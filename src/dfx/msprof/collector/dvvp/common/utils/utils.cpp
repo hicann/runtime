@@ -837,8 +837,9 @@ std::string Utils::TimestampToTime(const std::string& timestamp, int32_t unit /*
     time_t secTime;
     uint32_t microTime;
     try {
-        secTime = std::stoll(timestamp) / unit;
-        microTime = static_cast<uint32_t>(std::stoll(timestamp)) % static_cast<uint32_t>(unit);
+        const int64_t timestampValue = std::stoll(timestamp);
+        secTime = timestampValue / unit;
+        microTime = static_cast<uint32_t>(timestampValue % static_cast<int64_t>(unit));
     } catch (...) {
         return "0";
     }

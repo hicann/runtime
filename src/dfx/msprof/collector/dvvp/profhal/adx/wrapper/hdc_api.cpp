@@ -545,8 +545,8 @@ static int32_t FinalizeHdcSessionConnect(hdcError_t error, HDC_SESSION_PTR sessi
 
     if (MsprofDrvApi::instance()->drvHdcSetSessionReference(*session) != DRV_ERROR_NONE) {
         MSPROF_LOGE("session reference set failed");
-        (void)HdcSessionClose(session);
-        session = nullptr;
+        (void)HdcSessionClose(*session);
+        *session = nullptr;
         return IDE_DAEMON_ERROR;
     }
     return IDE_DAEMON_OK;

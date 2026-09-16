@@ -158,6 +158,11 @@ int32_t DynProfServer::DynProfSrvRecvParams()
         DynProfSrvRsqMsg(DynProfMsgType::DYN_PROF_PARAMS_RSQ, DynProfMsgRsqCode::DYN_PROF_RSQ_FAIL);
         return PROFILING_FAILED;
     }
+    if (params.dataLen > DYN_PROF_PARAMS_MAX_LEN) {
+        MSPROF_LOGE("invalid dyn prof params len: %u, max: %u", params.dataLen, DYN_PROF_PARAMS_MAX_LEN);
+        DynProfSrvRsqMsg(DynProfMsgType::DYN_PROF_PARAMS_RSQ, DynProfMsgRsqCode::DYN_PROF_RSQ_FAIL);
+        return PROFILING_FAILED;
+    }
     dynProfParams_ = std::string(params.data, params.dataLen);
     MSPROF_LOGD("recv params, size:%zu", dynProfParams_.size());
     DynProfSrvRsqMsg(DynProfMsgType::DYN_PROF_PARAMS_RSQ, DynProfMsgRsqCode::DYN_PROF_RSQ_SUCCESS);

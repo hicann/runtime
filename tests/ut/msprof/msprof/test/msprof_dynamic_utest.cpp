@@ -476,6 +476,41 @@ TEST_F(MSPROF_DYNAMIC_SERVER_UTEST, DynProfServer_DynProfSrvRecvParams)
     EXPECT_EQ(PROFILING_SUCCESS, ret);
 }
 
+TEST_F(MSPROF_DYNAMIC_SERVER_UTEST, DynProfServer_DynProfSrvRecvParams_InvalidDataLen)
+{
+    SHARED_PTR_ALIA<DynProfServer> dynProfServer = std::make_shared<DynProfServer>();
+    dynProfServer->dynProfParams_ = "old_params";
+
+    DynProfParams params;
+    params.dataLen = DYN_PROF_PARAMS_MAX_LEN + 1;
+    void* paramsData = &params;
+    MOCKER(LocalSocket::Recv, int(int, void*, int, int))
+        .stubs()
+        .with(any(), outBoundP(paramsData, sizeof(params)), any(), any())
+        .will(returnValue(sizeof(params)));
+    MOCKER(LocalSocket::Send, int(int, const void*, int, int)).expects(once()).will(returnValue(PROFILING_SUCCESS));
+
+    EXPECT_EQ(PROFILING_FAILED, dynProfServer->DynProfSrvRecvParams());
+    EXPECT_EQ("old_params", dynProfServer->dynProfParams_);
+}
+
+TEST_F(MSPROF_DYNAMIC_SERVER_UTEST, DynProfServer_DynProfSrvRecvParams_MaxDataLen)
+{
+    SHARED_PTR_ALIA<DynProfServer> dynProfServer = std::make_shared<DynProfServer>();
+
+    DynProfParams params;
+    params.dataLen = DYN_PROF_PARAMS_MAX_LEN;
+    void* paramsData = &params;
+    MOCKER(LocalSocket::Recv, int(int, void*, int, int))
+        .stubs()
+        .with(any(), outBoundP(paramsData, sizeof(params)), any(), any())
+        .will(returnValue(sizeof(params)));
+    MOCKER(LocalSocket::Send, int(int, const void*, int, int)).expects(once()).will(returnValue(PROFILING_SUCCESS));
+
+    EXPECT_EQ(PROFILING_SUCCESS, dynProfServer->DynProfSrvRecvParams());
+    EXPECT_EQ(DYN_PROF_PARAMS_MAX_LEN, dynProfServer->dynProfParams_.size());
+}
+
 TEST_F(MSPROF_DYNAMIC_SERVER_UTEST, DynProfServer_DynProfSrvProc)
 {
     SHARED_PTR_ALIA<DynProfServer> dynProfServer = std::make_shared<DynProfServer>();

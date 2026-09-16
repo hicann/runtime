@@ -1012,6 +1012,16 @@ TEST_F(COMMON_UTILS_UTILS_TEST, TimestampToTime2)
     EXPECT_NE(1, len);
 }
 
+TEST_F(COMMON_UTILS_UTILS_TEST, TimestampToTime_LargeTimestamp)
+{
+    GlobalMockObject::verify();
+    MOCKER(localtime_r).stubs().will(returnValue((struct tm*)0x123456));
+
+    const std::string time = Utils::TimestampToTime("1700000000123456", 1000000);
+    ASSERT_GE(time.size(), 7U);
+    EXPECT_EQ(".123456", time.substr(time.size() - 7));
+}
+
 TEST_F(COMMON_UTILS_UTILS_TEST, HandleEnvString)
 {
     GlobalMockObject::verify();

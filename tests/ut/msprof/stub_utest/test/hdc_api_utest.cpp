@@ -424,12 +424,15 @@ TEST_F(HDC_API_UTEST, HdcSessionConnect)
     MOCKER(drvHdcSessionConnect).stubs().then(returnValue(DRV_ERROR_NO_DEVICE)).then(returnValue(DRV_ERROR_NONE));
 
     MOCKER(drvHdcSetSessionReference).stubs().then(returnValue(DRV_ERROR_NO_DEVICE)).then(returnValue(DRV_ERROR_NONE));
+    MOCKER(drvHdcSessionClose).expects(once()).with(eq(session)).will(returnValue(DRV_ERROR_NONE));
 
     EXPECT_EQ(IDE_DAEMON_ERROR, HdcSessionConnect(-1, -1, NULL, NULL));                      // invalid parameters
     EXPECT_EQ(IDE_DAEMON_ERROR, HdcSessionConnect(peer_node, peer_devid, client, &session)); // drvHdcSessionConnect
     EXPECT_EQ(
         IDE_DAEMON_ERROR,
         HdcSessionConnect(peer_node, peer_devid, client, &session)); // drvHdcSetSessionReference failed
+    EXPECT_EQ(nullptr, session);
+    session = (HDC_SESSION)(0x12345678);
     EXPECT_EQ(DRV_ERROR_NONE, HdcSessionConnect(peer_node, peer_devid, client, &session));
 }
 
@@ -453,6 +456,7 @@ TEST_F(HDC_API_UTEST, HalHdcSessionConnect)
     MOCKER(halHdcSessionConnectEx).stubs().then(returnValue(DRV_ERROR_NO_DEVICE)).then(returnValue(DRV_ERROR_NONE));
 
     MOCKER(drvHdcSetSessionReference).stubs().then(returnValue(DRV_ERROR_NO_DEVICE)).then(returnValue(DRV_ERROR_NONE));
+    MOCKER(drvHdcSessionClose).expects(once()).with(eq(session)).will(returnValue(DRV_ERROR_NONE));
 
     EXPECT_EQ(IDE_DAEMON_ERROR, HalHdcSessionConnect(-1, -1, -1, NULL, NULL)); // invalid parameters
     EXPECT_EQ(
@@ -461,6 +465,8 @@ TEST_F(HDC_API_UTEST, HalHdcSessionConnect)
     EXPECT_EQ(
         IDE_DAEMON_ERROR,
         HalHdcSessionConnect(peer_node, peer_devid, host_pid, client, &session)); // drvHdcSetSessionReference failed
+    EXPECT_EQ(nullptr, session);
+    session = (HDC_SESSION)(0x12345678);
     EXPECT_EQ(DRV_ERROR_NONE, HalHdcSessionConnect(peer_node, peer_devid, host_pid, client, &session));
 }
 
