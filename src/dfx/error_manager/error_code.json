@@ -1632,17 +1632,6 @@
       }
     },
     {
-      "errClass": "DUMP Errors",
-      "errTitle": "Inner_Error",
-      "ErrCode": "EP9999",
-      "ErrMessage": "%s",
-      "Arglist": "message",
-      "suggestion": {
-        "Possible Cause": "N/A",
-        "Solution": "N/A"
-      }
-    },
-    {
       "errClass": "Queue Schedule Errors",
       "errTitle": "Inner_Error_Group_Attach_Failed",
       "ErrCode": "EM9001",
