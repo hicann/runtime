@@ -158,6 +158,11 @@ rtError_t StarsResumeRtsq(const rtCqReport_t* logicCq, const TaskInfo* const tas
 {
     uint32_t offset = 1U; // skip the error sqe
     uint32_t head = 0U;
+    Stream* const failStm = taskInfo->stream;
+
+    if (((failStm->Flags() & RT_STREAM_DQS_CTRL) != 0U) || ((failStm->Flags() & RT_STREAM_DQS_INTER_CHIP) != 0U)) {
+        return RT_ERROR_NONE;
+    }
 
     // No error exists.
     if ((logicCq->errorType & RT_STARS_EXIST_ERROR) == 0U) {
@@ -178,7 +183,6 @@ rtError_t StarsResumeRtsq(const rtCqReport_t* logicCq, const TaskInfo* const tas
     }
 
     rtError_t error = RT_ERROR_NONE;
-    Stream* const failStm = taskInfo->stream;
     Device* const dev = failStm->Device_();
     const uint32_t devId = dev->Id_();
     Driver* const devDrv = dev->Driver_();
