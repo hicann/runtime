@@ -25,6 +25,13 @@ Kernel* FuncSymbolTable::Lookup(const void* symbol)
     UNUSED(symbol);
     return nullptr;
 }
+
+void FuncSymbolTable::Unregister(void* binHandle)
+{
+    UNUSED(binHandle);
+    return;
+}
+
 FuncSymbolTable::~FuncSymbolTable() { return; }
 
 } // namespace runtime

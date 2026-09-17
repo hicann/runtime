@@ -1106,6 +1106,7 @@ rtError_t ApiImpl::BinaryUnLoad(Program* const binHandle)
             }
         }
     }
+    Runtime::Instance()->funcSymbolTable_.Unregister(binHandle);
     ResetEmbeddedInnerHandle<Program>(binHandle);
     delete binHandle;
 

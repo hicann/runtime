@@ -1837,9 +1837,11 @@ void Runtime::PutProgram(const Program* const programPtr, bool isUnRegisterApi)
 
     refObj->ResetVal();
     /* kernelTable_.RemoveAll must be done after refObj.ResetVal.
-     * Otherwise, KernelTable::Lookup may be deadlocked with
+     * Otherwise, KernelTable::Lookup may be
+     * deadlocked with
      * kernelTable_.RemoveAll.
      */
+    funcSymbolTable_.Unregister(prog);
     (void)kernelTable_.RemoveAll(prog);
     ResetEmbeddedInnerHandle<Program>(prog);
     delete prog;

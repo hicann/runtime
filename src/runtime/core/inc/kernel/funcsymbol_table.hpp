@@ -25,6 +25,7 @@ public:
     ~FuncSymbolTable() override;
 
     rtError_t Register(void* binHandle, const void* symbol, const char_t* const kernelName);
+    void Unregister(void* binHandle);
     Kernel* Lookup(const void* symbol);
 
 private:
