@@ -19,27 +19,7 @@
 aclError aclrtMemAllocManaged(void **ptr, uint64_t size, uint32_t flag)
 ```
 
-### 产品支持情况
-
-<!-- npu="950" id3214 -->
-- Ascend 950PR/Ascend 950DT：不支持
-<!-- end id3214 -->
-<!-- npu="A3" id3215 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
-<!-- end id3215 -->
-<!-- npu="910b" id3216 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
-<!-- end id3216 -->
-<!-- npu="310b" id3217 -->
-- Atlas 200I/500 A2 推理产品：不支持
-<!-- end id3217 -->
-<!-- npu="310p" id3218 -->
-- Atlas 推理系列产品：不支持
-<!-- end id3218 -->
-<!-- npu="910" id3219 -->
-- Atlas 训练系列产品：不支持
-<!-- end id3219 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/11-05_unified_addressing_res.md#id1 -->
+**须知：本接口为预留接口，暂不支持。**
 
 ### 功能说明
 
@@ -75,27 +55,7 @@ aclError aclrtMemAllocManaged(void **ptr, uint64_t size, uint32_t flag)
 aclError aclrtMemManagedAdvise(const void *const ptr, uint64_t size, aclrtMemManagedAdviseType advise, aclrtMemManagedLocation location)
 ```
 
-### 产品支持情况
-
-<!-- npu="950" id2150 -->
-- Ascend 950PR/Ascend 950DT：不支持
-<!-- end id2150 -->
-<!-- npu="A3" id2151 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
-<!-- end id2151 -->
-<!-- npu="910b" id2152 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
-<!-- end id2152 -->
-<!-- npu="310b" id2153 -->
-- Atlas 200I/500 A2 推理产品：不支持
-<!-- end id2153 -->
-<!-- npu="310p" id2154 -->
-- Atlas 推理系列产品：不支持
-<!-- end id2154 -->
-<!-- npu="910" id2155 -->
-- Atlas 训练系列产品：不支持
-<!-- end id2155 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/11-05_unified_addressing_res.md#id2 -->
+**须知：本接口为预留接口，暂不支持。**
 
 ### 功能说明
 
@@ -128,27 +88,7 @@ aclError aclrtMemManagedAdvise(const void *const ptr, uint64_t size, aclrtMemMan
 aclError aclrtMemManagedGetAttr(aclrtMemManagedRangeAttribute attribute, const void *ptr, size_t size, void *data, size_t dataSize)
 ```
 
-### 产品支持情况
-
-<!-- npu="950" id1688 -->
-- Ascend 950PR/Ascend 950DT：不支持
-<!-- end id1688 -->
-<!-- npu="A3" id1689 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
-<!-- end id1689 -->
-<!-- npu="910b" id1690 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
-<!-- end id1690 -->
-<!-- npu="310b" id1691 -->
-- Atlas 200I/500 A2 推理产品：不支持
-<!-- end id1691 -->
-<!-- npu="310p" id1692 -->
-- Atlas 推理系列产品：不支持
-<!-- end id1692 -->
-<!-- npu="910" id1693 -->
-- Atlas 训练系列产品：不支持
-<!-- end id1693 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/11-05_unified_addressing_res.md#id3 -->
+**须知：本接口为预留接口，暂不支持。**
 
 ### 功能说明
 
@@ -184,27 +124,7 @@ aclError aclrtMemManagedGetAttr(aclrtMemManagedRangeAttribute attribute, const v
 aclError aclrtMemManagedGetAttrs(aclrtMemManagedRangeAttribute *attributes, size_t numAttributes, const void *ptr, size_t size, void **data, size_t *dataSizes)
 ```
 
-### 产品支持情况
-
-<!-- npu="950" id2073 -->
-- Ascend 950PR/Ascend 950DT：不支持
-<!-- end id2073 -->
-<!-- npu="A3" id2074 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
-<!-- end id2074 -->
-<!-- npu="910b" id2075 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
-<!-- end id2075 -->
-<!-- npu="310b" id2076 -->
-- Atlas 200I/500 A2 推理产品：不支持
-<!-- end id2076 -->
-<!-- npu="310p" id2077 -->
-- Atlas 推理系列产品：不支持
-<!-- end id2077 -->
-<!-- npu="910" id2078 -->
-- Atlas 训练系列产品：不支持
-<!-- end id2078 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/11-05_unified_addressing_res.md#id4 -->
+**须知：本接口为预留接口，暂不支持。**
 
 ### 功能说明
 
@@ -241,27 +161,7 @@ aclError aclrtMemManagedGetAttrs(aclrtMemManagedRangeAttribute *attributes, size
 aclError aclrtMemManagedPrefetchAsync(const void* ptr, size_t size, aclrtMemManagedLocation location, uint32_t flags, aclrtStream stream)
 ```
 
-### 产品支持情况
-
-<!-- npu="950" id2136 -->
-- Ascend 950PR/Ascend 950DT：不支持
-<!-- end id2136 -->
-<!-- npu="A3" id2137 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
-<!-- end id2137 -->
-<!-- npu="910b" id2138 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
-<!-- end id2138 -->
-<!-- npu="310b" id2139 -->
-- Atlas 200I/500 A2 推理产品：不支持
-<!-- end id2139 -->
-<!-- npu="310p" id2140 -->
-- Atlas 推理系列产品：不支持
-<!-- end id2140 -->
-<!-- npu="910" id2141 -->
-- Atlas 训练系列产品：不支持
-<!-- end id2141 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/11-05_unified_addressing_res.md#id5 -->
+**须知：本接口为预留接口，暂不支持。**
 
 ### 功能说明
 
@@ -295,27 +195,7 @@ aclError aclrtMemManagedPrefetchAsync(const void* ptr, size_t size, aclrtMemMana
 aclError aclrtMemManagedPrefetchBatchAsync(const void** ptrs, size_t* sizes, size_t count, aclrtMemManagedLocation* prefetchLocs, size_t* prefetchLocIdxs, size_t numPrefetchLocs, uint64_t flags, aclrtStream stream)
 ```
 
-### 产品支持情况
-
-<!-- npu="950" id2339 -->
-- Ascend 950PR/Ascend 950DT：不支持
-<!-- end id2339 -->
-<!-- npu="A3" id2340 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
-<!-- end id2340 -->
-<!-- npu="910b" id2341 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
-<!-- end id2341 -->
-<!-- npu="310b" id2342 -->
-- Atlas 200I/500 A2 推理产品：不支持
-<!-- end id2342 -->
-<!-- npu="310p" id2343 -->
-- Atlas 推理系列产品：不支持
-<!-- end id2343 -->
-<!-- npu="910" id2344 -->
-- Atlas 训练系列产品：不支持
-<!-- end id2344 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/11-05_unified_addressing_res.md#id6 -->
+**须知：本接口为预留接口，暂不支持。**
 
 ### 功能说明
 
