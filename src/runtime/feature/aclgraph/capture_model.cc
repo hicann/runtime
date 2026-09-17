@@ -1171,7 +1171,7 @@ rtError_t CaptureModel::UpdateNotifyId(Stream* const exeStream)
     rtError_t error = RT_ERROR_NONE;
     rtError_t errorTmp = RT_ERROR_NONE;
     const mmTimespec beginTime = mmGetTickCount();
-    const int32_t REPORT_TIME_UINT = 180 * 1000; // report timeout every 3 min.
+    constexpr int32_t REPORT_TIME_UINT = 180 * 1000; // report timeout every 3 min.
     int32_t reportTime = REPORT_TIME_UINT;
     do {
         COND_PROC(IsProcessTimeout(beginTime, reportTime), reportTime += REPORT_TIME_UINT; RT_LOG(
