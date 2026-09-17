@@ -4654,6 +4654,28 @@ TEST_F(MSPROF_ACL_CORE_UTEST, ProfStop_NullConfig_WithoutRunningDevices)
     EXPECT_EQ(ACL_SUCCESS, Msprofiler::AclApi::ProfStop(ACL_API_TYPE, nullptr));
 }
 
+TEST_F(MSPROF_ACL_CORE_UTEST, ProfSetDefaultConfig_ActiveDevicesFailed)
+{
+    GlobalMockObject::verify();
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::GetAllActiveDevices)
+        .stubs()
+        .will(returnValue(static_cast<int32_t>(ACL_ERROR_PROFILING_FAILURE)));
+
+    EXPECT_EQ(nullptr, Msprofiler::AclApi::ProfSetDefaultConfig());
+    GlobalMockObject::verify();
+}
+
+TEST_F(MSPROF_ACL_CORE_UTEST, ProfStart_NullConfig_DefaultConfigFailed)
+{
+    GlobalMockObject::verify();
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::GetAllActiveDevices)
+        .stubs()
+        .will(returnValue(static_cast<int32_t>(ACL_ERROR_PROFILING_FAILURE)));
+
+    EXPECT_EQ(ACL_ERROR_PROFILING_FAILURE, Msprofiler::AclApi::ProfStart(ACL_API_TYPE, nullptr));
+    GlobalMockObject::verify();
+}
+
 // AutoInitForStartIfNeeded (via ProfStart): cover all auto-init failure branches in one body,
 // resetting mocks between sub-cases with GlobalMockObject::verify().
 TEST_F(MSPROF_ACL_CORE_UTEST, ProfStart_AutoInit_FailureBranches)

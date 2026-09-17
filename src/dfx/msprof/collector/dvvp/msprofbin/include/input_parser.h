@@ -234,9 +234,7 @@ private:
     void SetSwitchParam(int32_t opt, const char* value);
     bool IsSwitchValid2Handled(int32_t opt) const;
     int32_t CheckArgRange(const struct MsprofCmdInfo& cmdInfo, int32_t opt, uint32_t min, uint32_t max) const;
-#ifndef BUILD_PROFILING_OPEN_PROJECT
     int32_t CheckNpuEventsValid(const struct MsprofCmdInfo& cmdInfo, int32_t opt) const;
-#endif // BUILD_PROFILING_OPEN_PROJECT
     int32_t CheckCmdScaleIsValid(const struct MsprofCmdInfo& cmdInfo) const;
     int32_t CheckAiCoreMetricsValid(const struct MsprofCmdInfo& cmdInfo, int32_t opt) const;
     std::string GeneratePrompts() const;

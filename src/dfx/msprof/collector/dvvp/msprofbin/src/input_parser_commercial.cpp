@@ -62,6 +62,10 @@ void ArgsManager::PrintMsopprofHelp()
 
 int32_t InputParser::CheckNpuEventsValid(const struct MsprofCmdInfo& cmdInfo, int32_t opt) const
 {
+    if (cmdInfo.args[opt] == nullptr) {
+        CmdLog::CmdErrorLog("Argument --npu-events: expected one argument");
+        return MSPROF_DAEMON_ERROR;
+    }
     params_->npuEvents = cmdInfo.args[opt];
     if (!Platform::instance()->CheckIfSupport(PLATFORM_TASK_L2_CACHE_REG) &&
         !Platform::instance()->CheckIfSupport(PLATFORM_TASK_SOC_PMU)) {

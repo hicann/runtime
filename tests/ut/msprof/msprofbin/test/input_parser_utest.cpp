@@ -557,7 +557,12 @@ TEST_F(INPUT_PARSER_UTEST, CheckBaseInfo)
     EXPECT_EQ(PROFILING_FAILED, parser.CheckAiCoreMetricsValid(cmdInfo, ARGS_AIV_METRICS));
 #endif
 
-#ifndef BUILD_PROFILING_OPEN_PROJECT
+    cmdInfo.args[ARGS_NPU_EVENTS] = nullptr;
+    EXPECT_EQ(PROFILING_FAILED, parser.CheckNpuEventsValid(cmdInfo, ARGS_NPU_EVENTS));
+    cmdInfo.args[ARGS_NPU_EVENTS] = "0x1,0x2,0x3";
+#ifdef BUILD_PROFILING_OPEN_PROJECT
+    EXPECT_EQ(PROFILING_SUCCESS, parser.CheckNpuEventsValid(cmdInfo, ARGS_NPU_EVENTS));
+#else
     cmdInfo.args[ARGS_NPU_EVENTS] = "0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9";
     EXPECT_EQ(PROFILING_FAILED, parser.CheckNpuEventsValid(cmdInfo, ARGS_NPU_EVENTS));
     cmdInfo.args[ARGS_NPU_EVENTS] = "0x1,0x2,0x3";
@@ -827,6 +832,7 @@ TEST_F(INPUT_PARSER_UTEST, MsprofCmdCheckValid)
     cmdInfo.args[ARGS_DYNAMIC_PROF_PID] = "123";
     cmdInfo.args[ARGS_DELAY_PROF] = "1";
     cmdInfo.args[ARGS_DURATION_PROF] = "1";
+    EXPECT_EQ(MSPROF_DAEMON_ERROR, parser.MsprofCmdCheckValid(cmdInfo, ARGS_NPU_EVENTS));
     cmdInfo.args[ARGS_NPU_EVENTS] = "";
     MOCKER(mmGetOptInd).stubs().will(returnValue(1));
     parser.MsprofCmdCheckValid(cmdInfo, ARGS_AIV_MODE);

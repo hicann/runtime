@@ -366,8 +366,14 @@ static aclError ApplyStartConfig(const struct MsprofConfig& cfg, const std::vect
 aclError ProfStart(ProfType type, PROF_CONFIG_CONST_PTR profilerConfig)
 {
     PROF_CONFIG_CONST_PTR config = profilerConfig;
+    std::unique_ptr<const ProfConfig> defaultConfig;
     if (profilerConfig == nullptr) {
-        config = ProfSetDefaultConfig();
+        defaultConfig.reset(ProfSetDefaultConfig());
+        if (defaultConfig == nullptr) {
+            MSPROF_LOGE("[aclprofStart]Fail to set default config.");
+            return ACL_ERROR_PROFILING_FAILURE;
+        }
+        config = defaultConfig.get();
     }
     aclError aclRet = preCheckProfConfig(config);
     if (aclRet != ACL_SUCCESS) {
@@ -473,12 +479,16 @@ aclError ProfStop(ProfType type, PROF_CONFIG_CONST_PTR profilerConfig)
 
 PROF_CONFIG_CONST_PTR ProfSetDefaultConfig()
 {
-    PROF_CONFIG_PTR profilerConfig = new (std::nothrow) ProfConfig();
+    std::unique_ptr<ProfConfig> profilerConfig(new (std::nothrow) ProfConfig());
+    if (profilerConfig == nullptr) {
+        MSPROF_LOGE("[ProfSetDefaultConfig]Fail to allocate default config.");
+        return nullptr;
+    }
     std::vector<uint32_t> activeList = {};
     ProfAicoreMetrics aicoreMetrics = Platform::instance()->GetDefaultAicoreMetrics();
     uint64_t dataTypeConfig = Platform::instance()->GetDefaultDataTypeConfig();
     if (ProfAclMgr::instance()->GetAllActiveDevices(activeList) != ACL_SUCCESS) {
-        MSPROF_LOGE("[aclprofStart]Fail to get active device.");
+        MSPROF_LOGE("[ProfSetDefaultConfig]Fail to get active device.");
         return nullptr;
     }
     profilerConfig->devNums = activeList.size();
@@ -487,7 +497,7 @@ PROF_CONFIG_CONST_PTR ProfSetDefaultConfig()
     }
     profilerConfig->aicoreMetrics = aicoreMetrics;
     profilerConfig->dataTypeConfig = dataTypeConfig;
-    return profilerConfig;
+    return profilerConfig.release();
 }
 
 PROF_CONFIG_CONST_PTR ProfGetCurrentConfig()

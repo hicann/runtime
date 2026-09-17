@@ -772,6 +772,18 @@ int32_t InputParser::CheckArgRange(const struct MsprofCmdInfo& cmdInfo, int32_t 
     }
 }
 
+#ifdef BUILD_PROFILING_OPEN_PROJECT
+int32_t InputParser::CheckNpuEventsValid(const struct MsprofCmdInfo& cmdInfo, int32_t opt) const
+{
+    if (cmdInfo.args[opt] == nullptr) {
+        CmdLog::CmdErrorLog("Argument --npu-events: expected one argument");
+        return MSPROF_DAEMON_ERROR;
+    }
+    params_->npuEvents = cmdInfo.args[opt];
+    return MSPROF_DAEMON_OK;
+}
+#endif // BUILD_PROFILING_OPEN_PROJECT
+
 int32_t InputParser::CheckArgsIsNumber(const struct MsprofCmdInfo& cmdInfo, int32_t opt) const
 {
     if (cmdInfo.args[opt] == nullptr) {
@@ -1721,12 +1733,7 @@ int32_t InputParser::MsprofCmdCheckValid(const struct MsprofCmdInfo& cmdInfo, in
             ret = CheckAiCoreMetricsValid(cmdInfo, opt);
             break;
         case ARGS_NPU_EVENTS:
-#ifndef BUILD_PROFILING_OPEN_PROJECT
             ret = CheckNpuEventsValid(cmdInfo, opt);
-#else
-            params_->npuEvents = cmdInfo.args[opt];
-            ret = MSPROF_DAEMON_OK;
-#endif // BUILD_PROFILING_OPEN_PROJECT
             break;
         case ARGS_SYS_DEVICES:
             ret = CheckSysDevicesValid(cmdInfo);
