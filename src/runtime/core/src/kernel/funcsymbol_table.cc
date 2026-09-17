@@ -25,17 +25,29 @@ rtError_t FuncSymbolTable::Register(void* binHandle, const void* symbol, const c
     funcSymbolMapLock_.Lock();
     auto it = funcSymbolMap_.find(symbol);
     if (it != funcSymbolMap_.end()) {
-        funcSymbolMapLock_.Unlock();
-        RT_LOG(
-            RT_LOG_WARNING, "Symbol=%p, binHandle=%p already registered, skip duplicate registration.", symbol,
-            binHandle);
-        return RT_ERROR_NONE;
+        RT_LOG(RT_LOG_WARNING, "Symbol=%p, binHandle=%p already registered.", symbol, binHandle);
     }
-    funcSymbolMap_.emplace(symbol, kernel);
+    funcSymbolMap_[symbol] = kernel;
     funcSymbolMapLock_.Unlock();
 
     RT_LOG(RT_LOG_DEBUG, "Register function symbol success, symbol=%p", symbol);
     return RT_ERROR_NONE;
+}
+
+void FuncSymbolTable::Unregister(void* binHandle)
+{
+    Program* prog = static_cast<Program*>(binHandle);
+
+    funcSymbolMapLock_.Lock();
+    for (auto iter = funcSymbolMap_.begin(); iter != funcSymbolMap_.end();) {
+        Kernel* const kernel = iter->second;
+        if ((kernel != nullptr) && (kernel->Program_() == prog)) {
+            iter = funcSymbolMap_.erase(iter);
+            continue;
+        }
+        ++iter;
+    }
+    funcSymbolMapLock_.Unlock();
 }
 
 Kernel* FuncSymbolTable::Lookup(const void* symbol)

@@ -28,6 +28,7 @@ protected:
 
     virtual void TearDown()
     {
+        Runtime::Instance()->funcSymbolTable_.Unregister(prog_);
         delete prog_;
         prog_ = nullptr;
         GlobalMockObject::verify();
@@ -64,4 +65,15 @@ TEST_F(FuncSymbolTest, rtRegisterFuncSymbol_Success)
     EXPECT_EQ(error, RT_ERROR_NONE);
     const Kernel* retKernel = rtInstance->funcSymbolTable_.Lookup(&symbol_);
     EXPECT_NE(retKernel, nullptr);
+}
+
+TEST_F(FuncSymbolTest, rtRegisterFuncSymbol_UnregisterByBinHandle)
+{
+    Runtime* const rtInstance = Runtime::Instance();
+    rtError_t error = rtInstance->funcSymbolTable_.Register(prog_, &symbol_, "test_funcsymbol");
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_NE(rtInstance->funcSymbolTable_.Lookup(&symbol_), nullptr);
+
+    rtInstance->funcSymbolTable_.Unregister(prog_);
+    EXPECT_EQ(rtInstance->funcSymbolTable_.Lookup(&symbol_), nullptr);
 }
