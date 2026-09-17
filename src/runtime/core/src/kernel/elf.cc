@@ -1160,7 +1160,7 @@ rtError_t UpdateKernelsInfo(
         metaInfo->userArgsNum = iter->second->userArgsNum;
         metaInfo->crossCoreSync = iter->second->crossCoreSync;
         // default task ratio for task ration MIX_AIC_AIV_MAIN_AIC/MIX_AIC_AIV_MAIN_AIV
-        metaInfo->taskRation = DEFAULT_TASK_RATION;
+        metaInfo->taskRation = Runtime::Instance()->GetCurChipProperties().defaultTaskRatio;
         metaInfo->kernelVfType = iter->second->kernelVfType;
         metaInfo->shareMemSize = iter->second->shareMemSize;
         metaInfo->earlyStartEnable = iter->second->earlyStartEnable;
