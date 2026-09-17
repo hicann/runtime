@@ -644,6 +644,7 @@ public:
 
     void SetIsUserSetSocVersion(bool flag) { isUserSetSocVersion_ = flag; }
     rtError_t SubscribeCallback(const uint64_t threadId, Stream* stm, void* evtNotify);
+    CbSubscribe* GetCbSubscribe() const { return cbSubscribe_; }
     bool JudgeNeedSubscribe(const uint64_t threadId, Stream* stm, const uint32_t deviceId);
     void AllocTaskSn(uint32_t& taskSn)
     {

@@ -386,6 +386,7 @@ add_executable(runtime_utest_arch5162
     rt_utest_acl_api_stub_arch5162.cc
     ../../rt_utest_mbuf_stub.cc
     rt_utest_api_arch5162.cc
+    rt_utest_runtime_thread_aicpu.cc
     rt_utest_arg_loader_nocopy.cc
     ../../rt_utest_esched_stub.cc
     rt_utest_device_arch5162.cc
@@ -540,6 +541,7 @@ set(RUNTIME_TEST_INC_DIR_COMMON
     ${TOP_DIR}/src/runtime/feature/soma/
     ${TOP_DIR}/src/runtime/feature/snapshot/
     ${TOP_DIR}/src/runtime/feature/xpu/
+    ${TOP_DIR}/src/runtime/feature/runtime_thread_aicpu/
     ${TOP_DIR}/src/runtime/core/src/event
     ${C_SEC_INCLUDE}
 )

@@ -347,6 +347,7 @@ set(libruntime_src_files
     ${RUNTIME_FEATURE_DIR}/model/model.cc
     ${RUNTIME_FEATURE_DIR}/model/model_stars.cc
     ${RUNTIME_FEATURE_DIR}/model/model_rebuild.cc
+    ${RUNTIME_FEATURE_DIR}/runtime_thread_aicpu/runtime_thread_aicpu.cc
     ${RUNTIME_FEATURE_DIR}/soma/soma.cc
     ${RUNTIME_FEATURE_DIR}/soma/stream_mem_pool.cc
 )
@@ -416,6 +417,7 @@ set(RUNTIME_INC_DIR_ARCH5162
     ${RUNTIME_FEATURE_DIR}/ccu
     ${RUNTIME_FEATURE_DIR}/ffts
     ${RUNTIME_FEATURE_DIR}/xpu
+    ${RUNTIME_FEATURE_DIR}/runtime_thread_aicpu
     ${RUNTIME_CORE_DIR}/src/uvm
     ${RUNTIME_CORE_DIR}/src/event
     ${RUNTIME_DIR}/src/runtime/core/inc/cond_isa/v100

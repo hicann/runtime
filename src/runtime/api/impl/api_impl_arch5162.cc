@@ -10,6 +10,9 @@
 #include "api_impl.hpp"
 #include "context.hpp"
 #include "error_message_manage.hpp"
+#include "kernel.hpp"
+#include "runtime_thread_aicpu.hpp"
+#include "stream.hpp"
 
 namespace cce {
 namespace runtime {
@@ -26,6 +29,27 @@ rtError_t ApiImpl::NonBlockingLaunchEnd(Stream* const stream, const uint64_t fla
     UNUSED(stream);
     UNUSED(flag);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::CpuKernelLaunchEx(
+    const Kernel* const kernel, const uint32_t coreDim, const rtCpuKernelArgs_t* const argsInfo, const TaskCfg& taskCfg,
+    Stream* const stm, const uint32_t flag)
+{
+    UNUSED(taskCfg);
+    UNUSED(flag);
+    COND_RETURN_ERROR(
+        (kernel == nullptr) || (argsInfo == nullptr), RT_ERROR_INVALID_VALUE, "kernel or argsInfo is null.");
+    if (kernel->GetAicpuKernelType_() != static_cast<uint32_t>(KERNEL_TYPE_AICPU)) {
+        return RT_ERROR_FEATURE_NOT_SUPPORT;
+    }
+
+    Context* const context = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(context, RT_ERROR_CONTEXT_NULL);
+    Stream* const stream = (stm == nullptr) ? context->DefaultStream_() : stm;
+    NULL_PTR_RETURN_MSG(stream, RT_ERROR_STREAM_NULL);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        stream, context, RT_ERROR_STREAM_CONTEXT, "Delivering the AI CPU operator task");
+    return LaunchRuntimeThreadAicpuKernel(this, kernel, coreDim, argsInfo, stream);
 }
 
 rtError_t ApiImpl::FlushCache(const uint64_t base, const size_t len)

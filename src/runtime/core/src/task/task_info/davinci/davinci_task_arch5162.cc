@@ -24,6 +24,10 @@
 
 namespace cce {
 namespace runtime {
+namespace {
+constexpr uint32_t DRV_CALLBACK_GROUPID = 11U; // Driver-defined callback group ID.
+}
+
 #if F_DESC("DavinciKernelTask")
 void ConstructAICoreSqeForDavinciTask(TaskInfo* const taskInfo, rtStarsSqe_t* const command)
 {
@@ -106,9 +110,47 @@ void ConstructAICoreSqeForDavinciTask(TaskInfo* const taskInfo, rtStarsSqe_t* co
 
 void ConstructAICpuSqeForDavinciTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
 {
-    UNUSED(taskInfo);
-    UNUSED(command);
-    return;
+    (void)memset_s(command, sizeof(rtStarsSqe_t), 0, sizeof(rtStarsSqe_t));
+    AicpuTaskInfo* const aicpuTask = &taskInfo->u.aicpuTaskInfo;
+    const RuntimeThreadAicpuTaskInfo& runtimeThreadInfo = aicpuTask->extraInfo.runtimeThread;
+    Stream* const stream = taskInfo->stream;
+    RtStarsPhSqe* const sqe = &command->phSqe;
+
+    sqe->header.type = RT_STARS_SQE_TYPE_PLACE_HOLDER;
+    sqe->header.wrCqe = 1U;
+    sqe->header.rtStreamId = static_cast<uint16_t>(stream->Id_());
+    sqe->header.taskId = taskInfo->id;
+    sqe->header.u.sqeSubType = RT_SQE_SUBTYPE_AICPU;
+    sqe->header.preP = RT_STARS_SQE_INT_DIR_NO;
+    sqe->header.postP = RT_STARS_SQE_INT_DIR_NO;
+
+    sqe->u.callBackInfo.cbCqId = static_cast<uint16_t>(runtimeThreadInfo.callbackCqId);
+    sqe->u.callBackInfo.cbGroupId = static_cast<uint16_t>(runtimeThreadInfo.callbackGroupId);
+    sqe->u.callBackInfo.devId = static_cast<uint16_t>(stream->Device_()->Id_());
+    sqe->u.callBackInfo.streamId = static_cast<uint16_t>(stream->Id_());
+    sqe->u.callBackInfo.eventId = static_cast<uint16_t>(runtimeThreadInfo.eventId);
+    sqe->u.callBackInfo.isBlock = 1U;
+    sqe->u.callBackInfo.taskId = taskInfo->id;
+    sqe->u.callBackInfo.sqeSubType = RT_SQE_SUBTYPE_AICPU;
+
+    uint64_t address = runtimeThreadInfo.funcPtr;
+    sqe->u.callBackInfo.hostfuncAddrLow = static_cast<uint32_t>(address);
+    sqe->u.callBackInfo.hostfuncAddrHigh = static_cast<uint32_t>(address >> UINT32_BIT_NUM);
+    address = runtimeThreadInfo.fnData;
+    sqe->u.callBackInfo.fndataLow = static_cast<uint32_t>(address);
+    sqe->u.callBackInfo.fndataHigh = static_cast<uint32_t>(address >> UINT32_BIT_NUM);
+    sqe->u.callBackInfo.groupId = DRV_CALLBACK_GROUPID;
+    sqe->u.callBackInfo.destPid = 0U;
+
+    PrintSqe(command, "RuntimeThreadAicpu Task");
+    RT_LOG(
+        RT_LOG_INFO,
+        "RuntimeThreadAicpu sqe info, streamId=%hu, taskId=%hu, cbCqId=%hu, cbGroupId=%hu, devId=%hu, eventId=%hu, "
+        "sqeSubType=%hu, hostfuncAddrLow=%u, hostfuncAddrHigh=%u, fndataLow=%u, fndataHigh=%u",
+        sqe->header.rtStreamId, sqe->header.taskId, sqe->u.callBackInfo.cbCqId, sqe->u.callBackInfo.cbGroupId,
+        sqe->u.callBackInfo.devId, sqe->u.callBackInfo.eventId, sqe->u.callBackInfo.sqeSubType,
+        sqe->u.callBackInfo.hostfuncAddrLow, sqe->u.callBackInfo.hostfuncAddrHigh, sqe->u.callBackInfo.fndataLow,
+        sqe->u.callBackInfo.fndataHigh);
 }
 
 void SetResultForDavinciTask(TaskInfo* taskInfo, const void* const data, const uint32_t dataSize)

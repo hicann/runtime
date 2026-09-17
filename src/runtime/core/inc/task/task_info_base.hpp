@@ -143,6 +143,18 @@ struct AicTaskInfo {
     LaunchParam launchParam;
 };
 
+struct RuntimeThreadAicpuTaskInfo {
+    uint64_t funcPtr;
+    uint64_t fnData;
+    uint32_t callbackCqId;
+    uint32_t callbackGroupId;
+    uint32_t eventId;
+};
+
+union AicpuTaskExtraInfo {
+    RuntimeThreadAicpuTaskInfo runtimeThread;
+};
+
 struct AicpuTaskInfo {
     DavinciTaskInfoCommon comm;
     void* soName;
@@ -156,6 +168,7 @@ struct AicpuTaskInfo {
     uint8_t aicpuKernelType;
     uint8_t resv;
     const rtInnerObject* kernelInnerHandle;
+    AicpuTaskExtraInfo extraInfo;
 };
 
 struct rtAicAivFusionInfo_t {

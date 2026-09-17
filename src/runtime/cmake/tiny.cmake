@@ -262,6 +262,7 @@ set(libruntime_common_src_files
     ${RUNTIME_API_DIR}/impl/api_decorator.cc
     ${RUNTIME_API_DIR}/impl/api_error.cc
     ${RUNTIME_API_DIR}/impl/api_impl.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_cpu_kernel.cc
     ${RUNTIME_API_DIR}/impl/api_impl_kernel_args.cc
     ${RUNTIME_API_DIR}/impl/api_impl_memory.cc
     ${RUNTIME_API_DIR}/impl/api_impl_mbuf.cc
@@ -417,6 +418,7 @@ set(libruntime_v100_src_files
     ${RUNTIME_CORE_DIR}/src/common/inner_thread_local.cpp
     ${RUNTIME_API_DIR}/impl/api_decorator.cc
     ${RUNTIME_API_DIR}/impl/api_impl.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_cpu_kernel.cc
     ${RUNTIME_API_DIR}/impl/api_impl_kernel_args.cc
     ${RUNTIME_API_DIR}/impl/api_impl_memory.cc
     ${RUNTIME_API_DIR}/impl/api_error.cc

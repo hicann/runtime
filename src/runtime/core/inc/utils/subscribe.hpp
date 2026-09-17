@@ -66,6 +66,8 @@ public:
     rtError_t GetThreadIdByStreamId(const uint32_t devId, const int32_t streamId, uint64_t* const threadId);
     void LockGroupId(const uint32_t grpId) { grpIdWaitBitmap_.OccupyId(static_cast<int32_t>(grpId)); }
     void UnlockGroupId(const uint32_t grpId) { grpIdWaitBitmap_.FreeId(static_cast<int32_t>(grpId)); }
+    rtError_t ReserveInternalGroupId(uint32_t* groupId);
+    void ReleaseInternalGroupId(uint32_t groupId);
     bool IsExistInStreamMap(const Stream* const stm);
     void DeleteStreamHostOnly(const Stream* const stm);
     rtError_t SubscribeCallback(const uint64_t threadId, Stream* const stm, void* evtNotify);

@@ -129,8 +129,6 @@ TEST_F(Arch5162TaskTest, StubTask)
     ret = NormalKernelUpdatePrepare(nullptr, nullptr, 0U);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
 
-    ConstructAICpuSqeForDavinciTask(nullptr, nullptr);
-
     ret = ConvertAsyncDma(nullptr);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
 
@@ -292,6 +290,60 @@ TEST_F(Arch5162TaskTest, ConstructAICoreSqeForDavinciTask)
     EXPECT_EQ(sqe.aicAivKernelSqe.header.type, TS_TASK_TYPE_KERNEL_AICORE);
     delete stream;
     delete device;
+}
+
+TEST_F(Arch5162TaskTest, ConstructAICpuSqeForDavinciTask)
+{
+    constexpr uint64_t executeFunction = 0x1122334455667788ULL;
+    constexpr uint64_t taskCookie = 0x8877665544332211ULL;
+    constexpr uint32_t callbackCqId = 21U;
+    constexpr uint32_t callbackGroupId = 9U;
+    constexpr uint32_t eventId = 17U;
+    RawDevice device(0);
+    Stream stream(&device, 0);
+    TaskInfo taskInfo = {};
+    taskInfo.stream = &stream;
+    taskInfo.id = 37U;
+    taskInfo.type = TS_TASK_TYPE_KERNEL_AICPU;
+    taskInfo.pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].packageReportNum = 3U;
+    taskInfo.pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].expectPackage = 4U;
+    taskInfo.pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].receivePackage = 2U;
+    taskInfo.isCqeNeedConcern = 1U;
+    taskInfo.u.aicpuTaskInfo.extraInfo.runtimeThread = {
+        executeFunction, taskCookie, callbackCqId, callbackGroupId, eventId,
+    };
+    rtStarsSqe_t sqe = {};
+
+    ConstructAICpuSqeForDavinciTask(&taskInfo, &sqe);
+
+    EXPECT_EQ(sqe.phSqe.header.type, RT_STARS_SQE_TYPE_PLACE_HOLDER);
+    EXPECT_EQ(sqe.phSqe.header.wrCqe, 1U);
+    EXPECT_EQ(sqe.phSqe.header.rtStreamId, static_cast<uint16_t>(stream.Id_()));
+    EXPECT_EQ(sqe.phSqe.header.taskId, taskInfo.id);
+    EXPECT_EQ(sqe.phSqe.header.u.sqeSubType, RT_SQE_SUBTYPE_AICPU);
+    EXPECT_EQ(sqe.phSqe.header.preP, RT_STARS_SQE_INT_DIR_NO);
+    EXPECT_EQ(sqe.phSqe.header.postP, RT_STARS_SQE_INT_DIR_NO);
+    EXPECT_EQ(sqe.phSqe.u.callBackInfo.cbCqId, callbackCqId);
+    EXPECT_EQ(sqe.phSqe.u.callBackInfo.cbGroupId, callbackGroupId);
+    EXPECT_EQ(sqe.phSqe.u.callBackInfo.devId, device.Id_());
+    EXPECT_EQ(sqe.phSqe.u.callBackInfo.streamId, static_cast<uint16_t>(stream.Id_()));
+    EXPECT_EQ(sqe.phSqe.u.callBackInfo.eventId, eventId);
+    EXPECT_EQ(sqe.phSqe.u.callBackInfo.isBlock, 1U);
+    EXPECT_EQ(sqe.phSqe.u.callBackInfo.taskId, taskInfo.id);
+    EXPECT_EQ(sqe.phSqe.u.callBackInfo.sqeSubType, RT_SQE_SUBTYPE_AICPU);
+    const uint64_t actualFunction =
+        (static_cast<uint64_t>(sqe.phSqe.u.callBackInfo.hostfuncAddrHigh) << UINT32_BIT_NUM) |
+        sqe.phSqe.u.callBackInfo.hostfuncAddrLow;
+    const uint64_t actualTaskCookie = (static_cast<uint64_t>(sqe.phSqe.u.callBackInfo.fndataHigh) << UINT32_BIT_NUM) |
+                                      sqe.phSqe.u.callBackInfo.fndataLow;
+    EXPECT_EQ(actualFunction, executeFunction);
+    EXPECT_EQ(actualTaskCookie, taskCookie);
+    EXPECT_EQ(sqe.phSqe.u.callBackInfo.groupId, 11U);
+    EXPECT_EQ(sqe.phSqe.u.callBackInfo.destPid, 0U);
+    EXPECT_EQ(taskInfo.pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].packageReportNum, 3U);
+    EXPECT_EQ(taskInfo.pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].expectPackage, 4U);
+    EXPECT_EQ(taskInfo.pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].receivePackage, 2U);
+    EXPECT_EQ(taskInfo.isCqeNeedConcern, 1U);
 }
 
 TEST_F(Arch5162TaskTest, SetStarsResultForDavinciTask_aicpu)

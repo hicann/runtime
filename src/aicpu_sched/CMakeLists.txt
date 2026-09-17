@@ -65,6 +65,8 @@ set_target_properties(adump_stub
     OUTPUT_NAME adump
 )
 
+add_subdirectory(runtime_thread_aicpu)
+
 if(${PRODUCT_SIDE} STREQUAL device)
     add_subdirectory(aicpu_cust_schedule)
     add_subdirectory(aicpu_processer)

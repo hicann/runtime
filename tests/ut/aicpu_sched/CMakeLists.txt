@@ -42,6 +42,7 @@ add_subdirectory(aicpu_prof/ut)
 add_subdirectory(aicpu_sharder/ut)
 add_subdirectory(aicpu_schedule/ut)
 add_subdirectory(aicpu_kernel/ut)
+add_subdirectory(runtime_thread_aicpu/ut)
 
 add_subdirectory(aicpu_processer/st)
 add_subdirectory(aicpu_prof/st)
@@ -63,6 +64,7 @@ set(AICPU_SCHED_TARGET
   aicpu_sharder_utest
   aicpu_kernel_utest
   aicpu_sched_sim_utest
+  runtime_thread_aicpu_utest
   # aicpu_aicpuschedule_stest
   # aicpu_aicpuschedule_stest_host_cpu
   # aicpu_aicpuschedule_stest_hostaicpu

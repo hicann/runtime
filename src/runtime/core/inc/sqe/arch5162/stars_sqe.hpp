@@ -243,7 +243,7 @@ struct RtCallBackSqe {
     uint16_t eventId;
     uint16_t isBlock;
     uint16_t taskId;
-    uint16_t res4;
+    uint16_t sqeSubType;
 
     /* word8-11 */
     uint32_t hostfuncAddrLow;
