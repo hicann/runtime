@@ -452,9 +452,17 @@ bool FileSlice::FileSliceFlush()
     for (it = sliceNum_.begin(); it != sliceNum_.end(); ++it) {
         const std::string absolutePath = it->first + std::to_string(it->second);
         if (Utils::IsFileExist(absolutePath)) {
-            MSPROF_EVENT(
-                "[FileSliceFlush]file:%s, total_size_file:%" PRIu64 " bytes", Utils::BaseName(it->first).c_str(),
-                totalSize_[it->first]);
+            const std::string baseName = Utils::BaseName(it->first);
+            if (baseName.find("Memory.data") != std::string::npos ||
+                baseName.find("CpuUsage.data") != std::string::npos) {
+                MSPROF_LOGI(
+                    "[FileSliceFlush]file:%s, total_size_file:%" PRIu64 " bytes", baseName.c_str(),
+                    totalSize_[it->first]);
+            } else {
+                MSPROF_EVENT(
+                    "[FileSliceFlush]file:%s, total_size_file:%" PRIu64 " bytes", baseName.c_str(),
+                    totalSize_[it->first]);
+            }
             int64_t fileSize = Utils::GetFileSize(absolutePath);
             if (fileSize < 0) {
                 MSPROF_LOGE("[fileSize:%d error", fileSize);

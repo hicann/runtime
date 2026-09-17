@@ -64,7 +64,7 @@ void Analyzer::Flush()
 
 void Analyzer::PrintDeviceStats()
 {
-    MSPROF_EVENT("total_size_analyze, upload time: %" PRIu64, resultCount_);
+    MSPROF_EVENT("device total_size_analyze, uploaded records: %" PRIu64, resultCount_);
     analyzerHwts_->PrintStats();
     analyzerFfts_->PrintStats();
     analyzerTs_->PrintStats();
@@ -72,7 +72,7 @@ void Analyzer::PrintDeviceStats()
 
 void Analyzer::PrintHostStats()
 {
-    MSPROF_EVENT("total_size_analyze, upload time: %" PRIu64, resultCount_);
+    MSPROF_EVENT("host total_size_analyze, uploaded records: %" PRIu64, resultCount_);
     analyzerGe_->PrintStats();
     analyzerRt_->PrintStats();
 }
