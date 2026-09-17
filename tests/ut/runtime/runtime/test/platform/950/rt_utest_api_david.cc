@@ -12425,37 +12425,6 @@ TEST_F(ApiDavidTest, api_decorator_memqueue_forwarding)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
-TEST_F(ApiDavidTest, api_decorator_snapshot_forwarding)
-{
-    ApiImpl impl;
-    ApiDecorator api(&impl);
-    rtError_t error = RT_ERROR_NONE;
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::SnapShotCallbackRegister).stubs().will(returnValue(RT_ERROR_NONE));
-    error = api.SnapShotCallbackRegister(RT_SNAPSHOT_RESTORE_PRE, nullptr, nullptr);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::SnapShotCallbackUnregister).stubs().will(returnValue(RT_ERROR_NONE));
-    error = api.SnapShotCallbackUnregister(RT_SNAPSHOT_RESTORE_PRE, nullptr);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::SnapShotProcessBackup).stubs().will(returnValue(RT_ERROR_NONE));
-    error = api.SnapShotProcessBackup();
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::SnapShotProcessLock).stubs().will(returnValue(RT_ERROR_NONE));
-    error = api.SnapShotProcessLock();
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::SnapShotProcessRestore).stubs().will(returnValue(RT_ERROR_NONE));
-    error = api.SnapShotProcessRestore();
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::SnapShotProcessUnlock).stubs().will(returnValue(RT_ERROR_NONE));
-    error = api.SnapShotProcessUnlock();
-    EXPECT_EQ(error, RT_ERROR_NONE);
-}
-
 TEST_F(ApiDavidTest, api_decorator_misc_forwarding)
 {
     ApiImpl impl;

@@ -24,7 +24,6 @@
 #include "capture_model_utils.hpp"
 #include "capture_adapt.hpp"
 #include "para_convertor.hpp"
-#include "global_state_manager.hpp"
 #include "register_memory.hpp"
 #include "starsv2_base.hpp"
 #include "mem_type.hpp"
@@ -3656,46 +3655,6 @@ rtError_t ApiErrorDecorator::DeviceSynchronize(const int32_t timeout)
     const rtError_t error = impl_->DeviceSynchronize(timeout);
     ERROR_RETURN(error, "Device synchronize failed.");
     return error;
-}
-
-rtError_t ApiErrorDecorator::SnapShotProcessLock() { return impl_->SnapShotProcessLock(); }
-
-rtError_t ApiErrorDecorator::SnapShotProcessUnlock() { return impl_->SnapShotProcessUnlock(); }
-
-rtError_t ApiErrorDecorator::SnapShotCallbackRegister(rtSnapShotStage stage, rtSnapShotCallBack callback, void* args)
-{
-    return impl_->SnapShotCallbackRegister(stage, callback, args);
-}
-
-rtError_t ApiErrorDecorator::SnapShotCallbackUnregister(rtSnapShotStage stage, rtSnapShotCallBack callback)
-{
-    return impl_->SnapShotCallbackUnregister(stage, callback);
-}
-
-rtError_t ApiErrorDecorator::SnapShotProcessBackup()
-{
-    GlobalStateManager& globalStateManagerInstance = GlobalStateManager::GetInstance();
-    std::unique_lock<std::mutex> lock(globalStateManagerInstance.GetStateMtx());
-    if (globalStateManagerInstance.GetCurrentState() != RT_PROCESS_STATE_LOCKED) {
-        RT_LOG(
-            RT_LOG_ERROR, "current state is not the locked state, current state is %s",
-            GlobalStateManager::StateToString(globalStateManagerInstance.GetCurrentState()));
-        return RT_ERROR_SNAPSHOT_BACKUP_FAILED;
-    }
-    return impl_->SnapShotProcessBackup();
-}
-
-rtError_t ApiErrorDecorator::SnapShotProcessRestore()
-{
-    GlobalStateManager& globalStateManagerInstance = GlobalStateManager::GetInstance();
-    std::unique_lock<std::mutex> lock(globalStateManagerInstance.GetStateMtx());
-    if (globalStateManagerInstance.GetCurrentState() != RT_PROCESS_STATE_BACKED_UP) {
-        RT_LOG(
-            RT_LOG_ERROR, "current state is not the RT_PROCESS_STATE_BACKED_UP state, current state is %s",
-            GlobalStateManager::StateToString(globalStateManagerInstance.GetCurrentState()));
-        return RT_ERROR_SNAPSHOT_RESTORE_FAILED;
-    }
-    return impl_->SnapShotProcessRestore();
 }
 
 rtError_t ApiErrorDecorator::DeviceGetStreamPriorityRange(int32_t* const leastPriority, int32_t* const greatestPriority)

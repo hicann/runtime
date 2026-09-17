@@ -61,62 +61,9 @@
 #include "memory_c.hpp"
 #include "aicpu_c.hpp"
 #include "enum_desc.hpp"
-#include "global_state_manager.hpp"
-#include "snapshot_callback_manager.hpp"
-#include "snapshot_process_helper.hpp"
 
 namespace cce {
 namespace runtime {
-
-rtError_t ApiImpl::SnapShotProcessLock()
-{
-    rtError_t error = SnapshotCallbackManager::GetInstance().InvokeCallbacks(RT_SNAPSHOT_LOCK_PRE);
-    COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
-    error = GlobalStateManager::GetInstance().Locked();
-    return error;
-}
-
-rtError_t ApiImpl::SnapShotProcessUnlock()
-{
-    rtError_t error = GlobalStateManager::GetInstance().Unlocked();
-    COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
-    error = SnapshotCallbackManager::GetInstance().InvokeCallbacks(RT_SNAPSHOT_UNLOCK_POST);
-    return error;
-}
-
-rtError_t ApiImpl::SnapShotProcessBackup()
-{
-    rtError_t error = SnapshotCallbackManager::GetInstance().InvokeCallbacks(RT_SNAPSHOT_BACKUP_PRE);
-    COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
-    error = cce::runtime::SnapShotProcessBackup();
-    COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
-    error = SnapshotCallbackManager::GetInstance().InvokeCallbacks(RT_SNAPSHOT_BACKUP_POST);
-    COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
-    GlobalStateManager::GetInstance().SetCurrentState(RT_PROCESS_STATE_BACKED_UP);
-    return RT_ERROR_NONE;
-}
-
-rtError_t ApiImpl::SnapShotProcessRestore()
-{
-    rtError_t error = SnapshotCallbackManager::GetInstance().InvokeCallbacks(RT_SNAPSHOT_RESTORE_PRE);
-    COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
-    error = cce::runtime::SnapShotProcessRestore();
-    COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
-    error = SnapshotCallbackManager::GetInstance().InvokeCallbacks(RT_SNAPSHOT_RESTORE_POST);
-    COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
-    GlobalStateManager::GetInstance().SetCurrentState(RT_PROCESS_STATE_LOCKED);
-    return RT_ERROR_NONE;
-}
-
-rtError_t ApiImpl::SnapShotCallbackRegister(rtSnapShotStage stage, rtSnapShotCallBack callback, void* args)
-{
-    return SnapshotCallbackManager::GetInstance().RegisterCallback(stage, callback, args);
-}
-
-rtError_t ApiImpl::SnapShotCallbackUnregister(rtSnapShotStage stage, rtSnapShotCallBack callback)
-{
-    return SnapshotCallbackManager::GetInstance().UnregisterCallback(stage, callback);
-}
 
 rtError_t ApiImpl::BinaryEnumerateFunctions(
     const Program* const binHandle, Kernel** const funcHandles, const uint32_t numFunctions,
