@@ -54,7 +54,7 @@ static bool CmoTaskRegister()
         .setStarsResultFunc = &SetStarsResultCommonForDavid,
     };
 
-    const std::vector<rtChipType_t> chips = {CHIP_DAVID, CHIP_ASCEND_350};
+    const std::vector<rtChipType_t> chips = {CHIP_DAVID, CHIP_ASCEND_350, CHIP_MC62CM12A, CHIP_MC32DM11A};
     for (const auto chip : chips) {
         RegTaskFunc(chip, TS_TASK_TYPE_CMO, funcs);
         RegDavidSqeFunc(chip, TS_TASK_TYPE_CMO, &ConstructDavidSqeForCmoTask);
