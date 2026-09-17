@@ -32,7 +32,7 @@ bool IsProfOpen() { return false; }
 
 bool IsModelProfOpen() { return false; }
 
-void UpdateMode(bool mode) { (void)mode; }
+void UpdateMode(const bool mode) { (void)mode; }
 void UpdateModelMode(const bool mode) { (void)mode; }
 
 uint64_t GetSystemTick() { return 0; }

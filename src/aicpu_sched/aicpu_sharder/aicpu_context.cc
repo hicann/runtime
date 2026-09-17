@@ -57,11 +57,11 @@ std::vector<std::map<std::string, std::string>> g_debugThreadCtx;
 std::mutex g_funcMapMutex;
 std::map<uint32_t, std::map<uint32_t, std::pair<std::function<void(void*)>, bool>>> g_funcMap;
 
-typedef struct {
+struct DfxStorer {
     std::mutex dfxInfoMutex;
     uint64_t dfxInfoAddr = 0U;
     bool dfxInfoSet = false;
-} DfxStorer;
+};
 DfxStorer g_dfxStorer = {};
 
 std::map<std::string, std::string>& GetThreadCtx(const aicpu::CtxType type, const uint32_t threadIndex)

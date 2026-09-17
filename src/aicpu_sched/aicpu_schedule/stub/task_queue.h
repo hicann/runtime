@@ -28,7 +28,7 @@ enum TaskQueuePriority {
     TASK_QUEUE_MAX_PRIORITY,
 };
 
-enum TaskEventID { TASK_QUEUE_LOW_EVENT_ID = 1, TASK_QUEUE_HIGH_EVENT_ID };
+enum class TaskEventID { TASK_QUEUE_LOW_EVENT_ID = 1, TASK_QUEUE_HIGH_EVENT_ID };
 
 struct TaskInfo {
     std::string name;
