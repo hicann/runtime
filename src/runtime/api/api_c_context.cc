@@ -48,38 +48,6 @@ VISIBILITY_DEFAULT
 rtError_t rtsCtxGetCurrent(rtContext_t* currentCtx) { return rtCtxGetCurrent(currentCtx); }
 
 VISIBILITY_DEFAULT
-rtError_t rtsCtxSetSysParamOpt(rtSysParamOpt configOpt, int64_t configVal)
-{
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM_NAME(
-        (configOpt >= SYS_OPT_RESERVED) || (configOpt < 0), RT_ERROR_INVALID_VALUE, SysParamOptToString(configOpt),
-        "configOpt", "[0, " + std::to_string(SYS_OPT_RESERVED) + ")");
-
-    const rtError_t ret = apiInstance->CtxSetSysParamOpt(configOpt, configVal);
-    ERROR_RETURN_WITH_EXT_ERRCODE(ret);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtsCtxGetSysParamOpt(rtSysParamOpt configOpt, int64_t* configVal)
-{
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM_NAME(
-        (configOpt >= SYS_OPT_RESERVED) || (configOpt < 0), RT_ERROR_INVALID_VALUE, SysParamOptToString(configOpt),
-        "configOpt", "[0, " + std::to_string(SYS_OPT_RESERVED) + ")");
-
-    const rtError_t ret = apiInstance->CtxGetSysParamOpt(configOpt, configVal);
-    if (ret == RT_ERROR_NOT_SET_SYSPARAMOPT) {
-        return ACL_ERROR_RT_SYSPARAMOPT_NOT_SET;
-    }
-
-    ERROR_RETURN_WITH_EXT_ERRCODE(ret);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
 rtError_t rtsCtxGetCurrentDefaultStream(rtStream_t* stm) { return rtCtxGetCurrentDefaultStream(stm); }
 
 VISIBILITY_DEFAULT

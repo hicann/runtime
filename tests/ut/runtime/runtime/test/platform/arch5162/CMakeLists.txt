@@ -97,6 +97,7 @@ set(RUNTIME_UT_ARCH5162_API_WEAK_REAL_SRC_FILES
     ${TOP_DIR}/src/runtime/api/api_c_model.cc
     ${TOP_DIR}/src/runtime/api/api_c_soc.cc
     ${TOP_DIR}/src/runtime/api/api_c_stream.cc
+    ${TOP_DIR}/src/runtime/api/api_c_rt_config.cc
 )
 configure_runtime_api_weak_real_sources(arch5162 ${RUNTIME_UT_ARCH5162_API_WEAK_REAL_SRC_FILES})
 

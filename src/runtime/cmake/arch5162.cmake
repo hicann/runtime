@@ -31,6 +31,7 @@ set(RUNTIME_API_WEAK_REAL_SRC_FILES
     ${RUNTIME_API_DIR}/api_c_dqs.cc          # 1 stub
     ${RUNTIME_API_DIR}/api_c_esched.cc       # 9 stubs
     ${RUNTIME_API_DIR}/api_c_mbuf.cc         # 17 stubs
+    ${RUNTIME_API_DIR}/api_c_rt_config.cc     # 13 stubs
     ${RUNTIME_API_DIR}/api_c_snapshot.cc     # 7 stubs
     ${RUNTIME_API_DIR}/api_c_soma.cc         # 7 stubs
     ${RUNTIME_API_DIR}/api_c_standard_soc.cc # 104 stubs; rtMallocCached keeps the arch5162 strong provider

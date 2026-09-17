@@ -104,6 +104,7 @@ set(runtimeut_src_api_list
     ${TOP_DIR}/src/runtime/api/api_c_event.cc
     ${TOP_DIR}/src/runtime/api/api_c_mbuf.cc
     ${TOP_DIR}/src/runtime/api/api_c_esched.cc
+    ${TOP_DIR}/src/runtime/api/api_c_rt_config.cc
     ${TOP_DIR}/src/runtime/api/api_handle_guard.cc
     ${TOP_DIR}/src/runtime/api/inner.cc
     ${TOP_DIR}/src/runtime/api/api_handle_guard.cc

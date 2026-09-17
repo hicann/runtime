@@ -114,6 +114,7 @@ set(libruntime_api_weak_real_src_files
     ${RUNTIME_API_DIR}/api_c_memory.cc
     ${RUNTIME_API_DIR}/api_c_model.cc
     ${RUNTIME_API_DIR}/api_c_snapshot.cc
+    ${RUNTIME_API_DIR}/api_c_rt_config.cc
     ${RUNTIME_API_DIR}/api_c_soc.cc
     ${RUNTIME_API_DIR}/api_c_soma.cc
     ${RUNTIME_API_DIR}/api_c_standard_soc.cc

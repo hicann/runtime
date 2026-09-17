@@ -3355,32 +3355,6 @@ RTS_API rtError_t rtGeneralCtrl(uintptr_t* ctrl, uint32_t num, uint32_t type)
 }
 
 VISIBILITY_DEFAULT
-RTS_API rtError_t rtCtxSetSysParamOpt(const rtSysParamOpt configOpt, const int64_t configVal)
-{
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t ret = apiInstance->CtxSetSysParamOpt(configOpt, configVal);
-    ERROR_RETURN_WITH_EXT_ERRCODE(ret);
-    if (configOpt < SYS_OPT_RESERVED) {
-        sysParamOpt_[configOpt].store(configVal);
-    }
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-RTS_API rtError_t rtCtxGetSysParamOpt(const rtSysParamOpt configOpt, int64_t* const configVal)
-{
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t ret = apiInstance->CtxGetSysParamOpt(configOpt, configVal);
-    if (ret == RT_ERROR_NOT_SET_SYSPARAMOPT) {
-        return ACL_ERROR_RT_SYSPARAMOPT_NOT_SET;
-    }
-    ERROR_RETURN_WITH_EXT_ERRCODE(ret);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
 RTS_API rtError_t rtSetSysParamOpt(const rtSysParamOpt configOpt, const int64_t configVal)
 {
     constexpr int64_t SYS_OPT_DETERMINISTIC_LEVEL_MAX = 4;

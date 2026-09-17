@@ -164,48 +164,6 @@ rtError_t rtDeviceGetLimit(rtLimitType_t type, uint32_t* val)
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtsSetDeviceResLimit(const int32_t devId, const rtDevResLimitType_t type, uint32_t value)
-{
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    if (devId < 0) {
-        RT_LOG_OUTER_MSG_INVALID_PARAM(devId, "greater than or equal to 0");
-        ERROR_RETURN_WITH_EXT_ERRCODE(RT_ERROR_DEVICE_ID);
-    }
-    const rtError_t error = apiInstance->SetDeviceResLimit(static_cast<uint32_t>(devId), type, value);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtsResetDeviceResLimit(const int32_t devId)
-{
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    if (devId < 0) {
-        RT_LOG_OUTER_MSG_INVALID_PARAM(devId, "greater than or equal to 0");
-        ERROR_RETURN_WITH_EXT_ERRCODE(RT_ERROR_DEVICE_ID);
-    }
-    const rtError_t error = apiInstance->ResetDeviceResLimit(static_cast<uint32_t>(devId));
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtsGetDeviceResLimit(const int32_t devId, const rtDevResLimitType_t type, uint32_t* value)
-{
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    if (devId < 0) {
-        RT_LOG_OUTER_MSG_INVALID_PARAM(devId, "greater than or equal to 0");
-        ERROR_RETURN_WITH_EXT_ERRCODE(RT_ERROR_DEVICE_ID);
-    }
-    const rtError_t error = apiInstance->GetDeviceResLimit(static_cast<uint32_t>(devId), type, value);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
 rtError_t rtDeviceSynchronize(void)
 {
     Api* const apiInstance = Api::Instance();
