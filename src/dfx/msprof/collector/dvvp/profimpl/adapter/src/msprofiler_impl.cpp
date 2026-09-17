@@ -40,6 +40,28 @@ std::map<const uint32_t, const uint32_t> g_modelDeviceMap; // key: geModelId, va
 std::mutex g_mapMutex;
 std::mutex g_envMutex;
 
+const char* MsprofErrorCodeName(const int32_t ret)
+{
+    switch (ret) {
+        case MSPROF_ERROR_NONE:
+            return "MSPROF_ERROR_NONE";
+        case MSPROF_ERROR_MEM_NOT_ENOUGH:
+            return "MSPROF_ERROR_MEM_NOT_ENOUGH";
+        case MSPROF_ERROR_GET_ENV:
+            return "MSPROF_ERROR_GET_ENV";
+        case MSPROF_ERROR_CONFIG_INVALID:
+            return "MSPROF_ERROR_CONFIG_INVALID";
+        case MSPROF_ERROR_ACL_JSON_OFF:
+            return "MSPROF_ERROR_ACL_JSON_OFF";
+        case MSPROF_ERROR:
+            return "MSPROF_ERROR";
+        case MSPROF_ERROR_UNINITIALIZE:
+            return "MSPROF_ERROR_UNINITIALIZE";
+        default:
+            return "UNKNOWN_MSPROF_ERROR";
+    }
+}
+
 bool CheckMsprofBin(std::string& envValue)
 {
     MSPROF_GET_ENV(MM_ENV_PROFILER_SAMPLECONFIG, envValue);
@@ -123,7 +145,7 @@ int32_t ProfInit(uint32_t type, VOID_PTR data, uint32_t len)
         return MSPROF_ERROR_NONE;
     }
     if (ret != MSPROF_ERROR_NONE) {
-        MSPROF_LOGE("ProfInit Failed, ret is %d", ret);
+        MSPROF_LOGE("ProfInit failed, error code: %d (%s)", ret, MsprofErrorCodeName(ret));
         return ret;
     }
     return ProfInitProc(type);
