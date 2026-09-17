@@ -253,8 +253,8 @@ rtError_t DeviceSqCqPool::FreeSqCqImmediately(const rtDeviceSqCqInfo_t* const sq
     const std::lock_guard<std::mutex> deviceSqCqLock(deviceSqCqLock_);
     shrinkCount_ += freeNum;
     for (uint32_t listId = 0; listId < freeNum; listId++) {
-        uint32_t sqId = sqCqList[listId].sqId;
-        uint32_t cqId = sqCqList[listId].cqId;
+        const uint32_t sqId = sqCqList[listId].sqId;
+        const uint32_t cqId = sqCqList[listId].cqId;
         auto it = std::find_if(
             deviceSqCqOccupyList_.begin(), deviceSqCqOccupyList_.end(),
             [sqId, cqId](const rtDeviceSqCqInfo_t& info) { return (info.sqId == sqId) && (info.cqId == cqId); });
@@ -283,9 +283,10 @@ void DeviceSqCqPool::TryTrimSqCqPool(const uint32_t freeNum)
     const std::lock_guard<std::mutex> deviceSqCqLock(deviceSqCqLock_);
     uint32_t releasedNum = 0U;
     shrinkCount_ += freeNum;
-    uint32_t targetNum = preAllocCount_ > shrinkCount_ ? static_cast<uint32_t>(preAllocCount_ - shrinkCount_) : 0U;
-    uint32_t totalResNum = static_cast<uint32_t>(deviceSqCqFreeList_.size() + deviceSqCqOccupyList_.size());
-    uint32_t needReleaseNum = totalResNum > targetNum ? (totalResNum - targetNum) : 0U;
+    const uint32_t targetNum =
+        preAllocCount_ > shrinkCount_ ? static_cast<uint32_t>(preAllocCount_ - shrinkCount_) : 0U;
+    const uint32_t totalResNum = static_cast<uint32_t>(deviceSqCqFreeList_.size() + deviceSqCqOccupyList_.size());
+    const uint32_t needReleaseNum = totalResNum > targetNum ? (totalResNum - targetNum) : 0U;
 
     while ((!deviceSqCqFreeList_.empty()) && (releasedNum < needReleaseNum)) {
         const rtDeviceSqCqInfo_t& sqCqInfo = deviceSqCqFreeList_.front();
