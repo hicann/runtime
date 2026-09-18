@@ -554,7 +554,12 @@ TEST_F(ApiImplTest, ApiImplDeviceTopologyDeviceIdConvertFailed)
     ApiImplDeviceTopology apiImpl;
     Runtime* const rtInstance = static_cast<Runtime*>(Runtime::Instance());
     int32_t canAccessPeer = 0;
+    int32_t logicDevId = 0;
+    rtUuid_t uuid = {};
+    uint32_t phyId = 0U;
     uint32_t status = 0U;
+    uint32_t capabilities[1] = {0U};
+    const rtAtomicOperation operations[1] = {RT_ATOMIC_OPERATION_INTEGER_ADD};
     int64_t pairInfo = 0;
 
     MOCKER_CPP_VIRTUAL(rtInstance, &Runtime::ChgUserDevIdToDeviceId).stubs().will(returnValue(RT_ERROR_DEVICE_ID));
@@ -564,6 +569,162 @@ TEST_F(ApiImplTest, ApiImplDeviceTopologyDeviceIdConvertFailed)
     EXPECT_EQ(apiImpl.DeviceCanAccessPeer(&canAccessPeer, 1U, 0U), RT_ERROR_DEVICE_ID);
     EXPECT_EQ(apiImpl.GetP2PStatus(1U, 0U, &status), RT_ERROR_DEVICE_ID);
     EXPECT_EQ(apiImpl.GetPairDevicesInfo(1U, 0U, DEVS_INFO_TYPE_TOPOLOGY, &pairInfo), RT_ERROR_DEVICE_ID);
+    EXPECT_EQ(apiImpl.GetDevicePhyIdByIndex(1U, &phyId), RT_ERROR_DEVICE_ID);
+    EXPECT_EQ(apiImpl.GetLogicDevIdByUserDevId(1, &logicDevId), RT_ERROR_DEVICE_ID);
+    EXPECT_EQ(apiImpl.GetDeviceUuid(1, &uuid), RT_ERROR_DEVICE_ID);
+    EXPECT_EQ(apiImpl.GetHostAtomicCapabilities(capabilities, operations, 1U, 1), RT_ERROR_DEVICE_ID);
+    EXPECT_EQ(apiImpl.GetP2PAtomicCapabilities(capabilities, operations, 1U, 1, 0), RT_ERROR_DEVICE_ID);
+}
+
+TEST_F(ApiImplTest, ApiImplDeviceTopologyQueryInvalidParam)
+{
+    ApiImplDeviceTopology apiImpl;
+    int32_t deviceId = 0;
+    rtUuid_t uuid = {};
+    uint32_t capabilities[1] = {0U};
+    const rtAtomicOperation operations[1] = {RT_ATOMIC_OPERATION_INTEGER_ADD};
+    const rtAtomicOperation invalidOperations[1] = {static_cast<rtAtomicOperation>(RT_ATOMIC_OPERATION_MAX_VAL)};
+
+    EXPECT_EQ(apiImpl.GetDeviceCount(nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(apiImpl.GetDevicePhyIdByIndex(0U, nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(apiImpl.GetDeviceIndexByPhyId(0U, nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(apiImpl.GetLogicDevIdByUserDevId(-1, &deviceId), RT_ERROR_DEVICE_ID);
+    EXPECT_EQ(apiImpl.GetLogicDevIdByUserDevId(0, nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(apiImpl.GetUserDevIdByLogicDevId(-1, &deviceId), RT_ERROR_DEVICE_ID);
+    EXPECT_EQ(apiImpl.GetUserDevIdByLogicDevId(0, nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(apiImpl.GetDeviceUuid(-1, &uuid), RT_ERROR_DEVICE_ID);
+    EXPECT_EQ(apiImpl.GetDeviceUuid(0, nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(apiImpl.GetHostAtomicCapabilities(nullptr, operations, 1U, 0), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(apiImpl.GetHostAtomicCapabilities(capabilities, nullptr, 1U, 0), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(apiImpl.GetHostAtomicCapabilities(capabilities, operations, 0U, 0), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(apiImpl.GetHostAtomicCapabilities(capabilities, invalidOperations, 1U, 0), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(apiImpl.GetP2PAtomicCapabilities(nullptr, operations, 1U, 0, 1), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(apiImpl.GetP2PAtomicCapabilities(capabilities, nullptr, 1U, 0, 1), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(apiImpl.GetP2PAtomicCapabilities(capabilities, operations, 0U, 0, 1), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(apiImpl.GetP2PAtomicCapabilities(capabilities, operations, 1U, 0, 0), RT_ERROR_DEVICE_ID);
+}
+
+TEST_F(ApiImplTest, ApiImplDeviceTopologyVisibleDeviceCount)
+{
+    ApiImplDeviceTopology apiImpl;
+    Runtime* const rtInstance = static_cast<Runtime*>(Runtime::Instance());
+    const bool oldIsSetVisibleDev = rtInstance->isSetVisibleDev;
+    const uint32_t oldUserDeviceCnt = rtInstance->userDeviceCnt;
+    const RtSetVisDevicesErrorType oldRetType = rtInstance->retType;
+    rtInstance->isSetVisibleDev = true;
+    rtInstance->userDeviceCnt = 2U;
+    rtInstance->retType = RT_ALL_DATA_OK;
+
+    int32_t count = 0;
+    EXPECT_EQ(apiImpl.GetDeviceCount(&count), RT_ERROR_NONE);
+    EXPECT_EQ(count, 2);
+
+    rtInstance->isSetVisibleDev = oldIsSetVisibleDev;
+    rtInstance->userDeviceCnt = oldUserDeviceCnt;
+    rtInstance->retType = oldRetType;
+}
+
+TEST_F(ApiImplTest, ApiImplDeviceTopologyDeviceIdQuerySuccess)
+{
+    ApiImplDeviceTopology apiImpl;
+    Driver* const driver = Runtime::Instance()->driverFactory_.GetDriver(NPU_DRIVER);
+    ASSERT_NE(driver, nullptr);
+
+    uint32_t driverPhyId = 3U;
+    MOCKER_CPP_VIRTUAL(driver, &Driver::GetDevicePhyIdByIndex)
+        .expects(once())
+        .with(eq(0U), outBoundP(&driverPhyId, sizeof(driverPhyId)))
+        .will(returnValue(RT_ERROR_NONE));
+    uint32_t phyId = 0U;
+    EXPECT_EQ(apiImpl.GetDevicePhyIdByIndex(0U, &phyId), RT_ERROR_NONE);
+    EXPECT_EQ(phyId, driverPhyId);
+
+    uint32_t driverDeviceId = 0U;
+    MOCKER_CPP_VIRTUAL(driver, &Driver::GetDeviceIndexByPhyId)
+        .expects(once())
+        .with(eq(driverPhyId), outBoundP(&driverDeviceId, sizeof(driverDeviceId)))
+        .will(returnValue(RT_ERROR_NONE));
+    uint32_t devIndex = UINT32_MAX;
+    EXPECT_EQ(apiImpl.GetDeviceIndexByPhyId(driverPhyId, &devIndex), RT_ERROR_NONE);
+    EXPECT_EQ(devIndex, driverDeviceId);
+
+    int32_t logicDevId = -1;
+    int32_t userDevId = -1;
+    EXPECT_EQ(apiImpl.GetLogicDevIdByUserDevId(0, &logicDevId), RT_ERROR_NONE);
+    EXPECT_EQ(logicDevId, 0);
+    EXPECT_EQ(apiImpl.GetUserDevIdByLogicDevId(logicDevId, &userDevId), RT_ERROR_NONE);
+    EXPECT_EQ(userDevId, 0);
+}
+
+TEST_F(ApiImplTest, ApiImplDeviceTopologyDeviceIdQueryErrorReturn)
+{
+    ApiImplDeviceTopology apiImpl;
+    Driver* const driver = Runtime::Instance()->driverFactory_.GetDriver(NPU_DRIVER);
+    ASSERT_NE(driver, nullptr);
+
+    MOCKER_CPP_VIRTUAL(driver, &Driver::GetDevicePhyIdByIndex).expects(once()).will(returnValue(RT_ERROR_DRV_TIMEOUT));
+    uint32_t phyId = UINT32_MAX;
+    EXPECT_EQ(apiImpl.GetDevicePhyIdByIndex(0U, &phyId), RT_ERROR_DRV_TIMEOUT);
+    EXPECT_EQ(phyId, UINT32_MAX);
+
+    MOCKER_CPP_VIRTUAL(driver, &Driver::GetDeviceIndexByPhyId).expects(once()).will(returnValue(RT_ERROR_DRV_TIMEOUT));
+    uint32_t devIndex = UINT32_MAX;
+    EXPECT_EQ(apiImpl.GetDeviceIndexByPhyId(0U, &devIndex), RT_ERROR_DRV_TIMEOUT);
+    EXPECT_EQ(devIndex, UINT32_MAX);
+
+    MOCKER(halGetDeviceInfoByBuff).expects(once()).will(returnValue(DRV_ERROR_INVALID_VALUE));
+    rtUuid_t uuid = {};
+    EXPECT_EQ(apiImpl.GetDeviceUuid(0, &uuid), RT_ERROR_DRV_INPUT);
+}
+
+TEST_F(ApiImplTest, ApiImplDeviceTopologyContextErrorReturn)
+{
+    DefaultDeviceIdGuard guard;
+    ApiImplDeviceTopology apiImpl;
+    Runtime* const rtInstance = static_cast<Runtime*>(Runtime::Instance());
+    rtInstance->SetDefaultDeviceId(0);
+    Driver* const driver = rtInstance->driverFactory_.GetDriver(NPU_DRIVER);
+    ASSERT_NE(driver, nullptr);
+
+    MOCKER_CPP((static_cast<Context* (Runtime::*)(const bool, int32_t) const>(&Runtime::CurrentContext)))
+        .expects(once())
+        .with(eq(true), eq(0))
+        .will(returnValue(static_cast<Context*>(nullptr)));
+    MOCKER(&RtIsHeterogenous).expects(once()).will(returnValue(false));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::GetDeviceIndexByPhyId).expects(never());
+
+    uint32_t devIndex = UINT32_MAX;
+    EXPECT_EQ(apiImpl.GetDeviceIndexByPhyId(0U, &devIndex), RT_ERROR_CONTEXT_NULL);
+    EXPECT_EQ(devIndex, UINT32_MAX);
+}
+
+TEST_F(ApiImplTest, ApiImplDeviceTopologyAtomicCapabilitiesSuccessAndError)
+{
+    ApiImplDeviceTopology apiImpl;
+    Driver* const driver = Runtime::Instance()->driverFactory_.GetDriver(NPU_DRIVER);
+    ASSERT_NE(driver, nullptr);
+    const rtAtomicOperation operations[1] = {RT_ATOMIC_OPERATION_INTEGER_ADD};
+    uint32_t capabilities[1] = {UINT32_MAX};
+
+    int64_t hostTopology = HOST_DEVICE_CONNECT_TYPE_PCIE;
+    MOCKER_CPP_VIRTUAL(driver, &Driver::GetDevInfo)
+        .expects(exactly(2))
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&hostTopology, sizeof(hostTopology)))
+        .will(returnValue(RT_ERROR_NONE))
+        .then(returnValue(RT_ERROR_DRV_TIMEOUT));
+    EXPECT_EQ(apiImpl.GetHostAtomicCapabilities(capabilities, operations, 1U, 0), RT_ERROR_NONE);
+    EXPECT_EQ(capabilities[0], 0U);
+
+    capabilities[0] = UINT32_MAX;
+    int64_t peerTopology = TOPOLOGY_HCCS;
+    MOCKER_CPP_VIRTUAL(driver, &Driver::GetPairDevicesInfo)
+        .expects(once())
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&peerTopology, sizeof(peerTopology)))
+        .will(returnValue(RT_ERROR_NONE));
+    EXPECT_EQ(apiImpl.GetP2PAtomicCapabilities(capabilities, operations, 1U, 0, 1), RT_ERROR_NONE);
+    EXPECT_EQ(capabilities[0], 0U);
+
+    EXPECT_EQ(apiImpl.GetHostAtomicCapabilities(capabilities, operations, 1U, 0), RT_ERROR_DRV_TIMEOUT);
 }
 
 TEST_F(ApiImplTest, ApiImplDeviceTopologyFeatureNotSupport)

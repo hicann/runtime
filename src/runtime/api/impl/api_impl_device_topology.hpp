@@ -26,6 +26,20 @@ public:
         const uint32_t devId, const uint32_t otherDevId, const int32_t infoType, int64_t* const val) override;
     rtError_t GetPairPhyDevicesInfo(
         const uint32_t devId, const uint32_t otherDevId, const int32_t infoType, int64_t* const val) override;
+    rtError_t GetDeviceCount(int32_t* const cnt) override;
+    rtError_t GetDevicePhyIdByIndex(const uint32_t devIndex, uint32_t* const phyId) override;
+    rtError_t GetDeviceIndexByPhyId(const uint32_t phyId, uint32_t* const devIndex) override;
+    rtError_t GetLogicDevIdByUserDevId(const int32_t userDevId, int32_t* const logicDevId) override;
+    rtError_t GetUserDevIdByLogicDevId(const int32_t logicDevId, int32_t* const userDevId) override;
+    rtError_t GetDeviceUuid(const int32_t devId, rtUuid_t* const uuid) override;
+    rtError_t GetDevicePCIBusId(const int32_t devId, char* const pciBusId, const int32_t len) override;
+    rtError_t GetDeviceByPCIBusId(const char* const pciBusId, int32_t* const devId) override;
+    rtError_t GetHostAtomicCapabilities(
+        uint32_t* const capabilities, const rtAtomicOperation* const operations, const uint32_t count,
+        const int32_t deviceId) override;
+    rtError_t GetP2PAtomicCapabilities(
+        uint32_t* const capabilities, const rtAtomicOperation* const operations, const uint32_t count,
+        const int32_t srcDeviceId, const int32_t dstDeviceId) override;
 };
 
 } // namespace runtime

@@ -58,9 +58,23 @@
 #include "model/capture_model_utils.hpp"
 #include "inner_thread_local.hpp"
 #include "rt_capture_model_mock_helper.hpp"
+#include "api_impl_device_topology.hpp"
 
 using namespace testing;
 using namespace cce::runtime;
+
+TEST(ApiImplDeviceTopology910BTest, PciInvalidParam)
+{
+    ApiImplDeviceTopology apiImpl;
+    char pciBusId[RT_PCI_BUS_ID_MIN_LEN] = {};
+    int32_t devId = 0;
+
+    EXPECT_EQ(apiImpl.GetDevicePCIBusId(-1, pciBusId, sizeof(pciBusId)), RT_ERROR_DEVICE_ID);
+    EXPECT_EQ(apiImpl.GetDevicePCIBusId(0, nullptr, sizeof(pciBusId)), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(apiImpl.GetDevicePCIBusId(0, pciBusId, sizeof(pciBusId) - 1), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(apiImpl.GetDeviceByPCIBusId(nullptr, &devId), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(apiImpl.GetDeviceByPCIBusId("0000:00:00.0", nullptr), RT_ERROR_INVALID_VALUE);
+}
 
 extern bool g_init_platform_info_flag;
 extern bool g_get_platform_info_flag;
@@ -94,6 +108,28 @@ protected:
 private:
     bool isErrorNone_ = true;
 };
+
+TEST_F(CloudV2ApiImplTest, ApiImplDeviceTopologyPciSuccessAndNoMatch)
+{
+    ApiImplDeviceTopology apiImpl;
+    char pciBusId[RT_PCI_BUS_ID_MIN_LEN] = {};
+    EXPECT_EQ(apiImpl.GetDevicePCIBusId(0, pciBusId, sizeof(pciBusId)), RT_ERROR_NONE);
+    EXPECT_STREQ(pciBusId, "0000:3d:00.0");
+
+    int32_t devId = -1;
+    EXPECT_EQ(apiImpl.GetDeviceByPCIBusId(pciBusId, &devId), RT_ERROR_NONE);
+    EXPECT_EQ(devId, 0);
+    EXPECT_EQ(apiImpl.GetDeviceByPCIBusId("0000:ff:00.0", &devId), RT_ERROR_INVALID_VALUE);
+}
+
+TEST_F(CloudV2ApiImplTest, ApiImplDeviceTopologyPciDriverErrorReturn)
+{
+    MOCKER(halGetDeviceInfoByBuff).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
+
+    ApiImplDeviceTopology apiImpl;
+    char pciBusId[RT_PCI_BUS_ID_MIN_LEN] = {};
+    EXPECT_EQ(apiImpl.GetDevicePCIBusId(0, pciBusId, sizeof(pciBusId)), RT_ERROR_DRV_INPUT);
+}
 
 TEST_F(CloudV2ApiImplTest, capture_api_01)
 {

@@ -9,15 +9,18 @@
  */
 #include "api_impl_device_topology.hpp"
 
+#include <cstring>
 #include <new>
 #include <string>
 
 #include "api_impl_creator.hpp"
-#include "context.hpp"
+#include "device_enum_desc.hpp"
+#include "driver_enum_desc.hpp"
 #include "error_message_manage.hpp"
-#include "heterogenous.h"
 #include "npu_driver.hpp"
+#include "profiler_c.hpp"
 #include "runtime.hpp"
+#include "spec/base_info.hpp"
 
 namespace cce {
 namespace runtime {
@@ -41,6 +44,97 @@ void DestroyImplDeviceTopology(ApiDeviceTopology*& apiImplDeviceTopology)
     delete apiImplDeviceTopology;
     apiImplDeviceTopology = nullptr;
 }
+
+namespace {
+rtError_t ValidateAtomicOperations(const rtAtomicOperation* const operations, const uint32_t count)
+{
+    for (uint32_t i = 0U; i < count; ++i) {
+        COND_RETURN_AND_MSG_OUTER(
+            (operations[i] < RT_ATOMIC_OPERATION_INTEGER_ADD) || (operations[i] > RT_ATOMIC_OPERATION_SIMD_SCALAR_EXCH),
+            RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, "Validating atomic operations",
+            "UNKNOWN(" + std::to_string(static_cast<int32_t>(operations[i])) + ")",
+            "operations[" + std::to_string(i) + "]",
+            "the operation must be in [" + std::to_string(RT_ATOMIC_OPERATION_INTEGER_ADD) + ", " +
+                std::to_string(RT_ATOMIC_OPERATION_SIMD_SCALAR_EXCH) + "]");
+    }
+    return RT_ERROR_NONE;
+}
+
+rtError_t GetAtomicDevProperties(uint32_t* const capabilities, const uint32_t count, DevProperties& prop)
+{
+    for (uint32_t i = 0U; i < count; ++i) {
+        capabilities[i] = 0U;
+    }
+    const rtChipType_t chipType = Runtime::Instance()->GetChipType();
+    const rtError_t error = GET_DEV_PROPERTIES(chipType, prop);
+    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE, "GetDevProperties fail");
+    return RT_ERROR_NONE;
+}
+
+void FillAtomicCapabilities(
+    uint32_t* const capabilities, const rtAtomicOperation* const operations, const uint32_t count,
+    const uint32_t* const sourceCapabilities)
+{
+    for (uint32_t i = 0U; i < count; ++i) {
+        if ((operations[i] >= 0) && (operations[i] < RT_ATOMIC_OPERATION_MAX_VAL)) {
+            capabilities[i] = sourceCapabilities[operations[i]];
+        }
+    }
+}
+
+rtError_t CheckHostAtomicSupport(const int32_t deviceId, bool& supported)
+{
+    supported = false;
+    Driver* const curDrv = Runtime::Instance()->driverFactory_.GetDriver(NPU_DRIVER);
+    NULL_PTR_RETURN_MSG(curDrv, RT_ERROR_DRV_NULL);
+
+    int64_t topoType = 0;
+    const rtError_t error = curDrv->GetDevInfo(
+        static_cast<uint32_t>(deviceId), static_cast<int32_t>(MODULE_TYPE_SYSTEM),
+        static_cast<int32_t>(INFO_TYPE_HD_CONNECT_TYPE), &topoType);
+    if (error != RT_ERROR_NONE) {
+        if (error == RT_ERROR_DRV_INPUT) {
+            return RT_ERROR_NONE;
+        }
+        RT_LOG(RT_LOG_ERROR, "GetDevInfo fail, retCode=%#x", error);
+        return error;
+    }
+
+    RT_LOG(RT_LOG_INFO, "the topoType=%ld", topoType);
+    if (topoType != HOST_DEVICE_CONNECT_TYPE_UB) {
+        RT_LOG(RT_LOG_INFO, "Atomic operations are not supported for topoType=%ld", topoType);
+        return RT_ERROR_NONE;
+    }
+    supported = true;
+    return RT_ERROR_NONE;
+}
+
+rtError_t CheckP2PAtomicSupport(const int32_t srcDeviceId, const int32_t dstDeviceId, bool& supported)
+{
+    supported = false;
+    Driver* const curDrv = Runtime::Instance()->driverFactory_.GetDriver(NPU_DRIVER);
+    NULL_PTR_RETURN_MSG(curDrv, RT_ERROR_DRV_NULL);
+
+    int64_t topoType = 0;
+    const rtError_t error = curDrv->GetPairDevicesInfo(
+        static_cast<uint32_t>(srcDeviceId), static_cast<uint32_t>(dstDeviceId),
+        static_cast<int32_t>(DEVS_INFO_TYPE_TOPOLOGY), &topoType);
+    if (error != RT_ERROR_NONE) {
+        RT_LOG(RT_LOG_ERROR, "GetPairDevicesInfo fail, retCode=%#x", error);
+        return error;
+    }
+
+    RT_LOG(RT_LOG_INFO, "the topoType=%ld", topoType);
+    if ((topoType != TOPOLOGY_HCCS) && (topoType != TOPOLOGY_SIO) && (topoType != TOPOLOGY_HCCS_SW) &&
+        (topoType != TOPOLOGY_UB)) {
+        RT_LOG(RT_LOG_INFO, "Atomic operations are not supported for topoType=%ld", topoType);
+        return RT_ERROR_NONE;
+    }
+    supported = true;
+    return RT_ERROR_NONE;
+}
+
+} // namespace
 
 rtError_t ApiImplDeviceTopology::EnableP2P(const uint32_t devIdDes, const uint32_t phyIdSrc, const uint32_t flag)
 {
@@ -200,5 +294,332 @@ rtError_t ApiImplDeviceTopology::GetPairPhyDevicesInfo(
     return ret;
 }
 
+rtError_t ApiImplDeviceTopology::GetDeviceCount(int32_t* const cnt)
+{
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(cnt, RT_ERROR_INVALID_VALUE, "Obtaining the number of devices");
+    return Runtime::Instance()->GetDeviceCount(cnt);
+}
+
+rtError_t ApiImplDeviceTopology::GetDevicePhyIdByIndex(const uint32_t devIndex, uint32_t* const phyId)
+{
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
+        phyId, RT_ERROR_INVALID_VALUE, "Querying the physical ID of a device based on its logical ID");
+    uint32_t realDeviceId = 0U;
+    rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(devIndex, &realDeviceId);
+    COND_RETURN_ERROR(
+        error != RT_ERROR_NONE, error, "Failed to convert the user device ID %u to driver device ID.", devIndex);
+    // the api use before setdevice, so it do not need context
+    RT_LOG(RT_LOG_INFO, "get PhyId by Index=%u.", realDeviceId);
+    error = Runtime::Instance()->driverFactory_.GetDriver(NPU_DRIVER)->GetDevicePhyIdByIndex(realDeviceId, phyId);
+    ERROR_RETURN(error, "Get device physical id by index failed, index=%u.", devIndex);
+    return error;
+}
+
+rtError_t ApiImplDeviceTopology::GetDeviceIndexByPhyId(const uint32_t phyId, uint32_t* const devIndex)
+{
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
+        devIndex, RT_ERROR_INVALID_VALUE, "Querying the logical ID of a device based on its physical ID");
+
+    uint32_t realDeviceId = 0U;
+    rtError_t error = RT_ERROR_NONE;
+    do {
+        // the api use before setdevice, so it do not need context
+        RT_LOG(RT_LOG_INFO, "get Index by PhyId=%u.", phyId);
+        error = Runtime::Instance()->CheckCurCtxValid(static_cast<int32_t>(phyId));
+        if (unlikely(error != RT_ERROR_NONE)) {
+            RT_LOG(RT_LOG_ERROR, "Current Context is null, phyId[%d].", phyId);
+            error = RT_ERROR_CONTEXT_NULL;
+            break;
+        }
+        error = Runtime::Instance()->driverFactory_.GetDriver(NPU_DRIVER)->GetDeviceIndexByPhyId(phyId, &realDeviceId);
+        if (unlikely(error != RT_ERROR_NONE)) {
+            RT_LOG_INNER_MSG(
+                RT_LOG_ERROR, "GetDeviceIndexByPhyId failed, phyId = %u, retCode=%#x.", phyId,
+                static_cast<uint32_t>(error));
+            break;
+        }
+    } while (false);
+
+    if (error != RT_ERROR_NONE) {
+        RT_LOG(RT_LOG_ERROR, "Get device index by physical id failed, phyId:%u, realDeviceId=%u", phyId, realDeviceId);
+        return error;
+    }
+    error = Runtime::Instance()->GetUserDevIdByDeviceId(realDeviceId, devIndex);
+    COND_RETURN_ERROR_MSG_INNER(
+        error != RT_ERROR_NONE, error,
+        "Failed to convert the driver device ID %u to user device ID, phyId=%u, retCode=%#x", realDeviceId, phyId,
+        static_cast<uint32_t>(error));
+    RT_LOG(RT_LOG_DEBUG, "realDeviceId:%u, phyId=%u, devIndex=%u.", realDeviceId, phyId, *devIndex);
+    return RT_ERROR_NONE;
+}
+
+rtError_t ApiImplDeviceTopology::GetLogicDevIdByUserDevId(const int32_t userDevId, int32_t* const logicDevId)
+{
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        (userDevId < 0), RT_ERROR_DEVICE_ID, "Obtaining the logical device ID based on the user device ID", userDevId,
+        "greater than or equal to 0");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
+        logicDevId, RT_ERROR_INVALID_VALUE, "Obtaining the logical device ID based on the user device ID");
+
+    Runtime* const rt = Runtime::Instance();
+    rt->CallApiBegin(RT_PROF_API_USER_TO_LOGIC_ID);
+
+    int32_t realDeviceId = 0;
+    rtError_t error = RT_ERROR_NONE;
+    do {
+        error = rt->ChgUserDevIdToDeviceId(static_cast<uint32_t>(userDevId), RtPtrToPtr<uint32_t*>(&realDeviceId));
+        if (unlikely(error != RT_ERROR_NONE)) {
+            RT_LOG(RT_LOG_ERROR, "Failed to convert the user device ID %d to driver device ID.", userDevId);
+            break;
+        }
+    } while (false);
+
+    rt->CallApiEnd(error);
+
+    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "Get logicDevId failed.");
+    error = rt->CheckDeviceIdIsValid(realDeviceId);
+    COND_RETURN_ERROR_MSG_INNER(
+        error != RT_ERROR_NONE, error, "logicDevId is invalid, devId=%d, retCode=%#x", realDeviceId,
+        static_cast<uint32_t>(error));
+    *logicDevId = realDeviceId;
+    return RT_ERROR_NONE;
+}
+
+rtError_t ApiImplDeviceTopology::GetUserDevIdByLogicDevId(const int32_t logicDevId, int32_t* const userDevId)
+{
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        (logicDevId < 0), RT_ERROR_DEVICE_ID, "Obtaining the user device ID based on the logical device ID", logicDevId,
+        "greater than or equal to 0");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
+        userDevId, RT_ERROR_INVALID_VALUE, "Obtaining the user device ID based on the logical device ID");
+
+    Runtime* const rt = Runtime::Instance();
+    rtError_t error = rt->CheckDeviceIdIsValid(logicDevId);
+    COND_RETURN_ERROR_MSG_INNER(
+        error != RT_ERROR_NONE, error, "logicDevId is invalid, devId=%d, retCode=%#x", logicDevId,
+        static_cast<uint32_t>(error));
+
+    rt->CallApiBegin(RT_PROF_API_LOGIC_TO_USER_ID);
+
+    do {
+        int32_t realDeviceId = 0;
+        error = rt->GetUserDevIdByDeviceId(static_cast<uint32_t>(logicDevId), RtPtrToPtr<uint32_t*>(&realDeviceId));
+        if (unlikely(error != RT_ERROR_NONE)) {
+            RT_LOG_INNER_MSG(
+                RT_LOG_ERROR, "Failed to convert the driver device ID %u to user device ID, retCode=%#x", logicDevId,
+                static_cast<uint32_t>(error));
+            break;
+        }
+        *userDevId = realDeviceId;
+    } while (false);
+
+    rt->CallApiEnd(error);
+    return error;
+}
+
+rtError_t ApiImplDeviceTopology::GetDeviceUuid(const int32_t devId, rtUuid_t* const uuid)
+{
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        (devId < 0), RT_ERROR_DEVICE_ID, "Obtaining the device UUID", devId, "greater than or equal to 0");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(uuid, RT_ERROR_INVALID_VALUE, "Obtaining the device UUID");
+    int32_t drvDeviceId = 0;
+    rtError_t error =
+        Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId), RtPtrToPtr<uint32_t*>(&drvDeviceId));
+    COND_RETURN_ERROR(
+        error != RT_ERROR_NONE, error, "Failed to convert the user device ID %d to driver device ID.", devId);
+    error = Runtime::Instance()->CheckDeviceIdIsValid(drvDeviceId);
+    COND_RETURN_ERROR_MSG_INNER(
+        error != RT_ERROR_NONE, error, "drvDeviceId is invalid, drvDeviceId=%d, ErrorCode=%#x", drvDeviceId,
+        static_cast<uint32_t>(error));
+    RT_LOG(RT_LOG_DEBUG, "Get device uuid, drv devId=%d.", drvDeviceId);
+    int32_t drvRetUuidSize = RT_NPU_UUID_LENGTH;
+    return NpuDriver::GetDeviceInfoByBuff(
+        static_cast<uint32_t>(drvDeviceId), MODULE_TYPE_SYSTEM, INFO_TYPE_UUID, uuid->bytes, &drvRetUuidSize);
+}
+
+rtError_t ApiImplDeviceTopology::GetHostAtomicCapabilities(
+    uint32_t* const capabilities, const rtAtomicOperation* const operations, const uint32_t count,
+    const int32_t deviceId)
+{
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
+        capabilities, RT_ERROR_INVALID_VALUE,
+        "Querying details about the atomic operations supported between a specified device and the host");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
+        operations, RT_ERROR_INVALID_VALUE,
+        "Querying details about the atomic operations supported between a specified device and the host");
+    ZERO_RETURN_AND_MSG_OUTER_WITH_FUNC_DESC(
+        count, "Querying details about the atomic operations supported between a specified device and the host");
+
+    Runtime* const rt = Runtime::Instance();
+    int32_t realDeviceId;
+    rtError_t error =
+        rt->ChgUserDevIdToDeviceId(static_cast<uint32_t>(deviceId), RtPtrToPtr<uint32_t*>(&realDeviceId), true);
+    COND_RETURN_ERROR(
+        error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID, "Failed to convert the user device ID %d to driver device ID.",
+        deviceId);
+    error = rt->CheckDeviceIdIsValid(realDeviceId);
+    COND_RETURN_ERROR_MSG_INNER(
+        error != RT_ERROR_NONE, error, "drv devId is invalid, drv devId=%d, retCode=%#x", realDeviceId,
+        static_cast<uint32_t>(error));
+    error = ValidateAtomicOperations(operations, count);
+    COND_RETURN_ERROR_MSG_INNER(
+        error != RT_ERROR_NONE, error, "validate atomic operations failed, retCode=%#x", static_cast<uint32_t>(error));
+
+    rt->CallApiBegin(RT_PROF_API_GET_HOST_ATOMIC_CAPABILITIES);
+
+    do {
+        DevProperties prop;
+        error = GetAtomicDevProperties(capabilities, count, prop);
+        if (error != RT_ERROR_NONE) {
+            break;
+        }
+
+        bool supported = false;
+        error = CheckHostAtomicSupport(realDeviceId, supported);
+        if (error != RT_ERROR_NONE) {
+            break;
+        }
+
+        if (supported) {
+            FillAtomicCapabilities(capabilities, operations, count, prop.hostAtomicCapabilities.data());
+        }
+    } while (false);
+
+    rt->CallApiEnd(error, static_cast<uint32_t>(realDeviceId));
+    return error;
+}
+
+rtError_t ApiImplDeviceTopology::GetP2PAtomicCapabilities(
+    uint32_t* const capabilities, const rtAtomicOperation* const operations, const uint32_t count,
+    const int32_t srcDeviceId, const int32_t dstDeviceId)
+{
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
+        capabilities, RT_ERROR_INVALID_VALUE, "Querying details about the atomic operations supported between devices");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
+        operations, RT_ERROR_INVALID_VALUE, "Querying details about the atomic operations supported between devices");
+    ZERO_RETURN_AND_MSG_OUTER_WITH_FUNC_DESC(
+        count, "Querying details about the atomic operations supported between devices");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        srcDeviceId == dstDeviceId, RT_ERROR_DEVICE_ID,
+        "Querying details about the atomic operations supported between devices", srcDeviceId,
+        "srcDeviceId must be different from dstDeviceId");
+
+    Runtime* const rt = Runtime::Instance();
+    int32_t realSrcDeviceId;
+    rtError_t error =
+        rt->ChgUserDevIdToDeviceId(static_cast<uint32_t>(srcDeviceId), RtPtrToPtr<uint32_t*>(&realSrcDeviceId), true);
+    COND_RETURN_ERROR(
+        error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID, "Failed to convert the user device ID %d to driver device ID.",
+        srcDeviceId);
+    error = rt->CheckDeviceIdIsValid(realSrcDeviceId);
+    COND_RETURN_ERROR_MSG_INNER(
+        error != RT_ERROR_NONE, error, "drv devId is invalid, drv devId=%d, retCode=%#x", realSrcDeviceId,
+        static_cast<uint32_t>(error));
+
+    int32_t realDstDeviceId;
+    error =
+        rt->ChgUserDevIdToDeviceId(static_cast<uint32_t>(dstDeviceId), RtPtrToPtr<uint32_t*>(&realDstDeviceId), true);
+    COND_RETURN_ERROR(
+        error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID, "Failed to convert the user device ID %d to driver device ID.",
+        dstDeviceId);
+    error = rt->CheckDeviceIdIsValid(realDstDeviceId);
+    COND_RETURN_ERROR_MSG_INNER(
+        error != RT_ERROR_NONE, error, "drv devId is invalid, drv devId=%d, retCode=%#x", realDstDeviceId,
+        static_cast<uint32_t>(error));
+    error = ValidateAtomicOperations(operations, count);
+    COND_RETURN_ERROR_MSG_INNER(
+        error != RT_ERROR_NONE, error, "validate atomic operations failed, retCode=%#x", static_cast<uint32_t>(error));
+
+    rt->CallApiBegin(RT_PROF_API_GET_P2P_ATOMIC_CAPABILITIES);
+
+    do {
+        DevProperties prop;
+        error = GetAtomicDevProperties(capabilities, count, prop);
+        if (error != RT_ERROR_NONE) {
+            break;
+        }
+
+        bool supported = false;
+        error = CheckP2PAtomicSupport(realSrcDeviceId, realDstDeviceId, supported);
+        if (error != RT_ERROR_NONE) {
+            break;
+        }
+
+        if (supported) {
+            FillAtomicCapabilities(capabilities, operations, count, prop.p2pAtomicCapabilities.data());
+        }
+    } while (false);
+
+    rt->CallApiEnd(error, static_cast<uint32_t>(realSrcDeviceId));
+    return error;
+}
+
+rtError_t ApiImplDeviceTopology::GetDevicePCIBusId(const int32_t devId, char* const pciBusId, const int32_t len)
+{
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        (devId < 0), RT_ERROR_DEVICE_ID, "Obtaining the device PCI bus id", devId, "greater than or equal to 0");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(pciBusId, RT_ERROR_INVALID_VALUE, "Obtaining the device PCI bus id");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        (len < static_cast<int32_t>(RT_PCI_BUS_ID_MIN_LEN)), RT_ERROR_INVALID_VALUE, "Obtaining the device PCI bus id",
+        len, "greater than or equal to " + std::to_string(RT_PCI_BUS_ID_MIN_LEN));
+
+    int32_t drvDeviceId = 0;
+    rtError_t error =
+        Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId), RtPtrToPtr<uint32_t*>(&drvDeviceId));
+    COND_RETURN_ERROR(
+        error != RT_ERROR_NONE, error, "Failed to convert the user device ID %d to driver device ID.", devId);
+    error = Runtime::Instance()->CheckDeviceIdIsValid(drvDeviceId);
+    COND_RETURN_ERROR_MSG_INNER(
+        error != RT_ERROR_NONE, error, "drvDeviceId is invalid, drvDeviceId=%d, ErrorCode=%#x", drvDeviceId,
+        static_cast<uint32_t>(error));
+
+    RT_LOG(RT_LOG_DEBUG, "Get device PCI bus id, drv devId=%d.", drvDeviceId);
+    return NpuDriver::GetDevicePCIBusId(static_cast<uint32_t>(drvDeviceId), pciBusId, len);
+}
+
+rtError_t ApiImplDeviceTopology::GetDeviceByPCIBusId(const char* const pciBusId, int32_t* const devId)
+{
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(pciBusId, RT_ERROR_INVALID_VALUE, "Obtaining the device by PCI bus id");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(devId, RT_ERROR_INVALID_VALUE, "Obtaining the device by PCI bus id");
+    RT_LOG(RT_LOG_DEBUG, "Get device by PCI bus id, pciBusId=%s.", pciBusId);
+
+    Runtime* const rt = Runtime::Instance();
+    uint32_t devCnt = rt->deviceCnt;
+    if (devCnt == 0U) {
+        FacadeDriver& curDrv = rt->FacadeDriver_();
+        int32_t drvDeviceCnt = 0;
+        const rtError_t error = curDrv.GetDeviceCount(&drvDeviceCnt);
+        if (error != RT_ERROR_NONE) {
+            RT_LOG(RT_LOG_ERROR, "GetDeviceCount failed, error=%#x.", static_cast<uint32_t>(error));
+            return error;
+        }
+        devCnt = static_cast<uint32_t>(drvDeviceCnt);
+    }
+    for (uint32_t logicalDevId = 0U; logicalDevId < devCnt; ++logicalDevId) {
+        char curBdf[RT_PCI_BUS_ID_MIN_LEN] = {0};
+        rtError_t error = NpuDriver::GetDevicePCIBusId(logicalDevId, curBdf, static_cast<int32_t>(sizeof(curBdf)));
+        if (error != RT_ERROR_NONE) {
+            RT_LOG(
+                RT_LOG_DEBUG, "GetDevicePCIBusId failed for logicalDevId=%u, error=%#x.", logicalDevId,
+                static_cast<uint32_t>(error));
+            continue;
+        }
+        if (strcmp(pciBusId, curBdf) == 0) {
+            error = rt->GetUserDevIdByDeviceId(logicalDevId, reinterpret_cast<uint32_t*>(devId));
+            if (error != RT_ERROR_NONE) {
+                RT_LOG(
+                    RT_LOG_ERROR, "GetUserDevIdByDeviceId failed for logicalDevId=%u, error=%#x.", logicalDevId,
+                    static_cast<uint32_t>(error));
+                return error;
+            }
+            return RT_ERROR_NONE;
+        }
+    }
+    RT_LOG(RT_LOG_ERROR, "No device matched PCI bus id: %s.", pciBusId);
+    RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
+        ErrorCode::EE1003, "Obtaining the device by PCI bus id", std::string(pciBusId), "pciBusId",
+        "a valid PCI bus id string (e.g., 0000:86:00.0)");
+    return RT_ERROR_INVALID_VALUE;
+}
 } // namespace runtime
 } // namespace cce

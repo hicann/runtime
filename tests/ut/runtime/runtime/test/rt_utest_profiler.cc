@@ -28,6 +28,7 @@
 #include "hwts.hpp"
 #include "api_impl.hpp"
 #include "api_impl_rt_config.hpp"
+#include "api_impl_device_topology.hpp"
 #include "kernel.hpp"
 #include "program.hpp"
 #include "api_impl.hpp"
@@ -666,6 +667,52 @@ TEST_F(ProfilerTest, ApiImplRtConfigCtxSysParamOptKeepsErrorAndProfileOrder)
     ASSERT_EQ(g_reportedApiTypeNum, 2U);
     EXPECT_EQ(g_reportedApiTypes[0], RT_PROF_API_CtxSetSysParamOpt + RT_PROFILE_TYPE_API_BEGIN);
     EXPECT_EQ(g_reportedApiTypes[1], RT_PROF_API_CtxGetSysParamOpt + RT_PROFILE_TYPE_API_BEGIN);
+}
+
+TEST_F(ProfilerTest, ApiImplDeviceTopologyConversionFailureKeepsProfilePair)
+{
+    Runtime* const rt = static_cast<Runtime*>(Runtime::Instance());
+    profiler = rt->profiler_;
+    ASSERT_NE(profiler, nullptr);
+    PrepareRuntimeProfCallApiTest(profiler);
+    MOCKER(MsprofReportApi).expects(once()).will(invoke(MsprofReportApiOrderStub));
+    MOCKER_CPP_VIRTUAL(rt, &Runtime::ChgUserDevIdToDeviceId).expects(once()).will(returnValue(RT_ERROR_DEVICE_ID));
+
+    ApiImplDeviceTopology apiImpl;
+    int32_t logicDevId = -1;
+    EXPECT_EQ(apiImpl.GetLogicDevIdByUserDevId(1, &logicDevId), RT_ERROR_DEVICE_ID);
+    EXPECT_EQ(logicDevId, -1);
+    EXPECT_EQ(profiler->GetTopProfApiContext(), nullptr);
+
+    profiler->SetApiProfEnable(false);
+    ClearApiProfContextStack(profiler);
+    ASSERT_EQ(g_reportedApiTypeNum, 1U);
+    EXPECT_EQ(g_reportedApiTypes[0], RT_PROF_API_USER_TO_LOGIC_ID + RT_PROFILE_TYPE_API_BEGIN);
+}
+
+TEST_F(ProfilerTest, ApiImplDeviceTopologyAtomicFailureKeepsProfilePair)
+{
+    Runtime* const rt = static_cast<Runtime*>(Runtime::Instance());
+    profiler = rt->profiler_;
+    ASSERT_NE(profiler, nullptr);
+    PrepareRuntimeProfCallApiTest(profiler);
+    MOCKER(MsprofReportApi).expects(once()).will(invoke(MsprofReportApiOrderStub));
+
+    Driver* const driver = rt->driverFactory_.GetDriver(NPU_DRIVER);
+    ASSERT_NE(driver, nullptr);
+    MOCKER_CPP_VIRTUAL(driver, &Driver::GetDevInfo).expects(once()).will(returnValue(RT_ERROR_DRV_TIMEOUT));
+
+    ApiImplDeviceTopology apiImpl;
+    uint32_t capabilities[1] = {UINT32_MAX};
+    const rtAtomicOperation operations[1] = {RT_ATOMIC_OPERATION_INTEGER_ADD};
+    EXPECT_EQ(apiImpl.GetHostAtomicCapabilities(capabilities, operations, 1U, 0), RT_ERROR_DRV_TIMEOUT);
+    EXPECT_EQ(capabilities[0], 0U);
+    EXPECT_EQ(profiler->GetTopProfApiContext(), nullptr);
+
+    profiler->SetApiProfEnable(false);
+    ClearApiProfContextStack(profiler);
+    ASSERT_EQ(g_reportedApiTypeNum, 1U);
+    EXPECT_EQ(g_reportedApiTypes[0], RT_PROF_API_GET_HOST_ATOMIC_CAPABILITIES + RT_PROFILE_TYPE_API_BEGIN);
 }
 
 TEST_F(ProfilerTest, ApiProfileNestedContextLifo)
