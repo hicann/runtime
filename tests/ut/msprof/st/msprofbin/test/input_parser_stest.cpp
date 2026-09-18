@@ -571,7 +571,6 @@ TEST_F(INPUT_PARSER_STEST, CheckBaseInfo)
     cmdInfo.args[ARGS_IO_PROFILING] = "1";
     cmdInfo.args[ARGS_MODEL_EXECUTION] = "1";
     cmdInfo.args[ARGS_RUNTIME_API] = "1";
-    cmdInfo.args[ARGS_TASK_TSFW] = "1";
     cmdInfo.args[ARGS_AI_CORE] = "1";
     cmdInfo.args[ARGS_AIV] = "1";
     cmdInfo.args[ARGS_CPU_PROFILING] = "1";
@@ -599,7 +598,6 @@ TEST_F(INPUT_PARSER_STEST, CheckBaseInfo)
     parser.ParamsSwitchValid(cmdInfo, ARGS_IO_PROFILING);
     parser.ParamsSwitchValid(cmdInfo, ARGS_MODEL_EXECUTION);
     parser.ParamsSwitchValid(cmdInfo, ARGS_RUNTIME_API);
-    parser.ParamsSwitchValid(cmdInfo, ARGS_TASK_TSFW);
     parser.ParamsSwitchValid(cmdInfo, ARGS_AI_CORE);
     parser.ParamsSwitchValid(cmdInfo, ARGS_AIV);
     parser.ParamsSwitchValid(cmdInfo, ARGS_CPU_PROFILING);

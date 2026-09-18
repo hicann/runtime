@@ -48,7 +48,6 @@ const std::unordered_map<std::string, std::string> INTERNAL_SWITCH_MAP = {
     {"ai-core", "ai_core_profiling"},
     {"ai-vector-core", "aiv_profiling"},
     {"runtime-api", "runtimeApi"},
-    {"task-tsfw", "taskTsfw"},
     {"task-time", "taskTime"},
     {"ge-api", "geApi"},
     {"task-trace", "taskTrace"},

@@ -126,7 +126,6 @@ struct ProfileParams : public BaseInfo {
     std::string qosProfiling;
     std::string qosEvents;
     std::vector<uint8_t> qosEventId;
-    std::string memServiceflow;
 
     std::string l2CacheTaskProfiling;
     std::string l2CacheTaskProfilingEvents;
@@ -594,7 +593,6 @@ private:
         SET_VALUE(object, pid_sampling_interval);
         SET_VALUE(object, hardware_mem);
         SET_VALUE(object, hardware_mem_sampling_interval);
-        SET_VALUE(object, memServiceflow);
         SET_VALUE(object, io_profiling);
         SET_VALUE(object, io_sampling_interval);
         SET_VALUE(object, interconnection_profiling);
@@ -661,7 +659,6 @@ private:
         FROM_INT_VALUE(object, pid_sampling_interval, DEFAULT_PROFILING_INTERVAL_10MS);
         FROM_STRING_VALUE(object, hardware_mem);
         FROM_INT_VALUE(object, hardware_mem_sampling_interval, DEFAULT_PROFILING_INTERVAL_20000US);
-        FROM_STRING_VALUE(object, memServiceflow);
         FROM_STRING_VALUE(object, io_profiling);
         FROM_INT_VALUE(object, io_sampling_interval, DEFAULT_PROFILING_INTERVAL_10MS);
         FROM_STRING_VALUE(object, interconnection_profiling);

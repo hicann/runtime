@@ -271,7 +271,6 @@ TEST_F(AclJsonMilanStest, AclJsonMemServiceflow)
 {
     nlohmann::json data;
     data["output"] = MILAN_OUTPUT_DIR;
-    data["sys_mem_serviceflow"] = "aaa,bbb";
     data["sys_hardware_mem_freq"] = 50;
     std::vector<std::string> dataList = {"stars_soc_profile.data"};
     MsprofMgr().SetDeviceCheckList(dataList);

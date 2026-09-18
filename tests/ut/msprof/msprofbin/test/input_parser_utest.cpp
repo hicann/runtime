@@ -45,6 +45,7 @@ TEST_F(INPUT_PARSER_UTEST, ProcessOptions)
     struct MsprofCmdInfo cmdInfo = {{nullptr}};
     // invalid options
     EXPECT_EQ(PROFILING_FAILED, parser.ProcessOptions(-1, cmdInfo));
+    EXPECT_EQ(PROFILING_FAILED, parser.ProcessOptions(ARGS_INVALID, cmdInfo));
 
     char* resArgs = "on";
     MOCKER(mmGetOptArg).stubs().will(returnValue(resArgs));
@@ -558,10 +559,6 @@ TEST_F(INPUT_PARSER_UTEST, CheckBaseInfo)
 #endif
 
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-    cmdInfo.args[ARGS_NPU_EVENTS] = "0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9";
-    EXPECT_EQ(PROFILING_FAILED, parser.CheckNpuEventsValid(cmdInfo, ARGS_NPU_EVENTS));
-    cmdInfo.args[ARGS_NPU_EVENTS] = "0x1,0x2,0x3";
-    EXPECT_EQ(PROFILING_SUCCESS, parser.CheckNpuEventsValid(cmdInfo, ARGS_NPU_EVENTS));
 #endif
 
     GlobalMockObject::verify();
@@ -700,7 +697,6 @@ TEST_F(INPUT_PARSER_UTEST, CheckBaseInfo)
     cmdInfo.args[ARGS_IO_PROFILING] = "1";
     cmdInfo.args[ARGS_MODEL_EXECUTION] = "1";
     cmdInfo.args[ARGS_RUNTIME_API] = "1";
-    cmdInfo.args[ARGS_TASK_TSFW] = "1";
     cmdInfo.args[ARGS_AI_CORE] = "1";
     cmdInfo.args[ARGS_AIV] = "1";
     cmdInfo.args[ARGS_CPU_PROFILING] = "1";
@@ -731,7 +727,6 @@ TEST_F(INPUT_PARSER_UTEST, CheckBaseInfo)
     parser.ParamsSwitchValid(cmdInfo, ARGS_IO_PROFILING);
     parser.ParamsSwitchValid(cmdInfo, ARGS_MODEL_EXECUTION);
     parser.ParamsSwitchValid(cmdInfo, ARGS_RUNTIME_API);
-    parser.ParamsSwitchValid(cmdInfo, ARGS_TASK_TSFW);
     parser.ParamsSwitchValid(cmdInfo, ARGS_AI_CORE);
     parser.ParamsSwitchValid(cmdInfo, ARGS_AIV);
     parser.ParamsSwitchValid(cmdInfo, ARGS_CPU_PROFILING);
@@ -827,7 +822,6 @@ TEST_F(INPUT_PARSER_UTEST, MsprofCmdCheckValid)
     cmdInfo.args[ARGS_DYNAMIC_PROF_PID] = "123";
     cmdInfo.args[ARGS_DELAY_PROF] = "1";
     cmdInfo.args[ARGS_DURATION_PROF] = "1";
-    cmdInfo.args[ARGS_NPU_EVENTS] = "";
     MOCKER(mmGetOptInd).stubs().will(returnValue(1));
     parser.MsprofCmdCheckValid(cmdInfo, ARGS_AIV_MODE);
     parser.MsprofCmdCheckValid(cmdInfo, ARGS_AIC_METRICS);
@@ -839,14 +833,6 @@ TEST_F(INPUT_PARSER_UTEST, MsprofCmdCheckValid)
     EXPECT_EQ(MSPROF_DAEMON_OK, parser.MsprofCmdCheckValid(cmdInfo, ARGS_DYNAMIC_PROF_PID));
     EXPECT_EQ(MSPROF_DAEMON_OK, parser.MsprofCmdCheckValid(cmdInfo, ARGS_DELAY_PROF));
     EXPECT_EQ(MSPROF_DAEMON_OK, parser.MsprofCmdCheckValid(cmdInfo, ARGS_DURATION_PROF));
-    EXPECT_EQ(MSPROF_DAEMON_OK, parser.MsprofCmdCheckValid(cmdInfo, ARGS_NPU_EVENTS));
-    cmdInfo.args[ARGS_NPU_EVENTS] = "abcdefghijklmn";
-    EXPECT_EQ(MSPROF_DAEMON_ERROR, parser.MsprofCmdCheckValid(cmdInfo, ARGS_NPU_EVENTS));
-    EXPECT_EQ(MSPROF_DAEMON_ERROR, parser.MsprofCmdCheckValid(cmdInfo, ARGS_MEM_SERVICEFLOW));
-    cmdInfo.args[ARGS_MEM_SERVICEFLOW] = "";
-    EXPECT_EQ(MSPROF_DAEMON_ERROR, parser.MsprofCmdCheckValid(cmdInfo, ARGS_MEM_SERVICEFLOW));
-    cmdInfo.args[ARGS_MEM_SERVICEFLOW] = "aaa,bbb";
-    EXPECT_EQ(MSPROF_DAEMON_OK, parser.MsprofCmdCheckValid(cmdInfo, ARGS_MEM_SERVICEFLOW));
 }
 
 TEST_F(INPUT_PARSER_UTEST, MsprofFreqCheckValid)
@@ -1032,7 +1018,7 @@ TEST_F(INPUT_PARSER_UTEST, AddStarsArgsMdcLiteV2)
     argsManager.AddStarsArgs();
     ASSERT_EQ(1, argsManager.argsList_.size());
     EXPECT_EQ("task-block", argsManager.argsList_[0].name_);
-    EXPECT_NE(std::string::npos, argsManager.argsList_[0].detail_.find("'all', 'on', 'off'."));
+    EXPECT_NE(std::string::npos, argsManager.argsList_[0].detail_.find("'on', 'off'."));
 }
 #endif // BUILD_PROFILING_OPEN_PROJECT
 
@@ -1066,21 +1052,49 @@ TEST_F(INPUT_PARSER_UTEST, PreCheckSwitch310P)
     EXPECT_EQ(nullptr, parser.MsprofGetOpts(3, (const char**)argv));
 }
 
+TEST_F(INPUT_PARSER_UTEST, MsprofGetOptsRejectsRemovedOptions)
+{
+    InputParser parser = InputParser();
+    int32_t argc = 5;
+    const char* argv[argc];
+    argv[0] = "msprof";
+    argv[1] = "--npu-events=0x1,0x2,0x3";
+    argv[2] = "--task-tsfw=on";
+    argv[3] = "--sys-mem-serviceflow=on";
+    argv[4] = "--output=./";
+
+    MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
+        .stubs()
+        .will(returnValue(Analysis::Dvvp::Common::Config::PlatformType::DC_TYPE));
+    Platform::instance()->Uninit();
+    Platform::instance()->Init();
+    MOCKER(mmGetOptInd).stubs().will(returnValue(1));
+    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::RunSocSide).stubs().will(returnValue(false));
+    MOCKER(mmGetOptLong)
+        .stubs()
+        .will(returnValue(static_cast<int32_t>(ARGS_INVALID)))
+        .then(returnValue(MSPROF_DAEMON_ERROR));
+
+    EXPECT_EQ(nullptr, parser.MsprofGetOpts(argc, (const char**)argv));
+}
+
 /*
  * 函数原型	MsprofArgsType, LONG_OPTIONS[]
  * 函数功能	检测参数配置是否发生错位
- * 注意事项 谨慎修改，确保67位是invalid，并且67之前参数填充满，保证67的前后参数与input_parser.h顺序一致
+ * 注意事项 谨慎修改，确保63位是invalid，并且63之前参数填充满，保证63的前后参数与input_parser.h顺序一致
  */
 TEST_F(INPUT_PARSER_UTEST, PreCheckParamOffset)
 {
-    EXPECT_EQ(67, ARGS_INVALID);
-    EXPECT_EQ(68, ARGS_SYS_LOW_POWER_FREQ);
-    EXPECT_EQ(69, ARGS_EXPORT_ITERATION_ID);
-    EXPECT_EQ(70, ARGS_EXPORT_MODEL_ID);
+    EXPECT_EQ(63, ARGS_INVALID);
+    EXPECT_EQ(64, ARGS_SYS_LOW_POWER_FREQ);
+    EXPECT_EQ(65, ARGS_EXPORT_ITERATION_ID);
+    EXPECT_EQ(66, ARGS_EXPORT_MODEL_ID);
+    EXPECT_EQ(67, ARGS_HOST_SYS_USAGE_FREQ);
     EXPECT_STREQ("invalid", LONG_OPTIONS[ARGS_INVALID].name);
     EXPECT_STREQ("sys-lp-freq", LONG_OPTIONS[ARGS_SYS_LOW_POWER_FREQ].name);
     EXPECT_STREQ("iteration-id", LONG_OPTIONS[ARGS_EXPORT_ITERATION_ID].name);
     EXPECT_STREQ("model-id", LONG_OPTIONS[ARGS_EXPORT_MODEL_ID].name);
+    EXPECT_STREQ("host-sys-usage-freq", LONG_OPTIONS[ARGS_HOST_SYS_USAGE_FREQ].name);
     EXPECT_STREQ("aicore-shape", LONG_OPTIONS[ARGS_AICORE_SHAPE].name);
 }
 

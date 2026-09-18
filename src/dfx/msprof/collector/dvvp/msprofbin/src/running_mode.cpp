@@ -1484,7 +1484,6 @@ AppMode::AppMode(std::string preCheckParams, SHARED_PTR_ALIA<ProfileParams> para
         ARGS_AIC_METRICS,
         ARGS_AIV_MODE,
         ARGS_AIV_METRICS,
-        ARGS_NPU_EVENTS,
         ARGS_LLC_PROFILING,
         ARGS_ASCENDCL,
         ARGS_AI_CORE,
@@ -1492,7 +1491,6 @@ AppMode::AppMode(std::string preCheckParams, SHARED_PTR_ALIA<ProfileParams> para
         ARGS_MODEL_EXECUTION,
         ARGS_TASK_MEMORY,
         ARGS_RUNTIME_API,
-        ARGS_TASK_TSFW,
         ARGS_TASK_TIME,
         ARGS_GE_API,
         ARGS_TASK_TRACE,
@@ -1518,7 +1516,6 @@ AppMode::AppMode(std::string preCheckParams, SHARED_PTR_ALIA<ProfileParams> para
         ARGS_SYS_SAMPLING_FREQ,
         ARGS_PID_SAMPLING_FREQ,
         ARGS_HARDWARE_MEM_SAMPLING_FREQ,
-        ARGS_MEM_SERVICEFLOW,
         ARGS_IO_SAMPLING_FREQ,
         ARGS_DVPP_FREQ,
         ARGS_CPU_SAMPLING_FREQ,
@@ -1654,7 +1651,7 @@ SystemMode::SystemMode(std::string preCheckParams, SHARED_PTR_ALIA<ProfileParams
         ARGS_HOST_SYS_USAGE,
         ARGS_HOST_SYS_USAGE_FREQ,
         ARGS_PYTHON_PATH,
-        ARGS_MEM_SERVICEFLOW};
+    };
     neccessarySet_ = {ARGS_OUTPUT, ARGS_SYS_PERIOD};
 }
 

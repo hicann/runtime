@@ -199,9 +199,7 @@ TEST_F(CliDavidV121Stest, CliMemServiceflow)
         "--sys-mem-serviceflow=aaa,bbb,ccc",
         "--sys-hardware-mem=on",
     };
-    std::vector<std::string> dataList = {"stars_soc_profile.data"};
-    MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
+    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliDavidV121Stest, CliSysCpuProfiling)

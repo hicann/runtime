@@ -208,7 +208,6 @@ void SetAclApiSuccessConfigs()
 {
     ExpectSetConfigSuccess(ACL_PROF_STORAGE_LIMIT, "250MB");
     ExpectSetConfigSuccess(ACL_PROF_SYS_HARDWARE_MEM_FREQ, "10000");
-    ExpectSetConfigSuccess(ACL_PROF_SYS_MEM_SERVICEFLOW, "aaa,bbb");
     ExpectSetConfigSuccess(ACL_PROF_LLC_MODE, "read");
     ExpectSetConfigSuccess(ACL_PROF_LLC_MODE, "write");
     ExpectSetConfigSuccess(ACL_PROF_SYS_IO_FREQ, "50");

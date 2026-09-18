@@ -4776,7 +4776,6 @@ TEST_F(MSPROF_ACL_CORE_UTEST, ProfSetConfigWillCheckConfigWhenPlatformSupported)
     EXPECT_EQ(ACL_SUCCESS, Msprofiler::AclApi::ProfSetConfig(configType, config.c_str(), config.size()));
     configType = ACL_PROF_SYS_INTERCONNECTION_FREQ;
     EXPECT_EQ(ACL_SUCCESS, Msprofiler::AclApi::ProfSetConfig(configType, config.c_str(), config.size()));
-    configType = ACL_PROF_SYS_MEM_SERVICEFLOW;
     EXPECT_EQ(ACL_SUCCESS, Msprofiler::AclApi::ProfSetConfig(configType, config.c_str(), config.size()));
     configType = ACL_PROF_HOST_SYS_USAGE_FREQ;
     EXPECT_EQ(ACL_SUCCESS, Msprofiler::AclApi::ProfSetConfig(configType, config.c_str(), config.size()));
@@ -4986,7 +4985,6 @@ TEST_F(MSPROF_ACL_CORE_UTEST, MsprofSetConfigInvalidConfigReportsInputErrorForOp
         {ACL_PROF_LLC_MODE, "ACL_PROF_LLC_MODE", "'read' or 'write'"},
         {ACL_PROF_HOST_SYS, "ACL_PROF_HOST_SYS", "'cpu', 'mem', 'disk'"},
         {ACL_PROF_HOST_SYS_USAGE, "ACL_PROF_HOST_SYS_USAGE", "'cpu' or 'mem'"},
-        {ACL_PROF_SYS_MEM_SERVICEFLOW, "ACL_PROF_SYS_MEM_SERVICEFLOW", "non-empty"},
         {ACL_PROF_OPTYPE, "ACL_PROF_OPTYPE", "total length should not exceed 256"},
         {ACL_PROF_NTS_METRICS, "ACL_PROF_NTS_METRICS", "PipeUtilization"},
         {ACL_PROF_PATH, "ACL_PROF_PATH", "valid profiling result path"},
@@ -6624,8 +6622,6 @@ TEST_F(MSPROF_ACL_CORE_UTEST, ProfParamsAdapter_CheckJsonConfig_AllSwitchNames)
         .will(returnValue(true));
     EXPECT_TRUE(a->CheckJsonConfig("host_sys_usage", v));
     GlobalMockObject::verify();
-    MOCKER_CPP(&ParamValidation::CheckMemServiceflowValid).stubs().will(returnValue(true));
-    EXPECT_TRUE(a->CheckJsonConfig("sys_mem_serviceflow", v));
     GlobalMockObject::verify();
 #ifndef BUILD_PROFILING_OPEN_PROJECT
     MOCKER_CPP(&ParamValidation::CheckTaskBlockValid).stubs().will(returnValue(true));

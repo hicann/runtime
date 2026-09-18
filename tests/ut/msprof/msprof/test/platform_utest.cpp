@@ -531,7 +531,6 @@ TEST_F(PLATFORM_UTEST, MdcLiteV2PlatformFeatures)
     EXPECT_EQ(true, platform.FeatureIsSupport(PLATFORM_TASK_INSTR_PROFILING));
     EXPECT_EQ(true, platform.FeatureIsSupport(PLATFORM_SYS_DEVICE_LOW_POWER));
     EXPECT_EQ(true, platform.FeatureIsSupport(PLATFORM_SYS_DEVICE_QOS));
-    EXPECT_EQ(true, platform.FeatureIsSupport(PLATFORM_SYS_MEM_SERVICEFLOW));
     EXPECT_EQ(true, platform.FeatureIsSupport(PLATFORM_STARS_QOS));
     EXPECT_EQ(true, platform.FeatureIsSupport(PLATFORM_MC2));
     EXPECT_EQ(true, platform.FeatureIsSupport(PLATFORM_AICPU_HCCL));

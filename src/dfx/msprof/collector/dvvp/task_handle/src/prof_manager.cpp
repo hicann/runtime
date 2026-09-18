@@ -378,9 +378,6 @@ SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> ProfManager::ValidateAnd
     Analysis::Dvvp::Host::Adapter::ProfParamsAdapter::instance()->GenerateLlcEvents(params);
     if (params->hardware_mem.compare(MSVP_PROF_ON) == 0 && deviceId != static_cast<uint32_t>(DEFAULT_HOST_ID)) {
         params->qosProfiling = MSVP_PROF_ON;
-        if (!params->memServiceflow.empty()) {
-            params->qosEvents = params->memServiceflow;
-        }
         Platform::instance()->GetQosProfileInfo(deviceId, params->qosEvents, params->qosEventId);
         if (!params->qosEvents.empty() && params->qosEventId.empty()) {
             MSPROF_LOGE("Failed to get qosEventId.");

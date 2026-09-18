@@ -163,14 +163,6 @@ TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_TEST, CheckSystemTraceSwitchProfiling)
     EXPECT_EQ(true, entry->CheckSystemTraceSwitchProfiling(params));
 }
 
-TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_TEST, CheckControlSwitchProfiling)
-{
-    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams());
-    auto entry = analysis::dvvp::common::validation::ParamValidation::instance();
-    params->taskTsfw = "asd";
-    EXPECT_EQ(true, entry->CheckControlSwitchProfiling(params));
-}
-
 TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_TEST, CheckTsSwitchProfiling)
 {
     std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams());

@@ -307,9 +307,7 @@ TEST_F(CliDavidStest, CliMemServiceflow)
         "--sys-mem-serviceflow=aaa,bbb,ccc",
         "--sys-hardware-mem=on",
     };
-    std::vector<std::string> dataList = {"stars_soc_profile.data"};
-    MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
+    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliDavidStest, CliMemServiceflowError)
@@ -459,104 +457,18 @@ TEST_F(CliDavidStest, CliL2)
 
 TEST_F(CliDavidStest, NpuEvents)
 {
-    // david: Collect npu-events data
     const char* argv[] = {
         DAVID_OUTPUT_DIR,
         "--npu-events=0x1,0x2,0x3,0x4,0x5",
     };
-    std::vector<std::string> dataList = {"socpmu.data"};
-    MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
+    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
 
 TEST_F(CliDavidStest, SocPmuEvents)
 {
-    // david: Collect npu-events data
     const char* argv[] = {
         DAVID_OUTPUT_DIR,
-        "--npu-events=HA:0x1,0x2,0x3,0x4,0x5;SMMU:0x1,0x2,0x3;NOC:0x1,0x2",
-    };
-    std::vector<std::string> dataList = {"socpmu.data"};
-    MsprofMgr().SetDeviceCheckList(dataList);
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
-}
-
-TEST_F(CliDavidStest, SocPmuEventsHaRepeat)
-{
-    // david: Collect npu-events data
-    const char* argv[] = {
-        DAVID_OUTPUT_DIR,
-        "--npu-events=HA:0x1,0x2,0x3,0x4,0x5;HA:0x1,0x2,0x3",
-    };
-    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
-}
-
-TEST_F(CliDavidStest, SocPmuEventsSmmuRepeat)
-{
-    // david: Collect npu-events data
-    const char* argv[] = {
-        DAVID_OUTPUT_DIR,
-        "--npu-events=SMMU:0x1,0x2,0x3,0x4,0x5;SMMU:0x1,0x2,0x3",
-    };
-    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
-}
-
-TEST_F(CliDavidStest, SocPmuEventsNocRepeat)
-{
-    // david: Collect npu-events data
-    const char* argv[] = {
-        DAVID_OUTPUT_DIR,
-        "--npu-events=NOC:0x1,0x2,0x3;NOC:0x1,0x2,0x3",
-    };
-    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
-}
-
-TEST_F(CliDavidStest, SocPmuEventsHaOverFlow)
-{
-    // david: Collect npu-events data
-    const char* argv[] = {
-        DAVID_OUTPUT_DIR,
-        "--npu-events=HA:0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9;SMMU:0x1,0x2,0x3",
-    };
-    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
-}
-
-TEST_F(CliDavidStest, SocPmuEventsSmmuOverFlow)
-{
-    // david: Collect npu-events data
-    const char* argv[] = {
-        DAVID_OUTPUT_DIR,
-        "--npu-events=HA:0x1,0x2,0x3;SMMU:0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9",
-    };
-    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
-}
-
-TEST_F(CliDavidStest, SocPmuEventsNocOverFlowEvent)
-{
-    // david: Collect npu-events data
-    const char* argv[] = {
-        DAVID_OUTPUT_DIR,
-        "--npu-events=HA:0x1,0x2,0x3,0x4,0x5;SMMU:0x1,0x2,0x3;NOC:0x40",
-    };
-    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
-}
-
-TEST_F(CliDavidStest, SocPmuEventsSmmuOverFlowEvent)
-{
-    // david: Collect npu-events data
-    const char* argv[] = {
-        DAVID_OUTPUT_DIR,
-        "--npu-events=HA:0x1,0x2,0x3,0x4,0x5;SMMU:0x1,0x2,0x3,0x809",
-    };
-    EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
-}
-
-TEST_F(CliDavidStest, SocPmuEventsHaOverFlowEvent)
-{
-    // david: Collect npu-events data
-    const char* argv[] = {
-        DAVID_OUTPUT_DIR,
-        "--npu-events=HA:0x1,0x2,0x3,0x4,0x256;SMMU:0x1,0x2,0x3,0x809",
+        "--npu-events=HA:0x1,0x2,0x3,0x4,0x5;SMMU:0x1,0x2,0x3",
     };
     EXPECT_EQ(PROFILING_FAILED, MsprofMgr().MsprofStartByAppMode(sizeof(argv) / sizeof(char*), argv));
 }
