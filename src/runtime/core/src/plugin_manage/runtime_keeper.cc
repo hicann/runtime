@@ -80,8 +80,8 @@ rtError_t GetDeviceType(int64_t* hwVersion)
 
     if (drvRet != DRV_ERROR_NONE) {
         if (drvRet != DRV_ERROR_NOT_SUPPORT) {
-            DRV_ERROR_PROCESS(
-                drvRet,
+            RT_LOG(
+                RT_LOG_ERROR,
                 "Call halGetDeviceInfo failed: drvRet=%d, module type=MODULE_TYPE_SYSTEM(%d), "
                 "info type=INFO_TYPE_VERSION(%d).",
                 drvRet, MODULE_TYPE_SYSTEM, INFO_TYPE_VERSION);

@@ -98,6 +98,12 @@ rtError_t CondStreamActive(
     dstStm = tsk->stream;
     ScopeGuard tskErrRecycle(errRecycle);
     error = StreamActiveTaskInit(tsk, activeStream);
+    COND_PROC_RETURN_AND_MSG_OUTER(
+        error == RT_ERROR_DRV_NOT_SUPPORT, error, ErrorCode::EE1016,
+        RT_LOG(
+            RT_LOG_ERROR, "Failed to initialize active task, stream_id=%d, pos=%u, retCode=%#x.", streamId, pos,
+            static_cast<uint32_t>(error)),
+        "Initializing a stream activation task", "The driver does not support synchronous memory copy");
     ERROR_RETURN_MSG_INNER(
         error, "Failed to initialize active task, stream_id=%d, pos=%u, retCode=%#x.", streamId, pos,
         static_cast<uint32_t>(error));

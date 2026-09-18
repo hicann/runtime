@@ -240,9 +240,9 @@ rtError_t NpuDriver::GetStarsInfo(const uint32_t deviceId, const uint32_t tsId, 
     const drvError_t drvRet = halTsdrvCtl(
         deviceId, TSDRV_CTL_CMD_CTRL_MSG, static_cast<void*>(&para), sizeof(struct tsdrv_ctrl_msg),
         static_cast<void*>(&queryAck), &ackCount);
-    COND_RETURN_ERROR_MSG_INNER(
-        drvRet != DRV_ERROR_NONE, RT_GET_DRV_ERRCODE(drvRet),
-        "[drv api] halTsdrvCtl device_id=%u, ts_id=%u, drvRetCode=%d.", deviceId, tsId, static_cast<int32_t>(drvRet));
+    DRV_PROCESS_ERROR_RETURN(
+        drvRet, "[drv api] halTsdrvCtl device_id=%u, ts_id=%u, drvRetCode=%d.", deviceId, tsId,
+        static_cast<int32_t>(drvRet));
     COND_RETURN_ERROR_MSG_CALL(
         ERR_MODULE_DRV, (ackCount != sizeof(ts_ctrl_msg_body_t)), RT_GET_DRV_ERRCODE(DRV_ERROR_PARA_ERROR),
         "[drv api] halTsdrvCtl device_id=%u, ts_id=%u, drvRetCode=%d.", deviceId, tsId, static_cast<int32_t>(drvRet));
@@ -453,14 +453,17 @@ rtError_t NpuDriver::SqArgsCopyWithUb(uint32_t devId, struct halSqTaskArgsInfo* 
     drvError_t drvRet = DRV_ERROR_NONE;
 
     // This api does not support, should affect business
-    COND_RETURN_ERROR(
-        &halSqTaskArgsAsyncCopy == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT,
-        "[drv api] halSqTaskArgsAsyncCopy does not exist");
+    COND_RETURN_AND_MSG_OUTER(
+        &halSqTaskArgsAsyncCopy == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1015,
+        "Copying kernel arguments through the submission queue",
+        "The driver interface halSqTaskArgsAsyncCopy does not exist.");
 
     drvRet = halSqTaskArgsAsyncCopy(devId, sqArgs);
-    COND_RETURN_ERROR(
-        drvRet == DRV_ERROR_NOT_SUPPORT, RT_ERROR_FEATURE_NOT_SUPPORT,
-        "[drv api] halSqTaskArgsAsyncCopy does not support.");
+    COND_PROC_RETURN_AND_MSG_OUTER(
+        drvRet == DRV_ERROR_NOT_SUPPORT, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1016,
+        RT_LOG(RT_LOG_ERROR, "[drv api] halSqTaskArgsAsyncCopy does not support."),
+        "Copying kernel arguments through the submission queue",
+        "The driver does not support asynchronous submission-queue argument copying");
     DRV_PROCESS_ERROR_RETURN(
         drvRet, "Call driver api halSqTaskArgsAsyncCopy failed, drvRetCode=%d.", static_cast<int32_t>(drvRet));
 

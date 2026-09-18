@@ -268,6 +268,11 @@ rtError_t H2DCopyMgr::H2DMemCopy(void* dst, const void* const src, const uint64_
     } else if (policy_ == COPY_POLICY_SYNC) {
         error = drv_->MemCopySync(dst, size, src, size, RT_MEMCPY_HOST_TO_DEVICE);
         if (error != RT_ERROR_NONE) {
+            COND_PROC(
+                error == RT_ERROR_DRV_NOT_SUPPORT,
+                RT_LOG_OUTER_MSG_IMPL(
+                    ErrorCode::EE1016, "Copying kernel arguments from host to device",
+                    "The driver does not support synchronous host-to-device memory copy"));
             RT_LOG(RT_LOG_ERROR, "Failed to copy memory synchronously, retCode=%#x.", error);
             return error;
         }

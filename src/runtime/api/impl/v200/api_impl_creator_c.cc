@@ -14,6 +14,7 @@
 namespace cce {
 namespace runtime {
 
+size_t GetApiImplSize() { return sizeof(ApiImplDavid); }
 Api* CreateImplAndGet() { return new (std::nothrow) ApiImplDavid(); }
 } // namespace runtime
 } // namespace cce

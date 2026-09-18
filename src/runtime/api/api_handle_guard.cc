@@ -34,6 +34,23 @@ static bool HasExpectedMagic(const void* handle, const uint64_t expectedMagic)
     return innerObject->magic.load(std::memory_order_acquire) == expectedMagic;
 }
 
+template <typename T>
+rtError_t ProbeValidatedObject(const void* handle, T*& outRealObj)
+{
+    if (handle == nullptr) {
+        outRealObj = nullptr;
+        return RT_ERROR_NONE;
+    }
+
+    const auto* const innerObject = static_cast<const rtInnerObject*>(handle);
+    if (innerObject->magic.load(std::memory_order_acquire) != RtMagicTraits<T>::value) {
+        return RT_ERROR_INVALID_HANDLE;
+    }
+
+    outRealObj = static_cast<T*>(innerObject->object);
+    return RT_ERROR_NONE;
+}
+
 } // namespace
 
 rtError_t ValidateModelHandleForApi(rtModel_t handle, Model*& outRealObj, const char_t* callerFuncName)
@@ -139,7 +156,7 @@ rtError_t ValidateKernelHandleForApi(const void* handle, Kernel*& outRealObj, co
 
 rtError_t ValidateArgsHandleForApi(rtArgsHandle handle, RtArgsHandle*& outRealObj, const char_t* callerFuncName)
 {
-    const rtError_t ret = GetValidatedObject<RtArgsHandle>(handle, outRealObj);
+    const rtError_t ret = ProbeValidatedObject<RtArgsHandle>(handle, outRealObj);
     if (ret == RT_ERROR_NONE) {
         return RT_ERROR_NONE;
     }
@@ -147,7 +164,7 @@ rtError_t ValidateArgsHandleForApi(rtArgsHandle handle, RtArgsHandle*& outRealOb
     RtArgsHandle* const legacyArgsHandle = RtPtrToPtr<RtArgsHandle*>(handle);
     if (legacyArgsHandle != nullptr) {
         RtArgsHandle* realArgsHandle = nullptr;
-        const rtError_t legacyRet = GetValidatedObject<RtArgsHandle>(
+        const rtError_t legacyRet = ProbeValidatedObject<RtArgsHandle>(
             RtPtrToPtr<rtArgsHandle>(RtInnerHandleAccessor<RtArgsHandle>::Get(legacyArgsHandle)), realArgsHandle);
         if ((legacyRet == RT_ERROR_NONE) && (realArgsHandle == legacyArgsHandle)) {
             outRealObj = legacyArgsHandle;
@@ -194,7 +211,7 @@ rtError_t ValidateParamHandleForApi(rtParaHandle handle, ParaDetail*& outRealObj
 rtError_t ValidateLaunchArgsHandleForApi(
     rtLaunchArgsHandle handle, rtLaunchArgs_t*& outRealObj, const char_t* callerFuncName)
 {
-    const rtError_t ret = GetValidatedObject<rtLaunchArgs_t>(handle, outRealObj);
+    const rtError_t ret = ProbeValidatedObject<rtLaunchArgs_t>(handle, outRealObj);
     if (ret == RT_ERROR_NONE) {
         return RT_ERROR_NONE;
     }
@@ -202,7 +219,7 @@ rtError_t ValidateLaunchArgsHandleForApi(
     rtLaunchArgs_t* const legacyLaunchArgs = RtPtrToPtr<rtLaunchArgs_t*>(handle);
     if (legacyLaunchArgs != nullptr) {
         rtLaunchArgs_t* realLaunchArgs = nullptr;
-        const rtError_t legacyRet = GetValidatedObject<rtLaunchArgs_t>(
+        const rtError_t legacyRet = ProbeValidatedObject<rtLaunchArgs_t>(
             RtPtrToPtr<rtLaunchArgsHandle>(RtInnerHandleAccessor<rtLaunchArgs_t>::Get(legacyLaunchArgs)),
             realLaunchArgs);
         if ((legacyRet == RT_ERROR_NONE) && (realLaunchArgs == legacyLaunchArgs)) {

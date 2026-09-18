@@ -42,9 +42,10 @@ rtError_t InitDrvEventThread(const uint32_t deviceId)
         "Initializing the driver event thread", "The driver interface halDrvEventThreadInit does not exist.");
 
     const drvError_t err = halDrvEventThreadInit(deviceId);
-    COND_RETURN_ERROR_MSG_INNER(
-        err != DRV_ERROR_NONE, RT_GET_DRV_ERRCODE(err), "Failed to init drv event thread, error=%#x, devId=%u",
-        RT_GET_DRV_ERRCODE(err), deviceId);
+    COND_RETURN_WARN(
+        err == DRV_ERROR_NOT_SUPPORT, RT_GET_DRV_ERRCODE(err), "[drv api] halDrvEventThreadInit does not support");
+    DRV_PROCESS_ERROR_RETURN(
+        err, "Failed to init drv event thread, error=%#x, devId=%u", RT_GET_DRV_ERRCODE(err), deviceId);
     return RT_GET_DRV_ERRCODE(err);
 }
 

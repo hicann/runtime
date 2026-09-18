@@ -74,11 +74,18 @@ rtError_t ReduceAsyncV2(
 
     rtReduceAsyncV2Task->u.reduceAsyncV2TaskInfo.copyDataType = static_cast<uint8_t>(type);
 
+    const char* const expectedAlignment = ((type == RT_DATA_TYPE_FP16) || (type == RT_DATA_TYPE_INT16) ||
+                                           (type == RT_DATA_TYPE_UINT16) || (type == RT_DATA_TYPE_BFP16)) ?
+                                              "a 2-byte-aligned address" :
+                                              "a 4-byte-aligned address";
+    UNUSED(expectedAlignment);
     error = ctx->CheckMemAlign(src, type);
-    COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
+        error != RT_ERROR_NONE, error, "Asynchronously performing the Reduce operation", src, "src", expectedAlignment);
 
     error = ctx->CheckMemAlign(dst, type);
-    COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
+        error != RT_ERROR_NONE, error, "Asynchronously performing the Reduce operation", dst, "dst", expectedAlignment);
 
     error = dev->SubmitTask(rtReduceAsyncV2Task);
     COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);

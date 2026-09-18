@@ -554,7 +554,7 @@ void Runtime::TsdClientInit()
     void* const handlePtr = mmDlopen(libSoName, flags);
     if (handlePtr == nullptr) {
         const char_t* const dlRet = mmDlerror();
-        RT_LOG_CALL_MSG(ERR_MODULE_AICPU, "Open %s failed, dlerror() = %s.", libSoName, dlRet);
+        RT_LOG(RT_LOG_ERROR, "Open %s failed, dlerror() = %s.", libSoName, dlRet);
         return;
     }
 
@@ -564,14 +564,14 @@ void Runtime::TsdClientInit()
     if (IS_SUPPORT_CHIP_FEATURE(chipType_, RtOptionalFeatureType::RT_FEATURE_DEVICE_TS_DEAMON_OPEN_EX)) {
         openFuncEx = RtPtrToPtr<FUNC_TDT_OPEN_EX, void*>(mmDlsym(handlePtr, "TsdOpenEx"));
         if (openFuncEx == nullptr) {
-            RT_LOG_CALL_MSG(ERR_MODULE_AICPU, "No TsdOpenEx symbol found in %s.", libSoName);
+            RT_LOG(RT_LOG_ERROR, "No TsdOpenEx symbol found in %s.", libSoName);
             (void)mmDlclose(handlePtr);
             return;
         }
     } else {
         openFunc = RtPtrToPtr<FUNC_TDT_OPEN>(mmDlsym(handlePtr, "TsdOpen"));
         if (openFunc == nullptr) {
-            RT_LOG_CALL_MSG(ERR_MODULE_AICPU, "No TsdOpen symbol found in %s.", libSoName);
+            RT_LOG(RT_LOG_ERROR, "No TsdOpen symbol found in %s.", libSoName);
             (void)mmDlclose(handlePtr);
             return;
         }
@@ -579,14 +579,14 @@ void Runtime::TsdClientInit()
 
     FUNC_TDT_CLOSE const closeFunc = RtPtrToPtr<FUNC_TDT_CLOSE>(mmDlsym(handlePtr, "TsdClose"));
     if (closeFunc == nullptr) {
-        RT_LOG_CALL_MSG(ERR_MODULE_AICPU, "No TsdClose symbol found in %s.", libSoName);
+        RT_LOG(RT_LOG_ERROR, "No TsdClose symbol found in %s.", libSoName);
         (void)mmDlclose(handlePtr);
         return;
     }
 
     FUNC_TDT_CLOSE_EX const closeFuncEx = RtPtrToPtr<FUNC_TDT_CLOSE_EX>(mmDlsym(handlePtr, "TsdCloseEx"));
     if (closeFuncEx == nullptr) {
-        RT_LOG_CALL_MSG(ERR_MODULE_AICPU, "No TsdCloseEx symbol found in %s.", libSoName);
+        RT_LOG(RT_LOG_ERROR, "No TsdCloseEx symbol found in %s.", libSoName);
     }
 
     FUNC_TDT_UPDATE const updateFunc = RtPtrToPtr<FUNC_TDT_UPDATE>(mmDlsym(handlePtr, "UpdateProfilingMode"));
@@ -742,8 +742,8 @@ void Runtime::InitSocTypeFrom310BVersion(const int64_t hardwareVersion)
     } else if (pgVer == RT_VER_BIN4) {
         socVersion_ = "Ascend310B4";
     } else {
-        RT_LOG_CALL_MSG(
-            ERR_MODULE_GE, "The hardwareVersion (%#" PRIx64 ") reported by the driver is invalid.",
+        RT_LOG(
+            RT_LOG_ERROR, "The hardwareVersion (%#" PRIx64 ") reported by the driver is invalid.",
             static_cast<uint64_t>(hardwareVersion));
     }
 }
@@ -764,8 +764,8 @@ void Runtime::InitSocTypeFrom910BVersion(int64_t hardwareVersion)
     } else if (pgVer == RT_VER_BIN10) {
         socVersion_ = "Ascend910B4-1";
     } else {
-        RT_LOG_CALL_MSG(
-            ERR_MODULE_RTS,
+        RT_LOG(
+            RT_LOG_ERROR,
             "The hardwareVersion (%#" PRIx64
             ") reported by the driver indicates that CANN and HDK may not be compatible.",
             static_cast<uint64_t>(hardwareVersion));
@@ -781,8 +781,8 @@ void Runtime::InitSocTypeFromBS9SX1AXVersion()
     socVersion_ = "BS9SX1AA";
     drvRet = halGetDeviceInfo(RT_DEV_ZERO, MODULE_TYPE_AICORE, INFO_TYPE_CORE_NUM, &aicNum);
     if (drvRet != DRV_ERROR_NONE) {
-        DRV_ERROR_PROCESS(
-            drvRet, "Call halGetDeviceInfo failed: drvRetCode=%u, module type=%s, info type=%s.",
+        RT_LOG(
+            RT_LOG_ERROR, "Call halGetDeviceInfo failed: drvRetCode=%u, module type=%s, info type=%s.",
             static_cast<uint32_t>(drvRet), ModuleTypeToString(MODULE_TYPE_AICORE).c_str(),
             InfoTypeToString(INFO_TYPE_CORE_NUM).c_str());
         return;
@@ -790,8 +790,8 @@ void Runtime::InitSocTypeFromBS9SX1AXVersion()
 
     drvRet = halGetDeviceInfo(RT_DEV_ZERO, MODULE_TYPE_VECTOR_CORE, INFO_TYPE_CORE_NUM, &aivNum);
     if (drvRet != DRV_ERROR_NONE) {
-        DRV_ERROR_PROCESS(
-            drvRet, "Call halGetDeviceInfo failed: drvRetCode=%u, module type=%s, info type=%s.",
+        RT_LOG(
+            RT_LOG_ERROR, "Call halGetDeviceInfo failed: drvRetCode=%u, module type=%s, info type=%s.",
             static_cast<uint32_t>(drvRet), ModuleTypeToString(MODULE_TYPE_VECTOR_CORE).c_str(),
             InfoTypeToString(INFO_TYPE_CORE_NUM).c_str());
         return;
@@ -837,7 +837,7 @@ void Runtime::Init310PSocType(const int64_t vmAicoreNum)
     halChipInfo chipInfo;
     const drvError_t drvRet = halGetChipInfo(workingDev_, &chipInfo);
     if (drvRet != DRV_ERROR_NONE) {
-        DRV_ERROR_PROCESS(drvRet, "Call halGetChipInfo failed: drvRetCode=%d, device=%u.", drvRet, workingDev_);
+        RT_LOG(RT_LOG_ERROR, "Call halGetChipInfo failed: drvRetCode=%d, device=%u.", drvRet, workingDev_);
         return;
     }
     const char* chipName = RtPtrToPtr<const char*>(chipInfo.name);
@@ -857,8 +857,8 @@ void Runtime::InitSocTypeFromCloudVersion(const int64_t aicoreNumLevel)
     int64_t aicoreFreqLevel = 0;
     drvError_t drvRet = halGetDeviceInfo(workingDev_, MODULE_TYPE_AICORE, INFO_TYPE_FREQUE_LEVEL, &aicoreFreqLevel);
     if (drvRet != DRV_ERROR_NONE) {
-        DRV_ERROR_PROCESS(
-            drvRet, "Call halGetDeviceInfo failed: drvRetCode=%u, module type=%s, info type=%s.",
+        RT_LOG(
+            RT_LOG_ERROR, "Call halGetDeviceInfo failed: drvRetCode=%u, module type=%s, info type=%s.",
             static_cast<uint32_t>(drvRet), ModuleTypeToString(MODULE_TYPE_AICORE).c_str(),
             InfoTypeToString(INFO_TYPE_FREQUE_LEVEL).c_str());
         return;
@@ -991,9 +991,9 @@ rtError_t Runtime::InitSocVersionByHardwareVersion(const uint32_t deviceId, cons
     uint32_t aicoreNum = 0U;
     int64_t aicoreNumLevel = 0;
     const rtError_t ret = GetAicoreNumByLevel(chipType_, aicoreNumLevel, aicoreNum);
-    COND_RETURN_ERROR_MSG_CALL(
-        ERR_MODULE_DRV, ret != RT_ERROR_NONE, RT_ERROR_DRV_ERR,
-        "Get AI Core number by level failed: aicoreNumLevel=%u.", static_cast<uint32_t>(aicoreNumLevel));
+    COND_RETURN_ERROR(
+        ret != RT_ERROR_NONE, RT_ERROR_DRV_ERR, "Get AI Core number by level failed: aicoreNumLevel=%u.",
+        static_cast<uint32_t>(aicoreNumLevel));
 
     CheckVirtualMachineMode(aicoreNum, vmAicoreNum);
     const rtError_t retSoc = GetSocVersionByHardwareVer(hardwareVersion, aicoreNumLevel, vmAicoreNum);
@@ -1080,7 +1080,7 @@ rtError_t Runtime::InitChipTypeAndSocVersion()
             return error;
         }
         error = InitAiCpuCnt();
-        ERROR_RETURN_MSG_INNER(error, "Init AI CPU count failed, retCode=%#x.", static_cast<uint32_t>(error));
+        ERROR_RETURN(error, "Init AI CPU count failed, retCode=%#x.", static_cast<uint32_t>(error));
         isHaveDevice_ = true;
     }
     rtError_t ret = GET_ALL_DEV_PROPERTIES(propertiesMap_);
@@ -1099,7 +1099,7 @@ rtError_t Runtime::InitApiImplies()
 {
     apiImpl_ = CreateImplAndGet();
     if (apiImpl_ == nullptr) {
-        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1013, sizeof(ApiImpl), "new");
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1013, GetApiImplSize(), "new");
         RT_LOG(RT_LOG_ERROR, "create ApiImpl failed.");
         return RT_ERROR_API_NEW;
     }
@@ -1322,7 +1322,12 @@ rtError_t Runtime::InitProgramAllocator()
         RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1013, sizeof(ObjAllocator<RefObject<Program*>>), "new");
         return RT_ERROR_PROGRAM_NEW;
     }
-    return programAllocator_->Init();
+    ObjAllocatorInitFailureInfo failureInfo;
+    const rtError_t error = programAllocator_->Init(failureInfo);
+    COND_RETURN_AND_MSG_OUTER(
+        error == RT_ERROR_MEMORY_ALLOCATION, error, ErrorCode::EE1013, failureInfo.allocSize,
+        failureInfo.allocInterface);
+    return error;
 }
 
 rtError_t Runtime::InitLabelAllocator()
@@ -1417,8 +1422,8 @@ bool Runtime::CheckHaveDevice()
 
     if (drvRet != DRV_ERROR_NONE) {
         if (drvRet != DRV_ERROR_NOT_SUPPORT) {
-            DRV_ERROR_PROCESS(
-                drvRet, "Call halGetDeviceInfo failed: drvRet=%d, module type=%s, info type=%s.", drvRet,
+            RT_LOG(
+                RT_LOG_ERROR, "Call halGetDeviceInfo failed: drvRet=%d, module type=%s, info type=%s.", drvRet,
                 ModuleTypeToString(MODULE_TYPE_SYSTEM).c_str(), InfoTypeToString(INFO_TYPE_VERSION).c_str());
         } else {
             RT_LOG(
@@ -1605,21 +1610,17 @@ rtError_t Runtime::Init()
 
     error = InitApiImplies();
     Api* api = nullptr;
-    COND_GOTO_ERROR_MSG_AND_ASSIGN_CALL(
-        ERR_MODULE_SYSTEM, error != RT_ERROR_NONE, INIT_FAIL, error, error, "Failed to new ApiImpl.");
+    COND_GOTO_ERROR(error != RT_ERROR_NONE, INIT_FAIL, error, error, "Failed to new ApiImpl.");
 
     api = apiImpl_;
     error = InitLogger();
-    COND_GOTO_ERROR_MSG_AND_ASSIGN_CALL(
-        ERR_MODULE_SYSTEM, error != RT_ERROR_NONE, INIT_FAIL, error, error, "Failed to new Logger.");
+    COND_GOTO_ERROR(error != RT_ERROR_NONE, INIT_FAIL, error, error, "Failed to new Logger.");
 
     error = InitApiProfiler(api);
-    COND_GOTO_ERROR_MSG_AND_ASSIGN_CALL(
-        ERR_MODULE_SYSTEM, error != RT_ERROR_NONE, INIT_FAIL, error, error, "Failed to new Profiler.");
+    COND_GOTO_ERROR(error != RT_ERROR_NONE, INIT_FAIL, error, error, "Failed to new Profiler.");
 
     error = InitApiErrorDecorator(api);
-    COND_GOTO_ERROR_MSG_AND_ASSIGN_CALL(
-        ERR_MODULE_SYSTEM, error != RT_ERROR_NONE, INIT_FAIL, error, error, "Failed to new ApiErrorDecorator.");
+    COND_GOTO_ERROR(error != RT_ERROR_NONE, INIT_FAIL, error, error, "Failed to new ApiErrorDecorator.");
     api_ = apiError_;
     apiMbuf_ = apiImplMbuf_; // apiImplMbuf_ no Profiler and Decorator
     apiSoma_ = apiImplSoma_; // apiImplSoma_ no Profiler and Decorator
@@ -1631,21 +1632,17 @@ rtError_t Runtime::Init()
     apiDeviceTopology_ = apiImplDeviceTopology_;
 
     error = InitThreadGuard();
-    COND_GOTO_ERROR_MSG_AND_ASSIGN_CALL(
-        ERR_MODULE_SYSTEM, error != RT_ERROR_NONE, INIT_FAIL, error, error, "Failed to new ThreadGuard.");
+    COND_GOTO_ERROR(error != RT_ERROR_NONE, INIT_FAIL, error, error, "Failed to new ThreadGuard.");
 
     error = InitStreamObserver();
-    COND_GOTO_ERROR_MSG_AND_ASSIGN_CALL(
-        ERR_MODULE_SYSTEM, error != RT_ERROR_NONE, INIT_FAIL, error, error, "Failed to new EngineStreamObserver.");
+    COND_GOTO_ERROR(error != RT_ERROR_NONE, INIT_FAIL, error, error, "Failed to new EngineStreamObserver.");
 
     error = InitAicpuStreamIdBitmap();
-    COND_GOTO_ERROR_MSG_AND_ASSIGN_CALL(
-        ERR_MODULE_SYSTEM, error != RT_ERROR_NONE, INIT_FAIL, error, error, "Failed to new Bitmap, num=%u.",
-        RT_MAX_AICPU_STREAM_COUNT);
+    COND_GOTO_ERROR(
+        error != RT_ERROR_NONE, INIT_FAIL, error, error, "Failed to new Bitmap, num=%u.", RT_MAX_AICPU_STREAM_COUNT);
 
     error = InitCbSubscribe();
-    COND_GOTO_ERROR_MSG_AND_ASSIGN_CALL(
-        ERR_MODULE_SYSTEM, error != RT_ERROR_NONE, INIT_FAIL, error, error, "Failed to new CbSubscribe.");
+    COND_GOTO_ERROR(error != RT_ERROR_NONE, INIT_FAIL, error, error, "Failed to new CbSubscribe.");
 
     error = InitProgramAllocator();
     COND_GOTO_ERROR_MSG_AND_ASSIGN_CALL(
@@ -1653,9 +1650,9 @@ rtError_t Runtime::Init()
         "Init runtime failed, failed to new RefObject, num=%u.", maxProgramNum_);
 
     error = InitLabelAllocator();
-    COND_GOTO_ERROR_MSG_AND_ASSIGN_CALL(
-        ERR_MODULE_SYSTEM, error != RT_ERROR_NONE, INIT_FAIL, error, RT_ERROR_LABEL_ALLOCATOR,
-        "Failed to new LabelAllocator, num=%u.", RT_MAX_LABEL_NUM);
+    COND_GOTO_ERROR(
+        error != RT_ERROR_NONE, INIT_FAIL, error, RT_ERROR_LABEL_ALLOCATOR, "Failed to new LabelAllocator, num=%u.",
+        RT_MAX_LABEL_NUM);
 
     error = InitSetRuntimeVersion();
     COND_GOTO_ERROR_MSG_AND_ASSIGN_CALL(
@@ -2280,9 +2277,15 @@ rtError_t Runtime::CloseNetService() const
 rtError_t Runtime::StartAicpuSd(Device* const device) const
 {
     rtError_t error = InitDrvEventThread(device->Id_());
-    COND_RETURN_ERROR_MSG_INNER(
-        error != RT_ERROR_NONE, error, "Init drv event thread failed, error=%#x, devId=%u.",
-        static_cast<uint32_t>(error), device->Id_());
+    const bool isEventThreadNotSupport = (error == RT_ERROR_FEATURE_NOT_SUPPORT) || (error == RT_ERROR_DRV_NOT_SUPPORT);
+    COND_PROC_RETURN_AND_MSG_OUTER(
+        isEventThreadNotSupport, error, ErrorCode::EE1016,
+        RT_LOG(
+            RT_LOG_ERROR, "Init drv event thread failed, error=%#x, devId=%u.", static_cast<uint32_t>(error),
+            device->Id_()),
+        "Starting the AI CPU service", "The driver does not support initializing the event thread");
+    ERROR_RETURN(
+        error, "Init drv event thread failed, error=%#x, devId=%u.", static_cast<uint32_t>(error), device->Id_());
 #if (!defined CFG_DEV_PLATFORM_PC)
     RT_LOG(
         RT_LOG_DEBUG, "OpenAicpuSd, devId=%u, chipType=%d, isAicpuSchStart=%u", device->Id_(), chipType_,
@@ -2308,7 +2311,7 @@ rtError_t Runtime::StartAicpuSd(Device* const device) const
 
     COND_PROC_RETURN_AND_MSG_OUTER(
         tsdOpenAicpuSd_ == nullptr, RT_ERROR_DRV_SYM_TSD, ErrorCode::EE1015, aicpuSchSdLock->Unlock(),
-        "Starting the AI CPU service", "Symbol TsdOpenAicpuSd not found.");
+        "Starting the AI CPU service", "Symbol TsdOpenAicpuSd not found in libtsdclient.so.");
 
     uint32_t userDeviceId;
     error = GetUserDevIdByDeviceId(device->Id_(), &userDeviceId, true);
@@ -5041,9 +5044,9 @@ rtError_t Runtime::GetVisibleDevices()
     isSetVisibleDev = true;
     const drvError_t drvRet = drvGetDevNum(&deviceCnt);
     if ((drvRet != DRV_ERROR_NONE) || (deviceCnt > RT_MAX_DEV_NUM)) {
-        DRV_ERROR_PROCESS(
-            drvRet, "[drv api] drvGetDevNum failed: drvRetCode=%d, deviceCnt=[%u,%u].", static_cast<int32_t>(drvRet),
-            deviceCnt, RT_MAX_DEV_NUM);
+        RT_LOG(
+            RT_LOG_ERROR, "[drv api] drvGetDevNum failed: drvRetCode=%d, deviceCnt=[%u,%u].",
+            static_cast<int32_t>(drvRet), deviceCnt, RT_MAX_DEV_NUM);
         retType = RT_GET_DRIVER_ERROR;
         return RT_ERROR_NONE;
     }

@@ -85,18 +85,18 @@ Profiler::~Profiler()
 rtError_t Profiler::Init()
 {
     apiProfileDecorator_ = new (std::nothrow) ApiProfileDecorator(api_, this);
-    COND_RETURN_AND_MSG_OUTER(
-        apiProfileDecorator_ == nullptr, RT_ERROR_PROF_NEW, ErrorCode::EE1013,
-        std::to_string(sizeof(ApiProfileDecorator)).c_str(), "new");
+    COND_RETURN_ERROR(
+        apiProfileDecorator_ == nullptr, RT_ERROR_PROF_NEW, "new ApiProfileDecorator failed, size=%zu bytes.",
+        sizeof(ApiProfileDecorator));
     RT_LOG(RT_LOG_DEBUG, "new ApiProfileDecorator ok, size=%zu bytes", sizeof(ApiProfileDecorator));
 
     if (&InitApiProfileLogDecorator != nullptr) {
         InitApiProfileLogDecorator(api_, this, &apiProfileLogDecorator_);
         const size_t logDecoratorSize =
             (&GetApiProfileLogDecoratorSize != nullptr) ? GetApiProfileLogDecoratorSize() : 0U;
-        COND_RETURN_AND_MSG_OUTER(
-            apiProfileLogDecorator_ == nullptr, RT_ERROR_PROF_NEW, ErrorCode::EE1013,
-            std::to_string(logDecoratorSize).c_str(), "new");
+        COND_RETURN_ERROR(
+            apiProfileLogDecorator_ == nullptr, RT_ERROR_PROF_NEW, "new ApiProfileLogDecorator failed, size=%zu bytes.",
+            logDecoratorSize);
         RT_LOG(RT_LOG_DEBUG, "new ApiProfileLogDecorator ok, size=%zu", logDecoratorSize);
 
         RT_LOG(RT_LOG_INFO, "Init ok, Runtime_alloc_size %zu bytes", sizeof(ApiProfileDecorator) + logDecoratorSize);

@@ -22,6 +22,7 @@ class ApiRtConfig;
 class ApiDeviceTopology;
 class ApiKernelFunc;
 
+size_t GetApiImplSize();
 Api* CreateImplAndGet();
 bool IsImplMbufSupported();
 ApiMbuf* CreateImplMbufAndGet();

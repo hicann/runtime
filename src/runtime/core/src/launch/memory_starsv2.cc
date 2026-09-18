@@ -61,10 +61,17 @@ rtError_t CheckReduceCapability(Stream* const stm, const rtRecudeKind_t kind, co
 
 rtError_t CheckReduceAlign(Stream* const stm, const void* const src, const void* const dst, const rtDataType_t type)
 {
+    const char* const expectedAlignment = ((type == RT_DATA_TYPE_FP16) || (type == RT_DATA_TYPE_INT16) ||
+                                           (type == RT_DATA_TYPE_UINT16) || (type == RT_DATA_TYPE_BFP16)) ?
+                                              "a 2-byte-aligned address" :
+                                              "a 4-byte-aligned address";
+    UNUSED(expectedAlignment);
     rtError_t error = stm->Context_()->CheckMemAlign(src, type);
-    ERROR_RETURN_MSG_INNER(error, "invoke src CheckMemAlign error code:%#x", static_cast<uint32_t>(error));
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
+        error != RT_ERROR_NONE, error, "Asynchronously performing the Reduce operation", src, "src", expectedAlignment);
     error = stm->Context_()->CheckMemAlign(dst, type);
-    ERROR_RETURN_MSG_INNER(error, "invoke dst CheckMemAlign error code:%#x", static_cast<uint32_t>(error));
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
+        error != RT_ERROR_NONE, error, "Asynchronously performing the Reduce operation", dst, "dst", expectedAlignment);
     return RT_ERROR_NONE;
 }
 
@@ -92,6 +99,13 @@ rtError_t SubmitReduceTask(
     stm->StreamLock();
     rtError_t error = RT_ERROR_NONE;
     rtMemcpyAsyncTask = stm->AllocTask(nullptr, TS_TASK_TYPE_MEMCPY, error);
+    if (unlikely((rtMemcpyAsyncTask == nullptr) && (error == RT_ERROR_TASK_NOT_SUPPORT) && stm->IsTaskGroupUpdate())) {
+        RT_LOG(
+            RT_LOG_ERROR, "stream_id=%d alloc ccuLaunch task failed, retCode=%#x.", stm->Id_(),
+            static_cast<uint32_t>(error));
+        stm->StreamUnLock();
+        return error;
+    }
     COND_PROC_RETURN_ERROR_MSG_INNER(rtMemcpyAsyncTask == nullptr, error, stm->StreamUnLock();
                                      , "stream_id=%d alloc ccuLaunch task failed, retCode=%#x.", stm->Id_(),
                                      static_cast<uint32_t>(error));

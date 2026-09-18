@@ -1096,9 +1096,11 @@ static rtError_t UpdateCachedParamInfos(
     }
 
     if (kernelInfo->cachedParamInfos.size() != kernelInfo->paramCount) {
-        RT_LOG(
-            RT_LOG_ERROR, "Cached param count mismatch: kernel_name=%s, expected=%u, cached=%zu.", kernelName,
-            kernelInfo->paramCount, kernelInfo->cachedParamInfos.size());
+        RT_LOG_OUTER_MSG_IMPL(
+            ErrorCode::EE1014,
+            RtFmtMsg(
+                "The cached parameter count %zu of kernel %s does not match the declared parameter count %u",
+                kernelInfo->cachedParamInfos.size(), kernelName, kernelInfo->paramCount));
         return RT_ERROR_INVALID_VALUE;
     }
 
@@ -1119,6 +1121,11 @@ static rtError_t UpdateCachedParamInfos(
                 RT_LOG_INFO, "Restore cached param info: kernel_name=%s, ordinal=%u, offset=%u, size=%u.", kernelName,
                 cachedInfo.info.ordinal, cachedInfo.info.offset, cachedInfo.info.size);
         } else {
+            RT_LOG_OUTER_MSG_IMPL(
+                ErrorCode::EE1014,
+                RtFmtMsg(
+                    "The cached parameter ordinal %u of kernel %s is outside the valid range [0, %u)",
+                    cachedInfo.info.ordinal, kernelName, kernelInfo->paramCount));
             RT_LOG(
                 RT_LOG_ERROR,
                 "Restore cached param info failed: kernel_name=%s, error ordinal=%u, offset=%u, size=%u, "

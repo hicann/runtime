@@ -1074,7 +1074,10 @@ rtError_t ApiImpl::LaunchSqeUpdateTask(
         static_cast<uint32_t>(error));
 
     if ((modelStream->GetBindFlag() == false) || (!modelStream->IsModelStream())) {
-        RT_LOG_CALL_MSG(ERR_MODULE_GE, "Invalid dev_id=%d, stream_id=%u, stream is not in model", dev->Id_(), streamId);
+        RT_LOG(RT_LOG_ERROR, "Invalid dev_id=%d, stream_id=%u, stream is not in model", dev->Id_(), streamId);
+        RT_LOG_OUTER_MSG_IMPL(
+            ErrorCode::EE1016, "Updating task information",
+            RtFmtMsg("The stream (stream_id=%u) is not bound to a model", streamId));
         return RT_ERROR_INVALID_VALUE;
     }
 

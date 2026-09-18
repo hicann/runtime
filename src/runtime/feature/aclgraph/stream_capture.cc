@@ -81,9 +81,10 @@ rtError_t Stream::AllocCaptureTaskImpl(tsTaskType_t taskType, uint32_t sqeNum, T
         return RT_ERROR_STREAM_CAPTURE_EXIT;
     }
 
-    COND_PROC_RETURN_ERROR(
-        IsTaskGroupBreak(), RT_ERROR_STREAM_TASKGRP_INTR, SetTaskGroupErrCode(RT_ERROR_STREAM_TASKGRP_INTR),
-        "the task group interrupted.");
+    COND_PROC_RETURN_AND_MSG_OUTER(
+        IsTaskGroupBreak(), RT_ERROR_STREAM_TASKGRP_INTR, ErrorCode::EE1016,
+        SetTaskGroupErrCode(RT_ERROR_STREAM_TASKGRP_INTR), "Adding a task to the task group",
+        "The task group has been interrupted and does not support further task delivery");
 
     if (NeedCascadeExpandStream(curCaptureStream)) {
         Stream* newCaptureStream = nullptr;

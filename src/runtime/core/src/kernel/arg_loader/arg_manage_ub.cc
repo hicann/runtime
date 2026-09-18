@@ -11,6 +11,7 @@
 #include "task_info.hpp"
 #include "device.hpp"
 #include "stream.hpp"
+#include "error_message_manage.hpp"
 #include "stars_arg_manager.hpp"
 #include "kernel.hpp"
 #include "kernel_utils.hpp"
@@ -116,16 +117,12 @@ rtError_t UbArgManage::H2DArgCopy(const StarsArgLoaderResult* const result, void
         const errno_t ret = memcpy_s(
             RtValueToPtr<void*>(RtPtrToValue<void*>(dest) + offset), static_cast<size_t>(curSize),
             RtValueToPtr<void*>(RtPtrToValue<void*>(src) + offset), static_cast<size_t>(curSize));
-        if (ret != EOK) {
-            const std::string retStr = std::to_string(ret);
-            std::stringstream ss;
-            ss << std::hex << "dest=0x" << RtPtrToValue(dest) + offset << ", src=0x" << RtPtrToValue(src) + offset
-               << std::dec << ", destMax=" << curSize << ", count=" << curSize << ".";
-            RT_LOG_OUTER_MSG_IMPL(
-                ErrorCode::EE1020, "Copying kernel arguments from host to device", "memcpy_s", retStr.c_str(),
-                strerror(ret), ss.str().c_str());
-            return RT_ERROR_DRV_ERR;
-        }
+        COND_RETURN_AND_MSG_OUTER(
+            ret != EOK, RT_ERROR_DRV_ERR, ErrorCode::EE1020, "Copying kernel arguments from host to device", "memcpy_s",
+            RtFmtMsg("%d", ret), strerror(ret),
+            RtFmtMsg(
+                "dest=0x%" PRIx64 ", src=0x%" PRIx64 ", destMax=%u, count=%u.", RtPtrToValue(dest) + offset,
+                RtPtrToValue(src) + offset, curSize, curSize));
         offset += curSize;
     }
     // construct args copy WQE
@@ -178,22 +175,24 @@ rtError_t UbArgManage::LoadSimtArgsFromArray(
     void* argsBuffer = result->hostAddr;
     constexpr uint64_t syncCounter = 0ULL;
     errno_t ret = memcpy_s(argsBuffer, totalArgsSize, &syncCounter, SIMT_SYNC_COUNTER_SIZE);
-    if (ret != EOK) {
-        FreeFail(result);
-        RT_LOG(RT_LOG_ERROR, "memcpy sync counter failed, size=%u, ret=%d.", SIMT_SYNC_COUNTER_SIZE, ret);
-        return RT_ERROR_SEC_HANDLE;
-    }
+    COND_PROC_RETURN_AND_MSG_OUTER(
+        ret != EOK, RT_ERROR_SEC_HANDLE, ErrorCode::EE1020, FreeFail(result),
+        "Preparing the SIMT synchronization counter", "memcpy_s", RtFmtMsg("%d", ret), strerror(ret),
+        RtFmtMsg(
+            "dest=0x%" PRIx64 ", src=0x%" PRIx64 ", destMax=%u, count=%u.", RtPtrToValue(argsBuffer),
+            RtPtrToValue(&syncCounter), totalArgsSize, SIMT_SYNC_COUNTER_SIZE));
 
     uint32_t implicitData[SIMT_IMPLICIT_PARAM_COUNT] = {simtArgsArray->blockDim.z, simtArgsArray->blockDim.y,
                                                         simtArgsArray->blockDim.x, simtArgsArray->gridDim.z,
                                                         simtArgsArray->gridDim.y,  simtArgsArray->gridDim.x};
     void* implicitDataStart = static_cast<char*>(argsBuffer) + SIMT_SYNC_COUNTER_SIZE;
     ret = memcpy_s(implicitDataStart, totalArgsSize - SIMT_SYNC_COUNTER_SIZE, implicitData, SIMT_DIM_PARAM_SIZE);
-    if (ret != EOK) {
-        FreeFail(result);
-        RT_LOG(RT_LOG_ERROR, "memcpy implicit data failed, size=%u, ret=%d.", SIMT_DIM_PARAM_SIZE, ret);
-        return RT_ERROR_SEC_HANDLE;
-    }
+    COND_PROC_RETURN_AND_MSG_OUTER(
+        ret != EOK, RT_ERROR_SEC_HANDLE, ErrorCode::EE1020, FreeFail(result), "Copying SIMT grid and block dimensions",
+        "memcpy_s", RtFmtMsg("%d", ret), strerror(ret),
+        RtFmtMsg(
+            "dest=0x%" PRIx64 ", src=0x%" PRIx64 ", destMax=%u, count=%u.", RtPtrToValue(implicitDataStart),
+            RtPtrToValue(implicitData), totalArgsSize - SIMT_SYNC_COUNTER_SIZE, SIMT_DIM_PARAM_SIZE));
 
     void* kernelArgsStart = static_cast<char*>(argsBuffer) + SIMT_IMPLICIT_PARAM_SIZE;
     error = CopyKernelParamsToBuffer(kernel, simtArgsArray->argsArrayInfo, kernelArgsStart);
@@ -219,22 +218,24 @@ rtError_t UbArgManage::LoadSimtHostArgs(const bool useArgPool, SimtArgsHost* sim
     void* argsBuffer = result->hostAddr;
     constexpr uint64_t syncCounter = 0ULL;
     errno_t ret = memcpy_s(argsBuffer, totalArgsSize, &syncCounter, SIMT_SYNC_COUNTER_SIZE);
-    if (ret != EOK) {
-        FreeFail(result);
-        RT_LOG(RT_LOG_ERROR, "memcpy sync counter failed, size=%u, ret=%d.", SIMT_SYNC_COUNTER_SIZE, ret);
-        return RT_ERROR_SEC_HANDLE;
-    }
+    COND_PROC_RETURN_AND_MSG_OUTER(
+        ret != EOK, RT_ERROR_SEC_HANDLE, ErrorCode::EE1020, FreeFail(result),
+        "Preparing the SIMT synchronization counter", "memcpy_s", RtFmtMsg("%d", ret), strerror(ret),
+        RtFmtMsg(
+            "dest=0x%" PRIx64 ", src=0x%" PRIx64 ", destMax=%u, count=%u.", RtPtrToValue(argsBuffer),
+            RtPtrToValue(&syncCounter), totalArgsSize, SIMT_SYNC_COUNTER_SIZE));
 
     uint32_t implicitData[SIMT_IMPLICIT_PARAM_COUNT] = {simtArgsHost->blockDim.z, simtArgsHost->blockDim.y,
                                                         simtArgsHost->blockDim.x, simtArgsHost->gridDim.z,
                                                         simtArgsHost->gridDim.y,  simtArgsHost->gridDim.x};
     void* implicitDataStart = static_cast<char*>(argsBuffer) + SIMT_SYNC_COUNTER_SIZE;
     ret = memcpy_s(implicitDataStart, totalArgsSize - SIMT_SYNC_COUNTER_SIZE, implicitData, SIMT_DIM_PARAM_SIZE);
-    if (ret != EOK) {
-        FreeFail(result);
-        RT_LOG(RT_LOG_ERROR, "memcpy implicit data failed, size=%u, ret=%d.", SIMT_DIM_PARAM_SIZE, ret);
-        return RT_ERROR_SEC_HANDLE;
-    }
+    COND_PROC_RETURN_AND_MSG_OUTER(
+        ret != EOK, RT_ERROR_SEC_HANDLE, ErrorCode::EE1020, FreeFail(result), "Copying SIMT grid and block dimensions",
+        "memcpy_s", RtFmtMsg("%d", ret), strerror(ret),
+        RtFmtMsg(
+            "dest=0x%" PRIx64 ", src=0x%" PRIx64 ", destMax=%u, count=%u.", RtPtrToValue(implicitDataStart),
+            RtPtrToValue(implicitData), totalArgsSize - SIMT_SYNC_COUNTER_SIZE, SIMT_DIM_PARAM_SIZE));
 
     void* hostArgsStart = static_cast<char*>(argsBuffer) + SIMT_IMPLICIT_PARAM_SIZE;
     ret = memcpy_s(hostArgsStart, simtArgsHost->argsSize, simtArgsHost->hostArgs, simtArgsHost->argsSize);

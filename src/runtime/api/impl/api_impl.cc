@@ -6295,8 +6295,10 @@ rtError_t ApiImpl::AiCpuTaskSupportCheck()
         !IS_SUPPORT_CHIP_FEATURE(
             rtInstance->GetChipType(), RtOptionalFeatureType::RT_FEATURE_TASK_AICPU_DOT_SUPPORT_CHECK),
         RT_ERROR_NONE);
-    COND_RETURN_ERROR_MSG_INNER(
-        rtInstance->GetAicpuCnt() == 0, RT_ERROR_FEATURE_NOT_SUPPORT, "AICPU tasks are not supported!");
+    COND_PROC_RETURN_AND_MSG_OUTER(
+        rtInstance->GetAicpuCnt() == 0, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1006,
+        RT_LOG(RT_LOG_ERROR, "AICPU tasks are not supported!"), "Checking AI CPU task support", "AI CPU task",
+        "The current device has no AI CPU cores");
     return RT_ERROR_NONE;
 }
 

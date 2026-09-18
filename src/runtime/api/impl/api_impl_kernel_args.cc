@@ -8,11 +8,9 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include <cinttypes>
 #include <cstring>
-#include <iomanip>
 #include <new>
-#include <sstream>
-#include <string>
 
 #include "api_impl.hpp"
 #include "args_handle_allocator.hpp"
@@ -95,10 +93,15 @@ rtError_t ApiImpl::ProcessOverFlowArgs(RtArgsHandle* argsHandle)
     const size_t needOccupyOffset = realParaOffset + sizeof(uint64_t); // overflowAddr占8哥字节
 
     // 内存占用不能超过最大内存偏移
-    COND_RETURN_ERROR_MSG_INNER(
+    COND_PROC(
+        needOccupyOffset > argsHandle->bufferSize,
+        RT_LOG(
+            RT_LOG_ERROR, "process overflow args failed, para size overflow, needOccupyOffset=%zu,total=%zu",
+            needOccupyOffset, argsHandle->bufferSize));
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         (needOccupyOffset > argsHandle->bufferSize), RT_ERROR_INVALID_VALUE,
-        "process overflow args failed, para size overflow, needOccupyOffset=%zu,total=%zu", needOccupyOffset,
-        argsHandle->bufferSize);
+        "Processing overflow parameters in the kernel parameter handle", needOccupyOffset, "required buffer size",
+        RtFmtMsg("[0, %zu]", argsHandle->bufferSize));
 
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
@@ -220,7 +223,9 @@ rtError_t ApiImpl::KernelArgsGetMemSize(Kernel* const funcHandle, size_t userArg
 rtError_t ApiImpl::KernelArgsInit(Kernel* const funcHandle, RtArgsHandle** argsHandle)
 {
     static thread_local ArgsHandleAllocator threadArgsHandle;
-    NULL_PTR_RETURN_MSG(threadArgsHandle.localArgsHandle_, RT_ERROR_MEMORY_ALLOCATION);
+    COND_RETURN_ERROR(
+        threadArgsHandle.localArgsHandle_ == nullptr, RT_ERROR_MEMORY_ALLOCATION,
+        "Check param failed, threadArgsHandle.localArgsHandle_ can not be null.");
 
     RtArgsHandle* localArgsHandle = threadArgsHandle.localArgsHandle_;
     ReinitKernelArgsEmbeddedHandle(localArgsHandle, MAX_PARAM_CNT);
@@ -267,10 +272,15 @@ rtError_t ApiImpl::KernelArgsAppendPlaceHolder(RtArgsHandle* argsHandle, ParaDet
         "Appending and getting placeholder buffer after finalization is not supported");
 
     // 用户参数数量不能超过最大参数数量
-    COND_RETURN_ERROR_MSG_INNER(
+    COND_PROC(
+        (argsHandle->realUserParamNum + 1U) > argsHandle->maxUserParamNum,
+        RT_LOG(
+            RT_LOG_ERROR, "para num exceed max num,current real user para num is %u,max user para num is %u",
+            argsHandle->realUserParamNum, argsHandle->maxUserParamNum));
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         ((argsHandle->realUserParamNum + 1U) > argsHandle->maxUserParamNum), RT_ERROR_INVALID_VALUE,
-        "para num exceed max num,current real user para num is %u,max user para num is %u",
-        argsHandle->realUserParamNum, argsHandle->maxUserParamNum);
+        "Adding placeholder parameters to the kernel parameter handle", argsHandle->realUserParamNum + 1U,
+        "user parameter count", RtFmtMsg("[0, %u]", static_cast<uint32_t>(argsHandle->maxUserParamNum)));
 
     const uint32_t idx = argsHandle->realUserParamNum;
     argsHandle->para[idx].type = 1U; // 0 is common param, 1 is place holder param
@@ -285,10 +295,15 @@ rtError_t ApiImpl::KernelArgsAppendPlaceHolder(RtArgsHandle* argsHandle, ParaDet
     const size_t realParaOffset = argsHandle->argsSize + padding;
     constexpr size_t phParamSize = sizeof(uint64_t); // placeholder内部放的是指针为8字节
     const size_t needOccupyOffset = realParaOffset + phParamSize;
-    COND_RETURN_ERROR_MSG_INNER(
+    COND_PROC(
+        needOccupyOffset > argsHandle->bufferSize,
+        RT_LOG(
+            RT_LOG_ERROR, "args append failed,para size overflow,needOccupyOffset=%zu,total=%zu", needOccupyOffset,
+            argsHandle->bufferSize));
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         (needOccupyOffset > argsHandle->bufferSize), RT_ERROR_INVALID_VALUE,
-        "args append failed,para size overflow,needOccupyOffset=%zu,total=%zu", needOccupyOffset,
-        argsHandle->bufferSize);
+        "Adding placeholder parameters to the kernel parameter handle", needOccupyOffset, "required buffer size",
+        RtFmtMsg("[0, %zu]", argsHandle->bufferSize));
 
     argsHandle->para[idx].paraOffset = realParaOffset;
     argsHandle->para[idx].paraSize = static_cast<uint32_t>(sizeof(uint64_t));
@@ -308,8 +323,13 @@ rtError_t ApiImpl::KernelArgsGetPlaceHolderBuffer(
 {
     RT_LOG(RT_LOG_DEBUG, "get placeholder start, dataSize=%zu", dataSize);
     // 对非place holder的参数如果获取Buffer做拦截
-    COND_RETURN_ERROR_MSG_INNER(
-        paraHandle->type == 0U, RT_ERROR_INVALID_VALUE, "param type=0 does not support getting the placeholder buffer");
+    COND_PROC(
+        paraHandle->type == 0U, RT_LOG(RT_LOG_ERROR, "param type=0 does not support getting the placeholder buffer"));
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
+        paraHandle->type == 0U, RT_ERROR_INVALID_VALUE,
+        "Obtaining the memory address pointed to by the paramHandle placeholder",
+        "a common parameter handle returned by aclrtKernelArgsAppend", "paramHandle",
+        "a placeholder parameter handle returned by aclrtKernelArgsAppendPlaceHolder");
 
     // 开始排布数据区之后不允许再排布参数区
     COND_RETURN_AND_MSG_OUTER(
@@ -332,10 +352,15 @@ rtError_t ApiImpl::KernelArgsGetPlaceHolderBuffer(
 
     // 内存占用不能超过最大内存偏移
     const size_t needOccupyOffset = realParaOffset + dataSize;
-    COND_RETURN_ERROR_MSG_INNER(
+    COND_PROC(
+        needOccupyOffset > argsHandle->bufferSize,
+        RT_LOG(
+            RT_LOG_ERROR, "get placeholder buffer failed, size overflow, needOccupyOffset=%zu, total=%zu",
+            needOccupyOffset, argsHandle->bufferSize));
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         (needOccupyOffset > argsHandle->bufferSize), RT_ERROR_INVALID_VALUE,
-        "get placeholder buffer failed, size overflow, needOccupyOffset=%zu, total=%zu", needOccupyOffset,
-        argsHandle->bufferSize);
+        "Obtaining the memory address pointed to by the paramHandle placeholder", needOccupyOffset,
+        "required buffer size", RtFmtMsg("[0, %zu]", argsHandle->bufferSize));
     argsHandle->isGotPhBuff = true;
     paraHandle->dataOffset = realParaOffset;
     *bufferAddr = RtPtrToPtr<void*>(RtPtrToPtr<uint8_t*>(argsHandle->buffer) + paraHandle->dataOffset);
@@ -364,10 +389,15 @@ rtError_t ApiImpl::KernelArgsAppend(RtArgsHandle* argsHandle, void* para, size_t
         "Appending placeholder or common parameter after getting placeholder buffer is not supported");
 
     // 用户参数数量不能超过最大参数数量
-    COND_RETURN_ERROR_MSG_INNER(
+    COND_PROC(
+        (argsHandle->realUserParamNum + 1U) > argsHandle->maxUserParamNum,
+        RT_LOG(
+            RT_LOG_ERROR, "para num exceed max num,current real user para num is %u,max user para num is %u",
+            argsHandle->realUserParamNum, argsHandle->maxUserParamNum));
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         ((argsHandle->realUserParamNum + 1U) > argsHandle->maxUserParamNum), RT_ERROR_INVALID_VALUE,
-        "para num exceed max num,current real user para num is %u,max user para num is %u",
-        argsHandle->realUserParamNum, argsHandle->maxUserParamNum);
+        "Adding parameters to the kernel parameter handle", argsHandle->realUserParamNum + 1U, "user parameter count",
+        RtFmtMsg("[0, %u]", static_cast<uint32_t>(argsHandle->maxUserParamNum)));
     const Kernel* const kernel = RtPtrToPtr<Kernel*>(argsHandle->funcHandle);
     // CPU Kernel是紧密排布， 所以做1字节对齐，非CPU Kernel（AIC/AIC）仍然是8字节对齐
     const size_t alignSize = (kernel->GetKernelRegisterType() == RT_KERNEL_REG_TYPE_CPU) ?
@@ -379,10 +409,15 @@ rtError_t ApiImpl::KernelArgsAppend(RtArgsHandle* argsHandle, void* para, size_t
     const size_t needOccupyOffset = realParaOffset + paraSize;
 
     // 内存占用不能超过最大内存偏移
-    COND_RETURN_ERROR_MSG_INNER(
+    COND_PROC(
+        needOccupyOffset > argsHandle->bufferSize,
+        RT_LOG(
+            RT_LOG_ERROR, "args append failed, para size overflow, needOccupyOffset=%zu,total=%zu", needOccupyOffset,
+            argsHandle->bufferSize));
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         (needOccupyOffset > argsHandle->bufferSize), RT_ERROR_INVALID_VALUE,
-        "args append failed, para size overflow, needOccupyOffset=%zu,total=%zu", needOccupyOffset,
-        argsHandle->bufferSize);
+        "Adding parameters to the kernel parameter handle", needOccupyOffset, "required buffer size",
+        RtFmtMsg("[0, %zu]", argsHandle->bufferSize));
 
     const uint8_t index = argsHandle->realUserParamNum;
     *paraHandle = &(argsHandle->para[index]);
@@ -392,15 +427,12 @@ rtError_t ApiImpl::KernelArgsAppend(RtArgsHandle* argsHandle, void* para, size_t
     argsHandle->para[index].dataOffset = 0U;
     const uintptr_t offset = RtPtrToValue(argsHandle->buffer) + static_cast<uint64_t>(realParaOffset);
     const errno_t ret = memcpy_s(RtPtrToPtr<void*>(offset), paraSize, para, paraSize);
-    if (ret != EOK) {
-        std::stringstream ss;
-        ss << std::hex << "dest=0x" << offset << ", para=0x" << RtPtrToValue(para) << std::dec
-           << ", destMax=" << paraSize << ", paraSize=" << paraSize << ".";
-        RT_LOG_OUTER_MSG_IMPL(
-            ErrorCode::EE1020, "Adding placeholder parameters to the kernel parameter handle", "memcpy_s",
-            std::to_string(ret).c_str(), strerror(ret), ss.str().c_str());
-        return RT_ERROR_INVALID_VALUE;
-    }
+    COND_RETURN_AND_MSG_OUTER(
+        ret != EOK, RT_ERROR_INVALID_VALUE, ErrorCode::EE1020, "Adding parameters to the kernel parameter handle",
+        "memcpy_s", RtFmtMsg("%d", ret), strerror(ret),
+        RtFmtMsg(
+            "dest=0x%" PRIx64 ", para=0x%" PRIx64 ", destMax=%zu, paraSize=%zu.", static_cast<uint64_t>(offset),
+            RtPtrToValue(para), paraSize, paraSize));
     InitEmbeddedInnerHandle<ParaDetail>(*paraHandle);
     argsHandle->argsSize = needOccupyOffset; // 本地append参数后，内存偏移的变化
     argsHandle->realUserParamNum++;

@@ -191,14 +191,18 @@ rtError_t InternalUpdateTaskPrepare(
             updateTask->id, updateTask->stream->Id_()));
 
     if (updateTask->u.aicTaskInfo.kernel->GetMixType() == NO_MIX) {
-        if (!(device->CheckFeatureSupport(TS_FEATURE_CAPTURE_SQE_UPDATE))) {
+        COND_PROC_RETURN_AND_MSG_OUTER(
+            !(device->CheckFeatureSupport(TS_FEATURE_CAPTURE_SQE_UPDATE)), RT_ERROR_DRV_NOT_SUPPORT_UPDATE_OP,
+            ErrorCode::EE1015,
             RT_LOG(
                 RT_LOG_ERROR,
-                "current ts version does not support update no mix op, kernel name=%s, "
-                "drv devId=%u, stream_id=%d, task_id=%hu.",
-                kernel->Name_().c_str(), device->Id_(), updateTask->stream->Id_(), updateTask->id);
-            return RT_ERROR_DRV_NOT_SUPPORT_UPDATE_OP;
-        }
+                "current ts version does not support update no mix op, kernel name=%s, drv devId=%u, stream_id=%d, "
+                "task_id=%hu.",
+                kernel->Name_().c_str(), device->Id_(), updateTask->stream->Id_(), updateTask->id),
+            "Updating the captured non-mix kernel task",
+            RtFmtMsg(
+                "The current TS version does not support updating kernel %s. device_id=%u, stream_id=%d, task_id=%hu.",
+                kernel->Name_().c_str(), device->Id_(), updateTask->stream->Id_(), updateTask->id));
         updateTask->u.aicTaskInfo.updateSqeOffset = 0U;
     }
 
@@ -595,6 +599,9 @@ rtError_t StreamLaunchKernelV2(
     TIMESTAMP_BEGIN(rtKernelLaunch_AllocTask);
     kernTask = stm->AllocTask(&submitTask, TS_TASK_TYPE_KERNEL_AICORE, errorReason, 1U, UpdateTaskFlag::SUPPORT);
     TIMESTAMP_END(rtKernelLaunch_AllocTask);
+    COND_RETURN_ERROR(
+        (kernTask == nullptr) && (errorReason == RT_ERROR_STREAM_TASKGRP_UPDATE), errorReason,
+        "Failed to alloc task during task group update, stream_id=%d, retCode=%#x.", stm->Id_(), errorReason);
     COND_RETURN_ERROR_MSG_INNER(
         kernTask == nullptr, errorReason,
         "Failed to alloc task, stream_id=%d."
@@ -608,6 +615,12 @@ rtError_t StreamLaunchKernelV2(
 
     if (kernTask->isUpdateSinkSqe == 1U) {
         error = InternalUpdateTaskPrepare(ctx, kernTask, kernel, stm);
+        if (unlikely(error == RT_ERROR_DRV_NOT_SUPPORT_UPDATE_OP)) {
+            RT_LOG(
+                RT_LOG_ERROR, "Check kernel task failed, stream_id=%d, task_id=%hu, retCode=%#x.", stm->Id_(),
+                kernTask->id, error);
+            goto ERROR_FREE;
+        }
         ERROR_GOTO_MSG_INNER(
             error, ERROR_FREE, "Check kernel task failed, stream_id=%d, task_id=%hu, retCode=%#x.", stm->Id_(),
             kernTask->id, error);
@@ -733,6 +746,9 @@ rtError_t StreamLaunchKernelV1(
     TIMESTAMP_BEGIN(rtKernelLaunch_AllocTask);
     kernTask = stm->AllocTask(&submitTask, TS_TASK_TYPE_KERNEL_AICORE, errorReason, 1U, UpdateTaskFlag::SUPPORT);
     TIMESTAMP_END(rtKernelLaunch_AllocTask);
+    COND_RETURN_ERROR(
+        (kernTask == nullptr) && (errorReason == RT_ERROR_STREAM_TASKGRP_UPDATE), errorReason,
+        "Failed to alloc task during task group update, stream_id=%d, retCode=%#x.", stm->Id_(), errorReason);
     COND_RETURN_ERROR_MSG_INNER(
         kernTask == nullptr, errorReason, "Failed to alloc task, stream_id=%d, retCode=%#x.", stm->Id_(), errorReason);
 
@@ -752,6 +768,12 @@ rtError_t StreamLaunchKernelV1(
 
     if (kernTask->isUpdateSinkSqe == 1U) {
         error = InternalUpdateTaskPrepare(ctx, kernTask, registeredKernel, stm);
+        if (unlikely(error == RT_ERROR_DRV_NOT_SUPPORT_UPDATE_OP)) {
+            RT_LOG(
+                RT_LOG_ERROR, "Check kernel task failed, stream_id=%d, task_id=%hu, retCode=%#x.", stm->Id_(),
+                kernTask->id, error);
+            goto ERROR_RECYCLE;
+        }
         ERROR_GOTO_MSG_INNER(
             error, ERROR_RECYCLE, "Check kernel task failed, stream_id=%d, task_id=%hu, retCode=%#x.", stm->Id_(),
             kernTask->id, error);
@@ -865,6 +887,9 @@ rtError_t StreamLaunchKernelWithHandle(
     TIMESTAMP_BEGIN(rtKernelLaunch_AllocTask);
     kernTask = stm->AllocTask(&submitTask, TS_TASK_TYPE_KERNEL_AICORE, errorReason, 1U, UpdateTaskFlag::SUPPORT);
     TIMESTAMP_END(rtKernelLaunch_AllocTask);
+    COND_RETURN_ERROR(
+        (kernTask == nullptr) && (errorReason == RT_ERROR_STREAM_TASKGRP_UPDATE), errorReason,
+        "Failed to alloc task during task group update, stream_id=%d, retCode=%#x.", stm->Id_(), errorReason);
     COND_RETURN_ERROR_MSG_INNER(
         kernTask == nullptr, errorReason,
         "Failed to alloc task, stream_id=%d."
@@ -889,6 +914,12 @@ rtError_t StreamLaunchKernelWithHandle(
 
     if (kernTask->isUpdateSinkSqe == 1U) {
         error = InternalUpdateTaskPrepare(ctx, kernTask, registeredKernel, stm);
+        if (unlikely(error == RT_ERROR_DRV_NOT_SUPPORT_UPDATE_OP)) {
+            RT_LOG(
+                RT_LOG_ERROR, "Check kernel task failed, stream_id=%d, task_id=%hu, retCode=%#x.", stm->Id_(),
+                kernTask->id, error);
+            goto ERROR_FREE;
+        }
         ERROR_GOTO_MSG_INNER(
             error, ERROR_FREE, "Check kernel task failed, stream_id=%d, task_id=%hu, retCode=%#x.", stm->Id_(),
             kernTask->id, error);

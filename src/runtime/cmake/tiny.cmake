@@ -851,6 +851,8 @@ macro(add_runtime_v100_library target_name)
         -fvisibility=hidden
         -fno-common
         -fno-strict-aliasing
+        -ffunction-sections
+        -fdata-sections
         $<$<STREQUAL:${CMAKE_CXX_COMPILER_VERSION},7.3.0>:-Werror>
         -Werror=missing-field-initializers
         $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:-Wextra>
@@ -860,6 +862,11 @@ macro(add_runtime_v100_library target_name)
     target_include_directories(${target_name} PRIVATE
         ${RUNTIME_INC_DIR_TINY}
         ${RUNTIME_DIR}/include
+    )
+
+    # tiny 裁剪：按函数/数据分段并回收未引用段，剔除未使用的功能代码，控制 so 体积
+    target_link_options(${target_name} PRIVATE
+        $<$<NOT:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>>:-Wl,--gc-sections>
     )
 
     target_link_libraries(${target_name}

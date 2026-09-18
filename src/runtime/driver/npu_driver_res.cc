@@ -804,9 +804,8 @@ rtError_t NpuDriver::GetSqHead(
 
     while (retryCount < GET_SQ_HEAD_MAX_RETRY_TIMES) {
         const drvError_t drvRet = halSqCqQuery(deviceId, &queryInfoIn);
-        COND_RETURN_ERROR_MSG_CALL(
-            ERR_MODULE_DRV, drvRet != DRV_ERROR_NONE, RT_GET_DRV_ERRCODE(drvRet),
-            "[drv api] halSqCqQuery device_id=%u, ts_id=%u, sq_id=%u, drvRetCode=%d.", deviceId, tsId, sqId,
+        DRV_PROCESS_ERROR_RETURN(
+            drvRet, "[drv api] halSqCqQuery device_id=%u, ts_id=%u, sq_id=%u, drvRetCode=%d.", deviceId, tsId, sqId,
             static_cast<int32_t>(drvRet));
 
         head = static_cast<uint16_t>(queryInfoIn.value[0] & 0xFFFFU);
@@ -1258,8 +1257,8 @@ rtError_t NpuDriver::GetSqRegVirtualAddrBySqid(
         queryInfoIn.prop = DRV_SQCQ_PROP_SQ_REG_BASE;
         COND_RETURN_WARN(&halSqCqQuery == nullptr, RT_ERROR_DRV_NOT_SUPPORT, "[drv api] halSqCqQuery does not exist");
         const drvError_t drvRet = halSqCqQuery(static_cast<uint32_t>(deviceId), &queryInfoIn);
-        COND_RETURN_ERROR_MSG_CALL(
-            ERR_MODULE_DRV, drvRet != DRV_ERROR_NONE, RT_GET_DRV_ERRCODE(drvRet),
+        DRV_PROCESS_ERROR_RETURN(
+            drvRet,
             "[drv api] halSqCqQuery get SqSimple Virtual Addr failed device_id=%u, ts_id=%u, "
             "sq_id=%u, drvRetCode=%d.",
             deviceId, tsId, sqId, static_cast<int32_t>(drvRet));
@@ -1267,7 +1266,8 @@ rtError_t NpuDriver::GetSqRegVirtualAddrBySqid(
         *addr = (static_cast<uint64_t>(queryInfoIn.value[0]) << 32U) | (static_cast<uint64_t>(queryInfoIn.value[1]));
         // value[2] is addr size.
         *len = queryInfoIn.value[2];
-        COND_RETURN_ERROR(*addr == 0ULL, RT_ERROR_DRV_ERR, "[drv api] halSqCqQuery get SqSimple Virtual Addr=0 fail.");
+        COND_RETURN_ERROR_MSG_INNER(
+            *addr == 0ULL, RT_ERROR_DRV_ERR, "[drv api] halSqCqQuery get SqSimple Virtual Addr=0 fail.");
         RT_LOG(
             RT_LOG_INFO, "addr high 32 bit=0x%x, addr low 32 bit=0x%x, addr=0x%" PRIx64 ", size=%u",
             queryInfoIn.value[0], queryInfoIn.value[1], *addr, queryInfoIn.value[2]);

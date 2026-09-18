@@ -883,14 +883,24 @@ rtError_t UmaArgLoader::CheckPolicyPreCondition(uint32_t size, LoadPolicy policy
             "size=%u is more than MaxSize=%u", size, (ARG_ENTRY_INCRETMENT_SIZE + ARG_ENTRY_SIZE));
     }
     if (policy == LoadPolicy::LP_CPU_KRN_EX) {
-        COND_RETURN_ERROR(
-            size > itemSize_ && maxArgAllocator_ == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT,
-            "maxArgAllocator_ is nullptr.");
+        COND_PROC_RETURN_AND_MSG_OUTER(
+            size > itemSize_ && maxArgAllocator_ == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1006,
+            RT_LOG(RT_LOG_ERROR, "maxArgAllocator_ is nullptr."), "Loading AI CPU kernel arguments",
+            RtFmtMsg("AI CPU kernel argument size %u bytes", size),
+            RtFmtMsg(
+                "The large-argument allocator is unavailable. Reduce the argument size to no more than %u bytes or "
+                "use a device that supports large AI CPU kernel arguments",
+                itemSize_));
     }
     if (policy == LoadPolicy::LP_CPU_KRN) {
-        COND_RETURN_ERROR(
+        COND_PROC_RETURN_AND_MSG_OUTER(
             size > MULTI_GRAPH_ARG_ENTRY_SIZE && superArgAllocator_ == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT,
-            "superArgAllocator_ is nullptr.");
+            ErrorCode::EE1006, RT_LOG(RT_LOG_ERROR, "superArgAllocator_ is nullptr."),
+            "Loading AI CPU kernel arguments", RtFmtMsg("AI CPU kernel argument size %u bytes", size),
+            RtFmtMsg(
+                "The large-argument allocator is unavailable. Reduce the argument size to no more than %u bytes or "
+                "use a device that supports large AI CPU kernel arguments",
+                MULTI_GRAPH_ARG_ENTRY_SIZE));
     }
     return RT_ERROR_NONE;
 }

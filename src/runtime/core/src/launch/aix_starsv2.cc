@@ -372,6 +372,10 @@ rtError_t StreamLaunchKernelV1(
     stm->StreamLock();
     kernelTask = stm->AllocTask(nullptr, TS_TASK_TYPE_KERNEL_AICORE, error, 1U, UpdateTaskFlag::SUPPORT);
     ScopeGuard tskErrRecycle(errRecycle);
+    COND_RETURN_ERROR(
+        (kernelTask == nullptr) && (error == RT_ERROR_STREAM_TASKGRP_UPDATE), error,
+        "Failed to allocate task during task group update, stream_id=%d, retCode=%#x.", stm->Id_(),
+        static_cast<uint32_t>(error));
     COND_RETURN_ERROR_MSG_INNER(
         kernelTask == nullptr, error, "Failed to allocate task, stream_id=%d, retCode=%#x.", stm->Id_(),
         static_cast<uint32_t>(error));
@@ -493,6 +497,10 @@ rtError_t StreamLaunchKernelWithHandle(
     stm->StreamLock();
     kernelTask = stm->AllocTask(nullptr, TS_TASK_TYPE_KERNEL_AICORE, error, 1U, UpdateTaskFlag::SUPPORT);
     ScopeGuard tskErrRecycle(errRecycle);
+    COND_RETURN_ERROR(
+        (kernelTask == nullptr) && (error == RT_ERROR_STREAM_TASKGRP_UPDATE), error,
+        "Failed to allocate task during task group update, stream_id=%d, retCode=%#x.", stm->Id_(),
+        static_cast<uint32_t>(error));
     COND_RETURN_ERROR_MSG_INNER(
         kernelTask == nullptr, error, "Failed to allocate task, stream_id=%d, retCode=%#x.", stm->Id_(),
         static_cast<uint32_t>(error));
@@ -621,6 +629,10 @@ rtError_t StreamLaunchKernelV2(
     stm->StreamLock();
     kernelTask = stm->AllocTask(nullptr, TS_TASK_TYPE_KERNEL_AICORE, error, 1U, UpdateTaskFlag::SUPPORT);
     ScopeGuard tskErrRecycle(errRecycle);
+    COND_RETURN_ERROR(
+        (kernelTask == nullptr) && (error == RT_ERROR_STREAM_TASKGRP_UPDATE), error,
+        "Failed to allocate task during task group update, stream_id=%d, retCode=%#x.", stm->Id_(),
+        static_cast<uint32_t>(error));
     COND_RETURN_ERROR_MSG_INNER(
         kernelTask == nullptr, error, "Failed to allocate task, stream_id=%d, retCode=%#x.", stm->Id_(),
         static_cast<uint32_t>(error));

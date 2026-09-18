@@ -94,6 +94,11 @@ rtError_t DeviceSqCqPool::AllocSqRegVirtualAddr(const uint32_t sqId, uint64_t& s
 
     error = SetSqRegVirtualAddrToDevice(sqId, sqRegVirtualAddr);
     if (error != RT_ERROR_NONE) {
+        COND_PROC(
+            error == RT_ERROR_DRV_NOT_SUPPORT,
+            RT_LOG_OUTER_MSG_IMPL(
+                ErrorCode::EE1016, "Copying an SQ register virtual address to device memory",
+                RtFmtMsg("The driver does not support synchronous memory copy for SQ %u", sqId)));
         if (driver->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_STREAM_MAP_SQ_ADDR_TO_USER_SPACE)) {
             (void)driver->UnmapSqRegVirtualAddrBySqid(
                 static_cast<int32_t>(device_->Id_()), device_->DevGetTsId(), sqId);

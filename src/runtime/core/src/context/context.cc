@@ -536,7 +536,11 @@ rtError_t Context::Init()
     COND_RETURN_AND_MSG_OUTER(
         moduleAllocator_ == nullptr, RT_ERROR_MODULE_NEW, ErrorCode::EE1013, sizeof(ObjAllocator<Module*>), "new");
 
-    const rtError_t error = moduleAllocator_->Init();
+    ObjAllocatorInitFailureInfo failureInfo;
+    const rtError_t error = moduleAllocator_->Init(failureInfo);
+    COND_RETURN_AND_MSG_OUTER(
+        error == RT_ERROR_MEMORY_ALLOCATION, error, ErrorCode::EE1013, failureInfo.allocSize,
+        failureInfo.allocInterface);
     ERROR_RETURN_MSG_INNER(error, "Failed to init moduleAllocator_, retCode=%#x.", error);
 
     RT_LOG(RT_LOG_INFO, "Runtime_alloc_size is %zu.", sizeof(Module*) * DEFAULT_PROGRAM_NUMBER);
@@ -1392,9 +1396,9 @@ rtError_t Context::CreateAutoSplitSlaveStream(Stream* const masterStm, Stream** 
     Model* model = masterStm->Model_();
     if (model == nullptr) {
         (void)StreamDestroy(slaveStream, true);
-        RT_LOG(
-            RT_LOG_ERROR, "Master stream has no model, master_stream_id=%d, slave_stream_id=%d.",
-            masterStm->GetExposedStreamId(), slaveStream->Id_());
+        RT_LOG_OUTER_MSG_IMPL(
+            ErrorCode::EE1016, "Creating an automatically split slave stream",
+            RtFmtMsg("The master stream (stream_id=%d) is not bound to a model", masterStm->GetExposedStreamId()));
         return RT_ERROR_INVALID_VALUE;
     }
 

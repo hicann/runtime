@@ -1038,7 +1038,9 @@ rtError_t DavidStream::PrintStmDfxAndCheckDevice(
     constexpr uint16_t perDetectTimes = 1000U;
     if ((tryCount % perDetectTimes) == 0) {
         if (device_->GetDevRunningState() == static_cast<uint32_t>(DEV_RUNNING_DOWN)) {
-            RT_LOG(RT_LOG_ERROR, "device running down, device_id=%u, stream_id=%d", device_->Id_(), Id_());
+            RT_LOG_INNER_MSG(
+                RT_LOG_ERROR, "Failed to send a task because device %u is unavailable, stream_id=%d.", device_->Id_(),
+                Id_());
             StarsShowStmDfxInfo();
             return RT_ERROR_DRV_ERR;
         } else {

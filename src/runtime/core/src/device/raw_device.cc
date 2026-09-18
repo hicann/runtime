@@ -569,6 +569,7 @@ bool RawDevice::IsSupportFeature(RtOptionalFeatureType f) const
 rtError_t RawDevice::Init()
 {
     rtError_t error = InitRawDriver();
+    ObjAllocatorInitFailureInfo moduleAllocatorFailureInfo;
     ERROR_RETURN_MSG_INNER(
         error, "Failed to init RawDriver, device_id=%u, retCode=%#x.", deviceId_, static_cast<uint32_t>(error));
 
@@ -764,7 +765,10 @@ rtError_t RawDevice::Init()
         modulesAllocator_ == nullptr, KERNEL_POOL_FREE, error, RT_ERROR_MODULE_NEW, ErrorCode::EE1013,
         sizeof(ObjAllocator<RefObject<Module*>>), "new");
 
-    error = modulesAllocator_->Init();
+    error = modulesAllocator_->Init(moduleAllocatorFailureInfo);
+    COND_GOTO_MSG_OUTER(
+        error == RT_ERROR_MEMORY_ALLOCATION, MODULES_ALLOC_FREE, error, error, ErrorCode::EE1013,
+        moduleAllocatorFailureInfo.allocSize, moduleAllocatorFailureInfo.allocInterface);
     ERROR_GOTO_MSG_INNER(
         error, MODULES_ALLOC_FREE, "Failed to init moduleAllocator_, retCode=%#x.", static_cast<uint32_t>(error));
 

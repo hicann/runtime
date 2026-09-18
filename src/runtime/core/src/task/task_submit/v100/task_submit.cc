@@ -219,8 +219,10 @@ rtError_t AllocTaskAndSendDc(TaskInfo* submitTask, Stream* stm, uint32_t* const 
         tryCount++;
         if ((tryCount % perDetectTimes) == 0) {
             if (stm->Device_()->GetDevRunningState() == static_cast<uint32_t>(DEV_RUNNING_DOWN)) {
-                RT_LOG(
-                    RT_LOG_ERROR, "device status error, drvError=%#x, device_id=%u, stream_id=%d",
+                RT_LOG_INNER_MSG(
+                    RT_LOG_ERROR,
+                    "Failed to send a task because the device is unavailable, drvError=%#x, device_id=%u, "
+                    "stream_id=%d.",
                     static_cast<uint32_t>(error), devId, stm->Id_());
                 stm->DcShowStmDfxInfo();
                 return RT_ERROR_DRV_ERR;
@@ -322,8 +324,8 @@ rtError_t AllocTaskAndSendDc(TaskInfo* submitTask, Stream* stm, uint32_t* const 
     const drvError_t drvRet = halSqMsgSend(devId, &sendInfo);
     TIMESTAMP_END(CommandSendV1);
     if (unlikely(drvRet != DRV_ERROR_NONE)) {
-        RT_LOG(
-            RT_LOG_ERROR,
+        DRV_ERROR_PROCESS(
+            drvRet,
             "[drv api] halSqMsgSend failed, device_id=%u, ts_id=%u, sq_id=%u, cq_id=%u, stream_id=%d."
             " task_id=%hu, task_type=%d(%s), reportCount=%u, cmdCount=%u, drvRetCode=%d.",
             devId, tsId, sqId, cqId, stm->Id_(), taskInfo->id, taskInfo->type, taskInfo->typeName, reportCount,

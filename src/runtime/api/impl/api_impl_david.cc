@@ -166,11 +166,17 @@ rtError_t ApiImplDavid::CpuKernelLaunchExAll(
     }
 
     const uint32_t kernelType = kernel->GetAicpuKernelType_();
-    if ((kernelType != KERNEL_TYPE_FWK) && (kernelType != KERNEL_TYPE_AICPU) &&
-        (kernelType != KERNEL_TYPE_AICPU_CUSTOM) && (kernelType != KERNEL_TYPE_AICPU_KFC)) {
-        RT_LOG(RT_LOG_ERROR, "kernel type mismatch kernelType=UNKNOWN(%u).", kernelType);
-        return RT_ERROR_KERNEL_TYPE;
-    }
+    COND_PROC_RETURN_AND_MSG_OUTER(
+        (kernelType != KERNEL_TYPE_FWK) && (kernelType != KERNEL_TYPE_AICPU) &&
+            (kernelType != KERNEL_TYPE_AICPU_CUSTOM) && (kernelType != KERNEL_TYPE_AICPU_KFC),
+        RT_ERROR_KERNEL_TYPE, ErrorCode::EE1011,
+        RT_LOG(RT_LOG_ERROR, "kernel type mismatch kernelType=UNKNOWN(%u).", kernelType),
+        "Starting the compute task of an AI CPU operator", RtFmtMsg("%u", kernelType), "kernelType",
+        RtFmtMsg(
+            "kernelType must be KERNEL_TYPE_FWK(%u), KERNEL_TYPE_AICPU(%u), KERNEL_TYPE_AICPU_CUSTOM(%u), or "
+            "KERNEL_TYPE_AICPU_KFC(%u)",
+            static_cast<uint32_t>(KERNEL_TYPE_FWK), static_cast<uint32_t>(KERNEL_TYPE_AICPU),
+            static_cast<uint32_t>(KERNEL_TYPE_AICPU_CUSTOM), static_cast<uint32_t>(KERNEL_TYPE_AICPU_KFC)));
 
     const rtError_t error = StreamLaunchCpuKernelExWithArgs(
         coreDim, static_cast<const rtAicpuArgsEx_t*>(&argsInfo->baseArgs), taskCfg, stm, flag, kernelType, kernel,
@@ -1691,10 +1697,13 @@ rtError_t ApiImplDavid::CallbackLaunch(
     }
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Delivering an on-host callback function task in a stream");
-    COND_RETURN_ERROR_MSG_INNER(
-        !curStm->IsHostFuncCbReg(), RT_ERROR_STREAM_NO_CB_REG,
-        "The stream used by this user's callback function is not registered to any thread, retCode=%#x",
-        static_cast<uint32_t>(RT_ERROR_STREAM_NO_CB_REG));
+    COND_RETURN_AND_MSG_OUTER(
+        !curStm->IsHostFuncCbReg(), RT_ERROR_STREAM_NO_CB_REG, ErrorCode::EE1018,
+        "Delivering an on-host callback function task in a stream",
+        RtFmtMsg(
+            "Stream (stream_id=%d) is not bound to any thread. Call the aclrtSubscribeReport API to bind a thread to "
+            "the stream",
+            curStm->Id_()));
     if (isBlock) {
         const rtError_t ret = CallbackLaunchForDavidWithBlock(callBackFunc, fnData, curStm, MAX_UINT64_NUM);
         ERROR_RETURN(ret, "Call CallbackLaunch failed for block callback, ret=%#x.", ret);
@@ -2378,11 +2387,9 @@ rtError_t ApiImplDavid::LaunchHostFunc(Stream* const stm, const rtCallback_t cal
     // lock first Check whether the thread exists. If the thread does not exist, create a thread in context level.
     curCtx->callbackTheadMutex_.lock();
     if (!curCtx->GetCallBackThreadExistFlag()) {
-        if (curCtx->CreateContextCallBackThread() != RT_ERROR_NONE) {
-            curCtx->callbackTheadMutex_.unlock();
-            RT_LOG_INNER_MSG(RT_LOG_ERROR, "Failed to create callback thread.");
-            return RT_ERROR_MEMORY_ALLOCATION;
-        }
+        COND_PROC_RETURN_ERROR_MSG_INNER(
+            curCtx->CreateContextCallBackThread() != RT_ERROR_NONE, RT_ERROR_MEMORY_ALLOCATION,
+            curCtx->callbackTheadMutex_.unlock(), "Failed to create callback thread.");
         curCtx->SetCallBackThreadExistFlag();
     }
     curCtx->callbackTheadMutex_.unlock();

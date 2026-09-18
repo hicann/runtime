@@ -72,6 +72,8 @@ static rtError_t ConvertFuncToKernel(
         RT_LOG(RT_LOG_INFO, "cannot find function handle by symbol, treat func as handle directly");
         return ValidateKernelHandleForApi(func, kernel, callerFuncName);
     } else {
+        ErrorMessageUtils::FuncErrorReason(ret, callerFuncName);
+        RT_LOG_FLUSH();
         return GetRtExtErrCodeAndSetGlobalErr(ret);
     }
 }

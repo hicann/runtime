@@ -4894,10 +4894,15 @@ rtError_t Stream::UpdateTask(TaskInfo** updateTask)
 
     uint32_t taskIndex = updateTaskGroup->updateTaskIndex;
     if (taskIndex >= updateTaskGroup->taskIds.size()) {
-        RT_LOG_INNER_MSG(
+        RT_LOG(
             RT_LOG_ERROR,
             "The number of tasks cannot exceed the size of the task group, current task index=%u, task group size=%zu.",
             taskIndex, updateTaskGroup->taskIds.size());
+        RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
+            ErrorCode::EE1003, "Updating the task group", taskIndex + 1U,
+            "number of kernel launch calls in the task update interval",
+            RtFmtMsg(
+                "no more than %zu, matching the number of tasks in the task group", updateTaskGroup->taskIds.size()));
         return RT_ERROR_STREAM_TASKGRP_UPDATE;
     }
 

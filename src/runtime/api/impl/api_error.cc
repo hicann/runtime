@@ -1066,6 +1066,17 @@ rtError_t ApiErrorDecorator::LaunchKernelV2(
         kernel, RT_ERROR_INVALID_VALUE, "Starting the compute task of the corresponding operator");
     rtError_t error = CheckArgsWithType(kernel, argsWithType);
     ERROR_RETURN(error, "check args with type failed, retCode=%#x.", error);
+    const bool isSimtArgsArray = argsWithType->type == RT_SIMT_ARGS_ARRAY;
+    const bool isSimtArgsHost = argsWithType->type == RT_SIMT_ARGS_HOST;
+    COND_RETURN_AND_MSG_OUTER(
+        (blockDim == 0U) && (isSimtArgsArray || isSimtArgsHost), RT_ERROR_INVALID_VALUE, ErrorCode::EE1011,
+        "Starting the compute task of the corresponding operator",
+        RtFmtMsg(
+            "[%u,%u,%u]",
+            isSimtArgsArray ? argsWithType->args.simtArgsArray->gridDim.x : argsWithType->args.simtArgsHost->gridDim.x,
+            isSimtArgsArray ? argsWithType->args.simtArgsArray->gridDim.y : argsWithType->args.simtArgsHost->gridDim.y,
+            isSimtArgsArray ? argsWithType->args.simtArgsArray->gridDim.z : argsWithType->args.simtArgsHost->gridDim.z),
+        "gridDim", "The product of gridDim.x, gridDim.y and gridDim.z overflows uint32_t and becomes 0");
     ZERO_RETURN_AND_MSG_OUTER_WITH_FUNC_DESC(blockDim, "Starting the compute task of the corresponding operator");
     error = CheckKernelLaunchCfg(cfg, kernel);
     ERROR_RETURN(error, "check cfgInfo failed, retCode=%#x.", error);
