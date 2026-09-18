@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include <mutex>
 #include "acl_rt_impl.h"
 #include "runtime/rts/rts_kernel.h"
 #include "runtime/kernel.h"
@@ -43,6 +44,13 @@ aclError aclrtSubscribeReportImpl(uint64_t threadId, aclrtStream stream)
 
 aclError aclrtSetExceptionInfoCallbackImpl(aclrtExceptionInfoCallback callback)
 {
+    static std::once_flag flag;
+    std::call_once(flag, [] {
+        ACL_LOG_WARN("aclrtSetExceptionInfoCallback is deprecated since 9.2.0,"
+                     " Will be removed after 2027/9/30,"
+                     " use aclrtExceptionInfoCallbackRegister and aclrtExceptionInfoCallbackUnregister instead.");
+    });
+
     ACL_LOG_INFO("start to execute aclrtSetExceptionInfoCallback.");
     ACL_REQUIRES_RTS_OK(rtRegTaskFailCallbackByModule(acl::ACL_MODULE_NAME, static_cast<rtTaskFailCallback>(callback)));
     ACL_LOG_INFO("successfully execute aclrtSetExceptionInfoCallback");

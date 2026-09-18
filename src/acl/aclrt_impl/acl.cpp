@@ -815,6 +815,12 @@ extern "C" {
 
 aclError aclsysGetCANNVersionImpl(aclCANNPackageName name, aclCANNPackageVersion* version)
 {
+    static std::once_flag flag;
+    std::call_once(flag, [] {
+        ACL_LOG_WARN("aclsysGetCANNVersion is deprecated since 8.5.0,"
+                     " Will be removed after 2026/12/30,"
+                     " use aclsysGetVersionStr or aclsysGetVersionNum instead.");
+    });
     ACL_LOG_INFO("start to execute aclsysGetCANNVersion.");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(version);
     ACL_LOG_INFO(

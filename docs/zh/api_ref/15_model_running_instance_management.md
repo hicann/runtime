@@ -570,6 +570,8 @@ aclError aclmdlRIDebugJsonPrint(aclmdlRI modelRI, const char *path, uint32_t fla
 aclError aclmdlRIDebugPrint(aclmdlRI modelRI)
 ```
 
+**须知：aclmdlRIDebugPrint接口在CANN 8.5.0版本标记为废弃，将在2026年12月30日之后的版本删除，替换为：[aclmdlRIDebugJsonPrint](#aclmdlRIDebugJsonPrint)接口。**
+
 ### 产品支持情况
 
 <!-- npu="950" id3515 -->

@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include <mutex>
 #include "acl_rt_impl.h"
 #include "runtime/rt_model.h"
 #include "runtime/stream.h"
@@ -113,6 +114,13 @@ aclError aclmdlRIUpdateImpl(aclmdlRI modelRI)
 
 aclError aclmdlRIDebugPrintImpl(aclmdlRI modelRI)
 {
+    static std::once_flag flag;
+    std::call_once(flag, [] {
+        ACL_LOG_WARN("aclmdlRIDebugPrint is deprecated since 8.5.0,"
+                     " Will be removed after 2026/12/30,"
+                     " use aclmdlRIDebugJsonPrint instead.");
+    });
+
     ACL_PROFILING_REG(acl::AclProfType::AclmdlRIDebugPrint);
     ACL_LOG_INFO("start to execute aclmdlRIDebugPrint");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(modelRI);

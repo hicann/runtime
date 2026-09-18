@@ -260,7 +260,7 @@ aclFloat16 aclFloatToFloat16(float value)
 aclError aclrtGetVersion(int32_t *majorVersion, int32_t *minorVersion, int32_t *patchVersion)
 ```
 
-**须知：此接口后续版本会废弃，请使用aclsysGetVersioNum接口或者aclsysGetVersionStr接口。**
+**须知：aclrtGetVersion接口在CANN 9.2.0版本标记为废弃，将在2027年9月30日之后的版本删除，替换为：[aclsysGetVersionNum](#aclsysGetVersionNum)接口或[aclsysGetVersionStr](#aclsysGetVersionStr)接口。**
 
 ### 产品支持情况
 
@@ -315,7 +315,7 @@ aclError aclrtGetVersion(int32_t *majorVersion, int32_t *minorVersion, int32_t *
 aclError aclsysGetCANNVersion(aclCANNPackageName name, aclCANNPackageVersion *version)
 ```
 
-**须知：此接口后续版本会废弃，请使用[aclsysGetVersionStr](#aclsysGetVersionStr)、[aclsysGetVersionNum](#aclsysGetVersionNum)接口。**
+**须知：aclsysGetCANNVersion接口在CANN 8.5.0版本标记为废弃，将在2026年12月30日之后的版本删除，替换为：[aclsysGetVersionStr](#aclsysGetVersionStr)接口或[aclsysGetVersionNum](#aclsysGetVersionNum)接口。**
 
 ### 产品支持情况
 

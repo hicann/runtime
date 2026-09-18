@@ -29,7 +29,7 @@ typedef int aclError;
 | --- | --- | --- |
 | static const int ACL_SUCCESS = 0; | 执行成功。 | - |
 | static const int ACL_ERROR_INVALID_EXCEPTION_INFO = -1; | 无效的异常信息。 | 请检查传入的异常信息参数值是否为空指针。 |
-| static const int ACL_ERROR_NONE = 0;<br>须知：此返回码后续版本会废弃，请使用ACL_SUCCESS返回码。 | 执行成功。 | - |
+| static const int ACL_ERROR_NONE = 0;<br>须知：`ACL_ERROR_NONE`返回码在CANN 8.5.0版本标记为废弃，将在2026年12月30日之后的版本删除，替换为：ACL_SUCCESS返回码。 | 执行成功。 | - |
 | static const int ACL_ERROR_INVALID_PARAM = 100000; | 参数校验失败。 | 请检查接口的入参值是否正确。 |
 | static const int ACL_ERROR_UNINITIALIZE = 100001; | 未初始化。 | - 请检查是否已调用aclInit接口进行初始化，请确保已调用aclInit接口，且在其它acl接口之前调用。<br>  - 请检查是否已调用对应功能的初始化接口，例如初始化Dump的aclmdlInitDump接口、初始化Profiling的aclprofInit接口。 |
 | static const int ACL_ERROR_REPEAT_INITIALIZE = 100002; | 重复初始化或重复加载。 | 请检查是否调用对应的接口重复初始化或重复加载。 |
@@ -64,14 +64,14 @@ typedef int aclError;
 | static const int ACL_ERROR_KERNEL_ALREADY_REGISTERED = 100031; | 编译算子时，算子Kernel重复注册。 | 请检查是否重复调用aclopCreateKernel接口注册算子Kernel。 |
 | static const int ACL_ERROR_INVALID_QUEUE_ID = 100032; | 无效的队列ID。 | 请检查队列ID是否正确。 |
 | static const int ACL_ERROR_REPEAT_SUBSCRIBE = 100033; | 重复订阅。 | 请检查针对同一个Stream，是否重复调用aclrtSubscribeReport接口。 |
-| static const int ACL_ERROR_STREAM_NOT_SUBSCRIBE = 100034;<br>须知：此返回码后续版本会废弃，请使用[ACL_ERROR_RT_STREAM_NO_CB_REG](#table1089051917356)返回码。 | Stream未订阅。 | 请检查是否已调用aclrtSubscribeReport接口。 |
-| static const int ACL_ERROR_THREAD_NOT_SUBSCRIBE = 100035;<br>须知：此返回码后续版本会废弃，请使用[ACL_ERROR_RT_THREAD_SUBSCRIBE](#table1089051917356)返回码。 | 线程未订阅。 | 请检查是否已调用aclrtSubscribeReport接口。 |
-| static const int ACL_ERROR_WAIT_CALLBACK_TIMEOUT = 100036;<br>须知：此返回码后续版本会废弃，请使用[ACL_ERROR_RT_REPORT_TIMEOUT](#table1089051917356)返回码。 | 等待callback超时。 | 请检查是否已调用aclrtLaunchCallback接口下发callback任务；<br>请检查aclrtProcessReport接口中超时时间是否合理；<br>请检查callback任务是否已经处理完成，如果已处理完成，但还调用aclrtProcessReport接口，则需优化代码逻辑。 |
+| static const int ACL_ERROR_STREAM_NOT_SUBSCRIBE = 100034;<br>须知：`ACL_ERROR_STREAM_NOT_SUBSCRIBE`返回码在CANN 8.5.0版本标记为废弃，将在2026年12月30日之后的版本删除，替换为：[ACL_ERROR_RT_STREAM_NO_CB_REG](#table1089051917356)返回码。 | Stream未订阅。 | 请检查是否已调用aclrtSubscribeReport接口。 |
+| static const int ACL_ERROR_THREAD_NOT_SUBSCRIBE = 100035;<br>须知：`ACL_ERROR_THREAD_NOT_SUBSCRIBE`返回码在CANN 8.5.0版本标记为废弃，将在2026年12月30日之后的版本删除，替换为：[ACL_ERROR_RT_THREAD_SUBSCRIBE](#table1089051917356)返回码。 | 线程未订阅。 | 请检查是否已调用aclrtSubscribeReport接口。 |
+| static const int ACL_ERROR_WAIT_CALLBACK_TIMEOUT = 100036;<br>须知：`ACL_ERROR_WAIT_CALLBACK_TIMEOUT`返回码在CANN 8.5.0版本标记为废弃，将在2026年12月30日之后的版本删除，替换为：[ACL_ERROR_RT_REPORT_TIMEOUT](#table1089051917356)返回码。 | 等待callback超时。 | 请检查是否已调用aclrtLaunchCallback接口下发callback任务；<br>请检查aclrtProcessReport接口中超时时间是否合理；<br>请检查callback任务是否已经处理完成，如果已处理完成，但还调用aclrtProcessReport接口，则需优化代码逻辑。 |
 | static const int ACL_ERROR_REPEAT_FINALIZE = 100037; | 重复去初始化。 | 请检查是否重复调用aclFinalize接口或重复调用aclFinalizeReference接口进行去初始化。 |
-| static const int ACL_ERROR_NOT_STATIC_AIPP = 100038;<br>须知：此返回码后续版本会废弃，请使用[ACL_ERROR_GE_AIPP_NOT_EXIST](#table153902340461)返回码。 | 静态AIPP配置信息不存在。 | 调用aclmdlGetFirstAippInfo接口时，请传入正确的index值。 |
+| static const int ACL_ERROR_NOT_STATIC_AIPP = 100038;<br>须知：`ACL_ERROR_NOT_STATIC_AIPP`返回码在CANN 8.5.0版本标记为废弃，将在2026年12月30日之后的版本删除，替换为：[ACL_ERROR_GE_AIPP_NOT_EXIST](#table153902340461)返回码。 | 静态AIPP配置信息不存在。 | 调用aclmdlGetFirstAippInfo接口时，请传入正确的index值。 |
 | static const int ACL_ERROR_COMPILING_STUB_MODE = 100039; | 运行应用前配置的动态库路径是编译桩的路径，不是正确的动态库路径。 | 请检查动态库路径的配置，确保使用运行模式的动态库。 |
-| static const int ACL_ERROR_GROUP_NOT_SET = 100040;<br>须知：此返回码后续版本会废弃，请使用[ACL_ERROR_RT_GROUP_NOT_SET](#table1089051917356)返回码。 | 未设置Group。 | 请检查是否已调用aclrtSetGroup接口。 |
-| static const int ACL_ERROR_GROUP_NOT_CREATE = 100041;<br>须知：此返回码后续版本会废弃，请使用[ACL_ERROR_RT_GROUP_NOT_CREATE](#table1089051917356)返回码。 | 未创建对应的Group。 | 请检查调用接口时设置的Group ID是否在支持的范围内，Group ID的取值范围：[0, (Group数量-1)]，用户可调用aclrtGetGroupCount接口获取Group数量。 |
+| static const int ACL_ERROR_GROUP_NOT_SET = 100040;<br>须知：`ACL_ERROR_GROUP_NOT_SET`返回码在CANN 8.5.0版本标记为废弃，将在2026年12月30日之后的版本删除，替换为：[ACL_ERROR_RT_GROUP_NOT_SET](#table1089051917356)返回码。 | 未设置Group。 | 请检查是否已调用aclrtSetGroup接口。 |
+| static const int ACL_ERROR_GROUP_NOT_CREATE = 100041;<br>须知：`ACL_ERROR_GROUP_NOT_CREATE`返回码在CANN 8.5.0版本标记为废弃，将在2026年12月30日之后的版本删除，替换为：[ACL_ERROR_RT_GROUP_NOT_CREATE](#table1089051917356)返回码。 | 未创建对应的Group。 | 请检查调用接口时设置的Group ID是否在支持的范围内，Group ID的取值范围：[0, (Group数量-1)]，用户可调用aclrtGetGroupCount接口获取Group数量。 |
 | static const int ACL_ERROR_PROF_ALREADY_RUN = 100042; | 已存在采集Profiling数据的任务。 | - 请检查代码逻辑，“通过调用AscendCL API方式采集Profiling数据”的配置不能与其它方式的Profiling配置并存，只能保留一种。<br>  - 请检查是否对同一个Device重复下发了多次Profiling配置。 |
 | static const int ACL_ERROR_PROF_NOT_RUN = 100043; | 未使用aclprofInit接口先进行Profiling初始化。 | 请检查接口调用顺序。 |
 | static const int ACL_ERROR_DUMP_ALREADY_RUN = 100044; | 已存在获取Dump数据的任务。 | 请检查在调用aclmdlInitDump接口、aclmdlSetDump接口、aclmdlFinalizeDump接口配置Dump信息前，是否已调用aclInit接口配置Dump信息，如是，请调整代码逻辑，保留一种方式配置Dump信息即可。 |
@@ -86,7 +86,7 @@ typedef int aclError;
 | static const int ACL_ERROR_INVALID_BUNDLE_MODEL_ID = 148053; | 无效的模型ID。 | 请检查模型ID是否正确、模型是否正确加载。 |
 | static const int ACL_ERROR_BAD_ALLOC = 200000; | 申请内存失败。 | 请检查硬件环境上的内存剩余情况。 |
 | static const int ACL_ERROR_API_NOT_SUPPORT = 200001; | 接口不支持。 | 请检查调用的接口当前是否支持。 |
-| static const int ACL_ERROR_INVALID_DEVICE = 200002;<br>须知：此返回码后续版本会废弃，请使用[ACL_ERROR_RT_INVALID_DEVICEID](#table1089051917356)返回码。 | 无效的Device。 | 请检查Device是否存在。 |
+| static const int ACL_ERROR_INVALID_DEVICE = 200002;<br>须知：`ACL_ERROR_INVALID_DEVICE`返回码在CANN 8.5.0版本标记为废弃，将在2026年12月30日之后的版本删除，替换为：[ACL_ERROR_RT_INVALID_DEVICEID](#table1089051917356)返回码。 | 无效的Device。 | 请检查Device是否存在。 |
 | static const int ACL_ERROR_MEMORY_ADDRESS_UNALIGNED = 200003; | 内存地址未对齐。 | 请检查内存地址是否符合接口要求。 |
 | static const int ACL_ERROR_RESOURCE_NOT_MATCH = 200004; | 资源不匹配。 | 请检查调用接口时，是否传入正确的Stream、Context等资源。 |
 | static const int ACL_ERROR_INVALID_RESOURCE_HANDLE = 200005; | 无效的资源句柄。 | 请检查调用接口时，传入的Stream、Context等资源是否已被销毁或占用。 |

@@ -84,6 +84,14 @@ aclError aclFinalize()
 
 aclError aclrtGetVersion(int32_t* majorVersion, int32_t* minorVersion, int32_t* patchVersion)
 {
+    enum { DEPRECATION_NOT_WARNED = 0, DEPRECATION_WARNED = 1 };
+    static mmAtomicType warned = DEPRECATION_NOT_WARNED;
+    if (mmCompareAndSwap(&warned, DEPRECATION_NOT_WARNED, DEPRECATION_WARNED)) {
+        ACL_LOG_WARN(
+            "%s", "aclrtGetVersion is deprecated since 9.2.0,"
+                  " Will be removed after 2027/9/30,"
+                  " use aclsysGetVersionNum or aclsysGetVersionStr instead.");
+    }
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(majorVersion);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(minorVersion);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(patchVersion);

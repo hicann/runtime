@@ -81,62 +81,94 @@ CANN支持以下几类显式同步，调用此类接口后，主机线程会阻�
 
 - [aclGetDataBufferSize](25-03_Operation_APIs.md#aclGetDataBufferSize_deprecated)接口
 
-    此接口后续版本会废弃，请使用[aclGetDataBufferSizeV2](25-03_Operation_APIs.md#aclGetDataBufferSizeV2)接口。
+    aclGetDataBufferSize接口在CANN 8.5.0版本标记为废弃，将在2026年12月30日之后的版本删除，替换为：[aclGetDataBufferSizeV2](25-03_Operation_APIs.md#aclGetDataBufferSizeV2)接口。
 
 - [aclrtQueryEvent](07_event_management.md#aclrtQueryEvent_deprecated)接口
 
-    此接口后续版本会废弃，请使用[aclrtQueryEventStatus](07_event_management.md#aclrtQueryEventStatus)接口。
+    aclrtQueryEvent接口在CANN 8.5.0版本标记为废弃，将在2026年12月30日之后的版本删除，替换为：[aclrtQueryEventStatus](07_event_management.md#aclrtQueryEventStatus)接口。
 
 - [aclrtGetVersion](24_other_APIs.md#aclrtGetVersion_deprecated)接口
 
-    此接口后续版本会废弃，请使用[aclsysGetVersionNum](24_other_APIs.md#aclsysGetVersionNum)接口或[aclsysGetVersionStr](24_other_APIs.md#aclsysGetVersionStr)接口。
+    aclrtGetVersion接口在CANN 9.2.0版本标记为废弃，将在2027年9月30日之后的版本删除，替换为：[aclsysGetVersionNum](24_other_APIs.md#aclsysGetVersionNum)接口或[aclsysGetVersionStr](24_other_APIs.md#aclsysGetVersionStr)接口。
 
 - [aclrtMemcpyAsyncWithCondition](11-03_memory_copy_and_set.md#aclrtMemcpyAsyncWithCondition_deprecated)接口
 
-    此接口后续版本会废弃，请使用[aclrtMemcpyAsync](11-03_memory_copy_and_set.md#aclrtMemcpyAsync)接口。
+    aclrtMemcpyAsyncWithCondition接口在CANN 9.2.0版本标记为废弃，将在2027年9月30日之后的版本删除，替换为：[aclrtMemcpyAsync](11-03_memory_copy_and_set.md#aclrtMemcpyAsync)接口。
 
 - [aclrtSetExceptionInfoCallback](13_exception_handling.md#aclrtSetExceptionInfoCallback_deprecated)接口
 
-    此接口后续版本会废弃，请使用[aclrtExceptionInfoCallbackRegister](13_exception_handling.md#aclrtExceptionInfoCallbackRegister)接口或[aclrtExceptionInfoCallbackUnregister](13_exception_handling.md#aclrtExceptionInfoCallbackUnregister)。
+    aclrtSetExceptionInfoCallback接口在CANN 9.2.0版本标记为废弃，将在2027年9月30日之后的版本删除，替换为：[aclrtExceptionInfoCallbackRegister](13_exception_handling.md#aclrtExceptionInfoCallbackRegister)接口和[aclrtExceptionInfoCallbackUnregister](13_exception_handling.md#aclrtExceptionInfoCallbackUnregister)接口。
+
+- [aclsysGetCANNVersion](24_other_APIs.md#aclsysGetCANNVersion)接口
+
+    aclsysGetCANNVersion接口在CANN 8.5.0版本标记为废弃，将在2026年12月30日之后的版本删除，替换为：[aclsysGetVersionStr](24_other_APIs.md#aclsysGetVersionStr)接口或[aclsysGetVersionNum](24_other_APIs.md#aclsysGetVersionNum)接口。
+
+- [aclmdlRIDebugPrint](15_model_running_instance_management.md#aclmdlRIDebugPrint)接口
+
+    aclmdlRIDebugPrint接口在CANN 8.5.0版本标记为废弃，将在2026年12月30日之后的版本删除，替换为：[aclmdlRIDebugJsonPrint](15_model_running_instance_management.md#aclmdlRIDebugJsonPrint)接口。
 
 ### 返回码
 
 - [ACL\_ERROR\_NONE](25-01_aclError.md#aclError)返回码
 
-    此返回码后续版本会废弃，请使用[ACL\_SUCCESS](25-01_aclError.md#aclError)返回码。
+    `ACL_ERROR_NONE`返回码在CANN 8.5.0版本标记为废弃，将在2026年12月30日之后的版本删除，替换为：[ACL_SUCCESS](25-01_aclError.md#aclError)返回码。
 
 - [ACL\_ERROR\_NOT\_STATIC\_AIPP](25-01_aclError.md#aclError)
 
-    此返回码后续版本会废弃，请使用[ACL\_ERROR\_GE\_AIPP\_NOT\_EXIST](25-01_aclError.md#aclError)返回码。
+    `ACL_ERROR_NOT_STATIC_AIPP`返回码在CANN 8.5.0版本标记为废弃，将在2026年12月30日之后的版本删除，替换为：[ACL_ERROR_GE_AIPP_NOT_EXIST](25-01_aclError.md#aclError)返回码。
 
 - [ACL\_ERROR\_STREAM\_NOT\_SUBSCRIBE](25-01_aclError.md#aclError)
 
-    此返回码后续版本会废弃，请使用[ACL\_ERROR\_RT\_STREAM\_NO\_CB\_REG](25-01_aclError.md#aclError)返回码。
+    `ACL_ERROR_STREAM_NOT_SUBSCRIBE`返回码在CANN 8.5.0版本标记为废弃，将在2026年12月30日之后的版本删除，替换为：[ACL_ERROR_RT_STREAM_NO_CB_REG](25-01_aclError.md#aclError)返回码。
 
 - [ACL\_ERROR\_THREAD\_NOT\_SUBSCRIBE](25-01_aclError.md#aclError)
 
-    此返回码后续版本会废弃，请使用[ACL\_ERROR\_RT\_THREAD\_SUBSCRIBE](25-01_aclError.md#aclError)返回码。
+    `ACL_ERROR_THREAD_NOT_SUBSCRIBE`返回码在CANN 8.5.0版本标记为废弃，将在2026年12月30日之后的版本删除，替换为：[ACL_ERROR_RT_THREAD_SUBSCRIBE](25-01_aclError.md#aclError)返回码。
 
 - [ACL\_ERROR\_WAIT\_CALLBACK\_TIMEOUT](25-01_aclError.md#aclError)
 
-    此返回码后续版本会废弃，请使用[ACL\_ERROR\_RT\_REPORT\_TIMEOUT](25-01_aclError.md#aclError)返回码。
+    `ACL_ERROR_WAIT_CALLBACK_TIMEOUT`返回码在CANN 8.5.0版本标记为废弃，将在2026年12月30日之后的版本删除，替换为：[ACL_ERROR_RT_REPORT_TIMEOUT](25-01_aclError.md#aclError)返回码。
 
 - [ACL\_ERROR\_INVALID\_DEVICE](25-01_aclError.md#aclError)
 
-    此返回码后续版本会废弃，请使用[ACL\_ERROR\_RT\_INVALID\_DEVICEID](25-01_aclError.md#aclError)返回码。
+    `ACL_ERROR_INVALID_DEVICE`返回码在CANN 8.5.0版本标记为废弃，将在2026年12月30日之后的版本删除，替换为：[ACL_ERROR_RT_INVALID_DEVICEID](25-01_aclError.md#aclError)返回码。
 
 - [ACL\_ERROR\_GROUP\_NOT\_SET](25-01_aclError.md#aclError)
 
-    此返回码后续版本会废弃，请使用[ACL\_ERROR\_RT\_GROUP\_NOT\_SET](25-01_aclError.md#aclError)返回码。
+    `ACL_ERROR_GROUP_NOT_SET`返回码在CANN 8.5.0版本标记为废弃，将在2026年12月30日之后的版本删除，替换为：[ACL_ERROR_RT_GROUP_NOT_SET](25-01_aclError.md#aclError)返回码。
 
 - [ACL\_ERROR\_GROUP\_NOT\_CREATE](25-01_aclError.md#aclError)
 
-    此返回码后续版本会废弃，请使用[ACL\_ERROR\_RT\_GROUP\_NOT\_CREATE](25-01_aclError.md#aclError)返回码。
+    `ACL_ERROR_GROUP_NOT_CREATE`返回码在CANN 8.5.0版本标记为废弃，将在2026年12月30日之后的版本删除，替换为：[ACL_ERROR_RT_GROUP_NOT_CREATE](25-01_aclError.md#aclError)返回码。
 
 ### 枚举
 
 - [aclSysParamOpt](25-02_Enumerations.md#aclsysparamopt)枚举中的`ACL_OPT_STRONG_CONSISTENCY`枚举项
   
-    此枚举中的`ACL_OPT_STRONG_CONSISTENCY`枚举项后续版本会废弃，请使用`ACL_OPT_DETERMINISTIC`替代。
+    `ACL_OPT_STRONG_CONSISTENCY`枚举项在CANN 9.2.0版本标记为废弃，将在2027年9月30日之后的版本删除，替换为：`ACL_OPT_DETERMINISTIC`枚举项。配置值设为`2`。
     
+- [aclrtLaunchKernelAttrId](25-02_Enumerations.md#aclrtLaunchKernelAttrId)枚举中的`ACL_RT_LAUNCH_KERNEL_ATTR_LOCAL_MEMORY_SIZE`枚举项
+
+    `ACL_RT_LAUNCH_KERNEL_ATTR_LOCAL_MEMORY_SIZE`枚举项在CANN 9.0.0版本标记为废弃，将在2027年3月30日之后的版本删除，替换为：`ACL_RT_LAUNCH_KERNEL_ATTR_DYN_UBUF_SIZE`枚举项。
+
+- [aclrtDevAttr](25-02_Enumerations.md#aclrtDevAttr)枚举中的`ACL_DEV_ATTR_LOCAL_MEM_PER_VECTOR_CORE`枚举项
+
+    `ACL_DEV_ATTR_LOCAL_MEM_PER_VECTOR_CORE`枚举项在CANN 9.0.0版本标记为废弃，将在2027年3月30日之后的版本删除，替换为：`ACL_DEV_ATTR_UBUF_PER_VECTOR_CORE`枚举项。
+
+- [aclrtDevAttr](25-02_Enumerations.md#aclrtDevAttr)枚举中的`ACL_DEV_ATTR_SUPER_POD_DEVIDE_ID`枚举项
+
+    `ACL_DEV_ATTR_SUPER_POD_DEVIDE_ID`枚举项在CANN 9.0.0版本标记为废弃，将在2027年3月30日之后的版本删除，替换为：`ACL_DEV_ATTR_SUPER_POD_DEVICE_ID`枚举项。
+
+- [aclrtAtomicOperationCapability](25-02_Enumerations.md#aclrtAtomicOperationCapability)枚举中的`ACL_RT_ATOMIC_CAPABILITY_REDUCATION`枚举项
+
+    `ACL_RT_ATOMIC_CAPABILITY_REDUCATION`枚举项在CANN 9.2.0版本标记为废弃，将在2027年9月30日之后的版本删除，替换为：`ACL_RT_ATOMIC_CAPABILITY_REDUCTION`枚举项。
+
+- [aclrtBinaryLoadOptionType](25-02_Enumerations.md#aclrtBinaryLoadOptionType)枚举中的`ACL_RT_BINARY_LOAD_OPT_LAZY_MAGIC`枚举项
+
+    `ACL_RT_BINARY_LOAD_OPT_LAZY_MAGIC`枚举项在CANN 8.5.0版本标记为废弃，将在2026年12月30日之后的版本删除，替换为：`ACL_RT_BINARY_LOAD_OPT_MAGIC`枚举项。
+
+- [aclrtLaunchKernelAttrValue](25-04_Structs.md#aclrtLaunchKernelAttrValue)联合体中的`localMemorySize`成员
+
+    `aclrtLaunchKernelAttrValue.localMemorySize`成员在CANN 9.0.0版本标记为废弃，将在2027年3月30日之后的版本删除，替换为：`aclrtLaunchKernelAttrValue.dynUBufSize`成员。
+
 ---

@@ -527,6 +527,8 @@ Launch Kernel时，每个属性是由属性标识aclrtLaunchKernelAttr.id及其�
 
 ## aclrtLaunchKernelAttrValue
 
+**须知：`aclrtLaunchKernelAttrValue.localMemorySize`成员在CANN 9.0.0版本标记为废弃，将在2027年3月30日之后的版本删除，替换为：`aclrtLaunchKernelAttrValue.dynUBufSize`成员。**
+
 ```c
 typedef union aclrtLaunchKernelAttrValue {
     uint8_t schemMode;

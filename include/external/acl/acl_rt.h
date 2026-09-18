@@ -481,6 +481,7 @@ typedef enum aclrtLastErrLevel {
 
 typedef enum aclrtBinaryLoadOptionType {
     ACL_RT_BINARY_LOAD_OPT_LAZY_LOAD = 1,
+    // DEPRECATED since 8.5.0. Will be removed after 2026/12/30. Use ACL_RT_BINARY_LOAD_OPT_MAGIC instead.
     ACL_RT_BINARY_LOAD_OPT_LAZY_MAGIC = 2,
     ACL_RT_BINARY_LOAD_OPT_MAGIC = 2,
     ACL_RT_BINARY_LOAD_OPT_CPU_KERNEL_MODE = 3,
@@ -1143,6 +1144,8 @@ ACL_FUNC_VISIBILITY const char* aclGetRecentErrMsg();
  * @param version[OUT] CANN package version information
  * @retval ACL_SUCCESS The function is successfully executed.
  * @retval ACL_ERROR_INVALID_FILE Failure
+ * @deprecated aclsysGetCANNVersion is deprecated since 8.5.0, Will be removed after 2026/12/30, use
+ *             aclsysGetVersionStr or aclsysGetVersionNum instead.
  */
 ACL_DEPRECATED_MESSAGE("aclsysGetCANNVersion is deprecated, use aclsysGetVersionStr and aclsysGetVersionNum instead")
 ACL_FUNC_VISIBILITY aclError aclsysGetCANNVersion(aclCANNPackageName name, aclCANNPackageVersion* version);
@@ -1197,6 +1200,8 @@ ACL_FUNC_VISIBILITY aclError aclrtGetLastError(aclrtLastErrLevel level);
  *
  * @retval ACL_SUCCESS The function is successfully executed.
  * @retval OtherValues Failure
+ * @deprecated aclrtSetExceptionInfoCallback is deprecated since 9.2.0, Will be removed after 2027/9/30, use
+ *             aclrtExceptionInfoCallbackRegister and aclrtExceptionInfoCallbackUnregister instead.
  */
 ACL_DEPRECATED_MESSAGE("aclrtSetExceptionInfoCallback is deprecated, use aclrtExceptionInfoCallbackRegister and aclrtExceptionInfoCallbackUnregister instead")
 ACL_FUNC_VISIBILITY aclError aclrtSetExceptionInfoCallback(aclrtExceptionInfoCallback callback);
@@ -1806,6 +1811,8 @@ ACL_FUNC_VISIBILITY aclError aclrtResetEvent(aclrtEvent event, aclrtStream strea
  *
  * @retval ACL_SUCCESS The function is successfully executed.
  * @retval OtherValues Failure
+ * @deprecated aclrtQueryEvent is deprecated since 8.5.0, Will be removed after 2026/12/30, use
+ *             aclrtQueryEventStatus instead.
  */
 ACL_DEPRECATED_MESSAGE("aclrtQueryEvent is deprecated, use aclrtQueryEventStatus instead")
 ACL_FUNC_VISIBILITY aclError aclrtQueryEvent(aclrtEvent event, aclrtEventStatus* status);
@@ -2397,6 +2404,8 @@ ACL_FUNC_VISIBILITY aclError aclrtMemsetD32Async(
  * @retval OtherValues Failure
  *
  * @see aclrtSynchronizeStream
+ * @deprecated aclrtMemcpyAsyncWithCondition is deprecated since 9.2.0, Will be removed after 2027/9/30, use
+ *             aclrtMemcpyAsync instead.
  */
 ACL_DEPRECATED_MESSAGE("aclrtMemcpyAsyncWithCondition is deprecated, use aclrtMemcpyAsync instead")
 ACL_FUNC_VISIBILITY aclError aclrtMemcpyAsyncWithCondition(
@@ -4798,6 +4807,8 @@ ACL_FUNC_VISIBILITY aclError aclmdlRICaptureEnd(aclrtStream stream, aclmdlRI* mo
  * @param modelRI [IN] model runtime instance
  * @retval ACL_SUCCESS The function is successfully executed.
  * @retval OtherValues Failure
+ * @deprecated aclmdlRIDebugPrint is deprecated since 8.5.0, Will be removed after 2026/12/30, use
+ *             aclmdlRIDebugJsonPrint instead.
  */
 ACL_DEPRECATED_MESSAGE("aclmdlRIDebugPrint is deprecated, use aclmdlRIDebugJsonPrint instead")
 ACL_FUNC_VISIBILITY aclError aclmdlRIDebugPrint(aclmdlRI modelRI);
@@ -5078,6 +5089,8 @@ ACL_FUNC_VISIBILITY aclError aclmdlRITaskGetSeqId(aclmdlRITask task, uint32_t* i
  * @param patchVersion[OUT] ACL interface patch version
  * @retval ACL_SUCCESS The function is successfully executed.
  * @retval OtherValues Failure
+ * @deprecated aclrtGetVersion is deprecated since 9.2.0, Will be removed after 2027/9/30, use
+ *             aclsysGetVersionNum or aclsysGetVersionStr instead.
  */
 ACL_DEPRECATED_MESSAGE("aclrtGetVersion is deprecated, use aclSysGetVersion instead")
 ACL_FUNC_VISIBILITY aclError aclrtGetVersion(int32_t* majorVersion, int32_t* minorVersion, int32_t* patchVersion);

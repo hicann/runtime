@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include <mutex>
 #include "acl_rt_impl.h"
 #include "runtime/event.h"
 #include "runtime/rt_inner_event.h"
@@ -123,6 +124,13 @@ aclError aclrtResetEventImpl(aclrtEvent event, aclrtStream stream)
 
 aclError aclrtQueryEventImpl(aclrtEvent event, aclrtEventStatus* status)
 {
+    static std::once_flag flag;
+    std::call_once(flag, [] {
+        ACL_LOG_WARN("aclrtQueryEvent is deprecated since 8.5.0,"
+                     " Will be removed after 2026/12/30,"
+                     " use aclrtQueryEventStatus instead.");
+    });
+
     ACL_PROFILING_REG(acl::AclProfType::AclrtQueryEvent);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(event);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(status);

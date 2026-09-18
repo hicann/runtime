@@ -179,7 +179,7 @@ aclError aclrtMemcpyAsync(void *dst, size_t destMax, const void *src, size_t cou
 aclError aclrtMemcpyAsyncWithCondition(void *dst, size_t destMax, const void *src, size_t count, aclrtMemcpyKind kind, aclrtStream stream)
 ```
 
-**须知：此接口后续版本会废弃，请使用[aclrtMemcpyAsync](#aclrtMemcpyAsync)接口。**
+**须知：aclrtMemcpyAsyncWithCondition接口在CANN 9.2.0版本标记为废弃，将在2027年9月30日之后的版本删除，替换为：[aclrtMemcpyAsync](#aclrtMemcpyAsync)接口。**
 
 ### 产品支持情况
 

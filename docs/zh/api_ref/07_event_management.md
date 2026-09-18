@@ -547,7 +547,7 @@ aclError aclrtResetEvent(aclrtEvent event, aclrtStream stream)
 aclError aclrtQueryEvent(aclrtEvent event, aclrtEventStatus *status)
 ```
 
-**须知：此接口后续版本会废弃，请使用[aclrtQueryEventStatus](#aclrtQueryEventStatus)接口。**
+**须知：aclrtQueryEvent接口在CANN 8.5.0版本标记为废弃，将在2026年12月30日之后的版本删除，替换为：[aclrtQueryEventStatus](#aclrtQueryEventStatus)接口。**
 
 ### 产品支持情况
 

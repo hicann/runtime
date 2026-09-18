@@ -509,11 +509,11 @@ TEST_F(UTEST_ACL_Common, finalize2)
 TEST_F(UTEST_ACL_Common, dvpp_finalize_failed)
 {
     auto ret = aclFinalizeCallbackRegister(ACL_REG_TYPE_ACL_DVPP, FinalizeCallback_Fail, nullptr);
-    EXPECT_EQ(ret, ACL_ERROR_NONE);
+    EXPECT_EQ(ret, ACL_SUCCESS);
     ret = aclFinalize();
     EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
     ret = aclFinalizeCallbackUnRegister(ACL_REG_TYPE_ACL_DVPP, FinalizeCallback_Fail);
-    EXPECT_EQ(ret, ACL_ERROR_NONE);
+    EXPECT_EQ(ret, ACL_SUCCESS);
 }
 
 TEST_F(UTEST_ACL_Common, finalize_failed_with_rts_fail)

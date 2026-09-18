@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include <mutex>
 #include <sstream>
 #include "data_buffer_internal.h"
 #include "common/resource_statistics.h"
@@ -95,6 +96,13 @@ void* aclGetDataBufferAddrImpl(const aclDataBuffer* dataBuffer)
 
 uint32_t aclGetDataBufferSizeImpl(const aclDataBuffer* dataBuffer)
 {
+    static std::once_flag flag;
+    std::call_once(flag, [] {
+        ACL_LOG_WARN("aclGetDataBufferSize is deprecated since 8.5.0,"
+                     " Will be removed after 2026/12/30,"
+                     " use aclGetDataBufferSizeV2 instead.");
+    });
+
     if (dataBuffer == nullptr) {
         return 0U;
     }
