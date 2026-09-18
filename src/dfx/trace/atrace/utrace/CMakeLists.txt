@@ -347,3 +347,57 @@ set_target_properties(atrace_share
 )
 
 endif ()
+
+############################# libascend_trace_stub.so(linux)   #############################
+
+add_library(atrace_stub_share
+    SHARED
+        ${CMAKE_CURRENT_SOURCE_DIR}/atrace_stub.c)
+
+target_include_directories(atrace_stub_share
+    PRIVATE
+        ${libtraceHeaderDir})
+
+target_compile_options(atrace_stub_share
+    PRIVATE
+        -Wcast-qual
+        ${ADIAG_COMMON_COMPILE_OPTIONS}
+        $<$<CONFIG:Debug>:-g -O0>
+        $<$<CONFIG:Release>:-Os -D_FORTIFY_SOURCE=2>
+        -fPIC
+        -std=gnu11
+        -fstack-protector-strong
+        -fno-common
+        -fvisibility=hidden
+)
+
+target_link_options(atrace_stub_share
+    PRIVATE
+        -Wl,-z,relro,-z,now,-z,noexecstack
+        -Wl,--gc-sections
+        $<$<CONFIG:Release>:-s>
+)
+
+target_link_libraries(atrace_stub_share
+    PRIVATE
+        $<BUILD_INTERFACE:intf_pub>
+    PUBLIC
+        $<BUILD_INTERFACE:atrace_headers>
+)
+
+target_compile_definitions(atrace_stub_share
+    PRIVATE
+        OS_TYPE=0
+        _GNU_SOURCE
+)
+
+set_target_properties(atrace_stub_share
+    PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/stub
+        WINDOWS_EXPORT_ALL_SYMBOLS TRUE
+        OUTPUT_NAME ascend_trace
+)
+
+install(TARGETS atrace_stub_share OPTIONAL
+    LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR}/stub
+)

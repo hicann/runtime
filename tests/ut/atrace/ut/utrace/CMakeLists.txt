@@ -239,3 +239,46 @@ set_target_properties(utrace_arm_utest
     OUTPUT_NAME utrace_arm_utest
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
+
+############################# atrace_stub_utest(linux)   #############################
+add_executable(atrace_stub_utest
+    testcase/main.cc
+    testcase/atrace_stub_utest.cc
+    ${ATRACE_SOURCE_DIR}/utrace/atrace_stub.c
+)
+
+add_dependencies(atrace_stub_utest atrace_stub_share)
+
+target_include_directories(atrace_stub_utest PRIVATE
+    ${TOP_DIR}/pkg_inc/trace
+    ${TOP_DIR}/src/dfx/trace/inc/toolchain
+)
+
+target_compile_options(atrace_stub_utest PRIVATE
+    -g
+    -Wall
+    -Werror
+)
+
+target_compile_definitions(atrace_stub_utest PRIVATE
+    ATRACE_STUB_SO_PATH="$<TARGET_FILE:atrace_stub_share>"
+    LLT_TEST_DIR="/tmp/atrace_stub_utest"
+    _GNU_SOURCE
+)
+
+target_link_options(atrace_stub_utest PRIVATE
+   -ldl
+   -lpthread
+)
+
+target_link_libraries(atrace_stub_utest PRIVATE
+    $<BUILD_INTERFACE:intf_llt_pub>
+    $<BUILD_INTERFACE:atrace_headers>
+    dl
+)
+
+set_target_properties(atrace_stub_utest
+    PROPERTIES
+    OUTPUT_NAME atrace_stub_utest
+    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
