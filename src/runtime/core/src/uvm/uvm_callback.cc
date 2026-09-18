@@ -145,6 +145,16 @@ rtError_t UvmCallback::ConvertUvmLocationStruct(drv_uvm_location& drvUvmLoc, rtM
 
     const rtMemManagedLocationType memManagedLocType = memManagedLoc.type;
     int32_t drvUvmLocId = memManagedLoc.id;
+    if (memManagedLocType == rtMemLocationTypeDevice) {
+        const int32_t userDeviceId = memManagedLoc.id;
+        uint32_t realDeviceId = 0U;
+        const rtError_t error =
+            Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(userDeviceId), &realDeviceId);
+        COND_RETURN_ERROR(
+            error != RT_ERROR_NONE, error, "Failed to convert the user device ID %d to driver device ID.",
+            userDeviceId);
+        drvUvmLocId = static_cast<int32_t>(realDeviceId);
+    }
     // For hostNumaCurrent type, runtime need to get numa node id related to current thread
     if (memManagedLocType == rtMemLocationTypeHostNumaCurrent) {
         COND_RETURN_WARN(

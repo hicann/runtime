@@ -34,6 +34,14 @@ rtError_t ApiErrorDecorator::MemManagedAdvise(
             (location.id > (numDev - 1)) || (location.id < 0), RT_ERROR_INVALID_VALUE,
             "Managing the policy attributes of the unified virtual memory (UVM)", location.id,
             "[0, " + std::to_string(numDev - 1) + "]");
+        const int32_t userDeviceId = location.id;
+        uint32_t realDeviceId = 0U;
+        const rtError_t convertRet =
+            Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(userDeviceId), &realDeviceId);
+        COND_RETURN_ERROR(
+            convertRet != RT_ERROR_NONE, convertRet, "Failed to convert the user device ID %d to driver device ID.",
+            userDeviceId);
+        location.id = static_cast<int32_t>(realDeviceId);
     }
     const rtError_t error = impl_->MemManagedAdvise(ptr, size, advise, location);
     COND_RETURN_ERROR(

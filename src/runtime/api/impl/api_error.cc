@@ -6267,7 +6267,36 @@ rtError_t ApiErrorDecorator::MemSetAccess(void* virPtr, size_t size, rtMemAccess
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(virPtr, RT_ERROR_INVALID_VALUE, "Setting the memory access permission");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(desc, RT_ERROR_INVALID_VALUE, "Setting the memory access permission");
-    return impl_->MemSetAccess(virPtr, size, desc, count);
+    if (count == 0U) {
+        return impl_->MemSetAccess(virPtr, size, desc, count);
+    }
+
+    std::unique_ptr<rtMemAccessDesc[]> realDesc;
+    try {
+        realDesc.reset(new (std::nothrow) rtMemAccessDesc[count]);
+    } catch (const std::bad_array_new_length&) {
+        RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
+            ErrorCode::EE1011, "Setting the memory access permission", count, "count",
+            "The memory access descriptor array cannot be allocated with the specified count");
+        return RT_ERROR_INVALID_VALUE;
+    }
+    COND_RETURN_AND_MSG_OUTER(
+        realDesc == nullptr, RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, "Setting the memory access permission", count,
+        "count", "The memory access descriptor array cannot be allocated with the specified count");
+
+    for (size_t idx = 0U; idx < count; ++idx) {
+        realDesc[idx] = desc[idx];
+        if (realDesc[idx].location.type != RT_MEMORY_LOC_DEVICE) {
+            continue;
+        }
+        const uint32_t userDeviceId = realDesc[idx].location.id;
+        const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(userDeviceId, &realDesc[idx].location.id);
+        COND_RETURN_ERROR(
+            error != RT_ERROR_NONE, error, "Failed to convert the user device ID %u to driver device ID.",
+            userDeviceId);
+    }
+
+    return impl_->MemSetAccess(virPtr, size, realDesc.get(), count);
 }
 
 rtError_t ApiErrorDecorator::MemGetAccess(void* virPtr, rtMemLocation* location, uint64_t* flags)
@@ -6276,7 +6305,15 @@ rtError_t ApiErrorDecorator::MemGetAccess(void* virPtr, rtMemLocation* location,
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         location, RT_ERROR_INVALID_VALUE, "Obtaining the memory access permission");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(flags, RT_ERROR_INVALID_VALUE, "Obtaining the memory access permission");
-    return impl_->MemGetAccess(virPtr, location, flags);
+    rtMemLocation realLocation = *location;
+    if (realLocation.type == RT_MEMORY_LOC_DEVICE) {
+        const uint32_t userDeviceId = realLocation.id;
+        const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(userDeviceId, &realLocation.id);
+        COND_RETURN_ERROR(
+            error != RT_ERROR_NONE, error, "Failed to convert the user device ID %u to driver device ID.",
+            userDeviceId);
+    }
+    return impl_->MemGetAccess(virPtr, &realLocation, flags);
 }
 
 rtError_t ApiErrorDecorator::ExportToShareableHandle(
