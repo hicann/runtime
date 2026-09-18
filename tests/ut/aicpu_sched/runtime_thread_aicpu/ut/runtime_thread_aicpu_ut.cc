@@ -688,6 +688,14 @@ TEST_F(RuntimeThreadAicpuTest, FinishReportWritesCompletionCommandAndStreamError
     report.streamId = STREAM_ID;
     report.taskId = 31U;
     report.eventId = EVENT_ID;
+    g_driver.command.pid = 1U;
+    g_driver.command.commandType = 1U;
+    g_driver.command.vfId = 1U;
+    g_driver.command.tid = 1U;
+    g_driver.command.tsId = 1U;
+    for (auto& value : g_driver.command.reserved1) {
+        value = 1U;
+    }
     constexpr uint32_t executeResult = 0x5678U;
     ASSERT_EQ(service.FinishReport(&report, executeResult), RuntimeThreadAicpuStatus::OK);
     EXPECT_EQ(state.streamErrorCalls, 1U);
@@ -695,13 +703,20 @@ TEST_F(RuntimeThreadAicpuTest, FinishReportWritesCompletionCommandAndStreamError
     EXPECT_EQ(state.streamErrorTsId, TS_ID);
     EXPECT_EQ(state.streamErrorStreamId, STREAM_ID);
     EXPECT_EQ(state.streamExecuteResult, executeResult);
+    EXPECT_EQ(g_driver.command.pid, 0U);
     EXPECT_EQ(g_driver.command.commandType, 15U);
+    EXPECT_EQ(g_driver.command.vfId, 0U);
+    EXPECT_EQ(g_driver.command.tid, 0U);
+    EXPECT_EQ(g_driver.command.tsId, 0U);
     EXPECT_EQ(g_driver.command.streamId, STREAM_ID);
     EXPECT_EQ(g_driver.command.recordId, EVENT_ID);
     EXPECT_EQ(g_driver.command.taskId, 31U);
     EXPECT_EQ(g_driver.command.reserved, GROUP_ID);
     EXPECT_EQ(g_driver.command.reserved1[0], static_cast<uint32_t>(RuntimeThreadAicpuSqeSubtype::AICPU));
     EXPECT_EQ(g_driver.command.reserved1[1], executeResult);
+    for (size_t index = 2U; index < 12U; ++index) {
+        EXPECT_EQ(g_driver.command.reserved1[index], 0U);
+    }
     EXPECT_EQ(g_driver.messageSendInput.sqId, SQ_ID);
     EXPECT_EQ(g_driver.messageSendInput.reportCount, 1U);
 }

@@ -33,6 +33,7 @@ target_include_directories(runtime_thread_aicpu_utest PRIVATE
 target_link_libraries(runtime_thread_aicpu_utest PRIVATE
     $<BUILD_INTERFACE:intf_aicpu_llt_pub>
     $<BUILD_INTERFACE:slog_headers>
+    c_sec
     dl
     pthread
 )

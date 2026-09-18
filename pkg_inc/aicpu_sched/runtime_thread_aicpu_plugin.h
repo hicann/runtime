@@ -85,6 +85,6 @@ using RuntimeThreadAicpuGetPluginApiFunc = RuntimeThreadAicpuStatus (*)(
     const RuntimeThreadAicpuRuntimeHooks* hooks, const RuntimeThreadAicpuPluginApi** pluginApi);
 
 extern "C" __attribute__((visibility("default"))) RuntimeThreadAicpuStatus RuntimeThreadAicpuGetPluginApi(
-    const RuntimeThreadAicpuRuntimeHooks* hooks, const RuntimeThreadAicpuPluginApi** pluginApi);
+    const RuntimeThreadAicpuRuntimeHooks* const hooks, const RuntimeThreadAicpuPluginApi** const pluginApi);
 
 #endif

@@ -338,7 +338,7 @@ private:
         }
         (void)dlerror();
         const auto queryPlugin =
-            reinterpret_cast<RuntimeThreadAicpuGetPluginApiFunc>(dlsym(libraryHandle_, PLUGIN_QUERY_SYMBOL));
+            RtPtrToPtr<RuntimeThreadAicpuGetPluginApiFunc>(dlsym(libraryHandle_, PLUGIN_QUERY_SYMBOL));
         const char* const symbolError = dlerror();
         if ((queryPlugin == nullptr) || (symbolError != nullptr)) {
             unsupported_ = true;

@@ -47,6 +47,7 @@ target_include_directories(runtime_thread_aicpu PRIVATE
 
 target_link_libraries(runtime_thread_aicpu PRIVATE
     $<BUILD_INTERFACE:intf_pub>
+    c_sec
     ascend_hal_stub
     dl
     pthread

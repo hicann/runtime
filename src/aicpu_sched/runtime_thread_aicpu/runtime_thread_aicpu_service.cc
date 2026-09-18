@@ -16,8 +16,10 @@
 #include <new>
 #include <unistd.h>
 
+#include "securec.h"
 #include "aicpu_context.h"
 #include "aicpu_sched/aicpu_schedule/common/aicpusd_status.h"
+#include "aicpu_sched/common/type_def.h"
 #include "driver/ascend_hal.h"
 #include "runtime/runtime/kernel.h"
 
@@ -71,7 +73,8 @@ struct BlockInfo {
 
 using AicpuOpFunction = uint32_t (*)(void*);
 using AicpuOpFunctionWithBlock = uint32_t (*)(void*, void*);
-using RuntimeThreadExecuteFunction = uint32_t (*)(void*);
+using RuntimeThreadExecuteFunctionType = uint32_t(void*);
+using RuntimeThreadExecuteFunction = RuntimeThreadExecuteFunctionType*;
 
 static_assert(sizeof(CallbackReport) == 32U, "callback report layout changed");
 static_assert(offsetof(CallbackReport, funcPtr) == 16U, "callback report funcPtr offset changed");
@@ -266,7 +269,7 @@ RuntimeThreadAicpuStatus RuntimeThreadAicpuService::ResolveKernelNames(
                 fieldName, offset, context.args.size());
             return false;
         }
-        const char* const begin = reinterpret_cast<const char*>(context.args.data() + offset);
+        const char* const begin = PtrToPtr<uint8_t, const char>(context.args.data() + offset);
         const size_t remaining = context.args.size() - offset;
         const void* const terminator = std::memchr(begin, '\0', remaining);
         if (terminator == nullptr) {
@@ -419,7 +422,8 @@ RuntimeThreadAicpuStatus RuntimeThreadAicpuService::PrepareKernel(
     preparedKernel.eventId = event.eventId;
     preparedKernel.eventHandle = event.eventHandle;
     preparedKernel.taskCookie = taskCookie;
-    preparedKernel.funcPtr = reinterpret_cast<uint64_t>(&RuntimeThreadAicpuService::ExecutePreparedKernelEntry);
+    preparedKernel.funcPtr = PtrToValue(
+        PtrToPtr<RuntimeThreadExecuteFunctionType, void>(&RuntimeThreadAicpuService::ExecutePreparedKernelEntry));
     preparedKernel.fnData = taskCookie;
     aicpusd_info(
         "Prepare AICPU kernel success, device_id=%u, stream_id=%u, group_id=%u, cq_id=%u, event_id=%u, "
@@ -472,7 +476,7 @@ uint32_t RuntimeThreadAicpuService::ExecutePreparedKernelEntry(void* const cooki
         aicpusd_err("Execute prepared AICPU kernel failed because service is null.");
         return static_cast<uint32_t>(RuntimeThreadAicpuStatus::INTERNAL_ERROR);
     }
-    return service->ExecutePreparedKernel(reinterpret_cast<uint64_t>(cookieData));
+    return service->ExecutePreparedKernel(PtrToValue(cookieData));
 }
 
 uint32_t RuntimeThreadAicpuService::ExecutePreparedKernel(const uint64_t taskCookie)
@@ -529,9 +533,9 @@ uint32_t RuntimeThreadAicpuService::ExecuteKernel(KernelContext& context)
         uint32_t executeResult = 0U;
         if (context.functionName == RUN_KERNEL_WITH_BLOCK) {
             BlockInfo blockInfo = {.blockNum = context.blockDim, .blockId = blockId};
-            executeResult = reinterpret_cast<AicpuOpFunctionWithBlock>(functionAddress)(args, &blockInfo);
+            executeResult = PtrToFunctionPtr<void, AicpuOpFunctionWithBlock>(functionAddress)(args, &blockInfo);
         } else {
-            executeResult = reinterpret_cast<AicpuOpFunction>(functionAddress)(args);
+            executeResult = PtrToFunctionPtr<void, AicpuOpFunction>(functionAddress)(args);
         }
         if (executeResult != 0U) {
             aicpusd_err(
@@ -547,8 +551,8 @@ uint32_t RuntimeThreadAicpuService::ExecuteKernel(KernelContext& context)
 uint32_t RuntimeThreadAicpuService::ProcessOneReport(const void* const reportAddress)
 {
     const auto* const report = static_cast<const CallbackReport*>(reportAddress);
-    const uint64_t expectedFunction =
-        reinterpret_cast<uint64_t>(&RuntimeThreadAicpuService::ExecutePreparedKernelEntry);
+    const uint64_t expectedFunction = PtrToValue(
+        PtrToPtr<RuntimeThreadExecuteFunctionType, void>(&RuntimeThreadAicpuService::ExecutePreparedKernelEntry));
     if (report->funcPtr != expectedFunction) {
         aicpusd_err(
             "Invalid callback function in AICPU report, stream_id=%u, task_id=%u, func_ptr=%#llx, expected=%#llx.",
@@ -563,8 +567,8 @@ uint32_t RuntimeThreadAicpuService::ProcessOneReport(const void* const reportAdd
             static_cast<unsigned long long>(report->fnData));
         return static_cast<uint32_t>(RuntimeThreadAicpuStatus::INTERNAL_ERROR);
     }
-    const auto execute = reinterpret_cast<RuntimeThreadExecuteFunction>(report->funcPtr);
-    return execute(reinterpret_cast<void*>(report->fnData));
+    const auto execute = PtrToFunctionPtr<void, RuntimeThreadExecuteFunction>(ValueToPtr(report->funcPtr));
+    return execute(ValueToPtr(report->fnData));
 }
 
 RuntimeThreadAicpuStatus RuntimeThreadAicpuService::FinishReport(
@@ -588,17 +592,18 @@ RuntimeThreadAicpuStatus RuntimeThreadAicpuService::FinishReport(
         "Callback SQ command occupy start, device_id=%u, ts_id=%u, sq_id=%u.", deviceId_, tsId_, callbackSqId_);
     halSqMemGetOutput getOutput = {};
     drvError_t driverError = halSqMemGet(deviceId_, &getInput, &getOutput);
+    void* const commandAddress = ValueToPtr(PtrToFunctionPtr<volatile void, uint64_t>(getOutput.cmdPtr));
     if ((driverError != DRV_ERROR_NONE) || (getOutput.cmdPtr == nullptr) || (getOutput.cmdCount == 0U)) {
         aicpusd_err(
             "Call halSqMemGet failed, device_id=%u, ts_id=%u, sq_id=%u, requested_count=%u, actual_count=%u, "
             "cmd_ptr=%p, drv_ret_code=%d.",
-            deviceId_, tsId_, callbackSqId_, getInput.cmdCount, getOutput.cmdCount, const_cast<void*>(getOutput.cmdPtr),
+            deviceId_, tsId_, callbackSqId_, getInput.cmdCount, getOutput.cmdCount, commandAddress,
             static_cast<int32_t>(driverError));
         return RuntimeThreadAicpuStatus::RUNTIME_ERROR;
     }
 
-    auto* const command = static_cast<CallbackRecordCommand*>(const_cast<void*>(getOutput.cmdPtr));
-    (void)std::memset(command, 0, sizeof(*command));
+    auto* const command = PtrToPtr<void, CallbackRecordCommand>(commandAddress);
+    (void)memset_s(command, sizeof(*command), 0, sizeof(*command));
     command->commandType = CALLBACK_EVENT_RECORD_COMMAND;
     command->streamId = report->streamId;
     command->recordId = report->eventId;

@@ -31,9 +31,9 @@ public:
 
     RuntimeThreadAicpuStatus PrepareKernel(
         const RuntimeThreadAicpuKernelRequest& request, RuntimeThreadAicpuPreparedKernel& preparedKernel);
-    void ReleasePreparedKernel(uint64_t taskCookie);
-    void StreamDestroyed(void* streamHandle);
-    static uint32_t ExecutePreparedKernelEntry(void* cookieData);
+    void ReleasePreparedKernel(const uint64_t taskCookie);
+    void StreamDestroyed(void* const streamHandle);
+    static uint32_t ExecutePreparedKernelEntry(void* const cookieData);
 
 private:
     struct KernelContext {
@@ -57,17 +57,17 @@ private:
     RuntimeThreadAicpuStatus EnsureStarted(const RuntimeThreadAicpuKernelRequest& request);
     RuntimeThreadAicpuStatus AllocateCallbackChannel();
     void ReleaseCallbackChannel();
-    RuntimeThreadAicpuStatus GetOrCreateEvent(void* streamHandle, uint32_t streamId, EventEntry& event);
+    RuntimeThreadAicpuStatus GetOrCreateEvent(void* const streamHandle, const uint32_t streamId, EventEntry& event);
     RuntimeThreadAicpuStatus CreateKernelContext(const RuntimeThreadAicpuKernelRequest& request, uint64_t& taskCookie);
     RuntimeThreadAicpuStatus ResolveKernelNames(
         const RuntimeThreadAicpuKernelRequest& request, KernelContext& context) const;
-    bool SetReportedTaskId(uint64_t taskCookie, uint32_t taskId);
-    uint32_t ExecutePreparedKernel(uint64_t taskCookie);
+    bool SetReportedTaskId(const uint64_t taskCookie, const uint32_t taskId);
+    uint32_t ExecutePreparedKernel(const uint64_t taskCookie);
     uint32_t ExecuteKernel(KernelContext& context);
     void WorkerLoop();
     bool ProcessReports();
-    uint32_t ProcessOneReport(const void* reportAddress);
-    RuntimeThreadAicpuStatus FinishReport(const void* reportAddress, uint32_t executeResult);
+    uint32_t ProcessOneReport(const void* const reportAddress);
+    RuntimeThreadAicpuStatus FinishReport(const void* const reportAddress, const uint32_t executeResult);
 
     RuntimeThreadAicpuRuntimeHooks hooks_;
     std::mutex startMutex_;
@@ -87,7 +87,7 @@ private:
     SoManager soManager_;
 };
 
-void SetRuntimeThreadAicpuService(RuntimeThreadAicpuService* service);
+void SetRuntimeThreadAicpuService(RuntimeThreadAicpuService* const service);
 
 } // namespace runtime_thread_aicpu
 } // namespace cce

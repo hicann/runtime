@@ -21,7 +21,8 @@ class Kernel;
 class Stream;
 
 rtError_t LaunchRuntimeThreadAicpuKernel(
-    Api* api, const Kernel* kernel, uint32_t blockDim, const rtCpuKernelArgs_t* argsInfo, Stream* stream);
+    Api* const api, const Kernel* const kernel, const uint32_t blockDim, const rtCpuKernelArgs_t* const argsInfo,
+    Stream* const stream);
 
 } // namespace runtime
 } // namespace cce

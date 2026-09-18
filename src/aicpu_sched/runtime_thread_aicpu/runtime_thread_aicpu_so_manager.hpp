@@ -23,7 +23,7 @@ namespace runtime_thread_aicpu {
 class SoManager final {
 public:
     RuntimeThreadAicpuStatus GetFunction(
-        const std::string& soName, const std::string& functionName, void** function, std::string& errorDetail);
+        const std::string& soName, const std::string& functionName, void** const function, std::string& errorDetail);
 
 private:
     std::string ResolvePath(const std::string& soName) const;
