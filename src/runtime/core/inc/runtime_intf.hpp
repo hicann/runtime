@@ -26,6 +26,7 @@ class ApiEsched;
 class ApiSnapshot;
 class ApiRtConfig;
 class ApiDeviceTopology;
+class ApiKernelFunc;
 class Context;
 
 struct RtTimeoutConfig {
@@ -58,6 +59,8 @@ public:
     virtual ApiSoma* ApiSoma_() const = 0;
     // Get apiEvent implement.
     virtual ApiEvent* ApiEvent_() const = 0;
+    // Get apiKernelFunc implement.
+    virtual ApiKernelFunc* ApiKernelFunc_() const = 0;
     // Get apiEsched implement.
     virtual ApiEsched* ApiEsched_() const = 0;
     // Get apiSnapshot implement.

@@ -118,6 +118,7 @@ set(runtimeut_src_api_impl_list
     ${TOP_DIR}/src/runtime/api/impl/api_error.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_kernel_args_stub.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_kernel_func_stub.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_creator.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event_common.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_mbuf_stub.cc
@@ -384,6 +385,7 @@ add_executable(runtime_utest_arch5162
     rt_utest_api_stub_arch5162.cc
     ${RUNTIME_UT_ARCH5162_GENERATED_API_STUB_TEST_SOURCE}
     rt_utest_acl_api_stub_arch5162.cc
+    ../../rt_utest_api_kernel_func_stub.cc
     ../../rt_utest_mbuf_stub.cc
     ../../rt_utest_rt_config_stub.cc
     rt_utest_api_arch5162.cc

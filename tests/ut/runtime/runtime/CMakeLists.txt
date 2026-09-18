@@ -403,6 +403,7 @@ set(runtimeut_src_tiny_exclude_list
     ${TOP_DIR}/src/runtime/api/impl/api_impl_soma.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event_common.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_kernel_func.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_david.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/v200/api_impl_david_capture_event.cc
     ${TOP_DIR}/src/runtime/feature/xpu/api_error_xpu.cc
@@ -490,6 +491,7 @@ set(runtimeut_src_tiny_include_list
     ${TOP_DIR}/src/runtime/api/impl/api_impl_tiny.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event_stub.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_snapshot_stub.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_kernel_func_stub.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_esched.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_rt_config.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_device_topology.cc
@@ -603,6 +605,7 @@ set(runtimeut_src_list
     ${TOP_DIR}/src/runtime/api/impl/api_impl.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_cpu_kernel.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_kernel_args.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_kernel_func.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_memory.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_mbuf.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_standard_soc.cc
@@ -752,6 +755,7 @@ set(runtimeut_david_src_list
     ${TOP_DIR}/src/runtime/api/impl/api_impl.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_cpu_kernel.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_kernel_args.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_kernel_func.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_memory.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_mbuf.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event.cc
@@ -1247,6 +1251,7 @@ add_executable(runtime_utest_api
     test/rt_utest_api_esched_route.cc
     test/rt_utest_api_snapshot_route.cc
     test/rt_utest_api_rt_config.cc
+    test/rt_utest_api_kernel_func.cc
     test/rt_utest_api_kernel.cc
     test/rt_utest_api_impl.cc
     test/rt_api_test.cc
@@ -1420,6 +1425,7 @@ add_executable(runtime_utest_tiny_stub
     ${runtimeut_src_tiny_include_list}
     stub/hal_stub.cc
     test/main.cc
+    test/rt_utest_api_kernel_func_stub.cc
     test/rt_utest_stub.cc
 )
 
@@ -1680,6 +1686,7 @@ set(runtimeut_v201_src_list
     ${TOP_DIR}/src/runtime/api/impl/api_impl.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_cpu_kernel.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_kernel_args.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_kernel_func.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_memory.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_mbuf.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event.cc

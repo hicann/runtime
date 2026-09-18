@@ -249,6 +249,10 @@ set(libruntime_event_src_files_include_for_tiny
     ${RUNTIME_API_DIR}/impl/api_impl_event_stub.cc
 )
 
+set(libruntime_function_src_files_include_for_tiny
+    ${RUNTIME_API_DIR}/impl/api_impl_kernel_func_stub.cc
+)
+
 set(libruntime_api_src_files_include_for_tiny
     ${RUNTIME_DIR}/src/runtime/api/api_c_tiny.cc
     ${RUNTIME_TINY_GENERATED_API_STUB_SOURCE}
@@ -363,6 +367,7 @@ set(libruntime_common_src_files
     ${libruntime_api_src_files_include_for_tiny}
     ${libruntime_src_files_include_for_tiny}
     ${libruntime_event_src_files_include_for_tiny}
+    ${libruntime_function_src_files_include_for_tiny}
 )
 
 set(libruntime_dev_info_src_files
@@ -537,6 +542,7 @@ set(libruntime_v100_src_files
     ${libruntime_dev_info_src_files}
     ${libruntime_src_files_include_for_tiny}
     ${libruntime_event_src_files_include_for_tiny}
+    ${libruntime_function_src_files_include_for_tiny}
 )
 
 set(RUNTIME_INC_DIR_TINY

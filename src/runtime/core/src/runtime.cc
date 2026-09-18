@@ -331,6 +331,7 @@ Runtime::Runtime() : RuntimeIntf()
     apiMbuf_ = nullptr;
     apiSoma_ = nullptr;
     apiEvent_ = nullptr;
+    apiKernelFunc_ = nullptr;
     apiEsched_ = nullptr;
     apiSnapshot_ = nullptr;
     apiRtConfig_ = nullptr;
@@ -339,6 +340,7 @@ Runtime::Runtime() : RuntimeIntf()
     apiImplMbuf_ = nullptr;
     apiImplSoma_ = nullptr;
     apiImplEvent_ = nullptr;
+    apiImplKernelFunc_ = nullptr;
     apiImplEsched_ = nullptr;
     apiImplSnapshot_ = nullptr;
     apiImplRtConfig_ = nullptr;
@@ -1126,6 +1128,13 @@ rtError_t Runtime::InitApiImplies()
     }
     RT_LOG(RT_LOG_INFO, "ApiImplEvent:Runtime_alloc_size %zu bytes", sizeof(ApiImplEvent));
 
+    if (IsImplKernelFuncSupported()) {
+        apiImplKernelFunc_ = CreateImplKernelFuncAndGet();
+        if (apiImplKernelFunc_ == nullptr) {
+            return RT_ERROR_API_NEW;
+        }
+    }
+
     if (IsImplEschedSupported()) {
         apiImplEsched_ = CreateImplEschedAndGet();
         if (apiImplEsched_ == nullptr) {
@@ -1615,6 +1624,7 @@ rtError_t Runtime::Init()
     apiMbuf_ = apiImplMbuf_; // apiImplMbuf_ no Profiler and Decorator
     apiSoma_ = apiImplSoma_; // apiImplSoma_ no Profiler and Decorator
     apiEvent_ = apiImplEvent_;
+    apiKernelFunc_ = apiImplKernelFunc_;
     apiEsched_ = apiImplEsched_;
     apiSnapshot_ = apiImplSnapshot_;
     apiRtConfig_ = apiImplRtConfig_;
@@ -1675,6 +1685,7 @@ INIT_FAIL:
     DestroyImplMbuf(apiImplMbuf_);
     DELETE_O(apiImplSoma_);
     DELETE_O(apiImplEvent_);
+    DestroyImplKernelFunc(apiImplKernelFunc_);
     DestroyImplEsched(apiImplEsched_);
     DestroyImplSnapshot(apiImplSnapshot_);
     DestroyImplRtConfig(apiImplRtConfig_);

@@ -36,6 +36,7 @@ void __attribute__((weak)) halSetRuntimeApiVer(int Version);
 namespace cce {
 namespace runtime {
 class ApiEvent;
+class ApiKernelFunc;
 namespace {
 constexpr uint32_t DEFAULT_PROGRAM_NUMBER = 2000U;
 constexpr uint32_t DEFAULT_PHY_PAGE_SIZE = 4U * 1024U;
@@ -206,6 +207,8 @@ public:
     ApiSoma* ApiSoma_() const override { return apiSoma_; }
 
     ApiEvent* ApiEvent_() const override { return apiEvent_; }
+
+    ApiKernelFunc* ApiKernelFunc_() const override { return apiKernelFunc_; }
 
     ApiEsched* ApiEsched_() const override { return apiEsched_; }
 
@@ -934,6 +937,8 @@ private:
     ApiEvent* apiImplEvent_;
     ApiSnapshot* apiSnapshot_;
     ApiSnapshot* apiImplSnapshot_;
+    ApiKernelFunc* apiKernelFunc_;
+    ApiKernelFunc* apiImplKernelFunc_;
 };
 } // namespace runtime
 } // namespace cce

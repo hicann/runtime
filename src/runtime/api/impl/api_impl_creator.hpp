@@ -20,6 +20,7 @@ class ApiEsched;
 class ApiSnapshot;
 class ApiRtConfig;
 class ApiDeviceTopology;
+class ApiKernelFunc;
 
 Api* CreateImplAndGet();
 bool IsImplMbufSupported();
@@ -27,6 +28,9 @@ ApiMbuf* CreateImplMbufAndGet();
 void DestroyImplMbuf(ApiMbuf*& apiImplMbuf);
 ApiSoma* CreateImplSomaAndGet();
 ApiEvent* CreateImplEventAndGet();
+bool IsImplKernelFuncSupported();
+ApiKernelFunc* CreateImplKernelFuncAndGet();
+void DestroyImplKernelFunc(ApiKernelFunc*& apiImplKernelFunc);
 bool IsImplEschedSupported();
 ApiEsched* CreateImplEschedAndGet();
 void DestroyImplEsched(ApiEsched*& apiImplEsched);

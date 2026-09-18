@@ -266,6 +266,7 @@ set(runtimeut_910b_src_list
     ${TOP_DIR}/src/runtime/api/impl/api_impl.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_cpu_kernel.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_kernel_args.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_kernel_func.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_memory.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_mbuf.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_standard_soc.cc
@@ -738,6 +739,7 @@ add_executable(runtime_utest_api_910B
     rt_utest_aicpu_err_msg.cc
     rt_utest_aicpu_kernel_launch.cc
     rt_utest_runtime.cc
+    ../../rt_utest_api_kernel_func.cc
     rt_utest_snapshot.cc
     rt_utest_ipc_event.cc
     rt_utest_macro_value.cc

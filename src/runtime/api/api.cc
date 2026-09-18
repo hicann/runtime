@@ -10,6 +10,7 @@
 #include "api.hpp"
 #include "api_esched.hpp"
 #include "api_event.hpp"
+#include "api_kernel_func.hpp"
 #include "api_mbuf.hpp"
 #include "api_snapshot.hpp"
 #include "api_rt_config.hpp"
@@ -58,6 +59,16 @@ ApiEvent* ApiEvent::Instance()
         return nullptr;
     }
     return rtInstance->ApiEvent_();
+}
+
+ApiKernelFunc* ApiKernelFunc::Instance()
+{
+    const Runtime* const rtInstance = Runtime::Instance();
+    if (unlikely(rtInstance == nullptr)) {
+        RT_LOG(RT_LOG_ERROR, "Runtime::Instance == nullptr");
+        return nullptr;
+    }
+    return rtInstance->ApiKernelFunc_();
 }
 
 ApiEsched* ApiEsched::Instance()

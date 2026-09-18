@@ -22,6 +22,7 @@
 #include "api_device_topology.hpp"
 #include "api_event.hpp"
 #include "api_snapshot.hpp"
+#include "api_kernel_func.hpp"
 #include "api_impl.hpp"
 #include "api_impl_creator.hpp"
 #include "api_impl_snapshot.hpp"
@@ -245,6 +246,15 @@ TEST_F(RuntimeTest, ApiEventInstanceInitialized)
     EXPECT_EQ(ApiEvent::Instance(), runtime->ApiEvent_());
 }
 
+TEST_F(RuntimeTest, ApiKernelFuncInstanceInitialized)
+{
+    const Runtime* const runtime = Runtime::Instance();
+    ASSERT_NE(runtime, nullptr);
+    ASSERT_NE(runtime->ApiKernelFunc_(), nullptr);
+
+    EXPECT_EQ(ApiKernelFunc::Instance(), runtime->ApiKernelFunc_());
+}
+
 TEST_F(RuntimeTest, ApiEschedInstanceInitialized)
 {
     const Runtime* const runtime = Runtime::Instance();
@@ -295,6 +305,13 @@ TEST_F(RuntimeTest, CreateImplRtConfigAndGetFailed)
     MOCKER(static_cast<NothrowNewFunc>(&operator new)).expects(once()).will(invoke(NothrowNewFailStub));
 
     EXPECT_EQ(CreateImplRtConfigAndGet(), nullptr);
+}
+
+TEST_F(RuntimeTest, CreateImplKernelFuncAndGetFailed)
+{
+    MOCKER(static_cast<NothrowNewFunc>(&operator new)).expects(once()).will(invoke(NothrowNewFailStub));
+
+    EXPECT_EQ(CreateImplKernelFuncAndGet(), nullptr);
 }
 
 TEST_F(RuntimeTest, DestroyImplMbufSuccess)
@@ -360,6 +377,16 @@ TEST_F(RuntimeTest, DestroyImplDeviceTopologySuccess)
     DestroyImplDeviceTopology(apiImplDeviceTopology);
 
     EXPECT_EQ(apiImplDeviceTopology, nullptr);
+}
+
+TEST_F(RuntimeTest, DestroyImplKernelFuncSuccess)
+{
+    ApiKernelFunc* apiImplKernelFunc = CreateImplKernelFuncAndGet();
+    ASSERT_NE(apiImplKernelFunc, nullptr);
+
+    DestroyImplKernelFunc(apiImplKernelFunc);
+
+    EXPECT_EQ(apiImplKernelFunc, nullptr);
 }
 
 TEST_F(RuntimeTest, InitApiImpliesCreateMbufFailed)
