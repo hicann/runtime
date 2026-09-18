@@ -109,6 +109,31 @@ rtError_t Context::UpdateSuModelExeStreamNotifyWaitSqe(TaskInfo* taskInfo, Strea
     return error;
 }
 
+void Context::UpdateEndGraphTaskSqeType(Stream* const captureStream) const
+{
+    COND_PROC(!captureStream->IsSoftwareSqEnable(), return);
+    const uint16_t taskId = captureStream->GetLastTaskId();
+    TaskInfo* rtNotifyRecord = captureStream->Device_()->GetTaskFactory()->GetTask(captureStream->Id_(), taskId);
+    COND_RETURN_NORMAL(rtNotifyRecord == nullptr, "EndGraph task is NULL");
+
+    COND_RETURN_NORMAL(
+        rtNotifyRecord->type != TS_TASK_TYPE_NOTIFY_RECORD, "EndGraph stream_id=%d, task_id=%u, task type=%s(%u)",
+        rtNotifyRecord->stream->Id_(), rtNotifyRecord->id, GetTaskDescByType(rtNotifyRecord->type),
+        rtNotifyRecord->type);
+    COND_PROC(rtNotifyRecord->u.notifyrecordTask.notifyId != UINT32_MAX, return);
+
+    void* targetAddrOfUpdatedSqe = captureStream->GetHostSqeAddrByPos(rtNotifyRecord->pos);
+    COND_RETURN_NORMAL(
+        targetAddrOfUpdatedSqe == nullptr, "Get host sqe addr null, device_id=%u, stream_id=%d, task_pos=%u.",
+        captureStream->Device_()->Id_(), captureStream->Id_(), rtNotifyRecord->pos);
+
+    rtStarsSqe_t* sqeAddr = RtPtrToPtr<rtStarsSqe_t*, void*>(targetAddrOfUpdatedSqe);
+    sqeAddr->notifySqe.header.type = RT_STARS_SQE_TYPE_PLACE_HOLDER;
+
+    RT_LOG(RT_LOG_DEBUG, "capture stream_id=%u, task_id=%u, pos=%u", captureStream->Id_(), taskId, rtNotifyRecord->pos);
+    return;
+}
+
 rtError_t Context::AllocCascadeCaptureStream(
     const Stream* const stm, Model* const captureModel, Stream** newCaptureStream)
 {
@@ -637,6 +662,7 @@ rtError_t Context::StreamEndCapture(Stream* const stm, Model** const captureMdl)
         "capture model end graph failed, device_id=%u, origin stream_id=%d, "
         "capture model_id=%u, stream_id=%d, retCode=%#x.",
         device_->Id_(), stm->Id_(), captureModel->Id_(), captureStream->Id_(), error);
+    UpdateEndGraphTaskSqeType(captureStream);
 
     error = captureModelTmp->EndCaptureAdapterProc();
     COND_PROC_RETURN_ERROR(
