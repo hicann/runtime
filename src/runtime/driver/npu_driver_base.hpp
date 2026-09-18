@@ -287,38 +287,8 @@ enum class RtCtrlType {
         return RT_ERROR_NONE;                                \
     }
 
-#if (!defined(WIN32))
-#define DRV_ERROR_PROCESS(drvErrorCode, format, ...)                                                                   \
-    do {                                                                                                               \
-        if (&halMapErrorCode != nullptr) {                                                                             \
-            const int32_t errCodeAfterTrans = halMapErrorCode(drvErrorCode);                                           \
-            RT_LOG(                                                                                                    \
-                RT_LOG_INFO, "halMapErrorCode ret:%d, drvErrorCode:%d", errCodeAfterTrans,                             \
-                static_cast<int32_t>(drvErrorCode));                                                                   \
-            if ((errCodeAfterTrans >= 0) && (errCodeAfterTrans < MAX_DRV_ERR_CODE_AFTER_TRANS)) {                      \
-                std::string errBuf(ERROR_MSG_CODE_LEN, '\0');                                                          \
-                const int32_t errRet = sprintf_s(&(errBuf[0]), ERROR_MSG_CODE_LEN, "EL%04d", errCodeAfterTrans);       \
-                errBuf.resize(ERROR_MSG_CODE_LEN - 1U);                                                                \
-                if (likely(errRet != -1)) {                                                                            \
-                    if (errBuf.compare(RT_MEMORY_ALLOC_ERROR) == 0) {                                                  \
-                        REPORT_INPUT_ERROR(                                                                            \
-                            errBuf, std::vector<std::string>({"module_name"}), std::vector<std::string>({"UNKNOWN"})); \
-                    } else {                                                                                           \
-                        REPORT_INPUT_ERROR(errBuf, std::vector<std::string>(), std::vector<std::string>());            \
-                    }                                                                                                  \
-                } else {                                                                                               \
-                    RT_LOG(                                                                                            \
-                        RT_LOG_WARNING, "sprintf_s failed ret:%d, errCodeAfterTrans:%d", errRet, errCodeAfterTrans);   \
-                }                                                                                                      \
-                RT_LOG(RT_LOG_ERROR, format, ##__VA_ARGS__);                                                           \
-                break;                                                                                                 \
-            }                                                                                                          \
-        }                                                                                                              \
-        RT_LOG_CALL_MSG(ERR_MODULE_DRV, format, ##__VA_ARGS__);                                                        \
-    } while (false)
-#else
-#define DRV_ERROR_PROCESS(drvErrorCode, format, ...) RT_LOG_CALL_MSG(ERR_MODULE_DRV, format, ##__VA_ARGS__)
-#endif
+#define DRV_ERROR_PROCESS(drvErrorCode, format, ...) \
+    DRV_MALLOC_ERROR_PROCESS(drvErrorCode, APP_MODULE_ID, format, ##__VA_ARGS__)
 
 #define DRV_PROCESS_ERROR_RETURN(drvErrorCode, format, ...)     \
     if (unlikely(drvErrorCode != DRV_ERROR_NONE)) {             \

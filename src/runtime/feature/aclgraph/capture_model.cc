@@ -918,7 +918,7 @@ rtError_t CaptureModel::AddStreamToCaptureModel(Stream* const stm)
     if (it == addStreamMap_.end()) {
         CaptureSession* const captureSession = GetCaptureSession(Context_());
         NULL_PTR_RETURN_MSG(captureSession, RT_ERROR_CONTEXT_BASE);
-        rtError_t error = captureSession->StreamAddToCaptureModelProc(stm, this);
+        const rtError_t error = captureSession->StreamAddToCaptureModelProc(stm, this);
         if ((error != RT_ERROR_NONE) || (stm->GetCaptureStream() == nullptr)) {
             RT_LOG(
                 RT_LOG_ERROR,
