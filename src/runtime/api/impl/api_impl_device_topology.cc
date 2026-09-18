@@ -270,7 +270,7 @@ rtError_t ApiImplDeviceTopology::GetPairDevicesInfo(
 
     Driver* const curDrv = Runtime::Instance()->driverFactory_.GetDriver(NPU_DRIVER);
     NULL_PTR_RETURN_MSG(curDrv, RT_ERROR_DRV_NULL);
-    rtError_t ret = curDrv->GetPairDevicesInfo(realDeviceId, readOtherDeviceId, infoType, val);
+    const rtError_t ret = curDrv->GetPairDevicesInfo(realDeviceId, readOtherDeviceId, infoType, val);
     if (infoType == DEVS_INFO_TYPE_TOPOLOGY && *val == TOPOLOGY_HCCS_SW && realDeviceId == readOtherDeviceId) {
         *val = TOPOLOGY_HCCS;
     }

@@ -46,7 +46,7 @@ RTS_API rtError_t rtCtxGetSysParamOpt(const rtSysParamOpt configOpt, int64_t* co
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtsCtxSetSysParamOpt(const rtSysParamOpt configOpt, const int64_t configVal)
+rtError_t rtsCtxSetSysParamOpt(rtSysParamOpt configOpt, int64_t configVal)
 {
     ApiRtConfig* const apiRtConfigInstance = ApiRtConfig::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiRtConfigInstance);
@@ -59,7 +59,7 @@ rtError_t rtsCtxSetSysParamOpt(const rtSysParamOpt configOpt, const int64_t conf
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtsCtxGetSysParamOpt(const rtSysParamOpt configOpt, int64_t* const configVal)
+rtError_t rtsCtxGetSysParamOpt(rtSysParamOpt configOpt, int64_t* configVal)
 {
     ApiRtConfig* const apiRtConfigInstance = ApiRtConfig::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiRtConfigInstance);
