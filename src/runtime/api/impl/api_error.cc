@@ -1918,7 +1918,8 @@ rtError_t ApiErrorDecorator::EventCreateEx(Event** const evt, const uint64_t fla
         COND_RETURN_AND_MSG_OUTER(
             (((flag & itemFlag) != 0UL) && ((flag & (~itemFlag)) != 0UL)), RT_ERROR_INVALID_VALUE, ErrorCode::EE1006,
             "Event creation", "Parameter flag value " + std::to_string(flag),
-            "RT_EVENT_MC2(0x10U) and RT_EVENT_EXTERNAL(0x20U) do not support OR combination with other flags");
+            "RT_EVENT_MC2(0x10U), RT_EVENT_EXTERNAL(0x20U), and RT_EVENT_IPC(0x40U) do not support OR combination "
+            "with other flags");
     }
     if ((flag == RT_EVENT_IPC) && (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_IPC_EVENT))) {
         RT_LOG(RT_LOG_WARNING, "chip type(%d) does not support ipc event.", static_cast<int32_t>(chipType));

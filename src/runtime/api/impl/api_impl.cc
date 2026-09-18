@@ -1551,13 +1551,12 @@ rtError_t ApiImpl::StreamWaitEvent(Stream* const stm, Event* const evt, const ui
             RtFmtMsg(
                 "Stream (stream_id=%d) with the flag %s cannot be used for ACL Graph", curStm->Id_(), unsupportedFlag));
         COND_RETURN_AND_MSG_OUTER(
-            curStm == curCtx->DefaultStream_(), RT_ERROR_STREAM_CAPTURE_IMPLICIT, ErrorCode::EE1017,
-            "Triggering event waiting", "stream",
+            curStm == curCtx->DefaultStream_(), RT_ERROR_STREAM_CAPTURE_IMPLICIT, ErrorCode::EE1016,
+            "Triggering event waiting",
             RtFmtMsg("The default stream (stream_id=%d) cannot be used in the ACL Graph", curStm->Id_()));
-        COND_RETURN_AND_MSG_OUTER(
-            evt->IsEventWithoutWaitTask(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, "Triggering event waiting",
-            std::to_string(evt->GetEventFlag()), "event flag",
-            RtFmtMsg("Event (event_id=%d) does not support the ACL Graph", evt->EventId_()));
+        COND_RETURN_ERROR(
+            evt->IsEventWithoutWaitTask(), RT_ERROR_INVALID_VALUE, "Event (event_id=%d) does not support the ACL Graph",
+            evt->EventId_());
         const std::lock_guard<std::mutex> lk(curCtx->GetCaptureLock());
         if (evt->IsCapturing()) {
             const rtError_t retCode = CaptureEventWait(curCtx, curStm, evt, timeout);
@@ -2299,8 +2298,8 @@ rtError_t ApiImpl::EventRecord(Event* const evt, Stream* const stm, const uint32
             RtFmtMsg(
                 "Stream (stream_id=%d) with the flag %s cannot be used for ACL Graph", curStm->Id_(), unsupportedFlag));
         COND_RETURN_AND_MSG_OUTER(
-            curStm == curCtx->DefaultStream_(), RT_ERROR_STREAM_CAPTURE_IMPLICIT, ErrorCode::EE1017, "Event recording",
-            "stream", RtFmtMsg("The default stream (stream_id=%d) cannot be used in the ACL Graph", curStm->Id_()));
+            curStm == curCtx->DefaultStream_(), RT_ERROR_STREAM_CAPTURE_IMPLICIT, ErrorCode::EE1016, "Event recording",
+            RtFmtMsg("The default stream (stream_id=%d) cannot be used in the ACL Graph", curStm->Id_()));
         COND_RETURN_WARN(
             evt->IsEventWithoutWaitTask(), RT_ERROR_NONE,
             "The event flag %" PRIu64 " is not supported in capture mode.", evt->GetEventFlag());

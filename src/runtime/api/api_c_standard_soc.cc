@@ -1382,6 +1382,11 @@ rtError_t rtNotifySetImportPidInterServer(rtNotify_t notify, const rtServerPid* 
         const rtError_t ret =
             rtSetIpcNotifySuperPodPid(notifyPtr->GetIpcName().c_str(), serverPid.sdid, *(serverPid.pid));
         if (ret != ACL_RT_SUCCESS) {
+            RT_LOG(
+                RT_LOG_ERROR,
+                "Failed to set the Notify trustlist at index %zu; previously processed entries may already be "
+                "applied, retCode=%#x.",
+                i, static_cast<uint32_t>(ret));
             return ret;
         }
     }

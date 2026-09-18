@@ -187,7 +187,9 @@ rtError_t Notify::Record(Stream* const streamIn)
     TaskInfo submitTask = {};
     rtError_t errorReason;
     TaskInfo* notifyTask = streamIn->AllocTask(&submitTask, TS_TASK_TYPE_NOTIFY_RECORD, errorReason);
-    NULL_PTR_RETURN_MSG(notifyTask, errorReason);
+    COND_RETURN_ERROR(
+        notifyTask == nullptr, errorReason, "Failed to allocate the Notify record task, stream_id=%d, retCode=%#x.",
+        streamIn->Id_(), static_cast<uint32_t>(errorReason));
 
     bool isIpc = false;
     if (isIpcNotify_) {
@@ -319,16 +321,25 @@ rtError_t Notify::RevisedWait(Stream* const streamIn, const uint32_t timeout)
         error, ERROR_RECYCLE_WAIT, "Failed to submit event wait task, retCode=%#x.", static_cast<uint32_t>(error));
 
     resetTask = streamIn->AllocTask(&submitResetTask, TS_TASK_TYPE_EVENT_RESET, errorReason);
-    NULL_PTR_RETURN_MSG(resetTask, errorReason);
+    COND_RETURN_ERROR_MSG_INNER(
+        resetTask == nullptr, errorReason,
+        "The Notify wait task was submitted, but allocating the reset task failed; the wait task remains submitted, "
+        "notify_id=%u, retCode=%#x.",
+        notifyid_, static_cast<uint32_t>(errorReason));
 
     error = EventResetTaskInit(resetTask, nullptr, true, static_cast<int32_t>(eventId));
     ERROR_GOTO(
-        error, ERROR_RECYCLE_RESET, "Failed to initialize event reset task, notifyid=%u, retCode=%#x.", notifyid_,
-        static_cast<uint32_t>(error));
+        error, ERROR_RECYCLE_RESET,
+        "The Notify wait task was submitted, but initializing the reset task failed; the wait task remains submitted, "
+        "notify_id=%u, retCode=%#x.",
+        notifyid_, static_cast<uint32_t>(error));
 
     error = dev->SubmitTask(resetTask);
     ERROR_GOTO_MSG_INNER(
-        error, ERROR_RECYCLE_RESET, "Failed to submit event reset task, retCode=%#x.", static_cast<uint32_t>(error));
+        error, ERROR_RECYCLE_RESET,
+        "The Notify wait task was submitted, but submitting the reset task failed; the wait task remains submitted, "
+        "notify_id=%u, retCode=%#x.",
+        notifyid_, static_cast<uint32_t>(error));
 
     return RT_ERROR_NONE;
 ERROR_RECYCLE_RESET:

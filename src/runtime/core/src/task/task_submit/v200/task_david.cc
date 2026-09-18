@@ -25,6 +25,7 @@
 #include "cond_c.hpp"
 #include "stream.hpp"
 #include "capture_model.hpp"
+#include "npu_driver.hpp"
 
 namespace cce {
 namespace runtime {
@@ -527,10 +528,6 @@ rtError_t DavidSendTask(TaskInfo* taskInfo, Stream* const stm)
     sendInfo.sqId = sqId;
     sendInfo.sqe_addr = sqeBuffer;
     drvError_t drvRet = halSqTaskSend(devId, &sendInfo);
-    COND_RETURN_ERROR_MSG_INNER(
-        (drvRet != DRV_ERROR_NO_RESOURCES) && (drvRet != DRV_ERROR_NONE), RT_ERROR_DRV_ERR,
-        "[drv api] Call driver api halSqTaskSend failed, device_id=%u, stream_id=%d, drvRetCode=%d.", devId, stm->Id_(),
-        drvRet);
     while (unlikely(drvRet == DRV_ERROR_NO_RESOURCES)) {
         RT_LOG(
             RT_LOG_WARNING,
@@ -544,6 +541,13 @@ rtError_t DavidSendTask(TaskInfo* taskInfo, Stream* const stm)
             return RT_ERROR_DRV_ERR;
         }
         drvRet = halSqTaskSend(devId, &sendInfo);
+    }
+    if (drvRet != DRV_ERROR_NONE) {
+        DRV_ERROR_PROCESS(
+            drvRet,
+            "Call driver api halSqTaskSend failed, drvRetCode=%d, device_id=%u, stream_id=%d, "
+            "tryCount=%u.",
+            static_cast<int32_t>(drvRet), devId, stm->Id_(), tryCount);
     }
     if (drvRet == DRV_ERROR_NONE) {
         SetFlipTaskNum(stm, pos, taskInfo->sqeNum);

@@ -7,6 +7,8 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include <limits>
+
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 #include "driver/ascend_hal.h"
@@ -478,6 +480,7 @@ TEST_F(EventTest910B, TestElapsedTime)
     float32_t timeInterval;
 
     RawDevice* stub = new RawDevice(0);
+    stub->properties_.eventTimestampFreq = 48000.0F;
     event1.device_ = stub;
     event2.device_ = stub;
     error = event1.ElapsedTime(&timeInterval, &event2);
@@ -492,6 +495,72 @@ TEST_F(EventTest910B, TestElapsedTime)
     event2.timestamp_ = 10240000;
     error = event1.ElapsedTime(&timeInterval, &event2);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_NEAR(timeInterval, 10240000.0F / 48000.0F, 1e-4F);
+    event1.device_ = nullptr;
+    event2.device_ = nullptr;
+    delete stub;
+}
+
+TEST_F(EventTest910B, TestElapsedTimeInvalidFreq)
+{
+    rtError_t error;
+    Event event1;
+    Event event2;
+    float32_t timeInterval;
+
+    RawDevice* stub = new RawDevice(0);
+    event1.device_ = stub;
+    event2.device_ = stub;
+    event1.SetRecord(true);
+    event2.SetRecord(true);
+    event1.timestamp_ = 20480000;
+    event2.timestamp_ = 10240000;
+
+    stub->properties_.eventTimestampFreq = 0.0F;
+    error = event1.ElapsedTime(&timeInterval, &event2);
+    EXPECT_EQ(error, RT_ERROR_EVENT_BASE);
+
+    stub->properties_.eventTimestampFreq = std::numeric_limits<float32_t>::quiet_NaN();
+    error = event1.ElapsedTime(&timeInterval, &event2);
+    EXPECT_EQ(error, RT_ERROR_EVENT_BASE);
+
+    stub->properties_.eventTimestampFreq = 48000.0F;
+    error = event1.ElapsedTime(&timeInterval, &event2);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_NEAR(timeInterval, 10240000.0F / 48000.0F, 1e-4F);
+    event1.device_ = nullptr;
+    event2.device_ = nullptr;
+    delete stub;
+}
+
+TEST_F(EventTest910B, TestGetTimeStampInvalidFreq)
+{
+    rtError_t error;
+    Event event1;
+    uint64_t recTimestamp = 0UL;
+
+    RawDevice* stub = new RawDevice(0);
+    event1.device_ = stub;
+    event1.SetRecord(true);
+    event1.timestamp_ = 20480000;
+
+    stub->properties_.eventTimestampFreq = 0.0F;
+    error = event1.GetTimeStamp(&recTimestamp);
+    EXPECT_EQ(error, RT_ERROR_EVENT_BASE);
+
+    stub->properties_.eventTimestampFreq = std::numeric_limits<float32_t>::infinity();
+    error = event1.GetTimeStamp(&recTimestamp);
+    EXPECT_EQ(error, RT_ERROR_EVENT_BASE);
+
+    stub->properties_.eventTimestampFreq = 999.0F;
+    error = event1.GetTimeStamp(&recTimestamp);
+    EXPECT_EQ(error, RT_ERROR_EVENT_BASE);
+
+    stub->properties_.eventTimestampFreq = 48000.0F;
+    error = event1.GetTimeStamp(&recTimestamp);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(recTimestamp, 426666UL);
+    event1.device_ = nullptr;
     delete stub;
 }
 

@@ -170,6 +170,11 @@ rtError_t rtsNotifyBatchReset(rtNotify_t* notifies, uint32_t num)
     for (uint32_t i = 0; i < num; i++) {
         ret = rtNotifyReset(notifies[i]);
         if (ret != RT_ERROR_NONE) {
+            RT_LOG(
+                RT_LOG_ERROR,
+                "Failed to reset the Notify at index %u; previously processed Notify objects may already be reset, "
+                "retCode=%#x.",
+                i, static_cast<uint32_t>(ret));
             return ret;
         }
     }

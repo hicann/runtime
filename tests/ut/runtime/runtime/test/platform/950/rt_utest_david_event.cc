@@ -531,12 +531,41 @@ TEST_F(EventTestDavid, TestElapsedTime)
     EXPECT_EQ(error, RT_ERROR_EVENT_RECORDER_NULL);
 
     startEvt->SetRecord(true);
+    endEvt->SetRecord(false);
+    error = endEvt->ElapsedTime(&timeInterval, startEvt);
+    EXPECT_EQ(error, RT_ERROR_EVENT_RECORDER_NULL);
+
     endEvt->SetRecord(true);
     error = endEvt->ElapsedTime(&timeInterval, startEvt);
+    EXPECT_EQ(error, RT_ERROR_EVENT_TIMESTAMP_INVALID);
+
+    startEvt->SetTimeStamp(10240000);
+    endEvt->SetTimeStamp(20480000);
+    error = endEvt->ElapsedTime(&timeInterval, startEvt);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_FLOAT_EQ(timeInterval, 10.24F);
 
     error = rtEventDestroy(start);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
+    error = rtEventDestroy(end);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+}
+
+TEST_F(EventTestDavid, TestElapsedTimeCrossBackend)
+{
+    rtError_t error;
+    rtEvent_t end;
+    float32_t timeInterval = 0;
+    Event startEvt;
+
+    rtEventCreate(&end);
+    DavidEvent* endEvt = static_cast<DavidEvent*>(rt_ut::UnwrapOrNull<Event>(end));
+    endEvt->SetRecord(true);
+    endEvt->SetTimeStamp(20480000);
+
+    error = endEvt->ElapsedTime(&timeInterval, &startEvt);
+    EXPECT_EQ(error, RT_ERROR_EVENT_BASE);
+
     error = rtEventDestroy(end);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 }

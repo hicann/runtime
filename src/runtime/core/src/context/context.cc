@@ -1097,7 +1097,9 @@ rtError_t Context::SyncStreamsWithTimeout(
         error = defaultStream_->Synchronize(false, remainTime);
         if (unlikely((error != RT_ERROR_NONE) && (firstError == RT_ERROR_NONE))) {
             firstError = error;
-            RT_LOG_INNER_MSG(RT_LOG_ERROR, "Failed to synchronize default stream, retCode=%#x.", error);
+            if (error != RT_ERROR_STREAM_SYNC_TIMEOUT) {
+                RT_LOG_INNER_MSG(RT_LOG_ERROR, "Failed to synchronize default stream, retCode=%#x.", error);
+            }
         }
     }
     return firstError;
@@ -1142,9 +1144,7 @@ rtError_t Context::TaskReclaimforSyncDevice(const mmTimespec startTime, int32_t 
                 ctxStatus != RT_ERROR_NONE, ctxStatus, "context is aborted, status=%#x.",
                 static_cast<uint32_t>(ctxStatus));
 
-            COND_RETURN_ERROR_MSG_INNER(
-                IsProcessTimeout(startTime, timeout), RT_ERROR_STREAM_SYNC_TIMEOUT,
-                "Sync stream timeout=%dms, stream_id=%d.", timeout, syncStream->Id_());
+            COND_RETURN_WITH_NOLOG(IsProcessTimeout(startTime, timeout), RT_ERROR_STREAM_SYNC_TIMEOUT);
 
             if (error == RT_ERROR_STREAM_SYNC_TIMEOUT) {
                 RT_LOG(
@@ -1178,9 +1178,7 @@ rtError_t Context::TaskReclaimforSyncDevice(const mmTimespec startTime, int32_t 
             COND_RETURN_ERROR(
                 (device_->GetDevRunningState() == static_cast<uint32_t>(DEV_RUNNING_DOWN)), RT_ERROR_DRV_ERR,
                 "device_id=%u is down", device_->Id_());
-            COND_RETURN_ERROR_MSG_INNER(
-                IsProcessTimeout(startTime, timeout), RT_ERROR_STREAM_SYNC_TIMEOUT,
-                "Sync stream timeout=%dms, device_id=%d.", timeout, device_->Id_());
+            COND_RETURN_WITH_NOLOG(IsProcessTimeout(startTime, timeout), RT_ERROR_STREAM_SYNC_TIMEOUT);
             (void)sched_yield();
         }
     }
@@ -1224,9 +1222,12 @@ rtError_t Context::Synchronize(int32_t timeout)
         if (IsStreamNotSync(syncStream->Flags())) {
             continue;
         }
-        COND_RETURN_ERROR(
-            syncStream->IsCapturing(), RT_ERROR_STREAM_CAPTURED,
-            "Cannot synchronize captured stream, device_id=%u, stream_id=%d.", device_->Id_(), syncStream->Id_());
+        COND_RETURN_AND_MSG_OUTER(
+            syncStream->IsCapturing(), RT_ERROR_STREAM_CAPTURED, ErrorCode::EE1016, "Synchronizing the device",
+            RtFmtMsg(
+                "Stream (stream_id=%d) on device_id=%u is being captured. End the stream capture before synchronizing "
+                "the device",
+                syncStream->Id_(), device_->Id_()));
         // CONTINUE_ON_FAILURE need sync to get error code.
         COND_PROC(syncStream->IsSyncFinished() && (GetCtxMode() == ABORT_ON_FAILURE), continue;);
         syncStreams.push_back(syncStream);

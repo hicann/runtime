@@ -28,6 +28,8 @@
 #include "context.hpp"
 #include "stream.hpp"
 
+#include <cmath>
+
 namespace cce {
 namespace runtime {
 namespace {
@@ -194,9 +196,11 @@ rtError_t Event::TrySwitchToSoftwareMode()
     }
     const std::lock_guard<std::mutex> recordLock(recordStateMutex_);
     if (HasRecord() || (latestRecord_.state != INIT)) {
-        RT_LOG(
-            RT_LOG_ERROR, "Event mode cannot switch after record, event_id=%d, record_state=%s(%u).", eventId_,
-            EventStateName(latestRecord_.state), static_cast<uint32_t>(latestRecord_.state));
+        RT_LOG_OUTER_MSG_IMPL(
+            ErrorCode::EE1018, "Switching an Event from hardware mode to software mode",
+            RtFmtMsg(
+                "Event (event_id=%d) must be switched to software mode before initiating its first Record operation",
+                eventId_));
         return RT_ERROR_INVALID_VALUE;
     }
     SoftwareModeEnable();
@@ -360,7 +364,6 @@ void Event::DeleteFromNotifierMap(uint32_t streamId, uint16_t taskId)
 void Event::UpdateLatestRecord(
     RecordTaskInfo& latestRecord, const int32_t newEventId, const uint64_t timeLine, const uint64_t timeStamp)
 {
-    std::vector<std::string> latestRecordName = {"init", "recording", "recorded"};
     const std::lock_guard<std::mutex> updateLock(recordStateMutex_);
     if (latestRecord.state == RECORDING) {
         latestRecord_ = latestRecord;
@@ -380,16 +383,18 @@ void Event::UpdateLatestRecord(
     }
 
     if (latestRecord_.state > RECORDED) {
-        RT_LOG(RT_LOG_INFO, "invalid status=%d", latestRecord_.state);
+        RT_LOG(
+            RT_LOG_INFO, "invalid status=%s(%u)", EventStateName(latestRecord_.state),
+            static_cast<uint32_t>(latestRecord_.state));
         return;
     }
 
     RT_LOG(
         RT_LOG_INFO,
         "device_id=%u, event_id=%d, cur stream_id=%d, cur task_id=%u, "
-        "latest stream_id=%d, latest task_id=%u, status=%d(%s)",
+        "latest stream_id=%d, latest task_id=%u, status=%s(%u)",
         device_->Id_(), eventId_, latestRecord_.streamId, latestRecord_.taskId, latestRecord.streamId,
-        latestRecord.taskId, latestRecord_.state, (latestRecordName.at(latestRecord_.state)).c_str());
+        latestRecord.taskId, EventStateName(latestRecord_.state), static_cast<uint32_t>(latestRecord_.state));
 }
 
 void Event::RefreshEventId(int32_t eventid)
@@ -1197,8 +1202,8 @@ rtError_t Event::Query(void) // not support query after reset
     // record(recording) , return RT_ERROR_NONE. record(recorded) return Not complete
     queryResult = (latestRecord.state == RECORDING) ? RT_ERROR_EVENT_NOT_COMPLETE : RT_ERROR_NONE;
     RT_LOG(
-        RT_LOG_INFO, "device_id=%u, event_id=%d, latest state=%d, result=%d", device_->Id_(), eventId_,
-        latestRecord.state, queryResult);
+        RT_LOG_INFO, "device_id=%u, event_id=%d, latest state=%s(%u), result=%d", device_->Id_(), eventId_,
+        EventStateName(latestRecord.state), static_cast<uint32_t>(latestRecord.state), queryResult);
     return queryResult;
 }
 
@@ -1223,8 +1228,8 @@ rtError_t Event::QueryEventStatus(rtEventStatus_t* const status)
         *status = (latestRecord.state == RECORDING) ? RT_EVENT_INIT : RT_EVENT_RECORDED;
     }
     RT_LOG(
-        RT_LOG_INFO, "device_id=%u, event_id=%d, latest state=%d, status=%d", device_->Id_(), eventId_,
-        latestRecord.state, *status);
+        RT_LOG_INFO, "device_id=%u, event_id=%d, latest state=%s(%u), status=%d", device_->Id_(), eventId_,
+        EventStateName(latestRecord.state), static_cast<uint32_t>(latestRecord.state), *status);
     return error;
 }
 
@@ -1261,9 +1266,15 @@ rtError_t Event::QueryEventWaitStatus(const bool disableThread, bool& waitFlag)
 
 rtError_t Event::ElapsedTime(float32_t* const timeInterval, Event* const base)
 {
-    if ((!HasRecord()) || (!base->HasRecord())) {
-        return RT_ERROR_EVENT_RECORDER_NULL;
-    }
+    const bool startRecorded = base->HasRecord();
+    const bool endRecorded = HasRecord();
+    COND_RETURN_AND_MSG_OUTER(
+        (!startRecorded) || (!endRecorded), RT_ERROR_EVENT_RECORDER_NULL, ErrorCode::EE1018,
+        "Computing the elapsed time between two events",
+        RtFmtMsg(
+            "At least one Event has not been recorded, start_event_id=%d, start_event_recorded=%u, end_event_id=%d, "
+            "end_event_recorded=%u. Record and synchronize both Events before computing their elapsed time",
+            base->EventId_(), static_cast<uint32_t>(startRecorded), EventId_(), static_cast<uint32_t>(endRecorded)));
 
     uint64_t curNs;
     uint64_t baseNs;
@@ -1284,7 +1295,10 @@ rtError_t Event::ElapsedTime(float32_t* const timeInterval, Event* const base)
         return RT_ERROR_EVENT_TIMESTAMP_INVALID;
     }
 
-    float32_t freq = device_->GetDevProperties().eventTimestampFreq;
+    const float32_t freq = device_->GetDevProperties().eventTimestampFreq;
+    COND_RETURN_ERROR(
+        !std::isfinite(freq) || (freq <= 0.0F), RT_ERROR_EVENT_BASE,
+        "Invalid Event timestamp frequency, device_id=%u, frequency=%f.", device_->Id_(), static_cast<double>(freq));
     RT_LOG(
         RT_LOG_INFO, "curNs=%#" PRIx64 ", baseNs=%#" PRIx64 ", curEventId=%d, baseEventId=%d.", curNs, baseNs, eventId_,
         base->EventId_());
@@ -1308,17 +1322,26 @@ rtError_t Event::WaitForBusy()
 
 rtError_t Event::GetTimeStamp(uint64_t* const recTimestamp)
 {
-    if (!HasRecord()) {
-        return RT_ERROR_EVENT_RECORDER_NULL;
-    }
+    COND_RETURN_AND_MSG_OUTER(
+        !HasRecord(), RT_ERROR_EVENT_RECORDER_NULL, ErrorCode::EE1018, "Obtaining an Event timestamp",
+        RtFmtMsg(
+            "Event (event_id=%d) has not been recorded. Record and synchronize the Event before querying its timestamp",
+            EventId_()));
     UpdateTimeline();
     const uint64_t curUs = (Runtime::Instance()->GetDisableThread() && (!Runtime::Instance()->ChipIsHaveStars())) ?
                                Timeline_() :
                                TimeStamp();
     if (curUs == UINT64_MAX) {
+        const RecordTaskInfo latestRecord = GetLatestRecord();
+        RT_LOG(
+            RT_LOG_ERROR, "Event timestamp is invalid, event_id=%d, record_state=%s(%u).", EventId_(),
+            EventStateName(latestRecord.state), static_cast<uint32_t>(latestRecord.state));
         return RT_ERROR_EVENT_TIMESTAMP_INVALID;
     }
-    float32_t freq = device_->GetDevProperties().eventTimestampFreq;
+    const float32_t freq = device_->GetDevProperties().eventTimestampFreq;
+    COND_RETURN_ERROR(
+        !std::isfinite(freq) || (freq < 1000.0F), RT_ERROR_EVENT_BASE,
+        "Invalid Event timestamp frequency, device_id=%u, frequency=%f.", device_->Id_(), static_cast<double>(freq));
     *recTimestamp = curUs / (static_cast<uint64_t>(freq) / 1000U);
     RT_LOG(RT_LOG_DEBUG, "event_id=%d, timeline=%" PRIu64 ".", eventId_, *recTimestamp);
     return RT_ERROR_NONE;

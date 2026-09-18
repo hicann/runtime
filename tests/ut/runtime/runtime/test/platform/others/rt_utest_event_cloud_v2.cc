@@ -297,6 +297,7 @@ TEST_F(EventTest910, TestElapsedTime)
 
     rtInstance->SetDisableThread(false);
     RawDevice* stub = new RawDevice(0);
+    stub->properties_.eventTimestampFreq = 48000.0F;
     event1.device_ = stub;
     event2.device_ = stub;
 
@@ -308,8 +309,13 @@ TEST_F(EventTest910, TestElapsedTime)
     GlobalContainer::SetRtChipType(CHIP_MINI_V3);
     error = event1.ElapsedTime(&timeInterval, &event2);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_NEAR(timeInterval, 10240000.0F / 48000.0F, 1e-4F);
 
     rtInstance->SetDisableThread(true);
+    rtInstance->SetChipType(curChipType);
+    GlobalContainer::SetRtChipType(curChipType);
+    event1.device_ = nullptr;
+    event2.device_ = nullptr;
     delete stub;
 }
 

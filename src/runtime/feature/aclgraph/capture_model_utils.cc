@@ -635,15 +635,15 @@ rtError_t SubmitExternalEventTaskCommon(
     }
 
     error = evt->TrySwitchToSoftwareMode();
-    ERROR_RETURN_MSG_INNER(error, "Switch event to software mode failed, retCode=%#x.", error);
+    ERROR_RETURN(error, "Switch event to software mode failed, retCode=%#x.", error);
     error = isRecord ? CreateExternalRecordPlaceholder(stm, submitPlaceholder) :
                        CreateExternalWaitPlaceholder(evt, stm, submitPlaceholder);
-    ERROR_RETURN_MSG_INNER(error, "Create external event placeholder failed, retCode=%#x.", error);
+    ERROR_RETURN(error, "Create external event placeholder failed, retCode=%#x.", error);
 
     const uint32_t taskId = captureStm->GetLastTaskId();
     error = isRecord ? captureMdl->AddExternalRecordEvent(evt, static_cast<uint32_t>(captureStm->Id_()), taskId) :
                        captureMdl->AddExternalWaitEvent(evt, static_cast<uint32_t>(captureStm->Id_()), taskId);
-    ERROR_RETURN_MSG_INNER(error, "Submit external event task failed, retCode=%#x.", error);
+    ERROR_RETURN(error, "Submit external event task failed, retCode=%#x.", error);
     return RT_ERROR_NONE;
 }
 

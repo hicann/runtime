@@ -374,13 +374,32 @@ rtError_t DavidEvent::QueryEventWaitStatus(const bool disableThread, bool& waitF
 rtError_t DavidEvent::ElapsedTime(float32_t* const timeInterval, Event* const base)
 {
     DavidEvent* baseEvt = dynamic_cast<DavidEvent*>(base);
-    if ((!HasRecord()) || (!base->HasRecord())) {
-        return RT_ERROR_EVENT_RECORDER_NULL;
-    }
-    const uint64_t deltaNs = TimeStamp() - baseEvt->TimeStamp();
+    COND_RETURN_ERROR(
+        baseEvt == nullptr, RT_ERROR_EVENT_BASE,
+        "The start Event backend does not match the David end Event, end_event_id=%d.", EventId_());
+    const bool startRecorded = base->HasRecord();
+    const bool endRecorded = HasRecord();
+    COND_RETURN_AND_MSG_OUTER(
+        (!startRecorded) || (!endRecorded), RT_ERROR_EVENT_RECORDER_NULL, ErrorCode::EE1018,
+        "Computing the elapsed time between two events",
+        RtFmtMsg(
+            "At least one Event has not been recorded, start_event_id=%d, start_event_recorded=%u, end_event_id=%d, "
+            "end_event_recorded=%u. Record and synchronize both Events before computing their elapsed time",
+            base->EventId_(), static_cast<uint32_t>(startRecorded), EventId_(), static_cast<uint32_t>(endRecorded)));
+    const uint64_t curNs = TimeStamp();
+    const uint64_t baseNs = baseEvt->TimeStamp();
     RT_LOG(
-        RT_LOG_DEBUG, "curNs=%#" PRIx64 ", baseNs=%#" PRIx64 ", curEventId=%d, baseEventId=%d.", TimeStamp(),
-        baseEvt->TimeStamp(), eventId_, baseEvt->EventId_());
+        RT_LOG_DEBUG, "curNs=%#" PRIx64 ", baseNs=%#" PRIx64 ", curEventId=%d, baseEventId=%d.", curNs, baseNs,
+        eventId_, baseEvt->EventId_());
+    if ((curNs == UINT64_MAX) || (baseNs == UINT64_MAX)) {
+        const DavidEventState_t startState = baseEvt->GetRecordStatus();
+        const DavidEventState_t endState = GetRecordStatus();
+        RT_LOG(
+            RT_LOG_ERROR, "The event timestamp is invalid, curEventId=%d, baseEventId=%d, curState=%u, baseState=%u.",
+            eventId_, baseEvt->EventId_(), static_cast<uint32_t>(endState), static_cast<uint32_t>(startState));
+        return RT_ERROR_EVENT_TIMESTAMP_INVALID;
+    }
+    const uint64_t deltaNs = curNs - baseNs;
     *timeInterval = static_cast<float32_t>(static_cast<float64_t>(deltaNs) / RT_DEFAULT_TIMESTAMP_FREQ);
 
     return RT_ERROR_NONE;
@@ -388,12 +407,18 @@ rtError_t DavidEvent::ElapsedTime(float32_t* const timeInterval, Event* const ba
 
 rtError_t DavidEvent::GetTimeStamp(uint64_t* const recTimestamp)
 {
-    if (!HasRecord()) {
-        return RT_ERROR_EVENT_RECORDER_NULL;
-    }
+    COND_RETURN_AND_MSG_OUTER(
+        !HasRecord(), RT_ERROR_EVENT_RECORDER_NULL, ErrorCode::EE1018, "Obtaining an Event timestamp",
+        RtFmtMsg(
+            "Event (event_id=%d) has not been recorded. Record and synchronize the Event before querying its timestamp",
+            EventId_()));
     const uint64_t curUs = TimeStamp();
     RT_LOG(RT_LOG_DEBUG, "event_id=%d, timeline=%#" PRIx64 ".", eventId_, curUs);
     if (curUs == UINT64_MAX) {
+        const DavidEventState_t recordState = GetRecordStatus();
+        RT_LOG(
+            RT_LOG_ERROR, "Event timestamp is invalid, event_id=%d, record_state=%u.", EventId_(),
+            static_cast<uint32_t>(recordState));
         return RT_ERROR_EVENT_TIMESTAMP_INVALID;
     }
     *recTimestamp = curUs / (static_cast<uint64_t>(RT_DEFAULT_TIMESTAMP_FREQ) / 1000U);

@@ -2117,6 +2117,9 @@ rtError_t Stream::Synchronize(const bool isNeedWaitSyncCq, int32_t timeout)
     error = event->Synchronize(timeout);
     error = (error == RT_ERROR_EVENT_SYNC_TIMEOUT) ? RT_ERROR_STREAM_SYNC_TIMEOUT : error;
 #ifndef CFG_DEV_PLATFORM_PC
+    if (error == RT_ERROR_STREAM_SYNC_TIMEOUT) {
+        goto ERROR_FREE;
+    }
     ERROR_GOTO_MSG_INNER(error, ERROR_FREE, "Synchronize event failed, retCode=%#x.", static_cast<uint32_t>(error));
 #else
     if (error != RT_ERROR_NONE) {

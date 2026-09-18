@@ -438,7 +438,7 @@ rtError_t ApiImplDavid::EventCreate(Event** const evt, const uint64_t flag)
     COND_RETURN_ERROR(dev == nullptr, RT_ERROR_INVALID_VALUE, "device is NULL.");
 
     *evt = new (std::nothrow) DavidEvent(dev, flag, curCtx);
-    COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_SYSTEM, *evt == nullptr, RT_ERROR_EVENT_NEW, "new event failed.");
+    COND_RETURN_AND_MSG_OUTER(*evt == nullptr, RT_ERROR_EVENT_NEW, ErrorCode::EE1013, sizeof(DavidEvent), "new");
     if (flag != RT_EVENT_DEFAULT) {
         const rtError_t error = (*evt)->GenEventId();
         COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, DELETE_O(*evt);
@@ -528,8 +528,8 @@ rtError_t ApiImplDavid::EventRecord(Event* const evt, Stream* const stm, const u
             RtFmtMsg(
                 "Stream (stream_id=%d) with the flag %s cannot be used for ACL Graph", curStm->Id_(), unsupportedFlag));
         COND_RETURN_AND_MSG_OUTER(
-            curStm == curCtx->DefaultStream_(), RT_ERROR_STREAM_CAPTURE_IMPLICIT, ErrorCode::EE1017, "Event recording",
-            "stream", RtFmtMsg("The default stream (stream_id=%d) cannot be used in the ACL Graph", curStm->Id_()));
+            curStm == curCtx->DefaultStream_(), RT_ERROR_STREAM_CAPTURE_IMPLICIT, ErrorCode::EE1016, "Event recording",
+            RtFmtMsg("The default stream (stream_id=%d) cannot be used in the ACL Graph", curStm->Id_()));
         COND_RETURN_WARN(
             evt->IsEventWithoutWaitTask(), RT_ERROR_NONE,
             "The event flag %" PRIu64 " is not supported in capture mode.", evt->GetEventFlag());
@@ -578,17 +578,16 @@ rtError_t ApiImplDavid::EventReset(Event* const evt, Stream* const stm)
             RtFmtMsg(
                 "Stream (stream_id=%d) with the flag %s cannot be used for ACL Graph", curStm->Id_(), unsupportedFlag));
         COND_RETURN_AND_MSG_OUTER(
-            curStm == curCtx->DefaultStream_(), RT_ERROR_STREAM_CAPTURE_IMPLICIT, ErrorCode::EE1017, "Event reset",
-            "stream", RtFmtMsg("The default stream (stream_id=%d) cannot be used in the ACL Graph", curStm->Id_()));
-        COND_RETURN_AND_MSG_OUTER(
-            evt->IsEventWithoutWaitTask(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, "Event reset",
-            std::to_string(evt->GetEventFlag()), "event flag",
-            RtFmtMsg("Event (event_id=%d) does not support the ACL Graph", evt->EventId_()));
-
+            curStm == curCtx->DefaultStream_(), RT_ERROR_STREAM_CAPTURE_IMPLICIT, ErrorCode::EE1016, "Event reset",
+            RtFmtMsg("The default stream (stream_id=%d) cannot be used in the ACL Graph", curStm->Id_()));
+        COND_RETURN_ERROR(
+            evt->IsEventWithoutWaitTask(), RT_ERROR_INVALID_VALUE,
+            "Resetting an Event (event_id=%d) with flag value %" PRIu64 " is not supported in capture mode.",
+            evt->EventId_(), evt->GetEventFlag());
         const std::lock_guard<std::mutex> lk(curCtx->GetCaptureLock());
         if (evt->IsCapturing()) {
             const rtError_t retCode = CaptureResetEvent(evt, curStm);
-            ERROR_PROC_RETURN_MSG_INNER(retCode, TerminateCapture(evt, curStm), "Capture event record failed.");
+            ERROR_PROC_RETURN_MSG_INNER(retCode, TerminateCapture(evt, curStm), "Capture event reset failed.");
             return RT_ERROR_NONE;
         }
     } else {
@@ -685,13 +684,13 @@ rtError_t ApiImplDavid::StreamWaitEvent(
             RtFmtMsg(
                 "Stream (stream_id=%d) with the flag %s cannot be used for ACL Graph", curStm->Id_(), unsupportedFlag));
         COND_RETURN_AND_MSG_OUTER(
-            curStm == curCtx->DefaultStream_(), RT_ERROR_STREAM_CAPTURE_IMPLICIT, ErrorCode::EE1017,
-            "Triggering event waiting", "stream",
+            curStm == curCtx->DefaultStream_(), RT_ERROR_STREAM_CAPTURE_IMPLICIT, ErrorCode::EE1016,
+            "Triggering event waiting",
             RtFmtMsg("The default stream (stream_id=%d) cannot be used in the ACL Graph", curStm->Id_()));
-        COND_RETURN_AND_MSG_OUTER(
-            evt->IsEventWithoutWaitTask(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, "Triggering event waiting",
-            std::to_string(evt->GetEventFlag()), "event flag",
-            RtFmtMsg("Event (event_id=%d) does not support the ACL Graph", evt->EventId_()));
+        COND_RETURN_ERROR(
+            evt->IsEventWithoutWaitTask(), RT_ERROR_INVALID_VALUE,
+            "Waiting for an Event (event_id=%d) with flag value %" PRIu64 " is not supported in capture mode.",
+            evt->EventId_(), evt->GetEventFlag());
         const std::lock_guard<std::mutex> lk(curCtx->GetCaptureLock());
         if (evt->IsCapturing()) {
             const rtError_t retCode = CaptureWaitEvent(curCtx, curStm, evt, timeout);
@@ -1130,7 +1129,7 @@ rtError_t ApiImplDavid::CntNotifyRecord(
 
     const uint32_t countNotifyId = inCntNotify->GetCntNotifyId();
     const rtError_t error = inCntNotify->Record(targetStm, info);
-    ERROR_RETURN_MSG_INNER(
+    ERROR_RETURN(
         error,
         "Count Notify record failed, device_id=%u, stream_id=%d, count notify_id=%u,"
         " retCode=%#x",
@@ -1154,7 +1153,7 @@ rtError_t ApiImplDavid::CntNotifyReset(CountNotify* const inCntNotify, Stream* c
     rtCntNtyRecordInfo_t info = {RECORD_STORE_MODE, 0U};
     const uint32_t countNotifyId = inCntNotify->GetCntNotifyId();
     const rtError_t error = inCntNotify->Record(targetStm, &info);
-    ERROR_RETURN_MSG_INNER(
+    ERROR_RETURN(
         error,
         "Count Notify record failed, device_id=%u, stream_id=%d, count notify_id=%u,"
         " retCode=%#x",
@@ -1177,7 +1176,7 @@ rtError_t ApiImplDavid::CntNotifyWaitWithTimeout(
 
     const rtError_t error = inCntNotify->Wait(targetStm, info);
     const uint32_t notifyId = inCntNotify->GetCntNotifyId();
-    ERROR_RETURN_MSG_INNER(
+    ERROR_RETURN(
         error,
         "count notify wait failed, device_id=%u, stream_id=%d, count notify_id=%u,"
         " time_out = %u, retCode=%#x",
@@ -1272,11 +1271,11 @@ rtError_t ApiImplDavid::NotifyReset(Notify* const notify)
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     Stream* curStm = curCtx->GetCtrlSQStream();
-    NULL_STREAM_PTR_RETURN_MSG(curStm);
+    COND_RETURN_ERROR(curStm == nullptr, RT_ERROR_STREAM_NULL, "The internal CtrlSQ stream is null.");
 
     const uint32_t notifyId = notify->GetNotifyId();
     const rtError_t error = NtyReset(notify, curStm);
-    ERROR_RETURN_MSG_INNER(
+    ERROR_RETURN(
         error, "Notify reset failed, device_id=%u, notify_id=%u, is_ipc_notify=%d, retCode=%#x",
         curStm->Device_()->Id_(), notifyId, notify->IsIpcNotify(), static_cast<uint32_t>(error));
     return RT_ERROR_NONE;

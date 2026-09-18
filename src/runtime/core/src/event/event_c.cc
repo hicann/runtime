@@ -180,11 +180,18 @@ rtError_t EvtWait(Event* const evt, Stream* const stm, const uint32_t timeout)
 
     if (((davidEvt->GetEventFlag() & (RT_EVENT_DDSYNC_NS | RT_EVENT_EXTERNAL)) == 0U) &&
         (!davidEvt->HasRecord() || (eventId == INVALID_EVENT_ID))) {
-        RT_LOG(
-            RT_LOG_ERROR,
-            "Cannot submit event wait before event record, device_id=%u, stream_id=%d, flag=%u, "
-            "model=%s.",
-            dev->Id_(), stm->Id_(), davidEvt->GetEventFlag(), stm->IsModelStream() ? "yes" : "no");
+        if (!davidEvt->HasRecord()) {
+            RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
+                ErrorCode::EE1018, "Waiting for an event",
+                "Waiting for this event requires a prior Record operation. "
+                "Call aclrtRecordEvent on a stream before waiting for the event");
+        } else {
+            RT_LOG(
+                RT_LOG_ERROR,
+                "Cannot submit event wait because the event ID is invalid, device_id=%u, stream_id=%d, flag=%u, "
+                "model=%s.",
+                dev->Id_(), stm->Id_(), davidEvt->GetEventFlag(), stm->IsModelStream() ? "yes" : "no");
+        }
         return RT_ERROR_INVALID_VALUE;
     }
     error = CheckTaskCanSend(stm);

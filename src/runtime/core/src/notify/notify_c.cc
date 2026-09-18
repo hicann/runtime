@@ -138,7 +138,12 @@ rtError_t NtyReset(Notify* const inNotify, Stream* const streamIn)
         inNotify->GetLastBaseAddr());
 
     if (inNotify->IsIpcNotify()) {
-        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1005, "IPC notify reset");
+        RT_LOG_OUTER_MSG_IMPL(
+            ErrorCode::EE1016, "Resetting a Notify",
+            RtFmtMsg(
+                "Notify (notify_id=%u) is configured for IPC and cannot be reset. Use a non-IPC Notify when reset is "
+                "required",
+                inNotify->GetNotifyId()));
         return RT_ERROR_TASK_NOT_SUPPORT;
     }
     SingleBitNotifyRecordInfo singleInfo = {false,
