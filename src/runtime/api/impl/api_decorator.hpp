@@ -336,16 +336,6 @@ public:
 
     // device API
     rtError_t GetDeviceStatus(const int32_t devId, rtDevStatus_t* const status) override;
-    rtError_t SetDeviceResLimit(const uint32_t devId, const rtDevResLimitType_t type, uint32_t value) override;
-    rtError_t ResetDeviceResLimit(const uint32_t devId) override;
-    rtError_t GetDeviceResLimit(const uint32_t devId, const rtDevResLimitType_t type, uint32_t* value) override;
-    rtError_t SetStreamResLimit(Stream* const stm, const rtDevResLimitType_t type, const uint32_t value) override;
-    rtError_t ResetStreamResLimit(Stream* const stm) override;
-    rtError_t GetStreamResLimit(
-        const Stream* const stm, const rtDevResLimitType_t type, uint32_t* const value) override;
-    rtError_t UseStreamResInCurrentThread(const Stream* const stm) override;
-    rtError_t NotUseStreamResInCurrentThread(const Stream* const stm) override;
-    rtError_t GetResInCurrentThread(const rtDevResLimitType_t type, uint32_t* const value) override;
     rtError_t HdcServerCreate(const int32_t devId, const rtHdcServiceType_t type, rtHdcServer_t* const server) override;
     rtError_t HdcServerDestroy(rtHdcServer_t const server) override;
     rtError_t HdcSessionConnect(
@@ -716,8 +706,6 @@ public:
     rtError_t SetStreamTag(Stream* const stm, const uint32_t geOpTag) override;
     rtError_t GetStreamTag(Stream* const stm, uint32_t* const geOpTag) override;
     rtError_t GetVisibleDeviceIdByLogicDeviceId(const int32_t logicDeviceId, int32_t* const visibleDeviceId) override;
-    rtError_t CtxSetSysParamOpt(const rtSysParamOpt configOpt, const int64_t configVal) override;
-    rtError_t CtxGetSysParamOpt(const rtSysParamOpt configOpt, int64_t* const configVal) override;
     rtError_t CtxGetOverflowAddr(void** const overflowAddr) override;
     rtError_t GetDeviceSatStatus(void* const outputAddrPtr, const uint64_t outputSize, Stream* const stm) override;
     rtError_t CleanDeviceSatStatus(Stream* const stm) override;

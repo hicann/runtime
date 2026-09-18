@@ -1570,16 +1570,6 @@ rtError_t ApiDecorator::GetP2PAtomicCapabilities(
     return impl_->GetP2PAtomicCapabilities(capabilities, operations, count, srcDeviceId, dstDeviceId);
 }
 
-rtError_t ApiDecorator::CtxSetSysParamOpt(const rtSysParamOpt configOpt, const int64_t configVal)
-{
-    return impl_->CtxSetSysParamOpt(configOpt, configVal);
-}
-
-rtError_t ApiDecorator::CtxGetSysParamOpt(const rtSysParamOpt configOpt, int64_t* const configVal)
-{
-    return impl_->CtxGetSysParamOpt(configOpt, configVal);
-}
-
 rtError_t ApiDecorator::CtxGetOverflowAddr(void** const overflowAddr)
 {
     return impl_->CtxGetOverflowAddr(overflowAddr);
@@ -1811,46 +1801,6 @@ rtError_t ApiDecorator::PeekLastErr(rtLastErrLevel_t level) { return impl_->Peek
 rtError_t ApiDecorator::GetDeviceStatus(const int32_t devId, rtDevStatus_t* const status)
 {
     return impl_->GetDeviceStatus(devId, status);
-}
-
-rtError_t ApiDecorator::SetDeviceResLimit(const uint32_t devId, const rtDevResLimitType_t type, uint32_t value)
-{
-    return impl_->SetDeviceResLimit(devId, type, value);
-}
-
-rtError_t ApiDecorator::ResetDeviceResLimit(const uint32_t devId) { return impl_->ResetDeviceResLimit(devId); }
-
-rtError_t ApiDecorator::GetDeviceResLimit(const uint32_t devId, const rtDevResLimitType_t type, uint32_t* value)
-{
-    return impl_->GetDeviceResLimit(devId, type, value);
-}
-
-rtError_t ApiDecorator::SetStreamResLimit(Stream* const stm, const rtDevResLimitType_t type, const uint32_t value)
-{
-    return impl_->SetStreamResLimit(stm, type, value);
-}
-
-rtError_t ApiDecorator::ResetStreamResLimit(Stream* const stm) { return impl_->ResetStreamResLimit(stm); }
-
-rtError_t ApiDecorator::GetStreamResLimit(
-    const Stream* const stm, const rtDevResLimitType_t type, uint32_t* const value)
-{
-    return impl_->GetStreamResLimit(stm, type, value);
-}
-
-rtError_t ApiDecorator::UseStreamResInCurrentThread(const Stream* const stm)
-{
-    return impl_->UseStreamResInCurrentThread(stm);
-}
-
-rtError_t ApiDecorator::NotUseStreamResInCurrentThread(const Stream* const stm)
-{
-    return impl_->NotUseStreamResInCurrentThread(stm);
-}
-
-rtError_t ApiDecorator::GetResInCurrentThread(const rtDevResLimitType_t type, uint32_t* const value)
-{
-    return impl_->GetResInCurrentThread(type, value);
 }
 
 rtError_t ApiDecorator::HdcServerCreate(const int32_t devId, const rtHdcServiceType_t type, rtHdcServer_t* const server)

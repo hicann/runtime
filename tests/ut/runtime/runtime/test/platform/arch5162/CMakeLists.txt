@@ -385,6 +385,7 @@ add_executable(runtime_utest_arch5162
     ${RUNTIME_UT_ARCH5162_GENERATED_API_STUB_TEST_SOURCE}
     rt_utest_acl_api_stub_arch5162.cc
     ../../rt_utest_mbuf_stub.cc
+    ../../rt_utest_rt_config_stub.cc
     rt_utest_api_arch5162.cc
     rt_utest_runtime_thread_aicpu.cc
     rt_utest_arg_loader_nocopy.cc

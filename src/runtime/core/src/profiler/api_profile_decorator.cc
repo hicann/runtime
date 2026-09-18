@@ -1236,22 +1236,6 @@ rtError_t ApiProfileDecorator::BarrierTaskLaunch(
     return error;
 }
 
-rtError_t ApiProfileDecorator::CtxSetSysParamOpt(const rtSysParamOpt configOpt, const int64_t configVal)
-{
-    CallApiBegin(RT_PROF_API_CtxSetSysParamOpt);
-    const rtError_t error = impl_->CtxSetSysParamOpt(configOpt, configVal);
-    CallApiEnd(error);
-    return error;
-}
-
-rtError_t ApiProfileDecorator::CtxGetSysParamOpt(const rtSysParamOpt configOpt, int64_t* const configVal)
-{
-    CallApiBegin(RT_PROF_API_CtxGetSysParamOpt);
-    const rtError_t error = impl_->CtxGetSysParamOpt(configOpt, configVal);
-    CallApiEnd(error);
-    return error;
-}
-
 rtError_t ApiProfileDecorator::CtxGetOverflowAddr(void** const overflowAddr)
 {
     CallApiBegin(RT_PROF_API_CtxGetOverflowAddr);

@@ -270,8 +270,6 @@ public:
     rtError_t GetLogicDevIdByUserDevId(const int32_t userDevId, int32_t* const logicDevId) override;
     rtError_t GetUserDevIdByLogicDevId(const int32_t logicDevId, int32_t* const userDevId) override;
 
-    rtError_t CtxSetSysParamOpt(const rtSysParamOpt configOpt, const int64_t configVal) override;
-    rtError_t CtxGetSysParamOpt(const rtSysParamOpt configOpt, int64_t* const configVal) override;
     rtError_t CtxGetOverflowAddr(void** const overflowAddr) override;
     rtError_t GetDeviceSatStatus(void* const outputAddrPtr, const uint64_t outputSize, Stream* const stm) override;
     rtError_t CleanDeviceSatStatus(Stream* const stm) override;

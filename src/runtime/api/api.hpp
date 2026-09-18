@@ -259,13 +259,6 @@ public:
     virtual rtError_t StreamEndTaskGrp(Stream* const stm, TaskGroup** const handle) = 0;
     virtual rtError_t StreamBeginTaskUpdate(Stream* const stm, TaskGroup* handle) = 0;
     virtual rtError_t StreamEndTaskUpdate(Stream* const stm) = 0;
-    virtual rtError_t SetStreamResLimit(Stream* const stm, const rtDevResLimitType_t type, const uint32_t value) = 0;
-    virtual rtError_t ResetStreamResLimit(Stream* const stm) = 0;
-    virtual rtError_t GetStreamResLimit(
-        const Stream* const stm, const rtDevResLimitType_t type, uint32_t* const value) = 0;
-    virtual rtError_t UseStreamResInCurrentThread(const Stream* const stm) = 0;
-    virtual rtError_t NotUseStreamResInCurrentThread(const Stream* const stm) = 0;
-    virtual rtError_t GetResInCurrentThread(const rtDevResLimitType_t type, uint32_t* const value) = 0;
     virtual rtError_t StreamGetPriority(Stream* const stm, uint32_t* const priority) = 0;
     virtual rtError_t StreamGetFlags(Stream* const stm, uint32_t* const flags) = 0;
 
@@ -440,9 +433,6 @@ public:
 
     // device API
     virtual rtError_t GetDeviceStatus(const int32_t devId, rtDevStatus_t* const status) = 0;
-    virtual rtError_t SetDeviceResLimit(const uint32_t devId, const rtDevResLimitType_t type, uint32_t value) = 0;
-    virtual rtError_t ResetDeviceResLimit(const uint32_t devId) = 0;
-    virtual rtError_t GetDeviceResLimit(const uint32_t devId, const rtDevResLimitType_t type, uint32_t* value) = 0;
     virtual rtError_t HdcServerCreate(
         const int32_t devId, const rtHdcServiceType_t type, rtHdcServer_t* const server) = 0;
     virtual rtError_t HdcServerDestroy(rtHdcServer_t const server) = 0;
@@ -820,8 +810,6 @@ public:
     virtual rtError_t GetVisibleDeviceIdByLogicDeviceId(
         const int32_t logicDeviceId, int32_t* const visibleDeviceId) = 0;
 
-    virtual rtError_t CtxSetSysParamOpt(const rtSysParamOpt configOpt, const int64_t configVal) = 0;
-    virtual rtError_t CtxGetSysParamOpt(const rtSysParamOpt configOpt, int64_t* const configVal) = 0;
     virtual rtError_t CtxGetOverflowAddr(void** const overflowAddr) = 0;
     virtual rtError_t GetDeviceSatStatus(void* const outputAddrPtr, const uint64_t outputSize, Stream* const stm) = 0;
     virtual rtError_t CleanDeviceSatStatus(Stream* const stm) = 0;

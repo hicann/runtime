@@ -2675,21 +2675,6 @@ TEST_F(ProfilerTest, ProcessReport)
     delete apiImpl_;
 }
 
-TEST_F(ProfilerTest, CtxSysParamOptTest)
-{
-    ApiImpl* apiImpl_ = new ApiImpl();
-    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::CtxSetSysParamOpt).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::CtxGetSysParamOpt).stubs().will(returnValue(RT_ERROR_NONE));
-    Profiler* profiler = ((Runtime*)Runtime::Instance())->profiler_;
-    profiler->SetApiProfEnable(true);
-    auto error = profiler->apiProfileDecorator_->CtxSetSysParamOpt(SYS_OPT_DETERMINISTIC, 1);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    error = profiler->apiProfileDecorator_->CtxGetSysParamOpt(SYS_OPT_DETERMINISTIC, NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    profiler->SetApiProfEnable(false);
-    delete apiImpl_;
-}
-
 TEST_F(ProfilerTest, LaunchTest)
 {
     rtError_t error;
@@ -3166,8 +3151,6 @@ TEST_F(ProfilerTest, ProfileLogDecoratorDeviceApiTest)
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::DeviceResetForce).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::ContextCreate).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::ContextDestroy).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::CtxSetSysParamOpt).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::CtxGetSysParamOpt).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::CtxGetOverflowAddr).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::GetDeviceSatStatus).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::CleanDeviceSatStatus).stubs().will(returnValue(RT_ERROR_NONE));
@@ -3184,10 +3167,6 @@ TEST_F(ProfilerTest, ProfileLogDecoratorDeviceApiTest)
     error = profiler->apiProfileLogDecorator_->ContextCreate(nullptr, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = profiler->apiProfileLogDecorator_->ContextDestroy(nullptr);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    error = profiler->apiProfileLogDecorator_->CtxSetSysParamOpt(SYS_OPT_DETERMINISTIC, 0);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    error = profiler->apiProfileLogDecorator_->CtxGetSysParamOpt(SYS_OPT_DETERMINISTIC, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = profiler->apiProfileLogDecorator_->CtxGetOverflowAddr(nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);

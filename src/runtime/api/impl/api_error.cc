@@ -6044,33 +6044,6 @@ rtError_t ApiErrorDecorator::GetVisibleDeviceIdByLogicDeviceId(
     return impl_->GetVisibleDeviceIdByLogicDeviceId(logicDeviceId, visibleDeviceId);
 }
 
-rtError_t ApiErrorDecorator::CtxSetSysParamOpt(const rtSysParamOpt configOpt, const int64_t configVal)
-{
-    constexpr int64_t SYS_OPT_DETERMINISTIC_LEVEL_MAX = 4;
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
-        ((configOpt >= SYS_OPT_RESERVED) || (configOpt == SYS_OPT_ENABLE_KERNEL_EARLY_START) || (configOpt < 0)),
-        RT_ERROR_INVALID_VALUE, "Setting system parameter values in the current context",
-        SysParamOptToString(configOpt), "configOpt",
-        RtFmtMsg("[0, %d)", static_cast<int32_t>(SYS_OPT_ENABLE_KERNEL_EARLY_START)));
-    const int64_t maxVal =
-        (configOpt == SYS_OPT_DETERMINISTIC) ? SYS_OPT_DETERMINISTIC_LEVEL_MAX : static_cast<int64_t>(SYS_OPT_MAX);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
-        (configVal >= maxVal) || (configVal < 0), RT_ERROR_INVALID_VALUE,
-        "Setting system parameter values in the current context", configVal, RtFmtMsg("[0, %" PRId64 ")", maxVal));
-    return impl_->CtxSetSysParamOpt(configOpt, configVal);
-}
-
-rtError_t ApiErrorDecorator::CtxGetSysParamOpt(const rtSysParamOpt configOpt, int64_t* const configVal)
-{
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
-        (configOpt >= SYS_OPT_RESERVED) || (configOpt == SYS_OPT_ENABLE_KERNEL_EARLY_START) || (configOpt < 0),
-        RT_ERROR_INVALID_VALUE, "Obtaining the system parameter value in the current context",
-        SysParamOptToString(configOpt), "configOpt", "[0, " + std::to_string(SYS_OPT_ENABLE_KERNEL_EARLY_START) + ")");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        configVal, RT_ERROR_INVALID_VALUE, "Obtaining the system parameter value in the current context");
-    return impl_->CtxGetSysParamOpt(configOpt, configVal);
-}
-
 rtError_t ApiErrorDecorator::CtxGetOverflowAddr(void** const overflowAddr)
 {
     COND_RETURN_ERROR(
@@ -6617,95 +6590,6 @@ rtError_t ApiErrorDecorator::GetDeviceStatus(const int32_t devId, rtDevStatus_t*
         error != RT_ERROR_NONE, error, "Device ID is invalid, drv devId=%d, retCode=%#x", realDeviceId,
         static_cast<uint32_t>(error));
     return impl_->GetDeviceStatus(realDeviceId, status);
-}
-
-rtError_t ApiErrorDecorator::SetDeviceResLimit(const uint32_t devId, const rtDevResLimitType_t type, uint32_t value)
-{
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
-        static_cast<uint32_t>(type) >= RT_DEV_RES_TYPE_MAX, RT_ERROR_INVALID_VALUE, "Setting the device resource limit",
-        DevResLimitTypeToString(type), "type", "[0, 2)");
-    uint32_t drvDevId = 0;
-    rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(devId, &drvDevId);
-    COND_RETURN_ERROR(
-        error != RT_ERROR_NONE, error, "Failed to convert the user device ID %u to driver device ID.", devId);
-    error = CheckDeviceIdIsValid(static_cast<uint32_t>(drvDevId));
-    COND_RETURN_ERROR_MSG_INNER(
-        error != RT_ERROR_NONE, error, "drv devId is invalid, drv devId=%u, retCode=%#x", drvDevId,
-        static_cast<uint32_t>(error));
-    return impl_->SetDeviceResLimit(drvDevId, type, value);
-}
-
-rtError_t ApiErrorDecorator::ResetDeviceResLimit(const uint32_t devId)
-{
-    uint32_t drvDevId = 0;
-    rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(devId, &drvDevId);
-    COND_RETURN_ERROR(
-        error != RT_ERROR_NONE, error, "Failed to convert the user device ID %u to driver device ID.", devId);
-    error = CheckDeviceIdIsValid(static_cast<uint32_t>(drvDevId));
-    COND_RETURN_ERROR_MSG_INNER(
-        error != RT_ERROR_NONE, error, "drv devId is invalid, drv devId=%u, retCode=%#x", drvDevId,
-        static_cast<uint32_t>(error));
-    return impl_->ResetDeviceResLimit(drvDevId);
-}
-
-rtError_t ApiErrorDecorator::GetDeviceResLimit(const uint32_t devId, const rtDevResLimitType_t type, uint32_t* value)
-{
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
-        static_cast<uint32_t>(type) >= RT_DEV_RES_TYPE_MAX, RT_ERROR_INVALID_VALUE,
-        "Obtaining the device resource limits of the current process", DevResLimitTypeToString(type), "type", "[0, 2)");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        value, RT_ERROR_INVALID_VALUE, "Obtaining the device resource limits of the current process");
-    uint32_t drvDevId = 0;
-    rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(devId, &drvDevId);
-    COND_RETURN_ERROR(
-        error != RT_ERROR_NONE, error, "Failed to convert the user device ID %u to driver device ID.", devId);
-    error = CheckDeviceIdIsValid(static_cast<uint32_t>(drvDevId));
-    COND_RETURN_ERROR_MSG_INNER(
-        error != RT_ERROR_NONE, error, "drv devId is invalid, drv devId=%u, retCode=%#x", drvDevId,
-        static_cast<uint32_t>(error));
-    return impl_->GetDeviceResLimit(drvDevId, type, value);
-}
-
-rtError_t ApiErrorDecorator::SetStreamResLimit(Stream* const stm, const rtDevResLimitType_t type, const uint32_t value)
-{
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
-        static_cast<uint32_t>(type) >= RT_DEV_RES_TYPE_MAX, RT_ERROR_INVALID_VALUE,
-        "Setting the device resource limit for the specified stream", DevResLimitTypeToString(type), "type", "[0, 2)");
-    return impl_->SetStreamResLimit(stm, type, value);
-}
-
-rtError_t ApiErrorDecorator::ResetStreamResLimit(Stream* const stm) { return impl_->ResetStreamResLimit(stm); }
-
-rtError_t ApiErrorDecorator::GetStreamResLimit(
-    const Stream* const stm, const rtDevResLimitType_t type, uint32_t* const value)
-{
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
-        static_cast<uint32_t>(type) >= RT_DEV_RES_TYPE_MAX, RT_ERROR_INVALID_VALUE,
-        "Obtaining the device resource limits of a specified stream", DevResLimitTypeToString(type), "type", "[0, 2)");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        value, RT_ERROR_INVALID_VALUE, "Obtaining the device resource limits of a specified stream");
-    return impl_->GetStreamResLimit(stm, type, value);
-}
-
-rtError_t ApiErrorDecorator::UseStreamResInCurrentThread(const Stream* const stm)
-{
-    return impl_->UseStreamResInCurrentThread(stm);
-}
-
-rtError_t ApiErrorDecorator::NotUseStreamResInCurrentThread(const Stream* const stm)
-{
-    return impl_->NotUseStreamResInCurrentThread(stm);
-}
-
-rtError_t ApiErrorDecorator::GetResInCurrentThread(const rtDevResLimitType_t type, uint32_t* const value)
-{
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
-        static_cast<uint32_t>(type) >= RT_DEV_RES_TYPE_MAX, RT_ERROR_INVALID_VALUE,
-        "Obtaining the device resources that can be used by the current thread", DevResLimitTypeToString(type), "type",
-        "[0, 2)");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        value, RT_ERROR_INVALID_VALUE, "Obtaining the device resources that can be used by the current thread");
-    return impl_->GetResInCurrentThread(type, value);
 }
 
 rtError_t ApiErrorDecorator::HdcServerCreate(

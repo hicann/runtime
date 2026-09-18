@@ -761,22 +761,6 @@ rtError_t ApiProfileLogDecorator::StreamWaitEvent(
     return error;
 }
 
-rtError_t ApiProfileLogDecorator::CtxSetSysParamOpt(const rtSysParamOpt configOpt, const int64_t configVal)
-{
-    ProfileLogRecord record(PROFILE_RECORD_TYPE_RT_CALL_RT, RT_PROF_API_CtxSetSysParamOpt, profiler_);
-    const rtError_t error = impl_->CtxSetSysParamOpt(configOpt, configVal);
-    record.SaveRecord();
-    return error;
-}
-
-rtError_t ApiProfileLogDecorator::CtxGetSysParamOpt(const rtSysParamOpt configOpt, int64_t* const configVal)
-{
-    ProfileLogRecord record(PROFILE_RECORD_TYPE_RT_CALL_RT, RT_PROF_API_CtxGetSysParamOpt, profiler_);
-    const rtError_t error = impl_->CtxGetSysParamOpt(configOpt, configVal);
-    record.SaveRecord();
-    return error;
-}
-
 rtError_t ApiProfileLogDecorator::CtxGetOverflowAddr(void** const overflowAddr)
 {
     ProfileLogRecord record(PROFILE_RECORD_TYPE_RT_CALL_RT, RT_PROF_API_CtxGetOverflowAddr, profiler_);

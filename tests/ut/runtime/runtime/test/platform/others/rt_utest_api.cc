@@ -250,14 +250,6 @@ TEST_F(ApiTest, testMemcpyHostTaskTest)
     error = apiDec.GetVisibleDeviceIdByLogicDeviceId(1, NULL);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::CtxSetSysParamOpt).stubs().will(returnValue(RT_ERROR_NONE));
-    error = apiDec.CtxSetSysParamOpt(SYS_OPT_DETERMINISTIC, 1);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::CtxGetSysParamOpt).stubs().will(returnValue(RT_ERROR_NONE));
-    error = apiDec.CtxGetSysParamOpt(SYS_OPT_DETERMINISTIC, NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::CtxGetOverflowAddr).stubs().will(returnValue(RT_ERROR_NONE));
     error = apiDec.CtxGetOverflowAddr(NULL);
     EXPECT_EQ(error, RT_ERROR_NONE);
