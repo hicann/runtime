@@ -15,6 +15,8 @@
 #include <dlfcn.h>
 #include <climits>
 #include <algorithm>
+#include <map>
+#include <string>
 #include "platform/platform_infos_def.h"
 #include "platform_log.h"
 
@@ -24,6 +26,11 @@ extern std::mutex opt_info_mutex;
 const std::string PLATFORM_RELATIVE_PATH = "data/platform_config";
 const std::string PLATFORM_RELATIVE_PATH_KIRIN = "../data/platform_config";
 const std::string PLATFORM_RELATIVE_PATH_KIRIN_EXT = "../../platform/";
+
+static const std::vector<std::string> kCommonFilePrefixes = {
+    "Ascend960PR",
+    "Ascend960DT",
+};
 
 class PlatformInfosUtils {
 public:
@@ -35,6 +42,16 @@ public:
 
     static void Trim(std::string& str);
     static void Split(const std::string& str, char pattern, std::vector<std::string>& res_vec);
+
+    static bool FindCommonFile(const std::string& soc_version, const std::string& cfg_dir, std::string& common_path);
+    static bool IsFileExist(const std::string& file_path);
+
+    static bool GetDeviceIdBySocVersion(const std::string& soc_version, uint32_t& dev_id);
+
+    static uint32_t LoadIniFileToSections(
+        const std::string& ini_file_path, std::map<std::string, std::map<std::string, std::string>>& content_info_map);
+    static uint32_t EnrichSectionsByHAL(
+        const std::string& soc_version, std::map<std::string, std::map<std::string, std::string>>& content_info_map);
 
 private:
     PlatformInfosUtils();

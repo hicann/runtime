@@ -18,6 +18,7 @@ set(STATICPLATFORMFILE
     ${CMAKE_CURRENT_LIST_DIR}/platform_infos_def.cpp
     ${CMAKE_CURRENT_LIST_DIR}/platform_infos_impl.cpp
     ${CMAKE_CURRENT_LIST_DIR}/platform_infos_utils.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/platform_plugin_manager.cpp
     ${CMAKE_CURRENT_LIST_DIR}/platform_manager_v2.cpp
 )
 
@@ -40,6 +41,7 @@ else()
         "platform_infos_def.cpp"
         "platform_infos_impl.cpp"
         "platform_infos_utils.cpp"
+        "platform_plugin_manager.cpp"
         "platform_manager_v2.cpp")
 endif()
 
@@ -134,6 +136,7 @@ target_link_libraries(platform_static
                 -Wl,--as-needed
                 -ldl
                 ascend_protobuf_static
+                static_mmpa
         PUBLIC
                 platform_headers
         )
@@ -147,6 +150,7 @@ target_link_libraries(platform
                 -Wl,--as-needed
                 -ldl
                 ascend_protobuf
+                mmpa
         PUBLIC
                 platform_headers
         )

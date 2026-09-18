@@ -299,10 +299,12 @@ TEST_F(PlatformManagerUTest, platform_instance_Trim)
     EXPECT_EQ(ret, 0U);
 
     std::string strOk = " \t \t \t \t \t123456 \t \t \t \t";
-    instance.Trim(strOk);
+    PlatformInfosUtils::Trim(strOk);
+    EXPECT_EQ(strOk, "123456");
 
     std::string strNg = " \t \t \t \t \t                  ";
-    instance.Trim(strNg);
+    PlatformInfosUtils::Trim(strNg);
+    EXPECT_EQ(strNg, "");
 }
 
 TEST_F(PlatformManagerUTest, platform_instance_InitByInstance_success)
@@ -550,9 +552,8 @@ TEST_F(PlatformManagerUTest, platform_instance_InitializePlatformInfo_repeat)
 
 TEST_F(PlatformManagerUTest, platform_instance_Trim_empty)
 {
-    PlatformInfoManager& instance = PlatformInfoManager::Instance();
     std::string str = "";
-    instance.Trim(str);
+    PlatformInfosUtils::Trim(str);
     EXPECT_EQ(str, "");
 }
 

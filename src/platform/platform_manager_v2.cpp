@@ -13,6 +13,7 @@
 #include <string.h>
 #include <algorithm>
 #include <fstream>
+#include <vector>
 #include "platform_infos_utils.h"
 #include "platform_error_define.h"
 
@@ -37,57 +38,10 @@ PlatformManagerV2& PlatformManagerV2::Instance()
 
 uint32_t PlatformManagerV2::LoadIniFile(const std::string& ini_file_real_path)
 {
-    std::ifstream ifs(ini_file_real_path);
-    if (!ifs.is_open()) {
-        PF_LOGE("Failed to open conf file, it does not exist or is already opened.");
+    std::map<std::string, std::map<std::string, std::string>> content_info_map;
+    if (fe::PlatformInfosUtils::LoadIniFileToSections(ini_file_real_path, content_info_map) != PLATFORM_SUCCESS) {
         return PLATFORM_FAILED;
     }
-
-    std::map<std::string, std::string> content_map;
-    std::map<std::string, std::map<std::string, std::string>> content_info_map;
-    content_map.clear();
-    content_info_map.clear();
-    std::string line;
-    std::string map_key;
-    while (std::getline(ifs, line)) {
-        if (line.empty() || line.find('#') == 0) {
-            continue;
-        }
-
-        if (line.find('[') == 0) {
-            if (!map_key.empty() && !content_map.empty()) {
-                content_info_map.emplace(make_pair(map_key, content_map));
-                content_map.clear();
-            }
-            size_t pos = line.rfind(']');
-            if (pos == std::string::npos) {
-                continue;
-            }
-            map_key = line.substr(1, pos - 1);
-            fe::PlatformInfosUtils::Trim(map_key);
-            continue;
-        }
-
-        size_t pos_of_equal = line.find('=');
-        if (pos_of_equal == std::string::npos) {
-            continue;
-        }
-
-        std::string key = line.substr(0, pos_of_equal);
-        fe::PlatformInfosUtils::Trim(key);
-        std::string value = line.substr(pos_of_equal + 1, line.length() - pos_of_equal - 1);
-        fe::PlatformInfosUtils::Trim(value);
-        if (!key.empty() && !value.empty()) {
-            content_map.emplace(make_pair(key, value));
-        }
-    }
-
-    if (!content_map.empty() && !map_key.empty()) {
-        content_info_map.emplace(make_pair(map_key, content_map));
-        content_map.clear();
-    }
-
-    ifs.close();
 
     if (AssemblePlatformInfoVector(content_info_map) != PLATFORM_SUCCESS) {
         PF_LOGE("Assemble platform info failed.");
@@ -220,18 +174,58 @@ uint32_t PlatformManagerV2::ParsePlatformInfo(
     return PLATFORM_SUCCESS;
 }
 
-uint32_t PlatformManagerV2::InitPlatformInfos(const std::string& soc_version)
+uint32_t PlatformManagerV2::LoadCommonIniFileWithHAL(
+    const std::string& soc_version, std::map<std::string, std::map<std::string, std::string>>& content_info_map)
 {
-    std::string cfg_file_real_path = fe::GetConfigFilePath<PlatformManagerV2>();
-    if (cfg_file_real_path.empty()) {
-        PF_LOGE("File path[%s] is not valid.", cfg_file_real_path.c_str());
+    std::string common_path;
+    if (!fe::PlatformInfosUtils::FindCommonFile(soc_version, cfg_file_real_path_, common_path)) {
+        PF_LOGE("No common file found for soc[%s].", soc_version.c_str());
+        return PLATFORM_FAILED;
+    }
+    PF_LOGI("Fallback to common file[%s] for soc[%s].", common_path.c_str(), soc_version.c_str());
+
+    if (fe::PlatformInfosUtils::LoadIniFileToSections(common_path, content_info_map) != PLATFORM_SUCCESS) {
+        PF_LOGE("Failed to load common ini[%s].", common_path.c_str());
         return PLATFORM_FAILED;
     }
 
-    std::string ini_file_path = cfg_file_real_path + "/" + soc_version + INI_FILE_SUFFIX;
-    PF_LOGD("Begin to load ini file[%s].", ini_file_path.c_str());
-    if (LoadIniFile(ini_file_path) != PLATFORM_SUCCESS) {
-        PF_LOGE("Failed to load ini file[%s].", ini_file_path.c_str());
+    if (fe::PlatformInfosUtils::EnrichSectionsByHAL(soc_version, content_info_map) != PLATFORM_SUCCESS) {
+        PF_LOGE("HAL enrichment failed for soc[%s].", soc_version.c_str());
+        return PLATFORM_FAILED;
+    }
+
+    return PLATFORM_SUCCESS;
+}
+
+uint32_t PlatformManagerV2::InitPlatformInfos(const std::string& soc_version)
+{
+    if (cfg_file_real_path_.empty()) {
+        cfg_file_real_path_ = fe::GetConfigFilePath<PlatformManagerV2>();
+    }
+    if (cfg_file_real_path_.empty()) {
+        PF_LOGE("File path is not valid.");
+        return PLATFORM_FAILED;
+    }
+
+    std::string ini_file_path = cfg_file_real_path_ + "/" + soc_version + INI_FILE_SUFFIX;
+    if (fe::PlatformInfosUtils::IsFileExist(ini_file_path)) {
+        PF_LOGD("Begin to load ini file[%s].", ini_file_path.c_str());
+        if (LoadIniFile(ini_file_path) != PLATFORM_SUCCESS) {
+            PF_LOGE("Failed to load exact ini[%s].", ini_file_path.c_str());
+            return PLATFORM_FAILED;
+        }
+        return PLATFORM_SUCCESS;
+    }
+
+    PF_LOGI("Exact ini[%s] not found, trying common file fallback.", ini_file_path.c_str());
+    std::map<std::string, std::map<std::string, std::string>> content_info_map;
+    if (LoadCommonIniFileWithHAL(soc_version, content_info_map) != PLATFORM_SUCCESS) {
+        PF_LOGE("Failed to load ini file for soc[%s].", soc_version.c_str());
+        return PLATFORM_FAILED;
+    }
+
+    if (AssemblePlatformInfoVector(content_info_map) != PLATFORM_SUCCESS) {
+        PF_LOGE("Assemble platform info failed for soc[%s].", soc_version.c_str());
         return PLATFORM_FAILED;
     }
     return PLATFORM_SUCCESS;

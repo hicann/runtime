@@ -1,7 +1,20 @@
+# -----------------------------------------------------------------------------------------------------------
+# Copyright (c) 2025 Huawei Technologies Co., Ltd.
+# This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+# CANN Open Software License Agreement Version 2.0 (the "License").
+# Please refer to the License for details. You may not use this file except in compliance with the License.
+# THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+# INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+# See LICENSE in the root of the software repository for the full text of the License.
+# -----------------------------------------------------------------------------------------------------------
+
 set(CMAKE_CXX_STANDARD 14)
 # compile for ut
 set(SLOG_STUB_FILES
         ${CMAKE_CURRENT_LIST_DIR}/../depends/slog/slog_stub.cc)
+
+set(ASCEND_HAL_STUB_FILES
+        ${CMAKE_CURRENT_LIST_DIR}/../depends/ascend_hal_stub.cc)
 
 set (PLATFORM_SRC_FILES
         ${TOP_DIR}/src/platform/acl_platform.cpp
@@ -9,6 +22,7 @@ set (PLATFORM_SRC_FILES
         ${TOP_DIR}/src/platform/platform_infos_def.cpp
         ${TOP_DIR}/src/platform/platform_infos_impl.cpp
         ${TOP_DIR}/src/platform/platform_infos_utils.cpp
+        ${TOP_DIR}/src/platform/platform_plugin_manager.cpp
         ${TOP_DIR}/src/platform/platform_manager_v2.cpp
         )
 
@@ -19,12 +33,15 @@ set(PLATFORM_UT_FILES
         ${CMAKE_CURRENT_LIST_DIR}/testcase/platform_manager_acl_utest.cpp
         ${CMAKE_CURRENT_LIST_DIR}/testcase/platform_infos_def_utest.cpp
         ${CMAKE_CURRENT_LIST_DIR}/testcase/platform_infos_utils_utest.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/testcase/platform_common_fallback_utest.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/testcase/platform_plugin_manager_utest.cpp
         ${CMAKE_CURRENT_LIST_DIR}/testcase/platform_info_exception_utest.cpp)
 
 add_executable(platform_utest
         ${SLOG_STUB_FILES}
+        ${ASCEND_HAL_STUB_FILES}
         ${PLATFORM_UT_FILES}
-        ${PLATFORM_SRC_FILES} 
+        ${PLATFORM_SRC_FILES}
 #        ${PROTO_SRCS}
         )
 
@@ -93,6 +110,7 @@ target_compile_options(platform_stub_ut PRIVATE
 
 target_link_libraries(platform_utest PRIVATE
         -Wl,--no-as-needed
+        mmpa
         GTestShared::gtest
         GTestShared::gtest_main
         GTestShared::gmock

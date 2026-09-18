@@ -68,8 +68,6 @@ private:
 
     uint32_t LoadIniFile(std::string ini_file_real_path);
 
-    void Trim(std::string& str);
-
     void ParseVersion(
         std::map<std::string, std::string>& version_map, std::string& soc_version, PlatformInfo& platform_info_temp);
 
@@ -133,6 +131,9 @@ private:
     void FillupFixPipeInfo(PlatFormInfos& platform_infos);
 
     uint32_t EnsureSocVersionLoaded(const std::string& soc_version);
+
+    uint32_t LoadCommonIniFileWithHAL(
+        const std::string& soc_version, std::map<std::string, std::map<std::string, std::string>>& content_info_map);
 
     bool init_flag_;
     bool runtime_init_flag_;

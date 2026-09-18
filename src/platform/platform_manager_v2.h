@@ -50,11 +50,15 @@ private:
     uint32_t InitPlatformInfos(const std::string& soc_version);
     int32_t GetPlatformInfos(const std::string& soc_version, fe::PlatFormInfos& platform_info);
 
+    uint32_t LoadCommonIniFileWithHAL(
+        const std::string& soc_version, std::map<std::string, std::map<std::string, std::string>>& content_info_map);
+
 private:
     std::mutex soc_lock_;
     std::map<std::string, bool> soc_file_status_;
 
     std::map<std::string, fe::PlatFormInfos> platform_infos_map_;
+    std::string cfg_file_real_path_;
 };
 
 #ifdef __cplusplus

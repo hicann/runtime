@@ -15,6 +15,7 @@
 #define protected public
 #define private public
 #include "platform_info.h"
+#include "platform_infos_utils.h"
 #undef protected
 #undef private
 
@@ -155,9 +156,11 @@ TEST_F(PlatformManagerSTest, platform_instance_Trim)
     EXPECT_EQ(ret, 0U);
 
     std::string strOk = " \t \t \t \t \t123456 \t \t \t \t";
-    instance.Trim(strOk);
+    PlatformInfosUtils::Trim(strOk);
+    EXPECT_EQ(strOk, "123456");
 
     std::string strNg = " \t \t \t \t \t                  ";
-    instance.Trim(strNg);
+    PlatformInfosUtils::Trim(strNg);
+    EXPECT_EQ(strNg, "");
 }
 } // namespace fe
