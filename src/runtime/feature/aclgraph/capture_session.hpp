@@ -52,6 +52,7 @@ public:
     rtError_t StreamAddCondTask(CondHandle* condHandle, rtCondTaskParams params, Stream* const stm, uint32_t flags);
     rtError_t UpdateEndGraphTask(Stream* const origCaptureStream, Stream* const exeStream, Notify* ntf) const;
     rtError_t UpdateSuModelExeStreamNotifyWaitSqe(TaskInfo* taskInfo, Stream* const exeStream) const;
+    void UpdateEndGraphTaskSqeType(Stream* const captureStream) const;
 
 private:
     rtError_t CheckCaptureModelIsCaptured(Model* const mdl) const;
