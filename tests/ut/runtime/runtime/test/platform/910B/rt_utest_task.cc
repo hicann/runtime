@@ -199,6 +199,33 @@ TEST_F(CloudV2TaskTest, stream_IsReclaimAsync)
     error = rtStreamDestroy(stream);
 }
 
+TEST_F(CloudV2TaskTest, PrintMemcpyAsyncErrorInfoIncludesCopyDetails)
+{
+    EXPECT_STREQ(AsyncCpyMethodToString(static_cast<uint8_t>(rtAsyncCpyMethod::RT_ASYNC_CPY)), "NA");
+    EXPECT_STREQ(AsyncCpyMethodToString(static_cast<uint8_t>(rtAsyncCpyMethod::RT_ASYNC_CPY_2D)), "RT_ASYNC_CPY_2D(1)");
+    EXPECT_STREQ(
+        AsyncCpyMethodToString(static_cast<uint8_t>(rtAsyncCpyMethod::RT_ASYNC_CPY_BATCH)), "RT_ASYNC_CPY_BATCH(2)");
+    EXPECT_STREQ(AsyncCpyMethodToString(UINT8_MAX), "NA");
+
+    uint32_t src = 1U;
+    uint32_t dst = 0U;
+    TaskInfo task = {};
+    task.stream = stream_;
+    task.u.memcpyAsyncTaskInfo.src = &src;
+    task.u.memcpyAsyncTaskInfo.destPtr = &dst;
+    task.u.memcpyAsyncTaskInfo.size = sizeof(src);
+    task.u.memcpyAsyncTaskInfo.copyType = RT_MEMCPY_DIR_D2D_SDMA;
+    task.u.memcpyAsyncTaskInfo.copyMethod = static_cast<uint8_t>(rtAsyncCpyMethod::RT_ASYNC_CPY_BATCH);
+    task.u.memcpyAsyncTaskInfo.isD2dCross8P = true;
+    stream_->errorMsg_.clear();
+
+    PrintErrorInfoForMemcpyAsyncTask(&task, 0U);
+
+    ASSERT_FALSE(stream_->errorMsg_.empty());
+    EXPECT_NE(stream_->errorMsg_.back().second.find("copy_method=RT_ASYNC_CPY_BATCH(2)"), std::string::npos);
+    EXPECT_NE(stream_->errorMsg_.back().second.find("is_d2d_cross_8p=1"), std::string::npos);
+}
+
 TEST_F(CloudV2TaskTest, stars_timeout_sqe)
 {
     TaskInfo task = {};

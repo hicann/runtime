@@ -653,10 +653,14 @@ TEST_F(Arch5162TaskTest, PrintMemcpyErrorInfo)
     task.u.memcpyAsyncTaskInfo.destPtr = &dst;
     task.u.memcpyAsyncTaskInfo.size = sizeof(src);
     task.u.memcpyAsyncTaskInfo.copyType = RT_MEMCPY_DIR_D2D_SDMA;
+    task.u.memcpyAsyncTaskInfo.copyMethod = static_cast<uint8_t>(rtAsyncCpyMethod::RT_ASYNC_CPY_2D);
+    task.u.memcpyAsyncTaskInfo.isD2dCross8P = true;
     PrintErrorInfoForMemcpyAsyncTask(&task, 0U);
     ASSERT_FALSE(stream->errorMsg_.empty());
     EXPECT_EQ(stream->errorMsg_.back().first, ERR_MODULE_RTS);
     EXPECT_NE(stream->errorMsg_.back().second.find("MEMCPY_DIR_D2D_SDMA"), std::string::npos);
+    EXPECT_NE(stream->errorMsg_.back().second.find("copy_method=RT_ASYNC_CPY_2D(1)"), std::string::npos);
+    EXPECT_NE(stream->errorMsg_.back().second.find("is_d2d_cross_8p=1"), std::string::npos);
 
     device->driver_ = nullptr;
     delete stream;

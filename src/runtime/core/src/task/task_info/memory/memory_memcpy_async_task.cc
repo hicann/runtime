@@ -938,16 +938,19 @@ void PrintErrorInfoForMemcpyAsyncTask(TaskInfo* const taskInfo, const uint32_t d
         if (memcpyAsyncTaskInfo->dsaSqeUpdateFlag || memcpyAsyncTaskInfo->isSqeUpdateD2H) {
             countNum += sprintf_s(
                 errStr + countNum, (static_cast<size_t>(MSG_LENGTH) - static_cast<uint64_t>(countNum)),
-                "copy_type=%s, sq_id=%u, task_pos=%u, cp_size=%#" PRIx64, TransMemCopyDirToStr(copyType),
-                memcpyAsyncTaskInfo->sqId, memcpyAsyncTaskInfo->taskPos, memcpyAsyncTaskInfo->size);
+                "copy_type=%s, copy_method=%s, is_d2d_cross_8p=%d, sq_id=%u, task_pos=%u, cp_size=%#" PRIx64,
+                TransMemCopyDirToStr(copyType), AsyncCpyMethodToString(memcpyAsyncTaskInfo->copyMethod),
+                static_cast<int32_t>(memcpyAsyncTaskInfo->isD2dCross8P), memcpyAsyncTaskInfo->sqId,
+                memcpyAsyncTaskInfo->taskPos, memcpyAsyncTaskInfo->size);
             (void)snprintf_truncated_s(
                 errStr + countNum, (static_cast<size_t>(MSG_LENGTH) - static_cast<uint64_t>(countNum)),
                 ", src_dev_addr=%#" PRIx64, RtPtrToValue(memcpyAsyncTaskInfo->src));
         } else {
             countNum += sprintf_s(
                 errStr + countNum, (static_cast<size_t>(MSG_LENGTH) - static_cast<uint64_t>(countNum)),
-                "copy_type=%s, copy_method=%u, memcpy_type=%u, copy_data_type=%u, length=%u",
-                TransMemCopyDirToStr(copyType), static_cast<uint32_t>(memcpyAsyncTaskInfo->copyMethod),
+                "copy_type=%s, copy_method=%s, is_d2d_cross_8p=%d, memcpy_type=%u, copy_data_type=%u, length=%u",
+                TransMemCopyDirToStr(copyType), AsyncCpyMethodToString(memcpyAsyncTaskInfo->copyMethod),
+                static_cast<int32_t>(memcpyAsyncTaskInfo->isD2dCross8P),
                 static_cast<uint32_t>(memcpyAsyncTaskInfo->dmaAddr.phyAddr.flag),
                 static_cast<uint32_t>(memcpyAsyncTaskInfo->copyDataType), memcpyAsyncTaskInfo->dmaAddr.phyAddr.len);
             (void)snprintf_truncated_s(
@@ -959,8 +962,9 @@ void PrintErrorInfoForMemcpyAsyncTask(TaskInfo* const taskInfo, const uint32_t d
         errorModuleType = GetMemCpyErrorModule(copyType);
         countNum += sprintf_s(
             errStr + countNum, (static_cast<size_t>(MSG_LENGTH) - static_cast<uint64_t>(countNum)),
-            "copy_type=%s, copy_method=%u, memcpy_type=%u, copy_data_type=%u, length=%" PRIu64,
-            TransMemCopyDirToStr(copyType), static_cast<uint32_t>(memcpyAsyncTaskInfo->copyMethod),
+            "copy_type=%s, copy_method=%s, is_d2d_cross_8p=%d, memcpy_type=%u, copy_data_type=%u, length=%" PRIu64,
+            TransMemCopyDirToStr(copyType), AsyncCpyMethodToString(memcpyAsyncTaskInfo->copyMethod),
+            static_cast<int32_t>(memcpyAsyncTaskInfo->isD2dCross8P),
             static_cast<uint32_t>(memcpyAsyncTaskInfo->dmaAddr.phyAddr.flag),
             static_cast<uint32_t>(memcpyAsyncTaskInfo->copyDataType), memcpyAsyncTaskInfo->size);
 

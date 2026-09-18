@@ -20,6 +20,18 @@ struct TaskSqeInfo;
 
 constexpr uint32_t MEM_WAIT_WRITE_VALUE_ADDRESS_LEN = 64U;
 
+static inline const char_t* AsyncCpyMethodToString(const uint8_t copyMethod)
+{
+    switch (static_cast<rtAsyncCpyMethod>(copyMethod)) {
+        case rtAsyncCpyMethod::RT_ASYNC_CPY_2D:
+            return "RT_ASYNC_CPY_2D(1)";
+        case rtAsyncCpyMethod::RT_ASYNC_CPY_BATCH:
+            return "RT_ASYNC_CPY_BATCH(2)";
+        default:
+            return "NA";
+    }
+}
+
 rtError_t ConvertCpyType(
     TaskInfo* const taskInfo, const uint32_t cpyType, const void* const srcAddr, void* const desAddr);
 rtError_t MemcpyAsyncTaskCommonInit(TaskInfo* const taskInfo);

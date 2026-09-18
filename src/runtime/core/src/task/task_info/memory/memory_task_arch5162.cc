@@ -66,6 +66,7 @@ rtError_t MemcpyAsyncTaskCommonInit(TaskInfo* const taskInfo)
     memcpyAsyncTaskInfo->taskPos = 0U;
     memcpyAsyncTaskInfo->d2dOffsetFlag = false;
     memcpyAsyncTaskInfo->isD2dCross = false;
+    memcpyAsyncTaskInfo->isD2dCross8P = false;
     memcpyAsyncTaskInfo->isSqeUpdateH2D = false;
     memcpyAsyncTaskInfo->isSqeUpdateD2H = false;
     memcpyAsyncTaskInfo->isConcernedRecycle = false;
@@ -212,8 +213,9 @@ void PrintErrorInfoForMemcpyAsyncTask(TaskInfo* const taskInfo, const uint32_t d
 
     countNum += sprintf_s(
         errMsg + countNum, static_cast<size_t>(MSG_LENGTH) - static_cast<uint64_t>(countNum),
-        "copy_type=%s, copy_method=%u, memcpy_type=%u, copy_data_type=%u, length=%" PRIu64, "MEMCPY_DIR_D2D_SDMA(2)",
-        static_cast<uint32_t>(memcpyAsyncTaskInfo->copyMethod),
+        "copy_type=%s, copy_method=%s, is_d2d_cross_8p=%d, memcpy_type=%u, copy_data_type=%u, length=%" PRIu64,
+        "MEMCPY_DIR_D2D_SDMA(2)", AsyncCpyMethodToString(memcpyAsyncTaskInfo->copyMethod),
+        static_cast<int32_t>(memcpyAsyncTaskInfo->isD2dCross8P),
         static_cast<uint32_t>(memcpyAsyncTaskInfo->dmaAddr.phyAddr.flag),
         static_cast<uint32_t>(memcpyAsyncTaskInfo->copyDataType), memcpyAsyncTaskInfo->size);
     countNum += snprintf_truncated_s(
