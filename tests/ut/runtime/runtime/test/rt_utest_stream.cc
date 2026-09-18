@@ -504,6 +504,17 @@ TEST_F(StreamTest, stream_set_l2_addr_kernel_launch_translate_addr_failed)
 }
 #endif
 
+TEST_F(StreamTest, StreamCreateAicpuServiceFailureCallsStartOnce)
+{
+    rtStream_t stream = nullptr;
+    MOCKER_CPP(&Runtime::StartAicpuSd).expects(exactly(1)).will(returnValue(RT_ERROR_FEATURE_NOT_SUPPORT));
+
+    EXPECT_EQ(
+        rtStreamCreateWithFlags(&stream, RT_STREAM_PRIORITY_DEFAULT, RT_STREAM_AICPU),
+        ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    GlobalMockObject::verify();
+}
+
 TEST_F(StreamTest, StreamSqCqManageGetStreamIdBySqIdNotExist)
 {
     Runtime* rtInstance = static_cast<Runtime*>(Runtime::Instance());

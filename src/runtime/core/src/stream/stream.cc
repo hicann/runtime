@@ -1115,6 +1115,7 @@ rtError_t Stream::TaskAbortAndQueryStatus(const uint32_t opType)
 {
     rtError_t ret = RT_ERROR_NONE;
     uint32_t result = static_cast<uint32_t>(RT_ERROR_NONE);
+    const char* operation = (opType == OP_STOP_STREAM) ? "stop" : "abort";
     const uint64_t startTime = ClockGetTimeUs();
     uint64_t count = 0ULL;
     do {
@@ -1132,14 +1133,15 @@ rtError_t Stream::TaskAbortAndQueryStatus(const uint32_t opType)
             (result == TS_ERROR_ILLEGAL_PARAM) || (result == TS_APP_EXIT_UNFINISHED) ||
                 (result == TS_ERROR_ABORT_UNFINISHED),
             RT_ERROR_TSFW_ILLEGAL_PARAM,
-            "Failed to abort task by type, device_id=%u, stream_id=%d, sq_id=%u, result=%u.", device_->Id_(), streamId_,
-            sqId_, result);
+            "Failed to %s task by type for stream (stream_id=%d), device (device_id=%u), SQ (sq_id=%u), result=%u.",
+            operation, streamId_, device_->Id_(), sqId_, result);
 
         count = ClockGetTimeIntervalUs(startTime);
         COND_RETURN_ERROR_MSG_INNER(
             (count >= ABORT_STREAM_TIMEOUT), RT_ERROR_WAIT_TIMEOUT,
-            "Abort process timeout, device_id=%u, stream_id=%d, time=%" PRIu64 " us, timeout_threshold=%" PRIu64 " us",
-            device_->Id_(), streamId_, count, ABORT_STREAM_TIMEOUT);
+            "Failed to %s stream (stream_id=%d) because the TS request queue is full, device (device_id=%u), "
+            "SQ (sq_id=%u), result=%u, time=%" PRIu64 " us, timeout_threshold=%" PRIu64 " us.",
+            operation, streamId_, device_->Id_(), sqId_, result, count, ABORT_STREAM_TIMEOUT);
         (void)mmSleep(1U);
     } while (result == TS_ERROR_APP_QUEUE_FULL);
 
@@ -1148,7 +1150,8 @@ rtError_t Stream::TaskAbortAndQueryStatus(const uint32_t opType)
         // 4.polling if TS has aborted sq successfully until timeout
         ret = QueryAbortStatusByType(status, APP_ABORT_STS_QUERY_BY_SQ, sqId_);
         COND_RETURN_ERROR(
-            (ret != RT_ERROR_NONE), ret, "Query abort status failed, stream_id=%d, sq_id=%u, retCode=%#x.", streamId_,
+            (ret != RT_ERROR_NONE), ret,
+            "Failed to query the %s status of the stream, stream_id=%d, sq_id=%u, retCode=%#x.", operation, streamId_,
             sqId_, static_cast<uint32_t>(ret));
 
         if (status == DAVID_ABORT_TERMINATE_SUCC) {
@@ -1157,15 +1160,16 @@ rtError_t Stream::TaskAbortAndQueryStatus(const uint32_t opType)
 
         COND_RETURN_ERROR_MSG_INNER(
             (status == DAVID_ABORT_TERMINATE_FAIL), RT_ERROR_TSFW_ILLEGAL_PARAM,
-            "The abort status queried from the device is invalid, device_id=%u, stream_id=%d, sq_id=%u, status=%u.",
-            device_->Id_(), streamId_, sqId_, status);
+            "The %s status queried for stream (stream_id=%d) from device (device_id=%u) is invalid, SQ (sq_id=%u), "
+            "status=%u.",
+            operation, streamId_, device_->Id_(), sqId_, status);
 
         count = ClockGetTimeIntervalUs(startTime);
         COND_RETURN_ERROR_MSG_INNER(
             (count >= ABORT_STREAM_TIMEOUT), RT_ERROR_WAIT_TIMEOUT,
-            "Query abort status timeout, device_id=%u, stream_id=%d, time=%" PRIu64 " us, timeout_threshold=%" PRIu64
-            " us.",
-            device_->Id_(), streamId_, count, ABORT_STREAM_TIMEOUT);
+            "Query %s status timeout for stream (stream_id=%d), device (device_id=%u), SQ (sq_id=%u), status=%u, "
+            "time=%" PRIu64 " us, timeout_threshold=%" PRIu64 " us.",
+            operation, streamId_, device_->Id_(), sqId_, status, count, ABORT_STREAM_TIMEOUT);
         (void)mmSleep(5U);
     } while (true);
 

@@ -1043,10 +1043,12 @@ rtError_t Context::TearDownOwnedStream(Stream* stm, bool flag, bool* destroyTask
 {
     NULL_PTR_RETURN_MSG(stm, RT_ERROR_STREAM_NULL);
 
-    COND_RETURN_ERROR_MSG_INNER(
-        stm->Model_() != nullptr, RT_ERROR_STREAM_MODEL,
-        "Failed to tear down stream because stream is bound, stream_id=%d, model_id=%u, retCode=%#x.", stm->Id_(),
-        stm->Model_()->Id_(), RT_ERROR_STREAM_INVALID);
+    COND_RETURN_AND_MSG_OUTER(
+        stm->Model_() != nullptr, RT_ERROR_STREAM_MODEL, ErrorCode::EE1016, "Stream destruction",
+        RtFmtMsg(
+            "Stream (stream_id=%d) is bound to a model (model_id=%u). "
+            "Unbind the stream from the model before destroying the stream",
+            stm->Id_(), stm->Model_()->Id_()));
     FlushPendingTasksBeforeStreamTearDown(stm);
     if (stm->NeedDelSelfStream()) {
         ResetEmbeddedInnerHandle<Stream>(stm);

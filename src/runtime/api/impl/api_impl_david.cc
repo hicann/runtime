@@ -2061,9 +2061,16 @@ rtError_t ApiImplDavid::StreamStop(Stream* const stm)
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Stopping the running tasks in a stream");
-    COND_RETURN_ERROR_MSG_INNER(
-        stm->GetBindFlag(), RT_ERROR_STREAM_INVALID, "StreamStop does not support model stream, stream_id=%d.",
-        stm->Id_());
+    if (stm->GetBindFlag()) {
+        const uint32_t modelId = (stm->Model_() != nullptr) ? stm->Model_()->Id_() : UINT32_MAX;
+        RT_LOG_OUTER_MSG_IMPL(
+            ErrorCode::EE1016, "Stopping tasks in a stream",
+            RtFmtMsg(
+                "Stopping tasks in the stream (stream_id=%d) that is bound to a model (model_id=%u) is not supported. "
+                "Unbind the stream from the model before stopping tasks",
+                stm->Id_(), modelId));
+        return RT_ERROR_STREAM_INVALID;
+    }
     return stm->StreamStop();
 }
 rtError_t ApiImplDavid::StreamRecover(Stream* const stm)

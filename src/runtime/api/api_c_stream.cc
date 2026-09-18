@@ -165,6 +165,14 @@ rtError_t rtStreamSynchronize(rtStream_t stm)
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_SOCKET_CLOSE, ACL_ERROR_RT_SOCKET_CLOSE); // special state
 
     TIMESTAMP_END(rtStreamSynchronize);
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER(
+        (error == RT_ERROR_STREAM_ABORT) || (error == RT_ERROR_STREAM_ABORT_SEND_TASK_FAIL) ||
+            (error == RT_ERROR_STREAM_ABORT_SYNC_TASK_FAIL),
+        error, ErrorCode::EE1018, "Synchronizing a stream",
+        RtFmtMsg(
+            "Stream (stream_id=%d) is in abort state. Call a stream synchronization API only after the stream abort "
+            "operation has completed successfully",
+            exeStream->Id_()));
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -186,6 +194,14 @@ rtError_t rtStreamSynchronizeWithTimeout(rtStream_t stm, int32_t timeout)
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_SOCKET_CLOSE, ACL_ERROR_RT_SOCKET_CLOSE); // special state
 
     TIMESTAMP_END(rtStreamSynchronizeWithTimeout);
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER(
+        (error == RT_ERROR_STREAM_ABORT) || (error == RT_ERROR_STREAM_ABORT_SEND_TASK_FAIL) ||
+            (error == RT_ERROR_STREAM_ABORT_SYNC_TASK_FAIL),
+        error, ErrorCode::EE1018, "Synchronizing a stream",
+        RtFmtMsg(
+            "Stream (stream_id=%d) is in abort state. Call a stream synchronization API only after the stream abort "
+            "operation has completed successfully",
+            exeStream->Id_()));
 #ifndef CFG_DEV_PLATFORM_PC
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
 #else

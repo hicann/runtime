@@ -2306,11 +2306,9 @@ rtError_t Runtime::StartAicpuSd(Device* const device) const
         return RT_ERROR_NONE;
     }
 
-    if (tsdOpenAicpuSd_ == nullptr) {
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "TsdOpenAicpuSd func is null.");
-        aicpuSchSdLock->Unlock();
-        return RT_ERROR_DRV_SYM_TSD;
-    }
+    COND_PROC_RETURN_AND_MSG_OUTER(
+        tsdOpenAicpuSd_ == nullptr, RT_ERROR_DRV_SYM_TSD, ErrorCode::EE1015, aicpuSchSdLock->Unlock(),
+        "Starting the AI CPU service", "Symbol TsdOpenAicpuSd not found.");
 
     uint32_t userDeviceId;
     error = GetUserDevIdByDeviceId(device->Id_(), &userDeviceId, true);

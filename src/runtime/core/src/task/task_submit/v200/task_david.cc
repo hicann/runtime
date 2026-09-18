@@ -364,8 +364,17 @@ static rtError_t AllocTaskInfo(TaskInfo** taskInfo, Stream* const stm, uint32_t&
         }
         error = stm->CheckContextStatus();
         COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "context is abort, status=%#x.", static_cast<uint32_t>(error));
+        const rtError_t abortStatus = stm->abortStatus_;
+        COND_RETURN_AND_MSG_OUTER(
+            abortStatus == RT_ERROR_STREAM_ABORT, abortStatus, ErrorCode::EE1018, "Submitting a task to a stream",
+            RtFmtMsg(
+                "Stream (stream_id=%d) on device (device_id=%u) is in abort state. Submit tasks only after the stream "
+                "abort operation has completed successfully",
+                stmId, stm->Device_()->Id_()));
         COND_RETURN_ERROR_MSG_INNER(
-            (stm->abortStatus_ != RT_ERROR_NONE), stm->abortStatus_, "The stream %d is in abort state.", stmId);
+            abortStatus != RT_ERROR_NONE, abortStatus,
+            "Stream (stream_id=%d) has an abnormal status=%#x on device (device_id=%u).", stmId,
+            static_cast<uint32_t>(abortStatus), stm->Device_()->Id_());
         stm->StreamUnLock();
         stm->StarsStmDfxCheck(beginCnt, endCnt, checkCount);
         TryToReclaimTask(stm, needLog);
@@ -573,9 +582,13 @@ rtError_t CheckTaskCanSend(Stream* const stm)
     COND_RETURN_ERROR(
         errorCode != RT_ERROR_NONE, errorCode, "context is abort, status=%#x.", static_cast<uint32_t>(errorCode));
     const rtError_t streamAbortStatus = stm->GetAbortStatus();
-    COND_RETURN_ERROR_MSG_INNER(
-        (streamAbortStatus == RT_ERROR_STREAM_ABORT), RT_ERROR_STREAM_ABORT_SEND_TASK_FAIL,
-        "The stream %d is in abort state, device_id=%u.", stm->Id_(), stm->Device_()->Id_());
+    COND_RETURN_AND_MSG_OUTER(
+        streamAbortStatus == RT_ERROR_STREAM_ABORT, RT_ERROR_STREAM_ABORT_SEND_TASK_FAIL, ErrorCode::EE1018,
+        "Submitting a task to a stream",
+        RtFmtMsg(
+            "Stream (stream_id=%d) on device (device_id=%u) is in abort state. Submit tasks only after the stream "
+            "abort operation has completed successfully",
+            stm->Id_(), stm->Device_()->Id_()));
 
     if (unlikely(stm->taskResMang_ == nullptr) && (!stm->IsSoftwareSqEnable()) && (!stm->IsAutoSplitSq())) {
         RT_LOG(

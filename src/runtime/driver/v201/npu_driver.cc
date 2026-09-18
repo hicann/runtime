@@ -37,9 +37,9 @@ rtError_t GetConnectUbFlagFromDrv(const uint32_t deviceId, bool& connectUbFlag)
 
 rtError_t InitDrvEventThread(const uint32_t deviceId)
 {
-    COND_RETURN_WARN(
-        &halDrvEventThreadInit == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT,
-        "[drv api] halDrvEventThreadInit does not exist");
+    COND_RETURN_AND_MSG_OUTER(
+        &halDrvEventThreadInit == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1015,
+        "Initializing the driver event thread", "The driver interface halDrvEventThreadInit does not exist.");
 
     const drvError_t err = halDrvEventThreadInit(deviceId);
     COND_RETURN_ERROR_MSG_INNER(

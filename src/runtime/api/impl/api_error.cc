@@ -1609,9 +1609,18 @@ static rtError_t ValidateStreamFailureModeSet(Stream* const stm, Stream*& target
     targetStm = Runtime::Instance()->GetCurStream(stm);
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         targetStm, RT_ERROR_INVALID_VALUE, "Setting the error handling mode of a stream");
-    COND_RETURN_WARN(
-        (targetStm->Flags() & RT_STREAM_CP_PROCESS_USE) != 0U, RT_ERROR_FEATURE_NOT_SUPPORT,
-        "Coprocessor stream flag=%u is not supported, stream_id=%d", targetStm->Flags(), targetStm->Id_());
+    COND_PROC_RETURN_AND_MSG_OUTER(
+        (targetStm->Flags() & RT_STREAM_CP_PROCESS_USE) != 0U, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1006,
+        RT_LOG(
+            RT_LOG_WARNING,
+            "A stream with RT_STREAM_CP_PROCESS_USE does not support setting the error handling mode, stream_id=%d, "
+            "flags=%u.",
+            targetStm->Id_(), targetStm->Flags()),
+        "Setting the error handling mode of a stream", RtFmtMsg("Stream flags value %u", targetStm->Flags()),
+        RtFmtMsg(
+            "Stream (stream_id=%d) with the flag RT_STREAM_CP_PROCESS_USE(0x800U) does not support setting the error "
+            "handling mode",
+            targetStm->Id_()));
     return RT_ERROR_NONE;
 }
 
@@ -1642,9 +1651,12 @@ static rtError_t ValidateStreamPrioritySet(
     const Stream* const stm, const uint32_t streamPriority, uint32_t& targetPriority)
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_INVALID_VALUE, "Setting the stream priority");
-    COND_RETURN_ERROR(
-        (stm->Flags() & RT_STREAM_FORBIDDEN_DEFAULT) != 0U, RT_ERROR_FEATURE_NOT_SUPPORT,
-        "The stream with flag %u does not support priority setting.", stm->Flags());
+    COND_RETURN_AND_MSG_OUTER(
+        (stm->Flags() & RT_STREAM_FORBIDDEN_DEFAULT) != 0U, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1006,
+        "Setting the stream priority", RtFmtMsg("Stream flags value %u", stm->Flags()),
+        RtFmtMsg(
+            "Stream (stream_id=%d) with flag RT_STREAM_FORBIDDEN_DEFAULT(0x10U) does not support priority setting",
+            stm->Id_()));
     COND_RETURN_AND_MSG_OUTER(
         (stm->Flags() & RT_STREAM_AICPU) != 0U, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1006,
         "Setting the stream priority", "Parameter stm->Flags() value " + std::to_string(stm->Flags()),
@@ -1670,9 +1682,12 @@ static rtError_t ValidateStreamPriorityGet(const Stream* const stm, uint32_t* co
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(streamPriority, RT_ERROR_INVALID_VALUE, "Obtaining the stream priority");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stm, RT_ERROR_INVALID_VALUE, "Obtaining the stream priority");
-    COND_RETURN_ERROR(
-        (stm->Flags() & RT_STREAM_FORBIDDEN_DEFAULT) != 0U, RT_ERROR_FEATURE_NOT_SUPPORT,
-        "The stream with flag %u does not support priority setting.", stm->Flags());
+    COND_RETURN_AND_MSG_OUTER(
+        (stm->Flags() & RT_STREAM_FORBIDDEN_DEFAULT) != 0U, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1006,
+        "Obtaining the stream priority", RtFmtMsg("Stream flags value %u", stm->Flags()),
+        RtFmtMsg(
+            "Stream (stream_id=%d) with flag RT_STREAM_FORBIDDEN_DEFAULT(0x10U) does not support priority querying",
+            stm->Id_()));
     COND_RETURN_AND_MSG_OUTER(
         (stm->Flags() & RT_STREAM_AICPU) != 0U, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1006,
         "Obtaining the stream priority", "Parameter stm->Flags() value " + std::to_string(stm->Flags()),
@@ -1723,9 +1738,11 @@ rtError_t ApiErrorDecorator::StreamSetAttribute(
     switch (stmAttrId) {
         case RT_STREAM_ATTR_FAILURE_MODE: {
             const rtChipType_t chipType = Runtime::Instance()->GetChipType();
-            COND_RETURN_WARN(
+            COND_PROC_RETURN_AND_MSG_OUTER(
                 !IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_STREAM_ATTR_FAILURE_MODE),
-                ACL_ERROR_RT_FEATURE_NOT_SUPPORT, "chip type(%d) does not support.", static_cast<int32_t>(chipType));
+                ACL_ERROR_RT_FEATURE_NOT_SUPPORT, ErrorCode::EE1005,
+                RT_LOG(RT_LOG_WARNING, "chip type(%d) does not support.", static_cast<int32_t>(chipType)),
+                "setting the error handling mode of a stream");
             error = ValidateStreamFailureModeSet(stm, targetStm);
 #ifndef CFG_DEV_PLATFORM_PC
             if (error == RT_ERROR_NONE) {

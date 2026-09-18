@@ -110,6 +110,21 @@ using DevInfo = struct {
 
 namespace cce {
 namespace runtime {
+namespace {
+std::string StreamFailureModeToString(const uint64_t mode)
+{
+    switch (mode) {
+        case CONTINUE_ON_FAILURE:
+            return "CONTINUE_ON_FAILURE(0)";
+        case STOP_ON_FAILURE:
+            return "STOP_ON_FAILURE(1)";
+        case ABORT_ON_FAILURE:
+            return "ABORT_ON_FAILURE(2)";
+        default:
+            return RtFmtMsg("UNKNOWN(%" PRIu64 ")", mode);
+    }
+}
+} // namespace
 
 TIMESTAMP_EXTERN(MemCopy2D);
 TIMESTAMP_EXTERN(AicoreLoad);
@@ -1426,21 +1441,31 @@ rtError_t ApiImpl::StreamCreate(Stream** const stm, const int32_t priority, cons
         // need aicpu sd in aicpu stream
         Runtime* const rtInstance = Runtime::Instance();
         COND_RETURN_ERROR(rtInstance == nullptr, RT_ERROR_INSTANCE_NULL, "Runtime instance is null.");
+        const rtError_t startAicpuSdRet = rtInstance->StartAicpuSd(curCtx->Device_());
         ERROR_RETURN_MSG_INNER(
-            rtInstance->StartAicpuSd(curCtx->Device_()),
-            "StreamActive failed, check and start tsd open aicpu sd error.");
+            startAicpuSdRet,
+            "Failed to start the AI CPU service while creating an AI CPU stream on device (device_id=%u), "
+            "retCode=%#x.",
+            curCtx->Device_()->Id_(), static_cast<uint32_t>(startAicpuSdRet));
     }
 
     Device* const dev = curCtx->Device_();
     COND_RETURN_ERROR(dev == nullptr, RT_ERROR_INVALID_VALUE, "device is NULL.");
     const uint64_t failMode = dev->GetDevFailureMode();
     RT_LOG(RT_LOG_DEBUG, "device failMode is %llu.", failMode);
-    if (failMode != CONTINUE_ON_FAILURE && (flags & RT_STREAM_CP_PROCESS_USE) != 0U) {
+    COND_PROC_RETURN_AND_MSG_OUTER(
+        (failMode != CONTINUE_ON_FAILURE) && ((flags & RT_STREAM_CP_PROCESS_USE) != 0U), RT_ERROR_FEATURE_NOT_SUPPORT,
+        ErrorCode::EE1006,
         RT_LOG(
-            RT_LOG_EVENT, "Setting failure mode for coprocessor streams is not supported, flags=%u, failMode=%llu.",
-            flags, failMode);
-        return RT_ERROR_FEATURE_NOT_SUPPORT;
-    }
+            RT_LOG_EVENT,
+            "Creating a coprocessor stream is not supported in the current device failure mode, flags=%u, "
+            "failMode=%" PRIu64 ".",
+            flags, failMode),
+        "Creating a stream", RtFmtMsg("Stream flags value %u", flags),
+        RtFmtMsg(
+            "The device failure mode must be CONTINUE_ON_FAILURE(%u) when creating a coprocessor stream, but the "
+            "current mode is %s",
+            static_cast<uint32_t>(CONTINUE_ON_FAILURE), StreamFailureModeToString(failMode).c_str()));
 
     bool isHostSupport =
         dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MODEL_PERSISTENT_STREAM_UNLIMITED_DEPTH);
@@ -6320,10 +6345,13 @@ rtError_t ApiImpl::StreamClear(Stream* const stm, rtClearStep_t step)
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
 
-    if (!dev->CheckFeatureSupport(TS_FEATURE_MC2_ENHANCE)) {
-        RT_LOG(RT_LOG_ERROR, "Failed to clear stream because the tsch version does not support this feature.");
-        return RT_ERROR_FEATURE_NOT_SUPPORT;
-    }
+    COND_PROC_RETURN_AND_MSG_OUTER(
+        !dev->CheckFeatureSupport(TS_FEATURE_MC2_ENHANCE), RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1015,
+        RT_LOG(RT_LOG_ERROR, "Failed to clear stream because the current TSCH version does not support this feature."),
+        "Clearing tasks in a stream",
+        RtFmtMsg(
+            "The current TSCH version (%u) does not support clearing tasks in the stream (stream_id=%d).",
+            dev->GetTschVersion(), stm->Id_()));
 
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Clearing tasks in a stream");
