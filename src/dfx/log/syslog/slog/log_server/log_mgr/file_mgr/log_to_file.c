@@ -36,6 +36,11 @@ static unsigned int g_writeBPrintNum = 0;
 static unsigned int g_rootMkPrintNum = 0;
 static unsigned int g_subMkPrintNum = 0;
 static unsigned int g_chmodFPrintNum = 0;
+static unsigned int g_rollbackPrintNum = 0;
+// 维测统计：写失败期间被丢弃的日志条数与原始字节数，写恢复且丢失达到阈值时汇总打印
+STATIC ToolMutex g_logDropStatsLock = TOOL_MUTEX_INITIALIZER;
+STATIC uint32_t g_logDropCount = 0;
+STATIC uint64_t g_logDropBytes = 0;
 static char g_logRootPath[MAX_FILEDIR_LEN + 1U] = {0};
 
 static const char* const SORT_DIR_NAME[(int32_t)LOG_TYPE_NUM] = {DEBUG_DIR_NAME, SECURITY_DIR_NAME, RUN_DIR_NAME};
@@ -506,12 +511,74 @@ STATIC unsigned int LogAgentMkdir(const char* logPath)
 }
 
 /**
+ * @brief : rollback partial write caused by disk full or other write errors, keep log file
+ *          (especially gzip stream of compressed active file) integral
+ * @param [in] fd: file descriptor of the log file being written
+ * @param [in] origSize: file size before the failed write
+ * @param [in] logFileName: filename with full path, only used for log printing
+ */
+STATIC void LogAgentRollbackPartialWrite(int32_t fd, off_t origSize, const char* logFileName)
+{
+    if (origSize < 0) {
+        SELF_LOG_WARN("get file size before writing failed, skip rollback, file=%s.", logFileName);
+        return;
+    }
+    if (ftruncate(fd, origSize) != 0) {
+        SELF_LOG_ERROR_N(
+            &g_rollbackPrintNum, GENERAL_PRINT_NUM,
+            "rollback partial write failed, file=%s, orig_size=%ld, strerr=%s, print once every %u times.", logFileName,
+            (long)origSize, strerror(ToolGetErrorCode()), GENERAL_PRINT_NUM);
+    }
+}
+
+/**
+ * @brief : accumulate dropped-log statistics when writing file fails (e.g. disk full); no log is
+ *          printed here, throttled error logging is done by the caller
+ * @param [in] originalLen: log data length before compression
+ */
+STATIC void LogAgentDropStatsOnFail(uint32_t originalLen)
+{
+    (void)ToolMutexLock(&g_logDropStatsLock);
+    g_logDropCount++;
+    g_logDropBytes += originalLen;
+    (void)ToolMutexUnLock(&g_logDropStatsLock);
+}
+
+/**
+ * @brief : print the dropped-log summary once when log writing recovers, only if the accumulated
+ *          drop count reaches the threshold; small transient failures are silently reset
+ */
+STATIC void LogAgentDropStatsOnSuccess(void)
+{
+    uint32_t dropCount = 0;
+    uint64_t dropBytes = 0;
+    (void)ToolMutexLock(&g_logDropStatsLock);
+    if (g_logDropCount >= GENERAL_PRINT_NUM) {
+        dropCount = g_logDropCount;
+        dropBytes = g_logDropBytes;
+        g_logDropCount = 0;
+        g_logDropBytes = 0;
+    } else if (g_logDropCount != 0) {
+        g_logDropCount = 0;
+        g_logDropBytes = 0;
+    }
+    (void)ToolMutexUnLock(&g_logDropStatsLock);
+    if (dropCount != 0) {
+        SELF_LOG_WARN(
+            "log write recovered, %u entries (%lu bytes) were dropped during the failure period.", dropCount,
+            (unsigned long)dropBytes);
+    }
+}
+
+/**
  * @brief : write log to unzip file
  * @param [in] pstSubInfo: log file list
  * @param [in] pstLogData: log data to be written
+ * @param [in] originalLen: log data length before compression, for drop statistics
  * @return: OK: succeed; NOK: failed
  */
-STATIC uint32_t LogAgentWriteDataToFile(StSubLogFileList* pstSubInfo, const StLogDataBlock* pstLogData)
+STATIC uint32_t
+LogAgentWriteDataToFile(StSubLogFileList* pstSubInfo, const StLogDataBlock* pstLogData, uint32_t originalLen)
 {
     ONE_ACT_WARN_LOG(pstSubInfo == NULL, return NOK, "[input] log file list is null.");
     ONE_ACT_WARN_LOG(pstLogData == NULL, return NOK, "[input] log data is null.");
@@ -530,8 +597,12 @@ STATIC uint32_t LogAgentWriteDataToFile(StSubLogFileList* pstSubInfo, const StLo
             &g_openPrintNum, GENERAL_PRINT_NUM,
             "open file failed with mode, file=%s, strerr=%s, print once every %u times.", logFileName,
             strerror(ToolGetErrorCode()), GENERAL_PRINT_NUM);
+        LogAgentDropStatsOnFail(originalLen);
         return NOK;
     }
+
+    // file size before writing, for rolling back partial write (e.g. disk full)
+    off_t origSize = lseek(fd, 0, SEEK_END);
 
     // change file mode if it was masked by umask
     int32_t ret = ToolChmod((const char*)logFileName, (INT32)LOG_FILE_RDWR_MODE);
@@ -545,12 +616,15 @@ STATIC uint32_t LogAgentWriteDataToFile(StSubLogFileList* pstSubInfo, const StLo
     const VOID* dataBuf = pstLogData->paucData;
     ret = ToolWrite(fd, dataBuf, pstLogData->ulDataLen);
     if ((ret < 0) || ((uint32_t)ret != pstLogData->ulDataLen)) {
+        // rollback partial write: a truncated gzip member makes the whole compressed file undecompressable
+        LogAgentRollbackPartialWrite(fd, origSize, logFileName);
         LOG_CLOSE_FD(fd);
         SELF_LOG_ERROR_N(
             &g_writeBPrintNum, GENERAL_PRINT_NUM,
             "write to file failed, file=%s, data_length=%u, write_length=%d, strerr=%s,"
             " print once every %u time.",
             logFileName, pstLogData->ulDataLen, ret, strerror(ToolGetErrorCode()), GENERAL_PRINT_NUM);
+        LogAgentDropStatsOnFail(originalLen);
         return NOK;
     }
     ret = ToolFChownPath(fd);
@@ -560,6 +634,7 @@ STATIC uint32_t LogAgentWriteDataToFile(StSubLogFileList* pstSubInfo, const StLo
             strerror(ToolGetErrorCode()));
     }
     LOG_CLOSE_FD(fd);
+    LogAgentDropStatsOnSuccess();
     return OK;
 }
 
@@ -636,6 +711,8 @@ unsigned int LogAgentWriteFile(StSubLogFileList* subList, StLogDataBlock* logDat
         return NOK;
     }
 
+    // length before compression, for dropped-log statistics
+    uint32_t originalLen = logData->ulDataLen;
     char* zippedBuf = NULL;
     if (LogCompressSwitch()) {
         uint32_t zippedBufLen = 0;
@@ -656,7 +733,7 @@ unsigned int LogAgentWriteFile(StSubLogFileList* subList, StLogDataBlock* logDat
         return OK;
     }
 
-    uint32_t ret = LogAgentWriteDataToFile(subList, logData);
+    uint32_t ret = LogAgentWriteDataToFile(subList, logData, originalLen);
     XFREE(zippedBuf);
 
     return ret;

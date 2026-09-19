@@ -58,7 +58,7 @@ STATIC LogStatus HardwareCompressInit(int32_t fd, struct zip_stream* zipStream)
 
     // write head data to file
     int32_t bytes = ToolWrite(fd, ST_GZIP_HEADER, ST_GZIP_HEADER_SZ); // write log data
-    if (bytes == INVALID) {
+    if (bytes != (int32_t)ST_GZIP_HEADER_SZ) {
         SELF_LOG_ERROR("write gzip head to file failed, result=%d, strerr=%s.", bytes, strerror(ToolGetErrorCode()));
         HardwareCompressEnd(zipStream);
         return LOG_FAILURE;
@@ -214,7 +214,7 @@ STATIC LogStatus HardwareCompressProc(int32_t in, uint32_t fileSize, int32_t out
             break;
         }
         int32_t bytes = ToolWrite(out, zippedBuf, dataLen); // write log data
-        if (bytes == INVALID) {
+        if (bytes != dataLen) {
             SELF_LOG_ERROR(
                 "write log data failed, dataLen=%d, writen=%d, strerr=%s.", dataLen, bytes,
                 strerror(ToolGetErrorCode()));

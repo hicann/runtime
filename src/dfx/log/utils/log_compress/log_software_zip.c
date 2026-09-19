@@ -83,7 +83,11 @@ LogStatus SoftwareCompressFile(const char* file)
 
     int32_t err = GzCompress(in, out);
     (void)fclose(in);
-    (void)GzCloseFile(out);
+    /* a failed gzclose leaves the gzip trailer (crc/length) unwritten (e.g. disk full),
+     * the compressed file is incomplete and must be treated as a failure */
+    if (GzCloseFile(out) != LOG_SUCCESS) {
+        err = LOG_FAILURE;
+    }
     if (err != LOG_SUCCESS) {
         NO_ACT_ERR_LOG(
             ToolUnlink(outfile) != LOG_SUCCESS, "can not unlink file, file=%s, strerr=%s.", outfile,
