@@ -99,12 +99,21 @@ rtError_t SubmitReduceTask(
     NULL_PTR_RETURN_MSG(rtMemcpyAsyncTask, errorReason);
 
     Device* const dev = stm->Device_();
+    const char* const expectedAlignment = ((type == RT_DATA_TYPE_FP16) || (type == RT_DATA_TYPE_INT16) ||
+                                           (type == RT_DATA_TYPE_UINT16) || (type == RT_DATA_TYPE_BFP16)) ?
+                                              "a 2-byte-aligned address" :
+                                              "a 4-byte-aligned address";
+    UNUSED(expectedAlignment);
     rtError_t error = InitReduceTask(rtMemcpyAsyncTask, src, dst, cpySize, kind, type, cfgInfo);
     ERROR_GOTO(error, ERROR_RECYCLE, "reduce task init failed, retCode=%#x.", static_cast<uint32_t>(error));
     error = stm->Context_()->CheckMemAlign(src, type);
-    ERROR_GOTO(error, ERROR_RECYCLE, "invoke src CheckMemAlign error code:%#x", static_cast<uint32_t>(error));
+    COND_GOTO_MSG_OUTER(
+        error != RT_ERROR_NONE, ERROR_RECYCLE, error, error, ErrorCode::EE1003,
+        "Asynchronously performing the Reduce operation", src, "src", expectedAlignment);
     error = stm->Context_()->CheckMemAlign(dst, type);
-    ERROR_GOTO(error, ERROR_RECYCLE, "invoke dst CheckMemAlign error code:%#x", static_cast<uint32_t>(error));
+    COND_GOTO_MSG_OUTER(
+        error != RT_ERROR_NONE, ERROR_RECYCLE, error, error, ErrorCode::EE1003,
+        "Asynchronously performing the Reduce operation", dst, "dst", expectedAlignment);
     error = dev->SubmitTask(rtMemcpyAsyncTask);
     ERROR_GOTO(error, ERROR_RECYCLE, "reduce task submit failed, retCode=%#x.", static_cast<uint32_t>(error));
 

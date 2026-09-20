@@ -18,6 +18,7 @@ class ApiMbuf;
 class ApiEvent;
 class ApiEsched;
 
+size_t GetApiImplSize();
 Api* CreateImplAndGet();
 bool IsImplMbufSupported();
 ApiMbuf* CreateImplMbufAndGet();

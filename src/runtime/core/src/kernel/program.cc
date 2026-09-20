@@ -30,9 +30,9 @@
 namespace cce {
 namespace runtime {
 
-rtError_t AllocAndCopyHbmBuf(
+static rtError_t AllocAndCopyHbmBufImpl(
     const Device* const dev, const void* const hostBuf, const size_t bufSize, void** const devBuf,
-    std::vector<void*>& allocMem)
+    std::vector<void*>& allocMem, const char* const copyOperation)
 {
     const uint32_t devId = dev->Id_();
     Driver* const drv = dev->Driver_();
@@ -42,10 +42,21 @@ rtError_t AllocAndCopyHbmBuf(
     allocMem.push_back(*devBuf);
 
     ret = drv->MemCopySync(*devBuf, bufSize, hostBuf, bufSize, RT_MEMCPY_HOST_TO_DEVICE);
+    COND_PROC(
+        (ret == RT_ERROR_DRV_NOT_SUPPORT) && (copyOperation != nullptr),
+        RT_LOG_OUTER_MSG_IMPL(
+            ErrorCode::EE1016, copyOperation, "The driver does not support synchronous host-to-device memory copy"));
     COND_PROC_RETURN_ERROR(
         ret != RT_ERROR_NONE, ret, (drv->DevMemFree(*devBuf, devId), *devBuf = nullptr, allocMem.pop_back()),
         "MemCopySync H2D failed, deviceId=%u, size=%zu, ret=%#x.", devId, bufSize, static_cast<uint32_t>(ret));
     return RT_ERROR_NONE;
+}
+
+rtError_t AllocAndCopyHbmBuf(
+    const Device* const dev, const void* const hostBuf, const size_t bufSize, void** const devBuf,
+    std::vector<void*>& allocMem)
+{
+    return AllocAndCopyHbmBufImpl(dev, hostBuf, bufSize, devBuf, allocMem, nullptr);
 }
 
 Program::Program(const rtKernelAttrType kernelAttrType)
@@ -700,6 +711,10 @@ rtError_t Program::CopyKernelLiteralNameToDevice(
     // copy soName and funcName to device
     ret = curDrv->MemCopySync(devAddr, nameSize, literalName.c_str(), nameSize, RT_MEMCPY_HOST_TO_DEVICE);
     if (ret != RT_ERROR_NONE) {
+        COND_PROC(
+            ret == RT_ERROR_DRV_NOT_SUPPORT, RT_LOG_OUTER_MSG_IMPL(
+                                                 ErrorCode::EE1016, "Copying a kernel literal name to device memory",
+                                                 "The driver does not support synchronous host-to-device memory copy"));
         RT_LOG(RT_LOG_ERROR, "Failed to copy literalName to device, ret=%d, devId=%u.", ret, devId);
         (void)curDrv->DevMemFree(devAddr, devId);
         return ret;
@@ -1300,12 +1315,15 @@ rtError_t Program::ProcCpuKernelH2DMem(bool isLoadCpuSo, Device* const device)
     const uint32_t devId = static_cast<uint32_t>(device->Id_());
     void* devSoBuff = nullptr;
     if (isLoadCpuSo) {
-        ret = AllocAndCopyHbmBuf(device, binary_, binarySize_, &devSoBuff, allocMem);
+        ret = AllocAndCopyHbmBufImpl(
+            device, binary_, binarySize_, &devSoBuff, allocMem, "Copying an AI CPU shared object to device memory");
         ERROR_RETURN(ret, "devSoBuff alloc and copy failed! error=%#x", ret);
     }
 
     void* devSoName = nullptr;
-    ret = AllocAndCopyHbmBuf(device, soName_.c_str(), soName_.size(), &devSoName, allocMem);
+    ret = AllocAndCopyHbmBufImpl(
+        device, soName_.c_str(), soName_.size(), &devSoName, allocMem,
+        "Copying an AI CPU shared object name to device memory");
     ERROR_RETURN(ret, "devSoName alloc and copy failed! error=%#x", ret);
 
     CpuSoBuf cpuSoBuf = {
@@ -1316,7 +1334,8 @@ rtError_t Program::ProcCpuKernelH2DMem(bool isLoadCpuSo, Device* const device)
 
     void* args = nullptr;
     constexpr size_t argsSize = sizeof(CpuSoBuf);
-    ret = AllocAndCopyHbmBuf(device, &cpuSoBuf, argsSize, &args, allocMem);
+    ret = AllocAndCopyHbmBufImpl(
+        device, &cpuSoBuf, argsSize, &args, allocMem, "Copying AI CPU registration arguments to device memory");
     ERROR_RETURN(ret, "args alloc and copy failed! error=%#x", ret);
 
     const std::string opName = isLoadCpuSo ? LOAD_CPU_SO : DELETE_CPU_SO;

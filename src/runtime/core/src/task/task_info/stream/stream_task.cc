@@ -53,8 +53,18 @@ rtError_t InitFuncCallParaForStreamActiveTask(
             int64_t dieId;
             const uint32_t deviceId = streamActiveTask->activeStream->Device_()->Id_();
             error = driver->GetDevInfo(deviceId, MODULE_TYPE_SYSTEM, INFO_TYPE_PHY_CHIP_ID, &chipId);
+            COND_PROC_RETURN_AND_MSG_OUTER(
+                error == RT_ERROR_FEATURE_NOT_SUPPORT, error, ErrorCode::EE1016,
+                RT_LOG(RT_LOG_ERROR, "Failed to get chip id, device_id=%u.", deviceId),
+                "Initializing a stream activation task",
+                RtFmtMsg("Querying the physical chip ID for device %u is not supported", deviceId));
             ERROR_RETURN_MSG_INNER(error, "Failed to get chip id, device_id=%u.", deviceId);
             error = driver->GetDevInfo(deviceId, MODULE_TYPE_SYSTEM, INFO_TYPE_PHY_DIE_ID, &dieId);
+            COND_PROC_RETURN_AND_MSG_OUTER(
+                error == RT_ERROR_FEATURE_NOT_SUPPORT, error, ErrorCode::EE1016,
+                RT_LOG(RT_LOG_ERROR, "Failed to get die id, device_id=%u.", deviceId),
+                "Initializing a stream activation task",
+                RtFmtMsg("Querying the physical die ID for device %u is not supported", deviceId));
             ERROR_RETURN_MSG_INNER(error, "Failed to get die id, device_id=%u.", deviceId);
 
             const uint64_t chipAddr = taskInfo->stream->Device_()->GetChipAddr();

@@ -83,15 +83,16 @@ static rtError_t CheckRandomParam(const rtRandomParaInfo_t& paramInfo, const std
 {
     UNUSED(paramName);
     // 0: value, 1: addr
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         (paramInfo.isAddr != RANDOM_VALUE_FLAG) && (paramInfo.isAddr != RANDOM_ADDR_FLAG), RT_ERROR_INVALID_VALUE,
         "Verifying the parameters for generating a random number", paramInfo.isAddr,
-        std::to_string(RANDOM_VALUE_FLAG) + " or " + std::to_string(RANDOM_ADDR_FLAG));
+        RtFmtMsg("%s.isAddr", paramName.c_str()),
+        RtFmtMsg("%u or %u", static_cast<uint32_t>(RANDOM_VALUE_FLAG), static_cast<uint32_t>(RANDOM_ADDR_FLAG)));
 
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         (paramInfo.size == 0U) || (paramInfo.size > dataSize), RT_ERROR_INVALID_VALUE,
         "Verifying the parameters for generating a random number", paramInfo.size,
-        "[1, " + std::to_string(dataSize) + "]");
+        RtFmtMsg("%s.size", paramName.c_str()), RtFmtMsg("[1, %zu]", dataSize));
 
     return RT_ERROR_NONE;
 }

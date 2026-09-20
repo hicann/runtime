@@ -56,6 +56,10 @@ void ErrorMessageUtils::FuncErrorReason(const RtInnerErrcodeType rtErrCode, cons
             RT_LOG_OUTER_MSG(
                 RT_INVALID_ARGUMENT_ERROR, "%s execution failed, %s.", funcName, RT_GET_ERRREASON(rtErrCode).c_str());
             break;
+        case RT_ERROR_DRV_NOT_SUPPORT_UPDATE_OP:
+            RT_LOG_OUTER_MSG_IMPL(
+                ErrorCode::EE1015, funcName, "The current driver version does not support updating this operator.");
+            break;
         case RT_ERROR_INVALID_HANDLE:
             RT_LOG_OUTER_MSG_IMPL(
                 ErrorCode::EE1017, funcName, "handle",

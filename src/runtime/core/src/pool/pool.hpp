@@ -49,6 +49,11 @@ constexpr uint32_t PCIE_BAR_COPY_SIZE = 4096U;
 #endif
 constexpr uint32_t DMA_COPY_MAX_SIZE = 32U * 1024U * 1024U;
 
+struct ObjAllocatorInitFailureInfo {
+    size_t allocSize = 0U;
+    const char* allocInterface = nullptr;
+};
+
 template <class T>
 class ObjAllocator : public NoCopy {
 public:
@@ -90,6 +95,13 @@ public:
 
     rtError_t Init(void)
     {
+        ObjAllocatorInitFailureInfo failureInfo;
+        return Init(failureInfo);
+    }
+
+    rtError_t Init(ObjAllocatorInitFailureInfo& failureInfo)
+    {
+        failureInfo = {};
         uint32_t poolNum = GetPoolIndex(maxCount_ - 1) + 1;
         size_t poolArraySize = static_cast<size_t>(poolNum) * sizeof(T*);
         if (poolArraySize < sizeof(T*)) {
@@ -98,6 +110,8 @@ public:
 
         pool_ = (T**)malloc(poolArraySize);
         if (pool_ == nullptr) {
+            failureInfo.allocSize = poolArraySize;
+            failureInfo.allocInterface = "malloc";
             RT_LOG(RT_LOG_ERROR, "ObjAllocator alloc failed, pool array size %zu(bytes)", poolArraySize);
             return RT_ERROR_MEMORY_ALLOCATION;
         }
@@ -111,6 +125,8 @@ public:
 
         pool_[0] = ObjAlloc();
         if (pool_[0] == nullptr) {
+            failureInfo.allocSize = static_cast<size_t>(initCount_) * sizeof(T);
+            failureInfo.allocInterface = "new";
             RT_LOG(RT_LOG_ERROR, "ObjAlloc pool 0 failed.");
             free((void*)pool_);
             pool_ = nullptr;
@@ -120,6 +136,8 @@ public:
 
         mtx_ = new (std::nothrow) std::mutex[poolNum];
         if (mtx_ == nullptr) {
+            failureInfo.allocSize = static_cast<size_t>(poolNum) * sizeof(std::mutex);
+            failureInfo.allocInterface = "new";
             RT_LOG(RT_LOG_ERROR, "new mutex resource failed, poolNum=%u.", poolNum);
             ObjFree(pool_[0]);
             pool_[0] = nullptr;
@@ -131,6 +149,8 @@ public:
 
         activeCount_ = new (std::nothrow) std::atomic<uint32_t>[poolNum]();
         if (activeCount_ == nullptr) {
+            failureInfo.allocSize = static_cast<size_t>(poolNum) * sizeof(std::atomic<uint32_t>);
+            failureInfo.allocInterface = "new";
             RT_LOG(RT_LOG_ERROR, "new activeCount_ failed, poolNum=%u.", poolNum);
             ObjFree(pool_[0]);
             pool_[0] = nullptr;

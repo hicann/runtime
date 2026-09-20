@@ -171,19 +171,23 @@ rtError_t PcieArgManage::PrepareSimtArgsBuffer(
 
     constexpr uint64_t syncCounter = 0ULL;
     errno_t ret = memcpy_s(*argsBuffer, totalArgsSize, &syncCounter, SIMT_SYNC_COUNTER_SIZE);
-    if (ret != EOK) {
-        FreeFail(result);
-        return RT_ERROR_SEC_HANDLE;
-    }
+    COND_PROC_RETURN_AND_MSG_OUTER(
+        ret != EOK, RT_ERROR_SEC_HANDLE, ErrorCode::EE1020, FreeFail(result),
+        "Preparing the SIMT synchronization counter", "memcpy_s", RtFmtMsg("%d", ret), strerror(ret),
+        RtFmtMsg(
+            "dest=0x%" PRIx64 ", src=0x%" PRIx64 ", destMax=%u, count=%u.", RtPtrToValue(*argsBuffer),
+            RtPtrToValue(&syncCounter), totalArgsSize, SIMT_SYNC_COUNTER_SIZE));
 
     uint32_t implicitData[SIMT_IMPLICIT_PARAM_COUNT] = {blockDim.z, blockDim.y, blockDim.x,
                                                         gridDim.z,  gridDim.y,  gridDim.x};
     void* implicitDataStart = static_cast<char*>(*argsBuffer) + SIMT_SYNC_COUNTER_SIZE;
     ret = memcpy_s(implicitDataStart, totalArgsSize - SIMT_SYNC_COUNTER_SIZE, implicitData, SIMT_DIM_PARAM_SIZE);
-    if (ret != EOK) {
-        FreeFail(result);
-        return RT_ERROR_SEC_HANDLE;
-    }
+    COND_PROC_RETURN_AND_MSG_OUTER(
+        ret != EOK, RT_ERROR_SEC_HANDLE, ErrorCode::EE1020, FreeFail(result), "Copying SIMT grid and block dimensions",
+        "memcpy_s", RtFmtMsg("%d", ret), strerror(ret),
+        RtFmtMsg(
+            "dest=0x%" PRIx64 ", src=0x%" PRIx64 ", destMax=%u, count=%u.", RtPtrToValue(implicitDataStart),
+            RtPtrToValue(implicitData), totalArgsSize - SIMT_SYNC_COUNTER_SIZE, SIMT_DIM_PARAM_SIZE));
 
     return RT_ERROR_NONE;
 }

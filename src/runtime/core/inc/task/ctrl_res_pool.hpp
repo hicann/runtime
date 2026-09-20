@@ -85,6 +85,7 @@ public:
 
             TryTaskReclaim(stream);
             if (countNum > 2000000U) { // try 200w times
+                RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1023, "Alloc Ctrl task resource", "Too many Ctrl tasks are in use");
                 return nullptr;
             }
             countNum++;

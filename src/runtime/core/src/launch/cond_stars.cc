@@ -148,6 +148,14 @@ rtError_t CondStreamActive(
         NULL_PTR_RETURN_MSG(tsk, errorReason);
 
         error = StreamActiveTaskInit(tsk, activeStream);
+        COND_PROC(
+            error == RT_ERROR_DRV_NOT_SUPPORT,
+            RT_LOG(
+                RT_LOG_ERROR, "Stream activation task init failed, stream_id=%d, task_id=%hu, retCode=%#x.", streamId,
+                tsk->id, error));
+        COND_GOTO_MSG_OUTER(
+            error == RT_ERROR_DRV_NOT_SUPPORT, ERROR_RECYCLE, error, error, ErrorCode::EE1016,
+            "Initializing a stream activation task", "The driver does not support synchronous memory copy");
         ERROR_GOTO_MSG_INNER(
             error, ERROR_RECYCLE, "Stream activation task init failed, stream_id=%d, task_id=%hu, retCode=%#x.",
             streamId, tsk->id, error);

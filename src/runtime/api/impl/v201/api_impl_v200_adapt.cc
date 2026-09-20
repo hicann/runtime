@@ -54,9 +54,8 @@ rtError_t ApiImplDavid::LaunchKernelV2(
     Stream* curStm = (stm == nullptr) ? curCtx->DefaultStream_() : stm;
     NULL_STREAM_PTR_RETURN_MSG(curStm);
 
-    COND_RETURN_ERROR_MSG_INNER(
-        curStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
-        "Kernel launch with handle failed, stream is not in current ctx, stream_id=%d.", curStm->Id_());
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Starting the compute task of the corresponding operator");
     if (!kernel->Program_()->IsDeviceSoAndNameValid(dev->Id_())) {
         RT_LOG(RT_LOG_WARNING, "kernel is invalid, device_id=%d", curCtx->Device_()->Id_());
         return RT_ERROR_KERNEL_INVALID;

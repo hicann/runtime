@@ -201,10 +201,14 @@ rtError_t ConvertLaunchCfgToTaskCfg(TaskCfg& taskCfg, const rtKernelLaunchCfg_t*
                 taskCfg.base.enableProfiling = cfg->attrs[idx].value.enableProfiling;
                 break;
             default:
-                RT_LOG(
-                    RT_LOG_ERROR, "Launch kernel attr type[%s] is invalid, should be [%u, %u)",
-                    LaunchKernelAttrIdToString(cfg->attrs[idx].id).c_str(), RT_LAUNCH_KERNEL_ATTR_SCHEM_MODE,
-                    RT_LAUNCH_KERNEL_ATTR_MAX);
+                RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
+                    ErrorCode::EE1003,
+                    "Converting the kernel launch configuration attributes into the internal task configuration "
+                    "structure",
+                    LaunchKernelAttrIdToString(cfg->attrs[idx].id), RtFmtMsg("cfg->attrs[%zu].id", idx),
+                    RtFmtMsg(
+                        "[%u, %u)", RT_LAUNCH_KERNEL_ATTR_SCHEM_MODE,
+                        static_cast<uint32_t>(RT_LAUNCH_KERNEL_ATTR_MAX)));
                 return RT_ERROR_INVALID_VALUE;
         }
     }
