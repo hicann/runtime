@@ -4077,35 +4077,6 @@ rtError_t ApiImpl::NopTask(Stream* const stm)
     return StreamNopTask(stm);
 }
 
-rtError_t ApiImpl::IpcDestroyMemoryName(const char_t* const name)
-{
-    RT_LOG(RT_LOG_DEBUG, "Destroy ipc memory. name=%s.", name);
-    Context* const curCtx = CurrentContext();
-    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-
-    if (!curCtx->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_IPC_MEMORY)) {
-        RT_LOG_OUTER_MSG_WITH_FUNC_DESC(ErrorCode::EE1005, "destroying the IPC shared memory");
-        return RT_ERROR_FEATURE_NOT_SUPPORT;
-    }
-
-    return curCtx->Device_()->Driver_()->DestroyIpcMem(name);
-}
-
-rtError_t ApiImpl::SetIpcMemPid(const char_t* const name, int32_t pid[], const int32_t num)
-{
-    RT_LOG(RT_LOG_DEBUG, "Set ipc mem pid. name=%s.", name);
-    Context* const curCtx = CurrentContext();
-    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-
-    if (!curCtx->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_IPC_MEMORY)) {
-        RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
-            ErrorCode::EE1005, "setting the trustlist of processes that can share memory through IPC");
-        return RT_ERROR_FEATURE_NOT_SUPPORT;
-    }
-
-    return curCtx->Device_()->Driver_()->SetIpcMemPid(name, pid, num);
-}
-
 rtError_t ApiImpl::NotifyCreate(const int32_t deviceId, Notify** const notify, uint64_t flag)
 {
     RT_LOG(RT_LOG_INFO, "Notify create.");
@@ -6299,12 +6270,6 @@ rtError_t ApiImpl::SetStreamSqLockUnlock(Stream* const stm, const bool isLock)
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Locking or unlocking the send queue of a stream");
     return cce::runtime::SetStreamSqLockUnlock(stm, isLock);
-}
-
-rtError_t ApiImpl::ShmemSetPodPid(const char* name, uint32_t sdid, int32_t pid[], int32_t num)
-{
-    RT_LOG(RT_LOG_INFO, "Start to ShmemSetPodPid name=%s, sdid=%u, pid=%d", name, sdid, pid[0]);
-    return NpuDriver::ShmemSetPodPid(name, sdid, pid, num);
 }
 
 rtError_t ApiImpl::DevVA2PA(uint64_t devAddr, uint64_t len, Stream* stm, bool isAsync)

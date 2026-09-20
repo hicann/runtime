@@ -5623,20 +5623,8 @@ TEST_F(ApiTest, api_mem_and_buf_test)
     error = apiDec.ManagedMemFree(m_ptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    MOCKER_CPP_VIRTUAL(api, &Api::IpcSetMemoryName).stubs().will(returnValue(RT_ERROR_NONE));
-    error = apiDec.IpcSetMemoryName(NULL, 0, NULL, 0, 0UL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
     MOCKER_CPP_VIRTUAL(api, &Api::IpcSetMemoryAttr).stubs().will(returnValue(RT_ERROR_NONE));
     error = apiDec.IpcSetMemoryAttr(NULL, RT_ATTR_TYPE_MEM_MAP, 0);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(api, &Api::IpcOpenMemory).stubs().will(returnValue(RT_ERROR_NONE));
-    error = apiDec.IpcOpenMemory(NULL, NULL, 0UL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(api, &Api::IpcCloseMemory).stubs().will(returnValue(RT_ERROR_NONE));
-    error = apiDec.IpcCloseMemory(NULL);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER_CPP_VIRTUAL(api, &Api::MallocHostSharedMemory).stubs().will(returnValue(RT_ERROR_NONE));
@@ -5645,10 +5633,6 @@ TEST_F(ApiTest, api_mem_and_buf_test)
 
     MOCKER_CPP_VIRTUAL(api, &Api::FreeHostSharedMemory).stubs().will(returnValue(RT_ERROR_NONE));
     error = apiDec.FreeHostSharedMemory(NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(api, &Api::IpcDestroyMemoryName).stubs().will(returnValue(RT_ERROR_NONE));
-    error = apiDec.IpcDestroyMemoryName(NULL);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER_CPP_VIRTUAL(api, &Api::MemGetInfoEx).stubs().will(returnValue(RT_ERROR_NONE));
@@ -8610,35 +8594,8 @@ TEST_F(ApiTest, api_decorator_ipc_forwarding)
     ApiDecorator api(&impl);
     rtError_t error = RT_ERROR_INTERNAL_ERROR;
 
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::IpcOpenMemory).stubs().will(returnValue(RT_ERROR_NONE));
-    void* ptr = nullptr;
-    error = api.IpcOpenMemory(&ptr, nullptr, 0U);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::IpcCloseMemory).stubs().will(returnValue(RT_ERROR_NONE));
-    error = api.IpcCloseMemory(nullptr);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::IpcSetMemoryAttr).stubs().will(returnValue(RT_ERROR_NONE));
     error = api.IpcSetMemoryAttr(nullptr, 0U, 0U);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::IpcCloseMemoryByName).stubs().will(returnValue(RT_ERROR_NONE));
-    error = api.IpcCloseMemoryByName(nullptr);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::IpcSetMemoryName).stubs().will(returnValue(RT_ERROR_NONE));
-    char_t name[16] = {0};
-    error = api.IpcSetMemoryName(nullptr, 0U, name, 16U, 0U);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::IpcDestroyMemoryName).stubs().will(returnValue(RT_ERROR_NONE));
-    error = api.IpcDestroyMemoryName(nullptr);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::SetIpcMemPid).stubs().will(returnValue(RT_ERROR_NONE));
-    int32_t pidArr[1] = {0};
-    error = api.SetIpcMemPid(nullptr, pidArr, 1);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
@@ -8881,11 +8838,6 @@ TEST_F(ApiTest, api_decorator_misc_forwarding)
 
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DevVA2PA).stubs().will(returnValue(RT_ERROR_NONE));
     error = api.DevVA2PA(0U, 0U, nullptr, false);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::ShmemSetPodPid).stubs().will(returnValue(RT_ERROR_NONE));
-    uint32_t sdid = 0U;
-    error = api.ShmemSetPodPid(nullptr, sdid, pidArr, 1);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemcpyBatchAsync).stubs().will(returnValue(RT_ERROR_NONE));

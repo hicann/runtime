@@ -181,6 +181,7 @@ set(libruntime_src_files_optional
     ${RUNTIME_API_DIR}/impl/api_impl_snapshot.cc
     ${RUNTIME_API_DIR}/impl/api_impl_rt_config.cc
     ${RUNTIME_API_DIR}/impl/api_impl_device_topology.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_ipc_memory.cc
     ${RUNTIME_API_DIR}/impl/api_impl_soma.cc
     ${RUNTIME_API_DIR}/impl/api_error_uvm.cc
     ${RUNTIME_API_DIR}/impl/api_impl_uvm.cc
@@ -216,6 +217,7 @@ set(libruntime_src_files_optional
 
 set(libruntime_api_src_files_optional
     ${RUNTIME_DIR}/src/runtime/api/api_c_standard_soc.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_ipc_memory.cc
     ${RUNTIME_DIR}/src/runtime/api/api_c_soma.cc
     ${RUNTIME_DIR}/src/runtime/api/api_preload_task.cc
     ${RUNTIME_DIR}/src/runtime/api/api_c_dqs.cc

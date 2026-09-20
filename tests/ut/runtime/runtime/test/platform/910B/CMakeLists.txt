@@ -91,6 +91,7 @@ set(runtimeut_src_task_list
 set(runtimeut_src_api_list
     ${TOP_DIR}/src/runtime/api/api_c.cc
     ${TOP_DIR}/src/runtime/api/api_c_standard_soc.cc
+    ${TOP_DIR}/src/runtime/api/api_c_ipc_memory.cc
     ${TOP_DIR}/src/runtime/api/api_c_soma.cc
     ${TOP_DIR}/src/runtime/api/api_david.cc
     ${TOP_DIR}/src/runtime/api/api_preload_task.cc
@@ -271,6 +272,7 @@ set(runtimeut_910b_src_list
     ${TOP_DIR}/src/runtime/api/impl/api_impl_mbuf.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_standard_soc.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_snapshot.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_ipc_memory.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_soma.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event_common.cc

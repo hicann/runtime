@@ -619,17 +619,9 @@ public:
     virtual rtError_t XpuSetTaskFailCallback(const rtXpuDevType devType, const char_t* moduleName, void* callback) = 0;
 
     // IPC API
-    virtual rtError_t IpcSetMemoryName(
-        const void* const ptr, const uint64_t byteCount, char_t* const name, const uint32_t len,
-        const uint64_t flags = 0UL) = 0;
     virtual rtError_t IpcSetMemoryAttr(const char* name, uint32_t type, uint64_t attr) = 0;
-    virtual rtError_t IpcOpenMemory(void** const ptr, const char_t* const name, const uint64_t flags = 0UL) = 0;
     virtual rtError_t NopTask(Stream* const stm) = 0;
-    virtual rtError_t IpcCloseMemory(const void* const ptr) = 0;
-    virtual rtError_t IpcCloseMemoryByName(const char_t* const name) = 0;
-    virtual rtError_t IpcDestroyMemoryName(const char_t* const name) = 0;
     virtual rtError_t SetIpcNotifyPid(const char_t* const name, int32_t pid[], const int32_t num) = 0;
-    virtual rtError_t SetIpcMemPid(const char_t* const name, int32_t pid[], const int32_t num) = 0;
     virtual rtError_t RDMASend(const uint32_t sqIndex, const uint32_t wqeIndex, Stream* const stm) = 0;
     virtual rtError_t RdmaDbSend(const uint32_t dbIndex, const uint64_t dbInfo, Stream* const stm) = 0;
 
@@ -820,7 +812,6 @@ public:
         int32_t pid, uint32_t* chipId, uint32_t* vfId, uint32_t* hostPid, uint32_t* cpType) = 0;
     virtual rtError_t SetStreamSqLockUnlock(Stream* const stm, const bool isLock) = 0;
     virtual rtError_t ShrIdSetPodPid(const char* name, uint32_t sdid, int32_t pid) = 0;
-    virtual rtError_t ShmemSetPodPid(const char* name, uint32_t sdid, int32_t pid[], int32_t num) = 0;
     virtual rtError_t DevVA2PA(uint64_t devAddr, uint64_t len, Stream* stm, bool isAsync) = 0;
     virtual rtError_t StreamClear(Stream* const stm, rtClearStep_t step) = 0;
     virtual rtError_t StreamStop(Stream* const stm) = 0;

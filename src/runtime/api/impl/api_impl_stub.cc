@@ -692,25 +692,6 @@ rtError_t ApiImpl::GetGroupInfo(const int32_t groupId, rtGroupInfo_t* const grou
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t ApiImpl::IpcSetMemoryName(
-    const void* const ptr, const uint64_t byteCount, char_t* const name, const uint32_t len, const uint64_t flags)
-{
-    UNUSED(ptr);
-    UNUSED(byteCount);
-    UNUSED(name);
-    UNUSED(len);
-    UNUSED(flags);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiImpl::IpcOpenMemory(void** const ptr, const char_t* const name, const uint64_t flags)
-{
-    UNUSED(ptr);
-    UNUSED(name);
-    UNUSED(flags);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
 rtError_t ApiImpl::LaunchSqeUpdateTask(
     uint32_t streamId, uint32_t taskId, void* src, uint64_t cnt, Stream* const stm, bool needCpuTask)
 {
@@ -762,18 +743,6 @@ rtError_t ApiImpl::ModelTaskUpdate(
 }
 
 rtError_t ApiImpl::DeviceL2CacheFlush() { return RT_ERROR_FEATURE_NOT_SUPPORT; }
-
-rtError_t ApiImpl::IpcCloseMemory(const void* const ptr)
-{
-    UNUSED(ptr);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiImpl::IpcCloseMemoryByName(const char_t* const name)
-{
-    UNUSED(name);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
 
 rtError_t ApiImpl::HostGetDevicePointerAddrRange(rtAddrRange* addrRange, uint32_t* count)
 {

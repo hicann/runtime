@@ -26,6 +26,7 @@
 #include "api_kernel_args.hpp"
 #include "api_mbuf.hpp"
 #include "api_soma.hpp"
+#include "api_ipc_memory.hpp"
 #include "api_impl.hpp"
 #include "api_impl_creator.hpp"
 #include "api_impl_snapshot.hpp"
@@ -324,11 +325,26 @@ TEST_F(RuntimeTest, ApiRtConfigInstanceInitialized)
     EXPECT_EQ(ApiRtConfig::Instance(), runtime->ApiRtConfig_());
 }
 
+TEST_F(RuntimeTest, ApiIpcMemoryInstanceInitialized)
+{
+    const Runtime* const runtime = Runtime::Instance();
+    ASSERT_NE(runtime, nullptr);
+    ASSERT_NE(runtime->ApiIpcMemory_(), nullptr);
+    EXPECT_EQ(ApiIpcMemory::Instance(), runtime->ApiIpcMemory_());
+}
+
 TEST_F(RuntimeTest, CreateImplMbufAndGetFailed)
 {
     MOCKER(static_cast<NothrowNewFunc>(&operator new)).expects(once()).will(invoke(NothrowNewFailStub));
 
     EXPECT_EQ(CreateImplMbufAndGet(), nullptr);
+}
+
+TEST_F(RuntimeTest, CreateImplIpcMemoryAndGetFailed)
+{
+    MOCKER(static_cast<NothrowNewFunc>(&operator new)).expects(once()).will(invoke(NothrowNewFailStub));
+
+    EXPECT_EQ(CreateImplIpcMemoryAndGet(), nullptr);
 }
 
 TEST_F(RuntimeTest, CreateImplEschedAndGetFailed)
@@ -428,6 +444,16 @@ TEST_F(RuntimeTest, DestroyImplKernelArgsSuccess)
     DestroyImplKernelArgs(apiImplKernelArgs);
 
     EXPECT_EQ(apiImplKernelArgs, nullptr);
+}
+
+TEST_F(RuntimeTest, DestroyImplIpcMemorySuccess)
+{
+    ApiIpcMemory* apiImplIpcMemory = CreateImplIpcMemoryAndGet();
+    ASSERT_NE(apiImplIpcMemory, nullptr);
+
+    DestroyImplIpcMemory(apiImplIpcMemory);
+
+    EXPECT_EQ(apiImplIpcMemory, nullptr);
 }
 
 TEST_F(RuntimeTest, DestroyImplEschedSuccess)

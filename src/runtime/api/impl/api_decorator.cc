@@ -952,27 +952,10 @@ rtError_t ApiDecorator::RegTaskFailCallbackByModule(
     return impl_->RegTaskFailCallbackByModule(regName, callback, args, type);
 }
 
-rtError_t ApiDecorator::IpcSetMemoryName(
-    const void* const ptr, const uint64_t byteCount, char_t* const name, const uint32_t len, const uint64_t flags)
-{
-    return impl_->IpcSetMemoryName(ptr, byteCount, name, len, flags);
-}
-
 rtError_t ApiDecorator::IpcSetMemoryAttr(const char* name, uint32_t type, uint64_t attr)
 {
     return impl_->IpcSetMemoryAttr(name, type, attr);
 }
-rtError_t ApiDecorator::IpcOpenMemory(void** const ptr, const char_t* const name, const uint64_t flags)
-{
-    return impl_->IpcOpenMemory(ptr, name, flags);
-}
-
-rtError_t ApiDecorator::IpcCloseMemory(const void* const ptr) { return impl_->IpcCloseMemory(ptr); }
-
-rtError_t ApiDecorator::IpcCloseMemoryByName(const char_t* const name) { return impl_->IpcCloseMemoryByName(name); }
-
-rtError_t ApiDecorator::IpcDestroyMemoryName(const char_t* const name) { return impl_->IpcDestroyMemoryName(name); }
-
 rtError_t ApiDecorator::RDMASend(const uint32_t sqIndex, const uint32_t wqeIndex, Stream* const stm)
 {
     return impl_->RDMASend(sqIndex, wqeIndex, stm);
@@ -1067,11 +1050,6 @@ rtError_t ApiDecorator::ProfilerTraceEx(
 rtError_t ApiDecorator::SetIpcNotifyPid(const char_t* const name, int32_t pid[], const int32_t num)
 {
     return impl_->SetIpcNotifyPid(name, pid, num);
-}
-
-rtError_t ApiDecorator::SetIpcMemPid(const char_t* const name, int32_t pid[], const int32_t num)
-{
-    return impl_->SetIpcMemPid(name, pid, num);
 }
 
 rtError_t ApiDecorator::SubscribeReport(const uint64_t threadId, Stream* const stm)
@@ -1727,11 +1705,6 @@ rtError_t ApiDecorator::SetStreamSqLockUnlock(Stream* const stm, const bool isLo
 rtError_t ApiDecorator::ShrIdSetPodPid(const char* name, uint32_t sdid, int32_t pid)
 {
     return impl_->ShrIdSetPodPid(name, sdid, pid);
-}
-
-rtError_t ApiDecorator::ShmemSetPodPid(const char* name, uint32_t sdid, int32_t pid[], int32_t num)
-{
-    return impl_->ShmemSetPodPid(name, sdid, pid, num);
 }
 
 rtError_t ApiDecorator::DevVA2PA(uint64_t devAddr, uint64_t len, Stream* stm, bool isAsync)

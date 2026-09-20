@@ -22,6 +22,7 @@ class ApiRtConfig;
 class ApiDeviceTopology;
 class ApiKernelFunc;
 class ApiKernelArgs;
+class ApiIpcMemory;
 
 size_t GetApiImplSize();
 Api* CreateImplAndGet();
@@ -48,6 +49,9 @@ void DestroyImplRtConfig(ApiRtConfig*& apiImplRtConfig);
 bool IsImplDeviceTopologySupported();
 ApiDeviceTopology* CreateImplDeviceTopologyAndGet();
 void DestroyImplDeviceTopology(ApiDeviceTopology*& apiImplDeviceTopology);
+bool IsImplIpcMemorySupported();
+ApiIpcMemory* CreateImplIpcMemoryAndGet();
+void DestroyImplIpcMemory(ApiIpcMemory*& apiImplIpcMemory);
 } // namespace runtime
 } // namespace cce
 

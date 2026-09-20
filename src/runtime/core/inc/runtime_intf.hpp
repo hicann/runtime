@@ -28,6 +28,7 @@ class ApiRtConfig;
 class ApiDeviceTopology;
 class ApiKernelFunc;
 class ApiKernelArgs;
+class ApiIpcMemory;
 class Context;
 
 struct RtTimeoutConfig {
@@ -72,6 +73,8 @@ public:
     virtual ApiDeviceTopology* ApiDeviceTopology_() const = 0;
     // Get apiKernelArgs implement.
     virtual ApiKernelArgs* ApiKernelArgs_() const = 0;
+    // Get apiIpcMemory implement.
+    virtual ApiIpcMemory* ApiIpcMemory_() const = 0;
     virtual Api* ApiImpl_() const = 0;
     virtual rtError_t ProfilerStop(
         const uint64_t profConfig, const int32_t numsDev, uint32_t* const deviceList,

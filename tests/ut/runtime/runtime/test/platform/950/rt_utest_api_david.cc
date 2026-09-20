@@ -19,6 +19,7 @@
 #define protected public
 #include "runtime.hpp"
 #include "api.hpp"
+#include "api_ipc_memory.hpp"
 #include "api_impl.hpp"
 #include "api_impl_david.hpp"
 #include "program.hpp"
@@ -93,6 +94,78 @@
 
 using namespace testing;
 using namespace cce::runtime;
+
+namespace {
+class DavidApiIpcMemoryStub : public ApiIpcMemory {
+public:
+    rtError_t IpcSetMemoryName(
+        const void* const ptr, const uint64_t byteCount, char_t* const name, const uint32_t len,
+        const uint64_t flags) override
+    {
+        UNUSED(ptr);
+        UNUSED(byteCount);
+        UNUSED(name);
+        UNUSED(len);
+        UNUSED(flags);
+        return RT_ERROR_NONE;
+    }
+
+    rtError_t IpcOpenMemory(void** const ptr, const char_t* const name, const uint64_t flags) override
+    {
+        UNUSED(ptr);
+        UNUSED(name);
+        UNUSED(flags);
+        return RT_ERROR_NONE;
+    }
+
+    rtError_t IpcCloseMemory(const void* const ptr) override
+    {
+        UNUSED(ptr);
+        return RT_ERROR_NONE;
+    }
+
+    rtError_t IpcCloseMemoryByName(const char_t* const name) override
+    {
+        UNUSED(name);
+        return RT_ERROR_NONE;
+    }
+
+    rtError_t IpcDestroyMemoryName(const char_t* const name) override
+    {
+        UNUSED(name);
+        return RT_ERROR_NONE;
+    }
+
+    rtError_t SetIpcMemPid(const char_t* const name, int32_t pid[], const int32_t num) override
+    {
+        ++setPidCount_;
+        setPidName_ = name;
+        setPidPid_ = pid;
+        setPidNum_ = num;
+        return RT_ERROR_NONE;
+    }
+
+    rtError_t ShmemSetPodPid(const char* const name, const uint32_t sdid, int32_t pid[], const int32_t num) override
+    {
+        ++shmemSetPidCount_;
+        shmemSetPidName_ = name;
+        shmemSetPidSdid_ = sdid;
+        shmemSetPidPid_ = pid;
+        shmemSetPidNum_ = num;
+        return RT_ERROR_NONE;
+    }
+
+    uint32_t setPidCount_ = 0U;
+    uint32_t shmemSetPidCount_ = 0U;
+    const char_t* setPidName_ = nullptr;
+    int32_t* setPidPid_ = nullptr;
+    int32_t setPidNum_ = 0;
+    const char* shmemSetPidName_ = nullptr;
+    uint32_t shmemSetPidSdid_ = 0U;
+    int32_t* shmemSetPidPid_ = nullptr;
+    int32_t shmemSetPidNum_ = 0;
+};
+} // namespace
 
 // Mock for AllocTaskInfo that sets valid task pointer
 static TaskInfo g_apiMockTaskInfo = {};
@@ -12311,35 +12384,8 @@ TEST_F(ApiDavidTest, api_decorator_ipc_forwarding)
     ApiDecorator api(&impl);
     rtError_t error = RT_ERROR_NONE;
 
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::IpcOpenMemory).stubs().will(returnValue(RT_ERROR_NONE));
-    void* ptr = nullptr;
-    error = api.IpcOpenMemory(&ptr, nullptr, 0U);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::IpcCloseMemory).stubs().will(returnValue(RT_ERROR_NONE));
-    error = api.IpcCloseMemory(nullptr);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::IpcSetMemoryAttr).stubs().will(returnValue(RT_ERROR_NONE));
     error = api.IpcSetMemoryAttr(nullptr, 0U, 0U);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::IpcCloseMemoryByName).stubs().will(returnValue(RT_ERROR_NONE));
-    error = api.IpcCloseMemoryByName(nullptr);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::IpcSetMemoryName).stubs().will(returnValue(RT_ERROR_NONE));
-    char_t name[16] = {0};
-    error = api.IpcSetMemoryName(nullptr, 0U, name, 16U, 0U);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::IpcDestroyMemoryName).stubs().will(returnValue(RT_ERROR_NONE));
-    error = api.IpcDestroyMemoryName(nullptr);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::SetIpcMemPid).stubs().will(returnValue(RT_ERROR_NONE));
-    int32_t pidArr[1] = {0};
-    error = api.SetIpcMemPid(nullptr, pidArr, 1);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
@@ -12584,11 +12630,6 @@ TEST_F(ApiDavidTest, api_decorator_misc_forwarding)
     error = api.DevVA2PA(0U, 0U, nullptr, false);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::ShmemSetPodPid).stubs().will(returnValue(RT_ERROR_NONE));
-    uint32_t sdid = 0U;
-    error = api.ShmemSetPodPid(nullptr, sdid, pidArr, 1);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemcpyBatchAsync).stubs().will(returnValue(RT_ERROR_NONE));
     size_t failIdx = 0U;
     error = api.MemcpyBatchAsync(nullptr, nullptr, nullptr, nullptr, 0U, nullptr, nullptr, 0U, &failIdx, nullptr);
@@ -12805,9 +12846,6 @@ TEST_F(ApiDavidTest, api_error_decorator_forwarding_part2)
     error = api.SetIpcNotifyPid(nullptr, pidArr, 1);
     EXPECT_NE(error, RT_ERROR_NONE);
 
-    error = api.SetIpcMemPid(nullptr, pidArr, 1);
-    EXPECT_NE(error, RT_ERROR_NONE);
-
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::SetExceptCallback).stubs().will(returnValue(RT_ERROR_NONE));
     error = api.SetExceptCallback(nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -12999,10 +13037,24 @@ TEST_F(ApiDavidTest, api_c_success_with_mock)
     error = rtMemPrefetchToDevice(nullptr, 0U, 0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::SetIpcMemPid).stubs().will(returnValue(RT_ERROR_NONE));
     int32_t pidArr[1] = {0};
-    error = rtSetIpcMemPid(nullptr, pidArr, 1);
+    DavidApiIpcMemoryStub apiIpcMemory;
+    ApiIpcMemory* originApiIpcMemory = rtInstance->apiIpcMemory_;
+    rtInstance->apiIpcMemory_ = &apiIpcMemory;
+    error = rtSetIpcMemPid("ipc_key", pidArr, 1);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
+    error = rtSetIpcMemorySuperPodPid("ipc_key", 2U, pidArr, 1);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    EXPECT_EQ(apiIpcMemory.setPidCount_, 1U);
+    EXPECT_STREQ(apiIpcMemory.setPidName_, "ipc_key");
+    EXPECT_EQ(apiIpcMemory.setPidPid_, pidArr);
+    EXPECT_EQ(apiIpcMemory.setPidNum_, 1);
+    EXPECT_EQ(apiIpcMemory.shmemSetPidCount_, 1U);
+    EXPECT_STREQ(apiIpcMemory.shmemSetPidName_, "ipc_key");
+    EXPECT_EQ(apiIpcMemory.shmemSetPidSdid_, 2U);
+    EXPECT_EQ(apiIpcMemory.shmemSetPidPid_, pidArr);
+    EXPECT_EQ(apiIpcMemory.shmemSetPidNum_, 1);
+    rtInstance->apiIpcMemory_ = originApiIpcMemory;
 
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DeviceResourceClean).stubs().will(returnValue(RT_ERROR_NONE));
     error = rtDeviceResourceClean(0);

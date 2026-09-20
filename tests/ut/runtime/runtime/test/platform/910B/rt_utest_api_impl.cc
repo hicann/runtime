@@ -1300,18 +1300,6 @@ TEST_F(CloudV2ApiImplTest, rtSetSocVersionFeGetPlatInfoInvalidArch)
     ((Runtime*)Runtime::Instance())->SetIsUserSetSocVersion(false);
 }
 
-TEST_F(CloudV2ApiImplTest, SetIpcMemPid_01)
-{
-    rtError_t error;
-    char* name = nullptr;
-    int32_t pid[] = {1};
-    Api* oldApi_ = const_cast<Api*>(Runtime::runtime_->api_);
-    ApiDecorator* apiDecorator_ = new ApiDecorator(oldApi_);
-    error = apiDecorator_->SetIpcMemPid(name, pid, 1);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
-    delete apiDecorator_;
-}
-
 TEST_F(CloudV2ApiImplTest, SubcribeReport_01)
 {
     rtError_t error;

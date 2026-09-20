@@ -38,6 +38,7 @@
 #include "stub_task.hpp"
 #include "device_error_proc.hpp"
 #undef private
+#include <mutex>
 #include <string>
 #include "driver/ascend_hal.h"
 #include "device_msg_handler.hpp"
@@ -54,11 +55,13 @@
 #include "inner_thread_local.hpp"
 #include "api_impl_device_topology.hpp"
 #include "api_impl_kernel_args.hpp"
+#include "api_impl_ipc_memory.hpp"
 #include "thread_local_container.hpp"
 #include "maintenance_task.h"
 #include "stream_c.hpp"
 #include "fast_recover.hpp"
 #include "rts.h"
+#include "runtime/rts/rts_mem.h"
 #include "rts_snapshot.h"
 #include "ipc_event.hpp"
 #include "errcode_manage.hpp"
@@ -1987,16 +1990,241 @@ TEST_F(ApiImplTest, rtSetSocVersionFeGetPlatInfoInvalidArch)
     ((Runtime*)Runtime::Instance())->SetIsUserSetSocVersion(false);
 }
 
-TEST_F(ApiImplTest, SetIpcMemPid_01)
+TEST_F(ApiImplTest, api_impl_ipc_memory_invalid_parameter)
 {
-    rtError_t error;
-    char* name = nullptr;
+    ApiImplIpcMemory impl;
+    char_t name[] = "ipc_key";
     int32_t pid[] = {1};
-    Api* oldApi_ = const_cast<Api*>(Runtime::runtime_->api_);
-    ApiDecorator* apiDecorator_ = new ApiDecorator(oldApi_);
-    error = apiDecorator_->SetIpcMemPid(name, pid, 1);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
-    delete apiDecorator_;
+    int32_t value = 0;
+    const void* ptr = &value;
+    void* openedPtr = nullptr;
+
+    EXPECT_EQ(impl.IpcSetMemoryName(nullptr, 1U, name, sizeof(name), RT_IPC_MEM_FLAG_DEFAULT), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(impl.IpcSetMemoryName(ptr, 0U, name, sizeof(name), RT_IPC_MEM_FLAG_DEFAULT), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(impl.IpcSetMemoryName(ptr, 1U, nullptr, sizeof(name), RT_IPC_MEM_FLAG_DEFAULT), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(impl.IpcSetMemoryName(ptr, 1U, name, 0U, RT_IPC_MEM_FLAG_DEFAULT), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(
+        impl.IpcSetMemoryName(ptr, 1U, name, sizeof(name), RT_IPC_MEM_EXPORT_FLAG_DISABLE_PID_VALIDATION + 1UL),
+        RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(impl.IpcOpenMemory(nullptr, name, RT_IPC_MEM_FLAG_DEFAULT), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(impl.IpcOpenMemory(&openedPtr, nullptr, RT_IPC_MEM_FLAG_DEFAULT), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(
+        impl.IpcOpenMemory(&openedPtr, name, RT_IPC_MEM_IMPORT_FLAG_ENABLE_PEER_ACCESS + 1UL), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(impl.IpcCloseMemory(nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(impl.IpcCloseMemoryByName(nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(impl.IpcDestroyMemoryName(nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(impl.SetIpcMemPid(nullptr, pid, 1), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(impl.SetIpcMemPid(name, nullptr, 1), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(impl.SetIpcMemPid(name, pid, 0), RT_ERROR_INVALID_VALUE);
+}
+
+TEST_F(ApiImplTest, api_impl_ipc_memory_context_null)
+{
+    DefaultDeviceIdGuard guard;
+    Runtime::Instance()->SetDefaultDeviceId(DEFAULT_DEVICE_ID);
+    ApiImplIpcMemory impl;
+    char_t name[] = "ipc_key";
+    int32_t pid[] = {1};
+    int32_t value = 0;
+    const void* ptr = &value;
+    void* openedPtr = nullptr;
+
+    MOCKER(&InnerThreadLocalContainer::GetCurCtx).stubs().will(returnValue(static_cast<Context*>(nullptr)));
+    MOCKER(&InnerThreadLocalContainer::GetCurRef).stubs().will(returnValue(static_cast<RefObject<Context*>*>(nullptr)));
+
+    EXPECT_EQ(impl.IpcSetMemoryName(ptr, 1U, name, sizeof(name), RT_IPC_MEM_FLAG_DEFAULT), RT_ERROR_CONTEXT_NULL);
+    EXPECT_EQ(impl.IpcOpenMemory(&openedPtr, name, RT_IPC_MEM_FLAG_DEFAULT), RT_ERROR_CONTEXT_NULL);
+    EXPECT_EQ(impl.IpcCloseMemory(ptr), RT_ERROR_CONTEXT_NULL);
+    EXPECT_EQ(impl.IpcCloseMemoryByName(name), RT_ERROR_CONTEXT_NULL);
+    EXPECT_EQ(impl.IpcDestroyMemoryName(name), RT_ERROR_CONTEXT_NULL);
+    EXPECT_EQ(impl.SetIpcMemPid(name, pid, 1), RT_ERROR_CONTEXT_NULL);
+}
+
+TEST_F(ApiImplTest, api_impl_ipc_memory_uses_default_device_context)
+{
+    DefaultDeviceIdGuard guard;
+    Runtime* const rtInstance = static_cast<Runtime*>(Runtime::Instance());
+    rtInstance->SetDefaultDeviceId(0);
+    Context* const context = rtInstance->CurrentContext();
+    ASSERT_NE(context, nullptr);
+    Device* const dev = context->Device_();
+    ASSERT_NE(dev, nullptr);
+
+    ApiImplIpcMemory impl;
+    char_t name[] = "ipc_key";
+    int32_t pid[] = {1};
+    int32_t value = 0;
+    const void* ptr = &value;
+    void* openedPtr = nullptr;
+
+    MOCKER_CPP_VIRTUAL(dev, &Device::IsSupportFeature).stubs().will(returnValue(false));
+    const auto clearCurrentContext = []() {
+        InnerThreadLocalContainer::SetCurCtx(nullptr);
+        InnerThreadLocalContainer::SetCurRef(nullptr);
+        ASSERT_EQ(Runtime::Instance()->CurrentContext(), nullptr);
+    };
+
+    clearCurrentContext();
+    EXPECT_EQ(
+        impl.IpcSetMemoryName(ptr, 1U, name, sizeof(name), RT_IPC_MEM_FLAG_DEFAULT), RT_ERROR_FEATURE_NOT_SUPPORT);
+    clearCurrentContext();
+    EXPECT_EQ(impl.IpcOpenMemory(&openedPtr, name, RT_IPC_MEM_FLAG_DEFAULT), RT_ERROR_FEATURE_NOT_SUPPORT);
+    clearCurrentContext();
+    EXPECT_EQ(impl.IpcCloseMemory(ptr), RT_ERROR_FEATURE_NOT_SUPPORT);
+    clearCurrentContext();
+    EXPECT_EQ(impl.IpcCloseMemoryByName(name), RT_ERROR_FEATURE_NOT_SUPPORT);
+    clearCurrentContext();
+    EXPECT_EQ(impl.IpcDestroyMemoryName(name), RT_ERROR_FEATURE_NOT_SUPPORT);
+    clearCurrentContext();
+    EXPECT_EQ(impl.SetIpcMemPid(name, pid, 1), RT_ERROR_FEATURE_NOT_SUPPORT);
+}
+
+TEST_F(ApiImplTest, api_impl_ipc_memory_driver_success_paths)
+{
+    Runtime* const rtInstance = static_cast<Runtime*>(Runtime::Instance());
+    ASSERT_NE(rtInstance, nullptr);
+    Context* const context = rtInstance->CurrentContext();
+    ASSERT_NE(context, nullptr);
+    Device* const dev = context->Device_();
+    ASSERT_NE(dev, nullptr);
+    Driver* const driver = dev->Driver_();
+    ASSERT_NE(driver, nullptr);
+
+    {
+        const std::unique_lock<std::mutex> lock(rtInstance->GetIpcMemNameLock());
+        rtInstance->GetIpcMemNameMap().clear();
+    }
+
+    ApiImplIpcMemory impl;
+    char_t name[] = "ipc_key";
+    int32_t pid[] = {1};
+    int32_t value = 0;
+    void* openedPtr = reinterpret_cast<void*>(0x2000UL);
+
+    MOCKER_CPP_VIRTUAL(dev, &Device::IsSupportFeature).stubs().will(returnValue(true));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::CreateIpcMem).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::SetIpcMemAttr).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::OpenIpcMem).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::CloseIpcMem).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::DestroyIpcMem).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::SetIpcMemPid).stubs().will(returnValue(RT_ERROR_NONE));
+
+    EXPECT_EQ(
+        impl.IpcSetMemoryName(&value, 1U, name, sizeof(name), RT_IPC_MEM_EXPORT_FLAG_DISABLE_PID_VALIDATION),
+        RT_ERROR_NONE);
+    EXPECT_EQ(impl.IpcOpenMemory(&openedPtr, name, RT_IPC_MEM_FLAG_DEFAULT), RT_ERROR_NONE);
+    {
+        const std::unique_lock<std::mutex> lock(rtInstance->GetIpcMemNameLock());
+        auto& ipcMemNameMap = rtInstance->GetIpcMemNameMap();
+        ASSERT_EQ(ipcMemNameMap.count(name), 1U);
+        ASSERT_EQ(ipcMemNameMap[name].vaList.size(), 1U);
+        EXPECT_EQ(ipcMemNameMap[name].vaList.front(), RtPtrToValue(openedPtr));
+    }
+
+    EXPECT_EQ(impl.IpcCloseMemory(openedPtr), RT_ERROR_NONE);
+    {
+        const std::unique_lock<std::mutex> lock(rtInstance->GetIpcMemNameLock());
+        EXPECT_EQ(rtInstance->GetIpcMemNameMap().count(name), 0U);
+    }
+    EXPECT_EQ(impl.IpcCloseMemoryByName(name), RT_ERROR_NONE);
+    EXPECT_EQ(impl.IpcDestroyMemoryName(name), RT_ERROR_NONE);
+    EXPECT_EQ(impl.SetIpcMemPid(name, pid, 1), RT_ERROR_NONE);
+
+    {
+        const std::unique_lock<std::mutex> lock(rtInstance->GetIpcMemNameLock());
+        rtInstance->GetIpcMemNameMap().clear();
+    }
+}
+
+TEST_F(ApiImplTest, api_impl_ipc_memory_close_by_name_with_imported_va)
+{
+    Runtime* const rtInstance = static_cast<Runtime*>(Runtime::Instance());
+    ASSERT_NE(rtInstance, nullptr);
+    Context* const context = rtInstance->CurrentContext();
+    ASSERT_NE(context, nullptr);
+    Device* const dev = context->Device_();
+    ASSERT_NE(dev, nullptr);
+    Driver* const driver = dev->Driver_();
+    ASSERT_NE(driver, nullptr);
+
+    ApiImplIpcMemory impl;
+    char_t name[] = "ipc_key";
+    constexpr uint64_t va = 0x2000UL;
+
+    {
+        const std::unique_lock<std::mutex> lock(rtInstance->GetIpcMemNameLock());
+        rtInstance->GetIpcMemNameMap().clear();
+        rtInstance->GetIpcMemNameMap().emplace(name, ipcMemInfo_t{0UL, {va}});
+    }
+
+    MOCKER_CPP_VIRTUAL(dev, &Device::IsSupportFeature).stubs().will(returnValue(true));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::CloseIpcMem).stubs().will(returnValue(RT_ERROR_NONE));
+
+    EXPECT_EQ(impl.IpcCloseMemoryByName(name), RT_ERROR_NONE);
+    {
+        const std::unique_lock<std::mutex> lock(rtInstance->GetIpcMemNameLock());
+        EXPECT_EQ(rtInstance->GetIpcMemNameMap().count(name), 0U);
+    }
+}
+
+TEST_F(ApiImplTest, api_impl_ipc_memory_driver_error_paths)
+{
+    Runtime* const rtInstance = static_cast<Runtime*>(Runtime::Instance());
+    ASSERT_NE(rtInstance, nullptr);
+    Context* const context = rtInstance->CurrentContext();
+    ASSERT_NE(context, nullptr);
+    Device* const dev = context->Device_();
+    ASSERT_NE(dev, nullptr);
+    Driver* const driver = dev->Driver_();
+    ASSERT_NE(driver, nullptr);
+
+    ApiImplIpcMemory impl;
+    char_t name[] = "ipc_key";
+    int32_t pid[] = {1};
+    int32_t value = 0;
+    void* openedPtr = reinterpret_cast<void*>(0x2000UL);
+
+    MOCKER_CPP_VIRTUAL(dev, &Device::IsSupportFeature).stubs().will(returnValue(true));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::CreateIpcMem).expects(once()).will(returnValue(RT_ERROR_DRV_INPUT));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::OpenIpcMem).expects(once()).will(returnValue(RT_ERROR_DRV_INPUT));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::DestroyIpcMem).expects(once()).will(returnValue(RT_ERROR_DRV_INPUT));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::SetIpcMemPid).expects(once()).will(returnValue(RT_ERROR_DRV_INPUT));
+
+    EXPECT_EQ(impl.IpcSetMemoryName(&value, 1U, name, sizeof(name), RT_IPC_MEM_FLAG_DEFAULT), RT_ERROR_DRV_INPUT);
+    EXPECT_EQ(impl.IpcOpenMemory(&openedPtr, name, RT_IPC_MEM_FLAG_DEFAULT), RT_ERROR_DRV_INPUT);
+    EXPECT_EQ(impl.IpcDestroyMemoryName(name), RT_ERROR_DRV_INPUT);
+    EXPECT_EQ(impl.SetIpcMemPid(name, pid, 1), RT_ERROR_DRV_INPUT);
+}
+
+TEST_F(ApiImplTest, api_impl_ipc_memory_shmem_set_pod_pid_success)
+{
+    ApiImplIpcMemory impl;
+    const char_t name[] = "ipc_key";
+    const char_t* const namePtr = name;
+    constexpr uint32_t sdid = 2U;
+    int32_t pid[] = {1};
+    int32_t* const pidPtr = pid;
+    constexpr int32_t num = 1;
+
+    MOCKER(halShmemSetPodPid)
+        .expects(once())
+        .with(eq(namePtr), eq(sdid), eq(pidPtr), eq(num))
+        .will(returnValue(DRV_ERROR_NONE));
+
+    EXPECT_EQ(impl.ShmemSetPodPid(name, sdid, pid, num), RT_ERROR_NONE);
+}
+
+TEST_F(ApiImplTest, api_impl_ipc_memory_shmem_set_pod_pid_driver_error)
+{
+    ApiImplIpcMemory impl;
+    const char_t name[] = "ipc_key";
+    constexpr uint32_t sdid = 2U;
+    int32_t pid[] = {1};
+    constexpr int32_t num = 1;
+
+    MOCKER(halShmemSetPodPid).expects(once()).will(returnValue(DRV_ERROR_INVALID_VALUE));
+
+    EXPECT_EQ(impl.ShmemSetPodPid(name, sdid, pid, num), RT_GET_DRV_ERRCODE(DRV_ERROR_INVALID_VALUE));
 }
 
 TEST_F(ApiImplTest, SubcribeReport_01)

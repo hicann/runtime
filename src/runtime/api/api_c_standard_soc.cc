@@ -236,16 +236,6 @@ rtError_t rtRDMADBSend(uint32_t dbIndex, uint64_t dbInfo, rtStream_t stm)
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtIpcSetMemoryName(const void* ptr, uint64_t byteCount, char_t* name, uint32_t len)
-{
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->IpcSetMemoryName(ptr, byteCount, name, len, RT_IPC_MEM_FLAG_DEFAULT);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
 rtError_t rtIpcSetMemoryAttr(const char* name, uint32_t type, uint64_t attr)
 {
     Api* const apiInstance = Api::Instance();
@@ -253,38 +243,6 @@ rtError_t rtIpcSetMemoryAttr(const char* name, uint32_t type, uint64_t attr)
     const rtError_t error = apiInstance->IpcSetMemoryAttr(name, type, attr);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_DRV_LINK_TYPE_NOT_SUPPORTED, ACL_ERROR_RT_LINK_TYPE_NOT_SUPPORTED);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtIpcDestroyMemoryName(const char_t* name)
-{
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->IpcDestroyMemoryName(name);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtIpcOpenMemory(void** ptr, const char_t* name)
-{
-    GLOBAL_STATE_WAIT_IF_LOCKED();
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->IpcOpenMemory(ptr, name, RT_IPC_MEM_FLAG_DEFAULT);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtIpcCloseMemory(const void* ptr)
-{
-    GLOBAL_STATE_WAIT_IF_LOCKED();
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->IpcCloseMemory(ptr);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -1015,30 +973,6 @@ rtError_t rtMemsetD32Async(void* dst, uint64_t destMax, uint32_t value, uint64_t
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtIpcMemImportPidInterServer(const char* key, const rtServerPid* serverPids, size_t num)
-{
-    PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(key, RT_ERROR_INVALID_VALUE);
-    PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(serverPids, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM(num == 0UL, RT_ERROR_INVALID_VALUE, num, "not equal to 0");
-
-    for (size_t i = 0; i < num; i++) {
-        COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER(
-            (serverPids[i].pid == nullptr), RT_ERROR_INVALID_VALUE, ErrorCode::EE1004, __func__,
-            "serverPids[" + std::to_string(i) + "].pid");
-        COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER(
-            (serverPids[i].num > static_cast<size_t>(INT32_MAX)), RT_ERROR_INVALID_VALUE, ErrorCode::EE1003, __func__,
-            serverPids[i].num, "serverPids[" + std::to_string(i) + "].num", "INT32_MAX");
-        const rtError_t ret = rtSetIpcMemorySuperPodPid(
-            key, serverPids[i].sdid, serverPids[i].pid, static_cast<int32_t>(serverPids[i].num));
-        if (ret != ACL_RT_SUCCESS) {
-            return ret;
-        }
-    }
-
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
 rtError_t rtMemAdvise(void* devPtr, uint64_t count, uint32_t advise)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
@@ -1196,17 +1130,6 @@ rtError_t rtSetIpcNotifyPid(const char_t* name, int32_t pid[], int32_t num)
     Api* const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const rtError_t error = apiInstance->SetIpcNotifyPid(name, pid, num);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtSetIpcMemPid(const char_t* name, int32_t pid[], int32_t num)
-{
-    GLOBAL_STATE_WAIT_IF_LOCKED();
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->SetIpcMemPid(name, pid, num);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }

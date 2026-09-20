@@ -521,15 +521,8 @@ public:
         const char_t* regName, void* callback, void* args, StreamStateCallback type) override;
     rtError_t XpuSetTaskFailCallback(const rtXpuDevType devType, const char_t* moduleName, void* callback) override;
     // IPC API
-    rtError_t IpcSetMemoryName(
-        const void* const ptr, const uint64_t byteCount, char_t* const name, const uint32_t len,
-        const uint64_t flags) override;
     rtError_t IpcSetMemoryAttr(const char* name, uint32_t type, uint64_t attr) override;
     rtError_t NopTask(Stream* const stm) override;
-    rtError_t IpcOpenMemory(void** const ptr, const char_t* const name, const uint64_t flags) override;
-    rtError_t IpcCloseMemory(const void* const ptr) override;
-    rtError_t IpcCloseMemoryByName(const char_t* const name) override;
-    rtError_t IpcDestroyMemoryName(const char_t* const name) override;
     rtError_t RDMASend(const uint32_t sqIndex, const uint32_t wqeIndex, Stream* const stm) override;
     rtError_t RdmaDbSend(const uint32_t dbIndex, const uint64_t dbInfo, Stream* const stm) override;
 
@@ -586,7 +579,6 @@ public:
     rtError_t LabelSet(Label* const lbl, Stream* const stm) override;
     rtError_t LabelGoto(Label* const lbl, Stream* const stm) override;
     rtError_t SetIpcNotifyPid(const char_t* const name, int32_t pid[], const int32_t num) override;
-    rtError_t SetIpcMemPid(const char_t* const name, int32_t pid[], const int32_t num) override;
 
     // callback api
     rtError_t SubscribeReport(const uint64_t threadId, Stream* const stm) override;
@@ -716,7 +708,6 @@ public:
         int32_t pid, uint32_t* chipId, uint32_t* vfId, uint32_t* hostPid, uint32_t* cpType) override;
     rtError_t SetStreamSqLockUnlock(Stream* const stm, const bool isLock) override;
     rtError_t ShrIdSetPodPid(const char* name, uint32_t sdid, int32_t pid) override;
-    rtError_t ShmemSetPodPid(const char* name, uint32_t sdid, int32_t pid[], int32_t num) override;
     rtError_t DevVA2PA(uint64_t devAddr, uint64_t len, Stream* stm, bool isAsync) override;
     rtError_t StreamClear(Stream* const stm, rtClearStep_t step) override;
     rtError_t StreamStop(Stream* const stm) override;

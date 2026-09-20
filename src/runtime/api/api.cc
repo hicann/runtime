@@ -12,6 +12,7 @@
 #include "api_event.hpp"
 #include "api_kernel_func.hpp"
 #include "api_kernel_args.hpp"
+#include "api_ipc_memory.hpp"
 #include "api_mbuf.hpp"
 #include "api_snapshot.hpp"
 #include "api_rt_config.hpp"
@@ -120,6 +121,16 @@ ApiDeviceTopology* ApiDeviceTopology::Instance()
         return nullptr;
     }
     return rtInstance->ApiDeviceTopology_();
+}
+
+ApiIpcMemory* ApiIpcMemory::Instance()
+{
+    const Runtime* const rtInstance = Runtime::Instance();
+    if (unlikely(rtInstance == nullptr)) {
+        RT_LOG(RT_LOG_ERROR, "Runtime::Instance == nullptr");
+        return nullptr;
+    }
+    return rtInstance->ApiIpcMemory_();
 }
 
 } // namespace runtime

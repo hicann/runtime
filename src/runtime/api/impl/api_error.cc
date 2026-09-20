@@ -3878,27 +3878,6 @@ rtError_t ApiErrorDecorator::GetOnlineProfData(
     return error;
 }
 
-rtError_t ApiErrorDecorator::IpcSetMemoryName(
-    const void* const ptr, const uint64_t byteCount, char_t* const name, const uint32_t len, const uint64_t flags)
-{
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        ptr, RT_ERROR_INVALID_VALUE, "Setting the memory to be shared between processes");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        name, RT_ERROR_INVALID_VALUE, "Setting the memory to be shared between processes");
-    ZERO_RETURN_AND_MSG_OUTER_WITH_FUNC_DESC(byteCount, "Setting the memory to be shared between processes");
-    ZERO_RETURN_AND_MSG_OUTER_WITH_FUNC_DESC(len, "Setting the memory to be shared between processes");
-
-    constexpr uint64_t maxFlag = RT_IPC_MEM_EXPORT_FLAG_DISABLE_PID_VALIDATION;
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
-        (flags > maxFlag), RT_ERROR_INVALID_VALUE, "Setting the memory to be shared between processes", flags,
-        "[0, " + std::to_string(maxFlag) + "]");
-
-    const rtError_t error = impl_->IpcSetMemoryName(ptr, byteCount, name, len, flags);
-    ERROR_RETURN(
-        error, "Ipc set memory name failed, name=%s, byteCount=%#" PRIx64 ", len=%u(bytes)", name, byteCount, len);
-    return error;
-}
-
 rtError_t ApiErrorDecorator::IpcSetMemoryAttr(const char* name, uint32_t type, uint64_t attr)
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
@@ -3919,15 +3898,6 @@ rtError_t ApiErrorDecorator::NopTask(Stream* const stm)
     return impl_->NopTask(curStm);
 }
 
-rtError_t ApiErrorDecorator::IpcDestroyMemoryName(const char_t* const name)
-{
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(name, RT_ERROR_INVALID_VALUE, "Destroying the IPC shared memory");
-
-    const rtError_t error = impl_->IpcDestroyMemoryName(name);
-    ERROR_RETURN(error, "Ipc destroy memory name failed, name=%s.", name);
-    return error;
-}
-
 rtError_t ApiErrorDecorator::SetIpcNotifyPid(const char_t* const name, int32_t pid[], const int32_t num)
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
@@ -3938,54 +3908,6 @@ rtError_t ApiErrorDecorator::SetIpcNotifyPid(const char_t* const name, int32_t p
         num <= 0, RT_ERROR_INVALID_VALUE, "Setting the trustlist of processes that can share a Notify object", num,
         "(0, " + std::to_string(MAX_INT32_NUM) + "]");
     return impl_->SetIpcNotifyPid(name, pid, num);
-}
-
-rtError_t ApiErrorDecorator::SetIpcMemPid(const char_t* const name, int32_t pid[], const int32_t num)
-{
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        name, RT_ERROR_INVALID_VALUE, "Setting the trustlist of processes that can share memory through IPC");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        pid, RT_ERROR_INVALID_VALUE, "Setting the trustlist of processes that can share memory through IPC");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
-        num <= 0, RT_ERROR_INVALID_VALUE, "Setting the trustlist of processes that can share memory through IPC", num,
-        "(0, " + std::to_string(MAX_INT32_NUM) + "]");
-    return impl_->SetIpcMemPid(name, pid, num);
-}
-
-rtError_t ApiErrorDecorator::IpcOpenMemory(void** const ptr, const char_t* const name, const uint64_t flags)
-{
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        ptr, RT_ERROR_INVALID_VALUE, "Opening the shared memory between processes");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        name, RT_ERROR_INVALID_VALUE, "Opening the shared memory between processes");
-
-    constexpr uint64_t maxFlag = RT_IPC_MEM_IMPORT_FLAG_ENABLE_PEER_ACCESS;
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
-        (flags > maxFlag), RT_ERROR_INVALID_VALUE, "Opening the shared memory between processes", flags,
-        "[0, " + std::to_string(maxFlag) + "]");
-
-    const rtError_t error = impl_->IpcOpenMemory(ptr, name, flags);
-    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, error);
-    ERROR_RETURN(error, "Ipc open memory failed, name=%s.", name);
-    return error;
-}
-
-rtError_t ApiErrorDecorator::IpcCloseMemory(const void* const ptr)
-{
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(ptr, RT_ERROR_INVALID_VALUE, "Closing the IPC shared memory");
-
-    const rtError_t error = impl_->IpcCloseMemory(ptr);
-    ERROR_RETURN(error, "Ipc close memory failed.");
-    return error;
-}
-
-rtError_t ApiErrorDecorator::IpcCloseMemoryByName(const char_t* const name)
-{
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(name, RT_ERROR_INVALID_VALUE, "Closing the IPC shared memory");
-
-    const rtError_t error = impl_->IpcCloseMemoryByName(name);
-    ERROR_RETURN(error, "Ipc close memory failed.");
-    return error;
 }
 
 rtError_t ApiErrorDecorator::ModelCreate(Model** const mdl, const uint32_t flag)
@@ -6478,11 +6400,6 @@ rtError_t ApiErrorDecorator::SetStreamSqLockUnlock(Stream* const stm, bool isLoc
 rtError_t ApiErrorDecorator::ShrIdSetPodPid(const char* name, uint32_t sdid, int32_t pid)
 {
     return impl_->ShrIdSetPodPid(name, sdid, pid);
-}
-
-rtError_t ApiErrorDecorator::ShmemSetPodPid(const char* name, uint32_t sdid, int32_t pid[], int32_t num)
-{
-    return impl_->ShmemSetPodPid(name, sdid, pid, num);
 }
 
 rtError_t ApiErrorDecorator::DevVA2PA(uint64_t devAddr, uint64_t len, Stream* stm, bool isAsync)

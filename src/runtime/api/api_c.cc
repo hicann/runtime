@@ -3669,17 +3669,6 @@ rtError_t rtQueryProcessHostPid(int32_t pid, uint32_t* chipId, uint32_t* vfId, u
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtSetIpcMemorySuperPodPid(const char* name, uint32_t sdid, int32_t pid[], int32_t num)
-{
-    Api* apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->ShmemSetPodPid(name, sdid, pid, num);
-    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
 rtError_t rtNeedDevVA2PA(bool* need)
 {
     PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(need, RT_ERROR_INVALID_VALUE);

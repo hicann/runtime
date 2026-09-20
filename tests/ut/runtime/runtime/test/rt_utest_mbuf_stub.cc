@@ -25,6 +25,17 @@ TEST(ApiMbufStubTest, MbufImplLifecycleNotSupport)
     EXPECT_EQ(apiImplMbuf, nullptr);
 }
 
+TEST(ApiIpcMemoryStubTest, IpcMemoryImplLifecycleNotSupport)
+{
+    EXPECT_FALSE(IsImplIpcMemorySupported());
+    ApiIpcMemory* apiImplIpcMemory = CreateImplIpcMemoryAndGet();
+    EXPECT_EQ(apiImplIpcMemory, nullptr);
+
+    DestroyImplIpcMemory(apiImplIpcMemory);
+
+    EXPECT_EQ(apiImplIpcMemory, nullptr);
+}
+
 TEST(ApiMbufStubTest, MbufApisNotSupport)
 {
     EXPECT_EQ(rtMbufInit(nullptr), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);

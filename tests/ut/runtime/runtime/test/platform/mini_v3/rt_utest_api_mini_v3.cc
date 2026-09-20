@@ -111,26 +111,13 @@ TEST_F(ApiMINIV3Test, notify_test)
 TEST_F(ApiMINIV3Test, IPC_ADAPT)
 {
     ApiImpl apiImpl;
-    void* ptr = nullptr;
-    void** ptrNull = nullptr;
     char* name = nullptr;
-    rtNotify_t notify;
     int32_t pid[] = {1};
     rtError_t error;
     Runtime* rtInstance = const_cast<Runtime*>(Runtime::Instance());
-    Device* device = rtInstance->DeviceRetain(0, 0);
+    (void)rtInstance->DeviceRetain(0, 0);
 
-    error = apiImpl.IpcSetMemoryName(ptr, 0, name, 0, 0UL);
-    EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
-    error = apiImpl.IpcOpenMemory(ptrNull, name, 0UL);
-    EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
-    error = apiImpl.IpcCloseMemory(ptr);
-    EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
-    error = apiImpl.IpcDestroyMemoryName(name);
-    EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
     error = apiImpl.SetIpcNotifyPid(name, pid, 1);
-    EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
-    error = apiImpl.SetIpcMemPid(name, pid, 1);
     EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
 
     error = apiImpl.IpcSetMemoryAttr(name, RT_ATTR_TYPE_MEM_MAP, 0);

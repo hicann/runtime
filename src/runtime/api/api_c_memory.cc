@@ -832,53 +832,6 @@ rtError_t rtsLaunchCmoTask(rtCmoTaskCfg_t* taskCfg, rtStream_t stm, const void* 
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtsIpcMemGetExportKey(const void* ptr, size_t size, char_t* key, uint32_t len, uint64_t flags)
-{
-    GLOBAL_STATE_WAIT_IF_LOCKED();
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->IpcSetMemoryName(ptr, static_cast<uint64_t>(size), key, len, flags);
-    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtsIpcMemClose(const char_t* key)
-{
-    GLOBAL_STATE_WAIT_IF_LOCKED();
-    Runtime* const rtInstance = Runtime::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
-
-    const rtChipType_t chipType = rtInstance->GetChipType();
-    if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_IPC_MEMORY)) {
-        RT_LOG(RT_LOG_WARNING, "chip type(%d) does not support IpcMemClose.", chipType);
-        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
-    }
-
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->IpcCloseMemoryByName(key);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtsIpcMemImportByKey(void** ptr, const char_t* key, uint64_t flags)
-{
-    GLOBAL_STATE_WAIT_IF_LOCKED();
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->IpcOpenMemory(ptr, key, flags);
-    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtsIpcMemSetImportPid(const char_t* key, int32_t pid[], int num) { return rtSetIpcMemPid(key, pid, num); }
-
-VISIBILITY_DEFAULT
 rtError_t rtsCheckMemType(void** addrs, uint32_t size, uint32_t memType, uint32_t* checkResult, uint32_t reserve)
 {
     Api* const apiInstance = Api::Instance();

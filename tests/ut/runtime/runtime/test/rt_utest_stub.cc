@@ -88,6 +88,17 @@ protected:
     virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
+TEST_F(TinyStubTest, ipc_memory_impl_lifecycle_not_support)
+{
+    EXPECT_FALSE(IsImplIpcMemorySupported());
+    ApiIpcMemory* apiImplIpcMemory = CreateImplIpcMemoryAndGet();
+    EXPECT_EQ(apiImplIpcMemory, nullptr);
+
+    DestroyImplIpcMemory(apiImplIpcMemory);
+
+    EXPECT_EQ(apiImplIpcMemory, nullptr);
+}
+
 TEST_F(TinyStubTest, api_c_stub)
 {
     rtError_t ret = RT_ERROR_NONE;
@@ -158,6 +169,9 @@ TEST_F(TinyStubTest, api_c_stub)
     ret = rtIpcOpenMemory(nullptr, nullptr);
     EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ret = rtIpcCloseMemory(nullptr);
+    EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    int32_t pids[] = {1};
+    ret = rtSetIpcMemorySuperPodPid("ipc_key", 0U, pids, 1);
     EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ret = rtIpcSetNotifyName(nullptr, nullptr, 0);
     EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);

@@ -136,6 +136,7 @@ static inline bool IsAbortError(rtError_t error)
 
 class Api;
 class ApiEsched;
+class ApiIpcMemory;
 class ApiSnapshot;
 class ApiRtConfig;
 class Context;
@@ -215,6 +216,7 @@ public:
     ApiSnapshot* ApiSnapshot_() const override { return apiSnapshot_; }
     ApiRtConfig* ApiRtConfig_() const override { return apiRtConfig_; }
     ApiDeviceTopology* ApiDeviceTopology_() const override { return apiDeviceTopology_; }
+    ApiIpcMemory* ApiIpcMemory_() const override { return apiIpcMemory_; }
 
     ApiKernelArgs* ApiKernelArgs_() const override { return apiKernelArgs_; }
 
@@ -816,6 +818,7 @@ private:
     ApiEsched* apiEsched_;
     ApiRtConfig* apiRtConfig_;
     ApiDeviceTopology* apiDeviceTopology_;
+    ApiIpcMemory* apiIpcMemory_;
 
     Api* apiImpl_;
     ApiMbuf* apiImplMbuf_;
@@ -823,6 +826,7 @@ private:
     ApiEsched* apiImplEsched_;
     ApiRtConfig* apiImplRtConfig_;
     ApiDeviceTopology* apiImplDeviceTopology_;
+    ApiIpcMemory* apiImplIpcMemory_;
 
     RefObject<Context*> priCtxs_[RT_MAX_DEV_NUM][RT_MAX_TS_NUM];
     RefObject<Device*> devices_[RT_MAX_DEV_NUM + 1][RT_MAX_TS_NUM]; // Last one is stub device

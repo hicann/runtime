@@ -614,13 +614,7 @@ TEST_F(CloudV2ApiTest, KERNEL_LAUNCH_EX_1)
     error = api.MemPrefetchToDevice(ptr, size, device);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 
-    error = api.IpcSetMemoryName(ptr, 0, "mem1", 4, 0UL);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
-
     error = api.IpcSetMemoryAttr("mem1", RT_ATTR_TYPE_MAX, 0);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
-
-    error = api.IpcCloseMemory(ptr);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 
     GlobalMockObject::verify();
