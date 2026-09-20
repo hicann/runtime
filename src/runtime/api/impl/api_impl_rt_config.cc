@@ -362,6 +362,7 @@ rtError_t ApiImplRtConfig::UseStreamResInCurrentThread(const Stream* const stm)
         NULL_PTR_RETURN_MSG(curStm, RT_ERROR_STREAM_NULL);
     }
     InnerThreadLocalContainer::SetCurrentResLimitStream(curStm);
+    RT_LOG(RT_LOG_INFO, "Use stream resources in current thread, stream_id=%d.", curStm->Id_());
     return RT_ERROR_NONE;
 }
 
@@ -378,8 +379,9 @@ rtError_t ApiImplRtConfig::NotUseStreamResInCurrentThread(const Stream* const st
     const Stream* curResLimitStream = InnerThreadLocalContainer::GetCurrentResLimitStream();
     if (curResLimitStream == curStm) {
         InnerThreadLocalContainer::SetCurrentResLimitStream(nullptr);
+        RT_LOG(RT_LOG_INFO, "Stop using stream resources in current thread, stream_id=%d.", curStm->Id_());
     } else {
-        RT_LOG(RT_LOG_EVENT, "Try to unbind non-current stream.");
+        RT_LOG(RT_LOG_EVENT, "Try to unbind non-current stream, stream_id=%d.", curStm->Id_());
     }
     return RT_ERROR_NONE;
 }
