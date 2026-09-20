@@ -536,8 +536,11 @@ TEST_F(EventTestDavid, TestElapsedTime)
     EXPECT_EQ(error, RT_ERROR_EVENT_RECORDER_NULL);
 
     endEvt->SetRecord(true);
+    EXPECT_EQ(startEvt->TimeStamp(), UINT64_MAX);
+    EXPECT_EQ(endEvt->TimeStamp(), UINT64_MAX);
     error = endEvt->ElapsedTime(&timeInterval, startEvt);
-    EXPECT_EQ(error, RT_ERROR_EVENT_TIMESTAMP_INVALID);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_FLOAT_EQ(timeInterval, 0.0F);
 
     startEvt->SetTimeStamp(10240000);
     endEvt->SetTimeStamp(20480000);

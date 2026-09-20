@@ -391,14 +391,6 @@ rtError_t DavidEvent::ElapsedTime(float32_t* const timeInterval, Event* const ba
     RT_LOG(
         RT_LOG_DEBUG, "curNs=%#" PRIx64 ", baseNs=%#" PRIx64 ", curEventId=%d, baseEventId=%d.", curNs, baseNs,
         eventId_, baseEvt->EventId_());
-    if ((curNs == UINT64_MAX) || (baseNs == UINT64_MAX)) {
-        const DavidEventState_t startState = baseEvt->GetRecordStatus();
-        const DavidEventState_t endState = GetRecordStatus();
-        RT_LOG(
-            RT_LOG_ERROR, "The event timestamp is invalid, curEventId=%d, baseEventId=%d, curState=%u, baseState=%u.",
-            eventId_, baseEvt->EventId_(), static_cast<uint32_t>(endState), static_cast<uint32_t>(startState));
-        return RT_ERROR_EVENT_TIMESTAMP_INVALID;
-    }
     const uint64_t deltaNs = curNs - baseNs;
     *timeInterval = static_cast<float32_t>(static_cast<float64_t>(deltaNs) / RT_DEFAULT_TIMESTAMP_FREQ);
 
