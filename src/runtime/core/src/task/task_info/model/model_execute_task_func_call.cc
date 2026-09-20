@@ -31,6 +31,18 @@
 namespace cce {
 namespace runtime {
 
+static rtError_t ClearModelExecuteDfx(const Device* const dev, const Model* const model)
+{
+    void* const dfxPtr = model->GetDfxPtr();
+    if (dfxPtr == nullptr) {
+        return RT_ERROR_NONE;
+    }
+
+    const rtError_t ret = dev->Driver_()->MemSetSync(dfxPtr, TS_STARS_COND_DFX_SIZE, 0U, TS_STARS_COND_DFX_SIZE);
+    ERROR_RETURN(ret, "MemSetSync for model execute dfx failed, retCode=%#x.", ret);
+    return RT_ERROR_NONE;
+}
+
 // save func data to host memory
 static rtError_t SaveFuncCallDataForModelExecuteTask(
     TaskInfo* const taskInfo, const std::vector<uint64_t>& headSq, const std::vector<uint64_t>& streamSvmAddr)
@@ -117,7 +129,7 @@ static rtError_t DfxCombineFuncCallDevMemAlloc(Model* model, TaskInfo* const tas
 
     dfxPtr = RtValueToPtr<void*>(model->GetFuncCallSvmMem() + model->GetFunCallMemSize());
     model->SetDfxPtr(dfxPtr);
-    return RT_ERROR_NONE;
+    return ClearModelExecuteDfx(dev, model);
 }
 
 static rtError_t DfxSplitFuncCallDevMemAlloc(Model* model, TaskInfo* const taskInfo)
@@ -166,7 +178,7 @@ static rtError_t DfxSplitFuncCallDevMemAlloc(Model* model, TaskInfo* const taskI
     }
     model->SetDfxPtr(devMemDfx);
 
-    return RT_ERROR_NONE;
+    return ClearModelExecuteDfx(dev, model);
 }
 
 rtError_t AllocFuncCallMemForModelExecuteTask(TaskInfo* const taskInfo, rtStarsModelExeFuncCallPara_t& funcCallPara)
@@ -334,18 +346,6 @@ static rtError_t FuncCallSvmMemCopy(const Device* const dev, const Model* const 
     return RT_ERROR_NONE;
 }
 
-static rtError_t ClearModelExecuteDfx(const Device* const dev, const Model* const model)
-{
-    void* const dfxPtr = model->GetDfxPtr();
-    if (dfxPtr == nullptr) {
-        return RT_ERROR_NONE;
-    }
-
-    const rtError_t ret = dev->Driver_()->MemSetSync(dfxPtr, TS_STARS_COND_DFX_SIZE, 0U, TS_STARS_COND_DFX_SIZE);
-    ERROR_RETURN(ret, "MemSetSync for model execute dfx failed, retCode=%#x.", ret);
-    return RT_ERROR_NONE;
-}
-
 static rtError_t PrepareModelExecuteFuncCallDefault(TaskInfo* const taskInfo)
 {
     rtError_t ret;
@@ -427,9 +427,6 @@ rtError_t PrepareSqeInfoForModelExecuteTask(TaskInfo* const taskInfo)
             model->GetBaseFuncCallSvmMem(), model->GetDfxPtr());
     }
 
-    if (ret == RT_ERROR_NONE) {
-        ret = ClearModelExecuteDfx(dev, model);
-    }
     return ret;
 }
 
