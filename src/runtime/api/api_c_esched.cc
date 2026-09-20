@@ -93,11 +93,11 @@ rtError_t rtEschedSubscribeEvent(int32_t devId, uint32_t grpId, uint32_t threadI
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtEschedAckEvent(int32_t devId, rtEventIdType_t evtId, uint32_t subeventId, char_t* msg, uint32_t len)
+rtError_t rtEschedAckEvent(int32_t devId, rtEventIdType_t evtId, uint32_t subEvtId, char_t* msg, uint32_t len)
 {
     ApiEsched* const apiEschedInstance = ApiEsched::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiEschedInstance);
-    const rtError_t error = apiEschedInstance->EschedAckEvent(devId, evtId, subeventId, msg, len);
+    const rtError_t error = apiEschedInstance->EschedAckEvent(devId, evtId, subEvtId, msg, len);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }

@@ -624,7 +624,7 @@ public:
     static rtError_t EschedSubscribeEvent(
         const int32_t devId, const uint32_t grpId, const uint32_t threadId, const uint64_t eventBitmap);
     static rtError_t EschedAckEvent(
-        const int32_t devId, const rtEventIdType_t evtId, const uint32_t subeventId, char_t* const msg,
+        const int32_t devId, const rtEventIdType_t evtId, const uint32_t subEvtId, char_t* const msg,
         const uint32_t len);
     static rtError_t GetMaxStreamAndTask(const uint32_t deviceId, const uint32_t tsId, uint32_t* const maxStrCount);
     static rtError_t GetAvailStreamNum(const uint32_t deviceId, const uint32_t tsId, uint32_t* const streamCount);

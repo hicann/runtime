@@ -679,11 +679,11 @@ rtError_t NpuDriver::EschedWaitEvent(
 }
 
 rtError_t NpuDriver::EschedAckEvent(
-    const int32_t devId, const rtEventIdType_t evtId, const uint32_t subeventId, char_t* const msg, const uint32_t len)
+    const int32_t devId, const rtEventIdType_t evtId, const uint32_t subEvtId, char_t* const msg, const uint32_t len)
 {
     UNUSED(devId);
     UNUSED(evtId);
-    UNUSED(subeventId);
+    UNUSED(subEvtId);
     UNUSED(msg);
     UNUSED(len);
     return RT_ERROR_NONE;

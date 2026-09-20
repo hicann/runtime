@@ -5442,16 +5442,16 @@ TEST_F(ApiTest, rtEschedAckEvent)
 {
     int32_t device = 0;
     rtEventIdType_t event_id = RT_EVENT_RANDOM_KERNEL;
-    uint32_t subevent_id = 0;
+    uint32_t subEvtId = 0;
     char msg[] = "success";
     uint32_t len = sizeof(msg);
 
-    rtError_t error = rtEschedAckEvent(device, event_id, subevent_id, msg, len);
+    rtError_t error = rtEschedAckEvent(device, event_id, subEvtId, msg, len);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     drvError_t code = DRV_ERROR_INVALID_VALUE;
     MOCKER(halEschedAckEvent).stubs().will(returnValue(code));
-    error = rtEschedAckEvent(device, event_id, subevent_id, msg, len);
+    error = rtEschedAckEvent(device, event_id, subEvtId, msg, len);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 }
 

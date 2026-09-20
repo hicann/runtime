@@ -29,7 +29,7 @@ public:
     rtError_t EschedSubscribeEvent(
         const int32_t devId, const uint32_t grpId, const uint32_t threadId, const uint64_t eventBitmap) override;
     rtError_t EschedAckEvent(
-        const int32_t devId, const rtEventIdType_t evtId, const uint32_t subeventId, char_t* const msg,
+        const int32_t devId, const rtEventIdType_t evtId, const uint32_t subEvtId, char_t* const msg,
         const uint32_t len) override;
     rtError_t EschedQueryInfo(
         const uint32_t devId, const rtEschedQueryType type, rtEschedInputInfo* const inPut,

@@ -179,7 +179,7 @@ rtError_t ApiImplEsched::EschedSubscribeEvent(
 }
 
 rtError_t ApiImplEsched::EschedAckEvent(
-    const int32_t devId, const rtEventIdType_t evtId, const uint32_t subeventId, char_t* const msg, const uint32_t len)
+    const int32_t devId, const rtEventIdType_t evtId, const uint32_t subEvtId, char_t* const msg, const uint32_t len)
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(msg, RT_ERROR_INVALID_VALUE, "Event confirmation");
 
@@ -190,7 +190,7 @@ rtError_t ApiImplEsched::EschedAckEvent(
     error = Runtime::Instance()->CheckCurCtxValid(realDeviceId);
     COND_RETURN_ERROR(
         error != RT_ERROR_NONE, RT_ERROR_CONTEXT_NULL, "Current Context is null, drv devId[%d].", realDeviceId);
-    return NpuDriver::EschedAckEvent(realDeviceId, evtId, subeventId, msg, len);
+    return NpuDriver::EschedAckEvent(realDeviceId, evtId, subEvtId, msg, len);
 }
 
 rtError_t ApiImplEsched::EschedQueryInfo(

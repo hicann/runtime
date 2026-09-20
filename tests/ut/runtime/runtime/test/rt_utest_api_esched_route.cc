@@ -90,13 +90,13 @@ public:
     }
 
     rtError_t EschedAckEvent(
-        const int32_t devId, const rtEventIdType_t evtId, const uint32_t subeventId, char_t* const msg,
+        const int32_t devId, const rtEventIdType_t evtId, const uint32_t subEvtId, char_t* const msg,
         const uint32_t len) override
     {
         ++ackEventCount_;
         ackEventDevId_ = devId;
         ackEventId_ = evtId;
-        ackEventSubEvtId_ = subeventId;
+        ackEventSubEvtId_ = subEvtId;
         ackEventMsg_ = msg;
         ackEventLen_ = len;
         return ackEventRet_;
@@ -207,7 +207,7 @@ TEST_F(ApiEschedRouteTest, RoutesAllApisToApiEsched)
     constexpr uint32_t threadId = 7U;
     constexpr int32_t timeout = 11;
     constexpr uint64_t eventBitmap = 0x55U;
-    constexpr uint32_t subeventId = 13U;
+    constexpr uint32_t subEvtId = 13U;
     rtEschedEventSummary_t evt = {};
     rtEschedEventReply_t ack = {};
     rtEschedInputInfo input = {};
@@ -221,7 +221,7 @@ TEST_F(ApiEschedRouteTest, RoutesAllApisToApiEsched)
     EXPECT_EQ(rtEschedCreateGrp(devId, grpId, RT_GRP_TYPE_BIND_DP_CPU_EXCLUSIVE), ACL_RT_SUCCESS);
     EXPECT_EQ(rtEschedSubmitEvent(devId, &evt), ACL_RT_SUCCESS);
     EXPECT_EQ(rtEschedSubscribeEvent(devId, grpId, threadId, eventBitmap), ACL_RT_SUCCESS);
-    EXPECT_EQ(rtEschedAckEvent(devId, RT_EVENT_TEST, subeventId, msg, sizeof(msg)), ACL_RT_SUCCESS);
+    EXPECT_EQ(rtEschedAckEvent(devId, RT_EVENT_TEST, subEvtId, msg, sizeof(msg)), ACL_RT_SUCCESS);
     EXPECT_EQ(
         rtEschedQueryInfo(static_cast<uint32_t>(devId), RT_QUERY_TYPE_LOCAL_GRP_ID, &input, &output), ACL_RT_SUCCESS);
 
@@ -255,7 +255,7 @@ TEST_F(ApiEschedRouteTest, RoutesAllApisToApiEsched)
     EXPECT_EQ(apiEsched_.ackEventCount_, 1U);
     EXPECT_EQ(apiEsched_.ackEventDevId_, devId);
     EXPECT_EQ(apiEsched_.ackEventId_, RT_EVENT_TEST);
-    EXPECT_EQ(apiEsched_.ackEventSubEvtId_, subeventId);
+    EXPECT_EQ(apiEsched_.ackEventSubEvtId_, subEvtId);
     EXPECT_EQ(apiEsched_.ackEventMsg_, msg);
     EXPECT_EQ(apiEsched_.ackEventLen_, sizeof(msg));
     EXPECT_EQ(apiEsched_.queryInfoCount_, 1U);

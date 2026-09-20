@@ -220,25 +220,25 @@ rtError_t NpuDriver::EschedWaitEvent(
 }
 
 rtError_t NpuDriver::EschedAckEvent(
-    const int32_t devId, const rtEventIdType_t evtId, const uint32_t subeventId, char_t* const msg, const uint32_t len)
+    const int32_t devId, const rtEventIdType_t evtId, const uint32_t subEvtId, char_t* const msg, const uint32_t len)
 {
     RT_LOG(
         RT_LOG_INFO,
         "Esched ack event, drv devId=%d, event_id=%u, "
         "subevent_id=%u, len=%u.",
-        devId, static_cast<uint32_t>(evtId), subeventId, len);
+        devId, static_cast<uint32_t>(evtId), subEvtId, len);
 
     COND_RETURN_WARN(
         &halEschedAckEvent == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT, "[drv api] halEschedAckEvent does not exist.");
 
     const drvError_t drvRet =
-        halEschedAckEvent(static_cast<uint32_t>(devId), static_cast<EVENT_ID>(evtId), subeventId, msg, len);
+        halEschedAckEvent(static_cast<uint32_t>(devId), static_cast<EVENT_ID>(evtId), subEvtId, msg, len);
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(
             drvRet,
-            "Call driver api halEschedAckEvent failed, drvRetCode=%d, drvDevId=%d, eventId=%s(%u), subeventId=%u, "
+            "Call driver api halEschedAckEvent failed, drvRetCode=%d, drvDevId=%d, eventId=%s(%u), subEvtId=%u, "
             "len=%u(bytes).",
-            static_cast<int32_t>(drvRet), devId, EventIdTypeName(evtId), static_cast<uint32_t>(evtId), subeventId, len);
+            static_cast<int32_t>(drvRet), devId, EventIdTypeName(evtId), static_cast<uint32_t>(evtId), subEvtId, len);
         return RT_GET_DRV_ERRCODE(drvRet);
     }
     return RT_ERROR_NONE;
@@ -269,7 +269,7 @@ static uint64_t GetTimeInterval(const mmTimespec& beginTime, const mmTimespec& e
         static_cast<uint64_t>(beginTime.tv_sec) * RT_MS_PER_S + static_cast<uint64_t>(beginTime.tv_nsec) / RT_MS_TO_NS;
     const uint64_t endCnt =
         static_cast<uint64_t>(endTime.tv_sec) * RT_MS_PER_S + static_cast<uint64_t>(endTime.tv_nsec) / RT_MS_TO_NS;
-    uint64_t count = (endCnt > beginCnt) ? (endCnt - beginCnt) : 0ULL;
+    const uint64_t count = (endCnt > beginCnt) ? (endCnt - beginCnt) : 0ULL;
     return count;
 }
 
