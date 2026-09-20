@@ -32,7 +32,7 @@ public:
 
     void RestartSched(const uint32_t key);
 
-    const bool IsStopped(const uint32_t key) const;
+    bool IsStopped(const uint32_t key) const;
 
 private:
     std::unordered_set<uint32_t> schedKeys_;

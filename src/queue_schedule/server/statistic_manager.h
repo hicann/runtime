@@ -596,13 +596,13 @@ public:
      * Add unlink tag count
      * @return unlink tag count
      */
-    const uint32_t AddUnlinkCount();
+    uint32_t AddUnlinkCount();
 
     /**
      * Reduce unlink tag count
      * @return unlink tag count
      */
-    const uint32_t ReduceUnlinkCount();
+    uint32_t ReduceUnlinkCount();
 
     void RefreshEnqueHeartBeat();
 

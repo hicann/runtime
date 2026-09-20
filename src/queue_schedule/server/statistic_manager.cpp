@@ -359,13 +359,13 @@ void StatisticManager::ThreadFunc()
 
 void StatisticManager::SetExistEntityFlag(const bool flag) { existEntityFlag_.store(flag); }
 
-const uint32_t StatisticManager::AddUnlinkCount()
+uint32_t StatisticManager::AddUnlinkCount()
 {
     ++unLinkTagNum_;
     return unLinkTagNum_.load();
 }
 
-const uint32_t StatisticManager::ReduceUnlinkCount()
+uint32_t StatisticManager::ReduceUnlinkCount()
 {
     --unLinkTagNum_;
     return unLinkTagNum_.load();
