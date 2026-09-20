@@ -624,7 +624,8 @@ rtError_t NpuDriver::DestroyIpcMem(const char_t* const name)
 rtError_t NpuDriver::CheckIpcMapRoute(const char_t* const name, uint64_t attr, uint32_t devId)
 {
     COND_RETURN_WARN(
-        &halShmemMapRouteCheck == nullptr, RT_ERROR_DRV_NOT_SUPPORT, "[drv api] halShmemMapRouteCheck does not exist.");
+        &halShmemMapRouteCheck == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT,
+        "[drv api] halShmemMapRouteCheck does not exist.");
 
     const drvError_t drvRet = halShmemMapRouteCheck(name, devId, static_cast<uint32_t>(attr));
     if (drvRet == DRV_ERROR_NOT_EXIST) {

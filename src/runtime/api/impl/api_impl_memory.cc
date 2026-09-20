@@ -1204,9 +1204,6 @@ rtError_t ApiImpl::MemMapSelectedLink(void* virPtrDst, size_t size, void* virPtr
 
 rtError_t ApiImpl::MemMapSetLink(rtDrvMemHandle handle, rtMemLinkType adviceLink)
 {
-    Runtime* rt = Runtime::Instance();
-    std::unique_lock<std::mutex> lock(rt->GetMemMapSelectedLinkMutex_());
-
     rtHandleAttr attr;
     attr.memMapRoute = static_cast<uint32_t>(adviceLink);
     return NpuDriver::MemHandleSetAttribute(handle, HANDLE_ATTR_MEM_MAP_ROUTE, attr);
