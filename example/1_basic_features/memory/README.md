@@ -18,3 +18,4 @@
 - [11_ipc_memory_withoutpid](./11_ipc_memory_withoutpid/README.md)：演示不指定 PID 的 IPC 内存共享。
 - [12_cross_server_physical_memory_sharing_withoutpid](./12_cross_server_physical_memory_sharing_withoutpid/README.md)：演示跨服务器物理内存共享。
 - [13_memcpy_descriptor](./13_memcpy_descriptor/README.md)：演示通过内存复制描述符完成单 Device 内异步复制并校验结果。
+- [16_guarded_result_slice](./16_guarded_result_slice/README.md)：演示通过间接基地址和偏移异步更新结果表切片，并校验前后哨兵区。
