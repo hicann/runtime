@@ -594,7 +594,7 @@ rtError_t ApiImpl::IpcSetNotifyName(Notify* const inNotify, char_t* const name, 
     RT_LOG(RT_LOG_INFO, "IpcSetNotifyName, name=%s, len=%u, flag=%#" PRIx64 ".", name, len, flag);
     const uint32_t notify_id = inNotify->GetNotifyId();
     rtError_t error = inNotify->CreateIpcNotify(name, len);
-    ERROR_RETURN_MSG_INNER(
+    ERROR_RETURN(
         error, "CreateIpcNotify failed, notify_id=%u, name=%s, len=%u retCode=%#x", notify_id, name, len,
         static_cast<uint32_t>(error));
 

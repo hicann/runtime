@@ -63,7 +63,7 @@ rtError_t CountNotify::Setup()
     driver_ = dev->Driver_();
 
     rtError_t error = driver_->GetDevicePhyIdByIndex(deviceId_, &phyId_);
-    ERROR_RETURN_MSG_INNER(
+    ERROR_RETURN(
         error, "GetPhyIdByLogicIndex failed, device_id=%u, phydevice_id=%u, retCode=%#x!", deviceId_, phyId_,
         static_cast<uint32_t>(error));
 
