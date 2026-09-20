@@ -59,6 +59,23 @@ constexpr uint32_t SQ_ID_MEM_POOL_INIT_COUNT = 1024U;
 constexpr uint32_t WAIT_PRINTF_THREAD_TIME_MAX = 1000U;
 bool g_isAddrFlatDevice = false;
 
+rtError_t Device::QueryC2cCtrlAddr(uint64_t* const addr, uint32_t* const len)
+{
+    const uint64_t cachedAddr = GetC2cCtrlAddr();
+    const uint32_t cachedLen = GetC2cCtrlAddrLen();
+    if ((cachedAddr != 0UL) && (cachedLen != 0U)) {
+        *addr = cachedAddr;
+        *len = cachedLen;
+        return RT_ERROR_NONE;
+    }
+
+    const rtError_t error = Driver_()->GetC2cCtrlAddr(static_cast<int32_t>(Id_()), addr, len);
+    if (error == RT_ERROR_NONE) {
+        SetC2cCtrlAddr(*addr, *len);
+    }
+    return error;
+}
+
 RawDevice::RawDevice(const uint32_t devId)
     : GroupDevice(),
       primaryStream_(nullptr),

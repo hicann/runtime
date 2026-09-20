@@ -5252,22 +5252,7 @@ rtError_t ApiImpl::GetC2cCtrlAddr(uint64_t* const addr, uint32_t* const len)
     RT_LOG(RT_LOG_DEBUG, "get c2c ctrl addr.");
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    const uint64_t addrTmp = curCtx->Device_()->GetC2cCtrlAddr();
-    const uint32_t lenTmp = curCtx->Device_()->GetC2cCtrlAddrLen();
-    if ((addrTmp != 0UL) && (lenTmp != 0U)) {
-        *addr = addrTmp;
-        *len = lenTmp;
-        return RT_ERROR_NONE;
-    }
-
-    const int32_t drvDeviceId = static_cast<int32_t>(curCtx->Device_()->Id_());
-    Driver* const curDrv = curCtx->Device_()->Driver_();
-    const rtError_t error = curDrv->GetC2cCtrlAddr(drvDeviceId, addr, len);
-    if (error == RT_ERROR_NONE) {
-        curCtx->Device_()->SetC2cCtrlAddr(*addr, *len);
-    }
-
-    return error;
+    return curCtx->Device_()->QueryC2cCtrlAddr(addr, len);
 }
 
 rtError_t ApiImpl::NpuClearFloatStatus(const uint32_t checkMode, Stream* const stm)

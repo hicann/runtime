@@ -747,16 +747,6 @@ public:
     rtError_t LaunchDvppTask(
         const void* const sqe, const uint32_t sqeLen, Stream* const stm, rtDvppCfg_t* cfg = nullptr) override;
     rtError_t LaunchRandomNumTask(const rtRandomNumTaskInfo_t* taskInfo, Stream* const stm, void* reserve) override;
-    rtError_t KernelArgsInit(Kernel* const funcHandle, RtArgsHandle** argsHandle) override;
-    rtError_t KernelArgsAppendPlaceHolder(RtArgsHandle* argsHandle, ParaDetail** paraHandle) override;
-    rtError_t KernelArgsGetPlaceHolderBuffer(
-        RtArgsHandle* argsHandle, ParaDetail* paraHandle, size_t dataSize, void** bufferAddr) override;
-    rtError_t KernelArgsGetHandleMemSize(Kernel* const funcHandle, size_t* memSize) override;
-    rtError_t KernelArgsGetMemSize(Kernel* const funcHandle, size_t userArgsSize, size_t* actualArgsSize) override;
-    rtError_t KernelArgsInitByUserMem(
-        Kernel* const funcHandle, RtArgsHandle* argsHandle, void* userHostMem, size_t actualArgsSize) override;
-    rtError_t KernelArgsFinalize(RtArgsHandle* argsHandle) override;
-    rtError_t KernelArgsAppend(RtArgsHandle* argsHandle, void* para, size_t paraSize, ParaDetail** paraHandle) override;
     // OVER UB API
     rtError_t UbDbSend(rtUbDbInfo_t* const dbInfo, Stream* const stm) override;
     rtError_t UbDirectSend(rtUbWqeInfo_t* const wqeInfo, Stream* const stm) override;
@@ -849,8 +839,6 @@ private:
 
     rtError_t ParseMallocCfg(const rtMallocConfig_t* const cfg, rtConfigValue_t* cfgVal) const;
     rtError_t GetThreadLastTaskId(uint32_t* const taskId) override;
-    rtError_t ProcessOverFlowArgs(RtArgsHandle* argsHandle);
-    uint16_t GetToBeCalSystemParaNum(const Kernel* const kernel) const;
     rtError_t LaunchNonKernelByHandle(
         Kernel* const kernel, uint32_t blockDim, const RtArgsHandle* const argHandle, Stream* const curStm,
         const TaskCfg& taskCfg);

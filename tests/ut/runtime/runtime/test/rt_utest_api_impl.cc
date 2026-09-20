@@ -53,6 +53,7 @@
 #include "api_impl_rt_config.hpp"
 #include "inner_thread_local.hpp"
 #include "api_impl_device_topology.hpp"
+#include "api_impl_kernel_args.hpp"
 #include "thread_local_container.hpp"
 #include "maintenance_task.h"
 #include "stream_c.hpp"
@@ -2179,6 +2180,7 @@ TEST_F(ApiImplTest, rts_api_impl_test1)
     Device* device = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
     ApiImpl impl;
     ApiDecorator api(&impl);
+    ApiImplKernelArgs kernelArgsApi;
     uint32_t taskid;
     rtError_t error = api.GetThreadLastTaskId(&taskid);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -2196,16 +2198,16 @@ TEST_F(ApiImplTest, rts_api_impl_test1)
     k1->isSupportOverFlow_ = true;
     k1->isNeedSetFftsAddrInArg_ = true;
     RtArgsHandle* argsHandle;
-    error = api.KernelArgsInit(k1, &argsHandle);
+    error = kernelArgsApi.KernelArgsInit(k1, &argsHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
     uint32_t param1 = 1002;
     ParaDetail* paramHandle = nullptr;
-    error = api.KernelArgsAppend(argsHandle, (void*)&param1, sizeof(uint32_t), &paramHandle);
+    error = kernelArgsApi.KernelArgsAppend(argsHandle, (void*)&param1, sizeof(uint32_t), &paramHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    error = api.KernelArgsAppendPlaceHolder(argsHandle, &paramHandle);
+    error = kernelArgsApi.KernelArgsAppendPlaceHolder(argsHandle, &paramHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
     void* bufferAddr = nullptr;
-    error = api.KernelArgsGetPlaceHolderBuffer(argsHandle, paramHandle, 10U, &bufferAddr);
+    error = kernelArgsApi.KernelArgsGetPlaceHolderBuffer(argsHandle, paramHandle, 10U, &bufferAddr);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     delete stream;
@@ -2214,11 +2216,71 @@ TEST_F(ApiImplTest, rts_api_impl_test1)
     ((Runtime*)Runtime::Instance())->DeviceRelease(device);
 }
 
+TEST_F(ApiImplTest, KernelArgsModuleDirectInvalidParameters)
+{
+    ApiImplKernelArgs api;
+
+    EXPECT_EQ(api.KernelArgsInit(nullptr, nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(api.KernelArgsInitByUserMem(nullptr, nullptr, nullptr, 0U), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(api.KernelArgsGetMemSize(nullptr, 0U, nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(api.KernelArgsGetHandleMemSize(nullptr, nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(api.KernelArgsAppend(nullptr, nullptr, 0U, nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(api.KernelArgsAppendPlaceHolder(nullptr, nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(api.KernelArgsGetPlaceHolderBuffer(nullptr, nullptr, 0U, nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(api.KernelArgsFinalize(nullptr), RT_ERROR_INVALID_VALUE);
+}
+
+TEST_F(ApiImplTest, KernelArgsModuleDirectAllApisSuccess)
+{
+    PlainProgram program(RT_KERNEL_ATTR_TYPE_AICPU);
+    Kernel kernel("", 0ULL, &program, RT_KERNEL_ATTR_TYPE_AICPU, 10U);
+    kernel.kernelRegisterType_ = RT_KERNEL_REG_TYPE_CPU;
+
+    ApiImplKernelArgs api;
+    RtArgsHandle* localArgsHandle = nullptr;
+    ASSERT_EQ(api.KernelArgsInit(&kernel, &localArgsHandle), RT_ERROR_NONE);
+    ASSERT_NE(localArgsHandle, nullptr);
+
+    size_t argsHandleMemSize = 0U;
+    ASSERT_EQ(api.KernelArgsGetHandleMemSize(&kernel, &argsHandleMemSize), RT_ERROR_NONE);
+    constexpr size_t userArgsSize = 64U;
+    size_t actualArgsSize = 0U;
+    ASSERT_EQ(api.KernelArgsGetMemSize(&kernel, userArgsSize, &actualArgsSize), RT_ERROR_NONE);
+    ASSERT_EQ(actualArgsSize, userArgsSize);
+
+    uint8_t* const argsHandleMem = new (std::nothrow) uint8_t[argsHandleMemSize];
+    uint8_t* const userHostMem = new (std::nothrow) uint8_t[actualArgsSize];
+    ASSERT_NE(argsHandleMem, nullptr);
+    ASSERT_NE(userHostMem, nullptr);
+    RtArgsHandle* const argsHandle = reinterpret_cast<RtArgsHandle*>(argsHandleMem);
+    ASSERT_EQ(api.KernelArgsInitByUserMem(&kernel, argsHandle, userHostMem, actualArgsSize), RT_ERROR_NONE);
+
+    uint32_t parameter = 0x12345678U;
+    ParaDetail* parameterHandle = nullptr;
+    ASSERT_EQ(api.KernelArgsAppend(argsHandle, &parameter, sizeof(parameter), &parameterHandle), RT_ERROR_NONE);
+    ASSERT_NE(parameterHandle, nullptr);
+
+    ParaDetail* placeHolderHandle = nullptr;
+    ASSERT_EQ(api.KernelArgsAppendPlaceHolder(argsHandle, &placeHolderHandle), RT_ERROR_NONE);
+    ASSERT_NE(placeHolderHandle, nullptr);
+    void* placeHolderBuffer = nullptr;
+    ASSERT_EQ(
+        api.KernelArgsGetPlaceHolderBuffer(argsHandle, placeHolderHandle, sizeof(uint64_t), &placeHolderBuffer),
+        RT_ERROR_NONE);
+    ASSERT_NE(placeHolderBuffer, nullptr);
+    EXPECT_EQ(api.KernelArgsFinalize(argsHandle), RT_ERROR_NONE);
+    EXPECT_EQ(argsHandle->isFinalized, 1U);
+
+    delete[] userHostMem;
+    delete[] argsHandleMem;
+}
+
 TEST_F(ApiImplTest, rts_api_impl_test2)
 {
     Device* device = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
     ApiImpl impl;
     ApiDecorator api(&impl);
+    ApiImplKernelArgs kernelArgsApi;
     PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program* program = &stubProg;
     int32_t fun1;
@@ -2230,18 +2292,18 @@ TEST_F(ApiImplTest, rts_api_impl_test2)
     k1->isNeedSetFftsAddrInArg_ = true;
 
     size_t argshandleMemSize = 0U;
-    rtError_t error = api.KernelArgsGetHandleMemSize(k1, &argshandleMemSize);
+    rtError_t error = kernelArgsApi.KernelArgsGetHandleMemSize(k1, &argshandleMemSize);
     EXPECT_EQ(error, RT_ERROR_NONE);
     size_t actualArgsSize = 0U;
     const size_t userArgsSize = 1024U;
-    error = api.KernelArgsGetMemSize(k1, userArgsSize, &actualArgsSize);
+    error = kernelArgsApi.KernelArgsGetMemSize(k1, userArgsSize, &actualArgsSize);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     uint8_t* argsHandle = new (std::nothrow) uint8_t[argshandleMemSize];
     uint8_t* userHostMem = new (std::nothrow) uint8_t[actualArgsSize];
-    error = api.KernelArgsInitByUserMem(k1, (RtArgsHandle*)argsHandle, userHostMem, actualArgsSize);
+    error = kernelArgsApi.KernelArgsInitByUserMem(k1, (RtArgsHandle*)argsHandle, userHostMem, actualArgsSize);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    error = api.KernelArgsFinalize((RtArgsHandle*)argsHandle);
+    error = kernelArgsApi.KernelArgsFinalize((RtArgsHandle*)argsHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     RtArgsWithType argsWithType;
@@ -2275,6 +2337,7 @@ TEST_F(ApiImplTest, rts_api_impl_test3)
     ApiImpl impl;
     Profiler profiler(nullptr);
     ApiProfileDecorator api(&impl, &profiler);
+    ApiImplKernelArgs kernelArgsApi;
     PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program* program = &stubProg;
     int32_t fun1;
@@ -2289,25 +2352,25 @@ TEST_F(ApiImplTest, rts_api_impl_test3)
     k1->kernelRegisterType_ = RT_KERNEL_REG_TYPE_CPU;
 
     size_t argshandleMemSize = 0U;
-    rtError_t error = api.KernelArgsGetHandleMemSize(k1, &argshandleMemSize);
+    rtError_t error = kernelArgsApi.KernelArgsGetHandleMemSize(k1, &argshandleMemSize);
     EXPECT_EQ(error, RT_ERROR_NONE);
     size_t actualArgsSize = 0U;
     const size_t userArgsSize = 1024U;
-    error = api.KernelArgsGetMemSize(k1, userArgsSize, &actualArgsSize);
+    error = kernelArgsApi.KernelArgsGetMemSize(k1, userArgsSize, &actualArgsSize);
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_EQ(userArgsSize, actualArgsSize);
 
     uint8_t* argsHandle = new (std::nothrow) uint8_t[argshandleMemSize];
     (void)memset_s(argsHandle, argshandleMemSize, 0, argshandleMemSize);
     uint8_t* userHostMem = new (std::nothrow) uint8_t[actualArgsSize];
-    error = api.KernelArgsInitByUserMem(k1, (RtArgsHandle*)argsHandle, userHostMem, actualArgsSize);
+    error = kernelArgsApi.KernelArgsInitByUserMem(k1, (RtArgsHandle*)argsHandle, userHostMem, actualArgsSize);
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_EQ(0, ((RtArgsHandle*)argsHandle)->cpuKernelSysArgsInfo.kernelNameOffset);
     EXPECT_EQ(0, ((RtArgsHandle*)argsHandle)->cpuKernelSysArgsInfo.kernelNameSize);
     EXPECT_EQ(0, ((RtArgsHandle*)argsHandle)->cpuKernelSysArgsInfo.soNameOffset);
     EXPECT_EQ(0, ((RtArgsHandle*)argsHandle)->cpuKernelSysArgsInfo.soNameSize);
 
-    error = api.KernelArgsFinalize((RtArgsHandle*)argsHandle);
+    error = kernelArgsApi.KernelArgsFinalize((RtArgsHandle*)argsHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     RtArgsWithType argsWithType;
@@ -2346,6 +2409,7 @@ TEST_F(ApiImplTest, rts_api_impl_test4)
     ApiImpl impl;
     Profiler profiler(nullptr);
     ApiProfileDecorator api(&impl, &profiler);
+    ApiImplKernelArgs kernelArgsApi;
     uint32_t taskid;
     rtError_t error = api.GetThreadLastTaskId(&taskid);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -2363,16 +2427,16 @@ TEST_F(ApiImplTest, rts_api_impl_test4)
     k1->isSupportOverFlow_ = true;
     k1->isNeedSetFftsAddrInArg_ = true;
     RtArgsHandle* argsHandle;
-    error = api.KernelArgsInit(k1, &argsHandle);
+    error = kernelArgsApi.KernelArgsInit(k1, &argsHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
     uint32_t param1 = 1002;
     ParaDetail* paramHandle = nullptr;
-    error = api.KernelArgsAppend(argsHandle, (void*)&param1, sizeof(uint32_t), &paramHandle);
+    error = kernelArgsApi.KernelArgsAppend(argsHandle, (void*)&param1, sizeof(uint32_t), &paramHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    error = api.KernelArgsAppendPlaceHolder(argsHandle, &paramHandle);
+    error = kernelArgsApi.KernelArgsAppendPlaceHolder(argsHandle, &paramHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
     void* bufferAddr = nullptr;
-    error = api.KernelArgsGetPlaceHolderBuffer(argsHandle, paramHandle, 10U, &bufferAddr);
+    error = kernelArgsApi.KernelArgsGetPlaceHolderBuffer(argsHandle, paramHandle, 10U, &bufferAddr);
     EXPECT_EQ(error, RT_ERROR_NONE);
     delete stream;
     delete k1;
@@ -2386,6 +2450,7 @@ TEST_F(ApiImplTest, rts_api_impl_KernelArgsInitByUserMem)
     ApiImpl impl;
     Profiler profiler(nullptr);
     ApiProfileDecorator api(&impl, &profiler);
+    ApiImplKernelArgs kernelArgsApi;
     PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program* program = &stubProg;
     int32_t fun1;
@@ -2400,11 +2465,11 @@ TEST_F(ApiImplTest, rts_api_impl_KernelArgsInitByUserMem)
     k1->kernelRegisterType_ = RT_KERNEL_REG_TYPE_CPU;
 
     size_t argshandleMemSize = 0U;
-    rtError_t error = api.KernelArgsGetHandleMemSize(k1, &argshandleMemSize);
+    rtError_t error = kernelArgsApi.KernelArgsGetHandleMemSize(k1, &argshandleMemSize);
     EXPECT_EQ(error, RT_ERROR_NONE);
     size_t actualArgsSize = 0U;
     const size_t userArgsSize = 1024U;
-    error = api.KernelArgsGetMemSize(k1, userArgsSize, &actualArgsSize);
+    error = kernelArgsApi.KernelArgsGetMemSize(k1, userArgsSize, &actualArgsSize);
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_EQ(userArgsSize, actualArgsSize);
 
@@ -2418,14 +2483,14 @@ TEST_F(ApiImplTest, rts_api_impl_KernelArgsInitByUserMem)
     cpuKernelSysArgsInfo.kernelNameSize = 0x5A5A;
     cpuKernelSysArgsInfo.soNameOffset = 0x5A5A;
     cpuKernelSysArgsInfo.soNameSize = 0x5A5A;
-    error = api.KernelArgsInitByUserMem(k1, (RtArgsHandle*)argsHandle, userHostMem, actualArgsSize);
+    error = kernelArgsApi.KernelArgsInitByUserMem(k1, (RtArgsHandle*)argsHandle, userHostMem, actualArgsSize);
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_EQ(0, ((RtArgsHandle*)argsHandle)->cpuKernelSysArgsInfo.kernelNameOffset);
     EXPECT_EQ(0, ((RtArgsHandle*)argsHandle)->cpuKernelSysArgsInfo.kernelNameSize);
     EXPECT_EQ(0, ((RtArgsHandle*)argsHandle)->cpuKernelSysArgsInfo.soNameOffset);
     EXPECT_EQ(0, ((RtArgsHandle*)argsHandle)->cpuKernelSysArgsInfo.soNameSize);
 
-    error = api.KernelArgsFinalize((RtArgsHandle*)argsHandle);
+    error = kernelArgsApi.KernelArgsFinalize((RtArgsHandle*)argsHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     RtArgsWithType argsWithType;

@@ -29,6 +29,7 @@
 #include "api_impl.hpp"
 #include "api_impl_rt_config.hpp"
 #include "api_impl_device_topology.hpp"
+#include "api_impl_kernel_args.hpp"
 #include "kernel.hpp"
 #include "program.hpp"
 #include "api_impl.hpp"
@@ -713,6 +714,40 @@ TEST_F(ProfilerTest, ApiImplDeviceTopologyAtomicFailureKeepsProfilePair)
     ClearApiProfContextStack(profiler);
     ASSERT_EQ(g_reportedApiTypeNum, 1U);
     EXPECT_EQ(g_reportedApiTypes[0], RT_PROF_API_GET_HOST_ATOMIC_CAPABILITIES + RT_PROFILE_TYPE_API_BEGIN);
+}
+
+TEST_F(ProfilerTest, KernelArgsModuleProfileIsPairedForSuccessAndRawFailure)
+{
+    Runtime* const rt = static_cast<Runtime*>(Runtime::Instance());
+    profiler = rt->profiler_;
+    PrepareRuntimeProfCallApiTest(profiler);
+    MOCKER(MsprofReportApi).expects(exactly(2)).will(invoke(MsprofReportApiOrderStub));
+
+    PlainProgram program(RT_KERNEL_ATTR_TYPE_AICPU);
+    Kernel kernel("", 0ULL, &program, RT_KERNEL_ATTR_TYPE_AICPU, 10U);
+    kernel.kernelRegisterType_ = RT_KERNEL_REG_TYPE_CPU;
+    ApiImplKernelArgs api;
+
+    size_t actualArgsSize = 0U;
+    EXPECT_EQ(api.KernelArgsGetMemSize(nullptr, 8U, &actualArgsSize), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(profiler->GetTopProfApiContext(), nullptr);
+
+    EXPECT_EQ(api.KernelArgsGetMemSize(&kernel, 8U, &actualArgsSize), RT_ERROR_NONE);
+    EXPECT_EQ(actualArgsSize, 8U);
+    EXPECT_EQ(profiler->GetTopProfApiContext(), nullptr);
+
+    RtArgsHandle argsHandle{};
+    argsHandle.funcHandle = &kernel;
+    argsHandle.isFinalized = 1U;
+    ParaDetail* paraHandle = nullptr;
+    EXPECT_EQ(api.KernelArgsAppendPlaceHolder(&argsHandle, &paraHandle), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(profiler->GetTopProfApiContext(), nullptr);
+
+    ASSERT_EQ(g_reportedApiTypeNum, 2U);
+    EXPECT_EQ(g_reportedApiTypes[0], RT_PROF_API_KERNEL_ARGS_GET_MEM_SIZE + RT_PROFILE_TYPE_API_BEGIN);
+    EXPECT_EQ(g_reportedApiTypes[1], RT_PROF_API_KERNEL_ARGS_APEND_PLACE_HOLDER + RT_PROFILE_TYPE_API_BEGIN);
+    profiler->SetApiProfEnable(false);
+    ClearApiProfContextStack(profiler);
 }
 
 TEST_F(ProfilerTest, ApiProfileNestedContextLifo)

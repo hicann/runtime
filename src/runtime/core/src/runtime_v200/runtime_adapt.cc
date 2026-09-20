@@ -46,6 +46,7 @@
 #include "utils.h"
 #include "device.hpp"
 #include "api_impl_creator.hpp"
+#include "api_kernel_args.hpp"
 #include "dev_info_manage.h"
 #include "global_state_manager.hpp"
 #include "kernel.hpp"
@@ -84,7 +85,9 @@ Runtime::~Runtime()
     apiSnapshot_ = nullptr;
     apiRtConfig_ = nullptr;
     apiDeviceTopology_ = nullptr;
+    apiKernelArgs_ = nullptr;
 
+    DestroyImplKernelArgs(apiImplKernelArgs_);
     DELETE_O(apiImpl_);
     DestroyImplMbuf(apiImplMbuf_);
     DELETE_O(apiImplSoma_);

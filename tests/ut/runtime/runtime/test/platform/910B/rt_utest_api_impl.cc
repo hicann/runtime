@@ -23,6 +23,7 @@
 #include "module.hpp"
 #include "program.hpp"
 #include "api_impl.hpp"
+#include "api_impl_kernel_args.hpp"
 #include "api_error.hpp"
 #include "profiler.hpp"
 #include "api_profile_decorator.hpp"
@@ -1481,6 +1482,7 @@ TEST_F(CloudV2ApiImplTest, rts_api_impl_test1)
     Device* device = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
     ApiImpl impl;
     ApiDecorator api(&impl);
+    ApiImplKernelArgs kernelArgsApi;
     uint32_t taskid;
     rtError_t error = api.GetThreadLastTaskId(&taskid);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -1498,16 +1500,16 @@ TEST_F(CloudV2ApiImplTest, rts_api_impl_test1)
     k1->isSupportOverFlow_ = true;
     k1->isNeedSetFftsAddrInArg_ = true;
     RtArgsHandle* argsHandle;
-    error = api.KernelArgsInit(k1, &argsHandle);
+    error = kernelArgsApi.KernelArgsInit(k1, &argsHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
     uint32_t param1 = 1002;
     ParaDetail* paramHandle = nullptr;
-    error = api.KernelArgsAppend(argsHandle, (void*)&param1, sizeof(uint32_t), &paramHandle);
+    error = kernelArgsApi.KernelArgsAppend(argsHandle, (void*)&param1, sizeof(uint32_t), &paramHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    error = api.KernelArgsAppendPlaceHolder(argsHandle, &paramHandle);
+    error = kernelArgsApi.KernelArgsAppendPlaceHolder(argsHandle, &paramHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
     void* bufferAddr = nullptr;
-    error = api.KernelArgsGetPlaceHolderBuffer(argsHandle, paramHandle, 10U, &bufferAddr);
+    error = kernelArgsApi.KernelArgsGetPlaceHolderBuffer(argsHandle, paramHandle, 10U, &bufferAddr);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     delete stream;
@@ -1521,6 +1523,7 @@ TEST_F(CloudV2ApiImplTest, rts_api_impl_test2)
     Device* device = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
     ApiImpl impl;
     ApiDecorator api(&impl);
+    ApiImplKernelArgs kernelArgsApi;
     PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program* program = &stubProg;
     int32_t fun1;
@@ -1531,18 +1534,18 @@ TEST_F(CloudV2ApiImplTest, rts_api_impl_test2)
     k1->isNeedSetFftsAddrInArg_ = true;
 
     size_t argshandleMemSize = 0U;
-    rtError_t error = api.KernelArgsGetHandleMemSize(k1, &argshandleMemSize);
+    rtError_t error = kernelArgsApi.KernelArgsGetHandleMemSize(k1, &argshandleMemSize);
     EXPECT_EQ(error, RT_ERROR_NONE);
     size_t actualArgsSize = 0U;
     const size_t userArgsSize = 1024U;
-    error = api.KernelArgsGetMemSize(k1, userArgsSize, &actualArgsSize);
+    error = kernelArgsApi.KernelArgsGetMemSize(k1, userArgsSize, &actualArgsSize);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     uint8_t* argsHandle = new (std::nothrow) uint8_t[argshandleMemSize];
     uint8_t* userHostMem = new (std::nothrow) uint8_t[actualArgsSize];
-    error = api.KernelArgsInitByUserMem(k1, (RtArgsHandle*)argsHandle, userHostMem, actualArgsSize);
+    error = kernelArgsApi.KernelArgsInitByUserMem(k1, (RtArgsHandle*)argsHandle, userHostMem, actualArgsSize);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    error = api.KernelArgsFinalize((RtArgsHandle*)argsHandle);
+    error = kernelArgsApi.KernelArgsFinalize((RtArgsHandle*)argsHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     RtArgsWithType argsWithType;
@@ -1577,6 +1580,7 @@ TEST_F(CloudV2ApiImplTest, rts_api_impl_test3)
     ApiImpl impl;
     Profiler profiler(nullptr);
     ApiProfileDecorator api(&impl, &profiler);
+    ApiImplKernelArgs kernelArgsApi;
     PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program* program = &stubProg;
     int32_t fun1;
@@ -1590,25 +1594,25 @@ TEST_F(CloudV2ApiImplTest, rts_api_impl_test3)
     k1->kernelRegisterType_ = RT_KERNEL_REG_TYPE_CPU;
 
     size_t argshandleMemSize = 0U;
-    rtError_t error = api.KernelArgsGetHandleMemSize(k1, &argshandleMemSize);
+    rtError_t error = kernelArgsApi.KernelArgsGetHandleMemSize(k1, &argshandleMemSize);
     EXPECT_EQ(error, RT_ERROR_NONE);
     size_t actualArgsSize = 0U;
     const size_t userArgsSize = 1024U;
-    error = api.KernelArgsGetMemSize(k1, userArgsSize, &actualArgsSize);
+    error = kernelArgsApi.KernelArgsGetMemSize(k1, userArgsSize, &actualArgsSize);
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_EQ(userArgsSize, actualArgsSize);
 
     uint8_t* argsHandle = new (std::nothrow) uint8_t[argshandleMemSize];
     (void)memset_s(argsHandle, argshandleMemSize, 0, argshandleMemSize);
     uint8_t* userHostMem = new (std::nothrow) uint8_t[actualArgsSize];
-    error = api.KernelArgsInitByUserMem(k1, (RtArgsHandle*)argsHandle, userHostMem, actualArgsSize);
+    error = kernelArgsApi.KernelArgsInitByUserMem(k1, (RtArgsHandle*)argsHandle, userHostMem, actualArgsSize);
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_EQ(0, ((RtArgsHandle*)argsHandle)->cpuKernelSysArgsInfo.kernelNameOffset);
     EXPECT_EQ(0, ((RtArgsHandle*)argsHandle)->cpuKernelSysArgsInfo.kernelNameSize);
     EXPECT_EQ(0, ((RtArgsHandle*)argsHandle)->cpuKernelSysArgsInfo.soNameOffset);
     EXPECT_EQ(0, ((RtArgsHandle*)argsHandle)->cpuKernelSysArgsInfo.soNameSize);
 
-    error = api.KernelArgsFinalize((RtArgsHandle*)argsHandle);
+    error = kernelArgsApi.KernelArgsFinalize((RtArgsHandle*)argsHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     RtArgsWithType argsWithType;
@@ -1648,6 +1652,7 @@ TEST_F(CloudV2ApiImplTest, rts_api_impl_test4)
     ApiImpl impl;
     Profiler profiler(nullptr);
     ApiProfileDecorator api(&impl, &profiler);
+    ApiImplKernelArgs kernelArgsApi;
     uint32_t taskid;
     rtError_t error = api.GetThreadLastTaskId(&taskid);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -1665,16 +1670,16 @@ TEST_F(CloudV2ApiImplTest, rts_api_impl_test4)
     k1->isSupportOverFlow_ = true;
     k1->isNeedSetFftsAddrInArg_ = true;
     RtArgsHandle* argsHandle;
-    error = api.KernelArgsInit(k1, &argsHandle);
+    error = kernelArgsApi.KernelArgsInit(k1, &argsHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
     uint32_t param1 = 1002;
     ParaDetail* paramHandle = nullptr;
-    error = api.KernelArgsAppend(argsHandle, (void*)&param1, sizeof(uint32_t), &paramHandle);
+    error = kernelArgsApi.KernelArgsAppend(argsHandle, (void*)&param1, sizeof(uint32_t), &paramHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    error = api.KernelArgsAppendPlaceHolder(argsHandle, &paramHandle);
+    error = kernelArgsApi.KernelArgsAppendPlaceHolder(argsHandle, &paramHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
     void* bufferAddr = nullptr;
-    error = api.KernelArgsGetPlaceHolderBuffer(argsHandle, paramHandle, 10U, &bufferAddr);
+    error = kernelArgsApi.KernelArgsGetPlaceHolderBuffer(argsHandle, paramHandle, 10U, &bufferAddr);
     EXPECT_EQ(error, RT_ERROR_NONE);
     delete stream;
     delete k1;
@@ -1688,6 +1693,7 @@ TEST_F(CloudV2ApiImplTest, rts_api_impl_KernelArgsInitByUserMem)
     ApiImpl impl;
     Profiler profiler(nullptr);
     ApiProfileDecorator api(&impl, &profiler);
+    ApiImplKernelArgs kernelArgsApi;
     PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program* program = &stubProg;
     int32_t fun1;
@@ -1701,11 +1707,11 @@ TEST_F(CloudV2ApiImplTest, rts_api_impl_KernelArgsInitByUserMem)
     k1->kernelRegisterType_ = RT_KERNEL_REG_TYPE_CPU;
 
     size_t argshandleMemSize = 0U;
-    rtError_t error = api.KernelArgsGetHandleMemSize(k1, &argshandleMemSize);
+    rtError_t error = kernelArgsApi.KernelArgsGetHandleMemSize(k1, &argshandleMemSize);
     EXPECT_EQ(error, RT_ERROR_NONE);
     size_t actualArgsSize = 0U;
     const size_t userArgsSize = 1024U;
-    error = api.KernelArgsGetMemSize(k1, userArgsSize, &actualArgsSize);
+    error = kernelArgsApi.KernelArgsGetMemSize(k1, userArgsSize, &actualArgsSize);
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_EQ(userArgsSize, actualArgsSize);
 
@@ -1719,14 +1725,14 @@ TEST_F(CloudV2ApiImplTest, rts_api_impl_KernelArgsInitByUserMem)
     cpuKernelSysArgsInfo.kernelNameSize = 0x5A5A;
     cpuKernelSysArgsInfo.soNameOffset = 0x5A5A;
     cpuKernelSysArgsInfo.soNameSize = 0x5A5A;
-    error = api.KernelArgsInitByUserMem(k1, (RtArgsHandle*)argsHandle, userHostMem, actualArgsSize);
+    error = kernelArgsApi.KernelArgsInitByUserMem(k1, (RtArgsHandle*)argsHandle, userHostMem, actualArgsSize);
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_EQ(0, ((RtArgsHandle*)argsHandle)->cpuKernelSysArgsInfo.kernelNameOffset);
     EXPECT_EQ(0, ((RtArgsHandle*)argsHandle)->cpuKernelSysArgsInfo.kernelNameSize);
     EXPECT_EQ(0, ((RtArgsHandle*)argsHandle)->cpuKernelSysArgsInfo.soNameOffset);
     EXPECT_EQ(0, ((RtArgsHandle*)argsHandle)->cpuKernelSysArgsInfo.soNameSize);
 
-    error = api.KernelArgsFinalize((RtArgsHandle*)argsHandle);
+    error = kernelArgsApi.KernelArgsFinalize((RtArgsHandle*)argsHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     RtArgsWithType argsWithType;
@@ -1992,6 +1998,7 @@ TEST_F(CloudV2ApiImplTest, KernelArgsAppend_MemcpyFailure_EE1020)
     Device* device = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
     ApiImpl impl;
     ApiDecorator api(&impl);
+    ApiImplKernelArgs kernelArgsApi;
 
     PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
     Program* program = &stubProg;
@@ -2004,7 +2011,7 @@ TEST_F(CloudV2ApiImplTest, KernelArgsAppend_MemcpyFailure_EE1020)
     k1->isNeedSetFftsAddrInArg_ = true;
 
     RtArgsHandle* argsHandle = nullptr;
-    rtError_t error = api.KernelArgsInit(k1, &argsHandle);
+    rtError_t error = kernelArgsApi.KernelArgsInit(k1, &argsHandle);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     errno_t memcpyErr = ERANGE;
@@ -2015,7 +2022,7 @@ TEST_F(CloudV2ApiImplTest, KernelArgsAppend_MemcpyFailure_EE1020)
 
     char_t testData[32] = "test_data";
     ParaDetail* paramHandle = nullptr;
-    error = impl.KernelArgsAppend(argsHandle, testData, sizeof(testData), &paramHandle);
+    error = kernelArgsApi.KernelArgsAppend(argsHandle, testData, sizeof(testData), &paramHandle);
 
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 

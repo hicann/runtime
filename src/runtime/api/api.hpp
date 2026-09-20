@@ -835,17 +835,6 @@ public:
     virtual rtError_t LaunchDvppTask(
         const void* const sqe, const uint32_t sqeLen, Stream* const stm, rtDvppCfg_t* cfg = nullptr) = 0;
     virtual rtError_t LaunchRandomNumTask(const rtRandomNumTaskInfo_t* taskInfo, Stream* const stm, void* reserve) = 0;
-    virtual rtError_t KernelArgsInit(Kernel* const funcHandle, RtArgsHandle** argsHandle) = 0;
-    virtual rtError_t KernelArgsAppendPlaceHolder(RtArgsHandle* argsHandle, ParaDetail** paraHandle) = 0;
-    virtual rtError_t KernelArgsGetPlaceHolderBuffer(
-        RtArgsHandle* argsHandle, ParaDetail* paraHandle, size_t dataSize, void** bufferAddr) = 0;
-    virtual rtError_t KernelArgsGetHandleMemSize(Kernel* const funcHandle, size_t* memSize) = 0;
-    virtual rtError_t KernelArgsGetMemSize(Kernel* const funcHandle, size_t userArgsSize, size_t* actualArgsSize) = 0;
-    virtual rtError_t KernelArgsInitByUserMem(
-        Kernel* const funcHandle, RtArgsHandle* argsHandle, void* userHostMem, size_t actualArgsSize) = 0;
-    virtual rtError_t KernelArgsFinalize(RtArgsHandle* argsHandle) = 0;
-    virtual rtError_t KernelArgsAppend(
-        RtArgsHandle* argsHandle, void* para, size_t paraSize, ParaDetail** paraHandle) = 0;
     virtual rtError_t StreamTaskAbort(Stream* const stm) = 0;
     virtual rtError_t StreamRecover(Stream* const stm) = 0;
     virtual rtError_t StreamTaskClean(Stream* const stm) = 0;

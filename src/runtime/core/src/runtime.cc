@@ -336,11 +336,13 @@ Runtime::Runtime() : RuntimeIntf()
     apiSnapshot_ = nullptr;
     apiRtConfig_ = nullptr;
     apiDeviceTopology_ = nullptr;
+    apiKernelArgs_ = nullptr;
     apiImpl_ = nullptr;
     apiImplMbuf_ = nullptr;
     apiImplSoma_ = nullptr;
     apiImplEvent_ = nullptr;
     apiImplKernelFunc_ = nullptr;
+    apiImplKernelArgs_ = nullptr;
     apiImplEsched_ = nullptr;
     apiImplSnapshot_ = nullptr;
     apiImplRtConfig_ = nullptr;
@@ -1162,6 +1164,13 @@ rtError_t Runtime::InitApiImplies()
             return RT_ERROR_API_NEW;
         }
     }
+
+    if (IsImplKernelArgsSupported()) {
+        apiImplKernelArgs_ = CreateImplKernelArgsAndGet();
+        if (apiImplKernelArgs_ == nullptr) {
+            return RT_ERROR_API_NEW;
+        }
+    }
     return RT_ERROR_NONE;
 }
 
@@ -1630,6 +1639,7 @@ rtError_t Runtime::Init()
     apiSnapshot_ = apiImplSnapshot_;
     apiRtConfig_ = apiImplRtConfig_;
     apiDeviceTopology_ = apiImplDeviceTopology_;
+    apiKernelArgs_ = apiImplKernelArgs_;
 
     error = InitThreadGuard();
     COND_GOTO_ERROR(error != RT_ERROR_NONE, INIT_FAIL, error, error, "Failed to new ThreadGuard.");
@@ -1678,6 +1688,7 @@ INIT_FAIL:
     DELETE_O(apiError_);
     DELETE_O(profiler_);
     DELETE_O(logger_);
+    DestroyImplKernelArgs(apiImplKernelArgs_);
     DELETE_O(apiImpl_);
     DestroyImplMbuf(apiImplMbuf_);
     DELETE_O(apiImplSoma_);

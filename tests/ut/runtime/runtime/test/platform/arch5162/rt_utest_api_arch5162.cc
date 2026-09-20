@@ -9,9 +9,8 @@
  */
 #include "gtest/gtest.h"
 #include "runtime/rt.h"
-#include "api_impl.hpp"
-#include "api_error.hpp"
 #include "api_impl_creator.hpp"
+#include "api_error.hpp"
 #include "aicpu_dfx.hpp"
 
 using namespace cce::runtime;
@@ -24,18 +23,15 @@ TEST(Arch5162ApiTest, SnapshotApiImplStub_NotSupport)
     DestroyImplSnapshot(apiImplSnapshot);
 }
 
-TEST(Arch5162ApiTest, KernelArgsApiImplStub_NotSupport)
+TEST(Arch5162ApiTest, KernelArgsImplLifecycleNotSupport)
 {
-    ApiImpl apiImpl;
+    EXPECT_FALSE(IsImplKernelArgsSupported());
 
-    EXPECT_EQ(apiImpl.KernelArgsGetHandleMemSize(nullptr, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(apiImpl.KernelArgsFinalize(nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(apiImpl.KernelArgsInitByUserMem(nullptr, nullptr, nullptr, 0U), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(apiImpl.KernelArgsGetMemSize(nullptr, 0U, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(apiImpl.KernelArgsInit(nullptr, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(apiImpl.KernelArgsAppendPlaceHolder(nullptr, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(apiImpl.KernelArgsGetPlaceHolderBuffer(nullptr, nullptr, 0U, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(apiImpl.KernelArgsAppend(nullptr, nullptr, 0U, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
+    ApiKernelArgs* apiImplKernelArgs = CreateImplKernelArgsAndGet();
+    EXPECT_EQ(apiImplKernelArgs, nullptr);
+
+    DestroyImplKernelArgs(apiImplKernelArgs);
+    EXPECT_EQ(apiImplKernelArgs, nullptr);
 }
 
 TEST(Arch5162ApiTest, AicpuFifoPrintfDfxDisabled) { EXPECT_EQ(SetupAicpuPrintfDfx(nullptr, 0U), RT_ERROR_NONE); }

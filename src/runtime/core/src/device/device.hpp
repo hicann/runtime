@@ -284,6 +284,7 @@ public:
     virtual uint64_t GetC2cCtrlAddr(void) = 0;
     virtual uint32_t GetC2cCtrlAddrLen(void) = 0;
     virtual void SetC2cCtrlAddr(const uint64_t addr, const uint32_t addrLen) = 0;
+    rtError_t QueryC2cCtrlAddr(uint64_t* addr, uint32_t* len);
 
     virtual rtError_t AicpuModelLoad(void* const modelInfo) = 0;
     virtual rtError_t AicpuModelDestroy(const uint32_t modelId) = 0;

@@ -1895,45 +1895,6 @@ rtError_t ApiDecorator::LaunchRandomNumTask(const rtRandomNumTaskInfo_t* taskInf
     return impl_->LaunchRandomNumTask(taskInfo, stm, reserve);
 }
 
-rtError_t ApiDecorator::KernelArgsInit(Kernel* const funcHandle, RtArgsHandle** argsHandle)
-{
-    return impl_->KernelArgsInit(funcHandle, argsHandle);
-}
-
-rtError_t ApiDecorator::KernelArgsAppendPlaceHolder(RtArgsHandle* argsHandle, ParaDetail** paraHandle)
-{
-    return impl_->KernelArgsAppendPlaceHolder(argsHandle, paraHandle);
-}
-
-rtError_t ApiDecorator::KernelArgsGetPlaceHolderBuffer(
-    RtArgsHandle* argsHandle, ParaDetail* paraHandle, size_t dataSize, void** bufferAddr)
-{
-    return impl_->KernelArgsGetPlaceHolderBuffer(argsHandle, paraHandle, dataSize, bufferAddr);
-}
-
-rtError_t ApiDecorator::KernelArgsGetHandleMemSize(Kernel* const funcHandle, size_t* memSize)
-{
-    return impl_->KernelArgsGetHandleMemSize(funcHandle, memSize);
-}
-
-rtError_t ApiDecorator::KernelArgsFinalize(RtArgsHandle* argsHandle) { return impl_->KernelArgsFinalize(argsHandle); }
-
-rtError_t ApiDecorator::KernelArgsGetMemSize(Kernel* const funcHandle, size_t userArgsSize, size_t* actualArgsSize)
-{
-    return impl_->KernelArgsGetMemSize(funcHandle, userArgsSize, actualArgsSize);
-}
-
-rtError_t ApiDecorator::KernelArgsInitByUserMem(
-    Kernel* const funcHandle, RtArgsHandle* argsHandle, void* userHostMem, size_t actualArgsSize)
-{
-    return impl_->KernelArgsInitByUserMem(funcHandle, argsHandle, userHostMem, actualArgsSize);
-}
-
-rtError_t ApiDecorator::KernelArgsAppend(RtArgsHandle* argsHandle, void* para, size_t paraSize, ParaDetail** paraHandle)
-{
-    return impl_->KernelArgsAppend(argsHandle, para, paraSize, paraHandle);
-}
-
 rtError_t ApiDecorator::WriteValuePtr(void* const writeValueInfo, Stream* const stm, void* const pointedAddr)
 {
     return impl_->WriteValuePtr(writeValueInfo, stm, pointedAddr);

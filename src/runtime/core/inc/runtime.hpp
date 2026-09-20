@@ -216,6 +216,8 @@ public:
     ApiRtConfig* ApiRtConfig_() const override { return apiRtConfig_; }
     ApiDeviceTopology* ApiDeviceTopology_() const override { return apiDeviceTopology_; }
 
+    ApiKernelArgs* ApiKernelArgs_() const override { return apiKernelArgs_; }
+
     Api* ApiImpl_() const override { return apiImpl_; }
 
     Profiler* Profiler_() const { return profiler_; }
@@ -939,6 +941,8 @@ private:
     ApiSnapshot* apiImplSnapshot_;
     ApiKernelFunc* apiKernelFunc_;
     ApiKernelFunc* apiImplKernelFunc_;
+    ApiKernelArgs* apiKernelArgs_;
+    ApiKernelArgs* apiImplKernelArgs_;
 };
 } // namespace runtime
 } // namespace cce

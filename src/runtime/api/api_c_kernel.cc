@@ -11,6 +11,7 @@
 #include "api_c.h"
 #include "api.hpp"
 #include "api_handle_guard.h"
+#include "api_kernel_args.hpp"
 #include "osal.hpp"
 #include "rts/rts.h"
 #include "runtime/inner_kernel.h"
@@ -247,7 +248,7 @@ rtError_t rtsNpuClearFloatOverFlowDebugStatus(uint32_t checkMode, rtStream_t stm
 VISIBILITY_DEFAULT
 rtError_t rtsKernelArgsInit(rtFuncHandle funcHandle, rtArgsHandle* argsHandle)
 {
-    Api* const apiInstance = Api::Instance();
+    ApiKernelArgs* const apiInstance = ApiKernelArgs::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(funcHandle, Kernel, realKernel, ValidateKernelHandleForApi);
     const rtError_t error = apiInstance->KernelArgsInit(realKernel, RtPtrToPtr<RtArgsHandle**>(argsHandle));
@@ -260,7 +261,7 @@ rtError_t rtsKernelArgsInit(rtFuncHandle funcHandle, rtArgsHandle* argsHandle)
 VISIBILITY_DEFAULT
 rtError_t rtsKernelArgsAppend(rtArgsHandle argsHandle, void* para, size_t paraSize, rtParaHandle* paraHandle)
 {
-    Api* const apiInstance = Api::Instance();
+    ApiKernelArgs* const apiInstance = ApiKernelArgs::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(
         argsHandle, RtArgsHandle, realArgsHandle, ValidateArgsHandleForUserMemApi);
@@ -275,7 +276,7 @@ rtError_t rtsKernelArgsAppend(rtArgsHandle argsHandle, void* para, size_t paraSi
 VISIBILITY_DEFAULT
 rtError_t rtsKernelArgsAppendPlaceHolder(rtArgsHandle argsHandle, rtParaHandle* paraHandle)
 {
-    Api* const apiInstance = Api::Instance();
+    ApiKernelArgs* const apiInstance = ApiKernelArgs::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(
         argsHandle, RtArgsHandle, realArgsHandle, ValidateArgsHandleForUserMemApi);
@@ -291,7 +292,7 @@ VISIBILITY_DEFAULT
 rtError_t rtsKernelArgsGetPlaceHolderBuffer(
     rtArgsHandle argsHandle, rtParaHandle paraHandle, size_t dataSize, void** bufferAddr)
 {
-    Api* const apiInstance = Api::Instance();
+    ApiKernelArgs* const apiInstance = ApiKernelArgs::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(
         argsHandle, RtArgsHandle, realArgsHandle, ValidateArgsHandleForUserMemApi);
@@ -306,7 +307,7 @@ rtError_t rtsKernelArgsGetPlaceHolderBuffer(
 VISIBILITY_DEFAULT
 rtError_t rtsKernelArgsGetHandleMemSize(rtFuncHandle funcHandle, size_t* memSize)
 {
-    Api* const apiInstance = Api::Instance();
+    ApiKernelArgs* const apiInstance = ApiKernelArgs::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(funcHandle, Kernel, realKernel, ValidateKernelHandleForApi);
     const rtError_t error = apiInstance->KernelArgsGetHandleMemSize(realKernel, memSize);
@@ -318,7 +319,7 @@ rtError_t rtsKernelArgsGetHandleMemSize(rtFuncHandle funcHandle, size_t* memSize
 VISIBILITY_DEFAULT
 rtError_t rtsKernelArgsGetMemSize(rtFuncHandle funcHandle, size_t userArgsSize, size_t* actualArgsSize)
 {
-    Api* const apiInstance = Api::Instance();
+    ApiKernelArgs* const apiInstance = ApiKernelArgs::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(funcHandle, Kernel, realKernel, ValidateKernelHandleForApi);
     const rtError_t error = apiInstance->KernelArgsGetMemSize(realKernel, userArgsSize, actualArgsSize);
@@ -331,7 +332,7 @@ VISIBILITY_DEFAULT
 rtError_t rtsKernelArgsInitByUserMem(
     rtFuncHandle funcHandle, rtArgsHandle argsHandle, void* userHostMem, size_t actualArgsSize)
 {
-    Api* const apiInstance = Api::Instance();
+    ApiKernelArgs* const apiInstance = ApiKernelArgs::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(funcHandle, Kernel, realKernel, ValidateKernelHandleForApi);
     const rtError_t error = apiInstance->KernelArgsInitByUserMem(
@@ -378,7 +379,7 @@ rtError_t rtsKernelArgsParaUpdate(rtArgsHandle argsHandle, rtParaHandle paraHand
 VISIBILITY_DEFAULT
 rtError_t rtsKernelArgsFinalize(rtArgsHandle argsHandle)
 {
-    Api* const apiInstance = Api::Instance();
+    ApiKernelArgs* const apiInstance = ApiKernelArgs::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(
         argsHandle, RtArgsHandle, realArgsHandle, ValidateArgsHandleForUserMemApi);

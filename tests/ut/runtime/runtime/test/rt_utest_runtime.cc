@@ -23,6 +23,9 @@
 #include "api_event.hpp"
 #include "api_snapshot.hpp"
 #include "api_kernel_func.hpp"
+#include "api_kernel_args.hpp"
+#include "api_mbuf.hpp"
+#include "api_soma.hpp"
 #include "api_impl.hpp"
 #include "api_impl_creator.hpp"
 #include "api_impl_snapshot.hpp"
@@ -35,7 +38,6 @@
 #include "raw_device.hpp"
 #include "platform/platform_info.h"
 #include "soc_info.h"
-#include "thread_local_container.hpp"
 #include "runtime_exit_test_helper.h"
 #include "common/rt_utest_context_reset_helper.hpp"
 
@@ -80,6 +82,27 @@ private:
     bool launchBlockingEnvEnabled_;
     bool hasEnv_ = false;
     std::string envValue_;
+};
+
+class ApiKernelArgsDestroyProbe : public ApiKernelArgs {
+public:
+    explicit ApiKernelArgsDestroyProbe(bool& destroyed) : destroyed_(destroyed) {}
+    ~ApiKernelArgsDestroyProbe() override { destroyed_ = true; }
+
+    rtError_t KernelArgsInit(Kernel*, RtArgsHandle**) override { return RT_ERROR_NONE; }
+    rtError_t KernelArgsInitByUserMem(Kernel*, RtArgsHandle*, void*, size_t) override { return RT_ERROR_NONE; }
+    rtError_t KernelArgsGetMemSize(Kernel*, size_t, size_t*) override { return RT_ERROR_NONE; }
+    rtError_t KernelArgsGetHandleMemSize(Kernel*, size_t*) override { return RT_ERROR_NONE; }
+    rtError_t KernelArgsAppend(RtArgsHandle*, void*, size_t, ParaDetail**) override { return RT_ERROR_NONE; }
+    rtError_t KernelArgsAppendPlaceHolder(RtArgsHandle*, ParaDetail**) override { return RT_ERROR_NONE; }
+    rtError_t KernelArgsGetPlaceHolderBuffer(RtArgsHandle*, ParaDetail*, size_t, void**) override
+    {
+        return RT_ERROR_NONE;
+    }
+    rtError_t KernelArgsFinalize(RtArgsHandle*) override { return RT_ERROR_NONE; }
+
+private:
+    bool& destroyed_;
 };
 } // namespace
 
@@ -255,6 +278,28 @@ TEST_F(RuntimeTest, ApiKernelFuncInstanceInitialized)
     EXPECT_EQ(ApiKernelFunc::Instance(), runtime->ApiKernelFunc_());
 }
 
+TEST_F(RuntimeTest, ApiKernelArgsInstanceInitialized)
+{
+    const Runtime* const runtime = Runtime::Instance();
+    ASSERT_NE(runtime, nullptr);
+    ASSERT_NE(runtime->ApiKernelArgs_(), nullptr);
+    EXPECT_EQ(ApiKernelArgs::Instance(), runtime->ApiKernelArgs_());
+}
+
+TEST_F(RuntimeTest, ApiKernelArgsImplDestroyedWithRuntime)
+{
+    bool destroyed = false;
+    Runtime* const runtime = ConstructRuntimeImpl();
+    ASSERT_NE(runtime, nullptr);
+    ApiKernelArgs* const apiKernelArgs = new ApiKernelArgsDestroyProbe(destroyed);
+    runtime->apiKernelArgs_ = apiKernelArgs;
+    runtime->apiImplKernelArgs_ = apiKernelArgs;
+
+    DestructorRuntimeImpl(runtime);
+
+    EXPECT_TRUE(destroyed);
+}
+
 TEST_F(RuntimeTest, ApiEschedInstanceInitialized)
 {
     const Runtime* const runtime = Runtime::Instance();
@@ -314,6 +359,57 @@ TEST_F(RuntimeTest, CreateImplKernelFuncAndGetFailed)
     EXPECT_EQ(CreateImplKernelFuncAndGet(), nullptr);
 }
 
+TEST_F(RuntimeTest, CreateImplKernelArgsAndGetFailed)
+{
+    MOCKER(static_cast<NothrowNewFunc>(&operator new)).expects(once()).will(invoke(NothrowNewFailStub));
+
+    EXPECT_EQ(CreateImplKernelArgsAndGet(), nullptr);
+}
+
+TEST_F(RuntimeTest, InitApiImpliesCreateKernelArgsFailed)
+{
+    Runtime* const rt = static_cast<Runtime*>(Runtime::Instance());
+    ASSERT_NE(rt, nullptr);
+    Api* const oldApiImpl = rt->apiImpl_;
+    ApiMbuf* const oldApiImplMbuf = rt->apiImplMbuf_;
+    ApiSoma* const oldApiImplSoma = rt->apiImplSoma_;
+    ApiEvent* const oldApiImplEvent = rt->apiImplEvent_;
+    ApiEsched* const oldApiImplEsched = rt->apiImplEsched_;
+    ApiSnapshot* const oldApiImplSnapshot = rt->apiImplSnapshot_;
+    ApiKernelArgs* const oldApiImplKernelArgs = rt->apiImplKernelArgs_;
+    rt->apiImpl_ = nullptr;
+    rt->apiImplMbuf_ = nullptr;
+    rt->apiImplSoma_ = nullptr;
+    rt->apiImplEvent_ = nullptr;
+    rt->apiImplEsched_ = nullptr;
+    rt->apiImplSnapshot_ = nullptr;
+    rt->apiImplKernelArgs_ = nullptr;
+    MOCKER(CreateImplKernelArgsAndGet).expects(once()).will(returnValue(static_cast<ApiKernelArgs*>(nullptr)));
+
+    const rtError_t error = rt->InitApiImplies();
+    Api* const newApiImpl = rt->apiImpl_;
+    ApiMbuf* newApiImplMbuf = rt->apiImplMbuf_;
+    ApiSoma* const newApiImplSoma = rt->apiImplSoma_;
+    ApiEvent* const newApiImplEvent = rt->apiImplEvent_;
+    ApiEsched* newApiImplEsched = rt->apiImplEsched_;
+    ApiSnapshot* newApiImplSnapshot = rt->apiImplSnapshot_;
+    rt->apiImpl_ = oldApiImpl;
+    rt->apiImplMbuf_ = oldApiImplMbuf;
+    rt->apiImplSoma_ = oldApiImplSoma;
+    rt->apiImplEvent_ = oldApiImplEvent;
+    rt->apiImplEsched_ = oldApiImplEsched;
+    rt->apiImplSnapshot_ = oldApiImplSnapshot;
+    rt->apiImplKernelArgs_ = oldApiImplKernelArgs;
+    DestroyImplSnapshot(newApiImplSnapshot);
+    DestroyImplEsched(newApiImplEsched);
+    delete newApiImplEvent;
+    delete newApiImplSoma;
+    DestroyImplMbuf(newApiImplMbuf);
+    delete newApiImpl;
+
+    EXPECT_EQ(error, RT_ERROR_API_NEW);
+}
+
 TEST_F(RuntimeTest, DestroyImplMbufSuccess)
 {
     ApiMbuf* apiImplMbuf = CreateImplMbufAndGet();
@@ -322,6 +418,16 @@ TEST_F(RuntimeTest, DestroyImplMbufSuccess)
     DestroyImplMbuf(apiImplMbuf);
 
     EXPECT_EQ(apiImplMbuf, nullptr);
+}
+
+TEST_F(RuntimeTest, DestroyImplKernelArgsSuccess)
+{
+    ApiKernelArgs* apiImplKernelArgs = CreateImplKernelArgsAndGet();
+    ASSERT_NE(apiImplKernelArgs, nullptr);
+
+    DestroyImplKernelArgs(apiImplKernelArgs);
+
+    EXPECT_EQ(apiImplKernelArgs, nullptr);
 }
 
 TEST_F(RuntimeTest, DestroyImplEschedSuccess)

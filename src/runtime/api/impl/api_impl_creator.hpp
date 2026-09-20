@@ -21,6 +21,7 @@ class ApiSnapshot;
 class ApiRtConfig;
 class ApiDeviceTopology;
 class ApiKernelFunc;
+class ApiKernelArgs;
 
 size_t GetApiImplSize();
 Api* CreateImplAndGet();
@@ -32,6 +33,9 @@ ApiEvent* CreateImplEventAndGet();
 bool IsImplKernelFuncSupported();
 ApiKernelFunc* CreateImplKernelFuncAndGet();
 void DestroyImplKernelFunc(ApiKernelFunc*& apiImplKernelFunc);
+bool IsImplKernelArgsSupported();
+ApiKernelArgs* CreateImplKernelArgsAndGet();
+void DestroyImplKernelArgs(ApiKernelArgs*& apiImplKernelArgs);
 bool IsImplEschedSupported();
 ApiEsched* CreateImplEschedAndGet();
 void DestroyImplEsched(ApiEsched*& apiImplEsched);
