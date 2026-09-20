@@ -14,3 +14,4 @@ This directory focuses on Kernel loading, parameter organization, execution, and
 - [7_binary_introspection](./7_binary_introspection/README_en.md): Demonstrates querying Kernel binary, function parameter, code segment, and Device global variable metadata after loading.
 - [8_reusable_kernel_args](./8_reusable_kernel_args/README_en.md): Demonstrates user-managed argument memory and reuse of the same Kernel argument list through parameter updates.
 - [9_device_symbol_io](./9_device_symbol_io/README_en.md): Demonstrates asynchronously initializing a Device variable, updating its state in a Kernel, and verifying synchronous and asynchronous readback.
+- [10_simd_stack_budget](./10_simd_stack_budget/README_en.md): Demonstrates configuring and confirming a SIMD stack budget before binding a Device, then running a validation Kernel that uses a large amount of local stack data.
