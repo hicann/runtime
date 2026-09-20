@@ -125,8 +125,8 @@ void PrintErrorInfoForModelExecuteTask(TaskInfo* const taskInfo, const uint32_t 
         (void)taskInfo->stream->Device_()->Driver_()->MemCopySync(
             dfx, sizeof(dfx), modelExecuteTaskInfo->model->GetDfxPtr(), sizeof(dfx), RT_MEMCPY_DEVICE_TO_HOST);
         RT_LOG(
-            RT_LOG_ERROR, "stream_id=%u, task_id=%u, sqVirtualAddr=%" PRIu64 ", head equal tail flag=%" PRIu64 ".",
-            streamId, taskId, dfx[0U], dfx[1U]);
+            RT_LOG_ERROR, "stream_id=%u, task_id=%u, sqVirtualAddr=%" PRIu64 ", head ^ tail=%" PRIu64 ".", streamId,
+            taskId, dfx[0U], dfx[1U]);
 
         PrintErrorModelExecuteTaskFuncCall(taskInfo);
     }
