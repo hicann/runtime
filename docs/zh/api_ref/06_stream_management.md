@@ -700,7 +700,7 @@ aclError aclrtNonBlockingLaunchBegin(aclrtStream stream, uint64_t flag)
 
 ### 功能说明
 
-本接口需与[aclrtNonBlockingLaunchEnd](#aclrtNonBlockingLaunchEnd)接口配合使用。当`ASCEND_RT_LAUNCH_BLOCKING`环境变量配置为1，或通过[aclrtSetStreamAttribute](#aclrtSetStreamAttribute)接口将指定Stream设置为同步模式时，调用本接口和[aclrtNonBlockingLaunchEnd](#aclrtNonBlockingLaunchEnd)接口分别标记指定Stream上任务异步执行的起始点和结束点。在[aclrtNonBlockingLaunchBegin](#aclrtNonBlockingLaunchBegin)接口和[aclrtNonBlockingLaunchEnd](#aclrtNonBlockingLaunchEnd)接口之间，以下接口下发的任务将保持异步模式：
+当`ASCEND_RT_LAUNCH_BLOCKING`环境变量配置为1，或通过[aclrtSetStreamAttribute](#aclrtSetStreamAttribute)接口将指定Stream设置为同步模式时，指定Stream上的相关接口将采用同步模式。在单线程任务下发场景下，如果先下发的任务依赖后续尚未下发的任务，同步等待会导致后续任务无法下发，就会产生死锁。此时，可调用本接口和[aclrtNonBlockingLaunchEnd](#aclrtNonBlockingLaunchEnd)接口分别标记指定Stream上的起始点和结束点，起始点和结束点之间通过以下接口下发任务将保持异步模式：
 
 - aclrtLaunchKernel
 - aclrtLaunchKernelV2
@@ -730,6 +730,7 @@ aclError aclrtNonBlockingLaunchBegin(aclrtStream stream, uint64_t flag)
 - 本接口仅对上述接口生效。
 - 本接口设置的异步模式优先级高于`ASCEND_RT_LAUNCH_BLOCKING`环境变量和通过[aclrtSetStreamAttribute](#aclrtSetStreamAttribute)接口设置的`ACL_STREAM_LAUNCH_BLOCKING_MODE`属性。
 - 本接口和[aclrtNonBlockingLaunchEnd](#aclrtNonBlockingLaunchEnd)接口要成对使用，且两个接口中的Stream应相同。
+- 建议在同一线程中成对调用本接口和[aclrtNonBlockingLaunchEnd](#aclrtNonBlockingLaunchEnd)接口。
 - 支持嵌套调用。每调用一次本接口，需对应调用一次[aclrtNonBlockingLaunchEnd](#aclrtNonBlockingLaunchEnd)接口。两层嵌套调用示例如下：
 
     ```c
@@ -778,7 +779,7 @@ aclError aclrtNonBlockingLaunchEnd(aclrtStream stream, uint64_t flag)
 
 ### 功能说明
 
-本接口需与[aclrtNonBlockingLaunchBegin](#aclrtNonBlockingLaunchBegin)接口配合使用。当`ASCEND_RT_LAUNCH_BLOCKING`环境变量配置为1，或通过[aclrtSetStreamAttribute](#aclrtSetStreamAttribute)接口将指定Stream设置为同步模式时，调用[aclrtNonBlockingLaunchBegin](#aclrtNonBlockingLaunchBegin)接口和本接口分别标记指定Stream上任务异步执行的起始点和结束点。在[aclrtNonBlockingLaunchBegin](#aclrtNonBlockingLaunchBegin)接口和[aclrtNonBlockingLaunchEnd](#aclrtNonBlockingLaunchEnd)接口之间，以下接口下发的任务将保持异步模式：
+当`ASCEND_RT_LAUNCH_BLOCKING`环境变量配置为1，或通过[aclrtSetStreamAttribute](#aclrtSetStreamAttribute)接口将指定Stream设置为同步模式时，指定Stream上的相关接口将采用同步模式。在单线程任务下发场景下，如果先下发的任务依赖后续尚未下发的任务，同步等待会导致后续任务无法下发，就会产生死锁。此时，可调用[aclrtNonBlockingLaunchBegin](#aclrtNonBlockingLaunchBegin)接口和本接口分别标记指定Stream上的起始点和结束点，起始点和结束点之间通过以下接口下发任务将保持异步模式：
 
 - aclrtLaunchKernel
 - aclrtLaunchKernelV2
@@ -809,6 +810,7 @@ aclError aclrtNonBlockingLaunchEnd(aclrtStream stream, uint64_t flag)
 - 不支持调用[aclrtCreateStreamWithConfig](#aclrtCreateStreamWithConfig)接口，将flag设置为ACL_STREAM_PERSISTENT、ACL_STREAM_CPU_SCHEDULE或ACL_STREAM_DEVICE_USE_ONLY创建的Stream。
 - 本接口仅对上述接口生效。
 - [aclrtNonBlockingLaunchBegin](#aclrtNonBlockingLaunchBegin)接口和本接口要成对使用，且两个接口中的Stream应相同。若未先调用[aclrtNonBlockingLaunchBegin](#aclrtNonBlockingLaunchBegin)接口，本接口返回失败。
+- 建议在同一线程中成对调用[aclrtNonBlockingLaunchBegin](#aclrtNonBlockingLaunchBegin)接口和本接口。
 - 支持嵌套调用，只有所有[aclrtNonBlockingLaunchBegin](#aclrtNonBlockingLaunchBegin)接口调用均已结束时才可能执行同步等待。
 
 <br>
