@@ -358,16 +358,12 @@ rtError_t NpuDriver::HostDeviceClose(const uint32_t deviceId)
 
 rtError_t NpuDriver::DeviceClose(const uint32_t deviceId, const uint32_t tsId)
 {
-    if (isTscOpen_ && isTsvOpen_) {
-        if (tsId == static_cast<uint32_t>(RT_TSV_ID)) {
-            isTsvOpen_ = false;
-        } else {
-            isTscOpen_ = false;
-        }
+    bool* const openState = (tsId == static_cast<uint32_t>(RT_TSV_ID)) ? &isTsvOpen_ : &isTscOpen_;
+    if (!isNeedCloseDevice(isTscOpen_, isTsvOpen_)) {
+        *openState = false;
         RT_LOG(RT_LOG_INFO, "Close device success, device_id=%u, tsId=%u.", deviceId, tsId);
         return RT_ERROR_NONE;
     }
-
     drvError_t drvRet = DRV_ERROR_NONE;
 #ifndef CFG_DEV_PLATFORM_PC
     if (&halDeviceClose != nullptr) {
@@ -405,26 +401,19 @@ rtError_t NpuDriver::DeviceClose(const uint32_t deviceId, const uint32_t tsId)
             return RT_GET_DRV_ERRCODE(drvRet);
         }
     }
+    *openState = false;
     RT_LOG(RT_LOG_INFO, "Close device success, device_id=%u, tsId=%u.", deviceId, tsId);
     return RT_ERROR_NONE;
 }
 
 rtError_t NpuDriver::DeviceOpen(const uint32_t deviceId, const uint32_t tsId, uint32_t* const ssId)
 {
-    const bool sentinelMode = Runtime::Instance()->GetSentinelMode();
-    if (tsId == static_cast<uint32_t>(RT_TSV_ID)) {
+    bool* const openState = (tsId == static_cast<uint32_t>(RT_TSV_ID)) ? &isTsvOpen_ : &isTscOpen_;
+    if (!isNeedOpenDevice(isTscOpen_, isTsvOpen_, tsId)) {
+        *openState = true;
         RT_LOG(RT_LOG_INFO, "Open device success, device_id=%u, tsId=%u.", deviceId, tsId);
-        isTsvOpen_ = true;
-        if (!sentinelMode) {
-            return RT_ERROR_NONE;
-        }
-    } else {
-        if (sentinelMode) {
-            return RT_ERROR_NONE;
-        }
-        isTscOpen_ = true;
+        return RT_ERROR_NONE;
     }
-
     RT_LOG(RT_LOG_INFO, "Open device start, device_id=%u, tsId=%u.", deviceId, tsId);
     drvError_t drvRet = DRV_ERROR_NONE;
 #ifndef CFG_DEV_PLATFORM_PC
@@ -478,7 +467,7 @@ rtError_t NpuDriver::DeviceOpen(const uint32_t deviceId, const uint32_t tsId, ui
         (void)DeviceClose(deviceId, tsId);
         return RT_GET_DRV_ERRCODE(drvRet);
     }
-
+    *openState = true;
     RT_LOG(RT_LOG_INFO, "Open device success, device_id=%u, tsId=%u, SSID=%u.", deviceId, tsId, *ssId);
     return RT_ERROR_NONE;
 }

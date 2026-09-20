@@ -96,5 +96,15 @@ rtError_t GetIpcNotifyVa(
     Va = infoOut.va;
     return RT_ERROR_NONE;
 }
+
+bool isNeedOpenDevice(bool& isTscOpen, bool& isTsvOpen, const uint32_t tsId)
+{
+    UNUSED(isTscOpen);
+    UNUSED(isTsvOpen);
+    return tsId != static_cast<uint32_t>(RT_TSV_ID);
+}
+
+bool isNeedCloseDevice(bool& isTscOpen, bool& isTsvOpen) { return !(isTscOpen && isTsvOpen); }
+
 } // namespace runtime
 } // namespace cce

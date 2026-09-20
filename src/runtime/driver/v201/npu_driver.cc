@@ -72,5 +72,14 @@ bool IsOfflineNotSupportMemType(const rtMemType_t& type)
     UNUSED(type);
     return false;
 }
+
+bool isNeedOpenDevice(bool& isTscOpen, bool& isTsvOpen, const uint32_t tsId)
+{
+    UNUSED(tsId);
+    return !(isTscOpen || isTsvOpen);
+}
+
+bool isNeedCloseDevice(bool& isTscOpen, bool& isTsvOpen) { return !(isTscOpen && isTsvOpen); }
+
 } // namespace runtime
 } // namespace cce
