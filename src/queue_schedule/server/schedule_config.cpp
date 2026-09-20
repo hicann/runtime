@@ -31,5 +31,5 @@ void ScheduleConfig::StopSched(const uint32_t key) { stoppedSchedKeys_.insert(ke
 
 void ScheduleConfig::RestartSched(const uint32_t key) { stoppedSchedKeys_.erase(key); }
 
-const bool ScheduleConfig::IsStopped(const uint32_t key) const { return stoppedSchedKeys_.count(key) > 0U; }
+bool ScheduleConfig::IsStopped(const uint32_t key) const { return stoppedSchedKeys_.count(key) > 0U; }
 } // namespace dgw

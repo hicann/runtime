@@ -293,6 +293,8 @@ private:
     {
 #ifndef RUN_ON_X86
         asm volatile("mrs %0, CNTFRQ_EL0" : "=r"(freq) :);
+#else
+        (void)freq;
 #endif
     }
 
@@ -300,6 +302,8 @@ private:
     {
 #ifndef RUN_ON_X86
         asm volatile("mrs %0, CNTVCT_EL0" : "=r"(tick) :);
+#else
+        (void)tick;
 #endif
     }
 
