@@ -1450,7 +1450,9 @@ int32_t DgwClient::WaitConfigEffect(const int32_t rsv, const int32_t timeout)
 
     // 隔1S发送一次事件到SERVER端检测建链是否成功
     int32_t cmdRet = static_cast<int32_t>(BQS_STATUS_FAILED);
-    for (int32_t index = 0; index <= (QUERY_LINK_STATUS_UNIT / QUERY_LINK_STATUS_INTERVAL * timeout); index++) {
+    const uint64_t retryTimes =
+        static_cast<uint64_t>(QUERY_LINK_STATUS_UNIT / QUERY_LINK_STATUS_INTERVAL) * static_cast<uint32_t>(timeout);
+    for (uint64_t index = 0U; index <= retryTimes; index++) {
         event_sync_msg syncMsg = {};
         QsProcMsgRsp procMsgRsp = {};
         const int32_t ret = SendEventToQsSync(
