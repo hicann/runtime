@@ -11618,6 +11618,7 @@ TEST_F(ApiDavidTest, TestTaskGetParamsStarsV2Case)
     task.u.davidEventRecordTaskInfo.event = evt;
     error = apiImpl.TaskGetParams(static_cast<rtTask_t>(&task), &params);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(params.eventRecordTaskParams.event, event);
 
     task.type = TS_TASK_TYPE_DAVID_EVENT_WAIT;
     task.typeName = "DAVID_EVENT_WAIT";
@@ -11625,6 +11626,7 @@ TEST_F(ApiDavidTest, TestTaskGetParamsStarsV2Case)
     (void)memset_s(&params, sizeof(rtTaskParams), 0, sizeof(rtTaskParams));
     error = apiImpl.TaskGetParams(static_cast<rtTask_t>(&task), &params);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(params.eventWaitTaskParams.event, event);
 
     task.type = TS_TASK_TYPE_DAVID_EVENT_RESET;
     task.typeName = "DAVID_EVENT_RESET";
@@ -11632,6 +11634,7 @@ TEST_F(ApiDavidTest, TestTaskGetParamsStarsV2Case)
     (void)memset_s(&params, sizeof(rtTaskParams), 0, sizeof(rtTaskParams));
     error = apiImpl.TaskGetParams(static_cast<rtTask_t>(&task), &params);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(params.eventResetTaskParams.event, event);
 
     stream_->SetModel(nullptr);
 
@@ -11661,7 +11664,7 @@ TEST_F(ApiDavidTest, TestGetDavidEventTaskParamsStarsV2)
     error = GetEventRecordTaskParamsStarsV2(&taskRecord, &params);
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_EQ(params.type, RT_TASK_EVENT_RECORD);
-    EXPECT_EQ(params.eventRecordTaskParams.event, evt);
+    EXPECT_EQ(params.eventRecordTaskParams.event, event);
 
     TaskInfo taskWait = {};
     taskWait.type = TS_TASK_TYPE_DAVID_EVENT_WAIT;
@@ -11672,7 +11675,7 @@ TEST_F(ApiDavidTest, TestGetDavidEventTaskParamsStarsV2)
     error = GetEventWaitTaskParamsStarsV2(&taskWait, &params);
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_EQ(params.type, RT_TASK_EVENT_WAIT);
-    EXPECT_EQ(params.eventWaitTaskParams.event, evt);
+    EXPECT_EQ(params.eventWaitTaskParams.event, event);
 
     TaskInfo taskReset = {};
     taskReset.type = TS_TASK_TYPE_DAVID_EVENT_RESET;
@@ -11683,7 +11686,7 @@ TEST_F(ApiDavidTest, TestGetDavidEventTaskParamsStarsV2)
     error = GetEventResetTaskParamsStarsV2(&taskReset, &params);
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_EQ(params.type, RT_TASK_EVENT_RESET);
-    EXPECT_EQ(params.eventResetTaskParams.event, evt);
+    EXPECT_EQ(params.eventResetTaskParams.event, event);
 
     error = rtEventDestroy(event);
     EXPECT_EQ(error, RT_ERROR_NONE);

@@ -482,11 +482,11 @@ void SetStarsResultForEventWaitTask(TaskInfo* taskInfo, const rtCqReport_t& logi
 rtError_t GetEventRecordTaskParams(const TaskInfo* const taskInfo, rtTaskParams* const params)
 {
     params->type = RT_TASK_EVENT_RECORD;
-    params->eventRecordTaskParams.event = taskInfo->u.eventRecordTaskInfo.event;
+    Event* const event = taskInfo->u.eventRecordTaskInfo.event;
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        taskInfo->u.eventRecordTaskInfo.event, RT_ERROR_INVALID_VALUE, "Obtaining the Event Record task parameters");
-    params->eventRecordTaskParams.eventFlag =
-        static_cast<uint32_t>(taskInfo->u.eventRecordTaskInfo.event->GetEventFlag());
+        event, RT_ERROR_INVALID_VALUE, "Obtaining the Event Record task parameters");
+    params->eventRecordTaskParams.event = static_cast<rtEvent_t>(event->GetInnerHandle());
+    params->eventRecordTaskParams.eventFlag = static_cast<uint32_t>(event->GetEventFlag());
     params->eventRecordTaskParams.recordFlag = RT_EVENT_RECORD_DEFAULT;
 
     return RT_ERROR_NONE;
@@ -495,10 +495,10 @@ rtError_t GetEventRecordTaskParams(const TaskInfo* const taskInfo, rtTaskParams*
 rtError_t GetEventWaitTaskParams(const TaskInfo* const taskInfo, rtTaskParams* const params)
 {
     params->type = RT_TASK_EVENT_WAIT;
-    params->eventWaitTaskParams.event = taskInfo->u.eventWaitTaskInfo.event;
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        taskInfo->u.eventWaitTaskInfo.event, RT_ERROR_INVALID_VALUE, "Obtaining the Event Wait task parameters");
-    params->eventWaitTaskParams.eventFlag = static_cast<uint32_t>(taskInfo->u.eventWaitTaskInfo.event->GetEventFlag());
+    Event* const event = taskInfo->u.eventWaitTaskInfo.event;
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(event, RT_ERROR_INVALID_VALUE, "Obtaining the Event Wait task parameters");
+    params->eventWaitTaskParams.event = static_cast<rtEvent_t>(event->GetInnerHandle());
+    params->eventWaitTaskParams.eventFlag = static_cast<uint32_t>(event->GetEventFlag());
     params->eventWaitTaskParams.waitFlag = RT_EVENT_WAIT_DEFAULT;
 
     return RT_ERROR_NONE;
@@ -507,11 +507,11 @@ rtError_t GetEventWaitTaskParams(const TaskInfo* const taskInfo, rtTaskParams* c
 rtError_t GetEventResetTaskParams(const TaskInfo* const taskInfo, rtTaskParams* const params)
 {
     params->type = RT_TASK_EVENT_RESET;
-    params->eventResetTaskParams.event = taskInfo->u.eventResetTaskInfo.event;
+    Event* const event = taskInfo->u.eventResetTaskInfo.event;
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        taskInfo->u.eventResetTaskInfo.event, RT_ERROR_INVALID_VALUE, "Obtaining the Event Reset task parameters");
-    params->eventResetTaskParams.eventFlag =
-        static_cast<uint32_t>(taskInfo->u.eventResetTaskInfo.event->GetEventFlag());
+        event, RT_ERROR_INVALID_VALUE, "Obtaining the Event Reset task parameters");
+    params->eventResetTaskParams.event = static_cast<rtEvent_t>(event->GetInnerHandle());
+    params->eventResetTaskParams.eventFlag = static_cast<uint32_t>(event->GetEventFlag());
     params->eventResetTaskParams.resetFlag = RT_EVENT_WAIT_DEFAULT;
 
     return RT_ERROR_NONE;
@@ -520,12 +520,11 @@ rtError_t GetEventResetTaskParams(const TaskInfo* const taskInfo, rtTaskParams* 
 rtError_t GetEventRecordTaskParamsStarsV2(const TaskInfo* const taskInfo, rtTaskParams* const params)
 {
     params->type = RT_TASK_EVENT_RECORD;
-    params->eventRecordTaskParams.event = taskInfo->u.davidEventRecordTaskInfo.event;
+    Event* const event = taskInfo->u.davidEventRecordTaskInfo.event;
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        taskInfo->u.davidEventRecordTaskInfo.event, RT_ERROR_INVALID_VALUE,
-        "Obtaining the Event Record task parameters");
-    params->eventRecordTaskParams.eventFlag =
-        static_cast<uint32_t>(taskInfo->u.davidEventRecordTaskInfo.event->GetEventFlag());
+        event, RT_ERROR_INVALID_VALUE, "Obtaining the Event Record task parameters");
+    params->eventRecordTaskParams.event = static_cast<rtEvent_t>(event->GetInnerHandle());
+    params->eventRecordTaskParams.eventFlag = static_cast<uint32_t>(event->GetEventFlag());
     params->eventRecordTaskParams.recordFlag = RT_EVENT_RECORD_DEFAULT;
 
     return RT_ERROR_NONE;
@@ -534,11 +533,10 @@ rtError_t GetEventRecordTaskParamsStarsV2(const TaskInfo* const taskInfo, rtTask
 rtError_t GetEventWaitTaskParamsStarsV2(const TaskInfo* const taskInfo, rtTaskParams* const params)
 {
     params->type = RT_TASK_EVENT_WAIT;
-    params->eventWaitTaskParams.event = taskInfo->u.davidEventWaitTaskInfo.event;
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        taskInfo->u.davidEventWaitTaskInfo.event, RT_ERROR_INVALID_VALUE, "Obtaining the Event Wait task parameters");
-    params->eventWaitTaskParams.eventFlag =
-        static_cast<uint32_t>(taskInfo->u.davidEventWaitTaskInfo.event->GetEventFlag());
+    Event* const event = taskInfo->u.davidEventWaitTaskInfo.event;
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(event, RT_ERROR_INVALID_VALUE, "Obtaining the Event Wait task parameters");
+    params->eventWaitTaskParams.event = static_cast<rtEvent_t>(event->GetInnerHandle());
+    params->eventWaitTaskParams.eventFlag = static_cast<uint32_t>(event->GetEventFlag());
     params->eventWaitTaskParams.waitFlag = RT_EVENT_WAIT_DEFAULT;
 
     return RT_ERROR_NONE;
@@ -547,11 +545,11 @@ rtError_t GetEventWaitTaskParamsStarsV2(const TaskInfo* const taskInfo, rtTaskPa
 rtError_t GetEventResetTaskParamsStarsV2(const TaskInfo* const taskInfo, rtTaskParams* const params)
 {
     params->type = RT_TASK_EVENT_RESET;
-    params->eventResetTaskParams.event = taskInfo->u.davidEventResetTaskInfo.event;
+    Event* const event = taskInfo->u.davidEventResetTaskInfo.event;
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        taskInfo->u.davidEventResetTaskInfo.event, RT_ERROR_INVALID_VALUE, "Obtaining the Event Reset task parameters");
-    params->eventResetTaskParams.eventFlag =
-        static_cast<uint32_t>(taskInfo->u.davidEventResetTaskInfo.event->GetEventFlag());
+        event, RT_ERROR_INVALID_VALUE, "Obtaining the Event Reset task parameters");
+    params->eventResetTaskParams.event = static_cast<rtEvent_t>(event->GetInnerHandle());
+    params->eventResetTaskParams.eventFlag = static_cast<uint32_t>(event->GetEventFlag());
     params->eventResetTaskParams.resetFlag = RT_EVENT_WAIT_DEFAULT;
 
     return RT_ERROR_NONE;
