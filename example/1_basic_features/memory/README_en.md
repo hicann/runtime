@@ -19,4 +19,5 @@ This directory focuses on Host/Device data transfer, shared memory, IPC, and mul
 - [12_cross_server_physical_memory_sharing_withoutpid](./12_cross_server_physical_memory_sharing_withoutpid/README_en.md): Demonstrates cross-server physical memory sharing.
 - [13_memcpy_descriptor](./13_memcpy_descriptor/README_en.md): Demonstrates descriptor-based asynchronous copying within one device and verifies the result.
 - [14_reusable_data_buffer](./14_reusable_data_buffer/README_en.md): Demonstrates reusing one DataBuffer for data with different valid lengths and verifies the address, size, and content.
+- [15_batch_tensor_round_trip](./15_batch_tensor_round_trip/README_en.md): Demonstrates Host/Device round-trip transfers and element-wise verification for the same small tensors in four batch-copy modes.
 - [16_guarded_result_slice](./16_guarded_result_slice/README_en.md): Demonstrates an asynchronous result-slice update through indirect base addresses and offsets, with guard-region verification.
