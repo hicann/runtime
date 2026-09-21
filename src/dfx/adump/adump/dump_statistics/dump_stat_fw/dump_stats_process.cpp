@@ -42,7 +42,7 @@ KfcDumpResult InitSqCqFunction()
     } else if (g_kfcDumpStreamInfo.chipType == CHIP_CLOUD_V2) {
         g_addOneStatDumpTask = AddOneStatDumpTaskV1;
         g_printSqeInfo = KfcDumpPrintf::PrintSqeV1;
-    } else if (g_kfcDumpStreamInfo.chipType == CHIP_CLOUD_V4) {
+    } else if ((g_kfcDumpStreamInfo.chipType == CHIP_CLOUD_V4) || (g_kfcDumpStreamInfo.chipType == CHIP_CLOUD_V6)) {
         g_addOneStatDumpTask = AddStatDumpTaskCloudV4;
         g_printSqeInfo = KfcDumpPrintf::PrintSqeCloudV4;
     } else if (g_kfcDumpStreamInfo.chipType == CHIP_CLOUD_V5) {
@@ -50,8 +50,8 @@ KfcDumpResult InitSqCqFunction()
         g_printSqeInfo = KfcDumpPrintf::PrintSqeCloudV5;
     } else {
         IDE_LOGE(
-            "Kfc dump does not support chip type[%u], only chip type[%d,%d,%d,%d] are supported",
-            g_kfcDumpStreamInfo.chipType, CHIP_DC, CHIP_CLOUD_V2, CHIP_CLOUD_V4, CHIP_CLOUD_V5);
+            "Kfc dump does not support chip type[%u], only chip type[%d,%d,%d,%d,%d] are supported",
+            g_kfcDumpStreamInfo.chipType, CHIP_DC, CHIP_CLOUD_V2, CHIP_CLOUD_V4, CHIP_CLOUD_V5, CHIP_CLOUD_V6);
         return KFC_DUMP_E_NOT_SUPPORT;
     }
     return KFC_DUMP_SUCCESS;

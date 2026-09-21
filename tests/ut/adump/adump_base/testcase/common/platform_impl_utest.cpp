@@ -12,7 +12,9 @@
 #include "platform/cloud_v2_platform.h"
 #include "platform/cloud_v4_platform.h"
 #include "platform/cloud_v5_platform.h"
+#include "platform/cloud_v6_platform.h"
 #include "platform/dc_platform.h"
+#include "adump_platform_registry.h"
 #include "kernel_pc_fixer.h"
 #include "register_config.h"
 #include "dump_common.h"
@@ -191,6 +193,66 @@ TEST_F(PlatformImplUtest, CloudV5DataDump_SimtDumpThresholdFollowsBlockNum)
     EXPECT_EQ(threshold, static_cast<size_t>(140) * maxStrLen);
     EXPECT_FALSE(dataDump.IsSimtDumpEnabled(threshold));
     EXPECT_TRUE(dataDump.IsSimtDumpEnabled(threshold + 1U));
+}
+
+// ---------------- CloudV6Platform (CHIP_CLOUD_V6 / DV100Lite) ----------------
+TEST_F(PlatformImplUtest, CloudV6Features_SupportMatrix)
+{
+    CloudV6Features features;
+    EXPECT_TRUE(features.FeatureIsSupport(AdumpPlatformFeature::FEATURE_DATA_DUMP));
+    EXPECT_TRUE(features.FeatureIsSupport(AdumpPlatformFeature::FEATURE_OVERFLOW_DUMP));
+    EXPECT_TRUE(features.FeatureIsSupport(AdumpPlatformFeature::FEATURE_EXCEPTION_DUMP_L0));
+    EXPECT_TRUE(features.FeatureIsSupport(AdumpPlatformFeature::FEATURE_EXCEPTION_DUMP_L1));
+    EXPECT_TRUE(features.FeatureIsSupport(AdumpPlatformFeature::FEATURE_CORE_DUMP));
+}
+
+TEST_F(PlatformImplUtest, CloudV6Coredump_InheritsCloudV4Behaviour)
+{
+    CloudV6Coredump coredump;
+    EXPECT_NE(coredump.CreatePcFixer(), nullptr);
+    EXPECT_NE(coredump.CreateRegister(), nullptr);
+    EXPECT_EQ(coredump.ConvertCoreId(CORE_TYPE_AIC, 3), 3U);
+    EXPECT_EQ(coredump.ConvertCoreId(CORE_TYPE_AIV, 3), 21U);
+    DumpCore core("/tmp/dump_core_v6", 0);
+    MOCKER_CPP(&DumpCore::DumpV4Register).stubs();
+    coredump.DumpRegister(core, CORE_TYPE_AIC, 0);
+}
+
+TEST_F(PlatformImplUtest, CloudV6Exception_InheritsCloudV4Behaviour)
+{
+    CloudV6Exception exception;
+    EXPECT_FALSE(exception.IsArgsDataTypeSizeByByte());
+    EXPECT_FALSE(exception.SupportMc2SpacesDump());
+    EXPECT_EQ(exception.GetMc2StructSize(), 0U);
+}
+
+TEST_F(PlatformImplUtest, CloudV6DataDump_InheritsCloudV4Behaviour)
+{
+    CloudV6DataDump dataDump;
+    EXPECT_EQ(dataDump.GetKfcStackSize(), static_cast<uint64_t>(54) * BLOCK_MIN_SIZE * INTEGER_KILOBYTE);
+    EXPECT_EQ(
+        dataDump.GetKfcBinNames(), (std::vector<std::string>{"dump_stat_op_ascend950.o", "kfc_dump_stat_ascend950.o"}));
+    EXPECT_TRUE(dataDump.IsUbFromAiCore());
+    EXPECT_EQ(dataDump.GetCoreTypeIDOffset(), 36U);
+    EXPECT_EQ(dataDump.GetBlockNum(), 54U);
+    EXPECT_EQ(dataDump.GetStreamSyncTimeout(), 60000 * 30);
+}
+
+TEST_F(PlatformImplUtest, CloudV6Platform_RegisteredForAllDomains)
+{
+    const PlatformType type = PlatformType::CHIP_CLOUD_V6;
+    auto features = PlatformReflection<FeaturesSupportInterface>::CreatePlatform(type);
+    auto coredump = PlatformReflection<CoredumpInterface>::CreatePlatform(type);
+    auto exception = PlatformReflection<ExceptionDumpInterface>::CreatePlatform(type);
+    auto dataDump = PlatformReflection<DataDumpInterface>::CreatePlatform(type);
+    ASSERT_NE(features, nullptr);
+    ASSERT_NE(coredump, nullptr);
+    ASSERT_NE(exception, nullptr);
+    ASSERT_NE(dataDump, nullptr);
+    EXPECT_NE(dynamic_cast<CloudV6Features*>(features.get()), nullptr);
+    EXPECT_NE(dynamic_cast<CloudV6Coredump*>(coredump.get()), nullptr);
+    EXPECT_NE(dynamic_cast<CloudV6Exception*>(exception.get()), nullptr);
+    EXPECT_NE(dynamic_cast<CloudV6DataDump*>(dataDump.get()), nullptr);
 }
 
 // ---------------- CloudV2Platform (CHIP_CLOUD_V2 / Ascend910B) ----------------

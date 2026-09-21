@@ -15,6 +15,7 @@ set(ascendDumpBaseSrcList
     ${ADUMP_ADUMP_DIR}/common/platform/cloud_v2_platform.cpp
     ${ADUMP_ADUMP_DIR}/common/platform/cloud_v4_platform.cpp
     ${ADUMP_ADUMP_DIR}/common/platform/cloud_v5_platform.cpp
+    ${ADUMP_ADUMP_DIR}/common/platform/cloud_v6_platform.cpp
     ${ADUMP_ADUMP_DIR}/common/platform/dc_platform.cpp
     ${ADUMP_ADUMP_DIR}/common/file.cpp
     ${ADUMP_ADUMP_DIR}/common/json_parser.cpp

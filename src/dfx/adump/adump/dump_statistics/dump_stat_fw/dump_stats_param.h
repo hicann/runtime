@@ -26,8 +26,8 @@ enum KfcDumpResult {
     KFC_DUMP_SUCCESS = 0,       // Succeeded
     KFC_DUMP_E_PARA = 1,        // Invalid parameter: interface args is null, or unexpected message type received
     KFC_DUMP_E_TIMEOUT = 2,     // Timeout on waiting aiv response, free sq slot or statistics task completion
-    KFC_DUMP_E_NOT_SUPPORT = 3, // Chip type is none of CHIP_DC / CHIP_CLOUD_V2 / CHIP_CLOUD_V4 / CHIP_CLOUD_V5,
-                                // or an aicpu scheduler weak symbol is unresolved
+    KFC_DUMP_E_NOT_SUPPORT = 3, // Chip type is none of CHIP_DC / CHIP_CLOUD_V2 / CHIP_CLOUD_V4 / CHIP_CLOUD_V5 /
+                                // CHIP_CLOUD_V6, or an aicpu scheduler weak symbol is unresolved
     KFC_DUMP_E_AGAIN = 4,       // Retry needed, reserved and not used by current implementation
     KFC_DUMP_E_INTERNAL = 5,    // Launch before init, null sqe construct function, or reporting result failed
     KFC_DUMP_E_MEMORY = 6,      // Memory operation failed: memcpy_s / memset_s returned non-EOK
@@ -100,6 +100,7 @@ enum ChipType {
     CHIP_CLOUD_V2 = 5,  // Uses AddOneStatDumpTaskV1 / PrintSqeV1
     CHIP_CLOUD_V4 = 15, // Uses AddStatDumpTaskCloudV4 / PrintSqeCloudV4
     CHIP_CLOUD_V5 = 16, // Uses AddStatDumpTaskCloudV5 / PrintSqeCloudV5
+    CHIP_CLOUD_V6 = 19, // DV100Lite, uses AddStatDumpTaskCloudV4 / PrintSqeCloudV4 (same as V4)
 };
 
 enum TensorType {

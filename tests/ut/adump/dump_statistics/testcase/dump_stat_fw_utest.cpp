@@ -336,6 +336,14 @@ TEST_F(KfcDumpServer_UT, InitKfcDumpInfo_CHIP_CLOUD_V5_Success)
     EXPECT_TRUE(AdumpStatsOpInitStatus());
 }
 
+TEST_F(KfcDumpServer_UT, InitKfcDumpInfo_CHIP_CLOUD_V6_Success)
+{
+    StubKFCDumpParam kfcDumpParam;
+    kfcDumpParam.initParam.config.chipType = CHIP_CLOUD_V6;
+    EXPECT_EQ(KFC_DUMP_SUCCESS, AdumpStatsOpSrvInit(&kfcDumpParam.initParam));
+    EXPECT_TRUE(AdumpStatsOpInitStatus());
+}
+
 TEST_F(KfcDumpServer_UT, InitKfcDumpInfo_NotSupportChip)
 {
     StubKFCDumpParam kfcDumpParam;
@@ -525,6 +533,31 @@ TEST_F(KfcDumpServer_UT, AdumpStatsOpSrvLaunch_CHIP_CLOUD_V5_Success)
     EXPECT_NE(0U, sqe.groupBlockdim);
     EXPECT_EQ(KERNEL_TIMEOUT_CONSTANT, sqe.kernelCredit);
     KfcDumpPrintf::PrintSqeCloudV4(reinterpret_cast<uint8_t*>(&sqe));
+}
+
+TEST_F(KfcDumpServer_UT, AdumpStatsOpSrvLaunch_CHIP_CLOUD_V6_Success)
+{
+    StubKFCDumpParam kfcDumpParam;
+    uint64_t msgAddr = kfcDumpParam.initParam.kfcWorkSpace.msgQ;
+    KfcServerHandle kfcServer(msgAddr, KFC_DUMP_MSG_RESPONSE, 0);
+    KfcDumpTask kfcDumpTask;
+    kfcDumpTask.streamId_ = 1;
+    kfcDumpTask.taskId_ = 19;
+    kfcDumpTask.index_ = 1;
+    KfcDumpInfo kfcDumpInfo = GetDumpInfo(kfcDumpTask);
+    g_kfcDumpInfo = &kfcDumpInfo;
+    kfcDumpParam.initParam.config.chipType = CHIP_CLOUD_V6;
+    EXPECT_EQ(KFC_DUMP_SUCCESS, AdumpStatsOpSrvInit(&kfcDumpParam.initParam));
+    EXPECT_EQ(KFC_DUMP_SUCCESS, AdumpStatsOpSrvLaunch(reinterpret_cast<void*>(&kfcDumpTask)));
+    EXPECT_EQ(2U * STUB_TENSOR_COUNT_PER_TYPE, kfcServer.Stop());
+    EXPECT_TRUE(kfcServer.SawFinished());
+    EXPECT_TRUE(kfcServer.NoStaleRequestAtStop());
+
+    // CHIP_CLOUD_V6 intentionally reuses the CloudV4 SQE builder and printer.
+    rtDavidStarsAicAivSqeCloudV4 sqe = {};
+    AddStatDumpTaskCloudV4(reinterpret_cast<uint8_t*>(&sqe), &kfcDumpParam.initParam, &kfcDumpParam.dumpContext);
+    KfcDumpPrintf::PrintSqeCloudV4(reinterpret_cast<uint8_t*>(&sqe));
+    EXPECT_EQ(1U, sqe.header.type);
 }
 
 TEST_F(KfcDumpServer_UT, AdumpStatsOpSrvLaunch_CHIP_DC_Success)
