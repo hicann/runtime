@@ -42,11 +42,8 @@ extern "C" {
 #define ACL_PROF_API_STATS 0x400000000ULL
 #define ACL_PROF_AICORE_SHAPE 0x800000000ULL
 
-/**
- * @deprecated please use aclprofGetOpTypeLen and aclprofGetOpNameLen instead
- */
-#define ACL_PROF_MAX_OP_NAME_LEN 257
-#define ACL_PROF_MAX_OP_TYPE_LEN 65
+#define ACL_PROF_MAX_OP_NAME_LEN 257 // max op name len for aclprofGetOpNameLen
+#define ACL_PROF_MAX_OP_TYPE_LEN 65 // max op type len for aclprofGetOpTypeLen
 
 #ifndef ACL_PROF_TENSOR_DATA_SHAPE_LEN
 #define ACL_PROF_TENSOR_DATA_SHAPE_LEN 8 // frozen: must never change (changes aclprofTensor size/stride)
