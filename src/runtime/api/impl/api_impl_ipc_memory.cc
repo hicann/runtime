@@ -14,7 +14,6 @@
 #include "error_message_manage.hpp"
 #include "npu_driver.hpp"
 #include "runtime.hpp"
-#include "runtime/rts/rts_mem.h"
 
 #include <algorithm>
 #include <mutex>
