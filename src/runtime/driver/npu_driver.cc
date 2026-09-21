@@ -213,6 +213,12 @@ rtError_t NpuDriver::transMemAttribute(const uint32_t memPolicy, rtMemType_t* co
     return error;
 }
 
+std::string GetMemModuleName(const uint16_t moduleId)
+{
+    return (&halGetMemModuleName != nullptr) ? std::string(halGetMemModuleName(static_cast<uint32_t>(moduleId))) :
+                                               RT_GET_MODULE_NAME_FROM_MAP(moduleId);
+}
+
 void RtLogErrorLevelControl(bool isLogError, const char* format, ...)
 {
     constexpr int32_t singleLogUpperLimit = 512U;

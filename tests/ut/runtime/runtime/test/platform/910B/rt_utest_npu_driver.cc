@@ -658,7 +658,7 @@ TEST_F(CloudV2NpuDriverTest, huge_page_managed_memory_failed_04)
 
 TEST_F(CloudV2NpuDriverTest, utils_get_module_name)
 {
-    std::string moduleName = RT_GET_MODULE_NAME(RUNTIME_MODULE_ID);
+    std::string moduleName = RT_GET_MODULE_NAME_FROM_MAP(RUNTIME_MODULE_ID);
     EXPECT_EQ(moduleName, "RUNTIME");
 }
 
