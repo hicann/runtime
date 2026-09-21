@@ -244,7 +244,7 @@ void *aclGetDataBufferAddr(const aclDataBuffer *dataBuffer)
 ## aclGetDataBufferSize（废弃）
 
 ```c
-uint32 aclGetDataBufferSize(const aclDataBuffer *dataBuffer)
+uint32_t aclGetDataBufferSize(const aclDataBuffer *dataBuffer)
 ```
 
 **须知：aclGetDataBufferSize接口在CANN 8.5.0版本标记为废弃，将在2026年12月30日之后的版本删除，替换为：[aclGetDataBufferSizeV2](#aclGetDataBufferSizeV2)接口。**

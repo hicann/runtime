@@ -467,7 +467,7 @@ typedef struct {
     uint32_t value;
     uint32_t timeout;             // 超时时间，单位是秒，其中，0表示永久等待
     uint8_t  isClear;             // wait解除阻塞后是否CntNotify的计数值自动清空为0，取值：1表示清空，0表示不清空
-    uint8_t rev[3];
+    uint8_t rsv[3];
 } aclrtCntNotifyWaitInfo;
 ```
 
@@ -772,7 +772,7 @@ typedef struct aclrtMemLocation {
 ```c
 typedef struct {
     aclrtMemManagedLocationType type;  // 内存所在位置
-    int id;                            // Device ID或NUMA（Non-Uniform Memory Access） ID
+    int32_t id;                        // Device ID或NUMA（Non-Uniform Memory Access） ID
 } aclrtMemManagedLocation;
 ```
 
