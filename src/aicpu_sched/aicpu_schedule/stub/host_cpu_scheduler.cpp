@@ -395,7 +395,7 @@ TaskQueueMgr& TaskQueueMgr::GetInstance()
 
 TaskQueueMgr::TaskQueueMgr() {}
 TaskQueueMgr::~TaskQueueMgr() {}
-void TaskQueueMgr::OnPreprocessEvent(uint32_t eventId) { UNUSED(eventId); }
+void TaskQueueMgr::OnPreprocessEvent(uint32_t eventId) const { UNUSED(eventId); }
 } // namespace DataPreprocess
 
 namespace tdt {
@@ -450,7 +450,8 @@ extern "C" {
 
 int32_t CreateOrFindCustPid(
     const uint32_t deviceId, const uint32_t loadLibNum, const char* const loadLibName[], const uint32_t hostPid,
-    const uint32_t vfId, const char* groupNameList, const uint32_t groupNameNum, int32_t* custProcPid, bool* firstStart)
+    const uint32_t vfId, const char* const groupNameList, const uint32_t groupNameNum, int32_t* const custProcPid,
+    bool* const firstStart)
 {
     UNUSED(deviceId);
     UNUSED(loadLibNum);

@@ -95,7 +95,7 @@ void TaskQueueMgr::CloseTaskQueueFd() {}
 // void TaskQueueMgr::OnPreprocessEvent(const fd_set& eventfdSets) {}
 // void TaskQueueMgr::OnPreprocessEvent(uint32_t eventId) {}
 
-void TaskQueueMgr::OnPreprocessEvent(uint32_t eventId) { return; }
+void TaskQueueMgr::OnPreprocessEvent(uint32_t eventId) const { return; }
 } // namespace DataPreprocess
 
 namespace aicpu {

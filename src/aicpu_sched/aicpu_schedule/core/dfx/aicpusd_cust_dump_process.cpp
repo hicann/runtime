@@ -267,7 +267,7 @@ int32_t AicpuSdCustDumpProcess::DoCustDatadumpTask(const event_info& drvEventInf
 }
 
 int32_t AicpuSdCustDumpProcess::DoUdfDatadumpSubmitEventSync(
-    const char_t* const msg, const uint32_t len, struct event_proc_result* rsp) const
+    const char_t* const msg, const uint32_t len, const struct event_proc_result* rsp) const
 {
     uint32_t headLen = sizeof(struct event_sync_msg);
     if ((msg == nullptr) || (rsp == nullptr) || (len < headLen)) {
@@ -289,7 +289,7 @@ int32_t AicpuSdCustDumpProcess::DoUdfDatadumpSubmitEventSync(
     backEvent.event_id = static_cast<EVENT_ID>(msgHead.event_id);
     backEvent.subevent_id = msgHead.subevent_id;
     backEvent.msg_len = sizeof(struct event_proc_result);
-    backEvent.msg = PtrToPtr<struct event_proc_result, char_t>(rsp);
+    backEvent.msg = const_cast<char_t*>(PtrToPtr<struct event_proc_result, char_t>(rsp));
     const uint32_t deviceId = deviceId_;
     ret = halEschedSubmitEvent(deviceId, &backEvent);
     aicpusd_info(

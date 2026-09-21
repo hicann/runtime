@@ -112,7 +112,7 @@ public:
     Output       : NA
     Return Value : NA
     *****************************************************************************/
-    void OnPreprocessEvent(uint32_t eventId);
+    void OnPreprocessEvent(uint32_t eventId) const;
 
     /*****************************************************************************
     Description  : clear all task queues

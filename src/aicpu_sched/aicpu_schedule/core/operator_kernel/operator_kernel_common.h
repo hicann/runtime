@@ -20,7 +20,7 @@ class OperatorKernelCommon {
 public:
     static int32_t SendAICPUSubEvent(char_t* const msg, const uint32_t msgLen, const uint32_t subEventId);
     static void TraceQueueData(
-        const RunContext& taskContext, void* const headBuf, const uint32_t headSize, const char_t* const marker);
+        const RunContext& taskContext, const void* const headBuf, const uint32_t headSize, const char_t* const marker);
     static int32_t CopyMbufHeadInfo(const void* const srcHeaderBuf, const uint32_t srcHeadSize, Mbuf* destMbuf);
     static int32_t GetMbufDataPtr(const uint64_t srcAddr, void** dataAddrPtr);
     static int32_t UpdateDataPtr(
@@ -31,7 +31,7 @@ public:
     static int32_t GetMbufAddrAndSize(
         Mbuf* mbuf, void** dataPptr, uint64_t* dataLenPtr, uint32_t modelId, bool allowOnlyDesc);
     static std::shared_ptr<MbufHeadMsg> BackupHeadMsg(
-        void* const headBuf, const uint32_t headSize, const char_t* const marker);
+        const void* const headBuf, const uint32_t headSize, const char_t* const marker);
     static void DoTraceQueueData(
         const RunContext& taskContext, const MbufHeadMsg* const msg, const char_t* const marker);
 
@@ -44,7 +44,8 @@ private:
     OperatorKernelCommon(OperatorKernelCommon&&) = delete;
     OperatorKernelCommon& operator=(OperatorKernelCommon&&) = delete;
 
-    static MbufHeadMsg* GetHeadMsgForTrace(void* const headBuf, const size_t headSize, const char_t* const marker);
+    static MbufHeadMsg* GetHeadMsgForTrace(
+        const void* const headBuf, const size_t headSize, const char_t* const marker);
 };
 } // namespace AicpuSchedule
 

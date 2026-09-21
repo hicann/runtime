@@ -30,7 +30,7 @@ enum TaskQueuePriority {
     TASK_QUEUE_MAX_PRIORITY,
 };
 
-enum TaskEventID { TASK_QUEUE_LOW_EVENT_ID = 1, TASK_QUEUE_HIGH_EVENT_ID };
+enum class TaskEventID { TASK_QUEUE_LOW_EVENT_ID = 1, TASK_QUEUE_HIGH_EVENT_ID };
 
 struct TaskInfo {
     std::string name;
@@ -114,7 +114,7 @@ public:
     Output       : NA
     Return Value : NA
     *****************************************************************************/
-    void OnPreprocessEvent(uint32_t eventId);
+    void OnPreprocessEvent(uint32_t eventId) const;
 
     /*****************************************************************************
     Description  : clear all task queues

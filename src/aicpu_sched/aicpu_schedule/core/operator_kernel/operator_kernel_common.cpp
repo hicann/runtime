@@ -40,14 +40,14 @@ int32_t OperatorKernelCommon::SendAICPUSubEvent(char_t* const msg, const uint32_
 }
 
 void OperatorKernelCommon::TraceQueueData(
-    const RunContext& taskContext, void* const headBuf, const uint32_t headSize, const char_t* const marker)
+    const RunContext& taskContext, const void* const headBuf, const uint32_t headSize, const char_t* const marker)
 {
     MbufHeadMsg* const msg = GetHeadMsgForTrace(headBuf, static_cast<size_t>(headSize), marker);
     DoTraceQueueData(taskContext, msg, marker);
 }
 
 MbufHeadMsg* OperatorKernelCommon::GetHeadMsgForTrace(
-    void* const headBuf, const size_t headSize, const char_t* const marker)
+    const void* const headBuf, const size_t headSize, const char_t* const marker)
 {
     if (&CheckLogLevel != nullptr) {
         if (CheckLogLevel(static_cast<int32_t>(CCECPU), DLOG_INFO) != 1) {
@@ -59,8 +59,8 @@ MbufHeadMsg* OperatorKernelCommon::GetHeadMsgForTrace(
         return nullptr;
     }
 
-    MbufHeadMsg* const msg = PtrToPtr<uint8_t, MbufHeadMsg>(
-        PtrAdd<uint8_t>(PtrToPtr<void, uint8_t>(headBuf), MBUF_HEAD_MAX_SIZE, headSize - sizeof(MbufHeadMsg)));
+    MbufHeadMsg* const msg = PtrToPtr<uint8_t, MbufHeadMsg>(PtrAdd<uint8_t>(
+        const_cast<uint8_t*>(PtrToPtr<void, uint8_t>(headBuf)), MBUF_HEAD_MAX_SIZE, headSize - sizeof(MbufHeadMsg)));
     return msg;
 }
 
@@ -86,7 +86,7 @@ void OperatorKernelCommon::DoTraceQueueData(
 }
 
 std::shared_ptr<MbufHeadMsg> OperatorKernelCommon::BackupHeadMsg(
-    void* const headBuf, const uint32_t headSize, const char_t* const marker)
+    const void* const headBuf, const uint32_t headSize, const char_t* const marker)
 {
     MbufHeadMsg* const msg = GetHeadMsgForTrace(headBuf, static_cast<size_t>(headSize), marker);
     if (msg == nullptr) {

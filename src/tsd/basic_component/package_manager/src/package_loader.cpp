@@ -14,7 +14,6 @@
 #include "plugin_version_manager.h"
 #include <string>
 #include <vector>
-#include "driver/ascend_hal.h"
 #include "driver/ascend_inpackage_hal.h"
 #include "error_manager.h"
 #include "tsd_log.h"
