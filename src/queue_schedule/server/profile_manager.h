@@ -225,7 +225,7 @@ public:
      * @param isRecvCompEvent is receive completion event
      * @return time cost (us)
      */
-    const float64_t AddReqProcCompCost(const uint64_t cost, const bool isRecvCompEvent);
+    float64_t AddReqProcCompCost(const uint64_t cost, const bool isRecvCompEvent);
 
     /**
      * Add HcclIsend cost

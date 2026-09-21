@@ -214,7 +214,7 @@ void ProfileManager::AddHcclTestSomeCost(const uint64_t cost, const bool isRecvC
     }
 }
 
-const float64_t ProfileManager::AddReqProcCompCost(const uint64_t cost, const bool isRecvCompEvent)
+float64_t ProfileManager::AddReqProcCompCost(const uint64_t cost, const bool isRecvCompEvent)
 {
     if (isRecvCompEvent) {
         recvCompEventTrack_.reqProcCompNum++;
