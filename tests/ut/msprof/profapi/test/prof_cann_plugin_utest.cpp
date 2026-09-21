@@ -351,8 +351,12 @@ TEST_F(PROF_CANN_PLUGIN_UTEST, ProfSetStepInfo_GeCallbackNotRegistered)
 {
     auto plugin = ProfCannPlugin::instance();
     plugin->atlsReportApi_ = StubAtlsReportApi;
-    EXPECT_EQ(PROFILING_FAILED, plugin->ProfSetStepInfo(1, 2, nullptr));
-    EXPECT_EQ(0, g_atlsReportApi);
+    MOCKER_CPP(&ProfRuntimePlugin::RuntimeApiInit).stubs().will(returnValue((int32_t)PROFILING_SUCCESS));
+    MOCKER_CPP(&ProfRuntimePlugin::ProfMarkEx).stubs().will(returnValue((int32_t)RT_ERROR_NONE));
+    EXPECT_EQ(PROFILING_SUCCESS, plugin->ProfSetStepInfo(1, 2, nullptr));
+    EXPECT_EQ(0U, g_stepInfoCallbackCount);
+    EXPECT_EQ(1, g_atlsReportApi);
+    EXPECT_EQ(65542U, g_reportedApiType);
 }
 
 TEST_F(PROF_CANN_PLUGIN_UTEST, ProfSetStepInfo_RuntimeMarkFail)

@@ -95,6 +95,7 @@ typedef void* VOID_PTR;
 #define MSPROF_REPORT_NODE_GE_API_BASE_TYPE 0x010000U   /* type info: ge api */
 #define MSPROF_REPORT_NODE_HCCL_BASE_TYPE 0x020000U     /* type info: hccl api */
 #define MSPROF_REPORT_NODE_DVPP_API_BASE_TYPE 0x030000U /* type info: dvpp api */
+#define MSPROF_REPORT_NODE_STEP_INFO_TYPE 0x010006U     /* type info: step_info */
 /* Msprof report type of aicpu(6000), offset: 0x000000 */
 #define MSPROF_REPORT_AICPU_NODE_TYPE 0U             /* type info: DATA_PREPROCESS.AICPU */
 #define MSPROF_REPORT_AICPU_DP_TYPE 1U               /* type info: DATA_PREPROCESS.DP */
