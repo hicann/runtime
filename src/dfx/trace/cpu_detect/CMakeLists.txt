@@ -1,3 +1,12 @@
+# -----------------------------------------------------------------------------------------------------------
+# Copyright (c) 2026 Huawei Technologies Co., Ltd.
+# This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+# CANN Open Software License Agreement Version 2.0 (the "License").
+# Please refer to the License for details. You may not use this file except in compliance with the License.
+# THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+# INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+# See LICENSE in the root of the software repository for the full text of the License.
+# -----------------------------------------------------------------------------------------------------------
 ############################# libcpu_detect.so(linux)   #############################
 set(libcpudetectSrcFiles
     ${CMAKE_CURRENT_SOURCE_DIR}/cpu_detect.c
@@ -137,7 +146,7 @@ set(torinoCpuDetectTestSrcFiles
 set(libcpudetecttestSrcFiles ${milanCpuDetectTestSrcFiles})
 set(CPU_DETECT_STL_MARCH "-march=armv8.3-a+crc+crypto+fp16")
 if(PRODUCT)
-    if(${PRODUCT} STREQUAL "ascend950")
+    if((${PRODUCT} STREQUAL "ascend950") OR (${PRODUCT} STREQUAL "ascend350"))
         set(libcpudetecttestSrcFiles ${torinoCpuDetectTestSrcFiles})
         set(CPU_DETECT_STL_MARCH "-march=armv8.3-a+crc+fp+simd+lse+fp16+crypto")
     endif()
@@ -221,6 +230,7 @@ target_compile_definitions(cpu_detect_share
     PRIVATE
         OS_TYPE=0
         $<$<STREQUAL:${PRODUCT},ascend950>:CPU_DETECT_LINX_CORE>
+        $<$<STREQUAL:${PRODUCT},ascend350>:CPU_DETECT_LINX_CORE>
 )
 set_target_properties(cpu_detect_share
     PROPERTIES
