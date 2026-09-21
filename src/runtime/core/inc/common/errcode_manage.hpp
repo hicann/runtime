@@ -26,7 +26,7 @@
 
 #define RT_GET_ERRREASON(rtErrCode) ErrorcodeManage::Instance().GetErrorReason(rtErrCode)
 
-#define RT_GET_MODULE_NAME(moduleId) ErrorcodeManage::Instance().GetModuleName(moduleId)
+#define RT_GET_MODULE_NAME_FROM_MAP(moduleId) ErrorcodeManage::Instance().GetModuleName(moduleId)
 
 namespace cce {
 namespace runtime {
