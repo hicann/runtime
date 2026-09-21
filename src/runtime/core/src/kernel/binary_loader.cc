@@ -14,6 +14,7 @@
 #include <mutex>
 #include <set>
 #include "error_message_manage.hpp"
+#include "elf.hpp"
 #include "enum_desc.hpp"
 #include "runtime.hpp"
 #include "utils.h"
@@ -491,6 +492,21 @@ rtError_t BinaryLoader::LoadNonCpu(Program** prog)
     NULL_PTR_RETURN_MSG(Runtime::Instance(), RT_ERROR_INSTANCE_NULL);
 
     *prog = nullptr;
+    if (!isLoadFromFile_) {
+        // Reject malformed ELF headers before allocating or copying the full binary.
+        NULL_PTR_RETURN_MSG(binaryBuffer_, RT_ERROR_INVALID_VALUE);
+        COND_RETURN_AND_MSG_OUTER(
+            binarySize_ < sizeof(Elf64_External_Ehdr), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, __func__, "length",
+            "binary data is shorter than an ELF64 header");
+        const uint8_t* const ident = static_cast<const uint8_t*>(binaryBuffer_);
+        COND_RETURN_AND_MSG_OUTER(
+            (ident[0] != 0x7FU) || (ident[1] != 'E') || (ident[2] != 'L') || (ident[3] != 'F'), RT_ERROR_INVALID_VALUE,
+            ErrorCode::EE1017, __func__, "data", "invalid ELF magic");
+        COND_RETURN_AND_MSG_OUTER(
+            ident[EI_CLASS] != ELFCLASS64, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, __func__, "data",
+            "only ELF64 binary data is supported");
+    }
+
     // 1. Load binary file or data, parse elf, get the original kernel symbols and attributes.
     ElfProgram* program = LoadProgram();
     NULL_PTR_RETURN_MSG(program, RT_ERROR_INVALID_VALUE);

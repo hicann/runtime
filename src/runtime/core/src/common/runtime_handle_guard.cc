@@ -114,6 +114,13 @@ rtError_t GetValidatedObjectImpl(const void* handle, uint64_t expectedMagic, voi
         return RT_ERROR_NONE;
     }
 
+    if ((reinterpret_cast<uintptr_t>(handle) % alignof(rtInnerObject)) != 0U) {
+        RT_LOG_OUTER_MSG_IMPL(
+            ErrorCode::EE1017, "Object validation", GetResourceNameByMagic(expectedMagic),
+            "handle address is not aligned");
+        return RT_ERROR_INVALID_HANDLE;
+    }
+
     const rtError_t ret = ValidateInnerObject(handle, expectedMagic);
     if (ret != RT_ERROR_NONE) {
         return ret;

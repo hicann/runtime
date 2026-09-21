@@ -76,12 +76,24 @@ rtError_t ValidateLabelHandleForApi(rtLabel_t handle, Label*& outRealObj, const 
 rtError_t ValidateLabelHandleArrayForApi(
     rtLabel_t* handles, size_t count, std::vector<Label*>& outRealObjs, const char_t* callerFuncName)
 {
-    const rtError_t ret = GetValidatedObjectArray<Label>(handles, count, outRealObjs);
-    if (ret == RT_ERROR_NONE) {
-        return RT_ERROR_NONE;
-    } else {
-        return ReportApiHandleValidationError(ret, callerFuncName);
+    outRealObjs.clear();
+    if (handles == nullptr) {
+        return ReportApiHandleValidationError(RT_ERROR_INVALID_VALUE, callerFuncName);
     }
+    outRealObjs.reserve(count);
+    for (size_t i = 0U; i < count; ++i) {
+        Label* realObj = nullptr;
+        const rtError_t ret = GetValidatedObject<Label>(handles[i], realObj);
+        if (ret != RT_ERROR_NONE) {
+            return ReportApiHandleValidationError(ret, callerFuncName);
+        }
+        // Label lists require a real Label; stop before reading the next array element.
+        if (realObj == nullptr) {
+            return ReportApiHandleValidationError(RT_ERROR_INVALID_VALUE, callerFuncName);
+        }
+        outRealObjs.push_back(realObj);
+    }
+    return RT_ERROR_NONE;
 }
 
 rtError_t ValidateStreamHandleForApi(rtStream_t handle, Stream*& outRealObj, const char_t* callerFuncName)
