@@ -16,6 +16,7 @@
 #include "kernel.h"
 #include "rt_error_codes.h"
 #include "api_impl.hpp"
+#include "api_impl_kernel_func.hpp"
 #include "api_decorator.hpp"
 #include "api_error.hpp"
 #include "api_profile_log_decorator.hpp"
@@ -51,6 +52,11 @@ protected:
 };
 
 namespace {
+void MockApiKernelFuncInstance(ApiKernelFunc* const apiKernelFunc)
+{
+    MOCKER(ApiKernelFunc::Instance).stubs().will(returnValue(apiKernelFunc));
+}
+
 Kernel* CreateTestKernelForCheckArgs(
     rtKernelAttrType attrType, KernelRegisterType regType, bool hasParamSummary, size_t paramCount = 0)
 {
@@ -129,12 +135,18 @@ TEST_F(ApiKernelTest, TestRtsBinaryUnloadSuccess)
 
 TEST_F(ApiKernelTest, TestFuncGetAddr)
 {
+    ApiImplKernelFunc apiImplKernelFunc;
+    MockApiKernelFuncInstance(&apiImplKernelFunc);
     ElfProgram program;
     uint64_t tilingKey = 0;
     Kernel kernel("testKernelName", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
 
     void* func1;
     void* func2;
+    MOCKER_CPP_VIRTUAL(apiImplKernelFunc, &ApiImplKernelFunc::FuncGetAddr)
+        .expects(once())
+        .with(eq(static_cast<const Kernel*>(&kernel)), eq(&func1), eq(&func2))
+        .will(returnValue(RT_ERROR_NONE));
     rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
     rtError_t error = rtsFuncGetAddr(funcHandle, &func1, &func2);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -210,10 +222,16 @@ TEST_F(ApiKernelTest, TestRtsGetNonCacheAddrOffset)
 
 TEST_F(ApiKernelTest, TestFuncGetName)
 {
+    ApiImplKernelFunc apiImplKernelFunc;
+    MockApiKernelFuncInstance(&apiImplKernelFunc);
     ElfProgram program;
     uint64_t tilingKey = 0;
     Kernel kernel("testKernelName", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
     char_t name[128];
+    MOCKER_CPP_VIRTUAL(apiImplKernelFunc, &ApiImplKernelFunc::FuncGetName)
+        .expects(once())
+        .with(eq(static_cast<const Kernel*>(&kernel)), eq(128U), eq(static_cast<char_t*>(name)))
+        .will(returnValue(RT_ERROR_NONE));
     rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
     rtError_t error = rtsFuncGetName(funcHandle, 128, name);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -499,11 +517,17 @@ TEST_F(ApiImplKernelTest, MemcpyBatchAsync)
 
 TEST_F(ApiKernelTest, TestFuncGetAttribute)
 {
+    ApiImplKernelFunc apiImplKernelFunc;
+    MockApiKernelFuncInstance(&apiImplKernelFunc);
     ElfProgram program;
     uint64_t tilingKey = 0;
     Kernel kernel("testKernelName", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
 
     int64_t attrValue = 0;
+    MOCKER_CPP_VIRTUAL(apiImplKernelFunc, &ApiImplKernelFunc::FunctionGetAttribute)
+        .expects(exactly(2))
+        .will(returnValue(RT_ERROR_NONE))
+        .then(returnValue(RT_ERROR_INVALID_VALUE));
     rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
     rtError_t error = rtFunctionGetAttribute(funcHandle, RT_FUNCTION_ATTR_KERNEL_TYPE, &attrValue);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
@@ -680,9 +704,11 @@ TEST_F(ApiKernelTest, TestRtFunctionGetParamCount_ApiImplSuccess)
     kernel.SetParamCount(3);
 
     size_t paramCount = 0;
-    ApiImpl apiImpl;
-    MOCKER(Api::Instance).stubs().will(returnValue(static_cast<Api*>(&apiImpl)));
-    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::FunctionGetParamCount).stubs().will(returnValue(RT_ERROR_NONE));
+    ApiImplKernelFunc apiImplKernelFunc;
+    MockApiKernelFuncInstance(&apiImplKernelFunc);
+    MOCKER_CPP_VIRTUAL(apiImplKernelFunc, &ApiImplKernelFunc::FunctionGetParamCount)
+        .expects(once())
+        .will(returnValue(RT_ERROR_NONE));
 
     rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
     rtError_t error = rtFunctionGetParamCount(funcHandle, &paramCount);
@@ -696,10 +722,10 @@ TEST_F(ApiKernelTest, TestRtFunctionGetParamCount_ApiImplFeatureNotSupport)
     Kernel kernel("testKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
 
     size_t paramCount = 0;
-    ApiImpl apiImpl;
-    MOCKER(Api::Instance).stubs().will(returnValue(static_cast<Api*>(&apiImpl)));
-    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::FunctionGetParamCount)
-        .stubs()
+    ApiImplKernelFunc apiImplKernelFunc;
+    MockApiKernelFuncInstance(&apiImplKernelFunc);
+    MOCKER_CPP_VIRTUAL(apiImplKernelFunc, &ApiImplKernelFunc::FunctionGetParamCount)
+        .expects(once())
         .will(returnValue(RT_ERROR_FEATURE_NOT_SUPPORT));
 
     rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
@@ -714,9 +740,11 @@ TEST_F(ApiKernelTest, TestRtFunctionGetParamCount_ApiImplOtherError)
     Kernel kernel("testKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
 
     size_t paramCount = 0;
-    ApiImpl apiImpl;
-    MOCKER(Api::Instance).stubs().will(returnValue(static_cast<Api*>(&apiImpl)));
-    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::FunctionGetParamCount).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    ApiImplKernelFunc apiImplKernelFunc;
+    MockApiKernelFuncInstance(&apiImplKernelFunc);
+    MOCKER_CPP_VIRTUAL(apiImplKernelFunc, &ApiImplKernelFunc::FunctionGetParamCount)
+        .expects(once())
+        .will(returnValue(RT_ERROR_INVALID_VALUE));
 
     rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
     rtError_t error = rtFunctionGetParamCount(funcHandle, &paramCount);
@@ -732,9 +760,11 @@ TEST_F(ApiKernelTest, TestRtFunctionGetParamInfo_ApiImplSuccess)
     size_t paramIndex = 0;
     size_t paramOffset = 0;
     size_t paramSize = 0;
-    ApiImpl apiImpl;
-    MOCKER(Api::Instance).stubs().will(returnValue(static_cast<Api*>(&apiImpl)));
-    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::FunctionGetParamInfo).stubs().will(returnValue(RT_ERROR_NONE));
+    ApiImplKernelFunc apiImplKernelFunc;
+    MockApiKernelFuncInstance(&apiImplKernelFunc);
+    MOCKER_CPP_VIRTUAL(apiImplKernelFunc, &ApiImplKernelFunc::FunctionGetParamInfo)
+        .expects(once())
+        .will(returnValue(RT_ERROR_NONE));
 
     rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
     rtError_t error = rtFunctionGetParamInfo(funcHandle, paramIndex, &paramOffset, &paramSize);
@@ -750,9 +780,11 @@ TEST_F(ApiKernelTest, TestRtFunctionGetParamInfo_ApiImplFeatureNotSupport)
     size_t paramIndex = 0;
     size_t paramOffset = 0;
     size_t paramSize = 0;
-    ApiImpl apiImpl;
-    MOCKER(Api::Instance).stubs().will(returnValue(static_cast<Api*>(&apiImpl)));
-    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::FunctionGetParamInfo).stubs().will(returnValue(RT_ERROR_FEATURE_NOT_SUPPORT));
+    ApiImplKernelFunc apiImplKernelFunc;
+    MockApiKernelFuncInstance(&apiImplKernelFunc);
+    MOCKER_CPP_VIRTUAL(apiImplKernelFunc, &ApiImplKernelFunc::FunctionGetParamInfo)
+        .expects(once())
+        .will(returnValue(RT_ERROR_FEATURE_NOT_SUPPORT));
 
     rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
     rtError_t error = rtFunctionGetParamInfo(funcHandle, paramIndex, &paramOffset, &paramSize);
@@ -768,9 +800,11 @@ TEST_F(ApiKernelTest, TestRtFunctionGetParamInfo_ApiImplOtherError)
     size_t paramIndex = 0;
     size_t paramOffset = 0;
     size_t paramSize = 0;
-    ApiImpl apiImpl;
-    MOCKER(Api::Instance).stubs().will(returnValue(static_cast<Api*>(&apiImpl)));
-    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::FunctionGetParamInfo).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    ApiImplKernelFunc apiImplKernelFunc;
+    MockApiKernelFuncInstance(&apiImplKernelFunc);
+    MOCKER_CPP_VIRTUAL(apiImplKernelFunc, &ApiImplKernelFunc::FunctionGetParamInfo)
+        .expects(once())
+        .will(returnValue(RT_ERROR_INVALID_VALUE));
 
     rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
     rtError_t error = rtFunctionGetParamInfo(funcHandle, paramIndex, &paramOffset, &paramSize);
@@ -818,9 +852,11 @@ TEST_F(ApiKernelTest, TestRtFunctionGetAvailDynUbufPerBlock_ApiImplSuccess)
     Kernel kernel("testKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
 
     size_t dynamicUbufSize = 0;
-    ApiImpl apiImpl;
-    MOCKER(Api::Instance).stubs().will(returnValue(static_cast<Api*>(&apiImpl)));
-    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::FunctionGetAvailDynUbufPerBlock).stubs().will(returnValue(RT_ERROR_NONE));
+    ApiImplKernelFunc apiImplKernelFunc;
+    MockApiKernelFuncInstance(&apiImplKernelFunc);
+    MOCKER_CPP_VIRTUAL(apiImplKernelFunc, &ApiImplKernelFunc::FunctionGetAvailDynUbufPerBlock)
+        .expects(once())
+        .will(returnValue(RT_ERROR_NONE));
 
     rtError_t error =
         rtFunctionGetAvailDynUbufPerBlock(rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel), 0U, &dynamicUbufSize);
@@ -834,10 +870,10 @@ TEST_F(ApiKernelTest, TestRtFunctionGetAvailDynUbufPerBlock_ApiImplOtherError)
     Kernel kernel("testKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
 
     size_t dynamicUbufSize = 0;
-    ApiImpl apiImpl;
-    MOCKER(Api::Instance).stubs().will(returnValue(static_cast<Api*>(&apiImpl)));
-    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::FunctionGetAvailDynUbufPerBlock)
-        .stubs()
+    ApiImplKernelFunc apiImplKernelFunc;
+    MockApiKernelFuncInstance(&apiImplKernelFunc);
+    MOCKER_CPP_VIRTUAL(apiImplKernelFunc, &ApiImplKernelFunc::FunctionGetAvailDynUbufPerBlock)
+        .expects(once())
         .will(returnValue(RT_ERROR_INVALID_VALUE));
 
     rtError_t error =

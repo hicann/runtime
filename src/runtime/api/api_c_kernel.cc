@@ -12,6 +12,7 @@
 #include "api.hpp"
 #include "api_handle_guard.h"
 #include "api_kernel_args.hpp"
+#include "api_kernel_func.hpp"
 #include "osal.hpp"
 #include "rts/rts.h"
 #include "runtime/inner_kernel.h"
@@ -464,7 +465,7 @@ rtError_t rtBinaryGetFunctionCount(rtBinHandle const binHandle, uint32_t* const 
 VISIBILITY_DEFAULT
 rtError_t rtsFuncGetAddr(const rtFuncHandle funcHandle, void** aicAddr, void** aivAddr)
 {
-    Api* const apiInstance = Api::Instance();
+    ApiKernelFunc* const apiInstance = ApiKernelFunc::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(funcHandle, Kernel, realKernel, ValidateKernelHandleForApi);
     const rtError_t ret = apiInstance->FuncGetAddr(realKernel, aicAddr, aivAddr);
@@ -504,7 +505,7 @@ rtError_t rtsGetNonCacheAddrOffset(uint32_t deviceId, uint64_t* offset) { return
 VISIBILITY_DEFAULT
 rtError_t rtsFuncGetName(const rtFuncHandle funcHandle, const uint32_t maxLen, char_t* const name)
 {
-    Api* const apiInstance = Api::Instance();
+    ApiKernelFunc* const apiInstance = ApiKernelFunc::Instance();
     NULL_PTR_RETURN_NOLOG(apiInstance, ACL_ERROR_RT_INTERNAL_ERROR);
     RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(funcHandle, Kernel, realKernel, ValidateKernelHandleForApi);
     const rtError_t ret = apiInstance->FuncGetName(realKernel, maxLen, name);

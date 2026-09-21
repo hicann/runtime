@@ -11,6 +11,7 @@
 #include "api.hpp"
 #include "api_event.hpp"
 #include "api_handle_guard.h"
+#include "api_kernel_func.hpp"
 #include "ipc_event.hpp"
 #include "base.hpp"
 #include "device_enum_desc.hpp"
@@ -1467,7 +1468,7 @@ rtError_t rtIpcOpenEventHandle(rtIpcEventHandle_t handle, rtEvent_t* event)
 VISIBILITY_DEFAULT
 rtError_t rtFunctionGetAttribute(rtFuncHandle funcHandle, rtFuncAttribute attrType, int64_t* attrValue)
 {
-    Api* const apiInstance = Api::Instance();
+    ApiKernelFunc* const apiInstance = ApiKernelFunc::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(funcHandle, Kernel, realKernel, ValidateKernelHandleForApi);
     const rtError_t error =
@@ -1479,7 +1480,7 @@ rtError_t rtFunctionGetAttribute(rtFuncHandle funcHandle, rtFuncAttribute attrTy
 VISIBILITY_DEFAULT
 rtError_t rtFunctionGetBinary(const rtFuncHandle funcHandle, rtBinHandle* binHandle)
 {
-    Api* const apiInstance = Api::Instance();
+    ApiKernelFunc* const apiInstance = ApiKernelFunc::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(funcHandle, Kernel, realKernel, ValidateKernelHandleForApi);
     const rtError_t ret = apiInstance->FunctionGetBinary(realKernel, RtPtrToPtr<Program**>(binHandle));
@@ -1545,7 +1546,7 @@ rtError_t rtSymbolLookup(const void* hostVar, void** devPtr, size_t* size)
 VISIBILITY_DEFAULT
 rtError_t rtFunctionGetParamCount(const void* func, size_t* paramCount)
 {
-    Api* const apiInstance = Api::Instance();
+    ApiKernelFunc* const apiInstance = ApiKernelFunc::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const Runtime* const rtInstance = Runtime::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
@@ -1564,7 +1565,7 @@ rtError_t rtFunctionGetParamCount(const void* func, size_t* paramCount)
 VISIBILITY_DEFAULT
 rtError_t rtFunctionGetParamInfo(const void* func, size_t paramIndex, size_t* paramOffset, size_t* paramSize)
 {
-    Api* const apiInstance = Api::Instance();
+    ApiKernelFunc* const apiInstance = ApiKernelFunc::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const Runtime* const rtInstance = Runtime::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
@@ -1583,7 +1584,7 @@ rtError_t rtFunctionGetParamInfo(const void* func, size_t paramIndex, size_t* pa
 VISIBILITY_DEFAULT
 rtError_t rtFunctionGetAvailDynUbufPerBlock(void* func, uint32_t flags, size_t* dynamicUbufSize)
 {
-    Api* const apiInstance = Api::Instance();
+    ApiKernelFunc* const apiInstance = ApiKernelFunc::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(func, Kernel, kernel, ValidateKernelHandleForApi);
     const rtError_t error = apiInstance->FunctionGetAvailDynUbufPerBlock(kernel, flags, dynamicUbufSize);
@@ -1645,7 +1646,7 @@ rtError_t rtFuncGetSize(const rtFuncHandle funcHandle, size_t* aicSize, size_t* 
         !IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_MODEL_ACL_GRAPH),
         ACL_ERROR_RT_FEATURE_NOT_SUPPORT, "chip type(%d) does not support rtFuncGetSize api, return.",
         static_cast<int32_t>(chipType));
-    Api* const apiInstance = Api::Instance();
+    ApiKernelFunc* const apiInstance = ApiKernelFunc::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(funcHandle, Kernel, realKernel, ValidateKernelHandleForApi);
     const rtError_t ret = apiInstance->FuncGetSize(realKernel, aicSize, aivSize);
@@ -1656,7 +1657,7 @@ rtError_t rtFuncGetSize(const rtFuncHandle funcHandle, size_t* aicSize, size_t* 
 VISIBILITY_DEFAULT
 rtError_t rtGetFuncBySymbol(const void* symbol, rtFuncHandle* funcHandle)
 {
-    Api* const apiInstance = Api::Instance();
+    ApiKernelFunc* const apiInstance = ApiKernelFunc::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const rtError_t ret = apiInstance->GetFunctionBySymbol(symbol, RtPtrToPtr<Kernel**>(funcHandle));
     COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER(

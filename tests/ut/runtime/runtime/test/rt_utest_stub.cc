@@ -221,6 +221,10 @@ TEST_F(TinyStubTest, api_c_stub)
     EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ret = rtFuncGetSize(nullptr, nullptr, nullptr);
     EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    ret = rtsFuncGetAddr(nullptr, nullptr, nullptr);
+    EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    ret = rtsFuncGetName(nullptr, 0U, nullptr);
+    EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ret = rtLaunchDqsTask(nullptr, nullptr);
     EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     rtMemManagedLocation location;
