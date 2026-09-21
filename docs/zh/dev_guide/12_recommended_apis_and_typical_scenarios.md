@@ -679,9 +679,9 @@ aclError aclrtHostRegisterV2(void *ptr, uint64_t size, uint32_t flag)
 | `ACL_HOST_REG_PINNED` | 0x10000000 | 将Host非锁页内存注册为锁页内存（如malloc申请的内存） |
 | `ACL_HOST_REG_MAPPED` | 0x02 | 将Host内存映射注册为Device可访问的内存地址 |
 | `ACL_HOST_REG_IOMEMORY` | 0x04 | 将第三方PCIe设备的IO space映射注册为Device可访问（预留，当前不支持） |
-| `ACL_HOST_REG_READONLY` | 0x08 | Host内存映射注册为Device只读（预留，当前不支持） |
+| `ACL_HOST_REG_READONLY` | 0x08 | Host内存映射注册为Device只读 |
 
-> **注意**：`ACL_HOST_REG_PINNED` 和 `ACL_HOST_REG_MAPPED` 支持位或组合使用。`ACL_HOST_REG_IOMEMORY` 和 `ACL_HOST_REG_READONLY` 当前不支持。
+> **注意**：`ACL_HOST_REG_PINNED`、`ACL_HOST_REG_MAPPED` 和 `ACL_HOST_REG_READONLY` 支持位或组合使用。`ACL_HOST_REG_IOMEMORY` 当前不支持。
 
 ### 使用场景
 
@@ -749,6 +749,7 @@ aclrtHostUnregister(ioPtr);
 | 锁页 + 映射到Device | `ACL_HOST_REG_PINNED \| ACL_HOST_REG_MAPPED` | malloc内存供Device直接访问（最常用） |
 | 仅锁页 | `ACL_HOST_REG_PINNED` | 提升H2D/D2H拷贝性能 |
 | 仅映射（已有锁页内存） | `ACL_HOST_REG_MAPPED` | aclrtMallocHost申请的内存映射到Device |
+| 只读映射 | `ACL_HOST_REG_READONLY` 或 `ACL_HOST_REG_READONLY \| ACL_HOST_REG_MAPPED` | Host内存供Device只读访问 |
 | PCIe IO space映射 | `ACL_HOST_REG_IOMEMORY \| ACL_HOST_REG_MAPPED` | 第三方设备寄存器映射 |
 
 ### 约束说明
@@ -757,4 +758,4 @@ aclrtHostUnregister(ioPtr);
 - 当OS内核版本为5.10或更低时，使用 `ACL_HOST_REG_PINNED` 注册非锁页内存会导致异常，此时应改用 `aclrtMallocHost` 申请锁页内存。
 - 映射后的Device内存地址不能用于内存操作（如 `aclrtMemcpy`），仅供Device侧算子直接访问。如需内存复制，仍应使用 `aclrtMemcpy`。
 - 注册与取消注册需成对使用：`aclrtHostRegisterV2` 与 `aclrtHostUnregister`。
-- `ACL_HOST_REG_IOMEMORY` 和 `ACL_HOST_REG_READONLY` 当前为预留选项，不支持。
+- `ACL_HOST_REG_IOMEMORY` 当前为预留选项，不支持。

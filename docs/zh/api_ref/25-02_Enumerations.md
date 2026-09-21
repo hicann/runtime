@@ -1519,7 +1519,7 @@ typedef enum {
 | --- | --- |
 | ACL_HOST_REGISTER_MAPPED | Host内存映射注册为Device可访问，包括读写。 |
 | ACL_HOST_REGISTER_IOMEMORY | 将Host上第三方PCIe设备的IO space(寄存器、缓存)映射注册为Device可访问，包括读写。预留选项，当前不支持。 |
-| ACL_HOST_REGISTER_READONLY | Host内存映射注册为Device只读。预留选项，当前不支持。 |
+| ACL_HOST_REGISTER_READONLY | Host内存映射注册为Device只读。 |
 
 <br>
 
