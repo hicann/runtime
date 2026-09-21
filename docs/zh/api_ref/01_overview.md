@@ -103,7 +103,7 @@ CANN支持以下几类显式同步，调用此类接口后，主机线程会阻�
 
     aclsysGetCANNVersion接口在CANN 8.5.0版本标记为废弃，将在2026年12月30日之后的版本删除，替换为：[aclsysGetVersionStr](24_other_APIs.md#aclsysGetVersionStr)接口或[aclsysGetVersionNum](24_other_APIs.md#aclsysGetVersionNum)接口。
 
-- [aclmdlRIDebugPrint](15_model_running_instance_management.md#aclmdlRIDebugPrint)接口
+- [aclmdlRIDebugPrint](15_model_running_instance_management.md#aclmdlRIDebugPrint_deprecated)接口
 
     aclmdlRIDebugPrint接口在CANN 8.5.0版本标记为废弃，将在2026年12月30日之后的版本删除，替换为：[aclmdlRIDebugJsonPrint](15_model_running_instance_management.md#aclmdlRIDebugJsonPrint)接口。
 

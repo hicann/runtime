@@ -4810,7 +4810,8 @@ ACL_FUNC_VISIBILITY aclError aclmdlRICaptureEnd(aclrtStream stream, aclmdlRI* mo
  * @deprecated aclmdlRIDebugPrint is deprecated since 8.5.0, Will be removed after 2026/12/30, use
  *             aclmdlRIDebugJsonPrint instead.
  */
-ACL_DEPRECATED_MESSAGE("aclmdlRIDebugPrint is deprecated, use aclmdlRIDebugJsonPrint instead")
+ACL_DEPRECATED_MESSAGE("aclmdlRIDebugPrint is deprecated since 8.5.0, Will be removed after 2026/12/30, use "
+                       "aclmdlRIDebugJsonPrint instead")
 ACL_FUNC_VISIBILITY aclError aclmdlRIDebugPrint(aclmdlRI modelRI);
 
 /**
@@ -5092,7 +5093,8 @@ ACL_FUNC_VISIBILITY aclError aclmdlRITaskGetSeqId(aclmdlRITask task, uint32_t* i
  * @deprecated aclrtGetVersion is deprecated since 9.2.0, Will be removed after 2027/9/30, use
  *             aclsysGetVersionNum or aclsysGetVersionStr instead.
  */
-ACL_DEPRECATED_MESSAGE("aclrtGetVersion is deprecated, use aclSysGetVersion instead")
+ACL_DEPRECATED_MESSAGE("aclrtGetVersion is deprecated since 9.2.0, Will be removed after 2027/9/30, use"
+                       "aclsysGetVersionNum or aclsysGetVersionStr instead")
 ACL_FUNC_VISIBILITY aclError aclrtGetVersion(int32_t* majorVersion, int32_t* minorVersion, int32_t* patchVersion);
 
 /**

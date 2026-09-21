@@ -562,9 +562,9 @@ aclError aclmdlRIDebugJsonPrint(aclmdlRI modelRI, const char *path, uint32_t fla
 <br>
 <br>
 
-<a id="aclmdlRIDebugPrint"></a>
+<a id="aclmdlRIDebugPrint_deprecated"></a>
 
-## aclmdlRIDebugPrint
+## aclmdlRIDebugPrint（废弃）
 
 ```c
 aclError aclmdlRIDebugPrint(aclmdlRI modelRI)
