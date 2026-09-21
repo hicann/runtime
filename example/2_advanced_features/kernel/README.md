@@ -15,3 +15,4 @@
 - [8_reusable_kernel_args](./8_reusable_kernel_args/README.md)：演示由用户管理参数内存，并通过参数句柄更新和复用同一 Kernel 参数列表。
 - [9_device_symbol_io](./9_device_symbol_io/README.md)：演示异步初始化 Device 变量、由 Kernel 更新状态，并通过同步和异步方式读回校验。
 - [10_simd_stack_budget](./10_simd_stack_budget/README.md)：演示在绑定 Device 前配置并确认 SIMD 栈空间预算，再执行使用较大局部栈数据的校验 Kernel。
+- [11_device_argument_vector_add](./11_device_argument_vector_add/README.md)：演示将参数包上传至 Device 内存，通过异步 Kernel 任务完成向量加法并逐项校验结果。
