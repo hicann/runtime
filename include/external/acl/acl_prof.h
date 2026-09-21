@@ -136,7 +136,7 @@ typedef struct aclprofTensorInfo {
 typedef struct aclprofEventAttributes {
     uint16_t version;
     uint16_t size;
-    uint32_t messageType; // MESSAGE_TYPE_TENSOR_INFO
+    uint32_t messageType; // ACL_PROF_MESSAGE_TYPE_TENSOR_INFO
     union Message {
         aclprofTensorInfo* tensorInfo;
     } message;
