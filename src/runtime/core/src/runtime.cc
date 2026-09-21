@@ -2323,7 +2323,7 @@ rtError_t Runtime::StartAicpuSd(Device* const device) const
 
     COND_PROC_RETURN_AND_MSG_OUTER(
         tsdOpenAicpuSd_ == nullptr, RT_ERROR_DRV_SYM_TSD, ErrorCode::EE1015, aicpuSchSdLock->Unlock(),
-        "Starting the AI CPU service", "Symbol TsdOpenAicpuSd not found in libtsdclient.so.");
+        "Starting the AI CPU service", "Symbol TsdOpenAicpuSd not found.");
 
     uint32_t userDeviceId;
     error = GetUserDevIdByDeviceId(device->Id_(), &userDeviceId, true);
