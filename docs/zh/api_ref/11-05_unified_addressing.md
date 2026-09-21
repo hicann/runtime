@@ -22,22 +22,22 @@ aclError aclrtMemAllocManaged(void **ptr, uint64_t size, uint32_t flag)
 ### 产品支持情况
 
 <!-- npu="950" id3214 -->
-- Ascend 950PR/Ascend 950DT：不支持
+- Ascend 950PR&950DT系列产品：不支持
 <!-- end id3214 -->
 <!-- npu="A3" id3215 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3215 -->
 <!-- npu="910b" id3216 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3216 -->
 <!-- npu="310b" id3217 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id3217 -->
 <!-- npu="310p" id3218 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id3218 -->
 <!-- npu="910" id3219 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id3219 -->
 <!-- npu="IPV350" id3220 -->
 - IPV350：不支持
@@ -81,22 +81,22 @@ aclError aclrtMemManagedAdvise(const void *const ptr, uint64_t size, aclrtMemMan
 ### 产品支持情况
 
 <!-- npu="950" id2150 -->
-- Ascend 950PR/Ascend 950DT：不支持
+- Ascend 950PR&950DT系列产品：不支持
 <!-- end id2150 -->
 <!-- npu="A3" id2151 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2151 -->
 <!-- npu="910b" id2152 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2152 -->
 <!-- npu="310b" id2153 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id2153 -->
 <!-- npu="310p" id2154 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id2154 -->
 <!-- npu="910" id2155 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id2155 -->
 <!-- npu="IPV350" id2156 -->
 - IPV350：不支持
@@ -137,22 +137,22 @@ aclError aclrtMemManagedGetAttr(aclrtMemManagedRangeAttribute attribute, const v
 ### 产品支持情况
 
 <!-- npu="950" id1688 -->
-- Ascend 950PR/Ascend 950DT：不支持
+- Ascend 950PR&950DT系列产品：不支持
 <!-- end id1688 -->
 <!-- npu="A3" id1689 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1689 -->
 <!-- npu="910b" id1690 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1690 -->
 <!-- npu="310b" id1691 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id1691 -->
 <!-- npu="310p" id1692 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id1692 -->
 <!-- npu="910" id1693 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id1693 -->
 <!-- npu="IPV350" id1694 -->
 - IPV350：不支持
@@ -196,22 +196,22 @@ aclError aclrtMemManagedGetAttrs(aclrtMemManagedRangeAttribute *attributes, size
 ### 产品支持情况
 
 <!-- npu="950" id2073 -->
-- Ascend 950PR/Ascend 950DT：不支持
+- Ascend 950PR&950DT系列产品：不支持
 <!-- end id2073 -->
 <!-- npu="A3" id2074 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2074 -->
 <!-- npu="910b" id2075 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2075 -->
 <!-- npu="310b" id2076 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id2076 -->
 <!-- npu="310p" id2077 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id2077 -->
 <!-- npu="910" id2078 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id2078 -->
 <!-- npu="IPV350" id2079 -->
 - IPV350：不支持
@@ -256,22 +256,22 @@ aclError aclrtMemManagedPrefetchAsync(const void* ptr, size_t size, aclrtMemMana
 ### 产品支持情况
 
 <!-- npu="950" id2136 -->
-- Ascend 950PR/Ascend 950DT：不支持
+- Ascend 950PR&950DT系列产品：不支持
 <!-- end id2136 -->
 <!-- npu="A3" id2137 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2137 -->
 <!-- npu="910b" id2138 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2138 -->
 <!-- npu="310b" id2139 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id2139 -->
 <!-- npu="310p" id2140 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id2140 -->
 <!-- npu="910" id2141 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id2141 -->
 <!-- npu="IPV350" id2142 -->
 - IPV350：不支持
@@ -313,22 +313,22 @@ aclError aclrtMemManagedPrefetchBatchAsync(const void** ptrs, size_t* sizes, siz
 ### 产品支持情况
 
 <!-- npu="950" id2339 -->
-- Ascend 950PR/Ascend 950DT：不支持
+- Ascend 950PR&950DT系列产品：不支持
 <!-- end id2339 -->
 <!-- npu="A3" id2340 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2340 -->
 <!-- npu="910b" id2341 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2341 -->
 <!-- npu="310b" id2342 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id2342 -->
 <!-- npu="310p" id2343 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id2343 -->
 <!-- npu="910" id2344 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id2344 -->
 <!-- npu="IPV350" id2345 -->
 - IPV350：不支持
@@ -345,11 +345,11 @@ aclError aclrtMemManagedPrefetchBatchAsync(const void** ptrs, size_t* sizes, siz
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| ptrs            |   输入    | 待预取的内存地址数组，每个地址范围必须在UVM内存范围内存，即[0x90000000000ULL, 0x90000000000ULL+3TB)。 |
+| ptrs            |   输入    | 待预取的内存地址数组，每个地址范围必须在UVM内存范围内，即[0x90000000000ULL, 0x90000000000ULL+3TB)。 |
 | sizes           |   输入    | 内存预取长度数组，用于存放每一段要预取的UVM内存长度，单位Byte。每段长度要求2MB对齐，取值范围为(0, 3TB]。 |
 | count           |   输入    | ptrs和sizes数组长度。                                        |
 | prefetchLocs    |   输入    | 物理内存的位置信息数组，每个位置信息都包含id和type两个成员。类型定义请参见[aclrtMemManagedLocation](25-04_Structs.md#aclrtMemManagedLocation)。 |
-| prefetchLocIdxs |   输入    | 物理内存预取信息索引数组，用于指定prefetchLocs数组中的每个物理地址适用的预取范围。对于prefetchLocs[k]指定的物理地址，将预取ptrs数组中从第prefetchLocIdxs[k]个下标到第prefetchLocIdxs[k+1]-1个下标指向元素的UVM内存地址，同时对于prefetchLocs[numPrefetchLocs-1]指定的物理地址，将预取ptrs数组中从第prefetchLocs[numPrefetchLocs-1]个下标到第count-1个下标指向元素的UVM内存地址。 |
+| prefetchLocIdxs |   输入    | 物理内存预取信息索引数组，用于指定prefetchLocs数组中的每个物理地址适用的预取范围。对于prefetchLocs[k]指定的物理地址，将预取ptrs数组中从第prefetchLocIdxs[k]个下标到第prefetchLocIdxs[k+1]-1个下标指向元素的UVM内存地址，同时对于prefetchLocs[numPrefetchLocs-1]指定的物理地址，将预取ptrs数组中从第指定的物理地址，将预取ptrs数组中从第prefetchLocIdxs[numPrefetchLocs-1]个下标到第count-1个下标指向元素的UVM内存地址。 |
 | numPrefetchLocs |   输入    | prefetchLocs和prefetchLocIdxs数组的长度。                    |
 | flags           |   输入    | 预留参数。当前固定配置为0。                                  |
 | stream          |   输入    | 指定执行内存预取任务的Stream。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。 |
@@ -378,22 +378,22 @@ aclError aclrtMemP2PMap(void *devPtr, size_t size, int32_t dstDevId, uint64_t fl
 ### 产品支持情况
 
 <!-- npu="950" id2605 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2605 -->
 <!-- npu="A3" id2606 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2606 -->
 <!-- npu="910b" id2607 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2607 -->
 <!-- npu="310b" id2608 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id2608 -->
 <!-- npu="310p" id2609 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2609 -->
 <!-- npu="910" id2610 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2610 -->
 <!-- npu="IPV350" id2611 -->
 - IPV350：不支持
@@ -433,22 +433,22 @@ aclError aclrtPointerGetAttributes(const void *ptr, aclrtPtrAttributes *attribut
 ### 产品支持情况
 
 <!-- npu="950" id1709 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1709 -->
 <!-- npu="A3" id1710 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1710 -->
 <!-- npu="910b" id1711 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1711 -->
 <!-- npu="310b" id1712 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1712 -->
 <!-- npu="310p" id1713 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1713 -->
 <!-- npu="910" id1714 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1714 -->
 <!-- npu="IPV350" id1715 -->
 - IPV350：不支持

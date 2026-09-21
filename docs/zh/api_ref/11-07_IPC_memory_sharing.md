@@ -4,7 +4,7 @@
 
 - [`aclError aclrtIpcMemGetExportKey(void *devPtr, size_t size, char *key, size_t len, uint64_t flags)`](#aclrtIpcMemGetExportKey)：在本进程中将指定Device内存设置为IPC（Inter-Process Communication）共享内存，并返回共享内存key，以便后续将内存共享给其它进程。
 - [`aclError aclrtIpcMemSetImportPid(const char *key, int32_t *pid, size_t num)`](#aclrtIpcMemSetImportPid)：设置IPC共享内存的进程白名单。
-- [`aclError aclrtIpcMemImportPidInterServer(const char *key, aclrtServerPid *serverPids, size_t num)`](#aclrtIpcMemImportPidInterServer)：针对Atlas A3 训练系列产品/Atlas A3 推理系列产品中的超节点产品，批量设置IPC共享内存的进程白名单。
+- [`aclError aclrtIpcMemImportPidInterServer(const char *key, aclrtServerPid *serverPids, size_t num)`](#aclrtIpcMemImportPidInterServer)：针对Atlas A3系列产品中的超节点产品，批量设置IPC共享内存的进程白名单。
 - [`aclError aclrtIpcMemImportByKey(void **devPtr, const char *key, uint64_t flags)`](#aclrtIpcMemImportByKey)：在本进程中导入key的信息，并返回本进程可以使用的Device内存地址指针。
 - [`aclError aclrtIpcMemSetAttr(const char *key, aclrtIpcMemAttrType type, uint64_t attr)`](#aclrtIpcMemSetAttr)：设置IPC共享内存的属性信息。
 - [`aclError aclrtIpcMemClose(const char *key)`](#aclrtIpcMemClose)：关闭IPC共享内存，调用[aclrtIpcMemImportByKey](#aclrtIpcMemImportByKey)接口的进程中、调用[aclrtIpcMemGetExportKey](#aclrtIpcMemGetExportKey)接口的进程中都需要调用此接口。
@@ -20,22 +20,22 @@ aclError aclrtIpcMemGetExportKey(void *devPtr, size_t size, char *key, size_t le
 ### 产品支持情况
 
 <!-- npu="950" id1275 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1275 -->
 <!-- npu="A3" id1276 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1276 -->
 <!-- npu="910b" id1277 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1277 -->
 <!-- npu="310b" id1278 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id1278 -->
 <!-- npu="310p" id1279 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1279 -->
 <!-- npu="910" id1280 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1280 -->
 <!-- npu="IPV350" id1281 -->
 - IPV350：不支持
@@ -96,7 +96,7 @@ aclError aclrtIpcMemGetExportKey(void *devPtr, size_t size, char *key, size_t le
 在B进程中使用共享内存地址时，需注意以下要求（同一个Device上的两个进程通过IPC共享内存时不存在以下要求）：
 
 <!-- npu="310p" id1 -->
-- 在Atlas 推理系列产品上，调用[aclrtMalloc](11-01_device_memory_malloc_and_free.md#aclrtMalloc)接口申请Device内存时，policy处需选择P2P类型，例如ACL\_MEM\_MALLOC\_HUGE\_FIRST\_P2P。
+- 在Atlas推理系列产品上，调用[aclrtMalloc](11-01_device_memory_malloc_and_free.md#aclrtMalloc)接口申请Device内存时，policy处需选择P2P类型，例如ACL\_MEM\_MALLOC\_HUGE\_FIRST\_P2P。
 <!-- end id1 -->
 - 内存复制时，不支持根据源内存地址指针、目的内存地址指针自动判断复制方向；不支持Host-\>Device或Device-\>Host方向的内存复制操作，同步复制、异步复制都不支持；不支持同一个Device内的同步内存复制，但支持同一个Device内的异步内存复制。
 - 支持Cube计算单元、Vector计算单元跨片访问。
@@ -116,22 +116,22 @@ aclError aclrtIpcMemSetImportPid(const char *key, int32_t *pid, size_t num)
 ### 产品支持情况
 
 <!-- npu="950" id1191 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1191 -->
 <!-- npu="A3" id1192 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1192 -->
 <!-- npu="910b" id1193 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1193 -->
 <!-- npu="310b" id1194 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id1194 -->
 <!-- npu="310p" id1195 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1195 -->
 <!-- npu="910" id1196 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1196 -->
 <!-- npu="IPV350" id1197 -->
 - IPV350：不支持
@@ -171,22 +171,22 @@ aclError aclrtIpcMemImportPidInterServer(const char *key, aclrtServerPid *server
 ### 产品支持情况
 
 <!-- npu="950" id519 -->
-- Ascend 950PR/Ascend 950DT：不支持
+- Ascend 950PR&950DT系列产品：不支持
 <!-- end id519 -->
 <!-- npu="A3" id520 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id520 -->
 <!-- npu="910b" id521 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：不支持
+- Atlas A2系列产品：不支持
 <!-- end id521 -->
 <!-- npu="310b" id522 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id522 -->
 <!-- npu="310p" id523 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id523 -->
 <!-- npu="910" id524 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id524 -->
 <!-- npu="IPV350" id525 -->
 - IPV350：不支持
@@ -198,7 +198,7 @@ aclError aclrtIpcMemImportPidInterServer(const char *key, aclrtServerPid *server
 批量设置IPC共享内存的进程白名单。
 
 <!-- npu="A3" id2 -->
-该接口针对Atlas A3 训练系列产品/Atlas A3 推理系列产品中的超节点产品。
+该接口针对Atlas A3系列产品中的超节点产品。
 <!-- end id2 -->
 
 ### 参数说明
@@ -228,22 +228,22 @@ aclError aclrtIpcMemImportByKey(void **devPtr, const char *key, uint64_t flags)
 ### 产品支持情况
 
 <!-- npu="950" id568 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id568 -->
 <!-- npu="A3" id569 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id569 -->
 <!-- npu="910b" id570 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id570 -->
 <!-- npu="310b" id571 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id571 -->
 <!-- npu="310p" id572 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id572 -->
 <!-- npu="910" id573 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id573 -->
 <!-- npu="IPV350" id574 -->
 - IPV350：不支持
@@ -283,22 +283,22 @@ aclError aclrtIpcMemSetAttr(const char *key, aclrtIpcMemAttrType type, uint64_t 
 ### 产品支持情况
 
 <!-- npu="950" id421 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id421 -->
 <!-- npu="A3" id422 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id422 -->
 <!-- npu="910b" id423 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：不支持
+- Atlas A2系列产品：不支持
 <!-- end id423 -->
 <!-- npu="310b" id424 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id424 -->
 <!-- npu="310p" id425 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id425 -->
 <!-- npu="910" id426 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id426 -->
 <!-- npu="IPV350" id427 -->
 - IPV350：不支持
@@ -310,11 +310,11 @@ aclError aclrtIpcMemSetAttr(const char *key, aclrtIpcMemAttrType type, uint64_t 
 设置IPC共享内存的属性信息。
 
 <!-- npu="A3" id3 -->
-对于Atlas A3 训练系列产品/Atlas A3 推理系列产品，若需设置IPC共享内存的属性信息，在调用[aclrtIpcMemGetExportKey](#aclrtIpcMemGetExportKey)接口的进程中，需要先调用aclrtIpcMemSetAttr接口，再调用[aclrtIpcMemGetExportKey](#aclrtIpcMemGetExportKey)接口，且两个接口中的key必须保持一致。
+对于Atlas A3系列产品，若需设置IPC共享内存的属性信息，在调用[aclrtIpcMemGetExportKey](#aclrtIpcMemGetExportKey)接口的进程中，需要先调用aclrtIpcMemSetAttr接口，再调用[aclrtIpcMemGetExportKey](#aclrtIpcMemGetExportKey)接口，且两个接口中的key必须保持一致。
 <!-- end id3 -->
 
 <!-- npu="950" id4 -->
-对于Ascend 950PR/Ascend 950DT，若需设置IPC共享内存的属性信息，在调用[aclrtIpcMemImportByKey](#aclrtIpcMemImportByKey)接口的进程中，需要先调用aclrtIpcMemSetAttr接口，再调用[aclrtIpcMemImportByKey](#aclrtIpcMemImportByKey)接口，且两个接口中的key必须保持一致。
+对于Ascend 950PR&950DT系列产品，若需设置IPC共享内存的属性信息，在调用[aclrtIpcMemImportByKey](#aclrtIpcMemImportByKey)接口的进程中，需要先调用aclrtIpcMemSetAttr接口，再调用[aclrtIpcMemImportByKey](#aclrtIpcMemImportByKey)接口，且两个接口中的key必须保持一致。
 
 对同一个key多次调用aclrtIpcMemSetAttr接口设置attr时，以最后一次设置的attr值为准。
 <!-- end id4 -->
@@ -335,14 +335,14 @@ aclError aclrtIpcMemSetAttr(const char *key, aclrtIpcMemAttrType type, uint64_t 
 ### 约束说明
 
 <!-- npu="950" id5 -->
-- 对于Ascend 950PR/Ascend 950DT，attr支持以下取值：
+- 对于Ascend 950PR&950DT系列产品，attr支持以下取值：
     - ACL_RT_IPC_MEM_ATTR_ACCESS_LINK_UB_ONE_PORT_PATH（值为2）：UB（Unified Bus）单端口路径：FM（Full Mesh）连线方式，无层级、全点对点直连。
     - ACL_RT_IPC_MEM_ATTR_ACCESS_LINK_UB_MULTI_PORT_PATH（值为3）：UB（Unified Bus）多端口路径：CLOS连线方式，分层结构化互联。
 
     若传入其他值，则返回[ACL_ERROR_RT_LINK_TYPE_NOT_SUPPORTED](25-01_aclError.md)错误码。
 <!-- end id5 -->
 <!-- npu="A3" id6 -->
-- 对于Atlas A3 训练系列产品/Atlas A3 推理系列产品，attr支持以下取值：
+- 对于Atlas A3系列产品，attr支持以下取值：
     - ACL_RT_IPC_MEM_ATTR_ACCESS_LINK_SIO（值为0）：SIO通道，片内连接方式，两个DIE之间通过该方式连接。
     - ACL_RT_IPC_MEM_ATTR_ACCESS_LINK_HCCS（值为1）：HCCS通道，HCCS是Huawei Cache Coherence System（华为缓存一致性系统），用于CPU/NPU之间的高速互联。
 
@@ -365,22 +365,22 @@ aclError aclrtIpcMemClose(const char *key)
 ### 产品支持情况
 
 <!-- npu="950" id1303 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1303 -->
 <!-- npu="A3" id1304 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1304 -->
 <!-- npu="910b" id1305 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1305 -->
 <!-- npu="310b" id1306 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id1306 -->
 <!-- npu="310p" id1307 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1307 -->
 <!-- npu="910" id1308 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1308 -->
 <!-- npu="IPV350" id1309 -->
 - IPV350：不支持

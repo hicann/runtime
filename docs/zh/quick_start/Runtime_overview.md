@@ -8,46 +8,45 @@ CANN Runtime是CANN软件栈中负责驱动硬件执行与管理AI计算任务�
 
 下面以一个向量加法算子（VectorAdd，实现 `result = x + alpha * y` 的计算）伪码，展示使用CANN Runtime进行算子调用的完整流程。该示例真实可运行代码请见[hello_cann样例](../../../example/0_quickstart/0_hello_cann/main.cpp)
 
-
 ```c
 #include "acl/acl.h"
 
 int main() {
     // 1. 初始化Runtime
     aclInit(nullptr);
-  
+
     // 2. 设置计算设备
     int32_t deviceId = 0;
     aclrtSetDevice(deviceId);  // 创建默认Context和默认Stream
-  
+
     // 3. 创建Stream
     aclrtStream stream;
     aclrtCreateStream(&stream);
-  
+
     // 4. 申请设备内存
     size_t bufferSize = 8 * sizeof(float);  // 8个float元素
     float *xDevice, *yDevice, *resultDevice;
     aclrtMalloc(&xDevice, bufferSize, ACL_MEM_MALLOC_HUGE_FIRST);
     aclrtMalloc(&yDevice, bufferSize, ACL_MEM_MALLOC_HUGE_FIRST);
     aclrtMalloc(&resultDevice, bufferSize, ACL_MEM_MALLOC_HUGE_FIRST);
-  
+
     // 5. 准备主机数据并拷贝到设备
     float xHost[8] = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f};
     float yHost[8] = {0.5f, 1.0f, 1.5f, 2.0f, 2.5f, 3.0f, 3.5f, 4.0f};
     float alpha = 1.0f;
-  
+
     aclrtMemcpy(xDevice, bufferSize, xHost, bufferSize, ACL_MEMCPY_HOST_TO_DEVICE);
     aclrtMemcpy(yDevice, bufferSize, yHost, bufferSize, ACL_MEMCPY_HOST_TO_DEVICE);
-  
+
     // 6. 调用aclnnAdd(...)下发计算任务
-  
+
     // 7. 同步等待计算完成
     aclrtSynchronizeStream(stream);
-  
+
     // 8. 将结果拷贝回主机
     float resultHost[8];
     aclrtMemcpy(resultHost, bufferSize, resultDevice, bufferSize, ACL_MEMCPY_DEVICE_TO_HOST);
-  
+
     // 9. 释放资源
     aclrtFree(xDevice);
     aclrtFree(yDevice);
@@ -55,7 +54,7 @@ int main() {
     aclrtDestroyStream(stream);
     aclrtResetDeviceForce(deviceId);
     aclFinalize();
-  
+
     return 0;
 }
 ```
@@ -63,7 +62,6 @@ int main() {
 ### 代码解析
 
 上述调用示例展示了Runtime编程的核心步骤，每个步骤对应Runtime的不同能力模块：
-
 
 | 步骤 | 操作                     | Runtime能力        | 说明                                  |
 | ---- | ------------------------ | ------------------ | ------------------------------------- |
@@ -96,7 +94,6 @@ Runtime采用**主机-设备异步并行**的编程模式：
 
 从上述示例可以看出，Runtime围绕计算任务的执行生命周期，提供以下核心功能模块：
 
-
 | 功能模块           | 核心能力                             | 关键接口                                       |
 | ------------------ | ------------------------------------ | ---------------------------------------------- |
 | **运行时全局管理** | 初始化/去初始化、进程级配置、DFX功能 | `aclInit`、`aclFinalize`                       |
@@ -106,11 +103,12 @@ Runtime采用**主机-设备异步并行**的编程模式：
 | **Memory管理**     | 设备内存、主机内存申请/释放/拷贝     | `aclrtMalloc`、`aclrtMemcpy`                   |
 | **Kernel管理**     | 算子加载、注册、执行                 | `<<< >>>` 语法、`aclrtLaunchKernel`        |
 | **Event管理**      | Stream间同步、时间戳记录             | `aclrtCreateEvent`、`aclrtRecordEvent`         |
+
 <br>
 
 此外，Runtime 还提供一系列特性（如 ACL Graph）。Runtime 功能架构如下图所示：
 
-![](figures/逻辑架构图.png)
+![](figures/logical_architecture_diagram.png)
 
 <br>
 <br>

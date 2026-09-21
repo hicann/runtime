@@ -8,11 +8,11 @@ Event也支持**多个任务等待同一个事件（多等一）**，例如strea
 
 一个任务等待一个事件的图示如下：
 
-![](figures/Event_一个任务等待一个事件.png)
+![](figures/Event_one_task_one_event.png)
 
 多个任务等待同一个事件的图示如下：
 
-![](figures/Event_多个任务等待一个事件.png)
+![](figures/Event_multi_tasks_one_event.png)
 
 <br>
 <br>
@@ -125,7 +125,7 @@ aclrtEventElapsedTime(&useTime, startEvent, endEvent);
 
 以下是通过Event实现多线程内存池复用管理机制的代码示例，不可以直接拷贝编译运行，仅供参考。
 
-1.  在A线程中创建内存池，算子所用的内存来源于内存池，在算子后面插入Event Record任务。
+1. 在A线程中创建内存池，算子所用的内存来源于内存池，在算子后面插入Event Record任务。
 
     ```c
     // 申请内存池
@@ -133,18 +133,18 @@ aclrtEventElapsedTime(&useTime, startEvent, endEvent);
     // 创建Stream
     aclrtStream stream;
     aclrtCreateStream(&stream);
-    
+
     // 创建Event
     aclrtEvent event;
     aclrtCreateEventExWithFlag(&event, ACL_EVENT_CAPTURE_STREAM_PROGRESS);
-    
+
     // 在Stream中下发计算任务
     ......
     // 在算子所在stream插入event
     aclrtRecordEvent(event, stream);
     ```
 
-2.  在B线程中调用查询接口，如果查询的Event已经完成，则代表Event Record前面的算子内存都可以被安全的复用。
+2. 在B线程中调用查询接口，如果查询的Event已经完成，则代表Event Record前面的算子内存都可以被安全的复用。
 
     ```c
     aclrtEventRecordedStatus status;
@@ -155,7 +155,7 @@ aclrtEventElapsedTime(&useTime, startEvent, endEvent);
     } else {
     // 算子并未执行完成，该算子占用的内存不能被复用
     }
-    
+
     ```
 
 <br>

@@ -11,7 +11,7 @@
 
     配置为1后，部分算子性能可得到提升，但可能存在AI Core Error风险。
 
->**须知：** 
+>**须知：**
 >本环境变量为试验特性，后续版本可能会存在变更，不支持应用于生产环境中。
 
 ## 配置示例
@@ -28,14 +28,14 @@ export AUTO_USE_UC_MEMORY=0
 ## 支持的型号
 
 <!-- npu="310p" id2 -->
-Atlas 推理系列产品
+Atlas推理系列产品
 <!-- end id2 -->
 
 <!-- npu="910b" id3 -->
-Atlas A2 训练系列产品/Atlas A2 推理系列产品
+Atlas A2系列产品
 <!-- end id3 -->
 
 <!-- npu="A3" id4 -->
-Atlas A3 训练系列产品/Atlas A3 推理系列产品
+Atlas A3系列产品
 <!-- end id4 -->
 <!-- end id1 -->

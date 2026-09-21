@@ -29,7 +29,6 @@ Context与线程绑定，同一时刻一个线程只能使用一个Context。Run
 
 调用`aclrtSetDevice`接口时，Runtime会自动为指定Device创建一个**默认Context**。对于简单应用，使用默认Context即可满足需求。但对于复杂应用，显式创建和管理Context具有以下优势：
 
-
 | 场景         | 默认Context                                     | 显式Context                             |
 | ------------ | ----------------------------------------------- | --------------------------------------- |
 | 多线程编程   | 线程间共享默认Context，任务执行顺序依赖线程调度 | 每个线程独立Context，便于隔离和调试     |
@@ -43,7 +42,7 @@ Context与线程绑定，同一时刻一个线程只能使用一个Context。Run
 
 Context与Device、Stream的关系如下图所示：
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                         Host进程                            │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐       │
@@ -126,46 +125,46 @@ aclFinalize();
 // 线程函数
 void* threadFunc(void* arg) {
     int32_t deviceId = *(int32_t*)arg;
-  
+
     // 每个线程创建自己的Context
     aclrtContext ctx;
     aclrtCreateContext(&ctx, deviceId);
-  
+
     // 创建Stream
     aclrtStream stream;
     aclrtCreateStream(&stream);
-  
+
     // 执行任务
     // ... 业务逻辑 ...
-  
+
     // 同步等待任务完成
     aclrtSynchronizeStream(stream);
-  
+
     // 销毁资源
     aclrtDestroyStream(stream);
     aclrtDestroyContext(ctx);
-  
+
     return nullptr;
 }
 
 // 主线程
 int main() {
     aclInit(nullptr);
-  
+
     int32_t deviceId = 0;
     aclrtSetDevice(deviceId);
-  
+
     // 创建多个线程
     pthread_t threads[4];
     for (int i = 0; i < 4; i++) {
         pthread_create(&threads[i], nullptr, threadFunc, &deviceId);
     }
-  
+
     // 等待线程完成
     for (int i = 0; i < 4; i++) {
         pthread_join(threads[i], nullptr);
     }
-  
+
     aclrtResetDeviceForce(deviceId);
     aclFinalize();
     return 0;
@@ -183,43 +182,43 @@ aclrtContext g_ctx;  // 全局Context
 
 void* threadFunc(void* arg) {
     int threadId = *(int*)arg;
-  
+
     // 切换到共享Context
     aclrtSetCurrentContext(g_ctx);
-  
+
     // 创建线程专属Stream
     aclrtStream stream;
     aclrtCreateStream(&stream);
-  
+
     // 在自己的Stream上执行任务
     // ... 业务逻辑 ...
-  
+
     aclrtSynchronizeStream(stream);
     aclrtDestroyStream(stream);
-  
+
     return nullptr;
 }
 
 int main() {
     aclInit(nullptr);
-  
+
     int32_t deviceId = 0;
     aclrtSetDevice(deviceId);
-  
+
     // 创建一个Context供多线程共享
     aclrtCreateContext(&g_ctx, deviceId);
-  
+
     pthread_t threads[4];
     int threadIds[4];
     for (int i = 0; i < 4; i++) {
         threadIds[i] = i;
         pthread_create(&threads[i], nullptr, threadFunc, &threadIds[i]);
     }
-  
+
     for (int i = 0; i < 4; i++) {
         pthread_join(threads[i], nullptr);
     }
-  
+
     aclrtDestroyContext(g_ctx);
     aclrtResetDeviceForce(deviceId);
     aclFinalize();

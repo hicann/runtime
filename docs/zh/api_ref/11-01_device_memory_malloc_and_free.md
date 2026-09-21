@@ -26,22 +26,22 @@ aclError aclrtMalloc(void **devPtr, size_t size, aclrtMemMallocPolicy policy)
 ### 产品支持情况
 
 <!-- npu="950" id729 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id729 -->
 <!-- npu="A3" id730 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id730 -->
 <!-- npu="910b" id731 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id731 -->
 <!-- npu="310b" id732 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id732 -->
 <!-- npu="310p" id733 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id733 -->
 <!-- npu="910" id734 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id734 -->
 <!-- npu="IPV350" id735 -->
 - IPV350：支持
@@ -57,24 +57,24 @@ aclError aclrtMalloc(void **devPtr, size_t size, aclrtMemMallocPolicy policy)
 <!-- end id1 -->
 
 <!-- npu="950" id2 -->
-- 对于Ascend 950PR/Ascend 950DT，本接口分配的内存，会进行字节对齐，会对用户申请的size向上对齐成32字节整数倍。
+- 对于Ascend 950PR&950DT系列产品，本接口分配的内存，会进行字节对齐，会对用户申请的size向上对齐成32字节整数倍。
 <!-- end id2 -->
 <!-- npu="A3,910b,910,310p,310b" id3 -->
 - 对于以下产品型号，本接口分配的内存，会进行字节对齐，会对用户申请的size向上对齐成32字节整数倍后再多加32字节。但对于内存申请粒度为1GB的大页内存，为节省大页内存，本接口会对用户申请的size仅向上对齐成32字节整数倍，不会再增加32字节。
     <!-- npu="A3" id4 -->
-    - Atlas A3 训练系列产品/Atlas A3 推理系列产品
+    - Atlas A3系列产品
     <!-- end id4 -->
     <!-- npu="910b" id5 -->
-    - Atlas A2 训练系列产品/Atlas A2 推理系列产品
+    - Atlas A2系列产品
     <!-- end id5 -->
     <!-- npu="310b" id6 -->
-    - Atlas 200I/500 A2 推理产品
+    - Atlas 200I/500 A2推理产品
     <!-- end id6 -->
     <!-- npu="310p" id7 -->
-    - Atlas 推理系列产品
+    - Atlas推理系列产品
     <!-- end id7 -->
     <!-- npu="910" id8 -->
-    - Atlas 训练系列产品
+    - Atlas训练系列产品
     <!-- end id8 -->
 <!-- end id3 -->
 
@@ -99,10 +99,10 @@ aclError aclrtMalloc(void **devPtr, size_t size, aclrtMemMallocPolicy policy)
 ### 约束说明
 
 <!-- @ref: runtime/res/docs/zh/api_ref/11-01_device_memory_malloc_and_free_res.md#id14 -->
-- 本接口分配的内存不会对内容初始化，建议在使用内存前先调用[aclrtMemset](11-03_memory_copy_and_set.md#aclrtMemset)接口先初始化内存，清除内存中的随机数。
+- 本接口不会初始化内存内容，建议在使用内存前先调用[aclrtMemset](11-03_memory_copy_and_set.md#aclrtMemset)接口先初始化内存，清除内存中的随机数。
 - 本接口内部不会进行隐式的Device同步或流同步，如果申请内存成功或申请内存失败会立刻返回结果。
 - policy处仅支持配置单个枚举项，不支持配置多个枚举项位或。
-  
+
   <!-- npu="IPV350" id11 -->
   但对于IPV350，policy处支持配置单个枚举项，也支持配置多个枚举项位或。位或时，支持这三项（ACL\_MEM\_MALLOC\_HUGE\_FIRST、ACL\_MEM\_MALLOC\_HUGE\_ONLY、ACL\_MEM\_MALLOC\_NORMAL\_ONLY）与这两项（ACL\_MEM\_TYPE\_LOW\_BAND\_WIDTH、ACL\_MEM\_TYPE\_HIGH\_BAND\_WIDTH）组合，**例如**：ACL\_MEM\_MALLOC\_HUGE\_FIRST | ACL\_MEM\_TYPE\_HIGH\_BAND\_WIDTH
   <!-- end id11 -->
@@ -113,29 +113,29 @@ aclError aclrtMalloc(void **devPtr, size_t size, aclrtMemMallocPolicy policy)
     <!-- npu="950,A3,910b,910,310p,310b" id12 -->
     - 内存大小对齐规则，各产品型号有所不同：
         <!-- npu="950" id13 -->
-        - 对于Ascend 950PR/Ascend 950DT，内存大小向上对齐成32整数倍（m=ALIGN\_UP\[len,32\]字节）。
+        - 对于Ascend 950PR&950DT系列产品，内存大小向上对齐成32整数倍（m=ALIGN\_UP\[len,32\]字节）。
         <!-- end id13 -->
         <!-- npu="A3,910b,910,310p,310b" id14 -->
         - 对于以下产品型号，内存大小向上对齐成32整数倍+32字节（m=ALIGN\_UP\[len,32\]+32字节）。
 
             <!-- npu="A3" id15 -->
-            Atlas A3 训练系列产品/Atlas A3 推理系列产品
+            Atlas A3系列产品
             <!-- end id15 -->
 
             <!-- npu="910b" id16 -->
-            Atlas A2 训练系列产品/Atlas A2 推理系列产品
+            Atlas A2系列产品
             <!-- end id16 -->
 
             <!-- npu="310b" id17 -->
-            Atlas 200I/500 A2 推理产品
+            Atlas 200I/500 A2推理产品
             <!-- end id17 -->
 
             <!-- npu="310p" id18 -->
-            Atlas 推理系列产品
+            Atlas推理系列产品
             <!-- end id18 -->
 
             <!-- npu="910" id19 -->
-            Atlas 训练系列产品
+            Atlas训练系列产品
             <!-- end id19 -->
         <!-- end id14 -->
     <!-- end id12 -->
@@ -161,22 +161,22 @@ aclError aclrtMallocAlign32(void **devPtr, size_t size, aclrtMemMallocPolicy pol
 ### 产品支持情况
 
 <!-- npu="950" id1786 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1786 -->
 <!-- npu="A3" id1787 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1787 -->
 <!-- npu="910b" id1788 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1788 -->
 <!-- npu="310b" id1789 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1789 -->
 <!-- npu="310p" id1790 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1790 -->
 <!-- npu="910" id1791 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1791 -->
 <!-- npu="IPV350" id1792 -->
 - IPV350：支持
@@ -188,26 +188,26 @@ aclError aclrtMallocAlign32(void **devPtr, size_t size, aclrtMemMallocPolicy pol
 在Device上分配size大小的线性内存，并通过\*devPtr返回已分配内存的指针。本接口分配的内存会进行字节对齐，会对用户申请的size向上对齐成32字节整数倍。使用本接口申请的内存，需要通过[aclrtFree](#aclrtFree)接口或[aclrtFreeWithDevSync](#aclrtFreeWithDevSync)接口释放内存。
 
 <!-- npu="950" id21 -->
-对于Ascend 950PR/Ascend 950DT，本接口功能等同于aclrtMalloc接口。
+对于Ascend 950PR&950DT系列产品，本接口功能等同于aclrtMalloc接口。
 <!-- end id21 -->
 
 <!-- npu="A3,910b,910,310p,310b" id22 -->
 对于以下产品型号，与aclrtMalloc接口相比，本接口只会对用户申请的size向上对齐成32字节整数倍，不会再多加32字节。
 
 <!-- npu="A3" id23 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品
+- Atlas A3系列产品
 <!-- end id23 -->
 <!-- npu="910b" id24 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品
+- Atlas A2系列产品
 <!-- end id24 -->
 <!-- npu="310b" id25 -->
-- Atlas 200I/500 A2 推理产品
+- Atlas 200I/500 A2推理产品
 <!-- end id25 -->
 <!-- npu="310p" id26 -->
-- Atlas 推理系列产品
+- Atlas推理系列产品
 <!-- end id26 -->
 <!-- npu="910" id27 -->
-- Atlas 训练系列产品
+- Atlas训练系列产品
 <!-- end id27 -->
 <!-- end id22 -->
 
@@ -245,29 +245,29 @@ aclError aclrtMallocAlign32(void **devPtr, size_t size, aclrtMemMallocPolicy pol
     <!-- npu="950,A3,910b,910,310p,310b" id30 -->
     - 内存大小对齐规则，各产品型号有所不同：
         <!-- npu="950" id31 -->
-        - 对于Ascend 950PR/Ascend 950DT，内存大小向上对齐成32整数倍（m=ALIGN\_UP\[len,32\]字节）。
+        - 对于Ascend 950PR&950DT系列产品，内存大小向上对齐成32整数倍（m=ALIGN\_UP\[len,32\]字节）。
         <!-- end id31 -->
         <!-- npu="A3,910b,910,310p,310b" id32 -->
         - 对于以下产品型号，内存大小向上对齐成32整数倍+32字节（m=ALIGN\_UP\[len,32\]+32字节）。
 
             <!-- npu="A3" id34 -->
-            Atlas A3 训练系列产品/Atlas A3 推理系列产品
+            Atlas A3系列产品
             <!-- end id34 -->
 
             <!-- npu="910b" id35 -->
-            Atlas A2 训练系列产品/Atlas A2 推理系列产品
+            Atlas A2系列产品
             <!-- end id35 -->
 
             <!-- npu="310b" id36 -->
-            Atlas 200I/500 A2 推理产品
+            Atlas 200I/500 A2推理产品
             <!-- end id36 -->
 
             <!-- npu="310p" id37 -->
-            Atlas 推理系列产品
+            Atlas推理系列产品
             <!-- end id37 -->
 
             <!-- npu="910" id38 -->
-            Atlas 训练系列产品
+            Atlas训练系列产品
             <!-- end id38 -->
         <!-- end id32 -->
     <!-- end id30 -->
@@ -293,22 +293,22 @@ aclError aclrtMallocCached(void **devPtr, size_t size, aclrtMemMallocPolicy poli
 ### 产品支持情况
 
 <!-- npu="950" id316 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id316 -->
 <!-- npu="A3" id317 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id317 -->
 <!-- npu="910b" id318 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id318 -->
 <!-- npu="310b" id319 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id319 -->
 <!-- npu="310p" id320 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id320 -->
 <!-- npu="910" id321 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id321 -->
 <!-- npu="IPV350" id322 -->
 - IPV350：不支持
@@ -352,22 +352,22 @@ aclError aclrtMemFlush(void *devPtr, size_t size)
 ### 产品支持情况
 
 <!-- npu="950" id2094 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2094 -->
 <!-- npu="A3" id2095 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2095 -->
 <!-- npu="910b" id2096 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2096 -->
 <!-- npu="310b" id2097 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2097 -->
 <!-- npu="310p" id2098 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2098 -->
 <!-- npu="910" id2099 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2099 -->
 <!-- npu="IPV350" id2100 -->
 - IPV350：不支持
@@ -406,22 +406,22 @@ aclError aclrtMemInvalidate(void *devPtr, size_t size)
 ### 产品支持情况
 
 <!-- npu="950" id2031 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2031 -->
 <!-- npu="A3" id2032 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2032 -->
 <!-- npu="910b" id2033 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2033 -->
 <!-- npu="310b" id2034 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2034 -->
 <!-- npu="310p" id2035 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2035 -->
 <!-- npu="910" id2036 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2036 -->
 <!-- npu="IPV350" id2037 -->
 - IPV350：不支持
@@ -460,22 +460,22 @@ aclError aclrtMallocWithCfg(void **devPtr, size_t size, aclrtMemMallocPolicy pol
 ### 产品支持情况
 
 <!-- npu="950" id589 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id589 -->
 <!-- npu="A3" id590 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id590 -->
 <!-- npu="910b" id591 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id591 -->
 <!-- npu="310b" id592 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id592 -->
 <!-- npu="310p" id593 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id593 -->
 <!-- npu="910" id594 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id594 -->
 <!-- npu="IPV350" id595 -->
 - IPV350：不支持
@@ -527,22 +527,22 @@ aclError aclrtMallocForTaskScheduler(void **devPtr, size_t size, aclrtMemMallocP
 ### 产品支持情况
 
 <!-- npu="950" id2381 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2381 -->
 <!-- npu="A3" id2382 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2382 -->
 <!-- npu="910b" id2383 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2383 -->
 <!-- npu="310b" id2384 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2384 -->
 <!-- npu="310p" id2385 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2385 -->
 <!-- npu="910" id2386 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2386 -->
 <!-- npu="IPV350" id2387 -->
 - IPV350：不支持
@@ -583,22 +583,22 @@ aclError aclrtFree(void *devPtr)
 ### 产品支持情况
 
 <!-- npu="950" id323 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id323 -->
 <!-- npu="A3" id324 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id324 -->
 <!-- npu="910b" id325 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id325 -->
 <!-- npu="310b" id326 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id326 -->
 <!-- npu="310p" id327 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id327 -->
 <!-- npu="910" id328 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id328 -->
 <!-- npu="IPV350" id329 -->
 - IPV350：支持
@@ -640,22 +640,22 @@ aclError aclrtFreeWithDevSync(void *devPtr)
 ### 产品支持情况
 
 <!-- npu="950" id1100 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1100 -->
 <!-- npu="A3" id1101 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1101 -->
 <!-- npu="910b" id1102 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1102 -->
 <!-- npu="310b" id1103 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1103 -->
 <!-- npu="310p" id1104 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1104 -->
 <!-- npu="910" id1105 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1105 -->
 <!-- npu="IPV350" id1106 -->
 - IPV350：不支持
@@ -693,22 +693,22 @@ aclError aclrtGetMemInfo(aclrtMemAttr attr, size_t *free, size_t *total)
 ### 产品支持情况
 
 <!-- npu="950" id463 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id463 -->
 <!-- npu="A3" id464 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id464 -->
 <!-- npu="910b" id465 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id465 -->
 <!-- npu="310b" id466 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id466 -->
 <!-- npu="310p" id467 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id467 -->
 <!-- npu="910" id468 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id468 -->
 <!-- npu="IPV350" id469 -->
 - IPV350：支持
@@ -751,22 +751,22 @@ aclError aclrtGetMemUsageInfo(int32_t deviceId, aclrtMemUsageInfo *memUsageInfo,
 ### 产品支持情况
 
 <!-- npu="950" id85 -->
-- Ascend 950PR/Ascend 950DT：不支持
+- Ascend 950PR&950DT系列产品：不支持
 <!-- end id85 -->
 <!-- npu="A3" id86 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id86 -->
 <!-- npu="910b" id87 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id87 -->
 <!-- npu="310b" id88 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id88 -->
 <!-- npu="310p" id89 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id89 -->
 <!-- npu="910" id90 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id90 -->
 <!-- npu="IPV350" id91 -->
 - IPV350：不支持
@@ -805,22 +805,22 @@ aclError aclrtCheckMemType(void** addrList, uint32_t size, uint32_t memType, uin
 ### 产品支持情况
 
 <!-- npu="950" id2668 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2668 -->
 <!-- npu="A3" id2669 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2669 -->
 <!-- npu="910b" id2670 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2670 -->
 <!-- npu="310b" id2671 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2671 -->
 <!-- npu="310p" id2672 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2672 -->
 <!-- npu="910" id2673 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2673 -->
 <!-- npu="IPV350" id2674 -->
 - IPV350：不支持
@@ -832,7 +832,7 @@ aclError aclrtCheckMemType(void** addrList, uint32_t size, uint32_t memType, uin
 检查Device内存类型。
 
 <!-- npu="950" id39 -->
-Ascend 950PR/Ascend 950DT中不再有单独的DVPP Device内存类型（即ACL\_RT\_MEM\_TYPE\_DVPP），而是当做普通Device内存处理。
+Ascend 950PR&950DT系列产品中不再有单独的DVPP Device内存类型（即ACL\_RT\_MEM\_TYPE\_DVPP），而是当做普通Device内存处理。
 <!-- end id39 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-01_device_memory_malloc_and_free_res.md#id18 -->
 
@@ -842,7 +842,7 @@ Ascend 950PR/Ascend 950DT中不再有单独的DVPP Device内存类型（即ACL\_
 | --- | :---: | --- |
 | addrList | 输入 | Device内存地址数组。 |
 | size | 输入 | addrList数组大小。 |
-| memType | 输入 | Device内存类型。若addrList数组中有多种不同类型的内存地址，则memType处需配置为多种内存类型位或，例如配置为：ACL_RT_MEM_TYPE_DEV \| ACL_RT_MEM_TYPE_DVPP <br><br>当前支持设置为如下宏：<br>  - ACL_RT_MEM_TYPE_DEV：表示调用[aclrtMalloc](11-01_device_memory_malloc_and_free.md#aclrtMalloc)、[aclrtMallocWithCfg](11-01_device_memory_malloc_and_free.md#aclrtMallocWithCfg)等接口申请的Device内存。<br>  - ACL_RT_MEM_TYPE_DVPP：表示DVPP专用的Device内存，可调用相关内存申请接口（例如hi_mpi_dvpp_malloc）申请该内存。Ascend 950PR/Ascend 950DT中不再有单独的DVPP Device内存类型，而是当做普通Device内存处理。<br>  - ACL_RT_MEM_TYPE_RSVD：表示调用[aclrtReserveMemAddress](11-04_virtual_memory_management.md#aclrtReserveMemAddress)接口预留的虚拟内存。<br><br><br>宏定义如下：<br>#define ACL_RT_MEM_TYPE_DEV  (0X2U)<br>#define ACL_RT_MEM_TYPE_DVPP  (0X8U)<br>#define ACL_RT_MEM_TYPE_RSVD  (0X10U) |
+| memType | 输入 | Device内存类型。若addrList数组中有多种不同类型的内存地址，则memType处需配置为多种内存类型位或，例如配置为：ACL_RT_MEM_TYPE_DEV \| ACL_RT_MEM_TYPE_DVPP <br><br>当前支持设置为如下宏：<br>  - ACL_RT_MEM_TYPE_DEV：表示调用[aclrtMalloc](11-01_device_memory_malloc_and_free.md#aclrtMalloc)、[aclrtMallocWithCfg](11-01_device_memory_malloc_and_free.md#aclrtMallocWithCfg)等接口申请的Device内存。<br>  - ACL_RT_MEM_TYPE_DVPP：表示DVPP专用的Device内存，可调用相关内存申请接口（例如hi_mpi_dvpp_malloc）申请该内存。Ascend 950PR&950DT系列产品中不再有单独的DVPP Device内存类型，而是当做普通Device内存处理。<br>  - ACL_RT_MEM_TYPE_RSVD：表示调用[aclrtReserveMemAddress](11-04_virtual_memory_management.md#aclrtReserveMemAddress)接口预留的虚拟内存。<br><br><br>宏定义如下：<br>#define ACL_RT_MEM_TYPE_DEV  (0X2U)<br>#define ACL_RT_MEM_TYPE_DVPP  (0X8U)<br>#define ACL_RT_MEM_TYPE_RSVD  (0X10U) |
 | checkResult | 输出 | 检查addrList数组中内存地址类型与memType处是否匹配，1表示匹配，0表示不匹配。 |
 | reserve | 输入 | 预留参数，当前固定配置为0。 |
 

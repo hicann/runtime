@@ -4,11 +4,11 @@
 
 下图展示了在算子执行过程中与另一条流之间的同步过程：
 
-![](figures/内存语义同步.png)
+![](figures/mem_semantic_sync.png)
 
 内存语义同步相关接口的调用代码示例如下，不可以直接拷贝编译运行，仅供参考：
 
--   **Device示例代码**（算子核函数实现代码）
+- **Device示例代码**（算子核函数实现代码）
 
     ```c
     extern "C" __global__ __aicore__ void myKernel1(GM_ADDR syncMem)
@@ -37,7 +37,7 @@
     }
     ```
 
--   **Host示例代码**
+- **Host示例代码**
 
     ```c
     // 创建Stream
@@ -45,7 +45,7 @@
     aclrtStream stream2;
     aclrtCreateStream(&stream1);
     aclrtCreateStream(&stream2);
-    
+
     // 申请Device内存
     void* syncMem;
     aclrtMalloc(&syncMem, sizeof(uint64_t), ACL_MEM_MALLOC_NORMAL_ONLY);
@@ -53,7 +53,7 @@
     aclrtValueWait(syncMem, 1, ACL_STREAM_WAIT_VALUE_EQ, stream1);
     // 在stream2上下发myKernel1，该kernel内部向syncMem所指向内存写1，从而解除stream1上wait任务的阻塞状态
     myKernel1<<<numBlocks, nullptr, stream2>>>(syncMem);
-    
+
     // 在stream1上下发myKernel2，该kernel内部轮询等待直到syncMem所指向内存的值为2
     myKernel2<<<numBlocks, nullptr, stream1>>>(syncMem);
     // 在stream2上下发write任务，该任务往syncMem所指向内存写为2，从而解除stream1上myKernel2的阻塞状态

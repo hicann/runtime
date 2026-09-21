@@ -4,8 +4,8 @@
 
 自定义Kernel主要有两种下发方式：
 
--   **混合编程方式**：在Host代码中直接使用`<<< >>>`语法下发Kernel。
--   **非混合编程方式**：先将Kernel编译成独立算子二进制，再通过aclrtBinaryLoadFromFile、aclrtBinaryGetFunction、aclrtLaunchKernelWithConfig等Runtime接口加载和下发。
+- **混合编程方式**：在Host代码中直接使用`<<< >>>`语法下发Kernel。
+- **非混合编程方式**：先将Kernel编译成独立算子二进制，再通过aclrtBinaryLoadFromFile、aclrtBinaryGetFunction、aclrtLaunchKernelWithConfig等Runtime接口加载和下发。
 
 ## 两种方式的差异
 
@@ -105,9 +105,9 @@ target_link_libraries(ascendc_kernels_bbit PRIVATE ${ASCEND_CANN_PACKAGE_PATH}/l
 
 相关概念如下：
 
--   **Binary**：动态加载的代码容器单元，包含编译后的Kernel代码、全局变量等。用户通过aclrtBinaryLoadFromFile或aclrtBinaryLoadFromData加载算子二进制，并获得Binary句柄。
--   **Function**：Binary内部的具体可执行Kernel入口。用户通过aclrtBinaryGetFunction或aclrtBinaryGetFunctionByEntry获取Function句柄。
--   **参数列表**：LaunchKernel接口需要获取Kernel参数。参数可放在Device内存、Host内存或aclrtArgsHandle参数列表中，也可以使用placeholder让Runtime在Launch时完成小块参数数据的搬运。
+- **Binary**：动态加载的代码容器单元，包含编译后的Kernel代码、全局变量等。用户通过aclrtBinaryLoadFromFile或aclrtBinaryLoadFromData加载算子二进制，并获得Binary句柄。
+- **Function**：Binary内部的具体可执行Kernel入口。用户通过aclrtBinaryGetFunction或aclrtBinaryGetFunctionByEntry获取Function句柄。
+- **参数列表**：LaunchKernel接口需要获取Kernel参数。参数可放在Device内存、Host内存或aclrtArgsHandle参数列表中，也可以使用placeholder让Runtime在Launch时完成小块参数数据的搬运。
 
 以下是使用LaunchKernel接口的关键代码示例，不可以直接拷贝编译运行，仅供参考。
 

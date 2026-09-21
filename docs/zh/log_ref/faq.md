@@ -136,7 +136,7 @@
     若返回slogd进程相关信息，说明slogd进程存在。
 
     <!-- npu="310b" id3 -->
-    对于Atlas 200I/500 A2 推理产品，若slogd进程不存在，您可以获取日志后单击[support](https://www.hiascend.com/support)联系技术支持。
+    对于Atlas 200I/500 A2推理产品，若slogd进程不存在，您可以获取日志后单击[support](https://www.hiascend.com/support)联系技术支持。
     <!-- end id3 -->
 
 4. 若以上均无问题，但应用类日志仍没有正常落盘，可以尝试参考[重启日志进程](restarting_log_processes.md)内容处理日志进程启动异常。
@@ -154,7 +154,7 @@
     若显示进程相关信息，说明相关日志进程已存在。
 
     <!-- npu="310b" id4 -->
-    对于Atlas 200I/500 A2 推理产品，若进程不存在，您可以获取日志后单击[support](https://www.hiascend.com/support)联系技术支持。
+    对于Atlas 200I/500 A2推理产品，若进程不存在，您可以获取日志后单击[support](https://www.hiascend.com/support)联系技术支持。
     <!-- end id4 -->
 
 2. 执行如下命令查看日志落盘路径（“/var/log/npu/slog”）所在的磁盘空间是否已满。

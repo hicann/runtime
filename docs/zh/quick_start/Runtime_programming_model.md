@@ -8,7 +8,7 @@
 
 主机与设备的关系如下图所示：
 
-![](figures/主机设备关系图.png)
+![](figures/Host_Device_relationship.png)
 
 总结如下：
 
@@ -28,42 +28,45 @@
 
    Stream中的任务保序执行，Stream间的任务并行执行。例如下图中主机侧顺序启动Kernel1、Kernel2和Kernel3任务，具体执行顺序如下：
 
-   -   Kernel1和Kernel3位于同一个Stream中，因此Kernel3需要等待Kernel1执行完毕才能开始执行。
-   -   Kernel2与Kernel1、Kernel3不在同一个Stream中，因此Kernel2可以与Kernel1、Kernel3并行执行。
+   - Kernel1和Kernel3位于同一个Stream中，因此Kernel3需要等待Kernel1执行完毕才能开始执行。
+   - Kernel2与Kernel1、Kernel3不在同一个Stream中，因此Kernel2可以与Kernel1、Kernel3并行执行。
 
-   ![](figures/Stream中的异步任务执行.png)
+   ![](figures/Stream_async_task_execute.png)
 
 ## 同步与异步区分
 
 Runtime API采用同步和异步两种执行模式，具有以下典型特征：
 
 **同步执行**：
+
 - 函数调用会阻塞主机CPU线程，直到操作完成才返回。
 - 调用者必须等待操作执行完毕才能继续执行后续代码。
 - 适用于需要立即获取操作结果的场景。
 
 **异步执行**：
+
 - 函数调用立即返回，不会阻塞主机CPU线程。
 - 操作在设备侧异步执行，主机可以继续执行其他任务。
 - 通过Stream参数指定任务执行的队列。
 - 主机需要在合适的时机进行同步操作以获取结果。
 
 **API区分规则**：
+
 - **带Stream参数的API**：通常为异步接口，任务下发到指定Stream中异步执行。
 - **不带Stream参数的API**：通常为同步接口，会阻塞等待操作完成。
 
 典型示例：
+
 - `aclrtMemcpy`（不带Stream）：同步内存拷贝，阻塞直到拷贝完成。
 - `aclrtMemcpyAsync`（带Stream）：异步内存拷贝，立即返回，拷贝在指定Stream中执行。
 - `aclrtLaunchKernel`（带Stream）：下发算子任务，立即返回，算子任务在指定Stream中执行。
 - `aclrtSynchronizeStream`：同步接口，阻塞等待Stream中所有任务完成。
 
-
 ## 典型执行流程
 
 基于Runtime编程的典型执行流程图如下所示：
 
-![](figures/典型执行流程图.png)
+![](figures/typical_process.png)
 
 流程图展示了Host侧和Device侧的任务调度与执行机制，主要包含以下环节：
 
@@ -78,7 +81,7 @@ Runtime API采用同步和异步两种执行模式，具有以下典型特征：
 
 1. Device初始化，以Device 0为例。
 
-   ```
+   ```c
    int32_t devId=0;
    aclrtSetDevice(devId);
    ```
@@ -91,7 +94,7 @@ Runtime API采用同步和异步两种执行模式，具有以下典型特征：
 
 2. 在当前Context下创建Stream。
 
-   ```
+   ```c
    aclrtStream stream1;
    aclrtCreateStream(&stream1);
    ```
@@ -104,7 +107,7 @@ Runtime API采用同步和异步两种执行模式，具有以下典型特征：
 
 3. 申请主机内存。
 
-   ```
+   ```c
    uint64_t size=1024;
    void *hostPtr=nullptr;
    aclrtMallocHost(&hostPtr, size);
@@ -112,14 +115,14 @@ Runtime API采用同步和异步两种执行模式，具有以下典型特征：
 
 4. 申请设备内存。
 
-   ```
+   ```c
    void *devPtr=nullptr;
    aclrtMalloc(&devPtr, size, ACL_MEM_MALLOC_HUGE_FIRST);
    ```
 
 5. Host到Device的内存同步拷贝。
 
-   ```
+   ```c
    aclrtMemcpy(devPtr, size, hostPtr, size, ACL_MEMCPY_HOST_TO_DEVICE);
    ```
 
@@ -129,7 +132,7 @@ Runtime API采用同步和异步两种执行模式，具有以下典型特征：
 
 6. 下发myKernel计算任务。
 
-   ```
+   ```c
    myKernel<<<numBlocks,  nullptr, stream1>>>(devPtr);
    ```
 
@@ -164,7 +167,7 @@ Runtime API采用同步和异步两种执行模式，具有以下典型特征：
 
 7. Stream同步。
 
-   ```
+   ```c
    aclrtSynchronizeStream(stream1);
    ```
 
@@ -175,7 +178,7 @@ Runtime API采用同步和异步两种执行模式，具有以下典型特征：
 
 8. Device到Host的内存同步拷贝，将结果复制回Host。
 
-   ```
+   ```c
    aclrtMemcpy(hostPtr, size, devPtr, size, ACL_MEMCPY_DEVICE_TO_HOST);
    ```
 
@@ -183,43 +186,40 @@ Runtime API采用同步和异步两种执行模式，具有以下典型特征：
 
 9. 释放设备和主机内存。
 
-   ```
+   ```c
    aclrtFree(devPtr);
    aclrtFreeHost(hostPtr);
    ```
 
 10. 释放Device资源。
 
-    ```
+    ```c
     aclrtResetDeviceForce(devId);
     ```
 
-    
-
-
 ## Runtime主要编程概念
 
--   **Host**，是Runtime对主机的抽象。
--   **Device**，是对AI处理器所属设备的抽象，通常Host与Device关系为1：N。用户APP可以调用acl接口，例如aclrtSetDevice，指定当前用于运算的硬件设备。
--   **Context**，是Device的逻辑运行环境，Context与Device的关系为N：1，即每个Context必定隶属于一个唯一的Device。Context负责管理运行资源对象（包括Stream、Event和Notify，但不包括内存）的生命周期；不同Context中的对象是完全隔离的，例如，不同Context的Stream和Event是完全隔离的，无法建立同步等待关系；运行出错同样按Context隔离。
--   **Stream**，是Device提供的逻辑任务执行队列，可以异步地向Stream中添加任务，在同一个Stream中的任务会严格按FIFO方式执行。Stream与Context的关系是N：1，某条Stream一定属于唯一的Context。
--   **Task**，可被添加到Stream中的执行任务，可以分计算类任务、内存拷贝、事件同步类任务。Task与Stream的关系是N：1，某个Task会被加入到唯一的Stream。
+- **Host**，是Runtime对主机的抽象。
+- **Device**，是对AI处理器所属设备的抽象，通常Host与Device关系为1：N。用户APP可以调用acl接口，例如aclrtSetDevice，指定当前用于运算的硬件设备。
+- **Context**，是Device的逻辑运行环境，Context与Device的关系为N：1，即每个Context必定隶属于一个唯一的Device。Context负责管理运行资源对象（包括Stream、Event和Notify，但不包括内存）的生命周期；不同Context中的对象是完全隔离的，例如，不同Context的Stream和Event是完全隔离的，无法建立同步等待关系；运行出错同样按Context隔离。
+- **Stream**，是Device提供的逻辑任务执行队列，可以异步地向Stream中添加任务，在同一个Stream中的任务会严格按FIFO方式执行。Stream与Context的关系是N：1，某条Stream一定属于唯一的Context。
+- **Task**，可被添加到Stream中的执行任务，可以分计算类任务、内存拷贝、事件同步类任务。Task与Stream的关系是N：1，某个Task会被加入到唯一的Stream。
 
 Device、Context、Stream之间的关系如下图所示：
 
-![](figures/Device_Context_Stream关系.png)
+![](figures/Device_Context_Stream.png)
 
 ## 线程关联Context
 
 Runtime的大多数API接口没有device id参数，因为这些API接口所作用的Device是从调用线程关联的Context中获取的。因此，当主机线程调用Runtime API时，要遵循如下要求：
 
--   线程（主机侧的CPU线程）要关联Context后，才能正确调用Runtime API。
--   线程同一时刻只能关联一个Context。
--   应用程序可以显式创建Context来达成运行资源隔离的业务诉求。此场景中，同一进程内Context可被所有线程可见，线程可以通过aclrtGetCurrentContext查询当前Context，通过aclrtSetCurrentContext切换Context。
+- 线程（主机侧的CPU线程）要关联Context后，才能正确调用Runtime API。
+- 线程同一时刻只能关联一个Context。
+- 应用程序可以显式创建Context来达成运行资源隔离的业务诉求。此场景中，同一进程内Context可被所有线程可见，线程可以通过aclrtGetCurrentContext查询当前Context，通过aclrtSetCurrentContext切换Context。
 
 以下示例说明了线程在调用Context相关接口时，线程与Context之间的关联和切换过程，仅供参考，不可以直接拷贝编译运行。
 
-```
+```c
 // 初始时，线程未关联任何Context
 aclInit(nullptr);
 aclrtSetDevice(0);  // aclrtSetDevice会创建默认Context，同时将线程关联默认Context
@@ -256,28 +256,28 @@ aclrtResetDeviceForce(0);
 
 ## 默认Context和默认Stream的使用场景
 
--   Device上执行操作下发前，必须有Context和Stream，这个Context、Stream可以显式创建，也可以隐式创建。**隐式创建**的Context、Stream就是默认Context、默认Stream。
+- Device上执行操作下发前，必须有Context和Stream，这个Context、Stream可以显式创建，也可以隐式创建。**隐式创建**的Context、Stream就是默认Context、默认Stream。
 
     默认Stream作为接口入参时，直接传NULL。
 
--   **默认Context**不允许用户执行aclrtGetCurrentContext或aclrtSetCurrentContext操作，也不允许执行aclrtDestroyContext操作。
--   **默认Context、默认Stream**一般适用于简单应用，用户仅需要一个Device的计算场景下。多线程应用程序建议使用显式创建的Context和Stream。
+- **默认Context**不允许用户执行aclrtGetCurrentContext或aclrtSetCurrentContext操作，也不允许执行aclrtDestroyContext操作。
+- **默认Context、默认Stream**一般适用于简单应用，用户仅需要一个Device的计算场景下。多线程应用程序建议使用显式创建的Context和Stream。
 
 示例代码如下，仅供参考，不可以直接拷贝编译运行：
 
-```
+```c
 // ......
 uint32_t numBlocks = 32;
 uint64_t size = 1024;
 void *devPtr = nullptr;
 aclInit(nullptr);
-aclrtSetDevice(0); 
+aclrtSetDevice(0);
 /* 已经创建了一个默认Context，在默认Context中创建了一个默认Stream，并且在当前线程可用 */
 
 ......
 aclrtMalloc(&devPtr, size, ACL_MEM_MALLOC_HUGE_FIRST);
 myKernel<<<numBlocks, nullptr, nullptr>>>(devPtr);  // <<< >>>中第三参数nullptr表示在默认Stream上执行
-aclrtSynchronizeStream(nullptr); 
+aclrtSynchronizeStream(nullptr);
 
 /* 等待计算任务全部完成，用户根据需要获取计算任务的输出结果 */
 ......
@@ -288,14 +288,14 @@ aclrtResetDeviceForce(0);  // 释放Device 0，对应的默认Context及默认St
 
 遵循如下基本原则：
 
-1.  主机侧与Device侧异步执行。主机侧要能及时下发足够任务至Device，确保加速硬件始终处于计算状态。
-2.  采用多Stream方式充分利用Device上不同种类硬件加速器实现并发执行。 如下图所示，CANN Runtime可以协同调度多种硬件加速器，不同代AI处理器支持的硬件加速器不同，需以实际硬件用户手册中的说明为准。
+1. 主机侧与Device侧异步执行。主机侧要能及时下发足够任务至Device，确保加速硬件始终处于计算状态。
+2. 采用多Stream方式充分利用Device上不同种类硬件加速器实现并发执行。 如下图所示，CANN Runtime可以协同调度多种硬件加速器，不同代AI处理器支持的硬件加速器不同，需以实际硬件用户手册中的说明为准。
 
-    ![](figures/多种硬件加速器.png)
+    ![](figures/multi_hardware_accelerators.png)
 
 推荐如下方式：
 
--   单线程中创建并使用多个Stream。如果单线程的性能足以满足向多个Stream下发任务，以充分利用Device的算力，建议采用单线程模式。
--   当单线程性能不足时，可以采用多线程模式来提升主机侧任务下发的性能。推荐每个线程创建并使用各自的Stream下发任务；不推荐多个线程并发向同一个Stream下发任务，这将引入锁操作，且多个线程间下发的任务是乱序的。
--   Stream上下发的单个任务占不满AI Core时，可以使用多Stream下发可并行执行的任务来充分利用AI Core资源。
--   AI处理器中包含多种硬件加速器，例如AI Core、AI CPU、DVPP（Digital Vision Pre-Processing）、Random（随机数生成器）等，这些硬件加速器对应不同类型的任务，建议多Stream的创建按照算子执行硬件划分。
+- 单线程中创建并使用多个Stream。如果单线程的性能足以满足向多个Stream下发任务，以充分利用Device的算力，建议采用单线程模式。
+- 当单线程性能不足时，可以采用多线程模式来提升主机侧任务下发的性能。推荐每个线程创建并使用各自的Stream下发任务；不推荐多个线程并发向同一个Stream下发任务，这将引入锁操作，且多个线程间下发的任务是乱序的。
+- Stream上下发的单个任务占不满AI Core时，可以使用多Stream下发可并行执行的任务来充分利用AI Core资源。
+- AI处理器中包含多种硬件加速器，例如AI Core、AI CPU、DVPP（Digital Vision Pre-Processing）、Random（随机数生成器）等，这些硬件加速器对应不同类型的任务，建议多Stream的创建按照算子执行硬件划分。

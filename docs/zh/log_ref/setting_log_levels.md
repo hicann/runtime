@@ -47,5 +47,5 @@
 Ascend EP形态，通过msnpureport工具设置，具体方法请参见《[msnpureport 工具使用指南](https://support.huawei.com/enterprise/zh/ascend-computing/ascend-hdk-pid-252764743?category=reference-guides&subcategory=command-reference)》。
 
 <!-- npu="310b" id1 -->
-Ascend RC形态，对于Atlas 200I/500 A2 推理产品，通过`/etc/slog.conf`配置文件设置全局日志级别、模块日志级别和是否开启Event日志，具体请参见[查看日志配置文件](viewing_config_file.md)，设置后需重启slogd进程使配置生效，具体请参见[重启日志进程](restarting_log_processes.md)。
+Ascend RC形态，对于Atlas 200I/500 A2推理产品，通过`/etc/slog.conf`配置文件设置全局日志级别、模块日志级别和是否开启Event日志，具体请参见[查看日志配置文件](viewing_config_file.md)，设置后需重启slogd进程使配置生效，具体请参见[重启日志进程](restarting_log_processes.md)。
 <!-- end id1 -->

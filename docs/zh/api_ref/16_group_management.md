@@ -20,22 +20,22 @@ aclError aclrtSetGroup(int32_t groupId)
 ### 产品支持情况
 
 <!-- npu="950" id190 -->
-- Ascend 950PR/Ascend 950DT：不支持
+- Ascend 950PR&950DT系列产品：不支持
 <!-- end id190 -->
 <!-- npu="A3" id191 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：不支持
+- Atlas A3系列产品：不支持
 <!-- end id191 -->
 <!-- npu="910b" id192 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：不支持
+- Atlas A2系列产品：不支持
 <!-- end id192 -->
 <!-- npu="310b" id193 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id193 -->
 <!-- npu="310p" id194 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id194 -->
 <!-- npu="910" id195 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id195 -->
 <!-- npu="IPV350" id196 -->
 - IPV350：不支持
@@ -59,7 +59,7 @@ aclError aclrtSetGroup(int32_t groupId)
 <!-- npu="310p" id1 -->
 ### 约束说明
 
-仅支持在Atlas 推理系列产品的Control CPU开放形态下调用本接口。不支持在Atlas 推理系列产品Ascend EP形态下调用本接口。
+仅支持在Atlas推理系列产品的Control CPU开放形态下调用本接口。不支持在Atlas推理系列产品Ascend EP形态下调用本接口。
 
 **acl接口调用顺序**：调用[aclrtSetDevice](04_device_management.md#aclrtSetDevice)接口指定计算设备--\>调用[aclrtGetAllGroupInfo](#aclrtGetAllGroupInfo)接口获取所有Group信息--\>调用[aclrtGetGroupCount](#aclrtGetGroupCount)接口获取Group数量--\>调用[aclrtGetGroupInfoDetail](#aclrtGetGroupInfoDetail)接口获取指定Group信息--\>调用[aclrtSetGroup](#aclrtSetGroup)接口设置分组--\>执行其它任务--\>调用[aclrtResetDevice](04_device_management.md#aclrtResetDevice)接口释放计算设备。
 
@@ -82,22 +82,22 @@ aclError  aclrtGetGroupCount(uint32_t *count)
 ### 产品支持情况
 
 <!-- npu="950" id694 -->
-- Ascend 950PR/Ascend 950DT：不支持
+- Ascend 950PR&950DT系列产品：不支持
 <!-- end id694 -->
 <!-- npu="A3" id695 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：不支持
+- Atlas A3系列产品：不支持
 <!-- end id695 -->
 <!-- npu="910b" id696 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：不支持
+- Atlas A2系列产品：不支持
 <!-- end id696 -->
 <!-- npu="310b" id697 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id697 -->
 <!-- npu="310p" id698 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id698 -->
 <!-- npu="910" id699 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id699 -->
 <!-- npu="IPV350" id700 -->
 - IPV350：不支持
@@ -121,7 +121,7 @@ aclError  aclrtGetGroupCount(uint32_t *count)
 <!-- npu="310p" id2 -->
 ### 约束说明
 
-仅支持在Atlas 推理系列产品的Control CPU开放形态下调用本接口。不支持在Atlas 推理系列产品Ascend EP形态下调用本接口。
+仅支持在Atlas推理系列产品的Control CPU开放形态下调用本接口。不支持在Atlas推理系列产品Ascend EP形态下调用本接口。
 
 **acl接口调用顺序**：调用[aclrtSetDevice](04_device_management.md#aclrtSetDevice)接口指定计算设备--\>调用[aclrtGetAllGroupInfo](#aclrtGetAllGroupInfo)接口获取所有Group信息--\>调用[aclrtGetGroupCount](#aclrtGetGroupCount)接口获取Group数量--\>调用[aclrtGetGroupInfoDetail](#aclrtGetGroupInfoDetail)接口获取指定Group信息--\>调用[aclrtSetGroup](#aclrtSetGroup)接口设置分组--\>执行其它任务--\>调用[aclrtResetDevice](04_device_management.md#aclrtResetDevice)接口释放计算设备。
 
@@ -144,22 +144,22 @@ aclError  aclrtGetAllGroupInfo(aclrtGroupInfo *groupInfo)
 ### 产品支持情况
 
 <!-- npu="950" id1261 -->
-- Ascend 950PR/Ascend 950DT：不支持
+- Ascend 950PR&950DT系列产品：不支持
 <!-- end id1261 -->
 <!-- npu="A3" id1262 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：不支持
+- Atlas A3系列产品：不支持
 <!-- end id1262 -->
 <!-- npu="910b" id1263 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：不支持
+- Atlas A2系列产品：不支持
 <!-- end id1263 -->
 <!-- npu="310b" id1264 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id1264 -->
 <!-- npu="310p" id1265 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1265 -->
 <!-- npu="910" id1266 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id1266 -->
 <!-- npu="IPV350" id1267 -->
 - IPV350：不支持
@@ -183,7 +183,7 @@ aclError  aclrtGetAllGroupInfo(aclrtGroupInfo *groupInfo)
 <!-- npu="310p" id3 -->
 ### 约束说明
 
-仅支持在Atlas 推理系列产品的Control CPU开放形态下调用本接口。不支持在Atlas 推理系列产品Ascend EP形态下调用本接口。
+仅支持在Atlas推理系列产品的Control CPU开放形态下调用本接口。不支持在Atlas推理系列产品Ascend EP形态下调用本接口。
 
 **acl接口调用顺序**：调用[aclrtSetDevice](04_device_management.md#aclrtSetDevice)接口指定计算设备--\>调用[aclrtGetAllGroupInfo](#aclrtGetAllGroupInfo)接口获取所有Group信息--\>调用[aclrtGetGroupCount](#aclrtGetGroupCount)接口获取Group数量--\>调用[aclrtGetGroupInfoDetail](#aclrtGetGroupInfoDetail)接口获取指定Group信息--\>调用[aclrtSetGroup](#aclrtSetGroup)接口设置分组--\>执行其它任务--\>调用[aclrtResetDevice](04_device_management.md#aclrtResetDevice)接口释放计算设备。
 
@@ -206,22 +206,22 @@ aclError  aclrtGetGroupInfoDetail(const aclrtGroupInfo *groupInfo, int32_t group
 ### 产品支持情况
 
 <!-- npu="950" id890 -->
-- Ascend 950PR/Ascend 950DT：不支持
+- Ascend 950PR&950DT系列产品：不支持
 <!-- end id890 -->
 <!-- npu="A3" id891 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：不支持
+- Atlas A3系列产品：不支持
 <!-- end id891 -->
 <!-- npu="910b" id892 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：不支持
+- Atlas A2系列产品：不支持
 <!-- end id892 -->
 <!-- npu="310b" id893 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id893 -->
 <!-- npu="310p" id894 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id894 -->
 <!-- npu="910" id895 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id895 -->
 <!-- npu="IPV350" id896 -->
 - IPV350：不支持
@@ -250,7 +250,7 @@ aclError  aclrtGetGroupInfoDetail(const aclrtGroupInfo *groupInfo, int32_t group
 <!-- npu="310p" id4 -->
 ### 约束说明
 
-仅支持在Atlas 推理系列产品的Control CPU开放形态下调用本接口。不支持在Atlas 推理系列产品Ascend EP形态下调用本接口。
+仅支持在Atlas推理系列产品的Control CPU开放形态下调用本接口。不支持在Atlas推理系列产品Ascend EP形态下调用本接口。
 
 **acl接口调用顺序**：调用[aclrtSetDevice](04_device_management.md#aclrtSetDevice)接口指定计算设备--\>调用[aclrtGetAllGroupInfo](#aclrtGetAllGroupInfo)接口获取所有Group信息--\>调用[aclrtGetGroupCount](#aclrtGetGroupCount)接口获取Group数量--\>调用[aclrtGetGroupInfoDetail](#aclrtGetGroupInfoDetail)接口获取指定Group信息--\>调用[aclrtSetGroup](#aclrtSetGroup)接口设置分组--\>执行其它任务--\>调用[aclrtResetDevice](04_device_management.md#aclrtResetDevice)接口释放计算设备。
 
@@ -273,22 +273,22 @@ aclrtGroupInfo *aclrtCreateGroupInfo()
 ### 产品支持情况
 
 <!-- npu="950" id2346 -->
-- Ascend 950PR/Ascend 950DT：不支持
+- Ascend 950PR&950DT系列产品：不支持
 <!-- end id2346 -->
 <!-- npu="A3" id2347 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：不支持
+- Atlas A3系列产品：不支持
 <!-- end id2347 -->
 <!-- npu="910b" id2348 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：不支持
+- Atlas A2系列产品：不支持
 <!-- end id2348 -->
 <!-- npu="310b" id2349 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id2349 -->
 <!-- npu="310p" id2350 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2350 -->
 <!-- npu="910" id2351 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id2351 -->
 <!-- npu="IPV350" id2352 -->
 - IPV350：不支持
@@ -312,7 +312,7 @@ aclrtGroupInfo *aclrtCreateGroupInfo()
 <!-- npu="310p" id5 -->
 ### 约束说明
 
-仅支持在Atlas 推理系列产品的Control CPU开放形态下调用本接口。不支持在Atlas 推理系列产品Ascend EP形态下调用本接口。
+仅支持在Atlas推理系列产品的Control CPU开放形态下调用本接口。不支持在Atlas推理系列产品Ascend EP形态下调用本接口。
 <!-- end id5 -->
 
 <br>
@@ -330,22 +330,22 @@ aclError aclrtDestroyGroupInfo(aclrtGroupInfo *groupInfo)
 ### 产品支持情况
 
 <!-- npu="950" id1765 -->
-- Ascend 950PR/Ascend 950DT：不支持
+- Ascend 950PR&950DT系列产品：不支持
 <!-- end id1765 -->
 <!-- npu="A3" id1766 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：不支持
+- Atlas A3系列产品：不支持
 <!-- end id1766 -->
 <!-- npu="910b" id1767 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：不支持
+- Atlas A2系列产品：不支持
 <!-- end id1767 -->
 <!-- npu="310b" id1768 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id1768 -->
 <!-- npu="310p" id1769 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1769 -->
 <!-- npu="910" id1770 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id1770 -->
 <!-- npu="IPV350" id1771 -->
 - IPV350：不支持
@@ -369,5 +369,5 @@ aclError aclrtDestroyGroupInfo(aclrtGroupInfo *groupInfo)
 <!-- npu="310p" id6 -->
 ### 约束说明
 
-仅支持在Atlas 推理系列产品的Control CPU开放形态下调用本接口。不支持在Atlas 推理系列产品Ascend EP形态下调用本接口。
+仅支持在Atlas推理系列产品的Control CPU开放形态下调用本接口。不支持在Atlas推理系列产品Ascend EP形态下调用本接口。
 <!-- end id6 -->

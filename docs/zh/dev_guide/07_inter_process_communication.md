@@ -10,56 +10,60 @@
 
 此处以A进程（内存出借方）、B进程（内存借入方）为例，说明两个进程间的内存共享接口调用流程：
 
-![](figures/进程间共享内存.png)
+![](figures/inter_process_share_mem.png)
 
-以下为A、B进程之间共享内存的示例代码，不可以直接拷贝编译运行，仅供参考。完整样例代码请参见[Link](https://gitcode.com/cann/runtime/tree/master/example/1_basic_features/memory/11_ipc_memory_withoutpid)。
+以下为A、B进程之间共享内存的示例代码，不可以直接拷贝编译运行，仅供参考。
 
-1.  在A进程中分配内存，生成共享key：
+<!-- npu="950,A3,910b,910,310p,310b" id1 -->
+完整样例代码请参见[Link](https://gitcode.com/cann/runtime/tree/master/example/1_basic_features/memory/11_ipc_memory_withoutpid)。
+<!-- end id1 -->
+
+1. 在A进程中分配内存，生成共享key：
 
     **注意**：A进程要等待B进程导入后，再关闭IPC共享。若A进程提前关闭共享，B进程会导入失败
 
     ```c
     uint keyLen = 65;
-    char key[keyLen]; 
+    char key[keyLen];
     void *ptrA = nullptr;
-    
+
     aclrtSetDevice(0);  // 进程A使用Device 0
-    aclrtMalloc(&ptrA, size); 
-    
-    aclrtIpcMemGetExportKey(ptrA, size, key, keyLen, ACL_RT_IPC_MEM_EXPORT_FLAG_DISABLE_PID_VALIDATION);  
-    
+    aclrtMalloc(&ptrA, size);
+
+    aclrtIpcMemGetExportKey(ptrA, size, key, keyLen, ACL_RT_IPC_MEM_EXPORT_FLAG_DISABLE_PID_VALIDATION);
+
     // 跨进程通信交换key (以写文件方式交互)
     writeFile("file/ipc_mem", key, keyLen);
-    
+
     // 对共享内存进行读写操作
     ......
-    
+
     // 待共享内存使用完成后，借出方关闭IPC共享内存
-    aclrtIpcMemClose(key);   
+    aclrtIpcMemClose(key);
     aclrtFree(ptrA);
     aclrtResetDeviceForce(0);
     ```
 
-2.  在B进程中，通过共享key导入共享内存：
+2. 在B进程中，通过共享key导入共享内存：
 
     ```c
     uint keyLen = 65;
     char key[keyLen];
     void *ptrB;
-    
+
     // 跨进程通信交换key (以写文件方式交互)
     readFile("file/ipc_mem", key, keyLen);
-    
+
     aclrtSetDevice(1);  // 进程B使用Device 1
-    
-    // A，B进程使用不同的Device，导入共享内存访问要开启两个Device之间的数据交互 
-    aclrtIpcMemImportByKey(&ptrB, key, ACL_RT_IPC_MEM_IMPORT_FLAG_ENABLE_PEER_ACCESS);  
-    
+
+    // A，B进程使用不同的Device，导入共享内存访问要开启两个Device之间的数据交互
+    aclrtIpcMemImportByKey(&ptrB, key, ACL_RT_IPC_MEM_IMPORT_FLAG_ENABLE_PEER_ACCESS);
+
     // 对ptrB内存读写操作
     ......
-    
+
     // 使用完成后，借入方关闭IPC共享内存
-    aclrtIpcMemClose(key);    
+    aclrtIpcMemClose(key);
     aclrtResetDeviceForce(1);
     ```
 
@@ -67,56 +71,56 @@
 
 进程之间通过共享Event，可以实现进程间的事件同步。此处以A进程创建Event，共享给B进程为例，说明两个进程间任务同步的示例代码，不可以直接拷贝编译运行，仅供参考。完整样例代码请参见[Link](../../../example/2_advanced_features/ipcevent/0_ipcevent)。
 
-1.  在A进程中创建Event，生成共享handle：
-    
+1. 在A进程中创建Event，生成共享handle：
+
     **注意**：A进程要等待B进程导入后，再销毁共享Event。若A进程提前销毁，B进程会导入失败
 
     ```c
     aclrtEvent event;
     aclrtStream stream;
     aclrtIpcEventHandle handle;
-    
+
     aclrtSetDevice(0);  // 进程A使用Device 0
     aclrtCreateEventExWithFlag(&event, ACL_EVENT_IPC);  // 创建IPC Event
     aclrtCreateStream(&stream);  // 创建Stream
-    
+
     // 导出进程间共享handle
     aclrtIpcGetEventHandle(event, &handle);
-    
+
     // 跨进程通信交换key (以写文件方式交互)
     writeFile("file/ipc_event", handle, ACL_IPC_EVENT_HANDLE_SIZE);
-    
+
     // 下发record任务
-    aclrtEventRecord(event, stream);  
-    
+    aclrtEventRecord(event, stream);
+
     // Event使用完, 销毁共享Event
     aclrtDestroyEvent(event);
     aclrtResetDeviceForce(0);
     ```
 
-2.  在B进程中，通过共享handle导入共享Event：
+2. 在B进程中，通过共享handle导入共享Event：
 
     ```c
     aclrtStream stream;
     aclrtEvent event;
     aclrtIpcEventHandle handle;
-    
+
     aclrtCreateStream(&stream);  // 创建Stream
     // 跨进程获取共享handle（以写文件方式交互)
     readFile("file/ipc_event", handle, ACL_IPC_EVENT_HANDLE_SIZE);
-    
+
     aclrtSetDevice(1);  //进程B使用Device 1
-    
+
     // 导入handle，返回共享event
-    // A，B进程使用不同的Device 
-    aclrtIpcOpenEventHandle(handle, &event); 
-    
+    // A，B进程使用不同的Device
+    aclrtIpcOpenEventHandle(handle, &event);
+
     // 下发wait任务
-    aclrtStreamWaitEvent(stream, event); 
-    
+    aclrtStreamWaitEvent(stream, event);
+
     // 同步Stream上的任务
     aclrtSynchronizeStream(stream);
-    
+
     // Event使用完，销毁共享Event
     aclrtDestroyEvent(event);
     aclrtResetDeviceForce(1);
@@ -124,60 +128,64 @@
 
 ## 进程间共享Notify
 
-进程之间通过共享Notify，可以实现进程间的通知。此处以A进程创建Notify，共享给B进程为例，说明两个进程间任务同步的示例代码，不可以直接拷贝编译运行，仅供参考。完整样例代码请参见[Link](https://gitcode.com/cann/runtime/tree/master/example/2_advanced_features/notify/1_ipc_notify_withoutpid)。
+进程之间通过共享Notify，可以实现进程间的通知。此处以A进程创建Notify，共享给B进程为例，说明两个进程间任务同步的示例代码，不可以直接拷贝编译运行，仅供参考。
+
+<!-- npu="950,A3,910b,910,310p,310b" id2 -->
+完整样例代码请参见[Link](https://gitcode.com/cann/runtime/tree/master/example/2_advanced_features/notify/1_ipc_notify_withoutpid)。
+<!-- end id2 -->
 
 注意：创建端会分配Notify硬件资源，因此只能由创建端硬件进行Wait。为此共享Notify有使用约束，只能在创建端调aclrtNotifyWait进行Wait，不能在共享端Wait。
 
-1.  在A进程中创建Notify，生成共享key：
+1. 在A进程中创建Notify，生成共享key：
 
     **注意**：A进程要等待B进程导入后，再销毁共享Notify。若A进程提前销毁，B进程会导入失败
-
-    ```c
-    uint keyLen = 65;
-    char key[keyLen]; 
-    aclrtNotify notify;
-    aclrtStream stream;
-    
-    // 进程A使用Device 0
-    aclrtSetDevice(0);  
-    aclrtCreateStream(&stream); 
-    
-    aclrtNotifyCreate(&notify); 
-    // 导出key（即Notify共享名称）
-    aclrtNotifyGetExportKey(notify, key, keyLen, ACL_RT_NOTIFY_EXPORT_FLAG_DISABLE_PID_VALIDATION); 
-    // 跨进程通信交换key (以写文件方式交互)
-    writeFile("file/ipc_notify", key, keyLen);
-    
-    // 下发wait任务
-    aclrtNotifyWait(notify, stream);  
-    
-    // Notify使用完, 销毁共享Notify
-    aclrtNotifyDestroy(notify);
-    aclrtResetDeviceForce(0);
-    ```
-
-2.  在B进程中，通过共享key导入共享Notify：
 
     ```c
     uint keyLen = 65;
     char key[keyLen];
     aclrtNotify notify;
     aclrtStream stream;
-    
+
+    // 进程A使用Device 0
+    aclrtSetDevice(0);
+    aclrtCreateStream(&stream);
+
+    aclrtNotifyCreate(&notify);
+    // 导出key（即Notify共享名称）
+    aclrtNotifyGetExportKey(notify, key, keyLen, ACL_RT_NOTIFY_EXPORT_FLAG_DISABLE_PID_VALIDATION);
+    // 跨进程通信交换key (以写文件方式交互)
+    writeFile("file/ipc_notify", key, keyLen);
+
+    // 下发wait任务
+    aclrtNotifyWait(notify, stream);
+
+    // Notify使用完, 销毁共享Notify
+    aclrtNotifyDestroy(notify);
+    aclrtResetDeviceForce(0);
+    ```
+
+2. 在B进程中，通过共享key导入共享Notify：
+
+    ```c
+    uint keyLen = 65;
+    char key[keyLen];
+    aclrtNotify notify;
+    aclrtStream stream;
+
     // 跨进程通信交换key (以写文件方式交互)
     readFile("file/ipc_notify", key, keyLen);
-    
+
     //进程B使用Device 1
-    aclrtSetDevice(1);  
+    aclrtSetDevice(1);
     aclrtCreateStream(&stream);
-    
+
     // 导入key，返回共享Notify
     // A，B进程使用不同的Device，导入共享Notify要开启两个Device之间的数据交互
-    aclrtNotifyImportByKey(&notify, key, ACL_RT_NOTIFY_IMPORT_FLAG_ENABLE_PEER_ACCESS); 
-    
+    aclrtNotifyImportByKey(&notify, key, ACL_RT_NOTIFY_IMPORT_FLAG_ENABLE_PEER_ACCESS);
+
     // 下发record任务
-    aclrtNotifyRecord (notify, stream); 
-    
+    aclrtNotifyRecord (notify, stream);
+
     // Notify使用完，销毁共享Notify
     aclrtNotifyDestroy(notify);
     aclrtResetDeviceForce(1);
@@ -187,11 +195,14 @@
 
 除IPC Mem共享内存外，Runtime还提供了另外一套内存管理和内存共享接口。VMM（Virtual Memory Management）这套接口提供更灵活的功能，支持虚拟地址申请、物理内存申请和跨进程物理内存共享，还支持虚拟地址与物理内存之间的映射操作。
 
-此处以A、B进程为例，说明一个Device上、两个进程间的物理内存共享的示例代码，不可以直接拷贝编译运行，仅供参考，完整样例代码请参见[Link](https://gitcode.com/cann/runtime/tree/master/example/1_basic_features/memory/8_physical_memory_sharing_withoutpid)。
+此处以A、B进程为例，说明一个Device上、两个进程间的物理内存共享的示例代码，不可以直接拷贝编译运行，仅供参考。若A、B进程使用不同的Device，还需配合使用aclrtDeviceEnablePeerAccess接口开启跨Device的数据交互，详细描述请参见[跨Device的数据交互](05_multi_device_programming.md#跨device的数据交互)。
 
-若A、B进程使用不同的Device，还需配合使用aclrtDeviceEnablePeerAccess接口开启跨Device的数据交互，详细描述请参见[跨Device的数据交互](05_multi_device_programming.md#跨device的数据交互)。
+<!-- npu="950,A3,910b,910,310p,310b" id3 -->
+完整样例代码请参见[Link](https://gitcode.com/cann/runtime/tree/master/example/1_basic_features/memory/8_physical_memory_sharing_withoutpid)。
+<!-- end id3 -->
 
-1.  在A进程中：
+
+1. 在A进程中：
 
     **注意**：A进程要等待B进程导入后，再销毁物理内存Handle。若A进程提前销毁，B进程会导入失败
 
@@ -206,16 +217,16 @@
     prop.memAttr = ACL_HBM_MEM_NORMAL;
     size_t granularity = 0UL;
     aclrtMemGetAllocationGranularity(&prop, ACL_RT_MEM_ALLOC_GRANULARITY_MINIMUM, &granularity);
-    
+
     // 基于内存申请粒度申请物理内存
     size_t alignedSize = ((dataSize + granularity - 1U) / granularity) * granularity;
     aclrtDrvMemHandle handle = nullptr;
     aclrtMallocPhysical(&handle, alignedSize, &prop, 0);
-    
+
     // 预留虚拟内存
     void *virPtr;
     aclrtReserveMemAddress(&virPtr, alignedSize, 0, nullptr, 0);
-    
+
     // 将虚拟内存映射到物理内存
     aclrtMapMem(virPtr, alignedSize, 0, handle, 0);
     aclrtMemAccessDesc desc = {};
@@ -223,17 +234,17 @@
     desc.location.id = 0;
     desc.location.type = ACL_MEM_LOCATION_TYPE_DEVICE;
     aclrtMemSetAccess(virPtr, alignedSize, &desc, 1);
-    
+
     // 导入共享handle
     uint64_t shareableHandle = 0ULL;
     aclrtMemExportToShareableHandle(handle, ACL_MEM_HANDLE_TYPE_NONE, ACL_RT_VMM_EXPORT_FLAG_DISABLE_PID_VALIDATION , &shareableHandle);
-    
-    // 将共享handle传递给进程B     
+
+    // 将共享handle传递给进程B
     writeFile("file/vmm_mem", shareableHandle, sizeof(shareableHandle));
 
     // 使用virPtr进行复制、读、写等操作
     ......
-    
+
     // 取消虚拟内存与物理内存之间的映射关系
     aclrtUnmapMem(virPtr);
     // 待对端进程使用完成后，释放虚拟内存和物理内存
@@ -241,15 +252,15 @@
     aclrtFreePhysical(handle);
     ```
 
-2.  在B进程中：
+2. 在B进程中：
 
     ```c
     uint64_t shareableHandle = 0ULL;
     // 从文件中获取共享handle
     readFile("file/vmm_mem", &shareableHandle, sizeof(shareableHandle));
-    
-    aclrtDrvMemHandle handle = nullptr; 
-    int32_t deviceId=0;  
+
+    aclrtDrvMemHandle handle = nullptr;
+    int32_t deviceId=0;
     aclrtMemImportFromShareableHandle(shareableHandle, deviceId, &handle);
     // 查询内存申请粒度
     const size_t data_size = 1024 * sizeof(float);
@@ -262,7 +273,7 @@
     size_t granularity = 0UL;
     aclrtMemGetAllocationGranularity(&prop, ACL_RT_MEM_ALLOC_GRANULARITY_MINIMUM, &granularity);
     size_t alignedSize = ((data_size + granularity - 1U) / granularity) * granularity;
-    
+
     // 基于内存申请粒度预留虚拟内存
     void *virPtr = nullptr;
     aclrtReserveMemAddress(&virPtr, alignedSize, 0, nullptr, 0);
@@ -273,12 +284,12 @@
     desc.location.id = 0;
     desc.location.type = ACL_MEM_LOCATION_TYPE_DEVICE;
     aclrtMemSetAccess(virPtr,alignedSize, &desc, 1);
-    
+
     // 使用virPtr进行复制、读、写等操作
     ......
-    
+
     // 取消虚拟内存与物理内存之间的映射关系
-    aclrtUnmapMem(virPtr);       
+    aclrtUnmapMem(virPtr);
     // 释放虚拟内存和物理内存
     aclrtReleaseMemAddress(virPtr);
     aclrtFreePhysical(handle);

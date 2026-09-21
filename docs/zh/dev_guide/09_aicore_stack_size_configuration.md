@@ -13,4 +13,3 @@ json文件的配置示例如下，在aicore\_stack\_size参数处设置栈空间
     }
 }
 ```
-

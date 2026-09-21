@@ -54,22 +54,22 @@ aclError aclrtSetDevice(int32_t deviceId)
 ### 产品支持情况
 
 <!-- npu="950" id295 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id295 -->
 <!-- npu="A3" id296 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id296 -->
 <!-- npu="910b" id297 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id297 -->
 <!-- npu="310b" id298 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id298 -->
 <!-- npu="310p" id299 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id299 -->
 <!-- npu="910" id300 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id300 -->
 <!-- npu="IPV350" id301 -->
 - IPV350：支持
@@ -127,22 +127,22 @@ aclError aclrtResetDevice(int32_t deviceId)
 ### 产品支持情况
 
 <!-- npu="950" id288 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id288 -->
 <!-- npu="A3" id289 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id289 -->
 <!-- npu="910b" id290 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id290 -->
 <!-- npu="310b" id291 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id291 -->
 <!-- npu="310p" id292 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id292 -->
 <!-- npu="910" id293 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id293 -->
 <!-- npu="IPV350" id294 -->
 - IPV350：支持
@@ -192,22 +192,22 @@ aclError aclrtResetDeviceForce(int32_t deviceId)
 ### 产品支持情况
 
 <!-- npu="950" id1849 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1849 -->
 <!-- npu="A3" id1850 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1850 -->
 <!-- npu="910b" id1851 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1851 -->
 <!-- npu="310b" id1852 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1852 -->
 <!-- npu="310p" id1853 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1853 -->
 <!-- npu="910" id1854 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1854 -->
 <!-- npu="IPV350" id1855 -->
 - IPV350：支持
@@ -223,7 +223,7 @@ aclrtResetDeviceForce接口可与aclrtSetDevice接口配对使用，也可不与
 ```text
 // 与aclrtSetDevice接口配对使用：
 aclrtSetDevice(1) -> aclrtResetDeviceForce(1) -> aclrtSetDevice(1) -> aclrtResetDeviceForce(1)
- 
+
 // 与aclrtSetDevice接口不配对使用：
 aclrtSetDevice(1) -> aclrtSetDevice(1) -> aclrtResetDeviceForce(1)
 ```
@@ -256,7 +256,7 @@ aclrtSetDevice(1) -> aclrtSetDevice(1) -> aclrtResetDeviceForce(1)
 
     ```text
     时间线 ----------------------------------------------------------------------------->
-    线程1：aclrtSetDevice(1)    
+    线程1：aclrtSetDevice(1)
     线程2：aclrtSetDevice(1)                                   aclrtResetDeviceForce(1)
     ```
 
@@ -267,7 +267,7 @@ aclrtSetDevice(1) -> aclrtSetDevice(1) -> aclrtResetDeviceForce(1)
     # 两个Reset接口都分别与Set接口配对使用，且aclrtResetDeviceForce接口在aclrtResetDevice接口之后
     aclrtSetDevice(1) -> aclrtResetDevice(1) -> aclrtSetDevice(1) -> aclrtResetDeviceForce(1)
     aclrtSetDevice(1) -> aclrtSetDevice(1) -> aclrtResetDevice(1) -> aclrtResetDeviceForce(1)
-    
+
     # 混用时的错误方式：
     # aclrtResetDevice接口内部涉及引用计数的实现，当aclrtResetDevice接口每被调用一次，则该引用计数减1，当引用计数减到0时，会真正释放Device上的资源，此时再调用aclrtResetDevice或aclrtResetDeviceForce接口都会报错
     aclrtSetDevice(1) -> aclrtSetDevice(1) -> aclrtResetDevice(1)-->aclrtResetDevice(1)-->aclrtResetDeviceForce(1)
@@ -291,22 +291,22 @@ aclError aclrtGetDevice(int32_t *deviceId)
 ### 产品支持情况
 
 <!-- npu="950" id3242 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id3242 -->
 <!-- npu="A3" id3243 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3243 -->
 <!-- npu="910b" id3244 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3244 -->
 <!-- npu="310b" id3245 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id3245 -->
 <!-- npu="310p" id3246 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id3246 -->
 <!-- npu="910" id3247 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id3247 -->
 <!-- npu="IPV350" id3248 -->
 - IPV350：支持
@@ -346,22 +346,22 @@ aclError aclrtGetRunMode(aclrtRunMode *runMode)
 ### 产品支持情况
 
 <!-- npu="950" id596 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id596 -->
 <!-- npu="A3" id597 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id597 -->
 <!-- npu="910b" id598 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id598 -->
 <!-- npu="310b" id599 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id599 -->
 <!-- npu="310p" id600 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id600 -->
 <!-- npu="910" id601 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id601 -->
 <!-- npu="IPV350" id602 -->
 - IPV350：支持
@@ -397,22 +397,22 @@ aclError aclrtSetTsDevice(aclrtTsId tsId)
 ### 产品支持情况
 
 <!-- npu="950" id3046 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id3046 -->
 <!-- npu="A3" id3047 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3047 -->
 <!-- npu="910b" id3048 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3048 -->
 <!-- npu="310b" id3049 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id3049 -->
 <!-- npu="310p" id3050 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id3050 -->
 <!-- npu="910" id3051 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id3051 -->
 <!-- npu="IPV350" id3052 -->
 - IPV350：不支持
@@ -435,7 +435,7 @@ aclrtTsId的定义如下：
 typedef enum aclrtTsId {
     ACL_TS_ID_AICORE  = 0,  // 使用AI CORE Task Schedule
     ACL_TS_ID_AIVECTOR = 1, // 使用VECTOR Core Task Schedule
-    ACL_TS_ID_RESERVED = 2, 
+    ACL_TS_ID_RESERVED = 2,
 } aclrtTsId;
 ```
 
@@ -458,22 +458,22 @@ aclError aclrtGetDeviceCount(uint32_t *count)
 ### 产品支持情况
 
 <!-- npu="950" id1653 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1653 -->
 <!-- npu="A3" id1654 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1654 -->
 <!-- npu="910b" id1655 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1655 -->
 <!-- npu="310b" id1656 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1656 -->
 <!-- npu="310p" id1657 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1657 -->
 <!-- npu="910" id1658 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1658 -->
 <!-- npu="IPV350" id1659 -->
 - IPV350：支持
@@ -509,22 +509,22 @@ aclError aclrtGetDeviceUtilizationRate(int32_t deviceId, aclrtUtilizationInfo *u
 ### 产品支持情况
 
 <!-- npu="950" id393 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id393 -->
 <!-- npu="A3" id394 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id394 -->
 <!-- npu="910b" id395 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id395 -->
 <!-- npu="310b" id396 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id396 -->
 <!-- npu="310p" id397 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id397 -->
 <!-- npu="910" id398 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id398 -->
 <!-- npu="IPV350" id399 -->
 - IPV350：不支持
@@ -570,22 +570,22 @@ aclError aclrtQueryDeviceStatus(int32_t deviceId, aclrtDeviceStatus *deviceStatu
 ### 产品支持情况
 
 <!-- npu="950" id1737 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1737 -->
 <!-- npu="A3" id1738 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1738 -->
 <!-- npu="910b" id1739 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1739 -->
 <!-- npu="310b" id1740 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1740 -->
 <!-- npu="310p" id1741 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1741 -->
 <!-- npu="910" id1742 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1742 -->
 <!-- npu="IPV350" id1743 -->
 - IPV350：不支持
@@ -622,22 +622,22 @@ const char *aclrtGetSocName()
 ### 产品支持情况
 
 <!-- npu="950" id2640 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2640 -->
 <!-- npu="A3" id2641 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2641 -->
 <!-- npu="910b" id2642 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2642 -->
 <!-- npu="310b" id2643 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2643 -->
 <!-- npu="310p" id2644 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2644 -->
 <!-- npu="910" id2645 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2645 -->
 <!-- npu="IPV350" id2646 -->
 - IPV350：不支持
@@ -673,22 +673,22 @@ aclError aclrtSetDeviceSatMode(aclrtFloatOverflowMode mode)
 ### 产品支持情况
 
 <!-- npu="950" id3004 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id3004 -->
 <!-- npu="A3" id3005 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3005 -->
 <!-- npu="910b" id3006 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3006 -->
 <!-- npu="310b" id3007 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id3007 -->
 <!-- npu="310p" id3008 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id3008 -->
 <!-- npu="910" id3009 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id3009 -->
 <!-- npu="IPV350" id3010 -->
 - IPV350：不支持
@@ -726,22 +726,22 @@ aclError aclrtGetDeviceSatMode(aclrtFloatOverflowMode *mode)
 ### 产品支持情况
 
 <!-- npu="950" id1051 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1051 -->
 <!-- npu="A3" id1052 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1052 -->
 <!-- npu="910b" id1053 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1053 -->
 <!-- npu="310b" id1054 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1054 -->
 <!-- npu="310p" id1055 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1055 -->
 <!-- npu="910" id1056 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1056 -->
 <!-- npu="IPV350" id1057 -->
 - IPV350：不支持
@@ -777,22 +777,22 @@ aclError aclrtDeviceCanAccessPeer(int32_t *canAccessPeer, int32_t deviceId, int3
 ### 产品支持情况
 
 <!-- npu="950" id2493 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2493 -->
 <!-- npu="A3" id2494 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2494 -->
 <!-- npu="910b" id2495 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2495 -->
 <!-- npu="310b" id2496 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id2496 -->
 <!-- npu="310p" id2497 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2497 -->
 <!-- npu="910" id2498 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2498 -->
 <!-- npu="IPV350" id2499 -->
 - IPV350：不支持
@@ -822,7 +822,7 @@ aclError aclrtDeviceCanAccessPeer(int32_t *canAccessPeer, int32_t deviceId, int3
 - 仅支持同一个物理机或容器内的Device之间的数据交互操作。
 - 仅支持同一个进程内、线程间的Device之间的数据交互，不支持不同进程间Device之间的数据交互。
 <!-- npu="310p" id6 -->
-- Atlas 推理系列产品，Control CPU开放形态下，应用程序运行在Device的Control CPU上时，该接口不支持Device之间的数据交互。
+- Atlas推理系列产品，Control CPU开放形态下，应用程序运行在Device的Control CPU上时，该接口不支持Device之间的数据交互。
 <!-- end id6 -->
 
 <br>
@@ -840,22 +840,22 @@ aclError aclrtDeviceEnablePeerAccess(int32_t peerDeviceId, uint32_t flags)
 ### 产品支持情况
 
 <!-- npu="950" id2269 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2269 -->
 <!-- npu="A3" id2270 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2270 -->
 <!-- npu="910b" id2271 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2271 -->
 <!-- npu="310b" id2272 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id2272 -->
 <!-- npu="310p" id2273 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2273 -->
 <!-- npu="910" id2274 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2274 -->
 <!-- npu="IPV350" id2275 -->
 - IPV350：不支持
@@ -884,7 +884,7 @@ aclError aclrtDeviceEnablePeerAccess(int32_t peerDeviceId, uint32_t flags)
 <!-- npu="310p" id7 -->
 ### 约束说明
 
-Atlas 推理系列产品，Control CPU开放形态下，应用程序运行在Device的Control CPU上时，该接口不支持Device之间的数据交互。
+Atlas推理系列产品，Control CPU开放形态下，应用程序运行在Device的Control CPU上时，该接口不支持Device之间的数据交互。
 <!-- end id7 -->
 
 <br>
@@ -902,22 +902,22 @@ aclError aclrtDeviceDisablePeerAccess(int32_t peerDeviceId)
 ### 产品支持情况
 
 <!-- npu="950" id2962 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2962 -->
 <!-- npu="A3" id2963 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2963 -->
 <!-- npu="910b" id2964 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2964 -->
 <!-- npu="310b" id2965 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id2965 -->
 <!-- npu="310p" id2966 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2966 -->
 <!-- npu="910" id2967 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2967 -->
 <!-- npu="IPV350" id2968 -->
 - IPV350：不支持
@@ -943,7 +943,7 @@ aclError aclrtDeviceDisablePeerAccess(int32_t peerDeviceId)
 <!-- npu="310p" id8 -->
 ### 约束说明
 
-Atlas 推理系列产品，Control CPU开放形态下，应用程序运行在Device的Control CPU上时，该接口不支持Device之间的数据交互。
+Atlas推理系列产品，Control CPU开放形态下，应用程序运行在Device的Control CPU上时，该接口不支持Device之间的数据交互。
 <!-- end id8 -->
 
 <br>
@@ -961,22 +961,22 @@ aclError aclrtDevicePeerAccessStatus(int32_t deviceId, int32_t peerDeviceId, int
 ### 产品支持情况
 
 <!-- npu="950" id2955 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2955 -->
 <!-- npu="A3" id2956 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2956 -->
 <!-- npu="910b" id2957 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2957 -->
 <!-- npu="310b" id2958 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2958 -->
 <!-- npu="310p" id2959 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2959 -->
 <!-- npu="910" id2960 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2960 -->
 <!-- npu="IPV350" id2961 -->
 - IPV350：不支持
@@ -1018,22 +1018,22 @@ aclError aclrtGetOverflowStatus(void *outputAddr, size_t outputSize, aclrtStream
 ### 产品支持情况
 
 <!-- npu="950" id1135 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1135 -->
 <!-- npu="A3" id1136 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1136 -->
 <!-- npu="910b" id1137 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1137 -->
 <!-- npu="310b" id1138 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1138 -->
 <!-- npu="310p" id1139 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1139 -->
 <!-- npu="910" id1140 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1140 -->
 <!-- npu="IPV350" id1141 -->
 - IPV350：不支持
@@ -1059,7 +1059,7 @@ aclError aclrtGetOverflowStatus(void *outputAddr, size_t outputSize, aclrtStream
 <!-- npu="950,A3,910b" id9 -->
 ### 约束说明
 
-对于Ascend 950PR/Ascend 950DT、Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品，调用本接口查询出来的溢出状态是进程级别的。
+对于Ascend 950PR&950DT系列产品、Atlas A3系列产品、Atlas A2系列产品，调用本接口查询出来的溢出状态是进程级别的。
 <!-- end id9 -->
 
 <br>
@@ -1077,22 +1077,22 @@ aclError aclrtResetOverflowStatus(aclrtStream stream)
 ### 产品支持情况
 
 <!-- npu="950" id2276 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2276 -->
 <!-- npu="A3" id2277 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2277 -->
 <!-- npu="910b" id2278 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2278 -->
 <!-- npu="310b" id2279 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2279 -->
 <!-- npu="310p" id2280 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2280 -->
 <!-- npu="910" id2281 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2281 -->
 <!-- npu="IPV350" id2282 -->
 - IPV350：不支持
@@ -1116,7 +1116,7 @@ aclError aclrtResetOverflowStatus(aclrtStream stream)
 <!-- npu="950,A3,910b" id10 -->
 ### 约束说明
 
-对于Ascend 950PR/Ascend 950DT、Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品，调用本接口清除的溢出状态是进程级别的。
+对于Ascend 950PR&950DT系列产品、Atlas A3系列产品、Atlas A2系列产品，调用本接口清除的溢出状态是进程级别的。
 <!-- end id10 -->
 
 <br>
@@ -1134,22 +1134,22 @@ aclError aclrtSynchronizeDevice(void)
 ### 产品支持情况
 
 <!-- npu="950" id1268 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1268 -->
 <!-- npu="A3" id1269 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1269 -->
 <!-- npu="910b" id1270 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1270 -->
 <!-- npu="310b" id1271 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1271 -->
 <!-- npu="310p" id1272 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1272 -->
 <!-- npu="910" id1273 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1273 -->
 <!-- npu="IPV350" id1274 -->
 - IPV350：不支持
@@ -1183,22 +1183,22 @@ aclError aclrtSynchronizeDeviceWithTimeout(int32_t timeout)
 ### 产品支持情况
 
 <!-- npu="950" id2367 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2367 -->
 <!-- npu="A3" id2368 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2368 -->
 <!-- npu="910b" id2369 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2369 -->
 <!-- npu="310b" id2370 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2370 -->
 <!-- npu="310p" id2371 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2371 -->
 <!-- npu="910" id2372 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2372 -->
 <!-- npu="IPV350" id2373 -->
 - IPV350：不支持
@@ -1236,22 +1236,22 @@ aclError aclrtGetDeviceInfo(uint32_t deviceId, aclrtDevAttr attr, int64_t *value
 ### 产品支持情况
 
 <!-- npu="950" id3032 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id3032 -->
 <!-- npu="A3" id3033 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3033 -->
 <!-- npu="910b" id3034 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3034 -->
 <!-- npu="310b" id3035 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id3035 -->
 <!-- npu="310p" id3036 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id3036 -->
 <!-- npu="910" id3037 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id3037 -->
 <!-- npu="IPV350" id3038 -->
 - IPV350：不支持
@@ -1289,22 +1289,22 @@ aclError aclrtDeviceGetStreamPriorityRange(int32_t *leastPriority, int32_t *grea
 ### 产品支持情况
 
 <!-- npu="950" id1989 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1989 -->
 <!-- npu="A3" id1990 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1990 -->
 <!-- npu="910b" id1991 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1991 -->
 <!-- npu="310b" id1992 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1992 -->
 <!-- npu="310p" id1993 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1993 -->
 <!-- npu="910" id1994 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1994 -->
 <!-- npu="IPV350" id1995 -->
 - IPV350：不支持
@@ -1341,22 +1341,22 @@ aclError aclrtGetDeviceCapability(int32_t deviceId, aclrtDevFeatureType devFeatu
 ### 产品支持情况
 
 <!-- npu="950" id1079 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1079 -->
 <!-- npu="A3" id1080 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1080 -->
 <!-- npu="910b" id1081 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1081 -->
 <!-- npu="310b" id1082 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1082 -->
 <!-- npu="310p" id1083 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1083 -->
 <!-- npu="910" id1084 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1084 -->
 <!-- npu="IPV350" id1085 -->
 - IPV350：不支持
@@ -1394,22 +1394,22 @@ aclError aclrtGetDevicesTopo(uint32_t deviceId, uint32_t otherDeviceId, uint64_t
 ### 产品支持情况
 
 <!-- npu="950" id813 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id813 -->
 <!-- npu="A3" id814 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id814 -->
 <!-- npu="910b" id815 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id815 -->
 <!-- npu="310b" id816 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id816 -->
 <!-- npu="310p" id817 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id817 -->
 <!-- npu="910" id818 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id818 -->
 <!-- npu="IPV350" id819 -->
 - IPV350：不支持
@@ -1421,7 +1421,7 @@ aclError aclrtGetDevicesTopo(uint32_t deviceId, uint32_t otherDeviceId, uint64_t
 获取两个Device之间的网络拓扑关系。
 
 <!-- npu="310b" id11 -->
-本接口不支持在Atlas 200I/500 A2 推理产品的Ascend RC形态下调用。
+本接口不支持在Atlas 200I/500 A2推理产品的Ascend RC形态下调用。
 <!-- end id11 -->
 
 ### 参数说明
@@ -1451,22 +1451,22 @@ aclError aclrtRegDeviceStateCallback(const char *regName, aclrtDeviceStateCallba
 ### 产品支持情况
 
 <!-- npu="950" id2633 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2633 -->
 <!-- npu="A3" id2634 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2634 -->
 <!-- npu="910b" id2635 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2635 -->
 <!-- npu="310b" id2636 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2636 -->
 <!-- npu="310p" id2637 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2637 -->
 <!-- npu="910" id2638 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2638 -->
 <!-- npu="IPV350" id2639 -->
 - IPV350：不支持
@@ -1506,22 +1506,22 @@ aclError aclrtGetLogicDevIdByUserDevId(const int32_t userDevid, int32_t *const l
 ### 产品支持情况
 
 <!-- npu="950" id456 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id456 -->
 <!-- npu="A3" id457 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id457 -->
 <!-- npu="910b" id458 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id458 -->
 <!-- npu="310b" id459 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id459 -->
 <!-- npu="310p" id460 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id460 -->
 <!-- npu="910" id461 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id461 -->
 <!-- npu="IPV350" id462 -->
 - IPV350：不支持
@@ -1568,22 +1568,22 @@ aclError aclrtGetUserDevIdByLogicDevId(const int32_t logicDevId, int32_t *const 
 ### 产品支持情况
 
 <!-- npu="950" id1702 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1702 -->
 <!-- npu="A3" id1703 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1703 -->
 <!-- npu="910b" id1704 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1704 -->
 <!-- npu="310b" id1705 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1705 -->
 <!-- npu="310p" id1706 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1706 -->
 <!-- npu="910" id1707 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1707 -->
 <!-- npu="IPV350" id1708 -->
 - IPV350：不支持
@@ -1630,22 +1630,22 @@ aclError aclrtGetLogicDevIdByPhyDevId(const int32_t phyDevId, int32_t *const log
 ### 产品支持情况
 
 <!-- npu="950" id1296 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1296 -->
 <!-- npu="A3" id1297 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1297 -->
 <!-- npu="910b" id1298 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1298 -->
 <!-- npu="310b" id1299 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1299 -->
 <!-- npu="310p" id1300 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1300 -->
 <!-- npu="910" id1301 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1301 -->
 <!-- npu="IPV350" id1302 -->
 - IPV350：不支持
@@ -1694,22 +1694,22 @@ aclError aclrtGetPhyDevIdByLogicDevId(const int32_t logicDevId, int32_t *const p
 ### 产品支持情况
 
 <!-- npu="950" id2255 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2255 -->
 <!-- npu="A3" id2256 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2256 -->
 <!-- npu="910b" id2257 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2257 -->
 <!-- npu="310b" id2258 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2258 -->
 <!-- npu="310p" id2259 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2259 -->
 <!-- npu="910" id2260 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2260 -->
 <!-- npu="IPV350" id2261 -->
 - IPV350：不支持
@@ -1758,22 +1758,22 @@ aclError aclrtGetUserDevIdByPhyDevId(const int32_t phyDevId, int32_t *const user
 ### 产品支持情况
 
 <!-- npu="950" id3326 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id3326 -->
 <!-- npu="A3" id3327 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3327 -->
 <!-- npu="910b" id3328 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3328 -->
 <!-- npu="310b" id3329 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id3329 -->
 <!-- npu="310p" id3330 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id3330 -->
 <!-- npu="910" id3331 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id3331 -->
 <!-- npu="IPV350" id3332 -->
 - IPV350：不支持
@@ -1820,22 +1820,22 @@ aclError aclrtGetPhyDevIdByUserDevId(const int32_t userDevId, int32_t *const phy
 ### 产品支持情况
 
 <!-- npu="950" id575 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id575 -->
 <!-- npu="A3" id576 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id576 -->
 <!-- npu="910b" id577 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id577 -->
 <!-- npu="310b" id578 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id578 -->
 <!-- npu="310p" id579 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id579 -->
 <!-- npu="910" id580 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id580 -->
 <!-- npu="IPV350" id581 -->
 - IPV350：不支持
@@ -1882,22 +1882,22 @@ aclError aclrtDeviceGetUuid(int32_t deviceId, aclrtUuid *uuid)
 ### 产品支持情况
 
 <!-- npu="950" id2654 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2654 -->
 <!-- npu="A3" id2655 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2655 -->
 <!-- npu="910b" id2656 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2656 -->
 <!-- npu="310b" id2657 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id2657 -->
 <!-- npu="310p" id2658 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id2658 -->
 <!-- npu="910" id2659 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id2659 -->
 <!-- npu="IPV350" id2660 -->
 - IPV350：不支持
@@ -1934,22 +1934,22 @@ aclError aclrtDeviceGetPCIBusId(int32_t deviceId, char *pciBusId, int32_t len)
 ### 产品支持情况
 
 <!-- npu="950" id3333 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id3333 -->
 <!-- npu="A3" id3334 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3334 -->
 <!-- npu="910b" id3335 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3335 -->
 <!-- npu="310b" id3336 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id3336 -->
 <!-- npu="310p" id3337 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id3337 -->
 <!-- npu="910" id3338 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id3338 -->
 <!-- npu="IPV350" id3339 -->
 - IPV350：不支持
@@ -1992,22 +1992,22 @@ aclError aclrtDeviceGetByPCIBusId(const char *pciBusId, int32_t *deviceId)
 ### 产品支持情况
 
 <!-- npu="950" id3340 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id3340 -->
 <!-- npu="A3" id3341 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3341 -->
 <!-- npu="910b" id3342 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3342 -->
 <!-- npu="310b" id3343 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id3343 -->
 <!-- npu="310p" id3344 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id3344 -->
 <!-- npu="910" id3345 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id3345 -->
 <!-- npu="IPV350" id3346 -->
 - IPV350：不支持
@@ -2048,22 +2048,22 @@ aclError aclrtDeviceGetBareTgid(int32_t *pid)
 ### 产品支持情况
 
 <!-- npu="950" id855 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id855 -->
 <!-- npu="A3" id856 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id856 -->
 <!-- npu="910b" id857 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id857 -->
 <!-- npu="310b" id858 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id858 -->
 <!-- npu="310p" id859 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id859 -->
 <!-- npu="910" id860 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id860 -->
 <!-- npu="IPV350" id861 -->
 - IPV350：不支持
@@ -2101,22 +2101,22 @@ aclError aclrtDeviceGetHostAtomicCapabilities(uint32_t* capabilities, const aclr
 ### 产品支持情况
 
 <!-- npu="950" id2262 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2262 -->
 <!-- npu="A3" id2263 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2263 -->
 <!-- npu="910b" id2264 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2264 -->
 <!-- npu="310b" id2265 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2265 -->
 <!-- npu="310p" id2266 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2266 -->
 <!-- npu="910" id2267 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2267 -->
 <!-- npu="IPV350" id2268 -->
 - IPV350：不支持
@@ -2155,22 +2155,22 @@ aclError aclrtDeviceGetP2PAtomicCapabilities(uint32_t* capabilities, const aclrt
 ### 产品支持情况
 
 <!-- npu="950" id1968 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1968 -->
 <!-- npu="A3" id1969 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1969 -->
 <!-- npu="910b" id1970 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1970 -->
 <!-- npu="310b" id1971 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1971 -->
 <!-- npu="310p" id1972 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1972 -->
 <!-- npu="910" id1973 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1973 -->
 <!-- npu="IPV350" id1974 -->
 - IPV350：不支持
@@ -2206,22 +2206,22 @@ aclError aclrtDeviceSetLimit(aclrtDeviceLimit limit, size_t value)
 ### 产品支持情况
 
 <!-- npu="950" id3260 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id3260 -->
 <!-- npu="A3" id3261 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3261 -->
 <!-- npu="910b" id3262 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3262 -->
 <!-- npu="310b" id3266 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id3266 -->
 <!-- npu="310p" id3267 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id3267 -->
 <!-- npu="910" id3268 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id3268 -->
 <!-- npu="IPV350" id3269 -->
 - IPV350：不支持
@@ -2270,22 +2270,22 @@ aclError aclrtDeviceGetLimit(aclrtDeviceLimit limit, size_t *value)
 ### 产品支持情况
 
 <!-- npu="950" id3263 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id3263 -->
 <!-- npu="A3" id3264 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3264 -->
 <!-- npu="910b" id3265 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3265 -->
 <!-- npu="310b" id3272 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id3272 -->
 <!-- npu="310p" id3273 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id3273 -->
 <!-- npu="910" id3274 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id3274 -->
 <!-- npu="IPV350" id3275 -->
 - IPV350：不支持
@@ -2314,11 +2314,11 @@ aclError aclrtDeviceGetLimit(aclrtDeviceLimit limit, size_t *value)
 - 例如：首先调用`aclrtDeviceSetLimit`将栈大小设置为A，随后调用`aclrtSetDevice`使其生效。此时，调用`aclrtDeviceGetLimit`接口查询得到的值为A，且资源限制的大小亦为A。随后再次调用`aclrtDeviceSetLimit`将其修改为B，但未重新调用`aclrtSetDevice`。此时，调用`aclrtDeviceGetLimit`接口查询得到的值为B，而实际资源限制的大小仍为A。
 
 <!-- npu="A3,910b" id3276 -->
-- 对于Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品，查询`ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE`、`ACL_RT_DEV_LIMIT_SIMT_DVG_WARP_STACK_SIZE`、`ACL_RT_DEV_LIMIT_SIMT_PRINTF_FIFO_SIZE`时返回`ACL_ERROR_RT_FEATURE_NOT_SUPPORT`。
+- 对于Atlas A3系列产品、Atlas A2系列产品，查询`ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE`、`ACL_RT_DEV_LIMIT_SIMT_DVG_WARP_STACK_SIZE`、`ACL_RT_DEV_LIMIT_SIMT_PRINTF_FIFO_SIZE`时返回`ACL_ERROR_RT_FEATURE_NOT_SUPPORT`。
 <!-- end id3276 -->
 
 <!-- npu="950" id3277 -->
-- 对于Ascend 950PR/Ascend 950DT，查询`ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE`返回对齐后×32的值（每warp线程数），如设置256则查询返回8192；查询`ACL_RT_DEV_LIMIT_SIMT_DVG_WARP_STACK_SIZE`返回对齐后的值（不乘线程数），如设置512则查询返回512。
+- 对于Ascend 950PR&950DT系列产品，查询`ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE`返回对齐后×32的值（每warp线程数），如设置256则查询返回8192；查询`ACL_RT_DEV_LIMIT_SIMT_DVG_WARP_STACK_SIZE`返回对齐后的值（不乘线程数），如设置512则查询返回512。
 <!-- end id3277 -->
 
 <br>
@@ -2336,22 +2336,22 @@ aclError aclrtDeviceL2CacheFlush(void* rsv)
 ### 产品支持情况
 
 <!-- npu="950" id3300 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id3300 -->
 <!-- npu="A3" id3301 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：不支持
+- Atlas A3系列产品：不支持
 <!-- end id3301 -->
 <!-- npu="910b" id3302 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：不支持
+- Atlas A2系列产品：不支持
 <!-- end id3302 -->
 <!-- npu="310b" id3303 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id3303 -->
 <!-- npu="310p" id3304 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id3304 -->
 <!-- npu="910" id3305 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id3305 -->
 <!-- npu="IPV350" id3306 -->
 - IPV350：不支持

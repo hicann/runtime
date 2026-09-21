@@ -79,7 +79,7 @@ aclError aclrtGetBufData(const aclrtMbuf buf, void **dataPtr, size_t *size)
 
 获取共享Buffer的数据区指针和数据区长度，用户可以使用此指针填入数据。
 
-接口调用顺序：调用[aclrtAllocBuf](#aclrtAllocBuf)或[aclrtCopyBufRef](#aclrtCopyBufRef)接口申请到共享Buffer后，因此需由用户调用[aclrtGetBufData](#aclrtGetBufData)接口获取共享Buffer的内存指针及长度后，再自行向内存中填充有效数据，然后再调用[aclrtSetBufDataLen](#aclrtSetBufDataLen)接口设置共享Buffer中有效数据的长度，且长度必须小于[aclrtGetBufData](#aclrtGetBufData)获取到的size大小。
+接口调用顺序：调用[aclrtAllocBuf](#aclrtAllocBuf)或[aclrtCopyBufRef](#aclrtCopyBufRef)接口申请到共享Buffer后，需由用户调用[aclrtGetBufData](#aclrtGetBufData)接口获取共享Buffer的内存指针及长度，再自行向内存中填充有效数据，然后再调用[aclrtSetBufDataLen](#aclrtSetBufDataLen)接口设置共享Buffer中有效数据的长度，且长度必须小于[aclrtGetBufData](#aclrtGetBufData)获取到的size大小。
 
 ### 参数说明
 
@@ -113,7 +113,7 @@ aclError aclrtSetBufUserData(aclrtMbuf buf, const void *dataPtr, size_t size, si
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| buf | 输出 | 共享Buffer，类型定义请参见[aclrtMbuf](25-05_Typedefs.md#aclrtMbuf)。<br>须通过[aclrtAllocBuf](#aclrtAllocBuf)或[aclrtCopyBufRef](#aclrtCopyBufRef)接口申请获得。 |
+| buf | 输入 | 共享Buffer，类型定义请参见[aclrtMbuf](25-05_Typedefs.md#aclrtMbuf)。<br>须通过[aclrtAllocBuf](#aclrtAllocBuf)或[aclrtCopyBufRef](#aclrtCopyBufRef)接口申请获得。 |
 | dataPtr | 输入 | 存放用户数据的内存地址指针。 |
 | size | 输入 | 用户数据的长度，单位为Byte。<br>数据长度小于或等于96Byte。 |
 | offset | 输入 | 地址偏移，单位为Byte。<br>偏移量小于或等于96Byte。 |

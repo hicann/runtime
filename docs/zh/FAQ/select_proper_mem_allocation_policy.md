@@ -7,6 +7,7 @@
 内存分配速度慢、访问性能低，选择的页类型不适合业务场景。
 
 典型场景示例：
+
 ```c
 // 小块内存却配置了HUGE_ONLY策略，实际占用远超需求
 aclrtMalloc(&devPtr, 1024, ACL_MEM_MALLOC_HUGE_ONLY);  // 实际占用 2MB（大页对齐）
@@ -31,6 +32,7 @@ aclrtMalloc(&devPtr, 1024, ACL_MEM_MALLOC_HUGE_ONLY);  // 实际占用 2MB（大
 ### 原因1：普通页 vs 大页选择不当
 
 **解决方法**：
+
 - 理解页类型特性：
   - **普通页（4K）**：适合小块、短生命周期、数量多的内存申请，减少对齐浪费
   - **2M大页**：适合大块、长期驻留、频繁访问的内存，减少页表项、扩大TLB覆盖
@@ -41,6 +43,7 @@ aclrtMalloc(&devPtr, 1024, ACL_MEM_MALLOC_HUGE_ONLY);  // 实际占用 2MB（大
 - 了解 HUGE_FIRST 机制：申请大小 ≤1M 时，即使配置 HUGE_FIRST 也使用普通页
 
 策略选择示例：
+
 ```c
 // 小块内存（≤1M）：普通页或 HUGE_FIRST（自动降级）
 size_t smallSize = 1024 * 100;  // 100KB
@@ -59,11 +62,13 @@ aclrtMalloc(&ptr5, largeSize, ACL_MEM_MALLOC_HUGE_ONLY);        // 大页不足�
 ### 原因2：P2P 场景未使用对应策略
 
 **解决方法**：
+
 - 理解 P2P 场景：跨 Device 数据复制，内存需支持跨 Device 访问
 - 使用 P2P 策略：选择带 P2P 后缀的策略（HUGE_FIRST_P2P、HUGE_ONLY_P2P、NORMAL_ONLY_P2P）
 - 使内存属性匹配访问路径：P2P 策略确保内存属性与跨 Device 访问匹配
 
 P2P 策略示例：
+
 ```c
 // 跨 Device 复制场景
 aclrtSetDevice(0);
@@ -89,11 +94,13 @@ aclrtMemcpy(dev1Mem, size, dev0Mem, size, ACL_MEMCPY_DEVICE_TO_DEVICE);
 ### 原因3：频繁申请释放内存
 
 **解决方法**：
+
 - 预分配内存池：初始化阶段预分配固定大小的内存
 - 业务侧复用：避免频繁调用 aclrtMalloc/aclrtFree
 - 减少性能损耗：预分配复用可显著提升性能
 
 内存池示例：
+
 ```c
 // 初始化阶段预分配内存池
 #define POOL_SIZE 10

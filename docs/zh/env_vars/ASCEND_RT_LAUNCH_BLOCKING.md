@@ -40,14 +40,14 @@ export ASCEND_RT_LAUNCH_BLOCKING=1
 ## 支持的型号
 
 <!-- npu="950" id2 -->
-Ascend 950PR/Ascend 950DT
+Ascend 950PR&950DT系列产品
 <!-- end id2 -->
 
 <!-- npu="A3" id3 -->
-Atlas A3 训练系列产品/Atlas A3 推理系列产品
+Atlas A3系列产品
 <!-- end id3 -->
 
 <!-- npu="910b" id4 -->
-Atlas A2 训练系列产品/Atlas A2 推理系列产品
+Atlas A2系列产品
 <!-- end id4 -->
 <!-- end id1 -->

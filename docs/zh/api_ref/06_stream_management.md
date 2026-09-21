@@ -38,22 +38,22 @@ aclError aclrtCreateStream(aclrtStream *stream)
 ### 产品支持情况
 
 <!-- npu="950" id2591 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2591 -->
 <!-- npu="A3" id2592 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2592 -->
 <!-- npu="910b" id2593 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2593 -->
 <!-- npu="310b" id2594 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2594 -->
 <!-- npu="310p" id2595 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2595 -->
 <!-- npu="910" id2596 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2596 -->
 <!-- npu="IPV350" id2597 -->
 - IPV350：不支持
@@ -83,16 +83,16 @@ aclError aclrtCreateStream(aclrtStream *stream)
 不同型号的硬件支持的Stream最大数不同，如果已存在多个Stream（包含默认Stream），则只能显式创建N个Stream，N = Stream最大数 - 已存在的Stream数。例如，Stream最大数为1024，已存在2个Stream，则只能调用本接口显式创建1022个Stream。
 
 <!-- npu="950,A3,910b" id1 -->
-- 对于Ascend 950PR/Ascend 950DT、Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品，Stream最大数为1984。
+- 对于Ascend 950PR&950DT系列产品、Atlas A3系列产品、Atlas A2系列产品，Stream最大数为1984。
 <!-- end id1 -->
 <!-- npu="310b" id2 -->
-- 对于Atlas 200I/500 A2 推理产品，Stream最大数为512。
+- 对于Atlas 200I/500 A2推理产品，Stream最大数为512。
 <!-- end id2 -->
 <!-- npu="310p" id3 -->
-- 对于Atlas 推理系列产品，Stream最大数为1024。
+- 对于Atlas推理系列产品，Stream最大数为1024。
 <!-- end id3 -->
 <!-- npu="910" id4 -->
-- Atlas 训练系列产品，Stream最大数为2048。
+- Atlas训练系列产品，Stream最大数为2048。
 
     多进程场景下，若一次性创建的Stream数量总和接近2048，可能会出现创建Stream失败的情况，此时，建议：（1）清理冗余Stream，减少不必要的Stream；（2）调整代码逻辑，分批创建Stream，例如第一批创建部分Stream，然后第二批再创建部分Stream，以此类推，直到Stream总数接近2048。
 <!-- end id4 -->
@@ -113,22 +113,22 @@ aclError aclrtCreateStreamWithConfig(aclrtStream *stream, uint32_t priority, uin
 ### 产品支持情况
 
 <!-- npu="950" id3137 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id3137 -->
 <!-- npu="A3" id3138 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3138 -->
 <!-- npu="910b" id3139 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3139 -->
 <!-- npu="310b" id3140 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id3140 -->
 <!-- npu="310p" id3141 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id3141 -->
 <!-- npu="910" id3142 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id3142 -->
 <!-- npu="IPV350" id3143 -->
 - IPV350：不支持
@@ -188,19 +188,19 @@ aclError aclrtCreateStreamWithConfig(aclrtStream *stream, uint32_t priority, uin
     仅如下型号支持ACL\_STREAM\_DEVICE\_USE\_ONLY：
 
     <!-- npu="950" id7 -->
-    Ascend 950PR/Ascend 950DT
+    Ascend 950PR&950DT系列产品
     <!-- end id7 -->
 
     <!-- npu="A3" id8 -->
-    Atlas A3 训练系列产品/Atlas A3 推理系列产品
+    Atlas A3系列产品
     <!-- end id8 -->
 
     <!-- npu="910b" id9 -->
-    Atlas A2 训练系列产品/Atlas A2 推理系列产品
+    Atlas A2系列产品
     <!-- end id9 -->
 
     <!-- npu="310p" id10 -->
-    Atlas 推理系列产品
+    Atlas推理系列产品
     <!-- end id10 -->
     <!-- end id6 -->
 
@@ -223,22 +223,22 @@ aclError aclrtDestroyStream(aclrtStream stream)
 ### 产品支持情况
 
 <!-- npu="950" id3347 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id3347 -->
 <!-- npu="A3" id3348 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3348 -->
 <!-- npu="910b" id3349 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3349 -->
 <!-- npu="310b" id3350 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id3350 -->
 <!-- npu="310p" id3351 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id3351 -->
 <!-- npu="910" id3352 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id3352 -->
 <!-- npu="IPV350" id3353 -->
 - IPV350：支持
@@ -280,22 +280,22 @@ aclError aclrtDestroyStreamForce(aclrtStream stream)
 ### 产品支持情况
 
 <!-- npu="950" id3522 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id3522 -->
 <!-- npu="A3" id3523 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3523 -->
 <!-- npu="910b" id3524 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3524 -->
 <!-- npu="310b" id3525 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id3525 -->
 <!-- npu="310p" id3526 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id3526 -->
 <!-- npu="910" id3527 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id3527 -->
 <!-- npu="IPV350" id3528 -->
 - IPV350：不支持
@@ -335,22 +335,22 @@ aclError aclrtSetStreamOverflowSwitch(aclrtStream stream, uint32_t flag)
 ### 产品支持情况
 
 <!-- npu="950" id2227 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2227 -->
 <!-- npu="A3" id2228 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2228 -->
 <!-- npu="910b" id2229 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2229 -->
 <!-- npu="310b" id2230 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id2230 -->
 <!-- npu="310p" id2231 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id2231 -->
 <!-- npu="910" id2232 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id2232 -->
 <!-- npu="IPV350" id2233 -->
 - IPV350：不支持
@@ -391,22 +391,22 @@ aclError aclrtGetStreamOverflowSwitch(aclrtStream stream, uint32_t *flag)
 ### 产品支持情况
 
 <!-- npu="950" id309 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id309 -->
 <!-- npu="A3" id310 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id310 -->
 <!-- npu="910b" id311 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id311 -->
 <!-- npu="310b" id312 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id312 -->
 <!-- npu="310p" id313 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id313 -->
 <!-- npu="910" id314 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id314 -->
 <!-- npu="IPV350" id315 -->
 - IPV350：不支持
@@ -443,22 +443,22 @@ aclError aclrtSetStreamFailureMode(aclrtStream stream, uint64_t mode)
 ### 产品支持情况
 
 <!-- npu="950" id1107 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1107 -->
 <!-- npu="A3" id1108 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1108 -->
 <!-- npu="910b" id1109 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1109 -->
 <!-- npu="310b" id1110 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1110 -->
 <!-- npu="310p" id1111 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1111 -->
 <!-- npu="910" id1112 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1112 -->
 <!-- npu="IPV350" id1113 -->
 - IPV350：不支持
@@ -487,10 +487,10 @@ aclError aclrtSetStreamFailureMode(aclrtStream stream, uint64_t mode)
 - 当Stream上设置了遇错即停模式，该Stream所在的Context下的其它Stream也是遇错即停 。
 <!-- end id13 -->
 <!-- npu="950,A3,910b" id11 -->
-- 对于Ascend 950PR/Ascend 950DT、Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品，支持指定默认Stream（即stream参数传入NULL）。
+- 对于Ascend 950PR&950DT系列产品、Atlas A3系列产品、Atlas A2系列产品，支持指定默认Stream（即stream参数传入NULL）。
 <!-- end id11 -->
 <!-- npu="910,310p,310b" id12 -->
-- 对于Atlas 200I/500 A2 推理产品、Atlas 推理系列产品、Atlas 训练系列产品，不支持指定默认Stream（即stream参数传入NULL）。
+- 对于Atlas 200I/500 A2推理产品、Atlas推理系列产品、Atlas训练系列产品，不支持指定默认Stream（即stream参数传入NULL）。
 <!-- end id12 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/06_stream_management_res.md#id25 -->
 
@@ -509,22 +509,22 @@ aclError aclrtStreamQuery(aclrtStream stream, aclrtStreamStatus *status)
 ### 产品支持情况
 
 <!-- npu="950" id1310 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1310 -->
 <!-- npu="A3" id1311 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1311 -->
 <!-- npu="910b" id1312 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1312 -->
 <!-- npu="310b" id1313 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1313 -->
 <!-- npu="310p" id1314 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1314 -->
 <!-- npu="910" id1315 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1315 -->
 <!-- npu="IPV350" id1316 -->
 - IPV350：不支持
@@ -565,22 +565,22 @@ aclError aclrtSynchronizeStream(aclrtStream stream)
 ### 产品支持情况
 
 <!-- npu="950" id2612 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2612 -->
 <!-- npu="A3" id2613 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2613 -->
 <!-- npu="910b" id2614 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2614 -->
 <!-- npu="310b" id2615 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2615 -->
 <!-- npu="310p" id2616 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2616 -->
 <!-- npu="910" id2617 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2617 -->
 <!-- npu="IPV350" id2618 -->
 - IPV350：支持
@@ -620,22 +620,22 @@ aclError aclrtSynchronizeStreamWithTimeout(aclrtStream stream, int32_t timeout)
 ### 产品支持情况
 
 <!-- npu="950" id1982 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1982 -->
 <!-- npu="A3" id1983 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1983 -->
 <!-- npu="910b" id1984 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1984 -->
 <!-- npu="310b" id1985 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1985 -->
 <!-- npu="310p" id1986 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1986 -->
 <!-- npu="910" id1987 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1987 -->
 <!-- npu="IPV350" id1988 -->
 - IPV350：不支持
@@ -676,22 +676,22 @@ aclError aclrtNonBlockingLaunchBegin(aclrtStream stream, uint64_t flag)
 ### 产品支持情况
 
 <!-- npu="950" id3600 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id3600 -->
 <!-- npu="A3" id3601 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3601 -->
 <!-- npu="910b" id3602 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3602 -->
 <!-- npu="310b" id3603 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id3603 -->
 <!-- npu="310p" id3604 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id3604 -->
 <!-- npu="910" id3605 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id3605 -->
 <!-- npu="IPV350" id3606 -->
 - IPV350：不支持
@@ -755,22 +755,22 @@ aclError aclrtNonBlockingLaunchEnd(aclrtStream stream, uint64_t flag)
 ### 产品支持情况
 
 <!-- npu="950" id3607 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id3607 -->
 <!-- npu="A3" id3608 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3608 -->
 <!-- npu="910b" id3609 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3609 -->
 <!-- npu="310b" id3610 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id3610 -->
 <!-- npu="310p" id3611 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id3611 -->
 <!-- npu="910" id3612 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id3612 -->
 <!-- npu="IPV350" id3613 -->
 - IPV350：不支持
@@ -828,22 +828,22 @@ aclError aclrtStreamAbort(aclrtStream stream)
 ### 产品支持情况
 
 <!-- npu="950" id946 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id946 -->
 <!-- npu="A3" id947 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id947 -->
 <!-- npu="910b" id948 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id948 -->
 <!-- npu="310b" id949 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id949 -->
 <!-- npu="310p" id950 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id950 -->
 <!-- npu="910" id951 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id951 -->
 <!-- npu="IPV350" id952 -->
 - IPV350：不支持
@@ -870,7 +870,7 @@ aclError aclrtStreamAbort(aclrtStream stream)
 - 如果有其它Stream依赖本接口中指定的Stream（例如通过[aclrtRecordEvent](07_event_management.md#aclrtRecordEvent)、[aclrtStreamWaitEvent](07_event_management.md#aclrtStreamWaitEvent)等接口实现两个Stream间同步等待），则其它Stream执行可能会卡住，此时您需要显式调用本接口清除其它Stream上的任务。
 - 如果调用本接口清除指定Stream上的任务时，再调用同步等待接口（例如[aclrtSynchronizeStream](#aclrtSynchronizeStream)、[aclrtSynchronizeEvent](07_event_management.md#aclrtSynchronizeEvent)等），同步等待接口会退出并返回ACL\_ERROR\_RT\_STREAM\_ABORT的报错。
 <!-- npu="950" id14 -->
-- 对于Ascend 950PR/Ascend 950DT，不支持如下方式创建的Stream：调用aclrtCreateStreamWithConfig，将flag设置为ACL_STREAM_PERSISTENT。
+- 对于Ascend 950PR&950DT系列产品，不支持如下方式创建的Stream：调用aclrtCreateStreamWithConfig，将flag设置为ACL_STREAM_PERSISTENT。
 <!-- end id14 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/06_stream_management_res.md#id26 -->
 
@@ -889,22 +889,22 @@ aclError aclrtStreamGetId(aclrtStream stream, int32_t *streamId)
 ### 产品支持情况
 
 <!-- npu="950" id1933 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1933 -->
 <!-- npu="A3" id1934 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1934 -->
 <!-- npu="910b" id1935 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1935 -->
 <!-- npu="310b" id1936 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1936 -->
 <!-- npu="310p" id1937 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1937 -->
 <!-- npu="910" id1938 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1938 -->
 <!-- npu="IPV350" id1939 -->
 - IPV350：不支持
@@ -941,22 +941,22 @@ aclError aclrtGetStreamAvailableNum(uint32_t *streamCount)
 ### 产品支持情况
 
 <!-- npu="950" id960 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id960 -->
 <!-- npu="A3" id961 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id961 -->
 <!-- npu="910b" id962 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id962 -->
 <!-- npu="310b" id963 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id963 -->
 <!-- npu="310p" id964 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id964 -->
 <!-- npu="910" id965 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id965 -->
 <!-- npu="IPV350" id966 -->
 - IPV350：不支持
@@ -992,22 +992,22 @@ aclError aclrtSetStreamAttribute(aclrtStream stream, aclrtStreamAttr stmAttrType
 ### 产品支持情况
 
 <!-- npu="950" id1065 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1065 -->
 <!-- npu="A3" id1066 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1066 -->
 <!-- npu="910b" id1067 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1067 -->
 <!-- npu="310b" id1068 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1068 -->
 <!-- npu="310p" id1069 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1069 -->
 <!-- npu="910" id1070 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1070 -->
 <!-- npu="IPV350" id1071 -->
 - IPV350：不支持
@@ -1034,16 +1034,16 @@ aclError aclrtSetStreamAttribute(aclrtStream stream, aclrtStreamAttr stmAttrType
 
 - 溢出检测属性：调用该接口打开或关闭溢出检测开关后，仅对后续新下发的任务生效，已下发的任务仍维持原样。
 <!-- npu="950,A3,910b" id3618 -->
-- `ACL_STREAM_LAUNCH_BLOCKING_MODE`属性：仅Ascend 950PR/Ascend 950DT、Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品支持设置该属性。不支持对使用[aclmdlRIBindStream](15_model_running_instance_management.md#aclmdlRIBindStream)接口绑定模型运行实例的Stream设置该属性。不支持对调用[aclrtCreateStreamWithConfig](#aclrtCreateStreamWithConfig)接口，将flag设置为ACL_STREAM_PERSISTENT、ACL_STREAM_CPU_SCHEDULE或ACL_STREAM_DEVICE_USE_ONLY创建的Stream设置该属性。设置该属性时，stream参数指定的Stream必须是不在捕获状态的Stream。
+- `ACL_STREAM_LAUNCH_BLOCKING_MODE`属性：仅Ascend 950PR&950DT系列产品、Atlas A3系列产品、Atlas A2系列产品支持设置该属性。不支持对使用[aclmdlRIBindStream](15_model_running_instance_management.md#aclmdlRIBindStream)接口绑定模型运行实例的Stream设置该属性。不支持对调用[aclrtCreateStreamWithConfig](#aclrtCreateStreamWithConfig)接口，将flag设置为ACL_STREAM_PERSISTENT、ACL_STREAM_CPU_SCHEDULE或ACL_STREAM_DEVICE_USE_ONLY创建的Stream设置该属性。设置该属性时，stream参数指定的Stream必须是不在捕获状态的Stream。
 <!-- end id3618 -->
 <!-- npu="950,A3,910b,910,310p,310b" id15 -->
 - 当Stream上设置了遇错即停模式，该Stream所在的Context下的其它Stream也是遇错即停。
 <!-- end id15 -->
 <!-- npu="950,A3,910b" id16 -->
-- 对于Ascend 950PR/Ascend 950DT、Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品，支持指定默认Stream（即stream参数传入NULL）。不支持对默认Stream设置Failure Mode。
+- 对于Ascend 950PR&950DT系列产品、Atlas A3系列产品、Atlas A2系列产品，支持指定默认Stream（即stream参数传入NULL）。不支持对默认Stream设置Failure Mode。
 <!-- end id16 -->
 <!-- npu="910,310p,310b" id17 -->
-- 对于Atlas 200I/500 A2 推理产品、Atlas 推理系列产品、Atlas 训练系列产品，不支持指定默认Stream（即stream参数传入NULL）。
+- 对于Atlas 200I/500 A2推理产品、Atlas推理系列产品、Atlas训练系列产品，不支持指定默认Stream（即stream参数传入NULL）。
 <!-- end id17 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/06_stream_management_res.md#id27 -->
 
@@ -1062,22 +1062,22 @@ aclError aclrtGetStreamAttribute(aclrtStream stream, aclrtStreamAttr stmAttrType
 ### 产品支持情况
 
 <!-- npu="950" id2976 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2976 -->
 <!-- npu="A3" id2977 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2977 -->
 <!-- npu="910b" id2978 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2978 -->
 <!-- npu="310b" id2979 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2979 -->
 <!-- npu="310p" id2980 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2980 -->
 <!-- npu="910" id2981 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2981 -->
 <!-- npu="IPV350" id2982 -->
 - IPV350：不支持
@@ -1104,14 +1104,14 @@ aclError aclrtGetStreamAttribute(aclrtStream stream, aclrtStreamAttr stmAttrType
 ### 约束说明
 
 <!-- npu="950,A3,910b" id19 -->
-对于Ascend 950PR/Ascend 950DT、Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品，支持指定默认Stream（即stream参数传入NULL）。
+对于Ascend 950PR&950DT系列产品、Atlas A3系列产品、Atlas A2系列产品，支持指定默认Stream（即stream参数传入NULL）。
 <!-- end id19 -->
 
 <!-- npu="910,310p,310b" id20 -->
-对于Atlas 200I/500 A2 推理产品、Atlas 推理系列产品、Atlas 训练系列产品，不支持指定默认Stream（即stream参数传入NULL）。
+对于Atlas 200I/500 A2推理产品、Atlas推理系列产品、Atlas训练系列产品，不支持指定默认Stream（即stream参数传入NULL）。
 <!-- end id20 -->
 <!-- npu="950,A3,910b" id3619 -->
-- `ACL_STREAM_LAUNCH_BLOCKING_MODE`属性：仅Ascend 950PR/Ascend 950DT、Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品支持获取该属性。不支持对使用[aclmdlRIBindStream](15_model_running_instance_management.md#aclmdlRIBindStream)接口绑定模型运行实例的Stream获取该属性。不支持对调用[aclrtCreateStreamWithConfig](#aclrtCreateStreamWithConfig)接口，将flag设置为ACL_STREAM_PERSISTENT、ACL_STREAM_CPU_SCHEDULE或ACL_STREAM_DEVICE_USE_ONLY创建的Stream获取该属性。获取该属性时，stream参数指定的Stream必须是不在捕获状态的Stream。
+- `ACL_STREAM_LAUNCH_BLOCKING_MODE`属性：仅Ascend 950PR&950DT系列产品、Atlas A3系列产品、Atlas A2系列产品支持获取该属性。不支持对使用[aclmdlRIBindStream](15_model_running_instance_management.md#aclmdlRIBindStream)接口绑定模型运行实例的Stream获取该属性。不支持对调用[aclrtCreateStreamWithConfig](#aclrtCreateStreamWithConfig)接口，将flag设置为ACL_STREAM_PERSISTENT、ACL_STREAM_CPU_SCHEDULE或ACL_STREAM_DEVICE_USE_ONLY创建的Stream获取该属性。获取该属性时，stream参数指定的Stream必须是不在捕获状态的Stream。
 <!-- end id3619 -->
 <!-- end id18 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/06_stream_management_res.md#id28 -->
@@ -1131,22 +1131,22 @@ aclError aclrtActiveStream(aclrtStream activeStream, aclrtStream stream)
 ### 产品支持情况
 
 <!-- npu="950" id337 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id337 -->
 <!-- npu="A3" id338 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：不支持
+- Atlas A3系列产品：不支持
 <!-- end id338 -->
 <!-- npu="910b" id339 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id339 -->
 <!-- npu="310b" id340 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id340 -->
 <!-- npu="310p" id341 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id341 -->
 <!-- npu="910" id342 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id342 -->
 <!-- npu="IPV350" id343 -->
 - IPV350：不支持
@@ -1185,22 +1185,22 @@ aclError aclrtSwitchStream(void *leftValue, aclrtCondition cond, void *rightValu
 ### 产品支持情况
 
 <!-- npu="950" id2213 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2213 -->
 <!-- npu="A3" id2214 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：不支持
+- Atlas A3系列产品：不支持
 <!-- end id2214 -->
 <!-- npu="910b" id2215 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2215 -->
 <!-- npu="310b" id2216 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2216 -->
 <!-- npu="310p" id2217 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2217 -->
 <!-- npu="910" id2218 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2218 -->
 <!-- npu="IPV350" id2219 -->
 - IPV350：不支持
@@ -1244,22 +1244,22 @@ aclError aclrtRegStreamStateCallback(const char *regName, aclrtStreamStateCallba
 ### 产品支持情况
 
 <!-- npu="950" id1919 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1919 -->
 <!-- npu="A3" id1920 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1920 -->
 <!-- npu="910b" id1921 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1921 -->
 <!-- npu="310b" id1922 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1922 -->
 <!-- npu="310p" id1923 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1923 -->
 <!-- npu="910" id1924 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1924 -->
 <!-- npu="IPV350" id1925 -->
 - IPV350：不支持
@@ -1309,22 +1309,22 @@ aclError aclrtStreamStop(aclrtStream stream)
 ### 产品支持情况
 
 <!-- npu="950" id2500 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2500 -->
 <!-- npu="A3" id2501 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2501 -->
 <!-- npu="910b" id2502 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2502 -->
 <!-- npu="310b" id2503 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id2503 -->
 <!-- npu="310p" id2504 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id2504 -->
 <!-- npu="910" id2505 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id2505 -->
 <!-- npu="IPV350" id2506 -->
 - IPV350：不支持
@@ -1365,22 +1365,22 @@ aclError aclrtPersistentTaskClean(aclrtStream stream)
 ### 产品支持情况
 
 <!-- npu="950" id428 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id428 -->
 <!-- npu="A3" id429 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id429 -->
 <!-- npu="910b" id430 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id430 -->
 <!-- npu="310b" id431 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id431 -->
 <!-- npu="310p" id432 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id432 -->
 <!-- npu="910" id433 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id433 -->
 <!-- npu="IPV350" id434 -->
 - IPV350：不支持
@@ -1418,22 +1418,22 @@ aclError aclrtStreamGetPriority(aclrtStream stream, uint32_t *priority)
 ### 产品支持情况
 
 <!-- npu="950" id3088 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id3088 -->
 <!-- npu="A3" id3089 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3089 -->
 <!-- npu="910b" id3090 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3090 -->
 <!-- npu="310b" id3091 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id3091 -->
 <!-- npu="310p" id3092 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id3092 -->
 <!-- npu="910" id3093 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id3093 -->
 <!-- npu="IPV350" id3094 -->
 - IPV350：不支持
@@ -1470,22 +1470,22 @@ aclError aclrtStreamGetFlags(aclrtStream stream, uint32_t *flags)
 ### 产品支持情况
 
 <!-- npu="950" id1562 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1562 -->
 <!-- npu="A3" id1563 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1563 -->
 <!-- npu="910b" id1564 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1564 -->
 <!-- npu="310b" id1565 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1565 -->
 <!-- npu="310p" id1566 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1566 -->
 <!-- npu="910" id1567 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1567 -->
 <!-- npu="IPV350" id1568 -->
 - IPV350：不支持

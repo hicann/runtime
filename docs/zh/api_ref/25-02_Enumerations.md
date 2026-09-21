@@ -110,7 +110,7 @@ typedef enum {
 
 ```c
 typedef enum aclCANNPackageName {
-    ACL_PKG_NAME_CANN, 
+    ACL_PKG_NAME_CANN,
     ACL_PKG_NAME_RUNTIME,
     ACL_PKG_NAME_COMPILER,
     ACL_PKG_NAME_HCCL,
@@ -149,27 +149,27 @@ typedef enum {
     ACL_INT4 = 29,
     ACL_UINT1 = 30,
     ACL_COMPLEX32 = 33,
-    ACL_HIFLOAT8 = 34,      
-    ACL_FLOAT8_E5M2 = 35,   
-    ACL_FLOAT8_E4M3FN = 36, 
-    ACL_FLOAT8_E8M0 = 37,   
-    ACL_FLOAT6_E3M2 = 38,   
-    ACL_FLOAT6_E2M3 = 39,   
-    ACL_FLOAT4_E2M1 = 40,   
-    ACL_FLOAT4_E1M2 = 41,   
+    ACL_HIFLOAT8 = 34,
+    ACL_FLOAT8_E5M2 = 35,
+    ACL_FLOAT8_E4M3FN = 36,
+    ACL_FLOAT8_E8M0 = 37,
+    ACL_FLOAT6_E3M2 = 38,
+    ACL_FLOAT6_E2M3 = 39,
+    ACL_FLOAT4_E2M1 = 40,
+    ACL_FLOAT4_E1M2 = 41,
 } aclDataType;
 ```
 
 <!-- npu="950" id1 -->
-对于Ascend 950PR/Ascend 950DT，支持33\~41的枚举选项。
+对于Ascend 950PR&950DT系列产品，支持33\~41的枚举选项。
 <!-- end id1 -->
 
 <!-- npu="A3,910b" id2 -->
-对于Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品，不支持33\~41的枚举选项。
+对于Atlas A3系列产品、Atlas A2系列产品，不支持33\~41的枚举选项。
 <!-- end id2 -->
 
 <!-- npu="910,310p,310b" id3 -->
-对于Atlas 200I/500 A2 推理产品、Atlas 推理系列产品、Atlas 训练系列产品，不支持33\~41的枚举选项。
+对于Atlas 200I/500 A2推理产品、Atlas推理系列产品、Atlas训练系列产品，不支持33\~41的枚举选项。
 <!-- end id3 -->
 
 <!-- npu="IPV350" id4 -->
@@ -294,9 +294,9 @@ typedef enum {
     ACL_FORMAT_NCL = 47,
     ACL_FORMAT_FRACTAL_NZ_C0_16 = 50,
     ACL_FORMAT_FRACTAL_NZ_C0_32 = 51,
-    ACL_FORMAT_FRACTAL_NZ_C0_2 = 52, 
-    ACL_FORMAT_FRACTAL_NZ_C0_4 = 53, 
-    ACL_FORMAT_FRACTAL_NZ_C0_8 = 54, 
+    ACL_FORMAT_FRACTAL_NZ_C0_2 = 52,
+    ACL_FORMAT_FRACTAL_NZ_C0_4 = 53,
+    ACL_FORMAT_FRACTAL_NZ_C0_8 = 54,
 } aclFormat;
 ```
 
@@ -322,7 +322,7 @@ aclFormat各项含义如下：
 - FRACTAL\_NZ\_C0\__\[M\]_：内部用于分形的特殊数据排布格式，_\[M\]_代表C0的数值，当前支持（2, 4, 8, 16, 32）。用户目前无需使用。
 
     <!-- npu="950" id5 -->
-    仅Ascend 950PR/Ascend 950DT支持该类型。
+    仅Ascend 950PR&950DT系列产品支持该类型。
     <!-- end id5 -->
 
 <br>
@@ -481,7 +481,7 @@ typedef enum aclplatformDevInfo {
 | ACL_PLATFORM_L1_SIZE | L1缓冲区大小，单位Byte。 |
 | ACL_PLATFORM_SOC_VERSION | AI处理器型号名称。 |
 | ACL_PLATFORM_AIC_VERSION | AI Core版本字符串。 |
-| ACL_PLATFORM_NPU_ARCH | NPU架构版本，返回值对应[aclplatformNpuArch](#aclplatformNpuArch)枚举的整数值。<br><br> Ascend 950PR/Ascend 950DT对应NPU架构版本为3510，Atlas A3训练系列产品/Atlas A3推理系列产品对应NPU架构版本为2201，Atlas A2训练系列产品/Atlas A2推理系列产品对应NPU架构版本为2201。 |
+| ACL_PLATFORM_NPU_ARCH | NPU架构版本，返回值对应[aclplatformNpuArch](#aclplatformNpuArch)枚举的整数值。<br><br> Ascend 950PR&950DT系列产品对应NPU架构版本为3510，Atlas A3训练系列产品/Atlas A3推理系列产品对应NPU架构版本为2201，Atlas A2训练系列产品/Atlas A2推理系列产品对应NPU架构版本为2201。 |
 | ACL_PLATFORM_MEMORY_TYPE | 设备内存类型，返回值对应[aclplatformLocalMemType](#aclplatformLocalMemType)枚举的整数值。 |
 
 <br>
@@ -539,22 +539,22 @@ typedef enum aclplatformNpuArch {
 
 产品型号和NPU架构版本的对应关系如下所示：
 <!-- npu="950" id6 -->
-- Ascend 950PR/Ascend 950DT：3510
+- Ascend 950PR&950DT系列产品：3510
 <!-- end id6 -->
 <!-- npu="A3" id7 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：2201
+- Atlas A3系列产品：2201
 <!-- end id7 -->
 <!-- npu="910b" id8 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：2201
+- Atlas A2系列产品：2201
 <!-- end id8 -->
 <!-- npu="310b" id9 -->
-- Atlas 200I/500 A2 推理产品：3002
+- Atlas 200I/500 A2推理产品：3002
 <!-- end id9 -->
 <!-- npu="310p" id10 -->
-- Atlas 推理系列产品：2002
+- Atlas推理系列产品：2002
 <!-- end id10 -->
 <!-- npu="910" id11 -->
-- Atlas 训练系列产品：1001
+- Atlas训练系列产品：1001
 <!-- end id11 -->
 <!-- npu="IPV350" id12 -->
 - IPV350：3505
@@ -589,27 +589,27 @@ typedef enum {
 ```
 
 <!-- npu="310b" id97 -->
-Atlas 200I/500 A2 推理产品：不支持ACL\_AICORE\_MEMORY\_ACCESS
+Atlas 200I/500 A2推理产品：不支持ACL\_AICORE\_MEMORY\_ACCESS
 <!-- end id97 -->
 
 <!-- npu="310p" id98 -->
-Atlas 推理系列产品：不支持ACL\_AICORE\_L2\_CACHE、ACL\_AICORE\_PIPE\_EXECUTE\_UTILIZATION、ACL\_AICORE\_MEMORY\_ACCESS
+Atlas推理系列产品：不支持ACL\_AICORE\_L2\_CACHE、ACL\_AICORE\_PIPE\_EXECUTE\_UTILIZATION、ACL\_AICORE\_MEMORY\_ACCESS
 <!-- end id98 -->
 
 <!-- npu="910" id99 -->
-Atlas 训练系列产品：不支持ACL\_AICORE\_L2\_CACHE、ACL\_AICORE\_PIPE\_EXECUTE\_UTILIZATION、ACL\_AICORE\_MEMORY\_ACCESS
+Atlas训练系列产品：不支持ACL\_AICORE\_L2\_CACHE、ACL\_AICORE\_PIPE\_EXECUTE\_UTILIZATION、ACL\_AICORE\_MEMORY\_ACCESS
 <!-- end id99 -->
 
 <!-- npu="910b" id100 -->
-Atlas A2 训练系列产品/Atlas A2 推理系列产品：不支持ACL\_AICORE\_PIPE\_EXECUTE\_UTILIZATION
+Atlas A2系列产品：不支持ACL\_AICORE\_PIPE\_EXECUTE\_UTILIZATION
 <!-- end id100 -->
 
 <!-- npu="A3" id101 -->
-Atlas A3 训练系列产品/Atlas A3 推理系列产品：不支持ACL\_AICORE\_PIPE\_EXECUTE\_UTILIZATION
+Atlas A3系列产品：不支持ACL\_AICORE\_PIPE\_EXECUTE\_UTILIZATION
 <!-- end id101 -->
 
 <!-- npu="950" id102 -->
-Ascend 950PR/Ascend 950DT：不支持ACL\_AICORE\_L2\_CACHE、ACL\_AICORE\_PIPE\_EXECUTE\_UTILIZATION、ACL\_AICORE\_MEMORY\_ACCESS
+Ascend 950PR&950DT系列产品：不支持ACL\_AICORE\_L2\_CACHE、ACL\_AICORE\_PIPE\_EXECUTE\_UTILIZATION、ACL\_AICORE\_MEMORY\_ACCESS
 <!-- end id102 -->
 
 <!-- @ref: runtime/res/docs/zh/api_ref/25-02_Enumerations_res.md#id16 -->
@@ -623,7 +623,7 @@ Ascend 950PR/Ascend 950DT：不支持ACL\_AICORE\_L2\_CACHE、ACL\_AICORE\_PIPE\
 ```c
 typedef enum {
     ACL_PROF_ARGS_MIN                   = 0,
-    ACL_PROF_STORAGE_LIMIT              = 1, 
+    ACL_PROF_STORAGE_LIMIT              = 1,
     ACL_PROF_SYS_HARDWARE_MEM_FREQ      = 3,
     ACL_PROF_LLC_MODE                   = 4,
     ACL_PROF_SYS_IO_FREQ                = 5,
@@ -643,27 +643,27 @@ typedef enum {
 ```
 <!-- @ref: runtime/res/docs/zh/api_ref/25-02_Enumerations_res.md#id17 -->
 <!-- npu="950" id87 -->
-Ascend 950PR/Ascend 950DT：不支持ACL\_PROF\_DVPP\_FREQ、ACL\_PROF\_HOST\_SYS、ACL\_PROF\_HOST\_SYS\_USAGE、ACL\_PROF\_HOST\_SYS\_USAGE\_FREQ、ACL\_PROF\_NTS\_METRICS、ACL\_PROF\_OPTYPE。
+Ascend 950PR&950DT系列产品：不支持ACL\_PROF\_DVPP\_FREQ、ACL\_PROF\_HOST\_SYS、ACL\_PROF\_HOST\_SYS\_USAGE、ACL\_PROF\_HOST\_SYS\_USAGE\_FREQ、ACL\_PROF\_NTS\_METRICS、ACL\_PROF\_OPTYPE。
 <!-- end id87 -->
 
 <!-- npu="310p" id88 -->
-Atlas 推理系列产品：不支持ACL\_PROF\_SYS\_IO\_FREQ、ACL\_PROF\_NTS\_METRICS、ACL\_PROF\_OPTYPE。
+Atlas推理系列产品：不支持ACL\_PROF\_SYS\_IO\_FREQ、ACL\_PROF\_NTS\_METRICS、ACL\_PROF\_OPTYPE。
 <!-- end id88 -->
 
 <!-- npu="310b" id89 -->
-Atlas 200I/500 A2 推理产品：不支持ACL\_PROF\_SYS\_INTERCONNECTION\_FREQ、ACL\_PROF\_NTS\_METRICS、ACL\_PROF\_OPTYPE。
+Atlas 200I/500 A2推理产品：不支持ACL\_PROF\_SYS\_INTERCONNECTION\_FREQ、ACL\_PROF\_NTS\_METRICS、ACL\_PROF\_OPTYPE。
 <!-- end id89 -->
 
 <!-- npu="910" id90 -->
-Atlas 训练系列产品：不支持ACL\_PROF\_OPTYPE。
+Atlas训练系列产品：不支持ACL\_PROF\_OPTYPE。
 <!-- end id90 -->
 
 <!-- npu="910b" id91 -->
-Atlas A2 训练系列产品/Atlas A2 推理系列产品：不支持ACL\_PROF\_OPTYPE。
+Atlas A2系列产品：不支持ACL\_PROF\_OPTYPE。
 <!-- end id91 -->
 
 <!-- npu="A3" id92 -->
-Atlas A3 训练系列产品/Atlas A3 推理系列产品：不支持ACL\_PROF\_OPTYPE。
+Atlas A3系列产品：不支持ACL\_PROF\_OPTYPE。
 <!-- end id92 -->
 
 枚举项说明如下：
@@ -672,19 +672,19 @@ Atlas A3 训练系列产品/Atlas A3 推理系列产品：不支持ACL\_PROF\_OP
 - ACL\_PROF\_SYS\_HARDWARE\_MEM\_FREQ：片上内存读写速率、QoS传输带宽、LLC三级缓存带宽、加速器带宽、SoC传输带宽、组件内存占用等的采集频率，范围\[1,100\]，单位Hz。不同产品的采集内容略有差异，请以实际结果为准。已知在安装有glibc<2.34的环境上采集memory数据，可能触发glibc的一个已知[Bug 19329](https://sourceware.org/bugzilla/show_bug.cgi?id=19329)，通过升级环境的glibc版本可解决此问题。
 
     <!-- npu="950" id93 -->
-    Ascend 950PR/Ascend 950DT，Qos和SoC支持的采集频率最大支持配置10000，其他采集项支持的最大采集频率仍为100，若配置超出范围，其他采集项则按照最大采集频率100进行采集。
+    Ascend 950PR&950DT系列产品，Qos和SoC支持的采集频率最大支持配置10000，其他采集项支持的最大采集频率仍为100，若配置超出范围，其他采集项则按照最大采集频率100进行采集。
     <!-- end id93 -->
 
     <!-- npu="310b" id94 -->
-    Atlas 200I/500 A2 推理产品：采集任务结束后，不建议用户增大采集频率，否则可能导致SoC传输带宽数据丢失。
+    Atlas 200I/500 A2推理产品：采集任务结束后，不建议用户增大采集频率，否则可能导致SoC传输带宽数据丢失。
     <!-- end id94 -->
 
     <!-- npu="910b" id95 -->
-    Atlas A2 训练系列产品/Atlas A2 推理系列产品：采集任务结束后，不建议用户增大采集频率，否则可能导致SoC传输带宽数据丢失。
+    Atlas A2系列产品：采集任务结束后，不建议用户增大采集频率，否则可能导致SoC传输带宽数据丢失。
     <!-- end id95 -->
 
     <!-- npu="A3" id96 -->
-    Atlas A3 训练系列产品/Atlas A3 推理系列产品：采集任务结束后，不建议用户增大采集频率，否则可能导致SoC传输带宽数据丢失。
+    Atlas A3系列产品：采集任务结束后，不建议用户增大采集频率，否则可能导致SoC传输带宽数据丢失。
     <!-- end id96 -->
 
 - ACL\_PROF\_LLC\_MODE：LLC Profiling采集事件。要求同时设置ACL\_PROF\_SYS\_HARDWARE\_MEM\_FREQ。可以设置为：
@@ -707,7 +707,7 @@ Atlas A3 训练系列产品/Atlas A3 推理系列产品：不支持ACL\_PROF\_OP
 ## aclprofEventAttributes
 
 ```c
-typedef struct { 
+typedef struct {
     uint16_t version;
     uint16_t size;
     uint32_t messageType;   // MESSAGE_TYPE_TENSOR_INFO
@@ -716,7 +716,7 @@ typedef struct {
     } message;
 } aclprofEventAttributes;
 
-typedef struct { 
+typedef struct {
     uint64_t opNameId;      // 通过uint64_t aclprofStr2Id(const char *message)转化
     uint64_t opTypeId;
     uint32_t resv;
@@ -801,7 +801,7 @@ typedef enum aclrtAtomicOperation {
     /* 以上选项是基于SIMT（Single Instruction Multiple Thread）编程的原子操作 */
     /* 以下选项是基于SIMD（Single Instruction Multiple Data）编程的原子操作 */
 
-    ACL_RT_ATOMIC_OPERATION_DMA_ADD = 30,          // 原子加操作，对应Ascend C的SetAtomicAdd接口         
+    ACL_RT_ATOMIC_OPERATION_DMA_ADD = 30,          // 原子加操作，对应Ascend C的SetAtomicAdd接口
     ACL_RT_ATOMIC_OPERATION_DMA_MIN = 31,          // 原子求最小值操作，对应Ascend C的SetAtomicMin接口
     ACL_RT_ATOMIC_OPERATION_DMA_MAX = 32,          // 原子求最大值操作，对应Ascend C的SetAtomicMax接口
     ACL_RT_ATOMIC_OPERATION_SIMD_SCALAR_ADD = 40,  // 原子加操作，对应Ascend C的AtomicAdd接口
@@ -904,9 +904,9 @@ typedef enum {
 ## aclrtCompareDataType
 
 ```c
-typedef enum { 
-    ACL_RT_SWITCH_INT32 = 0, 
-    ACL_RT_SWITCH_INT64 = 1, 
+typedef enum {
+    ACL_RT_SWITCH_INT32 = 0,
+    ACL_RT_SWITCH_INT64 = 1,
 } aclrtCompareDataType;
 ```
 
@@ -917,13 +917,13 @@ typedef enum {
 ## aclrtCondition
 
 ```c
-typedef enum { 
-    ACL_RT_EQUAL = 0, 
-    ACL_RT_NOT_EQUAL, 
-    ACL_RT_GREATER, 
-    ACL_RT_GREATER_OR_EQUAL, 
-    ACL_RT_LESS, 
-    ACL_RT_LESS_OR_EQUAL 
+typedef enum {
+    ACL_RT_EQUAL = 0,
+    ACL_RT_NOT_EQUAL,
+    ACL_RT_GREATER,
+    ACL_RT_GREATER_OR_EQUAL,
+    ACL_RT_LESS,
+    ACL_RT_LESS_OR_EQUAL
 } aclrtCondition;
 ```
 
@@ -940,11 +940,11 @@ typedef enum {
 ### 定义
 
 ```c
-typedef enum { 
-    ACL_DEV_ATTR_AICPU_CORE_NUM  = 1, 
-    ACL_DEV_ATTR_AICORE_CORE_NUM = 101, 
+typedef enum {
+    ACL_DEV_ATTR_AICPU_CORE_NUM  = 1,
+    ACL_DEV_ATTR_AICORE_CORE_NUM = 101,
     ACL_DEV_ATTR_CUBE_CORE_NUM = 102,
-    ACL_DEV_ATTR_VECTOR_CORE_NUM = 201,      
+    ACL_DEV_ATTR_VECTOR_CORE_NUM = 201,
     ACL_DEV_ATTR_WARP_SIZE = 202,
     ACL_DEV_ATTR_MAX_THREAD_PER_VECTOR_CORE,
     ACL_DEV_ATTR_UBUF_PER_VECTOR_CORE,
@@ -963,7 +963,7 @@ typedef enum {
     ACL_DEV_ATTR_PHY_CHIP_ID = 402U,
     ACL_DEV_ATTR_SUPER_POD_DEVICE_ID = 403U,
     ACL_DEV_ATTR_SUPER_POD_SERVER_ID = 404U,
-    ACL_DEV_ATTR_SUPER_POD_ID = 405U, 
+    ACL_DEV_ATTR_SUPER_POD_ID = 405U,
     ACL_DEV_ATTR_CUST_OP_PRIVILEGE = 406U,
     ACL_DEV_ATTR_MAINBOARD_ID = 407U,
     ACL_DEV_ATTR_HD_CONNECT_TYPE = 408U,
@@ -998,7 +998,7 @@ typedef enum {
     一个Warp里的线程数，在SIMT（单指令多线程，Single Instruction Multiple Thread）编程模型中，Warp是指执行相同指令的线程集合。
 
     <!-- npu="950" id15 -->
-    仅Ascend 950PR/Ascend 950DT支持该选项。
+    仅Ascend 950PR&950DT系列产品支持该选项。
     <!-- end id15 -->
 
     对于不支持该选项的产品型号，默认返回0。
@@ -1008,7 +1008,7 @@ typedef enum {
     每个VECTOR\_CORE上可同时驻留的最大线程数。
 
     <!-- npu="950" id16 -->
-    仅Ascend 950PR/Ascend 950DT支持该选项。
+    仅Ascend 950PR&950DT系列产品支持该选项。
     <!-- end id16 -->
 
     对于不支持该选项的产品型号，默认返回0。
@@ -1018,7 +1018,7 @@ typedef enum {
     每个VECTOR\_CORE上可以使用的最大Unified Buffer的大小，单位Byte。
 
     <!-- npu="950" id17 -->
-    仅Ascend 950PR/Ascend 950DT支持该选项。
+    仅Ascend 950PR&950DT系列产品支持该选项。
     <!-- end id17 -->
 
     对于不支持该选项的产品型号，默认返回0。
@@ -1028,7 +1028,7 @@ typedef enum {
     Grid维度X的最大值，用于SIMT编程模型中线程块的网格配置。
 
     <!-- npu="950" id18 -->
-    仅Ascend 950PR/Ascend 950DT支持该选项。
+    仅Ascend 950PR&950DT系列产品支持该选项。
     <!-- end id18 -->
 
     对于不支持该选项的产品型号，默认返回0。
@@ -1040,7 +1040,7 @@ typedef enum {
     Grid维度Y的最大值，用于SIMT编程模型中线程块的网格配置。
 
     <!-- npu="950" id19 -->
-    仅Ascend 950PR/Ascend 950DT支持该选项。
+    仅Ascend 950PR&950DT系列产品支持该选项。
     <!-- end id19 -->
 
     对于不支持该选项的产品型号，默认返回0。
@@ -1050,7 +1050,7 @@ typedef enum {
     Grid维度Z的最大值，用于SIMT编程模型中线程块的网格配置。
 
     <!-- npu="950" id20 -->
-    仅Ascend 950PR/Ascend 950DT支持该选项。
+    仅Ascend 950PR&950DT系列产品支持该选项。
     <!-- end id20 -->
 
     对于不支持该选项的产品型号，默认返回0。
@@ -1060,7 +1060,7 @@ typedef enum {
     每个Grid中Block的最大数量，用于SIMT编程模型中线程块的网格配置。
 
     <!-- npu="950" id21 -->
-    仅Ascend 950PR/Ascend 950DT支持该选项。
+    仅Ascend 950PR&950DT系列产品支持该选项。
     <!-- end id21 -->
 
     对于不支持该选项的产品型号，默认返回0。
@@ -1070,7 +1070,7 @@ typedef enum {
     每个Block中线程的最大数量，用于SIMT编程模型中线程块的配置。
 
     <!-- npu="950" id22 -->
-    仅Ascend 950PR/Ascend 950DT支持该选项。
+    仅Ascend 950PR&950DT系列产品支持该选项。
     <!-- end id22 -->
 
     对于不支持该选项的产品型号，默认返回0。
@@ -1080,7 +1080,7 @@ typedef enum {
     Block维度X的最大值，用于SIMT编程模型中线程块的配置。
 
     <!-- npu="950" id23 -->
-    仅Ascend 950PR/Ascend 950DT支持该选项。
+    仅Ascend 950PR&950DT系列产品支持该选项。
     <!-- end id23 -->
 
     对于不支持该选项的产品型号，默认返回0。
@@ -1090,7 +1090,7 @@ typedef enum {
     Block维度Y的最大值，用于SIMT编程模型中线程块的配置。
 
     <!-- npu="950" id24 -->
-    仅Ascend 950PR/Ascend 950DT支持该选项。
+    仅Ascend 950PR&950DT系列产品支持该选项。
     <!-- end id24 -->
 
     对于不支持该选项的产品型号，默认返回0。
@@ -1100,7 +1100,7 @@ typedef enum {
     Block维度Z的最大值，用于SIMT编程模型中线程块的配置。
 
     <!-- npu="950" id25 -->
-    仅Ascend 950PR/Ascend 950DT支持该选项。
+    仅Ascend 950PR&950DT系列产品支持该选项。
     <!-- end id25 -->
 
     对于不支持该选项的产品型号，默认返回0。
@@ -1139,7 +1139,7 @@ typedef enum {
     - 1：自定义算子可以执行更多的系统调用权限。
 
     <!-- npu="950" id26 -->
-    Ascend 950PR/Ascend 950DT不支持该选项。
+    Ascend 950PR&950DT系列产品不支持该选项。
     <!-- end id26 -->
 
 - ACL\_DEV\_ATTR\_MAINBOARD\_ID
@@ -1157,7 +1157,7 @@ typedef enum {
     - 2：通过UB（Unified Bus，统一总线）互联传输。
 
     <!-- npu="950" id27 -->
-    仅Ascend 950PR/Ascend 950DT支持该选项。
+    仅Ascend 950PR&950DT系列产品支持该选项。
     <!-- end id27 -->
 
     对于不支持该选项的产品型号，返回报错。
@@ -1174,7 +1174,7 @@ typedef enum {
     - 3：PCIe标卡形态。
 
     <!-- npu="950" id61 -->
-    仅Ascend 950PR/Ascend 950DT支持该选项。
+    仅Ascend 950PR&950DT系列产品支持该选项。
     <!-- end id61 -->
 
     对于不支持该选项的产品型号，返回报错。
@@ -1184,7 +1184,7 @@ typedef enum {
     SuperPOD Chassis ID，表示超节点产品中的机箱ID。
 
     <!-- npu="950" id108 -->
-    仅Ascend 950PR/Ascend 950DT支持该选项。
+    仅Ascend 950PR&950DT系列产品支持该选项。
     <!-- end id108 -->
 
     对于不支持该选项的产品型号，返回报错。
@@ -1203,22 +1203,22 @@ typedef enum {
     产品型号和NPU架构版本的对应关系如下所示：
 
     <!-- npu="950" id28 -->
-    - Ascend 950PR/Ascend 950DT：3510
+    - Ascend 950PR&950DT系列产品：3510
     <!-- end id28 -->
     <!-- npu="A3" id29 -->
-    - Atlas A3 训练系列产品/Atlas A3 推理系列产品：2201
+    - Atlas A3系列产品：2201
     <!-- end id29 -->
     <!-- npu="910b" id30 -->
-    - Atlas A2 训练系列产品/Atlas A2 推理系列产品：2201
+    - Atlas A2系列产品：2201
     <!-- end id30 -->
     <!-- npu="310b" id31 -->
-    - Atlas 200I/500 A2 推理产品：3002
+    - Atlas 200I/500 A2推理产品：3002
     <!-- end id31 -->
     <!-- npu="310p" id32 -->
-    - Atlas 推理系列产品：2002
+    - Atlas推理系列产品：2002
     <!-- end id32 -->
     <!-- npu="910" id33 -->
-    - Atlas 训练系列产品：1001
+    - Atlas训练系列产品：1001
     <!-- end id33 -->
     <!-- npu="IPV350" id34 -->
     - IPV350：3505
@@ -1237,17 +1237,17 @@ typedef enum {
 
 - 当AI数据处理核心单元是AI Core：
     - 在AI Core内，Cube和Vector共用一个Scalar调度单元。
-        
+
         <!-- npu="910" id37 -->
-        此处以Atlas 训练系列产品为例。
+        此处以Atlas训练系列产品为例。
         <!-- end id37 -->
 
         ![](figures/aicore_shares_one_scalar.png)
 
-    - 在AI Core内，Cube和Vector都有各自的Scalar调度单元，因此又被称为Cube Core、Vector Core。这时，一个Cube Core和一组Vector Core被定义为一个AI Core，AI Core数量通常是以多少个Cube Core为基准计算的，例如Atlas A2 训练系列产品/Atlas A2 推理系列产品。
+    - 在AI Core内，Cube和Vector都有各自的Scalar调度单元，因此又被称为Cube Core、Vector Core。这时，一个Cube Core和一组Vector Core被定义为一个AI Core，AI Core数量通常是以多少个Cube Core为基准计算的，例如Atlas A2系列产品。
 
         <!-- npu="910b" id38 -->
-        此处以Atlas A2 训练系列产品/Atlas A2 推理系列产品为例。
+        此处以Atlas A2系列产品为例。
         <!-- end id38 -->
 
         ![](figures/aicore_contains_multi_scalars.png)
@@ -1255,7 +1255,7 @@ typedef enum {
 - 当AI数据处理核心单元是AI Core以及单独的Vector Core：AI Core和Vector Core都拥有独立的Scalar调度单元。
 
     <!-- npu="310p" id39 -->
-    此处以Atlas 推理系列产品为例。
+    此处以Atlas推理系列产品为例。
     <!-- end id39 -->
 
     ![](figures/aicore_and_vectorcore.png)
@@ -1271,7 +1271,7 @@ typedef enum {
 ## aclrtDevFeatureType
 
 ```c
-typedef enum { 
+typedef enum {
     ACL_FEATURE_TSCPU_TASK_UPDATE_SUPPORT_AIC_AIV = 1, // 更新AI Core算子的计算任务
     ACL_FEATURE_SYSTEM_MEMQ_EVENT_CROSS_DEV      = 21, // 跨设备发送队列事件消息
 } aclrtDevFeatureType;
@@ -1298,7 +1298,7 @@ typedef enum aclrtDeviceStatus {
 ## aclrtDevResLimitType
 
 ```c
-typedef enum { 
+typedef enum {
     ACL_RT_DEV_RES_CUBE_CORE = 0,   // AI Core或Cube Core
     ACL_RT_DEV_RES_VECTOR_CORE,     // Vector Core
 } aclrtDevResLimitType;
@@ -1310,11 +1310,11 @@ typedef enum {
 - 对于以下产品，ACL\_RT\_DEV\_RES\_CUBE\_CORE表示AI Core。
 
     <!-- npu="910" id41 -->
-    Atlas 训练系列产品
+    Atlas训练系列产品
     <!-- end id41 -->
 
     <!-- npu="310p" id42 -->
-    Atlas 推理系列产品
+    Atlas推理系列产品
     <!-- end id42 -->
 <!-- end id40 -->
 
@@ -1322,19 +1322,19 @@ typedef enum {
 - 对于以下产品，ACL\_RT\_DEV\_RES\_CUBE\_CORE表示Cube Core。
 
     <!-- npu="950" id44 -->
-    Ascend 950PR/Ascend 950DT
+    Ascend 950PR&950DT系列产品
     <!-- end id44 -->
 
     <!-- npu="A3" id45 -->
-    Atlas A3 训练系列产品/Atlas A3 推理系列产品
+    Atlas A3系列产品
     <!-- end id45 -->
 
     <!-- npu="910b" id46 -->
-    Atlas A2 训练系列产品/Atlas A2 推理系列产品
+    Atlas A2系列产品
     <!-- end id46 -->
 
     <!-- npu="310b" id47 -->
-    Atlas 200I/500 A2 推理产品
+    Atlas 200I/500 A2推理产品
     <!-- end id47 -->
 <!-- end id43 -->
 
@@ -1345,7 +1345,7 @@ typedef enum {
 ## aclrtEngineType
 
 ```c
-typedef enum { 
+typedef enum {
     ACL_RT_ENGINE_TYPE_AIC = 0,  // AI Core
     ACL_RT_ENGINE_TYPE_AIV,      // Vector Core
 } aclrtEngineType;
@@ -1409,11 +1409,11 @@ typedef enum aclrtFloatOverflowMode {
 对比于Inf/NaN模式，饱和模式下，计算结果如果是Inf，最终结果是一个极大值；计算结果如果是NaN，最终结果是0。若设置成饱和模式，计算精度可能存在误差，该模式仅为兼容旧版本，后续不演进。
 
 <!-- npu="950,A3,910b" id48 -->
-对于Ascend 950PR/Ascend 950DT、Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品，默认为Inf/NaN模式。其中，Ascend 950PR/Ascend 950DT仅支持Inf/NaN模式。
+对于Ascend 950PR&950DT系列产品、Atlas A3系列产品、Atlas A2系列产品，默认为Inf/NaN模式。其中，Ascend 950PR&950DT系列产品仅支持Inf/NaN模式。
 <!-- end id48 -->
 
 <!-- npu="910,310p,310b" id49 -->
-对于Atlas 200I/500 A2 推理产品、Atlas 推理系列产品、Atlas 训练系列产品，仅支持设置饱和模式。
+对于Atlas 200I/500 A2推理产品、Atlas推理系列产品、Atlas训练系列产品，仅支持设置饱和模式。
 <!-- end id49 -->
 
 <br>
@@ -1439,26 +1439,26 @@ typedef enum {
     uint16_t aicratio = ratioArr[1];   // 表示Cube Core的比例
     uint16_t aivratio = ratioArr[0];   // 表示Vector Core的比例
     ```
- 
+
     该属性在各产品型号上支持的情况不同，如下：
 
     <!-- npu="950" id51 -->
-    - Ascend 950PR/Ascend 950DT，不支持
+    - Ascend 950PR&950DT系列产品，不支持
     <!-- end id51 -->
     <!-- npu="A3" id52 -->
-    - Atlas A3 训练系列产品/Atlas A3 推理系列产品，支持
+    - Atlas A3系列产品，支持
     <!-- end id52 -->
     <!-- npu="910b" id53 -->
-    - Atlas A2 训练系列产品/Atlas A2 推理系列产品，支持
+    - Atlas A2系列产品，支持
     <!-- end id53 -->
     <!-- npu="310b" id54 -->
-    - Atlas 200I/500 A2 推理产品，不支持
+    - Atlas 200I/500 A2推理产品，不支持
     <!-- end id54 -->
     <!-- npu="310p" id55 -->
-    - Atlas 推理系列产品，支持
+    - Atlas推理系列产品，支持
     <!-- end id55 -->
     <!-- npu="910" id56 -->
-    - Atlas 训练系列产品，不支持
+    - Atlas训练系列产品，不支持
     <!-- end id56 -->
 <!-- end id50 -->
 <!-- npu="IPV350" id57 -->
@@ -1629,7 +1629,7 @@ typedef enum {
 
 ```c
 typedef enum {
-    ACL_RT_MEM_ACCESS_FLAGS_NONE = 0x0,      // 该地址范围不可访问 
+    ACL_RT_MEM_ACCESS_FLAGS_NONE = 0x0,      // 该地址范围不可访问
     ACL_RT_MEM_ACCESS_FLAGS_READ = 0x1,      // 地址范围可读
     ACL_RT_MEM_ACCESS_FLAGS_READWRITE = 0x3, // 地址范围可读可写
 } aclrtMemAccessFlags;
@@ -1683,7 +1683,7 @@ typedef enum aclrtMemAttr {
 对于申请大页内存的场景，当内存申请粒度为2MB时，如果要申请1GB大小的大页内存，会占用1024/2=512个页表，当内存申请粒度为1GB时，1GB大页内存只占用1个页表，能有效降低页表数量，有效扩大TLB（Translation Lookaside Buffer）缓存的地址范围，从而提升离散访问的性能。TLB是AI处理器中用于高速缓存的硬件模块，用于存储最近使用的虚拟地址到物理地址的映射。
 
 <!-- npu="A3,910b" id59 -->
-仅Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品支持HUGE1G相关选项。
+仅Atlas A3系列产品、Atlas A2系列产品支持HUGE1G相关选项。
 <!-- end id59 -->
 
 <!-- npu="IPV350" id60 -->
@@ -1705,9 +1705,9 @@ typedef enum aclrtMemcpyKind {
     ACL_MEMCPY_DEVICE_TO_HOST,   // Device到Host的内存复制
     ACL_MEMCPY_DEVICE_TO_DEVICE, // Device内或两个Device间的内存复制
     ACL_MEMCPY_DEFAULT,          // 由系统根据源、目的内存地址自行判断拷贝方向
-    ACL_MEMCPY_HOST_TO_BUF_TO_DEVICE,   // Host到Device的内存复制，但Host内存会暂存在Runtime管理的缓存中，内存复制接口调用成功后，就可以释放Host内存 
-    ACL_MEMCPY_INNER_DEVICE_TO_DEVICE,  // Device内的内存复制 
-    ACL_MEMCPY_INTER_DEVICE_TO_DEVICE,  // 两个Device之间的内存复制 
+    ACL_MEMCPY_HOST_TO_BUF_TO_DEVICE,   // Host到Device的内存复制，但Host内存会暂存在Runtime管理的缓存中，内存复制接口调用成功后，就可以释放Host内存
+    ACL_MEMCPY_INNER_DEVICE_TO_DEVICE,  // Device内的内存复制
+    ACL_MEMCPY_INTER_DEVICE_TO_DEVICE,  // 两个Device之间的内存复制
 } aclrtMemcpyKind;
 ```
 
@@ -1761,10 +1761,10 @@ typedef enum {
 - `ACL_RT_MEM_ACCESS_UB_MULTI_PORT_PATH`：UB（Unified Bus）多端口路径：CLOS连线方式，分层结构化互联。
 
 <!-- npu="A3" id109 -->
-对于Atlas A3 训练系列产品/Atlas A3 推理系列产品，仅支持`ACL_RT_MEM_ACCESS_LINK_SIO`、`ACL_RT_MEM_ACCESS_LINK_HCCS`。
+对于Atlas A3系列产品，仅支持`ACL_RT_MEM_ACCESS_LINK_SIO`、`ACL_RT_MEM_ACCESS_LINK_HCCS`。
 <!-- end id109 -->
 <!-- npu="950" id110 -->
-对于Ascend 950PR/Ascend 950DT，仅支持`ACL_RT_MEM_ACCESS_UB_ONE_PORT_PATH`、`ACL_RT_MEM_ACCESS_UB_MULTI_PORT_PATH`。
+对于Ascend 950PR&950DT系列产品，仅支持`ACL_RT_MEM_ACCESS_UB_ONE_PORT_PATH`、`ACL_RT_MEM_ACCESS_UB_MULTI_PORT_PATH`。
 <!-- end id110 -->
 
 <br>
@@ -1784,7 +1784,7 @@ typedef enum aclrtMemLocationType {
 ```
 
 <!-- npu="910b" id103 -->
-ACL_MEM_LOCATION_TYPE_MANAGED选项当前仅Atlas A2 训练系列产品/Atlas A2 推理系列产品支持。
+ACL_MEM_LOCATION_TYPE_MANAGED选项当前仅Atlas A2系列产品支持。
 <!-- end id103 -->
 
 <br>
@@ -1801,7 +1801,7 @@ typedef enum aclrtMemMallocPolicy {
     ACL_MEM_MALLOC_HUGE_FIRST_P2P,
     ACL_MEM_MALLOC_HUGE_ONLY_P2P,
     ACL_MEM_MALLOC_NORMAL_ONLY_P2P,
-    ACL_MEM_MALLOC_HUGE1G_ONLY, 
+    ACL_MEM_MALLOC_HUGE1G_ONLY,
     ACL_MEM_MALLOC_HUGE1G_ONLY_P2P,
     ACL_MEM_TYPE_LOW_BAND_WIDTH   = 0x0100U,
     ACL_MEM_TYPE_HIGH_BAND_WIDTH  = 0x1000U,
@@ -1834,11 +1834,11 @@ typedef enum aclrtMemMallocPolicy {
     配置该选项时，表示优先申请大页内存，如果大页内存不够，则使用普通页的内存。
 
     <!-- npu="310b" id62 -->
-    Atlas 200I/500 A2 推理产品不支持该选项。
+    Atlas 200I/500 A2推理产品不支持该选项。
     <!-- end id62 -->
 
     <!-- npu="310p" id63 -->
-    对于Atlas 推理系列产品，若涉及集合通信业务，通信域初始化需要在其他任何涉及Device内存申请的操作之前，否则可能因P2P内存不足导致初始化失败。
+    对于Atlas推理系列产品，若涉及集合通信业务，通信域初始化需要在其他任何涉及Device内存申请的操作之前，否则可能因P2P内存不足导致初始化失败。
     <!-- end id63 -->
 
     <!-- npu="IPV350" id64 -->
@@ -1853,11 +1853,11 @@ typedef enum aclrtMemMallocPolicy {
     配置该选项时，表示仅申请大页内存，如果大页内存不够，则返回错误。
 
     <!-- npu="310b" id65 -->
-    Atlas 200I/500 A2 推理产品不支持该选项。
+    Atlas 200I/500 A2推理产品不支持该选项。
     <!-- end id65 -->
 
     <!-- npu="310p" id66 -->
-    对于Atlas 推理系列产品，若涉及集合通信业务，通信域初始化需要在其他任何涉及Device内存申请的操作之前，否则可能因P2P内存不足导致初始化失败。
+    对于Atlas推理系列产品，若涉及集合通信业务，通信域初始化需要在其他任何涉及Device内存申请的操作之前，否则可能因P2P内存不足导致初始化失败。
     <!-- end id66 -->
 
     <!-- npu="IPV350" id67 -->
@@ -1871,11 +1871,11 @@ typedef enum aclrtMemMallocPolicy {
     两个Device之间内存复制场景下使用该选项，表示仅申请普通页的内存。另外，系统内部会根据硬件支持情况选择从高带宽或低带宽物理内存申请内存。
 
     <!-- npu="310b" id68 -->
-    Atlas 200I/500 A2 推理产品不支持该选项。
+    Atlas 200I/500 A2推理产品不支持该选项。
     <!-- end id68 -->
 
     <!-- npu="310p" id69 -->
-    对于Atlas 推理系列产品，若涉及集合通信业务，通信域初始化需要在其他任何涉及Device内存申请的操作之前，否则可能因P2P内存不足导致初始化失败。
+    对于Atlas推理系列产品，若涉及集合通信业务，通信域初始化需要在其他任何涉及Device内存申请的操作之前，否则可能因P2P内存不足导致初始化失败。
     <!-- end id69 -->
 
     <!-- npu="IPV350" id70 -->
@@ -1892,7 +1892,7 @@ typedef enum aclrtMemMallocPolicy {
     该选项与ACL\_MEM\_MALLOC\_HUGE\_ONLY选项相比，ACL\_MEM\_MALLOC\_HUGE\_ONLY的内存申请粒度为2MB，如果要申请1GB大小的大页内存，会占用1024/2=512个页表，但ACL\_MEM\_MALLOC\_HUGE1G\_ONLY的内存申请粒度为1GB，1GB大页内存只占用1个页表，能有效降低页表数量，有效扩大TLB（Translation Lookaside Buffer）缓存的地址范围，从而提升离散访问的性能。TLB是AI处理器中用于高速缓存的硬件模块，用于存储最近使用的虚拟地址到物理地址的映射。
 
     <!-- npu="910,310p,310b" id71 -->
-    Atlas 200I/500 A2 推理产品、Atlas 推理系列产品、Atlas 训练系列产品，不支持该选项。
+    Atlas 200I/500 A2推理产品、Atlas推理系列产品、Atlas训练系列产品，不支持该选项。
     <!-- end id71 -->
 
     <!-- npu="IPV350" id72 -->
@@ -1909,7 +1909,7 @@ typedef enum aclrtMemMallocPolicy {
     该选项与ACL\_MEM\_MALLOC\_HUGE\_ONLY\_P2P选项相比，ACL\_MEM\_MALLOC\_HUGE\_ONLY\_P2P的内存申请粒度为2MB，如果要申请1GB大小的大页内存，会占用1024/2=512个页表，但ACL\_MEM\_MALLOC\_HUGE1G\_ONLY\_P2P的内存申请粒度为1GB，1GB大页内存只占用1个页表，能有效降低页表数量，有效扩大TLB（Translation Lookaside Buffer）缓存的地址范围，从而提升离散访问的性能。TLB是AI处理器中用于高速缓存的硬件模块，用于存储最近使用的虚拟地址到物理地址的映射。
 
     <!-- npu="910,310p,310b" id73 -->
-    Atlas 200I/500 A2 推理产品、Atlas 推理系列产品、Atlas 训练系列产品，不支持该选项。
+    Atlas 200I/500 A2推理产品、Atlas推理系列产品、Atlas训练系列产品，不支持该选项。
     <!-- end id73 -->
 
     <!-- npu="IPV350" id74 -->
@@ -2173,7 +2173,7 @@ typedef enum aclrtMemPoolAttr{
 
 ```c
 typedef enum aclrtMemSharedHandleType {
-    ACL_MEM_SHARE_HANDLE_TYPE_DEFAULT = 0x1,  
+    ACL_MEM_SHARE_HANDLE_TYPE_DEFAULT = 0x1,
     ACL_MEM_SHARE_HANDLE_TYPE_FABRIC = 0x2,
 } aclrtMemSharedHandleType;
 ```
@@ -2186,7 +2186,7 @@ typedef enum aclrtMemSharedHandleType {
 | ACL_MEM_SHARE_HANDLE_TYPE_FABRIC | 跨AI Server跨进程共享内存，包含一个AI Server内的场景。 |
 
 <!-- npu="A3" id79 -->
-仅Atlas A3 训练系列产品/Atlas A3 推理系列产品支持ACL\_MEM\_SHARE\_HANDLE\_TYPE\_FABRIC选项。
+仅Atlas A3系列产品支持ACL\_MEM\_SHARE\_HANDLE\_TYPE\_FABRIC选项。
 <!-- end id79 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/25-02_Enumerations_res.md#id14 -->
 
@@ -2197,7 +2197,7 @@ typedef enum aclrtMemSharedHandleType {
 ## aclrtRandomNumFuncType
 
 ```c
-typedef enum { 
+typedef enum {
     ACL_RT_RANDOM_NUM_FUNC_TYPE_DROPOUT_BITMASK = 0,   // Dropout bitmask
     ACL_RT_RANDOM_NUM_FUNC_TYPE_UNIFORM_DIS,           // 均匀分布
     ACL_RT_RANDOM_NUM_FUNC_TYPE_NORMAL_DIS,            // 正态分布
@@ -2212,20 +2212,20 @@ typedef enum {
 ## aclrtReduceKind
 
 ```c
-typedef enum { 
-    ACL_RT_MEMCPY_SDMA_AUTOMATIC_SUM   = 10, 
-    ACL_RT_MEMCPY_SDMA_AUTOMATIC_MAX   = 11, 
-    ACL_RT_MEMCPY_SDMA_AUTOMATIC_MIN   = 12, 
+typedef enum {
+    ACL_RT_MEMCPY_SDMA_AUTOMATIC_SUM   = 10,
+    ACL_RT_MEMCPY_SDMA_AUTOMATIC_MAX   = 11,
+    ACL_RT_MEMCPY_SDMA_AUTOMATIC_MIN   = 12,
     ACL_RT_MEMCPY_SDMA_AUTOMATIC_EQUAL = 13,
 } aclrtReduceKind;
 ```
 
 <!-- npu="310p" id80 -->
-Atlas 推理系列产品仅支持SUM操作。
+Atlas推理系列产品仅支持SUM操作。
 <!-- end id80 -->
 
 <!-- npu="910" id81 -->
-Atlas 训练系列产品仅支持SUM操作。
+Atlas训练系列产品仅支持SUM操作。
 <!-- end id81 -->
 
 <br>
@@ -2245,7 +2245,7 @@ typedef enum aclrtRunMode {
 
 | 枚举项 | 说明 |
 | --- | --- |
-| ACL_DEVICE | AI软件栈运行在Device的Control CPU或板端环境上。<br>Ascend 950PR/Ascend 950DT，不支持该选项。<br>Atlas A3 训练系列产品/Atlas A3 推理系列产品，不支持该选项。<br>Atlas A2 训练系列产品/Atlas A2 推理系列产品，不支持该选项。 |
+| ACL_DEVICE | AI软件栈运行在Device的Control CPU或板端环境上。<br>Ascend 950PR&950DT系列产品，不支持该选项。<br>Atlas A3系列产品，不支持该选项。<br>Atlas A2系列产品，不支持该选项。 |
 | ACL_HOST | AI软件栈运行在Host CPU上。 |
 
 <br>
@@ -2272,11 +2272,11 @@ typedef enum {
 ## aclrtStreamAttr
 
 ```c
-typedef enum { 
+typedef enum {
     ACL_STREAM_ATTR_FAILURE_MODE         = 1,
     ACL_STREAM_ATTR_FLOAT_OVERFLOW_CHECK = 2,
-    ACL_STREAM_ATTR_USER_CUSTOM_TAG      = 3, 
-    ACL_STREAM_ATTR_CACHE_OP_INFO        = 4, 
+    ACL_STREAM_ATTR_USER_CUSTOM_TAG      = 3,
+    ACL_STREAM_ATTR_CACHE_OP_INFO        = 4,
     ACL_STREAM_ATTR_PRIORITY             = 5,
     ACL_STREAM_LAUNCH_BLOCKING_MODE           = 6,
 } aclrtStreamAttr;
@@ -2285,20 +2285,20 @@ typedef enum {
 | 枚举项 | 说明 |
 | --- | --- |
 | ACL_STREAM_ATTR_FAILURE_MODE | 当Stream上的任务执行出错时，可通过该属性设置Stream的任务调度模式，以便控制某个任务失败后是否继续执行下一个任务<br>默认Stream不支持设置任务调度模式。<br>通过该属性设置任务调度模式，与[aclrtSetStreamFailureMode](06_stream_management.md#aclrtSetStreamFailureMode)接口的功能一致。 |
-| ACL_STREAM_ATTR_FLOAT_OVERFLOW_CHECK | 当与上层训练框架（例如PyTorch）对接时，针对指定Stream，可通过该属性打开或关闭溢出检测开关。关闭后，将无法通过溢出检测算子获取任务是否溢出。<br>打开或关闭溢出检测开关后，仅对后续新下的任务生效，已下发的任务仍维持原样。<br>通过该属性设置溢出检测开关，与[aclrtSetStreamOverflowSwitch](06_stream_management.md#aclrtSetStreamOverflowSwitch)接口的功能一致。 |
+| ACL_STREAM_ATTR_FLOAT_OVERFLOW_CHECK | 当与上层训练框架（例如PyTorch）对接时，针对指定Stream，可通过该属性打开或关闭溢出检测开关。关闭后，将无法通过溢出检测算子获取任务是否溢出。<br>打开或关闭溢出检测开关后，仅对后续新下发的任务生效，已下发的任务仍维持原样。<br>通过该属性设置溢出检测开关，与[aclrtSetStreamOverflowSwitch](06_stream_management.md#aclrtSetStreamOverflowSwitch)接口的功能一致。 |
 | ACL_STREAM_ATTR_USER_CUSTOM_TAG | 设置Stream上的溢出检测分组标签，以确定溢出发生时检测的粒度。如果不设置分组标签，默认为进程粒度。如果设置了分组标签，则仅检测与发生溢出的Stream具有相同分组标签的Stream。 |
 | ACL_STREAM_ATTR_CACHE_OP_INFO | 基于捕获方式构建模型运行实例场景下，通过该属性设置Stream的算子信息缓存开关，以便于控制后续采集性能数据时是否附带算子信息。<br>该属性需与其它接口配合使用，请参见[aclrtCacheLastTaskOpInfo](24_other_APIs.md#aclrtCacheLastTaskOpInfo)中的接口调用流程。<br>跨Stream的任务捕获时，与主流关联的其他Stream，其算子信息缓存开关状态与主流一致。 |
 | ACL_STREAM_ATTR_PRIORITY | 基于该属性值动态设置/查询stream优先级。 |
 | ACL_STREAM_LAUNCH_BLOCKING_MODE | 用于控制以下接口在指定Stream上的执行模式为同步模式或异步模式：<br><br>  - aclrtLaunchKernel<br>  - aclrtLaunchKernelV2<br>  - aclrtLaunchKernelWithConfig<br>  - aclrtLaunchKernelWithHostArgs<br>  - aclrtLaunchKernelWithArgsArray<br>  - aclrtLaunchSIMTKernelWithArgsArray<br>  - aclrtLaunchSIMTKernelWithHostArgs<br>  - aclmdlRIExecuteAsync<br><br>通过[aclrtSetStreamAttribute](06_stream_management.md#aclrtSetStreamAttribute)接口设置，通过[aclrtGetStreamAttribute](06_stream_management.md#aclrtGetStreamAttribute)接口获取。属性值说明请参见[aclrtStreamAttrValue](25-04_Structs.md#aclrtStreamAttrValue)中的launchBlockingMode。 |
 
 <!-- npu="950,A3,910b" id84 -->
-对于Ascend 950PR/Ascend 950DT、Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品，支持设置Stream优先级。
-对于Ascend 950PR/Ascend 950DT、Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品，支持设置或获取`ACL_STREAM_LAUNCH_BLOCKING_MODE`属性。
+对于Ascend 950PR&950DT系列产品、Atlas A3系列产品、Atlas A2系列产品，支持设置Stream优先级。
+对于Ascend 950PR&950DT系列产品、Atlas A3系列产品、Atlas A2系列产品，支持设置或获取`ACL_STREAM_LAUNCH_BLOCKING_MODE`属性。
 <!-- end id84 -->
 
 <!-- npu="910,310p,310b" id82 -->
-对于Atlas 200I/500 A2 推理产品、Atlas 推理系列产品、Atlas 训练系列产品，不支持设置Stream优先级。
-对于Atlas 200I/500 A2 推理产品、Atlas 推理系列产品、Atlas 训练系列产品，不支持设置或获取`ACL_STREAM_LAUNCH_BLOCKING_MODE`属性。
+对于Atlas 200I/500 A2推理产品、Atlas推理系列产品、Atlas训练系列产品，不支持设置Stream优先级。
+对于Atlas 200I/500 A2推理产品、Atlas推理系列产品、Atlas训练系列产品，不支持设置或获取`ACL_STREAM_LAUNCH_BLOCKING_MODE`属性。
 <!-- end id82 -->
 
 <!-- npu="IPV350" id83 -->
@@ -2315,8 +2315,8 @@ typedef enum {
 
 ```c
 typedef enum {
-    ACL_RT_STREAM_WORK_ADDR_PTR = 0, 
-    ACL_RT_STREAM_WORK_SIZE, 
+    ACL_RT_STREAM_WORK_ADDR_PTR = 0,
+    ACL_RT_STREAM_WORK_SIZE,
     ACL_RT_STREAM_FLAG,
     ACL_RT_STREAM_PRIORITY,
 } aclrtStreamConfigAttr;
@@ -2352,9 +2352,9 @@ typedef enum aclrtStreamStatus {
 ## aclrtUpdateTaskAttrId
 
 ```c
-typedef enum { 
-    ACL_RT_UPDATE_RANDOM_TASK = 1, 
-    ACL_RT_UPDATE_AIC_AIV_TASK,     
+typedef enum {
+    ACL_RT_UPDATE_RANDOM_TASK = 1,
+    ACL_RT_UPDATE_AIC_AIV_TASK,
 } aclrtUpdateTaskAttrId;
 ```
 
@@ -2364,11 +2364,11 @@ typedef enum {
 | ACL_RT_UPDATE_AIC_AIV_TASK | 在Cube\Vector计算单元上执行的计算任务。 |
 
 <!-- npu="A3,910b" id85 -->
-Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品支持随机数生成任务。
+Atlas A3系列产品、Atlas A2系列产品支持随机数生成任务。
 <!-- end id85 -->
 
 <!-- npu="310p" id86 -->
-Atlas 推理系列产品不支持随机数生成任务。
+Atlas推理系列产品不支持随机数生成任务。
 <!-- end id86 -->
 
 <br>
@@ -2378,7 +2378,7 @@ Atlas 推理系列产品不支持随机数生成任务。
 ## aclSysParamOpt
 
 ```c
-typedef enum { 
+typedef enum {
     ACL_OPT_DETERMINISTIC = 0,
     ACL_OPT_ENABLE_DEBUG_KERNEL = 1,
     ACL_OPT_STRONG_CONSISTENCY = 2,
@@ -2485,11 +2485,11 @@ typedef enum aclrtDeviceLimit {
 ```
 
 <!-- npu="950" id106 -->
-对于Ascend 950PR/Ascend 950DT，以上选项都支持。`ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE`和`ACL_RT_DEV_LIMIT_SIMT_DVG_WARP_STACK_SIZE`不能同时设置为0，否则接口返回`ACL_ERROR_RT_PARAM_INVALID`。
+对于Ascend 950PR&950DT系列产品，以上选项都支持。`ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE`和`ACL_RT_DEV_LIMIT_SIMT_DVG_WARP_STACK_SIZE`不能同时设置为0，否则接口返回`ACL_ERROR_RT_PARAM_INVALID`。
 <!-- end id106 -->
 
 <!-- npu="A3,910b" id107 -->
-对于Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品，仅支持SIMD相关选项（例如`ACL_RT_DEV_LIMIT_SIMD_STACK_SIZE`），不支持SIMT相关选项（例如`ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE`）。
+对于Atlas A3系列产品、Atlas A2系列产品，仅支持SIMD相关选项（例如`ACL_RT_DEV_LIMIT_SIMD_STACK_SIZE`），不支持SIMT相关选项（例如`ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE`）。
 <!-- end id107 -->
 
 各枚举项的说明如下：
@@ -2501,11 +2501,11 @@ typedef enum aclrtDeviceLimit {
 - `ACL_RT_DEV_LIMIT_SIMD_STACK_SIZE`：用于控制进程中SIMD（Single Instruction Multiple Data）算子执行时为每个AI Core分配的栈空间大小，单位Byte。默认值为32768Byte（即32KB）。
 
     <!-- npu="A3,910b" id104 -->
-    对于Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品，设置为`ACL_RT_DEV_LIMIT_SIMD_STACK_SIZE`类型时，value的取值范围为(32768, 196608]Byte，即(32, 192]KB。
+    对于Atlas A3系列产品、Atlas A2系列产品，设置为`ACL_RT_DEV_LIMIT_SIMD_STACK_SIZE`类型时，value的取值范围为(32768, 196608]Byte，即(32, 192]KB。
     <!-- end id104 -->
 
     <!-- npu="950" id105 -->
-    对于Ascend 950PR/Ascend 950DT，设置为`ACL_RT_DEV_LIMIT_SIMD_STACK_SIZE`类型时，value的取值范围为(32768, 131072]Byte，即(32, 128]KB。
+    对于Ascend 950PR&950DT系列产品，设置为`ACL_RT_DEV_LIMIT_SIMD_STACK_SIZE`类型时，value的取值范围为(32768, 131072]Byte，即(32, 128]KB。
     <!-- end id105 -->
 
     当value的取值大于32KB时，接口内部会向上取整，确保其为16KB的整数倍；当value的取值小于或等于32KB时，默认按32KB处理。

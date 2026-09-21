@@ -28,22 +28,22 @@ aclError aclrtLaunchCallback(aclrtCallback fn, void *userData, aclrtCallbackBloc
 ### 产品支持情况
 
 <!-- npu="950" id2773 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2773 -->
 <!-- npu="A3" id2774 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2774 -->
 <!-- npu="910b" id2775 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2775 -->
 <!-- npu="310b" id2776 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2776 -->
 <!-- npu="310p" id2777 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2777 -->
 <!-- npu="910" id2778 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2778 -->
 <!-- npu="IPV350" id2779 -->
 - IPV350：支持
@@ -99,22 +99,22 @@ aclError aclrtSubscribeReport(uint64_t threadId, aclrtStream stream)
 ### 产品支持情况
 
 <!-- npu="950" id2010 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2010 -->
 <!-- npu="A3" id2011 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2011 -->
 <!-- npu="910b" id2012 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2012 -->
 <!-- npu="310b" id2013 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2013 -->
 <!-- npu="310p" id2014 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2014 -->
 <!-- npu="910" id2015 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2015 -->
 <!-- npu="IPV350" id2016 -->
 - IPV350：支持
@@ -170,22 +170,22 @@ aclError aclrtProcessReport(int32_t timeout)
 ### 产品支持情况
 
 <!-- npu="950" id1359 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1359 -->
 <!-- npu="A3" id1360 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1360 -->
 <!-- npu="910b" id1361 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1361 -->
 <!-- npu="310b" id1362 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1362 -->
 <!-- npu="310p" id1363 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1363 -->
 <!-- npu="910" id1364 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1364 -->
 <!-- npu="IPV350" id1365 -->
 - IPV350：支持
@@ -230,22 +230,22 @@ aclError aclrtUnSubscribeReport(uint64_t threadId, aclrtStream stream)
 ### 产品支持情况
 
 <!-- npu="950" id2143 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2143 -->
 <!-- npu="A3" id2144 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2144 -->
 <!-- npu="910b" id2145 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2145 -->
 <!-- npu="310b" id2146 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2146 -->
 <!-- npu="310p" id2147 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2147 -->
 <!-- npu="910" id2148 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2148 -->
 <!-- npu="IPV350" id2149 -->
 - IPV350：支持
@@ -291,22 +291,22 @@ aclError aclrtGetOpTimeOutInterval(uint64_t *interval)
 ### 产品支持情况
 
 <!-- npu="950" id1 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1 -->
 <!-- npu="A3" id2 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2 -->
 <!-- npu="910b" id3 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3 -->
 <!-- npu="310b" id4 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id4 -->
 <!-- npu="310p" id5 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id5 -->
 <!-- npu="910" id6 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id6 -->
 <!-- npu="IPV350" id7 -->
 - IPV350：不支持
@@ -318,7 +318,7 @@ aclError aclrtGetOpTimeOutInterval(uint64_t *interval)
 获取硬件支持的算子超时配置的最短时间间隔interval，单位为微秒。
 
 <!-- npu="910,310p,310b" id9 -->
-对于Atlas 200I/500 A2 推理产品、Atlas 推理系列产品、Atlas 训练系列产品，调用本接口只能获取AI Core算子的最短时间间隔。
+对于Atlas 200I/500 A2推理产品、Atlas推理系列产品、Atlas训练系列产品，调用本接口只能获取AI Core算子的最短时间间隔。
 <!-- end id9 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/12_execution_control_res.md#id16 -->
 
@@ -326,7 +326,7 @@ aclError aclrtGetOpTimeOutInterval(uint64_t *interval)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| interval | 输出 | 最短时间间隔，单位为微秒。<br>用户可配置且生效的超时时间是interval * N，N的取值为[1, 254]的整数，如果用户配置的超时时间不等于interval * N，则向上对齐到interval * N，假设interval = 100微秒，用户设置的超时时间为50微秒，则实际生效的超时时间为100 * 1 = 100微秒；用户设置的超时时间为30000微秒，则实际生效的超时时间为100 * 254 =25400微秒。 |
+| interval | 输出 | 最短时间间隔，单位为微秒。<br>用户可配置且生效的超时时间是interval \* N，N的取值为[1, 254]的整数，如果用户配置的超时时间不等于interval \* N，则向上对齐到interval \* N，假设interval = 100微秒，用户设置的超时时间为50微秒，则实际生效的超时时间为100 \* 1 = 100微秒；用户设置的超时时间为30000微秒，则实际生效的超时时间为100 \* 254 =25400微秒。 |
 
 ### 返回值说明
 
@@ -347,22 +347,22 @@ aclError aclrtSetOpExecuteTimeOut(uint32_t timeout)
 ### 产品支持情况
 
 <!-- npu="950" id547 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id547 -->
 <!-- npu="A3" id548 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id548 -->
 <!-- npu="910b" id549 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id549 -->
 <!-- npu="310b" id550 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id550 -->
 <!-- npu="310p" id551 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id551 -->
 <!-- npu="910" id552 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id552 -->
 <!-- npu="IPV350" id553 -->
 - IPV350：支持
@@ -376,7 +376,7 @@ aclError aclrtSetOpExecuteTimeOut(uint32_t timeout)
 如果算子下发时携带了超时时间，则该超时时间优先级高于本接口设置的超时时间。
 
 <!-- npu="950,A3,910b" id10 -->
-对于Ascend 950PR/Ascend 950DT、Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品，建议使用aclrtSetOpExecuteTimeOutV2接口，该接口会返回实际生效的超时时间。
+对于Ascend 950PR&950DT系列产品、Atlas A3系列产品、Atlas A2系列产品，建议使用aclrtSetOpExecuteTimeOutV2接口，该接口会返回实际生效的超时时间。
 <!-- end id10 -->
 
 ### 参数说明
@@ -394,36 +394,36 @@ aclError aclrtSetOpExecuteTimeOut(uint32_t timeout)
 
 - 不调用本接口，不同产品型号的AI Core算子、AI CPU算子默认超时时间不同：
     <!-- npu="950" id12 -->
-    - 对于Ascend 950PR/Ascend 950DT，AI Core算子、AI CPU算子的默认超时时间为1091秒。
+    - 对于Ascend 950PR&950DT系列产品，AI Core算子、AI CPU算子的默认超时时间为1091秒。
     <!-- end id12 -->
     <!-- npu="A3" id13 -->
-    - 对于Atlas A3 训练系列产品/Atlas A3 推理系列产品，AI Core算子、AI CPU算子的默认超时时间为1091秒。
+    - 对于Atlas A3系列产品，AI Core算子、AI CPU算子的默认超时时间为1091秒。
     <!-- end id13 -->
     <!-- npu="910b" id14 -->
-    - 对于Atlas A2 训练系列产品/Atlas A2 推理系列产品，AI Core算子、AI CPU算子的默认超时时间为1091秒。
+    - 对于Atlas A2系列产品，AI Core算子、AI CPU算子的默认超时时间为1091秒。
     <!-- end id14 -->
     <!-- npu="310b" id15 -->
-    - 对于Atlas 200I/500 A2 推理产品，Ascend EP形态下，AI Core算子、AI CPU算子的默认超时时间为1091秒；Ascend RC形态下，AI Core算子的默认超时时间为1091秒，AI CPU算子的默认超时时间为28秒。
+    - 对于Atlas 200I/500 A2推理产品，Ascend EP形态下，AI Core算子、AI CPU算子的默认超时时间为1091秒；Ascend RC形态下，AI Core算子的默认超时时间为1091秒，AI CPU算子的默认超时时间为28秒。
     <!-- end id15 -->
     <!-- npu="310p" id16 -->
-    - 对于Atlas 推理系列产品，AI Core算子的默认超时时间为547秒，AI CPU算子的默认超时时间为28秒。
+    - 对于Atlas推理系列产品，AI Core算子的默认超时时间为547秒，AI CPU算子的默认超时时间为28秒。
     <!-- end id16 -->
     <!-- npu="910" id17 -->
-    - 对于Atlas 训练系列产品，AI Core算子的默认超时时间为68秒，AI CPU算子的默认超时时间为28秒。
+    - 对于Atlas训练系列产品，AI Core算子的默认超时时间为68秒，AI CPU算子的默认超时时间为28秒。
     <!-- end id17 -->
 
 - 由于不同产品型号的架构差异，AI Core算子、AI CPU算子的最大超时时间有所不同：
     <!-- npu="950,A3,910b" id18 -->
-    - 对于Ascend 950PR/Ascend 950DT、Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品，AI Core算子、AI CPU算子最大超时时间为interval \* 254，单位是微秒，interval可通过aclrtGetOpTimeOutInterval接口获取。
-    <!-- end id18 -->   
+    - 对于Ascend 950PR&950DT系列产品、Atlas A3系列产品、Atlas A2系列产品，AI Core算子、AI CPU算子最大超时时间为interval \* 254，单位是微秒，interval可通过aclrtGetOpTimeOutInterval接口获取。
+    <!-- end id18 -->
     <!-- npu="310b" id19 -->
-    - 对于Atlas 200I/500 A2 推理产品，AI Core算子、AI CPU算子最大超时时间为1091秒。
+    - 对于Atlas 200I/500 A2推理产品，AI Core算子、AI CPU算子最大超时时间为1091秒。
     <!-- end id19 -->
     <!-- npu="310p" id20 -->
-    - 对于Atlas 推理系列产品，AI Core算子的最大超时时间为547秒，AI CPU算子的最大超时时间不支持设置。
+    - 对于Atlas推理系列产品，AI Core算子的最大超时时间为547秒，AI CPU算子的最大超时时间不支持设置。
     <!-- end id20 -->
     <!-- npu="910" id21 -->
-    - 对于Atlas 训练系列产品，AI Core算子、AI CPU算子最大超时时间为2176秒。
+    - 对于Atlas训练系列产品，AI Core算子、AI CPU算子最大超时时间为2176秒。
     <!-- end id21 -->
 <!-- end id11 -->
 
@@ -442,22 +442,22 @@ aclError aclrtSetOpExecuteTimeOutV2(uint64_t timeout,  uint64_t *actualTimeout)
 ### 产品支持情况
 
 <!-- npu="950" id1254 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1254 -->
 <!-- npu="A3" id1255 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1255 -->
 <!-- npu="910b" id1256 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1256 -->
 <!-- npu="310b" id1257 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1257 -->
 <!-- npu="310p" id1258 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1258 -->
 <!-- npu="910" id1259 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1259 -->
 <!-- npu="IPV350" id1260 -->
 - IPV350：不支持
@@ -472,7 +472,7 @@ aclError aclrtSetOpExecuteTimeOutV2(uint64_t timeout,  uint64_t *actualTimeout)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| timeout | 输入 | 设置超时时间，单位为微秒。<br>将该参数设置为0时，表示使用最大超时时间。<br> 当调用aclrtGetOpTimeOutInterval接口获取的时间间隔小于100000微妙，并且timeout参数设置为0时，表示AI Core算子将永不超时。 |
+| timeout | 输入 | 设置超时时间，单位为微秒。<br>将该参数设置为0时，表示使用最大超时时间。<br> 当调用aclrtGetOpTimeOutInterval接口获取的时间间隔小于100000微秒，并且timeout参数设置为0时，表示AI Core算子将永不超时。 |
 | actualTimeout | 输出 | 返回实际生效的超时时间，单位为微秒。<br> 如果AI Core算子永不超时，则该参数输出的值为uint64_t的最大值。 |
 
 ### 返回值说明
@@ -482,11 +482,11 @@ aclError aclrtSetOpExecuteTimeOutV2(uint64_t timeout,  uint64_t *actualTimeout)
 ### 约束说明
 
 <!-- npu="950,A3,910b" id22 -->
-对于Ascend 950PR/Ascend 950DT、Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品，当调用aclrtGetOpTimeoutInterval接口获取的时间间隔小于100000微秒，并且将timeout参数值设置为0时，表示AI Core算子将永不超时。此时，actualTimeout参数输出的值为uint64\_t的最大值。
+对于Ascend 950PR&950DT系列产品、Atlas A3系列产品、Atlas A2系列产品，当调用aclrtGetOpTimeoutInterval接口获取的时间间隔小于100000微秒，并且将timeout参数值设置为0时，表示AI Core算子将永不超时。此时，actualTimeout参数输出的值为uint64\_t的最大值。
 <!-- end id22 -->
 
 <!-- npu="910,310p" id23 -->
-对于Atlas 推理系列产品、Atlas 训练系列产品，调用本接口只能设置AI Core算子执行的超时时间。
+对于Atlas推理系列产品、Atlas训练系列产品，调用本接口只能设置AI Core算子执行的超时时间。
 <!-- end id23 -->
 
 <!-- @ref: runtime/res/docs/zh/api_ref/12_execution_control_res.md#id17 -->
@@ -506,22 +506,22 @@ aclError aclrtSetOpExecuteTimeOutWithMs(uint32_t timeout)
 ### 产品支持情况
 
 <!-- npu="950" id1884 -->
-- Ascend 950PR/Ascend 950DT：不支持
+- Ascend 950PR&950DT系列产品：不支持
 <!-- end id1884 -->
 <!-- npu="A3" id1885 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：不支持
+- Atlas A3系列产品：不支持
 <!-- end id1885 -->
 <!-- npu="910b" id1886 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：不支持
+- Atlas A2系列产品：不支持
 <!-- end id1886 -->
 <!-- npu="310b" id1887 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id1887 -->
 <!-- npu="310p" id1888 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id1888 -->
 <!-- npu="910" id1889 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id1889 -->
 <!-- npu="IPV350" id1890 -->
 - IPV350：不支持
@@ -559,22 +559,22 @@ aclError aclrtGetOpExecuteTimeout(uint32_t *const timeoutMs)
 ### 产品支持情况
 
 <!-- npu="950" id449 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id449 -->
 <!-- npu="A3" id450 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id450 -->
 <!-- npu="910b" id451 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id451 -->
 <!-- npu="310b" id452 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id452 -->
 <!-- npu="310p" id453 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id453 -->
 <!-- npu="910" id454 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id454 -->
 <!-- npu="IPV350" id455 -->
 - IPV350：不支持
@@ -586,7 +586,7 @@ aclError aclrtGetOpExecuteTimeout(uint32_t *const timeoutMs)
 获取算子执行的超时时间。
 
 <!-- npu="950,A3,910b" id24 -->
-对于Ascend 950PR/Ascend 950DT、Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品，如果算子永不超时，则该参数输出的值为uint32_t的最大值。
+对于Ascend 950PR&950DT系列产品、Atlas A3系列产品、Atlas A2系列产品，如果算子永不超时，则该参数输出的值为uint32_t的最大值。
 <!-- end id24 -->
 
 ### 参数说明
@@ -614,22 +614,22 @@ aclError aclrtGetThreadLastTaskId(uint32_t *taskId)
 ### 产品支持情况
 
 <!-- npu="950" id3333 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id3333 -->
 <!-- npu="A3" id3334 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3334 -->
 <!-- npu="910b" id3335 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3335 -->
 <!-- npu="310b" id3336 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id3336 -->
 <!-- npu="310p" id3337 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id3337 -->
 <!-- npu="910" id3338 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id3338 -->
 <!-- npu="IPV350" id3339 -->
 - IPV350：不支持
@@ -665,22 +665,22 @@ aclError aclrtReduceAsync(void *dst, const void *src, uint64_t count, aclrtReduc
 ### 产品支持情况
 
 <!-- npu="950" id2122 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2122 -->
 <!-- npu="A3" id2123 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2123 -->
 <!-- npu="910b" id2124 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2124 -->
 <!-- npu="310b" id2125 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2125 -->
 <!-- npu="310p" id2126 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2126 -->
 <!-- npu="910" id2127 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2127 -->
 <!-- npu="IPV350" id2128 -->
 - IPV350：不支持
@@ -712,27 +712,27 @@ aclError aclrtReduceAsync(void *dst, const void *src, uint64_t count, aclrtReduc
 dst、src必须跟stream所在的Device是同一个设备。
 
 <!-- npu="950" id25 -->
-Ascend 950PR/Ascend 950DT支持如下数据类型：int8、int16、int32、uint32、fp16、fp32、bf16。
+Ascend 950PR&950DT系列产品支持如下数据类型：int8、int16、int32、uint32、fp16、fp32、bf16。
 <!-- end id25 -->
 
 <!-- npu="A3" id26 -->
-Atlas A3 训练系列产品/Atlas A3 推理系列产品支持如下数据类型：int8、int16、int32、fp16、fp32、bf16。
+Atlas A3系列产品支持如下数据类型：int8、int16、int32、fp16、fp32、bf16。
 <!-- end id26 -->
 
 <!-- npu="910b" id27 -->
-Atlas A2 训练系列产品/Atlas A2 推理系列产品支持如下数据类型：int8、int16、int32、fp16、fp32、bf16。
+Atlas A2系列产品支持如下数据类型：int8、int16、int32、fp16、fp32、bf16。
 <!-- end id27 -->
 
 <!-- npu="310b" id28 -->
-Atlas 200I/500 A2 推理产品支持如下数据类型：int8、int16、int32、fp16、fp32。
+Atlas 200I/500 A2推理产品支持如下数据类型：int8、int16、int32、fp16、fp32。
 <!-- end id28 -->
 
 <!-- npu="310p" id29 -->
-Atlas 推理系列产品支持如下数据类型：fp32  、fp16、int16。
+Atlas推理系列产品支持如下数据类型：fp32  、fp16、int16。
 <!-- end id29 -->
 
 <!-- npu="910" id30 -->
-Atlas 训练系列产品仅支持fp32类型。
+Atlas训练系列产品仅支持fp32类型。
 <!-- end id30 -->
 
 <!-- @ref: runtime/res/docs/zh/api_ref/12_execution_control_res.md#id19 -->
@@ -752,22 +752,22 @@ aclError aclrtLaunchHostFunc(aclrtStream stream, aclrtHostFunc fn, void *args)
 ### 产品支持情况
 
 <!-- npu="950" id1975 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1975 -->
 <!-- npu="A3" id1976 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1976 -->
 <!-- npu="910b" id1977 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1977 -->
 <!-- npu="310b" id1978 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1978 -->
 <!-- npu="310p" id1979 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1979 -->
 <!-- npu="910" id1980 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1980 -->
 <!-- npu="IPV350" id1981 -->
 - IPV350：不支持
@@ -813,22 +813,22 @@ aclError aclrtRandomNumAsync(const aclrtRandomNumTaskInfo *taskInfo, const aclrt
 ### 产品支持情况
 
 <!-- npu="950" id2948 -->
-- Ascend 950PR/Ascend 950DT：不支持
+- Ascend 950PR&950DT系列产品：不支持
 <!-- end id2948 -->
 <!-- npu="A3" id2949 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2949 -->
 <!-- npu="910b" id2950 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2950 -->
 <!-- npu="310b" id2951 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id2951 -->
 <!-- npu="310p" id2952 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id2952 -->
 <!-- npu="910" id2953 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id2953 -->
 <!-- npu="IPV350" id2954 -->
 - IPV350：不支持
@@ -866,22 +866,22 @@ aclError aclrtTaskUpdateAsync(aclrtStream taskStream, uint32_t taskId, aclrtTask
 ### 产品支持情况
 
 <!-- npu="950" id3018 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id3018 -->
 <!-- npu="A3" id3019 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3019 -->
 <!-- npu="910b" id3020 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3020 -->
 <!-- npu="310b" id3021 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id3021 -->
 <!-- npu="310p" id3022 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id3022 -->
 <!-- npu="910" id3023 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id3023 -->
 <!-- npu="IPV350" id3024 -->
 - IPV350：不支持
@@ -908,5 +908,5 @@ aclError aclrtTaskUpdateAsync(aclrtStream taskStream, uint32_t taskId, aclrtTask
 <!-- npu="950" id31 -->
 ### 约束说明
 
-Ascend 950PR/Ascend 950DT产品不支持更新ACL_RT_UPDATE_RANDOM_TASK(随机数生成任务)。
+Ascend 950PR&950DT系列产品产品不支持更新ACL_RT_UPDATE_RANDOM_TASK(随机数生成任务)。
 <!-- end id31 -->

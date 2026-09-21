@@ -119,7 +119,6 @@ aclrtDestroyStream(stream);
 
 此外，用户可以使用aclrtStreamQuery查询stream上的任务是否全部执行完成。
 
-
 <br>
 <br>
 
@@ -129,7 +128,11 @@ CANN为CPU和NPU之间的异步协作提供了灵活的方式。用户可以使�
 
 回调函数不能直接或者间接调用CANN Runtime API，否则可能会导致错误或死锁。
 
-以下是在Stream上插入一个Host回调任务的代码示例，不可以直接拷贝编译运行，仅供参考。完整样例代码请参见[Link](https://gitcode.com/cann/runtime/tree/master/example/2_advanced_features/callback/1_callback_hostfunc)。
+以下是在Stream上插入一个Host回调任务的代码示例，不可以直接拷贝编译运行，仅供参考。
+
+<!-- npu="950,A3,910b,910,310p,310b" id1 -->
+完整样例代码请参见[Link](https://gitcode.com/cann/runtime/tree/master/example/2_advanced_features/callback/1_callback_hostfunc)。
+<!-- end id1 -->
 
 ```c
 // Host回调任务
@@ -186,7 +189,6 @@ aclrtCreateStreamWithConfig(&stream_low, leastPriority, ACL_STREAM_FAST_LAUNCH);
 
 Stream的优先级在Device范围内生效，而不是在Context范围内生效。
 
-
 <br>
 <br>
 
@@ -209,7 +211,7 @@ aclrtSetStreamFailureMode(stream, ACL_STOP_ON_FAILURE);
 
 也可以调用aclrtSetStreamAttribute接口指定调度模式的示例代码如下，不可以直接拷贝编译运行，仅供参考：
 
-```
+```c
 aclrtStream stream;
 aclrtCreateStream(&stream);
 

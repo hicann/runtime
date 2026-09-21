@@ -6,7 +6,7 @@
 
 跨Stream的任务捕获流程如下图所示：
 
-![](figures/ACL_Graph跨流捕获.png)
+![](figures/ACL_Graph_multi_stream.png)
 
 以下示例用两个stream为例演示跨流捕获，其中stream1是主流，stream2是子流。
 
@@ -69,7 +69,7 @@ int main()
     uint64_t workspaceSize = 0;
     aclOpExecutor *executor;
     auto size = GetShapeSize(shape);
-	
+
     // 初始化
     aclInit(NULL);
     // 指定计算设备
@@ -112,7 +112,7 @@ int main()
     // 切换捕获模式为RELAXED，允许调用aclrtMemcpy函数
     aclmdlRICaptureMode mode = ACL_MODEL_RI_CAPTURE_MODE_RELAXED;
     aclmdlRICaptureThreadExchangeMode(&mode);
-    // 同步拷贝，将算子other输入的数据从Host侧传到Device侧，仅执行一次 
+    // 同步拷贝，将算子other输入的数据从Host侧传到Device侧，仅执行一次
     aclrtMemcpy(other_d, size * sizeof(float), other_h, size * sizeof(float), ACL_MEMCPY_HOST_TO_DEVICE);
     // 将捕获模式切换回GLOBAL
     aclmdlRICaptureThreadExchangeMode(&mode);
@@ -133,7 +133,7 @@ int main()
     for (int i = 0; i < 8; i++) {
         aclmdlRIExecuteAsync(modelRI, stream1);
         aclrtSynchronizeStream(stream1);
-	// 打印每一次的算子输出数据
+    // 打印每一次的算子输出数据
         ACL_LOG("%f %f %f %f %f %f %f %f\n",
             self_h[0],
             self_h[1],
@@ -157,7 +157,7 @@ int main()
     aclDestroyScalar(alpha);
     aclrtFree(self_d);
     aclrtFree(other_d);
-    aclrtFree(out_d);		
+    aclrtFree(out_d);
     if (workspaceAddr != nullptr) {
         aclrtFree(workspaceAddr);
     }
@@ -167,4 +167,3 @@ int main()
     aclFinalize();
 }
 ```
-

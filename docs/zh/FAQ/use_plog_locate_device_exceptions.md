@@ -7,7 +7,8 @@
 Runtime应用在Device侧执行任务时发生异常，Host侧返回错误码，但无法定位具体的错误原因和位置。
 
 报错日志示例如下：
-```
+
+```text
 [ERROR] RUNTIME(2082291,python3):2024-07-04-14:14:25.036.721 [stars_engine.cc:1321]2082291 ProcLogicCqReport:[INIT][DEFAULT]Task run failed, device_id=0, stream_id=2, task_id=1, sqe_type=0(ffts), errType=0x1(task exception), sqSwStatus=0
 [ERROR] RUNTIME(2082291,python3):2024-07-04-14:14:25.050.365 [davinic_kernel_task.cc:1219]2082291 PreCheckTaskErr:[INIT][DEFAULT]Kernel task happen error, retCode=0x31, [vector core exception].
 [ERROR] RUNTIME(2082291,python3):2024-07-04-14:14:25.050.941 [davinic_kernel_task.cc:1143]2082291 PrintErrorInfoForDavinciTask:[INIT][DEFAULT]Aicore kernel execute failed, device_id=0, stream_id=2, report_stream_id=2, task_id=1, flip_num=0, fault kernel_name=Add_ee98c6628030785f610b924ab1557b31_high_performance_210000000
@@ -133,7 +134,8 @@ echo -e "\n=== 分析完成 ==="
 **典型问题诊断示例**：
 
 **场景1：地址访问越界**
-```
+
+```text
 错误特征：
 - aivec error exception
 
@@ -144,7 +146,8 @@ echo -e "\n=== 分析完成 ==="
 ```
 
 **场景2：内存对齐错误**
-```
+
+```text
 错误特征：
 - 数据传输失败
 
@@ -155,7 +158,8 @@ echo -e "\n=== 分析完成 ==="
 ```
 
 **场景3：任务超时**
-```
+
+```text
 错误特征：
 - task timeout
 - 任务执行时间过长
@@ -184,6 +188,7 @@ aclError error = aclInit(nullptr);
 ```
 
 **日志级别说明**：
+
 - 0: DEBUG - 详细调试日志
 - 1: INFO - 常规信息日志（默认）
 - 2: WARNING - 错误和警告日志

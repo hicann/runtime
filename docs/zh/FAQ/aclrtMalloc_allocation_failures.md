@@ -7,7 +7,8 @@
 调用 aclrtMalloc 接口申请 Device 内存时返回错误码 207001（ACL_ERROR_RT_MEMORY_ALLOCATION），表示内存申请失败。
 
 报错日志示例如下：
-```
+
+```text
 aclrtMalloc failed, ret = 207001, size=10485760
 [ERROR] RUNTIME: Failed to allocate device memory, device_id=0, size=10485760
 ```
@@ -22,6 +23,7 @@ aclrtMalloc failed, ret = 207001, size=10485760
 ### 原因1：Device 内存不足或申请大小不合理
 
 **解决方法**：
+
 - 检查内存容量：使用 npu-smi 工具查看设备内存使用情况
 - 释放已分配内存：调用 aclrtFree 释放不再使用的内存
 - 减少申请大小：优化业务逻辑，减少一次性申请的内存量
@@ -29,6 +31,7 @@ aclrtMalloc failed, ret = 207001, size=10485760
 - 预分配并复用：初始化阶段预分配固定内存池，业务中复用
 
 命令示例：
+
 ```bash
 # 查看设备内存使用情况
 npu-smi info -t memory
@@ -41,6 +44,7 @@ npu-smi info -t memory
 ```
 
 代码示例：
+
 ```c
 // 检查内存使用情况后合理申请
 void* devPtr = nullptr;
@@ -59,6 +63,7 @@ aclError ret = aclrtMalloc(&devPtr, size, ACL_MEM_MALLOC_HUGE_FIRST);
 ### 原因2：内存分配策略配置不当
 
 **解决方法**：
+
 - 理解策略含义：
   - ACL_MEM_MALLOC_HUGE_FIRST：优先大页，不足时退回普通页（推荐）
   - ACL_MEM_MALLOC_HUGE_ONLY：仅大页，不足时报错
@@ -67,6 +72,7 @@ aclError ret = aclrtMalloc(&devPtr, size, ACL_MEM_MALLOC_HUGE_FIRST);
 - 调整策略为 HUGE_FIRST：避免强制大页导致的申请失败
 
 策略选择建议：
+
 ```c
 // 推荐策略：大页优先，不足时退回普通页
 aclError ret = aclrtMalloc(&devPtr, size, ACL_MEM_MALLOC_HUGE_FIRST);
