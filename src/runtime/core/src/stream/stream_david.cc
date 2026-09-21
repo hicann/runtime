@@ -207,16 +207,18 @@ void DavidStream::FreeStreamIdAndSqCq()
 {
     DELETE_O(autoSplitCtx_);
     if (IsAutoSplitSq()) {
+        const uint32_t sqId = GetSqId();
+        const uint32_t cqId = GetCqId();
+        ResetSqCq();
         if (GetSqBaseAddr() != 0U) {
             streamSwitchInfo_[0].stream_id = UINT32_MAX;
-            streamSwitchInfo_[0].sq_id = GetSqId();
+            streamSwitchInfo_[0].sq_id = sqId;
             streamSwitchInfo_[0].sq_depth = GetSqDepth();
             streamSwitchInfo_[0].stream_mem = RtValueToPtr<void*>(GetSqBaseAddr());
             /* stream unbind sq */
             (void)device_->Driver_()->SqSwitchStreamBatch(device_->Id_(), streamSwitchInfo_, 1U);
         }
-        (void)device_->GetDeviceSqCqManage()->FreeSqCqToDrv(sqId_, cqId_);
-        ResetSqCq();
+        (void)device_->GetDeviceSqCqManage()->FreeSqCqToDrv(sqId, cqId);
     }
     DELETE_A(streamSwitchInfo_);
     FreeStreamId();

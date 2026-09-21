@@ -406,12 +406,13 @@ TEST_F(DavidStreamTest, auto_split_stream_destroy)
     MOCKER_CPP_VIRTUAL((NpuDriver*)device_->Driver_(), &NpuDriver::MemCopySync).stubs().will(returnValue(0));
     MOCKER_CPP_VIRTUAL((NpuDriver*)device_->Driver_(), &NpuDriver::SqSwitchStreamBatch).stubs().will(returnValue(0));
     MOCKER_CPP(&SqAddrMemoryOrder::FreeSqAddr).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP(&DeviceSqCqPool::FreeSqCqToDrv).stubs().will(returnValue(RT_ERROR_NONE));
     rtStream_t stream = 0;
     rtError_t res = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_PERSISTENT);
     EXPECT_EQ(res, RT_ERROR_NONE);
     Stream* realStream = rt_ut::UnwrapOrNull<Stream>(stream);
     ASSERT_NE(realStream, nullptr);
+    const uint32_t sqId = realStream->GetSqId();
+    const uint32_t cqId = realStream->GetCqId();
     realStream->SetAutoSplitSq(true);
     AutoSplitSqContext* autoSplitCtx_ = new (std::nothrow) AutoSplitSqContext();
     autoSplitCtx_->curStreamSqeCount = 0U;
@@ -422,7 +423,15 @@ TEST_F(DavidStreamTest, auto_split_stream_destroy)
     Stream* stream2 = nullptr;
     realStream->Context_()->CreateAutoSplitSlaveStream(realStream, &stream2);
     autoSplitCtx_->slaveStreams.push_back((Stream*)stream2);
+    uint32_t freedSqId = UINT32_MAX;
+    uint32_t freedCqId = UINT32_MAX;
+    MOCKER_CPP(&DeviceSqCqPool::FreeSqCqToDrv)
+        .expects(exactly(2))
+        .with(spy(freedSqId), spy(freedCqId))
+        .will(returnValue(RT_ERROR_NONE));
     rtStreamDestroy(stream);
+    EXPECT_EQ(freedSqId, sqId);
+    EXPECT_EQ(freedCqId, cqId);
 }
 
 TEST_F(DavidStreamTest, auto_split_task_clean)
