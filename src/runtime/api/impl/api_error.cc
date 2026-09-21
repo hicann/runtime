@@ -3661,9 +3661,9 @@ rtError_t ApiErrorDecorator::DeviceSetLimit(const int32_t devId, const rtLimitTy
     COND_RETURN_ERROR(
         error != RT_ERROR_NONE, error, "Failed to convert the user device ID %d to driver device ID.", devId);
     error = impl_->DeviceSetLimit(realDeviceId, type, val);
-    ERROR_RETURN(
-        error, "Device set limit failed, device_id=%d, type=%s, value=%u.", devId, LimitTypeToString(type).c_str(),
-        val);
+    COND_RETURN_ERROR(
+        (error != RT_ERROR_NONE) && (error != RT_ERROR_FEATURE_NOT_SUPPORT), error,
+        "Device set limit failed, device_id=%d, type=%s, value=%u.", devId, LimitTypeToString(type).c_str(), val);
     return error;
 }
 
