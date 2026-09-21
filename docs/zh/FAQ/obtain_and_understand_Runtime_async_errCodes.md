@@ -7,6 +7,7 @@
 调用Runtime异步接口（如aclrtMemcpyAsync、Kernel Launch等）时，接口返回成功（ACL_RT_SUCCESS），但实际执行时Device侧发生了错误。
 
 典型场景：
+
 ```cpp
 aclrtStream stream;
 aclrtCreateStream(&stream);
@@ -22,7 +23,8 @@ aclError error = aclrtMemcpyAsync(devPtr, devSize, hostPtr, hostSize,
 Device侧的异步错误会延迟到后续某个Runtime接口调用时返回，可能不是实际发生错误的接口，导致错误定位困难。
 
 报错日志示例如下：
-```
+
+```text
 [ERROR] RUNTIME: Aicore kernel execute failed, ret=507015, aicore exception
 fault kernel_name=Add_ee98c6628030785f610b924ab1557b31
 ```
@@ -45,7 +47,8 @@ aclrtSynchronizeStream(stream);
 3. **错误覆盖问题**：在遇错继续模式下，如果Stream上多个任务执行失败，后发生的错误可能覆盖先前的错误信息，导致无法获取首次错误。
 
 典型异步错误示例（通过 aclrtSynchronizeStream 获取）：
-```
+
+```text
 [ERROR] RUNTIME: Aicore kernel execute failed, ret=507015, aicore exception
 fault kernel_name=Add_ee98c6628030785f610b924ab1557b31
 ```
@@ -55,6 +58,7 @@ fault kernel_name=Add_ee98c6628030785f610b924ab1557b31
 ### 方法1：立即同步获取异步错误
 
 在异步接口调用后立即调用同步接口，获取Device侧的实际执行结果：
+
 ```cpp
 aclrtStream stream;
 aclrtCreateStream(&stream);
@@ -134,6 +138,7 @@ if (error != ACL_RT_SUCCESS) {
 ### 方法4：结合遇错即停模式
 
 配置遇错即停模式，在首个错误发生时停止执行，避免错误传播：
+
 ```cpp
 aclrtStream stream;
 aclrtCreateStream(&stream);
@@ -165,5 +170,6 @@ aclrtDestroyStream(stream);
 ```
 
 ## 相关 issue
+
 - [Issue #477: aclrtSynchronizeStream报错507015及plog日志分析](https://gitcode.com/cann/runtime/issues/477)
 - [Issue #480: aicore异常报错分析](https://gitcode.com/cann/runtime/issues/480)

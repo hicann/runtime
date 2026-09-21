@@ -21,22 +21,22 @@ aclError aclInit(const char *configPath)
 ### 产品支持情况
 
 <!-- npu="950" id3235 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id3235 -->
 <!-- npu="A3" id3236 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3236 -->
 <!-- npu="910b" id3237 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3237 -->
 <!-- npu="310b" id3238 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id3238 -->
 <!-- npu="310p" id3239 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id3239 -->
 <!-- npu="910" id3240 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id3240 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/02_initialization_and_deinitialization_res.md#id1 -->
 
@@ -163,9 +163,9 @@ aclError aclInit(const char *configPath)
 
         - 该选项仅支持以下型号，且需配套25.0.RC1或更高版本的驱动才可以使用：
 
-            Atlas A3 训练系列产品/Atlas A3 推理系列产品
+            Atlas A3系列产品
 
-            Atlas A2 训练系列产品/Atlas A2 推理系列产品
+            Atlas A2系列产品
 
             您可以单击[Link](https://www.hiascend.com/hardware/firmware-drivers/commercial)，在“固件与驱动”页面下载Ascend HDK  25.0.RC1或更高版本的驱动安装包，并参考相应版本的文档进行安装、升级。
 
@@ -280,23 +280,23 @@ aclError aclInit(const char *configPath)
 仅如下型号支持该配置：
 
 <!-- npu="950" id9 -->
-Ascend 950PR/Ascend 950DT
+Ascend 950PR&950DT系列产品
 <!-- end id9 -->
 
 <!-- npu="A3" id10 -->
-Atlas A3 训练系列产品/Atlas A3 推理系列产品
+Atlas A3系列产品
 <!-- end id10 -->
 
 <!-- npu="910b" id11 -->
-Atlas A2 训练系列产品/Atlas A2 推理系列产品
+Atlas A2系列产品
 <!-- end id11 -->
 
 <!-- npu="310b" id12 -->
-Atlas 200I/500 A2 推理产品
+Atlas 200I/500 A2推理产品
 <!-- end id12 -->
 
 <!-- npu="310p" id13 -->
-Atlas 推理系列产品
+Atlas推理系列产品
 <!-- end id13 -->
 
 配置dump\_kernel\_data参数开启算子Kernel调测信息Dump功能，配置文件中的示例如下：
@@ -397,33 +397,33 @@ default\_device参数处设置Device ID，Device ID可设置为0或十进制正�
 **AI Core栈空间大小配置**，用于控制进程中Kernel执行时为每个AI Core分配的栈空间大小，**默认为32KB**。
 
 <!-- npu="950" id17 -->
-Ascend 950PR/Ascend 950DT支持该配置，在编译AI Core算子时，无需打开O0开关。
+Ascend 950PR&950DT系列产品支持该配置，在编译AI Core算子时，无需打开O0开关。
 <!-- end id17 -->
 
 <!-- npu="A3,910b" id18 -->
-Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品支持该配置，但在编译AI Core算子时，只有打开O0开关，此处配置的AI Core栈空间大小才有效。
+Atlas A3系列产品、Atlas A2系列产品支持该配置，但在编译AI Core算子时，只有打开O0开关，此处配置的AI Core栈空间大小才有效。
 <!-- end id18 -->
 
 <!-- npu="310b" id19 -->
-Atlas 200I/500 A2 推理产品支持该配置，但在编译AI Core算子时，只有打开O0开关，此处配置的AI Core栈空间大小才有效。
+Atlas 200I/500 A2推理产品支持该配置，但在编译AI Core算子时，只有打开O0开关，此处配置的AI Core栈空间大小才有效。
 <!-- end id19 -->
 
 aicore\_stack\_size参数处设置栈空间大小，单位Byte，取值有以下要求：
 
 - aicore\_stack\_size是16K的整数倍，若传入aicore\_stack\_size不是16K的整数倍，则会向上取整，确保其为16K的整数倍。
-- aicore\_stack\_size最小值为32K，若传入的aicore\_stack\_size小于32KB，则按默认配置32KB处理。
+- aicore\_stack\_size最小值为32KB，若传入的aicore\_stack\_size小于32KB，则按默认配置32KB处理。
 - 各产品的aicore\_stack\_size最大值如下：
 
     <!-- npu="950" id20 -->
-    在Ascend 950PR/Ascend 950DT上，aicore\_stack\_size最大值为128KB。
+    在Ascend 950PR&950DT系列产品上，aicore\_stack\_size最大值为128KB。
     <!-- end id20 -->
 
     <!-- npu="A3,910b" id21 -->
-    在Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品上，aicore\_stack\_size最大值为192KB。
+    在Atlas A3系列产品、Atlas A2系列产品上，aicore\_stack\_size最大值为192KB。
     <!-- end id21 -->
 
     <!-- npu="310b" id22 -->
-    在Atlas 200I/500 A2 推理产品上，aicore\_stack\_size最大值为7680KB。
+    在Atlas 200I/500 A2推理产品上，aicore\_stack\_size最大值为7680KB。
     <!-- end id22 -->
 
 配置文件中的示例内容如下：
@@ -443,7 +443,7 @@ aicore\_stack\_size参数处设置栈空间大小，单位Byte，取值有以下
 **SIMT（Single Instruction Multiple Thread）栈空间大小配置**，用于控制每个线程中SIMT算子的栈空间大小以及SIMT算子的分支（Divergence）栈空间大小，单位Byte。
 
 <!-- npu="950" id24 -->
-仅Ascend 950PR/Ascend 950DT支持该配置。
+仅Ascend 950PR&950DT系列产品支持该配置。
 <!-- end id24 -->
 
 simt\_stack\_size参数处设置SIMT算子每个线程的栈空间大小，单位Byte。默认值为1152Byte。
@@ -470,7 +470,7 @@ simt\_stack\_size和simt\_divergence\_stack\_size的取值都必须是128的整�
 SIMT（Single Instruction Multiple Thread）Printf维测空间大小配置，用于控制SIMT算子可以Printf打印的空间大小，单位Byte。
 
 <!-- npu="950" id26 -->
-仅Ascend 950PR/Ascend 950DT支持该配置。
+仅Ascend 950PR&950DT系列产品支持该配置。
 <!-- end id26 -->
 
 simt\_printf\_fifo\_size参数处设置SIMT算子Printf维测空间大小，单位Byte。其取值都必须是8的整数倍，如果传入的不是8的整数倍，则接口内部会自动向上取整，确保其为8的整数倍。
@@ -492,7 +492,7 @@ simt\_printf\_fifo\_size配置默认值2MB，最小值是1MB，最大值64MB。
 SIMD（Single Instruction Multiple Data）Printf维测空间大小配置，用于控制每个Core上SIMD算子可以Printf打印的空间大小，单位Byte。仅如下型号支持该配置：
 
 <!-- npu="950,A3,910b" id28 -->
-仅Ascend 950PR/Ascend 950DT、Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品支持该配置。
+仅Ascend 950PR&950DT系列产品、Atlas A3系列产品、Atlas A2系列产品支持该配置。
 <!-- end id28 -->
 
 simd\_printf\_fifo\_size\_per\_core参数处设置SIMD算子Printf维测空间大小，单位Byte。其取值都必须是8的整数倍，如果传入的不是8的整数倍，则接口内部会自动向上取整，确保其为8的整数倍。
@@ -523,22 +523,22 @@ aclError aclFinalize()
 ### 产品支持情况
 
 <!-- npu="950" id666 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id666 -->
 <!-- npu="A3" id667 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id667 -->
 <!-- npu="910b" id668 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id668 -->
 <!-- npu="310b" id669 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id669 -->
 <!-- npu="310p" id670 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id670 -->
 <!-- npu="910" id671 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id671 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/02_initialization_and_deinitialization_res.md#id2 -->
 
@@ -579,22 +579,22 @@ aclError aclFinalizeReference(uint64_t *refCount)
 ### 产品支持情况
 
 <!-- npu="950" id3207 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id3207 -->
 <!-- npu="A3" id3208 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3208 -->
 <!-- npu="910b" id3209 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3209 -->
 <!-- npu="310b" id3210 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id3210 -->
 <!-- npu="310p" id3211 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id3211 -->
 <!-- npu="910" id3212 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id3212 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/02_initialization_and_deinitialization_res.md#id3 -->
 
@@ -635,22 +635,22 @@ aclError aclInitCallbackRegister(aclRegisterCallbackType type, aclInitCallbackFu
 ### 产品支持情况
 
 <!-- npu="950" id988 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id988 -->
 <!-- npu="A3" id989 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id989 -->
 <!-- npu="910b" id990 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id990 -->
 <!-- npu="310b" id991 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id991 -->
 <!-- npu="310p" id992 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id992 -->
 <!-- npu="910" id993 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id993 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/02_initialization_and_deinitialization_res.md#id4 -->
 
@@ -687,22 +687,22 @@ aclError aclInitCallbackUnRegister(aclRegisterCallbackType type, aclInitCallback
 ### 产品支持情况
 
 <!-- npu="950" id2444 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2444 -->
 <!-- npu="A3" id2445 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2445 -->
 <!-- npu="910b" id2446 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2446 -->
 <!-- npu="310b" id2447 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2447 -->
 <!-- npu="310p" id2448 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2448 -->
 <!-- npu="910" id2449 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2449 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/02_initialization_and_deinitialization_res.md#id5 -->
 
@@ -736,22 +736,22 @@ aclError aclFinalizeCallbackRegister(aclRegisterCallbackType type, aclFinalizeCa
 ### 产品支持情况
 
 <!-- npu="950" id2332 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2332 -->
 <!-- npu="A3" id2333 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2333 -->
 <!-- npu="910b" id2334 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2334 -->
 <!-- npu="310b" id2335 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2335 -->
 <!-- npu="310p" id2336 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2336 -->
 <!-- npu="910" id2337 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2337 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/02_initialization_and_deinitialization_res.md#id6 -->
 
@@ -788,22 +788,22 @@ aclError aclFinalizeCallbackUnRegister(aclRegisterCallbackType type, aclFinalize
 ### 产品支持情况
 
 <!-- npu="950" id155 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id155 -->
 <!-- npu="A3" id156 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id156 -->
 <!-- npu="910b" id157 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id157 -->
 <!-- npu="310b" id158 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id158 -->
 <!-- npu="310p" id159 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id159 -->
 <!-- npu="910" id160 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id160 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/02_initialization_and_deinitialization_res.md#id7 -->
 

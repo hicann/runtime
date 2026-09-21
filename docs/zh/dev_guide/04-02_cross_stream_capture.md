@@ -6,7 +6,7 @@
 
 跨Stream的任务捕获流程如下图所示：
 
-![](figures/ACL_Graph跨流捕获.png)
+![](figures/ACL_Graph_multi_stream.png)
 
 以下示例用两个stream为例演示跨流捕获，其中stream1是主流，stream2是子流。
 

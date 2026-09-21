@@ -7,6 +7,7 @@
 在使用Runtime IPC接口进行进程间内存共享时，调用`aclrtIpcMemGetExportKey`或`aclrtIpcMemImportByKey`接口时报错，提示共享内存页表未对齐。
 
 错误代码示例：
+
 ```cpp
 // 进程A：分配内存并导出IPC key
 void *ptrA = nullptr;

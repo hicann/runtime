@@ -7,6 +7,7 @@
 在多Device场景下，尝试进行跨Device的P2P数据交互时，内存复制失败。
 
 错误代码示例：
+
 ```cpp
 aclInit(NULL);
 aclrtSetDevice(0);

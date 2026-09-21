@@ -8,7 +8,7 @@
 
 主机与设备的关系如下图所示：
 
-![](figures/主机设备关系图.png)
+![](figures/Host_Device_relationship.png)
 
 总结如下：
 
@@ -31,7 +31,7 @@
    -   Kernel1和Kernel3位于同一个Stream中，因此Kernel3需要等待Kernel1执行完毕才能开始执行。
    -   Kernel2与Kernel1、Kernel3不在同一个Stream中，因此Kernel2可以与Kernel1、Kernel3并行执行。
 
-   ![](figures/Stream中的异步任务执行.png)
+   ![](figures/Stream_async_task_execute.png)
 
 ## 同步与异步区分
 
@@ -63,7 +63,7 @@ Runtime API采用同步和异步两种执行模式，具有以下典型特征：
 
 基于Runtime编程的典型执行流程图如下所示：
 
-![](figures/典型执行流程图.png)
+![](figures/typical_process.png)
 
 流程图展示了Host侧和Device侧的任务调度与执行机制，主要包含以下环节：
 
@@ -207,7 +207,7 @@ Runtime API采用同步和异步两种执行模式，具有以下典型特征：
 
 Device、Context、Stream之间的关系如下图所示：
 
-![](figures/Device_Context_Stream关系.png)
+![](figures/Device_Context_Stream.png)
 
 ## 线程关联Context
 
@@ -291,7 +291,7 @@ aclrtResetDeviceForce(0);  // 释放Device 0，对应的默认Context及默认St
 1.  主机侧与Device侧异步执行。主机侧要能及时下发足够任务至Device，确保加速硬件始终处于计算状态。
 2.  采用多Stream方式充分利用Device上不同种类硬件加速器实现并发执行。 如下图所示，CANN Runtime可以协同调度多种硬件加速器，不同代AI处理器支持的硬件加速器不同，需以实际硬件用户手册中的说明为准。
 
-    ![](figures/多种硬件加速器.png)
+    ![](figures/multi_hardware_accelerators.png)
 
 推荐如下方式：
 

@@ -20,22 +20,22 @@ aclError aclrtCreateLabel(aclrtLabel *label)
 ### 产品支持情况
 
 <!-- npu="950" id484 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id484 -->
 <!-- npu="A3" id485 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id485 -->
 <!-- npu="910b" id486 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id486 -->
 <!-- npu="310b" id487 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id487 -->
 <!-- npu="310p" id488 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id488 -->
 <!-- npu="910" id489 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id489 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/10_label_management_res.md#id1 -->
 
@@ -70,22 +70,22 @@ aclError aclrtSetLabel(aclrtLabel label, aclrtStream stream)
 ### 产品支持情况
 
 <!-- npu="950" id386 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id386 -->
 <!-- npu="A3" id387 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id387 -->
 <!-- npu="910b" id388 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id388 -->
 <!-- npu="310b" id389 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id389 -->
 <!-- npu="310p" id390 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id390 -->
 <!-- npu="910" id391 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id391 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/10_label_management_res.md#id2 -->
 
@@ -119,22 +119,22 @@ aclError aclrtDestroyLabel(aclrtLabel label)
 ### 产品支持情况
 
 <!-- npu="950" id2185 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2185 -->
 <!-- npu="A3" id2186 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2186 -->
 <!-- npu="910b" id2187 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2187 -->
 <!-- npu="310b" id2188 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2188 -->
 <!-- npu="310p" id2189 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2189 -->
 <!-- npu="910" id2190 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2190 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/10_label_management_res.md#id3 -->
 
@@ -167,22 +167,22 @@ aclError aclrtCreateLabelList(aclrtLabel *labels, size_t num, aclrtLabelList *la
 ### 产品支持情况
 
 <!-- npu="950" id1611 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1611 -->
 <!-- npu="A3" id1612 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1612 -->
 <!-- npu="910b" id1613 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1613 -->
 <!-- npu="310b" id1614 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1614 -->
 <!-- npu="310p" id1615 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1615 -->
 <!-- npu="910" id1616 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1616 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/10_label_management_res.md#id4 -->
 
@@ -217,22 +217,22 @@ aclError aclrtDestroyLabelList(aclrtLabelList labelList)
 ### 产品支持情况
 
 <!-- npu="950" id1093 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1093 -->
 <!-- npu="A3" id1094 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1094 -->
 <!-- npu="910b" id1095 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1095 -->
 <!-- npu="310b" id1096 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1096 -->
 <!-- npu="310p" id1097 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1097 -->
 <!-- npu="910" id1098 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1098 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/10_label_management_res.md#id5 -->
 
@@ -265,22 +265,22 @@ aclError aclrtSwitchLabelByIndex(void *ptr, uint32_t maxValue, aclrtLabelList la
 ### 产品支持情况
 
 <!-- npu="950" id1233 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1233 -->
 <!-- npu="A3" id1234 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1234 -->
 <!-- npu="910b" id1235 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1235 -->
 <!-- npu="310b" id1236 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1236 -->
 <!-- npu="310p" id1237 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1237 -->
 <!-- npu="910" id1238 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1238 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/10_label_management_res.md#id6 -->
 

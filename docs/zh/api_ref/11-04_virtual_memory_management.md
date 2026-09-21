@@ -36,22 +36,22 @@ aclError aclrtMallocPhysical(aclrtDrvMemHandle *handle, size_t size, const aclrt
 ### 产品支持情况
 
 <!-- npu="950" id1492 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1492 -->
 <!-- npu="A3" id1493 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1493 -->
 <!-- npu="910b" id1494 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1494 -->
 <!-- npu="310b" id1495 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1495 -->
 <!-- npu="310p" id1496 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1496 -->
 <!-- npu="910" id1497 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1497 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id1 -->
 
@@ -79,10 +79,10 @@ aclError aclrtMallocPhysical(aclrtDrvMemHandle *handle, size_t size, const aclrt
 ### 约束说明
 
 <!-- npu="310b" id1 -->
-- 对于Atlas 200I/500 A2 推理产品，Ascend RC形态不支持调用本接口。
+- 对于Atlas 200I/500 A2推理产品，Ascend RC形态不支持调用本接口。
 <!-- end id1 -->
 <!-- npu="A3" id2 -->
-- 针对Atlas A3 训练系列产品/Atlas A3 推理系列产品中的超节点产品，当内存所在位置aclrtPhysicalMemProp.location.type = ACL\_MEM\_LOCATION\_TYPE\_HOST\_NUMA，且内存属性类型aclrtPhysicalMemProp.aclrtMemAttr为P2P选项（例如ACL\_MEM\_P2P\_HUGE）时，可申请到的最大内存大小根据服务器型号、Bios版本会有所不同。建议通过aclrtMallocPhysical接口按内存规划尝试申请，以确认内存是否足够。
+- 针对Atlas A3系列产品中的超节点产品，当内存所在位置aclrtPhysicalMemProp.location.type = ACL\_MEM\_LOCATION\_TYPE\_HOST\_NUMA，且内存属性类型aclrtPhysicalMemProp.aclrtMemAttr为P2P选项（例如ACL\_MEM\_P2P\_HUGE）时，可申请到的最大内存大小根据服务器型号、Bios版本会有所不同。建议通过aclrtMallocPhysical接口按内存规划尝试申请，以确认内存是否足够。
 <!-- end id2 -->
 - 内存属性类型aclrtPhysicalMemProp.aclrtMemAttr当前仅支持如下选项：
     - ACL\_MEM\_NORMAL：普通内存。
@@ -90,15 +90,15 @@ aclError aclrtMallocPhysical(aclrtDrvMemHandle *handle, size_t size, const aclrt
     - ACL\_MEM\_HUGE1G：1GB粒度对齐的大页内存，仅支持Device。
 
         <!-- npu="A3,910b" id3 -->
-        仅Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品支持该类型。
+        仅Atlas A3系列产品、Atlas A2系列产品支持该类型。
         <!-- end id3 -->
 
         <!-- npu="950" id4 -->
-        Ascend 950PR/Ascend 950DT不支持该类型。
+        Ascend 950PR&950DT系列产品不支持该类型。
         <!-- end id4 -->
 
         <!-- npu="910,310p,310b" id5 -->
-        Atlas 200I/500 A2 推理产品、Atlas 推理系列产品、Atlas 训练系列产品不支持该类型。
+        Atlas 200I/500 A2推理产品、Atlas推理系列产品、Atlas训练系列产品不支持该类型。
         <!-- end id5 -->
 
     - ACL\_MEM\_P2P\_NORMAL：用于Device间数据复制的普通内存。
@@ -106,26 +106,26 @@ aclError aclrtMallocPhysical(aclrtDrvMemHandle *handle, size_t size, const aclrt
     - ACL\_MEM\_P2P\_HUGE1G：用于Device间数据复制的大页内存，内存申请粒度为1GB，仅支持Device。
 
         <!-- npu="A3" id6 -->
-        仅Atlas A3 训练系列产品/Atlas A3 推理系列产品中的部分互联形态支持该类型，以接口实际返回情况为准。
+        仅Atlas A3系列产品中的部分互联形态支持该类型，以接口实际返回情况为准。
         <!-- end id6 -->
 
         <!-- npu="950,910b" id7 -->
-        Ascend 950PR/Ascend 950DT、Atlas A2 训练系列产品/Atlas A2 推理系列产品不支持该类型。
+        Ascend 950PR&950DT系列产品、Atlas A2系列产品不支持该类型。
         <!-- end id7 -->
 
         <!-- npu="910,310p,310b" id8 -->
-        Atlas 200I/500 A2 推理产品、Atlas 推理系列产品、Atlas 训练系列产品不支持该类型。
+        Atlas 200I/500 A2推理产品、Atlas推理系列产品、Atlas训练系列产品不支持该类型。
         <!-- end id8 -->
 
     - ACL\_HBM\_MEM\_HUGE：2MB粒度对齐的大页内存。
     - ACL\_HBM\_MEM\_HUGE1G：1GB粒度对齐的大页内存，仅支持Device。
 
         <!-- npu="950,A3,910b" id9 -->
-        Ascend 950PR/Ascend 950DT、Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品支持该类型。
+        Ascend 950PR&950DT系列产品、Atlas A3系列产品、Atlas A2系列产品支持该类型。
         <!-- end id9 -->
 
         <!-- npu="910,310p,310b" id10 -->
-        Atlas 200I/500 A2 推理产品、Atlas 推理系列产品、Atlas 训练系列产品不支持该类型。
+        Atlas 200I/500 A2推理产品、Atlas推理系列产品、Atlas训练系列产品不支持该类型。
         <!-- end id10 -->
 
     - ACL\_HBM\_MEM\_NORMAL：普通内存，接口内部会按照ACL\_HBM\_MEM\_HUGE类型申请大页内存。
@@ -149,22 +149,22 @@ aclError aclrtFreePhysical(aclrtDrvMemHandle handle)
 ### 产品支持情况
 
 <!-- npu="950" id1947 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1947 -->
 <!-- npu="A3" id1948 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1948 -->
 <!-- npu="910b" id1949 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1949 -->
 <!-- npu="310b" id1950 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1950 -->
 <!-- npu="310p" id1951 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1951 -->
 <!-- npu="910" id1952 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1952 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id2 -->
 
@@ -187,7 +187,7 @@ aclError aclrtFreePhysical(aclrtDrvMemHandle handle)
 <!-- npu="310b" id11 -->
 ### 约束说明
 
-Atlas 200I/500 A2 推理产品上，Ascend RC形态不支持调用本接口。
+Atlas 200I/500 A2推理产品上，Ascend RC形态不支持调用本接口。
 <!-- end id11 -->
 
 <br>
@@ -205,22 +205,22 @@ aclError aclrtReserveMemAddress(void **virPtr, size_t size, size_t alignment, vo
 ### 产品支持情况
 
 <!-- npu="950" id1142 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1142 -->
 <!-- npu="A3" id1143 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1143 -->
 <!-- npu="910b" id1144 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1144 -->
 <!-- npu="310b" id1145 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1145 -->
 <!-- npu="310p" id1146 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1146 -->
 <!-- npu="910" id1147 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1147 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id3 -->
 
@@ -255,11 +255,11 @@ aclError aclrtReserveMemAddress(void **virPtr, size_t size, size_t alignment, vo
 ### 约束说明
 
 <!-- npu="950" id13 -->
-- 对于Ascend 950PR/Ascend 950DT，expectPtr参数处仅支持配置为nullptr。
+- 对于Ascend 950PR&950DT系列产品，expectPtr参数处仅支持配置为nullptr。
 <!-- end id13 -->
 
 <!-- npu="310b" id12 -->
-- Atlas 200I/500 A2 推理产品上，Ascend RC形态下，不支持调用本接口。
+- Atlas 200I/500 A2推理产品上，Ascend RC形态下，不支持调用本接口。
 <!-- end id12 -->
 
 - 使用本接口预留的虚拟内存，单进程场景下只支持调用[aclrtMemcpyAsync](11-03_memory_copy_and_set.md#aclrtMemcpyAsync)接口实现两个Device之间的数据拷贝。
@@ -281,22 +281,22 @@ aclError aclrtReserveMemAddressNoUCMemory(void **virPtr, size_t size, size_t ali
 ### 产品支持情况
 
 <!-- npu="950" id2192 -->
-- Ascend 950PR/Ascend 950DT：不支持
+- Ascend 950PR&950DT系列产品：不支持
 <!-- end id2192 -->
 <!-- npu="A3" id2193 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2193 -->
 <!-- npu="910b" id2194 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：不支持
+- Atlas A2系列产品：不支持
 <!-- end id2194 -->
 <!-- npu="310b" id2195 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id2195 -->
 <!-- npu="310p" id2196 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id2196 -->
 <!-- npu="910" id2197 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id2197 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id4 -->
 
@@ -337,22 +337,22 @@ aclError aclrtReleaseMemAddress(void *virPtr)
 ### 产品支持情况
 
 <!-- npu="950" id862 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id862 -->
 <!-- npu="A3" id863 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id863 -->
 <!-- npu="910b" id864 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id864 -->
 <!-- npu="310b" id865 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id865 -->
 <!-- npu="310p" id866 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id866 -->
 <!-- npu="910" id867 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id867 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id5 -->
 
@@ -383,7 +383,7 @@ aclError aclrtReleaseMemAddress(void *virPtr)
 ### 约束说明
 
 <!-- npu="310b" id14 -->
-- 对于Atlas 200I/500 A2 推理产品，Ascend RC形态下，不支持调用本接口。
+- 对于Atlas 200I/500 A2推理产品，Ascend RC形态下，不支持调用本接口。
 <!-- end id14 -->
 
 - 若该虚拟内存与物理内存存在映射关系，则释放虚拟内存前，需调用[aclrtUnmapMem](#aclrtUnmapMem)接口取消该虚拟内存与物理内存的映射。
@@ -403,22 +403,22 @@ aclError aclrtMapMem(void *virPtr, size_t size, size_t offset, aclrtDrvMemHandle
 ### 产品支持情况
 
 <!-- npu="950" id498 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id498 -->
 <!-- npu="A3" id499 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id499 -->
 <!-- npu="910b" id500 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id500 -->
 <!-- npu="310b" id501 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id501 -->
 <!-- npu="310p" id502 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id502 -->
 <!-- npu="910" id503 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id503 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id6 -->
 
@@ -453,7 +453,7 @@ aclError aclrtMapMem(void *virPtr, size_t size, size_t offset, aclrtDrvMemHandle
 <!-- npu="310b" id15 -->
 ### 约束说明
 
-对于Atlas 200I/500 A2 推理产品，Ascend RC形态下，不支持调用本接口。
+对于Atlas 200I/500 A2推理产品，Ascend RC形态下，不支持调用本接口。
 <!-- end id15 -->
 
 <br>
@@ -471,22 +471,22 @@ aclError aclrtMemMapNoAccess(void *virPtr, size_t size, size_t offset, aclrtDrvM
 ### 产品支持情况
 
 <!-- npu="950" id27 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id27 -->
 <!-- npu="A3" id28 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id28 -->
 <!-- npu="910b" id29 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id29 -->
 <!-- npu="310b" id30 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id30 -->
 <!-- npu="310p" id31 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id31 -->
 <!-- npu="910" id32 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id32 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id21 -->
 
@@ -524,11 +524,11 @@ aclError aclrtMemMapNoAccess(void *virPtr, size_t size, size_t offset, aclrtDrvM
 ### 约束说明
 
 <!-- npu="310b" id35 -->
-对于Atlas 200I/500 A2 推理产品，Ascend RC形态下，不支持调用本接口。
+对于Atlas 200I/500 A2推理产品，Ascend RC形态下，不支持调用本接口。
 <!-- end id35 -->
 
 <!-- npu="950,A3,910b" id36 -->
-对于Atlas A2 训练系列产品/Atlas A2 推理系列产品、Atlas A3 训练系列产品/Atlas A3 推理系列产品、Ascend 950PR/Ascend 950DT，本接口不支持PCIe互连形态的设备。
+对于Atlas A2系列产品、Atlas A3系列产品、Ascend 950PR&950DT系列产品，本接口不支持PCIe互连形态的设备。
 <!-- end id36 -->
 <!-- end id34 -->
 
@@ -547,22 +547,22 @@ aclError aclrtUnmapMem(void *virPtr)
 ### 产品支持情况
 
 <!-- npu="950" id3354 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id3354 -->
 <!-- npu="A3" id3355 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3355 -->
 <!-- npu="910b" id3356 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3356 -->
 <!-- npu="310b" id3357 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id3357 -->
 <!-- npu="310p" id3358 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id3358 -->
 <!-- npu="910" id3359 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id3359 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id7 -->
 
@@ -583,7 +583,7 @@ aclError aclrtUnmapMem(void *virPtr)
 <!-- npu="310b" id16 -->
 ### 约束说明
 
-对于Atlas 200I/500 A2 推理产品，Ascend RC形态下，不支持调用本接口。
+对于Atlas 200I/500 A2推理产品，Ascend RC形态下，不支持调用本接口。
 <!-- end id16 -->
 
 <br>
@@ -601,22 +601,22 @@ aclError aclrtMemExportToShareableHandle(aclrtDrvMemHandle handle, aclrtMemHandl
 ### 产品支持情况
 
 <!-- npu="950" id1940 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1940 -->
 <!-- npu="A3" id1941 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1941 -->
 <!-- npu="910b" id1942 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1942 -->
 <!-- npu="310b" id1943 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1943 -->
 <!-- npu="310p" id1944 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1944 -->
 <!-- npu="910" id1945 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1945 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id8 -->
 
@@ -672,7 +672,7 @@ aclError aclrtMemExportToShareableHandle(aclrtDrvMemHandle handle, aclrtMemHandl
 ### 约束说明
 
 <!-- npu="310b" id17 -->
-- 对于Atlas 200I/500 A2 推理产品，Ascend RC形态下，不支持调用本接口。
+- 对于Atlas 200I/500 A2推理产品，Ascend RC形态下，不支持调用本接口。
 <!-- end id17 -->
 <!-- npu="950,A3,910b,910,310p" id18 -->
 - 支持AI Server内跨进程共享物理内存。若跨Device，则还需配合[aclrtDeviceEnablePeerAccess](04_device_management.md#aclrtDeviceEnablePeerAccess)接口使用。AI Server通常是多个Device组成的服务器形态的统称。
@@ -697,22 +697,22 @@ aclError aclrtMemSetPidToShareableHandle(uint64_t shareableHandle, int32_t *pid,
 ### 产品支持情况
 
 <!-- npu="950" id1345 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1345 -->
 <!-- npu="A3" id1346 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1346 -->
 <!-- npu="910b" id1347 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1347 -->
 <!-- npu="310b" id1348 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1348 -->
 <!-- npu="310p" id1349 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1349 -->
 <!-- npu="910" id1350 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1350 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id9 -->
 
@@ -749,22 +749,22 @@ aclError aclrtMemImportFromShareableHandle(uint64_t shareableHandle, int32_t dev
 ### 产品支持情况
 
 <!-- npu="950" id1478 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1478 -->
 <!-- npu="A3" id1479 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1479 -->
 <!-- npu="910b" id1480 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1480 -->
 <!-- npu="310b" id1481 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1481 -->
 <!-- npu="310p" id1482 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1482 -->
 <!-- npu="910" id1483 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1483 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id10 -->
 
@@ -808,22 +808,22 @@ aclError aclrtMemExportToShareableHandleV2(aclrtDrvMemHandle handle, uint64_t fl
 ### 产品支持情况
 
 <!-- npu="950" id1646 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1646 -->
 <!-- npu="A3" id1647 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1647 -->
 <!-- npu="910b" id1648 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1648 -->
 <!-- npu="310b" id1649 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1649 -->
 <!-- npu="310p" id1650 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1650 -->
 <!-- npu="910" id1651 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1651 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id11 -->
 
@@ -851,13 +851,13 @@ aclError aclrtMemExportToShareableHandleV2(aclrtDrvMemHandle handle, uint64_t fl
 ### 约束说明
 
 <!-- npu="310b" id20 -->
-- 对于Atlas 200I/500 A2 推理产品，Ascend RC形态下，不支持调用本接口。
+- 对于Atlas 200I/500 A2推理产品，Ascend RC形态下，不支持调用本接口。
 <!-- end id20 -->
 <!-- npu="950,A3,910b,910,310p" id21 -->
 - 支持AI Server内跨进程共享物理内存，若跨Device，则还需配合[aclrtDeviceEnablePeerAccess](04_device_management.md#aclrtDeviceEnablePeerAccess)接口使用。
 <!-- end id21 -->
 <!-- npu="A3" id22 -->
-- 仅Atlas A3 训练系列产品/Atlas A3 推理系列产品支持跨AI Server的跨进程共享物理内存。
+- 仅Atlas A3系列产品支持跨AI Server的跨进程共享物理内存。
 <!-- end id22 -->
 <!-- npu="910b,910,310p" id23 -->
 - 不支持昇腾虚拟化实例场景。
@@ -879,22 +879,22 @@ aclError aclrtMemSetPidToShareableHandleV2(void *shareableHandle, aclrtMemShared
 ### 产品支持情况
 
 <!-- npu="950" id1366 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1366 -->
 <!-- npu="A3" id1367 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1367 -->
 <!-- npu="910b" id1368 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1368 -->
 <!-- npu="310b" id1369 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1369 -->
 <!-- npu="310p" id1370 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1370 -->
 <!-- npu="910" id1371 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1371 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id12 -->
 
@@ -934,22 +934,22 @@ aclError aclrtMemImportFromShareableHandleV2(void *shareableHandle, aclrtMemShar
 ### 产品支持情况
 
 <!-- npu="950" id827 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id827 -->
 <!-- npu="A3" id828 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id828 -->
 <!-- npu="910b" id829 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id829 -->
 <!-- npu="310b" id830 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id830 -->
 <!-- npu="310p" id831 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id831 -->
 <!-- npu="910" id832 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id832 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id13 -->
 
@@ -995,22 +995,22 @@ aclError aclrtMemGetAllocationGranularity(aclrtPhysicalMemProp *prop, aclrtMemGr
 ### 产品支持情况
 
 <!-- npu="950" id995 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id995 -->
 <!-- npu="A3" id996 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id996 -->
 <!-- npu="910b" id997 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id997 -->
 <!-- npu="310b" id998 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id998 -->
 <!-- npu="310p" id999 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id999 -->
 <!-- npu="910" id1000 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1000 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id14 -->
 
@@ -1035,7 +1035,7 @@ aclError aclrtMemGetAllocationGranularity(aclrtPhysicalMemProp *prop, aclrtMemGr
 <!-- npu="310b" id24 -->
 ### 约束说明
 
-Atlas 200I/500 A2 推理产品上，Ascend RC形态不支持调用本接口。
+Atlas 200I/500 A2推理产品上，Ascend RC形态不支持调用本接口。
 <!-- end id24 -->
 
 <br>
@@ -1053,22 +1053,22 @@ aclError aclrtMemSetAccess(void* virPtr, size_t size, aclrtMemAccessDesc* desc, 
 ### 产品支持情况
 
 <!-- npu="950" id2703 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2703 -->
 <!-- npu="A3" id2704 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2704 -->
 <!-- npu="910b" id2705 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2705 -->
 <!-- npu="310b" id2706 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2706 -->
 <!-- npu="310p" id2707 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2707 -->
 <!-- npu="910" id2708 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2708 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id15 -->
 
@@ -1104,22 +1104,22 @@ aclError aclrtMemGetAccess(void *virPtr, aclrtMemLocation *location, uint64_t *f
 ### 产品支持情况
 
 <!-- npu="950" id2675 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2675 -->
 <!-- npu="A3" id2676 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2676 -->
 <!-- npu="910b" id2677 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2677 -->
 <!-- npu="310b" id2678 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2678 -->
 <!-- npu="310p" id2679 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2679 -->
 <!-- npu="910" id2680 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2680 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id16 -->
 
@@ -1154,22 +1154,22 @@ aclError aclrtMemRetainAllocationHandle(void* virPtr, aclrtDrvMemHandle *handle)
 ### 产品支持情况
 
 <!-- npu="950" id2626 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2626 -->
 <!-- npu="A3" id2627 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2627 -->
 <!-- npu="910b" id2628 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2628 -->
 <!-- npu="310b" id2629 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2629 -->
 <!-- npu="310p" id2630 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2630 -->
 <!-- npu="910" id2631 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2631 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id17 -->
 
@@ -1195,7 +1195,7 @@ aclError aclrtMemRetainAllocationHandle(void* virPtr, aclrtDrvMemHandle *handle)
 <!-- npu="310b" id25 -->
 ### 约束说明
 
-Atlas 200I/500 A2 推理产品上，Ascend RC形态不支持调用本接口。
+Atlas 200I/500 A2推理产品上，Ascend RC形态不支持调用本接口。
 <!-- end id25 -->
 
 <br>
@@ -1213,22 +1213,22 @@ aclError aclrtMemGetAllocationPropertiesFromHandle(aclrtDrvMemHandle handle, acl
 ### 产品支持情况
 
 <!-- npu="950" id2437 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2437 -->
 <!-- npu="A3" id2438 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2438 -->
 <!-- npu="910b" id2439 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2439 -->
 <!-- npu="310b" id2440 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2440 -->
 <!-- npu="310p" id2441 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2441 -->
 <!-- npu="910" id2442 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2442 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id18 -->
 
@@ -1250,7 +1250,7 @@ aclError aclrtMemGetAllocationPropertiesFromHandle(aclrtDrvMemHandle handle, acl
 <!-- npu="310b" id26 -->
 ### 约束说明
 
-Atlas 200I/500 A2 推理产品上，Ascend RC形态不支持调用本接口。
+Atlas 200I/500 A2推理产品上，Ascend RC形态不支持调用本接口。
 <!-- end id26 -->
 
 <br>
@@ -1268,22 +1268,22 @@ aclError aclrtMemGetAddressRange(void *ptr, void **pbase, size_t *psize)
 ### 产品支持情况
 
 <!-- npu="950" id974 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id974 -->
 <!-- npu="A3" id975 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id975 -->
 <!-- npu="910b" id976 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id976 -->
 <!-- npu="310b" id977 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id977 -->
 <!-- npu="310p" id978 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id978 -->
 <!-- npu="910" id979 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id979 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id19 -->
 
@@ -1326,22 +1326,22 @@ aclError aclrtMemMapSelectedLink(void *virPtrDst, size_t size, void *virPtrSrc, 
 ### 产品支持情况
 
 <!-- npu="950" id652 -->
-- Ascend 950PR/Ascend 950DT：不支持
+- Ascend 950PR&950DT系列产品：不支持
 <!-- end id652 -->
 <!-- npu="A3" id653 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id653 -->
 <!-- npu="910b" id654 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：不支持
+- Atlas A2系列产品：不支持
 <!-- end id654 -->
 <!-- npu="310b" id655 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id655 -->
 <!-- npu="310p" id656 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id656 -->
 <!-- npu="910" id657 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id657 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id20 -->
 
@@ -1381,22 +1381,22 @@ aclError aclrtMemMapSetLink(aclrtDrvMemHandle handle, aclrtMemLinkType adviceLin
 ### 产品支持情况
 
 <!-- npu="950" id3361 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id3361 -->
 <!-- npu="A3" id3362 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3362 -->
 <!-- npu="910b" id3363 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：不支持
+- Atlas A2系列产品：不支持
 <!-- end id3363 -->
 <!-- npu="310b" id3364 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id3364 -->
 <!-- npu="310p" id3365 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id3365 -->
 <!-- npu="910" id3366 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id3366 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-04_virtual_memory_management_res.md#id22 -->
 
@@ -1421,12 +1421,12 @@ aclError aclrtMemMapSetLink(aclrtDrvMemHandle handle, aclrtMemLinkType adviceLin
 ### 约束说明
 
 <!-- npu="950" id3368 -->
-- 对于Ascend 950PR/Ascend 950DT，adviceLink支持以下取值：
+- 对于Ascend 950PR&950DT系列产品，adviceLink支持以下取值：
     - ACL_RT_MEM_ACCESS_UB_ONE_PORT_PATH：UB（Unified Bus）单端口路径：FM（Full Mesh）连线方式，无层级、全点对点直连。
     - ACL_RT_MEM_ACCESS_UB_MULTI_PORT_PATH：UB（Unified Bus）多端口路径：CLOS连线方式，分层结构化互联。
 <!-- end id3368 -->
 <!-- npu="A3" id3369 -->
-- 对于Atlas A3 训练系列产品/Atlas A3 推理系列产品，adviceLink支持以下取值：
+- 对于Atlas A3系列产品，adviceLink支持以下取值：
     - ACL_RT_MEM_ACCESS_LINK_SIO：SIO通道，片内连接方式，两个DIE之间通过该方式连接。
     - ACL_RT_MEM_ACCESS_LINK_HCCS：HCCS通道，HCCS是Huawei Cache Coherence System（华为缓存一致性系统），用于CPU/NPU之间的高速互联。
 <!-- end id3369 -->

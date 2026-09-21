@@ -2,11 +2,11 @@
 
 Notify通常用于多个Device之间的同步，如下图所示：Device 0向Device 1发送完数据后，通过Notify通知Device 1数据已写完。
 
-![](figures/Notify_多个Device之间的同步.png)
+![](figures/Notify_multi_devices_sync.png)
 
 Notify只支持一对一通知机制。若要实现向多个Device发起通知，要发起多次Notify操作，如下图所示：
 
-![](figures/Notify_多个Device通知机制.png)
+![](figures/Notify_multi_devices_notify.png)
 
 Notify与Event功能区别在于，Notify Wait完成后，Notify状态会自动重置，因此一个Notify Record任务只能通知一个Notify Wait任务；而Event Wait并不会自动重置Event状态，因此一个Event Record任务可以做到通知一个或多个Event Wait任务。此外，Notify不支持时间戳功能。
 

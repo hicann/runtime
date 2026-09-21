@@ -56,7 +56,12 @@
 
 ![](figures/operator_binary_and_kernel_function_relationship.png)
 
-- **算子二进制**：编译算子源码，可得到算子二进制文件\*.o。对于CANN内置算子，可从算子二进制包（包名为Ascend-cann-\*-ops-\*.run）中获取算子二进制文件。对于自定义算子，可在编译算子、发布二进制之后获取算子二进制文件。自定义算子的开发、编译请参见[《Ascend C算子开发指南》](https://gitcode.com/cann/asc-devkit/blob/9.2.0/docs/zh/guide/index.md)。
+- **算子二进制**：编译算子源码，可得到算子二进制文件\*.o。对于CANN内置算子，可从算子二进制包（包名为Ascend-cann-\*-ops-\*.run）中获取算子二进制文件。对于自定义算子，可在编译算子、发布二进制之后获取算子二进制文件。
+
+  <!-- npu="950,A3,910b,910,310p,310b" id3 -->
+  自定义算子的开发、编译请参见[《Ascend C算子开发指南》](https://gitcode.com/cann/asc-devkit/blob/9.2.0/docs/zh/guide/index.md)。
+  <!-- end id3 -->
+
 - **核函数**：是算子设备侧实现的入口函数。当前允许使用C/C++函数的语法扩展来编写设备端的运行代码，用户在核函数中进行数据访问和计算操作，由此实现该算子的所有功能。
 
 ### Kernel加载与执行接口调用流程
@@ -118,24 +123,24 @@ aclError aclrtBinaryLoadFromFile(const char* binPath, aclrtBinaryLoadOptions *op
 ### 产品支持情况
 
 <!-- npu="950" id2997 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2997 -->
 <!-- npu="A3" id2998 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2998 -->
 <!-- npu="910b" id2999 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2999 -->
 <!-- npu="310b" id3000 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id3000 -->
 <!-- npu="310p" id3001 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id3001 -->
 <!-- npu="910" id3002 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id3002 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id1 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id1 -->
 
 ### 功能说明
 
@@ -174,24 +179,24 @@ aclError aclrtBinaryLoadFromData(const void *data, size_t length, const aclrtBin
 ### 产品支持情况
 
 <!-- npu="950" id71 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id71 -->
 <!-- npu="A3" id72 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id72 -->
 <!-- npu="910b" id73 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id73 -->
 <!-- npu="310b" id74 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id74 -->
 <!-- npu="310p" id75 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id75 -->
 <!-- npu="910" id76 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id76 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id2 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id2 -->
 
 ### 功能说明
 
@@ -229,24 +234,24 @@ aclError aclrtBinaryGetFunction(const aclrtBinHandle binHandle, const char *kern
 ### 产品支持情况
 
 <!-- npu="950" id3389 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id3389 -->
 <!-- npu="A3" id3390 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3390 -->
 <!-- npu="910b" id3391 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3391 -->
 <!-- npu="310b" id3392 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id3392 -->
 <!-- npu="310p" id3393 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id3393 -->
 <!-- npu="910" id3394 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id3394 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id3 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id3 -->
 
 ### 功能说明
 
@@ -313,24 +318,24 @@ aclError aclrtBinaryGetDevAddress(const aclrtBinHandle binHandle, void **binAddr
 ### 产品支持情况
 
 <!-- npu="950" id2794 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2794 -->
 <!-- npu="A3" id2795 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2795 -->
 <!-- npu="910b" id2796 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2796 -->
 <!-- npu="310b" id2797 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2797 -->
 <!-- npu="310p" id2798 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2798 -->
 <!-- npu="910" id2799 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2799 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id4 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id4 -->
 
 ### 功能说明
 
@@ -363,24 +368,24 @@ aclError aclrtBinaryGetGlobal(aclrtBinHandle binHandle, const char *name, void *
 ### 产品支持情况
 
 <!-- npu="950" id1723 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1723 -->
 <!-- npu="A3" id1724 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1724 -->
 <!-- npu="910b" id1725 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1725 -->
 <!-- npu="310b" id1726 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1726 -->
 <!-- npu="310p" id1727 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1727 -->
 <!-- npu="910" id1728 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1728 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id5 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id5 -->
 
 ### 功能说明
 
@@ -414,24 +419,24 @@ aclError aclrtBinarySetExceptionCallback(aclrtBinHandle binHandle, aclrtOpExcept
 ### 产品支持情况
 
 <!-- npu="950" id274 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id274 -->
 <!-- npu="A3" id275 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id275 -->
 <!-- npu="910b" id276 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id276 -->
 <!-- npu="310b" id277 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id277 -->
 <!-- npu="310p" id278 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id278 -->
 <!-- npu="910" id279 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id279 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id6 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id6 -->
 
 ### 功能说明
 
@@ -466,24 +471,24 @@ aclError aclrtGetArgsFromExceptionInfo(const aclrtExceptionInfo *info, void **de
 ### 产品支持情况
 
 <!-- npu="950" id253 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id253 -->
 <!-- npu="A3" id254 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id254 -->
 <!-- npu="910b" id255 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id255 -->
 <!-- npu="310b" id256 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id256 -->
 <!-- npu="310p" id257 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id257 -->
 <!-- npu="910" id258 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id258 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id7 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id7 -->
 
 ### 功能说明
 
@@ -518,24 +523,24 @@ aclError aclrtGetFuncHandleFromExceptionInfo(const aclrtExceptionInfo *info, acl
 ### 产品支持情况
 
 <!-- npu="950" id2458 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2458 -->
 <!-- npu="A3" id2459 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2459 -->
 <!-- npu="910b" id2460 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2460 -->
 <!-- npu="310b" id2461 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2461 -->
 <!-- npu="310p" id2462 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2462 -->
 <!-- npu="910" id2463 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2463 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id8 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id8 -->
 
 ### 功能说明
 
@@ -569,24 +574,24 @@ aclError aclrtGetFunctionAddr(aclrtFuncHandle funcHandle, void **aicAddr, void *
 ### 产品支持情况
 
 <!-- npu="950" id1072 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1072 -->
 <!-- npu="A3" id1073 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1073 -->
 <!-- npu="910b" id1074 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1074 -->
 <!-- npu="310b" id1075 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1075 -->
 <!-- npu="310p" id1076 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1076 -->
 <!-- npu="910" id1077 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1077 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id9 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id9 -->
 
 ### 功能说明
 
@@ -599,7 +604,7 @@ aclError aclrtGetFunctionAddr(aclrtFuncHandle funcHandle, void **aicAddr, void *
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
 | funcHandle | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)。 |
-| aicAddr | 输出 | AI Core或Cube Core上的算子起始地址。<br><br>  - 对于以下产品，此处返回的是Cube Core上的算子起始地址。Ascend 950PR/Ascend 950DT<br>Atlas A3 训练系列产品/Atlas A3 推理系列产品<br>Atlas A2 训练系列产品/Atlas A2 推理系列产品 |
+| aicAddr | 输出 | AI Core或Cube Core上的算子起始地址。<br><br>  - 对于以下产品，此处返回的是Cube Core上的算子起始地址。Ascend 950PR&950DT系列产品<br>Atlas A3系列产品<br>Atlas A2系列产品 |
 | aivAddr | 输出 | Vector Core上的算子起始地址。<br>若通过本接口获取到aivAddr为空，则表示该算子不在Vector Core上执行。 |
 
 ### 返回值说明
@@ -621,24 +626,24 @@ aclError aclrtGetFunctionSize(aclrtFuncHandle funcHandle, size_t *aicSize, size_
 ### 产品支持情况
 
 <!-- npu="950" id673 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id673 -->
 <!-- npu="A3" id674 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id674 -->
 <!-- npu="910b" id675 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id675 -->
 <!-- npu="310b" id676 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id676 -->
 <!-- npu="310p" id677 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id677 -->
 <!-- npu="910" id678 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id678 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id10 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id10 -->
 
 ### 功能说明
 
@@ -671,24 +676,24 @@ aclError aclrtGetFunctionName(aclrtFuncHandle funcHandle, uint32_t maxLen, char 
 ### 产品支持情况
 
 <!-- npu="950" id162 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id162 -->
 <!-- npu="A3" id163 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id163 -->
 <!-- npu="910b" id164 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id164 -->
 <!-- npu="310b" id165 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id165 -->
 <!-- npu="310p" id166 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id166 -->
 <!-- npu="910" id167 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id167 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id11 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id11 -->
 
 ### 功能说明
 
@@ -721,24 +726,24 @@ aclError aclrtGetFunctionAttribute(aclrtFuncHandle funcHandle, aclrtFuncAttribut
 ### 产品支持情况
 
 <!-- npu="950" id57 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id57 -->
 <!-- npu="A3" id58 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id58 -->
 <!-- npu="910b" id59 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id59 -->
 <!-- npu="310b" id60 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id60 -->
 <!-- npu="310p" id61 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id61 -->
 <!-- npu="910" id62 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id62 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id12 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id12 -->
 
 ### 功能说明
 
@@ -773,24 +778,24 @@ aclError aclrtGetHardwareSyncAddr(void **addr)
 ### 产品支持情况
 
 <!-- npu="950" id22 -->
-- Ascend 950PR/Ascend 950DT：不支持
+- Ascend 950PR&950DT系列产品：不支持
 <!-- end id22 -->
 <!-- npu="A3" id23 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id23 -->
 <!-- npu="910b" id24 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id24 -->
 <!-- npu="310b" id25 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id25 -->
 <!-- npu="310p" id26 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id26 -->
 <!-- npu="910" id27 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id27 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id13 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id13 -->
 
 ### 功能说明
 
@@ -821,24 +826,24 @@ aclError aclrtRegisterCpuFunc(const aclrtBinHandle handle, const char *funcName,
 ### 产品支持情况
 
 <!-- npu="950" id407 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id407 -->
 <!-- npu="A3" id408 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id408 -->
 <!-- npu="910b" id409 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id409 -->
 <!-- npu="310b" id410 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id410 -->
 <!-- npu="310p" id411 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id411 -->
 <!-- npu="910" id412 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id412 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id14 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id14 -->
 
 ### 功能说明
 
@@ -874,24 +879,24 @@ aclError aclrtKernelArgsInit(aclrtFuncHandle funcHandle, aclrtArgsHandle *argsHa
 ### 产品支持情况
 
 <!-- npu="950" id939 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id939 -->
 <!-- npu="A3" id940 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id940 -->
 <!-- npu="910b" id941 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id941 -->
 <!-- npu="310b" id942 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id942 -->
 <!-- npu="310p" id943 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id943 -->
 <!-- npu="910" id944 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id944 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id15 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id15 -->
 
 ### 功能说明
 
@@ -927,24 +932,24 @@ aclError aclrtKernelArgsInitByUserMem(aclrtFuncHandle funcHandle, aclrtArgsHandl
 ### 产品支持情况
 
 <!-- npu="950" id631 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id631 -->
 <!-- npu="A3" id632 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id632 -->
 <!-- npu="910b" id633 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id633 -->
 <!-- npu="310b" id634 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id634 -->
 <!-- npu="310p" id635 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id635 -->
 <!-- npu="910" id636 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id636 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id16 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id16 -->
 
 ### 功能说明
 
@@ -982,24 +987,24 @@ aclError aclrtKernelArgsGetMemSize(aclrtFuncHandle funcHandle, size_t userArgsSi
 ### 产品支持情况
 
 <!-- npu="950" id1527 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1527 -->
 <!-- npu="A3" id1528 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1528 -->
 <!-- npu="910b" id1529 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1529 -->
 <!-- npu="310b" id1530 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1530 -->
 <!-- npu="310p" id1531 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1531 -->
 <!-- npu="910" id1532 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1532 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id17 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id17 -->
 
 ### 功能说明
 
@@ -1032,24 +1037,24 @@ aclError aclrtKernelArgsGetHandleMemSize(aclrtFuncHandle funcHandle, size_t *mem
 ### 产品支持情况
 
 <!-- npu="950" id1464 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1464 -->
 <!-- npu="A3" id1465 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1465 -->
 <!-- npu="910b" id1466 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1466 -->
 <!-- npu="310b" id1467 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1467 -->
 <!-- npu="310p" id1468 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1468 -->
 <!-- npu="910" id1469 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1469 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id18 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id18 -->
 
 ### 功能说明
 
@@ -1081,24 +1086,24 @@ aclError aclrtKernelArgsAppend(aclrtArgsHandle argsHandle, void *param, size_t p
 ### 产品支持情况
 
 <!-- npu="950" id1198 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1198 -->
 <!-- npu="A3" id1199 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1199 -->
 <!-- npu="910b" id1200 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1200 -->
 <!-- npu="310b" id1201 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1201 -->
 <!-- npu="310p" id1202 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1202 -->
 <!-- npu="910" id1203 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1203 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id19 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id19 -->
 
 ### 功能说明
 
@@ -1134,24 +1139,24 @@ aclError aclrtKernelArgsAppendPlaceHolder(aclrtArgsHandle argsHandle, aclrtParam
 ### 产品支持情况
 
 <!-- npu="950" id2836 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2836 -->
 <!-- npu="A3" id2837 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2837 -->
 <!-- npu="910b" id2838 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2838 -->
 <!-- npu="310b" id2839 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2839 -->
 <!-- npu="310p" id2840 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2840 -->
 <!-- npu="910" id2841 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2841 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id20 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id20 -->
 
 ### 功能说明
 
@@ -1185,24 +1190,24 @@ aclError aclrtKernelArgsGetPlaceHolderBuffer(aclrtArgsHandle argsHandle, aclrtPa
 ### 产品支持情况
 
 <!-- npu="950" id197 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id197 -->
 <!-- npu="A3" id198 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id198 -->
 <!-- npu="910b" id199 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id199 -->
 <!-- npu="310b" id200 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id200 -->
 <!-- npu="310p" id201 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id201 -->
 <!-- npu="910" id202 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id202 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id21 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id21 -->
 
 ### 功能说明
 
@@ -1236,24 +1241,24 @@ aclError aclrtKernelArgsParaUpdate(aclrtArgsHandle argsHandle, aclrtParamHandle 
 ### 产品支持情况
 
 <!-- npu="950" id3410 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id3410 -->
 <!-- npu="A3" id3411 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3411 -->
 <!-- npu="910b" id3412 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3412 -->
 <!-- npu="310b" id3413 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id3413 -->
 <!-- npu="310p" id3414 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id3414 -->
 <!-- npu="910" id3415 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id3415 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id22 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id22 -->
 
 ### 功能说明
 
@@ -1287,24 +1292,24 @@ aclError aclrtKernelArgsFinalize(aclrtArgsHandle argsHandle)
 ### 产品支持情况
 
 <!-- npu="950" id3431 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id3431 -->
 <!-- npu="A3" id3432 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3432 -->
 <!-- npu="910b" id3433 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3433 -->
 <!-- npu="310b" id3434 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id3434 -->
 <!-- npu="310p" id3435 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id3435 -->
 <!-- npu="910" id3436 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id3436 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id23 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id23 -->
 
 ### 功能说明
 
@@ -1335,24 +1340,24 @@ aclError aclrtLaunchKernel(aclrtFuncHandle funcHandle, uint32_t numBlocks, const
 ### 产品支持情况
 
 <!-- npu="950" id3487 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id3487 -->
 <!-- npu="A3" id3488 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3488 -->
 <!-- npu="910b" id3489 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3489 -->
 <!-- npu="310b" id3490 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id3490 -->
 <!-- npu="310p" id3491 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id3491 -->
 <!-- npu="910" id3492 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id3492 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id24 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id24 -->
 
 ### 功能说明
 
@@ -1403,24 +1408,24 @@ aclError aclrtLaunchKernelV2(aclrtFuncHandle funcHandle, uint32_t numBlocks, con
 ### 产品支持情况
 
 <!-- npu="950" id2969 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2969 -->
 <!-- npu="A3" id2970 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2970 -->
 <!-- npu="910b" id2971 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2971 -->
 <!-- npu="310b" id2972 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2972 -->
 <!-- npu="310p" id2973 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2973 -->
 <!-- npu="910" id2974 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2974 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id25 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id25 -->
 
 ### 功能说明
 
@@ -1460,24 +1465,24 @@ aclError aclrtLaunchKernelWithConfig(aclrtFuncHandle funcHandle, uint32_t numBlo
 ### 产品支持情况
 
 <!-- npu="950" id2563 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2563 -->
 <!-- npu="A3" id2564 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2564 -->
 <!-- npu="910b" id2565 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2565 -->
 <!-- npu="310b" id2566 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2566 -->
 <!-- npu="310p" id2567 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2567 -->
 <!-- npu="910" id2568 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2568 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id26 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id26 -->
 
 ### 功能说明
 
@@ -1519,24 +1524,24 @@ aclError aclrtLaunchKernelWithHostArgs(aclrtFuncHandle funcHandle, uint32_t numB
 ### 产品支持情况
 
 <!-- npu="950" id841 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id841 -->
 <!-- npu="A3" id842 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id842 -->
 <!-- npu="910b" id843 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id843 -->
 <!-- npu="310b" id844 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id844 -->
 <!-- npu="310p" id845 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id845 -->
 <!-- npu="910" id846 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id846 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id27 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id27 -->
 
 ### 功能说明
 
@@ -1578,24 +1583,24 @@ aclError aclrtLaunchKernelWithArgsArray(void *func, uint32_t numBlocks, aclrtStr
 ### 产品支持情况
 
 <!-- npu="950" id701 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id701 -->
 <!-- npu="A3" id702 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id702 -->
 <!-- npu="910b" id703 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id703 -->
 <!-- npu="310b" id704 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id704 -->
 <!-- npu="310p" id705 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id705 -->
 <!-- npu="910" id706 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id706 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id28 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id28 -->
 
 ### 功能说明
 
@@ -1605,7 +1610,7 @@ aclError aclrtLaunchKernelWithArgsArray(void *func, uint32_t numBlocks, aclrtStr
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| func | 输入 | 内核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
+| func | 输入 | 内核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel，仅适用于Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
 | numBlocks | 输入 | 指定核函数将会在几个核上执行。                                                                                     |
 | stream | 输入 | 指定执行任务的Stream。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。                                   |
 | cfg | 输入 | 任务下发的配置信息。类型定义请参见[aclrtLaunchKernelCfg](25-04_Structs.md#aclrtLaunchKernelCfg)。<br>不指定配置时，此处可传NULL。 |
@@ -1638,24 +1643,24 @@ aclrtBinary aclrtCreateBinary(const void *data, size_t dataLen)
 ### 产品支持情况
 
 <!-- npu="950" id3403 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id3403 -->
 <!-- npu="A3" id3404 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3404 -->
 <!-- npu="910b" id3405 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3405 -->
 <!-- npu="310b" id3406 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id3406 -->
 <!-- npu="310p" id3407 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id3407 -->
 <!-- npu="910" id3408 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id3408 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id29 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id29 -->
 
 ### 功能说明
 
@@ -1684,7 +1689,7 @@ Ascend EP标准形态下，data参数处需申请Host上的内存。
 Ascend RC形态或Control CPU开放形态下，data参数处需申请Device上的内存。
 <!-- end id2 -->
 
-<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id38 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id38 -->
 
 <br>
 <br>
@@ -1701,24 +1706,24 @@ aclError aclrtDestroyBinary(aclrtBinary binary)
 ### 产品支持情况
 
 <!-- npu="950" id2241 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2241 -->
 <!-- npu="A3" id2242 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2242 -->
 <!-- npu="910b" id2243 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2243 -->
 <!-- npu="310b" id2244 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2244 -->
 <!-- npu="310p" id2245 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2245 -->
 <!-- npu="910" id2246 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2246 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id30 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id30 -->
 
 ### 功能说明
 
@@ -1751,24 +1756,24 @@ aclError aclrtBinaryLoad(const aclrtBinary binary, aclrtBinHandle *binHandle)
 ### 产品支持情况
 
 <!-- npu="950" id533 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id533 -->
 <!-- npu="A3" id534 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id534 -->
 <!-- npu="910b" id535 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id535 -->
 <!-- npu="310b" id536 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id536 -->
 <!-- npu="310p" id537 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id537 -->
 <!-- npu="910" id538 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id538 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id31 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id31 -->
 
 ### 功能说明
 
@@ -1800,24 +1805,24 @@ aclError aclrtBinaryUnLoad(aclrtBinHandle binHandle)
 ### 产品支持情况
 
 <!-- npu="950" id2514 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2514 -->
 <!-- npu="A3" id2515 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2515 -->
 <!-- npu="910b" id2516 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2516 -->
 <!-- npu="310b" id2517 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2517 -->
 <!-- npu="310p" id2518 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2518 -->
 <!-- npu="910" id2519 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2519 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id32 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id32 -->
 
 ### 功能说明
 
@@ -1852,24 +1857,24 @@ aclError aclrtFunctionGetBinary(const aclrtFuncHandle funcHandle, aclrtBinHandle
 ### 产品支持情况
 
 <!-- npu="950" id2843 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2843 -->
 <!-- npu="A3" id2844 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2844 -->
 <!-- npu="910b" id2845 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2845 -->
 <!-- npu="310b" id2846 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2846 -->
 <!-- npu="310p" id2847 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2847 -->
 <!-- npu="910" id2848 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2848 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id33 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id33 -->
 
 ### 功能说明
 
@@ -1901,24 +1906,24 @@ aclError aclrtFunctionGetParamCount(const void *func, size_t *paramCount)
 ### 产品支持情况
 
 <!-- npu="950" id260 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id260 -->
 <!-- npu="A3" id261 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id261 -->
 <!-- npu="910b" id262 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id262 -->
 <!-- npu="310b" id263 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id263 -->
 <!-- npu="310p" id264 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id264 -->
 <!-- npu="910" id265 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id265 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id34 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id34 -->
 
 ### 功能说明
 
@@ -1952,24 +1957,24 @@ aclError aclrtFunctionGetParamInfo(const void *func, size_t paramIndex, size_t *
 ### 产品支持情况
 
 <!-- npu="950" id2248 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2248 -->
 <!-- npu="A3" id2249 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2249 -->
 <!-- npu="910b" id2250 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2250 -->
 <!-- npu="310b" id2251 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2251 -->
 <!-- npu="310p" id2252 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2252 -->
 <!-- npu="910" id2253 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2253 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id35 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id35 -->
 
 ### 功能说明
 
@@ -1980,7 +1985,7 @@ aclError aclrtFunctionGetParamInfo(const void *func, size_t paramIndex, size_t *
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
 | func | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)。                                                    |
-| paramIndex | 输入 | 参数索引。<br/> 可先调用[aclrtFunctionGetParamCount](#aclrtFunctionGetParamCount)接口获取可用的参数数量后，这个paramIndex的取值范围：[0，(参数数量-1)]. |
+| paramIndex | 输入 | 参数索引。<br/> 可先调用[aclrtFunctionGetParamCount](#aclrtFunctionGetParamCount)接口获取可用的参数数量后，这个paramIndex的取值范围：[0, (参数数量-1)]. |
 | paramOffset | 输出 | 参数在参数数据区中的偏移，单位为Byte。                                                                                                |
 | paramSize | 输出 | 参数的大小，单位为Byte。                                                                                                       |
 
@@ -2003,24 +2008,24 @@ aclError aclrtFunctionGetAvailDynUbufPerBlock(void *func, uint32_t flags, size_t
 ### 产品支持情况
 
 <!-- npu="950" id3263 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id3263 -->
 <!-- npu="A3" id3264 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3264 -->
 <!-- npu="910b" id3265 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3265 -->
 <!-- npu="310b" id3266 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id3266 -->
 <!-- npu="310p" id3267 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id3267 -->
 <!-- npu="910" id3268 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id3268 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id36 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id36 -->
 
 ### 功能说明
 
@@ -2055,24 +2060,24 @@ aclError aclrtGetFuncBySymbol(const void *symbol, aclrtFuncHandle *funcHandle)
 ### 产品支持情况
 
 <!-- npu="950" id603 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id603 -->
 <!-- npu="A3" id604 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id604 -->
 <!-- npu="910b" id605 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id605 -->
 <!-- npu="310b" id606 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id606 -->
 <!-- npu="310p" id607 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id607 -->
 <!-- npu="910" id608 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id608 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id37 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id37 -->
 
 ### 功能说明
 
@@ -2112,24 +2117,24 @@ aclError aclrtLaunchSIMTKernelWithArgsArray(void *func, dim3 gridDim, dim3 block
 ### 产品支持情况
 
 <!-- npu="950" id3494 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id3494 -->
 <!-- npu="A3" id3495 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：不支持
+- Atlas A3系列产品：不支持
 <!-- end id3495 -->
 <!-- npu="910b" id3496 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：不支持
+- Atlas A2系列产品：不支持
 <!-- end id3496 -->
 <!-- npu="310b" id3497 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id3497 -->
 <!-- npu="310p" id3498 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id3498 -->
 <!-- npu="910" id3499 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id3499 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id39 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id39 -->
 
 ### 功能说明
 
@@ -2139,7 +2144,7 @@ aclError aclrtLaunchSIMTKernelWithArgsArray(void *func, dim3 gridDim, dim3 block
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| func | 输入 | 内核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
+| func | 输入 | 内核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel，仅适用于Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
 | gridDim | 输入 | 线程块网格，由多个线程块（Thread Block）组成。Grid采用三维结构，其维度X、Y和Z分别表示不同维度下线程块的大小。类型定义请参见[dim3](25-04_Structs.md#dim3)。 |
 | blockDim | 输入 | 线程块（Thread Block），采用三维结构，其维度X、Y和Z分别表示线程块中三个维度的线程数。类型定义请参见[dim3](25-04_Structs.md#dim3)。 |
 | dynUbufSize | 输入 | 用于指定SIMT（Single Instruction Multiple Thread）算子执行时需要的UB（Unified Buffer，统一缓冲区）动态内存大小，单位Byte。若cfg中同时设置了ACL_RT_LAUNCH_KERNEL_ATTR_DYN_UBUF_SIZE属性，本参数的优先级更高。 |
@@ -2174,24 +2179,24 @@ aclError aclrtLaunchSIMTKernelWithHostArgs(void *func, dim3 gridDim, dim3 blockD
 ### 产品支持情况
 
 <!-- npu="950" id3501 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id3501 -->
 <!-- npu="A3" id3502 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：不支持
+- Atlas A3系列产品：不支持
 <!-- end id3502 -->
 <!-- npu="910b" id3503 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：不支持
+- Atlas A2系列产品：不支持
 <!-- end id3503 -->
 <!-- npu="310b" id3504 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id3504 -->
 <!-- npu="310p" id3505 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id3505 -->
 <!-- npu="910" id3506 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id3506 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id40 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id40 -->
 
 ### 功能说明
 
@@ -2201,7 +2206,7 @@ aclError aclrtLaunchSIMTKernelWithHostArgs(void *func, dim3 gridDim, dim3 blockD
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| func | 输入 | 内核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
+| func | 输入 | 内核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel，仅适用于Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
 | gridDim | 输入 | 线程块网格，由多个线程块（Thread Block）组成。Grid采用三维结构，其维度X、Y和Z分别表示不同维度下线程块的大小。类型定义请参见[dim3](25-04_Structs.md#dim3)。 |
 | blockDim | 输入 | 线程块（Thread Block），采用三维结构，其维度X、Y和Z分别表示线程块中三个维度的线程数。类型定义请参见[dim3](25-04_Structs.md#dim3)。 |
 | dynUbufSize | 输入 | 用于指定SIMT（Single Instruction Multiple Thread）算子执行时需要的UB（Unified Buffer，统一缓冲区）动态内存大小，单位Byte。若cfg中同时设置了ACL_RT_LAUNCH_KERNEL_ATTR_DYN_UBUF_SIZE属性，本参数的优先级更高。 |
@@ -2240,24 +2245,24 @@ aclError aclrtBinaryGetFunctionCount(const aclrtBinHandle binHandle, uint32_t *c
 ### 产品支持情况
 
 <!-- npu="950" id4001 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id4001 -->
 <!-- npu="A3" id4002 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id4002 -->
 <!-- npu="910b" id4003 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id4003 -->
 <!-- npu="310b" id4004 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id4004 -->
 <!-- npu="310p" id4005 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id4005 -->
 <!-- npu="910" id4006 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id4006 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id41 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id41 -->
 
 ### 功能说明
 
@@ -2290,24 +2295,24 @@ aclError aclrtBinaryEnumerateFunctions(const aclrtBinHandle binHandle, aclrtFunc
 ### 产品支持情况
 
 <!-- npu="950" id84247 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id84247 -->
 <!-- npu="A3" id84248 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id84248 -->
 <!-- npu="910b" id84249 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id84249 -->
 <!-- npu="310b" id84250 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id84250 -->
 <!-- npu="310p" id84251 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id84251 -->
 <!-- npu="910" id84252 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id84252 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/14_kerne_loading_and_execution_res.md#id42 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id42 -->
 ### 功能说明
 
 获取算子二进制中指定数量的核函数句柄。

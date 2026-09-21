@@ -77,7 +77,7 @@ typedef int aclError;
 | static const int ACL_ERROR_DUMP_ALREADY_RUN = 100044; | 已存在获取Dump数据的任务。 | 请检查在调用aclmdlInitDump接口、aclmdlSetDump接口、aclmdlFinalizeDump接口配置Dump信息前，是否已调用aclInit接口配置Dump信息，如是，请调整代码逻辑，保留一种方式配置Dump信息即可。 |
 | static const int ACL_ERROR_DUMP_NOT_RUN = 100045; | 未使用aclmdlInitDump接口先进行Dump初始化。 | 请检查获取Dump数据的接口调用顺序，参考aclmdlInitDump接口处的说明。 |
 | static const int ACL_ERROR_PROF_REPEAT_SUBSCRIBE = 148046; | 重复订阅同一个模型。 | 请检查接口调用顺序。 |
-| static const int ACL_ERROR_PROF_API_CONFLICT = 148047; | 采集性能数据的接口调用冲突。 | 两种方式的Profiling性能数据采集接口不能交叉调用，aclprofInit接口和aclprofFinalize接口之间不能调用aclprofModelSub接口、aclprofGet*接口、clprofModelUnSubscribe接口，aclprofModelSubscribe接口和aclprofModelUnSubscribe接口之间不能调用aclprofInit接口、aclprofStart接口、aclprofStop接口、aclprofFinalize。 |
+| static const int ACL_ERROR_PROF_API_CONFLICT = 148047; | 采集性能数据的接口调用冲突。 | 两种方式的Profiling性能数据采集接口不能交叉调用，aclprofInit接口和aclprofFinalize接口之间不能调用aclprofModelSub接口、aclprofGet*接口、aclprofModelUnSubscribe接口，aclprofModelSubscribe接口和aclprofModelUnSubscribe接口之间不能调用aclprofInit接口、aclprofStart接口、aclprofStop接口、aclprofFinalize。 |
 | static const int ACL_ERROR_INVALID_MAX_OPQUEUE_NUM_CONFIG = 148048; | 无效的算子缓存信息老化配置。 | 请检查算子缓存信息老化配置，参考aclInit处的配置说明及示例。 |
 | static const int ACL_ERROR_INVALID_OPP_PATH = 148049; | 没有设置ASCEND_OPP_PATH环境变量，或该环境变量的值设置错误。 | 请检查是否设置ASCEND_OPP_PATH环境变量，且该环境变量的值是否为opp软件包的安装路径。 |
 | static const int ACL_ERROR_OP_UNSUPPORTED_DYNAMIC = 148050; | 算子不支持动态Shape。 | - 请检查单算子模型文件中该算子的Shape是否为动态，如果是动态的，需要修改为固定Shape。<br>  - 请检查编译算子时，aclTensorDesc的Shape是否为动态，如果是动态的，需要按照固定Shape重新创建aclTensorDesc。 |
@@ -91,7 +91,7 @@ typedef int aclError;
 | static const int ACL_ERROR_RESOURCE_NOT_MATCH = 200004; | 资源不匹配。 | 请检查调用接口时，是否传入正确的Stream、Context等资源。 |
 | static const int ACL_ERROR_INVALID_RESOURCE_HANDLE = 200005; | 无效的资源句柄。 | 请检查调用接口时，传入的Stream、Context等资源是否已被销毁或占用。 |
 | static const int ACL_ERROR_FEATURE_UNSUPPORTED = 200006; | 特性不支持。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| static const ACL_ERROR_PROF_MODULES_UNSUPPORTED = 200007; | 下发了不支持的Profiling配置。 | 请参见aclprofCreateConfig中的说明检查Profiling的配置是否正确。 |
+| static const int ACL_ERROR_PROF_MODULES_UNSUPPORTED = 200007; | 下发了不支持的Profiling配置。 | 请参见aclprofCreateConfig中的说明检查Profiling的配置是否正确。 |
 | static const int ACL_ERROR_STORAGE_OVER_LIMIT = 300000; | 超出存储上限。 | 请检查硬件环境上的存储剩余情况。 |
 | static const int ACL_ERROR_INTERNAL_ERROR = 500000; | 未知内部错误。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
 | static const int ACL_ERROR_FAILURE = 500001; | 内部错误。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |

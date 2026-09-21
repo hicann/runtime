@@ -24,22 +24,22 @@ aclError aclrtCreateNotify(aclrtNotify *notify, uint64_t flag)
 ### 产品支持情况
 
 <!-- npu="950" id2549 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2549 -->
 <!-- npu="A3" id2550 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2550 -->
 <!-- npu="910b" id2551 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2551 -->
 <!-- npu="310b" id2552 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2552 -->
 <!-- npu="310p" id2553 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2553 -->
 <!-- npu="910" id2554 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2554 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/08_notify_management_res.md#id1 -->
 
@@ -63,16 +63,16 @@ aclError aclrtCreateNotify(aclrtNotify *notify, uint64_t flag)
 <!-- @ref: runtime/res/docs/zh/api_ref/08_notify_management_res.md#id11 -->
 不同型号的硬件支持的Notify数量不同。
 <!-- npu="950" id1 -->
-- 对于Ascend 950PR/Ascend 950DT，单个Device支持的Notify最大数为65535。
+- 对于Ascend 950PR&950DT系列产品，单个Device支持的Notify最大数为65535。
 <!-- end id1 -->
 <!-- npu="A3,910b" id2 -->
-- 对于Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品，单个Device支持的Notify最大数为8192。
+- 对于Atlas A3系列产品、Atlas A2系列产品，单个Device支持的Notify最大数为8192。
 <!-- end id2 -->
 <!-- npu="310b" id3 -->
-- 对于Atlas 200I/500 A2 推理产品，单个Device支持的Notify最大数为2048。
+- 对于Atlas 200I/500 A2推理产品，单个Device支持的Notify最大数为2048。
 <!-- end id3 -->
 <!-- npu="910,310p" id4 -->
-- 对于Atlas 推理系列产品、Atlas 训练系列产品，单个Device支持的Notify最大数为1024。
+- 对于Atlas推理系列产品、Atlas训练系列产品，单个Device支持的Notify最大数为1024。
 <!-- end id4 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/08_notify_management_res.md#id12 -->
 
@@ -91,22 +91,22 @@ aclError aclrtDestroyNotify(aclrtNotify notify)
 ### 产品支持情况
 
 <!-- npu="950" id1660 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1660 -->
 <!-- npu="A3" id1661 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1661 -->
 <!-- npu="910b" id1662 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1662 -->
 <!-- npu="310b" id1663 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1663 -->
 <!-- npu="310p" id1664 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1664 -->
 <!-- npu="910" id1665 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1665 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/08_notify_management_res.md#id2 -->
 
@@ -139,22 +139,22 @@ aclError aclrtRecordNotify(aclrtNotify notify, aclrtStream stream)
 ### 产品支持情况
 
 <!-- npu="950" id2577 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2577 -->
 <!-- npu="A3" id2578 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2578 -->
 <!-- npu="910b" id2579 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2579 -->
 <!-- npu="310b" id2580 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2580 -->
 <!-- npu="310p" id2581 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2581 -->
 <!-- npu="910" id2582 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2582 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/08_notify_management_res.md#id3 -->
 
@@ -190,22 +190,22 @@ aclError aclrtWaitAndResetNotify(aclrtNotify notify, aclrtStream stream, uint32_
 ### 产品支持情况
 
 <!-- npu="950" id1002 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1002 -->
 <!-- npu="A3" id1003 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1003 -->
 <!-- npu="910b" id1004 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1004 -->
 <!-- npu="310b" id1005 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1005 -->
 <!-- npu="310p" id1006 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1006 -->
 <!-- npu="910" id1007 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1007 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/08_notify_management_res.md#id4 -->
 
@@ -240,22 +240,22 @@ aclError aclrtGetNotifyId(aclrtNotify notify, uint32_t *notifyId)
 ### 产品支持情况
 
 <!-- npu="950" id3501 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id3501 -->
 <!-- npu="A3" id3502 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3502 -->
 <!-- npu="910b" id3503 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3503 -->
 <!-- npu="310b" id3504 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id3504 -->
 <!-- npu="310p" id3505 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id3505 -->
 <!-- npu="910" id3506 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id3506 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/08_notify_management_res.md#id5 -->
 
@@ -289,22 +289,22 @@ aclError aclrtNotifyBatchReset(aclrtNotify *notifies, size_t num)
 ### 产品支持情况
 
 <!-- npu="950" id442 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id442 -->
 <!-- npu="A3" id443 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id443 -->
 <!-- npu="910b" id444 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id444 -->
 <!-- npu="310b" id445 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id445 -->
 <!-- npu="310p" id446 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id446 -->
 <!-- npu="910" id447 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id447 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/08_notify_management_res.md#id6 -->
 
@@ -342,23 +342,23 @@ aclError aclrtNotifyGetExportKey(aclrtNotify notify, char *key, size_t len, uint
 ### 产品支持情况
 
 <!-- npu="950" id3165 -->
-- Ascend 950PR：支持
-- Ascend 950DT：不支持
+- Ascend 950PR系列产品：支持
+- Ascend 950DT系列产品：不支持
 <!-- end id3165 -->
 <!-- npu="A3" id3166 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3166 -->
 <!-- npu="910b" id3167 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3167 -->
 <!-- npu="310b" id3168 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id3168 -->
 <!-- npu="310p" id3169 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id3169 -->
 <!-- npu="910" id3170 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id3170 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/08_notify_management_res.md#id7 -->
 
@@ -423,23 +423,23 @@ aclError aclrtNotifySetImportPid(aclrtNotify notify, int32_t *pid, size_t num)
 ### 产品支持情况
 
 <!-- npu="950" id1807 -->
-- Ascend 950PR：支持
-- Ascend 950DT：不支持
+- Ascend 950PR系列产品：支持
+- Ascend 950DT系列产品：不支持
 <!-- end id1807 -->
 <!-- npu="A3" id1808 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1808 -->
 <!-- npu="910b" id1809 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1809 -->
 <!-- npu="310b" id1810 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id1810 -->
 <!-- npu="310p" id1811 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1811 -->
 <!-- npu="910" id1812 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1812 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/08_notify_management_res.md#id8 -->
 
@@ -482,22 +482,22 @@ aclError aclrtNotifySetImportPidInterServer(aclrtNotify notify, aclrtServerPid *
 ### 产品支持情况
 
 <!-- npu="950" id3270 -->
-- Ascend 950PR/Ascend 950DT：不支持
+- Ascend 950PR&950DT系列产品：不支持
 <!-- end id3270 -->
 <!-- npu="A3" id3271 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3271 -->
 <!-- npu="910b" id3272 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：不支持
+- Atlas A2系列产品：不支持
 <!-- end id3272 -->
 <!-- npu="310b" id3273 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id3273 -->
 <!-- npu="310p" id3274 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id3274 -->
 <!-- npu="910" id3275 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id3275 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/08_notify_management_res.md#id9 -->
 
@@ -506,7 +506,7 @@ aclError aclrtNotifySetImportPidInterServer(aclrtNotify notify, aclrtServerPid *
 设置共享Notify的进程白名单。
 
 <!-- npu="A3" id6 -->
-该接口仅针对Atlas A3 训练系列产品/Atlas A3 推理系列产品中的超节点产品。
+该接口仅针对Atlas A3系列产品中的超节点产品。
 <!-- end id6 -->
 
 ### 参数说明
@@ -536,23 +536,23 @@ aclError aclrtNotifyImportByKey(aclrtNotify *notify, const char *key, uint64_t f
 ### 产品支持情况
 
 <!-- npu="950" id2101 -->
-- Ascend 950PR：支持
-- Ascend 950DT：不支持
+- Ascend 950PR系列产品：支持
+- Ascend 950DT系列产品：不支持
 <!-- end id2101 -->
 <!-- npu="A3" id2102 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2102 -->
 <!-- npu="910b" id2103 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2103 -->
 <!-- npu="310b" id2104 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id2104 -->
 <!-- npu="310p" id2105 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2105 -->
 <!-- npu="910" id2106 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2106 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/08_notify_management_res.md#id10 -->
 

@@ -53,22 +53,22 @@ aclError aclmdlRICaptureBegin(aclrtStream stream, aclmdlRICaptureMode mode)
 ### 产品支持情况
 
 <!-- npu="950" id1009 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1009 -->
 <!-- npu="A3" id1010 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1010 -->
 <!-- npu="910b" id1011 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1011 -->
 <!-- npu="310b" id1012 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id1012 -->
 <!-- npu="310p" id1013 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1013 -->
 <!-- npu="910" id1014 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id1014 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id1 -->
 
@@ -110,22 +110,22 @@ aclError aclmdlRICaptureGetInfo(aclrtStream stream, aclmdlRICaptureStatus *statu
 ### 产品支持情况
 
 <!-- npu="950" id750 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id750 -->
 <!-- npu="A3" id751 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id751 -->
 <!-- npu="910b" id752 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id752 -->
 <!-- npu="310b" id753 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id753 -->
 <!-- npu="310p" id754 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id754 -->
 <!-- npu="910" id755 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id755 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id2 -->
 
@@ -160,22 +160,22 @@ aclError aclmdlRICaptureThreadExchangeMode(aclmdlRICaptureMode *mode)
 ### 产品支持情况
 
 <!-- npu="950" id2388 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2388 -->
 <!-- npu="A3" id2389 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2389 -->
 <!-- npu="910b" id2390 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2390 -->
 <!-- npu="310b" id2391 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id2391 -->
 <!-- npu="310p" id2392 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2392 -->
 <!-- npu="910" id2393 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id2393 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id3 -->
 
@@ -216,22 +216,22 @@ aclError aclmdlRICaptureEnd(aclrtStream stream, aclmdlRI *modelRI)
 ### 产品支持情况
 
 <!-- npu="950" id3067 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id3067 -->
 <!-- npu="A3" id3068 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3068 -->
 <!-- npu="910b" id3069 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3069 -->
 <!-- npu="310b" id3070 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id3070 -->
 <!-- npu="310p" id3071 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id3071 -->
 <!-- npu="910" id3072 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id3072 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id4 -->
 
@@ -269,22 +269,22 @@ aclError aclmdlRICaptureTaskGrpBegin(aclrtStream stream)
 ### 产品支持情况
 
 <!-- npu="950" id344 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id344 -->
 <!-- npu="A3" id345 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id345 -->
 <!-- npu="910b" id346 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id346 -->
 <!-- npu="310b" id347 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id347 -->
 <!-- npu="310p" id348 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id348 -->
 <!-- npu="910" id349 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id349 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id5 -->
 
@@ -321,22 +321,22 @@ aclError aclmdlRICaptureTaskGrpEnd(aclrtStream stream, aclrtTaskGrp *handle)
 ### 产品支持情况
 
 <!-- npu="950" id1037 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1037 -->
 <!-- npu="A3" id1038 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1038 -->
 <!-- npu="910b" id1039 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1039 -->
 <!-- npu="310b" id1040 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id1040 -->
 <!-- npu="310p" id1041 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1041 -->
 <!-- npu="910" id1042 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id1042 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id6 -->
 
@@ -372,22 +372,22 @@ aclError aclmdlRICaptureTaskUpdateBegin(aclrtStream stream, aclrtTaskGrp handle)
 ### 产品支持情况
 
 <!-- npu="950" id1429 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1429 -->
 <!-- npu="A3" id1430 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1430 -->
 <!-- npu="910b" id1431 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1431 -->
 <!-- npu="310b" id1432 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id1432 -->
 <!-- npu="310p" id1433 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1433 -->
 <!-- npu="910" id1434 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id1434 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id7 -->
 
@@ -402,10 +402,10 @@ aclmdlRICaptureTaskUpdateBegin、[aclmdlRICaptureTaskUpdateEnd](#aclmdlRICapture
 若任务更新时返回ACL\_ERROR\_RT\_FEATURE\_NOT\_SUPPORT，这表示底层驱动不支持该特性，需升级驱动包。您可以单击[Link](https://www.hiascend.com/hardware/firmware-drivers/commercial)，在“固件与驱动”页面下载对应版本的驱动安装包，并参照其文档进行安装和升级。
 
 <!-- npu="A3,910b" id1 -->
-- 针对Atlas A2 训练系列产品/Atlas A2 推理系列产品、Atlas A3 训练系列产品/Atlas A3 推理系列产品，需将驱动包升级到25.0.RC1或更高版本。
+- 针对Atlas A2系列产品、Atlas A3系列产品，需将驱动包升级到25.0.RC1或更高版本。
 <!-- end id1 -->
 <!-- npu="310p" id2 -->
-- 针对Atlas 推理系列产品，需将驱动包升级到26.0.RC1或更高版本。
+- 针对Atlas推理系列产品，需将驱动包升级到26.0.RC1或更高版本。
 <!-- end id2 -->
 
 ### 参数说明
@@ -422,7 +422,7 @@ aclmdlRICaptureTaskUpdateBegin、[aclmdlRICaptureTaskUpdateEnd](#aclmdlRICapture
 <!-- npu="A3,910b" id3 -->
 ### 约束说明
 
-对于Atlas A2 训练系列产品/Atlas A2 推理系列产品、Atlas A3 训练系列产品/Atlas A3 推理系列产品，如果CANN配套的Ascend HDK的版本为25.5.X之前（不包含该版本），那么单个Device可支持同时更新的最大任务数是1024\*1024个，超出该规格，任务会在执行阶段报错。
+对于Atlas A2系列产品、Atlas A3系列产品，如果CANN配套的Ascend HDK的版本为25.5.X之前（不包含该版本），那么单个Device可支持同时更新的最大任务数是1024\*1024个，超出该规格，任务会在执行阶段报错。
 <!-- end id3 -->
 
 <br>
@@ -440,22 +440,22 @@ aclError aclmdlRICaptureTaskUpdateEnd(aclrtStream stream)
 ### 产品支持情况
 
 <!-- npu="950" id15 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id15 -->
 <!-- npu="A3" id16 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id16 -->
 <!-- npu="910b" id17 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id17 -->
 <!-- npu="310b" id18 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id18 -->
 <!-- npu="310p" id19 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id19 -->
 <!-- npu="910" id20 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id20 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id8 -->
 
@@ -496,22 +496,22 @@ aclError aclmdlRIDebugJsonPrint(aclmdlRI modelRI, const char *path, uint32_t fla
 ### 产品支持情况
 
 <!-- npu="950" id302 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id302 -->
 <!-- npu="A3" id303 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id303 -->
 <!-- npu="910b" id304 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id304 -->
 <!-- npu="310b" id305 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id305 -->
 <!-- npu="310p" id306 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id306 -->
 <!-- npu="910" id307 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id307 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id9 -->
 
@@ -546,22 +546,22 @@ aclError aclmdlRIDebugPrint(aclmdlRI modelRI)
 ### 产品支持情况
 
 <!-- npu="950" id3515 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id3515 -->
 <!-- npu="A3" id3516 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3516 -->
 <!-- npu="910b" id3517 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3517 -->
 <!-- npu="310b" id3518 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id3518 -->
 <!-- npu="310p" id3519 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id3519 -->
 <!-- npu="910" id3520 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id3520 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id10 -->
 
@@ -594,22 +594,22 @@ aclError aclmdlRIBuildBegin(aclmdlRI *modelRI, uint32_t flag)
 ### 产品支持情况
 
 <!-- npu="950" id2402 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2402 -->
 <!-- npu="A3" id2403 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2403 -->
 <!-- npu="910b" id2404 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2404 -->
 <!-- npu="310b" id2405 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2405 -->
 <!-- npu="310p" id2406 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2406 -->
 <!-- npu="910" id2407 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2407 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id11 -->
 
@@ -647,22 +647,22 @@ aclError aclmdlRIBindStream(aclmdlRI modelRI, aclrtStream stream, uint32_t flag)
 ### 产品支持情况
 
 <!-- npu="950" id1625 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1625 -->
 <!-- npu="A3" id1626 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1626 -->
 <!-- npu="910b" id1627 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1627 -->
 <!-- npu="310b" id1628 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1628 -->
 <!-- npu="310p" id1629 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1629 -->
 <!-- npu="910" id1630 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1630 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id12 -->
 
@@ -697,22 +697,22 @@ aclError aclmdlRIEndTask(aclmdlRI modelRI, aclrtStream stream)
 ### 产品支持情况
 
 <!-- npu="950" id2899 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2899 -->
 <!-- npu="A3" id2900 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2900 -->
 <!-- npu="910b" id2901 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2901 -->
 <!-- npu="310b" id2902 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2902 -->
 <!-- npu="310p" id2903 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2903 -->
 <!-- npu="910" id2904 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2904 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id13 -->
 
@@ -746,22 +746,22 @@ aclError aclmdlRIBuildEnd(aclmdlRI modelRI, void *reserve)
 ### 产品支持情况
 
 <!-- npu="950" id29 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id29 -->
 <!-- npu="A3" id30 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id30 -->
 <!-- npu="910b" id31 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id31 -->
 <!-- npu="310b" id32 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id32 -->
 <!-- npu="310p" id33 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id33 -->
 <!-- npu="910" id34 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id34 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id14 -->
 
@@ -799,22 +799,22 @@ aclError aclmdlRIUnbindStream(aclmdlRI modelRI, aclrtStream stream)
 ### 产品支持情况
 
 <!-- npu="950" id722 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id722 -->
 <!-- npu="A3" id723 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id723 -->
 <!-- npu="910b" id724 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id724 -->
 <!-- npu="310b" id725 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id725 -->
 <!-- npu="310p" id726 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id726 -->
 <!-- npu="910" id727 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id727 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id15 -->
 
@@ -848,22 +848,22 @@ aclError aclmdlRIExecute(aclmdlRI modelRI, int32_t timeout)
 ### 产品支持情况
 
 <!-- npu="950" id582 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id582 -->
 <!-- npu="A3" id583 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id583 -->
 <!-- npu="910b" id584 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id584 -->
 <!-- npu="310b" id585 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id585 -->
 <!-- npu="310p" id586 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id586 -->
 <!-- npu="910" id587 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id587 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id16 -->
 
@@ -897,22 +897,22 @@ aclError aclmdlRIExecuteAsync(aclmdlRI modelRI, aclrtStream stream)
 ### 产品支持情况
 
 <!-- npu="950" id2906 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2906 -->
 <!-- npu="A3" id2907 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2907 -->
 <!-- npu="910b" id2908 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2908 -->
 <!-- npu="310b" id2909 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id2909 -->
 <!-- npu="310p" id2910 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2910 -->
 <!-- npu="910" id2911 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id2911 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id17 -->
 
@@ -946,22 +946,22 @@ aclError aclmdlRIDestroy(aclmdlRI modelRI)
 ### 产品支持情况
 
 <!-- npu="950" id99 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id99 -->
 <!-- npu="A3" id100 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id100 -->
 <!-- npu="910b" id101 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id101 -->
 <!-- npu="310b" id102 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id102 -->
 <!-- npu="310p" id103 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id103 -->
 <!-- npu="910" id104 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id104 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id18 -->
 
@@ -994,22 +994,22 @@ aclError aclmdlRISetName(aclmdlRI modelRI, const char *name)
 ### 产品支持情况
 
 <!-- npu="950" id2171 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2171 -->
 <!-- npu="A3" id2172 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2172 -->
 <!-- npu="910b" id2173 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2173 -->
 <!-- npu="310b" id2174 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2174 -->
 <!-- npu="310p" id2175 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2175 -->
 <!-- npu="910" id2176 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2176 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id19 -->
 
@@ -1043,22 +1043,22 @@ aclError aclmdlRIGetName(aclmdlRI modelRI, uint32_t maxLen, char *name)
 ### 产品支持情况
 
 <!-- npu="950" id2759 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2759 -->
 <!-- npu="A3" id2760 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2760 -->
 <!-- npu="910b" id2761 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2761 -->
 <!-- npu="310b" id2762 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2762 -->
 <!-- npu="310p" id2763 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2763 -->
 <!-- npu="910" id2764 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2764 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id20 -->
 
@@ -1095,22 +1095,22 @@ aclError aclmdlRIGetId(aclmdlRI modelRI, uint32_t *modelRIId)
 ### 产品支持情况
 
 <!-- npu="950" id869 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id869 -->
 <!-- npu="A3" id870 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id870 -->
 <!-- npu="910b" id871 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id871 -->
 <!-- npu="310b" id872 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id872 -->
 <!-- npu="310p" id873 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id873 -->
 <!-- npu="910" id874 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id874 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id21 -->
 
@@ -1144,22 +1144,22 @@ aclError aclrtCheckArchCompatibility(const char *socVersion, int32_t *canCompati
 ### 产品支持情况
 
 <!-- npu="950" id2927 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2927 -->
 <!-- npu="A3" id2928 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2928 -->
 <!-- npu="910b" id2929 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2929 -->
 <!-- npu="310b" id2930 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2930 -->
 <!-- npu="310p" id2931 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2931 -->
 <!-- npu="910" id2932 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2932 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id22 -->
 
@@ -1195,22 +1195,22 @@ aclError aclmdlRIAbort(aclmdlRI modelRI)
 ### 产品支持情况
 
 <!-- npu="950" id2024 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2024 -->
 <!-- npu="A3" id2025 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2025 -->
 <!-- npu="910b" id2026 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2026 -->
 <!-- npu="310b" id2027 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2027 -->
 <!-- npu="310p" id2028 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2028 -->
 <!-- npu="910" id2029 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2029 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id23 -->
 
@@ -1251,22 +1251,22 @@ aclError aclmdlRIGetStreams(aclmdlRI modelRI, aclrtStream *streams, uint32_t *nu
 ### 产品支持情况
 
 <!-- npu="950" id2598 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2598 -->
 <!-- npu="A3" id2599 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2599 -->
 <!-- npu="910b" id2600 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2600 -->
 <!-- npu="310b" id2601 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id2601 -->
 <!-- npu="310p" id2602 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id2602 -->
 <!-- npu="910" id2603 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id2603 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id24 -->
 
@@ -1308,22 +1308,22 @@ aclError aclmdlRIGetTasksByStream(aclrtStream stream, aclmdlRITask *tasks, uint3
 ### 产品支持情况
 
 <!-- npu="950" id1716 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1716 -->
 <!-- npu="A3" id1717 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1717 -->
 <!-- npu="910b" id1718 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1718 -->
 <!-- npu="310b" id1719 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id1719 -->
 <!-- npu="310p" id1720 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id1720 -->
 <!-- npu="910" id1721 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id1721 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id25 -->
 
@@ -1367,22 +1367,22 @@ aclError aclmdlRITaskGetSeqId(aclmdlRITask task, uint32_t *id)
 ### 产品支持情况
 
 <!-- npu="950" id771 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id771 -->
 <!-- npu="A3" id772 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id772 -->
 <!-- npu="910b" id773 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id773 -->
 <!-- npu="310b" id774 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id774 -->
 <!-- npu="310p" id775 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id775 -->
 <!-- npu="910" id776 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id776 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id26 -->
 
@@ -1424,22 +1424,22 @@ aclError aclmdlRITaskGetParams(aclmdlRITask task, aclmdlRITaskParams* params)
 ### 产品支持情况
 
 <!-- npu="950" id2360 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2360 -->
 <!-- npu="A3" id2361 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2361 -->
 <!-- npu="910b" id2362 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2362 -->
 <!-- npu="310b" id2363 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id2363 -->
 <!-- npu="310p" id2364 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id2364 -->
 <!-- npu="910" id2365 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id2365 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id27 -->
 
@@ -1481,22 +1481,22 @@ aclError aclmdlRITaskSetParams(aclmdlRITask task, aclmdlRITaskParams* params)
 ### 产品支持情况
 
 <!-- npu="950" id148 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id148 -->
 <!-- npu="A3" id149 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id149 -->
 <!-- npu="910b" id150 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id150 -->
 <!-- npu="310b" id151 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id151 -->
 <!-- npu="310p" id152 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id152 -->
 <!-- npu="910" id153 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id153 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id28 -->
 
@@ -1539,22 +1539,22 @@ aclError aclmdlRIKernelTaskGetAttribute(aclmdlRITask task, aclrtLaunchKernelAttr
 ### 产品支持情况
 
 <!-- npu="950" id1016 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1016 -->
 <!-- npu="A3" id1017 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1017 -->
 <!-- npu="910b" id1018 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1018 -->
 <!-- npu="310b" id1019 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id1019 -->
 <!-- npu="310p" id1020 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id1020 -->
 <!-- npu="910" id1021 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id1021 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id29 -->
 
@@ -1597,22 +1597,22 @@ aclError aclmdlRITaskDisable(aclmdlRITask task)
 ### 产品支持情况
 
 <!-- npu="950" id505 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id505 -->
 <!-- npu="A3" id506 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id506 -->
 <!-- npu="910b" id507 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id507 -->
 <!-- npu="310b" id508 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id508 -->
 <!-- npu="310p" id509 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id509 -->
 <!-- npu="910" id510 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id510 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id30 -->
 
@@ -1653,22 +1653,22 @@ aclError aclmdlRIUpdate(aclmdlRI modelRI)
 ### 产品支持情况
 
 <!-- npu="950" id1184 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1184 -->
 <!-- npu="A3" id1185 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1185 -->
 <!-- npu="910b" id1186 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1186 -->
 <!-- npu="310b" id1187 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id1187 -->
 <!-- npu="310p" id1188 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id1188 -->
 <!-- npu="910" id1189 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id1189 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id31 -->
 
@@ -1707,22 +1707,22 @@ aclError aclmdlRITaskGetType(aclmdlRITask task, aclmdlRITaskType *type)
 ### 产品支持情况
 
 <!-- npu="950" id1219 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1219 -->
 <!-- npu="A3" id1220 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1220 -->
 <!-- npu="910b" id1221 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1221 -->
 <!-- npu="310b" id1222 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id1222 -->
 <!-- npu="310p" id1223 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id1223 -->
 <!-- npu="910" id1224 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id1224 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id32 -->
 
@@ -1736,7 +1736,7 @@ aclError aclmdlRITaskGetType(aclmdlRITask task, aclmdlRITaskType *type)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| tasks | 输入 | 指定任务。类型定义请参见[aclmdlRITask](25-05_Typedefs.md#aclmdlRITask)。 |
+| task | 输入 | 指定任务。类型定义请参见[aclmdlRITask](25-05_Typedefs.md#aclmdlRITask)。 |
 | type | 输出 | 任务类型。类型定义请参见[aclmdlRITaskType](25-02_Enumerations.md#aclmdlRITaskType)。 |
 
 ### 返回值说明
@@ -1760,22 +1760,22 @@ aclError aclmdlRIDestroyRegisterCallback(aclmdlRI modelRI, aclrtCallback func, v
 ### 产品支持情况
 
 <!-- npu="950" id1870 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1870 -->
 <!-- npu="A3" id1871 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1871 -->
 <!-- npu="910b" id1872 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1872 -->
 <!-- npu="310b" id1873 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1873 -->
 <!-- npu="310p" id1874 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1874 -->
 <!-- npu="910" id1875 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1875 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id33 -->
 
@@ -1812,22 +1812,22 @@ aclError aclmdlRIDestroyUnregisterCallback(aclmdlRI modelRI, aclrtCallback func)
 ### 产品支持情况
 
 <!-- npu="950" id2878 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2878 -->
 <!-- npu="A3" id2879 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2879 -->
 <!-- npu="910b" id2880 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2880 -->
 <!-- npu="310b" id2881 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2881 -->
 <!-- npu="310p" id2882 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2882 -->
 <!-- npu="910" id2883 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2883 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id34 -->
 
@@ -1863,22 +1863,22 @@ aclError aclmdlRICondHandleCreate(aclmdlRI modelRI, uint32_t defaultLaunchValue,
 ### 产品支持情况
 
 <!-- npu="950" id134 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id134 -->
 <!-- npu="A3" id135 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id135 -->
 <!-- npu="910b" id136 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id136 -->
 <!-- npu="310b" id137 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id137 -->
 <!-- npu="310p" id138 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id138 -->
 <!-- npu="910" id139 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id139 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id35 -->
 
@@ -1918,22 +1918,22 @@ aclError aclmdlRICondHandleGetCondPtr(aclmdlRICondHandle handle, uint64_t **ptr)
 ### 产品支持情况
 
 <!-- npu="950" id736 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id736 -->
 <!-- npu="A3" id737 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id737 -->
 <!-- npu="910b" id738 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id738 -->
 <!-- npu="310b" id739 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id739 -->
 <!-- npu="310p" id740 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id740 -->
 <!-- npu="910" id741 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id741 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id36 -->
 
@@ -1971,22 +1971,22 @@ aclError aclmdlRIAddCondTask(aclmdlRICondTaskParams params, aclrtStream stream, 
 ### 产品支持情况
 
 <!-- npu="950" id2689 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2689 -->
 <!-- npu="A3" id2690 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2690 -->
 <!-- npu="910b" id2691 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2691 -->
 <!-- npu="310b" id2692 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id2692 -->
 <!-- npu="310p" id2693 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id2693 -->
 <!-- npu="910" id2694 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id2694 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id37 -->
 
@@ -2025,22 +2025,22 @@ aclError aclmdlRICaptureToModelRIBegin(aclrtStream stream, aclmdlRI modelRI, acl
 ### 产品支持情况
 
 <!-- npu="950" id3312 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id3312 -->
 <!-- npu="A3" id3313 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3313 -->
 <!-- npu="910b" id3314 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3314 -->
 <!-- npu="310b" id3315 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id3315 -->
 <!-- npu="310p" id3316 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id3316 -->
 <!-- npu="910" id3317 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id3317 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id38 -->
 

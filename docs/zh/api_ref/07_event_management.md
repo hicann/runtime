@@ -36,22 +36,22 @@ aclError aclrtCreateEvent(aclrtEvent *event)
 ### 产品支持情况
 
 <!-- npu="950" id687 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id687 -->
 <!-- npu="A3" id688 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id688 -->
 <!-- npu="910b" id689 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id689 -->
 <!-- npu="310b" id690 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id690 -->
 <!-- npu="310p" id691 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id691 -->
 <!-- npu="910" id692 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id692 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id1 -->
 
@@ -80,27 +80,27 @@ aclError aclrtCreateEvent(aclrtEvent *event)
   - 对于以下产品型号，单个Device支持的Event最大数为65536：
 
     <!-- npu="950" id18 -->
-    Ascend 950PR/Ascend 950DT
+    Ascend 950PR&950DT系列产品
     <!-- end id18 -->
 
     <!-- npu="A3" id19 -->
-    Atlas A3 训练系列产品/Atlas A3 推理系列产品
+    Atlas A3系列产品
     <!-- end id19 -->
 
     <!-- npu="910b" id20 -->
-    Atlas A2 训练系列产品/Atlas A2 推理系列产品
+    Atlas A2系列产品
     <!-- end id20 -->
 
     <!-- npu="310b" id21 -->
-    Atlas 200I/500 A2 推理产品
+    Atlas 200I/500 A2推理产品
     <!-- end id21 -->
 
   <!-- end id15 -->
   <!-- npu="310p" id16 -->
-  - 对于Atlas 推理系列产品，单个Device支持的Event最大数为1023。
+  - 对于Atlas推理系列产品，单个Device支持的Event最大数为1023。
   <!-- end id16 -->
   <!-- npu="910" id17 -->
-  - 对于Atlas 训练系列产品，单个Device支持的Event最大数为65535。
+  - 对于Atlas训练系列产品，单个Device支持的Event最大数为65535。
   <!-- end id17 -->
   <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id23 -->
 
@@ -119,22 +119,22 @@ aclError aclrtCreateEventWithFlag(aclrtEvent *event, uint32_t flag)
 ### 产品支持情况
 
 <!-- npu="950" id2808 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2808 -->
 <!-- npu="A3" id2809 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2809 -->
 <!-- npu="910b" id2810 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2810 -->
 <!-- npu="310b" id2811 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2811 -->
 <!-- npu="310p" id2812 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2812 -->
 <!-- npu="910" id2813 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2813 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id2 -->
 
@@ -159,15 +159,15 @@ aclError aclrtCreateEventWithFlag(aclrtEvent *event, uint32_t flag)
 - 各产品型号对ACL\_EVENT\_DEVICE\_USE\_ONLY的支持情况不同：
 
   <!-- npu="950,A3,910b" id23 -->
-  对于Ascend 950PR/Ascend 950DT、Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品，支持该flag。
+  对于Ascend 950PR&950DT系列产品、Atlas A3系列产品、Atlas A2系列产品，支持该flag。
   <!-- end id23 -->
 
   <!-- npu="310p" id25 -->
-  对于Atlas 推理系列产品，支持该flag。
+  对于Atlas推理系列产品，支持该flag。
   <!-- end id25 -->
 
   <!-- npu="310b" id24 -->
-  对于Atlas 200I/500 A2 推理产品、Atlas 训练系列产品，不支持该flag。
+  对于Atlas 200I/500 A2推理产品、Atlas训练系列产品，不支持该flag。
   <!-- end id24 -->
 
 <!-- end id22 -->
@@ -179,27 +179,27 @@ aclError aclrtCreateEventWithFlag(aclrtEvent *event, uint32_t flag)
   - 对于以下产品型号，单个Device支持的Event最大数为65536：
 
     <!-- npu="950" id27 -->
-    Ascend 950PR/Ascend 950DT
+    Ascend 950PR&950DT系列产品
     <!-- end id27 -->
 
     <!-- npu="A3" id28 -->
-    Atlas A3 训练系列产品/Atlas A3 推理系列产品
+    Atlas A3系列产品
     <!-- end id28 -->
 
     <!-- npu="910b" id29 -->
-    Atlas A2 训练系列产品/Atlas A2 推理系列产品
+    Atlas A2系列产品
     <!-- end id29 -->
 
     <!-- npu="310b" id30 -->
-    Atlas 200I/500 A2 推理产品
+    Atlas 200I/500 A2推理产品
     <!-- end id30 -->
   <!-- end id26 -->
 
   <!-- npu="310p" id31 -->
-  - 对于Atlas 推理系列产品，单个Device支持的Event最大数为1023。
+  - 对于Atlas推理系列产品，单个Device支持的Event最大数为1023。
   <!-- end id31 -->
   <!-- npu="910" id32 -->
-  - 对于Atlas 训练系列产品，单个Device支持的Event最大数为65535。
+  - 对于Atlas训练系列产品，单个Device支持的Event最大数为65535。
   <!-- end id32 -->
 
 <br>
@@ -217,22 +217,22 @@ aclError aclrtCreateEventExWithFlag(aclrtEvent *event, uint32_t flag)
 ### 产品支持情况
 
 <!-- npu="950" id2780 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2780 -->
 <!-- npu="A3" id2781 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2781 -->
 <!-- npu="910b" id2782 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2782 -->
 <!-- npu="310b" id2783 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2783 -->
 <!-- npu="310p" id2784 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2784 -->
 <!-- npu="910" id2785 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2785 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id3 -->
 
@@ -245,7 +245,7 @@ aclError aclrtCreateEventExWithFlag(aclrtEvent *event, uint32_t flag)
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
 | event | 输出 | Event的指针。类型定义请参见[aclrtEvent](25-05_Typedefs.md#aclrtEvent)。 |
-| flag | 输入 | Event指针的flag。<br>flag为bitmap，支持将flag设置为单个宏、或者对多个宏进行或操作。<br>当前支持将flag设置为如下宏：<br><br>  - ACL_EVENT_TIME_LINE：使能该bit表示创建的Event需要记录时间戳信息。注意：使能时间戳功能会影响Event相关接口的性能。<br>  - ACL_EVENT_SYNC：使能该bit表示创建的Event支持多Stream间的同步。<br>  - ACL_EVENT_CAPTURE_STREAM_PROGRESS：使能该bit表示创建的Event用于跟踪stream的任务执行进度。<br>  - ACL_EVENT_IPC：使能该bit表示创建的Event用于进程间通信，详细说明请参见[aclrtIpcGetEventHandle](#aclrtIpcGetEventHandle)。注意：该flag不支持与其他flag进行位或操作。Ascend 950DT不支持使用本flag创建Event。本flag创建出来的Event不支持在以下接口或场景中使用：[aclrtResetEvent](#aclrtResetEvent)、[aclrtQueryEvent](#aclrtQueryEvent_deprecated)、[aclrtQueryEventWaitStatus](#aclrtQueryEventWaitStatus)、[aclrtEventElapsedTime](#aclrtEventElapsedTime)、[aclrtEventGetTimestamp](#aclrtEventGetTimestamp)、[aclrtGetEventId](#aclrtGetEventId)、模型捕获场景（参见[aclmdlRICaptureBegin](15_model_running_instance_management.md#aclmdlRICaptureBegin)中的说明），否则返回报错。<br><br><br>宏的定义如下：<br>#define ACL_EVENT_TIME_LINE 0x00000008U<br>#define ACL_EVENT_SYNC 0x00000001U<br>#define ACL_EVENT_CAPTURE_STREAM_PROGRESS 0x00000002U<br>#define ACL_EVENT_IPC 0x00000040U |
+| flag | 输入 | Event指针的flag。<br>flag为bitmap，支持将flag设置为单个宏、或者对多个宏进行或操作。<br>当前支持将flag设置为如下宏：<br><br>  - ACL_EVENT_TIME_LINE：使能该bit表示创建的Event需要记录时间戳信息。注意：使能时间戳功能会影响Event相关接口的性能。<br>  - ACL_EVENT_SYNC：使能该bit表示创建的Event支持多Stream间的同步。<br>  - ACL_EVENT_CAPTURE_STREAM_PROGRESS：使能该bit表示创建的Event用于跟踪stream的任务执行进度。<br>  - ACL_EVENT_IPC：使能该bit表示创建的Event用于进程间通信，详细说明请参见[aclrtIpcGetEventHandle](#aclrtIpcGetEventHandle)。注意：该flag不支持与其他flag进行位或操作。Ascend 950DT系列产品不支持使用本flag创建Event。本flag创建出来的Event不支持在以下接口或场景中使用：[aclrtResetEvent](#aclrtResetEvent)、[aclrtQueryEvent](#aclrtQueryEvent_deprecated)、[aclrtQueryEventWaitStatus](#aclrtQueryEventWaitStatus)、[aclrtEventElapsedTime](#aclrtEventElapsedTime)、[aclrtEventGetTimestamp](#aclrtEventGetTimestamp)、[aclrtGetEventId](#aclrtGetEventId)、模型捕获场景（参见[aclmdlRICaptureBegin](15_model_running_instance_management.md#aclmdlRICaptureBegin)中的说明），否则返回报错。<br><br><br>宏的定义如下：<br>#define ACL_EVENT_TIME_LINE 0x00000008U<br>#define ACL_EVENT_SYNC 0x00000001U<br>#define ACL_EVENT_CAPTURE_STREAM_PROGRESS 0x00000002U<br>#define ACL_EVENT_IPC 0x00000040U |
 
 ### 返回值说明
 
@@ -262,27 +262,27 @@ aclError aclrtCreateEventExWithFlag(aclrtEvent *event, uint32_t flag)
   - 对于以下产品型号，单个Device支持的Event最大数为65536：
 
     <!-- npu="950" id34 -->
-    Ascend 950PR/Ascend 950DT
+    Ascend 950PR&950DT系列产品
     <!-- end id34 -->
 
     <!-- npu="A3" id35 -->
-    Atlas A3 训练系列产品/Atlas A3 推理系列产品
+    Atlas A3系列产品
     <!-- end id35 -->
 
     <!-- npu="910b" id36 -->
-    Atlas A2 训练系列产品/Atlas A2 推理系列产品
+    Atlas A2系列产品
     <!-- end id36 -->
 
     <!-- npu="310b" id37 -->
-    Atlas 200I/500 A2 推理产品
+    Atlas 200I/500 A2推理产品
     <!-- end id37 -->
   <!-- end id33 -->
 
   <!-- npu="310p" id38 -->
-  - 对于Atlas 推理系列产品，单个Device支持的Event最大数为1023。
+  - 对于Atlas推理系列产品，单个Device支持的Event最大数为1023。
   <!-- end id38 -->
   <!-- npu="910" id39 -->
-  - 对于Atlas 训练系列产品，单个Device支持的Event最大数为65535。
+  - 对于Atlas训练系列产品，单个Device支持的Event最大数为65535。
   <!-- end id39 -->
   <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id25 -->
 
@@ -301,22 +301,22 @@ aclError aclrtDestroyEvent(aclrtEvent event)
 ### 产品支持情况
 
 <!-- npu="950" id1338 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1338 -->
 <!-- npu="A3" id1339 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1339 -->
 <!-- npu="910b" id1340 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1340 -->
 <!-- npu="310b" id1341 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1341 -->
 <!-- npu="310p" id1342 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1342 -->
 <!-- npu="910" id1343 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1343 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id4 -->
 
@@ -353,22 +353,22 @@ aclError aclrtRecordEvent(aclrtEvent event, aclrtStream stream)
 ### 产品支持情况
 
 <!-- npu="950" id981 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id981 -->
 <!-- npu="A3" id982 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id982 -->
 <!-- npu="910b" id983 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id983 -->
 <!-- npu="310b" id984 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id984 -->
 <!-- npu="310p" id985 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id985 -->
 <!-- npu="910" id986 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id986 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id5 -->
 
@@ -411,22 +411,22 @@ aclError aclrtRecordEventWithFlag(aclrtEvent event, aclrtStream stream, uint32_t
 ### 产品支持情况
 
 <!-- npu="950" id1 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1 -->
 <!-- npu="A3" id2 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2 -->
 <!-- npu="910b" id3 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3 -->
 <!-- npu="310b" id4 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id4 -->
 <!-- npu="310p" id5 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id5 -->
 <!-- npu="910" id6 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id6 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id6 -->
 
@@ -470,22 +470,22 @@ aclError aclrtResetEvent(aclrtEvent event, aclrtStream stream)
 ### 产品支持情况
 
 <!-- npu="950" id246 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id246 -->
 <!-- npu="A3" id247 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id247 -->
 <!-- npu="910b" id248 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id248 -->
 <!-- npu="310b" id249 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id249 -->
 <!-- npu="310p" id250 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id250 -->
 <!-- npu="910" id251 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id251 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id7 -->
 
@@ -531,22 +531,22 @@ aclError aclrtQueryEvent(aclrtEvent event, aclrtEventStatus *status)
 ### 产品支持情况
 
 <!-- npu="950" id820 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id820 -->
 <!-- npu="A3" id821 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id821 -->
 <!-- npu="910b" id822 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id822 -->
 <!-- npu="310b" id823 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id823 -->
 <!-- npu="310p" id824 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id824 -->
 <!-- npu="910" id825 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id825 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id8 -->
 
@@ -580,22 +580,22 @@ aclError aclrtQueryEventStatus(aclrtEvent event, aclrtEventRecordedStatus *statu
 ### 产品支持情况
 
 <!-- npu="950" id3095 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id3095 -->
 <!-- npu="A3" id3096 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3096 -->
 <!-- npu="910b" id3097 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3097 -->
 <!-- npu="310b" id3098 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id3098 -->
 <!-- npu="310p" id3099 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id3099 -->
 <!-- npu="910" id3100 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id3100 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id9 -->
 
@@ -633,22 +633,22 @@ aclError aclrtQueryEventWaitStatus(aclrtEvent event, aclrtEventWaitStatus *statu
 ### 产品支持情况
 
 <!-- npu="950" id225 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id225 -->
 <!-- npu="A3" id226 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id226 -->
 <!-- npu="910b" id227 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id227 -->
 <!-- npu="310b" id228 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id228 -->
 <!-- npu="310p" id229 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id229 -->
 <!-- npu="910" id230 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id230 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id10 -->
 
@@ -686,22 +686,22 @@ aclError aclrtSynchronizeEvent(aclrtEvent event)
 ### 产品支持情况
 
 <!-- npu="950" id911 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id911 -->
 <!-- npu="A3" id912 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id912 -->
 <!-- npu="910b" id913 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id913 -->
 <!-- npu="310b" id914 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id914 -->
 <!-- npu="310p" id915 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id915 -->
 <!-- npu="910" id916 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id916 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id11 -->
 
@@ -734,22 +734,22 @@ aclError aclrtSynchronizeEventWithTimeout(aclrtEvent event, int32_t timeout)
 ### 产品支持情况
 
 <!-- npu="950" id1793 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1793 -->
 <!-- npu="A3" id1794 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1794 -->
 <!-- npu="910b" id1795 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1795 -->
 <!-- npu="310b" id1796 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1796 -->
 <!-- npu="310p" id1797 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1797 -->
 <!-- npu="910" id1798 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1798 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id12 -->
 
@@ -785,22 +785,22 @@ aclError aclrtEventElapsedTime(float *ms, aclrtEvent startEvent, aclrtEvent endE
 ### 产品支持情况
 
 <!-- npu="950" id1667 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1667 -->
 <!-- npu="A3" id1668 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1668 -->
 <!-- npu="910b" id1669 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1669 -->
 <!-- npu="310b" id1670 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1670 -->
 <!-- npu="310p" id1671 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1671 -->
 <!-- npu="910" id1672 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1672 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id13 -->
 
@@ -837,22 +837,22 @@ aclError aclrtStreamWaitEvent(aclrtStream stream, aclrtEvent event)
 ### 产品支持情况
 
 <!-- npu="950" id64 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id64 -->
 <!-- npu="A3" id65 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id65 -->
 <!-- npu="910b" id66 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id66 -->
 <!-- npu="310b" id67 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id67 -->
 <!-- npu="310p" id68 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id68 -->
 <!-- npu="910" id69 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id69 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id14 -->
 
@@ -892,22 +892,22 @@ aclError aclrtStreamWaitEventWithFlag(aclrtStream stream, aclrtEvent event, uint
 ### 产品支持情况
 
 <!-- npu="950" id8 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id8 -->
 <!-- npu="A3" id9 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id9 -->
 <!-- npu="910b" id10 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id10 -->
 <!-- npu="310b" id11 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id11 -->
 <!-- npu="310p" id12 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id12 -->
 <!-- npu="910" id13 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id13 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id15 -->
 
@@ -952,22 +952,22 @@ aclError aclrtStreamWaitEventWithTimeout(aclrtStream stream, aclrtEvent event, i
 ### 产品支持情况
 
 <!-- npu="950" id2129 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2129 -->
 <!-- npu="A3" id2130 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2130 -->
 <!-- npu="910b" id2131 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2131 -->
 <!-- npu="310b" id2132 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2132 -->
 <!-- npu="310p" id2133 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2133 -->
 <!-- npu="910" id2134 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2134 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id16 -->
 
@@ -1002,22 +1002,22 @@ aclError aclrtSetOpWaitTimeout(uint32_t timeout)
 ### 产品支持情况
 
 <!-- npu="950" id414 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id414 -->
 <!-- npu="A3" id415 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id415 -->
 <!-- npu="910b" id416 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id416 -->
 <!-- npu="310b" id417 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id417 -->
 <!-- npu="310p" id418 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id418 -->
 <!-- npu="910" id419 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id419 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id17 -->
 
@@ -1056,22 +1056,22 @@ aclError aclrtEventGetTimestamp(aclrtEvent event, uint64_t *timestamp)
 ### 产品支持情况
 
 <!-- npu="950" id2409 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2409 -->
 <!-- npu="A3" id2410 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2410 -->
 <!-- npu="910b" id2411 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2411 -->
 <!-- npu="310b" id2412 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2412 -->
 <!-- npu="310p" id2413 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2413 -->
 <!-- npu="910" id2414 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2414 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id18 -->
 
@@ -1107,22 +1107,22 @@ aclError aclrtGetEventId(aclrtEvent event, uint32_t *eventId)
 ### 产品支持情况
 
 <!-- npu="950" id127 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id127 -->
 <!-- npu="A3" id128 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id128 -->
 <!-- npu="910b" id129 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id129 -->
 <!-- npu="310b" id130 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id130 -->
 <!-- npu="310p" id131 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id131 -->
 <!-- npu="910" id132 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id132 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id19 -->
 
@@ -1156,22 +1156,22 @@ aclError aclrtGetEventAvailNum(uint32_t *eventCount)
 ### 产品支持情况
 
 <!-- npu="950" id617 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id617 -->
 <!-- npu="A3" id618 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id618 -->
 <!-- npu="910b" id619 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id619 -->
 <!-- npu="310b" id620 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id620 -->
 <!-- npu="310p" id621 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id621 -->
 <!-- npu="910" id622 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id622 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id20 -->
 
@@ -1204,23 +1204,23 @@ aclError aclrtIpcGetEventHandle(aclrtEvent event, aclrtIpcEventHandle *handle)
 ### 产品支持情况
 
 <!-- npu="950" id1891 -->
-- Ascend 950PR：支持
-- Ascend 950DT：不支持
+- Ascend 950PR系列产品：支持
+- Ascend 950DT系列产品：不支持
 <!-- end id1891 -->
 <!-- npu="A3" id1892 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1892 -->
 <!-- npu="910b" id1893 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1893 -->
 <!-- npu="310b" id1894 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id1894 -->
 <!-- npu="310p" id1895 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id1895 -->
 <!-- npu="910" id1896 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id1896 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id21 -->
 
@@ -1268,23 +1268,23 @@ aclError aclrtIpcOpenEventHandle(aclrtIpcEventHandle handle, aclrtEvent *event)
 ### 产品支持情况
 
 <!-- npu="950" id2164 -->
-- Ascend 950PR：支持
-- Ascend 950DT：不支持
+- Ascend 950PR系列产品：支持
+- Ascend 950DT系列产品：不支持
 <!-- end id2164 -->
 <!-- npu="A3" id2165 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2165 -->
 <!-- npu="910b" id2166 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2166 -->
 <!-- npu="310b" id2167 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id2167 -->
 <!-- npu="310p" id2168 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id2168 -->
 <!-- npu="910" id2169 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id2169 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/07_event_management_res.md#id22 -->
 

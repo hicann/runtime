@@ -7,6 +7,7 @@
 调用 aclrtMemcpyAsync 异步内存复制接口时返回错误码 107003（ACL_ERROR_RT_STREAM_CONTEXT），表示Stream不在当前Device的Context中。
 
 典型错误场景：
+
 ```c
 aclrtSetDevice(0);                 // 指定 Device 0
 aclrtStream s0;
@@ -21,7 +22,8 @@ aclrtMemcpyAsync(dst, size, src, size, ACL_MEMCPY_DEVICE_TO_DEVICE, s0);  // 失
 ```
 
 报错日志示例如下：
-```
+
+```text
 aclrtMemcpyAsync failed, ret = 107003, stream not in current context
 [ERROR] RUNTIME: Stream not in current context, stream device mismatch
 ```
@@ -35,11 +37,13 @@ aclrtMemcpyAsync failed, ret = 107003, stream not in current context
 ### 原因1：Stream 与当前 Device 不属于同一 Device
 
 **解决方法**：
+
 - 理解 Stream 归属概念：Stream 属于创建时的 Device，与 Device 绑定
 - 在正确 Device 上下发：切换 Device 后使用属于该 Device 的 Stream
 - 每个 Device 创建独立 Stream：避免跨 Device 混用 Stream
 
 正确使用示例：
+
 ```c
 // Device 0 的操作
 aclrtSetDevice(0);
@@ -62,6 +66,7 @@ aclrtMemcpyAsync(dst1, size, src1, size, ACL_MEMCPY_DEVICE_TO_DEVICE, s0);  // �
 ```
 
 多 Device 编程最佳实践：
+
 ```c
 // 为每个 Device 创建独立的 Stream
 aclrtStream deviceStreams[2];

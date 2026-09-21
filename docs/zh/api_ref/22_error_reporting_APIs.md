@@ -36,22 +36,22 @@ int32_t ReportInnerErrMsg(const char_t *file_name, const char_t *func, uint32_t 
 ### 产品支持情况
 
 <!-- npu="950" id1 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1 -->
 <!-- npu="A3" id2 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2 -->
 <!-- npu="910b" id3 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3 -->
 <!-- npu="310b" id4 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id4 -->
 <!-- npu="310p" id5 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id5 -->
 <!-- npu="910" id6 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id6 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/22_error_reporting_APIs_res.md#id1 -->
 
@@ -107,22 +107,22 @@ int32_t ReportInnerErrMsg(const char_t *file_name, const char_t *func, uint32_t 
 ### 产品支持情况
 
 <!-- npu="950" id8 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id8 -->
 <!-- npu="A3" id9 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id9 -->
 <!-- npu="910b" id10 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id10 -->
 <!-- npu="310b" id11 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id11 -->
 <!-- npu="310p" id12 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id12 -->
 <!-- npu="910" id13 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id13 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/22_error_reporting_APIs_res.md#id2 -->
 
@@ -170,22 +170,22 @@ int32_t ReportUserDefinedErrMsg(const char *error_code, const char *format, ...)
 ### 产品支持情况
 
 <!-- npu="950" id15 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id15 -->
 <!-- npu="A3" id16 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id16 -->
 <!-- npu="910b" id17 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id17 -->
 <!-- npu="310b" id18 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id18 -->
 <!-- npu="310p" id19 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id19 -->
 <!-- npu="910" id20 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id20 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/22_error_reporting_APIs_res.md#id3 -->
 
@@ -225,22 +225,22 @@ int32_t RegisterFormatErrorMessage(const char *error_msg, size_t error_msg_len)
 ### 产品支持情况
 
 <!-- npu="950" id22 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id22 -->
 <!-- npu="A3" id23 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id23 -->
 <!-- npu="910b" id24 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id24 -->
 <!-- npu="310b" id25 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id25 -->
 <!-- npu="310p" id26 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id26 -->
 <!-- npu="910" id27 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id27 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/22_error_reporting_APIs_res.md#id4 -->
 

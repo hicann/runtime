@@ -7,6 +7,7 @@
 在Stream上配置了遇错即停模式（ACL_STOP_ON_FAILURE），任务执行失败时整个Context下的任务被停止，但无法准确定位是哪个任务失败，失败原因是什么。
 
 典型场景：
+
 ```cpp
 aclrtStream stream;
 aclrtCreateStream(&stream);
@@ -195,6 +196,7 @@ aclrtDestroyStream(stream);
 ```
 
 **plog日志关键信息提取**：
+
 ```bash
 # 查找失败的任务
 grep "Task run failed" plog.log

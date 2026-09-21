@@ -22,23 +22,23 @@ aclError aclrtSnapShotProcessLock(int pid, void* reserve)
 ### 产品支持情况
 
 <!-- npu="950" id1639 -->
-- Ascend 950PR：支持
-- Ascend 950DT：不支持
+- Ascend 950PR系列产品：支持
+- Ascend 950DT系列产品：不支持
 <!-- end id1639 -->
 <!-- npu="A3" id1640 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1640 -->
 <!-- npu="910b" id1641 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1641 -->
 <!-- npu="310b" id1642 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id1642 -->
 <!-- npu="310p" id1643 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id1643 -->
 <!-- npu="910" id1644 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id1644 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/21_snapshot_management_res.md#id1 -->
 
@@ -76,23 +76,23 @@ aclError aclrtSnapShotProcessBackup(int pid, aclrtSnapShotBackupArgs *args)
 ### 产品支持情况
 
 <!-- npu="950" id1380 -->
-- Ascend 950PR：支持
-- Ascend 950DT：不支持
+- Ascend 950PR系列产品：支持
+- Ascend 950DT系列产品：不支持
 <!-- end id1380 -->
 <!-- npu="A3" id1381 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1381 -->
 <!-- npu="910b" id1382 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1382 -->
 <!-- npu="310b" id1383 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id1383 -->
 <!-- npu="310p" id1384 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id1384 -->
 <!-- npu="910" id1385 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id1385 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/21_snapshot_management_res.md#id2 -->
 
@@ -130,23 +130,23 @@ aclError aclrtSnapShotProcessRestore(int pid, aclrtSnapShotRestoreArgs *args)
 ### 产品支持情况
 
 <!-- npu="950" id3130 -->
-- Ascend 950PR：支持
-- Ascend 950DT：不支持
+- Ascend 950PR系列产品：支持
+- Ascend 950DT系列产品：不支持
 <!-- end id3130 -->
 <!-- npu="A3" id3131 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3131 -->
 <!-- npu="910b" id3132 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3132 -->
 <!-- npu="310b" id3133 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id3133 -->
 <!-- npu="310p" id3134 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id3134 -->
 <!-- npu="910" id3135 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id3135 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/21_snapshot_management_res.md#id3 -->
 
@@ -188,23 +188,23 @@ aclError aclrtSnapShotProcessUnlock(int pid, void* reserve)
 ### 产品支持情况
 
 <!-- npu="950" id2822 -->
-- Ascend 950PR：支持
-- Ascend 950DT：不支持
+- Ascend 950PR系列产品：支持
+- Ascend 950DT系列产品：不支持
 <!-- end id2822 -->
 <!-- npu="A3" id2823 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2823 -->
 <!-- npu="910b" id2824 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2824 -->
 <!-- npu="310b" id2825 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id2825 -->
 <!-- npu="310p" id2826 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id2826 -->
 <!-- npu="910" id2827 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id2827 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/21_snapshot_management_res.md#id4 -->
 
@@ -242,23 +242,23 @@ aclError aclrtSnapShotCallbackRegister(aclrtSnapShotStage stage, aclrtSnapShotCa
 ### 产品支持情况
 
 <!-- npu="950" id2766 -->
-- Ascend 950PR：支持
-- Ascend 950DT：不支持
+- Ascend 950PR系列产品：支持
+- Ascend 950DT系列产品：不支持
 <!-- end id2766 -->
 <!-- npu="A3" id2767 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2767 -->
 <!-- npu="910b" id2768 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2768 -->
 <!-- npu="310b" id2769 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id2769 -->
 <!-- npu="310p" id2770 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id2770 -->
 <!-- npu="910" id2771 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id2771 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/21_snapshot_management_res.md#id5 -->
 
@@ -295,23 +295,23 @@ aclError aclrtSnapShotCallbackUnregister(aclrtSnapShotStage stage, aclrtSnapShot
 ### 产品支持情况
 
 <!-- npu="950" id1772 -->
-- Ascend 950PR：支持
-- Ascend 950DT：不支持
+- Ascend 950PR系列产品：支持
+- Ascend 950DT系列产品：不支持
 <!-- end id1772 -->
 <!-- npu="A3" id1773 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1773 -->
 <!-- npu="910b" id1774 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1774 -->
 <!-- npu="310b" id1775 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id1775 -->
 <!-- npu="310p" id1776 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id1776 -->
 <!-- npu="910" id1777 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id1777 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/21_snapshot_management_res.md#id6 -->
 

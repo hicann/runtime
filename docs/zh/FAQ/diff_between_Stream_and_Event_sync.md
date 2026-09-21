@@ -7,6 +7,7 @@
 混淆两种同步机制的使用范围和特性，导致选择不当。
 
 典型错误场景：
+
 ```c
 // 需要等待跨Stream任务完成，但使用了Stream同步
 aclrtSynchronizeStream(stream1);  // 仅等待 stream1，不等待 stream2
@@ -17,6 +18,7 @@ aclrtSynchronizeStream(stream1);  // 仅等待 stream1，不等待 stream2
 错误选择同步方式：单流等待用Event（过度设计），多流协调用Stream同步（会阻塞）。
 
 典型错误场景：
+
 ```c
 // 单Stream内等待，但使用了Event同步（过度设计）
 aclrtEvent event;
@@ -38,6 +40,7 @@ aclrtSynchronizeEvent(event);  // Event同步比Stream同步更复杂
 ### 原因1：不理解两种同步机制差异
 
 **解决方法**：
+
 - 理解 Stream 同步特性：
   - **作用范围**：阻塞指定 Stream 上的所有任务，直到全部完成
   - **适用场景**：等待单个 Stream 的整批任务完成
@@ -48,6 +51,7 @@ aclrtSynchronizeEvent(event);  // Event同步比Stream同步更复杂
   - **接口**：aclrtRecordEvent、aclrtSynchronizeEvent、aclrtStreamWaitEvent
 
 对比示例：
+
 ```c
 // Stream 同步：等待整流任务完成
 aclrtMemcpyAsync(dst, size, src, size, ACL_MEMCPY_HOST_TO_DEVICE, stream);
@@ -74,12 +78,14 @@ aclrtSynchronizeEvent(event2);  // 等待 event2 时间点完成
 ### 原因2：错误选择同步方式
 
 **解决方法**：
+
 - **单 Stream 等待**：使用 aclrtSynchronizeStream，简单直接
 - **跨 Stream 协调**：使用 Event，stream1 Record，stream2 Wait
 - **精细时间点控制**：使用 Event，记录和等待特定时间点
 - **避免过度设计**：单流场景不要用 Event 同步
 
 场景选择示例：
+
 ```c
 // 场景1：单 Stream 等待整批任务 → Stream 同步
 aclrtStream stream;

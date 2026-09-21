@@ -110,7 +110,7 @@ Runtime采用**主机-设备异步并行**的编程模式：
 
 此外，Runtime 还提供一系列特性（如 ACL Graph）。Runtime 功能架构如下图所示：
 
-![](figures/逻辑架构图.png)
+![](figures/logical_architecture_diagram.png)
 
 <br>
 <br>

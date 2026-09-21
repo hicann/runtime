@@ -20,22 +20,22 @@ aclError aclrtCmoAsync(void *src, size_t size, aclrtCmoType cmoType, aclrtStream
 ### 产品支持情况
 
 <!-- npu="950" id3081 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id3081 -->
 <!-- npu="A3" id3082 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3082 -->
 <!-- npu="910b" id3083 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3083 -->
 <!-- npu="310b" id3084 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id3084 -->
 <!-- npu="310p" id3085 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id3085 -->
 <!-- npu="910" id3086 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id3086 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-06_CMO_memory_operation_res.md#id1 -->
 
@@ -71,22 +71,22 @@ aclError aclrtCmoAsyncWithBarrier(void *src, size_t size, aclrtCmoType cmoType, 
 ### 产品支持情况
 
 <!-- npu="950" id3480 -->
-- Ascend 950PR/Ascend 950DT：不支持
+- Ascend 950PR&950DT系列产品：不支持
 <!-- end id3480 -->
 <!-- npu="A3" id3481 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：不支持
+- Atlas A3系列产品：不支持
 <!-- end id3481 -->
 <!-- npu="910b" id3482 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：不支持
+- Atlas A2系列产品：不支持
 <!-- end id3482 -->
 <!-- npu="310b" id3483 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id3483 -->
 <!-- npu="310p" id3484 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id3484 -->
 <!-- npu="910" id3485 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id3485 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-06_CMO_memory_operation_res.md#id2 -->
 
@@ -123,22 +123,22 @@ aclError aclrtCmoWaitBarrier(aclrtBarrierTaskInfo *taskInfo, aclrtStream stream,
 ### 产品支持情况
 
 <!-- npu="950" id1086 -->
-- Ascend 950PR/Ascend 950DT：不支持
+- Ascend 950PR&950DT系列产品：不支持
 <!-- end id1086 -->
 <!-- npu="A3" id1087 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：不支持
+- Atlas A3系列产品：不支持
 <!-- end id1087 -->
 <!-- npu="910b" id1088 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：不支持
+- Atlas A2系列产品：不支持
 <!-- end id1088 -->
 <!-- npu="310b" id1089 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1089 -->
 <!-- npu="310p" id1090 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id1090 -->
 <!-- npu="910" id1091 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id1091 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-06_CMO_memory_operation_res.md#id3 -->
 
@@ -173,22 +173,22 @@ aclError aclrtCmoGetDescSize(size_t *size)
 ### 产品支持情况
 
 <!-- npu="950" id2745 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2745 -->
 <!-- npu="A3" id2746 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2746 -->
 <!-- npu="910b" id2747 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2747 -->
 <!-- npu="310b" id2748 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id2748 -->
 <!-- npu="310p" id2749 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id2749 -->
 <!-- npu="910" id2750 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id2750 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-06_CMO_memory_operation_res.md#id4 -->
 
@@ -221,22 +221,22 @@ aclError aclrtCmoSetDesc(void *cmoDesc, void *src, size_t size)
 ### 产品支持情况
 
 <!-- npu="950" id925 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id925 -->
 <!-- npu="A3" id926 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id926 -->
 <!-- npu="910b" id927 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id927 -->
 <!-- npu="310b" id928 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id928 -->
 <!-- npu="310p" id929 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id929 -->
 <!-- npu="910" id930 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id930 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-06_CMO_memory_operation_res.md#id5 -->
 
@@ -271,22 +271,22 @@ aclError aclrtCmoAsyncWithDesc(void *cmoDesc, aclrtCmoType cmoType, aclrtStream 
 ### 产品支持情况
 
 <!-- npu="950" id2619 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2619 -->
 <!-- npu="A3" id2620 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2620 -->
 <!-- npu="910b" id2621 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2621 -->
 <!-- npu="310b" id2622 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id2622 -->
 <!-- npu="310p" id2623 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id2623 -->
 <!-- npu="910" id2624 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id2624 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-06_CMO_memory_operation_res.md#id6 -->
 

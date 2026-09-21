@@ -7,6 +7,7 @@
 使用ACL Graph方式捕获Stream上的任务时（在`aclmdlRICaptureBegin`和`aclmdlRICaptureEnd`之间），对Stream、Event、Device、Context进行同步或查询操作，会导致捕获失败。
 
 错误代码示例：
+
 ```cpp
 aclmdlRICaptureBegin(stream, ACL_MODEL_RI_CAPTURE_MODE_GLOBAL);
 aclrtSynchronizeStream(stream);  // ✗ 非法操作，会导致捕获失败
@@ -14,7 +15,8 @@ aclmdlRICaptureEnd(stream, &modelRI);
 ```
 
 报错日志示例如下：
-```
+
+```text
 [ERROR] RUNTIME: operation not permitted when a stream is capturing and the specified capture mode is not relaxed, ret=107041
 ```
 
@@ -23,6 +25,7 @@ aclmdlRICaptureEnd(stream, &modelRI);
 在全局禁止模式（`ACL_MODEL_RI_CAPTURE_MODE_GLOBAL`）下调用内存同步操作类函数（如`aclrtMemset`、`aclrtMemcpy`、`aclrtMemcpy2d`）时报错。
 
 错误代码示例：
+
 ```cpp
 aclmdlRICaptureBegin(stream, ACL_MODEL_RI_CAPTURE_MODE_GLOBAL);
 aclrtMemcpy(dst, size, src, size, ACL_MEMCPY_DEVICE_TO_DEVICE);  // ✗ 非法操作，会报错
@@ -30,7 +33,8 @@ aclmdlRICaptureEnd(stream, &modelRI);
 ```
 
 报错日志示例如下：
-```
+
+```text
 [ERROR] RUNTIME: operation not permitted when a stream is capturing and the specified capture mode is not relaxed, ret=107041
 ```
 
@@ -39,6 +43,7 @@ aclmdlRICaptureEnd(stream, &modelRI);
 使用默认Stream（传nullptr）进行ACL Graph捕获时，可能导致捕获失败或行为异常。
 
 错误代码示例：
+
 ```cpp
 aclmdlRICaptureBegin(nullptr, ACL_MODEL_RI_CAPTURE_MODE_GLOBAL);  // ✗ 使用默认Stream
 aclmdlRICaptureEnd(nullptr, &modelRI);

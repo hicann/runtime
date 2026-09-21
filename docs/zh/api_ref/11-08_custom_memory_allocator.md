@@ -17,22 +17,22 @@ aclError aclrtAllocatorRegister(aclrtStream stream, aclrtAllocatorDesc allocator
 ### 产品支持情况
 
 <!-- npu="950" id2297 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2297 -->
 <!-- npu="A3" id2298 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2298 -->
 <!-- npu="910b" id2299 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2299 -->
 <!-- npu="310b" id2300 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id2300 -->
 <!-- npu="310p" id2301 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2301 -->
 <!-- npu="910" id2302 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2302 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-08_custom_memory_allocator_res.md#id1 -->
 
@@ -79,22 +79,22 @@ aclError aclrtAllocatorGetByStream(aclrtStream stream, aclrtAllocatorDesc *alloc
 ### 产品支持情况
 
 <!-- npu="950" id372 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id372 -->
 <!-- npu="A3" id373 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id373 -->
 <!-- npu="910b" id374 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id374 -->
 <!-- npu="310b" id375 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id375 -->
 <!-- npu="310p" id376 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id376 -->
 <!-- npu="910" id377 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id377 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-08_custom_memory_allocator_res.md#id2 -->
 
@@ -106,7 +106,7 @@ aclError aclrtAllocatorGetByStream(aclrtStream stream, aclrtAllocatorDesc *alloc
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| stream | 输入 | 注册的类型，按照不同的子模块区分。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。 |
+| stream | 输入 | 指定需查询的Stream。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。 |
 | allocatorDesc | 输出 | Allocator描述符指针。类型定义请参见[aclrtAllocatorDesc](25-03_Operation_APIs.md#aclrtAllocatorDesc)。 |
 | allocator | 输出 | 用户提供的Allocator对象指针。类型定义请参见[aclrtAllocator](25-05_Typedefs.md#aclrtAllocator)。 |
 | allocFunc | 输出 | 申请内存block的回调函数。<br>回调函数定义如下：<br>typedef void *(*aclrtAllocatorAllocFunc)([aclrtAllocator](25-05_Typedefs.md#aclrtAllocator) allocator, size_t size); |
@@ -133,22 +133,22 @@ aclError aclrtAllocatorUnregister(aclrtStream stream)
 ### 产品支持情况
 
 <!-- npu="950" id3186 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id3186 -->
 <!-- npu="A3" id3187 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3187 -->
 <!-- npu="910b" id3188 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3188 -->
 <!-- npu="310b" id3189 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id3189 -->
 <!-- npu="310p" id3190 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id3190 -->
 <!-- npu="910" id3191 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id3191 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-08_custom_memory_allocator_res.md#id3 -->
 

@@ -56,22 +56,22 @@ aclError aclprofInit(const char *profilerResultPath, size_t length)
 ### 产品支持情况
 
 <!-- npu="950" id645 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id645 -->
 <!-- npu="A3" id646 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id646 -->
 <!-- npu="910b" id647 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id647 -->
 <!-- npu="310b" id648 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id648 -->
 <!-- npu="310p" id649 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id649 -->
 <!-- npu="910" id650 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id650 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/19-01_data_profiling_apis_res.md#id1 -->
 ### 功能说明
@@ -108,22 +108,22 @@ aclError aclprofSetConfig(aclprofConfigType configType, const char *config, size
 ### 产品支持情况
 
 <!-- npu="950" id36 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id36 -->
 <!-- npu="A3" id37 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id37 -->
 <!-- npu="910b" id38 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id38 -->
 <!-- npu="310b" id39 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id39 -->
 <!-- npu="310p" id40 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id40 -->
 <!-- npu="910" id41 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id41 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/19-01_data_profiling_apis_res.md#id2 -->
 ### 功能说明
@@ -163,22 +163,22 @@ aclError aclprofStart(const aclprofConfig *profilerConfig)
 ### 产品支持情况
 
 <!-- npu="950" id3172 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id3172 -->
 <!-- npu="A3" id3173 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3173 -->
 <!-- npu="910b" id3174 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3174 -->
 <!-- npu="310b" id3175 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id3175 -->
 <!-- npu="310p" id3176 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id3176 -->
 <!-- npu="910" id3177 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id3177 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/19-01_data_profiling_apis_res.md#id3 -->
 
@@ -217,22 +217,22 @@ aclError aclprofStop(const aclprofConfig *profilerConfig)
 ### 产品支持情况
 
 <!-- npu="950" id2479 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2479 -->
 <!-- npu="A3" id2480 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2480 -->
 <!-- npu="910b" id2481 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2481 -->
 <!-- npu="310b" id2482 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2482 -->
 <!-- npu="310p" id2483 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2483 -->
 <!-- npu="910" id2484 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2484 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/19-01_data_profiling_apis_res.md#id4 -->
 
@@ -269,22 +269,22 @@ aclError aclprofFinalize()
 ### 产品支持情况
 
 <!-- npu="950" id1408 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1408 -->
 <!-- npu="A3" id1409 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1409 -->
 <!-- npu="910b" id1410 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1410 -->
 <!-- npu="310b" id1411 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1411 -->
 <!-- npu="310p" id1412 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1412 -->
 <!-- npu="910" id1413 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1413 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/19-01_data_profiling_apis_res.md#id5 -->
 

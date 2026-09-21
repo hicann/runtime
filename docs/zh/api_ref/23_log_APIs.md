@@ -47,22 +47,22 @@ int32_t AlogRecord(uint32_t moduleId, uint32_t logType, int32_t level, const cha
 ### 产品支持情况
 
 <!-- npu="950" id1170 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1170 -->
 <!-- npu="A3" id1171 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1171 -->
 <!-- npu="910b" id1172 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1172 -->
 <!-- npu="310b" id1173 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1173 -->
 <!-- npu="310p" id1174 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1174 -->
 <!-- npu="910" id1175 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1175 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/23_log_APIs_res.md#id1 -->
 
@@ -107,22 +107,22 @@ int32_t AlogCheckDebugLevel(uint32_t moduleId, int32_t level)
 ### 产品支持情况
 
 <!-- npu="950" id2038 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2038 -->
 <!-- npu="A3" id2039 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2039 -->
 <!-- npu="910b" id2040 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2040 -->
 <!-- npu="310b" id2041 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2041 -->
 <!-- npu="310p" id2042 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2042 -->
 <!-- npu="910" id2043 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2043 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/23_log_APIs_res.md#id2 -->
 
@@ -171,22 +171,22 @@ void acllogRecord(int32_t moduleId, int32_t level, const char *fmt, ...)
 ### 产品支持情况
 
 <!-- npu="950" id52038 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id52038 -->
 <!-- npu="A3" id52039 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id52039 -->
 <!-- npu="910b" id52040 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id52040 -->
 <!-- npu="310b" id52041 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id52041 -->
 <!-- npu="310p" id52042 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id52042 -->
 <!-- npu="910" id52043 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id52043 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/23_log_APIs_res.md#id7 -->
 ### 函数功能
@@ -227,22 +227,22 @@ void acllogVaList(int32_t moduleId, int32_t level, const char *fmt, va_list list
 ### 产品支持情况
 
 <!-- npu="950" id84240 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id84240 -->
 <!-- npu="A3" id84241 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id84241 -->
 <!-- npu="910b" id82242 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id82242 -->
 <!-- npu="310b" id84243 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id84243 -->
 <!-- npu="310p" id84244 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id84244 -->
 <!-- npu="910" id84245 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id84245 -->
 
 <!-- @ref: runtime/res/docs/zh/api_ref/23_log_APIs_res.md#id4 -->
@@ -294,22 +294,22 @@ int32_t acllogCheckDebugLevel(int32_t moduleId, int32_t logLevel)
 ### 产品支持情况
 
 <!-- npu="950" id3240 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id3240 -->
 <!-- npu="A3" id3241 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3241 -->
 <!-- npu="910b" id3242 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3242 -->
 <!-- npu="310b" id3243 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id3243 -->
 <!-- npu="310p" id3244 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id3244 -->
 <!-- npu="910" id3245 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id3245 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/23_log_APIs_res.md#id5 -->
 
@@ -355,22 +355,22 @@ int32_t acllogRegisterCallback(acllogRecordCallback callbackFunc, void *userData
 ### 产品支持情况
 
 <!-- npu="950" id240 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id240 -->
 <!-- npu="A3" id241 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id241 -->
 <!-- npu="910b" id242 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id242 -->
 <!-- npu="310b" id243 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id243 -->
 <!-- npu="310p" id244 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id244 -->
 <!-- npu="910" id245 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id245 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/23_log_APIs_res.md#id6 -->
 
@@ -430,22 +430,22 @@ int32_t acllogUnregisterCallback(acllogCallbackHandle callback)
 ### 产品支持情况
 
 <!-- npu="950" id1905 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1905 -->
 <!-- npu="A3" id1906 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1906 -->
 <!-- npu="910b" id1907 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1907 -->
 <!-- npu="310b" id1908 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id1908 -->
 <!-- npu="310p" id1909 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id1909 -->
 <!-- npu="910" id1910 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id1910 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/23_log_APIs_res.md#id3 -->
 

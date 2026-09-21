@@ -10,7 +10,7 @@
 
 此处以A进程（内存出借方）、B进程（内存借入方）为例，说明两个进程间的内存共享接口调用流程：
 
-![](figures/进程间共享内存.png)
+![](figures/inter_process_share_mem.png)
 
 以下为A、B进程之间共享内存的示例代码，不可以直接拷贝编译运行，仅供参考。完整样例代码请参见[Link](https://gitcode.com/cann/runtime/tree/9.2.0/example/1_basic_features/memory/11_ipc_memory_withoutpid)。
 

@@ -37,7 +37,7 @@ for (deviceId = 0; deviceId < deviceCount; ++deviceId) {
 
 多Device选择的接口调用流程如下图所示：
 
-<img src="figures/同步等待流程_多Device场景.png" width="60%">
+<img src="figures/sync_wait_multi_devices.png" width="60%">
 
 以下是多Device选择的代码示例，不可以直接拷贝编译运行，仅供参考：
 

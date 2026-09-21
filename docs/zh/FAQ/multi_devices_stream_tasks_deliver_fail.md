@@ -7,6 +7,7 @@
 在多Device场景下，当尝试在与当前Device无所属关系的Stream上下发算子时，任务下发失败。
 
 错误代码示例：
+
 ```cpp
 aclrtSetDevice(0);
 aclrtStream s0;

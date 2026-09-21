@@ -6,7 +6,7 @@
 
 捕获任务到模型中再执行模型的基本流程如下图所示：
 
-![](figures/ACL_Graph单流捕获.png)
+![](figures/ACL_Graph_single_stream.png)
 
 捕获任务到模型中、再执行模型的场景下，存在如下基本限制：
 

@@ -16,22 +16,22 @@ aclError aclrtApiInjectionSetFunc(const char* name, aclrtApiFunc func)
 ### 产品支持情况
 
 <!-- npu="950" id3550 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id3550 -->
 <!-- npu="A3" id3551 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3551 -->
 <!-- npu="910b" id3552 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3552 -->
 <!-- npu="310b" id3553 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id3553 -->
 <!-- npu="310p" id3554 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id3554 -->
 <!-- npu="910" id3555 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id3555 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/27_api_hook_interfaces_res.md#id1 -->
 
@@ -74,22 +74,22 @@ aclError aclrtApiInjectionGetFunc(const char* name, aclrtApiFunc* originFunc, ac
 ### 产品支持情况
 
 <!-- npu="950" id3557 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id3557 -->
 <!-- npu="A3" id3558 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3558 -->
 <!-- npu="910b" id3559 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3559 -->
 <!-- npu="310b" id3560 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id3560 -->
 <!-- npu="310p" id3561 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id3561 -->
 <!-- npu="910" id3562 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id3562 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/27_api_hook_interfaces_res.md#id2 -->
 

@@ -559,7 +559,7 @@ typedef union aclrtLaunchKernelAttrValue {
     可通过[aclrtFunctionGetAvailDynUbufPerBlock](14_Kernel_loading_and_execution.md#aclrtFunctionGetAvailDynUbufPerBlock)接口获取dynUBufSize参数的最大值。
 
     <!-- npu="950" id1 -->
-    仅Ascend 950PR/Ascend 950DT支持该参数。
+    仅Ascend 950PR&950DT系列产品支持该参数。
     <!-- end id1 -->
 
     <!-- @ref: runtime/res/docs/zh/api_ref/25-05_Typedefs_res.md#id1 -->
@@ -569,7 +569,7 @@ typedef union aclrtLaunchKernelAttrValue {
     表示算子执行引擎。类型定义请参见[aclrtEngineType](25-02_Enumerations.md#aclrtEngineType)。
 
     <!-- npu="310p" id3 -->
-    仅Atlas 推理系列产品支持该参数。
+    仅Atlas推理系列产品支持该参数。
     <!-- end id3 -->
 
     <!-- @ref: runtime/res/docs/zh/api_ref/25-05_Typedefs_res.md#id2 -->
@@ -579,7 +579,7 @@ typedef union aclrtLaunchKernelAttrValue {
     表示numBlocks偏移量。numBlocks用于指定算子的核函数将会在几个核上执行。
 
     <!-- npu="310p" id5 -->
-    仅Atlas 推理系列产品支持该参数。
+    仅Atlas推理系列产品支持该参数。
     <!-- end id5 -->
 
     - **如果numBlocks ≤ AI Core核数**，则无需使用Vector Core上计算，可将engineType配置为ACL\_RT\_ENGINE\_TYPE\_AIC（表示在AI Core上计算），则此处的blockDimOffset配置为0。
@@ -676,7 +676,7 @@ typedef union {
 | rsv | 预留参数。当前固定配置为0。 |
 
 <!-- npu="A3,910b" id7 -->
-注意，仅Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品支持vaFlag。
+注意，仅Atlas A3系列产品、Atlas A2系列产品支持vaFlag。
 <!-- end id7 -->
 
 <br>
@@ -1021,7 +1021,7 @@ typedef struct {
 
 | 成员名称 | 说明 |
 | --- | --- |
-| sdid | 针对Atlas A3 训练系列产品/Atlas A3 推理系列产品中的超节点产品，sdid（SuperPOD Device ID）表示超节点产品中的Device唯一标识，可提前调用[aclGetDeviceInfo](04_device_management.md#aclrtGetDeviceInfo)接口获取。 |
+| sdid | 针对Atlas A3系列产品中的超节点产品，sdid（SuperPOD Device ID）表示超节点产品中的Device唯一标识，可提前调用[aclGetDeviceInfo](04_device_management.md#aclrtGetDeviceInfo)接口获取。 |
 | pid | Host侧进程ID白名单数组。 |
 | num | pid数组长度。 |
 
@@ -1081,7 +1081,7 @@ typedef union {
 
 | 成员名称 | 说明 |
 | --- | --- |
-| failureMode | 设置aclrtStreamAttr中的ACL_STREAM_ATTR_FAILURE_MODE（表示Stream的任务调度模式）属性时，属性值的取值如下：<br><br>  - 0：某个任务失败后，继续执行下一个任务。默认值为0。<br>  - 1：某个任务失败后，停止执行后续的任务，通常称作遇错即停。触发遇错即停之后，不支持再下发新任务。当Stream上设置了遇错即停模式，该Stream所在的Context下的其它Stream也是遇错即停 。该约束适用于以下产品型号：<br>Atlas A3 训练系列产品/Atlas A3 推理系列产品<br>Atlas A2 训练系列产品/Atlas A2 推理系列产品 |
+| failureMode | 设置aclrtStreamAttr中的ACL_STREAM_ATTR_FAILURE_MODE（表示Stream的任务调度模式）属性时，属性值的取值如下：<br><br>  - 0：某个任务失败后，继续执行下一个任务。默认值为0。<br>  - 1：某个任务失败后，停止执行后续的任务，通常称作遇错即停。触发遇错即停之后，不支持再下发新任务。当Stream上设置了遇错即停模式，该Stream所在的Context下的其它Stream也是遇错即停 。该约束适用于以下产品型号：<br>Atlas A3系列产品<br>Atlas A2系列产品 |
 | overflowSwitch | 设置aclrtStreamAttr中的ACL_STREAM_ATTR_FLOAT_OVERFLOW_CHECK（表示溢出检测开关）属性时，属性值的取值如下：<br><br>  - 0：关闭溢出检测。默认值为0。<br>  - 1：打开溢出检测。 |
 | userCustomTag | 设置aclrtStreamAttr中的ACL_STREAM_ATTR_USER_CUSTOM_TAG（表示溢出检测分组标签）属性时，属性值的取值范围：0~uint32_t类型的最大值。 |
 | cacheOpInfoSwitch | 设置aclrtStreamAttr中的ACL_STREAM_ATTR_CACHE_OP_INFO （表示算子信息缓存开关）属性时，属性值的取值如下：<br><br>  - 0：关闭算子信息缓存开关。默认值为0。<br>  - 1：开启算子信息缓存开关。 |
@@ -1108,11 +1108,11 @@ typedef struct {
 | val | 待更新的任务信息。类型定义请参见[aclrtUpdateTaskAttrVal](#aclrtUpdateTaskAttrVal)。 |
 
 <!-- npu="A3,910b" id8 -->
-Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品支持随机数生成任务。
+Atlas A3系列产品、Atlas A2系列产品支持随机数生成任务。
 <!-- end id8 -->
 
 <!-- npu="310p" id9 -->
-Atlas 推理系列产品不支持随机数生成任务。
+Atlas推理系列产品不支持随机数生成任务。
 <!-- end id9 -->
 
 <br>
@@ -1161,7 +1161,7 @@ typedef union {
 
 | 成员名称 | 说明 |
 | --- | --- |
-| randomTaskAttr | 随机数生成任务。类型定义请参见[aclrtRandomTaskUpdateAttr](25-04_Structs.md#aclrtRandomTaskUpdateAttr)。<br>不同型号对该任务支持的情况不同：<br>Atlas A3 训练系列产品/Atlas A3 推理系列产品支持随机数生成任务<br>Atlas A2 训练系列产品/Atlas A2 推理系列产品支持随机数生成任务 |
+| randomTaskAttr | 随机数生成任务。类型定义请参见[aclrtRandomTaskUpdateAttr](25-04_Structs.md#aclrtRandomTaskUpdateAttr)。<br>不同型号对该任务支持的情况不同：<br>Atlas A3系列产品支持随机数生成任务<br>Atlas A2系列产品支持随机数生成任务 |
 | aicAivTaskAttr | 在Cube\Vector计算单元上执行的计算任务。类型定义请参见[aclrtAicAivTaskUpdateAttr](25-04_Structs.md#aclrtAicAivTaskUpdateAttr)。 |
 
 <br>

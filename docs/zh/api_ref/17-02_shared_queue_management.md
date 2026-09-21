@@ -25,22 +25,22 @@ aclError acltdtCreateQueue(const acltdtQueueAttr *attr, uint32_t *qid)
 ### 产品支持情况
 
 <!-- npu="950" id2815 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2815 -->
 <!-- npu="A3" id2816 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2816 -->
 <!-- npu="910b" id2817 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2817 -->
 <!-- npu="310b" id2818 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2818 -->
 <!-- npu="310p" id2819 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2819 -->
 <!-- npu="910" id2820 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2820 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/17-02_shared_queue_management_res.md#id1 -->
 
@@ -74,22 +74,22 @@ aclError acltdtDestroyQueue(uint32_t qid)
 ### 产品支持情况
 
 <!-- npu="950" id3249 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id3249 -->
 <!-- npu="A3" id3250 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3250 -->
 <!-- npu="910b" id3251 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3251 -->
 <!-- npu="310b" id3252 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id3252 -->
 <!-- npu="310p" id3253 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id3253 -->
 <!-- npu="910" id3254 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id3254 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/17-02_shared_queue_management_res.md#id2 -->
 
@@ -122,22 +122,22 @@ aclError acltdtEnqueueData(uint32_t qid, const void *data, size_t dataSize, cons
 ### 产品支持情况
 
 <!-- npu="950" id3151 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id3151 -->
 <!-- npu="A3" id3152 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3152 -->
 <!-- npu="910b" id3153 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3153 -->
 <!-- npu="310b" id3154 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id3154 -->
 <!-- npu="310p" id3155 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id3155 -->
 <!-- npu="910" id3156 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id3156 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/17-02_shared_queue_management_res.md#id3 -->
 
@@ -176,22 +176,22 @@ aclError acltdtDequeueData(uint32_t qid, void *data, size_t dataSize, size_t *re
 ### 产品支持情况
 
 <!-- npu="950" id2710 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2710 -->
 <!-- npu="A3" id2711 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2711 -->
 <!-- npu="910b" id2712 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2712 -->
 <!-- npu="310b" id2713 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2713 -->
 <!-- npu="310p" id2714 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2714 -->
 <!-- npu="910" id2715 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2715 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/17-02_shared_queue_management_res.md#id4 -->
 
@@ -230,22 +230,22 @@ aclError acltdtEnqueue(uint32_t qid, acltdtBuf buf, int32_t timeout)
 ### 产品支持情况
 
 <!-- npu="950" id2864 -->
-- Ascend 950PR/Ascend 950DT：不支持
+- Ascend 950PR&950DT系列产品：不支持
 <!-- end id2864 -->
 <!-- npu="A3" id2865 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：不支持
+- Atlas A3系列产品：不支持
 <!-- end id2865 -->
 <!-- npu="910b" id2866 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：不支持
+- Atlas A2系列产品：不支持
 <!-- end id2866 -->
 <!-- npu="310b" id2867 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id2867 -->
 <!-- npu="310p" id2868 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id2868 -->
 <!-- npu="910" id2869 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id2869 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/17-02_shared_queue_management_res.md#id5 -->
 
@@ -280,22 +280,22 @@ aclError acltdtDequeue(uint32_t qid, acltdtBuf *buf, int32_t timeout)
 ### 产品支持情况
 
 <!-- npu="950" id932 -->
-- Ascend 950PR/Ascend 950DT：不支持
+- Ascend 950PR&950DT系列产品：不支持
 <!-- end id932 -->
 <!-- npu="A3" id933 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：不支持
+- Atlas A3系列产品：不支持
 <!-- end id933 -->
 <!-- npu="910b" id934 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：不支持
+- Atlas A2系列产品：不支持
 <!-- end id934 -->
 <!-- npu="310b" id935 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id935 -->
 <!-- npu="310p" id936 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id936 -->
 <!-- npu="910" id937 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id937 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/17-02_shared_queue_management_res.md#id6 -->
 
@@ -330,22 +330,22 @@ aclError acltdtBindQueueRoutes(acltdtQueueRouteList *qRouteList)
 ### 产品支持情况
 
 <!-- npu="950" id2801 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2801 -->
 <!-- npu="A3" id2802 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2802 -->
 <!-- npu="910b" id2803 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2803 -->
 <!-- npu="310b" id2804 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2804 -->
 <!-- npu="310p" id2805 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2805 -->
 <!-- npu="910" id2806 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2806 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/17-02_shared_queue_management_res.md#id7 -->
 
@@ -389,22 +389,22 @@ aclError acltdtUnbindQueueRoutes(acltdtQueueRouteList *qRouteList)
 ### 产品支持情况
 
 <!-- npu="950" id1436 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1436 -->
 <!-- npu="A3" id1437 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1437 -->
 <!-- npu="910b" id1438 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1438 -->
 <!-- npu="310b" id1439 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1439 -->
 <!-- npu="310p" id1440 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1440 -->
 <!-- npu="910" id1441 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1441 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/17-02_shared_queue_management_res.md#id8 -->
 
@@ -439,22 +439,22 @@ aclError acltdtQueryQueueRoutes(const acltdtQueueRouteQueryInfo *queryInfo, aclt
 ### 产品支持情况
 
 <!-- npu="950" id3025 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id3025 -->
 <!-- npu="A3" id3026 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3026 -->
 <!-- npu="910b" id3027 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3027 -->
 <!-- npu="310b" id3028 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id3028 -->
 <!-- npu="310p" id3029 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id3029 -->
 <!-- npu="910" id3030 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id3030 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/17-02_shared_queue_management_res.md#id9 -->
 
@@ -488,22 +488,22 @@ aclError acltdtGrantQueue(uint32_t qid, int32_t pid, uint32_t permission, int32_
 ### 产品支持情况
 
 <!-- npu="950" id183 -->
-- Ascend 950PR/Ascend 950DT：不支持
+- Ascend 950PR&950DT系列产品：不支持
 <!-- end id183 -->
 <!-- npu="A3" id184 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：不支持
+- Atlas A3系列产品：不支持
 <!-- end id184 -->
 <!-- npu="910b" id185 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：不支持
+- Atlas A2系列产品：不支持
 <!-- end id185 -->
 <!-- npu="310b" id186 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id186 -->
 <!-- npu="310p" id187 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id187 -->
 <!-- npu="910" id188 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id188 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/17-02_shared_queue_management_res.md#id10 -->
 
@@ -541,22 +541,22 @@ aclError acltdtAttachQueue(uint32_t qid, int32_t timeout, uint32_t *permission)
 ### 产品支持情况
 
 <!-- npu="950" id3445 -->
-- Ascend 950PR/Ascend 950DT：不支持
+- Ascend 950PR&950DT系列产品：不支持
 <!-- end id3445 -->
 <!-- npu="A3" id3446 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：不支持
+- Atlas A3系列产品：不支持
 <!-- end id3446 -->
 <!-- npu="910b" id3447 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：不支持
+- Atlas A2系列产品：不支持
 <!-- end id3447 -->
 <!-- npu="310b" id3448 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id3448 -->
 <!-- npu="310p" id3449 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id3449 -->
 <!-- npu="910" id3450 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id3450 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/17-02_shared_queue_management_res.md#id11 -->
 

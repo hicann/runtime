@@ -5,29 +5,29 @@
 <!-- npu="950,A3,910b,910,310p,310b" id9 -->
 - [查看日志（Ascend EP）](./viewing_logs_ep.md)：涉及的产品型号如下：
   <!-- npu="950" id1 -->
-  - Ascend 950PR/Ascend 950DT
+  - Ascend 950PR&950DT系列产品
   <!-- end id1 -->
   <!-- npu="A3" id2 -->
-  - Atlas A3 训练系列产品/Atlas A3 推理系列产品
+  - Atlas A3系列产品
   <!-- end id2 -->
   <!-- npu="910b" id3 -->
-  - Atlas A2 训练系列产品/Atlas A2 推理系列产品
+  - Atlas A2系列产品
   <!-- end id3 -->
   <!-- npu="910" id6 -->
-  - Atlas 训练系列产品
+  - Atlas训练系列产品
   <!-- end id6 -->
   <!-- npu="310b" id4 -->
-  - Atlas 200I/500 A2 推理产品
+  - Atlas 200I/500 A2推理产品
   <!-- end id4 -->
   <!-- npu="310p" id5 -->
-  - Atlas 推理系列产品
+  - Atlas推理系列产品
   <!-- end id5 -->
 <!-- end id9 -->
 <!-- npu="310b" id7 -->
-- [查看日志（Ascend RC）](./viewing_logs_rc.md)：当前仅涉及Atlas 200I/500 A2 推理产品。
+- [查看日志（Ascend RC）](./viewing_logs_rc.md)：当前仅涉及Atlas 200I/500 A2推理产品。
 <!-- end id7 -->
 <!-- npu="310p" id8 -->
-- [查看日志（Control CPU开放形态）](./viewing_logs_open_ctrl_cpu.md)：当前仅涉及Atlas 推理系列产品。
+- [查看日志（Control CPU开放形态）](./viewing_logs_open_ctrl_cpu.md)：当前仅涉及Atlas推理系列产品。
 <!-- end id8 -->
 
 ## 日志分类

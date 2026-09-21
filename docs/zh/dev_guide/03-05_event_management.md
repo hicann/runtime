@@ -8,11 +8,11 @@ Event也支持**多个任务等待同一个事件（多等一）**，例如strea
 
 一个任务等待一个事件的图示如下：
 
-![](figures/Event_一个任务等待一个事件.png)
+![](figures/Event_one_task_one_event.png)
 
 多个任务等待同一个事件的图示如下：
 
-![](figures/Event_多个任务等待一个事件.png)
+![](figures/Event_multi_tasks_one_event.png)
 
 <br>
 <br>

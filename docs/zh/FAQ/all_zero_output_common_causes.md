@@ -7,7 +7,8 @@
 执行算子时，算子输入数据正确，但输出数据异常，全为0。
 
 报错日志示例如下：
-```
+
+```text
 [ERROR] RUNTIME(2082291,python3):2024-07-04-14:14:25.036.721 [stars_engine.cc:1321]2082291 ProcLogicCqReport:[INIT][DEFAULT]Task run failed, device_id=0, stream_id=2, task_id=1, sqe_type=0(ffts), errType=0x1(task exception), sqSwStatus=0
 [ERROR] RUNTIME(2082291,python3):2024-07-04-14:14:25.050.365 [davinic_kernel_task.cc:1219]2082291 PreCheckTaskErr:[INIT][DEFAULT]Kernel task happen error, retCode=0x31, [vector core exception].
 [ERROR] RUNTIME(2082291,python3):2024-07-04-14:14:25.050.517 [stream.cc:1082]2082291 GetError:[INIT][DEFAULT]AIV Kernel happen error, retCode=0x31.
@@ -108,6 +109,7 @@ error = aclrtSynchronizeStream(stream);
 ### 排查步骤4：分析plog日志定位异常
 
 通过plog日志中的错误码和异常信息定位问题：
+
 ```bash
 # 查找关键错误信息
 grep -i "error\|exception\|failed" plog.log

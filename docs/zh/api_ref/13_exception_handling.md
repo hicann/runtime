@@ -31,22 +31,22 @@ const char *aclGetRecentErrMsg()
 ### 产品支持情况
 
 <!-- npu="950" id113 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id113 -->
 <!-- npu="A3" id114 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id114 -->
 <!-- npu="910b" id115 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id115 -->
 <!-- npu="310b" id116 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id116 -->
 <!-- npu="310p" id117 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id117 -->
 <!-- npu="910" id118 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id118 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/13_exception_handling_res.md#id1 -->
 
@@ -85,22 +85,22 @@ aclError aclrtSetExceptionInfoCallback(aclrtExceptionInfoCallback callback)
 ### 产品支持情况
 
 <!-- npu="950" id1877 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1877 -->
 <!-- npu="A3" id1878 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1878 -->
 <!-- npu="910b" id1879 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1879 -->
 <!-- npu="310b" id1880 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1880 -->
 <!-- npu="310p" id1881 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1881 -->
 <!-- npu="910" id1882 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1882 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/13_exception_handling_res.md#id2 -->
 
@@ -217,22 +217,22 @@ aclError aclrtExceptionInfoCallbackRegister(aclrtExceptionInfoCallback callback)
 ### 产品支持情况
 
 <!-- npu="950" id36 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id36 -->
 <!-- npu="A3" id37 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id37 -->
 <!-- npu="910b" id38 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id38 -->
 <!-- npu="310b" id39 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id39 -->
 <!-- npu="310p" id40 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id40 -->
 <!-- npu="910" id41 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id41 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/13_exception_handling_res.md#id16 -->
 
@@ -355,22 +355,22 @@ aclError aclrtExceptionInfoCallbackUnregister(aclrtExceptionInfoCallback callbac
 ### 产品支持情况
 
 <!-- npu="950" id43 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id43 -->
 <!-- npu="A3" id44 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id44 -->
 <!-- npu="910b" id45 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id45 -->
 <!-- npu="310b" id46 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id46 -->
 <!-- npu="310p" id47 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id47 -->
 <!-- npu="910" id48 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id48 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/13_exception_handling_res.md#id17 -->
 
@@ -443,22 +443,22 @@ uint32_t aclrtGetTaskIdFromExceptionInfo(const aclrtExceptionInfo *info)
 ### 产品支持情况
 
 <!-- npu="950" id2528 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2528 -->
 <!-- npu="A3" id2529 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2529 -->
 <!-- npu="910b" id2530 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2530 -->
 <!-- npu="310b" id2531 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2531 -->
 <!-- npu="310p" id2532 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2532 -->
 <!-- npu="910" id2533 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2533 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/13_exception_handling_res.md#id3 -->
 
@@ -491,22 +491,22 @@ uint32_t aclrtGetStreamIdFromExceptionInfo(const aclrtExceptionInfo *info)
 ### 产品支持情况
 
 <!-- npu="950" id3116 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id3116 -->
 <!-- npu="A3" id3117 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id3117 -->
 <!-- npu="910b" id3118 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3118 -->
 <!-- npu="310b" id3119 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id3119 -->
 <!-- npu="310p" id3120 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id3120 -->
 <!-- npu="910" id3121 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id3121 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/13_exception_handling_res.md#id4 -->
 
@@ -539,22 +539,22 @@ uint32_t aclrtGetThreadIdFromExceptionInfo(const aclrtExceptionInfo *info)
 ### 产品支持情况
 
 <!-- npu="950" id2017 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id2017 -->
 <!-- npu="A3" id2018 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2018 -->
 <!-- npu="910b" id2019 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id2019 -->
 <!-- npu="310b" id2020 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id2020 -->
 <!-- npu="310p" id2021 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id2021 -->
 <!-- npu="910" id2022 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id2022 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/13_exception_handling_res.md#id5 -->
 
@@ -587,22 +587,22 @@ uint32_t aclrtGetDeviceIdFromExceptionInfo(const aclrtExceptionInfo *info)
 ### 产品支持情况
 
 <!-- npu="950" id757 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id757 -->
 <!-- npu="A3" id758 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id758 -->
 <!-- npu="910b" id759 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id759 -->
 <!-- npu="310b" id760 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id760 -->
 <!-- npu="310p" id761 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id761 -->
 <!-- npu="910" id762 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id762 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/13_exception_handling_res.md#id6 -->
 
@@ -635,22 +635,22 @@ uint32_t aclrtGetErrorCodeFromExceptionInfo(const aclrtExceptionInfo *info)
 ### 产品支持情况
 
 <!-- npu="950" id1044 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1044 -->
 <!-- npu="A3" id1045 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1045 -->
 <!-- npu="910b" id1046 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1046 -->
 <!-- npu="310b" id1047 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1047 -->
 <!-- npu="310p" id1048 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1048 -->
 <!-- npu="910" id1049 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1049 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/13_exception_handling_res.md#id7 -->
 
@@ -683,22 +683,22 @@ aclError aclrtPeekAtLastError(aclrtLastErrLevel level)
 ### 产品支持情况
 
 <!-- npu="950" id1835 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1835 -->
 <!-- npu="A3" id1836 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id1836 -->
 <!-- npu="910b" id1837 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id1837 -->
 <!-- npu="310b" id1838 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id1838 -->
 <!-- npu="310p" id1839 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id1839 -->
 <!-- npu="910" id1840 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id1840 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/13_exception_handling_res.md#id8 -->
 
@@ -731,22 +731,22 @@ aclError aclrtGetLastError(aclrtLastErrLevel level)
 ### 产品支持情况
 
 <!-- npu="950" id904 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id904 -->
 <!-- npu="A3" id905 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id905 -->
 <!-- npu="910b" id906 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id906 -->
 <!-- npu="310b" id907 -->
-- Atlas 200I/500 A2 推理产品：支持
+- Atlas 200I/500 A2推理产品：支持
 <!-- end id907 -->
 <!-- npu="310p" id908 -->
-- Atlas 推理系列产品：支持
+- Atlas推理系列产品：支持
 <!-- end id908 -->
 <!-- npu="910" id909 -->
-- Atlas 训练系列产品：支持
+- Atlas训练系列产品：支持
 <!-- end id909 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/13_exception_handling_res.md#id9 -->
 
@@ -781,22 +781,22 @@ aclError aclrtGetMemUceInfo(int32_t deviceId, aclrtMemUceInfo *memUceInfoArray, 
 ### 产品支持情况
 
 <!-- npu="950" id1 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id1 -->
 <!-- npu="A3" id2 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id2 -->
 <!-- npu="910b" id3 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id3 -->
 <!-- npu="310b" id4 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id4 -->
 <!-- npu="310p" id5 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id5 -->
 <!-- npu="910" id6 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id6 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/13_exception_handling_res.md#id11 -->
 
@@ -834,22 +834,22 @@ aclError aclrtMemUceRepair(int32_t deviceId, aclrtMemUceInfo *memUceInfoArray, s
 ### 产品支持情况
 
 <!-- npu="950" id8 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id8 -->
 <!-- npu="A3" id9 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id9 -->
 <!-- npu="910b" id10 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id10 -->
 <!-- npu="310b" id11 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id11 -->
 <!-- npu="310p" id12 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id12 -->
 <!-- npu="910" id13 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id13 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/13_exception_handling_res.md#id12 -->
 
@@ -886,22 +886,22 @@ aclError aclrtDeviceTaskAbort(int32_t deviceId, uint32_t timeout)
 ### 产品支持情况
 
 <!-- npu="950" id15 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id15 -->
 <!-- npu="A3" id16 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id16 -->
 <!-- npu="910b" id17 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id17 -->
 <!-- npu="310b" id18 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id18 -->
 <!-- npu="310p" id19 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id19 -->
 <!-- npu="910" id20 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id20 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/13_exception_handling_res.md#id13 -->
 
@@ -941,22 +941,22 @@ aclError aclrtGetErrorVerbose(int32_t deviceId, aclrtErrorInfo *errorInfo);
 ### 产品支持情况
 
 <!-- npu="950" id22 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id22 -->
 <!-- npu="A3" id23 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id23 -->
 <!-- npu="910b" id24 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id24 -->
 <!-- npu="310b" id25 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id25 -->
 <!-- npu="310p" id26 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id26 -->
 <!-- npu="910" id27 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id27 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/13_exception_handling_res.md#id14 -->
 
@@ -969,7 +969,7 @@ aclError aclrtGetErrorVerbose(int32_t deviceId, aclrtErrorInfo *errorInfo);
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
 | deviceId | 输入 | Device ID。<br>与[aclrtSetDevice](04_device_management.md#aclrtSetDevice)接口中Device ID保持一致。 |
-| errorInfo | 输出 | 错误信息。<br>typedef enum { <br>   ACL_RT_NO_ERROR = 0,  // 无错误<br>   ACL_RT_ERROR_MEMORY = 1,  // 内存错误<br>   ACL_RT_ERROR_L2 = 2,  // L2 Buffer错误<br>   ACL_RT_ERROR_AICORE = 3,  // AI Core错误<br>   ACL_RT_ERROR_LINK = 4,  // 网络错误<br>   ACL_RT_ERROR_L3_PORT = 5,  // L3端口错误<br>   ACL_RT_ERROR_OTHERS = 0xFFFF, // 其它错误<br>} aclrtErrorType;<br><br>typedef enum aclrtAicoreErrorType { <br>   ACL_RT_AICORE_ERROR_UNKNOWN,  // 未知错误<br>   ACL_RT_AICORE_ERROR_SW,  // 建议排查软件错误<br>   ACL_RT_AICORE_ERROR_HW_LOCAL, // 建议排查当前Device的硬件错误<br>} aclrtAicoreErrorType;<br><br>#define ACL_RT_MEM_UCE_INFO_MAX_NUM 20<br>typedef struct {<br>   size_t arraySize;  // memUceInfoArray数组大小<br>   [aclrtMemUceInfo](25-04_Structs.md#aclrtMemUceInfo) memUceInfoArray[ACL_RT_MEM_UCE_INFO_MAX_NUM];  // 内存UCE的错误虚拟地址数组<br>} aclrtMemUceInfoArray;<br><br>typedef union aclrtErrorInfoDetail { <br>   aclrtMemUceInfoArray uceInfo;  // 内存UCE（uncorrect error）<br>   aclrtAicoreErrorType aicoreErrType;  // AI Core错误<br>} aclrtErrorInfoDetail; <br><br>typedef struct aclrtErrorInfo { <br>   uint8_t tryRepair;  // 是否需要修复 ，0表示无需修复，1表示需修复   <br>   uint8_t hasDetail;  // 是否有详细报错信息，0表示没有，1表示有<br>   uint8_t reserved[2];  // 预留参数<br>   aclrtErrorType errorType;  // 错误类型<br>   aclrtErrorInfoDetail detail; // 错误详细信息<br>} aclrtErrorInfo; |
+| errorInfo | 输出 | 错误信息。<br>typedef enum { <br>   ACL_RT_NO_ERROR = 0,  // 无错误<br>   ACL_RT_ERROR_MEMORY = 1,  // 内存错误<br>   ACL_RT_ERROR_L2 = 2,  // L2 Buffer错误<br>   ACL_RT_ERROR_AICORE = 3,  // AI Core错误<br>   ACL_RT_ERROR_LINK = 4,  // 网络错误<br>   ACL_RT_ERROR_L3_PORT = 5,  // L3端口错误<br>   ACL_RT_ERROR_OTHERS = 0xFFFF, // 其它错误<br>} aclrtErrorType;<br><br>typedef enum aclrtAicoreErrorType { <br>   ACL_RT_AICORE_ERROR_UNKNOWN,  // 未知错误<br>   ACL_RT_AICORE_ERROR_SW,  // 建议排查软件错误<br>   ACL_RT_AICORE_ERROR_HW_LOCAL, // 建议排查当前Device的硬件错误<br>} aclrtAicoreErrorType;<br><br>#define ACL_RT_MEM_UCE_INFO_MAX_NUM 20<br>typedef struct {<br>   size_t arraySize;  // memUceInfoArray数组大小<br>   [aclrtMemUceInfo](25-04_Structs.md#aclrtMemUceInfo) memUceInfoArray[ACL_RT_MEM_UCE_INFO_MAX_NUM];  // 内存UCE的错误虚拟地址数组<br>} aclrtMemUceInfoArray;<br><br>typedef union aclrtErrorInfoDetail { <br>   aclrtMemUceInfoArray uceInfo;  // 内存UCE（uncorrectable error）<br>   aclrtAicoreErrorType aicoreErrType;  // AI Core错误<br>} aclrtErrorInfoDetail; <br><br>typedef struct aclrtErrorInfo { <br>   uint8_t tryRepair;  // 是否需要修复 ，0表示无需修复，1表示需修复   <br>   uint8_t hasDetail;  // 是否有详细报错信息，0表示没有，1表示有<br>   uint8_t reserved[2];  // 预留参数<br>   aclrtErrorType errorType;  // 错误类型<br>   aclrtErrorInfoDetail detail; // 错误详细信息<br>} aclrtErrorInfo; |
 
 ### 返回值说明
 
@@ -978,7 +978,7 @@ aclError aclrtGetErrorVerbose(int32_t deviceId, aclrtErrorInfo *errorInfo);
 ### 约束说明
 
 如果通过[aclrtGetOpTimeOutInterval](12_execution_control.md#aclrtGetOpTimeOutInterval)接口查询到的超时最短时间间隔小于100ms时，本接口返回的故障的详细信息可能不准确。
-对于Atlas A3 训练系列产品/Atlas A3 推理系列产品、Atlas A2 训练系列产品/Atlas A2 推理系列产品，仅支持获取ACL_RT_NO_ERROR（无错误） 、ACL_RT_ERROR_MEMORY（内存错误） 、ACL_RT_ERROR_OTHERS（其它错误）。
+对于Atlas A3系列产品、Atlas A2系列产品，仅支持获取ACL_RT_NO_ERROR（无错误） 、ACL_RT_ERROR_MEMORY（内存错误） 、ACL_RT_ERROR_OTHERS（其它错误）。
 
 <br>
 <br>
@@ -997,22 +997,22 @@ aclError aclrtRepairError(int32_t deviceId, const aclrtErrorInfo *errorInfo)
 ### 产品支持情况
 
 <!-- npu="950" id29 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id29 -->
 <!-- npu="A3" id30 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id30 -->
 <!-- npu="910b" id31 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id31 -->
 <!-- npu="310b" id32 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id32 -->
 <!-- npu="310p" id33 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id33 -->
 <!-- npu="910" id34 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id34 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/13_exception_handling_res.md#id15 -->
 
@@ -1046,22 +1046,22 @@ aclError aclrtSetDeviceTaskAbortCallback(const char *regName, aclrtDeviceTaskAbo
 ### 产品支持情况
 
 <!-- npu="950" id379 -->
-- Ascend 950PR/Ascend 950DT：支持
+- Ascend 950PR&950DT系列产品：支持
 <!-- end id379 -->
 <!-- npu="A3" id380 -->
-- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+- Atlas A3系列产品：支持
 <!-- end id380 -->
 <!-- npu="910b" id381 -->
-- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+- Atlas A2系列产品：支持
 <!-- end id381 -->
 <!-- npu="310b" id382 -->
-- Atlas 200I/500 A2 推理产品：不支持
+- Atlas 200I/500 A2推理产品：不支持
 <!-- end id382 -->
 <!-- npu="310p" id383 -->
-- Atlas 推理系列产品：不支持
+- Atlas推理系列产品：不支持
 <!-- end id383 -->
 <!-- npu="910" id384 -->
-- Atlas 训练系列产品：不支持
+- Atlas训练系列产品：不支持
 <!-- end id384 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/13_exception_handling_res.md#id10 -->
 
