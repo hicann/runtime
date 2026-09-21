@@ -3662,9 +3662,9 @@ rtError_t ApiErrorDecorator::DeviceSetLimit(const int32_t devId, const rtLimitTy
     COND_RETURN_ERROR(
         error != RT_ERROR_NONE, error, "Failed to convert the user device ID %d to driver device ID.", devId);
     error = impl_->DeviceSetLimit(realDeviceId, type, val);
-    ERROR_RETURN(
-        error, "Device set limit failed, device_id=%d, type=%s, value=%u.", devId, LimitTypeToString(type).c_str(),
-        val);
+    COND_RETURN_ERROR(
+        (error != RT_ERROR_NONE) && (error != RT_ERROR_FEATURE_NOT_SUPPORT), error,
+        "Device set limit failed, device_id=%d, type=%s, value=%u.", devId, LimitTypeToString(type).c_str(), val);
     return error;
 }
 
@@ -3673,7 +3673,9 @@ rtError_t ApiErrorDecorator::DeviceGetLimit(const rtLimitType_t type, uint32_t* 
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         val == nullptr, RT_ERROR_INVALID_VALUE, "Querying device restriction parameters", val, "non-null");
     rtError_t error = impl_->DeviceGetLimit(type, val);
-    ERROR_RETURN(error, "Device get limit failed, type=%s.", LimitTypeToString(type).c_str());
+    COND_RETURN_ERROR(
+        (error != RT_ERROR_NONE) && (error != RT_ERROR_FEATURE_NOT_SUPPORT), error, "Device get limit failed, type=%s.",
+        LimitTypeToString(type).c_str());
     return error;
 }
 

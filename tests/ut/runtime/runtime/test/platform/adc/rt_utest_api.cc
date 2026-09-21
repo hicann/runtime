@@ -58,6 +58,9 @@
 #undef private
 
 using namespace cce::runtime;
+void ClearLastDlogRecordLine();
+bool DlogRecordContains(const std::string& keyword);
+
 class ApiTest : public testing::Test {
 public:
 protected:
@@ -121,4 +124,97 @@ TEST_F(ApiTest, ipc_test_unsupport)
     int num = 1;
     rtError_t error = rtSetIpcNotifyPid("test", pid, num);
     EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+}
+
+TEST_F(ApiTest, DeviceSetLimitFeatureNotSupportReturnsWithoutErrorLog)
+{
+    ApiImpl impl;
+    ApiErrorDecorator api(&impl);
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DeviceSetLimit)
+        .expects(once())
+        .with(0, RT_LIMIT_TYPE_SIMT_PRINTF_FIFO_SIZE, 0U)
+        .will(returnValue(RT_ERROR_FEATURE_NOT_SUPPORT));
+    ClearLastDlogRecordLine();
+
+    const rtError_t error = api.DeviceSetLimit(0, RT_LIMIT_TYPE_SIMT_PRINTF_FIFO_SIZE, 0U);
+
+    EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_FALSE(DlogRecordContains("Device set limit failed"));
+}
+
+TEST_F(ApiTest, DeviceSetLimitOtherErrorRecordsErrorLog)
+{
+    ApiImpl impl;
+    ApiErrorDecorator api(&impl);
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DeviceSetLimit)
+        .expects(once())
+        .with(0, RT_LIMIT_TYPE_SIMT_PRINTF_FIFO_SIZE, 0U)
+        .will(returnValue(RT_ERROR_INVALID_VALUE));
+    ClearLastDlogRecordLine();
+
+    const rtError_t error = api.DeviceSetLimit(0, RT_LIMIT_TYPE_SIMT_PRINTF_FIFO_SIZE, 0U);
+
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+    EXPECT_TRUE(DlogRecordContains("Device set limit failed"));
+}
+
+TEST_F(ApiTest, DeviceGetLimitNullValueReturnsInvalidValue)
+{
+    ApiImpl impl;
+    ApiErrorDecorator api(&impl);
+
+    const rtError_t error = api.DeviceGetLimit(RT_LIMIT_TYPE_STACK_SIZE, nullptr);
+
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+}
+
+TEST_F(ApiTest, DeviceGetLimitSuccessReturnsWithoutErrorLog)
+{
+    ApiImpl impl;
+    ApiErrorDecorator api(&impl);
+    uint32_t val = 0U;
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DeviceGetLimit)
+        .expects(once())
+        .with(RT_LIMIT_TYPE_STACK_SIZE, &val)
+        .will(returnValue(RT_ERROR_NONE));
+    ClearLastDlogRecordLine();
+
+    const rtError_t error = api.DeviceGetLimit(RT_LIMIT_TYPE_STACK_SIZE, &val);
+
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_FALSE(DlogRecordContains("Device get limit failed"));
+}
+
+TEST_F(ApiTest, DeviceGetLimitFeatureNotSupportReturnsWithoutErrorLog)
+{
+    ApiImpl impl;
+    ApiErrorDecorator api(&impl);
+    uint32_t val = 0U;
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DeviceGetLimit)
+        .expects(once())
+        .with(RT_LIMIT_TYPE_SIMT_PRINTF_FIFO_SIZE, &val)
+        .will(returnValue(RT_ERROR_FEATURE_NOT_SUPPORT));
+    ClearLastDlogRecordLine();
+
+    const rtError_t error = api.DeviceGetLimit(RT_LIMIT_TYPE_SIMT_PRINTF_FIFO_SIZE, &val);
+
+    EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_FALSE(DlogRecordContains("Device get limit failed"));
+}
+
+TEST_F(ApiTest, DeviceGetLimitOtherErrorRecordsErrorLog)
+{
+    ApiImpl impl;
+    ApiErrorDecorator api(&impl);
+    uint32_t val = 0U;
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DeviceGetLimit)
+        .expects(once())
+        .with(RT_LIMIT_TYPE_STACK_SIZE, &val)
+        .will(returnValue(RT_ERROR_INVALID_VALUE));
+    ClearLastDlogRecordLine();
+
+    const rtError_t error = api.DeviceGetLimit(RT_LIMIT_TYPE_STACK_SIZE, &val);
+
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+    EXPECT_TRUE(DlogRecordContains("Device get limit failed"));
 }
