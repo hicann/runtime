@@ -703,7 +703,7 @@ Atlas A3系列产品：不支持ACL\_PROF\_OPTYPE。
 typedef struct { 
     uint16_t version;
     uint16_t size;
-    uint32_t messageType;   // MESSAGE_TYPE_TENSOR_INFO
+    uint32_t messageType;   // ACL_PROF_MESSAGE_TYPE_TENSOR_INFO
     union Message {
         aclprofTensorInfo *tensorInfo;
     } message;
@@ -721,16 +721,16 @@ typedef struct {
 } aclprofTensorInfo;
 
 typedef struct {
-    uint32_t type;          // tensor类型，0: input, 1: output
-    uint32_t format;        // format类型: aclFormat
-    uint32_t dataType;      // dataType类型 aclDataType
-    uint32_t shapeDim;      // shape dim <= 8
-    uint32_t shape[8];      // tensor内存大小
-}aclprofTensor;
+    uint32_t type;                                       // tensor类型，0: input, 1: output
+    uint32_t format;                                     // format类型: aclFormat
+    uint32_t dataType;                                   // dataType类型 aclDataType
+    uint32_t shapeDim;                                   // shape dim <= 8
+    uint32_t shape[ACL_PROF_TENSOR_DATA_SHAPE_LEN];      // tensor内存大小
+} aclprofTensor;
 
-typedef enum{
-    MESSAGE_TYPE_TENSOR_INFO = 0
-}ProfMessageType;
+typedef enum {
+    ACL_PROF_MESSAGE_TYPE_TENSOR_INFO = 0
+} aclprofMessageType;
 ```
 
 <br>
