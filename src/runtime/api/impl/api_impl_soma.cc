@@ -63,10 +63,10 @@ rtError_t ApiImplSoma::StreamMemPoolGetAttr(rtMemPool_t memPool, rtMemPoolAttr a
 }
 
 rtError_t ApiImplSoma::MemPoolMallocAsync(
-    void** const devPtr, const uint64_t size, const rtMemPool_t memPoolId, Stream* const stm)
+    void** const ptr, const uint64_t size, const rtMemPool_t memPoolId, Stream* const stm)
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        devPtr, RT_ERROR_INVALID_VALUE, "Allocating memory of a specified size from the memory pool");
+        ptr, RT_ERROR_INVALID_VALUE, "Allocating memory of a specified size from the memory pool");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         memPoolId, RT_ERROR_INVALID_VALUE, "Allocating memory of a specified size from the memory pool");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
@@ -87,14 +87,14 @@ rtError_t ApiImplSoma::MemPoolMallocAsync(
     const std::shared_ptr<SegmentManager> poolHolder = SomaApi::QueryMemPool(memPoolId);
     COND_RETURN_ERROR(poolHolder == nullptr, RT_ERROR_MEM_POOL_NULL, "Memory pool is not created or destroyed.");
     ReuseFlag flag = ReuseFlag::REUSE_FLAG_NONE;
-    rtError_t error = SomaApi::AllocFromMemPool(devPtr, alignedSize, memPoolId, streamId, flag);
+    rtError_t error = SomaApi::AllocFromMemPool(ptr, alignedSize, memPoolId, streamId, flag);
     ERROR_RETURN_MSG_INNER(
         error, "Failed to allocate memory from pool, stream_id=%d, retCode=%#x.", streamId,
         static_cast<uint32_t>(error));
     RT_LOG(
-        RT_LOG_INFO, "Memory allocated success! Start ptr=0x%llx, end ptr=0x%llx", RtPtrToValue(*devPtr),
-        (RtPtrToValue(*devPtr) + static_cast<uint64_t>(size)));
-    const uint64_t va = RtPtrToValue(*devPtr);
+        RT_LOG_INFO, "Memory allocated success! Start ptr=0x%llx, end ptr=0x%llx", RtPtrToValue(*ptr),
+        (RtPtrToValue(*ptr) + static_cast<uint64_t>(size)));
+    const uint64_t va = RtPtrToValue(*ptr);
     SomaApi::MemPoolAsyncConfig(memPoolId, va, alignedSize, false);
     constexpr AicpuOpType opType = AicpuOpType::MALLOC;
     error = SomaAicpuKernelLaunch(

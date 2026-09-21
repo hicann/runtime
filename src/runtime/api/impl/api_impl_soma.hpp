@@ -29,7 +29,7 @@ public:
     rtError_t StreamMemPoolSetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void* value) override;
     rtError_t StreamMemPoolGetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void* value) override;
     rtError_t MemPoolMallocAsync(
-        void** const devPtr, const uint64_t size, const rtMemPool_t memPoolId, Stream* const stm) override;
+        void** const ptr, const uint64_t size, const rtMemPool_t memPoolId, Stream* const stm) override;
     rtError_t MemPoolFreeAsync(void* const ptr, Stream* const stm) override;
     rtError_t MemPoolFreeSync(void* const ptr) override;
     rtError_t SomaAicpuKernelLaunch(

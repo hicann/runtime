@@ -41,7 +41,7 @@ public:
     virtual rtError_t StreamMemPoolSetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void* value) = 0;
     virtual rtError_t StreamMemPoolGetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void* value) = 0;
     virtual rtError_t MemPoolMallocAsync(
-        void** devPtr, const uint64_t size, const rtMemPool_t memPoolId, Stream* const stm) = 0;
+        void** ptr, const uint64_t size, const rtMemPool_t memPoolId, Stream* const stm) = 0;
     virtual rtError_t MemPoolFreeAsync(void* const ptr, Stream* const stm) = 0;
     virtual rtError_t MemPoolFreeSync(void* const ptr) = 0;
     virtual rtError_t MemPoolTrimTo(rtMemPool_t memPool, uint64_t minBytesToKeep) = 0;

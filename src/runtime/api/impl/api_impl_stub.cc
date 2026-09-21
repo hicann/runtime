@@ -359,9 +359,9 @@ rtError_t ApiImplSoma::StreamMemPoolGetAttr(rtMemPool_t memPool, rtMemPoolAttr a
 }
 
 rtError_t ApiImplSoma::MemPoolMallocAsync(
-    void** const devPtr, const uint64_t size, const rtMemPool_t memPoolId, Stream* const stm)
+    void** const ptr, const uint64_t size, const rtMemPool_t memPoolId, Stream* const stm)
 {
-    UNUSED(devPtr);
+    UNUSED(ptr);
     UNUSED(size);
     UNUSED(memPoolId);
     UNUSED(stm);
