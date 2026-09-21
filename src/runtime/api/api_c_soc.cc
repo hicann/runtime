@@ -141,11 +141,11 @@ rtError_t rtSetSocVersion(const char_t* ver)
     GlobalContainer::SetRtChipType(chipType);
     GlobalContainer::SetUserSocVersion(inputSocVersion);
     GlobalContainer::SetSocVersion(inputSocVersion);
+    RT_LOG(RT_LOG_INFO, "soc version is %s, type=%d", inputSocVersion.c_str(), chipType);
     const auto rtInstance = Runtime::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
     rtInstance->SetIsUserSetSocVersion(true);
     rtInstance->UpdateDevProperties(chipType, inputSocVersion);
-    RT_LOG(RT_LOG_INFO, "soc version is %s, type=%d", inputSocVersion.c_str(), chipType);
     return ACL_RT_SUCCESS;
 }
 

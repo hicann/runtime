@@ -5752,10 +5752,12 @@ TEST_F(ApiDavidTest, test_profiler_kinds_task_fail)
 {
     Context* curCtx = Runtime::Instance()->CurrentContext();
     Stream* dftStm = curCtx->DefaultStream_();
-    rtDavidSqe_t* sqe = (rtDavidSqe_t*)malloc(3 * sizeof(rtDavidSqe_t));
-    uint64_t oldSqAddr = dftStm->GetSqBaseAddr();
+    Stream* ctrlStm = curCtx->GetCtrlSQStream();
+    const uint32_t sqDepth = ctrlStm->Device_()->GetDevProperties().rtsqDepth;
+    rtDavidSqe_t* sqe = (rtDavidSqe_t*)malloc(sqDepth * sizeof(rtDavidSqe_t));
+    uint64_t oldSqAddr = ctrlStm->GetSqBaseAddr();
     uint64_t newSqAddr = reinterpret_cast<uint64_t>(sqe);
-    dftStm->SetSqBaseAddr(newSqAddr);
+    ctrlStm->SetSqBaseAddr(newSqAddr);
     int32_t streamId = dftStm->Id_();
     dftStm->streamId_ = 2147483647;
     struct halTaskSendInfo sendInfo = {};
@@ -5782,7 +5784,7 @@ TEST_F(ApiDavidTest, test_profiler_kinds_task_fail)
     ProfStart(profiler, profConfig, numsDev, stream_->Device_());
     ProfStop(profiler, profConfig, numsDev, stream_->Device_());
 
-    dftStm->SetSqBaseAddr(oldSqAddr);
+    ctrlStm->SetSqBaseAddr(oldSqAddr);
     dftStm->streamId_ = streamId;
     delete profiler;
     free(sqe);

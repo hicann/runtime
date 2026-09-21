@@ -52,6 +52,7 @@ static Bitmap g_eventIdBitmap(MAX_EVENT_NUM);
 static Bitmap g_streamIdBitmap(992);
 static Bitmap g_taskIdBitmap(32760);
 static Bitmap g_sqcqIdBitmap(MAX_SQCQ_NUM);
+static rtDavidSqe_t g_davidSqeBuffer[2049U] = {};
 
 DVresult drvMemSmmuQuery(DVdevice device, UINT32* SSID) { return DRV_ERROR_NONE; }
 
@@ -1144,7 +1145,11 @@ drvError_t halCqReportRecv(uint32_t devId, struct halReportRecvInfo* info)
 int32_t halSqCqRes = 0;
 drvError_t halSqCqQuery(uint32_t devId, struct halSqCqQueryInfo* info)
 {
-    if (info->prop != DRV_SQCQ_PROP_SQ_CQE_STATUS) {
+    if (info->prop == DRV_SQCQ_PROP_SQ_BASE) {
+        const uint64_t sqBaseAddr = reinterpret_cast<uint64_t>(g_davidSqeBuffer);
+        info->value[0] = static_cast<uint32_t>(sqBaseAddr);
+        info->value[1] = static_cast<uint32_t>(sqBaseAddr >> 32U);
+    } else if (info->prop != DRV_SQCQ_PROP_SQ_CQE_STATUS) {
         info->value[0] = 1;
     } else {
         info->value[0] = 0;

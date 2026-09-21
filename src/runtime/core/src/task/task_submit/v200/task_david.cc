@@ -535,7 +535,7 @@ rtError_t DavidSendTask(TaskInfo* taskInfo, Stream* const stm)
     sendInfo.sqe_num = taskInfo->sqeNum;
     sendInfo.tsId = tsId;
     sendInfo.sqId = sqId;
-    sendInfo.sqe_addr = sqeBuffer;
+    sendInfo.sqe_addr = RtPtrToPtr<uint8_t*>(sqeAddr);
     drvError_t drvRet = halSqTaskSend(devId, &sendInfo);
     while (unlikely(drvRet == DRV_ERROR_NO_RESOURCES)) {
         RT_LOG(

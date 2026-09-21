@@ -132,7 +132,6 @@ private:
     void TearDownAutoSplitSlaves();
     void WaitRecycleThreadProcDone();
 
-    uint64_t sqAddr_{0ULL};
     std::mutex cntNotifyInfoLock_;
     uint32_t cntNotifyId_{MAX_UINT32_NUM};
     Atomic<uint32_t> recordVersion_{0U};

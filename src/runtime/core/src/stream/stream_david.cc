@@ -674,8 +674,9 @@ rtError_t DavidStream::SetupByFlagAndCheck(void)
     SetSatMode(device_->GetSatMode());
 
     /**** alloc sq cq id *****/
+    uint64_t sqAddr = 0ULL;
     const auto stmSqCqManage = RtPtrToUnConstPtr<StreamSqCqManage*>(device_->GetStreamSqCqManage());
-    error = stmSqCqManage->AllocDavidStreamSqCq(this, priority_, 0U, sqId_, cqId_, sqAddr_);
+    error = stmSqCqManage->AllocDavidStreamSqCq(this, priority_, 0U, sqId_, cqId_, sqAddr);
     if (error == RT_ERROR_DRV_NO_RESOURCES) {
         DeviceSqCqPool* sqcqPool = device_->GetDeviceSqCqManage();
         if ((sqcqPool->GetSqCqPoolFreeResNum() == 0U) && (Context_() != nullptr)) {
@@ -684,7 +685,7 @@ rtError_t DavidStream::SetupByFlagAndCheck(void)
 
         if ((sqcqPool != nullptr) && (sqcqPool->GetSqCqPoolFreeResNum() != 0U)) {
             if (sqcqPool->TryFreeSqCqToDrv() == RT_ERROR_NONE) {
-                error = stmSqCqManage->AllocDavidStreamSqCq(this, priority_, 0U, sqId_, cqId_, sqAddr_);
+                error = stmSqCqManage->AllocDavidStreamSqCq(this, priority_, 0U, sqId_, cqId_, sqAddr);
             }
         }
     }
@@ -698,7 +699,7 @@ rtError_t DavidStream::SetupByFlagAndCheck(void)
         }
         return error;
     }
-
+    SetSqBaseAddr(sqAddr);
     RT_LOG(RT_LOG_DEBUG, "[StreamSetup]alloc sq cq success: stream_id=%d, sqId=%u, cqId=%u", streamId_, sqId_, cqId_);
 
     error = AllocLogicCq(true, true, stmSqCqManage);
