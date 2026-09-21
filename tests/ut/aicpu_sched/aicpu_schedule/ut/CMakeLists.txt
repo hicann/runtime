@@ -330,6 +330,7 @@ set(LOCAL_SRC_FILES
     testcase/aicpusd_threads_process_test.cc
     testcase/aicpusd_message_queue_test.cc
     testcase/aicpusd_msq_operator_manager_test.cc
+    testcase/aicpu_alert_rectification_test.cc
     main_ut.cc
     ${PROTO_SRCS}
     ${statistic_src_file}
@@ -402,6 +403,7 @@ add_executable(aicpu_aicpuschedule_utest_host_cpu
     testcase/aicpu_context_stub_test.cc
     testcase/host_cpu_driver_stub_test.cc
     testcase/host_cpu_scheduler_stub_test.cc
+    testcase/aicpu_alert_rectification_stub_test.cc
     ${PROTO_SRCS}
     ${statistic_src_file}
     ${operator_kernel_src_file}

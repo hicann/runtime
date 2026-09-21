@@ -176,6 +176,7 @@ set(LOCAL_SRC_FILES
     testcase/aicpusd_task_queue_test.cc
     testcase/aicpusd_threads_process_test.cc
     testcase/c_stub.c
+    testcase/aicpu_alert_rectification_st.cc
     main_st.cc
     ${PROTO_SRCS}
     ${statistic_src_file}

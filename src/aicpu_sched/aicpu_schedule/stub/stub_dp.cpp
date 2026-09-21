@@ -25,6 +25,6 @@ TaskQueueMgr& DataPreprocess::TaskQueueMgr::GetInstance()
     return instance;
 }
 
-void DataPreprocess::TaskQueueMgr::OnPreprocessEvent(uint32_t eventId) { return; }
+void DataPreprocess::TaskQueueMgr::OnPreprocessEvent(uint32_t eventId) const { return; }
 
 } // namespace DataPreprocess

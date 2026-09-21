@@ -68,12 +68,12 @@ inline uint64_t TickInterval2Microsecond(const uint64_t tickStart, const uint64_
     // tickFreq is record by second, to microsecond need multiply 1000000
     return ((tickEnd - tickStart) * 1000000U) / tickFreq;
 }
-typedef struct {
+struct ProfIdentity {
     uint64_t taskId;
     uint64_t streamId;
     uint32_t threadIndex;
     uint32_t deviceId;
-} ProfIdentity;
+};
 
 class AicpuUtil {
 public:

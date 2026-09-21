@@ -145,7 +145,7 @@ TaskQueueMgr::TaskQueueMgr()
     }
 }
 TaskQueueMgr::~TaskQueueMgr() {}
-void TaskQueueMgr::OnPreprocessEvent(uint32_t eventId) {}
+void TaskQueueMgr::OnPreprocessEvent(uint32_t eventId) const {}
 } // namespace DataPreprocess
 #ifdef __cplusplus
 namespace tdt {
