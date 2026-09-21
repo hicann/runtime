@@ -35,5 +35,6 @@ PyObject* WrapAclRtKernelArgsGetPlaceHolderBuffer(PyObject* self, PyObject* args
 PyObject* WrapAclRtKernelArgsParaUpdate(PyObject* self, PyObject* args);
 PyObject* WrapAclRtKernelArgsFinalize(PyObject* self, PyObject* args);
 PyObject* WrapAclRtLaunchKernelWithConfig(PyObject* self, PyObject* args);
+PyObject* WrapAclRtLaunchKernelWithHostArgs(PyObject* self, PyObject* args);
 
 #endif // ACL_PYTHON_RT_BINARY_H

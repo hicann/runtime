@@ -282,3 +282,21 @@ PyObject* WrapAclRtDevicePeerAccessStatus(PyObject* /* self */, PyObject* args)
     aclError ret = aclrtDevicePeerAccessStatus(deviceId, peerDeviceId, &status);
     return Py_BuildValue("ii", status, ret);
 }
+
+PyObject* WrapAclRtDeviceSetLimit(PyObject* /* self */, PyObject* args)
+{
+    aclrtDeviceLimit limit = ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE;
+    size_t value = 0;
+    CHECK_NULL(PyArg_ParseTuple(args, "ik", &limit, &value), "acl.rt.device_set_limit args parse failed");
+    aclError ret = aclrtDeviceSetLimit(limit, value);
+    return Py_BuildValue("i", ret);
+}
+
+PyObject* WrapAclRtDeviceGetLimit(PyObject* /* self */, PyObject* args)
+{
+    aclrtDeviceLimit limit = ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE;
+    size_t value = 0;
+    CHECK_NULL(PyArg_ParseTuple(args, "i", &limit), "acl.rt.device_get_limit args parse failed");
+    aclError ret = aclrtDeviceGetLimit(limit, &value);
+    return Py_BuildValue("ki", value, ret);
+}

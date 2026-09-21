@@ -331,6 +331,33 @@ static bool GetKernelCfgFromPyList(
     return true;
 }
 
+static bool GetPlaceHolderFromPyDict(PyObject* pyPlaceHolderArray, aclrtPlaceHolderInfo& placeHolder)
+{
+    CHECK_STRUCT_DICT(pyPlaceHolderArray, "the placeHolder argument is not dict");
+
+    uint32_t addrOffset = 0;
+    uint32_t dataOffset = 0;
+    CHECK_BOOL(GetValueFromPyDict(pyPlaceHolderArray, "addrOffset", addrOffset));
+    CHECK_BOOL(GetValueFromPyDict(pyPlaceHolderArray, "dataOffset", dataOffset));
+    placeHolder.addrOffset = addrOffset;
+    placeHolder.dataOffset = dataOffset;
+    return true;
+}
+
+static bool GetPlaceHolderArrayFromPyList(
+    PyObject* pyPlaceHolderArray, std::vector<aclrtPlaceHolderInfo>& placeHolderArray, size_t placeHolderArraySize)
+{
+    CHECK_BOOL(PyList_Check(pyPlaceHolderArray), "argument 2 only support the format of list", PyExc_ValueError);
+    CHECK_BOOL(
+        PyList_Size(pyPlaceHolderArray) == static_cast<Py_ssize_t>(placeHolderArraySize),
+        "the size of placeHolderArray is not matched", PyExc_ValueError);
+
+    placeHolderArray.assign(placeHolderArraySize + 1, {});
+    CHECK_BOOL(ConvertPyListToStructArray(
+        pyPlaceHolderArray, static_cast<int>(placeHolderArraySize), placeHolderArray.data(), GetPlaceHolderFromPyDict));
+    return true;
+}
+
 PyObject* WrapAclRtLaunchKernelWithConfig(PyObject* /* self */, PyObject* args)
 {
     aclrtFuncHandle funcHandle = nullptr;
@@ -350,5 +377,37 @@ PyObject* WrapAclRtLaunchKernelWithConfig(PyObject* /* self */, PyObject* args)
     aclrtLaunchKernelCfg* cfgPtr = (cfg.numAttrs > 0) ? &cfg : nullptr;
 
     aclError ret = aclrtLaunchKernelWithConfig(funcHandle, blockDim, stream, cfgPtr, argsHandle, reserve);
+    return Py_BuildValue("i", ret);
+}
+
+PyObject* WrapAclRtLaunchKernelWithHostArgs(PyObject* /* self */, PyObject* args)
+{
+    aclrtFuncHandle funcHandle = nullptr;
+    uint32_t blockDim = 0;
+    aclrtStream stream = nullptr;
+    PyObject* pyCfg = nullptr;
+    void* hostArgsPtr = nullptr;
+    size_t hostArgsSize = 0;
+    PyObject* pyPlaceHolderArray = nullptr;
+    size_t placeHolderArraySize = 0;
+
+    CHECK_NULL(
+        PyArg_ParseTuple(
+            args, "kIkOkkOk", &funcHandle, &blockDim, &stream, &pyCfg, &hostArgsPtr, &hostArgsSize, &pyPlaceHolderArray,
+            &placeHolderArraySize),
+        "acl.rt.launch_kernel_with_host_args args parse failed");
+
+    aclrtLaunchKernelCfg cfg{};
+    std::vector<aclrtLaunchKernelAttr> attrs;
+    CHECK_NULL(GetKernelCfgFromPyList(pyCfg, cfg, attrs));
+    aclrtLaunchKernelCfg* cfgPtr = (cfg.numAttrs > 0) ? &cfg : nullptr;
+
+    std::vector<aclrtPlaceHolderInfo> placeHolderArray;
+    CHECK_NULL(GetPlaceHolderArrayFromPyList(pyPlaceHolderArray, placeHolderArray, placeHolderArraySize));
+    aclrtPlaceHolderInfo* placeHolderArrayPtr = (placeHolderArraySize > 0) ? placeHolderArray.data() : nullptr;
+
+    aclError ret = aclrtLaunchKernelWithHostArgs(
+        funcHandle, blockDim, stream, cfgPtr, hostArgsPtr, hostArgsSize, placeHolderArrayPtr, placeHolderArraySize);
+
     return Py_BuildValue("i", ret);
 }
