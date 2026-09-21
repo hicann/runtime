@@ -643,17 +643,26 @@ int32_t ProfHostService::KillToolAndWaitHostProcess() const
     ExecCmdParams execCmdParams(CMD, false, "");
     int32_t ret = analysis::dvvp::common::utils::Utils::ExecCmd(execCmdParams, argsV, envV, exitCode, appProcess);
     if (ret != PROFILING_SUCCESS) {
-        MSPROF_LOGE("Failed to kill process %s, ret=%d, exitCode=%d", toolName_.c_str(), ret, exitCode);
-        MSPROF_INNER_ERROR(
-            "EK9999", "Failed to kill process %s, ret=%d, exitCode=%d", toolName_.c_str(), ret, exitCode);
+        if (hostTimerTag_ != PROF_HOST_CCA_MS) {
+            MSPROF_LOGE("Failed to kill process %s, ret=%d, exitCode=%d", toolName_.c_str(), ret, exitCode);
+            MSPROF_INNER_ERROR(
+                "EK9999", "Failed to kill process %s, ret=%d, exitCode=%d", toolName_.c_str(), ret, exitCode);
+        } else {
+            MSPROF_LOGW("Failed to kill process %s, ret=%d, exitCode=%d", toolName_.c_str(), ret, exitCode);
+        }
         return ret;
     }
     if (hostProcess_ > 0) {
         bool isExited = false;
         ret = analysis::dvvp::common::utils::Utils::WaitProcess(hostProcess_, isExited, exitCode, true);
         if (ret != PROFILING_SUCCESS) {
-            MSPROF_LOGE("Failed to wait process %d, ret=%d, exitCode=%d", hostProcess_, ret, exitCode);
-            MSPROF_INNER_ERROR("EK9999", "Failed to wait process %d, ret=%d, exitCode=%d", hostProcess_, ret, exitCode);
+            if (hostTimerTag_ != PROF_HOST_CCA_MS) {
+                MSPROF_LOGE("Failed to wait process %d, ret=%d, exitCode=%d", hostProcess_, ret, exitCode);
+                MSPROF_INNER_ERROR(
+                    "EK9999", "Failed to wait process %d, ret=%d, exitCode=%d", hostProcess_, ret, exitCode);
+            } else {
+                MSPROF_LOGW("Failed to wait process %d, ret=%d, exitCode=%d", hostProcess_, ret, exitCode);
+            }
             return ret;
         } else {
             MSPROF_LOGI("Process %d exited, exitcode=%d", hostProcess_, exitCode);
@@ -837,7 +846,11 @@ void ProfHostService::Run(const error_message::ErrorManagerContext& errorContext
     MsprofErrorManager::instance()->SetErrorContext(errorContext);
     int32_t ret = Process();
     if (ret == PROFILING_FAILED) {
-        MSPROF_LOGE("The run toolName:%s process failed.", toolName_.c_str());
+        if (hostTimerTag_ == PROF_HOST_CCA_MS) {
+            MSPROF_LOGW("The run toolName:%s process failed.", toolName_.c_str());
+        } else {
+            MSPROF_LOGE("The run toolName:%s process failed.", toolName_.c_str());
+        }
         return;
     }
     std::string fileName = profHostOutDir_ + MSVP_PROF_PERF_RET_FILE_SUFFIX;
@@ -942,8 +955,12 @@ int32_t ProfHostService::CollectToolIsRun()
     ExecCmdParams execCmdParams("sh", false, redirectionPath);
     const int32_t ret = analysis::dvvp::common::utils::Utils::ExecCmd(execCmdParams, argsV, envV, exitCode, appProcess);
     if (ret != PROFILING_SUCCESS) {
-        MSPROF_LOGE("Failed to check process %s, ret=%d", toolName_.c_str(), ret);
-        MSPROF_INNER_ERROR("EK9999", "Failed to check process %s, ret=%d", toolName_.c_str(), ret);
+        if (hostTimerTag_ == PROF_HOST_CCA_MS) {
+            MSPROF_LOGW("Failed to check process %s, ret=%d", toolName_.c_str(), ret);
+        } else {
+            MSPROF_LOGE("Failed to check process %s, ret=%d", toolName_.c_str(), ret);
+            MSPROF_INNER_ERROR("EK9999", "Failed to check process %s, ret=%d", toolName_.c_str(), ret);
+        }
         return ret;
     }
     for (int32_t i = 0; i < FILE_FIND_REPLAY; ++i) {
@@ -980,7 +997,11 @@ int32_t ProfHostService::WaitCollectToolStart()
         }
     }
     if (ret == PROFILING_FAILED) {
-        MSPROF_LOGE("Failed to start the process: %s", toolName_.c_str());
+        if (hostTimerTag_ == PROF_HOST_CCA_MS) {
+            MSPROF_LOGW("Failed to start the process: %s", toolName_.c_str());
+        } else {
+            MSPROF_LOGE("Failed to start the process: %s", toolName_.c_str());
+        }
     }
     return ret;
 }
