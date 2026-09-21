@@ -35,6 +35,9 @@ constexpr uint64_t INVALID_DATA_FLAG = 1LLU << 63U;
 constexpr uint8_t REG_DATA_VALID = 0U;
 constexpr uint8_t REG_DATA_INVALID = 1U;
 
+// op 执行超时低于该值视为快恢场景，异常处理链路须让路（提前块守卫与 Args 模式既有守卫共用同一阈值）。
+constexpr uint32_t FAST_RECOVERY_OP_TIMEOUT_MS = 500U;
+
 struct DevInfo {
     rtDbgCoreInfo_t coreInfo;
     uint32_t devId;

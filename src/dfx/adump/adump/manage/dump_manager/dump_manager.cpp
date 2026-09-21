@@ -99,6 +99,13 @@ DumpManager& DumpManager::Instance()
 DumpManager::DumpManager()
 {
     try {
+        // 0. 无条件注册异常回调到 runtime：注册与 ExceptionDump 开关解耦，开关只决定
+        //    DumpException 内是否执行 dump（提前块行号解析不受开关控制）。
+        //    注册失败仅告警：后续 SetDumpConfig 使能时会经 ExceptionConfig 重试（registered_ 保持 false）。
+        //    注册时机安全性：与既有 env 使能路径同一构造上下文（先例验证）。
+        if (!RegsiterExceptionCallback()) {
+            IDE_LOGW("Register exception callback in DumpManager init failed, retry on SetDumpConfig.");
+        }
         // 1. 通过环境变量使能Exception Dump
         EnableExceptionDumpWithEnv();
         // 2. 通过环境变量使能Kernel Dfx Dump
@@ -669,6 +676,12 @@ int32_t DumpManager::DelExceptionOp(uint32_t deviceId, uint32_t streamId)
 
 int32_t DumpManager::DumpExceptionInfo(const rtExceptionInfo& exception)
 {
+    // 惰性重试：构造函数注册失败（如静态初始化阶段 runtime 未就绪）时补偿注册。
+    // registered_ 幂等保护，成功后不再重复调用；仍失败则本次回调可能丢失，下次重试。
+    if (!registered_) {
+        IDE_LOGE("Exception callback not registered, lazy retry in DumpExceptionInfo.");
+        (void)RegsiterExceptionCallback();
+    }
     return exceptionDumper_.DumpException(exception);
 }
 

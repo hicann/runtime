@@ -108,6 +108,7 @@ private:
     uint16_t ConvertCoreId(uint8_t coreType, uint16_t coreId) const;
     void SaveCoreFile(const rtExceptionInfo& exception);
     std::string path_;
+    ExceptionRegInfo exceptionRegInfo_{0, nullptr};
     uint32_t devId_;
     ELF::DumpELF coreFile_;
     std::vector<uint16_t> aiCoreIds_;
@@ -118,7 +119,6 @@ private:
     CacheParam argsParam_;
     CacheParam tilingDataParam_;
     std::vector<CacheParam> stackParamList_;
-    ExceptionRegInfo exceptionRegInfo_{0, nullptr};
 };
 } // namespace Adx
 #endif

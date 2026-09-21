@@ -263,18 +263,9 @@ void InitCoreDumpExceptionDfxWorkspaceTensor(std::vector<uint8_t>& dfxInfoValue)
     dfxInfoValue.insert(dfxInfoValue.end(), workspaceDfxInfo.begin(), workspaceDfxInfo.end());
 }
 
-void CoreDumpBaseProcess(uint32_t chipType)
+// 构建全类型 DFX 信息（8 种张量类型 + 封装），返回值经 RVO 转移到调用方作用域。
+static std::vector<uint8_t> CoreDumpBuildDfxInfo()
 {
-    uint32_t type = chipType;
-    MOCKER_CPP(&Adx::AdumpDsmi::DrvGetPlatformType).stubs().with(outBound(type)).will(returnValue(true));
-    rtSetDevice(0);
-    rtDeviceReset(0);
-    rtSetDevice(0);
-
-    rtExceptionInfo exceptionInfo = {1, 1, 0, 1, 0, {RT_EXCEPTION_AICORE, {0}}};
-    // exceptionInfo.expandInfo.type = RT_EXCEPTION_AICORE;
-    InitCoreDumpExceptionArgs(exceptionInfo);
-
     std::vector<uint8_t> dfxInfoValue;
     InitCoreDumpExceptionDfxFftsAddrTensor(dfxInfoValue);
     InitCoreDumpExceptionDfxGeneralTensor(dfxInfoValue);
@@ -285,24 +276,58 @@ void CoreDumpBaseProcess(uint32_t chipType)
     InitCoreDumpExceptionDfxShapePointerTensor(dfxInfoValue);
     InitCoreDumpExceptionDfxWorkspaceTensor(dfxInfoValue);
 
-    // total dfxInfo
     std::vector<uint8_t> dfxInfo;
     uint16_t dfxInfoLength = static_cast<uint16_t>(dfxInfoValue.size());
     generateDfxByLittleEndian(dfxInfo, sizeof(uint16_t), TYPE_L0_EXCEPTION_DFX);
     generateDfxByLittleEndian(dfxInfo, sizeof(uint16_t), dfxInfoLength);
     dfxInfo.insert(dfxInfo.end(), dfxInfoValue.begin(), dfxInfoValue.end());
-    uint8_t* ptr = dfxInfo.data();
-    exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.dfxAddr = ptr;
-    exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.dfxSize = dfxInfo.size();
-    exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.elfDataFlag = 1;
+    return dfxInfo;
+}
 
-    // test collect kernel .o .json file
+// 准备 kernel_meta 测试文件与环境变量。
+static void CoreDumpSetupKernelMetaEnv()
+{
     system("mkdir -p /tmp/adump_coredump_utest/kernel_meta");
     system("echo '\"kernelName\": \"Custom_3ee04b5d550e4239498c29151be6bb5c\"' > "
            "/tmp/adump_coredump_utest/kernel_meta/Custom_3ee04b5d550e4239498c29151be6bb5c_mix_aic.json");
     system("echo 'test.o' > /tmp/adump_coredump_utest/kernel_meta/Custom_3ee04b5d550e4239498c29151be6bb5c_mix_aic.o");
     (void)setenv("ASCEND_CACHE_PATH", "/tmp/adump_coredump_utest", 1);
     (void)setenv("ASCEND_CUSTOM_OPP_PATH", ASCEND_CUSTOM_OPP_PATH, 1);
+}
+
+// 用 readelf 校验 .core 文件的各 section。
+static void CoreDumpVerifyCoreFile()
+{
+    EXPECT_EQ(0, system("readelf /tmp/adump_coredump_utest/*.core -t"));
+    EXPECT_EQ(0, system("readelf /tmp/adump_coredump_utest/*.core -p .ascend.global"));
+    EXPECT_EQ(0, system("readelf /tmp/adump_coredump_utest/*.core -p .ascend.host_kernel_object"));
+    EXPECT_EQ(0, system("readelf /tmp/adump_coredump_utest/*.core -p .ascend.file_kernel_json"));
+    EXPECT_EQ(0, system("readelf /tmp/adump_coredump_utest/*.core -p .ascend.file_kernel_object"));
+    EXPECT_EQ(0, system("readelf /tmp/adump_coredump_utest/*.core -p .ascend.kernel_info"));
+    EXPECT_EQ(0, system("readelf /tmp/adump_coredump_utest/*.core -p .ascend.local.1"));
+}
+
+void CoreDumpBaseProcess(uint32_t chipType)
+{
+    uint32_t type = chipType;
+    MOCKER_CPP(&Adx::AdumpDsmi::DrvGetPlatformType).stubs().with(outBound(type)).will(returnValue(true));
+    rtSetDevice(0);
+    rtDeviceReset(0);
+    rtSetDevice(0);
+
+    rtExceptionInfo exceptionInfo = {1, 1, 0, 1, 0, {RT_EXCEPTION_AICORE, {0}}};
+    InitCoreDumpExceptionArgs(exceptionInfo);
+
+    // DFX 信息构建（返回值在调用方作用域持有，保证 dfxAddr 指向有效）
+    std::vector<uint8_t> dfxInfo = CoreDumpBuildDfxInfo();
+    exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.dfxAddr = dfxInfo.data();
+    exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.dfxSize = dfxInfo.size();
+    exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.elfDataFlag = 1;
+
+    // kernel_meta 文件与环境变量
+    CoreDumpSetupKernelMetaEnv();
+
+    // bin/kernelName 为栈上局部变量，需在本函数作用域内保持存活直至 DumpCoreFile 完成
     char binData[] = "BIN_DATA";
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.bin = static_cast<rtBinHandle>(binData);
     exceptionInfo.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo.binSize = sizeof(binData);
@@ -313,13 +338,7 @@ void CoreDumpBaseProcess(uint32_t chipType)
     system("mkdir -p /tmp/adump_coredump_utest");
     DumpCore dumpCore("/tmp/adump_coredump_utest", 0);
     dumpCore.DumpCoreFile(exceptionInfo);
-    EXPECT_EQ(0, system("readelf /tmp/adump_coredump_utest/*.core -t"));
-    EXPECT_EQ(0, system("readelf /tmp/adump_coredump_utest/*.core -p .ascend.global"));
-    EXPECT_EQ(0, system("readelf /tmp/adump_coredump_utest/*.core -p .ascend.host_kernel_object"));
-    EXPECT_EQ(0, system("readelf /tmp/adump_coredump_utest/*.core -p .ascend.file_kernel_json"));
-    EXPECT_EQ(0, system("readelf /tmp/adump_coredump_utest/*.core -p .ascend.file_kernel_object"));
-    EXPECT_EQ(0, system("readelf /tmp/adump_coredump_utest/*.core -p .ascend.kernel_info"));
-    EXPECT_EQ(0, system("readelf /tmp/adump_coredump_utest/*.core -p .ascend.local.1"));
+    CoreDumpVerifyCoreFile();
 
     system("rm -r /tmp/adump_coredump_utest");
 }
@@ -594,7 +613,8 @@ TEST_F(DUMP_CORE_UTEST, TEST_CORE_DUMP_RUNTIME_FUNC_FAILED)
     DumpConfig dumpConf;
     dumpConf.dumpPath = "/tmp/adump_coredump_utest";
     dumpConf.dumpStatus = "on";
-    EXPECT_EQ(ADUMP_FAILED, dumper.DumpException(exceptionInfo));
+    // v3.1 提前块：未初始化（开关关闭）不再早退 FAILED，OFF 路径返回 SUCCESS（不执行 dump）。
+    EXPECT_EQ(ADUMP_SUCCESS, dumper.DumpException(exceptionInfo));
     dumper.ExceptionDumperInit(DumpType::AIC_ERR_DETAIL_DUMP, dumpConf);
     MOCKER_CPP(&DumpCore::DumpCoreFile).stubs().will(returnValue(ADUMP_FAILED));
     EXPECT_EQ(ADUMP_FAILED, dumper.DumpException(exceptionInfo));

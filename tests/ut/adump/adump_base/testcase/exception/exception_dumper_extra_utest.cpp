@@ -19,6 +19,13 @@
 #include "kernel_info_collector.h"
 #include "exception_info_common.h"
 #include "path.h"
+#include "case_workspace.h"
+#include "adump_dsmi.h"
+#include "adump_platform_manager.h"
+#include "kernel_source_symbolizer.h"
+#include "runtime_stub.h"
+#include "dump_core.h"
+#include <cstdlib>
 #include <gtest/gtest.h>
 #include "mockcpp/mockcpp.hpp"
 #include <fstream>
@@ -47,10 +54,19 @@ protected:
     {
         MOCKER(Thread::CreateDetachTaskWithDefaultAttr).stubs().will(returnValue(EN_OK));
         MOCKER(&AdxDumpRecord::RecordDumpDataToQueue).stubs().will(returnValue(true));
+        // T3 门⓪：默认平台 CloudV2（L0+L1+CORE_DUMP），避免未 mock 平台的用例被门⓪ 短路；
+        // 需要特定平台/不支持平台的用例在用例内重新 MOCKER 覆盖（后设替换先设）。
+        ResetAllPlatformManagers();
+        uint32_t cloudV2 = static_cast<uint32_t>(PlatformType::CHIP_CLOUD_V2);
+        MOCKER_CPP(&Adx::AdumpDsmi::DrvGetPlatformType).stubs().with(outBound(cloudV2)).will(returnValue(true));
     }
     void TearDown() override
     {
         DumpManager::Instance().Reset();
+        ResetAllPlatformManagers();
+        // 恢复默认算子超时（18 分钟）与门③查询失败注入，避免快恢用例状态泄漏到其他用例
+        (void)rtSetOpExecuteTimeOutWithMs(18U * 60U * 1000U);
+        g_rtGetOpTimeoutFail = 0U;
         GlobalMockObject::verify();
     }
 
@@ -488,7 +504,9 @@ TEST_F(ExceptionDumperExtraUtest, DumpException_UnsupportedType_Rejected)
     }
 }
 
-TEST_F(ExceptionDumperExtraUtest, DumpException_NotEnabled_Rejected)
+// v3.1 提前块（方案 2）：开关关闭不再早退 FAILED——进入提前块路径（门①类型门通过，
+// 守卫与主体由后续任务填充），OFF 分支返回 ADUMP_SUCCESS；earlyDumped=false 时不删除任何文件。
+TEST_F(ExceptionDumperExtraUtest, DumpException_NotEnabled_EarlySymbolizePath)
 {
     ExceptionDumper dumper;
     rtExceptionInfo exception = {};
@@ -496,7 +514,19 @@ TEST_F(ExceptionDumperExtraUtest, DumpException_NotEnabled_Rejected)
     exception.taskid = 1U;
     exception.streamid = 2U;
     exception.expandInfo.type = RT_EXCEPTION_AICORE;
-    EXPECT_EQ(dumper.DumpException(exception), ADUMP_FAILED);
+    EXPECT_EQ(dumper.DumpException(exception), ADUMP_SUCCESS);
+}
+
+// 门①异常类型门：AICPU 无 host .o 可解析，不进提前块；OFF 下静默返回 SUCCESS（不落盘不解析）。
+TEST_F(ExceptionDumperExtraUtest, DumpException_NotEnabled_UnsupportedType_SkipsEarlyBlock)
+{
+    ExceptionDumper dumper;
+    rtExceptionInfo exception = {};
+    exception.deviceid = 0U;
+    exception.taskid = 1U;
+    exception.streamid = 2U;
+    exception.expandInfo.type = RT_EXCEPTION_AICPU;
+    EXPECT_EQ(dumper.DumpException(exception), ADUMP_SUCCESS);
 }
 
 TEST_F(ExceptionDumperExtraUtest, DumpException_CreateDumpPathEmpty_Rejected)
@@ -1063,4 +1093,521 @@ TEST_F(ExceptionDumperExtraUtest, DumpArgsException_HostBinDroppedWhenSymbolizeF
     std::string content((std::istreambuf_iterator<char>(dumped)), std::istreambuf_iterator<char>());
     EXPECT_EQ(content, g_hostBinContentForSymFail);
     GlobalMockObject::verify();
+}
+
+// ============================================================================
+// v3.1 提前块（方案 2）T3/T4：门⓪ 平台支持门 / 门② OFF 工具门 / 门③ 统一快恢守卫 / 主体与 OFF 即用即删
+// ============================================================================
+
+namespace {
+const std::string g_earlyHostBinContent = "host kernel bin content for early-block test";
+int32_t StubGetBinDataForEarlyBlock(rtBinHandle binHandle, std::string& binData, uint32_t& binSize)
+{
+    (void)binHandle;
+    binData = g_earlyHostBinContent;
+    binSize = static_cast<uint32_t>(g_earlyHostBinContent.size());
+    return ADUMP_SUCCESS;
+}
+
+rtExceptionInfo BuildEarlyBlockException(uint32_t deviceId = 0U)
+{
+    rtExceptionInfo exception = {};
+    exception.deviceid = deviceId;
+    exception.taskid = 1U;
+    exception.streamid = 2U;
+    exception.expandInfo.type = RT_EXCEPTION_AICORE;
+    return exception;
+}
+} // namespace
+
+// 平台未注册（type99）不拦截 OFF 提前块——走既有工具门/快恢守卫，优雅降级链执行
+// （平台差异由 PC 修正等环节自行跳过）。
+TEST_F(ExceptionDumperExtraUtest, DumpException_Platform_Unsupported)
+{
+    Tools::CaseWorkspace ws("DumpException_Platform_Unsupported");
+    // 清除 fixture 默认平台桩（CloudV2）等所有 mock，使本用例的未注册平台桩为该函数唯一桩
+    // （mockcpp 多桩共存时先设者匹配，fixture 的 CloudV2 桩会掩盖本用例的 99 桩）。本用例为
+    // OFF 静态路径（无异步线程/数据 dump），清除 Thread/RecordDumpDataToQueue 桩无影响。
+    GlobalMockObject::reset();
+    const uint32_t unsupportedType = 99U; // 未注册平台类型
+    MOCKER_CPP(&Adx::AdumpDsmi::DrvGetPlatformType).stubs().with(outBound(unsupportedType)).will(returnValue(true));
+    // 门② 仅 OFF 查工具：指向确定可执行文件，保证主体执行
+    (void)setenv("ADUMP_LLVM_SYMBOLIZER", "/bin/true", 1);
+    KernelSourceSymbolizer::ResetLocateCacheForTest();
+
+    MOCKER_CPP(&ExceptionDumper::DumpHostKernelBinBeforeSymbolize).expects(once());
+
+    ExceptionDumper dumper;
+    dumper.SetDumpPath(ws.Root());
+    EXPECT_EQ(dumper.DumpException(BuildEarlyBlockException()), ADUMP_SUCCESS);
+
+    // 平台不再拦截：CreateDeviceDumpPath 已执行，dumpPath 目录已创建
+    Path extraInfo(ws.Root());
+    extraInfo.Append("/extra-info");
+    EXPECT_TRUE(extraInfo.Exist());
+
+    (void)unsetenv("ADUMP_LLVM_SYMBOLIZER");
+    KernelSourceSymbolizer::ResetLocateCacheForTest();
+}
+
+// 回归：DC 平台（L0+L1，无 CORE_DUMP）——入口平台门已移除，平台桩不再被门消费；
+// 作为"平台差异不阻断 OFF 提前块流程"的回归用例，主体照常执行。
+TEST_F(ExceptionDumperExtraUtest, DumpException_Platform_DcLike)
+{
+    Tools::CaseWorkspace ws("DumpException_Platform_DcLike");
+    // 清除 fixture 默认平台桩（CloudV2）等所有 mock，使本用例的 DC 平台桩为该函数唯一桩
+    // （DC=L0+L1 无 CORE_DUMP，验证部分特性平台经 L0 过门；OFF 静态路径清除其他桩无影响）。
+    GlobalMockObject::reset();
+    const uint32_t dcType = static_cast<uint32_t>(PlatformType::CHIP_DC_TYPE);
+    MOCKER_CPP(&Adx::AdumpDsmi::DrvGetPlatformType).stubs().with(outBound(dcType)).will(returnValue(true));
+    // 门② 仅 OFF 查工具：指向确定可执行文件，保证主体执行
+    (void)setenv("ADUMP_LLVM_SYMBOLIZER", "/bin/true", 1);
+    KernelSourceSymbolizer::ResetLocateCacheForTest();
+
+    MOCKER_CPP(&ExceptionDumper::DumpHostKernelBinBeforeSymbolize).expects(once());
+
+    ExceptionDumper dumper;
+    dumper.SetDumpPath(ws.Root());
+    EXPECT_EQ(dumper.DumpException(BuildEarlyBlockException()), ADUMP_SUCCESS);
+
+    (void)unsetenv("ADUMP_LLVM_SYMBOLIZER");
+    KernelSourceSymbolizer::ResetLocateCacheForTest();
+}
+
+// 门②：OFF + llvm-symbolizer 工具缺失 → Warning + 跳过提前块（不落盘不解析）。
+TEST_F(ExceptionDumperExtraUtest, DumpException_Disabled_ToolUnavailable)
+{
+    Tools::CaseWorkspace ws("DumpException_Disabled_ToolUnavailable");
+    (void)setenv("ADUMP_LLVM_SYMBOLIZER", "/nonexistent/llvm-symbolizer", 1);
+    KernelSourceSymbolizer::ResetLocateCacheForTest();
+
+    MOCKER_CPP(&ExceptionDumper::DumpHostKernelBinBeforeSymbolize).expects(never());
+
+    ExceptionDumper dumper;
+    dumper.SetDumpPath(ws.Root());
+    EXPECT_EQ(dumper.DumpException(BuildEarlyBlockException()), ADUMP_SUCCESS);
+
+    (void)unsetenv("ADUMP_LLVM_SYMBOLIZER");
+    KernelSourceSymbolizer::ResetLocateCacheForTest();
+}
+
+// 门③：OFF + 快恢（op 超时 400ms < 500ms）→ 跳过提前块仅告警。
+TEST_F(ExceptionDumperExtraUtest, DumpException_Disabled_FastRecovery)
+{
+    Tools::CaseWorkspace ws("DumpException_Disabled_FastRecovery");
+    (void)rtSetOpExecuteTimeOutWithMs(400U);
+    (void)setenv("ADUMP_LLVM_SYMBOLIZER", "/bin/true", 1);
+    KernelSourceSymbolizer::ResetLocateCacheForTest();
+
+    MOCKER_CPP(&ExceptionDumper::DumpHostKernelBinBeforeSymbolize).expects(never());
+
+    ExceptionDumper dumper;
+    dumper.SetDumpPath(ws.Root());
+    EXPECT_EQ(dumper.DumpException(BuildEarlyBlockException()), ADUMP_SUCCESS);
+
+    (void)unsetenv("ADUMP_LLVM_SYMBOLIZER");
+    KernelSourceSymbolizer::ResetLocateCacheForTest();
+    (void)rtSetOpExecuteTimeOutWithMs(18U * 60U * 1000U);
+}
+
+// T4 主体全链路：OFF + 工具可用 + 非快恢 → 落 _host.o → 符号化 → 即用即删。
+// 预置与桩内容一致、剥 mix 后缀命名的 _host.o（幂等：主体跳过重写），终态被删除即证明
+// OFF 即用即删作用于提前块产物（且证明 mix 后缀剥除命名一致）。
+TEST_F(ExceptionDumperExtraUtest, DumpException_Disabled_FullFlow)
+{
+    const uint32_t deviceId = 0U;
+    Tools::CaseWorkspace ws("DumpException_Disabled_FullFlow");
+    const std::string kernelName = "AddCustom_6ee04b5d550e4239498c29151be6bb50_mix_aic";
+
+    (void)setenv("ADUMP_LLVM_SYMBOLIZER", "/bin/true", 1);
+    KernelSourceSymbolizer::ResetLocateCacheForTest();
+    MOCKER_CPP(&ExceptionInfoCommon::GetBinDataFromHandle).stubs().will(invoke(StubGetBinDataForEarlyBlock));
+
+    Path hostBinPath(ws.Root());
+    hostBinPath.Append("/extra-info/data-dump/").Append(std::to_string(deviceId));
+    ASSERT_TRUE(hostBinPath.CreateDirectory(true));
+    hostBinPath.Concat(ExceptionInfoCommon::GetKernelNameWithoutMixSuffix(kernelName) + "_host.o");
+    const std::string preFilePath = hostBinPath.GetString();
+    {
+        std::ofstream preFile(preFilePath, std::ios::binary);
+        preFile << g_earlyHostBinContent;
+    }
+
+    ExceptionDumper dumper;
+    dumper.SetDumpPath(ws.Root());
+    rtExceptionInfo exception = BuildEarlyBlockException(deviceId);
+    char hostKernel[] = "host kernel bin file stub";
+    auto& kernelInfo = exception.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo;
+    kernelInfo.bin = static_cast<rtBinHandle>(hostKernel);
+    kernelInfo.binSize = sizeof(hostKernel);
+    kernelInfo.kernelName = const_cast<char*>(kernelName.data());
+    kernelInfo.kernelNameSize = kernelName.size();
+
+    EXPECT_EQ(dumper.DumpException(exception), ADUMP_SUCCESS);
+
+    // 终态：_host.o 已被删除（落盘→解析→即用即删全链路）
+    EXPECT_FALSE(Path(preFilePath).Exist());
+
+    (void)unsetenv("ADUMP_LLVM_SYMBOLIZER");
+    KernelSourceSymbolizer::ResetLocateCacheForTest();
+}
+
+// 门③：超时查询失败 → 告警后视为非快恢继续（主体执行）。
+TEST_F(ExceptionDumperExtraUtest, DumpException_Disabled_TimeoutQueryFail)
+{
+    Tools::CaseWorkspace ws("DumpException_Disabled_TimeoutQueryFail");
+    g_rtGetOpTimeoutFail = 1U;
+    (void)setenv("ADUMP_LLVM_SYMBOLIZER", "/bin/true", 1);
+    KernelSourceSymbolizer::ResetLocateCacheForTest();
+
+    MOCKER_CPP(&ExceptionDumper::DumpHostKernelBinBeforeSymbolize).expects(once());
+
+    ExceptionDumper dumper;
+    dumper.SetDumpPath(ws.Root());
+    EXPECT_EQ(dumper.DumpException(BuildEarlyBlockException()), ADUMP_SUCCESS);
+
+    g_rtGetOpTimeoutFail = 0U;
+    (void)unsetenv("ADUMP_LLVM_SYMBOLIZER");
+    KernelSourceSymbolizer::ResetLocateCacheForTest();
+}
+
+// OFF 路径不触发外部已注册回调（提前块位于 InvokeCallbacks 之前，OFF 分支在模式分发之前返回）。
+TEST_F(ExceptionDumperExtraUtest, DumpException_Disabled_CallbackNotInvoked)
+{
+    g_aicpuCallbackCount = 0U;
+    Tools::CaseWorkspace ws("DumpException_Disabled_CallbackNotInvoked");
+    (void)setenv("ADUMP_LLVM_SYMBOLIZER", "/bin/true", 1);
+    KernelSourceSymbolizer::ResetLocateCacheForTest();
+
+    ExceptionDumper dumper;
+    dumper.SetDumpPath(ws.Root());
+    ASSERT_EQ(dumper.RegisterExceptionDumpCallback(CountingOverwriteCallback), ADUMP_SUCCESS);
+    EXPECT_EQ(dumper.DumpException(BuildEarlyBlockException()), ADUMP_SUCCESS);
+    EXPECT_EQ(g_aicpuCallbackCount, 0U);
+
+    g_aicpuCallbackCount = 0U;
+    (void)unsetenv("ADUMP_LLVM_SYMBOLIZER");
+    KernelSourceSymbolizer::ResetLocateCacheForTest();
+}
+
+// 门③：Args 模式 + 快恢 → 提前块跳过；Args 既有快恢分支语义原样（默认路径不执行）。
+TEST_F(ExceptionDumperExtraUtest, DumpException_Args_FastRecovery_Skip)
+{
+    Tools::CaseWorkspace ws("DumpException_Args_FastRecovery_Skip");
+    (void)rtSetOpExecuteTimeOutWithMs(300U);
+    (void)setenv("ADUMP_LLVM_SYMBOLIZER", "/bin/true", 1);
+    KernelSourceSymbolizer::ResetLocateCacheForTest();
+
+    MOCKER_CPP(&ExceptionDumper::DumpHostKernelBinBeforeSymbolize).expects(never());
+    MOCKER_CPP(&ExceptionDumper::DumpArgsExceptionDefault).expects(never());
+
+    ExceptionDumper dumper;
+    DumpConfig config;
+    config.dumpStatus = "on";
+    config.dumpPath = ws.Root();
+    ASSERT_EQ(dumper.ExceptionDumperInit(DumpType::ARGS_EXCEPTION, config), ADUMP_SUCCESS);
+    ASSERT_TRUE(dumper.GetArgsExceptionStatus());
+
+    EXPECT_EQ(dumper.DumpException(BuildEarlyBlockException()), ADUMP_SUCCESS);
+
+    (void)rtSetOpExecuteTimeOutWithMs(18U * 60U * 1000U);
+    (void)unsetenv("ADUMP_LLVM_SYMBOLIZER");
+    KernelSourceSymbolizer::ResetLocateCacheForTest();
+}
+
+// 门③：coredump 模式 + 快恢 → 提前块跳过（v3.1 统一守卫；现状 coredump 无守卫）；模式 dump 照常。
+TEST_F(ExceptionDumperExtraUtest, DumpException_Detail_FastRecovery_Skip)
+{
+    Tools::CaseWorkspace ws("DumpException_Detail_FastRecovery_Skip");
+    (void)rtSetOpExecuteTimeOutWithMs(400U);
+    (void)setenv("ADUMP_LLVM_SYMBOLIZER", "/bin/true", 1);
+    KernelSourceSymbolizer::ResetLocateCacheForTest();
+
+    MOCKER_CPP(&ExceptionDumper::DumpHostKernelBinBeforeSymbolize).expects(never());
+    // 桩掉 DumpCoreFile：避免真实 core dump 流程（返回失败 → DumpDetailException 返回 FAILED，不触发 Exit）
+    MOCKER_CPP(&DumpCore::DumpCoreFile).stubs().will(returnValue(ADUMP_FAILED));
+
+    ExceptionDumper dumper;
+    DumpConfig config;
+    config.dumpStatus = "on";
+    config.dumpPath = ws.Root();
+    ASSERT_EQ(dumper.ExceptionDumperInit(DumpType::AIC_ERR_DETAIL_DUMP, config), ADUMP_SUCCESS);
+    ASSERT_TRUE(dumper.GetCoredumpStatus());
+
+    EXPECT_EQ(dumper.DumpException(BuildEarlyBlockException()), ADUMP_FAILED);
+
+    (void)rtSetOpExecuteTimeOutWithMs(18U * 60U * 1000U);
+    (void)unsetenv("ADUMP_LLVM_SYMBOLIZER");
+    KernelSourceSymbolizer::ResetLocateCacheForTest();
+}
+
+// ============================================================================
+// v3.1 T5：三模式去重——提前块是唯一落盘/解析入口，默认路径内部调用删除
+// ============================================================================
+
+// 门③+T5：Normal 模式 + 快恢 → 提前块跳过；T5 去重后 Normal 默认路径不再有内部
+// 落盘/解析调用，DumpHostKernelBinBeforeSymbolize 全程不被调用（红灯：默认路径仍调用）。
+TEST_F(ExceptionDumperExtraUtest, DumpException_Normal_FastRecovery_Skip)
+{
+    Tools::CaseWorkspace ws("DumpException_Normal_FastRecovery_Skip");
+    (void)rtSetOpExecuteTimeOutWithMs(400U);
+    (void)setenv("ADUMP_LLVM_SYMBOLIZER", "/bin/true", 1);
+    KernelSourceSymbolizer::ResetLocateCacheForTest();
+
+    MOCKER_CPP(&ExceptionDumper::DumpHostKernelBinBeforeSymbolize).expects(never());
+
+    ExceptionDumper dumper;
+    DumpConfig config;
+    config.dumpStatus = "on";
+    config.dumpPath = ws.Root();
+    ASSERT_EQ(dumper.ExceptionDumperInit(DumpType::EXCEPTION, config), ADUMP_SUCCESS);
+    ASSERT_TRUE(dumper.GetExceptionStatus());
+
+    EXPECT_EQ(dumper.DumpException(BuildEarlyBlockException()), ADUMP_SUCCESS);
+
+    (void)rtSetOpExecuteTimeOutWithMs(18U * 60U * 1000U);
+    (void)unsetenv("ADUMP_LLVM_SYMBOLIZER");
+    KernelSourceSymbolizer::ResetLocateCacheForTest();
+}
+
+// T5 去重：Normal + 非快恢 → DumpHostKernelBinBeforeSymbolize 仅由提前块调用一次。
+// 红灯：当前代码提前块+默认路径双重调用（2次），expects(once()) 失败。
+TEST_F(ExceptionDumperExtraUtest, DumpException_Normal_NoDoubleParse)
+{
+    Tools::CaseWorkspace ws("DumpException_Normal_NoDoubleParse");
+    (void)setenv("ADUMP_LLVM_SYMBOLIZER", "/bin/true", 1);
+    KernelSourceSymbolizer::ResetLocateCacheForTest();
+
+    MOCKER_CPP(&ExceptionDumper::DumpHostKernelBinBeforeSymbolize).expects(once());
+
+    ExceptionDumper dumper;
+    DumpConfig config;
+    config.dumpStatus = "on";
+    config.dumpPath = ws.Root();
+    ASSERT_EQ(dumper.ExceptionDumperInit(DumpType::EXCEPTION, config), ADUMP_SUCCESS);
+
+    EXPECT_EQ(dumper.DumpException(BuildEarlyBlockException()), ADUMP_SUCCESS);
+
+    (void)unsetenv("ADUMP_LLVM_SYMBOLIZER");
+    KernelSourceSymbolizer::ResetLocateCacheForTest();
+}
+
+// 行为变化点 1（缺陷修复）：coredump 模式行号解析从不生效 → 生效。
+// T5 去重后 dump_core.cpp DumpCoreFile 内的 DumpErrorSymbols 调用已删除，提前块是唯一
+// 符号化入口——_host.o 先落盘再解析，验证 coredump 模式下行号解析链路完整。
+TEST_F(ExceptionDumperExtraUtest, DumpException_Detail_LineParseEffective)
+{
+    const uint32_t deviceId = 0U;
+    Tools::CaseWorkspace ws("DumpException_Detail_LineParseEffective");
+    const std::string kernelName = "AddCustom_6ee04b5d550e4239498c29151be6bb50_mix_aic";
+
+    (void)setenv("ADUMP_LLVM_SYMBOLIZER", "/bin/true", 1);
+    KernelSourceSymbolizer::ResetLocateCacheForTest();
+    MOCKER_CPP(&ExceptionInfoCommon::GetBinDataFromHandle).stubs().will(invoke(StubGetBinDataForEarlyBlock));
+    // 桩掉 DumpCoreFile：避免真实 core dump 全流程（返回成功 → Exit 在 UT 模式下为空操作）
+    MOCKER_CPP(&DumpCore::DumpCoreFile).stubs().will(returnValue(ADUMP_SUCCESS));
+
+    ExceptionDumper dumper;
+    DumpConfig config;
+    config.dumpStatus = "on";
+    config.dumpPath = ws.Root();
+    ASSERT_EQ(dumper.ExceptionDumperInit(DumpType::AIC_ERR_DETAIL_DUMP, config), ADUMP_SUCCESS);
+    ASSERT_TRUE(dumper.GetCoredumpStatus());
+
+    rtExceptionInfo exception = BuildEarlyBlockException(deviceId);
+    char hostKernel[] = "host kernel bin file stub";
+    auto& kernelInfo = exception.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo;
+    kernelInfo.bin = static_cast<rtBinHandle>(hostKernel);
+    kernelInfo.binSize = sizeof(hostKernel);
+    kernelInfo.kernelName = const_cast<char*>(kernelName.data());
+    kernelInfo.kernelNameSize = kernelName.size();
+
+    EXPECT_EQ(dumper.DumpException(exception), ADUMP_SUCCESS);
+
+    // 行为变化点 1：coredump 模式 _host.o 已落盘（提前块先落盘再解析，
+    // 修复原 DumpCoreFile 中 DumpErrorSymbols 先于 _host.o 可用性执行的缺陷）
+    Path hostBinPath(ws.Root());
+    hostBinPath.Append("/extra-info/data-dump/").Append(std::to_string(deviceId));
+    hostBinPath.Concat(ExceptionInfoCommon::GetKernelNameWithoutMixSuffix(kernelName) + "_host.o");
+    EXPECT_TRUE(hostBinPath.Exist());
+
+    (void)unsetenv("ADUMP_LLVM_SYMBOLIZER");
+    KernelSourceSymbolizer::ResetLocateCacheForTest();
+}
+
+// 行为变化点 3：OVERWRITE 回调场景新增异常算子自身的默认解析。
+// T5 去重后提前块是唯一落盘/解析入口，不受回调模式影响 → 异常算子 _host.o 也落盘。
+TEST_F(ExceptionDumperExtraUtest, DumpException_Overwrite_DefaultParseAdded)
+{
+    g_aicpuCallbackCount = 0U;
+    const uint32_t deviceId = 0U;
+    Tools::CaseWorkspace ws("DumpException_Overwrite_DefaultParseAdded");
+    const std::string kernelName = "AddCustom_6ee04b5d550e4239498c29151be6bb50_mix_aic";
+
+    (void)setenv("ADUMP_LLVM_SYMBOLIZER", "/bin/true", 1);
+    KernelSourceSymbolizer::ResetLocateCacheForTest();
+    MOCKER_CPP(&ExceptionInfoCommon::GetBinDataFromHandle).stubs().will(invoke(StubGetBinDataForEarlyBlock));
+
+    ExceptionDumper dumper;
+    DumpConfig config;
+    config.dumpStatus = "on";
+    config.dumpPath = ws.Root();
+    ASSERT_EQ(dumper.ExceptionDumperInit(DumpType::ARGS_EXCEPTION, config), ADUMP_SUCCESS);
+    ASSERT_EQ(dumper.RegisterExceptionDumpCallback(CountingOverwriteCallback), ADUMP_SUCCESS);
+
+    // OVERWRITE 模式：默认路径不执行，但提前块照常落盘/解析
+    MOCKER_CPP(&ExceptionDumper::DumpArgsExceptionDefault).expects(never());
+    MOCKER_CPP(&ExceptionDumper::DumpCallbackData).expects(once());
+
+    rtExceptionInfo exception = BuildEarlyBlockException(deviceId);
+    char hostKernel[] = "host kernel bin file stub";
+    auto& kernelInfo = exception.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo;
+    kernelInfo.bin = static_cast<rtBinHandle>(hostKernel);
+    kernelInfo.binSize = sizeof(hostKernel);
+    kernelInfo.kernelName = const_cast<char*>(kernelName.data());
+    kernelInfo.kernelNameSize = kernelName.size();
+
+    EXPECT_EQ(dumper.DumpException(exception), ADUMP_SUCCESS);
+    EXPECT_EQ(g_aicpuCallbackCount, 1U);
+
+    // 异常算子自身 _host.o 已落盘（提前块不受 OVERWRITE 回调模式影响）
+    Path hostBinPath(ws.Root());
+    hostBinPath.Append("/extra-info/data-dump/").Append(std::to_string(deviceId));
+    hostBinPath.Concat(ExceptionInfoCommon::GetKernelNameWithoutMixSuffix(kernelName) + "_host.o");
+    EXPECT_TRUE(hostBinPath.Exist());
+
+    g_aicpuCallbackCount = 0U;
+    (void)unsetenv("ADUMP_LLVM_SYMBOLIZER");
+    KernelSourceSymbolizer::ResetLocateCacheForTest();
+}
+
+// ============================================================================
+// 检视意见 #9 补充：测试缺口填补
+// ============================================================================
+
+// 缺口 1a：RemoveHostKernelBinAfterSymbolize 的 GetExceptionInfo 失败分支。
+// GetExceptionInfo 全程失败 → 落盘跳过 + 删除跳过（均走告警降级），返回 SUCCESS（best-effort）。
+TEST_F(ExceptionDumperExtraUtest, DumpException_Disabled_RemoveGetInfoFail)
+{
+    Tools::CaseWorkspace ws("DumpException_Disabled_RemoveGetInfoFail");
+    (void)setenv("ADUMP_LLVM_SYMBOLIZER", "/bin/true", 1);
+    KernelSourceSymbolizer::ResetLocateCacheForTest();
+    // GetExceptionInfo 全程失败：DumpHostKernelBinBeforeSymbolize 内部跳过（告警），
+    // RemoveHostKernelBinAfterSymbolize 内部跳过（告警），无崩溃、返回 SUCCESS。
+    MOCKER_CPP(&ExceptionInfoCommon::GetExceptionInfo).stubs().will(returnValue(ADUMP_FAILED));
+
+    ExceptionDumper dumper;
+    dumper.SetDumpPath(ws.Root());
+    EXPECT_EQ(dumper.DumpException(BuildEarlyBlockException()), ADUMP_SUCCESS);
+
+    (void)unsetenv("ADUMP_LLVM_SYMBOLIZER");
+    KernelSourceSymbolizer::ResetLocateCacheForTest();
+}
+
+// 缺口 1b：RemoveHostKernelBinAfterSymbolize 的非 ENOENT 删除失败分支。
+// 预创建非空目录作为 _host.o 路径 → ::remove 返回 ENOTEMPTY（非 ENOENT）→ IDE_LOGW 告警。
+TEST_F(ExceptionDumperExtraUtest, DumpException_Disabled_RemoveNonEnoentFail)
+{
+    const uint32_t deviceId = 0U;
+    Tools::CaseWorkspace ws("DumpException_Disabled_RemoveNonEnoentFail");
+    const std::string kernelName = "AddCustom_nonenoent";
+
+    (void)setenv("ADUMP_LLVM_SYMBOLIZER", "/bin/true", 1);
+    KernelSourceSymbolizer::ResetLocateCacheForTest();
+    MOCKER_CPP(&ExceptionInfoCommon::GetBinDataFromHandle).stubs().will(invoke(StubGetBinDataForEarlyBlock));
+
+    // 预创建非空目录占用 _host.o 路径：DumpHostKernelBin 写入失败（EISDIR），
+    // RemoveHostKernelBinAfterSymbolize 的 ::remove 失败（ENOTEMPTY，非 ENOENT）→ 告警分支。
+    Path hostBinPath(ws.Root());
+    hostBinPath.Append("/extra-info/data-dump/").Append(std::to_string(deviceId));
+    ASSERT_TRUE(hostBinPath.CreateDirectory(true));
+    hostBinPath.Concat(kernelName + "_host.o");
+    ASSERT_TRUE(Path(hostBinPath.GetString()).CreateDirectory(true));
+    {
+        std::ofstream innerFile(hostBinPath.GetString() + "/placeholder");
+        innerFile << "x";
+    }
+
+    ExceptionDumper dumper;
+    dumper.SetDumpPath(ws.Root());
+    rtExceptionInfo exception = BuildEarlyBlockException(deviceId);
+    char hostKernel[] = "stub";
+    auto& ki = exception.expandInfo.u.aicoreInfo.exceptionArgs.exceptionKernelInfo;
+    ki.bin = static_cast<rtBinHandle>(hostKernel);
+    ki.binSize = sizeof(hostKernel);
+    ki.kernelName = const_cast<char*>(kernelName.data());
+    ki.kernelNameSize = kernelName.size();
+
+    // 删除失败仅告警不影响返回值
+    EXPECT_EQ(dumper.DumpException(exception), ADUMP_SUCCESS);
+
+    (void)unsetenv("ADUMP_LLVM_SYMBOLIZER");
+    KernelSourceSymbolizer::ResetLocateCacheForTest();
+}
+
+// 平台未注册不拦截使能态 dump（恢复原范围）——提前块执行 + 模式分发照常。
+TEST_F(ExceptionDumperExtraUtest, DumpException_Enabled_PlatformUnsupported)
+{
+    Tools::CaseWorkspace ws("DumpException_Enabled_PlatformUnsupported");
+    GlobalMockObject::reset();
+    const uint32_t unsupportedType = 99U;
+    MOCKER_CPP(&Adx::AdumpDsmi::DrvGetPlatformType).stubs().with(outBound(unsupportedType)).will(returnValue(true));
+
+    ExceptionDumper dumper;
+    DumpConfig config;
+    config.dumpStatus = "on";
+    config.dumpPath = ws.Root();
+    ASSERT_EQ(dumper.ExceptionDumperInit(DumpType::EXCEPTION, config), ADUMP_SUCCESS);
+    ASSERT_TRUE(dumper.GetExceptionStatus());
+
+    MOCKER_CPP(&ExceptionDumper::DumpHostKernelBinBeforeSymbolize).expects(once());
+
+    EXPECT_EQ(dumper.DumpException(BuildEarlyBlockException()), ADUMP_SUCCESS);
+
+    // 平台不再拦截：CreateDeviceDumpPath 已执行，dumpPath 目录已创建
+    Path extraInfo(ws.Root());
+    extraInfo.Append("/extra-info");
+    EXPECT_TRUE(extraInfo.Exist());
+}
+
+// 缺口 3：Args 模式（非 OVERWRITE）无重复落盘——DumpHostKernelBinBeforeSymbolize 仅由提前块调用一次。
+TEST_F(ExceptionDumperExtraUtest, DumpException_Args_NoDoubleParse)
+{
+    Tools::CaseWorkspace ws("DumpException_Args_NoDoubleParse");
+    (void)setenv("ADUMP_LLVM_SYMBOLIZER", "/bin/true", 1);
+    KernelSourceSymbolizer::ResetLocateCacheForTest();
+
+    MOCKER_CPP(&ExceptionDumper::DumpHostKernelBinBeforeSymbolize).expects(once());
+
+    ExceptionDumper dumper;
+    DumpConfig config;
+    config.dumpStatus = "on";
+    config.dumpPath = ws.Root();
+    ASSERT_EQ(dumper.ExceptionDumperInit(DumpType::ARGS_EXCEPTION, config), ADUMP_SUCCESS);
+
+    // 返回值不断言：Args 模式对空 argAddr 返回 FAILED（内部行为，非本用例目标）；
+    // 本用例仅验证 DumpHostKernelBinBeforeSymbolize 恰好调用一次（TearDown verify）。
+    (void)dumper.DumpException(BuildEarlyBlockException());
+
+    (void)unsetenv("ADUMP_LLVM_SYMBOLIZER");
+    KernelSourceSymbolizer::ResetLocateCacheForTest();
+}
+
+// 缺口 4：OFF 入口环境固定——固定工具路径与超时值，消除构建机环境漂移。
+TEST_F(ExceptionDumperExtraUtest, DumpException_Disabled_Entry_EnvPinned)
+{
+    Tools::CaseWorkspace ws("DumpException_Disabled_Entry_EnvPinned");
+    // 固定环境：工具可用（/bin/true）+ 默认超时（18 分钟，非快恢）
+    (void)setenv("ADUMP_LLVM_SYMBOLIZER", "/bin/true", 1);
+    KernelSourceSymbolizer::ResetLocateCacheForTest();
+    (void)rtSetOpExecuteTimeOutWithMs(18U * 60U * 1000U);
+
+    ExceptionDumper dumper;
+    dumper.SetDumpPath(ws.Root());
+    // 固定环境下：OFF + AICORE → 提前块执行（工具可用 + 非快恢）→ OFF 分支 → SUCCESS
+    EXPECT_EQ(dumper.DumpException(BuildEarlyBlockException()), ADUMP_SUCCESS);
+
+    (void)unsetenv("ADUMP_LLVM_SYMBOLIZER");
+    KernelSourceSymbolizer::ResetLocateCacheForTest();
+    (void)rtSetOpExecuteTimeOutWithMs(18U * 60U * 1000U);
 }

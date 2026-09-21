@@ -242,7 +242,8 @@ std::string KernelInfoCollector::GetHostOFilePath(const std::string& dumpPath) c
  * @return      : ADUMP_SUCCESS succeed; ADUMP_FAILED failed
  * @note        : 从 StartCollectKernel 拆出，供调用方在慢搜索/修正 PC 之前单独同步落 _host.o。
  */
-int32_t KernelInfoCollector::DumpHostKernelBin(const std::string& dumpPath, std::string& outHostOPath) const
+int32_t KernelInfoCollector::DumpHostKernelBin(
+    const std::string& dumpPath, std::string& outHostOPath, bool logInfoLevel) const
 {
     outHostOPath.clear();
     // 与拆分前 StartCollectKernel 入口保持一致的前置校验：kernelName 为空会退化成非唯一的 "_host.o"，
@@ -293,7 +294,11 @@ int32_t KernelInfoCollector::DumpHostKernelBin(const std::string& dumpPath, std:
             hostKernelBinPath.c_str(), static_cast<long long>(hostBinStat.st_size), kernelBinSize_);
         return ADUMP_FAILED;
     }
-    IDE_LOGE("[Dump][Exception] dump host kernel to file, file: %s", hostKernelBinPath.c_str());
+    if (logInfoLevel) {
+        IDE_LOGI("[Dump][Exception] dump host kernel to file, file: %s", hostKernelBinPath.c_str());
+    } else {
+        IDE_LOGE("[Dump][Exception] dump host kernel to file, file: %s", hostKernelBinPath.c_str());
+    }
     (void)mmChmod(hostKernelBinPath.c_str(), M_IRUSR); // 安全要求,落盘文件置为最小权限:用户只读, 400
     outHostOPath = hostKernelBinPath;
 

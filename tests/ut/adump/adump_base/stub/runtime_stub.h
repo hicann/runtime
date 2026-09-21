@@ -18,4 +18,11 @@ void SetStubStreamState(rtStreamCaptureStatus captureStatus, uint32_t streamFlag
 // 获取流状态桩的当前返回值
 void GetStubStreamState(rtStreamCaptureStatus& captureStatus, uint32_t& streamFlags);
 
+// 获取/复位 "AdumpException" 模块回调注册计数（T2 构造期无条件注册的 UT 可观测性接口）
+uint32_t GetAdumpExceptionRegCount();
+void ResetAdumpExceptionRegCount();
+
+// T3/T4 门③查询失败注入：非 0 时 rtGetOpExecuteTimeoutV2 返回失败（UT 专用）
+extern uint32_t g_rtGetOpTimeoutFail;
+
 #endif // TEST_RUNTIME_STUB_H

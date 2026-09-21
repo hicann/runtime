@@ -28,7 +28,9 @@ public:
     int32_t StartCollectKernel(const std::string& dumpPath) const;
     // 快速同步落 _host.o（纯内存 buffer 写），从 StartCollectKernel 拆出、供调用方单独同步调用；
     // outHostOPath 回传落盘绝对路径，供后续 symbolize 使用。
-    int32_t DumpHostKernelBin(const std::string& dumpPath, std::string& outHostOPath) const;
+    // logInfoLevel：落盘成功日志级别——未开启 ExceptionDump（OFF 提前块即用即删场景）传 true 打 INFO，
+    // 开启（异常 dump 产物场景）默认 false 打 ERROR。
+    int32_t DumpHostKernelBin(const std::string& dumpPath, std::string& outHostOPath, bool logInfoLevel = false) const;
     // 拼出 _host.o 落盘路径（不落盘），供回退/校验使用。
     std::string GetHostOFilePath(const std::string& dumpPath) const;
     std::string GetProcessedKernelName() const;

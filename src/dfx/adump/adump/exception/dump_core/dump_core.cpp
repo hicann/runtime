@@ -21,8 +21,11 @@
 namespace Adx {
 int32_t DumpCore::DumpCoreFile(const rtExceptionInfo& exception)
 {
-    if (ExceptionInfoCommon::GetExceptionRegInfo(exception, exceptionRegInfo_) == ADUMP_SUCCESS) {
-        KernelSymbolLocator::DumpErrorSymbols(exception, exceptionRegInfo_, path_);
+    // T5 去重：符号化已由 DumpException 入口的提前块统一接管（修复行号解析缺陷：提前块先落
+    // _host.o 再解析，原此处 DumpErrorSymbols 先于 _host.o 可用性执行导致行号解析不生效）。
+    // 此处保留寄存器信息获取：exceptionRegInfo_ 供后续 DumpErrorRegisterImpl 遍历核使用。
+    if (ExceptionInfoCommon::GetExceptionRegInfo(exception, exceptionRegInfo_) != ADUMP_SUCCESS) {
+        IDE_LOGW("Get exception register info failed, skip error register dump.");
     }
     DumpCoreInfo(exception.deviceid);
     DumpGlobalMemory(exception);

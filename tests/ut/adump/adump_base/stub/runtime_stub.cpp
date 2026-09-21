@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <cstring>
 #include "securec.h"
 #include <map>
 #include <vector>
@@ -208,12 +209,20 @@ rtError_t rtStreamSynchronize(rtStream_t stm)
     return RT_ERROR_NONE;
 }
 
+// T2 注册可观测性：记录 "AdumpException" 模块的注册次数，供 UT 断言构造期无条件注册；无行为变化。
+static uint32_t g_adumpExceptionRegCount = 0U;
 rtError_t rtRegTaskFailCallbackByModule(const char_t* moduleName, rtTaskFailCallback callback)
 {
-    (void)moduleName;
     (void)callback;
+    if ((moduleName != nullptr) && (strcmp(moduleName, "AdumpException") == 0)) {
+        ++g_adumpExceptionRegCount;
+    }
     return RT_ERROR_NONE;
 }
+
+uint32_t GetAdumpExceptionRegCount() { return g_adumpExceptionRegCount; }
+
+void ResetAdumpExceptionRegCount() { g_adumpExceptionRegCount = 0U; }
 
 rtError_t rtCtxGetCurrent(rtContext_t* context)
 {
@@ -558,8 +567,14 @@ rtError_t rtSetOpExecuteTimeOutWithMs(uint32_t timeout)
     return RT_ERROR_NONE;
 }
 
+// T3/T4 门③查询失败注入（UT 专用）：非 0 时 rtGetOpExecuteTimeoutV2 返回失败。
+uint32_t g_rtGetOpTimeoutFail = 0U;
+
 rtError_t rtGetOpExecuteTimeoutV2(uint32_t* const timeout)
 {
+    if (g_rtGetOpTimeoutFail != 0U) {
+        return RT_ERROR_STUB_FAILURE;
+    }
     *timeout = g_opTimeout;
     return RT_ERROR_NONE;
 }
