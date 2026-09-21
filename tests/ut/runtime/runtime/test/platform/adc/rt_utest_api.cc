@@ -157,3 +157,64 @@ TEST_F(ApiTest, DeviceSetLimitOtherErrorRecordsErrorLog)
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
     EXPECT_TRUE(DlogRecordContains("Device set limit failed"));
 }
+
+TEST_F(ApiTest, DeviceGetLimitNullValueReturnsInvalidValue)
+{
+    ApiImpl impl;
+    ApiErrorDecorator api(&impl);
+
+    const rtError_t error = api.DeviceGetLimit(RT_LIMIT_TYPE_STACK_SIZE, nullptr);
+
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+}
+
+TEST_F(ApiTest, DeviceGetLimitSuccessReturnsWithoutErrorLog)
+{
+    ApiImpl impl;
+    ApiErrorDecorator api(&impl);
+    uint32_t val = 0U;
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DeviceGetLimit)
+        .expects(once())
+        .with(RT_LIMIT_TYPE_STACK_SIZE, &val)
+        .will(returnValue(RT_ERROR_NONE));
+    ClearLastDlogRecordLine();
+
+    const rtError_t error = api.DeviceGetLimit(RT_LIMIT_TYPE_STACK_SIZE, &val);
+
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_FALSE(DlogRecordContains("Device get limit failed"));
+}
+
+TEST_F(ApiTest, DeviceGetLimitFeatureNotSupportReturnsWithoutErrorLog)
+{
+    ApiImpl impl;
+    ApiErrorDecorator api(&impl);
+    uint32_t val = 0U;
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DeviceGetLimit)
+        .expects(once())
+        .with(RT_LIMIT_TYPE_SIMT_PRINTF_FIFO_SIZE, &val)
+        .will(returnValue(RT_ERROR_FEATURE_NOT_SUPPORT));
+    ClearLastDlogRecordLine();
+
+    const rtError_t error = api.DeviceGetLimit(RT_LIMIT_TYPE_SIMT_PRINTF_FIFO_SIZE, &val);
+
+    EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_FALSE(DlogRecordContains("Device get limit failed"));
+}
+
+TEST_F(ApiTest, DeviceGetLimitOtherErrorRecordsErrorLog)
+{
+    ApiImpl impl;
+    ApiErrorDecorator api(&impl);
+    uint32_t val = 0U;
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DeviceGetLimit)
+        .expects(once())
+        .with(RT_LIMIT_TYPE_STACK_SIZE, &val)
+        .will(returnValue(RT_ERROR_INVALID_VALUE));
+    ClearLastDlogRecordLine();
+
+    const rtError_t error = api.DeviceGetLimit(RT_LIMIT_TYPE_STACK_SIZE, &val);
+
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+    EXPECT_TRUE(DlogRecordContains("Device get limit failed"));
+}
