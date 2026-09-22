@@ -1610,7 +1610,7 @@ RUNTIME_API(memory, rtError_t, rtsGetMemcpyDescSize,
     (rtMemcpyKind kind, size_t* descSize),
     (kind, descSize), FEATURE_NOT_SUPPORT, EXPORT)
 
-RUNTIME_API(memory, rtError_t, rtsGetP2PStatus,
+RUNTIME_API(device, rtError_t, rtsGetP2PStatus,
     (uint32_t devIdDes, uint32_t phyIdSrc, uint32_t* status),
     (devIdDes, phyIdSrc, status), FEATURE_NOT_SUPPORT, EXPORT)
 
@@ -3091,7 +3091,7 @@ RUNTIME_API(device, rtError_t, rtsDebugSetDumpMode,
     (const uint64_t mode),
     (mode), FEATURE_NOT_SUPPORT, EXPORT)
 
-RUNTIME_API(memory, rtError_t, rtsDeviceCanAccessPeer,
+RUNTIME_API(device, rtError_t, rtsDeviceCanAccessPeer,
     (uint32_t devId, uint32_t peerDevice, int32_t* canAccessPeer),
     (devId, peerDevice, canAccessPeer), FEATURE_NOT_SUPPORT, EXPORT)
 
@@ -3115,11 +3115,11 @@ RUNTIME_API(device, rtError_t, rtsDeviceTaskAbort,
     (int32_t devId, uint32_t timeout),
     (devId, timeout), FEATURE_NOT_SUPPORT, EXPORT)
 
-RUNTIME_API(memory, rtError_t, rtsDisableP2P,
+RUNTIME_API(device, rtError_t, rtsDisableP2P,
     (uint32_t devIdDes, uint32_t phyIdSrc),
     (devIdDes, phyIdSrc), FEATURE_NOT_SUPPORT, EXPORT)
 
-RUNTIME_API(memory, rtError_t, rtsEnableP2P,
+RUNTIME_API(device, rtError_t, rtsEnableP2P,
     (uint32_t devIdDes, uint32_t phyIdSrc, uint32_t flag),
     (devIdDes, phyIdSrc, flag), FEATURE_NOT_SUPPORT, EXPORT)
 

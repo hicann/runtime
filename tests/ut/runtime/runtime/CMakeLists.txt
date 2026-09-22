@@ -193,6 +193,7 @@ set(runtimeut_src_api_list
     ${TOP_DIR}/src/runtime/api/api_c_mbuf.cc
     ${TOP_DIR}/src/runtime/api/api_c_esched.cc
     ${TOP_DIR}/src/runtime/api/api_c_rt_config.cc
+    ${TOP_DIR}/src/runtime/api/api_c_device_topology.cc
     ${TOP_DIR}/src/runtime/api/inner.cc
     ${TOP_DIR}/src/runtime/api/api_handle_guard.cc
     ${TOP_DIR}/src/runtime/api/api_global_err.cc
@@ -394,6 +395,7 @@ set(runtimeut_src_callback_list
 )
 
 set(runtimeut_src_tiny_exclude_list
+    ${TOP_DIR}/src/runtime/api/api_c_device_topology.cc
     ${TOP_DIR}/src/runtime/api/api_c_dqs.cc
     ${TOP_DIR}/src/runtime/api/api_c_standard_soc.cc
     ${TOP_DIR}/src/runtime/api/api_c_soma.cc
@@ -411,6 +413,7 @@ set(runtimeut_src_tiny_exclude_list
     ${TOP_DIR}/src/runtime/api/impl/api_impl_soma.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event_common.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_device_topology.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_kernel_func.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_david.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/v200/api_impl_david_capture_event.cc
@@ -503,7 +506,7 @@ set(runtimeut_src_tiny_include_list
     ${TOP_DIR}/src/runtime/api/impl/api_impl_ipc_memory_stub.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_esched.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_rt_config.cc
-    ${TOP_DIR}/src/runtime/api/impl/api_impl_device_topology.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_device_topology_stub.cc
     ${TOP_DIR}/src/runtime/api/impl/api_decorator_stub.cc
     ${TOP_DIR}/src/runtime/core/src/dfx/fast_recover.cc
     ${TOP_DIR}/src/runtime/api/impl/v100/api_impl_v100.cc
@@ -1260,6 +1263,7 @@ add_executable(runtime_utest_api
     test/rt_utest_api_stream.cc
     test/rt_utest_api_context.cc
     test/rt_utest_api_device.cc
+    test/rt_utest_api_device_topology.cc
     test/rt_utest_api_event_route.cc
     test/rt_utest_api_esched_route.cc
     test/rt_utest_api_snapshot_route.cc
@@ -1440,6 +1444,7 @@ add_executable(runtime_utest_tiny_stub
     stub/hal_stub.cc
     test/main.cc
     test/rt_utest_api_kernel_func_stub.cc
+    test/rt_utest_device_topology_stub.cc
     test/rt_utest_stub.cc
 )
 set_property(TARGET runtime_utest_tiny_stub PROPERTY RUNTIME_API_WEAK_PROVIDER TRUE)

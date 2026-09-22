@@ -47,19 +47,6 @@ rtError_t rtCloseNetService()
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtGetDeviceCount(int32_t* cnt)
-{
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->GetDeviceCount(cnt);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtsGetDeviceCount(int32_t* cnt) { return rtGetDeviceCount(cnt); }
-
-VISIBILITY_DEFAULT
 rtError_t rtGetDeviceIDs(uint32_t* devices, uint32_t len)
 {
     Api* const apiInstance = Api::Instance();
@@ -220,106 +207,6 @@ rtError_t rtGetPhyDeviceInfo(uint32_t phyId, int32_t moduleType, int32_t infoTyp
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtGetDevicePhyIdByIndex(uint32_t devIndex, uint32_t* phyId)
-{
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->GetDevicePhyIdByIndex(devIndex, phyId);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtGetDeviceIndexByPhyId(uint32_t phyId, uint32_t* devIndex)
-{
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->GetDeviceIndexByPhyId(phyId, devIndex);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtsGetLogicDevIdByPhyDevId(int32_t phyDevId, int32_t* const logicDevId)
-{
-    if (phyDevId < 0) {
-        RT_LOG_OUTER_MSG_INVALID_PARAM(phyDevId, "greater than or equal to 0");
-        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
-    }
-    return rtGetDeviceIndexByPhyId(static_cast<uint32_t>(phyDevId), RtPtrToPtr<uint32_t*>(logicDevId));
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtsGetPhyDevIdByLogicDevId(int32_t logicDevId, int32_t* const phyDevId)
-{
-    if (logicDevId < 0) {
-        RT_LOG_OUTER_MSG_INVALID_PARAM(logicDevId, "greater than or equal to 0");
-        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
-    }
-    return rtGetDevicePhyIdByIndex(static_cast<uint32_t>(logicDevId), RtPtrToPtr<uint32_t*>(phyDevId));
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtsGetLogicDevIdByUserDevId(const int32_t userDevId, int32_t* const logicDevId)
-{
-    if (userDevId < 0) {
-        RT_LOG_OUTER_MSG_INVALID_PARAM(userDevId, "greater than or equal to 0");
-        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
-    }
-    return rtGetLogicDevIdByUserDevId(userDevId, logicDevId);
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtsGetUserDevIdByLogicDevId(const int32_t logicDevId, int32_t* const userDevId)
-{
-    if (logicDevId < 0) {
-        RT_LOG_OUTER_MSG_INVALID_PARAM(logicDevId, "greater than or equal to 0");
-        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
-    }
-    return rtGetUserDevIdByLogicDevId(logicDevId, userDevId);
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtEnableP2P(uint32_t devIdDes, uint32_t phyIdSrc, uint32_t flag)
-{
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->EnableP2P(devIdDes, phyIdSrc, flag);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtDisableP2P(uint32_t devIdDes, uint32_t phyIdSrc)
-{
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->DisableP2P(devIdDes, phyIdSrc);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtDeviceCanAccessPeer(int32_t* canAccessPeer, uint32_t devId, uint32_t peerDevice)
-{
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->DeviceCanAccessPeer(canAccessPeer, devId, peerDevice);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtGetP2PStatus(uint32_t devIdDes, uint32_t phyIdSrc, uint32_t* status)
-{
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->GetP2PStatus(devIdDes, phyIdSrc, status);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
 rtError_t rtsSetTsDevice(uint32_t tsId) { return rtSetTSDevice(tsId); }
 
 VISIBILITY_DEFAULT
@@ -409,41 +296,6 @@ rtError_t rtDeviceGetBareTgid(uint32_t* pid)
 
 VISIBILITY_DEFAULT
 rtError_t rtsDeviceGetBareTgid(uint32_t* pid) { return rtDeviceGetBareTgid(pid); }
-
-VISIBILITY_DEFAULT
-rtError_t rtGetPairDevicesInfo(uint32_t devId, uint32_t otherDevId, int32_t infoType, int64_t* val)
-{
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->GetPairDevicesInfo(devId, otherDevId, infoType, val);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtsGetPairDevicesInfo(uint32_t devId, uint32_t otherDevId, int32_t infoType, uint64_t* val)
-{
-    PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(val, RT_ERROR_INVALID_VALUE);
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    int64_t halVal = 0;
-    const rtError_t error = apiInstance->GetPairDevicesInfo(devId, otherDevId, infoType, &halVal);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-
-    *val = 1U << static_cast<uint64_t>(halVal);
-
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtGetPairPhyDevicesInfo(uint32_t devId, uint32_t otherDevId, int32_t infoType, int64_t* val)
-{
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->GetPairPhyDevicesInfo(devId, otherDevId, infoType, val);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
 
 VISIBILITY_DEFAULT
 rtError_t rtDeviceResetWithoutTsd(int32_t devId)
@@ -660,28 +512,6 @@ rtError_t rtGetHostCpuDevId(int32_t* const devId)
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtGetLogicDevIdByUserDevId(const int32_t userDevId, int32_t* const logicDevId)
-{
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-
-    const rtError_t error = apiInstance->GetLogicDevIdByUserDevId(userDevId, logicDevId);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtGetUserDevIdByLogicDevId(const int32_t logicDevId, int32_t* const userDevId)
-{
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-
-    const rtError_t error = apiInstance->GetUserDevIdByLogicDevId(logicDevId, userDevId);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
 rtError_t rtDebugSetDumpMode(const uint64_t mode)
 {
     Api* const apiInstance = Api::Instance();
@@ -786,12 +616,6 @@ rtError_t rtsGetSysParamOpt(const rtSysParamOpt configOpt, int64_t* const config
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtsGetP2PStatus(uint32_t devIdDes, uint32_t phyIdSrc, uint32_t* status)
-{
-    return rtGetP2PStatus(devIdDes, phyIdSrc, status);
-}
-
-VISIBILITY_DEFAULT
 rtError_t rtsGetErrorVerbose(const uint32_t deviceId, rtErrorInfo* const errorInfo)
 {
     Api* const apiInstance = Api::Instance();
@@ -858,18 +682,6 @@ rtError_t rtsDebugReadAICore(rtDebugMemoryParam* const param)
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtGetDeviceUuid(const int32_t devId, rtUuid_t* uuid)
-{
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-
-    const rtError_t error = apiInstance->GetDeviceUuid(devId, uuid);
-    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
 rtError_t rtSetDeviceWithFlags(int32_t deviceId, uint64_t flags)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
@@ -891,59 +703,11 @@ rtError_t rtSetDeviceWithFlags(int32_t deviceId, uint64_t flags)
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtDeviceGetHostAtomicCapabilities(
-    uint32_t* capabilities, const rtAtomicOperation* operations, const uint32_t count, int32_t deviceId)
-{
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->GetHostAtomicCapabilities(capabilities, operations, count, deviceId);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtDeviceGetP2PAtomicCapabilities(
-    uint32_t* capabilities, const rtAtomicOperation* operations, const uint32_t count, int32_t srcDeviceId,
-    int32_t dstDeviceId)
-{
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error =
-        apiInstance->GetP2PAtomicCapabilities(capabilities, operations, count, srcDeviceId, dstDeviceId);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
 rtError_t rtsDeviceGetInfo(uint32_t deviceId, rtDevAttr attr, int64_t* val)
 {
     Api* const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const rtError_t error = apiInstance->GetDeviceInfoByAttr(deviceId, attr, val);
-    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtDeviceGetPCIBusId(const int32_t devId, char* pciBusId, const int32_t len)
-{
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-
-    const rtError_t error = apiInstance->GetDevicePCIBusId(devId, pciBusId, len);
-    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtDeviceGetByPCIBusId(const char* pciBusId, int32_t* devId)
-{
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-
-    const rtError_t error = apiInstance->GetDeviceByPCIBusId(pciBusId, devId);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;

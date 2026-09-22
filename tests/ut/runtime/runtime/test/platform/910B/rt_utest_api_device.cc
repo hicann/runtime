@@ -16,6 +16,7 @@
 #include "rt_error_codes.h"
 #include "osal.hpp"
 #include "api_impl.hpp"
+#include "api_device_topology.hpp"
 #include "api_decorator.hpp"
 #include "api_profile_log_decorator.hpp"
 #include "api_profile_decorator.hpp"
@@ -580,8 +581,6 @@ TEST_F(CloudV2ApiDeviceTest, TestRtsDeviceResetForce)
 
 TEST_F(CloudV2ApiDeviceTest, TestRtsGetPairDevicesInfo)
 {
-    ApiImpl apiImpl;
-    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::GetPairDevicesInfo).stubs().will(returnValue(RT_ERROR_NONE));
     uint64_t val;
     rtError_t error = rtsGetPairDevicesInfo(0, 1, 0, &val);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
@@ -614,7 +613,7 @@ TEST_F(CloudV2ApiDeviceTest, TestRtsNewDeviceId)
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 }
 
-rtError_t ApiGetDeviceUuidStub(Api* api, int32_t devId, rtUuid_t* uuid)
+rtError_t ApiGetDeviceUuidStub(ApiDeviceTopology* api, int32_t devId, rtUuid_t* uuid)
 {
     UNUSED(api);
     UNUSED(devId);
@@ -628,7 +627,9 @@ TEST_F(CloudV2ApiDeviceTest, get_device_uuid_success)
     int32_t devId = 0;
     rtUuid_t uuid;
 
-    MOCKER_CPP_VIRTUAL(Runtime::Instance()->Api_(), &Api::GetDeviceUuid).stubs().will(invoke(ApiGetDeviceUuidStub));
+    MOCKER_CPP_VIRTUAL(ApiDeviceTopology::Instance(), &ApiDeviceTopology::GetDeviceUuid)
+        .stubs()
+        .will(invoke(ApiGetDeviceUuidStub));
 
     auto error = rtGetDeviceUuid(devId, &uuid);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -644,7 +645,7 @@ TEST_F(CloudV2ApiDeviceTest, get_device_uuid_fail)
     int32_t devId = 0;
     rtUuid_t uuid;
 
-    MOCKER_CPP_VIRTUAL(Runtime::Instance()->Api_(), &Api::GetDeviceUuid)
+    MOCKER_CPP_VIRTUAL(ApiDeviceTopology::Instance(), &ApiDeviceTopology::GetDeviceUuid)
         .stubs()
         .will(returnValue(RT_ERROR_DRV_NULL))
         .then(returnValue(RT_ERROR_FEATURE_NOT_SUPPORT))
@@ -660,7 +661,7 @@ TEST_F(CloudV2ApiDeviceTest, get_device_uuid_fail)
     EXPECT_EQ(error, ACL_ERROR_RT_INVALID_DEVICEID);
 }
 
-rtError_t ApiGetDevicePCIBusIdStub(Api* api, int32_t devId, char* pciBusId, int32_t len)
+rtError_t ApiGetDevicePCIBusIdStub(ApiDeviceTopology* api, int32_t devId, char* pciBusId, int32_t len)
 {
     UNUSED(api);
     UNUSED(devId);
@@ -675,7 +676,7 @@ TEST_F(CloudV2ApiDeviceTest, rt_device_get_pci_bus_id_success)
     int32_t devId = 0;
     char pciBusId[20] = {0};
 
-    MOCKER_CPP_VIRTUAL(Runtime::Instance()->Api_(), &Api::GetDevicePCIBusId)
+    MOCKER_CPP_VIRTUAL(ApiDeviceTopology::Instance(), &ApiDeviceTopology::GetDevicePCIBusId)
         .stubs()
         .will(invoke(ApiGetDevicePCIBusIdStub));
 
@@ -689,7 +690,7 @@ TEST_F(CloudV2ApiDeviceTest, rt_device_get_pci_bus_id_feature_not_support)
     int32_t devId = 0;
     char pciBusId[20] = {0};
 
-    MOCKER_CPP_VIRTUAL(Runtime::Instance()->Api_(), &Api::GetDevicePCIBusId)
+    MOCKER_CPP_VIRTUAL(ApiDeviceTopology::Instance(), &ApiDeviceTopology::GetDevicePCIBusId)
         .stubs()
         .will(returnValue(RT_ERROR_FEATURE_NOT_SUPPORT));
 
@@ -702,7 +703,7 @@ TEST_F(CloudV2ApiDeviceTest, rt_device_get_pci_bus_id_fail)
     int32_t devId = 0;
     char pciBusId[20] = {0};
 
-    MOCKER_CPP_VIRTUAL(Runtime::Instance()->Api_(), &Api::GetDevicePCIBusId)
+    MOCKER_CPP_VIRTUAL(ApiDeviceTopology::Instance(), &ApiDeviceTopology::GetDevicePCIBusId)
         .stubs()
         .will(returnValue(RT_ERROR_DEVICE_ID));
 
@@ -715,7 +716,9 @@ TEST_F(CloudV2ApiDeviceTest, rt_device_get_by_pci_bus_id_success)
     const char* pciBusId = "0000:3d:00.0";
     int32_t devId = -1;
 
-    MOCKER_CPP_VIRTUAL(Runtime::Instance()->Api_(), &Api::GetDeviceByPCIBusId).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(ApiDeviceTopology::Instance(), &ApiDeviceTopology::GetDeviceByPCIBusId)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
 
     auto error = rtDeviceGetByPCIBusId(pciBusId, &devId);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -726,7 +729,7 @@ TEST_F(CloudV2ApiDeviceTest, rt_device_get_by_pci_bus_id_feature_not_support)
     const char* pciBusId = "0000:3d:00.0";
     int32_t devId = 0;
 
-    MOCKER_CPP_VIRTUAL(Runtime::Instance()->Api_(), &Api::GetDeviceByPCIBusId)
+    MOCKER_CPP_VIRTUAL(ApiDeviceTopology::Instance(), &ApiDeviceTopology::GetDeviceByPCIBusId)
         .stubs()
         .will(returnValue(RT_ERROR_FEATURE_NOT_SUPPORT));
 

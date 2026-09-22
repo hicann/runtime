@@ -394,21 +394,6 @@ rtError_t rtsMemsetAsync(void* ptr, uint64_t destMax, uint32_t val, uint64_t cnt
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtsEnableP2P(uint32_t devIdDes, uint32_t phyIdSrc, uint32_t flag)
-{
-    return rtEnableP2P(devIdDes, phyIdSrc, flag);
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtsDisableP2P(uint32_t devIdDes, uint32_t phyIdSrc) { return rtDisableP2P(devIdDes, phyIdSrc); }
-
-VISIBILITY_DEFAULT
-rtError_t rtsDeviceCanAccessPeer(uint32_t devId, uint32_t peerDevice, int32_t* canAccessPeer)
-{
-    return rtDeviceCanAccessPeer(canAccessPeer, devId, peerDevice);
-}
-
-VISIBILITY_DEFAULT
 rtError_t rtsMemReserveAddress(
     void** virPtr, size_t size, rtMallocPolicy policy, void* expectAddr, rtMallocConfig_t* cfg)
 {
