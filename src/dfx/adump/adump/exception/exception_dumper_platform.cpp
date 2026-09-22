@@ -16,9 +16,12 @@
 #include "dump_core.h"
 #include "dump_memory.h"
 #include "exception_dumper.h"
-#include "dump_common.h"
 
 namespace Adx {
+namespace {
+// Timeout Threshod For Fast Recovery
+constexpr uint32_t TIMEOUT_THRESHOLD = 500U;
+} // namespace
 
 int32_t ExceptionDumper::LoadTensorPluginLib()
 {
@@ -35,7 +38,7 @@ int32_t ExceptionDumper::DumpArgsException(const rtExceptionInfo& exception, con
         IDE_LOGE("Get operator timeout failed, ret: %d", ret);
     } else {
         IDE_LOGI("Get operator timeout %ums", timeout);
-        if (timeout < FAST_RECOVERY_OP_TIMEOUT_MS) {
+        if (timeout < TIMEOUT_THRESHOLD) {
             IDE_LOGE("Operator timeout %ums, enable fast recovery, not dump data to file.", timeout);
             return DumpArgsExceptionFastRecovery(exception);
         }

@@ -55,21 +55,6 @@ protected:
     }
 };
 
-// T2：DumpManager 构造函数无条件注册异常回调到 runtime——不依赖任何开关/env/API 使能。
-// 本二进制含 __attribute__((constructor)) AdumpInit（adump_api.cpp:162），单例与注册在 main 前完成；
-// 本用例置于本文件首位（首个 DumpManager 相关用例），确保此前无使能类用例干扰断言语义。
-TEST_F(DumpManagerUtest, Test_AdumpInit_RegisterWithoutEnable)
-{
-    // 显式清理可能影响断言的环境变量（CI 环境可能预设 dump 使能）
-    (void)unsetenv("ASCEND_DUMP_SCENE");
-    (void)unsetenv("NPU_COLLECT_PATH");
-    // 前置：dump 从未被任何用例/env 使能
-    EXPECT_EQ(DumpManager::Instance().IsEnabledExceptionDump(), false);
-    EXPECT_EQ(DumpManager::Instance().IsEnableDump(DumpType::EXCEPTION), false);
-    // 无任何使能下 "AdumpException" 回调已完成注册（构造期无条件注册，注册与开关解耦）
-    EXPECT_GE(GetAdumpExceptionRegCount(), 1U);
-}
-
 TEST_F(DumpManagerUtest, Test_SetDumpConfig)
 {
     MOCKER(Thread::CreateDetachTaskWithDefaultAttr).stubs().will(returnValue(EN_OK));

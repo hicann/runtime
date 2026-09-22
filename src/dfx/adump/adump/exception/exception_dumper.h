@@ -56,12 +56,6 @@ private:
     int32_t DumpArgsExceptionInner(const rtExceptionInfo& exception, const std::string& dumpPath);
     int32_t DumpArgsExceptionDefault(const rtExceptionInfo& exception, const std::string& dumpPath);
     int32_t DumpArgsExceptionFastRecovery(const rtExceptionInfo& exception) const;
-    // 提前块：共性代码（落盘+解析）在开关判断之前执行，OFF 与三模式共用。
-    // 内部依次经过异常类型门、工具可用性门（仅 OFF）、快恢守卫，通过后落 _host.o 并符号化。
-    // earlyDumped 出参指示是否已执行落盘（供 OFF 分支决定是否删除）。
-    void TryEarlySymbolize(const rtExceptionInfo& exception, const std::string& dumpPath, bool& earlyDumped);
-    // 提前块落盘的 _host.o 在开关关闭时即用即删（best-effort）：ENOENT 静默、失败仅告警。
-    void RemoveHostKernelBinAfterSymbolize(const rtExceptionInfo& exception, const std::string& dumpPath) const;
 
     int32_t InvokeCallbacks(
         const rtExceptionInfo& exception, std::vector<ExceptionDumpInfo>& dumpInfos, ExceptionDumpMode& finalMode);

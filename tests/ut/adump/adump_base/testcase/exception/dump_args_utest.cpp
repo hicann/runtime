@@ -183,19 +183,7 @@ struct AicoreArgsFixture {
 
 class DumpArgsUtest : public testing::Test {
 protected:
-    virtual void SetUp()
-    {
-        ResetAllPlatformManagers();
-        // 默认平台 CloudV2（L0+L1+CORE_DUMP）：DumpException 的平台支持检查需要已注册平台，
-        // 未 mock 平台（type 0=CHIP_MINI_TYPE 未注册）会被检查拦截导致既有用例失败。
-        // 需要特定平台/不支持平台语义的用例：用例内先 GlobalMockObject::reset() 清除默认桩
-        // 再设置目标平台桩（mockcpp 多桩共存先设者匹配，reset 是唯一可靠覆盖方式）。
-        // 设计选择：全 fixture 默认桩 vs 按用例显式 mock——前者改动面最小（30+既有用例零改），
-        // 后者需逐用例加桩、遗漏即误报。选择前者并记录覆盖方式，先例：
-        // Test_Dump_Args_For_L2_Shape（V4）、Platform_Unsupported（99）。
-        uint32_t cloudV2 = static_cast<uint32_t>(PlatformType::CHIP_CLOUD_V2);
-        MOCKER_CPP(&Adx::AdumpDsmi::DrvGetPlatformType).stubs().with(outBound(cloudV2)).will(returnValue(true));
-    }
+    virtual void SetUp() { ResetAllPlatformManagers(); }
     virtual void TearDown()
     {
         ResetAllPlatformManagers();
@@ -2210,10 +2198,6 @@ static void L2Shape_CheckResult(
 TEST_F(DumpArgsUtest, Test_Dump_Args_For_L2_Shape)
 {
     Tools::CaseWorkspace ws("Test_Dump_Args_For_L2_Shape");
-    // 清除 fixture 默认平台桩（CloudV2），使本用例的 V4 平台桩为该函数唯一桩
-    // （mockcpp 多桩共存时先设者匹配，fixture 的 CloudV2 桩会掩盖本用例的 V4 桩，
-    //   导致 V4 特有 L2 shape 解析行为未按预期执行）。
-    GlobalMockObject::reset();
     std::string pluginDir = SetupPluginSoDir(ws);
     MOCKER_CPP(&LibPath::GetTargetPath).stubs().will(returnValue(pluginDir));
     MOCKER(dlopen).stubs().will(invoke(mmDlopen));

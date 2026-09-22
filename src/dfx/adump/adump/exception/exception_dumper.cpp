@@ -7,8 +7,6 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-#include <cerrno>
-#include <cstdio>
 #include <set>
 #include <cctype>
 #include <cstring>
@@ -25,7 +23,6 @@
 #include "kernel_symbol_locator.h"
 #include "kernel_info_collector.h"
 #include "kernel_source_symbolizer.h"
-#include "dump_common.h"
 #include "exception_dumper.h"
 
 namespace Adx {
@@ -178,14 +175,11 @@ int32_t ExceptionDumper::DumpException(const rtExceptionInfo& exception)
     IDE_CTRL_VALUE_WARN(
         ExceptionInfoCommon::IsSupportExceptionDump(exception), return ADUMP_FAILED,
         "Exception dump is not supported for this exception.");
+    IDE_CTRL_VALUE_WARN(IsEnabledExceptionDump(), return ADUMP_FAILED, "Not enable exception dump.");
     std::string dumpPath = CreateDeviceDumpPath(exception.deviceid);
     if (dumpPath.empty()) {
         return ADUMP_FAILED;
     }
-
-    // ===== 提前块：共性代码（落盘+解析）上移到开关判断之前，OFF 与三模式共用。 =====
-    bool earlyDumped = false;
-    TryEarlySymbolize(exception, dumpPath, earlyDumped);
 
     const std::string dumpScene = GetDumpSceneName();
     const std::string exceptionType = ExceptionInfoCommon::GetExceptionTaskTypeName(exception);
@@ -196,14 +190,6 @@ int32_t ExceptionDumper::DumpException(const rtExceptionInfo& exception)
         dumpScene.c_str(), exception.deviceid, exception.streamid, exception.taskid,
         static_cast<int32_t>(exception.expandInfo.type), exceptionType.c_str(), kernelName.c_str());
 
-    // ===== 开关判断：OFF 不执行 dump（不触发外部回调/不落 dump 文件），提前块产物即用即删。 =====
-    if (!IsEnabledExceptionDump()) {
-        if (earlyDumped) {
-            RemoveHostKernelBinAfterSymbolize(exception, dumpPath);
-        }
-        return ADUMP_SUCCESS;
-    }
-
     if (coredumpStatus_) {
         return DumpDetailException(exception, dumpPath);
     } else if (exceptionStatus_) {
@@ -211,74 +197,6 @@ int32_t ExceptionDumper::DumpException(const rtExceptionInfo& exception)
     } else {
         return DumpArgsException(exception, dumpPath);
     }
-}
-
-// 提前块：共性代码（落盘+解析）在开关判断之前执行，OFF 与三模式共用（方案 2 核心）。
-// 门序：异常类型门（AICPU 跳过）→ 工具可用性门（仅 OFF）→ 快恢守卫（统一，任何模式+OFF）。
-void ExceptionDumper::TryEarlySymbolize(
-    const rtExceptionInfo& exception, const std::string& dumpPath, bool& earlyDumped)
-{
-    // AICPU 不做落盘与解析（与三模式现状一致，跳过语义）。
-    if (!ExceptionInfoCommon::IsSupportDefaultExceptionDump(exception)) {
-        IDE_LOGD("Exception type does not support default dump, skip early block.");
-        return;
-    }
-    // 仅 OFF 在落盘前查 IsAvailable（工具缺失 Warning+跳过，不落盘不解析）；
-    // ON 不查——_host.o 落盘对 ON 有独立保留价值，行号解析在 SymbolizeCollectedLocations
-    // 内已有 IsAvailable 兜底（kernel_symbol_locator.cpp:758-762）。
-    if (!IsEnabledExceptionDump() && !KernelSourceSymbolizer::IsAvailable()) {
-        IDE_LOGW("llvm-symbolizer not available, skip early symbolize.");
-        return;
-    }
-    // 快恢场景不做 llvm-symbolizer 解析——任何模式（含 Detail/Normal）+ OFF 均跳过提前块仅告警；
-    // 查询失败→告警后视为非快恢继续（镜像 DumpArgsException 降级方向）。
-    // 注：Args 路径在 DumpArgsException 内还会再次查询超时，两次查询均走同一 RTS 接口
-    // (rtGetOpExecuteTimeoutV2)，语义一致无矛盾；不改签名传参，保持模式分发零侵入。
-    uint32_t timeout = 0U;
-    const rtError_t rtRet = rtGetOpExecuteTimeoutV2(&timeout);
-    const bool isFastRecovery = (rtRet == RT_ERROR_NONE) && (timeout < FAST_RECOVERY_OP_TIMEOUT_MS);
-    if (rtRet != RT_ERROR_NONE) {
-        IDE_LOGW("Get op execute timeout failed, ret=%d, skip fast recovery check.", static_cast<int32_t>(rtRet));
-    }
-    if (isFastRecovery) {
-        IDE_LOGW("Operator timeout %ums, fast recovery, skip early symbolize.", timeout);
-        return;
-    }
-    DumpHostKernelBinBeforeSymbolize(exception, dumpPath);
-    KernelSymbolLocator::DumpErrorSymbols(exception, dumpPath);
-    earlyDumped = true;
-}
-
-// 设计意图（用户需求 2+3）：开关关闭时行号解析仍需执行（llvm-symbolizer 需要文件路径
-// 作为输入，无法纯内存传递），故落盘→解析→删除三步链路为有意设计。
-// 残留风险：GetExceptionInfo 失败/非 ENOENT 删除失败/进程在写删之间退出时文件残留。
-// 提前块落盘的 _host.o 在开关关闭时即用即删（best-effort）：
-// 文件不存在（落盘失败/未落）视作已清理静默返回；其余删除失败仅告警，不影响返回值。
-// 仅删提前块产物：该路径不产生 kernel_meta 拷贝/异常文件等其他算子文件。
-// 已知可接受竞态：同设备并发同 kernel 名异常时删/读交错，最坏一方符号化读到已删文件
-// （日志可见"ParseElfSymbols failed, invalid ELF header"或"HasDebugLine"告警），
-// best-effort 降级（与既有 M_TRUNC 覆盖写风险同级）。
-void ExceptionDumper::RemoveHostKernelBinAfterSymbolize(
-    const rtExceptionInfo& exception, const std::string& dumpPath) const
-{
-    rtExceptionArgsInfo_t exceptionArgsInfo{};
-    if (ExceptionInfoCommon::GetExceptionInfo(exception, exceptionArgsInfo) != ADUMP_SUCCESS) {
-        IDE_LOGW("Get exception args info failed, skip remove host kernel bin.");
-        return;
-    }
-    KernelInfoCollector collector;
-    collector.LoadKernelInfo(exceptionArgsInfo);
-    const std::string hostOPath = collector.GetHostOFilePath(dumpPath);
-    if (hostOPath.empty()) {
-        return;
-    }
-    if (::remove(hostOPath.c_str()) != 0) {
-        if (errno != ENOENT) {
-            IDE_LOGW("Remove host kernel bin[%s] failed, errno=%d.", hostOPath.c_str(), errno);
-        }
-        return;
-    }
-    IDE_LOGI("[Dump][Exception] early symbolize done, removed host kernel bin: %s", hostOPath.c_str());
 }
 
 void ExceptionDumper::SetDumpPath(const std::string& dumpPath)
@@ -471,7 +389,7 @@ void ExceptionDumper::DumpHostKernelBinBeforeSymbolize(
     // 保证符号表损坏等场景下 _host.o 仍能落盘供事后分析；DumpHostKernelBin 幂等，
     // 后续 symbolize/慢搜索路径复用已落盘文件不会重复写。
     std::string hostOPath;
-    (void)collector.DumpHostKernelBin(dumpPath, hostOPath, !IsEnabledExceptionDump());
+    (void)collector.DumpHostKernelBin(dumpPath, hostOPath);
 }
 
 int32_t ExceptionDumper::DumpNormalException(const rtExceptionInfo& exception, const std::string& dumpPath)
@@ -484,8 +402,9 @@ int32_t ExceptionDumper::DumpNormalExceptionDefault(const rtExceptionInfo& excep
     IDE_CTRL_VALUE_WARN(
         ExceptionInfoCommon::IsSupportDefaultExceptionDump(exception), return ADUMP_FAILED,
         "Exception does not support default dump.");
-    // T5 去重：落盘/解析已由 DumpException 入口的提前块统一接管（方案 2 核心），
-    // 默认路径不再重复调用。
+    // 先无条件提前落 _host.o，再符号化（symbolize 复用已落盘文件，不重复落盘）。
+    DumpHostKernelBinBeforeSymbolize(exception, dumpPath);
+    KernelSymbolLocator::DumpErrorSymbols(exception, dumpPath);
     DumpOperator excOp;
     bool find = FindExceptionOperator(exception, excOp);
     if (!find) {
@@ -513,8 +432,9 @@ int32_t ExceptionDumper::DumpArgsExceptionDefault(const rtExceptionInfo& excepti
     IDE_CTRL_VALUE_WARN(
         ExceptionInfoCommon::IsSupportDefaultExceptionDump(exception), return ADUMP_FAILED,
         "Exception does not support default dump.");
-    // T5 去重：落盘/解析已由 DumpException 入口的提前块统一接管（方案 2 核心），
-    // 默认路径不再重复调用。
+    // 先无条件提前落 _host.o，再符号化（symbolize 复用已落盘文件，不重复落盘）。
+    DumpHostKernelBinBeforeSymbolize(exception, dumpPath);
+    KernelSymbolLocator::DumpErrorSymbols(exception, dumpPath);
     DumpArgs args;
     if (args.LoadArgsExceptionInfo(exception) != ADUMP_SUCCESS) {
         return ADUMP_FAILED;
