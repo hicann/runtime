@@ -14,6 +14,7 @@
 #include "runtime.hpp"
 #include "context.hpp"
 #include "raw_device.hpp"
+#include "model.hpp"
 
 namespace cce {
 namespace runtime {
@@ -81,5 +82,41 @@ bool isNeedOpenDevice(bool& isTscOpen, bool& isTsvOpen, const uint32_t tsId)
 
 bool isNeedCloseDevice(bool& isTscOpen, bool& isTsvOpen) { return !(isTscOpen && isTsvOpen); }
 
+rtError_t SetModelNameWithCtrlMsg(Model* const mdl)
+{
+    ts_ctrl_msg_body_t modelNameIn = {};
+    ts_ctrl_msg_body_t modelNameAck = {};
+    size_t ackCount = sizeof(ts_ctrl_msg_body_t);
+
+    modelNameIn.type = OP_SET_MODEL_NAME;
+    uint32_t tsId = mdl->Context_()->Device_()->DevGetTsId();
+    modelNameIn.u.set_model_name_info.ts_id = tsId;
+    modelNameIn.u.set_model_name_info.model_id = mdl->Id_();
+    const std::string& modelName = mdl->GetName();
+    constexpr size_t modelNameMaxLen = sizeof(modelNameIn.u.set_model_name_info.model_name);
+    const size_t copyLen = std::min(modelName.length(), modelNameMaxLen - 1);
+    const errno_t ret = memcpy_s(
+        const_cast<char*>(modelNameIn.u.set_model_name_info.model_name), modelNameMaxLen, modelName.c_str(), copyLen);
+    if (ret != EOK) {
+        RT_LOG(RT_LOG_ERROR, "memcpy_s model name failed, retCode=%d, srcLen=%zu", ret, copyLen);
+        return RT_ERROR_SEC_HANDLE;
+    }
+    uint32_t deviceId = mdl->Context_()->Device_()->Id_();
+    struct tsdrv_ctrl_msg para;
+    para.tsid = tsId;
+    para.msg_len = sizeof(ts_ctrl_msg_body_t);
+    para.msg = static_cast<void*>(&modelNameIn);
+
+    COND_RETURN_WARN(&halTsdrvCtl == nullptr, RT_ERROR_DRV_NOT_SUPPORT, "[drv api] halTsdrvCtl does not exist.");
+    RT_LOG(RT_LOG_INFO, "device_id=%u, ts_id=%u.", deviceId, tsId);
+    const drvError_t drvRet = halTsdrvCtl(
+        deviceId, TSDRV_CTL_CMD_CTRL_MSG, static_cast<void*>(&para), sizeof(tsdrv_ctrl_msg),
+        static_cast<void*>(&modelNameAck), &ackCount);
+    COND_RETURN_ERROR_MSG_CALL(
+        ERR_MODULE_DRV, drvRet != DRV_ERROR_NONE, RT_GET_DRV_ERRCODE(drvRet), "device_id=%u, ts_id=%u, drvRetCode=%d.",
+        deviceId, tsId, static_cast<int32_t>(drvRet));
+
+    return RT_ERROR_NONE;
+}
 } // namespace runtime
 } // namespace cce

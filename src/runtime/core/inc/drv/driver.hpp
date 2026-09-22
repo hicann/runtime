@@ -44,6 +44,7 @@ struct rtLogicReport_t;
 struct rtShmQuery_t;
 
 class Cdq;
+class Model;
 
 constexpr int32_t PRE_ALLOC_SQ_CQ_RETRY_MAX_COUNT = 10;
 
@@ -669,6 +670,7 @@ rtError_t GetIpcNotifyVa(
     const uint32_t notifyId, Driver* const curDrv, const uint32_t deviceId, const uint32_t phyId, uint64_t& Va);
 bool isNeedOpenDevice(bool& isTscOpen, bool& isTsvOpen, const uint32_t tsId);
 bool isNeedCloseDevice(bool& isTscOpen, bool& isTsvOpen);
+rtError_t SetModelNameWithCtrlMsg(Model* const mdl);
 } // namespace runtime
 } // namespace cce
 

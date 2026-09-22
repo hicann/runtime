@@ -106,5 +106,10 @@ bool isNeedOpenDevice(bool& isTscOpen, bool& isTsvOpen, const uint32_t tsId)
 
 bool isNeedCloseDevice(bool& isTscOpen, bool& isTsvOpen) { return !(isTscOpen && isTsvOpen); }
 
+rtError_t SetModelNameWithCtrlMsg(Model* const mdl)
+{
+    UNUSED(mdl);
+    return RT_ERROR_NONE;
+}
 } // namespace runtime
 } // namespace cce

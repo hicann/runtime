@@ -2593,7 +2593,7 @@ rtError_t Context::ModelNameSet(Model* const mdl, const char_t* const name) cons
     std::string modelName(name);
     mdl->SetModelName(modelName);
 
-    return RT_ERROR_NONE;
+    return SetModelNameWithCtrlMsg(mdl);
 }
 
 bool Context::IsStreamInContext(Stream* const stm)

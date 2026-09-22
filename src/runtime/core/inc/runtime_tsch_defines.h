@@ -486,6 +486,7 @@ enum OPERATION_TYPE {
     OP_UPDATE_STREAM_PRIORITY,
     OP_QUERY_STREAM_PRIORITY,
     OP_QUERY_SWAP_BUFFER_INFO,
+    OP_SET_MODEL_NAME,
     OP_INVALID
 };
 #pragma pack(push)
@@ -617,6 +618,12 @@ typedef struct {
 } ts_query_swap_buffer_info_t;
 
 typedef struct {
+    volatile uint32_t ts_id;
+    volatile uint32_t model_id;
+    volatile char model_name[32];
+} ts_set_model_name_info_t;
+
+typedef struct {
     volatile uint32_t type;
     union {
         ts_kill_task_info_t kill_task_info;
@@ -639,6 +646,7 @@ typedef struct {
         ts_query_stream_overflow_status query_stream_overflow_status;
         ts_update_and_query_stream_priority_t update_and_query_stream_priority;
         ts_query_swap_buffer_info_t query_swap_buffer_info;
+        ts_set_model_name_info_t set_model_name_info;
     } u;              // 40 bytes
 } ts_ctrl_msg_body_t; // 44 bytes
 #pragma pack(pop)
