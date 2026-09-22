@@ -2,7 +2,7 @@
 
 > [!WARNING]废弃说明
 >
-> ASCEND\_SLOG\_PRINT\_TO\_STDOUT环境变量在CANN 9.2.0版本标记废弃，将在13.0.0版本删除，替换为：[**ASCEND\_LOG\_PRINT\_TO\_STDOUT**](ASCEND_LOG_PRINT_TO_STDOUT.md)。
+> ASCEND\_SLOG\_PRINT\_TO\_STDOUT环境变量在CANN 9.2.0版本标记为废弃，将在2027年9月30日之后的版本删除，替换为：[**ASCEND\_LOG\_PRINT\_TO\_STDOUT**](ASCEND_LOG_PRINT_TO_STDOUT.md)。
 >
 > 不建议用户使用，以防止引发兼容性问题。若同时配置两者，以**ASCEND\_LOG\_PRINT\_TO\_STDOUT**为准。
 
