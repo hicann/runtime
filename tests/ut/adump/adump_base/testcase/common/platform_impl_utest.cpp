@@ -16,7 +16,7 @@
 #include "platform/dc_platform.h"
 #include "adump_platform_registry.h"
 #include "kernel_pc_fixer.h"
-#include "register_config.h"
+#include "coredump_register_interface.h"
 #include "dump_common.h"
 #include "dump_core.h"
 #include "hccl_mc2_define.h"
@@ -100,9 +100,9 @@ TEST_F(PlatformImplUtest, CloudV4Coredump_Behaviour)
     // ConvertCoreId: AIC 直返 coreId，非 AIC 偏移 CORE_SIZE_AIC_DAVID
     EXPECT_EQ(coredump.ConvertCoreId(CORE_TYPE_AIC, 3), 3U);
     EXPECT_EQ(coredump.ConvertCoreId(CORE_TYPE_AIV, 3), static_cast<uint16_t>(CORE_SIZE_AIC_DAVID + 3));
-    // DumpRegister 委托到 DumpCore::DumpV4Register，桩掉避免真实寄存器访问
+    // DumpRegister 委托到 DumpCore::DumpWideRegRegister，桩掉避免真实寄存器访问
     DumpCore core("/tmp/dump_core_v4", 0);
-    MOCKER_CPP(&DumpCore::DumpV4Register).stubs();
+    MOCKER_CPP(&DumpCore::DumpWideRegRegister).stubs();
     coredump.DumpRegister(core, CORE_TYPE_AIC, 0);
 }
 
@@ -146,7 +146,7 @@ TEST_F(PlatformImplUtest, CloudV5Coredump_Behaviour)
     CloudV5Coredump coredump;
     EXPECT_NE(coredump.CreatePcFixer(), nullptr);
     DumpCore core("/tmp/dump_core_v5", 0);
-    MOCKER_CPP(&DumpCore::DumpV4Register).stubs();
+    MOCKER_CPP(&DumpCore::DumpWideRegRegister).stubs();
     coredump.DumpRegister(core, CORE_TYPE_AIC, 0);
 }
 
@@ -214,7 +214,7 @@ TEST_F(PlatformImplUtest, CloudV6Coredump_InheritsCloudV4Behaviour)
     EXPECT_EQ(coredump.ConvertCoreId(CORE_TYPE_AIC, 3), 3U);
     EXPECT_EQ(coredump.ConvertCoreId(CORE_TYPE_AIV, 3), 21U);
     DumpCore core("/tmp/dump_core_v6", 0);
-    MOCKER_CPP(&DumpCore::DumpV4Register).stubs();
+    MOCKER_CPP(&DumpCore::DumpWideRegRegister).stubs();
     coredump.DumpRegister(core, CORE_TYPE_AIC, 0);
 }
 
@@ -274,7 +274,7 @@ TEST_F(PlatformImplUtest, CloudV2Coredump_Behaviour)
     EXPECT_EQ(coredump.ConvertCoreId(CORE_TYPE_AIC, 3), 3U);
     EXPECT_EQ(coredump.ConvertCoreId(CORE_TYPE_AIV, 3), static_cast<uint16_t>(CORE_SIZE_AIC + 3));
     DumpCore core("/tmp/dump_core_v2", 0);
-    MOCKER_CPP(&DumpCore::DumpV2Register).stubs();
+    MOCKER_CPP(&DumpCore::DumpStdRegRegister).stubs();
     coredump.DumpRegister(core, CORE_TYPE_AIC, 0);
 }
 

@@ -14,8 +14,8 @@
 #include "log/adx_log.h"
 #include "adump_platform_registry.h"
 #include "kernel_pc_fixer.h"
-#include "register_config.h"
 #include "dump_common.h"
+#include "acc_error_info.h"
 #include "dump_core.h"
 #include "hccl_mc2_define.h"
 
@@ -69,7 +69,7 @@ std::shared_ptr<RegisterInterface> CloudV2Coredump::CreateRegister() const
 
 void CloudV2Coredump::DumpRegister(DumpCore& core, uint8_t coreType, uint16_t coreId) const
 {
-    core.DumpV2Register(coreType, coreId);
+    core.DumpStdRegRegister(coreType, coreId);
 }
 
 uint16_t CloudV2Coredump::ConvertCoreId(uint8_t coreType, uint16_t coreId) const
@@ -96,4 +96,68 @@ std::vector<std::string> CloudV2DataDump::GetKfcBinNames() const
 
 bool CloudV2DataDump::IsUbFromAiCore() const { return true; }
 
+// ========== 寄存器配置实现 ==========
+
+CloudV2Register::CloudV2Register()
+{
+    InitAicAivRegisters();
+    registerTypeMap_ = {{CORE_TYPE_AIC, {RegisterType::AIC_DBG}}, {CORE_TYPE_AIV, {RegisterType::AIV_DBG}}};
+}
+
+std::vector<RegisterTable> CloudV2Register::GenAicDbgRegSuAddr() { return SuDbgRegAddr(); }
+
+// AIC MTE Debug 寄存器（模块编码 0x2）。
+std::vector<RegisterTable> CloudV2Register::GenAicDbgRegMteAddr()
+{
+    return {
+        {0X203000000000000, 17, 8},
+        {0X203000000000017, 25, 8},
+    };
+}
+
+// AIC CUBE Debug 寄存器（模块编码 0x3）。
+std::vector<RegisterTable> CloudV2Register::GenAicDbgRegCubeAddr()
+{
+    return {
+        {0X300000000000000, 1, 8},
+        {0X300000000002000, 1, 8},
+        {0X300000000004000, 1, 8},
+    };
+}
+
+std::vector<RegisterTable> CloudV2Register::GenAivDbgRegSuAddr() { return SuDbgRegAddr(); }
+
+// AIV VEC Debug 寄存器（模块编码 0x1）。
+std::vector<RegisterTable> CloudV2Register::GenAivDbgRegVecAddr()
+{
+    return {
+        {0X100000000000000, 2, 16},
+        {0X100000000000002, 14, 8},
+        {0X101000000000000, 8, 16},
+    };
+}
+
+void CloudV2Register::InitErrorRegisters()
+{
+    ErrorRegisterMap_ = {
+        {RT_V100_AIC_ERR_0, 0x00000700, 4, "AIC_ERROR_0"},      {RT_V100_AIC_ERR_1, 0x00000704, 4, "AIC_ERROR_1"},
+        {RT_V100_AIC_ERR_2, 0x00000760, 4, "AIC_ERROR_2"},      {RT_V100_AIC_ERR_3, 0x00000764, 4, "AIC_ERROR_3"},
+        {RT_V100_AIC_ERR_4, 0x00000780, 4, "AIC_ERROR_4"},      {RT_V100_AIC_ERR_5, 0x00000790, 4, "AIC_ERROR_5"},
+        {RT_V100_BIU_ERR_0, 0x00000710, 4, "BIU_ERR_INFO_0"},   {RT_V100_BIU_ERR_1, 0x00000714, 4, "BIU_ERR_INFO_1"},
+        {RT_V100_CCU_ERR_0, 0x00000718, 4, "CCU_ERR_INFO_0"},   {RT_V100_CCU_ERR_1, 0x0000071C, 4, "CCU_ERR_INFO_1"},
+        {RT_V100_IFU_ERR_0, 0x00000728, 4, "IFU_ERR_INFO_0"},   {RT_V100_IFU_ERR_1, 0x0000072C, 4, "IFU_ERR_INFO_1"},
+        {RT_V100_MTE_ERR_0, 0x00000730, 4, "MTE_ERR_INFO_0"},   {RT_V100_MTE_ERR_1, 0x00000734, 4, "MTE_ERR_INFO_1"},
+        {RT_V100_VEC_ERR_0, 0x00000738, 4, "VEC_ERR_INFO_0"},   {RT_V100_VEC_ERR_1, 0x0000073C, 4, "VEC_ERR_INFO_1"},
+        {RT_V100_FIXP_ERR_0, 0x0000078C, 4, "FIXP_ERR_INFO_0"}, {RT_V100_FIXP_ERR_1, 0x000007C8, 4, "FIXP_ERR_INFO_1"},
+        {RT_V100_CUBE_ERR_0, 0x00000720, 4, "CUBE_ERR_INFO"},
+    };
+}
+
+// V2 平台内部共享段：SU Debug 寄存器（GPR0-31 / PC / SPR，AIC/AIV 共用）。
+std::vector<RegisterTable> CloudV2Register::SuDbgRegAddr()
+{
+    return {
+        {0X0, 32, 8}, {0X40, 1, 8}, {0X42, 8, 8}, {0X4b, 4, 8}, {0X80, 12, 8},
+    };
+}
 } // namespace Adx
