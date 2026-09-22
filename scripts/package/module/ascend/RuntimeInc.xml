@@ -262,84 +262,8 @@
         <file value="cann-tsch-compat.tar.gz" install_mod="440" entity="true" optional="true"/>
         <file value="cann-tsch-compat.ini" install_mod="440" entity="true" optional="true"/>
     </file_info>
-    <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/data/platform_config" install_path="$(TARGET_ENV)/data/platform_config" install_type="all">
-        <file value="Ascend950PR_9599.ini" install_mod="440" entity="true"/>
-        <file value="Ascend950PR_9589.ini" install_mod="440" entity="true"/>
-        <file value="Ascend950PR_958b.ini" install_mod="440" entity="true"/>
-        <file value="Ascend950PR_9579.ini" install_mod="440" entity="true"/>
-        <file value="Ascend950PR_957b.ini" install_mod="440" entity="true"/>
-        <file value="Ascend950PR_957bx.ini" install_mod="440" entity="true"/>
-        <file value="Ascend950PR_957c.ini" install_mod="440" entity="true"/>
-        <file value="Ascend950PR_957d.ini" install_mod="440" entity="true"/>
-        <file value="Ascend950PR_950z.ini" install_mod="440" entity="true"/>
-        <file value="Ascend950DT_9591.ini" install_mod="440" entity="true"/>
-        <file value="Ascend950DT_9592.ini" install_mod="440" entity="true"/>
-        <file value="Ascend950DT_9581.ini" install_mod="440" entity="true"/>
-        <file value="Ascend950DT_9581x.ini" install_mod="440" entity="true"/>
-        <file value="Ascend950DT_9582.ini" install_mod="440" entity="true"/>
-        <file value="Ascend950DT_9582x.ini" install_mod="440" entity="true"/>
-        <file value="Ascend950DT_9584.ini" install_mod="440" entity="true"/>
-        <file value="Ascend950DT_9587.ini" install_mod="440" entity="true"/>
-        <file value="Ascend950DT_9588.ini" install_mod="440" entity="true"/>
-        <file value="Ascend950DT_9572.ini" install_mod="440" entity="true"/>
-        <file value="Ascend950DT_9575.ini" install_mod="440" entity="true"/>
-        <file value="Ascend950DT_9576.ini" install_mod="440" entity="true"/>
-        <file value="Ascend950DT_9574.ini" install_mod="440" entity="true"/>
-        <file value="Ascend950DT_9577.ini" install_mod="440" entity="true"/>
-        <file value="Ascend950DT_9578.ini" install_mod="440" entity="true"/>
-        <file value="Ascend950DT_9571.ini" install_mod="440" entity="true"/>
-        <file value="Ascend950DT_9573.ini" install_mod="440" entity="true"/>
-        <file value="Ascend950DT_9583.ini" install_mod="440" entity="true"/>
-        <file value="Ascend950DT_9585.ini" install_mod="440" entity="true"/>
-        <file value="Ascend950DT_9586.ini" install_mod="440" entity="true"/>
-        <file value="Ascend950DT_9595.ini" install_mod="440" entity="true"/>
-        <file value="Ascend950DT_9596.ini" install_mod="440" entity="true"/>
-        <file value="Ascend950DT_95A1.ini" install_mod="440" entity="true"/>
-        <file value="Ascend950DT_95A2.ini" install_mod="440" entity="true"/>
-        <file value="Ascend950DT_950x.ini" install_mod="440" entity="true"/>
-        <file value="Ascend950DT_950y.ini" install_mod="440" entity="true"/>
-        <file value="Ascend350_354f.ini" install_mod="440" entity="true"/>
-        <file value="Ascend350_355e.ini" install_mod="440" entity="true"/>
-    </file_info>
-    <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/data/platform_config" install_path="$(TARGET_ENV)/data/platform_config" install_type="all">
-        <file value="Ascend031.ini" install_mod="440" entity="true"/>
-        <file value="Ascend035.ini" install_mod="440" entity="true"/>
-        <file value="Ascend035A.ini" install_mod="440" entity="true"/>
-        <file value="Ascend035B.ini" install_mod="440" entity="true"/>
-        <file value="Ascend310B1.ini" install_mod="440" entity="true"/>
-        <file value="Ascend310B2.ini" install_mod="440" entity="true"/>
-        <file value="Ascend310B3.ini" install_mod="440" entity="true"/>
-        <file value="Ascend310B4.ini" install_mod="440" entity="true"/>
-        <file value="Ascend310P3.ini" install_mod="440" entity="true"/>
-        <file value="Ascend310P1.ini" install_mod="440" entity="true"/>
-        <file value="Ascend310P5.ini" install_mod="440" entity="true"/>
-        <file value="Ascend310P7.ini" install_mod="440" entity="true"/>
-        <file value="Ascend910A.ini" install_mod="440" entity="true"/>
-        <file value="Ascend910B.ini" install_mod="440" entity="true"/>
-        <file value="Ascend910PremiumA.ini" install_mod="440" entity="true"/>
-        <file value="Ascend910ProA.ini" install_mod="440" entity="true"/>
-        <file value="Ascend910ProB.ini" install_mod="440" entity="true"/>
-        <file value="Ascend910B1.ini" install_mod="440" entity="true"/>
-        <file value="Ascend910B2.ini" install_mod="440" entity="true"/>
-        <file value="Ascend910B3.ini" install_mod="440" entity="true"/>
-        <file value="Ascend910B4.ini" install_mod="440" entity="true"/>
-        <file value="Ascend910B4-1.ini" install_mod="440" entity="true"/>
-        <file value="Ascend910_9362.ini" install_mod="440" entity="true"/>
-        <file value="Ascend910_9363.ini" install_mod="440" entity="true"/>
-        <file value="Ascend910_9372.ini" install_mod="440" entity="true"/>
-        <file value="Ascend910_9381.ini" install_mod="440" entity="true"/>
-        <file value="Ascend910_9382.ini" install_mod="440" entity="true"/>
-        <file value="Ascend910_9391.ini" install_mod="440" entity="true"/>
-        <file value="Ascend910_9392.ini" install_mod="440" entity="true"/>
-        <file value="Ascend910B2C.ini" install_mod="440" entity="true"/>
-    </file_info>
-    <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/data/platform_config" install_path="$(TARGET_ENV)/data/platform_config" install_type="all">
-        <file value="KirinX90.ini" install_mod="440" entity="true"/>
-        <file value="Kirin9030.ini" install_mod="440" entity="true"/>
-        <file value="KirinDev0000.ini" install_mod="440" entity="true"/>
-        <file value="KirinDev0001.ini" install_mod="440" entity="true"/>
-        <file value="KirinDev0002.ini" install_mod="440" entity="true"/>
-        <file value="KirinDev0003.ini" install_mod="440" entity="true"/>
+    <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/data" install_path="$(TARGET_ENV)/data" install_type="all">
+        <file value="platform_config" install_mod="440"/>
     </file_info>
     <file_info copy_type="source" src_path="" dst_path="$(TARGET_ENV)/conf" install_path="$(TARGET_ENV)/conf" install_type="all">
         <file value="ascend_package_load.ini" install_mod="444" entity="true"/>
