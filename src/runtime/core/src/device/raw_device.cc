@@ -59,6 +59,19 @@ constexpr uint32_t SQ_ID_MEM_POOL_INIT_COUNT = 1024U;
 constexpr uint32_t WAIT_PRINTF_THREAD_TIME_MAX = 1000U;
 bool g_isAddrFlatDevice = false;
 
+namespace {
+void UnregisterDcacheLockOpProgram(Program*& program)
+{
+    if (program == nullptr) {
+        return;
+    }
+    program->Dereference();
+    program->SetUnRegisteringFlag();
+    Runtime::Instance()->PutProgram(program, true);
+    program = nullptr;
+}
+} // namespace
+
 rtError_t Device::QueryC2cCtrlAddr(uint64_t* const addr, uint32_t* const len)
 {
     const uint64_t cachedAddr = GetC2cCtrlAddr();
@@ -497,6 +510,7 @@ rtError_t RawDevice::RegisterDcacheLockOp(Program*& dcacheLockOpProgram)
     devBinInfo.length = dcacheLockMixOpData.size();
 
     rtError_t error = rtInstance->ProgramRegister(&devBinInfo, &dcacheLockOpProgram);
+    ScopeGuard programGuard([&dcacheLockOpProgram]() { UnregisterDcacheLockOpProgram(dcacheLockOpProgram); });
     if (error != RT_ERROR_NONE || dcacheLockOpProgram == nullptr) {
         RT_LOG(RT_LOG_ERROR, "register program failed, retCode=%#x", error);
         return error;
@@ -511,8 +525,10 @@ rtError_t RawDevice::RegisterDcacheLockOp(Program*& dcacheLockOpProgram)
         dcacheLockOpProgram, funcAddr, dcacheLockMixFuncName.c_str(), dcacheLockMixOpName.c_str(), 0);
     if (error != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR, "dcache lock op register program failed, retCode=%#x", error);
+        return error;
     }
-    return error;
+    programGuard.ReleaseGuard();
+    return RT_ERROR_NONE;
 }
 
 rtError_t RawDevice::RegisterAndLaunchDcacheLockOp(Context* ctx)
@@ -547,6 +563,7 @@ rtError_t RawDevice::RegisterAndLaunchDcacheLockOp(Context* ctx)
     if (error != RT_ERROR_NONE || dcacheLockOpProgram == nullptr) {
         return error;
     }
+    ScopeGuard programGuard([&dcacheLockOpProgram]() { UnregisterDcacheLockOpProgram(dcacheLockOpProgram); });
 
     void* funcAddr = static_cast<void*>(dcacheLockOpProgram);
     int64_t blockDim = 0;
@@ -566,10 +583,6 @@ rtError_t RawDevice::RegisterAndLaunchDcacheLockOp(Context* ctx)
     }
 
     dCacheLockFlag_ = true;
-    // 释放dcacheLockOpProgram
-    dcacheLockOpProgram->Dereference();
-    dcacheLockOpProgram->SetUnRegisteringFlag();
-    Runtime::Instance()->PutProgram(dcacheLockOpProgram, true);
     RT_LOG(RT_LOG_EVENT, "Launch dcache lock op success, blockDim=%lld.", blockDim);
     return RT_ERROR_NONE;
 }
