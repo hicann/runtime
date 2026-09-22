@@ -124,23 +124,10 @@ static void DestroyRuntimeImpl(Runtime* rt, const void* soHandle)
 #endif
 }
 
-static void PrepareRuntimeProcessExitImpl(Runtime* rt, const void* soHandle)
-{
-    UNUSED(soHandle);
-    if (rt != nullptr) {
-        rt->PrepareProcessExitNoThrow();
-    }
-    Runtime::runtime_ = nullptr;
-#ifdef XPU_UT
-    cce::tprt::TprtManage::tprt_ = nullptr;
-#endif
-}
-
 #else
 static const std::string LIBRUNTIME_SO_NAME = "libruntime_v100.so"; // default so name
 using ConstructFunc = Runtime* (*)();
 using DesConstructFunc = void (*)(Runtime*);
-using PrepareProcessExitFunc = void (*)(Runtime*);
 
 static rtChipType_t g_chipType = CHIP_BEGIN;
 rtChipType_t Runtime::GetChipType()
@@ -192,7 +179,9 @@ static const std::string GetLibRuntimeSoName()
 static Runtime* CreateRuntimeImpl(void** soHandle)
 {
     const std::string libSoName = GetLibRuntimeSoName();
-    constexpr const int32_t flags = static_cast<int32_t>(static_cast<uint32_t>(MMPA_RTLD_NOW));
+    // Pin platform Runtime code until process exit so mmDlclose cannot unmap it inside RuntimeKeeper's destructor.
+    constexpr const int32_t flags =
+        static_cast<int32_t>(static_cast<uint32_t>(MMPA_RTLD_NOW) | static_cast<uint32_t>(MMPA_RTLD_NODELETE));
     void* const handlePtr = mmDlopen(libSoName.c_str(), flags);
     if (handlePtr == nullptr) {
         const char_t* const dlRet = mmDlerror();
@@ -231,24 +220,6 @@ static void DestroyRuntimeImpl(Runtime* rt, void* soHandle)
     }
     func(rt);
     RT_LOG(RT_LOG_INFO, "Destroy Runtime success");
-    return;
-}
-
-static void PrepareRuntimeProcessExitImpl(Runtime* rt, void* soHandle)
-{
-    if ((soHandle == nullptr) || (rt == nullptr)) {
-        RT_LOG(RT_LOG_INFO, "soHandle or rt is nullptr");
-        return;
-    }
-    PrepareProcessExitFunc const func =
-        RtPtrToPtr<PrepareProcessExitFunc, void*>(mmDlsym(soHandle, "PrepareRuntimeProcessExitImpl"));
-    if (func == nullptr) {
-        const std::string libSoName = GetLibRuntimeSoName();
-        RT_LOG(RT_LOG_ERROR, "No process exit prepare symbol found in %s.", libSoName.c_str());
-        return;
-    }
-    RT_LOG(RT_LOG_INFO, "Runtime process exit prepare start.");
-    func(rt);
     return;
 }
 
@@ -312,14 +283,15 @@ RuntimeKeeper::~RuntimeKeeper()
 #ifndef CFG_DEV_PLATFORM_PC
         (void)UnregisterDrvErrMsgHandle();
 #endif
-        PrepareRuntimeProcessExitImpl(runtime_, soHandle_);
+        DestroyRuntimeImpl(runtime_, soHandle_);
     } catch (...) {
     }
 
     Runtime::runtime_ = nullptr;
     runtime_ = nullptr;
-    // Process exit relies on OS loader cleanup. Do not destroy Runtime, PoolRegistry or runtime so here:
-    // their destructors may touch heap or lower modules after other atexit handlers have started.
+    if (soHandle_ != nullptr) {
+        (void)mmDlclose(soHandle_);
+    }
     soHandle_ = nullptr;
 }
 
