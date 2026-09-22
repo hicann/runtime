@@ -217,7 +217,11 @@ std::string DeviceStreamSnapshotHandler::GetActiveStreamSnapshot(
                       << ", is_swap_in=" << streamSnapshot.isSwapIn;
         }
 
-        std::string taskTag = tsk->stream->GetTaskTag(tsk->id);
+        Stream* curStm = nullptr;
+        (void)dev_->GetStreamSqCqManage()->GetStreamById(static_cast<uint32_t>(streamSnapshot.streamId), &curStm);
+        COND_PROC((curStm == nullptr), continue;);
+
+        std::string taskTag = curStm->GetTaskTag(tsk->id);
         if (taskTag.empty()) {
             outStream << ", no task tag is set." << std::endl;
             continue;
