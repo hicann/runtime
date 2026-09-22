@@ -239,6 +239,7 @@ TEST_F(CloudV2DcacheDeviceTest, LaunchDcacheLockOp_05)
     MOCKER(StreamLaunchKernelV1).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
     rtError_t ret = dev->RegisterAndLaunchDcacheLockOp(&ctx);
     EXPECT_EQ(ret, RT_ERROR_INVALID_VALUE);
+    EXPECT_TRUE(program.GetUnRegisteringFlag());
     delete dev;
     dev = nullptr;
     ctx.device_ = nullptr;
@@ -264,8 +265,10 @@ TEST_F(CloudV2DcacheDeviceTest, LaunchDcacheLockOp_06)
 
     dev->primaryStream_ = new Stream(dev, 0);
     MOCKER_CPP_VIRTUAL(dev->primaryStream_, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER_CPP(&Program::Dereference).expects(once());
     rtError_t ret = dev->RegisterAndLaunchDcacheLockOp(&ctx);
     EXPECT_EQ(ret, RT_ERROR_INVALID_VALUE);
+    EXPECT_TRUE(program.GetUnRegisteringFlag());
     delete dev;
     dev = nullptr;
     ctx.device_ = nullptr;
@@ -292,8 +295,33 @@ TEST_F(CloudV2DcacheDeviceTest, LaunchDcacheLockOp_07)
     MOCKER_CPP_VIRTUAL(dev->primaryStream_, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
     rtError_t ret = dev->RegisterAndLaunchDcacheLockOp(&ctx);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_TRUE(program.GetUnRegisteringFlag());
     delete dev;
     dev = nullptr;
+    ctx.device_ = nullptr;
+}
+
+TEST_F(CloudV2DcacheDeviceTest, LaunchDcacheLockOp_GetDevInfoFailed)
+{
+    RawDevice* dev = new RawDevice(1);
+    dev->Init();
+    MOCKER_CPP_VIRTUAL(dev, &RawDevice::CheckFeatureSupport).stubs().will(returnValue(true));
+    MOCKER(QueryDcacheLockStatus).stubs().will(returnValue(RT_ERROR_NONE));
+    dev->stackAddrIsDcache_ = true;
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    MOCKER_CPP(&RawDevice::RegisterDcacheLockOp)
+        .stubs()
+        .with(outBound((Program*)&program))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::GetDevInfo).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    Context ctx(dev, 0);
+    ctx.Init();
+
+    const rtError_t ret = dev->RegisterAndLaunchDcacheLockOp(&ctx);
+    EXPECT_EQ(ret, RT_ERROR_INVALID_VALUE);
+    EXPECT_TRUE(program.GetUnRegisteringFlag());
+    delete dev;
     ctx.device_ = nullptr;
 }
 
@@ -427,6 +455,8 @@ TEST_F(CloudV2DcacheDeviceTest, RegisterDcacheLockOp_02)
     Program* dcacheLockOpProgram = nullptr;
     auto ret = dev->RegisterDcacheLockOp(dcacheLockOpProgram);
     EXPECT_EQ(ret, RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(dcacheLockOpProgram, nullptr);
+    EXPECT_TRUE(program.GetUnRegisteringFlag());
     rtInstance->dcacheLockMixOpData_.clear();
     delete dev;
 }
