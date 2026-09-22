@@ -12,6 +12,7 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <mutex>
 #include "base.hpp"
 #include "elf.hpp"
 #include "runtime/elf_base.h"
@@ -267,6 +268,22 @@ public:
     static rtError_t BinaryPoolMemCopySync(
         void* const devMem, const uint32_t size, void* const data, const Device* const device, const bool readonly);
 
+    rtOpExceptionCallback ExchangeOpExceptionCallback(rtOpExceptionCallback callback, void* userData)
+    {
+        const std::lock_guard<std::mutex> lock(opExceptionCallbackMutex_);
+        const rtOpExceptionCallback oldCallback = opExceptionCallback_;
+        opExceptionCallback_ = callback;
+        opExceptionCallbackUserData_ = userData;
+        return oldCallback;
+    }
+
+    void GetOpExceptionCallback(rtOpExceptionCallback& callback, void*& userData) const
+    {
+        const std::lock_guard<std::mutex> lock(opExceptionCallbackMutex_);
+        callback = opExceptionCallback_;
+        userData = opExceptionCallbackUserData_;
+    }
+
     rtKernelArray_t* KernelTable_;
     uint32_t kernelCount_;
     uint32_t kernelPos_;
@@ -278,10 +295,11 @@ public:
     std::string kernelNames_;
     std::mutex devValidMutex_[RT_MAX_DEV_NUM];
     Device* devicePtr_[RT_MAX_DEV_NUM] = {nullptr};
-    rtOpExceptionCallback opExceptionCallback_{nullptr};
-    void* opExceptionCallbackUserData_{nullptr};
 
 private:
+    mutable std::mutex opExceptionCallbackMutex_;
+    rtOpExceptionCallback opExceptionCallback_{nullptr};
+    void* opExceptionCallbackUserData_{nullptr};
     uint32_t progId_;
     uint32_t progType_;
     uint32_t progMemType_;

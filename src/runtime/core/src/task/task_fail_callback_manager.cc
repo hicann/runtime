@@ -92,8 +92,9 @@ static void ExecuteOpExceptionCallback(Program* const program, rtExceptionInfo_t
         return;
     }
 
-    auto callback = program->opExceptionCallback_;
-    void* userData = program->opExceptionCallbackUserData_;
+    rtOpExceptionCallback callback = nullptr;
+    void* userData = nullptr;
+    program->GetOpExceptionCallback(callback, userData);
     if (callback != nullptr) {
         RT_LOG(
             RT_LOG_ERROR,
@@ -156,16 +157,15 @@ void OpTaskFailCallbackNotify(rtExceptionInfo_t* const exceptionInfo)
 
 rtError_t OpTaskFailCallbackReg(Program* binHandle, void* callback, void* userData)
 {
-    if (binHandle->opExceptionCallback_ != nullptr) {
+    const rtOpExceptionCallback callbackPtr = RtPtrToPtr<rtOpExceptionCallback>(callback);
+    const rtOpExceptionCallback oldCallback = binHandle->ExchangeOpExceptionCallback(callbackPtr, userData);
+    if (oldCallback != nullptr) {
         RT_LOG(
             RT_LOG_INFO,
             "the callback in the current binHandle has already been assigned, binHandle=%p, binHandle_id=%u, "
             "callback=%p",
-            binHandle, binHandle->Id_(), binHandle->opExceptionCallback_);
+            binHandle, binHandle->Id_(), oldCallback);
     }
-
-    binHandle->opExceptionCallback_ = RtPtrToPtr<rtOpExceptionCallback>(callback);
-    binHandle->opExceptionCallbackUserData_ = userData;
 
     RT_LOG(
         RT_LOG_INFO, "reg binary exception callback success, binHandle=%p, binHandle_id=%u, callback=%p, userData=%p",

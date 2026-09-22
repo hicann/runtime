@@ -34,8 +34,8 @@ private:
     volatile uint64_t* freeBitmap_;
     uint32_t maxIdCount_;
     std::mutex mutex_;
-    uint32_t allocedCnt_;
-    uint32_t lastAllocIdx_;
+    Atomic<uint32_t> allocedCnt_;
+    Atomic<uint32_t> lastAllocIdx_;
 };
 } // namespace runtime
 } // namespace cce

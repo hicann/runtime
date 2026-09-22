@@ -27,10 +27,11 @@ void ProfCtrlCallbackManager::SaveProfSwitchData(const rtProfCommandHandle_t* co
         RT_LOG(RT_LOG_ERROR, "data len %u is invalid, valid value is %zu", len, sizeof(rtProfCommandHandle_t));
         return;
     }
+    const std::lock_guard<std::mutex> switchLock(switchMutex_);
     if ((data->type != PROF_COMMANDHANDLE_TYPE_STOP) && (data->type != PROF_COMMANDHANDLE_TYPE_FINALIZE) &&
         (data->type != PROF_COMMANDHANDLE_TYPE_MODEL_UNSUBSCRIBE)) {
-        switchIsSet_ = true;
         switchData_ = *data;
+        switchIsSet_ = true;
     } else {
         switchIsSet_ = false;
     }
@@ -57,15 +58,24 @@ void ProfCtrlCallbackManager::NotifyOneModule(
 void ProfCtrlCallbackManager::NotifyProfInfo(const uint32_t moduleId)
 {
     const MsprofReporterCallback rptCallback = ProfilingAgent::Instance().GetMsprofReporterCallback();
-    RT_LOG(RT_LOG_DEBUG, "moduleId:%u switchIsSet_:%d.", moduleId, static_cast<int32_t>(switchIsSet_));
+    rtProfCommandHandle_t switchData{};
+    bool switchIsSet = false;
+    {
+        const std::lock_guard<std::mutex> switchLock(switchMutex_);
+        switchIsSet = switchIsSet_;
+        if (switchIsSet) {
+            switchData = switchData_;
+        }
+    }
+    RT_LOG(RT_LOG_DEBUG, "moduleId:%u switchIsSet:%d.", moduleId, static_cast<int32_t>(switchIsSet));
     if (rptCallback != nullptr) {
         NotifyOneModule(
             moduleId, RT_PROF_CTRL_REPORTER, RtPtrToPtr<void*, const MsprofReporterCallback>(rptCallback),
             static_cast<uint32_t>(sizeof(MsprofReporterCallback)));
     }
-    if (switchIsSet_) {
+    if (switchIsSet) {
         NotifyOneModule(
-            moduleId, RT_PROF_CTRL_SWITCH, &switchData_, static_cast<uint32_t>(sizeof(rtProfCommandHandle_t)));
+            moduleId, RT_PROF_CTRL_SWITCH, &switchData, static_cast<uint32_t>(sizeof(rtProfCommandHandle_t)));
     }
 }
 
@@ -107,6 +117,10 @@ void ProfCtrlCallbackManager::DelAllData()
     callbackMap_.clear();
 }
 
-uint64_t ProfCtrlCallbackManager::GetSwitchData() const { return switchData_.profSwitch; }
+uint64_t ProfCtrlCallbackManager::GetSwitchData() const
+{
+    const std::lock_guard<std::mutex> switchLock(switchMutex_);
+    return switchData_.profSwitch;
+}
 } // namespace runtime
 } // namespace cce

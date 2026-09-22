@@ -10,6 +10,8 @@
 #include "rt_utest_api.hpp"
 #include "rt_unwrap.h"
 #include "common/rt_utest_context_reset_helper.hpp"
+#include <atomic>
+#include <thread>
 
 class ApiExceptionTest : public testing::Test {
 protected:
@@ -37,6 +39,10 @@ void CountOpExceptionCallback(rtExceptionInfo_t* exceptionInfo, void* userData)
     ++g_opExceptionCallbackCount;
 }
 
+void OpExceptionCallbackA(rtExceptionInfo_t*, void*) {}
+
+void OpExceptionCallbackB(rtExceptionInfo_t*, void*) {}
+
 TEST_F(ApiExceptionTest, rtBinarySetExceptionCallback)
 {
     ElfProgram bin_handle;
@@ -47,11 +53,55 @@ TEST_F(ApiExceptionTest, rtBinarySetExceptionCallback)
     rtOpExceptionCallback callback = MyOpExceptionCallback;
     error = rtBinarySetExceptionCallback(binHandle, callback, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    EXPECT_EQ(bin_handle.opExceptionCallback_, callback);
+    rtOpExceptionCallback registeredCallback = nullptr;
+    void* registeredUserData = nullptr;
+    bin_handle.GetOpExceptionCallback(registeredCallback, registeredUserData);
+    EXPECT_EQ(registeredCallback, callback);
+    EXPECT_EQ(registeredUserData, nullptr);
 
     // 验证重复注册场景
     error = rtBinarySetExceptionCallback(binHandle, callback, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiExceptionTest, ConcurrentExceptionCallbackPairIsConsistent)
+{
+    constexpr uint32_t iterations = 10000U;
+    ElfProgram binHandle;
+    uint32_t userDataA = 1U;
+    uint32_t userDataB = 2U;
+    std::atomic<bool> start{false};
+    std::atomic<bool> failed{false};
+    binHandle.ExchangeOpExceptionCallback(OpExceptionCallbackA, &userDataA);
+
+    auto writer = [&binHandle, &start, iterations](rtOpExceptionCallback callback, void* userData) {
+        while (!start.load(std::memory_order_acquire)) {
+            std::this_thread::yield();
+        }
+        for (uint32_t i = 0U; i < iterations; ++i) {
+            binHandle.ExchangeOpExceptionCallback(callback, userData);
+        }
+    };
+    std::thread writerA(writer, OpExceptionCallbackA, &userDataA);
+    std::thread writerB(writer, OpExceptionCallbackB, &userDataB);
+    std::thread reader([&]() {
+        start.store(true, std::memory_order_release);
+        for (uint32_t i = 0U; i < iterations; ++i) {
+            rtOpExceptionCallback callback = nullptr;
+            void* userData = nullptr;
+            binHandle.GetOpExceptionCallback(callback, userData);
+            if (((callback != OpExceptionCallbackA) || (userData != &userDataA)) &&
+                ((callback != OpExceptionCallbackB) || (userData != &userDataB))) {
+                failed.store(true, std::memory_order_relaxed);
+                break;
+            }
+        }
+    });
+
+    writerA.join();
+    writerB.join();
+    reader.join();
+    EXPECT_FALSE(failed.load(std::memory_order_relaxed));
 }
 
 TEST_F(ApiExceptionTest, rtGetFuncHandleFromExceptionInfo)
