@@ -10,6 +10,8 @@
 #include <cstdio>
 #include <stdlib.h>
 #include <array>
+#include <chrono>
+#include <future>
 #include <unordered_set>
 
 #include "driver/ascend_hal.h"
@@ -1996,6 +1998,52 @@ TEST_F(StreamTest, ShowDfxInfo_test)
     delete taskRes;
     delete stream;
     delete device;
+}
+
+TEST_F(StreamTest, report_error_message_checks_capacity_while_holding_lock)
+{
+    Stream stream(static_cast<Device*>(nullptr), 0U);
+    for (uint32_t i = 0U; i < 10U; ++i) {
+        stream.ReportErrorMessage(i, "error");
+    }
+
+    std::unique_lock<std::mutex> lock(stream.errorMsgLock_);
+    std::promise<void> started;
+    std::future<void> startedFuture = started.get_future();
+    std::future<void> reportFuture = std::async(std::launch::async, [&stream, &started]() {
+        started.set_value();
+        stream.ReportErrorMessage(10U, "ignored");
+    });
+    startedFuture.wait();
+
+    EXPECT_EQ(reportFuture.wait_for(std::chrono::milliseconds(100)), std::future_status::timeout);
+    lock.unlock();
+    EXPECT_EQ(reportFuture.wait_for(std::chrono::seconds(1)), std::future_status::ready);
+    reportFuture.get();
+    EXPECT_EQ(stream.errorMsg_.size(), 10U);
+}
+
+TEST_F(StreamTest, reset_stream_construct_clears_error_messages_while_holding_lock)
+{
+    RawDevice device(0U);
+    Stream stream(&device, 0U);
+    stream.ReportErrorMessage(1U, "error");
+
+    std::unique_lock<std::mutex> lock(stream.errorMsgLock_);
+    std::promise<void> started;
+    std::future<void> startedFuture = started.get_future();
+    std::future<void> resetFuture = std::async(std::launch::async, [&stream, &started]() {
+        started.set_value();
+        stream.ResetStreamConstruct();
+    });
+    startedFuture.wait();
+
+    EXPECT_EQ(resetFuture.wait_for(std::chrono::milliseconds(100)), std::future_status::timeout);
+    lock.unlock();
+    EXPECT_EQ(resetFuture.wait_for(std::chrono::seconds(1)), std::future_status::ready);
+    resetFuture.get();
+    EXPECT_TRUE(stream.errorMsg_.empty());
+    stream.device_ = nullptr;
 }
 
 TEST_F(StreamTest, Apply_CntValue)

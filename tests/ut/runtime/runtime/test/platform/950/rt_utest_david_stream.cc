@@ -10,6 +10,8 @@
 #include <cstdio>
 #include <stdlib.h>
 
+#include <chrono>
+#include <future>
 #include <iostream>
 #include <unistd.h>
 
@@ -229,6 +231,27 @@ public:
 
 char DavidStreamTest::function_ = 'a';
 uint32_t DavidStreamTest::binary_[32] = {};
+
+TEST(DavidStreamErrorMessageTest, reset_david_stream_construct_clears_error_messages_while_holding_lock)
+{
+    DavidStream stream(nullptr, 0U, 0U, nullptr);
+    stream.ReportErrorMessage(1U, "error");
+
+    std::unique_lock<std::mutex> lock(stream.errorMsgLock_);
+    std::promise<void> started;
+    std::future<void> startedFuture = started.get_future();
+    std::future<void> resetFuture = std::async(std::launch::async, [&stream, &started]() {
+        started.set_value();
+        stream.ResetDavidStreamConstruct();
+    });
+    startedFuture.wait();
+
+    EXPECT_EQ(resetFuture.wait_for(std::chrono::milliseconds(100)), std::future_status::timeout);
+    lock.unlock();
+    EXPECT_EQ(resetFuture.wait_for(std::chrono::seconds(1)), std::future_status::ready);
+    resetFuture.get();
+    EXPECT_TRUE(stream.errorMsg_.empty());
+}
 
 TEST_F(DavidStreamTest, Apply_CntValue)
 {

@@ -3092,11 +3092,16 @@ rtError_t Stream::WaitForTask(const uint32_t taskId, const bool isNeedWaitSyncCq
 
 void Stream::ReportErrorMessage(const uint32_t errCode, const std::string& errMsg)
 {
+    const std::lock_guard<std::mutex> errLock(errorMsgLock_);
     if (errorMsg_.size() < ERROR_MESSAGE_MAX_SIZE) {
-        errorMsgLock_.lock();
         errorMsg_.emplace_back(std::make_pair(errCode, errMsg));
-        errorMsgLock_.unlock();
     }
+}
+
+void Stream::ClearErrorMessage()
+{
+    const std::lock_guard<std::mutex> errLock(errorMsgLock_);
+    errorMsg_.clear();
 }
 
 /* Alloc SVM to save stream executed times, which is used in RDMA c-core SQE to calculate PI */
@@ -4778,7 +4783,7 @@ void Stream::ResetStreamConstruct()
     drvErr_ = 0U;
     failureMode_ = GetMode();
     SetStreamAsyncRecycleFlag(false);
-    errorMsg_.clear();
+    ClearErrorMessage();
     taskIdToTaskTagMap_.clear();
     latestConcernedTaskId.Set(MAX_UINT16_NUM);
     SetStreamStatus(StreamStatus::NORMAL);

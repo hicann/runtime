@@ -186,10 +186,12 @@ rtError_t NpuDriver::FreeHostSharedMemory(rtFreeHostSharedMemoryIn* const in, co
             RT_LOG(RT_LOG_DEBUG, "shm_unlink name: %s, size=%" PRIu64 "", in->name, in->size);
             COND_RETURN_WARN(ret != 0, RT_ERROR_NONE, "shm_unlink failed, %s may not exist.", in->name);
         } else if ((ret == 0) && (in->size != static_cast<uint64_t>(buf.st_size))) {
+            (void)close(in->fd);
             RT_LOG_OUTER_MSG_INVALID_PARAM_WITH_DESC("Releasing host shared memory", in->size, buf.st_size);
             return RT_ERROR_INVALID_VALUE;
         } else {
             RT_LOG(RT_LOG_WARNING, "%s does not exist.", in->name);
+            (void)close(in->fd);
         }
     } else {
         return RT_ERROR_FEATURE_NOT_SUPPORT;

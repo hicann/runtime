@@ -67,6 +67,7 @@
 #include "rts.h"
 #include "runtime/rts/rts_mem.h"
 #include "rts_snapshot.h"
+#include "dvpp_c.hpp"
 #include "ipc_event.hpp"
 #include "errcode_manage.hpp"
 #include "heterogenous.h"
@@ -211,6 +212,21 @@ public:
     rtCallback_t submittedCallback = nullptr;
     void* submittedData = nullptr;
     rtError_t submitRet = RT_ERROR_NONE;
+};
+
+class StarsTaskLaunchRecorder final : public ApiImpl {
+public:
+    rtError_t StarsTaskLaunch(
+        const void* const sqe, const uint32_t sqeLen, Stream* const stm, const uint32_t flag) override
+    {
+        UNUSED(sqe);
+        UNUSED(sqeLen);
+        UNUSED(flag);
+        stream = stm;
+        return RT_ERROR_NONE;
+    }
+
+    Stream* stream = nullptr;
 };
 
 class DefaultDeviceIdGuard {
@@ -752,6 +768,47 @@ TEST_F(ApiImplTest, ApiImplDeviceTopologyFeatureNotSupport)
 
     rtInstance->SetChipType(oldChipType);
     GlobalContainer::SetRtChipType(oldChipType);
+}
+
+TEST_F(ApiImplTest, StarsTaskLaunchForwardsNullStreamToImpl)
+{
+    StarsTaskLaunchRecorder impl;
+    ApiErrorDecorator apiError(&impl);
+    Context* const context = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(context, nullptr);
+    MOCKER_CPP((static_cast<Context* (Runtime::*)(const bool, int32_t) const>(&Runtime::CurrentContext)))
+        .expects(once())
+        .with(eq(true), eq(DEFAULT_DEVICE_ID))
+        .will(returnValue(context));
+    Device* const device = context->Device_();
+    ASSERT_NE(device, nullptr);
+    const DevProperties oldProperties = device->GetDevProperties();
+    DevProperties properties = oldProperties;
+    properties.isSupportDvppAccelerator = true;
+    device->RefreshDevProperties(properties);
+    uint8_t sqe = 0U;
+
+    EXPECT_EQ(apiError.StarsTaskLaunch(&sqe, sizeof(sqe), nullptr, RT_KERNEL_DEFAULT), RT_ERROR_NONE);
+    EXPECT_EQ(impl.stream, nullptr);
+    device->RefreshDevProperties(oldProperties);
+}
+
+TEST_F(ApiImplTest, ApiImplStarsTaskLaunchUsesDefaultStreamForNullStream)
+{
+    ApiImpl impl;
+    Context* const context = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(context, nullptr);
+    Stream* const defaultStream = context->DefaultStream_();
+    ASSERT_NE(defaultStream, nullptr);
+    uint8_t sqe = 0U;
+    MOCKER(StarsLaunch)
+        .expects(once())
+        .with(
+            eq(static_cast<const void*>(&sqe)), eq(static_cast<uint32_t>(sizeof(sqe))), eq(defaultStream),
+            eq(static_cast<uint32_t>(RT_KERNEL_DEFAULT)))
+        .will(returnValue(RT_ERROR_NONE));
+
+    EXPECT_EQ(impl.StarsTaskLaunch(&sqe, sizeof(sqe), nullptr, RT_KERNEL_DEFAULT), RT_ERROR_NONE);
 }
 
 TEST_F(ApiImplTest, ApiImplDeviceTopologySuccess)

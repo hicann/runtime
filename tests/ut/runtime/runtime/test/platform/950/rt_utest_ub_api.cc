@@ -49,6 +49,11 @@
 #undef protected
 #undef private
 
+#include <cerrno>
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <unistd.h>
+
 using namespace testing;
 using namespace cce::runtime;
 
@@ -1441,6 +1446,68 @@ TEST_F(ApiTestUb1, free_host_shared_memory_david_stub_hal)
     rtFreeHostSharedMemoryIn inputPara = {"abcd", 100, fd, &sharedMemAddr, &devSharedMemAddr};
     error = rtFreeHostSharedMemory(&inputPara);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+}
+
+class NpuDriverHostSharedMemoryTest : public testing::Test {
+protected:
+    void TearDown() override
+    {
+        GlobalMockObject::verify();
+        GlobalMockObject::reset();
+    }
+};
+
+TEST_F(NpuDriverHostSharedMemoryTest, FreeHostSharedMemoryClosesFdWhenBackingFileIsMissing)
+{
+    int pipeFds[2] = {-1, -1};
+    ASSERT_EQ(pipe(pipeFds), 0);
+    (void)close(pipeFds[1]);
+    NpuDriver driver;
+    void* hostPtr = reinterpret_cast<void*>(0x1000U);
+    void* devicePtr = reinterpret_cast<void*>(0x2000U);
+    rtFreeHostSharedMemoryIn input = {"white_scan_fd_close", 1U, pipeFds[0], hostPtr, devicePtr};
+    MOCKER_CPP_VIRTUAL(&driver, &NpuDriver::IsSupportFeature).stubs().will(returnValue(true));
+    MOCKER(halHostUnregister).expects(once()).will(returnValue(DRV_ERROR_NONE));
+    MOCKER(munmap).expects(once()).will(returnValue(0));
+    MOCKER(stat).expects(once()).will(returnValue(-1));
+
+    EXPECT_EQ(driver.FreeHostSharedMemory(&input, 0U), RT_ERROR_NONE);
+    errno = 0;
+    const int32_t fdState = fcntl(pipeFds[0], F_GETFD);
+    const int32_t fdErrno = errno;
+    if (fdState != -1) {
+        (void)close(pipeFds[0]);
+    }
+    EXPECT_EQ(fdState, -1);
+    EXPECT_EQ(fdErrno, EBADF);
+}
+
+TEST_F(NpuDriverHostSharedMemoryTest, FreeHostSharedMemoryClosesFdWhenBackingFileSizeChanges)
+{
+    int pipeFds[2] = {-1, -1};
+    ASSERT_EQ(pipe(pipeFds), 0);
+    (void)close(pipeFds[1]);
+    NpuDriver driver;
+    void* hostPtr = reinterpret_cast<void*>(0x1000U);
+    void* devicePtr = reinterpret_cast<void*>(0x2000U);
+    constexpr uint64_t inputSize = 2U;
+    struct stat statBuffer = {};
+    statBuffer.st_size = static_cast<off_t>(inputSize + 1U);
+    rtFreeHostSharedMemoryIn input = {"white_scan_fd_close", inputSize, pipeFds[0], hostPtr, devicePtr};
+    MOCKER_CPP_VIRTUAL(&driver, &NpuDriver::IsSupportFeature).stubs().will(returnValue(true));
+    MOCKER(halHostUnregister).expects(once()).will(returnValue(DRV_ERROR_NONE));
+    MOCKER(munmap).expects(once()).will(returnValue(0));
+    MOCKER(stat).expects(once()).with(mockcpp::any(), outBoundP(&statBuffer, sizeof(statBuffer))).will(returnValue(0));
+
+    EXPECT_EQ(driver.FreeHostSharedMemory(&input, 0U), RT_ERROR_INVALID_VALUE);
+    errno = 0;
+    const int32_t fdState = fcntl(pipeFds[0], F_GETFD);
+    const int32_t fdErrno = errno;
+    if (fdState != -1) {
+        (void)close(pipeFds[0]);
+    }
+    EXPECT_EQ(fdState, -1);
+    EXPECT_EQ(fdErrno, EBADF);
 }
 
 TEST_F(ApiTestUb1, onlineprof_david00)
