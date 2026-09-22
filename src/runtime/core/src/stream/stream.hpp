@@ -970,6 +970,9 @@ public:
 
     bool IsCtrlSQStream(void) const { return isCtrlSQStream_; }
 
+protected:
+    void ClearErrorMessage();
+
 private:
     friend class Context;
     friend class StreamLaunchBlocking;

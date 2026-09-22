@@ -10,6 +10,8 @@
 #include <cstdio>
 #include <stdlib.h>
 
+#include <chrono>
+#include <future>
 #include <iostream>
 #include <unistd.h>
 
@@ -302,6 +304,28 @@ TEST_F(DavidStreamTest, PrintStmDfxAndCheckDevice_normal)
     EXPECT_EQ(res, RT_ERROR_NONE);
     res = stream->PrintStmDfxAndCheckDevice(beginCnt, endCnt, checkCount, 1);
     EXPECT_EQ(res, RT_ERROR_NONE);
+}
+
+TEST_F(DavidStreamTest, ResetDavidStreamConstructClearsErrorMessagesWhileHoldingLock)
+{
+    DavidStream* const stream = new DavidStream(device_, 0U, 0U, nullptr);
+    ASSERT_NE(stream, nullptr);
+    stream->errorMsg_.emplace_back(1U, "error");
+
+    std::unique_lock<std::mutex> lock(stream->errorMsgLock_);
+    std::promise<void> started;
+    std::future<void> startedFuture = started.get_future();
+    auto reset = std::async(std::launch::async, [stream, &started]() {
+        started.set_value();
+        stream->ResetDavidStreamConstruct();
+    });
+    startedFuture.wait();
+    EXPECT_EQ(reset.wait_for(std::chrono::milliseconds(100)), std::future_status::timeout);
+    lock.unlock();
+    EXPECT_EQ(reset.wait_for(std::chrono::seconds(1)), std::future_status::ready);
+    reset.get();
+    EXPECT_TRUE(stream->errorMsg_.empty());
+    delete stream;
 }
 
 TEST_F(DavidStreamTest, CreateStreamTaskRes)

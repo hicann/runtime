@@ -10,6 +10,8 @@
 #include <cstdio>
 #include <stdlib.h>
 #include <array>
+#include <chrono>
+#include <future>
 #include <unordered_set>
 
 #include "driver/ascend_hal.h"
@@ -1905,6 +1907,57 @@ TEST_F(StreamTest, GetHostFuncExecuteError)
 
     EXPECT_EQ(stream.GetError(), RT_ERROR_HOST_FUNC_EXE_FAILED);
     EXPECT_EQ(stream.GetErrCode(), static_cast<uint32_t>(RT_ERROR_NONE));
+}
+
+TEST_F(StreamTest, ReportErrorMessageChecksCapacityWhileHoldingLock)
+{
+    Context* const context = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(context, nullptr);
+    Stream* const stream = context->DefaultStream_();
+    ASSERT_NE(stream, nullptr);
+
+    stream->errorMsg_.clear();
+    for (uint32_t index = 0U; index < 10U; ++index) {
+        stream->errorMsg_.emplace_back(index, "error");
+    }
+
+    std::unique_lock<std::mutex> lock(stream->errorMsgLock_);
+    std::promise<void> started;
+    std::future<void> startedFuture = started.get_future();
+    auto report = std::async(std::launch::async, [stream, &started]() {
+        started.set_value();
+        stream->ReportErrorMessage(10U, "ignored");
+    });
+    startedFuture.wait();
+    EXPECT_EQ(report.wait_for(std::chrono::milliseconds(100)), std::future_status::timeout);
+    lock.unlock();
+    EXPECT_EQ(report.wait_for(std::chrono::seconds(1)), std::future_status::ready);
+    report.get();
+    EXPECT_EQ(stream->errorMsg_.size(), 10U);
+    stream->errorMsg_.clear();
+}
+
+TEST_F(StreamTest, ResetStreamConstructClearsErrorMessagesWhileHoldingLock)
+{
+    Context* const context = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(context, nullptr);
+    Stream* const stream = context->DefaultStream_();
+    ASSERT_NE(stream, nullptr);
+    stream->errorMsg_.emplace_back(1U, "error");
+
+    std::unique_lock<std::mutex> lock(stream->errorMsgLock_);
+    std::promise<void> started;
+    std::future<void> startedFuture = started.get_future();
+    auto reset = std::async(std::launch::async, [stream, &started]() {
+        started.set_value();
+        stream->ResetStreamConstruct();
+    });
+    startedFuture.wait();
+    EXPECT_EQ(reset.wait_for(std::chrono::milliseconds(100)), std::future_status::timeout);
+    lock.unlock();
+    EXPECT_EQ(reset.wait_for(std::chrono::seconds(1)), std::future_status::ready);
+    reset.get();
+    EXPECT_TRUE(stream->errorMsg_.empty());
 }
 
 TEST_F(StreamTest, return_if_devstatus_not_normal_and_bindflag_true)

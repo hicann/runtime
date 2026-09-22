@@ -11,9 +11,25 @@
 #include "platform_manager_v2.h"
 #include "rt_unwrap.h"
 #include "../../data/elf.h"
+#include "dvpp_c.hpp"
 
 namespace {
 Notify* g_ipcOpenNotifyRet = nullptr;
+
+class StarsTaskLaunchRecorder final : public ApiImpl {
+public:
+    rtError_t StarsTaskLaunch(
+        const void* const sqe, const uint32_t sqeLen, Stream* const stm, const uint32_t flag) override
+    {
+        (void)sqe;
+        (void)sqeLen;
+        (void)flag;
+        stream = stm;
+        return RT_ERROR_NONE;
+    }
+
+    Stream* stream = nullptr;
+};
 
 rtError_t IpcOpenNotifyStub(
     cce::runtime::ApiImpl* api, Notify** const retNotify, const char_t* const name, uint32_t flag)
@@ -126,6 +142,40 @@ void* CloudV2ApiTest::binHandle_ = nullptr;
 char CloudV2ApiTest::function_ = 'a';
 uint32_t CloudV2ApiTest::binary_[32] = {};
 Driver* CloudV2ApiTest::driver_ = NULL;
+
+TEST_F(CloudV2ApiTest, StarsTaskLaunchForwardsNullStreamToImpl)
+{
+    Context* const context = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(context, nullptr);
+    MOCKER_CPP((static_cast<Context* (Runtime::*)(const bool, int32_t) const>(&Runtime::CurrentContext)))
+        .expects(once())
+        .with(eq(true), eq(DEFAULT_DEVICE_ID))
+        .will(returnValue(context));
+
+    StarsTaskLaunchRecorder impl;
+    ApiErrorDecorator api(&impl);
+    uint32_t sqe = 0U;
+    EXPECT_EQ(api.StarsTaskLaunch(&sqe, sizeof(sqe), nullptr, RT_KERNEL_DEFAULT), RT_ERROR_NONE);
+    EXPECT_EQ(impl.stream, nullptr);
+}
+
+TEST_F(CloudV2ApiTest, ApiImplStarsTaskLaunchUsesDefaultStreamForNullStream)
+{
+    Context* const context = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(context, nullptr);
+    Stream* const defaultStream = context->DefaultStream_();
+    ASSERT_NE(defaultStream, nullptr);
+    uint32_t sqe = 0U;
+    MOCKER(StarsLaunch)
+        .expects(once())
+        .with(
+            eq(static_cast<const void*>(&sqe)), eq(static_cast<uint32_t>(sizeof(sqe))), eq(defaultStream),
+            eq(static_cast<uint32_t>(RT_KERNEL_DEFAULT)))
+        .will(returnValue(RT_ERROR_NONE));
+
+    ApiImpl impl;
+    EXPECT_EQ(impl.StarsTaskLaunch(&sqe, sizeof(sqe), nullptr, RT_KERNEL_DEFAULT), RT_ERROR_NONE);
+}
 
 TEST_F(CloudV2ApiTest, memcpyex_host_to_device)
 {

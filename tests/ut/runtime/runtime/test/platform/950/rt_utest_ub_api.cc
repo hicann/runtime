@@ -9,6 +9,9 @@
  */
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
+#include <cerrno>
+#include <fcntl.h>
+#include <unistd.h>
 #include "driver/ascend_hal.h"
 #include "securec.h"
 #include "runtime/rt.h"
@@ -1435,6 +1438,59 @@ TEST_F(ApiTestUb1, free_host_shared_memory_david_stub_hal)
     rtFreeHostSharedMemoryIn inputPara = {"abcd", 100, fd, &sharedMemAddr, &devSharedMemAddr};
     error = rtFreeHostSharedMemory(&inputPara);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+}
+
+TEST_F(ApiTestUb1, FreeHostSharedMemoryClosesFdWhenSharedMemorySizeMismatches)
+{
+    int pipeFds[2] = {-1, -1};
+    ASSERT_EQ(pipe(pipeFds), 0);
+    (void)close(pipeFds[1]);
+
+    int sharedMemAddr = 0;
+    int devSharedMemAddr = 0;
+    constexpr uint64_t inputSize = 100U;
+    struct stat statBuffer = {};
+    statBuffer.st_size = static_cast<off_t>(inputSize + 1U);
+    MOCKER(halHostUnregister).stubs().will(returnValue(DRV_ERROR_NONE));
+    MOCKER(munmap).stubs().will(returnValue(0));
+    MOCKER(stat).stubs().with(mockcpp::any(), outBoundP(&statBuffer, sizeof(statBuffer))).will(returnValue(0));
+
+    rtFreeHostSharedMemoryIn input = {"white_scan_fd_close", inputSize, pipeFds[0], &sharedMemAddr, &devSharedMemAddr};
+    EXPECT_EQ(rtFreeHostSharedMemory(&input), ACL_ERROR_RT_PARAM_INVALID);
+
+    errno = 0;
+    const int32_t fdState = fcntl(pipeFds[0], F_GETFD);
+    const int32_t fdErrno = errno;
+    if (fdState != -1) {
+        (void)close(pipeFds[0]);
+    }
+    EXPECT_EQ(fdState, -1);
+    EXPECT_EQ(fdErrno, EBADF);
+}
+
+TEST_F(ApiTestUb1, FreeHostSharedMemoryClosesFdWhenSharedMemoryFileDoesNotExist)
+{
+    int pipeFds[2] = {-1, -1};
+    ASSERT_EQ(pipe(pipeFds), 0);
+    (void)close(pipeFds[1]);
+
+    int sharedMemAddr = 0;
+    int devSharedMemAddr = 0;
+    MOCKER(halHostUnregister).stubs().will(returnValue(DRV_ERROR_NONE));
+    MOCKER(munmap).stubs().will(returnValue(0));
+    MOCKER(stat).stubs().will(returnValue(-1));
+
+    rtFreeHostSharedMemoryIn input = {"white_scan_fd_close", 100U, pipeFds[0], &sharedMemAddr, &devSharedMemAddr};
+    EXPECT_EQ(rtFreeHostSharedMemory(&input), RT_ERROR_NONE);
+
+    errno = 0;
+    const int32_t fdState = fcntl(pipeFds[0], F_GETFD);
+    const int32_t fdErrno = errno;
+    if (fdState != -1) {
+        (void)close(pipeFds[0]);
+    }
+    EXPECT_EQ(fdState, -1);
+    EXPECT_EQ(fdErrno, EBADF);
 }
 
 TEST_F(ApiTestUb1, onlineprof_david00)

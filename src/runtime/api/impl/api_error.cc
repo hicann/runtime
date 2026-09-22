@@ -5277,8 +5277,10 @@ rtError_t ApiErrorDecorator::GetGroupInfo(const int32_t groupId, rtGroupInfo_t* 
 rtError_t ApiErrorDecorator::StarsTaskLaunch(
     const void* const sqe, const uint32_t sqeLen, Stream* const stm, const uint32_t flag)
 {
+    Context* const curCtx = Runtime::Instance()->CurrentContext(true, DEFAULT_DEVICE_ID);
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     /* 1910b tiny not support dvpp accelerator */
-    if (!stm->Device_()->GetDevProperties().isSupportDvppAccelerator) {
+    if (!curCtx->Device_()->GetDevProperties().isSupportDvppAccelerator) {
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(

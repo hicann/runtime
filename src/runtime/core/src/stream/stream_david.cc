@@ -1166,7 +1166,7 @@ void DavidStream::ResetDavidStreamConstruct()
     drvErr_ = 0U;
     failureMode_ = GetMode();
     SetLastTaskId(MAX_UINT32_NUM);
-    errorMsg_.clear();
+    ClearErrorMessage();
     latestConcernedTaskId.Set(MAX_UINT16_NUM);
     SetExecuteEndTaskId(static_cast<uint16_t>(MAX_UINT16_NUM));
     SetStreamStatus(StreamStatus::NORMAL);
