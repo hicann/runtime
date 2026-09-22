@@ -941,6 +941,8 @@ rtError_t GetReadLenAndAddr(
     const BlockWriteInfo* writeInfo = RtPtrToPtr<const BlockWriteInfo*>(blockAddr + blockSize - sizeof(BlockWriteInfo));
     const uint8_t* dumpStartAddr = blockAddr + sizeof(BlockInfo) + sizeof(BlockReadInfo);
 
+    COND_RETURN_AND_MSG_INNER(
+        (blockInfo->remainLen == 0U), RT_ERROR_INVALID_VALUE, "remainLen is 0, invalid block configuration.");
     const uint64_t readIdx = readInfo->readIdx % blockInfo->remainLen;
 
     if (writeInfo->writeIdx - readInfo->readIdx > blockInfo->remainLen) {
