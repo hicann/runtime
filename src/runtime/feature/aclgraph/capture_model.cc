@@ -881,7 +881,7 @@ rtError_t CaptureModel::AddStreamToCaptureModel(Stream* const stm)
     int32_t streamId = stm->Id_();
     auto it = addStreamMap_.find(stm);
     if (it == addStreamMap_.end()) {
-        rtError_t error = Context_()->StreamAddToCaptureModelProc(stm, this);
+        const rtError_t error = Context_()->StreamAddToCaptureModelProc(stm, this);
         if ((error != RT_ERROR_NONE) || (stm->GetCaptureStream() == nullptr)) {
             RT_LOG(
                 RT_LOG_ERROR,
