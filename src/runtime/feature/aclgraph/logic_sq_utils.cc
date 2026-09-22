@@ -21,9 +21,12 @@
 #include "device.hpp"
 #include "logic_sq_manage.hpp"
 #include "sq_addr_memory_pool.hpp"
+#include "error_message_manage.hpp"
 #include "securec.h"
 #include "rt_log.h"
 #include <algorithm>
+#include <cstring>
+#include <sstream>
 
 namespace cce {
 namespace runtime {
@@ -60,10 +63,18 @@ rtError_t AssembleHostSqe(
     const uint8_t* src = srcStm->GetSqeBuffer() + streamPosStart * SQE_SIZE_UNIT;
     uint8_t* dst = RtPtrToPtr<uint8_t*>(logicSq->GetHostSqeAddr()) + hwPos * SQE_SIZE_UNIT;
     const errno_t ret = memcpy_s(dst, copyNum * SQE_SIZE_UNIT, src, copyNum * SQE_SIZE_UNIT);
-    COND_RETURN_ERROR(
-        ret != EOK, RT_ERROR_SEC_HANDLE,
-        "memcpy_s failed, device_id=%u, stream_id=%d, logic_sq_id=%u, hwPos=%u, copyNum=%u, ret=%d.",
-        srcStm->Device_()->Id_(), srcStm->Id_(), logicSq->Id_(), hwPos, copyNum, ret);
+    if (ret != EOK) {
+        RT_LOG(
+            RT_LOG_ERROR, "memcpy_s failed, device_id=%u, stream_id=%d, logic_sq_id=%u, hwPos=%u, copyNum=%u, ret=%d.",
+            srcStm->Device_()->Id_(), srcStm->Id_(), logicSq->Id_(), hwPos, copyNum, ret);
+        std::stringstream ss;
+        ss << std::hex << "dest=0x" << RtPtrToValue(dst) << ", src=0x" << RtPtrToValue(src) << std::dec
+           << ", destMax=" << copyNum * SQE_SIZE_UNIT << ", size=" << copyNum * SQE_SIZE_UNIT << ".";
+        RT_LOG_INNER_MSG(
+            RT_LOG_ERROR, "Assembling host sqe failed. Reason: Standard function memcpy_s failed. [Errno %d] %s. %s",
+            ret, strerror(ret), ss.str().c_str());
+        return RT_ERROR_SEC_HANDLE;
+    }
     return RT_ERROR_NONE;
 }
 

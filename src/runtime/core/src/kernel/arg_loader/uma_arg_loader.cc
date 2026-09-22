@@ -236,7 +236,8 @@ rtError_t UmaArgLoader::AllocCopyPtrWithGenericPolicy(const uint32_t size, ArgLo
 {
     Handle* argHandle = nullptr;
     result->handle = handleAllocator_->AllocItem();
-    NULL_PTR_RETURN(result->handle, RT_ERROR_MEMORY_ALLOCATION);
+    COND_RETURN_AND_MSG_OUTER(
+        result->handle == nullptr, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013, sizeof(Handle), "malloc");
     argHandle = static_cast<Handle*>(result->handle);
     argHandle->freeArgs = false;
     bool isRandom = false;
@@ -777,7 +778,8 @@ rtError_t UmaArgLoader::Release(void* const argHandle)
 rtError_t UmaArgLoader::AllocNoCopyPtr(void* hostArgs, ArgLoaderResult* result)
 {
     Handle* argHandle = static_cast<Handle*>(handleAllocator_->AllocItem());
-    NULL_PTR_RETURN(argHandle, RT_ERROR_MEMORY_ALLOCATION);
+    COND_RETURN_AND_MSG_OUTER(
+        argHandle == nullptr, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013, sizeof(Handle), "malloc");
     argHandle->kerArgs = hostArgs;
     argHandle->freeArgs = false;
     argHandle->argsAlloc = argAllocator_;
@@ -914,7 +916,8 @@ rtError_t UmaArgLoader::AllocCopyPtrWithSpecificPolicy(uint32_t size, LoadPolicy
 
     // 分配 Handle
     Handle* argHandle = static_cast<Handle*>(handleAllocator_->AllocItem());
-    NULL_PTR_RETURN(argHandle, RT_ERROR_MEMORY_ALLOCATION);
+    COND_RETURN_AND_MSG_OUTER(
+        argHandle == nullptr, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013, sizeof(Handle), "malloc");
     argHandle->freeArgs = false;
 
     // 选择分配器

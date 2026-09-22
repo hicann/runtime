@@ -51,10 +51,7 @@ rtError_t LogicSq::SetUp(const uint32_t logicSqId, const uint32_t reserveSqeNum)
     rtsqId_ = UINT16_MAX; // 推迟到模型执行时（BindSqCq）填充
     hostSqeSize_ = logicSqDepth_ * static_cast<uint32_t>(sizeof(rtStarsSqe_t));
     auto* hostBuf = new (std::nothrow) uint8_t[hostSqeSize_];
-    if (hostBuf == nullptr) {
-        RT_LOG(RT_LOG_ERROR, "alloc hostSqeAddr failed, device_id=%u, size=%u.", device_->Id_(), hostSqeSize_);
-        return RT_ERROR_MEMORY_ALLOCATION;
-    }
+    COND_RETURN_AND_MSG_OUTER(hostBuf == nullptr, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013, hostSqeSize_, "new");
     (void)memset_s(hostBuf, hostSqeSize_, 0U, hostSqeSize_);
     hostSqeAddr_ = hostBuf;
     return RT_ERROR_NONE;

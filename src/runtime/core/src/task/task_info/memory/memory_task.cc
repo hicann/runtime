@@ -716,13 +716,23 @@ static rtError_t CheckUpdatingTaskParams(TaskInfo* const taskInfo, rtTaskParams*
     rtError_t error = ConvertTaskType(taskInfo, &taskType);
     ERROR_RETURN(error, "get task type failed, retCode=%#x.", error);
     // RT_TASK_DEFAULT表示外部不识别的类型，报错并打印RTS内部具体的Task类型
-    COND_RETURN_ERROR(
-        taskType == RT_TASK_DEFAULT, RT_ERROR_INVALID_VALUE, "current taskType=%s(%d) is invalid",
-        GetTaskDescByType(taskInfo->type), taskInfo->type);
+    COND_RETURN_AND_MSG_RESERVED_PARAM_WITH_FUNC_DESC(
+        taskType == RT_TASK_DEFAULT, RT_ERROR_INVALID_VALUE, "task",
+        "The current task type is RT_TASK_DEFAULT(0). Only task types other than RT_TASK_DEFAULT(0) support "
+        "updating task parameters to TASK_VALUE_WRITE(5) or TASK_VALUE_WAIT(6)",
+        "Updating value write or value wait task parameters");
 
-    COND_RETURN_ERROR(params->taskGrp != nullptr, RT_ERROR_INVALID_VALUE, "taskGrp must be nullptr");
-    COND_RETURN_ERROR(params->opInfoPtr != nullptr, RT_ERROR_INVALID_VALUE, "opInfoPtr must be nullptr");
-    COND_RETURN_ERROR(params->opInfoSize != 0U, RT_ERROR_INVALID_VALUE, "opInfoSize must be 0");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
+        params->taskGrp != nullptr, RT_ERROR_INVALID_VALUE, "Updating value write or value wait task parameters",
+        params->taskGrp, "params->taskGrp", "nullptr");
+
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
+        params->opInfoPtr != nullptr, RT_ERROR_INVALID_VALUE, "Updating value write or value wait task parameters",
+        params->opInfoPtr, "params->opInfoPtr", "nullptr");
+
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
+        params->opInfoSize != 0U, RT_ERROR_INVALID_VALUE, "Updating value write or value wait task parameters",
+        params->opInfoSize, "params->opInfoSize", "0");
 
     COND_RETURN_WARN(
         IsTaskBelongToSubCaptureMdl(taskInfo), RT_ERROR_FEATURE_NOT_SUPPORT,

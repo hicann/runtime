@@ -134,7 +134,9 @@ rtError_t GetKernelTaskParams(const TaskInfo* const taskInfo, rtTaskParams* cons
 
     Stream* stm = taskInfo->stream;
     Model* mdl = stm->Model_();
-    NULL_PTR_RETURN(mdl, RT_ERROR_MODEL_NULL);
+    COND_RETURN_AND_MSG_OUTER(
+        mdl == nullptr, RT_ERROR_MODEL_NULL, ErrorCode::EE1017, "Obtaining kernel task parameters", "task",
+        RtFmtMsg("The stream (stream_id=%d) to which the task belongs is not bound to a model", stm->Id_()));
     COND_RETURN_AND_MSG_OUTER(
         mdl->GetModelType() != RT_MODEL_CAPTURE_MODEL, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1016,
         "Obtaining kernel task parameters", "Non ACL Graph mode is not supported");
@@ -353,16 +355,21 @@ rtError_t GetKernelAttribute(
         case RT_LAUNCH_KERNEL_ATTR_BLOCK_TASK_PREFETCH:
             RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
                 ErrorCode::EE1003, "Obtaining kernel function attributes", LaunchKernelAttrIdToString(attrId), "attrId",
-                "not equal (" + LaunchKernelAttrIdToString(RT_LAUNCH_KERNEL_ATTR_ENGINE_TYPE) + ", " +
-                    LaunchKernelAttrIdToString(RT_LAUNCH_KERNEL_ATTR_BLOCKDIM_OFFSET) + ", " +
-                    LaunchKernelAttrIdToString(RT_LAUNCH_KERNEL_ATTR_BLOCK_TASK_PREFETCH) + ")");
+                RtFmtMsg(
+                    "%s, %s, %s, %s, %s or %s", LaunchKernelAttrIdToString(RT_LAUNCH_KERNEL_ATTR_SCHEM_MODE).c_str(),
+                    LaunchKernelAttrIdToString(RT_LAUNCH_KERNEL_ATTR_DYN_UBUF_SIZE).c_str(),
+                    LaunchKernelAttrIdToString(RT_LAUNCH_KERNEL_ATTR_DATA_DUMP).c_str(),
+                    LaunchKernelAttrIdToString(RT_LAUNCH_KERNEL_ATTR_TIMEOUT).c_str(),
+                    LaunchKernelAttrIdToString(RT_LAUNCH_KERNEL_ATTR_TIMEOUT_US).c_str(),
+                    LaunchKernelAttrIdToString(RT_LAUNCH_KERNEL_ATTR_ENABLE_PROFILING).c_str()));
             ret = RT_ERROR_INVALID_VALUE;
             break;
         default:
             RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
                 ErrorCode::EE1003, "Obtaining kernel function attributes", LaunchKernelAttrIdToString(attrId), "attrId",
-                "[" + std::to_string(RT_LAUNCH_KERNEL_ATTR_SCHEM_MODE) + ", " +
-                    std::to_string(RT_LAUNCH_KERNEL_ATTR_MAX) + ")");
+                RtFmtMsg(
+                    "[%u, %u)", static_cast<uint32_t>(RT_LAUNCH_KERNEL_ATTR_SCHEM_MODE),
+                    static_cast<uint32_t>(RT_LAUNCH_KERNEL_ATTR_MAX)));
             ret = RT_ERROR_INVALID_VALUE;
             break;
     }

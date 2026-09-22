@@ -290,9 +290,13 @@ rtError_t CaptureSession::StreamBeginTaskGrp(Stream* const stm)
 {
     const std::lock_guard<std::mutex> tskGrpLock(stm->GetTaskGrpMutex());
     const StreamTaskGroupStatus status = stm->GetTaskGroupStatus();
-    COND_RETURN_ERROR_MSG_INNER(
-        status != StreamTaskGroupStatus::NONE, RT_ERROR_STREAM_TASKGRP_STATUS,
-        "Task group is repeatedly started, or a task group is being updated.");
+    COND_RETURN_AND_MSG_OUTER(
+        status != StreamTaskGroupStatus::NONE, RT_ERROR_STREAM_TASKGRP_STATUS, ErrorCode::EE1018,
+        "Marking the start of a task group",
+        RtFmtMsg(
+            "The stream (stream_id=%d) has already started a task group or is being updated. "
+            "Call aclmdlRICaptureTaskGrpEnd or aclmdlRICaptureTaskUpdateEnd to finish the current task group",
+            stm->Id_()));
 
     Stream* captureStream = stm->GetCaptureStream();
     NULL_PTR_RETURN_MSG(captureStream, RT_ERROR_STREAM_NOT_CAPTURED);
@@ -327,9 +331,13 @@ rtError_t CaptureSession::StreamEndTaskGrp(Stream* const stm, TaskGroup** const 
     const std::lock_guard<std::mutex> tskGrpLock(stm->GetTaskGrpMutex());
 
     const StreamTaskGroupStatus status = stm->GetTaskGroupStatus();
-    COND_RETURN_ERROR_MSG_INNER(
-        status != StreamTaskGroupStatus::SAMPLE, RT_ERROR_STREAM_TASKGRP_STATUS,
-        "The end operation cannot be performed on a stream that has not started a task group.");
+    COND_RETURN_AND_MSG_OUTER(
+        status != StreamTaskGroupStatus::SAMPLE, RT_ERROR_STREAM_TASKGRP_STATUS, ErrorCode::EE1018,
+        "Marking the end of a task group",
+        RtFmtMsg(
+            "The stream (stream_id=%d) has not started a task group or is being updated. "
+            "Call aclmdlRICaptureTaskGrpBegin first, or call aclmdlRICaptureTaskUpdateEnd to finish the current update",
+            stm->Id_()));
 
     Stream* const captureStream = stm->GetCaptureStream();
     NULL_PTR_RETURN(captureStream, RT_ERROR_STREAM_NOT_CAPTURED);
@@ -370,11 +378,17 @@ rtError_t CaptureSession::StreamBeginTaskUpdate(Stream* const stm, TaskGroup* ha
 {
     const std::lock_guard<std::mutex> tskGrpLock(stm->GetTaskGrpMutex());
     COND_RETURN_AND_MSG_OUTER(
-        stm->GetTaskGroupStatus() != StreamTaskGroupStatus::NONE, RT_ERROR_STREAM_TASKGRP_STATUS, ErrorCode::EE1016,
-        "Marking the start of the task to be updated", "The stream is already in task update or sample mode");
-
-    COND_RETURN_ERROR_MSG_INNER(
-        handle->isUpdate, RT_ERROR_STREAM_TASKGRP_STATUS, "The handle can only be updated by one stream.");
+        stm->GetTaskGroupStatus() != StreamTaskGroupStatus::NONE, RT_ERROR_STREAM_TASKGRP_STATUS, ErrorCode::EE1018,
+        "Marking the start of the task to be updated",
+        RtFmtMsg(
+            "The stream (stream_id=%d) has already started a task group or is being updated. "
+            "Call aclmdlRICaptureTaskGrpEnd or aclmdlRICaptureTaskUpdateEnd to finish the current task group",
+            stm->Id_()));
+    COND_RETURN_AND_MSG_OUTER(
+        handle->isUpdate, RT_ERROR_STREAM_TASKGRP_STATUS, ErrorCode::EE1018,
+        "Marking the start of the task to be updated",
+        "The task group handle is already being updated. "
+        "Call aclmdlRICaptureTaskUpdateEnd to finish the current update before updating the task group again");
 
     for (const auto& streamTaskId : handle->taskIds) {
         TaskInfo* const taskInfo = GetStreamTaskInfo(stm->Device_(), streamTaskId.first, streamTaskId.second);
@@ -406,8 +420,10 @@ rtError_t CaptureSession::StreamEndTaskUpdate(Stream* const stm) const
         "Marking the end of the task to be updated", "The stream is not in task update mode");
 
     TaskGroup* updateTaskGroup = stm->GetUpdateTaskGroup();
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        updateTaskGroup, RT_ERROR_INVALID_VALUE, "Marking the end of the task to be updated");
+    COND_RETURN_AND_MSG_OUTER(
+        updateTaskGroup == nullptr, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
+        "Marking the end of the task to be updated", "stream",
+        RtFmtMsg("The stream (stream_id=%d) has no task group being updated", stm->Id_()));
     (void)stm->UpdateTaskGroupStatus(StreamTaskGroupStatus::NONE);
 
     const size_t taskIndex = updateTaskGroup->updateTaskIndex;
@@ -548,12 +564,20 @@ rtError_t CaptureSession::StreamAddToCaptureModelProc(Stream* const stm, Model* 
     }
 
     CaptureModel* captureModelTmp = dynamic_cast<CaptureModel*>(captureMdl);
-    if (captureModelTmp->IsCaptureFinish() || captureModelTmp->IsCaptureInvalid()) {
-        RT_LOG(
-            RT_LOG_ERROR, "model capture status mismatch, device_id=%u, original stream_id=%d, model_id=%u.",
-            ctx_->Device_()->Id_(), streamId, captureMdl->Id_());
-        return RT_ERROR_MODEL_CAPTURE_STATUS;
-    }
+    COND_RETURN_AND_MSG_OUTER(
+        captureModelTmp->IsCaptureFinish(), RT_ERROR_MODEL_CAPTURE_STATUS, ErrorCode::EE1016,
+        "Binding a model running instance to a stream",
+        RtFmtMsg(
+            "The model (model_id=%u) has finished capturing. Cannot bind the model running instance to the stream "
+            "(stream_id=%d)",
+            captureMdl->Id_(), streamId));
+    COND_RETURN_AND_MSG_OUTER(
+        captureModelTmp->IsCaptureInvalid(), RT_ERROR_MODEL_CAPTURE_STATUS, ErrorCode::EE1016,
+        "Binding a model running instance to a stream",
+        RtFmtMsg(
+            "The model (model_id=%u) is invalid because an error occurred during model capture. "
+            "Cannot bind the model running instance to the stream (stream_id=%d)",
+            captureMdl->Id_(), streamId));
 
     /* create capture stream */
     rtError_t error =
@@ -587,6 +611,12 @@ rtError_t CaptureSession::StreamAddToCaptureModelProc(Stream* const stm, Model* 
     const rtStreamCaptureStatus status = stm->GetCaptureStatus();
     /* check capture status again */
     if (status != RT_STREAM_CAPTURE_STATUS_NONE) {
+        RT_LOG_OUTER_MSG_IMPL(
+            ErrorCode::EE1016, "Binding a model running instance to a stream",
+            RtFmtMsg(
+                "The stream (stream_id=%d) is already in capture status. "
+                "Cannot bind the model running instance to the stream",
+                streamId));
         RT_LOG(
             RT_LOG_ERROR, "stream is already in capture status, device_id=%u, stream_id=%d, status=%s.",
             ctx_->Device_()->Id_(), streamId, ((status == RT_STREAM_CAPTURE_STATUS_ACTIVE) ? "active" : "invalidated"));
@@ -613,8 +643,8 @@ rtError_t CaptureSession::CheckCaptureModelIsCaptured(Model* const mdl) const
     CaptureModel* captureModelTmp = dynamic_cast<CaptureModel*>(mdl);
     if (captureModelTmp->GetCaptureModelStatus() != RtCaptureModelStatus::NONE) {
         RT_LOG_OUTER_MSG_IMPL(
-            ErrorCode::EE1017, "rtStreamBeginCaptureToModel", "modelRI",
-            RtFmtMsg("ModelRI (model_id=%u) is already captured", mdl->Id_()));
+            ErrorCode::EE1017, "Stream begin capture", "modelRI",
+            RtFmtMsg("The model (model_id=%u) is already captured", mdl->Id_()));
         return RT_ERROR_MODEL_CAPTURED;
     }
 
@@ -704,9 +734,12 @@ rtError_t CaptureSession::CheckCaptureModelValidity(Model* const captureMdl) con
 
     CaptureModel* const mdl = dynamic_cast<CaptureModel* const>(captureMdl);
     std::set<uint16_t>& streamIds = mdl->GetTaskGroupStreamIds();
-    COND_RETURN_ERROR(
-        (!streamIds.empty()), RT_ERROR_STREAM_TASKGRP_STATUS,
-        "A task group is not closed in the capture model, model_id=%u.", captureMdl->Id_());
+    COND_RETURN_AND_MSG_OUTER(
+        (!streamIds.empty()), RT_ERROR_STREAM_TASKGRP_STATUS, ErrorCode::EE1018, "Stream end capture",
+        RtFmtMsg(
+            "A task group in the model (model_id=%u) has been started but not ended. "
+            "Call aclmdlRICaptureTaskGrpEnd to finish it before ending the capture",
+            captureMdl->Id_()));
 
     bool isOnlyOrigStream = true;
     bool hasRecordOrigStream = false;
@@ -846,12 +879,13 @@ rtError_t CaptureSession::StreamEndCapture(Stream* const stm, Model** const capt
 
     Stream* captureStream = stm->GetCaptureStream();
     NULL_STREAM_PTR_RETURN_MSG(captureStream);
-    if (!(captureStream->IsOrigCaptureStream())) {
-        RT_LOG(
-            RT_LOG_ERROR, "The capture was not initiated in this stream. device_id=%u, stream_id=%d.",
-            ctx_->Device_()->Id_(), stm->Id_());
-        return RT_ERROR_STREAM_CAPTURE_UNMATCHED;
-    }
+    COND_RETURN_AND_MSG_OUTER(
+        !(captureStream->IsOrigCaptureStream()), RT_ERROR_STREAM_CAPTURE_UNMATCHED, ErrorCode::EE1016,
+        "Stream end capture",
+        RtFmtMsg(
+            "The capture was not initiated in this stream (stream_id=%d). "
+            "Call aclmdlRICaptureEnd with the stream used by aclmdlRICaptureBegin",
+            stm->Id_()));
 
     rtError_t error = CheckCaptureStreamThreadIsMatch(stm);
     COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, CaptureModeExit(stm); ClearCaptureModel(stm);

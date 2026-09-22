@@ -1754,10 +1754,12 @@ rtError_t Context::ModelDestroy(Model* mdl)
 
     if (mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL) {
         CaptureModel* captureModel = dynamic_cast<CaptureModel*>(mdl);
-        if (captureModel->IsCapturing()) {
-            RT_LOG(RT_LOG_ERROR, "Model is in capture mode and cannot be destroyed, model_id=%u!", captureModel->Id_());
-            return RT_ERROR_MODEL_CAPTURED;
-        }
+        COND_RETURN_AND_MSG_OUTER(
+            captureModel->IsCapturing(), RT_ERROR_MODEL_CAPTURED, ErrorCode::EE1016,
+            "Destroying a model running instance",
+            RtFmtMsg(
+                "The model (model_id=%u) is being captured. Call aclmdlRICaptureEnd before destroying the model",
+                captureModel->Id_()));
 
         constexpr uint32_t totalCheckCount = 10000U;                 // 10s
         constexpr auto checkInterval = std::chrono::milliseconds(1); // 1ms 检查一次
@@ -1766,9 +1768,13 @@ rtError_t Context::ModelDestroy(Model* mdl)
             RawDevice* const rawDev = dynamic_cast<RawDevice*>(device_);
             rawDev->PollEndGraphNotifyInfo();
 
-            COND_RETURN_ERROR(
-                (count >= totalCheckCount), RT_ERROR_MODEL_RUNNING,
-                "Model is still running and cannot be destroyed, model_id=%u", captureModel->Id_());
+            COND_RETURN_AND_MSG_OUTER(
+                (count >= totalCheckCount), RT_ERROR_MODEL_RUNNING, ErrorCode::EE1016,
+                "Destroying a model running instance",
+                RtFmtMsg(
+                    "The model (model_id=%u) is still running. Ensure model execution has finished "
+                    "before destroying the model",
+                    captureModel->Id_()));
             std::this_thread::sleep_for(checkInterval);
             count++;
         }

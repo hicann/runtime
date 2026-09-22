@@ -1210,8 +1210,8 @@ rtError_t ApiImpl::TaskGetParams(rtTask_t task, rtTaskParams* const params)
     if (taskInfo->taskOwner == static_cast<uint8_t>(TaskOwner::RT_TASK_INNER)) {
         RT_LOG_OUTER_MSG_IMPL(
             ErrorCode::EE1017, "Obtaining task parameter information", "task->type",
-            "The current task type RT_TASK_DEFAULT does not support obtaining of parameters."
-            " Only task types other than RT_TASK_DEFAULT supports obtaining of parameters");
+            "The current task type RT_TASK_DEFAULT(0) does not support obtaining of parameters."
+            " Only task types other than RT_TASK_DEFAULT(0) support obtaining parameters");
         RT_LOG(
             RT_LOG_ERROR, "streamId=%d, taskId=%u, alloc taskType=%s(%d), taskOwner=TASK_INNER(%u).",
             taskInfo->stream->Id_(), taskInfo->id, taskInfo->typeName, static_cast<int32_t>(taskInfo->type),
@@ -1272,8 +1272,8 @@ rtError_t ApiImpl::TaskGetParams(rtTask_t task, rtTaskParams* const params)
         default:
             RT_LOG_OUTER_MSG_IMPL(
                 ErrorCode::EE1017, "Obtaining task parameter information", "task->type",
-                "The current task type RT_TASK_DEFAULT does not support obtaining of parameters."
-                " Only task types other than RT_TASK_DEFAULT supports obtaining of parameters");
+                "The current task type RT_TASK_DEFAULT(0) does not support obtaining of parameters."
+                " Only task types other than RT_TASK_DEFAULT(0) support obtaining parameters");
             RT_LOG(
                 RT_LOG_ERROR, "now this task doesn't support get params, stream_id=%d, task_id=%hu, task_type=%s(%d)",
                 stm->Id_(), taskInfo->id, taskInfo->typeName, taskInfo->type);
@@ -1319,8 +1319,11 @@ rtError_t ApiImpl::TaskSetParams(rtTask_t task, rtTaskParams* const params)
             error = RT_ERROR_INVALID_VALUE;
             break;
     }
-    ERROR_PROC_RETURN_MSG_INNER(error, captureModel->SetCaptureModelStatus(RtCaptureModelStatus::FAULT);
-                                , "task set params failed");
+    if (error != RT_ERROR_NONE) {
+        captureModel->SetCaptureModelStatus(RtCaptureModelStatus::FAULT);
+        RT_LOG(RT_LOG_ERROR, "Failed to set task params, retCode=%#x.", error);
+        return error;
+    }
     taskInfo->updateFlag = static_cast<uint8_t>(TaskUpdateFlag::RT_TASK_UPDATE);
     RT_LOG(
         RT_LOG_INFO, "stream_id=%d, task_id=%hu, typeName=%s, task type=%d, target type=%s", taskInfo->stream->Id_(),

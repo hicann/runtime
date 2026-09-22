@@ -45,7 +45,7 @@ BufferAllocator::BufferAllocator(
     const uint32_t poolArraySize = (GetPoolIndex(maxCount_ - 1U) + 1U) * sizeof(uint8_t*);
     pool_ = RtPtrToPtr<uint8_t**>(malloc(static_cast<size_t>(poolArraySize)));
     if (pool_ == nullptr) {
-        RT_LOG(RT_LOG_ERROR, "malloc array failed, size=%u(bytes)", poolArraySize);
+        RT_LOG(RT_LOG_ERROR, "Failed to malloc pool array, size=%u(bytes).", poolArraySize);
         return;
     }
 

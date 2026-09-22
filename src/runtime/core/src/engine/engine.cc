@@ -200,7 +200,7 @@ rtError_t Engine::SubmitTaskNormal(TaskInfo* const workTask, uint32_t* const fli
             ToCommand(workTask, &command);
             COND_RETURN_AND_MSG_OUTER(
                 (workTask->stream->Model_() == nullptr), RT_ERROR_MODEL_NULL, ErrorCode::EE1018, "Submitting a task",
-                "Aicpu stream requires a model association. Call the rtsModelBindStream API to bind a model to the "
+                "AI CPU stream requires a model association. Call the rtsModelBindStream API to bind a model to the "
                 "stream");
             (void)workTask->stream->Model_()->SaveAicpuStreamTask(workTask->stream, &command);
         }

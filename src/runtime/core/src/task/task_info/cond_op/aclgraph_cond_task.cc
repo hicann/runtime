@@ -366,19 +366,48 @@ static rtError_t ConstructCaptureCondTaskFc(CaptureConditionTaskInfo* condTaskIn
             RtStarsCaptureIfCondFc fcIf = {};
             ConstructCaptureIfCondFc(para, fcIf);
             ret = memcpy_s(condTaskInfo->funcCallHostMem, condTaskInfo->funCallMemSize, &fcIf, sizeof(fcIf));
-            COND_RETURN_ERROR(ret != EOK, RT_ERROR_SEC_HANDLE, "memcpy fcIf failed.");
+            if (ret != EOK) {
+                std::stringstream ss;
+                ss << std::hex << "dest=0x" << RtPtrToValue(condTaskInfo->funcCallHostMem) << ", src=0x"
+                   << RtPtrToValue(&fcIf) << std::dec << ", destMax=" << condTaskInfo->funCallMemSize
+                   << ", size=" << sizeof(fcIf) << ".";
+                RT_LOG_INNER_MSG(
+                    RT_LOG_ERROR, "Failed to memcpy fcIf. Reason: Standard function memcpy_s failed. [Errno %d] %s. %s",
+                    ret, strerror(ret), ss.str().c_str());
+                return RT_ERROR_SEC_HANDLE;
+            }
         } break;
         case RT_COND_TASK_TYPE_WHILE: {
             RtStarsCaptureWhileCondFc fcWhile = {};
             ConstructCaptureWhileCondFc(para, fcWhile);
             ret = memcpy_s(condTaskInfo->funcCallHostMem, condTaskInfo->funCallMemSize, &fcWhile, sizeof(fcWhile));
-            COND_RETURN_ERROR(ret != EOK, RT_ERROR_SEC_HANDLE, "memcpy fcWhile failed.");
+            if (ret != EOK) {
+                std::stringstream ss;
+                ss << std::hex << "dest=0x" << RtPtrToValue(condTaskInfo->funcCallHostMem) << ", src=0x"
+                   << RtPtrToValue(&fcWhile) << std::dec << ", destMax=" << condTaskInfo->funCallMemSize
+                   << ", size=" << sizeof(fcWhile) << ".";
+                RT_LOG_INNER_MSG(
+                    RT_LOG_ERROR,
+                    "Failed to memcpy fcWhile. Reason: Standard function memcpy_s failed. [Errno %d] %s. %s", ret,
+                    strerror(ret), ss.str().c_str());
+                return RT_ERROR_SEC_HANDLE;
+            }
         } break;
         case RT_COND_TASK_TYPE_SWITCH: {
             RtStarsCaptureSwitchCondFc fcSwitch = {};
             ConstructCaptureSwitchCondFc(para, fcSwitch);
             ret = memcpy_s(condTaskInfo->funcCallHostMem, condTaskInfo->funCallMemSize, &fcSwitch, sizeof(fcSwitch));
-            COND_RETURN_ERROR(ret != EOK, RT_ERROR_SEC_HANDLE, "memcpy fcSwitch failed.");
+            if (ret != EOK) {
+                std::stringstream ss;
+                ss << std::hex << "dest=0x" << RtPtrToValue(condTaskInfo->funcCallHostMem) << ", src=0x"
+                   << RtPtrToValue(&fcSwitch) << std::dec << ", destMax=" << condTaskInfo->funCallMemSize
+                   << ", size=" << sizeof(fcSwitch) << ".";
+                RT_LOG_INNER_MSG(
+                    RT_LOG_ERROR,
+                    "Failed to memcpy fcSwitch. Reason: Standard function memcpy_s failed. [Errno %d] %s. %s", ret,
+                    strerror(ret), ss.str().c_str());
+                return RT_ERROR_SEC_HANDLE;
+            }
         } break;
         default:
             RT_LOG(
@@ -515,8 +544,9 @@ rtError_t ReConstructCaptureConditionTaskFc(TaskInfo* taskInfo, CondHandle* cond
     }
 
     condTaskInfo->funcCallHostMem = malloc(condTaskInfo->funCallMemSize);
-    COND_RETURN_ERROR(
-        condTaskInfo->funcCallHostMem == nullptr, RT_ERROR_MEMORY_ALLOCATION, "malloc funcCallHostMem failed.");
+    COND_RETURN_AND_MSG_OUTER(
+        condTaskInfo->funcCallHostMem == nullptr, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013,
+        condTaskInfo->funCallMemSize, "malloc");
 
     const rtMemcpyKind_t kind = RT_MEMCPY_HOST_TO_DEVICE;
     ret = drv->MemCopySync(

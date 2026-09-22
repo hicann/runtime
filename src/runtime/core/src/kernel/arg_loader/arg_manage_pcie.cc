@@ -109,11 +109,15 @@ rtError_t PcieArgManage::H2DArgCopy(const StarsArgLoaderResult* const result, vo
             error, "H2DMemCopy failed, kind=%s, retCode=%#x.", MemcpyKindToStr(RT_MEMCPY_HOST_TO_DEVICE), error);
     } else {
         const errno_t ret = memcpy_s(result->kerArgs, static_cast<uint64_t>(size), args, static_cast<uint64_t>(size));
-        COND_RETURN_ERROR_MSG_CALL(
-            ERR_MODULE_SYSTEM, ret != EOK, RT_ERROR_DRV_MEMORY,
-            "Failed to call memcpy_s to copy args, dest=%p, dest_max=%" PRIu64 ", src=%p, count=%" PRIu64
-            ", retCode=%d.",
-            result->kerArgs, static_cast<uint64_t>(size), args, static_cast<uint64_t>(size), ret);
+        if (ret != EOK) {
+            std::stringstream ss;
+            ss << std::hex << "dest=0x" << RtPtrToValue(result->kerArgs) << ", src=0x" << RtPtrToValue(args) << std::dec
+               << ", destMax=" << size << ", count=" << size << ".";
+            RT_LOG_OUTER_MSG_IMPL(
+                ErrorCode::EE1020, "Copying kernel arguments from host to device", "memcpy_s", std::to_string(ret),
+                strerror(ret), ss.str().c_str());
+            return RT_ERROR_DRV_MEMORY;
+        }
     }
     return error;
 }

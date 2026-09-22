@@ -176,7 +176,7 @@ rtError_t UbArgLoader::AllocCopyPtr(const uint32_t size, StarsArgLoaderResult* c
 
     result->handle = handleAllocator_->AllocItem();
     COND_RETURN_AND_MSG_OUTER(
-        result->handle == nullptr, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013, sizeof(UbHandle), "new");
+        result->handle == nullptr, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013, sizeof(UbHandle), "malloc");
     argHandle = static_cast<UbHandle*>(result->handle);
     argHandle->argsAlloc = nullptr;
     void* devTsegInfo = nullptr;

@@ -6941,12 +6941,13 @@ rtError_t ApiImpl::ModelUpdate(Model* mdl)
         return RT_ERROR_NONE;
     }
 
-    if (captureModel->GetCaptureModelStatus() != RtCaptureModelStatus::UPDATING) {
-        RT_LOG(
-            RT_LOG_ERROR, "model is not ready for update, model_id=%u, current status=%s", captureModel->Id_(),
-            CaptureModelStatusToString(captureModel->GetCaptureModelStatus()).c_str());
-        return RT_ERROR_MODEL_UPDATE_FAILED;
-    }
+    COND_RETURN_AND_MSG_OUTER(
+        captureModel->GetCaptureModelStatus() != RtCaptureModelStatus::UPDATING, RT_ERROR_MODEL_UPDATE_FAILED,
+        ErrorCode::EE1016, "Model update",
+        RtFmtMsg(
+            "The model (model_id=%u) is not in the updating state. "
+            "Ensure the model has successfully finished capturing and has tasks to update",
+            captureModel->Id_()));
 
     rtError_t ret = captureModel->Update();
     if (ret == RT_ERROR_NONE) {
@@ -7172,7 +7173,10 @@ rtError_t ApiImpl::TaskGetSeqId(rtTask_t task, uint32_t* id)
     const Stream* stm = taskInfo->stream;
     NULL_PTR_RETURN(stm, RT_ERROR_STREAM_NULL);
     const Model* mdl = stm->Model_();
-    NULL_PTR_RETURN(mdl, RT_ERROR_MODEL_NULL);
+    COND_RETURN_AND_MSG_OUTER(
+        mdl == nullptr, RT_ERROR_MODEL_NULL, ErrorCode::EE1017,
+        "Obtaining the Submission Queue Entry (SQE) ID of a task", "task",
+        RtFmtMsg("The stream (stream_id=%d) to which the task belongs is not bound to a model", stm->Id_()));
     COND_RETURN_AND_MSG_OUTER(
         mdl->GetModelType() != RT_MODEL_CAPTURE_MODEL, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1016,
         "Obtaining the Submission Queue Entry (SQE) ID of a task", "Non ACL Graph mode is not supported");
