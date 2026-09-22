@@ -107,11 +107,6 @@ public:
     rtError_t DevMallocCached(
         void** const devPtr, const uint64_t size, const rtMemType_t type,
         const uint16_t moduleId = MODULEID_RUNTIME) override;
-    rtError_t HostMalloc(
-        void** const hostPtr, const uint64_t size, const uint16_t moduleId = MODULEID_RUNTIME) override;
-    rtError_t HostMallocWithCfg(
-        void** const hostPtr, const uint64_t size, const rtMallocConfig_t* cfg = nullptr) override;
-    rtError_t HostFree(void* const hostPtr) override;
     rtError_t ManagedMemAlloc(
         void** const ptr, const uint64_t size, const uint32_t flag,
         const uint16_t moduleId = MODULEID_RUNTIME) override;

@@ -52,8 +52,6 @@ TIMESTAMP_EXTERN(rtFree_drvMemUnLock_drvMemFreeManaged);
 TIMESTAMP_EXTERN(rtDvppMalloc);
 TIMESTAMP_EXTERN(rtDvppFree);
 TIMESTAMP_EXTERN(rtDvppMallocWithFlag);
-TIMESTAMP_EXTERN(rtMallocHostSharedMemory);
-TIMESTAMP_EXTERN(rtFreeHostSharedMemory);
 TIMESTAMP_EXTERN(rtMemset);
 TIMESTAMP_EXTERN(rtMemsetAsync);
 TIMESTAMP_EXTERN(rtMemGetInfo);
@@ -914,32 +912,6 @@ rtError_t rtDvppFree(void* devPtr)
     TIMESTAMP_BEGIN(rtDvppFree);
     const rtError_t error = apiInstance->DevDvppFree(devPtr);
     TIMESTAMP_END(rtDvppFree);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtMallocHostSharedMemory(rtMallocHostSharedMemoryIn* in, rtMallocHostSharedMemoryOut* out)
-{
-    GLOBAL_STATE_WAIT_IF_LOCKED();
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_BEGIN(rtMallocHostSharedMemory);
-    const rtError_t error = apiInstance->MallocHostSharedMemory(in, out);
-    TIMESTAMP_END(rtMallocHostSharedMemory);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
-    return ACL_RT_SUCCESS;
-}
-
-VISIBILITY_DEFAULT
-rtError_t rtFreeHostSharedMemory(rtFreeHostSharedMemoryIn* in)
-{
-    GLOBAL_STATE_WAIT_IF_LOCKED();
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    TIMESTAMP_BEGIN(rtFreeHostSharedMemory);
-    const rtError_t error = apiInstance->FreeHostSharedMemory(in);
-    TIMESTAMP_END(rtFreeHostSharedMemory);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }

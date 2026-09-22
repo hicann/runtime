@@ -141,6 +141,7 @@ set(libruntime_api_impl_src_files
     ${RUNTIME_API_DIR}/impl/api_impl_rt_config_stub.cc
     ${RUNTIME_API_DIR}/impl/api_impl_device_topology_stub.cc
     ${RUNTIME_API_DIR}/impl/api_impl_ipc_memory_stub.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_host_memory_stub.cc
     ${RUNTIME_API_DIR}/impl/api_impl_event_common.cc
     ${RUNTIME_API_DIR}/impl/api_impl_stub.cc
     ${RUNTIME_API_DIR}/impl/api_impl_arch5162.cc

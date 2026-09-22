@@ -315,24 +315,6 @@ public:
         return RT_ERROR_NONE;
     }
 
-    rtError_t HostMalloc(void** const hostPtr, const uint64_t, const uint16_t) override
-    {
-        if (hostPtr != nullptr) {
-            *hostPtr = reinterpret_cast<void*>(HOST_ADDR);
-        }
-        return RT_ERROR_NONE;
-    }
-
-    rtError_t HostMallocWithCfg(void** const hostPtr, const uint64_t, const rtMallocConfig_t*) override
-    {
-        if (hostPtr != nullptr) {
-            *hostPtr = reinterpret_cast<void*>(HOST_CFG_ADDR);
-        }
-        return RT_ERROR_NONE;
-    }
-
-    rtError_t HostFree(void* const) override { return RT_ERROR_NONE; }
-
     rtError_t ManagedMemAlloc(void** const ptr, const uint64_t, const uint32_t, const uint16_t) override
     {
         if (ptr != nullptr) {
@@ -1187,16 +1169,6 @@ TEST_F(ProfilerTest, ApiProfileDecoratorMemoryWrappersFillExtInfo)
 
     ptr = nullptr;
     PrepareRuntimeProfDecoratorTest(&profiler);
-    EXPECT_EQ(api.HostMalloc(&ptr, 1024U, MODULEID_RUNTIME), RT_ERROR_NONE);
-    EXPECT_EQ(RtPtrToValue(ptr), RuntimeProfSuccessApiImpl::HOST_ADDR);
-
-    ptr = nullptr;
-    PrepareRuntimeProfDecoratorTest(&profiler);
-    EXPECT_EQ(api.HostMallocWithCfg(&ptr, 512U, nullptr), RT_ERROR_NONE);
-    EXPECT_EQ(RtPtrToValue(ptr), RuntimeProfSuccessApiImpl::HOST_CFG_ADDR);
-
-    ptr = nullptr;
-    PrepareRuntimeProfDecoratorTest(&profiler);
     EXPECT_EQ(api.ManagedMemAlloc(&ptr, 256U, 0U, MODULEID_RUNTIME), RT_ERROR_NONE);
     EXPECT_EQ(RtPtrToValue(ptr), RuntimeProfSuccessApiImpl::MANAGED_ADDR);
 
@@ -1219,9 +1191,6 @@ TEST_F(ProfilerTest, ApiProfileDecoratorMemoryWrappersFillExtInfo)
 
     PrepareRuntimeProfDecoratorTest(&profiler);
     EXPECT_EQ(api.DevFree(reinterpret_cast<void*>(RuntimeProfSuccessApiImpl::DEV_ADDR)), RT_ERROR_NONE);
-
-    PrepareRuntimeProfDecoratorTest(&profiler);
-    EXPECT_EQ(api.HostFree(reinterpret_cast<void*>(RuntimeProfSuccessApiImpl::HOST_ADDR)), RT_ERROR_NONE);
 
     PrepareRuntimeProfDecoratorTest(&profiler);
     EXPECT_EQ(api.ManagedMemFree(reinterpret_cast<void*>(RuntimeProfSuccessApiImpl::MANAGED_ADDR)), RT_ERROR_NONE);
@@ -3635,22 +3604,6 @@ TEST_F(ProfilerTest, DevDvppTest)
     delete apiImpl_;
 }
 
-TEST_F(ProfilerTest, HostMemTest)
-{
-    void* hostPtr;
-    ApiImpl* apiImpl_ = new ApiImpl();
-    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::HostMalloc).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::HostFree).stubs().will(returnValue(RT_ERROR_NONE));
-    Profiler* profiler = ((Runtime*)Runtime::Instance())->profiler_;
-    profiler->SetProfLogEnable(true);
-    auto error = profiler->apiProfileLogDecorator_->HostMalloc(&hostPtr, 64);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    error = profiler->apiProfileLogDecorator_->HostFree(NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    profiler->SetProfLogEnable(false);
-    delete apiImpl_;
-}
-
 TEST_F(ProfilerTest, ManagedMemTest)
 {
     void* hostPtr;
@@ -3907,19 +3860,13 @@ TEST_F(ProfilerTest, ProfileDecoratorNotifyApiTest)
 TEST_F(ProfilerTest, ProfileDecoratorMemApiTest)
 {
     ApiImpl* apiImpl_ = new ApiImpl();
-    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::HostMalloc).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::HostFree).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::ReduceAsync).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::GetRunMode).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::CmoAddrTaskLaunch).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::CtxGetOverflowAddr).stubs().will(returnValue(RT_ERROR_NONE));
     Profiler* profiler = ((Runtime*)Runtime::Instance())->profiler_;
     profiler->SetProfLogEnable(true);
-    auto error = profiler->apiProfileDecorator_->HostMalloc(nullptr, 0, 0);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    error = profiler->apiProfileDecorator_->HostFree(nullptr);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    error = profiler->apiProfileDecorator_->ReduceAsync(
+    auto error = profiler->apiProfileDecorator_->ReduceAsync(
         nullptr, nullptr, 0, RT_MEMCPY_SDMA_AUTOMATIC_ADD, RT_DATA_TYPE_FP32, nullptr, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = profiler->apiProfileDecorator_->GetRunMode(nullptr);

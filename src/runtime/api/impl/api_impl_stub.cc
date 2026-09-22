@@ -744,13 +744,6 @@ rtError_t ApiImpl::ModelTaskUpdate(
 
 rtError_t ApiImpl::DeviceL2CacheFlush() { return RT_ERROR_FEATURE_NOT_SUPPORT; }
 
-rtError_t ApiImpl::HostGetDevicePointerAddrRange(rtAddrRange* addrRange, uint32_t* count)
-{
-    UNUSED(addrRange);
-    UNUSED(count);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
 rtError_t ApiImpl::TaskGetParams(rtTask_t task, rtTaskParams* const params)
 {
     UNUSED(task);

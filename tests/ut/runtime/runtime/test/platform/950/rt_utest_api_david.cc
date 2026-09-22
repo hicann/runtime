@@ -20,9 +20,11 @@
 #include "runtime.hpp"
 #include "api.hpp"
 #include "api_ipc_memory.hpp"
+#include "api_host_memory.hpp"
 #include "api_impl.hpp"
 #include "api_impl_kernel_func.hpp"
 #include "api_impl_david.hpp"
+#include "api_impl_host_memory.hpp"
 #include "program.hpp"
 #include "context.hpp"
 #include "raw_device.hpp"
@@ -11948,35 +11950,12 @@ TEST_F(ApiDavidTest, api_decorator_memory_forwarding)
     error = api.InvalidCache(0U, 0U);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MallocHostSharedMemory).stubs().will(returnValue(RT_ERROR_NONE));
-    rtMallocHostSharedMemoryIn mallocIn = {};
-    rtMallocHostSharedMemoryOut mallocOut = {};
-    error = api.MallocHostSharedMemory(&mallocIn, &mallocOut);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::FreeHostSharedMemory).stubs().will(returnValue(RT_ERROR_NONE));
-    rtFreeHostSharedMemoryIn freeIn = {};
-    error = api.FreeHostSharedMemory(&freeIn);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemGetInfoEx).stubs().will(returnValue(RT_ERROR_NONE));
     error = api.MemGetInfoEx(RT_MEMORYINFO_NORMAL, &freeSize, &totalSize);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DevMallocCached).stubs().will(returnValue(RT_ERROR_NONE));
     error = api.DevMallocCached(&devPtr, 0U, RT_MEMORY_HOST, 0U);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::HostRegisterV2).stubs().will(returnValue(RT_ERROR_NONE));
-    error = api.HostRegisterV2(nullptr, 0U, 0U);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::HostUnregister).stubs().will(returnValue(RT_ERROR_NONE));
-    error = api.HostUnregister(nullptr);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::HostGetDevicePointer).stubs().will(returnValue(RT_ERROR_NONE));
-    error = api.HostGetDevicePointer(nullptr, &devPtr, 0U);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemGetAddressRange).stubs().will(returnValue(RT_ERROR_NONE));
@@ -12772,15 +12751,15 @@ TEST_F(ApiDavidTest, api_decorator_debug_esched_forwarding)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
-TEST_F(ApiDavidTest, api_decorator_host_malloc_forwarding)
+TEST_F(ApiDavidTest, api_host_memory_decorator_host_malloc_forwarding)
 {
-    ApiImpl impl;
-    ApiDecorator api(&impl);
+    ApiImplHostMemory impl;
+    ApiHostMemory* const api = &impl;
     rtError_t error = RT_ERROR_NONE;
 
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::HostMallocWithCfg).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(impl, &ApiImplHostMemory::HostMallocWithCfg).stubs().will(returnValue(RT_ERROR_NONE));
     void* hostPtr = nullptr;
-    error = api.HostMallocWithCfg(&hostPtr, 0U, nullptr);
+    error = api->HostMallocWithCfg(&hostPtr, 0U, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 

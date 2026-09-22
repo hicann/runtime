@@ -276,20 +276,6 @@ public:
     virtual rtError_t DevDvppMalloc(
         void** const devPtr, const uint64_t size, const uint32_t flag, const uint16_t moduleId = MODULEID_RUNTIME) = 0;
     virtual rtError_t DevDvppFree(void* const devPtr) = 0;
-    virtual rtError_t HostMalloc(
-        void** const hostPtr, const uint64_t size, const uint16_t moduleId = MODULEID_RUNTIME) = 0;
-    virtual rtError_t HostMallocWithCfg(
-        void** const hostPtr, const uint64_t size, const rtMallocConfig_t* cfg = nullptr) = 0;
-    virtual rtError_t HostFree(void* const hostPtr) = 0;
-    virtual rtError_t MallocHostSharedMemory(
-        rtMallocHostSharedMemoryIn* const in, rtMallocHostSharedMemoryOut* const out) = 0;
-    virtual rtError_t FreeHostSharedMemory(rtFreeHostSharedMemoryIn* const in) = 0;
-    virtual rtError_t HostRegister(void* ptr, uint64_t size, rtHostRegisterType type, void** devPtr) = 0;
-    virtual rtError_t HostMemMapCapabilities(
-        uint32_t deviceId, rtHacType hacType, rtHostMemMapCapability* capabilities) = 0;
-    virtual rtError_t HostRegisterV2(void* ptr, uint64_t size, uint32_t flag) = 0;
-    virtual rtError_t HostGetDevicePointer(void* pHost, void** pDevice, uint32_t flag) = 0;
-    virtual rtError_t HostUnregister(void* ptr) = 0;
     virtual rtError_t ManagedMemAlloc(
         void** const ptr, const uint64_t size, const uint32_t flag, const uint16_t moduleId = MODULEID_RUNTIME) = 0;
     virtual rtError_t ManagedMemFree(const void* const ptr) = 0;
@@ -404,7 +390,6 @@ public:
     virtual rtError_t MemRetainAllocationHandle(void* virPtr, rtDrvMemHandle* handle) = 0;
     virtual rtError_t MemGetAllocationPropertiesFromHandle(rtDrvMemHandle handle, rtDrvMemProp_t* prop) = 0;
     virtual rtError_t MemGetAddressRange(void* ptr, void** pbase, size_t* psize) = 0;
-    virtual rtError_t HostGetDevicePointerAddrRange(rtAddrRange* addrRange, uint32_t* count) = 0;
     // new memory API
     virtual rtError_t DevMalloc(
         void** const devPtr, const uint64_t size, rtMallocPolicy policy, rtMallocAdvise advise,

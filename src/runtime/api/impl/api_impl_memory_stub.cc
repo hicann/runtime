@@ -12,67 +12,6 @@
 namespace cce {
 namespace runtime {
 
-rtError_t ApiImpl::HostMalloc(void** const hostPtr, const uint64_t size, const uint16_t moduleId)
-{
-    UNUSED(hostPtr);
-    UNUSED(size);
-    UNUSED(moduleId);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiImpl::HostMallocWithCfg(void** const hostPtr, const uint64_t size, const rtMallocConfig_t* cfg)
-{
-    UNUSED(hostPtr);
-    UNUSED(size);
-    UNUSED(cfg);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiImpl::HostFree(void* const hostPtr)
-{
-    UNUSED(hostPtr);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiImpl::HostRegister(void* ptr, uint64_t size, rtHostRegisterType type, void** devPtr)
-{
-    UNUSED(ptr);
-    UNUSED(size);
-    UNUSED(type);
-    UNUSED(devPtr);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiImpl::HostRegisterV2(void* ptr, uint64_t size, uint32_t flag)
-{
-    UNUSED(ptr);
-    UNUSED(size);
-    UNUSED(flag);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiImpl::HostUnregister(void* ptr)
-{
-    UNUSED(ptr);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiImpl::HostGetDevicePointer(void* pHost, void** pDevice, uint32_t flag)
-{
-    UNUSED(pHost);
-    UNUSED(pDevice);
-    UNUSED(flag);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiImpl::HostMemMapCapabilities(uint32_t deviceId, rtHacType hacType, rtHostMemMapCapability* capabilities)
-{
-    UNUSED(deviceId);
-    UNUSED(hacType);
-    UNUSED(capabilities);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
 rtError_t ApiImpl::MemCopySyncEx(
     void* const dst, const uint64_t destMax, const void* const src, const uint64_t cnt, const rtMemcpyKind_t kind)
 {

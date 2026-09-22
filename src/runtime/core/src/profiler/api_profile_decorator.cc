@@ -597,44 +597,6 @@ rtError_t ApiProfileDecorator::MemAdvise(void* devPtr, const uint64_t count, con
     return error;
 }
 
-rtError_t ApiProfileDecorator::HostMalloc(void** const hostPtr, const uint64_t size, const uint16_t moduleId)
-{
-    CallApiBegin(RT_PROF_API_HOST_MALLOC);
-    const rtError_t error = impl_->HostMalloc(hostPtr, size, moduleId);
-    if (error == RT_ERROR_NONE) {
-        const uint64_t addr = (hostPtr == nullptr) ? 0U : RtPtrToValue(*hostPtr);
-        Runtime::Instance()->FillRuntimeMemMngExtInfo(
-            addr, size, RT_PROF_MEM_MNG_TYPE_MALLOC, MSPROF_MEMORY_TYPE_HOST, nullptr);
-    }
-    CallApiEnd(error);
-    return error;
-}
-
-rtError_t ApiProfileDecorator::HostMallocWithCfg(void** const hostPtr, const uint64_t size, const rtMallocConfig_t* cfg)
-{
-    CallApiBegin(RT_PROF_API_HOST_MALLOC);
-    const rtError_t error = impl_->HostMallocWithCfg(hostPtr, size, cfg);
-    if (error == RT_ERROR_NONE) {
-        const uint64_t addr = (hostPtr == nullptr) ? 0U : RtPtrToValue(*hostPtr);
-        Runtime::Instance()->FillRuntimeMemMngExtInfo(
-            addr, size, RT_PROF_MEM_MNG_TYPE_MALLOC, MSPROF_MEMORY_TYPE_HOST, nullptr);
-    }
-    CallApiEnd(error);
-    return error;
-}
-
-rtError_t ApiProfileDecorator::HostFree(void* const hostPtr)
-{
-    CallApiBegin(RT_PROF_API_HOST_FREE);
-    const rtError_t error = impl_->HostFree(hostPtr);
-    if (error == RT_ERROR_NONE) {
-        Runtime::Instance()->FillRuntimeMemMngExtInfo(
-            RtPtrToValue(hostPtr), 0U, RT_PROF_MEM_MNG_TYPE_FREE, MSPROF_MEMORY_TYPE_HOST, nullptr);
-    }
-    CallApiEnd(error);
-    return error;
-}
-
 rtError_t ApiProfileDecorator::ManagedMemAlloc(
     void** const ptr, const uint64_t size, const uint32_t flag, const uint16_t moduleId)
 {

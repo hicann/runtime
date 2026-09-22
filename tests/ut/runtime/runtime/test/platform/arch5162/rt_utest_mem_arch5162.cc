@@ -14,6 +14,8 @@
 #include "runtime/rt.h"
 #include "rt_external_mem.h"
 #include "api_impl.hpp"
+#include "api_impl_creator.hpp"
+#include "api_host_memory.hpp"
 #include "base_info.hpp"
 #include "rt_error_codes.h"
 
@@ -133,17 +135,14 @@ TEST_F(Arch5162MemTest, CommonCopySetApiImpls_UseRealImplementations)
 
 TEST_F(Arch5162MemTest, UnsupportedHostMemoryApiImpls_ReturnNotSupport)
 {
-    ApiImpl apiImpl;
+    EXPECT_FALSE(IsImplHostMemorySupported());
+    ApiHostMemory* apiHostMemory = CreateImplHostMemoryAndGet();
+    EXPECT_EQ(apiHostMemory, nullptr);
 
-    EXPECT_EQ(apiImpl.HostMalloc(nullptr, 0U, 0U), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(apiImpl.HostMallocWithCfg(nullptr, 0U, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(apiImpl.HostFree(nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(
-        apiImpl.HostRegister(nullptr, 0U, static_cast<rtHostRegisterType>(0), nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(apiImpl.HostRegisterV2(nullptr, 0U, 0U), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(apiImpl.HostUnregister(nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(apiImpl.HostGetDevicePointer(nullptr, nullptr, 0U), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(apiImpl.HostMemMapCapabilities(0U, static_cast<rtHacType>(0), nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
+    DestroyImplHostMemory(apiHostMemory);
+    EXPECT_EQ(apiHostMemory, nullptr);
+
+    ApiImpl apiImpl;
     EXPECT_EQ(apiImpl.ManagedMemAlloc(nullptr, 0U, 0U, 0U), RT_ERROR_FEATURE_NOT_SUPPORT);
 }
 

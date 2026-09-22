@@ -20,6 +20,7 @@ class ApiEsched;
 class ApiSnapshot;
 class ApiRtConfig;
 class ApiDeviceTopology;
+class ApiHostMemory;
 class ApiKernelFunc;
 class ApiKernelArgs;
 class ApiIpcMemory;
@@ -52,6 +53,9 @@ void DestroyImplDeviceTopology(ApiDeviceTopology*& apiImplDeviceTopology);
 bool IsImplIpcMemorySupported();
 ApiIpcMemory* CreateImplIpcMemoryAndGet();
 void DestroyImplIpcMemory(ApiIpcMemory*& apiImplIpcMemory);
+bool IsImplHostMemorySupported();
+ApiHostMemory* CreateImplHostMemoryAndGet();
+void DestroyImplHostMemory(ApiHostMemory*& apiImplHostMemory);
 } // namespace runtime
 } // namespace cce
 

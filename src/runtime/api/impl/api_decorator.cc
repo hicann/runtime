@@ -446,52 +446,6 @@ rtError_t ApiDecorator::DevDvppMalloc(
 
 rtError_t ApiDecorator::DevDvppFree(void* const devPtr) { return impl_->DevDvppFree(devPtr); }
 
-rtError_t ApiDecorator::HostMalloc(void** const hostPtr, const uint64_t size, const uint16_t moduleId)
-{
-    return impl_->HostMalloc(hostPtr, size, moduleId);
-}
-
-rtError_t ApiDecorator::HostMallocWithCfg(void** const hostPtr, const uint64_t size, const rtMallocConfig_t* cfg)
-{
-    return impl_->HostMallocWithCfg(hostPtr, size, cfg);
-}
-
-rtError_t ApiDecorator::HostFree(void* const hostPtr) { return impl_->HostFree(hostPtr); }
-
-rtError_t ApiDecorator::MallocHostSharedMemory(
-    rtMallocHostSharedMemoryIn* const in, rtMallocHostSharedMemoryOut* const out)
-{
-    return impl_->MallocHostSharedMemory(in, out);
-}
-
-rtError_t ApiDecorator::FreeHostSharedMemory(rtFreeHostSharedMemoryIn* const in)
-{
-    return impl_->FreeHostSharedMemory(in);
-}
-
-rtError_t ApiDecorator::HostRegister(void* ptr, uint64_t size, rtHostRegisterType type, void** devPtr)
-{
-    return impl_->HostRegister(ptr, size, type, devPtr);
-}
-
-rtError_t ApiDecorator::HostRegisterV2(void* ptr, uint64_t size, uint32_t flag)
-{
-    return impl_->HostRegisterV2(ptr, size, flag);
-}
-
-rtError_t ApiDecorator::HostUnregister(void* ptr) { return impl_->HostUnregister(ptr); }
-
-rtError_t ApiDecorator::HostMemMapCapabilities(
-    uint32_t deviceId, rtHacType hacType, rtHostMemMapCapability* capabilities)
-{
-    return impl_->HostMemMapCapabilities(deviceId, hacType, capabilities);
-}
-
-rtError_t ApiDecorator::HostGetDevicePointer(void* pHost, void** pDevice, uint32_t flag)
-{
-    return impl_->HostGetDevicePointer(pHost, pDevice, flag);
-}
-
 rtError_t ApiDecorator::ManagedMemAlloc(
     void** const ptr, const uint64_t size, const uint32_t flag, const uint16_t moduleId)
 {
@@ -2051,11 +2005,6 @@ rtError_t ApiDecorator::MemGetAllocationPropertiesFromHandle(rtDrvMemHandle hand
 rtError_t ApiDecorator::MemGetAddressRange(void* ptr, void** pbase, size_t* psize)
 {
     return impl_->MemGetAddressRange(ptr, pbase, psize);
-}
-
-rtError_t ApiDecorator::HostGetDevicePointerAddrRange(rtAddrRange* addrRange, uint32_t* count)
-{
-    return impl_->HostGetDevicePointerAddrRange(addrRange, count);
 }
 
 rtError_t ApiDecorator::MemMapSelectedLink(void* virPtrDst, size_t size, void* virPtrSrc, uint32_t linkIdx)

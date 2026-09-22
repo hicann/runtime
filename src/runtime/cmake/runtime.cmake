@@ -91,6 +91,7 @@ set(libruntime_api_src_files
     ${RUNTIME_DIR}/src/runtime/api/api_c_device.cc
     ${RUNTIME_DIR}/src/runtime/api/api_c_kernel.cc
     ${RUNTIME_DIR}/src/runtime/api/api_c_memory.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_host_memory.cc
     ${RUNTIME_DIR}/src/runtime/api/api_c_stream.cc
     ${RUNTIME_DIR}/src/runtime/api/api_c_task.cc
     ${RUNTIME_DIR}/src/runtime/api/api_c_model.cc
@@ -311,6 +312,7 @@ set(libruntime_v100_src_files
     ${RUNTIME_API_DIR}/impl/api_impl_kernel_args.cc
     ${RUNTIME_API_DIR}/impl/api_impl_kernel_func.cc
     ${RUNTIME_API_DIR}/impl/api_impl_memory.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_host_memory.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v100/api_impl_aclgraph.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v100/api_impl_capture_event.cc
     ${RUNTIME_API_DIR}/impl/api_impl_mbuf.cc

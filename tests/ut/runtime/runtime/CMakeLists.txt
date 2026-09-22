@@ -14,6 +14,10 @@ generate_runtime_api_stubs_at_configure(
     ${TOP_DIR}/src/runtime/cmake/tiny_unsupported_runtime_api.def
     RUNTIME_UT_TINY_GENERATED_API_STUB_SOURCE
 )
+configure_runtime_api_weak_real_sources(
+    tiny
+    ${TOP_DIR}/src/runtime/api/api_c_host_memory.cc
+)
 
 add_subdirectory(test)
 set(BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
@@ -182,6 +186,7 @@ set(runtimeut_src_api_list
     ${TOP_DIR}/src/runtime/api/api_c_device.cc
     ${TOP_DIR}/src/runtime/api/api_c_kernel.cc
     ${TOP_DIR}/src/runtime/api/api_c_memory.cc
+    ${TOP_DIR}/src/runtime/api/api_c_host_memory.cc
     ${TOP_DIR}/src/runtime/api/api_c_stream.cc
     ${TOP_DIR}/src/runtime/api/api_c_model.cc
     ${TOP_DIR}/src/runtime/api/api_c_event.cc
@@ -611,6 +616,7 @@ set(runtimeut_src_list
     ${TOP_DIR}/src/runtime/api/impl/api_impl_kernel_args.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_kernel_func.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_memory.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_host_memory.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_mbuf.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_standard_soc.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_snapshot.cc
@@ -762,6 +768,7 @@ set(runtimeut_david_src_list
     ${TOP_DIR}/src/runtime/api/impl/api_impl_kernel_args.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_kernel_func.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_memory.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_host_memory.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_mbuf.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event_common.cc
@@ -1435,6 +1442,7 @@ add_executable(runtime_utest_tiny_stub
     test/rt_utest_api_kernel_func_stub.cc
     test/rt_utest_stub.cc
 )
+set_property(TARGET runtime_utest_tiny_stub PROPERTY RUNTIME_API_WEAK_PROVIDER TRUE)
 
 target_compile_definitions(runtime_utest_tiny_stub PUBLIC
     TEMP_PERFORMANCE
@@ -1695,6 +1703,7 @@ set(runtimeut_v201_src_list
     ${TOP_DIR}/src/runtime/api/impl/api_impl_kernel_args.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_kernel_func.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_memory.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_host_memory.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_mbuf.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event_common.cc

@@ -19,6 +19,7 @@
 #include "stream.hpp"
 #include "raw_device.hpp"
 #include "api.hpp"
+#include "api_host_memory.hpp"
 #include "api_impl.hpp"
 #include "api_impl_creator.hpp"
 #include "api_impl_event.hpp"
@@ -335,8 +336,6 @@ TEST_F(TinyStubTest, api_error_stub)
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
     ret = api.MemManagedGetAttrs(nullptr, 0, nullptr, 0, nullptr, 0);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
-    ret = api.HostGetDevicePointerAddrRange(nullptr, nullptr);
-    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
     ret = api.GetDevicePCIBusId(0, nullptr, 0);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
     ret = api.GetDeviceByPCIBusId(nullptr, nullptr);
@@ -451,10 +450,24 @@ TEST_F(TinyStubTest, api_impl_stub)
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
     ret = impl.MemsetD32Async(nullptr, 0, 0, 0, nullptr);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
-    ret = impl.HostGetDevicePointerAddrRange(nullptr, nullptr);
-    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+    ApiHostMemory* apiHostMemory = CreateImplHostMemoryAndGet();
+    ASSERT_NE(apiHostMemory, nullptr);
+    ret = apiHostMemory->HostGetDevicePointerAddrRange(nullptr, nullptr);
+    EXPECT_EQ(ret, RT_ERROR_INVALID_VALUE);
+    DestroyImplHostMemory(apiHostMemory);
+    EXPECT_EQ(apiHostMemory, nullptr);
     ret = impl.GetDeviceByPCIBusId(nullptr, nullptr);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+}
+
+TEST_F(TinyStubTest, api_impl_host_memory_supported)
+{
+    EXPECT_TRUE(IsImplHostMemorySupported());
+    ApiHostMemory* apiHostMemory = CreateImplHostMemoryAndGet();
+    EXPECT_NE(apiHostMemory, nullptr);
+
+    DestroyImplHostMemory(apiHostMemory);
+    EXPECT_EQ(apiHostMemory, nullptr);
 }
 
 TEST_F(TinyStubTest, api_profile_stub)

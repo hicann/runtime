@@ -357,22 +357,6 @@ rtError_t ApiProfileLogDecorator::DevDvppFree(void* const devPtr)
     return error;
 }
 
-rtError_t ApiProfileLogDecorator::HostMalloc(void** const hostPtr, const uint64_t size, const uint16_t moduleId)
-{
-    ProfileLogRecord record(PROFILE_RECORD_TYPE_RT_CALL_RT, RT_PROF_API_HOST_MALLOC, profiler_);
-    const rtError_t error = impl_->HostMalloc(hostPtr, size, moduleId);
-    record.SaveRecord();
-    return error;
-}
-
-rtError_t ApiProfileLogDecorator::HostFree(void* const hostPtr)
-{
-    ProfileLogRecord record(PROFILE_RECORD_TYPE_RT_CALL_RT, RT_PROF_API_HOST_FREE, profiler_);
-    const rtError_t error = impl_->HostFree(hostPtr);
-    record.SaveRecord();
-    return error;
-}
-
 rtError_t ApiProfileLogDecorator::ManagedMemAlloc(
     void** const ptr, const uint64_t size, const uint32_t flag, const uint16_t moduleId)
 {

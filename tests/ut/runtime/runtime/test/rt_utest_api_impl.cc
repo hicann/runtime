@@ -31,6 +31,7 @@
 #include "task.hpp"
 #include "task_submit.hpp"
 #include "api.hpp"
+#include "api_host_memory.hpp"
 #include "driver.hpp"
 #include "npu_driver.hpp"
 #include "logger.hpp"
@@ -1250,8 +1251,8 @@ TEST_F(ApiImplTest, NAME_EVENT_TEST_3)
 TEST_F(ApiImplTest, HOST_MALLOC_TEST)
 {
     rtError_t error;
-    Api* Api_ = const_cast<Api*>(Runtime::runtime_->api_);
-    ApiDecorator* apiDecorator_ = new ApiDecorator(Api_);
+    ApiHostMemory* const apiDecorator_ = ApiHostMemory::Instance();
+    ASSERT_NE(apiDecorator_, nullptr);
     void* hostPtr;
     rtMallocConfig_t* malloCfg = (rtMallocConfig_t*)malloc(sizeof(rtMallocConfig_t));
     rtMallocAttribute_t* mallocAttrs = new rtMallocAttribute_t[1];
@@ -1263,7 +1264,6 @@ TEST_F(ApiImplTest, HOST_MALLOC_TEST)
     EXPECT_EQ(error, RT_ERROR_NONE);
     delete[] mallocAttrs;
     free(malloCfg);
-    delete apiDecorator_;
 }
 
 TEST_F(ApiImplTest, CPU_KERNEL_LAUNCH_DUMP)

@@ -490,13 +490,6 @@ rtError_t ApiErrorDecorator::GetDeviceByPCIBusId(const char* pciBusId, int32_t* 
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t ApiErrorDecorator::HostGetDevicePointerAddrRange(rtAddrRange* addrRange, uint32_t* count)
-{
-    UNUSED(addrRange);
-    UNUSED(count);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
 rtError_t ApiErrorDecorator::ModelTaskUpdate(
     Stream* desStm, uint32_t desTaskId, Stream* sinkStm, rtMdlTaskUpdateInfo_t* para)
 {

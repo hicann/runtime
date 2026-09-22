@@ -36,6 +36,7 @@ void __attribute__((weak)) halSetRuntimeApiVer(int Version);
 namespace cce {
 namespace runtime {
 class ApiEvent;
+class ApiHostMemory;
 class ApiKernelFunc;
 namespace {
 constexpr uint32_t DEFAULT_PROGRAM_NUMBER = 2000U;
@@ -219,6 +220,7 @@ public:
     ApiIpcMemory* ApiIpcMemory_() const override { return apiIpcMemory_; }
 
     ApiKernelArgs* ApiKernelArgs_() const override { return apiKernelArgs_; }
+    ApiHostMemory* ApiHostMemory_() const override { return apiHostMemory_; }
 
     Api* ApiImpl_() const override { return apiImpl_; }
 
@@ -819,6 +821,7 @@ private:
     ApiRtConfig* apiRtConfig_;
     ApiDeviceTopology* apiDeviceTopology_;
     ApiIpcMemory* apiIpcMemory_;
+    ApiHostMemory* apiHostMemory_;
 
     Api* apiImpl_;
     ApiMbuf* apiImplMbuf_;
@@ -827,6 +830,7 @@ private:
     ApiRtConfig* apiImplRtConfig_;
     ApiDeviceTopology* apiImplDeviceTopology_;
     ApiIpcMemory* apiImplIpcMemory_;
+    ApiHostMemory* apiImplHostMemory_;
 
     RefObject<Context*> priCtxs_[RT_MAX_DEV_NUM][RT_MAX_TS_NUM];
     RefObject<Device*> devices_[RT_MAX_DEV_NUM + 1][RT_MAX_TS_NUM]; // Last one is stub device

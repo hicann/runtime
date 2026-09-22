@@ -423,14 +423,22 @@ TEST_F(CloudV2IpcApiTest, MemGetAddressRange)
 
 TEST_F(CloudV2IpcApiTest, HostGetDevicePointerAddrRange)
 {
+    rtError_t error = rtSetDevice(0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
     rtAddrRange addrRange;
     uint32_t count = 1;
     MOCKER(halHostGetDevicePointerAddrCount).stubs().will(returnValue(DRV_ERROR_NONE));
     MOCKER(halHostGetDevicePointerAddrRange).stubs().will(returnValue(DRV_ERROR_NONE));
-    rtError_t error = rtHostGetDevicePointerAddrRange(&addrRange, &count);
+    error = rtHostGetDevicePointerAddrRange(&addrRange, &count);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtHostGetDevicePointerAddrRange(nullptr, &count);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtHostGetDevicePointerAddrRange(nullptr, nullptr);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+
+    error = rtDeviceReset(0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 

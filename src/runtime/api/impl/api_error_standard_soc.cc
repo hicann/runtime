@@ -722,12 +722,6 @@ rtError_t ApiErrorDecorator::GetDeviceByPCIBusId(const char* pciBusId, int32_t* 
     return impl_->GetDeviceByPCIBusId(pciBusId, devId);
 }
 
-rtError_t ApiErrorDecorator::HostGetDevicePointerAddrRange(rtAddrRange* addrRange, uint32_t* count)
-{
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(count, RT_ERROR_INVALID_VALUE, "Obtaining the device address range");
-    return impl_->HostGetDevicePointerAddrRange(addrRange, count);
-}
-
 rtError_t ApiErrorDecorator::ModelTaskUpdate(
     Stream* desStm, uint32_t desTaskId, Stream* sinkStm, rtMdlTaskUpdateInfo_t* para)
 {

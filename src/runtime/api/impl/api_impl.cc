@@ -2479,24 +2479,6 @@ rtError_t ApiImpl::DevDvppFree(void* const devPtr)
     return curDrv->DevMemFree(devPtr, id);
 }
 
-rtError_t ApiImpl::MallocHostSharedMemory(rtMallocHostSharedMemoryIn* const in, rtMallocHostSharedMemoryOut* const out)
-{
-    RT_LOG(RT_LOG_INFO, "sharedMemName=%s, sharedMemSize=%" PRIu64 ", flag=%u.", in->name, in->size, in->flag);
-    Context* const curCtx = CurrentContext();
-    NULL_PTR_RETURN_MSG(curCtx, RT_ERROR_CONTEXT_NULL);
-
-    return curCtx->Device_()->Driver_()->MallocHostSharedMemory(in, out, curCtx->Device_()->Id_());
-}
-
-rtError_t ApiImpl::FreeHostSharedMemory(rtFreeHostSharedMemoryIn* const in)
-{
-    RT_LOG(RT_LOG_INFO, "sharedMemName=%s, sharedMemSize=%" PRIu64 ", fd=%u.", in->name, in->size, in->fd);
-    Context* const curCtx = CurrentContext();
-    NULL_PTR_RETURN_MSG(curCtx, RT_ERROR_CONTEXT_NULL);
-
-    return curCtx->Device_()->Driver_()->FreeHostSharedMemory(in, curCtx->Device_()->Id_());
-}
-
 rtError_t ApiImpl::MemAdvise(void* devPtr, uint64_t count, uint32_t advise)
 {
     RT_LOG(RT_LOG_DEBUG, "memory advise, count=%" PRIu64 ", advise=%u.", count, advise);

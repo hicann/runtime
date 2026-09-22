@@ -26,6 +26,7 @@ class ApiEsched;
 class ApiSnapshot;
 class ApiRtConfig;
 class ApiDeviceTopology;
+class ApiHostMemory;
 class ApiKernelFunc;
 class ApiKernelArgs;
 class ApiIpcMemory;
@@ -75,6 +76,8 @@ public:
     virtual ApiKernelArgs* ApiKernelArgs_() const = 0;
     // Get apiIpcMemory implement.
     virtual ApiIpcMemory* ApiIpcMemory_() const = 0;
+    // Get apiHostMemory implement.
+    virtual ApiHostMemory* ApiHostMemory_() const = 0;
     virtual Api* ApiImpl_() const = 0;
     virtual rtError_t ProfilerStop(
         const uint64_t profConfig, const int32_t numsDev, uint32_t* const deviceList,

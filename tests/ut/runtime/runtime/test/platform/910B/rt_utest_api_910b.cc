@@ -2439,13 +2439,13 @@ TEST_F(CloudV2ApiTest910b, host_mem_alloc_free_apiDec)
     rtError_t error;
     void* hostPtr;
 
-    Api* api = Api::Instance();
-    ApiDecorator apiDec(api);
+    ApiHostMemory* const api = ApiHostMemory::Instance();
+    ASSERT_NE(api, nullptr);
 
-    error = apiDec.HostMalloc(&hostPtr, 64);
+    error = api->HostMalloc(&hostPtr, 64);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = apiDec.HostFree(hostPtr);
+    error = api->HostFree(hostPtr);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
@@ -2524,10 +2524,12 @@ TEST_F(CloudV2ApiTest910b, memory_attritue_apiDec)
     void* hostPtr;
     rtPointerAttributes_t attributes;
 
+    ApiHostMemory* const hostApi = ApiHostMemory::Instance();
+    ASSERT_NE(hostApi, nullptr);
     Api* api = Api::Instance();
     ApiDecorator apiDec(api);
 
-    error = apiDec.HostMalloc(&hostPtr, 60);
+    error = hostApi->HostMalloc(&hostPtr, 60);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER(drvMemGetAttribute).stubs().will(invoke(drvMemGetAttribute_2));
@@ -2535,7 +2537,7 @@ TEST_F(CloudV2ApiTest910b, memory_attritue_apiDec)
     error = apiDec.PointerGetAttributes(&attributes, hostPtr);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = apiDec.HostFree(hostPtr);
+    error = hostApi->HostFree(hostPtr);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 

@@ -20,6 +20,7 @@
 #include "context.hpp"
 #include "runtime.hpp"
 #include "api.hpp"
+#include "api_host_memory.hpp"
 #include "api_impl.hpp"
 #include "api_error.hpp"
 #include "api_c.h"
@@ -381,8 +382,8 @@ TEST_F(RtMemoryApiTest, rtGetMemUsageInfo)
 TEST_F(RtMemoryApiTest, rtsMallocHost_001)
 {
     rtError_t error;
-    Api* Api_ = const_cast<Api*>(Runtime::runtime_->api_);
-    ApiDecorator* apiDecorator_ = new ApiDecorator(Api_);
+    ApiHostMemory* const apiDecorator_ = ApiHostMemory::Instance();
+    ASSERT_NE(apiDecorator_, nullptr);
     void* hostPtr = nullptr;
     rtMallocConfig_t* malloCfg = (rtMallocConfig_t*)malloc(sizeof(rtMallocConfig_t));
     rtMallocAttribute_t* mallocAttrs = new rtMallocAttribute_t[1];
@@ -406,14 +407,13 @@ TEST_F(RtMemoryApiTest, rtsMallocHost_001)
 
     delete[] mallocAttrs;
     free(malloCfg);
-    delete apiDecorator_;
 }
 
 TEST_F(RtMemoryApiTest, rtsMallocHost_002)
 {
     rtError_t error;
-    Api* Api_ = const_cast<Api*>(Runtime::runtime_->api_);
-    ApiDecorator* apiDecorator_ = new ApiDecorator(Api_);
+    ApiHostMemory* const apiDecorator_ = ApiHostMemory::Instance();
+    ASSERT_NE(apiDecorator_, nullptr);
     void* hostPtr = nullptr;
     rtMallocConfig_t* malloCfg = (rtMallocConfig_t*)malloc(sizeof(rtMallocConfig_t));
     rtMallocAttribute_t* mallocAttrs = new rtMallocAttribute_t[1];
@@ -441,14 +441,13 @@ TEST_F(RtMemoryApiTest, rtsMallocHost_002)
 
     delete[] mallocAttrs;
     free(malloCfg);
-    delete apiDecorator_;
 }
 
 TEST_F(RtMemoryApiTest, rtsMallocHost_003)
 {
     rtError_t error;
-    Api* Api_ = const_cast<Api*>(Runtime::runtime_->api_);
-    ApiDecorator* apiDecorator_ = new ApiDecorator(Api_);
+    ApiHostMemory* const apiDecorator_ = ApiHostMemory::Instance();
+    ASSERT_NE(apiDecorator_, nullptr);
     void* hostPtr = nullptr;
     rtMallocConfig_t* malloCfg = (rtMallocConfig_t*)malloc(sizeof(rtMallocConfig_t));
     rtMallocAttribute_t* mallocAttrs = new rtMallocAttribute_t[1];
@@ -476,7 +475,6 @@ TEST_F(RtMemoryApiTest, rtsMallocHost_003)
 
     delete[] mallocAttrs;
     free(malloCfg);
-    delete apiDecorator_;
 }
 
 namespace {

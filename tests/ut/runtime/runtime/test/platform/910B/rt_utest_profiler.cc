@@ -26,6 +26,7 @@
 #include "stars.hpp"
 #include "hwts.hpp"
 #include "api_impl.hpp"
+#include "api_host_memory.hpp"
 #include "kernel.hpp"
 #include "program.hpp"
 #include "api_impl.hpp"
@@ -397,6 +398,72 @@ TEST_F(ProfilerTest, RuntimeCallApiBeginEndForwardAndIgnoreNullProfiler)
     rt->CallApiBegin(RT_PROF_API_DEV_FREE);
     rt->CallApiEnd(RT_ERROR_NONE, 0);
     rt->profiler_ = oldProfiler;
+}
+
+TEST_F(ProfilerTest, HostMallocWithCfgInvalidParamKeepsProfileBeginEndPaired)
+{
+    Runtime* rt = ((Runtime*)Runtime::Instance());
+    profiler = rt->profiler_;
+    ASSERT_NE(profiler, nullptr);
+    ApiHostMemory* const api = ApiHostMemory::Instance();
+    ASSERT_NE(api, nullptr);
+
+    PrepareRuntimeProfCallApiTest(profiler);
+    MOCKER(MsprofReportApi).expects(once()).will(invoke(MsprofReportApiOrderStub));
+    const rtError_t error = api->HostMallocWithCfg(nullptr, 1U, nullptr);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    EXPECT_EQ(g_reportedApiTypeNum, 1U);
+    EXPECT_EQ(g_reportedApiTypes[0], RT_PROF_API_HOST_MALLOC + RT_PROFILE_TYPE_API_BEGIN);
+    ProfApiContext profApiContext{};
+    EXPECT_FALSE(profiler->PopProfApiContext(profApiContext));
+
+    profiler->SetApiProfEnable(false);
+    ClearApiProfContextStack(profiler);
+}
+
+TEST_F(ProfilerTest, HostMallocInvalidParamKeepsProfileBeginEndPaired)
+{
+    Runtime* rt = ((Runtime*)Runtime::Instance());
+    profiler = rt->profiler_;
+    ASSERT_NE(profiler, nullptr);
+    ApiHostMemory* const api = ApiHostMemory::Instance();
+    ASSERT_NE(api, nullptr);
+
+    PrepareRuntimeProfCallApiTest(profiler);
+    MOCKER(MsprofReportApi).expects(once()).will(invoke(MsprofReportApiOrderStub));
+    const rtError_t error = api->HostMalloc(nullptr, 1U, 0U);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    EXPECT_EQ(g_reportedApiTypeNum, 1U);
+    EXPECT_EQ(g_reportedApiTypes[0], RT_PROF_API_HOST_MALLOC + RT_PROFILE_TYPE_API_BEGIN);
+    ProfApiContext profApiContext{};
+    EXPECT_FALSE(profiler->PopProfApiContext(profApiContext));
+
+    profiler->SetApiProfEnable(false);
+    ClearApiProfContextStack(profiler);
+}
+
+TEST_F(ProfilerTest, HostFreeInvalidParamKeepsProfileBeginEndPaired)
+{
+    Runtime* rt = ((Runtime*)Runtime::Instance());
+    profiler = rt->profiler_;
+    ASSERT_NE(profiler, nullptr);
+    ApiHostMemory* const api = ApiHostMemory::Instance();
+    ASSERT_NE(api, nullptr);
+
+    PrepareRuntimeProfCallApiTest(profiler);
+    MOCKER(MsprofReportApi).expects(once()).will(invoke(MsprofReportApiOrderStub));
+    const rtError_t error = api->HostFree(nullptr);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    EXPECT_EQ(g_reportedApiTypeNum, 1U);
+    EXPECT_EQ(g_reportedApiTypes[0], RT_PROF_API_HOST_FREE + RT_PROFILE_TYPE_API_BEGIN);
+    ProfApiContext profApiContext{};
+    EXPECT_FALSE(profiler->PopProfApiContext(profApiContext));
+
+    profiler->SetApiProfEnable(false);
+    ClearApiProfContextStack(profiler);
 }
 
 TEST_F(ProfilerTest, ApiProfileNestedContextLifo)
@@ -2715,22 +2782,6 @@ TEST_F(ProfilerTest, DevDvppTest)
     delete apiImpl_;
 }
 
-TEST_F(ProfilerTest, HostMemTest)
-{
-    void* hostPtr;
-    ApiImpl* apiImpl_ = new ApiImpl();
-    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::HostMalloc).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::HostFree).stubs().will(returnValue(RT_ERROR_NONE));
-    Profiler* profiler = ((Runtime*)Runtime::Instance())->profiler_;
-    profiler->SetProfLogEnable(true);
-    auto error = profiler->apiProfileLogDecorator_->HostMalloc(&hostPtr, 64);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    error = profiler->apiProfileLogDecorator_->HostFree(NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    profiler->SetProfLogEnable(false);
-    delete apiImpl_;
-}
-
 TEST_F(ProfilerTest, ManagedMemTest)
 {
     void* hostPtr;
@@ -2987,19 +3038,13 @@ TEST_F(ProfilerTest, ProfileDecoratorNotifyApiTest)
 TEST_F(ProfilerTest, ProfileDecoratorMemApiTest)
 {
     ApiImpl* apiImpl_ = new ApiImpl();
-    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::HostMalloc).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::HostFree).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::ReduceAsync).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::GetRunMode).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::CmoAddrTaskLaunch).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(apiImpl_, &ApiImpl::CtxGetOverflowAddr).stubs().will(returnValue(RT_ERROR_NONE));
     Profiler* profiler = ((Runtime*)Runtime::Instance())->profiler_;
     profiler->SetProfLogEnable(true);
-    auto error = profiler->apiProfileDecorator_->HostMalloc(nullptr, 0, 0);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    error = profiler->apiProfileDecorator_->HostFree(nullptr);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    error = profiler->apiProfileDecorator_->ReduceAsync(
+    auto error = profiler->apiProfileDecorator_->ReduceAsync(
         nullptr, nullptr, 0, RT_MEMCPY_SDMA_AUTOMATIC_ADD, RT_DATA_TYPE_FP32, nullptr, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = profiler->apiProfileDecorator_->GetRunMode(nullptr);

@@ -182,20 +182,6 @@ public:
         void** const devPtr, const uint64_t size, const uint32_t flag,
         const uint16_t moduleId = MODULEID_RUNTIME) override;
     rtError_t DevDvppFree(void* const devPtr) override;
-    rtError_t HostMalloc(
-        void** const hostPtr, const uint64_t size, const uint16_t moduleId = MODULEID_RUNTIME) override;
-    rtError_t HostMallocWithCfg(
-        void** const hostPtr, const uint64_t size, const rtMallocConfig_t* cfg = nullptr) override;
-    rtError_t HostFree(void* const hostPtr) override;
-    rtError_t MallocHostSharedMemory(
-        rtMallocHostSharedMemoryIn* const in, rtMallocHostSharedMemoryOut* const out) override;
-    rtError_t FreeHostSharedMemory(rtFreeHostSharedMemoryIn* const in) override;
-    rtError_t HostRegister(void* ptr, uint64_t size, rtHostRegisterType type, void** devPtr) override;
-    rtError_t HostRegisterV2(void* ptr, uint64_t size, uint32_t flag) override;
-    rtError_t HostUnregister(void* ptr) override;
-    rtError_t HostMemMapCapabilities(
-        uint32_t deviceId, rtHacType hacType, rtHostMemMapCapability* capabilities) override;
-    rtError_t HostGetDevicePointer(void* pHost, void** pDevice, uint32_t flag) override;
     rtError_t ManagedMemAlloc(
         void** const ptr, const uint64_t size, const uint32_t flag,
         const uint16_t moduleId = MODULEID_RUNTIME) override;
@@ -307,7 +293,6 @@ public:
     rtError_t MemRetainAllocationHandle(void* virPtr, rtDrvMemHandle* handle) override;
     rtError_t MemGetAllocationPropertiesFromHandle(rtDrvMemHandle handle, rtDrvMemProp_t* prop) override;
     rtError_t MemGetAddressRange(void* ptr, void** pbase, size_t* psize) override;
-    rtError_t HostGetDevicePointerAddrRange(rtAddrRange* addrRange, uint32_t* count) override;
     // new memory api
     rtError_t DevMalloc(
         void** const devPtr, const uint64_t size, rtMallocPolicy policy, rtMallocAdvise advise,

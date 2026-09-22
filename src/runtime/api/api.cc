@@ -10,6 +10,7 @@
 #include "api.hpp"
 #include "api_esched.hpp"
 #include "api_event.hpp"
+#include "api_host_memory.hpp"
 #include "api_kernel_func.hpp"
 #include "api_kernel_args.hpp"
 #include "api_ipc_memory.hpp"
@@ -131,6 +132,16 @@ ApiIpcMemory* ApiIpcMemory::Instance()
         return nullptr;
     }
     return rtInstance->ApiIpcMemory_();
+}
+
+ApiHostMemory* ApiHostMemory::Instance()
+{
+    const Runtime* const rtInstance = Runtime::Instance();
+    if (unlikely(rtInstance == nullptr)) {
+        RT_LOG(RT_LOG_ERROR, "Runtime::Instance == nullptr");
+        return nullptr;
+    }
+    return rtInstance->ApiHostMemory_();
 }
 
 } // namespace runtime
