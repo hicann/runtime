@@ -1778,7 +1778,7 @@ Ascend RC形态或Control CPU开放形态下，data参数处需申请Device上�
 <!-- end id2 -->
 
 <!-- npu="IPV350" id3 -->
-data参数处需申请Device上的内存。
+对于IPV350，data参数处需申请Device上的内存。
 <!-- end id3 -->
 
 <!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id38 -->
