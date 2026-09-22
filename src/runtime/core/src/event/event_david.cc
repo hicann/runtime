@@ -419,6 +419,7 @@ rtError_t DavidEvent::GetTimeStamp(uint64_t* const recTimestamp)
 
 rtError_t DavidEvent::ClearRecordStatus()
 {
+    const std::lock_guard<std::mutex> latestStateLock(recordStateMutex_);
     latestRecordTask_.streamId = -1;
     latestRecordTask_.taskId = UINT32_MAX;
     SetRecordStatus(DavidEventState_t::EVT_NOT_RECORDED);

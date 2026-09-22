@@ -76,10 +76,10 @@ static void CreateRefObjValWithUserData(RefObj* obj, const void* userData, void*
 static void DestroyRefObjVal(RefObj* obj, const void* userData, void* fnDestroyObj)
 {
     (void)userData;
-    mmSetData64(&obj->refCount, 0);
     if (fnDestroyObj != NULL) {
         ((FnDestroyRefObjValue)fnDestroyObj)(obj);
     }
+    mmSetData64(&obj->refCount, 0);
 }
 
 void* GetObjRef(RefObj* obj, FnCreateRefObjValue fnCreateObj)
