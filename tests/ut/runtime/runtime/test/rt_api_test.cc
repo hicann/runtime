@@ -232,8 +232,6 @@ TEST_F(ApiAbnormalTest, rtsSetMemcpyDescTest)
     error = rtsSetMemcpyDesc(desc, RT_MEMCPY_KIND_HOST_TO_HOST, srcPtr, dstPtr, count, nullptr);
     EXPECT_NE(error, RT_ERROR_NONE);
 
-    MOCKER_CPP(&ApiImpl::CurrentContext).stubs().will(returnValue((Context*)dstPtr));
-    MOCKER_CPP(&Context::SetMemcpyDesc).stubs().will(returnValue(RT_ERROR_NONE));
     error = rtsSetMemcpyDesc(desc, RT_MEMCPY_KIND_INNER_DEVICE_TO_DEVICE, srcPtr, dstPtr, count, nullptr);
     EXPECT_NE(error, RT_ERROR_NONE);
     Api* api = Api::Instance();

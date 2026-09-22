@@ -17,6 +17,7 @@ namespace cce {
 namespace runtime {
 
 class Device;
+class Program;
 struct RtDebugSendInfo;
 struct rtDebugReportInfo_t;
 
@@ -28,6 +29,14 @@ rtError_t DebugSetDumpMode(const uint64_t mode, Device* const device);
 rtError_t DebugGetStalledCore(rtDbgCoreInfo_t* const coreInfo, const Device* const device);
 
 rtError_t DebugReadAICore(const rtDebugMemoryParam_t* const param, const Device* const device = nullptr);
+
+rtError_t GetStackBuffer(
+    const Program* const programHdl, uint32_t deviceId, const uint32_t stackType, const uint32_t coreType,
+    const uint32_t coreId, const void** stack, uint32_t* stackSize, const Device* const device = nullptr);
+
+rtError_t GetExceptionRegInfo(
+    const rtExceptionInfo_t* const exceptionInfo, rtExceptionErrRegInfo_t** const exceptionErrRegInfo,
+    uint32_t* const num);
 
 } // namespace runtime
 } // namespace cce

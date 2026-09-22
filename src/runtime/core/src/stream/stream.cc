@@ -5766,5 +5766,35 @@ void Stream::GetCurrentRunningTaskInfo(uint16_t& taskId, tsTaskType_t& taskType,
         taskType = taskInfo->type;
     }
 }
+rtError_t Stream::GetDevArgsAddr(
+    const rtArgsEx_t* const argsInfo, void** const devArgsAddr, void** const argsHandle, const uint32_t logDeviceId)
+{
+    StarsArgLoaderResult result = {};
+    const rtError_t error = LoadArgsInfo(argsInfo, false, &result, LoadPolicy::LP_NO_MIX);
+    COND_RETURN_ERROR_MSG_INNER(
+        error != RT_ERROR_NONE, error,
+        "Failed to load args, stream_id=%d,"
+        " retCode=%#x.",
+        Id_(), error);
+
+    *devArgsAddr = result.kerArgs;
+    *argsHandle = result.handle;
+    fftsMemAllocCnt++;
+    RT_LOG(
+        RT_LOG_INFO, "device_id=%u, stream_id=%d, argSize=%u, hasTiling=%u, isNoNeedH2DCopy=%u, hand=%p", logDeviceId,
+        Id_(), argsInfo->argsSize, argsInfo->hasTiling, argsInfo->isNoNeedH2DCopy, result.handle);
+    if (CheckLogLevel(static_cast<int32_t>(RUNTIME), DLOG_INFO) == 0) {
+        return error;
+    }
+    RT_LOG(
+        RT_LOG_INFO, "device_id=%u, stream_id=%d argSize=%u hand=%p", logDeviceId, Id_(), argsInfo->argsSize,
+        result.handle);
+    const uint32_t* const cmd = RtPtrToPtr<const uint32_t*, void*>(argsInfo->args);
+    for (size_t i = 0UL; i < (argsInfo->argsSize) / sizeof(uint32_t); i++) {
+        RT_LOG(RT_LOG_INFO, "args[%u]:%08x", i, cmd[i]);
+    }
+    return error;
+}
+
 } // namespace runtime
 } // namespace cce

@@ -22,6 +22,7 @@
 #include "context.hpp"
 #include "model_c.hpp"
 #include "task_launch_c.hpp"
+#include "program.hpp"
 #include "capture_model.hpp"
 #include "runtime/feature/aclgraph/capture_session.hpp"
 #include "cond_c.hpp"
@@ -67,11 +68,14 @@
 #include "debug_task.h"
 #include "memcpy_c.hpp"
 #include "memory_c.hpp"
+#include "device_debug_c.hpp"
+#include "inner_kernel.h"
 #include "barrier_task.h"
 #include "stream_task.h"
 #include "task_info_v100.h"
 #include "data/elf.h"
 #include "common/rt_utest_context_reset_helper.hpp"
+#include "common/rt_utest_memory_transfer_driver.hpp"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -3298,25 +3302,24 @@ TEST_F(ContextTest, ReduceAsync_error_02)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 #endif
-TEST_F(ContextTest, ReduceAsync_CheckAlign)
+TEST(MemoryAlignTest, ReduceAsync_CheckAlign)
 {
-    rtError_t error;
-    Context* ctx = NULL;
-    Api* api = Api::Instance();
-    error = api->ContextGetCurrent(&ctx);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    RawDevice* device = (RawDevice*)ctx->Device_();
-    device->chipType_ = static_cast<rtChipType_t>(PLAT_GET_CHIP(static_cast<uint64_t>(0x300)));
-    uint32_t* addr = (uint32_t*)0x2;
-    error = ctx->CheckMemAlign(addr, RT_DATA_TYPE_FP16);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    error = ctx->CheckMemAlign(addr, RT_DATA_TYPE_FP32);
-    EXPECT_NE(error, RT_ERROR_NONE);
-    error = ctx->CheckMemAlign(addr, RT_DATA_TYPE_INT32);
-    EXPECT_NE(error, RT_ERROR_NONE);
-    error = ctx->CheckMemAlign(addr, RT_DATA_TYPE_END);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    device->chipType_ = static_cast<rtChipType_t>(PLAT_GET_CHIP(static_cast<uint64_t>(0x0)));
+    alignas(4) uint8_t buffer[8] = {};
+    for (const auto type : {RT_DATA_TYPE_FP16, RT_DATA_TYPE_INT16, RT_DATA_TYPE_UINT16, RT_DATA_TYPE_BFP16}) {
+        EXPECT_EQ(cce::runtime::CheckMemAlign(buffer, type), RT_ERROR_NONE);
+        EXPECT_EQ(cce::runtime::CheckMemAlign(buffer + 2, type), RT_ERROR_NONE);
+        EXPECT_EQ(cce::runtime::CheckMemAlign(buffer + 1, type), RT_ERROR_MEMORY_ADDRESS_UNALIGNED);
+    }
+    for (const auto type : {RT_DATA_TYPE_FP32, RT_DATA_TYPE_INT32, RT_DATA_TYPE_UINT32}) {
+        EXPECT_EQ(cce::runtime::CheckMemAlign(buffer, type), RT_ERROR_NONE);
+        EXPECT_EQ(cce::runtime::CheckMemAlign(buffer + 1, type), RT_ERROR_MEMORY_ADDRESS_UNALIGNED);
+        EXPECT_EQ(cce::runtime::CheckMemAlign(buffer + 2, type), RT_ERROR_MEMORY_ADDRESS_UNALIGNED);
+    }
+    for (const auto type : {RT_DATA_TYPE_INT8, RT_DATA_TYPE_UINT8, RT_DATA_TYPE_END}) {
+        EXPECT_EQ(cce::runtime::CheckMemAlign(buffer + 1, type), RT_ERROR_NONE);
+    }
+    EXPECT_EQ(cce::runtime::CheckMemAlign(nullptr, RT_DATA_TYPE_FP16), RT_ERROR_NONE);
+    EXPECT_EQ(cce::runtime::CheckMemAlign(nullptr, RT_DATA_TYPE_FP32), RT_ERROR_NONE);
 }
 
 rtError_t MemCopySyncStub_(
@@ -4424,6 +4427,110 @@ TEST_F(ContextTest, ReduceAsync_test)
     GlobalMockObject::verify();
 }
 
+static void CheckReduceFailureRecyclesOnce(const bool useV2)
+{
+    Context* const ctx = Runtime::Instance()->CurrentContext();
+    Stream* const stream = ctx->DefaultStream_();
+    Device* const device = stream->Device_();
+    alignas(4) uint8_t buffer[8] = {};
+    struct Scenario {
+        uint32_t srcOffset;
+        uint32_t dstOffset;
+        rtError_t initError;
+        rtError_t expected;
+    };
+    const Scenario scenarios[] = {
+        {1U, 1U, RT_ERROR_NONE, RT_ERROR_MEMORY_ADDRESS_UNALIGNED},
+        {0U, 1U, RT_ERROR_NONE, RT_ERROR_MEMORY_ADDRESS_UNALIGNED},
+        {1U, 1U, RT_ERROR_INVALID_VALUE, RT_ERROR_INVALID_VALUE},
+    };
+    for (const auto& scenario : scenarios) {
+        TaskInfo task = {};
+        task.stream = stream;
+        rtDevCapabilityInfo capability = {};
+        capability.sdma_reduce_kind = 0xFFFFFFFFU;
+        capability.sdma_reduce_support = 0xFFFFFFFFU;
+        MOCKER_CPP_VIRTUAL(device, &Device::GetDeviceCapabilities)
+            .stubs()
+            .with(outBound(capability))
+            .will(returnValue(RT_ERROR_NONE));
+        MOCKER_CPP(&Stream::AllocTask).expects(once()).will(returnValue(&task));
+        MOCKER_CPP(&TaskFactory::Recycle).expects(once()).with(eq(&task)).will(returnValue(RT_ERROR_NONE));
+        MOCKER_CPP_VIRTUAL(device, &Device::SubmitTask).expects(never());
+        if (useV2) {
+            MOCKER_CPP_VIRTUAL(device, &Device::GetTschVersion)
+                .stubs()
+                .will(returnValue(static_cast<uint32_t>(TS_VERSION_REDUCV2_OPTIMIZE)));
+            MOCKER(ReduceAsyncV2TaskInit).expects(once()).will(returnValue(scenario.initError));
+            EXPECT_EQ(
+                ReduceAsyncV2(
+                    buffer + scenario.dstOffset, buffer + scenario.srcOffset, 4U, RT_MEMCPY_SDMA_AUTOMATIC_ADD,
+                    RT_DATA_TYPE_FP32, stream, ctx->CtxGetOverflowAddr()),
+                scenario.expected);
+            EXPECT_EQ(task.u.reduceAsyncV2TaskInfo.overflowAddrOffset, ctx->CtxGetOverflowAddrOffset());
+        } else {
+            MOCKER(MemcpyAsyncTaskInitV3).expects(once()).will(returnValue(scenario.initError));
+            EXPECT_EQ(
+                ReduceAsync(
+                    buffer + scenario.dstOffset, buffer + scenario.srcOffset, 4U, RT_MEMCPY_SDMA_AUTOMATIC_ADD,
+                    RT_DATA_TYPE_FP32, stream, nullptr),
+                scenario.expected);
+        }
+        GlobalMockObject::verify();
+    }
+}
+
+TEST_F(ContextTest, ReduceAsync_AlignmentFailureRecyclesOnce) { CheckReduceFailureRecyclesOnce(false); }
+
+TEST_F(ContextTest, ReduceAsyncV2_AlignmentFailurePreservesOverflowAndRecyclesOnce)
+{
+    CheckReduceFailureRecyclesOnce(true);
+}
+
+TEST_F(ContextTest, GetStackBuffer_UsesPassedDeviceAndPreservesOffsets)
+{
+    Device* const device = Runtime::Instance()->CurrentContext()->Device_();
+    PlainProgram program;
+    uint8_t storage[8] = {};
+    const void* base = storage;
+    const void* stack = nullptr;
+    uint32_t size = 0U;
+    MOCKER_CPP_VIRTUAL(Runtime::Instance(), static_cast<Context* (Runtime::*)() const>(&Runtime::CurrentContext))
+        .expects(never());
+    MOCKER_CPP_VIRTUAL(device, &Device::GetStackPhyBase16k).stubs().will(returnValue(base));
+    MOCKER_CPP_VIRTUAL(device, &Device::GetStackPhyBase32k).stubs().will(returnValue(base));
+    MOCKER_CPP_VIRTUAL(device, &Device::GetCustomerStackPhyBase).stubs().will(returnValue(base));
+    MOCKER_CPP(&Program::GetStackSize).stubs().will(returnValue(KERNEL_STACK_SIZE_16K));
+    MOCKER_CPP(&Program::GetMaxMinStackSize)
+        .stubs()
+        .will(returnValue(0U))
+        .then(returnValue(KERNEL_STACK_SIZE_32K))
+        .then(returnValue(KERNEL_STACK_SIZE_32K * 2U));
+    MOCKER_CPP(&Runtime::GetDeviceCustomerStackSize).stubs().will(returnValue(KERNEL_STACK_SIZE_32K * 2U));
+
+    EXPECT_EQ(cce::runtime::GetStackBuffer(&program, 0U, 0U, 0U, 1U, &stack, &size, device), RT_ERROR_NONE);
+    EXPECT_EQ(size, KERNEL_STACK_SIZE_16K);
+    EXPECT_EQ(PtrToValue(stack), PtrToValue(base) + KERNEL_STACK_SIZE_16K);
+    EXPECT_EQ(cce::runtime::GetStackBuffer(&program, 0U, 0U, 1U, 1U, &stack, &size, device), RT_ERROR_NONE);
+    EXPECT_EQ(size, KERNEL_STACK_SIZE_32K);
+    EXPECT_EQ(PtrToValue(stack), PtrToValue(base) + size * (device->GetDevProperties().aicNumForCoreStack + 1U));
+    EXPECT_EQ(cce::runtime::GetStackBuffer(&program, 0U, 0U, 0U, 0U, &stack, &size, device), RT_ERROR_NONE);
+    EXPECT_EQ(size, KERNEL_STACK_SIZE_32K * 2U);
+    EXPECT_EQ(stack, base);
+    EXPECT_EQ(cce::runtime::GetStackBuffer(&program, 0U, 0U, 2U, 0U, &stack, &size, device), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(
+        cce::runtime::GetStackBuffer(&program, 0U, 0U, 0U, RT_AICORE_NUM_25, &stack, &size, device),
+        RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(
+        cce::runtime::GetStackBuffer(&program, 0U, 0U, 1U, RT_AIVECTOR_NUM_50, &stack, &size, device),
+        RT_ERROR_INVALID_VALUE);
+    GlobalMockObject::verify();
+    EXPECT_EQ(
+        Api::Instance()->GetStackBuffer(
+            RtPtrToPtr<rtBinHandle>(&program), 0U, RT_STACK_TYPE_SIMT, 0U, 0U, &stack, &size),
+        RT_ERROR_FEATURE_NOT_SUPPORT);
+}
+
 TEST_F(ContextTest, CmoAddrTaskLaunch_test)
 {
     GlobalMockObject::verify();
@@ -4561,7 +4668,11 @@ TEST_F(ContextTest, ModelTaskUpdate_test)
     para.hdl = rt_ut::InitAndExportHandle<rtBinHandle>(programBase);
     streamA->bindFlag_.Set(true);
     streamB->bindFlag_.Set(true);
-    MOCKER_CPP(&Context::CopyTilingTabToDev).stubs().will(returnValue(1)).then(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&Program::CopyTilingTabToDev)
+        .stubs()
+        .with(eq(ctx), eq(static_cast<const Device*>(device)), mockcpp::any(), mockcpp::any())
+        .will(returnValue(1))
+        .then(returnValue(RT_ERROR_NONE));
     MOCKER_CPP(&Stream::ModelTaskUpdate).stubs().will(returnValue(1));
 
     error = ctx->ModelTaskUpdate(streamA, 0, streamB, &para);
@@ -4598,32 +4709,203 @@ TEST_F(ContextTest, CopyTilingTabToDev_test)
     PlainProgram prog;
     TilingTabl* memoryPtr = new TilingTabl[10];
     Module module(device);
-    MOCKER_CPP(&Context::GetModule).stubs().will(returnValue((Module*)nullptr)).then(returnValue(&module));
-    error = ctx->CopyTilingTabToDev(&prog, device, nullptr, nullptr);
+    MOCKER_CPP(&Context::GetModule).stubs().will(returnValue(static_cast<Module*>(nullptr))).then(returnValue(&module));
+    error = prog.CopyTilingTabToDev(ctx, device, nullptr, nullptr);
     EXPECT_EQ(error, RT_ERROR_PROGRAM_SIZE);
 
     MOCKER_CPP(&Program::BuildTilingTbl).stubs().will(returnValue(1)).then(returnValue(RT_ERROR_NONE));
-    error = ctx->CopyTilingTabToDev(&prog, device, nullptr, nullptr);
+    error = prog.CopyTilingTabToDev(ctx, device, nullptr, nullptr);
     EXPECT_EQ(error, 1);
 
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::DevMemAlloc)
         .stubs()
         .with(outBoundP((void**)&memoryPtr))
         .will(returnValue(RT_ERROR_FEATURE_NOT_SUPPORT));
-    error = ctx->CopyTilingTabToDev(&prog, device, nullptr, nullptr);
+    error = prog.CopyTilingTabToDev(ctx, device, nullptr, nullptr);
     EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
 
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::DevMemAlloc)
         .stubs()
         .with(outBoundP((void**)&memoryPtr))
         .will(returnValue(RT_ERROR_NONE));
-    error = ctx->CopyTilingTabToDev(&prog, device, nullptr, nullptr);
+    error = prog.CopyTilingTabToDev(ctx, device, nullptr, nullptr);
     EXPECT_NE(error, RT_ERROR_NONE);
 
     (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(devId);
     delete stream;
     delete device;
     delete[] memoryPtr;
+    GlobalMockObject::verify();
+}
+
+namespace {
+class TilingCopyTargetDevice final : public RawDevice {
+public:
+    explicit TilingCopyTargetDevice(Driver* const driver) : RawDevice(1U), transferDriver_(driver) {}
+
+    Driver* Driver_() const override { return transferDriver_; }
+
+    bool IsSupportFeature(RtOptionalFeatureType feature) const override
+    {
+        UNUSED(feature);
+        return false;
+    }
+
+private:
+    Driver* const transferDriver_;
+};
+} // namespace
+
+TEST_F(ContextTest, CopyTilingTabToDev_WritesOutputsAndPreservesAllocationFlag)
+{
+    Context* const ctx = Runtime::Instance()->CurrentContext();
+    Device* const sourceDevice = ctx->Device_();
+    PlainProgram program;
+    TilingTabl* hostTable = static_cast<TilingTabl*>(malloc(sizeof(TilingTabl)));
+    ASSERT_NE(hostTable, nullptr);
+    uint32_t kernelCount = 1U;
+    ut::MemoryTransferTestDriver driver;
+    TilingCopyTargetDevice targetDevice(&driver);
+    void* output = nullptr;
+    uint32_t outputCount = 0U;
+
+    EXPECT_NE(sourceDevice->Id_(), targetDevice.Id_());
+    MOCKER_CPP_VIRTUAL(sourceDevice, &Device::IsSupportFeature)
+        .stubs()
+        .with(eq(RtOptionalFeatureType::RT_FEATURE_KERNEL_TILING_TABLE_PHY_CONTIGUOUS))
+        .will(returnValue(true));
+    MOCKER_CPP(&Context::GetModule)
+        .expects(once())
+        .with(eq(static_cast<Program*>(&program)))
+        .will(returnValue(static_cast<Module*>(nullptr)));
+    MOCKER_CPP_VIRTUAL(Runtime::Instance(), static_cast<Context* (Runtime::*)() const>(&Runtime::CurrentContext))
+        .expects(never());
+    MOCKER_CPP(&Program::BuildTilingTbl)
+        .expects(once())
+        .with(outBoundP(&hostTable), outBoundP(&kernelCount))
+        .will(returnValue(RT_ERROR_NONE));
+    EXPECT_EQ(program.CopyTilingTabToDev(ctx, &targetDevice, &output, &outputCount), RT_ERROR_NONE);
+    EXPECT_EQ(output, driver.storage);
+    EXPECT_EQ(outputCount, kernelCount);
+    EXPECT_TRUE(driver.phyContinuous);
+    EXPECT_EQ(driver.allocationCalls, 1U);
+    EXPECT_EQ(driver.allocationDeviceId, targetDevice.Id_());
+    EXPECT_EQ(driver.allocationSize, sizeof(TilingTabl));
+    EXPECT_EQ(driver.copyCalls, 1U);
+    EXPECT_EQ(driver.copySize, sizeof(TilingTabl));
+    EXPECT_EQ(driver.copyDestMax, sizeof(TilingTabl));
+    EXPECT_EQ(driver.copyKind, RT_MEMCPY_HOST_TO_DEVICE);
+    EXPECT_EQ(driver.freeCalls, 0U);
+    GlobalMockObject::verify();
+}
+
+TEST_F(ContextTest, GetDevArgsAddr_WritesOutputsAndIncrementsOnce)
+{
+    Stream stream(Runtime::Instance()->CurrentContext()->Device_(), 0U);
+    uint32_t args[] = {1U, 2U};
+    rtArgsEx_t info = {};
+    info.args = args;
+    info.argsSize = sizeof(args);
+    void* deviceArgs = nullptr;
+    void* handle = args;
+    const uint32_t before = stream.fftsMemAllocCnt;
+    MOCKER(CheckLogLevel).stubs().will(returnValue(1));
+
+    EXPECT_EQ(stream.GetDevArgsAddr(&info, &deviceArgs, &handle, 7U), RT_ERROR_NONE);
+    EXPECT_EQ(deviceArgs, args);
+    EXPECT_EQ(handle, nullptr);
+    EXPECT_EQ(stream.fftsMemAllocCnt, before + 1U);
+    GlobalMockObject::verify();
+}
+
+TEST_F(ContextTest, CopyTilingTabToDev_FailuresPreserveOutputsAndReleaseAllocation)
+{
+    Context* const ctx = Runtime::Instance()->CurrentContext();
+    Device* const device = ctx->Device_();
+    for (uint32_t scenario = 0U; scenario < 3U; ++scenario) {
+        PlainProgram program;
+        ut::MemoryTransferTestDriver driver;
+        driver.allocationResult = scenario < 2U ? RT_ERROR_MEMORY_ALLOCATION : RT_ERROR_NONE;
+        driver.allocateOnFailure = scenario == 1U;
+        driver.copyResult = RT_ERROR_INVALID_VALUE;
+        TilingTabl* hostTable = static_cast<TilingTabl*>(malloc(sizeof(TilingTabl)));
+        ASSERT_NE(hostTable, nullptr);
+        uint32_t kernelCount = 1U;
+        void* output = driver.storage + 64U;
+        void* const original = output;
+        uint32_t outputCount = 7U;
+        MOCKER_CPP_VIRTUAL(device, &Device::Driver_).stubs().will(returnValue(static_cast<Driver*>(&driver)));
+        MOCKER_CPP_VIRTUAL(device, &Device::IsSupportFeature).stubs().will(returnValue(false));
+        MOCKER_CPP(&Program::BuildTilingTbl)
+            .expects(once())
+            .with(outBoundP(&hostTable), outBoundP(&kernelCount))
+            .will(returnValue(RT_ERROR_NONE));
+        EXPECT_EQ(
+            program.CopyTilingTabToDev(ctx, device, &output, &outputCount),
+            scenario < 2U ? RT_ERROR_MEMORY_ALLOCATION : RT_ERROR_INVALID_VALUE);
+        EXPECT_EQ(output, original);
+        EXPECT_EQ(outputCount, 7U);
+        EXPECT_EQ(driver.allocationCalls, 1U);
+        EXPECT_EQ(driver.copyCalls, scenario == 2U ? 1U : 0U);
+        EXPECT_EQ(driver.freeCalls, scenario == 0U ? 0U : 1U);
+        if (scenario != 0U) {
+            EXPECT_EQ(driver.freedPointer, driver.storage);
+            EXPECT_EQ(driver.freeDeviceId, device->Id_());
+        }
+        GlobalMockObject::verify();
+    }
+}
+
+TEST_F(ContextTest, SetMemcpyDesc_PreservesLayoutAndOnlineFlushOrdering)
+{
+    Device* const device = Runtime::Instance()->CurrentContext()->Device_();
+    uint8_t src[16] = {};
+    uint8_t dst[16] = {};
+    for (const bool online : {false, true}) {
+        for (uint32_t scenario = 0U; scenario < 3U; ++scenario) {
+            ut::MemoryTransferTestDriver driver;
+            driver.runMode = online ? RT_RUN_MODE_ONLINE : RT_RUN_MODE_OFFLINE;
+            driver.copyResult = scenario == 1U ? RT_ERROR_INVALID_VALUE : RT_ERROR_NONE;
+            driver.flushResult = scenario == 2U ? RT_ERROR_DRV_ERR : RT_ERROR_NONE;
+            rtMemcpyAddrInfo desc = {};
+            MOCKER_CPP_VIRTUAL(device, &Device::Driver_).stubs().will(returnValue(static_cast<Driver*>(&driver)));
+            const rtError_t expected =
+                scenario == 1U ? RT_ERROR_INVALID_VALUE : (online && scenario == 2U ? RT_ERROR_DRV_ERR : RT_ERROR_NONE);
+            EXPECT_EQ(cce::runtime::SetMemcpyDesc(&desc, src, dst, sizeof(src), device), expected);
+            EXPECT_EQ(driver.copyCalls, 1U);
+            EXPECT_EQ(driver.copySize, sizeof(rtMemcpyAddrInfo));
+            EXPECT_EQ(driver.copyDestMax, MEMCPY_DESC_SIZE);
+            EXPECT_EQ(driver.copyKind, RT_MEMCPY_HOST_TO_DEVICE);
+            EXPECT_EQ(driver.flushCalls, online && scenario != 1U ? 1U : 0U);
+            if (scenario != 1U) {
+                EXPECT_EQ(desc.src, RtPtrToValue(src));
+                EXPECT_EQ(desc.dst, RtPtrToValue(dst));
+                EXPECT_EQ(desc.len, sizeof(src));
+            }
+            GlobalMockObject::verify();
+        }
+    }
+}
+
+TEST_F(ContextTest, GetDevArgsAddr_LoadFailurePreservesOutputsAndCount)
+{
+    Stream stream(Runtime::Instance()->CurrentContext()->Device_(), 0U);
+    uint32_t args = 1U;
+    rtArgsEx_t info = {};
+    info.args = &args;
+    info.argsSize = sizeof(args);
+    void* deviceArgs = &args;
+    void* handle = &args;
+    const uint32_t before = stream.fftsMemAllocCnt;
+    MOCKER_CPP(&Stream::LoadArgsInfo<rtArgsEx_t>)
+        .expects(once())
+        .with(eq(static_cast<const rtArgsEx_t*>(&info)), eq(false), mockcpp::any(), eq(LoadPolicy::LP_NO_MIX))
+        .will(returnValue(RT_ERROR_MEMORY_ALLOCATION));
+
+    EXPECT_EQ(stream.GetDevArgsAddr(&info, &deviceArgs, &handle, 7U), RT_ERROR_MEMORY_ALLOCATION);
+    EXPECT_EQ(deviceArgs, &args);
+    EXPECT_EQ(handle, &args);
+    EXPECT_EQ(stream.fftsMemAllocCnt, before);
     GlobalMockObject::verify();
 }
 
@@ -4647,28 +4929,27 @@ TEST_F(ContextTest, CopyTilingTabToDev_ForNewBinaryLoadFlow_Test)
 
     PlainProgram prog;
     prog.SetIsNewBinaryLoadFlow(true);
+    MOCKER_CPP(&Context::GetModule).expects(never());
     TilingTabl* memoryPtr = new TilingTabl[10];
-    Module module(device);
-    MOCKER_CPP(&Context::GetModule).stubs().will(returnValue((Module*)nullptr)).then(returnValue(&module));
-    error = ctx->CopyTilingTabToDev(&prog, device, nullptr, nullptr);
+    error = prog.CopyTilingTabToDev(ctx, device, nullptr, nullptr);
     EXPECT_EQ(error, RT_ERROR_PROGRAM_SIZE);
 
     MOCKER_CPP(&Program::BuildTilingTbl).stubs().will(returnValue(1)).then(returnValue(RT_ERROR_NONE));
-    error = ctx->CopyTilingTabToDev(&prog, device, nullptr, nullptr);
+    error = prog.CopyTilingTabToDev(ctx, device, nullptr, nullptr);
     EXPECT_EQ(error, 1);
 
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::DevMemAlloc)
         .stubs()
         .with(outBoundP((void**)&memoryPtr))
         .will(returnValue(RT_ERROR_FEATURE_NOT_SUPPORT));
-    error = ctx->CopyTilingTabToDev(&prog, device, nullptr, nullptr);
+    error = prog.CopyTilingTabToDev(ctx, device, nullptr, nullptr);
     EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
 
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::DevMemAlloc)
         .stubs()
         .with(outBoundP((void**)&memoryPtr))
         .will(returnValue(RT_ERROR_NONE));
-    error = ctx->CopyTilingTabToDev(&prog, device, nullptr, nullptr);
+    error = prog.CopyTilingTabToDev(ctx, device, nullptr, nullptr);
     EXPECT_NE(error, RT_ERROR_NONE);
 
     (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(devId);
@@ -5056,11 +5337,11 @@ TEST_F(ContextTest, SetMemcpyDesc_test)
     ctx = refObject->GetVal();
     EXPECT_NE(ctx, nullptr);
 
-    error = ctx->SetMemcpyDesc((void*)&desc, srcAddr, dstAddr, count);
+    error = cce::runtime::SetMemcpyDesc((void*)&desc, srcAddr, dstAddr, count, ctx->Device_());
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER_CPP_VIRTUAL(ctx->device_->Driver_(), &Driver::GetRunMode).stubs().will(returnValue(1));
-    error = ctx->SetMemcpyDesc((void*)&desc, srcAddr, dstAddr, count);
+    error = cce::runtime::SetMemcpyDesc((void*)&desc, srcAddr, dstAddr, count, ctx->Device_());
 
     EXPECT_EQ(error, RT_ERROR_NONE);
     (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(devId);

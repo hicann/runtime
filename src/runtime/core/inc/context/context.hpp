@@ -113,8 +113,6 @@ public:
     // Wait event recorded to complete.
     rtError_t Synchronize(int32_t timeout);
 
-    rtError_t GetDevArgsAddr(
-        Stream* const stm, const rtArgsEx_t* const argsInfo, void** const devArgsAddr, void** const argsHandle) const;
     virtual rtError_t StreamCreate(
         const uint32_t prio, const uint32_t flag, Stream** const result, DvppGrp* grp = nullptr,
         const bool isSoftWareSqEnable = false, const bool isAutoSplitEnable = false);
@@ -175,21 +173,12 @@ public:
 
     rtError_t ModelBindQueue(Model* const mdl, const uint32_t queueId, const rtModelQueueFlag_t flag) const;
 
-    rtError_t CopyTilingTabToDev(
-        Program* const programHdl, const Device* const device, void** devCopyMem, uint32_t* TilingTabLen);
-
     rtError_t ModelTaskUpdate(const Stream* desStm, uint32_t desTaskId, Stream* sinkStm, rtMdlTaskUpdateInfo_t* para);
 
     rtError_t StreamClear(const Stream* const stm, rtClearStep_t step) const;
     bool IsStreamAbortSupported();
     rtError_t StreamAbort(Stream* const stm);
 
-    rtError_t GetStackBuffer(
-        const rtBinHandle binHandle, const uint32_t coreType, const uint32_t coreId, const void** stack,
-        uint32_t* stackSize) const;
-    rtError_t GetExceptionRegInfo(
-        const rtExceptionInfo_t* const exceptionInfo, rtExceptionErrRegInfo_t** exceptionErrRegInfo,
-        uint32_t* num) const;
     Stream* GetCtrlSQStream() const;
 
     void SetDefaultStream(Stream* stm) { defaultStream_ = stm; }
@@ -307,8 +296,6 @@ public:
 
     bool IsINFMode() const { return infMode_; }
 
-    rtError_t GetNotifyAddress(Notify* const notify, uint64_t& addr, Stream* const stm);
-
     void* CtxGetOverflowAddr() const { return overflowAddr_; }
     uint64_t CtxGetOverflowAddrOffset() const { return overflowAddrOffset_; }
 
@@ -319,7 +306,6 @@ public:
     const std::list<Stream*> StreamList_() const { return streams_; }
 
     rtError_t SyncStreamsWithTimeout(const std::list<Stream*>& streams, int32_t timeout, const mmTimespec start) const;
-    rtError_t CheckMemAlign(const void* const addr, const rtDataType_t type) const;
     bool IsStreamInContext(Stream* const stm);
     rtError_t ResourceReset(void);
 
@@ -351,9 +337,6 @@ public:
     const std::list<Model*>& GetModelList() const { return models_; }
 
     SpinLock& GetModelLock() { return modelLock_; }
-    rtError_t SetMemcpyDesc(
-        rtMemcpyDesc_t desc, const void* const srcAddr, const void* const dstAddr, const size_t count);
-
     void SetContextForceReset(const bool isForceReset) { isForceReset_ = isForceReset; }
 
     bool IsContextForceReset() const { return isForceReset_; }

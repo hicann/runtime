@@ -33,6 +33,7 @@
 #include "device_sq_cq_pool.hpp"
 #include "sq_addr_memory_pool.hpp"
 #include "../../common/rt_utest_context_reset_helper.hpp"
+#include "../../common/rt_utest_memory_transfer_driver.hpp"
 using namespace testing;
 using namespace cce::runtime;
 
@@ -80,20 +81,20 @@ TEST_F(ContextTestDavid, CopyTilingTabToDevForDavid_ForNewBinaryLoadFlow_Test)
 
     PlainProgram prog;
     prog.SetIsNewBinaryLoadFlow(true);
+    MOCKER_CPP(&Context::GetModule).expects(never());
     TilingTabl* memoryPtr = new TilingTabl[10];
     uint32_t tilingTabLen = 0U;
-    Module module(device);
     void* devMem = nullptr;
 
     MOCKER_CPP(&Program::DavidBuildTilingTblForNewFlow).stubs().will(returnValue(1)).then(returnValue(RT_ERROR_NONE));
-    error = ctx->CopyTilingTabToDev((Program*)&prog, device, &devMem, &tilingTabLen);
+    error = prog.CopyTilingTabToDev(ctx, device, &devMem, &tilingTabLen);
     EXPECT_EQ(error, 1);
 
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::DevMemAlloc)
         .stubs()
         .with(outBoundP((void**)&memoryPtr))
         .will(returnValue(RT_ERROR_FEATURE_NOT_SUPPORT));
-    error = ctx->CopyTilingTabToDev((Program*)&prog, device, &devMem, &tilingTabLen);
+    error = prog.CopyTilingTabToDev(ctx, device, &devMem, &tilingTabLen);
     EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
 
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::DevMemAlloc)
@@ -101,14 +102,14 @@ TEST_F(ContextTestDavid, CopyTilingTabToDevForDavid_ForNewBinaryLoadFlow_Test)
         .with(outBoundP((void**)&memoryPtr))
         .will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::MemCopySync).stubs().then(returnValue(RT_ERROR_FEATURE_NOT_SUPPORT));
-    error = ctx->CopyTilingTabToDev((Program*)&prog, device, &devMem, &tilingTabLen);
+    error = prog.CopyTilingTabToDev(ctx, device, &devMem, &tilingTabLen);
     EXPECT_NE(error, RT_ERROR_NONE);
 
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::DevMemAlloc)
         .stubs()
         .with(outBoundP((void**)&memoryPtr))
         .will(returnValue(RT_ERROR_FEATURE_NOT_SUPPORT));
-    error = ctx->CopyTilingTabToDev((Program*)&prog, device, &devMem, &tilingTabLen);
+    error = prog.CopyTilingTabToDev(ctx, device, &devMem, &tilingTabLen);
     EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
 
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::DevMemAlloc)
@@ -116,7 +117,7 @@ TEST_F(ContextTestDavid, CopyTilingTabToDevForDavid_ForNewBinaryLoadFlow_Test)
         .with(outBoundP((void**)memoryPtr))
         .will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::MemCopySync).stubs().then(returnValue(RT_ERROR_NONE));
-    error = ctx->CopyTilingTabToDev((Program*)&prog, device, &devMem, &tilingTabLen);
+    error = prog.CopyTilingTabToDev(ctx, device, &devMem, &tilingTabLen);
     EXPECT_NE(error, RT_ERROR_NONE);
     (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(devId);
     delete stream;
@@ -146,19 +147,19 @@ TEST_F(ContextTestDavid, CopyTilingTabToDevForDavid_test)
     PlainProgram prog;
     TilingTabl* memoryPtr = new TilingTabl[10];
     Module module(device);
-    MOCKER_CPP(&Context::GetModule).stubs().will(returnValue((Module*)nullptr)).then(returnValue(&module));
-    error = ctx->CopyTilingTabToDev((Program*)&prog, device, nullptr, nullptr);
+    MOCKER_CPP(&Context::GetModule).stubs().will(returnValue(static_cast<Module*>(nullptr))).then(returnValue(&module));
+    error = prog.CopyTilingTabToDev(ctx, device, nullptr, nullptr);
     EXPECT_EQ(error, RT_ERROR_MODULE_NULL);
 
     MOCKER_CPP(&Program::BuildTilingTblForDavid).stubs().will(returnValue(1)).then(returnValue(RT_ERROR_NONE));
-    error = ctx->CopyTilingTabToDev((Program*)&prog, device, nullptr, nullptr);
+    error = prog.CopyTilingTabToDev(ctx, device, nullptr, nullptr);
     EXPECT_EQ(error, 1);
 
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::DevMemAlloc)
         .stubs()
         .with(outBoundP((void**)&memoryPtr))
         .will(returnValue(RT_ERROR_FEATURE_NOT_SUPPORT));
-    error = ctx->CopyTilingTabToDev((Program*)&prog, device, nullptr, nullptr);
+    error = prog.CopyTilingTabToDev(ctx, device, nullptr, nullptr);
     EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
 
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::DevMemAlloc)
@@ -166,14 +167,14 @@ TEST_F(ContextTestDavid, CopyTilingTabToDevForDavid_test)
         .with(outBoundP((void**)&memoryPtr))
         .will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::MemCopySync).stubs().then(returnValue(RT_ERROR_FEATURE_NOT_SUPPORT));
-    error = ctx->CopyTilingTabToDev((Program*)&prog, device, nullptr, nullptr);
+    error = prog.CopyTilingTabToDev(ctx, device, nullptr, nullptr);
     EXPECT_NE(error, RT_ERROR_NONE);
 
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::DevMemAlloc)
         .stubs()
         .with(outBoundP((void**)&memoryPtr))
         .will(returnValue(RT_ERROR_FEATURE_NOT_SUPPORT));
-    error = ctx->CopyTilingTabToDev((Program*)&prog, device, nullptr, nullptr);
+    error = prog.CopyTilingTabToDev(ctx, device, nullptr, nullptr);
     EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
 
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::DevMemAlloc)
@@ -181,11 +182,85 @@ TEST_F(ContextTestDavid, CopyTilingTabToDevForDavid_test)
         .with(outBoundP((void**)memoryPtr))
         .will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::MemCopySync).stubs().then(returnValue(RT_ERROR_NONE));
-    error = ctx->CopyTilingTabToDev((Program*)&prog, device, nullptr, nullptr);
+    error = prog.CopyTilingTabToDev(ctx, device, nullptr, nullptr);
     EXPECT_NE(error, RT_ERROR_NONE);
     (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(devId);
     delete stream;
     delete device;
     delete[] memoryPtr;
     GlobalMockObject::verify();
+}
+
+TEST_F(ContextTestDavid, CopyTilingTabToDev_WritesOutputsWithDavidLayout)
+{
+    Context* const ctx = Runtime::Instance()->CurrentContext();
+    Device* const device = ctx->Device_();
+    PlainProgram program;
+    program.SetIsNewBinaryLoadFlow(true);
+    MOCKER_CPP(&Context::GetModule).expects(never());
+    TilingTablForDavid* hostTable = static_cast<TilingTablForDavid*>(malloc(sizeof(TilingTablForDavid)));
+    ASSERT_NE(hostTable, nullptr);
+    uint32_t kernelCount = 1U;
+    ut::MemoryTransferTestDriver driver;
+    void* output = nullptr;
+    uint32_t outputCount = 0U;
+
+    MOCKER_CPP(&Program::DavidBuildTilingTblForNewFlow)
+        .expects(once())
+        .with(outBoundP(&hostTable), outBoundP(&kernelCount))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(device, &Device::Driver_).stubs().will(returnValue(static_cast<Driver*>(&driver)));
+
+    EXPECT_EQ(program.CopyTilingTabToDev(ctx, device, &output, &outputCount), RT_ERROR_NONE);
+    EXPECT_EQ(output, driver.storage);
+    EXPECT_EQ(outputCount, kernelCount);
+    EXPECT_FALSE(driver.phyContinuous);
+    EXPECT_EQ(driver.allocationCalls, 1U);
+    EXPECT_EQ(driver.allocationDeviceId, device->Id_());
+    EXPECT_EQ(driver.allocationSize, sizeof(TilingTablForDavid));
+    EXPECT_EQ(driver.copyCalls, 1U);
+    EXPECT_EQ(driver.copySize, sizeof(TilingTablForDavid));
+    EXPECT_EQ(driver.copyDestMax, sizeof(TilingTablForDavid));
+    EXPECT_EQ(driver.copyKind, RT_MEMCPY_HOST_TO_DEVICE);
+    EXPECT_EQ(driver.freeCalls, 0U);
+    GlobalMockObject::verify();
+}
+
+TEST_F(ContextTestDavid, CopyTilingTabToDev_FailuresPreserveOutputsAndReleaseAllocation)
+{
+    Context* const ctx = Runtime::Instance()->CurrentContext();
+    Device* const device = ctx->Device_();
+    for (uint32_t scenario = 0U; scenario < 3U; ++scenario) {
+        PlainProgram program;
+        program.SetIsNewBinaryLoadFlow(true);
+        MOCKER_CPP(&Context::GetModule).expects(never());
+        ut::MemoryTransferTestDriver driver;
+        driver.allocationResult = scenario < 2U ? RT_ERROR_MEMORY_ALLOCATION : RT_ERROR_NONE;
+        driver.allocateOnFailure = scenario == 1U;
+        driver.copyResult = RT_ERROR_INVALID_VALUE;
+        TilingTablForDavid* hostTable = static_cast<TilingTablForDavid*>(malloc(sizeof(TilingTablForDavid)));
+        ASSERT_NE(hostTable, nullptr);
+        uint32_t kernelCount = 1U;
+        void* output = driver.storage + 64U;
+        void* const original = output;
+        uint32_t outputCount = 7U;
+        MOCKER_CPP_VIRTUAL(device, &Device::Driver_).stubs().will(returnValue(static_cast<Driver*>(&driver)));
+        MOCKER_CPP(&Program::DavidBuildTilingTblForNewFlow)
+            .expects(once())
+            .with(outBoundP(&hostTable), outBoundP(&kernelCount))
+            .will(returnValue(RT_ERROR_NONE));
+        EXPECT_EQ(
+            program.CopyTilingTabToDev(ctx, device, &output, &outputCount),
+            scenario < 2U ? RT_ERROR_MEMORY_ALLOCATION : RT_ERROR_INVALID_VALUE);
+        EXPECT_EQ(output, original);
+        EXPECT_EQ(outputCount, 7U);
+        EXPECT_EQ(driver.allocationCalls, 1U);
+        EXPECT_EQ(driver.copyCalls, scenario == 2U ? 1U : 0U);
+        EXPECT_EQ(driver.freeCalls, scenario == 0U ? 0U : 1U);
+        if (scenario != 0U) {
+            EXPECT_EQ(driver.freedPointer, driver.storage);
+            EXPECT_EQ(driver.freeDeviceId, device->Id_());
+        }
+        GlobalMockObject::verify();
+    }
 }

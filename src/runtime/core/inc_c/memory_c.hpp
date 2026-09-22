@@ -24,6 +24,8 @@ rtError_t ReduceAsyncV2(
     void* const dst, const void* const src, const uint64_t cpySize, const rtRecudeKind_t kind, const rtDataType_t type,
     Stream* const stm, void* const overflowAddr);
 
+rtError_t CheckMemAlign(const void* const addr, const rtDataType_t type);
+
 } // namespace runtime
 } // namespace cce
 

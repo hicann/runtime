@@ -32,6 +32,10 @@ rtError_t MemcopyAsync(
     const rtTaskCfgInfo_t* const cfgInfo = nullptr, const rtD2DAddrCfgInfo_t* const addrCfg = nullptr);
 rtError_t MemSetAsync(
     Stream* const stm, void* const ptr, const uint64_t destMax, const uint32_t fillVal, const uint64_t fillCount);
+rtError_t SetMemcpyDesc(
+    rtMemcpyDesc_t desc, const void* const srcAddr, const void* const dstAddr, const size_t count,
+    const Device* const device);
+
 } // namespace runtime
 } // namespace cce
 

@@ -349,7 +349,6 @@ set(libruntime_v200_v201_common_src_files
     ${RUNTIME_CORE_DIR}/src/utils/osal.cc
     ${RUNTIME_CORE_DIR}/src/engine/hwts/scheduler.cc
     ${RUNTIME_CORE_DIR}/src/dfx/atrace_log.cc
-    ${RUNTIME_CORE_DIR}/src/dfx/coredump_c.cc
     ${RUNTIME_CORE_DIR}/src/dfx/fast_recover.cc
     ${RUNTIME_CORE_DIR}/src/utils/subscribe.cc
     ${RUNTIME_CORE_DIR}/src/profiler/onlineprof.cc

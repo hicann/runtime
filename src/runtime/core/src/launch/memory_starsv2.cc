@@ -59,17 +59,17 @@ rtError_t CheckReduceCapability(Stream* const stm, const rtRecudeKind_t kind, co
     return RT_ERROR_NONE;
 }
 
-rtError_t CheckReduceAlign(Stream* const stm, const void* const src, const void* const dst, const rtDataType_t type)
+rtError_t CheckReduceAlign(const void* const src, const void* const dst, const rtDataType_t type)
 {
     const char* const expectedAlignment = ((type == RT_DATA_TYPE_FP16) || (type == RT_DATA_TYPE_INT16) ||
                                            (type == RT_DATA_TYPE_UINT16) || (type == RT_DATA_TYPE_BFP16)) ?
                                               "a 2-byte-aligned address" :
                                               "a 4-byte-aligned address";
     UNUSED(expectedAlignment);
-    rtError_t error = stm->Context_()->CheckMemAlign(src, type);
+    rtError_t error = CheckMemAlign(src, type);
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         error != RT_ERROR_NONE, error, "Asynchronously performing the Reduce operation", src, "src", expectedAlignment);
-    error = stm->Context_()->CheckMemAlign(dst, type);
+    error = CheckMemAlign(dst, type);
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         error != RT_ERROR_NONE, error, "Asynchronously performing the Reduce operation", dst, "dst", expectedAlignment);
     return RT_ERROR_NONE;
@@ -187,7 +187,7 @@ rtError_t ReduceAsync(
     if (error != RT_ERROR_NONE) {
         return error;
     }
-    error = CheckReduceAlign(stm, src, dst, type);
+    error = CheckReduceAlign(src, dst, type);
     if (error != RT_ERROR_NONE) {
         return error;
     }

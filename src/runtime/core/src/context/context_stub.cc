@@ -40,13 +40,5 @@ rtError_t Context::CreateNotify(Notify** notify, uint32_t flag)
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t Context::GetNotifyAddress(Notify* const notify, uint64_t& addr, Stream* const stm)
-{
-    UNUSED(notify);
-    UNUSED(addr);
-    UNUSED(stm);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
 } // namespace runtime
 } // namespace cce

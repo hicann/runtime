@@ -6105,7 +6105,7 @@ rtError_t ApiImpl::GetDevArgsAddr(Stream* const stm, rtArgsEx_t* const argsInfo,
 {
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    return curCtx->GetDevArgsAddr(stm, argsInfo, devArgsAddr, argsHandle);
+    return stm->GetDevArgsAddr(argsInfo, devArgsAddr, argsHandle, curCtx->Device_()->Id_());
 }
 
 rtError_t ApiImpl::ModelCheckArchVersion(const char_t* omsocVersion)
@@ -6269,7 +6269,9 @@ rtError_t ApiImpl::GetStackBuffer(
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         ((stackType > RT_STACK_TYPE_SIMT)), RT_ERROR_INVALID_VALUE, "Obtaining the stack buffer", stackType,
         "[0, " + std::to_string(RT_STACK_TYPE_SIMT) + "]");
-    return curCtx->GetStackBuffer(binHandle, coreType, coreId, stack, stackSize);
+    return cce::runtime::GetStackBuffer(
+        RtPtrToPtr<const Program*>(binHandle), deviceId, stackType, coreType, coreId, stack, stackSize,
+        curCtx->Device_());
 }
 
 rtError_t ApiImpl::DebugSetDumpMode(const uint64_t mode)
@@ -6299,7 +6301,7 @@ rtError_t ApiImpl::GetExceptionRegInfo(
 {
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    return curCtx->GetExceptionRegInfo(exceptionInfo, exceptionErrRegInfo, num);
+    return cce::runtime::GetExceptionRegInfo(exceptionInfo, exceptionErrRegInfo, num);
 }
 
 rtError_t ApiImpl::GetServerIDBySDID(uint32_t sdid, uint32_t* srvId)

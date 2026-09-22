@@ -212,7 +212,6 @@ set(runtimeut_src_david_series_common_c_list
 
     ${TOP_DIR}/src/runtime/core/src/stream/stream_c.cc
     ${TOP_DIR}/src/runtime/feature/ccu/ccu_stream.cc
-    ${TOP_DIR}/src/runtime/core/src/dfx/coredump_c.cc
     ${TOP_DIR}/src/runtime/core/src/dfx/fast_recover.cc
     ${TOP_DIR}/src/runtime/core/src/device/device_debug_common.cc
     ${TOP_DIR}/src/runtime/core/src/device/device_debug_starsv2.cc
@@ -687,6 +686,7 @@ set(runtimeut_src_list
     ${TOP_DIR}/src/runtime/core/src/launch/label_stars.cc
     ${TOP_DIR}/src/runtime/core/src/launch/memory_common.cc
     ${TOP_DIR}/src/runtime/core/src/launch/memcpy_stars.cc
+    ${TOP_DIR}/src/runtime/core/src/launch/memcpy_desc_stars.cc
     ${TOP_DIR}/src/runtime/core/src/launch/memory_stars.cc
     ${TOP_DIR}/src/runtime/core/src/launch/task_launch_common.cc
     ${TOP_DIR}/src/runtime/core/src/launch/rdma_common.cc

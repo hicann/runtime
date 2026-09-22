@@ -9,6 +9,8 @@
  */
 
 #include "device_debug_c.hpp"
+#include "program.hpp"
+#include "inner_kernel.h"
 #include <map>
 #include "context.hpp"
 #include "device.hpp"
@@ -32,6 +34,50 @@ static const std::map<rtDebugMemoryType_t, uint64_t> debugMemSizeMap = {
     {RT_MEM_TYPE_L0A, L0A_L0B_SIZE_V100}, {RT_MEM_TYPE_L0B, L0A_L0B_SIZE_V100}, {RT_MEM_TYPE_L0C, L0C_UB_SIZE_V100},
     {RT_MEM_TYPE_L1, L1_SIZE_V100},       {RT_MEM_TYPE_UB, L0C_UB_SIZE_V100},
 };
+
+constexpr uint32_t MAX_WARP_NUM_PER_VECTOR = 64U;
+
+static rtError_t CheckCoreParam(
+    const Device* device, const uint32_t stackType, const uint32_t coreType, const uint32_t coreId)
+{
+    if (coreType == RT_CORE_TYPE_AIC && stackType == RT_STACK_TYPE_SIMT) {
+        RT_LOG(RT_LOG_WARNING, "stackType=%u and coreType=%u is not supported.", stackType, coreType);
+        return RT_ERROR_FEATURE_NOT_SUPPORT;
+    }
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        ((stackType > RT_STACK_TYPE_SIMT)), RT_ERROR_INVALID_VALUE,
+        "Verifying the validity of the compute core type and stack type", stackType,
+        "[0, " + std::to_string(RT_STACK_TYPE_SIMT) + "]");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        ((coreType > RT_CORE_TYPE_AIV)), RT_ERROR_INVALID_VALUE,
+        "Verifying the validity of the compute core type and stack type", coreType,
+        "[0, " + std::to_string(RT_CORE_TYPE_AIV) + "]");
+
+    const uint32_t aicNum = device->GetDevProperties().aicNum;
+    const uint32_t aivNum = device->GetDevProperties().aivNum;
+    if (coreType == RT_CORE_TYPE_AIC) {
+        COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+            (coreId >= aicNum), RT_ERROR_INVALID_VALUE,
+            "Verifying the validity of the compute core type and stack type", coreId,
+            "[0, " + std::to_string(aicNum) + ")");
+    } else {
+        COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+            (coreId >= aivNum), RT_ERROR_INVALID_VALUE,
+            "Verifying the validity of the compute core type and stack type", coreId,
+            "[0, " + std::to_string(aivNum) + ")");
+    }
+    return RT_ERROR_NONE;
+}
+
+static uint32_t GetDieOffset(const Device* device, const uint32_t coreType, const uint32_t coreId)
+{
+    const uint32_t aicNumPerDie = device->GetDevProperties().aicNumPerDie;
+    const uint32_t aivNumPerDie = device->GetDevProperties().aivNumPerDie;
+    const uint32_t dieId = (coreType == 0U) ? (coreId / aicNumPerDie) : (coreId / aivNumPerDie);
+    const uint32_t coreIdOnDie = (coreType == 0U) ? (coreId % aicNumPerDie) : (coreId % aivNumPerDie);
+    const uint32_t offsetBase = coreIdOnDie + (aicNumPerDie + aivNumPerDie) * dieId;
+    return (coreType == 0U) ? offsetBase : offsetBase + aicNumPerDie;
+}
 
 static rtError_t CheckMemoryParam(const rtDebugMemoryParam_t* const param)
 {
@@ -175,6 +221,40 @@ rtError_t DebugReadAICore(const rtDebugMemoryParam_t* const param, const Device*
     ret = ConstructReadAICoreSendInfo(curCtx, param, devMem);
     COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "ReadAICore fail, ret=%u", ret);
     return DebugReleaseDevMem(curCtx);
+}
+
+rtError_t GetStackBuffer(
+    const Program* const programHdl, uint32_t deviceId, const uint32_t stackType, const uint32_t coreType,
+    const uint32_t coreId, const void** stack, uint32_t* stackSize, const Device* const device)
+{
+    UNUSED(device);
+    UNUSED(deviceId);
+    const Runtime* const rt = Runtime::Instance();
+    Context* curCtx = rt->CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    const Device* currentDevice = curCtx->Device_();
+    NULL_PTR_RETURN(currentDevice, RT_ERROR_DEVICE_NULL);
+    const auto ret = CheckCoreParam(currentDevice, stackType, coreType, coreId);
+    COND_RETURN_WITH_NOLOG((ret != RT_ERROR_NONE), ret);
+    if (stackType == RT_STACK_TYPE_SIMT) {
+        const uint32_t simtWarpStkSize = currentDevice->GetSimtWarpStkSize();
+        const uint32_t simtDvgWarpStkSize = currentDevice->GetSimtDvgWarpStkSize();
+        *stackSize = MAX_WARP_NUM_PER_VECTOR * (simtWarpStkSize + simtDvgWarpStkSize);
+        const void* stackPhyBase = currentDevice->GetSimtStackPhyBase();
+        *stack = ValueToPtr(PtrToValue(stackPhyBase) + (*stackSize) * coreId);
+    } else {
+        *stackSize = KERNEL_STACK_SIZE_32K;
+        const void* stackPhyBase = currentDevice->GetStackPhyBase32k();
+        const uint32_t maxMinStackSize = programHdl->GetMaxMinStackSize();
+        const uint32_t deviceCustomerStackSize = currentDevice->GetDeviceAllocStackSize();
+        if ((deviceCustomerStackSize != 0U) && (maxMinStackSize > KERNEL_STACK_SIZE_32K)) {
+            *stackSize = deviceCustomerStackSize;
+            stackPhyBase = currentDevice->GetCustomerStackPhyBase();
+        }
+        *stack = ValueToPtr(PtrToValue(stackPhyBase) + (*stackSize) * GetDieOffset(currentDevice, coreType, coreId));
+    }
+    RT_LOG(RT_LOG_DEBUG, "coreType=%u, coreId=%u, stackSize=%u", coreType, coreId, *stackSize);
+    return RT_ERROR_NONE;
 }
 
 } // namespace runtime

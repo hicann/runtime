@@ -71,8 +71,6 @@ namespace cce {
 namespace runtime {
 namespace {
 constexpr uint64_t STREAM_ABORT_TIMEOUT = (60UL * RT_MS_PER_S); // 60s
-constexpr uint64_t REDUCE_ALIGN_SIZE = 0x4ULL;
-constexpr uint64_t REDUCE16_ALIGN_SIZE = 0x2ULL;
 constexpr uint64_t AICPU_CPU_SO_KERNEL_TIMEOUT_US = 1091ULL * 1000ULL * 1000ULL;
 std::atomic<const CaptureOps*> g_captureOps{nullptr};
 
@@ -118,35 +116,6 @@ const char_t* ContextStateToString(const ContextState state)
     }
 }
 
-rtError_t CheckCoreParam(const uint32_t coreType, const uint32_t coreId)
-{
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
-        (coreType != 0 && coreType != 1), RT_ERROR_INVALID_VALUE,
-        "Verifying the validity of the compute core type and stack type", coreType,
-        "[0, " + std::to_string(RT_CORE_TYPE_AIV) + "]");
-    if (coreType == 0) {
-        COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
-            (coreId >= RT_AICORE_NUM_25), RT_ERROR_INVALID_VALUE,
-            "Verifying the validity of the compute core type and stack type", coreId,
-            "[0, " + std::to_string(RT_AICORE_NUM_25) + ")");
-    } else {
-        COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
-            (coreId >= RT_AIVECTOR_NUM_50), RT_ERROR_INVALID_VALUE,
-            "Verifying the validity of the compute core type and stack type", coreId,
-            "[0, " + std::to_string(RT_AIVECTOR_NUM_50) + ")");
-    }
-    return RT_ERROR_NONE;
-}
-
-rtError_t CheckMemAddrAlign4B(const uint64_t memAddr)
-{
-    return ((memAddr % REDUCE_ALIGN_SIZE) != 0ULL) ? RT_ERROR_MEMORY_ADDRESS_UNALIGNED : RT_ERROR_NONE;
-}
-
-rtError_t CheckMemAddrAlign2B(const uint64_t memAddr)
-{
-    return ((memAddr % REDUCE16_ALIGN_SIZE) != 0ULL) ? RT_ERROR_MEMORY_ADDRESS_UNALIGNED : RT_ERROR_NONE;
-}
 } // namespace
 
 void RegisterCaptureOps(const CaptureOps* captureOps) { g_captureOps.store(captureOps, std::memory_order_release); }
@@ -1246,48 +1215,6 @@ rtError_t Context::Synchronize(int32_t timeout)
     return SyncStreamsWithTimeout(syncStreams, timeout, startTime);
 }
 
-rtError_t Context::GetDevArgsAddr(
-    Stream* const stm, const rtArgsEx_t* const argsInfo, void** const devArgsAddr, void** const argsHandle) const
-{
-    StarsArgLoaderResult result = {};
-    const rtError_t error = stm->LoadArgsInfo(argsInfo, false, &result, LoadPolicy::LP_NO_MIX);
-    COND_RETURN_ERROR_MSG_INNER(
-        error != RT_ERROR_NONE, error,
-        "Failed to load args, stream_id=%d,"
-        " retCode=%#x.",
-        stm->Id_(), error);
-
-    *devArgsAddr = result.kerArgs;
-    *argsHandle = result.handle;
-    stm->fftsMemAllocCnt++;
-    RT_LOG(
-        RT_LOG_INFO, "device_id=%u, stream_id=%d, argSize=%u, hasTiling=%u, isNoNeedH2DCopy=%u, hand=%p",
-        device_->Id_(), stm->Id_(), argsInfo->argsSize, argsInfo->hasTiling, argsInfo->isNoNeedH2DCopy, result.handle);
-    if (CheckLogLevel(static_cast<int32_t>(RUNTIME), DLOG_INFO) == 0) {
-        return error;
-    }
-    RT_LOG(
-        RT_LOG_INFO, "device_id=%u, stream_id=%d argSize=%u hand=%p", device_->Id_(), stm->Id_(), argsInfo->argsSize,
-        result.handle);
-    const uint32_t* const cmd = RtPtrToPtr<const uint32_t*, void*>(argsInfo->args);
-    for (size_t i = 0UL; i < (argsInfo->argsSize) / sizeof(uint32_t); i++) {
-        RT_LOG(RT_LOG_INFO, "args[%u]:%08x", i, cmd[i]);
-    }
-    return error;
-}
-
-rtError_t Context::CheckMemAlign(const void* const addr, const rtDataType_t type) const
-{
-    if ((type == RT_DATA_TYPE_FP16) || (type == RT_DATA_TYPE_INT16) || (type == RT_DATA_TYPE_UINT16) ||
-        (type == RT_DATA_TYPE_BFP16)) {
-        return CheckMemAddrAlign2B(RtPtrToValue<const void*>(addr));
-    } else if ((type == RT_DATA_TYPE_FP32) || (type == RT_DATA_TYPE_INT32) || (type == RT_DATA_TYPE_UINT32)) {
-        return CheckMemAddrAlign4B(RtPtrToValue<const void*>(addr));
-    } else {
-        return RT_ERROR_NONE;
-    }
-}
-
 rtError_t Context::StreamCreate(
     const uint32_t prio, const uint32_t flag, Stream** const result, DvppGrp* grp, const bool isSoftWareSqEnable,
     const bool isAutoSplitEnable)
@@ -2061,96 +1988,6 @@ rtError_t Context::LabelSwitchListCreate(Label** const labels, const size_t num,
     return RT_ERROR_NONE;
 }
 
-rtError_t Context::CopyTilingTabToDev(
-    Program* const programHdl, const Device* const device, void** devCopyMem, uint32_t* TilingTabLen)
-{
-    rtError_t ret;
-    rtError_t error;
-    Module* mdl = !programHdl->IsNewBinaryLoadFlow() ? GetModule(programHdl) : nullptr;
-    uint32_t kernelLen;
-    void* devMem = nullptr;
-    uint32_t copyLen = 0U;
-    Driver* const curDrv = device->Driver_();
-    if (device->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_KERNEL_TILING_TAB_COPY_V2)) {
-        /* 构建拷贝的内容 */
-        TilingTablForDavid* tilingTab = nullptr;
-        ret = programHdl->BuildTilingTblForDavid(mdl, &tilingTab, &kernelLen);
-        if (ret != RT_ERROR_NONE) {
-            RT_LOG(RT_LOG_ERROR, "BuildTilingTbl fail");
-            return ret;
-        }
-        copyLen = static_cast<uint32_t>(kernelLen * sizeof(TilingTablForDavid));
-        /* 拷贝内容到device */
-        error = curDrv->DevMemAlloc(
-            &devMem, static_cast<uint64_t>(copyLen), RT_MEMORY_TS, device->Id_(), MODULEID_RUNTIME, true, false, false);
-        if (error != RT_ERROR_NONE) {
-            RT_LOG(RT_LOG_ERROR, "DevMemAlloc fail copyLen=%u.", copyLen);
-            if (devMem != nullptr) {
-                (void)curDrv->DevMemFree(devMem, device->Id_());
-            }
-            programHdl->DestroyTilingTblForDavid(tilingTab);
-            return error;
-        }
-        error = curDrv->MemCopySync(
-            devMem, static_cast<uint64_t>(copyLen), tilingTab, static_cast<uint64_t>(copyLen),
-            RT_MEMCPY_HOST_TO_DEVICE);
-        if (error != RT_ERROR_NONE) {
-            RT_LOG(RT_LOG_ERROR, "MemCopySync failed.");
-            if (devMem != nullptr) {
-                (void)curDrv->DevMemFree(devMem, device->Id_());
-            }
-            programHdl->DestroyTilingTblForDavid(tilingTab);
-            return error;
-        }
-        RT_LOG(
-            RT_LOG_INFO, "Load on device devMem=%p,copyLen=%u,deviceId=%u,kernelLen=%u", devMem, copyLen, device->Id_(),
-            kernelLen);
-        programHdl->DestroyTilingTblForDavid(tilingTab);
-    } else {
-        /* 构建拷贝的内容 */
-        TilingTabl* tilingTab = nullptr;
-        const bool starsTillingFlag =
-            (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_KERNEL_TILING_TABLE_PHY_CONTIGUOUS)) ? true :
-                                                                                                                false;
-        ret = programHdl->BuildTilingTbl(&tilingTab, &kernelLen);
-        if (ret != RT_ERROR_NONE) {
-            RT_LOG(RT_LOG_ERROR, "BuildTilingTbl fail");
-            return ret;
-        }
-        copyLen = static_cast<uint32_t>(kernelLen * sizeof(TilingTabl));
-        /* 拷贝内容到device */
-        error = curDrv->DevMemAlloc(
-            &devMem, static_cast<uint64_t>(copyLen), RT_MEMORY_TS, device->Id_(), MODULEID_RUNTIME, true, false,
-            starsTillingFlag);
-        if (error != RT_ERROR_NONE) {
-            RT_LOG(RT_LOG_ERROR, "DevMemAlloc fail copyLen=%u.", copyLen);
-            if (devMem != nullptr) {
-                (void)curDrv->DevMemFree(devMem, device->Id_());
-            }
-            programHdl->DestroyTilingTbl(tilingTab);
-            return error;
-        }
-        error = curDrv->MemCopySync(
-            devMem, static_cast<uint64_t>(copyLen), tilingTab, static_cast<uint64_t>(copyLen),
-            RT_MEMCPY_HOST_TO_DEVICE);
-        if (error != RT_ERROR_NONE) {
-            RT_LOG(RT_LOG_ERROR, "MemCopySync failed.");
-            if (devMem != nullptr) {
-                (void)curDrv->DevMemFree(devMem, device->Id_());
-            }
-            programHdl->DestroyTilingTbl(tilingTab);
-            return error;
-        }
-        RT_LOG(
-            RT_LOG_INFO, "Load on device devMem=%p,copyLen=%u,deviceId=%u,kernelLen=%u", devMem, copyLen, device->Id_(),
-            kernelLen);
-        programHdl->DestroyTilingTbl(tilingTab);
-    }
-    *devCopyMem = devMem;
-    *TilingTabLen = kernelLen;
-    return RT_ERROR_NONE;
-}
-
 rtError_t Context::ModelTaskUpdate(
     const Stream* desStm, uint32_t desTaskId, Stream* sinkStm, rtMdlTaskUpdateInfo_t* para)
 {
@@ -2163,7 +2000,7 @@ rtError_t Context::ModelTaskUpdate(
         return ret;
     }
 
-    ret = CopyTilingTabToDev(program, sinkStm->Device_(), &devCopyMem, &tilingTabLen);
+    ret = program->CopyTilingTabToDev(this, sinkStm->Device_(), &devCopyMem, &tilingTabLen);
     if (ret != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR, "BuildTilingTbl fail");
         return ret;
@@ -2386,96 +2223,6 @@ rtError_t Context::CheckTaskSend(const TaskInfo* const workTask)
         return RT_ERROR_NONE;
     }
     return status;
-}
-
-rtError_t Context::SetMemcpyDesc(
-    rtMemcpyDesc_t desc, const void* const srcAddr, const void* const dstAddr, const size_t count)
-{
-    rtMemcpyAddrInfo memcpyData;
-    memset_s(&memcpyData, sizeof(rtMemcpyAddrInfo), 0, sizeof(rtMemcpyAddrInfo));
-    memcpyData.len = static_cast<uint32_t>(count);
-    memcpyData.src = RtPtrToValue<const void*>(srcAddr);
-    memcpyData.dst = RtPtrToValue<const void*>(dstAddr);
-
-    constexpr uint64_t dstMax = MEMCPY_DESC_SIZE;
-    rtError_t error = RT_ERROR_NONE;
-    if (device_->Driver_()->GetRunMode() == RT_RUN_MODE_ONLINE) {
-        error = device_->Driver_()->MemCopySync(
-            desc, dstMax, &memcpyData, sizeof(rtMemcpyAddrInfo), RT_MEMCPY_HOST_TO_DEVICE);
-        ERROR_RETURN(error, "Failed to memory copy stream info, device_id=%u, retCode=%#x.", device_->Id_(), error);
-
-        error = device_->Driver_()->DevMemFlushCache(RtPtrToValue(desc), static_cast<size_t>(dstMax));
-        ERROR_RETURN(error, "Failed to flush stream info, device_id=%u, retCode=%#x", device_->Id_(), error);
-    } else {
-        error = device_->Driver_()->MemCopySync(
-            desc, dstMax, &memcpyData, sizeof(rtMemcpyAddrInfo), RT_MEMCPY_HOST_TO_DEVICE);
-        ERROR_RETURN(error, "Failed to memory copy stream info, device_id=%u, retCode=%#x", device_->Id_(), error);
-    }
-
-    RT_LOG(RT_LOG_INFO, "Set memcpyDesc info success, srcAddr=%p, dstAddr=%p, count=%llu", srcAddr, dstAddr, count);
-    return RT_ERROR_NONE;
-}
-
-rtError_t Context::GetStackBuffer(
-    const rtBinHandle binHandle, const uint32_t coreType, const uint32_t coreId, const void** stack,
-    uint32_t* stackSize) const
-{
-    const auto ret = CheckCoreParam(coreType, coreId);
-    ERROR_RETURN(ret, "CheckCoreParam fail, coreType=%u, coreId=%u.", coreType, coreId);
-    RT_LOG(
-        RT_LOG_INFO, "Start to get stack buffer, bin handle %p, coreType %u, coreId %u", binHandle, coreType, coreId);
-
-    Program* const programHdl = static_cast<Program*>(binHandle);
-    *stackSize = programHdl->GetStackSize();
-    const void* stackPhyBase =
-        (*stackSize == KERNEL_STACK_SIZE_32K) ? device_->GetStackPhyBase32k() : device_->GetStackPhyBase16k();
-    const uint32_t maxMinStackSize = programHdl->GetMaxMinStackSize();
-    const uint32_t deviceCustomerStackSize = Runtime::Instance()->GetDeviceCustomerStackSize();
-    if ((deviceCustomerStackSize != 0U) && (maxMinStackSize > 0)) {
-        // -o0的情况下不考虑16KB的栈，因为编译器-o0的情况下能识别最小为32KB的栈
-        if (maxMinStackSize > KERNEL_STACK_SIZE_32K) {
-            *stackSize = deviceCustomerStackSize;
-            stackPhyBase = device_->GetCustomerStackPhyBase();
-        } else {
-            *stackSize = KERNEL_STACK_SIZE_32K;
-            stackPhyBase = device_->GetStackPhyBase32k();
-        }
-    }
-    const uint32_t aicNum = device_->GetDevProperties().aicNumForCoreStack;
-    if (coreType == 0U) {
-        *stack = ValueToPtr(PtrToValue(stackPhyBase) + (*stackSize) * coreId);
-    } else {
-        *stack = ValueToPtr(PtrToValue(stackPhyBase) + (*stackSize) * (aicNum + coreId));
-    }
-    RT_LOG(RT_LOG_INFO, "Get stack addr %p, stackSize %u", *stack, *stackSize);
-    return RT_ERROR_NONE;
-}
-
-rtError_t Context::GetExceptionRegInfo(
-    const rtExceptionInfo_t* const exceptionInfo, rtExceptionErrRegInfo_t** exceptionErrRegInfo, uint32_t* num) const
-{
-    uint32_t realDeviceId;
-    rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(exceptionInfo->deviceid, &realDeviceId);
-    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "change user deviceId[%u] failed", exceptionInfo->deviceid);
-    Device* dev = Runtime::Instance()->GetDevice(realDeviceId, 0, false);
-    NULL_PTR_RETURN(dev, RT_ERROR_DEVICE_NULL);
-    auto& exceptionRegMap = dev->GetExceptionRegMap();
-    const uint32_t taskId = exceptionInfo->taskid;
-    const uint32_t streamId = exceptionInfo->streamid;
-    std::pair<uint32_t, uint32_t> key = {streamId, taskId};
-
-    std::lock_guard<std::mutex> lock(dev->GetExceptionRegMutex());
-    auto it = exceptionRegMap.find(key);
-    if (it != exceptionRegMap.end() && !it->second.empty()) {
-        RT_LOG(RT_LOG_INFO, "find register info in map for <stream_id=%u, task_id=%u>", streamId, taskId);
-        *num = static_cast<uint32_t>(it->second.size());
-        *exceptionErrRegInfo = &(it->second[0]);
-    } else {
-        *num = 0U;
-        *exceptionErrRegInfo = nullptr;
-    }
-
-    return RT_ERROR_NONE;
 }
 
 rtError_t Context::SetStreamTag(Stream* const stm, const uint32_t geOpTag) const

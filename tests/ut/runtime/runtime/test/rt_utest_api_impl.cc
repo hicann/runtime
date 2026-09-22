@@ -14,6 +14,9 @@
 #include "runtime/rt.h"
 #include "securec.h"
 #include "context.hpp"
+#include "notify.hpp"
+#include "memcpy_c.hpp"
+#include "common/rt_utest_memory_transfer_driver.hpp"
 #include "raw_device.hpp"
 #include "event.hpp"
 #include "runtime.hpp"
@@ -958,9 +961,10 @@ TEST_F(ApiImplTest, ErrorLogBranches)
     constexpr rtError_t errorCode = RT_ERROR_INVALID_VALUE;
     ApiImpl apiImpl;
 
-    MOCKER_CPP(&Context::GetNotifyAddress).stubs().will(returnValue(errorCode));
+    MOCKER_CPP(&Notify::GetNotifyAddress).stubs().will(returnValue(errorCode));
     uint64_t notifyAddress = 0U;
-    EXPECT_EQ(apiImpl.GetNotifyAddress(nullptr, &notifyAddress), errorCode);
+    Notify notify(0U, 0U);
+    EXPECT_EQ(apiImpl.GetNotifyAddress(&notify, &notifyAddress), errorCode);
 
     MOCKER_CPP(&Runtime::ProgramRegister).stubs().will(returnValue(errorCode));
     Program* program = nullptr;
@@ -984,6 +988,53 @@ TEST_F(ApiImplTest, ErrorLogBranches)
     Program* newFlowProgram = new PlainProgram();
     newFlowProgram->SetIsNewBinaryLoadFlow(true);
     (void)apiImpl.BinaryUnLoad(newFlowProgram);
+}
+
+TEST_F(ApiImplTest, GetExceptionRegInfo_DeviceResolutionFailuresPreserveOutputs)
+{
+    ApiImpl impl;
+    rtExceptionInfo_t info = {};
+    rtExceptionErrRegInfo_t original = {};
+    rtExceptionErrRegInfo_t* output = &original;
+    uint32_t count = 7U;
+    MOCKER_CPP_VIRTUAL(Runtime::Instance(), &Runtime::ChgUserDevIdToDeviceId)
+        .stubs()
+        .will(returnValue(RT_ERROR_INVALID_VALUE));
+    EXPECT_EQ(impl.GetExceptionRegInfo(&info, &output, &count), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(output, &original);
+    EXPECT_EQ(count, 7U);
+    GlobalMockObject::verify();
+
+    uint32_t realDeviceId = 1U;
+    ASSERT_EQ(Runtime::Instance()->GetDevice(realDeviceId, 0U, false), nullptr);
+    MOCKER_CPP_VIRTUAL(Runtime::Instance(), &Runtime::ChgUserDevIdToDeviceId)
+        .stubs()
+        .with(eq(info.deviceid), outBoundP(&realDeviceId), mockcpp::any())
+        .will(returnValue(RT_ERROR_NONE));
+    EXPECT_EQ(impl.GetExceptionRegInfo(&info, &output, &count), RT_ERROR_DEVICE_NULL);
+    EXPECT_EQ(output, &original);
+    EXPECT_EQ(count, 7U);
+    GlobalMockObject::verify();
+}
+
+TEST_F(ApiImplTest, SetMemcpyDesc_ForwardsCurrentDevice)
+{
+    ApiImpl impl;
+    Device* const device = Runtime::Instance()->CurrentContext()->Device_();
+    ut::MemoryTransferTestDriver driver;
+    rtMemcpyAddrInfo desc = {};
+    uint8_t src[16] = {};
+    uint8_t dst[16] = {};
+    MOCKER_CPP_VIRTUAL(device, &Device::Driver_).stubs().will(returnValue(static_cast<Driver*>(&driver)));
+    EXPECT_EQ(
+        impl.SetMemcpyDesc(&desc, src, dst, sizeof(src), RT_MEMCPY_KIND_INNER_DEVICE_TO_DEVICE, nullptr),
+        RT_ERROR_NONE);
+    EXPECT_EQ(driver.copyCalls, 1U);
+    EXPECT_EQ(desc.src, RtPtrToValue(src));
+    EXPECT_EQ(desc.dst, RtPtrToValue(dst));
+    EXPECT_EQ(desc.len, sizeof(src));
+    EXPECT_EQ(driver.flushCalls, 0U);
+    GlobalMockObject::verify();
 }
 
 TEST_F(ApiImplTest, KERNEL_CONFIG_DUMP_TEST_2)

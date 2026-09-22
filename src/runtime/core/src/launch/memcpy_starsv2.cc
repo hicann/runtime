@@ -295,5 +295,36 @@ rtError_t DevMemSetAsyncByMemset(
     return RT_ERROR_NONE;
 }
 
+rtError_t SetMemcpyDesc(
+    rtMemcpyDesc_t desc, const void* const srcAddr, const void* const dstAddr, const size_t count,
+    const Device* const device)
+{
+    rtDavidMemcpyAddrInfo memcpyData;
+    (void)memset_s(&memcpyData, sizeof(rtDavidMemcpyAddrInfo), 0, sizeof(rtDavidMemcpyAddrInfo));
+
+    memcpyData.len = static_cast<uint32_t>(count);
+    memcpyData.src = RtPtrToValue<const void*>(srcAddr);
+    memcpyData.dst = RtPtrToValue<const void*>(dstAddr);
+
+    constexpr uint64_t dstMax = MEMCPY_DESC_SIZE_V2; // 64U
+    rtError_t error = RT_ERROR_NONE;
+
+    error = device->Driver_()->MemCopySync(
+        static_cast<rtDavidMemcpyAddrInfo*>(desc), dstMax, &memcpyData, dstMax, RT_MEMCPY_HOST_TO_DEVICE);
+    ERROR_RETURN(
+        error, "Failed to memory copy stream info, device_id=%u, dstMax=%u, retCode=%#x.", device->Id_(), dstMax,
+        static_cast<uint32_t>(error));
+
+    if (device->Driver_()->GetRunMode() == RT_RUN_MODE_ONLINE) {
+        error = device->Driver_()->DevMemFlushCache(RtPtrToPtr<uintptr_t>(desc), static_cast<size_t>(dstMax));
+        ERROR_RETURN(
+            error, "Failed to flush stream info, device_id=%u, retCode=%#x", device->Id_(),
+            static_cast<uint32_t>(error));
+    }
+
+    RT_LOG(RT_LOG_INFO, "Set memcpyDesc info success, srcAddr=%p, dstAddr=%p, count=%llu", srcAddr, dstAddr, count);
+    return RT_ERROR_NONE;
+}
+
 } // namespace runtime
 } // namespace cce

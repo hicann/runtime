@@ -206,6 +206,9 @@ public:
         return RT_ERROR_NONE;
     }
 
+    rtError_t GetDevArgsAddr(
+        const rtArgsEx_t* const argsInfo, void** const devArgsAddr, void** const argsHandle, uint32_t logDeviceId);
+
     virtual void SetAbortStatus(rtError_t status);
 
     virtual rtError_t GetAbortStatus() const;

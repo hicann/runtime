@@ -22,6 +22,7 @@
 #include "context.hpp"
 #include "model_c.hpp"
 #include "task_launch_c.hpp"
+#include "program.hpp"
 #include "profiling_task.h"
 #include "cond_op_stream_task.h"
 #include "reduce_task.h"
@@ -2036,25 +2037,24 @@ TEST_F(CloudV2ContextTest, genmode_notsupport)
     EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
 }
 
-TEST_F(CloudV2ContextTest, ReduceAsync_CheckAlign)
+TEST(MemoryAlignTest, ReduceAsync_CheckAlign)
 {
-    rtError_t error;
-    Context* ctx = NULL;
-    Api* api = Api::Instance();
-    error = api->ContextGetCurrent(&ctx);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    RawDevice* device = (RawDevice*)ctx->Device_();
-    device->chipType_ = static_cast<rtChipType_t>(PLAT_GET_CHIP(static_cast<uint64_t>(0x300)));
-    uint32_t* addr = (uint32_t*)0x2;
-    error = ctx->CheckMemAlign(addr, RT_DATA_TYPE_FP16);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    error = ctx->CheckMemAlign(addr, RT_DATA_TYPE_FP32);
-    EXPECT_NE(error, RT_ERROR_NONE);
-    error = ctx->CheckMemAlign(addr, RT_DATA_TYPE_INT32);
-    EXPECT_NE(error, RT_ERROR_NONE);
-    error = ctx->CheckMemAlign(addr, RT_DATA_TYPE_END);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    device->chipType_ = static_cast<rtChipType_t>(PLAT_GET_CHIP(static_cast<uint64_t>(0x0)));
+    alignas(4) uint8_t buffer[8] = {};
+    for (const auto type : {RT_DATA_TYPE_FP16, RT_DATA_TYPE_INT16, RT_DATA_TYPE_UINT16, RT_DATA_TYPE_BFP16}) {
+        EXPECT_EQ(cce::runtime::CheckMemAlign(buffer, type), RT_ERROR_NONE);
+        EXPECT_EQ(cce::runtime::CheckMemAlign(buffer + 2, type), RT_ERROR_NONE);
+        EXPECT_EQ(cce::runtime::CheckMemAlign(buffer + 1, type), RT_ERROR_MEMORY_ADDRESS_UNALIGNED);
+    }
+    for (const auto type : {RT_DATA_TYPE_FP32, RT_DATA_TYPE_INT32, RT_DATA_TYPE_UINT32}) {
+        EXPECT_EQ(cce::runtime::CheckMemAlign(buffer, type), RT_ERROR_NONE);
+        EXPECT_EQ(cce::runtime::CheckMemAlign(buffer + 1, type), RT_ERROR_MEMORY_ADDRESS_UNALIGNED);
+        EXPECT_EQ(cce::runtime::CheckMemAlign(buffer + 2, type), RT_ERROR_MEMORY_ADDRESS_UNALIGNED);
+    }
+    for (const auto type : {RT_DATA_TYPE_INT8, RT_DATA_TYPE_UINT8, RT_DATA_TYPE_END}) {
+        EXPECT_EQ(cce::runtime::CheckMemAlign(buffer + 1, type), RT_ERROR_NONE);
+    }
+    EXPECT_EQ(cce::runtime::CheckMemAlign(nullptr, RT_DATA_TYPE_FP16), RT_ERROR_NONE);
+    EXPECT_EQ(cce::runtime::CheckMemAlign(nullptr, RT_DATA_TYPE_FP32), RT_ERROR_NONE);
 }
 
 rtError_t MemCopySyncStub_(
@@ -3241,7 +3241,11 @@ TEST_F(CloudV2ContextTest, ModelTaskUpdate_test)
     para.hdl = rt_ut::InitAndExportHandle<rtBinHandle>(programBase);
     streamA->bindFlag_.Set(true);
     streamB->bindFlag_.Set(true);
-    MOCKER_CPP(&Context::CopyTilingTabToDev).stubs().will(returnValue(1)).then(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&Program::CopyTilingTabToDev)
+        .stubs()
+        .with(eq(ctx), eq(static_cast<const Device*>(device)), mockcpp::any(), mockcpp::any())
+        .will(returnValue(1))
+        .then(returnValue(RT_ERROR_NONE));
     MOCKER_CPP(&Stream::ModelTaskUpdate).stubs().will(returnValue(1));
 
     error = ctx->ModelTaskUpdate(streamA, 0, streamB, &para);
@@ -3664,11 +3668,11 @@ TEST_F(CloudV2ContextTest, SetMemcpyDesc_test)
     ctx = refObject->GetVal();
     EXPECT_NE(ctx, nullptr);
 
-    error = ctx->SetMemcpyDesc((void*)&desc, srcAddr, dstAddr, count);
+    error = cce::runtime::SetMemcpyDesc((void*)&desc, srcAddr, dstAddr, count, ctx->Device_());
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER_CPP_VIRTUAL(ctx->device_->Driver_(), &Driver::GetRunMode).stubs().will(returnValue(1));
-    error = ctx->SetMemcpyDesc((void*)&desc, srcAddr, dstAddr, count);
+    error = cce::runtime::SetMemcpyDesc((void*)&desc, srcAddr, dstAddr, count, ctx->Device_());
 
     EXPECT_EQ(error, RT_ERROR_NONE);
     (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(devId);

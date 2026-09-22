@@ -1381,8 +1381,6 @@ TEST_F(TinyStubTest, context_capture_notify_stub)
     ctx.Init();
     Notify* notify = nullptr;
     EXPECT_EQ(ctx.CreateNotify(&notify, 0), RT_ERROR_FEATURE_NOT_SUPPORT);
-    uint64_t notifyAddr = 0UL;
-    EXPECT_EQ(ctx.GetNotifyAddress(nullptr, notifyAddr, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
     delete dev;
     dev = nullptr;
     ctx.device_ = nullptr;

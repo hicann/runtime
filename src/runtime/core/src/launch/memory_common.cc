@@ -24,6 +24,33 @@ namespace runtime {
 TIMESTAMP_EXTERN(rtReduceAsyncV2_part1);
 TIMESTAMP_EXTERN(rtReduceAsyncV2_part2);
 
+namespace {
+constexpr uint64_t REDUCE_ALIGN_SIZE = 0x4ULL;
+constexpr uint64_t REDUCE16_ALIGN_SIZE = 0x2ULL;
+
+rtError_t CheckMemAddrAlign4B(const uint64_t memAddr)
+{
+    return ((memAddr % REDUCE_ALIGN_SIZE) != 0ULL) ? RT_ERROR_MEMORY_ADDRESS_UNALIGNED : RT_ERROR_NONE;
+}
+
+rtError_t CheckMemAddrAlign2B(const uint64_t memAddr)
+{
+    return ((memAddr % REDUCE16_ALIGN_SIZE) != 0ULL) ? RT_ERROR_MEMORY_ADDRESS_UNALIGNED : RT_ERROR_NONE;
+}
+} // namespace
+
+rtError_t CheckMemAlign(const void* const addr, const rtDataType_t type)
+{
+    if ((type == RT_DATA_TYPE_FP16) || (type == RT_DATA_TYPE_INT16) || (type == RT_DATA_TYPE_UINT16) ||
+        (type == RT_DATA_TYPE_BFP16)) {
+        return CheckMemAddrAlign2B(RtPtrToValue<const void*>(addr));
+    } else if ((type == RT_DATA_TYPE_FP32) || (type == RT_DATA_TYPE_INT32) || (type == RT_DATA_TYPE_UINT32)) {
+        return CheckMemAddrAlign4B(RtPtrToValue<const void*>(addr));
+    } else {
+        return RT_ERROR_NONE;
+    }
+}
+
 rtError_t ReduceAsyncV2(
     void* const dst, const void* const src, const uint64_t cpySize, const rtRecudeKind_t kind, const rtDataType_t type,
     Stream* const stm, void* const overflowAddr)
@@ -79,11 +106,11 @@ rtError_t ReduceAsyncV2(
                                               "a 2-byte-aligned address" :
                                               "a 4-byte-aligned address";
     UNUSED(expectedAlignment);
-    error = ctx->CheckMemAlign(src, type);
+    error = CheckMemAlign(src, type);
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         error != RT_ERROR_NONE, error, "Asynchronously performing the Reduce operation", src, "src", expectedAlignment);
 
-    error = ctx->CheckMemAlign(dst, type);
+    error = CheckMemAlign(dst, type);
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         error != RT_ERROR_NONE, error, "Asynchronously performing the Reduce operation", dst, "dst", expectedAlignment);
 

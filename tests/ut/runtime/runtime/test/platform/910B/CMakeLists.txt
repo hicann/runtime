@@ -331,6 +331,7 @@ set(runtimeut_910b_src_list
     ${TOP_DIR}/src/runtime/core/src/launch/label_stars.cc
     ${TOP_DIR}/src/runtime/core/src/launch/memory_common.cc
     ${TOP_DIR}/src/runtime/core/src/launch/memcpy_stars.cc
+    ${TOP_DIR}/src/runtime/core/src/launch/memcpy_desc_stars.cc
     ${TOP_DIR}/src/runtime/core/src/launch/memory_stars.cc
     ${TOP_DIR}/src/runtime/core/src/launch/task_launch_common.cc
     ${TOP_DIR}/src/runtime/core/src/launch/rdma_common.cc

@@ -62,6 +62,7 @@
 #include "device_error_proc_c.hpp"
 #include "dfx_api.hpp"
 #include "memcpy_c.hpp"
+#include "memory_c.hpp"
 #include "memset_common.h"
 #include "task_res_da.hpp"
 #include "fast_recover.hpp"
@@ -6048,7 +6049,7 @@ TEST_F(ApiDavidTest, test_model_task_update_task_on_david)
     Device* const dev = curCtx->Device_();
     EXPECT_EQ(dev != nullptr, true);
     MOCKER_CPP_VIRTUAL(dev, &Device::CheckFeatureSupport).stubs().will(returnValue(true));
-    MOCKER_CPP(&Context::CopyTilingTabToDev).stubs().will(returnValue(0));
+    MOCKER_CPP(&Program::CopyTilingTabToDev).stubs().will(returnValue(0));
     error = rtStreamCreate(&desStm, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
     (rt_ut::UnwrapOrNull<Stream>(desStm))->SetBindFlag(true);
@@ -9882,6 +9883,42 @@ TEST_F(ApiDavidTest, SetMemcpyDesc_ContextNull_Test)
     rtError_t error = impl.SetMemcpyDesc(descPtr, srcPtr, dstPtr, count, RT_MEMCPY_KIND_DEVICE_TO_DEVICE, nullptr);
     EXPECT_NE(error, RT_ERROR_NONE);
     EXPECT_EQ(error, RT_ERROR_CONTEXT_NULL);
+}
+
+TEST_F(ApiDavidTest, ReduceAsync_AlignmentAndCapabilityFailuresDoNotAllocate)
+{
+    Stream* const stream = Runtime::Instance()->CurrentContext()->DefaultStream_();
+    Device* const device = stream->Device_();
+    alignas(4) uint8_t buffer[8] = {};
+    rtDevCapabilityInfo capability = {};
+    capability.sdma_reduce_kind = 0xFFFFFFFFU;
+    capability.sdma_reduce_support = 0xFFFFFFFFU;
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(device, &Device::GetDeviceCapabilities)
+        .stubs()
+        .with(outBound(capability))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&Stream::AllocTask).expects(never());
+
+    EXPECT_EQ(
+        ReduceAsync(buffer + 1, buffer + 1, 4U, RT_MEMCPY_SDMA_AUTOMATIC_ADD, RT_DATA_TYPE_FP32, stream),
+        RT_ERROR_MEMORY_ADDRESS_UNALIGNED);
+    EXPECT_EQ(
+        ReduceAsync(buffer + 1, buffer, 4U, RT_MEMCPY_SDMA_AUTOMATIC_ADD, RT_DATA_TYPE_FP32, stream),
+        RT_ERROR_MEMORY_ADDRESS_UNALIGNED);
+    GlobalMockObject::verify();
+
+    capability.sdma_reduce_support = 0U;
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(device, &Device::GetDeviceCapabilities)
+        .stubs()
+        .with(outBound(capability))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&Stream::AllocTask).expects(never());
+    EXPECT_EQ(
+        ReduceAsync(buffer + 1, buffer + 1, 4U, RT_MEMCPY_SDMA_AUTOMATIC_ADD, RT_DATA_TYPE_FP32, stream),
+        RT_ERROR_FEATURE_NOT_SUPPORT);
+    GlobalMockObject::verify();
 }
 
 TEST_F(ApiDavidTest, SetMemcpyDesc_David_Test)

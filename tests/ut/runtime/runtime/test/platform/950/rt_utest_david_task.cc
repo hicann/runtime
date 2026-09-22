@@ -79,6 +79,7 @@
 #include "memory_task.h"
 #include "notify_task.h"
 #include "inner_kernel.h"
+#include "device_debug_c.hpp"
 #include "inner_thread_local.hpp"
 #include "model_maintaince_task.h"
 #include "model_to_aicpu_task.h"
@@ -1462,6 +1463,51 @@ TEST_F(TaskTestDavid, get_stack_buffer_simt)
     uint32_t stackSize = 0U;
     EXPECT_EQ(apiImpl.GetStackBuffer(RtPtrToPtr<rtBinHandle>(program), 0, 1, 1, 0, &stack, &stackSize), RT_ERROR_NONE);
     EXPECT_EQ(rtBinaryUnLoad(bin_handle), RT_ERROR_NONE);
+}
+
+TEST_F(TaskTestDavid, GetStackBuffer_DeviceLimitsCustomerStackAndDieOffset)
+{
+    Device* const device = Runtime::Instance()->CurrentContext()->Device_();
+    const auto& properties = device->GetDevProperties();
+    ASSERT_GT(properties.aicNum, 0U);
+    ASSERT_GT(properties.aivNum, 0U);
+    ASSERT_GT(properties.aicNumPerDie, 0U);
+    ASSERT_GT(properties.aivNumPerDie, 0U);
+    PlainProgram program;
+    uint8_t storage[8] = {};
+    const void* base = storage;
+    const void* stack = nullptr;
+    uint32_t size = 0U;
+    const uint32_t customerSize = KERNEL_STACK_SIZE_32K * 2U;
+    MOCKER_CPP(&Program::GetMaxMinStackSize).stubs().will(returnValue(customerSize));
+    MOCKER_CPP_VIRTUAL(device, &Device::GetDeviceAllocStackSize).stubs().will(returnValue(customerSize));
+    MOCKER_CPP_VIRTUAL(device, &Device::GetCustomerStackPhyBase).stubs().will(returnValue(base));
+    const uint32_t coresPerDie = properties.aicNumPerDie + properties.aivNumPerDie;
+    const uint32_t aicId = properties.aicNum - 1U;
+    const uint32_t aivId = properties.aivNum - 1U;
+    EXPECT_EQ(cce::runtime::GetStackBuffer(&program, 0U, 0U, 0U, aicId, &stack, &size), RT_ERROR_NONE);
+    EXPECT_EQ(size, customerSize);
+    EXPECT_EQ(
+        PtrToValue(stack), PtrToValue(base) + customerSize * (coresPerDie * (aicId / properties.aicNumPerDie) +
+                                                              aicId % properties.aicNumPerDie));
+    EXPECT_EQ(cce::runtime::GetStackBuffer(&program, 0U, 0U, 1U, aivId, &stack, &size), RT_ERROR_NONE);
+    EXPECT_EQ(
+        PtrToValue(stack),
+        PtrToValue(base) + customerSize * (coresPerDie * (aivId / properties.aivNumPerDie) + properties.aicNumPerDie +
+                                           aivId % properties.aivNumPerDie));
+    EXPECT_EQ(cce::runtime::GetStackBuffer(&program, 0U, 2U, 0U, 0U, &stack, &size), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(cce::runtime::GetStackBuffer(&program, 0U, 0U, 2U, 0U, &stack, &size), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(
+        cce::runtime::GetStackBuffer(&program, 0U, 0U, 0U, properties.aicNum, &stack, &size), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(
+        cce::runtime::GetStackBuffer(&program, 0U, 0U, 1U, properties.aivNum, &stack, &size), RT_ERROR_INVALID_VALUE);
+    GlobalMockObject::verify();
+
+    MOCKER_CPP_VIRTUAL(Runtime::Instance(), static_cast<Context* (Runtime::*)() const>(&Runtime::CurrentContext))
+        .stubs()
+        .will(returnValue(static_cast<Context*>(nullptr)));
+    EXPECT_EQ(cce::runtime::GetStackBuffer(&program, 0U, 0U, 0U, 0U, &stack, &size), RT_ERROR_CONTEXT_NULL);
+    GlobalMockObject::verify();
 }
 
 TEST_F(TaskTestDavid, Test_CondIsaHelper)

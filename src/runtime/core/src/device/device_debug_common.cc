@@ -9,11 +9,14 @@
  */
 
 #include "device_debug_c.hpp"
+#include <mutex>
+#include <utility>
 #include "capability.hpp"
 #include "device.hpp"
 #include "driver.hpp"
 #include "error_message_manage.hpp"
 #include "task.hpp"
+#include "runtime.hpp"
 
 namespace cce {
 namespace runtime {
@@ -89,6 +92,35 @@ rtError_t DebugGetStalledCore(rtDbgCoreInfo_t* const coreInfo, const Device* con
     RT_LOG(
         RT_LOG_INFO, "Get core info, bitmap info is 0x%llx 0x%llx 0x%llx 0x%llx", coreInfo->aicBitmap0,
         coreInfo->aicBitmap1, coreInfo->aivBitmap0, coreInfo->aivBitmap1);
+    return RT_ERROR_NONE;
+}
+
+rtError_t GetExceptionRegInfo(
+    const rtExceptionInfo_t* const exceptionInfo, rtExceptionErrRegInfo_t** const exceptionErrRegInfo,
+    uint32_t* const num)
+{
+    uint32_t realDeviceId;
+    rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(exceptionInfo->deviceid, &realDeviceId);
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "change user deviceId[%u] failed", exceptionInfo->deviceid);
+    Device* const device = Runtime::Instance()->GetDevice(realDeviceId, 0, false);
+    NULL_PTR_RETURN(device, RT_ERROR_DEVICE_NULL);
+
+    auto& exceptionRegMap = device->GetExceptionRegMap();
+    const uint32_t taskId = exceptionInfo->taskid;
+    const uint32_t streamId = exceptionInfo->streamid;
+    const std::pair<uint32_t, uint32_t> key = {streamId, taskId};
+
+    const std::lock_guard<std::mutex> lock(device->GetExceptionRegMutex());
+    const auto it = exceptionRegMap.find(key);
+    if ((it != exceptionRegMap.end()) && !it->second.empty()) {
+        RT_LOG(RT_LOG_INFO, "find register info in map for <stream_id=%u, task_id=%u>", streamId, taskId);
+        *num = static_cast<uint32_t>(it->second.size());
+        *exceptionErrRegInfo = &(it->second[0]);
+    } else {
+        *num = 0U;
+        *exceptionErrRegInfo = nullptr;
+    }
+
     return RT_ERROR_NONE;
 }
 

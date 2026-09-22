@@ -380,6 +380,7 @@ set(libruntime_v100_src_files
     ${RUNTIME_CORE_DIR}/src/launch/memory_common.cc
     ${RUNTIME_CORE_DIR}/src/launch/task_launch_common.cc
     ${RUNTIME_CORE_DIR}/src/launch/memcpy_stars.cc
+    ${RUNTIME_CORE_DIR}/src/launch/memcpy_desc_stars.cc
     ${RUNTIME_CORE_DIR}/src/launch/memory_stars.cc
     ${RUNTIME_CORE_DIR}/src/launch/cmo_barrier_common.cc
     ${RUNTIME_CORE_DIR}/src/launch/cmo_barrier_stars.cc

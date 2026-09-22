@@ -1905,5 +1905,96 @@ rtError_t ElfProgram::RegisterAllKernelCommon(void)
     return RT_ERROR_NONE;
 }
 
+rtError_t Program::CopyTilingTabToDev(
+    Context* const sourceContext, const Device* const targetDevice, void** const devCopyMem,
+    uint32_t* const tilingTabLen)
+{
+    rtError_t ret;
+    rtError_t error;
+    Module* const module = !IsNewBinaryLoadFlow() ? sourceContext->GetModule(this) : nullptr;
+    uint32_t kernelLen;
+    void* devMem = nullptr;
+    uint32_t copyLen = 0U;
+    Driver* const curDrv = targetDevice->Driver_();
+    if (targetDevice->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_KERNEL_TILING_TAB_COPY_V2)) {
+        /* 构建拷贝的内容 */
+        TilingTablForDavid* tilingTab = nullptr;
+        ret = BuildTilingTblForDavid(module, &tilingTab, &kernelLen);
+        if (ret != RT_ERROR_NONE) {
+            RT_LOG(RT_LOG_ERROR, "BuildTilingTbl fail");
+            return ret;
+        }
+        copyLen = static_cast<uint32_t>(kernelLen * sizeof(TilingTablForDavid));
+        /* 拷贝内容到device */
+        error = curDrv->DevMemAlloc(
+            &devMem, static_cast<uint64_t>(copyLen), RT_MEMORY_TS, targetDevice->Id_(), MODULEID_RUNTIME, true, false,
+            false);
+        if (error != RT_ERROR_NONE) {
+            RT_LOG(RT_LOG_ERROR, "DevMemAlloc fail copyLen=%u.", copyLen);
+            if (devMem != nullptr) {
+                (void)curDrv->DevMemFree(devMem, targetDevice->Id_());
+            }
+            DestroyTilingTblForDavid(tilingTab);
+            return error;
+        }
+        error = curDrv->MemCopySync(
+            devMem, static_cast<uint64_t>(copyLen), tilingTab, static_cast<uint64_t>(copyLen),
+            RT_MEMCPY_HOST_TO_DEVICE);
+        if (error != RT_ERROR_NONE) {
+            RT_LOG(RT_LOG_ERROR, "MemCopySync failed.");
+            if (devMem != nullptr) {
+                (void)curDrv->DevMemFree(devMem, targetDevice->Id_());
+            }
+            DestroyTilingTblForDavid(tilingTab);
+            return error;
+        }
+        RT_LOG(
+            RT_LOG_INFO, "Load on device devMem=%p,copyLen=%u,deviceId=%u,kernelLen=%u", devMem, copyLen,
+            targetDevice->Id_(), kernelLen);
+        DestroyTilingTblForDavid(tilingTab);
+    } else {
+        /* 构建拷贝的内容 */
+        TilingTabl* tilingTab = nullptr;
+        const bool starsTilingPhyContinuous = sourceContext->Device_()->IsSupportFeature(
+            RtOptionalFeatureType::RT_FEATURE_KERNEL_TILING_TABLE_PHY_CONTIGUOUS);
+        ret = BuildTilingTbl(&tilingTab, &kernelLen);
+        if (ret != RT_ERROR_NONE) {
+            RT_LOG(RT_LOG_ERROR, "BuildTilingTbl fail");
+            return ret;
+        }
+        copyLen = static_cast<uint32_t>(kernelLen * sizeof(TilingTabl));
+        /* 拷贝内容到device */
+        error = curDrv->DevMemAlloc(
+            &devMem, static_cast<uint64_t>(copyLen), RT_MEMORY_TS, targetDevice->Id_(), MODULEID_RUNTIME, true, false,
+            starsTilingPhyContinuous);
+        if (error != RT_ERROR_NONE) {
+            RT_LOG(RT_LOG_ERROR, "DevMemAlloc fail copyLen=%u.", copyLen);
+            if (devMem != nullptr) {
+                (void)curDrv->DevMemFree(devMem, targetDevice->Id_());
+            }
+            DestroyTilingTbl(tilingTab);
+            return error;
+        }
+        error = curDrv->MemCopySync(
+            devMem, static_cast<uint64_t>(copyLen), tilingTab, static_cast<uint64_t>(copyLen),
+            RT_MEMCPY_HOST_TO_DEVICE);
+        if (error != RT_ERROR_NONE) {
+            RT_LOG(RT_LOG_ERROR, "MemCopySync failed.");
+            if (devMem != nullptr) {
+                (void)curDrv->DevMemFree(devMem, targetDevice->Id_());
+            }
+            DestroyTilingTbl(tilingTab);
+            return error;
+        }
+        RT_LOG(
+            RT_LOG_INFO, "Load on device devMem=%p,copyLen=%u,deviceId=%u,kernelLen=%u", devMem, copyLen,
+            targetDevice->Id_(), kernelLen);
+        DestroyTilingTbl(tilingTab);
+    }
+    *devCopyMem = devMem;
+    *tilingTabLen = kernelLen;
+    return RT_ERROR_NONE;
+}
+
 } // namespace runtime
 } // namespace cce

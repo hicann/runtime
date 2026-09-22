@@ -37,12 +37,5 @@ rtError_t Context::CreateNotify(Notify** notify, uint32_t flag)
     return RT_ERROR_NONE;
 }
 
-rtError_t Context::GetNotifyAddress(Notify* const notify, uint64_t& addr, Stream* const stm)
-{
-    const rtError_t error = notify->GetNotifyAddress(stm, addr);
-    ERROR_RETURN_MSG_INNER(error, "Failed to get notify address, retCode=%#x.", error);
-    return error;
-}
-
 } // namespace runtime
 } // namespace cce

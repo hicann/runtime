@@ -176,7 +176,7 @@ rtError_t MdlTaskUpdate(const Stream* const desStm, uint32_t desTaskId, Stream* 
     rtError_t error = GetValidatedObject<Program>(RtPtrToPtr<rtBinHandle>(para->hdl), program);
     ERROR_RETURN_MSG_INNER(error, "Failed to validate bin handle, retCode=%#x.", static_cast<uint32_t>(error));
 
-    error = curCtx->CopyTilingTabToDev(program, dev, &devCopyMem, &tilingTabLen);
+    error = program->CopyTilingTabToDev(curCtx, dev, &devCopyMem, &tilingTabLen);
     ERROR_RETURN_MSG_INNER(error, "Failed to build tiling table, retCode=%#x.", static_cast<uint32_t>(error));
 
     TaskInfo* tsk = nullptr;

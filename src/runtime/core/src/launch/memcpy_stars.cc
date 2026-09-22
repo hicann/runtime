@@ -16,7 +16,6 @@
 #include "task.hpp"
 #include "device.hpp"
 #include "runtime.hpp"
-#include "securec.h"
 #include <cinttypes>
 
 namespace cce {

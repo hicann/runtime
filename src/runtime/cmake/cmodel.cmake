@@ -82,6 +82,7 @@ set(libruntime_cmodel_v100_task_src_files
     ${RUNTIME_CORE_DIR}/src/task/v100/task_adapter.cc
     ${RUNTIME_CORE_DIR}/src/launch/memory_common.cc
     ${RUNTIME_CORE_DIR}/src/launch/memcpy_stars.cc
+    ${RUNTIME_CORE_DIR}/src/launch/memcpy_desc_stars.cc
     ${RUNTIME_CORE_DIR}/src/launch/memory_stars.cc
     ${RUNTIME_CORE_DIR}/src/launch/aix_stars.cc
     ${RUNTIME_CORE_DIR}/src/launch/dvpp_stars.cc
@@ -647,7 +648,6 @@ set(libruntime_cmodel_v200_src_files
     ${RUNTIME_CORE_DIR}/src/utils/osal.cc
     ${RUNTIME_CORE_DIR}/src/engine/hwts/scheduler.cc
     ${RUNTIME_CORE_DIR}/src/dfx/atrace_log.cc
-    ${RUNTIME_CORE_DIR}/src/dfx/coredump_c.cc
     ${RUNTIME_CORE_DIR}/src/dfx/fast_recover.cc
     ${RUNTIME_CORE_DIR}/src/utils/subscribe.cc
     ${RUNTIME_CORE_DIR}/src/profiler/onlineprof.cc

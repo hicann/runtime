@@ -280,6 +280,7 @@ set(libruntime_common_src_files
     ${RUNTIME_CORE_DIR}/src/launch/cmo_barrier_common.cc
     ${RUNTIME_CORE_DIR}/src/launch/cmo_barrier_stars.cc
     ${RUNTIME_CORE_DIR}/src/launch/task_launch_common.cc
+    ${RUNTIME_CORE_DIR}/src/launch/memcpy_desc_stars.cc
     ${RUNTIME_CORE_DIR}/src/uvm/uvm_callback.cc
 
     # for V100
@@ -475,6 +476,7 @@ set(libruntime_v100_src_files
     ${RUNTIME_CORE_DIR}/src/launch/memory_common.cc
     ${RUNTIME_CORE_DIR}/src/launch/task_launch_common.cc
     ${RUNTIME_CORE_DIR}/src/launch/memcpy_stars.cc
+    ${RUNTIME_CORE_DIR}/src/launch/memcpy_desc_stars.cc
     ${RUNTIME_CORE_DIR}/src/kernel/v100/program_plat.cc
     ${RUNTIME_CORE_DIR}/src/launch/cmo_barrier_common.cc
     ${RUNTIME_CORE_DIR}/src/launch/cmo_barrier_stars.cc

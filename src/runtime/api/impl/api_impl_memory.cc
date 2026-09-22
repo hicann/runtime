@@ -105,7 +105,7 @@ rtError_t ApiImpl::SetMemcpyDesc(
     UNUSED(config);
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    return curCtx->SetMemcpyDesc(desc, srcAddr, dstAddr, count);
+    return cce::runtime::SetMemcpyDesc(desc, srcAddr, dstAddr, count, curCtx->Device_());
 }
 
 rtError_t ApiImpl::MemcpyAsyncWithDesc(

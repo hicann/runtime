@@ -464,7 +464,7 @@ rtError_t ApiImpl::GetNotifyAddress(Notify* const notify, uint64_t* const notify
 
     Stream* const curStm = curCtx->DefaultStream_();
     NULL_STREAM_PTR_RETURN_MSG(curStm);
-    const rtError_t error = curCtx->GetNotifyAddress(notify, addr, curStm);
+    const rtError_t error = notify->GetNotifyAddress(curStm, addr);
     if (error != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR, "GetNotifyAddress failed, retCode=%#x", error);
         return error;

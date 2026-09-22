@@ -106,11 +106,11 @@ rtError_t SubmitReduceTask(
     UNUSED(expectedAlignment);
     rtError_t error = InitReduceTask(rtMemcpyAsyncTask, src, dst, cpySize, kind, type, cfgInfo);
     ERROR_GOTO(error, ERROR_RECYCLE, "reduce task init failed, retCode=%#x.", static_cast<uint32_t>(error));
-    error = stm->Context_()->CheckMemAlign(src, type);
+    error = CheckMemAlign(src, type);
     COND_GOTO_MSG_OUTER(
         error != RT_ERROR_NONE, ERROR_RECYCLE, error, error, ErrorCode::EE1003,
         "Asynchronously performing the Reduce operation", src, "src", expectedAlignment);
-    error = stm->Context_()->CheckMemAlign(dst, type);
+    error = CheckMemAlign(dst, type);
     COND_GOTO_MSG_OUTER(
         error != RT_ERROR_NONE, ERROR_RECYCLE, error, error, ErrorCode::EE1003,
         "Asynchronously performing the Reduce operation", dst, "dst", expectedAlignment);

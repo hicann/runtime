@@ -35,7 +35,6 @@
 #include "label.hpp"
 #include "cmo_barrier_c.hpp"
 #include "profiler_c.hpp"
-#include "coredump_c.hpp"
 #include "device_debug_c.hpp"
 #include "thread_local_container.hpp"
 #include "inner_thread_local.hpp"
@@ -756,31 +755,7 @@ rtError_t ApiImplDavid::SetMemcpyDesc(
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     const Device* const dev = curCtx->Device_();
-
-    rtDavidMemcpyAddrInfo memcpyData;
-    (void)memset_s(&memcpyData, sizeof(rtDavidMemcpyAddrInfo), 0, sizeof(rtDavidMemcpyAddrInfo));
-
-    memcpyData.len = static_cast<uint32_t>(count);
-    memcpyData.src = RtPtrToValue<const void*>(srcAddr);
-    memcpyData.dst = RtPtrToValue<const void*>(dstAddr);
-
-    constexpr uint64_t dstMax = MEMCPY_DESC_SIZE_V2; // 64U
-    rtError_t error = RT_ERROR_NONE;
-
-    error = dev->Driver_()->MemCopySync(
-        static_cast<rtDavidMemcpyAddrInfo*>(desc), dstMax, &memcpyData, dstMax, RT_MEMCPY_HOST_TO_DEVICE);
-    ERROR_RETURN(
-        error, "Failed to memory copy stream info, device_id=%u, dstMax=%u, retCode=%#x.", dev->Id_(), dstMax,
-        static_cast<uint32_t>(error));
-
-    if (dev->Driver_()->GetRunMode() == RT_RUN_MODE_ONLINE) {
-        error = dev->Driver_()->DevMemFlushCache(RtPtrToPtr<uintptr_t>(desc), static_cast<size_t>(dstMax));
-        ERROR_RETURN(
-            error, "Failed to flush stream info, device_id=%u, retCode=%#x", dev->Id_(), static_cast<uint32_t>(error));
-    }
-
-    RT_LOG(RT_LOG_INFO, "Set memcpyDesc info success, srcAddr=%p, dstAddr=%p, count=%llu", srcAddr, dstAddr, count);
-    return RT_ERROR_NONE;
+    return cce::runtime::SetMemcpyDesc(desc, srcAddr, dstAddr, count, dev);
 }
 
 static rtError_t GetUbMemcpyFlag(
@@ -2342,7 +2317,7 @@ rtError_t ApiImplDavid::GetStackBuffer(
     RT_LOG(
         RT_LOG_DEBUG, "Get stack buffer, bin handle %p, stackType %u, coreType %u, coreId %u", binHandle, stackType,
         coreType, coreId);
-    return GetStackBufferInfo(
+    return cce::runtime::GetStackBuffer(
         RtPtrToPtr<const Program*>(binHandle), deviceId, stackType, coreType, coreId, stack, stackSize);
 }
 

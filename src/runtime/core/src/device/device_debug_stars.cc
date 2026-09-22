@@ -9,6 +9,8 @@
  */
 
 #include "device_debug_c.hpp"
+#include "runtime.hpp"
+#include "program.hpp"
 #include <map>
 #include "device.hpp"
 #include "driver_enum_desc.hpp"
@@ -25,6 +27,26 @@ constexpr uint64_t DEBUG_DEVMEM_LEN = 4096U;
 constexpr uint64_t L0A_SIZE = 65536;  // 同L0B_SIZE
 constexpr uint64_t L0C_SIZE = 262144; // 同UB_SIZE
 constexpr uint64_t L1_SIZE = 1048576;
+
+rtError_t CheckCoreParam(const uint32_t coreType, const uint32_t coreId)
+{
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        (coreType != 0 && coreType != 1), RT_ERROR_INVALID_VALUE,
+        "Verifying the validity of the compute core type and stack type", coreType,
+        "[0, " + std::to_string(RT_CORE_TYPE_AIV) + "]");
+    if (coreType == 0) {
+        COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+            (coreId >= RT_AICORE_NUM_25), RT_ERROR_INVALID_VALUE,
+            "Verifying the validity of the compute core type and stack type", coreId,
+            "[0, " + std::to_string(RT_AICORE_NUM_25) + ")");
+    } else {
+        COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+            (coreId >= RT_AIVECTOR_NUM_50), RT_ERROR_INVALID_VALUE,
+            "Verifying the validity of the compute core type and stack type", coreId,
+            "[0, " + std::to_string(RT_AIVECTOR_NUM_50) + ")");
+    }
+    return RT_ERROR_NONE;
+}
 
 rtError_t CheckMemoryParam(const rtDebugMemoryParam_t* const param)
 {
@@ -126,6 +148,42 @@ rtError_t DebugReadAICore(const rtDebugMemoryParam_t* const param, const Device*
         offset += memoryParam->memLen;
     }
     RT_LOG(RT_LOG_INFO, "ReadAICore success");
+    return RT_ERROR_NONE;
+}
+
+rtError_t GetStackBuffer(
+    const Program* const programHdl, uint32_t deviceId, const uint32_t stackType, const uint32_t coreType,
+    const uint32_t coreId, const void** stack, uint32_t* stackSize, const Device* const device)
+{
+    UNUSED(deviceId);
+    UNUSED(stackType);
+    const auto ret = CheckCoreParam(coreType, coreId);
+    ERROR_RETURN(ret, "CheckCoreParam fail, coreType=%u, coreId=%u.", coreType, coreId);
+    RT_LOG(
+        RT_LOG_INFO, "Start to get stack buffer, bin handle %p, coreType %u, coreId %u", programHdl, coreType, coreId);
+
+    *stackSize = programHdl->GetStackSize();
+    const void* stackPhyBase =
+        (*stackSize == KERNEL_STACK_SIZE_32K) ? device->GetStackPhyBase32k() : device->GetStackPhyBase16k();
+    const uint32_t maxMinStackSize = programHdl->GetMaxMinStackSize();
+    const uint32_t deviceCustomerStackSize = Runtime::Instance()->GetDeviceCustomerStackSize();
+    if ((deviceCustomerStackSize != 0U) && (maxMinStackSize > 0)) {
+        // -o0的情况下不考虑16KB的栈，因为编译器-o0的情况下能识别最小为32KB的栈
+        if (maxMinStackSize > KERNEL_STACK_SIZE_32K) {
+            *stackSize = deviceCustomerStackSize;
+            stackPhyBase = device->GetCustomerStackPhyBase();
+        } else {
+            *stackSize = KERNEL_STACK_SIZE_32K;
+            stackPhyBase = device->GetStackPhyBase32k();
+        }
+    }
+    const uint32_t aicNum = device->GetDevProperties().aicNumForCoreStack;
+    if (coreType == 0U) {
+        *stack = ValueToPtr(PtrToValue(stackPhyBase) + (*stackSize) * coreId);
+    } else {
+        *stack = ValueToPtr(PtrToValue(stackPhyBase) + (*stackSize) * (aicNum + coreId));
+    }
+    RT_LOG(RT_LOG_INFO, "Get stack addr %p, stackSize %u", *stack, *stackSize);
     return RT_ERROR_NONE;
 }
 

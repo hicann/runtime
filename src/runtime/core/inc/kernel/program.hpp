@@ -238,6 +238,9 @@ public:
     virtual rtError_t FunctionGetMetaInfoSize(
         const std::string& kernelName, const rtFunctionMetaType type, size_t* size) = 0;
 
+    rtError_t CopyTilingTabToDev(
+        Context* const sourceContext, const Device* const targetDevice, void** const devCopyMem,
+        uint32_t* const tilingTabLen);
     rtError_t BuildTilingTbl(TilingTabl** tilingTab, uint32_t* kernelLen);
     rtError_t BuildTilingTblForDavid(const Module* mdl, TilingTablForDavid** tilingTab, uint32_t* kernelLen);
     rtError_t DavidBuildTilingTblForNewFlow(TilingTablForDavid** tilingTab, uint32_t* kernelLen);
