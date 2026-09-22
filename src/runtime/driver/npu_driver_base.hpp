@@ -272,7 +272,7 @@ constexpr int32_t RT_INFO_TYPE_VA = 34U;
 constexpr int32_t RT_INFO_TYPE_SYS_COUNT = 13U;
 
 const std::string RT_MEMORY_ALLOC_ERROR = "EL0004";
-std::string GetMemModuleName(uint16_t moduleId);
+std::string GetMemModuleName(const uint16_t moduleId);
 #define RT_GET_MODULE_NAME(moduleId) GetMemModuleName(moduleId)
 
 enum class RtCtrlType {
