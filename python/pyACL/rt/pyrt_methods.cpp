@@ -230,6 +230,9 @@ PyMethodDef g_methodsRt[] = {
     {"device_peer_access_status", WrapAclRtDevicePeerAccessStatus, METH_VARARGS, "device peer access status"},
     {"host_register_v2", WrapAclRtHostRegisterV2, METH_VARARGS, "host register v2"},
     {"host_get_device_pointer", WrapAclRtHostGetDevicePointer, METH_VARARGS, "host get device pointer"},
+    {"device_set_limit", WrapAclRtDeviceSetLimit, METH_VARARGS, "device set limit"},
+    {"device_get_limit", WrapAclRtDeviceGetLimit, METH_VARARGS, "device get limit"},
+    {"launch_kernel_with_host_args", WrapAclRtLaunchKernelWithHostArgs, METH_VARARGS, "launch kernel with host args"},
 
 #ifdef USE_MDL
     {"set_group", WrapAclRtSetGroup, METH_VARARGS, "set group"},

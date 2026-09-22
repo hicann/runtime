@@ -39,5 +39,7 @@ PyObject* WrapAclRtGetLogicDevIdByPhyDevId(PyObject* self, PyObject* args);
 PyObject* WrapAclRtGetPhyDevIdByLogicDevId(PyObject* self, PyObject* args);
 PyObject* WrapAclRtDeviceGetUuid(PyObject* self, PyObject* args);
 PyObject* WrapAclRtDevicePeerAccessStatus(PyObject* self, PyObject* args);
+PyObject* WrapAclRtDeviceSetLimit(PyObject* self, PyObject* args);
+PyObject* WrapAclRtDeviceGetLimit(PyObject* self, PyObject* args);
 
 #endif // WORD_RT_DEVICE_FUNCS_H
