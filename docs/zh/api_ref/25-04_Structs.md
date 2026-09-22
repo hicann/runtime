@@ -110,7 +110,7 @@ typedef struct acldumpTensorInfo {
     size_t tensorSize;
     int32_t format;
     int32_t dataType;
-    int64_t *tensorAddr;
+    int64_t* tensorAddr;
     acldumpTensorAddressType addrType;
     acldumpTensorPlacement placement;
     uint32_t argsOffset;
@@ -147,7 +147,7 @@ typedef struct tagAclmdlRICondTaskParams {
     aclmdlRICondHandle handle;
     aclmdlRICondTaskType type;
     uint32_t size;
-    aclmdlRI *modelRIArray;
+    aclmdlRI* modelRIArray;
 } aclmdlRICondTaskParams;
 ```
 
@@ -296,7 +296,7 @@ typedef struct aclmdlRITaskParams {
 
 ```c
 typedef struct aclmdlRIValueWaitTaskParams {
-    void *devAddr;
+    void* devAddr;
     uint64_t value;
     uint32_t flag;
 } aclmdlRIValueWaitTaskParams;
@@ -316,7 +316,7 @@ typedef struct aclmdlRIValueWaitTaskParams {
 
 ```c
 typedef struct aclmdlRIValueWriteTaskParams {
-    void *devAddr;
+    void* devAddr;
     uint64_t value;
 } aclmdlRIValueWriteTaskParams;
 ```
@@ -334,9 +334,9 @@ typedef struct aclmdlRIValueWriteTaskParams {
 
 ```c
 typedef struct {
-    void *binHandle;
-    void *funcEntryAddr;
-    void *blockDimAddr;
+    void* binHandle;
+    void* funcEntryAddr;
+    void* blockDimAddr;
     uint32_t rsv[4];
 } aclrtAicAivTaskUpdateAttr;
 ```
@@ -411,7 +411,7 @@ typedef struct {
 
 ```c
 typedef struct aclrtBinaryLoadOptions {
-    aclrtBinaryLoadOption *options;
+    aclrtBinaryLoadOption* options;
     size_t numOpt;
 } aclrtBinaryLoadOptions;
 ```
@@ -639,7 +639,7 @@ typedef union aclrtLaunchKernelAttrValue {
 
 ```c
 typedef struct aclrtLaunchKernelCfg {
-    aclrtLaunchKernelAttr *attrs;
+    aclrtLaunchKernelAttr* attrs;
     size_t numAttrs;
 } aclrtLaunchKernelCfg;
 ```
@@ -954,9 +954,9 @@ typedef struct {
 typedef struct {
     aclDataType dataType;
     aclrtRandomNumFuncParaInfo randomNumFuncParaInfo;
-    void *randomParaAddr;
-    void *randomResultAddr;
-    void *randomCounterAddr;
+    void* randomParaAddr;
+    void* randomResultAddr;
+    void* randomCounterAddr;
     aclrtRandomParaInfo randomSeed;
     aclrtRandomParaInfo randomNum;
     uint8_t rsv[8];
@@ -1004,7 +1004,7 @@ typedef struct {
 
 ```c
 typedef struct {
-    void *srcAddr;
+    void* srcAddr;
     size_t size;
     uint32_t rsv[4];
 } aclrtRandomTaskUpdateAttr;
@@ -1025,7 +1025,7 @@ typedef struct {
 ```c
 typedef struct {
     uint32_t sdid;
-    int32_t *pid;
+    int32_t* pid;
     size_t num;
 } aclrtServerPid;
 ```
@@ -1188,7 +1188,7 @@ typedef struct aclrtUtilizationInfo {
     int32_t vectorUtilization; // Vector利用率
     int32_t aicpuUtilization;  // AI CPU利用率
     int32_t memoryUtilization; // Device内存利用率
-    aclrtUtilizationExtendInfo *utilizationExtend; // 预留参数，当前设置为null
+    aclrtUtilizationExtendInfo* utilizationExtend; // 预留参数，当前设置为null
 } aclrtUtilizationInfo;
 ```
 
@@ -1199,8 +1199,8 @@ typedef struct aclrtUtilizationInfo {
 ## aclrtUuid
 
 ```c
- typedef struct aclrtUuid {
-    char  bytes[16];    // 一个16字节的字符串，作为Device的唯一标识
+typedef struct aclrtUuid {
+    char bytes[16];    // 一个16字节的字符串，作为Device的唯一标识
 } aclrtUuid;
 ```
 

@@ -714,7 +714,7 @@ typedef struct {
     uint16_t size;
     uint32_t messageType;   // ACL_PROF_MESSAGE_TYPE_TENSOR_INFO
     union Message {
-        aclprofTensorInfo *tensorInfo;
+        aclprofTensorInfo* tensorInfo;
     } message;
 } aclprofEventAttributes;
 
@@ -725,8 +725,8 @@ typedef struct {
     uint32_t tensorNum;
     uint32_t kernelType;
     uint32_t blockNums;
-    void *stream;           // stream信息
-    aclprofTensor *tensors;
+    void* stream;           // stream信息
+    aclprofTensor* tensors;
 } aclprofTensorInfo;
 
 typedef struct {

@@ -464,12 +464,12 @@ Dump数据回调函数注册接口。
 
   ```c
   typedef struct acldumpChunk  {
-    char       fileName[ACL_DUMP_MAX_FILE_PATH_LENGTH];   // 待落盘的Dump数据文件名，ACL_DUMP_MAX_FILE_PATH_LENGTH表示文件名最大长度，当前为4096
-    uint32_t   bufLen;       // dataBuf数据长度，单位Byte
-    uint32_t   isLastChunk;  // 标识Dump数据是否为最后一个分片，0表示不是最后一个分片，1表示最后一个分片
-    int64_t    offset;       // Dump数据文件内容的偏移，其中-1表示文件追加内容
-    int32_t    flag;         // 预留Dump数据标识，当前数据无标识
-    uint8_t    dataBuf[0];   // Dump数据的内存地址
+    char fileName[ACL_DUMP_MAX_FILE_PATH_LENGTH];   // 待落盘的Dump数据文件名，ACL_DUMP_MAX_FILE_PATH_LENGTH表示文件名最大长度，当前为4096
+    uint32_t bufLen;       // dataBuf数据长度，单位Byte
+    uint32_t isLastChunk;  // 标识Dump数据是否为最后一个分片，0表示不是最后一个分片，1表示最后一个分片
+    int64_t offset;       // Dump数据文件内容的偏移，其中-1表示文件追加内容
+    int32_t flag;         // 预留Dump数据标识，当前数据无标识
+    uint8_t dataBuf[0];   // Dump数据的内存地址
   } acldumpChunk;
   ```
 
