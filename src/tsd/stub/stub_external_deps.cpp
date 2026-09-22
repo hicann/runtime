@@ -11,9 +11,9 @@
 #include "platform_info.h"
 
 namespace fe {
-PlatformInfoManager::PlatformInfoManager() : init_flag_(false), runtime_init_flag_(false) {}
+PlatformInfoManager::PlatformInfoManager() : init_flag_(false), runtime_init_flag_(false), opti_compilation_info_() {}
 
-PlatformInfoManager::~PlatformInfoManager() {}
+PlatformInfoManager::~PlatformInfoManager() = default;
 
 PlatformInfoManager& PlatformInfoManager::Instance()
 {
