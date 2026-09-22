@@ -969,7 +969,6 @@ TEST_F(CloudV2StarsEngineTest, TryRecycleTaskStreamAbort)
     ((StarsEngine*)engine_)->AddTaskToStream(&workTask, 1024);
     stream_->abortStatus_ = RT_ERROR_STREAM_ABORT;
     stream_->pendingNum_.Set(1U);
-    MOCKER_CPP(&Stream::IsSeparateSendAndRecycle).stubs().will(returnValue(false));
     error = ((StarsEngine*)engine_)->TryRecycleTask(stream_);
     EXPECT_EQ(error, RT_ERROR_STREAM_ABORT);
     stream_->abortStatus_ = RT_ERROR_NONE;
@@ -980,7 +979,6 @@ TEST_F(CloudV2StarsEngineTest, MaintenanceTask)
 {
     rtError_t error = RT_ERROR_NONE;
     uint32_t taskId = 0;
-    MOCKER_CPP(&Stream::IsSeparateSendAndRecycle).stubs().will(returnValue(false));
     // MaintenanceTask
     TaskInfo task = {};
     task.stream = stream_;

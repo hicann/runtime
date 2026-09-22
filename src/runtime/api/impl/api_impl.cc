@@ -1110,58 +1110,6 @@ rtError_t ApiImpl::BinaryLoadFromData(
     return ret;
 }
 
-// check if kernel is for vector core
-static bool CheckVectorKernel(const Kernel* const kernel)
-{
-    // 1. common aiv kernel
-    if (kernel->GetKernelAttrType() == RT_KERNEL_ATTR_TYPE_VECTOR) {
-        return true;
-    }
-    // 2. mix aiv only kernel
-    if (kernel->GetMixType() == MIX_AIV) {
-        return true;
-    }
-    return false;
-}
-
-rtError_t ApiImpl::FuncGetAddr(const Kernel* const funcHandle, void** const aicAddr, void** const aivAddr)
-{
-    uint64_t funcAddr1 = 0ULL;
-    uint64_t funcAddr2 = 0ULL;
-    const rtError_t error = funcHandle->GetFunctionDevAddr(funcAddr1, funcAddr2);
-    if (error != RT_ERROR_NONE) {
-        *aicAddr = nullptr;
-        *aivAddr = nullptr;
-        return error;
-    }
-
-    if ((funcAddr1 != 0ULL) && (funcAddr2 == 0ULL) && (CheckVectorKernel(funcHandle))) {
-        // there is only one address, and the kernel is for vector core
-        *aivAddr = RtValueToPtr<void*>(funcAddr1);
-        *aicAddr = RtValueToPtr<void*>(funcAddr2);
-    } else {
-        *aicAddr = RtValueToPtr<void*>(funcAddr1);
-        *aivAddr = RtValueToPtr<void*>(funcAddr2);
-    }
-    return RT_ERROR_NONE;
-}
-
-rtError_t ApiImpl::FuncGetSize(const Kernel* const funcHandle, size_t* const aicSize, size_t* const aivSize)
-{
-    uint32_t funcSize1 = 0U;
-    uint32_t funcSize2 = 0U;
-    funcHandle->GetKernelLength(funcSize1, funcSize2);
-    if ((funcSize1 != 0U) && (funcSize2 == 0U) && (CheckVectorKernel(funcHandle))) {
-        // there is only one size, and the kernel is for vector core
-        *aivSize = RtValueToPtr<size_t>(funcSize1);
-        *aicSize = RtValueToPtr<size_t>(funcSize2);
-    } else {
-        *aicSize = RtValueToPtr<size_t>(funcSize1);
-        *aivSize = RtValueToPtr<size_t>(funcSize2);
-    }
-    return RT_ERROR_NONE;
-}
-
 rtError_t ApiImpl::LaunchNonKernelByHandle(
     Kernel* const kernel, uint32_t blockDim, const RtArgsHandle* const argHandle, Stream* const curStm,
     const TaskCfg& taskCfg)
@@ -6665,22 +6613,6 @@ rtError_t ApiImpl::ModelGetName(Model* const mdl, const uint32_t maxLen, char_t*
     return curCtx->ModelGetName(mdl, maxLen, mdlName);
 }
 
-rtError_t ApiImpl::FuncGetName(const Kernel* const kernel, const uint32_t maxLen, char_t* const name)
-{
-    const errno_t error =
-        memcpy_s(name, static_cast<size_t>(maxLen), kernel->Name_().c_str(), kernel->Name_().length() + 1U);
-    if (error != EOK) {
-        std::stringstream ss;
-        ss << std::hex << "name=0x" << RtPtrToValue(name) << ", kernelName=0x" << RtPtrToValue(kernel->Name_().c_str())
-           << std::dec << ", maxLen=" << maxLen << ", actualLen=" << kernel->Name_().length() + 1U << ".";
-        RT_LOG_OUTER_MSG_IMPL(
-            ErrorCode::EE1020, "Obtaining the kernel function name", "memcpy_s", std::to_string(error).c_str(),
-            strerror(error), ss.str().c_str());
-        return RT_ERROR_SEC_HANDLE;
-    }
-    return RT_ERROR_NONE;
-}
-
 rtError_t ApiImpl::GetErrorVerbose(const uint32_t deviceId, rtErrorInfo* const errorInfo)
 {
     rtError_t error = RT_ERROR_NONE;
@@ -6911,54 +6843,6 @@ rtError_t ApiImpl::CacheLastTaskOpInfo(const void* const infoPtr, const size_t i
 
     CaptureModel* captureMdl = dynamic_cast<CaptureModel*>(mdl);
     return captureMdl->CacheLastTaskOpInfo(infoPtr, infoSize, stm);
-}
-
-rtError_t ApiImpl::FunctionGetBinary(const Kernel* const funcHandle, Program** const binHandle)
-{
-    Program* const prog = funcHandle->Program_();
-    *binHandle = prog;
-    return RT_ERROR_NONE;
-}
-
-rtError_t ApiImpl::FunctionGetParamCount(const Kernel* funcHandle, size_t* paramCount)
-{
-    *paramCount = static_cast<size_t>(funcHandle->GetParamCount());
-    return RT_ERROR_NONE;
-}
-
-rtError_t ApiImpl::FunctionGetParamInfo(
-    const Kernel* funcHandle, size_t paramIndex, size_t* paramOffset, size_t* paramSize)
-{
-    uint32_t offset = 0U;
-    uint32_t size = 0U;
-    const rtError_t ret = funcHandle->GetParamInfo(static_cast<uint32_t>(paramIndex), &offset, &size);
-    ERROR_RETURN(ret, "GetParamInfo failed, paramIndex=%zu.", paramIndex);
-    if (paramOffset != nullptr) {
-        *paramOffset = static_cast<size_t>(offset);
-    }
-    if (paramSize != nullptr) {
-        *paramSize = static_cast<size_t>(size);
-    }
-    return RT_ERROR_NONE;
-}
-
-rtError_t ApiImpl::FunctionGetAvailDynUbufPerBlock(Kernel* funcHandle, uint32_t flags, size_t* dynamicUbufSize)
-{
-    UNUSED(flags);
-    const uint32_t kernelVfType = funcHandle->KernelVfType_();
-    const bool simtFlag = (kernelVfType == static_cast<uint32_t>(AivTypeFlag::AIV_TYPE_SIMT_VF_ONLY)) ||
-                          (kernelVfType == static_cast<uint32_t>(AivTypeFlag::AIV_TYPE_SIMD_SIMT_MIX_VF));
-    if (!simtFlag) {
-        *dynamicUbufSize = 0U;
-        return RT_ERROR_NONE;
-    }
-
-    COND_RETURN_ERROR_MSG_INNER(
-        funcHandle->ShareMemSize_() > RT_SIMT_REMAIN_UB_SIZE, RT_ERROR_INVALID_VALUE,
-        "Compiler alloc ub size %u exceeds the maximum simt ub limit %u.", funcHandle->ShareMemSize_(),
-        RT_SIMT_REMAIN_UB_SIZE);
-    *dynamicUbufSize = static_cast<size_t>(RT_SIMT_REMAIN_UB_SIZE - funcHandle->ShareMemSize_());
-    return RT_ERROR_NONE;
 }
 
 rtError_t ApiImpl::BinarySetExceptionCallback(Program* binHandle, void* callback, void* userData)

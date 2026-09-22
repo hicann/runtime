@@ -21,6 +21,7 @@
 #include "api.hpp"
 #include "api_ipc_memory.hpp"
 #include "api_impl.hpp"
+#include "api_impl_kernel_func.hpp"
 #include "api_impl_david.hpp"
 #include "program.hpp"
 #include "context.hpp"
@@ -10982,8 +10983,9 @@ TEST_F(ApiDavidTest, FunctionGetParamCount_Success)
 
     Kernel kernelMock("test", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 10);
     kernelMock.SetParamCount(5);
+    kernelMock.SetHasParamSummary(true);
 
-    ApiImpl apiImpl;
+    ApiImplKernelFunc apiImpl;
     size_t paramCount = 0;
     rtError_t error = apiImpl.FunctionGetParamCount(&kernelMock, &paramCount);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -11008,7 +11010,7 @@ TEST_F(ApiDavidTest, FunctionGetParamInfo_Success)
     paramInfos[2].info.size = 64;
     kernelMock.SetParamInfos(paramInfos);
 
-    ApiImpl apiImpl;
+    ApiImplKernelFunc apiImpl;
     size_t paramOffset = 0;
     size_t paramSize = 0;
 
@@ -12249,15 +12251,6 @@ TEST_F(ApiDavidTest, api_decorator_kernel_forwarding)
     error = api.FunctionGetMetaInfoSize(nullptr, RT_FUNCTION_TYPE_KERNEL_TYPE, &sz);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::FuncGetSize).stubs().will(returnValue(RT_ERROR_NONE));
-    error = api.FuncGetSize(nullptr, &sz, &sz);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::FuncGetName).stubs().will(returnValue(RT_ERROR_NONE));
-    char_t name[16] = {0};
-    error = api.FuncGetName(nullptr, 16U, name);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetBinBuffer).stubs().will(returnValue(RT_ERROR_NONE));
     void* bin = nullptr;
     uint32_t binSize = 0U;
@@ -12291,14 +12284,6 @@ TEST_F(ApiDavidTest, api_decorator_kernel_forwarding)
 
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::BinaryGetMetaNum).stubs().will(returnValue(RT_ERROR_NONE));
     error = api.BinaryGetMetaNum(nullptr, RT_BINARY_TYPE_BIN_VERSION, &sz);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::FunctionGetAvailDynUbufPerBlock).stubs().will(returnValue(RT_ERROR_NONE));
-    error = api.FunctionGetAvailDynUbufPerBlock(nullptr, 0U, &sz);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::FunctionGetParamInfo).stubs().will(returnValue(RT_ERROR_NONE));
-    error = api.FunctionGetParamInfo(nullptr, 0U, &sz, &sz);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::KernelTaskGetAttribute).stubs().will(returnValue(RT_ERROR_NONE));

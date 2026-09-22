@@ -288,16 +288,6 @@ rtError_t ApiDecorator::BinaryLoadFromData(
     return impl_->BinaryLoadFromData(data, length, optionalCfg, handle);
 }
 
-rtError_t ApiDecorator::FuncGetAddr(const Kernel* const funcHandle, void** const aicAddr, void** const aivAddr)
-{
-    return impl_->FuncGetAddr(funcHandle, aicAddr, aivAddr);
-}
-
-rtError_t ApiDecorator::FuncGetSize(const Kernel* const funcHandle, size_t* const aicSize, size_t* const aivSize)
-{
-    return impl_->FuncGetSize(funcHandle, aicSize, aivSize);
-}
-
 rtError_t ApiDecorator::LaunchKernel(
     Kernel* const kernel, const uint32_t blockDim, const rtArgsEx_t* const argsInfo, Stream* const stm,
     const rtTaskCfgInfo_t* const cfgInfo)
@@ -2009,11 +1999,6 @@ rtError_t ApiDecorator::ModelGetName(Model* const mdl, const uint32_t maxLen, ch
     return impl_->ModelGetName(mdl, maxLen, mdlName);
 }
 
-rtError_t ApiDecorator::FuncGetName(const Kernel* const kernel, const uint32_t maxLen, char_t* const name)
-{
-    return impl_->FuncGetName(kernel, maxLen, name);
-}
-
 rtError_t ApiDecorator::GetErrorVerbose(const uint32_t deviceId, rtErrorInfo* const errorInfo)
 {
     return impl_->GetErrorVerbose(deviceId, errorInfo);
@@ -2061,32 +2046,6 @@ rtError_t ApiDecorator::MemRetainAllocationHandle(void* virPtr, rtDrvMemHandle* 
 rtError_t ApiDecorator::MemGetAllocationPropertiesFromHandle(rtDrvMemHandle handle, rtDrvMemProp_t* prop)
 {
     return impl_->MemGetAllocationPropertiesFromHandle(handle, prop);
-}
-
-rtError_t ApiDecorator::FunctionGetAttribute(rtFuncHandle funcHandle, rtFuncAttribute attrType, int64_t* attrValue)
-{
-    return impl_->FunctionGetAttribute(funcHandle, attrType, attrValue);
-}
-
-rtError_t ApiDecorator::FunctionGetBinary(const Kernel* const funcHandle, Program** const binHandle)
-{
-    return impl_->FunctionGetBinary(funcHandle, binHandle);
-}
-
-rtError_t ApiDecorator::FunctionGetParamCount(const Kernel* funcHandle, size_t* paramCount)
-{
-    return impl_->FunctionGetParamCount(funcHandle, paramCount);
-}
-
-rtError_t ApiDecorator::FunctionGetParamInfo(
-    const Kernel* funcHandle, size_t paramIndex, size_t* paramOffset, size_t* paramSize)
-{
-    return impl_->FunctionGetParamInfo(funcHandle, paramIndex, paramOffset, paramSize);
-}
-
-rtError_t ApiDecorator::FunctionGetAvailDynUbufPerBlock(Kernel* funcHandle, uint32_t flags, size_t* dynamicUbufSize)
-{
-    return impl_->FunctionGetAvailDynUbufPerBlock(funcHandle, flags, dynamicUbufSize);
 }
 
 rtError_t ApiDecorator::MemGetAddressRange(void* ptr, void** pbase, size_t* psize)

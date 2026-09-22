@@ -8454,15 +8454,6 @@ TEST_F(ApiTest, api_decorator_kernel_forwarding)
     error = api.FunctionGetMetaInfoSize(nullptr, RT_FUNCTION_TYPE_KERNEL_TYPE, &sz);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::FuncGetSize).stubs().will(returnValue(RT_ERROR_NONE));
-    error = api.FuncGetSize(nullptr, &sz, &sz);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::FuncGetName).stubs().will(returnValue(RT_ERROR_NONE));
-    char_t name[16] = {0};
-    error = api.FuncGetName(nullptr, 16U, name);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetBinBuffer).stubs().will(returnValue(RT_ERROR_NONE));
     void* bin = nullptr;
     uint32_t binSize = 0U;
@@ -8496,14 +8487,6 @@ TEST_F(ApiTest, api_decorator_kernel_forwarding)
 
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::BinaryGetMetaNum).stubs().will(returnValue(RT_ERROR_NONE));
     error = api.BinaryGetMetaNum(nullptr, RT_BINARY_TYPE_BIN_VERSION, &sz);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::FunctionGetAvailDynUbufPerBlock).stubs().will(returnValue(RT_ERROR_NONE));
-    error = api.FunctionGetAvailDynUbufPerBlock(nullptr, 0U, &sz);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::FunctionGetParamInfo).stubs().will(returnValue(RT_ERROR_NONE));
-    error = api.FunctionGetParamInfo(nullptr, 0U, &sz, &sz);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::KernelTaskGetAttribute).stubs().will(returnValue(RT_ERROR_NONE));

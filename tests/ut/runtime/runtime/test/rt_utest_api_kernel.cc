@@ -239,7 +239,7 @@ TEST_F(ApiKernelTest, TestFuncGetName)
 
 TEST_F(ApiKernelTest, TestFuncGetNameFail)
 {
-    ApiImpl apiImpl;
+    ApiImplKernelFunc apiImpl;
     ElfProgram program;
     uint64_t tilingKey = 0;
     Kernel kernel("testKernelName", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
@@ -353,7 +353,7 @@ TEST_F(ApiImplKernelTest, TestBinaryLoadFromDataFailed)
 
 TEST_F(ApiImplKernelTest, TestFuncGetAddr)
 {
-    ApiImpl apiImpl;
+    ApiImplKernelFunc apiImpl;
     ElfProgram program;
     uint64_t tilingKey = 0;
     Kernel kernel("testKernelName", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
@@ -361,19 +361,6 @@ TEST_F(ApiImplKernelTest, TestFuncGetAddr)
     void* func1;
     void* func2;
     rtError_t error = apiImpl.FuncGetAddr(&kernel, &func1, &func2);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    ApiDecorator apiDecorator(&apiImpl);
-    error = apiDecorator.FuncGetAddr(&kernel, &func1, &func2);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    Profiler profiler(&apiImpl);
-    ApiProfileDecorator apiProfileDecorator(&apiImpl, &profiler);
-    error = apiProfileDecorator.FuncGetAddr(&kernel, &func1, &func2);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    ApiProfileLogDecorator apiProfileLogDecorator(&apiImpl, &profiler);
-    error = apiProfileLogDecorator.FuncGetAddr(&kernel, &func1, &func2);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
@@ -419,7 +406,7 @@ TEST_F(ApiImplKernelTest, TestBinaryGetFunctionCount)
 
 TEST_F(ApiImplKernelTest, TestFuncGetAddrWithProgramNull)
 {
-    ApiImpl apiImpl;
+    ApiImplKernelFunc apiImpl;
     ElfProgram program;
     uint64_t tilingKey = 0;
     Kernel kernel("testKernelName", tilingKey, nullptr, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
@@ -534,14 +521,6 @@ TEST_F(ApiKernelTest, TestFuncGetAttribute)
 
     error = rtFunctionGetAttribute(funcHandle, RT_FUNCTION_ATTR_MAX, &attrValue);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
-
-    ApiImpl apiImpl;
-    error = apiImpl.FunctionGetAttribute(static_cast<rtFuncHandle>(&kernel), RT_FUNCTION_ATTR_MAX, &attrValue);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    ApiDecorator apiDecorator(&apiImpl);
-    error = apiDecorator.FunctionGetAttribute(static_cast<rtFuncHandle>(&kernel), RT_FUNCTION_ATTR_MAX, &attrValue);
-    EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
 TEST_F(ApiKernelTest, TestFunctionGetMetaInfoSize)
@@ -567,7 +546,7 @@ TEST_F(ApiKernelTest, TestFuncGetSchedMode)
 
     kernel.SetSchedMode(RT_SCHEM_MODE_NORMAL);
     int64_t attrValue = 0;
-    ApiImpl apiImpl;
+    ApiImplKernelFunc apiImpl;
     rtError_t error = apiImpl.FunctionGetAttribute(
         static_cast<rtFuncHandle>(&kernel), RT_FUNCTION_ATTR_KERNEL_SCHED_MODE, &attrValue);
     EXPECT_EQ(error, RT_ERROR_NONE);

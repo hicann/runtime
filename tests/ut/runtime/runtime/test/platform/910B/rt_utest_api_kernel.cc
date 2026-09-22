@@ -208,7 +208,7 @@ TEST_F(CloudV2ApiKernelTest, TestFuncGetName)
 
 TEST_F(CloudV2ApiKernelTest, TestFuncGetNameFail)
 {
-    ApiImpl apiImpl;
+    ApiImplKernelFunc apiImpl;
     ElfProgram program;
     uint64_t tilingKey = 0;
     Kernel kernel("testKernelName", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
@@ -344,7 +344,7 @@ TEST_F(CloudV2ApiKernelTest, TestBinaryGetFunctionCount)
 
 TEST_F(CloudV2ApiKernelTest, TestFuncGetAddrWithProgramNull)
 {
-    ApiImpl apiImpl;
+    ApiImplKernelFunc apiImpl;
     ElfProgram program;
     uint64_t tilingKey = 0;
     Kernel kernel("testKernelName", tilingKey, nullptr, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
@@ -463,17 +463,6 @@ TEST_F(CloudV2ApiKernelTest, TestFuncGetAttribute)
 
     error = rtFunctionGetAttribute(funcHandle, RT_FUNCTION_ATTR_KERNEL_RATIO, &attrValue);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
-
-    ApiImpl apiImpl;
-    error = apiImpl.FunctionGetAttribute(static_cast<rtFuncHandle>(&kernel), RT_FUNCTION_ATTR_MAX, &attrValue);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = apiImpl.FunctionGetAttribute(static_cast<rtFuncHandle>(&kernel), RT_FUNCTION_ATTR_KERNEL_RATIO, &attrValue);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    ApiDecorator apiDecorator(&apiImpl);
-    error = apiDecorator.FunctionGetAttribute(static_cast<rtFuncHandle>(&kernel), RT_FUNCTION_ATTR_MAX, &attrValue);
-    EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
 TEST_F(CloudV2ApiKernelTest, TestFuncGetAttribute2)
@@ -485,7 +474,7 @@ TEST_F(CloudV2ApiKernelTest, TestFuncGetAttribute2)
     kernel.SetTaskRation(0);
 
     int64_t attrValue = 0;
-    ApiImpl apiImpl;
+    ApiImplKernelFunc apiImpl;
     rtError_t error =
         apiImpl.FunctionGetAttribute(static_cast<rtFuncHandle>(&kernel), RT_FUNCTION_ATTR_KERNEL_RATIO, &attrValue);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -540,15 +529,6 @@ TEST_F(CloudV2ApiKernelTest, TestFunctionGetBinary)
         .will(returnValue(RT_ERROR_NONE));
     error = rtFunctionGetBinary(funcHandle, &binHandle);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
-
-    ApiImpl apiImpl;
-    Program* programHandle;
-    error = apiImpl.FunctionGetBinary(&kernel, &programHandle);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    ApiDecorator apiDecorator(&apiImpl);
-    error = apiDecorator.FunctionGetBinary(&kernel, &programHandle);
-    EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
 TEST_F(CloudV2ApiKernelTest, TestFuncGetSizeWithOnlyAiv)
@@ -603,7 +583,7 @@ TEST_F(CloudV2ApiKernelTest, TestFuncGetSchedMode)
 
     kernel.SetSchedMode(RT_SCHEM_MODE_NORMAL);
     int64_t attrValue = 0;
-    ApiImpl apiImpl;
+    ApiImplKernelFunc apiImpl;
     rtError_t error = apiImpl.FunctionGetAttribute(
         static_cast<rtFuncHandle>(&kernel), RT_FUNCTION_ATTR_KERNEL_SCHED_MODE, &attrValue);
     EXPECT_EQ(error, RT_ERROR_NONE);

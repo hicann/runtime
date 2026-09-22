@@ -167,9 +167,6 @@ public:
     virtual rtError_t BinaryLoadFromData(
         const void* const data, const uint64_t length, const rtLoadBinaryConfig_t* const optionalCfg,
         Program** handle) = 0;
-    virtual rtError_t FuncGetAddr(const Kernel* const funcHandle, void** const aicAddr, void** const aivAddr) = 0;
-    virtual rtError_t FuncGetSize(const Kernel* const funcHandle, size_t* const aicSize, size_t* const aivSize) = 0;
-    virtual rtError_t FuncGetName(const Kernel* const kernel, const uint32_t maxLen, char_t* const name) = 0;
     virtual rtError_t MetadataRegister(Program* const prog, const char_t* const metadata) = 0;
     virtual rtError_t DependencyRegister(Program* const mProgram, Program* const sProgram) = 0;
     virtual rtError_t FunctionRegister(
@@ -855,13 +852,6 @@ public:
     // event mode
     virtual rtError_t EventWorkModeSet(uint8_t mode) = 0;
     virtual rtError_t EventWorkModeGet(uint8_t* mode) = 0;
-
-    virtual rtError_t FunctionGetAttribute(rtFuncHandle funcHandle, rtFuncAttribute attrType, int64_t* attrValue) = 0;
-    virtual rtError_t FunctionGetBinary(const Kernel* const funcHandle, Program** const binHandle) = 0;
-    virtual rtError_t FunctionGetParamCount(const Kernel* funcHandle, size_t* paramCount) = 0;
-    virtual rtError_t FunctionGetParamInfo(
-        const Kernel* funcHandle, size_t paramIndex, size_t* paramOffset, size_t* paramSize) = 0;
-    virtual rtError_t FunctionGetAvailDynUbufPerBlock(Kernel* funcHandle, uint32_t flags, size_t* dynamicUbufSize) = 0;
 
     virtual rtError_t BinarySetExceptionCallback(Program* binHandle, void* callback, void* userData) = 0;
 

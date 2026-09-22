@@ -507,13 +507,5 @@ rtError_t ApiErrorDecorator::ModelTaskUpdate(
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t ApiErrorDecorator::FunctionGetAttribute(rtFuncHandle funcHandle, rtFuncAttribute attrType, int64_t* attrValue)
-{
-    UNUSED(funcHandle);
-    UNUSED(attrType);
-    UNUSED(attrValue);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
 } // namespace runtime
 } // namespace cce

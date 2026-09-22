@@ -909,42 +909,6 @@ rtError_t ApiErrorDecorator::BinaryLoadFromData(
     return error;
 }
 
-rtError_t ApiErrorDecorator::FuncGetAddr(const Kernel* const funcHandle, void** const aicAddr, void** const aivAddr)
-{
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        funcHandle, RT_ERROR_INVALID_VALUE, "Obtaining the execution address of a specified kernel on the device");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        aicAddr, RT_ERROR_INVALID_VALUE, "Obtaining the execution address of a specified kernel on the device");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        aivAddr, RT_ERROR_INVALID_VALUE, "Obtaining the execution address of a specified kernel on the device");
-    const KernelRegisterType kernelRegType = funcHandle->GetKernelRegisterType();
-    COND_RETURN_AND_MSG_OUTER(
-        kernelRegType != RT_KERNEL_REG_TYPE_NON_CPU, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
-        "Obtaining the execution address of a specified kernel on the device", "funcHandle",
-        "The funcHandle obtained after registering the AI CPU operator is not supported");
-    const rtError_t error = impl_->FuncGetAddr(funcHandle, aicAddr, aivAddr);
-    ERROR_RETURN(error, "Get func addr by function handle failed.");
-    return error;
-}
-
-rtError_t ApiErrorDecorator::FuncGetSize(const Kernel* const funcHandle, size_t* const aicSize, size_t* const aivSize)
-{
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        funcHandle, RT_ERROR_INVALID_VALUE, "Obtaining the size of the kernel function code segment");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        aicSize, RT_ERROR_INVALID_VALUE, "Obtaining the size of the kernel function code segment");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        aivSize, RT_ERROR_INVALID_VALUE, "Obtaining the size of the kernel function code segment");
-    const KernelRegisterType kernelRegType = funcHandle->GetKernelRegisterType();
-    COND_RETURN_AND_MSG_OUTER(
-        kernelRegType != RT_KERNEL_REG_TYPE_NON_CPU, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
-        "Obtaining the size of the kernel function code segment", "funcHandle",
-        "The funcHandle obtained after registering the AI CPU operator is not supported");
-    const rtError_t error = impl_->FuncGetSize(funcHandle, aicSize, aivSize);
-    ERROR_RETURN(error, "Get func size by function handle failed.");
-    return error;
-}
-
 rtError_t ApiErrorDecorator::LaunchKernel(
     Kernel* const kernel, uint32_t blockDim, const rtArgsEx_t* const argsInfo, Stream* const stm,
     const rtTaskCfgInfo_t* const cfgInfo)
@@ -6992,18 +6956,6 @@ rtError_t ApiErrorDecorator::ModelGetName(Model* const mdl, const uint32_t maxLe
     return error;
 }
 
-rtError_t ApiErrorDecorator::FuncGetName(const Kernel* const kernel, const uint32_t maxLen, char_t* const name)
-{
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(kernel, RT_ERROR_INVALID_VALUE, "Obtaining the kernel function name");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(name, RT_ERROR_INVALID_VALUE, "Obtaining the kernel function name");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
-        maxLen < (kernel->Name_().length() + 1U), RT_ERROR_INVALID_VALUE, "Obtaining the kernel function name", maxLen,
-        "greater than or equal to " + std::to_string(kernel->Name_().length() + 1U));
-    const rtError_t error = impl_->FuncGetName(kernel, maxLen, name);
-    ERROR_RETURN(error, "get func name failed");
-    return error;
-}
-
 rtError_t ApiErrorDecorator::GetErrorVerbose(const uint32_t deviceId, rtErrorInfo* const errorInfo)
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(errorInfo, RT_ERROR_INVALID_VALUE, "Obtaining detailed error information");
@@ -7140,66 +7092,6 @@ rtError_t ApiErrorDecorator::CacheLastTaskExtendInfo(const char* const extendInf
     }
     const size_t validSize = (infoSize > maxExtendInfoSize) ? maxExtendInfoSize : infoSize;
     return impl_->CacheLastTaskExtendInfo(extendInfoPtr, validSize);
-}
-
-rtError_t ApiErrorDecorator::FunctionGetBinary(const Kernel* const funcHandle, Program** const binHandle)
-{
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        funcHandle, RT_ERROR_INVALID_VALUE, "Obtaining the binary handle of an operator");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        binHandle, RT_ERROR_INVALID_VALUE, "Obtaining the binary handle of an operator");
-    return impl_->FunctionGetBinary(funcHandle, binHandle);
-}
-
-rtError_t ApiErrorDecorator::FunctionGetParamCount(const Kernel* funcHandle, size_t* paramCount)
-{
-    COND_RETURN_WARN(
-        funcHandle->GetKernelRegisterType() == RT_KERNEL_REG_TYPE_CPU, RT_ERROR_FEATURE_NOT_SUPPORT,
-        "AI CPU kernels are not supported.");
-    COND_RETURN_AND_MSG_OUTER(
-        !funcHandle->HasParamSummary(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
-        "Obtaining the number of parameters from the kernel function handle", "funcHandle",
-        "Kernel does not have parameter information");
-
-    return impl_->FunctionGetParamCount(funcHandle, paramCount);
-}
-
-rtError_t ApiErrorDecorator::FunctionGetParamInfo(
-    const Kernel* funcHandle, size_t paramIndex, size_t* paramOffset, size_t* paramSize)
-{
-    COND_RETURN_WARN(
-        funcHandle->GetKernelRegisterType() == RT_KERNEL_REG_TYPE_CPU, RT_ERROR_FEATURE_NOT_SUPPORT,
-        "AI CPU kernels are not supported.");
-    COND_RETURN_AND_MSG_OUTER(
-        !funcHandle->HasParamSummary(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
-        "Obtaining parameter information from the kernel function handle", "funcHandle",
-        "Kernel does not have parameter information");
-    if (paramIndex >= funcHandle->GetParamCount()) {
-        RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
-            ErrorCode::EE1003, "Obtaining parameter information from the kernel function handle", paramIndex,
-            "paramIndex", "[0, " + std::to_string(funcHandle->GetParamCount()) + ")");
-        return RT_ERROR_INVALID_VALUE;
-    }
-    return impl_->FunctionGetParamInfo(funcHandle, paramIndex, paramOffset, paramSize);
-}
-
-rtError_t ApiErrorDecorator::FunctionGetAvailDynUbufPerBlock(
-    Kernel* funcHandle, uint32_t flags, size_t* dynamicUbufSize)
-{
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        funcHandle, RT_ERROR_INVALID_VALUE,
-        "Querying the maximum size of the dynamic UB buffer that can be set for a kernel function");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        dynamicUbufSize, RT_ERROR_INVALID_VALUE,
-        "Querying the maximum size of the dynamic UB buffer that can be set for a kernel function");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
-        (flags != 0U), RT_ERROR_INVALID_VALUE,
-        "Querying the maximum size of the dynamic UB buffer that can be set for a kernel function", flags, "0");
-
-    Program* const prog = funcHandle->Program_();
-    NULL_PTR_RETURN_MSG(prog, RT_ERROR_PROGRAM_NULL);
-
-    return impl_->FunctionGetAvailDynUbufPerBlock(funcHandle, flags, dynamicUbufSize);
 }
 
 rtError_t ApiErrorDecorator::MemRetainAllocationHandle(void* virPtr, rtDrvMemHandle* handle)

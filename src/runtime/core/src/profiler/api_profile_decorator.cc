@@ -395,14 +395,6 @@ rtError_t ApiProfileDecorator::BinaryLoadFromData(
     return error;
 }
 
-rtError_t ApiProfileDecorator::FuncGetAddr(const Kernel* const funcHandle, void** const aicAddr, void** const aivAddr)
-{
-    CallApiBegin(RT_PROF_API_FUNC_GET_ADDR);
-    const rtError_t error = impl_->FuncGetAddr(funcHandle, aicAddr, aivAddr);
-    CallApiEnd(error);
-    return error;
-}
-
 rtError_t ApiProfileDecorator::LaunchKernel(
     Kernel* const kernel, uint32_t blockDim, const rtArgsEx_t* const argsInfo, Stream* const stm,
     const rtTaskCfgInfo_t* const cfgInfo)
