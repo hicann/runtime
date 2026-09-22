@@ -45,7 +45,7 @@ RTS_API rtError_t rtGetStackBuffer(
  * @param [out] aivSize   kernel size of aivector
  * @return RT_ERROR_NONE for ok
  */
-RTS_API rtError_t rtFuncGetSize(const rtFuncHandle funcHandle, size_t* aicSize, size_t* aivSize);
+RTS_API rtError_t rtFuncGetSize(const void* func, size_t* aicSize, size_t* aivSize);
 
 /**
  * @ingroup rt_kernel
@@ -54,7 +54,7 @@ RTS_API rtError_t rtFuncGetSize(const rtFuncHandle funcHandle, size_t* aicSize, 
  * @param [out] binHandle  bin handle
  * @return RT_ERROR_NONE for ok
  */
-RTS_API rtError_t rtFunctionGetBinary(const rtFuncHandle funcHandle, rtBinHandle* binHandle);
+RTS_API rtError_t rtFunctionGetBinary(const void* func, rtBinHandle* binHandle);
 
 /**
  * @brief get parameter count from function handle.
@@ -84,7 +84,7 @@ RTS_API rtError_t rtFunctionGetParamInfo(const void* func, size_t paramIndex, si
  * @return ACL_RT_SUCCESS for ok
  * @return ACL_ERROR_RT_PARAM_INVALID for error input
  */
-RTS_API rtError_t rtFunctionGetAvailDynUbufPerBlock(void* func, uint32_t flags, size_t* dynamicUbufSize);
+RTS_API rtError_t rtFunctionGetAvailDynUbufPerBlock(const void* func, uint32_t flags, size_t* dynamicUbufSize);
 
 /**
  * @ingroup rt_kernel

@@ -9948,6 +9948,19 @@ TEST_F(UTEST_ACL_Runtime, aclrtFunctionGetAvailDynUbufPerBlock_ReturnDynamicUbuf
     EXPECT_EQ(dynamicUbufSize, 4096U);
 }
 
+TEST_F(UTEST_ACL_Runtime, aclrtFunctionGetAvailDynUbufPerBlock_ConstSymbolTest)
+{
+    const int symbol = 0;
+    const void* func = &symbol;
+    size_t dynamicUbufSize = 0U;
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtFunctionGetAvailDynUbufPerBlock(func, 0U, _))
+        .WillOnce(DoAll(SetArgPointee<2>(4096U), Return(RT_ERROR_NONE)));
+    aclError ret = aclrtFunctionGetAvailDynUbufPerBlock(func, 0U, &dynamicUbufSize);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    EXPECT_EQ(dynamicUbufSize, 4096U);
+}
+
 TEST_F(UTEST_ACL_Runtime, aclrtFunctionGetAvailDynUbufPerBlock_FlagsNotZeroTest)
 {
     void* func = (void*)0x01;

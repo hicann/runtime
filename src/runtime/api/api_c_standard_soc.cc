@@ -58,27 +58,6 @@ TIMESTAMP_EXTERN(rtMallocCached);
 extern "C" {
 #endif // __cplusplus
 
-static rtError_t ConvertFuncToKernel(
-    Api* const apiInstance, void* func, Kernel*& kernel, const char_t* const callerFuncName)
-{
-    Kernel* symbolKernel = nullptr;
-    const rtError_t ret = apiInstance->GetFunctionBySymbol(func, &symbolKernel);
-    // 若用户传入的参数已经是 func handle，GetFunctionBySymbol 会找不到对应的 handle 返回错误。
-    // 这是正常情况，因此失败时不直接返回，而是将 func 当作 handle 使用。
-    if (ret == RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_INFO, "find function handle by symbol");
-        kernel = symbolKernel;
-        return RT_ERROR_NONE;
-    } else if (ret == RT_ERROR_INVALID_DEVICE_FUNCTION) {
-        RT_LOG(RT_LOG_INFO, "cannot find function handle by symbol, treat func as handle directly");
-        return ValidateKernelHandleForApi(func, kernel, callerFuncName);
-    } else {
-        ErrorMessageUtils::FuncErrorReason(ret, callerFuncName);
-        RT_LOG_FLUSH();
-        return GetRtExtErrCodeAndSetGlobalErr(ret);
-    }
-}
-
 VISIBILITY_DEFAULT
 rtError_t rtWriteValue(rtWriteValueInfo_t* const info, rtStream_t const stm)
 {
@@ -1466,24 +1445,31 @@ rtError_t rtIpcOpenEventHandle(rtIpcEventHandle_t handle, rtEvent_t* event)
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtFunctionGetAttribute(rtFuncHandle funcHandle, rtFuncAttribute attrType, int64_t* attrValue)
+rtError_t rtFunctionGetAttribute(const void* func, rtFuncAttribute attrType, int64_t* attrValue)
 {
     ApiKernelFunc* const apiInstance = ApiKernelFunc::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(funcHandle, Kernel, realKernel, ValidateKernelHandleForApi);
-    const rtError_t error =
-        apiInstance->FunctionGetAttribute(RtPtrToPtr<rtFuncHandle>(realKernel), attrType, attrValue);
+    Kernel* realKernel = nullptr;
+    rtError_t error = ConvertFuncToKernel(apiInstance, func, realKernel, __func__);
+    if (error != RT_ERROR_NONE) {
+        return error;
+    }
+    error = apiInstance->FunctionGetAttribute(RtPtrToPtr<rtFuncHandle>(realKernel), attrType, attrValue);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtFunctionGetBinary(const rtFuncHandle funcHandle, rtBinHandle* binHandle)
+rtError_t rtFunctionGetBinary(const void* func, rtBinHandle* binHandle)
 {
     ApiKernelFunc* const apiInstance = ApiKernelFunc::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(funcHandle, Kernel, realKernel, ValidateKernelHandleForApi);
-    const rtError_t ret = apiInstance->FunctionGetBinary(realKernel, RtPtrToPtr<Program**>(binHandle));
+    Kernel* realKernel = nullptr;
+    rtError_t ret = ConvertFuncToKernel(apiInstance, func, realKernel, __func__);
+    if (ret != RT_ERROR_NONE) {
+        return ret;
+    }
+    ret = apiInstance->FunctionGetBinary(realKernel, RtPtrToPtr<Program**>(binHandle));
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     Program* const realProgram = RtPtrToPtr<Program*>(*binHandle);
     if (realProgram != nullptr) {
@@ -1554,9 +1540,13 @@ rtError_t rtFunctionGetParamCount(const void* func, size_t* paramCount)
         RT_LOG(RT_LOG_WARNING, "XPU does not support rtFunctionGetParamCount");
         return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
     }
-    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(func, Kernel, realKernel, ValidateKernelHandleForApi);
+    Kernel* realKernel = nullptr;
+    rtError_t error = ConvertFuncToKernel(apiInstance, func, realKernel, __func__);
+    if (error != RT_ERROR_NONE) {
+        return error;
+    }
     const Kernel* const kernel = realKernel;
-    const rtError_t error = apiInstance->FunctionGetParamCount(kernel, paramCount);
+    error = apiInstance->FunctionGetParamCount(kernel, paramCount);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
@@ -1573,21 +1563,29 @@ rtError_t rtFunctionGetParamInfo(const void* func, size_t paramIndex, size_t* pa
         RT_LOG(RT_LOG_WARNING, "XPU does not support rtFunctionGetParamInfo");
         return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
     }
-    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(func, Kernel, realKernel, ValidateKernelHandleForApi);
+    Kernel* realKernel = nullptr;
+    rtError_t error = ConvertFuncToKernel(apiInstance, func, realKernel, __func__);
+    if (error != RT_ERROR_NONE) {
+        return error;
+    }
     const Kernel* const kernel = realKernel;
-    const rtError_t error = apiInstance->FunctionGetParamInfo(kernel, paramIndex, paramOffset, paramSize);
+    error = apiInstance->FunctionGetParamInfo(kernel, paramIndex, paramOffset, paramSize);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtFunctionGetAvailDynUbufPerBlock(void* func, uint32_t flags, size_t* dynamicUbufSize)
+rtError_t rtFunctionGetAvailDynUbufPerBlock(const void* func, uint32_t flags, size_t* dynamicUbufSize)
 {
     ApiKernelFunc* const apiInstance = ApiKernelFunc::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(func, Kernel, kernel, ValidateKernelHandleForApi);
-    const rtError_t error = apiInstance->FunctionGetAvailDynUbufPerBlock(kernel, flags, dynamicUbufSize);
+    Kernel* kernel = nullptr;
+    rtError_t error = ConvertFuncToKernel(apiInstance, func, kernel, __func__);
+    if (error != RT_ERROR_NONE) {
+        return error;
+    }
+    error = apiInstance->FunctionGetAvailDynUbufPerBlock(kernel, flags, dynamicUbufSize);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
@@ -1637,7 +1635,7 @@ rtError_t rtLaunchKernelWithArgsArray(
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtFuncGetSize(const rtFuncHandle funcHandle, size_t* aicSize, size_t* aivSize)
+rtError_t rtFuncGetSize(const void* func, size_t* aicSize, size_t* aivSize)
 {
     const Runtime* const rtInstance = Runtime::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
@@ -1648,8 +1646,12 @@ rtError_t rtFuncGetSize(const rtFuncHandle funcHandle, size_t* aicSize, size_t* 
         static_cast<int32_t>(chipType));
     ApiKernelFunc* const apiInstance = ApiKernelFunc::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(funcHandle, Kernel, realKernel, ValidateKernelHandleForApi);
-    const rtError_t ret = apiInstance->FuncGetSize(realKernel, aicSize, aivSize);
+    Kernel* realKernel = nullptr;
+    rtError_t ret = ConvertFuncToKernel(apiInstance, func, realKernel, __func__);
+    if (ret != RT_ERROR_NONE) {
+        return ret;
+    }
+    ret = apiInstance->FuncGetSize(realKernel, aicSize, aivSize);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
 }

@@ -151,6 +151,31 @@ TEST_F(CloudV2ApiKernelTest, TestFuncGetSize)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
+TEST_F(CloudV2ApiKernelTest, TestFuncGetSize_ApiImplSuccessWithSymbol)
+{
+    ApiImplKernelFunc apiImplKernelFunc;
+    MockApiKernelFuncInstance(&apiImplKernelFunc);
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_VECTOR);
+    uint64_t tilingKey = 0;
+    Kernel kernel("testKernelName", tilingKey, &program, RT_KERNEL_ATTR_TYPE_VECTOR, 2048, 0, 0, 0, 0);
+    kernel.SetKernelAttrType(RT_KERNEL_ATTR_TYPE_VECTOR);
+    kernel.SetKernelLength1(10);
+    Kernel* retKernel = &kernel;
+    MOCKER_CPP_VIRTUAL(apiImplKernelFunc, &ApiImplKernelFunc::GetFunctionBySymbol)
+        .stubs()
+        .with(mockcpp::any(), outBoundP(&retKernel, sizeof(Kernel*)))
+        .will(returnValue(RT_ERROR_NONE));
+
+    size_t aicSize = 0;
+    size_t aivSize = 0;
+    int dummySymbol = 0;
+    rtError_t error = rtFuncGetSize(reinterpret_cast<const void*>(&dummySymbol), &aicSize, &aivSize);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(aicSize, 0U);
+    EXPECT_EQ(aivSize, 10U);
+}
+
 TEST_F(CloudV2ApiKernelTest, TestRtsFuncGetByEntrySuccess)
 {
     ApiImpl apiImpl;

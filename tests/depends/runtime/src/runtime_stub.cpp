@@ -1231,17 +1231,17 @@ rtError_t aclStub::rtCacheLastTaskExtendInfo(const char* const extendInfoPtr, co
     return RT_ERROR_NONE;
 }
 
-rtError_t aclStub::rtFunctionGetAttribute(rtFuncHandle funcHandle, rtFuncAttribute attrType, int64_t* attrValue)
+rtError_t aclStub::rtFunctionGetAttribute(const void* func, rtFuncAttribute attrType, int64_t* attrValue)
 {
-    (void)funcHandle;
+    (void)func;
     (void)attrType;
     (void)attrValue;
     return RT_ERROR_NONE;
 }
 
-rtError_t aclStub::rtFunctionGetBinary(const rtFuncHandle funcHandle, rtBinHandle* binHandle)
+rtError_t aclStub::rtFunctionGetBinary(const void* func, rtBinHandle* binHandle)
 {
-    (void)funcHandle;
+    (void)func;
     (void)binHandle;
     return RT_ERROR_NONE;
 }
@@ -1268,7 +1268,7 @@ rtError_t aclStub::rtFunctionGetParamInfo(const void* func, size_t paramIndex, s
     return RT_ERROR_NONE;
 }
 
-rtError_t aclStub::rtFunctionGetAvailDynUbufPerBlock(void* func, uint32_t flags, size_t* dynamicUbufSize)
+rtError_t aclStub::rtFunctionGetAvailDynUbufPerBlock(const void* func, uint32_t flags, size_t* dynamicUbufSize)
 {
     (void)func;
     (void)flags;
@@ -1382,15 +1382,9 @@ rtError_t aclStub::rtBinaryGetFunctionCount(const rtBinHandle binHandle, uint32_
     return RT_ERROR_NONE;
 }
 
-rtError_t aclStub::rtsFuncGetAddr(const rtFuncHandle funcHandle, void** aicAddr, void** aivAddr)
-{
-    return RT_ERROR_NONE;
-}
+rtError_t aclStub::rtsFuncGetAddr(const void* func, void** aicAddr, void** aivAddr) { return RT_ERROR_NONE; }
 
-rtError_t aclStub::rtFuncGetSize(const rtFuncHandle funcHandle, size_t* aicSize, size_t* aivSize)
-{
-    return RT_ERROR_NONE;
-}
+rtError_t aclStub::rtFuncGetSize(const void* func, size_t* aicSize, size_t* aivSize) { return RT_ERROR_NONE; }
 
 rtError_t aclStub::rtsLaunchKernelWithConfig(
     rtFuncHandle funcHandle, uint32_t numBlocks, rtStream_t stm, rtKernelLaunchCfg_t* cfg, rtArgsHandle argsHandle,
@@ -1932,9 +1926,9 @@ rtError_t aclStub::rtsSwitchStream(
     return RT_ERROR_NONE;
 }
 
-rtError_t aclStub::rtsFuncGetName(const rtFuncHandle funcHandle, const uint32_t maxLen, char_t* const name)
+rtError_t aclStub::rtsFuncGetName(const void* func, const uint32_t maxLen, char_t* const name)
 {
-    (void)funcHandle;
+    (void)func;
     (void)maxLen;
     (void)name;
     return RT_ERROR_NONE;
@@ -3679,14 +3673,14 @@ rtError_t rtCacheLastTaskExtendInfo(const char* const extendInfoPtr, const size_
     return MockFunctionTest::aclStubInstance().rtCacheLastTaskExtendInfo(extendInfoPtr, infoSize);
 }
 
-rtError_t rtFunctionGetAttribute(rtFuncHandle funcHandle, rtFuncAttribute attrType, int64_t* attrValue)
+rtError_t rtFunctionGetAttribute(const void* func, rtFuncAttribute attrType, int64_t* attrValue)
 {
-    return MockFunctionTest::aclStubInstance().rtFunctionGetAttribute(funcHandle, attrType, attrValue);
+    return MockFunctionTest::aclStubInstance().rtFunctionGetAttribute(func, attrType, attrValue);
 }
 
-rtError_t rtFunctionGetBinary(const rtFuncHandle funcHandle, rtBinHandle* binHandle)
+rtError_t rtFunctionGetBinary(const void* func, rtBinHandle* binHandle)
 {
-    return MockFunctionTest::aclStubInstance().rtFunctionGetBinary(funcHandle, binHandle);
+    return MockFunctionTest::aclStubInstance().rtFunctionGetBinary(func, binHandle);
 }
 
 rtError_t rtFunctionGetParamCount(const void* func, size_t* paramCount)
@@ -3699,7 +3693,7 @@ rtError_t rtFunctionGetParamInfo(const void* func, size_t paramIndex, size_t* pa
     return MockFunctionTest::aclStubInstance().rtFunctionGetParamInfo(func, paramIndex, paramOffset, paramSize);
 }
 
-rtError_t rtFunctionGetAvailDynUbufPerBlock(void* func, uint32_t flags, size_t* dynamicUbufSize)
+rtError_t rtFunctionGetAvailDynUbufPerBlock(const void* func, uint32_t flags, size_t* dynamicUbufSize)
 {
     return MockFunctionTest::aclStubInstance().rtFunctionGetAvailDynUbufPerBlock(func, flags, dynamicUbufSize);
 }
@@ -3779,14 +3773,14 @@ rtError_t rtBinaryGetFunctionCount(const rtBinHandle binHandle, uint32_t* count)
     return MockFunctionTest::aclStubInstance().rtBinaryGetFunctionCount(binHandle, count);
 }
 
-rtError_t rtsFuncGetAddr(const rtFuncHandle funcHandle, void** aicAddr, void** aivAddr)
+rtError_t rtsFuncGetAddr(const void* func, void** aicAddr, void** aivAddr)
 {
-    return MockFunctionTest::aclStubInstance().rtsFuncGetAddr(funcHandle, aicAddr, aivAddr);
+    return MockFunctionTest::aclStubInstance().rtsFuncGetAddr(func, aicAddr, aivAddr);
 }
 
-rtError_t rtFuncGetSize(const rtFuncHandle funcHandle, size_t* aicSize, size_t* aivSize)
+rtError_t rtFuncGetSize(const void* func, size_t* aicSize, size_t* aivSize)
 {
-    return MockFunctionTest::aclStubInstance().rtFuncGetSize(funcHandle, aicSize, aivSize);
+    return MockFunctionTest::aclStubInstance().rtFuncGetSize(func, aicSize, aivSize);
 }
 
 rtError_t rtsLaunchKernelWithConfig(
@@ -4148,9 +4142,9 @@ rtError_t rtsSwitchStream(
         leftValue, cond, rightValue, dataType, trueStream, falseStream, stream);
 }
 
-rtError_t rtsFuncGetName(const rtFuncHandle funcHandle, const uint32_t maxLen, char_t* const name)
+rtError_t rtsFuncGetName(const void* func, const uint32_t maxLen, char_t* const name)
 {
-    return MockFunctionTest::aclStubInstance().rtsFuncGetName(funcHandle, maxLen, name);
+    return MockFunctionTest::aclStubInstance().rtsFuncGetName(func, maxLen, name);
 }
 
 rtError_t rtsModelSetName(rtModel_t mdl, const char_t* mdlName)

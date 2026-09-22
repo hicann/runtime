@@ -802,9 +802,9 @@ rtError_t rtGetFuncHandleFromExceptionInfo(const rtExceptionInfo_t* info, rtFunc
     return RT_ERROR_NONE;
 }
 
-rtError_t rtsFuncGetName(const rtFuncHandle funcHandle, const uint32_t maxLen, char* const name)
+rtError_t rtsFuncGetName(const void* func, const uint32_t maxLen, char* const name)
 {
-    (void)funcHandle;
+    (void)func;
     if (name == nullptr || maxLen == 0) {
         return RT_ERROR_INVALID_VALUE;
     }
@@ -812,9 +812,9 @@ rtError_t rtsFuncGetName(const rtFuncHandle funcHandle, const uint32_t maxLen, c
     return RT_ERROR_NONE;
 }
 
-rtError_t rtsFuncGetAddr(const rtFuncHandle funcHandle, void** aicAddr, void** aivAddr)
+rtError_t rtsFuncGetAddr(const void* func, void** aicAddr, void** aivAddr)
 {
-    (void)funcHandle;
+    (void)func;
     if (aicAddr != nullptr) {
         *aicAddr = nullptr;
     }

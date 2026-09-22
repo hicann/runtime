@@ -123,7 +123,7 @@ RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t
  * @return RT_ERROR_NONE for ok
  */
 RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t
-    rtsFuncGetAddr(const rtFuncHandle funcHandle, void** aicAddr, void** aivAddr);
+    rtsFuncGetAddr(const void* func, void** aicAddr, void** aivAddr);
 
 /**
  * @ingroup rts_kernel
@@ -433,7 +433,7 @@ RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t
  * @return ACL_ERROR_RT_PARAM_INVALID for error input
  */
 RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t
-    rtsFuncGetName(const rtFuncHandle funcHandle, const uint32_t maxLen, char_t* const name);
+    rtsFuncGetName(const void* func, const uint32_t maxLen, char_t* const name);
 
 /**
  * @ingroup rts_kernel

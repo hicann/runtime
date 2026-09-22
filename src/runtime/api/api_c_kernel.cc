@@ -463,12 +463,16 @@ rtError_t rtBinaryGetFunctionCount(rtBinHandle const binHandle, uint32_t* const 
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtsFuncGetAddr(const rtFuncHandle funcHandle, void** aicAddr, void** aivAddr)
+rtError_t rtsFuncGetAddr(const void* func, void** aicAddr, void** aivAddr)
 {
     ApiKernelFunc* const apiInstance = ApiKernelFunc::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(funcHandle, Kernel, realKernel, ValidateKernelHandleForApi);
-    const rtError_t ret = apiInstance->FuncGetAddr(realKernel, aicAddr, aivAddr);
+    Kernel* realKernel = nullptr;
+    rtError_t ret = ConvertFuncToKernel(apiInstance, func, realKernel, __func__);
+    if (ret != RT_ERROR_NONE) {
+        return ret;
+    }
+    ret = apiInstance->FuncGetAddr(realKernel, aicAddr, aivAddr);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
 }
@@ -503,12 +507,16 @@ VISIBILITY_DEFAULT
 rtError_t rtsGetNonCacheAddrOffset(uint32_t deviceId, uint64_t* offset) { return rtGetL2CacheOffset(deviceId, offset); }
 
 VISIBILITY_DEFAULT
-rtError_t rtsFuncGetName(const rtFuncHandle funcHandle, const uint32_t maxLen, char_t* const name)
+rtError_t rtsFuncGetName(const void* func, const uint32_t maxLen, char_t* const name)
 {
     ApiKernelFunc* const apiInstance = ApiKernelFunc::Instance();
     NULL_PTR_RETURN_NOLOG(apiInstance, ACL_ERROR_RT_INTERNAL_ERROR);
-    RT_VALIDATE_AND_UNWRAP_OBJECT_WITH_VALIDATOR(funcHandle, Kernel, realKernel, ValidateKernelHandleForApi);
-    const rtError_t ret = apiInstance->FuncGetName(realKernel, maxLen, name);
+    Kernel* realKernel = nullptr;
+    rtError_t ret = ConvertFuncToKernel(apiInstance, func, realKernel, __func__);
+    if (ret != RT_ERROR_NONE) {
+        return ret;
+    }
+    ret = apiInstance->FuncGetName(realKernel, maxLen, name);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     return ACL_RT_SUCCESS;
 }

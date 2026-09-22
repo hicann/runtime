@@ -263,10 +263,8 @@
     _(aclError, aclrtBinaryGetGlobal, (aclrtBinHandle binHandle, const char* name, void** dptr, size_t* size),         \
       (binHandle, name, dptr, size))                                                                                   \
     _(aclError, aclrtGetFuncBySymbol, (const void* symbol, aclrtFuncHandle* funcHandle), (symbol, funcHandle))         \
-    _(aclError, aclrtGetFunctionAddr, (aclrtFuncHandle funcHandle, void** aicAddr, void** aivAddr),                    \
-      (funcHandle, aicAddr, aivAddr))                                                                                  \
-    _(aclError, aclrtGetFunctionSize, (aclrtFuncHandle funcHandle, size_t * aicSize, size_t * aivSize),                \
-      (funcHandle, aicSize, aivSize))                                                                                  \
+    _(aclError, aclrtGetFunctionAddr, (const void* func, void** aicAddr, void** aivAddr), (func, aicAddr, aivAddr))    \
+    _(aclError, aclrtGetFunctionSize, (const void* func, size_t* aicSize, size_t* aivSize), (func, aicSize, aivSize))  \
     _(aclError, aclrtGetMemcpyDescSize, (aclrtMemcpyKind kind, size_t * descSize), (kind, descSize))                   \
     _(aclError, aclrtSetMemcpyDesc,                                                                                    \
       (void* desc, aclrtMemcpyKind kind, void* srcAddr, void* dstAddr, size_t count, void* config),                    \
@@ -372,8 +370,7 @@
       (void* leftValue, aclrtCondition cond, void* rightValue, aclrtCompareDataType dataType, aclrtStream trueStream,  \
        aclrtStream falseStream, aclrtStream stream),                                                                   \
       (leftValue, cond, rightValue, dataType, trueStream, falseStream, stream))                                        \
-    _(aclError, aclrtGetFunctionName, (aclrtFuncHandle funcHandle, uint32_t maxLen, char* name),                       \
-      (funcHandle, maxLen, name))                                                                                      \
+    _(aclError, aclrtGetFunctionName, (const void* func, uint32_t maxLen, char* name), (func, maxLen, name))           \
     _(aclError, aclrtGetBufFromChain, (aclrtMbuf headBuf, uint32_t index, aclrtMbuf * buf), (headBuf, index, buf))     \
     _(aclError, aclrtGetBufChainNum, (aclrtMbuf headBuf, uint32_t * num), (headBuf, num))                              \
     _(aclError, aclrtAppendBufChain, (aclrtMbuf headBuf, aclrtMbuf buf), (headBuf, buf))                               \
@@ -519,16 +516,14 @@
     _(aclError, aclrtCacheLastTaskOpInfo, (const void* const infoPtr, const size_t infoSize), (infoPtr, infoSize))     \
     _(aclError, aclrtCacheLastTaskExtendInfo, (const char* const extendInfoPtr, const size_t infoSize),                \
       (extendInfoPtr, infoSize))                                                                                       \
-    _(aclError, aclrtGetFunctionAttribute,                                                                             \
-      (aclrtFuncHandle funcHandle, aclrtFuncAttribute attrType, int64_t * attrValue),                                  \
-      (funcHandle, attrType, attrValue))                                                                               \
-    _(aclError, aclrtFunctionGetBinary, (const aclrtFuncHandle funcHandle, aclrtBinHandle* binHandle),                 \
-      (funcHandle, binHandle))                                                                                         \
+    _(aclError, aclrtGetFunctionAttribute, (const void* func, aclrtFuncAttribute attrType, int64_t* attrValue),        \
+      (func, attrType, attrValue))                                                                                     \
+    _(aclError, aclrtFunctionGetBinary, (const void* func, aclrtBinHandle* binHandle), (func, binHandle))              \
     _(aclError, aclrtFunctionGetParamCount, (const void* func, size_t* paramCount), (func, paramCount))                \
     _(aclError, aclrtFunctionGetParamInfo,                                                                             \
       (const void* func, size_t paramIndex, size_t* paramOffset, size_t* paramSize),                                   \
       (func, paramIndex, paramOffset, paramSize))                                                                      \
-    _(aclError, aclrtFunctionGetAvailDynUbufPerBlock, (void* func, uint32_t flags, size_t* dynamicUbufSize),           \
+    _(aclError, aclrtFunctionGetAvailDynUbufPerBlock, (const void* func, uint32_t flags, size_t* dynamicUbufSize),     \
       (func, flags, dynamicUbufSize))                                                                                  \
     _(aclError, aclrtIpcGetEventHandle, (aclrtEvent event, aclrtIpcEventHandle * handle), (event, handle))             \
     _(aclError, aclrtIpcOpenEventHandle, (aclrtIpcEventHandle handle, aclrtEvent * event), (handle, event))            \

@@ -15,6 +15,7 @@
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 
+#include "api_handle_guard.h"
 #include "api_impl_kernel_func.hpp"
 #include "base_david.hpp"
 #include "common/rt_utest_context_reset_helper.hpp"
@@ -139,4 +140,22 @@ TEST_F(ApiKernelFuncTest, GetFunctionBySymbolValidatesAndReportsMissingSymbol)
     EXPECT_EQ(apiKernelFunc.GetFunctionBySymbol(nullptr, &kernel), RT_ERROR_INVALID_VALUE);
     EXPECT_EQ(apiKernelFunc.GetFunctionBySymbol(&symbol, nullptr), RT_ERROR_INVALID_VALUE);
     EXPECT_EQ(apiKernelFunc.GetFunctionBySymbol(&symbol, &kernel), RT_ERROR_INVALID_DEVICE_FUNCTION);
+}
+
+TEST_F(ApiKernelFuncTest, ConvertFuncToKernelSupportsApiKernelFunc)
+{
+    ApiImplKernelFunc apiKernelFunc;
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    Kernel expectedKernel("testFunction", 0U, &program, RT_KERNEL_ATTR_TYPE_AICORE, 0U, 0U, 0U, 0U, 0U);
+    Kernel* symbolKernel = &expectedKernel;
+    MOCKER_CPP_VIRTUAL(apiKernelFunc, &ApiImplKernelFunc::GetFunctionBySymbol)
+        .expects(once())
+        .with(mockcpp::any(), outBoundP(&symbolKernel, sizeof(Kernel*)))
+        .will(returnValue(RT_ERROR_NONE));
+
+    int symbol = 0;
+    Kernel* kernel = nullptr;
+    ApiKernelFunc* const apiInstance = &apiKernelFunc;
+    EXPECT_EQ(ConvertFuncToKernel(apiInstance, &symbol, kernel, __func__), RT_ERROR_NONE);
+    EXPECT_EQ(kernel, &expectedKernel);
 }

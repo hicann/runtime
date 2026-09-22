@@ -366,12 +366,12 @@ public:
     virtual rtError_t rtStreamEndCapture(rtStream_t stm, rtModel_t* captureMdl);
     virtual rtError_t rtCacheLastTaskOpInfo(const void* const infoPtr, const size_t infoSize);
     virtual rtError_t rtCacheLastTaskExtendInfo(const char* const extendInfoPtr, const size_t infoSize);
-    virtual rtError_t rtFunctionGetAttribute(rtFuncHandle funcHandle, rtFuncAttribute attrType, int64_t* attrValue);
-    virtual rtError_t rtFunctionGetBinary(const rtFuncHandle funcHandle, rtBinHandle* binHandle);
+    virtual rtError_t rtFunctionGetAttribute(const void* func, rtFuncAttribute attrType, int64_t* attrValue);
+    virtual rtError_t rtFunctionGetBinary(const void* func, rtBinHandle* binHandle);
     virtual rtError_t rtFunctionGetParamCount(const void* func, size_t* paramCount);
     virtual rtError_t rtFunctionGetParamInfo(
         const void* func, size_t paramIndex, size_t* paramOffset, size_t* paramSize);
-    virtual rtError_t rtFunctionGetAvailDynUbufPerBlock(void* func, uint32_t flags, size_t* dynamicUbufSize);
+    virtual rtError_t rtFunctionGetAvailDynUbufPerBlock(const void* func, uint32_t flags, size_t* dynamicUbufSize);
     virtual rtError_t rtLaunchKernelWithArgsArray(
         void* func, uint32_t numBlocks, rtStream_t stream, rtKernelLaunchCfg_t* cfg, void** args);
     virtual rtError_t rtLaunchSIMTKernelWithArgsArray(
@@ -424,8 +424,8 @@ public:
     virtual rtError_t rtsFuncGetByEntry(
         const rtBinHandle binHandle, const uint64_t funcEntry, rtFuncHandle* funcHandle);
     virtual rtError_t rtBinaryGetFunctionCount(const rtBinHandle binHandle, uint32_t* count);
-    virtual rtError_t rtsFuncGetAddr(const rtFuncHandle funcHandle, void** aicAddr, void** aivAddr);
-    virtual rtError_t rtFuncGetSize(const rtFuncHandle funcHandle, size_t* aicSize, size_t* aivSize);
+    virtual rtError_t rtsFuncGetAddr(const void* func, void** aicAddr, void** aivAddr);
+    virtual rtError_t rtFuncGetSize(const void* func, size_t* aicSize, size_t* aivSize);
 
     virtual rtError_t rtsLaunchKernelWithConfig(
         rtFuncHandle funcHandle, uint32_t numBlocks, rtStream_t stm, rtKernelLaunchCfg_t* cfg, rtArgsHandle argsHandle,
@@ -522,7 +522,7 @@ public:
     virtual rtError_t rtsSwitchStream(
         void* leftValue, rtCondition_t cond, void* rightValue, rtSwitchDataType_t dataType, rtStream_t trueStream,
         rtStream_t falseStream, rtStream_t stream);
-    virtual rtError_t rtsFuncGetName(const rtFuncHandle funcHandle, const uint32_t maxLen, char_t* const name);
+    virtual rtError_t rtsFuncGetName(const void* func, const uint32_t maxLen, char_t* const name);
     virtual rtError_t rtsModelSetName(rtModel_t mdl, const char_t* mdlName);
     virtual rtError_t rtsModelGetName(rtModel_t mdl, const uint32_t maxLen, char_t* const mdlName);
 
@@ -985,13 +985,13 @@ public:
     MOCK_METHOD2(rtStreamEndCapture, rtError_t(rtStream_t stm, rtModel_t* captureMdl));
     MOCK_METHOD2(rtCacheLastTaskOpInfo, rtError_t(const void* const infoPtr, const size_t infoSize));
     MOCK_METHOD2(rtCacheLastTaskExtendInfo, rtError_t(const char* const extendInfoPtr, const size_t infoSize));
-    MOCK_METHOD3(
-        rtFunctionGetAttribute, rtError_t(rtFuncHandle funcHandle, rtFuncAttribute attrType, int64_t* attrValue));
-    MOCK_METHOD2(rtFunctionGetBinary, rtError_t(const rtFuncHandle funcHandle, rtBinHandle* binHandle));
+    MOCK_METHOD3(rtFunctionGetAttribute, rtError_t(const void* func, rtFuncAttribute attrType, int64_t* attrValue));
+    MOCK_METHOD2(rtFunctionGetBinary, rtError_t(const void* func, rtBinHandle* binHandle));
     MOCK_METHOD2(rtFunctionGetParamCount, rtError_t(const void* func, size_t* paramCount));
     MOCK_METHOD4(
         rtFunctionGetParamInfo, rtError_t(const void* func, size_t paramIndex, size_t* paramOffset, size_t* paramSize));
-    MOCK_METHOD3(rtFunctionGetAvailDynUbufPerBlock, rtError_t(void* func, uint32_t flags, size_t* dynamicUbufSize));
+    MOCK_METHOD3(
+        rtFunctionGetAvailDynUbufPerBlock, rtError_t(const void* func, uint32_t flags, size_t* dynamicUbufSize));
     MOCK_METHOD5(
         rtLaunchKernelWithArgsArray,
         rtError_t(void* func, uint32_t numBlocks, rtStream_t stream, rtKernelLaunchCfg_t* cfg, void** args));
@@ -1054,8 +1054,8 @@ public:
     MOCK_METHOD3(
         rtsFuncGetByEntry, rtError_t(const rtBinHandle binHandle, const uint64_t funcEntry, rtFuncHandle* funcHandle));
     MOCK_METHOD2(rtBinaryGetFunctionCount, rtError_t(const rtBinHandle binHandle, uint32_t* count));
-    MOCK_METHOD3(rtsFuncGetAddr, rtError_t(const rtFuncHandle funcHandle, void** aicAddr, void** aivAddr));
-    MOCK_METHOD3(rtFuncGetSize, rtError_t(const rtFuncHandle funcHandle, size_t* aicSize, size_t* aivSize));
+    MOCK_METHOD3(rtsFuncGetAddr, rtError_t(const void* func, void** aicAddr, void** aivAddr));
+    MOCK_METHOD3(rtFuncGetSize, rtError_t(const void* func, size_t* aicSize, size_t* aivSize));
     MOCK_METHOD6(
         rtsLaunchKernelWithConfig, rtError_t(
                                        rtFuncHandle funcHandle, uint32_t numBlocks, rtStream_t stm,
@@ -1166,7 +1166,7 @@ public:
         rtsSwitchStream, rtError_t(
                              void* leftValue, rtCondition_t cond, void* rightValue, rtSwitchDataType_t dataType,
                              rtStream_t trueStream, rtStream_t falseStream, rtStream_t stream));
-    MOCK_METHOD3(rtsFuncGetName, rtError_t(const rtFuncHandle funcHandle, const uint32_t maxLen, char_t* const name));
+    MOCK_METHOD3(rtsFuncGetName, rtError_t(const void* func, const uint32_t maxLen, char_t* const name));
     MOCK_METHOD2(rtsModelSetName, rtError_t(rtModel_t mdl, const char_t* mdlName));
     MOCK_METHOD3(rtsModelGetName, rtError_t(rtModel_t mdl, const uint32_t maxLen, char_t* const mdlName));
 

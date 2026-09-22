@@ -9,7 +9,9 @@
  */
 #include "api_handle_guard.h"
 
+#include "api.hpp"
 #include "api_global_err.h"
+#include "api_kernel_func.hpp"
 #include "args/args_inner.h"
 #include "errcode_manage.hpp"
 #include "error_message_manage.hpp"
@@ -49,6 +51,28 @@ rtError_t ProbeValidatedObject(const void* handle, T*& outRealObj)
 
     outRealObj = static_cast<T*>(innerObject->object);
     return RT_ERROR_NONE;
+}
+
+template <typename ApiType>
+rtError_t ConvertFuncToKernelImpl(
+    ApiType* const apiInstance, const void* func, Kernel*& kernel, const char_t* const callerFuncName)
+{
+    Kernel* symbolKernel = nullptr;
+    const rtError_t ret = apiInstance->GetFunctionBySymbol(func, &symbolKernel);
+    // 若用户传入的参数已经是 func handle，GetFunctionBySymbol 会找不到对应的 handle 返回错误。
+    // 这是正常情况，因此失败时不直接返回，而是将 func 当作 handle 使用。
+    if (ret == RT_ERROR_NONE) {
+        RT_LOG(RT_LOG_INFO, "find function handle by symbol");
+        kernel = symbolKernel;
+        return RT_ERROR_NONE;
+    } else if (ret == RT_ERROR_INVALID_DEVICE_FUNCTION) {
+        RT_LOG(RT_LOG_INFO, "cannot find function handle by symbol, treat func as handle directly");
+        return ValidateKernelHandleForApi(func, kernel, callerFuncName);
+    } else {
+        ErrorMessageUtils::FuncErrorReason(ret, callerFuncName);
+        RT_LOG_FLUSH();
+        return GetRtExtErrCodeAndSetGlobalErr(ret);
+    }
 }
 
 } // namespace
@@ -164,6 +188,18 @@ rtError_t ValidateKernelHandleForApi(const void* handle, Kernel*& outRealObj, co
     } else {
         return ReportApiHandleValidationError(ret, callerFuncName);
     }
+}
+
+rtError_t ConvertFuncToKernel(
+    Api* const apiInstance, const void* func, Kernel*& kernel, const char_t* const callerFuncName)
+{
+    return ConvertFuncToKernelImpl(apiInstance, func, kernel, callerFuncName);
+}
+
+rtError_t ConvertFuncToKernel(
+    ApiKernelFunc* const apiInstance, const void* func, Kernel*& kernel, const char_t* const callerFuncName)
+{
+    return ConvertFuncToKernelImpl(apiInstance, func, kernel, callerFuncName);
 }
 
 rtError_t ValidateArgsHandleForApi(rtArgsHandle handle, RtArgsHandle*& outRealObj, const char_t* callerFuncName)
