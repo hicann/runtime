@@ -3747,27 +3747,6 @@ void Stream::StarsSqHeadSet(const uint32_t data)
     return;
 }
 
-void Stream::StarsWrRecordEnQueue(const bool needSend)
-{
-    uint32_t sqeIndex = sqTailPos_;
-    if (!needSend) {
-        sqeIndex = static_cast<uint32_t>(1UL << FLAG_OFFSET) | sqeIndex;
-    }
-    wrRecordQueue_.queue[wrRecordQueue_.rear] = sqeIndex;
-    wrRecordQueue_.rear = (wrRecordQueue_.rear + 1U) % (wrRecordQueue_.size);
-    wrRecordQueue_.count++;
-    return;
-}
-
-void Stream::StarsWrRecordDeQueue()
-{
-    if (wrRecordQueue_.front != wrRecordQueue_.rear) {
-        wrRecordQueue_.front = (wrRecordQueue_.front + 1U) % (wrRecordQueue_.size);
-        wrRecordQueue_.count--;
-    }
-    return;
-}
-
 void Stream::UpdateTaskPosHead(const uint32_t sqPos, const uint32_t sqeNum)
 {
     if ((!device_->IsStarsPlatform()) || GetBindFlag()) {

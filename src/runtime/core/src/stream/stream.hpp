@@ -467,8 +467,6 @@ public:
     bool StarsCheckSqeFull(const uint32_t sendSqeNum);
     void StarsSqTailAdd();
     void StarsSqHeadSet(const uint32_t data);
-    void StarsWrRecordEnQueue(const bool needSend);
-    void StarsWrRecordDeQueue();
 
     RtStarsRecordQueue StarsGetWrRecordQueue() { return wrRecordQueue_; }
 
