@@ -11995,11 +11995,6 @@ TEST_F(ApiDavidTest, api_decorator_memory_forwarding)
     error = api.DevMallocCached(&devPtr, 0U, RT_MEMORY_HOST, 0U);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemGetAddressRange).stubs().will(returnValue(RT_ERROR_NONE));
-    void* base = nullptr;
-    error = api.MemGetAddressRange(nullptr, &base, &totalSize);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::PtrGetAttributes).stubs().will(returnValue(RT_ERROR_NONE));
     rtPtrAttributes_t attrs = {};
     error = api.PtrGetAttributes(nullptr, &attrs);
@@ -12605,31 +12600,8 @@ TEST_F(ApiDavidTest, api_decorator_misc_forwarding)
     error = api.MemGrpCacheAlloc(nullptr, 0, &cachePara);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemMapSetLink).stubs().will(returnValue(RT_ERROR_NONE));
-    error = api.MemMapSetLink(0, RT_MEM_ACCESS_LINK_SIO);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemMapSelectedLink).stubs().will(returnValue(RT_ERROR_NONE));
-    error = api.MemMapSelectedLink(nullptr, 0U, nullptr, 0U);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemPrefetchToDevice).stubs().will(returnValue(RT_ERROR_NONE));
     error = api.MemPrefetchToDevice(nullptr, 0U, 0);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemMallocPhysical).stubs().will(returnValue(RT_ERROR_NONE));
-    rtMemHandle memHandle = {};
-    rtMallocConfig_t mallocCfg = {};
-    error = api.MemMallocPhysical(&memHandle, 0U, RT_MEM_MALLOC_HUGE_FIRST, &mallocCfg);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemSetAccess).stubs().will(returnValue(RT_ERROR_NONE));
-    rtMemAccessDesc accessDesc = {};
-    error = api.MemSetAccess(nullptr, 0U, &accessDesc, 0U);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemReserveAddress).stubs().will(returnValue(RT_ERROR_NONE));
-    error = api.MemReserveAddress(&ptr, 0U, RT_MEM_MALLOC_HUGE_FIRST, nullptr, &mallocCfg);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DevVA2PA).stubs().will(returnValue(RT_ERROR_NONE));

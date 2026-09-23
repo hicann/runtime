@@ -253,28 +253,6 @@ public:
     rtError_t MemcpyHostTask(
         void* const dst, const uint64_t destMax, const void* const src, const uint64_t cnt, const rtMemcpyKind_t kind,
         Stream* const stm) override;
-    rtError_t ReserveMemAddress(void** devPtr, size_t size, size_t alignment, void* devAddr, uint64_t flags) override;
-    rtError_t ReleaseMemAddress(void* devPtr) override;
-    rtError_t MallocPhysical(rtDrvMemHandle* handle, size_t size, rtDrvMemProp_t* prop, uint64_t flags) override;
-    rtError_t FreePhysical(rtDrvMemHandle handle) override;
-    rtError_t MapMem(void* devPtr, size_t size, size_t offset, rtDrvMemHandle handle, uint64_t flags) override;
-    rtError_t UnmapMem(void* devPtr) override;
-    rtError_t MemMapNoAccess(void* virPtr, size_t size, size_t offset, rtDrvMemHandle handle, uint64_t flags) override;
-    rtError_t MemSetAccess(void* virPtr, size_t size, rtMemAccessDesc* desc, size_t count) override;
-    rtError_t MemGetAccess(void* virPtr, rtMemLocation* location, uint64_t* flags) override;
-    rtError_t ExportToShareableHandle(
-        rtDrvMemHandle handle, rtDrvMemHandleType handleType, uint64_t flags, uint64_t* shareableHandle) override;
-    rtError_t ExportToShareableHandleV2(
-        rtDrvMemHandle handle, rtMemSharedHandleType handleType, uint64_t flags, void* shareableHandle) override;
-    rtError_t ImportFromShareableHandle(uint64_t shareableHandle, int32_t devId, rtDrvMemHandle* handle) override;
-    rtError_t ImportFromShareableHandleV2(
-        const void* shareableHandle, rtMemSharedHandleType handleType, uint64_t flags, int32_t devId,
-        rtDrvMemHandle* handle) override;
-    rtError_t SetPidToShareableHandle(uint64_t shareableHandle, int32_t pid[], uint32_t pidNum) override;
-    rtError_t SetPidToShareableHandleV2(
-        const void* shareableHandle, rtMemSharedHandleType handleType, int32_t pid[], uint32_t pidNum) override;
-    rtError_t GetAllocationGranularity(
-        rtDrvMemProp_t* prop, rtDrvMemGranularityOptions option, size_t* granularity) override;
     rtError_t RtsMemcpyAsync(
         void* const dst, const uint64_t destMax, const void* const src, const uint64_t cnt, const rtMemcpyKind kind,
         rtMemcpyConfig_t* const config, Stream* const stm) override;
@@ -286,13 +264,6 @@ public:
         const rtMemcpyKind kind, rtMemcpyConfig_t* const config) override;
     rtError_t MemcpyAsyncWithDesc(
         rtMemcpyDesc_t desc, Stream* stm, const rtMemcpyKind kind, rtMemcpyConfig_t* const config) override;
-    rtError_t MemReserveAddress(
-        void** virPtr, size_t size, rtMallocPolicy policy, void* expectAddr, rtMallocConfig_t* cfg) override;
-    rtError_t MemMallocPhysical(
-        rtMemHandle* handle, size_t size, rtMallocPolicy policy, rtMallocConfig_t* cfg) override;
-    rtError_t MemRetainAllocationHandle(void* virPtr, rtDrvMemHandle* handle) override;
-    rtError_t MemGetAllocationPropertiesFromHandle(rtDrvMemHandle handle, rtDrvMemProp_t* prop) override;
-    rtError_t MemGetAddressRange(void* ptr, void** pbase, size_t* psize) override;
     // new memory api
     rtError_t DevMalloc(
         void** const devPtr, const uint64_t size, rtMallocPolicy policy, rtMallocAdvise advise,
@@ -313,8 +284,6 @@ public:
     rtError_t MemManagedPrefetchBatchAsync(
         const void** ptrs, size_t* sizes, size_t count, rtMemManagedLocation* prefetchLocs, size_t* prefetchLocIdxs,
         size_t numPrefetchLocs, uint64_t flags, Stream* const stream) override;
-    rtError_t MemMapSelectedLink(void* virPtrDst, size_t size, void* virPtrSrc, uint32_t linkIdx) override;
-    rtError_t MemMapSetLink(rtDrvMemHandle handle, rtMemLinkType adviceLink) override;
 
     // device API
     rtError_t GetDeviceStatus(const int32_t devId, rtDevStatus_t* const status) override;

@@ -88,6 +88,7 @@ Runtime::~Runtime()
     apiKernelArgs_ = nullptr;
     apiIpcMemory_ = nullptr;
     apiHostMemory_ = nullptr;
+    apiVmm_ = nullptr;
 
     DestroyImplKernelArgs(apiImplKernelArgs_);
     DELETE_O(apiImpl_);
@@ -101,6 +102,7 @@ Runtime::~Runtime()
     DestroyImplDeviceTopology(apiImplDeviceTopology_);
     DestroyImplIpcMemory(apiImplIpcMemory_);
     DestroyImplHostMemory(apiImplHostMemory_);
+    DestroyImplVmm(apiImplVmm_);
     DELETE_O(apiError_);
     DELETE_O(logger_);
     DELETE_O(profiler_);

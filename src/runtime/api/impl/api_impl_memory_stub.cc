@@ -166,137 +166,6 @@ rtError_t ApiImpl::MemcpyHostTask(
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t ApiImpl::ReserveMemAddress(void** devPtr, size_t size, size_t alignment, void* devAddr, uint64_t flags)
-{
-    UNUSED(devPtr);
-    UNUSED(size);
-    UNUSED(alignment);
-    UNUSED(devAddr);
-    UNUSED(flags);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiImpl::ReleaseMemAddress(void* devPtr)
-{
-    UNUSED(devPtr);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiImpl::MallocPhysical(rtDrvMemHandle* handle, size_t size, rtDrvMemProp_t* prop, uint64_t flags)
-{
-    UNUSED(handle);
-    UNUSED(size);
-    UNUSED(prop);
-    UNUSED(flags);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiImpl::FreePhysical(rtDrvMemHandle handle)
-{
-    UNUSED(handle);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiImpl::MapMem(void* devPtr, size_t size, size_t offset, rtDrvMemHandle handle, uint64_t flags)
-{
-    UNUSED(devPtr);
-    UNUSED(size);
-    UNUSED(offset);
-    UNUSED(handle);
-    UNUSED(flags);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiImpl::UnmapMem(void* devPtr)
-{
-    UNUSED(devPtr);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiImpl::MemSetAccess(void* virPtr, size_t size, rtMemAccessDesc* desc, size_t count)
-{
-    UNUSED(virPtr);
-    UNUSED(size);
-    UNUSED(desc);
-    UNUSED(count);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiImpl::MemGetAccess(void* virPtr, rtMemLocation* location, uint64_t* flags)
-{
-    UNUSED(virPtr);
-    UNUSED(location);
-    UNUSED(flags);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiImpl::ExportToShareableHandle(
-    rtDrvMemHandle handle, rtDrvMemHandleType handleType, uint64_t flags, uint64_t* shareableHandle)
-{
-    UNUSED(handle);
-    UNUSED(handleType);
-    UNUSED(flags);
-    UNUSED(shareableHandle);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiImpl::ExportToShareableHandleV2(
-    rtDrvMemHandle handle, rtMemSharedHandleType handleType, uint64_t flags, void* shareableHandle)
-{
-    UNUSED(handle);
-    UNUSED(handleType);
-    UNUSED(flags);
-    UNUSED(shareableHandle);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiImpl::ImportFromShareableHandle(uint64_t shareableHandle, int32_t devId, rtDrvMemHandle* handle)
-{
-    UNUSED(shareableHandle);
-    UNUSED(devId);
-    UNUSED(handle);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiImpl::ImportFromShareableHandleV2(
-    const void* shareableHandle, rtMemSharedHandleType handleType, uint64_t flags, int32_t devId,
-    rtDrvMemHandle* handle)
-{
-    UNUSED(shareableHandle);
-    UNUSED(handleType);
-    UNUSED(flags);
-    UNUSED(devId);
-    UNUSED(handle);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiImpl::SetPidToShareableHandle(uint64_t shareableHandle, int32_t pid[], uint32_t pidNum)
-{
-    UNUSED(shareableHandle);
-    UNUSED(pid);
-    UNUSED(pidNum);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiImpl::SetPidToShareableHandleV2(
-    const void* shareableHandle, rtMemSharedHandleType handleType, int32_t pid[], uint32_t pidNum)
-{
-    UNUSED(shareableHandle);
-    UNUSED(handleType);
-    UNUSED(pid);
-    UNUSED(pidNum);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiImpl::GetAllocationGranularity(
-    rtDrvMemProp_t* prop, rtDrvMemGranularityOptions option, size_t* granularity)
-{
-    UNUSED(prop);
-    UNUSED(option);
-    UNUSED(granularity);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
 rtError_t ApiImpl::DevMalloc(
     void** const devPtr, const uint64_t size, rtMallocPolicy policy, rtMallocAdvise advise,
     const rtMallocConfig_t* const cfg)
@@ -305,26 +174,6 @@ rtError_t ApiImpl::DevMalloc(
     UNUSED(size);
     UNUSED(policy);
     UNUSED(advise);
-    UNUSED(cfg);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiImpl::MemReserveAddress(
-    void** virPtr, size_t size, rtMallocPolicy policy, void* expectAddr, rtMallocConfig_t* cfg)
-{
-    UNUSED(virPtr);
-    UNUSED(size);
-    UNUSED(policy);
-    UNUSED(expectAddr);
-    UNUSED(cfg);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiImpl::MemMallocPhysical(rtMemHandle* handle, size_t size, rtMallocPolicy policy, rtMallocConfig_t* cfg)
-{
-    UNUSED(handle);
-    UNUSED(size);
-    UNUSED(policy);
     UNUSED(cfg);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
@@ -368,44 +217,6 @@ rtError_t ApiImpl::MemWaitValue(const void* const devAddr, const uint64_t value,
     UNUSED(value);
     UNUSED(flag);
     UNUSED(stm);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiImpl::MemRetainAllocationHandle(void* virPtr, rtDrvMemHandle* handle)
-{
-    UNUSED(virPtr);
-    UNUSED(handle);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiImpl::MemGetAllocationPropertiesFromHandle(rtDrvMemHandle handle, rtDrvMemProp_t* prop)
-{
-    UNUSED(handle);
-    UNUSED(prop);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiImpl::MemGetAddressRange(void* ptr, void** pbase, size_t* psize)
-{
-    UNUSED(ptr);
-    UNUSED(pbase);
-    UNUSED(psize);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiImpl::MemMapSelectedLink(void* virPtrDst, size_t size, void* virPtrSrc, uint32_t linkIdx)
-{
-    UNUSED(virPtrDst);
-    UNUSED(size);
-    UNUSED(virPtrSrc);
-    UNUSED(linkIdx);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiImpl::MemMapSetLink(rtDrvMemHandle handle, rtMemLinkType adviceLink)
-{
-    UNUSED(handle);
-    UNUSED(adviceLink);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 

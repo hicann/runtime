@@ -1549,83 +1549,6 @@ rtError_t ApiDecorator::ModelCheckArchVersion(const char_t* omsocVersion)
     return impl_->ModelCheckArchVersion(omsocVersion);
 }
 
-rtError_t ApiDecorator::ReserveMemAddress(void** devPtr, size_t size, size_t alignment, void* devAddr, uint64_t flags)
-{
-    return impl_->ReserveMemAddress(devPtr, size, alignment, devAddr, flags);
-}
-
-rtError_t ApiDecorator::ReleaseMemAddress(void* devPtr) { return impl_->ReleaseMemAddress(devPtr); }
-
-rtError_t ApiDecorator::MallocPhysical(rtDrvMemHandle* handle, size_t size, rtDrvMemProp_t* prop, uint64_t flags)
-{
-    return impl_->MallocPhysical(handle, size, prop, flags);
-}
-
-rtError_t ApiDecorator::FreePhysical(rtDrvMemHandle handle) { return impl_->FreePhysical(handle); }
-
-rtError_t ApiDecorator::MapMem(void* devPtr, size_t size, size_t offset, rtDrvMemHandle handle, uint64_t flags)
-{
-    return impl_->MapMem(devPtr, size, offset, handle, flags);
-}
-
-rtError_t ApiDecorator::UnmapMem(void* devPtr) { return impl_->UnmapMem(devPtr); }
-
-rtError_t ApiDecorator::MemMapNoAccess(void* virPtr, size_t size, size_t offset, rtDrvMemHandle handle, uint64_t flags)
-{
-    return impl_->MemMapNoAccess(virPtr, size, offset, handle, flags);
-}
-
-rtError_t ApiDecorator::MemSetAccess(void* virPtr, size_t size, rtMemAccessDesc* desc, size_t count)
-{
-    return impl_->MemSetAccess(virPtr, size, desc, count);
-}
-
-rtError_t ApiDecorator::MemGetAccess(void* virPtr, rtMemLocation* location, uint64_t* flags)
-{
-    return impl_->MemGetAccess(virPtr, location, flags);
-}
-
-rtError_t ApiDecorator::ExportToShareableHandle(
-    rtDrvMemHandle handle, rtDrvMemHandleType handleType, uint64_t flags, uint64_t* shareableHandle)
-{
-    return impl_->ExportToShareableHandle(handle, handleType, flags, shareableHandle);
-}
-
-rtError_t ApiDecorator::ExportToShareableHandleV2(
-    rtDrvMemHandle handle, rtMemSharedHandleType handleType, uint64_t flags, void* shareableHandle)
-{
-    return impl_->ExportToShareableHandleV2(handle, handleType, flags, shareableHandle);
-}
-
-rtError_t ApiDecorator::ImportFromShareableHandle(uint64_t shareableHandle, int32_t devId, rtDrvMemHandle* handle)
-{
-    return impl_->ImportFromShareableHandle(shareableHandle, devId, handle);
-}
-
-rtError_t ApiDecorator::ImportFromShareableHandleV2(
-    const void* shareableHandle, rtMemSharedHandleType handleType, uint64_t flags, int32_t devId,
-    rtDrvMemHandle* handle)
-{
-    return impl_->ImportFromShareableHandleV2(shareableHandle, handleType, flags, devId, handle);
-}
-
-rtError_t ApiDecorator::SetPidToShareableHandle(uint64_t shareableHandle, int32_t pid[], uint32_t pidNum)
-{
-    return impl_->SetPidToShareableHandle(shareableHandle, pid, pidNum);
-}
-
-rtError_t ApiDecorator::SetPidToShareableHandleV2(
-    const void* shareableHandle, rtMemSharedHandleType handleType, int32_t pid[], uint32_t pidNum)
-{
-    return impl_->SetPidToShareableHandleV2(shareableHandle, handleType, pid, pidNum);
-}
-
-rtError_t ApiDecorator::GetAllocationGranularity(
-    rtDrvMemProp_t* prop, rtDrvMemGranularityOptions option, size_t* granularity)
-{
-    return impl_->GetAllocationGranularity(prop, option, granularity);
-}
-
 rtError_t ApiDecorator::DeviceStatusQuery(const uint32_t devId, rtDeviceStatus* deviceStatus)
 {
     return impl_->DeviceStatusQuery(devId, deviceStatus);
@@ -1787,18 +1710,6 @@ rtError_t ApiDecorator::DevMalloc(
 {
     return impl_->DevMalloc(devPtr, size, policy, advise, cfg);
 }
-rtError_t ApiDecorator::MemReserveAddress(
-    void** virPtr, size_t size, rtMallocPolicy policy, void* expectAddr, rtMallocConfig_t* cfg)
-{
-    return impl_->MemReserveAddress(virPtr, size, policy, expectAddr, cfg);
-}
-
-rtError_t ApiDecorator::MemMallocPhysical(
-    rtMemHandle* handle, size_t size, rtMallocPolicy policy, rtMallocConfig_t* cfg)
-{
-    return impl_->MemMallocPhysical(handle, size, policy, cfg);
-}
-
 rtError_t ApiDecorator::GetThreadLastTaskId(uint32_t* const taskId) { return impl_->GetThreadLastTaskId(taskId); }
 
 rtError_t ApiDecorator::LaunchDvppTask(
@@ -1990,31 +1901,6 @@ rtError_t ApiDecorator::CacheLastTaskOpInfo(const void* const infoPtr, const siz
 rtError_t ApiDecorator::CacheLastTaskExtendInfo(const char* const extendInfoPtr, const size_t infoSize)
 {
     return impl_->CacheLastTaskExtendInfo(extendInfoPtr, infoSize);
-}
-
-rtError_t ApiDecorator::MemRetainAllocationHandle(void* virPtr, rtDrvMemHandle* handle)
-{
-    return impl_->MemRetainAllocationHandle(virPtr, handle);
-}
-
-rtError_t ApiDecorator::MemGetAllocationPropertiesFromHandle(rtDrvMemHandle handle, rtDrvMemProp_t* prop)
-{
-    return impl_->MemGetAllocationPropertiesFromHandle(handle, prop);
-}
-
-rtError_t ApiDecorator::MemGetAddressRange(void* ptr, void** pbase, size_t* psize)
-{
-    return impl_->MemGetAddressRange(ptr, pbase, psize);
-}
-
-rtError_t ApiDecorator::MemMapSelectedLink(void* virPtrDst, size_t size, void* virPtrSrc, uint32_t linkIdx)
-{
-    return impl_->MemMapSelectedLink(virPtrDst, size, virPtrSrc, linkIdx);
-}
-
-rtError_t ApiDecorator::MemMapSetLink(rtDrvMemHandle handle, rtMemLinkType adviceLink)
-{
-    return impl_->MemMapSetLink(handle, adviceLink);
 }
 
 rtError_t ApiDecorator::BinarySetExceptionCallback(Program* binHandle, void* callback, void* userData)

@@ -157,10 +157,6 @@ public:
         const void* const devAddr, const uint64_t value, const uint32_t flag, Stream* const stm) override;
     rtError_t GetDevArgsAddr(
         Stream* const stm, rtArgsEx_t* const argsInfo, void** const devArgsAddr, void** const argsHandle) override;
-    rtError_t ReserveMemAddress(void** devPtr, size_t size, size_t alignment, void* devAddr, uint64_t flags) override;
-    rtError_t ReleaseMemAddress(void* devPtr) override;
-    rtError_t MallocPhysical(rtDrvMemHandle* handle, size_t size, rtDrvMemProp_t* prop, uint64_t flags) override;
-    rtError_t FreePhysical(rtDrvMemHandle handle) override;
     rtError_t SetMemcpyDesc(
         rtMemcpyDesc_t desc, const void* const srcAddr, const void* const dstAddr, const size_t count,
         const rtMemcpyKind kind, rtMemcpyConfig_t* const config) override;

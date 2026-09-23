@@ -27,6 +27,7 @@
 #include "api_mbuf.hpp"
 #include "api_soma.hpp"
 #include "api_ipc_memory.hpp"
+#include "api_vmm.hpp"
 #include "api_impl.hpp"
 #include "api_impl_creator.hpp"
 #include "api_impl_snapshot.hpp"
@@ -333,6 +334,14 @@ TEST_F(RuntimeTest, ApiIpcMemoryInstanceInitialized)
     EXPECT_EQ(ApiIpcMemory::Instance(), runtime->ApiIpcMemory_());
 }
 
+TEST_F(RuntimeTest, ApiVmmInstanceInitialized)
+{
+    const Runtime* const runtime = Runtime::Instance();
+    ASSERT_NE(runtime, nullptr);
+    ASSERT_NE(runtime->ApiVmm_(), nullptr);
+    EXPECT_EQ(ApiVmm::Instance(), runtime->ApiVmm_());
+}
+
 TEST_F(RuntimeTest, CreateImplMbufAndGetFailed)
 {
     MOCKER(static_cast<NothrowNewFunc>(&operator new)).expects(once()).will(invoke(NothrowNewFailStub));
@@ -424,6 +433,13 @@ TEST_F(RuntimeTest, InitApiImpliesCreateKernelArgsFailed)
     delete newApiImpl;
 
     EXPECT_EQ(error, RT_ERROR_API_NEW);
+}
+
+TEST_F(RuntimeTest, CreateImplVmmAndGetFailed)
+{
+    MOCKER(static_cast<NothrowNewFunc>(&operator new)).expects(once()).will(invoke(NothrowNewFailStub));
+
+    EXPECT_EQ(CreateImplVmmAndGet(), nullptr);
 }
 
 TEST_F(RuntimeTest, DestroyImplMbufSuccess)
@@ -521,6 +537,16 @@ TEST_F(RuntimeTest, DestroyImplKernelFuncSuccess)
     EXPECT_EQ(apiImplKernelFunc, nullptr);
 }
 
+TEST_F(RuntimeTest, DestroyImplVmmSuccess)
+{
+    ApiVmm* apiImplVmm = CreateImplVmmAndGet();
+    ASSERT_NE(apiImplVmm, nullptr);
+
+    DestroyImplVmm(apiImplVmm);
+
+    EXPECT_EQ(apiImplVmm, nullptr);
+}
+
 TEST_F(RuntimeTest, InitApiImpliesCreateMbufFailed)
 {
     Runtime* const rt = static_cast<Runtime*>(Runtime::Instance());
@@ -534,6 +560,45 @@ TEST_F(RuntimeTest, InitApiImpliesCreateMbufFailed)
     rt->apiImpl_ = oldApiImpl;
     rt->apiImplMbuf_ = oldApiImplMbuf;
     delete newApiImpl;
+
+    EXPECT_EQ(error, RT_ERROR_API_NEW);
+}
+
+TEST_F(RuntimeTest, InitApiImpliesCreateVmmFailed)
+{
+    Runtime* const rt = static_cast<Runtime*>(Runtime::Instance());
+    ASSERT_NE(rt, nullptr);
+    Api* const oldApiImpl = rt->apiImpl_;
+    ApiMbuf* const oldApiImplMbuf = rt->apiImplMbuf_;
+    ApiSoma* const oldApiImplSoma = rt->apiImplSoma_;
+    ApiEvent* const oldApiImplEvent = rt->apiImplEvent_;
+    ApiEsched* const oldApiImplEsched = rt->apiImplEsched_;
+    ApiVmm* const oldApiImplVmm = rt->apiImplVmm_;
+    rt->apiImpl_ = nullptr;
+    rt->apiImplMbuf_ = nullptr;
+    rt->apiImplSoma_ = nullptr;
+    rt->apiImplEvent_ = nullptr;
+    rt->apiImplEsched_ = nullptr;
+    rt->apiImplVmm_ = nullptr;
+    MOCKER(CreateImplVmmAndGet).expects(once()).will(returnValue(static_cast<ApiVmm*>(nullptr)));
+
+    const rtError_t error = rt->InitApiImplies();
+    Api* const newApiImpl = rt->apiImpl_;
+    ApiMbuf* newApiImplMbuf = rt->apiImplMbuf_;
+    ApiSoma* newApiImplSoma = rt->apiImplSoma_;
+    ApiEvent* newApiImplEvent = rt->apiImplEvent_;
+    ApiEsched* newApiImplEsched = rt->apiImplEsched_;
+    rt->apiImpl_ = oldApiImpl;
+    rt->apiImplMbuf_ = oldApiImplMbuf;
+    rt->apiImplSoma_ = oldApiImplSoma;
+    rt->apiImplEvent_ = oldApiImplEvent;
+    rt->apiImplEsched_ = oldApiImplEsched;
+    rt->apiImplVmm_ = oldApiImplVmm;
+    delete newApiImpl;
+    DestroyImplMbuf(newApiImplMbuf);
+    DELETE_O(newApiImplSoma);
+    DELETE_O(newApiImplEvent);
+    DestroyImplEsched(newApiImplEsched);
 
     EXPECT_EQ(error, RT_ERROR_API_NEW);
 }

@@ -222,6 +222,8 @@ public:
     ApiKernelArgs* ApiKernelArgs_() const override { return apiKernelArgs_; }
     ApiHostMemory* ApiHostMemory_() const override { return apiHostMemory_; }
 
+    ApiVmm* ApiVmm_() const override { return apiVmm_; }
+
     Api* ApiImpl_() const override { return apiImpl_; }
 
     Profiler* Profiler_() const { return profiler_; }
@@ -822,6 +824,7 @@ private:
     ApiDeviceTopology* apiDeviceTopology_;
     ApiIpcMemory* apiIpcMemory_;
     ApiHostMemory* apiHostMemory_;
+    ApiVmm* apiVmm_;
 
     Api* apiImpl_;
     ApiMbuf* apiImplMbuf_;
@@ -831,6 +834,7 @@ private:
     ApiDeviceTopology* apiImplDeviceTopology_;
     ApiIpcMemory* apiImplIpcMemory_;
     ApiHostMemory* apiImplHostMemory_;
+    ApiVmm* apiImplVmm_;
 
     RefObject<Context*> priCtxs_[RT_MAX_DEV_NUM][RT_MAX_TS_NUM];
     RefObject<Device*> devices_[RT_MAX_DEV_NUM + 1][RT_MAX_TS_NUM]; // Last one is stub device

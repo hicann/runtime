@@ -325,43 +325,6 @@ TEST_F(CloudV2IpcApiTest, rtMemAddressFabric)
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 }
 
-TEST_F(CloudV2IpcApiTest, VmmMemExportAndImportv2_decorator_test)
-{
-    Api* oldApi_ = const_cast<Api*>(Runtime::runtime_->api_);
-    ApiDecorator* apiDecorator_ = new ApiDecorator(oldApi_);
-
-    ApiImpl impl;
-    ApiDecorator apiDecorator(&impl);
-    rtError_t error;
-
-    int32_t devId = 0;
-    error = rtSetDevice(devId);
-
-    rtMemLocation location;
-    location.type = RT_MEMORY_LOC_HOST;
-    location.id = 0;
-
-    uint64_t flags = 0UL;
-    error = apiDecorator_->MemGetAccess(nullptr, &location, &flags);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
-
-    rtDrvMemHandle handleVal;
-    rtDrvMemHandle* handle = &handleVal;
-
-    rtDrvMemFabricHandle shareableHandle = {};
-    error = apiDecorator_->ExportToShareableHandleV2(handle, RT_MEM_SHARE_HANDLE_TYPE_FABRIC, 0, &shareableHandle);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = apiDecorator_->ImportFromShareableHandleV2(&shareableHandle, RT_MEM_SHARE_HANDLE_TYPE_FABRIC, 0, 0, handle);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    int pid[1024];
-    error = apiDecorator_->SetPidToShareableHandleV2(&shareableHandle, RT_MEM_SHARE_HANDLE_TYPE_FABRIC, pid, 2);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    delete apiDecorator_;
-}
-
 TEST_F(CloudV2IpcApiTest, enableP2p)
 {
     Runtime* rtInstance = (Runtime*)Runtime::Instance();
@@ -543,31 +506,6 @@ TEST_F(CloudV2IpcApiTest, MemGetAllocationPropertiesFromHandle02)
 
     error = rtFree(handle);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
-}
-
-TEST_F(CloudV2IpcApiTest, MemGetAllocationPropertiesFromHandle_Prop_decorator)
-{
-    Api* oldApi_ = const_cast<Api*>(Runtime::runtime_->api_);
-    ApiDecorator* apiDecorator_ = new ApiDecorator(oldApi_);
-
-    ApiImpl impl;
-    ApiDecorator apiDecorator(&impl);
-    rtError_t error;
-
-    int32_t devId = 0;
-    error = rtSetDevice(devId);
-
-    void* virPtr = nullptr;
-    rtDrvMemHandle* handle = nullptr;
-    error = apiDecorator_->MemRetainAllocationHandle(virPtr, handle);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
-
-    rtDrvMemHandle hdl = nullptr;
-    rtDrvMemProp_t* prop = {};
-    error = apiDecorator_->MemGetAllocationPropertiesFromHandle(hdl, prop);
-    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
-
-    delete apiDecorator_;
 }
 
 TEST_F(CloudV2IpcApiTest, ipc_memory_close_normal)

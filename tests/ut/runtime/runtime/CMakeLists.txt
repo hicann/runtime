@@ -187,6 +187,7 @@ set(runtimeut_src_api_list
     ${TOP_DIR}/src/runtime/api/api_c_kernel.cc
     ${TOP_DIR}/src/runtime/api/api_c_memory.cc
     ${TOP_DIR}/src/runtime/api/api_c_host_memory.cc
+    ${TOP_DIR}/src/runtime/api/api_c_vmm.cc
     ${TOP_DIR}/src/runtime/api/api_c_stream.cc
     ${TOP_DIR}/src/runtime/api/api_c_model.cc
     ${TOP_DIR}/src/runtime/api/api_c_event.cc
@@ -619,6 +620,7 @@ set(runtimeut_src_list
     ${TOP_DIR}/src/runtime/api/impl/api_impl_kernel_func.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_memory.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_host_memory.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_vmm.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_mbuf.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_standard_soc.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_snapshot.cc
@@ -772,6 +774,7 @@ set(runtimeut_david_src_list
     ${TOP_DIR}/src/runtime/api/impl/api_impl_kernel_func.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_memory.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_host_memory.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_vmm.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_mbuf.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event_common.cc
@@ -1265,6 +1268,7 @@ add_executable(runtime_utest_api
     test/rt_utest_api_device.cc
     test/rt_utest_api_device_topology.cc
     test/rt_utest_api_event_route.cc
+    test/rt_utest_api_vmm_route.cc
     test/rt_utest_api_esched_route.cc
     test/rt_utest_api_snapshot_route.cc
     test/rt_utest_api_rt_config.cc
@@ -1709,6 +1713,7 @@ set(runtimeut_v201_src_list
     ${TOP_DIR}/src/runtime/api/impl/api_impl_kernel_func.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_memory.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_host_memory.cc
+    ${TOP_DIR}/src/runtime/api/impl/api_impl_vmm.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_mbuf.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event_common.cc

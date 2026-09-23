@@ -24,6 +24,7 @@
 #include "program.hpp"
 #include "api_impl.hpp"
 #include "api_impl_kernel_args.hpp"
+#include "api_impl_vmm.hpp"
 #include "api_error.hpp"
 #include "profiler.hpp"
 #include "api_profile_decorator.hpp"
@@ -2128,32 +2129,30 @@ TEST_F(CloudV2ApiImplTest, CheckCaptureModeSupport_NonRelaxedMode_EE1016)
     InnerThreadLocalContainer::SetThreadExchangeCaptureMode(oldExchangeMode);
 }
 
-TEST_F(CloudV2ApiImplTest, ApiImpl_MemMapSetLink_success)
+TEST_F(CloudV2ApiImplTest, ApiImplVmm_MemMapSetLink_success)
 {
     rtDrvMemHandle handle = reinterpret_cast<rtDrvMemHandle>(0x1234);
     rtMemLinkType adviceLink = RT_MEM_ACCESS_LINK_SIO;
 
-    ApiImpl impl;
+    ApiImplVmm impl;
 
     rtError_t error = impl.MemMapSetLink(handle, adviceLink);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
-TEST_F(CloudV2ApiImplTest, ApiErrorDecorator_MemMapSetLink_handle_null)
+TEST_F(CloudV2ApiImplTest, ApiImplVmm_MemMapSetLink_handle_null)
 {
-    Api* oldApi_ = const_cast<Api*>(Runtime::runtime_->api_);
-    ApiErrorDecorator apiErrorDec(oldApi_);
-    rtError_t error = apiErrorDec.MemMapSetLink(nullptr, RT_MEM_ACCESS_LINK_SIO);
+    ApiImplVmm impl;
+    rtError_t error = impl.MemMapSetLink(nullptr, RT_MEM_ACCESS_LINK_SIO);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 }
 
-TEST_F(CloudV2ApiImplTest, ApiErrorDecorator_MemMapSetLink_adviceLink_out_of_range)
+TEST_F(CloudV2ApiImplTest, ApiImplVmm_MemMapSetLink_adviceLink_out_of_range)
 {
     rtDrvMemHandle handle = reinterpret_cast<rtDrvMemHandle>(0x1234);
 
-    Api* oldApi_ = const_cast<Api*>(Runtime::runtime_->api_);
-    ApiErrorDecorator apiErrorDec(oldApi_);
-    rtError_t error = apiErrorDec.MemMapSetLink(handle, RT_MEM_ACCESS_LINK_MAX);
+    ApiImplVmm impl;
+    rtError_t error = impl.MemMapSetLink(handle, RT_MEM_ACCESS_LINK_MAX);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 }
 

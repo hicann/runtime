@@ -346,46 +346,6 @@ TEST_F(CloudV2ApiTest910b, testGetTaskBufferLenTest)
     error = apiDec.ModelCheckArchVersion(NULL);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::ReserveMemAddress).stubs().will(returnValue(RT_ERROR_NONE));
-    error = apiDec.ReserveMemAddress(NULL, 1, 1, NULL, 1);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::ReleaseMemAddress).stubs().will(returnValue(RT_ERROR_NONE));
-    error = apiDec.ReleaseMemAddress(NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MallocPhysical).stubs().will(returnValue(RT_ERROR_NONE));
-    error = apiDec.MallocPhysical(NULL, 1, NULL, 1);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::FreePhysical).stubs().will(returnValue(RT_ERROR_NONE));
-    error = apiDec.FreePhysical(NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MapMem).stubs().will(returnValue(RT_ERROR_NONE));
-    error = apiDec.MapMem(NULL, 1, 1, NULL, 1);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::UnmapMem).stubs().will(returnValue(RT_ERROR_NONE));
-    error = apiDec.UnmapMem(NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::ExportToShareableHandle).stubs().will(returnValue(RT_ERROR_NONE));
-    error = apiDec.ExportToShareableHandle(NULL, RT_MEM_HANDLE_TYPE_NONE, 1, NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::ImportFromShareableHandle).stubs().will(returnValue(RT_ERROR_NONE));
-    error = apiDec.ImportFromShareableHandle(1, 1, NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::SetPidToShareableHandle).stubs().will(returnValue(RT_ERROR_NONE));
-    error = apiDec.SetPidToShareableHandle(1, NULL, 1);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetAllocationGranularity).stubs().will(returnValue(RT_ERROR_NONE));
-    error = apiDec.GetAllocationGranularity(NULL, RT_MEM_ALLOC_GRANULARITY_RECOMMENDED, NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::BindHostPid).stubs().will(returnValue(RT_ERROR_NONE));
     error = apiDec.BindHostPid({});
     EXPECT_EQ(error, RT_ERROR_NONE);

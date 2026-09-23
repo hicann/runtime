@@ -91,6 +91,7 @@ set(libruntime_api_legacy_src_files
     ${RUNTIME_DIR}/src/runtime/api/api_c_device.cc
     ${RUNTIME_DIR}/src/runtime/api/api_c_kernel.cc
     ${RUNTIME_DIR}/src/runtime/api/api_c_memory.cc
+    ${RUNTIME_DIR}/src/runtime/api/api_c_vmm.cc
     ${RUNTIME_DIR}/src/runtime/api/api_c_stream.cc
     ${RUNTIME_DIR}/src/runtime/api/api_c_model.cc
     ${RUNTIME_DIR}/src/runtime/api/api_c_event.cc
@@ -113,6 +114,7 @@ set(libruntime_api_weak_real_src_files
     ${RUNTIME_API_DIR}/api_c_mbuf.cc
     ${RUNTIME_API_DIR}/api_c_memory.cc
     ${RUNTIME_API_DIR}/api_c_host_memory.cc
+    ${RUNTIME_API_DIR}/api_c_vmm.cc
     ${RUNTIME_API_DIR}/api_c_model.cc
     ${RUNTIME_API_DIR}/api_c_snapshot.cc
     ${RUNTIME_API_DIR}/api_c_rt_config.cc
@@ -272,6 +274,7 @@ set(libruntime_common_src_files
     ${RUNTIME_API_DIR}/impl/api_impl_kernel_args.cc
     ${RUNTIME_API_DIR}/impl/api_impl_memory.cc
     ${RUNTIME_API_DIR}/impl/api_impl_host_memory.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_vmm.cc
     ${RUNTIME_API_DIR}/impl/api_impl_mbuf.cc
     ${RUNTIME_API_DIR}/impl/api_impl_esched.cc
     ${RUNTIME_CORE_DIR}/src/launch/cond_stars.cc
@@ -431,6 +434,7 @@ set(libruntime_v100_src_files
     ${RUNTIME_API_DIR}/impl/api_impl_kernel_args.cc
     ${RUNTIME_API_DIR}/impl/api_impl_memory.cc
     ${RUNTIME_API_DIR}/impl/api_impl_host_memory.cc
+    ${RUNTIME_API_DIR}/impl/api_impl_vmm.cc
     ${RUNTIME_API_DIR}/impl/api_error.cc
     ${RUNTIME_API_DIR}/impl/api_impl_creator.cc
     ${RUNTIME_API_DIR}/impl/api_impl_mbuf.cc

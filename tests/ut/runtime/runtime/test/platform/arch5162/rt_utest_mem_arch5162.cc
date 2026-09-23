@@ -191,58 +191,33 @@ TEST_F(Arch5162MemTest, UnsupportedMemoryCopyApiImpls_ReturnNotSupport)
     EXPECT_EQ(apiImpl.MemWaitValue(nullptr, 0U, 0U, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
 }
 
-TEST_F(Arch5162MemTest, UnsupportedVirtualMemoryApiImpls_ReturnNotSupport)
+TEST_F(Arch5162MemTest, DevMallocApiImpl_ReturnNotSupport)
 {
     ApiImpl apiImpl;
 
     EXPECT_EQ(
         apiImpl.DevMalloc(nullptr, 0U, static_cast<rtMallocPolicy>(0), static_cast<rtMallocAdvise>(0), nullptr),
         RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(apiImpl.ReserveMemAddress(nullptr, 0U, 0U, nullptr, 0U), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(apiImpl.ReleaseMemAddress(nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(apiImpl.MallocPhysical(nullptr, 0U, nullptr, 0U), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(apiImpl.FreePhysical(nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(apiImpl.MapMem(nullptr, 0U, 0U, nullptr, 0U), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(apiImpl.UnmapMem(nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(apiImpl.MemSetAccess(nullptr, 0U, nullptr, 0U), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(apiImpl.MemGetAccess(nullptr, nullptr, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(
-        apiImpl.GetAllocationGranularity(nullptr, static_cast<rtDrvMemGranularityOptions>(0), nullptr),
-        RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(
-        apiImpl.MemReserveAddress(nullptr, 0U, static_cast<rtMallocPolicy>(0), nullptr, nullptr),
-        RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(
-        apiImpl.MemMallocPhysical(nullptr, 0U, static_cast<rtMallocPolicy>(0), nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
 }
 
-TEST_F(Arch5162MemTest, UnsupportedSharedAndQueryMemoryApiImpls_ReturnNotSupport)
+TEST_F(Arch5162MemTest, ApiVmmImplFactory_ReturnNotSupport)
+{
+    ApiVmm* apiVmm = CreateImplVmmAndGet();
+
+    EXPECT_FALSE(IsImplVmmSupported());
+    EXPECT_EQ(apiVmm, nullptr);
+    DestroyImplVmm(apiVmm);
+    EXPECT_EQ(apiVmm, nullptr);
+}
+
+TEST_F(Arch5162MemTest, UnsupportedMemoryQueryApiImpls_ReturnNotSupport)
 {
     ApiImpl apiImpl;
 
-    EXPECT_EQ(
-        apiImpl.ExportToShareableHandle(nullptr, static_cast<rtDrvMemHandleType>(0), 0U, nullptr),
-        RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(
-        apiImpl.ExportToShareableHandleV2(nullptr, static_cast<rtMemSharedHandleType>(0), 0U, nullptr),
-        RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(apiImpl.ImportFromShareableHandle(0U, 0, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(
-        apiImpl.ImportFromShareableHandleV2(nullptr, static_cast<rtMemSharedHandleType>(0), 0U, 0, nullptr),
-        RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(apiImpl.SetPidToShareableHandle(0U, nullptr, 0U), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(
-        apiImpl.SetPidToShareableHandleV2(nullptr, static_cast<rtMemSharedHandleType>(0), nullptr, 0U),
-        RT_ERROR_FEATURE_NOT_SUPPORT);
     EXPECT_EQ(apiImpl.CheckMemType(nullptr, 0U, 0U, nullptr, 0U), RT_ERROR_FEATURE_NOT_SUPPORT);
     EXPECT_EQ(apiImpl.GetMemUsageInfo(0U, nullptr, 0U, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
     EXPECT_EQ(apiImpl.MemGetInfoEx(static_cast<rtMemInfoType_t>(0), nullptr, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
     EXPECT_EQ(apiImpl.MemPrefetchToDevice(nullptr, 0U, 0), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(apiImpl.MemRetainAllocationHandle(nullptr, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(apiImpl.MemGetAllocationPropertiesFromHandle(nullptr, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(apiImpl.MemGetAddressRange(nullptr, nullptr, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(apiImpl.MemMapSelectedLink(nullptr, 0U, nullptr, 0U), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(apiImpl.MemMapSetLink(nullptr, static_cast<rtMemLinkType>(0)), RT_ERROR_FEATURE_NOT_SUPPORT);
 }
 
 class Arch5162RtMemTest : public testing::Test {

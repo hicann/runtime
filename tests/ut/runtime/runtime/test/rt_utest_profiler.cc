@@ -291,8 +291,6 @@ public:
     static constexpr uint64_t HOST_ADDR = 0x1200U;
     static constexpr uint64_t HOST_CFG_ADDR = 0x1300U;
     static constexpr uint64_t MANAGED_ADDR = 0x1400U;
-    static constexpr uint64_t RESERVED_ADDR = 0x1500U;
-    static constexpr uint64_t PHYSICAL_HANDLE = 0x1600U;
     static constexpr uint64_t NEW_DEV_ADDR = 0x1700U;
 
     explicit RuntimeProfSuccessApiImpl(Context* const ctx = nullptr) : RuntimeProfTestApiImpl(ctx) {}
@@ -368,26 +366,6 @@ public:
     {
         return RT_ERROR_NONE;
     }
-
-    rtError_t ReserveMemAddress(void** devPtr, size_t, size_t, void*, uint64_t) override
-    {
-        if (devPtr != nullptr) {
-            *devPtr = reinterpret_cast<void*>(RESERVED_ADDR);
-        }
-        return RT_ERROR_NONE;
-    }
-
-    rtError_t ReleaseMemAddress(void*) override { return RT_ERROR_NONE; }
-
-    rtError_t MallocPhysical(rtDrvMemHandle* handle, size_t, rtDrvMemProp_t*, uint64_t) override
-    {
-        if (handle != nullptr) {
-            *handle = reinterpret_cast<rtDrvMemHandle>(PHYSICAL_HANDLE);
-        }
-        return RT_ERROR_NONE;
-    }
-
-    rtError_t FreePhysical(rtDrvMemHandle) override { return RT_ERROR_NONE; }
 
     rtError_t SetMemcpyDesc(
         rtMemcpyDesc_t, const void* const, const void* const, const size_t, const rtMemcpyKind,
@@ -1174,16 +1152,6 @@ TEST_F(ProfilerTest, ApiProfileDecoratorMemoryWrappersFillExtInfo)
 
     ptr = nullptr;
     PrepareRuntimeProfDecoratorTest(&profiler);
-    EXPECT_EQ(api.ReserveMemAddress(&ptr, 128U, 0U, nullptr, 0U), RT_ERROR_NONE);
-    EXPECT_EQ(RtPtrToValue(ptr), RuntimeProfSuccessApiImpl::RESERVED_ADDR);
-
-    rtDrvMemHandle handle = nullptr;
-    PrepareRuntimeProfDecoratorTest(&profiler);
-    EXPECT_EQ(api.MallocPhysical(&handle, 64U, nullptr, 0U), RT_ERROR_NONE);
-    EXPECT_EQ(RtPtrToValue(handle), RuntimeProfSuccessApiImpl::PHYSICAL_HANDLE);
-
-    ptr = nullptr;
-    PrepareRuntimeProfDecoratorTest(&profiler);
     EXPECT_EQ(
         api.DevMalloc(&ptr, 32U, static_cast<rtMallocPolicy>(0), static_cast<rtMallocAdvise>(0), nullptr),
         RT_ERROR_NONE);
@@ -1195,12 +1163,6 @@ TEST_F(ProfilerTest, ApiProfileDecoratorMemoryWrappersFillExtInfo)
     PrepareRuntimeProfDecoratorTest(&profiler);
     EXPECT_EQ(api.ManagedMemFree(reinterpret_cast<void*>(RuntimeProfSuccessApiImpl::MANAGED_ADDR)), RT_ERROR_NONE);
 
-    PrepareRuntimeProfDecoratorTest(&profiler);
-    EXPECT_EQ(api.ReleaseMemAddress(reinterpret_cast<void*>(RuntimeProfSuccessApiImpl::RESERVED_ADDR)), RT_ERROR_NONE);
-
-    PrepareRuntimeProfDecoratorTest(&profiler);
-    EXPECT_EQ(
-        api.FreePhysical(reinterpret_cast<rtDrvMemHandle>(RuntimeProfSuccessApiImpl::PHYSICAL_HANDLE)), RT_ERROR_NONE);
     ClearApiProfContextStack(&profiler);
 }
 

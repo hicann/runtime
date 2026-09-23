@@ -19,6 +19,7 @@
 #include "api_rt_config.hpp"
 #include "api_device_topology.hpp"
 #include "api_soma.hpp"
+#include "api_vmm.hpp"
 #include "thread_local_container.hpp"
 
 namespace cce {
@@ -142,6 +143,16 @@ ApiHostMemory* ApiHostMemory::Instance()
         return nullptr;
     }
     return rtInstance->ApiHostMemory_();
+}
+
+ApiVmm* ApiVmm::Instance()
+{
+    const Runtime* const rtInstance = Runtime::Instance();
+    if (unlikely(rtInstance == nullptr)) {
+        RT_LOG(RT_LOG_ERROR, "Runtime::Instance == nullptr");
+        return nullptr;
+    }
+    return rtInstance->ApiVmm_();
 }
 
 } // namespace runtime

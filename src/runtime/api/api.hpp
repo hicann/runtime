@@ -348,30 +348,6 @@ public:
         void* const dst, const uint64_t destMax, const void* const src, const uint64_t cnt, const rtMemcpyKind_t kind,
         Stream* const stm) = 0;
     virtual rtError_t GetDevArgsAddr(Stream* stm, rtArgsEx_t* argsInfo, void** devArgsAddr, void** argsHandle) = 0;
-    virtual rtError_t ReserveMemAddress(
-        void** devPtr, size_t size, size_t alignment, void* devAddr, uint64_t flags) = 0;
-    virtual rtError_t ReleaseMemAddress(void* devPtr) = 0;
-    virtual rtError_t MallocPhysical(rtDrvMemHandle* handle, size_t size, rtDrvMemProp_t* prop, uint64_t flags) = 0;
-    virtual rtError_t FreePhysical(rtDrvMemHandle handle) = 0;
-    virtual rtError_t MapMem(void* devPtr, size_t size, size_t offset, rtDrvMemHandle handle, uint64_t flags) = 0;
-    virtual rtError_t UnmapMem(void* devPtr) = 0;
-    virtual rtError_t MemMapNoAccess(
-        void* virPtr, size_t size, size_t offset, rtDrvMemHandle handle, uint64_t flags) = 0;
-    virtual rtError_t MemSetAccess(void* virPtr, size_t size, rtMemAccessDesc* desc, size_t count) = 0;
-    virtual rtError_t MemGetAccess(void* virPtr, rtMemLocation* location, uint64_t* flags) = 0;
-    virtual rtError_t ExportToShareableHandle(
-        rtDrvMemHandle handle, rtDrvMemHandleType handleType, uint64_t flags, uint64_t* shareableHandle) = 0;
-    virtual rtError_t ExportToShareableHandleV2(
-        rtDrvMemHandle handle, rtMemSharedHandleType handleType, uint64_t flags, void* shareableHandle) = 0;
-    virtual rtError_t ImportFromShareableHandle(uint64_t shareableHandle, int32_t devId, rtDrvMemHandle* handle) = 0;
-    virtual rtError_t ImportFromShareableHandleV2(
-        const void* shareableHandle, rtMemSharedHandleType handleType, uint64_t flags, int32_t devId,
-        rtDrvMemHandle* handle) = 0;
-    virtual rtError_t SetPidToShareableHandle(uint64_t shareableHandle, int32_t pid[], uint32_t pidNum) = 0;
-    virtual rtError_t SetPidToShareableHandleV2(
-        const void* shareableHandle, rtMemSharedHandleType handleType, int32_t pid[], uint32_t pidNum) = 0;
-    virtual rtError_t GetAllocationGranularity(
-        rtDrvMemProp_t* prop, rtDrvMemGranularityOptions option, size_t* granularity) = 0;
     virtual rtError_t RtsMemcpyAsync(
         void* const dst, const uint64_t destMax, const void* const src, const uint64_t cnt, const rtMemcpyKind kind,
         rtMemcpyConfig_t* const config, Stream* const stm) = 0;
@@ -383,13 +359,6 @@ public:
         const rtMemcpyKind kind, rtMemcpyConfig_t* const config) = 0;
     virtual rtError_t MemcpyAsyncWithDesc(
         rtMemcpyDesc_t desc, Stream* stm, const rtMemcpyKind kind, rtMemcpyConfig_t* const config) = 0;
-    virtual rtError_t MemReserveAddress(
-        void** virPtr, size_t size, rtMallocPolicy policy, void* expectAddr, rtMallocConfig_t* cfg) = 0;
-    virtual rtError_t MemMallocPhysical(
-        rtMemHandle* handle, size_t size, rtMallocPolicy policy, rtMallocConfig_t* cfg) = 0;
-    virtual rtError_t MemRetainAllocationHandle(void* virPtr, rtDrvMemHandle* handle) = 0;
-    virtual rtError_t MemGetAllocationPropertiesFromHandle(rtDrvMemHandle handle, rtDrvMemProp_t* prop) = 0;
-    virtual rtError_t MemGetAddressRange(void* ptr, void** pbase, size_t* psize) = 0;
     // new memory API
     virtual rtError_t DevMalloc(
         void** const devPtr, const uint64_t size, rtMallocPolicy policy, rtMallocAdvise advise,
@@ -410,8 +379,6 @@ public:
     virtual rtError_t MemManagedPrefetchBatchAsync(
         const void** ptrs, size_t* sizes, size_t count, rtMemManagedLocation* prefetchLocs, size_t* prefetchLocIdxs,
         size_t numPrefetchLocs, uint64_t flags, Stream* const stream) = 0;
-    virtual rtError_t MemMapSelectedLink(void* virPtrDst, size_t size, void* virPtrSrc, uint32_t linkIdx) = 0;
-    virtual rtError_t MemMapSetLink(rtDrvMemHandle handle, rtMemLinkType adviceLink) = 0;
 
     // device API
     virtual rtError_t GetDeviceStatus(const int32_t devId, rtDevStatus_t* const status) = 0;

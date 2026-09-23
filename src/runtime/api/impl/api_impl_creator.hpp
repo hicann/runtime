@@ -24,6 +24,7 @@ class ApiHostMemory;
 class ApiKernelFunc;
 class ApiKernelArgs;
 class ApiIpcMemory;
+class ApiVmm;
 
 size_t GetApiImplSize();
 Api* CreateImplAndGet();
@@ -56,6 +57,9 @@ void DestroyImplIpcMemory(ApiIpcMemory*& apiImplIpcMemory);
 bool IsImplHostMemorySupported();
 ApiHostMemory* CreateImplHostMemoryAndGet();
 void DestroyImplHostMemory(ApiHostMemory*& apiImplHostMemory);
+bool IsImplVmmSupported();
+ApiVmm* CreateImplVmmAndGet();
+void DestroyImplVmm(ApiVmm*& apiImplVmm);
 } // namespace runtime
 } // namespace cce
 

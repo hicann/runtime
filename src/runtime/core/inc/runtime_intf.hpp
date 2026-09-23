@@ -30,6 +30,7 @@ class ApiHostMemory;
 class ApiKernelFunc;
 class ApiKernelArgs;
 class ApiIpcMemory;
+class ApiVmm;
 class Context;
 
 struct RtTimeoutConfig {
@@ -78,6 +79,8 @@ public:
     virtual ApiIpcMemory* ApiIpcMemory_() const = 0;
     // Get apiHostMemory implement.
     virtual ApiHostMemory* ApiHostMemory_() const = 0;
+    // Get apiVmm implement.
+    virtual ApiVmm* ApiVmm_() const = 0;
     virtual Api* ApiImpl_() const = 0;
     virtual rtError_t ProfilerStop(
         const uint64_t profConfig, const int32_t numsDev, uint32_t* const deviceList,
