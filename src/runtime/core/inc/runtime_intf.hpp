@@ -18,21 +18,6 @@
 namespace cce {
 namespace runtime {
 
-class Api;
-class ApiMbuf;
-class ApiSoma;
-class ApiEvent;
-class ApiEsched;
-class ApiSnapshot;
-class ApiRtConfig;
-class ApiDeviceTopology;
-class ApiHostMemory;
-class ApiKernelFunc;
-class ApiKernelArgs;
-class ApiIpcMemory;
-class ApiVmm;
-class Context;
-
 struct RtTimeoutConfig {
     std::mutex mtx;
     bool isCfgOpWaitTaskTimeout;
@@ -55,33 +40,6 @@ public:
     RuntimeIntf(RuntimeIntf&&) = delete;
     RuntimeIntf& operator=(RuntimeIntf&&) = delete;
     virtual rtError_t Init() = 0;
-    // Get api implement.
-    virtual Api* Api_() const = 0;
-    // Get apiMbuf implement.
-    virtual ApiMbuf* ApiMbuf_() const = 0;
-    // Get apiSoma implement.
-    virtual ApiSoma* ApiSoma_() const = 0;
-    // Get apiEvent implement.
-    virtual ApiEvent* ApiEvent_() const = 0;
-    // Get apiKernelFunc implement.
-    virtual ApiKernelFunc* ApiKernelFunc_() const = 0;
-    // Get apiEsched implement.
-    virtual ApiEsched* ApiEsched_() const = 0;
-    // Get apiSnapshot implement.
-    virtual ApiSnapshot* ApiSnapshot_() const = 0;
-    // Get apiRtConfig implement.
-    virtual ApiRtConfig* ApiRtConfig_() const = 0;
-    // Get apiDeviceTopology implement.
-    virtual ApiDeviceTopology* ApiDeviceTopology_() const = 0;
-    // Get apiKernelArgs implement.
-    virtual ApiKernelArgs* ApiKernelArgs_() const = 0;
-    // Get apiIpcMemory implement.
-    virtual ApiIpcMemory* ApiIpcMemory_() const = 0;
-    // Get apiHostMemory implement.
-    virtual ApiHostMemory* ApiHostMemory_() const = 0;
-    // Get apiVmm implement.
-    virtual ApiVmm* ApiVmm_() const = 0;
-    virtual Api* ApiImpl_() const = 0;
     virtual rtError_t ProfilerStop(
         const uint64_t profConfig, const int32_t numsDev, uint32_t* const deviceList,
         const uint64_t profSwitchHi = 0) = 0;

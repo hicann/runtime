@@ -136,6 +136,11 @@ static inline bool IsAbortError(rtError_t error)
 }
 
 class Api;
+class ApiMbuf;
+class ApiSoma;
+class ApiDeviceTopology;
+class ApiKernelArgs;
+class ApiVmm;
 class ApiEsched;
 class ApiIpcMemory;
 class ApiSnapshot;
@@ -201,30 +206,30 @@ public:
     }
 
     // Get api implement.
-    Api* Api_() const override { return api_; }
+    Api* Api_() const { return api_; }
 
     // Get apiMbuf implement.
-    ApiMbuf* ApiMbuf_() const override { return apiMbuf_; }
+    ApiMbuf* ApiMbuf_() const { return apiMbuf_; }
 
-    ApiSoma* ApiSoma_() const override { return apiSoma_; }
+    ApiSoma* ApiSoma_() const { return apiSoma_; }
 
-    ApiEvent* ApiEvent_() const override { return apiEvent_; }
+    ApiEvent* ApiEvent_() const { return apiEvent_; }
 
-    ApiKernelFunc* ApiKernelFunc_() const override { return apiKernelFunc_; }
+    ApiKernelFunc* ApiKernelFunc_() const { return apiKernelFunc_; }
 
-    ApiEsched* ApiEsched_() const override { return apiEsched_; }
+    ApiEsched* ApiEsched_() const { return apiEsched_; }
 
-    ApiSnapshot* ApiSnapshot_() const override { return apiSnapshot_; }
-    ApiRtConfig* ApiRtConfig_() const override { return apiRtConfig_; }
-    ApiDeviceTopology* ApiDeviceTopology_() const override { return apiDeviceTopology_; }
-    ApiIpcMemory* ApiIpcMemory_() const override { return apiIpcMemory_; }
+    ApiSnapshot* ApiSnapshot_() const { return apiSnapshot_; }
+    ApiRtConfig* ApiRtConfig_() const { return apiRtConfig_; }
+    ApiDeviceTopology* ApiDeviceTopology_() const { return apiDeviceTopology_; }
+    ApiIpcMemory* ApiIpcMemory_() const { return apiIpcMemory_; }
 
-    ApiKernelArgs* ApiKernelArgs_() const override { return apiKernelArgs_; }
-    ApiHostMemory* ApiHostMemory_() const override { return apiHostMemory_; }
+    ApiKernelArgs* ApiKernelArgs_() const { return apiKernelArgs_; }
+    ApiHostMemory* ApiHostMemory_() const { return apiHostMemory_; }
 
-    ApiVmm* ApiVmm_() const override { return apiVmm_; }
+    ApiVmm* ApiVmm_() const { return apiVmm_; }
 
-    Api* ApiImpl_() const override { return apiImpl_; }
+    Api* ApiImpl_() const { return apiImpl_; }
 
     Profiler* Profiler_() const { return profiler_; }
 
