@@ -165,7 +165,7 @@ rtError_t ApiImpl::MemGetInfoEx(const rtMemInfoType_t memInfoType, size_t* const
         RT_LOG_DEBUG, "mem get info memInfoType=%s, free=%zu, total=%zu.", MemInfoTypeToString(memInfoType).c_str(),
         *freeSize, *totalSize);
     Context* const curCtx = CurrentContext();
-    NULL_PTR_RETURN_MSG(curCtx, RT_ERROR_CONTEXT_NULL);
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
     return curCtx->Device_()->Driver_()->MemGetInfoEx(curCtx->Device_()->Id_(), memInfoType, freeSize, totalSize);
 }
