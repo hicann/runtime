@@ -144,6 +144,7 @@ rtError_t CbSubscribe::Insert(const uint64_t threadId, Stream* const stm, void* 
                 "Failed to allocate SQ/CQ for callback subscription, thread_id=%" PRIu64 ", "
                 "device_id=%u, ts_id=%u, retCode=%#x.",
                 threadId, devId, tsId, static_cast<uint32_t>(ret));
+            grpIdBitmap_.FreeId(groupId);
             return ret;
         }
     }
@@ -566,18 +567,16 @@ void CbSubscribe::DeleteAllHostOnly()
 bool CbSubscribe::FindThreadIdByKey(const uint32_t deviceId, const int32_t streamId)
 {
     const uint64_t key = RT_CB_SUBSCRIBE_MK_STREAM_DEV_KEY(deviceId, streamId);
-    subscribeLock_.lock();
     const auto it = subscribeMapByStreamId_.find(key);
     if (it == subscribeMapByStreamId_.end()) {
-        subscribeLock_.unlock();
         return false;
     }
-    subscribeLock_.unlock();
     return true;
 }
 
 bool CbSubscribe::JudgeNeedSubscribe(const uint64_t threadId, Stream* const stm, const uint32_t deviceId)
 {
+    const std::lock_guard<std::mutex> lock(subscribeLock_);
     if (FindThreadIdByKey(deviceId, stm->Id_())) {
         return false;
     }
