@@ -318,6 +318,7 @@ TEST_F(CloudV2ReportErrorInfoForModelExecuteTaskTest, dfx_case)
 
     modelExecuteTaskInfo->model->SetFunCallMemSize(
         sizeof(RtStarsModelExeFuncCall) + sizeof(uint64_t) + sizeof(uint64_t));
+    modelExecuteTaskInfo->model->SetFuncCallInstrSize(static_cast<uint16_t>(sizeof(RtStarsModelExeFuncCall)));
     Driver* driver_ = ((Runtime*)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
     MOCKER_CPP_VIRTUAL(driver_, &Driver::MemCopySync)
         .stubs()
