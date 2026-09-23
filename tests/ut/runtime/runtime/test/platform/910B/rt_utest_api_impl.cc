@@ -1095,7 +1095,7 @@ TEST_F(CloudV2ApiImplTest, GetTaskIdAndStreamID)
 
 TEST_F(CloudV2ApiImplTest, GetDeviceCount_test)
 {
-    ApiImpl apiImpl;
+    ApiImplDeviceTopology apiImpl;
     rtError_t error;
 
     Runtime* rtInstance = const_cast<Runtime*>(Runtime::Instance());

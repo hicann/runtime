@@ -12091,11 +12091,6 @@ TEST_F(ApiDavidTest, api_decorator_device_forwarding)
     error = api.DeviceSetLimit(0, RT_LIMIT_TYPE_LOW_POWER_TIMEOUT, 0U);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DeviceCanAccessPeer).stubs().will(returnValue(RT_ERROR_NONE));
-    int32_t canAccess = 0;
-    error = api.DeviceCanAccessPeer(&canAccess, 0U, 0U);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DeviceGetBareTgid).stubs().will(returnValue(RT_ERROR_NONE));
     uint32_t pid = 0U;
     error = api.DeviceGetBareTgid(&pid);
@@ -12110,39 +12105,6 @@ TEST_F(ApiDavidTest, api_decorator_device_forwarding)
     error = api.DeviceTaskAbort(0, 0U);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetDeviceUuid).stubs().will(returnValue(RT_ERROR_NONE));
-    rtUuid_t uuid = {};
-    error = api.GetDeviceUuid(0, &uuid);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetDeviceIndexByPhyId).stubs().will(returnValue(RT_ERROR_NONE));
-    uint32_t devIndex = 0U;
-    error = api.GetDeviceIndexByPhyId(0U, &devIndex);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetUserDevIdByLogicDevId).stubs().will(returnValue(RT_ERROR_NONE));
-    int32_t userDevId = 0;
-    error = api.GetUserDevIdByLogicDevId(0, &userDevId);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetLogicDevIdByUserDevId).stubs().will(returnValue(RT_ERROR_NONE));
-    int32_t logicDevId = 0;
-    error = api.GetLogicDevIdByUserDevId(0, &logicDevId);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::EnableP2P).stubs().will(returnValue(RT_ERROR_NONE));
-    error = api.EnableP2P(0U, 0U, 0U);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DisableP2P).stubs().will(returnValue(RT_ERROR_NONE));
-    error = api.DisableP2P(0U, 0U);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetP2PStatus).stubs().will(returnValue(RT_ERROR_NONE));
-    uint32_t p2pStatus = 0U;
-    error = api.GetP2PStatus(0U, 0U, &p2pStatus);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::SetDeviceFailureMode).stubs().will(returnValue(RT_ERROR_NONE));
     error = api.SetDeviceFailureMode(0U);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -12155,11 +12117,6 @@ TEST_F(ApiDavidTest, api_decorator_device_forwarding)
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetPrimaryCtxState).stubs().will(returnValue(RT_ERROR_NONE));
     int32_t active = 0;
     error = api.GetPrimaryCtxState(0, &val, &active);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetPairPhyDevicesInfo).stubs().will(returnValue(RT_ERROR_NONE));
-    int64_t infoVal = 0;
-    error = api.GetPairPhyDevicesInfo(0U, 0U, 0, &infoVal);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::GetDeviceCapability).stubs().will(returnValue(RT_ERROR_NONE));
@@ -12842,10 +12799,6 @@ TEST_F(ApiDavidTest, api_error_decorator_forwarding_part2)
 
     error = api.MemcpyHostTask(nullptr, 0U, nullptr, 0U, RT_MEMCPY_DEVICE_TO_DEVICE, nullptr);
     EXPECT_NE(error, RT_ERROR_NONE);
-
-    rtUuid_t uuid = {};
-    error = api.GetDeviceUuid(0, nullptr);
-    EXPECT_NE(error, RT_ERROR_NONE);
 }
 
 TEST_F(ApiDavidTest, api_impl_debug_register_forwarding)
@@ -12869,25 +12822,6 @@ TEST_F(ApiDavidTest, api_impl_debug_register_forwarding)
 
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DebugUnRegisterForStream).stubs().will(returnValue(RT_ERROR_NONE));
     error = impl.DebugUnRegisterForStream(nullptr);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-}
-
-TEST_F(ApiDavidTest, api_impl_device_p2p_forwarding)
-{
-    ApiImpl impl;
-    rtError_t error = RT_ERROR_NONE;
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DeviceCanAccessPeer).stubs().will(returnValue(RT_ERROR_NONE));
-    int32_t canAccess = 0;
-    error = impl.DeviceCanAccessPeer(&canAccess, 0U, 0U);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::EnableP2P).stubs().will(returnValue(RT_ERROR_NONE));
-    error = impl.EnableP2P(0U, 0U, 0U);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DisableP2P).stubs().will(returnValue(RT_ERROR_NONE));
-    error = impl.DisableP2P(0U, 0U);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 

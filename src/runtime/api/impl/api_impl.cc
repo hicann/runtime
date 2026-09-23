@@ -2795,8 +2795,6 @@ rtError_t ApiImpl::CloseNetService()
     return RT_ERROR_NONE;
 }
 
-rtError_t ApiImpl::GetDeviceCount(int32_t* const cnt) { return Runtime::Instance()->GetDeviceCount(cnt); }
-
 rtError_t ApiImpl::SetDevice(const int32_t devId)
 {
     RT_LOG(RT_LOG_INFO, "drv devId=%d.", devId);
@@ -2826,70 +2824,6 @@ rtError_t ApiImpl::SetDevice(const int32_t devId)
 }
 
 rtError_t ApiImpl::GetDevice(int32_t* const devId) { return Runtime::Instance()->GetCurrentDeviceId(devId); }
-
-rtError_t ApiImpl::GetDevicePhyIdByIndex(const uint32_t devIndex, uint32_t* const phyId)
-{
-    // the api use before setdevice, so it do not need context
-    RT_LOG(RT_LOG_INFO, "get PhyId by Index=%u.", devIndex);
-    return Runtime::Instance()->driverFactory_.GetDriver(NPU_DRIVER)->GetDevicePhyIdByIndex(devIndex, phyId);
-}
-
-rtError_t ApiImpl::GetDeviceIndexByPhyId(const uint32_t phyId, uint32_t* const devIndex)
-{
-    // the api use before setdevice, so it do not need context
-    RT_LOG(RT_LOG_INFO, "get Index by PhyId=%u.", phyId);
-    COND_RETURN_ERROR(
-        CheckCurCtxValid(static_cast<int32_t>(phyId)) != RT_ERROR_NONE, RT_ERROR_CONTEXT_NULL,
-        "Current Context is null, phyId[%d].", phyId);
-    rtError_t error = Runtime::Instance()->driverFactory_.GetDriver(NPU_DRIVER)->GetDeviceIndexByPhyId(phyId, devIndex);
-    COND_RETURN_ERROR_MSG_INNER(
-        error != RT_ERROR_NONE, error, "GetDeviceIndexByPhyId failed, phyId = %u, retCode=%#x.", phyId,
-        static_cast<uint32_t>(error));
-    return error;
-}
-
-rtError_t ApiImpl::EnableP2P(const uint32_t devIdDes, const uint32_t phyIdSrc, const uint32_t flag)
-{
-    RT_LOG(RT_LOG_INFO, "Enable P2P drv devId=%u, phyIdSrc=%u.", devIdDes, phyIdSrc);
-    return NpuDriver::EnableP2P(devIdDes, phyIdSrc, flag);
-}
-
-rtError_t ApiImpl::DisableP2P(const uint32_t devIdDes, const uint32_t phyIdSrc)
-{
-    RT_LOG(RT_LOG_INFO, "Disable P2P drv devId=%u, phyIdSrc=%u.", devIdDes, phyIdSrc);
-    return NpuDriver::DisableP2P(devIdDes, phyIdSrc);
-}
-
-rtError_t ApiImpl::DeviceCanAccessPeer(int32_t* const canAccessPeer, const uint32_t devId, const uint32_t peerDevice)
-{
-    RT_LOG(RT_LOG_INFO, "DeviceCanAccessPeer drv devId=%u, peerDevice=%u.", devId, peerDevice);
-    const Runtime* const rtInstance = Runtime::Instance();
-    const rtChipType_t chipType = rtInstance->GetChipType();
-    if (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_DEVICE_P2P)) {
-        UNUSED(devId);
-        UNUSED(peerDevice);
-        return RT_ERROR_FEATURE_NOT_SUPPORT;
-    }
-
-    const rtRunMode runMode = static_cast<rtRunMode>(NpuDriver::RtGetRunMode());
-    if (runMode == RT_RUN_MODE_OFFLINE) {
-        RT_LOG(RT_LOG_ERROR, "This feature is not supported in offline mode, drv devId=%u, peer=%u", devId, peerDevice);
-        return RT_ERROR_FEATURE_NOT_SUPPORT;
-    }
-    COND_RETURN_ERROR(
-        CheckCurCtxValid(static_cast<int32_t>(devId)) != RT_ERROR_NONE, RT_ERROR_CONTEXT_NULL,
-        "Current Context is null, drv devId[%lu].", devId);
-    return NpuDriver::DeviceCanAccessPeer(canAccessPeer, devId, peerDevice);
-}
-
-rtError_t ApiImpl::GetP2PStatus(const uint32_t devIdDes, const uint32_t phyIdSrc, uint32_t* const status)
-{
-    RT_LOG(RT_LOG_INFO, "drv devId=%u, phyIdSrc=%u.", devIdDes, phyIdSrc);
-    COND_RETURN_ERROR(
-        CheckCurCtxValid(static_cast<int32_t>(devIdDes)) != RT_ERROR_NONE, RT_ERROR_CONTEXT_NULL,
-        "Current Context is null, drv devId[%lu].", devIdDes);
-    return NpuDriver::GetP2PStatus(devIdDes, phyIdSrc, status);
-}
 
 rtError_t ApiImpl::DeviceGetBareTgid(uint32_t* const pid)
 {
@@ -4791,31 +4725,6 @@ rtError_t ApiImpl::GetAiCpuCount(uint32_t* const aiCpuCnt)
     return RT_ERROR_NONE;
 }
 
-rtError_t ApiImpl::GetPairDevicesInfo(
-    const uint32_t devId, const uint32_t otherDevId, const int32_t infoType, int64_t* const val)
-{
-    Driver* const curDrv = Runtime::Instance()->driverFactory_.GetDriver(NPU_DRIVER);
-    NULL_PTR_RETURN_MSG(curDrv, RT_ERROR_DRV_NULL);
-    rtError_t ret = curDrv->GetPairDevicesInfo(devId, otherDevId, infoType, val);
-    if (infoType == DEVS_INFO_TYPE_TOPOLOGY && *val == TOPOLOGY_HCCS_SW && devId == otherDevId) {
-        *val = TOPOLOGY_HCCS;
-    }
-
-    return ret;
-}
-
-rtError_t ApiImpl::GetPairPhyDevicesInfo(
-    const uint32_t devId, const uint32_t otherDevId, const int32_t infoType, int64_t* const val)
-{
-    Driver* const curDrv = Runtime::Instance()->driverFactory_.GetDriver(NPU_DRIVER);
-    NULL_PTR_RETURN_MSG(curDrv, RT_ERROR_DRV_NULL);
-    const rtError_t ret = curDrv->GetPairDevicesInfo(devId, otherDevId, infoType, val, true);
-    if (infoType == DEVS_INFO_TYPE_TOPOLOGY && *val == TOPOLOGY_HCCS_SW && devId == otherDevId) {
-        *val = TOPOLOGY_HCCS;
-    }
-    return ret;
-}
-
 static rtError_t HandlePersistentStreamFeature(const rtChipType_t chipType, int64_t* const val, Context* const curCtx)
 {
     rtError_t error = RT_ERROR_NONE;
@@ -6399,20 +6308,6 @@ rtError_t ApiImpl::GetDeviceStatus(const int32_t devId, rtDevStatus_t* const sta
     return npuDrv->GetDeviceStatus(static_cast<uint32_t>(devId), RtPtrToPtr<drvStatus_t*>(status));
 }
 
-rtError_t ApiImpl::GetDeviceUuid(const int32_t devId, rtUuid_t* uuid)
-{
-    RT_LOG(RT_LOG_DEBUG, "Get device uuid, drv devId=%d.", devId);
-    int32_t drvRetUuidSize = RT_NPU_UUID_LENGTH;
-    return NpuDriver::GetDeviceInfoByBuff(
-        static_cast<uint32_t>(devId), MODULE_TYPE_SYSTEM, INFO_TYPE_UUID, uuid->bytes, &drvRetUuidSize);
-}
-
-rtError_t ApiImpl::GetDevicePCIBusId(const int32_t devId, char* pciBusId, const int32_t len)
-{
-    RT_LOG(RT_LOG_DEBUG, "Get device PCI bus id, drv devId=%d.", devId);
-    return NpuDriver::GetDevicePCIBusId(static_cast<uint32_t>(devId), pciBusId, len);
-}
-
 rtError_t ApiImpl::HdcServerCreate(const int32_t devId, const rtHdcServiceType_t type, rtHdcServer_t* const server)
 {
     RT_LOG(RT_LOG_DEBUG, "HdcServerCreate, drv devId=%d, type = %d.", devId, type);
@@ -6441,29 +6336,6 @@ rtError_t ApiImpl::HdcSessionClose(rtHdcSession_t const session)
 rtError_t ApiImpl::GetHostCpuDevId(int32_t* const devId)
 {
     *devId = DEFAULT_HOSTCPU_USER_DEVICE_ID;
-    return RT_ERROR_NONE;
-}
-
-rtError_t ApiImpl::GetLogicDevIdByUserDevId(const int32_t userDevId, int32_t* const logicDevId)
-{
-    int32_t realDeviceId = 0;
-    const rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(
-        static_cast<uint32_t>(userDevId), RtPtrToPtr<uint32_t*>(&realDeviceId));
-    COND_RETURN_ERROR(
-        error != RT_ERROR_NONE, error, "Failed to convert the user device ID %d to driver device ID.", userDevId);
-    *logicDevId = realDeviceId;
-    return RT_ERROR_NONE;
-}
-
-rtError_t ApiImpl::GetUserDevIdByLogicDevId(const int32_t logicDevId, int32_t* const userDevId)
-{
-    int32_t realDeviceId = 0;
-    const rtError_t error = Runtime::Instance()->GetUserDevIdByDeviceId(
-        static_cast<uint32_t>(logicDevId), RtPtrToPtr<uint32_t*>(&realDeviceId));
-    COND_RETURN_ERROR_MSG_INNER(
-        error != RT_ERROR_NONE, error, "Failed to convert the driver device ID %u to user device ID, retCode=%#x",
-        logicDevId, static_cast<uint32_t>(error));
-    *userDevId = realDeviceId;
     return RT_ERROR_NONE;
 }
 
@@ -7032,131 +6904,6 @@ rtError_t ApiImpl::ModelTaskDisable(rtTask_t task)
     RT_LOG(
         RT_LOG_INFO, "stream_id=%d, task_id=%hu, typeName=%s, task type=%d", taskInfo->stream->Id_(),
         GetTaskId(taskInfo), taskInfo->typeName, taskInfo->type);
-    return RT_ERROR_NONE;
-}
-
-rtError_t ApiImpl::GetAtomicDevProperties(uint32_t* capabilities, uint32_t count, DevProperties& prop) const
-{
-    for (uint32_t i = 0U; i < count; ++i) {
-        capabilities[i] = 0U;
-    }
-    const rtChipType_t chipType = Runtime::Instance()->GetChipType();
-    rtError_t error = GET_DEV_PROPERTIES(chipType, prop);
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE, "GetDevProperties fail");
-    return RT_ERROR_NONE;
-}
-
-void ApiImpl::FillAtomicCapabilities(
-    uint32_t* capabilities, const rtAtomicOperation* operations, uint32_t count, const uint32_t* sourceCapabilities)
-{
-    for (uint32_t i = 0U; i < count; ++i) {
-        if (operations[i] >= 0 && operations[i] < RT_ATOMIC_OPERATION_MAX_VAL) {
-            capabilities[i] = sourceCapabilities[operations[i]];
-        }
-    }
-}
-
-rtError_t ApiImpl::CheckHostAtomicSupport(int32_t deviceId, bool& supported)
-{
-    supported = false;
-    Runtime* const rt = Runtime::Instance();
-    Driver* const curDrv = rt->driverFactory_.GetDriver(NPU_DRIVER);
-    NULL_PTR_RETURN_MSG(curDrv, RT_ERROR_DRV_NULL);
-
-    int64_t topoType = 0;
-    rtError_t error = curDrv->GetDevInfo(
-        static_cast<uint32_t>(deviceId), static_cast<int32_t>(MODULE_TYPE_SYSTEM),
-        static_cast<int32_t>(INFO_TYPE_HD_CONNECT_TYPE), &topoType);
-    if (error != RT_ERROR_NONE) {
-        if (error == RT_ERROR_DRV_INPUT) {
-            // 驱动A2/A3部分版本不支持查询拓扑，atomic能力也不支持
-            return RT_ERROR_NONE;
-        }
-        RT_LOG(RT_LOG_ERROR, "GetDevInfo fail, retCode=%#x", error);
-        return error;
-    }
-
-    RT_LOG(RT_LOG_INFO, "the topoType=%ld", topoType);
-
-    if (topoType != HOST_DEVICE_CONNECT_TYPE_UB) {
-        RT_LOG(RT_LOG_INFO, "Atomic operations are not supported for topoType=%ld", topoType);
-        return RT_ERROR_NONE;
-    }
-
-    supported = true;
-    return RT_ERROR_NONE;
-}
-
-rtError_t ApiImpl::CheckP2PAtomicSupport(int32_t srcDeviceId, int32_t dstDeviceId, bool& supported)
-{
-    supported = false;
-    Runtime* const rtInstance = Runtime::Instance();
-    Driver* const curDrv = rtInstance->driverFactory_.GetDriver(NPU_DRIVER);
-    NULL_PTR_RETURN_MSG(curDrv, RT_ERROR_DRV_NULL);
-
-    int64_t topoType = 0;
-    rtError_t error = curDrv->GetPairDevicesInfo(
-        static_cast<uint32_t>(srcDeviceId), static_cast<uint32_t>(dstDeviceId),
-        static_cast<int32_t>(DEVS_INFO_TYPE_TOPOLOGY), &topoType);
-    if (error != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_ERROR, "GetPairDevicesInfo fail, retCode=%#x", error);
-        return error;
-    }
-
-    RT_LOG(RT_LOG_INFO, "the topoType=%ld", topoType);
-
-    if (topoType != TOPOLOGY_HCCS && topoType != TOPOLOGY_SIO && topoType != TOPOLOGY_HCCS_SW &&
-        topoType != TOPOLOGY_UB) {
-        RT_LOG(RT_LOG_INFO, "Atomic operations are not supported for topoType=%ld", topoType);
-        return RT_ERROR_NONE;
-    }
-
-    supported = true;
-    return RT_ERROR_NONE;
-}
-
-rtError_t ApiImpl::GetHostAtomicCapabilities(
-    uint32_t* capabilities, const rtAtomicOperation* operations, const uint32_t count, int32_t deviceId)
-{
-    DevProperties prop;
-    rtError_t error = GetAtomicDevProperties(capabilities, count, prop);
-    if (error != RT_ERROR_NONE) {
-        return error;
-    }
-
-    bool supported = false;
-    error = CheckHostAtomicSupport(deviceId, supported);
-    if (error != RT_ERROR_NONE) {
-        return error;
-    }
-
-    if (supported) {
-        FillAtomicCapabilities(capabilities, operations, count, prop.hostAtomicCapabilities.data());
-    }
-
-    return RT_ERROR_NONE;
-}
-
-rtError_t ApiImpl::GetP2PAtomicCapabilities(
-    uint32_t* capabilities, const rtAtomicOperation* operations, const uint32_t count, int32_t srcDeviceId,
-    int32_t dstDeviceId)
-{
-    DevProperties prop;
-    rtError_t error = GetAtomicDevProperties(capabilities, count, prop);
-    if (error != RT_ERROR_NONE) {
-        return error;
-    }
-
-    bool supported = false;
-    error = CheckP2PAtomicSupport(srcDeviceId, dstDeviceId, supported);
-    if (error != RT_ERROR_NONE) {
-        return error;
-    }
-
-    if (supported) {
-        FillAtomicCapabilities(capabilities, operations, count, prop.p2pAtomicCapabilities.data());
-    }
-
     return RT_ERROR_NONE;
 }
 

@@ -28,7 +28,7 @@ rtError_t ApiErrorDecorator::MemManagedAdvise(
         "[0, " + std::to_string(rtMemAdviseUnSetAccessedBy) + "]");
     if (location.type == rtMemLocationTypeDevice) {
         int32_t numDev = 0;
-        const rtError_t ret = impl_->GetDeviceCount(&numDev);
+        const rtError_t ret = Runtime::Instance()->GetDeviceCount(&numDev);
         ERROR_RETURN(ret, "Get device count failed.");
         COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
             (location.id > (numDev - 1)) || (location.id < 0), RT_ERROR_INVALID_VALUE,
@@ -116,7 +116,7 @@ rtError_t ApiErrorDecorator::MemManagedPrefetchAsync(
         curStm, RT_ERROR_STREAM_NULL, "Managing the prefetching of the unified virtual memory (UVM)");
     if (location.type == rtMemLocationTypeDevice) {
         int32_t numDev = 0;
-        const rtError_t ret = impl_->GetDeviceCount(&numDev);
+        const rtError_t ret = Runtime::Instance()->GetDeviceCount(&numDev);
         ERROR_RETURN_MSG_CALL(ERR_MODULE_DRV, ret, "Get device cnt failed, retCode=%#x", static_cast<uint32_t>(ret));
         COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
             (location.id > (numDev - 1)) || (location.id < 0), RT_ERROR_INVALID_VALUE,
@@ -192,7 +192,7 @@ rtError_t ApiErrorDecorator::MemManagedPrefetchBatchAsync(
     for (size_t idx = 0; idx < numPrefetchLocs; idx++) {
         if (prefetchLocs[idx].type == rtMemLocationTypeDevice) {
             int32_t numDev = 0;
-            const rtError_t ret = impl_->GetDeviceCount(&numDev);
+            const rtError_t ret = Runtime::Instance()->GetDeviceCount(&numDev);
             ERROR_RETURN_MSG_CALL(
                 ERR_MODULE_DRV, ret, "Get device cnt failed, retCode=%#x", static_cast<uint32_t>(ret));
             COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(

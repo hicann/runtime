@@ -336,10 +336,6 @@ TEST_F(TinyStubTest, api_error_stub)
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
     ret = api.MemManagedGetAttrs(nullptr, 0, nullptr, 0, nullptr, 0);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
-    ret = api.GetDevicePCIBusId(0, nullptr, 0);
-    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
-    ret = api.GetDeviceByPCIBusId(nullptr, nullptr);
-    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
 }
 
 TEST_F(TinyStubTest, api_impl_stub)
@@ -456,8 +452,6 @@ TEST_F(TinyStubTest, api_impl_stub)
     EXPECT_EQ(ret, RT_ERROR_INVALID_VALUE);
     DestroyImplHostMemory(apiHostMemory);
     EXPECT_EQ(apiHostMemory, nullptr);
-    ret = impl.GetDeviceByPCIBusId(nullptr, nullptr);
-    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
 }
 
 TEST_F(TinyStubTest, api_impl_host_memory_supported)

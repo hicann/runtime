@@ -296,7 +296,6 @@ public:
 
     // device API
     rtError_t GetDeviceStatus(const int32_t devId, rtDevStatus_t* const status) override;
-    rtError_t GetDeviceCount(int32_t* const cnt) override;
     rtError_t OpenNetService(const rtNetServiceOpenArgs* args) override;
     rtError_t CloseNetService() override;
     rtError_t GetDeviceIDs(uint32_t* const devId, const uint32_t len) override;
@@ -315,20 +314,9 @@ public:
     rtError_t GetDeviceInfoByAttr(uint32_t deviceId, rtDevAttr attr, int64_t* val) override;
     rtError_t GetPhyDeviceInfo(
         const uint32_t phyId, const int32_t moduleType, const int32_t infoType, int64_t* const val) override;
-    rtError_t GetDevicePhyIdByIndex(const uint32_t devIndex, uint32_t* const phyId) override;
-    rtError_t GetDeviceIndexByPhyId(const uint32_t phyId, uint32_t* const devIndex) override;
     rtError_t DeviceSetTsId(const uint32_t tsId) override;
     rtError_t DeviceGetTsId(uint32_t* tsId) override;
-    rtError_t EnableP2P(const uint32_t devIdDes, const uint32_t phyIdSrc, const uint32_t flag) override;
-    rtError_t DisableP2P(const uint32_t devIdDes, const uint32_t phyIdSrc) override;
-    rtError_t DeviceCanAccessPeer(
-        int32_t* const canAccessPeer, const uint32_t devId, const uint32_t peerDevice) override;
-    rtError_t GetP2PStatus(const uint32_t devIdDes, const uint32_t phyIdSrc, uint32_t* const status) override;
     rtError_t DeviceGetBareTgid(uint32_t* const pid) override;
-    rtError_t GetPairDevicesInfo(
-        const uint32_t devId, const uint32_t otherDevId, const int32_t infoType, int64_t* const val) override;
-    rtError_t GetPairPhyDevicesInfo(
-        const uint32_t devId, const uint32_t otherDevId, const int32_t infoType, int64_t* const val) override;
     rtError_t GetRtCapability(
         const rtFeatureType_t featureType, const int32_t featureInfo, int64_t* const val) override;
     rtError_t GetDeviceCapability(
@@ -355,20 +343,10 @@ public:
     rtError_t GetHostCpuDevId(int32_t* const devId) override;
     rtError_t GetLastErr(rtLastErrLevel_t level) override;
     rtError_t PeekLastErr(rtLastErrLevel_t level) override;
-    rtError_t GetLogicDevIdByUserDevId(const int32_t userDevId, int32_t* const logicDevId) override;
-    rtError_t GetUserDevIdByLogicDevId(const int32_t logicDevId, int32_t* const userDevId) override;
     rtError_t DeviceResourceClean(int32_t devId) override;
     rtError_t SetXpuDevice(const rtXpuDevType devType, const uint32_t devId) override;
     rtError_t ResetXpuDevice(const rtXpuDevType devType, const uint32_t devId) override;
     rtError_t GetXpuDevCount(const rtXpuDevType devType, uint32_t* devCount) override;
-    rtError_t GetDeviceUuid(const int32_t devId, rtUuid_t* uuid) override;
-    rtError_t GetDevicePCIBusId(const int32_t devId, char* pciBusId, const int32_t len) override;
-    rtError_t GetDeviceByPCIBusId(const char* pciBusId, int32_t* devId) override;
-    rtError_t GetHostAtomicCapabilities(
-        uint32_t* capabilities, const rtAtomicOperation* operations, const uint32_t count, int32_t deviceId) override;
-    rtError_t GetP2PAtomicCapabilities(
-        uint32_t* capabilities, const rtAtomicOperation* operations, const uint32_t count, int32_t srcDeviceId,
-        int32_t dstDeviceId) override;
 
     // context
     rtError_t ContextCreate(Context** const inCtx, const int32_t devId) override;
@@ -795,12 +773,6 @@ private:
     rtError_t ValidateAndCheckMemCpyBatchAsync(
         void* dst, size_t destMax, void* src, size_t size, const rtMemcpyBatchAttr& memAttr, rtPtrAttributes_t& dstAttr,
         rtPtrAttributes_t& srcAttr, rtMemcpyKind_t& kind);
-    rtError_t GetAtomicDevProperties(uint32_t* capabilities, uint32_t count, DevProperties& prop) const;
-    static void FillAtomicCapabilities(
-        uint32_t* capabilities, const rtAtomicOperation* operations, uint32_t count,
-        const uint32_t* sourceCapabilities);
-    rtError_t CheckHostAtomicSupport(int32_t deviceId, bool& supported);
-    rtError_t CheckP2PAtomicSupport(int32_t srcDeviceId, int32_t dstDeviceId, bool& supported);
     // task
     rtError_t TaskGetParams(rtTask_t task, rtTaskParams* const params) override;
     rtError_t TaskSetParams(rtTask_t task, rtTaskParams* const params) override;

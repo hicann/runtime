@@ -294,14 +294,11 @@ public:
         rtHdcSession_t* const session) override;
     rtError_t HdcSessionClose(rtHdcSession_t const session) override;
     rtError_t GetHostCpuDevId(int32_t* const devId) override;
-    rtError_t GetDeviceCount(int32_t* const cnt) override;
     rtError_t OpenNetService(const rtNetServiceOpenArgs* args) override;
     rtError_t CloseNetService() override;
     rtError_t GetDeviceIDs(uint32_t* const devId, const uint32_t len) override;
     rtError_t SetDevice(const int32_t devId) override;
     rtError_t GetDevice(int32_t* const devId) override;
-    rtError_t GetDevicePhyIdByIndex(const uint32_t devIndex, uint32_t* const phyId) override;
-    rtError_t GetDeviceIndexByPhyId(const uint32_t phyId, uint32_t* const devIndex) override;
     rtError_t DeviceReset(const int32_t devId, const bool isForceReset = false) override;
     rtError_t DeviceSetLimit(const int32_t devId, const rtLimitType_t type, const uint32_t val) override;
     rtError_t DeviceGetLimit(const rtLimitType_t type, uint32_t* val) override;
@@ -317,16 +314,7 @@ public:
         const uint32_t phyId, const int32_t moduleType, const int32_t infoType, int64_t* const val) override;
     rtError_t DeviceSetTsId(const uint32_t tsId) override;
     rtError_t DeviceGetTsId(uint32_t* tsId) override;
-    rtError_t EnableP2P(const uint32_t devIdDes, const uint32_t phyIdSrc, const uint32_t flag) override;
-    rtError_t DisableP2P(const uint32_t devIdDes, const uint32_t phyIdSrc) override;
-    rtError_t DeviceCanAccessPeer(
-        int32_t* const canAccessPeer, const uint32_t devId, const uint32_t peerDevice) override;
-    rtError_t GetP2PStatus(const uint32_t devIdDes, const uint32_t phyIdSrc, uint32_t* const status) override;
     rtError_t DeviceGetBareTgid(uint32_t* const pid) override;
-    rtError_t GetPairDevicesInfo(
-        const uint32_t devId, const uint32_t otherDevId, const int32_t infoType, int64_t* const val) override;
-    rtError_t GetPairPhyDevicesInfo(
-        const uint32_t devId, const uint32_t otherDevId, const int32_t infoType, int64_t* const val) override;
     rtError_t GetRtCapability(
         const rtFeatureType_t featureType, const int32_t featureInfo, int64_t* const val) override;
     rtError_t GetDeviceCapability(
@@ -345,20 +333,10 @@ public:
     rtError_t SetDeviceFailureMode(uint64_t failureMode) override;
     rtError_t GetLastErr(rtLastErrLevel_t level) override;
     rtError_t PeekLastErr(rtLastErrLevel_t level) override;
-    rtError_t GetLogicDevIdByUserDevId(const int32_t userDevId, int32_t* const logicDevId) override;
-    rtError_t GetUserDevIdByLogicDevId(const int32_t logicDevId, int32_t* const userDevId) override;
     rtError_t DeviceResourceClean(const int32_t devId) override;
     rtError_t SetXpuDevice(const rtXpuDevType devType, const uint32_t devId) override;
     rtError_t ResetXpuDevice(const rtXpuDevType devType, const uint32_t devId) override;
     rtError_t GetXpuDevCount(const rtXpuDevType devType, uint32_t* devCount) override;
-    rtError_t GetDeviceUuid(const int32_t devId, rtUuid_t* uuid) override;
-    rtError_t GetDevicePCIBusId(const int32_t devId, char* pciBusId, const int32_t len) override;
-    rtError_t GetDeviceByPCIBusId(const char* pciBusId, int32_t* devId) override;
-    rtError_t GetHostAtomicCapabilities(
-        uint32_t* capabilities, const rtAtomicOperation* operations, const uint32_t count, int32_t deviceId) override;
-    rtError_t GetP2PAtomicCapabilities(
-        uint32_t* capabilities, const rtAtomicOperation* operations, const uint32_t count, int32_t srcDeviceId,
-        int32_t dstDeviceId) override;
 
     // context
     rtError_t ContextCreate(Context** const inCtx, const int32_t devId) override;

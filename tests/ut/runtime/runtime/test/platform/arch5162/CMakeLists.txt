@@ -396,6 +396,7 @@ add_executable(runtime_utest_arch5162
     rt_utest_runtime_thread_aicpu.cc
     rt_utest_arg_loader_nocopy.cc
     ../../rt_utest_esched_stub.cc
+    ../../rt_utest_device_topology_stub.cc
     rt_utest_device_arch5162.cc
     rt_utest_notify_arch5162.cc
 )

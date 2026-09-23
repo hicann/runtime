@@ -550,8 +550,6 @@ TEST_F(ApiDeviceTest, TestRtsDeviceResetForce)
 
 TEST_F(ApiDeviceTest, TestRtsGetPairDevicesInfo)
 {
-    ApiImpl apiImpl;
-    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::GetPairDevicesInfo).stubs().will(returnValue(RT_ERROR_NONE));
     uint64_t val;
     rtError_t error = rtsGetPairDevicesInfo(0, 1, 0, &val);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
@@ -646,50 +644,4 @@ TEST_F(ApiDeviceTest, rt_device_get_by_pci_bus_id_full_chain_invalid_dev_id_ptr)
 {
     rtError_t error = rtDeviceGetByPCIBusId("0000:3d:00.0", nullptr);
     EXPECT_NE(error, RT_ERROR_NONE);
-}
-
-/* ========== PCI Bus ID 测试：覆盖 ApiDecorator 基类（通过 ProfileDecorator） ========== */
-
-TEST_F(ApiDeviceTest, rt_device_get_pci_bus_id_profile_decorator)
-{
-    ApiImpl apiImpl;
-    Profiler profiler(&apiImpl);
-    ApiProfileDecorator apiProfileDecorator(&apiImpl, &profiler);
-    char pciBusId[20] = {0};
-    rtError_t error = apiProfileDecorator.GetDevicePCIBusId(0, pciBusId, sizeof(pciBusId));
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    EXPECT_STREQ(pciBusId, "0000:3d:00.0");
-}
-
-TEST_F(ApiDeviceTest, rt_device_get_by_pci_bus_id_profile_decorator)
-{
-    ApiImpl apiImpl;
-    Profiler profiler(&apiImpl);
-    ApiProfileDecorator apiProfileDecorator(&apiImpl, &profiler);
-    int32_t devId = -1;
-    rtError_t error = apiProfileDecorator.GetDeviceByPCIBusId("0000:3d:00.0", &devId);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    EXPECT_EQ(devId, 0);
-}
-
-TEST_F(ApiDeviceTest, rt_device_get_pci_bus_id_profile_log_decorator)
-{
-    ApiImpl apiImpl;
-    Profiler profiler(&apiImpl);
-    ApiProfileLogDecorator apiProfileLogDecorator(&apiImpl, &profiler);
-    char pciBusId[20] = {0};
-    rtError_t error = apiProfileLogDecorator.GetDevicePCIBusId(0, pciBusId, sizeof(pciBusId));
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    EXPECT_STREQ(pciBusId, "0000:3d:00.0");
-}
-
-TEST_F(ApiDeviceTest, rt_device_get_by_pci_bus_id_profile_log_decorator)
-{
-    ApiImpl apiImpl;
-    Profiler profiler(&apiImpl);
-    ApiProfileLogDecorator apiProfileLogDecorator(&apiImpl, &profiler);
-    int32_t devId = -1;
-    rtError_t error = apiProfileLogDecorator.GetDeviceByPCIBusId("0000:3d:00.0", &devId);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    EXPECT_EQ(devId, 0);
 }

@@ -3258,13 +3258,6 @@ rtError_t ApiErrorDecorator::OpenNetService(const rtNetServiceOpenArgs* args)
 
 rtError_t ApiErrorDecorator::CloseNetService() { return impl_->CloseNetService(); }
 
-rtError_t ApiErrorDecorator::GetDeviceCount(int32_t* const cnt)
-{
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(cnt, RT_ERROR_INVALID_VALUE, "Obtaining the number of devices");
-
-    return impl_->GetDeviceCount(cnt);
-}
-
 rtError_t ApiErrorDecorator::SetDevice(const int32_t devId)
 {
     Runtime* const rt = Runtime::Instance();
@@ -3303,117 +3296,6 @@ rtError_t ApiErrorDecorator::GetDevice(int32_t* const devId)
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(devId, RT_ERROR_INVALID_VALUE, "Obtaining the ID of the device in use");
 
     return impl_->GetDevice(devId);
-}
-
-rtError_t ApiErrorDecorator::GetDevicePhyIdByIndex(const uint32_t devIndex, uint32_t* const phyId)
-{
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        phyId, RT_ERROR_INVALID_VALUE, "Querying the physical ID of a device based on its logical ID");
-
-    uint32_t realDeviceId;
-    rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(devIndex, &realDeviceId);
-    COND_RETURN_ERROR(
-        error != RT_ERROR_NONE, error, "Failed to convert the user device ID %u to driver device ID.", devIndex);
-    error = impl_->GetDevicePhyIdByIndex(realDeviceId, phyId);
-    ERROR_RETURN(error, "Get device physical id by index failed, index=%u.", devIndex);
-    return error;
-}
-
-rtError_t ApiErrorDecorator::GetDeviceIndexByPhyId(const uint32_t phyId, uint32_t* const devIndex)
-{
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        devIndex, RT_ERROR_INVALID_VALUE, "Querying the logical ID of a device based on its physical ID");
-
-    uint32_t realDeviceId = 0;
-    rtError_t error = impl_->GetDeviceIndexByPhyId(phyId, &realDeviceId);
-    if (error != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_ERROR, "Get device index by physical id failed, phyId:%u, realDeviceId=%u", phyId, realDeviceId);
-        return error;
-    }
-
-    error = Runtime::Instance()->GetUserDevIdByDeviceId(realDeviceId, devIndex);
-    COND_RETURN_ERROR_MSG_INNER(
-        error != RT_ERROR_NONE, error,
-        "Failed to convert the driver device ID %u to user device ID, phyId=%u, retCode=%#x", realDeviceId, phyId,
-        static_cast<uint32_t>(error));
-    RT_LOG(RT_LOG_DEBUG, "realDeviceId:%u, phyId=%u, devIndex=%u.", realDeviceId, phyId, (*devIndex));
-    return RT_ERROR_NONE;
-}
-
-rtError_t ApiErrorDecorator::EnableP2P(const uint32_t devIdDes, const uint32_t phyIdSrc, const uint32_t flag)
-{
-    uint32_t realDeviceId;
-    rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(devIdDes, &realDeviceId);
-    COND_RETURN_ERROR(
-        error != RT_ERROR_NONE, error, "Failed to convert the user device ID %u to driver device ID.", devIdDes);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
-        realDeviceId >= RT_MAX_DEV_NUM, RT_ERROR_INVALID_VALUE, "Enabling inter-device memory copy", realDeviceId,
-        "[0, " + std::to_string(RT_MAX_DEV_NUM) + ")");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
-        phyIdSrc >= RT_MAX_DEV_NUM, RT_ERROR_INVALID_VALUE, "Enabling inter-device memory copy", phyIdSrc,
-        "[0, " + std::to_string(RT_MAX_DEV_NUM) + ")");
-
-    error = impl_->EnableP2P(realDeviceId, phyIdSrc, flag);
-    ERROR_RETURN(error, "Enable P2P failed, devIdDes=%u, phyIdSrc=%u.", devIdDes, phyIdSrc);
-    return error;
-}
-
-rtError_t ApiErrorDecorator::DisableP2P(const uint32_t devIdDes, const uint32_t phyIdSrc)
-{
-    uint32_t realDeviceId;
-    rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(devIdDes, &realDeviceId);
-    COND_RETURN_ERROR(
-        error != RT_ERROR_NONE, error, "Failed to convert the user device ID %u to driver device ID.", devIdDes);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
-        realDeviceId >= RT_MAX_DEV_NUM, RT_ERROR_INVALID_VALUE, "Disabling inter-device memory copy", realDeviceId,
-        "[0, " + std::to_string(RT_MAX_DEV_NUM) + ")");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
-        phyIdSrc >= RT_MAX_DEV_NUM, RT_ERROR_INVALID_VALUE, "Disabling inter-device memory copy", phyIdSrc,
-        "[0, " + std::to_string(RT_MAX_DEV_NUM) + ")");
-    error = impl_->DisableP2P(realDeviceId, phyIdSrc);
-    ERROR_RETURN(error, "Disable P2P failed, dest deviceId=%u, src phyId=%u.", devIdDes, phyIdSrc);
-    return error;
-}
-
-rtError_t ApiErrorDecorator::DeviceCanAccessPeer(
-    int32_t* const canAccessPeer, const uint32_t devId, const uint32_t peerDevice)
-{
-    uint32_t realDeviceId;
-    rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(devId, &realDeviceId);
-    COND_RETURN_ERROR(
-        error != RT_ERROR_NONE, error, "Failed to convert the user device ID %u to driver device ID.", devId);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
-        realDeviceId >= RT_MAX_DEV_NUM, RT_ERROR_INVALID_VALUE,
-        "Checking whether data exchange is supported between devices", realDeviceId,
-        "[0, " + std::to_string(RT_MAX_DEV_NUM) + ")");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        canAccessPeer, RT_ERROR_INVALID_VALUE, "Checking whether data exchange is supported between devices");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
-        peerDevice >= RT_MAX_DEV_NUM, RT_ERROR_INVALID_VALUE,
-        "Checking whether data exchange is supported between devices", peerDevice,
-        "[0, " + std::to_string(RT_MAX_DEV_NUM) + ")");
-    error = impl_->DeviceCanAccessPeer(canAccessPeer, realDeviceId, peerDevice);
-    ERROR_RETURN(error, "Device can access peer failed, devId=%u, peerDevice=%u.", devId, peerDevice);
-    return error;
-}
-
-rtError_t ApiErrorDecorator::GetP2PStatus(const uint32_t devIdDes, const uint32_t phyIdSrc, uint32_t* const status)
-{
-    uint32_t realDeviceId;
-    rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(devIdDes, &realDeviceId);
-    COND_RETURN_ERROR(
-        error != RT_ERROR_NONE, error, "Failed to convert the user device ID %u to driver device ID.", devIdDes);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
-        realDeviceId >= RT_MAX_DEV_NUM, RT_ERROR_INVALID_VALUE, "Obtaining the P2P status", realDeviceId,
-        "[0, " + std::to_string(RT_MAX_DEV_NUM) + ")");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
-        phyIdSrc >= RT_MAX_DEV_NUM, RT_ERROR_INVALID_VALUE, "Obtaining the P2P status", phyIdSrc,
-        "[0, " + std::to_string(RT_MAX_DEV_NUM) + ")");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(status, RT_ERROR_INVALID_VALUE, "Obtaining the P2P status");
-
-    error = impl_->GetP2PStatus(realDeviceId, phyIdSrc, status);
-    ERROR_RETURN(error, "Get P2P status failed, dest devId=%u, src phyId=%u.", devIdDes, phyIdSrc);
-    return error;
 }
 
 rtError_t ApiErrorDecorator::DeviceGetBareTgid(uint32_t* const pid)
@@ -4643,32 +4525,6 @@ rtError_t ApiErrorDecorator::GetAiCpuCount(uint32_t* const aiCpuCnt)
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(aiCpuCnt, RT_ERROR_INVALID_VALUE, "Obtaining the number of AI CPUs");
 
     return impl_->GetAiCpuCount(aiCpuCnt);
-}
-
-rtError_t ApiErrorDecorator::GetPairDevicesInfo(
-    const uint32_t devId, const uint32_t otherDevId, const int32_t infoType, int64_t* const val)
-{
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        val, RT_ERROR_INVALID_VALUE, "Querying the pairing information between two logical devices");
-    uint32_t realDeviceId;
-    rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(devId, &realDeviceId);
-    COND_RETURN_ERROR(
-        error != RT_ERROR_NONE, error, "Failed to convert the user device ID %u to driver device ID.", devId);
-    uint32_t readOtherDeviceId;
-    error = Runtime::Instance()->ChgUserDevIdToDeviceId(otherDevId, &readOtherDeviceId);
-    COND_RETURN_ERROR(
-        error != RT_ERROR_NONE, error, "Failed to convert the user device ID %u to driver device ID.", otherDevId);
-    return impl_->GetPairDevicesInfo(realDeviceId, readOtherDeviceId, infoType, val);
-}
-
-rtError_t ApiErrorDecorator::GetPairPhyDevicesInfo(
-    const uint32_t devId, const uint32_t otherDevId, const int32_t infoType, int64_t* const val)
-{
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        val, RT_ERROR_INVALID_VALUE, "Querying the pairing information between two physical devices");
-    RT_LOG(
-        RT_LOG_INFO, "input physical devId=%u, input physical otherDevId=%u, infoType=%d", devId, otherDevId, infoType);
-    return impl_->GetPairPhyDevicesInfo(devId, otherDevId, infoType, val);
 }
 
 rtError_t ApiErrorDecorator::GetRtCapability(
@@ -6199,58 +6055,6 @@ rtError_t ApiErrorDecorator::GetHostCpuDevId(int32_t* const devId)
     return impl_->GetHostCpuDevId(devId);
 }
 
-rtError_t ApiErrorDecorator::GetLogicDevIdByUserDevId(const int32_t userDevId, int32_t* const logicDevId)
-{
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
-        (userDevId < 0), RT_ERROR_DEVICE_ID, "Obtaining the logical device ID based on the user device ID", userDevId,
-        "greater than or equal to 0");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        logicDevId, RT_ERROR_INVALID_VALUE, "Obtaining the logical device ID based on the user device ID");
-    int32_t realDeviceId = 0;
-    rtError_t error = impl_->GetLogicDevIdByUserDevId(userDevId, &realDeviceId);
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "Get logicDevId failed.");
-    error = CheckDeviceIdIsValid(realDeviceId);
-    COND_RETURN_ERROR_MSG_INNER(
-        error != RT_ERROR_NONE, error, "logicDevId is invalid, devId=%d, retCode=%#x", realDeviceId,
-        static_cast<uint32_t>(error));
-    *logicDevId = realDeviceId;
-    return RT_ERROR_NONE;
-}
-
-rtError_t ApiErrorDecorator::GetUserDevIdByLogicDevId(const int32_t logicDevId, int32_t* const userDevId)
-{
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
-        (logicDevId < 0), RT_ERROR_DEVICE_ID, "Obtaining the user device ID based on the logical device ID", logicDevId,
-        "greater than or equal to 0");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        userDevId, RT_ERROR_INVALID_VALUE, "Obtaining the user device ID based on the logical device ID");
-    const rtError_t error = CheckDeviceIdIsValid(logicDevId);
-    COND_RETURN_ERROR_MSG_INNER(
-        error != RT_ERROR_NONE, error, "logicDevId is invalid, devId=%d, retCode=%#x", logicDevId,
-        static_cast<uint32_t>(error));
-    return impl_->GetUserDevIdByLogicDevId(logicDevId, userDevId);
-}
-
-rtError_t ApiErrorDecorator::GetDeviceUuid(const int32_t devId, rtUuid_t* uuid)
-{
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
-        (devId < 0), RT_ERROR_DEVICE_ID, "Obtaining the device UUID", devId, "greater than or equal to 0");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(uuid, RT_ERROR_INVALID_VALUE, "Obtaining the device UUID");
-
-    int32_t drvDeviceId;
-    rtError_t error =
-        Runtime::Instance()->ChgUserDevIdToDeviceId(static_cast<uint32_t>(devId), RtPtrToPtr<uint32_t*>(&drvDeviceId));
-    COND_RETURN_ERROR(
-        error != RT_ERROR_NONE, error, "Failed to convert the user device ID %d to driver device ID.", devId);
-
-    error = CheckDeviceIdIsValid(drvDeviceId);
-    COND_RETURN_ERROR_MSG_INNER(
-        error != RT_ERROR_NONE, error, "drvDeviceId is invalid, drvDeviceId=%d, ErrorCode=%#x", drvDeviceId,
-        static_cast<uint32_t>(error));
-
-    return impl_->GetDeviceUuid(drvDeviceId, uuid);
-}
-
 rtError_t ApiErrorDecorator::SetStreamCacheOpInfoSwitch(const Stream* const stm, uint32_t cacheOpInfoSwitch)
 {
     Stream* curStm = nullptr;
@@ -6774,95 +6578,6 @@ rtError_t ApiErrorDecorator::ModelTaskDisable(rtTask_t task)
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         task, RT_ERROR_INVALID_VALUE, "Setting the status of a specified task to disabled");
     return impl_->ModelTaskDisable(task);
-}
-
-static rtError_t ValidateAtomicOperations(const rtAtomicOperation* operations, uint32_t count)
-{
-    for (uint32_t i = 0U; i < count; ++i) {
-        COND_RETURN_AND_MSG_OUTER(
-            (operations[i] < RT_ATOMIC_OPERATION_INTEGER_ADD || operations[i] > RT_ATOMIC_OPERATION_SIMD_SCALAR_EXCH),
-            RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, "Validating atomic operations",
-            "UNKNOWN(" + std::to_string(static_cast<int32_t>(operations[i])) + ")",
-            "operations[" + std::to_string(i) + "]",
-            "the operation must be in [" + std::to_string(RT_ATOMIC_OPERATION_INTEGER_ADD) + ", " +
-                std::to_string(RT_ATOMIC_OPERATION_SIMD_SCALAR_EXCH) + "]");
-    }
-    return RT_ERROR_NONE;
-}
-
-rtError_t ApiErrorDecorator::GetHostAtomicCapabilities(
-    uint32_t* capabilities, const rtAtomicOperation* operations, const uint32_t count, int32_t deviceId)
-{
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        capabilities, RT_ERROR_INVALID_VALUE,
-        "Querying details about the atomic operations supported between a specified device and the host");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        operations, RT_ERROR_INVALID_VALUE,
-        "Querying details about the atomic operations supported between a specified device and the host");
-    ZERO_RETURN_AND_MSG_OUTER_WITH_FUNC_DESC(
-        count, "Querying details about the atomic operations supported between a specified device and the host");
-
-    int32_t realDeviceId;
-    rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(
-        static_cast<uint32_t>(deviceId), RtPtrToPtr<uint32_t*>(&realDeviceId), true);
-    COND_RETURN_ERROR(
-        error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID, "Failed to convert the user device ID %d to driver device ID.",
-        deviceId);
-
-    error = CheckDeviceIdIsValid(realDeviceId);
-    COND_RETURN_ERROR_MSG_INNER(
-        error != RT_ERROR_NONE, error, "drv devId is invalid, drv devId=%d, retCode=%#x", realDeviceId,
-        static_cast<uint32_t>(error));
-
-    error = ValidateAtomicOperations(operations, count);
-    COND_RETURN_ERROR_MSG_INNER(
-        error != RT_ERROR_NONE, error, "validate atomic operations failed, retCode=%#x", static_cast<uint32_t>(error));
-
-    return impl_->GetHostAtomicCapabilities(capabilities, operations, count, realDeviceId);
-}
-
-rtError_t ApiErrorDecorator::GetP2PAtomicCapabilities(
-    uint32_t* capabilities, const rtAtomicOperation* operations, const uint32_t count, int32_t srcDeviceId,
-    int32_t dstDeviceId)
-{
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        capabilities, RT_ERROR_INVALID_VALUE, "Querying details about the atomic operations supported between devices");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        operations, RT_ERROR_INVALID_VALUE, "Querying details about the atomic operations supported between devices");
-    ZERO_RETURN_AND_MSG_OUTER_WITH_FUNC_DESC(
-        count, "Querying details about the atomic operations supported between devices");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
-        (srcDeviceId == dstDeviceId), RT_ERROR_DEVICE_ID,
-        "Querying details about the atomic operations supported between devices", srcDeviceId,
-        "srcDeviceId must be different from dstDeviceId");
-
-    int32_t realSrcDeviceId;
-    rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(
-        static_cast<uint32_t>(srcDeviceId), RtPtrToPtr<uint32_t*>(&realSrcDeviceId), true);
-    COND_RETURN_ERROR(
-        error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID, "Failed to convert the user device ID %d to driver device ID.",
-        srcDeviceId);
-    error = CheckDeviceIdIsValid(realSrcDeviceId);
-    COND_RETURN_ERROR_MSG_INNER(
-        error != RT_ERROR_NONE, error, "drv devId is invalid, drv devId=%d, retCode=%#x", realSrcDeviceId,
-        static_cast<uint32_t>(error));
-
-    int32_t realDstDeviceId;
-    error = Runtime::Instance()->ChgUserDevIdToDeviceId(
-        static_cast<uint32_t>(dstDeviceId), RtPtrToPtr<uint32_t*>(&realDstDeviceId), true);
-    COND_RETURN_ERROR(
-        error != RT_ERROR_NONE, RT_ERROR_DEVICE_ID, "Failed to convert the user device ID %d to driver device ID.",
-        dstDeviceId);
-    error = CheckDeviceIdIsValid(realDstDeviceId);
-    COND_RETURN_ERROR_MSG_INNER(
-        error != RT_ERROR_NONE, error, "drv devId is invalid, drv devId=%d, retCode=%#x", realDstDeviceId,
-        static_cast<uint32_t>(error));
-
-    error = ValidateAtomicOperations(operations, count);
-    COND_RETURN_ERROR_MSG_INNER(
-        error != RT_ERROR_NONE, error, "validate atomic operations failed, retCode=%#x", static_cast<uint32_t>(error));
-
-    return impl_->GetP2PAtomicCapabilities(capabilities, operations, count, realSrcDeviceId, realDstDeviceId);
 }
 
 rtError_t ApiErrorDecorator::GetDeviceInfoByAttr(uint32_t deviceId, rtDevAttr attr, int64_t* val)

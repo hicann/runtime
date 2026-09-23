@@ -657,8 +657,6 @@ rtError_t ApiDecorator::MemPrefetchToDevice(const void* const devPtr, const uint
     return impl_->MemPrefetchToDevice(devPtr, len, devId);
 }
 
-rtError_t ApiDecorator::GetDeviceCount(int32_t* const cnt) { return impl_->GetDeviceCount(cnt); }
-
 rtError_t ApiDecorator::OpenNetService(const rtNetServiceOpenArgs* args) { return impl_->OpenNetService(args); }
 
 rtError_t ApiDecorator::CloseNetService() { return impl_->CloseNetService(); }
@@ -671,16 +669,6 @@ rtError_t ApiDecorator::GetDeviceIDs(uint32_t* const devId, const uint32_t len)
 rtError_t ApiDecorator::SetDevice(const int32_t devId) { return impl_->SetDevice(devId); }
 
 rtError_t ApiDecorator::GetDevice(int32_t* const devId) { return impl_->GetDevice(devId); }
-
-rtError_t ApiDecorator::GetDevicePhyIdByIndex(const uint32_t devIndex, uint32_t* const phyId)
-{
-    return impl_->GetDevicePhyIdByIndex(devIndex, phyId);
-}
-
-rtError_t ApiDecorator::GetDeviceIndexByPhyId(const uint32_t phyId, uint32_t* const devIndex)
-{
-    return impl_->GetDeviceIndexByPhyId(phyId, devIndex);
-}
 
 rtError_t ApiDecorator::DeviceReset(const int32_t devId, const bool isForceReset)
 {
@@ -737,27 +725,6 @@ rtError_t ApiDecorator::DeviceSetTsId(const uint32_t tsId) { return impl_->Devic
 rtError_t ApiDecorator::DeviceGetTsId(uint32_t* tsId) { return impl_->DeviceGetTsId(tsId); }
 
 rtError_t ApiDecorator::SetDeviceFailureMode(uint64_t failureMode) { return impl_->SetDeviceFailureMode(failureMode); }
-
-rtError_t ApiDecorator::EnableP2P(const uint32_t devIdDes, const uint32_t phyIdSrc, const uint32_t flag)
-{
-    return impl_->EnableP2P(devIdDes, phyIdSrc, flag);
-}
-
-rtError_t ApiDecorator::DisableP2P(const uint32_t devIdDes, const uint32_t phyIdSrc)
-{
-    return impl_->DisableP2P(devIdDes, phyIdSrc);
-}
-
-rtError_t ApiDecorator::DeviceCanAccessPeer(
-    int32_t* const canAccessPeer, const uint32_t devId, const uint32_t peerDevice)
-{
-    return impl_->DeviceCanAccessPeer(canAccessPeer, devId, peerDevice);
-}
-
-rtError_t ApiDecorator::GetP2PStatus(const uint32_t devIdDes, const uint32_t phyIdSrc, uint32_t* const status)
-{
-    return impl_->GetP2PStatus(devIdDes, phyIdSrc, status);
-}
 
 rtError_t ApiDecorator::DeviceGetBareTgid(uint32_t* const pid) { return impl_->DeviceGetBareTgid(pid); }
 
@@ -1073,18 +1040,6 @@ rtError_t ApiDecorator::LabelCreateEx(Label** const lbl, Model* const mdl, Strea
 rtError_t ApiDecorator::LabelSwitchListCreate(Label** const labels, const size_t num, void** const labelList)
 {
     return impl_->LabelSwitchListCreate(labels, num, labelList);
-}
-
-rtError_t ApiDecorator::GetPairDevicesInfo(
-    const uint32_t devId, const uint32_t otherDevId, const int32_t infoType, int64_t* const val)
-{
-    return impl_->GetPairDevicesInfo(devId, otherDevId, infoType, val);
-}
-
-rtError_t ApiDecorator::GetPairPhyDevicesInfo(
-    const uint32_t devId, const uint32_t otherDevId, const int32_t infoType, int64_t* const val)
-{
-    return impl_->GetPairPhyDevicesInfo(devId, otherDevId, infoType, val);
 }
 
 rtError_t ApiDecorator::GetRtCapability(
@@ -1479,19 +1434,6 @@ rtError_t ApiDecorator::GetVisibleDeviceIdByLogicDeviceId(const int32_t logicDev
     return impl_->GetVisibleDeviceIdByLogicDeviceId(logicDeviceId, visibleDeviceId);
 }
 
-rtError_t ApiDecorator::GetHostAtomicCapabilities(
-    uint32_t* capabilities, const rtAtomicOperation* operations, const uint32_t count, int32_t deviceId)
-{
-    return impl_->GetHostAtomicCapabilities(capabilities, operations, count, deviceId);
-}
-
-rtError_t ApiDecorator::GetP2PAtomicCapabilities(
-    uint32_t* capabilities, const rtAtomicOperation* operations, const uint32_t count, int32_t srcDeviceId,
-    int32_t dstDeviceId)
-{
-    return impl_->GetP2PAtomicCapabilities(capabilities, operations, count, srcDeviceId, dstDeviceId);
-}
-
 rtError_t ApiDecorator::CtxGetOverflowAddr(void** const overflowAddr)
 {
     return impl_->CtxGetOverflowAddr(overflowAddr);
@@ -1659,28 +1601,6 @@ rtError_t ApiDecorator::HdcSessionConnect(
 rtError_t ApiDecorator::HdcSessionClose(rtHdcSession_t const session) { return impl_->HdcSessionClose(session); }
 
 rtError_t ApiDecorator::GetHostCpuDevId(int32_t* const devId) { return impl_->GetHostCpuDevId(devId); }
-
-rtError_t ApiDecorator::GetLogicDevIdByUserDevId(const int32_t userDevId, int32_t* const logicDevId)
-{
-    return impl_->GetLogicDevIdByUserDevId(userDevId, logicDevId);
-}
-
-rtError_t ApiDecorator::GetUserDevIdByLogicDevId(const int32_t logicDevId, int32_t* const userDevId)
-{
-    return impl_->GetUserDevIdByLogicDevId(logicDevId, userDevId);
-}
-
-rtError_t ApiDecorator::GetDeviceUuid(const int32_t devId, rtUuid_t* uuid) { return impl_->GetDeviceUuid(devId, uuid); }
-
-rtError_t ApiDecorator::GetDevicePCIBusId(const int32_t devId, char* pciBusId, const int32_t len)
-{
-    return impl_->GetDevicePCIBusId(devId, pciBusId, len);
-}
-
-rtError_t ApiDecorator::GetDeviceByPCIBusId(const char* pciBusId, int32_t* devId)
-{
-    return impl_->GetDeviceByPCIBusId(pciBusId, devId);
-}
 
 rtError_t ApiDecorator::SetStreamCacheOpInfoSwitch(const Stream* const stm, uint32_t cacheOpInfoSwitch)
 {

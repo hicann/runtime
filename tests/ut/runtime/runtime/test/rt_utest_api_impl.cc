@@ -1884,7 +1884,7 @@ TEST_F(ApiImplTest, GetTaskIdAndStreamID)
 
 TEST_F(ApiImplTest, GetDeviceCount_test)
 {
-    ApiImpl apiImpl;
+    ApiImplDeviceTopology apiImpl;
     rtError_t error;
 
     Runtime* rtInstance = const_cast<Runtime*>(Runtime::Instance());

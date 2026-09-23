@@ -784,22 +784,6 @@ rtError_t ApiProfileLogDecorator::GetVisibleDeviceIdByLogicDeviceId(
     return impl_->GetVisibleDeviceIdByLogicDeviceId(logicDeviceId, visibleDeviceId);
 }
 
-rtError_t ApiProfileLogDecorator::GetLogicDevIdByUserDevId(const int32_t userDevId, int32_t* const logicDevId)
-{
-    ProfileLogRecord record(RT_PROF_API_USER_TO_LOGIC_ID, profiler_);
-    const rtError_t error = impl_->GetLogicDevIdByUserDevId(userDevId, logicDevId);
-    record.SaveRecord();
-    return error;
-}
-
-rtError_t ApiProfileLogDecorator::GetUserDevIdByLogicDevId(const int32_t logicDevId, int32_t* const userDevId)
-{
-    ProfileLogRecord record(RT_PROF_API_LOGIC_TO_USER_ID, profiler_);
-    const rtError_t error = impl_->GetUserDevIdByLogicDevId(logicDevId, userDevId);
-    record.SaveRecord();
-    return error;
-}
-
 rtError_t ApiProfileLogDecorator::MemWriteValue(
     const void* const devAddr, const uint64_t value, const uint32_t flag, Stream* const stm)
 {
@@ -844,25 +828,6 @@ rtError_t ApiProfileLogDecorator::CacheLastTaskOpInfo(const void* const infoPtr,
 {
     ProfileLogRecord record(RT_PROF_API_CACHE_LAST_TASK_OP_INFO, profiler_);
     const rtError_t error = impl_->CacheLastTaskOpInfo(infoPtr, infoSize);
-    record.SaveRecord();
-    return error;
-}
-
-rtError_t ApiProfileLogDecorator::GetHostAtomicCapabilities(
-    uint32_t* capabilities, const rtAtomicOperation* operations, const uint32_t count, int32_t deviceId)
-{
-    ProfileLogRecord record(RT_PROF_API_GET_HOST_ATOMIC_CAPABILITIES, profiler_);
-    const rtError_t error = impl_->GetHostAtomicCapabilities(capabilities, operations, count, deviceId);
-    record.SaveRecord();
-    return error;
-}
-
-rtError_t ApiProfileLogDecorator::GetP2PAtomicCapabilities(
-    uint32_t* capabilities, const rtAtomicOperation* operations, const uint32_t count, int32_t srcDeviceId,
-    int32_t dstDeviceId)
-{
-    ProfileLogRecord record(RT_PROF_API_GET_P2P_ATOMIC_CAPABILITIES, profiler_);
-    const rtError_t error = impl_->GetP2PAtomicCapabilities(capabilities, operations, count, srcDeviceId, dstDeviceId);
     record.SaveRecord();
     return error;
 }
