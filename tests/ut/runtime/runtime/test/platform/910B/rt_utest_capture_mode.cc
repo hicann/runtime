@@ -2770,6 +2770,7 @@ TEST_F(CloudV2CaptureModelTest, GetCaptureRecordTaskParams_Success)
     error = GetCaptureRecordTaskParams(taskInfo, &params);
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_EQ(params.type, RT_TASK_EVENT_RECORD);
+    EXPECT_EQ(params.eventRecordTaskParams.event, event);
     EXPECT_EQ(params.eventRecordTaskParams.recordFlag, RT_EVENT_RECORD_DEFAULT);
 
     free(taskInfo);
@@ -2800,6 +2801,7 @@ TEST_F(CloudV2CaptureModelTest, GetCaptureWaitTaskParams_Success)
     error = GetCaptureWaitTaskParams(taskInfo, &params);
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_EQ(params.type, RT_TASK_EVENT_WAIT);
+    EXPECT_EQ(params.eventWaitTaskParams.event, event);
     EXPECT_EQ(params.eventWaitTaskParams.waitFlag, RT_EVENT_WAIT_DEFAULT);
 
     free(taskInfo);
@@ -2830,6 +2832,7 @@ TEST_F(CloudV2CaptureModelTest, GetCaptureResetTaskParams_Success)
     error = GetCaptureResetTaskParams(taskInfo, &params);
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_EQ(params.type, RT_TASK_EVENT_RESET);
+    EXPECT_EQ(params.eventResetTaskParams.event, event);
     EXPECT_EQ(params.eventResetTaskParams.resetFlag, RT_EVENT_WAIT_DEFAULT);
 
     free(taskInfo);

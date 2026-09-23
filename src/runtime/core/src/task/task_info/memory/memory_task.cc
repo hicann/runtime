@@ -648,7 +648,7 @@ rtError_t GetCaptureRecordTaskParams(const TaskInfo* const taskInfo, rtTaskParam
     Event* event = taskInfo->u.memWriteValueTask.event;
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         event, RT_ERROR_INVALID_VALUE, "Obtaining the Event Record task parameters in capture mode");
-    params->eventRecordTaskParams.event = event;
+    params->eventRecordTaskParams.event = static_cast<rtEvent_t>(event->GetInnerHandle());
     params->eventRecordTaskParams.eventFlag = static_cast<uint32_t>(event->GetEventFlag());
     params->eventRecordTaskParams.recordFlag =
         (taskInfo->type == TS_TASK_TYPE_CAPTURE_RECORD_EXTERNAL) ? RT_EVENT_RECORD_EXTERNAL : RT_EVENT_RECORD_DEFAULT;
@@ -664,7 +664,7 @@ rtError_t GetCaptureWaitTaskParams(const TaskInfo* const taskInfo, rtTaskParams*
     Event* event = taskInfo->u.memWaitValueTask.event;
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         event, RT_ERROR_INVALID_VALUE, "Obtaining the Event Wait task parameters in capture mode");
-    params->eventWaitTaskParams.event = event;
+    params->eventWaitTaskParams.event = static_cast<rtEvent_t>(event->GetInnerHandle());
     params->eventWaitTaskParams.eventFlag = static_cast<uint32_t>(event->GetEventFlag());
     params->eventWaitTaskParams.waitFlag =
         (taskInfo->type == TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL) ? RT_EVENT_WAIT_EXTERNAL : RT_EVENT_WAIT_DEFAULT;
@@ -680,7 +680,7 @@ rtError_t GetCaptureResetTaskParams(const TaskInfo* const taskInfo, rtTaskParams
     Event* event = taskInfo->u.memWriteValueTask.event;
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         event, RT_ERROR_INVALID_VALUE, "Obtaining the Event Reset task parameters in capture mode");
-    params->eventResetTaskParams.event = event;
+    params->eventResetTaskParams.event = static_cast<rtEvent_t>(event->GetInnerHandle());
     params->eventResetTaskParams.eventFlag = static_cast<uint32_t>(event->GetEventFlag());
     params->eventResetTaskParams.resetFlag = RT_EVENT_WAIT_DEFAULT;
 
