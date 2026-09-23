@@ -240,7 +240,7 @@ rtError_t ApiImpl::StreamAddCondTaskParasCheck(rtCondTaskParams params, Stream* 
     CondHandle* realHandle = static_cast<CondHandle*>(inner->object);
     COND_RETURN_AND_MSG_OUTER(
         (realHandle->GetSubCaptureModels().size() != 0), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
-        "rtStreamAddCondTask", "params.handle",
+        "Verifying the parameters required by a conditional task", "params.handle",
         "The handle has been launched with condition task, "
         "create a new handle before adding another condition task");
 
@@ -249,30 +249,40 @@ rtError_t ApiImpl::StreamAddCondTaskParasCheck(rtCondTaskParams params, Stream* 
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Verifying the parameters required by a conditional task");
     COND_RETURN_AND_MSG_OUTER(
-        !stm->IsCapturing(), RT_ERROR_STREAM_NOT_CAPTURED, ErrorCode::EE1018, "rtStreamAddCondTask",
+        !stm->IsCapturing(), RT_ERROR_STREAM_NOT_CAPTURED, ErrorCode::EE1018,
+        "Verifying the parameters required by a conditional task",
         RtFmtMsg("Stream (stream_id=%d) must be in the capture stage before adding a condition task", stm->Id_()));
     NULL_PTR_RETURN(stm->GetCaptureStream(), RT_ERROR_STREAM_NOT_CAPTURED);
     rtError_t error = CheckCaptureModelSupportCondOp(curCtx->Device_());
     COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
-    COND_RETURN_ERROR_MSG_INNER(
-        (stm->GetCaptureStream()->Model_() != realHandle->GetParentModel()), RT_ERROR_INVALID_VALUE,
-        "model associated with the condition handle is inconsistent with that associated with the stream, "
-        "condhandle model=%p, capture stream model=%p.",
-        realHandle->GetParentModel(), stm->GetCaptureStream()->Model_());
+    COND_PROC_RETURN_AND_MSG_OUTER(
+        (stm->GetCaptureStream()->Model_() != realHandle->GetParentModel()), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
+        RT_LOG(
+            RT_LOG_ERROR,
+            "The model associated with the condition handle is inconsistent with that associated with the stream, "
+            "condhandle model=%p, capture stream model=%p.",
+            realHandle->GetParentModel(), stm->GetCaptureStream()->Model_()),
+        "Verifying the parameters required by a conditional task", "params.handle or stream",
+        RtFmtMsg(
+            "The model (model_id=%u) associated with the condition handle is inconsistent with the model (model_id=%u) "
+            "bound to the stream (stream_id=%d)",
+            realHandle->GetParentModel()->Id_(), stm->GetCaptureStream()->Model_()->Id_(), stm->Id_()));
 
     auto& addStreamMap = (dynamic_cast<CaptureModel*>(stm->GetCaptureStream()->Model_()))->GetAddStreamMap();
     auto it = addStreamMap.find(stm);
     COND_RETURN_AND_MSG_OUTER(
-        (it != addStreamMap.end()), RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1016, "rtStreamAddCondTask",
+        (it != addStreamMap.end()), RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1016,
+        "Verifying the parameters required by a conditional task",
         "The ACL Graph add stream does not support add condition task");
 
     error = CheckCondTaskParamsSize(params);
-    ERROR_RETURN_MSG_INNER(
+    ERROR_RETURN(
         error, "Failed to check condition task params, condition type=%s, condition size=%u, retCode=%#x.",
         CondTaskTypeToString(params.type).c_str(), params.size, static_cast<uint32_t>(error));
     COND_RETURN_AND_MSG_OUTER(
-        !realHandle->GetSubCaptureModels().empty(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "rtStreamAddCondTask",
-        "params.handle", "The condHandle has already been used by rtStreamAddCondTask");
+        !realHandle->GetSubCaptureModels().empty(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
+        "Verifying the parameters required by a conditional task", "params.handle",
+        "The condHandle has already been used by rtStreamAddCondTask");
 
     realHandle->SetCondType(params.type);
     realHandle->SetCondSize(params.size);

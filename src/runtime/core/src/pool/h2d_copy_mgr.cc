@@ -223,10 +223,15 @@ rtError_t H2DCopyMgr::H2DMemCopy(void* dst, const void* const src, const uint64_
     if (policy_ == COPY_POLICY_PCIE_BAR) {
         TIMESTAMP_BEGIN(rtKernelLaunch_MemCopyPcie);
         const errno_t ret = memcpy_s(dst, size, src, size);
-        COND_RETURN_ERROR_MSG_CALL(
-            ERR_MODULE_SYSTEM, ret != EOK, RT_ERROR_DRV_MEMORY,
-            "%s failed. Reason: Standard function memcpy_s failed. [Errno %d] %s. dst=%p, src=%p, size=%" PRIu64 ".",
-            "Copying memory from host to device", ret, strerror(ret), dst, src, size);
+        if (ret != EOK) {
+            std::stringstream ss;
+            ss << std::hex << "dest=0x" << RtPtrToValue(dst) << ", src=0x" << RtPtrToValue(src) << std::dec
+               << ", destMax=" << size << ", count=" << size << ".";
+            RT_LOG_OUTER_MSG_IMPL(
+                ErrorCode::EE1020, "Copying memory from host to device", "memcpy_s", std::to_string(ret), strerror(ret),
+                ss.str().c_str());
+            return RT_ERROR_DRV_MEMORY;
+        }
         TIMESTAMP_END(rtKernelLaunch_MemCopyPcie);
     } else if (policy_ == COPY_POLICY_ASYNC_PCIE_DMA) {
         CpyHandle* handle = static_cast<CpyHandle*>(dst);
@@ -249,11 +254,15 @@ rtError_t H2DCopyMgr::H2DMemCopy(void* dst, const void* const src, const uint64_
         }
         TIMESTAMP_BEGIN(rtKernelLaunch_MemCopyAsync_HostCpy);
         const errno_t ret = memcpy_s(RtValueToPtr<void*>(iter->second.hostAddr), size, src, size);
-        COND_RETURN_ERROR_MSG_CALL(
-            ERR_MODULE_SYSTEM, ret != EOK, RT_ERROR_DRV_MEMORY,
-            "%s failed. Reason: Standard function memcpy_s failed. [Errno %d] %s. dst=%p, src=%p, size=%" PRIu64 ".",
-            "Copying memory from host to device", ret, strerror(ret), RtValueToPtr<void*>(iter->second.hostAddr), src,
-            size);
+        if (ret != EOK) {
+            std::stringstream ss;
+            ss << std::hex << "dest=0x" << iter->second.hostAddr << ", src=0x" << RtPtrToValue(src) << std::dec
+               << ", destMax=" << size << ", count=" << size << ".";
+            RT_LOG_OUTER_MSG_IMPL(
+                ErrorCode::EE1020, "Copying memory from host to device", "memcpy_s", std::to_string(ret).c_str(),
+                strerror(ret), ss.str().c_str());
+            return RT_ERROR_DRV_MEMORY;
+        }
 
         handle->dmaHandle = &(iter->second.dmaAddr);
         TIMESTAMP_END(rtKernelLaunch_MemCopyAsync_HostCpy);

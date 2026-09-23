@@ -37,7 +37,7 @@ rtError_t LogicSqManage::CreateLogicSq(LogicSq*& logicSq)
 {
     logicSq = new (std::nothrow) LogicSq(device_);
     if (logicSq == nullptr) {
-        RT_LOG(RT_LOG_ERROR, "new logic sq failed, device_id=%u.", device_->Id_());
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1013, sizeof(LogicSq), "new");
         return RT_ERROR_MEMORY_ALLOCATION;
     }
 

@@ -12,6 +12,7 @@
 #if (!defined(CFG_VECTOR_CAST))
 #include <algorithm>
 #endif
+#include <cstring>
 #include <functional>
 #include "aicpu_sched/common/aicpu_task_struct.h"
 #include "davinci_kernel_task.h"
@@ -177,7 +178,7 @@ rtError_t Model::Setup(Context* const contextIn)
     }
 
     notifier_ = OsalFactory::CreateNotifier();
-    NULL_PTR_RETURN_MSG(notifier_, RT_ERROR_NOTIFY_NULL);
+    COND_RETURN_AND_MSG_OUTER(notifier_ == nullptr, RT_ERROR_NOTIFY_NULL, ErrorCode::EE1013, sizeof(Notifier), "new");
 
     const uint32_t tsVersion = dev->GetTschVersion();
     if ((tsVersion >= static_cast<uint32_t>(TS_VERSION_MORE_LABEL))) {
@@ -933,7 +934,7 @@ rtError_t Model::LoadComplete()
     if (IsAutoSplitSq()) {
         const rtError_t error = BuildSqCqForAutoSplit();
         COND_RETURN_ERROR_MSG_INNER(
-            error != RT_ERROR_NONE, error, "build sq cq failed, model_id=%u, auto_split_sq=%d.", Id_(),
+            error != RT_ERROR_NONE, error, "Failed to build SQ/CQ, model_id=%u, auto_split_sq=%d.", Id_(),
             IsAutoSplitSq());
     }
     Device* const dev = context_->Device_();
@@ -1352,9 +1353,12 @@ rtError_t Model::GetStreamToAsyncExecute(Stream* stm)
 
     if ((dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MODEL_EXE_DOT_NEED_LOAD_COMPLETE)) &&
         (GetModelExecutorType() != EXECUTOR_AICPU)) {
-        COND_RETURN_ERROR(
-            (!isModelComplete_), RT_ERROR_MODEL_NOT_END, "model is not load complete, stream_id=%d, model_id=%u",
-            stm->Id_(), modelId);
+        COND_RETURN_AND_MSG_OUTER(
+            (!isModelComplete_), RT_ERROR_MODEL_NOT_END, ErrorCode::EE1018, "Executing the model running instance",
+            RtFmtMsg(
+                "The model (model_id=%u) is not load complete. Before executing the model, call "
+                "aclmdlRIBuildEnd to complete the model loading",
+                modelId));
     }
 
     error = SubmitExecuteTask(stm);
@@ -1417,9 +1421,10 @@ rtError_t Model::Execute(Stream* const stm, int32_t timeout)
         (curStm != nullptr) && (curStm->Context_() != context_), RT_ERROR_STREAM_CONTEXT, ErrorCode::EE1010, "Model",
         "stream", RtFmtMsg("stream_id=%u, stream_ctx=%p, cur_ctx=%p", curStm->Id_(), curStm->Context_(), context_));
 
-    COND_RETURN_ERROR(
+    COND_RETURN_AND_MSG_OUTER(
         (GetModelExecutorType() == EXECUTOR_AICPU) && (queueInfo_.size() > 0UL), RT_ERROR_MODEL_EXE_FAILED,
-        "Repeated AICPU model execution!");
+        ErrorCode::EE1009, std::to_string(Id_()),
+        "The AICPU model does not support execution via model execution APIs");
 
     // MAX_INT32_NUM means that stream is type of RT_STREAM_FORBIDDEN_DEFAULT
     const bool syncFlag = ((curStm != nullptr) && ((curStm->Flags() & RT_STREAM_FORBIDDEN_DEFAULT) != 0));
@@ -1495,9 +1500,9 @@ rtError_t Model::ExecuteSync(int32_t timeout)
 {
     rtError_t error = RT_ERROR_NONE;
     const uint32_t modelId = Id_();
-    COND_RETURN_ERROR(
+    COND_RETURN_AND_MSG_OUTER(
         (GetModelExecutorType() == EXECUTOR_AICPU) && (queueInfo_.size() > 0UL), RT_ERROR_MODEL_EXE_FAILED,
-        "Repeated AICPU model execution!");
+        ErrorCode::EE1009, std::to_string(Id_()), "The AICPU model does not support execution via aclmdlRIExecute");
 
     if (GetModelExecutorType() == EXECUTOR_AICPU) {
         RT_LOG(RT_LOG_INFO, "synchronize execute aicpu model.");
@@ -2294,7 +2299,12 @@ rtError_t Model::GetModelName(const uint32_t maxLen, char_t* const name) const
 {
     const errno_t error = memcpy_s(name, static_cast<size_t>(maxLen), name_.c_str(), name_.length() + 1U);
     if (error != EOK) {
-        RT_LOG(RT_LOG_ERROR, "copy to model name failed, ret=%d, length=%zu.", error, name_.length() + 1U);
+        std::stringstream ss;
+        ss << std::hex << "name=0x" << RtPtrToValue(name) << ", src=0x" << RtPtrToValue(name_.c_str()) << std::dec
+           << ", maxLen=" << maxLen << ", size=" << name_.length() + 1U << ".";
+        RT_LOG_OUTER_MSG_IMPL(
+            ErrorCode::EE1020, "Getting the model name", "memcpy_s", std::to_string(error), strerror(error),
+            ss.str().c_str());
         return RT_ERROR_SEC_HANDLE;
     }
     return RT_ERROR_NONE;

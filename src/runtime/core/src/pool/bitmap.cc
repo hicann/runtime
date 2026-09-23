@@ -58,8 +58,8 @@ rtError_t Bitmap::AllocBitmap()
 int32_t Bitmap::AllocId(uint32_t maxAllocCount)
 {
     const rtError_t error = AllocBitmap();
-    COND_RETURN_ERROR_MSG_INNER(
-        (error != RT_ERROR_NONE), -1, "Failed to allocate bitmap, retCode=%#x", static_cast<uint32_t>(error));
+    COND_RETURN_ERROR(
+        error != RT_ERROR_NONE, -1, "Failed to allocate bitmap, retCode=%#x.", static_cast<uint32_t>(error));
 
     int32_t maxAllocBitmapIdx;
     // calculate the correct max count and max bitmap index for allocation

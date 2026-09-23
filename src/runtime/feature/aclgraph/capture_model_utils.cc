@@ -79,10 +79,14 @@ rtError_t CheckCaptureStreamThreadIsMatch(const Stream* const stm)
     if (threadId == runtime::GetCurrentTid()) {
         return RT_ERROR_NONE;
     }
-    if (streamCaptureMode != RT_STREAM_CAPTURE_MODE_RELAXED) {
-        RT_LOG(RT_LOG_ERROR, "end capture in the wrong thread.");
-        return RT_ERROR_STREAM_CAPTURE_WRONG_THREAD;
-    }
+    COND_RETURN_AND_MSG_OUTER(
+        streamCaptureMode != RT_STREAM_CAPTURE_MODE_RELAXED, RT_ERROR_STREAM_CAPTURE_WRONG_THREAD, ErrorCode::EE1016,
+        "Stream end capture",
+        RtFmtMsg(
+            "Cross-thread stream end capture is not supported in %s mode (stream_id=%d). "
+            "Call aclmdlRICaptureEnd in the same thread as aclmdlRICaptureBegin, "
+            "or call aclmdlRICaptureBegin with the RELAXED(2) mode",
+            StreamCaptureModeToString(streamCaptureMode).c_str(), stm->Id_()));
     return RT_ERROR_NONE;
 }
 
@@ -245,8 +249,9 @@ rtError_t CheckCaptureModelForUpdate(const Stream* stm)
     COND_RETURN_WITH_NOLOG((isSupportResult != RT_ERROR_NONE), isSupportResult);
 
     Model* const mdl = stm->Model_();
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        mdl, RT_ERROR_MODEL_NULL, "Checking whether the capture model is updatable");
+    COND_RETURN_AND_MSG_OUTER(
+        mdl == nullptr, RT_ERROR_MODEL_NULL, ErrorCode::EE1017, "Checking whether the capture model is updatable",
+        "task", RtFmtMsg("The stream (stream_id=%d) to which the task belongs is not bound to a model", stm->Id_()));
     COND_RETURN_AND_MSG_OUTER(
         mdl->GetModelType() != RT_MODEL_CAPTURE_MODEL, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1016,
         "Checking whether the capture model is updatable", "Non ACL Graph mode is not supported");

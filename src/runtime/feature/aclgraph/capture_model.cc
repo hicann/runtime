@@ -41,6 +41,7 @@
 #include "notify_c.hpp"
 #include <securec.h>
 #include <algorithm>
+#include <cstring>
 #include "task.hpp"
 #include "stream_launch_blocking.hpp"
 
@@ -1669,10 +1670,15 @@ rtError_t CaptureModel::SetShapeInfo(
 
     const uint64_t offset = RtPtrToValue(shapeInfo->data) + MS_PROF_SHAPE_HEADER_SIZE;
     err = memcpy_s(RtValueToPtr<void*>(offset), infoSize, infoPtr, infoSize);
-    COND_RETURN_ERROR_MSG_INNER(
-        err != EOK, RT_ERROR_SEC_HANDLE,
-        "Failed to call memcpy_s to copy shapeInfo data, dest=%p, dest_max=%zu, src=%p, count=%zu, retCode=%d.",
-        RtValueToPtr<void*>(offset), infoSize, infoPtr, infoSize, err);
+    if (err != EOK) {
+        std::stringstream ss;
+        ss << std::hex << "dest=0x" << RtPtrToValue(RtValueToPtr<void*>(offset)) << ", opInfoPtr=0x"
+           << RtPtrToValue(infoPtr) << std::dec << ", destMax=" << infoSize << ", opInfoSize=" << infoSize << ".";
+        RT_LOG_OUTER_MSG_IMPL(
+            ErrorCode::EE1020, "Setting shape information", "memcpy_s", std::to_string(err).c_str(), strerror(err),
+            ss.str().c_str());
+        return RT_ERROR_SEC_HANDLE;
+    }
 
     shapeInfo->dataLen = static_cast<uint32_t>(MS_PROF_SHAPE_HEADER_SIZE + infoSize);
 

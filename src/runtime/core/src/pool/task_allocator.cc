@@ -129,7 +129,9 @@ int32_t TaskAllocator::AllocId(const Stream* const stm, rtError_t& errCode)
         idManager = TaskIdManagerAlloc(streamId);
         if (idManager == nullptr) {
             vecIdLock.unlock();
-            RT_LOG_INNER_MSG(RT_LOG_ERROR, "Alloc taskId Manager failed");
+            RT_LOG(
+                RT_LOG_ERROR, "Alloc TaskIdManager failed, stream_id=%d, size=%zu(bytes).", streamId,
+                sizeof(TaskIdManager));
             return retId;
         }
     }

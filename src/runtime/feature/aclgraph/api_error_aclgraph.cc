@@ -20,16 +20,15 @@ static rtError_t StreamBeginCaptureMdlCheck(Model* const mdl)
 {
     COND_RETURN_WITH_NOLOG((mdl == nullptr), RT_ERROR_NONE);
 
-    COND_RETURN_ERROR(
-        mdl->GetModelType() != RT_MODEL_CAPTURE_MODEL, RT_ERROR_INVALID_VALUE,
-        "model is not an ACL Graph, modelType=%s.", ModelTypeToString(mdl->GetModelType()).c_str());
+    COND_RETURN_AND_MSG_OUTER(
+        mdl->GetModelType() != RT_MODEL_CAPTURE_MODEL, RT_ERROR_INVALID_VALUE, ErrorCode::EE1016,
+        "Stream begin capture", "Non ACL Graph mode is not supported");
 
     CaptureModel* captureModel = dynamic_cast<CaptureModel*>(mdl);
     COND_RETURN_ERROR(captureModel == nullptr, RT_ERROR_MODEL_NULL, "the ACL Graph is null.");
-    if (!captureModel->IsSubCaptureModel()) {
-        RT_LOG(RT_LOG_ERROR, "Stream begin capture does not support the ACL Graph, model_id=%u.", mdl->Id_());
-        return RT_ERROR_INVALID_VALUE;
-    }
+    COND_RETURN_AND_MSG_OUTER(
+        !captureModel->IsSubCaptureModel(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Stream begin capture",
+        "modelRI", RtFmtMsg("The modelRI (model_id=%u) is not a sub ACL Graph", mdl->Id_()));
 
     return RT_ERROR_NONE;
 }
@@ -48,9 +47,9 @@ rtError_t ApiErrorDecorator::StreamBeginCapture(Stream* const stm, const rtStrea
         unsupportedFlag != nullptr, RT_ERROR_STREAM_INVALID, ErrorCode::EE1006, "Stream begin capture",
         RtFmtMsg("Stream flag value %#x", stm->Flags()),
         RtFmtMsg("Stream (stream_id=%d) with the flag %s cannot be used for ACL Graph", stm->Id_(), unsupportedFlag));
-    COND_RETURN_AND_MSG_OUTER(
-        StreamBeginCaptureMdlCheck(mdl) != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
-        "Stream begin capture", "modelRI", "The modelRI is not a sub ACL Graph");
+    COND_RETURN_ERROR(
+        StreamBeginCaptureMdlCheck(mdl) != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE,
+        "Stream begin capture failed, the modelRI is invalid.");
 
     return impl_->StreamBeginCapture(stm, mode, mdl);
 }
@@ -146,7 +145,7 @@ rtError_t ApiErrorDecorator::StreamAddToModel(Stream* const stm, Model* const ca
         captureMdl, RT_ERROR_INVALID_VALUE, "Binding a model running instance to a stream");
     COND_RETURN_AND_MSG_OUTER(
         captureMdl->GetModelType() != RT_MODEL_CAPTURE_MODEL, RT_ERROR_INVALID_VALUE, ErrorCode::EE1016,
-        "rtStreamAddToModel", "Non ACL Graph mode is not supported");
+        "Binding a model running instance to a stream", "Non ACL Graph mode is not supported");
 
     const char_t* const unsupportedFlag = GetUnsupportedCaptureStreamFlag(stm->Flags());
     COND_RETURN_AND_MSG_OUTER(
