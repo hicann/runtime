@@ -1623,8 +1623,8 @@ aclError aclrtLaunchKernelWithArgsArray(void *func, uint32_t numBlocks, aclrtStr
 
 ### 约束说明
 
-本接口不支持下发AI CPU算子，否则返回ACL_ERROR_RT_FEATURE_NOT_SUPPORT。
-参数数组中的元素顺序需与核函数参数顺序保持一致，且参数数组大小需与核函数参数数量保持一致，否则会导致未定义行为。
+- 本接口不支持下发AI CPU算子，否则返回ACL_ERROR_RT_FEATURE_NOT_SUPPORT。
+- 参数数组中的元素顺序需与核函数参数顺序保持一致，且参数数组大小需与核函数参数数量保持一致，否则会导致未定义行为。
 
 ### 参考资源
 
