@@ -73,6 +73,7 @@ enum 类型数据。
 - [aclrtRandomNumFuncType](#aclrtRandomNumFuncType)
 - [aclrtReduceKind](#aclrtReduceKind)
 - [aclrtRunMode](#aclrtRunMode)
+- [aclrtProcessState](#aclrtProcessState)
 - [aclrtSnapShotStage](#aclrtSnapShotStage)
 - [aclrtStreamAttr](#aclrtStreamAttr)
 - [aclrtStreamConfigAttr](#aclrtStreamConfigAttr)
@@ -2249,6 +2250,27 @@ typedef enum aclrtRunMode {
 | --- | --- |
 | ACL_DEVICE | AI软件栈运行在Device的Control CPU或板端环境上。<br>Ascend 950PR&950DT系列产品，不支持该选项。<br>Atlas A3系列产品，不支持该选项。<br>Atlas A2系列产品，不支持该选项。 |
 | ACL_HOST | AI软件栈运行在Host CPU上。 |
+
+<br>
+
+<a id="aclrtProcessState"></a>
+
+## aclrtProcessState
+
+```c
+// 预留枚举
+typedef enum aclrtProcessState {
+    ACL_RT_PROCESS_STATE_RUNNING = 0,
+    ACL_RT_PROCESS_STATE_LOCKED,
+} aclrtProcessState;
+```
+
+**表 1**  枚举项说明
+
+| 枚举项 | 说明 |
+| --- | --- |
+| ACL_RT_PROCESS_STATE_RUNNING | 进程处于正常运行状态。 |
+| ACL_RT_PROCESS_STATE_LOCKED | 进程处于锁定状态，运行时接口调用会被阻塞，直至进程解除锁定。 |
 
 <br>
 
