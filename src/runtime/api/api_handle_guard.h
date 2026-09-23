@@ -20,6 +20,7 @@ typedef void* rtCondHandle_t;
 
 namespace cce {
 namespace runtime {
+class Api;
 class CondHandle;
 rtError_t ValidateModelHandleForApi(rtModel_t handle, Model*& outRealObj, const char_t* callerFuncName);
 rtError_t ValidateLabelHandleForApi(rtLabel_t handle, Label*& outRealObj, const char_t* callerFuncName);
@@ -32,6 +33,8 @@ rtError_t ValidateCountNotifyHandleForApi(rtCntNotify_t handle, CountNotify*& ou
 rtError_t ValidateCondHandleHandleForApi(rtCondHandle_t handle, CondHandle*& outRealObj, const char_t* callerFuncName);
 rtError_t ValidateProgramHandleForApi(rtBinHandle handle, Program*& outRealObj, const char_t* callerFuncName);
 rtError_t ValidateKernelHandleForApi(const void* handle, Kernel*& outRealObj, const char_t* callerFuncName);
+rtError_t ConvertFuncToKernel(
+    Api* const apiInstance, const void* func, Kernel*& kernel, const char_t* const callerFuncName);
 rtError_t ValidateArgsHandleForApi(rtArgsHandle handle, RtArgsHandle*& outRealObj, const char_t* callerFuncName);
 rtError_t ValidateArgsHandleForUserMemApi(rtArgsHandle handle, RtArgsHandle*& outRealObj, const char_t* callerFuncName);
 rtError_t ValidateParamHandleForApi(rtParaHandle handle, ParaDetail*& outRealObj, const char_t* callerFuncName);

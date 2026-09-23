@@ -318,8 +318,8 @@ TEST_F(CloudV2StreamTest, GetCurrentRunningTaskInfo_01)
     EXPECT_EQ(error, RT_ERROR_NONE);
     Stream* stream = rt_ut::UnwrapOrNull<Stream>(stm);
 
-    stream->posToTaskIdMapSize_ = 10U;
-    stream->posToTaskIdMap_ = new uint16_t[stream->posToTaskIdMapSize_];
+    ASSERT_NE(stream, nullptr);
+    ASSERT_NE(stream->posToTaskIdMap_, nullptr);
     (void)memset_s(
         stream->posToTaskIdMap_, stream->posToTaskIdMapSize_ * sizeof(uint16_t), 0xFF,
         stream->posToTaskIdMapSize_ * sizeof(uint16_t));
@@ -332,8 +332,8 @@ TEST_F(CloudV2StreamTest, GetCurrentRunningTaskInfo_01)
     EXPECT_EQ(taskId, MAX_UINT16_NUM);
     EXPECT_EQ(taskType, TS_TASK_TYPE_RESERVED);
 
-    delete[] stream->posToTaskIdMap_;
-    stream->posToTaskIdMap_ = nullptr;
+    GlobalMockObject::verify();
+    EXPECT_EQ(rtStreamDestroy(stm), RT_ERROR_NONE);
     rtInstance->DeviceRelease(device);
 }
 
@@ -346,8 +346,8 @@ TEST_F(CloudV2StreamTest, GetCurrentRunningTaskInfo_02)
     EXPECT_EQ(error, RT_ERROR_NONE);
     Stream* stream = rt_ut::UnwrapOrNull<Stream>(stm);
 
-    stream->posToTaskIdMapSize_ = 10U;
-    stream->posToTaskIdMap_ = new uint16_t[stream->posToTaskIdMapSize_];
+    ASSERT_NE(stream, nullptr);
+    ASSERT_NE(stream->posToTaskIdMap_, nullptr);
     stream->taskHead_ = 0U;
     (void)memset_s(
         stream->posToTaskIdMap_, stream->posToTaskIdMapSize_ * sizeof(uint16_t), 0xFF,
@@ -361,8 +361,8 @@ TEST_F(CloudV2StreamTest, GetCurrentRunningTaskInfo_02)
     EXPECT_EQ(taskId, MAX_UINT16_NUM);
     EXPECT_EQ(taskType, TS_TASK_TYPE_RESERVED);
 
-    delete[] stream->posToTaskIdMap_;
-    stream->posToTaskIdMap_ = nullptr;
+    GlobalMockObject::verify();
+    EXPECT_EQ(rtStreamDestroy(stm), RT_ERROR_NONE);
     rtInstance->DeviceRelease(device);
 }
 
@@ -375,8 +375,8 @@ TEST_F(CloudV2StreamTest, GetCurrentRunningTaskInfo_03)
     EXPECT_EQ(error, RT_ERROR_NONE);
     Stream* stream = rt_ut::UnwrapOrNull<Stream>(stm);
 
-    stream->posToTaskIdMapSize_ = 10U;
-    stream->posToTaskIdMap_ = new uint16_t[stream->posToTaskIdMapSize_];
+    ASSERT_NE(stream, nullptr);
+    ASSERT_NE(stream->posToTaskIdMap_, nullptr);
     stream->taskHead_ = 0U;
     (void)memset_s(
         stream->posToTaskIdMap_, stream->posToTaskIdMapSize_ * sizeof(uint16_t), 0U,
@@ -396,8 +396,8 @@ TEST_F(CloudV2StreamTest, GetCurrentRunningTaskInfo_03)
     EXPECT_EQ(taskId, 0U);
     EXPECT_EQ(taskType, TS_TASK_TYPE_KERNEL_AICORE);
 
-    delete[] stream->posToTaskIdMap_;
-    stream->posToTaskIdMap_ = nullptr;
+    GlobalMockObject::verify();
+    EXPECT_EQ(rtStreamDestroy(stm), RT_ERROR_NONE);
     rtInstance->DeviceRelease(device);
 }
 
@@ -419,9 +419,9 @@ TEST_F(CloudV2StreamTest, NeedUpdateMemcpyTaskInfoForSnapshot_1D_NotOnlineMode_S
 
     EXPECT_FALSE(NeedUpdateMemcpyTaskInfoForSnapshot(&taskInfo));
 
+    GlobalMockObject::verify();
     delete stream;
     rtInstance->DeviceRelease(device);
-    GlobalMockObject::verify();
 }
 
 TEST_F(CloudV2StreamTest, UpdateMemcpyTaskInfoForSnapshot_1D_MemConvertAddrSuccess)
@@ -448,9 +448,9 @@ TEST_F(CloudV2StreamTest, UpdateMemcpyTaskInfoForSnapshot_1D_MemConvertAddrSucce
     rtError_t error = UpdateMemcpyTaskInfoForSnapshot(&taskInfo);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
+    GlobalMockObject::verify();
     delete stream;
     rtInstance->DeviceRelease(device);
-    GlobalMockObject::verify();
 }
 
 TEST_F(CloudV2StreamTest, UpdateMemcpyTaskInfoForSnapshot_2D_MemCopy2DFailed)
@@ -478,9 +478,9 @@ TEST_F(CloudV2StreamTest, UpdateMemcpyTaskInfoForSnapshot_2D_MemCopy2DFailed)
     rtError_t error = UpdateMemcpyTaskInfoForSnapshot(&taskInfo);
     EXPECT_NE(error, RT_ERROR_NONE);
 
+    GlobalMockObject::verify();
     delete stream;
     rtInstance->DeviceRelease(device);
-    GlobalMockObject::verify();
 }
 
 TEST_F(CloudV2StreamTest, StreamUpdateSnapShotSqe_RoutingToSoftwareSq)
@@ -491,15 +491,15 @@ TEST_F(CloudV2StreamTest, StreamUpdateSnapShotSqe_RoutingToSoftwareSq)
     Stream* stream = new Stream(device, 0);
     ASSERT_NE(stream, nullptr);
 
-    MOCKER_CPP(&Stream::IsSoftwareSqEnable).stubs().will(returnValue(true));
+    stream->SetSoftWareSqEnable();
     MOCKER_CPP(&Stream::UpdateHostSqeForSnapshot).stubs().will(returnValue(RT_ERROR_NONE));
 
     rtError_t error = stream->UpdateSnapShotSqe();
     EXPECT_EQ(error, RT_ERROR_NONE);
 
+    GlobalMockObject::verify();
     delete stream;
     rtInstance->DeviceRelease(device);
-    GlobalMockObject::verify();
 }
 
 TEST_F(CloudV2StreamTest, StreamUpdateSnapShotSqe_RoutingToDeviceSq)
@@ -510,15 +510,14 @@ TEST_F(CloudV2StreamTest, StreamUpdateSnapShotSqe_RoutingToDeviceSq)
     Stream* stream = new Stream(device, 0);
     ASSERT_NE(stream, nullptr);
 
-    MOCKER_CPP(&Stream::IsSoftwareSqEnable).stubs().will(returnValue(false));
     MOCKER_CPP(&Stream::UpdateDeviceSqeForSnapshot).stubs().will(returnValue(RT_ERROR_NONE));
 
     rtError_t error = stream->UpdateSnapShotSqe();
     EXPECT_EQ(error, RT_ERROR_NONE);
 
+    GlobalMockObject::verify();
     delete stream;
     rtInstance->DeviceRelease(device);
-    GlobalMockObject::verify();
 }
 
 TEST_F(CloudV2StreamTest, StreamUpdateHostSqeForSnapshot_EmptyTaskList)
@@ -532,9 +531,9 @@ TEST_F(CloudV2StreamTest, StreamUpdateHostSqeForSnapshot_EmptyTaskList)
     rtError_t error = stream->UpdateHostSqeForSnapshot();
     EXPECT_EQ(error, RT_ERROR_NONE);
 
+    GlobalMockObject::verify();
     delete stream;
     rtInstance->DeviceRelease(device);
-    GlobalMockObject::verify();
 }
 
 TEST_F(CloudV2StreamTest, StreamUpdateSnapShotSqe_RoutingToSoftwareSq_EmptyList)
@@ -545,14 +544,14 @@ TEST_F(CloudV2StreamTest, StreamUpdateSnapShotSqe_RoutingToSoftwareSq_EmptyList)
     Stream* stream = new Stream(device, 0);
     ASSERT_NE(stream, nullptr);
 
-    MOCKER_CPP(&Stream::IsSoftwareSqEnable).stubs().will(returnValue(true));
+    stream->SetSoftWareSqEnable();
 
     rtError_t error = stream->UpdateSnapShotSqe();
     EXPECT_EQ(error, RT_ERROR_NONE);
 
+    GlobalMockObject::verify();
     delete stream;
     rtInstance->DeviceRelease(device);
-    GlobalMockObject::verify();
 }
 
 TEST_F(CloudV2StreamTest, StreamUpdateSnapShotSqe_RoutingToDeviceSq_EmptyList)
@@ -563,13 +562,12 @@ TEST_F(CloudV2StreamTest, StreamUpdateSnapShotSqe_RoutingToDeviceSq_EmptyList)
     Stream* stream = new Stream(device, 0);
     ASSERT_NE(stream, nullptr);
 
-    MOCKER_CPP(&Stream::IsSoftwareSqEnable).stubs().will(returnValue(false));
     MOCKER_CPP(&Stream::UpdateDeviceSqeForSnapshot).stubs().will(returnValue(RT_ERROR_NONE));
 
     rtError_t error = stream->UpdateSnapShotSqe();
     EXPECT_EQ(error, RT_ERROR_NONE);
 
+    GlobalMockObject::verify();
     delete stream;
     rtInstance->DeviceRelease(device);
-    GlobalMockObject::verify();
 }

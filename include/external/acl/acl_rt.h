@@ -3601,24 +3601,24 @@ ACL_FUNC_VISIBILITY aclError aclrtGetFuncBySymbol(const void* symbol, aclrtFuncH
 /**
  * @ingroup AscendCL
  * @brief Get kernel pc start address in device
- * @param [in] funcHandle
+ * @param [in] func  function handle or kernel function symbol
  * @param [out] aicAddr
  * @param [out] aivAddr
  * @retval ACL_SUCCESS The function is successfully executed.
  * @retval OtherValues Failure
  */
-ACL_FUNC_VISIBILITY aclError aclrtGetFunctionAddr(aclrtFuncHandle funcHandle, void** aicAddr, void** aivAddr);
+ACL_FUNC_VISIBILITY aclError aclrtGetFunctionAddr(const void* func, void** aicAddr, void** aivAddr);
 
 /**
  * @ingroup AscendCL
  * @brief Get kernel size
- * @param [in] funcHandle function handle
+ * @param [in] func function handle or kernel function symbol
  * @param [out] aicSize size of AI Cube kernel
  * @param [out] aivSize size of AI Vector kernel
  * @retval ACL_SUCCESS The function is successfully executed.
  * @retval OtherValues Failure
  */
-ACL_FUNC_VISIBILITY aclError aclrtGetFunctionSize(aclrtFuncHandle funcHandle, size_t* aicSize, size_t* aivSize);
+ACL_FUNC_VISIBILITY aclError aclrtGetFunctionSize(const void* func, size_t* aicSize, size_t* aivSize);
 
 /**
  * @ingroup AscendCL
@@ -4346,13 +4346,13 @@ ACL_FUNC_VISIBILITY aclError aclrtSwitchStream(
 /**
  * @ingroup AscendCL
  * @brief get kernel name
- * @param funcHandle [in] function Handle
- * @param maxLen [in]     max length of kernel name
- * @param name [out]      kernel name
+ * @param func [in]      function handle or kernel function symbol
+ * @param maxLen [in]    max length of kernel name
+ * @param name [out]     kernel name
  * @retval ACL_SUCCESS The function is successfully executed.
  * @retval OtherValues Failure
  */
-ACL_FUNC_VISIBILITY aclError aclrtGetFunctionName(aclrtFuncHandle funcHandle, uint32_t maxLen, char* name);
+ACL_FUNC_VISIBILITY aclError aclrtGetFunctionName(const void* func, uint32_t maxLen, char* name);
 
 /**
  * @ingroup AscendCL
@@ -5799,7 +5799,7 @@ ACL_FUNC_VISIBILITY aclError aclrtCacheLastTaskExtendInfo(const char* const exte
  * @ingroup AscendCL
  * @brief get function attribute by attribute type.
  *
- * @param [in]  funcHandle function handle
+ * @param [in]  func       function handle or kernel function symbol
  * @param [in]  attrType   function attribue type
  * @param [out] attrValue  function attribue value
  *
@@ -5807,25 +5807,25 @@ ACL_FUNC_VISIBILITY aclError aclrtCacheLastTaskExtendInfo(const char* const exte
  * @retval OtherValues Failure.
  */
 ACL_FUNC_VISIBILITY aclError aclrtGetFunctionAttribute(
-    aclrtFuncHandle funcHandle, aclrtFuncAttribute attrType, int64_t* attrValue);
+    const void* func, aclrtFuncAttribute attrType, int64_t* attrValue);
 
 /**
  * @ingroup AscendCL
- * @brief Find binHandle based on funcHandle
+ * @brief Find binHandle based on function handle or kernel function symbol
  *
- * @param [in] funcHandle   funcHandle
+ * @param [in] func        function handle or kernel function symbol
  * @param [out] binHandle   binHandle
  *
  * @retval ACL_SUCCESS The function is successfully executed.
  * @retval OtherValues Failure
  */
-ACL_FUNC_VISIBILITY aclError aclrtFunctionGetBinary(const aclrtFuncHandle funcHandle, aclrtBinHandle* binHandle);
+ACL_FUNC_VISIBILITY aclError aclrtFunctionGetBinary(const void* func, aclrtBinHandle* binHandle);
 
 /**
  * @ingroup AscendCL
- * @brief get parameter count from function handle.
+ * @brief get parameter count from function handle or kernel function symbol.
  *
- * @param [in] func        function handle
+ * @param [in] func        function handle or kernel function symbol
  * @param [out] paramCount parameter count
  *
  * @retval ACL_SUCCESS The function is successfully executed.
@@ -5835,9 +5835,9 @@ ACL_FUNC_VISIBILITY aclError aclrtFunctionGetParamCount(const void* func, size_t
 
 /**
  * @ingroup AscendCL
- * @brief get parameter info from function handle by index.
+ * @brief get parameter info from function handle or kernel function symbol by index.
  *
- * @param [in] func        function handle
+ * @param [in] func        function handle or kernel function symbol
  * @param [in] paramIndex  parameter index
  * @param [out] paramOffset parameter offset
  * @param [out] paramSize   parameter size
@@ -5851,14 +5851,15 @@ ACL_FUNC_VISIBILITY aclError aclrtFunctionGetParamInfo(
  * @ingroup AscendCL
  * @brief get available dynamic ubuf size per block from function handle.
  *
- * @param [in] func function handle
+ * @param [in] func function handle or kernel function symbol
  * @param [in] flags reserved, currently ignored
  * @param [out] dynamicUbufSize returned available dynamic ubuf size
  *
  * @retval ACL_SUCCESS The function is successfully executed.
  * @retval OtherValues Failure
  */
-ACL_FUNC_VISIBILITY aclError aclrtFunctionGetAvailDynUbufPerBlock(void* func, uint32_t flags, size_t* dynamicUbufSize);
+ACL_FUNC_VISIBILITY aclError aclrtFunctionGetAvailDynUbufPerBlock(
+    const void* func, uint32_t flags, size_t* dynamicUbufSize);
 /**
  * @ingroup AscendCL
  * @brief get an interprocess handle for a previously allocated event.

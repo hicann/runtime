@@ -15,10 +15,10 @@
 - [`aclError aclrtBinarySetExceptionCallback(aclrtBinHandle binHandle, aclrtOpExceptionCallback callback, void *userData)`](#aclrtBinarySetExceptionCallback)：调用本接口注册回调函数。若多次设置回调函数，以最后一次设置为准。
 - [`aclError aclrtGetArgsFromExceptionInfo(const aclrtExceptionInfo *info, void **devArgsPtr, uint32_t *devArgsLen)`](#aclrtGetArgsFromExceptionInfo)：从aclrtExceptionInfo异常信息中获取用户下发算子执行任务时的参数。
 - [`aclError aclrtGetFuncHandleFromExceptionInfo(const aclrtExceptionInfo *info, aclrtFuncHandle *func)`](#aclrtGetFuncHandleFromExceptionInfo)：从aclrtExceptionInfo异常信息中获取核函数句柄。
-- [`aclError aclrtGetFunctionAddr(aclrtFuncHandle funcHandle, void **aicAddr, void **aivAddr)`](#aclrtGetFunctionAddr)：根据核函数句柄获取Device侧算子起始地址。
-- [`aclError aclrtGetFunctionSize(aclrtFuncHandle funcHandle, size_t *aicSize, size_t *aivSize)`](#aclrtGetFunctionSize)：根据核函数句柄获取核函数代码段的大小。
-- [`aclError aclrtGetFunctionName(aclrtFuncHandle funcHandle, uint32_t maxLen, char *name)`](#aclrtGetFunctionName)：根据核函数句柄获取核函数名称。
-- [`aclError aclrtGetFunctionAttribute(aclrtFuncHandle funcHandle, aclrtFuncAttribute attrType, int64_t *attrValue)`](#aclrtGetFunctionAttribute)：根据核函数句柄获取核函数属性信息。
+- [`aclError aclrtGetFunctionAddr(const void *func, void **aicAddr, void **aivAddr)`](#aclrtGetFunctionAddr)：获取核函数Device侧算子起始地址。
+- [`aclError aclrtGetFunctionSize(const void *func, size_t *aicSize, size_t *aivSize)`](#aclrtGetFunctionSize)：获取核函数代码段的大小。
+- [`aclError aclrtGetFunctionName(const void *func, uint32_t maxLen, char *name)`](#aclrtGetFunctionName)：获取核函数名称。
+- [`aclError aclrtGetFunctionAttribute(const void *func, aclrtFuncAttribute attrType, int64_t *attrValue)`](#aclrtGetFunctionAttribute)：获取核函数属性信息。
 - [`aclError aclrtGetHardwareSyncAddr(void **addr)`](#aclrtGetHardwareSyncAddr)：获取Cube Core、Vector Core之间的同步地址。
 - [`aclError aclrtRegisterCpuFunc(const aclrtBinHandle handle, const char *funcName, const char *kernelName, aclrtFuncHandle *funcHandle)`](#aclrtRegisterCpuFunc)：若使用[aclrtBinaryLoadFromData](#aclrtBinaryLoadFromData)接口加载AI CPU算子二进制数据，还需配合使用本接口注册AI CPU算子信息，得到对应的funcHandle。
 - [`aclError aclrtKernelArgsInit(aclrtFuncHandle funcHandle, aclrtArgsHandle *argsHandle)`](#aclrtKernelArgsInit)：根据核函数句柄初始化参数列表，并获取标识参数列表的句柄。
@@ -39,10 +39,10 @@
 - [`aclError aclrtDestroyBinary(aclrtBinary binary)`](#aclrtDestroyBinary)：销毁通过[aclrtCreateBinary](#aclrtCreateBinary)接口创建的aclrtBinary类型的数据。
 - [`aclError aclrtBinaryLoad(const aclrtBinary binary, aclrtBinHandle *binHandle)`](#aclrtBinaryLoad)：解析、加载算子二进制文件，输出指向算子二进制的binHandle，同时将算子二进制文件数据拷贝至当前Context对应的Device上。
 - [`aclError aclrtBinaryUnLoad(aclrtBinHandle binHandle)`](#aclrtBinaryUnLoad)：删除binHandle指向的算子二进制数据，同时也删除加载算子二进制文件时拷贝到Device上的算子二进制数据。
-- [`aclError aclrtFunctionGetBinary(const aclrtFuncHandle funcHandle, aclrtBinHandle *binHandle)`](#aclrtFunctionGetBinary)：根据核函数句柄获取算子二进制句柄。
-- [`aclError aclrtFunctionGetParamCount(const void *func, size_t *paramCount)`](#aclrtFunctionGetParamCount)：从核函数句柄获取参数个数。
-- [`aclError aclrtFunctionGetParamInfo(const void *func, size_t paramIndex, size_t *paramOffset, size_t *paramSize)`](#aclrtFunctionGetParamInfo)：根据索引从核函数句柄获取参数信息。
-- [`aclError aclrtFunctionGetAvailDynUbufPerBlock(void *func, uint32_t flags, size_t *dynamicUbufSize)`](#aclrtFunctionGetAvailDynUbufPerBlock)：从核函数句柄获取每个Block可用的动态UB buffer大小。
+- [`aclError aclrtFunctionGetBinary(const void *func, aclrtBinHandle *binHandle)`](#aclrtFunctionGetBinary)：获取算子二进制句柄。
+- [`aclError aclrtFunctionGetParamCount(const void *func, size_t *paramCount)`](#aclrtFunctionGetParamCount)：获取核函数参数个数。
+- [`aclError aclrtFunctionGetParamInfo(const void *func, size_t paramIndex, size_t *paramOffset, size_t *paramSize)`](#aclrtFunctionGetParamInfo)：获取核函数参数信息。
+- [`aclError aclrtFunctionGetAvailDynUbufPerBlock(const void *func, uint32_t flags, size_t *dynamicUbufSize)`](#aclrtFunctionGetAvailDynUbufPerBlock)：获取每个Block可用的动态UB buffer大小。
 - [`aclError aclrtGetFuncBySymbol(const void *symbol, aclrtFuncHandle *funcHandle)`](#aclrtGetFuncBySymbol)：根据核函数名获取核函数句柄。
 - [`aclError aclrtLaunchSIMTKernelWithArgsArray(void *func, dim3 gridDim, dim3 blockDim, size_t dynUbufSize, aclrtStream stream, aclrtLaunchKernelCfg *cfg, void **args)`](#aclrtLaunchSIMTKernelWithArgsArray)：使用参数数组启动SIMT核函数计算任务，异步接口。
 - [`aclError aclrtLaunchSIMTKernelWithHostArgs(void *func, dim3 gridDim, dim3 blockDim, size_t dynUbufSize, aclrtStream stream, aclrtLaunchKernelCfg *cfg, void *hostArgs, size_t argsSize, aclrtPlaceHolderInfo *placeHolderArray, size_t placeHolderNum)`](#aclrtLaunchSIMTKernelWithHostArgs)：使用Host参数启动SIMT核函数计算任务，异步接口。
@@ -568,7 +568,7 @@ aclError aclrtGetFuncHandleFromExceptionInfo(const aclrtExceptionInfo *info, acl
 ## aclrtGetFunctionAddr
 
 ```c
-aclError aclrtGetFunctionAddr(aclrtFuncHandle funcHandle, void **aicAddr, void **aivAddr)
+aclError aclrtGetFunctionAddr(const void *func, void **aicAddr, void **aivAddr)
 ```
 
 ### 产品支持情况
@@ -595,7 +595,7 @@ aclError aclrtGetFunctionAddr(aclrtFuncHandle funcHandle, void **aicAddr, void *
 
 ### 功能说明
 
-根据核函数句柄获取Device侧算子起始地址。
+获取核函数Device侧算子起始地址。
 
 不同产品上的AI数据处理核心单元不同，关于Core的定义及详细说明，请参见[aclrtDevAttr](25-02_Enumerations.md#aclrtDevAttr)。
 
@@ -603,8 +603,8 @@ aclError aclrtGetFunctionAddr(aclrtFuncHandle funcHandle, void **aicAddr, void *
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| funcHandle | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)。 |
-| aicAddr | 输出 | AI Core或Cube Core上的算子起始地址。<br><br>  - 对于以下产品，此处返回的是Cube Core上的算子起始地址。Ascend 950PR&950DT系列产品<br>Atlas A3系列产品<br>Atlas A2系列产品 |
+| func | 输入 | 内核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel，仅适用于Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
+| aicAddr | 输出 | AI Core或Cube Core上的算子起始地址。<br><br>  - 对于以下产品，此处返回的是Cube Core上的算子起始地址。Ascend 950PR/Ascend 950DT<br>Atlas A3 训练系列产品/Atlas A3 推理系列产品<br>Atlas A2 训练系列产品/Atlas A2 推理系列产品 |
 | aivAddr | 输出 | Vector Core上的算子起始地址。<br>若通过本接口获取到aivAddr为空，则表示该算子不在Vector Core上执行。 |
 
 ### 返回值说明
@@ -620,7 +620,7 @@ aclError aclrtGetFunctionAddr(aclrtFuncHandle funcHandle, void **aicAddr, void *
 ## aclrtGetFunctionSize
 
 ```c
-aclError aclrtGetFunctionSize(aclrtFuncHandle funcHandle, size_t *aicSize, size_t *aivSize)
+aclError aclrtGetFunctionSize(const void *func, size_t *aicSize, size_t *aivSize)
 ```
 
 ### 产品支持情况
@@ -647,13 +647,14 @@ aclError aclrtGetFunctionSize(aclrtFuncHandle funcHandle, size_t *aicSize, size_
 
 ### 功能说明
 
-根据核函数句柄获取核函数代码段的大小。
+获取核函数代码段的大小。
+
 
 ### 参数说明
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| funcHandle | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)。 |
+| func | 输入 | 内核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel，仅适用于Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
 | aicSize | 输出 | 在AI Core或Cube Core上执行算子的代码段大小，单位Byte。<br>如果算子仅在Vector Core上执行，则该值为0。 |
 | aivSize | 输出 | 在Vector Core上执行算子的代码段大小，单位Byte。<br>如果算子仅在AI Core或Cube Core上执行，则该值为0。 |
 
@@ -670,7 +671,7 @@ aclError aclrtGetFunctionSize(aclrtFuncHandle funcHandle, size_t *aicSize, size_
 ## aclrtGetFunctionName
 
 ```c
-aclError aclrtGetFunctionName(aclrtFuncHandle funcHandle, uint32_t maxLen, char *name)
+aclError aclrtGetFunctionName(const void *func, uint32_t maxLen, char *name)
 ```
 
 ### 产品支持情况
@@ -697,13 +698,13 @@ aclError aclrtGetFunctionName(aclrtFuncHandle funcHandle, uint32_t maxLen, char 
 
 ### 功能说明
 
-根据核函数句柄获取核函数名称。
+获取核函数名称。
 
 ### 参数说明
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| funcHandle | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)。 |
+| func | 输入 | 内核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel，仅适用于Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
 | maxLen | 输入 | 用户申请用于存储核函数名称的最大内存大小，单位Byte。 |
 | name | 输出 | 核函数名称。 |
 
@@ -720,7 +721,7 @@ aclError aclrtGetFunctionName(aclrtFuncHandle funcHandle, uint32_t maxLen, char 
 ## aclrtGetFunctionAttribute
 
 ```c
-aclError aclrtGetFunctionAttribute(aclrtFuncHandle funcHandle, aclrtFuncAttribute attrType, int64_t *attrValue)
+aclError aclrtGetFunctionAttribute(const void *func, aclrtFuncAttribute attrType, int64_t *attrValue)
 ```
 
 ### 产品支持情况
@@ -747,15 +748,15 @@ aclError aclrtGetFunctionAttribute(aclrtFuncHandle funcHandle, aclrtFuncAttribut
 
 ### 功能说明
 
-根据核函数句柄获取核函数属性信息。
-
 此接口仅支持查询算子二进制文件中的核函数属性信息。
+
+
 
 ### 参数说明
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| funcHandle | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)。 |
+| func | 输入 | 内核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel，仅适用于Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
 | attrType | 输入 | 指定属性。类型定义请参见[aclrtFuncAttribute](25-02_Enumerations.md#aclrtFuncAttribute)。 |
 | attrValue | 输出 | 获取属性值。 |
 
@@ -1851,7 +1852,7 @@ aclError aclrtBinaryUnLoad(aclrtBinHandle binHandle)
 ## aclrtFunctionGetBinary
 
 ```c
-aclError aclrtFunctionGetBinary(const aclrtFuncHandle funcHandle, aclrtBinHandle *binHandle)
+aclError aclrtFunctionGetBinary(const void *func, aclrtBinHandle *binHandle)
 ```
 
 ### 产品支持情况
@@ -1878,13 +1879,13 @@ aclError aclrtFunctionGetBinary(const aclrtFuncHandle funcHandle, aclrtBinHandle
 
 ### 功能说明
 
-根据核函数句柄获取算子二进制句柄。
+获取算子二进制句柄。
 
 ### 参数说明
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| funcHandle | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)。 |
+| func | 输入 | 内核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel，仅适用于Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
 | binHandle | 输出 | 算子二进制的句柄。类型定义请参见[aclrtBinHandle](25-05_Typedefs.md#aclrtBinHandle)。 |
 
 ### 返回值说明
@@ -1927,7 +1928,7 @@ aclError aclrtFunctionGetParamCount(const void *func, size_t *paramCount)
 
 ### 功能说明
 
-从核函数句柄获取参数个数。
+获取核函数参数列表中包含的参数个数。
 
 使用本接口查询核函数的参数列表中包含多少个参数后，再配合[aclrtFunctionGetParamInfo](#aclrtFunctionGetParamInfo)接口使用，可遍历获取每个参数的详细信息（偏移和大小）。
 
@@ -1935,7 +1936,7 @@ aclError aclrtFunctionGetParamCount(const void *func, size_t *paramCount)
 
 | 参数名 | 输入/输出 | 说明                                                                |
 | --- | :---: |-------------------------------------------------------------------|
-| func | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)。 |
+| func | 输入 | 内核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel，仅适用于Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
 | paramCount | 输出 | 核函数参数列表中所包含的参数数量。                                                 |
 
 ### 返回值说明
@@ -1978,14 +1979,15 @@ aclError aclrtFunctionGetParamInfo(const void *func, size_t paramIndex, size_t *
 
 ### 功能说明
 
-根据索引从核函数句柄获取参数信息（偏移和大小）。
+根据索引获取核函数参数信息（偏移和大小）。
+
 
 ### 参数说明
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| func | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)。                                                    |
-| paramIndex | 输入 | 参数索引。<br/> 可先调用[aclrtFunctionGetParamCount](#aclrtFunctionGetParamCount)接口获取可用的参数数量后，这个paramIndex的取值范围：[0, (参数数量-1)]. |
+| func | 输入 | 内核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel，仅适用于Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
+| paramIndex | 输入 | 参数索引。<br/> 可先调用[aclrtFunctionGetParamCount](#aclrtFunctionGetParamCount)接口获取可用的参数数量后，这个paramIndex的取值范围：[0，(参数数量-1)]. |
 | paramOffset | 输出 | 参数在参数数据区中的偏移，单位为Byte。                                                                                                |
 | paramSize | 输出 | 参数的大小，单位为Byte。                                                                                                       |
 
@@ -2002,7 +2004,7 @@ aclError aclrtFunctionGetParamInfo(const void *func, size_t paramIndex, size_t *
 ## aclrtFunctionGetAvailDynUbufPerBlock
 
 ```c
-aclError aclrtFunctionGetAvailDynUbufPerBlock(void *func, uint32_t flags, size_t *dynamicUbufSize)
+aclError aclrtFunctionGetAvailDynUbufPerBlock(const void *func, uint32_t flags, size_t *dynamicUbufSize)
 ```
 
 ### 产品支持情况
@@ -2037,7 +2039,7 @@ aclError aclrtFunctionGetAvailDynUbufPerBlock(void *func, uint32_t flags, size_t
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| func | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)，不能为空。 |
+| func | 输入 | 内核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel，仅适用于Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
 | flags | 输入 | 预留参数，当前固定配置为0。 |
 | dynamicUbufSize | 输出 | 每个Block可用的动态UB buffer大小，单位为Byte，不能为空。 |
 

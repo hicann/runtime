@@ -487,12 +487,12 @@ RUNTIME_API(xpu, rtError_t, rtGetXpuDevCount,
     (devType, devCount), FEATURE_NOT_SUPPORT, EXPORT)
 
 RUNTIME_API(standard_soc, rtError_t, rtFunctionGetAttribute,
-    (rtFuncHandle funcHandle, rtFuncAttribute attrType, int64_t* attrValue),
-    (funcHandle, attrType, attrValue), FEATURE_NOT_SUPPORT, EXPORT)
+    (const void* func, rtFuncAttribute attrType, int64_t* attrValue),
+    (func, attrType, attrValue), FEATURE_NOT_SUPPORT, EXPORT)
 
 RUNTIME_API(standard_soc, rtError_t, rtFunctionGetBinary,
-    (const rtFuncHandle funcHandle, rtBinHandle* binHandle),
-    (funcHandle, binHandle), FEATURE_NOT_SUPPORT, EXPORT)
+    (const void* func, rtBinHandle* binHandle),
+    (func, binHandle), FEATURE_NOT_SUPPORT, EXPORT)
 
 RUNTIME_API(standard_soc, rtError_t, rtGetFuncBySymbol,
     (const void* symbol, rtFuncHandle* funcHandle),
@@ -511,7 +511,7 @@ RUNTIME_API(standard_soc, rtError_t, rtFunctionGetParamInfo,
     (func, paramIndex, paramOffset, paramSize), FEATURE_NOT_SUPPORT, EXPORT)
 
 RUNTIME_API(standard_soc, rtError_t, rtFunctionGetAvailDynUbufPerBlock,
-    (void* func, uint32_t flags, size_t* dynamicUbufSize),
+    (const void* func, uint32_t flags, size_t* dynamicUbufSize),
     (func, flags, dynamicUbufSize), FEATURE_NOT_SUPPORT, EXPORT)
 
 RUNTIME_API(standard_soc, rtError_t, rtLaunchKernelWithArgsArray,
@@ -539,8 +539,8 @@ RUNTIME_API(task, rtError_t, rtModelTaskDisable,
     (task), FEATURE_NOT_SUPPORT, EXPORT)
 
 RUNTIME_API(standard_soc, rtError_t, rtFuncGetSize,
-    (const rtFuncHandle funcHandle, size_t* aicSize, size_t* aivSize),
-    (funcHandle, aicSize, aivSize), FEATURE_NOT_SUPPORT, EXPORT)
+    (const void* func, size_t* aicSize, size_t* aivSize),
+    (func, aicSize, aivSize), FEATURE_NOT_SUPPORT, EXPORT)
 
 RUNTIME_API(dqs, rtError_t, rtLaunchDqsTask,
     (const rtStream_t stm, const rtDqsTaskCfg_t* const taskCfg),
@@ -1575,12 +1575,12 @@ RUNTIME_API(device, rtError_t, rtsDeviceGetInfo,
     (deviceId, attr, val), FEATURE_NOT_SUPPORT, EXPORT)
 
 RUNTIME_API(kernel, rtError_t, rtsFuncGetAddr,
-    (const rtFuncHandle funcHandle, void** aicAddr, void** aivAddr),
-    (funcHandle, aicAddr, aivAddr), FEATURE_NOT_SUPPORT, EXPORT)
+    (const void* func, void** aicAddr, void** aivAddr),
+    (func, aicAddr, aivAddr), FEATURE_NOT_SUPPORT, EXPORT)
 
 RUNTIME_API(kernel, rtError_t, rtsFuncGetName,
-    (const rtFuncHandle funcHandle, const uint32_t maxLen, char_t* const name),
-    (funcHandle, maxLen, name), FEATURE_NOT_SUPPORT, EXPORT)
+    (const void* func, const uint32_t maxLen, char_t* const name),
+    (func, maxLen, name), FEATURE_NOT_SUPPORT, EXPORT)
 
 RUNTIME_API(device, rtError_t, rtsGetDevice,
     (int32_t* devId),

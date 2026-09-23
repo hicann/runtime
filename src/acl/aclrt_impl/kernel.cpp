@@ -233,20 +233,20 @@ aclError aclrtGetFuncBySymbolImpl(const void* symbol, aclrtFuncHandle* funcHandl
     return ACL_SUCCESS;
 }
 
-aclError aclrtGetFunctionAddrImpl(aclrtFuncHandle funcHandle, void** aicAddr, void** aivAddr)
+aclError aclrtGetFunctionAddrImpl(const void* func, void** aicAddr, void** aivAddr)
 {
     ACL_LOG_INFO("start to execute aclrtGetFunctionAddr");
-    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(funcHandle);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(func);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(aicAddr);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(aivAddr);
 
-    ACL_REQUIRES_RTS_OK(rtsFuncGetAddr(funcHandle, aicAddr, aivAddr));
+    ACL_REQUIRES_RTS_OK(rtsFuncGetAddr(func, aicAddr, aivAddr));
     return ACL_SUCCESS;
 }
 
-aclError aclrtGetFunctionSizeImpl(aclrtFuncHandle funcHandle, size_t* aicSize, size_t* aivSize)
+aclError aclrtGetFunctionSizeImpl(const void* func, size_t* aicSize, size_t* aivSize)
 {
-    ACL_REQUIRES_RTS_OK(rtFuncGetSize(funcHandle, aicSize, aivSize));
+    ACL_REQUIRES_RTS_OK(rtFuncGetSize(func, aicSize, aivSize));
     return ACL_SUCCESS;
 }
 
@@ -424,12 +424,12 @@ aclError aclrtGetThreadLastTaskIdImpl(uint32_t* taskId)
     return ACL_SUCCESS;
 }
 
-aclError aclrtGetFunctionNameImpl(aclrtFuncHandle funcHandle, uint32_t maxLen, char* name)
+aclError aclrtGetFunctionNameImpl(const void* func, uint32_t maxLen, char* name)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtGetFunctionName);
     ACL_LOG_DEBUG("start to execute aclrtGetFunctionName, maxLen is [%u]", maxLen);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(name);
-    ACL_REQUIRES_RTS_OK(rtsFuncGetName(static_cast<rtFuncHandle>(funcHandle), maxLen, name));
+    ACL_REQUIRES_RTS_OK(rtsFuncGetName(func, maxLen, name));
     return ACL_SUCCESS;
 }
 
@@ -740,14 +740,14 @@ aclError aclrtCacheLastTaskExtendInfoImpl(const char* const extendInfoPtr, const
     return ACL_SUCCESS;
 }
 
-aclError aclrtGetFunctionAttributeImpl(aclrtFuncHandle funcHandle, aclrtFuncAttribute attrType, int64_t* attrValue)
+aclError aclrtGetFunctionAttributeImpl(const void* func, aclrtFuncAttribute attrType, int64_t* attrValue)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtGetFunctionAttribute);
     ACL_LOG_INFO("start to execute aclrtGetFunctionAttribute");
-    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(funcHandle);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(func);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(attrValue);
 
-    ACL_REQUIRES_RTS_OK(rtFunctionGetAttribute(funcHandle, static_cast<rtFuncAttribute>(attrType), attrValue));
+    ACL_REQUIRES_RTS_OK(rtFunctionGetAttribute(func, static_cast<rtFuncAttribute>(attrType), attrValue));
 
     ACL_LOG_INFO("successfully execute aclrtGetFunctionAttribute");
     return ACL_SUCCESS;
@@ -761,9 +761,9 @@ aclError aclmdlRITaskGetSeqIdImpl(aclmdlRITask task, uint32_t* id)
     return ACL_SUCCESS;
 }
 
-aclError aclrtFunctionGetBinaryImpl(const aclrtFuncHandle funcHandle, aclrtBinHandle* binHandle)
+aclError aclrtFunctionGetBinaryImpl(const void* func, aclrtBinHandle* binHandle)
 {
-    ACL_REQUIRES_RTS_OK(rtFunctionGetBinary(funcHandle, binHandle));
+    ACL_REQUIRES_RTS_OK(rtFunctionGetBinary(func, binHandle));
     return ACL_SUCCESS;
 }
 
@@ -794,7 +794,7 @@ aclError aclrtFunctionGetParamInfoImpl(const void* func, size_t paramIndex, size
     return ACL_SUCCESS;
 }
 
-aclError aclrtFunctionGetAvailDynUbufPerBlockImpl(void* func, uint32_t flags, size_t* dynamicUbufSize)
+aclError aclrtFunctionGetAvailDynUbufPerBlockImpl(const void* func, uint32_t flags, size_t* dynamicUbufSize)
 {
     ACL_LOG_INFO("start to execute aclrtFunctionGetAvailDynUbufPerBlock.");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(func);

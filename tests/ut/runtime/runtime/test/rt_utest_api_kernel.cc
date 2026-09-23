@@ -30,6 +30,7 @@
 #include "rt_unwrap.h"
 #include "common/rt_utest_context_reset_helper.hpp"
 #undef private
+#include "api_handle_guard.h"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -609,6 +610,221 @@ TEST_F(ApiKernelTest, TestRtLaunchKernelWithArgsArray_ApiImplSuccessWithSymbol)
 
     rtError_t error = rtLaunchKernelWithArgsArray(static_cast<void*>(&kernel), numBlocks, stm, &cfg, argsArray);
     EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiKernelTest, TestRtsFuncGetAddr_ApiImplSuccessWithSymbol)
+{
+    ApiImpl apiImpl;
+    MOCKER(Api::Instance).stubs().will(returnValue(static_cast<Api*>(&apiImpl)));
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t tilingKey = 0;
+    Kernel kernel("testKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+    void* expectedAicAddr = &kernel;
+    void* expectedAivAddr = &program;
+    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::FuncGetAddr)
+        .expects(once())
+        .with(
+            eq(static_cast<const Kernel*>(&kernel)), outBoundP(&expectedAicAddr, sizeof(void*)),
+            outBoundP(&expectedAivAddr, sizeof(void*)))
+        .will(returnValue(RT_ERROR_NONE));
+    Kernel* retKernel = &kernel;
+    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::GetFunctionBySymbol)
+        .stubs()
+        .with(mockcpp::any(), outBoundP(&retKernel, sizeof(Kernel*)))
+        .will(returnValue(RT_ERROR_NONE));
+
+    int dummySymbol = 0;
+    void* aicAddr = nullptr;
+    void* aivAddr = nullptr;
+    rtError_t error = rtsFuncGetAddr(reinterpret_cast<const void*>(&dummySymbol), &aicAddr, &aivAddr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(aicAddr, expectedAicAddr);
+    EXPECT_EQ(aivAddr, expectedAivAddr);
+}
+
+TEST_F(ApiKernelTest, TestRtsFuncGetAddr_ApiImplSymbolFallbackToHandle)
+{
+    ApiImpl apiImpl;
+    MOCKER(Api::Instance).stubs().will(returnValue(static_cast<Api*>(&apiImpl)));
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t tilingKey = 0;
+    Kernel kernel("testKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::FuncGetAddr)
+        .expects(once())
+        .with(eq(static_cast<const Kernel*>(&kernel)), mockcpp::any(), mockcpp::any())
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::GetFunctionBySymbol)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any())
+        .will(returnValue(RT_ERROR_INVALID_DEVICE_FUNCTION));
+
+    void* aicAddr = nullptr;
+    void* aivAddr = nullptr;
+    rtFuncHandle funcHandle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
+    rtError_t error = rtsFuncGetAddr(funcHandle, &aicAddr, &aivAddr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiKernelTest, TestRtsFuncGetAddr_ApiImplSymbolLookupError)
+{
+    ApiImpl apiImpl;
+    MOCKER(Api::Instance).stubs().will(returnValue(static_cast<Api*>(&apiImpl)));
+    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::GetFunctionBySymbol)
+        .expects(once())
+        .will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::FuncGetAddr).expects(never());
+
+    int dummySymbol = 0;
+    void* aicAddr = nullptr;
+    void* aivAddr = nullptr;
+    rtError_t error = rtsFuncGetAddr(&dummySymbol, &aicAddr, &aivAddr);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+}
+
+TEST_F(ApiKernelTest, TestRtsFuncGetName_ApiImplSuccessWithSymbol)
+{
+    ApiImpl apiImpl;
+    MOCKER(Api::Instance).stubs().will(returnValue(static_cast<Api*>(&apiImpl)));
+
+    ElfProgram program;
+    uint64_t tilingKey = 0;
+    Kernel kernel("testKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+    Kernel* retKernel = &kernel;
+    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::GetFunctionBySymbol)
+        .stubs()
+        .with(mockcpp::any(), outBoundP(&retKernel, sizeof(Kernel*)))
+        .will(returnValue(RT_ERROR_NONE));
+
+    char_t name[128];
+    int dummySymbol = 0;
+    rtError_t error = rtsFuncGetName(reinterpret_cast<const void*>(&dummySymbol), 128, name);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiKernelTest, TestRtFunctionGetAttribute_ApiImplSuccessWithSymbol)
+{
+    ApiImpl apiImpl;
+    MOCKER(Api::Instance).stubs().will(returnValue(static_cast<Api*>(&apiImpl)));
+
+    ElfProgram program;
+    uint64_t tilingKey = 0;
+    Kernel kernel("testKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+    Kernel* retKernel = &kernel;
+    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::GetFunctionBySymbol)
+        .stubs()
+        .with(mockcpp::any(), outBoundP(&retKernel, sizeof(Kernel*)))
+        .will(returnValue(RT_ERROR_NONE));
+
+    int64_t attrValue = 0;
+    int dummySymbol = 0;
+    rtError_t error =
+        rtFunctionGetAttribute(reinterpret_cast<const void*>(&dummySymbol), RT_FUNCTION_ATTR_KERNEL_TYPE, &attrValue);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    EXPECT_EQ(attrValue, static_cast<int64_t>(RT_KERNEL_ATTR_TYPE_AICORE));
+}
+
+TEST_F(ApiKernelTest, TestRtFunctionGetBinary_ApiImplSuccessWithSymbol)
+{
+    ApiImpl apiImpl;
+    MOCKER(Api::Instance).stubs().will(returnValue(static_cast<Api*>(&apiImpl)));
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t tilingKey = 0;
+    Kernel kernel("testKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+    Kernel* retKernel = &kernel;
+    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::GetFunctionBySymbol)
+        .stubs()
+        .with(mockcpp::any(), outBoundP(&retKernel, sizeof(Kernel*)))
+        .will(returnValue(RT_ERROR_NONE));
+
+    rtBinHandle binHandle = nullptr;
+    int dummySymbol = 0;
+    rtError_t error = rtFunctionGetBinary(reinterpret_cast<const void*>(&dummySymbol), &binHandle);
+    EXPECT_EQ(error, ACL_RT_SUCCESS);
+    EXPECT_EQ(binHandle, ExportEmbeddedHandle<rtBinHandle>(&program));
+}
+
+TEST_F(ApiKernelTest, TestRtFunctionGetParamCount_ApiImplSuccessWithSymbol)
+{
+    ApiImpl apiImpl;
+    MOCKER(Api::Instance).stubs().will(returnValue(static_cast<Api*>(&apiImpl)));
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t tilingKey = 0;
+    Kernel kernel("testKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+    kernel.SetHasParamSummary(true);
+    kernel.SetParamCount(3);
+    Kernel* retKernel = &kernel;
+    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::GetFunctionBySymbol)
+        .stubs()
+        .with(mockcpp::any(), outBoundP(&retKernel, sizeof(Kernel*)))
+        .will(returnValue(RT_ERROR_NONE));
+
+    size_t paramCount = 0;
+    int dummySymbol = 0;
+    rtError_t error = rtFunctionGetParamCount(reinterpret_cast<const void*>(&dummySymbol), &paramCount);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(paramCount, 3U);
+}
+
+TEST_F(ApiKernelTest, TestRtFunctionGetParamInfo_ApiImplSuccessWithSymbol)
+{
+    ApiImpl apiImpl;
+    MOCKER(Api::Instance).stubs().will(returnValue(static_cast<Api*>(&apiImpl)));
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t tilingKey = 0;
+    Kernel kernel("testKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+    kernel.SetHasParamSummary(true);
+    kernel.SetParamCount(3);
+    std::shared_ptr<ElfParamInfo[]> paramInfos(new ElfParamInfo[3]);
+    for (size_t i = 0; i < 3; i++) {
+        paramInfos[i].info.offset = static_cast<uint32_t>(i * 32);
+        paramInfos[i].info.size = 32;
+    }
+    kernel.SetParamInfos(paramInfos);
+    Kernel* retKernel = &kernel;
+    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::GetFunctionBySymbol)
+        .stubs()
+        .with(mockcpp::any(), outBoundP(&retKernel, sizeof(Kernel*)))
+        .will(returnValue(RT_ERROR_NONE));
+
+    size_t paramOffset = 0;
+    size_t paramSize = 0;
+    int dummySymbol = 0;
+    rtError_t error = rtFunctionGetParamInfo(reinterpret_cast<const void*>(&dummySymbol), 0, &paramOffset, &paramSize);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(paramOffset, 0U);
+    EXPECT_EQ(paramSize, 32U);
+}
+
+TEST_F(ApiKernelTest, TestRtFunctionGetAvailDynUbufPerBlock_ApiImplSuccessWithSymbol)
+{
+    ApiImpl apiImpl;
+    MOCKER(Api::Instance).stubs().will(returnValue(static_cast<Api*>(&apiImpl)));
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    uint64_t tilingKey = 0;
+    Kernel kernel("testKernel", tilingKey, &program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+    size_t expectedDynamicUbufSize = 256U;
+    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::FunctionGetAvailDynUbufPerBlock)
+        .expects(once())
+        .with(eq(&kernel), eq(0U), outBoundP(&expectedDynamicUbufSize, sizeof(size_t)))
+        .will(returnValue(RT_ERROR_NONE));
+    Kernel* retKernel = &kernel;
+    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::GetFunctionBySymbol)
+        .stubs()
+        .with(mockcpp::any(), outBoundP(&retKernel, sizeof(Kernel*)))
+        .will(returnValue(RT_ERROR_NONE));
+
+    size_t dynamicUbufSize = 0;
+    int dummySymbol = 0;
+    rtError_t error =
+        rtFunctionGetAvailDynUbufPerBlock(reinterpret_cast<const void*>(&dummySymbol), 0U, &dynamicUbufSize);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(dynamicUbufSize, expectedDynamicUbufSize);
 }
 
 TEST_F(ApiKernelTest, TestRtLaunchKernelWithArgsArray_ApiImplKernelInvalid)

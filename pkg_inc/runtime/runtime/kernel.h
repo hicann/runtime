@@ -970,14 +970,14 @@ RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t
 
 /**
  * @brief get function attribute by attribute type.
- * @param [in]  funcHandle function handle
+ * @param [in]  func function handle
  * @param [in]  attrType   function attribue type
  * @param [out] attrValue  function attribue value
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */
 RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t
-    rtFunctionGetAttribute(rtFuncHandle funcHandle, rtFuncAttribute attrType, int64_t* attrValue);
+    rtFunctionGetAttribute(const void* func, rtFuncAttribute attrType, int64_t* attrValue);
 
 RT_RUNTIME_DEPRECATED_DECLS_END
 #if defined(__cplusplus)
