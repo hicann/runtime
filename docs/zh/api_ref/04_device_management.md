@@ -20,6 +20,10 @@
 - [`aclError aclrtDevicePeerAccessStatus(int32_t deviceId, int32_t peerDeviceId, int32_t *status)`](#aclrtDevicePeerAccessStatus)：查询两个Device之间的数据交互状态。
 - [`aclError aclrtGetOverflowStatus(void *outputAddr, size_t outputSize, aclrtStream stream)`](#aclrtGetOverflowStatus)：获取当前Device下所有Stream上任务的溢出状态，并将状态值拷贝到用户申请的Device内存中。异步接口。
 - [`aclError aclrtResetOverflowStatus(aclrtStream stream)`](#aclrtResetOverflowStatus)：清除当前Device下所有Stream上任务的溢出状态。异步接口。
+- [`aclError aclrtGetFloatOverflowStatus(void *outputAddr, uint64_t outputSize, aclrtStream stream)`](#aclrtGetFloatOverflowStatus)：获取当前Device下浮点运算的溢出状态，并将状态值写入用户申请的Device内存中。异步接口。
+- [`aclError aclrtResetFloatOverflowStatus(aclrtStream stream)`](#aclrtResetFloatOverflowStatus)：清除当前Device下浮点运算的溢出状态。异步接口。
+- [`aclError aclrtNpuGetFloatOverFlowStatus(void *outputAddr, uint64_t outputSize, uint32_t checkMode, aclrtStream stream)`](#aclrtNpuGetFloatOverFlowStatus)：下发获取浮点运算溢出状态的任务，并将状态值写入用户申请的Device内存中。异步接口。
+- [`aclError aclrtNpuClearFloatOverFlowStatus(uint32_t checkMode, aclrtStream stream)`](#aclrtNpuClearFloatOverFlowStatus)：下发清除浮点运算溢出状态的任务。异步接口。
 - [`aclError aclrtSynchronizeDevice(void)`](#aclrtSynchronizeDevice)：阻塞当前线程，直到与当前线程绑定的Context所对应的Device完成运算。
 - [`aclError aclrtSynchronizeDeviceWithTimeout(int32_t timeout)`](#aclrtSynchronizeDeviceWithTimeout)：阻塞当前线程，直到与当前线程绑定的Context所对应的Device完成运算。
 - [`aclError aclrtGetDeviceInfo(uint32_t deviceId, aclrtDevAttr attr, int64_t *value)`](#aclrtGetDeviceInfo)：获取指定Device的信息。
@@ -1118,6 +1122,247 @@ aclError aclrtResetOverflowStatus(aclrtStream stream)
 
 对于Ascend 950PR&950DT系列产品、Atlas A3系列产品、Atlas A2系列产品，调用本接口清除的溢出状态是进程级别的。
 <!-- end id10 -->
+
+<br>
+<br>
+<br>
+
+<a id="aclrtGetFloatOverflowStatus"></a>
+
+## aclrtGetFloatOverflowStatus
+
+```c
+aclError aclrtGetFloatOverflowStatus(void *outputAddr, uint64_t outputSize, aclrtStream stream)
+```
+
+### 产品支持情况
+
+<!-- npu="950" id4101 -->
+- Ascend 950PR&950DT系列产品：支持
+<!-- end id4101 -->
+<!-- npu="A3" id4102 -->
+- Atlas A3系列产品：支持
+<!-- end id4102 -->
+<!-- npu="910b" id4103 -->
+- Atlas A2系列产品：支持
+<!-- end id4103 -->
+<!-- npu="310b" id4104 -->
+- Atlas 200I/500 A2推理产品：支持
+<!-- end id4104 -->
+<!-- npu="310p" id4105 -->
+- Atlas推理系列产品：支持
+<!-- end id4105 -->
+<!-- npu="910" id4106 -->
+- Atlas训练系列产品：支持
+<!-- end id4106 -->
+<!-- npu="IPV350" id4107 -->
+- IPV350：不支持
+<!-- end id4107 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id41 -->
+
+### 功能说明
+
+获取当前Device下浮点运算的溢出状态，并将状态值写入用户申请的Device内存中。
+
+本接口是异步接口，调用接口成功仅表示任务下发成功，不表示任务执行成功。调用本接口后，需调用同步等待接口（例如，[aclrtSynchronizeStream](06_stream_management.md#aclrtSynchronizeStream)）确保任务已执行完成。
+
+### 参数说明
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | :---: | --- |
+| outputAddr | 输入&输出 | 作为输入时，outputAddr为一级地址，由用户传入用于保存溢出状态的Device内存地址，地址不能为空，且内存大小不能小于outputSize。<br>作为输出时，该内存中保存当前Device下浮点运算的溢出状态数据。 |
+| outputSize | 输入 | outputAddr指向的Device内存大小，单位Byte，固定为64Byte。 |
+| stream | 输入 | 指定Stream，用于下发溢出状态查询任务。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。 |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+### 约束说明
+
+- 不支持在Stream捕获阶段调用本接口。
+- 本接口仅支持与[aclrtResetFloatOverflowStatus](#aclrtResetFloatOverflowStatus)接口配对使用。
+- 对于Ascend 950PR&950DT系列产品、Atlas A3系列产品、Atlas A2系列产品，调用本接口查询出来的溢出状态是进程级别的。
+
+<br>
+<br>
+<br>
+
+<a id="aclrtResetFloatOverflowStatus"></a>
+
+## aclrtResetFloatOverflowStatus
+
+```c
+aclError aclrtResetFloatOverflowStatus(aclrtStream stream)
+```
+
+### 产品支持情况
+
+<!-- npu="950" id4108 -->
+- Ascend 950PR&950DT系列产品：支持
+<!-- end id4108 -->
+<!-- npu="A3" id4109 -->
+- Atlas A3系列产品：支持
+<!-- end id4109 -->
+<!-- npu="910b" id4110 -->
+- Atlas A2系列产品：支持
+<!-- end id4110 -->
+<!-- npu="310b" id4111 -->
+- Atlas 200I/500 A2推理产品：支持
+<!-- end id4111 -->
+<!-- npu="310p" id4112 -->
+- Atlas推理系列产品：支持
+<!-- end id4112 -->
+<!-- npu="910" id4113 -->
+- Atlas训练系列产品：支持
+<!-- end id4113 -->
+<!-- npu="IPV350" id4114 -->
+- IPV350：不支持
+<!-- end id4114 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id42 -->
+
+### 功能说明
+
+清除当前Device下浮点运算的溢出状态。
+
+本接口是异步接口，调用接口成功仅表示任务下发成功，不表示任务执行成功。调用本接口后，需调用同步等待接口（例如，[aclrtSynchronizeStream](06_stream_management.md#aclrtSynchronizeStream)）确保任务已执行完成。
+
+### 参数说明
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | :---: | --- |
+| stream | 输入 | 指定Stream，用于下发溢出状态清除任务。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。 |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+### 约束说明
+
+- 不支持在Stream捕获阶段调用本接口。
+- 对于Ascend 950PR&950DT系列产品、Atlas A3系列产品、Atlas A2系列产品，调用本接口清除的溢出状态是进程级别的。
+
+<br>
+<br>
+<br>
+
+<a id="aclrtNpuGetFloatOverFlowStatus"></a>
+
+## aclrtNpuGetFloatOverFlowStatus
+
+```c
+aclError aclrtNpuGetFloatOverFlowStatus(
+    void *outputAddr, uint64_t outputSize, uint32_t checkMode, aclrtStream stream)
+```
+
+### 产品支持情况
+
+<!-- npu="950" id4115 -->
+- Ascend 950PR&950DT系列产品：支持
+<!-- end id4115 -->
+<!-- npu="A3" id4116 -->
+- Atlas A3系列产品：支持
+<!-- end id4116 -->
+<!-- npu="910b" id4117 -->
+- Atlas A2系列产品：支持
+<!-- end id4117 -->
+<!-- npu="310b" id4118 -->
+- Atlas 200I/500 A2推理产品：不支持
+<!-- end id4118 -->
+<!-- npu="310p" id4119 -->
+- Atlas推理系列产品：不支持
+<!-- end id4119 -->
+<!-- npu="910" id4120 -->
+- Atlas训练系列产品：不支持
+<!-- end id4120 -->
+<!-- npu="IPV350" id4121 -->
+- IPV350：不支持
+<!-- end id4121 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id43 -->
+
+### 功能说明
+
+获取当前Device下浮点运算的溢出状态，并将状态值写入用户申请的Device内存中。
+
+本接口与[aclrtGetFloatOverflowStatus](#aclrtGetFloatOverflowStatus)接口的差别在于，outputAddr参数含义不同：aclrtGetFloatOverflowStatus的outputAddr为一级地址，直接指向实际输出内存；本接口的outputAddr为二级地址，其指向的Device内存中保存实际输出内存的地址。
+
+本接口是异步接口，调用接口成功仅表示任务下发成功，不表示任务执行成功。调用本接口后，需调用同步等待接口（例如，[aclrtSynchronizeStream](06_stream_management.md#aclrtSynchronizeStream)）确保任务已执行完成。
+
+### 参数说明
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | :---: | --- |
+| outputAddr | 输入&输出 | 作为输入时，outputAddr为二级地址，其指向的Device内存中需保存实际输出内存的地址，且实际输出内存大小不能小于outputSize。outputAddr不能为空。<br>作为输出时，实际输出内存中保存查询到的浮点运算溢出状态数据。 |
+| outputSize | 输入 | 实际输出内存的大小，单位Byte，固定为64Byte。 |
+| checkMode | 输入 | 预留参数，当前固定配置为0。 |
+| stream | 输入 | 指定Stream，用于下发浮点运算溢出状态查询任务。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。 |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+### 约束说明
+
+- 不支持在Stream捕获阶段调用本接口。
+- 本接口仅支持与[aclrtNpuClearFloatOverFlowStatus](#aclrtNpuClearFloatOverFlowStatus)接口配对使用。
+
+<br>
+<br>
+<br>
+
+<a id="aclrtNpuClearFloatOverFlowStatus"></a>
+
+## aclrtNpuClearFloatOverFlowStatus
+
+```c
+aclError aclrtNpuClearFloatOverFlowStatus(uint32_t checkMode, aclrtStream stream)
+```
+
+### 产品支持情况
+
+<!-- npu="950" id4122 -->
+- Ascend 950PR&950DT系列产品：支持
+<!-- end id4122 -->
+<!-- npu="A3" id4123 -->
+- Atlas A3系列产品：支持
+<!-- end id4123 -->
+<!-- npu="910b" id4124 -->
+- Atlas A2系列产品：支持
+<!-- end id4124 -->
+<!-- npu="310b" id4125 -->
+- Atlas 200I/500 A2推理产品：不支持
+<!-- end id4125 -->
+<!-- npu="310p" id4126 -->
+- Atlas推理系列产品：不支持
+<!-- end id4126 -->
+<!-- npu="910" id4127 -->
+- Atlas训练系列产品：不支持
+<!-- end id4127 -->
+<!-- npu="IPV350" id4128 -->
+- IPV350：不支持
+<!-- end id4128 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id44 -->
+
+### 功能说明
+
+在指定Stream上下发清除浮点运算溢出状态的任务。
+
+本接口是异步接口，调用接口成功仅表示任务下发成功，不表示任务执行成功。调用本接口后，需调用同步等待接口（例如，[aclrtSynchronizeStream](06_stream_management.md#aclrtSynchronizeStream)）确保任务已执行完成。
+
+### 参数说明
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | :---: | --- |
+| checkMode | 输入 | 预留参数，当前固定配置为0。 |
+| stream | 输入 | 指定Stream，用于下发浮点运算溢出状态清除任务。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。 |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+### 约束说明
+
+不支持在Stream捕获阶段调用本接口。
 
 <br>
 <br>
