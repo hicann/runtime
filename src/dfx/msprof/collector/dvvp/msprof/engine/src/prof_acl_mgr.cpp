@@ -3694,10 +3694,11 @@ void ProfAclMgr::AicoreMetricsEnumToNameTwo(ProfAicoreMetrics aicMetrics, std::s
             if (
 #ifndef BUILD_PROFILING_OPEN_PROJECT
                 ConfigManager::instance()->GetPlatformType() == PlatformType::MINI_TYPE ||
-                ConfigManager::instance()->GetPlatformType() == PlatformType::MDC_TYPE ||
 #endif // BUILD_PROFILING_OPEN_PROJECT
                 ConfigManager::instance()->GetPlatformType() == PlatformType::CLOUD_TYPE ||
-                ConfigManager::instance()->GetPlatformType() == PlatformType::DC_TYPE) {
+                ConfigManager::instance()->GetPlatformType() == PlatformType::DC_TYPE ||
+                Analysis::Dvvp::Common::Platform::Platform::instance()->CheckIfSupport(
+                    ::Dvvp::Collect::Platform::PLATFORM_TASK_L2CACHE_ENUM)) {
                 value = L2_CACHE_ENUM;
                 break;
             }
@@ -3729,11 +3730,9 @@ int32_t ProfAclMgr::MsprofAclJsonMetricsConstruct(NanoJson::Json& acljsonCfg)
     std::string aiCoreMetrics;
     if (ConfigManager::instance()->GetPlatformType() == PlatformType::MINI_V3_TYPE
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-        || ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_MDC_MINI_V3 ||
-        ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_TINY_V1 ||
-        ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_MDC_LITE
+        || ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_TINY_V1
 #endif // BUILD_PROFILING_OPEN_PROJECT
-    ) {
+        || Platform::instance()->CheckIfSupport(::Dvvp::Collect::Platform::PLATFORM_AICORE_EXCT_DEFAULT)) {
         aiCoreMetrics =
             GetJsonMetricsParam(acljsonCfg, "aic_metrics", PIPE_EXECUTION_UTILIZATION, PIPE_EXECUTION_UTILIZATION);
     } else {

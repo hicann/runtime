@@ -22,14 +22,22 @@ set(hdcCpp
 
 ####################### libascend_devprof.so #########################
 
+# 扩展平台（module ext）使能时，全量构建由 modext 侧导出变量决定，替代独立芯片 PRODUCT 判断
+set(MSPROF_BUILD_ASCEND_DEVPROF_FULL OFF)
 if (PRODUCT)
 if (${PRODUCT} STREQUAL "ascend310Brc" OR
     ${PRODUCT} STREQUAL "ascend310Brcesl" OR
-    ${PRODUCT} STREQUAL "helper310p" OR
-    ${PRODUCT} STREQUAL "ascend610" OR
-    ${PRODUCT} STREQUAL "ascend610Lite" OR
-    ${PRODUCT} STREQUAL "ascend610Liteesl" OR
-    ${PRODUCT} STREQUAL "as31xm1")
+    ${PRODUCT} STREQUAL "helper310p")
+    set(MSPROF_BUILD_ASCEND_DEVPROF_FULL ON)
+endif()
+endif()
+
+if(ENABLE_MODULE_EXT AND MSPROF_MODULE_EXT_DEVPROF_FULL_PRODUCTS)
+    set(MSPROF_BUILD_ASCEND_DEVPROF_FULL ON)
+endif()
+
+if (PRODUCT OR ENABLE_MODULE_EXT)
+if (MSPROF_BUILD_ASCEND_DEVPROF_FULL)
 
 set(msprofCpp
     ./common/src/receive_data.cpp
@@ -152,6 +160,7 @@ target_compile_definitions(ascend_devprof PRIVATE
     MSPROF_LIB
     google=ascend_private
     RC_MODE
+    $<$<BOOL:${ENABLE_MODULE_EXT}>:${MSPROF_MODULE_EXT_COMPILE_DEFINITIONS}>
 )
 
 if(BUILD_PROFILING_OPEN_PROJECT)
@@ -204,6 +213,7 @@ else()
         MSPROF_LIB
         google=ascend_private
         EP_MODE
+        $<$<BOOL:${ENABLE_MODULE_EXT}>:${MSPROF_MODULE_EXT_COMPILE_DEFINITIONS}>
     )
 
     if(BUILD_PROFILING_OPEN_PROJECT)

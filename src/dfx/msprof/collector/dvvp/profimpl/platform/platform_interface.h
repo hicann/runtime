@@ -47,19 +47,14 @@ constexpr char EMPTY_FREQUENCY[] = "";
 enum PlatformTypeEnum {
     CHIP_MINI = 0,
     CHIP_CLOUD = 1,
-    CHIP_MDC = 2,
     CHIP_DC = 4,
     CHIP_CLOUD_V2 = 5,
     CHIP_MINI_V3 = 7,
     CHIP_TINY_V1 = 8,
     CHIP_NANO_V1 = 9,
-    CHIP_MDC_MINI_V3 = 11,
-    CHIP_MDC_LITE = 12,
     CHIP_CLOUD_V3 = 15,
     CHIP_CLOUD_V3_LITE = 19,
     CHIP_CLOUD_V4 = 16,
-    CHIP_MDC_V2 = 17,
-    CHIP_MDC_LITE_V2 = 18,
     CHIP_5162A = 21,
     CHIP_END
 };
@@ -156,6 +151,16 @@ enum PlatformFeature {
     PLATFORM_TASK_NTS,
     PLATFORM_API_STATS,
     PLATFORM_AICPU_SAMPLE_PERIOD,
+    // 平台能力扩展特性：蓝区平台类按能力置位，扩展平台（module ext）由扩展侧置位
+    PLATFORM_TASK_BLOCK_ON,              // task-block支持'on'取值
+    PLATFORM_AICORE_EVENT_FROM_ZERO,     // aicore pmu event最小值为0
+    PLATFORM_ADPROF,                     // 支持adprof采集
+    PLATFORM_AIV_INDEPENDENT_CONFIG,     // aiv参数独立配置(aiv-mode/aiv-metrics/默认值)
+    PLATFORM_AICORE_EXCT_DEFAULT,        // 默认aicore metrics为PipeUtilizationExct
+    PLATFORM_TASK_L2CACHE_ENUM,          // aicoreMetrics支持L2Cache枚举值
+    PLATFORM_SYS_DEVICE_LLC_EXT,         // 扩展平台LLC驱动支持
+    PLATFORM_SYS_DEVICE_SIO_PA,          // sys-interconnection覆盖SIO和PA
+    PLATFORM_SYS_DEVICE_INTERCONNECTION, // 提供sys-interconnection采集能力
     // MAX
     PLATFORM_COLLECTOR_TYPES_MAX
 };
@@ -262,10 +267,16 @@ public:
     virtual PmuCalculationAttr* GetMetricsFunc(const std::string& name, uint32_t index) const;
     virtual float GetTotalTime(uint64_t cycle, double freq, uint16_t blockDim, int64_t coreNum) const;
     virtual void SetSubscribeFeature();
+    // msprof CLI long option names this platform hides from users. Extension platforms fill in
+    // their own list, so chip specific blacklists stay out of the main tree. An empty list hides
+    // nothing and keeps the tool side blacklist table as the only source.
+    virtual std::vector<std::string> GetHiddenCliArgs() const;
     virtual ProfAicoreMetrics GetDefaultAicoreMetrics() const;
     virtual uint64_t GetDefaultDataTypeConfig() const;
     virtual std::string GetNtsEvents(const std::string& metrics);
     virtual PlatformFeature NtsMetricsToFeature(const std::string& key) const;
+    // aicore pmu event最大值，0表示无额外限制（仅部分扩展平台有额外限制）
+    virtual int32_t GetMaxAiPmuEvent() const;
 
 protected:
     virtual std::string GetMetricsValue(const PlatformFeature feature);

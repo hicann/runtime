@@ -25,8 +25,8 @@
 #include "david_platform.h"
 #include "david_lite_platform.h"
 #include "david_v121_platform.h"
-#include "mdc_lite_v2_platform.h"
-#include "mdc_v2_platform.h"
+#include "rc_lite_v2_platform_stub.h"
+#include "rc_v2_platform_stub.h"
 #include "modena_platform.h"
 #include "error_manager_stub2.h"
 
@@ -83,18 +83,18 @@ TEST_F(PLATFORM_UTEST, GetPlatform)
 }
 
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-TEST_F(PLATFORM_UTEST, NtsFeatureSupportedOnMdcV2)
+TEST_F(PLATFORM_UTEST, NtsFeatureSupportedOnRcV2)
 {
     auto platform = Platform::instance();
     EXPECT_EQ(PROFILING_SUCCESS, platform->Uninit());
-    MOCKER_CPP(&ConfigManager::GetPlatformType).stubs().will(returnValue(PlatformType::CHIP_MDC_V2));
+    MOCKER_CPP(&ConfigManager::GetPlatformType).stubs().will(returnValue(static_cast<PlatformType>(17)));
     EXPECT_EQ(PROFILING_SUCCESS, platform->Init());
     EXPECT_EQ(true, platform->CheckIfSupport(PLATFORM_TASK_NTS));
     EXPECT_EQ("0x301,0x312,0x315,0x316,0x32e,0x701,0x202,0x203,0x1,0x35", platform->GetNtsEvents("PipeUtilization"));
 }
 #endif
 
-TEST_F(PLATFORM_UTEST, NtsFeatureNotSupportedOnNonMdcV2)
+TEST_F(PLATFORM_UTEST, NtsFeatureNotSupportedOnNonRcV2)
 {
     auto platform = Platform::instance();
     EXPECT_EQ(PROFILING_SUCCESS, platform->Uninit());
@@ -104,11 +104,32 @@ TEST_F(PLATFORM_UTEST, NtsFeatureNotSupportedOnNonMdcV2)
 }
 
 #ifndef BUILD_PROFILING_OPEN_PROJECT
+TEST_F(PLATFORM_UTEST, LlcProfilingSupportedOnRcLiteV2)
+{
+    auto platform = Platform::instance();
+    EXPECT_EQ(PROFILING_SUCCESS, platform->Uninit());
+    MOCKER_CPP(&ConfigManager::GetPlatformType).stubs().will(returnValue(static_cast<PlatformType>(18)));
+    EXPECT_EQ(PROFILING_SUCCESS, platform->Init());
+    EXPECT_EQ(false, ConfigManager::instance()->IsDriverSupportLlc());
+    EXPECT_EQ(true, platform->IsSupportLlcProfiling());
+}
+
+TEST_F(PLATFORM_UTEST, LlcProfilingNotSupportedOnModena)
+{
+    auto platform = Platform::instance();
+    EXPECT_EQ(PROFILING_SUCCESS, platform->Uninit());
+    MOCKER_CPP(&ConfigManager::GetPlatformType).stubs().will(returnValue(PlatformType::CHIP_5162A));
+    EXPECT_EQ(PROFILING_SUCCESS, platform->Init());
+    EXPECT_EQ(false, platform->IsSupportLlcProfiling());
+}
+#endif
+
+#ifndef BUILD_PROFILING_OPEN_PROJECT
 TEST_F(PLATFORM_UTEST, NtsMetricsParamValidationExpandsDefaultEvents)
 {
     auto platform = Platform::instance();
     EXPECT_EQ(PROFILING_SUCCESS, platform->Uninit());
-    MOCKER_CPP(&ConfigManager::GetPlatformType).stubs().will(returnValue(PlatformType::CHIP_MDC_V2));
+    MOCKER_CPP(&ConfigManager::GetPlatformType).stubs().will(returnValue(static_cast<PlatformType>(17)));
     EXPECT_EQ(PROFILING_SUCCESS, platform->Init());
 
     auto params = std::make_shared<analysis::dvvp::message::ProfileParams>();
@@ -531,10 +552,10 @@ TEST_F(PLATFORM_UTEST, L2CacheAdaptorSkipsSmmuDfxForUnsupportedPlatform)
     EXPECT_EQ(std::string::npos, npuEvents.find("NOC:"));
 }
 
-TEST_F(PLATFORM_UTEST, MdcLiteV2PlatformMetrics)
+TEST_F(PLATFORM_UTEST, RcLiteV2PlatformMetrics)
 {
     GlobalMockObject::verify();
-    MdcLiteV2Platform platform;
+    RcLiteV2PlatformStub platform;
     PlatformInterface& platformInterface = platform;
     std::string aicEvent;
 
@@ -566,14 +587,15 @@ TEST_F(PLATFORM_UTEST, MdcLiteV2PlatformMetrics)
     EXPECT_EQ(MAX_COLLECT_MONITOR_NUM, platformInterface.GetQosMonitorNumber());
 }
 
-TEST_F(PLATFORM_UTEST, MdcLiteV2PlatformFeatures)
+TEST_F(PLATFORM_UTEST, RcLiteV2PlatformFeatures)
 {
     GlobalMockObject::verify();
-    MdcLiteV2Platform platform;
+    RcLiteV2PlatformStub platform;
 
     EXPECT_EQ(true, platform.FeatureIsSupport(PLATFORM_TASK_SWITCH));
     EXPECT_EQ(true, platform.FeatureIsSupport(PLATFORM_TASK_ASCENDCL));
     EXPECT_EQ(true, platform.FeatureIsSupport(PLATFORM_TASK_RUNTIME_API));
+    // lite v2支持AICPU采集特性，msprof --aicpu开关仍隐藏（与扩展仓实现一致）
     EXPECT_EQ(true, platform.FeatureIsSupport(PLATFORM_TASK_AICPU));
     EXPECT_EQ(true, platform.FeatureIsSupport(PLATFORM_TASK_HCCL));
     EXPECT_EQ(true, platform.FeatureIsSupport(PLATFORM_TASK_L2_CACHE_REG));
@@ -591,10 +613,10 @@ TEST_F(PLATFORM_UTEST, MdcLiteV2PlatformFeatures)
     EXPECT_EQ(false, platform.FeatureIsSupport(PLATFORM_TASK_RUNTIME));
 }
 
-TEST_F(PLATFORM_UTEST, MdcLiteV2PlatformReflection)
+TEST_F(PLATFORM_UTEST, RcLiteV2PlatformReflection)
 {
     GlobalMockObject::verify();
-    auto platform = PlatformReflection::CreatePlatformClass(CHIP_MDC_LITE_V2);
+    auto platform = PlatformReflection::CreatePlatformClass(static_cast<PlatformTypeEnum>(18));
     ASSERT_NE(nullptr, platform);
 
     std::string aicEvent;
@@ -709,10 +731,10 @@ TEST_F(PLATFORM_UTEST, SmmuDFXOffsetAndRegMask)
     EXPECT_EQ(0U, platform->GetSmmuDFXRegMask());
 }
 
-TEST_F(PLATFORM_UTEST, MdcV2PlatformBiuPerfChannelInfos)
+TEST_F(PLATFORM_UTEST, RcV2PlatformBiuPerfChannelInfos)
 {
     GlobalMockObject::verify();
-    MdcV2Platform platform;
+    RcV2PlatformStub platform;
 
     std::vector<uint32_t> groupVector = {0, 1, 2, 3, 4, 5};
     auto channelInfos = platform.GetBiuPerfChannelInfos(groupVector, static_cast<uint32_t>(groupVector.size()));

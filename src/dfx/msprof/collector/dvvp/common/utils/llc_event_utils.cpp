@@ -13,6 +13,7 @@
 #include "config_manager.h"
 #include "message/prof_params.h"
 #include "msprof_dlog.h"
+#include "platform/platform.h"
 
 namespace analysis {
 namespace dvvp {
@@ -71,7 +72,7 @@ void LlcEventUtils::GenerateLlcEvents(SHARED_PTR_ALIA<analysis::dvvp::message::P
         }
     } else
 #endif // BUILD_PROFILING_OPEN_PROJECT
-        if (ConfigManager::instance()->IsDriverSupportLlc()) {
+        if (::Analysis::Dvvp::Common::Platform::Platform::instance()->IsSupportLlcProfiling()) {
             if (params->llc_profiling.compare(LLC_PROFILING_READ) == 0) {
                 params->llc_profiling_events = LLC_PROFILING_READ;
             } else if (params->llc_profiling.compare(LLC_PROFILING_WRITE) == 0) {
@@ -91,7 +92,7 @@ void LlcEventUtils::GenerateLlcDefEvents(SHARED_PTR_ALIA<analysis::dvvp::message
         params->llc_profiling_events = GenerateCapacityEvents();
     } else
 #endif // BUILD_PROFILING_OPEN_PROJECT
-        if (ConfigManager::instance()->IsDriverSupportLlc()) {
+        if (::Analysis::Dvvp::Common::Platform::Platform::instance()->IsSupportLlcProfiling()) {
             params->llc_profiling = LLC_PROFILING_READ;
             params->llc_profiling_events = LLC_PROFILING_READ;
         } else {

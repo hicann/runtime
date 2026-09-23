@@ -132,7 +132,7 @@ TEST_F(JOB_WRAPPER_PROF_BIU_PERF_JOB_TEST, Launch)
     } while (0);
 }
 
-TEST_F(JOB_WRAPPER_PROF_BIU_PERF_JOB_TEST, MdcV2InstrProfilingOnlyStartsWhitelistChannels)
+TEST_F(JOB_WRAPPER_PROF_BIU_PERF_JOB_TEST, RcV2InstrProfilingOnlyStartsWhitelistChannels)
 {
     g_startedChannels.clear();
     MOCKER_CPP(

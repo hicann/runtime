@@ -30,6 +30,7 @@ MiniPlatform::MiniPlatform()
                          PLATFORM_SYS_HOST_ONE_PID_CPU, PLATFORM_SYS_HOST_ALL_PID_CPU, PLATFORM_SYS_HOST_ONE_PID_MEM,
                          PLATFORM_SYS_HOST_ALL_PID_MEM, PLATFORM_SYS_HOST_ONE_PID_DISK, PLATFORM_SYS_HOST_ONE_PID_OSRT,
                          PLATFORM_SYS_HOST_NETWORK, PLATFORM_SYS_HOST_SYS_CPU, PLATFORM_SYS_HOST_SYS_MEM};
+    supportedFeature_.insert(PLATFORM_ADPROF);
 }
 
 } // namespace Platform

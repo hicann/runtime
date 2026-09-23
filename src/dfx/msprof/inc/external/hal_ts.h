@@ -379,10 +379,10 @@ typedef struct _dump_mailbox_info {
 #define CHANNEL_BIU_GROUP10_AIV0 42
 
 #define CHANNEL_AICORE 43
-#define CHANNEL_TSFW 44                       // add for ts0 as tsfw channel
-#define CHANNEL_HWTS_LOG 45                   // add for ts0 as hwts channel
+#define CHANNEL_TSFW 44     // add for ts0 as tsfw channel
+#define CHANNEL_HWTS_LOG 45 // add for ts0 as hwts channel
 #define CHANNEL_KEY_POINT 46
-#define CHANNEL_TSFW_L2 47                    /* add for ascend910 and ascend610 */
+#define CHANNEL_TSFW_L2 47
 #define CHANNEL_HWTS_LOG1 48                  // add for ts1 as hwts channel
 #define CHANNEL_TSFW1 49                      // add for ts1 as tsfw channel
 #define CHANNEL_STARS_SOC_LOG_BUFFER 50       /* add for ascend910B */
@@ -440,13 +440,13 @@ typedef struct _dump_mailbox_info {
 
 #define CHANNEL_TSCPU_MAX 128
 #define CHANNEL_ROCE 129
-#define CHANNEL_DVPP_VENC 135  /* add for ascend610 */
-#define CHANNEL_DVPP_JPEGE 136 /* add for ascend610 */
-#define CHANNEL_DVPP_VDEC 137  /* add for ascend610 */
-#define CHANNEL_DVPP_JPEGD 138 /* add for ascend610 */
-#define CHANNEL_DVPP_VPC 139   /* add for ascend610 */
-#define CHANNEL_DVPP_PNG 140   /* add for ascend610 */
-#define CHANNEL_DVPP_SCD 141   /* add for ascend610 */
+#define CHANNEL_DVPP_VENC 135
+#define CHANNEL_DVPP_JPEGE 136
+#define CHANNEL_DVPP_VDEC 137
+#define CHANNEL_DVPP_JPEGD 138
+#define CHANNEL_DVPP_VPC 139
+#define CHANNEL_DVPP_PNG 140
+#define CHANNEL_DVPP_SCD 141
 #define PROF_CHANNEL_NUM 160
 #define CHANNEL_IDS_MAX PROF_CHANNEL_NUM
 #define MAX_DEVICE_NUM 1

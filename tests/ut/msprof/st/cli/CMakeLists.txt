@@ -30,12 +30,13 @@ set(testStubSrc
     ${CLI_STUB_DIR}/device/data_report.cpp
     ${CLI_STUB_DIR}/device/data_check.cpp
     ${CLI_STUB_DIR}/device/dc_device_simulator.cpp
-    ${CLI_STUB_DIR}/device/mdc_device_simulator.cpp
-    ${CLI_STUB_DIR}/device/mdc_lite_device_simulator.cpp
-    ${CLI_STUB_DIR}/device/mdc_lite_v2_device_simulator.cpp
+    ${CLI_STUB_DIR}/device/rc_device_simulator.cpp
+    ${CLI_STUB_DIR}/device/rc_lite_device_simulator.cpp
+    ${CLI_STUB_DIR}/device/rc_lite_v2_device_simulator.cpp
+    ${CLI_STUB_DIR}/device/rc_v2_device_simulator.cpp
     ${CLI_STUB_DIR}/device/mini_device_simulator.cpp
     ${CLI_STUB_DIR}/device/nano_device_simulator.cpp
-    ${CLI_STUB_DIR}/device/mdc_mini_v3_device_simulator.cpp
+    ${CLI_STUB_DIR}/device/rc_mini_v3_device_simulator.cpp
     ${CLI_STUB_DIR}/device/mini_stars_device_simulator.cpp
     ${CLI_STUB_DIR}/device/msprof_start.cpp
     ${CLI_STUB_DIR}/device/adx_api_stub.cpp
@@ -51,13 +52,14 @@ set(testSrc
     testcase/main.cpp
     testcase/cli_milan_stest.cpp
     # testcase/cli_cloud_stest.cpp
-    # testcase/cli_mdc_mini_v3_stest.cpp
+    # testcase/cli_rc_mini_v3_stest.cpp
     # testcase/cli_dc_stest.cpp
-    # testcase/cli_mdc_stest.cpp
+    # testcase/cli_rc_stest.cpp
     # testcase/cli_miniv3_ep_stest.cpp
     # testcase/cli_miniv3_rc_stest.cpp
-    # testcase/cli_mdc_lite_stest.cpp
-    testcase/cli_mdc_lite_v2_stest.cpp
+    # testcase/cli_rc_lite_stest.cpp
+    testcase/cli_rc_lite_v2_stest.cpp
+    testcase/cli_rc_v2_stest.cpp
     testcase/cli_david_stest.cpp
     testcase/cli_david_v121_stest.cpp
     testcase/cli_modena_stest.cpp
@@ -103,18 +105,18 @@ set(src_file
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/base_analyzer.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/nano_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mini_v3_platform.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_mini_v3_platform.cpp
+    ${TOP_DIR}/tests/ut/msprof/st/stub/platform/rc_mini_v3_platform_stub.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/cloud_v2_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/david_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/david_lite_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/david_v121_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/modena_platform.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_lite_platform.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_lite_v2_platform.cpp
+    ${TOP_DIR}/tests/ut/msprof/st/stub/platform/rc_lite_platform_stub.cpp
+    ${TOP_DIR}/tests/ut/msprof/st/stub/platform/rc_lite_v2_platform_stub.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/cloud_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/dc_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mini_platform.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_platform.cpp
+    ${TOP_DIR}/tests/ut/msprof/st/stub/platform/rc_platform_stub.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/tiny_v1_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/app/application.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/app/env_manager.cpp
@@ -221,7 +223,7 @@ set(src_file
     ${MSPROF_SOURCE_DIR}/dvvp/acp/src/op_analyzer_pmu.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/acp/src/op_analyzer_biu.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/acp/src/op_analyzer_pc_sampling.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_v2_platform.cpp
+    ${TOP_DIR}/tests/ut/msprof/st/stub/platform/rc_v2_platform_stub.cpp
 )
 
 if(NOT BUILD_PROFILING_OPEN_PROJECT)

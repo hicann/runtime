@@ -548,7 +548,7 @@ TEST_F(INPUT_PARSER_UTEST, CheckBaseInfo)
 #ifndef BUILD_PROFILING_OPEN_PROJECT
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
-        .will(returnValue(Analysis::Dvvp::Common::Config::PlatformType::MDC_TYPE));
+        .will(returnValue(static_cast<PlatformType>(2)));
     Platform::instance()->Uninit();
     Platform::instance()->Init();
     cmdInfo.args[ARGS_AIV_METRICS] = "L2Cache";
@@ -991,13 +991,15 @@ TEST_F(INPUT_PARSER_UTEST, PreCheckPlatform_Miniv3)
 }
 
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-TEST_F(INPUT_PARSER_UTEST, PreCheckPlatform_MdcLiteV2)
+TEST_F(INPUT_PARSER_UTEST, PreCheckPlatform_RcLiteV2)
 {
     InputParser parser = InputParser();
     const char* argv[] = {"msprof", "--aiv=on"};
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
-        .will(returnValue(Analysis::Dvvp::Common::Config::PlatformType::CHIP_MDC_LITE_V2));
+        .will(returnValue(static_cast<PlatformType>(18)));
+    Platform::instance()->Uninit();
+    Platform::instance()->Init();
     MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::RunSocSide).stubs().will(returnValue(false));
     MOCKER(mmGetOptInd).stubs().will(returnValue(2));
 
@@ -1010,12 +1012,30 @@ TEST_F(INPUT_PARSER_UTEST, PreCheckPlatform_MdcLiteV2)
     EXPECT_EQ(PROFILING_SUCCESS, parser.PreCheckPlatform(ARGS_SYS_LOW_POWER, argv));
 }
 
-TEST_F(INPUT_PARSER_UTEST, AddStarsArgsMdcLiteV2)
+TEST_F(INPUT_PARSER_UTEST, PreCheckPlatform_RcV2InstrProfilingFreq)
+{
+    InputParser parser = InputParser();
+    const char* argv[] = {"msprof", "--instr-profiling-freq=10000"};
+    MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
+        .stubs()
+        .will(returnValue(static_cast<PlatformType>(17)));
+    Platform::instance()->Uninit();
+    Platform::instance()->Init();
+    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::RunSocSide).stubs().will(returnValue(false));
+    MOCKER(mmGetOptInd).stubs().will(returnValue(2));
+
+    // rc_v2 owns the task-level instr capability, both switches stay out of the platform blacklist
+    EXPECT_EQ(PROFILING_SUCCESS, parser.PreCheckPlatform(ARGS_INSTR_PROFILING, argv));
+    EXPECT_EQ(PROFILING_SUCCESS, parser.PreCheckPlatform(ARGS_INSTR_PROFILING_FREQ, argv));
+    Platform::instance()->Uninit();
+}
+
+TEST_F(INPUT_PARSER_UTEST, AddStarsArgsRcLiteV2)
 {
     GlobalMockObject::verify();
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
-        .will(returnValue(Analysis::Dvvp::Common::Config::PlatformType::CHIP_MDC_LITE_V2));
+        .will(returnValue(static_cast<PlatformType>(18)));
     MOCKER_CPP(
         &Analysis::Dvvp::Common::Platform::Platform::CheckIfSupport,
         bool(Analysis::Dvvp::Common::Platform::Platform::*)(const PlatformFeature) const)
@@ -1028,7 +1048,7 @@ TEST_F(INPUT_PARSER_UTEST, AddStarsArgsMdcLiteV2)
     GlobalMockObject::verify();
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
-        .will(returnValue(Analysis::Dvvp::Common::Config::PlatformType::CHIP_MDC_LITE_V2));
+        .will(returnValue(static_cast<PlatformType>(18)));
     MOCKER_CPP(
         &Analysis::Dvvp::Common::Platform::Platform::CheckIfSupport,
         bool(Analysis::Dvvp::Common::Platform::Platform::*)(const PlatformFeature) const)

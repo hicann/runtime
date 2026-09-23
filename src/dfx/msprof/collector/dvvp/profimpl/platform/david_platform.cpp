@@ -46,6 +46,9 @@ DavidPlatform::DavidPlatform()
         PLATFORM_AICPU_SAMPLE_PERIOD};
     InsertPmuFeature();
     InsertSysFeature();
+    supportedFeature_.insert(PLATFORM_TASK_BLOCK_ON);
+    supportedFeature_.insert(PLATFORM_AICORE_EVENT_FROM_ZERO);
+    supportedFeature_.insert(PLATFORM_ADPROF);
 }
 
 uint16_t DavidPlatform::GetMaxMonitorNumber() const { return MAX_DAVID_MONITOR_NUM; }
@@ -95,6 +98,7 @@ void DavidPlatform::InsertSysFeature()
         PLATFORM_SYS_DEVICE_ROCE,
         PLATFORM_SYS_DEVICE_HCCS,
         PLATFORM_SYS_DEVICE_PCIE,
+        PLATFORM_SYS_DEVICE_INTERCONNECTION,
         PLATFORM_SYS_DEVICE_DVPP,
         PLATFORM_SYS_DEVICE_DVPP_EX,
         PLATFORM_SYS_DEVICE_LOW_POWER,

@@ -132,10 +132,11 @@ set(MSPROF_TARGET_PART2
     api_david_stest
     api_david_v121_stest
     api_mini_v3_stest
-    api_mdc_mini_v3_stest
+    api_rc_mini_v3_stest
     api_cloud_stest
-    api_mdc_stest
+    api_rc_stest
     api_tiny_stest
+    api_rc_v2_stest
 )
 
 set(MSPROF_TARGET

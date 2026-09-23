@@ -37,12 +37,13 @@ set(testStubSrc
     ${ACLJSON_STUB_DIR}/device/data_report.cpp
     ${ACLJSON_STUB_DIR}/device/data_check.cpp
     ${ACLJSON_STUB_DIR}/device/dc_device_simulator.cpp
-    ${ACLJSON_STUB_DIR}/device/mdc_device_simulator.cpp
-    ${ACLJSON_STUB_DIR}/device/mdc_lite_device_simulator.cpp
-    ${ACLJSON_STUB_DIR}/device/mdc_lite_v2_device_simulator.cpp
+    ${ACLJSON_STUB_DIR}/device/rc_device_simulator.cpp
+    ${ACLJSON_STUB_DIR}/device/rc_lite_device_simulator.cpp
+    ${ACLJSON_STUB_DIR}/device/rc_lite_v2_device_simulator.cpp
+    ${ACLJSON_STUB_DIR}/device/rc_v2_device_simulator.cpp
     ${ACLJSON_STUB_DIR}/device/mini_device_simulator.cpp
     ${ACLJSON_STUB_DIR}/device/nano_device_simulator.cpp
-    ${ACLJSON_STUB_DIR}/device/mdc_mini_v3_device_simulator.cpp
+    ${ACLJSON_STUB_DIR}/device/rc_mini_v3_device_simulator.cpp
     ${ACLJSON_STUB_DIR}/device/msprof_start.cpp
     ${ACLJSON_STUB_DIR}/device/rpc_device_manager_stub.cpp
     ${ACLJSON_STUB_DIR}/device/nano_device_simulator.cpp
@@ -57,12 +58,12 @@ set(testStubSrc
 set(testSrc
     testcase/main.cpp
     testcase/acljson_milan_stest.cpp
-    testcase/acljson_mdc_mini_v3_steat.cpp
+    testcase/acljson_rc_mini_v3_steat.cpp
     testcase/acljson_prof_json_stest.cpp
     testcase/acljson_miniv3_ep_stest.cpp
     testcase/acljson_miniv3_rc_stest.cpp
-    testcase/acljson_mdc_stest.cpp
-    testcase/acljson_mdc_lite_stest.cpp
+    testcase/acljson_rc_stest.cpp
+    testcase/acljson_rc_lite_stest.cpp
     testcase/acljson_dc_stest.cpp
     testcase/acljson_cloud_stest.cpp
     testcase/acljson_david_stest.cpp
@@ -190,18 +191,18 @@ set(src_file
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/base_analyzer.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/nano_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mini_v3_platform.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_mini_v3_platform.cpp
+    ${TOP_DIR}/tests/ut/msprof/st/stub/platform/rc_mini_v3_platform_stub.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/cloud_v2_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/david_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/david_lite_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/david_v121_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/modena_platform.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_lite_platform.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_lite_v2_platform.cpp
+    ${TOP_DIR}/tests/ut/msprof/st/stub/platform/rc_lite_platform_stub.cpp
+    ${TOP_DIR}/tests/ut/msprof/st/stub/platform/rc_lite_v2_platform_stub.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/cloud_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/dc_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mini_platform.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_platform.cpp
+    ${TOP_DIR}/tests/ut/msprof/st/stub/platform/rc_platform_stub.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/tiny_v1_platform.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/channel/nano_stars_profile.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/channel/channel_job.cpp
@@ -235,7 +236,7 @@ set(src_file
     ${MSPROF_SOURCE_DIR}/dvvp/acp/src/acp_command.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/acp/src/acp_pipe_transfer.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/acp/src/acp_compute_device_job.cpp
-    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_v2_platform.cpp
+    ${TOP_DIR}/tests/ut/msprof/st/stub/platform/rc_v2_platform_stub.cpp
     ${adprof_src}
 )
 

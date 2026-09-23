@@ -54,7 +54,7 @@ enum class StPlatformType {
     MINI_TYPE = 0,
     CLOUD_TYPE,
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-    MDC_TYPE,
+    RC_TYPE,
 #endif
     DC_TYPE = 4,
     CHIP_V4_1_0,
@@ -62,12 +62,13 @@ enum class StPlatformType {
 #ifndef BUILD_PROFILING_OPEN_PROJECT
     CHIP_TINY_V1 = 8,
     CHIP_NANO_V1 = 9,
-    CHIP_MDC_MINI_V3 = 11,
-    CHIP_MDC_LITE = 12,
+    RC_MINI_V3_TYPE = 11,
+    RC_LITE_TYPE = 12,
     CHIP_CLOUD_V3 = 15,
     CHIP_CLOUD_V3_LITE = 19,
     CHIP_CLOUD_V4 = 16,
-    CHIP_MDC_LITE_V2 = 18,
+    RC_V2_TYPE = 17,
+    RC_LITE_V2_TYPE = 18,
     CHIP_5162A = 21,
 #endif
     END_TYPE
@@ -85,17 +86,18 @@ enum class StProfConfigType {
 };
 
 const std::map<uint32_t, std::string> CLI_CHECK_OUTPUT = {
-    {0, "cliMinistest_workspace/output"},       {1, "cliCloudstest_workspace/output"},
+    {0, "cliMinistest_workspace/output"},      {1, "cliCloudstest_workspace/output"},
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-    {2, "cliMdcstest_workspace/output"},
+    {2, "cliRcstest_workspace/output"},
 #endif
-    {4, "cliDcstest_workspace/output"},         {5, "cliMilanstest_workspace/output"},
+    {4, "cliDcstest_workspace/output"},        {5, "cliMilanstest_workspace/output"},
     {7, "cliMiniV3stest_workspace/output"},
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-    {8, "cliTinystest_workspace/output"},       {9, "cliNanostest_workspace/output"},
-    {11, "cliMdcMiniV3stest_workspace/output"}, {12, "cliMdcLitestest_workspace/output"},
-    {15, "cliDavidstest_workspace/output"},     {16, "cliDavidV121stest_workspace/output"},
-    {18, "cliMdcLiteV2stest_workspace/output"}, {21, "cliModenastest_workspace/output"},
+    {8, "cliTinystest_workspace/output"},      {9, "cliNanostest_workspace/output"},
+    {11, "cliRcMiniV3stest_workspace/output"}, {12, "cliRcLitestest_workspace/output"},
+    {15, "cliDavidstest_workspace/output"},    {16, "cliDavidV121stest_workspace/output"},
+    {17, "cliRcV2stest_workspace/output"},     {18, "cliRcLiteV2stest_workspace/output"},
+    {21, "cliModenastest_workspace/output"},
 #endif
 };
 

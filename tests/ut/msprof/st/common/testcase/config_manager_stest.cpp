@@ -46,7 +46,7 @@ TEST_F(COMMON_CONFIG_MANAGER_STEST, GetPlatformType)
         .then(returnValue(DRV_ERROR_INVALID_VALUE))
         .then(returnValue(MSPROF_HELPER_HOST));
     configManger->Init();
-    EXPECT_EQ(Analysis::Dvvp::Common::Config::PlatformType::MDC_TYPE, configManger->GetPlatformType());
+    EXPECT_EQ(static_cast<PlatformType>(2), configManger->GetPlatformType());
     configManger->Uninit();
     configManger->configMap_[TYPE_CONFIG] = "0";
 
@@ -56,7 +56,7 @@ TEST_F(COMMON_CONFIG_MANAGER_STEST, GetPlatformType)
     configManger->configMap_[TYPE_CONFIG] = "0";
 
     configManger->Init();
-    EXPECT_EQ(Analysis::Dvvp::Common::Config::PlatformType::MDC_TYPE, configManger->GetPlatformType());
+    EXPECT_EQ(static_cast<PlatformType>(2), configManger->GetPlatformType());
     configManger->Uninit();
 }
 

@@ -127,10 +127,16 @@ const std::map<std::string, std::string> DEFAULT_MAP = {
 };
 
 const std::map<StPlatformType, std::string> DEFAULT_PLATFORM_MAP = {
-    {StPlatformType::MINI_TYPE, "ts_timeline"},       {StPlatformType::CLOUD_TYPE, "hwts_log"},
-    {StPlatformType::MDC_TYPE, "hwts_log"},           {StPlatformType::DC_TYPE, "hwts_log"},
-    {StPlatformType::CHIP_V4_1_0, "stars_acsq_task"}, {StPlatformType::MINI_V3_TYPE, "stars_acsq_task"},
-    {StPlatformType::CHIP_MDC_LITE, "hwts_log"},      {StPlatformType::CHIP_CLOUD_V3, "stars_acsq_task"},
+    {StPlatformType::MINI_TYPE, "ts_timeline"},
+    {StPlatformType::CLOUD_TYPE, "hwts_log"},
+    {StPlatformType::RC_TYPE, "hwts_log"},
+    {StPlatformType::DC_TYPE, "hwts_log"},
+    {StPlatformType::CHIP_V4_1_0, "stars_acsq_task"},
+    {StPlatformType::MINI_V3_TYPE, "stars_acsq_task"},
+    {StPlatformType::RC_LITE_TYPE, "hwts_log"},
+    {StPlatformType::CHIP_CLOUD_V3, "stars_acsq_task"},
+    // rc_v2与扩展仓同名平台实现一致支持PLATFORM_TASK_STARS_ACSQ，默认采集走stars_acsq_task
+    {StPlatformType::RC_V2_TYPE, "stars_acsq_task"},
 };
 
 class DataCheck {

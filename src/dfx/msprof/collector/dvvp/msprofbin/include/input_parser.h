@@ -307,6 +307,7 @@ public:
 public:
     void PrintHelp();
     void SetDetail(const std::string& detail);
+    const std::string& GetName() const { return name_; }
 
 private:
     std::string name_;
@@ -327,6 +328,7 @@ public:
 
 private:
     void AddArgs();
+    void FilterArgsByBlackSwitch();
     void AddStorageLimitArgs();
     void AddModelExecutionArgs();
     void AddAicMetricsArgs();

@@ -136,9 +136,9 @@ if(NOT BUILD_PROFILING_OPEN_PROJECT)
         ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/david_platform.cpp
         ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/david_lite_platform.cpp
         ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/david_v121_platform.cpp
-        ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_v2_platform.cpp
-        ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_lite_v2_platform.cpp
         ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/modena_platform.cpp
+        ${TOP_DIR}/tests/ut/msprof/st/stub/platform/rc_v2_platform_stub.cpp
+        ${TOP_DIR}/tests/ut/msprof/st/stub/platform/rc_lite_v2_platform_stub.cpp
     )
 endif()
 list(APPEND profilerSrcList
@@ -227,6 +227,7 @@ target_include_directories(msprofiler_utest PRIVATE
     stub/
     ../stub/
     ${TOP_DIR}/tests/ut/msprof
+    ${TOP_DIR}/tests/ut/msprof/st/stub/platform
     ${libmsprofHeaderDir}
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/engine/include
     ${MSPROF_SOURCE_DIR}/dvvp/common/utils

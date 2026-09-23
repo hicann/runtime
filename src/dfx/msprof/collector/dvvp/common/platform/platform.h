@@ -117,6 +117,8 @@ public:
     int32_t GetDataTypeConfig(uint64_t& supportSwitch);
     bool CheckIfSupport(const PlatformFeature feature) const;
     bool CheckIfSupport(const std::string feature) const;
+    std::vector<std::string> GetHiddenCliArgs() const;
+    bool IsSupportLlcProfiling() const;
     void SetSubscribeFeature();
     bool CheckIfPlatformExist() const;
     uint64_t PlatformSysCycleTime() const;
@@ -130,6 +132,7 @@ public:
     int32_t HalGetDeviceQosInfo(uint32_t deviceId, QosProfileInfo& info, int32_t* length) const;
     void GetQosProfileInfo(uint32_t deviceId, std::string& qosEventInfo, std::vector<uint8_t>& qosEventId);
     uint16_t GetMaxMonitorNumber() const;
+    int32_t GetMaxAiPmuEvent() const;
     std::vector<::Dvvp::Collect::Platform::BiuPerfChannelInfo> GetBiuPerfChannelInfos(
         const std::vector<uint32_t>& groupVector, uint32_t groupNum) const;
     uint16_t GetBiuPerfGroupNum() const;

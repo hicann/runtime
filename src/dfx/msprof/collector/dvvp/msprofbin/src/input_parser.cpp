@@ -15,6 +15,7 @@
 #include <cstring>
 #include <iostream>
 #include <iomanip>
+#include <algorithm>
 #include <sys/stat.h>
 #include "cmd_log/cmd_log.h"
 #include "errno/error_code.h"
@@ -24,6 +25,7 @@
 #include "ai_drv_dev_api.h"
 #include "platform/platform.h"
 #include "config/config.h"
+#include "platform_interface.h"
 #include "msprof_dlog.h"
 #include "osal.h"
 #include "dyn_prof_client.h"
@@ -62,6 +64,91 @@ const std::string CSV_FORMAT = "csv";
 const std::string JSON_FORMAT = "json";
 const std::string TEXT_EXPORT_TYPE = "text";
 const std::string DB_EXPORT_TYPE = "db";
+
+bool HasArg(const std::vector<MsprofArgsType>& argsList, MsprofArgsType arg)
+{
+    return std::find(argsList.begin(), argsList.end(), arg) != argsList.end();
+}
+
+// Extension platforms describe their own hidden switches by msprof long option name, so this tool
+// maps a name back to its argument id. Names this tool does not provide are reported and skipped
+// instead of failing the whole profiling command.
+MsprofArgsType CliNameToArg(const std::string& name)
+{
+    for (uint32_t i = 0; i < NR_ARGS; i++) {
+        if (LONG_OPTIONS[i].name == nullptr) {
+            continue;
+        }
+        std::string option = LONG_OPTIONS[i].name;
+        if (!option.empty() && option.back() == ' ') {
+            option.pop_back();
+        }
+        if (option == name) {
+            return static_cast<MsprofArgsType>(LONG_OPTIONS[i].val);
+        }
+    }
+    return NR_ARGS;
+}
+
+void AppendHiddenCliArgs(std::vector<MsprofArgsType>& argsList)
+{
+    for (const auto& name : Platform::instance()->GetHiddenCliArgs()) {
+        MsprofArgsType arg = CliNameToArg(name);
+        if (arg == NR_ARGS) {
+            MSPROF_LOGE("Ignore the hidden argument %s that this tool does not provide.", name.c_str());
+            continue;
+        }
+        if (!HasArg(argsList, arg)) {
+            argsList.push_back(arg);
+        }
+    }
+}
+
+bool IsArgSupportedByFeature(const std::string& argName)
+{
+    static const std::map<std::string, std::string> argFeatureMap = {
+        {"ascendcl", "ascendcl"},
+        {"runtime-api", "runtime_api"},
+        {"task-tsfw", "task_tsfw"},
+        {"task-trace", "task_trace"},
+        {"task-memory", "task_memory"},
+        {"ge-api", "ge_api"},
+        {"aicpu", "aicpu"},
+        {"msproftx", "msproftx"},
+        {"hccl", "hccl"},
+        {"task-block", "task_block"},
+        {"instr-profiling", "instr_profiling"},
+        {"instr-profiling-freq", "instr_profiling"},
+        {"l2", "l2"},
+        {"llc-profiling", "llc_profiling"},
+        {"sys-hardware-mem", "sys_hardware_mem_freq"},
+        {"sys-hardware-mem-freq", "sys_hardware_mem_freq"},
+        {"sys-io-profiling", "sys_io_sampling_freq"},
+        {"sys-io-sampling-freq", "sys_io_sampling_freq"},
+        {"sys-interconnection-profiling", "sys_interconnection_freq"},
+        {"sys-interconnection-freq", "sys_interconnection_freq"},
+        {"dvpp-profiling", "dvpp_freq"},
+        {"dvpp-freq", "dvpp_freq"},
+        {"sys-lp", "sys_lp"},
+        {"sys-lp-freq", "sys_lp_freq"},
+        {"sys-mem-serviceflow", "sys_mem_serviceflow"},
+        {"host-sys", "host_sys"},
+        {"host-sys-pid", "host_sys"},
+        {"host-sys-usage", "host_sys_usage"},
+        {"host-sys-usage-freq", "host_sys_usage_freq"}};
+    auto iter = argFeatureMap.find(argName);
+    if (iter != argFeatureMap.end()) {
+        return Platform::instance()->CheckIfSupport(iter->second);
+    }
+
+    static const std::map<std::string, ::Dvvp::Collect::Platform::PlatformFeature> argPlatformFeatureMap = {
+        {"ai-vector-core", PLATFORM_AIV_INDEPENDENT_CONFIG},
+        {"aiv-mode", PLATFORM_AIV_INDEPENDENT_CONFIG},
+        {"aiv-metrics", PLATFORM_AIV_INDEPENDENT_CONFIG},
+        {"aiv-freq", PLATFORM_AIV_INDEPENDENT_CONFIG}};
+    auto featureIter = argPlatformFeatureMap.find(argName);
+    return featureIter == argPlatformFeatureMap.end() || Platform::instance()->CheckIfSupport(featureIter->second);
+}
 
 InputParser::InputParser() { MSVP_MAKE_SHARED0(params_, analysis::dvvp::message::ProfileParams, return); }
 
@@ -1332,33 +1419,7 @@ void InputParser::InitOpenBlackLists(std::map<PlatformType, std::vector<MsprofAr
 #ifndef BUILD_PROFILING_OPEN_PROJECT
 void InputParser::InitClosedBlackLists(std::map<PlatformType, std::vector<MsprofArgsType>>& platformArgsType) const
 {
-    std::vector<MsprofArgsType> mdcBlackSwith = {
-        ARGS_IO_PROFILING,
-        ARGS_IO_SAMPLING_FREQ,
-        ARGS_INTERCONNECTION_FREQ,
-        ARGS_INTERCONNECTION_PROFILING,
-        ARGS_AICPU,
-        ARGS_TASK_BLOCK,
-        ARGS_PYTHON_PATH,
-        ARGS_SUMMARY_FORMAT,
-        ARGS_PARSE,
-        ARGS_QUERY,
-        ARGS_EXPORT,
-        ARGS_EXPORT_ITERATION_ID,
-        ARGS_EXPORT_MODEL_ID,
-        ARGS_INSTR_PROFILING,
-        ARGS_INSTR_PROFILING_FREQ,
-        ARGS_DYNAMIC_PROF,
-        ARGS_DYNAMIC_PROF_PID,
-        ARGS_ANALYZE,
-        ARGS_RULE,
-        ARGS_DELAY_PROF,
-        ARGS_DURATION_PROF,
-        ARGS_SYS_LOW_POWER,
-        ARGS_SYS_LOW_POWER_FREQ,
-        ARGS_MEM_SERVICEFLOW,
-        ARGS_OPTYPE};
-    std::vector<MsprofArgsType> mdcMiniV3BlackSwith = {
+    std::vector<MsprofArgsType> tinyBlackSwith = {
         ARGS_AICPU,
         ARGS_AIV,
         ARGS_AIV_FREQ,
@@ -1391,49 +1452,12 @@ void InputParser::InitClosedBlackLists(std::map<PlatformType, std::vector<Msprof
         ARGS_SYS_LOW_POWER,
         ARGS_SYS_LOW_POWER_FREQ,
         ARGS_OPTYPE};
-    std::vector<MsprofArgsType> mdcLiteBlackSwith = {
-        ARGS_AIV,
-        ARGS_AIV_FREQ,
-        ARGS_AIV_MODE,
-        ARGS_AIV_METRICS,
-        ARGS_IO_PROFILING,
-        ARGS_IO_SAMPLING_FREQ,
-        ARGS_INTERCONNECTION_FREQ,
-        ARGS_INTERCONNECTION_PROFILING,
-        ARGS_AICPU,
-        ARGS_TASK_BLOCK,
-        ARGS_PYTHON_PATH,
-        ARGS_SUMMARY_FORMAT,
-        ARGS_PARSE,
-        ARGS_QUERY,
-        ARGS_EXPORT,
-        ARGS_EXPORT_ITERATION_ID,
-        ARGS_EXPORT_MODEL_ID,
-        ARGS_INSTR_PROFILING,
-        ARGS_INSTR_PROFILING_FREQ,
-        ARGS_DYNAMIC_PROF,
-        ARGS_DYNAMIC_PROF_PID,
-        ARGS_ANALYZE,
-        ARGS_RULE,
-        ARGS_DELAY_PROF,
-        ARGS_DURATION_PROF,
-        ARGS_SYS_LOW_POWER,
-        ARGS_SYS_LOW_POWER_FREQ,
-        ARGS_MEM_SERVICEFLOW,
-        ARGS_OPTYPE};
     std::vector<MsprofArgsType> davidBlackSwith = {ARGS_AIV, ARGS_AIV_FREQ, ARGS_AIV_MODE, ARGS_AIV_METRICS};
     std::vector<MsprofArgsType> david121BlackSwith = {ARGS_AIV, ARGS_AIV_FREQ, ARGS_AIV_MODE, ARGS_AIV_METRICS};
-    std::vector<MsprofArgsType> mdcV2BlackSwith = {ARGS_AIV, ARGS_AIV_FREQ, ARGS_AIV_MODE, ARGS_AIV_METRICS};
-    std::vector<MsprofArgsType> mdcLiteV2BlackSwith = {ARGS_AIV, ARGS_AIV_FREQ, ARGS_AIV_MODE, ARGS_AIV_METRICS};
-    platformArgsType[PlatformType::MDC_TYPE] = mdcBlackSwith;
-    platformArgsType[PlatformType::CHIP_MDC_MINI_V3] = mdcMiniV3BlackSwith;
-    platformArgsType[PlatformType::CHIP_TINY_V1] = mdcMiniV3BlackSwith;
-    platformArgsType[PlatformType::CHIP_MDC_LITE] = mdcLiteBlackSwith;
+    platformArgsType[PlatformType::CHIP_TINY_V1] = tinyBlackSwith;
     platformArgsType[PlatformType::CHIP_CLOUD_V3] = davidBlackSwith;
     platformArgsType[PlatformType::CHIP_CLOUD_V3_LITE] = davidBlackSwith;
     platformArgsType[PlatformType::CHIP_CLOUD_V4] = david121BlackSwith;
-    platformArgsType[PlatformType::CHIP_MDC_V2] = mdcV2BlackSwith;
-    platformArgsType[PlatformType::CHIP_MDC_LITE_V2] = mdcLiteV2BlackSwith;
 }
 #endif // BUILD_PROFILING_OPEN_PROJECT
 
@@ -1445,7 +1469,10 @@ std::vector<MsprofArgsType> InputParser::GeneratePlatSwithList() const
 #ifndef BUILD_PROFILING_OPEN_PROJECT
     InitClosedBlackLists(platformArgsType);
 #endif // BUILD_PROFILING_OPEN_PROJECT
-    return platformArgsType[platformType];
+    std::vector<MsprofArgsType> platSwithList = platformArgsType[platformType];
+    // Extension platforms contribute their own hidden switches on top of the table above.
+    AppendHiddenCliArgs(platSwithList);
+    return platSwithList;
 }
 
 int32_t InputParser::CheckSampleModeValid(const struct MsprofCmdInfo& cmdInfo, int32_t opt) const
@@ -1469,7 +1496,7 @@ int32_t InputParser::CheckSampleModeValid(const struct MsprofCmdInfo& cmdInfo, i
     }
 
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-    if (ConfigManager::instance()->GetPlatformType() == PlatformType::MDC_TYPE) {
+    if (Platform::instance()->CheckIfSupport(::Dvvp::Collect::Platform::PLATFORM_AIV_INDEPENDENT_CONFIG)) {
         params_->aiv_profiling_mode =
             (opt == ARGS_AIV_MODE) ? cmdInfo.args[ARGS_AIV_MODE] : params_->aiv_profiling_mode;
     } else {
@@ -1510,7 +1537,7 @@ int32_t InputParser::CheckAiCoreMetricsValid(const struct MsprofCmdInfo& cmdInfo
     }
     params_->ai_core_metrics = (opt == ARGS_AIC_METRICS) ? cmdInfo.args[opt] : params_->ai_core_metrics;
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-    if (ConfigManager::instance()->GetPlatformType() == PlatformType::MDC_TYPE) {
+    if (Platform::instance()->CheckIfSupport(::Dvvp::Collect::Platform::PLATFORM_AIV_INDEPENDENT_CONFIG)) {
         params_->aiv_metrics = (opt == ARGS_AIV_METRICS) ? cmdInfo.args[opt] : params_->aiv_metrics;
     } else {
         params_->aiv_metrics = (opt == ARGS_AIC_METRICS) ? cmdInfo.args[opt] : params_->aiv_metrics;
@@ -1553,7 +1580,7 @@ int32_t InputParser::CheckLlcProfilingIsValid(const std::string& llcProfiling) c
 void InputParser::AiCoreFreqCheckValid(const int32_t intervalTransfer)
 {
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-    if (ConfigManager::instance()->GetPlatformType() == PlatformType::MDC_TYPE) {
+    if (Platform::instance()->CheckIfSupport(::Dvvp::Collect::Platform::PLATFORM_AIV_INDEPENDENT_CONFIG)) {
         params_->aicore_sampling_interval = intervalTransfer;
     } else {
         params_->aicore_sampling_interval = intervalTransfer;
@@ -1971,6 +1998,17 @@ void ArgsManager::AddArgs()
     AddDynProfArgs();
     AddDelayDurationArgs();
     AddScaleArgs();
+    FilterArgsByBlackSwitch();
+}
+
+// Unsupported platform capability arguments do not show in help.
+void ArgsManager::FilterArgsByBlackSwitch()
+{
+    argsList_.erase(
+        std::remove_if(
+            argsList_.begin(), argsList_.end(),
+            [](const Args& args) { return !IsArgSupportedByFeature(args.GetName()); }),
+        argsList_.end());
 }
 
 void ArgsManager::AddHardWareMemArgs()
@@ -2082,8 +2120,8 @@ void ArgsManager::AddStorageLimitArgs()
 void ArgsManager::AddModelExecutionArgs()
 {
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-    if (ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_MDC_MINI_V3 ||
-        ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_TINY_V1) {
+    // 独立tiny平台不展示；扩展平台经参数黑名单隐藏（黑名单参数在MsprofCmdUsage后统一过滤）
+    if (ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_TINY_V1) {
         return;
     }
 #endif // BUILD_PROFILING_OPEN_PROJECT
@@ -2098,10 +2136,8 @@ void ArgsManager::AddModelExecutionArgs()
 void ArgsManager::AddAicpuArgs()
 {
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-    if (ConfigManager::instance()->GetPlatformType() == PlatformType::MDC_TYPE ||
-        ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_MDC_LITE ||
-        ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_MDC_MINI_V3 ||
-        ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_TINY_V1) {
+    // 独立tiny平台不展示；扩展平台经参数黑名单隐藏（黑名单参数在MsprofCmdUsage后统一过滤）
+    if (ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_TINY_V1) {
         return;
     }
 #endif // BUILD_PROFILING_OPEN_PROJECT
@@ -2112,8 +2148,7 @@ void ArgsManager::AddAicpuArgs()
 void ArgsManager::AddAivArgs()
 {
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-    PlatformType type = ConfigManager::instance()->GetPlatformType();
-    if (type != PlatformType::MDC_TYPE) {
+    if (!Platform::instance()->CheckIfSupport(::Dvvp::Collect::Platform::PLATFORM_AIV_INDEPENDENT_CONFIG)) {
         return;
     }
     Args aiv = {"ai-vector-core", "Turn on / off the ai vector core profiling, the default value is on.", ON};
@@ -2147,10 +2182,8 @@ void ArgsManager::AddIoArgs()
 {
     if (ConfigManager::instance()->GetPlatformType() == PlatformType::DC_TYPE
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-        || ConfigManager::instance()->GetPlatformType() == PlatformType::MDC_TYPE ||
-        ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_MDC_MINI_V3 ||
-        ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_MDC_LITE ||
-        ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_TINY_V1
+        || ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_TINY_V1 ||
+        !Platform::instance()->CheckIfSupport(::Dvvp::Collect::Platform::PLATFORM_SYS_DEVICE_NIC)
 #endif // BUILD_PROFILING_OPEN_PROJECT
     ) {
         return;
@@ -2186,8 +2219,6 @@ void ArgsManager::AddInterArgs()
     if (ConfigManager::instance()->GetPlatformType() == PlatformType::MINI_V3_TYPE
 #ifndef BUILD_PROFILING_OPEN_PROJECT
         || ConfigManager::instance()->GetPlatformType() == PlatformType::MINI_TYPE ||
-        ConfigManager::instance()->GetPlatformType() == PlatformType::MDC_TYPE ||
-        ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_MDC_MINI_V3 ||
         ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_TINY_V1
 #endif // BUILD_PROFILING_OPEN_PROJECT
     ) {

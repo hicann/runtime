@@ -948,7 +948,7 @@ TEST_F(DRIVER_AI_DRV_API_TEST, MsprofDrvApiGeneralServerNoLib)
     unsigned int len = 0;
     EXPECT_EQ(DRV_ERROR_NOT_SUPPORT, api.halProfDataFlush(0, 0, &len));
 
-    // drv event 线程路径涉及的 5 个接口（原 prof_drv_event.cpp 直连弱符号，改造遗漏导致 MDC 空指针
+    // drv event 线程路径涉及的 5 个接口（原 prof_drv_event.cpp 直连弱符号，改造遗漏导致空指针
     // coredump），改为经 MsprofDrvApi dlopen 适配层调用；无驱动库时统一降级 DRV_ERROR_NOT_SUPPORT。
     EXPECT_EQ(DRV_ERROR_NOT_SUPPORT, api.halEschedAttachDevice(0));
     EXPECT_EQ(DRV_ERROR_NOT_SUPPORT, api.halEschedDettachDevice(0));

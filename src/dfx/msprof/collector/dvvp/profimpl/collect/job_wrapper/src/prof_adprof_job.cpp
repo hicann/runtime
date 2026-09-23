@@ -239,13 +239,7 @@ int32_t ProfAdprofJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
     }
 
     if (!Platform::instance()->CheckIfSupportAdprof(static_cast<uint32_t>(cfg->comParams->devId)) ||
-        (Platform::instance()->GetPlatformType() == CHIP_MINI_V3)
-#ifndef BUILD_PROFILING_OPEN_PROJECT
-        || (Platform::instance()->GetPlatformType() == CHIP_MDC) ||
-        (Platform::instance()->GetPlatformType() == CHIP_MDC_LITE) ||
-        (Platform::instance()->GetPlatformType() == CHIP_MDC_MINI_V3)
-#endif // BUILD_PROFILING_OPEN_PROJECT
-    ) {
+        !Platform::instance()->CheckIfSupport(::Dvvp::Collect::Platform::PLATFORM_ADPROF)) {
         MSPROF_LOGI("Drv version is not supported adprof");
         return PROFILING_FAILED;
     }

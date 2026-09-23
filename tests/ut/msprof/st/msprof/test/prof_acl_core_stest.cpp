@@ -2783,7 +2783,7 @@ TEST_F(MSPROF_ACL_CORE_STEST, ProfAclStartMultiDevice)
         ProfConfigStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &config, sizeof(config)));
     EXPECT_EQ(true, ProfAclMgr::instance()->devTasks_.empty());
 
-    // 1951 mdc
+    // 1951 rc
 #ifndef BUILD_PROFILING_OPEN_PROJECT
     GlobalMockObject::verify();
     Analysis::Dvvp::Common::Config::ConfigManager::instance()->Init();
@@ -2797,7 +2797,7 @@ TEST_F(MSPROF_ACL_CORE_STEST, ProfAclStartMultiDevice)
     MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::WaitAllDeviceResponse).stubs().will(returnValue(PROFILING_SUCCESS));
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
-        .will(returnValue(PlatformType::MDC_TYPE));
+        .will(returnValue(static_cast<PlatformType>(2)));
     MOCKER_CPP(&ProfAclMgr::StartUploaderDumper).stubs().will(returnValue(PROFILING_SUCCESS));
     Platform::instance()->Uninit();
     Platform::instance()->Init();
@@ -2810,11 +2810,11 @@ TEST_F(MSPROF_ACL_CORE_STEST, ProfAclStartMultiDevice)
     EXPECT_EQ(
         ACL_SUCCESS,
         ProfConfigStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &config, sizeof(config)));
-    std::shared_ptr<analysis::dvvp::message::ProfileParams> paramMdc(new analysis::dvvp::message::ProfileParams());
-    ProfAclMgr::ProfAclTaskInfo taskInfoMdc = {1, config.profSwitch, paramMdc};
-    ProfAclMgr::instance()->devTasks_[0] = taskInfoMdc;
-    taskInfoMdc.count = 1;
-    ProfAclMgr::instance()->devTasks_[64] = taskInfoMdc;
+    std::shared_ptr<analysis::dvvp::message::ProfileParams> paramRc(new analysis::dvvp::message::ProfileParams());
+    ProfAclMgr::ProfAclTaskInfo taskInfoRc = {1, config.profSwitch, paramRc};
+    ProfAclMgr::instance()->devTasks_[0] = taskInfoRc;
+    taskInfoRc.count = 1;
+    ProfAclMgr::instance()->devTasks_[64] = taskInfoRc;
     EXPECT_EQ(
         ACL_SUCCESS,
         ProfConfigStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &config, sizeof(config)));
@@ -2823,7 +2823,7 @@ TEST_F(MSPROF_ACL_CORE_STEST, ProfAclStartMultiDevice)
 }
 
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-TEST_F(MSPROF_ACL_CORE_STEST, ProfAclStartMdcMiniV3)
+TEST_F(MSPROF_ACL_CORE_STEST, ProfAclStartRcMiniV3)
 {
     GlobalMockObject::verify();
     Analysis::Dvvp::Common::Config::ConfigManager::instance()->Init();
@@ -2837,7 +2837,7 @@ TEST_F(MSPROF_ACL_CORE_STEST, ProfAclStartMdcMiniV3)
     MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::WaitAllDeviceResponse).stubs().will(returnValue(PROFILING_SUCCESS));
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
-        .will(returnValue(PlatformType::CHIP_MDC_MINI_V3));
+        .will(returnValue(static_cast<PlatformType>(11)));
     MOCKER_CPP(&ProfAclMgr::StartUploaderDumper).stubs().will(returnValue(PROFILING_SUCCESS));
 
     using namespace Msprofiler::Api;
@@ -2854,12 +2854,11 @@ TEST_F(MSPROF_ACL_CORE_STEST, ProfAclStartMdcMiniV3)
     EXPECT_EQ(
         ACL_SUCCESS,
         ProfConfigStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &config, sizeof(config)));
-    std::shared_ptr<analysis::dvvp::message::ProfileParams> paramMdcMiniV3(
-        new analysis::dvvp::message::ProfileParams());
-    ProfAclMgr::ProfAclTaskInfo taskInfoMdcMiniV3 = {1, config.profSwitch, paramMdcMiniV3};
-    ProfAclMgr::instance()->devTasks_[0] = taskInfoMdcMiniV3;
-    taskInfoMdcMiniV3.count = 1;
-    ProfAclMgr::instance()->devTasks_[64] = taskInfoMdcMiniV3;
+    std::shared_ptr<analysis::dvvp::message::ProfileParams> paramRcMiniV3(new analysis::dvvp::message::ProfileParams());
+    ProfAclMgr::ProfAclTaskInfo taskInfoRcMiniV3 = {1, config.profSwitch, paramRcMiniV3};
+    ProfAclMgr::instance()->devTasks_[0] = taskInfoRcMiniV3;
+    taskInfoRcMiniV3.count = 1;
+    ProfAclMgr::instance()->devTasks_[64] = taskInfoRcMiniV3;
     EXPECT_EQ(
         ACL_SUCCESS,
         ProfConfigStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &config, sizeof(config)));
@@ -2869,10 +2868,10 @@ TEST_F(MSPROF_ACL_CORE_STEST, ProfAclStartMdcMiniV3)
     EXPECT_EQ(
         ACL_SUCCESS,
         ProfConfigStart(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &config, sizeof(config)));
-    taskInfoMdcMiniV3 = {1, config.profSwitch, paramMdcMiniV3};
-    ProfAclMgr::instance()->devTasks_[0] = taskInfoMdcMiniV3;
-    taskInfoMdcMiniV3.count = 1;
-    ProfAclMgr::instance()->devTasks_[64] = taskInfoMdcMiniV3;
+    taskInfoRcMiniV3 = {1, config.profSwitch, paramRcMiniV3};
+    ProfAclMgr::instance()->devTasks_[0] = taskInfoRcMiniV3;
+    taskInfoRcMiniV3.count = 1;
+    ProfAclMgr::instance()->devTasks_[64] = taskInfoRcMiniV3;
     EXPECT_EQ(
         ACL_SUCCESS,
         ProfConfigStop(static_cast<uint32_t>(ProfConfigType::PROF_CONFIG_ACL_API), &config, sizeof(config)));

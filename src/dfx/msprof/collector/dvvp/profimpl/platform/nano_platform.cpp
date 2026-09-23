@@ -24,6 +24,7 @@ NanoPlatform::NanoPlatform()
     supportedFeature_ = {PLATFORM_TASK_SCALAR_RATIO_PMU, PLATFORM_TASK_PU_PMU,       PLATFORM_TASK_PSC_PMU,
                          PLATFORM_TASK_MEMORY_PMU,       PLATFORM_TASK_MEMORYUB_PMU, PLATFORM_TASK_TRACE,
                          PLATFORM_TASK_METRICS,          PLATFORM_TASK_SWITCH};
+    supportedFeature_.insert(PLATFORM_ADPROF);
 }
 
 std::string NanoPlatform::GetScalarMetrics() { return NANO_SCALAR_RATIO; }

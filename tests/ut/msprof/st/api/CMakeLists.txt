@@ -27,13 +27,14 @@ set(TEST_STUB_SRC
     ${API_STUB_DIR}/device/modena_device_simulator.cpp
     ${API_STUB_DIR}/device/cloud_device_simulator.cpp
     ${API_STUB_DIR}/device/dc_device_simulator.cpp
-    ${API_STUB_DIR}/device/mdc_device_simulator.cpp
-    ${API_STUB_DIR}/device/mdc_lite_device_simulator.cpp
-    ${API_STUB_DIR}/device/mdc_lite_v2_device_simulator.cpp
+    ${API_STUB_DIR}/device/rc_device_simulator.cpp
+    ${API_STUB_DIR}/device/rc_lite_device_simulator.cpp
+    ${API_STUB_DIR}/device/rc_lite_v2_device_simulator.cpp
+    ${API_STUB_DIR}/device/rc_v2_device_simulator.cpp
     ${API_STUB_DIR}/device/mini_device_simulator.cpp
     ${API_STUB_DIR}/device/tiny_device_simulator.cpp
     ${API_STUB_DIR}/device/nano_device_simulator.cpp
-    ${API_STUB_DIR}/device/mdc_mini_v3_device_simulator.cpp
+    ${API_STUB_DIR}/device/rc_mini_v3_device_simulator.cpp
     ${API_STUB_DIR}/device/mini_stars_device_simulator.cpp
     ${API_STUB_DIR}/host/msprof_stub.cpp
     ${API_STUB_DIR}/aicpu_report_hdc.cpp
@@ -201,11 +202,11 @@ if(NOT BUILD_PROFILING_OPEN_PROJECT)
         ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/david_lite_platform.cpp
         ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/david_v121_platform.cpp
         ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/modena_platform.cpp
-        ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_lite_platform.cpp
-        ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_lite_v2_platform.cpp
-        ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_mini_v3_platform.cpp
-        ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_platform.cpp
-        ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_v2_platform.cpp
+        ${API_STUB_DIR}/platform/rc_lite_platform_stub.cpp
+        ${API_STUB_DIR}/platform/rc_lite_v2_platform_stub.cpp
+        ${API_STUB_DIR}/platform/rc_mini_v3_platform_stub.cpp
+        ${API_STUB_DIR}/platform/rc_platform_stub.cpp
+        ${API_STUB_DIR}/platform/rc_v2_platform_stub.cpp
         ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mini_platform.cpp
         ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/nano_platform.cpp
         ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/tiny_v1_platform.cpp
@@ -273,6 +274,7 @@ set(INCLUDE_DIR
     data
     testcase/common
     ${API_STUB_DIR}
+    ${API_STUB_DIR}/platform
     ${API_STUB_DIR}/device
     ${API_STUB_DIR}/host
     ${TOP_DIR}/inc/driver
@@ -518,21 +520,21 @@ set_target_properties(api_mini_v3_stest
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-####################### api_mdc_mini_v3_stest ###########################
+####################### api_rc_mini_v3_stest ###########################
 if(NOT BUILD_PROFILING_OPEN_PROJECT)
-add_executable(api_mdc_mini_v3_stest
+add_executable(api_rc_mini_v3_stest
     ${TEST_STUB_SRC}
     ${TEST_SRC}
     ${SRC_FILE}
     ${CppPath}
-    testcase/api_mdc_mini_v3_stest.cpp
+    testcase/api_rc_mini_v3_stest.cpp
 )
 
-target_include_directories(api_mdc_mini_v3_stest PRIVATE
+target_include_directories(api_rc_mini_v3_stest PRIVATE
     ${INCLUDE_DIR}
 )
 
-target_compile_options(api_mdc_mini_v3_stest PRIVATE
+target_compile_options(api_rc_mini_v3_stest PRIVATE
     -g
     -Wall
     -std=c++14
@@ -540,22 +542,22 @@ target_compile_options(api_mdc_mini_v3_stest PRIVATE
     -Werror
 )
 
-target_compile_definitions(api_mdc_mini_v3_stest PRIVATE
+target_compile_definitions(api_rc_mini_v3_stest PRIVATE
     C_SEC
     __PROF_LLT
     google=ascend_private
     LLT_DATA_DIR="${LLT_DATA_DIR}"
     API_STEST
     PLATFORM_TYPE=11
-    SOC_TYPE="mdc_mini_v3"
+    SOC_TYPE="rc_mini_v3"
 )
 
-target_link_options(api_mdc_mini_v3_stest PRIVATE
+target_link_options(api_rc_mini_v3_stest PRIVATE
    -ldl
    -lpthread
 )
 
-target_link_libraries(api_mdc_mini_v3_stest PRIVATE
+target_link_libraries(api_rc_mini_v3_stest PRIVATE
     $<BUILD_INTERFACE:intf_llt_pub>
     $<BUILD_INTERFACE:mmpa_headers>
     $<BUILD_INTERFACE:slog_headers>
@@ -566,9 +568,9 @@ target_link_libraries(api_mdc_mini_v3_stest PRIVATE
     json
 )
 
-set_target_properties(api_mdc_mini_v3_stest
+set_target_properties(api_rc_mini_v3_stest
     PROPERTIES
-    OUTPUT_NAME api_mdc_mini_v3_stest
+    OUTPUT_NAME api_rc_mini_v3_stest
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 endif()
@@ -630,21 +632,21 @@ set_target_properties(api_cloud_stest
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-####################### api_mdc_stest ###########################
+####################### api_rc_stest ###########################
 if(NOT BUILD_PROFILING_OPEN_PROJECT)
-add_executable(api_mdc_stest
+add_executable(api_rc_stest
     ${TEST_STUB_SRC}
     ${TEST_SRC}
     ${SRC_FILE}
     ${CppPath}
-    testcase/acl_api/api_mdc_stest.cpp
+    testcase/acl_api/api_rc_stest.cpp
 )
 
-target_include_directories(api_mdc_stest PRIVATE
+target_include_directories(api_rc_stest PRIVATE
     ${INCLUDE_DIR}
 )
 
-target_compile_options(api_mdc_stest PRIVATE
+target_compile_options(api_rc_stest PRIVATE
     -g
     -Wall
     -std=c++14
@@ -652,22 +654,22 @@ target_compile_options(api_mdc_stest PRIVATE
     -Werror
 )
 
-target_compile_definitions(api_mdc_stest PRIVATE
+target_compile_definitions(api_rc_stest PRIVATE
     C_SEC
     __PROF_LLT
     google=ascend_private
     LLT_DATA_DIR="${LLT_DATA_DIR}"
     API_STEST
     PLATFORM_TYPE=2
-    SOC_TYPE="mdc"
+    SOC_TYPE="rc"
 )
 
-target_link_options(api_mdc_stest PRIVATE
+target_link_options(api_rc_stest PRIVATE
    -ldl
    -lpthread
 )
 
-target_link_libraries(api_mdc_stest PRIVATE
+target_link_libraries(api_rc_stest PRIVATE
     $<BUILD_INTERFACE:intf_llt_pub>
     $<BUILD_INTERFACE:mmpa_headers>
     $<BUILD_INTERFACE:slog_headers>
@@ -678,9 +680,9 @@ target_link_libraries(api_mdc_stest PRIVATE
     json
 )
 
-set_target_properties(api_mdc_stest
+set_target_properties(api_rc_stest
     PROPERTIES
-    OUTPUT_NAME api_mdc_stest
+    OUTPUT_NAME api_rc_stest
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 endif()
@@ -694,9 +696,9 @@ add_executable(acl_api_stest
     ${CppPath}
     # testcase/api_milan_stest.cpp
     testcase/acl_api/api_milan_stest.cpp
-    testcase/acl_api/api_mdc_stest.cpp
+    testcase/acl_api/api_rc_stest.cpp
     testcase/acl_api/api_cloud_stest.cpp
-    testcase/acl_api/api_mdc_mini_v3_stest.cpp
+    testcase/acl_api/api_rc_mini_v3_stest.cpp
     testcase/acl_api/api_dc_stest.cpp
     testcase/acl_api/api_mini_v3_stest.cpp
 )
@@ -811,6 +813,62 @@ set_target_properties(api_modena_stest
     OUTPUT_NAME api_modena_stest
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
+
+####################### api_rc_v2_stest ###########################
+
+if(NOT BUILD_PROFILING_OPEN_PROJECT)
+add_executable(api_rc_v2_stest
+    ${TEST_STUB_SRC}
+    ${TEST_SRC}
+    ${SRC_FILE}
+    ${CppPath}
+    testcase/acl_api/api_rc_v2_stest.cpp
+)
+
+target_include_directories(api_rc_v2_stest PRIVATE
+    ${INCLUDE_DIR}
+)
+
+target_compile_options(api_rc_v2_stest PRIVATE
+    -g
+    -Wall
+    -std=c++14
+    -fno-access-control
+    -Werror
+)
+
+target_compile_definitions(api_rc_v2_stest PRIVATE
+    C_SEC
+    __PROF_LLT
+    google=ascend_private
+    LLT_DATA_DIR="${LLT_DATA_DIR}"
+    API_STEST
+    PLATFORM_TYPE=17
+    SOC_TYPE="rc_v2"
+)
+
+target_link_options(api_rc_v2_stest PRIVATE
+   -ldl
+   -lpthread
+)
+
+target_link_libraries(api_rc_v2_stest PRIVATE
+    $<BUILD_INTERFACE:intf_llt_pub>
+    $<BUILD_INTERFACE:mmpa_headers>
+    $<BUILD_INTERFACE:slog_headers>
+    $<BUILD_INTERFACE:adump_headers>
+    profapi_share_st
+    ascend_protobuf_static
+    c_sec
+    json
+)
+
+set_target_properties(api_rc_v2_stest
+    PROPERTIES
+    OUTPUT_NAME api_rc_v2_stest
+    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+endif()
 
 target_include_directories(api_david_v121_stest PRIVATE
     ${INCLUDE_DIR}

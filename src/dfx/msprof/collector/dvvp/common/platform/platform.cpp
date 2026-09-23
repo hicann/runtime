@@ -75,6 +75,9 @@ int32_t Platform::Init()
     platform_ = PlatformReflection::CreatePlatformClass(type);
     if (platform_ == nullptr) {
         MSPROF_LOGE("Profiling platform init failed");
+    } else {
+        ConfigManager::instance()->UpdateFrequency(
+            platform_->GetDeviceOscDefaultFreq(), platform_->GetAicDefaultFreq());
     }
     return PROFILING_SUCCESS;
 }
@@ -213,6 +216,19 @@ bool Platform::CheckIfSupport(const std::string feature) const
         }
     }
     return false;
+}
+
+std::vector<std::string> Platform::GetHiddenCliArgs() const
+{
+    if (platform_ == nullptr) {
+        return {};
+    }
+    return platform_->GetHiddenCliArgs();
+}
+
+bool Platform::IsSupportLlcProfiling() const
+{
+    return ConfigManager::instance()->IsDriverSupportLlc() || CheckIfSupport(PLATFORM_SYS_DEVICE_LLC_EXT);
 }
 
 void Platform::SetSubscribeFeature()
@@ -368,6 +384,14 @@ uint16_t Platform::GetMaxMonitorNumber() const
         return MAX_COLLECT_MONITOR_NUM;
     }
     return platform_->GetMaxMonitorNumber();
+}
+
+int32_t Platform::GetMaxAiPmuEvent() const
+{
+    if (platform_ == nullptr) {
+        return 0;
+    }
+    return platform_->GetMaxAiPmuEvent();
 }
 
 std::vector<BiuPerfChannelInfo> Platform::GetBiuPerfChannelInfos(

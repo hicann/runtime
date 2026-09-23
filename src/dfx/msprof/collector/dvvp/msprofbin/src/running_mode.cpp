@@ -1548,24 +1548,18 @@ int32_t RunningMode::HandleProfilingParams() const
     std::string aiVectMetrics;
     if (ConfigManager::instance()->GetPlatformType() == PlatformType::MINI_V3_TYPE
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-        || ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_MDC_MINI_V3 ||
-        ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_TINY_V1 ||
-        ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_MDC_LITE
+        || ConfigManager::instance()->GetPlatformType() == PlatformType::CHIP_TINY_V1
 #endif // BUILD_PROFILING_OPEN_PROJECT
-    ) {
+        || Platform::instance()->CheckIfSupport(::Dvvp::Collect::Platform::PLATFORM_AICORE_EXCT_DEFAULT)) {
         aiCoreMetrics = params_->ai_core_metrics.empty() ? PIPE_EXECUTION_UTILIZATION : params_->ai_core_metrics;
     } else {
         aiCoreMetrics = params_->ai_core_metrics.empty() ? PIPE_UTILIZATION : params_->ai_core_metrics;
     }
-#ifndef BUILD_PROFILING_OPEN_PROJECT
-    if (ConfigManager::instance()->GetPlatformType() == PlatformType::MDC_TYPE) {
+    if (Platform::instance()->CheckIfSupport(::Dvvp::Collect::Platform::PLATFORM_AIV_INDEPENDENT_CONFIG)) {
         aiVectMetrics = params_->aiv_metrics.empty() ? PIPE_UTILIZATION : params_->aiv_metrics;
     } else {
         aiVectMetrics = aiCoreMetrics;
     }
-#else
-    aiVectMetrics = aiCoreMetrics;
-#endif // BUILD_PROFILING_OPEN_PROJECT
     ConfigManager::instance()->GetVersionSpecificMetrics(aiCoreMetrics);
     int32_t ret = Platform::instance()->GetAicoreEvents(aiCoreMetrics, params_->ai_core_profiling_events);
     if (ret != PROFILING_SUCCESS) {
@@ -1584,9 +1578,8 @@ int32_t RunningMode::HandleProfilingParams() const
 
 void AppMode::SetDefaultParamsByPlatformType() const
 {
-    auto platformType = ConfigManager::instance()->GetPlatformType();
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-    if (platformType == PlatformType::MDC_TYPE) {
+    if (Platform::instance()->CheckIfSupport(::Dvvp::Collect::Platform::PLATFORM_AIV_INDEPENDENT_CONFIG)) {
         if (params_->aiv_profiling.empty()) {
             params_->aiv_profiling = "on";
         }

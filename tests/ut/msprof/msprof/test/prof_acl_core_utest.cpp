@@ -3808,20 +3808,51 @@ TEST_F(MSPROF_ACL_CORE_UTEST, AicoreMetricsEnumToName)
     EXPECT_EQ("MemoryUB", metrics);
 
     Msprofiler::Api::ProfAclMgr::instance()->AicoreMetricsEnumToName(PROF_AICORE_L2_CACHE, metrics);
-    EXPECT_EQ("L2Cache", metrics);
+    EXPECT_EQ("MemoryUB", metrics);
 
     Msprofiler::Api::ProfAclMgr::instance()->AicoreMetricsEnumToName(PROF_AICORE_PIPE_EXECUTE_UTILIZATION, metrics);
     EXPECT_EQ("PipelineExecuteUtilization", metrics);
 
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-    MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
-        .stubs()
-        .will(returnValue(Analysis::Dvvp::Common::Config::PlatformType::MDC_TYPE));
-    metrics = "";
+    // 默认平台(MINI)下L2Cache枚举走报错路径，name保持前值
     Msprofiler::Api::ProfAclMgr::instance()->AicoreMetricsEnumToName(PROF_AICORE_L2_CACHE, metrics);
-    EXPECT_EQ("", metrics);
+    EXPECT_EQ("PipelineExecuteUtilization", metrics);
 #endif
 }
+
+#ifndef BUILD_PROFILING_OPEN_PROJECT
+TEST_F(MSPROF_ACL_CORE_UTEST, AicoreMetricsEnumToNameRcL2CacheByFeature)
+{
+    std::string metrics;
+    GlobalMockObject::verify();
+    MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
+        .stubs()
+        .will(returnValue(static_cast<PlatformType>(2)));
+    // RC平台L2Cache枚举值支持由平台特性表达
+    MOCKER_CPP(
+        &Analysis::Dvvp::Common::Platform::Platform::CheckIfSupport,
+        bool(Analysis::Dvvp::Common::Platform::Platform::*)(const ::Dvvp::Collect::Platform::PlatformFeature) const)
+        .stubs()
+        .will(returnValue(true));
+    metrics = "";
+    Msprofiler::Api::ProfAclMgr::instance()->AicoreMetricsEnumToName(PROF_AICORE_L2_CACHE, metrics);
+    // L2Cache枚举值在RC平台为非法枚举（报错路径），name保持初值
+    EXPECT_EQ("", metrics);
+
+    GlobalMockObject::verify();
+    MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
+        .stubs()
+        .will(returnValue(static_cast<PlatformType>(2)));
+    MOCKER_CPP(
+        &Analysis::Dvvp::Common::Platform::Platform::CheckIfSupport,
+        bool(Analysis::Dvvp::Common::Platform::Platform::*)(const ::Dvvp::Collect::Platform::PlatformFeature) const)
+        .stubs()
+        .will(returnValue(false));
+    metrics = "";
+    Msprofiler::Api::ProfAclMgr::instance()->AicoreMetricsEnumToName(PROF_AICORE_L2_CACHE, metrics);
+    EXPECT_EQ("L2Cache", metrics);
+}
+#endif
 
 TEST_F(MSPROF_ACL_CORE_UTEST, TaskBasedCfgTrfToReq)
 {

@@ -139,17 +139,32 @@ if(NOT BUILD_PROFILING_OPEN_PROJECT)
     list(APPEND profimplCpp
         profimpl/platform/modena_platform.cpp
         profimpl/platform/nano_platform.cpp
-        profimpl/platform/mdc_mini_v3_platform.cpp
         profimpl/platform/david_platform.cpp
         profimpl/platform/david_lite_platform.cpp
         profimpl/platform/david_v121_platform.cpp
-        profimpl/platform/mdc_lite_platform.cpp
         profimpl/platform/mini_platform.cpp
-        profimpl/platform/mdc_platform.cpp
         profimpl/platform/tiny_v1_platform.cpp
-        profimpl/platform/mdc_v2_platform.cpp
-        profimpl/platform/mdc_lite_v2_platform.cpp
     )
+endif()
+
+# 扩展平台（module ext）源文件隔离：仅MODULE_EXT使能时编入，默认（蓝区）构建不依赖modext目录
+set(ENABLE_MODULE_EXT OFF)
+if(DEFINED MODULE_EXT AND NOT (MODULE_EXT STREQUAL "") AND
+    NOT (MODULE_EXT STREQUAL "False") AND NOT (MODULE_EXT STREQUAL "false") AND
+    NOT (MODULE_EXT STREQUAL "OFF") AND NOT (MODULE_EXT STREQUAL "0"))
+    set(ENABLE_MODULE_EXT ON)
+    if(NOT DEFINED MSPROF_MODULE_EXT_ROOT)
+        get_filename_component(MSPROF_MODULE_EXT_ROOT "${RUNTIME_DIR}/../modext/runtime_modext" ABSOLUTE)
+    endif()
+    set(MSPROF_MODULE_EXT_CMAKE
+        "${MSPROF_MODULE_EXT_ROOT}/src/dfx/msprof/collector/dvvp/cmake/msprof_module_ext.cmake")
+    if(NOT EXISTS "${MSPROF_MODULE_EXT_CMAKE}")
+        message(FATAL_ERROR "Profiling module ext cmake not found: ${MSPROF_MODULE_EXT_CMAKE}")
+    endif()
+    include("${MSPROF_MODULE_EXT_CMAKE}")
+    if(NOT BUILD_PROFILING_OPEN_PROJECT)
+        list(APPEND profimplCpp ${MSPROF_MODULE_EXT_PLATFORM_CPP})
+    endif()
 endif()
 
 set(profimplInc
@@ -217,6 +232,7 @@ target_include_directories(profimpl_fwk_share PRIVATE
     ${RUNTIME_DIR}/graphengine/inc/framework
     depend/include/wrapper
     profapi/inc
+    $<$<BOOL:${ENABLE_MODULE_EXT}>:${MSPROF_MODULE_EXT_PLATFORM_INC}>
 )
 
 set_target_properties(profimpl_fwk_share
@@ -229,6 +245,7 @@ target_compile_definitions(profimpl_fwk_share PRIVATE
     $<$<STREQUAL:${CMAKE_BUILD_TYPE},Debug>:MSPROF_DEBUG>
     $<$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>:NOMINMAX>
     $<$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>:WIN32>
+    $<$<BOOL:${ENABLE_MODULE_EXT}>:${MSPROF_MODULE_EXT_COMPILE_DEFINITIONS}>
 )
 
 if(BUILD_PROFILING_OPEN_PROJECT)
@@ -378,6 +395,7 @@ target_compile_definitions(profimpl_share_device PRIVATE
     MSPROF_LIB
     google=ascend_private
     EP_MODE
+    $<$<BOOL:${ENABLE_MODULE_EXT}>:${MSPROF_MODULE_EXT_COMPILE_DEFINITIONS}>
 )
 
 if(BUILD_PROFILING_OPEN_PROJECT)

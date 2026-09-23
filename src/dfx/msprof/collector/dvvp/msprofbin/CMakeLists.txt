@@ -160,12 +160,12 @@ if(NOT BUILD_PROFILING_OPEN_PROJECT)
         ../profimpl/platform/david_platform.cpp
         ../profimpl/platform/david_lite_platform.cpp
         ../profimpl/platform/david_v121_platform.cpp
-        ../profimpl/platform/mdc_lite_platform.cpp
-        ../profimpl/platform/mdc_mini_v3_platform.cpp
-        ../profimpl/platform/mdc_platform.cpp
-        ../profimpl/platform/mdc_v2_platform.cpp
         ./src/input_parser_commercial.cpp
     )
+    # 扩展平台（module ext）源文件在 MODULE_EXT 使能时由 modext 导出并编入
+    if(ENABLE_MODULE_EXT)
+        list(APPEND msprofbinCpp ${MSPROF_MODULE_EXT_PLATFORM_CPP})
+    endif()
 endif()
 
 if(${TARGET_SYSTEM_NAME} STREQUAL "Windows")
@@ -180,6 +180,7 @@ target_include_directories(msprofbin PRIVATE
     ${msprofBinHeader}
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_BINARY_DIR}/proto/msprofbin_proto
+    $<$<BOOL:${ENABLE_MODULE_EXT}>:${MSPROF_MODULE_EXT_PLATFORM_INC}>
 )
 
 
@@ -201,6 +202,7 @@ target_compile_definitions(msprofbin PRIVATE
     SECUREC_USING_STD_SECURE_LIB=0
     google=ascend_private
     $<$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>:NOMINMAX>
+    $<$<BOOL:${ENABLE_MODULE_EXT}>:${MSPROF_MODULE_EXT_COMPILE_DEFINITIONS}>
 )
 
 if(BUILD_PROFILING_OPEN_PROJECT)

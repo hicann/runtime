@@ -21,6 +21,16 @@ using namespace Analysis::Dvvp::Common::Config;
 using namespace analysis::dvvp::common::error;
 static const std::string TYPE_CONFIG = "type";
 
+// 驱动不支持版本查询时的默认平台类型：主线回退MINI_TYPE，MDC形态的默认值由模块扩展宏承载
+static PlatformType GetExpectedDefaultPlatformType()
+{
+#if !defined(BUILD_PROFILING_OPEN_PROJECT) && defined(MSPROF_MODULE_EXT_DEFAULT_PLATFORM_TYPE)
+    return static_cast<PlatformType>(MSPROF_MODULE_EXT_DEFAULT_PLATFORM_TYPE);
+#else
+    return PlatformType::MINI_TYPE;
+#endif
+}
+
 class COMMON_CONFIG_MANAGER_TEST : public testing::Test {
 protected:
     virtual void SetUp() {}
@@ -44,7 +54,7 @@ TEST_F(COMMON_CONFIG_MANAGER_TEST, GetPlatformType)
         .then(returnValue(DRV_ERROR_INVALID_VALUE))
         .then(returnValue(MSPROF_HELPER_HOST));
     configManger->Init();
-    EXPECT_EQ(PlatformType::MDC_TYPE, configManger->GetPlatformType());
+    EXPECT_EQ(GetExpectedDefaultPlatformType(), configManger->GetPlatformType());
     configManger->Uninit();
     configManger->configMap_[TYPE_CONFIG] = "0";
 #endif
@@ -56,12 +66,12 @@ TEST_F(COMMON_CONFIG_MANAGER_TEST, GetPlatformType)
 
 #ifndef BUILD_PROFILING_OPEN_PROJECT
     configManger->Init();
-    EXPECT_EQ(PlatformType::MDC_TYPE, configManger->GetPlatformType());
+    EXPECT_EQ(GetExpectedDefaultPlatformType(), configManger->GetPlatformType());
     configManger->Uninit();
     configManger->configMap_[TYPE_CONFIG] = "0";
 
     configManger->Init();
-    EXPECT_EQ(PlatformType::MDC_TYPE, configManger->GetPlatformType());
+    EXPECT_EQ(GetExpectedDefaultPlatformType(), configManger->GetPlatformType());
     configManger->Uninit();
 #endif
 }
@@ -88,19 +98,14 @@ TEST_F(COMMON_CONFIG_MANAGER_TEST, IsDriverSupportLlc)
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
         .will(returnValue(PlatformType::CLOUD_TYPE))
-#ifndef BUILD_PROFILING_OPEN_PROJECT
-        .then(returnValue(PlatformType::CHIP_MDC_LITE_V2))
-#endif
         .then(returnValue(PlatformType::MINI_TYPE));
     auto configManger = Analysis::Dvvp::Common::Config::ConfigManager::instance();
     EXPECT_EQ(true, configManger->IsDriverSupportLlc());
-#ifndef BUILD_PROFILING_OPEN_PROJECT
-    EXPECT_EQ(true, configManger->IsDriverSupportLlc());
-#endif
     EXPECT_EQ(false, configManger->IsDriverSupportLlc());
 }
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-TEST_F(COMMON_CONFIG_MANAGER_TEST, GetPlatformTypeMdcLiteV2)
+// rc lite v2形态（chip id 18）的频率归一到平台层承载，主线频率表不含该chip id
+TEST_F(COMMON_CONFIG_MANAGER_TEST, GetPlatformTypeRcLiteV2)
 {
     GlobalMockObject::verify();
     auto configManger = Analysis::Dvvp::Common::Config::ConfigManager::instance();
@@ -108,10 +113,10 @@ TEST_F(COMMON_CONFIG_MANAGER_TEST, GetPlatformTypeMdcLiteV2)
     configManger->configMap_.clear();
     configManger->configMap_[TYPE_CONFIG] = "18";
 
-    EXPECT_EQ(PlatformType::CHIP_MDC_LITE_V2, configManger->GetPlatformType());
+    EXPECT_EQ(static_cast<PlatformType>(18), configManger->GetPlatformType());
     configManger->InitFrequency();
-    EXPECT_EQ("38.4", configManger->GetFrequency());
-    EXPECT_EQ("1500", configManger->GetAicDefFrequency());
+    EXPECT_EQ("", configManger->GetFrequency());
+    EXPECT_EQ("", configManger->GetAicDefFrequency());
 
     configManger->configMap_.clear();
     configManger->Uninit();

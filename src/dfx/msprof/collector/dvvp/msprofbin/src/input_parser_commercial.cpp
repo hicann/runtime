@@ -145,10 +145,7 @@ void ArgsManager::AddStarsArgs()
         return;
     }
     std::string task_block_ranges;
-    PlatformType platformType = ConfigManager::instance()->GetPlatformType();
-    if (platformType == PlatformType::CHIP_CLOUD_V3 || platformType == PlatformType::CHIP_CLOUD_V3_LITE ||
-        platformType == PlatformType::CHIP_CLOUD_V4 || platformType == PlatformType::CHIP_MDC_V2 ||
-        platformType == PlatformType::CHIP_MDC_LITE_V2) {
+    if (Platform::instance()->CheckIfSupport(::Dvvp::Collect::Platform::PLATFORM_TASK_BLOCK_ON)) {
         task_block_ranges = "'all', 'on', 'off'.";
     } else {
         task_block_ranges = "'all', 'off'.";

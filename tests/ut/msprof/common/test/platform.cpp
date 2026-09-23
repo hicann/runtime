@@ -26,8 +26,8 @@
 #include "message/codec.h"
 #include "cloud_v2_platform.h"
 #include "cloud_platform.h"
-#include "mdc_lite_platform.h"
-#include "mdc_platform.h"
+#include "rc_lite_platform_stub.h"
+#include "rc_platform_stub.h"
 #include "tiny_v1_platform.h"
 #include "dc_platform.h"
 #include "mini_platform.h"
@@ -191,13 +191,13 @@ TEST_F(COMMON_PLATFORM_TEST, NanoPlatformTest)
 #endif
 
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-TEST_F(COMMON_PLATFORM_TEST, MdcMiniV3PlatformTest)
+TEST_F(COMMON_PLATFORM_TEST, RcMiniV3PlatformTest)
 {
     GlobalMockObject::verify();
     MOCKER(halGetDeviceInfo).stubs().will(invoke(halGetDeviceInfoStub));
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
-        .will(returnValue(Analysis::Dvvp::Common::Config::PlatformType::CHIP_MDC_MINI_V3));
+        .will(returnValue(static_cast<PlatformType>(11)));
 
     auto platform = Analysis::Dvvp::Common::Platform::Platform::instance();
 
@@ -456,9 +456,9 @@ TEST_F(COMMON_PLATFORM_TEST, MiniPlatformTest)
 #endif
 
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-TEST_F(COMMON_PLATFORM_TEST, MdcPlatformTest)
+TEST_F(COMMON_PLATFORM_TEST, RcPlatformTest)
 {
-    Dvvp::Collect::Platform::MdcPlatform platform;
+    Dvvp::Collect::Platform::RcPlatformStub platform;
 
     // pmu
     std::string aicEvent;
@@ -595,13 +595,13 @@ TEST_F(COMMON_PLATFORM_TEST, TinyV1PlatformTest)
 #endif
 
 #ifndef BUILD_PROFILING_OPEN_PROJECT
-TEST_F(COMMON_PLATFORM_TEST, MdcLitePlatformTest)
+TEST_F(COMMON_PLATFORM_TEST, RcLitePlatformTest)
 {
     GlobalMockObject::verify();
     MOCKER(halGetDeviceInfo).stubs().will(invoke(halGetDeviceInfoStub));
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
-        .will(returnValue(Analysis::Dvvp::Common::Config::PlatformType::CHIP_MDC_LITE));
+        .will(returnValue(static_cast<PlatformType>(12)));
 
     auto platform = Analysis::Dvvp::Common::Platform::Platform::instance();
 

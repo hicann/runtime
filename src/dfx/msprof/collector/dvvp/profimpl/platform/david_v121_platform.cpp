@@ -40,6 +40,9 @@ DavidV121Platform::DavidV121Platform()
         PLATFORM_SYS_MEM_SERVICEFLOW, PLATFORM_API_STATS};
     InsertPmuFeature();
     InsertSysFeature();
+    supportedFeature_.insert(PLATFORM_TASK_BLOCK_ON);
+    supportedFeature_.insert(PLATFORM_AICORE_EVENT_FROM_ZERO);
+    supportedFeature_.insert(PLATFORM_ADPROF);
 }
 
 void DavidV121Platform::InsertPmuFeature()
@@ -67,6 +70,7 @@ void DavidV121Platform::InsertSysFeature()
         PLATFORM_SYS_DEVICE_ROCE,
         PLATFORM_SYS_DEVICE_HCCS,
         PLATFORM_SYS_DEVICE_PCIE,
+        PLATFORM_SYS_DEVICE_INTERCONNECTION,
         PLATFORM_SYS_DEVICE_DVPP,
         PLATFORM_SYS_DEVICE_DVPP_EX,
         PLATFORM_SYS_DEVICE_LOW_POWER,

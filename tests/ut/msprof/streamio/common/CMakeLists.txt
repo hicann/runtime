@@ -43,10 +43,10 @@ if(NOT BUILD_PROFILING_OPEN_PROJECT)
         ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mini_platform.cpp
         ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/david_platform.cpp
         ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/david_v121_platform.cpp
-        ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_platform.cpp
-        ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_lite_platform.cpp
-        ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_mini_v3_platform.cpp
-        ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/mdc_v2_platform.cpp
+        ${TOP_DIR}/tests/ut/msprof/st/stub/platform/rc_platform_stub.cpp
+        ${TOP_DIR}/tests/ut/msprof/st/stub/platform/rc_lite_platform_stub.cpp
+        ${TOP_DIR}/tests/ut/msprof/st/stub/platform/rc_mini_v3_platform_stub.cpp
+        ${TOP_DIR}/tests/ut/msprof/st/stub/platform/rc_v2_platform_stub.cpp
         ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/tiny_v1_platform.cpp
     )
 endif()

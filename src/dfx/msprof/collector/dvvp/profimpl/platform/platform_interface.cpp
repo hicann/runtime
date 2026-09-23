@@ -140,6 +140,8 @@ PlatformFeature PlatformInterface::NtsMetricsToFeature(const std::string& key) c
     return PlatformFeature::PLATFORM_FEATURE_INVALID;
 }
 
+int32_t PlatformInterface::GetMaxAiPmuEvent() const { return 0; }
+
 PlatformFeature PlatformInterface::PmuMetricsToFeature(const std::string& key) const
 {
     const auto it = METRIC_FEATURE_MAP.find(key);
@@ -154,6 +156,8 @@ bool PlatformInterface::FeatureIsSupport(const PlatformFeature feature) const
 {
     return (supportedFeature_.count(feature) > 0);
 }
+
+std::vector<std::string> PlatformInterface::GetHiddenCliArgs() const { return {}; }
 
 uint16_t PlatformInterface::GetMaxMonitorNumber() const { return MAX_COLLECT_MONITOR_NUM; }
 

@@ -473,7 +473,7 @@ TEST_F(INPUT_PARSER_STEST, CheckBaseInfo)
 #ifndef BUILD_PROFILING_OPEN_PROJECT
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
-        .will(returnValue(Analysis::Dvvp::Common::Config::PlatformType::MDC_TYPE));
+        .will(returnValue(static_cast<PlatformType>(2)));
     Platform::instance()->Uninit();
     Platform::instance()->Init();
     cmdInfo.args[ARGS_AIV_METRICS] = "L2Cache";
@@ -495,7 +495,7 @@ TEST_F(INPUT_PARSER_STEST, CheckBaseInfo)
 #ifndef BUILD_PROFILING_OPEN_PROJECT
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
         .stubs()
-        .will(returnValue(Analysis::Dvvp::Common::Config::PlatformType::CHIP_MDC_MINI_V3));
+        .will(returnValue(static_cast<PlatformType>(11)));
     Platform::instance()->Uninit();
     Platform::instance()->Init();
     EXPECT_EQ(PROFILING_SUCCESS, parser.CheckAiCoreMetricsValid(cmdInfo, ARGS_AIC_METRICS));
