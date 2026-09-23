@@ -848,6 +848,7 @@ TEST_F(DavidTaskTest, PrepareSqeInfoForModelExecuteTask_NotFirstExecute_MemCopyF
     realModel->SetFirstExecute(false);
     realModel->SetFuncCallHostMem(hostMem);
     realModel->SetFuncCallSvmMem(0x1000ULL);
+    realModel->SetBaseFuncCallSvmMem(reinterpret_cast<void*>(0x1000ULL));
     realModel->SetFunCallMemSize(funCallMemSize);
 
     RawDevice* rawDev = static_cast<RawDevice*>(stream_->Device_());
@@ -855,11 +856,17 @@ TEST_F(DavidTaskTest, PrepareSqeInfoForModelExecuteTask_NotFirstExecute_MemCopyF
     const bool origVal = rawDev->featureSet_[copyOnceIdx];
     rawDev->featureSet_[copyOnceIdx] = false;
     MOCKER_CPP_VIRTUAL(rawDev->Driver_(), &Driver::MemCopySync).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER_CPP_VIRTUAL(rawDev->Driver_(), &Driver::DevMemFree).stubs().will(returnValue(RT_ERROR_NONE));
 
     TaskInfo task = {};
     InitByStream(&task, stream_);
     rtError_t ret = ModelExecuteTaskInit(&task, realModel, realModel->Id_(), 0);
     EXPECT_EQ(ret, RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(realModel->GetFuncCallHostMem(), nullptr);
+    EXPECT_EQ(realModel->GetFuncCallSvmMem(), 0ULL);
+    EXPECT_EQ(realModel->GetBaseFuncCallSvmMem(), nullptr);
+    EXPECT_EQ(realModel->GetFunCallMemSize(), 0ULL);
+    EXPECT_TRUE(realModel->GetFirstExecute());
 
     rawDev->featureSet_[copyOnceIdx] = origVal;
     TaskUnInitProc(&task);

@@ -91,6 +91,7 @@ rtError_t FreeFuncCallHostMemAndSvmMem(TaskInfo* const taskInfo)
         (void)deviceDrv->DevMemFree(model->GetBaseFuncCallSvmMem(), dev->Id_());
         model->SetBaseFuncCallSvmMem(nullptr);
         model->SetFunCallMemSize(0ULL);
+        model->SetFuncCallSvmMem(0ULL);
     }
 
     if (model->GetFuncCallDfxBaseSvmMem() != nullptr) {
@@ -413,6 +414,7 @@ rtError_t PrepareSqeInfoForModelExecuteTask(TaskInfo* const taskInfo)
                           model->GetFuncCallHostMem(), model->GetFunCallMemSize(), RT_MEMCPY_DEVICE_TO_DEVICE);
             if (ret != RT_ERROR_NONE) {
                 (void)FreeFuncCallHostMemAndSvmMem(taskInfo);
+                model->SetFirstExecute(true);
                 RT_LOG(
                     RT_LOG_ERROR, "MemCopySync for model exe func call failed without first execute, retCode=%#x.",
                     ret);
@@ -451,10 +453,16 @@ void PrintErrorModelExecuteTaskFuncCall(TaskInfo* const task)
         model->GetFunCallMemSize(), RT_MEMCPY_DEVICE_TO_HOST);
     if (ret == RT_ERROR_NONE) {
         const uint32_t* cmd = RtPtrToPtr<const uint32_t*>(starsModelExefuncCall);
-        for (size_t i = 0UL; i < (model->GetFuncCallInstrSize() / sizeof(uint32_t)); i += 8UL) {
+        constexpr size_t wordsPerLog = 8UL;
+        const size_t wordCount = model->GetFuncCallInstrSize() / sizeof(uint32_t);
+        size_t i = 0UL;
+        for (; (i + wordsPerLog) <= wordCount; i += wordsPerLog) {
             RT_LOG(
                 RT_LOG_ERROR, "FuncCall data : %08x %08x %08x %08x %08x %08x %08x %08x", *(cmd + i), *(cmd + i + 1U),
                 *(cmd + i + 2U), *(cmd + i + 3U), *(cmd + i + 4U), *(cmd + i + 5U), *(cmd + i + 6U), *(cmd + i + 7U));
+        }
+        for (; i < wordCount; i++) {
+            RT_LOG(RT_LOG_ERROR, "FuncCall data : %08x", *(cmd + i));
         }
     }
     delete[] starsModelExefuncCall;
