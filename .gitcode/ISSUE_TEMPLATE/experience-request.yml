@@ -1,0 +1,48 @@
+name: Experience Request|体验需求
+description: 当您在CANN Runtime开发体验过程中发现可改进的问题时，请使用此模板。
+title: "[Experience Request|体验需求]: "
+labels: ["requirement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for sending an issue! Please fill in the following template to help quickly solve your problem.
+  - type: dropdown
+    attributes:
+      label: 体验活动所处阶段
+      description: 请选择发现体验问题时所处的开发阶段。
+      options:
+        - 感知学习（了解基础概念、查阅开发资料等）
+        - 环境部署与源码构建（安装CANN软件包、编译部署Runtime包等）
+        - 接口调用开发（初始化、设备/内存/Stream/Event管理、Kernel执行等）
+        - 高级特性开发（ACL Graph、多设备编程、进程间通信等）
+        - 性能调优（msprof性能数据采集与分析等）
+        - 精度调试与问题定位（adump数据Dump、日志、错误码等）
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: 体验改进触点（问题出现在哪类内容或环节）
+      description: 请选择体验问题对应的触点。
+      options:
+        - 开发资料（快速入门、编程指南、API参考、FAQ等）
+        - API（acl*/rt*等接口定义与行为）
+        - 源码/示例代码（example样例、src源码等）
+        - 工具（编译构建、UT测试、样例运行脚本等）
+        - 运行时反馈（日志、错误码、报错信息等）
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 详细描述
+      description: 说明具体体验场景和未达到预期的体验维度（如易学性、易用性、反馈清晰度），并描述实际遇到的问题。
+      placeholder: 针对您遇到的问题，请尽可能提供相关的资料链接、API名称、代码片段、操作步骤、日志或截图等信息。
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 改进建议
+      description: 请描述您期望的改进方式或理想体验。
+      placeholder: 例如期望补充哪些说明、简化哪些操作，或优化成什么样。
+    validations:
+      required: false
