@@ -48,14 +48,18 @@
 #endif
 
 #include <gmock/gmock.h>
+#include <vector>
 
 using namespace tdt;
+
+using ErrorMsgArgs = std::vector<const char*>;
 
 class aclStub {
 public:
     // error manager
     virtual std::unique_ptr<const char_t[]> GetErrMgrErrorMessage();
     virtual int Init();
+    virtual int32_t ReportPredefinedErrMsg(const char* errorCode, const ErrorMsgArgs& keys, const ErrorMsgArgs& values);
 
     // fe function
     virtual uint32_t InitializePlatformInfo();
@@ -655,6 +659,8 @@ public:
     // error manager
     MOCK_METHOD0(GetErrMgrErrorMessage, std::unique_ptr<const char_t[]>());
     MOCK_METHOD0(Init, int());
+    MOCK_METHOD3(
+        ReportPredefinedErrMsg, int32_t(const char* errorCode, const ErrorMsgArgs& keys, const ErrorMsgArgs& values));
 
     // fe function
     MOCK_METHOD0(InitializePlatformInfo, uint32_t());

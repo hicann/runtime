@@ -65,7 +65,8 @@ extern "C" void aclAppLogWithArgs(
 extern void aclGetMsgCallback(const char_t* msg, uint32_t len);
 extern void GetAllPackageVersion();
 extern aclError HandleDefaultDeviceAndStackSize(const char_t* const configPath);
-extern aclError GetAlignedAndPaddingSize(const size_t size, const bool isPadding, size_t& alignedSize);
+extern aclError GetAlignedAndPaddingSize(
+    const size_t size, const bool isPadding, size_t& alignedSize, const char* const funcDesc);
 extern void GetPaddingSize(size_t* paddingSize);
 extern int32_t UpdateOpSystemRunCfg(void* cfgAddr, uint32_t cfgLen);
 extern bool GetAclInitFlag();
@@ -75,6 +76,32 @@ extern aclError HandleEventModeConfig(const char_t* const configPath);
 } // namespace acl
 
 namespace {
+struct ErrorMsgCapture {
+    int32_t Capture(const char* code, const ErrorMsgArgs& argKeys, const ErrorMsgArgs& argValues)
+    {
+        errorCode = code;
+        for (const char* key : argKeys) {
+            keys.emplace_back(key);
+        }
+        for (const char* value : argValues) {
+            values.emplace_back(value);
+        }
+        return 0;
+    }
+
+    std::string errorCode;
+    std::vector<std::string> keys;
+    std::vector<std::string> values;
+};
+
+void ExpectInvalidSizeErrorMessage(
+    const ErrorMsgCapture& capture, const char* funcDesc, const std::string& sizeValue, const std::string& expected)
+{
+    EXPECT_EQ(capture.errorCode, "EH0007");
+    EXPECT_THAT(capture.keys, ElementsAre("func", "value", "param", "expect"));
+    EXPECT_THAT(capture.values, ElementsAre(funcDesc, sizeValue, "size", expected));
+}
+
 void TestAclAppLogWithArgs(aclLogLevel level, const char* func, const char* file, uint32_t line, const char* fmt, ...)
 {
     va_list args;
@@ -2485,28 +2512,85 @@ TEST_F(UTEST_ACL_Common, AclrtResetOverflowStatus)
 
 TEST_F(UTEST_ACL_Common, GetAlignedAndPaddingSize)
 {
+    ON_CALL(MockFunctionTest::aclStubInstance(), rtGetSocSpec(_, _, _, _)).WillByDefault(Invoke(rtGetSocSpec_Success));
     size_t alignedSize = 0UL;
-    aclError ret = acl::GetAlignedAndPaddingSize(UINT64_MAX - 63UL, true, alignedSize);
+    aclError ret = acl::GetAlignedAndPaddingSize(UINT64_MAX - 63UL, true, alignedSize, "aclrtMalloc");
     EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
-    ret = acl::GetAlignedAndPaddingSize(UINT64_MAX - 64UL, true, alignedSize);
+    ret = acl::GetAlignedAndPaddingSize(UINT64_MAX - 64UL, true, alignedSize, "aclrtMalloc");
     EXPECT_EQ(ret, ACL_SUCCESS);
     EXPECT_EQ(alignedSize, UINT64_MAX - 31UL);
-    ret = acl::GetAlignedAndPaddingSize(1UL, true, alignedSize);
+    ret = acl::GetAlignedAndPaddingSize(1UL, true, alignedSize, "aclrtMalloc");
     EXPECT_EQ(ret, ACL_SUCCESS);
     EXPECT_EQ(alignedSize, 64UL);
-    ret = acl::GetAlignedAndPaddingSize(32UL, true, alignedSize);
+    ret = acl::GetAlignedAndPaddingSize(32UL, true, alignedSize, "aclrtMallocCached");
+    EXPECT_EQ(ret, ACL_SUCCESS);
     EXPECT_EQ(alignedSize, 64UL);
-    ret = acl::GetAlignedAndPaddingSize(UINT64_MAX - 63UL, false, alignedSize);
+    ret = acl::GetAlignedAndPaddingSize(UINT64_MAX - 32UL, false, alignedSize, "aclrtMallocAlign32");
     EXPECT_EQ(ret, ACL_SUCCESS);
-    EXPECT_EQ(alignedSize, UINT64_MAX - 63UL);
-    ret = acl::GetAlignedAndPaddingSize(UINT64_MAX - 64UL, false, alignedSize);
-    EXPECT_EQ(ret, ACL_SUCCESS);
-    EXPECT_EQ(alignedSize, UINT64_MAX - 63UL);
-    ret = acl::GetAlignedAndPaddingSize(1UL, false, alignedSize);
+    EXPECT_EQ(alignedSize, UINT64_MAX - 31UL);
+    ret = acl::GetAlignedAndPaddingSize(UINT64_MAX - 31UL, false, alignedSize, "aclrtMallocAlign32");
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+    ret = acl::GetAlignedAndPaddingSize(1UL, false, alignedSize, "aclrtMallocAlign32");
     EXPECT_EQ(ret, ACL_SUCCESS);
     EXPECT_EQ(alignedSize, 32UL);
-    ret = acl::GetAlignedAndPaddingSize(32UL, false, alignedSize);
+    ret = acl::GetAlignedAndPaddingSize(32UL, false, alignedSize, "aclrtMallocAlign32");
+    EXPECT_EQ(ret, ACL_SUCCESS);
     EXPECT_EQ(alignedSize, 32UL);
+}
+
+TEST_F(UTEST_ACL_Common, MemoryMallocSizeOverflow)
+{
+    void* devPtr = nullptr;
+    ErrorMsgCapture capture;
+    ON_CALL(MockFunctionTest::aclStubInstance(), rtGetSocSpec(_, _, _, _)).WillByDefault(Invoke(rtGetSocSpec_Success));
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), ReportPredefinedErrMsg(_, _, _))
+        .WillOnce(Invoke(&capture, &ErrorMsgCapture::Capture));
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtMalloc(_, _, _, _)).Times(0);
+
+    EXPECT_EQ(aclrtMalloc(&devPtr, SIZE_MAX, ACL_MEM_MALLOC_NORMAL_ONLY), ACL_ERROR_INVALID_PARAM);
+    ExpectInvalidSizeErrorMessage(
+        capture, "aclrtMalloc", std::to_string(SIZE_MAX), "[1, " + std::to_string(SIZE_MAX - 64UL) + "]");
+}
+
+TEST_F(UTEST_ACL_Common, MemoryMallocHuge1gSizeOverflow)
+{
+    void* devPtr = nullptr;
+    ErrorMsgCapture capture;
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), ReportPredefinedErrMsg(_, _, _))
+        .WillOnce(Invoke(&capture, &ErrorMsgCapture::Capture));
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtMalloc(_, _, _, _)).Times(0);
+
+    EXPECT_EQ(aclrtMalloc(&devPtr, SIZE_MAX, ACL_MEM_MALLOC_HUGE1G_ONLY), ACL_ERROR_INVALID_PARAM);
+    ExpectInvalidSizeErrorMessage(
+        capture, "aclrtMalloc", std::to_string(SIZE_MAX), "[1, " + std::to_string(SIZE_MAX - 32UL) + "]");
+}
+
+TEST_F(UTEST_ACL_Common, MemoryMallocAlign32SizeOverflow)
+{
+    void* devPtr = nullptr;
+    ErrorMsgCapture capture;
+    ON_CALL(MockFunctionTest::aclStubInstance(), rtGetSocSpec(_, _, _, _)).WillByDefault(Invoke(rtGetSocSpec_Success));
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), ReportPredefinedErrMsg(_, _, _))
+        .WillOnce(Invoke(&capture, &ErrorMsgCapture::Capture));
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtMalloc(_, _, _, _)).Times(0);
+
+    EXPECT_EQ(aclrtMallocAlign32(&devPtr, SIZE_MAX, ACL_MEM_MALLOC_NORMAL_ONLY), ACL_ERROR_INVALID_PARAM);
+    ExpectInvalidSizeErrorMessage(
+        capture, "aclrtMallocAlign32", std::to_string(SIZE_MAX), "[1, " + std::to_string(SIZE_MAX - 32UL) + "]");
+}
+
+TEST_F(UTEST_ACL_Common, MemoryMallocCachedSizeOverflow)
+{
+    void* devPtr = nullptr;
+    ErrorMsgCapture capture;
+    ON_CALL(MockFunctionTest::aclStubInstance(), rtGetSocSpec(_, _, _, _)).WillByDefault(Invoke(rtGetSocSpec_Success));
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), ReportPredefinedErrMsg(_, _, _))
+        .WillOnce(Invoke(&capture, &ErrorMsgCapture::Capture));
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtMallocCached(_, _, _, _)).Times(0);
+
+    EXPECT_EQ(aclrtMallocCached(&devPtr, SIZE_MAX, ACL_MEM_MALLOC_NORMAL_ONLY), ACL_ERROR_INVALID_PARAM);
+    ExpectInvalidSizeErrorMessage(
+        capture, "aclrtMallocCached", std::to_string(SIZE_MAX), "[1, " + std::to_string(SIZE_MAX - 64UL) + "]");
 }
 
 TEST_F(UTEST_ACL_Common, GetPaddingSize)

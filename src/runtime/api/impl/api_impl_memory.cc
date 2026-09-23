@@ -49,13 +49,13 @@ rtError_t ApiImpl::MemCopySyncEx(
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     Device* device = curCtx->Device_();
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(device, RT_ERROR_INVALID_VALUE, "Synchronous memory copy");
+    NULL_PTR_RETURN_MSG(device, RT_ERROR_INVALID_VALUE);
     const rtError_t error = device->GetDeviceStatus();
     COND_PROC((error == RT_ERROR_DEVICE_TASK_ABORT), return error);
     CHECK_CAPTURE_MODE_SUPPORT_AND_RETURN_WITH_FUNC_DESC(curCtx, "Synchronous memory copy");
 
     Driver* driver = device->Driver_();
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(driver, RT_ERROR_INVALID_VALUE, "Synchronous memory copy");
+    NULL_PTR_RETURN_MSG(driver, RT_ERROR_INVALID_VALUE);
     rtMemcpyKind_t curKind = kind;
     if (device->IsSPM(dst)) {
         curKind = (driver->GetRunMode() == static_cast<uint32_t>(RT_RUN_MODE_ONLINE)) ? RT_MEMCPY_HOST_TO_DEVICE :
@@ -353,9 +353,8 @@ rtError_t ApiImpl::DevMalloc(
         RT_LOG(RT_LOG_INFO, "cfg is nullptr use default cfg");
     } else {
         error = ParseMallocCfg(cfg, &cfgVal);
-        COND_RETURN_ERROR_MSG_INNER(
-            error != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE, "Parse rtMallocConfig failed, error=%#x.",
-            static_cast<uint32_t>(error));
+        COND_RETURN_ERROR(
+            error != RT_ERROR_NONE, error, "Parse rtMallocConfig failed, error=%#x.", static_cast<uint32_t>(error));
     }
     Runtime* rtInstance = Runtime::Instance();
     uint32_t realDeviceId = cfgVal.deviceId;

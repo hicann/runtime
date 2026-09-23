@@ -306,7 +306,7 @@ rtError_t ConvertAsyncDmaBatch(TaskInfo* const taskInfo, AsyncDmaBatchInfo& batc
     AsyncDmaWqeOutputInfo output;
     (void)memset_s(&output, sizeof(AsyncDmaWqeOutputInfo), 0, sizeof(AsyncDmaWqeOutputInfo));
     const rtError_t error = driver->CreateAsyncDmaWqeBatch(devId, input, &output);
-    ERROR_RETURN_MSG_INNER(error, "drv create asyncDmaWqeBatch failed, retCode=%#x.", static_cast<uint32_t>(error));
+    ERROR_RETURN(error, "drv create asyncDmaWqeBatch failed, retCode=%#x.", static_cast<uint32_t>(error));
 
     memcpyAsyncTaskInfo->ubDma.jettyId = output.jettyId;
     memcpyAsyncTaskInfo->ubDma.functionId = output.functionId;

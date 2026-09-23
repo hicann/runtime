@@ -244,6 +244,23 @@ TEST_F(UvmApiTest, rtMemManagedPrefetchAsync_abnormal_para)
     delete apiProfLogDecorator_;
 }
 
+TEST_F(UvmApiTest, MemManagedPrefetchAsync_InvalidLocationType)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+    uint8_t devPtr = 0U;
+    constexpr size_t uvmSize = 1UL;
+    constexpr uint32_t flags = 0U;
+    const rtMemManagedLocationType invalidTypes[] = {
+        rtMemLocationTypeInvalid, static_cast<rtMemManagedLocationType>(100)};
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemManagedPrefetchAsync).expects(never());
+
+    for (const rtMemManagedLocationType type : invalidTypes) {
+        const rtMemManagedLocation location = {type, 0};
+        EXPECT_EQ(apiError.MemManagedPrefetchAsync(&devPtr, uvmSize, location, flags, nullptr), RT_ERROR_INVALID_VALUE);
+    }
+}
+
 TEST_F(UvmApiTest, ApiImpl_MemManagedPrefetchAsync)
 {
     ApiImpl apiImpl_;
@@ -406,6 +423,30 @@ TEST_F(UvmApiTest, rtMemManagedPrefetchBatchAsync_abnormal_para)
         (const void**)devPtrsArr, sizesArr, numUvmPtrs, prefetchLocsArr, prefetchLocIdxsArr, numPrefetchLocs, flags,
         stream);
     EXPECT_EQ(err, ACL_ERROR_RT_PARAM_INVALID);
+}
+
+TEST_F(UvmApiTest, MemManagedPrefetchBatchAsync_InvalidLocationType)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+    constexpr size_t count = 2UL;
+    constexpr size_t numPrefetchLocs = 2UL;
+    const void* ptrs[count] = {reinterpret_cast<const void*>(0x10), reinterpret_cast<const void*>(0x20)};
+    size_t sizes[count] = {1UL, 1UL};
+    size_t prefetchLocIdxs[numPrefetchLocs] = {0UL, 1UL};
+    rtMemManagedLocation prefetchLocs[numPrefetchLocs] = {{rtMemLocationTypeHost, 0}, {rtMemLocationTypeInvalid, 0}};
+    constexpr uint64_t flags = 0UL;
+    const rtMemManagedLocationType invalidTypes[] = {
+        rtMemLocationTypeInvalid, static_cast<rtMemManagedLocationType>(100)};
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::MemManagedPrefetchBatchAsync).expects(never());
+
+    for (const rtMemManagedLocationType type : invalidTypes) {
+        prefetchLocs[1].type = type;
+        EXPECT_EQ(
+            apiError.MemManagedPrefetchBatchAsync(
+                ptrs, sizes, count, prefetchLocs, prefetchLocIdxs, numPrefetchLocs, flags, nullptr),
+            RT_ERROR_INVALID_VALUE);
+    }
 }
 
 TEST_F(UvmApiTest, ApiImpl_MemManagedPrefetchBatchAsync)

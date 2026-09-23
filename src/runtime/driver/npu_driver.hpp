@@ -796,14 +796,14 @@ private:
         const bool starsTillingFlag = false, const bool isNewApi = false, const bool cpOnlyFlag = false);
     rtError_t DevMemAllocOffline(
         void** dptr, const uint64_t size, rtMemType_t type, const uint32_t deviceId,
-        const uint16_t moduleId = MODULEID_RUNTIME) const;
+        const uint16_t moduleId = MODULEID_RUNTIME, const bool isLogError = true) const;
     rtError_t MemAllocHugePolicyPageOffline(
         void** const dptr, const uint64_t size, const rtMemType_t type, const uint32_t deviceId,
-        const uint16_t moduleId = MODULEID_RUNTIME) const;
+        const uint16_t moduleId = MODULEID_RUNTIME, const bool isLogError = true) const;
 
     rtError_t MemAllocPolicyOffline(
         void** const dptr, const uint64_t size, const uint32_t memPolicy, const rtMemType_t type,
-        const uint32_t deviceId, const uint16_t moduleId = MODULEID_RUNTIME) const;
+        const uint32_t deviceId, const uint16_t moduleId = MODULEID_RUNTIME, const bool isLogError = true) const;
 
     rtError_t transMemAttribute(const uint32_t memPolicy, rtMemType_t* const type) const;
 

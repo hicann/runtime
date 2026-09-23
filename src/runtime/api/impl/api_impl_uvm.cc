@@ -109,9 +109,8 @@ rtError_t ApiImpl::MemManagedPrefetchAsync(
         (&halMemManagedPrefetch == nullptr), RT_ERROR_DRV_NOT_SUPPORT,
         "[drv api] halMemManagedPrefetch does not exist.");
     PrefetchParams* params = new (std::nothrow) PrefetchParams;
-    COND_RETURN_ERROR(
-        (params == nullptr), RT_ERROR_MEMORY_ALLOCATION, "New memory for params failed, mem size=%u",
-        sizeof(PrefetchParams));
+    COND_RETURN_AND_MSG_OUTER(
+        (params == nullptr), RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013, sizeof(PrefetchParams), "new");
 
     rtError_t ret = UvmCallback::ConvertUvmLocationStruct(params->location, location);
     COND_PROC((ret == RT_ERROR_DRV_NOT_SUPPORT), DELETE_O(params));
@@ -142,8 +141,7 @@ rtError_t ApiImpl::MemManagedPrefetchBatchAsync(
                         count * sizeof(size_t) + numPrefetchLocs * sizeof(drv_uvm_location) +
                         numPrefetchLocs * +sizeof(size_t);
     uint8_t* memBuffer = new (std::nothrow) uint8_t[bufferSize];
-    COND_RETURN_ERROR(
-        (memBuffer == nullptr), RT_ERROR_MEMORY_ALLOCATION, "New memory for memBuffer failed, mem size=%u", bufferSize);
+    COND_RETURN_AND_MSG_OUTER((memBuffer == nullptr), RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013, bufferSize, "new");
 
     size_t tmpOffset = 0;
     // Copy int data

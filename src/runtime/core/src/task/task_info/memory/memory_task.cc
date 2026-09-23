@@ -101,7 +101,7 @@ rtError_t ConvertAsyncDma2D(
     AsyncDmaWqeOutputInfo output;
     (void)memset_s(&output, sizeof(AsyncDmaWqeOutputInfo), 0, sizeof(AsyncDmaWqeOutputInfo));
     const rtError_t error = driver->CreateAsyncDmaWqe2D(devId, input, &output);
-    ERROR_RETURN_MSG_INNER(error, "drv create asyncDmaWqe2D failed, retCode=%#x.", static_cast<uint32_t>(error));
+    ERROR_RETURN(error, "drv create asyncDmaWqe2D failed, retCode=%#x.", static_cast<uint32_t>(error));
 
     memcpyAsyncTaskInfo->ubDma.jettyId = output.jettyId;
     memcpyAsyncTaskInfo->ubDma.functionId = output.functionId;

@@ -28,6 +28,10 @@
 using namespace testing;
 using namespace cce::runtime;
 
+namespace {
+uint32_t g_halMapErrorCodeCallCount = 0U;
+}
+
 class CloudV2NpuDriverTest : public testing::Test {
 protected:
     static void SetUpTestCase() {}
@@ -1732,6 +1736,59 @@ TEST_F(CloudV2NpuDriverTest, MemAllocPolicyOffline_fail)
     delete rawDrv;
 }
 
+TEST_F(CloudV2NpuDriverTest, MemAllocPolicyOffline_first_attempt_failure)
+{
+    MOCKER(halMemAlloc).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
+
+    g_halMapErrorCodeCallCount = 0U;
+    NpuDriver rawDrv;
+    void* ptr = nullptr;
+    const rtError_t error = rawDrv.MemAllocPolicyOffline(
+        &ptr, 10U, RT_MEMORY_POLICY_DEFAULT_PAGE_ONLY, RT_MEMORY_HBM, 0U, MODULEID_RUNTIME, false);
+    EXPECT_EQ(error, RT_ERROR_DRV_INPUT);
+    EXPECT_EQ(g_halMapErrorCodeCallCount, 0U);
+}
+
+TEST_F(CloudV2NpuDriverTest, MemAllocHugePolicyPageOffline_first_attempt_failure)
+{
+    MOCKER(halMemAlloc).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
+
+    g_halMapErrorCodeCallCount = 0U;
+    NpuDriver rawDrv;
+    void* ptr = nullptr;
+    const rtError_t error = rawDrv.MemAllocHugePolicyPageOffline(&ptr, 10U, RT_MEMORY_HBM, 0U, MODULEID_RUNTIME, false);
+    EXPECT_EQ(error, RT_ERROR_DRV_INPUT);
+    EXPECT_EQ(g_halMapErrorCodeCallCount, 0U);
+}
+
+TEST_F(CloudV2NpuDriverTest, DevMemAllocOffline_first_attempt_allocation_failure)
+{
+    MOCKER(halMemAlloc).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
+
+    g_halMapErrorCodeCallCount = 0U;
+    NpuDriver rawDrv;
+    rawDrv.chipType_ = CHIP_CLOUD;
+    void* ptr = nullptr;
+    const rtError_t error = rawDrv.DevMemAllocOffline(&ptr, 10U, RT_MEMORY_HBM, 0U, MODULEID_RUNTIME, false);
+    EXPECT_EQ(error, RT_ERROR_DRV_INPUT);
+    EXPECT_EQ(g_halMapErrorCodeCallCount, 0U);
+}
+
+TEST_F(CloudV2NpuDriverTest, DevMemAllocOffline_first_attempt_mbind_failure)
+{
+    MOCKER(halMemAlloc).stubs().will(returnValue(DRV_ERROR_NONE));
+    MOCKER(drvMbindHbm).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
+    MOCKER(halMemFree).stubs().will(returnValue(DRV_ERROR_NONE));
+
+    g_halMapErrorCodeCallCount = 0U;
+    NpuDriver rawDrv;
+    rawDrv.chipType_ = CHIP_CLOUD;
+    void* ptr = reinterpret_cast<void*>(0x1000);
+    const rtError_t error = rawDrv.DevMemAllocOffline(&ptr, 10U, RT_MEMORY_HBM, 0U, MODULEID_RUNTIME, false);
+    EXPECT_EQ(error, RT_ERROR_DRV_INPUT);
+    EXPECT_EQ(g_halMapErrorCodeCallCount, 0U);
+}
+
 TEST_F(CloudV2NpuDriverTest, MemAdvise_fail)
 {
     MOCKER(halMemAdvise).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
@@ -2171,6 +2228,7 @@ TEST_F(CloudV2NpuDriverTest, LogicCqAllocateV2_001)
 
 int32_t halMapErrorCode(drvError_t drvErrCode)
 {
+    ++g_halMapErrorCodeCallCount;
     if (static_cast<uint32_t>(drvErrCode) == 1) {
         return -1;
     } else if (static_cast<uint32_t>(drvErrCode) == 2) {

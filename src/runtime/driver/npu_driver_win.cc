@@ -1636,20 +1636,21 @@ rtError_t NpuDriver::DevMemAllocOnline(
 }
 
 rtError_t NpuDriver::MemAllocHugePolicyPageOffline(
-    void** const dptr, const uint64_t size, const rtMemType_t type, const uint32_t deviceId,
-    const uint16_t moduleId) const
+    void** const dptr, const uint64_t size, const rtMemType_t type, const uint32_t deviceId, const uint16_t moduleId,
+    const bool isLogError) const
 {
     UNUSED(dptr);
     UNUSED(size);
     UNUSED(deviceId);
     UNUSED(moduleId);
     UNUSED(type);
+    UNUSED(isLogError);
     return RT_ERROR_NONE;
 }
 
 rtError_t NpuDriver::MemAllocPolicyOffline(
     void** const dptr, const uint64_t size, const uint32_t memPolicy, const rtMemType_t type, const uint32_t deviceId,
-    const uint16_t moduleId) const
+    const uint16_t moduleId, const bool isLogError) const
 {
     UNUSED(dptr);
     UNUSED(size);
@@ -1657,17 +1658,20 @@ rtError_t NpuDriver::MemAllocPolicyOffline(
     UNUSED(moduleId);
     UNUSED(type);
     UNUSED(memPolicy);
+    UNUSED(isLogError);
     return RT_ERROR_NONE;
 }
 
 rtError_t NpuDriver::DevMemAllocOffline(
-    void** dptr, const uint64_t size, rtMemType_t type, const uint32_t deviceId, const uint16_t moduleId) const
+    void** dptr, const uint64_t size, rtMemType_t type, const uint32_t deviceId, const uint16_t moduleId,
+    const bool isLogError) const
 {
     UNUSED(dptr);
     UNUSED(size);
     UNUSED(deviceId);
     UNUSED(moduleId);
     UNUSED(type);
+    UNUSED(isLogError);
     return RT_ERROR_NONE;
 }
 
