@@ -150,7 +150,7 @@ PyObject* WrapAclRtGetDeviceInfo(PyObject* /* self */, PyObject* args)
     CHECK_NULL(PyArg_ParseTuple(args, "II", &deviceId, &attr), "acl.rt.get_device_info args parse failed");
 
     aclError ret = aclrtGetDeviceInfo(deviceId, attr, &value);
-    return Py_BuildValue("ii", value, ret);
+    return Py_BuildValue("li", value, ret);
 }
 
 PyObject* WrapAclRtDeviceGetStreamPriorityRange(PyObject* /* self */, PyObject* /* args */)
