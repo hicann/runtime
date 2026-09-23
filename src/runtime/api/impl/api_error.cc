@@ -4844,7 +4844,7 @@ rtError_t ApiErrorDecorator::RegProfCtrlCallback(const uint32_t moduleId, const 
 
 rtError_t ApiErrorDecorator::GetL2CacheOffset(uint32_t deviceId, uint64_t* offset)
 {
-    COND_RETURN_ERROR((offset == nullptr), RT_ERROR_INVALID_VALUE, "offset is null");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(offset, RT_ERROR_INVALID_VALUE, "offset is null");
     uint32_t realDeviceId = 0;
     rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(deviceId, &realDeviceId);
     COND_RETURN_ERROR(
@@ -5097,7 +5097,7 @@ rtError_t ApiErrorDecorator::GetDeviceCapability(
 rtError_t ApiErrorDecorator::GetFaultEvent(
     const int32_t deviceId, rtDmsEventFilter* filter, rtDmsFaultEvent* dmsEvent, uint32_t len, uint32_t* eventCount)
 {
-    COND_RETURN_ERROR((filter == nullptr), RT_ERROR_INVALID_VALUE, "input filter is null");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(filter, RT_ERROR_INVALID_VALUE, "input filter is null");
     Runtime* const rtInstance = Runtime::Instance();
     COND_RETURN_ERROR_MSG_INNER(rtInstance == nullptr, RT_ERROR_INSTANCE_NULL, "Runtime instance is null");
     const rtChipType_t chipType = rtInstance->GetChipType();
@@ -5118,7 +5118,7 @@ rtError_t ApiErrorDecorator::GetFaultEvent(
 
 rtError_t ApiErrorDecorator::GetMemUceInfo(const uint32_t deviceId, rtMemUceInfo* memUceInfo)
 {
-    COND_RETURN_ERROR((memUceInfo == nullptr), RT_ERROR_INVALID_VALUE, "input memUceInfo is null.");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(memUceInfo, RT_ERROR_INVALID_VALUE, "input memUceInfo is null.");
     Runtime* const rtInstance = Runtime::Instance();
     COND_RETURN_ERROR_MSG_INNER(rtInstance == nullptr, RT_ERROR_INSTANCE_NULL, "Runtime instance is null.");
     const rtChipType_t chipType = rtInstance->GetChipType();
@@ -5154,7 +5154,7 @@ rtError_t ApiErrorDecorator::GetMemUceInfo(const uint32_t deviceId, rtMemUceInfo
 
 rtError_t ApiErrorDecorator::MemUceRepair(const uint32_t deviceId, rtMemUceInfo* memUceInfo)
 {
-    COND_RETURN_ERROR((memUceInfo == nullptr), RT_ERROR_INVALID_VALUE, "input memUceInfo is null");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(memUceInfo, RT_ERROR_INVALID_VALUE, "input memUceInfo is null");
     Runtime* const rtInstance = Runtime::Instance();
     COND_RETURN_ERROR_MSG_INNER(rtInstance == nullptr, RT_ERROR_INSTANCE_NULL, "Runtime instance is null");
     const rtChipType_t chipType = rtInstance->GetChipType();
@@ -6199,15 +6199,15 @@ rtError_t ApiErrorDecorator::CtxGetSysParamOpt(const rtSysParamOpt configOpt, in
 
 rtError_t ApiErrorDecorator::CtxGetOverflowAddr(void** const overflowAddr)
 {
-    COND_RETURN_ERROR(
-        overflowAddr == nullptr, RT_ERROR_INVALID_VALUE, "Check param failed, overflowAddr can not be null.");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
+        overflowAddr, RT_ERROR_INVALID_VALUE, "Check param failed, overflowAddr can not be null.");
     return impl_->CtxGetOverflowAddr(overflowAddr);
 }
 
 rtError_t ApiErrorDecorator::GetDeviceSatStatus(void* const outputAddrPtr, const uint64_t outputSize, Stream* const stm)
 {
-    COND_RETURN_ERROR(
-        outputAddrPtr == nullptr, RT_ERROR_INVALID_VALUE, "Check param failed, outputAddrPtr can not be null.");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
+        outputAddrPtr, RT_ERROR_INVALID_VALUE, "Check param failed, outputAddrPtr can not be null.");
     COND_RETURN_ERROR(
         outputSize != OVERFLOW_OUTPUT_SIZE, RT_ERROR_INVALID_VALUE,
         "Output size %lu is invalid. Only %lu bytes are supported", outputSize, OVERFLOW_OUTPUT_SIZE);
