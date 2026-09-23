@@ -660,9 +660,7 @@ rtError_t ApiImpl::MemsetD32(void* const dst, const uint64_t destMax, const uint
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
     Device* device = curCtx->Device_();
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        device, RT_ERROR_INVALID_VALUE,
-        "Setting the memory content to a specified 32-bit unsigned integer value synchronously");
+    NULL_PTR_RETURN_MSG(device, RT_ERROR_INVALID_VALUE);
 
     const rtError_t deviceStatus = device->GetDeviceStatus();
     COND_PROC((deviceStatus == RT_ERROR_DEVICE_TASK_ABORT), return deviceStatus);
@@ -694,9 +692,7 @@ rtError_t ApiImpl::MemsetD32Async(
 
     // 4. Get memory location attributes
     Device* device = curCtx->Device_();
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        device, RT_ERROR_INVALID_VALUE,
-        "Setting the memory content to a specified 32-bit unsigned integer value asynchronously");
+    NULL_PTR_RETURN_MSG(device, RT_ERROR_INVALID_VALUE);
 
     rtPtrAttributes_t attr;
     rtError_t error = device->Driver_()->PtrGetAttributes(dst, &attr);

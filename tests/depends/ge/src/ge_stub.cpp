@@ -51,6 +51,14 @@ std::unique_ptr<const char_t[]> aclStub::GetErrMgrErrorMessage()
 
 int aclStub::Init() { return 0; }
 
+int32_t aclStub::ReportPredefinedErrMsg(const char* errorCode, const ErrorMsgArgs& keys, const ErrorMsgArgs& values)
+{
+    (void)errorCode;
+    (void)keys;
+    (void)values;
+    return 0;
+}
+
 int error_message::ErrMgrInit(error_message::ErrorMessageMode error_mode)
 {
     (void)error_mode;
@@ -67,7 +75,7 @@ int32_t error_message::ReportPredefinedErrMsg(const char* error_code) { return 0
 int32_t error_message::ReportPredefinedErrMsg(
     const char* error_code, const std::vector<const char*>& key, const std::vector<const char*>& value)
 {
-    return 0;
+    return MockFunctionTest::aclStubInstance().ReportPredefinedErrMsg(error_code, key, value);
 }
 
 int32_t error_message::ReportInnerErrMsg(
@@ -193,6 +201,10 @@ void MockFunctionTest::ResetToDefaultMock()
             return aclStub::rtMemcpy(dst, destMax, src, count, kind);
         });
     ON_CALL(*this, GetErrMgrErrorMessage).WillByDefault([this]() { return aclStub::GetErrMgrErrorMessage(); });
+    ON_CALL(*this, ReportPredefinedErrMsg)
+        .WillByDefault([this](const char* errorCode, const ErrorMsgArgs& keys, const ErrorMsgArgs& values) {
+            return aclStub::ReportPredefinedErrMsg(errorCode, keys, values);
+        });
     ON_CALL(*this, rtHostMemMapCapabilities)
         .WillByDefault([this](uint32_t deviceId, rtHacType hacType, rtHostMemMapCapability* capabilities) {
             return aclStub::rtHostMemMapCapabilities(deviceId, hacType, capabilities);

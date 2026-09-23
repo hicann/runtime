@@ -108,10 +108,10 @@ rtError_t MemSetAsync(
 
     if ((attributes.location.type == RT_MEMORY_LOC_HOST) || (attributes.location.type == RT_MEMORY_LOC_UNREGISTERED)) {
         const errno_t ret = memset_s(ptr, destMax, static_cast<int32_t>(fillVal), fillCount);
-        COND_RETURN_ERROR_MSG_CALL(
-            ERR_MODULE_SYSTEM, ret != EOK, RT_ERROR_SEC_HANDLE,
-            "Memset async failed, due to memset_s failed, destMax=%" PRIu64 ", fillCount=%" PRIu64 ", retCode=%d.",
-            destMax, fillCount, ret);
+        COND_RETURN_AND_MSG_OUTER(
+            ret != EOK, RT_ERROR_SEC_HANDLE, ErrorCode::EE1020, "Asynchronous memory set", "memset_s",
+            std::to_string(ret), strerror(ret),
+            RtFmtMsg("devPtr=%p, maxCount=%" PRIu64 ", count=%" PRIu64 ".", ptr, destMax, fillCount));
     } else {
         COND_RETURN_ERROR_MSG_INNER(
             fillCount > destMax, RT_ERROR_INVALID_VALUE,

@@ -93,7 +93,7 @@ rtError_t MemcpyAsyncTaskInitV3(
     const rtTaskCfgInfo_t* cfgInfo, const rtD2DAddrCfgInfo_t* const addrCfg)
 {
     rtError_t error = MemcpyAsyncTaskCommonInit(taskInfo);
-    ERROR_RETURN_MSG_INNER(error, "MemcpyAsyncTaskCommonInit V3 failed, retCode=%#x.", error);
+    ERROR_RETURN(error, "MemcpyAsyncTaskCommonInit V3 failed, retCode=%#x.", error);
 
     MemcpyAsyncTaskInfo* memcpyAsyncTaskInfo = &(taskInfo->u.memcpyAsyncTaskInfo);
     UNUSED(cpyType);

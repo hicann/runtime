@@ -161,7 +161,7 @@ rtError_t ApiImpl::HostRegister(void* ptr, uint64_t size, rtHostRegisterType typ
 {
     RT_LOG(RT_LOG_INFO, "MemSize=%" PRIu64 "u, type=%d.", size, type);
     Context* const curCtx = CurrentContext();
-    NULL_PTR_RETURN_MSG(curCtx, RT_ERROR_CONTEXT_NULL);
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     const Device* const dev = curCtx->Device_();
     NULL_PTR_RETURN_MSG(dev, RT_ERROR_DEVICE_NULL);
 
@@ -178,7 +178,7 @@ rtError_t ApiImpl::HostRegisterV2(void* ptr, uint64_t size, uint32_t flag)
 {
     RT_LOG(RT_LOG_INFO, "MemSize=%" PRIu64 ", flag=%u.", size, flag);
     Context* const curCtx = CurrentContext();
-    NULL_PTR_RETURN_MSG(curCtx, RT_ERROR_CONTEXT_NULL);
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     const Device* const dev = curCtx->Device_();
     NULL_PTR_RETURN_MSG(dev, RT_ERROR_DEVICE_NULL);
     const uint32_t deviceId = dev->Id_();
@@ -217,7 +217,7 @@ rtError_t ApiImpl::HostRegisterV2(void* ptr, uint64_t size, uint32_t flag)
 rtError_t ApiImpl::HostUnregister(void* ptr)
 {
     Context* const curCtx = CurrentContext();
-    NULL_PTR_RETURN_MSG(curCtx, RT_ERROR_CONTEXT_NULL);
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     const Device* const dev = curCtx->Device_();
     NULL_PTR_RETURN_MSG(dev, RT_ERROR_DEVICE_NULL);
     const uint32_t deviceId = dev->Id_();
@@ -239,7 +239,7 @@ rtError_t ApiImpl::HostUnregister(void* ptr)
             ErasePinnedMemory(ptr);
         }
         if ((!isMapped) && (!isPinned)) {
-            RT_LOG(RT_LOG_INFO, "set to error RT_ERROR_HOST_MEMORY_NOT_REGISTERED because of not registered.");
+            RT_LOG(RT_LOG_WARNING, "host memory is not registered.");
             error = RT_ERROR_HOST_MEMORY_NOT_REGISTERED;
         }
     }
@@ -306,13 +306,13 @@ rtError_t ApiImpl::MemCopySyncEx(
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     Device* device = curCtx->Device_();
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(device, RT_ERROR_INVALID_VALUE, "Synchronous memory copy");
+    NULL_PTR_RETURN_MSG(device, RT_ERROR_INVALID_VALUE);
     const rtError_t error = device->GetDeviceStatus();
     COND_PROC((error == RT_ERROR_DEVICE_TASK_ABORT), return error);
     CHECK_CAPTURE_MODE_SUPPORT_AND_RETURN_WITH_FUNC_DESC(curCtx, "Synchronous memory copy");
 
     Driver* driver = device->Driver_();
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(driver, RT_ERROR_INVALID_VALUE, "Synchronous memory copy");
+    NULL_PTR_RETURN_MSG(driver, RT_ERROR_INVALID_VALUE);
     rtMemcpyKind_t curKind = kind;
     if (device->IsSPM(dst)) {
         curKind = (driver->GetRunMode() == static_cast<uint32_t>(RT_RUN_MODE_ONLINE)) ? RT_MEMCPY_HOST_TO_DEVICE :
@@ -809,9 +809,8 @@ rtError_t ApiImpl::DevMalloc(
         RT_LOG(RT_LOG_INFO, "cfg is nullptr use default cfg");
     } else {
         error = ParseMallocCfg(cfg, &cfgVal);
-        COND_RETURN_ERROR_MSG_INNER(
-            error != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE, "Parse rtMallocConfig failed, error=%#x.",
-            static_cast<uint32_t>(error));
+        COND_RETURN_ERROR(
+            error != RT_ERROR_NONE, error, "Parse rtMallocConfig failed, error=%#x.", static_cast<uint32_t>(error));
     }
     Runtime* rtInstance = Runtime::Instance();
     uint32_t realDeviceId = cfgVal.deviceId;

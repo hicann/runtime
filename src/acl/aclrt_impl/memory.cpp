@@ -188,13 +188,15 @@ inline aclError MemcpyKindTranslate(const aclrtMemcpyKind kind, rtMemcpyKind_t& 
         }
         default: {
             ACL_LOG_ERROR("[Check][MemcpyKindTranslate]param kind invalid, which is %s.", acl::GetMemcpyKindDesc(kind));
+            const std::string expected = acl::AclErrorLogManager::FormatStr(
+                "%s or %s or %s or %s or %s or %s", acl::GetMemcpyKindDesc(ACL_MEMCPY_HOST_TO_DEVICE),
+                acl::GetMemcpyKindDesc(ACL_MEMCPY_DEVICE_TO_DEVICE), acl::GetMemcpyKindDesc(ACL_MEMCPY_DEVICE_TO_HOST),
+                acl::GetMemcpyKindDesc(ACL_MEMCPY_HOST_TO_HOST), acl::GetMemcpyKindDesc(ACL_MEMCPY_DEFAULT),
+                acl::GetMemcpyKindDesc(ACL_MEMCPY_HOST_TO_BUF_TO_DEVICE));
             acl::AclErrorLogManager::ReportInputError(
                 acl::INVALID_VALUE_MSG, std::vector<const char*>({"func", "value", "param", "expect"}),
                 std::vector<const char*>(
-                    {"Memory copy type conversion", acl::GetMemcpyKindDesc(kind), "kind",
-                     "ACL_MEMCPY_HOST_TO_DEVICE or "
-                     "ACL_MEMCPY_DEVICE_TO_DEVICE or ACL_MEMCPY_DEVICE_TO_HOST or "
-                     "ACL_MEMCPY_HOST_TO_HOST or ACL_MEMCPY_DEFAULT or ACL_MEMCPY_HOST_TO_BUF_TO_DEVICE."}));
+                    {"Memory copy type conversion", acl::GetMemcpyKindDesc(kind), "kind", expected.c_str()}));
             return ACL_ERROR_INVALID_PARAM;
         }
     }
@@ -258,11 +260,14 @@ aclError CheckMemcpy2dSyncKind(const aclrtMemcpyKind kind, rtMemcpyKind_t& rtKin
         }
         default: {
             ACL_LOG_ERROR("[Check][Kind]invalid kind of memcpy, kind = %s", acl::GetMemcpyKindDesc(kind));
+            const std::string expected = acl::AclErrorLogManager::FormatStr(
+                "%s or %s or %s", acl::GetMemcpyKindDesc(ACL_MEMCPY_HOST_TO_DEVICE),
+                acl::GetMemcpyKindDesc(ACL_MEMCPY_DEVICE_TO_HOST), acl::GetMemcpyKindDesc(ACL_MEMCPY_DEFAULT));
             acl::AclErrorLogManager::ReportInputError(
                 acl::INVALID_VALUE_MSG, std::vector<const char*>({"func", "value", "param", "expect"}),
                 std::vector<const char*>(
                     {"Checking the synchronous memory copy parameter validity", acl::GetMemcpyKindDesc(kind), "kind",
-                     "ACL_MEMCPY_HOST_TO_DEVICE or ACL_MEMCPY_DEVICE_TO_HOST or ACL_MEMCPY_DEFAULT"}));
+                     expected.c_str()}));
             ret = ACL_ERROR_INVALID_PARAM;
             break;
         }
@@ -292,12 +297,15 @@ aclError CheckMemcpy2dAsyncKind(const aclrtMemcpyKind kind, rtMemcpyKind_t& rtKi
         }
         default: {
             ACL_LOG_ERROR("[Check][Kind]invalid kind of memcpy, kind = %s", acl::GetMemcpyKindDesc(kind));
+            const std::string expected = acl::AclErrorLogManager::FormatStr(
+                "%s or %s or %s or %s", acl::GetMemcpyKindDesc(ACL_MEMCPY_HOST_TO_DEVICE),
+                acl::GetMemcpyKindDesc(ACL_MEMCPY_DEVICE_TO_HOST), acl::GetMemcpyKindDesc(ACL_MEMCPY_DEVICE_TO_DEVICE),
+                acl::GetMemcpyKindDesc(ACL_MEMCPY_DEFAULT));
             acl::AclErrorLogManager::ReportInputError(
                 acl::INVALID_VALUE_MSG, std::vector<const char*>({"func", "value", "param", "expect"}),
                 std::vector<const char*>(
                     {"Checking the asynchronous memory copy parameter validity", acl::GetMemcpyKindDesc(kind), "kind",
-                     "ACL_MEMCPY_HOST_TO_DEVICE or ACL_MEMCPY_DEVICE_TO_HOST or ACL_MEMCPY_DEVICE_TO_DEVICE or "
-                     "ACL_MEMCPY_DEFAULT"}));
+                     expected.c_str()}));
             ret = ACL_ERROR_INVALID_PARAM;
             break;
         }
@@ -326,7 +334,8 @@ void GetPaddingSize(size_t* paddingSize)
     }
 }
 
-aclError GetAlignedAndPaddingSize(const size_t size, const bool isPadding, size_t& alignedSize)
+aclError GetAlignedAndPaddingSize(
+    const size_t size, const bool isPadding, size_t& alignedSize, const char* const funcDesc)
 {
     static std::once_flag hasReadPaddingSize;
     static size_t paddingSize = DATA_MEMORY_PADDING_SIZE;
@@ -336,7 +345,13 @@ aclError GetAlignedAndPaddingSize(const size_t size, const bool isPadding, size_
 
     // check overflow before alignment calculation
     if ((size + appendSize) < size) {
-        ACL_LOG_INNER_ERROR("[Check][Size]size too large: %zu", size);
+        const size_t maxSize = SIZE_MAX - appendSize;
+        const std::string sizeVal = std::to_string(size);
+        const std::string expected = acl::AclErrorLogManager::FormatStr("[1, %zu]", maxSize);
+        ACL_LOG_ERROR("[Check][Size]size=%zu exceeds maxSize=%zu.", size, maxSize);
+        acl::AclErrorLogManager::ReportInputError(
+            acl::INVALID_VALUE_MSG, std::vector<const char*>({"func", "value", "param", "expect"}),
+            std::vector<const char*>({funcDesc, sizeVal.c_str(), "size", expected.c_str()}));
         return ACL_ERROR_INVALID_PARAM;
     }
 
@@ -345,16 +360,17 @@ aclError GetAlignedAndPaddingSize(const size_t size, const bool isPadding, size_
 }
 
 static aclError aclMallocMemInner(
-    void** devPtr, const size_t size, bool isPadding, const aclrtMemMallocPolicy policy, const uint16_t moduleId)
+    void** devPtr, const size_t size, bool isPadding, const aclrtMemMallocPolicy policy, const uint16_t moduleId,
+    const char* const funcDesc)
 {
     ACL_ADD_APPLY_TOTAL_COUNT(acl::ACL_STATISTICS_MALLOC_FREE);
     ACL_LOG_DEBUG("start to execute aclMallocMemInner, size = %zu", size);
-    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(devPtr);
-    ACL_REQUIRES_POSITIVE_REPORT(size);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT_AND_FUNC_DESC(devPtr, funcDesc);
+    ACL_REQUIRES_POSITIVE_REPORT_WITH_FUNC_DESC(size, funcDesc);
     size_t alignedSize = size;
     const bool huge1g = (policy == ACL_MEM_MALLOC_HUGE1G_ONLY) || (policy == ACL_MEM_MALLOC_HUGE1G_ONLY_P2P);
     isPadding = !huge1g && isPadding;
-    ACL_REQUIRES_OK(acl::GetAlignedAndPaddingSize(size, isPadding, alignedSize));
+    ACL_REQUIRES_OK(acl::GetAlignedAndPaddingSize(size, isPadding, alignedSize, funcDesc));
     uint32_t flags = RT_MEMORY_DEFAULT;
     if (policy == ACL_MEM_MALLOC_HUGE_FIRST) {
         flags |= RT_MEMORY_POLICY_HUGE_PAGE_FIRST;
@@ -381,24 +397,23 @@ static aclError aclMallocMemInner(
 }
 
 aclError aclrtMallocInnerWithCfg(
-    void** devPtr, const size_t size, aclrtMemMallocPolicy policy, rtMallocAdvise advise, aclrtMallocConfig* cfg)
+    void** devPtr, const size_t size, aclrtMemMallocPolicy policy, rtMallocAdvise advise, aclrtMallocConfig* cfg,
+    const char* const funcDesc)
 {
     ACL_ADD_APPLY_TOTAL_COUNT(acl::ACL_STATISTICS_MALLOC_FREE);
     ACL_LOG_DEBUG("start to execute aclrtMallocInnerWithCfg, size = %zu", size);
-    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(devPtr);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT_AND_FUNC_DESC(devPtr, funcDesc);
 
     // check attrs pointer
     if ((cfg != nullptr) && (cfg->numAttrs != 0) && (cfg->attrs == nullptr)) {
-        const std::string numAttrsVal = std::to_string(cfg->numAttrs);
         acl::AclErrorLogManager::ReportInputError(
             acl::INVALID_PARAM_REASON_MSG, std::vector<const char*>({"func", "value", "param", "reason"}),
             std::vector<const char*>(
-                {__func__, numAttrsVal.c_str(), "cfg->numAttrs",
-                 "cfg->attrs must not be null when cfg->numAttrs is not 0"}));
+                {funcDesc, "nullptr", "cfg->attrs", "cfg->attrs must not be nullptr when cfg->numAttrs is not 0"}));
         return ACL_ERROR_INVALID_PARAM;
     }
     // size must be greater than 0
-    ACL_REQUIRES_POSITIVE_REPORT(size);
+    ACL_REQUIRES_POSITIVE_REPORT_WITH_FUNC_DESC(size, funcDesc);
 
     ACL_REQUIRES_RTS_OK(
         rtsMalloc(devPtr, size, static_cast<rtMallocPolicy>(policy), advise, reinterpret_cast<rtMallocConfig_t*>(cfg)));
@@ -415,13 +430,13 @@ aclError aclrtMallocImpl(void** devPtr, size_t size, aclrtMemMallocPolicy policy
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtMalloc);
     ACL_LOG_DEBUG("start to execute aclrtMalloc, size = %zu", size);
-    return acl::aclMallocMemInner(devPtr, size, true, policy, acl::APP_MODE_ID_U16);
+    return acl::aclMallocMemInner(devPtr, size, true, policy, acl::APP_MODE_ID_U16, "aclrtMalloc");
 }
 
 aclError aclrtMallocAlign32Impl(void** devPtr, size_t size, aclrtMemMallocPolicy policy)
 {
     ACL_LOG_DEBUG("start to execute aclrtMallocAlign32, size = %zu", size);
-    return acl::aclMallocMemInner(devPtr, size, false, policy, acl::APP_MODE_ID_U16);
+    return acl::aclMallocMemInner(devPtr, size, false, policy, acl::APP_MODE_ID_U16, "aclrtMallocAlign32");
 }
 
 aclError aclrtMallocCachedImpl(void** devPtr, size_t size, aclrtMemMallocPolicy policy)
@@ -435,7 +450,7 @@ aclError aclrtMallocCachedImpl(void** devPtr, size_t size, aclrtMemMallocPolicy 
     size_t alignedSize = size;
     const bool huge1g = (policy == ACL_MEM_MALLOC_HUGE1G_ONLY) || (policy == ACL_MEM_MALLOC_HUGE1G_ONLY_P2P);
     const bool isPadding = !huge1g;
-    ACL_REQUIRES_OK(acl::GetAlignedAndPaddingSize(size, isPadding, alignedSize));
+    ACL_REQUIRES_OK(acl::GetAlignedAndPaddingSize(size, isPadding, alignedSize, "aclrtMallocCached"));
     uint32_t cacheFlags = RT_MEMORY_DEFAULT;
     if (policy == ACL_MEM_MALLOC_HUGE_FIRST) {
         cacheFlags |= RT_MEMORY_POLICY_HUGE_PAGE_FIRST;
@@ -458,7 +473,7 @@ aclError aclrtMallocWithCfgImpl(void** devPtr, size_t size, aclrtMemMallocPolicy
     ACL_PROFILING_REG(acl::AclProfType::AclrtMallocWithCfg);
     ACL_ADD_APPLY_TOTAL_COUNT(acl::ACL_STATISTICS_MALLOC_FREE);
     ACL_LOG_DEBUG("start to execute aclrtMallocWithCfg, size = %zu", size);
-    return acl::aclrtMallocInnerWithCfg(devPtr, size, policy, RT_MEM_ADVISE_NONE, cfg);
+    return acl::aclrtMallocInnerWithCfg(devPtr, size, policy, RT_MEM_ADVISE_NONE, cfg, "aclrtMallocWithCfg");
 }
 
 aclError aclrtMallocForTaskSchedulerImpl(
@@ -466,7 +481,7 @@ aclError aclrtMallocForTaskSchedulerImpl(
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtMallocForTaskScheduler);
     ACL_LOG_DEBUG("start to execute aclrtMallocForTaskScheduler, size = %zu", size);
-    return acl::aclrtMallocInnerWithCfg(devPtr, size, policy, RT_MEM_ADVISE_TS, cfg);
+    return acl::aclrtMallocInnerWithCfg(devPtr, size, policy, RT_MEM_ADVISE_TS, cfg, "aclrtMallocForTaskScheduler");
 }
 
 aclError aclrtMallocHostWithCfgImpl(void** ptr, uint64_t size, aclrtMallocConfig* cfg)
@@ -823,6 +838,10 @@ aclError aclrtMemsetD32Impl(void* ptr, size_t memSize, uint32_t value, size_t N)
     // Check byte alignment
     if ((reinterpret_cast<uintptr_t>(ptr) & ALIGNMENT_4BYTE_MASK) != 0) {
         ACL_LOG_ERROR("Pointer ptr=%p is not 4-byte aligned", ptr);
+        const std::string ptrValue = acl::AclErrorLogManager::FormatStr("%p", ptr);
+        acl::AclErrorLogManager::ReportInputError(
+            acl::INVALID_PARAM_REASON_MSG, std::vector<const char*>({"func", "value", "param", "reason"}),
+            std::vector<const char*>({"aclrtMemsetD32", ptrValue.c_str(), "ptr", "The pointer is not 4-byte aligned"}));
         return ACL_ERROR_INVALID_PARAM;
     }
 
@@ -888,6 +907,11 @@ aclError aclrtMemsetD32AsyncImpl(void* ptr, size_t memSize, uint32_t value, size
     // Check byte alignment
     if ((reinterpret_cast<uintptr_t>(ptr) & ALIGNMENT_4BYTE_MASK) != 0) {
         ACL_LOG_ERROR("Pointer ptr=%p is not 4-byte aligned", ptr);
+        const std::string ptrValue = acl::AclErrorLogManager::FormatStr("%p", ptr);
+        acl::AclErrorLogManager::ReportInputError(
+            acl::INVALID_PARAM_REASON_MSG, std::vector<const char*>({"func", "value", "param", "reason"}),
+            std::vector<const char*>(
+                {"aclrtMemsetD32Async", ptrValue.c_str(), "ptr", "The pointer is not 4-byte aligned"}));
         return ACL_ERROR_INVALID_PARAM;
     }
 
@@ -2350,7 +2374,8 @@ aclError aclrtGetSymbolSizeImpl(const void* symbol, size_t* size)
     return ACL_SUCCESS;
 }
 
-static aclError GetSymbolInfo(const void* symbol, size_t count, size_t offset, void** symbolAddr, size_t* symbolSize)
+static aclError GetSymbolInfo(
+    const void* symbol, size_t count, size_t offset, void** symbolAddr, size_t* symbolSize, const char* const funcDesc)
 {
     *symbolAddr = nullptr;
     *symbolSize = 0UL;
@@ -2361,37 +2386,41 @@ static aclError GetSymbolInfo(const void* symbol, size_t count, size_t offset, v
     if (totalSize > *symbolSize) {
         ACL_LOG_ERROR(
             "[Check][Offset]offset[%zu] + count[%zu] must be <= symbolSize[%zu].", offset, count, *symbolSize);
+        const std::string totalSizeValue = std::to_string(totalSize);
+        const std::string reason = acl::AclErrorLogManager::FormatStr(
+            "The sum of offset and count exceeds the symbol size (%zu)", *symbolSize);
         acl::AclErrorLogManager::ReportInputError(
-            acl::INVALID_PARAM_MSG, std::vector<const char*>({"param", "value", "reason"}),
-            std::vector<const char*>({"offset+count", std::to_string(totalSize).c_str(), "must be <= symbolSize"}));
+            acl::INVALID_PARAM_REASON_MSG, std::vector<const char*>({"func", "value", "param", "reason"}),
+            std::vector<const char*>({funcDesc, totalSizeValue.c_str(), "offset+count", reason.c_str()}));
         return ACL_ERROR_INVALID_PARAM;
     }
 
     return ACL_SUCCESS;
 }
 
-static aclError CheckMemcpyFromSymbol(void* dst, const void* symbol, size_t count, size_t dstMax, aclrtMemcpyKind kind)
+static aclError CheckMemcpyFromSymbol(
+    void* dst, const void* symbol, size_t count, size_t dstMax, aclrtMemcpyKind kind, const char* const funcDesc)
 {
-    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT_AND_FUNC_DESC(symbol, "Checking the synchronous memory copy parameter");
-    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT_AND_FUNC_DESC(dst, "Checking the synchronous memory copy parameter");
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT_AND_FUNC_DESC(symbol, funcDesc);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT_AND_FUNC_DESC(dst, funcDesc);
 
     if (count > dstMax) {
         ACL_LOG_ERROR("[Check][Count]count[%zu] must not be greater than dstMax[%zu].", count, dstMax);
+        const std::string countValue = std::to_string(count);
+        const std::string expected = acl::AclErrorLogManager::FormatStr("(0, %zu]", dstMax);
         acl::AclErrorLogManager::ReportInputError(
-            acl::INVALID_PARAM_MSG, std::vector<const char*>({"param", "value", "reason"}),
-            std::vector<const char*>({"count", std::to_string(count).c_str(), "must not be greater than dstMax"}));
+            acl::INVALID_VALUE_MSG, std::vector<const char*>({"func", "value", "param", "expect"}),
+            std::vector<const char*>({funcDesc, countValue.c_str(), "count", expected.c_str()}));
         return ACL_ERROR_INVALID_PARAM;
     }
 
     if ((kind != ACL_MEMCPY_DEVICE_TO_HOST) && (kind != ACL_MEMCPY_DEFAULT)) {
-        ACL_LOG_ERROR(
-            "[Check][Kind]kind[%s] only support ACL_MEMCPY_DEVICE_TO_HOST or ACL_MEMCPY_DEFAULT",
-            acl::GetMemcpyKindDesc(kind));
+        const std::string expected = acl::AclErrorLogManager::FormatStr(
+            "%s or %s", acl::GetMemcpyKindDesc(ACL_MEMCPY_DEVICE_TO_HOST), acl::GetMemcpyKindDesc(ACL_MEMCPY_DEFAULT));
+        ACL_LOG_ERROR("[Check][Kind]kind[%s] only supports %s", acl::GetMemcpyKindDesc(kind), expected.c_str());
         acl::AclErrorLogManager::ReportInputError(
             acl::INVALID_VALUE_MSG, std::vector<const char*>({"func", "value", "param", "expect"}),
-            std::vector<const char*>(
-                {"Checking the synchronous memory copy parameter", acl::GetMemcpyKindDesc(kind), "kind",
-                 "ACL_MEMCPY_DEVICE_TO_HOST or ACL_MEMCPY_DEFAULT"}));
+            std::vector<const char*>({funcDesc, acl::GetMemcpyKindDesc(kind), "kind", expected.c_str()}));
         return ACL_ERROR_INVALID_PARAM;
     }
 
@@ -2407,14 +2436,15 @@ aclError aclrtMemcpyFromSymbolImpl(
         ACL_LOG_INFO("count is 0, no need to execute mem copy from symbol, just return success.");
         return ACL_SUCCESS;
     }
-    aclError ret = CheckMemcpyFromSymbol(dst, symbol, count, dstMax, kind);
+    constexpr const char* funcDesc = "aclrtMemcpyFromSymbol";
+    aclError ret = CheckMemcpyFromSymbol(dst, symbol, count, dstMax, kind, funcDesc);
     if (ret != ACL_SUCCESS) {
         return ret;
     }
 
     void* symbolAddr = nullptr;
     size_t symbolSize = 0UL;
-    ret = GetSymbolInfo(symbol, count, offset, &symbolAddr, &symbolSize);
+    ret = GetSymbolInfo(symbol, count, offset, &symbolAddr, &symbolSize, funcDesc);
     if (ret != ACL_SUCCESS) {
         return ret;
     }
@@ -2434,14 +2464,15 @@ aclError aclrtMemcpyFromSymbolAsyncImpl(
         return ACL_SUCCESS;
     }
 
-    aclError aclErr = CheckMemcpyFromSymbol(dst, symbol, count, dstMax, kind);
+    constexpr const char* funcDesc = "aclrtMemcpyFromSymbolAsync";
+    aclError aclErr = CheckMemcpyFromSymbol(dst, symbol, count, dstMax, kind, funcDesc);
     if (aclErr != ACL_SUCCESS) {
         return aclErr;
     }
 
     void* symbolAddr = nullptr;
     size_t symbolSize = 0UL;
-    aclErr = GetSymbolInfo(symbol, count, offset, &symbolAddr, &symbolSize);
+    aclErr = GetSymbolInfo(symbol, count, offset, &symbolAddr, &symbolSize, funcDesc);
     if (aclErr != ACL_SUCCESS) {
         return aclErr;
     }
@@ -2451,20 +2482,19 @@ aclError aclrtMemcpyFromSymbolAsyncImpl(
     return ACL_SUCCESS;
 }
 
-static aclError CheckMemcpyToSymbol(const void* symbol, const void* src, aclrtMemcpyKind kind)
+static aclError CheckMemcpyToSymbol(
+    const void* symbol, const void* src, aclrtMemcpyKind kind, const char* const funcDesc)
 {
-    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT_AND_FUNC_DESC(symbol, "Checking the synchronous memory copy parameter");
-    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT_AND_FUNC_DESC(src, "Checking the synchronous memory copy parameter");
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT_AND_FUNC_DESC(symbol, funcDesc);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT_AND_FUNC_DESC(src, funcDesc);
 
     if ((kind != ACL_MEMCPY_HOST_TO_DEVICE) && (kind != ACL_MEMCPY_DEFAULT)) {
-        ACL_LOG_ERROR(
-            "[Check][Kind]kind[%s] only support ACL_MEMCPY_HOST_TO_DEVICE or ACL_MEMCPY_DEFAULT",
-            acl::GetMemcpyKindDesc(kind));
+        const std::string expected = acl::AclErrorLogManager::FormatStr(
+            "%s or %s", acl::GetMemcpyKindDesc(ACL_MEMCPY_HOST_TO_DEVICE), acl::GetMemcpyKindDesc(ACL_MEMCPY_DEFAULT));
+        ACL_LOG_ERROR("[Check][Kind]kind[%s] only supports %s", acl::GetMemcpyKindDesc(kind), expected.c_str());
         acl::AclErrorLogManager::ReportInputError(
             acl::INVALID_VALUE_MSG, std::vector<const char*>({"func", "value", "param", "expect"}),
-            std::vector<const char*>(
-                {"Checking the synchronous memory copy parameter", acl::GetMemcpyKindDesc(kind), "kind",
-                 "ACL_MEMCPY_HOST_TO_DEVICE or ACL_MEMCPY_DEFAULT"}));
+            std::vector<const char*>({funcDesc, acl::GetMemcpyKindDesc(kind), "kind", expected.c_str()}));
         return ACL_ERROR_INVALID_PARAM;
     }
     return ACL_SUCCESS;
@@ -2479,14 +2509,15 @@ aclError aclrtMemcpyToSymbolImpl(const void* symbol, const void* src, size_t cou
         return ACL_SUCCESS;
     }
 
-    aclError ret = CheckMemcpyToSymbol(symbol, src, kind);
+    constexpr const char* funcDesc = "aclrtMemcpyToSymbol";
+    aclError ret = CheckMemcpyToSymbol(symbol, src, kind, funcDesc);
     if (ret != ACL_SUCCESS) {
         return ret;
     }
 
     void* symbolAddr = nullptr;
     size_t symbolSize = 0UL;
-    ret = GetSymbolInfo(symbol, count, offset, &symbolAddr, &symbolSize);
+    ret = GetSymbolInfo(symbol, count, offset, &symbolAddr, &symbolSize, funcDesc);
     if (ret != ACL_SUCCESS) {
         return ret;
     }
@@ -2506,14 +2537,15 @@ aclError aclrtMemcpyToSymbolAsyncImpl(
         return ACL_SUCCESS;
     }
 
-    aclError aclErr = CheckMemcpyToSymbol(symbol, src, kind);
+    constexpr const char* funcDesc = "aclrtMemcpyToSymbolAsync";
+    aclError aclErr = CheckMemcpyToSymbol(symbol, src, kind, funcDesc);
     if (aclErr != ACL_SUCCESS) {
         return aclErr;
     }
 
     void* symbolAddr = nullptr;
     size_t symbolSize = 0UL;
-    aclErr = GetSymbolInfo(symbol, count, offset, &symbolAddr, &symbolSize);
+    aclErr = GetSymbolInfo(symbol, count, offset, &symbolAddr, &symbolSize, funcDesc);
     if (aclErr != ACL_SUCCESS) {
         return aclErr;
     }

@@ -95,6 +95,7 @@ rtError_t rtsMemcpy2D(rtMemcpy2DParams_t* params, rtMemcpyConfig_t* config)
     const rtError_t error = apiInstance->MemCopy2DSync(
         params->dst, params->dstPitch, params->src, params->srcPitch, params->width, params->height, RT_MEMCPY_RESERVED,
         params->kind);
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }

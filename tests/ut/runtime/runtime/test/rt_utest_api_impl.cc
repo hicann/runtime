@@ -161,6 +161,41 @@ private:
 static void ApiImplTest_Stream_Cb(void* arg) {}
 
 namespace {
+struct DevMemAllocRetryTestData {
+    uint32_t callCount = 0U;
+    rtError_t retryResult = RT_ERROR_NONE;
+    bool isLogError[2] = {true, false};
+};
+
+DevMemAllocRetryTestData g_devMemAllocRetryTestData;
+
+rtError_t DevMemAllocRetryStub(
+    Driver* driver, void** dptr, uint64_t size, rtMemType_t type, uint32_t deviceId, uint16_t moduleId, bool isLogError,
+    bool readOnlyFlag, bool starsTillingFlag, bool isNewApi, bool cpOnlyFlag)
+{
+    UNUSED(driver);
+    UNUSED(size);
+    UNUSED(type);
+    UNUSED(deviceId);
+    UNUSED(moduleId);
+    UNUSED(readOnlyFlag);
+    UNUSED(starsTillingFlag);
+    UNUSED(isNewApi);
+    UNUSED(cpOnlyFlag);
+
+    const uint32_t callIndex = g_devMemAllocRetryTestData.callCount++;
+    if (callIndex < 2U) {
+        g_devMemAllocRetryTestData.isLogError[callIndex] = isLogError;
+    }
+    if (callIndex == 0U) {
+        return RT_ERROR_MEMORY_ALLOCATION;
+    }
+    if (g_devMemAllocRetryTestData.retryResult == RT_ERROR_NONE) {
+        *dptr = reinterpret_cast<void*>(0x1000);
+    }
+    return g_devMemAllocRetryTestData.retryResult;
+}
+
 struct HostFuncTestData {
     uint32_t callCount = 0U;
     void* lastArg = nullptr;
@@ -2130,6 +2165,50 @@ TEST_F(ApiImplTest, TestDevMalloc_01)
     error = impl.DevMalloc(&ptr, 64, RT_MEM_MALLOC_HUGE1G_ONLY_P2P, RT_MEM_ADVISE_NONE, cfgPtr);
     EXPECT_EQ(error, RT_ERROR_NONE);
     ((Runtime*)Runtime::Instance())->DeviceRelease(device);
+}
+
+TEST_F(ApiImplTest, DevMallocRetrySuccessOnlyEnablesErrorReportingForFinalAttempt)
+{
+    Context* const context = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(context, nullptr);
+    ASSERT_NE(context->Device_(), nullptr);
+    Driver* const driver = context->Device_()->Driver_();
+    ASSERT_NE(driver, nullptr);
+
+    g_devMemAllocRetryTestData = {};
+    g_devMemAllocRetryTestData.retryResult = RT_ERROR_NONE;
+    MOCKER_CPP_VIRTUAL(driver, &Driver::DevMemAlloc).expects(exactly(2)).will(invoke(DevMemAllocRetryStub));
+
+    ApiImpl impl;
+    void* ptr = nullptr;
+    const rtError_t error = impl.DevMalloc(&ptr, 64U, RT_MEMORY_DEFAULT, MODULEID_RUNTIME);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(ptr, reinterpret_cast<void*>(0x1000));
+    EXPECT_EQ(g_devMemAllocRetryTestData.callCount, 2U);
+    EXPECT_FALSE(g_devMemAllocRetryTestData.isLogError[0]);
+    EXPECT_TRUE(g_devMemAllocRetryTestData.isLogError[1]);
+}
+
+TEST_F(ApiImplTest, DevMallocRetryFailureEnablesErrorReportingForFinalAttempt)
+{
+    Context* const context = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(context, nullptr);
+    ASSERT_NE(context->Device_(), nullptr);
+    Driver* const driver = context->Device_()->Driver_();
+    ASSERT_NE(driver, nullptr);
+
+    g_devMemAllocRetryTestData = {};
+    g_devMemAllocRetryTestData.retryResult = RT_ERROR_MEMORY_ALLOCATION;
+    MOCKER_CPP_VIRTUAL(driver, &Driver::DevMemAlloc).expects(exactly(2)).will(invoke(DevMemAllocRetryStub));
+
+    ApiImpl impl;
+    void* ptr = nullptr;
+    const rtError_t error = impl.DevMalloc(&ptr, 64U, RT_MEMORY_DEFAULT, MODULEID_RUNTIME);
+    EXPECT_EQ(error, RT_ERROR_MEMORY_ALLOCATION);
+    EXPECT_EQ(ptr, nullptr);
+    EXPECT_EQ(g_devMemAllocRetryTestData.callCount, 2U);
+    EXPECT_FALSE(g_devMemAllocRetryTestData.isLogError[0]);
+    EXPECT_TRUE(g_devMemAllocRetryTestData.isLogError[1]);
 }
 
 TEST_F(ApiImplTest, modelGetName_decorator_test)

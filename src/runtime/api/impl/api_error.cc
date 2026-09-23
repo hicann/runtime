@@ -2390,8 +2390,7 @@ rtError_t ApiErrorDecorator::MemcpyAsync(
             " the range of parameter cnt should be (0, %u]",
             MAX_MEMCPY_SIZE_OF_D2D));
     rtError_t error = MemcpyAsyncCheckParam(kind, stm);
-    ERROR_RETURN_MSG_CALL(
-        ERR_MODULE_GE, error, "check memcpy async param failure, retCode=%#x.", static_cast<uint32_t>(error));
+    ERROR_RETURN(error, "check memcpy async param failure, retCode=%#x.", static_cast<uint32_t>(error));
     if (addrCfg != nullptr) {
         error = MemcpyAsyncCheckAddrCfg(destMax, cnt, addrCfg);
         COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
@@ -2421,7 +2420,7 @@ rtError_t ApiErrorDecorator::MemcpyAsync(
     if ((kind == RT_MEMCPY_HOST_TO_DEVICE_EX) || (kind == RT_MEMCPY_DEVICE_TO_HOST_EX)) {
         if (runMode == RT_RUN_MODE_ONLINE) {
             error = MemcpyAsyncCheckExLocation(checkKind, kind, src, dst);
-            COND_RETURN_ERROR_MSG_INNER(
+            COND_RETURN_ERROR(
                 error != RT_ERROR_NONE, error, "MemcpyAsync EX check src or dst location failed, stream_id=%d, kind=%s",
                 streamId, MemcpyKindToStr(kind));
         } else {
@@ -2432,7 +2431,7 @@ rtError_t ApiErrorDecorator::MemcpyAsync(
         error = MemcpyAsyncCheckLocation(
             checkKind, copyKind, src, dst, isUserRequireToCheckPinnedMem,
             isD2HorH2DInvolvePageableMemory); /* 会更新copykind */
-        COND_RETURN_ERROR_MSG_INNER(
+        COND_RETURN_ERROR(
             error != RT_ERROR_NONE, error,
             "MemcpyAsync check src or dst location failed, stream_id=%d, checkKind=%d, copyKind=%s", streamId,
             checkKind, MemcpyKindToStr(copyKind));
@@ -2824,21 +2823,19 @@ static inline bool contains(const std::vector<rtMemcpyKind_t>& v, rtMemcpyKind_t
     return std::find(v.begin(), v.end(), k) != v.end();
 }
 
-// helper: convert allowedKinds to comma list string (for logs)
+// helper: convert allowedKinds to a readable list string
 static std::string allowed_list_to_string(const std::vector<rtMemcpyKind_t>& v)
 {
     if (v.empty()) {
         return "{}";
     }
     std::ostringstream oss;
-    oss << "{";
     for (size_t i = 0; i < v.size(); ++i) {
-        oss << static_cast<int32_t>(v[i]);
-        if (i + 1U < v.size()) {
-            oss << ", ";
+        if (i > 0U) {
+            oss << ((i + 1U == v.size()) ? " or " : ", ");
         }
+        oss << MemcpyKindToStr(v[i]);
     }
-    oss << "}";
     return oss.str();
 }
 
@@ -2974,10 +2971,11 @@ rtError_t ApiErrorDecorator::MemcpyKindAutoCorrect(
     }
     // 4) Otherwise illegal -> log expected set and return error
     std::string expected = allowed_list_to_string(rule.allowedKinds);
-    RT_LOG(
-        RT_LOG_ERROR, "MemcpyKindAutoCorrect: invalid kind=%s for src=%s, dst=%s; expected one of [%s], actual=%s.",
-        MemcpyKindToStr(*kind), MemLocationTypeToString(srcLocationType).c_str(),
-        MemLocationTypeToString(dstLocationType).c_str(), expected.c_str(), MemcpyKindToStr(*kind));
+    RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
+        ErrorCode::EE1003, "Checking the memory copy kind", MemcpyKindToStr(*kind), "kind",
+        RtFmtMsg(
+            "%s when the source location is %s and the destination location is %s", expected.c_str(),
+            MemLocationTypeToString(srcLocationType).c_str(), MemLocationTypeToString(dstLocationType).c_str()));
     return RT_ERROR_INVALID_VALUE;
 }
 
@@ -3008,9 +3006,10 @@ rtError_t ApiErrorDecorator::MemcpyAsyncCheckLocation(
     if (!isSupportUserMem) {
         if (isUserRequireToCheckPinnedMem) {
             /* 用户指定CHECK_MEMORY_PINNED，如果驱动不支持GET_USER_MALLOC_ATTR，则返回特性不支持 */
-            ERROR_RETURN(
-                RT_ERROR_FEATURE_NOT_SUPPORT, "Failed to check pinned memory required by the user because the "
-                                              "GET_USER_MALLOC_ATTR feature is not supported.");
+            COND_RETURN_AND_MSG_OUTER(
+                true, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1006,
+                "Checking pinned memory for asynchronous memory copy", "Pinned memory checking",
+                "The driver does not support querying the pinning status of host memory.");
         } else {
             /*
              * 用户未指定CHECK_MEMORY_PINNED，如果驱动不支持GET_USER_MALLOC_ATTR，则打印Info，流程继续。
@@ -3047,11 +3046,7 @@ rtError_t ApiErrorDecorator::MemcpyAsyncCheckLocation(
                 " and dst location %s are not both RT_MEMORY_LOC_DEVICE(1)",
                 MemLocationTypeToString(srcLocationType).c_str(), MemLocationTypeToString(dstLocationType).c_str()));
         error = MemcpyKindAutoCorrect(srcLocationType, dstLocationType, &copyKind);
-        COND_RETURN_ERROR_MSG_CALL(
-            ERR_MODULE_GE, error != RT_ERROR_NONE, error,
-            "Memory async check kind and loc failed, retCode=%#x, copyKind=%s, srcLoc=%s, dstLoc=%s",
-            static_cast<uint32_t>(error), MemcpyKindToStr(copyKind), MemLocationTypeToString(srcLocationType).c_str(),
-            MemLocationTypeToString(dstLocationType).c_str());
+        COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
     }
 
     /* 3) check whether involve pageable host memory */
@@ -3220,8 +3215,8 @@ rtError_t ApiErrorDecorator::MemCopy2DSync(
 {
     const auto curKind = GetMemCpyKind(kind, newKind);
     rtError_t error = MemCopy2DCheckParam(dst, dstPitch, src, srcPitch, width, height, curKind);
-    ERROR_RETURN_MSG_CALL(
-        ERR_MODULE_GE, error, "check memcpy2d param failure, retCode=%#x.", static_cast<uint32_t>(error));
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, error);
+    ERROR_RETURN(error, "check memcpy2d param failure, retCode=%#x.", static_cast<uint32_t>(error));
     COND_RETURN_WARN(
         ((curKind != RT_MEMCPY_DEFAULT) && (curKind != RT_MEMCPY_HOST_TO_DEVICE) &&
          (curKind != RT_MEMCPY_DEVICE_TO_HOST)),
@@ -3238,9 +3233,10 @@ rtError_t ApiErrorDecorator::MemCopy2DSync(
 
     /* MemcpyKindAutoUpdate需使用realLocation */
     error = MemcpyKindAutoCorrect(srcLocationType, dstLocationType, &copyKind);
+    COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
     COND_PROC_RETURN_AND_MSG_OUTER(
-        (error != RT_ERROR_NONE) || ((copyKind != RT_MEMCPY_HOST_TO_DEVICE) && (copyKind != RT_MEMCPY_DEVICE_TO_HOST)),
-        RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
+        (copyKind != RT_MEMCPY_HOST_TO_DEVICE) && (copyKind != RT_MEMCPY_DEVICE_TO_HOST), RT_ERROR_INVALID_VALUE,
+        ErrorCode::EE1017,
         RT_LOG(
             RT_LOG_ERROR, "srcLocType=%s, srcRealLocType=%s, dstLocType=%s, dstRealLocType=%s.",
             MemLocationTypeToString(srcLocationType).c_str(), MemLocationTypeToString(srcRealLocation).c_str(),
@@ -3267,13 +3263,12 @@ rtError_t ApiErrorDecorator::MemCopy2DAsync(
     rtMemcpyKind_t copyKind = GetMemCpyKind(kind, newKind);
     rtError_t error = MemCopy2DCheckParam(dst, dstPitch, src, srcPitch, width, height, copyKind);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, RT_ERROR_FEATURE_NOT_SUPPORT);
-    ERROR_RETURN_MSG_CALL(
-        ERR_MODULE_GE, error, "check memcpy2d param failure, retCode=%#x.", static_cast<uint32_t>(error));
+    ERROR_RETURN(error, "check memcpy2d param failure, retCode=%#x.", static_cast<uint32_t>(error));
 
     bool isD2HorH2DInvolvePageableMemory = false;
     error =
         MemcpyAsyncCheckLocation(true, copyKind, src, dst, false, isD2HorH2DInvolvePageableMemory); /* 会更新copykind */
-    COND_RETURN_ERROR_MSG_INNER(
+    COND_RETURN_ERROR(
         error != RT_ERROR_NONE, error, "MemcpyAsync check src or dst location failed, stream_id=%d.", curStm->Id_());
     COND_RETURN_AND_MSG_OUTER(
         (error != RT_ERROR_NONE) || ((copyKind != RT_MEMCPY_HOST_TO_DEVICE) && (copyKind != RT_MEMCPY_DEVICE_TO_HOST) &&

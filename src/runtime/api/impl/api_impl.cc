@@ -2495,14 +2495,14 @@ rtError_t ApiImpl::DevMalloc(void** const devPtr, const uint64_t size, const rtM
 
     auto driver = curCtx->Device_()->Driver_();
     uint32_t devId = curCtx->Device_()->Id_();
-    rtError_t ret = driver->DevMemAlloc(devPtr, tmpSize, type, devId, moduleId);
+    rtError_t ret = driver->DevMemAlloc(devPtr, tmpSize, type, devId, moduleId, false);
     if (ret != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_INFO, "DevMemAlloc first try not successful, ret=%d, trigger implicit mempool trim.", ret);
         rtError_t trimRet = Runtime::Instance()->ApiSoma_()->MemPoolTrimImplicit(true);
         if (trimRet != RT_ERROR_NONE) {
             RT_LOG(RT_LOG_WARNING, "Implicit mempool trim with errors, ret=%d.", trimRet);
         }
-        ret = driver->DevMemAlloc(devPtr, tmpSize, type, devId, moduleId);
+        ret = driver->DevMemAlloc(devPtr, tmpSize, type, devId, moduleId, true);
         COND_RETURN_ERROR(ret != RT_ERROR_NONE, ret, "DevMemAlloc retry after trim failed, ret=%d.", ret);
     }
     return ret;
@@ -2649,14 +2649,14 @@ rtError_t ApiImpl::MemCopySync(
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     Device* device = curCtx->Device_();
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(device, RT_ERROR_INVALID_VALUE, "Synchronous memory copy");
+    NULL_PTR_RETURN_MSG(device, RT_ERROR_INVALID_VALUE);
     const rtError_t error = device->GetDeviceStatus();
     COND_PROC((error == RT_ERROR_DEVICE_TASK_ABORT), return error);
 
     CHECK_CAPTURE_MODE_SUPPORT_AND_RETURN_WITH_FUNC_DESC(curCtx, "Synchronous memory copy");
 
     Driver* driver = device->Driver_();
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(driver, RT_ERROR_INVALID_VALUE, "Synchronous memory copy");
+    NULL_PTR_RETURN_MSG(driver, RT_ERROR_INVALID_VALUE);
     rtMemcpyKind_t curKind = kind;
     if (device->IsSPM(dst)) {
         curKind = (driver->GetRunMode() == static_cast<uint32_t>(RT_RUN_MODE_ONLINE)) ? RT_MEMCPY_HOST_TO_DEVICE :
@@ -2704,7 +2704,7 @@ static rtError_t LaunchAsyncCopy(
     const rtTaskCfgInfo_t* const cfgInfo, const rtD2DAddrCfgInfo_t* const addrCfg)
 {
     Device* const device = stm->Device_();
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(device, RT_ERROR_INVALID_VALUE, "Asynchronous memory copy");
+    NULL_PTR_RETURN_MSG(device, RT_ERROR_INVALID_VALUE);
     ConvertMappedAddrToDevice(device, src, kind);
 
     if (addrCfg != nullptr) {
@@ -7250,8 +7250,7 @@ rtError_t ApiImpl::LaunchHostFunc(Stream* const stm, const rtCallback_t callBack
         curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Adding a host callback function to the stream task queue");
     Runtime* const rtInstance = Runtime::Instance();
     Device* const dev = curCtx->Device_();
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        dev, RT_ERROR_INVALID_VALUE, "Adding a host callback function to the stream task queue");
+    NULL_PTR_RETURN_MSG(dev, RT_ERROR_INVALID_VALUE);
     // lock first Check whether the thread exists. If the thread does not exist, create a thread in context level.
     curCtx->callbackTheadMutex_.lock();
     if (!curCtx->GetCallBackThreadExistFlag()) {

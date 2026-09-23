@@ -386,7 +386,7 @@ rtError_t ConvertCpyType(
     } else if (cpyType == RT_MEMCPY_DEVICE_TO_DEVICE) {
         const rtError_t error =
             ConvertD2DCpyType(taskInfo->stream, copyTypeTmp, srcAddr, desAddr, &(memcpyAsyncTaskInfo->isD2dCross8P));
-        ERROR_RETURN_MSG_INNER(
+        ERROR_RETURN(
             error, "Failed to convert the D2D asynchronous copy type, retCode=%#x.", static_cast<uint32_t>(error));
     } else if (cpyType == RT_MEMCPY_SDMA_AUTOMATIC_ADD) {
         copyTypeTmp = RT_MEMCPY_DIR_SDMA_AUTOMATIC_ADD;
@@ -455,7 +455,7 @@ rtError_t ConvertD2DCpyType(
 rtError_t MemcpyAsyncTaskInitV1(TaskInfo* const taskInfo, void* memcpyAddrInfo, const uint64_t cpySize)
 {
     const rtError_t error = MemcpyAsyncTaskCommonInit(taskInfo);
-    ERROR_RETURN_MSG_INNER(error, "MemcpyAsyncTaskCommonInit V1 failed, retCode=%#x.", static_cast<uint32_t>(error));
+    ERROR_RETURN(error, "MemcpyAsyncTaskCommonInit V1 failed, retCode=%#x.", static_cast<uint32_t>(error));
 
     MemcpyAsyncTaskInfo* memcpyAsyncTaskInfo = &(taskInfo->u.memcpyAsyncTaskInfo);
     Stream* const stream = taskInfo->stream;
@@ -477,7 +477,7 @@ rtError_t MemcpyAsyncTaskInitV2(
     const uint64_t srcPitch, const uint64_t width, const uint64_t height, const uint32_t kind, const uint64_t fixedSize)
 {
     rtError_t error = MemcpyAsyncTaskCommonInit(taskInfo);
-    ERROR_RETURN_MSG_INNER(error, "MemcpyAsyncTaskCommonInit V2 failed, retCode=%#x.", error);
+    ERROR_RETURN(error, "MemcpyAsyncTaskCommonInit V2 failed, retCode=%#x.", error);
 
     MemcpyAsyncTaskInfo* memcpyAsyncTaskInfo = &(taskInfo->u.memcpyAsyncTaskInfo);
     Stream* const stream = taskInfo->stream;
@@ -497,8 +497,8 @@ rtError_t MemcpyAsyncTaskInitV2(
         memcpyAsyncTaskInfo->copyType = RT_MEMCPY_DIR_D2H;
     } else if (kind == RT_MEMCPY_DEVICE_TO_DEVICE) {
         error = ConvertCpyType(taskInfo, kind, srcAddr, dst);
-        ERROR_RETURN_MSG_INNER(
-            error, "Failed to convert the D2D asynchronous copy typeD2D, retCode=%#x, kind=%s.", error,
+        ERROR_RETURN(
+            error, "Failed to convert the D2D asynchronous copy type D2D, retCode=%#x, kind=%s.", error,
             MemcpyKindToStr(static_cast<rtMemcpyKind_t>(kind)));
     } else {
         // reserve
@@ -528,7 +528,7 @@ rtError_t MemcpyAsyncTaskInitV2(
             error = driver->MemCopy2D(
                 dst, dstPitch, srcAddr, srcPitch, width, height, kind, DEVMM_MEMCPY2D_ASYNC_CONVERT, fixedSize,
                 &(memcpyAsyncTaskInfo->dmaAddr));
-            ERROR_RETURN_MSG_INNER(error, "invoke rtMemcpy2DAsync failed, retCode=%#x.", error);
+            ERROR_RETURN(error, "invoke rtMemcpy2DAsync failed, retCode=%#x.", error);
             memcpyAsyncTaskInfo->isConcernedRecycle = true;
             memcpyAsyncTaskInfo->size = memcpyAsyncTaskInfo->dmaAddr.fixed_size;
             if (stream->Device_()->IsDavidPlatform() && IsPcieDma(memcpyAsyncTaskInfo->copyType) &&
@@ -551,7 +551,7 @@ rtError_t MemcpyAsyncTaskInitV3(
     const rtTaskCfgInfo_t* cfgInfo, const rtD2DAddrCfgInfo_t* const addrCfg)
 {
     rtError_t error = MemcpyAsyncTaskCommonInit(taskInfo);
-    ERROR_RETURN_MSG_INNER(error, "MemcpyAsyncTaskCommonInit V3 failed, retCode=%#x.", error);
+    ERROR_RETURN(error, "MemcpyAsyncTaskCommonInit V3 failed, retCode=%#x.", error);
 
     MemcpyAsyncTaskInfo* memcpyAsyncTaskInfo = &(taskInfo->u.memcpyAsyncTaskInfo);
     Stream* const stream = taskInfo->stream;

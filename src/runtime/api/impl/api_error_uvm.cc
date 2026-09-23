@@ -14,6 +14,17 @@
 
 namespace cce {
 namespace runtime {
+namespace {
+std::string GetExpectedManagedMemLocationTypes()
+{
+    return RtFmtMsg(
+        "%s or %s or %s or %s", ManagedMemLocationTypeToString(rtMemLocationTypeDevice).c_str(),
+        ManagedMemLocationTypeToString(rtMemLocationTypeHost).c_str(),
+        ManagedMemLocationTypeToString(rtMemLocationTypeHostNuma).c_str(),
+        ManagedMemLocationTypeToString(rtMemLocationTypeHostNumaCurrent).c_str());
+}
+} // namespace
+
 rtError_t ApiErrorDecorator::MemManagedAdvise(
     const void* const ptr, uint64_t size, uint16_t advise, rtMemManagedLocation location)
 {
@@ -111,6 +122,10 @@ rtError_t ApiErrorDecorator::MemManagedPrefetchAsync(
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         (flags != 0), RT_ERROR_INVALID_VALUE, "Managing the prefetching of the unified virtual memory (UVM)", flags,
         "equal to 0");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
+        (location.type < rtMemLocationTypeDevice) || (location.type > rtMemLocationTypeHostNumaCurrent),
+        RT_ERROR_INVALID_VALUE, "Managing the prefetching of the unified virtual memory (UVM)",
+        ManagedMemLocationTypeToString(location.type), "location.type", GetExpectedManagedMemLocationTypes());
     Stream* curStm = Runtime::Instance()->GetCurStream(stream);
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         curStm, RT_ERROR_STREAM_NULL, "Managing the prefetching of the unified virtual memory (UVM)");
@@ -190,6 +205,12 @@ rtError_t ApiErrorDecorator::MemManagedPrefetchBatchAsync(
     }
 
     for (size_t idx = 0; idx < numPrefetchLocs; idx++) {
+        COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
+            (prefetchLocs[idx].type < rtMemLocationTypeDevice) ||
+                (prefetchLocs[idx].type > rtMemLocationTypeHostNumaCurrent),
+            RT_ERROR_INVALID_VALUE, "Managing the batch prefetching of the unified virtual memory (UVM)",
+            ManagedMemLocationTypeToString(prefetchLocs[idx].type), RtFmtMsg("prefetchLocs[%zu].type", idx),
+            GetExpectedManagedMemLocationTypes());
         if (prefetchLocs[idx].type == rtMemLocationTypeDevice) {
             int32_t numDev = 0;
             const rtError_t ret = impl_->GetDeviceCount(&numDev);

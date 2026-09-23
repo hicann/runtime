@@ -883,9 +883,8 @@ rtError_t ApiImplDavid::BatchMemcpyAsync(
         curStm = curCtx->DefaultStream_();
         NULL_PTR_RETURN_MSG(curStm, RT_ERROR_STREAM_NULL);
     }
-    COND_RETURN_ERROR_MSG_INNER(
-        curStm->Context_() != curCtx, RT_ERROR_STREAM_CONTEXT,
-        "MemcopyBatch async failed, stream is not in current ctx, stream_id=%d.", curStm->Id_());
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Asynchronous batch memory copy");
 
     rtError_t error = RT_ERROR_NONE;
     rtMemcpyBatchAttr memAttr = attrs[0];
