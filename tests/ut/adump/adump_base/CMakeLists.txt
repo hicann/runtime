@@ -95,7 +95,6 @@ set(adumpBaseSrcList
     ${SRC_CODE_ROOT_PATH}/adump/exception/dump_ELF.cpp
     ${SRC_CODE_ROOT_PATH}/adump/exception/dump_core/dump_core.cpp
     ${SRC_CODE_ROOT_PATH}/adump/exception/dump_core/dump_core_register.cpp
-    ${SRC_CODE_ROOT_PATH}/adump/exception/register_config/register_config.cpp
     ${SRC_CODE_ROOT_PATH}/adump/exception/exception_info_common.cpp
     ${SRC_CODE_ROOT_PATH}/adump/exception/dump_tensor_plugin.cpp
     ${SRC_CODE_ROOT_PATH}/adump/exception/adx_exception_callback.cpp
@@ -186,7 +185,6 @@ set(adumpBaseHeaders
     ${SRC_CODE_ROOT_PATH}/adump/operator/operator_preliminary/
     ${SRC_CODE_ROOT_PATH}/adump/exception/
     ${SRC_CODE_ROOT_PATH}/adump/exception/dump_core/
-    ${SRC_CODE_ROOT_PATH}/adump/exception/register_config/
     ${SRC_CODE_ROOT_PATH}/adump/manage/
     ${SRC_CODE_ROOT_PATH}/adump/manage/dump_manager/
     ${SRC_CODE_ROOT_PATH}/adump/printf/

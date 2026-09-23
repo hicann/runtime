@@ -11,6 +11,7 @@
 #define ADUMP_COMMON_PLATFORM_CLOUD_V2_PLATFORM_H
 
 #include "features_support_interface.h"
+#include "coredump_register_interface.h"
 #include "coredump_interface.h"
 #include "exception_dump_interface.h"
 #include "data_dump_interface.h"
@@ -50,6 +51,24 @@ public:
     uint64_t GetKfcStackSize() const override;
     std::vector<std::string> GetKfcBinNames() const override;
     bool IsUbFromAiCore() const override;
+};
+
+// 寄存器配置
+class CloudV2Register : public RegisterInterface {
+public:
+    CloudV2Register();
+    ~CloudV2Register() override{};
+
+protected:
+    std::vector<RegisterTable> GenAicDbgRegSuAddr() override;
+    std::vector<RegisterTable> GenAicDbgRegMteAddr() override;
+    std::vector<RegisterTable> GenAicDbgRegCubeAddr() override;
+    std::vector<RegisterTable> GenAivDbgRegSuAddr() override;
+    std::vector<RegisterTable> GenAivDbgRegVecAddr() override;
+
+private:
+    static std::vector<RegisterTable> SuDbgRegAddr();
+    void InitErrorRegisters() override;
 };
 
 } // namespace Adx

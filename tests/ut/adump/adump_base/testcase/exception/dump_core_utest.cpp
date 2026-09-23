@@ -16,7 +16,7 @@
 #include "adump_platform_manager.h"
 #include "exception_dumper.h"
 #include "dump_manager.h"
-#include "register_config.h"
+#include "coredump_register_interface.h"
 #include "dump_exception_stub.h"
 
 using namespace Adx;
@@ -337,7 +337,6 @@ TEST_F(DUMP_CORE_UTEST, TEST_CORE_DUMP_A5)
     // CHIP_CLOUD_V4
     uint32_t chipType = 15;
     MOCKER_CPP(&Adx::AdumpDsmi::DrvGetPlatformType).stubs().with(outBound(chipType)).will(returnValue(true));
-    RegisterManager::GetInstance().CreateRegister();
     CoreDumpBaseProcess(chipType);
 }
 

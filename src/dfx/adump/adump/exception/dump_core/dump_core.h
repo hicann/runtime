@@ -12,11 +12,12 @@
 
 #include <vector>
 #include <string>
+#include <memory>
 #include "runtime/base.h"
 #include "dump_args.h"
 #include "dump_ELF.h"
 #include "dump_common.h"
-#include "register_config.h"
+#include "coredump_register_interface.h"
 #include "adump_platform_api.h"
 #include "kernel_symbol_locator.h"
 #include "inner_kernel.h"
@@ -33,8 +34,10 @@ public:
     explicit DumpCore(const std::string& path, uint32_t devId) : path_(path), devId_(devId){};
     ~DumpCore() = default;
     int32_t DumpCoreFile(const rtExceptionInfo& exception);
-    void DumpV2Register(uint8_t coreType, uint16_t coreId);
-    void DumpV4Register(uint8_t coreType, uint16_t coreId);
+    // 寄存器 dump 入口，两者仅记录条目宽度不同：标准(RegInfo, value 16B) / 加宽(RegInfoWide, value 32B)。
+    // 与平台无关，表选取与读取通道由平台注册的 RegisterType 决定。
+    void DumpStdRegRegister(uint8_t coreType, uint16_t coreId);
+    void DumpWideRegRegister(uint8_t coreType, uint16_t coreId);
 
 private:
     struct CacheParam {
@@ -81,18 +84,10 @@ private:
         uint8_t coreType, uint16_t coreId, const std::string& sectionName, std::vector<LocalMemInfo>& localMemInfoList);
     void DumpLocalAuxInfo(const std::string& coreIdStr, std::vector<LocalMemInfo>& localMemInfoList);
     void DumpRegister(uint8_t coreType, uint16_t coreId);
-    void DumpV2DebugRegister(
-        uint8_t coreType, uint16_t coreId, const std::vector<RegisterTable>& tables,
-        std::vector<RegInfo>& regData) const;
-    void DumpV2ErrorRegister(
-        uint8_t coreType, uint16_t coreId, const std::vector<ErrorRegisterTable>& tables,
-        std::vector<RegInfo>& regData) const;
-    void DumpV4DebugRegister(
-        uint8_t coreType, uint16_t coreId, RegisterType regType, const std::vector<RegisterTable>& tables,
-        std::vector<RegInfoWide>& regData) const;
-    void DumpV4ErrorRegister(
-        uint8_t coreType, uint16_t coreId, const std::vector<ErrorRegisterTable>& tables,
-        std::vector<RegInfoWide>& regData) const;
+    // 寄存器 dump 主流程：V2/V4 仅记录条目宽度不同（RegInfo 16 字节 / RegInfoWide 32 字节 value），
+    // 表的选取、读取通道与错误寄存器处理完全一致，故共用此模板。
+    template <typename T>
+    void DumpRegisterImpl(uint8_t coreType, uint16_t coreId);
     bool DumpReadDebugAICoreRegister(
         uint8_t coreType, uint16_t coreId, RegisterType regType, const RegisterTable& table,
         std::vector<uint8_t>& data) const;
@@ -119,6 +114,7 @@ private:
     CacheParam tilingDataParam_;
     std::vector<CacheParam> stackParamList_;
     ExceptionRegInfo exceptionRegInfo_{0, nullptr};
+    std::shared_ptr<RegisterInterface> register_;
 };
 } // namespace Adx
 #endif
