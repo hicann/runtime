@@ -603,7 +603,7 @@ aclError aclrtGetFunctionAddr(const void *func, void **aicAddr, void **aivAddr)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| func | 输入 | 内核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel，仅适用于Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
+| func | 输入 | 核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel，仅适用于Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
 | aicAddr | 输出 | AI Core或Cube Core上的算子起始地址。<br><br>  - 对于以下产品，此处返回的是Cube Core上的算子起始地址。Ascend 950PR/Ascend 950DT<br>Atlas A3 训练系列产品/Atlas A3 推理系列产品<br>Atlas A2 训练系列产品/Atlas A2 推理系列产品 |
 | aivAddr | 输出 | Vector Core上的算子起始地址。<br>若通过本接口获取到aivAddr为空，则表示该算子不在Vector Core上执行。 |
 
@@ -654,7 +654,7 @@ aclError aclrtGetFunctionSize(const void *func, size_t *aicSize, size_t *aivSize
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| func | 输入 | 内核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel，仅适用于Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
+| func | 输入 | 核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel，仅适用于Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
 | aicSize | 输出 | 在AI Core或Cube Core上执行算子的代码段大小，单位Byte。<br>如果算子仅在Vector Core上执行，则该值为0。 |
 | aivSize | 输出 | 在Vector Core上执行算子的代码段大小，单位Byte。<br>如果算子仅在AI Core或Cube Core上执行，则该值为0。 |
 
@@ -704,7 +704,7 @@ aclError aclrtGetFunctionName(const void *func, uint32_t maxLen, char *name)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| func | 输入 | 内核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel，仅适用于Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
+| func | 输入 | 核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel，仅适用于Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
 | maxLen | 输入 | 用户申请用于存储核函数名称的最大内存大小，单位Byte。 |
 | name | 输出 | 核函数名称。 |
 
@@ -756,7 +756,7 @@ aclError aclrtGetFunctionAttribute(const void *func, aclrtFuncAttribute attrType
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| func | 输入 | 内核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel，仅适用于Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
+| func | 输入 | 核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel，仅适用于Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
 | attrType | 输入 | 指定属性。类型定义请参见[aclrtFuncAttribute](25-02_Enumerations.md#aclrtFuncAttribute)。 |
 | attrValue | 输出 | 获取属性值。 |
 
@@ -1611,7 +1611,7 @@ aclError aclrtLaunchKernelWithArgsArray(void *func, uint32_t numBlocks, aclrtStr
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| func | 输入 | 内核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel，仅适用于Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
+| func | 输入 | 核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel，仅适用于Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
 | numBlocks | 输入 | 指定核函数将会在几个核上执行。                                                                                     |
 | stream | 输入 | 指定执行任务的Stream。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。                                   |
 | cfg | 输入 | 任务下发的配置信息。类型定义请参见[aclrtLaunchKernelCfg](25-04_Structs.md#aclrtLaunchKernelCfg)。<br>不指定配置时，此处可传NULL。 |
@@ -1886,7 +1886,7 @@ aclError aclrtFunctionGetBinary(const void *func, aclrtBinHandle *binHandle)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| func | 输入 | 内核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel，仅适用于Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
+| func | 输入 | 核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel，仅适用于Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
 | binHandle | 输出 | 算子二进制的句柄。类型定义请参见[aclrtBinHandle](25-05_Typedefs.md#aclrtBinHandle)。 |
 
 ### 返回值说明
@@ -1937,7 +1937,7 @@ aclError aclrtFunctionGetParamCount(const void *func, size_t *paramCount)
 
 | 参数名 | 输入/输出 | 说明                                                                |
 | --- | :---: |-------------------------------------------------------------------|
-| func | 输入 | 内核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel，仅适用于Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
+| func | 输入 | 核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel，仅适用于Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
 | paramCount | 输出 | 核函数参数列表中所包含的参数数量。                                                 |
 
 ### 返回值说明
@@ -1987,7 +1987,7 @@ aclError aclrtFunctionGetParamInfo(const void *func, size_t paramIndex, size_t *
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| func | 输入 | 内核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel，仅适用于Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
+| func | 输入 | 核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel，仅适用于Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
 | paramIndex | 输入 | 参数索引。<br/> 可先调用[aclrtFunctionGetParamCount](#aclrtFunctionGetParamCount)接口获取可用的参数数量后，这个paramIndex的取值范围：[0，(参数数量-1)]. |
 | paramOffset | 输出 | 参数在参数数据区中的偏移，单位为Byte。                                                                                                |
 | paramSize | 输出 | 参数的大小，单位为Byte。                                                                                                       |
@@ -2040,7 +2040,7 @@ aclError aclrtFunctionGetAvailDynUbufPerBlock(const void *func, uint32_t flags, 
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| func | 输入 | 内核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel，仅适用于Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
+| func | 输入 | 核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel，仅适用于Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
 | flags | 输入 | 预留参数，当前固定配置为0。 |
 | dynamicUbufSize | 输出 | 每个Block可用的动态UB buffer大小，单位为Byte，不能为空。 |
 
@@ -2147,7 +2147,7 @@ aclError aclrtLaunchSIMTKernelWithArgsArray(void *func, dim3 gridDim, dim3 block
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| func | 输入 | 内核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel，仅适用于Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
+| func | 输入 | 核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel，仅适用于Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
 | gridDim | 输入 | 线程块网格，由多个线程块（Thread Block）组成。Grid采用三维结构，其维度X、Y和Z分别表示不同维度下线程块的大小。类型定义请参见[dim3](25-04_Structs.md#dim3)。 |
 | blockDim | 输入 | 线程块（Thread Block），采用三维结构，其维度X、Y和Z分别表示线程块中三个维度的线程数。类型定义请参见[dim3](25-04_Structs.md#dim3)。 |
 | dynUbufSize | 输入 | 用于指定SIMT（Single Instruction Multiple Thread）算子执行时需要的UB（Unified Buffer，统一缓冲区）动态内存大小，单位Byte。若cfg中同时设置了ACL_RT_LAUNCH_KERNEL_ATTR_DYN_UBUF_SIZE属性，本参数的优先级更高。 |
@@ -2209,7 +2209,7 @@ aclError aclrtLaunchSIMTKernelWithHostArgs(void *func, dim3 gridDim, dim3 blockD
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| func | 输入 | 内核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel，仅适用于Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
+| func | 输入 | 核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel，仅适用于Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
 | gridDim | 输入 | 线程块网格，由多个线程块（Thread Block）组成。Grid采用三维结构，其维度X、Y和Z分别表示不同维度下线程块的大小。类型定义请参见[dim3](25-04_Structs.md#dim3)。 |
 | blockDim | 输入 | 线程块（Thread Block），采用三维结构，其维度X、Y和Z分别表示线程块中三个维度的线程数。类型定义请参见[dim3](25-04_Structs.md#dim3)。 |
 | dynUbufSize | 输入 | 用于指定SIMT（Single Instruction Multiple Thread）算子执行时需要的UB（Unified Buffer，统一缓冲区）动态内存大小，单位Byte。若cfg中同时设置了ACL_RT_LAUNCH_KERNEL_ATTR_DYN_UBUF_SIZE属性，本参数的优先级更高。 |
