@@ -1,5 +1,7 @@
 # runtime（运行时）
 
+简体中文 | [English](./README_en.md)
+
 ## 🔥Latest News
 
 - [2026/4] 支持Ascend 950PR/Ascend 950DT芯片。持续增强AclGraph功能，优化文档结构，提升开发者体验。
@@ -8,7 +10,7 @@
 ## 概述
 
 本仓提供CANN运行时组件和维测功能组件。
-- Runtime组件：提供Ascend NPU运行时用户编程接口和运行时核心实现，包括设备管理、流管理、Event管理、内存管理、任务调度等功能。 
+- Runtime组件：提供Ascend NPU运行时用户编程接口和运行时核心实现，包括设备管理、流管理、Event管理、内存管理、任务调度等功能。
 - 维测功能组件：包括性能数据采集、模型和算子Dump、日志、错误日志记录等功能。
     - 性能调优（msprof）模块：进行性能调优时，可以使用性能调优工具来采集和分析运行在昇腾AI处理器SoCNPU IP加速器上的AI任务各个运行阶段的关键性能指标，根据输出的性能数据，快速定位软、硬件性能瓶颈，提升AI任务性能分析的效率。
     - 精度调试（adump）模块：提供Ascend NPU运行时用户Dump单算子或模型（每一层算子）的输入/输出数据，用于与指定算子或模型进行对比，定位精度问题；提供Ascend NPU运行异常时Dump异常算子的输入/输出数据、Workspace信息、Tiling信息，用于分析AI Core Error问题。
@@ -28,19 +30,19 @@
   ├── docs                                           # 文档介绍
   ├── example                                        # 基于acl接口开发的样例代码
   ├── include                                        # 3.1包整体对外发布的头文件
-  |   ├── dfx                                        # dfx相关头文件  
+  |   ├── dfx                                        # dfx相关头文件
   |   ├── external                                   # 本仓对外提供的头文件
   |   ......
-  ├── pkg_inc                                        # 仓间管控相关头文件 
+  ├── pkg_inc                                        # 仓间管控相关头文件
   ├── scripts                                        # 辅助构建相关文件
   ├── src                                            # 所有3.1包内各模块的源代码
-  |   ├── acl                                        # acl对外api存放目录  
+  |   ├── acl                                        # acl对外api存放目录
   |   ├── dfx                                        # dfx模块目录
   |   |   ├── adump                                  # adump模块目录
   |   |   ├── log                                    # log模块目录
   |   |   ├── msprof                                 # msprof模块目录
   |   |   ├── trace                                  # trace模块目录
-  |   |   ......                                     
+  |   |   ......
   |   ├── mmpa                                       # mmpa模块目录
   |   ├── runtime                                    # runtime模块目录
   |   ......
@@ -87,7 +89,7 @@ sudo yum install python3 python3-pip python3-devel gcc gcc-c++ glibc-devel cmake
 - **场景1：体验master版本能力或基于master版本进行开发**
 
   1. **安装驱动与固件（可选，仅运行[样例](example/README.md)依赖）**
-   
+
       若仅编译runtime包，可跳过本操作步骤。运行runtime样例时须安装驱动与固件。
 
       下载和安装操作请参考《[CANN软件安装指南](https://www.hiascend.com/document/redirect/CannCommunityInstWizard)》中“准备软件包”和“安装NPU驱动和固件”章节。
@@ -107,9 +109,9 @@ sudo yum install python3 python3-pip python3-devel gcc gcc-c++ glibc-devel cmake
         - `${cann_version}`：表示CANN包版本号。
         - `${arch}`：表示CPU架构，如`aarch64`、`x86_64`。
         - `${install_path}`：表示指定安装路径，需要与Toolkit包安装在相同路径，root用户默认安装在`/usr/local/Ascend`目录。
-  
+
       - 安装CANN ops算子包（可选，仅运行[样例](example/README.md)依赖）。
-  
+
         若仅编译runtime包，可跳过本操作步骤。运行runtime样例时须安装CANN ops算子包。
 
         ```bash
@@ -133,7 +135,7 @@ sudo yum install python3 python3-pip python3-devel gcc gcc-c++ glibc-devel cmake
 
 
 
-    
+
 ### 环境验证
 
 安装完CANN包后，需验证环境和驱动是否正常。
@@ -165,7 +167,7 @@ sudo yum install python3 python3-pip python3-devel gcc gcc-c++ glibc-devel cmake
 - **Docker源码构建**：参考[.devcontainer/README.md](.devcontainer/README.md)，在容器内完成源码构建。
 
 ### 下载源码
-   
+
     ```bash
     # 下载项目源码，以master分支为例
     git clone https://gitcode.com/cann/runtime.git
@@ -243,8 +245,8 @@ cd build_out;
 - `${install_path}`：表示指定安装路径，可选，默认安装在`/usr/local/Ascend`目录。
 
 安装完成之后，用户编译生成的Runtime软件包会替换已安装CANN开发套件包中的Runtime相关软件。
-                                       
-### 本地验证 
+
+### 本地验证
 
 编译完成后，用户可以进行开发测试，验证项目功能是否正常，本节将介绍如何做单元测试(UT: Unit Testing)。
 > 说明：

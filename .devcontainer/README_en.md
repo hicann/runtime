@@ -1,5 +1,7 @@
 # Dev Container Usage Guide
 
+English | [简体中文](./README.md)
+
 This directory contains VS Code Dev Container configuration for compiling the runtime repository and executing UT tests within a container.
 
 ## Environment Specifications

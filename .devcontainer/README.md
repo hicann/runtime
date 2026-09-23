@@ -1,5 +1,7 @@
 # Dev Container 使用说明
 
+简体中文 | [English](./README_en.md)
+
 本目录包含 VS Code Dev Container 配置，用于在容器内编译 runtime 仓及执行 UT。
 
 ## 环境规格
@@ -35,7 +37,7 @@ bash build.sh
 bash build.sh --cann_3rd_lib_path=$(pwd)/third_party
 ```
 
-> **注意**：完整的 runtime 包编译及运行需要 CANN toolkit 和 NPU 驱动。  
+> **注意**：完整的 runtime 包编译及运行需要 CANN toolkit 和 NPU 驱动。
 > 请按照 README.md 中"环境准备"章节，在容器内手动下载并安装对应版本的 `Ascend-cann-toolkit` 包：
 > ```bash
 > chmod +x Ascend-cann-toolkit_${cann_version}_linux-x86_64.run

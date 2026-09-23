@@ -1,5 +1,7 @@
 # runtime
 
+English | [简体中文](./README.md)
+
 ## Latest News
 
 - [2026/4] Added support for Ascend 950PR/Ascend 950DT chips. Continuously enhanced AclGraph functionality, optimized documentation structure, and improved developer experience.

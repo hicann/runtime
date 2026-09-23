@@ -1,5 +1,7 @@
 # Sample Usage Guide
 
+English | [简体中文](./README.md)
+
 The example directory provides a series of Runtime interface samples, including Device management, Stream management, Event management, memory management, Kernel execution, and more. These samples are for developer reference to help developers quickly get started and master Runtime key features.
 
 ## Directory Overview

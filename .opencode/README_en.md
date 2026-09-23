@@ -1,5 +1,7 @@
 # Runtime Repository Agent Skills Planning
 
+English | [简体中文](./README.md)
+
 ## Runtime Repository Skills List
 
 > **Note**: In the list, `[x]` indicates that the skill is ready, and `[ ]` indicates that the skill is still in planning and has not been implemented yet.
