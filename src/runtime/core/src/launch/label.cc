@@ -155,9 +155,9 @@ rtError_t Label::Set(Stream* const stm)
         (mgrType_ == LABEL_MGR_TYPE_MODEL) && (stm->Model_() != model_), RT_ERROR_LABEL_MODEL, ErrorCode::EE1017,
         "rtLabelSet", "stream",
         RtFmtMsg(
-            "Model (model_id=%d) bound to the stream is inconsistent with model (model_id=%d) to which the label "
+            "Model (model_id=%u) bound to the stream is inconsistent with model (model_id=%u) to which the label "
             "belongs",
-            stm->Model_()->Id_(), model_->Id_()));
+            stm->Model_()->Id_(), (model_ != nullptr) ? model_->Id_() : UINT32_MAX));
     COND_RETURN_AND_MSG_OUTER(
         (stream_ != nullptr) && (stream_ != stm), RT_ERROR_LABEL_STREAM, ErrorCode::EE1017, "rtLabelSet", "stream",
         RtFmtMsg(

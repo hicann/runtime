@@ -260,6 +260,31 @@ TEST_F(LabelTest, label_handle_invalid_after_destroy)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
+TEST_F(LabelTest, label_set_after_model_destroy)
+{
+    rtContext_t ctx = nullptr;
+    rtModel_t labelModel = nullptr;
+    rtModel_t streamModel = nullptr;
+    rtStream_t stream = nullptr;
+    rtLabel_t label = nullptr;
+
+    EXPECT_EQ(rtCtxCreate(&ctx, RT_CTX_NORMAL_MODE, 0), RT_ERROR_NONE);
+    EXPECT_EQ(rtModelCreate(&labelModel, 0), RT_ERROR_NONE);
+    EXPECT_EQ(rtModelCreate(&streamModel, 0), RT_ERROR_NONE);
+    EXPECT_EQ(rtStreamCreateWithFlags(&stream, 0, RT_STREAM_PERSISTENT), RT_ERROR_NONE);
+    EXPECT_EQ(rtModelBindStream(streamModel, stream, 0), RT_ERROR_NONE);
+    EXPECT_EQ(rtLabelCreateV2(&label, labelModel), RT_ERROR_NONE);
+
+    EXPECT_EQ(rtModelDestroy(labelModel), RT_ERROR_NONE);
+    EXPECT_EQ(rtLabelSet(label, stream), ACL_ERROR_RT_INTERNAL_ERROR);
+
+    EXPECT_EQ(rtLabelDestroy(label), RT_ERROR_NONE);
+    EXPECT_EQ(rtModelUnbindStream(streamModel, stream), RT_ERROR_NONE);
+    EXPECT_EQ(rtModelDestroy(streamModel), RT_ERROR_NONE);
+    EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
+    EXPECT_EQ(rtCtxDestroy(ctx), RT_ERROR_NONE);
+}
+
 TEST_F(LabelTest, label_gotoex_task_submit)
 {
     rtError_t error;
