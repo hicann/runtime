@@ -882,10 +882,12 @@ rtError_t RawDevice::Alloc32kStackAddrForDcache()
     rtError_t error = AllocAddrForDcache(deviceId_, stackPhyBase32k_, RT_SCALAR_BUFFER_SIZE_32K_75, drvMemCtrlHandle_);
     if (error != RT_ERROR_NONE) {
         error = driver_->DevMemAlloc(&stackPhyBase32k_, RT_SCALAR_BUFFER_SIZE_32K_75, RT_MEMORY_DDR, Id_());
+        stackAddrIsDcache_ = false;
         COND_RETURN_ERROR(
             (error != RT_ERROR_NONE) || (stackPhyBase32k_ == nullptr), error,
             "Alloc stack phy base failed, mem alloc failed, retCode=%#x.", static_cast<uint32_t>(error));
     }
+    stackAddrIsDcache_ = true;
     stackPhyBase32kAlign_ = stackPhyBase32k_;
     return RT_ERROR_NONE;
 }
