@@ -15,6 +15,10 @@
 #include "driver.hpp"
 #include "cmodel_driver.h"
 #include "common/rt_utest_context_reset_helper.hpp"
+#include <atomic>
+#include <set>
+#include <thread>
+#include <vector>
 using namespace testing;
 using namespace cce::runtime;
 
@@ -64,6 +68,64 @@ TEST_F(DriverTest, bitmap)
 
     id = map2.AllocId(curMaxNumOfRes);
     EXPECT_EQ(id, -1);
+}
+
+TEST_F(DriverTest, bitmap_concurrent_allocation_metadata)
+{
+    constexpr uint32_t capacity = 512U;
+    constexpr uint32_t threadCount = 8U;
+    Bitmap map(capacity);
+    ASSERT_EQ(map.AllocBitmap(), RT_ERROR_NONE);
+    std::atomic<bool> start{false};
+    std::vector<std::vector<int32_t>> threadIds(threadCount);
+    std::vector<std::thread> threads;
+    for (uint32_t threadIdx = 0U; threadIdx < threadCount; ++threadIdx) {
+        threads.emplace_back([&map, &start, &threadIds, threadIdx]() {
+            while (!start.load(std::memory_order_acquire)) {
+                std::this_thread::yield();
+            }
+            while (true) {
+                const int32_t id = map.AllocId();
+                if (id < 0) {
+                    break;
+                }
+                threadIds[threadIdx].push_back(id);
+            }
+        });
+    }
+    start.store(true, std::memory_order_release);
+    for (auto& thread : threads) {
+        thread.join();
+    }
+
+    std::set<int32_t> uniqueIds;
+    for (const auto& ids : threadIds) {
+        uniqueIds.insert(ids.cbegin(), ids.cend());
+    }
+    EXPECT_EQ(uniqueIds.size(), capacity);
+    EXPECT_EQ(map.allocedCnt_.Value(), capacity);
+
+    threads.clear();
+    for (uint32_t threadIdx = 0U; threadIdx < threadCount; ++threadIdx) {
+        threads.emplace_back([&map, &threadIds, threadIdx]() {
+            for (const int32_t id : threadIds[threadIdx]) {
+                map.FreeId(id);
+            }
+        });
+    }
+    for (auto& thread : threads) {
+        thread.join();
+    }
+    EXPECT_EQ(map.allocedCnt_.Value(), 0U);
+}
+
+TEST_F(DriverTest, bitmap_normalizes_allocation_hint_for_smaller_limit)
+{
+    Bitmap map(128U);
+    for (uint32_t i = 0U; i < 65U; ++i) {
+        ASSERT_GE(map.AllocId(128U), 0);
+    }
+    EXPECT_EQ(map.AllocId(64U), -1);
 }
 
 TEST_F(DriverTest, get_plat_info_succ)

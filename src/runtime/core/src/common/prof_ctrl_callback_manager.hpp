@@ -37,8 +37,9 @@ private:
 private:
     std::map<std::uint32_t, rtProfCtrlHandle> callbackMap_;
     std::mutex mapMutex_;
-    rtProfCommandHandle_t switchData_;
-    bool switchIsSet_;
+    mutable std::mutex switchMutex_;
+    rtProfCommandHandle_t switchData_{};
+    bool switchIsSet_{false};
 };
 
 } // namespace runtime

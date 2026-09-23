@@ -73,17 +73,21 @@ int32_t Bitmap::AllocId(uint32_t maxAllocCount)
     }
 
     if ((maxAllocCount > maxAllocIdCountTh) && (freeBitmap_[maxAllocBitmapIdx] == 0)) {
-        RT_LOG(RT_LOG_WARNING, "alloced=%u max=%u", allocedCnt_, maxAllocCount);
-        if (((std::max(maxAllocCount, allocedCnt_) - std::min(maxAllocCount, allocedCnt_) < minAvailableIdCountTh) &&
+        const uint32_t allocedCnt = allocedCnt_.Value();
+        RT_LOG(RT_LOG_WARNING, "alloced=%u max=%u", allocedCnt, maxAllocCount);
+        if (((std::max(maxAllocCount, allocedCnt) - std::min(maxAllocCount, allocedCnt) < minAvailableIdCountTh) &&
              (maxAllocCount != maxIdCount_)) ||
-            (allocedCnt_ == maxIdCount_)) {
+            (allocedCnt == maxIdCount_)) {
             /* utilization is larger than 90% */
             return -1;
         }
     }
 
     uint64_t currentBitmap;
-    uint32_t mapIdx = lastAllocIdx_;
+    uint32_t mapIdx = 0U;
+    if (maxAllocBitmapIdx >= 0) {
+        mapIdx = lastAllocIdx_.Value() % (static_cast<uint32_t>(maxAllocBitmapIdx) + 1U);
+    }
     for (int32_t i = 0; i <= maxAllocBitmapIdx; i++) {
         // non-zero means there are free id
         while (true) {
@@ -97,8 +101,8 @@ int32_t Bitmap::AllocId(uint32_t maxAllocCount)
             // only one thread could occupy the id
             // other threads loop again to find other free id
             if (CompareAndExchange(&freeBitmap_[mapIdx], currentBitmap, newBitmap)) {
-                allocedCnt_++;
-                lastAllocIdx_ = mapIdx;
+                allocedCnt_.Add(1U);
+                lastAllocIdx_.Set(mapIdx);
                 return (static_cast<int32_t>(mapIdx) * 64) + static_cast<int32_t>(bitIdx); // 64 bit
             }
         }
@@ -119,8 +123,8 @@ int32_t Bitmap::AllocId(uint32_t maxAllocCount)
             // only one thread could occupy the id
             // other threads loop again to find other free id
             if (CompareAndExchange(&freeBitmap_[mapIdx], currentBitmap, newBitmap)) {
-                allocedCnt_++;
-                lastAllocIdx_ = (mapIdx > 0U ? mapIdx - 1 : 0U);
+                allocedCnt_.Add(1U);
+                lastAllocIdx_.Set(mapIdx > 0U ? mapIdx - 1U : 0U);
                 return (static_cast<int32_t>(mapIdx) * 64) + static_cast<int32_t>(bitIdx); // 64 bit
             }
         }
@@ -135,7 +139,10 @@ void Bitmap::FreeId(const int32_t id)
         const uint32_t mapIdx = static_cast<uint32_t>(id) / 64U; // 64:bit of uint64_t
         const uint32_t bitIdx = static_cast<uint32_t>(id) % 64U; // 64:bit of uint64_t
         FetchAndOr(&freeBitmap_[mapIdx], 1ULL << bitIdx);
-        allocedCnt_ = (allocedCnt_ > 0U) ? (allocedCnt_ - 1U) : 0U;
+        uint32_t allocedCnt = allocedCnt_.Value();
+        while ((allocedCnt > 0U) && !allocedCnt_.CompareExchange(allocedCnt, allocedCnt - 1U)) {
+            allocedCnt = allocedCnt_.Value();
+        }
     }
 }
 bool Bitmap::IsIdOccupied(const int32_t id) const

@@ -30,7 +30,10 @@
 #include "raw_device.hpp"
 #include "task_info.hpp"
 #include "rt_unwrap.h"
+#include <atomic>
+#include <cstring>
 #include <fstream>
+#include <thread>
 #include "prof_ctrl_callback_manager.hpp"
 #include "api_error.hpp"
 #include "profiling_agent.hpp"
@@ -120,6 +123,43 @@ rtEvent_t ProfileApiTest::event_ = NULL;
 void* ProfileApiTest::binHandle_ = NULL;
 char ProfileApiTest::function_ = 'a';
 uint32_t ProfileApiTest::binary_[32] = {};
+
+rtProfCommandHandle_t g_profSwitchDataA{};
+rtProfCommandHandle_t g_profSwitchDataB{};
+std::atomic<bool> g_profSwitchSnapshotFailed{false};
+
+bool IsSameProfSwitchData(const rtProfCommandHandle_t& lhs, const rtProfCommandHandle_t& rhs)
+{
+    return (lhs.profSwitch == rhs.profSwitch) && (lhs.profSwitchHi == rhs.profSwitchHi) &&
+           (lhs.devNums == rhs.devNums) && (std::memcmp(lhs.devIdList, rhs.devIdList, sizeof(lhs.devIdList)) == 0) &&
+           (lhs.modelId == rhs.modelId) && (lhs.type == rhs.type) && (lhs.cacheFlag == rhs.cacheFlag) &&
+           (lhs.commandHandleParams.pathLen == rhs.commandHandleParams.pathLen) &&
+           (lhs.commandHandleParams.storageLimit == rhs.commandHandleParams.storageLimit) &&
+           (lhs.commandHandleParams.profDataLen == rhs.commandHandleParams.profDataLen) &&
+           (std::memcmp(
+                lhs.commandHandleParams.path, rhs.commandHandleParams.path, sizeof(lhs.commandHandleParams.path)) ==
+            0) &&
+           (std::memcmp(
+                lhs.commandHandleParams.profData, rhs.commandHandleParams.profData,
+                sizeof(lhs.commandHandleParams.profData)) == 0);
+}
+
+rtError_t CheckProfSwitchSnapshot(uint32_t dataType, void* data, uint32_t dataLen)
+{
+    if (dataType != RT_PROF_CTRL_SWITCH) {
+        return RT_ERROR_NONE;
+    }
+    if ((data == nullptr) || (dataLen != sizeof(rtProfCommandHandle_t))) {
+        g_profSwitchSnapshotFailed.store(true, std::memory_order_relaxed);
+        return RT_ERROR_NONE;
+    }
+    const auto* const switchData = static_cast<rtProfCommandHandle_t*>(data);
+    if (!IsSameProfSwitchData(*switchData, g_profSwitchDataA) &&
+        !IsSameProfSwitchData(*switchData, g_profSwitchDataB)) {
+        g_profSwitchSnapshotFailed.store(true, std::memory_order_relaxed);
+    }
+    return RT_ERROR_NONE;
+}
 
 class ProfileApiCloudSyncTest : public ProfileApiTest {
 protected:
@@ -1263,6 +1303,71 @@ TEST_F(ProfileApiTest, NotifyProfInfo)
     auto& instance = ProfCtrlCallbackManager::Instance();
     EXPECT_NE(&instance, nullptr);
     instance.NotifyProfInfo(1);
+}
+
+TEST_F(ProfileApiTest, ConcurrentProfSwitchSnapshotIsConsistent)
+{
+    constexpr uint32_t moduleId = 100U;
+    constexpr uint32_t iterations = 2000U;
+    auto& instance = ProfCtrlCallbackManager::Instance();
+    g_profSwitchDataA = {};
+    g_profSwitchDataA.type = PROF_COMMANDHANDLE_TYPE_START;
+    g_profSwitchDataA.profSwitch = 0xAAAAAAAAAAAAAAAAULL;
+    g_profSwitchDataA.profSwitchHi = 0x1111111111111111ULL;
+    g_profSwitchDataA.devNums = 1U;
+    g_profSwitchDataA.devIdList[0] = 0xAAAAAAAAU;
+    g_profSwitchDataA.modelId = 0xAAAAAAAAU;
+    g_profSwitchDataA.cacheFlag = 0x11111111U;
+    g_profSwitchDataA.commandHandleParams.pathLen = PATH_LEN_MAX + 1U;
+    g_profSwitchDataA.commandHandleParams.storageLimit = 0xAAAAAAAAU;
+    g_profSwitchDataA.commandHandleParams.profDataLen = PARAM_LEN_MAX + 1U;
+    (void)std::memset(g_profSwitchDataA.commandHandleParams.path, 'A', PATH_LEN_MAX + 1U);
+    (void)std::memset(g_profSwitchDataA.commandHandleParams.profData, 'A', PARAM_LEN_MAX + 1U);
+    g_profSwitchDataB = {};
+    g_profSwitchDataB.type = PROF_COMMANDHANDLE_TYPE_START;
+    g_profSwitchDataB.profSwitch = 0x5555555555555555ULL;
+    g_profSwitchDataB.profSwitchHi = 0xEEEEEEEEEEEEEEEEULL;
+    g_profSwitchDataB.devNums = 1U;
+    g_profSwitchDataB.devIdList[0] = 0x55555555U;
+    g_profSwitchDataB.modelId = 0x55555555U;
+    g_profSwitchDataB.cacheFlag = 0xEEEEEEEEU;
+    g_profSwitchDataB.commandHandleParams.pathLen = PATH_LEN_MAX + 1U;
+    g_profSwitchDataB.commandHandleParams.storageLimit = 0x55555555U;
+    g_profSwitchDataB.commandHandleParams.profDataLen = PARAM_LEN_MAX + 1U;
+    (void)std::memset(g_profSwitchDataB.commandHandleParams.path, 'B', PATH_LEN_MAX + 1U);
+    (void)std::memset(g_profSwitchDataB.commandHandleParams.profData, 'B', PARAM_LEN_MAX + 1U);
+    g_profSwitchSnapshotFailed.store(false, std::memory_order_relaxed);
+    ASSERT_EQ(instance.RegProfCtrlCallback(moduleId, CheckProfSwitchSnapshot), RT_ERROR_NONE);
+    instance.SaveProfSwitchData(&g_profSwitchDataA, sizeof(rtProfCommandHandle_t));
+
+    std::atomic<bool> start{false};
+    std::thread writer([&]() {
+        while (!start.load(std::memory_order_acquire)) {
+            std::this_thread::yield();
+        }
+        for (uint32_t i = 0U; i < iterations; ++i) {
+            const rtProfCommandHandle_t* const data = ((i % 2U) == 0U) ? &g_profSwitchDataA : &g_profSwitchDataB;
+            instance.SaveProfSwitchData(data, sizeof(rtProfCommandHandle_t));
+        }
+    });
+    std::thread notifier([&]() {
+        start.store(true, std::memory_order_release);
+        for (uint32_t i = 0U; i < iterations; ++i) {
+            instance.NotifyProfInfo(moduleId);
+            const uint64_t profSwitch = instance.GetSwitchData();
+            if ((profSwitch != g_profSwitchDataA.profSwitch) && (profSwitch != g_profSwitchDataB.profSwitch)) {
+                g_profSwitchSnapshotFailed.store(true, std::memory_order_relaxed);
+            }
+        }
+    });
+
+    writer.join();
+    notifier.join();
+    EXPECT_FALSE(g_profSwitchSnapshotFailed.load(std::memory_order_relaxed));
+    EXPECT_EQ(instance.RegProfCtrlCallback(moduleId, nullptr), RT_ERROR_NONE);
+    rtProfCommandHandle_t stopData{};
+    stopData.type = PROF_COMMANDHANDLE_TYPE_STOP;
+    instance.SaveProfSwitchData(&stopData, sizeof(rtProfCommandHandle_t));
 }
 
 TEST_F(ProfileApiTest, EventCreateEx)
