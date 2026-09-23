@@ -17,6 +17,7 @@ generate_runtime_api_stubs_at_configure(
 configure_runtime_api_weak_real_sources(
     tiny
     ${TOP_DIR}/src/runtime/api/api_c_host_memory.cc
+    ${TOP_DIR}/src/runtime/api/api_c_rt_config.cc
 )
 
 add_subdirectory(test)
