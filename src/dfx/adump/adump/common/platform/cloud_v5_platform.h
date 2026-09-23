@@ -10,7 +10,6 @@
 #ifndef ADUMP_COMMON_PLATFORM_CLOUD_V5_PLATFORM_H
 #define ADUMP_COMMON_PLATFORM_CLOUD_V5_PLATFORM_H
 
-#include "coredump_register_interface.h"
 #include "cloud_v4_platform.h"
 
 namespace Adx {
@@ -38,33 +37,6 @@ public:
     std::vector<std::string> GetKfcBinNames() const override;
     size_t GetCoreTypeIDOffset() const override;
     size_t GetBlockNum() const override;
-};
-
-// 寄存器配置
-// V5 寄存器配置：继承 V4（共用错误寄存器基表与公共段函数）。
-class CloudV5Register : public CloudV4Register {
-public:
-    CloudV5Register();
-    ~CloudV5Register() override{};
-
-protected:
-    std::vector<RegisterTable> GenAicDbgRegSuAddr() override;
-    std::vector<RegisterTable> GenAicDbgRegMteAddr() override;
-    std::vector<RegisterTable> GenAicDbgRegCubeAddr() override;
-    std::vector<RegisterTable> GenAicDbgRegL1Addr() override;
-    std::vector<RegisterTable> GenAicDfxRegAddr() override;
-    std::vector<RegisterTable> GenAivDbgRegSuAddr() override;
-    std::vector<RegisterTable> GenAivDbgRegVecAddr() override;
-    std::vector<RegisterTable> GenAivDfxRegAddr() override;
-    void GenAICOffsetAddr() override;
-    void GenAIVOffsetAddr() override;
-
-private:
-    static std::vector<RegisterTable> ScSuDfxAddr();
-    static std::vector<RegisterTable> OffCommonHeadAddr();
-    static std::vector<RegisterTable> OffCommon9xAddr();
-    static std::vector<RegisterTable> OffCommonBxAddr();
-    void InitErrorRegisters() override;
 };
 
 } // namespace Adx

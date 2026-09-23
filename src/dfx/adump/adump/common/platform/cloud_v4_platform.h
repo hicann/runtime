@@ -11,7 +11,6 @@
 #define ADUMP_COMMON_PLATFORM_CLOUD_V4_PLATFORM_H
 
 #include "features_support_interface.h"
-#include "coredump_register_interface.h"
 #include "coredump_interface.h"
 #include "exception_dump_interface.h"
 #include "data_dump_interface.h"
@@ -46,43 +45,6 @@ public:
     size_t GetBlockNum() const override;
     int32_t GetStreamSyncTimeout() const override;
     bool IsSimtDumpEnabled(size_t dumpWorkSpaceSize) const override;
-};
-
-// 寄存器配置
-class CloudV4Register : public RegisterInterface {
-public:
-    CloudV4Register();
-    ~CloudV4Register() override{};
-
-protected:
-    // 跳过 V4 表构建的构造路径：供布局不同的派生平台（V5）使用，避免基类先构建 V4 表再被派生类覆盖。
-    explicit CloudV4Register(bool deferInit);
-
-    std::vector<RegisterTable> GenAicDbgRegSuAddr() override;
-    std::vector<RegisterTable> GenAicDbgRegMteAddr() override;
-    std::vector<RegisterTable> GenAicDbgRegCubeAddr() override;
-    std::vector<RegisterTable> GenAicDbgRegL1Addr() override;
-    std::vector<RegisterTable> GenAicDfxRegAddr() override;
-    std::vector<RegisterTable> GenAivDbgRegSuAddr() override;
-    std::vector<RegisterTable> GenAivDbgRegMteAddr() override;
-    std::vector<RegisterTable> GenAivDbgRegVecAddr() override;
-    std::vector<RegisterTable> GenAivDfxRegAddr() override;
-    void GenAICOffsetAddr() override;
-    void GenAIVOffsetAddr() override;
-
-private:
-    static std::vector<RegisterTable> SuDbgRegHeadAddr();
-    static std::vector<RegisterTable> ScSuDfxAddr();
-
-protected:
-    void InitErrorRegisters() override;
-    static std::vector<ErrorRegisterTable> GenCommonErrorRegisters();
-    // V4/V5 共用的 VEC DFX 段与 VEC Debug 头/尾段。
-    static std::vector<RegisterTable> VecDfxAddr();
-    static std::vector<RegisterTable> VecDbgRegHeadAddr();
-    static std::vector<RegisterTable> VecDbgRegTailAddr();
-    // V4 特有的 VEC Debug 尾段扩展条目。
-    static std::vector<RegisterTable> VecDbgRegTailExtraAddr();
 };
 
 } // namespace Adx

@@ -40,6 +40,7 @@ set(ascendDumpBaseSrcList
     ${ADUMP_ADUMP_DIR}/exception/kernel_symbol_locator.cpp
     ${ADUMP_ADUMP_DIR}/exception/kernel_source_symbolizer.cpp
     ${ADUMP_ADUMP_DIR}/exception/kernel_pc_fixer.cpp
+    ${ADUMP_ADUMP_DIR}/exception/register_config/register_config.cpp
     ${ADUMP_ADUMP_DIR}/exception/thread_manager.cpp
     ${ADUMP_ADUMP_DIR}/impl/dump_datatype.cpp
     ${ADUMP_ADUMP_DIR}/impl/dump_memory.cpp
@@ -85,6 +86,7 @@ set(ascendDumpBaseHeaderList
     ${ADUMP_ADUMP_DIR}/common/adump_platform_api/
     ${ADUMP_ADUMP_DIR}/exception/
     ${ADUMP_ADUMP_DIR}/exception/dump_core/
+    ${ADUMP_ADUMP_DIR}/exception/register_config/
     ${ADUMP_ADUMP_DIR}/impl/
     ${ADUMP_ADUMP_DIR}/manage/
     ${ADUMP_ADUMP_DIR}/manage/dump_manager/

@@ -12,7 +12,7 @@
 #include "log/adx_log.h"
 #include "runtime/mem.h"
 #include "adump_platform_manager.h"
-#include "coredump_register_interface.h"
+#include "register_config.h"
 #include "exception_info_common.h"
 #include "dump_core.h"
 
@@ -140,37 +140,76 @@ void DumpCore::DumpErrorRegisterImpl(
     }
 }
 
-// Debug 表按平台注册的 RegisterType 逐个读取（读取通道由 RegisterType 决定），再追加错误寄存器。
-template <typename T>
-void DumpCore::DumpRegisterImpl(uint8_t coreType, uint16_t coreId)
+void DumpCore::DumpV2Register(uint8_t coreType, uint16_t coreId)
 {
-    if (register_ == nullptr) {
-        auto* plat = CoredumpManager::Get();
-        IDE_CTRL_VALUE_FAILED(plat != nullptr, return, "Get register failed, platform unavailable.");
-        register_ = plat->CreateRegister();
-        IDE_CTRL_VALUE_FAILED(register_ != nullptr, return, "Get register failed, null register.");
-    }
-
-    std::vector<T> regData;
-    for (const auto& regType : register_->GetRegisterTypes(coreType)) {
-        DumpDebugRegisterImpl(coreType, coreId, regType, register_->GetRegisterTable(regType), regData);
-    }
-    DumpErrorRegisterImpl(coreType, coreId, register_->GetErrorRegisterTable(), regData);
-
+    std::vector<RegInfo> regData;
     std::string sectionName = ASCEND_SHNAME_REGS + "." + std::to_string(ConvertCoreId(coreType, coreId));
-    IDE_LOGI("coreType=%d, coreId=%d, register num=%zu", static_cast<int32_t>(coreType), coreId, regData.size());
-    std::string data(reinterpret_cast<const char*>(regData.data()), regData.size() * sizeof(T));
+    std::shared_ptr<RegisterInterface> reg = RegisterManager::GetInstance().GetRegister();
+    IDE_CTRL_VALUE_FAILED(reg != nullptr, return, "Get register failed, null register.");
+    for (const auto& regType : reg->GetRegisterTypes(coreType)) {
+        DumpV2DebugRegister(coreType, coreId, reg->GetRegisterTable(regType), regData);
+    }
+    DumpV2ErrorRegister(coreType, coreId, reg->GetErrorRegisterTable(), regData);
+
+    size_t totalSize = regData.size() * sizeof(RegInfo);
+    std::string data(reinterpret_cast<const char*>(regData.data()), totalSize);
     ELF::SectionPtr registerSection = coreFile_.AddSection(ASCEND_SHTYPE_REGS, sectionName);
     IDE_CTRL_VALUE_FAILED(registerSection != nullptr, return, "Create %s section failed.", sectionName.c_str());
     registerSection->SetData(data);
-    registerSection->SetEntSize(sizeof(T));
+    registerSection->SetEntSize(sizeof(RegInfo));
 }
 
-void DumpCore::DumpStdRegRegister(uint8_t coreType, uint16_t coreId) { DumpRegisterImpl<RegInfo>(coreType, coreId); }
-
-void DumpCore::DumpWideRegRegister(uint8_t coreType, uint16_t coreId)
+void DumpCore::DumpV2DebugRegister(
+    uint8_t coreType, uint16_t coreId, const std::vector<RegisterTable>& tables, std::vector<RegInfo>& regData) const
 {
-    DumpRegisterImpl<RegInfoWide>(coreType, coreId);
+    RegisterType regType;
+    if (coreType == CORE_TYPE_AIC) {
+        regType = RegisterType::AIC_DBG;
+    } else {
+        regType = RegisterType::AIV_DBG;
+    }
+    DumpDebugRegisterImpl(coreType, coreId, regType, tables, regData);
+}
+
+void DumpCore::DumpV2ErrorRegister(
+    uint8_t coreType, uint16_t coreId, const std::vector<ErrorRegisterTable>& tables,
+    std::vector<RegInfo>& regData) const
+{
+    DumpErrorRegisterImpl(coreType, coreId, tables, regData);
+}
+
+void DumpCore::DumpV4Register(uint8_t coreType, uint16_t coreId)
+{
+    std::vector<RegInfoWide> regData;
+    std::string sectionName = ASCEND_SHNAME_REGS + "." + std::to_string(ConvertCoreId(coreType, coreId));
+    std::shared_ptr<RegisterInterface> reg = RegisterManager::GetInstance().GetRegister();
+    IDE_CTRL_VALUE_FAILED(reg != nullptr, return, "Get register failed, null register.");
+    for (const auto& regType : reg->GetRegisterTypes(coreType)) {
+        DumpV4DebugRegister(coreType, coreId, regType, reg->GetRegisterTable(regType), regData);
+    }
+    DumpV4ErrorRegister(coreType, coreId, reg->GetErrorRegisterTable(), regData);
+
+    size_t totalSize = regData.size() * sizeof(RegInfoWide);
+    IDE_LOGI("coreType=%d, coreId=%d, register num=%zu", static_cast<int32_t>(coreType), coreId, regData.size());
+    std::string data(reinterpret_cast<const char*>(regData.data()), totalSize);
+    ELF::SectionPtr registerSection = coreFile_.AddSection(ASCEND_SHTYPE_REGS, sectionName);
+    IDE_CTRL_VALUE_FAILED(registerSection != nullptr, return, "Create %s section failed.", sectionName.c_str());
+    registerSection->SetData(data);
+    registerSection->SetEntSize(sizeof(RegInfoWide));
+}
+
+void DumpCore::DumpV4DebugRegister(
+    uint8_t coreType, uint16_t coreId, RegisterType regType, const std::vector<RegisterTable>& tables,
+    std::vector<RegInfoWide>& regData) const
+{
+    DumpDebugRegisterImpl(coreType, coreId, regType, tables, regData);
+}
+
+void DumpCore::DumpV4ErrorRegister(
+    uint8_t coreType, uint16_t coreId, const std::vector<ErrorRegisterTable>& tables,
+    std::vector<RegInfoWide>& regData) const
+{
+    DumpErrorRegisterImpl(coreType, coreId, tables, regData);
 }
 
 uint16_t DumpCore::ConvertCoreId(uint8_t coreType, uint16_t coreId) const

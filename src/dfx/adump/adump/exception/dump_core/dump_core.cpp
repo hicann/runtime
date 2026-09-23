@@ -81,7 +81,7 @@ void DumpCore::DumpResourceInit()
     IDE_CTRL_VALUE_FAILED(
         AdumpPlatformApi::GetAicoreSizeInfo(socVersion, bufferSize_), return,
         "Failed to read platform info from fe api.");
-    IDE_LOGI(
+    IDE_LOGD(
         "Get local buffer size: L0A: %llu, L0B: %llu, L0C: %llu, L1: %llu, UB: %llu", bufferSize_.l0aSize,
         bufferSize_.l0bSize, bufferSize_.l0cSize, bufferSize_.l1Size, bufferSize_.ubSize);
 }
@@ -95,7 +95,7 @@ void DumpCore::DumpCoreInfo(uint32_t devId)
 
     rtError_t ret = rtDebugGetStalledCore(&devInfo->coreInfo);
     IDE_CTRL_VALUE_FAILED(ret == RT_ERROR_NONE, return, "Get core id failed, ret: %d", ret);
-    IDE_LOGI(
+    IDE_LOGD(
         "get core info: aicBitmap: 0x%llx 0x%llx, aivBitmap: 0x%llx 0x%llx", devInfo->coreInfo.aicBitmap0,
         devInfo->coreInfo.aicBitmap1, devInfo->coreInfo.aivBitmap0, devInfo->coreInfo.aivBitmap1);
 
@@ -169,7 +169,7 @@ void DumpCore::DumpCache(
     localSec->SetData(cacheData);
     localSec->SetInfo(localMemInfoList.size() - 1);
 
-    IDE_LOGI(
+    IDE_LOGD(
         "Dump cache data success, core type: %hhu, core id: %hu, cache type: %d, addr: %llx, size: %llu", coreType,
         coreId, cacheParam.cacheType, cacheParam.memAddr, cacheParam.memSize);
 }
@@ -203,7 +203,7 @@ void DumpCore::DumpBuffer(
         localSec->SetData(localData);
         localSec->SetInfo(localMemInfoList.size() - 1);
 
-        IDE_LOGI(
+        IDE_LOGD(
             "Dump local memory success, core type: %hhu, core id: %hu, type: %d, size: %llu", coreType, coreId,
             memParam.debugMemType, memParam.memLen);
     }
