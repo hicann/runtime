@@ -2935,6 +2935,41 @@ TEST_F(TaskTest, Subscribe)
     delete dev;
 }
 
+TEST_F(TaskTest, DeleteAllSharedSqCq)
+{
+    GlobalMockObject::verify();
+
+    NpuDriver drv;
+    MOCKER_CPP(&Event::WaitForBusy).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(drv, &NpuDriver::SqCqFree).expects(once()).will(returnValue(RT_ERROR_NONE));
+    RawDevice* dev = new RawDevice(1);
+    dev->Init();
+    dev->driver_ = &drv;
+    Stream* stm = new (std::nothrow) Stream(dev, RT_STREAM_PRIORITY_DEFAULT, RT_STREAM_FAST_SYNC, nullptr);
+    CbSubscribe* cbSubscribe = new (std::nothrow) CbSubscribe(static_cast<uint32_t>(RT_THREAD_GROUP_ID_MAX));
+
+    const uint32_t devId = stm->Device_()->Id_();
+    const int32_t streamId = stm->Id_();
+    const uint64_t threadId = 0U;
+    const uint32_t sqId = 1U;
+    const uint32_t cqId = 2U;
+    const uint32_t groupId = 0U;
+    Event* evt1 = new (std::nothrow) Event();
+    evt1->device_ = stm->Device_();
+    Event* evt2 = new (std::nothrow) Event();
+    evt2->device_ = stm->Device_();
+    cbSubscribeInfo subscribeInfo1 = {threadId, stm, sqId, cqId, groupId, evt1};
+    cbSubscribeInfo subscribeInfo2 = {threadId, stm, sqId, cqId, groupId, evt2};
+    cbSubscribe->subscribeMapByStreamId_[RT_CB_SUBSCRIBE_MK_STREAM_DEV_KEY(devId, streamId)] = subscribeInfo1;
+    cbSubscribe->subscribeMapByStreamId_[RT_CB_SUBSCRIBE_MK_STREAM_DEV_KEY(devId, streamId + 1)] = subscribeInfo2;
+
+    cbSubscribe->DeleteAll();
+
+    delete cbSubscribe;
+    delete stm;
+    delete dev;
+}
+
 TEST_F(TaskTest, TestGetExceptionArgsForFftsPlus)
 {
     TaskInfo taskInfo = {};

@@ -7,6 +7,8 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include <set>
+#include <tuple>
 #include "subscribe.hpp"
 #include "error_message_manage.hpp"
 
@@ -516,6 +518,8 @@ rtError_t CbSubscribe::GetThreadIdByStreamId(const uint32_t devId, const int32_t
 void CbSubscribe::DeleteAll()
 {
     rtError_t ret;
+    using SqCqResource = std::tuple<uint64_t, uint32_t, uint32_t>;
+    std::set<SqCqResource> freedSqCqResources;
     subscribeLock_.lock();
     for (auto& it : subscribeMapByStreamId_) {
         const rtChipType_t chipType = Runtime::Instance()->GetChipType();
@@ -537,15 +541,18 @@ void CbSubscribe::DeleteAll()
             }
         }
         const auto devDriver = it.second.stream->Device_()->Driver_();
-        ret = devDriver->SqCqFree(
-            it.second.sqId, it.second.cqId, it.second.stream->Device_()->Id_(),
-            it.second.stream->Device_()->DevGetTsId());
+        const uint32_t devId = it.second.stream->Device_()->Id_();
+        const uint32_t tsId = it.second.stream->Device_()->DevGetTsId();
+        const SqCqResource resource = std::make_tuple(it.second.threadId, devId, tsId);
+        if (!freedSqCqResources.insert(resource).second) {
+            continue;
+        }
+        ret = devDriver->SqCqFree(it.second.sqId, it.second.cqId, devId, tsId);
         if (ret != RT_ERROR_NONE) {
             RT_LOG(
                 RT_LOG_ERROR,
                 "Failed to free SQ/CQ, thread_id=%" PRIu64 ", device_id=%u, ts_id=%u, sq_id=%u, cq_id=%u, retCode=%#x.",
-                it.second.threadId, it.second.stream->Device_()->Id_(), it.second.stream->Device_()->DevGetTsId(),
-                it.second.sqId, it.second.cqId, static_cast<uint32_t>(ret));
+                it.second.threadId, devId, tsId, it.second.sqId, it.second.cqId, static_cast<uint32_t>(ret));
         }
     }
 
