@@ -969,6 +969,10 @@ rtError_t CaptureSession::StreamEndCapture(Stream* const stm, Model** const capt
     captureStream = stm->GetCaptureStream();
     NULL_PTR_PROC_RETURN_ERROR(captureStream, RT_ERROR_STREAM_NULL, ClearCaptureModel(stm, captureModel));
     error = apiObj->ModelEndGraph(captureModel, captureStream, 0U);
+    if ((error == RT_ERROR_DRV_NO_NOTIFY_RESOURCES) || (error == RT_ERROR_DRV_NO_RESOURCES)) {
+        RT_LOG_OUTER_MSG_IMPL(
+            ErrorCode::EE1023, "Alloc Notify resource", "Too many ACL graphs are executed concurrently");
+    }
     COND_PROC_RETURN_ERROR(
         error != RT_ERROR_NONE, error, ClearCaptureModel(stm, captureModel),
         "capture model end graph failed, device_id=%u, origin stream_id=%d, "

@@ -1683,6 +1683,9 @@ rtError_t rtEndGraph(rtModel_t mdl, rtStream_t stm)
     RT_VALIDATE_AND_UNWRAP_OBJECT(mdl, Model, realModel);
     RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     const rtError_t error = apiInstance->ModelEndGraph(realModel, exeStream, 0U);
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER(
+        (error == RT_ERROR_DRV_NO_NOTIFY_RESOURCES) || (error == RT_ERROR_DRV_NO_RESOURCES), error, ErrorCode::EE1023,
+        __func__, "Too many Notify objects are created");
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
@@ -1696,6 +1699,9 @@ rtError_t rtEndGraphEx(rtModel_t mdl, rtStream_t stm, uint32_t flags)
     RT_VALIDATE_AND_UNWRAP_OBJECT(mdl, Model, realModel);
     RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     const rtError_t error = apiInstance->ModelEndGraph(realModel, exeStream, flags);
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER(
+        (error == RT_ERROR_DRV_NO_NOTIFY_RESOURCES) || (error == RT_ERROR_DRV_NO_RESOURCES), error, ErrorCode::EE1023,
+        __func__, "Too many Notify objects are created");
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }

@@ -1072,7 +1072,9 @@ rtError_t Context::SyncStreamsWithTimeout(
         error = defaultStream_->Synchronize(false, remainTime);
         if (unlikely((error != RT_ERROR_NONE) && (firstError == RT_ERROR_NONE))) {
             firstError = error;
-            if (error != RT_ERROR_STREAM_SYNC_TIMEOUT) {
+            if (error == RT_ERROR_STREAM_SYNC_TIMEOUT) {
+                RT_LOG(RT_LOG_ERROR, "Failed to synchronize default stream, retCode=%#x.", error);
+            } else {
                 RT_LOG_INNER_MSG(RT_LOG_ERROR, "Failed to synchronize default stream, retCode=%#x.", error);
             }
         }

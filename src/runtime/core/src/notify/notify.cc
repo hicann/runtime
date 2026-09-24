@@ -454,9 +454,13 @@ rtError_t Notify::CheckIpcNotifyDevId()
         rtError_t error = dev->Driver_()->GetDevicePhyIdByIndex(dev->Id_(), &phyDeviceId);
         COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
         if (phyId_ != phyDeviceId) {
-            RT_LOG(
-                RT_LOG_ERROR, "ipc notify cannot notify wait, name=%s, phyId=%u, ctx_device_id=%u, ctx_phy_id=%u",
-                ipcName_.c_str(), phyId_, dev->Id_(), phyDeviceId);
+            RT_LOG_OUTER_MSG_IMPL(
+                ErrorCode::EE1012, "Waiting for a Notify", phyDeviceId, "current deviceId",
+                RtFmtMsg(
+                    "The device (device_id=%u) cannot deliver the notify wait task."
+                    " The notify wait task must be delivered on the device (device_id=%u) where the IPC Notify is "
+                    "created",
+                    phyDeviceId, phyId_));
             return RT_ERROR_INVALID_VALUE;
         }
     }

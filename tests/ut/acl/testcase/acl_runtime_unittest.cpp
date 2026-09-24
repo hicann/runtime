@@ -8011,6 +8011,17 @@ TEST_F(UTEST_ACL_Runtime, aclrtNotifyBatchReset_success)
     EXPECT_EQ(ret, ACL_SUCCESS);
 }
 
+#if SIZE_MAX > UINT32_MAX
+TEST_F(UTEST_ACL_Runtime, aclrtNotifyBatchReset_rejects_num_above_uint32_max)
+{
+    aclrtNotify notify = nullptr;
+    const size_t num = static_cast<size_t>(UINT32_MAX) + 1U;
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtsNotifyBatchReset(_, _)).Times(0);
+
+    EXPECT_EQ(aclrtNotifyBatchReset(&notify, num), ACL_ERROR_RT_PARAM_INVALID);
+}
+#endif
+
 TEST_F(UTEST_ACL_Runtime, aclrtNotifyGetExportKey_failed_with_invalid_args)
 {
     aclrtNotify notify = (aclrtNotify)0x01;
@@ -8039,6 +8050,18 @@ TEST_F(UTEST_ACL_Runtime, aclrtNotifyGetExportKey_success)
     const auto ret = aclrtNotifyGetExportKey(notify, key, len, flags);
     EXPECT_EQ(ret, ACL_SUCCESS);
 }
+
+#if SIZE_MAX > UINT32_MAX
+TEST_F(UTEST_ACL_Runtime, aclrtNotifyGetExportKey_rejects_len_above_uint32_max)
+{
+    aclrtNotify notify = reinterpret_cast<aclrtNotify>(0x01);
+    char key[] = "key";
+    const size_t len = static_cast<size_t>(UINT32_MAX) + 1U;
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtsNotifyGetExportKey(_, _, _, _)).Times(0);
+
+    EXPECT_EQ(aclrtNotifyGetExportKey(notify, key, len, 0), ACL_ERROR_RT_PARAM_INVALID);
+}
+#endif
 
 TEST_F(UTEST_ACL_Runtime, aclrtNotifyImportByKey_failed_with_invalid_args)
 {
@@ -8092,6 +8115,16 @@ TEST_F(UTEST_ACL_Runtime, aclrtNotifySetImportPid_success)
     size_t num = 3;
     const auto ret = aclrtNotifySetImportPid(notify, pid, num);
     EXPECT_EQ(ret, ACL_SUCCESS);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtNotifySetImportPid_rejects_num_above_int32_max)
+{
+    aclrtNotify notify = reinterpret_cast<aclrtNotify>(0x01);
+    int32_t pid = 1;
+    const size_t num = static_cast<size_t>(INT32_MAX) + 1U;
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtsNotifySetImportPid(_, _, _)).Times(0);
+
+    EXPECT_EQ(aclrtNotifySetImportPid(notify, &pid, num), ACL_ERROR_RT_PARAM_INVALID);
 }
 
 TEST_F(UTEST_ACL_Runtime, aclrtNotifySetImportPidInterServer)
@@ -8961,6 +8994,11 @@ TEST_F(UTEST_ACL_Runtime, aclrtCntNotifyWaitWithTimeout)
 
     ret = aclrtCntNotifyWaitWithTimeout(&cntNotify, stream, nullptr);
     EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+
+    info.isClear = 2U;
+    ret = aclrtCntNotifyWaitWithTimeout(&cntNotify, stream, &info);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+    info.isClear = 1U;
 
     EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtsCntNotifyWaitWithTimeout(_, _, _))
         .WillOnce(Return(ACL_ERROR_RT_PARAM_INVALID));

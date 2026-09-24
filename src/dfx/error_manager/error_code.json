@@ -433,7 +433,7 @@
       "errClass": "RTS Errors",
       "errTitle": "Execution_Error_Stream_Synchronize_Timeout",
       "ErrCode": "EE1002",
-      "ErrMessage": "Stream synchronize timeout. %s",
+      "ErrMessage": "Stream synchronization timeout. %s",
       "Arglist": "extend_info",
       "suggestion": {
         "Possible Cause": "1. The timeout interval may be improperly set.",
@@ -676,6 +676,17 @@
       "suggestion": {
         "Possible Cause": "N/A",
         "Solution": "1. Use the correct dynamic library path. 2. Ensure that the required dynamic library has been correctly installed."
+      }
+    },
+    {
+      "errClass": "RTS Errors",
+      "errTitle": "Execution_Error_Event_Synchronize_Timeout",
+      "ErrCode": "EE1026",
+      "ErrMessage": "Event (event_id=%s) synchronization timeout. %s",
+      "Arglist": "event_id, extend_info",
+      "suggestion": {
+        "Possible Cause": "1. Tasks submitted before the last Event Record take a long time to execute, fail to be executed, or have unsolved dependency relationships. 2. The synchronization timeout interval is less than the time required for completing tasks submitted before the last Event Record. 3. For IPC Event, the peer process or device stops running.",
+        "Solution": "1. Check whether tasks submitted before the last Event Record fail to be executed or have unsolved dependency relationships. 2. Extend the synchronization timeout interval via an event timeout interval configuration API (for example, aclrtSynchronizeEventWithTimeout). 3. For IPC Event, ensure that the peer process and device are running properly."
       }
     },
     {

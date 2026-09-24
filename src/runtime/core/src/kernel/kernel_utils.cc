@@ -293,7 +293,11 @@ static rtError_t ConvertTimeoutByAttrId(
     } else {
         uint32_t opTimeout = 0U;
         rtError_t error = GetOpExecuteMsTimeout(&opTimeout, &timeout);
-        ERROR_RETURN(error, "cannot get system timeout");
+        COND_RETURN_AND_MSG_OUTER(
+            error == RT_ERROR_FEATURE_NOT_SUPPORT, error, ErrorCode::EE1006, "Obtaining kernel function attributes",
+            (attrId == RT_LAUNCH_KERNEL_ATTR_TIMEOUT) ? "The TIMEOUT attribute" : "The TIMEOUT_US attribute",
+            "The current chip does not support the kernel timeout credit capability");
+        ERROR_RETURN(error, "failed to get system timeout for the kernel task attribute");
         // 0: 用户未配置, 默认超时； 非0: 当前实际超时
         realTimeout = (timeout == 0ULL) ? static_cast<uint64_t>(opTimeout) * RT_TIMEOUT_MS_TO_US : timeout;
     }

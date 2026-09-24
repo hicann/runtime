@@ -85,6 +85,8 @@ aclError aclrtNotifyBatchResetImpl(aclrtNotify* notifies, size_t num)
     ACL_PROFILING_REG(acl::AclProfType::AclrtNotifyBatchReset);
     ACL_LOG_INFO("start to execute aclrtNotifyBatchReset, num is [%zu]", num);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(notifies);
+    ACL_CHECK_INVALID_VALUE_WITH_EXPECT_RET(
+        num <= static_cast<size_t>(UINT32_MAX), num, "(0, UINT32_MAX]", ACL_ERROR_RT_PARAM_INVALID);
     ACL_REQUIRES_RTS_OK(rtsNotifyBatchReset(notifies, static_cast<uint32_t>(num)));
 
     ACL_LOG_INFO("successfully execute aclrtNotifyBatchReset");
@@ -97,6 +99,8 @@ aclError aclrtNotifyGetExportKeyImpl(aclrtNotify notify, char* key, size_t len, 
     ACL_LOG_INFO("start to execute aclrtNotifyGetExportKey, len is [%zu], flags is [%lu]", len, flags);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(notify);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(key);
+    ACL_CHECK_INVALID_VALUE_WITH_EXPECT_RET(
+        len <= static_cast<size_t>(UINT32_MAX), len, "(0, UINT32_MAX]", ACL_ERROR_RT_PARAM_INVALID);
 
     ACL_REQUIRES_RTS_OK(rtsNotifyGetExportKey(notify, key, static_cast<uint32_t>(len), flags));
 
@@ -123,6 +127,8 @@ aclError aclrtNotifySetImportPidImpl(aclrtNotify notify, int32_t* pid, size_t nu
     ACL_LOG_INFO("start to execute aclrtNotifySetImportPid, num is [%zu]", num);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(notify);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(pid);
+    ACL_CHECK_INVALID_VALUE_WITH_EXPECT_RET(
+        num <= static_cast<size_t>(INT32_MAX), num, "(0, INT32_MAX]", ACL_ERROR_RT_PARAM_INVALID);
 
     ACL_REQUIRES_RTS_OK(rtsNotifySetImportPid(notify, pid, static_cast<int32_t>(num)));
 
@@ -180,6 +186,7 @@ aclError aclrtCntNotifyWaitWithTimeoutImpl(aclrtCntNotify cntNotify, aclrtStream
     ACL_PROFILING_REG(acl::AclProfType::AclrtCntNotifyWaitWithTimeout);
     ACL_LOG_INFO("start to execute aclrtCntNotifyWaitWithTimeout");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(info);
+    ACL_CHECK_INVALID_VALUE_WITH_EXPECT_RET(info->isClear <= 1U, info->isClear, "0 or 1", ACL_ERROR_INVALID_PARAM);
     ACL_REQUIRES_RTS_OK(rtsCntNotifyWaitWithTimeout(cntNotify, stream, reinterpret_cast<rtCntNotifyWaitInfo_t*>(info)));
 
     ACL_LOG_INFO("successfully execute aclrtCntNotifyWaitWithTimeout");

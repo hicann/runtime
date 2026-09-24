@@ -2377,6 +2377,12 @@ rtError_t ApiImpl::EventSynchronize(Event* const evt, const int32_t timeout)
     } else {
         error = evt->Synchronize(timeout);
     }
+    COND_RETURN_AND_MSG_OUTER(
+        error == RT_ERROR_EVENT_SYNC_TIMEOUT, error, ErrorCode::EE1026, evt->EventId_(),
+        RtFmtMsg(
+            "A timeout occurred when waiting for task execution before Event Record."
+            " The timeout interval is %d ms, device_id=%u.",
+            timeout, evt->Device_()->Id_()));
     ERROR_RETURN(error, "Synchronize event failed.");
     RT_LOG(RT_LOG_INFO, "Event synchronize success, trigger implicit mempool trim (exclude graph pool).");
     rtError_t trimRet = Runtime::Instance()->ApiSoma_()->MemPoolTrimImplicit(false);
@@ -4041,13 +4047,10 @@ rtError_t ApiImpl::NotifyWait(Notify* const notify, Stream* const stm, const uin
 
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Waiting for a Notify");
-    COND_RETURN_AND_MSG_OUTER(
-        notify->CheckIpcNotifyDevId() != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE, ErrorCode::EE1012,
-        "Waiting for a Notify", dev->Id_(), "current deviceId",
-        RtFmtMsg(
-            "The device (device_id=%u) cannot deliver the notify wait task."
-            " The notify wait task must be delivered on the device (device_id=%u) where the IPC Notify is created",
-            dev->Id_(), notify->GetDeviceId()));
+    COND_RETURN_ERROR(
+        notify->CheckIpcNotifyDevId() != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE,
+        "Failed to check the IPC Notify device for waiting, notify_id=%u, stream_id=%d.", notify->GetNotifyId(),
+        curStm->Id_());
 
     uint32_t timeOutTmp = timeOut;
     if (!IS_SUPPORT_CHIP_FEATURE(dev->GetChipType(), RtOptionalFeatureType::RT_FEATURE_NOTIFY_WAIT) &&

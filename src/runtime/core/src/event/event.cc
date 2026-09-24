@@ -525,7 +525,26 @@ rtError_t Event::ReAllocId()
 rtError_t Event::GetEventID(uint32_t* const evtId) const
 {
     if (eventId_ == INVALID_EVENT_ID) { // stream mark / timeline no use
-        RT_LOG(RT_LOG_ERROR, "eventFlag=%" PRIu64 ", event id is invalid.", eventFlag_);
+        const bool noIdByDesign = IsHardwareMode() && (eventFlag_ != RT_EVENT_DEFAULT) && IsEventWithoutWaitTask() &&
+                                  (!isIdAllocFromDrv_) && (device_ != nullptr) && device_->IsStarsPlatform();
+        const bool idAllocatedByRecord = isNewMode_ || (eventFlag_ == RT_EVENT_DEFAULT) || !IsHardwareMode();
+        if (noIdByDesign) {
+            RT_LOG_OUTER_MSG_IMPL(
+                ErrorCode::EE1006, "Obtaining the Event ID", RtFmtMsg("The Event flag %" PRIu64, eventFlag_),
+                "The current Event type does not allocate an ID. "
+                "Create the Event with RT_EVENT_DDSYNC_NS(0x1U) when an Event ID is required");
+        } else if (!HasRecord() && idAllocatedByRecord) {
+            RT_LOG_OUTER_MSG_IMPL(
+                ErrorCode::EE1018, "Obtaining the Event ID",
+                "The Event ID has not been allocated. Record the Event on a stream before obtaining its ID");
+        } else {
+            RT_LOG_INNER_MSG(
+                RT_LOG_ERROR,
+                "Failed to obtain Event ID because event_id is invalid, eventFlag=%" PRIu64
+                ", hasRecord=%u, isNewMode=%u, hardwareMode=%u, isIdAllocFromDrv=%u.",
+                eventFlag_, static_cast<uint32_t>(HasRecord()), static_cast<uint32_t>(isNewMode_),
+                static_cast<uint32_t>(IsHardwareMode()), static_cast<uint32_t>(isIdAllocFromDrv_));
+        }
         return RT_ERROR_EVENT_RECORDER_NULL;
     }
     *evtId = static_cast<uint32_t>(eventId_);
@@ -1289,9 +1308,15 @@ rtError_t Event::ElapsedTime(float32_t* const timeInterval, Event* const base)
     }
 
     if ((curNs == UINT64_MAX) || (baseNs == UINT64_MAX)) {
+        const RecordTaskInfo startRecord = base->GetLatestRecord();
+        const RecordTaskInfo endRecord = GetLatestRecord();
         RT_LOG(
-            RT_LOG_ERROR, "curNs=%#" PRIx64 ", baseNs=%#" PRIx64 ", curEventId=%d, baseEventId=%d.", curNs, baseNs,
-            eventId_, base->EventId_());
+            RT_LOG_ERROR,
+            "curNs=%#" PRIx64 ", baseNs=%#" PRIx64
+            ", curEventId=%d, baseEventId=%d, curState=%s(%u), baseState=%s(%u).",
+            curNs, baseNs, eventId_, base->EventId_(), EventStateName(endRecord.state),
+            static_cast<uint32_t>(endRecord.state), EventStateName(startRecord.state),
+            static_cast<uint32_t>(startRecord.state));
         return RT_ERROR_EVENT_TIMESTAMP_INVALID;
     }
 

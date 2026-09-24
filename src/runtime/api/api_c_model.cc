@@ -112,6 +112,9 @@ rtError_t rtsEndGraph(rtModel_t mdl, rtStream_t stm)
     rtError_t error = apiInstance->SetStreamSqLockUnlock(exeStream, false);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     error = apiInstance->ModelEndGraph(realModel, exeStream, 0U);
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER(
+        (error == RT_ERROR_DRV_NO_NOTIFY_RESOURCES) || (error == RT_ERROR_DRV_NO_RESOURCES), error, ErrorCode::EE1023,
+        __func__, "Too many Notify objects are created");
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }

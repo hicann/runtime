@@ -2122,6 +2122,7 @@ rtError_t Stream::Synchronize(const bool isNeedWaitSyncCq, int32_t timeout)
     error = (error == RT_ERROR_EVENT_SYNC_TIMEOUT) ? RT_ERROR_STREAM_SYNC_TIMEOUT : error;
 #ifndef CFG_DEV_PLATFORM_PC
     if (error == RT_ERROR_STREAM_SYNC_TIMEOUT) {
+        RT_LOG(RT_LOG_ERROR, "Synchronize event failed, retCode=%#x.", static_cast<uint32_t>(error));
         goto ERROR_FREE;
     }
     ERROR_GOTO_MSG_INNER(error, ERROR_FREE, "Synchronize event failed, retCode=%#x.", static_cast<uint32_t>(error));
@@ -5496,6 +5497,12 @@ rtError_t Stream::ReBuildStreamId()
         streamSwitchInfo_[0].stream_mem = RtValueToPtr<void*>(GetSqBaseAddr());
         /* stream unbind sq */
         error = device_->Driver_()->SqSwitchStreamBatch(device_->Id_(), streamSwitchInfo_, 1U);
+        if (error == RT_ERROR_DRV_NOT_SUPPORT) {
+            RT_LOG_OUTER_MSG_IMPL(
+                ErrorCode::EE1016, "Unbinding the stream from the SQ/CQ",
+                "The driver does not support unbinding the stream from the SQ/CQ");
+        }
+
         COND_RETURN_ERROR(
             (error != RT_ERROR_NONE), error, "stream unbind sq failed, stream_id=%u, sq_id=%u, retCode=%#x.", Id_(),
             GetSqId(), static_cast<uint32_t>(error));

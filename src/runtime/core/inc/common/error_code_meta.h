@@ -25,7 +25,7 @@
     /* EE1001 - Invalid_Argument */                                                                                \
     X(EE1001, "EE1001", ("extend_info"), "The argument is invalid. Reason: %s. ErrorCode=EE1001.\n", DLOG_ERROR)   \
     /* EE1002 - Execution_Error_Stream_Synchronize_Timeout */                                                      \
-    X(EE1002, "EE1002", ("extend_info"), "Stream synchronize timeout. %s. ErrorCode=EE1002.\n", DLOG_ERROR)        \
+    X(EE1002, "EE1002", ("extend_info"), "Stream synchronization timeout. %s. ErrorCode=EE1002.\n", DLOG_ERROR)    \
     /* EE1003 - Invalid_Argument */                                                                                \
     X(EE1003, "EE1003", ("func", "value", "param", "expect"),                                                      \
       "%s failed because value %s for parameter %s is invalid. "                                                   \
@@ -117,6 +117,11 @@
     /* EE1025 - Initialization_Error */                                                                            \
     X(EE1025, "EE1025", ("library_name", "reason"),                                                                \
       "Failed to load dynamic library %s. Reason: %s. ErrorCode=EE1025.\n", DLOG_ERROR)                            \
+    /* EE1026 - Execution_Error_Event_Synchronize_Timeout */                                                       \
+    X(EE1026, "EE1026", ("event_id", "extend_info"),                                                               \
+      "Event (event_id=%s) synchronization timeout. %s "                                                           \
+      "ErrorCode=EE1026.\n",                                                                                       \
+      DLOG_ERROR)                                                                                                  \
     /* EE2002 - Config_Error_Invalid_Environment_Variable */                                                       \
     X(EE2002, "EE2002", ("value", "env", "expect"),                                                                \
       "Value %s for environment variable %s is invalid. "                                                          \

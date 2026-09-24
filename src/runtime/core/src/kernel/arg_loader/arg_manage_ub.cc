@@ -88,7 +88,12 @@ rtError_t UbArgManage::ParseArgsCpyWqe(const StarsArgLoaderResult* const result,
     const uint32_t devId = dev->Id_();
     // aclgraph和自动切分下沉流走驱动halMemcpy做同步拷贝
     if (stream_->IsSoftwareSqEnable() || stream_->IsAutoSplitSq()) {
-        return dev->Driver_()->MemCopySync(result->kerArgs, size, result->hostAddr, size, RT_MEMCPY_HOST_TO_DEVICE);
+        const rtError_t error =
+            dev->Driver_()->MemCopySync(result->kerArgs, size, result->hostAddr, size, RT_MEMCPY_HOST_TO_DEVICE);
+        COND_RETURN_AND_MSG_OUTER(
+            error == RT_ERROR_DRV_NOT_SUPPORT, error, ErrorCode::EE1016, "Copying kernel arguments from host to device",
+            "The driver does not support synchronous host-to-device memory copy");
+        return error;
     }
     struct halSqTaskArgsInfo sqArgsInfo = {};
     sqArgsInfo.type = DRV_NORMAL_TYPE;

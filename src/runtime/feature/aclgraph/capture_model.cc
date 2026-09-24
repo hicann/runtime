@@ -1456,6 +1456,11 @@ rtError_t CaptureModel::BindSqCq(void)
         error = dev->Driver_()->MemCopySync(
             RtValueToPtr<void*>(logicSq->GetSqIdMemAddr()), sizeof(uint64_t), RtPtrToPtr<void*>(&(sqIdTmp)),
             sizeof(uint64_t), RT_MEMCPY_HOST_TO_DEVICE);
+        if (error == RT_ERROR_DRV_NOT_SUPPORT) {
+            RT_LOG_OUTER_MSG_IMPL(
+                ErrorCode::EE1016, "Binding the streams to the SQ/CQ of the ACL Graph",
+                "The driver does not support synchronous host-to-device memory copy");
+        }
         COND_RETURN_ERROR(
             (error != RT_ERROR_NONE), error,
             "stream set sq id failed, device_id=%u, model_id=%u, stream_id=%u, sqId=%u, logic_sq_id=%u, retCode=%#x.",
@@ -1471,6 +1476,11 @@ rtError_t CaptureModel::BindSqCq(void)
 
     /* switch stream to sq */
     error = dev->Driver_()->SqSwitchStreamBatch(dev->Id_(), switchInfo_, sqCqNum_);
+    if (error == RT_ERROR_DRV_NOT_SUPPORT) {
+        RT_LOG_OUTER_MSG_IMPL(
+            ErrorCode::EE1016, "Binding the streams to the SQ/CQ of the ACL Graph",
+            "The driver does not support binding streams to the SQ/CQ");
+    }
     COND_RETURN_ERROR(
         (error != RT_ERROR_NONE), error, "stream bind sq failed, device_id=%u, model_id=%u, sqNum=%u, retCode=%#x.",
         dev->Id_(), Id_(), sqCqNum_, static_cast<uint32_t>(error));
@@ -2190,8 +2200,8 @@ rtError_t CaptureModel::UpdateNotifyIdAll(Stream* const exeStream)
 {
     /* 更新所有图的endgraph notify record sqe */
     rtError_t error = UpdateNotifyIdForAllModels(exeStream);
-    ERROR_RETURN_MSG_INNER(
-        error, "update notify id for each model failed, model_id=%u, retCode=%#x.", Id_(),
+    ERROR_RETURN(
+        error, "Failed to update notify id for each model, model_id=%u, retCode=%#x.", Id_(),
         static_cast<uint32_t>(error));
 
     /* 更新所有条件算子后面的notify wait sqe */
