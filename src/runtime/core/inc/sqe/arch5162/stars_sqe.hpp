@@ -296,6 +296,13 @@ struct RtLabelSetSqe {
     uint16_t reserved[23];
 };
 
+struct RtUpdateAddress {
+    /* word4-15 */
+    uint64_t devAddr;
+    uint64_t len;
+    uint32_t reserved[8];
+};
+
 struct RtStarsPhSqe {
     /* word0-1 */
     rtStarsSqeHeader header;
@@ -316,6 +323,7 @@ struct RtStarsPhSqe {
         RtLabelSetSqe labelSetInfo;
         RtStreamActiveSqe streamActiveInfo;
         RtStreamSwitchExSqe streamSwitchExInfo;
+        RtUpdateAddress updateAddressInfo;
         uint32_t res[12];
     } u;
 };

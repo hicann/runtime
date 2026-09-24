@@ -183,9 +183,46 @@ TEST_F(Arch5162TaskTest, StubTask)
 
     ret = CreateL2AddrTaskInit(nullptr, 0);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+}
 
-    ret = UpdateAddressTaskInit(nullptr, 0, 0);
-    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
+TEST_F(Arch5162TaskTest, UpdateAddressTaskInitAndConstructSqe)
+{
+    constexpr uint64_t devAddr = 0x123456789ABCDEF0ULL;
+    constexpr uint64_t len = 0x1000200030004000ULL;
+    RawDevice* device = new RawDevice(0);
+    Stream* stream = new Stream(device, 0);
+    ASSERT_NE(stream, nullptr);
+    TaskInfo task = {};
+    task.stream = stream;
+    task.id = 0x34U;
+    MOCKER(SetTaskTag).stubs();
+
+    const rtError_t error = UpdateAddressTaskInit(&task, devAddr, len);
+
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(task.type, TS_TASK_TYPE_UPDATE_ADDRESS);
+    EXPECT_STREQ(task.typeName, "UPDATE_ADDRESS");
+    EXPECT_EQ(task.u.updateAddrTask.devAddr, devAddr);
+    EXPECT_EQ(task.u.updateAddrTask.len, len);
+
+    PfnTaskToSqe toSqeFunc = g_taskFuncArrays[CHIP_5162A].toSqeFunc[task.type];
+    ASSERT_NE(toSqeFunc, nullptr);
+    EXPECT_EQ(g_taskFuncArrays[CHIP_5162A].toCommandFunc[task.type], nullptr);
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].doCompleteSuccFunc[task.type], nullptr);
+    rtStarsSqe_t sqe = {};
+    toSqeFunc(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
+
+    EXPECT_EQ(sqe.phSqe.header.type, RT_STARS_SQE_TYPE_PLACE_HOLDER);
+    EXPECT_EQ(sqe.phSqe.header.wrCqe, stream->GetStarsWrCqeFlag());
+    EXPECT_EQ(sqe.phSqe.header.preP, RT_STARS_SQE_INT_DIR_TO_TSCPU);
+    EXPECT_EQ(sqe.phSqe.header.postP, RT_STARS_SQE_INT_DIR_NO);
+    EXPECT_EQ(sqe.phSqe.header.u.sqeSubType, RT_SQE_SUBTYPE_UPDATE_ADDRESS);
+    EXPECT_EQ(sqe.phSqe.header.rtStreamId, static_cast<uint16_t>(stream->Id_()));
+    EXPECT_EQ(sqe.phSqe.header.taskId, task.id);
+    EXPECT_EQ(sqe.phSqe.u.updateAddressInfo.devAddr, devAddr);
+    EXPECT_EQ(sqe.phSqe.u.updateAddressInfo.len, len);
+    delete stream;
+    delete device;
 }
 
 TEST_F(Arch5162TaskTest, MemoryLaunchStub)

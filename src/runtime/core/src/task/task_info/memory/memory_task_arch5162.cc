@@ -388,12 +388,42 @@ rtError_t CreateL2AddrTaskInit(TaskInfo* const taskInfo, const uint64_t ptePtrAd
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t UpdateAddressTaskInit(TaskInfo* taskInfo, uint64_t devAddr, uint64_t len)
+rtError_t UpdateAddressTaskInit(TaskInfo* const taskInfo, const uint64_t devAddr, const uint64_t len)
 {
-    UNUSED(taskInfo);
-    UNUSED(devAddr);
-    UNUSED(len);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
+    TaskCommonInfoInit(taskInfo);
+    taskInfo->typeName = "UPDATE_ADDRESS";
+    taskInfo->type = TS_TASK_TYPE_UPDATE_ADDRESS;
+    taskInfo->u.updateAddrTask.devAddr = devAddr;
+    taskInfo->u.updateAddrTask.len = len;
+    return RT_ERROR_NONE;
+}
+
+void ConstructSqeForUpdateAddressTask(TaskInfo* const taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
+{
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
+    UpdateAddressTaskInfo* const updateAddrTask = &(taskInfo->u.updateAddrTask);
+    Stream* const stream = taskInfo->stream;
+    (void)memset_s(command, sizeof(rtStarsSqe_t), 0, sizeof(rtStarsSqe_t));
+
+    RtStarsPhSqe* const sqe = &(command->phSqe);
+    sqe->header.type = RT_STARS_SQE_TYPE_PLACE_HOLDER;
+    sqe->header.wrCqe = stream->GetStarsWrCqeFlag();
+    sqe->header.rtStreamId = static_cast<uint16_t>(stream->Id_());
+    sqe->header.taskId = taskInfo->id;
+    sqe->header.u.sqeSubType = RT_SQE_SUBTYPE_UPDATE_ADDRESS;
+    sqe->header.preP = RT_STARS_SQE_INT_DIR_TO_TSCPU;
+
+    sqe->u.updateAddressInfo.devAddr = updateAddrTask->devAddr;
+    sqe->u.updateAddressInfo.len = updateAddrTask->len;
+
+    PrintSqe(command, "UpdateAddressTask");
+    RT_LOG(
+        RT_LOG_INFO,
+        "UpdateAddressTask stream_id=%d, task_id=%hu, dev_addr=%#" PRIx64 ", len=%" PRIu64 ", sqe_sub_type=%" PRIu16
+        ".",
+        stream->Id_(), taskInfo->id, updateAddrTask->devAddr, updateAddrTask->len, sqe->header.u.sqeSubType);
 }
 
 static void ConstructPlaceHolderSqe(TaskInfo* const taskInfo, rtStarsSqe_t* const command)
@@ -492,7 +522,19 @@ static bool MemoryTaskRegister()
         .setResultFunc = &SetResultCommon,
         .setStarsResultFunc = &SetStarsResultForMemcpyAsyncTask,
     };
+
+    TaskFuncSingle updateAddressFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = &ConstructSqeForUpdateAddressTask,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = &SetResultCommon,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
     RegTaskFunc(CHIP_5162A, TS_TASK_TYPE_MEMCPY, memcpyFuncs);
+    RegTaskFunc(CHIP_5162A, TS_TASK_TYPE_UPDATE_ADDRESS, updateAddressFuncs);
     return true;
 }
 

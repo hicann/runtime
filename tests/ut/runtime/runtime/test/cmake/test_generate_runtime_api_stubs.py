@@ -137,11 +137,11 @@ RUNTIME_API_STUB(rtNoop)
         self.assertFalse(set(names) - set(catalog))
         self.assertEqual(names, sorted(names))
         self.assertEqual(len(catalog), 786)
-        self.assertEqual(len(names), 654)
-        self.assertEqual(len(set(catalog) - set(names)), 132)
+        self.assertEqual(len(names), 653)
+        self.assertEqual(len(set(catalog) - set(names)), 133)
         self.assertEqual(
             sum(catalog[name].policy == "FEATURE_NOT_SUPPORT" for name in names),
-            650,
+            649,
         )
         self.assertEqual(
             sum(catalog[name].policy == "SUCCESS_NOOP" for name in names), 3
@@ -158,6 +158,7 @@ RUNTIME_API_STUB(rtNoop)
         for api in (
             "rtCtxGetCurrentDefaultStream",
             "rtDatadumpInfoLoadWithFlag",
+            "rtDevVA2PA",
             "rtDeviceGetStreamPriorityRange",
             "rtEventRecord",
             "rtGetAvailEventNum",

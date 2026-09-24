@@ -42,7 +42,7 @@ typedef enum tagGeneralCtrlType {
 
 /**
  * @ingroup rt_stars
- * @brief 5612(tiny) need translate addr
+ * @brief need translate addr
  * @param [out] needTranslate
  * @return RT_ERROR_NONE for ok, others failed
  */
