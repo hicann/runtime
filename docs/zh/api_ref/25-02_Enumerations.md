@@ -157,6 +157,8 @@ typedef enum {
     ACL_FLOAT6_E2M3 = 39,   
     ACL_FLOAT4_E2M1 = 40,   
     ACL_FLOAT4_E1M2 = 41,   
+    ACL_HIFLOAT4 = 42,
+    ACL_HIFLOAT4_SCALE = 43,
 } aclDataType;
 ```
 
@@ -2329,6 +2331,7 @@ typedef enum {
     ACL_OPT_DETERMINISTIC = 0,
     ACL_OPT_ENABLE_DEBUG_KERNEL = 1,
     ACL_OPT_STRONG_CONSISTENCY = 2,
+    ACL_OPT_ENABLE_KERNEL_EARLY_START = 3
 } aclSysParamOpt;
 ```
 

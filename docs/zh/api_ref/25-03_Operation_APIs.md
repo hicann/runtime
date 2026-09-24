@@ -235,7 +235,7 @@ void *aclGetDataBufferAddr(const aclDataBuffer *dataBuffer)
 ## aclGetDataBufferSize（废弃）
 
 ```c
-uint32 aclGetDataBufferSize(const aclDataBuffer *dataBuffer)
+uint32_t aclGetDataBufferSize(const aclDataBuffer *dataBuffer)
 ```
 
 **须知：此接口后续版本会废弃，请使用[aclGetDataBufferSizeV2](#aclGetDataBufferSizeV2)接口。**
