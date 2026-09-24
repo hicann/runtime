@@ -5601,10 +5601,10 @@ rtError_t Stream::SubmitMemCpyAsyncTask(TaskInfo* const updateTask)
     updateTask->stream->RecordDevMemAddr(sqeDeviceAddr);
 
     error = UpdateTaskH2DSubmit(updateTask, context_->GetCtrlSQStream(), sqeDeviceAddr);
-    COND_RETURN_ERROR(error != RT_ERROR_NONE, RT_ERROR_NONE, "h2d task submit failed, ret=%d", error);
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "h2d task submit failed, ret=%d", error);
 
     error = UpdateTaskD2HSubmit(updateTask, sqeDeviceAddr, context_->GetCtrlSQStream());
-    COND_RETURN_ERROR(error != RT_ERROR_NONE, RT_ERROR_NONE, "d2h task submit failed, ret=%d", error);
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "d2h task submit failed, ret=%d", error);
     return RT_ERROR_NONE;
 }
 
