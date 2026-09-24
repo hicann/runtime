@@ -373,7 +373,8 @@ rtError_t NpuDriver::MemQueueCreate(const int32_t devId, const rtMemQueueAttr_t*
 
     QueueAttr attr = {};
     const errno_t ret = strcpy_s(attr.name, sizeof(attr.name), queAttr->name);
-    COND_LOG_ERROR(ret != EOK, "strcpy_s failed, size=%zu(bytes), retCode=%d!", sizeof(attr.name), ret);
+    COND_RETURN_ERROR(
+        ret != EOK, RT_ERROR_SEC_HANDLE, "strcpy_s failed, size=%zu(bytes), retCode=%d!", sizeof(attr.name), ret);
     attr.depth = queAttr->depth;
     attr.workMode = queAttr->workMode;
     attr.flowCtrlFlag = queAttr->flowCtrlFlag;

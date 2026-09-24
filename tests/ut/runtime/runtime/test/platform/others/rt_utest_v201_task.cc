@@ -90,6 +90,15 @@ static drvError_t halResAddrMapStub(
     return DRV_ERROR_NONE;
 }
 
+static rtError_t MemCopySyncStubForDfx(
+    Driver* drv, void* dst, uint64_t destMax, const void* src, uint64_t size, rtMemcpyKind_t kind)
+{
+    UNUSED(drv);
+    UNUSED(kind);
+    (void)memcpy_s(dst, destMax, src, size);
+    return RT_ERROR_NONE;
+}
+
 static drvError_t halGetDeviceInfoStub(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t* value)
 {
     if (value) {
@@ -1319,6 +1328,10 @@ TEST_F(TaskTestV201, Test_DqsCountNotifyWait)
 
     StreamWithDqs* streamWithDqs = (StreamWithDqs*)stm;
     streamWithDqs->SetDqsCtrlSpace(&ctrlSpace);
+    auto* const cntNotify = new CountNotify(device_->Id_(), device_->DevGetTsId());
+    ASSERT_NE(cntNotify, nullptr);
+    streamWithDqs->SetDqsCountNotify(cntNotify);
+    MOCKER(halResAddrMap).stubs().will(invoke(halResAddrMapStub));
 
     rtDqsTaskCfg_t cfg = {};
     cfg.type = RT_DQS_TASK_DEQUEUE;
@@ -1368,6 +1381,10 @@ TEST_F(TaskTestV201, Test_DqsNotifyWaitWithInvalidQueNum)
 
     StreamWithDqs* streamWithDqs = (StreamWithDqs*)stm;
     streamWithDqs->SetDqsCtrlSpace(&ctrlSpace);
+    auto* const cntNotify = new CountNotify(device_->Id_(), device_->DevGetTsId());
+    ASSERT_NE(cntNotify, nullptr);
+    streamWithDqs->SetDqsCountNotify(cntNotify);
+    MOCKER(halResAddrMap).stubs().will(invoke(halResAddrMapStub));
     rtDqsTaskCfg_t cfg = {};
     cfg.type = RT_DQS_TASK_DEQUEUE;
     rtError_t error = DqsLaunchTask(stm, &cfg);
@@ -1376,6 +1393,133 @@ TEST_F(TaskTestV201, Test_DqsNotifyWaitWithInvalidQueNum)
     cfg.type = RT_DQS_TASK_NOTIFY_WAIT;
     error = DqsLaunchTask(stm, &cfg);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    delete stm;
+}
+
+TEST_F(TaskTestV201, Test_DqsEnqueueDequeueTaskUnInit)
+{
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    Stream* stm = CreateStreamAndGet(device_, 0, RT_STREAM_DQS_CTRL, nullptr);
+    EXPECT_NE(stm, nullptr);
+    Driver* driver = ((Runtime*)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
+    MOCKER_CPP_VIRTUAL(driver, &Driver::DevMemFree).stubs().will(returnValue(RT_ERROR_NONE));
+
+    TaskInfo task = {};
+    InitByStream(&task, stm);
+    void* const svmMem = RtValueToPtr<void*>(0x1000ULL);
+
+    task.type = TS_TASK_TYPE_DQS_ENQUEUE;
+    task.u.dqsEnqueueTask.baseFuncCallSvmMem = svmMem;
+    task.u.dqsEnqueueTask.funcCallSvmMem = svmMem;
+    task.u.dqsEnqueueTask.dfxPtr = svmMem;
+    task.u.dqsEnqueueTask.funCallMemSize = 64UL;
+    TaskUnInitProc(&task);
+    EXPECT_EQ(task.u.dqsEnqueueTask.baseFuncCallSvmMem, nullptr);
+    EXPECT_EQ(task.u.dqsEnqueueTask.funcCallSvmMem, nullptr);
+    EXPECT_EQ(task.u.dqsEnqueueTask.dfxPtr, nullptr);
+    EXPECT_EQ(task.u.dqsEnqueueTask.funCallMemSize, 0UL);
+
+    task.type = TS_TASK_TYPE_DQS_DEQUEUE;
+    task.u.dqsDequeueTask.baseFuncCallSvmMem = svmMem;
+    task.u.dqsDequeueTask.funcCallSvmMem = svmMem;
+    task.u.dqsDequeueTask.dfxPtr = svmMem;
+    task.u.dqsDequeueTask.funCallMemSize = 64UL;
+    TaskUnInitProc(&task);
+    EXPECT_EQ(task.u.dqsDequeueTask.baseFuncCallSvmMem, nullptr);
+    EXPECT_EQ(task.u.dqsDequeueTask.funcCallSvmMem, nullptr);
+    EXPECT_EQ(task.u.dqsDequeueTask.dfxPtr, nullptr);
+    EXPECT_EQ(task.u.dqsDequeueTask.funCallMemSize, 0UL);
+
+    delete stm;
+}
+
+TEST_F(TaskTestV201, Test_DqsConditionCopyAndPrepareTaskUnInit)
+{
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    Stream* stm = CreateStreamAndGet(device_, 0, RT_STREAM_DQS_CTRL, nullptr);
+    EXPECT_NE(stm, nullptr);
+    Driver* driver = ((Runtime*)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
+    MOCKER_CPP_VIRTUAL(driver, &Driver::DevMemFree).stubs().will(returnValue(RT_ERROR_NONE));
+
+    TaskInfo task = {};
+    InitByStream(&task, stm);
+    void* const svmMem = RtValueToPtr<void*>(0x1000ULL);
+
+    task.type = TS_TASK_TYPE_DQS_CONDITION_COPY;
+    task.u.dqsCondCopyTask.baseFuncCallSvmMem = svmMem;
+    task.u.dqsCondCopyTask.funcCallSvmMem = svmMem;
+    task.u.dqsCondCopyTask.dfxPtr = svmMem;
+    task.u.dqsCondCopyTask.funCallMemSize = 64UL;
+    TaskUnInitProc(&task);
+    EXPECT_EQ(task.u.dqsCondCopyTask.baseFuncCallSvmMem, nullptr);
+    EXPECT_EQ(task.u.dqsCondCopyTask.funcCallSvmMem, nullptr);
+    EXPECT_EQ(task.u.dqsCondCopyTask.dfxPtr, nullptr);
+    EXPECT_EQ(task.u.dqsCondCopyTask.funCallMemSize, 0UL);
+
+    task.type = TS_TASK_TYPE_DQS_PREPARE;
+    task.u.dqsPrepareTask.baseFuncCallSvmMem = svmMem;
+    task.u.dqsPrepareTask.funcCallSvmMem = svmMem;
+    task.u.dqsPrepareTask.dfxPtr = svmMem;
+    task.u.dqsPrepareTask.funCallMemSize = 64UL;
+    TaskUnInitProc(&task);
+    EXPECT_EQ(task.u.dqsPrepareTask.baseFuncCallSvmMem, nullptr);
+    EXPECT_EQ(task.u.dqsPrepareTask.funcCallSvmMem, nullptr);
+    EXPECT_EQ(task.u.dqsPrepareTask.dfxPtr, nullptr);
+    EXPECT_EQ(task.u.dqsPrepareTask.funCallMemSize, 0UL);
+
+    delete stm;
+}
+
+TEST_F(TaskTestV201, Test_DqsTaskAllocFuncCallNullPtr)
+{
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    Stream* stm = CreateStreamAndGet(device_, 0, RT_STREAM_DQS_CTRL, nullptr);
+    EXPECT_NE(stm, nullptr);
+    stars_dqs_ctrl_space_t ctrlSpace = {};
+    ctrlSpace.input_queue_num = 1U;
+    StreamWithDqs* streamWithDqs = (StreamWithDqs*)stm;
+    streamWithDqs->SetDqsCtrlSpace(&ctrlSpace);
+
+    // DevMemAlloc returns success but leaves the output pointer null
+    MOCKER_CPP_VIRTUAL((NpuDriver*)(device_->Driver_()), &NpuDriver::DevMemAlloc)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+
+    TaskInfo task = {};
+    InitByStream(&task, stm);
+    DqsTaskConfig cfg = {};
+    rtError_t error = DqsEnqueueTaskInit(&task, stm, &cfg);
+    EXPECT_EQ(error, RT_ERROR_DRV_PTRNULL);
+
+    delete stm;
+}
+
+TEST_F(TaskTestV201, Test_PrintErrorInfoForDqsPrepareTask)
+{
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    Stream* stm = CreateStreamAndGet(device_, 0, RT_STREAM_DQS_CTRL, nullptr);
+    EXPECT_NE(stm, nullptr);
+    stars_dqs_ctrl_space_t ctrlSpace = {};
+    StreamWithDqs* streamWithDqs = (StreamWithDqs*)stm;
+    streamWithDqs->SetDqsCtrlSpace(&ctrlSpace);
+
+    uint32_t dfxData[2U] = {STARS_DQS_MAX_OUTPUT_QUEUE_NUM, 0xABCDU};
+    TaskInfo task = {};
+    InitByStream(&task, stm);
+    task.u.dqsPrepareTask.dfxPtr = dfxData;
+
+    MOCKER_CPP_VIRTUAL(device_->Driver_(), &Driver::MemCopySync).stubs().will(invoke(MemCopySyncStubForDfx));
+
+    // out of range pool idx from device dfx must not access the pool id array
+    EXPECT_NO_FATAL_FAILURE(PrintErrorInfoForDqsPrepareTask(&task, 0U));
+
+    dfxData[0U] = STARS_DQS_MAX_OUTPUT_QUEUE_NUM + 100U;
+    EXPECT_NO_FATAL_FAILURE(PrintErrorInfoForDqsPrepareTask(&task, 0U));
+
+    // valid pool idx
+    dfxData[0U] = 0U;
+    EXPECT_NO_FATAL_FAILURE(PrintErrorInfoForDqsPrepareTask(&task, 0U));
 
     delete stm;
 }

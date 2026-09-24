@@ -4321,6 +4321,12 @@ TEST_F(ApiTest, rtMemQueueCreate)
     error = rtMemQueueCreate(0, &attr, &qid);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
     attr.depth = RT_MQ_DEPTH_MIN;
+
+    // name fills the whole buffer without null terminator, strcpy_s must fail
+    (void)memset_s(attr.name, sizeof(attr.name), 'A', sizeof(attr.name));
+    error = rtMemQueueCreate(0, &attr, &qid);
+    EXPECT_EQ(error, ACL_ERROR_RT_INTERNAL_ERROR);
+    (void)memset_s(attr.name, sizeof(attr.name), 0, sizeof(attr.name));
 }
 
 TEST_F(ApiTest, rtMemQueueDestroy)

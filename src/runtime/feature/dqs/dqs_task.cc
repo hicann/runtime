@@ -135,9 +135,12 @@ static rtError_t AllocDqsCommonTaskFuncCall(DqsCommonTaskInfo* const commonTaskI
     const uint64_t allocSize = commonTaskInfo->funCallMemSize + TS_STARS_COND_DFX_SIZE + FUNC_CALL_INSTR_ALIGN_SIZE;
     const rtError_t ret = dev->Driver_()->DevMemAlloc(&devMem, allocSize, RT_MEMORY_DDR, dev->Id_());
     COND_RETURN_ERROR(
-        (ret != RT_ERROR_NONE) || (devMem == nullptr), ret,
-        "alloc func call memory failed,retCode=%#x,size=%" PRIu64 "(Byte),dev_id=%u", ret,
+        ret != RT_ERROR_NONE, ret, "alloc func call memory failed,retCode=%#x,size=%" PRIu64 "(Byte),dev_id=%u", ret,
         commonTaskInfo->funCallMemSize, dev->Id_());
+    COND_RETURN_ERROR(
+        devMem == nullptr, RT_ERROR_DRV_PTRNULL,
+        "alloc func call memory return nullptr,size=%" PRIu64 "(Byte),dev_id=%u", commonTaskInfo->funCallMemSize,
+        dev->Id_());
 
     commonTaskInfo->baseFuncCallSvmMem = devMem;
     // instr addr should align to 256b
@@ -273,22 +276,21 @@ static rtError_t PrepareSqeInfoForDqsDequeueTask(TaskInfo* taskInfo)
     return ret;
 }
 
-static uint64_t GetNotifyRecordAddr(bool isRead, const StreamWithDqs* stm)
+static rtError_t GetNotifyRecordAddr(bool isRead, const StreamWithDqs* stm, uint64_t& addr)
 {
     const CountNotify* notify = stm->GetDqsCountNotify();
     NULL_PTR_RETURN_MSG(notify, RT_ERROR_NOTIFY_NULL);
 
-    uint64_t addr = 0ULL;
     const rtNotifyType_t regType = isRead ? NOTIFY_CNT_ST_SLICE : NOTIFY_CNT_BIT_CLR_SLICE;
     const rtError_t error = notify->GetCntNotifyAddress(addr, regType);
     if (error != RT_ERROR_NONE) {
         RT_LOG(
             RT_LOG_ERROR, "GetCntNotifyAddress failed, isRead=%d, retCode=%#x.", static_cast<int32_t>(isRead),
             static_cast<uint32_t>(error));
-        return 0x0ULL;
+        return error;
     }
 
-    return addr;
+    return RT_ERROR_NONE;
 }
 
 static void InitFreeMbufTracePara(CondMbufTraceParam& param, uint64_t ctrlSpaceAddr, const uint32_t streamId)
@@ -329,11 +331,14 @@ static rtError_t InitFuncCallParaForDqsBatchDequeueTask(TaskInfo* taskInfo, RtSt
     fcPara.inputMbufHandleAddr = RtPtrToValue(ctrlSpacePtr->input_mbuf_cache_list);
     fcPara.mbufFreeAddr = RtPtrToValue(ctrlSpacePtr->input_mbuf_free_addrs);
 
-    fcPara.cntNotifyReadAddr = GetNotifyRecordAddr(true, stm);
-    fcPara.cntNotifyClearAddr = GetNotifyRecordAddr(false, stm);
-    if ((fcPara.cntNotifyReadAddr == 0x0ULL) || (fcPara.cntNotifyClearAddr == 0x0ULL)) {
-        return RT_ERROR_NOTIFY_BASE;
-    }
+    rtError_t ret = GetNotifyRecordAddr(true, stm, fcPara.cntNotifyReadAddr);
+    ERROR_RETURN(ret, "Get notify record read addr failed, retCode=%#x.", ret);
+    ret = GetNotifyRecordAddr(false, stm, fcPara.cntNotifyClearAddr);
+    ERROR_RETURN(ret, "Get notify record clear addr failed, retCode=%#x.", ret);
+    COND_RETURN_ERROR(
+        ((fcPara.cntNotifyReadAddr == 0x0ULL) || (fcPara.cntNotifyClearAddr == 0x0ULL)), RT_ERROR_NOTIFY_BASE,
+        "cnt notify record addr is invalid, readAddr=%#llx, clearAddr=%#llx.", fcPara.cntNotifyReadAddr,
+        fcPara.cntNotifyClearAddr);
     fcPara.sqId = static_cast<uint32_t>(stm->GetSqId());
 
     fcPara.cntOffset = static_cast<uint8_t>(offsetof(input_mbuf_cache_t, cnt));
@@ -1009,6 +1014,16 @@ rtError_t DqsDequeueTaskInit(TaskInfo* taskInfo, const Stream* const stream, con
     return RT_ERROR_NONE;
 }
 
+void DqsEnqueueTaskUnInit(TaskInfo* const taskInfo)
+{
+    (void)FreeDqsCommonTaskFuncCall(&(taskInfo->u.dqsEnqueueTask), taskInfo);
+}
+
+void DqsDequeueTaskUnInit(TaskInfo* const taskInfo)
+{
+    (void)FreeDqsCommonTaskFuncCall(&(taskInfo->u.dqsDequeueTask), taskInfo);
+}
+
 rtError_t DqsZeroCopyTaskInit(TaskInfo* taskInfo, const Stream* const stream, const DqsTaskConfig* const cfg)
 {
     TaskCommonInfoInit(taskInfo);
@@ -1572,6 +1587,14 @@ void PrintErrorInfoForDqsPrepareTask(TaskInfo* taskInfo, const uint32_t devId)
     (void)dev->Driver_()->MemCopySync(
         dfx, sizeof(dfx), dqsPrepareTask->dfxPtr, sizeof(dfx), RT_MEMCPY_DEVICE_TO_DEVICE);
     const uint32_t failPoolIdx = dfx[0U];
+    if (failPoolIdx >= STARS_DQS_MAX_OUTPUT_QUEUE_NUM) {
+        RT_LOG(
+            RT_LOG_ERROR,
+            "dqs prepare error, alloc output mbuf handle failed, device_id=%u, stream_id=%d, task_id=%u, "
+            "alloc error_result=%#x, invalid pool idx=%u exceeds max=%u",
+            devId, taskInfo->stream->Id_(), taskInfo->id, dfx[1U], failPoolIdx, STARS_DQS_MAX_OUTPUT_QUEUE_NUM);
+        return;
+    }
     RT_LOG(
         RT_LOG_ERROR,
         "dqs prepare error, alloc output mbuf handle failed, device_id=%u, stream_id=%d, task_id=%u, "
@@ -1712,7 +1735,7 @@ static rtError_t PrepareSqeInfoForDqsConditionCopyTask(TaskInfo* taskInfo, const
 
 void DqsConditionCopyTaskUnInit(TaskInfo* const taskInfo)
 {
-    (void)FreeDqsCommonTaskFuncCall(&(taskInfo->u.dqsPrepareTask), taskInfo);
+    (void)FreeDqsCommonTaskFuncCall(&(taskInfo->u.dqsCondCopyTask), taskInfo);
 }
 
 void PrintErrorInfoForDqsConditionCopyTask(TaskInfo* taskInfo, const uint32_t devId)
@@ -1884,7 +1907,7 @@ static bool DqsTaskRegister()
         .toCommandFunc = nullptr,
         .toSqeFunc = &ConstructSqeForDqsEnqueueTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
-        .taskUnInitFunc = nullptr,
+        .taskUnInitFunc = &DqsEnqueueTaskUnInit,
         .waitAsyncCpCompleteFunc = nullptr,
         .printErrorInfoFunc = &PrintErrorInfoCommon,
         .setResultFunc = nullptr,
@@ -1894,7 +1917,7 @@ static bool DqsTaskRegister()
         .toCommandFunc = nullptr,
         .toSqeFunc = &ConstructSqeForDqsDequeueTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
-        .taskUnInitFunc = nullptr,
+        .taskUnInitFunc = &DqsDequeueTaskUnInit,
         .waitAsyncCpCompleteFunc = nullptr,
         .printErrorInfoFunc = &PrintErrorInfoCommon,
         .setResultFunc = nullptr,

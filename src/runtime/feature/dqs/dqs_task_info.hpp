@@ -58,6 +58,8 @@ void PrintErrorInfoForDqsAdspcTask(TaskInfo* taskInfo, const uint32_t devId);
 void PrintErrorInfoForDqsBatchDequeueTask(TaskInfo* taskInfo, const uint32_t devId);
 
 // DQS Task UnInit
+void DqsEnqueueTaskUnInit(TaskInfo* const taskInfo);
+void DqsDequeueTaskUnInit(TaskInfo* const taskInfo);
 void DqsMbufFreeTaskUnInit(TaskInfo* const taskInfo);
 void DqsPrepareTaskUnInit(TaskInfo* const taskInfo);
 void DqsZeroCopyTaskUnInit(TaskInfo* const taskInfo);
