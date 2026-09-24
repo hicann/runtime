@@ -52,10 +52,10 @@ rtError_t ValidateAtomicOperations(const rtAtomicOperation* const operations, co
         COND_RETURN_AND_MSG_OUTER(
             (operations[i] < RT_ATOMIC_OPERATION_INTEGER_ADD) || (operations[i] > RT_ATOMIC_OPERATION_SIMD_SCALAR_EXCH),
             RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, "Validating atomic operations",
-            "UNKNOWN(" + std::to_string(static_cast<int32_t>(operations[i])) + ")",
-            "operations[" + std::to_string(i) + "]",
-            "the operation must be in [" + std::to_string(RT_ATOMIC_OPERATION_INTEGER_ADD) + ", " +
-                std::to_string(RT_ATOMIC_OPERATION_SIMD_SCALAR_EXCH) + "]");
+            RtFmtMsg("UNKNOWN(%d)", static_cast<int32_t>(operations[i])), RtFmtMsg("operations[%u]", i),
+            RtFmtMsg(
+                "the operation must be in [%d, %d]", static_cast<int32_t>(RT_ATOMIC_OPERATION_INTEGER_ADD),
+                static_cast<int32_t>(RT_ATOMIC_OPERATION_SIMD_SCALAR_EXCH)));
     }
     return RT_ERROR_NONE;
 }
@@ -144,10 +144,10 @@ rtError_t ApiImplDeviceTopology::EnableP2P(const uint32_t devIdDes, const uint32
         error != RT_ERROR_NONE, error, "Failed to convert the user device ID %u to driver device ID.", devIdDes);
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         realDeviceId >= RT_MAX_DEV_NUM, RT_ERROR_INVALID_VALUE, "Enabling inter-device memory copy", realDeviceId,
-        "[0, " + std::to_string(RT_MAX_DEV_NUM) + ")");
+        RtFmtMsg("[0, %u)", RT_MAX_DEV_NUM));
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         phyIdSrc >= RT_MAX_DEV_NUM, RT_ERROR_INVALID_VALUE, "Enabling inter-device memory copy", phyIdSrc,
-        "[0, " + std::to_string(RT_MAX_DEV_NUM) + ")");
+        RtFmtMsg("[0, %u)", RT_MAX_DEV_NUM));
 
     RT_LOG(RT_LOG_INFO, "Enable P2P drv devId=%u, phyIdSrc=%u.", realDeviceId, phyIdSrc);
     error = NpuDriver::EnableP2P(realDeviceId, phyIdSrc, flag);
@@ -163,10 +163,10 @@ rtError_t ApiImplDeviceTopology::DisableP2P(const uint32_t devIdDes, const uint3
         error != RT_ERROR_NONE, error, "Failed to convert the user device ID %u to driver device ID.", devIdDes);
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         realDeviceId >= RT_MAX_DEV_NUM, RT_ERROR_INVALID_VALUE, "Disabling inter-device memory copy", realDeviceId,
-        "[0, " + std::to_string(RT_MAX_DEV_NUM) + ")");
+        RtFmtMsg("[0, %u)", RT_MAX_DEV_NUM));
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         phyIdSrc >= RT_MAX_DEV_NUM, RT_ERROR_INVALID_VALUE, "Disabling inter-device memory copy", phyIdSrc,
-        "[0, " + std::to_string(RT_MAX_DEV_NUM) + ")");
+        RtFmtMsg("[0, %u)", RT_MAX_DEV_NUM));
 
     RT_LOG(RT_LOG_INFO, "Disable P2P drv devId=%u, phyIdSrc=%u.", realDeviceId, phyIdSrc);
     error = NpuDriver::DisableP2P(realDeviceId, phyIdSrc);
@@ -184,13 +184,12 @@ rtError_t ApiImplDeviceTopology::DeviceCanAccessPeer(
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         realDeviceId >= RT_MAX_DEV_NUM, RT_ERROR_INVALID_VALUE,
         "Checking whether data exchange is supported between devices", realDeviceId,
-        "[0, " + std::to_string(RT_MAX_DEV_NUM) + ")");
+        RtFmtMsg("[0, %u)", RT_MAX_DEV_NUM));
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         canAccessPeer, RT_ERROR_INVALID_VALUE, "Checking whether data exchange is supported between devices");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         peerDevice >= RT_MAX_DEV_NUM, RT_ERROR_INVALID_VALUE,
-        "Checking whether data exchange is supported between devices", peerDevice,
-        "[0, " + std::to_string(RT_MAX_DEV_NUM) + ")");
+        "Checking whether data exchange is supported between devices", peerDevice, RtFmtMsg("[0, %u)", RT_MAX_DEV_NUM));
 
     do {
         RT_LOG(RT_LOG_INFO, "DeviceCanAccessPeer drv devId=%u, peerDevice=%u.", realDeviceId, peerDevice);
@@ -233,10 +232,10 @@ rtError_t ApiImplDeviceTopology::GetP2PStatus(const uint32_t devIdDes, const uin
         error != RT_ERROR_NONE, error, "Failed to convert the user device ID %u to driver device ID.", devIdDes);
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         realDeviceId >= RT_MAX_DEV_NUM, RT_ERROR_INVALID_VALUE, "Obtaining the P2P status", realDeviceId,
-        "[0, " + std::to_string(RT_MAX_DEV_NUM) + ")");
+        RtFmtMsg("[0, %u)", RT_MAX_DEV_NUM));
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         phyIdSrc >= RT_MAX_DEV_NUM, RT_ERROR_INVALID_VALUE, "Obtaining the P2P status", phyIdSrc,
-        "[0, " + std::to_string(RT_MAX_DEV_NUM) + ")");
+        RtFmtMsg("[0, %u)", RT_MAX_DEV_NUM));
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(status, RT_ERROR_INVALID_VALUE, "Obtaining the P2P status");
 
     do {
@@ -561,7 +560,7 @@ rtError_t ApiImplDeviceTopology::GetDevicePCIBusId(const int32_t devId, char* co
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(pciBusId, RT_ERROR_INVALID_VALUE, "Obtaining the device PCI bus id");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         (len < static_cast<int32_t>(RT_PCI_BUS_ID_MIN_LEN)), RT_ERROR_INVALID_VALUE, "Obtaining the device PCI bus id",
-        len, "greater than or equal to " + std::to_string(RT_PCI_BUS_ID_MIN_LEN));
+        len, RtFmtMsg("greater than or equal to %u", RT_PCI_BUS_ID_MIN_LEN));
 
     int32_t drvDeviceId = 0;
     rtError_t error =
