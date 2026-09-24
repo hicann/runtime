@@ -21,7 +21,7 @@ using namespace Analysis::Dvvp::Common::Config;
 using namespace analysis::dvvp::common::error;
 static const std::string TYPE_CONFIG = "type";
 
-// 驱动不支持版本查询时的默认平台类型：主线回退MINI_TYPE，MDC形态的默认值由模块扩展宏承载
+// 驱动不支持版本查询时的默认平台类型：主线回退MINI_TYPE，扩展形态的默认值由模块扩展宏承载
 static PlatformType GetExpectedDefaultPlatformType()
 {
 #if !defined(BUILD_PROFILING_OPEN_PROJECT) && defined(MSPROF_MODULE_EXT_DEFAULT_PLATFORM_TYPE)

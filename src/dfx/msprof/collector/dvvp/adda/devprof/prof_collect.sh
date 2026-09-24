@@ -35,7 +35,7 @@ function check_realpath()
     local real_file=$(realpath "${1}")
     if [ "${real_file}" == "${1}" ]; then
         return ${SUCCESS}
-    elif [ "${real_file}" == "/home${1}" ]; then # mdc data path
+    elif [ "${real_file}" == "/home${1}" ]; then # data path under /home
         return ${SUCCESS}
     fi
 

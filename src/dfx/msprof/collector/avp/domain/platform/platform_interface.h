@@ -22,14 +22,11 @@ extern "C" {
 typedef enum {
     CHIP_MINI = 0,
     CHIP_CLOUD = 1,
-    CHIP_MDC = 2,
     CHIP_DC = 4,
     CHIP_CLOUD_V2 = 5,
     CHIP_MINI_V3 = 7,
     CHIP_TINY_V1 = 8,
     CHIP_NANO_V1 = 9,
-    CHIP_MDC_MINI_V3 = 10, // 11 mdc
-    CHIP_MDC_V2 = 11,      // 51 lite
     CHIP_END
 } PlatformType;
 

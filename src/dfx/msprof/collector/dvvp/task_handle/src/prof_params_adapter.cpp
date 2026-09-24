@@ -73,7 +73,7 @@ int32_t ProfParamsAdapter::StartReqTrfToInnerParam(
     if (feature->featureName.find("op_trace") != std::string::npos) {
         UpdateOpFeature(feature, params);
     }
-    if (feature->featureName.compare("system_trace") == 0) { // mdc scene only use system_trace
+    if (feature->featureName.compare("system_trace") == 0) { // only system_trace is collected in this scene
         params->hwts_log1 = "off";
     }
     params->profiling_options = feature->featureName;
