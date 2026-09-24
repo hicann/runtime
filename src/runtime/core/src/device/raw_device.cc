@@ -1477,7 +1477,9 @@ bool RawDevice::IsPrintStreamTimeoutSnapshot()
 
 void RawDevice::GetErrorPcArr(const uint16_t devId, uint64_t** errorPc, uint32_t* cnt) const
 {
-    deviceErrorProc_->GetErrorPcArr(devId, errorPc, cnt);
+    if (deviceErrorProc_ != nullptr) {
+        deviceErrorProc_->GetErrorPcArr(devId, errorPc, cnt);
+    }
 }
 
 void RawDevice::SetSupportFlipVersionSwitch()
