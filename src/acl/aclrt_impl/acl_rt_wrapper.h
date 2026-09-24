@@ -113,6 +113,7 @@
     _(aclError, aclrtHostMemMapCapabilities,                                                                           \
       (uint32_t deviceId, aclrtHacType hacType, aclrtHostMemMapCapability * capabilities),                             \
       (deviceId, hacType, capabilities))                                                                               \
+    _(aclError, aclrtGetThreadLastTaskIdAndStreamId, (uint32_t * taskId, uint32_t * streamId), (taskId, streamId))     \
     _(aclError, aclrtGetThreadLastTaskId, (uint32_t * taskId), (taskId))                                               \
     _(aclError, aclrtStreamGetId, (aclrtStream stream, int32_t * streamId), (stream, streamId))                        \
     _(aclError, aclrtMemFlush, (void* devPtr, size_t size), (devPtr, size))                                            \

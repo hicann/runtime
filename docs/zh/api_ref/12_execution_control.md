@@ -16,6 +16,7 @@
 - [`aclError aclrtLaunchHostFunc(aclrtStream stream, aclrtHostFunc fn, void *args)`](#aclrtLaunchHostFunc)：在Stream的任务队列中下发一个Host回调任务，系统内部在执行到该回调任务时，会在Stream上注册的线程（该线程在本接口内部创建并注册）中执行回调函数，并且回调任务默认阻塞本Stream上后续任务的执行。
 - [`aclError aclrtRandomNumAsync(const aclrtRandomNumTaskInfo *taskInfo, const aclrtStream stream, void *reserve)`](#aclrtRandomNumAsync)：下发并执行随机数生成任务。异步接口。
 - [`aclError aclrtTaskUpdateAsync(aclrtStream taskStream, uint32_t taskId, aclrtTaskUpdateInfo *info, aclrtStream execStream)`](#aclrtTaskUpdateAsync)：刷新目标任务的信息。异步接口。
+- [`aclError aclrtGetThreadLastTaskIdAndStreamId(uint32_t *taskId, uint32_t *streamId)`](#aclrtGetThreadLastTaskIdAndStreamId)：获取当前线程上最后下发任务的Task ID和对应的Stream ID。
 
 <a id="aclrtLaunchCallback"></a>
 
@@ -910,3 +911,57 @@ aclError aclrtTaskUpdateAsync(aclrtStream taskStream, uint32_t taskId, aclrtTask
 
 Ascend 950PR&950DT系列产品产品不支持更新ACL_RT_UPDATE_RANDOM_TASK(随机数生成任务)。
 <!-- end id31 -->
+
+
+<br>
+<br>
+<br>
+
+
+<a id="aclrtGetThreadLastTaskIdAndStreamId"></a>
+
+## aclrtGetThreadLastTaskIdAndStreamId
+
+```c
+aclError aclrtGetThreadLastTaskIdAndStreamId(uint32_t *taskId, uint32_t *streamId)
+```
+
+### 产品支持情况
+
+<!-- npu="950" id3340 -->
+- Ascend 950PR/Ascend 950DT：支持
+<!-- end id3340 -->
+<!-- npu="A3" id3341 -->
+- Atlas A3 训练系列产品/Atlas A3 推理系列产品：支持
+<!-- end id3341 -->
+<!-- npu="910b" id3342 -->
+- Atlas A2 训练系列产品/Atlas A2 推理系列产品：支持
+<!-- end id3342 -->
+<!-- npu="310b" id3343 -->
+- Atlas 200I/500 A2 推理产品：支持
+<!-- end id3343 -->
+<!-- npu="310p" id3344 -->
+- Atlas 推理系列产品：支持
+<!-- end id3344 -->
+<!-- npu="910" id3345 -->
+- Atlas 训练系列产品：支持
+<!-- end id3345 -->
+<!-- npu="IPV350" id3346 -->
+- IPV350：支持
+<!-- end id3346 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/12_execution_control_res.md#id20 -->
+
+### 功能说明
+
+获取当前线程上最后下发任务的Task ID和对应的Stream ID。
+
+### 参数说明
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | :---: | --- |
+| taskId | 输出 | 当前线程最后一个下发任务的Task ID。 |
+| streamId | 输出 | 单算子场景下，任务直接下发至算子接口入参指定的Stream，本接口返回的streamId即为该入参Stream的ID。若该Stream处于捕获状态，单算子任务不会下发至入参指定的Stream，而是调度到Runtime内部创建的Stream，此时接口返回的streamId为该内部Stream的ID。 |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。

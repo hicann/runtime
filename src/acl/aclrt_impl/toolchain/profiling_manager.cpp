@@ -136,6 +136,7 @@ const std::map<AclProfType, std::string> PROF_TYPE_TO_NAMES = {
     {AclProfType::AclrtMallocWithCfg, "aclrtMallocWithCfg"},
     {AclProfType::AclrtMallocForTaskScheduler, "aclrtMallocForTaskScheduler"},
     {AclProfType::AclrtMallocHostWithCfg, "aclrtMallocHostWithCfg"},
+    {AclProfType::AclrtGetThreadLastTaskIdAndStreamId, "aclrtGetThreadLastTaskIdAndStreamId"},
     {AclProfType::AclrtGetThreadLastTaskId, "aclrtGetThreadLastTaskId"},
     {AclProfType::AclrtStreamGetId, "aclrtStreamGetId"},
     {AclProfType::AclrtPointerGetAttributes, "aclrtPointerGetAttributes"},

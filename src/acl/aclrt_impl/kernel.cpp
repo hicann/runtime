@@ -424,6 +424,16 @@ aclError aclrtGetThreadLastTaskIdImpl(uint32_t* taskId)
     return ACL_SUCCESS;
 }
 
+aclError aclrtGetThreadLastTaskIdAndStreamIdImpl(uint32_t* taskId, uint32_t* streamId)
+{
+    ACL_PROFILING_REG(acl::AclProfType::AclrtGetThreadLastTaskIdAndStreamId);
+    ACL_LOG_DEBUG("start to execute aclrtGetThreadLastTaskIdAndStreamId");
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(taskId);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(streamId);
+    ACL_REQUIRES_RTS_OK(rtGetTaskIdAndStreamID(taskId, streamId));
+    return ACL_SUCCESS;
+}
+
 aclError aclrtGetFunctionNameImpl(const void* func, uint32_t maxLen, char* name)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtGetFunctionName);

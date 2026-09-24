@@ -5701,6 +5701,44 @@ TEST_F(UTEST_ACL_Runtime, aclrtGetThreadLastTaskId_failed)
     EXPECT_EQ(ret, ACL_ERROR_RT_FAILURE);
 }
 
+TEST_F(UTEST_ACL_Runtime, aclrtGetThreadLastTaskIdAndStreamId_capture_shadow_stream_succ)
+{
+    uint32_t taskId = 0;
+    uint32_t streamId = 0;
+    constexpr uint32_t kTaskId = 101U;
+    constexpr uint32_t kShadowStreamId = 909U;
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtGetTaskIdAndStreamID(&taskId, &streamId))
+        .WillOnce(DoAll(SetArgPointee<0>(kTaskId), SetArgPointee<1>(kShadowStreamId), Return(RT_ERROR_NONE)));
+
+    const auto ret = aclrtGetThreadLastTaskIdAndStreamId(&taskId, &streamId);
+
+    EXPECT_EQ(ret, ACL_SUCCESS);
+    EXPECT_EQ(taskId, kTaskId);
+    EXPECT_EQ(streamId, kShadowStreamId);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtGetThreadLastTaskIdAndStreamId_failed)
+{
+    uint32_t taskId = 0;
+    uint32_t streamId = 0;
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtGetTaskIdAndStreamID(_, _))
+        .WillOnce(Return(ACL_ERROR_RT_FAILURE));
+
+    const auto ret = aclrtGetThreadLastTaskIdAndStreamId(&taskId, &streamId);
+    EXPECT_EQ(ret, ACL_ERROR_RT_FAILURE);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtGetThreadLastTaskIdAndStreamId_invalid_param)
+{
+    uint32_t taskId = 0;
+    uint32_t streamId = 0;
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtGetTaskIdAndStreamID(_, _)).Times(0);
+
+    EXPECT_EQ(aclrtGetThreadLastTaskIdAndStreamId(nullptr, &streamId), ACL_ERROR_INVALID_PARAM);
+    EXPECT_EQ(aclrtGetThreadLastTaskIdAndStreamId(&taskId, nullptr), ACL_ERROR_INVALID_PARAM);
+    EXPECT_EQ(aclrtGetThreadLastTaskIdAndStreamId(nullptr, nullptr), ACL_ERROR_INVALID_PARAM);
+}
+
 TEST_F(UTEST_ACL_Runtime, aclrtStreamGetId_succ)
 {
     aclrtStream stream = (aclrtStream)0x01;

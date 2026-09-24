@@ -2116,6 +2116,19 @@ ACL_FUNC_VISIBILITY aclError aclrtHostUnregister(void* ptr);
 
 ACL_FUNC_VISIBILITY aclError aclrtHostMemMapCapabilities(
     uint32_t deviceId, aclrtHacType hacType, aclrtHostMemMapCapability* capabilities);
+
+/**
+ * @ingroup AscendCL
+ * @brief get thread last task id and stream id
+ *
+ * @param taskId [OUT] thread task id
+ * @param streamId [OUT] thread stream id
+ *
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclrtGetThreadLastTaskIdAndStreamId(uint32_t* taskId, uint32_t* streamId);
+
 /**
  * @ingroup AscendCL
  * @brief get thread last task id
