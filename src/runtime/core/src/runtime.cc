@@ -959,10 +959,11 @@ rtError_t Runtime::InitSocVersionByDrvSocVersion(
 
             rtChipType_t chipType = CHIP_END;
             const rtError_t ret = GetChipTypeFromPlatform(socVersion, chipType);
-            if (ret != RT_ERROR_NONE) {
-                RT_LOG(RT_LOG_ERROR, "Get chipType by socVersion=%s from platform failed.", socVersion);
-                return ret;
-            }
+            ERROR_RETURN_MSG_INNER(
+                ret,
+                "Failed to obtain a valid chip type for SoC %s from the Runtime platform configuration "
+                "(configuration item: version/Chip_type), retCode=%#x.",
+                socVersion, static_cast<uint32_t>(ret));
             chipType_ = chipType;
             socVersion_ = socVersion;
             RT_LOG(RT_LOG_INFO, "socVersion=%s, chipType=%d", socVersion_.c_str(), chipType_);

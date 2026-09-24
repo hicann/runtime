@@ -186,12 +186,16 @@ static Runtime* CreateRuntimeImpl(void** soHandle)
     if (handlePtr == nullptr) {
         const char_t* const dlRet = mmDlerror();
         const char_t* const dlError = (dlRet == nullptr) ? "unknown" : dlRet;
-        RT_LOG_CALL_MSG(ERR_MODULE_SYSTEM, "Failed to open library %s, dlerror=%s.", libSoName.c_str(), dlError);
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1025, libSoName.c_str(), dlError);
         return nullptr;
     }
+    (void)mmDlerror(); // Clear a stale dynamic loader error before resolving the symbol.
     ConstructFunc const func = RtPtrToPtr<ConstructFunc>(mmDlsym(handlePtr, "ConstructRuntimeImpl"));
     if (func == nullptr) {
-        RT_LOG_CALL_MSG(ERR_MODULE_SYSTEM, "Failed to find symbol in %s.", libSoName.c_str());
+        const char_t* const dlRet = mmDlerror();
+        const char_t* const dlError =
+            (dlRet == nullptr) ? "Required symbol ConstructRuntimeImpl cannot be parsed" : dlRet;
+        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1025, libSoName.c_str(), dlError);
         (void)mmDlclose(handlePtr);
         return nullptr;
     }

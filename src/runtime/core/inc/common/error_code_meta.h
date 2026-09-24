@@ -114,6 +114,9 @@
       "%s failed. Reason: AI CPU operator execution timed out on device %s. "                                      \
       "In addition, an OOM event occurred on the device within %s seconds.\n",                                     \
       DLOG_ERROR)                                                                                                  \
+    /* EE1025 - Initialization_Error */                                                                            \
+    X(EE1025, "EE1025", ("library_name", "reason"),                                                                \
+      "Failed to load dynamic library %s. Reason: %s. ErrorCode=EE1025.\n", DLOG_ERROR)                            \
     /* EE2002 - Config_Error_Invalid_Environment_Variable */                                                       \
     X(EE2002, "EE2002", ("value", "env", "expect"),                                                                \
       "Value %s for environment variable %s is invalid. "                                                          \
