@@ -26,6 +26,7 @@
 #include "rt_utest_stub.h"
 #include "task_info.hpp"
 #include "stars_base.hpp"
+#include "stars_david.hpp"
 #include "../../../rt_utest_config_define.hpp"
 #include "maintenance_task.h"
 

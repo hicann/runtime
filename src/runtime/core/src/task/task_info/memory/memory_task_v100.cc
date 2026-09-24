@@ -325,8 +325,11 @@ static void ConstructMemcpySqe(TaskInfo* const taskInfo, rtStarsSqe_t* const com
     PrintSqe(command, "sdmaTask");
 }
 
-void ConstructSqeForMemcpyAsyncTask(TaskInfo* const taskInfo, rtStarsSqe_t* const command)
+void ConstructSqeForMemcpyAsyncTask(TaskInfo* const taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     MemcpyAsyncTaskInfo* memcpyAsyncTaskInfo = &(taskInfo->u.memcpyAsyncTaskInfo);
     Stream* const stream = taskInfo->stream;
     Driver* const driver = taskInfo->stream->Device_()->Driver_();
@@ -481,8 +484,11 @@ void PrintAsyncPtrProc(Driver* const driver, char_t* const errStr, void* memcpyA
 #endif
 
 #if F_DESC("MemWriteValueTask")
-void ConstructSqeForMemWriteValueTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+void ConstructSqeForMemWriteValueTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     Stream* const stream = taskInfo->stream;
     RtStarsWriteValueSqe* const sqe = &(command->writeValueSqe);
 
@@ -652,9 +658,9 @@ void InitFuncCallParaForMemWaitTask(TaskInfo* taskInfo, RtStarsMemWaitValueInstr
     const uint32_t taskPosTail = stream->GetBindFlag() ? stream->GetCurSqPos() : stream->GetTaskPosTail();
     // external wait task的SQE构造在capture end阶段，其pos不能使用GetCurSqPos()，需要使用capture时已经占位的pos
     // external 任务，是在buildsqcq之前， 不应该装
-    uint32_t firstSqePos =
+    const uint32_t firstSqePos =
         (taskInfo->type == TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL) ? stream->GetHwPosByPos(taskInfo->pos) : taskPosTail;
-    const uint32_t sqeNum = GetSendSqeNumForMemWaitTask(taskInfo);
+    const uint32_t sqeNum = taskInfo->sqeNum;
     const uint32_t sqDepth = stream->GetSqDepth();
 
     fcPara.devAddr = memWaitValueTask->devAddr;
@@ -697,43 +703,52 @@ uint32_t GetSendSqeNumForMemWaitTask(const TaskInfo* const taskInfo)
     return (taskInfo->type == TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL) ? MEM_WAIT_V2_SQE_NUM : MEM_WAIT_SQE_NUM;
 }
 
-void ConstructSqeForMemWaitValueTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+void ConstructSqeForMemWaitValueTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     RtStarsMemWaitValueInstrFcPara fcPara = {};
     InitFuncCallParaForMemWaitTask(taskInfo, fcPara);
 
-    ConstructSqeForNopTask(taskInfo, &(command[MEM_WAIT_SQE_INDEX_0]));
+    ConstructSqeForNopTask(taskInfo, &(command[MEM_WAIT_SQE_INDEX_0]), sqeInfo);
     ConstructSecondSqeForMemWaitValueTask(taskInfo, &(command[MEM_WAIT_SQE_INDEX_1]));
     ConstructLastSqeForMemWaitValueTask(taskInfo, &(command[MEM_WAIT_SQE_INDEX_2]), fcPara);
-    if (GetSendSqeNumForMemWaitTask(taskInfo) == MEM_WAIT_SQE_NUM) {
+    if (taskInfo->sqeNum == MEM_WAIT_SQE_NUM) {
         ConstructPhSqeForMemWaitValueTask(taskInfo, &(command[MEM_WAIT_SQE_INDEX_3]));
     }
     return;
 }
 
-void ConstructSqeForCaptureExternalRecordTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+void ConstructSqeForCaptureExternalRecordTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     const WriteValueTaskInfo* const writeValueTask = &taskInfo->u.writeValTask;
     if (writeValueTask->sqeAddr == 0ULL) {
         // capture阶段还未分配device侧内存，放NopTask占位
-        ConstructSqeForNopTask(taskInfo, command);
+        ConstructSqeForNopTask(taskInfo, command, sqeInfo);
         return;
     }
-    ConstructSqeForWriteValueTask(taskInfo, command);
+    ConstructSqeForWriteValueTask(taskInfo, command, sqeInfo);
 }
 
-void ConstructSqeForCaptureExternalWaitTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+void ConstructSqeForCaptureExternalWaitTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     const MemWaitValueTaskInfo* const memWaitValueTask = &taskInfo->u.memWaitValueTask;
     if (memWaitValueTask->funcCallSvmMem2 == nullptr) {
         // capture阶段还未分配device侧内存，放NopTask占位
-        const uint32_t sendSqeNum = GetSendSqeNum(taskInfo);
+        const uint32_t sendSqeNum = taskInfo->sqeNum;
         for (uint32_t i = 0U; i < sendSqeNum; ++i) {
-            ConstructSqeForNopTask(taskInfo, &(command[i]));
+            ConstructSqeForNopTask(taskInfo, &(command[i]), sqeInfo);
         }
         return;
     }
-    ConstructSqeForMemWaitValueTask(taskInfo, command);
+    ConstructSqeForMemWaitValueTask(taskInfo, command, sqeInfo);
 }
 
 void DoCompleteSuccessForMemWaitValueTask(TaskInfo* taskInfo, const uint32_t devId)
@@ -769,8 +784,11 @@ void DoCompleteSuccessForMemWaitValueTask(TaskInfo* taskInfo, const uint32_t dev
 
 #if F_DESC("UpdateAddressTask")
 // Construct the update address sqe.
-void ConstructSqeForUpdateAddressTask(TaskInfo* const taskInfo, rtStarsSqe_t* const command)
+void ConstructSqeForUpdateAddressTask(TaskInfo* const taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     UpdateAddressTaskInfo* updateAddrTask = &(taskInfo->u.updateAddrTask);
     Stream* const stream = taskInfo->stream;
 
@@ -864,17 +882,16 @@ rtError_t NormalKernelUpdatePrepare(TaskInfo* const updateTask, void** const hos
         RT_LOG_INFO, "update normal kernel, device_id=%u, stream_id=%d, task_id=%hu", devId, stream->Id_(),
         updateTask->id);
 
-    ConstructAICoreSqeForDavinciTask(updateTask, &sqe);
+    const TaskSqeInfo sqeInfo = {0ULL, 0ULL};
+    ConstructAICoreSqeForDavinciTask(updateTask, &sqe, sqeInfo);
 
     if (stream->IsSoftwareSqEnable() && (captureModel != nullptr)) {
-        uint8_t* hostSqeAddr = stream->GetHostSqeAddrByPos(updateTask->pos);
+        uint8_t* const hostSqeAddr = stream->GetHostSqeAddrByPos(updateTask->pos);
         COND_PROC_RETURN_ERROR((hostSqeAddr == nullptr), RT_ERROR_INVALID_VALUE, (void)driver->HostMemFree(*hostAddr);
                                *hostAddr = nullptr;
                                , "host sqe addr is nullptr, device_id=%u, stream_id=%d, task_pos=%u.", devId,
                                stream->Id_(), updateTask->pos);
-        (void)memcpy_s(
-            RtPtrToPtr<void*>(hostSqeAddr), sizeof(rtStarsSqe_t), RtPtrToPtr<void*, rtStarsSqe_t*>(&sqe),
-            sizeof(rtStarsSqe_t));
+        (void)memcpy_s(hostSqeAddr, SQE_SIZE_UNIT, RtPtrToPtr<void*, rtStarsSqe_t*>(&sqe), SQE_SIZE_UNIT);
     }
 
     error =

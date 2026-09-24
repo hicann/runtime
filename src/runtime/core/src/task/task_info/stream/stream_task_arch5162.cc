@@ -19,8 +19,11 @@ namespace cce {
 namespace runtime {
 
 #if F_DESC("StreamActiveTask")
-void ConstructSqeForStreamActiveTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+void ConstructSqeForStreamActiveTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     StreamActiveTaskInfo* streamActiveTask = &(taskInfo->u.streamactiveTask);
     Stream* const stm = taskInfo->stream;
     RtStarsPhSqe* const sqe = (RtStarsPhSqe*)&(command->phSqe);
@@ -73,8 +76,11 @@ rtError_t UpdateStreamActiveTaskFuncCallForSnapshot(TaskInfo* taskInfo)
 #endif
 
 #if F_DESC("CallbackLaunchTask")
-void ConstructSqeForCallbackLaunchTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+void ConstructSqeForCallbackLaunchTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     uint32_t pid = 0U;
     RtStarsPhSqe* const sqe = &(command->phSqe);
     Stream* stm = taskInfo->stream;

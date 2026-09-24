@@ -333,7 +333,7 @@ TEST(RdmaPiValueModifyTaskTest, ConstructSqeRdmaPiValueModifyTaskSuccess)
     MOCKER(PrintSqe).stubs();
 
     rtStarsSqe_t command = {};
-    ConstructSqeRdmaPiValueModifyTask(&taskInfo, &command);
+    ConstructSqeRdmaPiValueModifyTask(&taskInfo, &command, TaskSqeInfo{0ULL, 0ULL});
 
     const RtStarsFunctionCallSqe& sqe = command.fuctionCallSqe;
     EXPECT_EQ(sqe.kernel_credit, RT_STARS_DEFAULT_KERNEL_CREDIT);

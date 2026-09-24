@@ -172,7 +172,7 @@ static rtError_t UpdateDavidKernelPrepare(TaskInfo* const updateTask, void** con
     Stream* const dstStream = updateTask->stream;
     const uint32_t devId = static_cast<uint32_t>(dstStream->Device_()->Id_());
     Driver* const driver = dstStream->Device_()->Driver_();
-    uint8_t sqeBuffer[SQE_SIZE_MAX] = {};
+    TaskSqeBuffer sqeBuffer = {};
     TaskSqeInfo sqeInfo = {0ULL, 0ULL};
     /* alloc host memory */
     rtError_t error = driver->HostMemAlloc(hostAddr, allocSize, devId);
@@ -185,9 +185,10 @@ static rtError_t UpdateDavidKernelPrepare(TaskInfo* const updateTask, void** con
 
     /* 同时适用于AIC、AIV、MIX(AIC + AIV) kernel */
     sqeInfo.sqBaseAddr = 0ULL;
-    ToConstructDavidSqe(updateTask, RtPtrToPtr<void*>(sqeBuffer), sqeInfo);
+    ToConstructSqe(updateTask, static_cast<void*>(sqeBuffer.data), sqeInfo);
+    SetExpectedTaskReportNum(updateTask, updateTask->sqeNum);
     error = driver->MemCopySync(
-        *hostAddr, allocSize, static_cast<const void*>(sqeBuffer), allocSize, RT_MEMCPY_HOST_TO_HOST);
+        *hostAddr, allocSize, static_cast<const void*>(sqeBuffer.data), allocSize, RT_MEMCPY_HOST_TO_HOST);
     COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, (void)driver->HostMemFree(*hostAddr); *hostAddr = nullptr;
                            , "Failed to copy memory synchronously, retCode=%#x.", static_cast<uint32_t>(error));
 
@@ -222,7 +223,7 @@ void FreeTempHostAddr(const Stream* const stm, void* const hostAddr)
 rtError_t UpdateDavidKernelTaskSubmit(TaskInfo* const updateTask, Stream* const stm, uint32_t sqeLen)
 {
     void* srcHostAddr = nullptr;
-    const uint64_t allocSize = SQE_SIZE_UNIT * sqeLen;
+    const uint64_t allocSize = GetTaskSqeBytes(sqeLen);
 
     // 将updateTask转成sqe，并拷贝放到host svm内存中
     rtError_t error = UpdateDavidKernelPrepare(updateTask, &srcHostAddr, allocSize);

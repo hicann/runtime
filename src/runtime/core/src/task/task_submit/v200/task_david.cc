@@ -123,11 +123,12 @@ static rtError_t ExpandHostSqeBufferLocked(Stream* const stm)
     // 复制原有数据
     uint8_t* oldBuffer = stm->GetSqeBuffer();
     if (oldBuffer != nullptr) {
-        ret = memcpy_s(newBuffer, newSize, oldBuffer, ctx->curStreamSqeCount * sizeof(rtDavidSqe_t));
+        const size_t copiedBytes = static_cast<size_t>(GetTaskSqeBytes(ctx->curStreamSqeCount));
+        ret = memcpy_s(newBuffer, newSize, oldBuffer, copiedBytes);
         COND_PROC_RETURN_ERROR_MSG_INNER(
             ret != EOK, RT_ERROR_MEMORY_ALLOCATION, DELETE_A(newBuffer),
             "Failed to call memcpy_s to copy sqeBuffer, src=%p, dest=%p, dest_max=%u, count=%zu, retCode=%#x.",
-            oldBuffer, newBuffer, newSize, ctx->curStreamSqeCount * sizeof(rtDavidSqe_t), ret);
+            oldBuffer, newBuffer, newSize, copiedBytes, ret);
         DELETE_A(oldBuffer);
     }
 
@@ -216,7 +217,7 @@ rtError_t AllocTaskInfoOnAutoSplitStream(Stream* curStream, uint32_t sqeNum, Tas
         curStream->GetExposedStreamId(), curStream->Id_(), sqeNum);
     AutoSplitSqContext* splitCtx = curStream->GetAutoSplitCtx();
     // 检查是否需要扩容 host SQ buffer
-    if ((splitCtx->curStreamSqeCount + sqeNum) > (curStream->GetSqeBufferSize() / sizeof(rtDavidSqe_t))) {
+    if ((splitCtx->curStreamSqeCount + sqeNum) > (curStream->GetSqeBufferSize() / SQE_SIZE_UNIT)) {
         const rtError_t error = ExpandHostSqeBufferLocked(curStream);
         COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "Failed to expand host SQ buffer, retCode=%#x.", error);
     }
@@ -449,8 +450,8 @@ static rtError_t WriteAutoSplitSqeToHostBuffer(const TaskInfo* taskInfo, const S
             stm->Id_(), taskInfo->id, hostPos, taskInfo->sqeNum, hostSqeCapacity);
         return RT_ERROR_INVALID_VALUE;
     }
-    uint8_t* hostSqPos = sqeBuffer + hostPos * SQE_SIZE_UNIT;
-    const uint64_t sqeSize = static_cast<uint64_t>(taskInfo->sqeNum) * SQE_SIZE_UNIT;
+    uint8_t* const hostSqPos = GetSqeAddr(sqeBuffer, hostPos);
+    const uint64_t sqeSize = GetTaskSqeBytes(taskInfo->sqeNum);
     const errno_t ret = memcpy_s(hostSqPos, sqeSize, sqeAddr, sqeSize);
     COND_RETURN_AND_MSG_INNER(
         ret != EOK, RT_ERROR_INVALID_VALUE,
@@ -464,8 +465,8 @@ static rtError_t WriteAutoSplitSqeToHostBuffer(const TaskInfo* taskInfo, const S
 
 rtError_t DavidSendTask(TaskInfo* taskInfo, Stream* const stm)
 {
-    uint8_t sqeBuffer[SQE_SIZE_MAX] = {};
-    void* sqeAddr = static_cast<void*>(sqeBuffer);
+    TaskSqeBuffer sqeBuffer = {};
+    void* sqeAddr = static_cast<void*>(sqeBuffer.data);
     const uint16_t pos = taskInfo->id; // aclgraph扩流场景用不上这个字段
     const Device* dev = stm->Device_();
     const uint32_t devId = dev->Id_();
@@ -483,11 +484,12 @@ rtError_t DavidSendTask(TaskInfo* taskInfo, Stream* const stm)
         sqeInfo.sqBaseAddr = 0ULL;
     } else {
         if (sqeInfo.sqBaseAddr != 0ULL) { // 非扩流场景
-            sqeAddr = RtPtrToPtr<void*>(sqeInfo.sqBaseAddr + pos * SQE_SIZE_UNIT);
+            sqeAddr = RtValueToPtr<void*>(GetSqeAddr(sqeInfo.sqBaseAddr, pos));
         }
     }
 
-    ToConstructDavidSqe(taskInfo, sqeAddr, sqeInfo);
+    ToConstructSqe(taskInfo, sqeAddr, sqeInfo);
+    SetExpectedTaskReportNum(taskInfo, taskInfo->sqeNum);
     if ((profilerPtr != nullptr) && (!dev->IsDeviceRelease()) && (!stm->IsCtrlSQStream())) {
         profilerPtr->ReportTaskTrack(taskInfo, devId);
     }
@@ -504,17 +506,16 @@ rtError_t DavidSendTask(TaskInfo* taskInfo, Stream* const stm)
     }
 
     if (stm->IsSoftwareSqEnable()) {
-        const uint64_t sqeSize = static_cast<uint64_t>(taskInfo->sqeNum) * SQE_SIZE_UNIT;
-        const auto ret =
-            memcpy_s(RtPtrToPtr<void*>(stm->GetSqeBuffer() + SQE_SIZE_UNIT * taskInfo->pos), sqeSize, sqeAddr, sqeSize);
+        const uint64_t sqeSize = GetTaskSqeBytes(taskInfo->sqeNum);
+        uint8_t* const hostSqeAddr = GetSqeAddr(stm->GetSqeBuffer(), taskInfo->pos);
+        const auto ret = memcpy_s(hostSqeAddr, sqeSize, sqeAddr, sqeSize);
         if (ret != EOK) {
             RT_LOG_INNER_MSG(
                 RT_LOG_ERROR,
                 "Failed to call memcpy_s to copy sqeAddr, src=%p, dest=%p,"
                 " dest_max=%lu, sqe_num=%u, device_id=%u, ts_id=%u, sq_id=%u, cq_id=%u, stream_id=%d,"
                 " task_id=%hu, task_type=%u(%s), retCode=%#x.",
-                sqeAddr, RtPtrToPtr<void*>(stm->GetSqeBuffer() + SQE_SIZE_UNIT * taskInfo->pos), sqeSize,
-                taskInfo->sqeNum, devId, tsId, sqId, cqId, stm->Id_(), taskInfo->id,
+                sqeAddr, hostSqeAddr, sqeSize, taskInfo->sqeNum, devId, tsId, sqId, cqId, stm->Id_(), taskInfo->id,
                 static_cast<uint32_t>(taskInfo->type), taskInfo->typeName, ret);
             error = RT_ERROR_INVALID_VALUE;
         }

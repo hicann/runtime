@@ -18,8 +18,11 @@ namespace cce {
 namespace runtime {
 
 #if F_DESC("ProfilingEnableTask")
-void ConstructSqeForProfilingEnableTask(TaskInfo* const taskInfo, rtStarsSqe_t* const command)
+void ConstructSqeForProfilingEnableTask(TaskInfo* const taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     ProfilingEnableTaskInfo* profilingEnableTaskInfo = &(taskInfo->u.profilingEnableTaskInfo);
     Stream* const stream = taskInfo->stream;
 
@@ -46,8 +49,11 @@ void ConstructSqeForProfilingEnableTask(TaskInfo* const taskInfo, rtStarsSqe_t* 
 #endif
 
 #if F_DESC("ProfilingDisableTask")
-void ConstructSqeForProfilingDisableTask(TaskInfo* const taskInfo, rtStarsSqe_t* const command)
+void ConstructSqeForProfilingDisableTask(TaskInfo* const taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     ProfilingDisableTaskInfo* profilingDisableTaskInfo = &(taskInfo->u.profilingDisableTaskInfo);
     Stream* const stream = taskInfo->stream;
 
@@ -74,8 +80,11 @@ void ConstructSqeForProfilingDisableTask(TaskInfo* const taskInfo, rtStarsSqe_t*
 #endif
 
 #if F_DESC("ProfilerTraceExTask")
-void ConstructSqeForProfilerTraceExTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+void ConstructSqeForProfilerTraceExTask(TaskInfo* const taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     Stream* const stm = taskInfo->stream;
     RtStarsPhSqe* const sqe = &(command->phSqe);
     sqe->type = RT_STARS_SQE_TYPE_PLACE_HOLDER;

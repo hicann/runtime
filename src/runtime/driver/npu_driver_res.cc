@@ -2220,11 +2220,11 @@ rtError_t NpuDriver::SqCommandOccupy(
 }
 
 rtError_t NpuDriver::SqTaskSend(
-    const uint32_t sqId, rtStarsSqe_t* const sqe, const uint32_t deviceId, const uint32_t tsId, const uint32_t sqeNum)
+    const uint32_t sqId, void* const sqe, const uint32_t deviceId, const uint32_t tsId, const uint32_t sqeNum)
 {
     struct halTaskSendInfo info = {};
     info.type = DRV_NORMAL_TYPE;
-    info.sqe_addr = RtPtrToPtr<uint8_t*>(sqe);
+    info.sqe_addr = static_cast<uint8_t*>(sqe);
     info.sqe_num = sqeNum;
     info.tsId = tsId;
     info.sqId = sqId;

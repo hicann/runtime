@@ -125,7 +125,7 @@ TEST_F(StarsTaskTest, DoCompleteStarsError_david)
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
     rtStarsSqe_t sqe;
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     uint32_t errorcode = 10;
 
     rtCqReport_t wait_cqe = {};

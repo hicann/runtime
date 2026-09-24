@@ -5509,7 +5509,7 @@ TEST_F(UbStreamTest1, AIC_SQE)
 
     rtDavidSqe_t sqe = {};
     TaskSqeInfo sqeInfo = {0ULL, 0ULL};
-    ToConstructDavidSqe(&task, static_cast<void*>(&sqe), sqeInfo);
+    ToConstructSqe(&task, static_cast<void*>(&sqe), sqeInfo);
     TaskUnInitProc(&task);
     EXPECT_EQ(sqe.phSqe.header.type, RT_DAVID_SQE_TYPE_AIC);
 }
@@ -5529,7 +5529,7 @@ TEST_F(UbStreamTest1, AIV_SQE)
 
     rtDavidSqe_t sqe = {};
     TaskSqeInfo sqeInfo = {0ULL, 0ULL};
-    ToConstructDavidSqe(&task, static_cast<void*>(&sqe), sqeInfo);
+    ToConstructSqe(&task, static_cast<void*>(&sqe), sqeInfo);
     TaskUnInitProc(&task);
     EXPECT_EQ(sqe.phSqe.header.type, RT_DAVID_SQE_TYPE_AIV);
 }
@@ -5559,7 +5559,7 @@ TEST_F(UbStreamTest1, MIX_AIC_SQE)
 
     rtDavidSqe_t sqe = {};
     TaskSqeInfo sqeInfo = {0ULL, 0ULL};
-    ToConstructDavidSqe(&task, static_cast<void*>(&sqe), sqeInfo);
+    ToConstructSqe(&task, static_cast<void*>(&sqe), sqeInfo);
     TaskUnInitProc(&task);
     EXPECT_EQ(sqe.phSqe.header.type, RT_DAVID_SQE_TYPE_AIC);
     delete kernel;
@@ -5590,7 +5590,7 @@ TEST_F(UbStreamTest1, MIX_AIV_SQE)
 
     rtDavidSqe_t sqe = {};
     TaskSqeInfo sqeInfo = {0ULL, 0ULL};
-    ToConstructDavidSqe(&task, static_cast<void*>(&sqe), sqeInfo);
+    ToConstructSqe(&task, static_cast<void*>(&sqe), sqeInfo);
     TaskUnInitProc(&task);
     EXPECT_EQ(sqe.phSqe.header.type, RT_DAVID_SQE_TYPE_AIV);
     delete kernel;
@@ -5621,7 +5621,7 @@ TEST_F(UbStreamTest1, MIX_AIC_AIV_MAIN_AIC_SQE)
 
     rtDavidSqe_t sqe = {};
     TaskSqeInfo sqeInfo = {0ULL, 0ULL};
-    ToConstructDavidSqe(&task, static_cast<void*>(&sqe), sqeInfo);
+    ToConstructSqe(&task, static_cast<void*>(&sqe), sqeInfo);
     TaskUnInitProc(&task);
     EXPECT_EQ(sqe.phSqe.header.type, RT_DAVID_SQE_TYPE_AIC);
     delete kernel;
@@ -5645,9 +5645,9 @@ TEST_F(UbStreamTest1, CallBakLaunch_SQE_OFFLINE)
     uint64_t newSqAddr = reinterpret_cast<uint64_t>(sqe);
     stream_->SetSqBaseAddr(newSqAddr);
     sqeAddr = reinterpret_cast<void*>(stream_->GetSqBaseAddr() + (pos << SHIFT_SIX_SIZE));
-    ToConstructDavidSqe(&task, static_cast<void*>(sqe), sqeInfo);
+    ToConstructSqe(&task, static_cast<void*>(sqe), sqeInfo);
     TaskSqeInfo sqeInfoAddr = {stream_->GetSqBaseAddr(), 0ULL};
-    ToConstructDavidSqe(&task, sqeAddr, sqeInfoAddr);
+    ToConstructSqe(&task, sqeAddr, sqeInfoAddr);
     TaskUnInitProc(&task);
     EXPECT_EQ(sqe->phSqe.header.type, RT_DAVID_SQE_TYPE_PLACE_HOLDER);
     stream_->SetSqBaseAddr(oldSqAddr);
@@ -5667,7 +5667,7 @@ TEST_F(UbStreamTest1, CallBakLaunch_SQE_ONLINE)
 
     rtDavidSqe_t sqe = {};
     TaskSqeInfo sqeInfo = {0ULL, 0ULL};
-    ToConstructDavidSqe(&task, static_cast<void*>(&sqe), sqeInfo);
+    ToConstructSqe(&task, static_cast<void*>(&sqe), sqeInfo);
     TaskUnInitProc(&task);
     EXPECT_EQ(sqe.phSqe.header.type, RT_DAVID_SQE_TYPE_PLACE_HOLDER);
 
@@ -5698,7 +5698,7 @@ TEST_F(UbStreamTest1, DieFriendly_SQE)
     task.u.aicTaskInfo.groupBlockDim = launchTaskCfg.Group.groupBlockDim;
     rtDavidSqe_t sqe = {};
     TaskSqeInfo sqeInfo = {0ULL, 0ULL};
-    ToConstructDavidSqe(&task, static_cast<void*>(&sqe), sqeInfo);
+    ToConstructSqe(&task, static_cast<void*>(&sqe), sqeInfo);
     EXPECT_EQ(sqe.aicAivSqe.dieFriendly, 1);
     EXPECT_EQ(sqe.aicAivSqe.header.blockDim, 6);
     EXPECT_EQ(sqe.aicAivSqe.groupDim, 2);
@@ -5712,7 +5712,7 @@ TEST_F(UbStreamTest1, DieFriendly_SQE)
     delete aicKernel2;
     task.u.aicTaskInfo.groupDim = launchTaskCfg.Group.groupDim;
     task.u.aicTaskInfo.groupBlockDim = launchTaskCfg.Group.groupBlockDim;
-    ToConstructDavidSqe(&task, static_cast<void*>(&sqe), sqeInfo);
+    ToConstructSqe(&task, static_cast<void*>(&sqe), sqeInfo);
     EXPECT_EQ(sqe.aicAivSqe.header.blockDim, 4);
     EXPECT_EQ(sqe.aicAivSqe.groupDim, 2);
     EXPECT_EQ(sqe.aicAivSqe.groupBlockdim, 2);
@@ -5756,12 +5756,12 @@ TEST_F(UbStreamTest1, PiMix_SQE)
     aicTaskInfo->kernel->taskRation_ = 2;
     rtDavidSqe_t sqe = {};
     TaskSqeInfo sqeInfo = {0ULL, 0ULL};
-    ToConstructDavidSqe(&task, static_cast<void*>(&sqe), sqeInfo);
+    ToConstructSqe(&task, static_cast<void*>(&sqe), sqeInfo);
     EXPECT_EQ(sqe.aicAivSqe.piMix, 1);
     EXPECT_EQ(sqe.aicAivSqe.loose, 0);
 
     aicTaskInfo->kernel->taskRation_ = 1;
-    ToConstructDavidSqe(&task, static_cast<void*>(&sqe), sqeInfo);
+    ToConstructSqe(&task, static_cast<void*>(&sqe), sqeInfo);
     EXPECT_EQ(sqe.aicAivSqe.piMix, 1);
     EXPECT_EQ(sqe.aicAivSqe.loose, 1);
 
@@ -5772,7 +5772,7 @@ TEST_F(UbStreamTest1, PiMix_SQE)
     task.u.aicTaskInfo.groupDim = launchTaskCfg.Group.groupDim;
     task.u.aicTaskInfo.groupBlockDim = launchTaskCfg.Group.groupBlockDim;
     aicTaskInfo->kernel->SetMixType(NO_MIX);
-    ToConstructDavidSqe(&task, static_cast<void*>(&sqe), sqeInfo);
+    ToConstructSqe(&task, static_cast<void*>(&sqe), sqeInfo);
     EXPECT_EQ(sqe.aicAivSqe.piMix, 0);
     EXPECT_EQ(sqe.aicAivSqe.loose, 1);
 

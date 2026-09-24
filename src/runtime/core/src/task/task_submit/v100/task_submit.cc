@@ -269,6 +269,7 @@ rtError_t AllocTaskAndSendDc(TaskInfo* submitTask, Stream* stm, uint32_t* const 
     TIMESTAMP_BEGIN(SaveTaskInfo);
     SaveTaskInfo(taskInfo, submitTask);
     TIMESTAMP_END(SaveTaskInfo);
+    taskInfo->sqeNum = static_cast<uint8_t>(sendSqeNum);
     COND_PROC(flipTaskId != nullptr, *flipTaskId = GetFlipTaskId(taskInfo->id, taskInfo->flipNum););
     RT_LOG(
         RT_LOG_INFO, "ReportProfData, taskInfo->id=%hu, taskInfo->flipNum=%hu, flipTaskId=%u", taskInfo->id,
@@ -532,6 +533,7 @@ rtError_t AllocTaskAndSendStars(TaskInfo* submitTask, Stream* stm, uint32_t* con
         (void)stm->Device_()->GetTaskFactory()->Recycle(taskInfo);
         return RT_ERROR_INVALID_VALUE;
     }
+    taskInfo->sqeNum = static_cast<uint8_t>(sendSqeNum);
 
     stm->pendingNum_.Add(1U);
     if ((stm->Model_() != nullptr) && (taskInfo->type != TS_TASK_TYPE_MODEL_MAINTAINCE)) {
@@ -542,9 +544,10 @@ rtError_t AllocTaskAndSendStars(TaskInfo* submitTask, Stream* stm, uint32_t* con
     TIMESTAMP_BEGIN(ToCommandV1);
     rtTsCommand_t cmdLocal = {};
     cmdLocal.cmdType = RT_TASK_COMMAND_TYPE_STARS_SQE;
-    rtStarsSqe_t* starsSqe = nullptr;
-    starsSqe = cmdLocal.cmdBuf.u.starsSqe;
-    ToConstructSqe(taskInfo, starsSqe);
+    uint8_t* const sqe = cmdLocal.cmdBuf.sqe;
+    const TaskSqeInfo sqeInfo = {0ULL, 0ULL};
+    ToConstructSqe(taskInfo, static_cast<void*>(sqe), sqeInfo);
+    SetExpectedTaskReportNum(taskInfo, sendSqeNum);
     TIMESTAMP_END(ToCommandV1);
 
     // update the host-side head and tail
@@ -559,7 +562,7 @@ rtError_t AllocTaskAndSendStars(TaskInfo* submitTask, Stream* stm, uint32_t* con
 
     struct halTaskSendInfo sendInfo = {};
     sendInfo.type = DRV_NORMAL_TYPE;
-    sendInfo.sqe_addr = RtPtrToPtr<uint8_t*, rtStarsSqe_t*>(starsSqe);
+    sendInfo.sqe_addr = sqe;
     sendInfo.sqe_num = sendSqeNum;
     sendInfo.tsId = tsId;
     sendInfo.sqId = sqId;
@@ -584,20 +587,19 @@ rtError_t AllocTaskAndSendStars(TaskInfo* submitTask, Stream* stm, uint32_t* con
     if (!stm->IsSoftwareSqEnable()) {
         drvRet = halSqTaskSend(devId, &sendInfo);
     } else {
+        const uint64_t sqeBytes = GetTaskSqeBytes(taskInfo->sqeNum);
         auto ret = memcpy_s(
-            RtPtrToPtr<void*>(stm->GetSqeBuffer() + sizeof(rtStarsSqe_t) * taskInfo->pos),
-            sendSqeNum * sizeof(rtStarsSqe_t), RtPtrToPtr<void*, rtStarsSqe_t*>(starsSqe),
-            sendSqeNum * sizeof(rtStarsSqe_t));
+            static_cast<void*>(GetSqeAddr(stm->GetSqeBuffer(), taskInfo->pos)), sqeBytes, static_cast<void*>(sqe),
+            sqeBytes);
         if (ret != EOK) {
             RT_LOG_INNER_MSG(
                 RT_LOG_ERROR,
                 "Failed to call memcpy_s to copy starsSqe, src=%p, dest=%p,"
                 " dest_max=%zu, count=%zu, device_id=%u, ts_id=%u, sq_id=%u, cq_id=%u, stream_id=%d,"
                 " task_id=%hu, task_type=%u(%s), retCode=%#x.",
-                RtPtrToPtr<void*, rtStarsSqe_t*>(starsSqe),
-                RtPtrToPtr<void*>(stm->GetSqeBuffer() + sizeof(rtStarsSqe_t) * taskInfo->pos),
-                sendSqeNum * sizeof(rtStarsSqe_t), sendSqeNum * sizeof(rtStarsSqe_t), devId, tsId, sqId, cqId,
-                stm->Id_(), taskInfo->id, static_cast<uint32_t>(taskInfo->type), taskInfo->typeName, ret);
+                static_cast<void*>(sqe), static_cast<void*>(GetSqeAddr(stm->GetSqeBuffer(), taskInfo->pos)),
+                static_cast<size_t>(sqeBytes), static_cast<size_t>(sqeBytes), devId, tsId, sqId, cqId, stm->Id_(),
+                taskInfo->id, static_cast<uint32_t>(taskInfo->type), taskInfo->typeName, ret);
             error = RT_ERROR_TASK_BASE;
         }
     }

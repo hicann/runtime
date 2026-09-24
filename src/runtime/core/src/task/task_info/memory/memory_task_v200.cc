@@ -9,6 +9,7 @@
  */
 
 #include "stars_david.hpp"
+#include "david_sqe_adapter.hpp"
 #include "memory_task.h"
 #include "stream.hpp"
 #include "runtime.hpp"
@@ -28,7 +29,8 @@ static void ConstructDavidSqeForCaptureExternalRecordTask(
     const WriteValueTaskInfo* const writeValueTask = &taskInfo->u.writeValTask;
     if (writeValueTask->sqeAddr == 0ULL) {
         // capture阶段还未分配device侧内存，放NopTask占位
-        ConstructDavidSqeBase(taskInfo, sqe, sqeInfo);
+        ConstructDavidPlaceHolderSqe(taskInfo, sqe, sqeInfo);
+        UpdateDavidSqeHeadUpdate(taskInfo, sqe);
         return;
     }
     ConstructDavidSqeForWriteValueTask(taskInfo, sqe, sqeInfo);
@@ -41,10 +43,10 @@ static void ConstructDavidSqeForCaptureExternalWaitTask(
     if (memWaitValueTask->funcCallSvmMem2 == nullptr) {
         // capture阶段还未分配device侧内存，放NopTask占位
         rtDavidSqe_t* const davidSqe = static_cast<rtDavidSqe_t*>(sqe);
-        const uint32_t sendSqeNum = GetSendDavidSqeNum(taskInfo);
-        for (uint32_t i = 0U; i < sendSqeNum; ++i) {
-            ConstructDavidSqeBase(taskInfo, &(davidSqe[i]), sqeInfo);
+        for (uint32_t i = 0U; i < taskInfo->sqeNum; ++i) {
+            ConstructDavidPlaceHolderSqe(taskInfo, &(davidSqe[i]), sqeInfo);
         }
+        UpdateDavidSqeHeadUpdate(taskInfo, sqe);
         return;
     }
     ConstructDavidSqeForMemWaitValueTask(taskInfo, sqe, sqeInfo);
@@ -205,6 +207,7 @@ void ConstructDavidSqeForMemcpyAsyncTask(TaskInfo* const taskInfo, void* const s
         RT_LOG_INFO, "MemcpyAsyncTask, device_id=%u, stream_id=%d, task_id=%hu, copyType=%u",
         taskInfo->stream->Device_()->Id_(), static_cast<int32_t>(stream->Id_()), static_cast<uint32_t>(taskInfo->id),
         memcpyAsyncTaskInfo->copyType);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 rtError_t GetD2dCrossType(
@@ -251,7 +254,7 @@ static bool MemoryTaskRegister()
 {
     TaskFuncSingle memcpyFuncs = {
         .toCommandFunc = &ToCommandBodyForMemcpyAsyncTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForMemcpyAsyncTask,
         .doCompleteSuccFunc = &StarsV2DoCompleteSuccessForMemcpyAsyncTask,
         .taskUnInitFunc = &StarsV2MemcpyAsyncTaskUnInit,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -261,7 +264,7 @@ static bool MemoryTaskRegister()
     };
     TaskFuncSingle createL2AddrFuncs = {
         .toCommandFunc = &ToCommandBodyForCreateL2AddrTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeBase,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -271,7 +274,7 @@ static bool MemoryTaskRegister()
     };
     TaskFuncSingle updateAddressFuncs = {
         .toCommandFunc = nullptr,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeBase,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -281,7 +284,7 @@ static bool MemoryTaskRegister()
     };
     TaskFuncSingle memWriteValueFuncs = {
         .toCommandFunc = nullptr,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForMemWriteValueTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = &MemWriteTaskUnInit,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -291,7 +294,7 @@ static bool MemoryTaskRegister()
     };
     TaskFuncSingle memWaitValueFuncs = {
         .toCommandFunc = nullptr,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForMemWaitValueTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = &MemWaitTaskUnInit,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -301,7 +304,17 @@ static bool MemoryTaskRegister()
     };
     TaskFuncSingle captureRecordFuncs = {
         .toCommandFunc = nullptr,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForMemWriteValueTask,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    TaskFuncSingle captureExternalRecordFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForCaptureExternalRecordTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -311,7 +324,17 @@ static bool MemoryTaskRegister()
     };
     TaskFuncSingle captureWaitFuncs = {
         .toCommandFunc = nullptr,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForMemWaitValueTask,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+    };
+    TaskFuncSingle captureExternalWaitFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForCaptureExternalWaitTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -321,7 +344,7 @@ static bool MemoryTaskRegister()
     };
     TaskFuncSingle ipcRecordFuncs = {
         .toCommandFunc = nullptr,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForMemWriteValueTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = &StarsV2IpcEventRecordTaskUnInit,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -331,7 +354,7 @@ static bool MemoryTaskRegister()
     };
     TaskFuncSingle ipcWaitFuncs = {
         .toCommandFunc = nullptr,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForMemWaitValueTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = &StarsV2IpcEventWaitTaskUnInit,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -341,7 +364,7 @@ static bool MemoryTaskRegister()
     };
     TaskFuncSingle memsetFuncs = {
         .toCommandFunc = nullptr,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForMemsetAsyncTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -356,25 +379,13 @@ static bool MemoryTaskRegister()
         RegTaskFunc(chip, TS_TASK_TYPE_MEM_WAIT_VALUE, memWaitValueFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_CAPTURE_RECORD, captureRecordFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_CAPTURE_WAIT, captureWaitFuncs);
-        RegTaskFunc(chip, TS_TASK_TYPE_CAPTURE_RECORD_EXTERNAL, captureRecordFuncs);
-        RegTaskFunc(chip, TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL, captureWaitFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_CAPTURE_RECORD_EXTERNAL, captureExternalRecordFuncs);
+        RegTaskFunc(chip, TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL, captureExternalWaitFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_IPC_RECORD, ipcRecordFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_IPC_WAIT, ipcWaitFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_CREATE_L2_ADDR, createL2AddrFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_UPDATE_ADDRESS, updateAddressFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_MEMSET, memsetFuncs);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_MEMCPY, &ConstructDavidSqeForMemcpyAsyncTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_MEMSET, &ConstructDavidSqeForMemsetAsyncTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_MEM_WRITE_VALUE, &ConstructDavidSqeForMemWriteValueTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_MEM_WAIT_VALUE, &ConstructDavidSqeForMemWaitValueTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_CAPTURE_RECORD, &ConstructDavidSqeForMemWriteValueTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_CAPTURE_WAIT, &ConstructDavidSqeForMemWaitValueTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_CAPTURE_RECORD_EXTERNAL, &ConstructDavidSqeForCaptureExternalRecordTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL, &ConstructDavidSqeForCaptureExternalWaitTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_IPC_RECORD, &ConstructDavidSqeForMemWriteValueTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_IPC_WAIT, &ConstructDavidSqeForMemWaitValueTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_CREATE_L2_ADDR, &ConstructDavidSqeBase);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_UPDATE_ADDRESS, &ConstructDavidSqeBase);
     }
 
     return true;

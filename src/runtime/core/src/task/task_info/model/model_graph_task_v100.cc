@@ -20,8 +20,11 @@ namespace runtime {
 
 #if F_DESC("AddEndGraphTask")
 
-static void ConstructSqeForAddEndGraphTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+static void ConstructSqeForAddEndGraphTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     RtStarsAicpuKernelSqe* const sqe = &(command->aicpuSqe);
     Stream* stm = taskInfo->stream;
 

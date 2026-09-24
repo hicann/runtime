@@ -9,6 +9,7 @@
  */
 
 #include "stars_david.hpp"
+#include "david_sqe_adapter.hpp"
 #include "stream.hpp"
 #include "runtime.hpp"
 #include "kernel.hpp"
@@ -37,13 +38,14 @@ void ConstructDavidSqeForLabelSetTask(TaskInfo* const taskInfo, void* const sqe,
     RT_LOG(
         RT_LOG_INFO, "LabelSetTask, deviceId=%u, streamId=%d taskId=%hu", stm->Device_()->Id_(), stm->Id_(),
         taskInfo->id);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 static bool CondOpLabelTaskRegister()
 {
     TaskFuncSingle labelSetFuncs = {
         .toCommandFunc = &ToCommandBodyForLabelSetTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForLabelSetTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -53,7 +55,7 @@ static bool CondOpLabelTaskRegister()
     };
     TaskFuncSingle labelSwitchFuncs = {
         .toCommandFunc = &ToCommandBodyForLabelSwitchTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeBase,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -63,7 +65,7 @@ static bool CondOpLabelTaskRegister()
     };
     TaskFuncSingle labelGotoFuncs = {
         .toCommandFunc = &ToCommandBodyForLabelGotoTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeBase,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -77,11 +79,7 @@ static bool CondOpLabelTaskRegister()
         RegTaskFunc(chip, TS_TASK_TYPE_LABEL_SET, labelSetFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_LABEL_SWITCH, labelSwitchFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_LABEL_GOTO, labelGotoFuncs);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_LABEL_SET, &ConstructDavidSqeForLabelSetTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_LABEL_SWITCH, &ConstructDavidSqeBase);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_LABEL_GOTO, &ConstructDavidSqeBase);
     }
-
     return true;
 }
 

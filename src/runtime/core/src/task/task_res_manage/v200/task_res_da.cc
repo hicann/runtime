@@ -120,7 +120,7 @@ TaskInfo* TaskResManageDavid::GetTaskInfo(uint32_t taskId) const
 
 rtError_t TaskResManageDavid::AllocTaskInfoAndPos(uint32_t sqeNum, uint32_t& pos, TaskInfo** task, bool needLog)
 {
-    if (sqeNum > SQE_NUM_PER_DAVID_TASK_MAX) {
+    if ((sqeNum == 0U) || (sqeNum > SQE_NUM_PER_DAVID_TASK_MAX)) {
         RT_LOG(RT_LOG_ERROR, "sqeNum is invalid, sqeNum=%u, maxSqeNum=%u.", sqeNum, SQE_NUM_PER_DAVID_TASK_MAX);
         return RT_ERROR_INVALID_VALUE;
     }

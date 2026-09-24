@@ -1538,7 +1538,7 @@ rtError_t DeviceErrorProc::ProcessStarsSqeErrorInfo(
         TaskIdDesc(), info->u.sqeErrorInfo.taskId, info->u.sqeErrorInfo.sqId, info->u.sqeErrorInfo.sqHead);
 
     const uint32_t* const sqe = RtPtrToPtr<const uint32_t*>(&(info->u.sqeErrorInfo.sqe));
-    for (size_t i = 0UL; i < (sizeof(rtStarsSqe_t) / sizeof(uint32_t)); i++) {
+    for (size_t i = 0UL; i < (sizeof(info->u.sqeErrorInfo.sqe) / sizeof(uint32_t)); i++) {
         RT_LOG(RT_LOG_ERROR, "sqe[%zu]=0x%08x.", i, *(sqe + i));
     }
 

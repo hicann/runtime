@@ -247,7 +247,7 @@ TEST_F(CloudV2TaskTest, stars_timeout_sqe)
 
     TimeoutSetTaskInit(&task, RT_TIMEOUT_TYPE_OP_EXECUTE, 10);
     task.u.aicTaskInfo.kernel = kernel;
-    ToConstructSqe(&task, &sqe1);
+    ToConstructSqe(&task, &sqe1, TaskSqeInfo{0ULL, 0ULL});
     Complete(&task, 0);
 
     InitByStream(&task1, stream_);
@@ -255,7 +255,7 @@ TEST_F(CloudV2TaskTest, stars_timeout_sqe)
     AicTaskInit(&task1, vecKernel, vecKernel->GetKernelAttrType(), 1, nullptr);
     delete vecKernel;
     task1.u.aicTaskInfo.kernel = kernel;
-    ToConstructSqe(&task1, &sqe2);
+    ToConstructSqe(&task1, &sqe2, TaskSqeInfo{0ULL, 0ULL});
 
     TaskCfg taskcfg = {};
     taskcfg.isBaseValid = 1U;
@@ -289,7 +289,7 @@ TEST_F(CloudV2TaskTest, stars_mix_sqe_1)
     AicTaskInit(&task, aicKernel2, aicKernel2->GetKernelAttrType(), 1, nullptr);
     delete aicKernel2;
     task.u.aicTaskInfo.kernel = kernel;
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     TaskUnInitProc(&task);
 
     rtStreamDestroy(stream);
@@ -318,7 +318,7 @@ TEST_F(CloudV2TaskTest, stars_mix_sqe_2)
     AicTaskInit(&task, aicKernel3, aicKernel3->GetKernelAttrType(), 1, nullptr);
     delete aicKernel3;
     task.u.aicTaskInfo.kernel = kernel;
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     TaskUnInitProc(&task);
 
     rtStreamDestroy(stream);
@@ -346,7 +346,7 @@ TEST_F(CloudV2TaskTest, stars_mix_sqe_3)
     AicTaskInit(&task, aicKernel4, aicKernel4->GetKernelAttrType(), 1, nullptr);
     delete aicKernel4;
     task.u.aicTaskInfo.kernel = kernel;
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     TaskUnInitProc(&task);
 
     rtStreamDestroy(stream);
@@ -374,7 +374,7 @@ TEST_F(CloudV2TaskTest, stars_mix_sqe_4)
     AicTaskInit(&task, aicKernel5, aicKernel5->GetKernelAttrType(), 1, nullptr);
     delete aicKernel5;
     task.u.aicTaskInfo.kernel = kernel;
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     TaskUnInitProc(&task);
 
     rtStreamDestroy(stream);
@@ -406,7 +406,7 @@ TEST_F(CloudV2TaskTest, stars_mix_sqe_biu)
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
         .will(returnValue(RT_ERROR_DRV_OUT_MEMORY));
     task.u.aicTaskInfo.kernel = kernel;
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     TaskUnInitProc(&task);
     delete kernel;
 }
@@ -434,7 +434,7 @@ TEST_F(CloudV2TaskTest, stars_mix_sqe_l2_cache)
     AicTaskInit(&task, aicKernel7, aicKernel7->GetKernelAttrType(), 1, nullptr);
     delete aicKernel7;
     task.u.aicTaskInfo.kernel = kernel;
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     TaskUnInitProc(&task);
 
     rtStreamDestroy(stream);
@@ -456,7 +456,7 @@ TEST_F(CloudV2TaskTest, stars_eventreset_sqe)
     InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     EventResetTaskInit(&task, &evt, false, event_id);
     evt.EventIdCountAdd((task.u.eventResetTaskInfo).eventid);
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     Complete(&task, 0);
     rtStreamDestroy(stream);
 }
@@ -491,7 +491,7 @@ TEST_F(CloudV2TaskTest, stars_memcpy_async_sqe_addr_d2d)
     rtStarsSqe_t sqe;
     InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     MemcpyAsyncTaskInitV1(&task, src, count);
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
 
     Complete(&task, 0);
     TaskUnInitProc(&task);
@@ -514,7 +514,7 @@ TEST_F(CloudV2TaskTest, stars_memcpy_async_dsa_sqe_d2h)
     InitByStream(&task, stream_);
     MemcpyAsyncD2HTaskInit(&task, src, cnt, dsaStreamId, dsaTaskId);
     EXPECT_EQ(task.type, TS_TASK_TYPE_MEMCPY);
-    ToConstructSqe(&task, &command);
+    ToConstructSqe(&task, &command, TaskSqeInfo{0ULL, 0ULL});
     RtStarsMemcpyAsyncSqe* sqe = &(command.memcpyAsyncSqe);
 
     Complete(&task, 0);
@@ -539,7 +539,7 @@ TEST_F(CloudV2TaskTest, stars_memcpy2d_async_sqe_addr_h2d)
     rtStarsSqe_t sqe;
     InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     MemcpyAsyncTaskInitV2(&task, dst, size, src, size, size, 1, kind, size);
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
 
     Complete(&task, 0);
     TaskUnInitProc(&task);
@@ -563,7 +563,7 @@ TEST_F(CloudV2TaskTest, memcpy2d_async_sqe_d2d)
     rtStarsSqe_t sqe;
     InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     MemcpyAsyncTaskInitV2(&task, dst, size, src, size, size, 1, kind, size);
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
 
     Complete(&task, 0);
     TaskUnInitProc(&task);
@@ -587,7 +587,7 @@ TEST_F(CloudV2TaskTest, stars_memcpy2d_async_sqe_addr_d2h)
     rtStarsSqe_t sqe;
     InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     MemcpyAsyncTaskInitV2(&task, dst, size, src, size, size, 1, kind, size);
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
 
     Complete(&task, 0);
     TaskUnInitProc(&task);
@@ -610,7 +610,7 @@ TEST_F(CloudV2TaskTest, label_switch_by_index_sqe)
 
     InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     error = StreamLabelSwitchByIndexTaskInit(&task, (void*)&ptr, max, (void*)labelInfoPtr);
-    ToConstructSqe(&task, (rtStarsSqe_t*)sqe);
+    ToConstructSqe(&task, (rtStarsSqe_t*)sqe, TaskSqeInfo{0ULL, 0ULL});
     Complete(&task, 0);
     TaskUnInitProc(&task);
     rtStreamDestroy(stream);
@@ -629,7 +629,7 @@ TEST_F(CloudV2TaskTest, stars_ipc_notify_record_sqe)
     SingleBitNotifyRecordInfo single_bit_notify_info = {false, false, false, false, 0, 0, false};
     NotifyRecordTaskInit(&task, 0, 0, 0, &single_bit_notify_info, nullptr, nullptr, false);
 
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     Complete(&task, 0);
     TaskUnInitProc(&task);
     rtStreamDestroy(stream);
@@ -654,10 +654,10 @@ TEST_F(CloudV2TaskTest, cmoAddrTaskInfo_ConstructSqe)
     error = CmoAddrTaskInit(&cmoAddrTask, RtPtrToPtr<void*>(cmoAddrInfo), cmoOpCode);
     EXPECT_EQ(error, RT_ERROR_MODEL_NULL);
     rtStarsSqe_t sqe = {};
-    ToConstructSqe(&cmoAddrTask, &sqe);
+    ToConstructSqe(&cmoAddrTask, &sqe, TaskSqeInfo{0ULL, 0ULL});
 
     MOCKER(memcpy_s).stubs().will(returnValue(NULL));
-    ToConstructSqe(&cmoAddrTask, &sqe);
+    ToConstructSqe(&cmoAddrTask, &sqe, TaskSqeInfo{0ULL, 0ULL});
     TaskUnInitProc(&cmoAddrTask);
     delete stream;
     delete device;
@@ -705,7 +705,7 @@ TEST_F(CloudV2TaskTest, CmoTask_for_prefetch_test)
     error = CmoTaskInit(&task, &cmoTask, stream_, 0);
     EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
     rtStarsSqe_t sqe = {};
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     TaskUnInitProc(&task);
     stream_->SetModel(nullptr);
     ret = rtModelDestroy(model);
@@ -743,7 +743,7 @@ TEST_F(CloudV2TaskTest, CmoAddrTask_for_prefetch_test)
 
     // ConstructCmoAddrSqe
     rtStarsSqe_t sqe = {};
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     // printErrorInfo
     MOCKER(halMemAlloc).stubs().will(returnValue(DRV_ERROR_NONE));
     PrintErrorInfo(&task, 0);
@@ -796,7 +796,7 @@ TEST_F(CloudV2TaskTest, BuildMultipleTaskSqe)
     InitByStream(task, stream);
     DavinciMultipleTaskInit(task, &multipleTaskInfo, 0U);
 
-    ToConstructSqe(task, sqe);
+    ToConstructSqe(task, sqe, TaskSqeInfo{0ULL, 0ULL});
     auto taskNum = GetSendSqeNum(task);
     EXPECT_EQ(taskNum, 2);
 
@@ -871,7 +871,7 @@ TEST_F(CloudV2TaskTest, BuildMultipleTaskSqeDvpp_RuntimeNotFree)
     InitByStream(task, stream);
     DavinciMultipleTaskInit(task, &multipleTaskInfo, 0x40U);
 
-    ToConstructSqe(task, &sqe);
+    ToConstructSqe(task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     auto taskNum = GetSendSqeNum(task);
     EXPECT_EQ(taskNum, 1);
     WaitAsyncCopyComplete(task);
@@ -917,7 +917,7 @@ TEST_F(CloudV2TaskTest, BuildMultipleTaskSqeDvpp_RuntimeFree)
     InitByStream(task, stream);
     DavinciMultipleTaskInit(task, &multipleTaskInfo, 0x0U);
 
-    ToConstructSqe(task, &sqe);
+    ToConstructSqe(task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     auto taskNum = GetSendSqeNum(task);
     EXPECT_EQ(taskNum, 1);
     WaitAsyncCopyComplete(task);
@@ -1297,7 +1297,7 @@ TEST_F(CloudV2TaskTest1, constructSqeBarrierTask)
 
     kernTask.u.barrierTask.barrierMsg.cmoIdNum = 1;
     rtStarsSqe_t command;
-    (void)ConstructSqeForBarrierTask(&kernTask, &command);
+    ConstructSqeForBarrierTask(&kernTask, &command, TaskSqeInfo{0ULL, 0ULL});
     EXPECT_NE(&kernTask, nullptr);
     delete stream_;
     delete dev_;

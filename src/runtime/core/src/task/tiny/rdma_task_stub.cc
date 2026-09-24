@@ -31,10 +31,11 @@ rtError_t SubmitRdmaPiValueModifyTask(
     return RT_ERROR_NONE;
 }
 
-void ConstructSqeRdmaPiValueModifyTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+void ConstructSqeRdmaPiValueModifyTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
     UNUSED(taskInfo);
-    UNUSED(command);
+    UNUSED(sqeBuffer);
+    UNUSED(sqeInfo);
 }
 
 void RdmaPiValueModifyTaskUnInit(TaskInfo* taskInfo) { UNUSED(taskInfo); }
@@ -63,10 +64,11 @@ void ToCommandBodyForRdmaDbSendTask(TaskInfo* taskInfo, rtCommand_t* const comma
     UNUSED(command);
 }
 
-void ConstructSqeForRdmaDbSendTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+void ConstructSqeForRdmaDbSendTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
     UNUSED(taskInfo);
-    UNUSED(command);
+    UNUSED(sqeBuffer);
+    UNUSED(sqeInfo);
 }
 
 } // namespace runtime

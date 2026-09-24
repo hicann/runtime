@@ -856,7 +856,7 @@ void LogFusionKernelErrorInfo(const StarsDeviceErrorInfo* const info, uint64_t e
 
     const uint32_t* const cmd =
         RtPtrToPtr<const uint32_t*, const rtDavidSqe_t*>(info->u.fusionKernelErrorInfo.davidSqe);
-    const size_t size = sizeof(rtDavidSqe_t) * (info->u.fusionKernelErrorInfo.sqeLength + 1U);
+    const size_t size = static_cast<size_t>(GetTaskSqeBytes(info->u.fusionKernelErrorInfo.sqeLength + 1U));
     for (uint32_t i = 0U; i < (size / sizeof(uint32_t)); i += 8U) {
         RT_LOG(
             RT_LOG_ERROR, "printSqe: %08x %08x %08x %08x %08x %08x %08x %08x", cmd[i], cmd[i + 1U], cmd[i + 2U],

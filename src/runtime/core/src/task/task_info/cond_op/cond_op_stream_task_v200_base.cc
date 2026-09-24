@@ -9,6 +9,7 @@
  */
 
 #include "stars_david.hpp"
+#include "david_sqe_adapter.hpp"
 #include "stream.hpp"
 #include "runtime.hpp"
 #include "stars_cond_isa_helper.hpp"
@@ -43,6 +44,7 @@ void ConstructDavidSqeForStreamLabelSwitchByIndexTask(
     RT_LOG(
         RT_LOG_INFO, "StreamLabelSwitchByIndex, deviceId=%u, streamId=%d, taskId=%hu",
         taskInfo->stream->Device_()->Id_(), taskInfo->stream->Id_(), taskInfo->id);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 void ConstructDavidSqeForStreamSwitchTask(TaskInfo* const taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
@@ -74,6 +76,7 @@ void ConstructDavidSqeForStreamSwitchTask(TaskInfo* const taskInfo, void* const 
     RT_LOG(
         RT_LOG_INFO, "StreamSwitchTask, deviceId=%u, streamId=%d, taskId=%hu, trueStreamId=%u.", stm->Device_()->Id_(),
         stm->Id_(), taskInfo->id, streamSwitchTask->trueStreamId);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
     return;
 }
 
@@ -81,7 +84,7 @@ static bool CondOpStreamTaskRegister()
 {
     TaskFuncSingle streamSwitchFuncs = {
         .toCommandFunc = &ToCommandBodyForStreamSwitchTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForStreamSwitchTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = &StreamSwitchTaskUnInit,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -91,7 +94,7 @@ static bool CondOpStreamTaskRegister()
     };
     TaskFuncSingle streamSwitchNFuncs = {
         .toCommandFunc = &ToCommandBodyForStreamSwitchNTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeBase,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -101,7 +104,7 @@ static bool CondOpStreamTaskRegister()
     };
     TaskFuncSingle streamLabelSwitchByIndexFuncs = {
         .toCommandFunc = &ToCmdBodyForStreamLabelSwitchByIndexTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForStreamLabelSwitchByIndexTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = &StreamLabelSwitchByIndexTaskUnInit,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -111,7 +114,7 @@ static bool CondOpStreamTaskRegister()
     };
     TaskFuncSingle streamLabelGotoFuncs = {
         .toCommandFunc = &ToCmdBodyForStreamLabelGotoTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeBase,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -126,11 +129,6 @@ static bool CondOpStreamTaskRegister()
         RegTaskFunc(chip, TS_TASK_TYPE_STREAM_SWITCH_N, streamSwitchNFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_STREAM_LABEL_SWITCH_BY_INDEX, streamLabelSwitchByIndexFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_STREAM_LABEL_GOTO, streamLabelGotoFuncs);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_STREAM_SWITCH, &ConstructDavidSqeForStreamSwitchTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_STREAM_SWITCH_N, &ConstructDavidSqeBase);
-        RegDavidSqeFunc(
-            chip, TS_TASK_TYPE_STREAM_LABEL_SWITCH_BY_INDEX, &ConstructDavidSqeForStreamLabelSwitchByIndexTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_STREAM_LABEL_GOTO, &ConstructDavidSqeBase);
     }
     return true;
 }
@@ -224,6 +222,7 @@ void ConstructDavidSqeForCaptureConditionTask(TaskInfo* const taskInfo, void* co
     if (condTaskInfo->condHandle->GetCondType() == RT_COND_TASK_TYPE_WHILE) {
         Construct3rdDavidSqeForCaptureConditionTask(taskInfo, &davidSqe[CONDITION_SQE_INDEX_2]);
     }
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 } // namespace runtime

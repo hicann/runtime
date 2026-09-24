@@ -9,6 +9,7 @@
  */
 
 #include "vector"
+#include "david_sqe_adapter.hpp"
 #include "stream.hpp"
 #include "runtime.hpp"
 #include "context.hpp"
@@ -81,6 +82,7 @@ void ConstructDavidSqeForNotifyWaitTask(TaskInfo* taskInfo, void* const sqe, con
         stream->Device_()->Id_(), stream->Id_(), taskInfo->id, taskInfo->taskSn, stream->GetSqId(), notifySqe->notifyId,
         notifySqe->cntFlag, notifySqe->clrFlag, notifySqe->waitModeBit, notifySqe->recordModeBit, notifySqe->bitmap,
         notifySqe->cntValue, GetNotifySubType(notifySqe->subType), notifySqe->timeout);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 static void ConstructDavidSqeForNotifyResetTask(TaskInfo* const taskInfo, rtDavidSqe_t* const command)
@@ -104,7 +106,7 @@ static void ConstructDavidSqeForNotifyResetTask(TaskInfo* const taskInfo, rtDavi
         sqe->clrFlag, GetNotifySubType(sqe->subType));
 }
 
-void ConstructDavidSqeForNotifyRecordTask(TaskInfo* taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
+static void ConstructDavidNotifyRecordSqe(TaskInfo* taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
 {
     rtDavidSqe_t* davidSqe = static_cast<rtDavidSqe_t*>(sqe);
     UNUSED(sqeInfo);
@@ -147,10 +149,16 @@ void ConstructDavidSqeForNotifyRecordTask(TaskInfo* taskInfo, void* const sqe, c
         notifySqe->cntValue, GetNotifySubType(notifySqe->subType), notifySqe->timeout);
 }
 
+void ConstructDavidSqeForNotifyRecordTask(TaskInfo* taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
+{
+    ConstructDavidNotifyRecordSqe(taskInfo, sqe, sqeInfo);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
+}
+
 void ConstructStarsSqeForNotifyRecordTask(TaskInfo* taskInfo, uint8_t* const command)
 {
     TaskSqeInfo sqeInfo = {0ULL, 0ULL};
-    ConstructDavidSqeForNotifyRecordTask(taskInfo, static_cast<void* const>(command), sqeInfo);
+    ConstructDavidNotifyRecordSqe(taskInfo, static_cast<void*>(command), sqeInfo);
 }
 
 void ConstructStarsSqeForConditionNotifyWait(TaskInfo* taskInfo, uint8_t* const command)

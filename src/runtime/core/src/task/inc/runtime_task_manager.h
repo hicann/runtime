@@ -12,21 +12,40 @@
 
 #include "stream.hpp"
 #include "driver.hpp"
-#include "stars.hpp"
+#include "stars_base.hpp"
+#include "stars_sqe.hpp"
 
 namespace cce {
 namespace runtime {
 
-// For all chips, sqe size must be an integer multiple of 64B, with the minimum beging 64B.
-// This means 64B == sizeof(rtStarsSqe_t) == sizeof(rtDavidSqe_t) == ...
 constexpr uint32_t SQE_SIZE_UNIT = 64U;
 constexpr uint32_t SQE_NUM_PER_TASK_MAX = SQE_NUM_PER_DAVID_TASK_MAX;
-constexpr uint32_t SQE_SIZE_MAX = SQE_SIZE_UNIT * SQE_NUM_PER_TASK_MAX;
+constexpr uint32_t SQE_SIZE_PER_TASK_MAX = SQE_SIZE_UNIT * SQE_NUM_PER_TASK_MAX;
 
 struct TaskSqeInfo {
     uint64_t sqBaseAddr;
     uint64_t rsv;
 };
+
+struct TaskSqeBuffer final {
+    uint8_t data[SQE_SIZE_PER_TASK_MAX];
+};
+
+constexpr uint64_t GetTaskSqeBytes(const uint32_t sqeNum) { return static_cast<uint64_t>(sqeNum) * SQE_SIZE_UNIT; }
+
+constexpr uint64_t GetSqeAddr(const uint64_t base, const uint32_t pos) { return base + GetTaskSqeBytes(pos); }
+
+inline uint8_t* GetSqeAddr(uint8_t* const base, const uint32_t pos) { return base + GetTaskSqeBytes(pos); }
+
+inline const uint8_t* GetSqeAddr(const uint8_t* const base, const uint32_t pos) { return base + GetTaskSqeBytes(pos); }
+
+static_assert(SQE_SIZE_UNIT == (1U << 6U), "SQE unit must remain 64 bytes");
+static_assert(SQE_NUM_PER_STARS_TASK_MAX <= SQE_NUM_PER_TASK_MAX, "STARS task exceeds the common SQE capacity");
+static_assert(SQE_NUM_PER_TASK_MAX == 5U, "task SQE capacity must remain five units");
+static_assert(SQE_SIZE_PER_TASK_MAX == 320U, "per-task SQE buffer must hold five 64-byte units (320 bytes)");
+static_assert(sizeof(TaskSqeInfo) == 16U, "TaskSqeInfo layout must remain stable");
+static_assert(sizeof(TaskSqeBuffer) == SQE_SIZE_PER_TASK_MAX, "TaskSqeBuffer must not add padding");
+static_assert(sizeof(rtStarsSqe_t) == SQE_SIZE_UNIT, "rtStarsSqe_t must occupy one SQE unit");
 
 // record task error info for other thread sync
 #define STREAM_REPORT_ERR_MSG(STREAM, ERR_MODULE, format, ...)                                           \
@@ -47,7 +66,8 @@ void DoCompleteSuccess(TaskInfo* taskInfo, const uint32_t devId);
 void PrintErrorInfoCommon(TaskInfo* taskInfo, const uint32_t devId);
 
 using PfnTaskToCmd = void (*)(TaskInfo* const taskInfo, rtCommand_t* const command);
-using PfnTaskToSqe = void (*)(TaskInfo* taskInfo, rtStarsSqe_t* const command);
+using PfnTaskToSqe = void (*)(TaskInfo* taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo);
+using PfnTaskSqeHeaderPostProc = void (*)(void* const sqeHeader);
 using PfnWaitAsyncCpCompleteFunc = rtError_t (*)(TaskInfo* taskInfo);
 using PfnTaskSetResult = void (*)(TaskInfo* taskInfo, const void* const data, const uint32_t dataSize);
 using PfnDoCompleteSucc = void (*)(TaskInfo* taskInfo, const uint32_t devId);
@@ -64,6 +84,7 @@ struct TaskFuncArrays {
     PfnPrintErrorInfo printErrorInfoFunc[TS_TASK_TYPE_RESERVED];
     PfnTaskSetResult setResultFunc[TS_TASK_TYPE_RESERVED];
     PfnTaskSetStarsResult setStarsResultFunc[TS_TASK_TYPE_RESERVED];
+    PfnTaskSqeHeaderPostProc sqeHeaderPostProcFunc;
 };
 
 struct TaskFuncSingle {
@@ -79,9 +100,20 @@ struct TaskFuncSingle {
 
 extern TaskFuncArrays g_taskFuncArrays[CHIP_END];
 extern PfnTaskUnInit* g_taskUnInitFunc;
+extern PfnTaskSqeHeaderPostProc g_taskSqeHeaderPostProcRunningFunc;
 
 void RefreshTaskFuncPointer(rtChipType_t chipType);
 void RegTaskFunc(rtChipType_t chipType, tsTaskType_t taskType, const TaskFuncSingle& funcs);
+void RegTaskSqeHeaderPostProcFunc(rtChipType_t chipType, PfnTaskSqeHeaderPostProc func);
+void ToConstructSqe(TaskInfo* taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo);
+
+inline void PostProcessTaskSqeHeader(void* const sqeHeader)
+{
+    const PfnTaskSqeHeaderPostProc postProcFunc = g_taskSqeHeaderPostProcRunningFunc;
+    if (postProcFunc != nullptr) {
+        postProcFunc(sqeHeader);
+    }
+}
 
 const std::vector<rtChipType_t>& GetV100Chips();
 const std::vector<rtChipType_t>& GetDavidChips();

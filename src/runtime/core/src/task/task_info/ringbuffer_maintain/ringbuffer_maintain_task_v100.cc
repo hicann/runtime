@@ -19,8 +19,11 @@ namespace cce {
 namespace runtime {
 
 #if F_DESC("RingBufferMaintainTask")
-static void ConstructSqeForRingBufferMaintainTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+static void ConstructSqeForRingBufferMaintainTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     uint64_t offset = 0UL;
     RtStarsPhSqe* const sqe = &(command->phSqe);
     RingBufferMaintainTaskInfo* ringBufMtTsk = &taskInfo->u.ringBufMtTask;

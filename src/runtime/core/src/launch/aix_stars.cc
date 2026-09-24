@@ -29,6 +29,7 @@
 #include "enum_desc.hpp"
 #include "capture_model.hpp"
 #include "logic_sq.hpp"
+#include "runtime_task_manager.h"
 
 namespace cce {
 namespace runtime {
@@ -268,7 +269,7 @@ rtError_t InternalUpdateNormalKernelTaskH2DSubmitComm(
 {
     TaskInfo submitTask = {};
     rtError_t errorReason;
-    constexpr uint64_t allocSize = sizeof(rtStarsSqe_t);
+    constexpr uint64_t allocSize = SQE_SIZE_UNIT;
     Device* const device = ctx->Device_();
     Driver* const curDrv = stm->Device_()->Driver_();
     void* hostAddr = nullptr;
@@ -328,7 +329,7 @@ rtError_t InternalUpdateNormalKernelTaskD2HSubmit(
 {
     TaskInfo submitTask = {};
     rtError_t errorReason;
-    constexpr size_t allocSize = sizeof(rtStarsSqe_t);
+    constexpr size_t allocSize = SQE_SIZE_UNIT;
     const size_t copySize = allocSize - updateTask->u.aicTaskInfo.updateSqeOffset;
     void* sqeDevBuf = updateTask->u.aicTaskInfo.sqeDevBuf;
     const uint32_t sqId = updateTask->stream->GetSqId();

@@ -90,8 +90,11 @@ static void Construct3rdSqeForCaptureConditionTask(TaskInfo* taskInfo, rtStarsSq
         taskInfo->id);
 }
 
-static void ConstructSqeForCaptureConditionTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+static void ConstructSqeForCaptureConditionTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     Construct1stSqeForCaptureConditionTask(taskInfo, &command[0]);
     Construct2ndSqeForCaptureConditionTask(taskInfo, &command[1]);
 

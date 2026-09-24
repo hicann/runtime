@@ -24,8 +24,11 @@ namespace cce {
 namespace runtime {
 
 #if F_DESC("LabelSetTask")
-void ConstructSqeForLabelSetTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+void ConstructSqeForLabelSetTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     RtStarsPhSqe* const sqe = (RtStarsPhSqe*)&(command->phSqe);
     Stream* const stm = taskInfo->stream;
     sqe->header.type = RT_STARS_SQE_TYPE_PLACE_HOLDER;
@@ -80,8 +83,11 @@ rtError_t StreamSwitchTaskInitV2(
     return RT_ERROR_NONE;
 }
 
-void ConstructSqeForStreamSwitchTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+void ConstructSqeForStreamSwitchTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     Stream* const stm = taskInfo->stream;
     StreamSwitchTaskInfo* streamSwitchTask = &(taskInfo->u.streamswitchTask);
     RtStarsPhSqe* const sqe = (RtStarsPhSqe*)&(command->phSqe);
@@ -141,8 +147,11 @@ rtError_t StreamLabelSwitchByIndexTaskInit(
     return RT_ERROR_NONE;
 }
 
-void ConstructSqeForStreamLabelSwitchByIndexTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+void ConstructSqeForStreamLabelSwitchByIndexTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     RtStarsPhSqe* const sqe = (RtStarsPhSqe*)&(command->phSqe);
     Stream* const stm = taskInfo->stream;
     sqe->header.type = RT_STARS_SQE_TYPE_PLACE_HOLDER;

@@ -11,6 +11,7 @@
 #include "stream.hpp"
 #include "runtime.hpp"
 #include "stars_david.hpp"
+#include "david_sqe_adapter.hpp"
 #include "model_to_aicpu_task.h"
 #include "runtime_task_manager.h"
 
@@ -64,13 +65,14 @@ static void ConstructDavidSqeForModelToAicpuTask(TaskInfo* const taskInfo, void*
         "stream_id=%d, task_id=%hu, task_sn=%u.",
         static_cast<uint32_t>(aicpuCtrlSqe->topicType), taskInfo->u.modelToAicpuTask.cmdType,
         taskInfo->stream->Device_()->Id_(), stm->Id_(), taskInfo->id, taskInfo->taskSn);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 static bool ModelToAicpuTaskRegister()
 {
     TaskFuncSingle funcs = {
         .toCommandFunc = &ToCmdBodyForModelToAicpuTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForModelToAicpuTask,
         .doCompleteSuccFunc = &DoCompleteSuccForModelToAicpuTask,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -82,9 +84,7 @@ static bool ModelToAicpuTaskRegister()
     const auto& chips = GetDavidChips();
     for (const auto chip : chips) {
         RegTaskFunc(chip, TS_TASK_TYPE_MODEL_TO_AICPU, funcs);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_MODEL_TO_AICPU, &ConstructDavidSqeForModelToAicpuTask);
     }
-
     return true;
 }
 

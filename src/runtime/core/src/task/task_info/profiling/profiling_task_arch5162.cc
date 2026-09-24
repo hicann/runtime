@@ -17,8 +17,11 @@ namespace cce {
 namespace runtime {
 
 #if F_DESC("ProfilingEnableTask")
-void ConstructSqeForProfilingEnableTask(TaskInfo* const taskInfo, rtStarsSqe_t* const command)
+void ConstructSqeForProfilingEnableTask(TaskInfo* const taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     ProfilingEnableTaskInfo* const profilingEnableTaskInfo = &(taskInfo->u.profilingEnableTaskInfo);
     Stream* const stm = taskInfo->stream;
     (void)memset_s(command, sizeof(rtStarsSqe_t), 0, sizeof(rtStarsSqe_t));
@@ -40,8 +43,11 @@ void ConstructSqeForProfilingEnableTask(TaskInfo* const taskInfo, rtStarsSqe_t* 
 #endif
 
 #if F_DESC("ProfilingDisableTask")
-void ConstructSqeForProfilingDisableTask(TaskInfo* const taskInfo, rtStarsSqe_t* const command)
+void ConstructSqeForProfilingDisableTask(TaskInfo* const taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     ProfilingDisableTaskInfo* const profilingDisableTaskInfo = &(taskInfo->u.profilingDisableTaskInfo);
     Stream* const stm = taskInfo->stream;
     (void)memset_s(command, sizeof(rtStarsSqe_t), 0, sizeof(rtStarsSqe_t));

@@ -19,8 +19,11 @@ namespace cce {
 namespace runtime {
 
 #if F_DESC("MaintenanceTask")
-static void ConstructSqeForMaintenanceTask(TaskInfo* const taskInfo, rtStarsSqe_t* const command)
+static void ConstructSqeForMaintenanceTask(TaskInfo* const taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     Stream* const stm = taskInfo->stream;
     (void)memset_s(command, sizeof(rtStarsSqe_t), 0, sizeof(rtStarsSqe_t));
     RtStarsPhSqe* sqe = &(command->phSqe);

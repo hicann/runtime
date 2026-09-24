@@ -161,8 +161,11 @@ static rtError_t DavinciFftsPlusTaskNormalH2D(TaskInfo* taskInfo, const void* sr
     return ret;
 }
 
-void ConstructAICpuSqeForDavinciTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+void ConstructAICpuSqeForDavinciTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     RtStarsAicpuKernelSqe* const sqe = &(command->aicpuSqe);
     AicpuTaskInfo* aicpuTaskInfo = &(taskInfo->u.aicpuTaskInfo);
     Stream* const stm = taskInfo->stream;
@@ -421,14 +424,17 @@ void ConstructFftsMixSqeForDavinciTask(TaskInfo* taskInfo, rtStarsSqe_t* const c
     return;
 }
 
-void ConstructAicAivSqeForDavinciTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+void ConstructAicAivSqeForDavinciTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     AicTaskInfo* aicTaskInfo = &(taskInfo->u.aicTaskInfo);
     const uint8_t mixType = (aicTaskInfo->kernel != nullptr) ? aicTaskInfo->kernel->GetMixType() : 0U;
     if (mixType != NO_MIX) {
         ConstructFftsMixSqeForDavinciTask(taskInfo, command);
     } else {
-        ConstructAICoreSqeForDavinciTask(taskInfo, command);
+        ConstructAICoreSqeForDavinciTask(taskInfo, command, sqeInfo);
     }
 
     return;
@@ -814,8 +820,11 @@ static void UpdateQosCfgInAicoreSqe(RtFftsPlusKernelSqe* sqe, const TaskInfo* co
     return;
 }
 
-void ConstructAICoreSqeForDavinciTask(TaskInfo* const taskInfo, rtStarsSqe_t* const command)
+void ConstructAICoreSqeForDavinciTask(TaskInfo* const taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     RtFftsPlusKernelSqe* sqe = &(command->fftsPlusKernelSqe);
     AicTaskInfo* aicTaskInfo = &(taskInfo->u.aicTaskInfo);
     Stream* const stm = taskInfo->stream;

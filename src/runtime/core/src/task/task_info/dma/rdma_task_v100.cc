@@ -208,8 +208,11 @@ static void ConstructSqeNoSinkModeForRdmaDbSendTask(TaskInfo* taskInfo, rtStarsS
         taskInfo->id, taskInfo->u.rdmaDbSendTask.taskDbInfo.cmd.sqProducerIdx, dbAddr, dbVal);
 }
 
-void ConstructSqeForRdmaDbSendTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+void ConstructSqeForRdmaDbSendTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     RdmaDbSendTaskInfo* rdmaDbSendTask = &(taskInfo->u.rdmaDbSendTask);
     if (taskInfo->bindFlag != 0U) {
         if (rdmaDbSendTask->taskSeq == 1U) {

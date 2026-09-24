@@ -9,6 +9,7 @@
  */
 
 #include "ccu_sqe.hpp"
+#include "david_sqe_adapter.hpp"
 #include "stream.hpp"
 #include "error_message_manage.hpp"
 #include "task_execute_time.h"
@@ -54,6 +55,7 @@ void ConstructDavidSqeForCcuLaunchTask(TaskInfo* taskInfo, void* const sqe, cons
         RT_LOG(
             RT_LOG_ERROR, "copy to starsSqe failed, ret=%d, src size=%zu, dst size=%zu", ret,
             sizeof(rtDavidStarsCommonSqe_t), (sizeof(uint32_t) * CCU_2ND_SQE_LEFT_LEN));
+        UpdateDavidSqeHeadUpdate(taskInfo, sqe);
         return;
     }
     PrintDavidSqe(davidSqe, "CcuLaunchTask Part0");
@@ -64,6 +66,7 @@ void ConstructDavidSqeForCcuLaunchTask(TaskInfo* taskInfo, void* const sqe, cons
         "instCnt=%hu",
         stream->Device_()->Id_(), stream->Id_(), taskInfo->id, tskinfo->missionId, tskinfo->dieId, tskinfo->instStartId,
         tskinfo->instCnt);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
     return;
 }
 
@@ -88,7 +91,7 @@ static void FusionCcuSubSqeCommonInit(
     sqe->header.reserved = 0U;
     sqe->header.blockDim = 0U;
     sqe->header.taskId = taskInfo->taskSn;
-    PostProcessDavidSqeHeader(&(sqe->header));
+    PostProcessTaskSqeHeader(&(sqe->header));
 
     /* word2 */
     sqe->taskCnt = taskCnt - 1U;

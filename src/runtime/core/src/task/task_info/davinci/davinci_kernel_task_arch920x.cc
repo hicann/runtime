@@ -9,6 +9,7 @@
  */
 
 #include "stars_david.hpp"
+#include "david_sqe_adapter.hpp"
 #include "runtime_task_manager.h"
 #include "davinci_kernel_task.h"
 #include "aic_aiv_sqe_common.hpp"
@@ -58,6 +59,11 @@ void ConfigArch920xSqeHeaderTaskProfiling(rtDavidStarsSqeHeader_t* const header)
     }
 
     return;
+}
+
+static void PostProcessArch920xSqeHeader(void* const sqeHeader)
+{
+    ConfigArch920xSqeHeaderTaskProfiling(static_cast<rtDavidStarsSqeHeader_t*>(sqeHeader));
 }
 
 static void ConstructDavidCommonSqeForDavinciTask(TaskInfo* taskInfo, RtArch920xStarsAicAivKernelSqe* const sqe)
@@ -222,6 +228,7 @@ static void ConstructArch920xAicAivSqeForDavinciTask(
             ConstructDavidAivSqeForDavinciTask(taskInfo, davidSqe);
         }
     }
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 static void SetStarsResultByErrorType(TaskInfo* taskInfo, const rtCqReport_t& logicCq)
@@ -260,7 +267,7 @@ static bool DavinciKernelTaskRegister()
 {
     TaskFuncSingle aicAivFuncs = {
         .toCommandFunc = &ToCommandBodyForAicAivTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructArch920xAicAivSqeForDavinciTask,
         .doCompleteSuccFunc = &StarsV2DoCompleteSuccessForDavinciTask,
         .taskUnInitFunc = &StarsV2DavinciTaskUnInit,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -271,7 +278,7 @@ static bool DavinciKernelTaskRegister()
 
     TaskFuncSingle aicpuFuncs = {
         .toCommandFunc = &ToCommandBodyForAicpuTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidAICpuSqeForDavinciTask,
         .doCompleteSuccFunc = &StarsV2DoCompleteSuccessForDavinciTask,
         .taskUnInitFunc = &StarsV2DavinciTaskUnInit,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -284,10 +291,7 @@ static bool DavinciKernelTaskRegister()
         RegTaskFunc(chip, TS_TASK_TYPE_KERNEL_AICPU, aicpuFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_KERNEL_AICORE, aicAivFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_KERNEL_AIVEC, aicAivFuncs);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_KERNEL_AICPU, &ConstructDavidAICpuSqeForDavinciTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_KERNEL_AICORE, &ConstructArch920xAicAivSqeForDavinciTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_KERNEL_AIVEC, &ConstructArch920xAicAivSqeForDavinciTask);
-        RegDavidSqeHeaderPostProcFunc(chip, &ConfigArch920xSqeHeaderTaskProfiling);
+        RegTaskSqeHeaderPostProcFunc(chip, &PostProcessArch920xSqeHeader);
     }
     return true;
 }

@@ -13,6 +13,7 @@
 #include "profiling_task.h"
 #include "runtime_task_manager.h"
 #include "debug_task.h"
+#include "david_sqe_adapter.hpp"
 
 namespace cce {
 namespace runtime {
@@ -41,6 +42,7 @@ void ConstructDavidSqeForProfilingEnableTask(TaskInfo* const taskInfo, void* con
         "isSocLogEn=%hhu, isTaskBasedProfEn=%hhu.",
         taskInfo->stream->Device_()->Id_(), stream->Id_(), taskInfo->id, profilingEnableTaskInfo->pid,
         phSqe->u.dynamicProfilingInfo.isSocLogEn, phSqe->u.dynamicProfilingInfo.isTaskBasedProfEn);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 #endif
 
@@ -68,6 +70,7 @@ void ConstructDavidSqeForProfilingDisableTask(TaskInfo* const taskInfo, void* co
         "isSocLogEn=%hhu, isTaskBasedProfEn=%hhu.",
         taskInfo->stream->Device_()->Id_(), stream->Id_(), taskInfo->id, phSqe->u.dynamicProfilingInfo.pid,
         phSqe->u.dynamicProfilingInfo.isSocLogEn, phSqe->u.dynamicProfilingInfo.isTaskBasedProfEn);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 #endif
 
@@ -91,6 +94,7 @@ void ConstructDavidSqeForProfilerTraceExTask(TaskInfo* taskInfo, void* const sqe
     RT_LOG(
         RT_LOG_INFO, "ProfilerTraceExTask, device_id=%u, stream_id=%d, task_id=%hu, task_sn=%u.", stm->Device_()->Id_(),
         stm->Id_(), taskInfo->id, taskInfo->taskSn);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 #endif
 
@@ -100,7 +104,7 @@ static bool ProfilingTaskRegister()
     // TS_TASK_TYPE_PROFILER_DYNAMIC_ENABLE
     TaskFuncSingle profilerDynamicEnableFuncs = {
         .toCommandFunc = &ToCommandBodyForDynamicProfilingEnableTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeUpdateHeadOnly,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -112,7 +116,7 @@ static bool ProfilingTaskRegister()
     // TS_TASK_TYPE_PROFILER_DYNAMIC_DISABLE
     TaskFuncSingle profilerDynamicDisableFuncs = {
         .toCommandFunc = &ToCommandBodyForDynamicProfilingDisableTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeUpdateHeadOnly,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -124,7 +128,7 @@ static bool ProfilingTaskRegister()
     // TS_TASK_TYPE_PROFILING_ENABLE
     TaskFuncSingle profilingEnableFuncs = {
         .toCommandFunc = &ToCommandBodyForProfilingEnableTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForProfilingEnableTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -136,7 +140,7 @@ static bool ProfilingTaskRegister()
     // TS_TASK_TYPE_PROFILING_DISABLE
     TaskFuncSingle profilingDisableFuncs = {
         .toCommandFunc = &ToCommandBodyForProfilingDisableTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForProfilingDisableTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -148,7 +152,7 @@ static bool ProfilingTaskRegister()
     // TS_TASK_TYPE_ONLINEPROF_START
     TaskFuncSingle onlineProfStartFuncs = {
         .toCommandFunc = &ToCommandBodyForOnlineProfEnableTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeBase,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -160,7 +164,7 @@ static bool ProfilingTaskRegister()
     // TS_TASK_TYPE_ONLINEPROF_STOP
     TaskFuncSingle onlineProfStopFuncs = {
         .toCommandFunc = &ToCommandBodyForOnlineProfDisableTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeBase,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -172,7 +176,7 @@ static bool ProfilingTaskRegister()
     // TS_TASK_TYPE_ADCPROF
     TaskFuncSingle adcProfFuncs = {
         .toCommandFunc = &ToCommandBodyForAdcProfTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeBase,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -184,7 +188,7 @@ static bool ProfilingTaskRegister()
     // TS_TASK_TYPE_PROFILER_TRACE
     TaskFuncSingle profilerTraceFuncs = {
         .toCommandFunc = &ToCommandBodyForProfilerTraceTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeBase,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -196,7 +200,7 @@ static bool ProfilingTaskRegister()
     // TS_TASK_TYPE_PROFILER_TRACE_EX
     TaskFuncSingle profilerTraceExFuncs = {
         .toCommandFunc = &ToCommandBodyForProfilerTraceExTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForProfilerTraceExTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -216,13 +220,6 @@ static bool ProfilingTaskRegister()
         RegTaskFunc(chip, TS_TASK_TYPE_ADCPROF, adcProfFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_PROFILER_TRACE, profilerTraceFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_PROFILER_TRACE_EX, profilerTraceExFuncs);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_PROFILING_ENABLE, &ConstructDavidSqeForProfilingEnableTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_PROFILING_DISABLE, &ConstructDavidSqeForProfilingDisableTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_ONLINEPROF_START, &ConstructDavidSqeBase);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_ONLINEPROF_STOP, &ConstructDavidSqeBase);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_ADCPROF, &ConstructDavidSqeBase);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_PROFILER_TRACE, &ConstructDavidSqeBase);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_PROFILER_TRACE_EX, &ConstructDavidSqeForProfilerTraceExTask);
     }
 
     return true;

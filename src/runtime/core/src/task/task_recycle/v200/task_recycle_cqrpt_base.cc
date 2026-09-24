@@ -177,7 +177,7 @@ rtError_t StarsResumeRtsq(const rtCqReport_t* logicCq, const TaskInfo* const tas
     } else if (taskInfo->type == static_cast<uint16_t>(TS_TASK_TYPE_MODEL_SERIAL_SCHED_NOTIFY_WAIT)) {
         offset = 4U;
     } else if (IsNeedMoveMultipleSteps(taskInfo->type)) {
-        offset = GetSendDavidSqeNum(taskInfo);
+        offset = taskInfo->sqeNum;
     } else {
         // no operation
     }
@@ -194,7 +194,7 @@ rtError_t StarsResumeRtsq(const rtCqReport_t* logicCq, const TaskInfo* const tas
         error, "Failed to query the SQ disabled status in polling mode, retCode=%#x.", static_cast<uint32_t>(error));
 
     if (taskInfo->type == static_cast<uint16_t>(TS_TASK_TYPE_MULTIPLE_TASK)) {
-        head = ((taskInfo->pos + GetSendDavidSqeNum(taskInfo)) % failStm->GetSqDepth());
+        head = ((taskInfo->pos + taskInfo->sqeNum) % failStm->GetSqDepth());
     } else {
         head = ((static_cast<uint32_t>(logicCq->sqHead) + offset) % failStm->GetSqDepth());
     }
@@ -378,7 +378,7 @@ rtError_t ProcReport(
         }
 
         RT_LOG(RT_LOG_INFO, "taskType=%u.", reportTask->type);
-        if ((reportTask->type == TS_TASK_TYPE_MULTIPLE_TASK) && (GetSendDavidSqeNum(reportTask) > 1U)) {
+        if ((reportTask->type == TS_TASK_TYPE_MULTIPLE_TASK) && (reportTask->sqeNum > 1U)) {
             if (CompleteProcMultipleTaskReport(reportTask, report)) {
                 rtCqReport_t cqReport = report;
                 GetMultipleTaskCqeErrorInfo(reportTask, cqReport.sqeType, cqReport.errorType, cqReport.errorCode);

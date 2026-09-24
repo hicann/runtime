@@ -1374,9 +1374,10 @@ TEST_F(EngineTest, GetKernelNameForAiCoreorAiv_workTask_null)
     GlobalMockObject::reset();
 }
 
-void ToConstructSqeStub(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+void ToConstructSqeStub(TaskInfo* taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
 {
-    (void)command;
+    (void)sqe;
+    (void)sqeInfo;
     taskInfo->errorCode = RT_ERROR_NONE;
 }
 
@@ -1391,7 +1392,9 @@ TEST_F(EngineTest, TaskToCommand_RT_TASK_COMMAND_TYPE_STARS_SQE)
     MOCKER(ToConstructSqe).stubs().will(invoke(ToConstructSqeStub));
     rtLogicReport_t report;
     TaskInfo task = {};
-    engine->TaskToCommand(&task, cmdLocal, nullptr);
+    task.stream = stream_;
+    rtTsCmdSqBuf_t command = {};
+    engine->TaskToCommand(&task, cmdLocal, &command);
     EXPECT_EQ(task.errorCode, RT_ERROR_NONE);
     delete device;
     GlobalMockObject::reset();

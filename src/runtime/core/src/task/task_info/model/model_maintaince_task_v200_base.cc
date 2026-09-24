@@ -14,6 +14,7 @@
 #include "model.hpp"
 #include "notify.hpp"
 #include "stars_david.hpp"
+#include "david_sqe_adapter.hpp"
 #include "model_maintaince_task.h"
 #include "capture_model.hpp"
 #include "runtime_task_manager.h"
@@ -141,6 +142,7 @@ static void ConstructDavidSqeForModelMaintainceTask(
                 phSqe->u.modelMaintainceInfo.modelId, taskInfo->id);
             break;
     }
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
     return;
 }
 
@@ -150,7 +152,7 @@ static bool ModelMaintainceTaskRegister()
 {
     TaskFuncSingle funcs = {
         .toCommandFunc = &ToCommandBodyForModelMaintainceTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForModelMaintainceTask,
         .doCompleteSuccFunc = &DoCompleteSuccessForModelMaintainceTask,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -162,9 +164,7 @@ static bool ModelMaintainceTaskRegister()
     const auto& chips = GetDavidChips();
     for (const auto chip : chips) {
         RegTaskFunc(chip, TS_TASK_TYPE_MODEL_MAINTAINCE, funcs);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_MODEL_MAINTAINCE, &ConstructDavidSqeForModelMaintainceTask);
     }
-
     return true;
 }
 

@@ -420,8 +420,11 @@ static void ConstructPlaceHolderSqe(TaskInfo* const taskInfo, rtStarsSqe_t* cons
         sqe->u.memcpyAsyncWithoutSdmaInfo.pid);
 }
 
-void ConstructSqeForMemcpyAsyncTask(TaskInfo* const taskInfo, rtStarsSqe_t* const command)
+void ConstructSqeForMemcpyAsyncTask(TaskInfo* const taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     ConstructPlaceHolderSqe(taskInfo, command);
     RT_LOG(
         RT_LOG_INFO, "MemcpyAsyncTask using PH SQE. stream_id=%d, task_id=%u",

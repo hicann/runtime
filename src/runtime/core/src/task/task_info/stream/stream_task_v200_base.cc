@@ -13,6 +13,7 @@
 #include "stars_cond_isa_define.hpp"
 #include "stars_cond_isa_helper.hpp"
 #include "stars_david.hpp"
+#include "david_sqe_adapter.hpp"
 #include "error_code.h"
 #include "stream_task.h"
 #include "runtime_task_manager.h"
@@ -46,6 +47,7 @@ void ConstructDavidSqeForStreamActiveTask(TaskInfo* const taskInfo, void* const 
     RT_LOG(
         RT_LOG_INFO, "StreamActiveTask, deviceId=%u, streamId=%d, taskId=%hu, activeStreamId=%u.",
         stream->Device_()->Id_(), stream->Id_(), taskInfo->id, streamActiveTask->activeStreamId);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 void ConstructDavidSqeForOverflowSwitchSetTask(TaskInfo* const taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
@@ -70,6 +72,7 @@ void ConstructDavidSqeForOverflowSwitchSetTask(TaskInfo* const taskInfo, void* c
         "task_sn=%u, switch %s.",
         taskInfo->stream->Device_()->Id_(), taskInfo->stream->Id_(), overflowSwiSet->targetStm->Id_(), taskInfo->id,
         taskInfo->taskSn, overflowSwiSet->switchFlag ? "on" : "off");
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 void ConstructDavidSqeForStreamTagSetTask(TaskInfo* const taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
@@ -94,6 +97,7 @@ void ConstructDavidSqeForStreamTagSetTask(TaskInfo* const taskInfo, void* const 
         "sqe_task_id=%u, geOpTag=%u.",
         taskInfo->stream->Device_()->Id_(), taskInfo->stream->Id_(), taskInfo->id, taskInfo->taskSn,
         stmTagSetTsk->targetStm->Id_(), phSqe->header.taskId, stmTagSetTsk->geOpTag);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 void ConstructDavidSqeForCallbackLaunchTask(TaskInfo* const taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
@@ -148,13 +152,14 @@ void ConstructDavidSqeForCallbackLaunchTask(TaskInfo* const taskInfo, void* cons
         RT_LOG_INFO, "CallbackLaunch, stream_id=%hu, task_id=%hu, notify_id=%hu, isBlock=%hu, pid=%u",
         phSqe->u.callBackInfo.streamId, taskInfo->id, phSqe->u.callBackInfo.notifyId, phSqe->u.callBackInfo.isBlock,
         phSqe->u.callBackInfo.destPid);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 static bool StreamTaskRegister()
 {
     TaskFuncSingle createStreamFuncs = {
         .toCommandFunc = &ToCommandBodyForCreateStreamTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeBase,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -164,7 +169,7 @@ static bool StreamTaskRegister()
     };
     TaskFuncSingle streamActiveFuncs = {
         .toCommandFunc = &ToCommandBodyForStreamActiveTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForStreamActiveTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = &StreamActiveTaskUnInit,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -174,7 +179,7 @@ static bool StreamTaskRegister()
     };
     TaskFuncSingle activeAicpuStreamFuncs = {
         .toCommandFunc = &ToCmdBodyForActiveAicpuStreamTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeBase,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -184,7 +189,7 @@ static bool StreamTaskRegister()
     };
     TaskFuncSingle callbackLaunchFuncs = {
         .toCommandFunc = &ToCmdBodyForCallbackLaunchTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForCallbackLaunchTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -194,7 +199,7 @@ static bool StreamTaskRegister()
     };
     TaskFuncSingle overflowSwitchFuncs = {
         .toCommandFunc = nullptr,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForOverflowSwitchSetTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -204,7 +209,7 @@ static bool StreamTaskRegister()
     };
     TaskFuncSingle streamTagFuncs = {
         .toCommandFunc = nullptr,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForStreamTagSetTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -214,7 +219,7 @@ static bool StreamTaskRegister()
     };
     TaskFuncSingle streamModeFuncs = {
         .toCommandFunc = &ToCmdBodyForSetStreamModeTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeBase,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -224,7 +229,7 @@ static bool StreamTaskRegister()
     };
     TaskFuncSingle sqLockUnlockFuncs = {
         .toCommandFunc = nullptr,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeBase,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -234,7 +239,7 @@ static bool StreamTaskRegister()
     };
     TaskFuncSingle flipFuncs = {
         .toCommandFunc = &ToCmdBodyForFlipTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeBase,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -244,7 +249,7 @@ static bool StreamTaskRegister()
     };
     TaskFuncSingle sqeUpdateFuncs = {
         .toCommandFunc = &ToCommandBodyForSqeUpdateTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeUpdateHeadOnly,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -265,17 +270,7 @@ static bool StreamTaskRegister()
         RegTaskFunc(chip, TS_TASK_TYPE_SET_SQ_LOCK_UNLOCK, sqLockUnlockFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_FLIP, flipFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_TASK_SQE_UPDATE, sqeUpdateFuncs);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_CREATE_STREAM, &ConstructDavidSqeBase);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_STREAM_ACTIVE, &ConstructDavidSqeForStreamActiveTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_ACTIVE_AICPU_STREAM, &ConstructDavidSqeBase);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_HOSTFUNC_CALLBACK, &ConstructDavidSqeForCallbackLaunchTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_SET_OVERFLOW_SWITCH, &ConstructDavidSqeForOverflowSwitchSetTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_SET_STREAM_GE_OP_TAG, &ConstructDavidSqeForStreamTagSetTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_SET_STREAM_MODE, &ConstructDavidSqeBase);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_SET_SQ_LOCK_UNLOCK, &ConstructDavidSqeBase);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_FLIP, &ConstructDavidSqeBase);
     }
-
     return true;
 }
 

@@ -12,6 +12,7 @@
 #include "context.hpp"
 #include "capture_model_utils.hpp"
 #include "internal_error_define.hpp"
+#include "runtime_task_manager.h"
 #include "stars.hpp"
 #include "logic_sq.hpp"
 #include "logic_sq_manage.hpp"
@@ -48,18 +49,25 @@ rtError_t UpdateHostSqeBufferByTask(TaskInfo* const task)
     if ((task == nullptr) || (task->stream == nullptr)) {
         return RT_ERROR_INVALID_VALUE;
     }
-    uint8_t* sqeAddr = task->stream->GetHostSqeAddrByPos(task->pos);
+    if ((task->sqeNum == 0U) || (task->sqeNum > SQE_NUM_PER_STARS_TASK_MAX)) {
+        RT_LOG(
+            RT_LOG_ERROR, "Invalid sqe num, sqe_num=%u, max_sqe_num=%u, stream_id=%d, task_id=%u, task_pos=%u.",
+            task->sqeNum, SQE_NUM_PER_STARS_TASK_MAX, task->stream->Id_(), task->id, task->pos);
+        return RT_ERROR_INVALID_VALUE;
+    }
+    const size_t sqeBytes = static_cast<size_t>(GetTaskSqeBytes(task->sqeNum));
+    uint8_t* const sqeAddr = task->stream->GetHostSqeAddrByPos(task->pos);
     if (sqeAddr == nullptr) {
         RT_LOG(
             RT_LOG_ERROR, "Get host sqe addr failed, stream_id=%d, task_id=%u, task_pos=%u", task->stream->Id_(),
             task->id, task->pos);
         return RT_ERROR_INVALID_VALUE;
     }
-    const uint32_t sendSqeNum = GetSendSqeNum(task);
-    const size_t sqeSize = sizeof(rtStarsSqe_t) * static_cast<size_t>(sendSqeNum);
-    std::vector<rtStarsSqe_t> sqes(sendSqeNum);
-    ToConstructSqe(task, sqes.data());
-    const errno_t ret = memcpy_s(sqeAddr, sqeSize, sqes.data(), sqeSize);
+    std::vector<uint8_t> sqes(sqeBytes);
+    const TaskSqeInfo sqeInfo = {0ULL, 0ULL};
+    ToConstructSqe(task, static_cast<void*>(sqes.data()), sqeInfo);
+    SetExpectedTaskReportNum(task, task->sqeNum);
+    const errno_t ret = memcpy_s(sqeAddr, sqeBytes, sqes.data(), sqeBytes);
     if (ret != EOK) {
         return RT_ERROR_INVALID_VALUE;
     }

@@ -413,7 +413,7 @@ TEST_F(EventTestDavid, TestToConstructDavidEventRecordTask)
     DavidEventRecordTaskInit(&task, evt, evt->EventId_());
     EXPECT_EQ(task.type, TS_TASK_TYPE_DAVID_EVENT_RECORD);
     TaskSqeInfo sqeInfo = {0ULL, 0ULL};
-    ToConstructDavidSqe(&task, static_cast<void*>(&sqe), sqeInfo);
+    ToConstructSqe(&task, static_cast<void*>(&sqe), sqeInfo);
     delete evt;
 }
 
@@ -429,7 +429,7 @@ TEST_F(EventTestDavid, TestToConstructDavidEventWaitTask)
     DavidEventWaitTaskInit(&task, evt, evt->EventId_(), 0U);
     EXPECT_EQ(task.type, TS_TASK_TYPE_DAVID_EVENT_WAIT);
     TaskSqeInfo sqeInfo = {0ULL, 0ULL};
-    ToConstructDavidSqe(&task, static_cast<void*>(&sqe), sqeInfo);
+    ToConstructSqe(&task, static_cast<void*>(&sqe), sqeInfo);
     delete evt;
 }
 

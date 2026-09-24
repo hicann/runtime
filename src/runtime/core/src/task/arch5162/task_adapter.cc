@@ -19,6 +19,12 @@ uint32_t GetSendSqeNum(TaskInfo* const taskInfo)
     return 1U;
 }
 
+void SetExpectedTaskReportNum(TaskInfo* const taskInfo, const uint32_t sendSqeNum)
+{
+    UNUSED(sendSqeNum);
+    taskInfo->pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].expectPackage = 1U;
+}
+
 rtError_t ReduceAsyncV2TaskInit(
     TaskInfo* const taskInfo, uint32_t cpyType, const void* srcAddr, void* desAddr, const uint64_t cpySize,
     void* const overflowAddr)

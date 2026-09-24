@@ -9,6 +9,7 @@
  */
 
 #include "stars_david.hpp"
+#include "david_sqe_adapter.hpp"
 #include "stream.hpp"
 #include "model.hpp"
 #include "runtime_task_manager.h"
@@ -39,13 +40,14 @@ void ConstructDavidSqeForCmoTaskCommon(
 void ConstructDavidSqeForCmoTask(TaskInfo* const taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
 {
     ConstructDavidSqeForCmoTaskCommon(taskInfo, sqe, sqeInfo, &ConstructDavidCmoSqe);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 static bool CmoTaskRegister()
 {
     TaskFuncSingle funcs = {
         .toCommandFunc = nullptr,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForCmoTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -57,9 +59,7 @@ static bool CmoTaskRegister()
     const std::vector<rtChipType_t> chips = {CHIP_DAVID, CHIP_ASCEND_350, CHIP_MC62CM12A, CHIP_MC32DM11A};
     for (const auto chip : chips) {
         RegTaskFunc(chip, TS_TASK_TYPE_CMO, funcs);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_CMO, &ConstructDavidSqeForCmoTask);
     }
-
     return true;
 }
 

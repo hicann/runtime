@@ -193,6 +193,7 @@ void AsyncHwtsEngine::SendingRun(void)
 
         stm = runTask->stream;
         sendSqeNum = starsFlag ? GetSendSqeNum(runTask) : 1U;
+        runTask->sqeNum = static_cast<uint8_t>(sendSqeNum);
         sqId = stm->GetSqId();
         cqId = stm->GetCqId();
 
@@ -512,7 +513,9 @@ void AsyncHwtsEngine::TaskToCommand(
             ret != EOK, "stars sqe memset_s failed, destMax=%zu, count=%zu, retCode=%d.", sizeof(rtTsCommandBuf_t),
             sizeof(rtTsCommandBuf_t), ret);
         // command of hi1980C is host memory, use itself directly
-        ToConstructSqe(runTask, &command->starsSqe);
+        const TaskSqeInfo sqeInfo = {runTask->stream->GetSqBaseAddr(), 0ULL};
+        ToConstructSqe(runTask, static_cast<void*>(command->sqe), sqeInfo);
+        SetExpectedTaskReportNum(runTask, runTask->sqeNum);
     } else {
         const errno_t ret = memset_s(&cmdLocal.cmdBuf.cmd, sizeof(rtCommand_t), 0, sizeof(rtCommand_t));
         COND_RETURN_VOID(

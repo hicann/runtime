@@ -10,6 +10,7 @@
 
 #include "runtime.hpp"
 #include "stars_david.hpp"
+#include "david_sqe_adapter.hpp"
 #include "error_code.h"
 #include "fusion_task.h"
 #include "runtime_task_manager.h"
@@ -238,13 +239,14 @@ void ConstructArch920xSqeForFusionKernelTask(TaskInfo* const taskInfo, void* con
         RT_LOG_INFO, "FusionTask, device_id=%u, stream_id=%d, task_id=%hu, task_sn=%u, sub_type=%hhu.",
         taskInfo->stream->Device_()->Id_(), taskInfo->stream->Id_(), taskInfo->id, taskInfo->taskSn,
         fusionKernelTask->sqeSubType);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 static bool FusionKernelTaskRegister()
 {
     TaskFuncSingle funcs = {
         .toCommandFunc = nullptr,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructArch920xSqeForFusionKernelTask,
         .doCompleteSuccFunc = &DoCompleteSuccessForFusionKernelTask,
         .taskUnInitFunc = &FusionKernelTaskUnInit,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -255,7 +257,6 @@ static bool FusionKernelTaskRegister()
 
     for (const auto chip : GetArch920xChips()) {
         RegTaskFunc(chip, TS_TASK_TYPE_FUSION_KERNEL, funcs);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_FUSION_KERNEL, &ConstructArch920xSqeForFusionKernelTask);
     }
     return true;
 }

@@ -19,7 +19,7 @@ static bool KernelFusionTaskRegister()
 {
     TaskFuncSingle funcs = {
         .toCommandFunc = &ToCommandBodyForKernelFusionTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeBase,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -31,9 +31,7 @@ static bool KernelFusionTaskRegister()
     const auto& chips = GetDavidChips();
     for (const auto chip : chips) {
         RegTaskFunc(chip, TS_TASK_TYPE_FUSION_ISSUE, funcs);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_FUSION_ISSUE, &ConstructDavidSqeBase);
     }
-
     return true;
 }
 

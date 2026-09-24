@@ -9,6 +9,7 @@
  */
 #include "../../rt_utest_api.hpp"
 #include "model_execute_task.h"
+#include "runtime_task_manager.h"
 
 TEST_F(ApiDavidTest, AllocTaskInfoForCapture_UpdateTask)
 {
@@ -88,7 +89,7 @@ TEST_F(StarsTaskTest, ModelExecute_memFree)
 
     TaskInfo* task = &mdlExecTask;
     rtStarsSqe_t command[3] = {};
-    ToConstructSqe(task, command);
+    ToConstructSqe(task, command, TaskSqeInfo{0ULL, 0ULL});
     EXPECT_EQ(ret, RT_ERROR_NONE);
     ret = FreeFuncCallHostMemAndSvmMem(task);
     EXPECT_EQ(ret, RT_ERROR_NONE);

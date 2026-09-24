@@ -136,10 +136,11 @@ void Construct2ndSqeForCaptureConditionTask(TaskInfo* taskInfo, rtStarsSqe_t* sq
     UNUSED(taskInfo);
     UNUSED(sqe);
 }
-void ConstructSqeForCaptureConditionTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+void ConstructSqeForCaptureConditionTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
     UNUSED(taskInfo);
-    UNUSED(command);
+    UNUSED(sqeBuffer);
+    UNUSED(sqeInfo);
 }
 void CaptureConditionTaskUnInit(TaskInfo* const taskInfo) { UNUSED(taskInfo); }
 bool IsUbDma(Stream* const stm, const uint32_t kind, const void* const srcAddr, const void* const desAddr)

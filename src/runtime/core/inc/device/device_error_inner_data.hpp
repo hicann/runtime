@@ -393,6 +393,7 @@ struct StarsSqeErrorInfo {
     uint32_t dieId;
     rtStarsCommonSqe_t sqe;
 };
+static_assert(sizeof(StarsSqeErrorInfo::sqe) == 64U, "StarsSqeErrorInfo::sqe must occupy 64 bytes");
 
 struct notifyErrorInfo {
     uint32_t notifyId;

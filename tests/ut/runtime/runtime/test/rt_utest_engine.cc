@@ -180,6 +180,25 @@ TEST_F(EngineTest, EngineSendingWait)
     delete kernel;
 }
 
+TEST_F(EngineTest, DirectHwtsSendTaskPreservesExpectedReportCount)
+{
+    DirectHwtsEngine engine(device_);
+    TaskInfo task = {};
+    task.type = TS_TASK_TYPE_KERNEL_AICORE;
+    task.stream = stream_;
+    // Use a sentinel to verify that the non-STARS send path preserves task initialization metadata.
+    task.pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].expectPackage = 7U;
+    uint16_t taskId = 0U;
+    Engine* const engineBase = &engine;
+    MOCKER_CPP_VIRTUAL(engineBase, &Engine::TryRecycleTask).stubs().will(returnValue(RT_ERROR_NONE));
+
+    const rtError_t error = engine.SendTask(&task, taskId);
+
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(task.sqeNum, 1U);
+    EXPECT_EQ(task.pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].expectPackage, 7U);
+}
+
 TEST_F(EngineTest, AddTaskToStream)
 {
     rtError_t err = RT_ERROR_NONE;
@@ -219,6 +238,39 @@ TEST_F(EngineTest, TaskSubmitSendingWait)
     MOCKER_CPP(&Stream::IsTaskLimited).stubs().will(returnValue(true)).then(returnValue(false));
     err = AllocTaskAndSendDc(&task, stream_, nullptr);
     EXPECT_EQ(err, RT_ERROR_INVALID_VALUE);
+}
+
+TEST_F(EngineTest, AllocTaskAndSendDcCachesSingleSqeAtSendBoundary)
+{
+    TaskInfo submitTask = {};
+    InitByStream(&submitTask, stream_);
+    submitTask.type = TS_TASK_TYPE_NOP;
+    submitTask.typeName = "NOP";
+    submitTask.sqeNum = 0U;
+
+    TaskInfo savedTask = {};
+    InitByStream(&savedTask, stream_);
+    savedTask.sqeNum = 3U;
+    std::mutex sqMutex;
+    TaskResManage taskResManage;
+    taskResManage.taskPoolNum_ = 2U;
+    TaskResManage* const oldTaskResManage = stream_->taskResMang_;
+    stream_->taskResMang_ = &taskResManage;
+    const ScopeGuard restoreTaskResManage([&]() { stream_->taskResMang_ = oldTaskResManage; });
+
+    MOCKER_CPP_VIRTUAL(engine_, &Engine::TryRecycleTask).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&StreamSqCqManage::GetSqMutex).stubs().will(returnValue(&sqMutex));
+    MOCKER_CPP(&TaskResManage::AllocTaskInfoByTaskResId).stubs().will(returnValue(&savedTask));
+    MOCKER(ToCommand).stubs();
+    MOCKER_CPP(&Engine::TryAddTaskToStream).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
+
+    const rtError_t error = AllocTaskAndSendDc(&submitTask, stream_, nullptr);
+    GlobalMockObject::verify();
+    GlobalMockObject::reset();
+
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(savedTask.sqeNum, 1U);
 }
 
 TEST_F(EngineTest, ReportExceptProcNotSupport)
@@ -1567,9 +1619,11 @@ TEST_F(EngineTest, GetKernelNameForAiCoreorAiv_workTask_null)
     GlobalMockObject::reset();
 }
 
-void ToConstructSqeStub(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+void ToConstructSqeStub(TaskInfo* taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
 {
-    (void)command;
+    (void)sqe;
+    (void)sqeInfo;
+    EXPECT_EQ(taskInfo->pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].expectPackage, 7U);
     taskInfo->errorCode = RT_ERROR_NONE;
 }
 
@@ -1584,10 +1638,48 @@ TEST_F(EngineTest, TaskToCommand_RT_TASK_COMMAND_TYPE_STARS_SQE)
     MOCKER(ToConstructSqe).stubs().will(invoke(ToConstructSqeStub));
     rtLogicReport_t report;
     TaskInfo task = {};
-    engine->TaskToCommand(&task, cmdLocal, nullptr);
+    task.stream = stream_;
+    task.sqeNum = 3U;
+    task.pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].expectPackage = 7U;
+    rtTsCmdSqBuf_t command = {};
+    engine->TaskToCommand(&task, cmdLocal, &command);
     EXPECT_EQ(task.errorCode, RT_ERROR_NONE);
+    EXPECT_EQ(task.pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].expectPackage, 3U);
     delete device;
     GlobalMockObject::reset();
+}
+
+void ProbeConstructSqeBeforeExpectedReportCount(TaskInfo* taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
+{
+    (void)sqe;
+    (void)sqeInfo;
+    EXPECT_EQ(taskInfo->sqeNum, 4U);
+    EXPECT_EQ(taskInfo->pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].expectPackage, 1U);
+    taskInfo->pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].expectPackage = 7U;
+}
+
+TEST_F(EngineTest, SendCommandStarsSetsPlatformExpectedReportCountAfterConstruction)
+{
+    RawDevice* const rawDevice = static_cast<RawDevice*>(device_);
+    const bool originalIsStars = rawDevice->properties_.isStars;
+    const ScopeGuard restoreIsStars([&]() { rawDevice->properties_.isStars = originalIsStars; });
+    rawDevice->properties_.isStars = true;
+
+    TaskInfo task = {};
+    task.stream = stream_;
+    task.type = TS_TASK_TYPE_MEM_WAIT_VALUE;
+    task.sqeNum = 4U;
+    task.pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].expectPackage = 1U;
+    rtTsCommand_t cmdLocal = {};
+    rtTsCmdSqBuf_t command = {};
+    constexpr uint32_t sendSqeNum = 4U;
+    MOCKER(ToConstructSqe).expects(once()).will(invoke(ProbeConstructSqeBeforeExpectedReportCount));
+    MOCKER(WaitExecFinish).stubs().will(returnValue(RT_ERRORCODE_BASE));
+
+    std::unique_ptr<Engine> engine = std::make_unique<AsyncHwtsEngine>(device_);
+    const rtError_t error = engine->SendCommand(&task, cmdLocal, &command, sendSqeNum);
+    EXPECT_EQ(error, RT_ERRORCODE_BASE);
+    EXPECT_EQ(task.pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].expectPackage, sendSqeNum);
 }
 
 TEST_F(EngineTest, SetReportSimuFlag_test)

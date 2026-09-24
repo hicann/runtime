@@ -19,7 +19,7 @@ static bool FftsPlusTaskRegister()
 {
     TaskFuncSingle funcs = {
         .toCommandFunc = nullptr,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeBase,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -31,9 +31,7 @@ static bool FftsPlusTaskRegister()
     const auto& chips = GetDavidChips();
     for (const auto chip : chips) {
         RegTaskFunc(chip, TS_TASK_TYPE_FFTS_PLUS, funcs);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_FFTS_PLUS, &ConstructDavidSqeBase);
     }
-
     return true;
 }
 

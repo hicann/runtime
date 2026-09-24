@@ -99,7 +99,7 @@ static rtError_t ReportLogicCq(
 
     const tsTaskType_t taskType = reportTask->type;
     RT_LOG(RT_LOG_DEBUG, "ReportLogicCq get taskType=%u.", taskType);
-    if ((taskType == TS_TASK_TYPE_MULTIPLE_TASK) && (GetSendDavidSqeNum(reportTask) > 1U)) {
+    if ((taskType == TS_TASK_TYPE_MULTIPLE_TASK) && (reportTask->sqeNum > 1U)) {
         if (!CompleteProcMultipleTaskReport(reportTask, report)) {
             RT_LOG(
                 RT_LOG_INFO, "MultipleTask not CompleteProc sqeType=%u, streamId=%u, taskId=%u.", report.sqeType,

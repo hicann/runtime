@@ -178,7 +178,7 @@ TEST_F(StarsTaskTest, StreamSwitch)
         EXPECT_EQ(ret, RT_ERROR_NONE);
         rtStarsSqe_t sqe = {};
         auto& streamSwitchSqe = sqe.fuctionCallSqe;
-        ToConstructSqe(&task, &sqe);
+        ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
         PrintErrorInfo(&task, dev_->Id_());
         TaskUnInitProc(&task);
     }
@@ -220,7 +220,7 @@ TEST_F(StarsTaskTest, StreamSwitchEx)
             EXPECT_EQ(ret, RT_ERROR_NONE);
             rtStarsSqe_t sqe = {};
             auto& streamSwitchExSqe = sqe.fuctionCallSqe;
-            ToConstructSqe(&task, &sqe);
+            ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
             TaskUnInitProc(&task);
         }
     }
@@ -242,14 +242,14 @@ TEST_F(StarsTaskTest, RdmaNoSink)
     TaskInfo* task = &rdmaNoSinkTask;
     rtStarsSqe_t command = {};
     RtStarsWriteValueSqe& sqe = command.writeValueSqe;
-    ToConstructSqe(task, &command);
+    ToConstructSqe(task, &command, TaskSqeInfo{0ULL, 0ULL});
     EXPECT_EQ(sqe.header.type, RT_STARS_SQE_TYPE_WRITE_VALUE);
     EXPECT_EQ(sqe.header.wr_cqe, 0);
     EXPECT_EQ(sqe.va, 0U);
     EXPECT_EQ(sqe.write_value_part0, dbInfo & MASK_32_BIT);
     EXPECT_EQ(sqe.write_value_part1, dbInfo >> UINT32_BIT_NUM);
 
-    ConstructSqeBase(&rdmaNoSinkTask, &command);
+    ConstructSqeBase(&rdmaNoSinkTask, &command, TaskSqeInfo{0ULL, 0ULL});
     EXPECT_EQ(command.phSqe.type, RT_STARS_SQE_TYPE_PLACE_HOLDER);
 }
 
@@ -292,7 +292,7 @@ TEST_F(StarsTaskTest, RdmaSink)
     TaskInfo* task1 = &rdmaSinkTask1;
     rtStarsSqe_t command1 = {};
     RtStarsRdmaSinkSqe1& sqe1 = command1.rdmaSinkSqe1;
-    ToConstructSqe(task1, &command1);
+    ToConstructSqe(task1, &command1, TaskSqeInfo{0ULL, 0ULL});
 
     EXPECT_EQ(sqe1.sqeHeader.type, RT_STARS_SQE_TYPE_COND);
     EXPECT_EQ(sqe1.sqeHeader.wr_cqe, 0U);
@@ -313,7 +313,7 @@ TEST_F(StarsTaskTest, RdmaSink)
     TaskInfo* task2 = &rdmaSinkTask2;
     rtStarsSqe_t command2 = {};
     RtStarsRdmaSinkSqe2& sqe2 = command2.rdmaSinkSqe2;
-    ToConstructSqe(task2, &command2);
+    ToConstructSqe(task2, &command2, TaskSqeInfo{0ULL, 0ULL});
     EXPECT_EQ(sqe2.sqeHeader.type, RT_STARS_SQE_TYPE_COND);
     EXPECT_EQ(sqe2.sqeHeader.wr_cqe, 0U);
     EXPECT_EQ(sqe2.sqeHeader.l1_lock, 0U);
@@ -359,7 +359,7 @@ TEST_F(StarsTaskTest, ModelExecute)
 
     TaskInfo* task = &mdlExecTask;
     rtStarsSqe_t command[3] = {};
-    ToConstructSqe(task, command);
+    ToConstructSqe(task, command, TaskSqeInfo{0ULL, 0ULL});
     EXPECT_NE(ret, RT_ERROR_NONE);
     TaskUnInitProc(task);
     ret = rtModelUnbindStream(model, headSreamHandle);
@@ -581,19 +581,19 @@ TEST_F(StarsTaskTest, ModelMaintaince)
 
     InitByStream(&maintainceTask, stream_);
     (void)ModelMaintainceTaskInit(&maintainceTask, MMT_STREAM_ADD, model, stream, RT_MODEL_HEAD_STREAM, 0U);
-    ToConstructSqe(task, &sqe);
+    ToConstructSqe(task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     EXPECT_EQ(sqe.phSqe.pre_p, 1U);
 
     (void)ModelMaintainceTaskInit(&maintainceTask, MMT_STREAM_LOAD_COMPLETE, model, stream, RT_MODEL_HEAD_STREAM, 0U);
-    ToConstructSqe(task, &sqe);
+    ToConstructSqe(task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     (void)ModelMaintainceTaskInit(&maintainceTask, MMT_MODEL_LOAD_COMPLETE, model, stream, RT_MODEL_HEAD_STREAM, 0U);
-    ToConstructSqe(task, &sqe);
+    ToConstructSqe(task, &sqe, TaskSqeInfo{0ULL, 0ULL});
 
     (void)ModelMaintainceTaskInit(&maintainceTask, MMT_MODEL_ABORT, model, stream, RT_MODEL_HEAD_STREAM, 0U);
-    ToConstructSqe(task, &sqe);
+    ToConstructSqe(task, &sqe, TaskSqeInfo{0ULL, 0ULL});
 
     (void)ModelMaintainceTaskInit(&maintainceTask, MMT_STREAM_DEL, model, stream, RT_MODEL_HEAD_STREAM, 0U);
-    ToConstructSqe(task, &sqe);
+    ToConstructSqe(task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     EXPECT_EQ(stream->GetBindFlag(), false);
     EXPECT_EQ(sqe.phSqe.pre_p, 1U);
 
@@ -611,7 +611,7 @@ TEST_F(StarsTaskTest, MaintainceTaskForceRecycle)
 
     InitByStream(&maintainceTask, stream_);
     (void)MaintenanceTaskInit(&maintainceTask, MT_STREAM_RECYCLE_TASK, 100U, 1U);
-    ToConstructSqe(task, &sqe);
+    ToConstructSqe(task, &sqe, TaskSqeInfo{0ULL, 0ULL});
 
     EXPECT_EQ(sqe.phSqe.pre_p, 1U);
 }
@@ -643,7 +643,7 @@ TEST_F(StarsTaskTest, WaitEndgraphError)
     InitByStream(&task, stream);
     ret = NotifyWaitTaskInit(&task, 0, 0, nullptr, nullptr, false);
     rtStarsSqe_t sqe;
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     uint32_t errorcode = 10;
 
     rtCqReport_t wait_cqe = {};
@@ -695,7 +695,7 @@ TEST_F(StarsTaskTest, DoCompleteStarsError)
     InitByStream(&task, stream);
     ret = NotifyWaitTaskInit(&task, 0, 0, nullptr, nullptr, false);
     rtStarsSqe_t sqe;
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     uint32_t errorcode = 10;
 
     rtCqReport_t wait_cqe = {};
@@ -764,7 +764,7 @@ TEST_F(StarsTaskTest, DoCompleteStarsError2)
     InitByStream(&task, stream);
     ret = NotifyWaitTaskInit(&task, 0, 0, nullptr, nullptr, false);
     rtStarsSqe_t sqe;
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     uint32_t errorcode = 10;
 
     rtCqReport_t wait_cqe = {};
@@ -821,7 +821,7 @@ TEST_F(StarsTaskTest, DoCompleteStarsError3)
     InitByStream(&task, stream);
     ret = NotifyWaitTaskInit(&task, 0, 0, nullptr, nullptr, false);
     rtStarsSqe_t sqe;
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     uint32_t errorcode = 10;
 
     rtCqReport_t wait_cqe = {};
@@ -897,7 +897,7 @@ TEST_F(StarsTaskTest, RingBufferMaintain)
     rtError_t ret = RingBufferMaintainTaskInit(&maintainceTask, (void*)0x100, 0, 10);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
-    ToConstructSqe(task, &sqe);
+    ToConstructSqe(task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     EXPECT_EQ(sqe.phSqe.pre_p, 1U);
 }
 
@@ -994,7 +994,7 @@ TEST_F(StarsTaskTest, OverflowSwitchSetTask)
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
     rtStarsSqe_t command = {};
-    ToConstructSqe(&tsk, &command);
+    ToConstructSqe(&tsk, &command, TaskSqeInfo{0ULL, 0ULL});
     EXPECT_EQ(ret, RT_ERROR_NONE);
     DeleteStream(stm);
 }
@@ -1061,15 +1061,15 @@ TEST_F(StarsTaskTest, WriteValueTaskTest)
     TaskInfo* writeValueTask = dev_->GetTaskFactory()->Alloc(stream_, TS_TASK_TYPE_WRITE_VALUE, ret);
     ret = WriteValueTaskInit(writeValueTask, addr, WRITE_VALUE_SIZE_32_BYTE, value, TASK_WR_CQE_NEVER);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    ToConstructSqe(writeValueTask, &cmd);
+    ToConstructSqe(writeValueTask, &cmd, TaskSqeInfo{0ULL, 0ULL});
 
     ret = WriteValueTaskInit(writeValueTask, addr, WRITE_VALUE_SIZE_32_BYTE, value, TASK_WR_CQE_DEFAULT);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    ToConstructSqe(writeValueTask, &cmd);
+    ToConstructSqe(writeValueTask, &cmd, TaskSqeInfo{0ULL, 0ULL});
 
     ret = WriteValueTaskInit(writeValueTask, addr, WRITE_VALUE_SIZE_32_BYTE, value, TASK_WR_CQE_ALWAYS);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    ToConstructSqe(writeValueTask, &cmd);
+    ToConstructSqe(writeValueTask, &cmd, TaskSqeInfo{0ULL, 0ULL});
 
     (void)dev_->GetTaskFactory()->Recycle(writeValueTask);
 }
@@ -1084,7 +1084,7 @@ TEST_F(StarsTaskTest, CaptureRecordExternalTaskBuildsWriteValuePtrSqe)
     task->type = TS_TASK_TYPE_CAPTURE_RECORD_EXTERNAL;
 
     rtStarsSqe_t sqe = {};
-    ToConstructSqe(task, &sqe);
+    ToConstructSqe(task, &sqe, TaskSqeInfo{0ULL, 0ULL});
 
     EXPECT_EQ(sqe.writeValuePtrSqe.header.type, RT_STARS_SQE_TYPE_WRITE_VALUE);
     EXPECT_EQ(sqe.writeValuePtrSqe.ptr_mode, 1U);
@@ -1117,7 +1117,7 @@ TEST_F(StarsTaskTest, NotifyIpcTaskHccsTest)
         .expects(once())
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&topologyType, sizeof(topologyType)))
         .will(returnValue(RT_ERROR_NONE));
-    ToConstructSqe(task, &sqe);
+    ToConstructSqe(task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     uint64_t addr = (uint64_t)sqe.writeValueSqe.write_addr_high << 32 | sqe.writeValueSqe.write_addr_low;
     EXPECT_EQ(addr & RT_STARS_BASE_ADDR, RT_STARS_BASE_ADDR);
     delete single_notify;
@@ -1143,7 +1143,7 @@ TEST_F(StarsTaskTest, NotifyIpcTaskPixTest)
         .expects(once())
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&topologyType, sizeof(topologyType)))
         .will(returnValue(RT_ERROR_NONE));
-    ToConstructSqe(task, &sqe);
+    ToConstructSqe(task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     uint64_t addr = (uint64_t)sqe.writeValueSqe.write_addr_high << 32 | sqe.writeValueSqe.write_addr_low;
     EXPECT_EQ(addr & RT_STARS_PCIE_BASE_ADDR, RT_STARS_PCIE_BASE_ADDR);
     delete single_notify;
@@ -1169,7 +1169,7 @@ TEST_F(StarsTaskTest, NotifyIpcTaskErrTest)
         .expects(once())
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&topologyType, sizeof(topologyType)))
         .will(returnValue(RT_ERROR_NONE));
-    ToConstructSqe(task, &sqe);
+    ToConstructSqe(task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     uint64_t addr = (uint64_t)sqe.writeValueSqe.write_addr_high << 32 | sqe.writeValueSqe.write_addr_low;
     EXPECT_EQ(addr, 0);
     delete single_notify;
@@ -1186,7 +1186,7 @@ TEST_F(StarsTaskTest, NotifyIpcTaskErrTestDevid64)
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
     rtStarsSqe_t sqe = {};
-    ToConstructSqe(&ntyRecordTask, &sqe);
+    ToConstructSqe(&ntyRecordTask, &sqe, TaskSqeInfo{0ULL, 0ULL});
     delete single_notify;
 }
 
@@ -1318,7 +1318,7 @@ TEST_F(StarsTaskTest, stars_label_switch_by_index)
     rtStarsSqe_t sqe;
     InitByStream(&task, streamObj);
     error = StreamLabelSwitchByIndexTaskInit(&task, (void*)&ptr, max, (void*)labelInfoPtr);
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     error = rtLabelDestroy(label);
     EXPECT_EQ(error, RT_ERROR_NONE);
     TaskUnInitProc(&task);
@@ -1352,11 +1352,11 @@ TEST_F(StarsTaskTest, stars_wait_env)
     rtStarsSqe_t sqe;
     InitByStream(&task, streamObj);
     NotifyWaitTaskInit(&task, 0, 0, nullptr, nullptr, false);
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
 
     InitByStream(&waittask, streamObj);
     EventWaitTaskInit(&waittask, &evt, event_id, 0, 0);
-    ToConstructSqe(&waittask, &sqe);
+    ToConstructSqe(&waittask, &sqe, TaskSqeInfo{0ULL, 0ULL});
     waittask.u.eventWaitTaskInfo.event->DeleteWaitFromMap(&waittask);
 
     rtStreamDestroy(stream);
@@ -1469,7 +1469,7 @@ TEST_F(StarsTaskTest, StarsVersionTask)
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
     rtStarsSqe_t command = {};
-    ToConstructSqe(&starsVersionTask, &command);
+    ToConstructSqe(&starsVersionTask, &command, TaskSqeInfo{0ULL, 0ULL});
 
     RtStarsPhSqe* const sqe = &(command.phSqe);
 
@@ -1539,16 +1539,16 @@ TEST_F(StarsTaskTest, HCCLFftsPlusTaskInitTest2)
     task.u.fftsPlusTask.errInfo = ss;
     FftsPlusTaskInit(&task, &fftsPlusTaskInfo, 0);
     EXPECT_EQ(task.type, TS_TASK_TYPE_FFTS_PLUS);
-    ToConstructSqe(&task, &cmd);
+    ToConstructSqe(&task, &cmd, TaskSqeInfo{0ULL, 0ULL});
     stream->hcclIndex_ = 0xFFFFU;
-    ToConstructSqe(&task, &cmd);
+    ToConstructSqe(&task, &cmd, TaskSqeInfo{0ULL, 0ULL});
     MOCKER_CPP_VIRTUAL(dev_, &Device::AllocHcclIndex).stubs().will(returnValue(false));
     stream->hcclIndex_ = 0xFFFFU;
-    ToConstructSqe(&task, &cmd);
+    ToConstructSqe(&task, &cmd, TaskSqeInfo{0ULL, 0ULL});
     fftsSqe.subType = 0U;
     FftsPlusTaskInit(&task, &fftsPlusTaskInfo, 0);
     EXPECT_EQ(task.type, TS_TASK_TYPE_FFTS_PLUS);
-    ToConstructSqe(&task, &cmd);
+    ToConstructSqe(&task, &cmd, TaskSqeInfo{0ULL, 0ULL});
     stream->hcclIndex_ = 0x0U;
     rtStreamDestroy(stm);
     dev_->FreeHcclIndex(0);
@@ -1579,7 +1579,7 @@ TEST_F(StarsTaskTest, SameTaskIdForAll)
     task.u.fftsPlusTask.errInfo = ss;
     FftsPlusTaskInit(&task, &fftsPlusTaskInfo, 0);
     EXPECT_EQ(task.type, TS_TASK_TYPE_FFTS_PLUS);
-    ToConstructSqe(&task, &cmd);
+    ToConstructSqe(&task, &cmd, TaskSqeInfo{0ULL, 0ULL});
     rtStreamDestroy(stm);
     dev_->SetTschVersion(0);
     free((void*)fftsPlusTaskInfo.descBuf);
@@ -1629,7 +1629,7 @@ TEST_F(StarsTaskTest, streamclear_ConstructSqe)
     cmdInfo.step = RT_STREAM_STOP;
     CommonCmdTaskInit(task, PhCmdType::CMD_STREAM_CLEAR, &cmdInfo);
     EXPECT_EQ(task->type, TS_TASK_TYPE_COMMON_CMD);
-    ToConstructSqe(task, &cmd);
+    ToConstructSqe(task, &cmd, TaskSqeInfo{0ULL, 0ULL});
     Complete(task, 0);
     (void)dev_->GetTaskFactory()->Recycle(task);
 }
@@ -1644,7 +1644,7 @@ TEST_F(StarsTaskTest, notifyreset_ConstructSqe)
     cmdInfo.notifyId = 1;
     CommonCmdTaskInit(task, PhCmdType::CMD_NOTIFY_RESET, &cmdInfo);
     EXPECT_EQ(task->type, TS_TASK_TYPE_COMMON_CMD);
-    ToConstructSqe(task, &cmd);
+    ToConstructSqe(task, &cmd, TaskSqeInfo{0ULL, 0ULL});
     Complete(task, 0);
     (void)dev_->GetTaskFactory()->Recycle(task);
 }
@@ -1776,7 +1776,7 @@ TEST_F(StarsTaskTest, DoCompleteStarsError_1)
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
     rtStarsSqe_t sqe;
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     uint32_t errorcode = 10;
 
     rtCqReport_t wait_cqe = {};
@@ -1842,13 +1842,13 @@ TEST_F(StarsTaskTest, SQE_SET_SchedMode)
     taskcfg.isBaseValid = 1;
     taskcfg.base.schemMode = RT_SCHEM_MODE_NORMAL;
     AicTaskInit(&taskInfo, k1, k1->GetKernelAttrType(), 1, &taskcfg, false);
-    ConstructAicAivSqeForDavinciTask(&taskInfo, &sqe);
+    ConstructAicAivSqeForDavinciTask(&taskInfo, &sqe, TaskSqeInfo{0ULL, 0ULL});
     EXPECT_EQ(sqe.fftsPlusKernelSqe.schem, RT_SCHEM_MODE_NORMAL);
 
     // 优先级配置校验2
     k1->SetSchedMode(RT_SCHEM_MODE_BATCH);
     AicTaskInit(&taskInfo, k1, k1->GetKernelAttrType(), 1, nullptr, false);
-    ConstructAicAivSqeForDavinciTask(&taskInfo, &sqe);
+    ConstructAicAivSqeForDavinciTask(&taskInfo, &sqe, TaskSqeInfo{0ULL, 0ULL});
     EXPECT_EQ(sqe.fftsPlusKernelSqe.schem, RT_SCHEM_MODE_BATCH);
 
     rtStreamDestroy(stream);
@@ -1883,17 +1883,17 @@ TEST_F(StarsTaskTest, SchedMode_CheckBlockDim)
 
     // blockDim校验
     taskInfo.u.aicTaskInfo.comm.dim = 10;
-    ConstructAicAivSqeForDavinciTask(&taskInfo, &sqe);
+    ConstructAicAivSqeForDavinciTask(&taskInfo, &sqe, TaskSqeInfo{0ULL, 0ULL});
 
     // sqeType
     k1->SetKernelAttrType(RT_KERNEL_ATTR_TYPE_VECTOR);
-    ConstructAicAivSqeForDavinciTask(&taskInfo, &sqe);
+    ConstructAicAivSqeForDavinciTask(&taskInfo, &sqe, TaskSqeInfo{0ULL, 0ULL});
 
     k1->SetKernelAttrType(RT_KERNEL_ATTR_TYPE_AICORE);
-    ConstructAicAivSqeForDavinciTask(&taskInfo, &sqe);
+    ConstructAicAivSqeForDavinciTask(&taskInfo, &sqe, TaskSqeInfo{0ULL, 0ULL});
 
     k1->SetKernelAttrType(static_cast<rtKernelAttrType>(static_cast<rtKernelAttrType>(RT_KERNEL_ATTR_TYPE_INVALID)));
-    ConstructAicAivSqeForDavinciTask(&taskInfo, &sqe);
+    ConstructAicAivSqeForDavinciTask(&taskInfo, &sqe, TaskSqeInfo{0ULL, 0ULL});
 
     rtFftsPlusMixAicAivCtx_t fftsCtx;
     fftsCtx.contextType = RT_CTX_TYPE_MIX_AIC;

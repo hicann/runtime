@@ -11,6 +11,7 @@
 #include "stream.hpp"
 #include "runtime.hpp"
 #include "stars_david.hpp"
+#include "david_sqe_adapter.hpp"
 #include "model_graph_task.h"
 #include "runtime_task_manager.h"
 
@@ -71,6 +72,7 @@ static void ConstructDavidSqeForAddEndGraphTask(TaskInfo* const taskInfo, void* 
         "task_id=%hu, task_sn=%u.",
         static_cast<uint32_t>(aicpuKernelSqe->topicType), taskInfo->stream->Device_()->Id_(), stm->Id_(), taskInfo->id,
         taskInfo->taskSn);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 #endif
@@ -79,7 +81,7 @@ static bool ModelGraphTaskRegister()
 {
     TaskFuncSingle endGraphFuncs = {
         .toCommandFunc = &ToCmdBodyForAddEndGraphTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForAddEndGraphTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -89,7 +91,7 @@ static bool ModelGraphTaskRegister()
     };
     TaskFuncSingle exitGraphFuncs = {
         .toCommandFunc = &ToCmdBodyForAddModelExitTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeBase,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -102,10 +104,7 @@ static bool ModelGraphTaskRegister()
     for (const auto chip : chips) {
         RegTaskFunc(chip, TS_TASK_TYPE_MODEL_END_GRAPH, endGraphFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_MODEL_EXIT_GRAPH, exitGraphFuncs);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_MODEL_END_GRAPH, &ConstructDavidSqeForAddEndGraphTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_MODEL_EXIT_GRAPH, &ConstructDavidSqeBase);
     }
-
     return true;
 }
 

@@ -60,6 +60,7 @@ add_executable(runtime_utest_task_david
     rt_utest_david_customer_stack_size.cc 
     rt_utest_memory_corruption.cc
     rt_utest_aclgraph_ub.cc
+    ${TOP_DIR}/tests/ut/runtime/runtime/test/rt_utest_task_sqe.cc
 )
 
 target_compile_definitions(runtime_utest_task_david PUBLIC

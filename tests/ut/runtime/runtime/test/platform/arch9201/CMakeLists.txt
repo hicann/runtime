@@ -23,6 +23,7 @@ add_executable(runtime_utest_arch9201
     rt_utest_arch9201_stream.cc
     rt_utest_arch9201_die.cc
     rt_utest_macro_value.cc
+    ${TOP_DIR}/tests/ut/runtime/runtime/test/rt_utest_task_sqe.cc
 )
 
 target_compile_definitions(runtime_utest_arch9201 PUBLIC

@@ -41,6 +41,7 @@ namespace cce {
 namespace runtime {
 
 TaskFuncArrays g_taskFuncArrays[CHIP_END] = {};
+PfnTaskSqeHeaderPostProc g_taskSqeHeaderPostProcRunningFunc = g_taskFuncArrays[CHIP_BEGIN].sqeHeaderPostProcFunc;
 
 static PfnTaskToCmd* g_toCommandFunc = g_taskFuncArrays[CHIP_BEGIN].toCommandFunc;
 static PfnTaskToSqe* g_toSqeFunc = g_taskFuncArrays[CHIP_BEGIN].toSqeFunc;
@@ -212,7 +213,7 @@ void PrintSqe(const rtStarsSqe_t* const sqe, const char* desc)
     }
 
     const uint32_t* const cmd = RtPtrToPtr<const uint32_t*>(sqe);
-    for (size_t i = 0UL; i < (sizeof(rtStarsSqe_t) / sizeof(uint32_t)); i += 8U) {
+    for (size_t i = 0UL; i < (sizeof(*sqe) / sizeof(*cmd)); i += 8U) {
         RT_LOG(
             RT_LOG_DEBUG, "%s: %08x %08x %08x %08x %08x %08x %08x %08x", desc, cmd[i], cmd[i + 1U], cmd[i + 2U],
             cmd[i + 3U], cmd[i + 4U], cmd[i + 5U], cmd[i + 6U], cmd[i + 7U]);
@@ -233,7 +234,7 @@ void SetStarsResult(TaskInfo* taskInfo, const rtCqReport_t& logicCq)
 void PrintErrorSqe(const rtStarsSqe_t* const sqe, const char_t* desc)
 {
     const uint32_t* const cmd = RtPtrToPtr<const uint32_t*>(sqe);
-    for (size_t i = 0UL; i < (sizeof(rtStarsSqe_t) / sizeof(uint32_t)); i += 8U) {
+    for (size_t i = 0UL; i < (sizeof(*sqe) / sizeof(*cmd)); i += 8U) {
         RT_LOG(
             RT_LOG_ERROR, "%s: %08x %08x %08x %08x %08x %08x %08x %08x", desc, cmd[i], cmd[i + 1U], cmd[i + 2U],
             cmd[i + 3U], cmd[i + 4U], cmd[i + 5U], cmd[i + 6U], cmd[i + 7U]);
@@ -321,14 +322,14 @@ void SetTaskTag(TaskInfo* taskInfo)
         return;
     }
 
-    if (ThreadLocalContainer::IsTaskTagValid()) {
-        std::string taskTag;
-        ThreadLocalContainer::GetTaskTag(taskTag);
-        taskInfo->stream->AddTaskTag(taskInfo->id, taskTag);
-
-        // reset after use.
-        ThreadLocalContainer::ResetTaskTag();
+    if (!ThreadLocalContainer::IsTaskTagValid()) {
+        return;
     }
+
+    std::string taskTag;
+    ThreadLocalContainer::GetTaskTag(taskTag);
+    taskInfo->stream->AddTaskTag(taskInfo->id, taskTag);
+    ThreadLocalContainer::ResetTaskTag();
 }
 
 rtError_t WaitExecFinish(const TaskInfo* taskInfo)
@@ -851,18 +852,14 @@ void ToCommand(TaskInfo* taskInfo, rtCommand_t* const command)
     }
 }
 
-void ToConstructSqe(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+void ToConstructSqe(TaskInfo* taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
 {
     // same as ToCommand
     taskInfo->bindFlag = taskInfo->stream->GetBindFlag();
 
-    const uint32_t sendSqeNum = GetSendSqeNum(taskInfo);
     if (g_toSqeFunc[taskInfo->type] != nullptr) {
-        g_toSqeFunc[taskInfo->type](taskInfo, command);
+        g_toSqeFunc[taskInfo->type](taskInfo, sqe, sqeInfo);
     }
-
-    // set expect cqe_num after sqe construction which will be checked before task recly
-    taskInfo->pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].expectPackage = static_cast<uint16_t>(sendSqeNum);
 }
 
 TaskInfo* GetRealReportFaultTask(TaskInfo* taskInfo, const void* info)
@@ -924,17 +921,24 @@ void SetSqPos(TaskInfo* taskInfo, const uint32_t pos)
     }
 }
 
-void TaskCommonInfoInit(TaskInfo* taskInfo)
+// Reset fields shared by normal task initialization and pooled-task save.
+static inline void TaskCommonFieldsInit(TaskInfo* const taskInfo)
 {
     taskInfo->pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].packageReportNum = 1U;
     taskInfo->pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].expectPackage = 1U;
     taskInfo->pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].receivePackage = 0U;
     taskInfo->isValidInO1 = false;
-    taskInfo->needPostProc = false;
-    taskInfo->stmArgPos = UINT32_MAX;
     taskInfo->mte_error = 0; // init mte_error
     taskInfo->isNoRingbuffer = 0U;
     taskInfo->enableProfiling = 0U;
+}
+
+void TaskCommonInfoInit(TaskInfo* taskInfo)
+{
+    TaskCommonFieldsInit(taskInfo);
+    taskInfo->needPostProc = false;
+    taskInfo->stmArgPos = UINT32_MAX;
+
     /* if old process, set taskTag */
     if (taskInfo->stream->taskResMang_ == nullptr) {
         SetTaskTag(taskInfo);
@@ -955,7 +959,8 @@ void SaveTaskInfo(TaskInfo* const taskInfo, TaskInfo* submitTask)
     taskInfo->u = submitTask->u;
     taskInfo->taskOwner = submitTask->taskOwner;
 
-    TaskCommonInfoInit(taskInfo);
+    TaskCommonFieldsInit(taskInfo);
+    taskInfo->sqeNum = submitTask->sqeNum;
     taskInfo->needPostProc = submitTask->needPostProc;
     taskInfo->stmArgPos = submitTask->stmArgPos;
 
@@ -1029,6 +1034,16 @@ void RegTaskFunc(rtChipType_t chipType, tsTaskType_t taskType, const TaskFuncSin
     return;
 }
 
+void RegTaskSqeHeaderPostProcFunc(rtChipType_t chipType, PfnTaskSqeHeaderPostProc func)
+{
+    if (chipType < CHIP_BEGIN || chipType >= CHIP_END) {
+        RT_LOG(RT_LOG_ERROR, "Invalid chipType=UNKNOWN(%d), valid range: [%d, %d).", chipType, CHIP_BEGIN, CHIP_END);
+        return;
+    }
+
+    g_taskFuncArrays[chipType].sqeHeaderPostProcFunc = func;
+}
+
 void RefreshTaskFuncPointer(rtChipType_t chipType)
 {
     if (chipType < CHIP_BEGIN || chipType >= CHIP_END) {
@@ -1053,8 +1068,7 @@ void RefreshTaskFuncPointer(rtChipType_t chipType)
     g_printErrorInfoFunc = arrays.printErrorInfoFunc;
     g_setResultFunc = arrays.setResultFunc;
     g_setStarsResultFunc = arrays.setStarsResultFunc;
-
-    RefreshDavidSqeRunningFunc(chipType);
+    g_taskSqeHeaderPostProcRunningFunc = arrays.sqeHeaderPostProcFunc;
 
     RT_LOG(RT_LOG_INFO, "Task func pointer refreshed to chip type: %d", chipType);
 }

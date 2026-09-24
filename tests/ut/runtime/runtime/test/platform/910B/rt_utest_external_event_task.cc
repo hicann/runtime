@@ -755,6 +755,8 @@ TEST_F(ExternalEventTaskTest910B, ExternalTaskSqeBuildSkipsNullBuffer)
     MOCKER_CPP_VIRTUAL(captureStream->Device_()->Driver_(), &Driver::MemCopySync)
         .stubs()
         .will(returnValue(RT_ERROR_NONE));
+    taskInfo.sqeNum = MEM_WAIT_V2_SQE_NUM;
+    captureStream->SetSqeBufferSize(sizeof(sqeBuffer));
     EXPECT_EQ(UpdateHostSqeBufferByTask(&taskInfo), RT_ERROR_NONE);
     EXPECT_EQ(GetSendSqeNum(&taskInfo), MEM_WAIT_V2_SQE_NUM);
     const size_t untouchedOffset = sizeof(rtStarsSqe_t) * MEM_WAIT_V2_SQE_NUM;
@@ -782,9 +784,10 @@ TEST_F(ExternalEventTaskTest910B, ExternalWaitPlaceholderSqeSkipsFuncCallCopy)
     taskInfo.stream = streamObj;
     taskInfo.type = TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL;
     taskInfo.typeName = "CAPTURE_WAIT_EXTERNAL";
+    taskInfo.sqeNum = static_cast<uint8_t>(GetSendSqeNum(&taskInfo));
     rtStarsSqe_t sqes[MEM_WAIT_V2_SQE_NUM] = {};
     MOCKER_CPP_VIRTUAL(streamObj->Device_()->Driver_(), &Driver::MemCopySync).expects(never());
-    ToConstructSqe(&taskInfo, sqes);
+    ToConstructSqe(&taskInfo, sqes, TaskSqeInfo{0ULL, 0ULL});
     for (uint32_t i = 0U; i < MEM_WAIT_V2_SQE_NUM; ++i) {
         EXPECT_EQ(sqes[i].phSqe.type, RT_STARS_SQE_TYPE_PLACE_HOLDER);
         EXPECT_EQ(sqes[i].phSqe.task_type, TS_TASK_TYPE_NOP);

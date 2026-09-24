@@ -88,6 +88,8 @@
 #include "runtime/rt_inner_model.h"
 #include "capture_model_utils.hpp"
 #include "aic_aiv_sqe_common.hpp"
+#include "david_sqe_adapter.hpp"
+#include "davinci_multiple_task.h"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -156,6 +158,45 @@ rtError_t DavidSendAicpuTaskStub(TaskInfo* task, Stream* stream)
     }
     return RT_ERROR_NONE;
 }
+
+class TaskTagStateGuard {
+public:
+    TaskTagStateGuard(Stream* const stream, const uint16_t taskId)
+        : runtime_(Runtime::Instance()),
+          stream_(stream),
+          taskId_(taskId),
+          oldCollectFlag_(runtime_->GetNpuCollectFlag()),
+          oldStreamTaskTag_(stream_->GetTaskTag(taskId))
+    {
+        ThreadLocalContainer::GetTaskTag(oldThreadTaskTag_);
+        ThreadLocalContainer::ResetTaskTag();
+        stream_->DelTaskTag(taskId_);
+    }
+
+    ~TaskTagStateGuard()
+    {
+        runtime_->SetNpuCollectFlag(oldCollectFlag_);
+        ThreadLocalContainer::ResetTaskTag();
+        if (!oldThreadTaskTag_.empty()) {
+            (void)ThreadLocalContainer::SetTaskTag(oldThreadTaskTag_.c_str());
+        }
+        if (oldStreamTaskTag_.empty()) {
+            stream_->DelTaskTag(taskId_);
+        } else {
+            stream_->AddTaskTag(taskId_, oldStreamTaskTag_);
+        }
+    }
+
+    Runtime* RuntimeInstance() const { return runtime_; }
+
+private:
+    Runtime* const runtime_;
+    Stream* const stream_;
+    const uint16_t taskId_;
+    const bool oldCollectFlag_;
+    std::string oldThreadTaskTag_;
+    const std::string oldStreamTaskTag_;
+};
 
 } // namespace
 
@@ -289,6 +330,24 @@ public:
     Engine* engine_ = nullptr;
     rtStream_t streamHandle_ = 0;
 };
+
+TEST_F(TaskTestDavid, SaveTaskCommonInfoConsumesTaskTagAndSetsMetadata)
+{
+    constexpr uint16_t taskId = UINT16_MAX - 5U;
+    TaskTagStateGuard guard(stream_, taskId);
+    TaskInfo savedTask = {};
+    savedTask.id = taskId;
+
+    guard.RuntimeInstance()->SetNpuCollectFlag(true);
+    ASSERT_EQ(rtSetTaskTag("save_task_common_info"), RT_ERROR_NONE);
+    SaveTaskCommonInfo(&savedTask, stream_, 3U);
+
+    EXPECT_EQ(savedTask.stream, stream_);
+    EXPECT_EQ(savedTask.id, taskId);
+    EXPECT_EQ(savedTask.sqeNum, 3U);
+    EXPECT_EQ(stream_->GetTaskTag(taskId), "save_task_common_info");
+    EXPECT_FALSE(ThreadLocalContainer::IsTaskTagValid());
+}
 
 TEST_F(TaskTestDavid, TestDavidModelMaintainceTaskInit)
 {
@@ -845,6 +904,115 @@ TEST_F(TaskTestDavid, DebugReadAICore_l1_boundary)
     ApiImplDavid api;
     EXPECT_EQ(api.DebugReadAICore(&param), RT_ERROR_INVALID_VALUE);
     GlobalMockObject::verify();
+}
+
+TEST_F(TaskTestDavid, DavidAndArch920xShareRegistryContractWithSpecializedLeaves)
+{
+    const TaskFuncArrays& arch9201Funcs = g_taskFuncArrays[CHIP_CLOUD_V5];
+    const TaskFuncArrays& arch9202Funcs = g_taskFuncArrays[CHIP_CLOUD_V6];
+    for (const tsTaskType_t taskType :
+         {TS_TASK_TYPE_KERNEL_AICPU, TS_TASK_TYPE_KERNEL_AICORE, TS_TASK_TYPE_KERNEL_AIVEC, TS_TASK_TYPE_CMO,
+          TS_TASK_TYPE_FUSION_KERNEL}) {
+        ASSERT_NE(arch9201Funcs.toSqeFunc[taskType], nullptr);
+        EXPECT_EQ(arch9202Funcs.toSqeFunc[taskType], arch9201Funcs.toSqeFunc[taskType]);
+    }
+    ASSERT_NE(arch9201Funcs.sqeHeaderPostProcFunc, nullptr);
+    EXPECT_EQ(arch9202Funcs.sqeHeaderPostProcFunc, arch9201Funcs.sqeHeaderPostProcFunc);
+
+    EXPECT_EQ(
+        g_taskFuncArrays[CHIP_CLOUD_V5].toSqeFunc[TS_TASK_TYPE_KERNEL_AICPU],
+        g_taskFuncArrays[CHIP_DAVID].toSqeFunc[TS_TASK_TYPE_KERNEL_AICPU]);
+    EXPECT_NE(
+        g_taskFuncArrays[CHIP_CLOUD_V5].toSqeFunc[TS_TASK_TYPE_KERNEL_AICORE],
+        g_taskFuncArrays[CHIP_DAVID].toSqeFunc[TS_TASK_TYPE_KERNEL_AICORE]);
+    EXPECT_NE(
+        g_taskFuncArrays[CHIP_CLOUD_V5].toSqeFunc[TS_TASK_TYPE_KERNEL_AIVEC],
+        g_taskFuncArrays[CHIP_DAVID].toSqeFunc[TS_TASK_TYPE_KERNEL_AIVEC]);
+    EXPECT_NE(
+        g_taskFuncArrays[CHIP_CLOUD_V5].toSqeFunc[TS_TASK_TYPE_CMO],
+        g_taskFuncArrays[CHIP_DAVID].toSqeFunc[TS_TASK_TYPE_CMO]);
+    EXPECT_NE(
+        g_taskFuncArrays[CHIP_CLOUD_V5].toSqeFunc[TS_TASK_TYPE_FUSION_KERNEL],
+        g_taskFuncArrays[CHIP_DAVID].toSqeFunc[TS_TASK_TYPE_FUSION_KERNEL]);
+    EXPECT_EQ(
+        g_taskFuncArrays[CHIP_CLOUD_V5].toSqeFunc[TS_TASK_TYPE_KERNEL_AICORE],
+        g_taskFuncArrays[CHIP_CLOUD_V5].toSqeFunc[TS_TASK_TYPE_KERNEL_AIVEC]);
+
+    const PfnTaskToSqe davidConstruct = g_taskFuncArrays[CHIP_DAVID].toSqeFunc[TS_TASK_TYPE_PROFILING_ENABLE];
+    const PfnTaskToSqe arch920xConstruct = g_taskFuncArrays[CHIP_CLOUD_V6].toSqeFunc[TS_TASK_TYPE_PROFILING_ENABLE];
+    ASSERT_NE(davidConstruct, nullptr);
+    ASSERT_NE(arch920xConstruct, nullptr);
+    EXPECT_EQ(arch920xConstruct, davidConstruct);
+
+    TaskInfo task = {};
+    InitByStream(&task, stream_);
+    task.type = TS_TASK_TYPE_PROFILING_ENABLE;
+    task.sqeNum = 1U;
+    task.u.profilingEnableTaskInfo.pid = 0x1234U;
+    task.u.profilingEnableTaskInfo.isTaskBasedProfEn = 1U;
+    task.u.profilingEnableTaskInfo.isHwtsLogEn = 1U;
+    TaskSqeBuffer sqeBuffer = {};
+    const TaskSqeInfo sqeInfo = {0ULL, 0ULL};
+
+    arch920xConstruct(&task, sqeBuffer.data, sqeInfo);
+
+    const rtDavidSqe_t* const sqe = reinterpret_cast<const rtDavidSqe_t*>(sqeBuffer.data);
+    EXPECT_EQ(sqe->phSqe.header.type, RT_DAVID_SQE_TYPE_PLACE_HOLDER);
+    EXPECT_EQ(sqe->phSqe.taskType, TS_TASK_TYPE_PROFILER_DYNAMIC_ENABLE);
+    EXPECT_EQ(sqe->phSqe.u.dynamicProfilingInfo.pid, 0x1234U);
+    EXPECT_EQ(sqe->phSqe.u.dynamicProfilingInfo.isTaskBasedProfEn, 1U);
+    EXPECT_EQ(sqe->phSqe.u.dynamicProfilingInfo.isSocLogEn, 1U);
+}
+
+TEST_F(TaskTestDavid, DavidSqeFinalizePreservesNormalizedExpectedPackage)
+{
+    TaskInfo task = {};
+    InitByStream(&task, stream_);
+    task.type = TS_TASK_TYPE_MULTIPLE_TASK;
+    task.sqeNum = 3U;
+    task.u.davinciMultiTaskInfo.sqeNum = 1U;
+    task.pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].expectPackage = 3U;
+    rtDavidSqe_t sqe = {};
+
+    UpdateDavidSqeHeadUpdate(&task, &sqe);
+
+    EXPECT_EQ(task.sqeNum, 3U);
+    EXPECT_EQ(task.pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].expectPackage, 3U);
+}
+
+TEST_F(TaskTestDavid, DavinciMultipleTaskInitDoesNotCreateSendSnapshot)
+{
+    constexpr uint32_t sqeNum = 3U;
+    rtTaskDesc_t taskDesc[sqeNum] = {};
+    rtMultipleTaskInfo_t multipleTaskInfo = {};
+    multipleTaskInfo.taskNum = sqeNum;
+    multipleTaskInfo.taskDesc = taskDesc;
+    TaskInfo task = {};
+    InitByStream(&task, stream_);
+    task.sqeNum = 0U;
+
+    ASSERT_EQ(DavinciMultipleTaskInit(&task, &multipleTaskInfo, 0U), RT_ERROR_NONE);
+    EXPECT_EQ(task.sqeNum, 0U);
+    EXPECT_EQ(task.pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].expectPackage, 1U);
+    EXPECT_EQ(task.u.davinciMultiTaskInfo.sqeNum, sqeNum);
+
+    delete task.u.davinciMultiTaskInfo.cmdListVec;
+    task.u.davinciMultiTaskInfo.cmdListVec = nullptr;
+    delete task.u.davinciMultiTaskInfo.argHandleVec;
+    task.u.davinciMultiTaskInfo.argHandleVec = nullptr;
+}
+
+TEST_F(TaskTestDavid, SetExpectedTaskReportNumUsesDavidReportSemantics)
+{
+    TaskInfo task = {};
+    task.type = TS_TASK_TYPE_MEM_WAIT_VALUE;
+    task.pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].expectPackage = 7U;
+    SetExpectedTaskReportNum(&task, MEM_WAIT_V2_SQE_NUM);
+    EXPECT_EQ(task.pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].expectPackage, 7U);
+
+    task.type = TS_TASK_TYPE_MULTIPLE_TASK;
+    SetExpectedTaskReportNum(&task, 4U);
+    EXPECT_EQ(task.pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].expectPackage, 4U);
 }
 
 TEST_F(TaskTestDavid, read_aicore_mem)
@@ -2364,10 +2532,6 @@ TEST_F(TaskTestDavid, StreamSetupTryAlloc)
 
     error = deviceSqCqPool->GetSqCqPoolFreeResNum();
     EXPECT_EQ(error, 0U);
-    MOCKER(ConstructDavidSqeForNotifyRecordTask).stubs().will(returnValue(RT_ERROR_NONE));
-    TaskInfo taskInfo = {0};
-    uint8_t sqeMem[RT_STARS_SQE_LEN] = {0};
-    ConstructStarsSqeForNotifyRecordTask(&taskInfo, sqeMem);
 }
 
 TEST_F(TaskTestDavid, rtCacheLastTaskExtendInfo_debug_json_success_950)
@@ -2455,6 +2619,25 @@ static drvError_t stubHalAsyncDmaDestroy2D(uint32_t devId, struct halAsyncDmaDes
     return DRV_ERROR_NONE;
 }
 
+TEST_F(TaskTestDavid, ConstructSqeForEndGraphNotifyWaitTask)
+{
+    TaskInfo task = {};
+    task.stream = stream_;
+    task.type = TS_TASK_TYPE_ENDGRAPH_NOTIFY_WAIT;
+    task.id = 1U;
+    task.u.endGraphNotifyWaitTask.notifyId = 101U;
+    task.u.endGraphNotifyWaitTask.timeout = 5U;
+    rtDavidSqe_t sqe = {};
+
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
+
+    EXPECT_EQ(sqe.notifySqe.header.type, RT_DAVID_SQE_TYPE_NOTIFY_WAIT);
+    EXPECT_EQ(sqe.notifySqe.notifyId, 101U);
+    EXPECT_EQ(sqe.notifySqe.timeout, 5U);
+    EXPECT_FALSE(sqe.notifySqe.cntFlag);
+    EXPECT_TRUE(sqe.notifySqe.clrFlag);
+}
+
 TEST_F(TaskTestDavid, memcpy2d_async_ub_dma_h2d_test)
 {
     Runtime* rtInstance = ((Runtime*)Runtime::Instance());
@@ -2484,7 +2667,7 @@ TEST_F(TaskTestDavid, memcpy2d_async_ub_dma_h2d_test)
     EXPECT_EQ(task.u.memcpyAsyncTaskInfo.dmaKernelConvertFlag, true);
     EXPECT_EQ(task.u.memcpyAsyncTaskInfo.ubDma.wqePtr, reinterpret_cast<uint8_t*>(0x3000));
     EXPECT_EQ(task.u.memcpyAsyncTaskInfo.ubDma.wqeLen, 64);
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
 
     Complete(&task, 0);
     TaskUnInitProc(&task);
@@ -2546,7 +2729,7 @@ TEST_F(TaskTestDavid, memcpy2d_async_ub_dma_h2d_aclgraph_test)
     InitByStream(&task, stm);
     MemcpyAsyncTaskInitV2(&task, dst, size, src, size, size, 1, kind, size);
     EXPECT_EQ(task.u.memcpyAsyncTaskInfo.dmaKernelConvertFlag, false);
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
 
     Complete(&task, 0);
     TaskUnInitProc(&task);

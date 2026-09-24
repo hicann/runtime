@@ -111,8 +111,11 @@ static void ConstructIpcSqeForNotifyRecordTask(TaskInfo* taskInfo, rtStarsSqe_t*
     PrintSqe(command, "NotifyRecordTask_Ipc");
 }
 
-void ConstructSqeForNotifyRecordTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+void ConstructSqeForNotifyRecordTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     NotifyRecordTaskInfo* notifyRecord = &taskInfo->u.notifyrecordTask;
     if (notifyRecord->uInfo.singleBitNtfyInfo.isIpc == true) {
         ConstructIpcSqeForNotifyRecordTask(taskInfo, command);
@@ -149,8 +152,11 @@ static void SetResultForNotifyRecordTask(TaskInfo* const taskInfo, const void* c
 #endif
 
 #if F_DESC("NotifyWaitTask")
-static void ConstructSqeForNotifyWaitTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+static void ConstructSqeForNotifyWaitTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     const bool isEndGraphNotifyWait = taskInfo->type == TS_TASK_TYPE_ENDGRAPH_NOTIFY_WAIT;
     const uint32_t notifyId =
         isEndGraphNotifyWait ? taskInfo->u.endGraphNotifyWaitTask.notifyId : taskInfo->u.notifywaitTask.notifyId;

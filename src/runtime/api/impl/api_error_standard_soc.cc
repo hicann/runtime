@@ -8,6 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "api_error.hpp"
+#include <string>
+#include <unordered_set>
 #include "notify_enum_desc.hpp"
 #include "cond_enum_desc.hpp"
 #include "device_enum_desc.hpp"
@@ -28,8 +30,8 @@ namespace runtime {
 constexpr uint32_t TASK_ABORT_TIMEOUT_MAX = (36 * 60 * 1000U); // 36min
 constexpr uint32_t LAUNCH_BLOCKING_UNSUPPORTED_STREAM_FLAGS =
     RT_STREAM_PERSISTENT | RT_STREAM_AICPU | RT_STREAM_CP_PROCESS_USE;
-static string g_fusionSubTypeStr[RT_FUSION_END] = {"HCOM", "AICPU", "AIC", "CCU"};
-static unordered_set<string> g_fusionAllowedList{"HCOMAIC", "AICPUAIC", "CCUAIC", "CCU"};
+static std::string g_fusionSubTypeStr[RT_FUSION_END] = {"HCOM", "AICPU", "AIC", "CCU"};
+static std::unordered_set<std::string> g_fusionAllowedList{"HCOMAIC", "AICPUAIC", "CCUAIC", "CCU"};
 
 rtError_t ValidateStreamLaunchBlockingSet(const Stream* const stream, const uint32_t launchBlockingMode)
 {
@@ -417,7 +419,7 @@ rtError_t ApiErrorDecorator::FusionLaunch(void* const fusionInfo, Stream* const 
         "Fused operator task delivery", subTaskNum, "fusion subtask number",
         RtFmtMsg("The valid value range is [1, %u]", FUSION_SUB_TASK_MAX_NUM));
 
-    string fusionList = "";
+    std::string fusionList = "";
     for (uint32_t idx = 0U; idx < subTaskNum; idx++) {
         const rtFusionType_t subKernelType = fusionTask->subTask[idx].type;
         COND_RETURN_AND_MSG_OUTER(

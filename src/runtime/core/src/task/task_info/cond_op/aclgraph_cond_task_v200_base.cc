@@ -19,7 +19,7 @@ static bool AclgraphCondTaskRegister()
 {
     TaskFuncSingle funcs = {
         .toCommandFunc = nullptr,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForCaptureConditionTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = &CaptureConditionTaskUnInit,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -31,9 +31,7 @@ static bool AclgraphCondTaskRegister()
     const auto& chips = GetDavidChips();
     for (const auto chip : chips) {
         RegTaskFunc(chip, TS_TASK_TYPE_CAPTURE_CONDITION, funcs);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_CAPTURE_CONDITION, &ConstructDavidSqeForCaptureConditionTask);
     }
-
     return true;
 }
 

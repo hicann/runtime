@@ -235,8 +235,11 @@ void ConstructAICpuSqeByHandleForDavinciMultipleTask(TaskInfo* const taskInfo, r
     CommonConstructAICpuSqe(taskInfo, command, &params);
 }
 
-void ConstructSqeForDavinciMultipleTask(TaskInfo* const taskInfo, rtStarsSqe_t* const command)
+void ConstructSqeForDavinciMultipleTask(TaskInfo* const taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     DavinciMultiTaskInfo* davinciMultiTaskInfo = &(taskInfo->u.davinciMultiTaskInfo);
     const rtMultipleTaskInfo_t* multipleTaskInfo =
         static_cast<const rtMultipleTaskInfo_t*>(davinciMultiTaskInfo->multipleTaskInfo);

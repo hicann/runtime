@@ -519,6 +519,7 @@ rtError_t LaunchFusionKernel(Stream* stm, void* const fusionKernelInfo, rtFusion
     }
     taskInfo->stmArgPos = static_cast<DavidStream*>(dstStm)->GetArgPos();
     taskInfo->u.fusionKernelTask.fusionKernelInfo = const_cast<void*>(fusionKernelInfo);
+    taskInfo->sqeNum = static_cast<uint8_t>(sqeLen);
     taskInfo->u.fusionKernelTask.sqeLen = sqeLen;
     taskInfo->u.fusionKernelTask.sqeSubType = sqeSubType;
     RT_LOG(RT_LOG_INFO, "sqeLen=%hhu, sqeSubType=%hhu, stream_id=%d.", sqeLen, sqeSubType, stm->Id_());

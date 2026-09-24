@@ -1196,7 +1196,7 @@ rtError_t NpuDriver::SqCommandOccupy(
 }
 
 rtError_t NpuDriver::SqTaskSend(
-    const uint32_t sqId, rtStarsSqe_t* const sqe, const uint32_t deviceId, const uint32_t tsId, const uint32_t sqeNum)
+    const uint32_t sqId, void* const sqe, const uint32_t deviceId, const uint32_t tsId, const uint32_t sqeNum)
 {
     UNUSED(sqId);
     UNUSED(sqe);

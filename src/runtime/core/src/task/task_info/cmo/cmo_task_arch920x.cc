@@ -10,6 +10,7 @@
 
 #include "stars_david.hpp"
 #include "stream.hpp"
+#include "david_sqe_adapter.hpp"
 #include "runtime_task_manager.h"
 #include "arch920x.hpp"
 
@@ -91,13 +92,14 @@ static void ConstructDavidArch920xCmoSqe(TaskInfo* const taskInfo, rtDavidSqe_t*
 static void ConstructDavidSqeForArch920xCmoTask(TaskInfo* const taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
 {
     ConstructDavidSqeForCmoTaskCommon(taskInfo, sqe, sqeInfo, &ConstructDavidArch920xCmoSqe);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 static bool CmoTaskRegister()
 {
     TaskFuncSingle funcs = {
         .toCommandFunc = nullptr,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForArch920xCmoTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -108,7 +110,6 @@ static bool CmoTaskRegister()
 
     for (const auto chip : GetArch920xChips()) {
         RegTaskFunc(chip, TS_TASK_TYPE_CMO, funcs);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_CMO, &ConstructDavidSqeForArch920xCmoTask);
     }
     return true;
 }

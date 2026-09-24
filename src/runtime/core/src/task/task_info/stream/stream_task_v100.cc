@@ -49,8 +49,11 @@ void SetResultForCreateStreamTask(TaskInfo* const taskInfo, const void* const da
 
 #if F_DESC("SetSqLockUnlockTask")
 // Construct the sq lock or unlock sqe.
-void ConstructSqeForSetSqLockUnlockTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+void ConstructSqeForSetSqLockUnlockTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     Stream* const stm = taskInfo->stream;
     RtStarsPhSqe* const sqe = &(command->phSqe);
     sqe->type = RT_STARS_SQE_TYPE_PLACE_HOLDER;
@@ -78,8 +81,11 @@ void ConstructSqeForSetSqLockUnlockTask(TaskInfo* taskInfo, rtStarsSqe_t* const 
 #endif
 
 #if F_DESC("StreamActiveTask")
-void ConstructSqeForStreamActiveTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+void ConstructSqeForStreamActiveTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     StreamActiveTaskInfo* streamActiveTask = &(taskInfo->u.streamactiveTask);
     Stream* const stream = taskInfo->stream;
     RtStarsFunctionCallSqe& sqe = command->fuctionCallSqe;
@@ -109,8 +115,11 @@ void ConstructSqeForStreamActiveTask(TaskInfo* taskInfo, rtStarsSqe_t* const com
 #endif
 
 #if F_DESC("OverflowSwitchSetTask")
-void ConstructSqeForOverflowSwitchSetTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+void ConstructSqeForOverflowSwitchSetTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     RtStarsPhSqe* const sqe = &(command->phSqe);
     OverflowSwitchSetTaskInfo* overflowSwiSet = &taskInfo->u.overflowSwitchSetTask;
 
@@ -135,8 +144,11 @@ void ConstructSqeForOverflowSwitchSetTask(TaskInfo* taskInfo, rtStarsSqe_t* cons
 #endif
 
 #if F_DESC("StreamTagSetTask")
-void ConstructSqeForStreamTagSetTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+void ConstructSqeForStreamTagSetTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     StreamTagSetTaskInfo* stmTagSetTsk = &taskInfo->u.stmTagSetTask;
 
     RtStarsPhSqe* const sqe = &(command->phSqe);
@@ -160,8 +172,11 @@ void ConstructSqeForStreamTagSetTask(TaskInfo* taskInfo, rtStarsSqe_t* const com
 #endif
 
 #if F_DESC("CallbackLaunchTask")
-void ConstructSqeForCallbackLaunchTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+void ConstructSqeForCallbackLaunchTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     uint32_t pid = 0U;
     RtStarsHostfuncCallbackSqe* const sqe = &(command->callbackSqe);
     Stream* stm = taskInfo->stream;
@@ -248,8 +263,11 @@ rtError_t WaitAsyncCopyCompleteForUpdateTask(TaskInfo* taskInfo)
 #endif
 
 #if F_DESC("FlipTask")
-void ConstructSqeForFlipTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+void ConstructSqeForFlipTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     FlipTaskInfo* flipTaskInfo = &(taskInfo->u.flipTask);
     Stream* const stm = taskInfo->stream;
     RtStarsPhSqe* const sqe = &(command->phSqe);

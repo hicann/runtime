@@ -34,8 +34,11 @@ static void SetResultForEventRecordTask(TaskInfo* const taskInfo, const void* co
         static_cast<uint64_t>(tsData[0]) | (static_cast<uint64_t>(tsData[1]) << 32U); // shift 32 bit
 }
 
-static void ConstructSqeForEventRecordTask(TaskInfo* const taskInfo, rtStarsSqe_t* const command)
+static void ConstructSqeForEventRecordTask(TaskInfo* const taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     EventRecordTaskInfo* eventRecordTaskInfo = &(taskInfo->u.eventRecordTaskInfo);
     Stream* const stream = taskInfo->stream;
 
@@ -85,8 +88,11 @@ static void ConstructSqeForEventRecordTask(TaskInfo* const taskInfo, rtStarsSqe_
 #endif
 
 #if F_DESC("EventResetTask")
-static void ConstructSqeForEventResetTask(TaskInfo* const taskInfo, rtStarsSqe_t* const command)
+static void ConstructSqeForEventResetTask(TaskInfo* const taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     EventResetTaskInfo* eventResetTaskInfo = &(taskInfo->u.eventResetTaskInfo);
     Stream* const stream = taskInfo->stream;
 
@@ -170,8 +176,11 @@ static void DoCompleteSuccessForRemoteEventWaitTask(TaskInfo* const taskInfo, co
 #endif
 
 #if F_DESC("EventWaitTask")
-static void ConstructSqeForEventWaitTask(TaskInfo* const taskInfo, rtStarsSqe_t* const command)
+static void ConstructSqeForEventWaitTask(TaskInfo* const taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     EventWaitTaskInfo* eventWaitTaskInfo = &(taskInfo->u.eventWaitTaskInfo);
     Stream* const stream = taskInfo->stream;
 

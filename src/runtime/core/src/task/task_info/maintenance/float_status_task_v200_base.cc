@@ -9,6 +9,7 @@
  */
 
 #include "stars_david.hpp"
+#include "david_sqe_adapter.hpp"
 #include "stars_cond_isa_helper.hpp"
 #include "stream.hpp"
 #include "runtime_task_manager.h"
@@ -42,6 +43,7 @@ static void ConstructDavidSqeForNpuGetFloatStaTask(
         "NpuGetFloatStatusTask finish, device_id=%u, stream_id=%d, task_id=%hu, task_sn=%u, "
         "debugFlag=%hhu.",
         taskInfo->stream->Device_()->Id_(), stm->Id_(), taskInfo->id, taskInfo->taskSn, getFloatStatusSqe.debugFlag);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 static void ConstructDavidSqeForNpuClrFloatStaTask(
@@ -64,13 +66,14 @@ static void ConstructDavidSqeForNpuClrFloatStaTask(
         RT_LOG_INFO, "NpuClearFloatStatusTask, device_id=%u, stream_id=%d, task_id=%hu, task_sn=%u, debugFlag=%d.",
         taskInfo->stream->Device_()->Id_(), taskInfo->stream->Id_(), taskInfo->id, taskInfo->taskSn,
         npuClrFltSta->debugFlag);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 static bool FloatStatusTaskRegister()
 {
     TaskFuncSingle getFloatStatusFuncs = {
         .toCommandFunc = nullptr,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForNpuGetFloatStaTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -80,7 +83,7 @@ static bool FloatStatusTaskRegister()
     };
     TaskFuncSingle clearFloatStatusFuncs = {
         .toCommandFunc = nullptr,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForNpuClrFloatStaTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -93,8 +96,6 @@ static bool FloatStatusTaskRegister()
     for (const auto chip : chips) {
         (void)RegTaskFunc(chip, TS_TASK_TYPE_NPU_GET_FLOAT_STATUS, getFloatStatusFuncs);
         (void)RegTaskFunc(chip, TS_TASK_TYPE_NPU_CLEAR_FLOAT_STATUS, clearFloatStatusFuncs);
-        (void)RegDavidSqeFunc(chip, TS_TASK_TYPE_NPU_GET_FLOAT_STATUS, &ConstructDavidSqeForNpuGetFloatStaTask);
-        (void)RegDavidSqeFunc(chip, TS_TASK_TYPE_NPU_CLEAR_FLOAT_STATUS, &ConstructDavidSqeForNpuClrFloatStaTask);
     }
 
     return true;

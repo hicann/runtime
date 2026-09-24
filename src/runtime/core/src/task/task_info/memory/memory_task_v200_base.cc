@@ -9,6 +9,7 @@
  */
 
 #include "stars_david.hpp"
+#include "david_sqe_adapter.hpp"
 #include "stars_base.hpp"
 #include "memory_task.h"
 #include "stream.hpp"
@@ -545,6 +546,7 @@ void ConstructDavidSqeForMemsetAsyncTask(TaskInfo* const taskInfo, void* const s
     RT_LOG(
         RT_LOG_INFO, "SdmaMemsetTask, stream_id=%d, task_id=%hu, destAddr=%#" PRIx64 ", value=0x%x, size=%" PRIu64 ",",
         stream->Id_(), taskInfo->id, destAddr, memsetTask->fillValue, memsetTask->fillCount);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 void MemsetAsyncTaskInit(
@@ -629,6 +631,7 @@ void ConstructDavidSqeForMemWaitValueTask(TaskInfo* taskInfo, void* const sqe, c
         condSqeAddr = GetSqPosAddr(sqBaseAddr, pos);
     }
     ConstructSecondDavidSqeForMemWaitValueTask(taskInfo, condSqeAddr, fcPara);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 void ConstructNopSqeForMemWaitValueTask(TaskInfo* taskInfo, rtDavidSqe_t* const davidSqe)
@@ -756,6 +759,7 @@ void ConstructDavidSqeForMemWriteValueTask(TaskInfo* const taskInfo, void* const
     const uint64_t devAddr = taskInfo->u.memWriteValueTask.devAddr;
     if (devAddr == 0ULL) {
         writeValueSqe->header.type = RT_DAVID_SQE_TYPE_INVALID;
+        UpdateDavidSqeHeadUpdate(taskInfo, sqe);
         return;
     }
 
@@ -768,6 +772,7 @@ void ConstructDavidSqeForMemWriteValueTask(TaskInfo* const taskInfo, void* const
     RT_LOG(
         RT_LOG_INFO, "MemWriteValueTask stream_id=%d, awsize=%d ,task_id=%hu, devAddr=%#" PRIx64 ", value:%#" PRIx64,
         taskInfo->stream->Id_(), writeValueSqe->awsize, taskInfo->id, devAddr, value);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 #endif
 

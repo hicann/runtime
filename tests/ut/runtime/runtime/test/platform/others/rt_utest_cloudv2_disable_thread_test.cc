@@ -9,6 +9,7 @@
  */
 
 #include "gtest/gtest.h"
+#include <iostream>
 #include "mockcpp/mockcpp.hpp"
 #include "driver/ascend_hal.h"
 #include "rt_error_codes.h"
@@ -101,12 +102,12 @@ protected:
             .stubs()
             .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&phyDieId, sizeof(phyDieId)))
             .will(returnValue(RT_ERROR_NONE));
-        std::cout << "error2 : " << 1 << endl;
+        std::cout << "error2 : " << 1 << std::endl;
         (void)rtSetDevice(0);
-        std::cout << "error2 : " << 2 << endl;
+        std::cout << "error2 : " << 2 << std::endl;
         (void)rtSetTSDevice(0);
         rtError_t error1 = rtStreamCreateWithFlags(&stream_, 0, RT_STREAM_DEFAULT);
-        std::cout << "error1 : " << error1 << endl;
+        std::cout << "error1 : " << error1 << std::endl;
         rtError_t error2 = rtEventCreate(&event_);
 
         for (uint32_t i = 0; i < sizeof(binary_) / sizeof(uint32_t); i++) {

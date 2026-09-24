@@ -11,6 +11,7 @@
 #include "stream.hpp"
 #include "runtime.hpp"
 #include "stars_david.hpp"
+#include "david_sqe_adapter.hpp"
 #include "model_update_task.h"
 #include "runtime_task_manager.h"
 
@@ -50,6 +51,7 @@ static void ConstructDavidSqeForModelUpdateTask(TaskInfo* const taskInfo, void* 
         "Send TS_TASK_TYPE_MODEL_TASK_UPDATE succ,"
         "sqe_type=%u, pre_p=%u, stream_id=%u, task_id=%u, task_sn=%u, task_type=%u",
         phSqe->header.type, phSqe->header.preP, stm->Id_(), taskInfo->id, taskInfo->taskSn, phSqe->taskType);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 #endif
@@ -58,7 +60,7 @@ static bool ModelUpdateTaskRegister()
 {
     TaskFuncSingle funcs = {
         .toCommandFunc = &ToCommandBodyForModelUpdateTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForModelUpdateTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -70,9 +72,7 @@ static bool ModelUpdateTaskRegister()
     const auto& chips = GetDavidChips();
     for (const auto chip : chips) {
         RegTaskFunc(chip, TS_TASK_TYPE_MODEL_TASK_UPDATE, funcs);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_MODEL_TASK_UPDATE, &ConstructDavidSqeForModelUpdateTask);
     }
-
     return true;
 }
 

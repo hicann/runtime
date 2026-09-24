@@ -8,10 +8,15 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "runtime/rt.h"
+#include "gtest/gtest.h"
+#include "mockcpp/mockcpp.hpp"
+#define protected public
+#include "engine.hpp"
+#undef protected
 #include "event.hpp"
 #include "scheduler.hpp"
-#include "gtest/gtest.h"
 #include "stars.hpp"
+#include "stars_david.hpp"
 #include "stream_david.hpp"
 #include "hwts.hpp"
 #include "npu_driver.hpp"
@@ -29,7 +34,6 @@
 #include <chrono>
 #include "stream.hpp"
 #include "runtime.hpp"
-#include "mockcpp/mockcpp.hpp"
 #include "driver/ascend_hal.h"
 #include "osal.hpp"
 #include "api.hpp"
@@ -151,12 +155,117 @@ protected:
         GlobalMockObject::reset();
     }
 
+    void VerifyStarsSendTaskMetadataBeforeConstruction(const tsTaskType_t taskType, const uint8_t expectedSqeNum)
+    {
+        constexpr uint16_t initialReportNum = 7U;
+        TaskInfo task = {};
+        InitByStream(&task, stream_);
+        task.type = taskType;
+        task.typeName = "REPORT_COUNT_TEST";
+        task.pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].expectPackage = initialReportNum;
+        if (taskType == TS_TASK_TYPE_MULTIPLE_TASK) {
+            task.u.davinciMultiTaskInfo.sqeNum = expectedSqeNum;
+        }
+
+        uint16_t taskId = 0U;
+        MOCKER_CPP_VIRTUAL(engine_, &Engine::TryRecycleTask).stubs().will(returnValue(RT_ERROR_NONE));
+        stream_->SetAbortStatus(RT_ERROR_STREAM_ABORT);
+        const rtError_t error = engine_->SendTask(&task, taskId);
+        stream_->SetAbortStatus(RT_ERROR_NONE);
+
+        EXPECT_EQ(error, RT_ERROR_STREAM_ABORT_SEND_TASK_FAIL);
+        EXPECT_EQ(task.sqeNum, expectedSqeNum);
+        EXPECT_EQ(task.pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].expectPackage, initialReportNum);
+    }
+
+    void VerifyDavidSendTaskMetadataAfterConstruction(
+        TaskInfo& task, const uint8_t expectedSqeNum, const uint16_t expectedReportNum)
+    {
+        task.id = 0U;
+        task.sqeNum = expectedSqeNum;
+        task.pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].expectPackage = 1U;
+        TaskSqeBuffer sqeBuffer = {};
+        const uint64_t oldSqBaseAddr = stream_->GetSqBaseAddr();
+        stream_->SetSqBaseAddr(RtPtrToValue(sqeBuffer.data));
+        const ScopeGuard restoreSqBaseAddr([&]() { stream_->SetSqBaseAddr(oldSqBaseAddr); });
+        MOCKER_CPP_VIRTUAL(stream_, &Stream::StarsAddTaskToStream)
+            .expects(once())
+            .will(returnValue(RT_ERROR_INVALID_VALUE));
+
+        const rtError_t error = DavidSendTask(&task, stream_);
+
+        EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+        EXPECT_EQ(task.sqeNum, expectedSqeNum);
+        EXPECT_EQ(task.pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].expectPackage, expectedReportNum);
+    }
+
 public:
     Device* device_ = nullptr;
     Stream* stream_ = nullptr;
     Engine* engine_ = nullptr;
     rtStream_t streamHandle_ = 0;
 };
+
+TEST_F(DavidTaskSendTest, StarsSendMemWaitCachesThreeSqesBeforeConstruction)
+{
+    VerifyStarsSendTaskMetadataBeforeConstruction(TS_TASK_TYPE_MEM_WAIT_VALUE, MEM_WAIT_V2_SQE_NUM);
+}
+
+TEST_F(DavidTaskSendTest, StarsSendCcuCachesTwoSqesBeforeConstruction)
+{
+    VerifyStarsSendTaskMetadataBeforeConstruction(TS_TASK_TYPE_CCU_LAUNCH, 2U);
+}
+
+TEST_F(DavidTaskSendTest, StarsSendMultipleCachesFourSqesBeforeConstruction)
+{
+    VerifyStarsSendTaskMetadataBeforeConstruction(TS_TASK_TYPE_MULTIPLE_TASK, 4U);
+}
+
+TEST_F(DavidTaskSendTest, DavidSendExternalWaitKeepsThreeSqesAndOneReportAfterConstruction)
+{
+    TaskInfo task = {};
+    InitByStream(&task, stream_);
+    task.type = TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL;
+    task.typeName = "CAPTURE_WAIT_EXTERNAL";
+
+    VerifyDavidSendTaskMetadataAfterConstruction(task, MEM_WAIT_V2_SQE_NUM, 1U);
+}
+
+TEST_F(DavidTaskSendTest, DavidSendCcuKeepsTwoSqesAndOneReportAfterConstruction)
+{
+    uint32_t args[RT_CCU_SQE_ARGS_LEN * 2U] = {};
+    TaskInfo task = {};
+    InitByStream(&task, stream_);
+    task.type = TS_TASK_TYPE_CCU_LAUNCH;
+    task.typeName = "CCU_LAUNCH";
+    task.u.ccuLaunchTask.args = args;
+
+    VerifyDavidSendTaskMetadataAfterConstruction(task, 2U, 1U);
+}
+
+TEST_F(DavidTaskSendTest, DavidSendMultipleSetsOneReportPerSqeAfterConstruction)
+{
+    constexpr uint8_t sqeNum = 4U;
+    rtTaskDesc_t taskDesc[sqeNum] = {};
+    uint8_t cmdListMarker = 0U;
+    const uint64_t cmdListAddr = RtPtrToValue(&cmdListMarker);
+    for (auto& desc : taskDesc) {
+        desc.u.dvppTaskDesc.sqe.commandCustom[STARS_DVPP_SQE_CMDLIST_ADDR_LOW_IDX] =
+            static_cast<uint32_t>(cmdListAddr & 0xFFFFFFFFULL);
+        desc.u.dvppTaskDesc.sqe.commandCustom[STARS_DVPP_SQE_CMDLIST_ADDR_HIGH_IDX] =
+            static_cast<uint32_t>(cmdListAddr >> UINT32_BIT_NUM);
+    }
+    rtMultipleTaskInfo_t multipleTaskInfo = {sqeNum, taskDesc};
+    std::vector<void*> cmdListVec;
+    TaskInfo task = {};
+    InitByStream(&task, stream_);
+    task.type = TS_TASK_TYPE_MULTIPLE_TASK;
+    task.typeName = "MULTIPLE_TASK";
+    task.u.davinciMultiTaskInfo.multipleTaskInfo = &multipleTaskInfo;
+    task.u.davinciMultiTaskInfo.cmdListVec = &cmdListVec;
+
+    VerifyDavidSendTaskMetadataAfterConstruction(task, sqeNum, sqeNum);
+}
 
 TEST_F(DavidTaskSendTest, DavidAllocAndSendFlipTask_Fail)
 {

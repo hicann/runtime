@@ -810,10 +810,10 @@ TEST_F(DavidTaskRecycleTest, ProcReportWithTaskMultiple)
     Device* device = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
     TaskInfo reportTask = {};
     reportTask.type = TS_TASK_TYPE_MULTIPLE_TASK;
-    MOCKER(GetSendDavidSqeNum).stubs().will(returnValue(2));
+    reportTask.sqeNum = 2U;
     MOCKER(GetTaskInfo).stubs().will(returnValue(&reportTask));
     MOCKER(ProcLogicCqReport).stubs();
-    MOCKER(CompleteProcMultipleTaskReport).stubs().will(returnValue(true));
+    MOCKER(CompleteProcMultipleTaskReport).expects(once()).will(returnValue(true));
     MOCKER(StarsResumeRtsq).stubs().will(returnValue(RT_ERROR_NONE));
     rtCqReport_t report = {0};
     bool isFinished = false;
@@ -1741,6 +1741,7 @@ TEST_F(DavidTaskRecycleTest, ProcLogicCqWhenErr)
 
     TaskInfo task = {};
     task.type = TS_TASK_TYPE_MULTIPLE_TASK;
+    task.sqeNum = 2U;
     task.u.davinciMultiTaskInfo.sqeNum = 2U;
     task.u.davinciMultiTaskInfo.multipleTaskCqeNum = 2U;
     task.u.davinciMultiTaskInfo.hasUnderstudyTask = true;

@@ -717,7 +717,7 @@ rtError_t StarsEngine::ProcLogicCqUntilEmpty(const Stream* const stm, uint32_t& 
                 ProcLogicCqReport(report, false, nullptr);
                 continue;
             }
-            if ((reportTask->type == TS_TASK_TYPE_MULTIPLE_TASK) && (GetSendSqeNum(reportTask) > 1U)) {
+            if ((reportTask->type == TS_TASK_TYPE_MULTIPLE_TASK) && (reportTask->sqeNum > 1U)) {
                 if (!ProcMultipleTaskLogicCqReport(reportTask, report, false)) {
                     taskId = MAX_UINT16_NUM;
                 }
@@ -859,6 +859,7 @@ rtError_t StarsEngine::SendTask(TaskInfo* const workTask, uint16_t& taskId, uint
             SQE_NUM_PER_STARS_TASK_MAX, workTask->id, static_cast<int32_t>(workTask->type), workTask->typeName);
         return error;
     }
+    workTask->sqeNum = static_cast<uint8_t>(sendSqeNum);
     Device* dev = GetDevice();
     Driver* const devDrv = dev->Driver_();
     const uint32_t devId = dev->Id_();
@@ -892,7 +893,9 @@ rtError_t StarsEngine::SendTask(TaskInfo* const workTask, uint16_t& taskId, uint
     TIMESTAMP_BEGIN(ToCommand);
     rtTsCommand_t cmdLocal = {};
     cmdLocal.cmdType = RT_TASK_COMMAND_TYPE_STARS_SQE;
-    ToConstructSqe(workTask, cmdLocal.cmdBuf.u.starsSqe);
+    const TaskSqeInfo sqeInfo = {0ULL, 0ULL};
+    ToConstructSqe(workTask, static_cast<void*>(cmdLocal.cmdBuf.sqe), sqeInfo);
+    SetExpectedTaskReportNum(workTask, sendSqeNum);
     TIMESTAMP_END(ToCommand);
 
     // Update the host-side head and tail
@@ -924,21 +927,21 @@ rtError_t StarsEngine::SendTask(TaskInfo* const workTask, uint16_t& taskId, uint
     do {
         if (!stm->IsSoftwareSqEnable()) {
             TIMESTAMP_BEGIN(SqTaskSend);
-            error = devDrv->SqTaskSend(sqId, cmdLocal.cmdBuf.u.starsSqe, devId, tsId, sendSqeNum);
+            error = devDrv->SqTaskSend(sqId, cmdLocal.cmdBuf.sqe, devId, tsId, sendSqeNum);
             TIMESTAMP_END(SqTaskSend);
         } else {
+            const uint64_t sqeBytes = GetTaskSqeBytes(workTask->sqeNum);
             const auto ret = memcpy_s(
-                RtPtrToPtr<void*>(stm->GetSqeBuffer() + sizeof(rtStarsSqe_t) * workTask->pos),
-                sendSqeNum * sizeof(rtStarsSqe_t), RtPtrToPtr<void*, rtStarsSqe_t*>(cmdLocal.cmdBuf.u.starsSqe),
-                sendSqeNum * sizeof(rtStarsSqe_t));
+                static_cast<void*>(GetSqeAddr(stm->GetSqeBuffer(), workTask->pos)), sqeBytes,
+                static_cast<void*>(cmdLocal.cmdBuf.sqe), sqeBytes);
             if (ret != EOK) {
                 RT_LOG(
                     RT_LOG_ERROR,
                     "SendTask failed. Reason: Standard function memcpy_s failed. [Errno %d] %s. destAddr=%p, "
                     "srcAddr=%p, maxLen=%zu(bytes), actualLen=%zu(bytes).",
-                    ret, strerror(ret), RtPtrToPtr<void*>(stm->GetSqeBuffer() + sizeof(rtStarsSqe_t) * workTask->pos),
-                    RtPtrToPtr<void*, rtStarsSqe_t*>(cmdLocal.cmdBuf.u.starsSqe), sendSqeNum * sizeof(rtStarsSqe_t),
-                    sendSqeNum * sizeof(rtStarsSqe_t));
+                    ret, strerror(ret), static_cast<void*>(GetSqeAddr(stm->GetSqeBuffer(), workTask->pos)),
+                    static_cast<void*>(cmdLocal.cmdBuf.sqe), static_cast<size_t>(sqeBytes),
+                    static_cast<size_t>(sqeBytes));
                 error = RT_ERROR_TASK_BASE;
                 break;
             }
@@ -1119,7 +1122,7 @@ void StarsEngine::ProcReport(
             continue;
         }
         const tsTaskType_t taskType = reportTask->type;
-        if ((taskType == TS_TASK_TYPE_MULTIPLE_TASK) && (GetSendSqeNum(reportTask) > 1U)) {
+        if ((taskType == TS_TASK_TYPE_MULTIPLE_TASK) && (reportTask->sqeNum > 1U)) {
             if (ProcMultipleTaskLogicCqReport(reportTask, report, isStreamSync)) {
                 if (unlikely(TaskIdIsGEQ(static_cast<uint32_t>(report.taskId), taskId))) {
                     isFinished = true;
@@ -1802,7 +1805,7 @@ rtError_t StarsEngine::ReportLogicCq(const rtCqReport_t& report, rtDvppGrpCallba
 
     const tsTaskType_t taskType = reportTask->type;
     RT_LOG(RT_LOG_DEBUG, "ReportLogicCq get taskType=%u", taskType);
-    if ((taskType == TS_TASK_TYPE_MULTIPLE_TASK) && (GetSendSqeNum(reportTask) > 1U)) {
+    if ((taskType == TS_TASK_TYPE_MULTIPLE_TASK) && (reportTask->sqeNum > 1U)) {
         return MultipleTaskReportLogicCq(reportTask, report, callBackFunc);
     }
 
@@ -1968,7 +1971,7 @@ void StarsEngine::RecycleTaskProcessForSeparatedStm(TaskInfo* const recycleTask,
     if (recycleTask->bindFlag != 0U) {
         return;
     }
-    const uint32_t recycleTaskSqeNum = GetSendSqeNum(recycleTask);
+    const uint32_t recycleTaskSqeNum = recycleTask->sqeNum;
     const uint32_t recycleTaskPos = recycleTask->pos;
     uint16_t recycleTaskId = recycleTask->id;
     uint16_t excepted = recycleTaskId;

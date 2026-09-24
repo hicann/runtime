@@ -439,8 +439,8 @@ rtError_t MemcpyAsyncTaskPrepare(TaskInfo* const updateTask, void** const hostAd
     Stream* const stream = updateTask->stream;
     const uint32_t devId = static_cast<uint32_t>(stream->Device_()->Id_());
     Driver* const driver = updateTask->stream->Device_()->Driver_();
-    constexpr uint64_t allocSize = sizeof(rtStarsSqe_t);
-    rtStarsSqe_t sqe = {};
+    constexpr uint64_t allocSize = SQE_SIZE_UNIT;
+    rtTsCmdSqBuf_t sqe = {};
 
     rtError_t error = driver->HostMemAlloc(hostAddr, allocSize, devId);
     COND_RETURN_ERROR((error != RT_ERROR_NONE), error, "Failed to alloc host memory, retCode=%#x.", error);
@@ -448,9 +448,13 @@ rtError_t MemcpyAsyncTaskPrepare(TaskInfo* const updateTask, void** const hostAd
     /* construct new sqe */
     RT_LOG(RT_LOG_INFO, "update task, device_id=%u, stream_id=%d, task_id=%hu", devId, stream->Id_(), updateTask->id);
 
-    ToConstructSqe(updateTask, &sqe);
+    const uint32_t sendSqeNum = GetSendSqeNum(updateTask);
+    updateTask->sqeNum = static_cast<uint8_t>(sendSqeNum);
+    const TaskSqeInfo sqeInfo = {0ULL, 0ULL};
+    ToConstructSqe(updateTask, static_cast<void*>(sqe.sqe), sqeInfo);
+    SetExpectedTaskReportNum(updateTask, sendSqeNum);
     error =
-        driver->MemCopySync(*hostAddr, allocSize, static_cast<const void*>(&sqe), allocSize, RT_MEMCPY_HOST_TO_HOST);
+        driver->MemCopySync(*hostAddr, allocSize, static_cast<const void*>(sqe.sqe), allocSize, RT_MEMCPY_HOST_TO_HOST);
     COND_PROC_RETURN_ERROR(
         error != RT_ERROR_NONE, error, (void)driver->HostMemFree(*hostAddr), "MemCopySync failed, retCode=%#x.",
         static_cast<uint32_t>(error));
@@ -485,7 +489,7 @@ rtError_t UpdateTaskD2HSubmit(const TaskInfo* const updateTask, void* sqeAddr, S
 {
     TaskInfo submitTask = {};
     rtError_t errorReason;
-    const size_t allocSize = sizeof(rtStarsSqe_t);
+    const size_t allocSize = static_cast<size_t>(GetTaskSqeBytes(1U));
     const uint32_t sqId = updateTask->stream->GetSqId();
     // software-sq 场景用 hwPos
     uint32_t pos = updateTask->stream->GetHwPosByPos(updateTask->pos);
@@ -571,7 +575,7 @@ rtError_t UpdateTaskH2DSubmit(TaskInfo* const updateTask, Stream* const stm, voi
     TaskInfo submitTask = {};
     rtError_t errorReason;
     rtError_t error = RT_ERROR_NONE;
-    constexpr uint64_t copySize = sizeof(rtStarsSqe_t);
+    constexpr uint64_t copySize = GetTaskSqeBytes(1U);
     Driver* const curDrv = stm->Device_()->Driver_();
 
     if (updateTask->type == TS_TASK_TYPE_MODEL_TASK_UPDATE) {

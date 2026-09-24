@@ -40,8 +40,11 @@ static void SetResultForModelExecuteTask(TaskInfo* const taskInfo, const void* c
         highTaskId, taskInfo->errorCode, modelExecuteTaskInfo->errorTaskId, modelExecuteTaskInfo->errorStreamId);
 }
 
-static void ConstructSqeForModelExecuteTask(TaskInfo* const taskInfo, rtStarsSqe_t* const command)
+static void ConstructSqeForModelExecuteTask(TaskInfo* const taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     ModelExecuteTaskInfo* modelExecuteTaskInfo = &(taskInfo->u.modelExecuteTaskInfo);
     Stream* const stream = taskInfo->stream;
 

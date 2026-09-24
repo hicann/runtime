@@ -16,7 +16,7 @@
 #include "base.hpp"
 #include "stars.hpp"
 #include "hwts.hpp"
-#include "stars_david.hpp"
+#include "runtime_task_manager.h"
 #include "error_message_manage.hpp"
 #include "task_allocator.hpp"
 
@@ -65,16 +65,17 @@ struct tagTsReportMsg {
 // allloc buffer form driver
 union tagTsCmdSqBuf {
     rtCommand_t cmd;
-    rtStarsSqe_t starsSqe;
+    uint8_t sqe[SQE_SIZE_UNIT];
 };
 
 union tagTsCommandBuf {
-    rtCommand_t cmd;                                       // to ts module
-    union {
-        rtStarsSqe_t starsSqe[SQE_NUM_PER_STARS_TASK_MAX]; // STARS sqe format, to stars directly
-        rtDavidSqe_t davidSqe[SQE_NUM_PER_DAVID_TASK_MAX]; // STARS sqe format, to stars directly
-    } u;
+    rtCommand_t cmd; // to ts module
+    uint8_t sqe[SQE_SIZE_PER_TASK_MAX];
 };
+
+static_assert(sizeof(tagTsCmdSqBuf) == SQE_SIZE_UNIT, "single command buffer must occupy one SQE unit");
+static_assert(
+    sizeof(tagTsCommandBuf) == SQE_SIZE_PER_TASK_MAX, "task command buffer must hold the common SQE capacity");
 
 enum rtTaskCommandType {
     RT_TASK_COMMAND_TYPE_TS_COMMAND = 0, // ts module command format

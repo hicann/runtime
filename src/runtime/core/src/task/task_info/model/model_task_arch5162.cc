@@ -65,8 +65,11 @@ rtError_t ModelTaskUpdateInit(
 
 #if F_DESC("ModelExecuteTask")
 
-static void ConstructSqeForModelExecuteTask(TaskInfo* const taskInfo, rtStarsSqe_t* const command)
+static void ConstructSqeForModelExecuteTask(TaskInfo* const taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     ModelExecuteTaskInfo* modelExecuteTaskInfo = &(taskInfo->u.modelExecuteTaskInfo);
     Stream* const stm = taskInfo->stream;
     (void)memset_s(command, sizeof(rtStarsSqe_t), 0, sizeof(rtStarsSqe_t));
@@ -108,8 +111,12 @@ static void SetResultForModelExecuteTask(TaskInfo* const taskInfo, const void* c
 
 #if F_DESC("ModelMaintainceTask")
 
-static void ConstructSqeForModelMaintainceTask(TaskInfo* const taskInfo, rtStarsSqe_t* const command)
+static void ConstructSqeForModelMaintainceTask(
+    TaskInfo* const taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     ModelMaintainceTaskInfo* modelMaintainceTaskInfo = &(taskInfo->u.modelMaintainceTaskInfo);
     (void)memset_s(command, sizeof(rtStarsSqe_t), 0, sizeof(rtStarsSqe_t));
     RtStarsPhSqe* const sqe = &(command->phSqe);

@@ -9,6 +9,7 @@
  */
 
 #include "stars_david.hpp"
+#include "david_sqe_adapter.hpp"
 #include "stars.hpp"
 #include "device.hpp"
 #include "notify_task.h"
@@ -78,7 +79,7 @@ static bool NotifyTaskRegister()
 {
     TaskFuncSingle notifyRecordFuncs = {
         .toCommandFunc = &ToCommandBodyForNotifyRecordTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForNotifyRecordTask,
         .doCompleteSuccFunc = &DoCompleteSuccessForNotifyRecordTask,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -88,7 +89,7 @@ static bool NotifyTaskRegister()
     };
     TaskFuncSingle notifyWaitFuncs = {
         .toCommandFunc = &ToCommandBodyForNotifyWaitTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForNotifyWaitTask,
         .doCompleteSuccFunc = &DoCompleteSuccessForNotifyWaitTask,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -98,7 +99,7 @@ static bool NotifyTaskRegister()
     };
     TaskFuncSingle endGraphNotifyWaitFuncs = {
         .toCommandFunc = &ToCommandBodyForEndGraphNotifyWaitTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForNotifyWaitTask,
         .doCompleteSuccFunc = &DoCompleteSuccessForEndGraphNotifyWaitTask,
         .taskUnInitFunc = &EndGraphNotifyWaitTaskUnInit,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -112,11 +113,7 @@ static bool NotifyTaskRegister()
         RegTaskFunc(chip, TS_TASK_TYPE_NOTIFY_RECORD, notifyRecordFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_NOTIFY_WAIT, notifyWaitFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_ENDGRAPH_NOTIFY_WAIT, endGraphNotifyWaitFuncs);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_NOTIFY_RECORD, &ConstructDavidSqeForNotifyRecordTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_NOTIFY_WAIT, &ConstructDavidSqeForNotifyWaitTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_ENDGRAPH_NOTIFY_WAIT, &ConstructDavidSqeForNotifyWaitTask);
     }
-
     return true;
 }
 

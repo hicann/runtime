@@ -12,6 +12,7 @@
 #include "runtime.hpp"
 #include "context.hpp"
 #include "stars_david.hpp"
+#include "david_sqe_adapter.hpp"
 #include "runtime_task_manager.h"
 #include "timeout_set_task.h"
 
@@ -67,6 +68,7 @@ static void ConstructDavidSqeForTimeoutSetTask(TaskInfo* taskInfo, void* const s
         "topicType=%u, cmdType=%u.",
         stm->Device_()->Id_(), stm->Id_(), taskInfo->id, taskInfo->taskSn,
         static_cast<uint32_t>(aicpuCtrlSqe->topicType), aicpuCtrlSqe->usrData.cmdType);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 #endif
 
@@ -74,7 +76,7 @@ static bool TimeoutSetTaskRegister()
 {
     TaskFuncSingle funcs = {
         .toCommandFunc = &ToCommandBodyForTimeoutSetTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForTimeoutSetTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -86,9 +88,7 @@ static bool TimeoutSetTaskRegister()
     const auto& chips = GetDavidChips();
     for (const auto chip : chips) {
         RegTaskFunc(chip, TS_TASK_TYPE_TASK_TIMEOUT_SET, funcs);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_TASK_TIMEOUT_SET, &ConstructDavidSqeForTimeoutSetTask);
     }
-
     return true;
 }
 

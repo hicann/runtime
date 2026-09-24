@@ -14,6 +14,7 @@
 #include "runtime_task_manager.h"
 #include "stars.hpp"
 #include "stars_david.hpp"
+#include "david_sqe_adapter.hpp"
 #include "device.hpp"
 #include "error_code.h"
 #include "task_fail_callback_manager.hpp"
@@ -269,6 +270,7 @@ static void ConstructDavidSqeForUbDirectSendTask(TaskInfo* taskInfo, void* const
     RT_LOG(
         RT_LOG_INFO, "UbDirectSendTask stream_id=%d, task_id=%hu, wqeSize=%u.", stream->Id_(), taskInfo->id,
         ubdmaDirectSqe->wqeSize);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 static void ConstructDavidSqeForUbDbSendTask(TaskInfo* taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
@@ -299,13 +301,14 @@ static void ConstructDavidSqeForUbDbSendTask(TaskInfo* taskInfo, void* const sqe
     RT_LOG(
         RT_LOG_INFO, "UbDbSendTask stream_id=%d, task_id=%hu, dbNum=%u.", stream->Id_(), taskInfo->id,
         taskInfo->u.ubSendTask.dbNum);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 static bool UbDmaTaskRegister()
 {
     TaskFuncSingle ubDbFuncs = {
         .toCommandFunc = nullptr,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForUbDbSendTask,
         .doCompleteSuccFunc = &DoCompleteSuccessForUbDmaDbModeTask,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -315,7 +318,7 @@ static bool UbDmaTaskRegister()
     };
     TaskFuncSingle directSendFuncs = {
         .toCommandFunc = nullptr,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForUbDirectSendTask,
         .doCompleteSuccFunc = &DoCompleteSuccessForUbDmaDirectWqeModeTask,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -328,10 +331,7 @@ static bool UbDmaTaskRegister()
     for (const auto chip : chips) {
         RegTaskFunc(chip, TS_TASK_TYPE_UB_DB_SEND, ubDbFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_DIRECT_SEND, directSendFuncs);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_UB_DB_SEND, &ConstructDavidSqeForUbDbSendTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_DIRECT_SEND, &ConstructDavidSqeForUbDirectSendTask);
     }
-
     return true;
 }
 

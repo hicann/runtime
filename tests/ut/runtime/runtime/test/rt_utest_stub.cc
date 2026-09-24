@@ -615,7 +615,7 @@ TEST_F(TinyStubTest, npu_driver_stub)
 TEST_F(TinyStubTest, rdma_task_stub)
 {
     PrintDfxInfoForRdmaPiValueModifyTask(nullptr, 0);
-    ConstructSqeRdmaPiValueModifyTask(nullptr, nullptr);
+    ConstructSqeRdmaPiValueModifyTask(nullptr, nullptr, TaskSqeInfo{0ULL, 0ULL});
     PrintErrorInfoForRDMAPiValueModifyTask(nullptr, 0);
     RdmaPiValueModifyTaskUnInit(nullptr);
     auto ret = SubmitRdmaPiValueModifyTask(nullptr, nullptr, nullptr);
@@ -624,7 +624,7 @@ TEST_F(TinyStubTest, rdma_task_stub)
     EXPECT_EQ(num, 1);
     ToCommandBodyForRdmaSendTask(nullptr, nullptr);
     ToCommandBodyForRdmaDbSendTask(nullptr, nullptr);
-    ConstructSqeForRdmaDbSendTask(nullptr, nullptr);
+    ConstructSqeForRdmaDbSendTask(nullptr, nullptr, TaskSqeInfo{0ULL, 0ULL});
 }
 
 TEST_F(TinyStubTest, ffts_task_stub)
@@ -636,8 +636,8 @@ TEST_F(TinyStubTest, ffts_task_stub)
     PrintErrorInfoForFftsPlusTask(nullptr, 0);
     rtCqReport_t logicCq;
     SetStarsResultForFftsPlusTask(nullptr, logicCq);
-    ConstructSqeForFftsPlusTask(nullptr, nullptr);
-    ConstructSqeForRdmaDbSendTask(nullptr, nullptr);
+    ConstructSqeForFftsPlusTask(nullptr, nullptr, TaskSqeInfo{0ULL, 0ULL});
+    ConstructSqeForRdmaDbSendTask(nullptr, nullptr, TaskSqeInfo{0ULL, 0ULL});
     DoCompleteSuccForFftsPlusTask(nullptr, 0);
     SqeTaskUpdateForFftsPlus(nullptr, nullptr);
 }

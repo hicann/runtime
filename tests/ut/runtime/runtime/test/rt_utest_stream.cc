@@ -25,6 +25,7 @@
 #include "engine.hpp"
 #include "event.hpp"
 #include "model.hpp"
+#include "capture_model.hpp"
 #include "rt_unwrap.h"
 #include "task_res.hpp"
 #include "ctrl_stream.hpp"
@@ -762,6 +763,64 @@ TEST_F(StreamTest, SubscribeReport_CB)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 #endif
+
+TEST_F(StreamTest, UpdateAllPersistentTaskPreservesV100MultiSqeReportCount)
+{
+    rtStream_t streamHandle = nullptr;
+    ASSERT_EQ(rtStreamCreate(&streamHandle, 0), RT_ERROR_NONE);
+    Stream* const stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
+    ASSERT_NE(stream, nullptr);
+
+    uint16_t posToTaskIdMap[8] = {};
+    constexpr uint8_t sentinel = 0xA5U;
+    uint8_t sqeBuffer[SQE_SIZE_PER_TASK_MAX];
+    (void)memset_s(sqeBuffer, sizeof(sqeBuffer), sentinel, sizeof(sqeBuffer));
+    uint16_t* const oldPosToTaskIdMap = stream->posToTaskIdMap_;
+    const uint32_t oldPosToTaskIdMapSize = stream->posToTaskIdMapSize_;
+    uint8_t* const oldSqeBuffer = stream->sqeBuffer_;
+    const uint32_t oldSqeBufferSize = stream->sqeBufferSize_;
+    TaskInfo task = {};
+    {
+        const ScopeGuard restoreStreamBuffers([&]() {
+            stream->posToTaskIdMap_ = oldPosToTaskIdMap;
+            stream->posToTaskIdMapSize_ = oldPosToTaskIdMapSize;
+            stream->sqeBuffer_ = oldSqeBuffer;
+            stream->sqeBufferSize_ = oldSqeBufferSize;
+        });
+        stream->posToTaskIdMap_ = posToTaskIdMap;
+        stream->posToTaskIdMapSize_ = sizeof(posToTaskIdMap) / sizeof(posToTaskIdMap[0]);
+        stream->sqeBuffer_ = sqeBuffer;
+        stream->sqeBufferSize_ = sizeof(sqeBuffer);
+        CaptureModel captureModel(RT_MODEL_CAPTURE_MODEL);
+        captureModel.context_ = stream->Context_();
+        stream->SetModel(&captureModel);
+
+        InitByStream(&task, stream);
+        task.id = 1U;
+        task.type = TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL;
+        task.typeName = "CAPTURE_WAIT_EXTERNAL";
+        task.updateFlag = static_cast<uint8_t>(TaskUpdateFlag::RT_TASK_KEEP);
+        task.sqeNum = 1U;
+        task.pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].expectPackage = 7U;
+        stream->delayRecycleTaskid_.push_back(task.id);
+
+        MOCKER_CPP(&TaskFactory::GetTask).expects(once()).will(returnValue(&task));
+
+        EXPECT_EQ(stream->UpdateAllPersistentTask(), RT_ERROR_NONE);
+        EXPECT_EQ(task.sqeNum, MEM_WAIT_V2_SQE_NUM);
+        EXPECT_EQ(task.pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].expectPackage, MEM_WAIT_V2_SQE_NUM);
+        const rtStarsSqe_t* const rebuiltSqes = reinterpret_cast<const rtStarsSqe_t*>(sqeBuffer);
+        for (uint32_t i = 0U; i < MEM_WAIT_V2_SQE_NUM; ++i) {
+            EXPECT_EQ(rebuiltSqes[i].phSqe.type, RT_STARS_SQE_TYPE_PLACE_HOLDER);
+        }
+        EXPECT_EQ(sqeBuffer[GetTaskSqeBytes(MEM_WAIT_V2_SQE_NUM)], sentinel);
+        stream->delayRecycleTaskid_.clear();
+        stream->SetModel(nullptr);
+        GlobalMockObject::verify();
+        GlobalMockObject::reset();
+    }
+    EXPECT_EQ(rtStreamDestroy(streamHandle), RT_ERROR_NONE);
+}
 
 TEST_F(StreamTest, stream_tearDown_fail)
 {

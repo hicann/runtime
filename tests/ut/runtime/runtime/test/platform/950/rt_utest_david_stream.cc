@@ -26,6 +26,7 @@
 #include "event.hpp"
 #include "task_res.hpp"
 #include "task.hpp"
+#include "stars_david.hpp"
 #include "task_recycle.hpp"
 #include "stream.hpp"
 #include "stream_sqcq_manage.hpp"
@@ -220,10 +221,56 @@ protected:
         GlobalMockObject::reset();
     }
 
+    void VerifyPersistentTaskSqeSnapshot(
+        const tsTaskType_t taskType, const uint8_t initialSqeNum, const uint8_t expectedSqeNum)
+    {
+        DavidStream* const stream = static_cast<DavidStream*>(stream_);
+        uint16_t posToTaskIdMap[8] = {};
+        uint8_t sqeBuffer[SQE_SIZE_PER_TASK_MAX] = {};
+        uint16_t* const oldPosToTaskIdMap = stream->posToTaskIdMap_;
+        const uint32_t oldPosToTaskIdMapSize = stream->posToTaskIdMapSize_;
+        uint8_t* const oldSqeBuffer = stream->sqeBuffer_;
+        const uint32_t oldSqeBufferSize = stream->sqeBufferSize_;
+        const uint64_t oldSqBaseAddr = stream->GetSqBaseAddr();
+        const ScopeGuard restoreStreamBuffers([&]() {
+            stream->posToTaskIdMap_ = oldPosToTaskIdMap;
+            stream->posToTaskIdMapSize_ = oldPosToTaskIdMapSize;
+            stream->sqeBuffer_ = oldSqeBuffer;
+            stream->sqeBufferSize_ = oldSqeBufferSize;
+            stream->SetSqBaseAddr(oldSqBaseAddr);
+        });
+        stream->posToTaskIdMap_ = posToTaskIdMap;
+        stream->posToTaskIdMapSize_ = sizeof(posToTaskIdMap) / sizeof(posToTaskIdMap[0]);
+        stream->sqeBuffer_ = sqeBuffer;
+        stream->sqeBufferSize_ = sizeof(sqeBuffer);
+        stream->SetSqBaseAddr(0ULL);
+
+        TaskInfo& task = persistentTask_;
+        InitByStream(&task, stream);
+        task.id = 1U;
+        task.type = taskType;
+        task.typeName = "PERSISTENT_TASK";
+        task.updateFlag = static_cast<uint8_t>(TaskUpdateFlag::RT_TASK_KEEP);
+        task.sqeNum = initialSqeNum;
+        if (taskType == TS_TASK_TYPE_MULTIPLE_TASK) {
+            task.u.davinciMultiTaskInfo.sqeNum = initialSqeNum;
+        }
+        stream->delayRecycleTaskid_.push_back(task.id);
+
+        MOCKER_CPP(&TaskFactory::GetTask).expects(once()).will(returnValue(&task));
+        MOCKER_CPP_VIRTUAL(static_cast<Stream*>(stream), &Stream::HandleTaskDefault)
+            .expects(once())
+            .will(returnValue(RT_ERROR_NONE));
+
+        ASSERT_EQ(stream->UpdateAllPersistentTask(), RT_ERROR_NONE);
+        EXPECT_EQ(task.sqeNum, expectedSqeNum);
+    }
+
 public:
     Device* device_ = nullptr;
     Stream* stream_ = nullptr;
     Engine* engine_ = nullptr;
+    TaskInfo persistentTask_ = {};
     rtStream_t streamHandle_ = 0;
     static char function_;
     static uint32_t binary_[32];
@@ -1287,6 +1334,78 @@ TEST_F(DavidStreamTest, HandleTaskDefault)
     EXPECT_EQ(ret, RT_ERROR_NONE);
 }
 
+TEST_F(DavidStreamTest, UpdateAllPersistentTaskCachesWaitSqeSnapshotBeforeDispatch)
+{
+    VerifyPersistentTaskSqeSnapshot(TS_TASK_TYPE_MEM_WAIT_VALUE, 1U, MEM_WAIT_V2_SQE_NUM);
+}
+
+TEST_F(DavidStreamTest, UpdateAllPersistentTaskCachesCcuSqeSnapshotBeforeDispatch)
+{
+    VerifyPersistentTaskSqeSnapshot(TS_TASK_TYPE_CCU_LAUNCH, 1U, 2U);
+}
+
+TEST_F(DavidStreamTest, UpdateAllPersistentTaskCachesMultipleSqeSnapshotBeforeDispatch)
+{
+    constexpr uint8_t multipleSqeNum = 4U;
+    VerifyPersistentTaskSqeSnapshot(TS_TASK_TYPE_MULTIPLE_TASK, multipleSqeNum, multipleSqeNum);
+}
+
+TEST_F(DavidStreamTest, UpdateAllPersistentTaskRebuildsExternalWaitThroughRealHandler)
+{
+    DavidStream* const stream = static_cast<DavidStream*>(stream_);
+    uint16_t posToTaskIdMap[8] = {};
+    constexpr uint8_t sentinel = 0xA5U;
+    TaskSqeBuffer sqeBuffer;
+    (void)memset_s(sqeBuffer.data, sizeof(sqeBuffer.data), sentinel, sizeof(sqeBuffer.data));
+    uint16_t* const oldPosToTaskIdMap = stream->posToTaskIdMap_;
+    const uint32_t oldPosToTaskIdMapSize = stream->posToTaskIdMapSize_;
+    uint8_t* const oldSqeBuffer = stream->sqeBuffer_;
+    const uint32_t oldSqeBufferSize = stream->sqeBufferSize_;
+    const uint64_t oldSqBaseAddr = stream->GetSqBaseAddr();
+    const ScopeGuard restoreStream([&]() {
+        stream->posToTaskIdMap_ = oldPosToTaskIdMap;
+        stream->posToTaskIdMapSize_ = oldPosToTaskIdMapSize;
+        stream->sqeBuffer_ = oldSqeBuffer;
+        stream->sqeBufferSize_ = oldSqeBufferSize;
+        stream->SetSqBaseAddr(oldSqBaseAddr);
+    });
+    stream->posToTaskIdMap_ = posToTaskIdMap;
+    stream->posToTaskIdMapSize_ = sizeof(posToTaskIdMap) / sizeof(posToTaskIdMap[0]);
+    stream->sqeBuffer_ = sqeBuffer.data;
+    stream->sqeBufferSize_ = sizeof(sqeBuffer.data);
+    stream->SetSqBaseAddr(0ULL);
+
+    CaptureModel captureModel(RT_MODEL_CAPTURE_MODEL);
+    captureModel.context_ = stream->Context_();
+    Model* const oldModel = stream->Model_();
+    const ScopeGuard restoreModel([&]() {
+        stream->delayRecycleTaskid_.clear();
+        stream->SetModel(oldModel);
+    });
+    stream->SetModel(&captureModel);
+    TaskInfo task = {};
+    InitByStream(&task, stream);
+    task.id = 1U;
+    task.type = TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL;
+    task.typeName = "CAPTURE_WAIT_EXTERNAL";
+    task.updateFlag = static_cast<uint8_t>(TaskUpdateFlag::RT_TASK_KEEP);
+    task.sqeNum = 1U;
+    task.pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].expectPackage = 1U;
+    stream->delayRecycleTaskid_.push_back(task.id);
+    MOCKER_CPP(&TaskFactory::GetTask).expects(once()).will(returnValue(&task));
+
+    ASSERT_EQ(stream->UpdateAllPersistentTask(), RT_ERROR_NONE);
+    EXPECT_EQ(task.sqeNum, MEM_WAIT_V2_SQE_NUM);
+    EXPECT_EQ(task.pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].expectPackage, 1U);
+    const rtDavidSqe_t* const rebuiltSqes = reinterpret_cast<const rtDavidSqe_t*>(sqeBuffer.data);
+    for (uint32_t i = 0U; i < MEM_WAIT_V2_SQE_NUM; ++i) {
+        EXPECT_EQ(rebuiltSqes[i].phSqe.header.type, RT_DAVID_SQE_TYPE_PLACE_HOLDER);
+    }
+    EXPECT_EQ(sqeBuffer.data[GetTaskSqeBytes(MEM_WAIT_V2_SQE_NUM)], sentinel);
+    GlobalMockObject::verify();
+    GlobalMockObject::reset();
+}
+
 TEST_F(DavidStreamTest, ExternalRecordRefreshEntryUsesDavidWriteValueSqe)
 {
     rtDavidSqe_t sqe = {};
@@ -1302,6 +1421,24 @@ TEST_F(DavidStreamTest, ExternalRecordRefreshEntryUsesDavidWriteValueSqe)
     EXPECT_EQ(sqe.writeValueSqe.writeAddrLow, static_cast<uint32_t>(eventAddr & 0xFFFFFFFFU));
     EXPECT_EQ(sqe.writeValueSqe.writeAddrHigh, static_cast<uint32_t>((eventAddr >> 32U) & 0x1FFFFU));
     EXPECT_EQ(sqe.writeValueSqe.writeValuePart[0], 1U);
+}
+
+TEST_F(DavidStreamTest, TaskResourceRejectsZeroSqeNumWithoutChangingState)
+{
+    auto* const taskResManage = static_cast<TaskResManageDavid*>(stream_->taskResMang_);
+    ASSERT_NE(taskResManage, nullptr);
+    const uint16_t oldHead = taskResManage->GetResHead();
+    const uint16_t oldTail = taskResManage->GetResTail();
+    const uint64_t oldAllocNum = taskResManage->GetAllocNum();
+    uint32_t pos = UINT32_MAX;
+    TaskInfo* task = nullptr;
+
+    EXPECT_EQ(taskResManage->AllocTaskInfoAndPos(0U, pos, &task), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(pos, UINT32_MAX);
+    EXPECT_EQ(task, nullptr);
+    EXPECT_EQ(taskResManage->GetResHead(), oldHead);
+    EXPECT_EQ(taskResManage->GetResTail(), oldTail);
+    EXPECT_EQ(taskResManage->GetAllocNum(), oldAllocNum);
 }
 
 TEST_F(DavidStreamTest, ExternalTaskSqeBuildRejectsInvalidTaskAndSkipsNullSqeBuffer)
@@ -1327,6 +1464,7 @@ TEST_F(DavidStreamTest, ExternalTaskSqeBuildRejectsInvalidTaskAndSkipsNullSqeBuf
     uint8_t funcCallMem[sizeof(RtStarsExternalWaitFuncCall)] = {};
     InitByStream(&taskInfo, stream_);
     taskInfo.type = TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL;
+    taskInfo.sqeNum = MEM_WAIT_SQE_NUM;
     taskInfo.u.memWaitValueTask.devAddr = 0x1234U;
     taskInfo.u.memWaitValueTask.funcCallSvmMem2 = funcCallMem;
     taskInfo.u.memWaitValueTask.funCallMemSize2 = sizeof(funcCallMem);

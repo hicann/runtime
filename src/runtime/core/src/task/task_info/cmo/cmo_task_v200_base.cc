@@ -9,6 +9,7 @@
  */
 
 #include "stars_david.hpp"
+#include "david_sqe_adapter.hpp"
 #include "stream.hpp"
 #include "device.hpp"
 #include "enum_desc.hpp"

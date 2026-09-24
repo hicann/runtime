@@ -40,10 +40,11 @@ void SetStarsResultForFftsPlusTask(TaskInfo* taskInfo, const rtCqReport_t& logic
     UNUSED(logicCq);
 }
 
-void ConstructSqeForFftsPlusTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+void ConstructSqeForFftsPlusTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
     UNUSED(taskInfo);
-    UNUSED(command);
+    UNUSED(sqeBuffer);
+    UNUSED(sqeInfo);
 }
 
 void DoCompleteSuccForFftsPlusTask(TaskInfo* taskInfo, const uint32_t devId)

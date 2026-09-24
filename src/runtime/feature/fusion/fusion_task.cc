@@ -9,6 +9,7 @@
  */
 
 #include <sstream>
+#include "david_sqe_adapter.hpp"
 #include <vector>
 #include "fusion_task.h"
 #include "stream.hpp"
@@ -304,6 +305,7 @@ void ConstructDavidSqeForFusionKernelTask(TaskInfo* const taskInfo, void* const 
         RT_LOG_INFO, "FusionTask, device_id=%u, stream_id=%d, task_id=%hu, task_sn=%u, sub_type=%hhu.",
         taskInfo->stream->Device_()->Id_(), taskInfo->stream->Id_(), taskInfo->id, taskInfo->taskSn,
         fusionKernelTask->sqeSubType);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 std::string BuildFusionKernelTaskName(FusionTaskInfo* fusionTaskInfo)

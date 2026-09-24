@@ -26,8 +26,11 @@ constexpr uint32_t WR_EVENT_RESET_VALUE = 0x80000U;
 uint16_t GetSqeEventId(const rtStarsSqe_t* sqe) { return sqe->notifySqe.notify_id; }
 
 #if F_DESC("NotifyRecordTask")
-void ConstructSqeForNotifyRecordTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+void ConstructSqeForNotifyRecordTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     (void)memset_s(command, sizeof(rtStarsSqe_t), 0, sizeof(rtStarsSqe_t));
     Stream* const stm = taskInfo->stream;
     RtStarsWriteValueSqe* sqe = &(command->writeValueSqe);
@@ -48,8 +51,11 @@ void ConstructSqeForNotifyRecordTask(TaskInfo* taskInfo, rtStarsSqe_t* const com
 #endif
 
 #if F_DESC("NotifyWaitTask")
-static void ConstructSqeForNotifyWaitTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+static void ConstructSqeForNotifyWaitTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     (void)memset_s(command, sizeof(rtStarsSqe_t), 0, sizeof(rtStarsSqe_t));
     const bool isEndGraphNotifyWait = taskInfo->type == TS_TASK_TYPE_ENDGRAPH_NOTIFY_WAIT;
     const uint32_t notifyId =
@@ -75,8 +81,11 @@ void ReleaseResourceForEndGraphNotifyWaitTaskOnlModel(const TaskInfo* taskInfo) 
 #endif
 
 #if F_DESC("EventRecordTask")
-static void ConstructSqeForEventRecordTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+static void ConstructSqeForEventRecordTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     EventRecordTaskInfo* eventRecordTaskInfo = &(taskInfo->u.eventRecordTaskInfo);
     (void)memset_s(command, sizeof(rtStarsSqe_t), 0, sizeof(rtStarsSqe_t));
     Stream* const stm = taskInfo->stream;
@@ -114,8 +123,11 @@ static void ConstructSqeForEventRecordTask(TaskInfo* taskInfo, rtStarsSqe_t* con
 #endif
 
 #if F_DESC("EventResetTask")
-static void ConstructSqeForEventResetTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+static void ConstructSqeForEventResetTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     EventResetTaskInfo* eventResetTaskInfo = &(taskInfo->u.eventResetTaskInfo);
     (void)memset_s(command, sizeof(rtStarsSqe_t), 0, sizeof(rtStarsSqe_t));
     Stream* const stm = taskInfo->stream;
@@ -141,8 +153,11 @@ static void ConstructSqeForEventResetTask(TaskInfo* taskInfo, rtStarsSqe_t* cons
 #endif
 
 #if F_DESC("EventWaitTask")
-static void ConstructSqeForEventWaitTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+static void ConstructSqeForEventWaitTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     EventWaitTaskInfo* eventWaitTaskInfo = &(taskInfo->u.eventWaitTaskInfo);
     (void)memset_s(command, sizeof(rtStarsSqe_t), 0, sizeof(rtStarsSqe_t));
     Stream* const stm = taskInfo->stream;

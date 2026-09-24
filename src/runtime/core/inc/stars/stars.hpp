@@ -105,7 +105,6 @@ struct rtStarsCqe_t {
 
 #pragma pack(pop)
 
-void ToConstructSqe(TaskInfo* taskInfo, rtStarsSqe_t* const command);
 void PrintSqe(const rtStarsSqe_t* const sqe, const char* desc);
 void ConstructPcieDmaSqe(TaskInfo* const taskInfo, rtStarsSqe_t* const command);
 

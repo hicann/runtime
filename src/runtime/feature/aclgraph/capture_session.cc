@@ -27,6 +27,7 @@
 #include "notify.hpp"
 #include "npu_driver.hpp"
 #include "runtime.hpp"
+#include "runtime_task_manager.h"
 #include "stream.hpp"
 #include "stream_jetty_handler.h"
 #include "stub_task.hpp"
@@ -159,7 +160,7 @@ rtError_t CaptureSession::UpdateEndGraphTask(
         origCaptureStream->Id_(), rtNotifyRecord->pos);
     uint64_t realSize = 0U;
     const rtError_t error = MemcopyAsync(
-        targetAddrOfUpdatedSqe, sizeof(rtStarsSqe_t), sqeMem, sizeof(sqeMem), RT_MEMCPY_HOST_TO_DEVICE_EX, exeStream,
+        targetAddrOfUpdatedSqe, GetTaskSqeBytes(1U), sqeMem, sizeof(sqeMem), RT_MEMCPY_HOST_TO_DEVICE_EX, exeStream,
         &realSize);
     COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "update task fail error=0x%x", error);
     RT_LOG(
@@ -179,11 +180,11 @@ rtError_t CaptureSession::UpdateSuModelExeStreamNotifyWaitSqe(TaskInfo* taskInfo
         condTaskAddr == nullptr, RT_ERROR_INVALID_VALUE,
         "Get device sqe addr failed, device_id=%u, stream_id=%d, task_pos=%u.", taskInfo->stream->Device_()->Id_(),
         taskInfo->stream->Id_(), taskInfo->pos);
-    void* targetAddrOfUpdatedSqe = RtPtrToPtr<uint8_t*>(condTaskAddr) + SQE_SIZE_UNIT;
+    void* targetAddrOfUpdatedSqe = GetSqeAddr(RtPtrToPtr<uint8_t*>(condTaskAddr), 1U);
 
     uint64_t realSize = 0U;
     auto error = MemcopyAsync(
-        targetAddrOfUpdatedSqe, sizeof(rtStarsSqe_t), &sqeMem, sizeof(sqeMem), RT_MEMCPY_HOST_TO_DEVICE_EX, exeStream,
+        targetAddrOfUpdatedSqe, GetTaskSqeBytes(1U), &sqeMem, sizeof(sqeMem), RT_MEMCPY_HOST_TO_DEVICE_EX, exeStream,
         &realSize);
     COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "update sqe fail error=0x%x", error);
     RT_LOG(

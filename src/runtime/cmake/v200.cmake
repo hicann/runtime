@@ -378,7 +378,6 @@ set(libruntime_v200_v201_common_src_files
     ${RUNTIME_CORE_DIR}/src/engine/hwts/package_rebuilder.cc
     ${RUNTIME_CORE_DIR}/src/engine/stars/stars_engine.cc
     ${RUNTIME_CORE_DIR}/src/engine/hwts/direct_hwts_engine.cc
-    ${RUNTIME_CORE_DIR}/src/task/v200_base/stars_david.cc
     ${RUNTIME_FEATURE_DIR}/cntnotify/count_notify.cc
     ${RUNTIME_CORE_DIR}/src/launch/aix_starsv2.cc
     ${RUNTIME_CORE_DIR}/src/launch/aicpu_starsv2.cc

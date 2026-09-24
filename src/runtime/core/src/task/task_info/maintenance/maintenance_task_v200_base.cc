@@ -12,6 +12,7 @@
 #include "runtime.hpp"
 #include "context.hpp"
 #include "stars_david.hpp"
+#include "david_sqe_adapter.hpp"
 #include "maintenance_task.h"
 #include "runtime_task_manager.h"
 
@@ -45,6 +46,7 @@ static void ConstructDavidSqeForMaintenanceTask(TaskInfo* const taskInfo, void* 
     RT_LOG(
         RT_LOG_INFO, "MaintenanceTask, device_id=%u, stream_id=%d, task_id=%hu, task_sn=%u.",
         taskInfo->stream->Device_()->Id_(), stream->Id_(), taskInfo->id, taskInfo->taskSn);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 #endif
 
@@ -72,6 +74,7 @@ static void ConstructDavidSqeForGetDevMsgTask(TaskInfo* taskInfo, void* const sq
     RT_LOG(
         RT_LOG_INFO, "GetDevMsgTask, device_id=%u, stream_id=%d, task_id=%hu.", stm->Device_()->Id_(), stm->Id_(),
         taskInfo->id);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 #endif
 
@@ -132,6 +135,7 @@ static void ConstructDavidSqeForAicpuMsgVersionTask(
         "topic_type=%u, cmd_type=%u",
         stm->Device_()->Id_(), stm->Id_(), taskInfo->id, taskInfo->taskSn,
         static_cast<uint32_t>(aicpuCtrlSqe->topicType), aicpuCtrlSqe->usrData.cmdType);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 #endif
 
@@ -139,7 +143,7 @@ static bool MaintenanceTaskRegister()
 {
     TaskFuncSingle maintenanceFuncs = {
         .toCommandFunc = &ToCommandBodyForMaintenanceTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForMaintenanceTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -149,7 +153,7 @@ static bool MaintenanceTaskRegister()
     };
     TaskFuncSingle getDeviceMsgFuncs = {
         .toCommandFunc = &ToCommandBodyForGetDevMsgTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForGetDevMsgTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -159,7 +163,7 @@ static bool MaintenanceTaskRegister()
     };
     TaskFuncSingle getStarsVersionFuncs = {
         .toCommandFunc = nullptr,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeBase,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -169,7 +173,7 @@ static bool MaintenanceTaskRegister()
     };
     TaskFuncSingle aicpuMsgVersionFuncs = {
         .toCommandFunc = nullptr,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForAicpuMsgVersionTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -184,10 +188,6 @@ static bool MaintenanceTaskRegister()
         (void)RegTaskFunc(chip, TS_TASK_TYPE_GET_DEVICE_MSG, getDeviceMsgFuncs);
         (void)RegTaskFunc(chip, TS_TASK_TYPE_GET_STARS_VERSION, getStarsVersionFuncs);
         (void)RegTaskFunc(chip, TS_TASK_TYPE_TSFW_AICPU_MSG_VERSION, aicpuMsgVersionFuncs);
-        (void)RegDavidSqeFunc(chip, TS_TASK_TYPE_MAINTENANCE, &ConstructDavidSqeForMaintenanceTask);
-        (void)RegDavidSqeFunc(chip, TS_TASK_TYPE_GET_DEVICE_MSG, &ConstructDavidSqeForGetDevMsgTask);
-        (void)RegDavidSqeFunc(chip, TS_TASK_TYPE_GET_STARS_VERSION, &ConstructDavidSqeBase);
-        (void)RegDavidSqeFunc(chip, TS_TASK_TYPE_TSFW_AICPU_MSG_VERSION, &ConstructDavidSqeForAicpuMsgVersionTask);
     }
 
     return true;

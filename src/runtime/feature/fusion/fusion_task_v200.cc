@@ -39,7 +39,7 @@ static bool FusionKernelTaskRegister()
 {
     TaskFuncSingle funcs = {
         .toCommandFunc = nullptr,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForFusionKernelTask,
         .doCompleteSuccFunc = &DoCompleteSuccessForFusionKernelTask,
         .taskUnInitFunc = &FusionKernelTaskUnInit,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -51,9 +51,7 @@ static bool FusionKernelTaskRegister()
     constexpr rtChipType_t chips[] = {CHIP_DAVID, CHIP_ASCEND_350, CHIP_MC62CM12A, CHIP_MC32DM11A};
     for (const auto chip : chips) {
         RegTaskFunc(chip, TS_TASK_TYPE_FUSION_KERNEL, funcs);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_FUSION_KERNEL, &ConstructDavidSqeForFusionKernelTask);
     }
-
     return true;
 }
 

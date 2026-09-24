@@ -686,8 +686,10 @@ static void UpdateSqeSubTypeForMix(TaskInfo* taskInfo)
     RT_LOG(RT_LOG_INFO, "fftsSqe subType=%u", fftPlusTask->fftsSqe.subType);
 }
 
-void ConstructSqeForFftsPlusTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+void ConstructSqeForFftsPlusTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
     FftsPlusTaskInfo* fftsPlusTask = &taskInfo->u.fftsPlusTask;
     if ((fftsPlusTask->kernelFlag & RT_KERNEL_FFTSPLUS_DYNAMIC_SHAPE_DUMPFLAG) != 0U) {
         // first is load dump info sqe

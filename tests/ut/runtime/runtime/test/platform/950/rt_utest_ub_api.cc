@@ -945,7 +945,7 @@ TEST_F(ApiTestUb1, ub_async_h2d_dma_submit)
 
     rtDavidSqe_t sqe[2];
     TaskSqeInfo sqeInfo = {0ULL, 0ULL};
-    ToConstructDavidSqe(task, static_cast<void*>(sqe), sqeInfo);
+    ToConstructSqe(task, static_cast<void*>(sqe), sqeInfo);
     auto taskNum = GetSendDavidSqeNum(task);
     EXPECT_EQ(taskNum, 2);
     TaskUnInitProc(task);
@@ -979,7 +979,7 @@ TEST_F(ApiTestUb1, ub_async_d2d_dma_submit)
 
     rtDavidSqe_t sqe[2];
     TaskSqeInfo sqeInfo = {0ULL, 0ULL};
-    ToConstructDavidSqe(task, static_cast<void*>(sqe), sqeInfo);
+    ToConstructSqe(task, static_cast<void*>(sqe), sqeInfo);
     auto taskNum = GetSendDavidSqeNum(task);
     EXPECT_EQ(taskNum, 2);
     drv_trans_type = RT_MEMCPY_CHANNEL_TYPE_PCIe;

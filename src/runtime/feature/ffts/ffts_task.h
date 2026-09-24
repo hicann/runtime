@@ -18,6 +18,7 @@
 namespace cce {
 namespace runtime {
 class Stream;
+struct TaskSqeInfo;
 
 rtError_t FftsPlusTaskLaunch(
     const rtFftsPlusTaskInfo_t* const fftsPlusTaskInfo, Stream* const stm, const uint32_t flag,
@@ -28,7 +29,7 @@ void DoCompleteSuccForFftsPlusTask(TaskInfo* taskInfo, const uint32_t devId);
 void FftsPlusTaskUnInit(TaskInfo* const taskInfo);
 void SqeTaskUpdateForFftsPlus(TaskInfo* taskInfo, rtStarsSqe_t* const fftsplusSqe);
 uint32_t GetSendSqeNumForFftsPlusTask(const TaskInfo* const taskInfo);
-void ConstructSqeForFftsPlusTask(TaskInfo* taskInfo, rtStarsSqe_t* const command);
+void ConstructSqeForFftsPlusTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo);
 void PrintDsaErrorInfoForFftsPlusTask(TaskInfo* taskInfo, const rtFftsPlusTaskErrInfo_t& info, const uint32_t devId);
 void PrintAicAivErrorInfoForFftsPlusTask(TaskInfo* taskInfo, const rtFftsPlusTaskErrInfo_t& info, uint32_t devId);
 void GetExceptionArgsForFftsPlus(

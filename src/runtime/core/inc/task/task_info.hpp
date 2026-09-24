@@ -62,7 +62,7 @@ typedef struct tagTaskInfoStru {
     uint8_t taskOwner : 1;       // 默认是user，使用此标记需关注其实际值
     uint8_t resv : 3;
     uint8_t enableProfiling : 1; // 0: disable 1: enable
-    uint8_t sqeNum : 7;          // 使用sqeNum必须在对应taskini中初始化
+    uint8_t sqeNum : 7;          // Task-specific value before send; actual SQE count stays stable from send to recycle.
     uint8_t needPostProc : 1;
     union {
         AicTaskInfo aicTaskInfo;
@@ -245,6 +245,9 @@ void GetAicpuExceptionDetailInfo(TaskInfo* taskInfo, rtAicpuExDetailInfo_t* deta
 void SetSqPos(TaskInfo* taskInfo, const uint32_t pos);
 void SetEndGraphNotifyWaitSqPos(TaskInfo* taskInfo, const uint32_t pos);
 uint32_t GetSendSqeNum(TaskInfo* const taskInfo);
+// Call after SQE construction. V100 expects one report per SQE, STARS V2 does so only for MULTIPLE_TASK,
+// and Arch5162 always expects one report.
+void SetExpectedTaskReportNum(TaskInfo* const taskInfo, const uint32_t sendSqeNum);
 void DoCompleteSuccess(TaskInfo* taskInfo, const uint32_t devId);
 void PrintErrorInfo(TaskInfo* taskInfo, const uint32_t devId);
 

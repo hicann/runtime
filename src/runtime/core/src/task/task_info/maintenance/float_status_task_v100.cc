@@ -15,8 +15,11 @@
 namespace cce {
 namespace runtime {
 
-static void ConstructSqeForNpuGetFloatStaTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+static void ConstructSqeForNpuGetFloatStaTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     RtStarsGetFloatStatusSqe& sqe = command->getFloatStatusSqe;
     NpuGetFloatStatusTaskInfo* npuGetFltSta = &taskInfo->u.npuGetFloatStatusTask;
     Stream* const stm = taskInfo->stream;
@@ -43,8 +46,11 @@ static void ConstructSqeForNpuGetFloatStaTask(TaskInfo* taskInfo, rtStarsSqe_t* 
         static_cast<uint32_t>(taskInfo->id), sqe.debugFlag);
 }
 
-static void ConstructSqeForNpuClrFloatStaTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+static void ConstructSqeForNpuClrFloatStaTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     RtStarsPhSqe* const sqe = &(command->phSqe);
     NpuClearFloatStatusTaskInfo* npuClrFltSta = &taskInfo->u.npuClrFloatStatusTask;
     sqe->type = RT_STARS_SQE_TYPE_PLACE_HOLDER;

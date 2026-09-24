@@ -18,6 +18,7 @@
 #include "stars_dqs_cond_isa_helper.hpp"
 #include "stars_cond_isa_batch_struct.hpp"
 #include "stars_david.hpp"
+#include "david_sqe_adapter.hpp"
 #include "ascend_hal_define.h"
 #include "stars_cond_isa_para.hpp"
 #include "model_serial_sched_task.hpp"
@@ -1188,6 +1189,7 @@ void ConstructSqeForDqsMbufFreeTask(TaskInfo* const taskInfo, void* const sqe, c
     RT_LOG(
         RT_LOG_INFO, "DqsMbufFree, deviceId=%u, streamId=%d, taskId=%hu", stm->Device_()->Id_(), stm->Id_(),
         taskInfo->id);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 void ConstructSqeForDqsEnqueueTask(TaskInfo* const taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
@@ -1210,6 +1212,7 @@ void ConstructSqeForDqsEnqueueTask(TaskInfo* const taskInfo, void* const sqe, co
     RT_LOG(
         RT_LOG_INFO, "DqsEnqueue, deviceId=%u, streamId=%d, taskId=%hu", stm->Device_()->Id_(), stm->Id_(),
         taskInfo->id);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 void ConstructSqeForDqsDequeueTask(TaskInfo* const taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
@@ -1232,6 +1235,7 @@ void ConstructSqeForDqsDequeueTask(TaskInfo* const taskInfo, void* const sqe, co
     RT_LOG(
         RT_LOG_INFO, "DqsDequeue, deviceId=%u, streamId=%d, taskId=%hu", stm->Device_()->Id_(), stm->Id_(),
         taskInfo->id);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 void ConstructSqeForDqsBatchDequeueTask(TaskInfo* const taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
@@ -1253,6 +1257,7 @@ void ConstructSqeForDqsBatchDequeueTask(TaskInfo* const taskInfo, void* const sq
     RT_LOG(
         RT_LOG_INFO, "DqsBatchDequeue, deviceId=%u, streamId=%d, taskId=%hu", stm->Device_()->Id_(), stm->Id_(),
         taskInfo->id);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 void ConstructSqeForDqsFrameAlignTask(TaskInfo* const taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
@@ -1275,6 +1280,7 @@ void ConstructSqeForDqsFrameAlignTask(TaskInfo* const taskInfo, void* const sqe,
     RT_LOG(
         RT_LOG_INFO, "DqsFrameAlignTask, deviceId=%u, streamId=%d, taskId=%hu", stm->Device_()->Id_(), stm->Id_(),
         taskInfo->id);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 void ConstructSqeForDqsZeroCopyTask(TaskInfo* const taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
@@ -1300,6 +1306,7 @@ void ConstructSqeForDqsZeroCopyTask(TaskInfo* const taskInfo, void* const sqe, c
     RT_LOG(
         RT_LOG_INFO, "DqsZeroCopy, deviceId=%u, streamId=%d, taskId=%hu", stm->Device_()->Id_(), stm->Id_(),
         taskInfo->id);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 void ConstructSqeForDqsConditionCopyTask(TaskInfo* const taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
@@ -1322,6 +1329,7 @@ void ConstructSqeForDqsConditionCopyTask(TaskInfo* const taskInfo, void* const s
     RT_LOG(
         RT_LOG_INFO, "DqsConditionCopy, device_id=%u, stream_id=%d, task_id=%hu", stm->Device_()->Id_(), stm->Id_(),
         taskInfo->id);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 static void ResetMbufListOpSnapshot(
@@ -1369,9 +1377,17 @@ void ConstructSqeForDqsSchedEndTask(TaskInfo* const taskInfo, void* const sqe, c
     const uint16_t sqId = stream->GetSqId();
 
     StreamWithDqs* stm = dynamic_cast<StreamWithDqs*>(stream);
-    COND_RETURN_VOID(stm == nullptr, "stm is not stream with dqs.");
+    if (unlikely(stm == nullptr)) {
+        RT_LOG(RT_LOG_ERROR, "stm is not stream with dqs.");
+        UpdateDavidSqeHeadUpdate(taskInfo, sqe);
+        return;
+    }
     stars_dqs_ctrl_space_t* ctrlSpacePtr = stm->GetDqsCtrlSpace();
-    COND_RETURN_VOID(ctrlSpacePtr == nullptr, "ctrl space is nullptr.");
+    if (unlikely(ctrlSpacePtr == nullptr)) {
+        RT_LOG(RT_LOG_ERROR, "ctrl space is nullptr.");
+        UpdateDavidSqeHeadUpdate(taskInfo, sqe);
+        return;
+    }
 
     const uint64_t ctrlSpacePtrVal = RtPtrToValue(ctrlSpacePtr);
     const uint64_t offset = offsetof(stars_dqs_ctrl_space_t, mbuf_list_op_snapshot);
@@ -1383,6 +1399,7 @@ void ConstructSqeForDqsSchedEndTask(TaskInfo* const taskInfo, void* const sqe, c
     RT_LOG(
         RT_LOG_INFO, "DqsSchedEnd, deviceId=%u, streamId=%d, taskId=%hu, sqId=%u", stm->Device_()->Id_(), stm->Id_(),
         taskInfo->id, sqId);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 void ConstructSqeForDqsInterChipPreProcTask(TaskInfo* const taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
@@ -1404,6 +1421,7 @@ void ConstructSqeForDqsInterChipPreProcTask(TaskInfo* const taskInfo, void* cons
     RT_LOG(
         RT_LOG_INFO, "DqsInterChipPreProc, deviceId=%u, streamId=%d, taskId=%hu", stm->Device_()->Id_(), stm->Id_(),
         taskInfo->id);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 void ConstructSqeForDqsInterChipPostProcTask(TaskInfo* const taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
@@ -1425,6 +1443,7 @@ void ConstructSqeForDqsInterChipPostProcTask(TaskInfo* const taskInfo, void* con
     RT_LOG(
         RT_LOG_INFO, "DqsInterChipPostProc, deviceId=%u, streamId=%d, taskId=%hu", stm->Device_()->Id_(), stm->Id_(),
         taskInfo->id);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 void ConstructSqeForDqsAdspcTask(TaskInfo* const taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
@@ -1445,6 +1464,7 @@ void ConstructSqeForDqsAdspcTask(TaskInfo* const taskInfo, void* const sqe, cons
     RT_LOG(
         RT_LOG_INFO, "DqsAdspcTask, deviceId=%u, streamId=%d, taskId=%hu", stm->Device_()->Id_(), stm->Id_(),
         taskInfo->id);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 static void InitPrepareAllocMbufTracePara(
@@ -1742,6 +1762,7 @@ void ConstructSqeForDqsPrepareTask(TaskInfo* const taskInfo, void* const sqe, co
     RT_LOG(
         RT_LOG_INFO, "DqsPrepare, deviceId=%u, streamId=%d, taskId=%hu", stm->Device_()->Id_(), stm->Id_(),
         taskInfo->id);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 static void InitFuncCallParaForDqsAdspcTask(
@@ -1861,7 +1882,7 @@ static bool DqsTaskRegister()
 {
     TaskFuncSingle dqsEnqueueFuncs = {
         .toCommandFunc = nullptr,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructSqeForDqsEnqueueTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -1871,7 +1892,7 @@ static bool DqsTaskRegister()
     };
     TaskFuncSingle dqsDequeueFuncs = {
         .toCommandFunc = nullptr,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructSqeForDqsDequeueTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -1881,7 +1902,7 @@ static bool DqsTaskRegister()
     };
     TaskFuncSingle dqsPrepareFuncs = {
         .toCommandFunc = nullptr,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructSqeForDqsPrepareTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = &DqsPrepareTaskUnInit,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -1891,7 +1912,7 @@ static bool DqsTaskRegister()
     };
     TaskFuncSingle dqsZeroCopyFuncs = {
         .toCommandFunc = nullptr,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructSqeForDqsZeroCopyTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = &DqsZeroCopyTaskUnInit,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -1901,7 +1922,7 @@ static bool DqsTaskRegister()
     };
     TaskFuncSingle dqsSchedEndFuncs = {
         .toCommandFunc = nullptr,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructSqeForDqsSchedEndTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -1911,7 +1932,7 @@ static bool DqsTaskRegister()
     };
     TaskFuncSingle dqsMbufFreeFuncs = {
         .toCommandFunc = nullptr,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructSqeForDqsMbufFreeTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = &DqsMbufFreeTaskUnInit,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -1921,7 +1942,7 @@ static bool DqsTaskRegister()
     };
     TaskFuncSingle dqsInterChipPreProcFuncs = {
         .toCommandFunc = nullptr,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructSqeForDqsInterChipPreProcTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = &DqsInterChipPreProcTaskUnInit,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -1931,7 +1952,7 @@ static bool DqsTaskRegister()
     };
     TaskFuncSingle dqsInterChipPostProcFuncs = {
         .toCommandFunc = nullptr,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructSqeForDqsInterChipPostProcTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = &DqsInterChipPostProcTaskUnInit,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -1941,7 +1962,7 @@ static bool DqsTaskRegister()
     };
     TaskFuncSingle dqsAdspcFuncs = {
         .toCommandFunc = nullptr,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructSqeForDqsAdspcTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = &DqsAdspcTaskUnInit,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -1951,7 +1972,7 @@ static bool DqsTaskRegister()
     };
     TaskFuncSingle dqsBatchDequeueFuncs = {
         .toCommandFunc = nullptr,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructSqeForDqsBatchDequeueTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = &DqsBatchDequeTaskUnInit,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -1961,7 +1982,7 @@ static bool DqsTaskRegister()
     };
     TaskFuncSingle dqsConditionCopyFuncs = {
         .toCommandFunc = nullptr,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructSqeForDqsConditionCopyTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = &DqsConditionCopyTaskUnInit,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -1971,7 +1992,7 @@ static bool DqsTaskRegister()
     };
     TaskFuncSingle dqsFrameAlignFuncs = {
         .toCommandFunc = nullptr,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructSqeForDqsFrameAlignTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = &DqsFrameAlignTaskUnInit,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -1981,7 +2002,7 @@ static bool DqsTaskRegister()
     };
     TaskFuncSingle modelSerialSchedPreProcTaskFuncs = {
         .toCommandFunc = nullptr,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructSqeForModelSerialSchedPreProcTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -1991,7 +2012,7 @@ static bool DqsTaskRegister()
     };
     TaskFuncSingle modelSerialSchedNotifyWaitTaskFuncs = {
         .toCommandFunc = nullptr,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructSqeForModelSerialSchedNotifyWaitTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -2001,7 +2022,7 @@ static bool DqsTaskRegister()
     };
     TaskFuncSingle modelSerialSchedPostProcTaskFuncs = {
         .toCommandFunc = nullptr,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructSqeForModelSerialSchedPostProcTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -2027,22 +2048,6 @@ static bool DqsTaskRegister()
         RegTaskFunc(chip, TS_TASK_TYPE_MODEL_SERIAL_SCHED_PREPROC, modelSerialSchedPreProcTaskFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_MODEL_SERIAL_SCHED_NOTIFY_WAIT, modelSerialSchedNotifyWaitTaskFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_MODEL_SERIAL_SCHED_POSTPROC, modelSerialSchedPostProcTaskFuncs);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_DQS_MBUF_FREE, &ConstructSqeForDqsMbufFreeTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_DQS_ENQUEUE, &ConstructSqeForDqsEnqueueTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_DQS_DEQUEUE, &ConstructSqeForDqsDequeueTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_DQS_ZERO_COPY, &ConstructSqeForDqsZeroCopyTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_DQS_SCHED_END, &ConstructSqeForDqsSchedEndTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_DQS_PREPARE, &ConstructSqeForDqsPrepareTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_DQS_INTER_CHIP_PREPROC, &ConstructSqeForDqsInterChipPreProcTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_DQS_INTER_CHIP_POSTPROC, &ConstructSqeForDqsInterChipPostProcTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_DQS_ADSPC, &ConstructSqeForDqsAdspcTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_DQS_BATCH_DEQUEUE, &ConstructSqeForDqsBatchDequeueTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_DQS_CONDITION_COPY, &ConstructSqeForDqsConditionCopyTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_DQS_FRAME_ALIGN, &ConstructSqeForDqsFrameAlignTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_MODEL_SERIAL_SCHED_PREPROC, &ConstructSqeForModelSerialSchedPreProcTask);
-        RegDavidSqeFunc(
-            chip, TS_TASK_TYPE_MODEL_SERIAL_SCHED_NOTIFY_WAIT, &ConstructSqeForModelSerialSchedNotifyWaitTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_MODEL_SERIAL_SCHED_POSTPROC, &ConstructSqeForModelSerialSchedPostProcTask);
     }
 
     return true;

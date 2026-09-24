@@ -19,6 +19,7 @@
 #include "stream_sqcq_manage.hpp"
 #include "error_message_manage.hpp"
 #include "task.hpp"
+#include "stars_david.hpp"
 
 namespace cce {
 namespace runtime {

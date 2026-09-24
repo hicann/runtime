@@ -200,8 +200,10 @@ rtError_t SubmitRdmaPiValueModifyTask(
     return RT_ERROR_NONE;
 }
 
-void ConstructSqeRdmaPiValueModifyTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+void ConstructSqeRdmaPiValueModifyTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
     Stream* const stream = taskInfo->stream;
     RtStarsFunctionCallSqe& sqe = command->fuctionCallSqe;
     (void)memset_s(&sqe, sizeof(rtStarsSqe_t), 0, sizeof(rtStarsSqe_t));

@@ -29,8 +29,11 @@ constexpr uint32_t DRV_CALLBACK_GROUPID = 11U; // Driver-defined callback group 
 }
 
 #if F_DESC("DavinciKernelTask")
-void ConstructAICoreSqeForDavinciTask(TaskInfo* const taskInfo, rtStarsSqe_t* const command)
+void ConstructAICoreSqeForDavinciTask(TaskInfo* const taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     AicTaskInfo* aicTaskInfo = &(taskInfo->u.aicTaskInfo);
     (void)memset_s(command, sizeof(rtStarsSqe_t), 0, sizeof(rtStarsSqe_t));
     RtStarsAicAivKernelSqe* sqe = &(command->aicAivKernelSqe);
@@ -108,8 +111,11 @@ void ConstructAICoreSqeForDavinciTask(TaskInfo* const taskInfo, rtStarsSqe_t* co
     PrintSqe(command, "AIC or AIV Task");
 }
 
-void ConstructAICpuSqeForDavinciTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+void ConstructAICpuSqeForDavinciTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     (void)memset_s(command, sizeof(rtStarsSqe_t), 0, sizeof(rtStarsSqe_t));
     AicpuTaskInfo* const aicpuTask = &taskInfo->u.aicpuTaskInfo;
     const RuntimeThreadAicpuTaskInfo& runtimeThreadInfo = aicpuTask->extraInfo.runtimeThread;

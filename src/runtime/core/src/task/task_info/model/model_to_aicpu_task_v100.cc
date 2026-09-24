@@ -19,8 +19,11 @@ namespace runtime {
 
 #if F_DESC("ModelToAicpuTask")
 
-static void ConstructSqeForModelToAicpuTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+static void ConstructSqeForModelToAicpuTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     RtStarsAicpuControlSqe* const sqe = &(command->aicpuControlSqe);
     Stream* stm = taskInfo->stream;
 

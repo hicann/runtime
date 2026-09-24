@@ -17,8 +17,11 @@
 namespace cce {
 namespace runtime {
 #if F_DESC("TaskTimeoutSetTask")
-static void ConstructSqeForTimeoutSetTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+static void ConstructSqeForTimeoutSetTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     TimeoutSetTaskInfo* const timeoutSetTask = &(taskInfo->u.timeoutSetTask);
     Stream* const stm = taskInfo->stream;
     RtStarsAicpuControlSqe* const sqe = &(command->aicpuControlSqe);

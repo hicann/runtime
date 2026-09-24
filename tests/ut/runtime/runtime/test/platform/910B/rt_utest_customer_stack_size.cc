@@ -14,6 +14,7 @@
 #define private public
 #define protected public
 #include "runtime.hpp"
+#include "runtime_task_manager.h"
 #include "model.hpp"
 #include "raw_device.hpp"
 #include "module.hpp"
@@ -323,7 +324,7 @@ TEST_F(CloudV2CustomerStackSize, ConstructAICoreSqeForDavinciTask)
     taskInfo.u.aicTaskInfo.kernel = &kernel;
 
     rtStarsSqe_t command = {};
-    ConstructAICoreSqeForDavinciTask(&taskInfo, &command);
+    ConstructAICoreSqeForDavinciTask(&taskInfo, &command, TaskSqeInfo{0ULL, 0ULL});
 
     ret = rtStreamDestroy(stream);
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -362,7 +363,7 @@ TEST_F(CloudV2CustomerStackSize, ConstructAICoreSqeForDavinciTask2)
     taskInfo.u.aicTaskInfo.kernel = &kernel;
 
     rtStarsSqe_t command = {};
-    ConstructAICoreSqeForDavinciTask(&taskInfo, &command);
+    ConstructAICoreSqeForDavinciTask(&taskInfo, &command, TaskSqeInfo{0ULL, 0ULL});
 
     ret = rtStreamDestroy(stream);
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -401,7 +402,7 @@ TEST_F(CloudV2CustomerStackSize, ConstructAICoreSqeForDavinciTask3)
     taskInfo.u.aicTaskInfo.kernel = &kernel;
 
     rtStarsSqe_t command = {};
-    ConstructAICoreSqeForDavinciTask(&taskInfo, &command);
+    ConstructAICoreSqeForDavinciTask(&taskInfo, &command, TaskSqeInfo{0ULL, 0ULL});
 
     ret = rtStreamDestroy(stream);
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -446,7 +447,7 @@ TEST_F(CloudV2CustomerStackSize, ConstructAICoreSqeForDavinciTask4)
     dev->SetQosCfg(aicoreQosCfg[1], 1);
     dev->SetQosCfg(aicoreQosCfg[2], 2);
     dev->SetQosCfg(aicoreQosCfg[3], 3);
-    ConstructAICoreSqeForDavinciTask(&taskInfo, &command);
+    ConstructAICoreSqeForDavinciTask(&taskInfo, &command, TaskSqeInfo{0ULL, 0ULL});
 
     ret = rtStreamDestroy(stream);
     EXPECT_EQ(ret, RT_ERROR_NONE);

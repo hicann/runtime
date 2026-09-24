@@ -243,6 +243,61 @@ Event* TaskTest::event_ = NULL;
 rtStream_t TaskTest::streamHandle_ = NULL;
 rtEvent_t TaskTest::eventHandle_ = NULL;
 
+namespace {
+class TaskTagStateGuard {
+public:
+    TaskTagStateGuard(Stream* const stream, const uint16_t taskId)
+        : runtime_(Runtime::Instance()),
+          stream_(stream),
+          taskId_(taskId),
+          oldCollectFlag_(runtime_->GetNpuCollectFlag()),
+          oldStreamTaskTag_(stream_->GetTaskTag(taskId))
+    {
+        ThreadLocalContainer::GetTaskTag(oldThreadTaskTag_);
+        ThreadLocalContainer::ResetTaskTag();
+        stream_->DelTaskTag(taskId_);
+    }
+
+    ~TaskTagStateGuard()
+    {
+        runtime_->SetNpuCollectFlag(oldCollectFlag_);
+        ThreadLocalContainer::ResetTaskTag();
+        if (!oldThreadTaskTag_.empty()) {
+            (void)ThreadLocalContainer::SetTaskTag(oldThreadTaskTag_.c_str());
+        }
+        if (oldStreamTaskTag_.empty()) {
+            stream_->DelTaskTag(taskId_);
+        } else {
+            stream_->AddTaskTag(taskId_, oldStreamTaskTag_);
+        }
+    }
+
+    Runtime* RuntimeInstance() const { return runtime_; }
+
+private:
+    Runtime* const runtime_;
+    Stream* const stream_;
+    const uint16_t taskId_;
+    const bool oldCollectFlag_;
+    std::string oldThreadTaskTag_;
+    const std::string oldStreamTaskTag_;
+};
+
+class TaskResManageStateGuard {
+public:
+    explicit TaskResManageStateGuard(Stream* const stream) : stream_(stream), oldTaskResManage_(stream->taskResMang_)
+    {
+        stream_->taskResMang_ = nullptr;
+    }
+
+    ~TaskResManageStateGuard() { stream_->taskResMang_ = oldTaskResManage_; }
+
+private:
+    Stream* const stream_;
+    TaskResManage* const oldTaskResManage_;
+};
+} // namespace
+
 drvError_t drvDeviceGetTransWay_stub_1(void* src, void* dst, uint8_t* trans_type)
 {
     drvError_t error = DRV_ERROR_NONE;
@@ -383,32 +438,97 @@ TEST_F(TaskTest, notify_wait_task_fail_print)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
-TEST_F(TaskTest, notify_wait_task_set_task_tag)
+TEST_F(TaskTest, SetTaskTagKeepsPendingTagWhenCollectionIsDisabled)
 {
+    constexpr uint16_t taskId = UINT16_MAX - 6U;
+    TaskTagStateGuard guard(stream_, taskId);
     TaskInfo task = {};
-    task.id = 1;
+    task.id = taskId;
+    InitByStream(&task, stream_);
 
-    const char* taskTag1 = "123456123456";
-    rtError_t error = rtSetTaskTag(taskTag1);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    rtStream_t stream = NULL;
-    error = rtStreamCreate(&stream, 0);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    const char* taskTag = "123456";
-    error = rtSetTaskTag(taskTag);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
-    Runtime* rtInstance = ((Runtime*)Runtime::Instance());
-    rtInstance->SetNpuCollectFlag(true);
+    guard.RuntimeInstance()->SetNpuCollectFlag(false);
+    ASSERT_EQ(rtSetTaskTag("disabled_collect"), RT_ERROR_NONE);
     SetTaskTag(&task);
-    EXPECT_STREQ(task.stream->GetTaskTag(task.id).c_str(), taskTag);
 
-    rtInstance->SetNpuCollectFlag(false);
-    error = rtStreamDestroy(stream);
-    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_TRUE(ThreadLocalContainer::IsTaskTagValid());
+    EXPECT_TRUE(stream_->GetTaskTag(taskId).empty());
+}
+
+TEST_F(TaskTest, SetTaskTagDoesNothingWithoutAValidThreadTag)
+{
+    constexpr uint16_t taskId = UINT16_MAX - 1U;
+    TaskTagStateGuard guard(stream_, taskId);
+    TaskInfo task = {};
+    task.id = taskId;
+    InitByStream(&task, stream_);
+
+    guard.RuntimeInstance()->SetNpuCollectFlag(true);
+    SetTaskTag(&task);
+
+    EXPECT_FALSE(ThreadLocalContainer::IsTaskTagValid());
+    EXPECT_TRUE(stream_->GetTaskTag(taskId).empty());
+}
+
+TEST_F(TaskTest, SetTaskTagConsumesAValidThreadTagOnce)
+{
+    constexpr uint16_t taskId = UINT16_MAX - 2U;
+    TaskTagStateGuard guard(stream_, taskId);
+    TaskInfo task = {};
+    task.id = taskId;
+    InitByStream(&task, stream_);
+
+    guard.RuntimeInstance()->SetNpuCollectFlag(true);
+    ASSERT_EQ(rtSetTaskTag("consume_once"), RT_ERROR_NONE);
+    SetTaskTag(&task);
+    SetTaskTag(&task);
+
+    EXPECT_EQ(stream_->GetTaskTag(taskId), "consume_once");
+    EXPECT_FALSE(ThreadLocalContainer::IsTaskTagValid());
+}
+
+TEST_F(TaskTest, TaskCommonInfoInitConsumesTaskTagForOldProcess)
+{
+    constexpr uint16_t taskId = UINT16_MAX - 3U;
+    TaskTagStateGuard guard(stream_, taskId);
+    TaskInfo task = {};
+    task.id = taskId;
+    InitByStream(&task, stream_);
+
+    guard.RuntimeInstance()->SetNpuCollectFlag(true);
+    ASSERT_EQ(rtSetTaskTag("old_process"), RT_ERROR_NONE);
+    {
+        TaskResManageStateGuard taskResGuard(stream_);
+        TaskCommonInfoInit(&task);
+    }
+
+    EXPECT_EQ(stream_->GetTaskTag(taskId), "old_process");
+    EXPECT_FALSE(ThreadLocalContainer::IsTaskTagValid());
+}
+
+TEST_F(TaskTest, SaveTaskInfoConsumesTaskTagAndPreservesSubmittedFields)
+{
+    constexpr uint16_t taskId = UINT16_MAX - 4U;
+    TaskTagStateGuard guard(stream_, taskId);
+    TaskInfo submitTask = {};
+    TaskInfo savedTask = {};
+    InitByStream(&submitTask, stream_);
+    InitByStream(&savedTask, stream_);
+    submitTask.id = taskId;
+    submitTask.sqeNum = 3U;
+    savedTask.sqeNum = 2U;
+    submitTask.needPostProc = true;
+    submitTask.stmArgPos = 5U;
+
+    guard.RuntimeInstance()->SetNpuCollectFlag(true);
+    ASSERT_EQ(rtSetTaskTag("save_task_info"), RT_ERROR_NONE);
+    SaveTaskInfo(&savedTask, &submitTask);
+
+    EXPECT_EQ(savedTask.id, taskId);
+    EXPECT_EQ(savedTask.sqeNum, 3U);
+    EXPECT_TRUE(savedTask.needPostProc);
+    EXPECT_EQ(savedTask.stmArgPos, 5U);
+    EXPECT_EQ(stream_->GetTaskTag(taskId), "save_task_info");
+    EXPECT_FALSE(ThreadLocalContainer::IsTaskTagValid());
 }
 
 TEST_F(TaskTest, model_maintance_DoCompleteSuccess_01)
@@ -944,7 +1064,7 @@ TEST_F(TaskTest, base_task_print0)
     PrintErrorInfo(&task, 0);
 
     rtStarsSqe_t sqe;
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     Complete(&task, 0);
     rtStreamDestroy(stream);
 }
@@ -965,10 +1085,10 @@ TEST_F(TaskTest, base_task_lock_unlock)
     SqLockUnlockTaskInit(&task1, false);
 
     rtStarsSqe_t sqe;
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     Complete(&task, 0);
     rtStarsSqe_t sqe1;
-    ToConstructSqe(&task1, &sqe1);
+    ToConstructSqe(&task1, &sqe1, TaskSqeInfo{0ULL, 0ULL});
     Complete(&task1, 0);
     rtStreamDestroy(stream);
 }
@@ -1032,7 +1152,7 @@ TEST_F(TaskTest, base_aicpu_info_load_task)
     AicpuInfoLoadTaskInit(&task, aicpu_info, 16);
 
     rtStarsSqe_t sqe;
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     rtCqReport_t cqe;
     cqe.errorType = 1;
     cqe.errorCode = 1;
@@ -1055,7 +1175,7 @@ TEST_F(TaskTest, base_task_nop)
     NopTaskInit(&task);
 
     rtStarsSqe_t sqe;
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     Complete(&task, 0);
     rtStreamDestroy(stream);
 }
@@ -1113,15 +1233,15 @@ TEST_F(TaskTest, stars_aicpu_sqe)
     EXPECT_EQ(task.type, TS_TASK_TYPE_KERNEL_AICPU);
     RtStarsAicpuKernelSqe* const sqe = &(command.aicpuSqe);
     task.u.aicpuTaskInfo.comm.kernelFlag = RT_KERNEL_HOST_FIRST;
-    ToConstructSqe(&task, &command);
+    ToConstructSqe(&task, &command, TaskSqeInfo{0ULL, 0ULL});
     task.u.aicpuTaskInfo.aicpuKernelType = 1;
     EXPECT_EQ(sqe->topic_type, TOPIC_TYPE_HOST_AICPU_FIRST);
 
     task.u.aicpuTaskInfo.comm.kernelFlag = RT_KERNEL_HOST_ONLY;
-    ToConstructSqe(&task, &command);
+    ToConstructSqe(&task, &command, TaskSqeInfo{0ULL, 0ULL});
     EXPECT_EQ(sqe->topic_type, TOPIC_TYPE_HOST_AICPU_ONLY);
     task.u.aicpuTaskInfo.comm.kernelFlag = RT_KERNEL_DEVICE_FIRST;
-    ToConstructSqe(&task, &command);
+    ToConstructSqe(&task, &command, TaskSqeInfo{0ULL, 0ULL});
     EXPECT_EQ(sqe->topic_type, TOPIC_TYPE_DEVICE_AICPU_FIRST);
     rtCqReport_t cqe;
     cqe.errorType = 1;
@@ -1140,7 +1260,7 @@ TEST_F(TaskTest, stars_eventrecord_sqe)
     rtStarsSqe_t sqe;
     InitByStream(&task, stream_);
     EventRecordTaskInit(&task, &evt, false, evt.EventId_());
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     Complete(&task, 0);
 
     rtCqReport_t cqe;
@@ -1166,7 +1286,7 @@ TEST_F(TaskTest, stars_eventwait_sqe)
     InitByStream(&task, stream_);
     EventWaitTaskInit(&task, &evt, event_id, 0, 0);
     EXPECT_EQ(task.type, TS_TASK_TYPE_STREAM_WAIT_EVENT);
-    ToConstructSqe(&task, &command);
+    ToConstructSqe(&task, &command, TaskSqeInfo{0ULL, 0ULL});
     RtStarsEventSqe* evSqe = &(command.eventSqe);
     EXPECT_EQ(evSqe->header.type, RT_STARS_SQE_TYPE_EVENT_WAIT);
     evt.EventIdCountAdd((task.u.eventWaitTaskInfo).eventId);
@@ -1191,7 +1311,7 @@ TEST_F(TaskTest, stars_memcpy_async_sqe_d2d)
     rtStarsSqe_t sqe;
     InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     MemcpyAsyncTaskInitV3(&task, kind, src, dst, count, 0, NULL);
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     MemcpyAsyncTaskInitV3(&task, RT_MEMCPY_HOST_TO_DEVICE_EX, src, dst, count, 0, NULL);
 
     rtCqReport_t cqe = {};
@@ -1220,7 +1340,7 @@ TEST_F(TaskTest, stars_memcpy_async_sqe_d2d_error)
     rtStarsSqe_t sqe;
     InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     MemcpyAsyncTaskInitV3(&task, kind, src, dst, count, 0, NULL);
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
 
     rtCqReport_t cqe = {};
     cqe.errorType = 1U;
@@ -1245,7 +1365,7 @@ TEST_F(TaskTest, stars_dsa_update_sqe_d2h_error)
     InitByStream(&task, stream_);
     MemcpyAsyncD2HTaskInit(&task, src, count, 2U, 3U);
     EXPECT_EQ(task.type, TS_TASK_TYPE_MEMCPY);
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     rtCqReport_t cqe = {};
     cqe.errorType = 1U;
     Complete(&task, 0);
@@ -1277,7 +1397,7 @@ TEST_F(TaskTest, stars_dsa_update_sqe_d2h_error_not_dsa)
     InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     MemcpyAsyncD2HTaskInit(&task, src, count, 2U, 3U);
     EXPECT_EQ(task.type, TS_TASK_TYPE_MEMCPY);
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
 
     rtCqReport_t cqe = {};
     cqe.errorType = 1U;
@@ -1324,7 +1444,7 @@ TEST_F(TaskTest, stars_reduce_async_sqe)
             InitByStream(pTask, rt_ut::UnwrapOrNull<Stream>(stream));
             MemcpyAsyncTaskInitV3(pTask, (rtRecudeKind_t)iKind, src, dst, count, 0, NULL);
             pTask->u.memcpyAsyncTaskInfo.copyDataType = (rtDataType_t)jType;
-            ToConstructSqe(pTask, &sqe);
+            ToConstructSqe(pTask, &sqe, TaskSqeInfo{0ULL, 0ULL});
             Complete(pTask, 0);
             TaskUnInitProc(pTask);
         }
@@ -1346,7 +1466,7 @@ TEST_F(TaskTest, stars_notify_record_sqe_notify_null)
     SingleBitNotifyRecordInfo single_bit_notify_info = {false, false, false, false, 0, 0, false};
     NotifyRecordTaskInit(&task, 0, 0, 0, &single_bit_notify_info, nullptr, nullptr, false);
 
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     Complete(&task, 0);
 
     rtStreamDestroy(stream);
@@ -1363,7 +1483,7 @@ TEST_F(TaskTest, stars_notify_wait_sqe)
     rtStarsSqe_t sqe;
     InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     NotifyWaitTaskInit(&task, 0, 0, nullptr, nullptr, false);
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     Complete(&task, 0);
     PrintErrorInfo(&task, 0);
 
@@ -1382,7 +1502,7 @@ TEST_F(TaskTest, stars_stream_activate_sqe)
     rtStarsSqe_t sqe;
     InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     StreamActiveTaskInit(&task, rt_ut::UnwrapOrNull<Stream>(stream));
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     Complete(&task, 0);
     rtStarsStreamActiveFcPara_t fcPara = {};
     error = InitFuncCallParaForStreamActiveTask(&task, fcPara, CHIP_MINI_V3);
@@ -1419,7 +1539,7 @@ TEST_F(TaskTest, stars_ph_sqe)
     rtStarsSqe_t sqe;
     InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     DataDumpLoadInfoTaskInit(&task, 0, 0, RT_KERNEL_DEFAULT);
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     Complete(&task, 0);
     rtStreamDestroy(stream);
 }
@@ -1433,16 +1553,16 @@ TEST_F(TaskTest, stars_callback_launch)
     InitByStream(&task, stream_);
     CallbackLaunchTaskInit(&task, nullptr, nullptr, true, -1);
     EXPECT_EQ(task.type, TS_TASK_TYPE_HOSTFUNC_CALLBACK);
-    ToConstructSqe(&task, &starsSqe);
+    ToConstructSqe(&task, &starsSqe, TaskSqeInfo{0ULL, 0ULL});
     MOCKER_CPP(&CbSubscribe::GetGroupIdByStreamId).stubs().will(returnValue(RT_ERROR_NONE));
-    ToConstructSqe(&task, &starsSqe);
+    ToConstructSqe(&task, &starsSqe, TaskSqeInfo{0ULL, 0ULL});
     RtStarsHostfuncCallbackSqe* sqe = &(starsSqe.callbackSqe);
 
     MOCKER_CPP_VIRTUAL((NpuDriver*)(stream_->Device_()->Driver_()), &NpuDriver::GetRunMode)
         .stubs()
         .will(returnValue((uint32_t)RT_RUN_MODE_ONLINE));
 
-    ToConstructSqe(&task, &starsSqe);
+    ToConstructSqe(&task, &starsSqe, TaskSqeInfo{0ULL, 0ULL});
     EXPECT_EQ(sqe->kernel_type, TS_AICPU_KERNEL_NON);
     Complete(&task, 0);
     ToCommand(&task, &command);
@@ -1806,7 +1926,7 @@ TEST_F(TaskTest, InitFftsPlusTaskForDynamicShape)
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_EQ(fftsPlusTask.type, TS_TASK_TYPE_FFTS_PLUS);
     rtStarsSqe_t sqe[3] = {};
-    ToConstructSqe(&fftsPlusTask, &sqe[0]);
+    ToConstructSqe(&fftsPlusTask, &sqe[0], TaskSqeInfo{0ULL, 0ULL});
 
     TaskUnInitProc(&fftsPlusTask);
     free((void*)fftsPlusTaskInfo.descBuf);
@@ -1832,7 +1952,7 @@ TEST_F(TaskTest, InitFftsPlusTaskForStaticShape)
     FftsPlusTaskInit(&fftsPlusTask, &fftsPlusTaskInfo, flag);
     EXPECT_EQ(fftsPlusTask.type, TS_TASK_TYPE_FFTS_PLUS);
     rtStarsSqe_t sqe = {};
-    ToConstructSqe(&fftsPlusTask, &sqe);
+    ToConstructSqe(&fftsPlusTask, &sqe, TaskSqeInfo{0ULL, 0ULL});
 
     TaskUnInitProc(&fftsPlusTask);
     free((void*)fftsPlusTaskInfo.descBuf);
@@ -1858,7 +1978,7 @@ TEST_F(TaskTest, ConstructSqe)
     AicTaskInit(&task, kernel, kernel->GetKernelAttrType(), 1, nullptr);
 
     rtStarsSqe_t sqe = {};
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     delete kernel;
 }
 
@@ -1912,7 +2032,7 @@ TEST_F(TaskTest, ConstructSqe_MACH_AI_MIX_KERNEL_01)
     aicTaskInfo->kernel->funcType_ = KERNEL_FUNCTION_TYPE_AIC;
 
     rtStarsSqe_t sqe = {};
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     delete kernel;
     rtFftsPlusSqe_t* fftsSqe = &(sqe.fftsPlusSqe);
     EXPECT_EQ(fftsSqe->sqeHeader.type, RT_STARS_SQE_TYPE_FFTS);
@@ -1945,7 +2065,7 @@ TEST_F(TaskTest, ConstructSqe_MACH_AI_MIX_KERNEL_02)
     aicTaskInfo->kernel->funcType_ = KERNEL_FUNCTION_TYPE_AIV;
 
     rtStarsSqe_t sqe = {};
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     delete kernel;
     rtFftsPlusSqe_t* fftsSqe = &(sqe.fftsPlusSqe);
     EXPECT_EQ(fftsSqe->sqeHeader.type, RT_STARS_SQE_TYPE_FFTS);
@@ -1978,7 +2098,7 @@ TEST_F(TaskTest, ConstructSqe_MACH_AI_MIX_KERNEL_03)
     aicTaskInfo->kernel->funcType_ = KERNEL_FUNCTION_TYPE_INVALID;
 
     rtStarsSqe_t sqe = {};
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     delete kernel;
 }
 
@@ -2004,7 +2124,7 @@ TEST_F(TaskTest, ConstructSqe_MACH_AI_MIX_KERNEL_04)
     task.u.aicTaskInfo.kernel = kernel;
 
     rtStarsSqe_t sqe = {};
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     delete kernel;
 }
 
@@ -2018,7 +2138,7 @@ TEST_F(TaskTest, ProfilerTraceExTask_ConstructSqe)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     rtStarsSqe_t sqe = {};
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
 }
 
 TEST_F(TaskTest, LabelSetTask_ConstructSqe)
@@ -2036,7 +2156,7 @@ TEST_F(TaskTest, LabelSetTask_ConstructSqe)
     ASSERT_NE(modelPtr, nullptr);
     stream_->SetModel(modelPtr);
     rtStarsSqe_t sqe = {};
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     EXPECT_EQ(sqe.phSqe.type, RT_STARS_SQE_TYPE_PLACE_HOLDER);
     stream_->SetModel(nullptr);
     ret = rtModelDestroy(model);
@@ -2067,10 +2187,10 @@ TEST_F(TaskTest, StarsCommonTask_ConstructSqe)
     StarsCommonTaskInit(&dvppTask, vpcSqe, 0);
 
     rtStarsSqe_t sqe = {};
-    ToConstructSqe(&dvppTask, &sqe);
+    ToConstructSqe(&dvppTask, &sqe, TaskSqeInfo{0ULL, 0ULL});
 
     MOCKER(memcpy_s).stubs().will(returnValue(NULL));
-    ToConstructSqe(&dvppTask, &sqe);
+    ToConstructSqe(&dvppTask, &sqe, TaskSqeInfo{0ULL, 0ULL});
 
     delete stream;
     delete device;
@@ -2085,7 +2205,7 @@ TEST_F(TaskTest, GetDevMsgTask_ConstructSqe)
     GetDevMsgTaskInit(&task, devMemAddr, devMemSize, RT_GET_DEV_ERROR_MSG);
     rtStarsSqe_t command;
     command.phSqe = {};
-    ToConstructSqe(&task, &command);
+    ToConstructSqe(&task, &command, TaskSqeInfo{0ULL, 0ULL});
     EXPECT_EQ(command.phSqe.task_type, TS_TASK_TYPE_GET_DEVICE_MSG);
 }
 
@@ -2122,7 +2242,7 @@ TEST_F(TaskTest, CmoTask_test)
     error = CmoTaskInit(&task, &cmoTask, stream, 0);
     EXPECT_EQ(error, RT_ERROR_SEC_HANDLE);
     rtStarsSqe_t sqe = {};
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     TaskUnInitProc(&task);
     stream->SetModel(nullptr);
     ret = rtModelDestroy(model);
@@ -2161,7 +2281,7 @@ TEST_F(TaskTest, BarrierTask_test)
     error = BarrierTaskInit(&task, &barrierTask, stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
     rtStarsSqe_t sqe = {};
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     stream->SetModel(nullptr);
     ret = rtModelDestroy(model);
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -2179,7 +2299,7 @@ TEST_F(TaskTest, npuGetFloatStatus_01)
     NpuGetFloatStaTaskInit(&task, nullptr, 32, checkmode);
 
     rtStarsSqe_t sqe = {};
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     stream_->SetBindFlag(bindFlag);
     EXPECT_EQ(sqe.getFloatStatusSqe.sqeHeader.type, RT_STARS_SQE_TYPE_COND);
 }
@@ -2194,7 +2314,7 @@ TEST_F(TaskTest, npuGetFloatDebugStatus_01)
     NpuGetFloatStaTaskInit(&task, nullptr, 32, checkmode, true);
 
     rtStarsSqe_t sqe = {};
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     stream_->SetBindFlag(bindFlag);
     EXPECT_EQ(sqe.getFloatStatusSqe.sqeHeader.type, RT_STARS_SQE_TYPE_COND);
 }
@@ -2209,7 +2329,7 @@ TEST_F(TaskTest, npuGetFloatStatus_02)
     NpuGetFloatStaTaskInit(&task, nullptr, 32, checkmode);
 
     rtStarsSqe_t sqe = {};
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     stream_->SetBindFlag(bindFlag);
     EXPECT_EQ(sqe.getFloatStatusSqe.sqeHeader.type, RT_STARS_SQE_TYPE_COND);
 
@@ -2218,7 +2338,7 @@ TEST_F(TaskTest, npuGetFloatStatus_02)
     StreamTagSetTaskInit(&tagTask, stream_, 0);
     rtStarsSqe_t command;
     command.phSqe = {};
-    ToConstructSqe(&tagTask, &command);
+    ToConstructSqe(&tagTask, &command, TaskSqeInfo{0ULL, 0ULL});
 }
 
 TEST_F(TaskTest, npuGetFloatDebugStatus_02)
@@ -2231,7 +2351,7 @@ TEST_F(TaskTest, npuGetFloatDebugStatus_02)
     NpuGetFloatStaTaskInit(&task, nullptr, 32, checkmode, true);
 
     rtStarsSqe_t sqe = {};
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     stream_->SetBindFlag(bindFlag);
     EXPECT_EQ(sqe.getFloatStatusSqe.sqeHeader.type, RT_STARS_SQE_TYPE_COND);
 
@@ -2240,7 +2360,7 @@ TEST_F(TaskTest, npuGetFloatDebugStatus_02)
     StreamTagSetTaskInit(&tagTask, stream_, 0);
     rtStarsSqe_t command;
     command.phSqe = {};
-    ToConstructSqe(&tagTask, &command);
+    ToConstructSqe(&tagTask, &command, TaskSqeInfo{0ULL, 0ULL});
 }
 
 TEST_F(TaskTest, npuClearFloatStatus_01)
@@ -2253,7 +2373,7 @@ TEST_F(TaskTest, npuClearFloatStatus_01)
     NpuClrFloatStaTaskInit(&task, checkmode);
 
     rtStarsSqe_t sqe = {};
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     stream_->SetBindFlag(bindFlag);
     EXPECT_EQ(sqe.phSqe.type, RT_STARS_SQE_TYPE_PLACE_HOLDER);
 }
@@ -2268,7 +2388,7 @@ TEST_F(TaskTest, npuClearFloatDebugStatus_01)
     NpuClrFloatStaTaskInit(&task, checkmode, true);
 
     rtStarsSqe_t sqe = {};
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     stream_->SetBindFlag(bindFlag);
     EXPECT_EQ(sqe.phSqe.type, RT_STARS_SQE_TYPE_PLACE_HOLDER);
 }
@@ -2283,7 +2403,7 @@ TEST_F(TaskTest, npuClearFloatStatus_02)
     NpuClrFloatStaTaskInit(&task, checkmode);
 
     rtStarsSqe_t sqe = {};
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     stream_->SetBindFlag(bindFlag);
     EXPECT_EQ(sqe.phSqe.type, RT_STARS_SQE_TYPE_PLACE_HOLDER);
 }
@@ -2298,7 +2418,7 @@ TEST_F(TaskTest, npuClearFloatDebugStatus_02)
     NpuClrFloatStaTaskInit(&task, checkmode, true);
 
     rtStarsSqe_t sqe = {};
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     stream_->SetBindFlag(bindFlag);
     EXPECT_EQ(sqe.phSqe.type, RT_STARS_SQE_TYPE_PLACE_HOLDER);
 }
@@ -2349,7 +2469,7 @@ TEST_F(TaskTest, ToConstructSqeForFlipTask)
     FlipTaskInit(&task, flipNum);
 
     rtStarsSqe_t sqe = {};
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     EXPECT_EQ(sqe.phSqe.task_type, TS_TASK_TYPE_FLIP);
 }
 
@@ -2361,7 +2481,7 @@ TEST_F(TaskTest, ToConstructSqeForFlipTaskTaskID)
     FlipTaskInit(&task, flipNum, 0, 1);
 
     rtStarsSqe_t sqe = {};
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     EXPECT_EQ(sqe.phSqe.task_type, TS_TASK_TYPE_FLIP);
     EXPECT_EQ(sqe.phSqe.task_id, UINT16_MAX);
 }
@@ -2373,7 +2493,7 @@ TEST_F(TaskTest, ToConstructSqeForUpdateAddressTask)
     UpdateAddressTaskInit(&task, 0, 1);
 
     rtStarsSqe_t sqe = {};
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     EXPECT_EQ(sqe.phSqe.task_type, TS_TASK_TYPE_UPDATE_ADDRESS);
 }
 
@@ -2399,7 +2519,7 @@ TEST_F(TaskTest, FftsPlusTaskProcessErr)
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
     rtStarsSqe_t sqe[3] = {};
-    ToConstructSqe(&fftsPlusTask, &sqe[0]);
+    ToConstructSqe(&fftsPlusTask, &sqe[0], TaskSqeInfo{0ULL, 0ULL});
     rtCqReport_t cqe;
     cqe.errorType = 1;
     cqe.errorCode = 1;
@@ -2437,7 +2557,7 @@ TEST_F(TaskTest, FftsPlusTaskProcessErr1)
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
     rtStarsSqe_t sqe[3] = {};
-    ToConstructSqe(&fftsPlusTask, &sqe[0]);
+    ToConstructSqe(&fftsPlusTask, &sqe[0], TaskSqeInfo{0ULL, 0ULL});
     rtCqReport_t cqe;
     cqe.errorType = 1;
     cqe.errorCode = 1;
@@ -2480,7 +2600,7 @@ TEST_F(TaskTest, FftsPlusTaskProcessErr2)
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
     rtStarsSqe_t sqe[3] = {};
-    ToConstructSqe(&fftsPlusTask, &sqe[0]);
+    ToConstructSqe(&fftsPlusTask, &sqe[0], TaskSqeInfo{0ULL, 0ULL});
     rtCqReport_t cqe;
     cqe.errorType = 1;
     cqe.errorCode = 1;
@@ -2523,7 +2643,7 @@ TEST_F(TaskTest, FftsPlusTaskProcessErr3)
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
     rtStarsSqe_t sqe[3] = {};
-    ToConstructSqe(&fftsPlusTask, &sqe[0]);
+    ToConstructSqe(&fftsPlusTask, &sqe[0], TaskSqeInfo{0ULL, 0ULL});
     rtCqReport_t cqe;
     cqe.errorType = 1;
     cqe.errorCode = 1;
@@ -2566,7 +2686,7 @@ TEST_F(TaskTest, FftsPlusTaskProcessErr5)
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
     rtStarsSqe_t sqe[3] = {};
-    ToConstructSqe(&fftsPlusTask, &sqe[0]);
+    ToConstructSqe(&fftsPlusTask, &sqe[0], TaskSqeInfo{0ULL, 0ULL});
     rtCqReport_t cqe;
     cqe.errorType = 1;
     cqe.errorCode = 1;
@@ -2651,7 +2771,7 @@ TEST_F(TaskTest, FftsPlusTaskForDevAddr)
     stream_->SetModel(nullptr);
     DoCompleteSuccForFftsPlusTask(&fftsPlusTask, 0);
     rtStarsSqe_t sqe[3] = {};
-    ToConstructSqe(&fftsPlusTask, &sqe[0]);
+    ToConstructSqe(&fftsPlusTask, &sqe[0], TaskSqeInfo{0ULL, 0ULL});
 
     struct Handle {
         void* kerArgs;
@@ -2706,7 +2826,7 @@ TEST_F(TaskTest, FftsPlusTaskForDevMemErr)
     fftsPlusTask.mte_error = 0x58;
     DoCompleteSuccForFftsPlusTask(&fftsPlusTask, 0);
     rtStarsSqe_t sqe[3] = {};
-    ToConstructSqe(&fftsPlusTask, &sqe[0]);
+    ToConstructSqe(&fftsPlusTask, &sqe[0], TaskSqeInfo{0ULL, 0ULL});
 
     FftsPlusTaskUnInit(&fftsPlusTask);
     EXPECT_EQ(fftsPlusTask.u.fftsPlusTask.errInfo, nullptr);
@@ -2735,7 +2855,7 @@ TEST_F(TaskTest, FftsPlusTaskForDevMemErr_1)
     fftsPlusTask.mte_error = 0x220;
     DoCompleteSuccForFftsPlusTask(&fftsPlusTask, 0);
     rtStarsSqe_t sqe[3] = {};
-    ToConstructSqe(&fftsPlusTask, &sqe[0]);
+    ToConstructSqe(&fftsPlusTask, &sqe[0], TaskSqeInfo{0ULL, 0ULL});
 
     FftsPlusTaskUnInit(&fftsPlusTask);
     EXPECT_EQ(fftsPlusTask.u.fftsPlusTask.errInfo, nullptr);
@@ -2764,7 +2884,7 @@ TEST_F(TaskTest, FftsPlusTaskForDevMemErr_2)
     fftsPlusTask.mte_error = 0x221;
     DoCompleteSuccForFftsPlusTask(&fftsPlusTask, 0);
     rtStarsSqe_t sqe[3] = {};
-    ToConstructSqe(&fftsPlusTask, &sqe[0]);
+    ToConstructSqe(&fftsPlusTask, &sqe[0], TaskSqeInfo{0ULL, 0ULL});
 
     FftsPlusTaskUnInit(&fftsPlusTask);
     EXPECT_EQ(fftsPlusTask.u.fftsPlusTask.errInfo, nullptr);
@@ -2820,7 +2940,7 @@ TEST_F(TaskTest, ToConstructSqeForModelUpdateTask)
     MOCKER_CPP_VIRTUAL(drv, &NpuDriver::MemAddressTranslate).stubs().will(returnValue(RT_ERROR_NONE));
 
     rtStarsSqe_t sqe = {};
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     EXPECT_EQ(sqe.phSqe.task_type, TS_TASK_TYPE_MODEL_TASK_UPDATE);
 }
 
@@ -3671,7 +3791,7 @@ TEST_F(TaskTest, ConstructSqeForMemcpyAsyncTask)
     memcpyAsyncTask.u.memcpyAsyncTaskInfo.copyType = RT_MEMCPY_ADDR_D2D_SDMA;
     memcpyAsyncTask.u.memcpyAsyncTaskInfo.copyKind = RT_MEMCPY_RESERVED;
     memcpyAsyncTask.u.memcpyAsyncTaskInfo.memcpyAddrInfo = &memcpyAddrInfo;
-    ConstructSqeForMemcpyAsyncTask(&memcpyAsyncTask, &sqe);
+    ConstructSqeForMemcpyAsyncTask(&memcpyAsyncTask, &sqe, TaskSqeInfo{0ULL, 0ULL});
 
     rtError_t error = GetModuleIdByMemcpyAddr(nullptr, nullptr, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -3740,11 +3860,11 @@ TEST_F(TaskTest, stars_ipc_notify_record_sqe)
     InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
     SingleBitNotifyRecordInfo single_bit_notify_info = {false, false, false, false, 0, 0, false};
     NotifyRecordTaskInit(&task, 0, 0, 0, &single_bit_notify_info, nullptr, nullptr, false);
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
 
     NpuDriver drv;
     MOCKER_CPP_VIRTUAL(drv, &NpuDriver::GetChipFromDevice).stubs().will(returnValue((uint32_t)1));
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     Complete(&task, 0);
     rtStreamDestroy(stream);
 }
@@ -3781,7 +3901,7 @@ TEST_F(TaskTest, stars_memcpy_async_miniv3)
     kind = RT_MEMCPY_HOST_TO_HOST;
     error = MemcpyAsyncTaskInitV3(&task, kind, src, dst, count, 0, NULL);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
 
     rtCqReport_t cqe = {};
     cqe.errorType = 1U;
@@ -3828,7 +3948,7 @@ TEST_F(TaskTest, stars_memcpy_async_miniv3_offline)
     kind = RT_MEMCPY_DEVICE_TO_HOST;
     error = MemcpyAsyncTaskInitV3(&task, kind, src, dst, count, 0, NULL);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
 
     rtCqReport_t cqe = {};
     cqe.errorType = 1U;
@@ -3864,7 +3984,7 @@ TEST_F(TaskTest, memcpy_async_to_constructSqe_01)
     memcpyTask.u.memcpyAsyncTaskInfo.copyType = RT_MEMCPY_DIR_D2D_SDMA;
     MOCKER_CPP_VIRTUAL(drv, &NpuDriver::GetRunMode).stubs().will(returnValue((uint32_t)0));
     rtStarsSqe_t command;
-    ToConstructSqe(&memcpyTask, &command);
+    ToConstructSqe(&memcpyTask, &command, TaskSqeInfo{0ULL, 0ULL});
     TaskUnInitProc(&memcpyTask);
     free(src);
     free(dst);

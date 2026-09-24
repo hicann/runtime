@@ -37,6 +37,7 @@ namespace runtime {
 constexpr uint32_t RT_AICPU_ERROR_CODE_BIT_MOVE =
     16U; /* 32bit swStatus=[16bit:aicpu error code | 16bit:aicpu exe status] */
 constexpr uint32_t SHIFT_SIX_SIZE = 6U;
+constexpr uint64_t DAVID_TASK_NUM_FOR_HEAD_UPDATE = 64U;
 constexpr uint64_t RUNTIME_DAVINCI_MAX_TIMEOUT = 1091000000UL; // 1091s
 // hcom_cpu:0, aicpu:1, aic:2, ccu die0:3, ccu die1:4
 constexpr uint32_t RT_FUSION_HCOMCPU_BIT_MOVE = 0U;
@@ -480,27 +481,11 @@ union rtDavidSqe_t {
     RtDavidStarsAicpuDqsSqe aicpuDqsSqe;
 };
 
+static_assert(sizeof(rtDavidSqe_t) == SQE_SIZE_UNIT, "rtDavidSqe_t must occupy 64 bytes");
+static_assert(SQE_NUM_PER_DAVID_TASK_MAX <= SQE_NUM_PER_TASK_MAX, "David task exceeds the common SQE capacity");
+
 #pragma pack(pop)
 
-using PfnTaskToDavidSqe = void (*)(TaskInfo* taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo);
-using PfnDavidSqeHeaderPostProc = void (*)(rtDavidStarsSqeHeader_t* header);
-
-extern PfnDavidSqeHeaderPostProc g_davidSqeHeaderPostProcRunningFunc;
-
-void RegDavidSqeFunc(rtChipType_t chipType, tsTaskType_t taskType, PfnTaskToDavidSqe func);
-void RegDavidSqeHeaderPostProcFunc(rtChipType_t chipType, PfnDavidSqeHeaderPostProc func);
-void RefreshDavidSqeRunningFunc(rtChipType_t chipType);
-
-inline void PostProcessDavidSqeHeader(rtDavidStarsSqeHeader_t* header)
-{
-    PfnDavidSqeHeaderPostProc const postProcFunc = g_davidSqeHeaderPostProcRunningFunc;
-    if (postProcFunc != nullptr) {
-        postProcFunc(header);
-    }
-    return;
-}
-
-void ToConstructDavidSqe(TaskInfo* taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo);
 uint32_t GetSendDavidSqeNum(const TaskInfo* const taskInfo);
 uint8_t GetHeadUpdateFlag(uint64_t allocTimes);
 bool IsNeedRetryTask(const uint16_t sqeType);
@@ -620,7 +605,7 @@ rtError_t DavidModelMaintainceTaskInit(
 void ConstructDavidSqeForNotifyWaitTask(TaskInfo* taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo);
 void ConstructDavidSqeForNotifyRecordTask(TaskInfo* taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo);
 void ConstructDavidSqeForStarsCommonTask(TaskInfo* const taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo);
-void ConstructDavidSqeForWordOne(const TaskInfo* const taskInfo, rtDavidSqe_t* const sqe);
+void ConstructDavidSqeForTaskId(const TaskInfo* const taskInfo, rtDavidSqe_t* const sqe);
 void ConstructDavidSqeForDavinciMultipleTask(TaskInfo* const taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo);
 void StarsV2DavinciMultipleTaskUnInit(TaskInfo* taskInfo);
 void ConstructSqeForIpcNotifyRecordTask(TaskInfo* taskInfo, rtDavidSqe_t* const command);

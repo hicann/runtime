@@ -10,6 +10,7 @@
 
 #include "runtime.hpp"
 #include "stars_david.hpp"
+#include "david_sqe_adapter.hpp"
 #include "stream_david.hpp"
 #include "runtime_dump_task.h"
 #include "runtime_task_manager.h"
@@ -34,6 +35,7 @@ static void ConstructDavidSqeForDebugUnRegisterForStreamTask(
     RT_LOG(
         RT_LOG_INFO, "DebugUnRegisterForStreamTask, device_id=%u, stream_id=%d, task_id=%hu, task_sn=%u.",
         taskInfo->stream->Device_()->Id_(), stm->Id_(), taskInfo->id, taskInfo->taskSn);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 static void ConstructDavidSqeForDebugRegisterTask(TaskInfo* taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
@@ -56,6 +58,7 @@ static void ConstructDavidSqeForDebugRegisterTask(TaskInfo* taskInfo, void* cons
     RT_LOG(
         RT_LOG_INFO, "DebugRegisterTask, device_id=%u, stream_id=%d, task_id=%hu, task_sn=%u.", stm->Device_()->Id_(),
         stm->Id_(), taskInfo->id, taskInfo->taskSn);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 static void ConstructDavidSqeForDebugUnRegisterTask(TaskInfo* taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
@@ -78,6 +81,7 @@ static void ConstructDavidSqeForDebugUnRegisterTask(TaskInfo* taskInfo, void* co
         "DebugUnRegisterTask, device_id=%u, stream_id=%d, task_id=%hu, task_sn=%u, "
         "model_id=%u.",
         stm->Device_()->Id_(), stm->Id_(), taskInfo->id, taskInfo->taskSn, taskInfo->u.debugUnRegisterTask.modelId);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 static void ConstructDavidSqeForDebugRegisterForStreamTask(
@@ -100,6 +104,7 @@ static void ConstructDavidSqeForDebugRegisterForStreamTask(
     RT_LOG(
         RT_LOG_INFO, "DebugRegisterForStreamTask, device_id=%u, stream_id=%d, task_id=%hu, task_sn=%u.",
         stm->Device_()->Id_(), stm->Id_(), taskInfo->id, taskInfo->taskSn);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 static void ConstructDavidSqeForDataDumpLoadInfoTask(TaskInfo* taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
@@ -124,6 +129,7 @@ static void ConstructDavidSqeForDataDumpLoadInfoTask(TaskInfo* taskInfo, void* c
     RT_LOG(
         RT_LOG_INFO, "DataDumpLoadInfoTask, device_id=%u, stream_id=%d, task_id=%hu, task_sn=%u.",
         stm->Device_()->Id_(), stm->Id_(), taskInfo->id, taskInfo->taskSn);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 static void ConstructDavidSqeForAicpuInfoLoadTask(TaskInfo* taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
@@ -147,6 +153,7 @@ static void ConstructDavidSqeForAicpuInfoLoadTask(TaskInfo* taskInfo, void* cons
 
     PrintDavidSqe(davidSqe, "AicpuInfoLoadTask");
     RT_LOG(RT_LOG_INFO, "AicpuInfoLoadTask stream_id:%d task_id:%hu", stm->Id_(), taskInfo->id);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 static void ConstructDavidSqeForNopTask(TaskInfo* const taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
@@ -159,13 +166,14 @@ static void ConstructDavidSqeForNopTask(TaskInfo* const taskInfo, void* const sq
     phSqe->taskType = TS_TASK_TYPE_NOP;
     phSqe->kernelCredit = RT_STARS_DEFAULT_KERNEL_CREDIT_DAVID;
     PrintDavidSqe(davidSqe, "NoOperationTask");
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 static bool DumpTaskRegister()
 {
     TaskFuncSingle fusionDumpAddrSetFuncs = {
         .toCommandFunc = &ToCommandBodyForFusionDumpAddrSetTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeBase,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -175,7 +183,7 @@ static bool DumpTaskRegister()
     };
     TaskFuncSingle dataDumpLoadInfoFuncs = {
         .toCommandFunc = &ToCommandBodyForDataDumpLoadInfoTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForDataDumpLoadInfoTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -185,7 +193,7 @@ static bool DumpTaskRegister()
     };
     TaskFuncSingle debugRegisterFuncs = {
         .toCommandFunc = &ToCommandBodyForDebugRegisterTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForDebugRegisterTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -195,7 +203,7 @@ static bool DumpTaskRegister()
     };
     TaskFuncSingle debugUnRegisterFuncs = {
         .toCommandFunc = &ToCommandBodyForDebugUnRegisterTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForDebugUnRegisterTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -205,7 +213,7 @@ static bool DumpTaskRegister()
     };
     TaskFuncSingle debugRegisterForStreamFuncs = {
         .toCommandFunc = &ToCommandBodyForDebugRegisterForStreamTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForDebugRegisterForStreamTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -215,7 +223,7 @@ static bool DumpTaskRegister()
     };
     TaskFuncSingle debugUnRegisterForStreamFuncs = {
         .toCommandFunc = &ToCmdBodyForDebugUnRegisterForStreamTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForDebugUnRegisterForStreamTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -225,7 +233,7 @@ static bool DumpTaskRegister()
     };
     TaskFuncSingle aicpuInfoLoadFuncs = {
         .toCommandFunc = &ToCommandBodyForAicpuInfoLoadTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForAicpuInfoLoadTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -235,7 +243,7 @@ static bool DumpTaskRegister()
     };
     TaskFuncSingle nopFuncs = {
         .toCommandFunc = &ToCommandForNopTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForNopTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -254,15 +262,6 @@ static bool DumpTaskRegister()
         RegTaskFunc(chip, TS_TASK_TYPE_DEBUG_UNREGISTER_FOR_STREAM, debugUnRegisterForStreamFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_AICPU_INFO_LOAD, aicpuInfoLoadFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_NOP, nopFuncs);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_FUSIONDUMP_ADDR_SET, &ConstructDavidSqeBase);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_DATADUMP_LOADINFO, &ConstructDavidSqeForDataDumpLoadInfoTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_DEBUG_REGISTER, &ConstructDavidSqeForDebugRegisterTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_DEBUG_UNREGISTER, &ConstructDavidSqeForDebugUnRegisterTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_DEBUG_REGISTER_FOR_STREAM, &ConstructDavidSqeForDebugRegisterForStreamTask);
-        RegDavidSqeFunc(
-            chip, TS_TASK_TYPE_DEBUG_UNREGISTER_FOR_STREAM, &ConstructDavidSqeForDebugUnRegisterForStreamTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_AICPU_INFO_LOAD, &ConstructDavidSqeForAicpuInfoLoadTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_NOP, &ConstructDavidSqeForNopTask);
     }
 
     return true;

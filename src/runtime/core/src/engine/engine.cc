@@ -408,7 +408,7 @@ bool Engine::ProcessPublicTask(TaskInfo* workTask, const uint32_t deviceId, uint
     bool isTaskDelayRecycle = false;
     bool streamFreeFlag = false;
     const uint32_t endTaskSqPos = workTask->pos;
-    const uint32_t endTaskSqeNum = GetSendSqeNum(workTask);
+    const uint32_t endTaskSqeNum = workTask->sqeNum;
     uint16_t count = 0U;
     uint16_t lastRecycleTaskId = MAX_UINT16_NUM;
     uint16_t delTaskId = 0U;
@@ -472,7 +472,7 @@ bool Engine::ProcessPublicTask(TaskInfo* workTask, const uint32_t deviceId, uint
         delTaskId = workTask->id;
         lastRecycleTaskId = static_cast<uint16_t>(workTask->id);
         streamFreeFlag = IsNeedFreeStreamRes(workTask);
-        recycleStm->UpdateTaskPosHead(workTask->pos, GetSendSqeNum(workTask));
+        recycleStm->UpdateTaskPosHead(workTask->pos, workTask->sqeNum);
 
         if (isNeedAsyncRecycle && recycleStm->isHasPcieBar_ && recycleStm->IsDavinciTask(workTask)) {
             recycleStm->AddArgToRecycleList(workTask);
@@ -1064,7 +1064,9 @@ rtError_t Engine::SendCommand(
 
     if (cmdLocal.cmdType == RT_TASK_COMMAND_TYPE_STARS_SQE) {
         // command of hi1980C is host memory, use itself directly
-        ToConstructSqe(workTask, &(command->starsSqe));
+        const TaskSqeInfo sqeInfo = {stm->GetSqBaseAddr(), 0ULL};
+        ToConstructSqe(workTask, static_cast<void*>(command->sqe), sqeInfo);
+        SetExpectedTaskReportNum(workTask, sendSqeNum);
     } else {
         command->cmd = cmdLocal.cmdBuf.cmd;
     }
@@ -1148,6 +1150,7 @@ rtError_t Engine::SendTask(TaskInfo* const workTask, uint16_t& taskId, uint32_t*
     const uint32_t sqId = stm->GetSqId();
     const uint32_t cqId = stm->GetCqId();
     const uint32_t sendSqeNum = GetSendSqeNum(workTask);
+    workTask->sqeNum = static_cast<uint8_t>(sendSqeNum);
     uint32_t pos = 0U;
     COND_RETURN_ERROR(devDrv == nullptr, RT_ERROR_DRV_ERR, "Failed to find device driver.");
     StreamSqCqManage* const stmSqCqManage = const_cast<StreamSqCqManage*>(device_->GetStreamSqCqManage());

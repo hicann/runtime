@@ -133,7 +133,6 @@ set(runtimeut_david_series_common_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/v200_base/task_adapter.cc
     ${TOP_DIR}/src/runtime/feature/fusion/fusion_task.cc
     ${TOP_DIR}/src/runtime/feature/ffts/ffts_task_v200_base.cc
-    ${TOP_DIR}/src/runtime/core/src/task/v200_base/stars_david.cc
     ${TOP_DIR}/src/runtime/feature/ccu/ccu_sqe.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cmo/cmo_task_v200_base.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/profiling/profiling_task_v200_base.cc
@@ -475,7 +474,6 @@ set(runtimeut_src_tiny_exclude_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/dma/ubdma_task_v200_base.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_update_task_v200_base.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/event/notify_task_v200_base.cc
-    ${TOP_DIR}/src/runtime/core/src/task/v200_base/stars_david.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/memory/memory_task_v200.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci/davinci_kernel_task_v200.cc
     ${TOP_DIR}/src/runtime/feature/fusion/fusion_task_v200.cc
@@ -1359,6 +1357,7 @@ add_executable(runtime_utest_task_normal
     stub/hal_stub.cc
     test/main.cc
     test/rt_utest_task.cc
+    test/rt_utest_task_sqe.cc
 )
 
 target_compile_definitions(runtime_utest_task_normal PUBLIC

@@ -16,8 +16,11 @@
 namespace cce {
 namespace runtime {
 
-void ConstructSqeForBarrierTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+void ConstructSqeForBarrierTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     BarrierTaskInfo* barrierTsk = &taskInfo->u.barrierTask;
     RtBarrierKernelSqe* const sqe = &(command->barrierKernelSqe);
     sqe->header.ie = 0U;

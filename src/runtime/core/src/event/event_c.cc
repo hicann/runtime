@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "event_c.hpp"
+#include "stars_david.hpp"
 #include "task_david.hpp"
 #include "thread_local_container.hpp"
 #include "inner_thread_local.hpp"

@@ -332,8 +332,8 @@ rtError_t StreamJettyHandler::UpdateUbdmaSqeWithJettyInfo(
         memcpyAsyncTaskInfo->ubDma.dieId = jettyInfo.dieId;
         memcpyAsyncTaskInfo->ubDma.functionId = jettyInfo.functionId;
         memcpyAsyncTaskInfo->ubDma.pi = wqeCount;
-        uint8_t sqeBuffer[SQE_SIZE_MAX] = {};
-        rtDavidSqe_t* davidSqe = RtPtrToPtr<rtDavidSqe_t*>(sqeBuffer);
+        TaskSqeBuffer sqeBuffer = {};
+        rtDavidSqe_t* davidSqe = RtPtrToPtr<rtDavidSqe_t*>(sqeBuffer.data);
         taskInfo->bindFlag = taskInfo->stream->GetBindFlag();
         taskInfo->isNoRingbuffer = 1U;
         ConstructDavidAsyncUbDbSqe(taskInfo, davidSqe);

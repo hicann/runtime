@@ -19,8 +19,11 @@ namespace cce {
 namespace runtime {
 
 #if F_DESC("StreamSwitchTask")
-void ConstructSqeForStreamSwitchTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+void ConstructSqeForStreamSwitchTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     Stream* const stm = taskInfo->stream;
     StreamSwitchTaskInfo* streamSwitchTask = &(taskInfo->u.streamswitchTask);
     RtStarsFunctionCallSqe& sqe = command->fuctionCallSqe;
@@ -54,8 +57,11 @@ void ConstructSqeForStreamSwitchTask(TaskInfo* taskInfo, rtStarsSqe_t* const com
 #endif
 
 #if F_DESC("StreamLabelSwitchByIndexTask")
-void ConstructSqeForStreamLabelSwitchByIndexTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+void ConstructSqeForStreamLabelSwitchByIndexTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     RtStarsFunctionCallSqe& sqe = command->fuctionCallSqe;
     StmLabelSwitchByIdxTaskInfo* stmLblSwiByIdx = &taskInfo->u.stmLabelSwitchIdxTask;
 

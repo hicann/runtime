@@ -37,8 +37,16 @@ uint32_t GetSendSqeNum(TaskInfo* const taskInfo)
     }
 }
 
-void ConstructSqeBase(TaskInfo* const taskInfo, rtStarsSqe_t* const command)
+void SetExpectedTaskReportNum(TaskInfo* const taskInfo, const uint32_t sendSqeNum)
 {
+    taskInfo->pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].expectPackage = static_cast<uint16_t>(sendSqeNum);
+}
+
+void ConstructSqeBase(TaskInfo* const taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
+{
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     command->phSqe.type = RT_STARS_SQE_TYPE_PLACE_HOLDER;
     command->phSqe.l2_lock = 0;
     command->phSqe.ie = 0;

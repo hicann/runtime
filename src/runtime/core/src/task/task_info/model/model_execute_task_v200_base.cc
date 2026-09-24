@@ -13,6 +13,7 @@
 #include "context.hpp"
 #include "model.hpp"
 #include "stars_david.hpp"
+#include "david_sqe_adapter.hpp"
 #include "stars_cond_isa_helper.hpp"
 #include "model_execute_task.h"
 #include "runtime_task_manager.h"
@@ -50,6 +51,7 @@ static void ConstructDavidSqeForModelExecuteTask(TaskInfo* const taskInfo, void*
     RT_LOG(
         RT_LOG_INFO, "ModelExecuteTask, device_id=%u, stream_id=%d, task_id=%hu, task_sn=%u, model_id=%hu.",
         taskInfo->stream->Device_()->Id_(), stream->Id_(), taskInfo->id, taskInfo->taskSn, fnCallSqe.reserved0);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 #endif
@@ -58,7 +60,7 @@ static bool ModelExecuteTaskRegister()
 {
     TaskFuncSingle funcs = {
         .toCommandFunc = &ToCommandBodyForModelExecuteTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForModelExecuteTask,
         .doCompleteSuccFunc = &DoCompleteSuccessForModelExecuteTask,
         .taskUnInitFunc = &ModelExecuteTaskUnInit,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -70,9 +72,7 @@ static bool ModelExecuteTaskRegister()
     const auto& chips = GetDavidChips();
     for (const auto chip : chips) {
         RegTaskFunc(chip, TS_TASK_TYPE_MODEL_EXECUTE, funcs);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_MODEL_EXECUTE, &ConstructDavidSqeForModelExecuteTask);
     }
-
     return true;
 }
 

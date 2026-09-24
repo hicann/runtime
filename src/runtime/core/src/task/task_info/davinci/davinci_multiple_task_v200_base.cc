@@ -12,6 +12,7 @@
 #include "davinci_multiple_task.h"
 #include "stream_david.hpp"
 #include "stars_david.hpp"
+#include "david_sqe_adapter.hpp"
 #include "task_execute_time.h"
 #include "runtime_task_manager.h"
 
@@ -59,7 +60,7 @@ static void ConstructDavidDvppSqe(
     dvppSqe->header.postP = 0U;
     dvppSqe->header.headUpdate = 0U;
     dvppSqe->header.reserved = 0U;
-    ConstructDavidSqeForWordOne(taskInfo, sqeAddr);
+    ConstructDavidSqeForTaskId(taskInfo, sqeAddr);
     uint16_t kernelCredit = dvppSqe->kernelCredit;
     kernelCredit = kernelCredit < RT_STARS_MAX_KERNEL_CREDIT ? kernelCredit : RT_STARS_MAX_KERNEL_CREDIT;
     dvppSqe->kernelCredit = static_cast<uint8_t>(TransKernelCreditCreditByChip(kernelCredit));
@@ -267,13 +268,14 @@ void ConstructDavidSqeForDavinciMultipleTask(TaskInfo* const taskInfo, void* con
             ConstructDavidDvppSqe(taskInfo, davidSqe, idx, sqBaseAddr);
         }
     }
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 static bool DavinciMultipleTaskRegister()
 {
     TaskFuncSingle funcs = {
         .toCommandFunc = nullptr,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForDavinciMultipleTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = &StarsV2DavinciMultipleTaskUnInit,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -285,7 +287,6 @@ static bool DavinciMultipleTaskRegister()
     const auto& chips = GetDavidChips();
     for (const auto chip : chips) {
         RegTaskFunc(chip, TS_TASK_TYPE_MULTIPLE_TASK, funcs);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_MULTIPLE_TASK, &ConstructDavidSqeForDavinciMultipleTask);
     }
 
     return true;

@@ -20,8 +20,11 @@ namespace cce {
 namespace runtime {
 
 #if F_DESC("LabelSetTask")
-void ConstructSqeForLabelSetTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+void ConstructSqeForLabelSetTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     Stream* const stm = taskInfo->stream;
     command->phSqe.type = RT_STARS_SQE_TYPE_PLACE_HOLDER;
     command->phSqe.l2_lock = 0U;

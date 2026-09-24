@@ -9,6 +9,7 @@
  */
 
 #include "stars_david.hpp"
+#include "david_sqe_adapter.hpp"
 #include "runtime_task_manager.h"
 #include "davinci_kernel_task.h"
 #include "arch920x/aic_aiv_sqe.h"
@@ -30,6 +31,7 @@ void ConstructDavidAICpuSqeForDavinciTask(TaskInfo* const taskInfo, void* const 
     RT_LOG(
         RT_LOG_INFO, "topic_type=%hu, kernel_type=%u, dump_en=%u", aicpuKernelSqe->topicType,
         aicpuKernelSqe->kernelType, aicpuKernelSqe->debugDumpEn);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
     return;
 }
 
@@ -71,7 +73,7 @@ static bool DavinciKernelTaskRegister()
 {
     TaskFuncSingle aicAivFuncs = {
         .toCommandFunc = &ToCommandBodyForAicAivTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidAicAivSqeForDavinciTask,
         .doCompleteSuccFunc = &StarsV2DoCompleteSuccessForDavinciTask,
         .taskUnInitFunc = &StarsV2DavinciTaskUnInit,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -82,7 +84,7 @@ static bool DavinciKernelTaskRegister()
 
     TaskFuncSingle aicpuFuncs = {
         .toCommandFunc = &ToCommandBodyForAicpuTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidAICpuSqeForDavinciTask,
         .doCompleteSuccFunc = &StarsV2DoCompleteSuccessForDavinciTask,
         .taskUnInitFunc = &StarsV2DavinciTaskUnInit,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -96,9 +98,6 @@ static bool DavinciKernelTaskRegister()
         RegTaskFunc(chip, TS_TASK_TYPE_KERNEL_AICPU, aicpuFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_KERNEL_AICORE, aicAivFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_KERNEL_AIVEC, aicAivFuncs);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_KERNEL_AICPU, &ConstructDavidAICpuSqeForDavinciTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_KERNEL_AICORE, &ConstructDavidAicAivSqeForDavinciTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_KERNEL_AIVEC, &ConstructDavidAicAivSqeForDavinciTask);
     }
 
     return true;

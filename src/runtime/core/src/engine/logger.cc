@@ -84,11 +84,11 @@ void EngineLogObserver::TaskLaunchedEx(const uint32_t devId, TaskInfo* const tsk
     uint16_t tsCmdEventId = 0U;
     uint16_t notifyId = 0U;
     const bool isStarsCqe = (command->cmdType == RT_TASK_COMMAND_TYPE_STARS_SQE) ? true : false;
+    const rtStarsSqe_t* const starsSqe = isStarsCqe ? RtPtrToPtr<const rtStarsSqe_t*>(command->cmdBuf.sqe) : nullptr;
 
     switch (tsk->type) {
         case TS_TASK_TYPE_EVENT_RECORD: {
-            tsCmdEventId =
-                isStarsCqe ? GetSqeEventId(command->cmdBuf.u.starsSqe) : command->cmdBuf.cmd.u.eventRecordTask.eventID;
+            tsCmdEventId = isStarsCqe ? GetSqeEventId(starsSqe) : command->cmdBuf.cmd.u.eventRecordTask.eventID;
             RT_LOG(
                 RT_LOG_DEBUG,
                 "device_id=%u, stream_id=%d, task_id=%hu, event_id=%hu,"
@@ -98,8 +98,7 @@ void EngineLogObserver::TaskLaunchedEx(const uint32_t devId, TaskInfo* const tsk
         }
 
         case TS_TASK_TYPE_STREAM_WAIT_EVENT: {
-            tsCmdEventId = isStarsCqe ? GetSqeEventId(command->cmdBuf.u.starsSqe) :
-                                        command->cmdBuf.cmd.u.streamWaitEventTask.eventID;
+            tsCmdEventId = isStarsCqe ? GetSqeEventId(starsSqe) : command->cmdBuf.cmd.u.streamWaitEventTask.eventID;
             RT_LOG(
                 RT_LOG_DEBUG,
                 "device_id=%u, stream_id=%d, task_id=%hu, event_id=%hu,"
@@ -110,8 +109,7 @@ void EngineLogObserver::TaskLaunchedEx(const uint32_t devId, TaskInfo* const tsk
 
         case TS_TASK_TYPE_NOTIFY_RECORD: {
             uint16_t deviceId = 0U;
-            notifyId = isStarsCqe ? command->cmdBuf.u.starsSqe[0].notifySqe.notify_id :
-                                    command->cmdBuf.cmd.u.notifyrecordTask.notifyId;
+            notifyId = isStarsCqe ? starsSqe[0].notifySqe.notify_id : command->cmdBuf.cmd.u.notifyrecordTask.notifyId;
             deviceId = isStarsCqe ? 0U : command->cmdBuf.cmd.u.notifyrecordTask.deviceId;
             RT_LOG(
                 RT_LOG_DEBUG,
@@ -122,8 +120,7 @@ void EngineLogObserver::TaskLaunchedEx(const uint32_t devId, TaskInfo* const tsk
         }
 
         case TS_TASK_TYPE_NOTIFY_WAIT: {
-            notifyId = isStarsCqe ? command->cmdBuf.u.starsSqe[0].notifySqe.notify_id :
-                                    command->cmdBuf.cmd.u.notifywaitTask.notifyid;
+            notifyId = isStarsCqe ? starsSqe[0].notifySqe.notify_id : command->cmdBuf.cmd.u.notifywaitTask.notifyid;
             RT_LOG(
                 RT_LOG_DEBUG,
                 "device_id=%u, stream_id=%d, task_id=%hu, notify_id=%hu,"
@@ -132,8 +129,7 @@ void EngineLogObserver::TaskLaunchedEx(const uint32_t devId, TaskInfo* const tsk
             break;
         }
         case TS_TASK_TYPE_ENDGRAPH_NOTIFY_WAIT: {
-            notifyId = isStarsCqe ? command->cmdBuf.u.starsSqe[0].notifySqe.notify_id :
-                                    command->cmdBuf.cmd.u.notifywaitTask.notifyid;
+            notifyId = isStarsCqe ? starsSqe[0].notifySqe.notify_id : command->cmdBuf.cmd.u.notifywaitTask.notifyid;
             RT_LOG(
                 RT_LOG_DEBUG,
                 "device_id=%u, stream_id=%d, task_id=%hu, notify_id=%hu,"

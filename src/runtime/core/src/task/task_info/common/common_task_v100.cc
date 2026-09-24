@@ -18,8 +18,11 @@
 namespace cce {
 namespace runtime {
 #if F_DESC("StarsCommonTask")
-void ConstructSqeForStarsCommonTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+void ConstructSqeForStarsCommonTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     StarsCommonTaskInfo* starsCommTask = &taskInfo->u.starsCommTask;
 
     starsCommTask->commonStarsSqe.commonSqe.sqeHeader.task_id = taskInfo->id;
@@ -83,8 +86,11 @@ static void ConstructWriteValueSqePtr(TaskInfo* const taskInfo, rtStarsSqe_t* co
         taskInfo->id, writeValTsk->sqeAddr);
 }
 
-void ConstructSqeForWriteValueTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+void ConstructSqeForWriteValueTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     WriteValueTaskInfo* writeValTsk = &taskInfo->u.writeValTask;
     if (writeValTsk->ptrFlag == 1U) {
         ConstructWriteValueSqePtr(taskInfo, command);
@@ -189,8 +195,11 @@ static void ConstructSqeForNotifyResetTask(TaskInfo* const taskInfo, rtStarsSqe_
         sqe->type, sqe->pre_p, sqe->rt_streamID, sqe->task_id, sqe->task_type, commonCmdTaskInfo->notifyId);
 }
 
-void ConstructSqeForCommonCmdTask(TaskInfo* const taskInfo, rtStarsSqe_t* const command)
+void ConstructSqeForCommonCmdTask(TaskInfo* const taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     CommonCmdTaskInfo* commonCmdTaskInfo = &(taskInfo->u.commonCmdTask);
     if (commonCmdTaskInfo->cmdType == static_cast<uint16_t>(PhCmdType::CMD_STREAM_CLEAR)) {
         ConstructSqeForStreamClearTask(taskInfo, command);

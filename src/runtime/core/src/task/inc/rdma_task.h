@@ -16,6 +16,8 @@
 
 namespace cce {
 namespace runtime {
+struct TaskSqeInfo;
+
 uint32_t GetSendSqeNumForRdmaDbSendTask(TaskInfo* const taskInfo);
 rtError_t RdmaSendTaskInit(TaskInfo* taskInfo, const uint32_t sqId, const uint32_t wqeId);
 rtError_t RdmaDbSendTaskInit(TaskInfo* taskInfo, const uint32_t dbIndex, const uint64_t dbInfo, const uint32_t taskSeq);
@@ -27,7 +29,7 @@ void GetRdmaTaskInfoFromFftsPlusTask(
     std::vector<uint64_t>& rdmaPiValueDeviceAddrVec);
 rtError_t SubmitRdmaPiValueModifyTask(
     Stream* const stm, const rtFftsPlusTaskInfo_t* const fftsPlusTaskInfo, const void* deviceDescAlignBuf);
-void ConstructSqeRdmaPiValueModifyTask(TaskInfo* taskInfo, rtStarsSqe_t* const command);
+void ConstructSqeRdmaPiValueModifyTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo);
 void RdmaPiValueModifyTaskUnInit(TaskInfo* taskInfo);
 void PrintErrorInfoForRDMAPiValueModifyTask(TaskInfo* const taskInfo, const uint32_t devId);
 void PrintDfxInfoForRdmaPiValueModifyTask(const TaskInfo* taskInfo, const uint32_t devId);

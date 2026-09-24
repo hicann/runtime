@@ -1502,10 +1502,10 @@ TEST_F(TaskTestV201, construct_sqe_for_stars_memcpy_async_sqe_d2d)
     TaskSqeInfo sqeInfo = {0ULL, 0ULL};
     InitByStream(&task, stream_);
     MemcpyAsyncTaskInitV3(&task, kind, src, dst, count, 0, NULL);
-    ToConstructDavidSqe(&task, static_cast<void*>(&sqe), sqeInfo);
+    ToConstructSqe(&task, static_cast<void*>(&sqe), sqeInfo);
     EXPECT_EQ(sqe.memcpyAsyncSqe.header.type, RT_DAVID_SQE_TYPE_SDMA);
     task.id = 0;
-    ToConstructDavidSqe(&task, static_cast<void*>(&sqe), sqeInfo);
+    ToConstructSqe(&task, static_cast<void*>(&sqe), sqeInfo);
     TaskUnInitProc(&task);
 }
 
@@ -1519,19 +1519,19 @@ TEST_F(TaskTestV201, Test_Construct_Sqe)
     InitByStream(&task, stream_);
     AicpuTaskInit(&task, 1, (uint32_t)0);
     task.u.aicpuTaskInfo.aicpuKernelType = KERNEL_TYPE_AICPU_KFC;
-    ToConstructDavidSqe(&task, static_cast<void*>(sqe), sqeInfo);
+    ToConstructSqe(&task, static_cast<void*>(sqe), sqeInfo);
 
     task.u.aicpuTaskInfo.comm.kernelFlag = 0x40;
-    ToConstructDavidSqe(&task, static_cast<void*>(sqe), sqeInfo);
+    ToConstructSqe(&task, static_cast<void*>(sqe), sqeInfo);
 
     task.u.aicpuTaskInfo.comm.kernelFlag = 0x10;
-    ToConstructDavidSqe(&task, static_cast<void*>(sqe), sqeInfo);
+    ToConstructSqe(&task, static_cast<void*>(sqe), sqeInfo);
 
     task.type = TS_TASK_TYPE_MODEL_END_GRAPH;
-    ToConstructDavidSqe(&task, static_cast<void*>(sqe), sqeInfo);
+    ToConstructSqe(&task, static_cast<void*>(sqe), sqeInfo);
 
     task.type = TS_TASK_TYPE_MODEL_TO_AICPU;
-    ToConstructDavidSqe(&task, static_cast<void*>(sqe), sqeInfo);
+    ToConstructSqe(&task, static_cast<void*>(sqe), sqeInfo);
 
     free(sqe);
     sqe = nullptr;
@@ -1596,7 +1596,7 @@ TEST_F(TaskTestV201, Test_Construct_Fusion_Sqe)
     AixKernelTaskInitForFusion(&kernTask, &aicAivInfo, &taskCfgInfo);
     kernTask.u.fusionKernelTask.aicAivType = 0; // aic no mix
     TaskSqeInfo sqeInfo = {0ULL, 0ULL};
-    ToConstructDavidSqe(&kernTask, static_cast<void*>(sqe), sqeInfo);
+    ToConstructSqe(&kernTask, static_cast<void*>(sqe), sqeInfo);
     EXPECT_EQ(sqe[0].aicpuSqe.header.type, RT_DAVID_SQE_TYPE_FUSION);
 
     TaskUnInitProc(&kernTask);
@@ -1844,7 +1844,7 @@ TEST_F(TaskTestV201, Test_Construct_Simt_Sqe)
     task.u.aicTaskInfo.kernel = kernel;
     task.u.aicTaskInfo.dynamicShareMemSize = 8192;
     TaskSqeInfo sqeInfo = {stream_->GetSqBaseAddr(), 0ULL};
-    ToConstructDavidSqe(&task, static_cast<void*>(sqeAddr), sqeInfo);
+    ToConstructSqe(&task, static_cast<void*>(sqeAddr), sqeInfo);
     EXPECT_EQ(sqe->aicpuControlSqe.header.type, RT_DAVID_SQE_TYPE_AIC);
 
     free(sqe);
@@ -2365,7 +2365,7 @@ TEST_F(TaskTestV201, EndGraphNotifyWaitReadOnlyTask)
     const TaskInfo& readOnlyTask = task;
     rtDavidSqe_t sqe = {};
     const TaskSqeInfo sqeInfo = {};
-    ConstructDavidSqeForNotifyWaitTask(&task, &sqe, sqeInfo);
+    ToConstructSqe(&task, &sqe, sqeInfo);
     EXPECT_EQ(sqe.notifySqe.notifyId, 3U);
     EXPECT_EQ(sqe.notifySqe.timeout, 5U);
     EXPECT_EQ(sqe.notifySqe.header.type, RT_DAVID_SQE_TYPE_NOTIFY_WAIT);

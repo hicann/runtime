@@ -226,7 +226,7 @@ public:
         const uint32_t tsId, const uint32_t cmdCount) override;
 
     rtError_t SqTaskSend(
-        const uint32_t sqId, rtStarsSqe_t* const sqe, const uint32_t deviceId, const uint32_t tsId,
+        const uint32_t sqId, void* const sqe, const uint32_t deviceId, const uint32_t tsId,
         const uint32_t sqeNum) override;
 
     rtError_t DebugSqTaskSend(

@@ -19,8 +19,11 @@ namespace cce {
 namespace runtime {
 
 #if F_DESC("MaintenanceTask")
-static void ConstructSqeForMaintenanceTask(TaskInfo* const taskInfo, rtStarsSqe_t* const command)
+static void ConstructSqeForMaintenanceTask(TaskInfo* const taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     MaintenanceTaskInfo* maintenanceTaskInfo = &(taskInfo->u.maintenanceTaskInfo);
     Stream* const stream = taskInfo->stream;
 
@@ -72,8 +75,11 @@ static void DoCompleteSuccessForMaintenanceTask(TaskInfo* const taskInfo, const 
 #endif
 
 #if F_DESC("GetDevMsgTask")
-static void ConstructSqeForGetDevMsgTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+static void ConstructSqeForGetDevMsgTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     GetDevMsgTaskInfo* getDevMsgTask = &(taskInfo->u.getDevMsgTask);
     Stream* const stm = taskInfo->stream;
     RtStarsPhSqe* const sqe = &(command->phSqe);
@@ -99,8 +105,11 @@ static void ConstructSqeForGetDevMsgTask(TaskInfo* taskInfo, rtStarsSqe_t* const
 #endif
 
 #if F_DESC("StarsVersionTask")
-static void ConstructSqeForStarsVersionTask(TaskInfo* const taskInfo, rtStarsSqe_t* const command)
+static void ConstructSqeForStarsVersionTask(TaskInfo* const taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     Stream* const stm = taskInfo->stream;
     RtStarsPhSqe* const sqe = &(command->phSqe);
     sqe->type = RT_STARS_SQE_TYPE_PLACE_HOLDER;

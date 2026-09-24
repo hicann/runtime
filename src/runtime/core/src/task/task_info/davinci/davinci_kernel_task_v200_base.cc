@@ -9,6 +9,7 @@
  */
 
 #include "davinci_kernel_task.h"
+#include "david_sqe_adapter.hpp"
 #include "stream_david.hpp"
 #include "task_scheduler_error.h"
 #include "runtime_task_manager.h"
@@ -354,6 +355,8 @@ void ConstructDavidAicAivSqeForDavinciTask(TaskInfo* const taskInfo, void* const
             ConstructDavidAivSqeForDavinciTask(taskInfo, davidSqe, sqBaseAddr);
         }
     }
+
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 
     return;
 }

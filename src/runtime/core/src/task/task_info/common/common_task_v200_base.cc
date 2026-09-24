@@ -13,10 +13,12 @@
 #include "context.hpp"
 #include "common_task.h"
 #include "stars_david.hpp"
+#include "david_sqe_adapter.hpp"
 #include "runtime_task_manager.h"
 
 namespace cce {
 namespace runtime {
+
 #if F_DESC("StarsCommonTask")
 void ConstructDavidSqeForStarsCommonTask(TaskInfo* const taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
 {
@@ -45,11 +47,12 @@ void ConstructDavidSqeForStarsCommonTask(TaskInfo* const taskInfo, void* const s
             static_cast<unsigned long>(sizeof(starsCommTask->commonStarsSqe.commonDavidSqe)),
             static_cast<uint32_t>(error));
     }
-    ConstructDavidSqeForWordOne(taskInfo, davidSqe);
+    ConstructDavidSqeForTaskId(taskInfo, davidSqe);
     PrintDavidSqe(davidSqe, "StarsCommonTask");
     RT_LOG(
         RT_LOG_INFO, "StarsCommonTask, device_id=%u, stream_id=%d, task_id=%hu, task_sn=%u.", stm->Device_()->Id_(),
         stm->Id_(), taskInfo->id, taskInfo->taskSn);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 #endif
 
@@ -125,6 +128,7 @@ void ConstructDavidSqeForWriteValueTask(TaskInfo* const taskInfo, void* const sq
     WriteValueTaskInfo* const writeValTsk = &(taskInfo->u.writeValTask);
     if (writeValTsk->ptrFlag == 1U) {
         ConstructWriteValueSqePtr(taskInfo, davidSqe, sqBaseAddr);
+        UpdateDavidSqeHeadUpdate(taskInfo, sqe);
         return;
     }
 
@@ -164,6 +168,7 @@ void ConstructDavidSqeForWriteValueTask(TaskInfo* const taskInfo, void* const sq
         "WriteValueTask, device_id=%u, stream_id=%d, task_id=%hu, task_sn=%u, "
         "addr=%#." PRIx64,
         taskInfo->stream->Device_()->Id_(), taskInfo->stream->Id_(), taskInfo->id, taskInfo->taskSn, writeValTsk->addr);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 #endif
 
@@ -171,7 +176,7 @@ static bool CommonTaskRegister()
 {
     TaskFuncSingle starsCommonFuncs = {
         .toCommandFunc = nullptr,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForStarsCommonTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = &StarsCommonTaskUnInit,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -181,7 +186,7 @@ static bool CommonTaskRegister()
     };
     TaskFuncSingle writeValueFuncs = {
         .toCommandFunc = nullptr,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForWriteValueTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -191,7 +196,7 @@ static bool CommonTaskRegister()
     };
     TaskFuncSingle commonCmdFuncs = {
         .toCommandFunc = nullptr,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeUpdateHeadOnly,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -205,10 +210,7 @@ static bool CommonTaskRegister()
         RegTaskFunc(chip, TS_TASK_TYPE_STARS_COMMON, starsCommonFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_WRITE_VALUE, writeValueFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_COMMON_CMD, commonCmdFuncs);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_STARS_COMMON, &ConstructDavidSqeForStarsCommonTask);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_WRITE_VALUE, &ConstructDavidSqeForWriteValueTask);
     }
-
     return true;
 }
 

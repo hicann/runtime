@@ -125,7 +125,7 @@ TEST_F(Arch9201TaskTest, check_prefetch_cnt_on_construct_arch9201_sqe_for_aic_mi
     task.u.aicTaskInfo.kernel = kernel;
     kernel->SetMixType(MIX_AIC);
     stubProg.SetIsDcacheLockOp(true);
-    ToConstructDavidSqe(&task, static_cast<void*>(&sqe), sqeInfo);
+    ToConstructSqe(&task, static_cast<void*>(&sqe), sqeInfo);
     RtArch920xStarsAicAivKernelSqe* arch9201Sqe =
         static_cast<RtArch920xStarsAicAivKernelSqe*>(static_cast<void*>(&sqe));
     EXPECT_EQ(arch9201Sqe->header.type, RT_DAVID_SQE_TYPE_AIC);
@@ -136,7 +136,7 @@ TEST_F(Arch9201TaskTest, check_prefetch_cnt_on_construct_arch9201_sqe_for_aic_mi
     delete vecKernel2;
     EXPECT_EQ(task.type, TS_TASK_TYPE_KERNEL_AIVEC);
     kernel->SetMixType(MIX_AIV);
-    ToConstructDavidSqe(&task, static_cast<void*>(&sqe), sqeInfo);
+    ToConstructSqe(&task, static_cast<void*>(&sqe), sqeInfo);
     EXPECT_EQ(arch9201Sqe->header.type, RT_DAVID_SQE_TYPE_AIV);
     EXPECT_EQ(arch9201Sqe->aivIcachePrefetchCnt, 0x2);
 
@@ -145,7 +145,7 @@ TEST_F(Arch9201TaskTest, check_prefetch_cnt_on_construct_arch9201_sqe_for_aic_mi
     delete aicKernel4;
     kernel->SetMixType(MIX_AIC_AIV_MAIN_AIC);
     EXPECT_EQ(task.type, TS_TASK_TYPE_KERNEL_AICORE);
-    ToConstructDavidSqe(&task, static_cast<void*>(&sqe), sqeInfo);
+    ToConstructSqe(&task, static_cast<void*>(&sqe), sqeInfo);
     EXPECT_EQ(arch9201Sqe->aicIcachePrefetchCnt, 0x2);
     EXPECT_EQ(arch9201Sqe->aivIcachePrefetchCnt, 0x4);
     ((Runtime*)Runtime::Instance())->kernelTable_.RemoveAll(program);
@@ -178,7 +178,7 @@ TEST_F(Arch9201TaskTest, check_prefetch_cnt_on_construct_arch9201_sqe_for_aicaiv
     EXPECT_EQ(task.type, TS_TASK_TYPE_KERNEL_AICORE);
     task.id = 0;
     task.u.aicTaskInfo.kernel = kernel;
-    ToConstructDavidSqe(&task, static_cast<void*>(&sqe), sqeInfo);
+    ToConstructSqe(&task, static_cast<void*>(&sqe), sqeInfo);
     EXPECT_EQ(sqe.header.type, RT_DAVID_SQE_TYPE_AIC);
     EXPECT_EQ(sqe.aicIcachePrefetchCnt, 0x2);
 
@@ -186,7 +186,7 @@ TEST_F(Arch9201TaskTest, check_prefetch_cnt_on_construct_arch9201_sqe_for_aicaiv
     AicTaskInit(&task, vecKernel3, vecKernel3->GetKernelAttrType(), 1, nullptr);
     delete vecKernel3;
     EXPECT_EQ(task.type, TS_TASK_TYPE_KERNEL_AIVEC);
-    ToConstructDavidSqe(&task, static_cast<void*>(&sqe), sqeInfo);
+    ToConstructSqe(&task, static_cast<void*>(&sqe), sqeInfo);
     EXPECT_EQ(sqe.header.type, RT_DAVID_SQE_TYPE_AIV);
     EXPECT_EQ(sqe.aivIcachePrefetchCnt, 0x2);
     ((Runtime*)Runtime::Instance())->SetBiuperfProfFlag(true);
@@ -195,7 +195,7 @@ TEST_F(Arch9201TaskTest, check_prefetch_cnt_on_construct_arch9201_sqe_for_aicaiv
     AicTaskInit(&task, vecKernel4, vecKernel4->GetKernelAttrType(), 1, nullptr);
     delete vecKernel4;
     EXPECT_EQ(task.type, TS_TASK_TYPE_KERNEL_AIVEC);
-    ToConstructDavidSqe(&task, static_cast<void*>(&sqe), sqeInfo);
+    ToConstructSqe(&task, static_cast<void*>(&sqe), sqeInfo);
     ((Runtime*)Runtime::Instance())->kernelTable_.RemoveAll(program);
     TaskUnInitProc(&task);
 }
@@ -394,23 +394,23 @@ TEST_F(Arch9201TaskTest, construct_arch9201sqe_for_fusion_kernel_launch_1)
     AixKernelTaskInitForFusion(&kernTask, &aicAivInfo, &taskCfgInfo);
     kernTask.u.fusionKernelTask.aicAivType = 0; // aic no mix
     TaskSqeInfo sqeInfo = {0ULL, 0ULL};
-    ToConstructDavidSqe(&kernTask, static_cast<void*>(sqe), sqeInfo);
+    ToConstructSqe(&kernTask, static_cast<void*>(sqe), sqeInfo);
     EXPECT_EQ(sqe[0].aicpuSqe.header.type, RT_DAVID_SQE_TYPE_FUSION);
 
     kernTask.u.fusionKernelTask.aicAivType = 1; // aiv no mix
     fusionInfo.subTask[0].task.aicpuInfo.flags = RT_KERNEL_HOST_FIRST;
-    ToConstructDavidSqe(&kernTask, static_cast<void*>(sqe), sqeInfo);
+    ToConstructSqe(&kernTask, static_cast<void*>(sqe), sqeInfo);
     EXPECT_EQ(sqe[0].aicpuSqe.header.type, RT_DAVID_SQE_TYPE_FUSION);
 
     kernTask.u.fusionKernelTask.aicPart.kernel = kernel;
     kernTask.u.fusionKernelTask.aicPart.kernel->mixType_ = MIX_AIC_AIV_MAIN_AIC;
     fusionInfo.subTask[0].task.aicpuInfo.flags = RT_KERNEL_HOST_ONLY;
-    ToConstructDavidSqe(&kernTask, static_cast<void*>(sqe), sqeInfo);
+    ToConstructSqe(&kernTask, static_cast<void*>(sqe), sqeInfo);
     EXPECT_EQ(sqe[0].aicpuSqe.header.type, RT_DAVID_SQE_TYPE_FUSION);
 
     kernTask.u.fusionKernelTask.aicPart.kernel->mixType_ = MIX_AIV;
     fusionInfo.subTask[0].task.aicpuInfo.flags = RT_KERNEL_DEVICE_FIRST;
-    ToConstructDavidSqe(&kernTask, static_cast<void*>(sqe), sqeInfo);
+    ToConstructSqe(&kernTask, static_cast<void*>(sqe), sqeInfo);
     EXPECT_EQ(sqe[0].aicpuSqe.header.type, RT_DAVID_SQE_TYPE_FUSION);
 
     MOCKER(TaskFailCallBack).stubs().will(invoke(TaskFailCallBackStubfunc));
@@ -492,7 +492,7 @@ TEST_F(Arch9201TaskTest, construct_arch9201sqe_for_fusion_kernel_launch_2)
     AixKernelTaskInitForFusion(&kernTask, &aicAivInfo, &taskCfgInfo);
     kernTask.u.fusionKernelTask.aicAivType = 0; // aic no mix
     TaskSqeInfo sqeInfo = {0ULL, 0ULL};
-    ToConstructDavidSqe(&kernTask, static_cast<void*>(sqe), sqeInfo);
+    ToConstructSqe(&kernTask, static_cast<void*>(sqe), sqeInfo);
     EXPECT_EQ(sqe[0].ccuSqe.header.type, RT_DAVID_SQE_TYPE_FUSION);
 
     TaskUnInitProc(&kernTask);
@@ -545,7 +545,7 @@ TEST_F(Arch9201TaskTest, construct_arch9201sqe_for_fusion_kernel_launch_3)
     kernTask.u.fusionKernelTask.aicAivType = 0; // aic no mix
 
     TaskSqeInfo sqeInfo = {0ULL, 0ULL};
-    ToConstructDavidSqe(&kernTask, static_cast<void*>(sqe), sqeInfo);
+    ToConstructSqe(&kernTask, static_cast<void*>(sqe), sqeInfo);
     EXPECT_EQ(sqe[0].ccuSqe.usrData[0], UINT32_MAX);
     EXPECT_EQ(sqe[1].ccuSqe.header.type, 0x3F);
 
@@ -570,8 +570,37 @@ TEST_F(Arch9201TaskTest, construct_davidsqe_for_cmotask_arch9201_prefetch)
     EXPECT_EQ(ret, RT_ERROR_NONE);
     EXPECT_EQ(task.type, TS_TASK_TYPE_CMO);
 
-    ToConstructDavidSqe(&task, static_cast<void*>(&sqe), sqeInfo);
+    ToConstructSqe(&task, static_cast<void*>(&sqe), sqeInfo);
     EXPECT_EQ(sqe.cmoSqe.header.type, RT_DAVID_SQE_TYPE_CMO);
+    TaskUnInitProc(&task);
+}
+
+TEST_F(Arch9201TaskTest, construct_sqe_for_arch9201_preserves_david_head_update)
+{
+    TaskInfo task = {};
+    rtDavidSqe_t sqe = {};
+    const TaskSqeInfo sqeInfo = {0ULL, 0ULL};
+    InitByStream(&task, stream_);
+
+    rtCmoTaskInfo_t cmoTask = {};
+    cmoTask.opCode = RT_CMO_PREFETCH;
+    cmoTask.lengthInner = 64U;
+    const rtError_t ret = CmoTaskInit(&task, &cmoTask, stream_, 0U);
+    ASSERT_EQ(ret, RT_ERROR_NONE);
+    task.id = 0U;
+
+    Runtime* const runtime = Runtime::Instance();
+    const bool originalConnectUbFlag = runtime->GetConnectUbFlag();
+    TaskResManage* const originalTaskResManager = stream_->taskResMang_;
+    runtime->SetConnectUbFlag(true);
+    stream_->taskResMang_ = nullptr;
+    RefreshTaskFuncPointer(CHIP_CLOUD_V5);
+
+    ToConstructSqe(&task, static_cast<void*>(&sqe), sqeInfo);
+    EXPECT_EQ(sqe.commonSqe.sqeHeader.headUpdate, 1U);
+
+    stream_->taskResMang_ = originalTaskResManager;
+    runtime->SetConnectUbFlag(originalConnectUbFlag);
     TaskUnInitProc(&task);
 }
 
@@ -591,7 +620,7 @@ TEST_F(Arch9201TaskTest, construct_davidsqe_for_cmotask_arch9201_writeback)
     EXPECT_EQ(ret, RT_ERROR_NONE);
     EXPECT_EQ(task.type, TS_TASK_TYPE_CMO);
 
-    ToConstructDavidSqe(&task, static_cast<void*>(&sqe), sqeInfo);
+    ToConstructSqe(&task, static_cast<void*>(&sqe), sqeInfo);
     EXPECT_EQ(sqe.cmoSqe.header.type, RT_DAVID_SQE_TYPE_CMO);
     TaskUnInitProc(&task);
 }
@@ -610,7 +639,7 @@ TEST_F(Arch9201TaskTest, construct_davidsqe_for_cmotask_arch9201_invalid)
     rtError_t ret = CmoTaskInit(&task, &cmoTask, stream_, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
-    ToConstructDavidSqe(&task, static_cast<void*>(&sqe), sqeInfo);
+    ToConstructSqe(&task, static_cast<void*>(&sqe), sqeInfo);
     EXPECT_EQ(sqe.memcpyAsyncSqe.header.type, RT_DAVID_SQE_TYPE_SDMA);
     TaskUnInitProc(&task);
 }
@@ -636,7 +665,7 @@ TEST_F(Arch9201TaskTest, construct_davidsqe_for_cmotask_arch9201_model_stream)
     ret = CmoTaskInit(&task, &cmoTask, stream_, 0);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
 
-    ToConstructDavidSqe(&task, static_cast<void*>(&sqe), sqeInfo);
+    ToConstructSqe(&task, static_cast<void*>(&sqe), sqeInfo);
     EXPECT_EQ(sqe.memcpyAsyncPtrSqe.header.type, RT_DAVID_SQE_TYPE_SDMA);
 
     stream_->SetModel(nullptr);
@@ -705,7 +734,7 @@ TEST_F(Arch9201TaskTest, construct_davidsqe_for_cmotask_arch9201_complete_and_pr
     rtError_t ret = CmoTaskInit(&task, &cmoTask, stream_, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
-    ToConstructDavidSqe(&task, static_cast<void*>(&sqe), sqeInfo);
+    ToConstructSqe(&task, static_cast<void*>(&sqe), sqeInfo);
     EXPECT_EQ(sqe.cmoSqe.header.type, RT_DAVID_SQE_TYPE_CMO);
 
     uint32_t errorCode = 0;

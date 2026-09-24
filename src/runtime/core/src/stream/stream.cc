@@ -3547,22 +3547,25 @@ rtError_t Stream::HandleTaskUpdate(
     model->SetKernelTaskId(static_cast<uint32_t>(workTask->id), streamId_);
     rtTsCommand_t cmdLocal = {};
     cmdLocal.cmdType = RT_TASK_COMMAND_TYPE_STARS_SQE;
-    ToConstructSqe(workTask, cmdLocal.cmdBuf.u.starsSqe);
+    const TaskSqeInfo sqeInfo = {0ULL, 0ULL};
+    ToConstructSqe(workTask, static_cast<void*>(cmdLocal.cmdBuf.sqe), sqeInfo);
+    SetExpectedTaskReportNum(workTask, sendSqeNum);
     // Update the host-side head and tail
     // 这里的pending num再发生错误的时候不需要减1
     rtError_t error = StarsAddTaskToStreamForModelUpdate(workTask, sendSqeNum);
     ERROR_RETURN_MSG_INNER(error, "Add task to stream failed, stream_id=%d, task_id=%u.", streamId_, workTask->id);
 
+    const uint64_t sqeBytes = GetTaskSqeBytes(workTask->sqeNum);
     auto ret = memcpy_s(
-        RtPtrToPtr<void*>(sqeBufferBackup + sizeof(rtStarsSqe_t) * workTask->pos), sendSqeNum * sizeof(rtStarsSqe_t),
-        RtPtrToPtr<void*, rtStarsSqe_t*>(cmdLocal.cmdBuf.u.starsSqe), sendSqeNum * sizeof(rtStarsSqe_t));
+        static_cast<void*>(GetSqeAddr(sqeBufferBackup, workTask->pos)), sqeBytes,
+        static_cast<void*>(cmdLocal.cmdBuf.sqe), sqeBytes);
     COND_RETURN_ERROR_MSG_INNER(
         ret != EOK, RT_ERROR_INVALID_VALUE,
         "memcpy_s failed, dest=%p, dest_max=%zu, src=%p, count=%zu, retCode=%d, device_id=%u, stream_id=%d, "
         "task_id=%hu, task_type=%d(%s).",
-        sqeBufferBackup + sizeof(rtStarsSqe_t) * workTask->pos, sendSqeNum * sizeof(rtStarsSqe_t),
-        cmdLocal.cmdBuf.u.starsSqe, sendSqeNum * sizeof(rtStarsSqe_t), ret, device_->Id_(), streamId_, workTask->id,
-        workTask->type, workTask->typeName);
+        GetSqeAddr(sqeBufferBackup, workTask->pos), static_cast<size_t>(sqeBytes), cmdLocal.cmdBuf.sqe,
+        static_cast<size_t>(sqeBytes), ret, device_->Id_(), streamId_, workTask->id, workTask->type,
+        workTask->typeName);
 
     Complete(workTask, device_->Id_());
     RT_LOG(
@@ -3592,24 +3595,26 @@ rtError_t Stream::HandleTaskDefault(
     rtTsCommand_t cmdLocal = {};
     if (NeedReBuildSqe(workTask)) {
         cmdLocal.cmdType = RT_TASK_COMMAND_TYPE_STARS_SQE;
-        ToConstructSqe(workTask, cmdLocal.cmdBuf.u.starsSqe);
-        oldhostSqeAddr = RtPtrToPtr<uint8_t*, rtStarsSqe_t*>(cmdLocal.cmdBuf.u.starsSqe);
+        const TaskSqeInfo sqeInfo = {0ULL, 0ULL};
+        ToConstructSqe(workTask, static_cast<void*>(cmdLocal.cmdBuf.sqe), sqeInfo);
+        SetExpectedTaskReportNum(workTask, sendSqeNum);
+        oldhostSqeAddr = cmdLocal.cmdBuf.sqe;
     }
     COND_PROC((oldhostSqeAddr == nullptr), return RT_ERROR_INVALID_VALUE);
     // Update the host-side head and tail
     const rtError_t error = StarsAddTaskToStreamForModelUpdate(workTask, sendSqeNum);
     ERROR_RETURN_MSG_INNER(error, "Add task to stream failed, stream_id=%d, task_id=%u.", streamId_, workTask->id);
 
-    const uint32_t taskPos = workTask->pos;
+    const uint64_t sqeBytes = GetTaskSqeBytes(workTask->sqeNum);
     const auto ret = memcpy_s(
-        RtPtrToPtr<void*>(sqeBufferBackup + sizeof(rtStarsSqe_t) * taskPos), sendSqeNum * sizeof(rtStarsSqe_t),
-        RtPtrToPtr<void*>(oldhostSqeAddr), sendSqeNum * sizeof(rtStarsSqe_t));
+        static_cast<void*>(GetSqeAddr(sqeBufferBackup, workTask->pos)), sqeBytes, static_cast<void*>(oldhostSqeAddr),
+        sqeBytes);
     COND_RETURN_ERROR_MSG_INNER(
         ret != EOK, RT_ERROR_INVALID_VALUE,
         "memcpy_s failed, dest=%p, dest_max=%zu, src=%p, count=%zu, retCode=%d, device_id=%u, stream_id=%d, "
         "task_id=%hu, task_type=%d(%s).",
-        sqeBufferBackup + sizeof(rtStarsSqe_t) * taskPos, sendSqeNum * sizeof(rtStarsSqe_t), oldhostSqeAddr,
-        sendSqeNum * sizeof(rtStarsSqe_t), ret, device_->Id_(), streamId_, workTask->id, workTask->type,
+        GetSqeAddr(sqeBufferBackup, workTask->pos), static_cast<size_t>(sqeBytes), oldhostSqeAddr,
+        static_cast<size_t>(sqeBytes), ret, device_->Id_(), streamId_, workTask->id, workTask->type,
         workTask->typeName);
     RT_LOG(
         RT_LOG_INFO, "handle default task finish, stream_id=%d, task_id=%hu, task_type=%d(%s).", streamId_,
@@ -3662,6 +3667,7 @@ rtError_t Stream::UpdateAllPersistentTask()
             "Value %u of sendSqeNum cannot be greater than the maximum number (%u) of SQEs allowed by the task. "
             "task_id=%hu, task_type=%d(%s).",
             sendSqeNum, SQE_NUM_PER_STARS_TASK_MAX, workTask->id, workTask->type, workTask->typeName);
+        workTask->sqeNum = static_cast<uint8_t>(sendSqeNum);
         if (workTask->updateFlag == static_cast<uint8_t>(TaskUpdateFlag::RT_TASK_UPDATE) ||
             workTask->updateFlag == static_cast<uint8_t>(TaskUpdateFlag::RT_TASK_KEEP)) {
             COND_RETURN_AND_MSG_OUTER(
@@ -5054,7 +5060,7 @@ rtError_t Stream::AllocAutoSplitSqAddr()
     uint32_t sqDepth = (sqeNum + SQE_DEPTH_1k - 1U) / SQE_DEPTH_1k * SQE_DEPTH_1k;
     sqDepth = sqDepth > STREAM_SQ_MAX_DEPTH ? STREAM_SQ_MAX_DEPTH : sqDepth;
     if (GetSqBaseAddr() == 0ULL) {
-        const uint32_t allocMemSize = sqDepth * sizeof(rtStarsSqe_t);
+        const uint32_t allocMemSize = static_cast<uint32_t>(GetTaskSqeBytes(sqDepth));
         const uint32_t memOrderType = sqAddrMemoryManage->GetMemOrderTypeByMemSize(allocMemSize);
         uint64_t* sqBaseAddr = nullptr;
         ret = Context_()->Device_()->GetSqAddrMemoryManage()->AllocSqAddr(memOrderType, &sqBaseAddr);
@@ -5594,8 +5600,7 @@ rtError_t Stream::SubmitMemCpyAsyncTask(TaskInfo* const updateTask)
     void* sqeDeviceAddr = nullptr;
     rtError_t error = RT_ERROR_NONE;
 
-    error = device_->Driver_()->DevMemAlloc(
-        &sqeDeviceAddr, static_cast<uint64_t>(sizeof(rtStarsSqe_t)), RT_MEMORY_HBM, device_->Id_());
+    error = device_->Driver_()->DevMemAlloc(&sqeDeviceAddr, SQE_SIZE_UNIT, RT_MEMORY_HBM, device_->Id_());
     COND_RETURN_ERROR_MSG_INNER(
         (error != RT_ERROR_NONE) || (sqeDeviceAddr == nullptr), error, "Failed to allocate device memory, retCode=%#x.",
         error);

@@ -222,7 +222,8 @@ void RecycleThreadDoForStarsV2(Device* deviceInfo)
 
 void ConstructStarsSqeForNotifyRecordTask(TaskInfo* taskInfo, uint8_t* const command)
 {
-    ConstructSqeForNotifyRecordTask(taskInfo, RtPtrToPtr<rtStarsSqe_t*>(command));
+    const TaskSqeInfo sqeInfo = {0ULL, 0ULL};
+    ConstructSqeForNotifyRecordTask(taskInfo, command, sqeInfo);
 }
 
 void ConstructStarsSqeForConditionNotifyWait(TaskInfo* taskInfo, uint8_t* const command)
@@ -255,12 +256,6 @@ void TaskRollBack(Stream* const stm, uint32_t pos)
 {
     UNUSED(stm);
     UNUSED(pos);
-    return;
-}
-
-void RefreshDavidSqeRunningFunc(rtChipType_t chipType)
-{
-    UNUSED(chipType);
     return;
 }
 

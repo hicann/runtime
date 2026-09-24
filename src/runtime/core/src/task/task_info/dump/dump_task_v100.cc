@@ -21,8 +21,11 @@ namespace runtime {
 constexpr const uint16_t STARS_DATADUMP_LOADINFO_END_BITMAP = 0x20U;
 
 #if F_DESC("DataDumpLoadInfoTask")
-static void ConstructSqeForDataDumpLoadInfoTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+static void ConstructSqeForDataDumpLoadInfoTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     Stream* const stm = taskInfo->stream;
     RtStarsPhSqe* const sqe = &(command->phSqe);
     sqe->type = RT_STARS_SQE_TYPE_PLACE_HOLDER;
@@ -61,8 +64,11 @@ static void DoCompleteSuccessForDataDumpLoadInfoTask(TaskInfo* taskInfo, const u
 #endif
 
 #if F_DESC("DebugRegisterTask")
-static void ConstructSqeForDebugRegisterTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+static void ConstructSqeForDebugRegisterTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     Stream* const stm = taskInfo->stream;
     RtStarsPhSqe* const sqe = &(command->phSqe);
     sqe->type = RT_STARS_SQE_TYPE_PLACE_HOLDER;
@@ -87,8 +93,11 @@ static void ConstructSqeForDebugRegisterTask(TaskInfo* taskInfo, rtStarsSqe_t* c
 #endif
 
 #if F_DESC("DebugUnRegisterTask")
-static void ConstructSqeForDebugUnRegisterTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+static void ConstructSqeForDebugUnRegisterTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     Stream* const stm = taskInfo->stream;
     RtStarsPhSqe* const sqe = &(command->phSqe);
     sqe->type = RT_STARS_SQE_TYPE_PLACE_HOLDER;
@@ -111,8 +120,12 @@ static void ConstructSqeForDebugUnRegisterTask(TaskInfo* taskInfo, rtStarsSqe_t*
 #endif
 
 #if F_DESC("DebugRegisterForStreamTask")
-static void ConstructSqeForDebugRegisterForStreamTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+static void ConstructSqeForDebugRegisterForStreamTask(
+    TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     Stream* const stm = taskInfo->stream;
     RtStarsPhSqe* const sqe = &(command->phSqe);
     sqe->type = RT_STARS_SQE_TYPE_PLACE_HOLDER;
@@ -140,8 +153,12 @@ static void ConstructSqeForDebugRegisterForStreamTask(TaskInfo* taskInfo, rtStar
 #endif
 
 #if F_DESC("DebugUnRegisterForStreamTask")
-static void ConstructSqeForDebugUnRegisterForStreamTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+static void ConstructSqeForDebugUnRegisterForStreamTask(
+    TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     RtStarsPhSqe* const sqe = &(command->phSqe);
     Stream* stm = taskInfo->stream;
 
@@ -167,8 +184,11 @@ static void ConstructSqeForDebugUnRegisterForStreamTask(TaskInfo* taskInfo, rtSt
 #endif
 
 #if F_DESC("AicpuInfoLoadTask")
-static void ConstructSqeForAicpuInfoLoadTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+static void ConstructSqeForAicpuInfoLoadTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     Stream* const stm = taskInfo->stream;
     RtStarsPhSqe* const sqe = &(command->phSqe);
     sqe->type = RT_STARS_SQE_TYPE_PLACE_HOLDER;
@@ -205,8 +225,11 @@ static void DoCompleteSuccessForAicpuInfoLoadTask(TaskInfo* taskInfo, const uint
 }
 #endif
 
-void ConstructSqeForNopTask(TaskInfo* const taskInfo, rtStarsSqe_t* const command)
+void ConstructSqeForNopTask(TaskInfo* const taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     Stream* const stm = taskInfo->stream;
     RtStarsPhSqe* const sqe = &(command->phSqe);
     sqe->type = RT_STARS_SQE_TYPE_PLACE_HOLDER;

@@ -276,7 +276,7 @@ TEST_F(CloudV2StarsEngineTest, ProfilingEnableTask)
 
     rtStarsSqe_t sqe = {};
     RtStarsPhSqe& placeHolderSqe = sqe.phSqe;
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     // head task_type
     EXPECT_EQ(placeHolderSqe.task_type, 27);
 }
@@ -293,7 +293,7 @@ TEST_F(CloudV2StarsEngineTest, ProfilingDisableTask)
     rtStarsSqe_t sqe = {};
     RtStarsPhSqe& placeHolderSqe = sqe.phSqe;
 
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     // head task_type
     EXPECT_EQ(placeHolderSqe.task_type, 28);
 }
@@ -986,7 +986,7 @@ TEST_F(CloudV2StarsEngineTest, MaintenanceTask)
 
     rtStarsSqe_t sqe = {};
     RtStarsPhSqe& placeHolderSqe = sqe.phSqe;
-    ToConstructSqe(&task, &sqe);
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
     // head check
     EXPECT_EQ(placeHolderSqe.rt_streamID, (0x8000 | stream_->Id_()));
 }
@@ -1009,7 +1009,7 @@ TEST_F(CloudV2StarsEngineTest, RecycleEventRecordTask)
     taskInfo.first = 12;
     taskInfo.second = 0;
 
-    ToConstructSqe(workTask, &sqe);
+    ToConstructSqe(workTask, &sqe, TaskSqeInfo{0ULL, 0ULL});
     workTask->stream = stream_;
     stream_->SetSyncRemainTime(5);
 
@@ -1048,7 +1048,7 @@ TEST_F(CloudV2StarsEngineTest, RecycleEventRecordTask_01)
     taskInfo.first = 12;
     taskInfo.second = 0;
 
-    ToConstructSqe(workTask, &sqe);
+    ToConstructSqe(workTask, &sqe, TaskSqeInfo{0ULL, 0ULL});
     workTask->stream = stream_;
     stream_->SetSyncRemainTime(5);
 
@@ -1090,7 +1090,7 @@ TEST_F(CloudV2StarsEngineTest, SyncTaskCheckResult)
     taskInfo.first = 12;
     taskInfo.second = 0;
 
-    ToConstructSqe(workTask, &sqe);
+    ToConstructSqe(workTask, &sqe, TaskSqeInfo{0ULL, 0ULL});
     workTask->stream = stream_;
     stream_->SetSyncRemainTime(5);
     MOCKER_CPP(&TaskFactory::GetTask).stubs().will(returnValue(workTask));
@@ -1433,7 +1433,7 @@ TEST_F(CloudV2StarsEngineTest, ProcLogicCqUntilEmpty_MutiTaskReport)
 
     TaskInfo task = {};
     task.type = TS_TASK_TYPE_MULTIPLE_TASK;
-    task.u.davinciMultiTaskInfo.sqeNum = 2U;
+    task.sqeNum = 2U;
     MOCKER_CPP(&TaskFactory::GetTask).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(&task));
 
     MOCKER_CPP_VIRTUAL(device_->Driver_(), &Driver::LogicCqReportV2)
@@ -1486,8 +1486,8 @@ TEST_F(CloudV2StarsEngineTest, ProcReport_test)
 
     TaskInfo task = {};
     task.type = TS_TASK_TYPE_MULTIPLE_TASK;
+    task.sqeNum = 2U;
     MOCKER_CPP(&TaskFactory::GetTask).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(&task));
-    MOCKER(GetSendSqeNum).stubs().will(returnValue(static_cast<uint32_t>(2U)));
     MOCKER_CPP(&StarsEngine::ProcMultipleTaskLogicCqReport).stubs().will(returnValue(true));
 
     bool isFinished = false;

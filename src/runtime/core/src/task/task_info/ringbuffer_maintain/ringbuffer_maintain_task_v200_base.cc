@@ -12,6 +12,7 @@
 #include "runtime.hpp"
 #include "context.hpp"
 #include "stars_david.hpp"
+#include "david_sqe_adapter.hpp"
 #include "ringbuffer_maintain_task.h"
 #include "runtime_task_manager.h"
 #include "device_error_info.hpp"
@@ -43,6 +44,7 @@ static void ConstructDavidSqeForRingBufferMaintainTask(
         RT_LOG(
             RT_LOG_INFO, "RingBufferMaintainTask, device_id=%u, stream_id=%d, task_id=%hu",
             taskInfo->stream->Device_()->Id_(), taskInfo->stream->Id_(), taskInfo->id);
+        UpdateDavidSqeHeadUpdate(taskInfo, sqe);
         return;
     }
 
@@ -59,6 +61,7 @@ static void ConstructDavidSqeForRingBufferMaintainTask(
         " offset=%#" PRIx64 ", elementSize=%u.",
         taskInfo->stream->Device_()->Id_(), taskInfo->stream->Id_(), taskInfo->id, offset,
         phSqe->u.ringBufferControlInfo.elementSize);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 #endif
@@ -67,7 +70,7 @@ static bool RingBufferMaintainTaskRegister()
 {
     TaskFuncSingle funcs = {
         .toCommandFunc = &ToCmdBodyForRingBufferMaintainTask,
-        .toSqeFunc = nullptr,
+        .toSqeFunc = &ConstructDavidSqeForRingBufferMaintainTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
         .taskUnInitFunc = nullptr,
         .waitAsyncCpCompleteFunc = nullptr,
@@ -79,9 +82,7 @@ static bool RingBufferMaintainTaskRegister()
     const auto& chips = GetDavidChips();
     for (const auto chip : chips) {
         RegTaskFunc(chip, TS_TASK_TYPE_DEVICE_RINGBUFFER_CONTROL, funcs);
-        RegDavidSqeFunc(chip, TS_TASK_TYPE_DEVICE_RINGBUFFER_CONTROL, &ConstructDavidSqeForRingBufferMaintainTask);
     }
-
     return true;
 }
 

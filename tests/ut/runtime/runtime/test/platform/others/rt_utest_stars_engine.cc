@@ -158,6 +158,29 @@ protected:
 
 rtChipType_t OthersStarsEngineTest::originType_ = CHIP_MINI;
 
+TEST_F(OthersStarsEngineTest, SendMultipleTaskCachesActualSqeNumBeforeAbort)
+{
+    constexpr uint32_t sendSqeNum = 3U;
+    TaskInfo task = {};
+    InitByStream(&task, stream_);
+    task.type = TS_TASK_TYPE_MULTIPLE_TASK;
+    task.typeName = "MULTIPLE_TASK";
+    task.sqeNum = 0U;
+    task.u.davinciMultiTaskInfo.sqeNum = sendSqeNum;
+
+    StarsEngine* const starsEngine = static_cast<StarsEngine*>(engine_);
+    Engine* const engineBase = starsEngine;
+    MOCKER_CPP_VIRTUAL(engineBase, &Engine::TryRecycleTask).stubs().will(returnValue(RT_ERROR_NONE));
+    stream_->SetAbortStatus(RT_ERROR_STREAM_ABORT);
+    const ScopeGuard restoreAbortStatus([&]() { stream_->SetAbortStatus(RT_ERROR_NONE); });
+    uint16_t taskId = 0U;
+
+    const rtError_t error = starsEngine->SendTask(&task, taskId);
+
+    EXPECT_EQ(error, RT_ERROR_STREAM_ABORT_SEND_TASK_FAIL);
+    EXPECT_EQ(task.sqeNum, sendSqeNum);
+}
+
 TEST_F(OthersStarsEngineTest, MonitorForWatchDog_02)
 {
     rtError_t error;

@@ -20,8 +20,12 @@
 namespace cce {
 namespace runtime {
 
-static void ConstructSqeForModelMaintainceTask(TaskInfo* const taskInfo, rtStarsSqe_t* const command)
+static void ConstructSqeForModelMaintainceTask(
+    TaskInfo* const taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
 {
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+
     ModelMaintainceTaskInfo* modelMaintainceTaskInfo = &(taskInfo->u.modelMaintainceTaskInfo);
     RtStarsPhSqe* const sqe = &(command->phSqe);
     Stream* const stream = taskInfo->stream;

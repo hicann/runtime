@@ -9,6 +9,7 @@
  */
 
 #include "base.hpp"
+#include "david_sqe_adapter.hpp"
 #include "model_serial_sched_task.hpp"
 #include "error_message_manage.hpp"
 #include "inner_thread_local.hpp"
@@ -263,6 +264,7 @@ void ConstructSqeForModelSerialSchedPreProcTask(TaskInfo* const taskInfo, void* 
     aicpuDqsSqe->subType = static_cast<uint32_t>(ModelSerialSchedSubType::kPreProc);
     aicpuDqsSqe->magic = RT_MODEL_SERIAL_SCHED_PRE_PROC_MAGIC;
     PrintDavidSqe(davidSqe, "ModelSerialSchedPreProcTask");
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 void ConstructSqeForModelSerialSchedPostProcTask(TaskInfo* const taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
@@ -276,6 +278,7 @@ void ConstructSqeForModelSerialSchedPostProcTask(TaskInfo* const taskInfo, void*
     aicpuDqsSqe->subType = static_cast<uint32_t>(ModelSerialSchedSubType::kPostProc);
     aicpuDqsSqe->magic = RT_MODEL_SERIAL_SCHED_POST_PROC_MAGIC;
     PrintDavidSqe(davidSqe, "ModelSerialSchedPostProcTask");
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 void ConstructSqeForModelSerialSchedNotifyWaitTask(
@@ -306,6 +309,7 @@ void ConstructSqeForModelSerialSchedNotifyWaitTask(
         stream->Device_()->Id_(), stream->Id_(), taskInfo->id, taskInfo->taskSn, stream->GetSqId(), notifySqe->notifyId,
         notifySqe->cntFlag, notifySqe->clrFlag, notifySqe->waitModeBit, notifySqe->recordModeBit, notifySqe->bitmap,
         notifySqe->cntValue, GetNotifySubType(notifySqe->subType), notifySqe->timeout);
+    UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
 } // namespace runtime

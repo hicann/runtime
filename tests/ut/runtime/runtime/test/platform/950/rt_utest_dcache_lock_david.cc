@@ -28,6 +28,7 @@
 #include "label.hpp"
 #include "task_res.hpp"
 #include "stars.hpp"
+#include "stars_david.hpp"
 #include "device_state_callback_manager.hpp"
 #include "npu_driver.hpp"
 #include "api_error.hpp"
