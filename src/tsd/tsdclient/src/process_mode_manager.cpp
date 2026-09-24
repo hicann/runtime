@@ -213,12 +213,13 @@ TSD_StatusT ProcessModeManager::CapabilityGet(const int32_t type, const uint64_t
 TSD_StatusT ProcessModeManager::LoadFileToDevice(
     const char_t* const filePath, const uint64_t pathLen, const char_t* const fileName, const uint64_t fileNameLen)
 {
-    return packageMgr_.LoadFileToDevice(filePath, pathLen, fileName, fileNameLen, tsdCtrl_.BuildBaseMessageContext());
+    return GetPackageManager().LoadFileToDevice(
+        filePath, pathLen, fileName, fileNameLen, GetTsdController().BuildBaseMessageContext());
 }
 
 TSD_StatusT ProcessModeManager::ProcessOpenSubProc(ProcOpenArgs* openArgs)
 {
-    return subProcCtrl_.OpenSubProc(openArgs);
+    return GetSubProcessController().OpenSubProc(openArgs);
 }
 
 TSD_StatusT ProcessModeManager::ProcessCloseSubProc(const pid_t closePid)
@@ -296,7 +297,7 @@ void ProcessModeManager::ServerToClientMsgProc(const uint32_t sessionID, const H
     const std::shared_ptr<ProcessModeManager> client =
         std::dynamic_pointer_cast<ProcessModeManager>(ClientManager::GetInstance(realDeviceId, DIE_MODE, false));
     TSD_CHECK_NULLPTR_VOID(client);
-    client->GetDispatcher().DeviceMsgProcess(msg);
+    client->DeviceMsgProcess(msg);
 }
 
 void ProcessModeManager::PackageInfoMsgProc(const uint32_t sessionID, const HDCMessage& msg)

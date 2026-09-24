@@ -9,6 +9,8 @@
  */
 
 #include "inc/tsd_process_controller.h"
+#include <cinttypes>
+#include <cstdint>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -167,7 +169,7 @@ TSD_StatusT TsdProcessController::Close(uint32_t flag)
     }
 
     commAgent_.ReleaseDeviceConnection();
-    sharedCtx_.rspCode = ResponseCode::FAIL;
+    sharedCtx_.ResetResponseState();
     isStartedHccp_ = false;
     hccpPid_ = 0U;
     SetTsdStartInfo(false, false, false);
@@ -249,7 +251,7 @@ MessageContext TsdProcessController::BuildBaseMessageContext() const
 {
     MessageContext ctx{};
     ctx.logicDeviceId = sharedCtx_.logicDeviceId;
-    ctx.rankSize = rankSize_;
+    ctx.rankSize = GetRankSize();
     ctx.procSign = commAgent_.GetProcSign();
     ctx.profilingMode = static_cast<uint32_t>(sharedCtx_.profilingMode);
     ctx.logLevel = sharedCtx_.logLevel;
@@ -261,15 +263,14 @@ MessageContext TsdProcessController::BuildBaseMessageContext() const
     ctx.aicpuDeviceMode = aicpuDeviceMode_;
     if (sharedCtx_.aicpuSchedMode >= static_cast<uint64_t>(AICPU_SCHED_MODE_INVALID)) {
         TSD_RUN_WARN(
-            "[TsdClient] invalid aicpuSchedMode:%llu, valid range is [0-%llu]",
-            static_cast<unsigned long long>(sharedCtx_.aicpuSchedMode),
-            static_cast<unsigned long long>(AICPU_SCHED_MODE_INVALID));
+            "[TsdClient] invalid aicpuSchedMode:%" PRIu64 ", valid range is [0-%" PRIu64 "]", sharedCtx_.aicpuSchedMode,
+            static_cast<std::uint64_t>(AICPU_SCHED_MODE_INVALID));
         ctx.aicpuSchedMode = AICPU_SCHED_MODE_INTERRUPT;
     } else {
         ctx.aicpuSchedMode = static_cast<SchedMode>(sharedCtx_.aicpuSchedMode);
     }
-    ctx.qsInitGroupName = qsInitGrpName_;
-    ctx.schedPolicy = schedPolicy_;
+    ctx.qsInitGroupName = GetQsInitGrpName();
+    ctx.schedPolicy = GetSchedPolicy();
     return ctx;
 }
 
@@ -283,7 +284,7 @@ TSD_StatusT TsdProcessController::ConstructOpenMsg(HDCMessage& hdcMsg, const Tsd
 
 TSD_StatusT TsdProcessController::SendOpenMsg(const uint32_t rankSize, const TsdStartStatusInfo startInfo)
 {
-    rankSize_ = rankSize;
+    SetRankSize(rankSize);
     HDCMessage hdcMsg;
     if (ConstructOpenMsg(hdcMsg, startInfo) != TSD_OK) {
         TSD_ERROR("ConstructOpenMsg open msg error");
@@ -404,12 +405,12 @@ TSD_StatusT TsdProcessController::InitQs(const InitFlowGwInfo* const initInfo)
 
     if (groupName != nullptr) {
         TSD_INFO("[TsdClient]QS open with group[%s]", groupName);
-        qsInitGrpName_ = groupName;
+        SetQsInitGrpName(groupName);
     } else {
         TSD_INFO("[TsdClient]QS open with empty groupName");
-        qsInitGrpName_.clear();
+        SetQsInitGrpName("");
     }
-    schedPolicy_ = initInfo->schedPolicy;
+    SetSchedPolicy(initInfo->schedPolicy);
 
     constexpr TsdStartStatusInfo startInfo = {false, false, true};
     ret = SendOpenMsg(DEFAULT_QS_RANKSIZE, startInfo);
@@ -427,17 +428,19 @@ TSD_StatusT TsdProcessController::InitQs(const InitFlowGwInfo* const initInfo)
 
 void TsdProcessController::SetTsdStartInfo(const bool cpStatus, const bool hccpStatus, const bool qsStatus)
 {
-    tsdStartStatus_.startCp_ = cpStatus;
-    tsdStartStatus_.startHccp_ = hccpStatus;
-    tsdStartStatus_.startQs_ = qsStatus;
+    auto& startStatus = GetTsdStartStatus();
+    startStatus.startCp_ = cpStatus;
+    startStatus.startHccp_ = hccpStatus;
+    startStatus.startQs_ = qsStatus;
     capabilityMgr_.SetStartCpStatus(cpStatus);
 }
 
-bool TsdProcessController::CheckNeedToOpen(const uint32_t rankSize, TsdStartStatusInfo& startInfo)
+bool TsdProcessController::CheckNeedToOpen(const uint32_t rankSize, TsdStartStatusInfo& startInfo) const
 {
     constexpr uint32_t HCCP_START_RANK_SIZE = 1U;
+    const auto& startStatus = GetTsdStartStatus();
     if (rankSize <= HCCP_START_RANK_SIZE) {
-        if (tsdStartStatus_.startCp_) {
+        if (startStatus.startCp_) {
             TSD_INFO("[TsdClient] cp has already opened, no need open again");
             return false;
         } else {
@@ -445,7 +448,7 @@ bool TsdProcessController::CheckNeedToOpen(const uint32_t rankSize, TsdStartStat
             startInfo.startCp_ = true;
         }
     } else {
-        if ((tsdStartStatus_.startCp_) && (tsdStartStatus_.startHccp_)) {
+        if ((startStatus.startCp_) && (startStatus.startHccp_)) {
             TSD_INFO("[TsdClient] hccp and cp have already opened, no need open again");
             return false;
         }

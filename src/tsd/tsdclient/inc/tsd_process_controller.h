@@ -49,7 +49,7 @@ public:
     MessageContext BuildBaseMessageContext() const;
 
     void SetTsdStartInfo(const bool cpStatus, const bool hccpStatus, const bool qsStatus);
-    bool CheckNeedToOpen(const uint32_t rankSize, TsdStartStatusInfo& startInfo);
+    bool CheckNeedToOpen(const uint32_t rankSize, TsdStartStatusInfo& startInfo) const;
 
     TSD_StatusT ProcessQueueForAdc();
     TSD_StatusT SyncQueueAuthority() const;

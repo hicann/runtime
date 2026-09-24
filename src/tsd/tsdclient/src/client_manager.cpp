@@ -233,12 +233,6 @@ TSD_StatusT ClientManager::SetAicpuSchedMode(const uint32_t schedMode)
     return tsd::TSD_OK;
 }
 
-bool ClientManager::GetPackageTitle(std::string& packageTitle) const
-{
-    return PackageEnvInfo::ResolvePackageTitle(
-        static_cast<uint32_t>(g_platInfo.chipType), g_platInfo.onlineStatus, packageTitle);
-}
-
 void ClientManager::GetProfilingMode()
 {
     profilingMode_ = ProfilingMode::PROFILING_CLOSE;
@@ -383,8 +377,10 @@ bool ClientManager::GetVisibleDevices()
 TSD_StatusT ClientManager::ChangeUserDeviceIdToLogicDeviceId(const uint32_t userDevId, uint32_t& logicDevId)
 {
     const std::lock_guard<std::mutex> lk(g_visibleDevicesMut);
-    if (!g_hadGetVisibleDevices && !GetVisibleDevices()) {
-        return TSD_OK;
+    if (!g_hadGetVisibleDevices) {
+        if (!GetVisibleDevices()) {
+            return TSD_OK;
+        }
     }
 
     // user device id匹配logic id

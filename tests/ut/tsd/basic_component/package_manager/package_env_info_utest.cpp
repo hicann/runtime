@@ -224,6 +224,14 @@ TEST_F(PackageEnvInfoComponentTest, GetPackageTitle_Ascend910B_ReturnsAscend)
     EXPECT_EQ(pkgTitle, "Ascend");
 }
 
+TEST_F(PackageEnvInfoComponentTest, GetPackageTitle_Ascend310P_ReturnsAscend310P)
+{
+    PackageEnvInfo envInfo(deviceId, static_cast<uint32_t>(ModeType::ONLINE), false, CHIP_DC);
+    std::string pkgTitle;
+    EXPECT_TRUE(envInfo.GetPackageTitle(pkgTitle));
+    EXPECT_EQ(pkgTitle, "Ascend310P");
+}
+
 TEST_F(PackageEnvInfoComponentTest, CheckPackageExists_ExtendPackageEntryMatches_ReturnsTrue)
 {
     MOCKER(mmAccess).stubs().will(returnValue(0));

@@ -154,8 +154,6 @@ public:
 
     virtual TSD_StatusT CloseNetService() = 0;
 
-    bool GetPackageTitle(std::string& packageTitle) const;
-
     uint32_t GetPlatInfoMode() const;
 
     bool CheckPackageExists(const bool loadAicpuKernelFlag = true)

@@ -335,9 +335,10 @@ TSD_StatusT SubProcessController::ExecuteClosePidList(
     const ProcStatusParam* closeList, const uint32_t startIndex, const uint32_t pidCnt)
 {
     if ((closeList == nullptr) || (pidCnt == 0U) || (pidCnt > MAX_PROCESS_PID_CNT)) {
+        const char* const closeListState = (closeList == nullptr) ? "null" : "not null";
         TSD_ERROR(
-            "input param is invalid, closeList:%s, pidCnt:%u, valid range is [1, %u]",
-            (closeList == nullptr) ? "null" : "not null", pidCnt, MAX_PROCESS_PID_CNT);
+            "input param is invalid, closeList:%s, pidCnt:%u, valid range is [1, %u]", closeListState, pidCnt,
+            MAX_PROCESS_PID_CNT);
         return TSD_INTERNAL_ERROR;
     }
 

@@ -156,7 +156,7 @@ TEST_F(ClientManagerTest, GetPlatInfoMode_NewProcessManager_ReturnsOnlineMode)
     EXPECT_EQ(platInfoMode, 1);
 }
 
-TEST_F(ClientManagerTest, GetPackageTitle_Ascend310PPlatform_ReturnsAscend310P)
+TEST_F(ClientManagerTest, GetPlatformInfo_Ascend310PPlatform_StoresChipType)
 {
     MOCKER(halGetDeviceInfo).stubs().will(invoke(halGetDeviceInfoAscend310P));
     MOCKER(drvGetPlatformInfo).stubs().will(invoke(drvGetPlatformInfoSuccess));
@@ -165,9 +165,7 @@ TEST_F(ClientManagerTest, GetPackageTitle_Ascend310PPlatform_ReturnsAscend310P)
     ASSERT_NE(client, nullptr);
     EXPECT_EQ(client->GetPlatformInfo(deviceId), TSD_OK);
 
-    std::string packageTitle;
-    EXPECT_TRUE(client->GetPackageTitle(packageTitle));
-    EXPECT_EQ(packageTitle, "Ascend310P");
+    EXPECT_EQ(ClientManager::GetPlatInfoChipType(), static_cast<uint32_t>(CHIP_DC));
 }
 
 TEST_F(ClientManagerTest, GetInstance_PlatformInfoQueryFails_ReturnsNull)

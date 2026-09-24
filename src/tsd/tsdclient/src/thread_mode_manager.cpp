@@ -9,6 +9,7 @@
  */
 
 #include "inc/thread_mode_manager.h"
+#include <cinttypes>
 #include "common/enum_name.h"
 #include "driver/ascend_hal.h"
 #include "tsd_log.h"
@@ -405,7 +406,7 @@ TSD_StatusT ThreadModeManager::ProcessOpenSubProc(ProcOpenArgs* openArgs)
 
     if (openArgs->extParamCnt > SUB_PROC_PARAM_LIST_MAX_COUNT) {
         TSD_ERROR(
-            "extParamList too long, extParamCnt:%u, max:%u", static_cast<uint32_t>(openArgs->extParamCnt),
+            "extParamList too long, extParamCnt:%" PRIu64 ", max:%u", openArgs->extParamCnt,
             static_cast<uint32_t>(SUB_PROC_PARAM_LIST_MAX_COUNT));
         return TSD_INTERNAL_ERROR;
     }
@@ -475,11 +476,11 @@ TSD_StatusT ThreadModeManager::ProcessCloseSubProcList(const ProcStatusParam* cl
         TSD_ERROR("[ThreadModeManager] closeList is nullptr or pid list size invalid:%u", listSize);
         return TSD_INTERNAL_ERROR;
     }
-    TSD_RUN_INFO("[ThreadModeManager] enter ExecuteClosePidList cnt:%u, procType:%u", listSize, closeList[0].procType);
-    if (closeList[0].procType != TSD_SUB_PROC_ADPROF) {
+    TSD_RUN_INFO("[ThreadModeManager] enter ExecuteClosePidList cnt:%u, procType:%u", listSize, closeList->procType);
+    if (closeList->procType != TSD_SUB_PROC_ADPROF) {
         TSD_ERROR(
             "[ThreadModeManager] close in thread mode is not supported, procType:%s(%u)",
-            GetEnumName(closeList[0].procType).c_str(), static_cast<uint32_t>(closeList[0].procType));
+            GetEnumName(closeList->procType).c_str(), static_cast<uint32_t>(closeList->procType));
         return TSD_INTERNAL_ERROR;
     }
 
