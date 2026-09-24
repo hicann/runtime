@@ -49,6 +49,10 @@ rtError_t CmoTaskInit(
             return RT_ERROR_NONE;
         } else {
             RT_LOG(RT_LOG_WARNING, "CMO task stream does not support in model.");
+            RT_LOG_OUTER_MSG_IMPL(
+                ErrorCode::EE1016, "Operating the cache memory on the device",
+                "CMO task delivery on a stream associated with a model, including an ACL Graph capture stream, is "
+                "not supported");
             return RT_ERROR_FEATURE_NOT_SUPPORT;
         }
     } else if (cmoModel == nullptr) {
