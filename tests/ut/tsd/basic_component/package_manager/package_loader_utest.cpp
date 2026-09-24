@@ -294,6 +294,13 @@ TEST_F(PackageLoaderComponentTest, SupportLoadPkgAcceptsHixlOnAscend950)
     EXPECT_TRUE(manager.GetPackageManager().loader_.SupportLoadPkg("cann-hixl-compat.tar.gz"));
 }
 
+TEST_F(PackageLoaderComponentTest, SupportLoadPkgAcceptsMc2ServerOnCloudV5)
+{
+    ProcessModeManager manager(deviceId, 0);
+    manager.GetPackageManager().envInfo_.SetPlatInfoChipType(CHIP_CLOUD_V5);
+    EXPECT_TRUE(manager.GetPackageManager().loader_.SupportLoadPkg("mc2_server.tar.gz"));
+}
+
 TEST_F(PackageLoaderComponentTest, LoadRuntimePkgToDevice_LegacyPackageSizeIsZero_ReturnsOk)
 {
     MOCKER_CPP(&PackageCheckCodeService::InitTsdClient).stubs().will(returnValue(tsd::TSD_OK));

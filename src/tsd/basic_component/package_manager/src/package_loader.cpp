@@ -36,7 +36,7 @@ constexpr uint64_t HELPER_INPUT_MAX_FILE_PATH_LEN = 4096UL;
 constexpr uint64_t HELPER_INPUT_MAX_FILE_NAME_LEN = 256UL;
 const std::map<std::string, std::vector<tsd::ChipType_t>> PKG_CHIP_SUPPORT_MAP = {
     {"aicpu_hccl.tar.gz", {tsd::CHIP_ASCEND_910B, tsd::CHIP_ASCEND_950, tsd::CHIP_CLOUD_V5, tsd::CHIP_ASCEND_350}},
-    {"mc2_server.tar.gz", {tsd::CHIP_ASCEND_950, tsd::CHIP_ASCEND_350}},
+    {"mc2_server.tar.gz", {tsd::CHIP_ASCEND_950, tsd::CHIP_CLOUD_V5, tsd::CHIP_ASCEND_350}},
     {"aicpu_hcomm.tar.gz",
      {tsd::CHIP_DC, tsd::CHIP_ASCEND_910B, tsd::CHIP_ASCEND_950, tsd::CHIP_ASCEND_350, tsd::CHIP_CLOUD_V5}},
     {"cann-hcomm-compat.tar.gz",
