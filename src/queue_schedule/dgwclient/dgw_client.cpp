@@ -321,7 +321,8 @@ int32_t DgwClient::UpdateConfig(ConfigInfo& cfgInfo, std::vector<int32_t>& cfgRe
     BQS_LOG_INFO("[DgwClient] Begin to update config.");
     // check dgw client initialized
     if (!initFlag_) {
-        BQS_LOG_ERROR("[DgwClient] please check whether datagw client has initialized successfully.");
+        BQS_LOG_ERROR(
+            "[DgwClient] UpdateConfig failed, please check whether datagw client has initialized successfully.");
         return static_cast<int32_t>(BQS_STATUS_NOT_INIT);
     }
 
@@ -354,7 +355,7 @@ int32_t DgwClient::UpdateConfig(ConfigInfo& cfgInfo, std::vector<int32_t>& cfgRe
         const uint32_t endpointNum = cfgInfo.cfg.groupCfg.endpointNum;
         spareEndpoints.reset(new (std::nothrow) Endpoint[endpointNum]);
         if (spareEndpoints == nullptr) {
-            BQS_LOG_ERROR("[DgwClient] malloc failed on spareEndpoints.");
+            BQS_LOG_ERROR("[DgwClient] malloc failed on spareEndpoints in UpdateConfig.");
             return static_cast<int32_t>(BQS_STATUS_INNER_ERROR);
         }
     } else {
@@ -392,7 +393,8 @@ int32_t DgwClient::QueryConfig(const ConfigQuery& query, ConfigInfo& cfgInfo, co
     BQS_LOG_INFO("[DgwClient] Begin to query config.");
     // check dgw client initialized
     if (!initFlag_) {
-        BQS_LOG_ERROR("[DgwClient] please check whether datagw client has initialized successfully.");
+        BQS_LOG_ERROR(
+            "[DgwClient] QueryConfig failed, please check whether datagw client has initialized successfully.");
         return static_cast<int32_t>(BQS_STATUS_NOT_INIT);
     }
     // check route num/group num
@@ -421,7 +423,7 @@ int32_t DgwClient::QueryConfig(const ConfigQuery& query, ConfigInfo& cfgInfo, co
         const uint32_t endpointNum = cfgInfo.cfg.groupCfg.endpointNum;
         spareEndpoints.reset(new (std::nothrow) Endpoint[endpointNum]);
         if (spareEndpoints == nullptr) {
-            BQS_LOG_ERROR("[DgwClient] malloc failed on spareEndpoints.");
+            BQS_LOG_ERROR("[DgwClient] malloc failed on spareEndpoints in QueryConfig.");
             return static_cast<int32_t>(BQS_STATUS_INNER_ERROR);
         }
     } else {
@@ -462,7 +464,8 @@ int32_t DgwClient::QueryConfigNum(ConfigQuery& query, const int32_t timeout)
     BQS_LOG_INFO("[DgwClient] Begin to query config number.");
     // check dgw client initialized
     if (!initFlag_) {
-        BQS_LOG_ERROR("[DgwClient] please check whether datagw client has initialized successfully.");
+        BQS_LOG_ERROR(
+            "[DgwClient] QueryConfigNum failed, please check whether datagw client has initialized successfully.");
         return static_cast<int32_t>(BQS_STATUS_NOT_INIT);
     }
 
@@ -1340,7 +1343,7 @@ int32_t DgwClient::GetQryGroupRet(
             BQS_LOG_INFO("[GetQryGroupRet] old version need to transfer queue 2 mem queue");
             std::unique_ptr<Endpoint[]> spareEndpoints(new (std::nothrow) Endpoint[cfgInfo.cfg.groupCfg.endpointNum]);
             if (spareEndpoints == nullptr) {
-                BQS_LOG_ERROR("[DgwClient] malloc failed on spareEndpoints.");
+                BQS_LOG_ERROR("[DgwClient] malloc failed on spareEndpoints in GetQryGroupRet.");
                 return static_cast<int32_t>(BQS_STATUS_INNER_ERROR);
             }
 
@@ -1402,7 +1405,8 @@ int32_t DgwClient::WaitConfigEffect(const uint64_t timeout)
     const std::lock_guard<std::mutex> lk(mutexForWaitConfig);
     // check dgw client initialized
     if (!initFlag_) {
-        BQS_LOG_ERROR("[DgwClient] please check whether datagw client has initialized successfully.");
+        BQS_LOG_ERROR("[DgwClient] WaitConfigEffect(timeout) failed, please check whether datagw client has "
+                      "initialized successfully.");
         return static_cast<int32_t>(BQS_STATUS_NOT_INIT);
     }
 
@@ -1444,7 +1448,8 @@ int32_t DgwClient::WaitConfigEffect(const int32_t rsv, const int32_t timeout)
     const std::lock_guard<std::mutex> lk(mutexForWaitConfig);
     // check dgw client initialized
     if (!initFlag_) {
-        BQS_LOG_ERROR("[DgwClient] please check whether datagw client has initialized successfully.");
+        BQS_LOG_ERROR("[DgwClient] WaitConfigEffect(rsv, timeout) failed, please check whether datagw client has "
+                      "initialized successfully.");
         return static_cast<int32_t>(BQS_STATUS_NOT_INIT);
     }
 

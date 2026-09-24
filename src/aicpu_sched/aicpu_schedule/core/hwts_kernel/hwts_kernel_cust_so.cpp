@@ -259,7 +259,7 @@ int32_t LoadOpFromBuffTsKernel::Compute(const aicpu::HwtsTsKernel& tsKernelInfo)
 {
     aicpusd_run_info("Begin to process ts kernel loadOpFromBuf");
     if (!AicpuCustSoManager::GetInstance().IsSupportCustAicpu()) {
-        aicpusd_err("Cust aicpu scheduler is not supported in message queue mode.");
+        aicpusd_err("Cust aicpu scheduler is not supported in message queue mode in LoadOpFromBuffTsKernel compute.");
         return AICPU_SCHEDULE_ERROR_INNER_ERROR;
     }
 
@@ -331,7 +331,8 @@ int32_t BatchLoadSoFromBuffTsKernel::Compute(const aicpu::HwtsTsKernel& tsKernel
 {
     aicpusd_info("Begin to process ts kernel BatchLoadOpFromBuf event.");
     if (!AicpuCustSoManager::GetInstance().IsSupportCustAicpu()) {
-        aicpusd_err("Cust aicpu scheduler is not supported in message queue mode.");
+        aicpusd_err(
+            "Cust aicpu scheduler is not supported in message queue mode in BatchLoadSoFromBuffTsKernel compute.");
         return AICPU_SCHEDULE_ERROR_INNER_ERROR;
     }
 
@@ -390,7 +391,7 @@ int32_t DeleteCustOpTsKernel::Compute(const aicpu::HwtsTsKernel& tsKernelInfo)
 {
     aicpusd_info("Begin to process ts kernel deleteCustOp event.");
     if (!AicpuCustSoManager::GetInstance().IsSupportCustAicpu()) {
-        aicpusd_err("Cust aicpu scheduler is not supported in message queue mode.");
+        aicpusd_err("Cust aicpu scheduler is not supported in message queue mode in DeleteCustOpTsKernel compute.");
         return AICPU_SCHEDULE_ERROR_INNER_ERROR;
     }
 

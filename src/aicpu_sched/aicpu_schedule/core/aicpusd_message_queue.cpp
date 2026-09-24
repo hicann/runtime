@@ -330,7 +330,7 @@ MsqStatus MsqImplV1::ReadMsqT1Status() const { return MsqOperatorManager::CallV1
 void MsqImplV1::ReadMsqT0Data(const uint32_t msgSize, MsqDatas& datas) const
 {
     if (msgSize == static_cast<uint32_t>(MsqDataSize::MSQ_DATA_SIZE_0)) {
-        aicpusd_err("Message size is 0");
+        aicpusd_err("Message size is 0 in MsqImplV1::ReadMsqT0Data");
         return;
     }
 
@@ -340,7 +340,7 @@ void MsqImplV1::ReadMsqT0Data(const uint32_t msgSize, MsqDatas& datas) const
 void MsqImplV1::ReadMsqT1Data(const uint32_t msgSize, MsqDatas& datas) const
 {
     if (msgSize == static_cast<uint32_t>(MsqDataSize::MSQ_DATA_SIZE_0)) {
-        aicpusd_err("Message size is 0");
+        aicpusd_err("Message size is 0 in MsqImplV1::ReadMsqT1Data");
         return;
     }
 
@@ -375,7 +375,7 @@ MsqStatus MsqImplV2::ReadMsqT1Status() const { return MsqOperatorManager::CallV2
 void MsqImplV2::ReadMsqT1Data(const uint32_t msgSize, MsqDatas& datas) const
 {
     if (msgSize == static_cast<uint32_t>(MsqDataSize::MSQ_DATA_SIZE_0)) {
-        aicpusd_err("Message size is 0");
+        aicpusd_err("Message size is 0 in MsqImplV2::ReadMsqT1Data");
         return;
     }
 

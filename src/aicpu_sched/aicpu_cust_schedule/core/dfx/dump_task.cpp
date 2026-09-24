@@ -812,7 +812,7 @@ int32_t OpDumpTaskManager::Load(const aicpu::dump::OpMappingInfo& opMappingInfo)
             }
             aicpusd_memory_log("MallocMemory, func=new, size=%zu, purpose=data dumper", sizeof(OpDumpTask));
             if (opDumpTaskPtr == nullptr) {
-                aicpusd_err("malloc memory for OpDumpTask object failed");
+                aicpusd_err("malloc memory for OpDumpTask object failed in Load");
                 return AICPU_SCHEDULE_ERROR_DUMP_FAILED;
             }
             const int32_t ret = opDumpTaskPtr->PreProcessOpMappingInfo(task, dumpPath, optionalParam, dumpStep);
@@ -991,12 +991,12 @@ int32_t OpDumpTaskManager::DoDump(const aicpu::dump::OpMappingInfo& opMappingInf
         aicpusd_err("malloc memory for OpDumpTask object failed, reason is [%s]", err.what());
         return AICPU_SCHEDULE_ERROR_DUMP_FAILED;
     } catch (...) {
-        aicpusd_err("malloc memory for OpDumpTask object failed");
+        aicpusd_err("malloc memory for OpDumpTask object failed in DoDump, exception caught");
         return AICPU_SCHEDULE_ERROR_DUMP_FAILED;
     }
     aicpusd_memory_log("MallocMemory, func=new, size=%zu, purpose=data dumper", sizeof(OpDumpTask));
     if (opDumpTaskPtr == nullptr) {
-        aicpusd_err("malloc memory for OpDumpTask object failed");
+        aicpusd_err("malloc memory for OpDumpTask object failed in DoDump, opDumpTaskPtr is null");
         return AICPU_SCHEDULE_ERROR_DUMP_FAILED;
     }
     int32_t ret = AICPU_SCHEDULE_OK;

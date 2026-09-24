@@ -23,7 +23,7 @@
 __attribute__((visibility("default"))) int32_t aeCallInterface(const void* const addr)
 {
     if (addr == nullptr) {
-        AE_ERR_LOG(AE_MODULE_ID, "Input param addr is NULL");
+        AE_ERR_LOG(AE_MODULE_ID, "Input param addr of aeCallInterface is NULL");
         return AE_STATUS_BAD_PARAM;
     }
     const auto strKernel = static_cast<const aicpu::HwtsTsKernel*>(addr);
@@ -88,7 +88,7 @@ __attribute__((visibility("default"))) aeStatus_t aeCloseSo(const uint32_t kerne
 __attribute__((visibility("default"))) aeStatus_t AeAddSoInWhiteList(const char_t* const soName)
 {
     if (soName == nullptr) {
-        AE_ERR_LOG(AE_MODULE_ID, "Input param addr is NULL");
+        AE_ERR_LOG(AE_MODULE_ID, "Input param soName of AeAddSoInWhiteList is NULL");
         return AE_STATUS_BAD_PARAM;
     }
     return cce::AIKernelsLibManger::AddSoInWhiteList(soName);
@@ -97,7 +97,7 @@ __attribute__((visibility("default"))) aeStatus_t AeAddSoInWhiteList(const char_
 __attribute__((visibility("default"))) void AeDeleteSoInWhiteList(const char_t* const soName)
 {
     if (soName == nullptr) {
-        AE_ERR_LOG(AE_MODULE_ID, "Input param addr is NULL");
+        AE_ERR_LOG(AE_MODULE_ID, "Input param soName of AeDeleteSoInWhiteList is NULL");
         return;
     }
     cce::AIKernelsLibManger::DelteSoInWhiteList(soName);

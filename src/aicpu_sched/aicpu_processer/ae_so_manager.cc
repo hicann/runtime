@@ -427,7 +427,7 @@ aeStatus_t MultiSoManager::GetInnerSoPath(const std::string& soName, std::string
     aicpu::aicpuContext_t currentAicpuCtx;
     status = aicpu::aicpuGetContext(&currentAicpuCtx);
     if (status != aicpu::AICPU_ERROR_NONE) {
-        AE_ERR_LOG(AE_MODULE_ID, "Get current ctx failed.");
+        AE_ERR_LOG(AE_MODULE_ID, "Get current ctx failed in GetInnerSoPath.");
         return AE_STATUS_INNER_ERROR;
     }
     // libtf_kernels.so and libaicpu_kernels.so and libcpu_kernels.so and libpt_kernels.so path from context
@@ -485,7 +485,7 @@ aeStatus_t MultiSoManager::GetCustSoPath(std::string& soPath) const
     aicpu::aicpuContext_t currentAicpuCtx;
     const aicpu::status_t status = aicpu::aicpuGetContext(&currentAicpuCtx);
     if (status != aicpu::AICPU_ERROR_NONE) {
-        AE_ERR_LOG(AE_MODULE_ID, "Get current ctx failed.");
+        AE_ERR_LOG(AE_MODULE_ID, "Get current ctx failed in GetCustSoPath.");
         return AE_STATUS_INNER_ERROR;
     }
     const uint32_t uniqueVfId = aicpu::GetUniqueVfId();
@@ -640,7 +640,7 @@ aeStatus_t MultiSoManager::GetSoInHostPidPath(
     aicpu::aicpuContext_t currentAicpuCtx;
     const aicpu::status_t status = aicpu::aicpuGetContext(&currentAicpuCtx);
     if (status != aicpu::AICPU_ERROR_NONE) {
-        AE_ERR_LOG(AE_MODULE_ID, "Get current ctx failed.");
+        AE_ERR_LOG(AE_MODULE_ID, "Get current ctx failed in GetSoInHostPidPath.");
         return AE_STATUS_INNER_ERROR;
     }
     oriPath.append(std::to_string(currentAicpuCtx.hostPid))

@@ -46,7 +46,7 @@ TSD_StatusT PidQosSaveResult(const CapabilityManager& mgr, uint64_t ptr)
 {
     uint64_t* const resultPtr = reinterpret_cast<uint64_t*>(static_cast<uintptr_t>(ptr));
     if (resultPtr == nullptr) {
-        TSD_ERROR("input ptr is null");
+        TSD_ERROR("input ptr is null in PidQosSaveResult");
         return TSD_CLT_OPEN_FAILED;
     }
     const int64_t pidQos = mgr.GetPidQos();
@@ -76,7 +76,7 @@ TSD_StatusT LevelSaveResult(const CapabilityManager& mgr, uint64_t ptr)
 {
     uint32_t* const resultPtr = PtrToPtr<void, uint32_t>(ValueToPtr(static_cast<uintptr_t>(ptr)));
     if (resultPtr == nullptr) {
-        TSD_ERROR("input ptr is null");
+        TSD_ERROR("input ptr is null in LevelSaveResult");
         return TSD_CLT_OPEN_FAILED;
     }
     *resultPtr = static_cast<uint32_t>(mgr.GetTsdSupportLevel());
@@ -173,7 +173,7 @@ TSD_StatusT AdprofSaveResult(const CapabilityManager& mgr, uint64_t ptr)
 {
     bool* const resultPtr = reinterpret_cast<bool*>(static_cast<uintptr_t>(ptr));
     if (resultPtr == nullptr) {
-        TSD_ERROR("input ptr is null");
+        TSD_ERROR("input ptr is null in AdprofSaveResult");
         return TSD_CLT_OPEN_FAILED;
     }
     *resultPtr = mgr.IsAdprofSupport();
@@ -488,7 +488,7 @@ TSD_StatusT CapabilityManager::CapabilityGet(const int32_t type, const uint64_t 
 
     TSD_RUN_INFO("[CapabilityManager] enter into CapabilityGet process deviceId[%u] type[%d].", logicDeviceId_, type);
     if (ptr == 0UL) {
-        TSD_ERROR("input ptr is null");
+        TSD_ERROR("input ptr is null in CapabilityGet");
         return TSD_CLT_OPEN_FAILED;
     }
     if (!IsOkToGetCapability(type)) {

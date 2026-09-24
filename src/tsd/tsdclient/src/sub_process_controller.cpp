@@ -147,7 +147,7 @@ TSD_StatusT SubProcessController::OpenSubProc(ProcOpenArgs* openArgs)
 TSD_StatusT SubProcessController::CloseSubProc(const pid_t closePid)
 {
     if (closePid <= 0) {
-        TSD_ERROR("input param is invalid");
+        TSD_ERROR("input param is invalid in CloseSubProc");
         return TSD_INTERNAL_ERROR;
     }
     if (!capabilityMgr_.IsSupportCommonInterface(TSD_SUPPORT_HS_AISERVER_FEATURE_BIT)) {
@@ -182,7 +182,7 @@ TSD_StatusT SubProcessController::CloseSubProc(const pid_t closePid)
 TSD_StatusT SubProcessController::GetSubProcStatus(ProcStatusInfo* pidInfo, const uint32_t arrayLen)
 {
     if ((pidInfo == nullptr) || (arrayLen == 0U)) {
-        TSD_ERROR("input param is invalid");
+        TSD_ERROR("input param is invalid in GetSubProcStatus");
         return TSD_INTERNAL_ERROR;
     }
 
@@ -215,7 +215,7 @@ TSD_StatusT SubProcessController::GetSubProcStatus(ProcStatusInfo* pidInfo, cons
 TSD_StatusT SubProcessController::GetSubProcListStatus(ProcStatusParam* pidInfo, const uint32_t arrayLen)
 {
     if ((pidInfo == nullptr) || (arrayLen == 0U) || (arrayLen > MAX_PROCESS_PID_CNT)) {
-        TSD_ERROR("input param is invalid");
+        TSD_ERROR("input param is invalid in GetSubProcListStatus");
         return TSD_INTERNAL_ERROR;
     }
 
@@ -248,7 +248,7 @@ TSD_StatusT SubProcessController::GetSubProcListStatus(ProcStatusParam* pidInfo,
 TSD_StatusT SubProcessController::RemoveFileOnDevice(const char_t* const filePath, const uint64_t pathLen)
 {
     if ((filePath == nullptr) || (pathLen == 0UL) || (pathLen >= 4096UL)) {
-        TSD_ERROR("input param is invalid");
+        TSD_ERROR("input param is invalid in RemoveFileOnDevice");
         return TSD_INTERNAL_ERROR;
     }
     try {

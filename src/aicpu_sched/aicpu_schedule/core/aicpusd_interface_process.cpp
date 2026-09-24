@@ -104,7 +104,7 @@ int32_t AicpuScheduleInterface::LoadModelWithQueue(const void* const ptr) const
     AicpuModelInfo curAicpuModelInfo;
 
     if (ptr == nullptr) {
-        aicpusd_err("the parameter is not valid in load model.");
+        aicpusd_err("the parameter is not valid in LoadModelWithQueue.");
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
 
@@ -129,7 +129,7 @@ int32_t AicpuScheduleInterface::LoadModelWithEvent(const void* const ptr) const
     AicpuModelInfo curAicpuModelInfo;
 
     if (ptr == nullptr) {
-        aicpusd_err("the parameter is not valid in load model.");
+        aicpusd_err("the parameter is not valid in LoadModelWithEvent.");
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
 
@@ -155,7 +155,7 @@ int32_t AicpuScheduleInterface::LoadModelWithEvent(const void* const ptr) const
 int32_t AicpuScheduleInterface::LoadProcess(const void* const ptr, const ModelCfgInfo* const cfg) const
 {
     if (ptr == nullptr) {
-        aicpusd_err("the parameter is not valid in load model.");
+        aicpusd_err("the parameter is not valid in LoadProcess.");
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
 

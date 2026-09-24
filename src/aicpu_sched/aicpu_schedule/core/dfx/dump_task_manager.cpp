@@ -133,7 +133,7 @@ int32_t OpDumpTaskManager::Load(const aicpu::dump::OpMappingInfo& opMappingInfo,
                     }
                     aicpusd_memory_log("MallocMemory, func=new, size=%zu, purpose=data dumper", sizeof(OpDumpTask));
                     if (opDumpTaskPtr == nullptr) {
-                        aicpusd_err("malloc memory for OpDumpTask object failed");
+                        aicpusd_err("malloc memory for OpDumpTask object failed in Load with fftsplus task");
                         return AICPU_SCHEDULE_ERROR_DUMP_FAILED;
                     }
                     DumpMode dumpMode = opMappingInfo.dump_data();
@@ -166,7 +166,7 @@ int32_t OpDumpTaskManager::Load(const aicpu::dump::OpMappingInfo& opMappingInfo,
                 }
                 aicpusd_memory_log("MallocMemory, func=new, size=%zu, purpose=data dumper", sizeof(OpDumpTask));
                 if (opDumpTaskPtr == nullptr) {
-                    aicpusd_err("malloc memory for OpDumpTask object failed");
+                    aicpusd_err("malloc memory for OpDumpTask object failed in Load");
                     return AICPU_SCHEDULE_ERROR_DUMP_FAILED;
                 }
                 DumpMode dumpMode = opMappingInfo.dump_data();
@@ -464,7 +464,7 @@ int32_t OpDumpTaskManager::DoDump(
     }
     aicpusd_memory_log("MallocMemory, func=new, size=%zu, purpose=data dumper", sizeof(OpDumpTask));
     if (opDumpTaskPtr == nullptr) {
-        aicpusd_err("malloc memory for OpDumpTask object failed");
+        aicpusd_err("malloc memory for OpDumpTask object failed in DoDump");
         return AICPU_SCHEDULE_ERROR_DUMP_FAILED;
     }
     const aicpu::dump::Task task = opMappingInfo.task(0);

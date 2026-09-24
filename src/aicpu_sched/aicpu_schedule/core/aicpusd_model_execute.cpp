@@ -280,7 +280,7 @@ StatusCode AicpuModelManager::CheckModelConfigShape(
     }
 
     if (unparseLen < (static_cast<int32_t>(sizeof(TlvHead)) + static_cast<int32_t>(tlvLen))) {
-        aicpusd_err("aicpu model config tensor length is error, please check.");
+        aicpusd_err("aicpu model config tensor length is error in CheckModelConfigShape, please check.");
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
     unparseLen = unparseLen - (static_cast<int32_t>(sizeof(TlvHead)) + static_cast<int32_t>(tlvLen));
@@ -290,7 +290,7 @@ StatusCode AicpuModelManager::CheckModelConfigShape(
 StatusCode AicpuModelManager::CheckModelConfigDtype(const TlvHead tlvHeadAddr, int32_t& unparseLen) const
 {
     if (unparseLen < static_cast<int32_t>(sizeof(TlvHead))) {
-        aicpusd_err("aicpu model config tensor length is error, please check.");
+        aicpusd_err("aicpu model config tensor length is error in CheckModelConfigDtype, please check.");
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
 
@@ -323,7 +323,7 @@ StatusCode AicpuModelManager::ParseModelConfigTensorDesc(const AicpuModelShapeCo
     while (totalLen > 0) {
         ModelConfigTensorDesc tensorDesc;
         if (totalLen < static_cast<int32_t>(sizeof(TlvHead))) {
-            aicpusd_err("aicpu model config tensor length is error, please check.");
+            aicpusd_err("aicpu model config tensor length is error in ParseModelConfigTensorDesc, please check.");
             return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
         }
         const uint32_t type = tlvHeadAddr->type;
