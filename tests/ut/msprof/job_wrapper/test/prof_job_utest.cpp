@@ -34,6 +34,7 @@
 #include "transport/hdc/hdc_transport.h"
 #include "prof_task.h"
 #include "config_manager.h"
+#include "json_parser.h"
 #include "prof_perf_job.h"
 #include "prof_ts_job.h"
 #include "prof_sys_info_job.h"
@@ -1781,9 +1782,34 @@ TEST_F(JOB_WRAPPER_PROF_HWTS_JOB_TEST, Init)
     collectionJobCfg_->comParams->params->hwts_log = "off";
     EXPECT_EQ(PROFILING_FAILED, profHwtsLogJob->Init(collectionJobCfg_));
     collectionJobCfg_->comParams->params->hwts_log = "on";
+    MOCKER_CPP(
+        &Analysis::Dvvp::Common::Platform::Platform::CheckIfSupport,
+        bool(Analysis::Dvvp::Common::Platform::Platform::*)(const PlatformFeature) const)
+        .stubs()
+        .will(returnValue(false));
     EXPECT_EQ(PROFILING_SUCCESS, profHwtsLogJob->Init(collectionJobCfg_));
     collectionJobCfg_->comParams->params->hostProfiling = true;
     EXPECT_EQ(PROFILING_FAILED, profHwtsLogJob->Init(collectionJobCfg_));
+}
+
+// Both task switches on with the f die platform supported: only the f die job registers on
+// channel 45, the legacy hwts job must yield even though hwts_log is on (acl api entry).
+TEST_F(JOB_WRAPPER_PROF_HWTS_JOB_TEST, InitYieldsToFDieJobOnSameChannel)
+{
+    GlobalMockObject::verify();
+    collectionJobCfg_->comParams->params->hostProfiling = false;
+    collectionJobCfg_->comParams->params->hwts_log = "on";
+    collectionJobCfg_->comParams->params->stars_acsq_task = "on";
+    collectionJobCfg_->comParams->params->taskBlock = "on";
+    MOCKER_CPP(
+        &Analysis::Dvvp::Common::Platform::Platform::CheckIfSupport,
+        bool(Analysis::Dvvp::Common::Platform::Platform::*)(const PlatformFeature) const)
+        .stubs()
+        .will(returnValue(true));
+    EXPECT_EQ(
+        PROFILING_FAILED, std::make_shared<Analysis::Dvvp::JobWrapper::ProfHwtsLogJob>()->Init(collectionJobCfg_));
+    EXPECT_EQ(
+        PROFILING_SUCCESS, std::make_shared<Analysis::Dvvp::JobWrapper::ProfHwtsLogFDieJob>()->Init(collectionJobCfg_));
 }
 
 TEST_F(JOB_WRAPPER_PROF_HWTS_JOB_TEST, Process)
@@ -1792,6 +1818,11 @@ TEST_F(JOB_WRAPPER_PROF_HWTS_JOB_TEST, Process)
     auto profHwtsLogJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfHwtsLogJob>();
     collectionJobCfg_->comParams->params->hostProfiling = false;
     collectionJobCfg_->comParams->params->hwts_log = "on";
+    MOCKER_CPP(
+        &Analysis::Dvvp::Common::Platform::Platform::CheckIfSupport,
+        bool(Analysis::Dvvp::Common::Platform::Platform::*)(const PlatformFeature) const)
+        .stubs()
+        .will(returnValue(false));
     profHwtsLogJob->Init(collectionJobCfg_);
     EXPECT_EQ(PROFILING_SUCCESS, profHwtsLogJob->Process());
     profHwtsLogJob->Init(collectionJobCfg_);
@@ -1801,12 +1832,114 @@ TEST_F(JOB_WRAPPER_PROF_HWTS_JOB_TEST, Process)
 TEST_F(JOB_WRAPPER_PROF_HWTS_JOB_TEST, Uninit)
 {
     GlobalMockObject::verify();
+    MOCKER_CPP(
+        &Analysis::Dvvp::Common::Platform::Platform::CheckIfSupport,
+        bool(Analysis::Dvvp::Common::Platform::Platform::*)(const PlatformFeature) const)
+        .stubs()
+        .will(returnValue(false));
 
     auto profHwtsLogJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfHwtsLogJob>();
     profHwtsLogJob->Init(collectionJobCfg_);
     EXPECT_EQ(PROFILING_SUCCESS, profHwtsLogJob->Uninit());
     profHwtsLogJob->Init(collectionJobCfg_);
     EXPECT_EQ(PROFILING_SUCCESS, profHwtsLogJob->Uninit());
+}
+
+class JOB_WRAPPER_PROF_F_DIE_JOB_TEST : public testing::Test {
+protected:
+    virtual void SetUp()
+    {
+        collectionJobCfg_ = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCfg>();
+        std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
+        std::shared_ptr<analysis::dvvp::message::JobContext> jobCtx(new analysis::dvvp::message::JobContext);
+        auto comParams = std::make_shared<Analysis::Dvvp::JobWrapper::CollectionJobCommonParams>();
+        comParams->params = params;
+        comParams->jobCtx = jobCtx;
+        collectionJobCfg_->comParams = comParams;
+        collectionJobCfg_->jobParams.events = std::make_shared<std::vector<std::string> >(0);
+        collectionJobCfg_->jobParams.cores = std::make_shared<std::vector<int> >(0);
+    }
+    virtual void TearDown() { collectionJobCfg_.reset(); }
+
+public:
+    std::shared_ptr<Analysis::Dvvp::JobWrapper::CollectionJobCfg> collectionJobCfg_;
+};
+
+TEST_F(JOB_WRAPPER_PROF_F_DIE_JOB_TEST, Init)
+{
+    GlobalMockObject::verify();
+    auto profHwtsLogFDieJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfHwtsLogFDieJob>();
+    EXPECT_EQ(PROFILING_FAILED, profHwtsLogFDieJob->Init(nullptr));
+    collectionJobCfg_->comParams->params->hostProfiling = true;
+    EXPECT_EQ(PROFILING_FAILED, profHwtsLogFDieJob->Init(collectionJobCfg_));
+    collectionJobCfg_->comParams->params->hostProfiling = false;
+    MOCKER_CPP(&Platform::CheckIfSupport, bool(Platform::*)(const PlatformFeature) const)
+        .stubs()
+        .will(returnValue(false))
+        .then(returnValue(true));
+    EXPECT_EQ(PROFILING_FAILED, profHwtsLogFDieJob->Init(collectionJobCfg_));
+    collectionJobCfg_->comParams->params->stars_acsq_task = "off";
+    collectionJobCfg_->comParams->params->taskBlock = "off";
+    EXPECT_EQ(PROFILING_FAILED, profHwtsLogFDieJob->Init(collectionJobCfg_));
+    collectionJobCfg_->comParams->params->stars_acsq_task = "on";
+    EXPECT_EQ(PROFILING_SUCCESS, profHwtsLogFDieJob->Init(collectionJobCfg_));
+    collectionJobCfg_->comParams->params->stars_acsq_task = "off";
+    collectionJobCfg_->comParams->params->taskBlock = "on";
+    EXPECT_EQ(PROFILING_SUCCESS, profHwtsLogFDieJob->Init(collectionJobCfg_));
+}
+
+TEST_F(JOB_WRAPPER_PROF_F_DIE_JOB_TEST, Process)
+{
+    GlobalMockObject::verify();
+    auto profHwtsLogFDieJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfHwtsLogFDieJob>();
+    collectionJobCfg_->comParams->params->hostProfiling = false;
+    collectionJobCfg_->comParams->params->stars_acsq_task = "on";
+    collectionJobCfg_->comParams->params->taskBlock = "on";
+    MOCKER_CPP(
+        &Analysis::Dvvp::Common::Platform::Platform::CheckIfSupport,
+        bool(Analysis::Dvvp::Common::Platform::Platform::*)(const PlatformFeature) const)
+        .stubs()
+        .will(returnValue(true));
+    profHwtsLogFDieJob->Init(collectionJobCfg_);
+    MOCKER_CPP(&analysis::dvvp::driver::DrvChannelsMgr::ChannelIsValid)
+        .stubs()
+        .will(returnValue(false))
+        .then(returnValue(true));
+    EXPECT_EQ(PROFILING_SUCCESS, profHwtsLogFDieJob->Process());
+    collectionJobCfg_->comParams->params->job_id = "job_f_die";
+    collectionJobCfg_->jobParams.dataPath = "data/stars_f_soc.data";
+    profHwtsLogFDieJob->Init(collectionJobCfg_);
+    MOCKER_CPP(&Msprofiler::Parser::JsonParser::GetJsonChannelPeroid).stubs().will(returnValue((uint32_t)10));
+    MOCKER_CPP(&Msprofiler::Parser::JsonParser::GetJsonChannelDriverBufferLen)
+        .stubs()
+        .will(returnValue((uint32_t)1024));
+    MOCKER_CPP(&analysis::dvvp::driver::DrvStarsSocLogStart)
+        .stubs()
+        .will(returnValue(PROFILING_SUCCESS))
+        .then(returnValue(PROFILING_FAILED));
+    EXPECT_EQ(PROFILING_SUCCESS, profHwtsLogFDieJob->Process());
+    profHwtsLogFDieJob->Init(collectionJobCfg_);
+    EXPECT_EQ(PROFILING_FAILED, profHwtsLogFDieJob->Process());
+}
+
+TEST_F(JOB_WRAPPER_PROF_F_DIE_JOB_TEST, Uninit)
+{
+    GlobalMockObject::verify();
+    auto profHwtsLogFDieJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfHwtsLogFDieJob>();
+    collectionJobCfg_->comParams->params->stars_acsq_task = "on";
+    MOCKER_CPP(
+        &Analysis::Dvvp::Common::Platform::Platform::CheckIfSupport,
+        bool(Analysis::Dvvp::Common::Platform::Platform::*)(const PlatformFeature) const)
+        .stubs()
+        .will(returnValue(true));
+    profHwtsLogFDieJob->Init(collectionJobCfg_);
+    MOCKER_CPP(&analysis::dvvp::driver::DrvChannelsMgr::ChannelIsValid).stubs().will(returnValue(false));
+    EXPECT_EQ(PROFILING_SUCCESS, profHwtsLogFDieJob->Uninit());
+    collectionJobCfg_->comParams->params->job_id = "job_f_die";
+    profHwtsLogFDieJob->Init(collectionJobCfg_);
+    MOCKER_CPP(&analysis::dvvp::driver::DrvChannelsMgr::ChannelIsValid).stubs().will(returnValue(true));
+    MOCKER_CPP(&analysis::dvvp::driver::DrvStop).stubs().will(returnValue(PROFILING_FAILED));
+    EXPECT_EQ(PROFILING_SUCCESS, profHwtsLogFDieJob->Uninit());
 }
 
 class JOB_WRAPPER_PROF_SOC_PMU_JOB_TEST : public testing::Test {

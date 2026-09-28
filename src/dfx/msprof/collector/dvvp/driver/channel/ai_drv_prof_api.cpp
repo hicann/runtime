@@ -804,7 +804,13 @@ int32_t DrvStarsSocLogStart(
         configP.ffts_context_task = TS_PROFILE_COMMAND_TYPE_PROFILING_ENABLE;
     }
     if (profileParams->taskBlock.compare(analysis::dvvp::common::config::MSVP_PROF_ON) == 0) {
-        configP.ffts_block = TS_PROFILE_COMMAND_TYPE_PROFILING_ENABLE;
+        if (profChannel == PROF_CHANNEL_HWTS_LOG) {
+            // F die channel (45): task-block maps to dvpp_vpc_block.
+            configP.dvpp_vpc_block = TS_PROFILE_COMMAND_TYPE_PROFILING_ENABLE;
+        } else {
+            // P die channel (50): task-block maps to ffts_block.
+            configP.ffts_block = TS_PROFILE_COMMAND_TYPE_PROFILING_ENABLE;
+        }
     }
 
     if (profileParams->taskBlockShink.compare(analysis::dvvp::common::config::MSVP_PROF_ON) == 0) {

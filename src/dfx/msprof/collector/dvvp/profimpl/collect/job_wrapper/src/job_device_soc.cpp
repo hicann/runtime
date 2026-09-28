@@ -512,6 +512,8 @@ int32_t JobDeviceSoc::CreateTsCollectionJobArray()
     MSVP_MAKE_SHARED0(
         collectionJobV_[STARS_SOC_LOG_COLLECTION_JOB].collectionJob, ProfStarsSocLogJob, return PROFILING_FAILED);
     MSVP_MAKE_SHARED0(
+        collectionJobV_[STARS_F_SOC_LOG_COLLECTION_JOB].collectionJob, ProfHwtsLogFDieJob, return PROFILING_FAILED);
+    MSVP_MAKE_SHARED0(
         collectionJobV_[STARS_BLOCK_LOG_COLLECTION_JOB].collectionJob, ProfStarsBlockLogJob, return PROFILING_FAILED);
     MSVP_MAKE_SHARED0(collectionJobV_[HWTS_LOG_COLLECTION_JOB].collectionJob, ProfHwtsLogJob, return PROFILING_FAILED);
     MSVP_MAKE_SHARED0(

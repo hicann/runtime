@@ -161,6 +161,7 @@ enum PlatformFeature {
     PLATFORM_SYS_DEVICE_LLC_EXT,         // 扩展平台LLC驱动支持
     PLATFORM_SYS_DEVICE_SIO_PA,          // sys-interconnection覆盖SIO和PA
     PLATFORM_SYS_DEVICE_INTERCONNECTION, // 提供sys-interconnection采集能力
+    PLATFORM_STARS_F_DIE,
     // MAX
     PLATFORM_COLLECTOR_TYPES_MAX
 };

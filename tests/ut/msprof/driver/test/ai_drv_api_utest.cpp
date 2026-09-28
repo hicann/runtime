@@ -403,6 +403,70 @@ TEST_F(DRIVER_AI_DRV_API_TEST, DrvStarsSocLogStart)
     EXPECT_EQ(PROFILING_SUCCESS, analysis::dvvp::driver::DrvStarsSocLogStart(peripheralCfg, profileParams));
 }
 
+int ProfDrvStartStarsSocLogDieStub(unsigned int deviceId, unsigned int channelId, struct prof_start_para* startPara)
+{
+    EXPECT_NE(nullptr, startPara);
+    EXPECT_NE(nullptr, startPara->user_data);
+    const auto* config = static_cast<const analysis::dvvp::driver::StarsSocLogConfigT*>(startPara->user_data);
+    if (channelId == static_cast<unsigned int>(analysis::dvvp::driver::PROF_CHANNEL_STARS_SOC_LOG)) {
+        // P die: task-block maps to ffts_block.
+        EXPECT_EQ(static_cast<unsigned int>(TS_PROFILE_COMMAND_TYPE_PROFILING_ENABLE), config->ffts_block);
+        EXPECT_EQ(0U, config->dvpp_vpc_block);
+    } else if (channelId == static_cast<unsigned int>(analysis::dvvp::driver::PROF_CHANNEL_HWTS_LOG)) {
+        // F die: task-block maps to dvpp_vpc_block.
+        EXPECT_EQ(static_cast<unsigned int>(TS_PROFILE_COMMAND_TYPE_PROFILING_ENABLE), config->dvpp_vpc_block);
+        EXPECT_EQ(0U, config->ffts_block);
+    }
+    return PROF_OK;
+}
+
+TEST_F(DRIVER_AI_DRV_API_TEST, DrvStarsSocLogStartTaskBlockMapsByDie)
+{
+    GlobalMockObject::verify();
+
+    auto profileParams = std::make_shared<analysis::dvvp::message::ProfileParams>();
+    profileParams->taskBlock = "on";
+
+    analysis::dvvp::driver::DrvPeripheralProfileCfg peripheralCfg;
+    peripheralCfg.profDeviceId = 0;
+    peripheralCfg.profChannel = analysis::dvvp::driver::PROF_CHANNEL_STARS_SOC_LOG;
+    peripheralCfg.profSamplePeriod = 10;
+    MOCKER(prof_drv_start).stubs().will(invoke(ProfDrvStartStarsSocLogDieStub));
+    EXPECT_EQ(PROFILING_SUCCESS, analysis::dvvp::driver::DrvStarsSocLogStart(peripheralCfg, profileParams));
+
+    peripheralCfg.profChannel = analysis::dvvp::driver::PROF_CHANNEL_HWTS_LOG;
+    EXPECT_EQ(PROFILING_SUCCESS, analysis::dvvp::driver::DrvStarsSocLogStart(peripheralCfg, profileParams));
+}
+
+int ProfDrvStartStarsSocLogTaskBlockOffStub(
+    unsigned int deviceId, unsigned int channelId, struct prof_start_para* startPara)
+{
+    EXPECT_NE(nullptr, startPara);
+    EXPECT_NE(nullptr, startPara->user_data);
+    const auto* config = static_cast<const analysis::dvvp::driver::StarsSocLogConfigT*>(startPara->user_data);
+    EXPECT_EQ(0U, config->ffts_block);
+    EXPECT_EQ(0U, config->dvpp_vpc_block);
+    return PROF_OK;
+}
+
+TEST_F(DRIVER_AI_DRV_API_TEST, DrvStarsSocLogStartTaskBlockOffSetsNoBlockField)
+{
+    GlobalMockObject::verify();
+
+    auto profileParams = std::make_shared<analysis::dvvp::message::ProfileParams>();
+    profileParams->taskBlock = "off";
+
+    analysis::dvvp::driver::DrvPeripheralProfileCfg peripheralCfg;
+    peripheralCfg.profDeviceId = 0;
+    peripheralCfg.profChannel = analysis::dvvp::driver::PROF_CHANNEL_STARS_SOC_LOG;
+    peripheralCfg.profSamplePeriod = 10;
+    MOCKER(prof_drv_start).stubs().will(invoke(ProfDrvStartStarsSocLogTaskBlockOffStub));
+    EXPECT_EQ(PROFILING_SUCCESS, analysis::dvvp::driver::DrvStarsSocLogStart(peripheralCfg, profileParams));
+
+    peripheralCfg.profChannel = analysis::dvvp::driver::PROF_CHANNEL_HWTS_LOG;
+    EXPECT_EQ(PROFILING_SUCCESS, analysis::dvvp::driver::DrvStarsSocLogStart(peripheralCfg, profileParams));
+}
+
 TEST_F(DRIVER_AI_DRV_API_TEST, DrvStart)
 {
     GlobalMockObject::verify();

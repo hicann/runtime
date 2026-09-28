@@ -37,6 +37,18 @@ public:
     int32_t Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg) override;
 };
 
+class ProfHwtsLogFDieJob : public ProfDrvJob {
+public:
+    ProfHwtsLogFDieJob();
+    ~ProfHwtsLogFDieJob() override;
+    int32_t Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg) override;
+    int32_t Process() override;
+    int32_t Uninit() override;
+
+protected:
+    analysis::dvvp::driver::AI_DRV_CHANNEL channelId_;
+};
+
 } // namespace JobWrapper
 } // namespace Dvvp
 } // namespace Analysis
