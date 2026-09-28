@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "dump_manager.h"
+#include <system_error>
 #include <thread>
 #include <cctype>
 #include <cinttypes>
@@ -575,9 +576,9 @@ int32_t DumpManager::DumpOperatorWithCapture(
         return ADUMP_FAILED;
     }
 
-    if (!isCaptureDumpServerInit_) {
+    if (!isCaptureDumpServerInit_.load(std::memory_order_relaxed)) {
         IDE_CTRL_VALUE_FAILED(StartDataDumpServer(), return ADUMP_FAILED, "Start data dump server failed!");
-        isCaptureDumpServerInit_ = true;
+        isCaptureDumpServerInit_.store(true, std::memory_order_relaxed);
     }
 
     uint32_t streamId = 0;
@@ -714,6 +715,45 @@ int32_t DumpManager::RegisterCallback(uint32_t moduleId, AdumpCallback enableFun
     return HandleDumpEvent(moduleId, DumpEnableAction::AUTO);
 }
 
+namespace {
+// strerror 为非可重入库函数，多线程环境下使用 std::error_code 获取等价的错误描述（glibc 文本一致）。
+std::string SafeErrnoString() { return std::error_code(errno, std::generic_category()).message(); }
+
+int32_t CheckOpInfoRecordPath(const std::string& dumpPath, std::string& normalizedPath)
+{
+    Adx::Path path(dumpPath);
+    if (path.Empty()) {
+        REPORT_EP0006_INVALID_ARGUMENT(
+            FUNC_NAME_ACL_OP_START_DUMP_ARGS, dumpPath, FUNC_ACL_OP_START_DUMP_ARGS_PARAM_PATH,
+            ADUMP_REASON_PARAM_PATH_EMPTY);
+        return -1;
+    }
+    if (!path.Exist()) {
+        if (!path.CreateDirectory(true)) {
+            std::string reason = StrUtils::Format(ADUMP_REASON_PARAM_PATH_CREATE_DIR_ERROR, SafeErrnoString().c_str());
+            REPORT_EP0006_INVALID_ARGUMENT(
+                FUNC_NAME_ACL_OP_START_DUMP_ARGS, dumpPath, FUNC_ACL_OP_START_DUMP_ARGS_PARAM_PATH, reason);
+            return -1;
+        }
+    }
+    if (!path.IsDirectory()) {
+        REPORT_EP0006_INVALID_ARGUMENT(
+            FUNC_NAME_ACL_OP_START_DUMP_ARGS, dumpPath, FUNC_ACL_OP_START_DUMP_ARGS_PARAM_PATH,
+            ADUMP_REASON_PARAM_PATH_NOT_DIRECTORY);
+        return -1;
+    }
+    constexpr uint32_t accessMode = static_cast<uint32_t>(M_R_OK) | static_cast<uint32_t>(M_W_OK);
+    if (!path.Asccess(accessMode)) {
+        REPORT_EP0006_INVALID_ARGUMENT(
+            FUNC_NAME_ACL_OP_START_DUMP_ARGS, dumpPath, FUNC_ACL_OP_START_DUMP_ARGS_PARAM_PATH,
+            ADUMP_REASON_PATH_NO_PERMISSION);
+        return -1;
+    }
+    normalizedPath = path.GetString();
+    return 0;
+}
+} // namespace
+
 int32_t DumpManager::StartDumpArgs(const std::string& dumpPath)
 {
     uint64_t dumpSwitch = 0;
@@ -724,42 +764,27 @@ int32_t DumpManager::StartDumpArgs(const std::string& dumpPath)
             REPORT_EP0008_API_CALL_SEQUENCE(FUNC_NAME_ACL_OP_START_DUMP_ARGS, ADUMP_REASON_API_CALLED_REPEATEDLY);
             return -1;
         }
-
-        Adx::Path path(dumpPath);
-        if (path.Empty()) {
-            REPORT_EP0006_INVALID_ARGUMENT(
-                FUNC_NAME_ACL_OP_START_DUMP_ARGS, dumpPath, FUNC_ACL_OP_START_DUMP_ARGS_PARAM_PATH,
-                ADUMP_REASON_PARAM_PATH_EMPTY);
-            return -1;
-        }
-        if (!path.Exist()) {
-            if (!path.CreateDirectory(true)) {
-                std::string reason = StrUtils::Format(ADUMP_REASON_PARAM_PATH_CREATE_DIR_ERROR, strerror(errno));
-                REPORT_EP0006_INVALID_ARGUMENT(
-                    FUNC_NAME_ACL_OP_START_DUMP_ARGS, dumpPath, FUNC_ACL_OP_START_DUMP_ARGS_PARAM_PATH, reason);
-                return -1;
-            }
-        }
-        if (!path.IsDirectory()) {
-            REPORT_EP0006_INVALID_ARGUMENT(
-                FUNC_NAME_ACL_OP_START_DUMP_ARGS, dumpPath, FUNC_ACL_OP_START_DUMP_ARGS_PARAM_PATH,
-                ADUMP_REASON_PARAM_PATH_NOT_DIRECTORY);
-            return -1;
-        }
-        constexpr uint32_t accessMode = static_cast<uint32_t>(M_R_OK) | static_cast<uint32_t>(M_W_OK);
-        if (!path.Asccess(accessMode)) {
-            REPORT_EP0006_INVALID_ARGUMENT(
-                FUNC_NAME_ACL_OP_START_DUMP_ARGS, dumpPath, FUNC_ACL_OP_START_DUMP_ARGS_PARAM_PATH,
-                ADUMP_REASON_PATH_NO_PERMISSION);
+        std::string normalizedPath;
+        if (CheckOpInfoRecordPath(dumpPath, normalizedPath) != 0) {
             return -1;
         }
 
         dumpSwitch |= OP_INFO_RECORD_DUMP;
         dumpSetting_.InitDumpSwitch(dumpSwitch);
-        opInfoRecordPath_ = path.GetString();
+        opInfoRecordPath_ = normalizedPath;
     }
-    for (auto& item : enableCallbackFunc_) {
-        item.second(dumpSwitch, dumpConfigInfo_.data(), dumpConfigInfo_.size());
+    std::string dumpConfigSnapshot;
+    std::vector<AdumpCallback> enableCallbacks;
+    {
+        std::lock_guard<std::mutex> lk(resourceMtx2_);
+        dumpConfigSnapshot = dumpConfigInfo_;
+        enableCallbacks.reserve(enableCallbackFunc_.size());
+        for (auto& item : enableCallbackFunc_) {
+            enableCallbacks.push_back(item.second);
+        }
+    }
+    for (auto& callback : enableCallbacks) {
+        callback(dumpSwitch, dumpConfigSnapshot.data(), static_cast<int32_t>(dumpConfigSnapshot.size()));
     }
     IDE_RUN_LOGI("OpInfoRecord start success!");
     return 0;
@@ -778,8 +803,18 @@ int32_t DumpManager::StopDumpArgs()
         dumpSwitch &= ~OP_INFO_RECORD_DUMP;
         dumpSetting_.InitDumpSwitch(dumpSwitch);
     }
-    for (auto& item : disableCallbackFunc_) {
-        item.second(dumpSwitch, dumpConfigInfo_.data(), dumpConfigInfo_.size());
+    std::string dumpConfigSnapshot;
+    std::vector<AdumpCallback> disableCallbacks;
+    {
+        std::lock_guard<std::mutex> lk(resourceMtx2_);
+        dumpConfigSnapshot = dumpConfigInfo_;
+        disableCallbacks.reserve(disableCallbackFunc_.size());
+        for (auto& item : disableCallbackFunc_) {
+            disableCallbacks.push_back(item.second);
+        }
+    }
+    for (auto& callback : disableCallbacks) {
+        callback(dumpSwitch, dumpConfigSnapshot.data(), static_cast<int32_t>(dumpConfigSnapshot.size()));
     }
     IDE_RUN_LOGI("OpInfoRecord success!");
     return 0;
@@ -813,8 +848,15 @@ int32_t DumpManager::SaveExceptionInfo(
 
 int32_t DumpManager::SaveFile(const char* data, size_t dataLen, const char* fileName, SaveType type)
 {
+    // opInfoRecordPath_ 写侧在 StartDumpArgs 的 resourceMtx_ 内，读侧在此同步拷贝快照，
+    // 避免并发 StartDumpArgs 换路径时 std::string 撕裂读。
+    std::string opInfoRecordPathSnapshot;
+    {
+        std::lock_guard<std::mutex> lk(resourceMtx_);
+        opInfoRecordPathSnapshot = opInfoRecordPath_;
+    }
     std::string canonicalPath;
-    if (!Adx::Path::BuildFullPathUnderRoot(opInfoRecordPath_, fileName, canonicalPath)) {
+    if (!Adx::Path::BuildFullPathUnderRoot(opInfoRecordPathSnapshot, fileName, canonicalPath)) {
         IDE_LOGE("invalid fileName[%s], may escape root path.", fileName);
         return -1;
     }

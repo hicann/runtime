@@ -19,10 +19,10 @@
 
 namespace Adx {
 uint64_t g_chunk[RING_CHUNK_SIZE + MAX_TENSOR_NUM] = {0};
-bool g_setAssert = false;
+std::atomic<bool> g_setAssert{false};
 static std::mutex g_setAssertMtx;
 namespace {
-uint32_t g_atomicIndex = 0x2000;
+std::atomic<uint32_t> g_atomicIndex{0x2000};
 std::atomic<uint64_t> g_writeIdx{0};
 
 void ConvertAclDumpTensorInner(const acldumpTensorInfo& src, size_t index, TensorInfo& dst)
@@ -124,18 +124,18 @@ bool ConvertAclDumpTensor(const acldumpTensorInfo& src, size_t index, TensorInfo
 
 void* AdumpGetSizeInfoAddr(uint32_t space, uint32_t& atomicIndex)
 {
-    if (!g_setAssert) {
+    if (!g_setAssert.load(std::memory_order_relaxed)) {
         const std::lock_guard<std::mutex> lock(g_setAssertMtx);
-        if (!g_setAssert) {
+        if (!g_setAssert.load(std::memory_order_relaxed)) {
             (void)rtSetTaskFailCallback(AdxAssertCallBack);
-            g_setAssert = true;
+            g_setAssert.store(true, std::memory_order_relaxed);
         }
     }
     if (space > MAX_TENSOR_NUM) {
         return nullptr;
     }
 
-    atomicIndex = g_atomicIndex++;
+    atomicIndex = g_atomicIndex.fetch_add(1, std::memory_order_relaxed);
     auto nextWriteCursor = g_writeIdx.fetch_add(space);
     return g_chunk + (nextWriteCursor % RING_CHUNK_SIZE);
 }

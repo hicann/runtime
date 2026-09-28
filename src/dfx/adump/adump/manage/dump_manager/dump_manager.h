@@ -11,6 +11,7 @@
 #define DUMP_MANAGER_H
 
 #include <mutex>
+#include <atomic>
 #include <set>
 #include "adump_pub.h"
 #include "adump_api.h"
@@ -117,7 +118,7 @@ private:
     std::map<uint32_t, AdumpCallback> disableCallbackFunc_;
     std::string dumpConfigInfo_;
     bool isEnvExceptionDump_ = false;
-    bool isCaptureDumpServerInit_ = false;
+    std::atomic<bool> isCaptureDumpServerInit_{false};
     bool opTimeoutModified_ = false;
     uint32_t originOpExecuteTimeOut_ = 0U;
 };

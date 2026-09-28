@@ -12,6 +12,7 @@
 #include <string>
 #include <functional>
 #include <atomic>
+#include <mutex>
 #include "common/singleton.h"
 #include "adx_datadump_callback.h"
 namespace Adx {
@@ -23,10 +24,11 @@ public:
     ~AdxDumpProcess() override{};
     ADX_API void MessageCallbackRegister(const MessageCallback callbackFun);
     ADX_API void MessageCallbackUnRegister();
-    const std::function<int32_t(const struct DumpChunk*, int32_t)>& GetCallbackFun() const;
+    std::function<int32_t(const struct DumpChunk*, int32_t)> GetCallbackFun() const;
     bool IsRegistered() const;
 
 private:
+    mutable std::mutex callbackMtx_;
     std::function<int32_t(const struct DumpChunk*, int32_t)> messageCallback_;
     std::atomic<bool> init_;
 };

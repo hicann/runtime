@@ -9,6 +9,7 @@
  */
 #include "dump_manager.h"
 #include <thread>
+#include <atomic>
 #include <cctype>
 #include <cinttypes>
 #include <map>
@@ -29,6 +30,10 @@ namespace Adx {
 // AdumpGetDFXInfoAddr chunk
 uint64_t* g_dynamicChunk = nullptr;
 uint64_t* g_staticChunk = nullptr;
+// 031 形态不编译 exception_dumper.cpp（InitArgsExceptionMemory 所在 TU），
+// 此处平行定义使能标志以满足 adump_api.cpp 的符号引用；031 侧无人调用
+// InitArgsExceptionMemory()，标志恒为 false，等价于改动前 g_dynamicChunk == nullptr 的守卫行为。
+std::atomic<bool> g_argsExceptionMemInited{false};
 
 DumpManager::DumpManager() {}
 

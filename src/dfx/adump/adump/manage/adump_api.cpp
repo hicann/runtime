@@ -26,7 +26,7 @@ constexpr uint64_t STATIC_BUFFER_ID = 0x080000000;
 
 void* AdumpGetDFXInfoAddrForDynamic(uint32_t space, uint64_t& atomicIndex)
 {
-    if (space > DFX_MAX_TENSOR_NUM || g_dynamicChunk == nullptr) {
+    if (space > DFX_MAX_TENSOR_NUM || !g_argsExceptionMemInited.load(std::memory_order_acquire)) {
         return nullptr;
     }
 
@@ -41,7 +41,7 @@ void* AdumpGetDFXInfoAddrForDynamic(uint32_t space, uint64_t& atomicIndex)
 
 void* AdumpGetDFXInfoAddrForStatic(uint32_t space, uint64_t& atomicIndex)
 {
-    if (space > DFX_MAX_TENSOR_NUM || g_staticChunk == nullptr) {
+    if (space > DFX_MAX_TENSOR_NUM || !g_argsExceptionMemInited.load(std::memory_order_acquire)) {
         return nullptr;
     }
 

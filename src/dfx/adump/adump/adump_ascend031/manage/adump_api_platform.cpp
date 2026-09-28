@@ -17,7 +17,7 @@ namespace Adx {
 uint64_t g_chunk[RING_CHUNK_SIZE + MAX_TENSOR_NUM] = {0};
 namespace {
 std::atomic<uint64_t> g_writeIdx{0};
-uint32_t g_atomicIndex = 0x2000;
+std::atomic<uint32_t> g_atomicIndex{0x2000};
 } // namespace
 
 void* AdumpGetSizeInfoAddr(uint32_t space, uint32_t& atomicIndex)
@@ -26,7 +26,7 @@ void* AdumpGetSizeInfoAddr(uint32_t space, uint32_t& atomicIndex)
         return nullptr;
     }
 
-    atomicIndex = g_atomicIndex++;
+    atomicIndex = g_atomicIndex.fetch_add(1, std::memory_order_relaxed);
     auto nextWriteCursor = g_writeIdx.fetch_add(space);
     return g_chunk + (nextWriteCursor % RING_CHUNK_SIZE);
 }

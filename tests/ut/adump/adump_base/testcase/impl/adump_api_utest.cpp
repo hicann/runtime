@@ -10,6 +10,7 @@
 #include <gtest/gtest.h>
 #include "mockcpp/mockcpp.hpp"
 #include <thread>
+#include "adump_concurrent_test_util.h"
 #include <fstream>
 #include <cassert>
 #include <filesystem>
@@ -1145,4 +1146,9 @@ TEST_F(AdumpApiUtest, Test_AdumpUnregExceptionDumpCallback_Success)
 
     ret = AdumpUnregExceptionDumpCallback(MockExceptionCallback);
     EXPECT_EQ(ret, ADUMP_SUCCESS);
+}
+
+TEST_F(AdumpApiUtest, Test_AdumpGetSizeInfoAddr_ConcurrentAtomicIndexUnique)
+{
+    AdxTestUtil::AssertAtomicIndexUniqueConcurrently();
 }

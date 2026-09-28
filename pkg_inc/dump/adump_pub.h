@@ -20,6 +20,7 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <atomic>
 #include "acl/acl_base.h"
 
 #if (defined(_WIN32) || defined(_WIN64) || defined(_MSC_VER))
@@ -36,6 +37,7 @@ constexpr uint32_t ADUMP_ARGS_EXCEPTION_HEAD = 2;
 // AdumpGetDFXInfoAddr chunk size parameter
 extern uint64_t* g_dynamicChunk;
 extern uint64_t* g_staticChunk;
+extern std::atomic<bool> g_argsExceptionMemInited;
 constexpr uint32_t DYNAMIC_RING_CHUNK_SIZE = 393216; // 393216 * 8 = 3M
 constexpr uint32_t STATIC_RING_CHUNK_SIZE = 131072;  // 131072 * 8 = 1M
 constexpr uint32_t DFX_MAX_TENSOR_NUM = 4000;

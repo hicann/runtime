@@ -14,6 +14,7 @@
 #include "mockcpp/mockcpp.hpp"
 #include "acl_dump.h"
 #include "adump_api.h"
+#include "adump_concurrent_test_util.h"
 
 using namespace Adx;
 
@@ -44,6 +45,11 @@ TEST_F(TinyAdumpApiPlatformUtest, Test_AdumpGetSizeInfoAddr_Valid)
 
     void* addr2 = AdumpGetSizeInfoAddr(MAX_TENSOR_NUM, atomicIndex);
     EXPECT_NE(addr2, nullptr);
+}
+
+TEST_F(TinyAdumpApiPlatformUtest, Test_AdumpGetSizeInfoAddr_ConcurrentAtomicIndexUnique)
+{
+    AdxTestUtil::AssertAtomicIndexUniqueConcurrently();
 }
 
 TEST_F(TinyAdumpApiPlatformUtest, Test_AdumpRegisterCallback_NullFunc)

@@ -62,39 +62,29 @@ bool IsValidExceptionDumpMode(ExceptionDumpMode dumpMode)
 }
 } // namespace
 
-uint64_t* g_dynamicChunk = nullptr;
-uint64_t* g_staticChunk = nullptr;
+namespace {
+// 进程级静态缓冲：位于 BSS 段（demand paging，未写入的页不占物理内存），随进程生命周期由 OS 统一回收。
+// 不做堆分配即无释放窗口，规避收尾阶段 delete 与其他线程无锁访问构成的 UAF。
+uint64_t g_dynamicChunkStorage[DYNAMIC_RING_CHUNK_SIZE + DFX_MAX_TENSOR_NUM + RESERVE_SPACE] = {0};
+uint64_t g_staticChunkStorage[STATIC_RING_CHUNK_SIZE + DFX_MAX_TENSOR_NUM + RESERVE_SPACE] = {0};
+} // namespace
+
+// 指针编译期绑定静态存储，运行期零写入（消除指针本身的 data race 窗口）。
+// 使能标志承接导出接口的未使能守卫（adump_api.cpp 的 nullptr 检查改为此标志）。
+uint64_t* g_dynamicChunk = g_dynamicChunkStorage;
+uint64_t* g_staticChunk = g_staticChunkStorage;
+std::atomic<bool> g_argsExceptionMemInited{false};
 
 ExceptionDumper::~ExceptionDumper()
 {
-    if (g_dynamicChunk != nullptr) {
-        delete[] g_dynamicChunk;
-        g_dynamicChunk = nullptr;
-    }
-
-    if (g_staticChunk != nullptr) {
-        delete[] g_staticChunk;
-        g_staticChunk = nullptr;
-    }
     KernelSymbolLocator::ClearCache();
     destructionFlag_ = true;
 }
 
 bool ExceptionDumper::InitArgsExceptionMemory() const
 {
-    if (g_dynamicChunk == nullptr) {
-        g_dynamicChunk = new (std::nothrow) uint64_t[DYNAMIC_RING_CHUNK_SIZE + DFX_MAX_TENSOR_NUM + RESERVE_SPACE]();
-        if (g_dynamicChunk == nullptr) {
-            return false;
-        }
-    }
-
-    if (g_staticChunk == nullptr) {
-        g_staticChunk = new (std::nothrow) uint64_t[STATIC_RING_CHUNK_SIZE + DFX_MAX_TENSOR_NUM + RESERVE_SPACE]();
-        if (g_staticChunk == nullptr) {
-            return false;
-        }
-    }
+    // 首次使能时置位原子标志（release 序与导出接口的 acquire 读配对，保证静态缓冲初始化可见）。
+    g_argsExceptionMemInited.store(true, std::memory_order_release);
     return true;
 }
 

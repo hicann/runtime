@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "adx_datadump_server.h"
+#include <mutex>
 #include "component/adx_server_manager.h"
 #include "ascend_hal.h"
 #include "adx_dump_receive.h"
@@ -52,10 +53,25 @@ static bool IsOnDeviceSide()
     }
     return false;
 }
+
+// 全局锁序约定：g_serverLifecycleMtx 始终作为最外层锁被获取；
+// AdxDataDumpServerInit/UnInit 内部调用链不存在再次进入这两个接口的重入路径，
+// 亦不会以相反顺序获取 DumpManager::resourceMtx_/resourceMtx2_，禁止在此锁内反向调用。
+// 锁最长持有时间说明：
+// - Init 首次调用：WaitServerInitted() 正常毫秒级返回（服务器线程启动即置位），
+//   异常兜底最长约 60s（346 次递增等待，仅服务器线程启动失败时触达）。
+// - UnInit：g_manager.Exit() 内部自旋等待服务器线程退出（500ms 粒度，正常毫秒级）、
+//   WaitProcessDrained() 最长 5000ms，加上组件 UnInit/Terminate 循环，
+//   最坏合计约 5s+ 量级（服务器正常运行时各步均毫秒级完成）。
+// - RTS 快照 LOCK_PRE 回调（DumpSnapShotLockPreCallback → StopDataDumpServer → UnInit）
+//   与本锁串行化，在 dumpNum > 0 时为 while 循环反复调用 UnInit；
+//   快照本身为长时备份流程（秒~分钟级），可容忍 5s 级的单次 UnInit 等待。
+std::mutex g_serverLifecycleMtx;
 } // namespace
 
 int32_t AdxDataDumpServerInit()
 {
+    const std::lock_guard<std::mutex> lock(g_serverLifecycleMtx);
     if (AdxDumpRecord::Instance().HasStartedServer()) {
         IDE_LOGI("the data dump server has been started, not need to start again");
         AdxDumpRecord::Instance().UpdateDumpInitNum(true);
@@ -95,6 +111,7 @@ int32_t AdxDataDumpServerInit()
 
 int32_t AdxDataDumpServerUnInit()
 {
+    const std::lock_guard<std::mutex> lock(g_serverLifecycleMtx);
     if (!AdxDumpRecord::Instance().CanShutdownServer()) {
         IDE_LOGI("still have init times, can not stop the data dump server");
         AdxDumpRecord::Instance().UpdateDumpInitNum(false);

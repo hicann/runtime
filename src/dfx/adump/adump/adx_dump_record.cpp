@@ -159,21 +159,27 @@ AdxDumpRecord::AdxDumpRecord() : dumpRecordFlag_(true), dumpInitNum_(0)
 
 AdxDumpRecord::~AdxDumpRecord() { UnInit(); }
 
-int32_t AdxDumpRecord::GetDumpInitNum() const { return dumpInitNum_; }
+int32_t AdxDumpRecord::GetDumpInitNum() const { return dumpInitNum_.load(std::memory_order_relaxed); }
 
 void AdxDumpRecord::UpdateDumpInitNum(bool isPlus)
 {
     if (isPlus) {
-        dumpInitNum_++;
-    } else if (dumpInitNum_ > 0) {
-        dumpInitNum_--;
+        dumpInitNum_.fetch_add(1, std::memory_order_relaxed);
+    } else {
+        int32_t observed = dumpInitNum_.load(std::memory_order_relaxed);
+        while (observed > 0) {
+            if (dumpInitNum_.compare_exchange_weak(observed, observed - 1, std::memory_order_relaxed)) {
+                break;
+            }
+            observed = dumpInitNum_.load(std::memory_order_relaxed);
+        }
     }
-    IDE_LOGI("dump init number: %d", dumpInitNum_);
+    IDE_LOGI("dump init number: %d", dumpInitNum_.load(std::memory_order_relaxed));
 }
 
-bool AdxDumpRecord::HasStartedServer() const { return dumpInitNum_ > 0; }
+bool AdxDumpRecord::HasStartedServer() const { return dumpInitNum_.load(std::memory_order_relaxed) > 0; }
 
-bool AdxDumpRecord::CanShutdownServer() const { return dumpInitNum_ <= 1; }
+bool AdxDumpRecord::CanShutdownServer() const { return dumpInitNum_.load(std::memory_order_relaxed) <= 1; }
 
 int32_t AdxDumpRecord::Init(const std::string& hostPid)
 {

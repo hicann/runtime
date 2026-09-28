@@ -129,7 +129,7 @@ private:
     std::string dumpPath_;
     std::string workPath_;
     std::unique_ptr<BoundQueueMemory<HostDumpDataInfo>> hostDumpDataInfoQueue_;
-    int32_t dumpInitNum_;
+    std::atomic<int32_t> dumpInitNum_;
     std::thread recordThread_;
     std::mutex recordMutex_;
 

@@ -79,6 +79,7 @@ set(adumpTinyStubSrcList
 )
 
 set(adumpTinyHeaders
+    ${TOP_DIR}/tests/ut/adump/common/
     ${SRC_CODE_ROOT_PATH}/inc/adump
     ${SRC_CODE_ROOT_PATH}/adcore
     ${SRC_CODE_ROOT_PATH}/adcore/common
