@@ -2278,7 +2278,7 @@ TEST_F(ApiTest, rtsMalloc_02)
     attrs[0].attr = RT_MEM_MALLOC_ATTR_MODULE_ID;
     attrs[0].value.moduleId = DEFAULT_MODULEID;
 
-    rtMallocConfig_t cfg;
+    rtMallocConfig_t cfg = {};
     cfg.attrs = attrs;
     cfg.numAttrs = sizeof(attrs) / sizeof(rtMallocAttribute_t);
     rtError_t error;
@@ -2302,7 +2302,7 @@ TEST_F(ApiTest, rtsMalloc_03)
 
     rtMallocPolicy policy = RT_MEM_MALLOC_HUGE_FIRST;
 
-    rtMallocConfig_t cfg;
+    rtMallocConfig_t cfg = {};
     cfg.attrs = attrs;
     cfg.numAttrs = sizeof(attrs) / sizeof(rtMallocAttribute_t);
     rtError_t error;
@@ -2340,7 +2340,7 @@ TEST_F(ApiTest, rtsMalloc_04)
     attrs[0].attr = RT_MEM_MALLOC_ATTR_MODULE_ID;
     attrs[0].value.moduleId = DEFAULT_MODULEID;
 
-    rtMallocConfig_t cfg;
+    rtMallocConfig_t cfg = {};
     cfg.attrs = attrs;
     cfg.numAttrs = sizeof(attrs) / sizeof(rtMallocAttribute_t);
     rtError_t error;
@@ -2373,7 +2373,7 @@ TEST_F(ApiTest, rtsMalloc_05)
     // moduleId
     attrs[0].attr = RT_MEM_MALLOC_ATTR_RSV;
 
-    rtMallocConfig_t cfg;
+    rtMallocConfig_t cfg = {};
     cfg.attrs = attrs;
     cfg.numAttrs = sizeof(attrs) / sizeof(rtMallocAttribute_t);
     rtError_t error;
@@ -2402,7 +2402,7 @@ TEST_F(ApiTest, rtsMalloc_06)
     attrs[0].attr = RT_MEM_MALLOC_ATTR_DEVICE_ID;
     attrs[0].value.moduleId = 0x5AU;
 
-    rtMallocConfig_t cfg;
+    rtMallocConfig_t cfg = {};
     cfg.attrs = attrs;
     cfg.numAttrs = sizeof(attrs) / sizeof(rtMallocAttribute_t);
     rtError_t error;
@@ -2420,7 +2420,7 @@ TEST_F(ApiTest, rtsMalloc_07)
     attrs[0].attr = RT_MEM_MALLOC_ATTR_MODULE_ID;
     attrs[0].value.moduleId = DEFAULT_MODULEID;
 
-    rtMallocConfig_t cfg;
+    rtMallocConfig_t cfg = {};
     cfg.attrs = attrs;
     cfg.numAttrs = sizeof(attrs) / sizeof(rtMallocAttribute_t);
     rtError_t error;

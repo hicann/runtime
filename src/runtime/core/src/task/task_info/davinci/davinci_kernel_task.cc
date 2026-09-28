@@ -122,7 +122,7 @@ void AicTaskInitCommon(
             constexpr uint32_t allocSize = sizeof(rtStarsSqe_t);
             const uint32_t devId = static_cast<uint32_t>(taskInfo->stream->Device_()->Id_());
             void* devAddr = nullptr;
-            const rtError_t error = driver->DevMemAlloc(&devAddr, allocSize, RT_MEMORY_HBM, devId);
+            const rtError_t error = driver->DevMemAllocWithBackupFlag(&devAddr, allocSize, RT_MEMORY_HBM, devId);
             COND_RETURN_VOID(
                 (error != RT_ERROR_NONE), "alloc device memory failed, retCode=%#x.", static_cast<uint32_t>(error));
             aicTaskInfo->sqeDevBuf = devAddr;

@@ -1574,7 +1574,7 @@ rtError_t NpuDriver::ManagedMemFree(const void* const dptr)
 
 rtError_t NpuDriver::DevMemAllocHugePageManaged(
     void** const dptr, const uint64_t size, const rtMemType_t type, const uint32_t deviceId, const uint16_t moduleId,
-    const bool isLogError, const bool readOnlyFlag, const bool cpOnlyFlag)
+    const DevMemAllocConfig config, const bool isLogError)
 {
     UNUSED(dptr);
     UNUSED(size);
@@ -1582,14 +1582,13 @@ rtError_t NpuDriver::DevMemAllocHugePageManaged(
     UNUSED(moduleId);
     UNUSED(type);
     UNUSED(isLogError);
-    UNUSED(readOnlyFlag);
-    UNUSED(cpOnlyFlag);
+    UNUSED(config);
     return RT_ERROR_NONE;
 }
 
 rtError_t NpuDriver::DevMemAlloc1GHugePage(
     void** const dptr, const uint64_t size, const rtMemType_t type, const uint32_t memPolicy, const uint32_t deviceId,
-    const uint16_t moduleId, const bool isLogError)
+    const uint16_t moduleId, const DevMemAllocConfig config, const bool isLogError)
 {
     UNUSED(dptr);
     UNUSED(size);
@@ -1598,12 +1597,13 @@ rtError_t NpuDriver::DevMemAlloc1GHugePage(
     UNUSED(type);
     UNUSED(isLogError);
     UNUSED(memPolicy);
+    UNUSED(config);
     return RT_ERROR_NONE;
 }
 
 rtError_t NpuDriver::DevMemAllocManaged(
     void** const dptr, const uint64_t size, const rtMemType_t type, const uint32_t deviceId, const uint16_t moduleId,
-    const bool isLogError, const bool readOnlyFlag, const bool starsTillingFlag, const bool cpOnlyFlag) const
+    const DevMemAllocConfig config, const bool isLogError) const
 {
     UNUSED(dptr);
     UNUSED(size);
@@ -1611,16 +1611,13 @@ rtError_t NpuDriver::DevMemAllocManaged(
     UNUSED(moduleId);
     UNUSED(type);
     UNUSED(isLogError);
-    UNUSED(readOnlyFlag);
-    UNUSED(starsTillingFlag);
-    UNUSED(cpOnlyFlag);
+    UNUSED(config);
     return RT_ERROR_NONE;
 }
 
 rtError_t NpuDriver::DevMemAllocOnline(
     void** const dptr, const uint64_t size, rtMemType_t type, const uint32_t deviceId, const uint16_t moduleId,
-    const bool isLogError, const bool readOnlyFlag, const bool starsTillingFlag, const bool isNewApi,
-    const bool cpOnlyFlag)
+    const bool isLogError, const DevMemAllocConfig config, const bool isNewApi)
 {
     UNUSED(dptr);
     UNUSED(size);
@@ -1628,16 +1625,14 @@ rtError_t NpuDriver::DevMemAllocOnline(
     UNUSED(moduleId);
     UNUSED(type);
     UNUSED(isLogError);
-    UNUSED(readOnlyFlag);
-    UNUSED(starsTillingFlag);
-    UNUSED(cpOnlyFlag);
+    UNUSED(config);
     UNUSED(isNewApi);
     return RT_ERROR_NONE;
 }
 
 rtError_t NpuDriver::MemAllocHugePolicyPageOffline(
     void** const dptr, const uint64_t size, const rtMemType_t type, const uint32_t deviceId, const uint16_t moduleId,
-    const bool isLogError) const
+    const bool isLogError, const DevMemAllocConfig config) const
 {
     UNUSED(dptr);
     UNUSED(size);
@@ -1645,12 +1640,13 @@ rtError_t NpuDriver::MemAllocHugePolicyPageOffline(
     UNUSED(moduleId);
     UNUSED(type);
     UNUSED(isLogError);
+    UNUSED(config);
     return RT_ERROR_NONE;
 }
 
 rtError_t NpuDriver::MemAllocPolicyOffline(
     void** const dptr, const uint64_t size, const uint32_t memPolicy, const rtMemType_t type, const uint32_t deviceId,
-    const uint16_t moduleId, const bool isLogError) const
+    const uint16_t moduleId, const bool isLogError, const DevMemAllocConfig config) const
 {
     UNUSED(dptr);
     UNUSED(size);
@@ -1659,12 +1655,13 @@ rtError_t NpuDriver::MemAllocPolicyOffline(
     UNUSED(type);
     UNUSED(memPolicy);
     UNUSED(isLogError);
+    UNUSED(config);
     return RT_ERROR_NONE;
 }
 
 rtError_t NpuDriver::DevMemAllocOffline(
     void** dptr, const uint64_t size, rtMemType_t type, const uint32_t deviceId, const uint16_t moduleId,
-    const bool isLogError) const
+    const bool isLogError, const DevMemAllocConfig config) const
 {
     UNUSED(dptr);
     UNUSED(size);
@@ -1672,13 +1669,13 @@ rtError_t NpuDriver::DevMemAllocOffline(
     UNUSED(moduleId);
     UNUSED(type);
     UNUSED(isLogError);
+    UNUSED(config);
     return RT_ERROR_NONE;
 }
 
 rtError_t NpuDriver::DevMemAlloc(
     void** const dptr, const uint64_t size, const rtMemType_t type, const uint32_t deviceId, const uint16_t moduleId,
-    const bool isLogError, const bool readOnlyFlag, const bool starsTillingFlag, const bool isNewApi,
-    const bool cpOnlyFlag)
+    const bool isLogError, const DevMemAllocConfig config, const bool isNewApi)
 {
     UNUSED(dptr);
     UNUSED(size);
@@ -1686,9 +1683,7 @@ rtError_t NpuDriver::DevMemAlloc(
     UNUSED(moduleId);
     UNUSED(type);
     UNUSED(isLogError);
-    UNUSED(readOnlyFlag);
-    UNUSED(starsTillingFlag);
-    UNUSED(cpOnlyFlag);
+    UNUSED(config);
     UNUSED(isNewApi);
     return RT_ERROR_NONE;
 }

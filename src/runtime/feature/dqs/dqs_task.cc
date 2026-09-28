@@ -133,7 +133,8 @@ static rtError_t AllocDqsCommonTaskFuncCall(DqsCommonTaskInfo* const commonTaskI
     void* devMem = nullptr;
     const auto dev = taskInfo->stream->Device_();
     const uint64_t allocSize = commonTaskInfo->funCallMemSize + TS_STARS_COND_DFX_SIZE + FUNC_CALL_INSTR_ALIGN_SIZE;
-    const rtError_t ret = dev->Driver_()->DevMemAlloc(&devMem, allocSize, RT_MEMORY_DDR, dev->Id_());
+    const rtError_t ret = dev->Driver_()->DevMemAllocWithBackupFlag(
+        &devMem, allocSize, RT_MEMORY_DDR, dev->Id_(), SNAPSHOT_OPTIONAL_BACKUP);
     COND_RETURN_ERROR(
         ret != RT_ERROR_NONE, ret, "alloc func call memory failed,retCode=%#x,size=%" PRIu64 "(Byte),dev_id=%u", ret,
         commonTaskInfo->funCallMemSize, dev->Id_());
@@ -434,13 +435,15 @@ static rtError_t AllocSvmMemForDqsZeroCopyTask(TaskInfo* const taskInfo, const D
     const uint64_t count = cfg->zeroCopyCfg->count;
     const uint64_t allocSize = sizeof(uint64_t) * count;
     const auto dev = taskInfo->stream->Device_();
-    ret = dev->Driver_()->DevMemAlloc(&dest, allocSize, RT_MEMORY_DDR, dev->Id_());
+    ret = dev->Driver_()->DevMemAllocWithBackupFlag(
+        &dest, allocSize, RT_MEMORY_DDR, dev->Id_(), SNAPSHOT_OPTIONAL_BACKUP);
     ERROR_RETURN(
         ret, "Alloc dest memory failed, retCode=%#x, size=%" PRIu64 "(Byte), dev_id=%u", ret, allocSize, dev->Id_());
     dqsZeroCopyTask->destPtr = dest;
 
     void* offset = nullptr;
-    ret = dev->Driver_()->DevMemAlloc(&offset, allocSize, RT_MEMORY_DDR, dev->Id_());
+    ret = dev->Driver_()->DevMemAllocWithBackupFlag(
+        &offset, allocSize, RT_MEMORY_DDR, dev->Id_(), SNAPSHOT_OPTIONAL_BACKUP);
     ERROR_RETURN(
         ret, "Alloc offset memory failed, retCode=%#x, size=%" PRIu64 "(bytes), dev_id=%u", ret, allocSize, dev->Id_());
     drvErrRecycle.ReleaseGuard();

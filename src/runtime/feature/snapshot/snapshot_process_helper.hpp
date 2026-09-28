@@ -12,19 +12,20 @@
 
 #include "base.hpp"
 #include "context_data_manage.h"
+#include "rts_snapshot.h"
 
 namespace cce {
 namespace runtime {
 class Device;
 
 rtError_t SnapShotPreProcessBackup(ContextDataManage& ctxMan);
-rtError_t SnapShotDeviceRestore();
+rtError_t SnapShotDeviceRestore(uint32_t restoreFlags);
 rtError_t SnapShotResourceRestore(ContextDataManage& ctxMan);
 rtError_t SnapShotAclGraphRestore(Device* const dev);
 
-rtError_t SnapShotProcessBackup();
-rtError_t SnapShotProcessRestore();
-rtError_t ModelBackup(const int32_t devId);
+rtError_t SnapShotProcessBackup(const rtSnapShotBackupArgs* args);
+rtError_t SnapShotProcessRestore(const rtSnapShotRestoreArgs* args);
+rtError_t ModelBackup(const int32_t devId, const bool allCompatible = false);
 rtError_t ModelRestore(const int32_t devId);
 rtError_t SinkTaskMemoryBackup(const int32_t devId);
 } // namespace runtime

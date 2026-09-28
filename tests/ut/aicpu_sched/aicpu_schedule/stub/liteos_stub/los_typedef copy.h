@@ -11,6 +11,4 @@
 #ifndef COMMON_STUB_LOS_TYPEDEF_H
 #define COMMON_STUB_LOS_TYPEDEF_H
 
-
-
 #endif

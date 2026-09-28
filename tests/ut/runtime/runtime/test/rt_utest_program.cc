@@ -53,11 +53,11 @@ TEST_F(ProgramTest, ModuleLoadDevMemAllocUsesRuntimeModuleId)
     prog.binarySize_ = sizeof(binary);
     Module module(device);
 
-    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::DevMemAlloc)
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::DevMemAllocWithBackupFlag)
         .expects(once())
         .with(
             mockcpp::any(), mockcpp::any(), eq(RT_MEMORY_HBM), eq(static_cast<uint32_t>(device->Id_())),
-            eq(static_cast<uint16_t>(MODULEID_RUNTIME)), eq(true), eq(false))
+            eq(SNAPSHOT_REQUIRED_BACKUP), eq(static_cast<uint16_t>(MODULEID_RUNTIME)), eq(true))
         .will(returnValue(RT_ERROR_DRV_ERR));
 
     EXPECT_EQ(module.Load(&prog), RT_ERROR_DRV_ERR);
@@ -82,11 +82,11 @@ TEST_F(ProgramTest, RuntimeBinaryLoadDevMemAllocUsesRuntimeModuleId)
     prog.binary_ = binary;
     prog.binarySize_ = sizeof(binary);
 
-    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::DevMemAlloc)
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::DevMemAllocWithBackupFlag)
         .expects(once())
         .with(
             mockcpp::any(), mockcpp::any(), eq(RT_MEMORY_HBM), eq(static_cast<uint32_t>(device->Id_())),
-            eq(static_cast<uint16_t>(MODULEID_RUNTIME)), eq(true), eq(false))
+            eq(SNAPSHOT_REQUIRED_BACKUP), eq(static_cast<uint16_t>(MODULEID_RUNTIME)), eq(true))
         .will(returnValue(RT_ERROR_DRV_ERR));
 
     EXPECT_EQ(Runtime::Instance()->BinaryLoad(device, &prog), RT_ERROR_DRV_ERR);
@@ -827,19 +827,18 @@ TEST_F(ProgramTest, CopySoAndNameToCurrentDevice_StoreKernelLiteralNameFailed)
 }
 
 static rtError_t DevMemAllocSuccessStub(
-    Driver* drv, void** dptr, uint64_t size, rtMemType_t type, uint32_t deviceId, uint16_t moduleId, bool isLogError,
-    bool readOnlyFlag, bool starsTillingFlag, bool isNewApi, bool cpOnlyFlag)
+    Driver* drv, void** dptr, uint64_t size, rtMemType_t type, uint32_t deviceId, DevMemBackupType backupType,
+    uint16_t moduleId, bool isLogError, DevMemAllocConfig config, bool isNewApi)
 {
     UNUSED(drv);
     UNUSED(size);
     UNUSED(type);
     UNUSED(deviceId);
+    UNUSED(backupType);
     UNUSED(moduleId);
     UNUSED(isLogError);
-    UNUSED(readOnlyFlag);
-    UNUSED(starsTillingFlag);
+    UNUSED(config);
     UNUSED(isNewApi);
-    UNUSED(cpOnlyFlag);
     *dptr = reinterpret_cast<void*>(0x1000);
     return RT_ERROR_NONE;
 }
@@ -855,7 +854,9 @@ TEST_F(ProgramTest, AllocAndCopyHbmBuf_Success)
     void* devBuf = nullptr;
     std::vector<void*> allocMem;
 
-    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::DevMemAlloc).stubs().will(invoke(DevMemAllocSuccessStub));
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::DevMemAllocWithBackupFlag)
+        .stubs()
+        .will(invoke(DevMemAllocSuccessStub));
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::MemCopySync).stubs().will(returnValue(RT_ERROR_NONE));
 
     rtError_t ret = AllocAndCopyHbmBuf(device, hostBuf, sizeof(hostBuf), &devBuf, allocMem);
@@ -880,7 +881,9 @@ TEST_F(ProgramTest, AllocAndCopyHbmBuf_DevMemAllocFailed)
     void* devBuf = nullptr;
     std::vector<void*> allocMem;
 
-    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::DevMemAlloc).stubs().will(returnValue(RT_ERROR_DRV_ERR));
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::DevMemAllocWithBackupFlag)
+        .stubs()
+        .will(returnValue(RT_ERROR_DRV_ERR));
 
     rtError_t ret = AllocAndCopyHbmBuf(device, hostBuf, sizeof(hostBuf), &devBuf, allocMem);
     EXPECT_NE(ret, RT_ERROR_NONE);
@@ -898,7 +901,7 @@ TEST_F(ProgramTest, AllocAndCopyHbmBuf_MemCopySyncFailed)
     void* devBuf = nullptr;
     std::vector<void*> allocMem;
 
-    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::DevMemAlloc).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::DevMemAllocWithBackupFlag).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::MemCopySync).stubs().will(returnValue(RT_ERROR_DRV_ERR));
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::DevMemFree).stubs().will(returnValue(RT_ERROR_NONE));
 

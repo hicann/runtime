@@ -43,7 +43,8 @@ rtError_t AicpuTimeoutControl::CloseAicpuMonitor(const Device* const dev, bool& 
     const uint32_t devId = dev->Id_();
     void* devArgsBuf = nullptr;
 
-    rtError_t ret = drv->DevMemAlloc(&devArgsBuf, sizeof(CloseAicpuMonitorArgs), RT_MEMORY_DEFAULT, devId);
+    rtError_t ret = drv->DevMemAllocWithBackupFlag(
+        &devArgsBuf, sizeof(CloseAicpuMonitorArgs), RT_MEMORY_DEFAULT, devId, SNAPSHOT_OPTIONAL_BACKUP);
     if (ret != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR, "DevMemAlloc args failed, deviceId=%u, ret=%d", devId, ret);
         return ret;
@@ -115,7 +116,8 @@ rtError_t AicpuTimeoutControl::CheckKernelSupported(
     void* devResultBuf = nullptr;
     void* devCfgBuf = nullptr;
 
-    rtError_t ret = drv->DevMemAlloc(&devNameBuf, nameLen, RT_MEMORY_DEFAULT, devId);
+    rtError_t ret =
+        drv->DevMemAllocWithBackupFlag(&devNameBuf, nameLen, RT_MEMORY_DEFAULT, devId, SNAPSHOT_OPTIONAL_BACKUP);
     if (ret != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR, "DevMemAlloc name failed, len=%u, ret=%d", nameLen, ret);
         return ret;
@@ -132,12 +134,14 @@ rtError_t AicpuTimeoutControl::CheckKernelSupported(
         }
     });
 
-    ret = drv->DevMemAlloc(&devResultBuf, sizeof(uint32_t), RT_MEMORY_DEFAULT, devId);
+    ret = drv->DevMemAllocWithBackupFlag(
+        &devResultBuf, sizeof(uint32_t), RT_MEMORY_DEFAULT, devId, SNAPSHOT_OPTIONAL_BACKUP);
     if (ret != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR, "DevMemAlloc result failed, ret=%d", ret);
         return ret;
     }
-    ret = drv->DevMemAlloc(&devCfgBuf, sizeof(CheckKernelSupportedConfig), RT_MEMORY_DEFAULT, devId);
+    ret = drv->DevMemAllocWithBackupFlag(
+        &devCfgBuf, sizeof(CheckKernelSupportedConfig), RT_MEMORY_DEFAULT, devId, SNAPSHOT_OPTIONAL_BACKUP);
     if (ret != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR, "DevMemAlloc config failed, ret=%d", ret);
         return ret;

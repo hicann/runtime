@@ -759,6 +759,13 @@ typedef struct {
 /* device cp only, not support share(prefetch/register/ipc/p2p) and op(host ldst/memcpy/memset) */
 #define MEM_DEV_CP_ONLY_BIT 32
 #define MEM_DEV_CP_ONLY (0X1UL << MEM_DEV_CP_ONLY_BIT)
+
+/* process snapshot classification, only used by process resource backup/restore */
+#define MEM_SNAPSHOT_OPTIONAL_BIT 33U
+#define MEM_SNAPSHOT_REQUIRED_BIT 34U
+#define MEM_SNAPSHOT_OPTIONAL (1ULL << MEM_SNAPSHOT_OPTIONAL_BIT)
+#define MEM_SNAPSHOT_REQUIRED (1ULL << MEM_SNAPSHOT_REQUIRED_BIT)
+
 /* align size 5 bits width 20-24bit */
 #define MEM_ALIGN_BIT 20
 #define MEM_ALIGN_SIZE(x) (1U << (((x) >> MEM_ALIGN_BIT) & 0x1FU))
@@ -821,6 +828,7 @@ enum ADVISE_MEM_TYPE {
     ADVISE_DEV_MEM = 1,
     ADVISE_ACCESS_READONLY = 2,
     ADVISE_ACCESS_READWRITE = 3,
+    ADVISE_SNAPSHOT_REQUIRED = 4,
     ADVISE_TYPE_MAX
 };
 
@@ -1537,6 +1545,7 @@ typedef enum tagDrvFeature {
     FEATURE_APM_RES_MAP_REMOTE = 12,
     FEATURE_SVM_MEM_REGISTER_HOST_PINNED = 13,
     FEATURE_DMS_GET_BOARD_LOCATION = 14,
+    FEATURE_SVM_PROCESS_DEVICE_MEM_SNAPSHOT = 15,
     FEATURE_MAX
 } drvFeature_t;
 /*=============================== query feature END ===============================*/

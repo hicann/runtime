@@ -541,7 +541,9 @@ extern int32_t processResBackupFlag;
 extern int32_t processResRestoreFlag;
 TEST_F(CloudV2ApiImplTest, rtsSnapShotProcess02)
 {
+    rtSnapShotRestoreArgs restoreArgs = {};
     ApiImpl apiImpl;
+    rtSnapShotBackupArgs args = {};
     Device* device = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
     device->SetTschVersion(TS_VERSION_GET_DEV_MSG);
     MOCKER(GetDevMsgTaskInit).stubs().will(invoke(GetDevMsgTaskInitStub));
@@ -561,29 +563,29 @@ TEST_F(CloudV2ApiImplTest, rtsSnapShotProcess02)
         .stubs()
         .will(returnValue(RT_ERROR_NONE));
     deviceCloseFlag = 1;
-    rtError_t error = rtSnapShotProcessBackup();
+    rtError_t error = rtSnapShotProcessBackupWithArgs(&args);
     EXPECT_EQ(error, ACL_ERROR_SNAPSHOT_BACKUP_FAILED);
-    error = rtSnapShotProcessRestore();
+    error = rtSnapShotProcessRestoreWithArgs(&restoreArgs);
     EXPECT_EQ(error, ACL_ERROR_SNAPSHOT_RESTORE_FAILED);
     deviceCloseFlag = 0;
 
     halResourceIdFlag = 1;
 
-    error = rtSnapShotProcessBackup();
+    error = rtSnapShotProcessBackupWithArgs(&args);
     EXPECT_EQ(error, ACL_ERROR_SNAPSHOT_BACKUP_FAILED);
-    error = rtSnapShotProcessRestore();
+    error = rtSnapShotProcessRestoreWithArgs(&restoreArgs);
     EXPECT_EQ(error, ACL_ERROR_SNAPSHOT_RESTORE_FAILED);
     halResourceIdFlag = 0;
 
     processResBackupFlag = 1;
-    error = rtSnapShotProcessBackup();
+    error = rtSnapShotProcessBackupWithArgs(&args);
     EXPECT_EQ(error, ACL_ERROR_SNAPSHOT_BACKUP_FAILED);
     processResBackupFlag = 0;
 
     processResRestoreFlag = 1;
-    error = rtSnapShotProcessBackup();
+    error = rtSnapShotProcessBackupWithArgs(&args);
     EXPECT_EQ(error, ACL_ERROR_SNAPSHOT_BACKUP_FAILED);
-    error = rtSnapShotProcessRestore();
+    error = rtSnapShotProcessRestoreWithArgs(&restoreArgs);
     EXPECT_EQ(error, ACL_ERROR_SNAPSHOT_RESTORE_FAILED);
     processResRestoreFlag = 0;
 
@@ -598,11 +600,11 @@ TEST_F(CloudV2ApiImplTest, SnapShotDeviceRestore_ut)
     MOCKER_CPP_VIRTUAL(static_cast<RawDevice*>(device), &RawDevice::ReOpen).stubs().will(returnValue(RT_ERROR_NONE));
 
     processResRestoreFlag = 0;
-    rtError_t error = SnapShotDeviceRestore();
+    rtError_t error = SnapShotDeviceRestore(0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     processResRestoreFlag = 1;
-    error = SnapShotDeviceRestore();
+    error = SnapShotDeviceRestore(0);
     EXPECT_EQ(error, RT_ERROR_DRV_NOT_SUPPORT);
     processResRestoreFlag = 0;
 }

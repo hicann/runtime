@@ -1051,8 +1051,15 @@ typedef struct aclrtSnapShotBackupArgs {
 
 | 成员名称 | 说明 |
 | --- | --- |
-| backupFlags | 备份标志位。 |
-| reserved | 预留字段。 |
+| backupFlags | 驱动备份可选内存的控制参数，取值为0或1，含义见下文。 |
+| reserved | 预留字段，初始化为0。 |
+
+`aclrtSnapShotProcessBackup` 的 `args` 传入非NULL时，Runtime会先检查驱动Device内存快照能力；能力支持时，backupFlags传给驱动：
+
+- 0（ACL_RT_SNAPSHOT_BACKUP_REQUIRED_ONLY）：不设置包含可选内存的标志。
+- 1（ACL_RT_SNAPSHOT_BACKUP_INCLUDE_OPTIONAL）：设置包含可选内存的标志。
+
+`args` 传入NULL时走旧Runtime备份流程，backupFlags不参与判断。
 
 <br>
 
@@ -1069,8 +1076,15 @@ typedef struct aclrtSnapShotRestoreArgs {
 
 | 成员名称 | 说明 |
 | --- | --- |
-| restoreFlags | 恢复标志位。 |
-| reserved | 预留字段。 |
+| restoreFlags | 驱动恢复可选内存的控制参数，取值为0或1，含义见下文。 |
+| reserved | 预留字段，初始化为0。 |
+
+`aclrtSnapShotProcessRestore` 的 `args` 传入非NULL时，Runtime会先检查驱动Device内存快照能力；能力支持时，restoreFlags传给驱动：
+
+- 0（ACL_RT_SNAPSHOT_RESTORE_REQUIRED_ONLY）：不设置包含可选内存的标志。
+- 1（ACL_RT_SNAPSHOT_RESTORE_INCLUDE_OPTIONAL）：设置包含可选内存的标志。
+
+`args` 传入NULL时走旧Runtime恢复流程，restoreFlags不参与判断。
 
 <br>
 

@@ -428,7 +428,8 @@ rtError_t StreamGetSatStatus(const uint64_t outputSize, Stream* const curStm)
 
     if (curStm->GetMemContainOverflowAddr() == nullptr) {
         void* memAddr = nullptr;
-        error = dev->Driver_()->DevMemAlloc(&memAddr, sizeof(uint64_t), RT_MEMORY_DEFAULT, dev->Id_());
+        error = dev->Driver_()->DevMemAllocWithBackupFlag(
+            &memAddr, sizeof(uint64_t), RT_MEMORY_DEFAULT, dev->Id_(), SNAPSHOT_OPTIONAL_BACKUP);
         COND_RETURN_ERROR(
             error != RT_ERROR_NONE, error, "memAddr DevMemAlloc failed, retCode=%#x.", static_cast<uint32_t>(error));
         curStm->SetMemContainOverflowAddr(memAddr);

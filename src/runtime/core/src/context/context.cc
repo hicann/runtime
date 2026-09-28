@@ -567,7 +567,8 @@ rtError_t Context::SetOverflowAddr()
             (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_TS_MEM_4G_SPACE_FOR_OVERFLOW)) ?
                 RT_MEMORY_TS_4G :
                 RT_MEMORY_DEFAULT;
-        error = device_->Driver_()->DevMemAlloc(&overflowAddr_, OVERFLOW_ADDR_MAX_SIZE, memType, device_->Id_());
+        error = device_->Driver_()->DevMemAllocWithBackupFlag(
+            &overflowAddr_, OVERFLOW_ADDR_MAX_SIZE, memType, device_->Id_(), SNAPSHOT_OPTIONAL_BACKUP);
         if (unlikely(error == RT_ERROR_DRV_OUT_MEMORY)) {
             RT_LOG(RT_LOG_ERROR, "Failed to allocate overflow address device memory, retCode=%#x.", error);
         } else {
@@ -1950,7 +1951,7 @@ rtError_t Context::LabelSwitchListCreate(Label** const labels, const size_t num,
     const uint64_t labelSize = sizeof(rtLabelDevInfo) * num;
     const rtMemType_t memType = Runtime::Instance()->GetTsMemType(MEM_REQUEST_FEATURE_DEFAULT, labelSize);
     void* devMem = nullptr;
-    rtError_t error = device_->Driver_()->DevMemAlloc(&devMem, labelSize, memType, device_->Id_());
+    rtError_t error = device_->Driver_()->DevMemAllocWithBackupFlag(&devMem, labelSize, memType, device_->Id_());
     ERROR_RETURN(
         error,
         "Failed to allocate device memory for label list, size=%" PRIu64
@@ -2326,7 +2327,8 @@ rtError_t Context::GetSatStatusForStars(const uint64_t outputSize, Stream* const
     if (curStm->GetMemContainOverflowAddr() == nullptr) {
         void* memAddr = nullptr;
         Device* dev = Device_();
-        error = dev->Driver_()->DevMemAlloc(&memAddr, sizeof(uint64_t), RT_MEMORY_DEFAULT, dev->Id_());
+        error = dev->Driver_()->DevMemAllocWithBackupFlag(
+            &memAddr, sizeof(uint64_t), RT_MEMORY_DEFAULT, dev->Id_(), SNAPSHOT_OPTIONAL_BACKUP);
         ERROR_RETURN(error, "memAddr DevMemAlloc failed, retCode=%#x.", static_cast<uint32_t>(error));
         curStm->SetMemContainOverflowAddr(memAddr);
     }

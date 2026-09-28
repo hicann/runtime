@@ -380,8 +380,9 @@ rtError_t ApiImpl::DevMalloc(
         // no operation
     }
     RT_LOG(RT_LOG_INFO, "type=%#x.", type);
+    DevMemAllocConfig allocConfig = {};
     return (curCtx->Device_()->Driver_())
-        ->DevMemAlloc(devPtr, tmpSize, type, realDeviceId, cfgVal.moduleId, true, false, false, true);
+        ->DevMemAlloc(devPtr, tmpSize, type, realDeviceId, cfgVal.moduleId, true, allocConfig, true);
 }
 
 rtError_t ApiImpl::MemcpyBatch(

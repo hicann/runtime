@@ -957,7 +957,7 @@ static inline uint64_t FlagAddCpOnlyBit(uint64_t drvFlag) { return (drvFlag | st
 
 rtError_t NpuDriver::DevMemAllocHugePageManaged(
     void** const dptr, const uint64_t size, const rtMemType_t type, const uint32_t deviceId, const uint16_t moduleId,
-    const bool isLogError, const bool readOnlyFlag, const bool cpOnlyFlag)
+    const DevMemAllocConfig config, const bool isLogError)
 {
     drvError_t drvRet;
     uint64_t drvFlag = 0;
@@ -993,15 +993,16 @@ rtError_t NpuDriver::DevMemAllocHugePageManaged(
                   static_cast<uint64_t>(NODE_TO_DEVICE(deviceId));
     }
 
-    if (readOnlyFlag) {
+    if (config.readOnlyFlag) {
         drvFlag = FlagAddReadBit(drvFlag);
     }
 
-    if (cpOnlyFlag) {
+    if (config.cpOnlyFlag) {
         drvFlag = FlagAddCpOnlyBit(drvFlag);
     }
 
     drvFlag = FlagAddModuleId(drvFlag, moduleId);
+    drvFlag = FlagAddBackupBit(drvFlag, config.type);
     drvRet = halMemAlloc(dptr, static_cast<UINT64>(size), static_cast<UINT64>(drvFlag));
     if (drvRet != DRV_ERROR_NONE) {
         const rtError_t rtErrorCode = RT_GET_DRV_ERRCODE(drvRet);
@@ -1031,7 +1032,7 @@ rtError_t NpuDriver::DevMemAllocHugePageManaged(
 
 rtError_t NpuDriver::DevMemAllocManaged(
     void** const dptr, const uint64_t size, const rtMemType_t type, const uint32_t deviceId, const uint16_t moduleId,
-    const bool isLogError, const bool readOnlyFlag, const bool starsTillingFlag, const bool cpOnlyFlag) const
+    const DevMemAllocConfig config, const bool isLogError) const
 {
     drvError_t drvRet;
     uint64_t drvFlag = 0;
@@ -1064,7 +1065,7 @@ rtError_t NpuDriver::DevMemAllocManaged(
         (GetDevProperties().allocManagedFlag == AllocManagedFlag::ALLOC_MANAGED_MEM_HOST_AGENT)) {
         drvFlag = static_cast<uint64_t>(MEM_HOST_AGENT) | static_cast<uint64_t>(NODE_TO_DEVICE(deviceId));
     } else {
-        if (starsTillingFlag == true) {
+        if (config.starsTillingFlag == true) {
             drvFlag = static_cast<uint64_t>(MEM_DEV) | static_cast<uint64_t>(MEM_CONTIGUOUS_PHY) |
                       static_cast<uint64_t>(MEM_SET_ALIGN_SIZE(9ULL)) | static_cast<uint64_t>(MEM_ADVISE_TS) |
                       static_cast<uint64_t>(NODE_TO_DEVICE(deviceId));
@@ -1074,13 +1075,14 @@ rtError_t NpuDriver::DevMemAllocManaged(
         }
     }
 
-    if (readOnlyFlag) {
+    if (config.readOnlyFlag) {
         drvFlag = FlagAddReadBit(drvFlag);
     }
 
-    COND_PROC(cpOnlyFlag == true, drvFlag = FlagAddCpOnlyBit(drvFlag));
+    COND_PROC(config.cpOnlyFlag == true, drvFlag = FlagAddCpOnlyBit(drvFlag));
 
     drvFlag = FlagAddModuleId(drvFlag, moduleId);
+    drvFlag = FlagAddBackupBit(drvFlag, config.type);
     drvRet = halMemAlloc(dptr, static_cast<UINT64>(size), static_cast<UINT64>(drvFlag));
     if (drvRet != DRV_ERROR_NONE) {
         const rtError_t rtErrorCode = RT_GET_DRV_ERRCODE(drvRet);
@@ -1103,7 +1105,8 @@ rtError_t NpuDriver::DevMemAllocManaged(
 
     RT_LOG(
         RT_LOG_DEBUG, "device_id=%u, type=%u, size=%" PRIu64 "(bytes), chip type=%d, moduleId=%hu, tillFlag=%d",
-        deviceId, static_cast<uint32_t>(type), size, static_cast<int32_t>(chipType_), moduleId, starsTillingFlag);
+        deviceId, static_cast<uint32_t>(type), size, static_cast<int32_t>(chipType_), moduleId,
+        config.starsTillingFlag);
     return RT_ERROR_NONE;
 }
 

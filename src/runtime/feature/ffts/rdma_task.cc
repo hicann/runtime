@@ -42,7 +42,7 @@ rtError_t RdmaPiValueModifyTaskInit(TaskInfo* const taskInfo, const std::vector<
     const uint64_t allocSize = funCallMemAndPiValueMemSize + dfxSize + FUNC_CALL_INSTR_ALIGN_SIZE;
 
     void* funCallMemAddr = nullptr;
-    auto ret = dev->Driver_()->DevMemAlloc(&funCallMemAddr, allocSize, RT_MEMORY_DDR, dev->Id_());
+    auto ret = dev->Driver_()->DevMemAllocWithBackupFlag(&funCallMemAddr, allocSize, RT_MEMORY_DDR, dev->Id_());
     if (ret != RT_ERROR_NONE || funCallMemAddr == nullptr) {
         RT_LOG(
             RT_LOG_ERROR,

@@ -183,17 +183,15 @@ DevMemAllocRetryTestData g_devMemAllocRetryTestData;
 
 rtError_t DevMemAllocRetryStub(
     Driver* driver, void** dptr, uint64_t size, rtMemType_t type, uint32_t deviceId, uint16_t moduleId, bool isLogError,
-    bool readOnlyFlag, bool starsTillingFlag, bool isNewApi, bool cpOnlyFlag)
+    DevMemAllocConfig config, bool isNewApi)
 {
     UNUSED(driver);
     UNUSED(size);
     UNUSED(type);
     UNUSED(deviceId);
     UNUSED(moduleId);
-    UNUSED(readOnlyFlag);
-    UNUSED(starsTillingFlag);
+    UNUSED(config);
     UNUSED(isNewApi);
-    UNUSED(cpOnlyFlag);
 
     const uint32_t callIndex = g_devMemAllocRetryTestData.callCount++;
     if (callIndex < 2U) {

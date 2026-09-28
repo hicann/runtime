@@ -724,8 +724,9 @@ rtError_t CaptureModel::AllocateExternalRefreshTable()
     NULL_PTR_RETURN_MSG(dev, RT_ERROR_DEVICE_NULL);
     Driver* const driver = dev->Driver_();
     NULL_PTR_RETURN_MSG(driver, RT_ERROR_DRV_NULL);
-    const rtError_t error = driver->DevMemAlloc(
-        &externalEventRefreshDeviceBase_, externalEventRefreshLayout_.totalSize, RT_MEMORY_DEFAULT, dev->Id_());
+    const rtError_t error = driver->DevMemAllocWithBackupFlag(
+        &externalEventRefreshDeviceBase_, externalEventRefreshLayout_.totalSize, RT_MEMORY_DEFAULT, dev->Id_(),
+        SNAPSHOT_OPTIONAL_BACKUP);
     if (error != RT_ERROR_NONE) {
         const uint64_t totalSize = externalEventRefreshLayout_.totalSize;
         externalEventRefreshHostTemplate_.reset();

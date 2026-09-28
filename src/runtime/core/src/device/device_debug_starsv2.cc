@@ -211,7 +211,8 @@ rtError_t DebugReadAICore(const rtDebugMemoryParam_t* const param, const Device*
     NULL_PTR_RETURN(devDrv, RT_ERROR_DRV_PTRNULL);
     const uint32_t deviceId = curDevice->Id_();
     void* devMem = nullptr;
-    ret = devDrv->DevMemAlloc(&devMem, COREDUMP_MEM_SIZE, RT_MEMORY_HBM, deviceId);
+    ret = devDrv->DevMemAllocWithBackupFlag(
+        &devMem, COREDUMP_MEM_SIZE, RT_MEMORY_HBM, deviceId, SNAPSHOT_OPTIONAL_BACKUP);
     COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "malloc mem fail, ret=%u", ret);
     ScopeGuard guard([&devMem, &devDrv, &deviceId]() {
         (void)devDrv->DevMemFree(devMem, deviceId);

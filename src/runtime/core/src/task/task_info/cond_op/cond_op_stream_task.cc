@@ -17,6 +17,7 @@
 #include "cond_op_stream_task.h"
 #include "stub_task.hpp"
 #include "cond_op_manager.hpp"
+#include "npu_driver.hpp"
 
 namespace cce {
 namespace runtime {
@@ -156,7 +157,7 @@ rtError_t AllocFuncCallMemForStreamSwitchTask(TaskInfo* taskInfo)
     StreamSwitchTaskInfo* streamSwitchTask = &(taskInfo->u.streamswitchTask);
     const auto dev = taskInfo->stream->Device_();
     const uint64_t allocSize = streamSwitchTask->funCallMemSize + TS_STARS_COND_DFX_SIZE + FUNC_CALL_INSTR_ALIGN_SIZE;
-    const rtError_t ret = dev->Driver_()->DevMemAlloc(&devMem, allocSize, RT_MEMORY_DDR, dev->Id_());
+    const rtError_t ret = dev->Driver_()->DevMemAllocWithBackupFlag(&devMem, allocSize, RT_MEMORY_DDR, dev->Id_());
     COND_RETURN_ERROR(
         (ret != RT_ERROR_NONE) || (devMem == nullptr), ret,
         "alloc func call memory failed,retCode=%#x,size=%" PRIu64 "(bytes),dev_id=%u", ret,
@@ -400,7 +401,7 @@ rtError_t AllocFuncCallMemForStmLblSwiByIdxTask(TaskInfo* taskInfo)
     void* devMem = nullptr;
     const auto dev = taskInfo->stream->Device_();
     const uint64_t allocSize = stmLblSwiByIdx->funCallMemSize + TS_STARS_COND_DFX_SIZE + FUNC_CALL_INSTR_ALIGN_SIZE;
-    const rtError_t ret = dev->Driver_()->DevMemAlloc(&devMem, allocSize, RT_MEMORY_DDR, dev->Id_());
+    const rtError_t ret = dev->Driver_()->DevMemAllocWithBackupFlag(&devMem, allocSize, RT_MEMORY_DDR, dev->Id_());
     COND_RETURN_ERROR(
         (ret != RT_ERROR_NONE) || (devMem == nullptr), ret,
         "Alloc func call svm memory failed,retCode=%#x,size=%" PRIu64 "(bytes),dev_id=%u.", ret,
@@ -521,6 +522,12 @@ rtError_t StreamLabelSwitchByIndexTaskInit(
     taskInfo->u.stmLabelSwitchIdxTask.phyLabelInfoPtr = 0ULL;
     taskInfo->u.stmLabelSwitchIdxTask.max = maxIndex;
     taskInfo->u.stmLabelSwitchIdxTask.funCallMemSize = 0UL;
+    const uint32_t devId = taskInfo->stream->Device_()->Id_();
+    if ((idPtr != nullptr) && NpuDriver::CheckIsSupportFeature(devId, FEATURE_SVM_PROCESS_DEVICE_MEM_SNAPSHOT)) {
+        const rtError_t error =
+            taskInfo->stream->Device_()->Driver_()->MemAdvise(idPtr, sizeof(uint64_t), ADVISE_SNAPSHOT_REQUIRED, devId);
+        ERROR_RETURN(error, "Snapshot advise label switch by index ptr failed, retCode=%#x.", error);
+    }
     taskInfo->u.stmLabelSwitchIdxTask.funcCallSvmMem = nullptr;
     taskInfo->u.stmLabelSwitchIdxTask.dfxPtr = nullptr;
     taskInfo->u.stmLabelSwitchIdxTask.baseFuncCallSvmMem = nullptr;

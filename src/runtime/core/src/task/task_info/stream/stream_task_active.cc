@@ -84,7 +84,7 @@ rtError_t AllocFuncCallMemForStreamActiveTask(TaskInfo* taskInfo)
     void* devMem = nullptr;
     const auto dev = taskInfo->stream->Device_();
     const uint64_t allocSize = streamActiveTask->funCallMemSize + TS_STARS_COND_DFX_SIZE + FUNC_CALL_INSTR_ALIGN_SIZE;
-    const rtError_t ret = dev->Driver_()->DevMemAlloc(&devMem, allocSize, RT_MEMORY_DDR, dev->Id_());
+    const rtError_t ret = dev->Driver_()->DevMemAllocWithBackupFlag(&devMem, allocSize, RT_MEMORY_DDR, dev->Id_());
     COND_RETURN_ERROR(
         (ret != RT_ERROR_NONE) || (devMem == nullptr), ret,
         "alloc func call memory failed,retCode=%#x,size=%" PRIu64 "(bytes),dev_id=%u", ret,

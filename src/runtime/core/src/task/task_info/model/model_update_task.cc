@@ -15,6 +15,7 @@
 #include "task_info.hpp"
 #include "model_update_task.h"
 #include "task.hpp"
+#include "npu_driver.hpp"
 
 namespace cce {
 namespace runtime {
@@ -134,12 +135,39 @@ rtError_t ModelTaskUpdateInit(
         mdlUpdateTaskInfo->tilingTabOffset = tilingTaboffset;
         mdlUpdateTaskInfo->blockDimAddr = para->blockDimAddr;
         mdlUpdateTaskInfo->tilingKeyAddr = para->tilingKeyAddr;
+        const uint32_t devId = stm->Device_()->Id_();
+        if (NpuDriver::CheckIsSupportFeature(devId, FEATURE_SVM_PROCESS_DEVICE_MEM_SNAPSHOT)) {
+            if (mdlUpdateTaskInfo->tilingKeyAddr != nullptr) {
+                error = stm->Device_()->Driver_()->MemAdvise(
+                    mdlUpdateTaskInfo->tilingKeyAddr, sizeof(uint64_t), ADVISE_SNAPSHOT_REQUIRED, devId);
+                ERROR_RETURN(error, "Snapshot advise model task update tiling key failed, retCode=%#x.", error);
+            }
+            if (mdlUpdateTaskInfo->blockDimAddr != nullptr) {
+                error = stm->Device_()->Driver_()->MemAdvise(
+                    mdlUpdateTaskInfo->blockDimAddr, sizeof(uint64_t), ADVISE_SNAPSHOT_REQUIRED, devId);
+                ERROR_RETURN(error, "Snapshot advise model task update block dim failed, retCode=%#x.", error);
+            }
+        }
         return RT_ERROR_NONE;
     }
     // david process
     mdlUpdateTaskInfo->tilingKeyOffset = RtPtrToValue(para->tilingKeyAddr);
     mdlUpdateTaskInfo->blockDimOffset = RtPtrToValue(para->blockDimAddr);
     mdlUpdateTaskInfo->tilingTabOffset = RtPtrToValue(devCopyMem);
+    const uint32_t devId = stm->Device_()->Id_();
+    if (NpuDriver::CheckIsSupportFeature(devId, FEATURE_SVM_PROCESS_DEVICE_MEM_SNAPSHOT)) {
+        rtError_t error = RT_ERROR_NONE;
+        if (para->tilingKeyAddr != nullptr) {
+            error = stm->Device_()->Driver_()->MemAdvise(
+                para->tilingKeyAddr, sizeof(uint64_t), ADVISE_SNAPSHOT_REQUIRED, devId);
+            ERROR_RETURN(error, "Snapshot advise model task update tiling key failed, retCode=%#x.", error);
+        }
+        if (para->blockDimAddr != nullptr) {
+            error = stm->Device_()->Driver_()->MemAdvise(
+                para->blockDimAddr, sizeof(uint64_t), ADVISE_SNAPSHOT_REQUIRED, devId);
+            ERROR_RETURN(error, "Snapshot advise model task update block dim failed, retCode=%#x.", error);
+        }
+    }
     return RT_ERROR_NONE;
 }
 #endif

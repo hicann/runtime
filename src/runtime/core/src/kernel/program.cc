@@ -11,6 +11,7 @@
 #include <thread>
 #include "securec.h"
 #include "context.hpp"
+#include "drv/driver.hpp"
 #include "aicpu_c.hpp"
 #include "runtime.hpp"
 #include "elf.hpp"
@@ -36,7 +37,7 @@ static rtError_t AllocAndCopyHbmBufImpl(
 {
     const uint32_t devId = dev->Id_();
     Driver* const drv = dev->Driver_();
-    rtError_t ret = drv->DevMemAlloc(devBuf, bufSize, RT_MEMORY_HBM, devId, MODULEID_RUNTIME);
+    rtError_t ret = drv->DevMemAllocWithBackupFlag(devBuf, bufSize, RT_MEMORY_HBM, devId, SNAPSHOT_NO_BACKUP);
     ERROR_RETURN(
         ret, "DevMemAlloc failed, deviceId=%u, size=%zu, ret=%#x.", devId, bufSize, static_cast<uint32_t>(ret));
     allocMem.push_back(*devBuf);
@@ -705,7 +706,7 @@ rtError_t Program::CopyKernelLiteralNameToDevice(
     size_t nameSize = literalName.size() + 1;
     void* devAddr = nullptr;
     const rtMemType_t memType = runtime->GetTsMemType(MEM_REQUEST_FEATURE_DEFAULT, static_cast<uint64_t>(nameSize));
-    rtError_t ret = curDrv->DevMemAlloc(&devAddr, nameSize, memType, devId);
+    rtError_t ret = curDrv->DevMemAllocWithBackupFlag(&devAddr, nameSize, memType, devId);
     ERROR_RETURN(ret, "Failed to alloc device memory for literalName, ret=%d, devId=%u.", ret, devId);
 
     // copy soName and funcName to device
@@ -1926,9 +1927,8 @@ rtError_t Program::CopyTilingTabToDev(
         }
         copyLen = static_cast<uint32_t>(kernelLen * sizeof(TilingTablForDavid));
         /* 拷贝内容到device */
-        error = curDrv->DevMemAlloc(
-            &devMem, static_cast<uint64_t>(copyLen), RT_MEMORY_TS, targetDevice->Id_(), MODULEID_RUNTIME, true, false,
-            false);
+        error = curDrv->DevMemAllocWithBackupFlag(
+            &devMem, static_cast<uint64_t>(copyLen), RT_MEMORY_TS, targetDevice->Id_());
         if (error != RT_ERROR_NONE) {
             RT_LOG(RT_LOG_ERROR, "DevMemAlloc fail copyLen=%u.", copyLen);
             if (devMem != nullptr) {
@@ -1955,7 +1955,8 @@ rtError_t Program::CopyTilingTabToDev(
     } else {
         /* 构建拷贝的内容 */
         TilingTabl* tilingTab = nullptr;
-        const bool starsTilingPhyContinuous = sourceContext->Device_()->IsSupportFeature(
+        DevMemAllocConfig allocConfig = {};
+        allocConfig.starsTillingFlag = sourceContext->Device_()->IsSupportFeature(
             RtOptionalFeatureType::RT_FEATURE_KERNEL_TILING_TABLE_PHY_CONTIGUOUS);
         ret = BuildTilingTbl(&tilingTab, &kernelLen);
         if (ret != RT_ERROR_NONE) {
@@ -1964,9 +1965,9 @@ rtError_t Program::CopyTilingTabToDev(
         }
         copyLen = static_cast<uint32_t>(kernelLen * sizeof(TilingTabl));
         /* 拷贝内容到device */
-        error = curDrv->DevMemAlloc(
-            &devMem, static_cast<uint64_t>(copyLen), RT_MEMORY_TS, targetDevice->Id_(), MODULEID_RUNTIME, true, false,
-            starsTilingPhyContinuous);
+        error = curDrv->DevMemAllocWithBackupFlag(
+            &devMem, static_cast<uint64_t>(copyLen), RT_MEMORY_TS, targetDevice->Id_(), SNAPSHOT_REQUIRED_BACKUP,
+            MODULEID_RUNTIME, true, allocConfig);
         if (error != RT_ERROR_NONE) {
             RT_LOG(RT_LOG_ERROR, "DevMemAlloc fail copyLen=%u.", copyLen);
             if (devMem != nullptr) {

@@ -496,12 +496,14 @@ TEST_F(RuntimeTest, ApiImplSnapshotRejectsInvalidProcessState)
 {
     ApiImplSnapshot apiImplSnapshot;
     GlobalStateManager& stateManager = GlobalStateManager::GetInstance();
+    rtSnapShotBackupArgs backupArgs = {};
+    rtSnapShotRestoreArgs restoreArgs = {};
 
     stateManager.SetCurrentState(RT_PROCESS_STATE_RUNNING);
-    EXPECT_EQ(apiImplSnapshot.SnapShotProcessBackup(), RT_ERROR_SNAPSHOT_BACKUP_FAILED);
+    EXPECT_EQ(apiImplSnapshot.SnapShotProcessBackup(&backupArgs), RT_ERROR_SNAPSHOT_BACKUP_FAILED);
 
     stateManager.SetCurrentState(RT_PROCESS_STATE_LOCKED);
-    EXPECT_EQ(apiImplSnapshot.SnapShotProcessRestore(), RT_ERROR_SNAPSHOT_RESTORE_FAILED);
+    EXPECT_EQ(apiImplSnapshot.SnapShotProcessRestore(&restoreArgs), RT_ERROR_SNAPSHOT_RESTORE_FAILED);
 
     stateManager.SetCurrentState(RT_PROCESS_STATE_RUNNING);
 }

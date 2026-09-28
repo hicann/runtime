@@ -107,8 +107,9 @@ void* TaskResManage::MallocPcieBarBuffer(const uint32_t size, Device* const dev,
         RT_LOG(RT_LOG_WARNING, "dev does not support pcie bar copy, device_id=%d, val=%u.", dev->Id_(), val);
         return nullptr;
     }
-    rtError_t ret = dev->Driver_()->DevMemAlloc(
-        &addr, static_cast<uint64_t>(size), RT_MEMORY_P2P_HBM, dev->Id_(), MODULEID_RUNTIME, isLogError);
+    rtError_t ret = dev->Driver_()->DevMemAllocWithBackupFlag(
+        &addr, static_cast<uint64_t>(size), RT_MEMORY_P2P_HBM, dev->Id_(), SNAPSHOT_OPTIONAL_BACKUP, MODULEID_RUNTIME,
+        isLogError);
     if (ret != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_WARNING, "alloc dev mem failed, retCode=%#x, size=%u, dev_id=%u.", ret, size, dev->Id_());
         return nullptr;

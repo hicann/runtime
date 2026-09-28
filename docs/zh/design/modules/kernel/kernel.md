@@ -299,13 +299,13 @@ flowchart TD
     B --> C[CopySoAndNameToCurrentDevice]
     C --> D[Load2Device]
     D --> E[Runtime::BinaryLoad]
-    E --> F[DevMemAlloc - KernelMemoryPool]
+    E --> F[DevMemAllocWithBackupFlag - KernelMemoryPool]
     F --> G[4K 地址对齐 - ARM ADRP]
     G --> H[H2D 拷贝二进制]
     H --> I[SetBinBaseAddr/SetBinAlignBaseAddr]
 ```
 
-**流程步骤说明**：设备侧加载在 aclrtBinaryGetFunction 内部通过 CopySoAndNameToCurrentDevice 触发。Program::Load2Device 调用 Runtime::BinaryLoad 完成实际拷贝：分配设备内存（优先使用 KernelMemoryPool 内存池）、4K 地址对齐（ARM ADRP 指令要求）、H2D 拷贝、记录 baseAddr/baseAddrAlign。
+**流程步骤说明**：设备侧加载在 aclrtBinaryGetFunction 内部通过 CopySoAndNameToCurrentDevice 触发。Program::Load2Device 调用 Runtime::BinaryLoad 完成实际拷贝：通过 `DevMemAllocWithBackupFlag` 分配 Runtime 内部设备内存（优先使用 KernelMemoryPool 内存池）、4K 地址对齐（ARM ADRP 指令要求）、H2D 拷贝、记录 baseAddr/baseAddrAlign。
 
 #### 内核执行流程
 

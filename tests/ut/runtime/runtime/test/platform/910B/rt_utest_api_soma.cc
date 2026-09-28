@@ -833,7 +833,7 @@ TEST_F(CloudV2ApiTestSOMA, rtMemPoolTrimImplicit_Malloc)
         .stubs()
         .with(
             mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(),
-            mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any())
+            mockcpp::any(), mockcpp::any())
         .will(returnValue(RT_ERROR_INVALID_VALUE));
 
     MOCKER_CPP_VIRTUAL(*device, &RawDevice::CheckFeatureSupport).stubs().with(mockcpp::any()).will(returnValue(true));

@@ -13,6 +13,6 @@
 
 // slog stub 捕获最近一次 DlogRecord 落盘的日志内容，供单测断言使用。
 // 通过头文件声明的函数接口访问，避免在测试源文件中以 extern 声明引用外部变量（G.EXP.05-CPP）。
-const char *DlogStubGetLastLogMsg();
+const char* DlogStubGetLastLogMsg();
 
 #endif // TESTS_DEPENDS_SLOG_STUB_LOG_CAPTURE_H_

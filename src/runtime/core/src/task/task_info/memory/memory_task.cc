@@ -25,6 +25,7 @@
 #include "capture_model_utils.hpp"
 #include "rt_inner_event.h"
 #include "task.hpp"
+#include "npu_driver.hpp"
 
 namespace cce {
 namespace runtime {
@@ -364,7 +365,7 @@ static rtError_t AllocFuncCallMemForMemWaitTask(TaskInfo* taskInfo)
         }
         ret = taskInfo->stream->Model_()->MemWaitDevAlloc(&devMem, taskInfo->stream->Device_());
     } else {
-        ret = dev->Driver_()->DevMemAlloc(&devMem, allocSize, RT_MEMORY_DDR, dev->Id_());
+        ret = dev->Driver_()->DevMemAllocWithBackupFlag(&devMem, allocSize, RT_MEMORY_DDR, dev->Id_());
     }
     COND_RETURN_ERROR(
         (ret != RT_ERROR_NONE) || (devMem == nullptr), ret,
@@ -415,7 +416,15 @@ rtError_t MemWaitValueTaskInit(TaskInfo* taskInfo, const void* const devAddr, co
     memWaitValueTask->funCallMemSize2 = 0ULL;
     memWaitValueTask->ownedEventId = INVALID_EVENT_ID;
     memWaitValueTask->awSize = RT_STARS_WRITE_VALUE_SIZE_TYPE_64BIT;
-    rtError_t ret = AllocFuncCallMemForMemWaitTask(taskInfo);
+    rtError_t ret = RT_ERROR_NONE;
+    const uint32_t devId = taskInfo->stream->Device_()->Id_();
+    if ((devAddr != nullptr) && NpuDriver::CheckIsSupportFeature(devId, FEATURE_SVM_PROCESS_DEVICE_MEM_SNAPSHOT)) {
+        ret = taskInfo->stream->Device_()->Driver_()->MemAdvise(
+            const_cast<void*>(devAddr), sizeof(uint64_t), ADVISE_SNAPSHOT_REQUIRED, devId);
+        ERROR_RETURN(ret, "Snapshot advise mem wait value dev addr failed, retCode=%#x.", ret);
+    }
+
+    ret = AllocFuncCallMemForMemWaitTask(taskInfo);
     ERROR_RETURN(ret, "Alloc func call svm failed, retCode=%#x.", ret);
 
     return RT_ERROR_NONE;

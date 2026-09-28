@@ -156,12 +156,12 @@ RUNTIME_API_STUB(rtNoop)
         self.assertEqual(catalog_version, product_version)
         self.assertFalse(set(names) - set(catalog))
         self.assertEqual(names, sorted(names))
-        self.assertEqual(len(catalog), 786)
-        self.assertEqual(len(names), 653)
+        self.assertEqual(len(catalog), 788)
+        self.assertEqual(len(names), 655)
         self.assertEqual(len(set(catalog) - set(names)), 133)
         self.assertEqual(
             sum(catalog[name].policy == "FEATURE_NOT_SUPPORT" for name in names),
-            649,
+            651,
         )
         self.assertEqual(
             sum(catalog[name].policy == "SUCCESS_NOOP" for name in names), 3

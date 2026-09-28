@@ -96,7 +96,8 @@ rtError_t DebugReadAICore(const rtDebugMemoryParam_t* const param, const Device*
     const uint32_t deviceId = device->Id_();
     void* devMem = nullptr;
     uint64_t physicPtr = 0U;
-    ret = devDrv->DevMemAlloc(&devMem, DEBUG_DEVMEM_LEN, RT_MEMORY_HBM, deviceId);
+    ret =
+        devDrv->DevMemAllocWithBackupFlag(&devMem, DEBUG_DEVMEM_LEN, RT_MEMORY_HBM, deviceId, SNAPSHOT_OPTIONAL_BACKUP);
     ERROR_RETURN(ret, "Failed to allocate device memory, retCode=%#x.", ret);
     ScopeGuard guard([&devMem, &devDrv, &deviceId]() { (void)devDrv->DevMemFree(devMem, deviceId); });
     ret = devDrv->MemAddressTranslate(static_cast<int32_t>(deviceId), PtrToValue(devMem), &physicPtr);

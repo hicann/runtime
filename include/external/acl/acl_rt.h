@@ -880,6 +880,11 @@ typedef enum {
 
 typedef uint32_t (*aclrtSnapShotCallBack)(int32_t deviceId, void* args);
 
+#define ACL_RT_SNAPSHOT_BACKUP_REQUIRED_ONLY 0U
+#define ACL_RT_SNAPSHOT_BACKUP_INCLUDE_OPTIONAL 1U
+#define ACL_RT_SNAPSHOT_RESTORE_REQUIRED_ONLY 0U
+#define ACL_RT_SNAPSHOT_RESTORE_INCLUDE_OPTIONAL 1U
+
 typedef struct aclrtSnapShotBackupArgs {
     uint32_t backupFlags;
     char reserved[60];
@@ -5745,6 +5750,7 @@ ACL_FUNC_VISIBILITY aclError aclrtSnapShotProcessUnlock(int pid, void* reserve);
 /**
  * @ingroup AscendCL
  * @brief backup the NPU process
+ * @param [in] args snapshot backup args. If args is NULL, the legacy Runtime backup flow is used.
  *
  * @retval ACL_SUCCESS The function is successfully executed.
  * @retval OtherValues Failure
@@ -5754,6 +5760,7 @@ ACL_FUNC_VISIBILITY aclError aclrtSnapShotProcessBackup(int pid, aclrtSnapShotBa
 /**
  * @ingroup AscendCL
  * @brief restore the NPU process from the last backup point
+ * @param [in] args snapshot restore args. If args is NULL, the legacy Runtime restore flow is used.
  *
  * @retval ACL_SUCCESS The function is successfully executed.
  * @retval OtherValues Failure

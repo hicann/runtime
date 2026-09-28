@@ -63,19 +63,18 @@ int32_t g_syncTimeout = -1;
 rtError_t g_syncResult = RT_ERROR_NONE;
 
 rtError_t DevMemAllocStub(
-    Driver* drv, void** dptr, uint64_t size, rtMemType_t type, uint32_t deviceId, uint16_t moduleId, bool isLogError,
-    bool readOnlyFlag, bool starsTillingFlag, bool isNewApi, bool cpOnlyFlag)
+    Driver* drv, void** dptr, uint64_t size, rtMemType_t type, uint32_t deviceId, DevMemBackupType backupType,
+    uint16_t moduleId, bool isLogError, DevMemAllocConfig config, bool isNewApi)
 {
     UNUSED(drv);
     UNUSED(size);
     UNUSED(type);
     UNUSED(deviceId);
+    UNUSED(backupType);
     UNUSED(moduleId);
     UNUSED(isLogError);
-    UNUSED(readOnlyFlag);
-    UNUSED(starsTillingFlag);
+    UNUSED(config);
     UNUSED(isNewApi);
-    UNUSED(cpOnlyFlag);
     if (g_allocResults.empty()) {
         return RT_ERROR_MEMORY_ALLOCATION;
     }
@@ -235,7 +234,7 @@ protected:
     void MockBuiltinKernelDependencies(rtError_t syncResult = RT_ERROR_NONE)
     {
         g_syncResult = syncResult;
-        MOCKER_CPP_VIRTUAL(driver_, &Driver::DevMemAlloc).stubs().will(invoke(DevMemAllocStub));
+        MOCKER_CPP_VIRTUAL(driver_, &Driver::DevMemAllocWithBackupFlag).stubs().will(invoke(DevMemAllocStub));
         MOCKER_CPP_VIRTUAL(driver_, &Driver::DevMemFree).stubs().will(invoke(DevMemFreeStub));
         MOCKER_CPP_VIRTUAL(driver_, &Driver::MemCopySync).stubs().will(invoke(MemCopySyncStub));
         MOCKER(StreamLaunchCpuKernel).stubs().will(invoke(LaunchCpuKernelStub));
@@ -545,7 +544,7 @@ TEST_F(AicpuTimeoutTest, CheckKernelSupportedPreservesUnsupportedResult)
 
 TEST_F(AicpuTimeoutTest, CheckKernelSupportedFreesAllocatedMemoryOnPartialAllocFailure)
 {
-    MOCKER_CPP_VIRTUAL(driver_, &Driver::DevMemAlloc).stubs().will(invoke(DevMemAllocStub));
+    MOCKER_CPP_VIRTUAL(driver_, &Driver::DevMemAllocWithBackupFlag).stubs().will(invoke(DevMemAllocStub));
     MOCKER_CPP_VIRTUAL(driver_, &Driver::DevMemFree).stubs().will(invoke(DevMemFreeStub));
     g_allocResults = {{RT_ERROR_NONE, nameBuffer_.data()}, {RT_ERROR_MEMORY_ALLOCATION, nullptr}};
     bool supported = true;
@@ -557,7 +556,7 @@ TEST_F(AicpuTimeoutTest, CheckKernelSupportedFreesAllocatedMemoryOnPartialAllocF
 
 TEST_F(AicpuTimeoutTest, CheckKernelSupportedReturnsFirstAllocFailure)
 {
-    MOCKER_CPP_VIRTUAL(driver_, &Driver::DevMemAlloc).stubs().will(invoke(DevMemAllocStub));
+    MOCKER_CPP_VIRTUAL(driver_, &Driver::DevMemAllocWithBackupFlag).stubs().will(invoke(DevMemAllocStub));
     g_allocResults = {{RT_ERROR_MEMORY_ALLOCATION, nullptr}};
     bool supported = true;
 
@@ -568,7 +567,7 @@ TEST_F(AicpuTimeoutTest, CheckKernelSupportedReturnsFirstAllocFailure)
 
 TEST_F(AicpuTimeoutTest, CheckKernelSupportedFreesBuffersOnConfigAllocFailure)
 {
-    MOCKER_CPP_VIRTUAL(driver_, &Driver::DevMemAlloc).stubs().will(invoke(DevMemAllocStub));
+    MOCKER_CPP_VIRTUAL(driver_, &Driver::DevMemAllocWithBackupFlag).stubs().will(invoke(DevMemAllocStub));
     MOCKER_CPP_VIRTUAL(driver_, &Driver::DevMemFree).stubs().will(invoke(DevMemFreeStub));
     g_allocResults = {
         {RT_ERROR_NONE, nameBuffer_.data()},
@@ -653,7 +652,7 @@ TEST_F(AicpuTimeoutTest, CloseMonitorReturnsDeviceSuccess)
 
 TEST_F(AicpuTimeoutTest, CloseMonitorReturnsAllocFailure)
 {
-    MOCKER_CPP_VIRTUAL(driver_, &Driver::DevMemAlloc).stubs().will(invoke(DevMemAllocStub));
+    MOCKER_CPP_VIRTUAL(driver_, &Driver::DevMemAllocWithBackupFlag).stubs().will(invoke(DevMemAllocStub));
     g_allocResults = {{RT_ERROR_MEMORY_ALLOCATION, nullptr}};
     bool closed = true;
 

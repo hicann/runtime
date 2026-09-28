@@ -621,7 +621,9 @@ public:
     virtual rtError_t rtSnapShotProcessLock();
     virtual rtError_t rtSnapShotProcessUnlock();
     virtual rtError_t rtSnapShotProcessBackup();
+    virtual rtError_t rtSnapShotProcessBackupWithArgs(const rtSnapShotBackupArgs* args);
     virtual rtError_t rtSnapShotProcessRestore();
+    virtual rtError_t rtSnapShotProcessRestoreWithArgs(const rtSnapShotRestoreArgs* args);
     virtual rtError_t rtSnapShotCallbackRegister(rtSnapShotStage stage, rtSnapShotCallBack callback, void* args);
     virtual rtError_t rtSnapShotCallbackUnregister(rtSnapShotStage stage, rtSnapShotCallBack callback);
     // tdt function
@@ -1291,7 +1293,9 @@ public:
     MOCK_METHOD0(rtSnapShotProcessLock, rtError_t());
     MOCK_METHOD0(rtSnapShotProcessUnlock, rtError_t());
     MOCK_METHOD0(rtSnapShotProcessBackup, rtError_t());
+    MOCK_METHOD1(rtSnapShotProcessBackupWithArgs, rtError_t(const rtSnapShotBackupArgs* args));
     MOCK_METHOD0(rtSnapShotProcessRestore, rtError_t());
+    MOCK_METHOD1(rtSnapShotProcessRestoreWithArgs, rtError_t(const rtSnapShotRestoreArgs* args));
 
     // prof function stub
     MOCK_METHOD0(MsprofFinalize, int32_t());

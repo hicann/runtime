@@ -16,17 +16,11 @@
 extern "C" int AdxDataDumpServerInit();
 extern "C" int AdxDataDumpServerUnInit();
 
-int aclStub::AdxDataDumpServerInit()
-{
-    return 0;
-}
+int aclStub::AdxDataDumpServerInit() { return 0; }
 
-int aclStub::AdxDataDumpServerUnInit()
-{
-    return 0;
-}
+int aclStub::AdxDataDumpServerUnInit() { return 0; }
 
-int32_t aclStub::AdumpSetDump(const char *dumpConfigData, size_t dumpConfigSize)
+int32_t aclStub::AdumpSetDump(const char* dumpConfigData, size_t dumpConfigSize)
 {
     (void)dumpConfigData;
     (void)dumpConfigSize;
@@ -39,50 +33,37 @@ int32_t aclStub::AdumpSetDumpConfig(const Adx::DumpConfigInfo configInfo)
     return 0;
 }
 
-int32_t aclStub::AdumpUnSetDump()
-{
-    return 1;
-}
+int32_t aclStub::AdumpUnSetDump() { return 1; }
 
-int AdxDataDumpServerInit()
-{
-    return MockFunctionTest::aclStubInstance().AdxDataDumpServerInit();
-}
+int AdxDataDumpServerInit() { return MockFunctionTest::aclStubInstance().AdxDataDumpServerInit(); }
 
-int AdxDataDumpServerUnInit()
-{
-    return MockFunctionTest::aclStubInstance().AdxDataDumpServerUnInit();
-}
+int AdxDataDumpServerUnInit() { return MockFunctionTest::aclStubInstance().AdxDataDumpServerUnInit(); }
 
 AwdHandle AwdCreateThreadWatchdog(uint32_t moduleId, uint32_t timeout, AwatchdogCallbackFunc callback)
 {
     (void)moduleId;
     (void)timeout;
     (void)callback;
-    AwdThreadWatchdog *hdl = new AwdThreadWatchdog();
+    AwdThreadWatchdog* hdl = new AwdThreadWatchdog();
     return (AwdHandle)hdl;
 }
 
 void AwdDestroyThreadWatchdog(AwdHandle handle)
 {
-    AwdThreadWatchdog *dog = (AwdThreadWatchdog *)handle;
+    AwdThreadWatchdog* dog = (AwdThreadWatchdog*)handle;
     delete dog;
 }
 
 namespace Adx {
-    int32_t AdumpSetDump(const char *dumpConfigData, size_t dumpConfigSize)
-    {
-        return MockFunctionTest::aclStubInstance().AdumpSetDump(dumpConfigData, dumpConfigSize);
-    }
-
-    int32_t AdumpSetDumpConfig(const DumpConfigInfo configInfo)
-    {
-        return MockFunctionTest::aclStubInstance().AdumpSetDumpConfig(configInfo);
-    }
-
-    int32_t AdumpUnSetDump()
-    {
-        return MockFunctionTest::aclStubInstance().AdumpUnSetDump();
-    }
+int32_t AdumpSetDump(const char* dumpConfigData, size_t dumpConfigSize)
+{
+    return MockFunctionTest::aclStubInstance().AdumpSetDump(dumpConfigData, dumpConfigSize);
 }
 
+int32_t AdumpSetDumpConfig(const DumpConfigInfo configInfo)
+{
+    return MockFunctionTest::aclStubInstance().AdumpSetDumpConfig(configInfo);
+}
+
+int32_t AdumpUnSetDump() { return MockFunctionTest::aclStubInstance().AdumpUnSetDump(); }
+} // namespace Adx

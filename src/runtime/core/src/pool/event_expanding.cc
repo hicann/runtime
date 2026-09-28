@@ -38,7 +38,8 @@ void* EventExpandingPool::MallocBufferForEvent(const size_t size, void* const pa
 {
     void* addr = nullptr;
     Device* const dev = static_cast<Device*>(para);
-    rtError_t error = dev->Driver_()->DevMemAlloc(&addr, static_cast<uint64_t>(size), RT_MEMORY_DDR, dev->Id_());
+    rtError_t error = dev->Driver_()->DevMemAllocWithBackupFlag(
+        &addr, static_cast<uint64_t>(size), RT_MEMORY_DDR, dev->Id_(), SNAPSHOT_OPTIONAL_BACKUP);
     COND_RETURN_WARN(
         error != RT_ERROR_NONE, nullptr,
         "device mem alloc pool mem failed, "

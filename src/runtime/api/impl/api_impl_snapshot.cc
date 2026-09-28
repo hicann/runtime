@@ -57,7 +57,7 @@ rtError_t ApiImplSnapshot::SnapShotProcessUnlock()
     return error;
 }
 
-rtError_t ApiImplSnapshot::SnapShotProcessBackup()
+rtError_t ApiImplSnapshot::SnapShotProcessBackup(const rtSnapShotBackupArgs* const args)
 {
     GlobalStateManager& globalStateManagerInstance = GlobalStateManager::GetInstance();
     std::unique_lock<std::mutex> lock(globalStateManagerInstance.GetStateMtx());
@@ -70,7 +70,7 @@ rtError_t ApiImplSnapshot::SnapShotProcessBackup()
 
     rtError_t error = SnapshotCallbackManager::GetInstance().InvokeCallbacks(RT_SNAPSHOT_BACKUP_PRE);
     COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
-    error = cce::runtime::SnapShotProcessBackup();
+    error = cce::runtime::SnapShotProcessBackup(args);
     COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
     error = SnapshotCallbackManager::GetInstance().InvokeCallbacks(RT_SNAPSHOT_BACKUP_POST);
     COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
@@ -78,7 +78,7 @@ rtError_t ApiImplSnapshot::SnapShotProcessBackup()
     return RT_ERROR_NONE;
 }
 
-rtError_t ApiImplSnapshot::SnapShotProcessRestore()
+rtError_t ApiImplSnapshot::SnapShotProcessRestore(const rtSnapShotRestoreArgs* const args)
 {
     GlobalStateManager& globalStateManagerInstance = GlobalStateManager::GetInstance();
     std::unique_lock<std::mutex> lock(globalStateManagerInstance.GetStateMtx());
@@ -91,7 +91,7 @@ rtError_t ApiImplSnapshot::SnapShotProcessRestore()
 
     rtError_t error = SnapshotCallbackManager::GetInstance().InvokeCallbacks(RT_SNAPSHOT_RESTORE_PRE);
     COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
-    error = cce::runtime::SnapShotProcessRestore();
+    error = cce::runtime::SnapShotProcessRestore(args);
     COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
     error = SnapshotCallbackManager::GetInstance().InvokeCallbacks(RT_SNAPSHOT_RESTORE_POST);
     COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);

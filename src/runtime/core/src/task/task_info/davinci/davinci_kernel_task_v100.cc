@@ -99,10 +99,14 @@ void SetResultForDavinciTask(TaskInfo* taskInfo, const void* const data, const u
 static rtError_t RuntimeDevMemAlloc(void** const dptr, const uint64_t size, const rtMemType_t type, Device* dev)
 {
     // when alloc small page HBM OOM, try Alloc huge page.
-    rtError_t ret = (dev->Driver_())->DevMemAlloc(dptr, size, type, dev->Id_(), MODULEID_RUNTIME, false);
+    rtError_t ret = (dev->Driver_())
+                        ->DevMemAllocWithBackupFlag(
+                            dptr, size, type, dev->Id_(), SNAPSHOT_REQUIRED_BACKUP, MODULEID_RUNTIME, false);
     if (ret == RT_ERROR_DRV_OUT_MEMORY) {
         RT_LOG(RT_LOG_WARNING, "device_id=%u alloc small page mem OOM, alloc huge page size=%uB.", dev->Id_(), size);
-        ret = (dev->Driver_())->DevMemAlloc(dptr, size, RT_MEMORY_POLICY_HUGE_PAGE_ONLY, dev->Id_());
+        ret = (dev->Driver_())
+                  ->DevMemAllocWithBackupFlag(
+                      dptr, size, RT_MEMORY_POLICY_HUGE_PAGE_ONLY, dev->Id_(), SNAPSHOT_REQUIRED_BACKUP);
     }
     return ret;
 }

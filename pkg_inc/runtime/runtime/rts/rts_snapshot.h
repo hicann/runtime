@@ -36,6 +36,16 @@ typedef enum {
 
 typedef uint32_t (*rtSnapShotCallBack)(int32_t devId, void* args) RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE);
 
+typedef struct rtSnapShotBackupArgs {
+    uint32_t backupFlags;
+    char reserved[60];
+} rtSnapShotBackupArgs;
+
+typedef struct rtSnapShotRestoreArgs {
+    uint32_t restoreFlags;
+    char reserved[60];
+} rtSnapShotRestoreArgs;
+
 /**
  * @ingroup rts_snapshot
  * @brief lock the NPU process which will block further rts API calls
@@ -69,10 +79,28 @@ RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtSnapSho
 
 /**
  * @ingroup rts_snapshot
+ * @brief backup the NPU process with snapshot args
+ * @param [in] args snapshot process backup args. If args is NULL, the legacy Runtime backup flow is used.
+ * @return ACL_RT_SUCCESS for ok, others failed
+ */
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t
+    rtSnapShotProcessBackupWithArgs(const rtSnapShotBackupArgs* args);
+
+/**
+ * @ingroup rts_snapshot
  * @brief restore the NPU process from the last backup point
  * @return ACL_RT_SUCCESS for ok, others failed
  */
 RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtSnapShotProcessRestore();
+
+/**
+ * @ingroup rts_snapshot
+ * @brief restore the NPU process from the last backup point with snapshot args
+ * @param [in] args snapshot process restore args. If args is NULL, the legacy Runtime restore flow is used.
+ * @return ACL_RT_SUCCESS for ok, others failed
+ */
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t
+    rtSnapShotProcessRestoreWithArgs(const rtSnapShotRestoreArgs* args);
 
 /**
  * @ingroup rts_snapshot

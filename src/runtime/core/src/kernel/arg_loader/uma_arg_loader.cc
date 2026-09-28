@@ -135,7 +135,7 @@ void* UmaArgLoader::MallocBuffer(const size_t size, void* const para)
 {
     void* addr = nullptr;
     Device* const dev = static_cast<Device*>(para);
-    (void)dev->Driver_()->DevMemAlloc(&addr, static_cast<uint64_t>(size), RT_MEMORY_HBM, dev->Id_());
+    (void)dev->Driver_()->DevMemAllocWithBackupFlag(&addr, static_cast<uint64_t>(size), RT_MEMORY_HBM, dev->Id_());
     return addr;
 }
 
@@ -674,7 +674,8 @@ rtError_t UmaArgLoader::LoadStreamSwitchNArgs(
         RT_LOG_DEBUG, "memType=%u, chip type=%d.", static_cast<uint32_t>(memType),
         static_cast<int32_t>(rtInstance->GetChipType()));
 
-    error = drv_->DevMemAlloc(&valueDevAddr, valueDevSize, memType, device_->Id_());
+    error =
+        drv_->DevMemAllocWithBackupFlag(&valueDevAddr, valueDevSize, memType, device_->Id_(), SNAPSHOT_OPTIONAL_BACKUP);
     ERROR_RETURN(
         error, "Failed to alloc dev value memory, memType=%u, deviceId=%u, retCode=%#x", static_cast<uint32_t>(memType),
         device_->Id_(), static_cast<uint32_t>(error));
@@ -690,7 +691,8 @@ rtError_t UmaArgLoader::LoadStreamSwitchNArgs(
     stm->PushbackSwitchNArgs(valueDevAddr);
 
     memType = rtInstance->GetTsMemType(MEM_REQUEST_FEATURE_DEFAULT, streamIdDevSize);
-    error = drv_->DevMemAlloc(&streamIdDevAddr, streamIdDevSize, memType, device_->Id_());
+    error = drv_->DevMemAllocWithBackupFlag(
+        &streamIdDevAddr, streamIdDevSize, memType, device_->Id_(), SNAPSHOT_OPTIONAL_BACKUP);
     if (error != RT_ERROR_NONE) {
         (void)drv_->DevMemFree(valueDevAddr, device_->Id_());
         RT_LOG(

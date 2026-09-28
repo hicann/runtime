@@ -765,9 +765,15 @@ TEST_F(TinyStubTest, npu_snapshot_stub)
     EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ret = rtSnapShotProcessUnlock();
     EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    rtSnapShotBackupArgs backupArgs = {};
     ret = rtSnapShotProcessBackup();
     EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    ret = rtSnapShotProcessBackupWithArgs(&backupArgs);
+    EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    rtSnapShotRestoreArgs restoreArgs = {};
     ret = rtSnapShotProcessRestore();
+    EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    ret = rtSnapShotProcessRestoreWithArgs(&restoreArgs);
     EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     rtProcessState state;
     ret = rtSnapShotProcessGetState(&state);
@@ -941,7 +947,7 @@ TEST_F(TinyStubTest, snapshot_process_helper_stub)
     rtError_t ret = SnapShotPreProcessBackup(ctxMan);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
 
-    ret = SnapShotDeviceRestore();
+    ret = SnapShotDeviceRestore(0);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
 
     ret = SnapShotResourceRestore(ctxMan);
@@ -950,10 +956,12 @@ TEST_F(TinyStubTest, snapshot_process_helper_stub)
     ret = SnapShotAclGraphRestore(nullptr);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
 
-    ret = SnapShotProcessBackup();
+    rtSnapShotBackupArgs backupArgs = {};
+    ret = SnapShotProcessBackup(&backupArgs);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
 
-    ret = SnapShotProcessRestore();
+    rtSnapShotRestoreArgs restoreArgs = {};
+    ret = SnapShotProcessRestore(&restoreArgs);
     EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
 
     ret = ModelBackup(0);

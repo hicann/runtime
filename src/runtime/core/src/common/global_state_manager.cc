@@ -91,16 +91,19 @@ rtError_t GlobalStateManager::Unlocked()
 
 void GlobalStateManager::ForceUnlocked()
 {
-    std::unique_lock<std::mutex> lock(stateMtx_);
-    if (currentState_.load() == RT_PROCESS_STATE_RUNNING) {
-        RT_LOG(RT_LOG_INFO, "already in RUNNING state, no action needed");
-        return;
-    }
+    {
+        std::unique_lock<std::mutex> lock(stateMtx_);
+        if (currentState_.load() == RT_PROCESS_STATE_RUNNING) {
+            RT_LOG(RT_LOG_INFO, "already in RUNNING state, no action needed");
+            return;
+        }
 
-    RT_LOG(RT_LOG_EVENT, "forcing state transition from %s to RUNNING", StateToString(currentState_.load()));
-    currentState_.store(RT_PROCESS_STATE_RUNNING);
-    lockedBackgroundThreadCount_.store(0);
-    globalLockCv_.notify_all();
+        RT_LOG(RT_LOG_EVENT, "forcing state transition from %s to RUNNING", StateToString(currentState_.load()));
+        currentState_.store(RT_PROCESS_STATE_RUNNING);
+        lockedBackgroundThreadCount_.store(0);
+        globalLockCv_.notify_all();
+    }
+    ClearSnapShotVersionInfo();
     return;
 }
 
@@ -209,5 +212,23 @@ rtError_t GlobalStateManager::WaitForAllBackgroundThreadUnlocked() const
 void GlobalStateManager::SetCurrentState(const rtProcessState state) { currentState_.store(state); }
 
 rtProcessState GlobalStateManager::GetCurrentState() const { return currentState_.load(); }
+
+void GlobalStateManager::SetSnapShotVersionInfo(const GlobalStateManager::SnapShotVersionInfo& versionInfo)
+{
+    std::unique_lock<std::mutex> lock(snapShotVersionInfoMtx_);
+    snapShotVersionInfo_ = versionInfo;
+}
+
+GlobalStateManager::SnapShotVersionInfo GlobalStateManager::GetSnapShotVersionInfo() const
+{
+    std::unique_lock<std::mutex> lock(snapShotVersionInfoMtx_);
+    return snapShotVersionInfo_;
+}
+
+void GlobalStateManager::ClearSnapShotVersionInfo()
+{
+    std::unique_lock<std::mutex> lock(snapShotVersionInfoMtx_);
+    snapShotVersionInfo_ = GlobalStateManager::SnapShotVersionInfo{};
+}
 } // namespace runtime
 } // namespace cce

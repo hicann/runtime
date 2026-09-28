@@ -47,6 +47,12 @@ protected:
         rtError_t error = rtSetDevice(0);
         ASSERT_EQ(error, RT_ERROR_NONE);
 
+        GlobalStateManager::SnapShotVersionInfo versionInfo;
+        versionInfo.runtimeApiVersion = __HAL_API_VERSION;
+        versionInfo.driverApiVersion = __HAL_API_VERSION;
+        versionInfo.isValid = true;
+        GlobalStateManager::GetInstance().SetSnapShotVersionInfo(versionInfo);
+
         device_ = Runtime::Instance()->GetDevice(0, 0);
         ASSERT_NE(device_, nullptr);
 
@@ -62,6 +68,7 @@ protected:
         DELETE_O(deviceSnapshot_);
         DELETE_O(eventPool_);
         rtDeviceReset(0);
+        GlobalStateManager::GetInstance().ClearSnapShotVersionInfo();
         GlobalMockObject::verify();
     }
 
@@ -103,13 +110,15 @@ TEST_F(SnapshotTest, UnlockFailed)
 
 TEST_F(SnapshotTest, BackUpFailed)
 {
-    const rtError_t error = rtSnapShotProcessBackup();
+    rtSnapShotBackupArgs args = {};
+    const rtError_t error = rtSnapShotProcessBackupWithArgs(&args);
     EXPECT_EQ(error, ACL_ERROR_SNAPSHOT_BACKUP_FAILED);
 }
 
 TEST_F(SnapshotTest, RestoreFailed)
 {
-    const rtError_t error = rtSnapShotProcessRestore();
+    rtSnapShotRestoreArgs restoreArgs = {};
+    const rtError_t error = rtSnapShotProcessRestoreWithArgs(&restoreArgs);
     EXPECT_EQ(error, ACL_ERROR_SNAPSHOT_RESTORE_FAILED);
 }
 
@@ -159,6 +168,8 @@ static uint32_t rtSnapShotCallBackUtFailed(int32_t devId, void* args)
 
 TEST_F(SnapshotTest, Chip_Support)
 {
+    rtSnapShotRestoreArgs restoreArgs = {};
+    rtSnapShotBackupArgs args = {};
     Runtime* rtInstance = (Runtime*)Runtime::Instance();
     rtChipType_t oldChipType = rtInstance->GetChipType();
     rtInstance->SetChipType(CHIP_CLOUD);
@@ -171,9 +182,9 @@ TEST_F(SnapshotTest, Chip_Support)
     EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     error = rtSnapShotProcessUnlock();
     EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
-    error = rtSnapShotProcessBackup();
+    error = rtSnapShotProcessBackupWithArgs(&args);
     EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
-    error = rtSnapShotProcessRestore();
+    error = rtSnapShotProcessRestoreWithArgs(&restoreArgs);
     EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     error = rtSnapShotCallbackRegister(RT_SNAPSHOT_LOCK_PRE, rtSnapShotCallBackUt, nullptr);
     EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
@@ -224,7 +235,9 @@ TEST_F(SnapshotTest, SnapShotCallbackFailed)
 
 TEST_F(SnapshotTest, SnapShotCallbackRegisterLock)
 {
+    rtSnapShotRestoreArgs restoreArgs = {};
     int32_t devId = 0;
+    rtSnapShotBackupArgs args = {};
     rtError_t error = rtSetDevice(devId);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 
@@ -237,10 +250,10 @@ TEST_F(SnapshotTest, SnapShotCallbackRegisterLock)
     MOCKER(SnapShotProcessBackup).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(SnapShotProcessRestore).stubs().will(returnValue(RT_ERROR_NONE));
 
-    error = rtSnapShotProcessBackup();
+    error = rtSnapShotProcessBackupWithArgs(&args);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 
-    error = rtSnapShotProcessRestore();
+    error = rtSnapShotProcessRestoreWithArgs(&restoreArgs);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 
     error = rtSnapShotProcessUnlock();
@@ -456,10 +469,10 @@ TEST_F(SnapshotTest, SnapShotProcessRestore4)
         .will(returnValue(RT_ERROR_NONE))
         .then(returnValue(RT_ERROR_DRV_NOT_SUPPORT));
     MOCKER_CPP(&SnapShotResourceRestore).stubs().will(returnValue(RT_ERROR_DRV_NOT_SUPPORT));
-    rtError_t error = SnapShotProcessRestore();
+    rtError_t error = SnapShotProcessRestore(nullptr);
     EXPECT_NE(error, RT_ERROR_NONE);
 
-    error = SnapShotProcessRestore();
+    error = SnapShotProcessRestore(nullptr);
     EXPECT_EQ(error, RT_ERROR_DRV_NOT_SUPPORT);
 }
 
@@ -468,6 +481,7 @@ TEST_F(SnapshotTest, SnapShotProcessRestore_Success)
     RawDevice* rawDevice = dynamic_cast<RawDevice*>(device_);
     ASSERT_NE(rawDevice, nullptr);
 
+    MOCKER_CPP(&NpuDriver::CheckIsSupportFeature).expects(never());
     MOCKER_CPP(&SnapShotDeviceRestore).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP(&SnapShotResourceRestore).stubs().will(returnValue(RT_ERROR_NONE));
 
@@ -483,8 +497,122 @@ TEST_F(SnapshotTest, SnapShotProcessRestore_Success)
 
     MOCKER_CPP(&Runtime::RestoreModule).stubs().will(returnValue(RT_ERROR_NONE));
 
-    rtError_t error = SnapShotProcessRestore();
+    rtError_t error = SnapShotProcessRestore(nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(SnapshotTest, SnapShotProcessBackup_CompatiblePassesBackupFlags)
+{
+    constexpr uint32_t backupFlags = 1U;
+    rtSnapShotBackupArgs args = {};
+    args.backupFlags = backupFlags;
+
+    MOCKER_CPP(&SnapShotPreProcessBackup).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&NpuDriver::QueryDevPid).stubs().will(returnValue(RT_ERROR_DRV_NOT_SUPPORT));
+    MOCKER_CPP(&NpuDriver::CheckIsSupportFeature).expects(once()).will(returnValue(true));
+    MOCKER_CPP(&ModelBackup)
+        .expects(once())
+        .with(eq(static_cast<int32_t>(device_->Id_())), eq(true))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&Runtime::SaveModule).expects(never());
+    MOCKER_CPP(&NpuDriver::ProcessResBackup).expects(once()).with(eq(backupFlags)).will(returnValue(RT_ERROR_NONE));
+
+    rtError_t error = SnapShotProcessBackup(&args);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(SnapshotTest, SnapShotProcessBackup_NullArgsUsesLegacyBackupAndZeroFlags)
+{
+    MOCKER_CPP(&NpuDriver::CheckIsSupportFeature).expects(never());
+    MOCKER_CPP(&SnapShotPreProcessBackup).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&NpuDriver::QueryDevPid).stubs().will(returnValue(RT_ERROR_DRV_NOT_SUPPORT));
+    MOCKER_CPP(&ModelBackup)
+        .expects(once())
+        .with(eq(static_cast<int32_t>(device_->Id_())), eq(false))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&Runtime::SaveModule).expects(once()).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&NpuDriver::ProcessResBackup).expects(once()).with(eq(0U)).will(returnValue(RT_ERROR_NONE));
+
+    rtError_t error = SnapShotProcessBackup(nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(SnapshotTest, SnapShotProcessBackup_IncompatibleWithArgsReturnsNotSupport)
+{
+    rtSnapShotBackupArgs args = {};
+    args.backupFlags = 1U;
+
+    MOCKER_CPP(&NpuDriver::CheckIsSupportFeature).expects(once()).will(returnValue(false));
+    MOCKER_CPP(&SnapShotPreProcessBackup).expects(never());
+    MOCKER_CPP(&ModelBackup).expects(never());
+    MOCKER_CPP(&Runtime::SaveModule).expects(never());
+    MOCKER_CPP(&NpuDriver::ProcessResBackup).expects(never());
+
+    rtError_t error = SnapShotProcessBackup(&args);
+    EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
+}
+
+TEST_F(SnapshotTest, SnapShotProcessRestore_CompatiblePassesRestoreFlags)
+{
+    constexpr uint32_t restoreFlags = 1U;
+    rtSnapShotRestoreArgs restoreArgs = {};
+    restoreArgs.restoreFlags = restoreFlags;
+    RawDevice* rawDevice = dynamic_cast<RawDevice*>(device_);
+    ASSERT_NE(rawDevice, nullptr);
+
+    MOCKER_CPP(&NpuDriver::CheckIsSupportFeature).expects(once()).will(returnValue(true));
+    MOCKER_CPP(&SnapShotDeviceRestore).expects(once()).with(eq(restoreFlags)).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&SnapShotResourceRestore).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&Runtime::RestoreModule).expects(never());
+    IDeviceSnapshotOps* deviceSnapshotOps = static_cast<IDeviceSnapshotOps*>(deviceSnapshot_);
+    MOCKER_CPP_VIRTUAL(rawDevice, &RawDevice::GetDeviceSnapShot).stubs().will(returnValue(deviceSnapshotOps));
+    MOCKER_CPP_VIRTUAL(deviceSnapshot_, &DeviceSnapshot::OpMemoryRestore).expects(never());
+    MOCKER_CPP_VIRTUAL(deviceSnapshot_, &DeviceSnapshot::ArgsPoolRestore).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(deviceSnapshot_, &DeviceSnapshot::UbArgsPoolRestore).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&ModelRestore).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&SnapShotAclGraphRestore).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(rawDevice->ArgLoader_(), &ArgLoader::RestoreAiCpuKernelInfo).stubs();
+
+    rtError_t error = SnapShotProcessRestore(&restoreArgs);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(SnapshotTest, SnapShotProcessRestore_NullArgsUsesLegacyRestoreAndZeroFlags)
+{
+    RawDevice* rawDevice = dynamic_cast<RawDevice*>(device_);
+    ASSERT_NE(rawDevice, nullptr);
+
+    MOCKER_CPP(&NpuDriver::CheckIsSupportFeature).expects(never());
+    MOCKER_CPP(&SnapShotDeviceRestore).expects(once()).with(eq(0U)).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&SnapShotResourceRestore).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&Runtime::RestoreModule).expects(once()).will(returnValue(RT_ERROR_NONE));
+    IDeviceSnapshotOps* deviceSnapshotOps = static_cast<IDeviceSnapshotOps*>(deviceSnapshot_);
+    MOCKER_CPP_VIRTUAL(rawDevice, &RawDevice::GetDeviceSnapShot).stubs().will(returnValue(deviceSnapshotOps));
+    MOCKER_CPP_VIRTUAL(deviceSnapshot_, &DeviceSnapshot::OpMemoryRestore)
+        .expects(once())
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(deviceSnapshot_, &DeviceSnapshot::ArgsPoolRestore).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(deviceSnapshot_, &DeviceSnapshot::UbArgsPoolRestore).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&ModelRestore).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&SnapShotAclGraphRestore).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(rawDevice->ArgLoader_(), &ArgLoader::RestoreAiCpuKernelInfo).stubs();
+
+    rtError_t error = SnapShotProcessRestore(nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(SnapshotTest, SnapShotProcessRestore_IncompatibleWithArgsReturnsNotSupport)
+{
+    rtSnapShotRestoreArgs restoreArgs = {};
+    restoreArgs.restoreFlags = 1U;
+
+    MOCKER_CPP(&NpuDriver::CheckIsSupportFeature).expects(once()).will(returnValue(false));
+    MOCKER_CPP(&SnapShotDeviceRestore).expects(never());
+    MOCKER_CPP(&SnapShotResourceRestore).expects(never());
+    MOCKER_CPP(&Runtime::RestoreModule).expects(never());
+
+    rtError_t error = SnapShotProcessRestore(&restoreArgs);
+    EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
 }
 
 // ==================== ModelBackup 分支覆盖 ====================
@@ -620,19 +748,18 @@ static void SetupSnapShotRestoreUpstreamMocks(RawDevice* rawDevice, DeviceSnapsh
 }
 
 static rtError_t DevMemAllocStub(
-    Driver* drv, void** dptr, uint64_t size, rtMemType_t type, uint32_t deviceId, uint16_t moduleId, bool isLogError,
-    bool readOnlyFlag, bool starsTillingFlag, bool isNewApi, bool cpOnlyFlag)
+    Driver* drv, void** dptr, uint64_t size, rtMemType_t type, uint32_t deviceId, DevMemBackupType backupType,
+    uint16_t moduleId, bool isLogError, DevMemAllocConfig config, bool isNewApi)
 {
     UNUSED(drv);
     UNUSED(size);
     UNUSED(type);
     UNUSED(deviceId);
+    UNUSED(backupType);
     UNUSED(moduleId);
     UNUSED(isLogError);
-    UNUSED(readOnlyFlag);
-    UNUSED(starsTillingFlag);
+    UNUSED(config);
     UNUSED(isNewApi);
-    UNUSED(cpOnlyFlag);
     *dptr = reinterpret_cast<void*>(0x1000);
     return RT_ERROR_NONE;
 }
@@ -660,7 +787,7 @@ TEST_F(SnapshotTest, SnapShotProcessRestore_NoCustomProcess_SkipBatchLoad)
     MOCKER(LaunchAicpuKernelForCpuSo).expects(never());
     MOCKER(SetupAicpuPrintfDfx).expects(never());
 
-    rtError_t error = SnapShotProcessRestore();
+    rtError_t error = SnapShotProcessRestore(nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
@@ -674,7 +801,7 @@ TEST_F(SnapshotTest, SnapShotProcessRestore_HasCustomProcessButNoPrograms)
     SetupSnapShotRestoreUpstreamMocks(rawDevice, deviceSnapshot_);
     MOCKER(LaunchAicpuKernelForCpuSo).expects(never());
 
-    rtError_t error = SnapShotProcessRestore();
+    rtError_t error = SnapShotProcessRestore(nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
@@ -690,14 +817,14 @@ TEST_F(SnapshotTest, SnapShotProcessRestore_BatchLoadCustomAicpuSo_Success)
     rawDevice->programSet_.insert(prog);
 
     SetupSnapShotRestoreUpstreamMocks(rawDevice, deviceSnapshot_);
-    MOCKER_CPP_VIRTUAL(rawDevice->Driver_(), &Driver::DevMemAlloc).stubs().will(invoke(DevMemAllocStub));
+    MOCKER_CPP_VIRTUAL(rawDevice->Driver_(), &Driver::DevMemAllocWithBackupFlag).stubs().will(invoke(DevMemAllocStub));
     MOCKER_CPP_VIRTUAL(rawDevice->Driver_(), &Driver::MemCopySync).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(rawDevice->Driver_(), &Driver::DevMemFree).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(LaunchAicpuKernelForCpuSo).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(rawDevice->primaryStream_, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
     rawDevice->aicpuDfxSupport_ = false;
 
-    rtError_t error = SnapShotProcessRestore();
+    rtError_t error = SnapShotProcessRestore(nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     rawDevice->programSet_.clear();
@@ -716,10 +843,12 @@ TEST_F(SnapshotTest, SnapShotProcessRestore_BatchLoad_DevMemAllocFailed)
     rawDevice->programSet_.insert(prog);
 
     SetupSnapShotRestoreUpstreamMocks(rawDevice, deviceSnapshot_);
-    MOCKER_CPP_VIRTUAL(rawDevice->Driver_(), &Driver::DevMemAlloc).stubs().will(returnValue(RT_ERROR_DRV_ERR));
+    MOCKER_CPP_VIRTUAL(rawDevice->Driver_(), &Driver::DevMemAllocWithBackupFlag)
+        .stubs()
+        .will(returnValue(RT_ERROR_DRV_ERR));
     MOCKER_CPP_VIRTUAL(rawDevice->Driver_(), &Driver::DevMemFree).stubs().will(returnValue(RT_ERROR_NONE));
 
-    rtError_t error = SnapShotProcessRestore();
+    rtError_t error = SnapShotProcessRestore(nullptr);
     EXPECT_NE(error, RT_ERROR_NONE);
 
     rawDevice->programSet_.clear();
@@ -738,12 +867,12 @@ TEST_F(SnapshotTest, SnapShotProcessRestore_BatchLoad_LaunchFailed)
     rawDevice->programSet_.insert(prog);
 
     SetupSnapShotRestoreUpstreamMocks(rawDevice, deviceSnapshot_);
-    MOCKER_CPP_VIRTUAL(rawDevice->Driver_(), &Driver::DevMemAlloc).stubs().will(invoke(DevMemAllocStub));
+    MOCKER_CPP_VIRTUAL(rawDevice->Driver_(), &Driver::DevMemAllocWithBackupFlag).stubs().will(invoke(DevMemAllocStub));
     MOCKER_CPP_VIRTUAL(rawDevice->Driver_(), &Driver::MemCopySync).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(rawDevice->Driver_(), &Driver::DevMemFree).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(LaunchAicpuKernelForCpuSo).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
 
-    rtError_t error = SnapShotProcessRestore();
+    rtError_t error = SnapShotProcessRestore(nullptr);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 
     rawDevice->programSet_.clear();
@@ -762,7 +891,7 @@ TEST_F(SnapshotTest, SnapShotProcessRestore_BatchLoad_StreamSyncFailed)
     rawDevice->programSet_.insert(prog);
 
     SetupSnapShotRestoreUpstreamMocks(rawDevice, deviceSnapshot_);
-    MOCKER_CPP_VIRTUAL(rawDevice->Driver_(), &Driver::DevMemAlloc).stubs().will(invoke(DevMemAllocStub));
+    MOCKER_CPP_VIRTUAL(rawDevice->Driver_(), &Driver::DevMemAllocWithBackupFlag).stubs().will(invoke(DevMemAllocStub));
     MOCKER_CPP_VIRTUAL(rawDevice->Driver_(), &Driver::MemCopySync).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(rawDevice->Driver_(), &Driver::DevMemFree).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(LaunchAicpuKernelForCpuSo).stubs().will(returnValue(RT_ERROR_NONE));
@@ -770,7 +899,7 @@ TEST_F(SnapshotTest, SnapShotProcessRestore_BatchLoad_StreamSyncFailed)
         .stubs()
         .will(returnValue(RT_ERROR_STREAM_SYNC_TIMEOUT));
 
-    rtError_t error = SnapShotProcessRestore();
+    rtError_t error = SnapShotProcessRestore(nullptr);
     EXPECT_EQ(error, RT_ERROR_STREAM_SYNC_TIMEOUT);
 
     rawDevice->programSet_.clear();
@@ -792,7 +921,7 @@ TEST_F(SnapshotTest, SnapShotProcessRestore_SkipNonCpuProgram)
     SetupSnapShotRestoreUpstreamMocks(rawDevice, deviceSnapshot_);
     MOCKER(LaunchAicpuKernelForCpuSo).expects(never());
 
-    rtError_t error = SnapShotProcessRestore();
+    rtError_t error = SnapShotProcessRestore(nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     rawDevice->programSet_.clear();
@@ -809,7 +938,7 @@ TEST_F(SnapshotTest, SnapShotProcessRestore_SetAicpuDfx_NotSupported)
     SetupSnapShotRestoreUpstreamMocks(rawDevice, deviceSnapshot_);
     MOCKER(SetupAicpuPrintfDfx).expects(never());
 
-    rtError_t error = SnapShotProcessRestore();
+    rtError_t error = SnapShotProcessRestore(nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
@@ -826,7 +955,7 @@ TEST_F(SnapshotTest, SnapShotProcessRestore_SetAicpuDfx_ReInitFailed)
     SetupSnapShotRestoreUpstreamMocks(rawDevice, deviceSnapshot_);
     MOCKER(InitAicpuPrintf).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
 
-    rtError_t error = SnapShotProcessRestore();
+    rtError_t error = SnapShotProcessRestore(nullptr);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 
     rawDevice->aicpuPrintfAddr_ = nullptr;
@@ -846,7 +975,7 @@ TEST_F(SnapshotTest, SnapShotProcessRestore_SetAicpuDfx_SetupFailed)
     MOCKER(InitAicpuPrintf).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(SetupAicpuPrintfDfx).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
 
-    rtError_t error = SnapShotProcessRestore();
+    rtError_t error = SnapShotProcessRestore(nullptr);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 
     rawDevice->aicpuPrintfAddr_ = nullptr;
@@ -866,7 +995,7 @@ TEST_F(SnapshotTest, SnapShotProcessRestore_SetAicpuDfx_Success)
     MOCKER(InitAicpuPrintf).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(SetupAicpuPrintfDfx).stubs().will(returnValue(RT_ERROR_NONE));
 
-    rtError_t error = SnapShotProcessRestore();
+    rtError_t error = SnapShotProcessRestore(nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     rawDevice->aicpuPrintfAddr_ = nullptr;

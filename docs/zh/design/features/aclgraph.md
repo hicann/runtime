@@ -322,7 +322,7 @@ sequenceDiagram
     Api->>Context: CurrentContext
     Api->>CondHandle: new CondHandle(model, defVal, flag)
     Api->>CondHandle: Setup(ctx)
-    CondHandle->>CondHandle: DevMemAlloc(devAddr_)
+    CondHandle->>CondHandle: DevMemAllocWithBackupFlag(devAddr_)
     CondHandle->>CaptureModel: ModelPushBackCondHandle(this)
     Api-->>App: 返回 condHandle
 
@@ -502,12 +502,14 @@ flowchart TD
     E -->|是| G[检查设备是否支持 CondOp]
     G --> H[new CondHandle]
     H --> I[CondHandle::Setup]
-    I --> J[DevMemAlloc 分配条件值内存]
+    I --> J[DevMemAllocWithBackupFlag 分配条件值内存]
     J --> K[MemSetSync 初始化为0]
     K --> L[InitEmbeddedInnerHandle]
     L --> M[ModelPushBackCondHandle]
     M --> N[返回 condHandle]
 ```
+
+条件值设备内存属于 Runtime 内部辅助内存，`CondHandle::Setup` 通过 `DevMemAllocWithBackupFlag(..., SNAPSHOT_OPTIONAL_BACKUP)` 申请。
 
 **关键代码**：
 

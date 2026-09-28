@@ -18,7 +18,11 @@ rtError_t SnapShotPreProcessBackup(ContextDataManage& ctxMan)
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t SnapShotDeviceRestore() { return RT_ERROR_FEATURE_NOT_SUPPORT; }
+rtError_t SnapShotDeviceRestore(const uint32_t restoreFlags)
+{
+    UNUSED(restoreFlags);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
 
 rtError_t SnapShotResourceRestore(ContextDataManage& ctxMan)
 {
@@ -32,13 +36,22 @@ rtError_t SnapShotAclGraphRestore(Device* const dev)
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t SnapShotProcessBackup() { return RT_ERROR_FEATURE_NOT_SUPPORT; }
+rtError_t SnapShotProcessBackup(const rtSnapShotBackupArgs* args)
+{
+    UNUSED(args);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
 
-rtError_t SnapShotProcessRestore() { return RT_ERROR_FEATURE_NOT_SUPPORT; }
+rtError_t SnapShotProcessRestore(const rtSnapShotRestoreArgs* const args)
+{
+    UNUSED(args);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
 
-rtError_t ModelBackup(const int32_t devId)
+rtError_t ModelBackup(const int32_t devId, const bool allCompatible)
 {
     UNUSED(devId);
+    UNUSED(allCompatible);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 

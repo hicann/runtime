@@ -19,8 +19,8 @@ class ApiImplSnapshot : public ApiSnapshot {
 public:
     rtError_t SnapShotProcessLock() override;
     rtError_t SnapShotProcessUnlock() override;
-    rtError_t SnapShotProcessBackup() override;
-    rtError_t SnapShotProcessRestore() override;
+    rtError_t SnapShotProcessBackup(const rtSnapShotBackupArgs* args) override;
+    rtError_t SnapShotProcessRestore(const rtSnapShotRestoreArgs* args) override;
     rtError_t SnapShotCallbackRegister(rtSnapShotStage stage, rtSnapShotCallBack callback, void* args) override;
     rtError_t SnapShotCallbackUnregister(rtSnapShotStage stage, rtSnapShotCallBack callback) override;
 };

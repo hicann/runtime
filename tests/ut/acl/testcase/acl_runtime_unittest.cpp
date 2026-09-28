@@ -4384,29 +4384,55 @@ TEST_F(UTEST_ACL_Runtime, SnapShotProcessUnlock_failed)
 
 TEST_F(UTEST_ACL_Runtime, SnapShotProcessBackup_success)
 {
-    aclError ret = aclrtSnapShotProcessBackup(static_cast<int>(mmGetPid()), nullptr);
+    aclrtSnapShotBackupArgs args = {};
+    aclError ret = aclrtSnapShotProcessBackup(static_cast<int>(mmGetPid()), &args);
     EXPECT_EQ(ret, ACL_SUCCESS);
 }
 
 TEST_F(UTEST_ACL_Runtime, SnapShotProcessBackup_failed)
 {
-    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtSnapShotProcessBackup())
+    aclrtSnapShotBackupArgs args = {};
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtSnapShotProcessBackupWithArgs(_))
         .WillOnce(Return(ACL_ERROR_INVALID_PARAM));
-    aclError ret = aclrtSnapShotProcessBackup(static_cast<int>(mmGetPid()), nullptr);
+    aclError ret = aclrtSnapShotProcessBackup(static_cast<int>(mmGetPid()), &args);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(UTEST_ACL_Runtime, SnapShotProcessBackup_invalid_flags)
+{
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtSnapShotProcessBackupWithArgs(_)).Times(0);
+
+    aclrtSnapShotBackupArgs args = {};
+    args.backupFlags = 2U;
+    aclError ret = aclrtSnapShotProcessBackup(static_cast<int>(mmGetPid()), &args);
     EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
 }
 
 TEST_F(UTEST_ACL_Runtime, SnapShotProcessRestore_success)
 {
-    aclError ret = aclrtSnapShotProcessRestore(static_cast<int>(mmGetPid()), nullptr);
+    aclrtSnapShotRestoreArgs args = {};
+    aclError ret = aclrtSnapShotProcessRestore(static_cast<int>(mmGetPid()), &args);
     EXPECT_EQ(ret, ACL_SUCCESS);
 }
 
 TEST_F(UTEST_ACL_Runtime, SnapShotProcessRestore_failed)
 {
-    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtSnapShotProcessRestore())
+    aclrtSnapShotRestoreArgs args = {};
+    EXPECT_CALL(
+        MockFunctionTest::aclStubInstance(),
+        rtSnapShotProcessRestoreWithArgs(reinterpret_cast<const rtSnapShotRestoreArgs*>(&args)))
         .WillOnce(Return(ACL_ERROR_INVALID_PARAM));
-    aclError ret = aclrtSnapShotProcessRestore(static_cast<int>(mmGetPid()), nullptr);
+    aclError ret = aclrtSnapShotProcessRestore(static_cast<int>(mmGetPid()), &args);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(UTEST_ACL_Runtime, SnapShotProcessRestore_invalid_flags)
+{
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtSnapShotProcessRestoreWithArgs(_)).Times(0);
+
+    aclrtSnapShotRestoreArgs args = {};
+    args.restoreFlags = 2U;
+    aclError ret = aclrtSnapShotProcessRestore(static_cast<int>(mmGetPid()), &args);
     EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
 }
 
@@ -4435,18 +4461,30 @@ TEST_F(UTEST_ACL_Runtime, SnapShotProcessLock_invalid_reserve)
     EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
 }
 
-TEST_F(UTEST_ACL_Runtime, SnapShotProcessBackup_invalid_args)
+TEST_F(UTEST_ACL_Runtime, SnapShotProcessBackup_null_args_success)
 {
-    aclrtSnapShotBackupArgs args = {};
-    aclError ret = aclrtSnapShotProcessBackup(static_cast<int>(mmGetPid()), &args);
-    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtSnapShotProcessBackup()).WillOnce(Return(RT_ERROR_NONE));
+    aclError ret = aclrtSnapShotProcessBackup(static_cast<int>(mmGetPid()), nullptr);
+    EXPECT_EQ(ret, ACL_SUCCESS);
 }
 
-TEST_F(UTEST_ACL_Runtime, SnapShotProcessRestore_invalid_args)
+TEST_F(UTEST_ACL_Runtime, SnapShotProcessRestore_null_args_success)
+{
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtSnapShotProcessRestore()).WillOnce(Return(RT_ERROR_NONE));
+    aclError ret = aclrtSnapShotProcessRestore(static_cast<int>(mmGetPid()), nullptr);
+    EXPECT_EQ(ret, ACL_SUCCESS);
+}
+
+TEST_F(UTEST_ACL_Runtime, SnapShotProcessRestore_with_args_success)
 {
     aclrtSnapShotRestoreArgs args = {};
+    args.restoreFlags = 1U;
+    EXPECT_CALL(
+        MockFunctionTest::aclStubInstance(),
+        rtSnapShotProcessRestoreWithArgs(reinterpret_cast<const rtSnapShotRestoreArgs*>(&args)))
+        .WillOnce(Return(RT_ERROR_NONE));
     aclError ret = aclrtSnapShotProcessRestore(static_cast<int>(mmGetPid()), &args);
-    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+    EXPECT_EQ(ret, ACL_SUCCESS);
 }
 
 TEST_F(UTEST_ACL_Runtime, get_mem_uce_info__failedwith_invalid_array)

@@ -100,6 +100,15 @@ uint32_t NpuDriver::GetRunMode() { return runMode_; }
 
 uint32_t NpuDriver::GetAicpuDeploy() const { return aicpuDeploy_; }
 
+rtError_t NpuDriver::DevMemAllocWithBackupFlag(
+    void** const dptr, const uint64_t size, const rtMemType_t memType, const uint32_t deviceId,
+    const DevMemBackupType type, const uint16_t moduleId, const bool isLogError, DevMemAllocConfig config,
+    const bool isNewApi)
+{
+    config.type = type;
+    return DevMemAlloc(dptr, size, memType, deviceId, moduleId, isLogError, config, isNewApi);
+}
+
 Driver* NpuDriver::Instance_() { return new (std::nothrow) NpuDriver(); }
 
 uint32_t NpuDriver::RtGetRunMode()
@@ -314,12 +323,15 @@ rtError_t NpuDriver::MemDestroyAddr(struct DMA_ADDR* const ptr)
     return RT_ERROR_NONE;
 }
 
-rtError_t NpuDriver::ProcessResBackup()
+rtError_t NpuDriver::ProcessResBackup(const uint32_t backupFlags)
 {
     COND_RETURN_WARN(
         &halProcessResBackup == nullptr, RT_ERROR_DRV_NOT_SUPPORT, "[drv api] halProcessResBackup does not exist.");
 
     halProcResBackupInfo info = {0};
+    if (backupFlags == 1U) {
+        info.reserve[0] = HAL_PROC_RES_BACKUP_INCLUDE_OPTIONAL;
+    }
     const drvError_t drvRet = halProcessResBackup(&info);
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(
@@ -330,12 +342,15 @@ rtError_t NpuDriver::ProcessResBackup()
     return RT_ERROR_NONE;
 }
 
-rtError_t NpuDriver::ProcessResRestore()
+rtError_t NpuDriver::ProcessResRestore(const uint32_t restoreFlags)
 {
     COND_RETURN_WARN(
         &halProcessResRestore == nullptr, RT_ERROR_DRV_NOT_SUPPORT, "[drv api] halProcessResRestore does not exist.");
 
     halProcResRestoreInfo info = {0};
+    if (restoreFlags == 1U) {
+        info.reserve[0] = HAL_PROC_RES_RESTORE_INCLUDE_OPTIONAL;
+    }
     const drvError_t drvRet = halProcessResRestore(&info);
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(
@@ -1140,7 +1155,9 @@ bool NpuDriver::CheckIsSupportFeature(uint32_t devId, int32_t featureType)
         "FEATURE_APM_RES_MAP_REMOTE",
         "FEATURE_SVM_MEM_REGISTER_HOST_PINNED",
         "FEATURE_DMS_GET_BOARD_LOCATION",
+        "FEATURE_SVM_PROCESS_DEVICE_MEM_SNAPSHOT",
     };
+
     static_assert(
         (sizeof(featureNameTable) / sizeof(featureNameTable[0])) == static_cast<size_t>(FEATURE_MAX),
         "featureNameTable must match drvFeature_t");

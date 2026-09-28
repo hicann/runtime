@@ -151,7 +151,7 @@ void* H2DCopyMgr::AllocDevMem(const uint32_t size)
 {
     rtError_t error = RT_ERROR_NONE;
     void* addr = nullptr;
-    error = drv_->DevMemAlloc(&addr, static_cast<uint64_t>(size), RT_MEMORY_HBM, device_->Id_());
+    error = drv_->DevMemAllocWithBackupFlag(&addr, static_cast<uint64_t>(size), RT_MEMORY_HBM, device_->Id_());
     if (error != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR, "DevMemAlloc failed, retCode=%#x", error);
         return nullptr;
@@ -341,7 +341,7 @@ void* H2DCopyMgr::MallocBuffer(const size_t size, void* const para)
     void* addr = nullptr;
     CpyDmaInfo* cpyInfoDmaInfo = static_cast<CpyDmaInfo*>(para);
     Device* const dev = cpyInfoDmaInfo->device;
-    (void)dev->Driver_()->DevMemAlloc(&addr, static_cast<uint64_t>(size), RT_MEMORY_HBM, dev->Id_());
+    (void)dev->Driver_()->DevMemAllocWithBackupFlag(&addr, static_cast<uint64_t>(size), RT_MEMORY_HBM, dev->Id_());
 
     if ((cpyInfoDmaInfo->cpyCount != 0U) && (addr != nullptr)) {
         void* hostAddr = nullptr;
@@ -414,8 +414,9 @@ void* H2DCopyMgr::MallocPcieBarBuffer(size_t size, void* para)
     const bool isLogError = (IS_SUPPORT_CHIP_FEATURE(
         Runtime::Instance()->GetChipType(), RtOptionalFeatureType::RT_FEATURE_DFX_ARGS_DOT_ALLOC_ERROR_LOG));
     Device* const dev = static_cast<Device*>(para);
-    rtError_t ret = dev->Driver_()->DevMemAlloc(
-        &addr, static_cast<uint64_t>(size), RT_MEMORY_P2P_HBM, dev->Id_(), MODULEID_RUNTIME, isLogError);
+    rtError_t ret = dev->Driver_()->DevMemAllocWithBackupFlag(
+        &addr, static_cast<uint64_t>(size), RT_MEMORY_P2P_HBM, dev->Id_(), SNAPSHOT_REQUIRED_BACKUP, MODULEID_RUNTIME,
+        isLogError);
     if (ret != RT_ERROR_NONE) {
         RtLogErrorLevelControl(
             isLogError, "alloc dev mem failed, retCode=%#x, size=%u(bytes), dev_id=%u.", ret, size, dev->Id_());
@@ -490,7 +491,8 @@ void* H2DCopyMgr::MallocUbBuffer(const size_t size, void* const para)
     CpyUbInfo* cpyInfoUbInfo = static_cast<CpyUbInfo*>(para);
     Device* const dev = cpyInfoUbInfo->device;
 
-    rtError_t ret = dev->Driver_()->DevMemAlloc(&devAddr, static_cast<uint64_t>(size), RT_MEMORY_HBM, dev->Id_());
+    rtError_t ret =
+        dev->Driver_()->DevMemAllocWithBackupFlag(&devAddr, static_cast<uint64_t>(size), RT_MEMORY_HBM, dev->Id_());
     if (ret != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR, "alloc dev mem failed, retCode=%#x, size=%u(bytes), device_id=%u.", ret, size, dev->Id_());
         return nullptr;

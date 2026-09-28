@@ -930,7 +930,9 @@ TEST_F(NpuDriverTest, memory_dev_alloc_online_11)
     NpuDriver* rawDrv = new NpuDriver();
 
     MOCKER(halMemAlloc).stubs().will(returnValue(DRV_ERROR_IOCRL_FAIL));
-    error = rawDrv->DevMemAllocHugePageManaged(&ptr, size, RT_MEMORY_HBM, 0, 255, false, true);
+    DevMemAllocConfig config = {};
+    config.readOnlyFlag = true;
+    error = rawDrv->DevMemAllocHugePageManaged(&ptr, size, RT_MEMORY_HBM, 0, 255, config, false);
     EXPECT_EQ(error, RT_ERROR_DRV_IOCTRL);
     delete rawDrv;
     free(ptr);
@@ -961,7 +963,9 @@ TEST_F(NpuDriverTest, DevMemAllocManaged_11)
     NpuDriver* rawDrv = new NpuDriver();
 
     MOCKER(halMemAlloc).stubs().will(returnValue(DRV_ERROR_IOCRL_FAIL));
-    error = rawDrv->DevMemAllocManaged(&ptr, size, RT_MEMORY_HBM, 0, 255, false, true);
+    DevMemAllocConfig config = {};
+    config.readOnlyFlag = true;
+    error = rawDrv->DevMemAllocManaged(&ptr, size, RT_MEMORY_HBM, 0, 255, config, false);
     EXPECT_EQ(error, RT_ERROR_DRV_IOCTRL);
     delete rawDrv;
     free(ptr);

@@ -14,6 +14,7 @@
 #include "device.hpp"
 #include "runtime.hpp"
 #include "capture_model_utils.hpp"
+#include "global_state_manager.hpp"
 #include "idevice_snapshot_ops.hpp"
 #include "npu_driver.hpp"
 #include "model.hpp"
@@ -28,6 +29,68 @@
 
 namespace cce {
 namespace runtime {
+
+static rtError_t GetCurrentSnapShotVersionInfo(uint32_t& runtimeApiVersion, uint32_t& driverApiVersion)
+{
+    COND_RETURN_WARN(
+        &halGetAPIVersion == nullptr, RT_ERROR_DRV_NOT_SUPPORT, "[drv api] halGetAPIVersion does not exist.");
+
+    int halApiVersion = 0;
+    const drvError_t drvRet = halGetAPIVersion(&halApiVersion);
+    if (drvRet != DRV_ERROR_NONE) {
+        DRV_ERROR_PROCESS(
+            drvRet, "Call driver api halGetAPIVersion failed, drvRetCode=%d.", static_cast<int32_t>(drvRet));
+        return RT_GET_DRV_ERRCODE(drvRet);
+    }
+
+    runtimeApiVersion = static_cast<uint32_t>(__HAL_API_VERSION);
+    driverApiVersion = static_cast<uint32_t>(halApiVersion);
+    return RT_ERROR_NONE;
+}
+
+static rtError_t SnapShotVersionInfoBackup()
+{
+    GlobalStateManager::GetInstance().ClearSnapShotVersionInfo();
+    uint32_t runtimeApiVersion = 0U;
+    uint32_t driverApiVersion = 0U;
+    const rtError_t ret = GetCurrentSnapShotVersionInfo(runtimeApiVersion, driverApiVersion);
+    COND_RETURN_WITH_NOLOG(ret != RT_ERROR_NONE, ret);
+
+    GlobalStateManager::SnapShotVersionInfo versionInfo;
+    versionInfo.runtimeApiVersion = runtimeApiVersion;
+    versionInfo.driverApiVersion = driverApiVersion;
+    versionInfo.isValid = true;
+    GlobalStateManager::GetInstance().SetSnapShotVersionInfo(versionInfo);
+    RT_LOG(
+        RT_LOG_INFO, "Snapshot version info backup success, runtimeApiVersion=%#x, driverApiVersion=%#x.",
+        versionInfo.runtimeApiVersion, versionInfo.driverApiVersion);
+    return RT_ERROR_NONE;
+}
+
+static rtError_t CheckSnapShotVersionInfo()
+{
+    const GlobalStateManager::SnapShotVersionInfo backupVersion =
+        GlobalStateManager::GetInstance().GetSnapShotVersionInfo();
+    COND_RETURN_ERROR(
+        !backupVersion.isValid, RT_ERROR_SNAPSHOT_RESTORE_FAILED, "Snapshot backup version info is invalid.");
+
+    GlobalStateManager::SnapShotVersionInfo currentVersion;
+    const rtError_t ret =
+        GetCurrentSnapShotVersionInfo(currentVersion.runtimeApiVersion, currentVersion.driverApiVersion);
+    ERROR_RETURN(ret, "Get current Snapshot version info failed, ret=%#x.", ret);
+
+    RT_LOG(
+        RT_LOG_INFO,
+        "backup runtimeApiVersion=%#x, backup driverApiVersion=%#x, current runtimeApiVersion=%#x, "
+        "current driverApiVersion=%#x.",
+        backupVersion.runtimeApiVersion, backupVersion.driverApiVersion, currentVersion.runtimeApiVersion,
+        currentVersion.driverApiVersion);
+    COND_RETURN_ERROR(
+        (backupVersion.runtimeApiVersion != currentVersion.runtimeApiVersion) ||
+            (backupVersion.driverApiVersion != currentVersion.driverApiVersion),
+        RT_ERROR_SNAPSHOT_RESTORE_FAILED, "Snapshot backup and restore versions do not match.");
+    return RT_ERROR_NONE;
+}
 
 rtError_t SnapShotPreProcessBackup(ContextDataManage& ctxMan)
 {
@@ -45,7 +108,7 @@ rtError_t SnapShotPreProcessBackup(ContextDataManage& ctxMan)
     return ret;
 }
 
-rtError_t SnapShotDeviceRestore()
+rtError_t SnapShotDeviceRestore(const uint32_t restoreFlags)
 {
     // 先重新打开所有device
     for (int32_t devId = 0; devId < static_cast<int32_t>(RT_MAX_DEV_NUM); ++devId) {
@@ -62,7 +125,7 @@ rtError_t SnapShotDeviceRestore()
     }
 
     // 恢复进程上所有的页表信息
-    return NpuDriver::ProcessResRestore();
+    return NpuDriver::ProcessResRestore(restoreFlags);
 }
 
 rtError_t SnapShotResourceRestore(ContextDataManage& ctxMan)
@@ -398,7 +461,27 @@ rtError_t SinkTaskMemoryBackup(const int32_t devId)
     return error;
 }
 
-rtError_t ModelBackup(const int32_t devId)
+static bool IsProcessDeviceMemSnapshotCompatible()
+{
+    for (uint32_t devId = 0; devId < static_cast<uint32_t>(RT_MAX_DEV_NUM); devId++) {
+        Device* dev = Runtime::Instance()->GetDevice(devId, 0U);
+        if (dev == nullptr) {
+            continue;
+        }
+        return NpuDriver::CheckIsSupportFeature(devId, FEATURE_SVM_PROCESS_DEVICE_MEM_SNAPSHOT);
+    }
+    return false;
+}
+
+static rtError_t CheckProcessDeviceMemSnapshotCompatible()
+{
+    COND_RETURN_ERROR(
+        !IsProcessDeviceMemSnapshotCompatible(), RT_ERROR_FEATURE_NOT_SUPPORT,
+        "Driver does not support process device memory snapshot.");
+    return RT_ERROR_NONE;
+}
+
+rtError_t ModelBackup(const int32_t devId, const bool allCompatible)
 {
     ContextDataManage& ctxMan = ContextDataManage::Instance();
     const ReadProtect rp(&ctxMan.GetSetRwLock());
@@ -436,6 +519,9 @@ rtError_t ModelBackup(const int32_t devId)
         mdlLock.Unlock();
     }
 
+    if (allCompatible) {
+        return RT_ERROR_NONE;
+    }
     const rtError_t ret = SinkTaskMemoryBackup(devId);
     ERROR_RETURN(ret, "Backup model memory failed, ret=%u, devId=%d", ret, devId);
     return RT_ERROR_NONE;
@@ -475,31 +561,49 @@ rtError_t ModelRestore(const int32_t devId)
     return RT_ERROR_NONE;
 }
 
-rtError_t SnapShotProcessBackup()
+rtError_t SnapShotProcessBackup(const rtSnapShotBackupArgs* const args)
 {
+    const bool useDeviceMemSnapshot = (args != nullptr);
+    if (useDeviceMemSnapshot) {
+        const rtError_t ret = CheckProcessDeviceMemSnapshotCompatible();
+        COND_RETURN_WITH_NOLOG(ret != RT_ERROR_NONE, ret);
+    }
+
     ContextDataManage& ctxMan = ContextDataManage::Instance();
     rtError_t ret = SnapShotPreProcessBackup(ctxMan);
     ERROR_RETURN(ret, "PreProcessBackup failed, ret=%#x.", ret);
-
+    if (useDeviceMemSnapshot) {
+        ret = SnapShotVersionInfoBackup();
+        ERROR_RETURN(ret, "Backup snapshot version info failed, ret=%#x.", ret);
+    }
     for (uint32_t devId = 0; devId < static_cast<uint32_t>(RT_MAX_DEV_NUM); devId++) {
         Device* dev = Runtime::Instance()->GetDevice(devId, 0U);
         if (dev == nullptr) {
             continue;
         }
         QueryCustomAicpuProcess(dev);
-        ret = ModelBackup(static_cast<int32_t>(devId));
+        ret = ModelBackup(static_cast<int32_t>(devId), useDeviceMemSnapshot);
         COND_RETURN_WITH_NOLOG(ret != RT_ERROR_NONE, ret);
     }
-
-    Runtime::Instance()->SaveModule();
-    return NpuDriver::ProcessResBackup();
+    if (!useDeviceMemSnapshot) {
+        Runtime::Instance()->SaveModule();
+    }
+    return NpuDriver::ProcessResBackup(useDeviceMemSnapshot ? args->backupFlags : 0U);
 }
 
-rtError_t SnapShotProcessRestore()
+rtError_t SnapShotProcessRestore(const rtSnapShotRestoreArgs* const args)
 {
+    const bool useDeviceMemSnapshot = (args != nullptr);
+    if (useDeviceMemSnapshot) {
+        rtError_t ret = CheckProcessDeviceMemSnapshotCompatible();
+        COND_RETURN_WITH_NOLOG(ret != RT_ERROR_NONE, ret);
+        ret = CheckSnapShotVersionInfo();
+        ERROR_RETURN(ret, "Check Snapshot version info failed, ret=%#x.", ret);
+    }
+
     ContextDataManage& ctxMan = ContextDataManage::Instance();
     RT_LOG(RT_LOG_INFO, "start to restore resource");
-    rtError_t ret = SnapShotDeviceRestore();
+    rtError_t ret = SnapShotDeviceRestore(useDeviceMemSnapshot ? args->restoreFlags : 0U);
     if (ret == RT_ERROR_DRV_NOT_SUPPORT) {
         return ret;
     }
@@ -508,8 +612,10 @@ rtError_t SnapShotProcessRestore()
     ret = SnapShotResourceRestore(ctxMan);
     ERROR_RETURN(ret, "Resource Restore failed, ret=%#x.", ret);
 
-    ret = Runtime::Instance()->RestoreModule();
-    ERROR_RETURN(ret, "Module Restore failed, ret=%#x.", static_cast<uint32_t>(ret));
+    if (!useDeviceMemSnapshot) {
+        ret = Runtime::Instance()->RestoreModule();
+        ERROR_RETURN(ret, "Module Restore failed, ret=%#x.", static_cast<uint32_t>(ret));
+    }
 
     for (uint32_t devId = 0; devId < static_cast<uint32_t>(RT_MAX_DEV_NUM); devId++) {
         Device* dev = Runtime::Instance()->GetDevice(devId, 0U);
@@ -520,8 +626,10 @@ rtError_t SnapShotProcessRestore()
         IDeviceSnapshotOps* deviceSnapShot = dev->GetDeviceSnapShot();
         NULL_PTR_RETURN_MSG(deviceSnapShot, RT_ERROR_MEMORY_ALLOCATION);
 
-        ret = deviceSnapShot->OpMemoryRestore();
-        ERROR_RETURN(ret, "memory restore failed, ret=%#x, devId=%u", static_cast<uint32_t>(ret), devId);
+        if (!useDeviceMemSnapshot) {
+            ret = deviceSnapShot->OpMemoryRestore();
+            ERROR_RETURN(ret, "memory restore failed, ret=%#x, devId=%u", static_cast<uint32_t>(ret), devId);
+        }
 
         ret = deviceSnapShot->ArgsPoolRestore();
         ERROR_RETURN(ret, "args pool addr restore failed, ret=%#x, devId=%u", static_cast<uint32_t>(ret), devId);
@@ -535,7 +643,9 @@ rtError_t SnapShotProcessRestore()
         ret = SnapShotAclGraphRestore(dev);
         ERROR_RETURN(ret, "ACL Graph restore failed, ret=%#x, devId=%u.", static_cast<uint32_t>(ret), devId);
 
-        dev->ArgLoader_()->RestoreAiCpuKernelInfo();
+        if (!useDeviceMemSnapshot) {
+            dev->ArgLoader_()->RestoreAiCpuKernelInfo();
+        }
         AicpuTimeoutManager::ClearAicpuTimeoutState(dev);
 #ifndef CFG_DEV_PLATFORM_PC
         ret = AicpuTimeoutManager::TryCloseAicpuMonitor(dev);

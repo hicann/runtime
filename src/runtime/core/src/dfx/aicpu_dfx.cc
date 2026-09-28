@@ -41,7 +41,8 @@ rtError_t SetupAicpuPrintfDfx(Device* device, uint32_t devId)
     const size_t totalSize = dfxInfoSize + attrsTotalSize;
 
     void* devDfxMem = nullptr;
-    ret = device->Driver_()->DevMemAlloc(&devDfxMem, totalSize, RT_MEMORY_HBM, devId, MODULEID_RUNTIME);
+    ret = device->Driver_()->DevMemAllocWithBackupFlag(
+        &devDfxMem, totalSize, RT_MEMORY_HBM, devId, SNAPSHOT_OPTIONAL_BACKUP, MODULEID_RUNTIME);
     COND_RETURN_WARN((ret != RT_ERROR_NONE), ret, "devDfxMem alloc failed! error=%#x", ret);
 
     std::vector<uint8_t> buffer(totalSize, 0);
@@ -67,7 +68,8 @@ rtError_t SetupAicpuPrintfDfx(Device* device, uint32_t devId)
     dfxArgs.dfxPtr = PtrToValue(devDfxMem);
 
     void* devDfxArgs = nullptr;
-    ret = device->Driver_()->DevMemAlloc(&devDfxArgs, sizeof(dfxArgs), RT_MEMORY_HBM, devId, MODULEID_RUNTIME);
+    ret = device->Driver_()->DevMemAllocWithBackupFlag(
+        &devDfxArgs, sizeof(dfxArgs), RT_MEMORY_HBM, devId, SNAPSHOT_OPTIONAL_BACKUP, MODULEID_RUNTIME);
     if (ret != RT_ERROR_NONE) {
         (void)device->Driver_()->DevMemFree(devDfxMem, devId);
         RT_LOG(RT_LOG_WARNING, "alloc devDfxArgs failed! error=%#x", ret);
@@ -117,8 +119,8 @@ rtError_t InitAicpuPrintInfoImpl(RawDevice* device)
 {
     device->aicpuPrintfMemSize_ = Runtime::Instance()->GetAicpuPrintfMemSize();
     if (device->aicpuPrintfAddr_ == nullptr) {
-        rtError_t ret = device->driver_->DevMemAlloc(
-            &device->aicpuPrintfAddr_, device->aicpuPrintfMemSize_, RT_MEMORY_HBM, device->deviceId_, MODULEID_RUNTIME);
+        rtError_t ret = device->driver_->DevMemAllocWithBackupFlag(
+            &device->aicpuPrintfAddr_, device->aicpuPrintfMemSize_, RT_MEMORY_HBM, device->deviceId_);
         COND_RETURN_WARN(
             (ret != RT_ERROR_NONE), ret, "Malloc aicpu printf mem failed, device_id=%u, ret=%u.", device->deviceId_,
             ret);

@@ -321,7 +321,7 @@ rtError_t NpuDriver::StreamMemPoolAsyncConfig(
 
 rtError_t NpuDriver::DevMemAllocHugePageManaged(
     void** const dptr, const uint64_t size, const rtMemType_t type, const uint32_t deviceId, const uint16_t moduleId,
-    const bool isLogError, const bool readOnlyFlag, const bool cpOnlyFlag)
+    const DevMemAllocConfig config, const bool isLogError)
 {
     UNUSED(dptr);
     UNUSED(size);
@@ -329,14 +329,13 @@ rtError_t NpuDriver::DevMemAllocHugePageManaged(
     UNUSED(deviceId);
     UNUSED(moduleId);
     UNUSED(isLogError);
-    UNUSED(readOnlyFlag);
-    UNUSED(cpOnlyFlag);
+    UNUSED(config);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
 rtError_t NpuDriver::DevMemAllocManaged(
     void** const dptr, const uint64_t size, const rtMemType_t type, const uint32_t deviceId, const uint16_t moduleId,
-    const bool isLogError, const bool readOnlyFlag, const bool starsTillingFlag, const bool cpOnlyFlag) const
+    const DevMemAllocConfig config, const bool isLogError) const
 {
     UNUSED(dptr);
     UNUSED(size);
@@ -344,9 +343,7 @@ rtError_t NpuDriver::DevMemAllocManaged(
     UNUSED(deviceId);
     UNUSED(moduleId);
     UNUSED(isLogError);
-    UNUSED(readOnlyFlag);
-    UNUSED(starsTillingFlag);
-    UNUSED(cpOnlyFlag);
+    UNUSED(config);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 

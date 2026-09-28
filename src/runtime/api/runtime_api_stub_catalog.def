@@ -438,9 +438,17 @@ RUNTIME_API(snapshot, rtError_t, rtSnapShotProcessBackup,
     (),
     (), FEATURE_NOT_SUPPORT, EXPORT)
 
+RUNTIME_API(snapshot, rtError_t, rtSnapShotProcessBackupWithArgs,
+    (const rtSnapShotBackupArgs* args),
+    (args), FEATURE_NOT_SUPPORT, EXPORT)
+
 RUNTIME_API(snapshot, rtError_t, rtSnapShotProcessRestore,
     (),
     (), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(snapshot, rtError_t, rtSnapShotProcessRestoreWithArgs,
+    (const rtSnapShotRestoreArgs* args),
+    (args), FEATURE_NOT_SUPPORT, EXPORT)
 
 RUNTIME_API(snapshot, rtError_t, rtSnapShotCallbackRegister,
     (rtSnapShotStage stage, rtSnapShotCallBack callback, void* args),

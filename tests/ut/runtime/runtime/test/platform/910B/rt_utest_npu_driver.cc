@@ -30,8 +30,20 @@ using namespace cce::runtime;
 
 namespace {
 uint32_t g_halMapErrorCodeCallCount = 0U;
+uint64_t g_processResReserve = 0U;
+
+drvError_t HalProcessResBackupStub(halProcResBackupInfo* info)
+{
+    g_processResReserve = (info == nullptr) ? 0U : info->reserve[0];
+    return DRV_ERROR_NONE;
 }
 
+drvError_t HalProcessResRestoreStub(halProcResRestoreInfo* info)
+{
+    g_processResReserve = (info == nullptr) ? 0U : info->reserve[0];
+    return DRV_ERROR_NONE;
+}
+} // namespace
 class CloudV2NpuDriverTest : public testing::Test {
 protected:
     static void SetUpTestCase() {}
@@ -308,7 +320,7 @@ TEST_F(CloudV2NpuDriverTest, DevMemAlloc1GHugePage_3)
 
     MOCKER(halMemAlloc).stubs().will(returnValue(DRV_ERROR_NONE));
     error = rawDrv->DevMemAlloc1GHugePage(
-        &ptr, size, RT_MEMORY_HBM, RT_MEMORY_POLICY_DEFAULT_PAGE_ONLY_P2P, 255, false, true);
+        &ptr, size, RT_MEMORY_HBM, RT_MEMORY_POLICY_DEFAULT_PAGE_ONLY_P2P, 255, false, {}, true);
     EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
     delete rawDrv;
     free(ptr);
@@ -325,11 +337,11 @@ TEST_F(CloudV2NpuDriverTest, DevMemAlloc1GHugePage_4)
     rtInstance->SetIsSupport1GHugePage(false);
 
     error = rawDrv->DevMemAlloc1GHugePage(
-        &ptr, size, RT_MEMORY_DEFAULT, RT_MEMORY_POLICY_DEFAULT_PAGE_ONLY_P2P, 255, false, true);
+        &ptr, size, RT_MEMORY_DEFAULT, RT_MEMORY_POLICY_DEFAULT_PAGE_ONLY_P2P, 255, false, {}, true);
     EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
 
     error = rawDrv->DevMemAlloc1GHugePage(
-        &ptr, size, RT_MEMORY_HOST, RT_MEMORY_POLICY_DEFAULT_PAGE_ONLY_P2P, 255, false, true);
+        &ptr, size, RT_MEMORY_HOST, RT_MEMORY_POLICY_DEFAULT_PAGE_ONLY_P2P, 255, false, {}, true);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
     delete rawDrv;
     free(ptr);
@@ -967,7 +979,9 @@ TEST_F(CloudV2NpuDriverTest, memory_dev_alloc_online_11)
     NpuDriver* rawDrv = new NpuDriver();
 
     MOCKER(halMemAlloc).stubs().will(returnValue(DRV_ERROR_IOCRL_FAIL));
-    error = rawDrv->DevMemAllocHugePageManaged(&ptr, size, RT_MEMORY_HBM, 0, 255, false, true);
+    DevMemAllocConfig config = {};
+    config.readOnlyFlag = true;
+    error = rawDrv->DevMemAllocHugePageManaged(&ptr, size, RT_MEMORY_HBM, 0, 255, config, false);
     EXPECT_EQ(error, RT_ERROR_DRV_IOCTRL);
     delete rawDrv;
     free(ptr);
@@ -981,7 +995,9 @@ TEST_F(CloudV2NpuDriverTest, DevMemAllocManaged_11)
     NpuDriver* rawDrv = new NpuDriver();
 
     MOCKER(halMemAlloc).stubs().will(returnValue(DRV_ERROR_IOCRL_FAIL));
-    error = rawDrv->DevMemAllocManaged(&ptr, size, RT_MEMORY_HBM, 0, 255, false, true);
+    DevMemAllocConfig config = {};
+    config.readOnlyFlag = true;
+    error = rawDrv->DevMemAllocManaged(&ptr, size, RT_MEMORY_HBM, 0, 255, config, false);
     EXPECT_EQ(error, RT_ERROR_DRV_IOCTRL);
     delete rawDrv;
     free(ptr);
@@ -2824,6 +2840,46 @@ TEST_F(CloudV2NpuDriverTest, CheckIsSupportFeature_invalid)
     ret = rawDrv->CheckIsSupportFeature(0, feature);
     EXPECT_FALSE(ret);
     delete rawDrv;
+}
+
+TEST_F(CloudV2NpuDriverTest, ProcessResBackup_IncludeOptionalFlag)
+{
+    g_processResReserve = 0U;
+    MOCKER(halProcessResBackup).expects(once()).will(invoke(HalProcessResBackupStub));
+
+    rtError_t ret = NpuDriver::ProcessResBackup(1U);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(g_processResReserve, static_cast<uint64_t>(HAL_PROC_RES_BACKUP_INCLUDE_OPTIONAL));
+}
+
+TEST_F(CloudV2NpuDriverTest, ProcessResBackup_RequiredOnlyFlag)
+{
+    g_processResReserve = HAL_PROC_RES_BACKUP_INCLUDE_OPTIONAL;
+    MOCKER(halProcessResBackup).expects(once()).will(invoke(HalProcessResBackupStub));
+
+    rtError_t ret = NpuDriver::ProcessResBackup(0U);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(g_processResReserve, 0U);
+}
+
+TEST_F(CloudV2NpuDriverTest, ProcessResRestore_IncludeOptionalFlag)
+{
+    g_processResReserve = 0U;
+    MOCKER(halProcessResRestore).expects(once()).will(invoke(HalProcessResRestoreStub));
+
+    rtError_t ret = NpuDriver::ProcessResRestore(1U);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(g_processResReserve, static_cast<uint64_t>(HAL_PROC_RES_RESTORE_INCLUDE_OPTIONAL));
+}
+
+TEST_F(CloudV2NpuDriverTest, ProcessResRestore_RequiredOnlyFlag)
+{
+    g_processResReserve = HAL_PROC_RES_RESTORE_INCLUDE_OPTIONAL;
+    MOCKER(halProcessResRestore).expects(once()).will(invoke(HalProcessResRestoreStub));
+
+    rtError_t ret = NpuDriver::ProcessResRestore(0U);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(g_processResReserve, 0U);
 }
 
 TEST_F(CloudV2NpuDriverTest, get_topology_type_device_id)

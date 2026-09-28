@@ -23,6 +23,12 @@ namespace cce {
 namespace runtime {
 class GlobalStateManager {
 public:
+    struct SnapShotVersionInfo {
+        uint32_t runtimeApiVersion = 0U;
+        uint32_t driverApiVersion = 0U;
+        bool isValid = false;
+    };
+
     static GlobalStateManager& GetInstance();
     std::mutex& GetStateMtx();
     rtError_t Locked();
@@ -38,6 +44,9 @@ public:
     // Background thread checks the status and waits if it is blocked.
     void BackgroundThreadWaitIfLocked(const char* name);
     static const char* StateToString(const rtProcessState state);
+    void SetSnapShotVersionInfo(const SnapShotVersionInfo& versionInfo);
+    SnapShotVersionInfo GetSnapShotVersionInfo() const;
+    void ClearSnapShotVersionInfo();
 
 private:
     GlobalStateManager(const GlobalStateManager&) = delete;
@@ -50,6 +59,8 @@ private:
     std::mutex stateMtx_;
     std::condition_variable globalLockCv_;
     std::atomic<rtProcessState> currentState_{RT_PROCESS_STATE_RUNNING};
+    mutable std::mutex snapShotVersionInfoMtx_;
+    SnapShotVersionInfo snapShotVersionInfo_{};
 
     // 监控线程的管理
     std::atomic<uint32_t> backgroundThreadCount_{0};       // 需要阻塞的背景线程个数

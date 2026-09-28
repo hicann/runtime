@@ -39,14 +39,16 @@ public:
         return unlockRet_;
     }
 
-    rtError_t SnapShotProcessBackup() override
+    rtError_t SnapShotProcessBackup(const rtSnapShotBackupArgs* args) override
     {
+        backupArgs_ = args;
         ++backupCount_;
         return backupRet_;
     }
 
-    rtError_t SnapShotProcessRestore() override
+    rtError_t SnapShotProcessRestore(const rtSnapShotRestoreArgs* args) override
     {
+        restoreArgs_ = args;
         ++restoreCount_;
         return restoreRet_;
     }
@@ -80,6 +82,8 @@ public:
     rtSnapShotCallBack registerCallback_ = nullptr;
     rtSnapShotCallBack unregisterCallback_ = nullptr;
     void* registerArgs_ = nullptr;
+    const rtSnapShotBackupArgs* backupArgs_ = nullptr;
+    const rtSnapShotRestoreArgs* restoreArgs_ = nullptr;
     rtError_t lockRet_ = RT_ERROR_NONE;
     rtError_t unlockRet_ = RT_ERROR_NONE;
     rtError_t backupRet_ = RT_ERROR_NONE;
@@ -130,10 +134,12 @@ protected:
 TEST_F(ApiSnapshotRouteTest, RoutesApisToApiSnapshot)
 {
     int32_t callbackArgs = 7;
+    rtSnapShotBackupArgs backupArgs = {};
+    rtSnapShotRestoreArgs restoreArgs = {};
 
     EXPECT_EQ(rtSnapShotProcessLock(), ACL_RT_SUCCESS);
-    EXPECT_EQ(rtSnapShotProcessBackup(), ACL_RT_SUCCESS);
-    EXPECT_EQ(rtSnapShotProcessRestore(), ACL_RT_SUCCESS);
+    EXPECT_EQ(rtSnapShotProcessBackupWithArgs(&backupArgs), ACL_RT_SUCCESS);
+    EXPECT_EQ(rtSnapShotProcessRestoreWithArgs(&restoreArgs), ACL_RT_SUCCESS);
     EXPECT_EQ(rtSnapShotProcessUnlock(), ACL_RT_SUCCESS);
     EXPECT_EQ(rtSnapShotCallbackRegister(RT_SNAPSHOT_LOCK_PRE, SnapshotCallback, &callbackArgs), ACL_RT_SUCCESS);
     EXPECT_EQ(rtSnapShotCallbackUnregister(RT_SNAPSHOT_LOCK_PRE, SnapshotCallback), ACL_RT_SUCCESS);
@@ -153,14 +159,28 @@ TEST_F(ApiSnapshotRouteTest, RoutesApisToApiSnapshot)
 
 TEST_F(ApiSnapshotRouteTest, PreservesErrorMapping)
 {
+    rtSnapShotBackupArgs backupArgs = {};
+    rtSnapShotRestoreArgs restoreArgs = {};
+
     apiSnapshot_.lockRet_ = RT_ERROR_SNAPSHOT_LOCK_FAILED;
     EXPECT_EQ(rtSnapShotProcessLock(), ACL_ERROR_SNAPSHOT_LOCK_FAILED);
 
     apiSnapshot_.backupRet_ = RT_ERROR_FEATURE_NOT_SUPPORT;
-    EXPECT_EQ(rtSnapShotProcessBackup(), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(rtSnapShotProcessBackupWithArgs(&backupArgs), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
 
     apiSnapshot_.restoreRet_ = RT_ERROR_FEATURE_NOT_SUPPORT;
-    EXPECT_EQ(rtSnapShotProcessRestore(), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(rtSnapShotProcessRestoreWithArgs(&restoreArgs), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+}
+
+TEST_F(ApiSnapshotRouteTest, LegacyBackupRestoreApisPassNullArgs)
+{
+    EXPECT_EQ(rtSnapShotProcessBackup(), ACL_RT_SUCCESS);
+    EXPECT_EQ(rtSnapShotProcessRestore(), ACL_RT_SUCCESS);
+
+    EXPECT_EQ(apiSnapshot_.backupCount_, 1U);
+    EXPECT_EQ(apiSnapshot_.backupArgs_, nullptr);
+    EXPECT_EQ(apiSnapshot_.restoreCount_, 1U);
+    EXPECT_EQ(apiSnapshot_.restoreArgs_, nullptr);
 }
 
 TEST_F(ApiSnapshotRouteTest, ReturnsNotSupportBeforeRoutingOnUnsupportedChip)

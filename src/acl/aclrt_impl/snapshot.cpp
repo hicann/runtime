@@ -64,9 +64,14 @@ aclError aclrtSnapShotProcessBackupImpl(int pid, aclrtSnapShotBackupArgs* args)
         pid != static_cast<int32_t>(mmGetPid()), pid,
         "pid must be current process pid, cross-process operation is not supported");
 
-    ACL_CHECK_INVALID_PARAM_NO_VALUE(args == nullptr, "args", "args is a reserved parameter and must be nullptr");
-
-    ACL_REQUIRES_RTS_OK(rtSnapShotProcessBackup());
+    if (args == nullptr) {
+        ACL_REQUIRES_RTS_OK(rtSnapShotProcessBackup());
+    } else {
+        ACL_CHECK_INVALID_PARAM_NO_VALUE(
+            args->backupFlags <= ACL_RT_SNAPSHOT_BACKUP_INCLUDE_OPTIONAL, "args->backupFlags",
+            "backupFlags must be 0 or 1");
+        ACL_REQUIRES_RTS_OK(rtSnapShotProcessBackupWithArgs(reinterpret_cast<const rtSnapShotBackupArgs*>(args)));
+    }
 
     ACL_LOG_INFO("successfully execute aclrtSnapShotProcessBackup");
     return ACL_SUCCESS;
@@ -81,9 +86,14 @@ aclError aclrtSnapShotProcessRestoreImpl(int pid, aclrtSnapShotRestoreArgs* args
         pid != static_cast<int32_t>(mmGetPid()), pid,
         "pid must be current process pid, cross-process operation is not supported");
 
-    ACL_CHECK_INVALID_PARAM_NO_VALUE(args == nullptr, "args", "args is a reserved parameter and must be nullptr");
-
-    ACL_REQUIRES_RTS_OK(rtSnapShotProcessRestore());
+    if (args == nullptr) {
+        ACL_REQUIRES_RTS_OK(rtSnapShotProcessRestore());
+    } else {
+        ACL_CHECK_INVALID_PARAM_NO_VALUE(
+            args->restoreFlags <= ACL_RT_SNAPSHOT_RESTORE_INCLUDE_OPTIONAL, "args->restoreFlags",
+            "restoreFlags must be 0 or 1");
+        ACL_REQUIRES_RTS_OK(rtSnapShotProcessRestoreWithArgs(reinterpret_cast<const rtSnapShotRestoreArgs*>(args)));
+    }
 
     ACL_LOG_INFO("successfully execute aclrtSnapShotProcessRestore");
     return ACL_SUCCESS;

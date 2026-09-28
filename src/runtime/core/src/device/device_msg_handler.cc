@@ -50,7 +50,8 @@ rtError_t DeviceMsgHandler::AllocDevMem()
 
     // create task to transfer the addr to device for error message.
     void* devMem = nullptr;
-    const rtError_t error = devDrv->DevMemAlloc(&devMem, static_cast<uint64_t>(devMemSize_), memType, dev_->Id_());
+    const rtError_t error = devDrv->DevMemAllocWithBackupFlag(
+        &devMem, static_cast<uint64_t>(devMemSize_), memType, dev_->Id_(), SNAPSHOT_OPTIONAL_BACKUP);
     ERROR_RETURN(
         error,
         "Failed to alloc device memory for get device message, size=%u (bytes), "

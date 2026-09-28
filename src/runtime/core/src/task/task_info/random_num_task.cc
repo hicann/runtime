@@ -368,9 +368,9 @@ rtError_t GetDsaSqeByRandomNumTask(const rtRandomNumTaskInfo_t* taskInfo, TaskIn
     void* devMem = nullptr;
     const auto dev = commonTask->stream->Device_();
 
-    error = dev->Driver_()->DevMemAlloc(
+    error = dev->Driver_()->DevMemAllocWithBackupFlag(
         &devMem, static_cast<uint64_t>(RANDOM_INPUT_PARAM_SIZE + sizeof(rtStarsDsaSqe_t)), RT_MEMORY_DEFAULT,
-        dev->Id_(), MODULEID_RUNTIME, true, false, false);
+        dev->Id_(), SNAPSHOT_OPTIONAL_BACKUP, MODULEID_RUNTIME);
     COND_RETURN_ERROR((error != RT_ERROR_NONE), error, "malloc mem fail, ret=%u", error);
     RT_LOG(RT_LOG_INFO, "mem alloc by runtime, mem ptr=0x%llx", RtPtrToPtr<uint64_t, void*>(devMem));
 

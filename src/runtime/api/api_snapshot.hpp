@@ -30,8 +30,8 @@ public:
 
     virtual rtError_t SnapShotProcessLock() = 0;
     virtual rtError_t SnapShotProcessUnlock() = 0;
-    virtual rtError_t SnapShotProcessBackup() = 0;
-    virtual rtError_t SnapShotProcessRestore() = 0;
+    virtual rtError_t SnapShotProcessBackup(const rtSnapShotBackupArgs* args) = 0;
+    virtual rtError_t SnapShotProcessRestore(const rtSnapShotRestoreArgs* args) = 0;
     virtual rtError_t SnapShotCallbackRegister(rtSnapShotStage stage, rtSnapShotCallBack callback, void* args) = 0;
     virtual rtError_t SnapShotCallbackUnregister(rtSnapShotStage stage, rtSnapShotCallBack callback) = 0;
 };

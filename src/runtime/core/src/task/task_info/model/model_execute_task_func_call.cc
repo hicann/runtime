@@ -111,7 +111,8 @@ static rtError_t DfxCombineFuncCallDevMemAlloc(Model* model, TaskInfo* const tas
     const Device* dev = stream->Device_();
     const uint64_t allocSize =
         model->GetFunCallMemSize() + TS_STARS_COND_DFX_SIZE + static_cast<uint64_t>(FUNC_CALL_INSTR_ALIGN_SIZE);
-    ret = dev->Driver_()->DevMemAlloc(&devMem, allocSize, RT_MEMORY_DDR, dev->Id_());
+    ret = dev->Driver_()->DevMemAllocWithBackupFlag(
+        &devMem, allocSize, RT_MEMORY_DDR, dev->Id_(), SNAPSHOT_OPTIONAL_BACKUP);
     if ((ret != RT_ERROR_NONE) || (devMem == nullptr)) {
         RT_LOG(
             RT_LOG_ERROR, "alloc func call memory failed, retCode=%#x, size=%" PRIu64 "(bytes), device_id=%u", ret,
@@ -142,8 +143,11 @@ static rtError_t DfxSplitFuncCallDevMemAlloc(Model* model, TaskInfo* const taskI
     const Device* dev = stream->Device_();
     constexpr bool readonly = true;
     uint64_t allocSize = model->GetFunCallMemSize() + static_cast<uint64_t>(FUNC_CALL_INSTR_ALIGN_SIZE);
+    DevMemAllocConfig allocConfig = {};
+    allocConfig.readOnlyFlag = readonly;
     // alloc funcCall devMem which is readonly.
-    ret = dev->Driver_()->DevMemAlloc(&devMem, allocSize, RT_MEMORY_DDR, dev->Id_(), MODULEID_RUNTIME, true, readonly);
+    ret = dev->Driver_()->DevMemAllocWithBackupFlag(
+        &devMem, allocSize, RT_MEMORY_DDR, dev->Id_(), SNAPSHOT_OPTIONAL_BACKUP, MODULEID_RUNTIME, true, allocConfig);
     if ((ret != RT_ERROR_NONE) || (devMem == nullptr)) {
         RT_LOG(
             RT_LOG_ERROR, "alloc funcCall memory failed, retCode=%#x, size=%" PRIu64 "(bytes), device_id=%u", ret,
@@ -152,7 +156,8 @@ static rtError_t DfxSplitFuncCallDevMemAlloc(Model* model, TaskInfo* const taskI
     }
     // alloc funcCall devMem for dfx, cannot use readonly and need align.
     allocSize = TS_STARS_COND_DFX_SIZE + static_cast<uint64_t>(FUNC_CALL_INSTR_ALIGN_SIZE);
-    ret = dev->Driver_()->DevMemAlloc(&devMemDfx, allocSize, RT_MEMORY_DDR, dev->Id_());
+    ret = dev->Driver_()->DevMemAllocWithBackupFlag(
+        &devMemDfx, allocSize, RT_MEMORY_DDR, dev->Id_(), SNAPSHOT_OPTIONAL_BACKUP);
     if ((ret != RT_ERROR_NONE) || (devMemDfx == nullptr)) {
         (void)dev->Driver_()->DevMemFree(devMem, dev->Id_());
         devMem = nullptr;

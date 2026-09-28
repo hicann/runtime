@@ -963,7 +963,7 @@ rtError_t NpuDriver::ManagedMemFree(const void* const dptr)
 
 rtError_t NpuDriver::DevMemAlloc1GHugePage(
     void** const dptr, const uint64_t size, const rtMemType_t type, const uint32_t memPolicy, const uint32_t deviceId,
-    const uint16_t moduleId, const bool isLogError)
+    const uint16_t moduleId, const DevMemAllocConfig config, const bool isLogError)
 {
     const rtError_t ret = CheckIfSupport1GHugePage();
     if (ret != RT_ERROR_NONE) {
@@ -999,6 +999,7 @@ rtError_t NpuDriver::DevMemAlloc1GHugePage(
     }
 
     drvFlag = FlagAddModuleId(drvFlag, moduleId);
+    drvFlag = FlagAddBackupBit(drvFlag, config.type);
     const drvError_t drvRet = halMemAlloc(dptr, static_cast<UINT64>(size), static_cast<UINT64>(drvFlag));
     if (drvRet != DRV_ERROR_NONE) {
         const rtError_t rtErrorCode = RT_GET_DRV_ERRCODE(drvRet);
@@ -1027,8 +1028,7 @@ rtError_t NpuDriver::DevMemAlloc1GHugePage(
 
 rtError_t NpuDriver::DevMemAllocOnline(
     void** const dptr, const uint64_t size, rtMemType_t type, const uint32_t deviceId, const uint16_t moduleId,
-    const bool isLogError, const bool readOnlyFlag, const bool starsTillingFlag, const bool isNewApi,
-    const bool cpOnlyFlag)
+    const bool isLogError, const DevMemAllocConfig config, const bool isNewApi)
 {
     const uint32_t memPolicy = static_cast<uint32_t>(type) & (~(static_cast<uint32_t>(MEM_ALLOC_TYPE_BIT)));
     type = type & MEM_ALLOC_TYPE_BIT;
@@ -1051,11 +1051,9 @@ rtError_t NpuDriver::DevMemAllocOnline(
     if (defaultPolicy || isP2pHugeFirst) {
         if (size > HUGE_PAGE_MEM_CRITICAL_VALUE) {
             // HugePage
-            temptRet =
-                DevMemAllocHugePageManaged(dptr, size, type, deviceId, moduleId, false, readOnlyFlag, cpOnlyFlag);
+            temptRet = DevMemAllocHugePageManaged(dptr, size, type, deviceId, moduleId, config, false);
             if (temptRet != RT_ERROR_NONE) {
-                temptRet = DevMemAllocManaged(
-                    dptr, size, type, deviceId, moduleId, isLogError, readOnlyFlag, starsTillingFlag, cpOnlyFlag);
+                temptRet = DevMemAllocManaged(dptr, size, type, deviceId, moduleId, config, isLogError);
                 if (temptRet != RT_ERROR_NONE) {
                     RT_LOG(
                         RT_LOG_WARNING,
@@ -1066,8 +1064,7 @@ rtError_t NpuDriver::DevMemAllocOnline(
                 }
             }
         } else {
-            temptRet = DevMemAllocManaged(
-                dptr, size, type, deviceId, moduleId, isLogError, readOnlyFlag, starsTillingFlag, cpOnlyFlag);
+            temptRet = DevMemAllocManaged(dptr, size, type, deviceId, moduleId, config, isLogError);
             if (temptRet != RT_ERROR_NONE) {
                 RtLogErrorLevelControl(
                     isLogError,
@@ -1077,8 +1074,7 @@ rtError_t NpuDriver::DevMemAllocOnline(
             }
         }
     } else if ((memPolicy == RT_MEMORY_POLICY_HUGE_PAGE_ONLY) || isP2pHugeOnly) {
-        temptRet =
-            DevMemAllocHugePageManaged(dptr, size, type, deviceId, moduleId, isLogError, readOnlyFlag, cpOnlyFlag);
+        temptRet = DevMemAllocHugePageManaged(dptr, size, type, deviceId, moduleId, config, isLogError);
         if (temptRet != RT_ERROR_NONE) {
             RtLogErrorLevelControl(
                 isLogError,
@@ -1090,7 +1086,7 @@ rtError_t NpuDriver::DevMemAllocOnline(
         }
     } else if (
         (memPolicy == RT_MEMORY_POLICY_HUGE1G_PAGE_ONLY) || (memPolicy == RT_MEMORY_POLICY_HUGE1G_PAGE_ONLY_P2P)) {
-        temptRet = DevMemAlloc1GHugePage(dptr, size, type, memPolicy, deviceId, moduleId, isLogError);
+        temptRet = DevMemAlloc1GHugePage(dptr, size, type, memPolicy, deviceId, moduleId, config, isLogError);
         if (temptRet != RT_ERROR_NONE) {
             RtLogErrorLevelControl(
                 isLogError,
@@ -1099,8 +1095,7 @@ rtError_t NpuDriver::DevMemAllocOnline(
             return temptRet;
         }
     } else {
-        temptRet = DevMemAllocManaged(
-            dptr, size, type, deviceId, moduleId, isLogError, readOnlyFlag, starsTillingFlag, cpOnlyFlag);
+        temptRet = DevMemAllocManaged(dptr, size, type, deviceId, moduleId, config, isLogError);
         if (temptRet != RT_ERROR_NONE) {
             RtLogErrorLevelControl(
                 isLogError, "DevMemAllocManaged failed: device_id=%u, type=%u, size=%" PRIu64 "(bytes), drvRetCode=%d!",
@@ -1117,7 +1112,7 @@ rtError_t NpuDriver::DevMemAllocOnline(
 
 rtError_t NpuDriver::MemAllocHugePolicyPageOffline(
     void** const dptr, const uint64_t size, const rtMemType_t type, const uint32_t deviceId, const uint16_t moduleId,
-    const bool isLogError) const
+    const bool isLogError, const DevMemAllocConfig config) const
 {
     drvError_t drvRet;
     uint64_t drvFlag = 0;
@@ -1133,6 +1128,7 @@ rtError_t NpuDriver::MemAllocHugePolicyPageOffline(
         if (size > HUGE_PAGE_MEM_CRITICAL_VALUE) {
             drvFlag = nonHugeDrvFlag | static_cast<uint64_t>(MEM_PAGE_HUGE);
             drvFlag = FlagAddModuleId(drvFlag, moduleId);
+            drvFlag = FlagAddBackupBit(drvFlag, config.type);
             drvRet = halMemAlloc(dptr, static_cast<UINT64>(size), drvFlag); // malloc huge page
             if (drvRet == DRV_ERROR_NONE) {
                 RT_LOG(
@@ -1149,6 +1145,7 @@ rtError_t NpuDriver::MemAllocHugePolicyPageOffline(
             drvFlag = static_cast<uint64_t>(MEM_SET_ALIGN_SIZE(9ULL)) | static_cast<uint64_t>(MEM_SVM_HUGE) |
                       static_cast<uint64_t>(NODE_TO_DEVICE(deviceId));
             drvFlag = FlagAddModuleId(drvFlag, moduleId);
+            drvFlag = FlagAddBackupBit(drvFlag, config.type);
             drvRet = halMemAlloc(dptr, static_cast<UINT64>(size), static_cast<UINT64>(drvFlag)); // malloc huge page
             if (drvRet == DRV_ERROR_NONE) {
                 RT_LOG(
@@ -1163,6 +1160,7 @@ rtError_t NpuDriver::MemAllocHugePolicyPageOffline(
                   static_cast<uint64_t>(NODE_TO_DEVICE(deviceId));
     }
     drvFlag = FlagAddModuleId(drvFlag, moduleId);
+    drvFlag = FlagAddBackupBit(drvFlag, config.type);
     drvRet = halMemAlloc(dptr, static_cast<UINT64>(size), static_cast<UINT64>(drvFlag));
     if (drvRet != DRV_ERROR_NONE) {
         const rtError_t rtErrorCode = RT_GET_DRV_ERRCODE(drvRet);
@@ -1188,12 +1186,13 @@ rtError_t NpuDriver::MemAllocHugePolicyPageOffline(
 
 rtError_t NpuDriver::MemAllocPolicyOffline(
     void** const dptr, const uint64_t size, const uint32_t memPolicy, const rtMemType_t type, const uint32_t deviceId,
-    const uint16_t moduleId, const bool isLogError) const
+    const uint16_t moduleId, const bool isLogError, const DevMemAllocConfig config) const
 {
     drvError_t drvRet;
     if ((memPolicy == RT_MEMORY_POLICY_NONE) || (memPolicy == RT_MEMORY_POLICY_HUGE_PAGE_FIRST) ||
         (memPolicy == RT_MEMORY_POLICY_HUGE_PAGE_FIRST_P2P)) {
-        const rtError_t temptRet = MemAllocHugePolicyPageOffline(dptr, size, type, deviceId, moduleId, isLogError);
+        const rtError_t temptRet =
+            MemAllocHugePolicyPageOffline(dptr, size, type, deviceId, moduleId, isLogError, config);
         return temptRet;
     }
 
@@ -1211,6 +1210,7 @@ rtError_t NpuDriver::MemAllocPolicyOffline(
     }
 
     drvFlag = FlagAddModuleId(drvFlag, moduleId);
+    drvFlag = FlagAddBackupBit(drvFlag, config.type);
     drvRet = halMemAlloc(dptr, static_cast<UINT64>(size), static_cast<UINT64>(drvFlag));
     if (drvRet != DRV_ERROR_NONE) {
         const rtError_t rtErrorCode = RT_GET_DRV_ERRCODE(drvRet);
@@ -1235,7 +1235,7 @@ rtError_t NpuDriver::MemAllocPolicyOffline(
 
 rtError_t NpuDriver::DevMemAllocOffline(
     void** dptr, const uint64_t size, rtMemType_t type, const uint32_t deviceId, const uint16_t moduleId,
-    const bool isLogError) const
+    const bool isLogError, const DevMemAllocConfig config) const
 {
     const uint32_t memPolicy = type & static_cast<uint32_t>(~MEM_ALLOC_TYPE_BIT);
     type = type & MEM_ALLOC_TYPE_BIT;
@@ -1276,6 +1276,7 @@ rtError_t NpuDriver::DevMemAllocOffline(
         uint64_t drvFlag = static_cast<uint64_t>(MEM_SET_ALIGN_SIZE(9ULL)) | static_cast<uint64_t>(MEM_SVM_NORMAL) |
                            static_cast<uint64_t>(NODE_TO_DEVICE(deviceId));
         drvFlag = FlagAddModuleId(drvFlag, moduleId);
+        drvFlag = FlagAddBackupBit(drvFlag, config.type);
         drvError_t drvRet = halMemAlloc(dptr, static_cast<UINT64>(size), static_cast<UINT64>(drvFlag)); // 20:align size
         if (drvRet != DRV_ERROR_NONE) {
             const rtError_t rtErrorCode = RT_GET_DRV_ERRCODE(drvRet);
@@ -1328,7 +1329,7 @@ rtError_t NpuDriver::DevMemAllocOffline(
             return RT_GET_DRV_ERRCODE(drvRet);
         }
     } else {
-        temptRet = MemAllocPolicyOffline(dptr, size, memPolicy, type, deviceId, moduleId, isLogError);
+        temptRet = MemAllocPolicyOffline(dptr, size, memPolicy, type, deviceId, moduleId, isLogError, config);
     }
 
     return temptRet;
@@ -1336,16 +1337,14 @@ rtError_t NpuDriver::DevMemAllocOffline(
 
 rtError_t NpuDriver::DevMemAlloc(
     void** const dptr, const uint64_t size, const rtMemType_t type, const uint32_t deviceId, const uint16_t moduleId,
-    const bool isLogError, const bool readOnlyFlag, const bool starsTillingFlag, const bool isNewApi,
-    const bool cpOnlyFlag)
+    const bool isLogError, const DevMemAllocConfig config, const bool isNewApi)
 {
     rtError_t temptRet = RT_ERROR_DRV_ERR;
     const uint32_t devRunMode = GetRunMode();
 
     RT_LOG(RT_LOG_DEBUG, "device_id=%d, type=%u, size=%" PRIu64 ", mode=%u.", deviceId, type, size, devRunMode);
     if (devRunMode == static_cast<uint32_t>(RT_RUN_MODE_ONLINE)) {
-        temptRet = DevMemAllocOnline(
-            dptr, size, type, deviceId, moduleId, isLogError, readOnlyFlag, starsTillingFlag, isNewApi, cpOnlyFlag);
+        temptRet = DevMemAllocOnline(dptr, size, type, deviceId, moduleId, isLogError, config, isNewApi);
     } else if ((devRunMode == static_cast<uint32_t>(RT_RUN_MODE_OFFLINE)) && (IsOfflineNotSupportMemType(type))) {
         RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
             ErrorCode::EE1006, "Device memory allocation", "Parameter type value " + MemTypeToString(type),
@@ -1354,7 +1353,7 @@ rtError_t NpuDriver::DevMemAlloc(
     } else if (
         (devRunMode == static_cast<uint32_t>(RT_RUN_MODE_OFFLINE)) ||
         (devRunMode == static_cast<uint32_t>(RT_RUN_MODE_AICPU_SCHED))) {
-        temptRet = DevMemAllocOffline(dptr, size, type, deviceId, moduleId, isLogError);
+        temptRet = DevMemAllocOffline(dptr, size, type, deviceId, moduleId, isLogError, config);
     } else {
         // no operation
     }

@@ -765,6 +765,9 @@ DLLEXPORT drvError_t halDeviceOpen(uint32_t devid, halDevOpenIn* in, halDevOpenO
  */
 DLLEXPORT drvError_t halDeviceClose(uint32_t devid, halDevCloseIn* in);
 
+#define HAL_PROC_RES_RESTORE_INCLUDE_OPTIONAL (1ULL << 0U)
+#define HAL_PROC_RES_BACKUP_INCLUDE_OPTIONAL (1ULL << 0U)
+
 typedef struct hal_proc_res_backup_info {
     uint64_t reserve[8]; // reserved parameter
 } halProcResBackupInfo;

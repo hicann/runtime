@@ -23,6 +23,7 @@
 #include "capture_model_utils.hpp"
 #include "inner_thread_local.hpp"
 #include "para_convertor.hpp"
+#include "npu_driver.hpp"
 
 namespace cce {
 namespace runtime {
@@ -164,6 +165,15 @@ rtError_t StreamLaunchKernelEx(const void* const args, const uint32_t argsSize, 
         kernelTask->u.aicpuTaskInfo.comm.dim);
 
     SetAicpuArgs(kernelTask, args, argsSize, nullptr);
+    const uint32_t devId = stm->Device_()->Id_();
+    if ((args != nullptr) && (argsSize != 0U) &&
+        NpuDriver::CheckIsSupportFeature(devId, FEATURE_SVM_PROCESS_DEVICE_MEM_SNAPSHOT)) {
+        error = stm->Device_()->Driver_()->MemAdvise(
+            const_cast<void*>(kernelTask->u.aicpuTaskInfo.comm.args), kernelTask->u.aicpuTaskInfo.comm.argsSize,
+            ADVISE_SNAPSHOT_REQUIRED, devId);
+        ERROR_GOTO_MSG_INNER(
+            error, ERROR_RECYCLE, "Snapshot advise kernel launch ex aicpu args failed, retCode=%#x.", error);
+    }
     kernelTask->u.aicpuTaskInfo.aicpuKernelType = static_cast<uint8_t>(TS_AICPU_KERNEL_FMK);
     kernelTask->u.aicpuTaskInfo.aicpuFlags = flags;
 

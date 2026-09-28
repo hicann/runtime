@@ -50,7 +50,8 @@ rtError_t RawDevice::AllocSimtStackPhyBase(const rtChipType_t chipType)
         aivCoreNum * RT_MAX_WARP_NUM_PER_VECTOR_CORE * (simtWarpStkSize + static_cast<uint64_t>(simtDvgWarpStkSize));
     stackPhySize += static_cast<uint64_t>(STACK_PHY_BASE_ALIGN_LEN); // 128B align
 
-    const rtError_t error = driver_->DevMemAlloc(&simtStackPhyBase_, stackPhySize, RT_MEMORY_DDR, deviceId_);
+    const rtError_t error = driver_->DevMemAllocWithBackupFlag(
+        &simtStackPhyBase_, stackPhySize, RT_MEMORY_DDR, deviceId_, SNAPSHOT_OPTIONAL_BACKUP);
     RT_LOG(
         RT_LOG_DEBUG, "AllocStackPhyBase device_id=%u, simtStackPhyBase_=0x%llx, stackPhySize=%llu(bytes).", deviceId_,
         RtPtrToValue(simtStackPhyBase_), static_cast<unsigned long long>(stackPhySize));
@@ -99,7 +100,8 @@ rtError_t RawDevice::AllocStackPhyBaseDavid()
         return RT_ERROR_INVALID_VALUE;
     }
     const uint64_t stackPhySize = scalerBufSize + STACK_PHY_BASE_ALIGN_LEN;
-    error = driver_->DevMemAlloc(&stackPhyBase32k_, stackPhySize, RT_MEMORY_DDR, deviceId_);
+    error = driver_->DevMemAllocWithBackupFlag(
+        &stackPhyBase32k_, stackPhySize, RT_MEMORY_DDR, deviceId_, SNAPSHOT_OPTIONAL_BACKUP);
     COND_RETURN_ERROR(
         (error != RT_ERROR_NONE) || (stackPhyBase32k_ == nullptr), error,
         "Alloc stack phy base failed, mem alloc failed, retCode=%#x.", static_cast<uint32_t>(error));

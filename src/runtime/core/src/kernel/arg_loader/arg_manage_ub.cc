@@ -25,7 +25,8 @@ rtError_t UbArgManage::MallocArgMem(void*& devAddr, void*& hostAddr)
     Device* const dev = stream_->Device_();
     const uint32_t devId = dev->Id_();
 
-    rtError_t ret = dev->Driver_()->DevMemAlloc(&devAddr, static_cast<uint64_t>(argPoolSize_), RT_MEMORY_HBM, devId);
+    rtError_t ret =
+        dev->Driver_()->DevMemAllocWithBackupFlag(&devAddr, static_cast<uint64_t>(argPoolSize_), RT_MEMORY_HBM, devId);
     if (ret != RT_ERROR_NONE) {
         RT_LOG(
             RT_LOG_WARNING, "Alloc stream args pool dev mem failed, retCode=%#x, size=%u, device_id=%u.", ret,

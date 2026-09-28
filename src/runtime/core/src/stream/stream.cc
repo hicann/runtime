@@ -2653,8 +2653,8 @@ rtError_t Stream::AcquireTimeline(uint64_t& base, uint32_t& offset)
         constexpr uint32_t maxTimelineSize = maxTimelineNum * sizeof(uint64_t);
         Runtime* const rtInstance = Runtime::Instance();
         const rtMemType_t memType = rtInstance->GetTsMemType(MEM_REQUEST_FEATURE_DEFAULT, maxTimelineSize);
-        rtError_t error =
-            devDrv->DevMemAlloc(RtPtrToPtr<void**>(&timelineAddr_), maxTimelineSize, memType, device_->Id_());
+        rtError_t error = devDrv->DevMemAllocWithBackupFlag(
+            RtPtrToPtr<void**>(&timelineAddr_), maxTimelineSize, memType, device_->Id_(), SNAPSHOT_OPTIONAL_BACKUP);
         ERROR_RETURN(
             error, "Malloc timeline buffer failed, type=%u, error=%#x", static_cast<uint32_t>(memType),
             static_cast<uint32_t>(error));
@@ -3114,8 +3114,9 @@ rtError_t Stream::AllocExecutedTimesSvm()
         Runtime* const rtInstance = Runtime::Instance();
         const rtMemType_t memType = rtInstance->GetTsMemType(MEM_REQUEST_FEATURE_DEFAULT, sizeof(uint16_t));
 
-        error = device_->Driver_()->DevMemAlloc(
-            RtPtrToPtr<void**>(&executedTimesSvm_), sizeof(uint16_t), memType, device_->Id_());
+        error = device_->Driver_()->DevMemAllocWithBackupFlag(
+            RtPtrToPtr<void**>(&executedTimesSvm_), sizeof(uint16_t), memType, device_->Id_(),
+            SNAPSHOT_OPTIONAL_BACKUP);
         COND_RETURN_ERROR_MSG_INNER(
             (error != RT_ERROR_NONE) || (executedTimesSvm_ == nullptr), error, "Failed to Allocate SVM, retCode=%#x.",
             error);
@@ -4465,8 +4466,8 @@ void* Stream::GetDvppRRTaskAddr(void)
         return addr;
     }
 
-    const rtError_t error =
-        device_->Driver_()->DevMemAlloc(&addr, DVPP_RR_WRITE_VALUE_LEN, RT_MEMORY_DEFAULT, device_->Id_());
+    const rtError_t error = device_->Driver_()->DevMemAllocWithBackupFlag(
+        &addr, DVPP_RR_WRITE_VALUE_LEN, RT_MEMORY_DEFAULT, device_->Id_(), SNAPSHOT_OPTIONAL_BACKUP);
     if (error != RT_ERROR_NONE) {
         RT_LOG_INNER_MSG(
             RT_LOG_ERROR, "Failed to allocate device memory, stream_id=%d, size=%u, retCode=%#x", streamId_,
@@ -5613,7 +5614,8 @@ rtError_t Stream::SubmitMemCpyAsyncTask(TaskInfo* const updateTask)
     void* sqeDeviceAddr = nullptr;
     rtError_t error = RT_ERROR_NONE;
 
-    error = device_->Driver_()->DevMemAlloc(&sqeDeviceAddr, SQE_SIZE_UNIT, RT_MEMORY_HBM, device_->Id_());
+    error = device_->Driver_()->DevMemAllocWithBackupFlag(
+        &sqeDeviceAddr, SQE_SIZE_UNIT, RT_MEMORY_HBM, device_->Id_(), SNAPSHOT_OPTIONAL_BACKUP);
     COND_RETURN_ERROR_MSG_INNER(
         (error != RT_ERROR_NONE) || (sqeDeviceAddr == nullptr), error, "Failed to allocate device memory, retCode=%#x.",
         error);

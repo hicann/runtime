@@ -113,7 +113,7 @@ aclError aclrtSnapShotProcessBackup(int pid, aclrtSnapShotBackupArgs *args)
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
 | pid | 输入 | 进程ID，当前只支持传入本进程的ID，不支持跨进程操作。 |
-| args | 输入 | 备份配置参数，类型为[aclrtSnapShotBackupArgs](25-04_Structs.md#aclrtSnapShotBackupArgs)，当前只支持传入NULL。 |
+| args | 输入 | 备份配置参数，类型为[aclrtSnapShotBackupArgs](25-04_Structs.md#aclrtSnapShotBackupArgs)。传入NULL时走旧Runtime备份流程；传入非NULL时走驱动Device内存快照流程，并要求驱动支持Device内存快照能力。 |
 
 ### 返回值说明
 
@@ -170,7 +170,7 @@ aclError aclrtSnapShotProcessRestore(int pid, aclrtSnapShotRestoreArgs *args)
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
 | pid | 输入 | 进程ID，当前只支持传入本进程的ID，不支持跨进程操作。 |
-| args | 输入 | 恢复配置参数，类型为[aclrtSnapShotRestoreArgs](25-04_Structs.md#aclrtSnapShotRestoreArgs)，当前只支持传入NULL。 |
+| args | 输入 | 恢复配置参数，类型为[aclrtSnapShotRestoreArgs](25-04_Structs.md#aclrtSnapShotRestoreArgs)。传入NULL时走旧Runtime恢复流程；传入非NULL时走驱动Device内存快照流程，并要求驱动支持Device内存快照能力。 |
 
 ### 返回值说明
 
@@ -178,7 +178,7 @@ aclError aclrtSnapShotProcessRestore(int pid, aclrtSnapShotRestoreArgs *args)
 
 ### 约束说明
 
-恢复和备份需要在同一个Device上（指Device ID相同）。恢复时，若Device被其他进程占用，则恢复失败。
+恢复和备份需要在同一个Device上（指Device ID相同）。恢复时，若Device被其他进程占用，则恢复失败。`args`传入非NULL时，恢复前会先检查驱动Device内存快照能力，再检查备份版本信息：Runtime 使用的 HAL API 版本、驱动 API 版本必须分别与备份时一致。版本校验通过后，继续重新打开 Device。备份版本信息无效或版本不匹配时，返回 `ACL_ERROR_SNAPSHOT_RESTORE_FAILED`（507909）；版本查询失败时，返回对应错误。`args`传入NULL时，走旧Runtime恢复流程，不执行上述Device内存快照兼容性和版本一致性检查。
 
 <br>
 <br>

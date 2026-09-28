@@ -16,7 +16,10 @@
 #include <map>
 
 #define MSG_LENGTH_STUB (1024)
-#define SET_MOUDLE_ID_MAP_NAME(x) {#x, x}
+#define SET_MOUDLE_ID_MAP_NAME(x) \
+    {                             \
+        #x, x                     \
+    }
 
 #ifdef __cplusplus
 extern "C" {

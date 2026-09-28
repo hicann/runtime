@@ -128,8 +128,8 @@ rtError_t UbArgLoader::AllocDynamic(
     void* hostAddr = nullptr;
     void* tsegInfoAddr = nullptr;
 
-    rtError_t error =
-        device_->Driver_()->DevMemAlloc(&devAddr, static_cast<uint64_t>(size), RT_MEMORY_HBM, device_->Id_());
+    rtError_t error = device_->Driver_()->DevMemAllocWithBackupFlag(
+        &devAddr, static_cast<uint64_t>(size), RT_MEMORY_HBM, device_->Id_());
     if (error != RT_ERROR_NONE) {
         RT_LOG(
             RT_LOG_ERROR, "Failed to allocate args dynamic device memory, retCode=%#x, size=%u, device_id=%u.", error,

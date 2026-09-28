@@ -426,6 +426,7 @@ TEST_F(CloudV2ApiImplSpecTest, MODEL_TASK_UPDATE_TEST_1)
 TEST_F(CloudV2ApiImplSpecTest, MODEL_BACKUP)
 {
     rtError_t error;
+    rtSnapShotBackupArgs args = {};
     Context* const curCtx = Runtime::Instance()->CurrentContext();
     EXPECT_EQ(curCtx != nullptr, true);
     Device* dev = curCtx->Device_();
@@ -452,7 +453,7 @@ TEST_F(CloudV2ApiImplSpecTest, MODEL_BACKUP)
     error = rtSnapShotProcessLock();
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 
-    error = rtSnapShotProcessBackup();
+    error = rtSnapShotProcessBackupWithArgs(&args);
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = rtSnapShotProcessUnlock();
     EXPECT_EQ(error, ACL_RT_SUCCESS);

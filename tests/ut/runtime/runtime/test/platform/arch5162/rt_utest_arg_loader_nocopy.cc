@@ -43,19 +43,18 @@ uint32_t g_freeCount = 0U;
 uint32_t g_pcieBarCapability = RT_CAPABILITY_NOT_SUPPORT;
 
 rtError_t DevMemAllocForArgLoader(
-    Driver* drv, void** dptr, uint64_t size, rtMemType_t type, uint32_t deviceId, uint16_t moduleId, bool isLogError,
-    bool readOnlyFlag, bool starsTillingFlag, bool isNewApi, bool cpOnlyFlag)
+    Driver* drv, void** dptr, uint64_t size, rtMemType_t type, uint32_t deviceId, DevMemBackupType backupType,
+    uint16_t moduleId, bool isLogError, DevMemAllocConfig config, bool isNewApi)
 {
     UNUSED(drv);
     UNUSED(size);
     UNUSED(type);
     UNUSED(deviceId);
+    UNUSED(backupType);
     UNUSED(moduleId);
     UNUSED(isLogError);
-    UNUSED(readOnlyFlag);
-    UNUSED(starsTillingFlag);
+    UNUSED(config);
     UNUSED(isNewApi);
-    UNUSED(cpOnlyFlag);
 
     if (!g_allocResults.empty()) {
         const AllocResult result = g_allocResults.front();
@@ -145,7 +144,7 @@ protected:
         runtime_->SetAicpuCnt(0);
 
         Driver* const driver = &driver_;
-        MOCKER_CPP_VIRTUAL(driver, &Driver::DevMemAlloc).stubs().will(invoke(DevMemAllocForArgLoader));
+        MOCKER_CPP_VIRTUAL(driver, &Driver::DevMemAllocWithBackupFlag).stubs().will(invoke(DevMemAllocForArgLoader));
         MOCKER_CPP_VIRTUAL(driver, &Driver::DevMemFree).stubs().will(invoke(DevMemFreeForArgLoader));
         MOCKER_CPP_VIRTUAL(driver, &Driver::MemCopySync).stubs().will(invoke(MemCopySyncForArgLoader));
         MOCKER_CPP_VIRTUAL(driver, &Driver::CheckSupportPcieBarCopy)

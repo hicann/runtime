@@ -91,8 +91,8 @@ rtError_t Module::Load(Program* const prog)
         const auto& progKernelName = prog->GetKernelNamesBuffer();
         if (!progKernelName.empty()) {
             RT_LOG(RT_LOG_DEBUG, "load on host the kernel name, size=%zu(bytes).", progKernelName.size());
-            error =
-                curDrv->DevMemAlloc(&kernelNamesBaseAddr_, progKernelName.size() + 1U, RT_MEMORY_HBM, device_->Id_());
+            error = curDrv->DevMemAllocWithBackupFlag(
+                &kernelNamesBaseAddr_, progKernelName.size() + 1U, RT_MEMORY_HBM, device_->Id_());
             ERROR_GOTO(
                 error, FAIL_FREE,
                 "Malloc kernel names buffer failed, type=%d(RT_MEMORY_HBM), "
@@ -104,7 +104,8 @@ rtError_t Module::Load(Program* const prog)
                 RT_MEMCPY_HOST_TO_DEVICE);
             ERROR_GOTO(error, FAIL_FREE, "Memcpy failed, retCode=%#x.", static_cast<uint32_t>(error));
 
-            error = curDrv->DevMemAlloc(&soNamesBaseAddr_, prog->GetSoName().size(), RT_MEMORY_HBM, device_->Id_());
+            error = curDrv->DevMemAllocWithBackupFlag(
+                &soNamesBaseAddr_, prog->GetSoName().size(), RT_MEMORY_HBM, device_->Id_());
             ERROR_GOTO(
                 error, FAIL_FREE,
                 "Malloc so names buffer failed, size=%zu(bytes), "
@@ -147,10 +148,12 @@ rtError_t Module::Load(Program* const prog)
             isPoolMem = true;
         }
 
+        DevMemAllocConfig allocConfig = {};
+        allocConfig.readOnlyFlag = readonly;
         if (devMem == nullptr) {
-            error = curDrv->DevMemAlloc(
+            error = curDrv->DevMemAllocWithBackupFlag(
                 &devMem, static_cast<uint64_t>(devSize + INSTR_ALIGN_SIZE), RT_MEMORY_HBM, device_->Id_(),
-                MODULEID_RUNTIME, true, readonly);
+                SNAPSHOT_REQUIRED_BACKUP, MODULEID_RUNTIME, true, allocConfig);
             isPoolMem = false;
             ERROR_GOTO(error, FAIL_FREE, "Malloc device program failed, retCode=%#x.", static_cast<uint32_t>(error));
         }

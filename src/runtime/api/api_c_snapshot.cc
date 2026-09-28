@@ -75,8 +75,7 @@ rtError_t rtSnapShotProcessGetState(rtProcessState* state)
     return ACL_RT_SUCCESS;
 }
 
-VISIBILITY_DEFAULT
-rtError_t rtSnapShotProcessBackup()
+static rtError_t ProcessBackup(const rtSnapShotBackupArgs* const args)
 {
     rtError_t error = CheckSnapShotFeatureSupport();
     if (error != RT_ERROR_NONE) {
@@ -85,14 +84,19 @@ rtError_t rtSnapShotProcessBackup()
 
     ApiSnapshot* const apiSnapshotInstance = ApiSnapshot::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiSnapshotInstance);
-    error = apiSnapshotInstance->SnapShotProcessBackup();
+    error = apiSnapshotInstance->SnapShotProcessBackup(args);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
 
 VISIBILITY_DEFAULT
-rtError_t rtSnapShotProcessRestore()
+rtError_t rtSnapShotProcessBackup() { return ProcessBackup(nullptr); }
+
+VISIBILITY_DEFAULT
+rtError_t rtSnapShotProcessBackupWithArgs(const rtSnapShotBackupArgs* const args) { return ProcessBackup(args); }
+
+static rtError_t ProcessRestore(const rtSnapShotRestoreArgs* const args)
 {
     rtError_t error = CheckSnapShotFeatureSupport();
     if (error != RT_ERROR_NONE) {
@@ -101,11 +105,17 @@ rtError_t rtSnapShotProcessRestore()
 
     ApiSnapshot* const apiSnapshotInstance = ApiSnapshot::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiSnapshotInstance);
-    error = apiSnapshotInstance->SnapShotProcessRestore();
+    error = apiSnapshotInstance->SnapShotProcessRestore(args);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
+
+VISIBILITY_DEFAULT
+rtError_t rtSnapShotProcessRestore() { return ProcessRestore(nullptr); }
+
+VISIBILITY_DEFAULT
+rtError_t rtSnapShotProcessRestoreWithArgs(const rtSnapShotRestoreArgs* const args) { return ProcessRestore(args); }
 
 VISIBILITY_DEFAULT
 rtError_t rtSnapShotCallbackRegister(rtSnapShotStage stage, rtSnapShotCallBack callback, void* args)

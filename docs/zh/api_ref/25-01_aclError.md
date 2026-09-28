@@ -238,7 +238,7 @@ typedef int aclError;
 | #define  ACL_ERROR_SNAPSHOT_LOCK_FAILED  507906 | 锁定当前进程失败。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
 | #define  ACL_ERROR_SNAPSHOT_UNLOCK_FAILED  507907 | 解锁当前进程失败。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
 | #define  ACL_ERROR_SNAPSHOT_BACKUP_FAILED  507908 | 备份快照进程失败。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| #define  ACL_ERROR_SNAPSHOT_RESTORE_FAILED  507909 | 恢复快照进程失败。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
+| #define  ACL_ERROR_SNAPSHOT_RESTORE_FAILED  507909 | 恢复快照进程失败，包括备份版本信息无效，或恢复时Runtime使用的HAL API版本、驱动API版本与备份时不一致。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
 | #define  ACL_ERROR_HOST_MEMORY_ALREADY_REGISTERED  507910 | Host内存已经被注册。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
 | #define  ACL_ERROR_HOST_MEMORY_NOT_REGISTERED  507911 | 待取消注册的Host内存未曾注册。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
 | #define  ACL_ERROR_SNAPSHOT_CALLBACK_FAILED  507912 | 快照某个阶段，执行回调函数失败。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
