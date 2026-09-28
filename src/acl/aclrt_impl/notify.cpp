@@ -186,7 +186,8 @@ aclError aclrtCntNotifyWaitWithTimeoutImpl(aclrtCntNotify cntNotify, aclrtStream
     ACL_PROFILING_REG(acl::AclProfType::AclrtCntNotifyWaitWithTimeout);
     ACL_LOG_INFO("start to execute aclrtCntNotifyWaitWithTimeout");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(info);
-    ACL_CHECK_INVALID_VALUE_WITH_EXPECT_RET(info->isClear <= 1U, info->isClear, "0 or 1", ACL_ERROR_INVALID_PARAM);
+    ACL_CHECK_INVALID_VALUE_WITH_EXPECT_RET(
+        info->isClear <= 1U, static_cast<uint32_t>(info->isClear), "0 or 1", ACL_ERROR_INVALID_PARAM);
     ACL_REQUIRES_RTS_OK(rtsCntNotifyWaitWithTimeout(cntNotify, stream, reinterpret_cast<rtCntNotifyWaitInfo_t*>(info)));
 
     ACL_LOG_INFO("successfully execute aclrtCntNotifyWaitWithTimeout");

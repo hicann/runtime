@@ -2345,7 +2345,7 @@ rtError_t Model::GetModelName(const uint32_t maxLen, char_t* const name) const
     if (error != EOK) {
         std::stringstream ss;
         ss << std::hex << "name=0x" << RtPtrToValue(name) << ", src=0x" << RtPtrToValue(name_.c_str()) << std::dec
-           << ", maxLen=" << maxLen << ", size=" << name_.length() + 1U << ".";
+           << ", maxLen=" << maxLen << ", size=" << (name_.length() + 1U) << ".";
         RT_LOG_OUTER_MSG_IMPL(
             ErrorCode::EE1020, "Getting the model name", "memcpy_s", std::to_string(error), strerror(error),
             ss.str().c_str());

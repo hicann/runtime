@@ -292,7 +292,7 @@ static rtError_t ConvertTimeoutByAttrId(
         realTimeout = 0ULL;
     } else {
         uint32_t opTimeout = 0U;
-        rtError_t error = GetOpExecuteMsTimeout(&opTimeout, &timeout);
+        const rtError_t error = GetOpExecuteMsTimeout(&opTimeout, &timeout);
         COND_RETURN_AND_MSG_OUTER(
             error == RT_ERROR_FEATURE_NOT_SUPPORT, error, ErrorCode::EE1006, "Obtaining kernel function attributes",
             (attrId == RT_LAUNCH_KERNEL_ATTR_TIMEOUT) ? "The TIMEOUT attribute" : "The TIMEOUT_US attribute",

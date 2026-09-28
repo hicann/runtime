@@ -548,7 +548,7 @@ rtError_t ReConstructCaptureConditionTaskFc(TaskInfo* taskInfo, CondHandle* cond
         condTaskInfo->funcCallHostMem == nullptr, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013,
         condTaskInfo->funCallMemSize, "malloc");
 
-    const rtMemcpyKind_t kind = RT_MEMCPY_HOST_TO_DEVICE;
+    constexpr rtMemcpyKind_t kind = RT_MEMCPY_HOST_TO_DEVICE;
     ret = drv->MemCopySync(
         condTaskInfo->headSqArrPtrArrSvmMem, totalModelSize, headSqArrPtrArr.data(), totalModelSize, kind);
     COND_RETURN_ERROR(ret != RT_ERROR_NONE, ret, "H2D ptrArr failed, retCode=%#x.", ret);

@@ -275,7 +275,7 @@ const std::string RT_MEMORY_ALLOC_ERROR = "EL0004";
 std::string GetMemModuleName(const uint16_t moduleId);
 #define RT_GET_MODULE_NAME(moduleId) GetMemModuleName(moduleId)
 
-enum class RtCtrlType {
+enum class RtCtrlType : int32_t {
     RT_CTRL_TYPE_ADDR_MAP = 0,
     RT_CTRL_TYPE_ADDR_UNMAP = 1,
     RT_CTRL_TYPE_SUPPORT_FEATURE = 2,
