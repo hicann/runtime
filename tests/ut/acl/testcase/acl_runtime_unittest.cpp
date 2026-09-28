@@ -7888,6 +7888,20 @@ TEST_F(UTEST_ACL_Runtime, aclrtIpcMemGetExportKey_success)
     EXPECT_EQ(ret, ACL_SUCCESS);
 }
 
+TEST_F(UTEST_ACL_Runtime, aclrtIpcMemGetExportKey_rejects_length_overflow)
+{
+    void* devPtr = (void*)0xff;
+    constexpr size_t size = 1;
+    char key[] = "key";
+    constexpr uint64_t flags = 1;
+    constexpr size_t maxLen = static_cast<size_t>(UINT32_MAX);
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtsIpcMemGetExportKey(_, _, _, UINT32_MAX, _))
+        .WillOnce(Return(ACL_SUCCESS));
+    EXPECT_EQ(aclrtIpcMemGetExportKey(devPtr, size, key, maxLen, flags), ACL_SUCCESS);
+    EXPECT_EQ(aclrtIpcMemGetExportKey(devPtr, size, key, maxLen + 1U, flags), ACL_ERROR_INVALID_PARAM);
+}
+
 TEST_F(UTEST_ACL_Runtime, aclrtIpcMemClose_failed_with_invalid_args)
 {
     const char* key = "key";

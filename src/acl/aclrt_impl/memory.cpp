@@ -1884,6 +1884,7 @@ aclError aclrtIpcMemGetExportKeyImpl(void* devPtr, size_t size, char* key, size_
         "start to execute aclrtIpcMemGetExportKey, size is [%zu], len is [%zu], flags is [%lu]", size, len, flags);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(devPtr);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(key);
+    ACL_REQUIRES_LE(len, static_cast<size_t>(UINT32_MAX));
     ACL_REQUIRES_RTS_OK(rtsIpcMemGetExportKey(devPtr, size, key, static_cast<uint32_t>(len), flags));
     return ACL_SUCCESS;
 }
