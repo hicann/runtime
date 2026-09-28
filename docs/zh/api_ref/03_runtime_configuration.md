@@ -459,7 +459,7 @@ aclError aclrtResetStreamResLimit(aclrtStream stream)
 ## aclrtUseStreamResInCurrentThread
 
 ```c
-aclError aclrtUseStreamResInCurrentThread([aclrtStream](25-05_Typedefs.md#aclrtStream) stream)
+aclError aclrtUseStreamResInCurrentThread(aclrtStream stream)
 ```
 
 ### 产品支持情况
