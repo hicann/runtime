@@ -1809,7 +1809,7 @@ TEST_F(ApiTest, rdma_send_test_3)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     Engine* engine = new AsyncHwtsEngine(NULL);
-    MOCKER_CPP_VIRTUAL(engine, &Engine::SubmitTaskNormal).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER_CPP_VIRTUAL(engine, &Engine::SubmitTask).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
 
     error = rtRDMASend(1, 1, stream);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
@@ -1891,7 +1891,7 @@ TEST_F(ApiTest, rdma_db_send_test_3)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     Engine* engine = new AsyncHwtsEngine(NULL);
-    MOCKER_CPP_VIRTUAL(engine, &Engine::SubmitTaskNormal).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER_CPP_VIRTUAL(engine, &Engine::SubmitTask).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
 
     error = rtRDMADBSend(1, 1, stream);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);

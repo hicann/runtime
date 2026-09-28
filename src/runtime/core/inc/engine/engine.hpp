@@ -139,7 +139,8 @@ public:
 
     // Submit task to process.
     virtual rtError_t SubmitTask(TaskInfo* const workTask, uint32_t* const flipTaskId = nullptr, int32_t timeout = -1);
-    virtual rtError_t SubmitTaskNormal(TaskInfo* const workTask, uint32_t* const flipTaskId = nullptr);
+    virtual rtError_t HwtsSubmitTask(
+        TaskInfo* const workTask, uint32_t* const flipTaskId = nullptr, const int32_t timeout = -1);
     virtual rtError_t TaskReclaim(const uint32_t streamId, const bool limited, uint32_t& taskId);
     virtual rtError_t TaskReclaimByStm(Stream* const stm, const bool limited, uint32_t& taskId);
     virtual rtError_t TaskReclaimAllForNoRes(const bool limited, uint32_t& taskId);
@@ -198,6 +199,8 @@ public:
         observerNum_++;
     }
 
+    rtError_t ProcessAicpuTask(TaskInfo* const workTask);
+
     void TaskFinished(const uint32_t devId, const TaskInfo* const workTask)
     {
         for (uint32_t i = 0U; i < observerNum_; i++) {
@@ -219,6 +222,7 @@ public:
 
     rtError_t CreatePrintfThread(void);
     bool isEnablePrintfThread(void);
+    void ProcessObserver(const uint32_t deviceId, TaskInfo* const task, rtTsCommand_t* const command) const;
 
 protected:
     Device* GetDevice() const { return device_; }
@@ -234,7 +238,6 @@ protected:
         const uint64_t msec = MAX_UINT16_NUM);
     void GetProfileEnableFlag(uint8_t* const profileEnabled) const;
     void ReportStatusFailProc(const rtError_t error, const uint32_t deviceId) const;
-    void ProcessObserver(const uint32_t deviceId, TaskInfo* const task, rtTsCommand_t* const command) const;
     rtError_t SendCommand(
         TaskInfo* const workTask, rtTsCommand_t& cmdLocal, rtTsCmdSqBuf_t* const command, const uint32_t sendSqeNum);
     void ProcessProfAndObserver(TaskInfo* workTask, const uint32_t deviceId);

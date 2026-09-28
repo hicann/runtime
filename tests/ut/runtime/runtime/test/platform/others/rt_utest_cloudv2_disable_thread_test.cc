@@ -371,14 +371,14 @@ TEST_F(ApiCloudV2DisableThreadTest, kernel_launch_sq_task_send_error)
     Device* dev = stm->Device_();
     MOCKER_CPP_VIRTUAL(dev, &Device::GetDevRunningState).stubs().will(returnValue((uint32_t)DEV_RUNNING_DOWN));
 
-    int32_t errCode = 8888;
-    MOCKER_CPP_VIRTUAL((NpuDriver*)(dev->Driver_()), &NpuDriver::SqTaskSend).stubs().will(returnValue(errCode));
+    MOCKER(halSqTaskSend).expects(once()).will(returnValue(DRV_ERROR_IOCRL_FAIL));
+    MOCKER_CPP_VIRTUAL(stm, &Stream::PrintStmDfxAndCheckDevice).expects(once()).will(returnValue(RT_ERROR_DRV_ERR));
 
     const bool isDisableThread = Runtime::Instance()->GetDisableThread();
     EXPECT_EQ(isDisableThread, true);
 
     error = rtKernelLaunch(&function_, 1, (void*)args, sizeof(args), NULL, stream_);
-    EXPECT_EQ(error, errCode);
+    EXPECT_EQ(error, ACL_ERROR_RT_DRV_INTERNAL_ERROR);
 }
 
 TEST_F(ApiCloudV2DisableThreadTest, task_group_create)

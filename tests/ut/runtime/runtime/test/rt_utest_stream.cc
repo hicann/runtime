@@ -676,6 +676,7 @@ TEST_F(StreamTest, stream_sync_fail)
 
     // Model model;
     rt_ut::UnwrapOrNull<Model>(model)->UnbindStream(NULL, false);
+    stream_var->SetModel(nullptr);
 
     error = rtModelDestroy(model);
     error = rtEventDestroy(event);
@@ -1928,7 +1929,6 @@ TEST_F(StreamTest, GetStarsVersion)
     stream->taskResMang_ = &taskResMng;
 
     MOCKER_CPP_VIRTUAL(device, &RawDevice::SubmitTask).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER(AllocTaskAndSend).stubs().will(returnValue(RT_ERROR_NONE));
 
     stream->taskResMang_ = nullptr;
 

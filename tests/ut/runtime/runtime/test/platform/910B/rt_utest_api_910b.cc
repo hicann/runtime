@@ -560,7 +560,6 @@ TEST_F(CloudV2ApiTest910b, TEST_MODEL_LOAD_COMPLETE_FAIL)
     rtError_t error = RT_ERROR_NONE;
     rtModel_t model;
     rtStream_t stream;
-    Engine* engine = new AsyncHwtsEngine(NULL);
 
     error = rtModelCreate(&model, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -570,8 +569,6 @@ TEST_F(CloudV2ApiTest910b, TEST_MODEL_LOAD_COMPLETE_FAIL)
 
     error = rtModelBindStream(model, stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(engine, &Engine::SubmitTaskNormal).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
 
     error = rtModelLoadComplete(model);
     EXPECT_NE(error, RT_ERROR_NONE);
@@ -584,9 +581,6 @@ TEST_F(CloudV2ApiTest910b, TEST_MODEL_LOAD_COMPLETE_FAIL)
 
     error = rtStreamDestroy(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
-
-    delete engine;
-    GlobalMockObject::verify();
 }
 
 TEST_F(CloudV2ApiTest910b, TEST_MODEL_LOAD_COMPLETE)

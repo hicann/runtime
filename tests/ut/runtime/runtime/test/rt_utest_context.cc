@@ -160,16 +160,13 @@ TEST_F(ContextTest, NpuGetFloatStatus_abnormal_001)
     EXPECT_NE(stm->taskResMang_, nullptr);
 
     MOCKER(NpuGetFloatStaTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER(AllocTaskAndSend).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(SubmitTaskDc).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
-    Engine* engine = new AsyncHwtsEngine(nullptr);
-    MOCKER_CPP_VIRTUAL(engine, &Engine::SubmitTaskNormal).stubs().will(returnValue(RT_ERROR_NONE));
 
     error = StreamNpuGetFloatStatus(nullptr, 0U, 0U, stm, true);
     EXPECT_EQ(error, RT_ERROR_NONE);
     stm->taskResMang_ = preTaskResMng;
     (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(devId);
-    delete engine;
 }
 
 TEST_F(ContextTest, NpuClearFloatStatus_abnormal_001)
@@ -206,16 +203,13 @@ TEST_F(ContextTest, NpuClearFloatStatus_abnormal_001)
     EXPECT_NE(stm->taskResMang_, nullptr);
 
     MOCKER(NpuClrFloatStaTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER(AllocTaskAndSend).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(SubmitTaskDc).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
-    Engine* engine = new AsyncHwtsEngine(nullptr);
-    MOCKER_CPP_VIRTUAL(engine, &Engine::SubmitTaskNormal).stubs().will(returnValue(RT_ERROR_NONE));
 
     error = StreamNpuClearFloatStatus(0U, stm, true);
     EXPECT_EQ(error, RT_ERROR_NONE);
     stm->taskResMang_ = preTaskResMng;
     (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(devId);
-    delete engine;
 }
 
 TEST_F(ContextTest, launch_update_sqe_anormal_001)
@@ -252,16 +246,13 @@ TEST_F(ContextTest, launch_update_sqe_anormal_001)
     EXPECT_NE(stm->taskResMang_, nullptr);
 
     MOCKER(MemcpyAsyncD2HTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER(AllocTaskAndSend).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER(SubmitTaskDc).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
     MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
-    Engine* engine = new AsyncHwtsEngine(nullptr);
-    MOCKER_CPP_VIRTUAL(engine, &Engine::SubmitTaskNormal).stubs().will(returnValue(RT_ERROR_NONE));
 
     error = LaunchSqeUpdateTask(nullptr, 40U, 2U, 0, stm);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
     stm->taskResMang_ = preTaskResMng;
     (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(devId);
-    delete engine;
 }
 #if 0
 TEST_F(ContextTest, launch_update_sqe_anormal_002)

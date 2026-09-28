@@ -567,7 +567,7 @@ TEST_F(ApiTest, TEST_MODEL_LOAD_COMPLETE_FAIL)
     error = rtModelBindStream(model, stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    MOCKER_CPP_VIRTUAL(engine, &Engine::SubmitTaskNormal).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER_CPP_VIRTUAL(engine, &Engine::SubmitTask).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
 
     error = rtModelLoadComplete(model);
     EXPECT_NE(error, RT_ERROR_NONE);

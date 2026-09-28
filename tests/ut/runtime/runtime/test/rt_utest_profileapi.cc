@@ -987,7 +987,7 @@ TEST_F(ProfileApiTest, SET_DEVICE_TEST_2)
     rtError_t error;
 
     Engine* engine = new AsyncHwtsEngine(NULL);
-    MOCKER_CPP_VIRTUAL(engine, &Engine::SubmitTaskNormal).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER_CPP_VIRTUAL(engine, &Engine::SubmitTask).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
 
     error = rtSetDevice(0);
     EXPECT_EQ(error, RT_ERROR_NONE);

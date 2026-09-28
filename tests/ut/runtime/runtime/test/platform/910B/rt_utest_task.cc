@@ -953,6 +953,372 @@ protected:
     virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
+class TaskResSenderTest : public testing::Test {
+protected:
+    static TaskInfo* AllocateTaskInfo(TaskResManage*, Stream* stream, uint32_t slot, uint16_t taskId, tsTaskType_t)
+    {
+        TaskResSenderTest* const test = active_;
+        if (test->allocCount_ < 2U) {
+            test->slots_[test->allocCount_] = slot;
+            test->taskIds_[test->allocCount_] = taskId;
+        }
+        test->allocCount_++;
+        return (test->allocCount_ == 1U) ? nullptr : &test->persistent_;
+    }
+
+    static void UpdateStreamAfterReclaim(TaskFactory*, Stream* stream)
+    {
+        stream->SetAbortStatus(active_->abortAfterFirstAlloc_);
+        stream->SetLastTaskId(active_->lastTaskIdAfterFirstAlloc_);
+    }
+
+    static void ClearLimitFlag(StarsEngine*, Stream* stream) { stream->SetLimitFlag(false); }
+
+    void SetUp() override
+    {
+        device_ = new RawDevice(0);
+        ASSERT_EQ(device_->Init(), RT_ERROR_NONE);
+        stream_ = new Stream(device_, 0);
+        ASSERT_EQ(stream_->Setup(), RT_ERROR_NONE);
+        InitByStream(&source_, stream_);
+        InitByStream(&persistent_, stream_);
+        ASSERT_EQ(MaintenanceTaskInit(&source_, MT_STREAM_RECYCLE_TASK, 0U, false), RT_ERROR_NONE);
+        ASSERT_EQ(MaintenanceTaskInit(&persistent_, MT_STREAM_RECYCLE_TASK, 0U, false), RT_ERROR_NONE);
+        active_ = this;
+    }
+
+    void TearDown() override
+    {
+        ScopeGuard cleanup([&]() {
+            GlobalMockObject::reset();
+            active_ = nullptr;
+            COND_PROC(stream_ != nullptr, stream_->pendingNum_.Set(0U); delete stream_; stream_ = nullptr;);
+            COND_PROC(device_ != nullptr, delete device_; device_ = nullptr;);
+        });
+        GlobalMockObject::verify();
+    }
+
+    void PrepareSender(uint32_t sendSqeNum = 1U)
+    {
+        stream_->pendingNum_.Set(4U);
+        const uint16_t taskId = static_cast<uint16_t>(stream_->GetLastTaskId() + 1U);
+        const uint32_t slot = taskId % stream_->taskResMang_->GetTaskPoolNum();
+        MOCKER_CPP_VIRTUAL(device_->Engine_(), &Engine::TryRecycleTask)
+            .expects(once())
+            .will(returnValue(RT_ERROR_NONE));
+        MOCKER_CPP(&TaskResManage::AllocTaskInfoByTaskResId)
+            .expects(once())
+            .with(eq(stream_), eq(slot), eq(taskId), eq(source_.type))
+            .will(returnValue(&persistent_));
+        MOCKER(GetSendSqeNum).stubs().with(eq(&persistent_)).will(returnValue(sendSqeNum));
+        MOCKER(WaitAsyncCopyComplete).stubs().with(eq(&persistent_)).will(returnValue(RT_ERROR_NONE));
+    }
+
+    void PrepareNormalSender()
+    {
+        MOCKER_CPP_VIRTUAL(device_->Engine_(), &Engine::TryRecycleTask).stubs().will(returnValue(RT_ERROR_NONE));
+        MOCKER(GetSendSqeNum).stubs().with(eq(&source_)).will(returnValue(1U));
+        MOCKER(WaitAsyncCopyComplete).stubs().with(eq(&source_)).will(returnValue(RT_ERROR_NONE));
+    }
+
+    void ExpectStreamUnlocked()
+    {
+        stream_->StreamLock();
+        stream_->StreamUnLock();
+    }
+
+    RawDevice* device_ = nullptr;
+    Stream* stream_ = nullptr;
+    TaskInfo source_ = {};
+    TaskInfo persistent_ = {};
+    uint32_t allocCount_ = 0U;
+    uint16_t taskIds_[2] = {};
+    uint32_t slots_[2] = {};
+    rtError_t abortAfterFirstAlloc_ = RT_ERROR_NONE;
+    uint32_t lastTaskIdAfterFirstAlloc_ = 0U;
+    static TaskResSenderTest* active_;
+};
+
+TaskResSenderTest* TaskResSenderTest::active_ = nullptr;
+
+TEST_F(TaskResSenderTest, NormalBindProcessesTask)
+{
+    TaskInfo task = {};
+    InitByStream(&task, stream_);
+    TaskResManage* const taskRes = stream_->taskResMang_;
+    stream_->taskResMang_ = nullptr;
+    stream_->SetBindFlag(true);
+    const uint32_t pending = device_->Engine_()->GetPendingNum();
+    MOCKER(StarsAllocTaskAndSend).expects(once()).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&Engine::ProcessTask).expects(once()).with(eq(&task), eq(device_->Id_())).will(returnValue(true));
+    MOCKER(AllocAndSendFlipTask).expects(once()).will(returnValue(RT_ERROR_NONE));
+
+    EXPECT_EQ(StarsSubmitTask(&task, stream_, nullptr, -1), RT_ERROR_NONE);
+    EXPECT_EQ(device_->Engine_()->GetPendingNum(), pending + 1U);
+    device_->Engine_()->pendingNum_.Set(pending);
+    stream_->SetBindFlag(false);
+    stream_->taskResMang_ = taskRes;
+}
+
+TEST_F(TaskResSenderTest, NormalPreservesSourceOwner)
+{
+    Runtime* const runtime = Runtime::Instance();
+    const bool profileEnabled = runtime->GetProfileEnableFlag() != 0U;
+    const ScopeGuard cleanup([&]() { runtime->SetProfileEnableFlag(profileEnabled); });
+    runtime->SetProfileEnableFlag(true);
+    PrepareNormalSender();
+    TaskResManage* const taskRes = stream_->taskResMang_;
+    stream_->taskResMang_ = nullptr;
+    stream_->pendingNum_.Set(2U);
+    MOCKER_CPP(&StarsEngine::AddTaskToStream)
+        .expects(once())
+        .with(eq(&source_), eq(1U))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&Engine::ProcessObserver).expects(never());
+    MOCKER(halSqTaskSend).expects(once()).will(returnValue(DRV_ERROR_NONE));
+    MOCKER_CPP(&TaskFactory::Recycle).expects(never());
+
+    EXPECT_EQ(StarsAllocTaskAndSend(&source_, stream_, nullptr), RT_ERROR_NONE);
+    EXPECT_EQ(source_.profEn, 1U);
+    EXPECT_EQ(stream_->GetPendingNum(), 3U);
+    ExpectStreamUnlocked();
+    stream_->taskResMang_ = taskRes;
+}
+
+TEST_F(TaskResSenderTest, NormalFailureOnlyUnlocks)
+{
+    PrepareNormalSender();
+    TaskResManage* const taskRes = stream_->taskResMang_;
+    stream_->taskResMang_ = nullptr;
+    stream_->pendingNum_.Set(3U);
+    MOCKER_CPP(&StarsEngine::AddTaskToStream).expects(once()).will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER_CPP(&TaskFactory::Recycle).expects(never());
+
+    EXPECT_EQ(StarsAllocTaskAndSend(&source_, stream_, nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(stream_->GetPendingNum(), 3U);
+    ExpectStreamUnlocked();
+    stream_->taskResMang_ = taskRes;
+}
+
+TEST_F(TaskResSenderTest, NormalChecksContextWhileLimited)
+{
+    PrepareNormalSender();
+    TaskResManage* const taskRes = stream_->taskResMang_;
+    stream_->taskResMang_ = nullptr;
+    stream_->SetLimitFlag(true);
+    MOCKER_CPP(&StarsEngine::SendingWaitProc).expects(once()).will(invoke(ClearLimitFlag));
+    MOCKER_CPP(&Stream::CheckContextTaskSend).expects(once()).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&StarsEngine::AddTaskToStream).expects(once()).will(returnValue(RT_ERROR_NONE));
+    MOCKER(halSqTaskSend).expects(once()).will(returnValue(DRV_ERROR_NONE));
+
+    EXPECT_EQ(StarsAllocTaskAndSend(&source_, stream_, nullptr), RT_ERROR_NONE);
+    ExpectStreamUnlocked();
+    stream_->taskResMang_ = taskRes;
+}
+
+TEST_F(TaskResSenderTest, InitialAbortOnlyUnlocks)
+{
+    stream_->pendingNum_.Set(4U);
+    stream_->SetAbortStatus(RT_ERROR_STREAM_ABORT);
+    MOCKER_CPP_VIRTUAL(device_->Engine_(), &Engine::TryRecycleTask).expects(once()).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&TaskResManage::AllocTaskInfoByTaskResId).expects(never());
+    MOCKER_CPP(&TaskFactory::Recycle).expects(never());
+
+    EXPECT_EQ(StarsAllocTaskAndSend(&source_, stream_, nullptr), RT_ERROR_STREAM_ABORT);
+    EXPECT_EQ(stream_->GetPendingNum(), 4U);
+    ExpectStreamUnlocked();
+    stream_->SetAbortStatus(RT_ERROR_NONE);
+}
+
+TEST_F(TaskResSenderTest, BindTaskResourceFullOnlyUnlocks)
+{
+    stream_->SetBindFlag(true);
+    stream_->pendingNum_.Set(4U);
+    MOCKER_CPP_VIRTUAL(device_->Engine_(), &Engine::TryRecycleTask).expects(once()).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&TaskResManage::AllocTaskInfoByTaskResId)
+        .expects(once())
+        .will(returnValue(static_cast<TaskInfo*>(nullptr)));
+    MOCKER_CPP(&TaskFactory::Recycle).expects(never());
+
+    EXPECT_EQ(StarsAllocTaskAndSend(&source_, stream_, nullptr), RT_ERROR_STREAM_FULL);
+    EXPECT_EQ(stream_->GetPendingNum(), 4U);
+    ExpectStreamUnlocked();
+    stream_->SetBindFlag(false);
+}
+
+TEST_F(TaskResSenderTest, LoadArgsFailureUnlocksAndRecyclesPersistentOwner)
+{
+    stream_->pendingNum_.Set(4U);
+    const uint16_t taskId = static_cast<uint16_t>(stream_->GetLastTaskId() + 1U);
+    const uint32_t slot = taskId % stream_->taskResMang_->GetTaskPoolNum();
+    MOCKER_CPP_VIRTUAL(device_->Engine_(), &Engine::TryRecycleTask).expects(once()).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&TaskResManage::AllocTaskInfoByTaskResId)
+        .expects(once())
+        .with(eq(stream_), eq(slot), eq(taskId), eq(source_.type))
+        .will(returnValue(&persistent_));
+    MOCKER(LoadArgsInfo)
+        .expects(once())
+        .with(eq(&source_), eq(stream_), eq(static_cast<uint16_t>(slot)))
+        .will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER(GetSendSqeNum).expects(never());
+    MOCKER_CPP(&TaskFactory::Recycle).expects(once()).with(eq(&persistent_)).will(returnValue(RT_ERROR_NONE));
+
+    EXPECT_EQ(StarsAllocTaskAndSend(&source_, stream_, nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(stream_->GetPendingNum(), 4U);
+    ExpectStreamUnlocked();
+}
+
+TEST_F(TaskResSenderTest, SoftwareCopyFailureCleansPersistentOwner)
+{
+    PrepareSender();
+    const ScopeGuard restoreHardwareSqMode([&]() { stream_->isSoftwareSqEnable_ = false; });
+    stream_->SetSoftWareSqEnable();
+    MOCKER_CPP(&StarsEngine::AddTaskToStream).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(memcpy_s).expects(once()).will(returnValue(EINVAL));
+    MOCKER(halSqTaskSend).expects(never());
+    MOCKER_CPP(&TaskFactory::Recycle).expects(once()).with(eq(&persistent_)).will(returnValue(RT_ERROR_NONE));
+
+    EXPECT_EQ(StarsAllocTaskAndSend(&source_, stream_, nullptr), RT_ERROR_TASK_BASE);
+    EXPECT_EQ(stream_->GetPendingNum(), 4U);
+    ExpectStreamUnlocked();
+}
+
+TEST_F(TaskResSenderTest, AddFailureCleansPersistentOwner)
+{
+    PrepareSender();
+    MOCKER_CPP(&StarsEngine::AddTaskToStream).expects(once()).will(returnValue(RT_ERROR_LOST_HEARTBEAT));
+    MOCKER_CPP(&TaskFactory::Recycle).expects(once()).with(eq(&persistent_)).will(returnValue(RT_ERROR_NONE));
+
+    EXPECT_EQ(StarsAllocTaskAndSend(&source_, stream_, nullptr), RT_ERROR_LOST_HEARTBEAT);
+    EXPECT_EQ(stream_->GetPendingNum(), 4U);
+    ExpectStreamUnlocked();
+}
+
+TEST_F(TaskResSenderTest, WaitFailureCleansPersistentOwner)
+{
+    PrepareSender();
+    MOCKER_CPP(&StarsEngine::AddTaskToStream).expects(once()).will(returnValue(RT_ERROR_NONE));
+    MOCKER(WaitAsyncCopyComplete).reset();
+    MOCKER(WaitAsyncCopyComplete).expects(once()).with(eq(&persistent_)).will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER_CPP(&TaskFactory::Recycle).expects(once()).with(eq(&persistent_)).will(returnValue(RT_ERROR_NONE));
+
+    EXPECT_EQ(StarsAllocTaskAndSend(&source_, stream_, nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(stream_->GetPendingNum(), 4U);
+    ExpectStreamUnlocked();
+}
+
+TEST_F(TaskResSenderTest, DeviceDownUsesCommonErrorAndPreservesOwner)
+{
+    PrepareSender();
+    MOCKER_CPP(&StarsEngine::AddTaskToStream).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(halSqTaskSend).expects(once()).will(returnValue(DRV_ERROR_IOCRL_FAIL));
+    MOCKER_CPP_VIRTUAL(stream_, &Stream::PrintStmDfxAndCheckDevice).expects(once()).will(returnValue(RT_ERROR_DRV_ERR));
+    MOCKER_CPP(&TaskFactory::Recycle).expects(never());
+
+    EXPECT_EQ(StarsAllocTaskAndSend(&source_, stream_, nullptr), RT_ERROR_DRV_ERR);
+    EXPECT_EQ(stream_->GetPendingNum(), 4U);
+    ExpectStreamUnlocked();
+    GlobalMockObject::verify();
+    GlobalMockObject::reset();
+
+    TaskResManage* const taskRes = stream_->taskResMang_;
+    stream_->taskResMang_ = nullptr;
+    PrepareNormalSender();
+    stream_->pendingNum_.Set(4U);
+    MOCKER_CPP(&StarsEngine::AddTaskToStream).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(halSqTaskSend).expects(once()).will(returnValue(DRV_ERROR_IOCRL_FAIL));
+    MOCKER_CPP_VIRTUAL(stream_, &Stream::PrintStmDfxAndCheckDevice).expects(once()).will(returnValue(RT_ERROR_DRV_ERR));
+    MOCKER_CPP(&TaskFactory::Recycle).expects(never());
+
+    EXPECT_EQ(StarsAllocTaskAndSend(&source_, stream_, nullptr), RT_ERROR_DRV_ERR);
+    EXPECT_EQ(stream_->GetPendingNum(), 4U);
+    ExpectStreamUnlocked();
+    stream_->taskResMang_ = taskRes;
+}
+
+TEST_F(TaskResSenderTest, BindFullRollsBackPendingOnce)
+{
+    stream_->SetBindFlag(true);
+    for (uint32_t pos = 1U; pos < stream_->GetSqDepth(); ++pos) {
+        ASSERT_EQ(stream_->StarsAddTaskToStream(&persistent_, 1U), RT_ERROR_NONE);
+    }
+    PrepareSender();
+    MOCKER_CPP(&TaskFactory::Recycle).expects(once()).with(eq(&persistent_)).will(returnValue(RT_ERROR_NONE));
+
+    EXPECT_EQ(StarsAllocTaskAndSend(&source_, stream_, nullptr), RT_ERROR_STREAM_FULL);
+    EXPECT_EQ(stream_->GetPendingNum(), 4U);
+    ExpectStreamUnlocked();
+}
+
+TEST_F(TaskResSenderTest, SqeOverflowHasNoPublishSideEffects)
+{
+    PrepareSender(SQE_NUM_PER_STARS_TASK_MAX + 1U);
+    uint32_t flipTaskId = 0x12345678U;
+    MOCKER_CPP(&StarsEngine::AddTaskToStream).expects(never());
+    MOCKER(halSqTaskSend).expects(never());
+    MOCKER_CPP(&Engine::ReportProfData).expects(never());
+    MOCKER_CPP(&TaskFactory::Recycle).expects(once()).with(eq(&persistent_)).will(returnValue(RT_ERROR_NONE));
+
+    EXPECT_EQ(StarsAllocTaskAndSend(&source_, stream_, &flipTaskId), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(flipTaskId, 0x12345678U);
+    EXPECT_EQ(stream_->GetPendingNum(), 4U);
+    ExpectStreamUnlocked();
+}
+
+TEST_F(TaskResSenderTest, HalRetrySucceedsAndKeepsPending)
+{
+    Runtime* const runtime = Runtime::Instance();
+    const bool profileEnabled = runtime->GetProfileEnableFlag() != 0U;
+    const ScopeGuard cleanup([&]() { runtime->SetProfileEnableFlag(profileEnabled); });
+    runtime->SetProfileEnableFlag(true);
+    PrepareSender();
+    MOCKER_CPP(&StarsEngine::AddTaskToStream).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&Engine::ProcessObserver).expects(never());
+    MOCKER(halSqTaskSend).expects(exactly(2)).will(returnValue(DRV_ERROR_IOCRL_FAIL)).then(returnValue(DRV_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(stream_, &Stream::PrintStmDfxAndCheckDevice).expects(once()).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&TaskFactory::Recycle).expects(never());
+
+    EXPECT_EQ(StarsAllocTaskAndSend(&source_, stream_, nullptr), RT_ERROR_NONE);
+    EXPECT_EQ(persistent_.profEn, 1U);
+    EXPECT_EQ(stream_->GetPendingNum(), 5U);
+    ExpectStreamUnlocked();
+}
+
+TEST_F(TaskResSenderTest, ReclaimAbortStopsSecondAllocation)
+{
+    stream_->pendingNum_.Set(4U);
+    abortAfterFirstAlloc_ = RT_ERROR_INVALID_VALUE;
+    MOCKER_CPP_VIRTUAL(device_->Engine_(), &Engine::TryRecycleTask).expects(once()).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&TaskResManage::AllocTaskInfoByTaskResId).stubs().will(invoke(AllocateTaskInfo));
+    MOCKER_CPP(&TaskFactory::TryTaskReclaim).expects(once()).will(invoke(UpdateStreamAfterReclaim));
+    MOCKER_CPP(&Stream::CheckContextTaskSend).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&TaskFactory::Recycle).expects(never());
+
+    EXPECT_EQ(StarsAllocTaskAndSend(&source_, stream_, nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(allocCount_, 1U);
+    EXPECT_EQ(stream_->GetPendingNum(), 4U);
+    ExpectStreamUnlocked();
+}
+
+TEST_F(TaskResSenderTest, ReclaimRecomputesTaskIdAndSlot)
+{
+    stream_->pendingNum_.Set(4U);
+    stream_->SetLastTaskId(7U);
+    lastTaskIdAfterFirstAlloc_ = 20U;
+    MOCKER_CPP_VIRTUAL(device_->Engine_(), &Engine::TryRecycleTask).expects(once()).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&TaskResManage::AllocTaskInfoByTaskResId).stubs().will(invoke(AllocateTaskInfo));
+    MOCKER_CPP(&TaskFactory::TryTaskReclaim).expects(once()).will(invoke(UpdateStreamAfterReclaim));
+    MOCKER_CPP(&StarsEngine::AddTaskToStream).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER(GetSendSqeNum).stubs().with(eq(&persistent_)).will(returnValue(1U));
+    MOCKER_CPP(&TaskFactory::Recycle).expects(once()).with(eq(&persistent_)).will(returnValue(RT_ERROR_NONE));
+
+    EXPECT_EQ(StarsAllocTaskAndSend(&source_, stream_, nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(allocCount_, 2U);
+    EXPECT_EQ(taskIds_[0], 8U);
+    EXPECT_EQ(taskIds_[1], 21U);
+    EXPECT_EQ(slots_[1], 21U % stream_->taskResMang_->GetTaskPoolNum());
+}
+
 TEST_F(CloudV2TaskTest1, load_args_is_pcie_bar)
 {
     rtError_t error;
@@ -974,7 +1340,7 @@ TEST_F(CloudV2TaskTest1, load_args_is_pcie_bar)
     rtArgsEx_t argsInfo = {};
     kernTask.u.aicTaskInfo.argsInfo = &argsInfo;
 
-    error = AllocTaskAndSendStars(&kernTask, stream_, &taskId);
+    error = StarsAllocTaskAndSend(&kernTask, stream_, &taskId);
     EXPECT_NE(error, RT_ERROR_NONE);
 
     kernTask.type = TS_TASK_TYPE_KERNEL_AICPU;
@@ -982,7 +1348,7 @@ TEST_F(CloudV2TaskTest1, load_args_is_pcie_bar)
     rtAicpuArgsEx_t aicpuArgsInfo = {};
     kernTask.u.aicpuTaskInfo.aicpuArgsInfo = &aicpuArgsInfo;
     kernTask.u.aicpuTaskInfo.kernel = nullptr;
-    error = AllocTaskAndSendStars(&kernTask, stream_, &taskId);
+    error = StarsAllocTaskAndSend(&kernTask, stream_, &taskId);
     EXPECT_NE(error, RT_ERROR_NONE);
 
     TaskUnInitProc(&kernTask);
@@ -1018,7 +1384,7 @@ TEST_F(CloudV2TaskTest1, AllocTaskAndSendStars_test1)
     rtArgsEx_t argsInfo = {};
     kernTask.u.aicTaskInfo.argsInfo = &argsInfo;
 
-    error = AllocTaskAndSendStars(&kernTask, stream_, &taskId);
+    error = StarsAllocTaskAndSend(&kernTask, stream_, &taskId);
     EXPECT_NE(error, RT_ERROR_NONE);
 
     TaskUnInitProc(&kernTask);
@@ -1056,7 +1422,7 @@ TEST_F(CloudV2TaskTest1, AllocTaskAndSendStars_test2)
         .will(returnValue((uint32_t)DEV_RUNNING_NORMAL))
         .then(returnValue((uint32_t)DEV_RUNNING_DOWN));
 
-    error = AllocTaskAndSendStars(&kernTask, stream_, &taskId);
+    error = StarsAllocTaskAndSend(&kernTask, stream_, &taskId);
     EXPECT_NE(error, RT_ERROR_NONE);
 
     TaskUnInitProc(&kernTask);
@@ -1089,7 +1455,7 @@ TEST_F(CloudV2TaskTest1, AllocTaskAndSendStars_test3)
     MOCKER_CPP(&TaskResManage::AllocTaskInfoByTaskResId).stubs().will(returnValue((TaskInfo*)&kernTask1));
     MOCKER_CPP(&StarsEngine::AddTaskToStream).stubs().will(returnValue(RT_ERROR_STREAM_FULL));
 
-    error = AllocTaskAndSendStars(&kernTask, stream_, &taskId);
+    error = StarsAllocTaskAndSend(&kernTask, stream_, &taskId);
     EXPECT_NE(error, RT_ERROR_NONE);
 
     TaskUnInitProc(&kernTask);
@@ -1123,7 +1489,7 @@ TEST_F(CloudV2TaskTest1, AllocTaskAndSendStars_test4)
     MOCKER_CPP(&StarsEngine::AddTaskToStream).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(WaitAsyncCopyComplete).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
 
-    error = AllocTaskAndSendStars(&kernTask, stream_, &taskId);
+    error = StarsAllocTaskAndSend(&kernTask, stream_, &taskId);
     EXPECT_NE(error, RT_ERROR_NONE);
     TaskUnInitProc(&kernTask);
     TaskUnInitProc(&kernTask1);
@@ -1161,7 +1527,7 @@ TEST_F(CloudV2TaskTest1, AllocTaskAndSendStars_test5)
 
     MOCKER_CPP_VIRTUAL(dev_, &Device::GetDevRunningState).stubs().will(returnValue((uint32_t)DEV_RUNNING_NORMAL));
 
-    error = AllocTaskAndSendStars(&kernTask, stream_, &taskId);
+    error = StarsAllocTaskAndSend(&kernTask, stream_, &taskId);
     EXPECT_NE(error, RT_ERROR_NONE);
     TaskUnInitProc(&kernTask);
     TaskUnInitProc(&kernTask1);
@@ -1200,7 +1566,7 @@ TEST_F(CloudV2TaskTest1, AllocTaskAndSendStars_test6)
     MOCKER_CPP_VIRTUAL(dev_, &Device::GetDevRunningState).stubs().will(returnValue((uint32_t)DEV_RUNNING_NORMAL));
 
     stream_->abortStatus_ = RT_ERROR_STREAM_ABORT;
-    error = AllocTaskAndSendStars(&kernTask, stream_, &taskId);
+    error = StarsAllocTaskAndSend(&kernTask, stream_, &taskId);
     EXPECT_EQ(error, RT_ERROR_STREAM_ABORT);
     TaskUnInitProc(&kernTask);
     TaskUnInitProc(&kernTask1);
@@ -1223,7 +1589,7 @@ TEST_F(CloudV2TaskTest1, SubmitTaskStars_test2)
     InitByStream(&kernTask, stream_);
     (void)MaintenanceTaskInit(&kernTask, MT_STREAM_RECYCLE_TASK, 100U, 1U);
     MOCKER(memcpy_s).stubs().will(returnValue(0));
-    MOCKER(AllocTaskAndSendStars).stubs().will(returnValue(RT_ERROR_STREAM_ABORT_SEND_TASK_FAIL));
+    MOCKER(StarsAllocTaskAndSend).stubs().will(returnValue(RT_ERROR_STREAM_ABORT_SEND_TASK_FAIL));
     MOCKER(AllocAndSendFlipTask).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(GetSendSqeNum).stubs().will(returnValue(static_cast<uint32_t>(10U)));
     MOCKER_CPP(&Engine::ProcessTask).stubs().will(returnValue(false));
@@ -1231,7 +1597,7 @@ TEST_F(CloudV2TaskTest1, SubmitTaskStars_test2)
     kernTask.isNeedStreamSync = true;
     stream_->SetBindFlag(true);
 
-    error = SubmitTaskStars(&kernTask, stream_, &taskId, 0U);
+    error = StarsSubmitTask(&kernTask, stream_, &taskId, 0U);
     EXPECT_EQ(error, RT_ERROR_STREAM_ABORT_SEND_TASK_FAIL);
     TaskUnInitProc(&kernTask);
     delete stream_;

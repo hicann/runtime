@@ -25,7 +25,6 @@
 #include "count_notify.hpp"
 #include "task_res.hpp"
 #include "atrace_log.hpp"
-#include "task_submit.hpp"
 #include "task.hpp"
 #include "device/device_error_proc.hpp"
 #include "runtime_task_manager.h"
@@ -819,173 +818,6 @@ rtError_t StarsEngine::TryRecycleTask(Stream* const stm)
     return RT_ERROR_NONE;
 }
 
-TIMESTAMP_EXTERN(SqTaskSend);
-TIMESTAMP_EXTERN(TryRecycleTask);
-TIMESTAMP_EXTERN(TaskSendLimited);
-TIMESTAMP_EXTERN(ToCommand);
-rtError_t StarsEngine::SendTask(TaskInfo* const workTask, uint16_t& taskId, uint32_t* const flipTaskId)
-{
-    Stream* const stm = workTask->stream;
-    TIMESTAMP_BEGIN(TryRecycleTask);
-    rtError_t error = TryRecycleTask(stm);
-    if (error == RT_ERROR_STREAM_ABORT || error == RT_ERROR_DEVICE_TASK_ABORT) {
-        error = (error == RT_ERROR_STREAM_ABORT) ? RT_ERROR_STREAM_ABORT_SEND_TASK_FAIL :
-                                                   RT_ERROR_DEVICE_ABORT_SEND_TASK_FAIL;
-    }
-    TIMESTAMP_END(TryRecycleTask);
-    COND_RETURN_ERROR_MSG_INNER(
-        error != RT_ERROR_NONE, error, "Failed to recycle task, retCode=%#x.", static_cast<uint32_t>(error));
-
-    constexpr uint16_t perDetectTimes = 1000U;
-    uint32_t tryCount = 0U;
-    while (stm->GetLimitFlag() && (!stm->GetRecycleFlag())) {
-        TIMESTAMP_BEGIN(TaskSendLimited);
-        SendingWaitProc(stm); // Send limited, need release complete task.
-        TIMESTAMP_END(TaskSendLimited);
-        if ((tryCount % perDetectTimes) == 0) {
-            error = stm->CheckContextTaskSend(workTask);
-            COND_RETURN_ERROR(
-                error != RT_ERROR_NONE, error, "Failed to send task. Reason: context is abort, status=%#x.",
-                static_cast<uint32_t>(error));
-        }
-        tryCount++;
-    }
-    tryCount = 0U;
-
-    const uint32_t sendSqeNum = GetSendSqeNum(workTask);
-    if (sendSqeNum > SQE_NUM_PER_STARS_TASK_MAX) {
-        RT_LOG(
-            RT_LOG_ERROR, "sendSqeNum %u more than max num %d. task_id=%hu, task_type=%d(%s).", sendSqeNum,
-            SQE_NUM_PER_STARS_TASK_MAX, workTask->id, static_cast<int32_t>(workTask->type), workTask->typeName);
-        return error;
-    }
-    workTask->sqeNum = static_cast<uint8_t>(sendSqeNum);
-    Device* dev = GetDevice();
-    Driver* const devDrv = dev->Driver_();
-    const uint32_t devId = dev->Id_();
-    const uint32_t tsId = dev->DevGetTsId();
-    const uint32_t sqId = stm->GetSqId();
-    const uint32_t cqId = stm->GetCqId();
-    COND_RETURN_ERROR(devDrv == nullptr, RT_ERROR_DRV_ERR, "Failed to find device driver.");
-
-    stm->StreamLock();
-    const rtError_t status = stm->abortStatus_;
-    if ((status == RT_ERROR_STREAM_ABORT) || (status == RT_ERROR_DEVICE_TASK_ABORT)) {
-        stm->StreamUnLock();
-        RT_LOG(
-            RT_LOG_ERROR,
-            "Failed to send task. Reason: stream is in abort status, device_id=%u, stream_id=%d, task_id=%hu, "
-            "task_type=%d(%s), status=%u.",
-            devId, stm->Id_(), workTask->id, static_cast<int32_t>(workTask->type), workTask->typeName, status);
-        return (status == RT_ERROR_STREAM_ABORT) ? RT_ERROR_STREAM_ABORT_SEND_TASK_FAIL :
-                                                   RT_ERROR_DEVICE_ABORT_SEND_TASK_FAIL;
-    }
-
-    dev->GetTaskFactory()->SetSerialId(stm, workTask);
-    taskId = workTask->id;
-    COND_PROC(flipTaskId != nullptr, *flipTaskId = GetFlipTaskId(workTask->id, workTask->flipNum););
-    if ((stm->Model_() != nullptr) && (workTask->type != TS_TASK_TYPE_MODEL_MAINTAINCE)) {
-        stm->Model_()->SetKernelTaskId(static_cast<uint32_t>(workTask->id), static_cast<int32_t>(stm->Id_()));
-    }
-
-    ReportProfData(workTask);
-
-    TIMESTAMP_BEGIN(ToCommand);
-    rtTsCommand_t cmdLocal = {};
-    cmdLocal.cmdType = RT_TASK_COMMAND_TYPE_STARS_SQE;
-    const TaskSqeInfo sqeInfo = {0ULL, 0ULL};
-    ToConstructSqe(workTask, static_cast<void*>(cmdLocal.cmdBuf.sqe), sqeInfo);
-    SetExpectedTaskReportNum(workTask, sendSqeNum);
-    TIMESTAMP_END(ToCommand);
-
-    // Update the host-side head and tail
-    error = AddTaskToStream(workTask, sendSqeNum);
-    if (error != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_ERROR, "Failed to add task to stream, stream_id=%d, task_id=%u.", stm->Id_(), workTask->id);
-        stm->StreamUnLock();
-        return error;
-    }
-
-    workTask->profEn = Runtime::Instance()->GetProfileEnableFlag();
-    ProcessObserver(devId, workTask, &cmdLocal);
-
-    error = ProcessTaskWait(workTask);
-    if (error != EOK) {
-        RT_LOG(
-            RT_LOG_ERROR,
-            "Failed to process task wait, device_id=%u, ts_id=%u, sq_id=%u, cq_id=%u, stream_id=%d, task_id=%hu, "
-            "task_type=%d(%s), retCode=%d.",
-            devId, tsId, sqId, cqId, stm->Id_(), workTask->id, static_cast<int32_t>(workTask->type), workTask->typeName,
-            error);
-        stm->StreamUnLock();
-        return error;
-    }
-    uint64_t beginCnt = 0ULL;
-    uint64_t endCnt = 0ULL;
-    uint16_t checkCount = 0U;
-
-    do {
-        if (!stm->IsSoftwareSqEnable()) {
-            TIMESTAMP_BEGIN(SqTaskSend);
-            error = devDrv->SqTaskSend(sqId, cmdLocal.cmdBuf.sqe, devId, tsId, sendSqeNum);
-            TIMESTAMP_END(SqTaskSend);
-        } else {
-            const uint64_t sqeBytes = GetTaskSqeBytes(workTask->sqeNum);
-            const auto ret = memcpy_s(
-                static_cast<void*>(GetSqeAddr(stm->GetSqeBuffer(), workTask->pos)), sqeBytes,
-                static_cast<void*>(cmdLocal.cmdBuf.sqe), sqeBytes);
-            if (ret != EOK) {
-                RT_LOG(
-                    RT_LOG_ERROR,
-                    "SendTask failed. Reason: Standard function memcpy_s failed. [Errno %d] %s. destAddr=%p, "
-                    "srcAddr=%p, maxLen=%zu(bytes), actualLen=%zu(bytes).",
-                    ret, strerror(ret), static_cast<void*>(GetSqeAddr(stm->GetSqeBuffer(), workTask->pos)),
-                    static_cast<void*>(cmdLocal.cmdBuf.sqe), static_cast<size_t>(sqeBytes),
-                    static_cast<size_t>(sqeBytes));
-                error = RT_ERROR_TASK_BASE;
-                break;
-            }
-        }
-
-        if (unlikely(error != RT_ERROR_NONE)) {
-            RT_LOG(
-                RT_LOG_WARNING,
-                "device_id=%u, ts_id=%u, sq_id=%u, cq_id=%u,"
-                " stream_id=%d, task_id=%hu, task_type=%u(%s), error=%#x",
-                devId, tsId, sqId, cqId, stm->Id_(), workTask->id, static_cast<uint32_t>(workTask->type),
-                workTask->typeName, static_cast<uint32_t>(error));
-
-            tryCount++;
-            if (stm->PrintStmDfxAndCheckDevice(beginCnt, endCnt, checkCount, tryCount) != RT_ERROR_NONE) {
-                stm->StreamUnLock();
-                RT_LOG(
-                    RT_LOG_ERROR, "Failed to send SQE task. Reason: device status error, device_id=%u, stream_id=%d.",
-                    devId, stm->Id_());
-                return error;
-            }
-        } else {
-            break;
-        }
-    } while (true);
-
-    stm->StreamUnLock();
-
-    const uint32_t posTail = stm->GetBindFlag() ? stm->GetDelayRecycleTaskSqeNum() : stm->GetTaskPosTail();
-    const uint32_t posHead = stm->GetBindFlag() ? stm->GetTaskPersistentHeadValue() : stm->GetTaskPosHead();
-    RT_LOG(
-        RT_LOG_INFO,
-        "Sq task send finished, device_id=%u, ts_id=%u, sq_id=%u, cq_id=%u, stream_id=%d, "
-        "task_id=%hu, task_type=%u(%s), isSupportASyncRecycle=%d, isNeedPostProc=%d, davincHead=%u, "
-        "davincTail=%u, taskHead=%u, taskTail=%u, sendSqeNum=%u, tryCount=%u, "
-        "bindFlag=%d, head=%u, tail=%u, delay recycle task num=%zu.",
-        devId, tsId, sqId, cqId, stm->Id_(), workTask->id, workTask->type, workTask->typeName,
-        stm->GetIsSupportASyncRecycle(), stm->IsNeedPostProc(workTask), stm->GetDavinciTaskHead(),
-        stm->GetDavinciTaskTail(), stm->GetTaskHead(), stm->GetTaskTail(), sendSqeNum, tryCount, stm->GetBindFlag(),
-        posHead, posTail, stm->GetDelayRecycleTaskSize());
-
-    return error;
-}
-
 rtError_t StarsEngine::RecycleTaskBySqHead(Stream* const stm, uint32_t& finishTaskId)
 {
     uint16_t sqHead = 0U;
@@ -1324,78 +1156,6 @@ rtError_t StarsEngine::SyncTask(
             "Failed to sync task. Reason: SQ is disabled for 50 times, device_id=%u, stream_id=%u, sq_id=%u.",
             dev->Id_(), streamId, stm->GetSqId());
     }
-
-    return RT_ERROR_NONE;
-}
-
-rtError_t StarsEngine::SubmitSend(TaskInfo* const workTask, uint32_t* const flipTaskId)
-{
-    uint16_t taskId = 0U;
-    bool isNeedStreamSync = false;
-    int32_t timeout = -1; // -1:no limit
-    COND_RETURN_ERROR(
-        workTask == nullptr, RT_ERROR_INVALID_VALUE,
-        "Failed to submit send task. Reason: workTask cannot be a NULL pointer.");
-    Stream* const stm = workTask->stream;
-    COND_RETURN_ERROR(
-        stm == nullptr, RT_ERROR_INVALID_VALUE, "Failed to submit send task. Reason: stream cannot be a NULL pointer.");
-    Device* device = stm->Device_();
-
-    COND_RETURN_ERROR(
-        device == nullptr, RT_ERROR_INVALID_VALUE,
-        "Failed to submit send task. Reason: device cannot be a NULL pointer.");
-
-    if (workTask->type == TS_TASK_TYPE_EVENT_RECORD) {
-        if (workTask->u.eventRecordTaskInfo.waitCqflag) {
-            isNeedStreamSync = true;
-            timeout = workTask->u.eventRecordTaskInfo.timeout;
-        }
-    }
-
-    if ((workTask->type == TS_TASK_TYPE_MAINTENANCE) || (workTask->type == TS_TASK_TYPE_GET_STARS_VERSION)) {
-        isNeedStreamSync = true;
-    }
-
-    const bool bindFlag = stm->GetBindFlag();
-    rtError_t error = SendTask(workTask, taskId, flipTaskId);
-    if (error != RT_ERROR_NONE) {
-        RT_LOG(
-            RT_LOG_ERROR, "Failed to send task, streamId=%d, taskId=%hu, taskType=%s(%u), retCode=%#x.", stm->Id_(),
-            workTask->id, GetTaskDescByType(workTask->type), workTask->type, error);
-        if (!(bindFlag && (error == RT_ERROR_STREAM_FULL))) {
-            TaskFinished(device->Id_(), workTask);
-        }
-        return error;
-    }
-
-    AddPendingNum();
-
-    // simu stars report
-    if (bindFlag) {
-        stm->StreamSyncLock();
-        (void)ProcessTask(workTask, GetDevice()->Id_());
-        stm->StreamSyncUnLock();
-    }
-
-    if (isNeedStreamSync) {
-        stm->StreamSyncLock();
-        // isStreamSync para set true if need wait cq in unsink stream
-        error = SyncTask(stm, static_cast<uint32_t>(taskId), false, timeout);
-        SyncTaskCheckResult(error, stm, taskId);
-        stm->StreamSyncUnLock();
-
-        COND_RETURN_INFO(
-            error != RT_ERROR_NONE, error, "SyncTask stream_id=%u, task_id=%u, result=%u", stm->Id_(), taskId, error);
-        error = SendFlipTask(taskId, stm);
-        COND_RETURN_INFO(
-            error != RT_ERROR_NONE, error, "SendFlipTask stream sync stream_id=%u, task_id=%u, result=%u", stm->Id_(),
-            taskId, error);
-        return error;
-    }
-
-    error = SendFlipTask(taskId, stm);
-    COND_RETURN_INFO(
-        error != RT_ERROR_NONE, error, "SendFlipTask stream_id=%u, task_id=%u, result=%u", stm->Id_(), taskId, error);
 
     return RT_ERROR_NONE;
 }
@@ -1990,16 +1750,17 @@ void StarsEngine::RecycleTaskProcessForSeparatedStm(TaskInfo* const recycleTask,
 
 rtError_t StarsEngine::RecycleSeparatedStmByFinishedId(Stream* const stm, const uint16_t endTaskId, bool isCqeProcess)
 {
-    const uint16_t taskResDepth = stm->taskResMang_->GetTaskPoolNum();
     TaskInfo* recycleTask = nullptr;
     uint32_t recycleTaskId = 0U;
-    const uint16_t endTaskPos = endTaskId % taskResDepth;
-    const uint16_t recycleEndPos = (endTaskPos + 1) % taskResDepth;
+    // Stars提交归一后，Normal bind stream可能在没有taskResMang_时进入此路径，需在访问stm->taskResMang_前处理。
     if (stm->GetBindFlag()) {
         recycleTask = stm->Device_()->GetTaskFactory()->GetTask(stm->Id_(), endTaskId);
         RecycleTaskProcessForSeparatedStm(recycleTask, stm->Device_()->Id_());
         return RT_ERROR_NONE;
     }
+    const uint16_t taskResDepth = stm->taskResMang_->GetTaskPoolNum();
+    const uint16_t endTaskPos = endTaskId % taskResDepth;
+    const uint16_t recycleEndPos = (endTaskPos + 1) % taskResDepth;
     if (!isCqeProcess) {
         stm->SetExecuteEndTaskId(endTaskId);
     }

@@ -149,23 +149,6 @@ rtError_t utest_engine_stream_setup_sub(Stream* stream)
 
 void ExeciptionCallback(rtExceptionType type) { printf("this is app exception callback, ExceptionType=%d\n", type); }
 
-TEST_F(EngineTest, EngineSendingWait)
-{
-    rtError_t err = RT_ERROR_NONE;
-    TaskInfo task = {};
-    task.type = TS_TASK_TYPE_KERNEL_AICORE;
-    uint16_t taskId = 0;
-    task.stream = stream_;
-    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICORE);
-    Program* program = &stubProg;
-    Kernel* kernel = new Kernel("test", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICORE, 10);
-    task.u.aicTaskInfo.kernel = kernel;
-    MOCKER_CPP(&Stream::IsTaskLimited).stubs().will(returnValue(true)).then(returnValue(false));
-    err = engine_->SendTask(&task, taskId);
-    EXPECT_EQ(err, RT_ERROR_NONE);
-    delete kernel;
-}
-
 TEST_F(EngineTest, AddTaskToStream)
 {
     rtError_t err = RT_ERROR_NONE;

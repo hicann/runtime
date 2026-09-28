@@ -36,6 +36,7 @@
 #include "context.hpp"
 #include "device/device_error_proc.hpp"
 #include "stream_sqcq_manage.hpp"
+#include "task_submit.hpp"
 #include <map>
 #include <utility> // For std::pair and std::make_pair.
 #include "rt_stars_define.h"
@@ -48,6 +49,9 @@
 #include "task.hpp"
 #include "model_execute_task.h"
 #include "event_task.h"
+#include "runtime_dump_task.h"
+#include "stream_task.h"
+#include "osal.hpp"
 #include "../../task_test_helper.h"
 
 using namespace testing;
@@ -59,6 +63,42 @@ namespace {
 constexpr uint32_t TS_SDMA_STATUS_DDRC_ERROR = 0x8U;
 constexpr uint32_t TS_SDMA_STATUS_LINK_ERROR = 0x9U;
 constexpr uint32_t TS_SDMA_STATUS_POISON_ERROR = 0xAU;
+
+enum class NormalSyncTaskKind : uint8_t {
+    NOP,
+    EVENT_RECORD_ASYNC,
+    EVENT_RECORD_SYNC,
+    MAINTENANCE,
+    GET_STARS_VERSION,
+    SET_STREAM_GE_OP_TAG,
+};
+
+rtError_t InitNormalSyncTask(TaskInfo* task, Stream* stm, Event* event, NormalSyncTaskKind kind, int32_t syncTimeout)
+{
+    InitByStream(task, stm);
+    switch (kind) {
+        case NormalSyncTaskKind::NOP:
+            return NopTaskInit(task);
+        case NormalSyncTaskKind::EVENT_RECORD_ASYNC:
+        case NormalSyncTaskKind::EVENT_RECORD_SYNC: {
+            const rtError_t error = EventRecordTaskInit(task, event, false, event->EventId_());
+            if ((error == RT_ERROR_NONE) && (kind == NormalSyncTaskKind::EVENT_RECORD_SYNC)) {
+                task->u.eventRecordTaskInfo.waitCqflag = true;
+                task->u.eventRecordTaskInfo.timeout = syncTimeout;
+                task->isNeedStreamSync = true;
+            }
+            return error;
+        }
+        case NormalSyncTaskKind::MAINTENANCE:
+            return MaintenanceTaskInit(task, MT_STREAM_RECYCLE_TASK, 0U, false);
+        case NormalSyncTaskKind::GET_STARS_VERSION:
+            return StarsVersionTaskInit(task);
+        case NormalSyncTaskKind::SET_STREAM_GE_OP_TAG:
+            return StreamTagSetTaskInit(task, stm, 0U);
+        default:
+            return RT_ERROR_INVALID_VALUE;
+    }
+}
 } // namespace
 
 void ReportErrorInfoForModelExecuteTask(TaskInfo* const taskInfo, const uint32_t devId);
@@ -355,65 +395,240 @@ TEST_F(CloudV2StarsEngineTest, RecycleSeparatedStreamAdvancesTaskResHead)
     EXPECT_EQ(engine_->GetPendingNum(), 0U);
 }
 
-TEST_F(CloudV2StarsEngineTest, SendTask)
+TEST_F(CloudV2StarsEngineTest, SubmitTaskRoutesByPlatformAndTaskRes)
 {
-    rtError_t err = RT_ERROR_NONE;
-    TaskInfo task = {};
-    task.type = TS_TASK_TYPE_KERNEL_AICORE;
-    uint16_t taskId = 0;
-    task.stream = stream_;
-    stream_->SetAbortStatus(RT_ERROR_STREAM_ABORT);
-    MOCKER_CPP(&Stream::IsTaskLimited).stubs().will(returnValue(false)).then(returnValue(false));
-    err = engine_->SendTask(&task, taskId);
-    EXPECT_EQ(err, RT_ERROR_STREAM_ABORT_SEND_TASK_FAIL);
-    stream_->SetAbortStatus(RT_ERROR_NONE);
+    const DevProperties properties = device_->GetDevProperties();
+    TaskResManage* const taskRes = stream_->taskResMang_;
+    const ScopeGuard cleanup([&]() {
+        stream_->taskResMang_ = taskRes;
+        device_->RefreshDevProperties(properties);
+    });
+    for (uint32_t scenario = 0U; scenario < 4U; ++scenario) {
+        SCOPED_TRACE(scenario);
+        TaskInfo task = {};
+        InitByStream(&task, stream_);
+        DevProperties current = properties;
+        current.isStars = scenario < 2U;
+        device_->RefreshDevProperties(current);
+        stream_->taskResMang_ = ((scenario & 1U) != 0U) ? taskRes : nullptr;
+        if (current.isStars) {
+            MOCKER(StarsSubmitTask).expects(once()).will(returnValue(RT_ERROR_INVALID_VALUE));
+        } else if (stream_->taskResMang_ == nullptr) {
+            MOCKER_CPP_VIRTUAL(engine_, &Engine::SubmitSend).expects(once()).will(returnValue(RT_ERROR_INVALID_VALUE));
+        } else {
+            MOCKER(SubmitTaskDc).expects(once()).will(returnValue(RT_ERROR_INVALID_VALUE));
+        }
+        EXPECT_EQ(engine_->SubmitTask(&task), RT_ERROR_INVALID_VALUE);
+        stream_->taskResMang_ = taskRes;
+        device_->RefreshDevProperties(properties);
+        GlobalMockObject::verify();
+        GlobalMockObject::reset();
+        MockDriverApi();
+    }
 }
 
-TEST_F(CloudV2StarsEngineTest, SendTaskFail)
+TEST_F(CloudV2StarsEngineTest, SubmitTaskHwtsRoutesTaskRes)
 {
-    rtError_t err = RT_ERROR_NONE;
     TaskInfo task = {};
-    task.type = TS_TASK_TYPE_KERNEL_AICORE;
-    uint16_t taskId = 0;
-    task.stream = stream_;
-    stream_->Device_()->SetDevStatus(RT_ERROR_LOST_HEARTBEAT);
-    stream_->SetLimitFlag(true);
-    MOCKER_CPP_VIRTUAL(engine_, &Engine::TryRecycleTask).stubs().with(mockcpp::any()).will(returnValue(RT_ERROR_NONE));
-    err = engine_->SendTask(&task, taskId);
-    EXPECT_EQ(err, RT_ERROR_LOST_HEARTBEAT);
-    stream_->SetLimitFlag(false);
-    stream_->Device_()->SetDevStatus(RT_ERROR_NONE);
+    InitByStream(&task, stream_);
+    uint32_t flipTaskId = 0U;
+    constexpr int32_t timeout = 123;
+    ASSERT_NE(stream_->taskResMang_, nullptr);
+    const DevProperties properties = device_->GetDevProperties();
+    const ScopeGuard cleanup([&]() { device_->RefreshDevProperties(properties); });
+    DevProperties legacyProperties = properties;
+    legacyProperties.isStars = false;
+    device_->RefreshDevProperties(legacyProperties);
+    MOCKER_CPP_VIRTUAL(engine_, &Engine::SubmitSend).expects(never());
+    MOCKER(SubmitTaskDc)
+        .expects(once())
+        .with(eq(&task), eq(stream_), eq(&flipTaskId), eq(timeout))
+        .will(returnValue(RT_ERROR_INVALID_VALUE));
+
+    EXPECT_EQ(engine_->SubmitTask(&task, &flipTaskId, timeout), RT_ERROR_INVALID_VALUE);
 }
 
-TEST_F(CloudV2StarsEngineTest, SendTaskDeviceAbort)
+TEST_F(CloudV2StarsEngineTest, SubmitTaskCompletesLegacyAicpuWithoutSending)
 {
-    rtError_t err = RT_ERROR_NONE;
+    TaskResManage* const taskRes = stream_->taskResMang_;
+    const uint32_t flags = stream_->flags_;
+    const DevProperties properties = device_->GetDevProperties();
     TaskInfo task = {};
-    task.type = TS_TASK_TYPE_KERNEL_AICORE;
-    uint16_t taskId = 0;
-    task.stream = stream_;
-    stream_->SetAbortStatus(RT_ERROR_DEVICE_TASK_ABORT);
-    MOCKER_CPP(&Stream::IsTaskLimited).stubs().will(returnValue(false)).then(returnValue(false));
-    err = engine_->SendTask(&task, taskId);
-    EXPECT_EQ(err, RT_ERROR_DEVICE_ABORT_SEND_TASK_FAIL);
-    stream_->SetAbortStatus(RT_ERROR_NONE);
+    InitByStream(&task, stream_);
+    const ScopeGuard cleanup([&]() {
+        stream_->flags_ = flags;
+        stream_->taskResMang_ = taskRes;
+        device_->RefreshDevProperties(properties);
+    });
+    DevProperties legacyProperties = properties;
+    legacyProperties.isStars = false;
+    device_->RefreshDevProperties(legacyProperties);
+    stream_->taskResMang_ = nullptr;
+    stream_->flags_ = flags | RT_STREAM_AICPU;
+    MOCKER_CPP(&Stream::NeedSaveTask).expects(once()).will(returnValue(false));
+    MOCKER_CPP_VIRTUAL(engine_, &Engine::HwtsSubmitTask).expects(never());
+    MOCKER(StarsSubmitTask).expects(never());
+    MOCKER(Complete).expects(once()).with(eq(&task), eq(RT_MAX_DEV_NUM));
+    MOCKER_CPP(&TaskFactory::Recycle).expects(once()).with(eq(&task)).will(returnValue(RT_ERROR_NONE));
+
+    EXPECT_EQ(engine_->SubmitTask(&task), RT_ERROR_NONE);
 }
 
-TEST_F(CloudV2StarsEngineTest, SendTaskStreamAbort)
+TEST_F(CloudV2StarsEngineTest, SubmitTaskAicpuSaveRequiresModel)
 {
-    rtError_t err = RT_ERROR_NONE;
+    TaskResManage* const taskRes = stream_->taskResMang_;
+    const uint32_t flags = stream_->flags_;
+    const ScopeGuard cleanup([&]() {
+        stream_->flags_ = flags;
+        stream_->taskResMang_ = taskRes;
+    });
     TaskInfo task = {};
-    task.type = TS_TASK_TYPE_KERNEL_AICORE;
-    uint16_t taskId = 0;
-    task.stream = stream_;
-    stream_->SetAbortStatus(RT_ERROR_STREAM_ABORT);
-    MOCKER_CPP_VIRTUAL(engine_, &Engine::TryRecycleTask)
-        .stubs()
-        .with(mockcpp::any())
-        .will(returnValue(RT_ERROR_STREAM_ABORT));
-    err = engine_->SendTask(&task, taskId);
-    EXPECT_EQ(err, RT_ERROR_STREAM_ABORT_SEND_TASK_FAIL);
-    stream_->SetAbortStatus(RT_ERROR_NONE);
+    InitByStream(&task, stream_);
+    ASSERT_EQ(MaintenanceTaskInit(&task, MT_STREAM_RECYCLE_TASK, 0U, false), RT_ERROR_NONE);
+    ASSERT_EQ(stream_->Model_(), nullptr);
+    stream_->taskResMang_ = nullptr;
+    stream_->flags_ = flags | RT_STREAM_AICPU;
+    MOCKER_CPP(&Stream::NeedSaveTask).expects(once()).will(returnValue(true));
+    MOCKER(StarsSubmitTask).expects(never());
+    MOCKER_CPP_VIRTUAL(engine_, &Engine::HwtsSubmitTask).expects(never());
+    MOCKER(Complete).expects(never());
+    MOCKER_CPP(&TaskFactory::Recycle).expects(never());
+
+    EXPECT_EQ(engine_->SubmitTask(&task), RT_ERROR_MODEL_NULL);
+}
+
+TEST_F(CloudV2StarsEngineTest, SubmitTaskRejectsInvalidStreamIds)
+{
+    Runtime* const runtime = Runtime::Instance();
+    const bool disableThread = runtime->GetDisableThread();
+    const bool streamSubmitFail = stream_->isSubmitTaskFail_;
+    const bool engineSubmitFail = engine_->isSubmitTaskFail_;
+    const int32_t streamId = stream_->streamId_;
+    const ScopeGuard cleanup([&]() {
+        runtime->SetDisableThread(disableThread);
+        stream_->isSubmitTaskFail_ = streamSubmitFail;
+        engine_->isSubmitTaskFail_ = engineSubmitFail;
+        stream_->streamId_ = streamId;
+    });
+    runtime->SetDisableThread(true);
+    stream_->isSubmitTaskFail_ = false;
+    engine_->isSubmitTaskFail_ = false;
+    for (const int32_t invalidId : {-1, MAX_INT32_NUM}) {
+        SCOPED_TRACE(invalidId);
+        TaskInfo task = {};
+        InitByStream(&task, stream_);
+        stream_->streamId_ = invalidId;
+        MOCKER(StarsSubmitTask).expects(never());
+        EXPECT_EQ(engine_->SubmitTask(&task), RT_ERROR_STREAM_INVALID);
+        EXPECT_EQ(task.error, TASK_ERROR_SUBMIT_FAIL);
+        EXPECT_FALSE(stream_->isSubmitTaskFail_);
+        EXPECT_FALSE(engine_->isSubmitTaskFail_);
+        stream_->streamId_ = streamId;
+        GlobalMockObject::verify();
+        GlobalMockObject::reset();
+        MockDriverApi();
+    }
+}
+
+TEST_F(CloudV2StarsEngineTest, StarsSubmitTaskNormalProductionSyncMatrix)
+{
+    TaskResManage* const taskRes = stream_->taskResMang_;
+    struct SyncScenario {
+        NormalSyncTaskKind kind;
+        bool expectSourceSync;
+        bool expectSync;
+        int32_t eventTimeout;
+        int32_t callTimeout;
+        int32_t expectTimeout;
+    };
+    const SyncScenario scenarios[] = {
+        {NormalSyncTaskKind::NOP, false, false, 0, -1, 0},
+        {NormalSyncTaskKind::EVENT_RECORD_ASYNC, false, false, 0, -1, 0},
+        {NormalSyncTaskKind::EVENT_RECORD_SYNC, true, true, 123, 123, 123},
+        {NormalSyncTaskKind::MAINTENANCE, true, true, 0, -1, -1},
+        {NormalSyncTaskKind::GET_STARS_VERSION, true, true, 0, -1, -1},
+        {NormalSyncTaskKind::SET_STREAM_GE_OP_TAG, true, true, 0, -1, -1}};
+    const ScopeGuard cleanup([&]() { stream_->taskResMang_ = taskRes; });
+    stream_->taskResMang_ = nullptr;
+    for (const auto& scenario : scenarios) {
+        SCOPED_TRACE(static_cast<uint32_t>(scenario.kind));
+        TaskInfo task = {};
+        Event event(device_, 0U, nullptr);
+        ASSERT_EQ(InitNormalSyncTask(&task, stream_, &event, scenario.kind, scenario.eventTimeout), RT_ERROR_NONE);
+        EXPECT_EQ(task.isNeedStreamSync != 0U, scenario.expectSourceSync);
+        task.id = 17U;
+        MOCKER(StarsAllocTaskAndSend).expects(once()).will(returnValue(RT_ERROR_NONE));
+        if (scenario.expectSync) {
+            MOCKER_CPP_VIRTUAL(engine_, &Engine::SyncTask)
+                .expects(once())
+                .with(
+                    eq(stream_), eq(static_cast<uint32_t>(task.id)), eq(false), eq(scenario.expectTimeout),
+                    mockcpp::any())
+                .will(returnValue(RT_ERROR_NONE));
+        } else {
+            MOCKER_CPP_VIRTUAL(engine_, &Engine::SyncTask).expects(never());
+        }
+        MOCKER(AllocAndSendFlipTask).expects(once()).will(returnValue(RT_ERROR_NONE));
+        EXPECT_EQ(StarsSubmitTask(&task, stream_, nullptr, scenario.callTimeout), RT_ERROR_NONE);
+        GlobalMockObject::verify();
+        GlobalMockObject::reset();
+        MockDriverApi();
+    }
+}
+
+TEST_F(CloudV2StarsEngineTest, StarsSubmitTaskSetStreamGeOpTagUsesCallTimeoutForBothResourceModes)
+{
+    TaskResManage* const taskRes = stream_->taskResMang_;
+    const ScopeGuard cleanup([&]() { stream_->taskResMang_ = taskRes; });
+    for (const bool useTaskRes : {false, true}) {
+        SCOPED_TRACE(useTaskRes);
+        TaskInfo task = {};
+        InitByStream(&task, stream_);
+        ASSERT_EQ(StreamTagSetTaskInit(&task, stream_, 0U), RT_ERROR_NONE);
+        stream_->taskResMang_ = useTaskRes ? taskRes : nullptr;
+        task.id = 17U;
+        MOCKER(StarsAllocTaskAndSend).expects(once()).will(returnValue(RT_ERROR_NONE));
+        MOCKER_CPP_VIRTUAL(engine_, &Engine::SyncTask)
+            .expects(once())
+            .with(eq(stream_), eq(static_cast<uint32_t>(task.id)), eq(false), eq(456), mockcpp::any())
+            .will(returnValue(RT_ERROR_NONE));
+        MOCKER(AllocAndSendFlipTask).expects(once()).will(returnValue(RT_ERROR_NONE));
+
+        EXPECT_EQ(StarsSubmitTask(&task, stream_, nullptr, 456), RT_ERROR_NONE);
+        GlobalMockObject::verify();
+        GlobalMockObject::reset();
+        MockDriverApi();
+    }
+}
+
+TEST_F(CloudV2StarsEngineTest, StarsSubmitTaskNormalSyncFailureSkipsFlip)
+{
+    TaskResManage* const taskRes = stream_->taskResMang_;
+    const ScopeGuard cleanup([&]() { stream_->taskResMang_ = taskRes; });
+    stream_->taskResMang_ = nullptr;
+    TaskInfo task = {};
+    InitByStream(&task, stream_);
+    ASSERT_EQ(MaintenanceTaskInit(&task, MT_STREAM_RECYCLE_TASK, 0U, false), RT_ERROR_NONE);
+    MOCKER(StarsAllocTaskAndSend).expects(once()).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(engine_, &Engine::SyncTask).expects(once()).will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER(AllocAndSendFlipTask).expects(never());
+
+    EXPECT_EQ(StarsSubmitTask(&task, stream_, nullptr, -1), RT_ERROR_INVALID_VALUE);
+}
+
+TEST_F(CloudV2StarsEngineTest, StarsSubmitTaskNormalFailureDoesNotForgeFinished)
+{
+    TaskInfo task = {};
+    InitByStream(&task, stream_);
+    TaskResManage* const taskRes = stream_->taskResMang_;
+    stream_->taskResMang_ = nullptr;
+    MOCKER_CPP(&Engine::TaskFinished).expects(never());
+    MOCKER(StarsAllocTaskAndSend).expects(once()).will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER_CPP_VIRTUAL(engine_, &Engine::SyncTask).expects(never());
+    MOCKER(AllocAndSendFlipTask).expects(never());
+
+    EXPECT_EQ(StarsSubmitTask(&task, stream_, nullptr, -1), RT_ERROR_INVALID_VALUE);
+    stream_->taskResMang_ = taskRes;
 }
 
 TEST_F(CloudV2StarsEngineTest, AddTaskToStream3)

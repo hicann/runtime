@@ -11,6 +11,7 @@
 #include <thread>
 #include "securec.h"
 #include "runtime.hpp"
+#include "raw_device.hpp"
 #include "task.hpp"
 #include "ctrl_stream.hpp"
 #include "stream_sqcq_manage.hpp"
@@ -156,16 +157,24 @@ void Engine::SetDevRunningState(const DevRunningState state, const bool direct)
 
 rtError_t Engine::SubmitTask(TaskInfo* const workTask, uint32_t* const flipTaskId, int32_t timeout)
 {
-    rtError_t ret = workTask->stream->CheckContextTaskSend(workTask);
+    Stream* const stm = workTask->stream;
+    rtError_t ret = stm->CheckContextTaskSend(workTask);
     ERROR_RETURN(
         ret, "Failed to check the context status for the task. Reason: context is aborted, status=%#x.",
         static_cast<uint32_t>(ret));
-    if (workTask->stream->taskResMang_ == nullptr) {
-        // for non-fast scenarios
-        ret = SubmitTaskNormal(workTask, flipTaskId);
+    if ((!stm->IsCtrlStream()) && ((stm->Id_() == -1) || (stm->Id_() == MAX_INT32_NUM))) {
+        RT_LOG_CALL_MSG(ERR_MODULE_RTS, "stream is invalid, device_id=%u, stream_id=%d.", device_->Id_(), stm->Id_());
+        workTask->error = TASK_ERROR_SUBMIT_FAIL;
+        return RT_ERROR_STREAM_INVALID;
+    }
+
+    // AICPU Stream使用独立提交处理，不需要进入Stars/HWTS常规发送流程
+    if ((stm->Flags() & RT_STREAM_AICPU) != 0U) {
+        ret = ProcessAicpuTask(workTask);
+    } else if (device_->IsStarsPlatform()) {
+        ret = StarsSubmitTask(workTask, stm, flipTaskId, timeout);
     } else {
-        // for fastlaunch scenarios
-        ret = AllocTaskAndSend(workTask, workTask->stream, flipTaskId, timeout);
+        ret = HwtsSubmitTask(workTask, flipTaskId, timeout);
     }
 
     if (ret != RT_ERROR_NONE) {
@@ -183,34 +192,10 @@ rtError_t Engine::SubmitTask(TaskInfo* const workTask, uint32_t* const flipTaskI
 }
 
 TIMESTAMP_EXTERN(ObserverSubmitted);
-rtError_t Engine::SubmitTaskNormal(TaskInfo* const workTask, uint32_t* const flipTaskId)
+rtError_t Engine::HwtsSubmitTask(TaskInfo* const workTask, uint32_t* const flipTaskId, const int32_t timeout)
 {
-    if ((!workTask->stream->IsCtrlStream()) &&
-        ((workTask->stream->Id_() == -1) || (workTask->stream->Id_() == MAX_INT32_NUM))) {
-        RT_LOG_CALL_MSG(ERR_MODULE_GE, "stream is invalid, stream_id=%d.", workTask->stream->Id_());
-        workTask->error = TASK_ERROR_SUBMIT_FAIL;
-        return RT_ERROR_STREAM_INVALID;
-    }
-
-    /* save task to model for ACL */
-    if ((workTask->stream->Flags() & RT_STREAM_AICPU) != 0U) {
-        if (workTask->stream->NeedSaveTask(workTask)) {
-            rtCommand_t command;
-            (void)memset_s(&command, sizeof(rtCommand_t), 0U, sizeof(rtCommand_t));
-            ToCommand(workTask, &command);
-            COND_RETURN_AND_MSG_OUTER(
-                (workTask->stream->Model_() == nullptr), RT_ERROR_MODEL_NULL, ErrorCode::EE1018, "Submitting a task",
-                "AI CPU stream requires a model association. Call the rtsModelBindStream API to bind a model to the "
-                "stream");
-            (void)workTask->stream->Model_()->SaveAicpuStreamTask(workTask->stream, &command);
-        }
-        RT_LOG(
-            RT_LOG_DEBUG, "aicpu stream, no need to send to ts, stream_id=%u, task_id=%u, task_type=%d (%s).",
-            static_cast<uint32_t>(workTask->stream->Id_()), static_cast<uint32_t>(workTask->id),
-            static_cast<int32_t>(workTask->type), workTask->typeName);
-        Complete(workTask, RT_MAX_DEV_NUM);
-        (void)device_->GetTaskFactory()->Recycle(workTask);
-        return RT_ERROR_NONE;
+    if (workTask->stream->taskResMang_ != nullptr) {
+        return SubmitTaskDc(workTask, workTask->stream, flipTaskId, timeout);
     }
 
     TIMESTAMP_BEGIN(ObserverSubmitted);
@@ -220,6 +205,27 @@ rtError_t Engine::SubmitTaskNormal(TaskInfo* const workTask, uint32_t* const fli
     TIMESTAMP_END(ObserverSubmitted);
 
     return SubmitSend(workTask, flipTaskId);
+}
+
+rtError_t Engine::ProcessAicpuTask(TaskInfo* const workTask)
+{
+    if (workTask->stream->NeedSaveTask(workTask)) {
+        rtCommand_t command;
+        (void)memset_s(&command, sizeof(rtCommand_t), 0U, sizeof(rtCommand_t));
+        ToCommand(workTask, &command);
+        COND_RETURN_AND_MSG_OUTER(
+            (workTask->stream->Model_() == nullptr), RT_ERROR_MODEL_NULL, ErrorCode::EE1018, "Submitting a task",
+            "AI CPU stream requires a model association. Call the rtsModelBindStream API to bind a model to the "
+            "stream");
+        (void)workTask->stream->Model_()->SaveAicpuStreamTask(workTask->stream, &command);
+    }
+    RT_LOG(
+        RT_LOG_DEBUG, "aicpu stream, no need to send to ts, stream_id=%u, task_id=%u, task_type=%d (%s).",
+        static_cast<uint32_t>(workTask->stream->Id_()), static_cast<uint32_t>(workTask->id),
+        static_cast<int32_t>(workTask->type), workTask->typeName);
+    Complete(workTask, RT_MAX_DEV_NUM);
+    (void)device_->GetTaskFactory()->Recycle(workTask);
+    return RT_ERROR_NONE;
 }
 
 void Engine::ReportProfData(TaskInfo* const workTask) const

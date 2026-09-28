@@ -290,7 +290,7 @@ TEST_F(NotifyTest, notify_record_tasksubmit_error)
 {
     RawDevice* device = (RawDevice*)((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
 
-    MOCKER_CPP_VIRTUAL(device->engine_, &Engine::SubmitTaskNormal).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER_CPP_VIRTUAL(device->engine_, &Engine::SubmitTask).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
     rtError_t error;
     int32_t device_id = 0;
     uint32_t tsId = 0;

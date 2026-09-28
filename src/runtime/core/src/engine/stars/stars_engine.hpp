@@ -102,10 +102,6 @@ private:
     rtError_t TaskReclaimBySqHeadForSeparatedStm(Stream* const stm);
     rtError_t TaskReclaimByCqeForSeparatedStm(Stream* const stm);
 
-    rtError_t SendTask(TaskInfo* const workTask, uint16_t& taskId, uint32_t* const flipTaskId = nullptr) override;
-
-    rtError_t SubmitSend(TaskInfo* const workTask, uint32_t* const flipTaskId) override;
-
     rtError_t StarsResumeRtsq(const rtCqReport_t& logicCq, const uint16_t taskType, Stream* const failStm) const;
 
     void StarsCqeReceive(const rtCqReport_t& logicCq, TaskInfo* const runTask) const;

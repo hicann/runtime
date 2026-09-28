@@ -26,7 +26,9 @@
 #include "task_res.hpp"
 #include "task_recycle.hpp"
 #include "task_david.hpp"
+#include "task_submit.hpp"
 #include "raw_device.hpp"
+#include "stars_engine.hpp"
 #include "task_res_da.hpp"
 #include "stream_sqcq_manage.hpp"
 #include "model.hpp"
@@ -61,6 +63,14 @@ static drvError_t stubDavidGetDeviceInfo(uint32_t devId, int32_t moduleType, int
         }
     }
     return DRV_ERROR_NONE;
+}
+
+static void VerifyStarsTaskMetadataAtConstruction(TaskInfo* taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
+{
+    UNUSED(sqe);
+    UNUSED(sqeInfo);
+    EXPECT_EQ(taskInfo->sqeNum, GetSendSqeNum(taskInfo));
+    EXPECT_EQ(taskInfo->pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].expectPackage, 7U);
 }
 
 class DavidTaskSendTest : public testing::Test {
@@ -167,15 +177,17 @@ protected:
             task.u.davinciMultiTaskInfo.sqeNum = expectedSqeNum;
         }
 
-        uint16_t taskId = 0U;
+        TaskResManage* const taskResManage = stream_->taskResMang_;
+        stream_->taskResMang_ = nullptr;
+        const ScopeGuard restoreTaskResManage([&]() { stream_->taskResMang_ = taskResManage; });
         MOCKER_CPP_VIRTUAL(engine_, &Engine::TryRecycleTask).stubs().will(returnValue(RT_ERROR_NONE));
-        stream_->SetAbortStatus(RT_ERROR_STREAM_ABORT);
-        const rtError_t error = engine_->SendTask(&task, taskId);
-        stream_->SetAbortStatus(RT_ERROR_NONE);
+        MOCKER(ToConstructSqe).expects(once()).will(invoke(VerifyStarsTaskMetadataAtConstruction));
+        MOCKER_CPP(&StarsEngine::AddTaskToStream).expects(once()).will(returnValue(RT_ERROR_INVALID_VALUE));
 
-        EXPECT_EQ(error, RT_ERROR_STREAM_ABORT_SEND_TASK_FAIL);
+        const rtError_t error = StarsAllocTaskAndSend(&task, stream_, nullptr);
+
+        EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
         EXPECT_EQ(task.sqeNum, expectedSqeNum);
-        EXPECT_EQ(task.pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].expectPackage, initialReportNum);
     }
 
     void VerifyDavidSendTaskMetadataAfterConstruction(

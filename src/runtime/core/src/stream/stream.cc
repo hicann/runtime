@@ -3457,12 +3457,8 @@ rtError_t Stream::StarsAddTaskToStream(TaskInfo* const tsk, const uint32_t sendS
             GetSqDepth();
     const uint32_t newPosTail = (posTail + sendSqeNum) % rtsqDepth;
     if (bind) {
-        // If model stream is already full, return STREAM_FULL. PendingNum add 1 in TaskSubmited. Because the task will
-        // not be sent, pendingNum sub 1 is performed.
-
-        COND_PROC_RETURN_AND_MSG_OUTER(
-            posTail + sendSqeNum >= rtsqDepth, RT_ERROR_STREAM_FULL, ErrorCode::EE1019, pendingNum_.Sub(1),
-            "Adding task to stream",
+        COND_RETURN_AND_MSG_OUTER(
+            posTail + sendSqeNum >= rtsqDepth, RT_ERROR_STREAM_FULL, ErrorCode::EE1019, "Adding task to stream",
             "The model stream is full, stream_id=" + std::to_string(streamId_) +
                 ", task_id=" + std::to_string(tsk->id) + ", posTail=" + std::to_string(posTail) +
                 ", sendSqeNum=" + std::to_string(sendSqeNum) + ", rtsqDepth=" + std::to_string(rtsqDepth));

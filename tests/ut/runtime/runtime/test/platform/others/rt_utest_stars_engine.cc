@@ -177,7 +177,7 @@ TEST_F(OthersStarsEngineTest, SendMultipleTaskCachesActualSqeNumBeforeAbort)
 
     const rtError_t error = starsEngine->SendTask(&task, taskId);
 
-    EXPECT_EQ(error, RT_ERROR_STREAM_ABORT_SEND_TASK_FAIL);
+    EXPECT_EQ(error, RT_ERROR_STREAM_ABORT);
     EXPECT_EQ(task.sqeNum, sendSqeNum);
 }
 

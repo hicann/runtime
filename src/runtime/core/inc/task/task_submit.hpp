@@ -17,10 +17,9 @@
 namespace cce {
 namespace runtime {
 rtError_t AllocTaskAndSendDc(TaskInfo* submitTask, Stream* stm, uint32_t* const flipTaskId);
-rtError_t AllocTaskAndSendStars(TaskInfo* submitTask, Stream* stm, uint32_t* const flipTaskId);
+rtError_t StarsAllocTaskAndSend(TaskInfo* submitTask, Stream* stm, uint32_t* const flipTaskId);
 rtError_t SubmitTaskDc(TaskInfo* submitTask, Stream* stm, uint32_t* const flipTaskId, int32_t timeout);
-rtError_t SubmitTaskStars(TaskInfo* submitTask, Stream* stm, uint32_t* const flipTaskId, int32_t timeout);
-rtError_t AllocTaskAndSend(TaskInfo* submitTask, Stream* stm, uint32_t* const flipTaskId, int32_t timeout);
+rtError_t StarsSubmitTask(TaskInfo* submitTask, Stream* stm, uint32_t* const flipTaskId, int32_t timeout);
 rtError_t AllocAndSendFlipTask(uint16_t preTaskId, Stream* stm);
 rtError_t LoadArgsInfo(TaskInfo* submitTask, Stream* stm, uint16_t taskResId);
 rtError_t LoadArgsInfoForAicoreKernelTask(TaskInfo* submitTask, Stream* stm, uint16_t taskResId);
