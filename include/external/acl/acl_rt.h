@@ -5774,6 +5774,12 @@ ACL_FUNC_VISIBILITY aclError aclrtSnapShotProcessRestore(int pid, aclrtSnapShotR
  * @param [in] callback Pointer to the callback function
  * @param [in] args User-defined argument pointer passed unchanged to the callback.
  *        This can be NULL if no additional data is needed.
+ *
+ * @note The callback function can only be used for backing up and restoring the business's own state. It is
+ * forbidden to call any Runtime API inside the callback function (including but not limited to the snapshot
+ * management APIs, such as callback registration/unregistration, process lock/unlock, async memory copy);
+ * otherwise a deadlock or undefined behavior may occur.
+ *
  * @retval ACL_SUCCESS The function is successfully executed
  * @retval OtherValues Failure
  */

@@ -293,6 +293,11 @@ aclError aclrtSnapShotCallbackRegister(aclrtSnapShotStage stage, aclrtSnapShotCa
 
 返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
+### 约束说明
+
+- 回调函数仅可用于业务自身状态的备份与恢复。
+- 禁止在回调函数内调用Runtime接口（包括但不限于快照管理接口，例如回调函数的注册与注销、进程锁定与解锁、异步拷贝等），否则可能导致进程挂死或未定义行为。
+
 <br>
 <br>
 <br>
