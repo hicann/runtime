@@ -31,12 +31,13 @@ VISIBILITY_DEFAULT cce::runtime::Runtime* ConstructRuntimeImpl()
 
 VISIBILITY_DEFAULT void DestructorRuntimeImpl(cce::runtime::Runtime* rt)
 {
-    delete rt;
-    cce::runtime::Runtime::runtime_ = nullptr;
 #ifndef CFG_DEV_PLATFORM_PC
+    // TPRT workers can access Runtime state until their current task returns.
     delete cce::tprt::TprtManage::tprt_;
     cce::tprt::TprtManage::tprt_ = nullptr;
 #endif
+    delete rt;
+    cce::runtime::Runtime::runtime_ = nullptr;
     RT_LOG(RT_LOG_INFO, "RuntimeImpl destructor success");
     return;
 }
