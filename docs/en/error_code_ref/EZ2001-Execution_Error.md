@@ -18,4 +18,4 @@ Fault RAS occurs in the system: [event_id:0x80e18400] New uncorrectable ECC / ot
 
 ## Solution
 
-Please locate the issue as prompted in the error messsage.
+Please locate the issue as prompted in the error message.

@@ -664,12 +664,23 @@ rtError_t CheckTaskCanSend(Stream* const stm)
             stm->Id_(), stm->Device_()->Id_()));
 
     TaskResManageDavid* taskResManag = RtPtrToPtr<TaskResManageDavid*, TaskResManage*>(stm->taskResMang_);
-    if (unlikely(taskResManag == nullptr) && (!stm->IsSoftwareSqEnable()) && (!stm->IsAutoSplitSq())) {
+    const bool isTaskResourceUnavailable =
+        unlikely(taskResManag == nullptr) && (!stm->IsSoftwareSqEnable()) && (!stm->IsAutoSplitSq());
+    COND_PROC_RETURN_AND_MSG_OUTER(
+        isTaskResourceUnavailable && ((stm->Flags() & RT_STREAM_CP_PROCESS_USE) != 0U), RT_ERROR_STREAM_INVALID,
+        ErrorCode::EE1006,
         RT_LOG(
             RT_LOG_WARNING, "device_id=%u stream_id=%d(flags=0x%x) does not support send task.", stm->Device_()->Id_(),
-            stm->Id_(), stm->Flags());
-        return RT_ERROR_STREAM_INVALID;
-    }
+            stm->Id_(), stm->Flags()),
+        "Sending a task", RtFmtMsg("Stream flags value %u", stm->Flags()),
+        RtFmtMsg(
+            "Stream (stream_id=%d) with the flag RT_STREAM_CP_PROCESS_USE(0x800U) cannot be used for host-side task "
+            "delivery",
+            stm->Id_()));
+    COND_RETURN_WARN(
+        isTaskResourceUnavailable, RT_ERROR_STREAM_INVALID,
+        "device_id=%u stream_id=%d(flags=0x%x) does not support send task.", stm->Device_()->Id_(), stm->Id_(),
+        stm->Flags());
     return RT_ERROR_NONE;
 }
 
