@@ -112,13 +112,15 @@ flowchart TD
     classDef v201Style fill:#E0F2F1,stroke:#00695C,stroke-width:2px,color:#004D40
 
     A["Runtime::Init() RegTaskFunc()"]:::entryStyle --> B{"路径选择"}:::branchStyle
-    B -->|v100| C["TaskFuncReg()"]:::v100Style
-    B -->|v200_base| D["RegDavidTaskFunc()"]:::v200baseStyle
+    B -->|v100| C["TaskFuncSingle + RegTaskFunc()"]:::v100Style
+    B -->|v200_base| D["TaskFuncSingle + RegTaskFunc()"]:::v200baseStyle
 
-    D -->|v200| E["RegDavidTaskFunc() <br/> RegXpuTaskFunc()"]:::v200Style
-    D -->|v201| F["RegDavidTaskFunc()  <br/> 更新DQS钩子"]:::v201Style
+    D -->|v200| E["TaskFuncSingle + RegTaskFunc() <br/> RegXpuTaskFunc()"]:::v200Style
+    D -->|v201| F["TaskFuncSingle + RegTaskFunc() <br/> 更新DQS钩子"]:::v201Style
 
 ```
+
+各平台都通过 `RegTaskFunc` 注册 `TaskFuncSingle::toSqeFunc`，并由统一的 `ToConstructSqe` 入口调用。
 
 ### 3.3 David Task下发流程
 
@@ -140,7 +142,9 @@ sequenceDiagram
     Stream->>Stream: 根据任务类型填充 TaskInfo.u.xxx
     rect rgba(245, 237, 244, 0.62)
         alt DavidSendTask
-            Stream->>Stream: ToConstructDavidSqe(taskInfo, sqeAddr) <br/> 构建 SQE
+            Stream->>Stream: 准备 TaskSqeInfo
+            Stream->>Stream: ToConstructSqe(taskInfo, sqeAddr, sqeInfo) <br/> 构建 SQE
+            Stream->>Stream: SetExpectedTaskReportNum(taskInfo, taskInfo->sqeNum) <br/> 设置任务报告数
             Stream->>PublicQueue: AddTaskToPublicQueue(taskInfo, sqeNum) <br/> 加入Task 队列
             Stream->>Driver: halSqTaskSend(devId, &sendInfo) <br/> 发送 SQE 到硬件
             Driver-->>HWTS: SQE 写入执行地址
@@ -237,7 +241,7 @@ typedef struct tagTaskInfoStru {
     uint8_t bindFlag : 1;        // 模型绑定流标志
     uint8_t isCqeNeedConcern : 1; // CQE 需关注
     uint8_t isNeedStreamSync : 1; // 需流同步
-    uint8_t sqeNum : 7;           // SQE 数量（David 多 SQE）
+    uint8_t sqeNum : 7;           // 实际发送的 SQE 数量，发送后保持到任务回收
     ...
     union {
         AicTaskInfo aicTaskInfo;
@@ -249,6 +253,9 @@ typedef struct tagTaskInfoStru {
     ...
 } TaskInfo;
 ```
+
+`sqeNum` 是实际发送的 SQE 数量，`expectPackage` 是完成判定需要等待的任务报告数，二者不一定相等。
+任务报告数在 SQE 构造完成后由 `SetExpectedTaskReportNum` 按平台规则设置。
 
 #### 4.2.2 TaskRes资源分配核心逻辑
 
@@ -312,10 +319,12 @@ static rtError_t AllocTaskInfo(TaskInfo** taskInfo, Stream* const stm, uint32_t&
 #### 4.2.3 Task处理函数的回调框架
 
 **1. TaskFuncSingle 结构体** <br/>
-不同 TASK_TYPE 的任务回调函数结构体，针对不同 CHIP_TYPE 和 taskType 单独处理，调用函数 rtError_t RegTaskFunc(rtChipType_t chipType, tsTaskType_t taskType, const TaskFuncSingle& funcs) 进行全局注册。
+不同 TASK_TYPE 的任务回调函数结构体，针对不同 CHIP_TYPE 和 taskType 单独处理，调用函数 void RegTaskFunc(rtChipType_t chipType, tsTaskType_t taskType, const TaskFuncSingle& funcs) 进行全局注册。
 
 ```cpp
-// src/runtime/core/src/task/inc/runtime_task_manager.h:69-78
+// src/runtime/core/src/task/inc/runtime_task_manager.h
+using PfnTaskToSqe = void (*)(TaskInfo* taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo);
+
 struct TaskFuncSingle {
     PfnTaskToCmd toCommandFunc;
     PfnTaskToSqe toSqeFunc;
@@ -326,13 +335,15 @@ struct TaskFuncSingle {
     PfnTaskSetResult setResultFunc;
     PfnTaskSetStarsResult setStarsResultFunc;
 };
+
+void ToConstructSqe(TaskInfo* taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo);
 ```
 
 **2. TaskFuncArrays 结构体** <br/>
 TaskFuncArrays g_taskFuncArrays[CHIP_END]  runtime初始化的时候根据 CHIP_TYPE 保存对应 TaskFunc。
 
 ```cpp
-// src/runtime/core/src/task/inc/runtime_task_manager.h:58-67
+// src/runtime/core/src/task/inc/runtime_task_manager.h
 struct TaskFuncArrays {
     PfnTaskToCmd toCommandFunc[TS_TASK_TYPE_RESERVED];           // [0] TaskCommand 构建
     PfnTaskToSqe toSqeFunc[TS_TASK_TYPE_RESERVED];               // [1] SQE 构建
@@ -342,6 +353,7 @@ struct TaskFuncArrays {
     PfnPrintErrorInfo printErrorInfoFunc[TS_TASK_TYPE_RESERVED];  // [5] 错误打印
     PfnTaskSetResult setResultFunc[TS_TASK_TYPE_RESERVED];        // [6] Task异常结果设置（v100）
     PfnTaskSetStarsResult setStarsResultFunc[TS_TASK_TYPE_RESERVED]; // [7] Task异常结果设置（v100）
+    PfnTaskSqeHeaderPostProc sqeHeaderPostProcFunc;
 };
 ```
 **3. Task处理时使用的全局变量**  <br/>
@@ -355,6 +367,8 @@ static PfnPrintErrorInfo *g_printErrorInfoFunc = g_taskFuncArrays[CHIP_BEGIN].pr
 static PfnTaskSetResult *g_setResultFunc = g_taskFuncArrays[CHIP_BEGIN].setResultFunc;
 static PfnTaskSetStarsResult *g_setStarsResultFunc = g_taskFuncArrays[CHIP_BEGIN].setStarsResultFunc;
 PfnTaskUnInit *g_taskUnInitFunc = g_taskFuncArrays[CHIP_BEGIN].taskUnInitFunc;
+PfnTaskSqeHeaderPostProc g_taskSqeHeaderPostProcRunningFunc =
+    g_taskFuncArrays[CHIP_BEGIN].sqeHeaderPostProcFunc;
 
 ```
 

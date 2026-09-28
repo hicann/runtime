@@ -261,15 +261,9 @@ rtError_t DavidSendTask(TaskInfo *taskInfo, Stream *stm) {
     }
     
     // 构建 SQE 内容
-    ToConstructDavidSqe(taskInfo, sqeAddr, sqBaseAddr);
-    // 填充 SQE 字段（AICore 任务）
-    sqeAddr->taskType = TS_TASK_TYPE_KERNEL_AICORE;
-    sqeAddr->taskId = taskInfo->id;
-    sqeAddr->sqId = stm->GetSqId();
-    sqeAddr->cqId = stm->GetCqId();
-    sqeAddr->kernelAddr = kernel->GetAddr();
-    sqeAddr->argsAddr = args;
-    // ... 其他 SQE 字段
+    TaskSqeInfo sqeInfo = {sqBaseAddr, 0ULL};
+    ToConstructSqe(taskInfo, static_cast<void *>(sqeAddr), sqeInfo);
+    SetExpectedTaskReportNum(taskInfo, taskInfo->sqeNum);
 }
 
 // 4. 发送到 SQ
@@ -288,6 +282,9 @@ if (drvRet != DRV_ERROR_NONE) {
 // 更新 SQ tail 位置
 stm->UpdateSqTailPos(taskInfo->sqeNum);
 ```
+
+`sqeNum` 表示实际发送的 SQE 数量，发送后供队列管理和回收使用；`expectPackage` 表示任务完成
+需要等待的报告数。二者含义不同，报告数应在 SQE 构造完成后按平台规则设置。
 
 #### 流同步流程
 
