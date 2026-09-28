@@ -1042,7 +1042,7 @@ protected:
     uint32_t errCode_;
     uint32_t drvErr_;
     DvppGrp* dvppGrp_;
-    void* dvppRRTaskAddr_{nullptr};
+    Atomic<void*> dvppRRTaskAddr_{nullptr};
     uint32_t* taskPublicBuff_{nullptr};
     uint16_t taskPublicBuffSize_{0};
     uint64_t sqRegVirtualAddr_{0ULL}; // virtual address of stars_simple_sq0_4k head, get from DRV by sq_id

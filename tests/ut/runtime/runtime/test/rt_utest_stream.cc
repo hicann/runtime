@@ -1254,7 +1254,7 @@ TEST_F(StreamTest, StreamExitTearDownAndDestructorSkipDriverRelease)
     stream->streamId_ = 7;
     void* const fakeArgsHandle = reinterpret_cast<void*>(0x1234U);
     stream->argsHandle_ = fakeArgsHandle;
-    stream->dvppRRTaskAddr_ = reinterpret_cast<void*>(0x2345U);
+    stream->dvppRRTaskAddr_.Set(reinterpret_cast<void*>(0x2345U));
     stream->timelineAddr_ = reinterpret_cast<uint64_t*>(0x3456U);
     stream->memContainOverflowAddr_ = reinterpret_cast<void*>(0x4567U);
     stream->switchNArg_.push_back(reinterpret_cast<void*>(0x5678U));

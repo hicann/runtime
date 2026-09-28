@@ -105,9 +105,10 @@ void DavidStream::ReleaseSqCqResourcesOnDestroy()
         (void)device_->GetStreamSqCqManage()->FreeLogicCq(static_cast<uint32_t>(streamId_));
     }
 
-    if (dvppRRTaskAddr_ != nullptr) {
-        (void)device_->Driver_()->DevMemFree(dvppRRTaskAddr_, device_->Id_());
-        dvppRRTaskAddr_ = nullptr;
+    void* const dvppRRTaskAddr = dvppRRTaskAddr_.Value();
+    if (dvppRRTaskAddr != nullptr) {
+        (void)device_->Driver_()->DevMemFree(dvppRRTaskAddr, device_->Id_());
+        dvppRRTaskAddr_.Set(nullptr);
     }
 }
 

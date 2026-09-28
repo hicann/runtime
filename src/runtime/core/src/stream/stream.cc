@@ -196,9 +196,10 @@ Stream::~Stream()
             }
         }
 
-        if (dvppRRTaskAddr_ != nullptr) {
-            (void)device_->Driver_()->DevMemFree(dvppRRTaskAddr_, device_->Id_());
-            dvppRRTaskAddr_ = nullptr;
+        void* const dvppRRTaskAddr = dvppRRTaskAddr_.Value();
+        if (dvppRRTaskAddr != nullptr) {
+            (void)device_->Driver_()->DevMemFree(dvppRRTaskAddr, device_->Id_());
+            dvppRRTaskAddr_.Set(nullptr);
         }
 
         ReleaseStreamArgRes();
@@ -1718,7 +1719,7 @@ void Stream::ResetHostPointersOnExit()
     parentCaptureStream_ = nullptr;
     argManage_ = nullptr;
     lastHalfRecord_ = nullptr;
-    dvppRRTaskAddr_ = nullptr;
+    dvppRRTaskAddr_.Set(nullptr);
     timelineAddr_ = nullptr;
     memContainOverflowAddr_ = nullptr;
     argsHandle_ = nullptr;
@@ -4451,13 +4452,21 @@ rtError_t Stream::GetLastFinishTaskId(const uint32_t taskId, uint32_t& currId, i
 // default align of DevMemAlloc is 4K(page size)
 void* Stream::GetDvppRRTaskAddr(void)
 {
-    if (dvppRRTaskAddr_ != nullptr) {
-        return dvppRRTaskAddr_;
+    void* addr = dvppRRTaskAddr_.Value();
+    if (addr != nullptr) {
+        return addr;
     }
 
     const std::lock_guard<std::mutex> lock(dvppRRTaskAddrLock_);
+    // Double check after acquiring the lock: a concurrent caller may have allocated meanwhile,
+    // and allocating again would overwrite the pointer and leak the earlier device memory.
+    addr = dvppRRTaskAddr_.Value();
+    if (addr != nullptr) {
+        return addr;
+    }
+
     const rtError_t error =
-        device_->Driver_()->DevMemAlloc(&dvppRRTaskAddr_, DVPP_RR_WRITE_VALUE_LEN, RT_MEMORY_DEFAULT, device_->Id_());
+        device_->Driver_()->DevMemAlloc(&addr, DVPP_RR_WRITE_VALUE_LEN, RT_MEMORY_DEFAULT, device_->Id_());
     if (error != RT_ERROR_NONE) {
         RT_LOG_INNER_MSG(
             RT_LOG_ERROR, "Failed to allocate device memory, stream_id=%d, size=%u, retCode=%#x", streamId_,
@@ -4465,8 +4474,9 @@ void* Stream::GetDvppRRTaskAddr(void)
         return nullptr;
     }
 
+    dvppRRTaskAddr_.Set(addr);
     RT_LOG(RT_LOG_INFO, "stream_id=%d", streamId_);
-    return dvppRRTaskAddr_;
+    return addr;
 }
 
 rtError_t Stream::SetFailMode(const uint64_t mode)
