@@ -886,8 +886,9 @@ rtError_t RawDevice::Alloc32kStackAddrForDcache()
         COND_RETURN_ERROR(
             (error != RT_ERROR_NONE) || (stackPhyBase32k_ == nullptr), error,
             "Alloc stack phy base failed, mem alloc failed, retCode=%#x.", static_cast<uint32_t>(error));
+    } else {
+        stackAddrIsDcache_ = true;
     }
-    stackAddrIsDcache_ = true;
     stackPhyBase32kAlign_ = stackPhyBase32k_;
     return RT_ERROR_NONE;
 }

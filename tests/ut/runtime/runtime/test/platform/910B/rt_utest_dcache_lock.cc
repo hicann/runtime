@@ -43,6 +43,20 @@
 using namespace testing;
 using namespace cce::runtime;
 
+namespace {
+void* g_alloc32kDcacheAddr = nullptr;
+void* g_alloc32kDrvHandle = nullptr;
+
+rtError_t StubAlloc32kAddrForDcache(const uint32_t deviceId, void*& dcacheAddr, const uint64_t size, void*& drvHandle)
+{
+    (void)deviceId;
+    (void)size;
+    dcacheAddr = g_alloc32kDcacheAddr;
+    drvHandle = g_alloc32kDrvHandle;
+    return RT_ERROR_NONE;
+}
+} // namespace
+
 class CloudV2DcacheDeviceTest : public testing::Test {
 protected:
     static void SetUpTestCase() {}
@@ -96,13 +110,44 @@ TEST_F(CloudV2DcacheDeviceTest, Alloc32kStackAddrForDcache)
     MOCKER(AllocAddrForDcache).stubs().will(returnValue(RT_ERROR_FEATURE_NOT_SUPPORT));
     RawDevice* dev = new RawDevice(1);
     int32_t temp = 0;
-    dev->stackPhyBase32k_ = &temp;
+    void* stackAddr = &temp;
     Driver* driver_ = ((Runtime*)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
     dev->driver_ = driver_;
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::DevMemAlloc)
+        .expects(once())
+        .with(
+            outBoundP(&stackAddr, sizeof(stackAddr)), eq(RT_SCALAR_BUFFER_SIZE_32K_75), eq(RT_MEMORY_DDR),
+            eq(dev->Id_()))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::DevMemFree)
+        .expects(once())
+        .with(eq(static_cast<void*>(&temp)), eq(dev->deviceId_))
+        .will(returnValue(RT_ERROR_NONE));
     rtError_t ret = dev->Alloc32kStackAddrForDcache();
     EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(dev->stackAddrIsDcache_, false);
+    EXPECT_EQ(dev->stackPhyBase32k_, &temp);
     dev->FreeStackPhyBase();
     dev->driver_ = nullptr;
+    delete dev;
+}
+
+TEST_F(CloudV2DcacheDeviceTest, Alloc32kStackAddrForDcacheDcacheSuccess)
+{
+    int32_t temp = 0;
+    int32_t handle = 0;
+    g_alloc32kDcacheAddr = &temp;
+    g_alloc32kDrvHandle = &handle;
+    MOCKER(AllocAddrForDcache).expects(once()).will(invoke(StubAlloc32kAddrForDcache));
+
+    RawDevice* dev = new RawDevice(1);
+    rtError_t ret = dev->Alloc32kStackAddrForDcache();
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(dev->stackAddrIsDcache_, true);
+    EXPECT_EQ(dev->stackPhyBase32k_, &temp);
+    EXPECT_EQ(dev->stackPhyBase32kAlign_, &temp);
+    EXPECT_EQ(dev->drvMemCtrlHandle_, &handle);
+
     delete dev;
 }
 
