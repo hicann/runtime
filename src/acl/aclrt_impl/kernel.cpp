@@ -136,6 +136,8 @@ aclError aclrtLaunchKernelImpl(
     ACL_PROFILING_REG(acl::AclProfType::AclrtLaunchKernel);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(funcHandle);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(argsData);
+    ACL_CHECK_INVALID_PARAM_WITH_REASON(
+        argsSize > static_cast<size_t>(UINT32_MAX), argsSize, "must be no greater than UINT32_MAX");
 
     rtArgsEx_t argsInfo = {};
     argsInfo.args = const_cast<void*>(argsData);
@@ -507,6 +509,8 @@ aclError aclrtLaunchKernelV2Impl(
     ACL_LOG_INFO("Start to execute aclrtLaunchKernelV2");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(funcHandle);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(argsData);
+    ACL_CHECK_INVALID_PARAM_WITH_REASON(
+        argsSize > static_cast<size_t>(UINT32_MAX), argsSize, "must be no greater than UINT32_MAX");
 
     rtKernelLaunchCfg_t* rt_cfg = nullptr;
     if (cfg != nullptr) {
@@ -534,6 +538,8 @@ aclError aclrtLaunchKernelWithHostArgsImpl(
     ACL_PROFILING_REG(acl::AclProfType::AclrtLaunchKernelWithHostArgs);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(funcHandle);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(hostArgs);
+    ACL_CHECK_INVALID_PARAM_WITH_REASON(
+        argsSize > static_cast<size_t>(UINT32_MAX), argsSize, "must be no greater than UINT32_MAX");
     ACL_LOG_INFO("start to execute aclrtLaunchKernelWithHostArgsImpl");
     rtKernelLaunchCfg_t* rt_cfg = nullptr;
     rtPlaceHolderInfo_t* rt_placeHolderArray = nullptr;
@@ -633,6 +639,8 @@ aclError aclrtLaunchSIMTKernelWithHostArgsImpl(
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(func);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(hostArgs);
     ACL_REQUIRES_POSITIVE_REPORT(argsSize);
+    ACL_CHECK_INVALID_PARAM_WITH_REASON(
+        argsSize > static_cast<size_t>(UINT32_MAX), argsSize, "must be no greater than UINT32_MAX");
 
     rtDim3 rtGridDim = {gridDim.x, gridDim.y, gridDim.z};
     rtDim3 rtBlockDim = {blockDim.x, blockDim.y, blockDim.z};
