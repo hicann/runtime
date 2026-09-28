@@ -15,9 +15,9 @@ trace日志具体落盘路径为：“`$HOME/ascend/atrace/trace_{进程组pid}_
 |存储路径|说明|
 |--|--|
 |`schedule_tracer_ts_{device_id}.txt`|当发生AI Core Error、notify wait超时时，Task Schedule回传到host侧的维测信息，包括寄存器、硬件buffer、bitmap等。|
-|`stackcore_tracer_{signal}_{tid}_{program_name}_{time}.txt`|当Host业务进程崩溃时记录的轻量级core文件，包括栈帧地址和基地址，该文件需要使用asys工具解析，具体请参见[asys工具](https://hiascend.com/document/redirect/CannCommunityasys)。|
+|`stackcore_tracer_{signal}_{tid}_{program_name}_{time}.txt`|当Host业务进程崩溃时记录的轻量级core文件，包括栈帧地址和基地址，该文件需要使用asys工具解析，具体请参见[asys工具](https://gitcode.com/cann/oam-tools/blob/master/docs/zh/asys/README.md)。|
 |`schedule_tracer_{object_name}.txt`|Runtime、HCCL等模块在运行过程中上报的轨迹信息，记录进程运行过程。|
-|`schedule_tracer_{object_name}.bin`|AICPU等模块在运行过程中上报的轨迹信息，记录进程运行过程。以二进制格式存储，需要使用asys工具解析，具体请参见[asys工具](https://hiascend.com/document/redirect/CannCommunityasys)。|
+|`schedule_tracer_{object_name}.bin`|AICPU等模块在运行过程中上报的轨迹信息，记录进程运行过程。以二进制格式存储，需要使用asys工具解析，具体请参见[asys工具](https://gitcode.com/cann/oam-tools/blob/master/docs/zh/asys/README.md)。|
 
 - 通过环境变量ASCEND\_LOG\_DEVICE\_FLUSH\_TIMEOUT配置Device侧日志回传到Host侧的延时时间，具体请参考《[环境变量参考](https://gitcode.com/cann/docs/blob/master/docs/zh/env-vars/README.md)》。
 - 通过环境变量ASCEND\_TRACE\_RECORD\_NUM可控制“`$HOME/ascend/atrace/trace_{进程组pid}_{首次加载trace动态库的进程pid}_{首次加载trace动态库的时间戳}/`”目录下“`schedule_event_{当前进程pid}_{目录生成时的时间戳}`”子目录的老化规格，具体请参考《[环境变量参考](https://gitcode.com/cann/docs/blob/master/docs/zh/env-vars/README.md)》。
