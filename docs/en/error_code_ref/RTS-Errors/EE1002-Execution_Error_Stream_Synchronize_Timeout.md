@@ -5,13 +5,13 @@
 The following is error format. The placeholder %s indicates the error cause.
 
 ```text
-Stream synchronize timeout. %s
+Stream synchronization timeout. %s
 ```
 
 Error example:
 
 ```text
-Stream synchronize timeout. rtModelExecute execution failed.
+Stream synchronization timeout. rtModelExecute execution failed.
 ```
 
 ## Possible Cause

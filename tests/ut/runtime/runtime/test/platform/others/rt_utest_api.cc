@@ -4993,6 +4993,16 @@ TEST_F(ApiTest, rtsNotifySetImportPid_ChipNotSupport)
     rtInstance->SetChipType(oldChipType);
 }
 
+TEST_F(ApiTest, rts_notify_import_by_key_rejects_flag_above_uint32_max)
+{
+    rtNotify_t notify = nullptr;
+    const uint64_t flag = static_cast<uint64_t>(UINT32_MAX) + 1ULL;
+    MOCKER(rtIpcOpenNotifyWithFlag).expects(never());
+
+    EXPECT_EQ(rtsNotifyImportByKey(&notify, "key", flag), ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(notify, nullptr);
+}
+
 TEST_F(ApiTest, rts_ipc_open_with_flag_succ)
 {
     ApiImpl apiImpl;

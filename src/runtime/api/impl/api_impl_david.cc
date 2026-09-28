@@ -1233,13 +1233,10 @@ rtError_t ApiImplDavid::NotifyWait(Notify* const inNotify, Stream* const stm, co
 
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Waiting for a Notify");
-    COND_RETURN_AND_MSG_OUTER(
-        inNotify->CheckIpcNotifyDevId() != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE, ErrorCode::EE1012,
-        "Waiting for a Notify", curCtx->Device_()->Id_(), "current deviceId",
-        RtFmtMsg(
-            "The device (device_id=%u) cannot deliver the notify wait task."
-            " The notify wait task must be delivered on the device (device_id=%u) where the IPC Notify is created",
-            curCtx->Device_()->Id_(), inNotify->GetDeviceId()));
+    COND_RETURN_ERROR(
+        inNotify->CheckIpcNotifyDevId() != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE,
+        "Failed to check the IPC Notify device for waiting, notify_id=%u, stream_id=%d.", inNotify->GetNotifyId(),
+        curStm->Id_());
     const uint32_t timeOutTmp = timeOut;
     const rtError_t error = NtyWait(inNotify, curStm, timeOutTmp);
     const uint32_t notifyId = inNotify->GetNotifyId();

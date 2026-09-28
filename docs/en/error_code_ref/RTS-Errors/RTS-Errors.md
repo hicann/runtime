@@ -48,6 +48,8 @@
 
 - [EE1025 Initialization\_Error](EE1025-Initialization_Error.md)
 
+- [EE1026 Execution\_Error\_Event\_Synchronize\_Timeout](EE1026-Execution_Error_Event_Synchronize_Timeout.md)
+
 - [EE2002 Config\_Error\_Invalid\_Environment\_Variable](EE2002-Config_Error_Invalid_Environment_Variable.md)
 
 - [EE4001 Model\_Binding\_Errors](EE4001-Model_Binding_Errors.md)

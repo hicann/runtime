@@ -209,7 +209,10 @@ rtError_t rtsNotifyGetExportKey(rtNotify_t notify, char_t* key, uint32_t len, ui
 VISIBILITY_DEFAULT
 rtError_t rtsNotifyImportByKey(rtNotify_t* notify, const char_t* key, uint64_t flag)
 {
-    return rtIpcOpenNotifyWithFlag(notify, key, static_cast<uint32_t>(flag & MAX_UINT32_NUM));
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM(
+        flag > static_cast<uint64_t>(MAX_UINT32_NUM), RT_ERROR_INVALID_VALUE, flag,
+        RtFmtMsg("[0, %u]", MAX_UINT32_NUM));
+    return rtIpcOpenNotifyWithFlag(notify, key, static_cast<uint32_t>(flag));
 }
 
 #ifdef __cplusplus

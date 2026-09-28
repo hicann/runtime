@@ -73,7 +73,7 @@ TEST_F(RtErrorCodeTest, PrintErrMsgToLog)
     std::vector<std::string> values1001 = {"The argument is invalid"};
     PrintErrMsgToLog(ErrorCode::EE1001, "file", 1000, "func", values1001);
 
-    std::vector<std::string> values1002 = {"Stream synchronize timeout"};
+    std::vector<std::string> values1002 = {"Stream synchronization timeout"};
     PrintErrMsgToLog(ErrorCode::EE1002, "file", 1000, "func", values1002);
 
     std::vector<std::string> values1 = {"rtMemCpy", "0", "size", "[0, 255]"};
@@ -91,6 +91,9 @@ TEST_F(RtErrorCodeTest, PrintErrMsgToLog)
 
     std::vector<std::string> values1024 = {"Stream synchronize", "0", "10"};
     PrintErrMsgToLog(ErrorCode::EE1024, "file", 1000, "func", values1024);
+
+    std::vector<std::string> values1026 = {"5", "Event synchronization exceeded the configured timeout"};
+    PrintErrMsgToLog(ErrorCode::EE1026, "file", 1000, "func", values1026);
 
     std::vector<std::string> values4 = {"rtMemCpy", "d2d", "The current device does not support d2d memory copy"};
     PrintErrMsgToLog(ErrorCode::EE1006, "file", 1000, "func", values4);
@@ -167,7 +170,7 @@ TEST_F(RtErrorCodeTest, PrintErrMsgToLog2)
 TEST_F(RtErrorCodeTest, RePortErrCode)
 {
     RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1001, "The argument is invalid");
-    RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1002, "Stream synchronize timeout");
+    RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1002, "Stream synchronization timeout");
     RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1003, "rtMemCpy", "0", "size", "[0, 255]");
     RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1004, "rtMemCpy", "src");
     RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1005, "rtMemCpy");
@@ -200,6 +203,7 @@ TEST_F(RtErrorCodeTest, RePortErrCode)
         "Parameters pbase and psize cannot both be nullptr");
     RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1024, "Stream synchronize", 0, 10);
     RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1025, "libruntime_v200.so", "library not found");
+    RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1026, 5, "Event synchronization exceeded the configured timeout");
     RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE2002, "1, 2, 2", "SetVisible", "not repeat");
     RT_LOG_OUTER_MSG_IMPL(
         ErrorCode::WE0001, "set the saturation mode", "only the Inf/NaN mode can be set and the saturation mode");
@@ -257,6 +261,8 @@ TEST_F(RtErrorCodeTest, CheckErrCodeParams2)
     EXPECT_EQ(names, (std::vector<std::string>{"func_name", "devId", "oom_window"}));
     names = GetParamNames(ErrorCode::EE1025);
     EXPECT_EQ(names, (std::vector<std::string>{"library_name", "reason"}));
+    names = GetParamNames(ErrorCode::EE1026);
+    EXPECT_EQ(names, (std::vector<std::string>{"event_id", "extend_info"}));
     names = GetParamNames(ErrorCode::EE2002);
     EXPECT_EQ(names, (std::vector<std::string>{"value", "env", "expect"}));
     names = GetParamNames(ErrorCode::EE_NO_ERROR);
@@ -280,7 +286,8 @@ TEST_F(RtErrorCodeTest, ErrorCodeTableParamCountMatchesMessageFormat)
         {ErrorCode::EE1014, 1}, {ErrorCode::EE1015, 2}, {ErrorCode::EE1016, 2}, {ErrorCode::EE1017, 3},
         {ErrorCode::EE1018, 2}, {ErrorCode::EE1019, 2}, {ErrorCode::EE1020, 5}, {ErrorCode::EE1021, 2},
         {ErrorCode::EE1022, 4}, {ErrorCode::EE1023, 2}, {ErrorCode::EE1024, 3}, {ErrorCode::EE1025, 2},
-        {ErrorCode::EE2002, 3}, {ErrorCode::EE4002, 1}, {ErrorCode::EZ2001, 3}, {ErrorCode::WE0001, 2},
+        {ErrorCode::EE1026, 2}, {ErrorCode::EE2002, 3}, {ErrorCode::EE4002, 1}, {ErrorCode::EZ2001, 3},
+        {ErrorCode::WE0001, 2},
     };
     for (const auto& info : allCodes) {
         auto names = GetParamNames(info.code);

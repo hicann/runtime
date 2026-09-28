@@ -140,6 +140,11 @@ rtError_t CondHandle::InitCondTaskByDefValue()
     uint64_t defValue = static_cast<uint64_t>(defaultValue_);
     rtError_t error =
         driver->MemCopySync(devAddr_, sizeof(uint64_t), &defValue, sizeof(uint64_t), RT_MEMCPY_HOST_TO_DEVICE);
+    if (error == RT_ERROR_DRV_NOT_SUPPORT) {
+        RT_LOG_OUTER_MSG_IMPL(
+            ErrorCode::EE1016, "Initializing the ACL Graph condition value",
+            "The driver does not support synchronous host-to-device memory copy");
+    }
     ERROR_RETURN(
         error, "Failed to init cond default value, condFlag=%s, condType=%s, condSize=%u, defValue=%u retCode=%#x.",
         CondHandleFlagToString(flag_).c_str(), CondTaskTypeToString(condType_).c_str(), condSize_, defaultValue_,

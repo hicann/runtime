@@ -765,6 +765,7 @@ rtError_t rtModelCondHandleCreate(
     RT_VALIDATE_AND_UNWRAP_OBJECT(mdl, Model, realModel);
     CondHandle* condHandle = nullptr;
     const rtError_t error = apiInstance->ModelCondHandleCreate(realModel, defaultLaunchValue, flag, &condHandle);
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     *handle = ExportEmbeddedHandle<rtCondHandle_t>(condHandle);
     return ACL_RT_SUCCESS;

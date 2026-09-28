@@ -88,6 +88,9 @@ RUNTIME_API_STUB(rtNoop)
         self.assertEqual(version, product_version)
         source = GENERATOR.render_source("test", [catalog[name] for name in names])
         self.assertIn("return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;", source)
+        self.assertNotIn("RT_LOG_OUTER_MSG", source)
+        self.assertNotIn("ErrorCode::", source)
+        self.assertNotIn('#include "error_message_manage.hpp"', source)
         self.assertIn("return ACL_RT_SUCCESS;", source)
         hidden_stub = GENERATOR.render_stub(catalog["rtVoidNoop"])
         self.assertIn("void rtVoidNoop(void* value)", hidden_stub)
@@ -126,6 +129,23 @@ RUNTIME_API_STUB(rtNoop)
                 "rtVoidNoop": "weak_real",
             },
         )
+
+    def test_product_stubs_do_not_report_errmsg(self):
+        catalog_path = REPO_ROOT / "src/runtime/api/runtime_api_stub_catalog.def"
+        _, catalog = GENERATOR.parse_catalog(catalog_path)
+        for product in ("tiny", "arch5162"):
+            product_path = (
+                REPO_ROOT
+                / f"src/runtime/cmake/{product}_unsupported_runtime_api.def"
+            )
+            _, stub_names = GENERATOR.parse_product_def(product_path)
+            source = GENERATOR.render_source(product, [catalog[name] for name in stub_names])
+            self.assertNotIn("RT_LOG_OUTER_MSG", source)
+            self.assertNotIn("ErrorCode::", source)
+            self.assertEqual(
+                source.count("return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;"),
+                sum(catalog[name].policy == "FEATURE_NOT_SUPPORT" for name in stub_names),
+            )
 
     def test_arch5162_product_matches_confirmed_api_support(self):
         catalog_path = REPO_ROOT / "src/runtime/api/runtime_api_stub_catalog.def"
@@ -266,6 +286,17 @@ RUNTIME_API_STUB(rtUnsupported)
         )
         with self.assertRaisesRegex(ValueError, "unsupported policy"):
             GENERATOR.parse_catalog(self.catalog_path)
+
+    def test_rejects_errmsg_metadata(self):
+        for metadata in ('"Calling API"', '"Calling API", "Unsupported operation"'):
+            with self.subTest(metadata=metadata):
+                self.catalog_path.write_text(
+                    "RUNTIME_API_CATALOG_VERSION(1)\n"
+                    "RUNTIME_API(module, rtError_t, rtApi, (void), (), FEATURE_NOT_SUPPORT, EXPORT, "
+                    + metadata + ")\n", encoding="utf-8",
+                )
+                with self.assertRaisesRegex(ValueError, "expects 7 fields"):
+                    GENERATOR.parse_catalog(self.catalog_path)
 
     def test_rejects_unknown_visibility(self):
         self.catalog_path.write_text(

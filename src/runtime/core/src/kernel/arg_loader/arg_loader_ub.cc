@@ -156,6 +156,10 @@ rtError_t UbArgLoader::AllocDynamic(
     error = GetMemTsegInfo(
         device_, devAddr, hostAddr, static_cast<uint64_t>(size), &(argHandle->memTsegInfo->devTsegInfo),
         &(argHandle->memTsegInfo->hostTsegInfo));
+    COND_PROC_RETURN_AND_MSG_OUTER(error == RT_ERROR_DRV_NOT_SUPPORT, error, ErrorCode::EE1016,
+                                   (void)device_->Driver_()->HostMemFree(argHandle->memTsegInfo);
+                                   argHandle->memTsegInfo = nullptr, "Preparing kernel argument memory",
+                                   "The driver does not support querying memory segment information");
     ERROR_PROC_RETURN_MSG_INNER(
         error, (void)device_->Driver_()->HostMemFree(argHandle->memTsegInfo); argHandle->memTsegInfo = nullptr;
         , "Failed to get tseg info, retCode=%#x, size=%u, device_id=%u.", error, size, device_->Id_());

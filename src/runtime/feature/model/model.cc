@@ -901,6 +901,11 @@ rtError_t Model::BuildSqCqForAutoSplit()
 
     /* switch stream to sq */
     error = dev->Driver_()->SqSwitchStreamBatch(dev->Id_(), modelSwitchInfo_, streamNum);
+    if (error == RT_ERROR_DRV_NOT_SUPPORT) {
+        RT_LOG_OUTER_MSG_IMPL(
+            ErrorCode::EE1016, "Ending model running instance build",
+            "The driver does not support binding streams to the SQ/CQ");
+    }
     COND_RETURN_ERROR(
         (error != RT_ERROR_NONE), error,
         "stream bind sq failed, device_id=%u, model_id=%u, auto_split_sq=%d, sq_num=%u, retCode=%#x.", dev->Id_(),
@@ -972,6 +977,9 @@ rtError_t Model::UpdateLabelCountPtr() const
         const rtError_t error = dev->Driver_()->MemCopySync(
             labelCountPtr_, sizeof(uint64_t), &labelCount_, sizeof(uint64_t), RT_MEMCPY_HOST_TO_DEVICE);
         if (error != RT_ERROR_NONE) {
+            COND_RETURN_AND_MSG_OUTER(
+                error == RT_ERROR_DRV_NOT_SUPPORT, error, ErrorCode::EE1016, "Updating model label metadata",
+                "The driver does not support synchronous host-to-device memory copy");
             ERROR_RETURN_MSG_INNER(error, "Failed to copy label count, retCode=%#x.", static_cast<uint32_t>(error));
         }
     }
@@ -2092,6 +2100,11 @@ rtError_t Model::MallocDevString(const char_t* const str, void** ptr) const
 
     error = deviceDrv->MemCopySync(*ptr, devStrLen, str, devStrLen, RT_MEMCPY_HOST_TO_DEVICE);
     if (error != RT_ERROR_NONE) {
+        if (error == RT_ERROR_DRV_NOT_SUPPORT) {
+            RT_LOG_OUTER_MSG_IMPL(
+                ErrorCode::EE1016, "Initializing model metadata strings",
+                "The driver does not support synchronous host-to-device memory copy");
+        }
         ERROR_GOTO(
             error, FAIL_ALLOC, "Memory copy string failed, string=%s, size=%zu, retCode=%#x!", str, devStrLen,
             static_cast<uint32_t>(error));
@@ -2133,6 +2146,11 @@ rtError_t Model::MallocDevValue(const void* const data, const uint32_t size, voi
     error = deviceDrv->MemCopySync(
         *ptr, static_cast<uint64_t>(size), data, static_cast<uint64_t>(size), RT_MEMCPY_HOST_TO_DEVICE);
     if (error != RT_ERROR_NONE) {
+        if (error == RT_ERROR_DRV_NOT_SUPPORT) {
+            RT_LOG_OUTER_MSG_IMPL(
+                ErrorCode::EE1016, "Initializing model metadata",
+                "The driver does not support synchronous host-to-device memory copy");
+        }
         ERROR_GOTO(
             error, FAIL_ALLOC, "Memory copy value failed, size=%u(bytes), kind=%s, retCode=%#x.", size,
             MemcpyKindToStr(RT_MEMCPY_HOST_TO_DEVICE), static_cast<uint32_t>(error));
