@@ -10,6 +10,9 @@
 #ifndef CCE_RUNTIME_API_IMPL_VMM_HPP
 #define CCE_RUNTIME_API_IMPL_VMM_HPP
 
+#include <cstddef>
+#include <cstdint>
+
 #include "api_vmm.hpp"
 
 namespace cce {

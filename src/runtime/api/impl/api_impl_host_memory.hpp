@@ -10,6 +10,8 @@
 #ifndef CCE_RUNTIME_API_IMPL_HOST_MEMORY_HPP
 #define CCE_RUNTIME_API_IMPL_HOST_MEMORY_HPP
 
+#include <cstdint>
+
 #include "api_host_memory.hpp"
 
 namespace cce {

@@ -10,9 +10,11 @@
 #ifndef CCE_RUNTIME_API_HOST_MEMORY_HPP
 #define CCE_RUNTIME_API_HOST_MEMORY_HPP
 
+#include <cstdint>
+
 #include "internal_error_define.hpp"
 #include "runtime/rt.h"
-#include "rt_inner_mem.h"
+#include "runtime/rt_inner_mem.h"
 
 namespace cce {
 namespace runtime {
