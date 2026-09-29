@@ -1564,14 +1564,14 @@ TEST_F(TinyStubTest, rtRegisterParseDfxInfoFunc_ExpectFeatureNotSupport)
     EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
 }
 
-TEST_F(TinyStubTest, ParseKernelDfxInfo_SetCallback_ExpectFeatureNotSupport)
+TEST_F(TinyStubTest, ParseDfxInfoFunc_SetCallback_ExpectFeatureNotSupport)
 {
-    rtError_t error = ParseKernelDfxInfo::Instance()->SetCallback(nullptr);
+    rtError_t error = SetParseDfxInfoFunc(nullptr);
     EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
 }
 
-TEST_F(TinyStubTest, ParseKernelDfxInfo_GetCallback_ExpectNullptr)
+TEST_F(TinyStubTest, ParseDfxInfoFunc_GetCallback_ExpectNullptr)
 {
-    rtParseDfxInfoFunc cb = ParseKernelDfxInfo::Instance()->GetCallback();
+    rtParseDfxInfoFunc cb = GetParseDfxInfoFunc();
     EXPECT_EQ(cb, nullptr);
 }

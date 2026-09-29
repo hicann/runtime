@@ -688,7 +688,6 @@ public:
         rtTask_t task, rtLaunchKernelAttrId attrId, rtLaunchKernelAttrVal_t* attrValue) override;
 
     rtError_t SetKernelDfxInfoCallback(rtKernelDfxInfoType type, rtKernelDfxInfoProFunc func) override;
-    rtError_t RegisterParseDfxInfoFunc(rtParseDfxInfoFunc func) override;
 
 protected:
     Api* impl_;

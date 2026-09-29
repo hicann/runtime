@@ -34,6 +34,7 @@
 #include "global_state_manager.hpp"
 #include "platform_manager_v2.h"
 #include "kernel_dfx_info.hpp"
+#include "parse_kernel_dfx_info.hpp"
 #include "api_handle_guard.h"
 #include "runtime/kernel.h"
 #include "runtime/inner_kernel.h"
@@ -1755,9 +1756,7 @@ rtError_t rtSetKernelDfxInfoCallback(rtKernelDfxInfoType type, rtKernelDfxInfoPr
 VISIBILITY_DEFAULT
 rtError_t rtRegisterParseDfxInfoFunc(rtParseDfxInfoFunc func)
 {
-    Api* const apiInstance = Api::Instance();
-    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->RegisterParseDfxInfoFunc(func);
+    const rtError_t error = SetParseDfxInfoFunc(func);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }

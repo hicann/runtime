@@ -9,16 +9,17 @@
  */
 
 #include "parse_kernel_dfx_info.hpp"
+#include <atomic>
+
 namespace cce {
 namespace runtime {
+namespace {
+std::atomic<rtParseDfxInfoFunc> g_parseDfxInfoFunc{nullptr};
+}
 
-rtError_t ParseKernelDfxInfo::SetCallback(rtParseDfxInfoFunc func)
+rtError_t SetParseDfxInfoFunc(rtParseDfxInfoFunc func)
 {
-    const std::lock_guard<std::mutex> callbackLock(parseKernelDfxInfoMutex_);
-    // runtime不校验cb合法性，客户端传入什么runtime侧保留什么：
-    // 1. 允许func为nullptr（清除已有回调）
-    // 2. 允许重复注册（新值覆盖旧值）
-    cb_ = func;
+    g_parseDfxInfoFunc.store(func, std::memory_order_release);
     if (func != nullptr) {
         RT_LOG(RT_LOG_INFO, "Register parse dfx info callback success, func=%p.", func);
     } else {
@@ -27,11 +28,7 @@ rtError_t ParseKernelDfxInfo::SetCallback(rtParseDfxInfoFunc func)
     return RT_ERROR_NONE;
 }
 
-rtParseDfxInfoFunc ParseKernelDfxInfo::GetCallback()
-{
-    const std::lock_guard<std::mutex> callbackLock(parseKernelDfxInfoMutex_);
-    return cb_;
-}
+rtParseDfxInfoFunc GetParseDfxInfoFunc() { return g_parseDfxInfoFunc.load(std::memory_order_acquire); }
 
 } // namespace runtime
 } // namespace cce

@@ -2378,7 +2378,7 @@ rtError_t RawDevice::ParseSimtPrintInfo()
         RT_LOG(RT_LOG_WARNING, "GetUserDevIdByDeviceId failed, fallback to driver deviceId=%u.", deviceId_);
         userDeviceId = deviceId_;
     }
-    rtParseDfxInfoFunc cb = ParseKernelDfxInfo::Instance()->GetCallback();
+    rtParseDfxInfoFunc cb = GetParseDfxInfoFunc();
     if (cb != nullptr) {
         ret = ParseSimtPrintfV2(simtPrintfAddr_, simtPrintLen_, driver_, userDeviceId);
     } else {
@@ -2405,7 +2405,7 @@ rtError_t RawDevice::ParseSimdPrintInfo()
         RT_LOG(RT_LOG_WARNING, "GetUserDevIdByDeviceId failed, fallback to driver deviceId=%u.", deviceId_);
         userDeviceId = deviceId_;
     }
-    rtParseDfxInfoFunc cb = ParseKernelDfxInfo::Instance()->GetCallback();
+    rtParseDfxInfoFunc cb = GetParseDfxInfoFunc();
     if (cb != nullptr) {
         ret = ParsePrintfV2(printfAddr_, printblockLen_, driver_, userDeviceId);
     } else {

@@ -703,7 +703,6 @@ public:
     rtError_t GetFuncHandleFromExceptionInfo(const rtExceptionInfo_t* info, Kernel** const funcHandle) override;
 
     rtError_t SetKernelDfxInfoCallback(rtKernelDfxInfoType type, rtKernelDfxInfoProFunc func) override;
-    rtError_t RegisterParseDfxInfoFunc(rtParseDfxInfoFunc func) override;
 
 protected:
     static rtError_t CheckEventAndStreamDevice(

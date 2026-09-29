@@ -1418,7 +1418,7 @@ rtError_t ParsePrintfV2(void* addr, const size_t blockSize, Driver* curDrv, uint
         // 表示没有信息更新
         if (readInfo->readIdx == writeInfo->writeIdx) {
             RT_LOG(
-                RT_LOG_INFO,
+                RT_LOG_DEBUG,
                 "block[%zu] no data updates, readIdx=%" PRIu64 ", writeIdx=%" PRIu64
                 ", coreType=%u, coreId=%u, deviceId=%u",
                 i, readInfo->readIdx, writeInfo->writeIdx, blockInfo->flag, blockInfo->coreId, userDeviceId);
@@ -1437,7 +1437,7 @@ rtError_t ParsePrintfV2(void* addr, const size_t blockSize, Driver* curDrv, uint
         COND_RETURN_ERROR(
             (ret != RT_ERROR_NONE), ret, "MemCopySync h2d failed, ret=%u, deviceId=%u", ret, userDeviceId);
 
-        rtParseDfxInfoFunc cb = ParseKernelDfxInfo::Instance()->GetCallback();
+        rtParseDfxInfoFunc cb = GetParseDfxInfoFunc();
         if (cb != nullptr) {
             uint64_t consumedLen = 0U;
             rtDfxParseParam param = {blockAddr,       static_cast<uint64_t>(blockSize),
@@ -1447,7 +1447,7 @@ rtError_t ParsePrintfV2(void* addr, const size_t blockSize, Driver* curDrv, uint
             // 调用回调将整个block交付给adump，adump自行遍历DumpInfoHead并解析打印，返回实际消费的字节数consumedLen
             cb(&param, &consumedLen);
             RT_LOG(
-                RT_LOG_INFO,
+                RT_LOG_DEBUG,
                 "block[%zu] callback consumedLen=%" PRIu64 ", readIdx=%" PRIu64 ", writeIdx=%" PRIu64
                 ", coreType=%u, coreId=%u, deviceId=%u",
                 i, consumedLen, readIdx, writeInfo->writeIdx, blockInfo->flag, blockInfo->coreId, userDeviceId);
@@ -1485,14 +1485,14 @@ rtError_t ParseSimtPrintfV2(void* addr, const size_t blockSize, Driver* curDrv, 
     // 表示没有信息更新
     if (readInfo->readIdx == writeInfo->writeIdx) {
         RT_LOG(
-            RT_LOG_INFO,
+            RT_LOG_DEBUG,
             "no data updates, readIdx=%" PRIu64 ", writeIdx=%" PRIu64 ", coreType=%u, coreId=%u, deviceId=%u",
             readInfo->readIdx, writeInfo->writeIdx, RT_KERNEL_DFX_INFO_CORE_TYPE_SIMT, 0U, userDeviceId);
         return RT_ERROR_NONE;
     }
 
     const uint64_t readIdx = readInfo->readIdx;
-    rtParseDfxInfoFunc cb = ParseKernelDfxInfo::Instance()->GetCallback();
+    rtParseDfxInfoFunc cb = GetParseDfxInfoFunc();
     if (cb != nullptr) {
         uint64_t consumedLen = 0U;
         rtDfxParseParam param = {blockAddr,           static_cast<uint64_t>(blockSize),  readIdx,
@@ -1532,7 +1532,7 @@ rtError_t ParseSimtPrintfV2(void* addr, const size_t blockSize, Driver* curDrv, 
         }
 
         RT_LOG(
-            RT_LOG_INFO,
+            RT_LOG_DEBUG,
             "callback consumedLen=%" PRIu64 ", readIdx=%" PRIu64 ", writeIdx=%" PRIu64
             ", coreType=%u, coreId=%u, deviceId=%u",
             consumedLen, readIdx, writeInfo->writeIdx, RT_KERNEL_DFX_INFO_CORE_TYPE_SIMT, 0U, userDeviceId);
@@ -1555,7 +1555,7 @@ rtError_t ParseSimtPrintfV2(void* addr, const size_t blockSize, Driver* curDrv, 
         }
 
         RT_LOG(
-            RT_LOG_INFO,
+            RT_LOG_DEBUG,
             "cleared consumedLen=%" PRIu64 " bytes, readIdx=%" PRIu64 ", writeIdx=%" PRIu64
             ", coreType=%u, coreId=%u, deviceId=%u",
             consumedLen, readIdx, writeInfo->writeIdx, RT_KERNEL_DFX_INFO_CORE_TYPE_SIMT, 0U, userDeviceId);
@@ -1710,7 +1710,7 @@ rtError_t ParseAicpuPrintfV2(void* addr, const size_t blockSize, Driver* curDrv,
     }
 
     const uint64_t readIdx = readInfo->readIdx;
-    const rtParseDfxInfoFunc cb = ParseKernelDfxInfo::Instance()->GetCallback();
+    const rtParseDfxInfoFunc cb = GetParseDfxInfoFunc();
     if (cb != nullptr) {
         uint64_t consumedLen = 0U;
         rtDfxParseParam param = {blockAddr,           static_cast<uint64_t>(blockSize),   readIdx,

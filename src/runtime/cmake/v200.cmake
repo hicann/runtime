@@ -237,7 +237,6 @@ set(libruntime_v200_src_files_exclude_for_tiny
     ${RUNTIME_CORE_DIR}/src/dfx/printf.cc
     ${RUNTIME_CORE_DIR}/src/dfx/aicpu_dfx.cc
     ${RUNTIME_CORE_DIR}/src/dfx/kernel_dfx_info.cc
-    ${RUNTIME_CORE_DIR}/src/dfx/parse_kernel_dfx_info.cc
     ${RUNTIME_DIR}/src/runtime/driver/npu_driver_standard_soc.cc
     ${RUNTIME_DIR}/src/runtime/driver/npu_driver_soma.cc
     ${RUNTIME_CORE_DIR}/src/engine/hwts/direct_hwts_engine.cc

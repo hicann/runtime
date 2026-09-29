@@ -344,7 +344,7 @@ TEST_F(PrintfTest, TestParseAicpuPrintInfo_V1Fallback)
     dev->aicpuDfxSent_ = true;
     dev->aicpuPrintfAddr_ = RtValueToPtr<void*>(0x1000U);
     dev->aicpuPrintfMemSize_ = 1024U;
-    (void)ParseKernelDfxInfo::Instance()->SetCallback(nullptr);
+    (void)SetParseDfxInfoFunc(nullptr);
     MOCKER(ParseAicpuPrintf).expects(once()).will(returnValue(RT_ERROR_NONE));
     MOCKER(ParseAicpuPrintfV2).expects(never());
 
@@ -367,13 +367,13 @@ TEST_F(PrintfTest, TestParseAicpuPrintInfo_V2Dispatch)
     dev->aicpuDfxSent_ = true;
     dev->aicpuPrintfAddr_ = RtValueToPtr<void*>(0x1000U);
     dev->aicpuPrintfMemSize_ = 1024U;
-    (void)ParseKernelDfxInfo::Instance()->SetCallback(EmptyParseDfxInfoCallback);
+    (void)SetParseDfxInfoFunc(EmptyParseDfxInfoCallback);
     MOCKER(ParseAicpuPrintf).expects(never());
     MOCKER(ParseAicpuPrintfV2).expects(once()).will(returnValue(RT_ERROR_NONE));
 
     EXPECT_EQ(dev->ParseAicpuPrintInfo(), RT_ERROR_NONE);
 
-    (void)ParseKernelDfxInfo::Instance()->SetCallback(nullptr);
+    (void)SetParseDfxInfoFunc(nullptr);
     dev->aicpuPrintfAddr_ = nullptr;
     dev->aicpuPrintfMemSize_ = 0U;
     dev->aicpuDfxSent_ = false;

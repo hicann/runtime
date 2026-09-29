@@ -12,31 +12,12 @@
 #define CCE_RUNTIME_PARSE_KERNEL_DFX_INFO_HPP
 #include "base.hpp"
 #include "rt_inner_dfx.h"
-#include <mutex>
 
 namespace cce {
 namespace runtime {
 
-class ParseKernelDfxInfo {
-public:
-    ParseKernelDfxInfo(const ParseKernelDfxInfo&) = delete;
-    ParseKernelDfxInfo& operator=(const ParseKernelDfxInfo&) = delete;
-
-    static ParseKernelDfxInfo* Instance()
-    {
-        static ParseKernelDfxInfo instance;
-        return &instance;
-    }
-
-    rtError_t SetCallback(rtParseDfxInfoFunc func);
-    rtParseDfxInfoFunc GetCallback();
-
-private:
-    std::mutex parseKernelDfxInfoMutex_;
-    rtParseDfxInfoFunc cb_{nullptr};
-
-    ParseKernelDfxInfo() = default;
-};
+VISIBILITY_DEFAULT rtError_t SetParseDfxInfoFunc(rtParseDfxInfoFunc func);
+VISIBILITY_DEFAULT rtParseDfxInfoFunc GetParseDfxInfoFunc();
 
 } // namespace runtime
 } // namespace cce

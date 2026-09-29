@@ -127,6 +127,7 @@ set(common_src_files
     ${RUNTIME_CORE_DIR}/src/common/global_state_manager.cc
     ${RUNTIME_CORE_DIR}/src/common/runtime_handle_guard.cc
     ${RUNTIME_CORE_DIR}/src/common/register_memory.cc
+    ${RUNTIME_CORE_DIR}/src/dfx/parse_kernel_dfx_info.cc
 )
 
 set(libruntime_context_src_files
@@ -196,7 +197,6 @@ set(libruntime_src_files_optional
     ${RUNTIME_CORE_DIR}/src/dfx/printf.cc
     ${RUNTIME_CORE_DIR}/src/dfx/aicpu_dfx.cc
     ${RUNTIME_CORE_DIR}/src/dfx/kernel_dfx_info.cc
-    ${RUNTIME_CORE_DIR}/src/dfx/parse_kernel_dfx_info.cc
     ${RUNTIME_DIR}/src/runtime/driver/npu_driver_standard_soc.cc
     ${RUNTIME_DIR}/src/runtime/driver/npu_driver_soma.cc
     ${RUNTIME_CORE_DIR}/src/engine/hwts/direct_hwts_engine.cc

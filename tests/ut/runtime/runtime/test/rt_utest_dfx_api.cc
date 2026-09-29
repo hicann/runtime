@@ -9,12 +9,14 @@
  */
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
+#include <atomic>
 #include <thread>
 #include <vector>
 #define private public
 #define protected public
 #include "runtime/rt.h"
 #include "runtime/rt_inner_dfx.h"
+#include "api.hpp"
 #include "parse_kernel_dfx_info.hpp"
 #include "thread_local_container.hpp"
 #undef private
@@ -133,80 +135,87 @@ static void DummyParseCallback2(const rtDfxParseParam* param, uint64_t* consumed
 
 class ParseDfxInfoApiTest : public testing::Test {
 protected:
-    virtual void SetUp()
-    {
-        ParseKernelDfxInfo* inst = ParseKernelDfxInfo::Instance();
-        if (inst != nullptr) {
-            (void)inst->SetCallback(nullptr);
-        }
-    }
+    virtual void SetUp() { (void)SetParseDfxInfoFunc(nullptr); }
 
     virtual void TearDown()
     {
-        ParseKernelDfxInfo* inst = ParseKernelDfxInfo::Instance();
-        if (inst != nullptr) {
-            (void)inst->SetCallback(nullptr);
-        }
+        (void)SetParseDfxInfoFunc(nullptr);
         GlobalMockObject::verify();
     }
 };
 
-TEST_F(ParseDfxInfoApiTest, ParseKernelDfxInfo_SetCallback_WhenValidFunc_ExpectSuccess)
+TEST_F(ParseDfxInfoApiTest, ParseDfxInfoFunc_SetCallback_WhenValidFunc_ExpectSuccess)
 {
-    rtError_t ret = ParseKernelDfxInfo::Instance()->SetCallback(DummyParseCallback);
+    rtError_t ret = SetParseDfxInfoFunc(DummyParseCallback);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    EXPECT_EQ(ParseKernelDfxInfo::Instance()->GetCallback(), DummyParseCallback);
+    EXPECT_EQ(GetParseDfxInfoFunc(), DummyParseCallback);
 }
 
-TEST_F(ParseDfxInfoApiTest, ParseKernelDfxInfo_SetCallback_WhenDuplicate_ExpectOverwritten)
+TEST_F(ParseDfxInfoApiTest, ParseDfxInfoFunc_SetCallback_WhenDuplicate_ExpectOverwritten)
 {
-    (void)ParseKernelDfxInfo::Instance()->SetCallback(DummyParseCallback);
-    rtError_t ret = ParseKernelDfxInfo::Instance()->SetCallback(DummyParseCallback2);
+    (void)SetParseDfxInfoFunc(DummyParseCallback);
+    rtError_t ret = SetParseDfxInfoFunc(DummyParseCallback2);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    EXPECT_EQ(ParseKernelDfxInfo::Instance()->GetCallback(), DummyParseCallback2);
+    EXPECT_EQ(GetParseDfxInfoFunc(), DummyParseCallback2);
 }
 
-TEST_F(ParseDfxInfoApiTest, ParseKernelDfxInfo_SetCallback_WhenNullptrClear_ExpectSuccess)
+TEST_F(ParseDfxInfoApiTest, ParseDfxInfoFunc_SetCallback_WhenNullptrClear_ExpectSuccess)
 {
-    (void)ParseKernelDfxInfo::Instance()->SetCallback(DummyParseCallback);
-    rtError_t ret = ParseKernelDfxInfo::Instance()->SetCallback(nullptr);
+    (void)SetParseDfxInfoFunc(DummyParseCallback);
+    rtError_t ret = SetParseDfxInfoFunc(nullptr);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    EXPECT_EQ(ParseKernelDfxInfo::Instance()->GetCallback(), nullptr);
+    EXPECT_EQ(GetParseDfxInfoFunc(), nullptr);
 }
 
 TEST_F(ParseDfxInfoApiTest, rtRegisterParseDfxInfoFunc_WhenNullptr_ExpectSuccess)
 {
     rtError_t ret = rtRegisterParseDfxInfoFunc(nullptr);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    EXPECT_EQ(ParseKernelDfxInfo::Instance()->GetCallback(), nullptr);
+    EXPECT_EQ(GetParseDfxInfoFunc(), nullptr);
 }
 
 TEST_F(ParseDfxInfoApiTest, rtRegisterParseDfxInfoFunc_WhenValidFunc_ExpectCallbackSet)
 {
     rtError_t ret = rtRegisterParseDfxInfoFunc(DummyParseCallback);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    EXPECT_EQ(ParseKernelDfxInfo::Instance()->GetCallback(), DummyParseCallback);
+    EXPECT_EQ(GetParseDfxInfoFunc(), DummyParseCallback);
 }
 
-TEST_F(ParseDfxInfoApiTest, ParseKernelDfxInfo_SetCallback_WhenNullptrAndNoExisting_ExpectSuccess)
+TEST_F(ParseDfxInfoApiTest, rtRegisterParseDfxInfoFunc_WhenRegistering_ExpectNoApiInstance)
 {
-    (void)ParseKernelDfxInfo::Instance()->SetCallback(nullptr);
-    rtError_t ret = ParseKernelDfxInfo::Instance()->SetCallback(nullptr);
+    MOCKER(Api::Instance).expects(never());
+    const rtError_t ret = rtRegisterParseDfxInfoFunc(DummyParseCallback);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    EXPECT_EQ(ParseKernelDfxInfo::Instance()->GetCallback(), nullptr);
+    EXPECT_EQ(GetParseDfxInfoFunc(), DummyParseCallback);
 }
 
-TEST_F(ParseDfxInfoApiTest, ParseKernelDfxInfo_WhenConcurrentAccess_ExpectNoCrash)
+TEST_F(ParseDfxInfoApiTest, ParseDfxInfoFunc_SetCallback_WhenNullptrAndNoExisting_ExpectSuccess)
 {
-    ParseKernelDfxInfo* inst = ParseKernelDfxInfo::Instance();
-    ASSERT_NE(inst, nullptr);
+    (void)SetParseDfxInfoFunc(nullptr);
+    rtError_t ret = SetParseDfxInfoFunc(nullptr);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(GetParseDfxInfoFunc(), nullptr);
+}
 
-    const int threadNum = 4;
+TEST_F(ParseDfxInfoApiTest, ParseDfxInfoFunc_WhenConcurrentSetAndGet_ExpectValidCallback)
+{
+    constexpr int iterationNum = 100;
+    std::atomic<bool> invalidCallback{false};
     std::vector<std::thread> threads;
-    for (int i = 0; i < threadNum; i++) {
-        threads.emplace_back([inst]() {
-            for (int j = 0; j < 100; j++) {
-                (void)inst->GetCallback();
+    for (int i = 0; i < 2; i++) {
+        threads.emplace_back([i]() {
+            for (int j = 0; j < iterationNum; j++) {
+                (void)SetParseDfxInfoFunc(((i + j) % 2 == 0) ? DummyParseCallback : DummyParseCallback2);
+            }
+        });
+    }
+    for (int i = 0; i < 2; i++) {
+        threads.emplace_back([&invalidCallback]() {
+            for (int j = 0; j < iterationNum; j++) {
+                const rtParseDfxInfoFunc callback = GetParseDfxInfoFunc();
+                if ((callback != nullptr) && (callback != DummyParseCallback) && (callback != DummyParseCallback2)) {
+                    invalidCallback.store(true);
+                }
             }
         });
     }
@@ -214,5 +223,5 @@ TEST_F(ParseDfxInfoApiTest, ParseKernelDfxInfo_WhenConcurrentAccess_ExpectNoCras
         t.join();
     }
 
-    SUCCEED();
+    EXPECT_FALSE(invalidCallback.load());
 }

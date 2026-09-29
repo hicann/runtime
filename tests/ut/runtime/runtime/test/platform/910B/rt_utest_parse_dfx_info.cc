@@ -118,7 +118,7 @@ protected:
     virtual void TearDown()
     {
         cmodelDrvMemcpy_flag = 0;
-        (void)ParseKernelDfxInfo::Instance()->SetCallback(nullptr);
+        (void)SetParseDfxInfoFunc(nullptr);
         ResetCapture(0U);
         rtDeviceReset(0);
     }
@@ -142,8 +142,8 @@ TEST_F(ParsePrintfV2Test, WhenHasData_ExpectCallbackCalled)
     const uint32_t testUserDeviceId = 42U;
     ConstructSimdBlock(hostData.data(), blockSize, testReadIdx, testWriteIdx, 0U);
 
-    (void)ParseKernelDfxInfo::Instance()->SetCallback(nullptr);
-    (void)ParseKernelDfxInfo::Instance()->SetCallback(TestParseDfxInfoCallback);
+    (void)SetParseDfxInfoFunc(nullptr);
+    (void)SetParseDfxInfoFunc(TestParseDfxInfoCallback);
     ResetCapture(testWriteIdx);
 
     error = ParsePrintfV2(hostData.data(), blockSize, dev->driver_, testUserDeviceId);
@@ -176,8 +176,8 @@ TEST_F(ParsePrintfV2Test, WhenNoData_ExpectCallbackNotCalled)
 
     ConstructSimdBlock(hostData.data(), blockSize, 0U, 0U, 0U);
 
-    (void)ParseKernelDfxInfo::Instance()->SetCallback(nullptr);
-    (void)ParseKernelDfxInfo::Instance()->SetCallback(TestParseDfxInfoCallback);
+    (void)SetParseDfxInfoFunc(nullptr);
+    (void)SetParseDfxInfoFunc(TestParseDfxInfoCallback);
     ResetCapture(0U);
 
     error = ParsePrintfV2(hostData.data(), blockSize, dev->driver_, 0U);
@@ -202,7 +202,7 @@ TEST_F(ParsePrintfV2Test, WhenNoCallback_ExpectReadIdxAdvance)
     const uint64_t testWriteIdx = 100U;
     ConstructSimdBlock(hostData.data(), blockSize, 0U, testWriteIdx, 0U);
 
-    (void)ParseKernelDfxInfo::Instance()->SetCallback(nullptr);
+    (void)SetParseDfxInfoFunc(nullptr);
     ResetCapture(0U);
 
     error = ParsePrintfV2(hostData.data(), blockSize, dev->driver_, 0U);
@@ -233,8 +233,8 @@ TEST_F(ParsePrintfV2Test, WhenConsumedLenExceedsRemainLen_ExpectFullAdvance)
     BlockInfo* blockInfo = RtPtrToPtr<BlockInfo*>(hostData.data());
     const uint64_t excessiveConsumedLen = blockInfo->remainLen + 1000U;
 
-    (void)ParseKernelDfxInfo::Instance()->SetCallback(nullptr);
-    (void)ParseKernelDfxInfo::Instance()->SetCallback(TestParseDfxInfoCallback);
+    (void)SetParseDfxInfoFunc(nullptr);
+    (void)SetParseDfxInfoFunc(TestParseDfxInfoCallback);
     ResetCapture(excessiveConsumedLen);
 
     error = ParsePrintfV2(hostData.data(), blockSize, dev->driver_, 0U);
@@ -312,8 +312,8 @@ TEST_F(ParsePrintfV2Test, WhenConsumedLenZero_ExpectFullAdvance)
     const uint64_t testWriteIdx = 100U;
     ConstructSimdBlock(hostData.data(), blockSize, testReadIdx, testWriteIdx, 0U);
 
-    (void)ParseKernelDfxInfo::Instance()->SetCallback(nullptr);
-    (void)ParseKernelDfxInfo::Instance()->SetCallback(TestParseDfxInfoCallback);
+    (void)SetParseDfxInfoFunc(nullptr);
+    (void)SetParseDfxInfoFunc(TestParseDfxInfoCallback);
     ResetCapture(0U);
 
     error = ParsePrintfV2(hostData.data(), blockSize, dev->driver_, 0U);
@@ -335,7 +335,7 @@ protected:
     virtual void TearDown()
     {
         cmodelDrvMemcpy_flag = 0;
-        (void)ParseKernelDfxInfo::Instance()->SetCallback(nullptr);
+        (void)SetParseDfxInfoFunc(nullptr);
         ResetCapture(0U);
         rtDeviceReset(0);
     }
@@ -356,8 +356,8 @@ TEST_F(ParseSimtPrintfV2Test, WhenHasData_ExpectCallbackCalled)
     const uint32_t testUserDeviceId = 42U;
     ConstructSimtBlock(hostData.data(), blockSize, testReadIdx, testWriteIdx);
 
-    (void)ParseKernelDfxInfo::Instance()->SetCallback(nullptr);
-    (void)ParseKernelDfxInfo::Instance()->SetCallback(TestParseDfxInfoCallback);
+    (void)SetParseDfxInfoFunc(nullptr);
+    (void)SetParseDfxInfoFunc(TestParseDfxInfoCallback);
     ResetCapture(testWriteIdx);
 
     error = ParseSimtPrintfV2(hostData.data(), blockSize, dev->driver_, testUserDeviceId);
@@ -388,8 +388,8 @@ TEST_F(ParseSimtPrintfV2Test, WhenConsumedLenZero_ExpectNoAdvance)
     const uint64_t testWriteIdx = 100U;
     ConstructSimtBlock(hostData.data(), blockSize, testReadIdx, testWriteIdx);
 
-    (void)ParseKernelDfxInfo::Instance()->SetCallback(nullptr);
-    (void)ParseKernelDfxInfo::Instance()->SetCallback(TestParseDfxInfoCallback);
+    (void)SetParseDfxInfoFunc(nullptr);
+    (void)SetParseDfxInfoFunc(TestParseDfxInfoCallback);
     ResetCapture(0U);
 
     error = ParseSimtPrintfV2(hostData.data(), blockSize, dev->driver_, 0U);
@@ -413,7 +413,7 @@ TEST_F(ParseSimtPrintfV2Test, WhenNoCallback_ExpectReadIdxAdvance)
     const uint64_t testWriteIdx = 100U;
     ConstructSimtBlock(hostData.data(), blockSize, 0U, testWriteIdx);
 
-    (void)ParseKernelDfxInfo::Instance()->SetCallback(nullptr);
+    (void)SetParseDfxInfoFunc(nullptr);
     ResetCapture(0U);
 
     error = ParseSimtPrintfV2(hostData.data(), blockSize, dev->driver_, 0U);
@@ -441,8 +441,8 @@ TEST_F(ParseSimtPrintfV2Test, WhenConsumedLenExceedsRemainLen_ExpectClamped)
     BlockInfo* blockInfo = RtPtrToPtr<BlockInfo*>(hostData.data());
     const uint64_t excessiveConsumedLen = blockInfo->remainLen + 1000U;
 
-    (void)ParseKernelDfxInfo::Instance()->SetCallback(nullptr);
-    (void)ParseKernelDfxInfo::Instance()->SetCallback(TestParseDfxInfoCallback);
+    (void)SetParseDfxInfoFunc(nullptr);
+    (void)SetParseDfxInfoFunc(TestParseDfxInfoCallback);
     ResetCapture(excessiveConsumedLen);
 
     error = ParseSimtPrintfV2(hostData.data(), blockSize, dev->driver_, 0U);
@@ -487,8 +487,8 @@ TEST_F(ParseSimtPrintfV2Test, WhenNoData_ExpectCallbackNotCalled)
 
     ConstructSimtBlock(hostData.data(), blockSize, 0U, 0U);
 
-    (void)ParseKernelDfxInfo::Instance()->SetCallback(nullptr);
-    (void)ParseKernelDfxInfo::Instance()->SetCallback(TestParseDfxInfoCallback);
+    (void)SetParseDfxInfoFunc(nullptr);
+    (void)SetParseDfxInfoFunc(TestParseDfxInfoCallback);
     ResetCapture(0U);
 
     error = ParseSimtPrintfV2(hostData.data(), blockSize, dev->driver_, 0U);
@@ -514,8 +514,8 @@ TEST_F(ParseSimtPrintfV2Test, WhenRingBufferOverflow_ExpectClampedToRemainLen)
     BlockInfo* blockInfo = RtPtrToPtr<BlockInfo*>(hostData.data());
     const uint64_t testConsumedLen = testWriteIdx;
 
-    (void)ParseKernelDfxInfo::Instance()->SetCallback(nullptr);
-    (void)ParseKernelDfxInfo::Instance()->SetCallback(TestParseDfxInfoCallback);
+    (void)SetParseDfxInfoFunc(nullptr);
+    (void)SetParseDfxInfoFunc(TestParseDfxInfoCallback);
     ResetCapture(testConsumedLen);
 
     error = ParseSimtPrintfV2(hostData.data(), blockSize, dev->driver_, 0U);
@@ -540,8 +540,8 @@ TEST_F(ParseSimtPrintfV2Test, WhenRemainLenZero_ExpectInvalidValue)
     BlockInfo* blockInfo = RtPtrToPtr<BlockInfo*>(hostData.data());
     blockInfo->remainLen = 0U;
 
-    (void)ParseKernelDfxInfo::Instance()->SetCallback(nullptr);
-    (void)ParseKernelDfxInfo::Instance()->SetCallback(TestParseDfxInfoCallback);
+    (void)SetParseDfxInfoFunc(nullptr);
+    (void)SetParseDfxInfoFunc(TestParseDfxInfoCallback);
     ResetCapture(50U);
 
     error = ParseSimtPrintfV2(hostData.data(), blockSize, dev->driver_, 0U);
@@ -566,8 +566,8 @@ TEST_F(ParseSimtPrintfV2Test, WhenWraparound_ExpectCorrectAvailableData)
     const uint64_t expectedAvailableData =
         blockInfo->remainLen - (testReadIdx % blockInfo->remainLen) + (testWriteIdx % blockInfo->remainLen);
 
-    (void)ParseKernelDfxInfo::Instance()->SetCallback(nullptr);
-    (void)ParseKernelDfxInfo::Instance()->SetCallback(TestParseDfxInfoCallback);
+    (void)SetParseDfxInfoFunc(nullptr);
+    (void)SetParseDfxInfoFunc(TestParseDfxInfoCallback);
     ResetCapture(expectedAvailableData);
 
     error = ParseSimtPrintfV2(hostData.data(), blockSize, dev->driver_, 0U);
@@ -596,8 +596,8 @@ TEST_F(ParseSimtPrintfV2Test, WhenWraparoundPartialConsume_ExpectTwoSegmentClear
     const uint64_t testConsumedLen = 80U;
     const uint64_t readIdxMod = testReadIdx % blockInfo->remainLen;
 
-    (void)ParseKernelDfxInfo::Instance()->SetCallback(nullptr);
-    (void)ParseKernelDfxInfo::Instance()->SetCallback(TestParseDfxInfoCallback);
+    (void)SetParseDfxInfoFunc(nullptr);
+    (void)SetParseDfxInfoFunc(TestParseDfxInfoCallback);
     ResetCapture(testConsumedLen);
 
     error = ParseSimtPrintfV2(hostData.data(), blockSize, dev->driver_, 0U);

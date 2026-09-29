@@ -64,13 +64,13 @@ rtError_t ParseSimtPrintfV2(void* addr, const size_t blockSize, Driver* curDrv, 
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t ParseKernelDfxInfo::SetCallback(rtParseDfxInfoFunc func)
+rtError_t SetParseDfxInfoFunc(rtParseDfxInfoFunc func)
 {
     UNUSED(func);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtParseDfxInfoFunc ParseKernelDfxInfo::GetCallback() { return nullptr; }
+rtParseDfxInfoFunc GetParseDfxInfoFunc() { return nullptr; }
 
 rtError_t InitAicpuPrintf(void* addr, const size_t blockSize, Driver* curDrv)
 {
