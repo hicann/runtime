@@ -398,6 +398,7 @@ add_executable(runtime_utest_arch5162
     ../../rt_utest_esched_stub.cc
     ../../rt_utest_device_topology_stub.cc
     rt_utest_device_arch5162.cc
+    rt_utest_npu_driver_arch5162.cc
     rt_utest_notify_arch5162.cc
     ${TOP_DIR}/tests/ut/runtime/runtime/test/rt_utest_task_sqe.cc
 )

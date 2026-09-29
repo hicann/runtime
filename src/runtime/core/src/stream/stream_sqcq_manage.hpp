@@ -135,10 +135,10 @@ protected:
 private:
     rtError_t Add(
         const uint32_t streamId, uint32_t drvFlag, uint32_t& sqId, uint32_t& cqId, uint32_t* const info,
-        const uint32_t len, uint32_t* const msg, const uint32_t msgLen);
+        const uint32_t len, uint32_t* const msg, const uint32_t msgLen, const uint32_t streamFlags = UINT32_MAX);
     rtError_t Alloc(
         const uint32_t streamId, const uint32_t drvFlag, uint32_t& sqId, uint32_t& cqId, uint32_t* const info,
-        const uint32_t len, uint32_t* const msg, const uint32_t msgLen);
+        const uint32_t len, uint32_t* const msg, const uint32_t msgLen, const uint32_t streamFlags = UINT32_MAX);
     rtError_t UnbindandFreeLogicCq(const uint32_t streamId);
 
 private:

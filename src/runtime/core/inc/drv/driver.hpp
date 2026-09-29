@@ -297,7 +297,7 @@ public:
     virtual rtError_t NormalSqCqAllocate(
         const uint32_t deviceId, const uint32_t tsId, const uint32_t drvFlag, uint32_t* const sqId,
         uint32_t* const cqId, uint32_t* const info, const uint32_t len, uint32_t* const msg, const uint32_t msgLen,
-        const int32_t retryCount = PRE_ALLOC_SQ_CQ_RETRY_MAX_COUNT) = 0;
+        const int32_t retryCount = PRE_ALLOC_SQ_CQ_RETRY_MAX_COUNT, const uint32_t streamFlags = UINT32_MAX) = 0;
     virtual rtError_t NormalSqCqFree(
         const uint32_t deviceId, const uint32_t tsId, const uint32_t drvFlag, const uint32_t sqId,
         const uint32_t cqId) = 0;

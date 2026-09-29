@@ -10,6 +10,26 @@
 
 #include "platform_manager_v2.h"
 
+#include "platform_error_define.h"
+
+namespace {
+constexpr const char* TINY_SOC_VERSION = "Ascend031";
+constexpr const char* TINY_DEFAULT_SOC_SPEC = "3004";
+
+struct TinySocSpec {
+    const char* label;
+    const char* key;
+    const char* value;
+};
+
+constexpr TinySocSpec TINY_SOC_SPECS[] = {
+    {"version", "NpuArch", "3004"},          {"version", "Chip_type", "8"},
+    {"SoCInfo", "ai_core_cnt", "1"},         {"SoCInfo", "ai_cpu_cnt", "4"},
+    {"SoCInfo", "normal_stream_num", "480"}, {"SoCInfo", "normal_stream_depth", "2048"},
+    {"SoCInfo", "huge_stream_num", "0"},     {"SoCInfo", "huge_stream_depth", "0"},
+};
+} // namespace
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
@@ -23,8 +43,16 @@ PlatformManagerV2& PlatformManagerV2::Instance()
 int32_t PlatformManagerV2::GetSocSpec(
     const std::string& soc_version, const std::string& label, const std::string& key, std::string& value)
 {
-    value = "3004";
-    return 0;
+    if (soc_version == TINY_SOC_VERSION) {
+        for (const auto& spec : TINY_SOC_SPECS) {
+            if ((label == spec.label) && (key == spec.key)) {
+                value = spec.value;
+                return PLATFORM_SUCCESS;
+            }
+        }
+    }
+    value = TINY_DEFAULT_SOC_SPEC;
+    return PLATFORM_SUCCESS;
 }
 
 #ifdef __cplusplus

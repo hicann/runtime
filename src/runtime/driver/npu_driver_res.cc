@@ -1713,7 +1713,8 @@ rtError_t NpuDriver::SqCqFree(const uint32_t sqId, const uint32_t cqId, const ui
 
 rtError_t NpuDriver::NormalSqCqAllocate(
     const uint32_t deviceId, const uint32_t tsId, const uint32_t drvFlag, uint32_t* const sqId, uint32_t* const cqId,
-    uint32_t* const info, const uint32_t len, uint32_t* const msg, const uint32_t msgLen, const int32_t retryCount)
+    uint32_t* const info, const uint32_t len, uint32_t* const msg, const uint32_t msgLen, const int32_t retryCount,
+    const uint32_t streamFlags)
 {
     struct halSqCqInputInfo normalSqCqAllocInputInfo = {};
     struct halSqCqOutputInfo normalSqCqAllocOutputInfo;
@@ -1759,6 +1760,16 @@ rtError_t NpuDriver::NormalSqCqAllocate(
         normalSqCqAllocInputInfo.cqeDepth = GetDevProperties().rtcqDepth;
     }
 
+    const DevProperties& props = GetDevProperties();
+    if (props.isStars && (props.maxTaskNumPerHugeStream != 0U)) {
+        const uint32_t streamSqDepth =
+            ((streamFlags & RT_STREAM_HUGE) != 0U) ? props.maxTaskNumPerHugeStream : props.rtsqDepth;
+        COND_RETURN_ERROR_MSG_INNER(
+            (streamSqDepth == 0U) || (streamSqDepth > sqeDepth), RT_ERROR_INVALID_VALUE,
+            "Invalid stream SQ depth, streamSqDepth=%u, maxSqeDepth=%u.", streamSqDepth, sqeDepth);
+        normalSqCqAllocInputInfo.sqeDepth = streamSqDepth;
+    }
+
     normalSqCqAllocInputInfo.cqeDepth =
         ((sysMode_ == RUN_MACHINE_VIRTUAL && addrMode_ != 0) ? CQ_DEPTH_FOR_FLAT_ADDR_VIRTURE_MACH :
                                                                normalSqCqAllocInputInfo.cqeDepth);
@@ -1774,8 +1785,9 @@ rtError_t NpuDriver::NormalSqCqAllocate(
         "Call memcpy_s failed, dst length=%zu, src length=%u, retCode=%d!", sizeof(normalSqCqAllocInputInfo.info), len,
         ret);
     RT_LOG(
-        RT_LOG_DEBUG, "normal sqcq alloc, device_id=%u, tsId=%u, flag=%u, cqId=%u, sqId=%u.", deviceId, tsId,
-        normalSqCqAllocInputInfo.flag, *cqId, *sqId);
+        RT_LOG_DEBUG,
+        "normal sqcq alloc, device_id=%u, tsId=%u, flag=%u, cqId=%u, sqId=%u, sqeDepth=%u, streamFlags=%#x.", deviceId,
+        tsId, normalSqCqAllocInputInfo.flag, *cqId, *sqId, normalSqCqAllocInputInfo.sqeDepth, streamFlags);
 
     drvError_t drvRet = halSqCqAllocate(deviceId, &normalSqCqAllocInputInfo, &normalSqCqAllocOutputInfo);
     if (g_isAddrFlatDevice) {

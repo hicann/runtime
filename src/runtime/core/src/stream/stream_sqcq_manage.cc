@@ -108,8 +108,9 @@ rtError_t StreamSqCqManage::AllocStreamSqCq(
         (newStm->Device_()->GetVfId() != MAX_UINT32_NUM)) {
         drvFlag |= (static_cast<uint32_t>(TSDRV_FLAG_RANGE_ID));
     }
-    const rtError_t error = Add(
-        streamId, drvFlag, sqId, cqId, info, sizeof(info), RtPtrToPtr<uint32_t*>(&infoEx), sizeof(rtStreamInfoExMsg_t));
+    const rtError_t error =
+        Add(streamId, drvFlag, sqId, cqId, info, sizeof(info), RtPtrToPtr<uint32_t*>(&infoEx),
+            sizeof(rtStreamInfoExMsg_t), newStm->Flags());
     if (error != RT_ERROR_NONE) {
         RT_LOG(
             RT_LOG_WARNING, "[SqCqManage]Alloc sq cq fail, stream_id=%u, retCode=%#x.", streamId,
@@ -159,7 +160,8 @@ rtError_t StreamSqCqManage::AllocDavidStreamSqCq(
         drvFlag |= (static_cast<uint32_t>(TSDRV_FLAG_PRE_ASYNC_SQ));
     }
     rtError_t error = Alloc(
-        streamId, drvFlag, sqId, cqId, info, sizeof(info), RtPtrToPtr<uint32_t*>(&infoEx), sizeof(rtStreamInfoExMsg_t));
+        streamId, drvFlag, sqId, cqId, info, sizeof(info), RtPtrToPtr<uint32_t*>(&infoEx), sizeof(rtStreamInfoExMsg_t),
+        newStm->Flags());
     COND_RETURN_WARN((error != RT_ERROR_NONE), error, "NormalSqCqAllocate fail, retCode=%#x.", error);
     error = device_->Driver_()->GetSqAddrInfo(device_->Id_(), device_->DevGetTsId(), sqId, sqAddr);
     COND_LOG_WARN(
@@ -206,7 +208,7 @@ rtError_t StreamSqCqManage::UpdateStreamSqCq(Stream* newStm)
     FillStreamInfoEx(newStm, infoEx);
     error = device_->Driver_()->NormalSqCqAllocate(
         device_->Id_(), device_->DevGetTsId(), drvFlag, &sqId, &cqId, info, sizeof(info),
-        RtPtrToPtr<uint32_t*>(&infoEx), sizeof(rtStreamInfoExMsg_t));
+        RtPtrToPtr<uint32_t*>(&infoEx), sizeof(rtStreamInfoExMsg_t), PRE_ALLOC_SQ_CQ_RETRY_MAX_COUNT, newStm->Flags());
 
     COND_RETURN_ERROR((error != RT_ERROR_NONE), error, "NormalSqCqAllocate fail, retCode=%#x.", error);
 
@@ -259,7 +261,7 @@ rtError_t StreamSqCqManage::ReAllocSqCqId(const Stream* const newStm)
          remoteFlag);
     rtError_t error = device_->Driver_()->NormalSqCqAllocate(
         device_->Id_(), device_->DevGetTsId(), drvFlag, &sqId, &cqId, info, sizeof(info),
-        RtPtrToPtr<uint32_t*>(&infoEx), sizeof(rtStreamInfoExMsg_t));
+        RtPtrToPtr<uint32_t*>(&infoEx), sizeof(rtStreamInfoExMsg_t), PRE_ALLOC_SQ_CQ_RETRY_MAX_COUNT, newStm->Flags());
     COND_RETURN_ERROR((error != RT_ERROR_NONE), error, "NormalSqCqAllocate fail, retCode=%#x.", error);
     COND_RETURN_ERROR_MSG_INNER(
         ((newStm->GetSqId() != sqId) || (newStm->GetCqId() != cqId)), RT_ERROR_DRV_ERR,
@@ -317,7 +319,7 @@ rtError_t StreamSqCqManage::ReAllocDavidSqCqId(const Stream* const stream)
          remoteFlag);
     rtError_t error = device_->Driver_()->NormalSqCqAllocate(
         device_->Id_(), device_->DevGetTsId(), drvFlag, &sqId, &cqId, info, sizeof(info),
-        RtPtrToPtr<uint32_t*>(&infoEx), sizeof(rtStreamInfoExMsg_t));
+        RtPtrToPtr<uint32_t*>(&infoEx), sizeof(rtStreamInfoExMsg_t), PRE_ALLOC_SQ_CQ_RETRY_MAX_COUNT, stream->Flags());
     COND_RETURN_ERROR((error != RT_ERROR_NONE), error, "NormalSqCqAllocate fail, ret=%#x.", error);
     COND_RETURN_ERROR(
         ((stream->GetSqId() != sqId) || (stream->GetCqId() != cqId)), RT_ERROR_DRV_ERR,
@@ -347,9 +349,9 @@ rtError_t StreamSqCqManage::ReAllocDavidSqCqId(const Stream* const stream)
 
 rtError_t StreamSqCqManage::Add(
     const uint32_t streamId, uint32_t drvFlag, uint32_t& sqId, uint32_t& cqId, uint32_t* const info, const uint32_t len,
-    uint32_t* const msg, const uint32_t msgLen)
+    uint32_t* const msg, const uint32_t msgLen, const uint32_t streamFlags)
 {
-    rtError_t error = Alloc(streamId, drvFlag, sqId, cqId, info, len, msg, msgLen);
+    rtError_t error = Alloc(streamId, drvFlag, sqId, cqId, info, len, msg, msgLen, streamFlags);
     if (error == RT_ERROR_SQID_FULL) {
         // One-to-one mapping between SQ and CQ for stars, reuse not allowed
         if ((device_->IsStarsPlatform()) || ((drvFlag & (static_cast<uint32_t>(TSDRV_FLAG_REMOTE_ID))) != 0U)) {
@@ -365,7 +367,7 @@ rtError_t StreamSqCqManage::Add(
             // Query the low-frequency(less than 5) sqId in the SQCQ ID map table, to apply for a new SQCQ.
             if (sqIdRefMap_[itor->second] < 5U) { // 5:frequency
                 sqId = itor->second;
-                error = Alloc(streamId, drvFlag, sqId, cqId, info, len, msg, msgLen);
+                error = Alloc(streamId, drvFlag, sqId, cqId, info, len, msg, msgLen, streamFlags);
                 return error;
             }
         }
@@ -374,7 +376,7 @@ rtError_t StreamSqCqManage::Add(
             // Reuse the first host side sqId to apply for a new SQCQ.
             if (sqIdRefMap_[itor->second] != UINT32_MAX) {
                 sqId = itor->second;
-                error = Alloc(streamId, drvFlag, sqId, cqId, info, len, msg, msgLen);
+                error = Alloc(streamId, drvFlag, sqId, cqId, info, len, msg, msgLen, streamFlags);
                 return error;
             }
         }
@@ -384,7 +386,7 @@ rtError_t StreamSqCqManage::Add(
 
 rtError_t StreamSqCqManage::Alloc(
     const uint32_t streamId, const uint32_t drvFlag, uint32_t& sqId, uint32_t& cqId, uint32_t* const info,
-    const uint32_t len, uint32_t* const msg, const uint32_t msgLen)
+    const uint32_t len, uint32_t* const msg, const uint32_t msgLen, const uint32_t streamFlags)
 {
     const auto itor = streamIdToSqIdMap_.find(streamId);
     if (unlikely(itor != streamIdToSqIdMap_.end())) {
@@ -398,7 +400,8 @@ rtError_t StreamSqCqManage::Alloc(
 
     RT_LOG(RT_LOG_INFO, "deviceId=%u, tsId=%u, drvFlag=%u", device_->Id_(), device_->DevGetTsId(), drvFlag);
     const rtError_t error = device_->Driver_()->NormalSqCqAllocate(
-        device_->Id_(), device_->DevGetTsId(), drvFlag, &sqId, &cqId, info, len, msg, msgLen);
+        device_->Id_(), device_->DevGetTsId(), drvFlag, &sqId, &cqId, info, len, msg, msgLen,
+        PRE_ALLOC_SQ_CQ_RETRY_MAX_COUNT, streamFlags);
     if (unlikely(error != RT_ERROR_NONE)) {
         // no log here, may be retry outside
         return error;

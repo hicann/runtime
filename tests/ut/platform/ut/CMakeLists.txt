@@ -49,8 +49,10 @@ add_executable(platform_stub_ut
         ${SLOG_STUB_FILES}
         ${TOP_DIR}/src/platform/stub/platform_info_stub.cpp
         ${TOP_DIR}/src/platform/stub/platform_infos_def_stub.cpp
+        ${TOP_DIR}/src/platform/stub/platform_manager_v2_stub.cpp
         ${CMAKE_CURRENT_LIST_DIR}/testcase/platform_manager_instance_stub_utest.cpp
         ${CMAKE_CURRENT_LIST_DIR}/testcase/platform_manager_ge_instance_stub_utest.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/testcase/platform_manager_v2_instance_stub_utest.cpp
 #        ${PROTO_SRCS}
         )
 

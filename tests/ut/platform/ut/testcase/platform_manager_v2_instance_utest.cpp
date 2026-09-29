@@ -55,6 +55,16 @@ TEST_F(PlatformManagerV2UTest, platform_instance_001)
     EXPECT_EQ(ret, 0x071F0001);
 }
 
+TEST_F(PlatformManagerV2UTest, platform_instance_Ascend031StreamDepth)
+{
+    PlatformManagerV2& instance = PlatformManagerV2::Instance();
+    std::string streamDepth;
+
+    const auto ret = instance.GetSocSpec("Ascend031", "SoCInfo", "normal_stream_depth", streamDepth);
+    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(streamDepth, "2048");
+}
+
 TEST_F(PlatformManagerV2UTest, platform_instance_Trim)
 {
     std::string strOk = " \t \t \t \t \t123456 \t \t \t \t";
