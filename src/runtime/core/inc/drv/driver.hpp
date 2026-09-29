@@ -686,8 +686,8 @@ rtError_t GetDrvSentinelMode(void);
 bool IsOfflineNotSupportMemType(const rtMemType_t& type);
 rtError_t GetIpcNotifyVa(
     const uint32_t notifyId, Driver* const curDrv, const uint32_t deviceId, const uint32_t phyId, uint64_t& Va);
-bool isNeedOpenDevice(bool& isTscOpen, bool& isTsvOpen, const uint32_t tsId);
-bool isNeedCloseDevice(bool& isTscOpen, bool& isTsvOpen);
+bool isNeedOpenDevice(const bool isTscOpen, const bool isTsvOpen, const uint32_t tsId);
+bool isNeedCloseDevice(const bool isTscOpen, const bool isTsvOpen);
 rtError_t SetModelNameWithCtrlMsg(Model* const mdl);
 } // namespace runtime
 } // namespace cce

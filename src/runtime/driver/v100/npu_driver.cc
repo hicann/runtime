@@ -50,14 +50,14 @@ rtError_t GetIpcNotifyVa(
     return RT_ERROR_NONE;
 }
 
-bool isNeedOpenDevice(bool& isTscOpen, bool& isTsvOpen, const uint32_t tsId)
+bool isNeedOpenDevice(const bool isTscOpen, const bool isTsvOpen, const uint32_t tsId)
 {
     UNUSED(isTscOpen);
     UNUSED(isTsvOpen);
     return tsId != static_cast<uint32_t>(RT_TSV_ID);
 }
 
-bool isNeedCloseDevice(bool& isTscOpen, bool& isTsvOpen) { return !(isTscOpen && isTsvOpen); }
+bool isNeedCloseDevice(const bool isTscOpen, const bool isTsvOpen) { return !(isTscOpen && isTsvOpen); }
 
 rtError_t SetModelNameWithCtrlMsg(Model* const mdl)
 {
