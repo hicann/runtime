@@ -748,7 +748,7 @@ public:
         uint32_t devid, uint64_t va, uint64_t size, uint32_t flag, struct halTsegInfo* tsegInfo) override;
     rtError_t PutTsegInfo(uint32_t devid, struct halTsegInfo* tsegInfo) override;
 
-    // soma
+    // soma: SOMA in npu_driver_soma.cc
     rtError_t StreamMemPoolCreate(
         const uint32_t deviceId, const uint64_t poolId, const uint64_t size, bool isGraphPool,
         uint64_t& outVa) override;
@@ -762,7 +762,7 @@ public:
         const uint32_t deviceId, const uint64_t poolId, const rtMemPoolAttr attr, void* value) override;
     rtError_t StreamMemPoolAsyncConfig(
         const uint32_t deviceId, const uint64_t poolId, const uint64_t va, const uint64_t size,
-        const bool flag) override;
+        const halMemPoolConfig_t config) override;
 
     rtError_t GetChipIdDieId(
         const uint32_t devId, const uint32_t remoteDevId, const uint32_t remotePhyId, int64_t& chipId,

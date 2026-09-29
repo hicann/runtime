@@ -1487,7 +1487,13 @@ drvError_t halAsyncDmaWqeConvert(
 
 drvError_t halAsyncDmaJettyWqeFill(uint32_t devId, struct halAsyncDmaJettyFillInfo* para) { return DRV_ERROR_NONE; }
 
-drvError_t halMemPoolCreate(soma_mem_pool_t pool, soma_mem_pool_prop prop) { return DRV_ERROR_NONE; }
+drvError_t halMemPoolCreate(soma_mem_pool_t pool, soma_mem_pool_prop* prop)
+{
+    if (prop != nullptr) {
+        prop->va = 0xFFFF00000000ULL;
+    }
+    return DRV_ERROR_NONE;
+}
 
 drvError_t halMemPoolDestroy(soma_mem_pool_t pool) { return DRV_ERROR_NONE; }
 
@@ -1502,7 +1508,10 @@ drvError_t halMemPoolTrim(soma_mem_pool_t pool, uint64_t* size, uint64_t poolUse
     return DRV_ERROR_NONE;
 }
 
-drvError_t halMemPoolAsyncConfig(soma_mem_pool_t pool, uint64_t va, uint64_t size, bool flag) { return DRV_ERROR_NONE; }
+drvError_t halMemPoolAsyncConfig(soma_mem_pool_t pool, uint64_t va, uint64_t size, halMemPoolConfig_t config)
+{
+    return DRV_ERROR_NONE;
+}
 
 drvError_t halMemPoolSetAttr(soma_mem_pool_t pool, soma_mem_pool_attr attr, void* value) { return DRV_ERROR_NONE; }
 

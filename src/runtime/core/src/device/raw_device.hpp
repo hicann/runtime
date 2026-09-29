@@ -20,7 +20,6 @@
 #include "event_expanding.hpp"
 #include "ctrl_sq.hpp"
 #include "program.hpp"
-#include "soma.hpp"
 #include "jetty_manager.h"
 #include "logic_sq_manage.hpp"
 namespace cce {

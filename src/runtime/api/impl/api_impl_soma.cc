@@ -95,7 +95,10 @@ rtError_t ApiImplSoma::MemPoolMallocAsync(
         RT_LOG_INFO, "Memory allocated success! Start ptr=0x%llx, end ptr=0x%llx", RtPtrToValue(*ptr),
         (RtPtrToValue(*ptr) + static_cast<uint64_t>(size)));
     const uint64_t va = RtPtrToValue(*ptr);
-    SomaApi::MemPoolAsyncConfig(memPoolId, va, alignedSize, false);
+    const SomaAsyncConfigType cfgType = (flag == ReuseFlag::REUSE_FLAG_INTERNAL) ?
+                                            SomaAsyncConfigType::SOMA_ASYNC_CONFIG_INTERNAL :
+                                            SomaAsyncConfigType::SOMA_ASYNC_CONFIG_MALLOC;
+    SomaApi::MemPoolAsyncConfig(memPoolId, va, alignedSize, cfgType);
     constexpr AicpuOpType opType = AicpuOpType::MALLOC;
     error = SomaAicpuKernelLaunch(
         "SomaMemMng", alignedSize, va, memPoolId, stm, static_cast<int32_t>(opType), static_cast<int32_t>(flag));
@@ -132,7 +135,7 @@ rtError_t ApiImplSoma::MemPoolFreeAsync(void* const ptr, Stream* const stm)
         const uint64_t va = RtPtrToValue(ptr);
         const uint64_t allocSize = SomaApi::GetAllocSize(ptr);
         COND_RETURN_ERROR(allocSize == 0, RT_ERROR_INVALID_VALUE, "Get alloc size is 0, ptr=%#" PRIx64 ".", va);
-        SomaApi::MemPoolAsyncConfig(memPool, va, allocSize, true);
+        SomaApi::MemPoolAsyncConfig(memPool, va, allocSize, SomaAsyncConfigType::SOMA_ASYNC_CONFIG_FREE);
         rtError_t error = SomaApi::FreeToMemPool(ptr);
         ERROR_RETURN_MSG_INNER(
             error, "Failed to free memory to pool, ptr=%#" PRIx64 ", stream_id=%d, retCode=%#x.", va, stm->Id_(),

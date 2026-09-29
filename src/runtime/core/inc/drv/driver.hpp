@@ -629,7 +629,8 @@ public:
     virtual rtError_t StreamMemPoolGetAttr(
         const uint32_t deviceId, const uint64_t poolId, const rtMemPoolAttr attr, void* value) = 0;
     virtual rtError_t StreamMemPoolAsyncConfig(
-        const uint32_t deviceId, const uint64_t poolId, const uint64_t va, const uint64_t size, const bool flag) = 0;
+        const uint32_t deviceId, const uint64_t poolId, const uint64_t va, const uint64_t size,
+        const halMemPoolConfig_t config) = 0;
 
     virtual rtError_t SetStreamPriorityValue(Stream* const stm, const uint32_t streamPriority) = 0;
     virtual rtError_t GetStreamPriorityValue(Stream* const stm, uint32_t* const streamPriority) = 0;

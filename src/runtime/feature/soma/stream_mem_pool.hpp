@@ -55,7 +55,7 @@ struct Segment {
     void MergeLeft();
 
     uint64_t basePtr;
-    uint64_t size;
+    uint64_t segsize;
     Segment* prev;
     Segment* next;
     int32_t streamId;
@@ -68,8 +68,8 @@ struct Segment {
 struct SegmentComparator {
     bool operator()(const Segment* a, const Segment* b) const
     {
-        if (a->size != b->size) {
-            return a->size < b->size;
+        if (a->segsize != b->segsize) {
+            return a->segsize < b->segsize;
         }
         return a->basePtr < b->basePtr;
     }
@@ -119,6 +119,12 @@ enum class ReuseFlag : int32_t {
     REUSE_FLAG_INVALID = 0XFFFF,
 };
 
+enum class SomaAsyncConfigType : int32_t {
+    SOMA_ASYNC_CONFIG_MALLOC = 0,
+    SOMA_ASYNC_CONFIG_FREE = 1,
+    SOMA_ASYNC_CONFIG_INTERNAL = 2,
+};
+
 class SegmentManager {
 public:
     SegmentManager(Segment* seg, uint32_t deviceId, bool canDelete);
@@ -149,7 +155,7 @@ private:
     bool CheckMergeRules(const Segment* segLeft, const Segment* segRight) const;
     Segment* AllocFromFreeSegs(uint64_t size);
     void MergeIntoFreeSegs(Segment*& seg);
-    void TrimCachedSegs(const uint64_t minBytesToKeep);
+    rtError_t TrimCachedSegs(const uint64_t minBytesToKeep);
 
     std::mutex mutex_;
     std::unordered_map<uint64_t, Segment*> allocedMap_;

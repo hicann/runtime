@@ -1624,7 +1624,13 @@ drvError_t halMemHandleGetAttribute(drv_mem_handle_t* handle, HandleAttrType typ
     return DRV_ERROR_NONE;
 }
 
-drvError_t halMemPoolCreate(soma_mem_pool_t pool, soma_mem_pool_prop prop) { return DRV_ERROR_NONE; }
+drvError_t halMemPoolCreate(soma_mem_pool_t pool, soma_mem_pool_prop* prop)
+{
+    if (prop != nullptr) {
+        prop->va = 0xFFFF00000000ULL;
+    }
+    return DRV_ERROR_NONE;
+}
 
 drvError_t halMemPoolDestroy(soma_mem_pool_t pool) { return DRV_ERROR_NONE; }
 
@@ -1639,7 +1645,10 @@ drvError_t halMemPoolTrim(soma_mem_pool_t pool, uint64_t* size, uint64_t poolUse
     return DRV_ERROR_NONE;
 }
 
-drvError_t halMemPoolAsyncConfig(soma_mem_pool_t pool, uint64_t va, uint64_t size, bool flag) { return DRV_ERROR_NONE; }
+drvError_t halMemPoolAsyncConfig(soma_mem_pool_t pool, uint64_t va, uint64_t size, halMemPoolConfig_t config)
+{
+    return DRV_ERROR_NONE;
+}
 
 DVresult halMemManagedPrefetch(DVdeviceptr devPtr, size_t size, struct drv_uvm_location location, unsigned int flags)
 {

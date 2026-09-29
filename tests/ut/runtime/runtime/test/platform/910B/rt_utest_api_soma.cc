@@ -994,6 +994,255 @@ TEST_F(CloudV2ApiTestSOMA, rt_async_alloc_and_sync_free)
     delete device;
 }
 
+TEST_F(CloudV2ApiTestSOMA, rt_malloc_from_mempool_by_single_reuse)
+{
+    rtError_t error;
+    rtStream_t stream1;
+    rtStream_t stream2;
+    error = rtStreamCreate(&stream1, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtStreamCreate(&stream2, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    const int32_t stmId1 = rt_ut::UnwrapOrNull<Stream>(stream1)->Id_();
+    const int32_t stmId2 = rt_ut::UnwrapOrNull<Stream>(stream2)->Id_();
+
+    RawDevice* device = new RawDevice(0);
+    device->Init();
+    size_t totalSize = (16UL * 1024 * 1024 * 1024);
+    MOCKER_CPP_VIRTUAL(*device->driver_, &Driver::MemGetInfoEx)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&totalSize, sizeof(totalSize)))
+        .will(returnValue(RT_ERROR_NONE));
+
+    MOCKER_CPP_VIRTUAL(*device, &RawDevice::CheckFeatureSupport).stubs().with(mockcpp::any()).will(returnValue(true));
+
+    rtMemPool_t memPoolId = nullptr;
+    rtMemPoolProps poolProps = {
+        .side = 1, .devId = 0, .handleType = RT_MEM_HANDLE_TYPE_POSIX, .maxSize = (10UL << 30), .reserve = 0};
+    error = rtMemPoolCreate(&memPoolId, &poolProps);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    uint32_t val = 0;
+    rtMemPoolAttr attr = rtMemPoolReuseFollowEventDependencies;
+    error = rtMemPoolSetAttr(memPoolId, attr, &val);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    attr = rtMemPoolReuseAllowOpportunistic;
+    error = rtMemPoolSetAttr(memPoolId, attr, &val);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    attr = rtMemPoolReuseAllowInternalDependencies;
+    error = rtMemPoolSetAttr(memPoolId, attr, &val);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    size_t size = 32;
+    void* ptr = nullptr;
+    ReuseFlag flag = ReuseFlag::REUSE_FLAG_NONE;
+    rtError_t ret = SomaApi::AllocFromMemPool(&ptr, size, memPoolId, stmId1, flag);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtMemPoolFreeAsync(ptr, stream1);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    void* ptrReuse = nullptr;
+    ret = SomaApi::AllocFromMemPool(&ptrReuse, size, memPoolId, stmId2, flag);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_NE(ptrReuse, ptr);
+    EXPECT_EQ(flag, ReuseFlag::REUSE_FLAG_NONE);
+
+    ret = SomaApi::AllocFromMemPool(&ptrReuse, size, memPoolId, stmId1, flag);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(ptrReuse, ptr);
+    EXPECT_EQ(flag, ReuseFlag::REUSE_FLAG_STANDARD);
+
+    ret = rtStreamDestroy(stream1);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamDestroy(stream2);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtMemPoolDestroy(memPoolId);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    delete device;
+}
+
+TEST_F(CloudV2ApiTestSOMA, rt_malloc_from_mempool_by_event_reuse)
+{
+    rtError_t error;
+    rtStream_t stream1;
+    rtStream_t stream2;
+    rtEvent_t event;
+    error = rtStreamCreate(&stream1, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtStreamCreate(&stream2, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtEventCreate(&event);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    const int32_t stmId1 = rt_ut::UnwrapOrNull<Stream>(stream1)->Id_();
+    const int32_t stmId2 = rt_ut::UnwrapOrNull<Stream>(stream2)->Id_();
+
+    RawDevice* device = new RawDevice(0);
+    device->Init();
+    size_t totalSize = (16UL * 1024 * 1024 * 1024);
+    MOCKER_CPP_VIRTUAL(*device->driver_, &Driver::MemGetInfoEx)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&totalSize, sizeof(totalSize)))
+        .will(returnValue(RT_ERROR_NONE));
+
+    MOCKER_CPP_VIRTUAL(*device, &RawDevice::CheckFeatureSupport).stubs().with(mockcpp::any()).will(returnValue(true));
+
+    rtMemPool_t memPoolId = nullptr;
+    rtMemPoolProps poolProps = {
+        .side = 1, .devId = 0, .handleType = RT_MEM_HANDLE_TYPE_POSIX, .maxSize = (10UL << 30), .reserve = 0};
+    error = rtMemPoolCreate(&memPoolId, &poolProps);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    size_t size = 32;
+    void* ptr = nullptr;
+    ReuseFlag flag = ReuseFlag::REUSE_FLAG_NONE;
+    rtError_t ret = SomaApi::AllocFromMemPool(&ptr, size, memPoolId, stmId1, flag);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtMemPoolFreeAsync(ptr, stream1);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtEventRecord(event, stream1);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamWaitEvent(stream2, event);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    void* ptrReuse = nullptr;
+    uint32_t val = 1;
+    rtMemPoolAttr attr = rtMemPoolReuseFollowEventDependencies;
+    error = rtMemPoolSetAttr(memPoolId, attr, &val);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    ret = SomaApi::AllocFromMemPool(&ptrReuse, size, memPoolId, stmId2, flag);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(ptrReuse, ptr);
+    EXPECT_EQ(flag, ReuseFlag::REUSE_FLAG_STANDARD);
+    ret = rtStreamSynchronize(stream1);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamSynchronize(stream2);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamDestroy(stream1);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamDestroy(stream2);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtEventDestroy(event);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtMemPoolDestroy(memPoolId);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    delete device;
+}
+
+TEST_F(CloudV2ApiTestSOMA, rt_malloc_from_mempool_by_opport_reuse)
+{
+    rtError_t error;
+    rtStream_t stream1;
+    rtStream_t stream2;
+    error = rtStreamCreate(&stream1, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtStreamCreate(&stream2, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    const int32_t stmId1 = rt_ut::UnwrapOrNull<Stream>(stream1)->Id_();
+    const int32_t stmId2 = rt_ut::UnwrapOrNull<Stream>(stream2)->Id_();
+
+    RawDevice* device = new RawDevice(0);
+    device->Init();
+    size_t totalSize = (16UL * 1024 * 1024 * 1024);
+    MOCKER_CPP_VIRTUAL(*device->driver_, &Driver::MemGetInfoEx)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&totalSize, sizeof(totalSize)))
+        .will(returnValue(RT_ERROR_NONE));
+
+    MOCKER_CPP_VIRTUAL(*device, &RawDevice::CheckFeatureSupport).stubs().with(mockcpp::any()).will(returnValue(true));
+
+    rtMemPool_t memPoolId = nullptr;
+    rtMemPoolProps poolProps = {
+        .side = 1, .devId = 0, .handleType = RT_MEM_HANDLE_TYPE_POSIX, .maxSize = (10UL << 30), .reserve = 0};
+    error = rtMemPoolCreate(&memPoolId, &poolProps);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    uint32_t val = 1;
+    rtMemPoolAttr attr = rtMemPoolReuseAllowOpportunistic;
+    error = rtMemPoolSetAttr(memPoolId, attr, &val);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    size_t size = 32;
+    void* ptr = nullptr;
+    ReuseFlag flag = ReuseFlag::REUSE_FLAG_NONE;
+    rtError_t ret = SomaApi::AllocFromMemPool(&ptr, size, memPoolId, stmId1, flag);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtMemPoolFreeAsync(ptr, stream1);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    void* ptrReuse = nullptr;
+    ret = SomaApi::AllocFromMemPool(&ptrReuse, size, memPoolId, stmId2, flag);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(ptrReuse, ptr);
+    EXPECT_EQ(flag, ReuseFlag::REUSE_FLAG_STANDARD);
+
+    ret = rtStreamDestroy(stream1);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamDestroy(stream2);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtMemPoolDestroy(memPoolId);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    delete device;
+}
+
+TEST_F(CloudV2ApiTestSOMA, rt_malloc_from_mempool_by_internal_reuse)
+{
+    rtError_t error;
+    rtStream_t stream1;
+    rtStream_t stream2;
+    error = rtStreamCreate(&stream1, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtStreamCreate(&stream2, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    const int32_t stmId1 = rt_ut::UnwrapOrNull<Stream>(stream1)->Id_();
+    const int32_t stmId2 = rt_ut::UnwrapOrNull<Stream>(stream2)->Id_();
+
+    RawDevice* device = new RawDevice(0);
+    device->Init();
+    size_t totalSize = (16UL * 1024 * 1024 * 1024);
+    MOCKER_CPP_VIRTUAL(*device->driver_, &Driver::MemGetInfoEx)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&totalSize, sizeof(totalSize)))
+        .will(returnValue(RT_ERROR_NONE));
+
+    MOCKER_CPP_VIRTUAL(*device, &RawDevice::CheckFeatureSupport).stubs().with(mockcpp::any()).will(returnValue(true));
+
+    rtMemPool_t memPoolId = nullptr;
+    rtMemPoolProps poolProps = {
+        .side = 1, .devId = 0, .handleType = RT_MEM_HANDLE_TYPE_POSIX, .maxSize = (10UL << 30), .reserve = 0};
+    error = rtMemPoolCreate(&memPoolId, &poolProps);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    uint32_t val = 1;
+    rtMemPoolAttr attr = rtMemPoolReuseAllowInternalDependencies;
+    error = rtMemPoolSetAttr(memPoolId, attr, &val);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    size_t size = 32;
+    void* ptr = nullptr;
+    ReuseFlag flag = ReuseFlag::REUSE_FLAG_NONE;
+    rtError_t ret = SomaApi::AllocFromMemPool(&ptr, size, memPoolId, stmId1, flag);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtMemPoolFreeAsync(ptr, stream1);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    void* ptrReuse = nullptr;
+    ret = SomaApi::AllocFromMemPool(&ptrReuse, size, memPoolId, stmId2, flag);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(ptrReuse, ptr);
+    EXPECT_EQ(flag, ReuseFlag::REUSE_FLAG_INTERNAL);
+
+    ret = rtStreamDestroy(stream1);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtStreamDestroy(stream2);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = rtMemPoolDestroy(memPoolId);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    delete device;
+}
+
 TEST_F(CloudV2ApiTestSOMA, rt_malloc_from_mempool_by_event_reuse_fail)
 {
     rtError_t error;

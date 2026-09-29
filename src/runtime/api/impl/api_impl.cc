@@ -2169,8 +2169,8 @@ rtError_t ApiImpl::EventCreateEx(Event** const evt, const uint64_t flag)
 
 rtError_t ApiImpl::EventDestroy(Event* evt)
 {
-    ResetEmbeddedInnerHandle<Event>(evt);
     EventStateCallbackManager::Instance().Notify(nullptr, evt, EventStatePeriod::EVENT_STATE_PERIOD_DESTROY);
+    ResetEmbeddedInnerHandle<Event>(evt);
     if (evt->GetEventFlag() == RT_EVENT_IPC) {
         IpcEvent* eventIpc = dynamic_cast<IpcEvent*>(evt);
         IpcEventDestroy(&eventIpc, MAX_INT32_NUM, true);

@@ -9408,7 +9408,7 @@ TEST_F(UTEST_ACL_Runtime, aclrtMemPoolMallocAsync)
 
     size = 0;
     error = aclrtMemPoolMallocAsync(&ptr, size, memPool, stream);
-    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(error, ACL_ERROR_INVALID_PARAM);
 }
 
 TEST_F(UTEST_ACL_Runtime, aclrtMemPoolTrimTo)

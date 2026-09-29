@@ -668,6 +668,7 @@ add_executable(runtime_utest_task_910B
     ${TOP_DIR}/src/runtime/driver/npu_driver_res.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_dcache_lock_opb.cpp
     ${TOP_DIR}/src/runtime/driver/npu_driver_standard_soc.cc
+    ${TOP_DIR}/src/runtime/driver/npu_driver_soma.cc
     ${TOP_DIR}/src/runtime/driver/v100/npu_driver.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/v100/kernel.cc
     ${TOP_DIR}/src/runtime/core/src/task/v100/stub_task.cc
@@ -721,6 +722,7 @@ add_executable(runtime_utest_api_910B
     ${TOP_DIR}/src/runtime/driver/npu_driver_res.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_dcache_lock_opb.cpp
     ${TOP_DIR}/src/runtime/driver/npu_driver_standard_soc.cc
+    ${TOP_DIR}/src/runtime/driver/npu_driver_soma.cc
     ${TOP_DIR}/src/runtime/driver/v100/npu_driver.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/v100/kernel.cc
     ${TOP_DIR}/src/runtime/core/src/task/v100/stub_task.cc
@@ -799,6 +801,7 @@ add_executable(runtime_utest_xpu_910B
     ${TOP_DIR}/src/runtime/driver/npu_driver_res.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_dcache_lock_opb.cpp
     ${TOP_DIR}/src/runtime/driver/npu_driver_standard_soc.cc
+    ${TOP_DIR}/src/runtime/driver/npu_driver_soma.cc
     ${TOP_DIR}/src/runtime/driver/v100/npu_driver.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/v100/kernel.cc
     ${TOP_DIR}/src/runtime/core/src/task/v100/stub_task.cc

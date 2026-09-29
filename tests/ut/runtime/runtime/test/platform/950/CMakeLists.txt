@@ -12,6 +12,7 @@ add_executable(runtime_utest_api_david
     ${runtimeut_david_src_list}
     ${TOP_DIR}/src/runtime/driver/npu_driver.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_standard_soc.cc
+    ${TOP_DIR}/src/runtime/driver/npu_driver_soma.cc
     stub/hal_stub.cc
     main.cc
     rt_utest_david.cc
@@ -21,6 +22,8 @@ add_executable(runtime_utest_api_david
     rt_utest_ipc_event_starsV2.cc
     rt_utest_ipc_mem_david.cc
     rt_utest_context_david.cc
+    rt_utest_api_soma.cc
+    rt_utest_soma.cc
     rt_utest_david_snapshot.cc
 )
 
@@ -43,21 +46,22 @@ target_link_libraries(runtime_utest_api_david PRIVATE
 add_executable(runtime_utest_task_david
     ${TOP_DIR}/src/runtime/driver/npu_driver.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_standard_soc.cc
+    ${TOP_DIR}/src/runtime/driver/npu_driver_soma.cc
     stub/hal_stub.cc
     main.cc
-    rt_utest_david_task_recycle.cc	 
-    rt_utest_david_task_send.cc 
-    rt_utest_david_task.cc 
-    rt_utest_david_model_c.cc 
-    rt_utest_david_event.cc 
-    rt_utest_david_stream.cc 
-    rt_utest_david_elf.cc 
-    rt_utest_david_device.cc 
-    rt_utest_david_context.cc 
-    rt_utest_stream_ub.cc 
-    rt_utest_dcache_lock_david.cc 
+    rt_utest_david_task_recycle.cc
+    rt_utest_david_task_send.cc
+    rt_utest_david_task.cc
+    rt_utest_david_model_c.cc
+    rt_utest_david_event.cc
+    rt_utest_david_stream.cc
+    rt_utest_david_elf.cc
+    rt_utest_david_device.cc
+    rt_utest_david_context.cc
+    rt_utest_stream_ub.cc
+    rt_utest_dcache_lock_david.cc
     rt_utest_david_die.cc
-    rt_utest_david_customer_stack_size.cc 
+    rt_utest_david_customer_stack_size.cc
     rt_utest_memory_corruption.cc
     rt_utest_aclgraph_ub.cc
     ${TOP_DIR}/tests/ut/runtime/runtime/test/rt_utest_task_sqe.cc
@@ -82,6 +86,7 @@ target_link_libraries(runtime_utest_task_david PRIVATE
 add_executable(runtime_utest_xpu
     ${TOP_DIR}/src/runtime/driver/npu_driver.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_standard_soc.cc
+    ${TOP_DIR}/src/runtime/driver/npu_driver_soma.cc
     stub/hal_stub.cc
     stub/xpu_stub.cc
     main.cc
@@ -109,7 +114,7 @@ add_executable(runtime_utest_xpu
 )
 
 target_include_directories(
-    runtime_utest_xpu PUBLIC 
+    runtime_utest_xpu PUBLIC
     ${TOP_DIR}/src/tprt/inc/external
     ${TOP_DIR}/src/tprt/feature/inc
     ${TOP_DIR}/pkg_inc/runtime

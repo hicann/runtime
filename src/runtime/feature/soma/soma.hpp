@@ -31,7 +31,7 @@ public:
     static rtError_t StreamMemPoolDestroy(rtMemPool_t const memPool);
     static rtError_t StreamMemPoolSetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void* value);
     static rtError_t StreamMemPoolGetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void* value);
-    static void MemPoolAsyncConfig(rtMemPool_t memPool, uint64_t va, uint64_t size, bool flag);
+    static void MemPoolAsyncConfig(rtMemPool_t memPool, uint64_t va, uint64_t size, SomaAsyncConfigType cfgType);
     static bool InMemPoolRegion(void* const ptr);
     static uint64_t GetAllocSize(void* const ptr);
     static std::shared_ptr<SegmentManager> FindMemPoolByPtr(void* const ptr);

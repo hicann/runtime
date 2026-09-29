@@ -5734,6 +5734,12 @@ enum vmng_split_mode {
  */
 DLLEXPORT drvError_t halGetDeviceSplitMode(unsigned int dev_id, unsigned int* mode);
 
+typedef enum {
+    HAL_MEM_POOL_CONFIG_MALLOC = 0,
+    HAL_MEM_POOL_CONFIG_FREE = 1,
+    HAL_MEM_POOL_CONFIG_INTERNAL = 2,
+} halMemPoolConfig_t;
+
 typedef struct {
     uint64_t poolId;
     uint32_t devId;
@@ -5764,11 +5770,12 @@ typedef enum {
  * @ingroup driver
  * @brief create memory pool
  * @attention null
- * @param [in]  pool: pool info
- * @param [in]  prop: pool properties, prop->va must be pre-reserved by caller via halMemAddressReserve
+ * @param [in]     pool: pool info
+ * @param [in,out] prop: pool properties, must not be null; prop->va is allocated by the driver
+ *                       and written back to the caller on success
  * @return   0 for success, others for fail
  */
-DLLEXPORT drvError_t halMemPoolCreate(soma_mem_pool_t pool, soma_mem_pool_prop prop);
+DLLEXPORT drvError_t halMemPoolCreate(soma_mem_pool_t pool, soma_mem_pool_prop* prop);
 
 /**
  * @ingroup driver
@@ -5838,7 +5845,8 @@ DLLEXPORT DV_ONLINE drvError_t halMemPoolFree(soma_mem_pool_t pool, uint64_t va,
 DLLEXPORT DV_ONLINE drvError_t
 halMemPoolTrim(soma_mem_pool_t pool, uint64_t* size, uint64_t poolUsedSize, uint64_t poolFreeSize);
 
-DLLEXPORT DV_ONLINE drvError_t halMemPoolAsyncConfig(soma_mem_pool_t pool, uint64_t va, uint64_t size, bool flag);
+DLLEXPORT DV_ONLINE drvError_t
+halMemPoolAsyncConfig(soma_mem_pool_t pool, uint64_t va, uint64_t size, halMemPoolConfig_t config);
 
 /**
  * @ingroup driver

@@ -277,11 +277,12 @@ rtError_t SomaApi::FreeToMemPool(void* ptr, bool forceFree)
     return RT_ERROR_NONE;
 }
 
-void SomaApi::MemPoolAsyncConfig(rtMemPool_t memPool, uint64_t va, uint64_t size, bool flag)
+void SomaApi::MemPoolAsyncConfig(rtMemPool_t memPool, uint64_t va, uint64_t size, SomaAsyncConfigType cfgType)
 {
     SegmentManager* mempool = RtPtrToPtr<SegmentManager*>(memPool);
+    const halMemPoolConfig_t config = static_cast<halMemPoolConfig_t>(cfgType);
     (void)Runtime::Instance()->CurrentContext()->Device_()->Driver_()->StreamMemPoolAsyncConfig(
-        mempool->DeviceId(), mempool->MemPoolId(), va, size, flag);
+        mempool->DeviceId(), mempool->MemPoolId(), va, size, config);
 }
 
 rtError_t SomaApi::MemPoolTrimTo(rtMemPool_t memPool, uint64_t minBytesToKeep)

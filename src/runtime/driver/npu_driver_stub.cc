@@ -309,13 +309,14 @@ rtError_t NpuDriver::StreamMemPoolGetAttr(
 }
 
 rtError_t NpuDriver::StreamMemPoolAsyncConfig(
-    const uint32_t deviceId, const uint64_t poolId, const uint64_t va, const uint64_t size, const bool flag)
+    const uint32_t deviceId, const uint64_t poolId, const uint64_t va, const uint64_t size,
+    const halMemPoolConfig_t config)
 {
     UNUSED(deviceId);
     UNUSED(poolId);
     UNUSED(va);
     UNUSED(size);
-    UNUSED(flag);
+    UNUSED(config);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 

@@ -16,6 +16,7 @@
 #include "profiler_c.hpp"
 #include "event_david.hpp"
 #include "common_task.h"
+#include "event_state_callback_manager.hpp"
 namespace cce {
 namespace runtime {
 
@@ -58,6 +59,7 @@ rtError_t EvtRecord(Event* const evt, Stream* const stm)
     SET_THREAD_TASKID_AND_STREAMID(dstStm->GetExposedStreamId(), tsk->taskSn);
     error = SubmitTaskPostProc(dstStm, pos);
     ERROR_RETURN(error, "Failed to recycle task, stream_id=%d, retCode=%#x.", stm->Id_(), static_cast<uint32_t>(error));
+    EventStateCallbackManager::Instance().Notify(stm, evt, EventStatePeriod::EVENT_STATE_PERIOD_RECORD);
     return error;
 }
 
@@ -219,6 +221,7 @@ rtError_t EvtWait(Event* const evt, Stream* const stm, const uint32_t timeout)
     SET_THREAD_TASKID_AND_STREAMID(dstStm->GetExposedStreamId(), tsk->taskSn);
     error = SubmitTaskPostProc(dstStm, pos);
     ERROR_RETURN(error, "Failed to recycle task, stream_id=%d, retCode=%#x.", stm->Id_(), static_cast<uint32_t>(error));
+    EventStateCallbackManager::Instance().Notify(stm, evt, EventStatePeriod::EVENT_STATE_PERIOD_WAIT);
     return RT_ERROR_NONE;
 }
 

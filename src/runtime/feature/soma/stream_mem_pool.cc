@@ -21,7 +21,7 @@ PoolRegistry* PoolRegistry::poolRegistry_ = nullptr;
 
 Segment::Segment(uint64_t base, uint64_t size)
     : basePtr(base),
-      size(size),
+      segsize(size),
       prev(nullptr),
       next(nullptr),
       streamId(INVALID_STREAM_ID),
@@ -33,7 +33,7 @@ Segment::Segment(uint64_t base, uint64_t size)
 
 Segment::Segment(uint64_t base, uint64_t size, Segment* prev, Segment* next)
     : basePtr(base),
-      size(size),
+      segsize(size),
       prev(prev),
       next(next),
       streamId(INVALID_STREAM_ID),
@@ -45,9 +45,9 @@ Segment::Segment(uint64_t base, uint64_t size, Segment* prev, Segment* next)
 
 Segment* Segment::SplitLeft(uint64_t splitedSize, bool mustSplit)
 {
-    if (splitedSize > size) {
+    if (splitedSize > segsize) {
         return nullptr;
-    } else if (splitedSize == size && !mustSplit) {
+    } else if (splitedSize == segsize && !mustSplit) {
         return this;
     } else {
         auto splitedSeg = SegmentManager::CreateSegment(basePtr, splitedSize, prev, this);
@@ -59,7 +59,7 @@ Segment* Segment::SplitLeft(uint64_t splitedSize, bool mustSplit)
             prev->next = splitedSeg;
         }
         prev = splitedSeg;
-        size -= splitedSize;
+        segsize -= splitedSize;
         basePtr = basePtr + static_cast<uintptr_t>(splitedSize);
         return splitedSeg;
     }
@@ -69,7 +69,7 @@ void Segment::MergeLeft()
 {
     Segment* old_prev = prev;
     basePtr = prev->basePtr;
-    size += prev->size;
+    segsize += prev->segsize;
     prev = prev->prev;
     if (prev != nullptr) {
         prev->next = this;
@@ -96,7 +96,7 @@ SegmentManager::SegmentManager(Segment* seg, uint32_t deviceId, bool canDelete)
             MemPoolId());
     } else {
         base_ = seg->basePtr;
-        size_ = seg->size;
+        size_ = seg->segsize;
         seg->state = SegmentState::FREE;
         (void)freeSegs_.insert(seg);
     }
@@ -140,11 +140,28 @@ SegmentManager::~SegmentManager()
 Segment* SegmentManager::TryToReuse(
     size_t size, const int32_t streamId, PoolDependencyFea& state, ReuseFlag& flag) const
 {
-    UNUSED(size);
-    UNUSED(streamId);
-    UNUSED(state);
-    UNUSED(flag);
-    return nullptr;
+    Segment* reuseSeg = nullptr;
+    if (state.singleDependencies != 0) {
+        reuseSeg = SingleStreamReuse(size, streamId, flag);
+        if (reuseSeg != nullptr)
+            return reuseSeg;
+    }
+    if (state.eventDependencies != 0) {
+        reuseSeg = StreamEventReuse(size, streamId, flag);
+        if (reuseSeg != nullptr)
+            return reuseSeg;
+    }
+    if (state.opportunistic != 0) {
+        reuseSeg = StreamInternalReuse(size, streamId, true, flag);
+        if (reuseSeg != nullptr)
+            return reuseSeg;
+    }
+    if (state.internalDependencies != 0) {
+        reuseSeg = StreamInternalReuse(size, streamId, false, flag);
+        if (reuseSeg != nullptr)
+            return reuseSeg;
+    }
+    return reuseSeg;
 }
 
 rtError_t SegmentManager::SegmentAlloc(Segment*& ret, uint64_t size, int streamId, ReuseFlag& flag)
@@ -175,15 +192,16 @@ rtError_t SegmentManager::SegmentAlloc(Segment*& ret, uint64_t size, int streamI
         RT_LOG(
             RT_LOG_DEBUG,
             "Allocating new segment from cached segments, size=%#" PRIx64 ", cached block size=%#" PRIx64 ".", size,
-            reuseSegment->size);
-        reuseSegment->streamId = streamId;
-        RT_LOG(RT_LOG_DEBUG, "Update reuseSegment streamId to %d.", streamId);
+            reuseSegment->segsize);
         (void)cachedSegs_.erase(reuseSegment);
         ret = reuseSegment->SplitLeft(size);
         COND_RETURN_ERROR(
             ret == nullptr, RT_ERROR_MEM_POOL_ALLOC,
-            "Unable to alloc segments(size=%#" PRIx64 ") from segment(size=%#" PRIx64 ").", size, reuseSegment->size);
-
+            "Unable to alloc segments(size=%#" PRIx64 ") from segment(size=%#" PRIx64 ").", size,
+            reuseSegment->segsize);
+        ret->streamId = streamId;
+        ret->seqId = PoolRegistry::Instance().GetStreamSeqId()[streamId];
+        RT_LOG(RT_LOG_DEBUG, "Update reused segment streamId to %d, seqId to %lu.", streamId, ret->seqId);
         ret->state = SegmentState::BUSY;
         (void)allocedMap_.insert(std::make_pair(ret->basePtr, ret));
         if (reuseSegment->basePtr != ret->basePtr) {
@@ -203,9 +221,9 @@ rtError_t SegmentManager::SegmentFree(uint64_t ptr, bool forceFree)
         it == allocedMap_.end(), RT_ERROR_POOL_PTR_NOTFOUND, "Unable to free ptr=%#" PRIx64 " from memPoolId=%#" PRIx64,
         ptr, MemPoolId());
     Segment* seg = it->second;
-    RT_LOG(RT_LOG_DEBUG, "Free segment ptr=%#" PRIx64 " size=%#" PRIx64 ".", seg->basePtr, seg->size);
+    RT_LOG(RT_LOG_DEBUG, "Free segment ptr=%#" PRIx64 " size=%#" PRIx64 ".", seg->basePtr, seg->segsize);
     (void)allocedMap_.erase(it);
-    busySize_ -= seg->size;
+    busySize_ -= seg->segsize;
     if (forceFree) {
         seg->state = SegmentState::FREE;
         MergeIntoFreeSegs(seg);
@@ -221,13 +239,14 @@ uint64_t SegmentManager::GetAllocSize(uint64_t ptr)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     auto it = allocedMap_.find(ptr);
-    return (it != allocedMap_.end()) ? it->second->size : 0;
+    return (it != allocedMap_.end()) ? it->second->segsize : 0;
 }
 
 void SegmentManager::MergeIntoCachedSegs(Segment*& seg)
 {
     RT_LOG(
-        RT_LOG_DEBUG, "Merging segment into cachedSegs ptr=%#" PRIx64 " size=%#" PRIx64 ".", seg->basePtr, seg->size);
+        RT_LOG_DEBUG, "Merging segment into cachedSegs ptr=%#" PRIx64 " size=%#" PRIx64 ".", seg->basePtr,
+        seg->segsize);
     while ((seg->basePtr != base_) && (seg->prev != nullptr) && (seg->prev->state == SegmentState::CACHED) &&
            CheckMergeRules(seg->prev, seg)) {
         (void)cachedSegs_.erase(seg->prev);
@@ -239,7 +258,7 @@ void SegmentManager::MergeIntoCachedSegs(Segment*& seg)
         seg = seg->next;
         seg->MergeLeft();
     }
-    RT_LOG(RT_LOG_DEBUG, "After merging segment seg, ptr=%#" PRIx64 " size=%lu.", seg->basePtr, seg->size);
+    RT_LOG(RT_LOG_DEBUG, "After merging segment seg, ptr=%#" PRIx64 " size=%lu.", seg->basePtr, seg->segsize);
     (void)cachedSegs_.insert(seg);
 }
 
@@ -249,7 +268,7 @@ Segment* SegmentManager::SingleStreamReuse(size_t size, const int32_t streamId, 
     Segment* curStmSeg = nullptr;
 
     auto it = std::lower_bound(cachedSegs_.begin(), cachedSegs_.end(), size, [](const Segment* seg, size_t targetSize) {
-        return seg->size < targetSize;
+        return seg->segsize < targetSize;
     });
 
     for (; it != cachedSegs_.end(); ++it) {
@@ -282,7 +301,7 @@ Segment* SegmentManager::StreamEventReuse(size_t size, const int32_t streamId, R
     Segment* eventStmSeg = nullptr;
 
     auto it = std::lower_bound(cachedSegs_.begin(), cachedSegs_.end(), size, [](const Segment* seg, size_t targetSize) {
-        return seg->size < targetSize;
+        return seg->segsize < targetSize;
     });
 
     for (; it != cachedSegs_.end(); ++it) {
@@ -314,7 +333,7 @@ Segment* SegmentManager::StreamInternalReuse(size_t size, const int32_t streamId
     Segment* otherStmSeg = nullptr;
 
     auto it = std::lower_bound(cachedSegs_.begin(), cachedSegs_.end(), size, [](const Segment* seg, size_t targetSize) {
-        return seg->size < targetSize;
+        return seg->segsize < targetSize;
     });
     if (it != cachedSegs_.end()) {
         otherStmSeg = *it;
@@ -335,9 +354,6 @@ Segment* SegmentManager::StreamInternalReuse(size_t size, const int32_t streamId
 
 bool SegmentManager::CheckMergeRules(const Segment* segLeft, const Segment* segRight) const
 {
-    if (segLeft == tail_ || segRight == tail_) {
-        return false;
-    }
     return (segLeft->state == segRight->state) && (segLeft->streamId == segRight->streamId) &&
            (segLeft->graphId == segRight->graphId) && (segLeft->eventId == segRight->eventId) &&
            (segLeft->seqId == segRight->seqId);
@@ -356,6 +372,11 @@ Segment* SegmentManager::AllocFromFreeSegs(uint64_t size)
     Segment* seg = *fit;
     (void)freeSegs_.erase(fit);
     Segment* ret = seg->SplitLeft(size);
+    if (ret == nullptr) {
+        RT_LOG(RT_LOG_ERROR, "Failed to allocate New Segment: Host out of memory.");
+        (void)freeSegs_.insert(seg);
+        return nullptr;
+    }
     if (seg->basePtr != ret->basePtr) {
         (void)freeSegs_.insert(seg);
     }
@@ -364,7 +385,7 @@ Segment* SegmentManager::AllocFromFreeSegs(uint64_t size)
 
 void SegmentManager::MergeIntoFreeSegs(Segment*& seg)
 {
-    RT_LOG(RT_LOG_DEBUG, "Merging free segment basePtr=%#" PRIx64 " size=%lu.", seg->basePtr, seg->size);
+    RT_LOG(RT_LOG_DEBUG, "Merging free segment basePtr=%#" PRIx64 " size=%lu.", seg->basePtr, seg->segsize);
 
     while ((seg->basePtr != base_) && (seg->prev != nullptr) && (seg->prev->state == SegmentState::FREE)) {
         (void)freeSegs_.erase(seg->prev);
@@ -375,35 +396,39 @@ void SegmentManager::MergeIntoFreeSegs(Segment*& seg)
         seg = seg->next;
         seg->MergeLeft();
     }
-    RT_LOG(RT_LOG_DEBUG, "After merging segment seg, ptr=%#" PRIx64 " size=%lu.", seg->basePtr, seg->size);
+    RT_LOG(RT_LOG_DEBUG, "After merging segment seg, ptr=%#" PRIx64 " size=%lu.", seg->basePtr, seg->segsize);
     seg->state = SegmentState::FREE;
     (void)freeSegs_.insert(seg);
 }
 
-void SegmentManager::TrimCachedSegs(const uint64_t minBytesToKeep)
+rtError_t SegmentManager::TrimCachedSegs(const uint64_t minBytesToKeep)
 {
     RT_LOG(RT_LOG_DEBUG, "Trim reserved size from %lu to %lu.", reserveSize_, minBytesToKeep);
     auto it = cachedSegs_.begin();
     while ((it != cachedSegs_.end()) && (reserveSize_ > minBytesToKeep)) {
         Segment* seg = *it;
-        RT_LOG(RT_LOG_DEBUG, "Trim cached segment basePtr=%#" PRIx64 " size=%lu.", seg->basePtr, seg->size);
-        if (seg->size > reserveSize_ - minBytesToKeep) {
+        RT_LOG(RT_LOG_DEBUG, "Trim cached segment basePtr=%#" PRIx64 " size=%lu.", seg->basePtr, seg->segsize);
+        if (seg->segsize > reserveSize_ - minBytesToKeep) {
             RT_LOG(
                 RT_LOG_DEBUG, "Split last segment with size=%lu for exact trimming, reserved size=%lu, size=%lu.",
-                seg->size, reserveSize_, minBytesToKeep);
+                seg->segsize, reserveSize_, minBytesToKeep);
             (void)cachedSegs_.erase(seg);
             uint64_t leftSize = reserveSize_ - minBytesToKeep;
             Segment* left = seg->SplitLeft(leftSize);
             (void)cachedSegs_.insert(seg);
+            COND_RETURN_AND_MSG_OUTER(
+                left == nullptr, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013, std::to_string(sizeof(Segment)).c_str(),
+                "new");
             reserveSize_ -= leftSize;
             MergeIntoFreeSegs(left);
             break;
         } else {
             it = cachedSegs_.erase(it);
-            reserveSize_ -= seg->size;
+            reserveSize_ -= seg->segsize;
             MergeIntoFreeSegs(seg);
         }
     }
+    return RT_ERROR_NONE;
 }
 
 void SegmentManager::SetInitialSegment(Segment* seg)
@@ -412,7 +437,7 @@ void SegmentManager::SetInitialSegment(Segment* seg)
     COND_RETURN_VOID(seg == nullptr, "SetInitialSegment: seg is null.");
     tail_ = seg;
     base_ = seg->basePtr;
-    size_ = seg->size;
+    size_ = seg->segsize;
     seg->state = SegmentState::FREE;
     (void)freeSegs_.insert(seg);
 }
@@ -431,7 +456,8 @@ rtError_t SegmentManager::TrimTo(const uint64_t minBytesToKeep)
         minBytesToKeep < busySize_, RT_ERROR_POOL_OP_INVALID,
         "Trim size is smaller than busy size, busy size=%lu, trim to size=%lu.", busySize_, minBytesToKeep);
 
-    TrimCachedSegs(minBytesToKeep);
+    const rtError_t error = TrimCachedSegs(minBytesToKeep);
+    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "TrimCachedSegs failed, ret=%d.", error);
     return RT_ERROR_NONE;
 }
 

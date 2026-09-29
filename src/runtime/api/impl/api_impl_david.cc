@@ -28,6 +28,7 @@
 #include "notify_c.hpp"
 #include "count_notify.hpp"
 #include "event_david.hpp"
+#include "event_state_callback_manager.hpp"
 #include "model_c.hpp"
 #include "cond_c.hpp"
 #include "cond_enum_desc.hpp"
@@ -481,6 +482,7 @@ rtError_t ApiImplDavid::EventCreateEx(Event** const evt, const uint64_t flag)
 
 rtError_t ApiImplDavid::EventDestroy(Event* evt)
 {
+    EventStateCallbackManager::Instance().Notify(nullptr, evt, EventStatePeriod::EVENT_STATE_PERIOD_DESTROY);
     ResetEmbeddedInnerHandle<Event>(evt);
     if (evt->GetEventFlag() == RT_EVENT_IPC) {
         IpcEvent* eventIpc = dynamic_cast<IpcEvent*>(evt);

@@ -320,12 +320,6 @@ TEST_F(ApiTestSoma950, rt_async_alloc_and_sync_free)
     ret = rtMemPoolMallocAsync(&ptr, size, memPoolId, streamId);
     ASSERT_EQ(ret, RT_ERROR_NONE);
 
-    uint64_t expectSize = size;
-    MOCKER_CPP(&halMemPoolTrim)
-        .stubs()
-        .with(mockcpp::any(), outBoundP(&expectSize, sizeof(expectSize)), mockcpp::any(), mockcpp::any())
-        .will(returnValue(DRV_ERROR_NONE));
-
     rtStreamSynchronize(streamId);
 
     MOCKER_CPP(&halMemFree).stubs().will(returnValue(DRV_ERROR_NONE)).then(invoke(halMemFreeNormalStub));

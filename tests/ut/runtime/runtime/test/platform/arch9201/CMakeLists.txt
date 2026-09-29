@@ -12,6 +12,7 @@ add_executable(runtime_utest_arch9201
     ${runtimeut_david_src_list}
     ${TOP_DIR}/src/runtime/driver/npu_driver.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_standard_soc.cc
+    ${TOP_DIR}/src/runtime/driver/npu_driver_soma.cc
     stub/hal_stub.cc
     main.cc
     rt_utest_arch9201_error_proc.cc

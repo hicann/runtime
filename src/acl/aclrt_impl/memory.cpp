@@ -2254,9 +2254,7 @@ aclError aclrtMemPoolMallocAsyncImpl(void** ptr, size_t size, aclrtMemPool memPo
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(ptr);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(memPool);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(stream);
-    if (size == 0) {
-        return ACL_SUCCESS;
-    }
+    ACL_REQUIRES_POSITIVE_REPORT(size);
 
     ACL_REQUIRES_RTS_OK(rtMemPoolMallocAsync(ptr, size, memPool, stream));
 
