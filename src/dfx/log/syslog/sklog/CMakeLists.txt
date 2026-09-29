@@ -37,8 +37,7 @@ set(sklogdHeaderDir
 if (PRODUCT)
 if (${PRODUCT} STREQUAL "ascend310p" OR (${PRODUCT} STREQUAL "ascend310B") OR (${PRODUCT} STREQUAL "ascend310Besl") OR (${PRODUCT} STREQUAL "ascend310Brc") OR (${PRODUCT} STREQUAL "helper310p") OR (${PRODUCT} STREQUAL "ascend310Brcesl") OR ${PRODUCT} STREQUAL "ascend910" OR ${PRODUCT} STREQUAL "ascend910B")
     list(APPEND sklogdHeaderDir
-        ${IAM_HEADER_DIR}/include
-        ${MDC_LINUX_SDK_DIR}/include)
+        ${IAM_HEADER_DIR}/include)
 endif ()
 endif ()
 

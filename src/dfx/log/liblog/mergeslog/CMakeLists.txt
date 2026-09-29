@@ -51,14 +51,7 @@ target_link_options(ascendlogcollector PRIVATE
 target_link_libraries(ascendlogcollector PRIVATE
     $<BUILD_INTERFACE:intf_pub>
     $<BUILD_INTERFACE:slog_headers>
-    $<$<STREQUAL:${PRODUCT},as31xm1>:iam>
-    $<$<STREQUAL:${PRODUCT},mc32dm11a>:iam>
-    $<$<STREQUAL:${PRODUCT},mc32dm11aesl>:iam>
-    $<$<STREQUAL:${PRODUCT},ascend610>:iam>
-    $<$<STREQUAL:${PRODUCT},ascend610Lite>:iam>
-    $<$<STREQUAL:${PRODUCT},ascend610Liteesl>:iam>
-    $<$<STREQUAL:${PRODUCT},mc62cm12a>:iam>
-    $<$<STREQUAL:${PRODUCT},mc62cm12aesl>:iam>
+    $<$<BOOL:${MODEXT_LOG_BUILD}>:iam>
     dl
     rt
     c_sec

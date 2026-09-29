@@ -12,23 +12,18 @@ project(toolchain_syslog)
 
 get_filename_component(TOOLAHCIN_LOG_DIR "${CMAKE_CURRENT_SOURCE_DIR}/.." ABSOLUTE)
 
+# Default to the slog configuration directory in the Runtime source tree.
+# modext may override SLOG_ETC_DIR with its own configuration directory.
+if(NOT DEFINED SLOG_ETC_DIR)
+    set(SLOG_ETC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/slog/etc")
+endif ()
+
 # Core subdirectories
 add_subdirectory(slog)
 add_subdirectory(sklog)
 add_subdirectory(log_daemon)
 
-### INTERNAL START ###
-# MDC Ascend series product support
-if (PRODUCT)
-if ((${PRODUCT} STREQUAL "ascend610") OR 
-    (${PRODUCT} STREQUAL "ascend610Lite") OR 
-    (${PRODUCT} STREQUAL "ascend610Liteesl") OR 
-    (${PRODUCT} STREQUAL "as31xm1") OR 
-    (${PRODUCT} STREQUAL "mc32dm11a") OR 
-    (${PRODUCT} STREQUAL "mc32dm11aesl") OR 
-    (${PRODUCT} STREQUAL "mc62cm12a") OR 
-    (${PRODUCT} STREQUAL "mc62cm12aesl"))
+# MODEXT_LOG_BUILD 由 modext CMakeLists 设置，标识当前为模块扩展构建上下文。
+if (MODEXT_LOG_BUILD)
     add_subdirectory(log_proxy)
 endif ()
-endif ()
-### INTERNAL END ###

@@ -104,8 +104,8 @@
 
 #ifndef LOG_FILE_PATH
 #if (OS_TYPE_DEF == LINUX)
-#ifdef IAM
-#define LOG_FILE_PATH "/home/mdc/var/log"
+#ifdef LOG_FILE_DIR_PATH
+#define LOG_FILE_PATH LOG_FILE_DIR_PATH
 #else
 #define LOG_FILE_PATH "/var/log/npu/slog"
 #endif

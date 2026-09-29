@@ -30,18 +30,8 @@ set(LOG_COMMON_COMPILE_OPTIONS
 
 add_subdirectory(slog)
 
-### INTERNAL START ###
-# MDC Ascend series product support
-if (PRODUCT)
-if ((${PRODUCT} STREQUAL "ascend610") OR 
-    (${PRODUCT} STREQUAL "ascend610Lite") OR 
-    (${PRODUCT} STREQUAL "ascend610Liteesl") OR 
-    (${PRODUCT} STREQUAL "as31xm1") OR 
-    (${PRODUCT} STREQUAL "mc32dm11a") OR 
-    (${PRODUCT} STREQUAL "mc32dm11aesl") OR 
-    (${PRODUCT} STREQUAL "mc62cm12a") OR 
-    (${PRODUCT} STREQUAL "mc62cm12aesl"))
+# MODEXT_LOG_BUILD 由 modext CMakeLists 设置，标识当前为模块扩展构建上下文。
+# 仅在 modext 构建时添加 mergeslog （模块扩展专有的日志合并库）。
+if (MODEXT_LOG_BUILD)
     add_subdirectory(mergeslog)
 endif ()
-endif ()
-### INTERNAL END ###

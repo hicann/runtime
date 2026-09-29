@@ -27,22 +27,12 @@ if(${PRODUCT_SIDE} STREQUAL "host")
     set(liblog_type "host")
 endif ()
 
-### INTERNAL START ###
-# Define supported MDC products to identify device_mdc type
-if (PRODUCT)
-if ((${PRODUCT} STREQUAL "ascend610") OR 
-    (${PRODUCT} STREQUAL "ascend610Lite") OR 
-    (${PRODUCT} STREQUAL "ascend610Liteesl") OR 
-    (${PRODUCT} STREQUAL "as31xm1") OR 
-    (${PRODUCT} STREQUAL "mc32dm11a") OR 
-    (${PRODUCT} STREQUAL "mc32dm11aesl") OR 
-    (${PRODUCT} STREQUAL "mc62cm12a") OR
-    (${PRODUCT} STREQUAL "mc62cm12aesl") OR
-    ((${PRODUCT} STREQUAL "pegasus") AND (${PRODUCT_SIDE} STREQUAL "device")))
-    set(liblog_type "device_mdc")
+# MODEXT_LOG_BUILD 由 modext CMakelists 设置，标识当前为模块扩展构建上下文。
+# 仅在 modext 构建时切换为 device_ext 类型（由 modext 的 plog_device 扩展库提供）。
+# npu_runtime 等带 MODULE_EXT=true 但非 modext 构建时，仍使用 device 类型 （由 plog_device 提供 unified_dlog/alog）。
+if (MODEXT_LOG_BUILD)
+    set(liblog_type "device_ext")
 endif ()
-endif ()
-### INTERNAL END ###
 
 # Build configuration based on liblog_type
 if(liblog_type STREQUAL "host")
@@ -51,11 +41,3 @@ if(liblog_type STREQUAL "host")
 elseif(liblog_type STREQUAL "device")
     add_subdirectory(plog_device)
 endif ()
-
-### INTERNAL START ###
-# MDC device build configuration based on liblog_type
-if(liblog_type STREQUAL "device_mdc")
-    add_subdirectory(plog_device_mdc)
-endif ()
-### INTERNAL END ###
-
