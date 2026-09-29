@@ -1942,7 +1942,8 @@ aclError aclrtBinaryUnLoad(aclrtBinHandle binHandle)
 
 ### 约束说明
 
-调用本接口删除算子二进制数据时，需跟[aclrtBinaryLoadFromFile](#aclrtBinaryLoadFromFile)、[aclrtBinaryLoadFromData](#aclrtBinaryLoadFromData)或者[aclrtBinaryLoad](#aclrtBinaryLoad)接口在同一个Context下，这样才能一并删除加载算子二进制文件时拷贝到Device上的算子二进制数据，否则可能会导致Device上的算子二进制数据删除异常。
+- 调用本接口删除算子二进制数据时，需跟[aclrtBinaryLoadFromFile](#aclrtBinaryLoadFromFile)、[aclrtBinaryLoadFromData](#aclrtBinaryLoadFromData)或者[aclrtBinaryLoad](#aclrtBinaryLoad)接口在同一个Context下，这样才能一并删除加载算子二进制文件时拷贝到Device上的算子二进制数据，否则可能会导致Device上的算子二进制数据删除异常。
+- 若频繁执行算子二进制数据的加载、卸载操作，同一进程内PC（Program Counter）虚拟地址可能发生复用并命中缓存，进而引发算子执行异常或精度问题。因此不建议频繁调用该接口，请在算子相关任务全部执行完毕后，再调用本接口卸载算子二进制数据。
 
 <br>
 <br>
