@@ -97,7 +97,7 @@ void ErrorcodeManage::InitRtErrCodeMap()
     rtErrMap_[RT_ERROR_HOST_FUNC_EXE_FAILED] = {ACL_ERROR_RT_INTERNAL_ERROR, "host function execute failed"};
     rtErrMap_[RT_ERROR_DRV_NO_NOTIFY_RESOURCES] = {ACL_ERROR_RT_NO_NOTIFY_RESOURCE, "driver error:no notify resource"};
     rtErrMap_[RT_ERROR_DRV_NO_MODEL_RESOURCES] = {ACL_ERROR_RT_NO_MODEL_RESOURCE, "driver error:no model resource"};
-    rtErrMap_[RT_ERROR_DRV_NOT_SUPPORT] = {ACL_ERROR_RT_FEATURE_NOT_SUPPORT, "driver error:feature not support"};
+    rtErrMap_[RT_ERROR_DRV_NOT_SUPPORT] = {ACL_ERROR_RT_FEATURE_NOT_SUPPORT, "driver error:feature not supported"};
     rtErrMap_[RT_ERROR_DRV_NOT_SUPPORT_UPDATE_OP] = {
         ACL_ERROR_RT_FEATURE_NOT_SUPPORT_UPDATE_OP,
         "driver error:current driver version does not support to update this op, please upgrade the driver"};
