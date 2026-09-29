@@ -12,6 +12,7 @@
 
 #include <cstddef>
 #include <cstring>
+#include <exception>
 #include <limits>
 #include <new>
 #include <unistd.h>
@@ -34,6 +35,11 @@ constexpr uint32_t CALLBACK_CQ_DEPTH = 512U;
 constexpr int32_t REPORT_WAIT_TIMEOUT_MS = 1000;
 constexpr uint8_t CALLBACK_EVENT_RECORD_COMMAND = 15U;
 constexpr char RUN_KERNEL_WITH_BLOCK[] = "RunCpuKernelWithBlock";
+
+enum class CallbackReportType : uint8_t {
+    AICPU = 0U,
+    DATADUMP = 1U,
+};
 
 struct CallbackReport {
     volatile uint16_t phase : 1;
@@ -91,7 +97,7 @@ bool HooksAreValid(const RuntimeThreadAicpuRuntimeHooks& hooks)
            (hooks.releaseGroupId != nullptr) && (hooks.createCompletionEvent != nullptr) &&
            (hooks.destroyCompletionEvent != nullptr) && (hooks.setStreamError != nullptr) &&
            (hooks.monitorThreadEnter != nullptr) && (hooks.monitorThreadExit != nullptr) &&
-           (hooks.isProcessExiting != nullptr);
+           (hooks.isProcessExiting != nullptr) && (hooks.clockGetTimeUs != nullptr);
 }
 
 } // namespace
@@ -151,7 +157,7 @@ void RuntimeThreadAicpuService::ReleaseCallbackChannel()
     callbackCqId_ = 0U;
 }
 
-RuntimeThreadAicpuStatus RuntimeThreadAicpuService::EnsureStarted(const RuntimeThreadAicpuKernelRequest& request)
+RuntimeThreadAicpuStatus RuntimeThreadAicpuService::EnsureStarted(const uint32_t deviceId, const uint32_t tsId)
 {
     if (failed_.load(std::memory_order_acquire)) {
         aicpusd_err("RuntimeThreadAicpu worker is already in failed state.");
@@ -160,11 +166,11 @@ RuntimeThreadAicpuStatus RuntimeThreadAicpuService::EnsureStarted(const RuntimeT
 
     std::lock_guard<std::mutex> lock(startMutex_);
     if (started_) {
-        if ((request.deviceId != deviceId_) || (request.tsId != tsId_)) {
+        if ((deviceId != deviceId_) || (tsId != tsId_)) {
             aicpusd_err(
                 "RuntimeThreadAicpu worker cannot switch device, request_device_id=%u, request_ts_id=%u, "
                 "worker_device_id=%u, worker_ts_id=%u.",
-                request.deviceId, request.tsId, deviceId_, tsId_);
+                deviceId, tsId, deviceId_, tsId_);
             return RuntimeThreadAicpuStatus::RUNTIME_ERROR;
         }
         return RuntimeThreadAicpuStatus::OK;
@@ -173,7 +179,8 @@ RuntimeThreadAicpuStatus RuntimeThreadAicpuService::EnsureStarted(const RuntimeT
         aicpusd_err(
             "RuntimeThreadAicpu runtime hooks are invalid, hooks_size=%u, expected_size=%zu, "
             "reserve_group_valid=%u, release_group_valid=%u, create_event_valid=%u, destroy_event_valid=%u, "
-            "set_stream_error_valid=%u, monitor_enter_valid=%u, monitor_exit_valid=%u, process_exit_valid=%u.",
+            "set_stream_error_valid=%u, monitor_enter_valid=%u, monitor_exit_valid=%u, process_exit_valid=%u, "
+            "clock_valid=%u.",
             hooks_.structSize, sizeof(RuntimeThreadAicpuRuntimeHooks),
             static_cast<uint32_t>(hooks_.reserveGroupId != nullptr),
             static_cast<uint32_t>(hooks_.releaseGroupId != nullptr),
@@ -182,12 +189,13 @@ RuntimeThreadAicpuStatus RuntimeThreadAicpuService::EnsureStarted(const RuntimeT
             static_cast<uint32_t>(hooks_.setStreamError != nullptr),
             static_cast<uint32_t>(hooks_.monitorThreadEnter != nullptr),
             static_cast<uint32_t>(hooks_.monitorThreadExit != nullptr),
-            static_cast<uint32_t>(hooks_.isProcessExiting != nullptr));
+            static_cast<uint32_t>(hooks_.isProcessExiting != nullptr),
+            static_cast<uint32_t>(hooks_.clockGetTimeUs != nullptr));
         return RuntimeThreadAicpuStatus::INVALID_PARAM;
     }
 
-    deviceId_ = request.deviceId;
-    tsId_ = request.tsId;
+    deviceId_ = deviceId;
+    tsId_ = tsId;
     RuntimeThreadAicpuStatus status = hooks_.reserveGroupId(hooks_.runtimeData, &groupId_);
     if (status != RuntimeThreadAicpuStatus::OK) {
         aicpusd_err("Reserve callback group ID failed, status=%u.", static_cast<uint32_t>(status));
@@ -352,6 +360,7 @@ RuntimeThreadAicpuStatus RuntimeThreadAicpuService::CreateKernelContext(
         context->blockDim = request.blockDim;
         context->deviceId = request.deviceId;
         context->streamId = request.streamId;
+        context->streamHandle = request.streamHandle;
         context->opType = (request.opType == nullptr) ? std::string() : std::string(request.opType);
         const RuntimeThreadAicpuStatus nameStatus = ResolveKernelNames(request, *context);
         if (nameStatus != RuntimeThreadAicpuStatus::OK) {
@@ -396,7 +405,7 @@ RuntimeThreadAicpuStatus RuntimeThreadAicpuService::PrepareKernel(
         return RuntimeThreadAicpuStatus::INVALID_PARAM;
     }
 
-    RuntimeThreadAicpuStatus status = EnsureStarted(request);
+    RuntimeThreadAicpuStatus status = EnsureStarted(request.deviceId, request.tsId);
     if (status != RuntimeThreadAicpuStatus::OK) {
         return status;
     }
@@ -433,6 +442,46 @@ RuntimeThreadAicpuStatus RuntimeThreadAicpuService::PrepareKernel(
     return RuntimeThreadAicpuStatus::OK;
 }
 
+RuntimeThreadAicpuStatus RuntimeThreadAicpuService::StartWorker(const RuntimeThreadAicpuStartRequest& request)
+{
+    if (request.structSize < sizeof(RuntimeThreadAicpuStartRequest)) {
+        aicpusd_err(
+            "Start RuntimeThreadAicpu worker failed because request is invalid, request_size=%u, expected_size=%zu.",
+            request.structSize, sizeof(RuntimeThreadAicpuStartRequest));
+        return RuntimeThreadAicpuStatus::INVALID_PARAM;
+    }
+    return EnsureStarted(request.deviceId, request.tsId);
+}
+
+RuntimeThreadAicpuStatus RuntimeThreadAicpuService::LoadDumpInfo(const RuntimeThreadAicpuDumpInfoRequest& request)
+{
+    if ((request.structSize < sizeof(RuntimeThreadAicpuDumpInfoRequest)) || (request.dumpInfo == nullptr) ||
+        (request.length == 0U)) {
+        aicpusd_err(
+            "Load DataDump info failed because request is invalid, request_size=%u, expected_size=%zu, "
+            "dump_info_valid=%u, length=%u.",
+            request.structSize, sizeof(RuntimeThreadAicpuDumpInfoRequest),
+            static_cast<uint32_t>(request.dumpInfo != nullptr), request.length);
+        return RuntimeThreadAicpuStatus::INVALID_PARAM;
+    }
+    RuntimeThreadAicpuStatus status = EnsureStarted(request.deviceId, request.tsId);
+    if (status != RuntimeThreadAicpuStatus::OK) {
+        return status;
+    }
+
+    datadump::ParsedDumpCommand command;
+    std::string errorDetail;
+    status = dataDumpParser_.Parse(request.dumpInfo, request.length, command, errorDetail);
+    if (status != RuntimeThreadAicpuStatus::OK) {
+        aicpusd_err(
+            "Parse DataDump info failed, status=%u, length=%u, reason=%s.", static_cast<uint32_t>(status),
+            request.length, errorDetail.c_str());
+        return status;
+    }
+    return (command.action == datadump::DumpInfoAction::LOAD) ? dataDumpManager_.Load(command.model) :
+                                                                dataDumpManager_.Unload(command.modelId);
+}
+
 void RuntimeThreadAicpuService::ReleasePreparedKernel(const uint64_t taskCookie)
 {
     std::lock_guard<std::mutex> lock(taskMutex_);
@@ -445,17 +494,132 @@ void RuntimeThreadAicpuService::ReleasePreparedKernel(const uint64_t taskCookie)
 void RuntimeThreadAicpuService::StreamDestroyed(void* const streamHandle)
 {
     EventEntry event;
+    bool eventFound = false;
     {
         std::lock_guard<std::mutex> lock(resourceMutex_);
         const auto eventIt = events_.find(streamHandle);
-        if (eventIt == events_.end()) {
-            return;
+        if (eventIt != events_.end()) {
+            event = eventIt->second;
+            events_.erase(eventIt);
+            eventFound = true;
         }
-        event = eventIt->second;
-        events_.erase(eventIt);
     }
-    hooks_.destroyCompletionEvent(hooks_.runtimeData, event.eventHandle);
-    aicpusd_info("Destroy completion event, stream_id=%u, event_id=%u.", event.streamId, event.eventId);
+    if (eventFound) {
+        hooks_.destroyCompletionEvent(hooks_.runtimeData, event.eventHandle);
+        aicpusd_info("Destroy completion event, stream_id=%u, event_id=%u.", event.streamId, event.eventId);
+    }
+
+    std::lock_guard<std::mutex> lock(executionMutex_);
+    for (auto taskIt = executingTasks_.begin(); taskIt != executingTasks_.end();) {
+        if (taskIt->second.streamHandle == streamHandle) {
+            taskIt = executingTasks_.erase(taskIt);
+        } else {
+            ++taskIt;
+        }
+    }
+}
+
+void RuntimeThreadAicpuService::SetExecuteTimeout(const uint64_t timeoutUs)
+{
+    executeTimeoutUs_.store(timeoutUs, std::memory_order_release);
+    aicpusd_info(
+        "Set RuntimeThreadAicpu execute timeout, timeout_us=%llu.", static_cast<unsigned long long>(timeoutUs));
+}
+
+RuntimeThreadAicpuStatus RuntimeThreadAicpuService::BeginExecution(
+    const uint64_t taskCookie, const KernelContext& context)
+{
+    ExecutingTaskInfo taskInfo;
+    taskInfo.taskCookie = taskCookie;
+    taskInfo.startTimeUs = hooks_.clockGetTimeUs(hooks_.runtimeData);
+    taskInfo.deviceId = context.deviceId;
+    taskInfo.tsId = tsId_;
+    taskInfo.streamId = context.streamId;
+    taskInfo.taskId = context.taskId;
+    taskInfo.streamHandle = context.streamHandle;
+    try {
+        const std::lock_guard<std::mutex> lock(executionMutex_);
+        const auto result = executingTasks_.emplace(taskCookie, taskInfo);
+        if (!result.second) {
+            aicpusd_err(
+                "Start AICPU execution monitoring failed because task is duplicated, task_cookie=%llu, "
+                "stream_id=%u, task_id=%u.",
+                static_cast<unsigned long long>(taskCookie), context.streamId, context.taskId);
+            return RuntimeThreadAicpuStatus::INTERNAL_ERROR;
+        }
+    } catch (const std::bad_alloc&) {
+        aicpusd_err(
+            "Start AICPU execution monitoring failed because memory allocation failed, task_cookie=%llu, "
+            "stream_id=%u, task_id=%u.",
+            static_cast<unsigned long long>(taskCookie), context.streamId, context.taskId);
+        return RuntimeThreadAicpuStatus::NO_MEMORY;
+    } catch (const std::exception& exception) {
+        aicpusd_err(
+            "Start AICPU execution monitoring failed because a standard exception was thrown, reason=%s, "
+            "task_cookie=%llu, stream_id=%u, task_id=%u.",
+            exception.what(), static_cast<unsigned long long>(taskCookie), context.streamId, context.taskId);
+        return RuntimeThreadAicpuStatus::INTERNAL_ERROR;
+    } catch (...) {
+        aicpusd_err(
+            "Start AICPU execution monitoring failed because an unknown exception was thrown, task_cookie=%llu, "
+            "stream_id=%u, task_id=%u.",
+            static_cast<unsigned long long>(taskCookie), context.streamId, context.taskId);
+        return RuntimeThreadAicpuStatus::INTERNAL_ERROR;
+    }
+    return RuntimeThreadAicpuStatus::OK;
+}
+
+void RuntimeThreadAicpuService::EndExecution(const uint64_t taskCookie)
+{
+    const std::lock_guard<std::mutex> lock(executionMutex_);
+    (void)executingTasks_.erase(taskCookie);
+}
+
+void RuntimeThreadAicpuService::MonitorExecutionTimeout()
+{
+    const uint64_t timeoutUs = executeTimeoutUs_.load(std::memory_order_acquire);
+    if (timeoutUs == std::numeric_limits<uint64_t>::max()) {
+        return;
+    }
+
+    std::unique_lock<std::mutex> lock(executionMutex_);
+    if (executingTasks_.empty()) {
+        return;
+    }
+
+    const uint64_t nowUs = hooks_.clockGetTimeUs(hooks_.runtimeData);
+    const size_t taskCount = executingTasks_.size();
+    std::vector<ExecutingTaskInfo> timeoutTasks;
+    try {
+        timeoutTasks.reserve(taskCount);
+    } catch (const std::bad_alloc&) {
+        aicpusd_err(
+            "Collect RuntimeThreadAicpu timeout tasks failed because memory allocation failed, task_count=%zu.",
+            taskCount);
+        return;
+    }
+    for (auto& taskEntry : executingTasks_) {
+        ExecutingTaskInfo& taskInfo = taskEntry.second;
+        if (taskInfo.timeoutReported || (nowUs < taskInfo.startTimeUs) ||
+            ((nowUs - taskInfo.startTimeUs) < timeoutUs)) {
+            continue;
+        }
+        timeoutTasks.emplace_back(taskInfo);
+        taskInfo.timeoutReported = true;
+    }
+    lock.unlock();
+
+    for (const ExecutingTaskInfo& taskInfo : timeoutTasks) {
+        aicpusd_err(
+            "RuntimeThreadAicpu operator timed out, task_cookie=%llu, device_id=%u, ts_id=%u, stream_id=%u, "
+            "task_id=%u, elapsed_us=%llu, timeout_us=%llu.",
+            static_cast<unsigned long long>(taskInfo.taskCookie), taskInfo.deviceId, taskInfo.tsId, taskInfo.streamId,
+            taskInfo.taskId, static_cast<unsigned long long>(nowUs - taskInfo.startTimeUs),
+            static_cast<unsigned long long>(timeoutUs));
+        hooks_.setStreamError(
+            hooks_.runtimeData, taskInfo.deviceId, taskInfo.tsId, taskInfo.streamId, taskInfo.streamHandle,
+            RuntimeThreadAicpuStreamErrorType::EXECUTION_TIMEOUT, 0U);
+    }
 }
 
 bool RuntimeThreadAicpuService::SetReportedTaskId(const uint64_t taskCookie, const uint32_t taskId)
@@ -494,6 +658,12 @@ uint32_t RuntimeThreadAicpuService::ExecutePreparedKernel(const uint64_t taskCoo
         context = std::move(contextIt->second);
         kernelContexts_.erase(contextIt);
     }
+
+    const RuntimeThreadAicpuStatus status = BeginExecution(taskCookie, *context);
+    if (status != RuntimeThreadAicpuStatus::OK) {
+        return static_cast<uint32_t>(status);
+    }
+    const ExecutionStateGuard executionStateGuard(*this, taskCookie);
     return ExecuteKernel(*context);
 }
 
@@ -548,7 +718,7 @@ uint32_t RuntimeThreadAicpuService::ExecuteKernel(KernelContext& context)
     return 0U;
 }
 
-uint32_t RuntimeThreadAicpuService::ProcessOneReport(const void* const reportAddress)
+uint32_t RuntimeThreadAicpuService::ProcessAicpuReport(const void* const reportAddress)
 {
     const auto* const report = static_cast<const CallbackReport*>(reportAddress);
     const uint64_t expectedFunction = PtrToValue(
@@ -571,16 +741,32 @@ uint32_t RuntimeThreadAicpuService::ProcessOneReport(const void* const reportAdd
     return execute(ValueToPtr(report->fnData));
 }
 
+uint32_t RuntimeThreadAicpuService::ProcessDumpReport(const void* const reportAddress)
+{
+    const auto* const report = static_cast<const CallbackReport*>(reportAddress);
+    const datadump::TaskKey key = {report->streamId, report->taskId};
+    const datadump::ConstOpDumpInfoPtr op = dataDumpManager_.SearchOp(key);
+    if (op == nullptr) {
+        aicpusd_err(
+            "Cannot find DataDump op for report, stream_id=%u, task_id=%u.", static_cast<uint32_t>(report->streamId),
+            static_cast<uint32_t>(report->taskId));
+        return static_cast<uint32_t>(RuntimeThreadAicpuStatus::DATADUMP_OP_NOT_FOUND);
+    }
+    return static_cast<uint32_t>(dataDumpWriter_.DumpOp(*op));
+}
+
 RuntimeThreadAicpuStatus RuntimeThreadAicpuService::FinishReport(
-    const void* const reportAddress, const uint32_t executeResult)
+    const void* const reportAddress, const uint32_t executeResult, const RuntimeThreadAicpuSqeSubtype subtype)
 {
     const auto* const report = static_cast<const CallbackReport*>(reportAddress);
     if (executeResult != 0U) {
         aicpusd_err(
-            "AICPU operator report execution failed, stream_id=%u, task_id=%u, execute_result=%#x.",
-            static_cast<uint32_t>(report->streamId), static_cast<uint32_t>(report->taskId), executeResult);
+            "Callback report processing failed, stream_id=%u, task_id=%u, sqe_subtype=%u, execute_result=%#x.",
+            static_cast<uint32_t>(report->streamId), static_cast<uint32_t>(report->taskId),
+            static_cast<uint32_t>(subtype), executeResult);
         hooks_.setStreamError(
-            hooks_.runtimeData, deviceId_, tsId_, static_cast<uint32_t>(report->streamId), executeResult);
+            hooks_.runtimeData, deviceId_, tsId_, static_cast<uint32_t>(report->streamId), nullptr,
+            RuntimeThreadAicpuStreamErrorType::EXECUTION_FAILED, executeResult);
     }
 
     halSqMemGetInput getInput = {};
@@ -609,11 +795,11 @@ RuntimeThreadAicpuStatus RuntimeThreadAicpuService::FinishReport(
     command->recordId = report->eventId;
     command->taskId = report->taskId;
     command->reserved = static_cast<uint16_t>(groupId_);
-    const uint32_t sqeSubtype = static_cast<uint32_t>(RuntimeThreadAicpuSqeSubtype::AICPU);
+    const uint32_t sqeSubtype = static_cast<uint32_t>(subtype);
     command->reserved1[0] = sqeSubtype;
     command->reserved1[1] = executeResult;
     aicpusd_debug(
-        "Construct AICPU finish command, stream_id=%u, task_id=%u, event_id=%u, group_id=%u, sqe_subtype=%u, "
+        "Construct callback finish command, stream_id=%u, task_id=%u, event_id=%u, group_id=%u, sqe_subtype=%u, "
         "execute_result=%#x.",
         static_cast<uint32_t>(report->streamId), static_cast<uint32_t>(report->taskId),
         static_cast<uint32_t>(report->eventId), groupId_, sqeSubtype, executeResult);
@@ -709,13 +895,28 @@ bool RuntimeThreadAicpuService::ProcessReports()
     bool success = true;
     for (uint32_t index = 0U; index < getOutput.count; ++index) {
         aicpusd_info(
-            "AICPU report[%u], sq_id=%u, stream_id=%u, task_id=%u, event_id=%u, is_block=%u.", index,
+            "Callback report[%u], sq_id=%u, stream_id=%u, task_id=%u, event_id=%u, is_block=%u, report_type=%u.", index,
             static_cast<uint32_t>(reports[index].sqId), static_cast<uint32_t>(reports[index].streamId),
             static_cast<uint32_t>(reports[index].taskId), static_cast<uint32_t>(reports[index].eventId),
-            static_cast<uint32_t>(reports[index].isBlock));
-        const uint32_t executeResult = ProcessOneReport(&reports[index]);
-        if (FinishReport(&reports[index], executeResult) != RuntimeThreadAicpuStatus::OK) {
-            success = false;
+            static_cast<uint32_t>(reports[index].isBlock), static_cast<uint32_t>(reports[index].reserved));
+        const CallbackReportType reportType = static_cast<CallbackReportType>(reports[index].reserved);
+        if (reportType == CallbackReportType::AICPU) {
+            const uint32_t executeResult = ProcessAicpuReport(&reports[index]);
+            if (FinishReport(&reports[index], executeResult, RuntimeThreadAicpuSqeSubtype::AICPU) !=
+                RuntimeThreadAicpuStatus::OK) {
+                success = false;
+            }
+        } else if (reportType == CallbackReportType::DATADUMP) {
+            const uint32_t executeResult = ProcessDumpReport(&reports[index]);
+            if (FinishReport(&reports[index], executeResult, RuntimeThreadAicpuSqeSubtype::DATADUMP) !=
+                RuntimeThreadAicpuStatus::OK) {
+                success = false;
+            }
+        } else {
+            aicpusd_warn(
+                "Unknown callback report type, stream_id=%u, task_id=%u, report_type=%u.",
+                static_cast<uint32_t>(reports[index].streamId), static_cast<uint32_t>(reports[index].taskId),
+                static_cast<uint32_t>(reports[index].reserved));
         }
 
         halReportReleaseInfo releaseInfo = {};

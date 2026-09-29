@@ -8,7 +8,11 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "stars_engine.hpp"
+#include <algorithm>
+#include <memory>
+#include <mutex>
 #include <thread>
+#include <vector>
 #include "recycle_thread_utils.hpp"
 #include "securec.h"
 #include "context.hpp"
@@ -42,10 +46,45 @@ namespace {
 constexpr uint16_t TASK_RECLAIM_MAX_NUM = 64U;       // Max reclaim num per query.
 constexpr uint16_t TASK_QUERY_INTERVAL_NUM = 64U;    // Shared memory query interval.
 constexpr uint16_t TASK_WAIT_EXECUTE_MAX_NUM = 512U; // Max number of tasks waiting to be executed on device.
+
+std::mutex g_starsMonitorTaskMutex;
+std::vector<cce::runtime::StarsMonitorTask> g_starsMonitorTasks;
 } // namespace
 
 namespace cce {
 namespace runtime {
+rtError_t RegisterStarsMonitorTask(const StarsMonitorTask task)
+{
+    COND_RETURN_ERROR(task == nullptr, RT_ERROR_INVALID_VALUE, "Stars monitor task is null.");
+    const std::lock_guard<std::mutex> lock(g_starsMonitorTaskMutex);
+    const auto taskIt = std::find(g_starsMonitorTasks.cbegin(), g_starsMonitorTasks.cend(), task);
+    if (taskIt != g_starsMonitorTasks.cend()) {
+        const size_t taskIndex = static_cast<size_t>(taskIt - g_starsMonitorTasks.cbegin());
+        RT_LOG(RT_LOG_DEBUG, "Stars monitor task is already registered, index=%zu.", taskIndex);
+        return RT_ERROR_NONE;
+    }
+
+    g_starsMonitorTasks.emplace_back(task);
+    RT_LOG(RT_LOG_DEBUG, "Register Stars monitor task, index=%zu.", g_starsMonitorTasks.size() - 1U);
+    return RT_ERROR_NONE;
+}
+
+rtError_t UnregisterStarsMonitorTask(const StarsMonitorTask task)
+{
+    COND_RETURN_ERROR(task == nullptr, RT_ERROR_INVALID_VALUE, "Stars monitor task is null.");
+    const std::lock_guard<std::mutex> lock(g_starsMonitorTaskMutex);
+    const auto taskIt = std::find(g_starsMonitorTasks.cbegin(), g_starsMonitorTasks.cend(), task);
+    if (taskIt == g_starsMonitorTasks.end()) {
+        RT_LOG(RT_LOG_DEBUG, "Stars monitor task is not registered.");
+        return RT_ERROR_NONE;
+    }
+
+    const size_t taskIndex = static_cast<size_t>(taskIt - g_starsMonitorTasks.cbegin());
+    g_starsMonitorTasks.erase(taskIt);
+    RT_LOG(RT_LOG_DEBUG, "Unregister Stars monitor task, index=%zu.", taskIndex);
+    return RT_ERROR_NONE;
+}
+
 StarsEngine::StarsEngine(Device* const dev, Thread* const monitor, Thread* const recycle)
     : Engine(dev), monitorThread_(monitor), recycleThread_(recycle)
 {
@@ -1641,6 +1680,19 @@ void StarsEngine::MonitorEndGraphNotify(Device* const dev) const
     rawDev->PollEndGraphNotifyInfo();
 }
 
+void StarsEngine::RunRegisteredMonitorTasks(Device* const dev) const
+{
+    const std::lock_guard<std::mutex> lock(g_starsMonitorTaskMutex);
+    for (size_t taskIndex = 0U; taskIndex < g_starsMonitorTasks.size(); ++taskIndex) {
+        const StarsMonitorTask task = g_starsMonitorTasks[taskIndex];
+        try {
+            task(dev);
+        } catch (...) {
+            RT_LOG(RT_LOG_ERROR, "Stars monitor task threw an exception, index=%zu.", taskIndex);
+        }
+    }
+}
+
 void StarsEngine::MonitoringRun()
 {
     Device* const dev = GetDevice();
@@ -1669,6 +1721,7 @@ void StarsEngine::MonitoringRun()
         if (GetDevRunningState() != static_cast<uint32_t>(DEV_RUNNING_DOWN)) {
             (void)MonitorForWatchDog(dev);
             MonitorEndGraphNotify(dev);
+            RunRegisteredMonitorTasks(dev);
         }
 
         // sleep 1s

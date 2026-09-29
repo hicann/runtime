@@ -10,9 +10,11 @@
 
 #include "runtime_thread_aicpu.hpp"
 
+#include <atomic>
 #include <cstddef>
 #include <dlfcn.h>
 #include <functional>
+#include <memory>
 #include <mutex>
 #include <new>
 #include <string>
@@ -22,6 +24,7 @@
 #include "api.hpp"
 #include "davinci_kernel_task.h"
 #include "device.hpp"
+#include "dfx_api.hpp"
 #include "event.hpp"
 #include "inner_thread_local.hpp"
 #include "kernel.hpp"
@@ -35,6 +38,7 @@
 #include "subscribe.hpp"
 #include "task.hpp"
 #include "task_info.hpp"
+#include "task_scheduler_error.h"
 
 namespace cce {
 namespace runtime {
@@ -89,9 +93,14 @@ namespace {
 constexpr char PLUGIN_SO_NAME[] = "libruntime_thread_aicpu.so";
 constexpr char PLUGIN_QUERY_SYMBOL[] = "RuntimeThreadAicpuGetPluginApi";
 constexpr char STREAM_OBSERVER_NAME[] = "Inner#RuntimeThreadAicpu";
+std::mutex g_streamErrorMutex;
+std::atomic<const RuntimeThreadAicpuPluginApi*> g_monitorPluginApi{nullptr};
 static_assert(
     static_cast<uint32_t>(RuntimeThreadAicpuSqeSubtype::AICPU) == static_cast<uint32_t>(RT_SQE_SUBTYPE_AICPU),
     "RuntimeThreadAicpu SQE subtype does not match the runtime protocol");
+static_assert(
+    static_cast<uint32_t>(RuntimeThreadAicpuSqeSubtype::DATADUMP) == static_cast<uint32_t>(RT_SQE_SUBTYPE_DATADUMP),
+    "RuntimeThreadAicpu DataDump SQE subtype does not match the runtime protocol");
 
 RuntimeThreadAicpuStatus ToPluginStatus(const rtError_t error)
 {
@@ -116,6 +125,7 @@ rtError_t ToRuntimeStatus(const RuntimeThreadAicpuStatus status)
         case RuntimeThreadAicpuStatus::OK:
             return RT_ERROR_NONE;
         case RuntimeThreadAicpuStatus::INVALID_PARAM:
+        case RuntimeThreadAicpuStatus::DATADUMP_PARSE_FAILED:
             return RT_ERROR_INVALID_VALUE;
         case RuntimeThreadAicpuStatus::NO_MEMORY:
             return RT_ERROR_MEMORY_ALLOCATION;
@@ -209,34 +219,97 @@ void DestroyCompletionEvent(void* const runtimeData, void* const eventHandle)
 
 void SetStreamError(
     void* const runtimeData, const uint32_t deviceId, const uint32_t tsId, const uint32_t streamId,
-    const uint32_t executeResult)
+    void* const streamHandle, const RuntimeThreadAicpuStreamErrorType errorType, const uint32_t errorDetail)
 {
     UNUSED(runtimeData);
+    const bool isTimeout = errorType == RuntimeThreadAicpuStreamErrorType::EXECUTION_TIMEOUT;
+    if ((errorType != RuntimeThreadAicpuStreamErrorType::EXECUTION_FAILED) && (!isTimeout)) {
+        RT_LOG(
+            RT_LOG_ERROR, "Set RuntimeThreadAicpu stream error failed because error type is invalid, error_type=%u.",
+            static_cast<uint32_t>(errorType));
+        return;
+    }
+    if (isTimeout && (streamHandle == nullptr)) {
+        RT_LOG(RT_LOG_ERROR, "Set RuntimeThreadAicpu timeout error failed because stream handle is null.");
+        return;
+    }
+
     Runtime* const runtime = Runtime::Instance();
     Device* const device = (runtime == nullptr) ? nullptr : runtime->GetDevice(deviceId, tsId, false);
     StreamSqCqManage* const streamManage = (device == nullptr) ? nullptr : device->GetStreamSqCqManage();
     if (streamManage == nullptr) {
         RT_LOG(
-            RT_LOG_ERROR, "Set RuntimeThreadAicpu stream error failed, device_id=%u, ts_id=%u, stream_id=%u.", deviceId,
-            tsId, streamId);
+            RT_LOG_ERROR,
+            "Set RuntimeThreadAicpu stream error failed, device_id=%u, ts_id=%u, stream_id=%u, error_type=%u.",
+            deviceId, tsId, streamId, static_cast<uint32_t>(errorType));
         return;
     }
-    Stream* reportStream = nullptr;
-    const rtError_t error = streamManage->GetStreamById(streamId, &reportStream);
-    Stream* const errorStream =
-        ((error == RT_ERROR_NONE) && (reportStream != nullptr)) ? GetReportStream(reportStream) : nullptr;
+
+    std::shared_ptr<Stream> reportStream;
+    const rtError_t error = streamManage->GetStreamSharedPtrById(streamId, reportStream);
+    if ((error != RT_ERROR_NONE) || (reportStream == nullptr)) {
+        RT_LOG(
+            RT_LOG_ERROR,
+            "Get RuntimeThreadAicpu error stream failed, device_id=%u, ts_id=%u, stream_id=%u, error_type=%u, "
+            "error_detail=%#x, retCode=%#x.",
+            deviceId, tsId, streamId, static_cast<uint32_t>(errorType), errorDetail, static_cast<uint32_t>(error));
+        return;
+    }
+    if ((streamHandle != nullptr) && (reportStream->GetInnerHandle() != streamHandle)) {
+        RT_LOG(
+            RT_LOG_WARNING,
+            "Skip RuntimeThreadAicpu stream error because stream has been reused, device_id=%u, ts_id=%u, "
+            "stream_id=%u, error_type=%u.",
+            deviceId, tsId, streamId, static_cast<uint32_t>(errorType));
+        return;
+    }
+
+    Stream* const errorStream = GetReportStream(reportStream.get());
     if (errorStream == nullptr) {
         RT_LOG(
             RT_LOG_ERROR,
-            "Get RuntimeThreadAicpu error stream failed, device_id=%u, ts_id=%u, stream_id=%u, "
-            "execute_result=%#x.",
-            deviceId, tsId, streamId, executeResult);
+            "Set RuntimeThreadAicpu stream error failed because report stream is null, device_id=%u, ts_id=%u, "
+            "stream_id=%u, error_type=%u.",
+            deviceId, tsId, streamId, static_cast<uint32_t>(errorType));
         return;
     }
-    RT_LOG(
-        RT_LOG_ERROR, "RuntimeThreadAicpu operator failed, stream_id=%u, error_stream_id=%d, execute_result=%#x.",
-        streamId, errorStream->Id_(), executeResult);
-    errorStream->SetErrCode(static_cast<uint32_t>(RT_ERROR_HOST_FUNC_EXE_FAILED));
+
+    const std::lock_guard<std::mutex> lock(g_streamErrorMutex);
+    const uint32_t currentError = errorStream->GetErrCode();
+    if (isTimeout) {
+        if ((currentError != static_cast<uint32_t>(RT_ERROR_NONE)) &&
+            (currentError != static_cast<uint32_t>(RT_ERROR_HOST_FUNC_EXE_FAILED))) {
+            RT_LOG(
+                RT_LOG_WARNING,
+                "Keep existing stream error when RuntimeThreadAicpu operator times out, stream_id=%u, "
+                "error_stream_id=%d, current_error=%#x.",
+                streamId, errorStream->Id_(), currentError);
+            return;
+        }
+        RT_LOG(
+            RT_LOG_ERROR, "Set RuntimeThreadAicpu timeout error, stream_id=%u, error_stream_id=%d.", streamId,
+            errorStream->Id_());
+        errorStream->SetErrCode(static_cast<uint32_t>(TS_ERROR_AICPU_TIMEOUT));
+    } else {
+        RT_LOG(
+            RT_LOG_ERROR, "RuntimeThreadAicpu operator failed, stream_id=%u, error_stream_id=%d, execute_result=%#x.",
+            streamId, errorStream->Id_(), errorDetail);
+        if (currentError == static_cast<uint32_t>(TS_ERROR_AICPU_TIMEOUT)) {
+            RT_LOG(
+                RT_LOG_WARNING,
+                "Keep RuntimeThreadAicpu timeout error instead of overwriting it with execution failure, "
+                "stream_id=%u, error_stream_id=%d.",
+                streamId, errorStream->Id_());
+            return;
+        }
+        errorStream->SetErrCode(static_cast<uint32_t>(RT_ERROR_HOST_FUNC_EXE_FAILED));
+    }
+}
+
+uint64_t RuntimeThreadAicpuClockGetTimeUs(void* const runtimeData)
+{
+    UNUSED(runtimeData);
+    return ClockGetTimeUs();
 }
 
 void MonitorThreadEnter(void* const runtimeData)
@@ -276,12 +349,44 @@ RuntimeThreadAicpuRuntimeHooks BuildRuntimeHooks(Api* const api)
         .monitorThreadEnter = &MonitorThreadEnter,
         .monitorThreadExit = &MonitorThreadExit,
         .isProcessExiting = &IsProcessExiting,
+        .clockGetTimeUs = &RuntimeThreadAicpuClockGetTimeUs,
     };
+}
+
+void MonitorRuntimeThreadAicpuExecution(Device* const dev)
+{
+    UNUSED(dev);
+    const RuntimeThreadAicpuPluginApi* const pluginApi = g_monitorPluginApi.load(std::memory_order_acquire);
+    if (pluginApi != nullptr) {
+        pluginApi->monitorExecutionTimeout();
+    }
 }
 
 class RuntimeThreadAicpuAdapter final {
 public:
     explicit RuntimeThreadAicpuAdapter(Api* const api) : api_(api) {}
+
+    ~RuntimeThreadAicpuAdapter() noexcept
+    {
+        if (monitorTaskRegistered_ && (pluginApi_ != nullptr)) {
+            (void)UnregisterStarsMonitorTask(&MonitorRuntimeThreadAicpuExecution);
+            g_monitorPluginApi.store(nullptr, std::memory_order_release);
+        }
+        if (streamObserverRegistered_) {
+            (void)StreamStateCallbackManager::Instance().RegStreamStateCallback(
+                STREAM_OBSERVER_NAME, nullptr, nullptr, cce::runtime::StreamStateCallback::RTS_STREAM_STATE_CALLBACK);
+        }
+    }
+
+    rtError_t SetExecuteTimeout(const uint64_t timeoutUs)
+    {
+        const std::lock_guard<std::mutex> lock(mutex_);
+        executeTimeoutUs_ = timeoutUs;
+        if (pluginApi_ != nullptr) {
+            pluginApi_->setExecuteTimeout(timeoutUs);
+        }
+        return RT_ERROR_NONE;
+    }
 
     rtError_t PrepareKernel(
         const RuntimeThreadAicpuKernelRequest& request, RuntimeThreadAicpuPreparedKernel& preparedKernel)
@@ -292,6 +397,30 @@ public:
             return error;
         }
         return ToRuntimeStatus(pluginApi_->prepareKernel(&request, &preparedKernel));
+    }
+
+    rtError_t LoadDumpInfo(
+        const uint32_t deviceId, const uint32_t tsId, const void* const dumpInfo, const uint32_t length)
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        rtError_t error = EnsurePlugin();
+        if (error != RT_ERROR_NONE) {
+            return error;
+        }
+        const RuntimeThreadAicpuStartRequest startRequest = {
+            .structSize = sizeof(RuntimeThreadAicpuStartRequest), .deviceId = deviceId, .tsId = tsId};
+        error = ToRuntimeStatus(pluginApi_->startWorker(&startRequest));
+        if (error != RT_ERROR_NONE) {
+            return error;
+        }
+        const RuntimeThreadAicpuDumpInfoRequest loadRequest = {
+            .structSize = sizeof(RuntimeThreadAicpuDumpInfoRequest),
+            .deviceId = deviceId,
+            .tsId = tsId,
+            .dumpInfo = dumpInfo,
+            .length = length,
+        };
+        return ToRuntimeStatus(pluginApi_->loadDumpInfo(&loadRequest));
     }
 
     void ReleasePreparedKernel(const uint64_t taskCookie)
@@ -351,25 +480,34 @@ private:
         const RuntimeThreadAicpuRuntimeHooks hooks = BuildRuntimeHooks(api_);
         const RuntimeThreadAicpuStatus status = queryPlugin(&hooks, &pluginApi_);
         const uint32_t apiSize = (pluginApi_ == nullptr) ? 0U : pluginApi_->structSize;
-        const bool prepareValid = (pluginApi_ != nullptr) && (pluginApi_->prepareKernel != nullptr);
-        const bool releaseValid = (pluginApi_ != nullptr) && (pluginApi_->releasePreparedKernel != nullptr);
-        const bool streamDestroyedValid = (pluginApi_ != nullptr) && (pluginApi_->streamDestroyed != nullptr);
-        if ((status != RuntimeThreadAicpuStatus::OK) || (pluginApi_ == nullptr) ||
-            (apiSize < sizeof(RuntimeThreadAicpuPluginApi)) || (!prepareValid) || (!releaseValid) ||
-            (!streamDestroyedValid)) {
+        const bool apiTableValid = (pluginApi_ != nullptr) && (apiSize >= sizeof(RuntimeThreadAicpuPluginApi));
+        const bool prepareValid = apiTableValid && (pluginApi_->prepareKernel != nullptr);
+        const bool releaseValid = apiTableValid && (pluginApi_->releasePreparedKernel != nullptr);
+        const bool streamDestroyedValid = apiTableValid && (pluginApi_->streamDestroyed != nullptr);
+        const bool startWorkerValid = apiTableValid && (pluginApi_->startWorker != nullptr);
+        const bool loadDumpInfoValid = apiTableValid && (pluginApi_->loadDumpInfo != nullptr);
+        const bool setTimeoutValid = apiTableValid && (pluginApi_->setExecuteTimeout != nullptr);
+        const bool monitorValid = apiTableValid && (pluginApi_->monitorExecutionTimeout != nullptr);
+        if ((status != RuntimeThreadAicpuStatus::OK) || (!apiTableValid) || (!prepareValid) || (!releaseValid) ||
+            (!streamDestroyedValid) || (!startWorkerValid) || (!loadDumpInfoValid) || (!setTimeoutValid) ||
+            (!monitorValid)) {
             RT_LOG(
                 RT_LOG_ERROR,
                 "Initialize RuntimeThreadAicpu plugin interface failed, plugin_status=%u, api_valid=%u, "
-                "api_size=%u, expected_size=%zu, prepare_valid=%u, release_valid=%u, stream_destroy_valid=%u.",
+                "api_size=%u, expected_size=%zu, prepare_valid=%u, release_valid=%u, stream_destroy_valid=%u, "
+                "start_worker_valid=%u, load_dump_info_valid=%u, set_timeout_valid=%u, monitor_valid=%u.",
                 static_cast<uint32_t>(status), static_cast<uint32_t>(pluginApi_ != nullptr), apiSize,
                 sizeof(RuntimeThreadAicpuPluginApi), static_cast<uint32_t>(prepareValid),
-                static_cast<uint32_t>(releaseValid), static_cast<uint32_t>(streamDestroyedValid));
+                static_cast<uint32_t>(releaseValid), static_cast<uint32_t>(streamDestroyedValid),
+                static_cast<uint32_t>(startWorkerValid), static_cast<uint32_t>(loadDumpInfoValid),
+                static_cast<uint32_t>(setTimeoutValid), static_cast<uint32_t>(monitorValid));
             unsupported_ = true;
             pluginApi_ = nullptr;
             return RT_ERROR_FEATURE_NOT_SUPPORT;
         }
 
-        const rtError_t error = StreamStateCallbackManager::Instance().RegStreamStateCallback(
+        pluginApi_->setExecuteTimeout(executeTimeoutUs_);
+        rtError_t error = StreamStateCallbackManager::Instance().RegStreamStateCallback(
             STREAM_OBSERVER_NAME, RtPtrToPtr<void*>(&RuntimeThreadAicpuAdapter::StreamStateCallback), this,
             cce::runtime::StreamStateCallback::RTS_STREAM_STATE_CALLBACK);
         if (error != RT_ERROR_NONE) {
@@ -379,13 +517,32 @@ private:
             pluginApi_ = nullptr;
             return error;
         }
+        streamObserverRegistered_ = true;
+
+        g_monitorPluginApi.store(pluginApi_, std::memory_order_release);
+        error = RegisterStarsMonitorTask(&MonitorRuntimeThreadAicpuExecution);
+        if (error != RT_ERROR_NONE) {
+            RT_LOG(
+                RT_LOG_ERROR, "Register RuntimeThreadAicpu monitor task failed, retCode=%#x.",
+                static_cast<uint32_t>(error));
+            (void)StreamStateCallbackManager::Instance().RegStreamStateCallback(
+                STREAM_OBSERVER_NAME, nullptr, nullptr, cce::runtime::StreamStateCallback::RTS_STREAM_STATE_CALLBACK);
+            streamObserverRegistered_ = false;
+            g_monitorPluginApi.store(nullptr, std::memory_order_release);
+            pluginApi_ = nullptr;
+            return error;
+        }
+        monitorTaskRegistered_ = true;
         return RT_ERROR_NONE;
     }
 
     Api* api_ = nullptr;
     std::mutex mutex_;
+    uint64_t executeTimeoutUs_ = RUNTIME_THREAD_AICPU_DEFAULT_EXECUTE_TIMEOUT_US;
     void* libraryHandle_ = nullptr;
     const RuntimeThreadAicpuPluginApi* pluginApi_ = nullptr;
+    bool streamObserverRegistered_ = false;
+    bool monitorTaskRegistered_ = false;
     bool unsupported_ = false;
 };
 
@@ -452,6 +609,15 @@ rtError_t SubmitAicpuTask(
 
 } // namespace
 
+rtError_t SetRuntimeThreadAicpuExecuteTimeout(Api* const api, const uint64_t timeoutUs)
+{
+    if (api == nullptr) {
+        return RT_ERROR_INVALID_VALUE;
+    }
+    RuntimeThreadAicpuAdapter* const adapter = GetAdapter(api);
+    return (adapter == nullptr) ? RT_ERROR_MEMORY_ALLOCATION : adapter->SetExecuteTimeout(timeoutUs);
+}
+
 rtError_t LaunchRuntimeThreadAicpuKernel(
     Api* const api, const Kernel* const kernel, const uint32_t blockDim, const rtCpuKernelArgs_t* const argsInfo,
     Stream* const stream)
@@ -501,6 +667,16 @@ rtError_t LaunchRuntimeThreadAicpuKernel(
     error = event->Reset(stream);
     ERROR_RETURN(error, "Reset RuntimeThreadAicpu event failed, retCode=%#x.", error);
     return RT_ERROR_NONE;
+}
+
+rtError_t LoadRuntimeThreadAicpuDumpInfo(
+    Api* const api, const uint32_t deviceId, const uint32_t tsId, const void* const dumpInfo, const uint32_t length)
+{
+    if ((api == nullptr) || (dumpInfo == nullptr) || (length == 0U)) {
+        return RT_ERROR_INVALID_VALUE;
+    }
+    RuntimeThreadAicpuAdapter* const adapter = GetAdapter(api);
+    return (adapter == nullptr) ? RT_ERROR_MEMORY_ALLOCATION : adapter->LoadDumpInfo(deviceId, tsId, dumpInfo, length);
 }
 
 } // namespace runtime

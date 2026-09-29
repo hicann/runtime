@@ -12,7 +12,11 @@ set(RUNTIME_THREAD_AICPU_SRC_PATH ${AICPU_SCHED_PATH}/runtime_thread_aicpu)
 
 add_executable(runtime_thread_aicpu_utest
     main_ut.cc
+    data_dump_ut.cc
     runtime_thread_aicpu_ut.cc
+    ${RUNTIME_THREAD_AICPU_SRC_PATH}/datadump/data_dump_manager.cc
+    ${RUNTIME_THREAD_AICPU_SRC_PATH}/datadump/data_dump_parser.cc
+    ${RUNTIME_THREAD_AICPU_SRC_PATH}/datadump/data_dump_writer.cc
     ${RUNTIME_THREAD_AICPU_SRC_PATH}/runtime_thread_aicpu_plugin.cc
     ${RUNTIME_THREAD_AICPU_SRC_PATH}/runtime_thread_aicpu_service.cc
     ${RUNTIME_THREAD_AICPU_SRC_PATH}/runtime_thread_aicpu_so_manager.cc

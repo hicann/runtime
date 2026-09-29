@@ -320,11 +320,38 @@ TEST_F(Arch5162TaskTest, ConstructAICoreSqeForDavinciTask)
     TaskInfo taskInfo = {};
     taskInfo.stream = stream;
     taskInfo.u.aicTaskInfo.kernel = nullptr;
+    taskInfo.u.aicTaskInfo.comm.dim = 13U;
     taskInfo.type = TS_TASK_TYPE_KERNEL_AICORE;
     rtStarsSqe_t sqe = {};
     memset_s(&sqe, sizeof(sqe), 0, sizeof(sqe));
     ConstructAICoreSqeForDavinciTask(&taskInfo, &sqe, TaskSqeInfo{0ULL, 0ULL});
     EXPECT_EQ(sqe.aicAivKernelSqe.header.type, TS_TASK_TYPE_KERNEL_AICORE);
+    EXPECT_EQ(sqe.aicAivKernelSqe.header.u.blockDim, 13U);
+    EXPECT_EQ(sqe.aicAivKernelSqe.header.postP, RT_STARS_SQE_INT_DIR_NO);
+    EXPECT_EQ(sqe.aicAivKernelSqe.res7[1U], 0U);
+    delete stream;
+    delete device;
+}
+
+TEST_F(Arch5162TaskTest, ConstructAICoreSqeEnablesDataDumpWithoutChangingBlockDim)
+{
+    MOCKER(GetAicoreKernelCredit).stubs().will(returnValue((uint16_t)0));
+    RawDevice* device = new RawDevice(0);
+    Stream* stream = new Stream(device, 0);
+    ASSERT_NE(stream, nullptr);
+    TaskInfo taskInfo = {};
+    taskInfo.stream = stream;
+    taskInfo.u.aicTaskInfo.kernel = nullptr;
+    taskInfo.u.aicTaskInfo.comm.dim = 17U;
+    taskInfo.u.aicTaskInfo.comm.kernelFlag = RT_KERNEL_DUMPFLAG;
+    taskInfo.type = TS_TASK_TYPE_KERNEL_AICORE;
+    rtStarsSqe_t sqe = {};
+
+    ConstructAICoreSqeForDavinciTask(&taskInfo, &sqe, TaskSqeInfo{0ULL, 0ULL});
+
+    EXPECT_EQ(sqe.aicAivKernelSqe.header.u.blockDim, 17U);
+    EXPECT_EQ(sqe.aicAivKernelSqe.header.postP, RT_STARS_SQE_INT_DIR_TO_TSCPU);
+    EXPECT_EQ(sqe.aicAivKernelSqe.res7[1U] & SQE_BIZ_FLAG_DATADUMP, SQE_BIZ_FLAG_DATADUMP);
     delete stream;
     delete device;
 }

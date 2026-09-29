@@ -12,6 +12,9 @@ set(RUNTIME_THREAD_AICPU_RUNTIME_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../..)
 set(RUNTIME_THREAD_AICPU_CONTEXT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/../aicpu_sharder/aicpu_context.cc)
 
 add_library(runtime_thread_aicpu SHARED
+    datadump/data_dump_manager.cc
+    datadump/data_dump_parser.cc
+    datadump/data_dump_writer.cc
     runtime_thread_aicpu_plugin.cc
     runtime_thread_aicpu_service.cc
     runtime_thread_aicpu_so_manager.cc

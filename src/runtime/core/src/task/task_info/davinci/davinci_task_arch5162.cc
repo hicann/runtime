@@ -8,6 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include <cstddef>
+
 #include "davinci_kernel_task.h"
 #include "stars.hpp"
 #include "stream.hpp"
@@ -26,7 +28,8 @@ namespace cce {
 namespace runtime {
 namespace {
 constexpr uint32_t DRV_CALLBACK_GROUPID = 11U; // Driver-defined callback group ID.
-}
+constexpr size_t DATADUMP_FLAG_RES7_INDEX = 1U;
+} // namespace
 
 #if F_DESC("DavinciKernelTask")
 void ConstructAICoreSqeForDavinciTask(TaskInfo* const taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
@@ -107,6 +110,11 @@ void ConstructAICoreSqeForDavinciTask(TaskInfo* const taskInfo, void* const sqeB
         sqe->TaskParamPtrHigh &= 0x000FFFFFU;
         const uint32_t stackLevel = static_cast<uint32_t>(stackSize / KERNEL_STACK_SIZE_16K - 2U);
         sqe->TaskParamPtrHigh |= stackLevel << 20U;
+    }
+    if ((aicTaskInfo->comm.kernelFlag & RT_KERNEL_DUMPFLAG) != 0U) {
+        sqe->header.postP = RT_STARS_SQE_INT_DIR_TO_TSCPU;
+        // res7[1] starts at byte 52 of the SQE; bit 0 is the DataDump marker reported to TSCPU.
+        sqe->res7[DATADUMP_FLAG_RES7_INDEX] |= SQE_BIZ_FLAG_DATADUMP;
     }
     PrintSqe(command, "AIC or AIV Task");
 }

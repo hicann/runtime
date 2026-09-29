@@ -50,11 +50,52 @@ void StreamDestroyed(void* const streamHandle)
     }
 }
 
+RuntimeThreadAicpuStatus StartWorker(const RuntimeThreadAicpuStartRequest* const request)
+{
+    if ((g_pluginService == nullptr) || (request == nullptr)) {
+        aicpusd_err(
+            "Start RuntimeThreadAicpu worker failed because plugin input is invalid, service_valid=%u, "
+            "request_valid=%u.",
+            static_cast<uint32_t>(g_pluginService != nullptr), static_cast<uint32_t>(request != nullptr));
+        return RuntimeThreadAicpuStatus::INVALID_PARAM;
+    }
+    return g_pluginService->StartWorker(*request);
+}
+
+RuntimeThreadAicpuStatus LoadDumpInfo(const RuntimeThreadAicpuDumpInfoRequest* const request)
+{
+    if ((g_pluginService == nullptr) || (request == nullptr)) {
+        aicpusd_err(
+            "Load DataDump info failed because plugin input is invalid, service_valid=%u, request_valid=%u.",
+            static_cast<uint32_t>(g_pluginService != nullptr), static_cast<uint32_t>(request != nullptr));
+        return RuntimeThreadAicpuStatus::INVALID_PARAM;
+    }
+    return g_pluginService->LoadDumpInfo(*request);
+}
+
+void SetExecuteTimeout(const uint64_t timeoutUs)
+{
+    if (g_pluginService != nullptr) {
+        g_pluginService->SetExecuteTimeout(timeoutUs);
+    }
+}
+
+void MonitorExecutionTimeout()
+{
+    if (g_pluginService != nullptr) {
+        g_pluginService->MonitorExecutionTimeout();
+    }
+}
+
 const RuntimeThreadAicpuPluginApi PLUGIN_API = {
     .structSize = sizeof(RuntimeThreadAicpuPluginApi),
     .prepareKernel = &PrepareKernel,
     .releasePreparedKernel = &ReleasePreparedKernel,
     .streamDestroyed = &StreamDestroyed,
+    .startWorker = &StartWorker,
+    .loadDumpInfo = &LoadDumpInfo,
+    .setExecuteTimeout = &SetExecuteTimeout,
+    .monitorExecutionTimeout = &MonitorExecutionTimeout,
 };
 
 } // namespace

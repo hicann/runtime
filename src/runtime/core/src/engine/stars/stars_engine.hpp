@@ -130,6 +130,7 @@ private:
     static const std::vector<std::string> StarsCqeErrorDesc_;
 
     void MonitoringRun();
+    void RunRegisteredMonitorTasks(Device* dev) const;
     rtError_t CreateRecycleThread(void);
     void RecycleThreadRun(void);
     void DestroyRecycleThread(void);

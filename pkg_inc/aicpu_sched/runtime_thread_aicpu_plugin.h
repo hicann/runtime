@@ -13,6 +13,8 @@
 
 #include <cstdint>
 
+constexpr uint64_t RUNTIME_THREAD_AICPU_DEFAULT_EXECUTE_TIMEOUT_US = 1091000000ULL;
+
 enum class RuntimeThreadAicpuStatus : uint32_t {
     OK = 0U,
     INVALID_PARAM,
@@ -23,10 +25,23 @@ enum class RuntimeThreadAicpuStatus : uint32_t {
     SYMBOL_NOT_FOUND,
     KERNEL_FAILED,
     INTERNAL_ERROR,
+    DATADUMP_PARSE_FAILED,
+    DATADUMP_OP_NOT_FOUND,
+    DATADUMP_ADDRESS_INVALID,
+    DATADUMP_TENSOR_INVALID,
+    DATADUMP_CREATE_DIR_FAILED,
+    DATADUMP_OPEN_FILE_FAILED,
+    DATADUMP_WRITE_FILE_FAILED,
 };
 
 enum class RuntimeThreadAicpuSqeSubtype : uint32_t {
     AICPU = 22U,
+    DATADUMP = 23U,
+};
+
+enum class RuntimeThreadAicpuStreamErrorType : uint32_t {
+    EXECUTION_FAILED = 0U,
+    EXECUTION_TIMEOUT,
 };
 
 struct RuntimeThreadAicpuRuntimeHooks {
@@ -38,10 +53,12 @@ struct RuntimeThreadAicpuRuntimeHooks {
         void* runtimeData, void* streamHandle, void** eventHandle, uint32_t* eventId);
     void (*destroyCompletionEvent)(void* runtimeData, void* eventHandle);
     void (*setStreamError)(
-        void* runtimeData, uint32_t deviceId, uint32_t tsId, uint32_t streamId, uint32_t executeResult);
+        void* runtimeData, uint32_t deviceId, uint32_t tsId, uint32_t streamId, void* streamHandle,
+        RuntimeThreadAicpuStreamErrorType errorType, uint32_t errorDetail);
     void (*monitorThreadEnter)(void* runtimeData);
     void (*monitorThreadExit)(void* runtimeData);
     bool (*isProcessExiting)(void* runtimeData);
+    uint64_t (*clockGetTimeUs)(void* runtimeData);
 };
 
 struct RuntimeThreadAicpuKernelRequest {
@@ -73,12 +90,30 @@ struct RuntimeThreadAicpuPreparedKernel {
     uint64_t fnData;
 };
 
+struct RuntimeThreadAicpuStartRequest {
+    uint32_t structSize;
+    uint32_t deviceId;
+    uint32_t tsId;
+};
+
+struct RuntimeThreadAicpuDumpInfoRequest {
+    uint32_t structSize;
+    uint32_t deviceId;
+    uint32_t tsId;
+    const void* dumpInfo;
+    uint32_t length;
+};
+
 struct RuntimeThreadAicpuPluginApi {
     uint32_t structSize;
     RuntimeThreadAicpuStatus (*prepareKernel)(
         const RuntimeThreadAicpuKernelRequest* request, RuntimeThreadAicpuPreparedKernel* preparedKernel);
     void (*releasePreparedKernel)(uint64_t taskCookie);
     void (*streamDestroyed)(void* streamHandle);
+    RuntimeThreadAicpuStatus (*startWorker)(const RuntimeThreadAicpuStartRequest* request);
+    RuntimeThreadAicpuStatus (*loadDumpInfo)(const RuntimeThreadAicpuDumpInfoRequest* request);
+    void (*setExecuteTimeout)(uint64_t timeoutUs);
+    void (*monitorExecutionTimeout)();
 };
 
 using RuntimeThreadAicpuGetPluginApiFunc = RuntimeThreadAicpuStatus (*)(

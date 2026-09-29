@@ -20,6 +20,9 @@
 #include <vector>
 
 #include "aicpu_sched/runtime_thread_aicpu_plugin.h"
+#include "datadump/data_dump_manager.hpp"
+#include "datadump/data_dump_parser.hpp"
+#include "datadump/data_dump_writer.hpp"
 #include "runtime_thread_aicpu_so_manager.hpp"
 
 namespace cce {
@@ -31,8 +34,12 @@ public:
 
     RuntimeThreadAicpuStatus PrepareKernel(
         const RuntimeThreadAicpuKernelRequest& request, RuntimeThreadAicpuPreparedKernel& preparedKernel);
+    RuntimeThreadAicpuStatus StartWorker(const RuntimeThreadAicpuStartRequest& request);
+    RuntimeThreadAicpuStatus LoadDumpInfo(const RuntimeThreadAicpuDumpInfoRequest& request);
     void ReleasePreparedKernel(const uint64_t taskCookie);
     void StreamDestroyed(void* const streamHandle);
+    void SetExecuteTimeout(const uint64_t timeoutUs);
+    void MonitorExecutionTimeout();
     static uint32_t ExecutePreparedKernelEntry(void* const cookieData);
 
 private:
@@ -46,6 +53,7 @@ private:
         uint32_t deviceId = 0U;
         uint32_t streamId = 0U;
         uint32_t taskId = 0U;
+        void* streamHandle = nullptr;
     };
 
     struct EventEntry {
@@ -54,7 +62,32 @@ private:
         uint32_t streamId = 0U;
     };
 
-    RuntimeThreadAicpuStatus EnsureStarted(const RuntimeThreadAicpuKernelRequest& request);
+    struct ExecutingTaskInfo {
+        uint64_t taskCookie = 0U;
+        uint64_t startTimeUs = 0U;
+        uint32_t deviceId = 0U;
+        uint32_t tsId = 0U;
+        uint32_t streamId = 0U;
+        uint32_t taskId = 0U;
+        void* streamHandle = nullptr;
+        bool timeoutReported = false;
+    };
+
+    class ExecutionStateGuard final {
+    public:
+        ExecutionStateGuard(RuntimeThreadAicpuService& service, const uint64_t taskCookie)
+            : service_(service), taskCookie_(taskCookie)
+        {}
+        ExecutionStateGuard(const ExecutionStateGuard&) = delete;
+        ExecutionStateGuard& operator=(const ExecutionStateGuard&) = delete;
+        ~ExecutionStateGuard() noexcept { service_.EndExecution(taskCookie_); }
+
+    private:
+        RuntimeThreadAicpuService& service_;
+        uint64_t taskCookie_;
+    };
+
+    RuntimeThreadAicpuStatus EnsureStarted(const uint32_t deviceId, const uint32_t tsId);
     RuntimeThreadAicpuStatus AllocateCallbackChannel();
     void ReleaseCallbackChannel();
     RuntimeThreadAicpuStatus GetOrCreateEvent(void* const streamHandle, const uint32_t streamId, EventEntry& event);
@@ -62,17 +95,22 @@ private:
     RuntimeThreadAicpuStatus ResolveKernelNames(
         const RuntimeThreadAicpuKernelRequest& request, KernelContext& context) const;
     bool SetReportedTaskId(const uint64_t taskCookie, const uint32_t taskId);
+    RuntimeThreadAicpuStatus BeginExecution(const uint64_t taskCookie, const KernelContext& context);
+    void EndExecution(const uint64_t taskCookie);
     uint32_t ExecutePreparedKernel(const uint64_t taskCookie);
     uint32_t ExecuteKernel(KernelContext& context);
     void WorkerLoop();
     bool ProcessReports();
-    uint32_t ProcessOneReport(const void* const reportAddress);
-    RuntimeThreadAicpuStatus FinishReport(const void* const reportAddress, const uint32_t executeResult);
+    uint32_t ProcessAicpuReport(const void* const reportAddress);
+    uint32_t ProcessDumpReport(const void* const reportAddress);
+    RuntimeThreadAicpuStatus FinishReport(
+        const void* const reportAddress, const uint32_t executeResult, const RuntimeThreadAicpuSqeSubtype subtype);
 
     RuntimeThreadAicpuRuntimeHooks hooks_;
     std::mutex startMutex_;
     std::mutex resourceMutex_;
     std::mutex taskMutex_;
+    std::mutex executionMutex_;
     std::thread worker_;
     std::atomic<bool> failed_{false};
     std::atomic<uint64_t> nextTaskCookie_{1U};
@@ -84,7 +122,12 @@ private:
     uint32_t callbackCqId_ = 0U;
     std::unordered_map<void*, EventEntry> events_;
     std::unordered_map<uint64_t, std::unique_ptr<KernelContext>> kernelContexts_;
+    std::unordered_map<uint64_t, ExecutingTaskInfo> executingTasks_;
+    std::atomic<uint64_t> executeTimeoutUs_{RUNTIME_THREAD_AICPU_DEFAULT_EXECUTE_TIMEOUT_US};
     SoManager soManager_;
+    datadump::DataDumpParser dataDumpParser_;
+    datadump::DataDumpManager dataDumpManager_;
+    datadump::DataDumpWriter dataDumpWriter_;
 };
 
 void SetRuntimeThreadAicpuService(RuntimeThreadAicpuService* const service);

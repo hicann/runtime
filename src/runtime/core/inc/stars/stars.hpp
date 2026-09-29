@@ -18,6 +18,8 @@
 
 namespace cce {
 namespace runtime {
+class Device;
+
 constexpr uint8_t RT_STARS_AS31XM1X_DEFAULT_KERNEL_CREDIT = 3U;         // The TS reference time is 33.5 ms.
 constexpr float32_t RT_STARS_AS31XM1X_TASK_KERNEL_CREDIT_SCALE = 33.5F; // 2^24 / 500M *1000(ms)
 constexpr uint8_t RT_STARS_FFTSPLUS_SUBTYPE_MIX = 0x1U;
@@ -107,6 +109,12 @@ struct rtStarsCqe_t {
 
 void PrintSqe(const rtStarsSqe_t* const sqe, const char* desc);
 void ConstructPcieDmaSqe(TaskInfo* const taskInfo, rtStarsSqe_t* const command);
+
+using StarsMonitorTask = void (*)(Device* dev);
+
+// Monitor tasks run under the registry lock and must not register or unregister monitor tasks.
+rtError_t RegisterStarsMonitorTask(StarsMonitorTask task);
+rtError_t UnregisterStarsMonitorTask(StarsMonitorTask task);
 
 } // namespace runtime
 } // namespace cce

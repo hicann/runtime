@@ -8,28 +8,27 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef CCE_RUNTIME_THREAD_AICPU_HPP
-#define CCE_RUNTIME_THREAD_AICPU_HPP
+#ifndef RUNTIME_THREAD_AICPU_DATA_DUMP_PARSER_HPP
+#define RUNTIME_THREAD_AICPU_DATA_DUMP_PARSER_HPP
 
-#include "runtime/runtime/kernel.h"
+#include <cstdint>
+#include <string>
+
+#include "aicpu_sched/runtime_thread_aicpu_plugin.h"
+#include "data_dump_types.hpp"
 
 namespace cce {
-namespace runtime {
+namespace runtime_thread_aicpu {
+namespace datadump {
 
-class Api;
-class Kernel;
-class Stream;
+class DataDumpParser final {
+public:
+    RuntimeThreadAicpuStatus Parse(
+        const void* const dumpInfo, const uint32_t length, ParsedDumpCommand& command, std::string& errorDetail) const;
+};
 
-rtError_t SetRuntimeThreadAicpuExecuteTimeout(Api* const api, const uint64_t timeoutUs);
-
-rtError_t LaunchRuntimeThreadAicpuKernel(
-    Api* const api, const Kernel* const kernel, const uint32_t blockDim, const rtCpuKernelArgs_t* const argsInfo,
-    Stream* const stream);
-
-rtError_t LoadRuntimeThreadAicpuDumpInfo(
-    Api* const api, const uint32_t deviceId, const uint32_t tsId, const void* const dumpInfo, const uint32_t length);
-
-} // namespace runtime
+} // namespace datadump
+} // namespace runtime_thread_aicpu
 } // namespace cce
 
 #endif

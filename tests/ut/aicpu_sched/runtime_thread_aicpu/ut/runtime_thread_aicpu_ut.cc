@@ -125,6 +125,7 @@ struct HookState {
     uint32_t createEventCalls = 0U;
     uint32_t destroyEventCalls = 0U;
     uint32_t streamErrorCalls = 0U;
+    uint32_t clockCalls = 0U;
     uint32_t monitorEnterCalls = 0U;
     uint32_t monitorExitCalls = 0U;
     uint32_t releasedGroupId = 0U;
@@ -132,6 +133,9 @@ struct HookState {
     uint32_t streamErrorTsId = 0U;
     uint32_t streamErrorStreamId = 0U;
     uint32_t streamExecuteResult = 0U;
+    void* streamErrorHandle = nullptr;
+    RuntimeThreadAicpuStreamErrorType streamErrorType = RuntimeThreadAicpuStreamErrorType::EXECUTION_FAILED;
+    uint64_t clockUs = 0U;
     void* eventHandle = reinterpret_cast<void*>(0x12340000ULL);
     uint32_t eventId = EVENT_ID;
     void* destroyedEventHandle = nullptr;
@@ -194,15 +198,17 @@ void DestroyCompletionEvent(void* runtimeData, void* eventHandle)
 }
 
 void SetStreamError(
-    void* runtimeData, const uint32_t deviceId, const uint32_t tsId, const uint32_t streamId,
-    const uint32_t executeResult)
+    void* runtimeData, const uint32_t deviceId, const uint32_t tsId, const uint32_t streamId, void* const streamHandle,
+    const RuntimeThreadAicpuStreamErrorType errorType, const uint32_t errorDetail)
 {
     auto* const state = static_cast<HookState*>(runtimeData);
     ++state->streamErrorCalls;
     state->streamErrorDeviceId = deviceId;
     state->streamErrorTsId = tsId;
     state->streamErrorStreamId = streamId;
-    state->streamExecuteResult = executeResult;
+    state->streamErrorHandle = streamHandle;
+    state->streamErrorType = errorType;
+    state->streamExecuteResult = errorDetail;
 }
 
 void MonitorThreadEnter(void* runtimeData) { ++static_cast<HookState*>(runtimeData)->monitorEnterCalls; }
@@ -210,6 +216,13 @@ void MonitorThreadEnter(void* runtimeData) { ++static_cast<HookState*>(runtimeDa
 void MonitorThreadExit(void* runtimeData) { ++static_cast<HookState*>(runtimeData)->monitorExitCalls; }
 
 bool IsProcessExiting(void* runtimeData) { return static_cast<HookState*>(runtimeData)->processExiting.load(); }
+
+uint64_t ClockGetTimeUs(void* runtimeData)
+{
+    auto* const state = static_cast<HookState*>(runtimeData);
+    ++state->clockCalls;
+    return state->clockUs;
+}
 
 RuntimeThreadAicpuRuntimeHooks MakeHooks(HookState& state)
 {
@@ -224,6 +237,7 @@ RuntimeThreadAicpuRuntimeHooks MakeHooks(HookState& state)
         .monitorThreadEnter = &MonitorThreadEnter,
         .monitorThreadExit = &MonitorThreadExit,
         .isProcessExiting = &IsProcessExiting,
+        .clockGetTimeUs = &ClockGetTimeUs,
     };
 }
 
@@ -262,6 +276,7 @@ RuntimeThreadAicpuService::KernelContext MakeContext(
     context.deviceId = DEVICE_ID;
     context.streamId = STREAM_ID;
     context.taskId = 31U;
+    context.streamHandle = reinterpret_cast<void*>(0x56780000ULL);
     return context;
 }
 
@@ -399,17 +414,17 @@ TEST_F(RuntimeThreadAicpuTest, EnsureStartedValidatesHooksAndRollsBackFailures)
     RuntimeThreadAicpuRuntimeHooks invalidHooks = MakeHooks(state);
     invalidHooks.reserveGroupId = nullptr;
     RuntimeThreadAicpuService invalidService(invalidHooks);
-    EXPECT_EQ(invalidService.EnsureStarted(MakeRequest()), RuntimeThreadAicpuStatus::INVALID_PARAM);
+    EXPECT_EQ(invalidService.EnsureStarted(DEVICE_ID, TS_ID), RuntimeThreadAicpuStatus::INVALID_PARAM);
 
     state.reserveResult = RuntimeThreadAicpuStatus::NO_MEMORY;
     RuntimeThreadAicpuService reserveFailure(MakeHooks(state));
-    EXPECT_EQ(reserveFailure.EnsureStarted(MakeRequest()), RuntimeThreadAicpuStatus::NO_MEMORY);
+    EXPECT_EQ(reserveFailure.EnsureStarted(DEVICE_ID, TS_ID), RuntimeThreadAicpuStatus::NO_MEMORY);
     EXPECT_EQ(reserveFailure.deviceId_, 0U);
 
     HookState allocateState;
     g_driver.allocateResult = static_cast<drvError_t>(1);
     RuntimeThreadAicpuService allocateFailure(MakeHooks(allocateState));
-    EXPECT_EQ(allocateFailure.EnsureStarted(MakeRequest()), RuntimeThreadAicpuStatus::RUNTIME_ERROR);
+    EXPECT_EQ(allocateFailure.EnsureStarted(DEVICE_ID, TS_ID), RuntimeThreadAicpuStatus::RUNTIME_ERROR);
     EXPECT_EQ(allocateState.releaseCalls, 1U);
     EXPECT_EQ(allocateFailure.groupId_, 0U);
 }
@@ -420,19 +435,19 @@ TEST_F(RuntimeThreadAicpuTest, EnsureStartedCreatesOneReusableWorker)
     state.processExiting.store(true);
     RuntimeThreadAicpuService service(MakeHooks(state));
     const RuntimeThreadAicpuKernelRequest request = MakeRequest();
-    ASSERT_EQ(service.EnsureStarted(request), RuntimeThreadAicpuStatus::OK);
+    ASSERT_EQ(service.EnsureStarted(request.deviceId, request.tsId), RuntimeThreadAicpuStatus::OK);
     ASSERT_TRUE(service.worker_.joinable());
     service.worker_.join();
     EXPECT_TRUE(service.started_);
     EXPECT_EQ(state.reserveCalls, 1U);
     EXPECT_EQ(state.monitorEnterCalls, 1U);
     EXPECT_EQ(state.monitorExitCalls, 1U);
-    EXPECT_EQ(service.EnsureStarted(request), RuntimeThreadAicpuStatus::OK);
+    EXPECT_EQ(service.EnsureStarted(request.deviceId, request.tsId), RuntimeThreadAicpuStatus::OK);
     EXPECT_EQ(state.reserveCalls, 1U);
 
     RuntimeThreadAicpuKernelRequest otherDevice = request;
     otherDevice.deviceId = DEVICE_ID + 1U;
-    EXPECT_EQ(service.EnsureStarted(otherDevice), RuntimeThreadAicpuStatus::RUNTIME_ERROR);
+    EXPECT_EQ(service.EnsureStarted(otherDevice.deviceId, otherDevice.tsId), RuntimeThreadAicpuStatus::RUNTIME_ERROR);
     service.ReleaseCallbackChannel();
     ReleaseGroupId(&state, GROUP_ID);
 }
@@ -442,7 +457,28 @@ TEST_F(RuntimeThreadAicpuTest, EnsureStartedRejectsFailedWorker)
     HookState state;
     RuntimeThreadAicpuService service(MakeHooks(state));
     service.failed_.store(true);
-    EXPECT_EQ(service.EnsureStarted(MakeRequest()), RuntimeThreadAicpuStatus::RUNTIME_ERROR);
+    EXPECT_EQ(service.EnsureStarted(DEVICE_ID, TS_ID), RuntimeThreadAicpuStatus::RUNTIME_ERROR);
+}
+
+TEST_F(RuntimeThreadAicpuTest, DataDumpWorkerAndLoadRequestsAreValidated)
+{
+    HookState state;
+    RuntimeThreadAicpuService service(MakeHooks(state));
+    RuntimeThreadAicpuStartRequest start = {};
+    EXPECT_EQ(service.StartWorker(start), RuntimeThreadAicpuStatus::INVALID_PARAM);
+    start.structSize = sizeof(start);
+    start.deviceId = DEVICE_ID;
+    start.tsId = TS_ID;
+    service.started_ = true;
+    service.deviceId_ = DEVICE_ID;
+    service.tsId_ = TS_ID;
+    EXPECT_EQ(service.StartWorker(start), RuntimeThreadAicpuStatus::OK);
+
+    RuntimeThreadAicpuDumpInfoRequest load = {};
+    load.structSize = sizeof(load);
+    load.deviceId = DEVICE_ID;
+    load.tsId = TS_ID;
+    EXPECT_EQ(service.LoadDumpInfo(load), RuntimeThreadAicpuStatus::INVALID_PARAM);
 }
 
 TEST_F(RuntimeThreadAicpuTest, CompletionEventIsCachedAndDestroyedWithStream)
@@ -664,16 +700,94 @@ TEST_F(RuntimeThreadAicpuTest, ExecutePreparedKernelConsumesContextOnce)
         static_cast<uint32_t>(RuntimeThreadAicpuStatus::INTERNAL_ERROR));
 }
 
-TEST_F(RuntimeThreadAicpuTest, ProcessOneReportValidatesFunctionAndCookie)
+TEST_F(RuntimeThreadAicpuTest, TimeoutMonitorUsesBoundaryAndReportsEachExecutionOnce)
+{
+    HookState state;
+    state.clockUs = 100U;
+    RuntimeThreadAicpuService service(MakeHooks(state));
+    service.tsId_ = TS_ID;
+    RuntimeThreadAicpuService::KernelContext context = MakeContext();
+    service.SetExecuteTimeout(10U);
+
+    ASSERT_EQ(service.BeginExecution(7U, context), RuntimeThreadAicpuStatus::OK);
+    EXPECT_EQ(state.clockCalls, 1U);
+    state.clockUs = 109U;
+    service.MonitorExecutionTimeout();
+    EXPECT_EQ(state.streamErrorCalls, 0U);
+
+    state.clockUs = 110U;
+    service.MonitorExecutionTimeout();
+    EXPECT_EQ(state.streamErrorCalls, 1U);
+    EXPECT_EQ(state.streamErrorDeviceId, DEVICE_ID);
+    EXPECT_EQ(state.streamErrorTsId, TS_ID);
+    EXPECT_EQ(state.streamErrorStreamId, STREAM_ID);
+    EXPECT_EQ(state.streamErrorHandle, context.streamHandle);
+    EXPECT_EQ(state.streamErrorType, RuntimeThreadAicpuStreamErrorType::EXECUTION_TIMEOUT);
+    EXPECT_EQ(state.streamExecuteResult, 0U);
+
+    state.clockUs = 120U;
+    service.MonitorExecutionTimeout();
+    EXPECT_EQ(state.streamErrorCalls, 1U);
+    service.EndExecution(7U);
+    EXPECT_TRUE(service.executingTasks_.empty());
+}
+
+TEST_F(RuntimeThreadAicpuTest, TimeoutMonitorCanBeDisabledAndStreamDestroyClearsExecution)
+{
+    HookState state;
+    state.clockUs = 100U;
+    RuntimeThreadAicpuService service(MakeHooks(state));
+    service.tsId_ = TS_ID;
+    RuntimeThreadAicpuService::KernelContext context = MakeContext();
+    ASSERT_EQ(service.BeginExecution(7U, context), RuntimeThreadAicpuStatus::OK);
+
+    service.SetExecuteTimeout(std::numeric_limits<uint64_t>::max());
+    state.clockUs = std::numeric_limits<uint64_t>::max();
+    service.MonitorExecutionTimeout();
+    EXPECT_EQ(state.streamErrorCalls, 0U);
+    EXPECT_EQ(state.clockCalls, 1U);
+
+    service.StreamDestroyed(context.streamHandle);
+    EXPECT_TRUE(service.executingTasks_.empty());
+}
+
+TEST_F(RuntimeThreadAicpuTest, ProcessAicpuReportValidatesFunctionAndCookie)
 {
     HookState state;
     RuntimeThreadAicpuService service(MakeHooks(state));
     TestCallbackReport report = {};
     report.funcPtr = 1U;
-    EXPECT_EQ(service.ProcessOneReport(&report), static_cast<uint32_t>(RuntimeThreadAicpuStatus::INTERNAL_ERROR));
+    EXPECT_EQ(service.ProcessAicpuReport(&report), static_cast<uint32_t>(RuntimeThreadAicpuStatus::INTERNAL_ERROR));
     report.funcPtr = reinterpret_cast<uint64_t>(&RuntimeThreadAicpuService::ExecutePreparedKernelEntry);
     report.fnData = 100U;
-    EXPECT_EQ(service.ProcessOneReport(&report), static_cast<uint32_t>(RuntimeThreadAicpuStatus::INTERNAL_ERROR));
+    EXPECT_EQ(service.ProcessAicpuReport(&report), static_cast<uint32_t>(RuntimeThreadAicpuStatus::INTERNAL_ERROR));
+}
+
+TEST_F(RuntimeThreadAicpuTest, ProcessDumpReportFindsOpAndReturnsWriterStatus)
+{
+    HookState state;
+    RuntimeThreadAicpuService service(MakeHooks(state));
+    std::shared_ptr<cce::runtime_thread_aicpu::datadump::ModelDumpConfig> config =
+        std::make_shared<cce::runtime_thread_aicpu::datadump::ModelDumpConfig>();
+    config->modelId = 5U;
+    cce::runtime_thread_aicpu::datadump::ModelDumpInfoPtr model =
+        std::make_shared<cce::runtime_thread_aicpu::datadump::ModelDumpInfo>();
+    model->config = config;
+    cce::runtime_thread_aicpu::datadump::OpDumpInfoPtr op =
+        std::make_shared<cce::runtime_thread_aicpu::datadump::OpDumpInfo>();
+    op->taskKey = {STREAM_ID, 31U};
+    op->opName = "MatMul";
+    op->config = config;
+    model->ops[op->taskKey] = op;
+    ASSERT_EQ(service.dataDumpManager_.Load(model), RuntimeThreadAicpuStatus::OK);
+
+    TestCallbackReport report = {};
+    report.streamId = STREAM_ID;
+    report.taskId = 31U;
+    EXPECT_EQ(service.ProcessDumpReport(&report), static_cast<uint32_t>(RuntimeThreadAicpuStatus::INVALID_PARAM));
+    report.taskId = 32U;
+    EXPECT_EQ(
+        service.ProcessDumpReport(&report), static_cast<uint32_t>(RuntimeThreadAicpuStatus::DATADUMP_OP_NOT_FOUND));
 }
 
 TEST_F(RuntimeThreadAicpuTest, FinishReportWritesCompletionCommandAndStreamError)
@@ -697,11 +811,15 @@ TEST_F(RuntimeThreadAicpuTest, FinishReportWritesCompletionCommandAndStreamError
         value = 1U;
     }
     constexpr uint32_t executeResult = 0x5678U;
-    ASSERT_EQ(service.FinishReport(&report, executeResult), RuntimeThreadAicpuStatus::OK);
+    ASSERT_EQ(
+        service.FinishReport(&report, executeResult, RuntimeThreadAicpuSqeSubtype::AICPU),
+        RuntimeThreadAicpuStatus::OK);
     EXPECT_EQ(state.streamErrorCalls, 1U);
     EXPECT_EQ(state.streamErrorDeviceId, DEVICE_ID);
     EXPECT_EQ(state.streamErrorTsId, TS_ID);
     EXPECT_EQ(state.streamErrorStreamId, STREAM_ID);
+    EXPECT_EQ(state.streamErrorHandle, nullptr);
+    EXPECT_EQ(state.streamErrorType, RuntimeThreadAicpuStreamErrorType::EXECUTION_FAILED);
     EXPECT_EQ(state.streamExecuteResult, executeResult);
     EXPECT_EQ(g_driver.command.pid, 0U);
     EXPECT_EQ(g_driver.command.commandType, 15U);
@@ -727,16 +845,39 @@ TEST_F(RuntimeThreadAicpuTest, FinishReportHandlesDriverFailures)
     RuntimeThreadAicpuService service(MakeHooks(state));
     TestCallbackReport report = {};
     g_driver.memoryGetResult = static_cast<drvError_t>(1);
-    EXPECT_EQ(service.FinishReport(&report, 0U), RuntimeThreadAicpuStatus::RUNTIME_ERROR);
+    EXPECT_EQ(
+        service.FinishReport(&report, 0U, RuntimeThreadAicpuSqeSubtype::AICPU),
+        RuntimeThreadAicpuStatus::RUNTIME_ERROR);
     g_driver.memoryGetResult = DRV_ERROR_NONE;
     g_driver.provideCommand = false;
-    EXPECT_EQ(service.FinishReport(&report, 0U), RuntimeThreadAicpuStatus::RUNTIME_ERROR);
+    EXPECT_EQ(
+        service.FinishReport(&report, 0U, RuntimeThreadAicpuSqeSubtype::AICPU),
+        RuntimeThreadAicpuStatus::RUNTIME_ERROR);
     g_driver.provideCommand = true;
     g_driver.memoryCommandCount = 0U;
-    EXPECT_EQ(service.FinishReport(&report, 0U), RuntimeThreadAicpuStatus::RUNTIME_ERROR);
+    EXPECT_EQ(
+        service.FinishReport(&report, 0U, RuntimeThreadAicpuSqeSubtype::AICPU),
+        RuntimeThreadAicpuStatus::RUNTIME_ERROR);
     g_driver.memoryCommandCount = 1U;
     g_driver.messageSendResult = static_cast<drvError_t>(1);
-    EXPECT_EQ(service.FinishReport(&report, 0U), RuntimeThreadAicpuStatus::RUNTIME_ERROR);
+    EXPECT_EQ(
+        service.FinishReport(&report, 0U, RuntimeThreadAicpuSqeSubtype::AICPU),
+        RuntimeThreadAicpuStatus::RUNTIME_ERROR);
+}
+
+TEST_F(RuntimeThreadAicpuTest, FinishReportWritesDataDumpSubtype)
+{
+    HookState state;
+    RuntimeThreadAicpuService service(MakeHooks(state));
+    service.groupId_ = GROUP_ID;
+    service.callbackSqId_ = SQ_ID;
+    TestCallbackReport report = {};
+    report.streamId = STREAM_ID;
+    report.taskId = 31U;
+    report.eventId = EVENT_ID;
+    ASSERT_EQ(service.FinishReport(&report, 0U, RuntimeThreadAicpuSqeSubtype::DATADUMP), RuntimeThreadAicpuStatus::OK);
+    EXPECT_EQ(g_driver.command.reserved1[0], static_cast<uint32_t>(RuntimeThreadAicpuSqeSubtype::DATADUMP));
+    EXPECT_EQ(g_driver.command.reserved1[1], 0U);
 }
 
 TEST_F(RuntimeThreadAicpuTest, ProcessReportsHandlesWaitAndCqSelection)
@@ -809,6 +950,43 @@ TEST_F(RuntimeThreadAicpuTest, ProcessReportsSurfacesFinishAndReleaseFailures)
     EXPECT_FALSE(service.ProcessReports());
 }
 
+TEST_F(RuntimeThreadAicpuTest, ProcessReportsRoutesDataDumpByReservedField)
+{
+    HookState state;
+    RuntimeThreadAicpuService service(MakeHooks(state));
+    service.deviceId_ = DEVICE_ID;
+    service.tsId_ = TS_ID;
+    service.groupId_ = GROUP_ID;
+    service.callbackSqId_ = SQ_ID;
+    service.callbackCqId_ = CQ_ID;
+    std::shared_ptr<cce::runtime_thread_aicpu::datadump::ModelDumpConfig> config =
+        std::make_shared<cce::runtime_thread_aicpu::datadump::ModelDumpConfig>();
+    config->modelId = 5U;
+    cce::runtime_thread_aicpu::datadump::ModelDumpInfoPtr model =
+        std::make_shared<cce::runtime_thread_aicpu::datadump::ModelDumpInfo>();
+    model->config = config;
+    cce::runtime_thread_aicpu::datadump::OpDumpInfoPtr op =
+        std::make_shared<cce::runtime_thread_aicpu::datadump::OpDumpInfo>();
+    op->taskKey = {STREAM_ID, 31U};
+    op->opName = "MatMul";
+    op->config = config;
+    model->ops[op->taskKey] = op;
+    ASSERT_EQ(service.dataDumpManager_.Load(model), RuntimeThreadAicpuStatus::OK);
+
+    g_driver.waitResult = DRV_ERROR_NONE;
+    g_driver.setExpectedCqBit = true;
+    g_driver.reportCount = 1U;
+    g_driver.reports[0].streamId = STREAM_ID;
+    g_driver.reports[0].taskId = 31U;
+    g_driver.reports[0].eventId = EVENT_ID;
+    g_driver.reports[0].reserved = 1U;
+    ASSERT_TRUE(service.ProcessReports());
+    EXPECT_EQ(g_driver.command.reserved1[0], static_cast<uint32_t>(RuntimeThreadAicpuSqeSubtype::DATADUMP));
+    EXPECT_EQ(g_driver.command.reserved1[1], static_cast<uint32_t>(RuntimeThreadAicpuStatus::INVALID_PARAM));
+    EXPECT_EQ(state.streamErrorCalls, 1U);
+    EXPECT_EQ(g_driver.reportReleaseCalls, 1U);
+}
+
 TEST_F(RuntimeThreadAicpuTest, WorkerLoopMarksUnexpectedDriverFailure)
 {
     HookState state;
@@ -841,9 +1019,17 @@ TEST_F(RuntimeThreadAicpuTest, PluginApiValidatesInputsAndReturnsCompleteTable)
     EXPECT_NE(api->prepareKernel, nullptr);
     EXPECT_NE(api->releasePreparedKernel, nullptr);
     EXPECT_NE(api->streamDestroyed, nullptr);
+    EXPECT_NE(api->startWorker, nullptr);
+    EXPECT_NE(api->loadDumpInfo, nullptr);
+    EXPECT_EQ(api->startWorker(nullptr), RuntimeThreadAicpuStatus::INVALID_PARAM);
+    EXPECT_EQ(api->loadDumpInfo(nullptr), RuntimeThreadAicpuStatus::INVALID_PARAM);
+    EXPECT_NE(api->setExecuteTimeout, nullptr);
+    EXPECT_NE(api->monitorExecutionTimeout, nullptr);
     EXPECT_EQ(api->prepareKernel(nullptr, nullptr), RuntimeThreadAicpuStatus::INVALID_PARAM);
     api->releasePreparedKernel(0U);
     api->streamDestroyed(nullptr);
+    api->setExecuteTimeout(100U);
+    api->monitorExecutionTimeout();
 }
 
 } // namespace

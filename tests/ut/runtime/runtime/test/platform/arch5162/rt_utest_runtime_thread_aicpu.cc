@@ -8,9 +8,13 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include <atomic>
+#include <condition_variable>
 #include <cstdint>
 #include <cstring>
+#include <mutex>
 #include <string>
+#include <thread>
 
 #include <gtest/gtest.h>
 #include <mockcpp/mockcpp.hpp>
@@ -22,6 +26,7 @@
 #include "event.hpp"
 #include "kernel.hpp"
 #include "raw_device.hpp"
+#include "stars_engine.hpp"
 #include "stream.hpp"
 #include "stream_state_callback_manager.hpp"
 #undef private
@@ -38,15 +43,24 @@ namespace {
 struct PluginState {
     RuntimeThreadAicpuStatus queryStatus = RuntimeThreadAicpuStatus::OK;
     RuntimeThreadAicpuStatus prepareStatus = RuntimeThreadAicpuStatus::OK;
+    RuntimeThreadAicpuStatus startStatus = RuntimeThreadAicpuStatus::OK;
+    RuntimeThreadAicpuStatus loadStatus = RuntimeThreadAicpuStatus::OK;
     bool returnNullApi = false;
     uint32_t prepareCalls = 0U;
     uint32_t releaseCalls = 0U;
     uint32_t streamDestroyedCalls = 0U;
+    uint32_t startCalls = 0U;
+    uint32_t loadCalls = 0U;
+    uint32_t setTimeoutCalls = 0U;
+    uint32_t monitorCalls = 0U;
     uint64_t releasedCookie = 0U;
+    uint64_t timeoutUs = 0U;
     void* destroyedStream = nullptr;
     RuntimeThreadAicpuKernelRequest request = {};
     RuntimeThreadAicpuRuntimeHooks hooks = {};
     RuntimeThreadAicpuPreparedKernel prepared = {};
+    RuntimeThreadAicpuStartRequest startRequest = {};
+    RuntimeThreadAicpuDumpInfoRequest loadRequest = {};
 };
 
 PluginState g_plugin;
@@ -80,6 +94,32 @@ void FakeStreamDestroyed(void* const streamHandle)
     g_plugin.destroyedStream = streamHandle;
 }
 
+RuntimeThreadAicpuStatus FakeStartWorker(const RuntimeThreadAicpuStartRequest* const request)
+{
+    ++g_plugin.startCalls;
+    if (request != nullptr) {
+        g_plugin.startRequest = *request;
+    }
+    return g_plugin.startStatus;
+}
+
+RuntimeThreadAicpuStatus FakeLoadDumpInfo(const RuntimeThreadAicpuDumpInfoRequest* const request)
+{
+    ++g_plugin.loadCalls;
+    if (request != nullptr) {
+        g_plugin.loadRequest = *request;
+    }
+    return g_plugin.loadStatus;
+}
+
+void FakeSetExecuteTimeout(const uint64_t timeoutUs)
+{
+    ++g_plugin.setTimeoutCalls;
+    g_plugin.timeoutUs = timeoutUs;
+}
+
+void FakeMonitorExecutionTimeout() { ++g_plugin.monitorCalls; }
+
 RuntimeThreadAicpuStatus FakeQueryPlugin(
     const RuntimeThreadAicpuRuntimeHooks* const hooks, const RuntimeThreadAicpuPluginApi** const pluginApi)
 {
@@ -112,6 +152,28 @@ void DummyStreamStateCallback(rtStream_t stream, rtStreamState state, void* args
     (void)stream;
     (void)state;
     (void)args;
+}
+
+std::atomic<uint32_t> g_monitorTaskCalls{0U};
+std::atomic<Device*> g_monitorTaskDevice{nullptr};
+std::mutex g_blockingMonitorMutex;
+std::condition_variable g_blockingMonitorCondition;
+bool g_blockingMonitorEntered = false;
+bool g_releaseBlockingMonitor = false;
+
+void CountMonitorTask(Device* const dev)
+{
+    g_monitorTaskDevice.store(dev);
+    ++g_monitorTaskCalls;
+}
+
+void BlockingMonitorTask(Device* const dev)
+{
+    UNUSED(dev);
+    std::unique_lock<std::mutex> lock(g_blockingMonitorMutex);
+    g_blockingMonitorEntered = true;
+    g_blockingMonitorCondition.notify_all();
+    g_blockingMonitorCondition.wait(lock, []() { return g_releaseBlockingMonitor; });
 }
 
 class RuntimeThreadAicpuTestDevice final : public RawDevice {
@@ -165,6 +227,10 @@ protected:
             .prepareKernel = &FakePrepareKernel,
             .releasePreparedKernel = &FakeReleasePreparedKernel,
             .streamDestroyed = &FakeStreamDestroyed,
+            .startWorker = &FakeStartWorker,
+            .loadDumpInfo = &FakeLoadDumpInfo,
+            .setExecuteTimeout = &FakeSetExecuteTimeout,
+            .monitorExecutionTimeout = &FakeMonitorExecutionTimeout,
         };
         g_plugin.prepared.structSize = sizeof(RuntimeThreadAicpuPreparedKernel);
         g_plugin.prepared.callbackCqId = 23U;
@@ -210,6 +276,56 @@ TEST_F(RuntimeThreadAicpuRuntimeTest, StatusConversionPreservesPublicSemantics)
     EXPECT_EQ(ToRuntimeStatus(RuntimeThreadAicpuStatus::KERNEL_FAILED), RT_ERROR_AICPU_INTERNAL_ERROR);
 }
 
+TEST_F(RuntimeThreadAicpuRuntimeTest, StarsMonitorTaskRegistrationIsIdempotentAndRemovable)
+{
+    (void)UnregisterStarsMonitorTask(&CountMonitorTask);
+    g_monitorTaskCalls.store(0U);
+    g_monitorTaskDevice.store(nullptr);
+    StarsEngine engine(nullptr);
+    Device* const dev = reinterpret_cast<Device*>(0x12340000ULL);
+    ASSERT_EQ(RegisterStarsMonitorTask(&CountMonitorTask), RT_ERROR_NONE);
+    ASSERT_EQ(RegisterStarsMonitorTask(&CountMonitorTask), RT_ERROR_NONE);
+    engine.RunRegisteredMonitorTasks(dev);
+    EXPECT_EQ(g_monitorTaskCalls.load(), 1U);
+    EXPECT_EQ(g_monitorTaskDevice.load(), dev);
+    ASSERT_EQ(UnregisterStarsMonitorTask(&CountMonitorTask), RT_ERROR_NONE);
+    ASSERT_EQ(UnregisterStarsMonitorTask(&CountMonitorTask), RT_ERROR_NONE);
+    engine.RunRegisteredMonitorTasks(dev);
+    EXPECT_EQ(g_monitorTaskCalls.load(), 1U);
+}
+
+TEST_F(RuntimeThreadAicpuRuntimeTest, StarsMonitorTaskUnregisterWaitsForInFlightCall)
+{
+    (void)UnregisterStarsMonitorTask(&BlockingMonitorTask);
+    {
+        const std::lock_guard<std::mutex> lock(g_blockingMonitorMutex);
+        g_blockingMonitorEntered = false;
+        g_releaseBlockingMonitor = false;
+    }
+    StarsEngine engine(nullptr);
+    ASSERT_EQ(RegisterStarsMonitorTask(&BlockingMonitorTask), RT_ERROR_NONE);
+    std::thread monitorThread([&engine]() { engine.RunRegisteredMonitorTasks(nullptr); });
+    {
+        std::unique_lock<std::mutex> lock(g_blockingMonitorMutex);
+        g_blockingMonitorCondition.wait(lock, []() { return g_blockingMonitorEntered; });
+    }
+
+    std::atomic<bool> unregisterReturned{false};
+    std::thread unregisterThread([&unregisterReturned]() {
+        (void)UnregisterStarsMonitorTask(&BlockingMonitorTask);
+        unregisterReturned.store(true);
+    });
+    EXPECT_FALSE(unregisterReturned.load());
+    {
+        const std::lock_guard<std::mutex> lock(g_blockingMonitorMutex);
+        g_releaseBlockingMonitor = true;
+    }
+    g_blockingMonitorCondition.notify_all();
+    monitorThread.join();
+    unregisterThread.join();
+    EXPECT_TRUE(unregisterReturned.load());
+}
+
 TEST_F(RuntimeThreadAicpuRuntimeTest, InternalGroupReservationKeepsAllocationAndWaitBitmapsConsistent)
 {
     CbSubscribe subscribe(2U);
@@ -244,6 +360,7 @@ TEST_F(RuntimeThreadAicpuRuntimeTest, RuntimeHooksExposeExpectedFunctionsAndVali
     EXPECT_NE(hooks.monitorThreadEnter, nullptr);
     EXPECT_NE(hooks.monitorThreadExit, nullptr);
     EXPECT_NE(hooks.isProcessExiting, nullptr);
+    EXPECT_NE(hooks.clockGetTimeUs, nullptr);
     EXPECT_EQ(CreateCompletionEvent(nullptr, nullptr, nullptr, nullptr), RuntimeThreadAicpuStatus::INVALID_PARAM);
     EXPECT_EQ(ReserveGroupId(nullptr, nullptr), RuntimeThreadAicpuStatus::INVALID_PARAM);
     DestroyCompletionEvent(nullptr, nullptr);
@@ -330,8 +447,53 @@ TEST_F(RuntimeThreadAicpuRuntimeTest, RuntimeHooksMaintainMonitorCountAndHandleM
     EXPECT_EQ(runtime->monitorThreadNum_.Value(), monitorCount + 1U);
     MonitorThreadExit(nullptr);
     EXPECT_EQ(runtime->monitorThreadNum_.Value(), monitorCount);
-    SetStreamError(nullptr, 99U, 0U, 1U, 2U);
+    SetStreamError(nullptr, 99U, 0U, 1U, nullptr, RuntimeThreadAicpuStreamErrorType::EXECUTION_FAILED, 2U);
+    SetStreamError(
+        nullptr, 99U, 0U, 1U, reinterpret_cast<void*>(0x1ULL), RuntimeThreadAicpuStreamErrorType::EXECUTION_TIMEOUT,
+        0U);
+    (void)RuntimeThreadAicpuClockGetTimeUs(nullptr);
     (void)IsProcessExiting(nullptr);
+}
+
+TEST_F(RuntimeThreadAicpuRuntimeTest, RuntimeErrorHookValidatesStreamIdentityAndPreservesErrorPriority)
+{
+    Runtime* const runtime = Runtime::Instance();
+    ASSERT_NE(runtime, nullptr);
+    RuntimeThreadAicpuTestDevice device(3U);
+    device.streamSqCqManage_ = new StreamSqCqManage(&device);
+    ASSERT_NE(device.streamSqCqManage_, nullptr);
+    Stream stream(&device, 0U);
+    stream.streamId_ = 17;
+    stream.myself = std::shared_ptr<Stream>(&stream, [](Stream*) {});
+    device.streamSqCqManage_->SetStreamIdToStream(17U, &stream);
+    const uint32_t tsId = device.DevGetTsId();
+    runtime->devices_[device.Id_()][tsId].SetVal(&device);
+
+    SetStreamError(
+        nullptr, device.Id_(), tsId, 17U, reinterpret_cast<void*>(0x1ULL),
+        RuntimeThreadAicpuStreamErrorType::EXECUTION_TIMEOUT, 0U);
+    EXPECT_EQ(stream.GetErrCode(), static_cast<uint32_t>(RT_ERROR_NONE));
+
+    SetStreamError(
+        nullptr, device.Id_(), tsId, 17U, stream.GetInnerHandle(), RuntimeThreadAicpuStreamErrorType::EXECUTION_TIMEOUT,
+        0U);
+    EXPECT_EQ(stream.GetErrCode(), static_cast<uint32_t>(TS_ERROR_AICPU_TIMEOUT));
+    SetStreamError(
+        nullptr, device.Id_(), tsId, 17U, nullptr, RuntimeThreadAicpuStreamErrorType::EXECUTION_FAILED, 0x1234U);
+    EXPECT_EQ(stream.GetErrCode(), static_cast<uint32_t>(TS_ERROR_AICPU_TIMEOUT));
+
+    stream.SetErrCode(static_cast<uint32_t>(TS_ERROR_TASK_EXCEPTION));
+    SetStreamError(
+        nullptr, device.Id_(), tsId, 17U, stream.GetInnerHandle(), RuntimeThreadAicpuStreamErrorType::EXECUTION_TIMEOUT,
+        0U);
+    EXPECT_EQ(stream.GetErrCode(), static_cast<uint32_t>(TS_ERROR_TASK_EXCEPTION));
+
+    stream.SetErrCode(static_cast<uint32_t>(RT_ERROR_HOST_FUNC_EXE_FAILED));
+    SetStreamError(
+        nullptr, device.Id_(), tsId, 17U, stream.GetInnerHandle(), RuntimeThreadAicpuStreamErrorType::EXECUTION_TIMEOUT,
+        0U);
+    EXPECT_EQ(stream.GetErrCode(), static_cast<uint32_t>(TS_ERROR_AICPU_TIMEOUT));
+    runtime->devices_[device.Id_()][tsId].SetVal(nullptr);
 }
 
 TEST_F(RuntimeThreadAicpuRuntimeTest, AdapterCachesUnsupportedWhenPluginCannotBeLoaded)
@@ -368,7 +530,7 @@ TEST_F(RuntimeThreadAicpuRuntimeTest, AdapterValidatesPluginApiTable)
 
     MockSuccessfulDynamicLoad();
     g_plugin.returnNullApi = false;
-    g_pluginApi.structSize = sizeof(g_pluginApi) - 1U;
+    g_pluginApi.structSize = sizeof(RuntimeThreadAicpuPluginApi) - 1U;
     RuntimeThreadAicpuAdapter shortApiAdapter(nullptr);
     EXPECT_EQ(shortApiAdapter.PrepareKernel(request, prepared), RT_ERROR_FEATURE_NOT_SUPPORT);
     GlobalMockObject::verify();
@@ -378,6 +540,40 @@ TEST_F(RuntimeThreadAicpuRuntimeTest, AdapterValidatesPluginApiTable)
     g_pluginApi.releasePreparedKernel = nullptr;
     RuntimeThreadAicpuAdapter missingFunctionAdapter(nullptr);
     EXPECT_EQ(missingFunctionAdapter.PrepareKernel(request, prepared), RT_ERROR_FEATURE_NOT_SUPPORT);
+}
+
+TEST_F(RuntimeThreadAicpuRuntimeTest, AdapterRejectsMissingDataDumpFunctions)
+{
+    MockSuccessfulDynamicLoad();
+    g_pluginApi.startWorker = nullptr;
+    RuntimeThreadAicpuAdapter missingStartWorkerAdapter(nullptr);
+    RuntimeThreadAicpuKernelRequest request = {};
+    EXPECT_EQ(missingStartWorkerAdapter.LoadDumpInfo(0U, 0U, &request, sizeof(request)), RT_ERROR_FEATURE_NOT_SUPPORT);
+    GlobalMockObject::verify();
+
+    MockSuccessfulDynamicLoad();
+    g_pluginApi.startWorker = &FakeStartWorker;
+    g_pluginApi.loadDumpInfo = nullptr;
+    RuntimeThreadAicpuAdapter missingLoadDumpInfoAdapter(nullptr);
+    EXPECT_EQ(missingLoadDumpInfoAdapter.LoadDumpInfo(0U, 0U, &request, sizeof(request)), RT_ERROR_FEATURE_NOT_SUPPORT);
+}
+
+TEST_F(RuntimeThreadAicpuRuntimeTest, AdapterStartsWorkerBeforeLoadingDataDumpInfo)
+{
+    MockSuccessfulDynamicLoad();
+    RuntimeThreadAicpuAdapter adapter(nullptr);
+    const uint32_t dumpInfo = 0x12345678U;
+    ASSERT_EQ(adapter.LoadDumpInfo(3U, 2U, &dumpInfo, sizeof(dumpInfo)), RT_ERROR_NONE);
+    EXPECT_EQ(g_plugin.startCalls, 1U);
+    EXPECT_EQ(g_plugin.loadCalls, 1U);
+    EXPECT_EQ(g_plugin.startRequest.deviceId, 3U);
+    EXPECT_EQ(g_plugin.startRequest.tsId, 2U);
+    EXPECT_EQ(g_plugin.loadRequest.dumpInfo, &dumpInfo);
+    EXPECT_EQ(g_plugin.loadRequest.length, sizeof(dumpInfo));
+
+    g_plugin.startStatus = RuntimeThreadAicpuStatus::RUNTIME_ERROR;
+    EXPECT_EQ(adapter.LoadDumpInfo(3U, 2U, &dumpInfo, sizeof(dumpInfo)), RT_ERROR_AICPU_INTERNAL_ERROR);
+    EXPECT_EQ(g_plugin.loadCalls, 1U);
 }
 
 TEST_F(RuntimeThreadAicpuRuntimeTest, AdapterPropagatesPrepareAndForwardsLifecycleCalls)
@@ -402,6 +598,32 @@ TEST_F(RuntimeThreadAicpuRuntimeTest, AdapterPropagatesPrepareAndForwardsLifecyc
     adapter.StreamDestroyed(streamHandle);
     EXPECT_EQ(g_plugin.streamDestroyedCalls, 1U);
     EXPECT_EQ(g_plugin.destroyedStream, streamHandle);
+}
+
+TEST_F(RuntimeThreadAicpuRuntimeTest, AdapterCachesTimeoutUntilPluginIsLoaded)
+{
+    MockSuccessfulDynamicLoad();
+    StarsEngine engine(nullptr);
+    {
+        RuntimeThreadAicpuAdapter adapter(nullptr);
+        ASSERT_EQ(adapter.SetExecuteTimeout(123456U), RT_ERROR_NONE);
+        EXPECT_EQ(g_plugin.setTimeoutCalls, 0U);
+
+        RuntimeThreadAicpuKernelRequest request = {};
+        RuntimeThreadAicpuPreparedKernel prepared = {};
+        ASSERT_EQ(adapter.PrepareKernel(request, prepared), RT_ERROR_NONE);
+        EXPECT_EQ(g_plugin.setTimeoutCalls, 1U);
+        EXPECT_EQ(g_plugin.timeoutUs, 123456U);
+
+        engine.RunRegisteredMonitorTasks(nullptr);
+        EXPECT_EQ(g_plugin.monitorCalls, 1U);
+
+        ASSERT_EQ(adapter.SetExecuteTimeout(654321U), RT_ERROR_NONE);
+        EXPECT_EQ(g_plugin.setTimeoutCalls, 2U);
+        EXPECT_EQ(g_plugin.timeoutUs, 654321U);
+    }
+    engine.RunRegisteredMonitorTasks(nullptr);
+    EXPECT_EQ(g_plugin.monitorCalls, 1U);
 }
 
 TEST_F(RuntimeThreadAicpuRuntimeTest, AdapterReportsDuplicateObserverRegistration)
@@ -591,6 +813,29 @@ TEST_F(RuntimeThreadAicpuRuntimeTest, PublicLaunchPropagatesWaitAndResetFailures
     EXPECT_EQ(LaunchRuntimeThreadAicpuKernel(&api, &kernel, 1U, &args, &stream), RT_ERROR_DRV_ERR);
     EXPECT_EQ(LaunchRuntimeThreadAicpuKernel(&api, &kernel, 1U, &args, &stream), RT_ERROR_DRV_ERR);
     EXPECT_EQ(g_plugin.prepareCalls, 2U);
+}
+
+TEST_F(RuntimeThreadAicpuRuntimeTest, DataDumpInfoLoadValidatesFlagAndContext)
+{
+    ApiImpl api;
+    const uint32_t dumpInfo = 0x12345678U;
+    EXPECT_EQ(api.DatadumpInfoLoad(&dumpInfo, sizeof(dumpInfo), RT_KERNEL_CUSTOM_AICPU), RT_ERROR_FEATURE_NOT_SUPPORT);
+
+    MOCKER_CPP(&ApiImpl::CurrentContext).stubs().will(returnValue(static_cast<Context*>(nullptr)));
+    EXPECT_EQ(api.DatadumpInfoLoad(&dumpInfo, sizeof(dumpInfo), RT_KERNEL_DEFAULT), RT_ERROR_CONTEXT_NULL);
+}
+
+TEST_F(RuntimeThreadAicpuRuntimeTest, DataDumpInfoLoadRoutesToRuntimeThreadFeature)
+{
+    ApiImpl api;
+    RuntimeThreadAicpuTestDevice device(3U);
+    Context context(&device, false);
+    const uint32_t dumpInfo = 0x12345678U;
+    MOCKER_CPP(&ApiImpl::CurrentContext).stubs().will(returnValue(&context));
+    MOCKER(ContextManage::CheckContextIsValid).stubs().will(returnValue(true));
+    MOCKER(LoadRuntimeThreadAicpuDumpInfo).stubs().will(returnValue(RT_ERROR_DRV_ERR));
+
+    EXPECT_EQ(api.DatadumpInfoLoad(&dumpInfo, sizeof(dumpInfo), RT_KERNEL_DEFAULT), RT_ERROR_DRV_ERR);
 }
 
 TEST_F(RuntimeThreadAicpuRuntimeTest, CpuKernelLaunchExValidatesKernelContract)
