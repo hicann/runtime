@@ -13,6 +13,7 @@
 #include "prof_runtime_plugin.h"
 #include "msprof_dlog.h"
 #include "errno/error_code.h"
+#include "aprof_pub.h"
 
 using namespace ProfAPI;
 using namespace analysis::dvvp::common::error;
@@ -123,6 +124,9 @@ void ClearProfHooks()
     plugin->profNotifySetDevice_ = nullptr;
     plugin->profBatchAddBufPop_ = nullptr;
     plugin->profBatchAddBufIndexShift_ = nullptr;
+#ifndef ascend031
+    plugin->profUnRegisterCallback_ = nullptr;
+#endif
 }
 
 } // namespace
@@ -457,3 +461,113 @@ TEST_F(PROF_CANN_PLUGIN_UTEST, ProfGetCommandTypeName_KnownAndUnknown)
     EXPECT_STREQ("FINALIZE", ProfGetCommandTypeName(3));
     EXPECT_STREQ("UNKNOWN", ProfGetCommandTypeName(9999));
 }
+
+#ifndef ascend031
+namespace {
+int32_t StubUnRegCmdHandleA(uint32_t type, void* data, uint32_t len) { return 0; }
+
+int32_t StubUnRegCmdHandleB(uint32_t type, void* data, uint32_t len) { return 0; }
+
+int32_t g_unRegisterForwardCount = 0;
+
+int32_t g_unRegisterForwardRet = 0;
+
+int32_t StubUnRegisterForward(uint32_t moduleId, ProfCommandHandle handle)
+{
+    g_unRegisterForwardCount++;
+    return g_unRegisterForwardRet;
+}
+} // namespace
+
+TEST_F(PROF_CANN_PLUGIN_UTEST, ProfUnRegisterCallback_InvalidHandle)
+{
+    auto plugin = ProfCannPlugin::instance();
+    EXPECT_EQ(-1, plugin->ProfUnRegisterCallback(GE, nullptr));
+}
+
+TEST_F(PROF_CANN_PLUGIN_UTEST, ProfUnRegisterCallback_FallbackTable)
+{
+    auto plugin = ProfCannPlugin::instance();
+    ASSERT_EQ(PROFILING_SUCCESS, plugin->ProfRegisterCallback(GE, StubUnRegCmdHandleA));
+    ASSERT_EQ(PROFILING_SUCCESS, plugin->ProfRegisterCallback(GE, StubUnRegCmdHandleB));
+
+    // remove one of two registered handles: the other one stays
+    EXPECT_EQ(PROFILING_SUCCESS, plugin->ProfUnRegisterCallback(GE, StubUnRegCmdHandleA));
+    {
+        const std::unique_lock<std::mutex> lock(ProfPlugin::callbackMutex_);
+        auto it = ProfPlugin::moduleCallbacks_.find(GE);
+        ASSERT_NE(ProfPlugin::moduleCallbacks_.cend(), it);
+        EXPECT_EQ(1U, it->second.size());
+        EXPECT_EQ(1U, it->second.count(StubUnRegCmdHandleB));
+    }
+
+    // remove the last one: the module entry is erased as well
+    EXPECT_EQ(PROFILING_SUCCESS, plugin->ProfUnRegisterCallback(GE, StubUnRegCmdHandleB));
+    {
+        const std::unique_lock<std::mutex> lock(ProfPlugin::callbackMutex_);
+        EXPECT_EQ(ProfPlugin::moduleCallbacks_.cend(), ProfPlugin::moduleCallbacks_.find(GE));
+    }
+}
+
+TEST_F(PROF_CANN_PLUGIN_UTEST, ProfUnRegisterCallback_NotRegistered)
+{
+    auto plugin = ProfCannPlugin::instance();
+    EXPECT_EQ(PROFILING_SUCCESS, plugin->ProfUnRegisterCallback(GE, StubUnRegCmdHandleA));
+}
+
+TEST_F(PROF_CANN_PLUGIN_UTEST, ProfUnRegisterCallback_SameHandleTwiceIsIdempotent)
+{
+    auto plugin = ProfCannPlugin::instance();
+    ASSERT_EQ(PROFILING_SUCCESS, plugin->ProfRegisterCallback(GE, StubUnRegCmdHandleA));
+    // unregistering the same handle twice stays success and keeps the table clean
+    EXPECT_EQ(PROFILING_SUCCESS, plugin->ProfUnRegisterCallback(GE, StubUnRegCmdHandleA));
+    EXPECT_EQ(PROFILING_SUCCESS, plugin->ProfUnRegisterCallback(GE, StubUnRegCmdHandleA));
+    {
+        const std::unique_lock<std::mutex> lock(ProfPlugin::callbackMutex_);
+        EXPECT_EQ(ProfPlugin::moduleCallbacks_.cend(), ProfPlugin::moduleCallbacks_.find(GE));
+    }
+}
+
+TEST_F(PROF_CANN_PLUGIN_UTEST, ProfUnRegisterCallback_ForwardAndCleanResidue)
+{
+    auto plugin = ProfCannPlugin::instance();
+    g_unRegisterForwardCount = 0;
+    g_unRegisterForwardRet = 0;
+    plugin->profUnRegisterCallback_ = StubUnRegisterForward;
+    // registered while the profiler lib was not loaded: the entry lives in the local fallback table
+    ASSERT_EQ(PROFILING_SUCCESS, plugin->ProfRegisterCallback(GE, StubUnRegCmdHandleA));
+
+    EXPECT_EQ(PROFILING_SUCCESS, plugin->ProfUnRegisterCallback(GE, StubUnRegCmdHandleA));
+    // the call is forwarded to the profiler lib
+    EXPECT_EQ(1, g_unRegisterForwardCount);
+    // and the local fallback residue is cleaned as well
+    {
+        const std::unique_lock<std::mutex> lock(ProfPlugin::callbackMutex_);
+        EXPECT_EQ(ProfPlugin::moduleCallbacks_.cend(), ProfPlugin::moduleCallbacks_.find(GE));
+    }
+}
+
+TEST_F(PROF_CANN_PLUGIN_UTEST, ProfUnRegisterCallback_ForwardFailureStillCleansLocalTable)
+{
+    auto plugin = ProfCannPlugin::instance();
+    g_unRegisterForwardCount = 0;
+    g_unRegisterForwardRet = -1; // profiler-lib side failure is logged, not propagated
+    plugin->profUnRegisterCallback_ = StubUnRegisterForward;
+    ASSERT_EQ(PROFILING_SUCCESS, plugin->ProfRegisterCallback(GE, StubUnRegCmdHandleA));
+
+    EXPECT_EQ(PROFILING_SUCCESS, plugin->ProfUnRegisterCallback(GE, StubUnRegCmdHandleA));
+    EXPECT_EQ(1, g_unRegisterForwardCount);
+    // the local fallback entry is cleaned even when the forward reports failure
+    {
+        const std::unique_lock<std::mutex> lock(ProfPlugin::callbackMutex_);
+        EXPECT_EQ(ProfPlugin::moduleCallbacks_.cend(), ProfPlugin::moduleCallbacks_.find(GE));
+    }
+    g_unRegisterForwardRet = 0;
+}
+
+TEST_F(PROF_CANN_PLUGIN_UTEST, MsprofUnRegisterCallback_Export)
+{
+    EXPECT_EQ(-1, MsprofUnRegisterCallback(GE, nullptr));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofUnRegisterCallback(GE, StubUnRegCmdHandleA));
+}
+#endif // ascend031

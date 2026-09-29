@@ -106,6 +106,9 @@ void ProfCannPlugin::LoadProfCoreApi()
     LOAD_MSPROF_API(profStop_, msProfLibHandle_, ProfStopFunc, "MsprofStop");
     LOAD_MSPROF_API(profSetConfig_, msProfLibHandle_, ProfSetConfigFunc, "MsprofSetConfig");
     LOAD_MSPROF_API(profRegisterCallback_, msProfLibHandle_, ProfRegisterCallbackFunc, "MsprofRegisterCallback");
+#ifndef ascend031
+    LOAD_MSPROF_API(profUnRegisterCallback_, msProfLibHandle_, ProfUnRegisterCallbackFunc, "MsprofUnRegisterCallback");
+#endif
     LOAD_MSPROF_API(profReportData_, msProfLibHandle_, ProfReportDataFunc, "MsprofReportData");
     LOAD_MSPROF_API(profGetPath_, msProfLibHandle_, ProfGetPathFunc, "ProfImplGetOutputPath");
     LOAD_MSPROF_API(profSetDeviceId_, msProfLibHandle_, ProfSetDeviceIdFunc, "MsprofSetDeviceIdByGeModelIdx");
@@ -451,6 +454,45 @@ int32_t ProfCannPlugin::ProfRegisterCallback(uint32_t moduleId, ProfCommandHandl
     }
     return 0;
 }
+
+/* host-side only: excluded from the ascend031 build so libprofapi.so does not grow */
+#ifndef ascend031
+int32_t ProfCannPlugin::ProfUnRegisterCallback(uint32_t moduleId, ProfCommandHandle handle)
+{
+    if (handle == nullptr) {
+        MSPROF_LOGE("Unregister callback with invalid handle nullptr, module[%u]", moduleId);
+        return -1;
+    }
+    if (profUnRegisterCallback_ != nullptr) {
+        MSPROF_LOGI("Unregister module[%s(%u)] callback with handle.", ProfGetModuleName(moduleId), moduleId);
+        const int32_t ret = profUnRegisterCallback_(moduleId, handle);
+        if (ret != 0) {
+            // the local fallback entry below is still cleaned; only the profiler-lib side result is reported
+            MSPROF_LOGE(
+                "Unregister module[%s(%u)] callback failed in profiler lib, ret:%d.", ProfGetModuleName(moduleId),
+                moduleId, ret);
+        }
+    } else {
+        MSPROF_LOGI("Unregister module[%s(%u)] callback.", ProfGetModuleName(moduleId), moduleId);
+    }
+    // callbacks registered before the profiler lib was loaded live in the local table; always drop the
+    // matching entry so a later lib re-load does not replay an already unregistered callback
+    const std::unique_lock<std::mutex> lock(ProfPlugin::callbackMutex_);
+    auto it = ProfPlugin::moduleCallbacks_.find(moduleId);
+    if (it == ProfPlugin::moduleCallbacks_.cend() || it->second.erase(handle) == 0) {
+        if (profUnRegisterCallback_ == nullptr) {
+            MSPROF_EVENT(
+                "Module[%s(%u)] callback was not registered, nothing to unregister.", ProfGetModuleName(moduleId),
+                moduleId);
+        }
+        return 0;
+    }
+    if (it->second.empty()) {
+        ProfPlugin::moduleCallbacks_.erase(it);
+    }
+    return 0;
+}
+#endif
 
 int32_t ProfCannPlugin::ProfReportData(uint32_t moduleId, uint32_t type, void* data, uint32_t len)
 {
