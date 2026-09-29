@@ -338,21 +338,23 @@ TEST_F(MSPROF_TEST, MsprofTxManager)
     ret = manager->SetStampPayload(nullptr, 0, nullptr);
     EXPECT_EQ(PROFILING_FAILED, ret);
 
+    // profiling not enabled: the apis return success silently
     ret = manager->Mark(nullptr);
-    EXPECT_EQ(PROFILING_FAILED, ret);
+    EXPECT_EQ(ACL_SUCCESS, ret);
 
     ret = manager->Push(nullptr);
-    EXPECT_EQ(PROFILING_FAILED, ret);
+    EXPECT_EQ(ACL_SUCCESS, ret);
 
     ret = manager->Pop();
-    EXPECT_EQ(PROFILING_FAILED, ret);
+    EXPECT_EQ(ACL_SUCCESS, ret);
 
-    uint32_t rangeId;
+    uint32_t rangeId = 0;
     ret = manager->RangeStart(nullptr, &rangeId);
-    EXPECT_EQ(PROFILING_FAILED, ret);
+    EXPECT_EQ(ACL_SUCCESS, ret);
+    EXPECT_EQ(0U, rangeId); // profiling not enabled: the out param keeps a deterministic value
 
     ret = manager->RangeStop(rangeId);
-    EXPECT_EQ(PROFILING_FAILED, ret);
+    EXPECT_EQ(ACL_SUCCESS, ret);
 
     ACL_PROF_STAMP_PTR stamp = manager->CreateStamp();
     EXPECT_EQ(nullptr, stamp);
@@ -437,9 +439,9 @@ TEST_F(MSPROF_TEST, MarkExBase)
     MSVP_MAKE_SHARED0(manager, MsprofTxManager, return);
     manager->RegisterReporterCallback(MsprofAdditionalBufPushCallbackStub);
     aclrtStream stream = nullptr;
-    // MsprofTxManager is not inited yet
+    // MsprofTxManager is not inited yet: return success silently
     int32_t ret = manager->MarkEx("abc", strlen("abc"), stream);
-    EXPECT_EQ(ret, PROFILING_FAILED);
+    EXPECT_EQ(ret, ACL_SUCCESS);
     // Invalid input param for markEx
     EXPECT_EQ(manager->Init(), PROFILING_SUCCESS);
     ret = manager->MarkEx("abc", strlen("abc"), stream);

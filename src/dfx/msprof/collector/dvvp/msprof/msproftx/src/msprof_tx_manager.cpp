@@ -40,11 +40,16 @@ MsprofTxManager::MsprofTxManager()
       stampPool_(nullptr),
       categoryNameMap_({}),
       markExIndex_(0),
-      rtProfilerTraceExFunc_(nullptr)
+      rtProfilerTraceExFunc_(nullptr),
+      stampCallCount_(0),
+      markCallCount_(0),
+      rangeCallCount_(0)
 {}
 
 MsprofTxManager::~MsprofTxManager()
 {
+    // profiling may never have been started in this process; emit the summary on exit as well
+    ReportCallSummary();
     reporter_.reset();
     stampPool_.reset();
 }
@@ -91,6 +96,53 @@ void MsprofTxManager::UnInit()
         isInit_ = false;
         MSPROF_LOGI("[UnInit] TxManager unInit success.");
     }
+    ReportCallSummary();
+}
+
+void MsprofTxManager::CountCall(TxApiCategory category)
+{
+    switch (category) {
+        case TxApiCategory::STAMP:
+            (void)stampCallCount_.fetch_add(1, std::memory_order_relaxed);
+            break;
+        case TxApiCategory::MARK:
+            (void)markCallCount_.fetch_add(1, std::memory_order_relaxed);
+            break;
+        case TxApiCategory::RANGE:
+            (void)rangeCallCount_.fetch_add(1, std::memory_order_relaxed);
+            break;
+        default:
+            break;
+    }
+}
+
+uint64_t MsprofTxManager::GetCallCount(TxApiCategory category) const
+{
+    switch (category) {
+        case TxApiCategory::STAMP:
+            return stampCallCount_.load(std::memory_order_relaxed);
+        case TxApiCategory::MARK:
+            return markCallCount_.load(std::memory_order_relaxed);
+        case TxApiCategory::RANGE:
+            return rangeCallCount_.load(std::memory_order_relaxed);
+        default:
+            return 0;
+    }
+}
+
+// Emit the per-lifecycle aclprof api call summary once, then reset the counters so the next
+// lifecycle starts from zero. Called from UnInit under mtx_; skipped when nothing was called.
+void MsprofTxManager::ReportCallSummary()
+{
+    const uint64_t stampCount = stampCallCount_.exchange(0, std::memory_order_relaxed);
+    const uint64_t markCount = markCallCount_.exchange(0, std::memory_order_relaxed);
+    const uint64_t rangeCount = rangeCallCount_.exchange(0, std::memory_order_relaxed);
+    if (stampCount == 0 && markCount == 0 && rangeCount == 0) {
+        return;
+    }
+    MSPROF_EVENT(
+        "msproftx api call summary, stamp: %llu, mark: %llu, range: %llu", static_cast<unsigned long long>(stampCount),
+        static_cast<unsigned long long>(markCount), static_cast<unsigned long long>(rangeCount));
 }
 
 /*!
@@ -100,10 +152,6 @@ void MsprofTxManager::UnInit()
 ACL_PROF_STAMP_PTR MsprofTxManager::CreateStamp() const
 {
     if (!isInit_) {
-        MSPROF_LOGE("[CreateStamp]MsprofTxManager is not inited yet");
-        MSPROF_INPUT_ERROR(
-            "EK0002", std::vector<std::string>({"intf1", "intf2"}),
-            std::vector<std::string>({"aclprofStart", "aclprofCreateStamp"}));
         return nullptr;
     }
 
@@ -124,7 +172,6 @@ void MsprofTxManager::DestroyStamp(const ACL_PROF_STAMP_PTR stamp) const
         return;
     }
     if (!isInit_) {
-        MSPROF_LOGE("[DestroyStamp]MsprofTxManager is not inited yet");
         return;
     }
     stampPool_->DestroyStamp(stamp);
@@ -211,8 +258,7 @@ int32_t MsprofTxManager::SetStampTraceMessage(ACL_PROF_STAMP_PTR stamp, CONST_CH
 int32_t MsprofTxManager::Mark(ACL_PROF_STAMP_PTR stamp) const
 {
     if (!isInit_) {
-        MSPROF_LOGE("[Mark]MsprofTxManager is not inited yet");
-        return PROFILING_FAILED;
+        return ACL_SUCCESS;
     }
     if (stamp == nullptr) {
         MSPROF_LOGE("[Mark]aclprofStamp is nullptr");
@@ -229,8 +275,10 @@ int32_t MsprofTxManager::Mark(ACL_PROF_STAMP_PTR stamp) const
 
 int32_t MsprofTxManager::MarkEx(CONST_CHAR_PTR msg, size_t msgLen, aclrtStream stream)
 {
-    // check tx init status
-    FUNRET_CHECK_EXPR_ACTION(!isInit_, return PROFILING_FAILED, "[MarkEx]MsprofTxManager is not inited yet.");
+    // profiling not enabled: return success silently
+    if (!isInit_) {
+        return ACL_SUCCESS;
+    }
     // check if message invalid
     if (msg == nullptr || stream == nullptr || strlen(msg) != msgLen) {
         MSPROF_LOGE("[MarkEx]Invalid input param for markEx.");
@@ -285,8 +333,7 @@ int32_t MsprofTxManager::MarkExPoint(aclrtStream stream, MsprofTxInfo& info)
 int32_t MsprofTxManager::Push(ACL_PROF_STAMP_PTR stamp) const
 {
     if (!isInit_) {
-        MSPROF_LOGE("[Push]MsprofTxManager is not inited yet");
-        return PROFILING_FAILED;
+        return ACL_SUCCESS;
     }
     if (stamp == nullptr) {
         MSPROF_LOGE("[Push]aclprofStamp is nullptr");
@@ -302,8 +349,7 @@ int32_t MsprofTxManager::Push(ACL_PROF_STAMP_PTR stamp) const
 int32_t MsprofTxManager::Pop() const
 {
     if (!isInit_) {
-        MSPROF_LOGE("[Pop]MsprofTxManager is not inited yet");
-        return PROFILING_FAILED;
+        return ACL_SUCCESS;
     }
     auto stamp = stampPool_->MsprofStampPop();
     if (stamp == nullptr) {
@@ -322,11 +368,10 @@ int32_t MsprofTxManager::Pop() const
 int MsprofTxManager::RangeStart(ACL_PROF_STAMP_PTR stamp, uint32_t* rangeId) const
 {
     if (!isInit_) {
-        MSPROF_LOGE("[RangeStart]MsprofTxManager is not inited yet");
-        MSPROF_INPUT_ERROR(
-            "EK0002", std::vector<std::string>({"intf1", "intf2"}),
-            std::vector<std::string>({"aclprofStart", "aclprofRangeStart"}));
-        return PROFILING_FAILED;
+        if (rangeId != nullptr) {
+            *rangeId = 0; // profiling not enabled: keep the out param deterministic on success
+        }
+        return ACL_SUCCESS;
     }
     if (stamp == nullptr) {
         MSPROF_LOGE("[RangeStart] stamp pointer is nullptr!");
@@ -353,11 +398,7 @@ int MsprofTxManager::RangeStart(ACL_PROF_STAMP_PTR stamp, uint32_t* rangeId) con
 int32_t MsprofTxManager::RangeStop(uint32_t rangeId) const
 {
     if (!isInit_) {
-        MSPROF_LOGE("[RangeStop]MsprofTxManager is not inited yet");
-        MSPROF_INPUT_ERROR(
-            "EK0002", std::vector<std::string>({"intf1", "intf2"}),
-            std::vector<std::string>({"aclprofStart", "aclprofRangeStop"}));
-        return PROFILING_FAILED;
+        return ACL_SUCCESS;
     }
     auto stamp = stampPool_->GetStampById(rangeId);
     if (stamp == nullptr) {

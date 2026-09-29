@@ -31,21 +31,13 @@ int32_t ReportNullParam(const char* api, const char* param)
 
 extern "C" void* ProfAclCreateStamp()
 {
-    if (Platform::instance()->PlatformIsHelperHostSide()) {
-        MSPROF_LOGE("acl api not support in helper");
-        MSPROF_INPUT_ERROR(
-            "EK0004", std::vector<std::string>({"intf"}), std::vector<std::string>({"aclprofCreateStamp"}));
-        return nullptr;
-    }
+    Msprof::MsprofTx::MsprofTxManager::instance()->CountCall(Msprof::MsprofTx::TxApiCategory::STAMP);
     return Msprof::MsprofTx::MsprofTxManager::instance()->CreateStamp();
 }
 
 extern "C" void ProfAclDestroyStamp(VOID_PTR stamp)
 {
-    if (Platform::instance()->PlatformIsHelperHostSide()) {
-        MSPROF_LOGE("acl api not support in helper");
-        return;
-    }
+    Msprof::MsprofTx::MsprofTxManager::instance()->CountCall(Msprof::MsprofTx::TxApiCategory::STAMP);
     if (stamp == nullptr) {
         (void)ReportNullParam("aclprofDestroyStamp", "stamp");
         return;
@@ -95,30 +87,21 @@ extern "C" int32_t ProfAclSetStampTraceMessage(VOID_PTR stamp, const char* msg, 
 
 extern "C" int32_t ProfAclMark(VOID_PTR stamp)
 {
-    if (Platform::instance()->PlatformIsHelperHostSide()) {
-        MSPROF_LOGE("acl api not support in helper");
-        return ACL_ERROR_FEATURE_UNSUPPORTED;
-    }
+    Msprof::MsprofTx::MsprofTxManager::instance()->CountCall(Msprof::MsprofTx::TxApiCategory::MARK);
     auto stampInstancePtr = static_cast<Msprof::MsprofTx::ACL_PROF_STAMP_PTR>(stamp);
     return Msprof::MsprofTx::MsprofTxManager::instance()->Mark(stampInstancePtr);
 }
 
 extern "C" int32_t ProfAclMarkEx(const char* msg, size_t msgLen, aclrtStream stream)
 {
-    if (Platform::instance()->PlatformIsHelperHostSide()) {
-        MSPROF_LOGE("acl api not support in helper");
-        return ACL_ERROR_FEATURE_UNSUPPORTED;
-    }
+    Msprof::MsprofTx::MsprofTxManager::instance()->CountCall(Msprof::MsprofTx::TxApiCategory::MARK);
 
     return Msprof::MsprofTx::MsprofTxManager::instance()->MarkEx(msg, msgLen, stream);
 }
 
 extern "C" int32_t ProfAclPush(VOID_PTR stamp)
 {
-    if (Platform::instance()->PlatformIsHelperHostSide()) {
-        MSPROF_LOGE("acl api not support in helper");
-        return ACL_ERROR_FEATURE_UNSUPPORTED;
-    }
+    Msprof::MsprofTx::MsprofTxManager::instance()->CountCall(Msprof::MsprofTx::TxApiCategory::MARK);
     if (stamp == nullptr) {
         return ReportNullParam("aclprofPush", "stamp");
     }
@@ -128,21 +111,13 @@ extern "C" int32_t ProfAclPush(VOID_PTR stamp)
 
 extern "C" int32_t ProfAclPop()
 {
-    if (Platform::instance()->PlatformIsHelperHostSide()) {
-        MSPROF_LOGE("acl api not support in helper");
-        return ACL_ERROR_FEATURE_UNSUPPORTED;
-    }
+    Msprof::MsprofTx::MsprofTxManager::instance()->CountCall(Msprof::MsprofTx::TxApiCategory::MARK);
     return Msprof::MsprofTx::MsprofTxManager::instance()->Pop();
 }
 
 extern "C" int32_t ProfAclRangeStart(VOID_PTR stamp, uint32_t* rangeId)
 {
-    if (Platform::instance()->PlatformIsHelperHostSide()) {
-        MSPROF_LOGE("acl api not support in helper");
-        MSPROF_INPUT_ERROR(
-            "EK0004", std::vector<std::string>({"intf"}), std::vector<std::string>({"aclprofRangeStart"}));
-        return ACL_ERROR_FEATURE_UNSUPPORTED;
-    }
+    Msprof::MsprofTx::MsprofTxManager::instance()->CountCall(Msprof::MsprofTx::TxApiCategory::RANGE);
     if (stamp == nullptr) {
         return ReportNullParam("aclprofRangeStart", "stamp");
     }
@@ -155,12 +130,7 @@ extern "C" int32_t ProfAclRangeStart(VOID_PTR stamp, uint32_t* rangeId)
 
 extern "C" int32_t ProfAclRangeStop(uint32_t rangeId)
 {
-    if (Platform::instance()->PlatformIsHelperHostSide()) {
-        MSPROF_LOGE("acl api not support in helper");
-        MSPROF_INPUT_ERROR(
-            "EK0004", std::vector<std::string>({"intf"}), std::vector<std::string>({"aclprofRangeStop"}));
-        return ACL_ERROR_FEATURE_UNSUPPORTED;
-    }
+    Msprof::MsprofTx::MsprofTxManager::instance()->CountCall(Msprof::MsprofTx::TxApiCategory::RANGE);
     return Msprof::MsprofTx::MsprofTxManager::instance()->RangeStop(rangeId);
 }
 

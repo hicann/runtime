@@ -15,6 +15,7 @@
 #include <map>
 #include <string>
 #include <atomic>
+#include "securec.h"
 
 const std::map<int, std::string> LOG_LEVEL_INFO = {
     {DLOG_DEBUG, "DEBUG"}, {DLOG_INFO, "INFO"}, {DLOG_WARN, "WARING"}, {DLOG_ERROR, "ERROR"}, {DLOG_EVENT, "EVENT"},
@@ -22,8 +23,17 @@ const std::map<int, std::string> LOG_LEVEL_INFO = {
 
 static std::atomic<int32_t> g_dlogRecordCount{0};
 
+namespace {
+constexpr int LOG_MSG_MAX = 4096;
+char g_lastDlogRecordMsg[LOG_MSG_MAX] = {0};
+} // namespace
+
 void ResetDlogRecordCount() { g_dlogRecordCount.store(0); }
 int32_t GetDlogRecordCount() { return g_dlogRecordCount.load(); }
+
+void ResetLastDlogRecordMsg() { g_lastDlogRecordMsg[0] = '\0'; }
+
+const char* GetLastDlogRecordMsg() { return g_lastDlogRecordMsg; }
 
 void DlogErrorInner(int moduleId, const char* format, ...)
 {
@@ -98,6 +108,11 @@ void DlogRecord(int module_id, int level, const char* fmt, ...)
     char buffer[4096] = {0};
     va_start(args, fmt);
     vsnprintf(buffer, sizeof(buffer), fmt, args);
+    int32_t ret =
+        snprintf_s(g_lastDlogRecordMsg, sizeof(g_lastDlogRecordMsg), sizeof(g_lastDlogRecordMsg) - 1U, "%s", buffer);
+    if (ret < 0) {
+        g_lastDlogRecordMsg[0] = '\0';
+    }
     printf("[%s][pid:%d]%s", levelStr.c_str(), getpid(), buffer);
     va_end(args);
 }

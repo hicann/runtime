@@ -256,9 +256,9 @@ private:
     std::array<Msprof::MsprofTx::MsprofStampInstance*, Msprof::MsprofTx::CURRENT_STAMP_SIZE> savedStampInstances_{};
 };
 
-TEST_F(ACL_PROF_MARK_EX_UTEST, RejectsBeforeInitializationWithoutCallingDependencies)
+TEST_F(ACL_PROF_MARK_EX_UTEST, ReturnsSilentlyBeforeInitializationWithoutCallingDependencies)
 {
-    EXPECT_EQ(PROFILING_FAILED, aclprofMarkEx("mark", 4, &streamToken_));
+    EXPECT_EQ(ACL_SUCCESS, aclprofMarkEx("mark", 4, &streamToken_));
     EXPECT_TRUE(capture_.runtimeMarks.empty());
     EXPECT_TRUE(capture_.reports.empty());
 }
@@ -356,12 +356,12 @@ TEST_F(ACL_PROF_MARK_EX_UTEST, ReportsDistinctIdsAndMessagesForRepeatedMarks)
     EXPECT_NE(capture_.runtimeMarks[0].markId, capture_.runtimeMarks[1].markId);
 }
 
-TEST_F(ACL_PROF_MARK_EX_UTEST, RejectsAfterUninitializationWithoutCallingDependencies)
+TEST_F(ACL_PROF_MARK_EX_UTEST, ReturnsSilentlyAfterUninitializationWithoutCallingDependencies)
 {
     ASSERT_EQ(PROFILING_SUCCESS, manager_.Init());
     manager_.UnInit();
 
-    EXPECT_EQ(PROFILING_FAILED, aclprofMarkEx("mark", 4, &streamToken_));
+    EXPECT_EQ(ACL_SUCCESS, aclprofMarkEx("mark", 4, &streamToken_));
     EXPECT_TRUE(capture_.runtimeMarks.empty());
     EXPECT_TRUE(capture_.reports.empty());
 }

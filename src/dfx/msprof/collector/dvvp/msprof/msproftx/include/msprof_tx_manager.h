@@ -26,6 +26,9 @@ using CONST_CHAR_PTR = const char*;
 
 enum class EventType { MARK = 0, PUSH_OR_POP, START_OR_STOP, MARK_EX };
 
+// aclprof api categories for call-count statistics.
+enum class TxApiCategory { STAMP = 0, MARK, RANGE };
+
 class MsprofTxManager : public analysis::dvvp::common::singleton::Singleton<MsprofTxManager> {
 public:
     MsprofTxManager();
@@ -35,6 +38,13 @@ public:
     int32_t Init();
     // destroy resource
     void UnInit();
+
+    // count one aclprof api call of the given category at the adapter entry; every entry call is counted
+    // on purpose, including calls made while profiling is not enabled (that call volume is the signal
+    // this counter exists to surface)
+    void CountCall(TxApiCategory category);
+    // get the current call count of the given category
+    uint64_t GetCallCount(TxApiCategory category) const;
 
     // get stamp from memory pool
     ACL_PROF_STAMP_PTR CreateStamp() const;
@@ -73,6 +83,7 @@ private:
 
 private:
     int32_t ReportStampData(MsprofStampInstance* stamp) const;
+    void ReportCallSummary();
 
     bool isInit_;
     std::mutex mtx_;
@@ -83,6 +94,10 @@ private:
     ProfMarkExCallback rtProfilerTraceExFunc_;
     std::mutex markExMtx_;
     std::atomic<uint64_t> txEventId_;
+    // aclprof api call counters, one per api category (stamp/mark/range)
+    mutable std::atomic<uint64_t> stampCallCount_;
+    mutable std::atomic<uint64_t> markCallCount_;
+    mutable std::atomic<uint64_t> rangeCallCount_;
 };
 
 } // namespace MsprofTx

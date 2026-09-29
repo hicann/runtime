@@ -13,6 +13,8 @@
 #include <cstdlib>
 #include <fstream>
 #include <string.h>
+#include <thread>
+#include <vector>
 #include <google/protobuf/util/json_util.h>
 #include "config_manager.h"
 #include "config/feature_manager.h"
@@ -75,6 +77,7 @@
 #include "json_parser.h"
 #include "stats_analyzer.h"
 #include "error_manager_stub2.h"
+#include "hdc-log-stub.h"
 
 using namespace analysis::dvvp::common::error;
 using namespace Analysis::Dvvp::Analyze;
@@ -5234,26 +5237,23 @@ TEST_F(MSPROF_API_MSPROFTX_UTEST, aclprofCreateStamp)
     GlobalMockObject::verify();
 }
 
-TEST_F(MSPROF_API_MSPROFTX_UTEST, aclprofCreateStampHelperHostReportInputError)
+TEST_F(MSPROF_API_MSPROFTX_UTEST, aclprofCreateStampHelperHostNoError)
 {
     GlobalMockObject::verify();
     MsprofUtestStub::ResetMsprofLastInputErrorCode();
 
-    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsHelperHostSide)
-        .expects(once())
-        .will(returnValue(true));
+    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsHelperHostSide).stubs().will(returnValue(true));
     EXPECT_EQ((void*)nullptr, aclprofCreateStamp());
-    EXPECT_EQ("EK0004", MsprofUtestStub::GetMsprofLastInputErrorCode());
-    GlobalMockObject::verify();
+    EXPECT_TRUE(MsprofUtestStub::GetMsprofLastInputErrorCode().empty());
 }
 
-TEST_F(MSPROF_API_MSPROFTX_UTEST, CreateStampWithoutInitReportInputError)
+TEST_F(MSPROF_API_MSPROFTX_UTEST, CreateStampWithoutInitReturnsSilently)
 {
     Msprof::MsprofTx::MsprofTxManager::instance()->UnInit();
 
     MsprofUtestStub::ResetMsprofLastInputErrorCode();
     EXPECT_EQ(nullptr, Msprof::MsprofTx::MsprofTxManager::instance()->CreateStamp());
-    EXPECT_EQ("EK0002", MsprofUtestStub::GetMsprofLastInputErrorCode());
+    EXPECT_TRUE(MsprofUtestStub::GetMsprofLastInputErrorCode().empty());
 }
 
 TEST_F(MSPROF_API_MSPROFTX_UTEST, aclprofDestroyStamp)
@@ -5269,7 +5269,9 @@ TEST_F(MSPROF_API_MSPROFTX_UTEST, aclprofDestroyStamp)
     EXPECT_EQ((void*)nullptr, ret);
 
     MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsHelperHostSide).stubs().will(returnValue(true));
+    MsprofUtestStub::ResetMsprofLastInputErrorCode();
     aclprofDestroyStamp(nullptr);
+    EXPECT_EQ("EK0006", MsprofUtestStub::GetMsprofLastInputErrorCode());
 }
 
 TEST_F(MSPROF_API_MSPROFTX_UTEST, aclprofSetCategoryName)
@@ -5329,7 +5331,7 @@ TEST_F(MSPROF_API_MSPROFTX_UTEST, aclprofMark)
     EXPECT_EQ(ACL_SUCCESS, ret);
 
     MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsHelperHostSide).stubs().will(returnValue(true));
-    EXPECT_EQ(ACL_ERROR_FEATURE_UNSUPPORTED, aclprofMark(nullptr));
+    EXPECT_EQ(ACL_SUCCESS, aclprofMark(nullptr));
 }
 
 TEST_F(MSPROF_API_MSPROFTX_UTEST, aclprofPush)
@@ -5346,7 +5348,7 @@ TEST_F(MSPROF_API_MSPROFTX_UTEST, aclprofPush)
     EXPECT_EQ("EK0006", MsprofUtestStub::GetMsprofLastInputErrorCode());
 
     MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsHelperHostSide).stubs().will(returnValue(true));
-    EXPECT_EQ(ACL_ERROR_FEATURE_UNSUPPORTED, aclprofPush((void*)0x12345678));
+    EXPECT_EQ(ACL_SUCCESS, aclprofPush((void*)0x12345678));
 }
 
 TEST_F(MSPROF_API_MSPROFTX_UTEST, aclprofPop)
@@ -5355,7 +5357,8 @@ TEST_F(MSPROF_API_MSPROFTX_UTEST, aclprofPop)
     MOCKER_CPP(&Msprof::MsprofTx::MsprofTxManager::Pop)
         .stubs()
         .will(returnValue(ACL_SUCCESS))
-        .then(returnValue(PROFILING_FAILED));
+        .then(returnValue(PROFILING_FAILED))
+        .then(returnValue(ACL_SUCCESS));
 
     aclError ret = aclprofPop();
     EXPECT_EQ(ACL_SUCCESS, ret);
@@ -5365,7 +5368,7 @@ TEST_F(MSPROF_API_MSPROFTX_UTEST, aclprofPop)
     EXPECT_TRUE(MsprofUtestStub::GetMsprofLastInputErrorCode().empty());
 
     MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsHelperHostSide).stubs().will(returnValue(true));
-    EXPECT_EQ(ACL_ERROR_FEATURE_UNSUPPORTED, aclprofPop());
+    EXPECT_EQ(ACL_SUCCESS, aclprofPop());
 }
 
 TEST_F(MSPROF_API_MSPROFTX_UTEST, aclprofRangeStart)
@@ -5389,8 +5392,8 @@ TEST_F(MSPROF_API_MSPROFTX_UTEST, aclprofRangeStart)
 
     MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsHelperHostSide).stubs().will(returnValue(true));
     MsprofUtestStub::ResetMsprofLastInputErrorCode();
-    EXPECT_EQ(ACL_ERROR_FEATURE_UNSUPPORTED, aclprofRangeStart((void*)0x12345678, &rangeId));
-    EXPECT_EQ("EK0004", MsprofUtestStub::GetMsprofLastInputErrorCode());
+    EXPECT_EQ(ACL_SUCCESS, aclprofRangeStart((void*)0x12345678, &rangeId));
+    EXPECT_TRUE(MsprofUtestStub::GetMsprofLastInputErrorCode().empty());
 }
 
 TEST_F(MSPROF_API_MSPROFTX_UTEST, aclprofRangeStop)
@@ -5399,7 +5402,8 @@ TEST_F(MSPROF_API_MSPROFTX_UTEST, aclprofRangeStop)
     MOCKER_CPP(&Msprof::MsprofTx::MsprofTxManager::RangeStop)
         .stubs()
         .will(returnValue(ACL_SUCCESS))
-        .then(returnValue(PROFILING_FAILED));
+        .then(returnValue(PROFILING_FAILED))
+        .then(returnValue(ACL_SUCCESS));
 
     aclError ret = aclprofRangeStop(0);
     EXPECT_EQ(ACL_SUCCESS, ret);
@@ -5410,8 +5414,8 @@ TEST_F(MSPROF_API_MSPROFTX_UTEST, aclprofRangeStop)
 
     MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsHelperHostSide).stubs().will(returnValue(true));
     MsprofUtestStub::ResetMsprofLastInputErrorCode();
-    EXPECT_EQ(ACL_ERROR_FEATURE_UNSUPPORTED, aclprofRangeStop(0));
-    EXPECT_EQ("EK0004", MsprofUtestStub::GetMsprofLastInputErrorCode());
+    EXPECT_EQ(ACL_SUCCESS, aclprofRangeStop(0));
+    EXPECT_TRUE(MsprofUtestStub::GetMsprofLastInputErrorCode().empty());
 }
 
 TEST_F(MSPROF_API_MSPROFTX_UTEST, aclprofRangePushEx)
@@ -5458,7 +5462,7 @@ TEST_F(MSPROF_API_MSPROFTX_UTEST, RangeStop)
     EXPECT_NE(std::string::npos, values[2].find("aclprofRangeStart"));
 }
 
-TEST_F(MSPROF_API_MSPROFTX_UTEST, TxManagerRangeReportsApiSequenceErrorWhenNotInitialized)
+TEST_F(MSPROF_API_MSPROFTX_UTEST, TxManagerRangeSilentSuccessWhenNotInitialized)
 {
     GlobalMockObject::verify();
     auto manager = Msprof::MsprofTx::MsprofTxManager::instance();
@@ -5467,12 +5471,10 @@ TEST_F(MSPROF_API_MSPROFTX_UTEST, TxManagerRangeReportsApiSequenceErrorWhenNotIn
     uint32_t rangeId = 0;
 
     MsprofUtestStub::ResetMsprofLastInputErrorCode();
-    EXPECT_EQ(PROFILING_FAILED, manager->RangeStart(&validStamp, &rangeId));
-    EXPECT_EQ("EK0002", MsprofUtestStub::GetMsprofLastInputErrorCode());
-
-    MsprofUtestStub::ResetMsprofLastInputErrorCode();
-    EXPECT_EQ(PROFILING_FAILED, manager->RangeStop(rangeId));
-    EXPECT_EQ("EK0002", MsprofUtestStub::GetMsprofLastInputErrorCode());
+    EXPECT_EQ(ACL_SUCCESS, manager->RangeStart(&validStamp, &rangeId));
+    EXPECT_EQ(0U, rangeId); // profiling not enabled: the out param keeps a deterministic value
+    EXPECT_EQ(ACL_SUCCESS, manager->RangeStop(rangeId));
+    EXPECT_TRUE(MsprofUtestStub::GetMsprofLastInputErrorCode().empty());
 }
 
 TEST_F(MSPROF_API_MSPROFTX_UTEST, TxManagerPopAndRangeStartInvalidInputsReportInputError)
@@ -5492,6 +5494,124 @@ TEST_F(MSPROF_API_MSPROFTX_UTEST, TxManagerPopAndRangeStartInvalidInputsReportIn
     MsprofUtestStub::ResetMsprofLastInputErrorCode();
     EXPECT_EQ(PROFILING_FAILED, manager->RangeStart(&validStamp, nullptr));
     EXPECT_EQ("EK0006", MsprofUtestStub::GetMsprofLastInputErrorCode());
+}
+
+int32_t MsprofAdditionalBufPushCallbackStub(uint32_t aging, const VOID_PTR data, uint32_t len);
+
+TEST_F(MSPROF_API_MSPROFTX_UTEST, AclProfCallCountByCategory)
+{
+    GlobalMockObject::verify();
+    auto manager = Msprof::MsprofTx::MsprofTxManager::instance();
+    // Reset to a clean un-inited state through public apis only: make sure the reporter exists so a
+    // leaked inited state from earlier cases is uninit-ed safely, then drop the counters.
+    manager->RegisterReporterCallback(MsprofAdditionalBufPushCallbackStub);
+    manager->UnInit();
+
+    MOCKER_CPP(&Msprof::MsprofTx::MsprofTxManager::MarkEx).stubs().will(returnValue(ACL_SUCCESS));
+    (void)aclprofCreateStamp();
+    aclprofDestroyStamp(nullptr);
+    (void)aclprofMark(nullptr);
+    (void)aclprofMarkEx("msg", 3, nullptr);
+    (void)aclprofPush((void*)0x12345678);
+    (void)aclprofPop();
+    uint32_t rangeId = 0;
+    (void)aclprofRangeStart((void*)0x12345678, &rangeId);
+    (void)aclprofRangeStop(0);
+
+    EXPECT_EQ(2U, manager->GetCallCount(Msprof::MsprofTx::TxApiCategory::STAMP));
+    EXPECT_EQ(4U, manager->GetCallCount(Msprof::MsprofTx::TxApiCategory::MARK));
+    EXPECT_EQ(2U, manager->GetCallCount(Msprof::MsprofTx::TxApiCategory::RANGE));
+
+    manager->UnInit();
+    EXPECT_EQ(0U, manager->GetCallCount(Msprof::MsprofTx::TxApiCategory::STAMP));
+    EXPECT_EQ(0U, manager->GetCallCount(Msprof::MsprofTx::TxApiCategory::MARK));
+    EXPECT_EQ(0U, manager->GetCallCount(Msprof::MsprofTx::TxApiCategory::RANGE));
+}
+
+TEST_F(MSPROF_API_MSPROFTX_UTEST, AclProfCallSummaryEmittedOnceWithCounts)
+{
+    GlobalMockObject::verify();
+    auto manager = Msprof::MsprofTx::MsprofTxManager::instance();
+    manager->RegisterReporterCallback(MsprofAdditionalBufPushCallbackStub);
+    manager->UnInit();
+
+    // nothing counted yet: UnInit must not emit a summary event
+    ResetDlogRecordCount();
+    ResetLastDlogRecordMsg();
+    manager->UnInit();
+    EXPECT_EQ(0, GetDlogRecordCount());
+
+    manager->CountCall(Msprof::MsprofTx::TxApiCategory::STAMP);
+    manager->CountCall(Msprof::MsprofTx::TxApiCategory::MARK);
+    manager->CountCall(Msprof::MsprofTx::TxApiCategory::MARK);
+    manager->CountCall(Msprof::MsprofTx::TxApiCategory::RANGE);
+
+    // the summary event is emitted exactly once, with all three counts, then the counters are reset
+    ResetDlogRecordCount();
+    ResetLastDlogRecordMsg();
+    manager->UnInit();
+    EXPECT_EQ(1, GetDlogRecordCount());
+    EXPECT_NE(nullptr, strstr(GetLastDlogRecordMsg(), "msproftx api call summary"));
+    EXPECT_NE(nullptr, strstr(GetLastDlogRecordMsg(), "stamp: 1, mark: 2, range: 1"));
+    EXPECT_EQ(0U, manager->GetCallCount(Msprof::MsprofTx::TxApiCategory::STAMP));
+    EXPECT_EQ(0U, manager->GetCallCount(Msprof::MsprofTx::TxApiCategory::MARK));
+    EXPECT_EQ(0U, manager->GetCallCount(Msprof::MsprofTx::TxApiCategory::RANGE));
+
+    // already reported: the next UnInit does not emit again
+    ResetDlogRecordCount();
+    manager->UnInit();
+    EXPECT_EQ(0, GetDlogRecordCount());
+}
+
+TEST_F(MSPROF_API_MSPROFTX_UTEST, AclProfCallSummaryEmittedOnDestructor)
+{
+    GlobalMockObject::verify();
+    // a process that never starts profiling exits without UnInit: the manager destructor
+    // must still emit the summary event once
+    ResetDlogRecordCount();
+    ResetLastDlogRecordMsg();
+    {
+        Msprof::MsprofTx::MsprofTxManager manager;
+        manager.CountCall(Msprof::MsprofTx::TxApiCategory::STAMP);
+        manager.CountCall(Msprof::MsprofTx::TxApiCategory::RANGE);
+    }
+    EXPECT_EQ(1, GetDlogRecordCount());
+    EXPECT_NE(nullptr, strstr(GetLastDlogRecordMsg(), "msproftx api call summary"));
+    EXPECT_NE(nullptr, strstr(GetLastDlogRecordMsg(), "stamp: 1, mark: 0, range: 1"));
+}
+
+TEST_F(MSPROF_API_MSPROFTX_UTEST, AclProfCallCountConcurrencyAndInvalidCategory)
+{
+    GlobalMockObject::verify();
+    auto manager = Msprof::MsprofTx::MsprofTxManager::instance();
+    manager->RegisterReporterCallback(MsprofAdditionalBufPushCallbackStub);
+    manager->UnInit();
+
+    // invalid category values are ignored: nothing crashes and nothing is counted
+    constexpr int32_t invalidCategory = 99;
+    manager->CountCall(static_cast<Msprof::MsprofTx::TxApiCategory>(invalidCategory));
+    EXPECT_EQ(0U, manager->GetCallCount(static_cast<Msprof::MsprofTx::TxApiCategory>(invalidCategory)));
+
+    // concurrent counting from multiple threads keeps the counters exact
+    constexpr int32_t threadNum = 4;
+    constexpr int32_t loopsPerThread = 1000;
+    std::vector<std::thread> threads;
+    for (int32_t i = 0; i < threadNum; i++) {
+        threads.emplace_back([&manager]() {
+            for (int32_t j = 0; j < loopsPerThread; j++) {
+                manager->CountCall(Msprof::MsprofTx::TxApiCategory::MARK);
+            }
+        });
+    }
+    for (auto& thread : threads) {
+        thread.join();
+    }
+    EXPECT_EQ(
+        static_cast<uint64_t>(threadNum) * static_cast<uint64_t>(loopsPerThread),
+        manager->GetCallCount(Msprof::MsprofTx::TxApiCategory::MARK));
+
+    manager->UnInit();
+    EXPECT_EQ(0U, manager->GetCallCount(Msprof::MsprofTx::TxApiCategory::MARK));
 }
 
 int32_t MsprofAdditionalBufPushCallbackStub(uint32_t aging, const VOID_PTR data, uint32_t len) { return 0; }
