@@ -2858,29 +2858,6 @@ rtError_t ApiErrorDecorator::MemcpyAsyncCheckLocation(
     return error;
 }
 
-rtError_t ApiErrorDecorator::MemcpyKindAutoUpdate(
-    const rtMemLocationType srcType, const rtMemLocationType dstType, rtMemcpyKind_t* kind) const
-{
-    // registered memory should be treated as host memory
-    if ((srcType == RT_MEMORY_LOC_HOST)) {
-        if (dstType == RT_MEMORY_LOC_HOST) {
-            *kind = RT_MEMCPY_HOST_TO_HOST;
-        } else {
-            *kind = RT_MEMCPY_HOST_TO_DEVICE;
-        }
-    } else {
-        if (dstType == RT_MEMORY_LOC_HOST) {
-            *kind = RT_MEMCPY_DEVICE_TO_HOST;
-        } else {
-            *kind = RT_MEMCPY_DEVICE_TO_DEVICE;
-        }
-    }
-    RT_LOG(
-        RT_LOG_DEBUG, "auto infer copy srcType=%s, dstType=%s, dir=%s", MemLocationTypeToString(srcType).c_str(),
-        MemLocationTypeToString(dstType).c_str(), MemcpyKindToStr(*kind));
-    return RT_ERROR_NONE;
-}
-
 rtError_t ApiErrorDecorator::ReduceAsync(
     void* const dst, const void* const src, const uint64_t cnt, const rtRecudeKind_t kind, const rtDataType_t type,
     Stream* const stm, const rtTaskCfgInfo_t* const cfgInfo)
@@ -3024,7 +3001,6 @@ rtError_t ApiErrorDecorator::MemCopy2DSync(
         ERR_MODULE_DRV, error != RT_ERROR_NONE, error, "GetLocationType Failed, retCode=%#x, src=%p, dst=%p",
         static_cast<uint32_t>(error), src, dst);
 
-    /* MemcpyKindAutoUpdate需使用realLocation */
     error = MemcpyKindAutoCorrect(srcLocationType, dstLocationType, &copyKind);
     COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
     COND_PROC_RETURN_AND_MSG_OUTER(

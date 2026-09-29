@@ -683,8 +683,6 @@ private:
         const uint64_t width, const uint64_t height, const rtMemcpyKind_t kind) const;
     rtMemcpyKind_t GetMemCpyKind(const rtMemcpyKind_t kind, const rtMemcpyKind newKind) const;
     rtError_t MemcpyAsyncCheckParam(const rtMemcpyKind_t kind, const Stream* const stm) const;
-    rtError_t MemcpyKindAutoUpdate(
-        const rtMemLocationType srcType, const rtMemLocationType dstType, rtMemcpyKind_t* kind) const;
     rtError_t MemcpyAsyncCheckAddrCfg(
         const uint64_t destMax, const uint64_t cnt, const rtD2DAddrCfgInfo_t* const addrCfg) const;
     rtError_t GetLocationType(
