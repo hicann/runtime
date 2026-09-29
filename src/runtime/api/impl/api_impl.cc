@@ -2402,7 +2402,7 @@ rtError_t ApiImpl::DevMalloc(void** const devPtr, const uint64_t size, const rtM
     const uint64_t tmpSize = (((size + 0x1FU) >> 5U) << 5U); // 32 byte align
 
     auto driver = curCtx->Device_()->Driver_();
-    uint32_t devId = curCtx->Device_()->Id_();
+    const uint32_t devId = curCtx->Device_()->Id_();
     rtError_t ret = driver->DevMemAlloc(devPtr, tmpSize, type, devId, moduleId, false);
     if (ret != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_INFO, "DevMemAlloc first try not successful, ret=%d, trigger implicit mempool trim.", ret);

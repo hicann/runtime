@@ -54,7 +54,7 @@ rtError_t DoMemRetainAllocationHandle(void* virPtr, rtDrvMemHandle* handle)
 rtError_t DoMemGetAddressRange(void* ptr, void** pbase, size_t* psize)
 {
     RT_LOG(RT_LOG_INFO, "Start to MemGetAddressRange");
-    rtError_t error = NpuDriver::MemGetAddressRange(ptr, pbase, psize);
+    const rtError_t error = NpuDriver::MemGetAddressRange(ptr, pbase, psize);
     ERROR_RETURN(error, "Call MemGetAddressRange failed, ptr=%p", ptr);
     return error;
 }
@@ -298,7 +298,7 @@ rtError_t ApiImplVmm::ExportToShareableHandle(
         (flags > maxFlag), RT_ERROR_INVALID_VALUE, "Exporting the physical memory handle of the device", flags,
         "[0, " + std::to_string(maxFlag) + "]");
     /* handle在上下文中作为一个整体使用, 内部的devid不用进行转换 */
-    uint64_t drvFlags = 0UL;
+    const uint64_t drvFlags = 0UL;
     rtError_t error = NpuDriver::ExportToShareableHandle(handle, handleType, drvFlags, shareableHandle);
     COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
     if ((flags & RT_VMM_EXPORT_FLAG_DISABLE_PID_VALIDATION) != 0UL) {
@@ -337,7 +337,7 @@ rtError_t ApiImplVmm::ExportToShareableHandleV2(
             "This device does not support cross-server communication drv devId=%u localServerId=%" PRId64 " err:%#x",
             devId, localServerId, static_cast<uint32_t>(error));
     }
-    uint64_t drvFlags = 0UL;
+    const uint64_t drvFlags = 0UL;
     error = NpuDriver::ExportToShareableHandleV2(handle, handleType, drvFlags, shareableHandle);
     COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
     if ((flags & RT_VMM_EXPORT_FLAG_DISABLE_PID_VALIDATION) != 0UL) {
