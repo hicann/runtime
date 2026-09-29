@@ -28,11 +28,7 @@ extern "C" {
 #define SLOG_DEFAULT_GROUP_NAME "device-os"
 #define DEFAULT_LOG_SIZE (800 * 1024)
 #define DEFAULT_BUF_SIZE 256
-#ifdef DEFAULT_LOG_FILE_DIR
-#define DEFAULT_FILE_DIR DEFAULT_LOG_FILE_DIR
-#else
-#define DEFAULT_FILE_DIR "/var/log/npu/slog/"
-#endif
+#define DEFAULT_FILE_DIR "/home/mdc/var/log/"
 
 // slog module type
 typedef enum { SLOGD, ALOG, PLOG, LOGDAEMON, MODULE_MAX } SymbolEnum;

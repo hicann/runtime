@@ -18,10 +18,10 @@
 #endif
 #define SLOGD_LOG_LOCK "/tmp.lock"
 
-#if defined(SLOGD_LOG_FILE_PATH) && defined(SLOGD_LOG_OLD_FILE_PATH) && defined(SLOGD_LOG_LOCK_PATH)
-#define DEFAULT_SLOGD_LOG_FILE SLOGD_LOG_FILE_PATH
-#define DEFAULT_SLOGD_LOG_OLD_FILE SLOGD_LOG_OLD_FILE_PATH
-#define DEFAULT_SLOGD_LOG_LOCK SLOGD_LOG_LOCK_PATH
+#ifdef IAM
+#define DEFAULT_SLOGD_LOG_FILE "/home/mdc/var/log/slogd/slogdlog"
+#define DEFAULT_SLOGD_LOG_OLD_FILE "/home/mdc/var/log/slogd/slogdlog.old"
+#define DEFAULT_SLOGD_LOG_LOCK "/home/mdc/var/log/slogd/tmp.lock"
 #else
 #define DEFAULT_SLOGD_LOG_FILE "/var/log/npu/slog/slogd/slogdlog"
 #define DEFAULT_SLOGD_LOG_OLD_FILE "/var/log/npu/slog/slogd/slogdlog.old"

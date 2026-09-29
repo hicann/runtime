@@ -73,23 +73,6 @@ STATIC int32_t SlogdApplogFlush(void* buffer, uint32_t bufferLen, bool flushFlag
     return SlogdAppLogReport();
 }
 
-#else
-STATIC int32_t SlogdApplogWirte(const char* msg, uint32_t msgLen, const LogInfo* info)
-{
-    (void)msg;
-    (void)msgLen;
-    (void)info;
-    return LOG_SUCCESS;
-}
-
-STATIC int32_t SlogdApplogFlush(void* buffer, uint32_t bufferLen, bool flushFlag)
-{
-    (void)buffer;
-    (void)bufferLen;
-    (void)flushFlag;
-    return LOG_SUCCESS;
-}
-
 #endif
 
 static int32_t SlogdApplogRegister(void)

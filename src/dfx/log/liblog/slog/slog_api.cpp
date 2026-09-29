@@ -471,7 +471,7 @@ int32_t DlogSetAttr(LogAttr logAttrInfo)
         // update level by env after setting app property.
         // g_levelSetted is setted true in the interface 'dlog_setlevel',
         // if g_levelSetted is false, then update level by env.
-        // EP aicpu call dlog_setlevel first, then set log attr
+        // EP/MDC aicpu call dlog_setlevel first, then set log attr
         // RC aicpu not call dlog_setlevel, only set log attr
         DlogLevelInitByEnv();
 #ifdef IAM
