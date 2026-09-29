@@ -928,7 +928,7 @@ static inline void TaskCommonFieldsInit(TaskInfo* const taskInfo)
     taskInfo->pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].expectPackage = 1U;
     taskInfo->pkgStat[RT_PACKAGE_TYPE_TASK_REPORT].receivePackage = 0U;
     taskInfo->isValidInO1 = false;
-    taskInfo->mte_error = 0; // init mte_error
+    taskInfo->mte_error = 0U; // init mte_error
     taskInfo->isNoRingbuffer = 0U;
     taskInfo->enableProfiling = 0U;
 }

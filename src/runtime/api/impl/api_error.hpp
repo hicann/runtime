@@ -18,7 +18,7 @@ namespace cce {
 namespace runtime {
 
 // Keep launch-blocking validation in the standard/tiny source split so tiny retains its unsupported stub.
-rtError_t ValidateStreamLaunchBlockingSet(const Stream* const stm, const uint32_t launchBlockingMode);
+rtError_t ValidateStreamLaunchBlockingSet(const Stream* const stream, const uint32_t launchBlockingMode);
 rtError_t ValidateStreamLaunchBlockingGet(const Stream* const stm);
 
 class ApiErrorDecorator : public ApiDecorator {

@@ -1745,8 +1745,8 @@ rtError_t DavidStream::HandleTaskDefault(
     model->SetKernelTaskId(static_cast<uint32_t>(workTask->id), streamId_);
     uint8_t* oldhostSqeAddr = GetHostSqeAddrByPos(workTask->pos);
     TaskSqeBuffer sqeBuffer = {};
-    const TaskSqeInfo sqeInfo = {0ULL, 0ULL};
     if (NeedReBuildSqe(workTask)) {
+        const TaskSqeInfo sqeInfo = {0ULL, 0ULL};
         ToConstructSqe(workTask, static_cast<void*>(sqeBuffer.data), sqeInfo);
         SetExpectedTaskReportNum(workTask, sendSqeNum);
         oldhostSqeAddr = sqeBuffer.data;

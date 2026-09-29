@@ -37,7 +37,7 @@ constexpr uint8_t GetDavidHeadUpdateFlag(const uint64_t allocTimes)
     return ((allocTimes % DAVID_TASK_NUM_FOR_HEAD_UPDATE) == 0U) ? 1U : 0U;
 }
 
-inline void UpdateDavidSqeHeadUpdate(TaskInfo* const taskInfo, void* const sqe)
+inline void UpdateDavidSqeHeadUpdate(const TaskInfo* const taskInfo, void* const sqe)
 {
     rtDavidSqe_t* const davidSqe = static_cast<rtDavidSqe_t*>(sqe);
     if (Runtime::Instance()->GetConnectUbFlag() && (davidSqe->commonSqe.sqeHeader.headUpdate == 0U)) {

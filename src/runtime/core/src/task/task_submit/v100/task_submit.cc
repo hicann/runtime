@@ -441,7 +441,7 @@ static rtError_t StarsSendTask(
         TIMESTAMP_END(SqTaskSend);
     } else {
         const uint64_t sqeBytes = GetTaskSqeBytes(taskInfo->sqeNum);
-        auto ret = memcpy_s(
+        const auto ret = memcpy_s(
             static_cast<void*>(GetSqeAddr(stm->GetSqeBuffer(), taskInfo->pos)), sqeBytes,
             static_cast<void*>(sendInfo.sqe_addr), sqeBytes);
         if (ret != EOK) {

@@ -3593,7 +3593,7 @@ rtError_t Stream::HandleTaskUpdate(TaskInfo* workTask, Model* model, uint8_t* sq
     ERROR_RETURN_MSG_INNER(error, "Add task to stream failed, stream_id=%d, task_id=%u.", streamId_, workTask->id);
 
     const uint64_t sqeBytes = GetTaskSqeBytes(workTask->sqeNum);
-    auto ret = memcpy_s(
+    const auto ret = memcpy_s(
         static_cast<void*>(GetSqeAddr(sqeBufferBackup, workTask->pos)), sqeBytes,
         static_cast<void*>(cmdLocal.cmdBuf.sqe), sqeBytes);
     COND_RETURN_ERROR_MSG_INNER(

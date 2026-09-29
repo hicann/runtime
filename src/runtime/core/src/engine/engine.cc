@@ -416,7 +416,7 @@ bool Engine::ProcessPublicTask(TaskInfo* workTask, const uint32_t deviceId, uint
     const uint32_t endTaskSqPos = workTask->pos;
     const uint32_t endTaskSqeNum = workTask->sqeNum;
     uint16_t count = 0U;
-    uint16_t lastRecycleTaskId = MAX_UINT16_NUM;
+    uint16_t lastRecycleTaskId = static_cast<uint16_t>(MAX_UINT16_NUM);
     uint16_t delTaskId = 0U;
     rtError_t error = RT_ERROR_NONE;
 

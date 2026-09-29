@@ -487,7 +487,7 @@ static_assert(SQE_NUM_PER_DAVID_TASK_MAX <= SQE_NUM_PER_TASK_MAX, "David task ex
 #pragma pack(pop)
 
 uint32_t GetSendDavidSqeNum(const TaskInfo* const taskInfo);
-uint8_t GetHeadUpdateFlag(uint64_t allocTimes);
+uint8_t GetHeadUpdateFlag(const uint64_t allocTimes);
 bool IsNeedRetryTask(const uint16_t sqeType);
 
 template <typename T>
@@ -538,7 +538,7 @@ void SetCommonCmoParameters(SqeType* sqe, TaskInfo* const taskInfo)
 const char_t* GetNotifySubType(const uint16_t subType);
 void InitWriteValueSqe(RtDavidStarsWriteValueSqe* const writeValueSqe, const rtWriteValueInfo_t* const writeValueInfo);
 void AicpuMsgVersionTaskInit(TaskInfo* taskInfo);
-void SetStarsResultCommonForDavid(TaskInfo* taskInfo, const rtCqReport_t& logicCq);
+void SetStarsResultCommonForDavid(TaskInfo* const taskInfo, const rtCqReport_t& logicCq);
 
 rtError_t GetLaunchConfigAttr(rtLaunchAttribute_t* attr, LaunchTaskCfgInfo_t* launchTaskCfg);
 rtError_t GetLaunchConfigInfo(const rtLaunchConfig_t* const launchConfig, LaunchTaskCfgInfo_t* launchTaskCfg);
@@ -563,9 +563,9 @@ void ConstructDavidAicAivSqeForDavinciTask(TaskInfo* const taskInfo, void* const
 void StarsV2DavinciTaskUnInit(TaskInfo* taskInfo);
 void StarsV2DoCompleteSuccessForDavinciTask(TaskInfo* taskInfo, const uint32_t devId);
 void PrintErrorInfoForDavidEventWaitTask(TaskInfo* const taskInfo, const uint32_t devId);
-rtDavidSqe_t* GetSqPosAddr(uint64_t sqBaseAddr, uint32_t pos);
-void ConstructDavidSqeForHeadCommon(const TaskInfo* taskInfo, rtDavidSqe_t* const sqe);
-void ConstructDavidSqeBase(TaskInfo* taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo);
+rtDavidSqe_t* GetSqPosAddr(const uint64_t sqBaseAddr, const uint32_t pos);
+void ConstructDavidSqeForHeadCommon(const TaskInfo* const taskInfo, rtDavidSqe_t* const sqe);
+void ConstructDavidSqeBase(TaskInfo* const taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo);
 void ConstructDavidAICpuSqeForDavinciTaskBase(
     TaskInfo* const taskInfo, rtDavidSqe_t* const davidSqe, uint64_t sqBaseAddr);
 void ConstructDavidAICpuSqeForDavinciTaskResFieldPart(
@@ -624,7 +624,7 @@ uint32_t GetSendSqeNumForAsyncDmaTask(const TaskInfo* const taskInfo);
 void ConstructFirstDavidSqeForMemWaitValueTask(TaskInfo* taskInfo, rtDavidSqe_t* const davidSqe);
 void ConstructSecondDavidSqeForMemWaitValueTask(
     TaskInfo* taskInfo, rtDavidSqe_t* const davidSqe, const RtStarsMemWaitValueInstrFcParaWithDynamicProf& fcPara);
-void ConstructNopSqeForMemWaitValueTask(TaskInfo* taskInfo, rtDavidSqe_t* const davidSqe);
+void ConstructNopSqeForMemWaitValueTask(const TaskInfo* const taskInfo, rtDavidSqe_t* const davidSqe);
 
 void InitStarsSdmaSqeForDavid(RtDavidStarsMemcpySqe* sdmaSqe, const rtTaskCfgInfo_t* const cfgInfo, const Stream* stm);
 void ConstructDavidCmoSqe(TaskInfo* const taskInfo, rtDavidSqe_t* const davidSqe, uint64_t sqBaseAddr);

@@ -196,7 +196,7 @@ rtError_t CaptureSession::UpdateSuModelExeStreamNotifyWaitSqe(TaskInfo* taskInfo
     void* targetAddrOfUpdatedSqe = GetSqeAddr(RtPtrToPtr<uint8_t*>(condTaskAddr), 1U);
 
     uint64_t realSize = 0U;
-    auto error = MemcopyAsync(
+    const auto error = MemcopyAsync(
         targetAddrOfUpdatedSqe, GetTaskSqeBytes(1U), &sqeMem, sizeof(sqeMem), RT_MEMCPY_HOST_TO_DEVICE_EX, exeStream,
         &realSize);
     COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "update sqe fail error=0x%x", error);

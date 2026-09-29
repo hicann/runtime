@@ -1786,7 +1786,7 @@ void StarsEngine::RecycleTaskProcessForSeparatedStm(TaskInfo* const recycleTask,
     }
     const uint32_t recycleTaskSqeNum = recycleTask->sqeNum;
     const uint32_t recycleTaskPos = recycleTask->pos;
-    uint16_t recycleTaskId = recycleTask->id;
+    const uint16_t recycleTaskId = recycleTask->id;
     uint16_t excepted = recycleTaskId;
     (void)device_->GetTaskFactory()->Recycle(recycleTask);
     stm->UpdateTaskPosHead(recycleTaskPos, recycleTaskSqeNum);

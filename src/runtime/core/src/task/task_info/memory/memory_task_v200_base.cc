@@ -634,7 +634,7 @@ void ConstructDavidSqeForMemWaitValueTask(TaskInfo* taskInfo, void* const sqe, c
     UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
-void ConstructNopSqeForMemWaitValueTask(TaskInfo* taskInfo, rtDavidSqe_t* const davidSqe)
+void ConstructNopSqeForMemWaitValueTask(const TaskInfo* const taskInfo, rtDavidSqe_t* const davidSqe)
 {
     ConstructDavidSqeForHeadCommon(taskInfo, davidSqe);
 

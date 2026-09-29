@@ -14,7 +14,7 @@
 
 namespace cce {
 namespace runtime {
-uint8_t GetHeadUpdateFlag(uint64_t allocTimes)
+uint8_t GetHeadUpdateFlag(const uint64_t allocTimes)
 {
     UNUSED(allocTimes);
     return 1U;

@@ -109,7 +109,7 @@ void ToConstructSqe(TaskInfo* taskInfo, void* const sqe, const TaskSqeInfo& sqeI
 
 inline void PostProcessTaskSqeHeader(void* const sqeHeader)
 {
-    const PfnTaskSqeHeaderPostProc postProcFunc = g_taskSqeHeaderPostProcRunningFunc;
+    PfnTaskSqeHeaderPostProc const postProcFunc = g_taskSqeHeaderPostProcRunningFunc;
     if (postProcFunc != nullptr) {
         postProcFunc(sqeHeader);
     }

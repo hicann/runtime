@@ -12,9 +12,9 @@
 namespace cce {
 namespace runtime {
 
-rtError_t ValidateStreamLaunchBlockingSet(const Stream* const stm, const uint32_t launchBlockingMode)
+rtError_t ValidateStreamLaunchBlockingSet(const Stream* const stream, const uint32_t launchBlockingMode)
 {
-    UNUSED(stm);
+    UNUSED(stream);
     UNUSED(launchBlockingMode);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }

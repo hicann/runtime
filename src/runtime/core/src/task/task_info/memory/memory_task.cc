@@ -498,7 +498,7 @@ rtError_t UpdateTaskD2HSubmit(const TaskInfo* const updateTask, void* sqeAddr, S
 {
     TaskInfo submitTask = {};
     rtError_t errorReason;
-    const size_t allocSize = static_cast<size_t>(GetTaskSqeBytes(1U));
+    constexpr size_t allocSize = static_cast<size_t>(GetTaskSqeBytes(1U));
     const uint32_t sqId = updateTask->stream->GetSqId();
     // software-sq 场景用 hwPos
     uint32_t pos = updateTask->stream->GetHwPosByPos(updateTask->pos);
