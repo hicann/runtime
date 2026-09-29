@@ -245,7 +245,6 @@ set(libruntime_src_files_include_for_tiny
     ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/capture_adapt_stub.cc
     ${RUNTIME_API_DIR}/impl/api_decorator_stub.cc
     ${RUNTIME_FEATURE_DIR}/model/tiny/model_aclgraph_stub.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/stream_capture_stub.cc
     ${RUNTIME_FEATURE_DIR}/jetty/jetty_stub.cc
 )
 

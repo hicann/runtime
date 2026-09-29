@@ -9,7 +9,7 @@
  */
 #include "context.hpp"
 #include "driver_enum_desc.hpp"
-#include "capture_ops.hpp"
+#include "capture_func.hpp"
 #include "davinci_kernel_task.h"
 #include "maintenance_task.h"
 #include "runtime_dump_task.h"
@@ -72,7 +72,7 @@ namespace runtime {
 namespace {
 constexpr uint64_t STREAM_ABORT_TIMEOUT = (60UL * RT_MS_PER_S); // 60s
 constexpr uint64_t AICPU_CPU_SO_KERNEL_TIMEOUT_US = 1091ULL * 1000ULL * 1000ULL;
-std::atomic<const CaptureOps*> g_captureOps{nullptr};
+CaptureFunc g_captureFunc = {};
 
 bool ShouldRestoreStreamAfterTearDownFailure(
     const Stream* const stm, const bool willDeleteOnTearDown, const bool destroyTaskRecycledStream,
@@ -118,9 +118,9 @@ const char_t* ContextStateToString(const ContextState state)
 
 } // namespace
 
-void RegisterCaptureOps(const CaptureOps* captureOps) { g_captureOps.store(captureOps, std::memory_order_release); }
+void RegCaptureFunc(const CaptureFunc& funcs) { g_captureFunc = funcs; }
 
-const CaptureOps* GetCaptureOps() { return g_captureOps.load(std::memory_order_acquire); }
+const CaptureFunc& GetCaptureFunc() { return g_captureFunc; }
 
 static rtError_t LaunchAicpuKernelForCpuSoImpl(
     const rtKernelLaunchNames_t* const launchNames, const rtArgsEx_t* const argsInfo, Stream* const stm,
@@ -226,12 +226,12 @@ ContextExtension* Context::EnsureExtension() const
         return extension_.get();
     }
 
-    const CaptureOps* const captureOps = GetCaptureOps();
-    if ((captureOps == nullptr) || (captureOps->createContextExtension == nullptr)) {
+    const CaptureFunc& captureFunc = GetCaptureFunc();
+    if (captureFunc.createContextExtension == nullptr) {
         return nullptr;
     }
 
-    extension_.reset(captureOps->createContextExtension(const_cast<Context*>(this)));
+    extension_.reset(captureFunc.createContextExtension(const_cast<Context*>(this)));
     return extension_.get();
 }
 

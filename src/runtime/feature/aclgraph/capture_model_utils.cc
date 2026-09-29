@@ -9,6 +9,7 @@
  */
 #include "capture_model_utils.hpp"
 #include "capture_session.hpp"
+#include "stream_capture.hpp"
 #include "capture_model_enum_desc.hpp"
 #include "enum_desc.hpp"
 #include "inner_thread_local.hpp"
@@ -75,8 +76,10 @@ bool IsUseHardwareEvent(Device* const dev)
 
 rtError_t CheckCaptureStreamThreadIsMatch(const Stream* const stm)
 {
-    const rtStreamCaptureMode streamCaptureMode = stm->GetStreamCaptureMode();
-    const uint32_t threadId = stm->GetBeginCaptureThreadId();
+    const StreamCapture* const capture = StreamCapture::Get(stm);
+    const rtStreamCaptureMode streamCaptureMode =
+        (capture == nullptr) ? RT_STREAM_CAPTURE_MODE_MAX : capture->GetCaptureMode();
+    const uint32_t threadId = (capture == nullptr) ? UINT32_MAX : capture->GetBeginCaptureThreadId();
     if (threadId == runtime::GetCurrentTid()) {
         return RT_ERROR_NONE;
     }

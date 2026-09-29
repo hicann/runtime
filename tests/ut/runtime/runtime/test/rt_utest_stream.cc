@@ -54,6 +54,7 @@
 #include "task_submit.hpp"
 #include "task.hpp"
 #include "capture_model_utils.hpp"
+#include "runtime/feature/aclgraph/stream_capture.hpp"
 #include "thread_local_container.hpp"
 #include "capture_adapt.hpp"
 #include "data/elf.h"
@@ -2392,9 +2393,6 @@ TEST_F(StreamTest, stream_taskGrp_status)
     flag = stm->IsTaskGrouping();
     EXPECT_EQ(flag, true);
 
-    flag = stm->IsTaskGroupBreak();
-    EXPECT_EQ(flag, false);
-
     stm->SetTaskGroupErrCode(RT_ERROR_NONE);
 
     error = rtStreamDestroy(stream);
@@ -3451,7 +3449,9 @@ TEST_F(StreamTest, SendFlipTaskWithStreamId_CtrlStreamNull)
     stream->streamId_ = 1;
     stream->device_ = stubDevice;
     Runtime::Instance()->SetTrackProfFlag(true);
-    stream->SetStreamCacheOpInfoSwitch(1U);
+    StreamCapture* const streamCapture = StreamCapture::GetOrCreate(stream);
+    ASSERT_NE(streamCapture, nullptr);
+    streamCapture->SetCacheOpInfoSwitch(1U);
     MOCKER_CPP_VIRTUAL(stubDevice, &RawDevice::CheckFeatureSupport).stubs().will(returnValue(true));
     MOCKER_CPP_VIRTUAL(stubDevice, &RawDevice::GetCtrlStream)
         .stubs()
@@ -3722,7 +3722,9 @@ TEST_F(StreamTest, PackingTaskGroup_UnsupportedTaskType_ReturnsNotSupport)
     Stream* const stm = rt_ut::UnwrapOrNull<Stream>(stream);
     ASSERT_NE(stm, nullptr);
     auto taskGroup = std::make_unique<TaskGroup>();
-    stm->UpdateCurrentTaskGroup(taskGroup);
+    StreamCapture* const streamCapture = StreamCapture::GetOrCreate(stm);
+    ASSERT_NE(streamCapture, nullptr);
+    streamCapture->UpdateCurrentTaskGroup(taskGroup);
 
     TaskInfo task = {};
     task.type = TS_TASK_TYPE_MEMCPY;
@@ -3730,7 +3732,7 @@ TEST_F(StreamTest, PackingTaskGroup_UnsupportedTaskType_ReturnsNotSupport)
 
     EXPECT_EQ(stm->PackingTaskGroup(&task, 0U), RT_ERROR_TASK_NOT_SUPPORT);
 
-    stm->ResetTaskGroup();
+    streamCapture->ResetTaskGroup();
     EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
 }
 
@@ -3741,7 +3743,9 @@ TEST_F(StreamTest, PackingTaskGroup_StreamActiveTask_Skipped)
     Stream* const stm = rt_ut::UnwrapOrNull<Stream>(stream);
     ASSERT_NE(stm, nullptr);
     auto taskGroup = std::make_unique<TaskGroup>();
-    stm->UpdateCurrentTaskGroup(taskGroup);
+    StreamCapture* const streamCapture = StreamCapture::GetOrCreate(stm);
+    ASSERT_NE(streamCapture, nullptr);
+    streamCapture->UpdateCurrentTaskGroup(taskGroup);
 
     TaskInfo task = {};
     task.type = TS_TASK_TYPE_STREAM_ACTIVE;
@@ -3749,7 +3753,7 @@ TEST_F(StreamTest, PackingTaskGroup_StreamActiveTask_Skipped)
 
     EXPECT_EQ(stm->PackingTaskGroup(&task, 0U), RT_ERROR_NONE);
 
-    stm->ResetTaskGroup();
+    streamCapture->ResetTaskGroup();
     EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
 }
 
@@ -3760,7 +3764,9 @@ TEST_F(StreamTest, AllocTask_UnsupportedTaskTypeInUpdateMode_ReturnsNotSupport)
     Stream* const stm = rt_ut::UnwrapOrNull<Stream>(stream);
     ASSERT_NE(stm, nullptr);
     auto taskGroup = std::make_unique<TaskGroup>();
-    stm->UpdateCurrentTaskGroup(taskGroup);
+    StreamCapture* const streamCapture = StreamCapture::GetOrCreate(stm);
+    ASSERT_NE(streamCapture, nullptr);
+    streamCapture->UpdateCurrentTaskGroup(taskGroup);
     ASSERT_EQ(stm->UpdateTaskGroupStatus(StreamTaskGroupStatus::UPDATE), RT_ERROR_NONE);
 
     TaskInfo task = {};
@@ -3769,7 +3775,7 @@ TEST_F(StreamTest, AllocTask_UnsupportedTaskTypeInUpdateMode_ReturnsNotSupport)
     EXPECT_EQ(errorReason, RT_ERROR_TASK_NOT_SUPPORT);
     EXPECT_EQ(result, nullptr);
 
-    stm->ResetTaskGroup();
+    streamCapture->ResetTaskGroup();
     ASSERT_EQ(stm->UpdateTaskGroupStatus(StreamTaskGroupStatus::NONE), RT_ERROR_NONE);
     EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
 }

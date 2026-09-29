@@ -61,6 +61,7 @@
 #include "stream_state_callback_manager.hpp"
 #include "stream_launch_blocking.hpp"
 #include "heterogenous.h"
+#include "capture_func.hpp"
 #include "capture_model.hpp"
 #include "capture_model_enum_desc.hpp"
 #include "capture_model_utils.hpp"
@@ -2003,15 +2004,17 @@ static rtError_t GetStreamTagInternal(const Stream* const stm, uint32_t* const g
 static rtError_t SetStreamCacheOpInfoInternal(const Stream* const stm, const uint32_t cacheOpInfoSwitch)
 {
     // The ctx is not checked for performance.
-    stm->SetStreamCacheOpInfoOriginSwitch(cacheOpInfoSwitch);
+    const CaptureFunc& captureFunc = GetCaptureFunc();
+    captureFunc.setCacheOpInfoOriginSwitch(stm, cacheOpInfoSwitch);
     RT_LOG(
         RT_LOG_DEBUG, "device_id=%u, stream_id=%u, cacheOpInfoSwitch=%u.", stm->Device_()->Id_(), stm->Id_(),
         cacheOpInfoSwitch);
 
-    if (stm->IsCapturing() && stm->GetCaptureStream() != nullptr && stm->GetCaptureStream()->IsOrigCaptureStream()) {
+    if (stm->IsCapturing() && (stm->GetCaptureStream() != nullptr) &&
+        captureFunc.isOrigCaptureStream(stm->GetCaptureStream())) {
         CaptureModel* mdl = dynamic_cast<CaptureModel*>(stm->GetCaptureStream()->Model_());
         RT_LOG(
-            RT_LOG_INFO, "set cache op info switch status, model_id = %u, stream_id=%u, status=%u.", mdl->Id_(),
+            RT_LOG_INFO, "set cache op info switch status, model_id = %u, stream_id=%d, status=%u.", mdl->Id_(),
             stm->Id_(), cacheOpInfoSwitch);
         mdl->SetModelCacheOpInfoSwitch(cacheOpInfoSwitch);
     }
@@ -2023,7 +2026,7 @@ static rtError_t GetStreamCacheOpInfoInternal(const Stream* const stm, uint32_t*
 {
     // The ctx is not checked for performance.
     // main stream is not closed & this stream is opened
-    *cacheOpInfoSwitch = stm->GetStreamCacheOpInfoSwitch();
+    *cacheOpInfoSwitch = GetCaptureFunc().getCacheOpInfoSwitch(stm);
     return RT_ERROR_NONE;
 }
 

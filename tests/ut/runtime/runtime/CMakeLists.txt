@@ -516,7 +516,6 @@ set(runtimeut_src_tiny_include_list
     ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/capture_model_utils_stub.cc
     ${TOP_DIR}/src/runtime/core/src/event/event_software_stub.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/event_capture_stub.cc
-    ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/stream_capture_stub.cc
     ${TOP_DIR}/src/runtime/feature/model/tiny/model_aclgraph_stub.cc
     ${TOP_DIR}/src/runtime/feature/launch_blocking/tiny/stream_launch_blocking_tiny_stub.cc
     ${TOP_DIR}/src/runtime/feature/snapshot/tiny/device_snapshot_stub.cc

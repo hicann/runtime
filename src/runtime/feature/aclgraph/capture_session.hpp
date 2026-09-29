@@ -34,7 +34,7 @@ public:
 
     rtStreamCaptureMode GetContextCaptureMode() const { return captureMode_; }
     bool IsCaptureModeSupport() const;
-    void CaptureModeEnter(Stream* const stm, rtStreamCaptureMode mode);
+    rtError_t CaptureModeEnter(Stream* const stm, rtStreamCaptureMode mode);
     void CaptureModeExit(Stream* const stm);
     rtError_t ThreadExchangeCaptureMode(rtStreamCaptureMode* const mode) const;
 

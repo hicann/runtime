@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "event.hpp"
+#include "stream_capture.hpp"
 #include "stream.hpp"
 
 namespace cce {
@@ -19,7 +20,8 @@ bool Event::IsRecordOrigCaptureStream(const Stream* const stm) const
         if (obj->Id_() == stm->Id_()) {
             continue;
         }
-        if (obj->IsOrigCaptureStream()) {
+        const StreamCapture* const capture = StreamCapture::Get(obj);
+        if ((capture != nullptr) && capture->IsOrigCaptureStream()) {
             return true;
         }
     }

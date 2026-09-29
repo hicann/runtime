@@ -17,6 +17,7 @@
 #include "runtime.hpp"
 #include "model.hpp"
 #include "capture_model.hpp"
+#include "runtime/feature/aclgraph/stream_capture.hpp"
 #include "cond_handle/cond_handle.hpp"
 #include "rt_unwrap.h"
 #include "rt_capture_model_mock_helper.hpp"
@@ -2911,7 +2912,9 @@ TEST_F(CloudV2CaptureModelTest, CaptureModelEndGraphInnerError)
     Stream stream(static_cast<Device*>(nullptr), 0U);
     stream.streamId_ = 1;
     stream.SetContext(ctx);
-    stream.MarkOrigCaptureStream(true);
+    StreamCapture* capture = StreamCapture::GetOrCreate(&stream);
+    ASSERT_NE(capture, nullptr);
+    capture->MarkOrigCaptureStream(true);
     model.streams_.push_back(&stream);
     Api* api = rtInstance->ApiImpl_();
     ASSERT_NE(api, nullptr);

@@ -25,6 +25,7 @@
 #include "program.hpp"
 #include "capture_model.hpp"
 #include "runtime/feature/aclgraph/capture_session.hpp"
+#include "runtime/feature/aclgraph/stream_capture.hpp"
 #include "cond_c.hpp"
 #include "label_c.hpp"
 #include "dvpp_c.hpp"
@@ -6222,8 +6223,11 @@ TEST_F(ContextTest, StreamEndTaskGrpReportsPreviousApiError)
     stm->UpdateCaptureStream(captureStm);
     stm->SetCaptureStatus(RT_STREAM_CAPTURE_STATUS_ACTIVE);
     ASSERT_EQ(stm->UpdateTaskGroupStatus(StreamTaskGroupStatus::SAMPLE), RT_ERROR_NONE);
+    ASSERT_NE(StreamCapture::GetOrCreate(stm), nullptr);
     std::unique_ptr<TaskGroup> taskGroup(new TaskGroup);
-    captureStm->UpdateCurrentTaskGroup(taskGroup);
+    StreamCapture* const streamCapture = StreamCapture::GetOrCreate(captureStm);
+    ASSERT_NE(streamCapture, nullptr);
+    streamCapture->UpdateCurrentTaskGroup(taskGroup);
     captureModel.InsertTaskGroupStreamId(static_cast<uint16_t>(captureStm->Id_()));
     captureModel.SetTaskGroupErrCode(RT_ERROR_TASK_NOT_SUPPORT);
 
@@ -6231,7 +6235,7 @@ TEST_F(ContextTest, StreamEndTaskGrpReportsPreviousApiError)
     EXPECT_EQ(captureSession->StreamEndTaskGrp(stm, &handle), RT_ERROR_TASK_NOT_SUPPORT);
     EXPECT_EQ(handle, nullptr);
     EXPECT_EQ(stm->GetTaskGroupStatus(), StreamTaskGroupStatus::NONE);
-    EXPECT_EQ(captureStm->GetCurrentTaskGroup(), nullptr);
+    EXPECT_EQ(streamCapture->GetCurrentTaskGroup(), nullptr);
     EXPECT_TRUE(captureModel.GetTaskGroupStreamIds().empty());
 
     captureStm->SetModel(nullptr);
@@ -6264,15 +6268,18 @@ TEST_F(ContextTest, StreamEndTaskGrpReportsInvalidatedCapture)
     stm->UpdateCaptureStream(captureStm);
     stm->SetCaptureStatus(RT_STREAM_CAPTURE_STATUS_ACTIVE);
     ASSERT_EQ(stm->UpdateTaskGroupStatus(StreamTaskGroupStatus::SAMPLE), RT_ERROR_NONE);
+    ASSERT_NE(StreamCapture::GetOrCreate(stm), nullptr);
     std::unique_ptr<TaskGroup> taskGroup(new TaskGroup);
-    captureStm->UpdateCurrentTaskGroup(taskGroup);
+    StreamCapture* const streamCapture = StreamCapture::GetOrCreate(captureStm);
+    ASSERT_NE(streamCapture, nullptr);
+    streamCapture->UpdateCurrentTaskGroup(taskGroup);
     captureModel.InsertTaskGroupStreamId(static_cast<uint16_t>(captureStm->Id_()));
 
     TaskGroup* handle = nullptr;
     EXPECT_EQ(captureSession->StreamEndTaskGrp(stm, &handle), RT_ERROR_STREAM_CAPTURE_INVALIDATED);
     EXPECT_EQ(handle, nullptr);
     EXPECT_EQ(stm->GetTaskGroupStatus(), StreamTaskGroupStatus::NONE);
-    EXPECT_EQ(captureStm->GetCurrentTaskGroup(), nullptr);
+    EXPECT_EQ(streamCapture->GetCurrentTaskGroup(), nullptr);
     EXPECT_TRUE(captureModel.GetTaskGroupStreamIds().empty());
 
     captureStm->SetModel(nullptr);
@@ -6297,14 +6304,14 @@ TEST_F(ContextTest, StreamEndTaskUpdate_UnupdatedTasks_ReturnsTaskGrpUpdateError
     std::unique_ptr<TaskGroup> taskGroup(new TaskGroup);
     taskGroup->taskIds.emplace_back(0U, 0U);
     taskGroup->taskIds.emplace_back(0U, 1U);
-    taskGroup->isUpdate = true;
+    StreamCapture* const streamCapture = StreamCapture::GetOrCreate(stm);
+    ASSERT_NE(streamCapture, nullptr);
+    streamCapture->SetUpdateTaskGroup(taskGroup.get());
     taskGroup->updateTaskIndex = 1U;
-    stm->updateTaskGroup_ = taskGroup.get();
 
     EXPECT_EQ(captureSession->StreamEndTaskUpdate(stm), RT_ERROR_STREAM_TASKGRP_UPDATE);
     EXPECT_EQ(stm->GetTaskGroupStatus(), StreamTaskGroupStatus::NONE);
 
-    stm->updateTaskGroup_ = nullptr;
     ASSERT_EQ(stm->UpdateTaskGroupStatus(StreamTaskGroupStatus::NONE), RT_ERROR_NONE);
     EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
 }
@@ -6323,14 +6330,14 @@ TEST_F(ContextTest, StreamEndTaskUpdate_AllTasksUpdated_ReturnsSuccess)
     ASSERT_EQ(stm->UpdateTaskGroupStatus(StreamTaskGroupStatus::UPDATE), RT_ERROR_NONE);
     std::unique_ptr<TaskGroup> taskGroup(new TaskGroup);
     taskGroup->taskIds.emplace_back(0U, 0U);
-    taskGroup->isUpdate = true;
+    StreamCapture* const streamCapture = StreamCapture::GetOrCreate(stm);
+    ASSERT_NE(streamCapture, nullptr);
+    streamCapture->SetUpdateTaskGroup(taskGroup.get());
     taskGroup->updateTaskIndex = 1U;
-    stm->updateTaskGroup_ = taskGroup.get();
 
     EXPECT_EQ(captureSession->StreamEndTaskUpdate(stm), RT_ERROR_NONE);
     EXPECT_EQ(stm->GetTaskGroupStatus(), StreamTaskGroupStatus::NONE);
 
-    stm->updateTaskGroup_ = nullptr;
     ASSERT_EQ(stm->UpdateTaskGroupStatus(StreamTaskGroupStatus::NONE), RT_ERROR_NONE);
     EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
 }

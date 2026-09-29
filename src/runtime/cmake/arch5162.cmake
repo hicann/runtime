@@ -238,7 +238,6 @@ set(runtime_src_aclgraph_list
     ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/capture_adapt_stub.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/capture_model_stub.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/capture_model_utils_stub.cc
-    ${RUNTIME_FEATURE_DIR}/aclgraph/tiny/stream_capture_stub.cc
     ${RUNTIME_FEATURE_DIR}/model/tiny/model_aclgraph_stub.cc
     ${RUNTIME_FEATURE_DIR}/jetty/jetty_stub.cc
 )

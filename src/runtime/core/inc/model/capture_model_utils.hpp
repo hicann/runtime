@@ -21,6 +21,7 @@
 
 namespace cce {
 namespace runtime {
+class CaptureModel;
 struct EventResource;
 struct ExternalEventRefreshLayout;
 struct ExternalEventRefreshInfo;

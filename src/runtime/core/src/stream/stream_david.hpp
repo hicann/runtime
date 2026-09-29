@@ -119,10 +119,10 @@ public:
 private:
     void BuildTraceEventForTask(TaskInfo* const task, const uint32_t flags, TraceEvent& record) const;
     rtError_t HandleTaskUpdate(
-        TaskInfo* workTask, CaptureModel* model, uint8_t* sqeBufferBackup, uint32_t sendSqeNum) override;
+        TaskInfo* workTask, Model* model, uint8_t* sqeBufferBackup, uint32_t sendSqeNum) override;
     rtError_t HandleTaskDefault(
-        TaskInfo* workTask, CaptureModel* model, uint8_t* sqeBufferBackup, uint32_t sendSqeNum) override;
-    rtError_t HandleTaskDisable(TaskInfo* workTask, CaptureModel* model) override;
+        TaskInfo* workTask, Model* model, uint8_t* sqeBufferBackup, uint32_t sendSqeNum) override;
+    rtError_t HandleTaskDisable(TaskInfo* workTask, Model* model) override;
     void FinalizeDavidHostStateOnExit();
     void RecycleArgHandlesOnDestroy();
     void ReleaseSqCqResourcesOnDestroy();

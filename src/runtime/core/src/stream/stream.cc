@@ -38,7 +38,7 @@
 #include "inner_thread_local.hpp"
 #include "stream_task.h"
 #include "error_code.h"
-#include "capture_model.hpp"
+#include "capture_func.hpp"
 #include "logic_sq.hpp"
 #include "logic_sq_manage.hpp"
 #include "task_david.hpp"
@@ -161,11 +161,52 @@ Stream::Stream(const Context* const stmCtx, const uint32_t prio, const uint32_t 
     : Stream(stmCtx->Device_(), prio, stmFlags)
 {}
 
+void Stream::CacheCaptureTaskId(const uint16_t taskId) { GetCaptureFunc().cacheCaptureTaskId(this, taskId); }
+
+StreamExtension* Stream::GetExtension() const
+{
+    const std::lock_guard<std::mutex> lock(extensionLock_);
+    return extension_.get();
+}
+
+StreamExtension* Stream::EnsureExtension() const
+{
+    const std::lock_guard<std::mutex> lock(extensionLock_);
+    if (extension_ != nullptr) {
+        return extension_.get();
+    }
+
+    const PfnCreateStreamExtension createStreamExtension = GetCaptureFunc().createStreamExtension;
+    if (createStreamExtension == nullptr) {
+        return nullptr;
+    }
+
+    extension_.reset(createStreamExtension(const_cast<Stream*>(this)));
+    return extension_.get();
+}
+
+void Stream::ResetExtension()
+{
+    const std::lock_guard<std::mutex> lock(extensionLock_);
+    extension_.reset();
+}
+
+void Stream::ResetCaptureInfo()
+{
+    /* exit capture status */
+    std::unique_lock<std::mutex> lk(captureLock_);
+    UpdateCaptureStream(nullptr);
+    SetCaptureStatus(RT_STREAM_CAPTURE_STATUS_NONE);
+
+    return;
+}
+
 Stream::~Stream()
 {
     // Release optional state before the process-exit and device-fault early returns below.
     StreamLaunchBlocking::ReleaseLaunchBlockingState(this);
     ResetEmbeddedInnerHandle<Stream>(this);
+    const ScopeGuard extensionGuard([this]() { ResetExtension(); });
     Runtime* const rt = Runtime::Instance();
     if (Runtime::IsProcessExiting(rt)) {
         FinalizeHostStateOnExit();
@@ -258,7 +299,7 @@ Stream::~Stream()
         onProfHostRtAddr_ = nullptr;
         onProfHostTsAddr_ = nullptr;
         dvppGrp_ = nullptr;
-        taskGroup_ = nullptr;
+        GetCaptureFunc().resetTaskGroup(this);
         isSoftwareSqEnable_ = false;
         sqAddr_ = 0ULL;
         sqMemOrderType_ = SQ_ADDR_MEM_ORDER_TYPE_MAX;
@@ -1713,10 +1754,8 @@ void Stream::ResetHostPointersOnExit()
     onProfHostRtAddr_ = nullptr;
     onProfHostTsAddr_ = nullptr;
     dvppGrp_ = nullptr;
-    taskGroup_ = nullptr;
-    updateTaskGroup_ = nullptr;
+    GetCaptureFunc().resetTaskGroup(this);
     captureStream_ = nullptr;
-    parentCaptureStream_ = nullptr;
     argManage_ = nullptr;
     lastHalfRecord_ = nullptr;
     dvppRRTaskAddr_.Set(nullptr);
@@ -3473,7 +3512,7 @@ rtError_t Stream::StarsAddTaskToStream(TaskInfo* const tsk, const uint32_t sendS
 
         Model* model = tsk->stream->Model_();
         if ((model != nullptr) && (model->GetModelType() == RT_MODEL_CAPTURE_MODEL)) {
-            tsk->modelSeqId = dynamic_cast<CaptureModel*>(model)->GenerateSeqId();
+            tsk->modelSeqId = GetCaptureFunc().generateSeqId(model);
             RT_LOG(
                 RT_LOG_INFO, "device_id=%u, stream_id=%d, task_id=%hu, sequence id=%u.", tsk->stream->Device_()->Id_(),
                 streamId_, tsk->id, tsk->modelSeqId);
@@ -3535,14 +3574,13 @@ rtError_t Stream::StarsAddTaskToStreamForModelUpdate(TaskInfo* const tsk, const 
     return RT_ERROR_NONE;
 }
 
-rtError_t Stream::HandleTaskUpdate(
-    TaskInfo* workTask, CaptureModel* model, uint8_t* sqeBufferBackup, uint32_t sendSqeNum)
+rtError_t Stream::HandleTaskUpdate(TaskInfo* workTask, Model* model, uint8_t* sqeBufferBackup, uint32_t sendSqeNum)
 {
     RT_LOG(
         RT_LOG_INFO, "update task begin, stream_id=%d, task_id=%hu, task_type=%d(%s).", streamId_, workTask->id,
         workTask->type, workTask->typeName);
     // 将model中的argsHandle备份，然后将新的argsHandle添加到model中
-    model->BackupArgHandle(static_cast<uint16_t>(streamId_), workTask->id);
+    GetCaptureFunc().backupArgHandle(model, static_cast<uint16_t>(streamId_), workTask->id);
     model->SetKernelTaskId(static_cast<uint32_t>(workTask->id), streamId_);
     rtTsCommand_t cmdLocal = {};
     cmdLocal.cmdType = RT_TASK_COMMAND_TYPE_STARS_SQE;
@@ -3573,20 +3611,19 @@ rtError_t Stream::HandleTaskUpdate(
     return RT_ERROR_NONE;
 }
 
-rtError_t Stream::HandleTaskDisable(TaskInfo* workTask, CaptureModel* model)
+rtError_t Stream::HandleTaskDisable(TaskInfo* workTask, Model* model)
 {
     RT_LOG(
         RT_LOG_INFO, "disable task, stream_id=%d, task_id=%hu, task_type=%d(%s).", streamId_, workTask->id,
         workTask->type, workTask->typeName);
     // 保存argsHandle
-    model->BackupArgHandle(static_cast<uint16_t>(streamId_), workTask->id);
+    GetCaptureFunc().backupArgHandle(model, static_cast<uint16_t>(streamId_), workTask->id);
     // 释放老的taskInfo 释放mix任务的subContext
     (void)device_->GetTaskFactory()->Recycle(workTask);
     return RT_ERROR_NONE;
 }
 
-rtError_t Stream::HandleTaskDefault(
-    TaskInfo* workTask, CaptureModel* model, uint8_t* sqeBufferBackup, uint32_t sendSqeNum)
+rtError_t Stream::HandleTaskDefault(TaskInfo* workTask, Model* model, uint8_t* sqeBufferBackup, uint32_t sendSqeNum)
 {
     model->SetKernelTaskId(static_cast<uint32_t>(workTask->id), streamId_);
     // 获取老的sqe
@@ -3634,7 +3671,7 @@ rtError_t Stream::UpdateAllPersistentTask()
         "memset_s failed for posToTaskIdMap_, dest=%p, dest_max=%zu, c=0xFF, count=%zu, retCode=%d.", posToTaskIdMap_,
         posToTaskIdMapSize_ * sizeof(uint16_t), posToTaskIdMapSize_ * sizeof(uint16_t), ret);
     Model* mdl = Model_();
-    CaptureModel* captureModel = dynamic_cast<CaptureModel*>(mdl);
+    Model* captureModel = GetCaptureFunc().getModelIfCapture(mdl);
     // 存在融合后sqe变多的场景，这里的buffer是按内存64字节逐个访问，为了提升性能不做memset
     if (sqeBuffer_ == nullptr) {
         sqeBufferSize_ = STREAM_SQE_BUFFER_MAX_SIZE;
@@ -4161,10 +4198,9 @@ uint8_t* Stream::GetHostSqeAddrByPos(const uint32_t pos) const
 {
     const uint32_t sqeSize = SQE_SIZE_UNIT;
     Model* mdl = Model_();
-    CaptureModel* captureModel = dynamic_cast<CaptureModel*>(mdl);
 
     // 非capture stream，或者capture model还没finish capture
-    if ((!IsSoftwareSqEnable()) || (captureModel == nullptr) || (!captureModel->IsCaptureFinish())) {
+    if ((!IsSoftwareSqEnable()) || (!GetCaptureFunc().isCaptureFinish(mdl))) {
         const uint64_t offset = static_cast<uint64_t>(pos) * static_cast<uint64_t>(sqeSize);
         if ((sqeBuffer_ == nullptr) || ((offset + sqeSize) > sqeBufferSize_)) {
             return nullptr;
@@ -4177,7 +4213,7 @@ uint8_t* Stream::GetHostSqeAddrByPos(const uint32_t pos) const
     if (!GetHwPosByPos(pos, logicSqId, hwPos)) {
         RT_LOG(
             RT_LOG_WARNING, "no hwPos, device_id=%u, model_id=%u, stream_id=%d, task_pos=%u", device_->Id_(),
-            captureModel->Id_(), Id_(), pos);
+            mdl->Id_(), Id_(), pos);
         return nullptr;
     }
 
@@ -4186,7 +4222,7 @@ uint8_t* Stream::GetHostSqeAddrByPos(const uint32_t pos) const
         RT_LOG(
             RT_LOG_WARNING,
             "Get logicSq failed, device_id=%u, model_id=%u, stream_id=%d, task_pos=%u, logic_sq_id=%u, hwPos=%u.",
-            device_->Id_(), captureModel->Id_(), Id_(), pos, logicSqId, hwPos);
+            device_->Id_(), mdl->Id_(), Id_(), pos, logicSqId, hwPos);
         return nullptr;
     }
 
@@ -4197,7 +4233,7 @@ uint8_t* Stream::GetHostSqeAddrByPos(const uint32_t pos) const
             RT_LOG_WARNING,
             "Invalid logicSq host sqe addr, device_id=%u, model_id=%u, stream_id=%d, task_pos=%u, logic_sq_id=%u, "
             "hw_pos=%u.",
-            device_->Id_(), captureModel->Id_(), Id_(), pos, logicSqId, hwPos);
+            device_->Id_(), mdl->Id_(), Id_(), pos, logicSqId, hwPos);
         return nullptr;
     }
     return RtPtrToPtr<uint8_t*>(hostSqeAddr) + offset;
@@ -4207,8 +4243,7 @@ void* Stream::GetDeviceSqeAddrByPos(const uint32_t pos) const
 {
     const uint32_t sqeSize = SQE_SIZE_UNIT;
     Model* mdl = Model_();
-    CaptureModel* captureModel = dynamic_cast<CaptureModel*>(mdl);
-    if ((!IsSoftwareSqEnable()) || (captureModel == nullptr) || (!captureModel->IsCaptureFinish())) {
+    if ((!IsSoftwareSqEnable()) || (!GetCaptureFunc().isCaptureFinish(mdl))) {
         const uint64_t offset = static_cast<uint64_t>(pos) * static_cast<uint64_t>(sqeSize);
         if ((GetSqBaseAddr() == 0ULL) || (pos >= GetSqDepth())) {
             return nullptr;
@@ -4221,7 +4256,7 @@ void* Stream::GetDeviceSqeAddrByPos(const uint32_t pos) const
     if (!GetHwPosByPos(pos, logicSqId, hwPos)) {
         RT_LOG(
             RT_LOG_WARNING, "no hwPos, device_id=%u, model_id=%u, stream_id=%d, task_pos=%u", device_->Id_(),
-            captureModel->Id_(), Id_(), pos);
+            mdl->Id_(), Id_(), pos);
         return nullptr;
     }
 
@@ -4229,7 +4264,7 @@ void* Stream::GetDeviceSqeAddrByPos(const uint32_t pos) const
     if ((device_->GetLogicSqManage()->GetLogicSqById(logicSqId, sq) != RT_ERROR_NONE) || (sq == nullptr)) {
         RT_LOG(
             RT_LOG_WARNING, "Get logicSq failed, device_id=%u, model_id=%u, stream_id=%d, task_pos=%u, logic_sq_id=%u.",
-            device_->Id_(), captureModel->Id_(), Id_(), pos, logicSqId);
+            device_->Id_(), mdl->Id_(), Id_(), pos, logicSqId);
         return nullptr;
     }
 
@@ -4239,7 +4274,7 @@ void* Stream::GetDeviceSqeAddrByPos(const uint32_t pos) const
             RT_LOG_WARNING,
             "Invalid logicSq device sqe addr, device_id=%u, model_id=%u, stream_id=%d, task_pos=%u, logic_sq_id=%u, "
             "hw_pos=%u.",
-            device_->Id_(), captureModel->Id_(), Id_(), pos, logicSqId, hwPos);
+            device_->Id_(), mdl->Id_(), Id_(), pos, logicSqId, hwPos);
         return nullptr;
     }
     return RtPtrToPtr<uint8_t*>(deviceSqeAddr) + static_cast<uint64_t>(hwPos) * static_cast<uint64_t>(sqeSize);
@@ -4248,8 +4283,7 @@ void* Stream::GetDeviceSqeAddrByPos(const uint32_t pos) const
 uint64_t Stream::GetSqIdMemAddrByPos(const uint32_t pos) const
 {
     Model* mdl = Model_();
-    CaptureModel* captureModel = dynamic_cast<CaptureModel*>(mdl);
-    if ((!IsSoftwareSqEnable()) || (captureModel == nullptr) || (!captureModel->IsCaptureFinish())) {
+    if ((!IsSoftwareSqEnable()) || (!GetCaptureFunc().isCaptureFinish(mdl))) {
         return GetSqIdMemAddr();
     }
 
@@ -4258,14 +4292,14 @@ uint64_t Stream::GetSqIdMemAddrByPos(const uint32_t pos) const
                   RT_LOG_WARNING,
                   "sqIdMemAddr should be transferred to logicSq, device_id=%u, model_id=%u, stream_id=%d, task_pos=%u, "
                   "sqIdMemAddr=%#lx.",
-                  device_->Id_(), captureModel->Id_(), Id_(), pos, GetSqIdMemAddr()););
+                  device_->Id_(), mdl->Id_(), Id_(), pos, GetSqIdMemAddr()););
 
     uint32_t logicSqId = 0U;
     uint32_t hwPos = 0U;
     if (!GetHwPosByPos(pos, logicSqId, hwPos)) {
         RT_LOG(
             RT_LOG_WARNING, "no hwPos, device_id=%u, model_id=%u, stream_id=%d, task_pos=%u", device_->Id_(),
-            captureModel->Id_(), Id_(), pos);
+            mdl->Id_(), Id_(), pos);
         return 0UL;
     }
 
@@ -4273,7 +4307,7 @@ uint64_t Stream::GetSqIdMemAddrByPos(const uint32_t pos) const
     if ((device_->GetLogicSqManage()->GetLogicSqById(logicSqId, sq) != RT_ERROR_NONE) || (sq == nullptr)) {
         RT_LOG(
             RT_LOG_WARNING, "Get logicSq failed, device_id=%u, model_id=%u, stream_id=%d, task_pos=%u, logic_sq_id=%u.",
-            device_->Id_(), captureModel->Id_(), Id_(), pos, logicSqId);
+            device_->Id_(), mdl->Id_(), Id_(), pos, logicSqId);
         return 0UL;
     }
 
@@ -4290,10 +4324,10 @@ uint32_t Stream::GetHwPosByPos(const uint32_t pos) const
     COND_PROC(mdl == nullptr, return realPos;);
 
     // 非aclgraph场景
-    CaptureModel* captureModel = dynamic_cast<CaptureModel*>(mdl);
+    Model* captureModel = GetCaptureFunc().getModelIfCapture(mdl);
     COND_PROC(captureModel == nullptr, return realPos;);
 
-    if (IsSoftwareSqEnable() && captureModel->IsCaptureFinish()) {
+    if (IsSoftwareSqEnable() && GetCaptureFunc().isCaptureFinish(captureModel)) {
         uint32_t logicSqId = 0U;
         uint32_t hwPos = 0U;
         if (GetHwPosByPos(pos, logicSqId, hwPos)) {
@@ -4879,51 +4913,6 @@ uint8_t Stream::GetGroupId() const
     return groupId;
 }
 
-rtError_t Stream::UpdateTask(TaskInfo** updateTask)
-{
-    *updateTask = nullptr;
-    const std::lock_guard<std::mutex> tskGrpLock(GetTaskGrpMutex());
-    TaskGroup* updateTaskGroup = GetUpdateTaskGroup();
-
-    if (updateTaskGroup == nullptr) {
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "The updateTaskGroup is a NULL pointer.");
-        return RT_ERROR_INVALID_VALUE;
-    }
-
-    uint32_t taskIndex = updateTaskGroup->updateTaskIndex;
-    if (taskIndex >= updateTaskGroup->taskIds.size()) {
-        RT_LOG(
-            RT_LOG_ERROR,
-            "The number of tasks cannot exceed the size of the task group, current task index=%u, task group size=%zu.",
-            taskIndex, updateTaskGroup->taskIds.size());
-        RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
-            ErrorCode::EE1003, "Updating the task group", taskIndex + 1U,
-            "number of kernel launch calls in the task update interval",
-            RtFmtMsg(
-                "no more than %zu, matching the number of tasks in the task group", updateTaskGroup->taskIds.size()));
-        return RT_ERROR_STREAM_TASKGRP_UPDATE;
-    }
-
-    auto& taskIdPair = updateTaskGroup->taskIds[taskIndex];
-    const uint16_t streamId = taskIdPair.first;
-    const uint16_t taskId = taskIdPair.second;
-
-    TaskInfo* taskInfo = GetStreamTaskInfo(device_, streamId, taskId);
-    if (unlikely(taskInfo == nullptr)) {
-        RT_LOG_INNER_MSG(
-            RT_LOG_ERROR, "stream_id or task_id is invalid, stream_id=%hu, task_id=%hu.", streamId, taskId);
-        return RT_ERROR_STREAM_TASKGRP_UPDATE;
-    }
-
-    taskInfo->isUpdateSinkSqe = 1U;
-    *updateTask = taskInfo;
-    UpdateTaskIndex(taskIndex + 1U);
-    RT_LOG(
-        RT_LOG_DEBUG, "stream_id=%hu, task_id=%hu, current task index=%u, task group size=%u", streamId, taskId,
-        taskIndex, updateTaskGroup->taskIds.size());
-    return RT_ERROR_NONE;
-}
-
 TaskInfo* Stream::HandleTaskGroupUpdate(tsTaskType_t taskType, UpdateTaskFlag flag, rtError_t& errorReason)
 {
     if (flag != UpdateTaskFlag::SUPPORT) {
@@ -4937,7 +4926,7 @@ TaskInfo* Stream::HandleTaskGroupUpdate(tsTaskType_t taskType, UpdateTaskFlag fl
         return nullptr;
     }
     TaskInfo* updateTask = nullptr;
-    errorReason = UpdateTask(&updateTask);
+    errorReason = GetCaptureFunc().updateTask(this, &updateTask);
     if (errorReason != RT_ERROR_NONE) {
         return nullptr;
     }
@@ -4947,7 +4936,7 @@ TaskInfo* Stream::HandleTaskGroupUpdate(tsTaskType_t taskType, UpdateTaskFlag fl
 TaskInfo* Stream::AllocCaptureTask(tsTaskType_t taskType, uint32_t sqeNum, TaskInfo* pTask, rtError_t& errorReason)
 {
     TaskInfo* captureTask = pTask;
-    errorReason = AllocCaptureTaskImpl(taskType, sqeNum, &captureTask);
+    errorReason = GetCaptureFunc().allocCaptureTask(this, taskType, sqeNum, &captureTask);
     if (errorReason == RT_ERROR_STREAM_CAPTURE_EXIT) {
         return AllocNonCaptureTask(this, pTask, taskType, errorReason, sqeNum);
     }
@@ -5349,22 +5338,7 @@ void Stream::DebugJsonPrintForModelStm(
 
 rtError_t Stream::PackingTaskGroup(const TaskInfo* const task, const uint16_t streamId)
 {
-    NULL_PTR_RETURN_NOLOG(taskGroup_, RT_ERROR_NONE);
-    if (task->type == TS_TASK_TYPE_STREAM_ACTIVE) {
-        /* 过滤掉capture model级联场景下隐式添加的StreamActive任务 */
-        return RT_ERROR_NONE;
-    }
-    if (!TaskTypeIsSupportTaskGroup(task)) {
-        RT_LOG_OUTER_MSG_IMPL(
-            ErrorCode::EE1006, "Adding the task to the task group",
-            RtFmtMsg(
-                "Task type %s(%u)", GetTaskDescByType(static_cast<uint32_t>(task->type)),
-                static_cast<uint32_t>(task->type)),
-            "Only tasks running on Cube Core or Vector Core can be added to a task group");
-        return RT_ERROR_TASK_NOT_SUPPORT;
-    }
-    taskGroup_->taskIds.emplace_back(streamId, task->id);
-    return RT_ERROR_NONE;
+    return GetCaptureFunc().packingTaskGroup(this, task, streamId);
 }
 
 rtError_t Stream::UpdateTaskGroupStatus(const StreamTaskGroupStatus status)
@@ -5384,37 +5358,9 @@ rtError_t Stream::UpdateTaskGroupStatus(const StreamTaskGroupStatus status)
 
 bool Stream::IsTaskGrouping(void) const { return (taskGroupStatus_ == StreamTaskGroupStatus::SAMPLE); }
 
-bool Stream::IsTaskGroupBreak() const
-{
-    if (captureStream_ == nullptr) {
-        return false;
-    }
-    if (captureStream_->GetCurrentTaskGroup() != nullptr) {
-        return false;
-    }
-    CaptureModel* const mdl = dynamic_cast<CaptureModel*>(captureStream_->Model_());
-    if (mdl == nullptr) {
-        RT_LOG(RT_LOG_ERROR, "capture model is NULL, stream_id=%d.", Id_());
-        return true;
-    }
-    std::set<uint16_t>& stmIds = mdl->GetTaskGroupStreamIds();
-    return (!stmIds.empty());
-}
-
 void Stream::SetTaskGroupErrCode(const rtError_t errorCode) const
 {
-    CaptureModel* mdl = nullptr;
-    if (captureStream_ == nullptr) {
-        mdl = dynamic_cast<CaptureModel*>(Model_());
-    } else {
-        mdl = dynamic_cast<CaptureModel*>(captureStream_->Model_());
-    }
-    if (mdl == nullptr) {
-        RT_LOG(RT_LOG_ERROR, "capture model is NULL, stream_id=%d.", Id_());
-        return;
-    }
-    mdl->TerminateCapture();
-    mdl->SetTaskGroupErrCode(errorCode);
+    GetCaptureFunc().setTaskGroupErrCode(this, errorCode);
 }
 
 void Stream::InsertResLimit(const rtDevResLimitType_t type, const uint32_t value)

@@ -16,6 +16,7 @@
 #include "logic_sq_utils.hpp"
 #include "logic_sq_manage.hpp"
 #include "capture_session.hpp"
+#include "stream_capture.hpp"
 #include "jetty_pool.h"
 #include "context.hpp"
 #include "stream_sqcq_manage.hpp"
@@ -345,7 +346,11 @@ void CaptureModel::ReportTrackData(Profiler* profiler)
             continue;
         }
 
-        for (const auto& taskId : s->GetCacheCaptureTaskId()) {
+        const StreamCapture* const capture = StreamCapture::Get(s);
+        if (capture == nullptr) {
+            continue;
+        }
+        for (const auto& taskId : capture->GetCachedTaskIds()) {
             profiler->ReportTrackData(s, taskId);
         }
     }
@@ -964,7 +969,10 @@ void CaptureModel::ExitCaptureNotify()
     }
 
     for (Stream* const streamObj : StreamList_()) {
-        (void)streamObj->ResetTaskGroup();
+        StreamCapture* const capture = StreamCapture::Get(streamObj);
+        if (capture != nullptr) {
+            capture->ResetTaskGroup();
+        }
     }
     for (Event* const evt : singleOperEvents_) {
         evt->SetCaptureEvent(nullptr);
@@ -1103,7 +1111,8 @@ void CaptureModel::EraseStreamInfoForProfiling() const
 Stream* CaptureModel::GetOriginalCaptureStream(void) const
 {
     for (auto stm : StreamList_()) {
-        if (stm->IsOrigCaptureStream() && stm->IsLastLevelCaptureStream()) {
+        const StreamCapture* const capture = StreamCapture::Get(stm);
+        if ((capture != nullptr) && capture->IsOrigCaptureStream() && capture->IsLastLevelCaptureStream()) {
             return stm;
         }
     }
@@ -1710,7 +1719,10 @@ void CaptureModel::SetModelCacheOpInfoSwitch(const uint32_t status) const
             Stream* stm = nullptr;
             (void)streamSqCqManagePtr->GetStreamById(static_cast<uint32_t>(iter.first), &stm);
             if (stm != nullptr) {
-                stm->SetStreamCacheOpInfoSwitch(status);
+                StreamCapture* const capture = StreamCapture::GetOrCreate(stm);
+                if (capture != nullptr) {
+                    capture->SetCacheOpInfoSwitch(status);
+                }
             }
         }
     }
@@ -2353,7 +2365,8 @@ void CaptureModel::CollectSourceStreams(std::vector<std::vector<StreamRange>>& s
             range.beginPos = 0U;
             range.num = sqeNum;
             ranges.push_back(range);
-            cur = cur->GetChildCaptureStream(); // 递归子级联链（父→子方向）
+            const StreamCapture* const capture = StreamCapture::Get(cur);
+            cur = (capture == nullptr) ? nullptr : capture->GetChildCaptureStream(); // 递归子级联链（父→子方向）
         }
         sourceGroups.push_back(std::move(ranges));
     }

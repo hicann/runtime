@@ -1094,31 +1094,17 @@ TEST_F(TinyStubTest, logic_sq_stub)
     EXPECT_EQ(ctx.GetCaptureModelEndGraphNotify(nullptr, nullptr, notify), RT_ERROR_MODEL_NULL);
 }
 
-TEST_F(TinyStubTest, stream_capture_stub)
+TEST_F(TinyStubTest, stream_capture_callback_stub)
 {
     Stream stream(static_cast<Device*>(nullptr), 0, 0);
     stream.taskResMang_ = reinterpret_cast<TaskResManage*>(0x1);
-    stream.SingleStreamTerminateCapture();
-    EXPECT_EQ(stream.GetCaptureStatus(), RT_STREAM_CAPTURE_STATUS_INVALIDATED);
-
-    Stream* newStream = nullptr;
-    rtError_t ret = stream.AllocCascadeCaptureStream(newStream, nullptr);
-    EXPECT_EQ(ret, RT_ERROR_FEATURE_NOT_SUPPORT);
-
-    stream.UpdateCascadeCaptureStreamInfo(nullptr, nullptr);
 
     TaskInfo* task = nullptr;
     rtError_t allocError = RT_ERROR_NONE;
     task = stream.AllocCaptureTask(TS_TASK_TYPE_KERNEL_AICORE, 0, nullptr, allocError);
     EXPECT_EQ(allocError, RT_ERROR_STREAM_CAPTURE_EXIT);
 
-    stream.EnterCapture(nullptr);
-    EXPECT_EQ(stream.GetCaptureStatus(), RT_STREAM_CAPTURE_STATUS_ACTIVE);
-
     stream.ResetCaptureInfo();
-    EXPECT_EQ(stream.GetCaptureStatus(), RT_STREAM_CAPTURE_STATUS_NONE);
-
-    stream.ExitCapture();
     EXPECT_EQ(stream.GetCaptureStatus(), RT_STREAM_CAPTURE_STATUS_NONE);
 }
 

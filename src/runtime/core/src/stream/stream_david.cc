@@ -35,6 +35,7 @@
 #include <thread>
 #include "raw_device.hpp"
 #include "aix_c.hpp"
+#include "capture_func.hpp"
 #include "capture_model_utils.hpp"
 #include "kernel_utils.hpp"
 
@@ -808,7 +809,7 @@ rtError_t DavidStream::StarsAddTaskToStream(TaskInfo* const tsk, const uint32_t 
 
         Model* model = tsk->stream->Model_();
         if ((model != nullptr) && (model->GetModelType() == RT_MODEL_CAPTURE_MODEL)) {
-            tsk->modelSeqId = dynamic_cast<CaptureModel*>(model)->GenerateSeqId();
+            tsk->modelSeqId = GetCaptureFunc().generateSeqId(model);
             RT_LOG(
                 RT_LOG_INFO, "device_id=%u, stream_id=%d, task_id=%hu, sequence id=%u.", tsk->stream->Device_()->Id_(),
                 streamId_, tsk->id, tsk->modelSeqId);
@@ -1692,8 +1693,7 @@ rtError_t DavidStream::UpdateSnapShotSqe()
     return RT_ERROR_NONE;
 }
 
-rtError_t DavidStream::HandleTaskUpdate(
-    TaskInfo* workTask, CaptureModel* model, uint8_t* sqeBufferBackup, uint32_t sendSqeNum)
+rtError_t DavidStream::HandleTaskUpdate(TaskInfo* workTask, Model* model, uint8_t* sqeBufferBackup, uint32_t sendSqeNum)
 {
     RT_LOG(
         RT_LOG_INFO, "update task begin, stream_id=%d, task_id=%hu, task_type=%d(%s).", streamId_, workTask->id,
@@ -1726,7 +1726,7 @@ rtError_t DavidStream::HandleTaskUpdate(
     return RT_ERROR_NONE;
 }
 
-rtError_t DavidStream::HandleTaskDisable(TaskInfo* workTask, CaptureModel* model)
+rtError_t DavidStream::HandleTaskDisable(TaskInfo* workTask, Model* model)
 {
     UNUSED(model);
     RT_LOG(
@@ -1740,7 +1740,7 @@ rtError_t DavidStream::HandleTaskDisable(TaskInfo* workTask, CaptureModel* model
 }
 
 rtError_t DavidStream::HandleTaskDefault(
-    TaskInfo* workTask, CaptureModel* model, uint8_t* sqeBufferBackup, uint32_t sendSqeNum)
+    TaskInfo* workTask, Model* model, uint8_t* sqeBufferBackup, uint32_t sendSqeNum)
 {
     model->SetKernelTaskId(static_cast<uint32_t>(workTask->id), streamId_);
     uint8_t* oldhostSqeAddr = GetHostSqeAddrByPos(workTask->pos);

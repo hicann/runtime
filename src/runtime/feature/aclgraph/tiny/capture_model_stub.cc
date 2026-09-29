@@ -8,12 +8,93 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "capture_model.hpp"
+#include "capture_func.hpp"
 #include "capture_model_utils.hpp"
 #include "logic_sq.hpp"
 #include "logic_sq_manage.hpp"
 
 namespace cce {
 namespace runtime {
+
+namespace {
+Model* GetModelIfCapture(Model* const model) { return dynamic_cast<CaptureModel*>(model); }
+
+void BackupCaptureArgHandle(Model* const model, const uint16_t streamId, const uint16_t taskId)
+{
+    dynamic_cast<CaptureModel*>(model)->BackupArgHandle(streamId, taskId);
+}
+
+bool IsCaptureFinish(const Model* const model)
+{
+    const CaptureModel* const captureModel = dynamic_cast<const CaptureModel*>(model);
+    return (captureModel != nullptr) && captureModel->IsCaptureFinish();
+}
+
+rtError_t AllocCaptureTaskStub(
+    Stream* const stm, const tsTaskType_t taskType, const uint32_t sqeNum, TaskInfo** const task)
+{
+    UNUSED(stm);
+    UNUSED(taskType);
+    UNUSED(sqeNum);
+    UNUSED(task);
+    return RT_ERROR_STREAM_CAPTURE_EXIT;
+}
+
+void CacheCaptureTaskIdStub(Stream* const stm, const uint16_t taskId)
+{
+    UNUSED(stm);
+    UNUSED(taskId);
+}
+
+uint32_t GetCacheOpInfoSwitchStub(const Stream* const stm)
+{
+    UNUSED(stm);
+    return 0U;
+}
+
+void SetCacheOpInfoOriginSwitchStub(const Stream* const stm, const uint32_t status)
+{
+    UNUSED(stm);
+    UNUSED(status);
+}
+
+void ResetTaskGroupStub(Stream* const stm) { UNUSED(stm); }
+
+rtError_t PackingTaskGroupStub(Stream* const stm, const TaskInfo* const task, const uint16_t streamId)
+{
+    UNUSED(stm);
+    UNUSED(task);
+    UNUSED(streamId);
+    return RT_ERROR_NONE;
+}
+
+static bool CaptureFuncRegister()
+{
+    const CaptureFunc funcs = {
+        .createContextExtension = nullptr,
+        .createStreamExtension = nullptr,
+        .createSubCaptureModels = nullptr,
+        .detachCaptureEvent = nullptr,
+        .setTaskGroupErrCode = nullptr,
+        .allocCaptureTask = &AllocCaptureTaskStub,
+        .generateSeqId = nullptr,
+        .getModelIfCapture = &GetModelIfCapture,
+        .backupArgHandle = &BackupCaptureArgHandle,
+        .isCaptureFinish = &IsCaptureFinish,
+        .cacheCaptureTaskId = &CacheCaptureTaskIdStub,
+        .getCacheOpInfoSwitch = &GetCacheOpInfoSwitchStub,
+        .setCacheOpInfoOriginSwitch = &SetCacheOpInfoOriginSwitchStub,
+        .isOrigCaptureStream = nullptr,
+        .resetTaskGroup = &ResetTaskGroupStub,
+        .updateTask = nullptr,
+        .packingTaskGroup = &PackingTaskGroupStub,
+    };
+    RegCaptureFunc(funcs);
+    return true;
+}
+
+static bool g_captureFuncRegister = CaptureFuncRegister();
+} // namespace
 
 CaptureModel::CaptureModel(ModelType type) : Model(type) {}
 

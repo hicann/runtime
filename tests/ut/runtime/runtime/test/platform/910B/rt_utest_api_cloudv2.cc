@@ -49,6 +49,7 @@
 #include "task_fail_callback_manager.hpp"
 #include "model.hpp"
 #include "capture_model.hpp"
+#include "runtime/feature/aclgraph/stream_capture.hpp"
 #include "runtime/feature/aclgraph/capture_session.hpp"
 #include "capture_model_utils.hpp"
 #include "subscribe.hpp"
@@ -1190,7 +1191,9 @@ TEST_F(RtApiTest, capture_api_mutil_thread)
     EXPECT_EQ(status, RT_STREAM_CAPTURE_STATUS_ACTIVE);
 
     Stream* s = rt_ut::UnwrapOrNull<Stream>(stream);
-    s->SetBeginCaptureThreadId(0);
+    StreamCapture* capture = StreamCapture::Get(s);
+    ASSERT_NE(capture, nullptr);
+    capture->SetBeginCaptureThreadId(0U);
     error = rtStreamEndCapture(stream, &model);
     EXPECT_EQ(error, ACL_ERROR_RT_STREAM_CAPTURE_WRONG_THREAD);
 
@@ -1220,7 +1223,9 @@ TEST_F(RtApiTest, capture_api_mutil_thread_2)
     EXPECT_EQ(status, RT_STREAM_CAPTURE_STATUS_ACTIVE);
 
     Stream* s = rt_ut::UnwrapOrNull<Stream>(stream);
-    s->SetBeginCaptureThreadId(0);
+    StreamCapture* capture = StreamCapture::Get(s);
+    ASSERT_NE(capture, nullptr);
+    capture->SetBeginCaptureThreadId(0U);
     error = rtStreamEndCapture(stream, &model);
     EXPECT_EQ(error, RT_ERROR_NONE);
 

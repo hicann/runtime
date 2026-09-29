@@ -7,32 +7,26 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-#ifndef CCE_RUNTIME_CAPTURE_OPS_HPP
-#define CCE_RUNTIME_CAPTURE_OPS_HPP
-
-#include "runtime/base.h"
-#include "runtime/rt_inner_model.h"
+#ifndef CCE_RUNTIME_STREAM_EXTENSION_HPP
+#define CCE_RUNTIME_STREAM_EXTENSION_HPP
 
 namespace cce {
 namespace runtime {
 
-class CondHandle;
-class Context;
-class ContextExtension;
-class Event;
-class Stream;
+class StreamExtension {
+public:
+    StreamExtension() = default;
+    virtual ~StreamExtension() = 0;
 
-struct CaptureOps {
-    ContextExtension* (*createContextExtension)(Context* ctx);
-    void (*freeCascadeCaptureStream)(Context* ctx, Stream* cascadeCaptureStream);
-    rtError_t (*createSubCaptureModels)(Context* ctx, CondHandle* condHandle, rtCondTaskParams params, Stream* stm);
-    void (*detachCaptureEvent)(Event* event);
+    StreamExtension(const StreamExtension&) = delete;
+    StreamExtension& operator=(const StreamExtension&) = delete;
+    StreamExtension(StreamExtension&&) = delete;
+    StreamExtension& operator=(StreamExtension&&) = delete;
 };
-
-void RegisterCaptureOps(const CaptureOps* captureOps);
-const CaptureOps* GetCaptureOps();
 
 } // namespace runtime
 } // namespace cce
 
-#endif // CCE_RUNTIME_CAPTURE_OPS_HPP
+inline cce::runtime::StreamExtension::~StreamExtension() = default;
+
+#endif // CCE_RUNTIME_STREAM_EXTENSION_HPP

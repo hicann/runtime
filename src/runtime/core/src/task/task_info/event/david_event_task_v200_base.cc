@@ -19,7 +19,7 @@
 #include "task_david.hpp"
 #include "device.hpp"
 #include "error_code.h"
-#include "capture_ops.hpp"
+#include "capture_func.hpp"
 
 namespace cce {
 namespace runtime {
@@ -364,10 +364,7 @@ void DavidUpdateAndTryToDestroyEvent(TaskInfo* taskInfo, Event** eventPtr, David
     }
     if (canEventbeDelete) {
         if ((*eventPtr)->IsCapturing()) {
-            const CaptureOps* const captureOps = GetCaptureOps();
-            if ((captureOps != nullptr) && (captureOps->detachCaptureEvent != nullptr)) {
-                captureOps->detachCaptureEvent(*eventPtr);
-            }
+            GetCaptureFunc().detachCaptureEvent(*eventPtr);
         }
         if ((*eventPtr)->Device_() != nullptr) {
             (*eventPtr)->Device_()->RemoveEvent(*eventPtr);

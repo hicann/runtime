@@ -59,6 +59,7 @@
 #include "rt_unwrap.h"
 #include "../../data/elf.h"
 #include "stream_task.h"
+#include "runtime/feature/aclgraph/stream_capture.hpp"
 #include "../../task_test_helper.h"
 
 using namespace testing;
@@ -15411,7 +15412,10 @@ TEST_F(UbStreamTest3, fusion_launch_api_test_ub_stream_error)
     pTask->u.fusionKernelTask.sqeLen = 2U;
     pTask->u.fusionKernelTask.aicPart.kernel = kernel;
     pTask->u.fusionKernelTask.aicPart.kernel->mixType_ = NO_MIX;
-    MOCKER_CPP(&Stream::UpdateTask).stubs().with(outBoundP(&pTask, sizeof(TaskInfo*))).will(returnValue(RT_ERROR_NONE));
+    MOCKER(UpdateStreamTask)
+        .stubs()
+        .with(mockcpp::any(), outBoundP(&pTask, sizeof(TaskInfo*)))
+        .will(returnValue(RT_ERROR_NONE));
     MOCKER(UpdateDavidKernelTaskSubmit).stubs().will(returnValue(RT_ERROR_DRV_INPUT));
 
     rtModel_t model;

@@ -15,6 +15,7 @@
 #include "stream.hpp"
 namespace cce {
 namespace runtime {
+class CaptureModel;
 struct CaptureCntNotify {
     int32_t eventId;
     uint32_t cntValue;

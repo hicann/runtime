@@ -10,6 +10,7 @@
 #include "../../rt_utest_api.hpp"
 #include "model_execute_task.h"
 #include "runtime_task_manager.h"
+#include "runtime/feature/aclgraph/stream_capture.hpp"
 
 TEST_F(ApiDavidTest, AllocTaskInfoForCapture_UpdateTask)
 {
@@ -41,7 +42,7 @@ TEST_F(ApiDavidTest, AllocTask_UpdateTaskFail)
     error = stm->UpdateTaskGroupStatus(StreamTaskGroupStatus::UPDATE);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    MOCKER_CPP(&Stream::UpdateTask).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER(UpdateStreamTask).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
 
     rtError_t allocError = RT_ERROR_NONE;
     TaskInfo* task = stm->AllocTask(nullptr, TS_TASK_TYPE_KERNEL_AICORE, allocError, 1U, UpdateTaskFlag::SUPPORT);

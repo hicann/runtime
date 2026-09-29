@@ -47,6 +47,7 @@
 #include "task.hpp"
 #include "capture_model.hpp"
 #include "runtime/feature/aclgraph/capture_session.hpp"
+#include "runtime/feature/aclgraph/stream_capture.hpp"
 #include "subscribe.hpp"
 #include <fstream>
 #include <stdio.h>
@@ -1240,7 +1241,9 @@ TEST_F(ApiCloudV2DisableThreadTest, task_group_update_2)
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 
     Model* model2 = new Model();
-    (rt_ut::UnwrapOrNull<Stream>(stream1))->ResetUpdateTaskGroup();
+    StreamCapture* const streamCapture = StreamCapture::Get(rt_ut::UnwrapOrNull<Stream>(stream1));
+    ASSERT_NE(streamCapture, nullptr);
+    streamCapture->ResetUpdateTaskGroup();
 
     error = rtKernelLaunch(&function_, 1, (void*)args, sizeof(args), nullptr, stream1);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);

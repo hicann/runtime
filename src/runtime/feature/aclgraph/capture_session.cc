@@ -16,7 +16,7 @@
 #include "capture_model.hpp"
 #include "capture_model_enum_desc.hpp"
 #include "capture_model_utils.hpp"
-#include "capture_ops.hpp"
+#include "capture_func.hpp"
 #include "cond_enum_desc.hpp"
 #include "cond_handle.hpp"
 #include "context.hpp"
@@ -29,6 +29,7 @@
 #include "runtime.hpp"
 #include "runtime_task_manager.h"
 #include "stream.hpp"
+#include "stream_capture.hpp"
 #include "stream_jetty_handler.h"
 #include "stub_task.hpp"
 #include "task.hpp"
@@ -87,23 +88,35 @@ bool CaptureSession::IsCaptureModeSupport(void) const
     return true;
 }
 
-void CaptureSession::CaptureModeEnter(Stream* const stm, rtStreamCaptureMode mode)
+rtError_t CaptureSession::CaptureModeEnter(Stream* const stm, rtStreamCaptureMode mode)
 {
-    stm->SetStreamCaptureMode(mode);
-    stm->SetBeginCaptureThreadId(runtime::GetCurrentTid());
+    StreamCapture* const capture = StreamCapture::GetOrCreate(stm);
+    if (capture == nullptr) {
+        RT_LOG(
+            RT_LOG_ERROR, "Failed to allocate stream capture state, device_id=%u, stream_id=%d.",
+            ctx_->Device_()->Id_(), stm->Id_());
+        return RT_ERROR_MEMORY_ALLOCATION;
+    }
+    capture->SetCaptureMode(mode);
+    capture->SetBeginCaptureThreadId(runtime::GetCurrentTid());
     captureModeRefNum_[mode]++;
     InnerThreadLocalContainer::ThreadCaptureModeEnter(mode);
 
     if (mode < captureMode_) {
         captureMode_ = mode;
     }
+    return RT_ERROR_NONE;
 }
 
 void CaptureSession::CaptureModeExit(Stream* const stm)
 {
-    const rtStreamCaptureMode streamCaptureMode = stm->GetStreamCaptureMode();
-    stm->SetStreamCaptureMode(RT_STREAM_CAPTURE_MODE_MAX);
-    stm->SetBeginCaptureThreadId(UINT32_MAX);
+    StreamCapture* const capture = StreamCapture::Get(stm);
+    const rtStreamCaptureMode streamCaptureMode =
+        (capture == nullptr) ? RT_STREAM_CAPTURE_MODE_MAX : capture->GetCaptureMode();
+    if (capture != nullptr) {
+        capture->SetCaptureMode(RT_STREAM_CAPTURE_MODE_MAX);
+        capture->SetBeginCaptureThreadId(UINT32_MAX);
+    }
 
     if (static_cast<uint32_t>(streamCaptureMode) >= RT_STREAM_CAPTURE_MODE_MAX) {
         return;
@@ -241,6 +254,14 @@ rtError_t CaptureSession::AllocCascadeCaptureStream(
         return error;
     }
 
+    if (StreamCapture::Create(newCaptureStreamTmp) == nullptr) {
+        RT_LOG(
+            RT_LOG_ERROR, "Failed to allocate stream capture state, device_id=%u, stream_id=%d.",
+            ctx_->Device_()->Id_(), newCaptureStreamTmp->Id_());
+        (void)ctx_->StreamDestroy(newCaptureStreamTmp);
+        return RT_ERROR_MEMORY_ALLOCATION;
+    }
+
     if (captureModelTmp->IsSoftwareSqEnable()) {
         /* add stream to model */
         error = ctx_->ModelAddStream(captureModel, newCaptureStreamTmp, static_cast<uint32_t>(RT_INVALID_FLAG));
@@ -289,7 +310,11 @@ void CaptureSession::FreeCascadeCaptureStream(Stream* const cascadeCaptureStm)
 
 rtError_t CaptureSession::StreamBeginTaskGrp(Stream* const stm)
 {
-    const std::lock_guard<std::mutex> tskGrpLock(stm->GetTaskGrpMutex());
+    StreamCapture* const streamCapture = StreamCapture::GetOrCreate(stm);
+    COND_RETURN_ERROR_MSG_INNER(
+        streamCapture == nullptr, RT_ERROR_MEMORY_ALLOCATION, "Failed to allocate stream capture state, stream_id=%d.",
+        stm->Id_());
+    const std::lock_guard<std::mutex> tskGrpLock(streamCapture->GetTaskGroupMutex());
     const StreamTaskGroupStatus status = stm->GetTaskGroupStatus();
     COND_RETURN_AND_MSG_OUTER(
         status != StreamTaskGroupStatus::NONE, RT_ERROR_STREAM_TASKGRP_STATUS, ErrorCode::EE1018,
@@ -320,8 +345,12 @@ rtError_t CaptureSession::StreamBeginTaskGrp(Stream* const stm)
     COND_RETURN_ERROR(
         (mdl != dynamic_cast<CaptureModel*>(captureStream->Model_())), RT_ERROR_STREAM_CAPTURE_CONFLICT,
         "Capture model conflict.");
+    StreamCapture* const capture = StreamCapture::GetOrCreate(captureStream);
+    COND_RETURN_ERROR_MSG_INNER(
+        capture == nullptr, RT_ERROR_MEMORY_ALLOCATION, "Failed to allocate capture stream state, stream_id=%d.",
+        captureStream->Id_());
     (void)stm->UpdateTaskGroupStatus(StreamTaskGroupStatus::SAMPLE);
-    captureStream->UpdateCurrentTaskGroup(taskGrp);
+    capture->UpdateCurrentTaskGroup(taskGrp);
     mdl->InsertTaskGroupStreamId(static_cast<uint16_t>(captureStream->Id_()));
     return RT_ERROR_NONE;
 }
@@ -329,7 +358,14 @@ rtError_t CaptureSession::StreamBeginTaskGrp(Stream* const stm)
 rtError_t CaptureSession::StreamEndTaskGrp(Stream* const stm, TaskGroup** const handle) const
 {
     *handle = nullptr;
-    const std::lock_guard<std::mutex> tskGrpLock(stm->GetTaskGrpMutex());
+    StreamCapture* const streamCapture = StreamCapture::Get(stm);
+    COND_RETURN_AND_MSG_OUTER(
+        streamCapture == nullptr, RT_ERROR_STREAM_TASKGRP_STATUS, ErrorCode::EE1018, "Marking the end of a task group",
+        RtFmtMsg(
+            "The stream (stream_id=%d) has not started a task group or is being updated. "
+            "Call aclmdlRICaptureTaskGrpBegin first, or call aclmdlRICaptureTaskUpdateEnd to finish the current update",
+            stm->Id_()));
+    const std::lock_guard<std::mutex> tskGrpLock(streamCapture->GetTaskGroupMutex());
 
     const StreamTaskGroupStatus status = stm->GetTaskGroupStatus();
     COND_RETURN_AND_MSG_OUTER(
@@ -346,7 +382,9 @@ rtError_t CaptureSession::StreamEndTaskGrp(Stream* const stm, TaskGroup** const 
     CaptureModel* mdl = dynamic_cast<CaptureModel*>(captureStream->Model_());
     NULL_PTR_RETURN(mdl, RT_ERROR_MODEL_NULL);
 
-    std::unique_ptr<TaskGroup>& taskGrp = captureStream->GetCurrentTaskGroup();
+    StreamCapture* const capture = StreamCapture::Get(captureStream);
+    NULL_PTR_RETURN(capture, RT_ERROR_STREAM_TASKGRP_NULL);
+    std::unique_ptr<TaskGroup>& taskGrp = capture->GetCurrentTaskGroup();
     NULL_PTR_RETURN(taskGrp, RT_ERROR_STREAM_TASKGRP_NULL);
 
     rtError_t errorCode = mdl->GetTaskGroupErrCode();
@@ -369,7 +407,7 @@ rtError_t CaptureSession::StreamEndTaskGrp(Stream* const stm, TaskGroup** const 
         *handle = taskGrp.get();
         mdl->AddTaskGroupList(taskGrp);
     }
-    captureStream->ResetTaskGroup();
+    capture->ResetTaskGroup();
     mdl->DeleteTaskGroupStreamId(static_cast<uint16_t>(captureStream->Id_()));
     (void)stm->UpdateTaskGroupStatus(StreamTaskGroupStatus::NONE);
     return errorCode;
@@ -377,9 +415,14 @@ rtError_t CaptureSession::StreamEndTaskGrp(Stream* const stm, TaskGroup** const 
 
 rtError_t CaptureSession::StreamBeginTaskUpdate(Stream* const stm, TaskGroup* handle) const
 {
-    const std::lock_guard<std::mutex> tskGrpLock(stm->GetTaskGrpMutex());
+    StreamCapture* const streamCapture = StreamCapture::GetOrCreate(stm);
+    COND_RETURN_ERROR_MSG_INNER(
+        streamCapture == nullptr, RT_ERROR_MEMORY_ALLOCATION, "Failed to allocate stream capture state, stream_id=%d.",
+        stm->Id_());
+    const std::lock_guard<std::mutex> tskGrpLock(streamCapture->GetTaskGroupMutex());
+    const StreamTaskGroupStatus status = stm->GetTaskGroupStatus();
     COND_RETURN_AND_MSG_OUTER(
-        stm->GetTaskGroupStatus() != StreamTaskGroupStatus::NONE, RT_ERROR_STREAM_TASKGRP_STATUS, ErrorCode::EE1018,
+        status != StreamTaskGroupStatus::NONE, RT_ERROR_STREAM_TASKGRP_STATUS, ErrorCode::EE1018,
         "Marking the start of the task to be updated",
         RtFmtMsg(
             "The stream (stream_id=%d) has already started a task group or is being updated. "
@@ -404,23 +447,29 @@ rtError_t CaptureSession::StreamBeginTaskUpdate(Stream* const stm, TaskGroup* ha
     }
 
     const rtError_t ret = stm->UpdateTaskGroupStatus(StreamTaskGroupStatus::UPDATE);
+    const StreamTaskGroupStatus currentStatus = stm->GetTaskGroupStatus();
     ERROR_RETURN(
         ret, "update stream task group status failed, ret:%#x, status:%s(%u).", static_cast<uint32_t>(ret),
-        StreamTaskGroupStatusName(stm->GetTaskGroupStatus()), static_cast<uint32_t>(stm->GetTaskGroupStatus()));
+        StreamTaskGroupStatusName(currentStatus), static_cast<uint32_t>(currentStatus));
 
-    stm->SetUpdateTaskGroup(handle);
+    streamCapture->SetUpdateTaskGroup(handle);
     RT_LOG(RT_LOG_INFO, "Success to begin update tasks, stream_id=%d.", stm->Id_());
     return RT_ERROR_NONE;
 }
 
 rtError_t CaptureSession::StreamEndTaskUpdate(Stream* const stm) const
 {
-    const std::lock_guard<std::mutex> tskGrpLock(stm->GetTaskGrpMutex());
+    StreamCapture* const streamCapture = StreamCapture::Get(stm);
     COND_RETURN_AND_MSG_OUTER(
-        stm->GetTaskGroupStatus() != StreamTaskGroupStatus::UPDATE, RT_ERROR_STREAM_TASKGRP_STATUS, ErrorCode::EE1016,
+        streamCapture == nullptr, RT_ERROR_STREAM_TASKGRP_STATUS, ErrorCode::EE1016,
+        "Marking the end of the task to be updated", "The stream is not in task update mode");
+    const std::lock_guard<std::mutex> tskGrpLock(streamCapture->GetTaskGroupMutex());
+    const StreamTaskGroupStatus status = stm->GetTaskGroupStatus();
+    COND_RETURN_AND_MSG_OUTER(
+        status != StreamTaskGroupStatus::UPDATE, RT_ERROR_STREAM_TASKGRP_STATUS, ErrorCode::EE1016,
         "Marking the end of the task to be updated", "The stream is not in task update mode");
 
-    TaskGroup* updateTaskGroup = stm->GetUpdateTaskGroup();
+    TaskGroup* updateTaskGroup = streamCapture->GetUpdateTaskGroup();
     COND_RETURN_AND_MSG_OUTER(
         updateTaskGroup == nullptr, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
         "Marking the end of the task to be updated", "stream",
@@ -429,7 +478,7 @@ rtError_t CaptureSession::StreamEndTaskUpdate(Stream* const stm) const
 
     const size_t taskIndex = updateTaskGroup->updateTaskIndex;
     COND_PROC_RETURN_AND_MSG_OUTER(taskIndex != updateTaskGroup->taskIds.size(), RT_ERROR_STREAM_TASKGRP_UPDATE,
-                                   ErrorCode::EE1017, stm->ResetUpdateTaskGroup();
+                                   ErrorCode::EE1017, streamCapture->ResetUpdateTaskGroup();
                                    , "Marking the end of the task to be updated",
                                    RtFmtMsg("stream (stream_id=%d)", stm->Id_()),
                                    RtFmtMsg(
@@ -437,7 +486,7 @@ rtError_t CaptureSession::StreamEndTaskUpdate(Stream* const stm) const
                                        "total_num=%zu, matched_num=%zu",
                                        updateTaskGroup->taskIds.size(), taskIndex));
 
-    stm->ResetUpdateTaskGroup();
+    streamCapture->ResetUpdateTaskGroup();
     RT_LOG(
         RT_LOG_INFO, "stream_id=%d update tasks result: total=%zu, success=%zu, remain=%zu", stm->Id_(),
         updateTaskGroup->taskIds.size(), taskIndex, (updateTaskGroup->taskIds.size() - taskIndex));
@@ -590,6 +639,15 @@ rtError_t CaptureSession::StreamAddToCaptureModelProc(Stream* const stm, Model* 
         return error;
     }
 
+    StreamCapture* const capture = StreamCapture::Create(captureStream);
+    if (capture == nullptr) {
+        RT_LOG(
+            RT_LOG_ERROR, "Failed to allocate stream capture state, device_id=%u, stream_id=%d.",
+            ctx_->Device_()->Id_(), captureStream->Id_());
+        (void)ctx_->StreamDestroy(captureStream);
+        return RT_ERROR_MEMORY_ALLOCATION;
+    }
+
     if (captureModelTmp->IsSoftwareSqEnable()) {
         /* add stream to model */
         error = ctx_->ModelAddStream(captureMdl, captureStream, RT_HEAD_STREAM);
@@ -633,8 +691,8 @@ rtError_t CaptureSession::StreamAddToCaptureModelProc(Stream* const stm, Model* 
         return RT_ERROR_STREAM_CAPTURED;
     }
 
-    captureStream->MarkOrigCaptureStream(isOriginal);
-    stm->EnterCapture(captureStream);
+    capture->MarkOrigCaptureStream(isOriginal);
+    StreamCapture::EnterCapture(stm, captureStream);
     return RT_ERROR_NONE;
 }
 
@@ -707,7 +765,14 @@ rtError_t CaptureSession::StreamBeginCapture(Stream* const stm, const rtStreamCa
         return error;
     }
 
-    CaptureModeEnter(stm, mode);
+    error = CaptureModeEnter(stm, mode);
+    if (error != RT_ERROR_NONE) {
+        RT_LOG(
+            RT_LOG_ERROR, "Failed to enter capture mode, device_id=%u, original stream_id=%d, retCode=%#x.",
+            ctx_->Device_()->Id_(), streamId, error);
+        ClearCaptureModel(stm, captureModel);
+        return error;
+    }
 
     CondHandle* condHandle = nullptr;
     /* 父model取到的condHandle是nullptr，接口不返错 */
@@ -746,10 +811,13 @@ rtError_t CaptureSession::CheckCaptureModelValidity(Model* const captureMdl) con
     bool hasRecordOrigStream = false;
     int32_t origStreamId = -1;
     for (auto it = streams.begin(); it != streams.end(); it++) {
-        if ((*it)->IsOrigCaptureStream()) {
+        const StreamCapture* const capture = StreamCapture::Get(*it);
+        const bool isOriginal = (capture != nullptr) && capture->IsOrigCaptureStream();
+        if (isOriginal) {
             origStreamId = (*it)->Id_();
         }
-        if (((*it)->IsOrigCaptureStream()) || ((*it)->IsLastLevelCaptureStream() == false) || (mdl->IsAddStream(*it))) {
+        const bool isLastLevel = (capture == nullptr) ? true : capture->IsLastLevelCaptureStream();
+        if (isOriginal || (!isLastLevel) || mdl->IsAddStream(*it)) {
             continue;
         }
 
@@ -838,7 +906,7 @@ rtError_t CaptureSession::SetNotifyForExeModel(CaptureModel* const captureMdl)
 
 void CaptureSession::ClearCaptureModel(Stream* const stm, Model* mdl)
 {
-    stm->ExitCapture();
+    StreamCapture::ExitCapture(stm);
     /* steam is bound to model, only need destroy model */
 
     if (mdl != nullptr) {
@@ -880,8 +948,9 @@ rtError_t CaptureSession::StreamEndCapture(Stream* const stm, Model** const capt
 
     Stream* captureStream = stm->GetCaptureStream();
     NULL_STREAM_PTR_RETURN_MSG(captureStream);
+    const StreamCapture* const capture = StreamCapture::Get(captureStream);
     COND_RETURN_AND_MSG_OUTER(
-        !(captureStream->IsOrigCaptureStream()), RT_ERROR_STREAM_CAPTURE_UNMATCHED, ErrorCode::EE1016,
+        (capture == nullptr) || (!capture->IsOrigCaptureStream()), RT_ERROR_STREAM_CAPTURE_UNMATCHED, ErrorCode::EE1016,
         "Stream end capture",
         RtFmtMsg(
             "The capture was not initiated in this stream (stream_id=%d). "
@@ -1018,7 +1087,7 @@ rtError_t CaptureSession::StreamEndCapture(Stream* const stm, Model** const capt
 
     (void)captureModel->ModelExecuteType();
     /* stm end capture */
-    stm->ExitCapture();
+    StreamCapture::ExitCapture(stm);
     *captureMdl = captureModel;
 
     RT_LOG(
@@ -1045,14 +1114,10 @@ ContextExtension* CreateCaptureSession(Context* const ctx)
     return new (std::nothrow) CaptureSession(ctx);
 }
 
-void FreeCascadeCaptureStream(Context* const ctx, Stream* const cascadeCaptureStream)
+StreamExtension* CreateStreamCapture(Stream* const stm)
 {
-    CaptureSession* const captureSession = GetCaptureSession(ctx);
-    if (captureSession == nullptr) {
-        RT_LOG(RT_LOG_ERROR, "Capture session is null when freeing cascade capture stream.");
-        return;
-    }
-    captureSession->FreeCascadeCaptureStream(cascadeCaptureStream);
+    UNUSED(stm);
+    return new (std::nothrow) StreamCapture;
 }
 
 rtError_t CreateSubCaptureModels(
@@ -1063,15 +1128,60 @@ rtError_t CreateSubCaptureModels(
     return captureSession->CreateSubCaptureModels(condHandle, params, stm);
 }
 
-const CaptureOps g_aclgraphCaptureOps = {
-    CreateCaptureSession, FreeCascadeCaptureStream, CreateSubCaptureModels, DetachCaptureEvent};
+void SetTaskGroupErrCode(const Stream* const stm, const rtError_t errorCode)
+{
+    Stream* const captureStream = stm->GetCaptureStream();
+    const Stream* const modelStream = (captureStream == nullptr) ? stm : captureStream;
+    CaptureModel* const captureModel = dynamic_cast<CaptureModel*>(modelStream->Model_());
+    if (captureModel == nullptr) {
+        RT_LOG(RT_LOG_ERROR, "capture model is NULL, stream_id=%d.", stm->Id_());
+        return;
+    }
+    captureModel->TerminateCapture();
+    captureModel->SetTaskGroupErrCode(errorCode);
+}
 
-class CaptureOpsRegistrar {
-public:
-    CaptureOpsRegistrar() { RegisterCaptureOps(&g_aclgraphCaptureOps); }
-};
+uint32_t GenerateSeqId(Model* const model) { return dynamic_cast<CaptureModel*>(model)->GenerateSeqId(); }
 
-CaptureOpsRegistrar g_captureOpsRegistrar;
+Model* GetModelIfCapture(Model* const model) { return dynamic_cast<CaptureModel*>(model); }
+
+void BackupCaptureArgHandle(Model* const model, const uint16_t streamId, const uint16_t taskId)
+{
+    dynamic_cast<CaptureModel*>(model)->BackupArgHandle(streamId, taskId);
+}
+
+bool IsCaptureFinish(const Model* const model)
+{
+    const CaptureModel* const captureModel = dynamic_cast<const CaptureModel*>(model);
+    return (captureModel != nullptr) && captureModel->IsCaptureFinish();
+}
+
+static bool CaptureFuncRegister()
+{
+    const CaptureFunc funcs = {
+        .createContextExtension = &CreateCaptureSession,
+        .createStreamExtension = &CreateStreamCapture,
+        .createSubCaptureModels = &CreateSubCaptureModels,
+        .detachCaptureEvent = &DetachCaptureEvent,
+        .setTaskGroupErrCode = &SetTaskGroupErrCode,
+        .allocCaptureTask = &StreamCapture::AllocTask,
+        .generateSeqId = &GenerateSeqId,
+        .getModelIfCapture = &GetModelIfCapture,
+        .backupArgHandle = &BackupCaptureArgHandle,
+        .isCaptureFinish = &IsCaptureFinish,
+        .cacheCaptureTaskId = &CacheCaptureTaskId,
+        .getCacheOpInfoSwitch = &GetStreamCacheOpInfoSwitch,
+        .setCacheOpInfoOriginSwitch = &SetStreamCacheOpInfoOriginSwitch,
+        .isOrigCaptureStream = &IsOriginalCaptureStream,
+        .resetTaskGroup = &ResetStreamTaskGroup,
+        .updateTask = &UpdateStreamTask,
+        .packingTaskGroup = &PackStreamTaskGroup,
+    };
+    RegCaptureFunc(funcs);
+    return true;
+}
+
+static bool g_captureFuncRegister = CaptureFuncRegister();
 
 } // namespace
 

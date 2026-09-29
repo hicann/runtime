@@ -13,7 +13,7 @@
 #include "event.hpp"
 #include "runtime_task_manager.h"
 #include "error_code.h"
-#include "capture_ops.hpp"
+#include "capture_func.hpp"
 #include "stub_task.hpp"
 #include "event_task.h"
 #include "rt_inner_event.h"
@@ -174,10 +174,7 @@ void TryToFreeEventIdAndDestroyEvent(Event** eventPtr, int32_t freeId, bool isNe
 
     if (canEventbeDelete) {
         if ((*eventPtr)->IsCapturing()) {
-            const CaptureOps* const captureOps = GetCaptureOps();
-            if ((captureOps != nullptr) && (captureOps->detachCaptureEvent != nullptr)) {
-                captureOps->detachCaptureEvent(*eventPtr);
-            }
+            GetCaptureFunc().detachCaptureEvent(*eventPtr);
         }
         if ((*eventPtr)->Device_() != nullptr) {
             (*eventPtr)->Device_()->RemoveEvent(*eventPtr);
