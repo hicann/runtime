@@ -820,6 +820,7 @@ public:
     TaskInfo* AllocTask(
         TaskInfo* pTask, tsTaskType_t taskType, rtError_t& errorReason, uint32_t sqeNum = 1U,
         UpdateTaskFlag flag = UpdateTaskFlag::NOT_SUPPORT);
+    rtError_t LaunchExtTask(tsTaskType_t taskType, const void* params);
     rtError_t TaskReclaim(void);
     TaskInfo* AllocCaptureTask(tsTaskType_t taskType, uint32_t sqeNum, TaskInfo* pTask, rtError_t& errorReason);
     TaskInfo* HandleTaskGroupUpdate(tsTaskType_t taskType, UpdateTaskFlag flag, rtError_t& errorReason);

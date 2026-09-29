@@ -302,7 +302,8 @@ rtError_t ApiImpl::FftsPlusTaskLaunch(
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Function Flow Task Scheduler (FFTS) Plus task delivery");
 
-    return cce::runtime::FftsPlusTaskLaunch(fftsPlusTaskInfo, curStm, flag, curCtx->GetCaptureLock());
+    const FftsPlusLaunchParams params = {fftsPlusTaskInfo, flag};
+    return curStm->LaunchExtTask(TS_TASK_TYPE_FFTS_PLUS, &params);
 }
 
 rtError_t ApiImpl::RDMASend(const uint32_t sqIndex, const uint32_t wqeIndex, Stream* const stm)
@@ -336,7 +337,7 @@ rtError_t ApiImpl::RdmaDbSend(const uint32_t dbIndex, const uint64_t dbInfo, Str
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Delivering an RDMA Doorbell task");
 
-    return cce::runtime::RdmaDbSend(dbIndex, dbInfo, curStm, curCtx->GetCaptureLock());
+    return cce::runtime::RdmaDbSend(dbIndex, dbInfo, curStm);
 }
 
 // dqs

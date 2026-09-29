@@ -223,13 +223,12 @@ public:
 
     void InsertRdmaPiValueModifyInfo(int32_t streamId, uint16_t taskId)
     {
-        // 在captureLock_下，因此不需要再加锁
+        const std::lock_guard<std::mutex> lock(rdmaPiValueModifyTaskInfoMutex_);
         (void)rdmaPiValueModifyTaskInfoMap_[streamId].insert(taskId);
     }
 
-    const std::unordered_map<int32_t, std::unordered_set<uint16_t>>& GetRdmaPiValueModifyTaskInfoMap() const
+    std::unordered_map<int32_t, std::unordered_set<uint16_t>> GetRdmaPiValueModifyTaskInfoMap() const
     {
-        // 目前只有模型执行完后的notify wait的后处理才会调用这个函数，所以不需要加锁
         return rdmaPiValueModifyTaskInfoMap_;
     }
 
@@ -390,6 +389,7 @@ private:
     std::set<uint16_t> taskGroupStmIds_;
     std::vector<std::unique_ptr<TaskGroup>> taskGroupList_;
     rtError_t taskGroupErrCode_{RT_ERROR_NONE};
+    mutable std::mutex rdmaPiValueModifyTaskInfoMutex_;
     std::unordered_map<int32_t, std::unordered_set<uint16_t>> rdmaPiValueModifyTaskInfoMap_;
     bool isSoftwareSqEnable_{false};
     rtDeviceSqCqInfo_t* sqCqArray_{nullptr};

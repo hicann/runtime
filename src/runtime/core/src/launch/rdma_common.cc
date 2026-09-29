@@ -77,11 +77,10 @@ ERROR_RECYCLE:
     return error;
 }
 
-rtError_t RdmaDbSend(const uint32_t dbIndex, const uint64_t dbInfo, Stream* const stm, std::mutex& contextCaptureLock)
+rtError_t RdmaDbSend(const uint32_t dbIndex, const uint64_t dbInfo, Stream* const stm)
 {
     rtError_t error;
     if ((Runtime::Instance()->ChipIsHaveStars()) && (stm->IsCapturing())) {
-        std::lock_guard<std::mutex> lock(contextCaptureLock);
         if (stm->IsCapturing()) {
             for (uint32_t taskSeq = 0U; taskSeq < RT_STARS_MODEL_RDMADB_TASK_NUM; taskSeq++) {
                 error = RdmaDbSendToDev(dbIndex, dbInfo, stm, (taskSeq + 1U));

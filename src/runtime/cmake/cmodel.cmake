@@ -353,6 +353,7 @@ set(libruntime_cmodel_src_files_optional
     ${RUNTIME_API_DIR}/impl/api_impl_uvm.cc
     ${RUNTIME_CORE_DIR}/src/context/context_standard_soc.cc
     ${RUNTIME_CORE_DIR}/src/launch/rdma_common.cc
+    ${RUNTIME_CORE_DIR}/src/stream/ext_task_launch.cc
     ${RUNTIME_CORE_DIR}/src/dfx/fp16_t.cpp
     ${RUNTIME_CORE_DIR}/src/dfx/hifloat.cpp
     ${RUNTIME_CORE_DIR}/src/dfx/printf.cc

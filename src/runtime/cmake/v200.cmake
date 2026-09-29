@@ -231,6 +231,7 @@ set(libruntime_v200_src_files_exclude_for_tiny
     ${RUNTIME_FEATURE_DIR}/aclgraph/v200/api_impl_david_capture_event.cc
     ${RUNTIME_CORE_DIR}/src/context/context_standard_soc.cc
     ${RUNTIME_CORE_DIR}/src/launch/rdma_common.cc
+    ${RUNTIME_CORE_DIR}/src/stream/ext_task_launch.cc
     ${RUNTIME_CORE_DIR}/src/dfx/fp16_t.cpp
     ${RUNTIME_CORE_DIR}/src/dfx/hifloat.cpp
     ${RUNTIME_CORE_DIR}/src/dfx/printf.cc

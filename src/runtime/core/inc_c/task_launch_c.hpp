@@ -11,8 +11,6 @@
 #ifndef RUNTIME_CORE_INC_C_TASK_LAUNCH_C_HPP
 #define RUNTIME_CORE_INC_C_TASK_LAUNCH_C_HPP
 
-#include <mutex>
-
 #include "runtime/base.h"
 #include "rts/rts_stars.h"
 
@@ -28,7 +26,7 @@ rtError_t LaunchSqeUpdateTask(
 rtError_t SetStreamSqLockUnlock(Stream* const stm, const bool isLock);
 rtError_t SetUpdateAddrTask(const uint64_t devAddr, const uint64_t len, Stream* const stm);
 rtError_t RDMASend(const uint32_t sqIndex, const uint32_t wqeIndex, Stream* const stm);
-rtError_t RdmaDbSend(const uint32_t dbIndex, const uint64_t dbInfo, Stream* const stm, std::mutex& contextCaptureLock);
+rtError_t RdmaDbSend(const uint32_t dbIndex, const uint64_t dbInfo, Stream* const stm);
 
 } // namespace runtime
 } // namespace cce

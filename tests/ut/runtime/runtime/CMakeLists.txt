@@ -423,6 +423,7 @@ set(runtimeut_src_tiny_exclude_list
     ${TOP_DIR}/src/runtime/core/src/context/context_dfx.cc
     ${TOP_DIR}/src/runtime/core/src/context/context_standard_soc.cc
     ${TOP_DIR}/src/runtime/core/src/launch/rdma_common.cc
+    ${TOP_DIR}/src/runtime/core/src/stream/ext_task_launch.cc
     ${TOP_DIR}/src/runtime/core/src/device/device_sq_cq_pool.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/api_decorator_aclgraph.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/api_error_aclgraph.cc
@@ -691,6 +692,7 @@ set(runtimeut_src_list
     ${TOP_DIR}/src/runtime/core/src/launch/memory_stars.cc
     ${TOP_DIR}/src/runtime/core/src/launch/task_launch_common.cc
     ${TOP_DIR}/src/runtime/core/src/launch/rdma_common.cc
+    ${TOP_DIR}/src/runtime/core/src/stream/ext_task_launch.cc
     ${TOP_DIR}/src/runtime/core/src/launch/aix_stars.cc
     ${TOP_DIR}/src/runtime/core/src/launch/aicpu_stars.cc
     ${TOP_DIR}/src/runtime/core/src/launch/dvpp_stars.cc
@@ -835,6 +837,7 @@ set(runtimeut_david_src_list
     ${TOP_DIR}/src/runtime/feature/soma/stream_mem_pool.cc
     ${TOP_DIR}/src/runtime/core/src/launch/task_launch_common.cc
     ${TOP_DIR}/src/runtime/core/src/launch/rdma_common.cc
+    ${TOP_DIR}/src/runtime/core/src/stream/ext_task_launch.cc
     ${TOP_DIR}/src/runtime/core/src/launch/label.cc
     ${TOP_DIR}/src/runtime/core/src/device/aicpu_err_msg.cc
     ${TOP_DIR}/src/runtime/core/src/aicpu_timeout/aicpu_timeout_manager.cc
@@ -1790,6 +1793,7 @@ set(runtimeut_v201_src_list
     ${TOP_DIR}/src/runtime/feature/soma/stream_mem_pool.cc
     ${TOP_DIR}/src/runtime/core/src/launch/task_launch_common.cc
     ${TOP_DIR}/src/runtime/core/src/launch/rdma_common.cc
+    ${TOP_DIR}/src/runtime/core/src/stream/ext_task_launch.cc
     ${TOP_DIR}/src/runtime/core/src/launch/label.cc
     ${TOP_DIR}/src/runtime/core/src/device/aicpu_err_msg.cc
     ${TOP_DIR}/src/runtime/core/src/aicpu_timeout/aicpu_timeout_manager.cc

@@ -3691,7 +3691,8 @@ TEST_F(ContextTest, FftsPlusTaskLaunch_invalid_stream)
     MOCKER_CPP(&TaskFactory::Alloc).stubs().will(returnValue(&taskInfo));
     MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
 
-    error = FftsPlusTaskLaunch(&fftsPlusTaskInfo, stream, 0U, ctx->GetCaptureLock());
+    const FftsPlusLaunchParams params = {&fftsPlusTaskInfo, 0U};
+    error = stream->LaunchExtTask(TS_TASK_TYPE_FFTS_PLUS, &params);
     EXPECT_EQ(error, RT_ERROR_STREAM_INVALID);
 
     (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(devId);
@@ -3734,15 +3735,16 @@ TEST_F(ContextTest, FftsPlusTaskLaunch_test)
     MOCKER_CPP(&TaskFactory::Alloc).stubs().will(returnValue((TaskInfo*)nullptr));
     MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
 
-    error = FftsPlusTaskLaunch(nullptr, stream, 0U, ctx->GetCaptureLock());
+    const FftsPlusLaunchParams params = {nullptr, 0U};
+    error = stream->LaunchExtTask(TS_TASK_TYPE_FFTS_PLUS, &params);
     EXPECT_EQ(error, RT_ERROR_STREAM_INVALID);
 
     argHdl->freeArgs = 1;
-    error = FftsPlusTaskLaunch(nullptr, stream, 0U, ctx->GetCaptureLock());
+    error = stream->LaunchExtTask(TS_TASK_TYPE_FFTS_PLUS, &params);
     EXPECT_EQ(error, RT_ERROR_STREAM_INVALID);
 
     MOCKER_CPP_VIRTUAL(ctx->device_, &Device::SubmitTask).stubs().will(returnValue(RT_ERROR_NONE));
-    error = FftsPlusTaskLaunch(nullptr, stream, 0U, ctx->GetCaptureLock());
+    error = stream->LaunchExtTask(TS_TASK_TYPE_FFTS_PLUS, &params);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(devId);
@@ -5259,7 +5261,7 @@ TEST_F(ContextTest, RdmaDbSend_test)
     Runtime::Instance()->chipType_ = CHIP_910_B_93;
     GlobalContainer::SetRtChipType(CHIP_910_B_93);
     stream->bindFlag_.Set(true);
-    error = RdmaDbSend(0, 0, stream, ctx->GetCaptureLock());
+    error = RdmaDbSend(0, 0, stream);
     EXPECT_NE(error, RT_ERROR_NONE);
 
     Runtime::Instance()->chipType_ = preType;
@@ -6417,13 +6419,12 @@ TEST_F(ContextTest, UnifiedRdmaCoverage)
     const rtChipType_t globalChipType = GlobalContainer::GetRtChipType();
     runtime->chipType_ = CHIP_MINI;
     GlobalContainer::SetRtChipType(CHIP_MINI);
-    std::mutex captureLock;
-    EXPECT_EQ(RdmaDbSend(0U, 0U, stream, captureLock), RT_ERROR_NONE);
+    EXPECT_EQ(RdmaDbSend(0U, 0U, stream), RT_ERROR_NONE);
 
     runtime->chipType_ = CHIP_910_B_93;
     GlobalContainer::SetRtChipType(CHIP_910_B_93);
     stream->SetCaptureStatus(RT_STREAM_CAPTURE_STATUS_ACTIVE);
-    EXPECT_EQ(RdmaDbSend(0U, 0U, stream, captureLock), RT_ERROR_NONE);
+    EXPECT_EQ(RdmaDbSend(0U, 0U, stream), RT_ERROR_NONE);
 
     stream->SetCaptureStatus(RT_STREAM_CAPTURE_STATUS_NONE);
     runtime->chipType_ = chipType;
@@ -6463,8 +6464,8 @@ TEST_F(ContextTest, UnifiedFftsPlusCaptureCoverage)
     MOCKER(FftsPlusTaskInit).stubs().will(invoke(FftsPlusTaskInitAndStartCapture));
     MOCKER(SubmitRdmaPiValueModifyTask).stubs().will(returnValue(RT_ERROR_NONE));
 
-    std::mutex captureLock;
-    EXPECT_EQ(FftsPlusTaskLaunch(nullptr, stream, 0U, captureLock), RT_ERROR_NONE);
+    const FftsPlusLaunchParams params = {nullptr, 0U};
+    EXPECT_EQ(stream->LaunchExtTask(TS_TASK_TYPE_FFTS_PLUS, &params), RT_ERROR_NONE);
 
     stream->SetCaptureStatus(RT_STREAM_CAPTURE_STATUS_NONE);
     stream->UpdateCaptureStream(nullptr);

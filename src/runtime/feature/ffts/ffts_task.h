@@ -10,8 +10,6 @@
 #ifndef RUNTIME_FFTS_TASK_H
 #define RUNTIME_FFTS_TASK_H
 
-#include <mutex>
-
 #include "driver.hpp"
 #include "stars.hpp"
 
@@ -20,9 +18,12 @@ namespace runtime {
 class Stream;
 struct TaskSqeInfo;
 
-rtError_t FftsPlusTaskLaunch(
-    const rtFftsPlusTaskInfo_t* const fftsPlusTaskInfo, Stream* const stm, const uint32_t flag,
-    std::mutex& contextCaptureLock);
+struct FftsPlusLaunchParams {
+    const rtFftsPlusTaskInfo_t* taskInfo;
+    uint32_t flag;
+};
+
+rtError_t FftsPlusLaunchHandler(Stream* stm, const void* params);
 rtError_t FftsPlusTaskInit(TaskInfo* taskInfo, const rtFftsPlusTaskInfo_t* const fftsPlusTaskInfo, const uint32_t flag);
 rtError_t FillFftsPlusSqe(TaskInfo* taskInfo, const void* const devMem);
 void DoCompleteSuccForFftsPlusTask(TaskInfo* taskInfo, const uint32_t devId);

@@ -2304,7 +2304,8 @@ TEST_F(CloudV2ContextTest, FftsPlusTaskLaunch_invalid_stream)
     MOCKER_CPP(&TaskFactory::Alloc).stubs().will(returnValue(&taskInfo));
     MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
 
-    error = FftsPlusTaskLaunch(&fftsPlusTaskInfo, stream, 0U, ctx->GetCaptureLock());
+    const FftsPlusLaunchParams params = {&fftsPlusTaskInfo, 0U};
+    error = stream->LaunchExtTask(TS_TASK_TYPE_FFTS_PLUS, &params);
     EXPECT_EQ(error, RT_ERROR_STREAM_INVALID);
 
     (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(devId);
@@ -2347,15 +2348,16 @@ TEST_F(CloudV2ContextTest, FftsPlusTaskLaunch_test)
     MOCKER_CPP(&TaskFactory::Alloc).stubs().will(returnValue((TaskInfo*)nullptr));
     MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
 
-    error = FftsPlusTaskLaunch(nullptr, stream, 0U, ctx->GetCaptureLock());
+    const FftsPlusLaunchParams params = {nullptr, 0U};
+    error = stream->LaunchExtTask(TS_TASK_TYPE_FFTS_PLUS, &params);
     EXPECT_EQ(error, RT_ERROR_STREAM_INVALID);
 
     argHdl->freeArgs = 1;
-    error = FftsPlusTaskLaunch(nullptr, stream, 0U, ctx->GetCaptureLock());
+    error = stream->LaunchExtTask(TS_TASK_TYPE_FFTS_PLUS, &params);
     EXPECT_EQ(error, RT_ERROR_STREAM_INVALID);
 
     MOCKER_CPP_VIRTUAL(ctx->device_, &Device::SubmitTask).stubs().will(returnValue(RT_ERROR_NONE));
-    error = FftsPlusTaskLaunch(nullptr, stream, 0U, ctx->GetCaptureLock());
+    error = stream->LaunchExtTask(TS_TASK_TYPE_FFTS_PLUS, &params);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(devId);
@@ -3564,7 +3566,7 @@ TEST_F(CloudV2ContextTest, RdmaDbSend_test)
     EXPECT_NE(error, RT_ERROR_NONE);
 
     stream->bindFlag_.Set(true);
-    error = RdmaDbSend(0, 0, stream, ctx->GetCaptureLock());
+    error = RdmaDbSend(0, 0, stream);
     EXPECT_NE(error, RT_ERROR_NONE);
 
     (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(devId);

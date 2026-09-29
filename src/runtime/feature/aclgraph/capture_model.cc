@@ -660,7 +660,10 @@ void CaptureModel::FinalizeHostStateOnExit() noexcept
     externalEventRefreshDeviceBase_ = nullptr;
     externalEventRefreshLayout_ = {};
     taskGroupStmIds_.clear();
-    rdmaPiValueModifyTaskInfoMap_.clear();
+    {
+        const std::lock_guard<std::mutex> lock(rdmaPiValueModifyTaskInfoMutex_);
+        rdmaPiValueModifyTaskInfoMap_.clear();
+    }
     argLoaderBackup_.clear();
     isNeedUpdateEndGraph_ = false;
     trackDataReportFlag_ = false;

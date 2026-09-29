@@ -29,6 +29,7 @@
 #include "model.hpp"
 #include "error_code.h"
 #include "davinci_kernel_task.h"
+#include "ext_task_launch.hpp"
 #include "ffts_task.h"
 #include "inner_thread_local.hpp"
 #include "rdma_task.h"
@@ -1077,10 +1078,11 @@ void SetStarsResultForFftsPlusTask(TaskInfo* taskInfo, const rtCqReport_t& logic
 
 #endif
 
-rtError_t FftsPlusTaskLaunch(
-    const rtFftsPlusTaskInfo_t* const fftsPlusTaskInfo, Stream* const stm, const uint32_t flag,
-    std::mutex& contextCaptureLock)
+rtError_t FftsPlusLaunchHandler(Stream* const stm, const void* const params)
 {
+    const FftsPlusLaunchParams* const launchParams = static_cast<const FftsPlusLaunchParams*>(params);
+    const rtFftsPlusTaskInfo_t* const fftsPlusTaskInfo = launchParams->taskInfo;
+    const uint32_t flag = launchParams->flag;
     const int32_t streamId = stm->Id_();
     const uint32_t sqeNum = ((flag & RT_KERNEL_FFTSPLUS_DYNAMIC_SHAPE_DUMPFLAG) != 0U) ? 3U : 1U;
 
@@ -1124,11 +1126,8 @@ rtError_t FftsPlusTaskLaunch(
     GET_THREAD_TASKID_AND_STREAMID(rtFftsPlusTask, stm->AllocTaskStreamId());
 
     if (stm->IsCapturing() && stm->GetCaptureStream() != nullptr) {
-        std::lock_guard<std::mutex> lock(contextCaptureLock); // 防止跟endCapture接口并发调用，概率较低
-        if (stm->IsCapturing() && stm->GetCaptureStream() != nullptr) {
-            FftsPlusTaskInfo& fftsPlusTask = rtFftsPlusTask->u.fftsPlusTask;
-            error = SubmitRdmaPiValueModifyTask(stm, fftsPlusTaskInfo, fftsPlusTask.descAlignBuf);
-        }
+        FftsPlusTaskInfo& fftsPlusTask = rtFftsPlusTask->u.fftsPlusTask;
+        error = SubmitRdmaPiValueModifyTask(stm, fftsPlusTaskInfo, fftsPlusTask.descAlignBuf);
     }
 
     return error;
@@ -1136,6 +1135,19 @@ ERROR_RECYCLE:
     (void)device->GetTaskFactory()->Recycle(rtFftsPlusTask);
     return error;
 }
+
+static bool FftsPlusLaunchRegister()
+{
+    for (const auto chip : GetV100Chips()) {
+        RegisterExtTaskLaunch(chip, TS_TASK_TYPE_FFTS_PLUS, &FftsPlusLaunchHandler);
+    }
+    for (const auto chip : GetDavidChips()) {
+        RegisterExtTaskLaunch(chip, TS_TASK_TYPE_FFTS_PLUS, &FftsPlusLaunchHandler);
+    }
+    return true;
+}
+
+static bool g_fftsPlusLaunchRegister = FftsPlusLaunchRegister();
 
 } // namespace runtime
 } // namespace cce
