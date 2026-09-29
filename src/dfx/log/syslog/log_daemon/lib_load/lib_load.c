@@ -265,7 +265,9 @@ STATIC int32_t LibLoadCheckInfo(const CommHandle* handle, LibOpenInfo* openInfo,
     char path[LIB_LOAD_MAX_FILE_LEN] = {0};
     int32_t ret = LibLoadFindLibraryPath(devId, openInfo->name, path, LIB_LOAD_MAX_FILE_LEN);
     if (ret == LOG_INVALID_DATA) {
-        LibLoadReplyMsg(handle, LIB_LOAD_REPLY_SUCCESS, strlen(LIB_LOAD_REPLY_SUCCESS));
+        // 库文件在设备路径不存在时无需升级，最终的应答统一由 LibLoadServerProcess 发送，
+        // 此处再发一次会让上位机 hdc 协议错位
+        SELF_LOG_INFO("library %s not found in device path, no upgrade needed", openInfo->name);
         return LOG_SUCCESS;
     } else if (ret == LOG_FAILURE) {
         LibLoadReplyMsg(handle, LIB_LOAD_REPLY_SYSTEM_FUNCTION, strlen(LIB_LOAD_REPLY_SYSTEM_FUNCTION));
@@ -292,7 +294,6 @@ STATIC int32_t LibLoadCheckInfo(const CommHandle* handle, LibOpenInfo* openInfo,
     uint32_t libSize = (uint32_t)statBuff.st_size;
     if ((strcmp(openInfo->version, buffer) == 0) && (libSize == openInfo->size)) {
         SELF_LOG_INFO("library %s needn't upgrade", openInfo->name);
-        LibLoadReplyMsg(handle, LIB_LOAD_REPLY_SUCCESS, strlen(LIB_LOAD_REPLY_SUCCESS));
         return LOG_SUCCESS;
     }
 
