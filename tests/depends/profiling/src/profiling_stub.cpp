@@ -13,6 +13,8 @@
 
 int32_t MsprofRegisterCallback(uint32_t moduleId, ProfCommandHandle handle) { return 1; }
 
+int32_t MsprofUnRegisterCallback(uint32_t moduleId, ProfCommandHandle handle) { return 1; }
+
 int32_t ProfAclCfgToSampleCfg(const std::string& aclCfg, std::string& sampleCfg) { return 0; }
 
 int32_t aclStub::MsprofFinalize() { return 0; }

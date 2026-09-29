@@ -678,6 +678,23 @@ MSVP_PROF_API int32_t MsprofFinalize(void);
  */
 MSVP_PROF_API int32_t MsprofRegisterCallback(uint32_t moduleId, ProfCommandHandle handle);
 
+/* host-side only api: not built when the ascend031 product macro is defined (injected through the
+ * profapi/profimpl targets of PRODUCT=ascend031 builds); do not call it in the ascend031 form. */
+#ifndef ascend031
+/**
+ * @ingroup libprofapi
+ * @name  MsprofUnRegisterCallback
+ * @brief unregister profiling switch callback for module, only effective on the host side
+ * @param[in] moduleId  Report ID of the component; AICPU is not supported and returns failure,
+ *                      because the host side cannot reach the adprof device-side registry
+ * @param[in] handle    Callback function to remove, must match the pair used on registration
+ * @return 0:SUCCESS, !0:FAILED
+ * @note  a command snapshot already taken when this returns may still fire the callback once;
+ *        callers must not unload the module holding the callback right after unregistering it
+ */
+MSVP_PROF_API int32_t MsprofUnRegisterCallback(uint32_t moduleId, ProfCommandHandle handle);
+#endif
+
 /**
  * @ingroup libprofapi
  * @name  MsprofSetInjectionFunc

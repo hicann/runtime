@@ -182,6 +182,7 @@ target_include_directories(profapi_lite_share PRIVATE
 
 target_compile_definitions(profapi_lite_share PRIVATE
     OSAL
+    $<$<STREQUAL:${PRODUCT},ascend031>:ascend031>
 )
 
 set_target_properties(profapi_lite_share

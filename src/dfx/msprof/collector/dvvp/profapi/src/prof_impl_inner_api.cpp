@@ -36,6 +36,14 @@ MSVP_PROF_API int32_t MsprofRegisterCallback(uint32_t moduleId, ProfCommandHandl
     return ProfAPI::ProfCannPlugin::instance()->ProfRegisterCallback(moduleId, handle);
 }
 
+/* host-side only: excluded from the ascend031 build so libprofapi.so does not grow */
+#ifndef ascend031
+MSVP_PROF_API int32_t MsprofUnRegisterCallback(uint32_t moduleId, ProfCommandHandle handle)
+{
+    return ProfAPI::ProfCannPlugin::instance()->ProfUnRegisterCallback(moduleId, handle);
+}
+#endif
+
 MSVP_PROF_API int32_t MsprofReportApi(uint32_t nonPersistantFlag, const MsprofApi* api)
 {
     if (api == nullptr) {

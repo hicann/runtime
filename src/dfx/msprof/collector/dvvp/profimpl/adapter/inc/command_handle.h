@@ -31,6 +31,10 @@ int32_t CommandHandleProfFinalize();
 int32_t CommandHandleProfUnSubscribe(uint32_t modelId);
 void CommandHandleFinalizeGuard();
 int32_t ProfRegisterCallback(uint32_t moduleId, ProfCommandHandle callback);
+/* host-side only: excluded from the ascend031 build so the artifact does not grow */
+#ifndef ascend031
+int32_t ProfUnRegisterCallback(uint32_t moduleId, ProfCommandHandle callback);
+#endif
 int32_t ProfSetProfCommand(ProfCommand& command);
 
 class ProfModuleReprotMgr {
@@ -43,6 +47,9 @@ public:
     void DoCallbackHandle(uint32_t moduleId, ProfCommandHandle callback, ProfCommand command);
     ProfCommand BuildModuleCommand(uint32_t moduleId, const ProfCommand& sourceCommand) const;
     int32_t ModuleRegisterCallback(uint32_t moduleId, ProfCommandHandle callback);
+#ifndef ascend031
+    int32_t ModuleUnRegisterCallback(uint32_t moduleId, ProfCommandHandle callback);
+#endif
     int32_t ModuleReportInit();
     int32_t ModuleReportStart(const uint32_t devIdList[], uint32_t devNums, uint64_t profSwitch, uint64_t profSwitchHi);
     int32_t ModuleReportStop(const uint32_t devIdList[], uint32_t devNums, uint64_t profSwitch, uint64_t profSwitchHi);

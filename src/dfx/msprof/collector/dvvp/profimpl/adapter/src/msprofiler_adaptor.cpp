@@ -47,6 +47,26 @@ extern "C" MSVP_PROF_API int32_t MsprofRegisterCallback(uint32_t moduleId, ProfC
     return Analysis::Dvvp::ProfilerCommon::ProfRegisterCallback(moduleId, handle);
 }
 
+/* host-side only: excluded from the ascend031 build so the artifact does not grow */
+#ifndef ascend031
+extern "C" MSVP_PROF_API int32_t MsprofUnRegisterCallback(uint32_t moduleId, ProfCommandHandle handle)
+{
+    if (handle == nullptr) {
+        MSPROF_LOGE("Unregister callback with invalid handle nullptr, module[%u]", moduleId);
+        return analysis::dvvp::common::error::PROFILING_FAILED;
+    }
+    if (moduleId == AICPU) {
+        // host-side unregister cannot reach the adprof device-side registry: report failure instead of
+        // pretending success, so the caller does not unload a module whose callback is still registered
+        MSPROF_LOGE(
+            "Unregister callback of module[%s(%u)] is not supported on device side.", ProfGetModuleName(moduleId),
+            moduleId);
+        return analysis::dvvp::common::error::PROFILING_FAILED;
+    }
+    return Analysis::Dvvp::ProfilerCommon::ProfUnRegisterCallback(moduleId, handle);
+}
+#endif
+
 extern "C" MSVP_PROF_API int32_t MsprofRegisterDataCallback(uint32_t type, void* callback)
 {
     return Analysis::Dvvp::ProfilerCommon::ProfRegisterDataCallback(type, callback);

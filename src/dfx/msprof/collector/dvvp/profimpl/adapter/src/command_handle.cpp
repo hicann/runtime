@@ -34,6 +34,13 @@ int32_t ProfRegisterCallback(uint32_t moduleId, ProfCommandHandle callback)
     return ProfModuleReprotMgr::GetInstance().ModuleRegisterCallback(moduleId, callback);
 }
 
+#ifndef ascend031
+int32_t ProfUnRegisterCallback(uint32_t moduleId, ProfCommandHandle callback)
+{
+    return ProfModuleReprotMgr::GetInstance().ModuleUnRegisterCallback(moduleId, callback);
+}
+#endif
+
 int32_t CommandHandleProfInit() { return ProfModuleReprotMgr::GetInstance().ModuleReportInit(); }
 
 int32_t CommandHandleProfStart(const uint32_t devIdList[], uint32_t devNums, uint64_t profSwitch, uint64_t profSwitchHi)
@@ -182,6 +189,32 @@ int32_t ProfModuleReprotMgr::ModuleRegisterCallback(uint32_t moduleId, ProfComma
     }
     return ACL_SUCCESS;
 }
+
+/* host-side only: excluded from the ascend031 build so the artifact does not grow */
+#ifndef ascend031
+int32_t ProfModuleReprotMgr::ModuleUnRegisterCallback(uint32_t moduleId, ProfCommandHandle callback)
+{
+    if (callback == nullptr) {
+        return PROFILING_FAILED;
+    }
+    // a command snapshot already taken by ProfSetProfCommand may still fire this callback once,
+    // symmetric to the late-register replay in ModuleRegisterCallback
+    std::unique_lock<std::mutex> lock(regCallback_);
+    auto it = moduleCallbacks_.find(moduleId);
+    if (it == moduleCallbacks_.cend() || it->second.erase(callback) == 0) {
+        lock.unlock();
+        MSPROF_EVENT(
+            "Module[%s(%u)] callback was not registered, nothing to unregister.", ProfGetModuleName(moduleId),
+            moduleId);
+        return ACL_SUCCESS;
+    }
+    MSPROF_LOGI("Module[%s(%u)] unregister callback of ctrl handle.", ProfGetModuleName(moduleId), moduleId);
+    if (it->second.empty()) {
+        moduleCallbacks_.erase(it);
+    }
+    return ACL_SUCCESS;
+}
+#endif
 
 void ProfModuleReprotMgr::DoCallbackHandle(uint32_t moduleId, ProfCommandHandle callback, ProfCommand command)
 {

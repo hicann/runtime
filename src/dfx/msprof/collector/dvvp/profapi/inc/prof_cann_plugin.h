@@ -36,6 +36,10 @@ using ProfStartFunc = int32_t (*)(uint32_t dataType, const void* data, uint32_t 
 using ProfStopFunc = int32_t (*)(uint32_t dataType, const void* data, uint32_t length);
 using ProfSetConfigFunc = int32_t (*)(uint32_t configType, const char* config, size_t configLength);
 using ProfRegisterCallbackFunc = int32_t (*)(uint32_t moduleId, ProfCommandHandle handle);
+/* host-side only: excluded from the ascend031 build so libprofapi.so does not grow */
+#ifndef ascend031
+using ProfUnRegisterCallbackFunc = int32_t (*)(uint32_t moduleId, ProfCommandHandle handle);
+#endif
 using ProfReportDataFunc = int32_t (*)(uint32_t moduleId, uint32_t type, void* data, uint32_t len);
 using ProfSetDeviceIdFunc = int32_t (*)(const uint32_t geModelIdx, const uint32_t deviceId);
 using ProfNotifySetDeviceFunc = int32_t (*)(uint32_t chipId, uint32_t deviceId, bool isOpen);
@@ -73,6 +77,9 @@ public:
     int32_t ProfStop(uint32_t dataType, const void* data, uint32_t length) override;
     int32_t ProfSetConfig(uint32_t configType, const char* config, size_t configLength) override;
     int32_t ProfRegisterCallback(uint32_t moduleId, ProfCommandHandle handle) override;
+#ifndef ascend031
+    int32_t ProfUnRegisterCallback(uint32_t moduleId, ProfCommandHandle handle);
+#endif
     int32_t ProfReportData(uint32_t moduleId, uint32_t type, void* data, uint32_t len) override;
     int32_t ProfReportApi(uint32_t agingFlag, const MsprofApi* api) override;
     int32_t ProfReportEvent(uint32_t agingFlag, const MsprofEvent* event) override;
@@ -156,6 +163,9 @@ private:
     ProfStopFunc profStop_{nullptr};
     ProfSetConfigFunc profSetConfig_{nullptr};
     ProfRegisterCallbackFunc profRegisterCallback_{nullptr};
+#ifndef ascend031
+    ProfUnRegisterCallbackFunc profUnRegisterCallback_{nullptr};
+#endif
     ProfReportDataFunc profReportData_{nullptr};
     ProfReportRegTypeInfoFunc profReportRegTypeInfo_{nullptr};
     ProfReportRegDataFormatFunc profReportRegDataFormat_{nullptr};
