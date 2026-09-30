@@ -161,6 +161,7 @@ static const std::map<int32_t, Handler> memAttrHandlers = {
 
 inline aclError MemcpyKindTranslate(const aclrtMemcpyKind kind, rtMemcpyKind_t& rtKind)
 {
+    aclError ret = ACL_SUCCESS;
     switch (kind) {
         case ACL_MEMCPY_HOST_TO_DEVICE: {
             rtKind = RT_MEMCPY_HOST_TO_DEVICE;
@@ -197,10 +198,11 @@ inline aclError MemcpyKindTranslate(const aclrtMemcpyKind kind, rtMemcpyKind_t& 
                 acl::INVALID_VALUE_MSG, std::vector<const char*>({"func", "value", "param", "expect"}),
                 std::vector<const char*>(
                     {"Memory copy type conversion", acl::GetMemcpyKindDesc(kind), "kind", expected.c_str()}));
-            return ACL_ERROR_INVALID_PARAM;
+            ret = ACL_ERROR_INVALID_PARAM;
+            break;
         }
     }
-    return ACL_SUCCESS;
+    return ret;
 }
 
 inline bool IsZeroSizeMemcpy2d(const size_t width, const size_t height) { return (width == 0UL) || (height == 0UL); }
@@ -334,7 +336,7 @@ void GetPaddingSize(size_t* paddingSize)
     }
 }
 
-aclError GetAlignedAndPaddingSize(
+static aclError GetAlignedAndPaddingSize(
     const size_t size, const bool isPadding, size_t& alignedSize, const char* const funcDesc)
 {
     static std::once_flag hasReadPaddingSize;
@@ -396,7 +398,7 @@ static aclError aclMallocMemInner(
     return ACL_SUCCESS;
 }
 
-aclError aclrtMallocInnerWithCfg(
+static aclError aclrtMallocInnerWithCfg(
     void** devPtr, const size_t size, aclrtMemMallocPolicy policy, rtMallocAdvise advise, aclrtMallocConfig* cfg,
     const char* const funcDesc)
 {
