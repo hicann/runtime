@@ -1,6 +1,6 @@
 # aclprofConfigType
 <!-- npu="950" id87 -->
-Ascend 950PR/Ascend 950DT：不支持ACL\_PROF\_DVPP\_FREQ、ACL\_PROF\_HOST\_SYS、ACL\_PROF\_HOST\_SYS\_USAGE、ACL\_PROF\_HOST\_SYS\_USAGE\_FREQ。
+Ascend 950PR&950DT系列产品：不支持ACL\_PROF\_DVPP\_FREQ、ACL\_PROF\_HOST\_SYS、ACL\_PROF\_HOST\_SYS\_USAGE、ACL\_PROF\_HOST\_SYS\_USAGE\_FREQ。
 <!-- end id87 -->
 
 <!-- npu="310p" id88 -->
