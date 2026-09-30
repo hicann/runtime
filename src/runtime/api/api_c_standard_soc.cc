@@ -66,8 +66,6 @@ rtError_t rtWriteValue(rtWriteValueInfo_t* const info, rtStream_t const stm)
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     const rtError_t error = apiInstance->WriteValue(info, exeStream);
-    COND_RETURN_EXT_WARNCODE_AND_MSG_OUTER(
-        error == RT_ERROR_FEATURE_NOT_SUPPORT, error, ErrorCode::WE0000, __func__, RT_GET_ERRREASON(error).c_str());
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
 
     return error;

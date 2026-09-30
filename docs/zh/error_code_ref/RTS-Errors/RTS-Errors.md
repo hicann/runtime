@@ -58,6 +58,4 @@
 
 - [EE4004 Profiling\_Enable\_Errors](EE4004-Profiling_Enable_Errors.md)  
 
-- [WE0000 Not\_Supported](WE0000-Not_Supported.md)
-
 - [WE0001 Not\_Supported](WE0001-Not_Supported.md)  

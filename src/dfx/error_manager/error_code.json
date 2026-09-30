@@ -747,17 +747,6 @@
     {
       "errClass": "RTS Errors",
       "errTitle": "Not_Supported",
-      "ErrCode": "WE0000",
-      "ErrMessage": "%s execution failed, %s.",
-      "Arglist": "function, reason",
-      "suggestion": {
-        "Possible Cause": "N/A",
-        "Solution": "N/A"
-      }
-    },
-    {
-      "errClass": "RTS Errors",
-      "errTitle": "Not_Supported",
       "ErrCode": "WE0001",
       "ErrMessage": "Failed to %s because %s is not supported.",
       "Arglist": "function, type",

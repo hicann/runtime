@@ -133,8 +133,6 @@
     /* EZ2001 - Execution_Error (RAS Fault) */                                                                     \
     X(EZ2001, "EZ2001", ("aicore_error_info", "fault_type", "fault_info"),                                         \
       "%s\nFault %s occurs in the system: %s ErrorCode=EZ2001.\n", DLOG_ERROR)                                     \
-    /* WE0000 - Not_Supported (Warning 级别) */                                                                  \
-    X(WE0000, "WE0000", ("function", "reason"), "%s execution failed, %s. ErrorCode=WE0000.\n", DLOG_WARN)         \
     /* WE0001 - Not_Supported (Warning 级别) */                                                                  \
     X(WE0001, "WE0001", ("function", "type"), "Failed to %s because %s is not supported. ErrorCode=WE0001.\n",     \
       DLOG_WARN)
