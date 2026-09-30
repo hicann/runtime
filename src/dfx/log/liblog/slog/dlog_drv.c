@@ -114,14 +114,17 @@ STATIC void DlogDriverLog(int moduleId, int level, const char* fmt, ...)
 /*
  * Initial level handed to the driver at registration. Registration runs at the
  * end of DlogInit, after the level state has been initialized from shmem
- * (system processes) or env (application processes) - read the level that is
- * actually in effect now, so the driver starts filtering at the same level
- * this process applies, instead of re-deriving it from the environment and
- * overwriting whatever the level init just dispatched.
+ * (system processes) or env (application processes) - read the DRV level that
+ * is actually in effect now, so the driver starts filtering at the same level
+ * this process applies. DRV rather than ALL_MODULE: the registration level
+ * feeds the driver-side filter owned by the DRV module, so a per-module
+ * override (ASCEND_MODULE_LOG_LEVEL=DRV:x) must reach the driver too; without
+ * an override the DRV entry equals the global level (level init syncs all
+ * module entries), so global-only configs keep the previous behavior.
  */
 STATIC uint32_t DlogGetInitLogLevel(void)
 {
-    int32_t level = DlogGetLogTypeLevelByModuleId(ALL_MODULE, DEBUG_LOG_MASK);
+    int32_t level = DlogGetLogTypeLevelByModuleId((uint32_t)DRV, DEBUG_LOG_MASK);
     if ((level < LOG_MIN_LEVEL) || (level > LOG_MAX_LEVEL)) {
         return GLOABLE_DEFAULT_LOG_LEVEL;
     }
