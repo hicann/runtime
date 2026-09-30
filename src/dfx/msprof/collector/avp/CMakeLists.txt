@@ -109,6 +109,7 @@ target_include_directories(profcore_static PRIVATE
     ${basicInc}
     ${domainInc}
     ${serviceInc}
+    $<BUILD_INTERFACE:${MSPROF_DIR}/inc/external>
     $<$<STREQUAL:${TARGET_SYSTEM_NAME},LiteOS>:$<BUILD_INTERFACE:${NANO_LITEOS_HEADERS_PATH}>>
 )
 
@@ -130,7 +131,7 @@ target_compile_definitions(profcore_static PRIVATE
 
 target_compile_options(profcore_static PRIVATE
     -fPIC
-    -fstack-protector-all
+    $<IF:$<STREQUAL:${CPU_TYPE},hifi3z>,,-fstack-protector-all>
     -fno-strict-aliasing
     -fno-common
     -Wall

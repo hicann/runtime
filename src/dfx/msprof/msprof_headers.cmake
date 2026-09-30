@@ -14,7 +14,6 @@ add_library(msprof_headers INTERFACE)
 target_include_directories(msprof_headers INTERFACE
     $<BUILD_INTERFACE:${MSPROF_DIR}/inc>
     $<BUILD_INTERFACE:${MSPROF_DIR}/inc/toolchain>
-    $<BUILD_INTERFACE:${MSPROF_DIR}/inc/external>
     $<BUILD_INTERFACE:${RUNTIME_DIR}/pkg_inc>
     $<BUILD_INTERFACE:${RUNTIME_DIR}/pkg_inc/profiling>
     $<INSTALL_INTERFACE:include>
