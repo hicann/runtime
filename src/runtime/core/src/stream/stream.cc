@@ -1188,7 +1188,7 @@ rtError_t Stream::TaskAbortAndQueryStatus(const uint32_t opType)
     } while (result == TS_ERROR_APP_QUEUE_FULL);
 
     uint32_t status = 0U;
-    do {
+    while (true) {
         // 4.polling if TS has aborted sq successfully until timeout
         ret = QueryAbortStatusByType(status, APP_ABORT_STS_QUERY_BY_SQ, sqId_);
         COND_RETURN_ERROR(
@@ -1213,7 +1213,7 @@ rtError_t Stream::TaskAbortAndQueryStatus(const uint32_t opType)
             "time=%" PRIu64 " us, timeout_threshold=%" PRIu64 " us.",
             operation, streamId_, device_->Id_(), sqId_, status, count, ABORT_STREAM_TIMEOUT);
         (void)mmSleep(5U);
-    } while (true);
+    }
 
     return ret;
 }

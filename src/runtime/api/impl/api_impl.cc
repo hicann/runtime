@@ -1399,7 +1399,7 @@ rtError_t ApiImpl::StreamCreate(Stream** const stm, const int32_t priority, cons
             "current mode is %s",
             static_cast<uint32_t>(CONTINUE_ON_FAILURE), StreamFailureModeToString(failMode).c_str()));
 
-    bool isHostSupport =
+    const bool isHostSupport =
         dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MODEL_PERSISTENT_STREAM_UNLIMITED_DEPTH);
     bool isTsSupport = dev->CheckFeatureSupport(TS_FEATURE_SOFTWARE_SQ_ENABLE);
     bool isDrvSupport =
