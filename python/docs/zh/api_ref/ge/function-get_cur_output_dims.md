@@ -1,0 +1,64 @@
+# 函数：get\_cur\_output\_dims
+
+## 产品支持情况
+
+<!-- npu="950" id1 -->
+- Ascend 950PR&950DT系列产品：支持
+<!-- end id1 -->
+<!-- npu="A3" id2 -->
+- Atlas A3系列产品：支持
+<!-- end id2 -->
+<!-- npu="910b" id3 -->
+- Atlas A2系列产品：支持
+<!-- end id3 -->
+<!-- npu="310b" id4 -->
+- Atlas 200I/500 A2推理产品：支持
+<!-- end id4 -->
+<!-- npu="310p" id5 -->
+- Atlas推理系列产品：支持
+<!-- end id5 -->
+<!-- npu="910" id6 -->
+- Atlas训练系列产品：支持
+<!-- end id6 -->
+
+## 功能说明
+
+根据模型描述信息获取指定的模型输出tensor的实际维度信息。
+
+## 函数原型
+
+- **C函数原型**
+
+    ```c
+    aclError aclmdlGetCurOutputDims(const aclmdlDesc *modelDesc, size_t index, aclIODims *dims)
+    ```
+
+- **python函数**
+
+    ```python
+    dims, ret = acl.mdl.get_cur_output_dims(model_desc, index)
+    ```
+
+## 参数说明
+
+| 参数名 | 说明 |
+| --- | --- |
+| model_desc | int，aclmdlDesc类型数据的指针地址。需提前调用[acl.mdl.create_desc](function-create_desc.md)接口创建aclmdlDesc类型的数据。 |
+| index | int，指定获取第几个输出的Dims，index值从0开始。 |
+
+## 返回值说明
+
+| 返回值 | 说明 |
+| --- | --- |
+| dims | dict，输出实际维度信息。<br>若tensor的name长度大于127，则在输出的dims.name时，接口会将tensor的name转换为“acl_modelId_${id}_input_${index}_${随机字符串} ”格式（如果转换后的tensor的name与模型中已有的tensor的name冲突，则会在转换后的name尾部增加“_${随机字符串} ”，否则不会增加随机字符串），并在转换后的name与原name之间建立映射关系，用户可调用[acl.mdl.get_tensor_real_name](function-get_tensor_real_name.md)接口，传入转换后的name，获取原name（若向接口传入原name，则获取的还是原name）；若tensor的name长度小于或等于127，则在输出的dims.name时，按tensor的name输出。 |
+| ret | int，错误码。<br> 返回0表示成功。<br> 返回[其它值](aclError.md)表示失败。 |
+
+## 约束说明
+
+当前仅支持通过本接口获取以下场景中的模型输出Tensor的维度信息：
+
+- 通过模型转换设置多档Batch size或分辨率或维度值，实现动态Batch或动态分辨率或动态维度（ND格式）时。
+    - 如果用户已调用[acl.mdl.set\_dynamic\_batch\_size](function-set_dynamic_batch_size.md)设置Batch或调用[acl.mdl.set\_dynamic\_hw\_size](function-set_dynamic_hw_size.md)接口设置输入图片的宽高或调用[acl.mdl.set\_input\_dynamic\_dims](function-set_input_dynamic_dims.md)接口设置某动态维度的值，则可通过该接口获取指定模型输出Tensor的实际维度信息。
+    - 如果用户未调用[acl.mdl.set\_dynamic\_batch\_size](function-set_dynamic_batch_size.md)接口、[acl.mdl.set\_dynamic\_hw\_size](function-set_dynamic_hw_size.md)接口或[acl.mdl.set\_input\_dynamic\_dims](function-set_input_dynamic_dims.md)接口，则通过该接口可获取最大档的维度信息。
+
+- 固定Shape场景下，通过该接口获取指定的模型输出Tensor的维度信息。

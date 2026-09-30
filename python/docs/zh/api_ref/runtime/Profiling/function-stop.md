@@ -1,0 +1,56 @@
+# 函数：stop
+
+## 产品支持情况
+
+<!-- npu="950" id1 -->
+- Ascend 950PR&950DT系列产品：支持
+<!-- end id1 -->
+<!-- npu="A3" id2 -->
+- Atlas A3系列产品：支持
+<!-- end id2 -->
+<!-- npu="910b" id3 -->
+- Atlas A2系列产品：支持
+<!-- end id3 -->
+<!-- npu="310b" id4 -->
+- Atlas 200I/500 A2推理产品：支持
+<!-- end id4 -->
+<!-- npu="310p" id5 -->
+- Atlas推理系列产品：支持
+<!-- end id5 -->
+<!-- npu="910" id6 -->
+- Atlas训练系列产品：支持
+<!-- end id6 -->
+
+## 功能说明
+
+停止Profiling数据采集。
+
+## 函数原型
+
+- **C函数原型**
+
+    ```c
+    aclError aclprofStop(const aclprofConfig *profilerConfig)
+    ```
+
+- **python函数**
+
+    ```python
+    ret = acl.prof.stop(profiler_config)
+    ```
+
+## 参数说明
+
+| 参数名 | 说明 |
+| --- | --- |
+| profiler_config | int，指定停止Profiling数据采集的配置的指针地址。<br>与[acl.prof.start](function-start.md)接口中的aclprofConfig类型数据保持一致。 |
+
+## 返回值说明
+
+| 返回值 | 说明 |
+| --- | --- |
+| ret | int，错误码。<br>返回0表示成功。<br>返回[其它值](../datatypes/aclError.md)表示失败。 |
+
+## 约束说明
+
+与[acl.prof.start](function-start.md)接口配对使用，先调用acl.prof.start接口再调用acl.prof.stop接口。

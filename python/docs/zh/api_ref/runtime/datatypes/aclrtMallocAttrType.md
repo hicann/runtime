@@ -1,0 +1,7 @@
+# aclrtMallocAttrType
+
+| 数据格式 | 说明 |
+| --- | --- |
+| ACL_RT_MEM_ATTR_RSV = 0 | 预留值。 |
+| ACL_RT_MEM_ATTR_MODULE_ID = 1 | 模块ID。 |
+| ACL_RT_MEM_ATTR_DEVICE_ID = 2 | Device ID。 |
