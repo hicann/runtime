@@ -1,0 +1,92 @@
+# -----------------------------------------------------------------------------------------------------------
+# Copyright (c) 2026 Huawei Technologies Co., Ltd.
+# This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+# CANN Open Software License Agreement Version 2.0 (the "License").
+# Please refer to the License for details. You may not use this file except in compliance with the License.
+# THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+# INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+# See LICENSE in the root of the software repository for the full text of the License.
+# -----------------------------------------------------------------------------------------------------------
+
+schema_version: 1
+skill: runtime-example-generator
+cases:
+  - id: generate-scenario-from-related-apis
+    prompt: "请根据 aclrtCreateStream、aclrtMemcpyAsync 和 aclrtSynchronizeStream 生成一个 CANN Runtime 样例。"
+    expected_invocation: true
+    expected_behavior: "先确认 API 准入和相互关系，再围绕真实的数据异步搬运目标设计完整场景，生成新样例并验证业务结果。"
+    validation:
+      method: "scenario, workflow, and reference review"
+      result: pass
+
+  - id: split-unrelated-apis
+    prompt: "请把这些互不相关的 CANN API 都放进一个新样例。"
+    expected_invocation: true
+    expected_behavior: "不把无关 API 强行拼接；说明不能形成单一实际场景，并按完整业务目标提出拆分或替换建议。"
+    validation:
+      method: "scenario-coherence review"
+      result: pass
+
+  - id: reject-unsupported-api
+    prompt: "请为一个文档标记为目标产品不支持的 CANN Runtime API 生成正式样例。"
+    expected_invocation: true
+    expected_behavior: "API 准入不通过时不生成正式调用，并说明产品支持或版本证据不足。"
+    validation:
+      method: "API admission review"
+      result: pass
+
+  - id: scan-api-coverage-only
+    prompt: "统计整个 example 目录的 Runtime API 覆盖率，并列出所有未覆盖 API。"
+    expected_invocation: false
+    expected_behavior: "说明覆盖率盘点不属于本 Skill 的场景样例生成职责。"
+    validation:
+      method: "description and task-boundary review"
+      result: pass
+
+  - id: modify-existing-sample
+    prompt: "请给已有 Runtime 样例增加几个 API。"
+    expected_invocation: false
+    expected_behavior: "保持已有样例只读，说明本 Skill 只根据 API 创建新的场景样例。"
+    validation:
+      method: "description and task-boundary review"
+      result: pass
+
+  - id: reject-multi-device-sample
+    prompt: "请根据 P2P 和设备拓扑 API 生成一个双 Device Runtime 样例。"
+    expected_invocation: true
+    expected_behavior: "不生成多 Device 样例，说明该请求超出本 Skill 的单 Device 边界。"
+    validation:
+      method: "single-device boundary review"
+      result: pass
+
+  - id: enforce-local-delivery-checks
+    prompt: "请生成一个包含初始化、Context 配置、结果校验和资源清理的新样例，构建运行通过后直接交付。"
+    expected_invocation: true
+    expected_behavior: "构建运行通过后仍对包含未跟踪新文件和源码在内的完整任务文件清单执行仓库本地 Pre-commit、git diff --check 和 Shell 语法检查；检查失败或改写文件时检查差异并复跑到成功且不再产生改动。"
+    validation:
+      method: "local delivery-check workflow review"
+      result: pass
+
+  - id: inspect-remote-ci-results
+    prompt: "请检查已有 PR 的 CodeCheck_precommit 和 openLiBing 报告，修复告警后重跑流水线。"
+    expected_invocation: false
+    expected_behavior: "说明远端 PR/CI 状态检查、告警修复和流水线重跑不属于本 Skill 的场景样例生成职责。"
+    validation:
+      method: "description and task-boundary review"
+      result: pass
+
+  - id: derive-product-support-intersection
+    prompt: "请用一组仅支持 A2/A3、不支持 A5 的关键 Runtime API 生成新样例，并在当前 A5 环境验证。"
+    expected_invocation: true
+    expected_behavior: "逐个核对关键 API 的正式产品支持说明，以交集确定样例支持范围，将 A5 标记为不支持；不在 A5 上执行样例，不把预期的不支持报错当成样例缺陷，也不根据编译或其他产品结果外推 A5 支持。"
+    validation:
+      method: "product-support and execution-gate review"
+      result: pass
+
+  - id: require-bilingual-readmes
+    prompt: "请根据 aclrtCreateContext 和 aclrtSetCurrentContext 生成一个新的单 Device Runtime 样例。"
+    expected_invocation: true
+    expected_behavior: "生成的每个可运行样例目录必须同时包含内容一致的中文 README.md 和英文 README_en.md；缺少任一文件时不得通过交付检查。"
+    validation:
+      method: "generated-file-set and bilingual-document consistency review"
+      result: pass
