@@ -415,8 +415,8 @@ void* H2DCopyMgr::MallocPcieBarBuffer(size_t size, void* para)
         Runtime::Instance()->GetChipType(), RtOptionalFeatureType::RT_FEATURE_DFX_ARGS_DOT_ALLOC_ERROR_LOG));
     Device* const dev = static_cast<Device*>(para);
     rtError_t ret = dev->Driver_()->DevMemAllocWithBackupFlag(
-        &addr, static_cast<uint64_t>(size), RT_MEMORY_P2P_HBM, dev->Id_(), SNAPSHOT_REQUIRED_BACKUP, MODULEID_RUNTIME,
-        isLogError);
+        &addr, static_cast<uint64_t>(size), RT_MEMORY_P2P_HBM, dev->Id_(), DevMemBackupType::SNAPSHOT_REQUIRED_BACKUP,
+        MODULEID_RUNTIME, isLogError);
     if (ret != RT_ERROR_NONE) {
         RtLogErrorLevelControl(
             isLogError, "alloc dev mem failed, retCode=%#x, size=%u(bytes), dev_id=%u.", ret, size, dev->Id_());

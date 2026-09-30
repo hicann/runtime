@@ -2354,7 +2354,7 @@ rtError_t aclStub::rtSnapShotProcessUnlock() { return RT_ERROR_NONE; }
 
 rtError_t aclStub::rtSnapShotProcessBackup() { return RT_ERROR_NONE; }
 
-rtError_t aclStub::rtSnapShotProcessBackupWithArgs(const rtSnapShotBackupArgs* args)
+rtError_t aclStub::rtSnapShotProcessBackupWithArgs(const rtSnapShotBackupArgs* const args)
 {
     (void)args;
     return RT_ERROR_NONE;
@@ -2362,7 +2362,7 @@ rtError_t aclStub::rtSnapShotProcessBackupWithArgs(const rtSnapShotBackupArgs* a
 
 rtError_t aclStub::rtSnapShotProcessRestore() { return RT_ERROR_NONE; }
 
-rtError_t aclStub::rtSnapShotProcessRestoreWithArgs(const rtSnapShotRestoreArgs* args)
+rtError_t aclStub::rtSnapShotProcessRestoreWithArgs(const rtSnapShotRestoreArgs* const args)
 {
     (void)args;
     return RT_ERROR_NONE;
@@ -2538,7 +2538,7 @@ rtError_t rtSnapShotProcessUnlock() { return MockFunctionTest::aclStubInstance()
 
 rtError_t rtSnapShotProcessBackup() { return MockFunctionTest::aclStubInstance().rtSnapShotProcessBackup(); }
 
-rtError_t rtSnapShotProcessBackupWithArgs(const rtSnapShotBackupArgs* args)
+rtError_t rtSnapShotProcessBackupWithArgs(const rtSnapShotBackupArgs* const args)
 {
     return MockFunctionTest::aclStubInstance().rtSnapShotProcessBackupWithArgs(args);
 }

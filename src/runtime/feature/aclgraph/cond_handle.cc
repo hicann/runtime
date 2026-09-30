@@ -84,7 +84,8 @@ rtError_t CondHandle::Setup(Context* ctx)
     }
 
     rtError_t error = driver->DevMemAllocWithBackupFlag(
-        (void**)(&devAddr_), sizeof(uint64_t), RT_MEMORY_DEFAULT, dev->Id_(), SNAPSHOT_OPTIONAL_BACKUP);
+        (void**)(&devAddr_), sizeof(uint64_t), RT_MEMORY_DEFAULT, dev->Id_(),
+        DevMemBackupType::SNAPSHOT_OPTIONAL_BACKUP);
     if (error != RT_ERROR_NONE) {
         RT_LOG_INNER_MSG(
             RT_LOG_ERROR, "DevMemAlloc failed for cond handle, device_id=%u, size=%zu, retCode=%#x.", dev->Id_(),

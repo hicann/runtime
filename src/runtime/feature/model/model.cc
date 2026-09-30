@@ -146,7 +146,8 @@ rtError_t Model::Setup(Context* const contextIn)
     }
 
     error = deviceDrv->DevMemAllocWithBackupFlag(
-        &aicpuModelInfo_, sizeof(rtAicpuModelInfo_t), RT_MEMORY_DEFAULT, devId, SNAPSHOT_OPTIONAL_BACKUP);
+        &aicpuModelInfo_, sizeof(rtAicpuModelInfo_t), RT_MEMORY_DEFAULT, devId,
+        DevMemBackupType::SNAPSHOT_OPTIONAL_BACKUP);
     if (error != RT_ERROR_NONE) {
         RT_LOG(
             RT_LOG_ERROR, "Malloc aicpu model info failed, model_id=%d, device_id=%u, retCode=%#x!", id_, devId,
@@ -192,7 +193,7 @@ rtError_t Model::Setup(Context* const contextIn)
 
     if (dev->IsStarsPlatform()) {
         error = dev->Driver_()->DevMemAllocWithBackupFlag(
-            &labelCountPtr_, sizeof(uint64_t), RT_MEMORY_DDR, dev->Id_(), SNAPSHOT_OPTIONAL_BACKUP);
+            &labelCountPtr_, sizeof(uint64_t), RT_MEMORY_DDR, dev->Id_(), DevMemBackupType::SNAPSHOT_OPTIONAL_BACKUP);
         if (error != RT_ERROR_NONE) {
             RT_LOG(
                 RT_LOG_ERROR, "Malloc labelCountPtr failed, model_id=%d, retCode=%#x!", id_,
@@ -1639,7 +1640,7 @@ rtError_t Model::PacketAllStreamInfo(rtAicpuModelInfo_t* const aicpuModelInfoIn)
     Device* const dev = context_->Device_();
     Driver* const deviceDrv = dev->Driver_();
     rtError_t error = deviceDrv->DevMemAllocWithBackupFlag(
-        &streamInfoPtr_, streamInfoSize, RT_MEMORY_DEFAULT, dev->Id_(), SNAPSHOT_OPTIONAL_BACKUP);
+        &streamInfoPtr_, streamInfoSize, RT_MEMORY_DEFAULT, dev->Id_(), DevMemBackupType::SNAPSHOT_OPTIONAL_BACKUP);
     if (error != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR, "Malloc stream info failed, modelId=%d, deviceId=%u!", id_, dev->Id_());
         DELETE_A(streamInfo);
@@ -1708,7 +1709,7 @@ rtError_t Model::PacketAicpuTaskInfo(rtAicpuModelInfo_t* const infoAicpuModel)
         (aicpuTaskInfoPtr_ != nullptr), RT_ERROR_MODEL_BASE, ErrorCode::EE1018, DELETE_A(taskInfo), "modelLoadComplete",
         "The rtModelLoadComplete or rtStreamEndCapture API can be called only once");
     error = dev->Driver_()->DevMemAllocWithBackupFlag(
-        &aicpuTaskInfoPtr_, aicpuTaskSize, RT_MEMORY_DEFAULT, dev->Id_(), SNAPSHOT_OPTIONAL_BACKUP);
+        &aicpuTaskInfoPtr_, aicpuTaskSize, RT_MEMORY_DEFAULT, dev->Id_(), DevMemBackupType::SNAPSHOT_OPTIONAL_BACKUP);
     if (error != RT_ERROR_NONE) {
         RT_LOG(
             RT_LOG_ERROR,
@@ -1767,7 +1768,7 @@ rtError_t Model::PacketQueueInfo(rtAicpuModelInfo_t* const aicpuModelInfoIn)
     Device* const dev = context_->Device_();
 
     error = dev->Driver_()->DevMemAllocWithBackupFlag(
-        &queueInfoPtr_, queueInfoSize, RT_MEMORY_DEFAULT, dev->Id_(), SNAPSHOT_OPTIONAL_BACKUP);
+        &queueInfoPtr_, queueInfoSize, RT_MEMORY_DEFAULT, dev->Id_(), DevMemBackupType::SNAPSHOT_OPTIONAL_BACKUP);
     if (error != RT_ERROR_NONE) {
         RT_LOG(
             RT_LOG_ERROR, "Malloc stream info failed, modelId=%d, deviceId=%u, size=%" PRIu64 ", retCode=%#x!", id_,
@@ -2113,7 +2114,7 @@ rtError_t Model::MallocDevString(const char_t* const str, void** ptr) const
     Device* const dev = context_->Device_();
     Driver* const deviceDrv = dev->Driver_();
     rtError_t error = deviceDrv->DevMemAllocWithBackupFlag(
-        ptr, devStrBufLen, RT_MEMORY_DEFAULT, dev->Id_(), SNAPSHOT_OPTIONAL_BACKUP);
+        ptr, devStrBufLen, RT_MEMORY_DEFAULT, dev->Id_(), DevMemBackupType::SNAPSHOT_OPTIONAL_BACKUP);
     if (error != RT_ERROR_NONE) {
         RT_LOG(
             RT_LOG_ERROR,
@@ -2161,7 +2162,7 @@ rtError_t Model::MallocDevValue(const void* const data, const uint32_t size, voi
     Driver* const deviceDrv = dev->Driver_();
 
     rtError_t error = deviceDrv->DevMemAllocWithBackupFlag(
-        ptr, static_cast<uint64_t>(size), RT_MEMORY_DEFAULT, dev->Id_(), SNAPSHOT_OPTIONAL_BACKUP);
+        ptr, static_cast<uint64_t>(size), RT_MEMORY_DEFAULT, dev->Id_(), DevMemBackupType::SNAPSHOT_OPTIONAL_BACKUP);
     if (error != RT_ERROR_NONE) {
         RT_LOG_INNER_MSG(
             RT_LOG_ERROR,

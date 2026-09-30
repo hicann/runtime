@@ -293,8 +293,9 @@ public:
         const bool isNewApi = false) override;
     rtError_t DevMemAllocWithBackupFlag(
         void** const dptr, const uint64_t size, const rtMemType_t memType, const uint32_t deviceId,
-        const DevMemBackupType type = SNAPSHOT_REQUIRED_BACKUP, const uint16_t moduleId = MODULEID_RUNTIME,
-        const bool isLogError = true, DevMemAllocConfig config = {}, const bool isNewApi = false) override;
+        const DevMemBackupType type = DevMemBackupType::SNAPSHOT_REQUIRED_BACKUP,
+        const uint16_t moduleId = MODULEID_RUNTIME, const bool isLogError = true, DevMemAllocConfig config = {},
+        const bool isNewApi = false) override;
 
     // Alloc contiguous memory.
     rtError_t DevMemAllocConPhy(
@@ -340,8 +341,8 @@ public:
     // Function for dev open
     rtError_t DeviceOpen(const uint32_t deviceId, const uint32_t tsId, uint32_t* const ssId) override;
 
-    static rtError_t ProcessResBackup(uint32_t backupFlags);
-    static rtError_t ProcessResRestore(uint32_t restoreFlags);
+    static rtError_t ProcessResBackup(const uint32_t backupFlags);
+    static rtError_t ProcessResRestore(const uint32_t restoreFlags);
     // Function for host dev close
     rtError_t HostDeviceClose(const uint32_t deviceId) override;
 
@@ -846,10 +847,10 @@ static inline uint64_t FlagAddModuleId(uint64_t drvFlag, uint16_t moduleId)
 
 static inline uint64_t FlagAddBackupBit(uint64_t drvFlag, const DevMemBackupType backupType)
 {
-    if (backupType == SNAPSHOT_REQUIRED_BACKUP) {
+    if (backupType == DevMemBackupType::SNAPSHOT_REQUIRED_BACKUP) {
         return drvFlag | MEM_SNAPSHOT_REQUIRED;
     }
-    if (backupType == SNAPSHOT_OPTIONAL_BACKUP) {
+    if (backupType == DevMemBackupType::SNAPSHOT_OPTIONAL_BACKUP) {
         return drvFlag | MEM_SNAPSHOT_OPTIONAL;
     }
     return drvFlag;

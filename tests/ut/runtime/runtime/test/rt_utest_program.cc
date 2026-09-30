@@ -57,7 +57,7 @@ TEST_F(ProgramTest, ModuleLoadDevMemAllocUsesRuntimeModuleId)
         .expects(once())
         .with(
             mockcpp::any(), mockcpp::any(), eq(RT_MEMORY_HBM), eq(static_cast<uint32_t>(device->Id_())),
-            eq(SNAPSHOT_REQUIRED_BACKUP), eq(static_cast<uint16_t>(MODULEID_RUNTIME)), eq(true))
+            eq(DevMemBackupType::SNAPSHOT_REQUIRED_BACKUP), eq(static_cast<uint16_t>(MODULEID_RUNTIME)), eq(true))
         .will(returnValue(RT_ERROR_DRV_ERR));
 
     EXPECT_EQ(module.Load(&prog), RT_ERROR_DRV_ERR);
@@ -86,7 +86,7 @@ TEST_F(ProgramTest, RuntimeBinaryLoadDevMemAllocUsesRuntimeModuleId)
         .expects(once())
         .with(
             mockcpp::any(), mockcpp::any(), eq(RT_MEMORY_HBM), eq(static_cast<uint32_t>(device->Id_())),
-            eq(SNAPSHOT_REQUIRED_BACKUP), eq(static_cast<uint16_t>(MODULEID_RUNTIME)), eq(true))
+            eq(DevMemBackupType::SNAPSHOT_REQUIRED_BACKUP), eq(static_cast<uint16_t>(MODULEID_RUNTIME)), eq(true))
         .will(returnValue(RT_ERROR_DRV_ERR));
 
     EXPECT_EQ(Runtime::Instance()->BinaryLoad(device, &prog), RT_ERROR_DRV_ERR);

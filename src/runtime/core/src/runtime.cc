@@ -5014,7 +5014,7 @@ rtError_t Runtime::BinaryLoad(const Device* const device, Program* const prog)
     if (devMem == nullptr) {
         error = curDrv->DevMemAllocWithBackupFlag(
             &devMem, static_cast<uint64_t>(devSize + INSTR_ALIGN_SIZE), RT_MEMORY_HBM, device->Id_(),
-            SNAPSHOT_REQUIRED_BACKUP, MODULEID_RUNTIME, true, allocConfig);
+            DevMemBackupType::SNAPSHOT_REQUIRED_BACKUP, MODULEID_RUNTIME, true, allocConfig);
         isPoolMem = false;
     }
     TIMESTAMP_END(rtBinaryLoad_DevMemAlloc);

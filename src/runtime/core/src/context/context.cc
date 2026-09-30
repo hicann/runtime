@@ -568,7 +568,8 @@ rtError_t Context::SetOverflowAddr()
                 RT_MEMORY_TS_4G :
                 RT_MEMORY_DEFAULT;
         error = device_->Driver_()->DevMemAllocWithBackupFlag(
-            &overflowAddr_, OVERFLOW_ADDR_MAX_SIZE, memType, device_->Id_(), SNAPSHOT_OPTIONAL_BACKUP);
+            &overflowAddr_, OVERFLOW_ADDR_MAX_SIZE, memType, device_->Id_(),
+            DevMemBackupType::SNAPSHOT_OPTIONAL_BACKUP);
         if (unlikely(error == RT_ERROR_DRV_OUT_MEMORY)) {
             RT_LOG(RT_LOG_ERROR, "Failed to allocate overflow address device memory, retCode=%#x.", error);
         } else {
@@ -2328,7 +2329,7 @@ rtError_t Context::GetSatStatusForStars(const uint64_t outputSize, Stream* const
         void* memAddr = nullptr;
         Device* dev = Device_();
         error = dev->Driver_()->DevMemAllocWithBackupFlag(
-            &memAddr, sizeof(uint64_t), RT_MEMORY_DEFAULT, dev->Id_(), SNAPSHOT_OPTIONAL_BACKUP);
+            &memAddr, sizeof(uint64_t), RT_MEMORY_DEFAULT, dev->Id_(), DevMemBackupType::SNAPSHOT_OPTIONAL_BACKUP);
         ERROR_RETURN(error, "memAddr DevMemAlloc failed, retCode=%#x.", static_cast<uint32_t>(error));
         curStm->SetMemContainOverflowAddr(memAddr);
     }

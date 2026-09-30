@@ -98,8 +98,8 @@ void* MemoryPool::AllocDevMem(const uint32_t size) const
     allocConfig.readOnlyFlag = readOnly;
 
     error = driver_->DevMemAllocWithBackupFlag(
-        &addr, static_cast<uint64_t>(size), RT_MEMORY_HBM, device_->Id_(), SNAPSHOT_REQUIRED_BACKUP, MODULEID_RUNTIME,
-        true, allocConfig);
+        &addr, static_cast<uint64_t>(size), RT_MEMORY_HBM, device_->Id_(), DevMemBackupType::SNAPSHOT_REQUIRED_BACKUP,
+        MODULEID_RUNTIME, true, allocConfig);
     if (error != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR, "DevMemAlloc failed, device_id=%u, retCode=%#x", device_->Id_(), error);
         return nullptr;

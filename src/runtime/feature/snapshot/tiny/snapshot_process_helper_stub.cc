@@ -36,7 +36,7 @@ rtError_t SnapShotAclGraphRestore(Device* const dev)
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t SnapShotProcessBackup(const rtSnapShotBackupArgs* args)
+rtError_t SnapShotProcessBackup(const rtSnapShotBackupArgs* const args)
 {
     UNUSED(args);
     return RT_ERROR_FEATURE_NOT_SUPPORT;

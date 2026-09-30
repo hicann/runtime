@@ -84,7 +84,7 @@ RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtSnapSho
  * @return ACL_RT_SUCCESS for ok, others failed
  */
 RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t
-    rtSnapShotProcessBackupWithArgs(const rtSnapShotBackupArgs* args);
+    rtSnapShotProcessBackupWithArgs(const rtSnapShotBackupArgs* const args);
 
 /**
  * @ingroup rts_snapshot
@@ -100,7 +100,7 @@ RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtSnapSho
  * @return ACL_RT_SUCCESS for ok, others failed
  */
 RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t
-    rtSnapShotProcessRestoreWithArgs(const rtSnapShotRestoreArgs* args);
+    rtSnapShotProcessRestoreWithArgs(const rtSnapShotRestoreArgs* const args);
 
 /**
  * @ingroup rts_snapshot

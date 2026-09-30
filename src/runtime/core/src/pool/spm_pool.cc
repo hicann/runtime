@@ -112,7 +112,8 @@ void* SpmPool::DrvAllocSPM(const size_t size, void* const para)
     SpmPool* const spm = static_cast<SpmPool*>(para);
 
     error = spm->dev_->Driver_()->DevMemAllocWithBackupFlag(
-        &addr, static_cast<uint64_t>(size), RT_MEMORY_HBM, spm->dev_->Id_(), SNAPSHOT_OPTIONAL_BACKUP);
+        &addr, static_cast<uint64_t>(size), RT_MEMORY_HBM, spm->dev_->Id_(),
+        DevMemBackupType::SNAPSHOT_OPTIONAL_BACKUP);
     COND_LOG_WARN(
         error != RT_ERROR_NONE,
         "device mem alloc spm failed, "

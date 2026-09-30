@@ -53,7 +53,7 @@ static rtError_t CondTaskFuncCallDevMemAlloc(TaskInfo* taskInfo, CondHandle* con
     const uint64_t allocSize =
         (totalSqCount * 2U + modelCount * 3U) * sizeof(uint64_t) + static_cast<uint64_t>(FUNC_CALL_INSTR_ALIGN_SIZE);
     const rtError_t ret = dev->Driver_()->DevMemAllocWithBackupFlag(
-        &devMem, allocSize, RT_MEMORY_DDR, dev->Id_(), SNAPSHOT_OPTIONAL_BACKUP);
+        &devMem, allocSize, RT_MEMORY_DDR, dev->Id_(), DevMemBackupType::SNAPSHOT_OPTIONAL_BACKUP);
     if ((ret != RT_ERROR_NONE) || (devMem == nullptr)) {
         RT_LOG(
             RT_LOG_ERROR, "alloc func call memory failed, retCode=%#x, size=%" PRIu64 "(bytes), device_id=%u", ret,
@@ -103,8 +103,8 @@ static rtError_t AllocCondTaskFuncCallMem(TaskInfo* taskInfo)
     /* totalSqCount * 3U + modelCount * 2U 为了存储条件算子用到的几个dev地址，含义见下文注释 */
     const uint64_t allocSize = condTaskInfo->funCallMemSize + TS_STARS_COND_DFX_SIZE +
                                COND_TASK_RESV_LEN_FOR_COND_EXECUTE + static_cast<uint64_t>(FUNC_CALL_INSTR_ALIGN_SIZE);
-    rtError_t ret = dev->Driver_()->DevMemAllocWithBackupFlag(
-        &devMem, allocSize, RT_MEMORY_DDR, dev->Id_(), SNAPSHOT_OPTIONAL_BACKUP);
+    const rtError_t ret = dev->Driver_()->DevMemAllocWithBackupFlag(
+        &devMem, allocSize, RT_MEMORY_DDR, dev->Id_(), DevMemBackupType::SNAPSHOT_OPTIONAL_BACKUP);
     if ((ret != RT_ERROR_NONE) || (devMem == nullptr)) {
         RT_LOG(
             RT_LOG_ERROR, "alloc func call memory failed, retCode=%#x, size=%" PRIu64 "(bytes), device_id=%u", ret,
@@ -202,7 +202,7 @@ static rtError_t AllocJumpBackFuncCallMemForCaptureCondTask(TaskInfo* taskInfo)
     const Device* dev = taskInfo->stream->Device_();
     const uint64_t allocSize = condTaskInfo->jumpBackFunCallMemSize + FUNC_CALL_INSTR_ALIGN_SIZE;
     const rtError_t ret = dev->Driver_()->DevMemAllocWithBackupFlag(
-        &devMem, allocSize, RT_MEMORY_DDR, dev->Id_(), SNAPSHOT_OPTIONAL_BACKUP);
+        &devMem, allocSize, RT_MEMORY_DDR, dev->Id_(), DevMemBackupType::SNAPSHOT_OPTIONAL_BACKUP);
     COND_RETURN_ERROR(
         (ret != RT_ERROR_NONE) || (devMem == nullptr), RT_ERROR_MEMORY_ALLOCATION,
         "alloc jumpBack func call mem failed, retCode=%#x.", ret);

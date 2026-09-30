@@ -394,7 +394,8 @@ rtError_t DeviceErrorProc::CreateDeviceRingBufferAndSendTask()
     Runtime* const rtInstance = Runtime::Instance();
     const rtMemType_t memType = rtInstance->GetTsMemType(MEM_REQUEST_FEATURE_DEFAULT, ringBufferSize_);
     rtError_t error = devDrv->DevMemAllocWithBackupFlag(
-        &devMem, static_cast<uint64_t>(ringBufferSize_), memType, device_->Id_(), SNAPSHOT_OPTIONAL_BACKUP);
+        &devMem, static_cast<uint64_t>(ringBufferSize_), memType, device_->Id_(),
+        DevMemBackupType::SNAPSHOT_OPTIONAL_BACKUP);
     COND_RETURN_WARN(
         error != RT_ERROR_NONE, RT_ERROR_DRV_MEMORY,
         "Failed to alloc huge page device memory for ring buffer in device, size=%u(bytes)."

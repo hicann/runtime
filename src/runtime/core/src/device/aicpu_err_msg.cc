@@ -50,7 +50,8 @@ rtError_t AicpuErrMsg::AllocResource(void)
     if (errMsgBuf_ == nullptr) {
         Driver* const devDrv = device_->Driver_();
         retErr = devDrv->DevMemAllocWithBackupFlag(
-            &errMsgBuf_, DEV_ERR_MSG_BUF_TOTAL_LEN, RT_MEMORY_DEFAULT, device_->Id_(), SNAPSHOT_OPTIONAL_BACKUP);
+            &errMsgBuf_, DEV_ERR_MSG_BUF_TOTAL_LEN, RT_MEMORY_DEFAULT, device_->Id_(),
+            DevMemBackupType::SNAPSHOT_OPTIONAL_BACKUP);
         if (retErr != RT_ERROR_NONE) {
             RT_LOG(RT_LOG_ERROR, "malloc dev msg buf failed, retCode=%d.", retErr);
             return retErr;

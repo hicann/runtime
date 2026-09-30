@@ -42,7 +42,7 @@ rtError_t AllocCpyTmpMem(TaskInfo* const taskInfo, uint32_t& cpyType, const void
         } else {
             error = driver->DevMemAllocWithBackupFlag(
                 &(memcpyAsyncTaskInfo->srcPtr), size, RT_MEMORY_DEFAULT, stream->Device_()->Id_(),
-                SNAPSHOT_OPTIONAL_BACKUP);
+                DevMemBackupType::SNAPSHOT_OPTIONAL_BACKUP);
         }
         ERROR_RETURN(
             error, "Alloc src failed,size=%" PRIu64 "(bytes), device_id=%u, retCode=%#x", size,
@@ -68,7 +68,7 @@ rtError_t AllocCpyTmpMem(TaskInfo* const taskInfo, uint32_t& cpyType, const void
         } else {
             error = driver->DevMemAllocWithBackupFlag(
                 &(memcpyAsyncTaskInfo->desPtr), size, RT_MEMORY_DEFAULT, stream->Device_()->Id_(),
-                SNAPSHOT_OPTIONAL_BACKUP);
+                DevMemBackupType::SNAPSHOT_OPTIONAL_BACKUP);
         }
         ERROR_RETURN(
             error, "Alloc dest failed, size=%u(bytes), device_id=%u, retCode=%#x", size, stream->Device_()->Id_(),
@@ -227,7 +227,7 @@ rtError_t AllocCpyTmpMemFor3588(
         } else {
             error = driver->DevMemAllocWithBackupFlag(
                 &(memcpyAsyncTaskInfo->srcPtr), size, RT_MEMORY_DEFAULT, stream->Device_()->Id_(),
-                SNAPSHOT_OPTIONAL_BACKUP);
+                DevMemBackupType::SNAPSHOT_OPTIONAL_BACKUP);
         }
         COND_RETURN_ERROR(
             (error != RT_ERROR_NONE) || (memcpyAsyncTaskInfo->srcPtr == nullptr), RT_ERROR_MEMORY_ALLOCATION,
@@ -252,7 +252,7 @@ rtError_t AllocCpyTmpMemFor3588(
         } else {
             error = driver->DevMemAllocWithBackupFlag(
                 &(memcpyAsyncTaskInfo->desPtr), size, RT_MEMORY_DEFAULT, stream->Device_()->Id_(),
-                SNAPSHOT_OPTIONAL_BACKUP);
+                DevMemBackupType::SNAPSHOT_OPTIONAL_BACKUP);
         }
         COND_RETURN_ERROR(
             (error != RT_ERROR_NONE) || (memcpyAsyncTaskInfo->desPtr == nullptr), RT_ERROR_MEMORY_ALLOCATION,

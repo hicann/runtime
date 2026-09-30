@@ -153,7 +153,7 @@ rtError_t Module::Load(Program* const prog)
         if (devMem == nullptr) {
             error = curDrv->DevMemAllocWithBackupFlag(
                 &devMem, static_cast<uint64_t>(devSize + INSTR_ALIGN_SIZE), RT_MEMORY_HBM, device_->Id_(),
-                SNAPSHOT_REQUIRED_BACKUP, MODULEID_RUNTIME, true, allocConfig);
+                DevMemBackupType::SNAPSHOT_REQUIRED_BACKUP, MODULEID_RUNTIME, true, allocConfig);
             isPoolMem = false;
             ERROR_GOTO(error, FAIL_FREE, "Malloc device program failed, retCode=%#x.", static_cast<uint32_t>(error));
         }

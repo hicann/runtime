@@ -37,7 +37,8 @@ static rtError_t AllocAndCopyHbmBufImpl(
 {
     const uint32_t devId = dev->Id_();
     Driver* const drv = dev->Driver_();
-    rtError_t ret = drv->DevMemAllocWithBackupFlag(devBuf, bufSize, RT_MEMORY_HBM, devId, SNAPSHOT_NO_BACKUP);
+    rtError_t ret =
+        drv->DevMemAllocWithBackupFlag(devBuf, bufSize, RT_MEMORY_HBM, devId, DevMemBackupType::SNAPSHOT_NO_BACKUP);
     ERROR_RETURN(
         ret, "DevMemAlloc failed, deviceId=%u, size=%zu, ret=%#x.", devId, bufSize, static_cast<uint32_t>(ret));
     allocMem.push_back(*devBuf);
@@ -1966,8 +1967,8 @@ rtError_t Program::CopyTilingTabToDev(
         copyLen = static_cast<uint32_t>(kernelLen * sizeof(TilingTabl));
         /* 拷贝内容到device */
         error = curDrv->DevMemAllocWithBackupFlag(
-            &devMem, static_cast<uint64_t>(copyLen), RT_MEMORY_TS, targetDevice->Id_(), SNAPSHOT_REQUIRED_BACKUP,
-            MODULEID_RUNTIME, true, allocConfig);
+            &devMem, static_cast<uint64_t>(copyLen), RT_MEMORY_TS, targetDevice->Id_(),
+            DevMemBackupType::SNAPSHOT_REQUIRED_BACKUP, MODULEID_RUNTIME, true, allocConfig);
         if (error != RT_ERROR_NONE) {
             RT_LOG(RT_LOG_ERROR, "DevMemAlloc fail copyLen=%u.", copyLen);
             if (devMem != nullptr) {

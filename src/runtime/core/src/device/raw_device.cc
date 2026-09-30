@@ -882,7 +882,8 @@ rtError_t RawDevice::Alloc32kStackAddrForDcache()
     rtError_t error = AllocAddrForDcache(deviceId_, stackPhyBase32k_, RT_SCALAR_BUFFER_SIZE_32K_75, drvMemCtrlHandle_);
     if (error != RT_ERROR_NONE) {
         error = driver_->DevMemAllocWithBackupFlag(
-            &stackPhyBase32k_, RT_SCALAR_BUFFER_SIZE_32K_75, RT_MEMORY_DDR, Id_(), SNAPSHOT_OPTIONAL_BACKUP);
+            &stackPhyBase32k_, RT_SCALAR_BUFFER_SIZE_32K_75, RT_MEMORY_DDR, Id_(),
+            DevMemBackupType::SNAPSHOT_OPTIONAL_BACKUP);
         stackAddrIsDcache_ = false;
         COND_RETURN_ERROR(
             (error != RT_ERROR_NONE) || (stackPhyBase32k_ == nullptr), error,
@@ -912,7 +913,7 @@ rtError_t RawDevice::AllocStackPhyAddrForDcache()
 
     constexpr uint64_t stackPhySize = static_cast<uint64_t>(RT_SCALAR_BUFFER_SIZE_16K_75);
     error = driver_->DevMemAllocWithBackupFlag(
-        &stackPhyBase16k_, stackPhySize, RT_MEMORY_DDR, deviceId_, SNAPSHOT_OPTIONAL_BACKUP);
+        &stackPhyBase16k_, stackPhySize, RT_MEMORY_DDR, deviceId_, DevMemBackupType::SNAPSHOT_OPTIONAL_BACKUP);
     if ((error != RT_ERROR_NONE) || (stackPhyBase16k_ == nullptr)) {
         FreeDcacheAddr(deviceId_, stackPhyBase32k_, drvMemCtrlHandle_);
         stackPhyBase32k_ = nullptr;
@@ -937,7 +938,7 @@ rtError_t RawDevice::AllocStackPhyBaseForCloudV2()
     }
     uint64_t stackPhySize = RT_SCALAR_BUFFER_SIZE_32K_75;
     rtError_t error = driver_->DevMemAllocWithBackupFlag(
-        &stackPhyBase32k_, stackPhySize, RT_MEMORY_DDR, Id_(), SNAPSHOT_OPTIONAL_BACKUP);
+        &stackPhyBase32k_, stackPhySize, RT_MEMORY_DDR, Id_(), DevMemBackupType::SNAPSHOT_OPTIONAL_BACKUP);
     COND_RETURN_ERROR(
         (error != RT_ERROR_NONE) || (stackPhyBase32k_ == nullptr), error,
         "Alloc stack phy base failed, mem alloc failed, retCode=%#x.", static_cast<uint32_t>(error));
@@ -952,7 +953,7 @@ rtError_t RawDevice::AllocStackPhyBaseForCloudV2()
     }
     stackPhySize = static_cast<uint64_t>(RT_SCALAR_BUFFER_SIZE_16K_75);
     error = driver_->DevMemAllocWithBackupFlag(
-        &stackPhyBase16k_, stackPhySize, RT_MEMORY_DDR, Id_(), SNAPSHOT_OPTIONAL_BACKUP);
+        &stackPhyBase16k_, stackPhySize, RT_MEMORY_DDR, Id_(), DevMemBackupType::SNAPSHOT_OPTIONAL_BACKUP);
     RT_LOG(
         RT_LOG_DEBUG, "AllocStackPhyBase device_id=%u, stackPhyBase16k_=0x%llx, stackPhySize=%uB.", Id_(),
         RtPtrToValue(stackPhyBase16k_), stackPhySize);
@@ -983,7 +984,7 @@ rtError_t RawDevice::AllocStackPhyBase()
     const uint64_t stackPhySize = GetDevProperties().stackPhyBase;
 
     const rtError_t error = driver_->DevMemAllocWithBackupFlag(
-        &stackPhyBase32k_, stackPhySize, RT_MEMORY_DDR, Id_(), SNAPSHOT_OPTIONAL_BACKUP);
+        &stackPhyBase32k_, stackPhySize, RT_MEMORY_DDR, Id_(), DevMemBackupType::SNAPSHOT_OPTIONAL_BACKUP);
     RT_LOG(
         RT_LOG_INFO, "AllocStackPhyBase device_id=%u, stackPhyBase32k_=0x%llx, stackPhySize=%uB.", Id_(),
         RtPtrToValue(stackPhyBase32k_), stackPhySize);
@@ -1017,7 +1018,7 @@ rtError_t RawDevice::AllocCustomerStackPhyBase()
     const uint64_t stackPhySize = totalCoreNum * customerStackSize;
 
     const rtError_t error = driver_->DevMemAllocWithBackupFlag(
-        &customerStackPhyBase_, stackPhySize, RT_MEMORY_DDR, Id_(), SNAPSHOT_OPTIONAL_BACKUP);
+        &customerStackPhyBase_, stackPhySize, RT_MEMORY_DDR, Id_(), DevMemBackupType::SNAPSHOT_OPTIONAL_BACKUP);
     COND_RETURN_ERROR(
         (error != RT_ERROR_NONE) || (customerStackPhyBase_ == nullptr), error,
         "Alloc customer stack memory failed, retCode=%#x, totalCoreNum=%#" PRIx64
@@ -1273,7 +1274,7 @@ void* RawDevice::MallocBufferForSqIdMem(const size_t size, void* const para)
     void* addr = nullptr;
     Device* const dev = static_cast<Device*>(para);
     const rtError_t error = dev->Driver_()->DevMemAllocWithBackupFlag(
-        &addr, static_cast<uint64_t>(size), RT_MEMORY_HBM, dev->Id_(), SNAPSHOT_OPTIONAL_BACKUP);
+        &addr, static_cast<uint64_t>(size), RT_MEMORY_HBM, dev->Id_(), DevMemBackupType::SNAPSHOT_OPTIONAL_BACKUP);
     COND_RETURN_ERROR(
         error != RT_ERROR_NONE, nullptr,
         "alloc mem failed, "
@@ -1321,7 +1322,8 @@ rtError_t RawDevice::AllocProfSwitchAddr(void)
 
     void* addr = nullptr;
     const rtError_t error = Driver_()->DevMemAllocWithBackupFlag(
-        &addr, static_cast<uint64_t>(sizeof(uint64_t)), RT_MEMORY_HBM, deviceId_, SNAPSHOT_OPTIONAL_BACKUP);
+        &addr, static_cast<uint64_t>(sizeof(uint64_t)), RT_MEMORY_HBM, deviceId_,
+        DevMemBackupType::SNAPSHOT_OPTIONAL_BACKUP);
     COND_RETURN_ERROR(
         error != RT_ERROR_NONE, error,
         "alloc mem failed, "
@@ -1734,7 +1736,7 @@ rtError_t RawDevice::AllocMemForSqVirtualArr()
 {
     const uint64_t allocSize = static_cast<uint64_t>(GetDevProperties().rtsqDepth * sizeof(uint64_t));
     rtError_t error = driver_->DevMemAllocWithBackupFlag(
-        &sqVirtualArrBaseAddr_, allocSize, RT_MEMORY_DDR, deviceId_, SNAPSHOT_OPTIONAL_BACKUP);
+        &sqVirtualArrBaseAddr_, allocSize, RT_MEMORY_DDR, deviceId_, DevMemBackupType::SNAPSHOT_OPTIONAL_BACKUP);
     ERROR_RETURN(
         error,
         "Device memory allocation for SQ virtual addr failed, retCode=%#x, device_id=%u, "

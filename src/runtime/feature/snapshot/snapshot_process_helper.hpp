@@ -19,12 +19,12 @@ namespace runtime {
 class Device;
 
 rtError_t SnapShotPreProcessBackup(ContextDataManage& ctxMan);
-rtError_t SnapShotDeviceRestore(uint32_t restoreFlags);
+rtError_t SnapShotDeviceRestore(const uint32_t restoreFlags);
 rtError_t SnapShotResourceRestore(ContextDataManage& ctxMan);
 rtError_t SnapShotAclGraphRestore(Device* const dev);
 
-rtError_t SnapShotProcessBackup(const rtSnapShotBackupArgs* args);
-rtError_t SnapShotProcessRestore(const rtSnapShotRestoreArgs* args);
+rtError_t SnapShotProcessBackup(const rtSnapShotBackupArgs* const args);
+rtError_t SnapShotProcessRestore(const rtSnapShotRestoreArgs* const args);
 rtError_t ModelBackup(const int32_t devId, const bool allCompatible = false);
 rtError_t ModelRestore(const int32_t devId);
 rtError_t SinkTaskMemoryBackup(const int32_t devId);

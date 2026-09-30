@@ -34,7 +34,8 @@ rtError_t OnlineProf::OnlineProfMalloc(Stream* const stm)
     constexpr uint64_t memSize = static_cast<uint64_t>(ONLINEPROF_MEM_SIZE) * 2UL;
     Runtime* const rtInstance = Runtime::Instance();
     const rtMemType_t memType = rtInstance->GetTsMemType(MEM_REQUEST_FEATURE_DEFAULT, memSize);
-    ret = deviceDrv->DevMemAllocWithBackupFlag(&deviceMem, memSize, memType, dev->Id_(), SNAPSHOT_OPTIONAL_BACKUP);
+    ret = deviceDrv->DevMemAllocWithBackupFlag(
+        &deviceMem, memSize, memType, dev->Id_(), DevMemBackupType::SNAPSHOT_OPTIONAL_BACKUP);
     ERROR_RETURN(
         ret,
         "Failed to allocate online profiling device memory, "

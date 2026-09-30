@@ -48,7 +48,7 @@ class Model;
 
 constexpr int32_t PRE_ALLOC_SQ_CQ_RETRY_MAX_COUNT = 10;
 
-enum DevMemBackupType {
+enum class DevMemBackupType : uint32_t {
     SNAPSHOT_NO_BACKUP = 0U,
     SNAPSHOT_OPTIONAL_BACKUP = 1U,
     SNAPSHOT_REQUIRED_BACKUP = 2U,
@@ -58,7 +58,7 @@ struct DevMemAllocConfig {
     bool readOnlyFlag = false;
     bool starsTillingFlag = false;
     bool cpOnlyFlag = false;
-    DevMemBackupType type = SNAPSHOT_NO_BACKUP;
+    DevMemBackupType type = DevMemBackupType::SNAPSHOT_NO_BACKUP;
 };
 
 // facade interface for driver.
@@ -344,8 +344,9 @@ public:
         const bool isNewApi = false) = 0;
     virtual rtError_t DevMemAllocWithBackupFlag(
         void** const dptr, const uint64_t size, const rtMemType_t memType, const uint32_t deviceId,
-        const DevMemBackupType type = SNAPSHOT_REQUIRED_BACKUP, const uint16_t moduleId = MODULEID_RUNTIME,
-        const bool isLogError = true, DevMemAllocConfig config = {}, const bool isNewApi = false) = 0;
+        const DevMemBackupType type = DevMemBackupType::SNAPSHOT_REQUIRED_BACKUP,
+        const uint16_t moduleId = MODULEID_RUNTIME, const bool isLogError = true, DevMemAllocConfig config = {},
+        const bool isNewApi = false) = 0;
 
     // Alloc contiguous memory
     virtual rtError_t DevMemAllocConPhy(
