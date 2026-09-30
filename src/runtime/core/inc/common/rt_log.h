@@ -52,7 +52,8 @@ enum class ErrorCode {
     EE2002,
     EE4002,
     EZ2001,
-    WE0001
+    WE0001,
+    WE0000
 };
 std::vector<std::string> GetParamNames(ErrorCode code);
 void PrintErrMsgToLog(

@@ -287,7 +287,7 @@ TEST_F(RtErrorCodeTest, ErrorCodeTableParamCountMatchesMessageFormat)
         {ErrorCode::EE1018, 2}, {ErrorCode::EE1019, 2}, {ErrorCode::EE1020, 5}, {ErrorCode::EE1021, 2},
         {ErrorCode::EE1022, 4}, {ErrorCode::EE1023, 2}, {ErrorCode::EE1024, 3}, {ErrorCode::EE1025, 2},
         {ErrorCode::EE1026, 2}, {ErrorCode::EE2002, 3}, {ErrorCode::EE4002, 1}, {ErrorCode::EZ2001, 3},
-        {ErrorCode::WE0001, 2},
+        {ErrorCode::WE0000, 2}, {ErrorCode::WE0001, 2},
     };
     for (const auto& info : allCodes) {
         auto names = GetParamNames(info.code);
