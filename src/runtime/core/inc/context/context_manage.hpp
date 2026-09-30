@@ -28,7 +28,6 @@ public:
         Context* const curCtx, ContextAccessMode accessMode = ContextAccessMode::USER, rtError_t* errorCode = nullptr);
     static void ReportContextValidationError();
     static void InsertContext(Context* const insertCtx);
-    static rtError_t MarkContextForDelete(Context* const eraseCtx);
     static rtError_t DeviceAbort(const int32_t devId);
     static rtError_t Devicekill(const int32_t devId);
     static rtError_t DeviceQuery(const int32_t devId, const uint32_t step, const uint32_t timeout);
@@ -42,7 +41,6 @@ public:
     static bool DeviceSetFaultTypeIfNoError(const uint32_t devId, DeviceFaultType deviceFaultType);
     static bool CheckStreamPtrIsValid(Stream* const stm);
     static rtError_t DeviceResourceClean(int32_t devId);
-    static void QueryContextInUse(const int32_t devId, bool& isInUse);
     static bool IsContextTracked(Context* const ctx);
     static bool HasAttachedDevice(Context* const ctx);
     static bool IsActiveContext(Context* const ctx);

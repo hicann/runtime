@@ -120,15 +120,6 @@ void ContextManage::InsertContext(Context* const insertCtx)
     return;
 }
 
-rtError_t ContextManage::MarkContextForDelete(Context* const eraseCtx)
-{
-    if (eraseCtx == nullptr) {
-        return RT_ERROR_CONTEXT_NULL;
-    }
-    eraseCtx->SetContextDeleteStatus();
-    return RT_ERROR_NONE;
-}
-
 rtError_t ContextManage::RemoveContextFromSet(Context* const eraseCtx)
 {
     if (!g_ctxMan.EraseSetValueWithLock(eraseCtx)) {
@@ -292,20 +283,6 @@ rtError_t ContextManage::DeviceQuery(const int32_t devId, const uint32_t step, c
     }
     RT_LOG(RT_LOG_INFO, "DeviceQuery[%d] finish", devId);
     return error;
-}
-
-void ContextManage::QueryContextInUse(const int32_t devId, bool& isInUse)
-{
-    uint32_t cnt = 0U;
-    const ReadProtect wp(&g_ctxMan.GetSetRwLock());
-    for (Context* const ctx : g_ctxMan.GetSetObj()) {
-        COND_PROC(!IsActiveContextOnDevice(ctx, devId), continue);
-        cnt++;
-        break; // 只统计一个即可
-    }
-    RT_LOG(RT_LOG_INFO, "QueryContextInUse[%d], cnt=%u", devId, cnt);
-    isInUse = (cnt != 0U);
-    return;
 }
 
 rtError_t ContextManage::DeviceClean(const int32_t devId)

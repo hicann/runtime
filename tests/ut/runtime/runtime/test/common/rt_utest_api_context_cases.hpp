@@ -121,21 +121,6 @@ inline void RunRtsCtxGetAndSetCurrentCase()
     ExpectPrimaryCtxStateAccessible(devId);
 }
 
-inline void RunRtsGetPrimaryCtxStateCase()
-{
-    rtError_t error;
-    int32_t state = 0;
-    int32_t devId = 0;
-    uint32_t flag;
-    rtContext_t ctx = nullptr;
-    rtsCtxCreate(&ctx, 0, devId);
-    error = rtsGetPrimaryCtxState(1, &flag, &state);
-    bool isInUse = false;
-    ContextManage::QueryContextInUse(0, isInUse);
-    rtCtxDestroy(ctx);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-}
-
 inline void RunRtsCtxGetAndSetSysParamOptCase()
 {
     rtError_t error;
@@ -415,8 +400,6 @@ inline void RunDeviceResetDoesNotDestroyExplicitContextCase()
     TEST_F(test_fixture, TestRtsCtxDestroy) { cce::runtime::ut::RunRtsCtxDestroyCase(); }                           \
                                                                                                                     \
     TEST_F(test_fixture, TestRtsCtxGetAndSetCurrent) { cce::runtime::ut::RunRtsCtxGetAndSetCurrentCase(); }         \
-                                                                                                                    \
-    TEST_F(test_fixture, TestRtsGetPrimaryCtxState) { cce::runtime::ut::RunRtsGetPrimaryCtxStateCase(); }           \
                                                                                                                     \
     TEST_F(test_fixture, TestRtsCtxGetAndSetSysParamOpt) { cce::runtime::ut::RunRtsCtxGetAndSetSysParamOptCase(); } \
                                                                                                                     \
