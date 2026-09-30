@@ -138,7 +138,7 @@ rtError_t CondHandle::InitCondTaskByDefValue()
     Driver* driver = dev->Driver_();
     COND_RETURN_ERROR((driver == nullptr), RT_ERROR_DRV_NULL, "Driver is null, failed to init cond value.");
 
-    uint64_t defValue = static_cast<uint64_t>(defaultValue_);
+    const uint64_t defValue = static_cast<uint64_t>(defaultValue_);
     const rtError_t error =
         driver->MemCopySync(devAddr_, sizeof(uint64_t), &defValue, sizeof(uint64_t), RT_MEMCPY_HOST_TO_DEVICE);
     if (error == RT_ERROR_DRV_NOT_SUPPORT) {
