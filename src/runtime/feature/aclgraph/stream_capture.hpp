@@ -24,12 +24,12 @@ namespace runtime {
 
 class Stream;
 struct tagTaskInfoStru;
-typedef tagTaskInfoStru TaskInfo;
+using TaskInfo = tagTaskInfoStru;
 struct TaskGroup;
 class StreamCapture final : public StreamExtension {
 public:
     StreamCapture();
-    ~StreamCapture() override;
+    ~StreamCapture() final;
 
     static StreamCapture* Create(const Stream* stm);
     static StreamCapture* GetOrCreate(const Stream* stm);
@@ -57,9 +57,9 @@ public:
     void ResetTaskGroup();
     void UpdateCurrentTaskGroup(std::unique_ptr<TaskGroup>& taskGroup);
     std::unique_ptr<TaskGroup>& GetCurrentTaskGroup();
-    TaskGroup* GetUpdateTaskGroup();
+    TaskGroup* GetUpdateTaskGroup() const;
     void SetUpdateTaskGroup(TaskGroup* taskGroup);
-    void UpdateTaskIndex(uint32_t index);
+    void UpdateTaskIndex(uint32_t index) const;
     void ResetUpdateTaskGroup();
     std::mutex& GetTaskGroupMutex();
     bool IsSubCaptureModel() const;
@@ -69,7 +69,7 @@ public:
     rtError_t PackingTaskGroup(const TaskInfo* task, uint16_t streamId);
 
 private:
-    static bool IsTaskGroupBreak(const Stream* stm, Stream* captureStream);
+    static bool IsTaskGroupBreak(const Stream* stm, const Stream* captureStream);
     static void Terminate(Stream* stm);
     static rtError_t AllocCascadeStream(Stream* stm, Stream*& newCaptureStream, const Stream* curCaptureStream);
     static void UpdateCascadeStreamInfo(Stream* stm, Stream* newCaptureStream, Stream* curCaptureStream);
@@ -82,7 +82,7 @@ private:
     Stream* parentCaptureStream_{nullptr};
     Stream* childCaptureStream_{nullptr};
     rtStreamCaptureMode captureMode_{RT_STREAM_CAPTURE_MODE_MAX};
-    std::unique_ptr<TaskGroup> taskGroup_{nullptr};
+    std::unique_ptr<TaskGroup> taskGroup_;
     std::mutex taskGroupMutex_;
     TaskGroup* updateTaskGroup_{nullptr};
     bool isSubCaptureModel_{false};

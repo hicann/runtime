@@ -11,6 +11,7 @@
 #ifndef RUNTIME_CORE_INC_C_TASK_LAUNCH_C_HPP
 #define RUNTIME_CORE_INC_C_TASK_LAUNCH_C_HPP
 
+#include <cstdint>
 #include "runtime/base.h"
 #include "rts/rts_stars.h"
 

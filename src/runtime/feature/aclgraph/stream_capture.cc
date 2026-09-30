@@ -25,7 +25,7 @@
 namespace cce {
 namespace runtime {
 
-void CacheCaptureTaskId(Stream* const stm, const uint16_t taskId)
+void CacheCaptureTaskId(Stream* stm, uint16_t taskId)
 {
     StreamCapture* const capture = StreamCapture::GetOrCreate(stm);
     if (capture != nullptr) {
@@ -33,13 +33,13 @@ void CacheCaptureTaskId(Stream* const stm, const uint16_t taskId)
     }
 }
 
-uint32_t GetStreamCacheOpInfoSwitch(const Stream* const stm)
+uint32_t GetStreamCacheOpInfoSwitch(const Stream* stm)
 {
     const StreamCapture* const capture = StreamCapture::Get(stm);
     return (capture == nullptr) ? 0U : capture->GetCacheOpInfoSwitch();
 }
 
-void SetStreamCacheOpInfoOriginSwitch(const Stream* const stm, const uint32_t status)
+void SetStreamCacheOpInfoOriginSwitch(const Stream* stm, uint32_t status)
 {
     StreamCapture* const capture = StreamCapture::GetOrCreate(stm);
     if (capture != nullptr) {
@@ -47,13 +47,13 @@ void SetStreamCacheOpInfoOriginSwitch(const Stream* const stm, const uint32_t st
     }
 }
 
-bool IsOriginalCaptureStream(const Stream* const stm)
+bool IsOriginalCaptureStream(const Stream* stm)
 {
     const StreamCapture* const capture = StreamCapture::Get(stm);
     return (capture == nullptr) ? false : capture->IsOrigCaptureStream();
 }
 
-void ResetStreamTaskGroup(Stream* const stm)
+void ResetStreamTaskGroup(Stream* stm)
 {
     StreamCapture* const capture = StreamCapture::Get(stm);
     if (capture != nullptr) {
@@ -61,7 +61,7 @@ void ResetStreamTaskGroup(Stream* const stm)
     }
 }
 
-rtError_t UpdateStreamTask(Stream* const stm, TaskInfo** const task)
+rtError_t UpdateStreamTask(Stream* stm, TaskInfo** task)
 {
     StreamCapture* const capture = StreamCapture::Get(stm);
     if (capture == nullptr) {
@@ -75,7 +75,7 @@ rtError_t UpdateStreamTask(Stream* const stm, TaskInfo** const task)
         return RT_ERROR_INVALID_VALUE;
     }
 
-    uint32_t taskIndex = updateTaskGroup->updateTaskIndex;
+    const uint32_t taskIndex = updateTaskGroup->updateTaskIndex;
     if (taskIndex >= updateTaskGroup->taskIds.size()) {
         RT_LOG(
             RT_LOG_ERROR,
@@ -108,7 +108,7 @@ rtError_t UpdateStreamTask(Stream* const stm, TaskInfo** const task)
     return RT_ERROR_NONE;
 }
 
-rtError_t PackStreamTaskGroup(Stream* const stm, const TaskInfo* const task, const uint16_t streamId)
+rtError_t PackStreamTaskGroup(Stream* stm, const TaskInfo* task, uint16_t streamId)
 {
     StreamCapture* const capture = StreamCapture::Get(stm);
     return (capture == nullptr) ? RT_ERROR_NONE : capture->PackingTaskGroup(task, streamId);
@@ -118,9 +118,9 @@ StreamCapture::StreamCapture() = default;
 
 StreamCapture::~StreamCapture() = default;
 
-StreamCapture* StreamCapture::Create(const Stream* const stm) { return GetOrCreate(stm); }
+StreamCapture* StreamCapture::Create(const Stream* stm) { return GetOrCreate(stm); }
 
-StreamCapture* StreamCapture::GetOrCreate(const Stream* const stm)
+StreamCapture* StreamCapture::GetOrCreate(const Stream* stm)
 {
     if (stm == nullptr) {
         return nullptr;
@@ -128,24 +128,24 @@ StreamCapture* StreamCapture::GetOrCreate(const Stream* const stm)
     return dynamic_cast<StreamCapture*>(stm->EnsureExtension());
 }
 
-StreamCapture* StreamCapture::Get(const Stream* const stm)
+StreamCapture* StreamCapture::Get(const Stream* stm)
 {
     return (stm == nullptr) ? nullptr : dynamic_cast<StreamCapture*>(stm->GetExtension());
 }
 
-void StreamCapture::CacheTaskId(const uint16_t taskId) { cacheCaptureTaskIds_.push_back(taskId); }
+void StreamCapture::CacheTaskId(uint16_t taskId) { cacheCaptureTaskIds_.push_back(taskId); }
 
 const std::list<uint16_t>& StreamCapture::GetCachedTaskIds() const { return cacheCaptureTaskIds_; }
 
 uint32_t StreamCapture::GetCacheOpInfoSwitch() const { return cacheOpInfoSwitch_; }
 
-void StreamCapture::SetCacheOpInfoSwitch(const uint32_t status) { cacheOpInfoSwitch_ = status; }
+void StreamCapture::SetCacheOpInfoSwitch(uint32_t status) { cacheOpInfoSwitch_ = status; }
 
 uint32_t StreamCapture::GetCacheOpInfoOriginSwitch() const { return cacheOpInfoOriginSwitch_; }
 
-void StreamCapture::SetCacheOpInfoOriginSwitch(const uint32_t status) { cacheOpInfoOriginSwitch_ = status; }
+void StreamCapture::SetCacheOpInfoOriginSwitch(uint32_t status) { cacheOpInfoOriginSwitch_ = status; }
 
-void StreamCapture::MarkOrigCaptureStream(const bool flag) { isOrigCaptureStream_ = flag; }
+void StreamCapture::MarkOrigCaptureStream(bool flag) { isOrigCaptureStream_ = flag; }
 
 bool StreamCapture::IsOrigCaptureStream() const { return isOrigCaptureStream_; }
 
@@ -153,15 +153,15 @@ void StreamCapture::CancelLastLevelCaptureStream() { isLastLevelCaptureStream_ =
 
 bool StreamCapture::IsLastLevelCaptureStream() const { return isLastLevelCaptureStream_; }
 
-void StreamCapture::SetParentCaptureStream(Stream* const parent) { parentCaptureStream_ = parent; }
+void StreamCapture::SetParentCaptureStream(Stream* parent) { parentCaptureStream_ = parent; }
 
 Stream* StreamCapture::GetChildCaptureStream() const { return childCaptureStream_; }
 
-void StreamCapture::SetChildCaptureStream(Stream* const child) { childCaptureStream_ = child; }
+void StreamCapture::SetChildCaptureStream(Stream* child) { childCaptureStream_ = child; }
 
 rtStreamCaptureMode StreamCapture::GetCaptureMode() const { return captureMode_; }
 
-void StreamCapture::SetCaptureMode(const rtStreamCaptureMode mode) { captureMode_ = mode; }
+void StreamCapture::SetCaptureMode(rtStreamCaptureMode mode) { captureMode_ = mode; }
 
 void StreamCapture::ResetTaskGroup() { taskGroup_ = nullptr; }
 
@@ -169,18 +169,18 @@ void StreamCapture::UpdateCurrentTaskGroup(std::unique_ptr<TaskGroup>& taskGroup
 
 std::unique_ptr<TaskGroup>& StreamCapture::GetCurrentTaskGroup() { return taskGroup_; }
 
-TaskGroup* StreamCapture::GetUpdateTaskGroup() { return updateTaskGroup_; }
+TaskGroup* StreamCapture::GetUpdateTaskGroup() const { return updateTaskGroup_; }
 
-void StreamCapture::SetUpdateTaskGroup(TaskGroup* const taskGroup)
+void StreamCapture::SetUpdateTaskGroup(TaskGroup* taskGroup)
 {
     updateTaskGroup_ = taskGroup;
     updateTaskGroup_->isUpdate = true;
-    updateTaskGroup_->updateTaskIndex = 0;
+    updateTaskGroup_->updateTaskIndex = 0U;
 }
 
-void StreamCapture::UpdateTaskIndex(const uint32_t index) { updateTaskGroup_->updateTaskIndex = index; }
+void StreamCapture::UpdateTaskIndex(uint32_t index) const { updateTaskGroup_->updateTaskIndex = index; }
 
-rtError_t StreamCapture::PackingTaskGroup(const TaskInfo* const task, const uint16_t streamId)
+rtError_t StreamCapture::PackingTaskGroup(const TaskInfo* task, uint16_t streamId)
 {
     std::unique_ptr<TaskGroup>& taskGroup = GetCurrentTaskGroup();
     NULL_PTR_RETURN_NOLOG(taskGroup, RT_ERROR_NONE);
@@ -191,20 +191,18 @@ rtError_t StreamCapture::PackingTaskGroup(const TaskInfo* const task, const uint
     if (!TaskTypeIsSupportTaskGroup(task)) {
         RT_LOG_OUTER_MSG_IMPL(
             ErrorCode::EE1006, "Adding the task to the task group",
-            RtFmtMsg(
-                "Task type %s(%u)", GetTaskDescByType(static_cast<uint32_t>(task->type)),
-                static_cast<uint32_t>(task->type)),
+            RtFmtMsg("Task type %s(%u)", GetTaskDescByType(task->type), static_cast<uint32_t>(task->type)),
             "Only tasks running on Cube Core or Vector Core can be added to a task group");
         return RT_ERROR_TASK_NOT_SUPPORT;
     }
-    taskGroup->taskIds.emplace_back(streamId, task->id);
+    (void)taskGroup->taskIds.emplace_back(streamId, task->id);
     return RT_ERROR_NONE;
 }
 
 void StreamCapture::ResetUpdateTaskGroup()
 {
     updateTaskGroup_->isUpdate = false;
-    updateTaskGroup_->updateTaskIndex = 0;
+    updateTaskGroup_->updateTaskIndex = 0U;
     updateTaskGroup_ = nullptr;
 }
 
@@ -214,11 +212,11 @@ bool StreamCapture::IsSubCaptureModel() const { return isSubCaptureModel_; }
 
 void StreamCapture::SetSubCaptureModel() { isSubCaptureModel_ = true; }
 
-void StreamCapture::SetBeginCaptureThreadId(const uint32_t threadId) { beginCaptureThreadId_ = threadId; }
+void StreamCapture::SetBeginCaptureThreadId(uint32_t threadId) { beginCaptureThreadId_ = threadId; }
 
 uint32_t StreamCapture::GetBeginCaptureThreadId() const { return beginCaptureThreadId_; }
 
-bool StreamCapture::IsTaskGroupBreak(const Stream* const stm, Stream* const captureStream)
+bool StreamCapture::IsTaskGroupBreak(const Stream* stm, const Stream* captureStream)
 {
     if (captureStream == nullptr) {
         return false;
@@ -236,7 +234,7 @@ bool StreamCapture::IsTaskGroupBreak(const Stream* const stm, Stream* const capt
     return (!streamIds.empty());
 }
 
-void StreamCapture::Terminate(Stream* const stm)
+void StreamCapture::Terminate(Stream* stm)
 {
     stm->SetCaptureStatus(RT_STREAM_CAPTURE_STATUS_INVALIDATED);
     Stream* const curCaptureStream = stm->GetCaptureStream();
@@ -248,8 +246,7 @@ void StreamCapture::Terminate(Stream* const stm)
     }
 }
 
-rtError_t StreamCapture::AllocCascadeStream(
-    Stream* const stm, Stream*& newCaptureStream, const Stream* const curCaptureStream)
+rtError_t StreamCapture::AllocCascadeStream(Stream* stm, Stream*& newCaptureStream, const Stream* curCaptureStream)
 {
     Context* const ctx = stm->Context_();
     CaptureSession* const captureSession = GetCaptureSession(ctx);
@@ -274,8 +271,7 @@ rtError_t StreamCapture::AllocCascadeStream(
     return RT_ERROR_NONE;
 }
 
-void StreamCapture::UpdateCascadeStreamInfo(
-    Stream* const stm, Stream* const newCaptureStream, Stream* const curCaptureStream)
+void StreamCapture::UpdateCascadeStreamInfo(Stream* stm, Stream* newCaptureStream, Stream* curCaptureStream)
 {
     StreamCapture* const currentCapture = Get(curCaptureStream);
     StreamCapture* const newCapture = Get(newCaptureStream);
@@ -295,8 +291,7 @@ void StreamCapture::UpdateCascadeStreamInfo(
     stm->UpdateCaptureStream(newCaptureStream);
 }
 
-rtError_t StreamCapture::AllocTask(
-    Stream* const stm, const tsTaskType_t taskType, const uint32_t sqeNum, TaskInfo** const task)
+rtError_t StreamCapture::AllocTask(Stream* stm, tsTaskType_t taskType, uint32_t sqeNum, TaskInfo** task)
 {
     std::unique_lock<std::mutex> lock(stm->GetCaptureLock());
     Stream* curCaptureStream = stm->GetCaptureStream();
@@ -362,7 +357,7 @@ rtError_t StreamCapture::AllocTask(
     return ret;
 }
 
-void StreamCapture::EnterCapture(Stream* const stm, const Stream* const captureStream)
+void StreamCapture::EnterCapture(Stream* stm, const Stream* captureStream)
 {
     CaptureModel* const captureModel = RtPtrToPtr<CaptureModel*>(captureStream->Model_());
     if (captureModel != nullptr) {
@@ -387,7 +382,7 @@ void StreamCapture::EnterCapture(Stream* const stm, const Stream* const captureS
     }
 }
 
-void StreamCapture::ExitCapture(Stream* const stm)
+void StreamCapture::ExitCapture(Stream* stm)
 {
     Stream* const captureStream = stm->GetCaptureStream();
     if (captureStream != nullptr) {

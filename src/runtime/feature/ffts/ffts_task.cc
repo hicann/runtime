@@ -1078,7 +1078,7 @@ void SetStarsResultForFftsPlusTask(TaskInfo* taskInfo, const rtCqReport_t& logic
 
 #endif
 
-rtError_t FftsPlusLaunchHandler(Stream* const stm, const void* const params)
+rtError_t FftsPlusLaunchHandler(Stream* stm, const void* params)
 {
     const FftsPlusLaunchParams* const launchParams = static_cast<const FftsPlusLaunchParams*>(params);
     const rtFftsPlusTaskInfo_t* const fftsPlusTaskInfo = launchParams->taskInfo;

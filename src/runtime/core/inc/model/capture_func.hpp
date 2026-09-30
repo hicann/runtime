@@ -25,7 +25,7 @@ class Model;
 class Stream;
 class StreamExtension;
 struct tagTaskInfoStru;
-typedef tagTaskInfoStru TaskInfo;
+using TaskInfo = tagTaskInfoStru;
 
 using PfnCreateContextExtension = ContextExtension* (*)(Context* ctx);
 using PfnCreateStreamExtension = StreamExtension* (*)(Stream* stm);

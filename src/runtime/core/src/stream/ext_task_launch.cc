@@ -29,7 +29,7 @@ bool IsValidExtTaskLaunchIndex(const rtChipType_t chipType, const tsTaskType_t t
 
 } // namespace
 
-void RegisterExtTaskLaunch(const rtChipType_t chipType, const tsTaskType_t taskType, const ExtTaskLaunchFunc func)
+void RegisterExtTaskLaunch(rtChipType_t chipType, tsTaskType_t taskType, ExtTaskLaunchFunc func)
 {
     if (!IsValidExtTaskLaunchIndex(chipType, taskType)) {
         RT_LOG(
@@ -41,7 +41,7 @@ void RegisterExtTaskLaunch(const rtChipType_t chipType, const tsTaskType_t taskT
     g_extTaskLaunchFuncs[chipType][taskType] = func;
 }
 
-ExtTaskLaunchFunc GetExtTaskLaunchFunc(const rtChipType_t chipType, const tsTaskType_t taskType)
+ExtTaskLaunchFunc GetExtTaskLaunchFunc(rtChipType_t chipType, tsTaskType_t taskType)
 {
     if (!IsValidExtTaskLaunchIndex(chipType, taskType)) {
         return nullptr;
@@ -49,9 +49,9 @@ ExtTaskLaunchFunc GetExtTaskLaunchFunc(const rtChipType_t chipType, const tsTask
     return g_extTaskLaunchFuncs[chipType][taskType];
 }
 
-rtError_t Stream::LaunchExtTask(const tsTaskType_t taskType, const void* const params)
+rtError_t Stream::LaunchExtTask(tsTaskType_t taskType, const void* params)
 {
-    const ExtTaskLaunchFunc launchFunc = GetExtTaskLaunchFunc(device_->GetChipType(), taskType);
+    ExtTaskLaunchFunc const launchFunc = GetExtTaskLaunchFunc(device_->GetChipType(), taskType);
     COND_RETURN_ERROR_MSG_INNER(
         launchFunc == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT,
         "Ext task launch is not registered, chipType=%s, taskType=%s(%d).",
