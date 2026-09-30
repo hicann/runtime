@@ -85,9 +85,9 @@ class GenerateAclApiStubsTest(unittest.TestCase):
             REPO_ROOT / "src/acl/aclrt_impl/acl_rt_wrapper.h"
         )
 
-        self.assertEqual(len(entries), 404)
+        self.assertEqual(len(entries), 405)
         self.assertEqual(
-            sum(entry.return_type == "aclError" for entry in entries.values()), 387
+            sum(entry.return_type == "aclError" for entry in entries.values()), 388
         )
         self.assertEqual(
             sum(entry.return_type != "aclError" for entry in entries.values()), 17
@@ -104,6 +104,9 @@ class GenerateAclApiStubsTest(unittest.TestCase):
             entries["aclrtNonBlockingLaunchEnd"].impl_name,
             "aclrtNonBlockingLaunchEndImpl",
         )
+        self.assertEqual(entries["aclmdlRIGetTasks"].impl_name, "aclmdlRIGetTasksImpl")
+        self.assertEqual(entries["aclmdlRIGetTasks"].return_type, "aclError")
+        self.assertEqual(entries["aclmdlRIGetTasks"].arguments, "(modelRI, tasks, numTasks)")
 
     def test_generates_stubs_and_report(self):
         product = self.write_product("""\
@@ -144,15 +147,18 @@ ACL_API_STUB(aclZero, ZERO)
 
         self.assertEqual(version, 1)
         self.assertEqual(real_provider_count, 94)
-        self.assertEqual(len(entries), 310)
+        self.assertEqual(len(entries), 311)
         self.assertEqual(
-            sum(entry.policy == "RT_FEATURE_NOT_SUPPORT" for entry in entries), 295
+            sum(entry.policy == "RT_FEATURE_NOT_SUPPORT" for entry in entries), 296
         )
         self.assertEqual(sum(entry.policy == "NULLPTR" for entry in entries), 5)
         self.assertEqual(sum(entry.policy == "ZERO" for entry in entries), 10)
+        GENERATOR.validate_real_provider_count(wrapper, entries, real_provider_count)
+        self.assertEqual(dict(product_entries)["aclmdlRIGetTasks"], "RT_FEATURE_NOT_SUPPORT")
         unsupported_names = {entry.public_name for entry in entries}
         for name in (
             "aclFloat16ToFloat",
+            "aclmdlRIGetTasks",
             "aclrtCreateBinary",
             "aclrtGetRunMode",
             "aclrtMallocAlign32",

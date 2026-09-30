@@ -692,6 +692,7 @@ add_executable(runtime_utest_task_910B
     rt_utest_dcache_lock.cc
     rt_utest_capture_mode_update.cc
     rt_utest_capture_mode.cc
+    rt_utest_model_ri.cc
     rt_utest_customer_stack_size.cc
     rt_utest_ipc.cc
     rt_utest_task_res.cc

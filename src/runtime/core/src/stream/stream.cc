@@ -5621,6 +5621,12 @@ rtError_t Stream::StreamGetTasks(void** tasks, uint32_t* numTasks)
     return RT_ERROR_NONE;
 }
 
+void Stream::GetDelayRecycleTaskIdWithLock(std::vector<uint16_t>& taskIds)
+{
+    const std::lock_guard<std::mutex> stmLock(streamMutex_);
+    taskIds = delayRecycleTaskid_;
+}
+
 rtError_t Stream::RestoreForSoftwareSq()
 {
     RT_LOG(RT_LOG_INFO, "Begin restore capture stream, StreamId=%u.", Id_());

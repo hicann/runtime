@@ -907,6 +907,7 @@ public:
 
     StreamStatus GetStreamStatus() const { return streamStatus_; }
     rtError_t StreamGetTasks(void** tasks, uint32_t* numTasks);
+    void GetDelayRecycleTaskIdWithLock(std::vector<uint16_t>& taskIds);
     rtError_t RestoreForSoftwareSq();
     void SetCtrlSQStream() { isCtrlSQStream_ = true; }
 

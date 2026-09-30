@@ -64,6 +64,16 @@ RTS_API rtError_t rtModelGetStreams(rtModel_t const mdl, rtStream_t* streams, ui
 
 /**
  * @ingroup rt_model
+ * @brief get task handles from all streams associated with a model
+ * @param [in] mdl: model handle in the current context
+ * @param [out] tasks: caller-owned array; nullptr queries the task count
+ * @param [in, out] numTasks: input capacity and output number of retrieved tasks
+ * @return RT_ERROR_NONE for success, RT_ERROR_INSUFFICIENT_INPUT_ARRAY if only a prefix fits
+ */
+RTS_API rtError_t rtModelGetTasks(rtModel_t const mdl, rtTask_t* tasks, uint32_t* numTasks);
+
+/**
+ * @ingroup rt_model
  * @brief register callback func for model destroy
  * @param [in] mdl
  * @param [in] fn

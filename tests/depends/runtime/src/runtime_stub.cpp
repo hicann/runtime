@@ -2422,6 +2422,14 @@ rtError_t aclStub::rtStreamGetTasks(rtStream_t const stm, rtTask_t* tasks, uint3
     return RT_ERROR_NONE;
 }
 
+rtError_t aclStub::rtModelGetTasks(rtModel_t const mdl, rtTask_t* tasks, uint32_t* numTasks)
+{
+    (void)mdl;
+    (void)tasks;
+    (void)numTasks;
+    return RT_ERROR_NONE;
+}
+
 rtError_t aclStub::rtTaskGetType(rtTask_t task, rtTaskType* type)
 {
     (void)task;
@@ -4461,6 +4469,11 @@ rtError_t rtModelGetId(rtModel_t mdl, uint32_t* modelId)
 rtError_t rtStreamGetTasks(rtStream_t const stm, rtTask_t* tasks, uint32_t* numTasks)
 {
     return MockFunctionTest::aclStubInstance().rtStreamGetTasks(stm, tasks, numTasks);
+}
+
+rtError_t rtModelGetTasks(rtModel_t const mdl, rtTask_t* tasks, uint32_t* numTasks)
+{
+    return MockFunctionTest::aclStubInstance().rtModelGetTasks(mdl, tasks, numTasks);
 }
 
 rtError_t rtTaskGetType(rtTask_t task, rtTaskType* type)

@@ -340,6 +340,7 @@ enum AclProfType {
     AclrtHostGetDevicePointerAddrRange,
     AclrtBinaryEnumerateFunctions,
     AclrtGetThreadLastTaskIdAndStreamId,
+    AclmdlRIGetTasks,
     // this is the end, can not add after AclRtProfTypeEnd
     AclRtProfTypeEnd
 };

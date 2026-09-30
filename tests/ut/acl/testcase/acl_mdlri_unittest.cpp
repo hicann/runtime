@@ -275,6 +275,50 @@ TEST_F(UTEST_ACL_Modelri, TestaclmdlRIGetTasksByStream)
     EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
 }
 
+TEST_F(UTEST_ACL_Modelri, TestaclmdlRIGetTasks)
+{
+    int modelToken = 0;
+    aclmdlRI modelRI = &modelToken; // Only the fully mocked ACL forwarding layer uses this token.
+    aclmdlRITask task = nullptr;
+    uint32_t numTasks = 1U;
+    const aclError results[] = {
+        ACL_SUCCESS, ACL_ERROR_RT_PARAM_INVALID, ACL_ERROR_RT_FEATURE_NOT_SUPPORT,
+        ACL_ERROR_RT_INSUFFICIENT_INPUT_ARRAY};
+    for (const auto result : results) {
+        EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtModelGetTasks(modelRI, &task, &numTasks))
+            .WillOnce(Return(result));
+        EXPECT_EQ(aclmdlRIGetTasks(modelRI, &task, &numTasks), result);
+    }
+}
+
+TEST_F(UTEST_ACL_Modelri, TestaclmdlRIGetTasksQueryCount)
+{
+    int modelToken = 0;
+    aclmdlRI modelRI = &modelToken;
+    uint32_t numTasks = 0U;
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtModelGetTasks(modelRI, nullptr, &numTasks))
+        .WillOnce(DoAll(SetArgPointee<2>(5U), Return(ACL_SUCCESS)));
+    EXPECT_EQ(aclmdlRIGetTasks(modelRI, nullptr, &numTasks), ACL_SUCCESS);
+    EXPECT_EQ(numTasks, 5U);
+}
+
+TEST_F(UTEST_ACL_Modelri, TestaclmdlRIGetTasksOutputHandles)
+{
+    int modelToken = 0;
+    int taskTokens[2] = {};
+    aclmdlRI modelRI = &modelToken;
+    aclmdlRITask tasks[3] = {};
+    rtTask_t expected[3] = {&taskTokens[0], &taskTokens[1], nullptr};
+    uint32_t numTasks = 3U;
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtModelGetTasks(modelRI, tasks, &numTasks))
+        .WillOnce(DoAll(SetArrayArgument<1>(expected, expected + 3), SetArgPointee<2>(2U), Return(ACL_SUCCESS)));
+    EXPECT_EQ(aclmdlRIGetTasks(modelRI, tasks, &numTasks), ACL_SUCCESS);
+    EXPECT_EQ(numTasks, 2U);
+    for (size_t i = 0U; i < 3U; ++i) {
+        EXPECT_EQ(tasks[i], expected[i]);
+    }
+}
+
 TEST_F(UTEST_ACL_Modelri, TestaclmdlRITaskGetType)
 {
     aclmdlRITask task = (aclmdlRITask)0x01;

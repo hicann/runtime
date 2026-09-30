@@ -794,6 +794,8 @@ public:
         rtTask_t task, rtLaunchKernelAttrId attrId, rtLaunchKernelAttrVal_t* attrValue) = 0;
 
     virtual rtError_t SetKernelDfxInfoCallback(rtKernelDfxInfoType type, rtKernelDfxInfoProFunc func) = 0;
+
+    virtual rtError_t ModelGetTasks(const Model* const mdl, void** tasks, uint32_t* numTasks) = 0;
 };
 } // namespace runtime
 } // namespace cce

@@ -594,6 +594,10 @@ RUNTIME_API(standard_soc, rtError_t, rtStreamGetTasks,
     (rtStream_t const stm, rtTask_t* tasks, uint32_t* numTasks),
     (stm, tasks, numTasks), FEATURE_NOT_SUPPORT, EXPORT)
 
+RUNTIME_API(standard_soc, rtError_t, rtModelGetTasks,
+    (rtModel_t const mdl, rtTask_t* tasks, uint32_t* numTasks),
+    (mdl, tasks, numTasks), FEATURE_NOT_SUPPORT, EXPORT)
+
 RUNTIME_API(task, rtError_t, rtTaskGetType,
     (rtTask_t task, rtTaskType* type),
     (task, type), FEATURE_NOT_SUPPORT, EXPORT)

@@ -1864,6 +1864,11 @@ rtError_t ApiDecorator::StreamGetTasks(Stream* const stm, void** tasks, uint32_t
     return impl_->StreamGetTasks(stm, tasks, numTasks);
 }
 
+rtError_t ApiDecorator::ModelGetTasks(const Model* const mdl, void** tasks, uint32_t* numTasks)
+{
+    return impl_->ModelGetTasks(mdl, tasks, numTasks);
+}
+
 rtError_t ApiDecorator::TaskGetType(rtTask_t task, rtTaskType* type) { return impl_->TaskGetType(task, type); }
 
 rtError_t ApiDecorator::TaskGetSeqId(rtTask_t task, uint32_t* id) { return impl_->TaskGetSeqId(task, id); }

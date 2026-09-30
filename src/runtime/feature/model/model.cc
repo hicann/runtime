@@ -2432,6 +2432,70 @@ rtError_t Model::ModelGetStreams(Stream** streams, uint32_t* numStreams) const
     return RT_ERROR_NONE;
 }
 
+static inline rtError_t AccumulateTaskCount(const size_t count, uint32_t& total)
+{
+    COND_RETURN_ERROR_MSG_INNER(
+        count > static_cast<size_t>(UINT32_MAX - total), RT_ERROR_INVALID_VALUE,
+        "Model task count exceeds UINT32_MAX, accumulated=%u, next stream count=%zu.", total, count);
+    total += static_cast<uint32_t>(count);
+    return RT_ERROR_NONE;
+}
+
+rtError_t Model::ModelGetTasks(void** tasks, uint32_t* numTasks) const
+{
+    RT_LOG(RT_LOG_INFO, "start to get model tasks, modelId=%u, input numTasks=%u.", id_, *numTasks);
+    if (!isModelComplete_) {
+        RT_LOG(RT_LOG_WARNING, "model is not load complete, modelId=%u.", id_);
+    }
+
+    const uint32_t capacity = *numTasks;
+    uint32_t total = 0U;
+    std::vector<TaskInfo*> taskInfos;
+    for (Stream* const stm : streams_) {
+        std::vector<uint16_t> taskIds;
+        stm->GetDelayRecycleTaskIdWithLock(taskIds);
+        const rtError_t error = AccumulateTaskCount(taskIds.size(), total);
+        ERROR_RETURN(error, "Failed to accumulate model task count, modelId=%u.", id_);
+        if (tasks == nullptr) {
+            continue;
+        }
+        // Count all tasks, but keep only the prefix that can fit in the caller's array.
+        const size_t count = std::min(taskIds.size(), static_cast<size_t>(capacity) - taskInfos.size());
+        for (size_t i = 0U; i < count; ++i) {
+            const uint16_t taskId = taskIds[i];
+            TaskInfo* const task = stm->Device_()->GetTaskFactory()->GetTask(stm->Id_(), taskId);
+            if (task == nullptr) {
+                RT_LOG(
+                    RT_LOG_ERROR, "task is nullptr, modelId=%u, streamId=%d, taskId=%u.", id_, stm->Id_(),
+                    static_cast<uint32_t>(taskId));
+                return RT_ERROR_INVALID_VALUE;
+            }
+            taskInfos.push_back(task);
+        }
+    }
+
+    const uint32_t taskNum = total;
+    if (tasks == nullptr) {
+        *numTasks = taskNum;
+        return RT_ERROR_NONE;
+    }
+    const uint32_t retTaskNum = std::min(capacity, taskNum);
+    for (uint32_t i = 0U; i < retTaskNum; ++i) {
+        tasks[i] = RtPtrToPtr<void*>(taskInfos[i]);
+    }
+    for (uint32_t i = retTaskNum; i < capacity; ++i) {
+        tasks[i] = nullptr;
+    }
+    *numTasks = retTaskNum;
+    COND_RETURN_AND_MSG_OUTER(
+        retTaskNum < taskNum, RT_ERROR_INSUFFICIENT_INPUT_ARRAY, ErrorCode::EE1011,
+        "Obtaining all tasks in a model running instance", retTaskNum, "numTasks",
+        RtFmtMsg(
+            "The array space is insufficient. The array size is less than the total number of model tasks %u",
+            taskNum));
+    return RT_ERROR_NONE;
+}
+
 rtError_t Model::ModelDestroyRegisterCallback(const rtCallback_t fn, const void* ptr)
 {
     const std::unique_lock<std::mutex> mdlDestroyCallbackLock(mdlDestroyCallbackMutex_);

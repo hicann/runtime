@@ -5081,6 +5081,19 @@ ACL_FUNC_VISIBILITY aclError aclmdlRIGetTasksByStream(aclrtStream stream, aclmdl
 
 /**
  * @ingroup AscendCL
+ * @brief get task handles from all streams associated with a model running instance
+ * @param [in] modelRI: model running instance handle in the current context
+ * @param [out] tasks: caller-owned array; nullptr queries the task count only
+ * @param [in, out] numTasks: array capacity on input, number of tasks retrieved on output
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval ACL_ERROR_RT_INSUFFICIENT_INPUT_ARRAY The array contains only the prefix that fits.
+ * @note Unused array entries are set to nullptr. The caller must keep the model and tasks alive
+ *       and must not destroy or modify them concurrently with the query.
+ */
+ACL_FUNC_VISIBILITY aclError aclmdlRIGetTasks(aclmdlRI modelRI, aclmdlRITask* tasks, uint32_t* numTasks);
+
+/**
+ * @ingroup AscendCL
  * @brief get the type of the task
  * @param [in] task: task handle
  * @param [in, out] type: variable to store the task type

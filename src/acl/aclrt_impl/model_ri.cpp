@@ -337,6 +337,13 @@ aclError aclmdlRIGetStreamsImpl(aclmdlRI modelRI, aclrtStream* streams, uint32_t
     return ACL_SUCCESS;
 }
 
+aclError aclmdlRIGetTasksImpl(aclmdlRI modelRI, aclmdlRITask* tasks, uint32_t* numTasks)
+{
+    ACL_PROFILING_REG(acl::AclProfType::AclmdlRIGetTasks);
+    ACL_REQUIRES_RTS_OK(rtModelGetTasks(static_cast<rtModel_t>(modelRI), static_cast<rtTask_t*>(tasks), numTasks));
+    return ACL_SUCCESS;
+}
+
 aclError aclmdlRIDestroyRegisterCallbackImpl(aclmdlRI modelRI, aclrtCallback func, void* userData)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclmdlRIDestroyRegisterCallback);

@@ -172,6 +172,7 @@ public:
     rtError_t BindSqPerStream(Stream* const streamIn, const uint32_t flag);
     rtError_t UnBindSqPerStream(Stream* const streamIn);
     rtError_t ModelGetStreams(Stream** streams, uint32_t* numStreams) const;
+    rtError_t ModelGetTasks(void** tasks, uint32_t* numTasks) const;
     rtError_t ModelDestroyRegisterCallback(const rtCallback_t fn, const void* ptr);
     rtError_t ModelDestroyUnregisterCallback(rtCallback_t const fn);
     rtError_t CacheLastTaskExtendInfo(const Stream* const stm, const char* infoPtr, const size_t infoSize);

@@ -300,6 +300,7 @@ const std::map<AclProfType, std::string> PROF_TYPE_TO_NAMES = {
     {AclProfType::AclmdlRITaskGetSeqId, "aclmdlRITaskGetSeqId"},
     {AclProfType::AclmdlRIGetStreams, "aclmdlRIGetStreams"},
     {AclProfType::AclmdlRIGetTasksByStream, "aclmdlRIGetTasksByStream"},
+    {AclProfType::AclmdlRIGetTasks, "aclmdlRIGetTasks"},
     {AclProfType::AclmdlRITaskGetType, "aclmdlRITaskGetType"},
     {AclProfType::AclmdlRIDestroyRegisterCallback, "aclmdlRIDestroyRegisterCallback"},
     {AclProfType::AclmdlRIDestroyUnregisterCallback, "aclmdlRIDestroyUnregisterCallback"},

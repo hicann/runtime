@@ -1872,6 +1872,30 @@ rtError_t rtStreamGetTasks(rtStream_t const stm, rtTask_t* tasks, uint32_t* numT
 }
 
 VISIBILITY_DEFAULT
+rtError_t rtModelGetTasks(rtModel_t const mdl, rtTask_t* tasks, uint32_t* numTasks)
+{
+    const Runtime* const rtInstance = Runtime::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
+
+    static const bool isSupportAclGraph =
+        IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(), RtOptionalFeatureType::RT_FEATURE_MODEL_ACL_GRAPH);
+    if (!isSupportAclGraph) {
+        RT_LOG(
+            RT_LOG_WARNING, "chip type(%d) does not support, return.", static_cast<int32_t>(rtInstance->GetChipType()));
+        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
+    }
+
+    Api* const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(mdl, Model, realModel);
+    PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(numTasks, RT_ERROR_INVALID_VALUE);
+    const rtError_t error = apiInstance->ModelGetTasks(realModel, static_cast<void**>(tasks), numTasks);
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
 rtError_t rtLaunchSIMTKernelWithHostArgs(
     void* func, rtDim3 gridDim, rtDim3 blockDim, size_t dynUbufSize, rtStream_t stm, rtKernelLaunchCfg_t* cfg,
     void* hostArgs, uint32_t argsSize, rtPlaceHolderInfo_t* placeHolderArray, uint32_t placeHolderNum)

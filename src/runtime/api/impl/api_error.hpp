@@ -427,6 +427,7 @@ public:
     rtError_t ModelGetStreams(const Model* const mdl, Stream** streams, uint32_t* numStreams) override;
     rtError_t ModelUpdate(Model* mdl) override;
     rtError_t StreamGetTasks(Stream* const stm, void** tasks, uint32_t* numTasks) override;
+    rtError_t ModelGetTasks(const Model* const mdl, void** tasks, uint32_t* numTasks) override;
     rtError_t TaskGetType(rtTask_t task, rtTaskType* type) override;
     rtError_t TaskGetSeqId(rtTask_t task, uint32_t* id) override;
     rtError_t ModelTaskDisable(rtTask_t task) override;

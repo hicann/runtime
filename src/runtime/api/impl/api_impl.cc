@@ -6820,6 +6820,17 @@ rtError_t ApiImpl::StreamGetTasks(Stream* const stm, void** tasks, uint32_t* num
     return stm->StreamGetTasks(tasks, numTasks);
 }
 
+rtError_t ApiImpl::ModelGetTasks(const Model* const mdl, void** tasks, uint32_t* numTasks)
+{
+    Context* const curCtx = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_MODEL_WITH_FUNC_DESC(
+        mdl, curCtx, RT_ERROR_MODEL_CONTEXT, "Obtaining all tasks in a model running instance");
+
+    std::unique_lock<std::mutex> streamLock(curCtx->streamLock_);
+    return mdl->ModelGetTasks(tasks, numTasks);
+}
+
 rtError_t ApiImpl::TaskGetType(rtTask_t task, rtTaskType* type)
 {
     const TaskInfo* const taskInfo = static_cast<const TaskInfo*>(task);

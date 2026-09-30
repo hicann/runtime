@@ -649,6 +649,8 @@
       (modelRI, streams, numStreams))                                                                                 \
     _(aclError, aclmdlRIGetTasksByStream, (aclrtStream stream, aclmdlRITask * tasks, uint32_t * numTasks),            \
       (stream, tasks, numTasks))                                                                                      \
+    _(aclError, aclmdlRIGetTasks, (aclmdlRI modelRI, aclmdlRITask * tasks, uint32_t * numTasks),                      \
+      (modelRI, tasks, numTasks))                                                                                     \
     _(aclError, aclmdlRITaskGetType, (aclmdlRITask task, aclmdlRITaskType * type), (task, type))                      \
     _(aclError, aclmdlRITaskDisable, (aclmdlRITask task), (task))                                                     \
     _(aclError, aclmdlRIDestroyRegisterCallback, (aclmdlRI modelRI, aclrtCallback func, void* userData),              \

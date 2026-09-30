@@ -6524,6 +6524,15 @@ rtError_t ApiErrorDecorator::StreamGetTasks(Stream* const stm, void** tasks, uin
     return impl_->StreamGetTasks(stm, tasks, numTasks);
 }
 
+rtError_t ApiErrorDecorator::ModelGetTasks(const Model* const mdl, void** tasks, uint32_t* numTasks)
+{
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
+        mdl, RT_ERROR_INVALID_VALUE, "Obtaining all tasks in a model running instance");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
+        numTasks, RT_ERROR_INVALID_VALUE, "Obtaining all tasks in a model running instance");
+    return impl_->ModelGetTasks(mdl, tasks, numTasks);
+}
+
 rtError_t ApiErrorDecorator::TaskGetType(rtTask_t task, rtTaskType* type)
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(task, RT_ERROR_INVALID_VALUE, "Obtaining the task type");
