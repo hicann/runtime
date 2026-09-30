@@ -11,7 +11,7 @@
 - [`aclError aclmdlRICaptureTaskUpdateBegin(aclrtStream stream, aclrtTaskGrp handle)`](#aclmdlRICaptureTaskUpdateBegin)：标记待更新任务的开始。
 - [`aclError aclmdlRICaptureTaskUpdateEnd(aclrtStream stream)`](#aclmdlRICaptureTaskUpdateEnd)：标记待更新任务的结束。
 - [`aclError aclmdlRIDebugJsonPrint(aclmdlRI modelRI, const char *path, uint32_t flags)`](#aclmdlRIDebugJsonPrint)：维测场景下，使用本接口将模型运行实例信息以JSON格式导出到文件中，包括Model ID、Stream ID、Task ID、Task Type等信息。
-- [`aclError aclmdlRIDebugPrint(aclmdlRI modelRI)`](#aclmdlRIDebugPrint)：维测场景下使用本接口打印内部模型信息，包括Device ID、Stream ID、Task ID等信息。
+- [`aclError aclmdlRIDebugPrint(aclmdlRI modelRI)`](#aclmdlRIDebugPrint_deprecated)：维测场景下使用本接口打印内部模型信息，包括Device ID、Stream ID、Task ID等信息。
 - [`aclError aclmdlRIBuildBegin(aclmdlRI *modelRI, uint32_t flag)`](#aclmdlRIBuildBegin)：开始构建一个模型运行实例。
 - [`aclError aclmdlRIBindStream(aclmdlRI modelRI, aclrtStream stream, uint32_t flag)`](#aclmdlRIBindStream)：将模型运行实例与Stream绑定。
 - [`aclError aclmdlRIEndTask(aclmdlRI modelRI, aclrtStream stream)`](#aclmdlRIEndTask)：在Stream上标记下发任务结束。
@@ -82,7 +82,7 @@ aclError aclmdlRICaptureBegin(aclrtStream stream, aclmdlRICaptureMode mode)
 
 在aclmdlRICaptureBegin和[aclmdlRICaptureEnd](#aclmdlRICaptureEnd)接口之间，所有在指定Stream上下发的任务不会立即执行，而是被暂存在系统内部模型运行实例中，只有在调用[aclmdlRIExecuteAsync](#aclmdlRIExecuteAsync)接口执行模型时，这些任务才会被真正执行，以此减少Host侧的任务下发开销。所有任务执行完毕后，若无需再使用内部模型，可调用[aclmdlRIDestroy](#aclmdlRIDestroy)接口及时销毁该资源。
 
-aclmdlRICaptureBegin和[aclmdlRICaptureEnd](#aclmdlRICaptureEnd)接口要成对使用，且两个接口中的Stream应相同。在这两个接口之间，可以调用[aclmdlRICaptureGetInfo](#aclmdlRICaptureGetInfo)接口获取捕获信息，调用[aclmdlRICaptureThreadExchangeMode](#aclmdlRICaptureThreadExchangeMode)接口切换当前线程的捕获模式。此外，在调用[aclmdlRICaptureEnd](#aclmdlRICaptureEnd)接口之后，还可以调用[aclmdlRIDebugPrint](#aclmdlRIDebugPrint)接口打印模型信息，这在维护和测试场景下有助于问题定位。
+aclmdlRICaptureBegin和[aclmdlRICaptureEnd](#aclmdlRICaptureEnd)接口要成对使用，且两个接口中的Stream应相同。在这两个接口之间，可以调用[aclmdlRICaptureGetInfo](#aclmdlRICaptureGetInfo)接口获取捕获信息，调用[aclmdlRICaptureThreadExchangeMode](#aclmdlRICaptureThreadExchangeMode)接口切换当前线程的捕获模式。此外，在调用[aclmdlRICaptureEnd](#aclmdlRICaptureEnd)接口之后，还可以调用[aclmdlRIDebugPrint](#aclmdlRIDebugPrint_deprecated)接口打印模型信息，这在维护和测试场景下有助于问题定位。
 
 在aclmdlRICaptureBegin和[aclmdlRICaptureEnd](#aclmdlRICaptureEnd)接口之间捕获的任务，若要更新任务（包含任务本身以及任务的参数信息），则需在[aclmdlRICaptureTaskGrpBegin](#aclmdlRICaptureTaskGrpBegin)、[aclmdlRICaptureTaskGrpEnd](#aclmdlRICaptureTaskGrpEnd)接口之间下发后续可能更新的任务，给任务打上任务组的标记，然后在[aclmdlRICaptureTaskUpdateBegin](#aclmdlRICaptureTaskUpdateBegin)、[aclmdlRICaptureTaskUpdateEnd](#aclmdlRICaptureTaskUpdateEnd)接口之间更新任务的输入信息。
 
@@ -2243,7 +2243,7 @@ aclError aclmdlRICaptureToModelRIBegin(aclrtStream stream, aclmdlRI modelRI, acl
 
 在aclmdlRICaptureToModelRIBegin和[aclmdlRICaptureEnd](#aclmdlRICaptureEnd)接口之间，所有在指定Stream上下发的任务不会立即执行，而是被暂存在系统内部模型运行实例中，只有在根模型调用[aclmdlRIExecuteAsync](#aclmdlRIExecuteAsync)接口执行模型时，这些任务才会被真正执行，以此减少Host侧的任务下发开销。该模型运行实例不支持aclmdlRIDestroy。
 
-aclmdlRICaptureToModelRIBegin和[aclmdlRICaptureEnd](#aclmdlRICaptureEnd)接口要成对使用，且两个接口中的Stream应相同。在这两个接口之间，可以调用[aclmdlRICaptureGetInfo](#aclmdlRICaptureGetInfo)接口获取捕获信息，调用[aclmdlRICaptureThreadExchangeMode](#aclmdlRICaptureThreadExchangeMode)接口切换当前线程的捕获模式。此外，在调用[aclmdlRICaptureEnd](#aclmdlRICaptureEnd)接口之后，还可以调用[aclmdlRIDebugPrint](#aclmdlRIDebugPrint)接口打印模型信息，这在维护和测试场景下有助于问题定位。
+aclmdlRICaptureToModelRIBegin和[aclmdlRICaptureEnd](#aclmdlRICaptureEnd)接口要成对使用，且两个接口中的Stream应相同。在这两个接口之间，可以调用[aclmdlRICaptureGetInfo](#aclmdlRICaptureGetInfo)接口获取捕获信息，调用[aclmdlRICaptureThreadExchangeMode](#aclmdlRICaptureThreadExchangeMode)接口切换当前线程的捕获模式。此外，在调用[aclmdlRICaptureEnd](#aclmdlRICaptureEnd)接口之后，还可以调用[aclmdlRIDebugPrint](#aclmdlRIDebugPrint_deprecated)接口打印模型信息，这在维护和测试场景下有助于问题定位。
 
 在aclmdlRICaptureToModelRIBegin和[aclmdlRICaptureEnd](#aclmdlRICaptureEnd)接口之间捕获的任务，若要更新任务（包含任务本身以及任务的参数信息），则需在[aclmdlRICaptureTaskGrpBegin](#aclmdlRICaptureTaskGrpBegin)、[aclmdlRICaptureTaskGrpEnd](#aclmdlRICaptureTaskGrpEnd)接口之间下发后续可能更新的任务，给任务打上任务组的标记，然后在[aclmdlRICaptureTaskUpdateBegin](#aclmdlRICaptureTaskUpdateBegin)、[aclmdlRICaptureTaskUpdateEnd](#aclmdlRICaptureTaskUpdateEnd)接口之间更新任务的输入信息。
 
