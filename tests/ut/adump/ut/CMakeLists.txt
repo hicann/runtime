@@ -180,7 +180,6 @@ set(adxdumpsocapiSrcList
     ${SRC_CODE_ROOT_PATH}/adcore/common/thread.cpp
     ${SRC_CODE_ROOT_PATH}/adcore/common/thread_comm.cpp
     ${SRC_CODE_ROOT_PATH}/adcore/commopts/adx_comm_opt_manager.cpp
-    ${SRC_CODE_ROOT_PATH}/adcore/common/memory_utils.cpp
     ${SRC_CODE_ROOT_PATH}/adump/adx_dump_record.cpp
     ${SRC_CODE_ROOT_PATH}/adcore/common/file_utils.cpp
     ${SRC_CODE_ROOT_PATH}/adcore/protocol/adx_msg_proto.cpp
@@ -191,7 +190,6 @@ set(adxdumpsocapiSrcList
     ${SRC_CODE_ROOT_PATH}/adcore/device/adx_sock_device.cpp
     ${SRC_CODE_ROOT_PATH}/adcore/commopts/sock_api.cpp
     ${SRC_CODE_ROOT_PATH}/adcore/commopts/sock_comm_opt.cpp
-    ${SRC_CODE_ROOT_PATH}/adcore/common/thread.cpp
     ${SRC_CODE_ROOT_PATH}/adump/device/adx_dump_soc_api.cpp
     ${SRC_CODE_ROOT_PATH}/adump/host/adx_datadump_server_stub.cpp
     ${SRC_CODE_ROOT_PATH}/adump/adx_dump_process.cpp

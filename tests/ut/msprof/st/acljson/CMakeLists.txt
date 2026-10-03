@@ -46,7 +46,6 @@ set(testStubSrc
     ${ACLJSON_STUB_DIR}/device/rc_mini_v3_device_simulator.cpp
     ${ACLJSON_STUB_DIR}/device/msprof_start.cpp
     ${ACLJSON_STUB_DIR}/device/rpc_device_manager_stub.cpp
-    ${ACLJSON_STUB_DIR}/device/nano_device_simulator.cpp
     ${ACLJSON_STUB_DIR}/device/mini_stars_device_simulator.cpp
     ${ACLJSON_STUB_DIR}/device/tsd_stub.cpp
     ${ACLJSON_STUB_DIR}/host/msprof_stub.cpp

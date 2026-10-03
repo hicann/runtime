@@ -75,7 +75,6 @@ set(logDaemonSrc
     ${CMAKE_CURRENT_SOURCE_DIR}/testcase/hbm_detect/hbm_detect_excp_utest.cc
     ${LOG_SOURCE_PATH}/syslog/log_daemon/hbm_detect/hbm_detect.c
     #server-mgr
-    ${LOG_SOURCE_PATH}/syslog/log_daemon/server_mgr/server_mgr.c
     # cpu-detect-server
     ${CMAKE_CURRENT_SOURCE_DIR}/testcase/cpu_detect_server/cpu_detect_server_utest.cc
     ${LOG_SOURCE_PATH}/syslog/log_daemon/cpu_detect_server/cpu_detect_server.c

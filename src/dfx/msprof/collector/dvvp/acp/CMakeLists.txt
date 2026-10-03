@@ -199,7 +199,6 @@ set(profinjCpp
     ../driver/channel/ai_drv_prof_api.cpp
     ../driver/devmgmt/ai_drv_dsmi_api.cpp
     ../driver/devmgmt/msprof_drv_api.cpp
-    ${PROF_BASIC_DIR}/osal/osal.c
     ../app/application.cpp
     ../app/env_manager.cpp
     ../depend/stub/error_manager/msprof_error_manager_stub.cpp
