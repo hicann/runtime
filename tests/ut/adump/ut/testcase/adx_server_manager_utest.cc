@@ -21,6 +21,7 @@
 #include "hdc_api.h"
 #include "adx_dump_receive.h"
 #include "adx_dsmi.h"
+#include "adcore_api.h"
 
 using namespace Adx;
 
@@ -332,6 +333,14 @@ void IdeXfreeCountStub(const IdeMemHandle ptr)
 {
     ++g_ideXfreeCount;
     free(ptr);
+}
+
+uint32_t g_hdcSessionCloseCount = 0;
+int32_t HdcSessionCloseCountStub(HDC_SESSION session)
+{
+    (void)session;
+    ++g_hdcSessionCloseCount;
+    return IDE_DAEMON_OK;
 }
 
 int HdcReadFailStub(HDC_SESSION session, IdeRecvBuffT recvBuf, IdeI32Pt recvLen)
@@ -834,4 +843,166 @@ TEST_F(ADX_SERVER_MANAGER_UTEST, PrepareComponentProcessOwnsShortRequest)
     EXPECT_EQ(1U, g_ideXfreeCount);
 
     AdxCommOptManager::Instance().commOptMap_.clear();
+}
+
+class AdxOwnershipCountStub : public AdxComponent {
+public:
+    AdxOwnershipCountStub(ComponentType type, bool destroyHandle, bool processSuccess)
+        : type_(type), destroyHandle_(destroyHandle), processSuccess_(processSuccess)
+    {}
+
+    int32_t Init() override { return IDE_DAEMON_OK; }
+    const std::string GetInfo() override { return "OwnershipCount"; }
+    ComponentType GetType() override { return type_; }
+    int32_t UnInit() override { return IDE_DAEMON_OK; }
+
+    int32_t Process(const CommHandle& handle, const SharedPtr<MsgProto>& req) override
+    {
+        (void)req;
+        if (destroyHandle_) {
+            AdxDestroyCommHandle(const_cast<AdxCommHandle>(&handle));
+        }
+        return processSuccess_ ? IDE_DAEMON_OK : IDE_DAEMON_ERROR;
+    }
+
+private:
+    ComponentType type_;
+    bool destroyHandle_;
+    bool processSuccess_;
+};
+
+static uint32_t g_adxDestroyCommHandleCount = 0;
+static void AdxDestroyCommHandleCountStub(AdxCommHandle handle)
+{
+    (void)handle;
+    ++g_adxDestroyCommHandleCount;
+}
+
+static void ClearCommOptMap() { AdxCommOptManager::Instance().commOptMap_.clear(); }
+
+static bool RegisterHdcCommOpt(AdxServerManager& server)
+{
+    std::unique_ptr<AdxCommOpt> commOpt(new HdcCommOpt());
+    return server.RegisterCommOpt(commOpt, std::to_string(3));
+}
+
+static SharedPtr<MsgProto> MakeOwnershipMsg()
+{
+    const char* payload = "ownership";
+    MsgProto* msg = AdxMsgProto::CreateMsgPacket(IDE_FILE_GETD_REQ, 0, payload, strlen(payload) + 1);
+    if (msg == nullptr) {
+        return SharedPtr<MsgProto>();
+    }
+    return SharedPtr<MsgProto>(msg, free);
+}
+
+// 非持久组件：无论 Process 成败，框架都必须且只能关闭一次 session、释放一次 CommHandle。
+TEST_F(ADX_SERVER_MANAGER_UTEST, RunProcessTaskReleasesNonPersistentHandleExactlyOnce)
+{
+    AdxServerManager server;
+    ClearCommOptMap();
+    ASSERT_TRUE(RegisterHdcCommOpt(server));
+    AdxCommHandle processHandle = static_cast<AdxCommHandle>(IdeXmalloc(sizeof(CommHandle)));
+    ASSERT_NE(nullptr, processHandle);
+    *processHandle = CommHandle{OptType::COMM_HDC, 1, ComponentType::COMPONENT_GETD_FILE, -1, nullptr};
+    SharedPtr<MsgProto> msgPtr = MakeOwnershipMsg();
+    std::unique_ptr<AdxComponent> component(
+        new AdxOwnershipCountStub(ComponentType::COMPONENT_GETD_FILE, false, false));
+    ASSERT_TRUE(server.ComponentAdd(component));
+
+    g_hdcSessionCloseCount = 0;
+    g_ideXfreeCount = 0;
+    g_adxDestroyCommHandleCount = 0;
+    MOCKER(HdcSessionClose).expects(once()).will(invoke(HdcSessionCloseCountStub));
+    MOCKER(IdeXfree).expects(once()).will(invoke(IdeXfreeCountStub));
+    MOCKER(AdxDestroyCommHandle).stubs().will(invoke(AdxDestroyCommHandleCountStub));
+
+    AdxServerManager::ProcessTask task{&server, processHandle, msgPtr, ComponentType::COMPONENT_GETD_FILE, true};
+    server.RunProcessTask(task);
+
+    EXPECT_EQ(1U, g_hdcSessionCloseCount);
+    EXPECT_EQ(1U, g_ideXfreeCount);
+    EXPECT_EQ(0U, g_adxDestroyCommHandleCount);
+    EXPECT_EQ(0U, server.linkNum_);
+    EXPECT_EQ(nullptr, task.handle);
+}
+
+// 持久组件自释放场景：框架不 Close、不 IdeXfree，组件的 AdxDestroyCommHandle 是唯一释放点。
+TEST_F(ADX_SERVER_MANAGER_UTEST, RunProcessTaskLetsPersistentComponentOwnHandle)
+{
+    AdxServerManager server;
+    AdxCommHandle processHandle = static_cast<AdxCommHandle>(IdeXmalloc(sizeof(CommHandle)));
+    ASSERT_NE(nullptr, processHandle);
+    *processHandle = CommHandle{OptType::COMM_HDC, 1, ComponentType::COMPONENT_TRACE, -1, nullptr};
+    SharedPtr<MsgProto> msgPtr = MakeOwnershipMsg();
+    std::unique_ptr<AdxComponent> component(new AdxOwnershipCountStub(ComponentType::COMPONENT_TRACE, true, true));
+    ASSERT_TRUE(server.ComponentAdd(component));
+
+    g_hdcSessionCloseCount = 0;
+    g_ideXfreeCount = 0;
+    g_adxDestroyCommHandleCount = 0;
+    MOCKER(HdcSessionClose).expects(never()).will(invoke(HdcSessionCloseCountStub));
+    MOCKER(IdeXfree).expects(never()).will(invoke(IdeXfreeCountStub));
+    MOCKER(AdxDestroyCommHandle).expects(once()).will(invoke(AdxDestroyCommHandleCountStub));
+
+    AdxServerManager::ProcessTask task{&server, processHandle, msgPtr, ComponentType::COMPONENT_TRACE, false};
+    server.RunProcessTask(task);
+
+    EXPECT_EQ(0U, g_hdcSessionCloseCount);
+    EXPECT_EQ(0U, g_ideXfreeCount);
+    EXPECT_EQ(1U, g_adxDestroyCommHandleCount);
+    EXPECT_EQ(nullptr, task.handle);
+}
+
+// 持久组件 Process 失败但不释放句柄时，保持旧契约：组件拥有句柄，框架不得二次释放。
+// 若未来契约改为“失败交还框架”，本用例会显式失败，防止所有权模型被隐式改动。
+TEST_F(ADX_SERVER_MANAGER_UTEST, RunProcessTaskDoesNotDoubleFreePersistentFailedHandle)
+{
+    AdxServerManager server;
+    AdxCommHandle processHandle = static_cast<AdxCommHandle>(IdeXmalloc(sizeof(CommHandle)));
+    ASSERT_NE(nullptr, processHandle);
+    *processHandle = CommHandle{OptType::COMM_HDC, 1, ComponentType::COMPONENT_SYS_REPORT, -1, nullptr};
+    SharedPtr<MsgProto> msgPtr = MakeOwnershipMsg();
+    std::unique_ptr<AdxComponent> component(
+        new AdxOwnershipCountStub(ComponentType::COMPONENT_SYS_REPORT, false, false));
+    ASSERT_TRUE(server.ComponentAdd(component));
+
+    g_hdcSessionCloseCount = 0;
+    g_ideXfreeCount = 0;
+    g_adxDestroyCommHandleCount = 0;
+    MOCKER(HdcSessionClose).expects(never()).will(invoke(HdcSessionCloseCountStub));
+    MOCKER(IdeXfree).expects(never()).will(invoke(IdeXfreeCountStub));
+    MOCKER(AdxDestroyCommHandle).expects(never()).will(invoke(AdxDestroyCommHandleCountStub));
+
+    AdxServerManager::ProcessTask task{&server, processHandle, msgPtr, ComponentType::COMPONENT_SYS_REPORT, false};
+    server.RunProcessTask(task);
+
+    EXPECT_EQ(0U, g_hdcSessionCloseCount);
+    EXPECT_EQ(0U, g_ideXfreeCount);
+    EXPECT_EQ(0U, g_adxDestroyCommHandleCount);
+    EXPECT_EQ(nullptr, task.handle);
+}
+
+// 组件在启动后被移除：框架必须关闭 session 并释放句柄，不能因组件缺失造成泄漏。
+TEST_F(ADX_SERVER_MANAGER_UTEST, RunProcessTaskReleasesHandleWhenComponentMissing)
+{
+    AdxServerManager server;
+    ClearCommOptMap();
+    ASSERT_TRUE(RegisterHdcCommOpt(server));
+    AdxCommHandle processHandle = static_cast<AdxCommHandle>(IdeXmalloc(sizeof(CommHandle)));
+    ASSERT_NE(nullptr, processHandle);
+    *processHandle = CommHandle{OptType::COMM_HDC, 1, ComponentType::COMPONENT_DUMP, -1, nullptr};
+    SharedPtr<MsgProto> msgPtr = MakeOwnershipMsg();
+
+    g_hdcSessionCloseCount = 0;
+    g_ideXfreeCount = 0;
+    MOCKER(HdcSessionClose).expects(once()).will(invoke(HdcSessionCloseCountStub));
+    MOCKER(IdeXfree).expects(once()).will(invoke(IdeXfreeCountStub));
+
+    AdxServerManager::ProcessTask task{&server, processHandle, msgPtr, ComponentType::COMPONENT_DUMP, false};
+    server.RunProcessTask(task);
+
+    EXPECT_EQ(1U, g_hdcSessionCloseCount);
+    EXPECT_EQ(1U, g_ideXfreeCount);
+    EXPECT_EQ(nullptr, task.handle);
 }

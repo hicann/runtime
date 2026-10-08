@@ -24,6 +24,13 @@
 #define MSG_STATUS_LONG_LINK 12
 #define MSG_STATUS_SHORT_LINK 13
 
+static uint32_t g_traceDestroyHandleCount = 0;
+static void TraceAdxDestroyCommHandleCountStub(AdxCommHandle handle)
+{
+    (void)handle;
+    ++g_traceDestroyHandleCount;
+}
+
 class TraceSendUtest : public testing::Test {
 protected:
     virtual void SetUp()
@@ -233,6 +240,47 @@ TEST_F(TraceSendUtest, TraceDeviceProcessInvalid)
     free(msg);
     msg = NULL;
     EXPECT_EQ(TRACE_SUCCESS, TraceDeviceExit());
+}
+
+// 组件侧所有权回归：短消息无论成败都由 TraceDeviceProcess 释放且仅释放一次 CommHandle。
+TEST_F(TraceSendUtest, TraceDeviceProcessDestroysShortHandleExactlyOnce)
+{
+    EXPECT_EQ(TRACE_SUCCESS, TraceDeviceInit());
+    g_traceDestroyHandleCount = 0;
+    MOCKER(AdxDestroyCommHandle).stubs().will(invoke(TraceAdxDestroyCommHandleCountStub));
+
+    AdxCommConHandle handle = (AdxCommConHandle)AdiagMalloc(sizeof(CommHandle));
+    TraceDataMsg* msg = (TraceDataMsg*)AdiagMalloc(sizeof(TraceDataMsg) + sizeof(TraceHelloMsg));
+    TraceHelloMsg* helloMsg = (TraceHelloMsg*)msg->data;
+    helloMsg->msgType = TRACE_HELLO_MSG;
+    helloMsg->magic = TRACE_HEAD_MAGIC;
+    helloMsg->version = TRACE_HEAD_VERSION;
+    EXPECT_EQ(TRACE_SUCCESS, TraceDeviceProcess(handle, (const void*)msg, sizeof(TraceHelloMsg)));
+    EXPECT_EQ(1U, g_traceDestroyHandleCount);
+
+    EXPECT_EQ(TRACE_SUCCESS, TraceDeviceExit());
+    free(msg);
+    msg = NULL;
+}
+
+// 长连接消息由 session store 接管，TraceDeviceProcess 不得立即销毁句柄。
+TEST_F(TraceSendUtest, TraceDeviceProcessLongLinkDoesNotDestroyHandle)
+{
+    EXPECT_EQ(TRACE_SUCCESS, TraceServerSessionInit());
+    EXPECT_EQ(TRACE_SUCCESS, TraceDeviceInit());
+    g_traceDestroyHandleCount = 0;
+    MOCKER(AdxDestroyCommHandle).stubs().will(invoke(TraceAdxDestroyCommHandleCountStub));
+
+    AdxCommConHandle handle = (AdxCommConHandle)AdiagMalloc(sizeof(CommHandle));
+    TraceDataMsg* msg = (TraceDataMsg*)AdiagMalloc(sizeof(TraceDataMsg) + sizeof(TraceEndMsg));
+    msg->status = MSG_STATUS_LONG_LINK;
+    EXPECT_EQ(TRACE_SUCCESS, TraceDeviceProcess(handle, (const void*)msg, sizeof(TraceEndMsg)));
+    EXPECT_EQ(0U, g_traceDestroyHandleCount);
+
+    EXPECT_EQ(TRACE_SUCCESS, TraceDeviceExit());
+    TraceServerSessionExit();
+    free(msg);
+    msg = NULL;
 }
 
 TEST_F(TraceSendUtest, TraceDeviceProcessNull)

@@ -40,19 +40,10 @@ typedef int32_t (*ServerSend)(ServerHandle, const char*, uint32_t);
 typedef int32_t (*ServerRecv)(ServerHandle, char**, uint32_t*, uint32_t);
 
 typedef struct ServerMgr {
-    bool init;           // init is used only once; true: be used; false: free
-    bool processFlag;    // true: running process exists; false: no running process
-    bool monitorRunFlag; // true: running status; false: stopped status
-    // CommHandle 所有权：仅在 ServerProcess 的 start 返回成功后置位，表示句柄已移交组件、
-    // 由 session monitor 负责释放。置位前句柄归框架侧（RunProcessTask 在 Process 返回失败时释放），
-    // 监控线程此时销毁句柄会与框架侧构成 double free
-    bool handleOwned;
-    // 请求代际：每次 ServerProcess 接管节点时递增，监控线程创建时捕获当时代际，
-    // 收尾时仅当代际未变（节点未被新请求接管）才处理节点级状态（销毁句柄/递减计数），
-    // 否则只做自身退出，避免旧线程误销毁新请求的句柄、破坏新请求的并发计数
-    uint32_t generation;
+    bool init;             // init is used only once; true: be used; false: free
+    bool processFlag;      // true: running process exists; false: no running process
+    bool monitorRunFlag;   // true: running status; false: stopped status
     ToolThread monitorTid; // tid of session monitor
-    ComponentType comp;    // component type of this node, the session monitor thread uses it
     AdxCommConHandle handle;
     uint32_t maxNum;
     uint32_t linkedNum;
@@ -88,21 +79,6 @@ int32_t ServersStart(void);
 int32_t ServerSyncFile(ServerHandle handle, const char* srcFileName, const char* dstFileName);
 int32_t ServerSendMsg(ServerHandle handle, const char* msg, uint32_t msgLen);
 int32_t ServerRecvMsg(ServerHandle handle, char** msg, uint32_t* msgLen, uint32_t timeout);
-
-// UT 构建下 STATIC 展开为空，模块内部符号具备外部链接，在此导出声明供用例引用
-#if defined _LOG_UT_ || defined __IDE_UT
-extern ServerMgr g_serverMgr[NR_COMPONENTS];
-int32_t ServerProcess(const CommHandle* handle, const void* msg, uint32_t len);
-int32_t ServerWaitStop(ServerHandle handle);
-// 监控线程的私有上下文（与 server_mgr.c 中的定义保持一致），用例直接构造后调线程体。
-// UT 栈上构造时 onHeap 置 false（线程体内不 free）
-typedef struct {
-    ServerHandle mgr;
-    uint32_t generation;
-    bool onHeap;
-} SessionMonitorCtx;
-void* SessionMonitorProcess(void* arg);
-#endif
 
 #ifdef __cplusplus
 }
