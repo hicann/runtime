@@ -202,7 +202,7 @@ const char* aclrtGetSocNameImpl()
 aclError aclrtGetVersionImpl(int32_t* majorVersion, int32_t* minorVersion, int32_t* patchVersion)
 {
     static std::once_flag flag;
-    std::call_once(flag, [] {
+    std::call_once(flag, []() {
         ACL_LOG_WARN("aclrtGetVersion is deprecated since 9.2.0,"
                      " Will be removed after 2027/9/30,"
                      " use aclsysGetVersionNum or aclsysGetVersionStr instead.");

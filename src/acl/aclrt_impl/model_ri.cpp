@@ -114,7 +114,7 @@ aclError aclmdlRIUpdateImpl(aclmdlRI modelRI)
 aclError aclmdlRIDebugPrintImpl(aclmdlRI modelRI)
 {
     static std::once_flag flag;
-    std::call_once(flag, [] {
+    std::call_once(flag, []() {
         ACL_LOG_WARN("aclmdlRIDebugPrint is deprecated since 8.5.0,"
                      " Will be removed after 2026/12/30,"
                      " use aclmdlRIDebugJsonPrint instead.");

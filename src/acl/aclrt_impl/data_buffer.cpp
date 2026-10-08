@@ -97,7 +97,7 @@ void* aclGetDataBufferAddrImpl(const aclDataBuffer* dataBuffer)
 uint32_t aclGetDataBufferSizeImpl(const aclDataBuffer* dataBuffer)
 {
     static std::once_flag flag;
-    std::call_once(flag, [] {
+    std::call_once(flag, []() {
         ACL_LOG_WARN("aclGetDataBufferSize is deprecated since 8.5.0,"
                      " Will be removed after 2026/12/30,"
                      " use aclGetDataBufferSizeV2 instead.");

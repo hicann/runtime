@@ -762,7 +762,7 @@ aclError aclrtMemcpyAsyncWithConditionImpl(
     void* dst, size_t destMax, const void* src, size_t count, aclrtMemcpyKind kind, aclrtStream stream)
 {
     static std::once_flag flag;
-    std::call_once(flag, [] {
+    std::call_once(flag, []() {
         ACL_LOG_WARN("aclrtMemcpyAsyncWithCondition is deprecated since 9.2.0,"
                      " Will be removed after 2027/9/30,"
                      " use aclrtMemcpyAsync instead.");

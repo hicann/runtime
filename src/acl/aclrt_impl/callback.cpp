@@ -45,7 +45,7 @@ aclError aclrtSubscribeReportImpl(uint64_t threadId, aclrtStream stream)
 aclError aclrtSetExceptionInfoCallbackImpl(aclrtExceptionInfoCallback callback)
 {
     static std::once_flag flag;
-    std::call_once(flag, [] {
+    std::call_once(flag, []() {
         ACL_LOG_WARN("aclrtSetExceptionInfoCallback is deprecated since 9.2.0,"
                      " Will be removed after 2027/9/30,"
                      " use aclrtExceptionInfoCallbackRegister and aclrtExceptionInfoCallbackUnregister instead.");
