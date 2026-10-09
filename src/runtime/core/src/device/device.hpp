@@ -446,6 +446,7 @@ public:
     virtual bool IsSupportPinRegister() const = 0;
     virtual rtError_t EnableP2PWithOtherDevice(const uint32_t peerPhyDeviceId) = 0;
     virtual bool IsSupportFeature(RtOptionalFeatureType f) const = 0;
+    virtual bool IsProcessDeviceMemSnapshotAdviseSupported() const = 0;
     virtual IDeviceSnapshotOps* GetDeviceSnapShot(void) = 0;
     virtual std::map<std::pair<uint32_t, uint32_t>, std::vector<rtExceptionErrRegInfo_t>>& GetExceptionRegMap() = 0;
     virtual std::mutex& GetExceptionRegMutex() = 0;

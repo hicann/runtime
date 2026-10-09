@@ -136,7 +136,7 @@ rtError_t ModelTaskUpdateInit(
         mdlUpdateTaskInfo->blockDimAddr = para->blockDimAddr;
         mdlUpdateTaskInfo->tilingKeyAddr = para->tilingKeyAddr;
         const uint32_t devId = stm->Device_()->Id_();
-        if (NpuDriver::CheckIsSupportFeature(devId, FEATURE_SVM_PROCESS_DEVICE_MEM_SNAPSHOT)) {
+        if (stm->Device_()->IsProcessDeviceMemSnapshotAdviseSupported()) {
             if (mdlUpdateTaskInfo->tilingKeyAddr != nullptr) {
                 error = stm->Device_()->Driver_()->MemAdvise(
                     mdlUpdateTaskInfo->tilingKeyAddr, sizeof(uint64_t), ADVISE_SNAPSHOT_REQUIRED, devId);
@@ -155,7 +155,7 @@ rtError_t ModelTaskUpdateInit(
     mdlUpdateTaskInfo->blockDimOffset = RtPtrToValue(para->blockDimAddr);
     mdlUpdateTaskInfo->tilingTabOffset = RtPtrToValue(devCopyMem);
     const uint32_t devId = stm->Device_()->Id_();
-    if (NpuDriver::CheckIsSupportFeature(devId, FEATURE_SVM_PROCESS_DEVICE_MEM_SNAPSHOT)) {
+    if (stm->Device_()->IsProcessDeviceMemSnapshotAdviseSupported()) {
         rtError_t error = RT_ERROR_NONE;
         if (para->tilingKeyAddr != nullptr) {
             error = stm->Device_()->Driver_()->MemAdvise(

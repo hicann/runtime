@@ -596,6 +596,12 @@ bool RawDevice::IsSupportFeature(RtOptionalFeatureType f) const
     return featureSet_[index];
 }
 
+bool RawDevice::IsProcessDeviceMemSnapshotAdviseSupported() const
+{
+    return IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DFX_PROCESS_SNAPSHOT) &&
+           NpuDriver::CheckIsSupportFeature(deviceId_, FEATURE_SVM_PROCESS_DEVICE_MEM_SNAPSHOT);
+}
+
 rtError_t RawDevice::Init()
 {
     rtError_t error = InitRawDriver();

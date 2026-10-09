@@ -489,6 +489,7 @@ public:
 
     rtError_t EnableP2PWithOtherDevice(const uint32_t peerPhyDeviceId) override;
     bool IsSupportFeature(RtOptionalFeatureType f) const override;
+    bool IsProcessDeviceMemSnapshotAdviseSupported() const override;
     IDeviceSnapshotOps* GetDeviceSnapShot(void) override { return deviceSnapshot_; }
     rtError_t ParsePrintInfo() override;
     rtError_t ParseSimdPrintInfoWithLock() override;

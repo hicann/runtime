@@ -418,7 +418,7 @@ rtError_t MemWaitValueTaskInit(TaskInfo* taskInfo, const void* const devAddr, co
     memWaitValueTask->awSize = RT_STARS_WRITE_VALUE_SIZE_TYPE_64BIT;
     rtError_t ret = RT_ERROR_NONE;
     const uint32_t devId = taskInfo->stream->Device_()->Id_();
-    if ((devAddr != nullptr) && NpuDriver::CheckIsSupportFeature(devId, FEATURE_SVM_PROCESS_DEVICE_MEM_SNAPSHOT)) {
+    if ((devAddr != nullptr) && taskInfo->stream->Device_()->IsProcessDeviceMemSnapshotAdviseSupported()) {
         ret = taskInfo->stream->Device_()->Driver_()->MemAdvise(
             const_cast<void*>(devAddr), sizeof(uint64_t), ADVISE_SNAPSHOT_REQUIRED, devId);
         ERROR_RETURN(ret, "Snapshot advise mem wait value dev addr failed, retCode=%#x.", ret);

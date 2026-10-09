@@ -435,7 +435,7 @@ rtError_t FftsPlusTaskInit(TaskInfo* taskInfo, const rtFftsPlusTaskInfo_t* const
         fftsPlusTask->descAlignBuf = const_cast<void*>(fftsPlusTaskInfo->descBuf);
         const uint32_t devId = taskInfo->stream->Device_()->Id_();
         if ((fftsPlusTaskInfo->descBuf != nullptr) && (fftsPlusTask->descBufLen != 0U) &&
-            NpuDriver::CheckIsSupportFeature(devId, FEATURE_SVM_PROCESS_DEVICE_MEM_SNAPSHOT)) {
+            taskInfo->stream->Device_()->IsProcessDeviceMemSnapshotAdviseSupported()) {
             error = taskInfo->stream->Device_()->Driver_()->MemAdvise(
                 const_cast<void*>(fftsPlusTaskInfo->descBuf), fftsPlusTask->descBufLen, ADVISE_SNAPSHOT_REQUIRED,
                 devId);

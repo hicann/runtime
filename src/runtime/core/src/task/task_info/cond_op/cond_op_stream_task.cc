@@ -523,7 +523,7 @@ rtError_t StreamLabelSwitchByIndexTaskInit(
     taskInfo->u.stmLabelSwitchIdxTask.max = maxIndex;
     taskInfo->u.stmLabelSwitchIdxTask.funCallMemSize = 0UL;
     const uint32_t devId = taskInfo->stream->Device_()->Id_();
-    if ((idPtr != nullptr) && NpuDriver::CheckIsSupportFeature(devId, FEATURE_SVM_PROCESS_DEVICE_MEM_SNAPSHOT)) {
+    if ((idPtr != nullptr) && taskInfo->stream->Device_()->IsProcessDeviceMemSnapshotAdviseSupported()) {
         const rtError_t error =
             taskInfo->stream->Device_()->Driver_()->MemAdvise(idPtr, sizeof(uint64_t), ADVISE_SNAPSHOT_REQUIRED, devId);
         ERROR_RETURN(error, "Snapshot advise label switch by index ptr failed, retCode=%#x.", error);

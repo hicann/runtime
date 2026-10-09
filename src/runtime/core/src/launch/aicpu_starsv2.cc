@@ -10,6 +10,7 @@
 #include "aicpu_c.hpp"
 #include "davinci_kernel_task.h"
 #include "stream_c.hpp"
+#include "runtime.hpp"
 #include "task_david.hpp"
 #include "error_message_manage.hpp"
 #include "thread_local_container.hpp"
@@ -67,8 +68,7 @@ static rtError_t StreamLaunchKernelExForAicpuStream(
     RT_LOG(RT_LOG_INFO, "kernelFlag=0x%x, blkdim=%u.", aicpuTask->comm.kernelFlag, aicpuTask->comm.dim);
     SetAicpuArgs(kernelTask, args, argsSize, nullptr);
     const uint32_t devId = stm->Device_()->Id_();
-    if ((args != nullptr) && (argsSize != 0U) &&
-        NpuDriver::CheckIsSupportFeature(devId, FEATURE_SVM_PROCESS_DEVICE_MEM_SNAPSHOT)) {
+    if ((args != nullptr) && (argsSize != 0U) && stm->Device_()->IsProcessDeviceMemSnapshotAdviseSupported()) {
         const rtError_t ret = stm->Device_()->Driver_()->MemAdvise(
             const_cast<void*>(kernelTask->u.aicpuTaskInfo.comm.args), kernelTask->u.aicpuTaskInfo.comm.argsSize,
             ADVISE_SNAPSHOT_REQUIRED, devId);
@@ -115,8 +115,7 @@ rtError_t StreamLaunchKernelEx(const void* const args, const uint32_t argsSize, 
         kernelTask->u.aicpuTaskInfo.comm.dim);
     SetAicpuArgs(kernelTask, args, argsSize, nullptr);
     const uint32_t devId = dstStm->Device_()->Id_();
-    if ((args != nullptr) && (argsSize != 0U) &&
-        NpuDriver::CheckIsSupportFeature(devId, FEATURE_SVM_PROCESS_DEVICE_MEM_SNAPSHOT)) {
+    if ((args != nullptr) && (argsSize != 0U) && dstStm->Device_()->IsProcessDeviceMemSnapshotAdviseSupported()) {
         error = dstStm->Device_()->Driver_()->MemAdvise(
             const_cast<void*>(kernelTask->u.aicpuTaskInfo.comm.args), kernelTask->u.aicpuTaskInfo.comm.argsSize,
             ADVISE_SNAPSHOT_REQUIRED, devId);

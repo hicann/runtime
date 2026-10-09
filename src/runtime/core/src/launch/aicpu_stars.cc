@@ -166,8 +166,7 @@ rtError_t StreamLaunchKernelEx(const void* const args, const uint32_t argsSize, 
 
     SetAicpuArgs(kernelTask, args, argsSize, nullptr);
     const uint32_t devId = stm->Device_()->Id_();
-    if ((args != nullptr) && (argsSize != 0U) &&
-        NpuDriver::CheckIsSupportFeature(devId, FEATURE_SVM_PROCESS_DEVICE_MEM_SNAPSHOT)) {
+    if ((args != nullptr) && (argsSize != 0U) && stm->Device_()->IsProcessDeviceMemSnapshotAdviseSupported()) {
         error = stm->Device_()->Driver_()->MemAdvise(
             const_cast<void*>(kernelTask->u.aicpuTaskInfo.comm.args), kernelTask->u.aicpuTaskInfo.comm.argsSize,
             ADVISE_SNAPSHOT_REQUIRED, devId);
