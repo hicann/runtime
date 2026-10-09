@@ -359,9 +359,11 @@ TEST_F(CloudV2ELFTest, ELF_CONVERT_TASK_RATION_ERROR)
     rtElfData* elfData;
     RtKernel* kernels;
 
-    elfData = new rtElfData;
+    elfData = new rtElfData{};
+    elfData->obj_size = sizeof(static_kernel_data);
     MOCKER(ConvertTaskRation).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
     kernels = ProcessObject((char_t*)static_kernel_data, elfData);
+    EXPECT_EQ(elfData->kernel_num, 1);
 
     if (NULL != elfData->section_headers) {
         delete[] elfData->section_headers;

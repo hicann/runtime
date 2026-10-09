@@ -1142,6 +1142,34 @@ TEST_F(ELFTest, UpdateKernelsInfo_Success)
     delete kernelInfo;
 }
 
+TEST_F(ELFTest, ParseElfBinaryMetaInfo_IcachePreloadFlag)
+{
+    rtElfData elfData = {};
+    RtKernel* kernels = ProcessObject((char_t*)elf_o, &elfData);
+
+    ElfBinaryMetaIcachePreloadFlag preloadInfo = {};
+    preloadInfo.head.type = RT_BINARY_TYPE_ICACHE_PRELOAD_FLAG;
+    preloadInfo.head.length = sizeof(uint16_t) * 2U;
+    preloadInfo.icachePreloadFlag = 1U;
+    ParseElfBinaryMetaInfo(
+        &elfData, reinterpret_cast<const uint8_t*>(&preloadInfo), sizeof(preloadInfo), ".ascend.meta");
+    EXPECT_EQ(elfData.icachePreloadFlag, 1U);
+
+    preloadInfo.icachePreloadFlag = 0U;
+    elfData.icachePreloadFlag = 0U;
+    ParseElfBinaryMetaInfo(
+        &elfData, reinterpret_cast<const uint8_t*>(&preloadInfo), sizeof(preloadInfo), ".ascend.meta");
+    EXPECT_EQ(elfData.icachePreloadFlag, 0U);
+
+    if (kernels != nullptr) {
+        for (uint32_t i = 0U; i < elfData.kernel_num; ++i) {
+            delete[] kernels[i].name;
+        }
+    }
+    delete[] kernels;
+    delete[] elfData.section_headers;
+}
+
 TEST_F(ELFTest, ElfParseParamSummary_Success)
 {
     rtElfData* elfData = new rtElfData;

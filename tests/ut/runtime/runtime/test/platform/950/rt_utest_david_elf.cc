@@ -620,7 +620,8 @@ TEST_F(ELFTest, ELF_CONVERT_TASK_RATION_ERROR)
     rtChipType_t chipType = rtInstance->GetChipType();
     rtInstance->SetChipType(CHIP_DAVID);
 
-    elfData = new rtElfData;
+    elfData = new rtElfData{};
+    elfData->obj_size = sizeof(static_kernel_data);
     MOCKER(ConvertTaskRation).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
     kernels = ProcessObject((char_t*)static_kernel_data, elfData);
     EXPECT_EQ(elfData->kernel_num, 1);

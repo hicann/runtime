@@ -226,6 +226,13 @@ public:
     const std::string& GetKernelNamesBuffer() const;
     virtual uint32_t SymbolOffset(const void* const symbol, uint32_t& length) = 0;
     virtual uint32_t LoadSize() = 0;
+    virtual uint32_t GetPrefetchIncreaseSize(const Device* const dev) const
+    {
+        if (dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_SIMT)) {
+            return PREFETCH_INCREASE_SIZE;
+        }
+        return 0U;
+    }
     virtual bool IsReadOnly() = 0;
     virtual rtError_t LoadExtract(void* output, uint32_t size) = 0;
     virtual void* Data() = 0;
@@ -365,6 +372,13 @@ public:
     ~ElfProgram() override;
     uint32_t SymbolOffset(const void* const symbol, uint32_t& length) override;
     uint32_t LoadSize() override;
+    uint32_t GetPrefetchIncreaseSize(const Device* const dev) const override
+    {
+        if ((elfData_ != nullptr) && (elfData_->icachePreloadFlag == 1U)) {
+            return PREFETCH_INCREASE_SIZE_32K;
+        }
+        return Program::GetPrefetchIncreaseSize(dev);
+    }
     bool IsReadOnly() override;
     rtError_t LoadExtract(void* const output, const uint32_t size) override;
     void* Data() override;

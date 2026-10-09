@@ -962,7 +962,7 @@ void PrintErrorInfoForDavinciTask(TaskInfo* taskInfo, const uint32_t devId)
                 kernelInfoExt.c_str());
             return;
         }
-        const auto error = modulePtr->CalModuleHash(hashKeyNum);
+        const auto error = modulePtr->CalModuleHash(hashKeyNum, programPtr);
         const std::string hashInfo = (error != RT_ERROR_NONE) ? "(no result)" : (std::to_string(hashKeyNum).c_str());
         STREAM_REPORT_ERR_MSG(
             reportStream, ERR_MODULE_TBE,

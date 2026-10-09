@@ -23,6 +23,7 @@
 #include "runtime_handle_guard.h"
 
 #define PREFETCH_INCREASE_SIZE (1280U) // 1280byte
+#define PREFETCH_INCREASE_SIZE_32K (32U * 1024U)
 namespace cce {
 namespace runtime {
 constexpr uint32_t KERNEL_ARRAY_SIZE_PER_ALLOC = 2048U;
