@@ -2331,7 +2331,7 @@ rtError_t ApiErrorDecorator::MemcpyAsyncPtr(
                 ERR_MODULE_GE, error != RT_ERROR_NONE, error,
                 "Memory async ptr failed, get pointer attributes failed, retCode=%#x", static_cast<uint32_t>(error));
             const rtMemLocationType srcLocationType = attributes.location.type;
-            COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+            COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
                 srcLocationType != RT_MEMORY_LOC_DEVICE, RT_ERROR_INVALID_VALUE,
                 "Performing asynchronous memory copy using the address description on the device",
                 MemLocationTypeToString(srcLocationType), "srcLocationType",
