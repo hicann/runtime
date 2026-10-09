@@ -21,3 +21,4 @@
 - [14_reusable_data_buffer](./14_reusable_data_buffer/README.md)：演示为不同有效长度的数据复用同一个 DataBuffer，并校验地址、大小和内容。
 - [15_batch_tensor_round_trip](./15_batch_tensor_round_trip/README.md)：演示同一组小张量在四种批量复制模式下完成 Host/Device 往返传输并逐项校验。
 - [16_guarded_result_slice](./16_guarded_result_slice/README.md)：演示通过间接基地址和偏移异步更新结果表切片，并校验前后哨兵区。
+- [17_configured_allocation](./17_configured_allocation/README.md)：演示按应用模块配置分配缓冲区，识别内存后完成单 Device 往返传输、同步释放与数据校验。
