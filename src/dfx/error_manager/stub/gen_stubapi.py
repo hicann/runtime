@@ -460,8 +460,8 @@ class H2CC(object):
             template_string = re.sub(r'\s*=.*,', ',', template_string)
             template_string = re.sub(r'\s*=.*', '', template_string)
         if self.stack_template[-1] != '':
-            if not (re.search(r'<\s*>', stack_template[-1])):
-                template_line = re.sub(r'^\s*template', 'template', stack_template[-1])
+            if not (re.search(r'<\s*>', self.stack_template[-1])):
+                template_line = re.sub(r'^\s*template', 'template', self.stack_template[-1])
                 if not (re.search(r'<.*>', self.stack_class[-1])):
                     # for x we get like template<class T, typename U> -> <T,U>
                     x = re.sub(r'template\s*<', '<', template_line)  # remove template -> <class T, typename U>
