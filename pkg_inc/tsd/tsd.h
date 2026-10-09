@@ -351,7 +351,7 @@ int32_t SendUpdateProfilingRspToTsd(
  * @param [in] waitType : process type
  * @param [in] hostPid :  host pid
  * @param [in] vfId : vf id
- * @param [in] vfId : vf id
+ * @param [in] scheInfo : sub-process schedule mode info
  * @return TSD_OK: success, other: error code
  */
 int32_t SetSubProcScheduleMode(

@@ -532,8 +532,8 @@ typedef void* rtCntNotify_t;
 /**
  * @ingroup dvrt_base
  * @brief get current thread last stream id and task id
- * @param [out] stm id and task id
- * @param [in] null
+ * @param [out] taskId task id
+ * @param [out] streamId stream id
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for input null ptr
  */

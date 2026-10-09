@@ -140,7 +140,6 @@ RTS_API rtError_t rtGetDevResAddress(rtDevResInfo* const resInfo, rtDevResAddrIn
  * @ingroup
  * @brief unmap resource va address
  * @param [in] resInfo resource info
- * @param [out] resAddress resource address
  * @return RT_ERROR_NONE for ok, errno for failed
  * @return RT_ERROR_INVALID_VALUE for error input
  */

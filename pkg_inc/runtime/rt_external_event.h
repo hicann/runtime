@@ -53,8 +53,7 @@ typedef struct tagNotifyPhyInfo {
  * @ingroup dvrt_event
  * @brief Get notify phy and pod info
  * @param [in] notify the created/opened notify
- * @param [out] phyDevId phy device id
- * @param [out] tsId ts id
+ * @param [out] notifyInfo notify phy info
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
  */

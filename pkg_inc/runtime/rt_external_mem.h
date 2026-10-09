@@ -265,9 +265,9 @@ RTS_API rtError_t rtBuffFree(void* buff);
 /**
  * @ingroup rt_mem_queue
  * @brief alloc buff
- * @param [out] mbufPtr: buff addr alloced
  * @param [in]  buff: The buff must be the shared memory pointer applied by calling halBuffAlloc and halBuffAllocByPool
  * @param [in]  size: The amount of memory space requested
+ * @param [out] mbufPtr: buff addr alloced
  * @return RT_ERROR_NONE for ok
  */
 RTS_API rtError_t rtMbufBuild(void* buff, const uint64_t size, rtMbufPtr_t* mbufPtr);
@@ -286,8 +286,7 @@ RTS_API rtError_t rtMbufUnBuild(const rtMbufPtr_t mbufPtr, void** buff, uint64_t
  * @ingroup rt_mem_queue
  * @brief put mbuffer
  * @param [in] mbufPtr: buff addr alloced
- * @param [out]  buff: The buffer of mbuPtr
- * @param [out]  size: The amount of memory space of buffer
+ * @param [in]  buff: The buffer of mbuPtr
  * @return RT_ERROR_NONE for ok
  */
 RTS_API rtError_t rtBuffPut(const rtMbufPtr_t mbufPtr, void* buff);
@@ -954,8 +953,8 @@ RTS_API rtError_t rtMemQueueDestroy(int32_t devId, uint32_t qid);
  * @ingroup rt_mem_queue
  * @brief  queue reset
  * @attention null
- * @param [in] qid: qid
  * @param [in] devId: logic devid
+ * @param [in] qid: qid
  * @return 0 for success, others for fail
  **/
 RTS_API rtError_t rtMemQueueReset(int32_t devId, uint32_t qid);

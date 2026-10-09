@@ -57,7 +57,7 @@ ADX_API bool AdumpIsDumpEnable(DumpType dumpType);
  *
  * @attention 无
  * @param  dumpType [IN] dump 类型（operator, exception）
- * @param  dumpType [OUT] dumpSwitch开关
+ * @param  dumpSwitch [OUT] dumpSwitch开关
  * @retval #false dump 开关状态(flag) off
  * @retval #true dump 开关状态(flag) on
  * @see 无

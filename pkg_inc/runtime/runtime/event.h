@@ -277,8 +277,8 @@ RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t
  * @brief get fault event .
  * @param [in] deviceId device id
  * @param [in] filter filter condition:PID
- * @param [in] len output length
  * @param [out] dmsEvent return dms event struct array
+ * @param [in] len output length
  * @param [out] eventCount return event count
  * @return RT_ERROR_NONE for ok
  * @return RT_ERROR_INVALID_VALUE for error input
