@@ -480,17 +480,13 @@ void AdxServerManager::RunProcessTask(ProcessTask& task)
         this->processCv_.notify_all();
     });
 
-    std::unique_ptr<CommHandle, decltype(&IdeXfree)> handleGuard(task.handle, IdeXfree);
-
     const std::shared_ptr<AdxComponent> component = GetComponent(task.comp);
-    bool processSuccess = false;
     if (component != nullptr && task.handle != nullptr) {
         const std::string compInfo = component->GetInfo();
         IDE_LOGI("begin to process [%s] component", compInfo.c_str());
         if (component->Process(*task.handle, task.msgPtr) != IDE_DAEMON_OK) {
             IDE_LOGE("end of processing [%s] component failed, req->type: %u", compInfo.c_str(), task.msgPtr->reqType);
         } else {
-            processSuccess = true;
             IDE_LOGI("end of processing [%s] component successfully", compInfo.c_str());
         }
     }
@@ -499,14 +495,12 @@ void AdxServerManager::RunProcessTask(ProcessTask& task)
         (task.comp == ComponentType::COMPONENT_LOG_BACKHAUL) || (task.comp == ComponentType::COMPONENT_TRACE) ||
         (task.comp == ComponentType::COMPONENT_SYS_REPORT) || (task.comp == ComponentType::COMPONENT_FILE_REPORT) ||
         (task.comp == ComponentType::COMPONENT_CPU_DETECT);
-    if (!persistentComponent || !processSuccess) {
+    if (component == nullptr || !persistentComponent) {
         if (task.handle != nullptr) {
             (void)AdxCommOptManager::Instance().Close(*task.handle);
             task.handle->session = ADX_OPT_INVALID_HANDLE;
+            IDE_XFREE_AND_SET_NULL(task.handle);
         }
-    } else {
-        // Persistent components retain the handle through their session store.
-        (void)handleGuard.release();
     }
     task.handle = nullptr;
     if (task.linkAcquired) {
