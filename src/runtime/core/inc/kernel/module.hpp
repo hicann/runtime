@@ -33,7 +33,7 @@ public:
     rtError_t GetPrefetchCnt(const Kernel* const kernelIn, uint32_t& icachePrefetchCnt) const;
     rtError_t GetPrefetchCnt(
         const Kernel* const kernelIn, uint32_t& icachePrefetchCnt1, uint32_t& icachePrefetchCnt2) const;
-    rtError_t CalModuleHash(std::size_t& hash) const;
+    rtError_t CalModuleHash(std::size_t& hash, Program* const prog) const;
     rtError_t GetTaskRation(const Kernel* const kernelIn, uint32_t& taskRation) const;
 
     Program* GetProgram() const;

@@ -138,9 +138,7 @@ rtError_t Module::Load(Program* const prog)
 
     {
         TIMESTAMP_BEGIN(ModuleMemAlloc);
-        const uint32_t devSize = device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_SIMT) ?
-                                     (size + PREFETCH_INCREASE_SIZE) :
-                                     size;
+        const uint32_t devSize = size + prog->GetPrefetchIncreaseSize(device_);
         if (IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_MEM_POOL_ALIGN)) {
             alignSize = (devSize + POOL_ALIGN_SIZE) & (~POOL_ALIGN_SIZE);
             devMem = device_->GetKernelMemoryPool()->Allocate(alignSize, readonly);
@@ -227,15 +225,15 @@ Program* Module::GetProgram() const
     return nullptr;
 }
 
-rtError_t Module::CalModuleHash(std::size_t& hash) const
+rtError_t Module::CalModuleHash(std::size_t& hash, Program* const prog) const
 {
     void* hostMem = nullptr;
-    const bool suppSimt = device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_SIMT);
+    uint32_t prefetchIncreaseSize = prog->GetPrefetchIncreaseSize(device_);
     COND_RETURN_ERROR(
-        (baseAddrAlign_ == nullptr) || (baseAddrSize_ == 0U) || (suppSimt && (baseAddrSize_ <= PREFETCH_INCREASE_SIZE)),
-        RT_ERROR_INVALID_VALUE, "Cal module hash failed, support simt=%d, address size=%u(bytes)", suppSimt,
-        baseAddrSize_);
-    const uint32_t dataSize = suppSimt ? (baseAddrSize_ - PREFETCH_INCREASE_SIZE) : baseAddrSize_;
+        (baseAddrAlign_ == nullptr) || (baseAddrSize_ == 0U) || (baseAddrSize_ <= prefetchIncreaseSize),
+        RT_ERROR_INVALID_VALUE, "Cal module hash failed, address size=%u(bytes), prefetch increase size=%u(bytes)",
+        baseAddrSize_, prefetchIncreaseSize);
+    const uint32_t dataSize = baseAddrSize_ - prefetchIncreaseSize;
     Driver* const deviceDrv = device_->Driver_();
     rtError_t error = deviceDrv->HostMemAlloc(&hostMem, static_cast<uint64_t>(dataSize) + 1ULL, device_->Id_());
 

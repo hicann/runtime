@@ -4967,9 +4967,7 @@ rtError_t Runtime::BinaryLoad(const Device* const device, Program* const prog)
     }
 
     TIMESTAMP_BEGIN(rtBinaryLoad_DevMemAlloc);
-    const uint32_t devSize = device->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_SIMT) ?
-                                 (size + PREFETCH_INCREASE_SIZE) :
-                                 size;
+    const uint32_t devSize = size + prog->GetPrefetchIncreaseSize(device);
     if (device->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_KERNEL_MEMORY_POOL)) {
         alignSize = (devSize + POOL_ALIGN_SIZE) & (~POOL_ALIGN_SIZE);
         devMem = device->GetKernelMemoryPool()->Allocate(static_cast<size_t>(alignSize), readonly);
@@ -5186,9 +5184,7 @@ rtError_t Runtime::BinaryUnLoad(const Device* const device, Program* const prog)
     TIMESTAMP_BEGIN(rtBinaryUnLoad_DevMemRelease);
     rtError_t ret = RT_ERROR_NONE;
     if (prog->GetBinBaseAddr(device->Id_()) != nullptr) {
-        const uint32_t devSize = device->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_SIMT) ?
-                                     (prog->LoadSize() + PREFETCH_INCREASE_SIZE) :
-                                     prog->LoadSize();
+        const uint32_t devSize = prog->LoadSize() + prog->GetPrefetchIncreaseSize(device);
         const uint32_t alignSize = (devSize + POOL_ALIGN_SIZE) & (~POOL_ALIGN_SIZE);
         // 使用 TryRelease 原子化 Contains + Release，消除 TOCTOU 竞争
         if ((device->GetKernelMemoryPool() != nullptr) &&

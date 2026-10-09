@@ -586,6 +586,16 @@ static void ElfParseBinaryTlvInfo(rtElfData* const elfData, uint16_t tlvType, co
             type = addrInfo->type;
             SetMetaFlag(elfData, type);
             break;
+        case RT_BINARY_TYPE_ICACHE_PRELOAD_FLAG: {
+            const ElfBinaryMetaIcachePreloadFlag* flagInfo = RtPtrToPtr<const ElfBinaryMetaIcachePreloadFlag*>(buf);
+            const uint16_t preloadFlag = static_cast<uint16_t>(GetByte(
+                RtPtrToPtr<const uint8_t*>(&(flagInfo->icachePreloadFlag)), sizeof(flagInfo->icachePreloadFlag)));
+            if (preloadFlag == 1U) {
+                elfData->icachePreloadFlag = 1U;
+            }
+            RT_LOG(RT_LOG_DEBUG, "Set icache preload flag=%u", preloadFlag);
+            break;
+        }
         default:
             break;
     }

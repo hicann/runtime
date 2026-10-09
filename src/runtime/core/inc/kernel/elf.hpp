@@ -190,6 +190,12 @@ struct ElfBinaryAddrInfo {
     uint32_t type;
 };
 
+struct ElfBinaryMetaIcachePreloadFlag {
+    ElfTlvHead head;
+    uint16_t icachePreloadFlag; // 0: no preload, 1: preload
+    uint16_t reserved;
+};
+
 struct ElfKernelSchedModeInfo {
     ElfTlvHead head;
     uint32_t schedMode;
@@ -394,7 +400,8 @@ struct rtElfData {
     const char_t* so_name;
     uint64_t stackSize;
     bool dataFlag = false;
-    uint32_t ascendMetaFlag = 0;
+    uint32_t ascendMetaFlag = 0U;
+    uint32_t icachePreloadFlag = 0U;
     rtElfSymbolAddr symbolAddr;
     std::map<std::string, std::pair<uint64_t, uint64_t>> globalSymbolMap; // name -> (st_value, st_size)
 };
