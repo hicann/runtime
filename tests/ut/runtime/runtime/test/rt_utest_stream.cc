@@ -2241,6 +2241,197 @@ TEST_F(StreamTest, GetLastFinishTaskId_err)
     delete device;
 }
 
+namespace {
+void CheckTimelineInitializationRetry(const bool translateFailure, const bool cleanupFailure)
+{
+    constexpr uint64_t expectedBase = 0x12345000ULL;
+    uint64_t translatedBase = expectedBase;
+    std::array<uint64_t, 512U> buffer{};
+    void* bufferAddr = buffer.data();
+    Device* const device = Runtime::Instance()->CurrentContext()->Device_();
+    auto* const driver = static_cast<NpuDriver*>(device->Driver_());
+    Stream stream(device, 0U);
+
+    MOCKER_CPP_VIRTUAL(driver, &NpuDriver::DevMemAllocWithBackupFlag)
+        .expects(exactly(2))
+        .with(outBoundP(&bufferAddr), mockcpp::eq(sizeof(buffer)))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &NpuDriver::MemSetSync)
+        .expects(exactly(2))
+        .with(
+            mockcpp::eq(static_cast<const void*>(bufferAddr)), mockcpp::eq(sizeof(buffer)), mockcpp::eq(0xFFU),
+            mockcpp::eq(sizeof(buffer)))
+        .will(returnValue(translateFailure ? RT_ERROR_NONE : RT_ERROR_DRV_ERR))
+        .then(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &NpuDriver::MemAddressTranslate)
+        .expects(exactly(translateFailure ? 2 : 1))
+        .with(mockcpp::any(), mockcpp::any(), outBoundP(&translatedBase))
+        .will(returnValue(translateFailure ? RT_ERROR_DRV_ERR : RT_ERROR_NONE))
+        .then(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &NpuDriver::DevMemFree)
+        .expects(exactly(2))
+        .with(mockcpp::eq(bufferAddr), mockcpp::eq(device->Id_()))
+        .will(returnValue(cleanupFailure ? RT_ERROR_DRV_MEMORY : RT_ERROR_NONE))
+        .then(returnValue(RT_ERROR_NONE));
+
+    uint64_t base = UINT64_MAX;
+    uint32_t offset = UINT32_MAX;
+    EXPECT_EQ(stream.AcquireTimeline(base, offset), RT_ERROR_DRV_ERR);
+    EXPECT_EQ(base, UINT64_MAX);
+    EXPECT_EQ(offset, UINT32_MAX);
+    EXPECT_EQ(stream.timelineBase_, 0U);
+    EXPECT_TRUE(stream.timelineOffset_.empty());
+    EXPECT_EQ(stream.timelineAddr_, nullptr);
+
+    EXPECT_EQ(stream.AcquireTimeline(base, offset), RT_ERROR_NONE);
+    EXPECT_EQ(base, expectedBase);
+    EXPECT_EQ(offset, 0U);
+    EXPECT_EQ(stream.AcquireTimeline(base, offset), RT_ERROR_NONE);
+    EXPECT_EQ(base, expectedBase);
+    EXPECT_EQ(offset, 1U);
+    EXPECT_EQ(stream.ReleaseTimeline(base, 0U), RT_ERROR_NONE);
+    EXPECT_EQ(stream.AcquireTimeline(base, offset), RT_ERROR_NONE);
+    EXPECT_EQ(offset, 0U);
+}
+} // namespace
+
+TEST_F(StreamTest, AcquireTimeline_MemsetFailureRetry) { CheckTimelineInitializationRetry(false, false); }
+
+TEST_F(StreamTest, AcquireTimeline_TranslateFailureRetry) { CheckTimelineInitializationRetry(true, false); }
+
+TEST_F(StreamTest, AcquireTimeline_MemsetAndCleanupFailureRetry) { CheckTimelineInitializationRetry(false, true); }
+
+TEST_F(StreamTest, AcquireTimeline_TranslateAndCleanupFailureRetry) { CheckTimelineInitializationRetry(true, true); }
+
+TEST_F(StreamTest, AcquireTimeline_AllocationFailureRetry)
+{
+    constexpr uint64_t expectedBase = 0x12345000ULL;
+    uint64_t translatedBase = expectedBase;
+    std::array<uint64_t, 512U> buffer{};
+    void* bufferAddr = buffer.data();
+    Device* const device = Runtime::Instance()->CurrentContext()->Device_();
+    auto* const driver = static_cast<NpuDriver*>(device->Driver_());
+    Stream stream(device, 0U);
+    void* nullAddr = nullptr;
+    MOCKER_CPP_VIRTUAL(driver, &NpuDriver::DevMemAllocWithBackupFlag)
+        .expects(once())
+        .with(outBoundP(&nullAddr))
+        .will(returnValue(RT_ERROR_DRV_MEMORY));
+
+    uint64_t base = UINT64_MAX;
+    uint32_t offset = UINT32_MAX;
+    EXPECT_EQ(stream.AcquireTimeline(base, offset), RT_ERROR_DRV_MEMORY);
+    EXPECT_EQ(base, UINT64_MAX);
+    EXPECT_EQ(offset, UINT32_MAX);
+    EXPECT_EQ(stream.timelineAddr_, nullptr);
+    EXPECT_TRUE(stream.timelineOffset_.empty());
+    GlobalMockObject::verify();
+    GlobalMockObject::reset();
+
+    MOCKER_CPP_VIRTUAL(driver, &NpuDriver::DevMemAllocWithBackupFlag)
+        .expects(once())
+        .with(outBoundP(&bufferAddr))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &NpuDriver::MemSetSync).expects(once()).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &NpuDriver::MemAddressTranslate)
+        .expects(once())
+        .with(mockcpp::any(), mockcpp::any(), outBoundP(&translatedBase))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &NpuDriver::DevMemFree)
+        .expects(once())
+        .with(mockcpp::eq(bufferAddr))
+        .will(returnValue(RT_ERROR_NONE));
+    EXPECT_EQ(stream.AcquireTimeline(base, offset), RT_ERROR_NONE);
+    EXPECT_EQ(base, expectedBase);
+    EXPECT_EQ(offset, 0U);
+    for (uint32_t i = 1U; i < buffer.size(); ++i) {
+        EXPECT_EQ(stream.AcquireTimeline(base, offset), RT_ERROR_NONE);
+        EXPECT_EQ(base, expectedBase);
+        EXPECT_EQ(offset, i);
+    }
+    EXPECT_EQ(stream.AcquireTimeline(base, offset), RT_ERROR_DEVICE_LIMIT);
+}
+
+TEST_F(StreamTest, AcquireTimeline_AllocationFailureDoesNotRetainOutput)
+{
+    constexpr uint64_t expectedBase = 0x12345000ULL;
+    uint64_t translatedBase = expectedBase;
+    std::array<uint64_t, 512U> buffer{};
+    void* bufferAddr = buffer.data();
+    Device* const device = Runtime::Instance()->CurrentContext()->Device_();
+    auto* const driver = static_cast<NpuDriver*>(device->Driver_());
+    Stream stream(device, 0U);
+    MOCKER_CPP_VIRTUAL(driver, &NpuDriver::DevMemAllocWithBackupFlag)
+        .expects(exactly(2))
+        .with(outBoundP(&bufferAddr))
+        .will(returnValue(RT_ERROR_DRV_MEMORY))
+        .then(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &NpuDriver::MemSetSync).expects(once()).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &NpuDriver::MemAddressTranslate)
+        .expects(once())
+        .with(mockcpp::any(), mockcpp::any(), outBoundP(&translatedBase))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &NpuDriver::DevMemFree)
+        .expects(once())
+        .with(mockcpp::eq(bufferAddr))
+        .will(returnValue(RT_ERROR_NONE));
+
+    uint64_t base = UINT64_MAX;
+    uint32_t offset = UINT32_MAX;
+    EXPECT_EQ(stream.AcquireTimeline(base, offset), RT_ERROR_DRV_MEMORY);
+    EXPECT_EQ(stream.timelineAddr_, nullptr);
+    EXPECT_EQ(base, UINT64_MAX);
+    EXPECT_EQ(offset, UINT32_MAX);
+    EXPECT_TRUE(stream.timelineOffset_.empty());
+    EXPECT_EQ(stream.AcquireTimeline(base, offset), RT_ERROR_NONE);
+    EXPECT_EQ(base, expectedBase);
+    EXPECT_EQ(offset, 0U);
+}
+
+TEST_F(StreamTest, AcquireTimeline_RepeatedSetupAndCleanupFailures)
+{
+    constexpr uint64_t expectedBase = 0x12345000ULL;
+    uint64_t translatedBase = expectedBase;
+    std::array<uint64_t, 512U> buffer{};
+    void* bufferAddr = buffer.data();
+    Device* const device = Runtime::Instance()->CurrentContext()->Device_();
+    auto* const driver = static_cast<NpuDriver*>(device->Driver_());
+    Stream stream(device, 0U);
+    MOCKER_CPP_VIRTUAL(driver, &NpuDriver::DevMemAllocWithBackupFlag)
+        .expects(exactly(3))
+        .with(outBoundP(&bufferAddr))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &NpuDriver::MemSetSync)
+        .expects(exactly(3))
+        .will(returnValue(RT_ERROR_DRV_ERR))
+        .then(returnValue(RT_ERROR_DRV_ERR))
+        .then(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &NpuDriver::MemAddressTranslate)
+        .expects(once())
+        .with(mockcpp::any(), mockcpp::any(), outBoundP(&translatedBase))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &NpuDriver::DevMemFree)
+        .expects(exactly(3))
+        .with(mockcpp::eq(bufferAddr))
+        .will(returnValue(RT_ERROR_DRV_MEMORY))
+        .then(returnValue(RT_ERROR_DRV_MEMORY))
+        .then(returnValue(RT_ERROR_NONE));
+
+    uint64_t base = UINT64_MAX;
+    uint32_t offset = UINT32_MAX;
+    for (uint32_t i = 0U; i < 2U; ++i) {
+        EXPECT_EQ(stream.AcquireTimeline(base, offset), RT_ERROR_DRV_ERR);
+        EXPECT_EQ(base, UINT64_MAX);
+        EXPECT_EQ(offset, UINT32_MAX);
+        EXPECT_EQ(stream.timelineAddr_, nullptr);
+        EXPECT_EQ(stream.timelineBase_, 0U);
+        EXPECT_TRUE(stream.timelineOffset_.empty());
+    }
+    EXPECT_EQ(stream.AcquireTimeline(base, offset), RT_ERROR_NONE);
+    EXPECT_EQ(base, expectedBase);
+    EXPECT_EQ(offset, 0U);
+}
+
 TEST_F(StreamTest, IsStreamFull_True)
 {
     RawDevice* device = new RawDevice(0);

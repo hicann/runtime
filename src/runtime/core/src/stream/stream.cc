@@ -2695,9 +2695,15 @@ rtError_t Stream::AcquireTimeline(uint64_t& base, uint32_t& offset)
         rtError_t error = devDrv->DevMemAllocWithBackupFlag(
             RtPtrToPtr<void**>(&timelineAddr_), maxTimelineSize, memType, device_->Id_(),
             DevMemBackupType::SNAPSHOT_OPTIONAL_BACKUP);
-        ERROR_RETURN(
-            error, "Malloc timeline buffer failed, type=%u, error=%#x", static_cast<uint32_t>(memType),
-            static_cast<uint32_t>(error));
+        COND_PROC_RETURN_ERROR(
+            error != RT_ERROR_NONE, error, timelineAddr_ = nullptr, "Malloc timeline buffer failed, type=%u, error=%#x",
+            static_cast<uint32_t>(memType), static_cast<uint32_t>(error));
+
+        ScopeGuard timelineGuard([this, devDrv]() {
+            (void)devDrv->DevMemFree(timelineAddr_, device_->Id_());
+            timelineAddr_ = nullptr;
+            timelineBase_ = 0U;
+        });
 
         error = devDrv->MemSetSync(timelineAddr_, maxTimelineSize, 0xFFU, maxTimelineSize);
         ERROR_RETURN(
@@ -2708,6 +2714,7 @@ rtError_t Stream::AcquireTimeline(uint64_t& base, uint32_t& offset)
             static_cast<int32_t>(device_->Id_()), RtPtrToValue(timelineAddr_), &timelineBase_);
         ERROR_RETURN(error, "Convert address to physical failed! error=%#x.", static_cast<uint32_t>(error));
         RT_LOG(RT_LOG_DEBUG, "stream_id=%d, base=%#" PRIx64 "", streamId_, timelineBase_);
+        timelineGuard.ReleaseGuard();
     }
 
     for (uint32_t i = 0U; i < maxTimelineNum; ++i) {
