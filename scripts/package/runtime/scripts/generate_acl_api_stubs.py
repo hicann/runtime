@@ -27,6 +27,7 @@ REAL_PROVIDER_COUNT_MACRO = "ACL_API_REAL_PROVIDER_COUNT"
 PRODUCT_STUB_MACRO = "ACL_API_STUB"
 SUPPORTED_POLICIES = {
     "ACL_FEATURE_UNSUPPORTED",
+    "INVALID_EXCEPTION_INFO",
     "NULLPTR",
     "RT_FEATURE_NOT_SUPPORT",
     "VOID_NOOP",
@@ -150,6 +151,9 @@ def validate_policy(entry: AclApiEntry) -> None:
     if entry.policy in {"RT_FEATURE_NOT_SUPPORT", "ACL_FEATURE_UNSUPPORTED"}:
         if entry.return_type != "aclError":
             raise ValueError(f"{entry.public_name}: {entry.policy} requires aclError return type")
+    elif entry.policy == "INVALID_EXCEPTION_INFO":
+        if entry.return_type != "uint32_t":
+            raise ValueError(f"{entry.public_name}: INVALID_EXCEPTION_INFO requires uint32_t return type")
     elif entry.policy == "NULLPTR":
         if not is_nullable_type(entry.return_type):
             raise ValueError(f"{entry.public_name}: NULLPTR requires a pointer or nullable handle return type")
@@ -213,6 +217,8 @@ def render_return(policy: str) -> str:
         return "    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;"
     if policy == "ACL_FEATURE_UNSUPPORTED":
         return "    return ACL_ERROR_FEATURE_UNSUPPORTED;"
+    if policy == "INVALID_EXCEPTION_INFO":
+        return "    return static_cast<uint32_t>(ACL_ERROR_INVALID_EXCEPTION_INFO);"
     if policy == "NULLPTR":
         return "    return nullptr;"
     if policy == "ZERO":

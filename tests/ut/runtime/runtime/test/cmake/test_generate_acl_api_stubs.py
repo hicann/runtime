@@ -35,6 +35,7 @@ SPEC.loader.exec_module(GENERATOR)
 WRAPPER = """\
 #define ACL_FUNC_MAP(_) \\
     _(aclError, aclUnsupported, (int32_t value), (value)) \\
+    _(uint32_t, aclInvalidExceptionInfo, (), ()) \\
     _(const char*, aclNull, (), ()) \\
     _(uint32_t, aclZero, (uint32_t value), (value))
 #define ACL_RT_FUNC_MAP(_)
@@ -112,6 +113,7 @@ class GenerateAclApiStubsTest(unittest.TestCase):
         product = self.write_product("""\
 ACL_API_CATALOG_VERSION(1)
 ACL_API_REAL_PROVIDER_COUNT(0)
+ACL_API_STUB(aclInvalidExceptionInfo, INVALID_EXCEPTION_INFO)
 ACL_API_STUB(aclNull, NULLPTR)
 ACL_API_STUB(aclUnsupported, RT_FEATURE_NOT_SUPPORT)
 ACL_API_STUB(aclZero, ZERO)
@@ -120,6 +122,11 @@ ACL_API_STUB(aclZero, ZERO)
 
         self.assertEqual(result.returncode, 0, result.stderr)
         source = (self.root / "generated.cc").read_text(encoding="utf-8")
+        self.assertIn("uint32_t aclInvalidExceptionInfoImpl()", source)
+        self.assertIn(
+            "return static_cast<uint32_t>(ACL_ERROR_INVALID_EXCEPTION_INFO);",
+            source,
+        )
         self.assertIn("const char* aclNullImpl()", source)
         self.assertIn("return nullptr;", source)
         self.assertIn("return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;", source)
@@ -127,10 +134,11 @@ ACL_API_STUB(aclZero, ZERO)
 
         with (self.root / "provider.csv").open(encoding="utf-8", newline="") as report:
             rows = list(csv.DictReader(report))
-        self.assertEqual(len(rows), 3)
+        self.assertEqual(len(rows), 4)
         self.assertEqual(
             {row["acl_api"]: row["provider"] for row in rows},
             {
+                "aclInvalidExceptionInfo": "strong_stub",
                 "aclNull": "strong_stub",
                 "aclUnsupported": "strong_stub",
                 "aclZero": "strong_stub",
@@ -152,9 +160,19 @@ ACL_API_STUB(aclZero, ZERO)
             sum(entry.policy == "RT_FEATURE_NOT_SUPPORT" for entry in entries), 296
         )
         self.assertEqual(sum(entry.policy == "NULLPTR" for entry in entries), 5)
-        self.assertEqual(sum(entry.policy == "ZERO" for entry in entries), 10)
+        self.assertEqual(sum(entry.policy == "INVALID_EXCEPTION_INFO" for entry in entries), 5)
+        self.assertEqual(sum(entry.policy == "ZERO" for entry in entries), 5)
         GENERATOR.validate_real_provider_count(wrapper, entries, real_provider_count)
-        self.assertEqual(dict(product_entries)["aclmdlRIGetTasks"], "RT_FEATURE_NOT_SUPPORT")
+        policies = dict(product_entries)
+        self.assertEqual(policies["aclmdlRIGetTasks"], "RT_FEATURE_NOT_SUPPORT")
+        for name in (
+            "aclrtGetDeviceIdFromExceptionInfo",
+            "aclrtGetErrorCodeFromExceptionInfo",
+            "aclrtGetStreamIdFromExceptionInfo",
+            "aclrtGetTaskIdFromExceptionInfo",
+            "aclrtGetThreadIdFromExceptionInfo",
+        ):
+            self.assertEqual(policies[name], "INVALID_EXCEPTION_INFO")
         unsupported_names = {entry.public_name for entry in entries}
         for name in (
             "aclFloat16ToFloat",
@@ -223,6 +241,17 @@ ACL_API_STUB(aclZero, RT_FEATURE_NOT_SUPPORT)
 
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("requires aclError return type", result.stderr)
+
+    def test_rejects_invalid_exception_info_for_non_uint32_return_type(self):
+        product = self.write_product("""\
+ACL_API_CATALOG_VERSION(1)
+ACL_API_REAL_PROVIDER_COUNT(3)
+ACL_API_STUB(aclNull, INVALID_EXCEPTION_INFO)
+""")
+        result = self.run_generator(product)
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("requires uint32_t return type", result.stderr)
 
     def test_rejects_unknown_policy(self):
         product = self.write_product("""\

@@ -16,9 +16,10 @@
 // Stubs whose return types cannot carry ACL_ERROR_RT_FEATURE_NOT_SUPPORT:
 // NULLPTR: aclCreateDataBuffer, aclGetDataBufferAddr, aclrtAllocatorCreateDesc, aclrtCreateBinary,
 //          aclrtCreateGroupInfo.
-// ZERO: aclDataTypeSize, aclFloat16ToFloat, aclFloatToFloat16, aclGetDataBufferSize,
-//       aclGetDataBufferSizeV2, aclrtGetDeviceIdFromExceptionInfo, aclrtGetErrorCodeFromExceptionInfo,
-//       aclrtGetStreamIdFromExceptionInfo, aclrtGetTaskIdFromExceptionInfo, aclrtGetThreadIdFromExceptionInfo.
+// INVALID_EXCEPTION_INFO: aclrtGetDeviceIdFromExceptionInfo, aclrtGetErrorCodeFromExceptionInfo,
+//                         aclrtGetStreamIdFromExceptionInfo, aclrtGetTaskIdFromExceptionInfo,
+//                         aclrtGetThreadIdFromExceptionInfo.
+// ZERO: aclDataTypeSize, aclFloat16ToFloat, aclFloatToFloat16, aclGetDataBufferSize, aclGetDataBufferSizeV2.
 // ACL wrapper entries not listed below become weak real providers. Keep this count unchanged when adding a new
 // unsupported ACL API. Only change it after arch5162 product support is explicitly confirmed.
 
@@ -145,12 +146,12 @@ ACL_API_STUB(aclrtGetBufFromChain, RT_FEATURE_NOT_SUPPORT)
 ACL_API_STUB(aclrtGetBufUserData, RT_FEATURE_NOT_SUPPORT)
 ACL_API_STUB(aclrtGetDeviceCapability, RT_FEATURE_NOT_SUPPORT)
 ACL_API_STUB(aclrtGetDeviceCount, RT_FEATURE_NOT_SUPPORT)
-ACL_API_STUB(aclrtGetDeviceIdFromExceptionInfo, ZERO)
+ACL_API_STUB(aclrtGetDeviceIdFromExceptionInfo, INVALID_EXCEPTION_INFO)
 ACL_API_STUB(aclrtGetDeviceInfo, RT_FEATURE_NOT_SUPPORT)
 ACL_API_STUB(aclrtGetDeviceResLimit, RT_FEATURE_NOT_SUPPORT)
 ACL_API_STUB(aclrtGetDeviceSatMode, RT_FEATURE_NOT_SUPPORT)
 ACL_API_STUB(aclrtGetDevicesTopo, RT_FEATURE_NOT_SUPPORT)
-ACL_API_STUB(aclrtGetErrorCodeFromExceptionInfo, ZERO)
+ACL_API_STUB(aclrtGetErrorCodeFromExceptionInfo, INVALID_EXCEPTION_INFO)
 ACL_API_STUB(aclrtGetErrorVerbose, RT_FEATURE_NOT_SUPPORT)
 ACL_API_STUB(aclrtGetFloatOverflowStatus, RT_FEATURE_NOT_SUPPORT)
 ACL_API_STUB(aclrtGetFuncBySymbol, RT_FEATURE_NOT_SUPPORT)
@@ -174,14 +175,14 @@ ACL_API_STUB(aclrtGetPhyDevIdByUserDevId, RT_FEATURE_NOT_SUPPORT)
 ACL_API_STUB(aclrtGetResInCurrentThread, RT_FEATURE_NOT_SUPPORT)
 ACL_API_STUB(aclrtGetRunMode, RT_FEATURE_NOT_SUPPORT)
 ACL_API_STUB(aclrtGetStreamAttribute, RT_FEATURE_NOT_SUPPORT)
-ACL_API_STUB(aclrtGetStreamIdFromExceptionInfo, ZERO)
+ACL_API_STUB(aclrtGetStreamIdFromExceptionInfo, INVALID_EXCEPTION_INFO)
 ACL_API_STUB(aclrtGetStreamOverflowSwitch, RT_FEATURE_NOT_SUPPORT)
 ACL_API_STUB(aclrtGetStreamResLimit, RT_FEATURE_NOT_SUPPORT)
 ACL_API_STUB(aclrtGetSymbolAddress, RT_FEATURE_NOT_SUPPORT)
 ACL_API_STUB(aclrtGetSymbolSize, RT_FEATURE_NOT_SUPPORT)
 ACL_API_STUB(aclrtGetSysParamOpt, RT_FEATURE_NOT_SUPPORT)
-ACL_API_STUB(aclrtGetTaskIdFromExceptionInfo, ZERO)
-ACL_API_STUB(aclrtGetThreadIdFromExceptionInfo, ZERO)
+ACL_API_STUB(aclrtGetTaskIdFromExceptionInfo, INVALID_EXCEPTION_INFO)
+ACL_API_STUB(aclrtGetThreadIdFromExceptionInfo, INVALID_EXCEPTION_INFO)
 ACL_API_STUB(aclrtGetThreadLastTaskIdAndStreamId, RT_FEATURE_NOT_SUPPORT)
 ACL_API_STUB(aclrtGetUserDevIdByLogicDevId, RT_FEATURE_NOT_SUPPORT)
 ACL_API_STUB(aclrtGetUserDevIdByPhyDevId, RT_FEATURE_NOT_SUPPORT)

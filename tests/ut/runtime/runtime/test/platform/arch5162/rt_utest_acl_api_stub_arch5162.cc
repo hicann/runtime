@@ -26,6 +26,7 @@ struct AclErrorPolicy {
 
 using RtFeatureNotSupportPolicy = AclErrorPolicy<ACL_ERROR_RT_FEATURE_NOT_SUPPORT>;
 using AclFeatureUnsupportedPolicy = AclErrorPolicy<ACL_ERROR_FEATURE_UNSUPPORTED>;
+using InvalidExceptionInfoPolicy = AclErrorPolicy<ACL_ERROR_INVALID_EXCEPTION_INFO>;
 
 struct NullptrPolicy {
     template <typename ReturnType>
@@ -82,6 +83,7 @@ void VerifyStub(VoidNoopPolicy, void (*impl)(Args...), void (*api)(Args...))
 
 #define ACL_STUB_POLICY_RT_FEATURE_NOT_SUPPORT RtFeatureNotSupportPolicy
 #define ACL_STUB_POLICY_ACL_FEATURE_UNSUPPORTED AclFeatureUnsupportedPolicy
+#define ACL_STUB_POLICY_INVALID_EXCEPTION_INFO InvalidExceptionInfoPolicy
 #define ACL_STUB_POLICY_NULLPTR NullptrPolicy
 #define ACL_STUB_POLICY_ZERO ZeroPolicy
 #define ACL_STUB_POLICY_VOID_NOOP VoidNoopPolicy
@@ -102,5 +104,6 @@ void VerifyStub(VoidNoopPolicy, void (*impl)(Args...), void (*api)(Args...))
 #undef ACL_STUB_POLICY_VOID_NOOP
 #undef ACL_STUB_POLICY_ZERO
 #undef ACL_STUB_POLICY_NULLPTR
+#undef ACL_STUB_POLICY_INVALID_EXCEPTION_INFO
 #undef ACL_STUB_POLICY_ACL_FEATURE_UNSUPPORTED
 #undef ACL_STUB_POLICY_RT_FEATURE_NOT_SUPPORT
