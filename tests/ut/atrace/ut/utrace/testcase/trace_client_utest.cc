@@ -12,6 +12,7 @@
 #include "mockcpp/mockcpp.hpp"
 #include "atrace_api.h"
 #include "atrace_client_core.h"
+#include "atrace_client_thread.h"
 #include "atrace_client_communication.h"
 #include "trace_msg.h"
 #include "trace_attr.h"
@@ -19,6 +20,42 @@
 #include "adcore_api.h"
 #include "trace_recorder.h"
 #include "mmpa_api.h"
+#include <atomic>
+#include <pthread.h>
+#include <unistd.h>
+
+namespace {
+std::atomic<bool> g_releaseEntered(false);
+std::atomic<bool> g_allowRelease(false);
+std::atomic<bool> g_releaseExecuted(false);
+std::atomic<bool> g_poolExitDone(false);
+
+void* AtraceNoopThread(void*) { return nullptr; }
+
+void BlockingRelease(void** handle)
+{
+    g_releaseEntered.store(true);
+    while (!g_allowRelease.load()) {
+        (void)usleep(1000);
+    }
+    *handle = nullptr;
+    g_releaseExecuted.store(true);
+}
+
+void* InvokeConditionalRelease(void* arg)
+{
+    void** handle = static_cast<void**>(arg);
+    (void)AtraceThreadReleaseHdcIfAllowed(0, handle, BlockingRelease);
+    return nullptr;
+}
+
+void* InvokePoolExit(void*)
+{
+    AtraceThreadPoolExit(nullptr);
+    g_poolExitDone.store(true);
+    return nullptr;
+}
+} // namespace
 
 class TraceClientUtest : public testing::Test {
 protected:
@@ -194,6 +231,38 @@ TEST_F(TraceClientUtest, TraceClient_SendHelloFailed)
 // symbol has external linkage and can be called directly from the test.
 extern "C" int32_t AtraceClientExitNoSend(int32_t devId);
 
+TEST_F(TraceClientUtest, AtraceThreadPoolExitWaitsForInProgressHdcRelease)
+{
+    TraceThreadArgs args = {0};
+    EXPECT_EQ(TRACE_SUCCESS, AtraceThreadCreate(0, &args, AtraceNoopThread));
+
+    void* handle = reinterpret_cast<void*>(1);
+    g_releaseEntered.store(false);
+    g_allowRelease.store(false);
+    g_releaseExecuted.store(false);
+    g_poolExitDone.store(false);
+
+    pthread_t releaseThread;
+    EXPECT_EQ(0, pthread_create(&releaseThread, nullptr, InvokeConditionalRelease, &handle));
+    for (int32_t i = 0; i < 100 && !g_releaseEntered.load(); ++i) {
+        (void)usleep(1000);
+    }
+    EXPECT_TRUE(g_releaseEntered.load());
+
+    pthread_t poolExitThread;
+    EXPECT_EQ(0, pthread_create(&poolExitThread, nullptr, InvokePoolExit, nullptr));
+    (void)usleep(10000);
+    EXPECT_FALSE(g_poolExitDone.load());
+
+    g_allowRelease.store(true);
+    EXPECT_EQ(0, pthread_join(releaseThread, nullptr));
+    EXPECT_EQ(0, pthread_join(poolExitThread, nullptr));
+    EXPECT_TRUE(g_releaseExecuted.load());
+    EXPECT_TRUE(g_poolExitDone.load());
+
+    EXPECT_EQ(TRACE_SUCCESS, AtraceThreadPoolInit());
+}
+
 TEST_F(TraceClientUtest, AtraceClientExitNoSend_ReturnsSuccessWithoutHdc)
 {
     // The stub passed into AtraceThreadPoolExit by AtraceClientExit must be a
@@ -221,6 +290,7 @@ TEST_F(TraceClientUtest, AtraceClientExit_DoesNotSendEnd)
     sleep(1); // let the recv thread enter its loop
 
     MOCKER(AdxSendMsgAndNoResultByType).expects(never());
+    MOCKER(AtraceClientReleaseHandle).expects(never());
     AtraceClientExit();
     GlobalMockObject::verify();
 
@@ -240,5 +310,6 @@ TEST_F(TraceClientUtest, AtraceClientStop_StillSendsEnd)
     sleep(1);
 
     MOCKER(AdxSendMsgAndNoResultByType).expects(atLeast(1)).will(returnValue((int32_t)IDE_DAEMON_OK));
+    MOCKER(AtraceClientReleaseHandle).expects(once());
     AtraceClientStop(devId);
 }

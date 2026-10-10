@@ -62,7 +62,9 @@ STATIC void AtraceClientRecvAndWrite(int32_t devId, int32_t timeout, void** hand
     int32_t recvTimeout = timeout / MAX_RETRY_TIME;
     while (retryTime < MAX_RETRY_TIME) {
         if (!AtraceClientIsHandleValid(*handle)) { // handle is invalid
-            AtraceClientReleaseHandle(handle);
+            if (!AtraceThreadReleaseHdcIfAllowed(devId, handle, AtraceClientReleaseHandle)) {
+                break;
+            }
             if (AtraceThreadGetStatus(devId) == THREAD_STATUS_WAIT_EXIT) {
                 break;
             }
@@ -123,7 +125,7 @@ STATIC void* AtraceClientRecvThread(void* pArgs)
     }
     const int32_t timeReserve = 2000; // 2s for receive thread waiting device timeout exit
     AtraceClientRecvAndWrite(devId, timeout + timeReserve, &handle);
-    AtraceClientReleaseHandle(&handle);
+    (void)AtraceThreadReleaseHdcIfAllowed(devId, &handle, AtraceClientReleaseHandle);
     ADIAG_RUN_INF("atrace receive thread exited, devId=%d.", devId);
     return NULL;
 }
