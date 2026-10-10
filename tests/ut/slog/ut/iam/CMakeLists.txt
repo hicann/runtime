@@ -136,6 +136,8 @@ set_target_properties(iam_app_slog_utest PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/
 )
 
+include(dlog_multi_library.cmake)
+
 add_executable(iam_slogd_utest
     ${LOG_SOURCE_PATH}/syslog/slog/log_server/log_pre_process/log_communication/slogd_communication_iam.c
     ${LOG_SOURCE_PATH}/utils/log_buffer/log_ring_buffer.c

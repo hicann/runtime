@@ -25,6 +25,7 @@ set(SLOG_UT_TARGETS
     ep_stackcore_utest
     iam_slog_utest
     iam_app_slog_utest
+    dlog_multi_library_utest
     iam_slogd_utest
     mergeslog_coverage_utest
     log_proxy_coverage_utest

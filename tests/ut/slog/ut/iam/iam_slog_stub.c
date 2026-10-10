@@ -10,6 +10,7 @@
 
 #include "alog_to_slog.h"
 #include "dlog_common.h"
+#include "dlog_async_process.h"
 #include "dlog_unified_timer_api.h"
 #include "iam.h"
 #include "log_iam_pub.h"
@@ -19,6 +20,15 @@
 #include <errno.h>
 #include <stdarg.h>
 #include <stdio.h>
+
+#if defined(__GNUC__)
+#define IAM_STUB_EXPORT __attribute__((visibility("default")))
+#else
+#define IAM_STUB_EXPORT
+#endif
+
+IAM_STUB_EXPORT void IamSlogStubExit(void) { DlogAsyncExit(); }
+#undef IAM_STUB_EXPORT
 
 static bool g_servicePrepared = true;
 static int32_t g_registerRet = SYS_OK;
@@ -108,9 +118,11 @@ void LogPrintSys(int32_t priority, const char* format, ...)
     }
 }
 
+#ifndef IAM_PUBLIC_API
 void AlogCloseSlogLib(void) {}
 
 int32_t AlogTransferToSlog(void) { return LOG_FAILURE; }
+#endif
 
 bool IAMCheckServicePreparation(void) { return g_servicePrepared; }
 
@@ -120,6 +132,11 @@ int32_t IAMRegResStatusChangeCb(
 {
     (void)config;
     g_resourceCallback = resourceStatusChangeCb;
+#ifdef IAM_AUTO_READY
+    if (g_registerRet == SYS_OK) {
+        IamSlogStubNotifyResource(IAM_RESOURCE_READY);
+    }
+#endif
     return g_registerRet;
 }
 
@@ -156,6 +173,7 @@ int ioctl(int fd, unsigned long request, ...)
     return g_ioctlRet;
 }
 
+#ifndef IAM_SHARED_TIMER
 LogStatus DlogLoadTimerDll(void) { return g_timerLoadRet; }
 
 LogStatus DlogCloseTimerDll(void) { return LOG_SUCCESS; }
@@ -175,3 +193,4 @@ uint32_t DlogRemoveUnifiedTimer(const char* timerName)
     (void)timerName;
     return g_timerRemoveRet;
 }
+#endif

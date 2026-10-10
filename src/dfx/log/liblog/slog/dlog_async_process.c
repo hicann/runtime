@@ -47,9 +47,12 @@ extern "C" {
     } while (0)
 
 // timer name
-#if defined LOG_CPP || defined APP_LOG
+#if defined LOG_CPP
 #define DLOG_TIMER_NAME "alog_send_task_timer"
 #define DLOG_SYNC_TIMER_NAME "alog_sync_task_timer"
+#elif defined APP_LOG || defined UNIFIED_DLOG
+#define DLOG_TIMER_NAME "dlog_send_task_timer"
+#define DLOG_SYNC_TIMER_NAME "dlog_sync_task_timer"
 #else
 #define DLOG_TIMER_NAME "slog_send_task_timer"
 #define DLOG_SYNC_TIMER_NAME "slog_sync_task_timer"

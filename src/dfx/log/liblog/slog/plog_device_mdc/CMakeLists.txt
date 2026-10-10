@@ -216,6 +216,7 @@ target_include_directories(unified_slog
 
 target_compile_definitions(unified_slog
     PRIVATE
+        UNIFIED_DLOG
         OS_TYPE_DEF=0
         OS_TYPE=0
         IAM
