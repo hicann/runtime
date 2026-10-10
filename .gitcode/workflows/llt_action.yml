@@ -70,7 +70,7 @@ jobs:
       -
         name: upload
         uses: obs-upload
-        if: ${{ always() }}
+        if: ${{ always() && inputs.task_name != 'UT_Test_camodel' && inputs.task_name != 'UT_Test_mmpa' }}
         with:
           endpoint: "https://obs.cn-north-4.myhuaweicloud.com"
           bucket: "ascend-ci"
