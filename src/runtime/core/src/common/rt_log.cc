@@ -142,7 +142,29 @@ static void DispatchErrMsg(
 void PrintErrMsgToLog(
     ErrorCode errCode, const char* file, const int32_t line, const char* func, const std::vector<std::string>& values)
 {
-    const size_t expectedSize = GetParamNames(errCode).size();
+    size_t expectedSize = 0U;
+    const char* fmt = nullptr;
+    int32_t logLevel = DLOG_ERROR;
+
+#define RT_PARAM_LIST(...) __VA_ARGS__
+#define RT_GET_LOG_META(code, name, params, msg, level)              \
+    case ErrorCode::code: {                                          \
+        constexpr const char* paramNames[] = {RT_PARAM_LIST params}; \
+        expectedSize = sizeof(paramNames) / sizeof(paramNames[0]);   \
+        fmt = (msg);                                                 \
+        logLevel = (level);                                          \
+        break;                                                       \
+    }
+
+    switch (errCode) {
+        RUNTIME_ERROR_CODE_TABLE(RT_GET_LOG_META)
+        default:
+            break;
+    }
+
+#undef RT_GET_LOG_META
+#undef RT_PARAM_LIST
+
     if (values.size() != expectedSize) {
         RecordLog(
             DLOG_WARN, file, line, func, "Parameter count mismatch for error code %d. Expected %zu, got %zu.\n",
@@ -150,18 +172,12 @@ void PrintErrMsgToLog(
         return;
     }
 
-#undef RT_PRINT_CASE
-#define RT_PRINT_CASE(code, name, params, msg, level)                     \
-    case ErrorCode::code:                                                 \
-        DispatchErrMsg((level), (file), (line), (func), (msg), (values)); \
-        break;
-    switch (errCode) {
-        RUNTIME_ERROR_CODE_TABLE(RT_PRINT_CASE)
-        default:
-            RecordErrorLog(file, line, func, "Unknown error code: %d\n", static_cast<int32_t>(errCode));
-            break;
+    if (fmt == nullptr) {
+        RecordErrorLog(file, line, func, "Unknown error code: %d\n", static_cast<int32_t>(errCode));
+        return;
     }
-#undef RT_PRINT_CASE
+
+    DispatchErrMsg(logLevel, file, line, func, fmt, values);
 }
 
 void ProcessErrorCodeImpl(
