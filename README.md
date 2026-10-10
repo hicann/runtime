@@ -192,11 +192,17 @@ source ${install_path}/cann/set_env.sh
 bash build.sh
 ```
 
-若您的编译环境无法访问网络，可以直接调用脚本获取开源组件压缩包，脚本将自动下载至当前新建的 `third_party` 目录中：
+若您的编译环境无法访问网络，可以直接调用脚本获取开源组件压缩包，脚本将自动下载至指定目录中：
 
 ```bash
-python download_3rd_party.py
+bash download_3rd_party.sh
+# 指定下载目录
+bash download_3rd_party.sh --3rd_party third_party
 ```
+
+未指定参数时，下载到当前目录下的 `third_party`。压缩包直接保存到下载目录，所有补丁保存到其 `patch` 子目录。指定下载目录后，编译时请将 `--cann_3rd_lib_path` 设置为相同路径。
+
+校验失败的缓存会重新下载；下载或校验失败时，脚本返回非零退出码。
 
 下载完成后，可以使用如下命令进行编译：
 ```bash
@@ -215,23 +221,27 @@ runtime在编译时，依赖的第三方开源软件列表如下：
 
 | 开源软件 | 版本 | 下载地址 |
 |---|---|---|
-| abseil-cpp | 20230802.1 | [abseil-cpp-20230802.1.tar.gz](https://gitcode.com/cann-src-third-party/abseil-cpp/releases/download/20230802.1/abseil-cpp-20230802.1.tar.gz) |
+| abseil-cpp | 20230802.1 | [abseil-cpp-20230802.1.tar.gz](https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/abseil-cpp/abseil-cpp-20230802.1.tar.gz) |
+| abseil-cpp_patch | 20230802.1-h0 | [patch/backport-CVE-2025-0838.patch](https://gitcode.com/cann-src-third-party/abseil-cpp/releases/download/20230802.1-h0/backport-CVE-2025-0838.patch) |
 | acl-compat (x86_64) | 9.2.0 | [acl-compat_9.2.0_linux-x86_64.tar.gz](https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/cann/acl-compat/acl-compat_9.2.0_linux-x86_64.tar.gz) |
 | acl-compat (aarch64) | 9.2.0 | [acl-compat_9.2.0_linux-aarch64.tar.gz](https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/cann/acl-compat/acl-compat_9.2.0_linux-aarch64.tar.gz) |
-| boost | 1.87.0 | [boost_1_87_0.tar.gz](https://gitcode.com/cann-src-third-party/boost/releases/download/v1.87.0/boost_1_87_0.tar.gz) |
-| eigen | 5.0.0 | [eigen-5.0.0.tar.gz](https://gitcode.com/cann-src-third-party/eigen/releases/download/5.0.0-h0.trunk/eigen-5.0.0.tar.gz) |
-| googletest | 1.14.0 | [googletest-1.14.0.tar.gz](https://gitcode.com/cann-src-third-party/googletest/releases/download/v1.14.0/googletest-1.14.0.tar.gz) |
-| json | 3.12.0 | [json-3.12.0.tar.gz](https://gitcode.com/cann-src-third-party/json/releases/download/v3.12.0/json-3.12.0.tar.gz) |
-| libboundscheck | 1.1.16 | [libboundscheck-v1.1.16.tar.gz](https://gitcode.com/cann-src-third-party/libboundscheck/releases/download/v1.1.16/libboundscheck-v1.1.16.tar.gz) |
-| libseccomp | 2.5.4 | [libseccomp-2.5.4.tar.gz](https://gitcode.com/cann-src-third-party/libseccomp/releases/download/v2.5.4/libseccomp-2.5.4.tar.gz) |
-| mockcpp | 2.7-h5 | [mockcpp-2.7.tar.gz](https://gitcode.com/cann-src-third-party/mockcpp/releases/download/v2.7-h5/mockcpp-2.7.tar.gz) |
-| mockcpp_patch | 2.7-h5 | [mockcpp-2.7-h5.patch](https://gitcode.com/cann-src-third-party/mockcpp/releases/download/v2.7-h5/mockcpp-2.7-h5.patch) |
-| protobuf | 25.1 | [protobuf-25.1.tar.gz](https://gitcode.com/cann-src-third-party/protobuf/releases/download/v25.1/protobuf-25.1.tar.gz) |
-| makeself | 2.5.0 | [makeself-release-2.5.0-patch1.tar.gz](https://gitcode.com/cann-src-third-party/makeself/releases/download/release-2.5.0-patch1.0/makeself-release-2.5.0-patch1.tar.gz) |
-| cann-cmake | master-053 | [cmake-master-053.tar.gz](https://raw.gitcode.com/cann/cmake/archive/refs/heads/master-053.tar.gz) |
+| boost | 1.87.0 | [boost_1_87_0.tar.gz](https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/boost/boost_1_87_0.tar.gz) |
+| eigen | 5.0.0 | [eigen-5.0.0.tar.gz](https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/eigen/eigen-5.0.0.tar.gz) |
+| googletest | 1.14.0 | [googletest-1.14.0.tar.gz](https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/googletest/googletest-1.14.0.tar.gz) |
+| json | 3.12.0 | [json-3.12.0.tar.gz](https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/json/json-3.12.0.tar.gz) |
+| libboundscheck | 1.1.16 | [libboundscheck-v1.1.16.tar.gz](https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/libboundscheck/libboundscheck-v1.1.16.tar.gz) |
+| libseccomp | 2.5.4 | [libseccomp-2.5.4.tar.gz](https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/libseccomp/libseccomp-2.5.4.tar.gz) |
+| mockcpp | 2.7-h5 | [mockcpp-2.7.tar.gz](https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/mockcpp/mockcpp-2.7.tar.gz) |
+| mockcpp_patch | 2.7-h5 | [patch/mockcpp-2.7-h5.patch](https://gitcode.com/cann-src-third-party/mockcpp/releases/download/v2.7-h5/mockcpp-2.7-h5.patch) |
+| protobuf | 25.1 | [protobuf-25.1.tar.gz](https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/protobuf/protobuf-25.1.tar.gz) |
+| makeself | 2.5.0 | [makeself-release-2.5.0.tar.gz](https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/makeself/makeself-release-2.5.0.tar.gz) |
+| makeself_patch | 2.5.0 | [patch/makeself-2.5.0.patch](https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/makeself/fix/makeself-2.5.0.patch) |
+| cann-cmake | master-059 | [cmake-master-059.tar.gz](https://raw.gitcode.com/cann/cmake/archive/refs/heads/master-059.tar.gz) |
 
 > [!NOTE]注意
-> 如果您从其他地址下载，请确保版本号一致。
+> 下载列表和补丁布局适配 [cann/cmake master-059](https://gitcode.com/cann/cmake/tree/master-059/third_party)，下载地址和 SHA256 固定在本地 `download_3rd_party.sh` 中。
+> 如果您从其他地址下载，请确保版本号和 SHA256 一致。
+> Abseil 补丁保存在 `patch` 目录，并复制一份到 `patch/device`，分别供 Host 和 Device 离线构建使用。
 
 ### 安装runtime包
 执行如下命令安装编译生成的runtime软件包。

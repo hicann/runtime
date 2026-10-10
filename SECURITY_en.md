@@ -24,19 +24,27 @@ The public network addresses included in this project code are shown below:
 
 | Type | Open Source Code Address | File Name | Public IP Address/Public URL Address/Domain Name/Email Address/Compressed File Address | Usage Description |
 | :------------: |:------------------------------------------------------------------------------------------:|:----------------------------------------------------------| :---------------------------------------------------------- |:-----------------------------------------|
-| Dependency | Not applicable | cmake/makeself-fetch.cmake | https://gitcode.com/cann-src-third-party/makeself/releases/download/release-2.5.0-patch1.0/makeself-release-2.5.0-patch1.tar.gz | Download makeself source code from gitcode, used as build dependency |
-| Dependency | Not applicable | build_third_party.sh | https://gitcode.com/cann-src-third-party/json/releases/download/v3.12.0/json-3.12.0.tar.gz | Download json source code from gitcode, used as build dependency |
-| Dependency | Not applicable | build_third_party.sh | https://gitcode.com/cann-src-third-party/googletest/releases/download/v1.14.0/googletest-1.14.0.tar.gz | Download gtest source code from gitcode, used as build dependency |
-| Dependency | Not applicable | cmake/third_party/mockcpp.cmake | https://gitcode.com/cann-src-third-party/mockcpp/releases/download/v2.7-h1/mockcpp-2.7_py3.patch | Download mockcpp patch source code from gitcode, used as build dependency |
-| Dependency | Not applicable | cmake/third_party/mockcpp.cmake | https://gitcode.com/cann-src-third-party/mockcpp/releases/download/v2.7-h1/mockcpp-2.7.tar.gz | Download mockcpp source code from gitcode, used as build dependency |
-| Dependency | Not applicable | cmake/third_party/boost.cmake | https://gitcode.com/cann-src-third-party/boost/releases/download/v1.87.0/boost_1_87_0.tar.gz | Download boost source code from gitcode, used as build dependency |
-| Dependency | Not applicable | cmake/third_party/acl_compat.cmake | https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/cann/acl-compat/acl-compat_9.2.0_linux-${TARGET_ARCH}.tar.gz | Download binary dependencies from huaweicloud |
-| Dependency | Not applicable | cmake/third_party/csec.cmake | https://gitcode.com/cann-src-third-party/libboundscheck/releases/download/v1.1.16/libboundscheck-v1.1.16.tar.gz | Download libboundscheck source code from gitcode, used as build dependency |
-| Dependency | Not applicable | cmake/third_party/eigen.cmake | https://gitcode.com/cann-src-third-party/eigen/releases/download/5.0.0-h0.trunk/eigen-5.0.0.tar.gz | Download eigen source code from gitcode, used as build dependency |
-| Dependency | Not applicable | cmake/third_party/protobuf.cmake | https://gitcode.com/cann-src-third-party/protobuf/releases/download/v25.1/protobuf-25.1.tar.gz | Download protobuf source code from gitcode, used as build dependency |
-| Dependency | Not applicable | cmake/third_party/seccomp.cmake | https://gitcode.com/cann-src-third-party/libseccomp/releases/download/v2.5.4/libseccomp-2.5.4.tar.gz | Download libseccomp source code from gitcode, used as build dependency |
-| Dependency | Not applicable | install_deps.sh | https://apt.kitware.com/keys/kitware-archive-latest.asc | Download cmake software from kitware, used as build dependency |
-| Dependency | Not applicable | install_deps.sh | https://apt.kitware.com/ubuntu/ | Download cmake software from kitware, used as build dependency |
+| Dependency | Not applicable | download_3rd_party.sh | https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/abseil-cpp/abseil-cpp-20230802.1.tar.gz | Download Abseil source code from Huawei Cloud for building |
+| Dependency | Not applicable | download_3rd_party.sh | https://gitcode.com/cann-src-third-party/abseil-cpp/releases/download/20230802.1-h0/backport-CVE-2025-0838.patch | Download the Abseil patch from GitCode for building |
+| Dependency | Not applicable | download_3rd_party.sh | https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/cann/acl-compat/acl-compat_9.2.0_linux-x86_64.tar.gz | Download the ACL compatibility binary dependency for x86_64 from Huawei Cloud for building |
+| Dependency | Not applicable | download_3rd_party.sh | https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/cann/acl-compat/acl-compat_9.2.0_linux-aarch64.tar.gz | Download the ACL compatibility binary dependency for aarch64 from Huawei Cloud for building |
+| Dependency | Not applicable | download_3rd_party.sh | https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/boost/boost_1_87_0.tar.gz | Download Boost source code from Huawei Cloud for building |
+| Dependency | Not applicable | download_3rd_party.sh | https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/eigen/eigen-5.0.0.tar.gz | Download Eigen source code from Huawei Cloud for building |
+| Dependency | Not applicable | download_3rd_party.sh | https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/googletest/googletest-1.14.0.tar.gz | Download GoogleTest source code from Huawei Cloud for building |
+| Dependency | Not applicable | download_3rd_party.sh | https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/json/json-3.12.0.tar.gz | Download JSON source code from Huawei Cloud for building |
+| Dependency | Not applicable | download_3rd_party.sh | https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/libboundscheck/libboundscheck-v1.1.16.tar.gz | Download libboundscheck source code from Huawei Cloud for building |
+| Dependency | Not applicable | download_3rd_party.sh | https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/libseccomp/libseccomp-2.5.4.tar.gz | Download libseccomp source code from Huawei Cloud for building |
+| Dependency | Not applicable | download_3rd_party.sh | https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/mockcpp/mockcpp-2.7.tar.gz | Download mockcpp source code from Huawei Cloud for building |
+| Dependency | Not applicable | download_3rd_party.sh | https://gitcode.com/cann-src-third-party/mockcpp/releases/download/v2.7-h5/mockcpp-2.7-h5.patch | Download the mockcpp patch from GitCode for building |
+| Dependency | Not applicable | download_3rd_party.sh | https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/protobuf/protobuf-25.1.tar.gz | Download Protobuf source code from Huawei Cloud for building |
+| Dependency | Not applicable | download_3rd_party.sh | https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/makeself/makeself-release-2.5.0.tar.gz | Download makeself source code from Huawei Cloud for building |
+| Dependency | Not applicable | download_3rd_party.sh | https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/makeself/fix/makeself-2.5.0.patch | Download the makeself patch from Huawei Cloud for building |
+| Dependency | Not applicable | download_3rd_party.sh | https://raw.gitcode.com/cann/cmake/archive/refs/heads/master-059.tar.gz | Download the cann/cmake master-059 build configuration from GitCode for building |
+| Dependency | Not applicable | cmake/third_party/acl_compat.cmake | https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/cann/acl-compat/acl-compat_9.2.0_linux-${TARGET_ARCH}.tar.gz | Download ACL compatibility binary dependencies for the target architecture from Huawei Cloud |
+| Dependency | Not applicable | cmake/fetch_cann_cmake.cmake | https://gitcode.com/cann/cmake.git | Fetch the cann/cmake master-059 build configuration online |
+| Dependency | Not applicable | install_deps.sh | https://apt.kitware.com/keys/kitware-archive-latest.asc | Download the signing key for the Kitware APT repository |
+| Dependency | Not applicable | install_deps.sh | https://apt.kitware.com/ubuntu/ | Install the CMake build dependency from the Kitware APT repository |
+
 ---
 
 ## Vulnerability Mechanism Description

@@ -24,19 +24,27 @@
 
 |      类型      |                                           开源代码地址                                           |                            文件名                             |             公网IP地址/公网URL地址/域名/邮箱地址/压缩文件地址             |                   用途说明                    |
 | :------------: |:------------------------------------------------------------------------------------------:|:----------------------------------------------------------| :---------------------------------------------------------- |:-----------------------------------------|
-|  依赖  | 不涉及  | cmake/makeself-fetch.cmake | https://gitcode.com/cann-src-third-party/makeself/releases/download/release-2.5.0-patch1.0/makeself-release-2.5.0-patch1.tar.gz | 从gitcode下载makeself源码，作用编译依赖 |
-|  依赖  | 不涉及  | build_third_party.sh | https://gitcode.com/cann-src-third-party/json/releases/download/v3.12.0/json-3.12.0.tar.gz | 从gitcode下载json源码，作用编译依赖 |
-|  依赖  | 不涉及  | build_third_party.sh | https://gitcode.com/cann-src-third-party/googletest/releases/download/v1.14.0/googletest-1.14.0.tar.gz | 从gitcode下载gtest源码，作用编译依赖 |
-|  依赖  | 不涉及  | cmake/third_party/mockcpp.cmake | https://gitcode.com/cann-src-third-party/mockcpp/releases/download/v2.7-h1/mockcpp-2.7_py3.patch | 从gitcode下载mockcpp patch源码，作用编译依赖 |
-|  依赖  | 不涉及  | cmake/third_party/mockcpp.cmake | https://gitcode.com/cann-src-third-party/mockcpp/releases/download/v2.7-h1/mockcpp-2.7.tar.gz | 从gitcode下载mockcpp源码，作用编译依赖 |
-|  依赖  | 不涉及  | cmake/third_party/boost.cmake | https://gitcode.com/cann-src-third-party/boost/releases/download/v1.87.0/boost_1_87_0.tar.gz | 从gitcode下载boost源码，作用编译依赖 |
-|  依赖  | 不涉及  | cmake/third_party/acl_compat.cmake | https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/cann/acl-compat/acl-compat_9.2.0_linux-${TARGET_ARCH}.tar.gz | 从huaweicloud下载二进制依赖 |
-|  依赖  | 不涉及  | cmake/third_party/csec.cmake | https://gitcode.com/cann-src-third-party/libboundscheck/releases/download/v1.1.16/libboundscheck-v1.1.16.tar.gz | 从gitcode下载libboundscheck源码，作用编译依赖 |
-|  依赖  | 不涉及  | cmake/third_party/eigen.cmake | https://gitcode.com/cann-src-third-party/eigen/releases/download/5.0.0-h0.trunk/eigen-5.0.0.tar.gz | 从gitcode下载eigen源码，作用编译依赖 |
-|  依赖  | 不涉及  | cmake/third_party/protobuf.cmake | https://gitcode.com/cann-src-third-party/protobuf/releases/download/v25.1/protobuf-25.1.tar.gz | 从gitcode下载protobuf源码，作用编译依赖 |
-|  依赖  | 不涉及  | cmake/third_party/seccomp.cmake | https://gitcode.com/cann-src-third-party/libseccomp/releases/download/v2.5.4/libseccomp-2.5.4.tar.gz | 从gitcode下载libseccomp源码，作用编译依赖 |
-|  依赖  | 不涉及  | install_deps.sh | https://apt.kitware.com/keys/kitware-archive-latest.asc | 从kitware下载cmake软件，作用编译依赖 |
-|  依赖  | 不涉及  | install_deps.sh | https://apt.kitware.com/ubuntu/ | 从kitware下载cmake软件，作用编译依赖 |
+| 依赖 | 不涉及 | download_3rd_party.sh | https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/abseil-cpp/abseil-cpp-20230802.1.tar.gz | 从Huawei Cloud下载Abseil源码，用作编译依赖 |
+| 依赖 | 不涉及 | download_3rd_party.sh | https://gitcode.com/cann-src-third-party/abseil-cpp/releases/download/20230802.1-h0/backport-CVE-2025-0838.patch | 从GitCode下载Abseil补丁，用作编译依赖 |
+| 依赖 | 不涉及 | download_3rd_party.sh | https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/cann/acl-compat/acl-compat_9.2.0_linux-x86_64.tar.gz | 从Huawei Cloud下载ACL兼容库（x86_64）二进制依赖，用作编译依赖 |
+| 依赖 | 不涉及 | download_3rd_party.sh | https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/cann/acl-compat/acl-compat_9.2.0_linux-aarch64.tar.gz | 从Huawei Cloud下载ACL兼容库（aarch64）二进制依赖，用作编译依赖 |
+| 依赖 | 不涉及 | download_3rd_party.sh | https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/boost/boost_1_87_0.tar.gz | 从Huawei Cloud下载Boost源码，用作编译依赖 |
+| 依赖 | 不涉及 | download_3rd_party.sh | https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/eigen/eigen-5.0.0.tar.gz | 从Huawei Cloud下载Eigen源码，用作编译依赖 |
+| 依赖 | 不涉及 | download_3rd_party.sh | https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/googletest/googletest-1.14.0.tar.gz | 从Huawei Cloud下载GoogleTest源码，用作编译依赖 |
+| 依赖 | 不涉及 | download_3rd_party.sh | https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/json/json-3.12.0.tar.gz | 从Huawei Cloud下载JSON源码，用作编译依赖 |
+| 依赖 | 不涉及 | download_3rd_party.sh | https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/libboundscheck/libboundscheck-v1.1.16.tar.gz | 从Huawei Cloud下载libboundscheck源码，用作编译依赖 |
+| 依赖 | 不涉及 | download_3rd_party.sh | https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/libseccomp/libseccomp-2.5.4.tar.gz | 从Huawei Cloud下载libseccomp源码，用作编译依赖 |
+| 依赖 | 不涉及 | download_3rd_party.sh | https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/mockcpp/mockcpp-2.7.tar.gz | 从Huawei Cloud下载mockcpp源码，用作编译依赖 |
+| 依赖 | 不涉及 | download_3rd_party.sh | https://gitcode.com/cann-src-third-party/mockcpp/releases/download/v2.7-h5/mockcpp-2.7-h5.patch | 从GitCode下载mockcpp补丁，用作编译依赖 |
+| 依赖 | 不涉及 | download_3rd_party.sh | https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/protobuf/protobuf-25.1.tar.gz | 从Huawei Cloud下载Protobuf源码，用作编译依赖 |
+| 依赖 | 不涉及 | download_3rd_party.sh | https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/makeself/makeself-release-2.5.0.tar.gz | 从Huawei Cloud下载makeself源码，用作编译依赖 |
+| 依赖 | 不涉及 | download_3rd_party.sh | https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/makeself/fix/makeself-2.5.0.patch | 从Huawei Cloud下载makeself补丁，用作编译依赖 |
+| 依赖 | 不涉及 | download_3rd_party.sh | https://raw.gitcode.com/cann/cmake/archive/refs/heads/master-059.tar.gz | 从GitCode下载cann/cmake master-059构建配置，用作编译依赖 |
+| 依赖 | 不涉及 | cmake/third_party/acl_compat.cmake | https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/cann/acl-compat/acl-compat_9.2.0_linux-${TARGET_ARCH}.tar.gz | 从Huawei Cloud下载目标架构的ACL兼容二进制依赖 |
+| 依赖 | 不涉及 | cmake/fetch_cann_cmake.cmake | https://gitcode.com/cann/cmake.git | 在线获取cann/cmake master-059构建配置 |
+| 依赖 | 不涉及 | install_deps.sh | https://apt.kitware.com/keys/kitware-archive-latest.asc | 下载Kitware APT仓库签名密钥 |
+| 依赖 | 不涉及 | install_deps.sh | https://apt.kitware.com/ubuntu/ | 从Kitware APT仓库安装CMake编译依赖 |
+
 ---
 
 ## 漏洞机制说明

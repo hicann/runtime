@@ -30,7 +30,7 @@ bash build.sh --help
 bash install_deps.sh
 
 # Download third-party libraries (only use when local network is unavailable; not needed when network is working)
-python3 download_3rd_party.py
+bash download_3rd_party.sh
 ```
 
 ## Directory Structure

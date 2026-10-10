@@ -30,7 +30,7 @@ bash build.sh --help
 bash install_deps.sh
 
 # 下载第三方库（仅在本地网络不通时使用，网络通畅时不需要）
-python3 download_3rd_party.py
+bash download_3rd_party.sh
 ```
 
 ## 目录结构
