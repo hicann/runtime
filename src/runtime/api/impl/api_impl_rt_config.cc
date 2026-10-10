@@ -166,7 +166,7 @@ rtError_t ApiImplRtConfig::CtxSetSysParamOpt(const rtSysParamOpt configOpt, cons
     rtError_t error = RT_ERROR_NONE;
     do {
         RT_LOG(RT_LOG_DEBUG, "Start to set sys param opt, opt=%s.", SysParamOptToString(configOpt).c_str());
-        Context* const curCtx = Runtime::Instance()->CurrentContext();
+        Context* const curCtx = Runtime::Instance()->CurrentContext(true, DEFAULT_DEVICE_ID);
         if (unlikely(!ContextManage::CheckContextIsValid(curCtx))) {
             ContextManage::ReportContextValidationError();
             error = RT_ERROR_CONTEXT_NULL;
@@ -198,7 +198,7 @@ rtError_t ApiImplRtConfig::CtxGetSysParamOpt(const rtSysParamOpt configOpt, int6
 
     rtError_t error = RT_ERROR_NONE;
     do {
-        Context* const curCtx = Runtime::Instance()->CurrentContext();
+        Context* const curCtx = Runtime::Instance()->CurrentContext(true, DEFAULT_DEVICE_ID);
         if (unlikely(!ContextManage::CheckContextIsValid(curCtx))) {
             ContextManage::ReportContextValidationError();
             error = RT_ERROR_CONTEXT_NULL;
@@ -303,7 +303,7 @@ rtError_t ApiImplRtConfig::SetStreamResLimit(Stream* const stm, const rtDevResLi
 
     rtError_t ret = RT_ERROR_NONE;
     if (stm == nullptr) {
-        Context* const curCtx = Runtime::Instance()->CurrentContext();
+        Context* const curCtx = Runtime::Instance()->CurrentContext(true, DEFAULT_DEVICE_ID);
         CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
         Stream* const defaultStream = curCtx->DefaultStream_();
         NULL_PTR_RETURN_MSG(defaultStream, RT_ERROR_STREAM_NULL);
@@ -317,7 +317,7 @@ rtError_t ApiImplRtConfig::SetStreamResLimit(Stream* const stm, const rtDevResLi
 rtError_t ApiImplRtConfig::ResetStreamResLimit(Stream* const stm)
 {
     if (stm == nullptr) {
-        Context* const curCtx = Runtime::Instance()->CurrentContext();
+        Context* const curCtx = Runtime::Instance()->CurrentContext(true, DEFAULT_DEVICE_ID);
         CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
         Stream* const defaultStream = curCtx->DefaultStream_();
         NULL_PTR_RETURN_MSG(defaultStream, RT_ERROR_STREAM_NULL);
@@ -341,7 +341,7 @@ rtError_t ApiImplRtConfig::GetStreamResLimit(
 
     rtError_t ret = RT_ERROR_NONE;
     if (stm == nullptr) {
-        Context* const curCtx = Runtime::Instance()->CurrentContext();
+        Context* const curCtx = Runtime::Instance()->CurrentContext(true, DEFAULT_DEVICE_ID);
         CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
         Stream* const defaultStream = curCtx->DefaultStream_();
         NULL_PTR_RETURN_MSG(defaultStream, RT_ERROR_STREAM_NULL);
@@ -356,7 +356,7 @@ rtError_t ApiImplRtConfig::UseStreamResInCurrentThread(const Stream* const stm)
 {
     const Stream* curStm = stm;
     if (curStm == nullptr) {
-        Context* const curCtx = Runtime::Instance()->CurrentContext();
+        Context* const curCtx = Runtime::Instance()->CurrentContext(true, DEFAULT_DEVICE_ID);
         CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
         curStm = curCtx->DefaultStream_();
         NULL_PTR_RETURN_MSG(curStm, RT_ERROR_STREAM_NULL);
@@ -370,7 +370,7 @@ rtError_t ApiImplRtConfig::NotUseStreamResInCurrentThread(const Stream* const st
 {
     const Stream* curStm = stm;
     if (curStm == nullptr) {
-        Context* const curCtx = Runtime::Instance()->CurrentContext();
+        Context* const curCtx = Runtime::Instance()->CurrentContext(true, DEFAULT_DEVICE_ID);
         CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
         curStm = curCtx->DefaultStream_();
         NULL_PTR_RETURN_MSG(curStm, RT_ERROR_STREAM_NULL);
@@ -403,7 +403,7 @@ rtError_t ApiImplRtConfig::GetResInCurrentThread(const rtDevResLimitType_t type,
     } else {
         Device* dev = InnerThreadLocalContainer::GetDevice();
         if (dev == nullptr) {
-            Context* const curCtx = Runtime::Instance()->CurrentContext();
+            Context* const curCtx = Runtime::Instance()->CurrentContext(true, DEFAULT_DEVICE_ID);
             CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
             dev = curCtx->Device_();
             NULL_PTR_RETURN_MSG(dev, RT_ERROR_DEVICE_NULL);
