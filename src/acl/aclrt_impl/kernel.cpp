@@ -10,6 +10,7 @@
 
 #include "acl_rt_impl.h"
 #include <map>
+#include "securec.h"
 #include "runtime/kernel.h"
 #include "runtime/rts/rts_kernel.h"
 #include "runtime/inner_kernel.h"
@@ -715,10 +716,14 @@ aclError aclrtRandomNumAsyncImpl(const aclrtRandomNumTaskInfo* taskInfo, const a
                  "The data type is currently not supported"}));
         return ACL_ERROR_INVALID_PARAM;
     }
-    rtRandomNumTaskInfo_t* rtTaskInfo =
-        const_cast<rtRandomNumTaskInfo_t*>(reinterpret_cast<const rtRandomNumTaskInfo_t*>(taskInfo));
-    rtTaskInfo->dataType = kMapDataType.at(type);
-    ACL_REQUIRES_RTS_OK(rtsLaunchRandomNumTask(rtTaskInfo, static_cast<rtStream_t>(stream), reserve));
+    rtRandomNumTaskInfo_t rtTaskInfo = {};
+    const auto ret = memcpy_s(&rtTaskInfo, sizeof(rtTaskInfo), taskInfo, sizeof(*taskInfo));
+    if (ret != EOK) {
+        ACL_LOG_ERROR("copy random task info failed, result = %d", ret);
+        return ACL_ERROR_FAILURE;
+    }
+    rtTaskInfo.dataType = kMapDataType.at(type);
+    ACL_REQUIRES_RTS_OK(rtsLaunchRandomNumTask(&rtTaskInfo, static_cast<rtStream_t>(stream), reserve));
     ACL_LOG_INFO("successfully execute aclrtRandomNumAsync");
     return ACL_SUCCESS;
 }

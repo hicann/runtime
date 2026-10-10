@@ -11,6 +11,10 @@
 #include <cassert>
 #include <iostream>
 #include <cstdint>
+#include <cstring>
+#include <utility>
+#include <sys/mman.h>
+#include <unistd.h>
 #include "mmpa/mmpa_api.h"
 
 #include "acl/acl.h"
@@ -8738,22 +8742,72 @@ TEST_F(UTEST_ACL_Runtime, launch_random_task)
     aclrtStream stream = (aclrtStream)0x01U;
     aclrtRandomNumTaskInfo info = {};
     void* resv = reinterpret_cast<void*>(0x01U);
-    aclError ret = aclrtRandomNumAsync(nullptr, stream, nullptr);
-    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtsLaunchRandomNumTask(_, _, _)).Times(0);
+    EXPECT_EQ(aclrtRandomNumAsync(nullptr, stream, nullptr), ACL_ERROR_INVALID_PARAM);
 
     info.dataType = ACL_BOOL;
-    ret = aclrtRandomNumAsync(&info, nullptr, resv);
-    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+    EXPECT_EQ(aclrtRandomNumAsync(&info, nullptr, resv), ACL_ERROR_INVALID_PARAM);
+    EXPECT_EQ(info.dataType, ACL_BOOL);
+    Mock::VerifyAndClearExpectations(&MockFunctionTest::aclStubInstance());
 
-    info.dataType = ACL_FLOAT16;
-    ret = aclrtRandomNumAsync(&info, stream, nullptr);
-    EXPECT_EQ(ret, ACL_SUCCESS);
+    const std::pair<aclDataType, rtRandomNumDataType> dataTypes[] = {
+        {ACL_FLOAT16, RT_RANDOM_NUM_DATATYPE_FP16},  {ACL_FLOAT, RT_RANDOM_NUM_DATATYPE_FP32},
+        {ACL_BF16, RT_RANDOM_NUM_DATATYPE_BF16},     {ACL_INT32, RT_RANDOM_NUM_DATATYPE_INT32},
+        {ACL_INT64, RT_RANDOM_NUM_DATATYPE_INT64},   {ACL_UINT32, RT_RANDOM_NUM_DATATYPE_UINT32},
+        {ACL_UINT64, RT_RANDOM_NUM_DATATYPE_UINT64},
+    };
+    for (const auto& dataType : dataTypes) {
+        SCOPED_TRACE(static_cast<int32_t>(dataType.first));
+        std::memset(&info, 0x5A, sizeof(info));
+        info.dataType = dataType.first;
+        const aclrtRandomNumTaskInfo input = info;
+        rtRandomNumTaskInfo_t expected = {};
+        ASSERT_EQ(sizeof(expected), sizeof(input));
+        std::memcpy(&expected, &input, sizeof(expected));
+        expected.dataType = dataType.second;
 
-    info.dataType = ACL_FLOAT16;
-    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtsLaunchRandomNumTask(_, _, _))
-        .WillOnce(Return(ACL_ERROR_INVALID_PARAM));
-    ret = aclrtRandomNumAsync(&info, stream, nullptr);
-    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+        const rtError_t results[] = {ACL_RT_SUCCESS, ACL_RT_SUCCESS, ACL_ERROR_INVALID_PARAM};
+        for (const auto result : results) {
+            EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtsLaunchRandomNumTask(_, stream, nullptr))
+                .WillOnce(Invoke([&](const rtRandomNumTaskInfo_t* taskInfo, rtStream_t, void*) {
+                    EXPECT_NE(static_cast<const void*>(taskInfo), static_cast<const void*>(&input));
+                    EXPECT_EQ(taskInfo->dataType, dataType.second);
+                    EXPECT_EQ(std::memcmp(taskInfo, &expected, sizeof(expected)), 0);
+                    return result;
+                }));
+            EXPECT_EQ(aclrtRandomNumAsync(&input, stream, nullptr), result);
+            EXPECT_EQ(std::memcmp(&input, &info, sizeof(input)), 0);
+        }
+    }
+}
+
+TEST_F(UTEST_ACL_Runtime, launch_random_task_readonly_input)
+{
+    ASSERT_EXIT(
+        {
+            const size_t pageSize = static_cast<size_t>(sysconf(_SC_PAGESIZE));
+            void* page = mmap(nullptr, pageSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+            if (page == MAP_FAILED) {
+                _exit(1);
+            }
+            aclrtRandomNumTaskInfo info = {};
+            info.dataType = ACL_FLOAT16;
+            std::memcpy(page, &info, sizeof(info));
+            if (mprotect(page, pageSize, PROT_READ) != 0) {
+                _exit(2);
+            }
+            EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtsLaunchRandomNumTask(_, _, _))
+                .WillOnce(Invoke([](const rtRandomNumTaskInfo_t* taskInfo, rtStream_t, void*) -> rtError_t {
+                    return taskInfo->dataType == RT_RANDOM_NUM_DATATYPE_FP16 ? ACL_RT_SUCCESS : ACL_ERROR_FAILURE;
+                }));
+            const auto* input = static_cast<const aclrtRandomNumTaskInfo*>(page);
+            const aclError ret = aclrtRandomNumAsync(input, nullptr, nullptr);
+            const bool unchanged = std::memcmp(input, &info, sizeof(info)) == 0;
+            const bool dispatched = Mock::VerifyAndClearExpectations(&MockFunctionTest::aclStubInstance());
+            (void)munmap(page, pageSize);
+            _exit(ret == ACL_SUCCESS && unchanged && dispatched ? 0 : 3);
+        },
+        ExitedWithCode(0), "");
 }
 
 void taskFailCallback(aclrtExceptionInfo exceptionInfo) { (void)exceptionInfo; }
