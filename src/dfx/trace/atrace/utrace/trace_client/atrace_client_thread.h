@@ -29,6 +29,7 @@ typedef struct {
 
 // thread run function, callback when create thread
 typedef void* (*ThreadRunFunc)(void* args);
+typedef void (*ThreadReleaseHdcFunc)(void** handle);
 // thread stop function, callback when release thread
 typedef int32_t (*ThreadStopFunc)(int32_t devId);
 
@@ -39,6 +40,7 @@ void AtraceThreadRelease(int32_t devId, ThreadStopFunc func, bool sync);
 
 void AtraceThreadFree(int32_t devId);
 int8_t AtraceThreadGetStatus(int32_t devId);
+bool AtraceThreadReleaseHdcIfAllowed(int32_t devId, void** handle, ThreadReleaseHdcFunc releaseFunc);
 bool AtraceThreadSingleTask(int32_t devId);
 
 #ifdef __cplusplus

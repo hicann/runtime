@@ -18,6 +18,7 @@ typedef struct {
     TraceThread tid;
     int32_t pid;
     int8_t threadStatus;
+    bool releaseHdcStatus;
     TraceThreadArgs args;
     TraceUserBlock block;
 } ThreadInfo;
@@ -67,6 +68,24 @@ int8_t AtraceThreadGetStatus(int32_t devId)
     }
     AtraceThreadUnLock();
     return status;
+}
+
+bool AtraceThreadReleaseHdcIfAllowed(int32_t devId, void** handle, ThreadReleaseHdcFunc releaseFunc)
+{
+    if ((devId < 0) || (devId >= HOST_MAX_DEV_NUM) || (handle == NULL) || (releaseFunc == NULL)) {
+        return false;
+    }
+
+    bool released = false;
+    // Keep the mutex while invoking the callback so pool exit cannot disable release
+    // between the status check and the HDC destruction.
+    AtraceThreadLock();
+    if ((g_traceThread != NULL) && (g_traceThread[devId] != NULL) && g_traceThread[devId]->releaseHdcStatus) {
+        releaseFunc(handle);
+        released = true;
+    }
+    AtraceThreadUnLock();
+    return released;
 }
 
 /**
@@ -202,6 +221,7 @@ TraStatus AtraceThreadCreate(int32_t devId, TraceThreadArgs* pArgs, ThreadRunFun
     }
 
     g_traceThread[devId]->pid = TraceGetPid();
+    g_traceThread[devId]->releaseHdcStatus = true;
     g_traceThread[devId]->block.procFunc = func;
     g_traceThread[devId]->block.pulArg = (void*)(&g_traceThread[devId]->args);
     TraceThreadAttr threadAttr = {0, 0, 0, 0, 0, 0, 128 * 1024}; // joinable
@@ -255,6 +275,17 @@ TraStatus AtraceThreadPoolInit(void)
 void AtraceThreadPoolExit(ThreadStopFunc func)
 {
     int32_t i;
+    // Process teardown must not destroy HDC sessions. Mark every thread before
+    // signaling any of them so a concurrent receive loop observes the policy.
+    AtraceThreadLock();
+    if (g_traceThread != NULL) {
+        for (i = 0; i < HOST_MAX_DEV_NUM; i++) {
+            if (g_traceThread[i] != NULL) {
+                g_traceThread[i]->releaseHdcStatus = false;
+            }
+        }
+    }
+    AtraceThreadUnLock();
     for (i = 0; i < HOST_MAX_DEV_NUM; i++) {
         AtraceThreadRelease(i, func, false);
     }
