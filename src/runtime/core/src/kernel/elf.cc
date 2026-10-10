@@ -209,6 +209,16 @@ int32_t Get64bitSectionHeaders(rtElfData* const elfData)
     const uint32_t size = elfData->elf_header.e_shentsize;
     const uint32_t num = elfData->elf_header.e_shnum;
 
+    if ((elfData->elf_header.e_shstrndx != static_cast<uint32_t>(SHN_UNDEF)) &&
+        (elfData->elf_header.e_shstrndx >= num)) {
+        RT_LOG_OUTER_MSG_IMPL(
+            ErrorCode::EE1014, "The value " + std::to_string(elfData->elf_header.e_shstrndx) +
+                                   " of e_shstrndx in the operator binary ELF file header is invalid. The valid value "
+                                   "range is [0, " +
+                                   std::to_string(num) + "), or SHN_UNDEF");
+        return ELF_FAIL;
+    }
+
     /* Cope with unexpected section header sizes.  */
     if ((size == 0U) || (num == 0U) || (num > ((~(static_cast<uint64_t>(0))) / size))) {
         RT_LOG_OUTER_MSG_IMPL(

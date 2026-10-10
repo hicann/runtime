@@ -9,6 +9,7 @@
  */
 #include "driver/ascend_hal.h"
 #include "runtime/rt.h"
+#include "rt_error_codes.h"
 #include <sstream>
 #define private public
 #define protected public
@@ -431,6 +432,28 @@ TEST_F(ELFTest, ELF_Get_64bit_Section_Headers_Error_02)
         delete elfData;
         elfData = NULL;
     }
+}
+
+TEST_F(ELFTest, ELF_Get_64bit_Section_Headers_String_Index)
+{
+    const auto verifySectionStringIndex = [](const uint32_t shstrndx, const int expected) {
+        Elf64_External_Shdr externalHeaders[3] = {};
+        rtElfData elfData{};
+        elfData.obj_ptr_origin = reinterpret_cast<char_t*>(externalHeaders);
+        elfData.obj_size = sizeof(externalHeaders);
+        elfData.elf_header.e_shentsize = sizeof(Elf64_External_Shdr);
+        elfData.elf_header.e_shnum = 3U;
+        elfData.elf_header.e_shstrndx = shstrndx;
+
+        const int ret = Get64bitSectionHeaders(&elfData);
+        EXPECT_EQ(ret, expected);
+        EXPECT_EQ(elfData.section_headers != nullptr, expected == 0);
+        delete[] elfData.section_headers;
+    };
+
+    verifySectionStringIndex(2U, 0);
+    verifySectionStringIndex(SHN_UNDEF, 0);
+    verifySectionStringIndex(3U, 1);
 }
 
 TEST_F(ELFTest, ELF_Get_64bit_Elf_Symbols_Error_01)
@@ -1314,14 +1337,15 @@ TEST_F(ELFTest, GetBinaryMetaInfo_Error)
 
 // ===== AICPU SO printf TLV detection UT =====
 // Constructs a minimal 64-bit ELF with a .ascend.meta section containing specified TLVs.
-// Layout: | Elf64_Ehdr | shstrtab | .ascend.meta data | Elf64_Shdr[2] |
-//          section[0] = .ascend.meta, section[1] = .shstrtab
+// Layout: | Elf64_Ehdr | shstrtab | .ascend.meta data | Elf64_Shdr[3] |
+//          section[0] = null, section[1] = .ascend.meta, section[2] = .shstrtab
 
 struct MiniElf {
     std::vector<uint8_t> buf;
 };
 
-static MiniElf BuildElfWithMetaSection(const std::vector<std::pair<uint16_t, std::vector<uint8_t>>>& tlvs)
+static MiniElf BuildElfWithMetaSection(
+    const std::vector<std::pair<uint16_t, std::vector<uint8_t>>>& tlvs, const uint16_t shstrndx = 2U)
 {
     MiniElf elf;
     constexpr uint16_t ELF_MAGIC0 = 0x464C457FU; // \x7fELF
@@ -1354,9 +1378,7 @@ static MiniElf BuildElfWithMetaSection(const std::vector<std::pair<uint16_t, std
     const uint64_t metaOff = shstrtabOff + shstrtab.size();
     const uint64_t shdrOff = metaOff + metaData.size();
     const uint16_t shentsize = static_cast<uint16_t>(sizeof(Elf64_External_Shdr));
-    const uint16_t shnum = 2U;
-    const uint16_t shstrndx = 1U;
-
+    const uint16_t shnum = 3U;
     elf.buf.resize(shdrOff + shnum * sizeof(Elf64_External_Shdr), 0);
 
     auto put16 = [&elf](uint64_t off, uint16_t val) {
@@ -1407,31 +1429,31 @@ static MiniElf BuildElfWithMetaSection(const std::vector<std::pair<uint16_t, std
     // .ascend.meta data
     std::copy(metaData.begin(), metaData.end(), elf.buf.begin() + metaOff);
 
-    // section header[0]: .ascend.meta
-    uint64_t shdr0 = shdrOff;
-    put32(shdr0 + 0, metaNameIdx);
-    put32(shdr0 + 4, SHT_PROGBITS);
-    put64(shdr0 + 8, 0UL);
-    put64(shdr0 + 16, 0UL);
-    put64(shdr0 + 24, metaOff);
-    put64(shdr0 + 32, static_cast<uint64_t>(metaData.size()));
-    put32(shdr0 + 40, 0U);
-    put32(shdr0 + 44, 0U);
-    put64(shdr0 + 48, 1UL);
-    put64(shdr0 + 56, 0UL);
-
-    // section header[1]: .shstrtab
+    // section header[0] is the required null section.
     uint64_t shdr1 = shdrOff + sizeof(Elf64_External_Shdr);
-    put32(shdr1 + 0, strtabNameIdx);
-    put32(shdr1 + 4, SHT_STRTAB);
+    put32(shdr1 + 0, metaNameIdx);
+    put32(shdr1 + 4, SHT_PROGBITS);
     put64(shdr1 + 8, 0UL);
     put64(shdr1 + 16, 0UL);
-    put64(shdr1 + 24, shstrtabOff);
-    put64(shdr1 + 32, static_cast<uint64_t>(shstrtab.size()));
+    put64(shdr1 + 24, metaOff);
+    put64(shdr1 + 32, static_cast<uint64_t>(metaData.size()));
     put32(shdr1 + 40, 0U);
     put32(shdr1 + 44, 0U);
     put64(shdr1 + 48, 1UL);
     put64(shdr1 + 56, 0UL);
+
+    // section header[2]: .shstrtab
+    uint64_t shdr2 = shdrOff + 2U * sizeof(Elf64_External_Shdr);
+    put32(shdr2 + 0, strtabNameIdx);
+    put32(shdr2 + 4, SHT_STRTAB);
+    put64(shdr2 + 8, 0UL);
+    put64(shdr2 + 16, 0UL);
+    put64(shdr2 + 24, shstrtabOff);
+    put64(shdr2 + 32, static_cast<uint64_t>(shstrtab.size()));
+    put32(shdr2 + 40, 0U);
+    put32(shdr2 + 44, 0U);
+    put64(shdr2 + 48, 1UL);
+    put64(shdr2 + 56, 0UL);
 
     return elf;
 }
@@ -1454,6 +1476,36 @@ TEST_F(ELFTest, CheckAicpuSoPrintfTlv_InvalidInput)
     ret = CheckAicpuSoPrintfTlv(invalidSectionElf.buf.data(), sizeof(Elf64_External_Ehdr), hasPrintf);
     EXPECT_NE(ret, RT_ERROR_NONE);
     EXPECT_EQ(hasPrintf, false);
+}
+
+TEST_F(ELFTest, BinaryLoadFromData_ValidSectionStringIndexControl)
+{
+    auto elf = BuildElfWithMetaSection({});
+    rtBinHandle handle = nullptr;
+    const rtError_t ret = rtsBinaryLoadFromData(elf.buf.data(), elf.buf.size(), nullptr, &handle);
+
+    EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(handle, nullptr);
+}
+
+TEST_F(ELFTest, BinaryLoadFromData_UndefinedSectionStringIndex)
+{
+    auto elf = BuildElfWithMetaSection({}, SHN_UNDEF);
+    rtBinHandle handle = nullptr;
+    const rtError_t ret = rtsBinaryLoadFromData(elf.buf.data(), elf.buf.size(), nullptr, &handle);
+
+    EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(handle, nullptr);
+}
+
+TEST_F(ELFTest, BinaryLoadFromData_InvalidSectionStringIndex)
+{
+    auto elf = BuildElfWithMetaSection({}, 3U);
+    rtBinHandle handle = nullptr;
+    const rtError_t ret = rtsBinaryLoadFromData(elf.buf.data(), elf.buf.size(), nullptr, &handle);
+
+    EXPECT_EQ(ret, ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(handle, nullptr);
 }
 
 TEST_F(ELFTest, CheckAicpuSoPrintfTlv_NoMetaSection)
