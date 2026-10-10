@@ -361,7 +361,8 @@ AdxServerManager::PrepareResult AdxServerManager::PrepareComponentProcess(
 {
     MsgProto* req = nullptr;
     int32_t length = 0;
-    int32_t ret = AdxCommOptManager::Instance().TryRead(handle, reinterpret_cast<IdeRecvBuffT>(&req), length);
+    int32_t ret =
+        AdxCommOptManager::Instance().Read(handle, reinterpret_cast<IdeRecvBuffT>(&req), length, COMM_OPT_NOBLOCK);
     if (req != nullptr) {
         msgPtr = SharedPtr<MsgProto>(req, IdeXfree);
         req = nullptr;

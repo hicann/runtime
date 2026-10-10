@@ -813,9 +813,8 @@ TEST_F(ADX_SERVER_MANAGER_UTEST, ProcessRequestContinuesAfterNoDataRequest)
     AdxServerManager::PendingRequest first{1, deadline};
     AdxServerManager::PendingRequest second{2, deadline};
 
-    MOCKER(HdcReadNb).expects(exactly(2)).will(returnValue(IDE_DAEMON_RECV_NODATA)).then(invoke(HdcReadStub));
-    MOCKER_CPP(&AdxServerManager::WaitRequest).expects(once()).will(returnValue(true));
-    MOCKER_CPP(&AdxServerManager::LaunchComponentProcess).expects(once()).will(returnValue(true));
+    MOCKER(HdcReadNb).expects(exactly(3)).will(returnValue(IDE_DAEMON_RECV_NODATA)).then(invoke(HdcReadStub));
+    MOCKER_CPP(&AdxServerManager::LaunchComponentProcess).expects(exactly(2)).will(returnValue(true));
 
     server.ProcessRequest(first);
     server.ProcessRequest(second);
