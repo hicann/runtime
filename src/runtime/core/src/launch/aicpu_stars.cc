@@ -240,7 +240,7 @@ rtError_t StreamLaunchCpuKernel(
     aicpuTaskInfo = &(kernTask->u.aicpuTaskInfo);
     RT_LOG(
         RT_LOG_INFO,
-        "device_id=%lu, stream_id=%d, task_id=%hu, flag=%u, kernelFlag=0x%x, blkdim=%u, soName=%s, "
+        "device_id=%u, stream_id=%d, task_id=%hu, flag=%u, kernelFlag=0x%x, blkdim=%u, soName=%s, "
         "kernel_name=%s.",
         curCtx->Device_()->Id_(), stm->Id_(), kernTask->id, flag, aicpuTaskInfo->comm.kernelFlag,
         aicpuTaskInfo->comm.dim, launchSoName != nullptr ? launchSoName : "null",
