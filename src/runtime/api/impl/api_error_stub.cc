@@ -19,9 +19,9 @@ rtError_t ValidateStreamLaunchBlockingSet(const Stream* const stream, const uint
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t ValidateStreamLaunchBlockingGet(const Stream* const stm)
+rtError_t ValidateStreamLaunchBlockingGet(const Stream* const stream)
 {
-    UNUSED(stm);
+    UNUSED(stream);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
