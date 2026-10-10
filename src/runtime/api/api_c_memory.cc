@@ -491,7 +491,9 @@ rtError_t rtsMemcpyBatchAsync(
     const rtError_t error = apiInstance->MemcpyBatchAsync(
         dsts, destMaxs, srcs, sizes, count, attrs, attrsIdxs, numAttrs, failIdx, streamPtr);
     TIMESTAMP_END(rtsMemcpyBatchAsync);
-    COND_RETURN_WITH_NOLOG(error == RT_ERROR_DRV_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    COND_RETURN_WITH_NOLOG(
+        (error == RT_ERROR_DRV_NOT_SUPPORT) || (error == RT_ERROR_FEATURE_NOT_SUPPORT),
+        ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }

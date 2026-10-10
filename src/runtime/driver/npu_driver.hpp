@@ -700,7 +700,7 @@ public:
     static rtError_t GetSmmuFaultValid(uint32_t deviceId, bool& isValid);
     static rtError_t MemUceRepair(const uint32_t deviceId, rtMemUceInfo* memUceInfo);
     static bool CheckIsSupportFeature(uint32_t devId, int32_t featureType);
-    static rtError_t CheckIfSupport1GHugePage();
+    static rtError_t CheckIfSupport1GHugePage(const bool isLogError = true);
     static rtError_t ShrIdSetPodPid(const char* name, uint32_t sdid, int32_t pid);
     rtError_t ParseSDID(
         const uint32_t sdid, uint32_t* srvId, uint32_t* chipId, uint32_t* dieId, uint32_t* pyhId) override;

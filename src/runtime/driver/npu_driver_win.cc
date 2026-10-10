@@ -2038,7 +2038,11 @@ rtError_t NpuDriver::SupportNumaTsMemCtrl(int64_t& val)
     return RT_ERROR_NONE;
 }
 
-rtError_t NpuDriver::CheckIfSupport1GHugePage() { return RT_ERROR_NONE; }
+rtError_t NpuDriver::CheckIfSupport1GHugePage(const bool isLogError)
+{
+    UNUSED(isLogError);
+    return RT_ERROR_NONE;
+}
 
 bool NpuDriver::CheckIfSupportNumaTs() { return false; }
 

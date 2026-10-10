@@ -1043,6 +1043,7 @@ rtError_t rtMemcpy(void* dst, uint64_t destMax, const void* src, uint64_t cnt, r
     TIMESTAMP_BEGIN(rtMemcpy);
     const rtError_t error = apiInstance->MemCopySync(dst, destMax, src, cnt, kind);
     TIMESTAMP_END(rtMemcpy);
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_DRV_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }

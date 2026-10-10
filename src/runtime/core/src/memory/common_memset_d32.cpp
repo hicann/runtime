@@ -171,6 +171,12 @@ rtError_t MemsetD32OnDeviceByBatch(void* dst, uint64_t destMax, uint32_t value, 
 
         const rtError_t ret = NpuDriver::MemcpyBatch(dsts.data(), srcs.data(), sizes.data(), realBatch);
         if (ret != RT_ERROR_NONE) {
+            if (ret == RT_ERROR_DRV_NOT_SUPPORT) {
+                RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
+                    ErrorCode::EE1015,
+                    "Setting the memory content to a specified 32-bit unsigned integer value synchronously",
+                    "The current driver does not support batch memory copy through halMemcpyBatch.");
+            }
             RT_LOG(RT_LOG_ERROR, "MemcpyBatch failed, retCode=%#x.", static_cast<uint32_t>(ret));
             return ret;
         }

@@ -261,7 +261,7 @@ rtError_t ApiImplHostMemory::MallocHostSharedMemory(
     ZERO_RETURN_AND_MSG_OUTER_WITH_FUNC_DESC(in->size, "Shared memory allocation");
     RT_LOG(RT_LOG_INFO, "sharedMemName=%s, sharedMemSize=%" PRIu64 ", flag=%u.", in->name, in->size, in->flag);
     Context* const curCtx = Runtime::Instance()->CurrentContext(true, DEFAULT_DEVICE_ID);
-    NULL_PTR_RETURN_MSG(curCtx, RT_ERROR_CONTEXT_NULL);
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
     const rtError_t error = curCtx->Device_()->Driver_()->MallocHostSharedMemory(in, out, curCtx->Device_()->Id_());
     ERROR_RETURN(
@@ -281,7 +281,7 @@ rtError_t ApiImplHostMemory::FreeHostSharedMemory(rtFreeHostSharedMemoryIn* cons
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(in->devPtr, RT_ERROR_INVALID_VALUE, "Releasing host shared memory");
     RT_LOG(RT_LOG_INFO, "sharedMemName=%s, sharedMemSize=%" PRIu64 ", fd=%u.", in->name, in->size, in->fd);
     Context* const curCtx = Runtime::Instance()->CurrentContext(true, DEFAULT_DEVICE_ID);
-    NULL_PTR_RETURN_MSG(curCtx, RT_ERROR_CONTEXT_NULL);
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
     const rtError_t error = curCtx->Device_()->Driver_()->FreeHostSharedMemory(in, curCtx->Device_()->Id_());
     ERROR_RETURN(
@@ -307,7 +307,7 @@ rtError_t ApiImplHostMemory::HostRegister(void* ptr, uint64_t size, rtHostRegist
 
     RT_LOG(RT_LOG_INFO, "MemSize=%" PRIu64 ", type=%d.", size, type);
     Context* const curCtx = Runtime::Instance()->CurrentContext(true, DEFAULT_DEVICE_ID);
-    NULL_PTR_RETURN_MSG(curCtx, RT_ERROR_CONTEXT_NULL);
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     const Device* const dev = curCtx->Device_();
     NULL_PTR_RETURN_MSG(dev, RT_ERROR_DEVICE_NULL);
 
@@ -344,7 +344,7 @@ rtError_t ApiImplHostMemory::HostRegisterV2(void* ptr, uint64_t size, uint32_t f
 
     RT_LOG(RT_LOG_INFO, "MemSize=%" PRIu64 ", flag=%u.", size, flag);
     Context* const curCtx = Runtime::Instance()->CurrentContext(true, DEFAULT_DEVICE_ID);
-    NULL_PTR_RETURN_MSG(curCtx, RT_ERROR_CONTEXT_NULL);
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     const Device* const dev = curCtx->Device_();
     NULL_PTR_RETURN_MSG(dev, RT_ERROR_DEVICE_NULL);
     const uint32_t deviceId = dev->Id_();
@@ -388,7 +388,7 @@ rtError_t ApiImplHostMemory::HostUnregister(void* ptr)
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(ptr, RT_ERROR_INVALID_VALUE, "Host memory deregistration");
 
     Context* const curCtx = Runtime::Instance()->CurrentContext(true, DEFAULT_DEVICE_ID);
-    NULL_PTR_RETURN_MSG(curCtx, RT_ERROR_CONTEXT_NULL);
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     const Device* const dev = curCtx->Device_();
     NULL_PTR_RETURN_MSG(dev, RT_ERROR_DEVICE_NULL);
     const uint32_t deviceId = dev->Id_();
@@ -489,7 +489,7 @@ rtError_t ApiImplHostMemory::HostMemMapCapabilities(
         "Querying the host memory mapping capability on a specified device", HacTypeToString(hacType), "hacType",
         "[0, " + std::to_string(RT_HAC_TYPE_MAX) + ")");
     Context* const curCtx = Runtime::Instance()->CurrentContext(true, DEFAULT_DEVICE_ID);
-    NULL_PTR_RETURN_MSG(curCtx, RT_ERROR_CONTEXT_NULL);
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
     error = curCtx->Device_()->Driver_()->HostMemMapCapabilities(realDeviceId, hacType, capabilities);
     if (error == RT_ERROR_FEATURE_NOT_SUPPORT) {

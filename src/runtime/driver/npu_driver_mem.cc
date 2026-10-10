@@ -203,6 +203,7 @@ rtError_t NpuDriver::HostRegister(void* ptr, uint64_t size, uint32_t type, void*
 {
     if (!IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MEM_HOST_REGISTER)) {
         RT_LOG(RT_LOG_WARNING, "not support current chiptype");
+        RT_LOG_OUTER_MSG_WITH_FUNC_DESC(ErrorCode::EE1005, "host memory address registration");
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
     const bool isIOMemory = ((type & RT_MEM_HOST_REGISTER_IOMEMORY) != 0U);
@@ -251,6 +252,7 @@ rtError_t NpuDriver::HostUnregister(void* ptr, const uint32_t deviceId, const bo
 {
     if (!IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MEM_HOST_REGISTER)) {
         RT_LOG(RT_LOG_WARNING, "not support current chiptype");
+        RT_LOG_OUTER_MSG_WITH_FUNC_DESC(ErrorCode::EE1005, "host memory deregistration");
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
 
@@ -261,9 +263,10 @@ rtError_t NpuDriver::HostUnregister(void* ptr, const uint32_t deviceId, const bo
         if (!IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MEM_HOST_REGISTER_PCIE_THROUGH)) {
             flag = static_cast<uint32_t>(HOST_MEM_MAP_DEV);
         }
-        COND_RETURN_WARN(
-            &halHostUnregisterEx == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT,
-            "[drv api] halHostUnregisterEx does not exist");
+        COND_PROC_RETURN_AND_MSG_OUTER(
+            &halHostUnregisterEx == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1015,
+            RT_LOG(RT_LOG_WARNING, "[drv api] halHostUnregisterEx does not exist"), "Unregistering host memory",
+            "The driver interface halHostUnregisterEx does not exist.");
         drvRet = halHostUnregisterEx(ptr, deviceId, static_cast<UINT32>(flag));
     } else {
         // driver will use this interface to unregister without flag in new version
@@ -427,11 +430,16 @@ rtError_t NpuDriver::MapMem(void* devPtr, size_t size, size_t offset, rtDrvMemHa
 {
     drvError_t drvRet = DRV_ERROR_NONE;
 
-    COND_RETURN_WARN(&halMemMap == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT, "[drv api] halMemMap does not exist");
+    COND_PROC_RETURN_AND_MSG_OUTER(
+        &halMemMap == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1015,
+        RT_LOG(RT_LOG_WARNING, "[drv api] halMemMap does not exist"), "Mapping physical memory to a virtual address",
+        "The driver interface halMemMap does not exist.");
 
     drvRet = halMemMap(devPtr, size, offset, RtPtrToPtr<drv_mem_handle_t*>(handle), flags);
-    COND_RETURN_WARN(
-        drvRet == DRV_ERROR_NOT_SUPPORT, RT_ERROR_FEATURE_NOT_SUPPORT, "[drv api] halMemMap does not support.");
+    COND_PROC_RETURN_AND_MSG_OUTER(
+        drvRet == DRV_ERROR_NOT_SUPPORT, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1015,
+        RT_LOG(RT_LOG_WARNING, "[drv api] halMemMap does not support."), "Mapping physical memory to a virtual address",
+        "The driver interface halMemMap does not support memory mapping.");
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(drvRet, "Call driver api halMemMap failed, drvRetCode=%d.", static_cast<int32_t>(drvRet));
         return RT_GET_DRV_ERRCODE(drvRet);
@@ -461,11 +469,17 @@ rtError_t NpuDriver::UnmapMem(void* devPtr)
 {
     drvError_t drvRet = DRV_ERROR_NONE;
 
-    COND_RETURN_WARN(&halMemUnmap == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT, "[drv api] halMemUnmap does not exist");
+    COND_PROC_RETURN_AND_MSG_OUTER(
+        &halMemUnmap == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1015,
+        RT_LOG(RT_LOG_WARNING, "[drv api] halMemUnmap does not exist"),
+        "Unmapping physical memory from a virtual address", "The driver interface halMemUnmap does not exist.");
 
     drvRet = halMemUnmap(devPtr);
-    COND_RETURN_WARN(
-        drvRet == DRV_ERROR_NOT_SUPPORT, RT_ERROR_FEATURE_NOT_SUPPORT, "[drv api] halMemUnmap does not support.");
+    COND_PROC_RETURN_AND_MSG_OUTER(
+        drvRet == DRV_ERROR_NOT_SUPPORT, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1015,
+        RT_LOG(RT_LOG_WARNING, "[drv api] halMemUnmap does not support."),
+        "Unmapping physical memory from a virtual address",
+        "The driver interface halMemUnmap does not support memory unmapping.");
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(drvRet, "Call driver api halMemUnmap failed, drvRetCode=%d.", static_cast<int32_t>(drvRet));
         return RT_GET_DRV_ERRCODE(drvRet);
@@ -1529,9 +1543,12 @@ rtError_t NpuDriver::DevMemAllocCached(
 {
     const uint32_t memPolicy = type & static_cast<uint32_t>(~MEM_ALLOC_TYPE_BIT);
     RT_LOG(RT_LOG_DEBUG, "device_id=%d, type=%u, size=%" PRIu64 ", memPolicy=%u.", deviceId, type, size, memPolicy);
-    if (memPolicy != RT_MEMORY_POLICY_DEFAULT_PAGE_ONLY) {
-        return RT_ERROR_FEATURE_NOT_SUPPORT;
-    }
+    COND_RETURN_AND_MSG_OUTER(
+        memPolicy != RT_MEMORY_POLICY_DEFAULT_PAGE_ONLY, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1006,
+        "Allocating device memory with the cache attribute", RtFmtMsg("Memory policy value %#x", memPolicy),
+        RtFmtMsg(
+            "Cacheable memory supports only RT_MEMORY_POLICY_DEFAULT_PAGE_ONLY(%#x)",
+            RT_MEMORY_POLICY_DEFAULT_PAGE_ONLY));
 
     uint64_t drvFlag = static_cast<uint64_t>(MEM_SET_ALIGN_SIZE(9ULL)) | static_cast<uint64_t>(MEM_SVM_NORMAL) |
                        static_cast<uint64_t>(MEM_CACHEABLE_TYPE) | static_cast<uint64_t>(NODE_TO_DEVICE(deviceId));
@@ -1750,7 +1767,7 @@ static void ExtractDrvMemGetInfo(
             info->phyInfo.hugeFree = drvMemInfo->phy_info.huge_free;
             info->phyInfo.total = drvMemInfo->phy_info.total;
             info->phyInfo.hugeTotal = drvMemInfo->phy_info.huge_total;
-            if (NpuDriver::CheckIfSupport1GHugePage() == RT_ERROR_NONE) {
+            if (NpuDriver::CheckIfSupport1GHugePage(false) == RT_ERROR_NONE) {
                 info->phyInfo.giantHugeFree = drvMemInfo->phy_info.giant_free;
                 info->phyInfo.giantHugeTotal = drvMemInfo->phy_info.giant_total;
                 RT_LOG(
@@ -2066,9 +2083,11 @@ rtError_t NpuDriver::PointerGetAttributes(rtPointerAttributes_t* const attribute
 rtError_t NpuDriver::MemManagedGetAttr(
     rtMemManagedRangeAttribute attribute, const void* ptr, size_t size, void* data, size_t dataSize)
 {
-    COND_RETURN_WARN(
-        &halMemManagedRangeGetAttributes == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT,
-        "[drv api] halMemManagedRangeGetAttributes does not support.");
+    COND_PROC_RETURN_AND_MSG_OUTER(
+        &halMemManagedRangeGetAttributes == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1015,
+        RT_LOG(RT_LOG_WARNING, "[drv api] halMemManagedRangeGetAttributes does not support."),
+        "Querying a policy attribute value of UVM",
+        "The driver interface halMemManagedRangeGetAttributes does not exist.");
     const size_t attribute_num = 1U;
     const drvError_t drvRet = halMemManagedRangeGetAttributes(
         &data, &dataSize, RtPtrToPtr<uint32_t*>(&attribute), attribute_num, (DVdeviceptr)(uintptr_t)(ptr), size);
@@ -2086,9 +2105,11 @@ rtError_t NpuDriver::MemManagedGetAttrs(
     rtMemManagedRangeAttribute* attributes, size_t numAttributes, const void* ptr, size_t size, void** data,
     size_t* dataSizes)
 {
-    COND_RETURN_WARN(
-        &halMemManagedRangeGetAttributes == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT,
-        "[drv api] halMemManagedRangeGetAttributes does not support.");
+    COND_PROC_RETURN_AND_MSG_OUTER(
+        &halMemManagedRangeGetAttributes == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1015,
+        RT_LOG(RT_LOG_WARNING, "[drv api] halMemManagedRangeGetAttributes does not support."),
+        "Querying multiple policy attribute values of UVM",
+        "The driver interface halMemManagedRangeGetAttributes does not exist.");
     const drvError_t drvRet = halMemManagedRangeGetAttributes(
         data, dataSizes, RtPtrToPtr<uint32_t*>(attributes), numAttributes, (DVdeviceptr)(uintptr_t)(ptr), size);
     if (drvRet != DRV_ERROR_NONE) {
@@ -2402,7 +2423,10 @@ rtError_t NpuDriver::MemCopy2D(
         // do nothing
     }
 
-    COND_RETURN_WARN(&halMemcpy2D == nullptr, RT_ERROR_DRV_NOT_SUPPORT, "[drv api] halMemcpy2D does not exist.");
+    COND_PROC_RETURN_AND_MSG_OUTER(
+        &halMemcpy2D == nullptr, RT_ERROR_DRV_NOT_SUPPORT, ErrorCode::EE1015,
+        RT_LOG(RT_LOG_WARNING, "[drv api] halMemcpy2D does not exist."), "Performing a two-dimensional memory copy",
+        "The driver interface halMemcpy2D does not exist.");
     NpuDriverRecord record(static_cast<uint16_t>(RT_PROF_DRV_API_HalMemcpy2D));
     TIMESTAMP_BEGIN(halMemcpy2D);
     const drvError_t drvRet = halMemcpy2D(&memCpy2DValue);
@@ -2508,7 +2532,7 @@ rtError_t NpuDriver::SupportNumaTsMemCtrl(int64_t& val)
     return ret;
 }
 
-rtError_t NpuDriver::CheckIfSupport1GHugePage()
+rtError_t NpuDriver::CheckIfSupport1GHugePage(const bool isLogError)
 {
     if (Runtime::Instance()->GetIsSupport1GHugePage()) {
         return RT_ERROR_NONE;
@@ -2516,17 +2540,29 @@ rtError_t NpuDriver::CheckIfSupport1GHugePage()
     const auto curChipType = Runtime::Instance()->GetChipType();
     // Static function does not have featureSet
     if (!IS_SUPPORT_CHIP_FEATURE(curChipType, RtOptionalFeatureType::RT_FEATURE_MEM_1G_HUGE_PAGE)) {
-        RT_LOG(RT_LOG_ERROR, "chip type does not support, chip type=%s.", ChipTypeToString(curChipType).c_str());
+        RtLogErrorLevelControl(
+            isLogError, "chip type does not support, chip type=%s.", ChipTypeToString(curChipType).c_str());
+        if (isLogError) {
+            RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
+                ErrorCode::EE1006, "Checking 1 GB huge-page memory support",
+                "The 1 GB huge-page memory allocation policy",
+                "The current SoC does not support 1 GB huge-page memory allocation");
+        }
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
 
     const rtError_t ret = Support1GHugePageCtrl();
     if (ret != RT_ERROR_NONE) {
-        RT_LOG(
-            RT_LOG_ERROR,
+        RtLogErrorLevelControl(
+            isLogError,
             "this feature is not supported on current version, "
             "memory policy=0x%x(RT_MEMORY_POLICY_HUGE1G_PAGE_ONLY) or 0x%x(RT_MEMORY_POLICY_HUGE1G_PAGE_ONLY_P2P).",
             RT_MEMORY_POLICY_HUGE1G_PAGE_ONLY, RT_MEMORY_POLICY_HUGE1G_PAGE_ONLY_P2P);
+        if (isLogError) {
+            RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
+                ErrorCode::EE1015, "Checking 1 GB huge-page memory support",
+                "The driver failed to query support for 1 GB huge-page memory.");
+        }
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
     Runtime::Instance()->SetIsSupport1GHugePage(true);
