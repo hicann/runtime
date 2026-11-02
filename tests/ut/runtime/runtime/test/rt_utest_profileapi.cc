@@ -12,6 +12,8 @@
 #include "driver/ascend_hal.h"
 #include "securec.h"
 #include "runtime/rt.h"
+#include "osal.hpp"
+#include "dev_info_manage.h"
 #define private public
 #define protected public
 #include "runtime.hpp"
@@ -55,6 +57,8 @@ protected:
     {
         SetProfilerOn();
         oldApi_ = const_cast<Api*>(Runtime::runtime_->api_);
+        // This fixture calls the profiling decorator directly.
+        // NULL argument validation belongs to ApiErrorDecorator.
         Runtime::runtime_->api_ = Runtime::runtime_->profiler_->apiProfileDecorator_;
         Runtime::runtime_->profiler_->profCfg_.isRtsProfEn = 1;
 
@@ -564,27 +568,18 @@ TEST_F(ProfileApiTest, memcpy_host_to_device)
 
 TEST_F(ProfileApiTest, memcpy_async_host_to_device)
 {
-    rtError_t error;
-    void* hostPtr;
-    void* devPtr;
+    uint8_t hostBuffer[64] = {};
+    void* devPtr = nullptr;
+    ASSERT_EQ(rtMalloc(&devPtr, sizeof(hostBuffer), RT_MEMORY_HBM, DEFAULT_MODULEID), RT_ERROR_NONE);
+    const ScopeGuard memoryGuard([&]() { EXPECT_EQ(rtFree(devPtr), RT_ERROR_NONE); });
+    rtStream_t stream = nullptr;
+    ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
+    const ScopeGuard streamGuard([&]() { EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE); });
 
-    error = rtMalloc(&hostPtr, 64, RT_MEMORY_HBM, DEFAULT_MODULEID);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtMalloc(&devPtr, 64, RT_MEMORY_HBM, DEFAULT_MODULEID);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtMemcpyAsync(devPtr, 64, hostPtr, 64, RT_MEMCPY_HOST_TO_DEVICE, stream_);
-    // EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtStreamSynchronize(stream_);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtFree(devPtr);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtFree(hostPtr);
-    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(
+        rtMemcpyAsync(devPtr, sizeof(hostBuffer), hostBuffer, sizeof(hostBuffer), RT_MEMCPY_HOST_TO_DEVICE, stream),
+        RT_ERROR_NONE);
+    EXPECT_EQ(rtStreamSynchronize(stream), RT_ERROR_NONE);
 }
 
 TEST_F(ProfileApiTest, hosttask_memcpy_host_to_device)
@@ -628,9 +623,15 @@ TEST_F(ProfileApiTest, hosttask_memcpy_default_stream)
 
     error = rtMalloc(&devPtr, 64, RT_MEMORY_HBM, DEFAULT_MODULEID);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    MOCKER(cmodelDrvMemcpy).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
+    MOCKER_CPP(&DevInfoManage::IsSupportChipFeature)
+        .expects(once())
+        .with(mockcpp::any(), eq(RtOptionalFeatureType::RT_FEATURE_TASK_MEMORY_COPY_DOT_HOST))
+        .will(returnValue(true));
+    ApiImpl apiImpl;
+    MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::MemcpyHostTask).expects(once()).will(returnValue(RT_ERROR_INVALID_VALUE));
     error = rtMemcpyHostTask(devPtr, 64, hostPtr, 64, RT_MEMCPY_HOST_TO_DEVICE, NULL);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+    GlobalMockObject::verify();
 
     error = rtFree(devPtr);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -641,27 +642,15 @@ TEST_F(ProfileApiTest, hosttask_memcpy_default_stream)
 
 TEST_F(ProfileApiTest, memcpy_async_host_to_device_default_stream)
 {
-    rtError_t error;
-    void* hostPtr;
-    void* devPtr;
+    uint8_t hostBuffer[64] = {};
+    void* devPtr = nullptr;
+    ASSERT_EQ(rtMalloc(&devPtr, sizeof(hostBuffer), RT_MEMORY_HBM, DEFAULT_MODULEID), RT_ERROR_NONE);
+    const ScopeGuard memoryGuard([&]() { EXPECT_EQ(rtFree(devPtr), RT_ERROR_NONE); });
 
-    error = rtMalloc(&hostPtr, 64, RT_MEMORY_HBM, DEFAULT_MODULEID);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtMalloc(&devPtr, 64, RT_MEMORY_HBM, DEFAULT_MODULEID);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtMemcpyAsync(devPtr, 64, hostPtr, 64, RT_MEMCPY_HOST_TO_DEVICE, NULL);
-    // EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtStreamSynchronize(NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtFree(devPtr);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtFree(hostPtr);
-    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(
+        rtMemcpyAsync(devPtr, sizeof(hostBuffer), hostBuffer, sizeof(hostBuffer), RT_MEMCPY_HOST_TO_DEVICE, nullptr),
+        RT_ERROR_NONE);
+    EXPECT_EQ(rtStreamSynchronize(nullptr), RT_ERROR_NONE);
 }
 
 TEST_F(ProfileApiTest, dev_sync_null)
@@ -673,9 +662,6 @@ TEST_F(ProfileApiTest, dev_sync_null)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     (RefObject<Context*>*)((Runtime*)Runtime::Instance())->PrimaryContextRetain(devId);
-
-    //    error = rtDeviceReset(0);
-    //    EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtDeviceSynchronize();
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -701,16 +687,10 @@ TEST_F(ProfileApiTest, dev_get_all)
     int32_t devId;
     rtError_t error;
 
-    // error = rtGetDevice(NULL);
-    // EXPECT_NE(error, RT_ERROR_NONE);
-
     error = rtGetDevice(&devId);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     (RefObject<Context*>*)((Runtime*)Runtime::Instance())->PrimaryContextRetain(devId);
-
-    // error = rtDeviceReset(0);
-    // EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtGetDevice(&devId);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -760,12 +740,6 @@ TEST_F(ProfileApiTest, dev_default_use)
     error = rtGetDevice(&devId);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // error = rtCtxSetCurrent(NULL);
-    // EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
-
-    // error = rtDeviceReset(0);
-    // EXPECT_NE(error, RT_ERROR_NONE);
-
     error = rtCtxGetCurrent(&ctx);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
@@ -800,9 +774,6 @@ TEST_F(ProfileApiTest, context_create_and_destroy)
     error = rtCtxDestroy(ctx);
     EXPECT_NE(error, RT_ERROR_NONE);
 
-    // error = rtCtxCreate(NULL, 0, 0);
-    // EXPECT_NE(error, RT_ERROR_NONE);
-
     int32_t devNum = 0;
     error = rtGetDeviceCount(&devNum);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -826,9 +797,6 @@ TEST_F(ProfileApiTest, context_create_and_destroy)
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_EQ(current, ctx);
 
-    // error = rtCtxDestroy(ctx);
-    // EXPECT_NE(error, RT_ERROR_NONE);
-
     error = rtStreamDestroy(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
@@ -838,8 +806,6 @@ TEST_F(ProfileApiTest, context_create_and_destroy)
     error = rtCtxDestroy(ctx);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // error = rtCtxDestroy(NULL);
-    // EXPECT_NE(error, RT_ERROR_NONE);
     error = rtDeviceReset(devId);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
@@ -850,12 +816,6 @@ TEST_F(ProfileApiTest, context_set_and_get)
     rtContext_t ctxA, ctxB;
     rtContext_t current = NULL;
     int32_t currentDevId = -1;
-
-    // error = rtCtxGetDevice(NULL);
-    // EXPECT_NE(error, RT_ERROR_NONE);
-
-    // error = rtCtxGetCurrent(NULL);
-    // EXPECT_NE(error, RT_ERROR_NONE);
 
     int32_t devId = 0;
     error = rtGetDevice(&devId);
@@ -956,14 +916,19 @@ TEST_F(ProfileApiTest, context_destroy_with_stream_abandon)
 
 TEST_F(ProfileApiTest, managed_mem)
 {
-    rtError_t error;
-    void* ptr = NULL;
+    // A distinct driver allocation avoids aliasing the stub's shared SPM buffer.
+    uint8_t buffer[128] = {};
+    void* allocation = buffer;
+    MOCKER(halMemAlloc)
+        .expects(once())
+        .with(outBoundP(&allocation, sizeof(allocation)), mockcpp::any(), mockcpp::any())
+        .will(returnValue(DRV_ERROR_NONE));
+    MOCKER(halMemFree).expects(once()).with(eq(allocation)).will(returnValue(DRV_ERROR_NONE));
 
-    error = rtMemAllocManaged(&ptr, 128, 0, DEFAULT_MODULEID);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtMemFreeManaged(ptr);
-    // EXPECT_EQ(error, RT_ERROR_NONE);
+    void* ptr = nullptr;
+    ASSERT_EQ(rtMemAllocManaged(&ptr, sizeof(buffer), 0, DEFAULT_MODULEID), RT_ERROR_NONE);
+    EXPECT_EQ(ptr, allocation);
+    EXPECT_EQ(rtMemFreeManaged(ptr), RT_ERROR_NONE);
 }
 
 /*UT for profiler.cc SetDevice() "if (RT_ERROR_NONE != error)" Line:655*/

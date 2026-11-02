@@ -1551,13 +1551,6 @@ TEST_F(AICPUScheduleTEST, ProcessEventTest)
     eventInfo.comm.event_id = EVENT_TDT_ENQUEUE;
     ret = AicpuEventManager::GetInstance().ProcessEvent(eventInfo, 0);
     EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
-
-    // MOCKER_CPP(&AicpuEventManager::ProcessCdqEvent)
-    //     .stubs()
-    //     .will(returnValue(0));
-    // eventInfo.comm.event_id = EVENT_CDQ_MSG;
-    // ret = AicpuEventManager::GetInstance().ProcessEvent(eventInfo, 0);
-    // EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
 }
 
 TEST_F(AICPUScheduleTEST, ProcessEventTest02)
@@ -1579,9 +1572,6 @@ TEST_F(AICPUScheduleTEST, ProcessEventTest2)
     MOCKER_CPP(&AicpuQueueEventProcess::ProcessQsMsg).stubs().will(returnValue(0));
     MOCKER_CPP(&AicpuQueueEventProcess::ProcessDrvMsg).stubs().will(returnValue(0));
     MOCKER_CPP(&MessageQueue::SendResponse).stubs();
-    // MOCKER_CPP(&AicpuEventManager::ProcessCdqEvent)
-    //     .stubs()
-    //     .will(returnValue(0));
 
     event_info eventInfo = g_event;
     eventInfo.comm.event_id = EVENT_DVPP_MPI_MSG;
@@ -1610,11 +1600,6 @@ TEST_F(AICPUScheduleTEST, ProcessEventTest2)
     std::cout << "AICPUScheduleTEST EVENT_ACPU_MSG_TYPE1" << std::endl;
     ret = AicpuEventManager::GetInstance().ProcessEvent(eventInfo, 0);
     EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
-
-    // eventInfo.comm.event_id = EVENT_CDQ_MSG;
-    // std::cout << "AICPUScheduleTEST EVENT_CDQ_MSG" << std::endl;
-    // ret = AicpuEventManager::GetInstance().ProcessEvent(eventInfo, 0);
-    // EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
 
     eventInfo.comm.event_id = EVENT_QS_MSG;
     std::cout << "AICPUScheduleTEST EVENT_QS_MSG" << std::endl;

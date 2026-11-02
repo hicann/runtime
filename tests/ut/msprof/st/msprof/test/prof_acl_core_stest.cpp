@@ -2211,7 +2211,8 @@ TEST_F(COMMANDHANDLE_STEST, commandHandle_api)
 {
     GlobalMockObject::verify();
 
-    // EXPECT_EQ(ACL_SUCCESS, CommandHandleProfInit());
+    // Command initialization and callback dispatch are covered by COMMANDHANDLE_TEST.commandHandle_api.
+    // This legacy ST test file is excluded from the current CMake targets.
     std::string retStr(4099, 'a');
     std::string zeroStr = "{}";
     MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::GetParamJsonStr)

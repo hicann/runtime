@@ -1245,17 +1245,37 @@ TEST_F(UTEST_ACL_Common, aclInitFlag_false)
     EXPECT_EQ(ret, false);
 }
 
-TEST(AclInitTest, MultiThreadConcurrentAclInit)
+class AclInitTest : public testing::Test {
+protected:
+    void SetUp() override
+    {
+        MockFunctionTest::aclStubInstance().ResetToDefaultMock();
+        ON_CALL(MockFunctionTest::aclStubInstance(), GetPlatformResWithLock(_, _)).WillByDefault(Return(true));
+        // aclFinalize() preserves the configuration hash across initialization cycles.
+        resetAclJsonHash();
+        ASSERT_FALSE(GetAclInitFlag());
+    }
+
+    void TearDown() override
+    {
+        if (GetAclInitFlag()) {
+            EXPECT_EQ(aclFinalize(), ACL_SUCCESS);
+        }
+        resetAclJsonHash();
+        Mock::VerifyAndClear(&MockFunctionTest::aclStubInstance());
+    }
+};
+
+TEST_F(AclInitTest, MultiThreadConcurrentAclInit)
 {
     const int numThreads = 10;
     std::vector<std::thread> threads;
     std::atomic<int> successCount(0);
     std::atomic<int> repeatInitCount(0);
-    aclError ret;
 
     for (int i = 0; i < numThreads; ++i) {
         threads.emplace_back([&]() {
-            ret = aclInit("");
+            const aclError ret = aclInit("");
             if (ret == ACL_SUCCESS) {
                 successCount++;
             } else if (ret == ACL_ERROR_REPEAT_INITIALIZE) {
@@ -1270,21 +1290,24 @@ TEST(AclInitTest, MultiThreadConcurrentAclInit)
     EXPECT_EQ(successCount, 1);                  // 只有一个线程能够成功初始化
     EXPECT_EQ(repeatInitCount, numThreads - 1);  // 其他线程返回 ACL_ERROR_REPEAT_INITIALIZE
     EXPECT_EQ(GetAclInitRefCount(), numThreads); // 引用计数增加1
-    //    ret = aclFinalize();
-    //    EXPECT_EQ(ret, ACL_SUCCESS);
+    EXPECT_EQ(aclFinalize(), ACL_SUCCESS);
+    EXPECT_EQ(GetAclInitRefCount(), 0U);
+    EXPECT_FALSE(GetAclInitFlag());
 }
 
-TEST(AclInitTest, MultiThreadConcurrentAclFinalizeReference)
+TEST_F(AclInitTest, MultiThreadConcurrentAclFinalizeReference)
 {
     const int numThreads = 10;
     std::vector<std::thread> threads;
     std::atomic<int> successCount(0);
-    aclError ret;
+    for (int i = 0; i < numThreads; ++i) {
+        ASSERT_EQ(aclInit(""), i == 0 ? ACL_SUCCESS : ACL_ERROR_REPEAT_INITIALIZE);
+    }
 
     for (int i = 0; i < numThreads; ++i) {
         threads.emplace_back([&]() {
             uint64_t refCount = 0;
-            ret = aclFinalizeReference(&refCount);
+            const aclError ret = aclFinalizeReference(&refCount);
             if (ret == ACL_SUCCESS) {
                 successCount++;
             }

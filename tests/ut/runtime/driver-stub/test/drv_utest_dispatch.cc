@@ -82,14 +82,6 @@ TEST_F(DrvDispatchTest, dispatch_occupyAPI_test)
     in.type = DRV_CALLBACK_TYPE;
     error = halSqMemGet(devId, &in, &out);
     EXPECT_EQ(error, DRV_ERROR_NONE);
-    //    error = drvCommandOccupy(deviceId, &drvInfo);
-    //   EXPECT_EQ(error, DRV_ERROR_NONE);
-
-    // error = drvCommandOccupy(deviceId, NULL);
-    //  EXPECT_EQ(error, DRV_ERROR_INVALID_HANDLE);
-
-    // error = drvCommandOccupy(-1, &drvInfo);
-    // EXPECT_EQ(error, DRV_ERROR_INVALID_VALUE);
 }
 
 TEST_F(DrvDispatchTest, dispatch_occupy_size_test)
@@ -233,9 +225,9 @@ TEST_F(DrvDispatchTest, dispatch_send_test4)
     in.type = DRV_INVALID_TYPE;
     Sendinfo.type = DRV_INVALID_TYPE;
     error = halSqMemGet(deviceId, &in, &out);
-    // EXPECT_EQ(error, DRV_ERROR_NONE);
+    EXPECT_EQ(error, DRV_ERROR_INVALID_VALUE);
     error = halSqMsgSend(deviceId, &Sendinfo);
-    // EXPECT_EQ(error, DRV_ERROR_NONE);
+    EXPECT_EQ(error, DRV_ERROR_INVALID_VALUE);
 }
 TEST_F(DrvDispatchTest, dispatch_queueAPI_test)
 {

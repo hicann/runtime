@@ -142,18 +142,10 @@ TEST_F(PROF_DEVICE_RPC_UTEST, SendMsgAndHandleResponse)
         .will(returnValue(mockMessage))
         .then(returnValue(encodeMessage));
 
-    // MOCKER_CPP(&analysis::dvvp::transport::DeviceTransport::SendMsgAndRecvResponse)
-    //     .stubs()
-    //     .will(returnValue(-1))
-    //     .then(returnValue(0));
-
-    // MOCKER_CPP(&analysis::dvvp::transport::DeviceTransport::HandlePacket)
-    //     .stubs()
-    //     .will(returnValue(-1))
-    //     .then(returnValue(0));
     EXPECT_EQ(PROFILING_FAILED, jobDeviceRpc->SendMsgAndHandleResponse(message));
     EXPECT_EQ(PROFILING_FAILED, jobDeviceRpc->SendMsgAndHandleResponse(message));
     EXPECT_EQ(PROFILING_FAILED, jobDeviceRpc->SendMsgAndHandleResponse(message));
     EXPECT_EQ(PROFILING_FAILED, jobDeviceRpc->SendMsgAndHandleResponse(message));
-    // EXPECT_EQ(PROFILING_SUCCESS, jobDeviceRpc->SendMsgAndHandleResponse(message));
+    // A success path needs DevTransMgr::GetDevTransport to return an initialized transport.
+    // This legacy file is not included in the current CMake test source list.
 }

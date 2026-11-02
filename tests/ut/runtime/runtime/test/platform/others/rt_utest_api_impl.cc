@@ -46,6 +46,7 @@
 #include "soc_info.h"
 #include "../../rt_utest_config_define.hpp"
 #include "api_impl_david.hpp"
+#include "dev_info_manage.h"
 #include "inner_thread_local.hpp"
 #include "thread_local_container.hpp"
 #include "stream_c.hpp"
@@ -284,6 +285,10 @@ TEST_F(ApiImplTest, rtGetDevMsg)
 {
     ApiImpl apiImpl;
     rtError_t error;
+    MOCKER_CPP(&DevInfoManage::IsSupportChipFeature)
+        .expects(exactly(2))
+        .with(eq(CHIP_CLOUD), eq(RtOptionalFeatureType::RT_FEATURE_DFX_TS_GET_DEVICE_MSG))
+        .will(returnValue(true));
     MOCKER_CPP(&ApiImpl::CurrentContext).stubs().will(returnValue((Context*)NULL));
     MOCKER(ContextManage::CheckContextIsValid).stubs().will(returnValue(false));
     MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::GetRunMode).stubs().will(invoke(GetRunModeStubExt));
@@ -294,9 +299,9 @@ TEST_F(ApiImplTest, rtGetDevMsg)
     GlobalContainer::SetRtChipType(CHIP_CLOUD);
 
     error = apiImpl.GetDevMsg(RT_GET_DEV_ERROR_MSG, GetErrorMessage);
-    // EXPECT_EQ(error, RT_ERROR_CONTEXT_NULL); 临时注释，后续整改
+    EXPECT_EQ(error, RT_ERROR_CONTEXT_NULL);
     error = apiImpl.GetDevMsg(RT_GET_DEV_MSG_RESERVE, GetErrorMessage);
-    // EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT); 临时注释，后续整改
+    EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
     rtInstance->SetChipType(chipType);
     GlobalContainer::SetRtChipType(chipType);
     GlobalMockObject::verify();
@@ -313,6 +318,10 @@ TEST_F(ApiImplTest, rtGetDevMsgOffline)
 {
     ApiImpl apiImpl;
     rtError_t error;
+    MOCKER_CPP(&DevInfoManage::IsSupportChipFeature)
+        .expects(exactly(2))
+        .with(eq(CHIP_CLOUD), eq(RtOptionalFeatureType::RT_FEATURE_DFX_TS_GET_DEVICE_MSG))
+        .will(returnValue(true));
     MOCKER_CPP(&ApiImpl::CurrentContext).stubs().will(returnValue((Context*)NULL));
     MOCKER(ContextManage::CheckContextIsValid).stubs().will(returnValue(false));
     MOCKER_CPP_VIRTUAL(apiImpl, &ApiImpl::GetRunMode).stubs().will(invoke(GetRunModeOfflineStub));
@@ -323,9 +332,9 @@ TEST_F(ApiImplTest, rtGetDevMsgOffline)
     GlobalContainer::SetRtChipType(CHIP_CLOUD);
 
     error = apiImpl.GetDevMsg(RT_GET_DEV_ERROR_MSG, GetErrorMessage);
-    // EXPECT_EQ(error, RT_ERROR_CONTEXT_NULL); 临时注释，后续整改
+    EXPECT_EQ(error, RT_ERROR_CONTEXT_NULL);
     error = apiImpl.GetDevMsg(RT_GET_DEV_MSG_RESERVE, GetErrorMessage);
-    // EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT); 临时注释，后续整改
+    EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
     rtInstance->SetChipType(chipType);
     GlobalContainer::SetRtChipType(chipType);
     GlobalMockObject::verify();

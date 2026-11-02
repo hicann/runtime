@@ -51,7 +51,6 @@ TEST_F(HOST_PROF_DEVICE_TRANSPORT_UTEST, CreateCoparamsnn)
     std::shared_ptr<analysis::dvvp::proto::DataChannelHandshake> data_message(
         new analysis::dvvp::proto::DataChannelHandshake());
     EXPECT_EQ(nullptr, dev_tran->CreateConn());
-    // EXPECT_EQ(PROFILING_FAILED, dev_tran->HandleShake(nullptr, data_message));
 
     data_tran = std::make_shared<HDCTransport>(client);
     std::shared_ptr<AdxTransport> fake_trans;
@@ -436,4 +435,27 @@ TEST_F(HELPERTRANSPORT_TEST, PackingData)
     EXPECT_EQ(fileName, package.fileName);
     EXPECT_EQ(extraInfo, package.extraInfo);
     EXPECT_NE("", package.id);
+}
+TEST_F(HOST_PROF_DEVICE_TRANSPORT_UTEST, HandleShakeCreateConnFailed)
+{
+    GlobalMockObject::verify();
+    dev_tran = std::make_shared<DeviceTransport>(client, "0", "123", "def_mode");
+    std::shared_ptr<AdxTransport> connection;
+    MOCKER_CPP(&DeviceTransport::CreateConn).expects(once()).will(returnValue(connection));
+    MOCKER(analysis::dvvp::common::utils::Utils::UsleepInterupt).expects(never());
+    auto message = std::make_shared<analysis::dvvp::proto::DataChannelHandshake>();
+    EXPECT_EQ(PROFILING_FAILED, dev_tran->HandleShake(message, false));
+    GlobalMockObject::verify();
+}
+
+TEST_F(HOST_PROF_DEVICE_TRANSPORT_UTEST, HandleShakeCtrlCreateConnFailed)
+{
+    GlobalMockObject::verify();
+    dev_tran = std::make_shared<DeviceTransport>(client, "0", "123", "def_mode");
+    std::shared_ptr<AdxTransport> connection;
+    MOCKER_CPP(&DeviceTransport::CreateConn).expects(exactly(5)).will(returnValue(connection));
+    MOCKER(analysis::dvvp::common::utils::Utils::UsleepInterupt).expects(exactly(4)).will(returnValue(0));
+    auto message = std::make_shared<analysis::dvvp::proto::CtrlChannelHandshake>();
+    EXPECT_EQ(PROFILING_FAILED, dev_tran->HandleShake(message, true));
+    GlobalMockObject::verify();
 }

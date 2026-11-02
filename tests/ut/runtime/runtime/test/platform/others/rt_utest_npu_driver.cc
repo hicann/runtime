@@ -682,33 +682,34 @@ TEST_F(NpuDriverTest, managed_memory_failed)
 
 TEST_F(NpuDriverTest, huge_page_managed_memory_failed_01)
 {
-    void* mem;
-    rtError_t error;
+    NpuDriver driver;
+    uint8_t buffer[64] = {};
+    void* allocation = buffer;
+    MOCKER(halMemAlloc)
+        .expects(exactly(2))
+        .with(outBoundP(&allocation, sizeof(allocation)), mockcpp::any(), mockcpp::any())
+        .will(returnValue(DRV_ERROR_INVALID_VALUE))
+        .then(returnValue(DRV_ERROR_NONE));
+    MOCKER(halMemFree).expects(once()).with(eq(allocation)).will(returnValue(DRV_ERROR_NONE));
 
-    MOCKER(halMemAlloc).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
-
-    // NpuDriver * rawDrv = new NpuDriver();
-    // MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::ManagedMemFree)
-    //     .stubs()
-    //     .will(returnValue(RT_ERROR_INVALID_VALUE));
-
-    error = rtMemAllocManaged(&mem, 1024 * 1025, 0, DEFAULT_MODULEID);
-    // EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtMemFreeManaged(mem);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    // delete rawDrv;
+    // The failed huge-page allocation must fall back to normal pages.
+    void* mem = nullptr;
+    ASSERT_EQ(driver.ManagedMemAlloc(&mem, 1024 * 1025, Driver::MANAGED_MEM_RW, 0, DEFAULT_MODULEID), RT_ERROR_NONE);
+    EXPECT_EQ(mem, allocation);
+    EXPECT_EQ(driver.ManagedMemFree(mem), RT_ERROR_NONE);
 }
 
 TEST_F(NpuDriverTest, huge_page_managed_memory_failed_02)
 {
-    void* mem;
+    NpuDriver driver;
+    void* mem = nullptr;
     rtError_t error;
 
-    MOCKER(halMemAlloc).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
+    MOCKER(halMemAlloc).expects(exactly(2)).will(returnValue(DRV_ERROR_INVALID_VALUE));
 
-    error = rtMemAllocManaged(&mem, 1024 * 1025, 0, DEFAULT_MODULEID);
-    EXPECT_NE(error, RT_ERROR_NONE);
+    error = driver.ManagedMemAlloc(&mem, 1024 * 1025, Driver::MANAGED_MEM_RW, 0, DEFAULT_MODULEID);
+    EXPECT_EQ(error, RT_ERROR_DRV_INPUT);
+    EXPECT_EQ(mem, nullptr);
 }
 
 TEST_F(NpuDriverTest, memory_failed)
@@ -2582,14 +2583,12 @@ TEST_F(NpuDriverTest2, trans_mem_attributr)
 
 TEST_F(NpuDriverTest2, trans_mem_attributr_not_support)
 {
-    rtError_t error = RT_ERROR_NONE;
     rtMemType_t type = RT_MEMORY_DEFAULT;
-    NpuDriver* rawDrv = new NpuDriver();
-    rawDrv->chipType_ = CHIP_ADC;
+    NpuDriver driver;
+    driver.featureSet_[static_cast<uint32_t>(RtOptionalFeatureType::RT_FEATURE_DEVICE_P2P)] = false;
 
-    error = rawDrv->transMemAttribute(RT_MEMORY_POLICY_DEFAULT_PAGE_ONLY_P2P, &type);
-    // EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT); Temporary comment (for future refactoring/cleanup).
-    delete rawDrv;
+    EXPECT_EQ(driver.transMemAttribute(RT_MEMORY_POLICY_DEFAULT_PAGE_ONLY_P2P, &type), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(type, RT_MEMORY_DEFAULT);
 }
 
 TEST_F(NpuDriverTest2, mem_addr_translate_failed)

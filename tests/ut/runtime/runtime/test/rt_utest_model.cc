@@ -1630,34 +1630,27 @@ TEST_F(ModelTest, model_stream_unbind_stream_fail_03)
 
 TEST_F(ModelTest, model_stream_excute_task_fail)
 {
-    rtError_t error;
-    rtStream_t stream;
-    rtModel_t model;
-    rtContext_t ctx;
+    rtContext_t ctx = nullptr;
+    ASSERT_EQ(rtCtxCreate(&ctx, RT_CTX_NORMAL_MODE, 0), RT_ERROR_NONE);
+    const ScopeGuard contextGuard([&]() { EXPECT_EQ(rtCtxDestroy(ctx), RT_ERROR_NONE); });
+    rtStream_t executeStream = nullptr;
+    ASSERT_EQ(rtStreamCreate(&executeStream, 0), RT_ERROR_NONE);
+    const ScopeGuard executeStreamGuard([&]() { EXPECT_EQ(rtStreamDestroy(executeStream), RT_ERROR_NONE); });
+    rtStream_t modelStream = nullptr;
+    ASSERT_EQ(rtStreamCreateWithFlags(&modelStream, 0, RT_STREAM_PERSISTENT), RT_ERROR_NONE);
+    const ScopeGuard modelStreamGuard([&]() { EXPECT_EQ(rtStreamDestroy(modelStream), RT_ERROR_NONE); });
+    rtModel_t model = nullptr;
+    ASSERT_EQ(rtModelCreate(&model, 0), RT_ERROR_NONE);
+    const ScopeGuard modelGuard([&]() { EXPECT_EQ(rtModelDestroy(model), RT_ERROR_NONE); });
+    ASSERT_EQ(rtModelBindStream(model, modelStream, 0), RT_ERROR_NONE);
+    ASSERT_EQ(rtModelLoadComplete(model), RT_ERROR_NONE);
 
-    error = rtCtxCreate(&ctx, RT_CTX_NORMAL_MODE, 0);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtStreamCreate(&stream, 0);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtModelCreate(&model, 0);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtModelBindStream(model, stream, 0);
-    // EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL((*(((Context**)&ctx)))->Device_(), &Device::SubmitTask)
-        .stubs()
-        .will(returnValue(ACL_ERROR_RT_PARAM_INVALID));
-
-    error = rtModelExecute(model, stream, 0);
-    // EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
-
-    error = rtModelDestroy(model);
-
-    error = rtCtxDestroy(ctx);
-    // EXPECT_EQ(error, RT_ERROR_NONE);
+    const ScopeGuard mockGuard([]() { GlobalMockObject::reset(); });
+    MOCKER_CPP_VIRTUAL(static_cast<Context*>(ctx)->Device_(), &Device::SubmitTask)
+        .expects(once())
+        .will(returnValue(RT_ERROR_INVALID_VALUE));
+    EXPECT_EQ(rtModelExecute(model, executeStream, 0), ACL_ERROR_RT_PARAM_INVALID);
+    GlobalMockObject::verify();
 }
 
 TEST_F(ModelTest, save_aicpu_stream_task)

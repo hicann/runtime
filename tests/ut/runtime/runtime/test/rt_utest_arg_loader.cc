@@ -7,6 +7,8 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include <memory>
+#include <vector>
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 #include "securec.h"
@@ -24,6 +26,7 @@
 #include "event.hpp"
 #include "npu_driver.hpp"
 #include "api.hpp"
+#include "osal.hpp"
 #include "cmodel_driver.h"
 #include "thread_local_container.hpp"
 #include "common/rt_utest_context_reset_helper.hpp"
@@ -369,124 +372,74 @@ TEST_F(ArgLoaderTest, uma_arg_loader_with_kernel_info_Ex00)
 TEST_F(ArgLoaderTest, uma_arg_loader_with_kernel_info_Ex01)
 {
     int32_t devId = -1;
-    rtError_t error;
-    Device* device;
+    ASSERT_EQ(rtGetDevice(&devId), RT_ERROR_NONE);
+    std::shared_ptr<Device> device(
+        Runtime::Instance()->DeviceRetain(devId, 0), [](Device* dev) { Runtime::Instance()->DeviceRelease(dev); });
+    ASSERT_NE(device, nullptr);
+    auto* rawDevice = static_cast<RawDevice*>(device.get());
+    const auto feature = static_cast<uint32_t>(RtOptionalFeatureType::RT_FEATURE_KERNEL_UMA_SUPER_ARGS_ALLOC);
+    const bool savedFeature = rawDevice->featureSet_[feature];
+    const ScopeGuard featureGuard([=]() { rawDevice->featureSet_[feature] = savedFeature; });
+    rawDevice->featureSet_[feature] = true;
 
-    void* args[] = {NULL, NULL, NULL, NULL};
-    ArgLoaderResult results[10];
-    void* memBase = (void*)100;
-    NpuDriver* rawDrv = new NpuDriver();
-
-    MOCKER(memcpy_s).stubs().will(returnValue(NULL));
-    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::DevMemAllocWithBackupFlag)
-        .stubs()
-        .with(outBoundP(&memBase, sizeof(memBase)), mockcpp::any(), mockcpp::any(), mockcpp::any())
-        .will(returnValue(RT_ERROR_NONE));
-
-    error = rtGetDevice(&devId);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    device = ((Runtime*)Runtime::Instance())->DeviceRetain(devId, 0);
-    UmaArgLoader* loader = new UmaArgLoader(device);
-    loader->Init();
+    UmaArgLoader loader(device.get());
+    ASSERT_EQ(loader.Init(), RT_ERROR_NONE);
+    std::vector<uint8_t> args(6320U, 0U);
     rtAicpuArgsEx_t argsInfo = {};
-    argsInfo.args = &args;
-    argsInfo.argsSize = 6320; // sizeof(args);
-    for (uint32_t i = 0; i < 1; i++) {
-        error = loader->LoadCpuKernelArgsEx(&argsInfo, (Stream*)device->PrimaryStream_(), &results[i]);
-        EXPECT_EQ(error, RT_ERROR_NONE);
-    }
+    argsInfo.args = args.data();
+    argsInfo.argsSize = args.size();
+    ArgLoaderResult result = {};
 
-    for (uint32_t i = 0; i < 1; i++) {
-        error = loader->Release(results[i].handle);
-        // EXPECT_EQ(error, RT_ERROR_NONE);
-    }
-
-    delete loader;
-    delete rawDrv;
-    ((Runtime*)Runtime::Instance())->DeviceRelease(device);
+    ASSERT_EQ(loader.LoadCpuKernelArgsEx(&argsInfo, device->PrimaryStream_(), &result), RT_ERROR_NONE);
+    ASSERT_NE(result.handle, nullptr);
+    EXPECT_EQ(loader.Release(result.handle), RT_ERROR_NONE);
 }
 
 TEST_F(ArgLoaderTest, uma_arg_loader_with_kernel_info_Ex02)
 {
     int32_t devId = -1;
-    rtError_t error;
-    Device* device;
+    ASSERT_EQ(rtGetDevice(&devId), RT_ERROR_NONE);
+    std::shared_ptr<Device> device(
+        Runtime::Instance()->DeviceRetain(devId, 0), [](Device* dev) { Runtime::Instance()->DeviceRelease(dev); });
+    ASSERT_NE(device, nullptr);
+    auto* rawDevice = static_cast<RawDevice*>(device.get());
+    const auto feature = static_cast<uint32_t>(RtOptionalFeatureType::RT_FEATURE_KERNEL_UMA_SUPER_ARGS_ALLOC);
+    const bool savedFeature = rawDevice->featureSet_[feature];
+    const ScopeGuard featureGuard([=]() { rawDevice->featureSet_[feature] = savedFeature; });
+    rawDevice->featureSet_[feature] = true;
 
-    void* args[] = {NULL, NULL, NULL, NULL};
-    ArgLoaderResult results[10];
-    void* memBase = (void*)100;
-    NpuDriver* rawDrv = new NpuDriver();
-
-    MOCKER(memcpy_s).stubs().will(returnValue(NULL));
-    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::DevMemAllocWithBackupFlag)
-        .stubs()
-        .with(outBoundP(&memBase, sizeof(memBase)), mockcpp::any(), mockcpp::any(), mockcpp::any())
-        .will(returnValue(RT_ERROR_NONE));
-
-    error = rtGetDevice(&devId);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    device = ((Runtime*)Runtime::Instance())->DeviceRetain(devId, 0);
-    UmaArgLoader* loader = new UmaArgLoader(device);
-    loader->Init();
+    UmaArgLoader loader(device.get());
+    ASSERT_EQ(loader.Init(), RT_ERROR_NONE);
+    std::vector<uint8_t> args(45000U, 0U);
     rtAicpuArgsEx_t argsInfo = {};
-    argsInfo.args = &args;
-    argsInfo.argsSize = 45000; // sizeof(args);
-    for (uint32_t i = 0; i < 1; i++) {
-        error = loader->LoadCpuKernelArgsEx(&argsInfo, (Stream*)device->PrimaryStream_(), &results[i]);
-        EXPECT_EQ(error, RT_ERROR_NONE);
-    }
+    argsInfo.args = args.data();
+    argsInfo.argsSize = args.size();
+    ArgLoaderResult result = {};
 
-    for (uint32_t i = 0; i < 1; i++) {
-        error = loader->Release(results[i].handle);
-        // EXPECT_EQ(error, RT_ERROR_NONE);
-    }
-
-    delete loader;
-    delete rawDrv;
-    ((Runtime*)Runtime::Instance())->DeviceRelease(device);
+    ASSERT_EQ(loader.LoadCpuKernelArgsEx(&argsInfo, device->PrimaryStream_(), &result), RT_ERROR_NONE);
+    ASSERT_NE(result.handle, nullptr);
+    EXPECT_EQ(loader.Release(result.handle), RT_ERROR_NONE);
 }
 
 TEST_F(ArgLoaderTest, uma_arg_loader_with_kernel_info_Ex03)
 {
     int32_t devId = -1;
-    rtError_t error;
-    Device* device;
+    ASSERT_EQ(rtGetDevice(&devId), RT_ERROR_NONE);
+    std::shared_ptr<Device> device(
+        Runtime::Instance()->DeviceRetain(devId, 0), [](Device* dev) { Runtime::Instance()->DeviceRelease(dev); });
+    ASSERT_NE(device, nullptr);
 
-    void* args[] = {NULL, NULL, NULL, NULL};
-    ArgLoaderResult results[10];
-    void* memBase = (void*)100;
-    NpuDriver* rawDrv = new NpuDriver();
-
-    MOCKER(memcpy_s).stubs().will(returnValue(NULL));
-    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::DevMemAllocWithBackupFlag)
-        .stubs()
-        .with(outBoundP(&memBase, sizeof(memBase)), mockcpp::any(), mockcpp::any(), mockcpp::any())
-        .will(returnValue(RT_ERROR_NONE));
-
-    error = rtGetDevice(&devId);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    device = ((Runtime*)Runtime::Instance())->DeviceRetain(devId, 0);
-    UmaArgLoader* loader = new UmaArgLoader(device);
-    loader->Init();
+    UmaArgLoader loader(device.get());
+    ASSERT_EQ(loader.Init(), RT_ERROR_NONE);
+    std::vector<uint8_t> args(80000U, 0U);
     rtAicpuArgsEx_t argsInfo = {};
-    argsInfo.args = &args;
-    argsInfo.argsSize = 80000; // sizeof(args);
-    for (uint32_t i = 0; i < 1; i++) {
-        error = loader->LoadCpuKernelArgsEx(&argsInfo, (Stream*)device->PrimaryStream_(), &results[i]);
-        EXPECT_EQ(error, RT_ERROR_NONE);
-    }
+    argsInfo.args = args.data();
+    argsInfo.argsSize = args.size();
+    ArgLoaderResult result = {};
 
-    for (uint32_t i = 0; i < 1; i++) {
-        error = loader->Release(results[i].handle);
-        // EXPECT_EQ(error, RT_ERROR_NONE);
-    }
-
-    delete loader;
-    delete rawDrv;
-    ((Runtime*)Runtime::Instance())->DeviceRelease(device);
+    ASSERT_EQ(loader.LoadCpuKernelArgsEx(&argsInfo, device->PrimaryStream_(), &result), RT_ERROR_NONE);
+    ASSERT_NE(result.handle, nullptr);
+    EXPECT_EQ(loader.Release(result.handle), RT_ERROR_NONE);
 }
 
 class ArgLoaderTest1 : public testing::Test {
@@ -507,93 +460,65 @@ protected:
 TEST_F(ArgLoaderTest, uma_arg_loader_with_kernel_info_super)
 {
     int32_t devId = -1;
-    rtError_t error;
-    Device* device;
+    ASSERT_EQ(rtGetDevice(&devId), RT_ERROR_NONE);
+    std::shared_ptr<Device> device(
+        Runtime::Instance()->DeviceRetain(devId, 0), [](Device* dev) { Runtime::Instance()->DeviceRelease(dev); });
+    ASSERT_NE(device, nullptr);
+    auto* rawDevice = static_cast<RawDevice*>(device.get());
+    const auto feature = static_cast<uint32_t>(RtOptionalFeatureType::RT_FEATURE_KERNEL_UMA_SUPER_ARGS_ALLOC);
+    const bool savedFeature = rawDevice->featureSet_[feature];
+    const ScopeGuard featureGuard([=]() { rawDevice->featureSet_[feature] = savedFeature; });
+    rawDevice->featureSet_[feature] = true;
 
-    void* args[] = {NULL, NULL, NULL, NULL};
-    ArgLoaderResult results[10];
-    void* memBase = (void*)100;
-    NpuDriver* rawDrv = new NpuDriver();
-
-    MOCKER(memcpy_s).stubs().will(returnValue(NULL));
-    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::DevMemAllocWithBackupFlag)
-        .stubs()
-        .with(outBoundP(&memBase, sizeof(memBase)), mockcpp::any(), mockcpp::any(), mockcpp::any())
-        .will(returnValue(RT_ERROR_NONE));
-
-    error = rtGetDevice(&devId);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    device = ((Runtime*)Runtime::Instance())->DeviceRetain(devId, 0);
-    UmaArgLoader* loader = new UmaArgLoader(device);
-    loader->Init();
+    UmaArgLoader loader(device.get());
+    ASSERT_EQ(loader.Init(), RT_ERROR_NONE);
+    std::vector<uint8_t> args(6320U, 0U);
     rtArgsEx_t argsInfo = {};
-    argsInfo.args = &args;
-    argsInfo.argsSize = 6320; // sizeof(args);
-    for (uint32_t i = 0; i < 1; i++) {
-        error = loader->LoadCpuKernelArgs(&argsInfo, (Stream*)device->PrimaryStream_(), &results[i]);
-    }
+    argsInfo.args = args.data();
+    argsInfo.argsSize = args.size();
+    ArgLoaderResult result = {};
 
-    for (uint32_t i = 0; i < 1; i++) {
-        error = loader->Release(results[i].handle);
-        // EXPECT_EQ(error, RT_ERROR_NONE);
-    }
-
-    delete loader;
-    delete rawDrv;
-    ((Runtime*)Runtime::Instance())->DeviceRelease(device);
+    ASSERT_EQ(loader.LoadCpuKernelArgs(&argsInfo, device->PrimaryStream_(), &result), RT_ERROR_NONE);
+    ASSERT_NE(result.handle, nullptr);
+    EXPECT_EQ(loader.Release(result.handle), RT_ERROR_NONE);
 }
 
 TEST_F(ArgLoaderTest, uma_arg_loader_with_kernel_info_super_fail)
 {
     int32_t devId = -1;
-    rtError_t error;
-    Device* device;
+    ASSERT_EQ(rtGetDevice(&devId), RT_ERROR_NONE);
+    std::shared_ptr<Device> device(
+        Runtime::Instance()->DeviceRetain(devId, 0), [](Device* dev) { Runtime::Instance()->DeviceRelease(dev); });
+    ASSERT_NE(device, nullptr);
+    auto* rawDevice = static_cast<RawDevice*>(device.get());
+    const auto feature = static_cast<uint32_t>(RtOptionalFeatureType::RT_FEATURE_KERNEL_UMA_SUPER_ARGS_ALLOC);
+    const bool savedFeature = rawDevice->featureSet_[feature];
+    const ScopeGuard featureGuard([=]() { rawDevice->featureSet_[feature] = savedFeature; });
+    rawDevice->featureSet_[feature] = true;
 
-    void* args[] = {NULL, NULL, NULL, NULL};
-    ArgLoaderResult results[10];
-    void* memBase = (void*)100;
-    NpuDriver* rawDrv = new NpuDriver();
-
-    MOCKER(memcpy_s).stubs().will(returnValue(NULL));
-    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::DevMemAllocWithBackupFlag)
+    // Select synchronous copying so the injected driver failure is always exercised.
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::GetRunMode)
         .stubs()
-        .with(outBoundP(&memBase, sizeof(memBase)), mockcpp::any(), mockcpp::any(), mockcpp::any())
-        .will(returnValue(RT_ERROR_NONE));
+        .will(returnValue(static_cast<uint32_t>(RT_RUN_MODE_OFFLINE)));
 
-    error = rtGetDevice(&devId);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    device = ((Runtime*)Runtime::Instance())->DeviceRetain(devId, 0);
-    UmaArgLoader* loader = new UmaArgLoader(device);
-    loader->Init();
-
-    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::MemCopySync).stubs().will(returnValue(RT_ERROR_DEVICE_NULL));
-
+    UmaArgLoader loader(device.get());
+    ASSERT_EQ(loader.Init(), RT_ERROR_NONE);
+    std::vector<uint8_t> args(6320U, 0U);
     rtArgsEx_t argsInfo = {};
-    argsInfo.args = &args;
-    argsInfo.argsSize = 6320; // sizeof(args);
-    for (uint32_t i = 0; i < 1; i++) {
-        memset(&results[i], 0, sizeof(results[i]));
-        error = loader->LoadCpuKernelArgs(&argsInfo, (Stream*)device->PrimaryStream_(), &results[i]);
-    }
+    argsInfo.args = args.data();
+    argsInfo.argsSize = args.size();
+    ArgLoaderResult result = {};
 
-    for (uint32_t i = 0; i < 1; i++) {
-        error = loader->Release(results[i].handle);
-        // EXPECT_EQ(error, RT_ERROR_NONE);
-    }
-    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::DevMemAllocWithBackupFlag).stubs().will(returnValue(RT_ERROR_DEVICE_NULL));
-    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::PcieHostRegister).stubs().will(returnValue(RT_ERROR_DEVICE_NULL));
-
-    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::DevMemFree).stubs().will(returnValue(RT_ERROR_DEVICE_NULL));
-    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::PcieHostUnRegister).stubs().will(returnValue(RT_ERROR_DEVICE_NULL));
-
-    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::DevMemAllocWithBackupFlag).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::PcieHostRegister).stubs().will(returnValue(RT_ERROR_DEVICE_NULL));
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::MemCopySync).expects(once()).will(returnValue(RT_ERROR_DEVICE_NULL));
+    EXPECT_EQ(loader.LoadCpuKernelArgs(&argsInfo, device->PrimaryStream_(), &result), RT_ERROR_DEVICE_NULL);
+    EXPECT_EQ(result.handle, nullptr);
+    EXPECT_EQ(result.kerArgs, nullptr);
+    EXPECT_EQ(loader.Release(result.handle), RT_ERROR_NONE);
     GlobalMockObject::verify();
-    delete loader;
-    delete rawDrv;
-    ((Runtime*)Runtime::Instance())->DeviceRelease(device);
+
+    ASSERT_EQ(loader.LoadCpuKernelArgs(&argsInfo, device->PrimaryStream_(), &result), RT_ERROR_NONE);
+    ASSERT_NE(result.handle, nullptr);
+    EXPECT_EQ(loader.Release(result.handle), RT_ERROR_NONE);
 }
 
 TEST_F(ArgLoaderTest, uma_arg_loader_with_sm_fail)

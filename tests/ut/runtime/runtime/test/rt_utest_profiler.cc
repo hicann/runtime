@@ -2100,9 +2100,6 @@ TEST_F(ProfilerLogFunctionTest, memcpy_host_to_device)
     error = rtMemcpy(devPtr, 64, hostPtr, 64, RT_MEMCPY_HOST_TO_DEVICE);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    // error = rtMemcpy(devPtr, 64, hostPtr, 64, RT_MEMCPY_HOST_TO_DEVICE);
-    // EXPECT_EQ(error, RT_ERROR_NONE);
-
     error = rtFree(devPtr);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
@@ -2112,54 +2109,32 @@ TEST_F(ProfilerLogFunctionTest, memcpy_host_to_device)
 
 TEST_F(ProfilerLogFunctionTest, memcpy_async_host_to_device)
 {
-    rtError_t error;
-    void* hostPtr;
-    void* devPtr;
+    uint8_t hostBuffer[64] = {};
+    void* devPtr = nullptr;
+    ASSERT_EQ(rtMalloc(&devPtr, sizeof(hostBuffer), RT_MEMORY_HBM, DEFAULT_MODULEID), RT_ERROR_NONE);
+    const ScopeGuard memoryGuard([&]() { EXPECT_EQ(rtFree(devPtr), RT_ERROR_NONE); });
+    rtStream_t stream = nullptr;
+    ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
+    const ScopeGuard streamGuard([&]() { EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE); });
 
-    error = rtMalloc(&hostPtr, 64, RT_MEMORY_HBM, DEFAULT_MODULEID);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtMalloc(&devPtr, 64, RT_MEMORY_HBM, DEFAULT_MODULEID);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtMemcpyAsync(devPtr, 64, hostPtr, 64, RT_MEMCPY_HOST_TO_DEVICE, stream_);
-    // EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtMemsetAsync(hostPtr, 64, 1, 64, stream_);
-
-    error = rtStreamSynchronize(stream_);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtFree(devPtr);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtFree(hostPtr);
-    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(
+        rtMemcpyAsync(devPtr, sizeof(hostBuffer), hostBuffer, sizeof(hostBuffer), RT_MEMCPY_HOST_TO_DEVICE, stream),
+        RT_ERROR_NONE);
+    EXPECT_EQ(rtMemsetAsync(devPtr, sizeof(hostBuffer), 1, sizeof(hostBuffer), stream), RT_ERROR_NONE);
+    EXPECT_EQ(rtStreamSynchronize(stream), RT_ERROR_NONE);
 }
 
 TEST_F(ProfilerLogFunctionTest, memcpy_async_host_to_device_default_stream)
 {
-    rtError_t error;
-    void* hostPtr;
-    void* devPtr;
+    uint8_t hostBuffer[64] = {};
+    void* devPtr = nullptr;
+    ASSERT_EQ(rtMalloc(&devPtr, sizeof(hostBuffer), RT_MEMORY_HBM, DEFAULT_MODULEID), RT_ERROR_NONE);
+    const ScopeGuard memoryGuard([&]() { EXPECT_EQ(rtFree(devPtr), RT_ERROR_NONE); });
 
-    error = rtMalloc(&hostPtr, 64, RT_MEMORY_HBM, DEFAULT_MODULEID);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtMalloc(&devPtr, 64, RT_MEMORY_HBM, DEFAULT_MODULEID);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtMemcpyAsync(devPtr, 64, hostPtr, 64, RT_MEMCPY_HOST_TO_DEVICE, NULL);
-    // EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtStreamSynchronize(NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtFree(devPtr);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtFree(hostPtr);
-    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(
+        rtMemcpyAsync(devPtr, sizeof(hostBuffer), hostBuffer, sizeof(hostBuffer), RT_MEMCPY_HOST_TO_DEVICE, nullptr),
+        RT_ERROR_NONE);
+    EXPECT_EQ(rtStreamSynchronize(nullptr), RT_ERROR_NONE);
 }
 
 TEST_F(ProfilerLogFunctionTest, dev_sync_null)
@@ -2175,11 +2150,11 @@ TEST_F(ProfilerLogFunctionTest, dev_sync_null)
     error = rtDeviceSynchronize();
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = rtDeviceSynchronizeWithTimeout(1);
-    // EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtDeviceSynchronizeWithTimeout(1000);
+    EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = rtsDeviceSynchronize(2);
-    // EXPECT_EQ(error, RT_ERROR_NONE);
+    error = rtsDeviceSynchronize(1000);
+    EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtSetDevice(devId);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -2221,13 +2196,19 @@ TEST_F(ProfilerLogFunctionTest, dev_get_all)
 
 TEST_F(ProfilerLogFunctionTest, managed_mem)
 {
-    rtError_t error;
-    void* ptr = NULL;
+    // A distinct driver allocation avoids aliasing the stub's shared SPM buffer.
+    uint8_t buffer[128] = {};
+    void* allocation = buffer;
+    MOCKER(halMemAlloc)
+        .expects(once())
+        .with(outBoundP(&allocation, sizeof(allocation)), mockcpp::any(), mockcpp::any())
+        .will(returnValue(DRV_ERROR_NONE));
+    MOCKER(halMemFree).expects(once()).with(eq(allocation)).will(returnValue(DRV_ERROR_NONE));
 
-    error = rtMemAllocManaged(&ptr, 128, 0, DEFAULT_MODULEID);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtMemFreeManaged(ptr);
+    void* ptr = nullptr;
+    ASSERT_EQ(rtMemAllocManaged(&ptr, sizeof(buffer), 0, DEFAULT_MODULEID), RT_ERROR_NONE);
+    EXPECT_EQ(ptr, allocation);
+    EXPECT_EQ(rtMemFreeManaged(ptr), RT_ERROR_NONE);
 }
 
 TEST_F(ProfilerLogFunctionTest, SET_DEVICE_TEST_1)

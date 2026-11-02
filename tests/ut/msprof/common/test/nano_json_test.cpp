@@ -58,7 +58,9 @@ TEST_F(NANO_JSON_TEST, json_insert_test)
     EXPECT_EQ(20, json["behavior"]["funny"][2].GetValue<int64_t>());
     json["behavior"]["funny"][2] = 3;
 
-    // EXPECT_EQ(4, json["champion"].size());
+    ASSERT_EQ(NanoJson::JsonValueType::ARRAY, json["champion"].type);
+    ASSERT_NE(nullptr, json["champion"].value.arrayValue);
+    EXPECT_EQ(4U, json["champion"].value.arrayValue->size());
     EXPECT_EQ(1, json["champion"][0].GetValue<int64_t>());
     EXPECT_EQ(2, json["champion"][1].GetValue<int64_t>());
     EXPECT_EQ(3, json["champion"][2].GetValue<int64_t>());

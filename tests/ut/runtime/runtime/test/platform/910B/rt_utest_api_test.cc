@@ -85,22 +85,23 @@ char NewCloudV2ApiTest::function_ = 'a';
 uint32_t NewCloudV2ApiTest::binary_[32] = {};
 Driver* NewCloudV2ApiTest::driver_ = NULL;
 
-TEST_F(NewCloudV2ApiTest, rt_malloc_1G_huge_page_offline)
+TEST_F(NewCloudV2ApiTest, rt_malloc_1G_huge_page_offline_not_supported)
 {
-    Runtime* rtInstance = (Runtime*)Runtime::Instance();
-    rtError_t error;
+    Runtime* const rtInstance = Runtime::Instance();
+    const bool savedSupport = rtInstance->GetIsSupport1GHugePage();
+    const ScopeGuard supportGuard([=]() { rtInstance->SetIsSupport1GHugePage(savedSupport); });
+    rtInstance->SetIsSupport1GHugePage(true);
+    NpuDriver driver;
+    MOCKER_CPP_VIRTUAL(driver, &NpuDriver::GetRunMode)
+        .stubs()
+        .will(returnValue(static_cast<uint32_t>(RT_RUN_MODE_OFFLINE)));
+
     void* devPtr = nullptr;
-    NpuDriver* rawDrv = new NpuDriver();
-
-    MOCKER_CPP_VIRTUAL(rawDrv, &NpuDriver::GetRunMode).stubs().will(returnValue(0U));
-
-    // 只支持HBM场景
-    error = rtMalloc(&devPtr, 60, RT_MEMORY_POLICY_HUGE1G_PAGE_ONLY | RT_MEMORY_HBM, DEFAULT_MODULEID);
-    // EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtFree(devPtr);
-    // EXPECT_EQ(error, RT_ERROR_NONE);
-    delete rawDrv;
+    // The 910B offline allocator rejects this policy even when the capability probe succeeds.
+    EXPECT_EQ(
+        rtMalloc(&devPtr, 60, RT_MEMORY_POLICY_HUGE1G_PAGE_ONLY | RT_MEMORY_HBM, DEFAULT_MODULEID),
+        ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(devPtr, nullptr);
 }
 
 TEST_F(NewCloudV2ApiTest, rtCmoAddrTaskLaunch)

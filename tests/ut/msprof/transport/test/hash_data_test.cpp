@@ -103,24 +103,25 @@ TEST_F(COMMON_HASH_DATA_TEST, GenHashId)
 
 TEST_F(COMMON_HASH_DATA_TEST, SaveHashData)
 {
-    GlobalMockObject::verify();
+    HashData::instance()->SaveHashData(0);
+    EXPECT_FALSE(HashData::instance()->IsInit());
+    ASSERT_EQ(PROFILING_SUCCESS, HashData::instance()->Init());
+    const char* data = "ABCDEFGHIJK";
+    ASSERT_NE(0U, HashData::instance()->GenHashId("DATA_PREPROCESS", data, strlen(data)));
     MOCKER_CPP(
-        &analysis::dvvp::transport::UploaderMgr::UploadData,
-        int(analysis::dvvp::transport::UploaderMgr::*)(const std::string&, const void*, uint32_t))
-        .stubs()
+        &UploaderMgr::UploadData,
+        int32_t(UploaderMgr::*)(const std::string&, std::shared_ptr<analysis::dvvp::ProfileFileChunk>))
+        .expects(exactly(2))
         .will(returnValue(PROFILING_FAILED))
         .then(returnValue(PROFILING_SUCCESS));
 
-    // EXPECT_EQ(PROFILING_FAILED, HashData::instance()->SaveHashData("DATA_PREPROCESS"));
+    // Failed uploads must retain the hash data for a later retry.
     HashData::instance()->SaveHashData(0);
-    HashData::instance()->Init();
-    const char* data = "ABCDEFGHIJK";
-    HashData::instance()->GenHashId("DATA_PREPROCESS", data, strlen(data));
-    HashData::instance()->GenHashId("AclModule", data, strlen(data));
+    EXPECT_EQ(1U, HashData::instance()->hashDataKeyMap_["DATA_PREPROCESS"].size());
     HashData::instance()->SaveHashData(0);
-    HashData::instance()->SaveHashData(64);
-    HashData::instance()->SaveHashData(-1);
-    EXPECT_EQ(HashData::instance()->Uninit(), PROFILING_SUCCESS);
+    EXPECT_EQ(1U, HashData::instance()->hashDataKeyMap_["DATA_PREPROCESS"].size());
+    GlobalMockObject::verify();
+    EXPECT_EQ(PROFILING_SUCCESS, HashData::instance()->Uninit());
 }
 
 TEST_F(COMMON_HASH_DATA_TEST, SaveNewHashData)

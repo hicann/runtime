@@ -211,7 +211,6 @@ int mmWriteStub(int fd, void* buf, unsigned int bufLen)
     EXPECT_EQ(true, OpDescParser::GetOpStart(buf, bufLen, 0) > 0);
     EXPECT_EQ(true, OpDescParser::GetOpEnd(buf, bufLen, 0) > 0);
     EXPECT_EQ(true, OpDescParser::GetOpDuration(buf, bufLen, 0) > 0);
-    // EXPECT_EQ(true, Msprofiler::Api::ProfGetOpExecutionTime(buf, bufLen, 0) >= 0);
     EXPECT_EQ(true, ProfGetOpExecutionTime(buf, bufLen, 0) >= 0);
     EXPECT_EQ(true, OpDescParser::GetOpCubeFops(buf, bufLen, 0) >= 0);
     EXPECT_EQ(true, OpDescParser::GetOpVectorFops(buf, bufLen, 0) >= 0);

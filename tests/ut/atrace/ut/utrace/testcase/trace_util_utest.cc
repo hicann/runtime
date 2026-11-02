@@ -17,7 +17,10 @@
 #include "adiag_list.h"
 #include "adiag_utils.h"
 #include "trace_system_api.h"
+#include <cerrno>
 #include <pwd.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 class TraceUtilUtest : public testing::Test {
 protected:
@@ -145,23 +148,37 @@ TEST_F(TraceUtilUtest, TestTraceDriverApi)
     TraceAttrExit();
 }
 
+namespace {
+int TraceMkdirPermissionDenied(const char*, mode_t)
+{
+    errno = EACCES;
+    return -1;
+}
+} // namespace
+
 TEST_F(TraceUtilUtest, TestTraceMkdir)
 {
-    uint32_t mode = 0750U;
-    int32_t uid = 0;
-    uint32_t gid = 0;
-    MOCKER(mkdir).stubs().will(returnValue(-1));
-    // EXPECT_EQ(TRACE_MKDIR_FAIL, TraceMkdir("/tmp/123456789", mode, uid, gid));
-    GlobalMockObject::verify();
+    MOCKER(access).expects(once()).will(returnValue(-1));
+    MOCKER(mkdir).expects(once()).will(invoke(TraceMkdirPermissionDenied));
+    MOCKER(chmod).expects(never());
+    MOCKER(chown).expects(never());
+    EXPECT_EQ(TRACE_MKDIR_FAIL, TraceMkdir("/tmp/trace-util-ut", 0750U, 0U, 0U));
+}
 
-    MOCKER(mkdir).stubs().will(returnValue(0));
-    MOCKER(chmod).stubs().will(returnValue(-1));
-    // EXPECT_EQ(TRACE_CHMOD_FAIL, TraceMkdir("/tmp/123456789", mode, uid, gid));
-    GlobalMockObject::verify();
+TEST_F(TraceUtilUtest, TestTraceMkdirChmodFailed)
+{
+    MOCKER(access).expects(once()).will(returnValue(-1));
+    MOCKER(mkdir).expects(once()).will(returnValue(0));
+    MOCKER(chmod).expects(once()).will(returnValue(-1));
+    MOCKER(chown).expects(never());
+    EXPECT_EQ(TRACE_CHMOD_FAIL, TraceMkdir("/tmp/trace-util-ut", 0750U, 0U, 0U));
+}
 
-    MOCKER(mkdir).stubs().will(returnValue(0));
-    MOCKER(chmod).stubs().will(returnValue(0));
-    MOCKER(chown).stubs().will(returnValue(-1));
-    // EXPECT_EQ(TRACE_CHOWN_FAIL, TraceMkdir("/tmp/123456789", mode, uid, gid));
-    GlobalMockObject::verify();
+TEST_F(TraceUtilUtest, TestTraceMkdirChownFailed)
+{
+    MOCKER(access).expects(once()).will(returnValue(-1));
+    MOCKER(mkdir).expects(once()).will(returnValue(0));
+    MOCKER(chmod).expects(once()).will(returnValue(0));
+    MOCKER(chown).expects(once()).will(returnValue(-1));
+    EXPECT_EQ(TRACE_CHOWN_FAIL, TraceMkdir("/tmp/trace-util-ut", 0750U, 0U, 0U));
 }
