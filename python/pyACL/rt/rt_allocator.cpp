@@ -13,6 +13,20 @@
 #include "acl/acl_rt_allocator.h"
 
 namespace {
+void* GetPointerFromPyResult(PyObject* result)
+{
+    if (result == Py_None) {
+        return nullptr;
+    }
+    void* ptr = PyLong_AsVoidPtr(result);
+    if (PyErr_Occurred() != nullptr) {
+        PyErr_Clear();
+        ACL_APP_LOG(ACL_ERROR, "allocator callback must return a pointer address integer");
+        return nullptr;
+    }
+    return ptr;
+}
+
 PyObject* g_allocFunc = nullptr;
 PyObject* g_freeFunc = nullptr;
 PyObject* g_allocAdviseFunc = nullptr;
@@ -56,12 +70,14 @@ static void* AllocatorAllocFunc(const aclrtAllocator allocator, const size_t siz
     Py_XDECREF(argslist);
     if (result == nullptr) {
         ACL_APP_LOG(ACL_ERROR, "AllocatorAllocFunc wrong out");
+        PyErr_Clear();
         PyGILState_Release(state);
         return nullptr;
     }
+    void* ptr = GetPointerFromPyResult(result);
     Py_XDECREF(result);
     PyGILState_Release(state);
-    return nullptr;
+    return ptr;
 }
 
 PyObject* WrapAclRtAllocatorSetAllocFuncToDesc(PyObject* /* self */, PyObject* args)
@@ -130,12 +146,14 @@ static void* AllocatorAllocAdviseFunc(const aclrtAllocator allocator, const size
     Py_XDECREF(argslist);
     if (result == nullptr) {
         ACL_APP_LOG(ACL_ERROR, "AllocatorAllocAdviseFunc wrong out");
+        PyErr_Clear();
         PyGILState_Release(state);
         return nullptr;
     }
+    void* ptr = GetPointerFromPyResult(result);
     Py_XDECREF(result);
     PyGILState_Release(state);
-    return nullptr;
+    return ptr;
 }
 
 PyObject* WrapAclRtAllocatorSetAllocAdviseFuncToDesc(PyObject* /* self */, PyObject* args)
@@ -161,19 +179,21 @@ PyObject* WrapAclRtAllocatorSetAllocAdviseFuncToDesc(PyObject* /* self */, PyObj
 static void* AllocatorSetGetAddrFromBlockFunc(const aclrtAllocatorBlock block)
 {
     PyGILState_STATE state = PyGILState_Ensure();
-    PyObject* argslist = Py_BuildValue("k", block);
+    PyObject* argslist = Py_BuildValue("(k)", block);
 
     PyObject* result = PyObject_CallObject(g_setGetAddrFunc, argslist);
 
     Py_XDECREF(argslist);
     if (result == nullptr) {
         ACL_APP_LOG(ACL_ERROR, "AllocatorSetGetAddrFromBlockFunc wrong out");
+        PyErr_Clear();
         PyGILState_Release(state);
         return nullptr;
     }
+    void* ptr = GetPointerFromPyResult(result);
     Py_XDECREF(result);
     PyGILState_Release(state);
-    return nullptr;
+    return ptr;
 }
 
 PyObject* WrapAclRtAllocatorSetGetAddrFromBlockFuncToDesc(PyObject* /* self */, PyObject* args)

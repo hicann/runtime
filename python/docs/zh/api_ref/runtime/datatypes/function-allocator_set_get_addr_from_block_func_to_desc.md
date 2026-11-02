@@ -43,7 +43,7 @@
 | 参数名 | 说明 |
 | --- | --- |
 | allocatorDesc | int，Allocator描述符指针地址。需提前调用[acl.rt.allocator_create_desc](function-allocator_create_desc.md)接口设置Allocator描述信息。 |
-| func | 根据申请来的block获取device内存地址的回调函数。<br>回调函数定义如下：<br>`def allocator_get_addr_from_block_func(block): pass` |
+| func | 根据申请来的block获取device内存地址的回调函数。<br>需返回device地址对应的整数，返回`None`表示空指针。<br>回调函数定义如下：<br>`def allocator_get_addr_from_block_func(block): return device_address` |
 
 ## 返回值说明
 

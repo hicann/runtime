@@ -43,7 +43,7 @@
 | 参数名 | 说明 |
 | --- | --- |
 | allocatorDesc | int，Allocator描述符指针地址。需提前调用[acl.rt.allocator_create_desc](function-allocator_create_desc.md)接口设置Allocator描述信息。 |
-| func | 根据建议地址申请内存block的回调函数。<br>回调函数定义如下：<br>def allocator_alloc_advise_func(allocator, size, addr):<br>    pass |
+| func | 根据建议地址申请内存block的回调函数。<br>成功时需返回block地址对应的整数，返回`None`表示申请失败。<br>回调函数定义如下：<br>def allocator_alloc_advise_func(allocator, size, addr):<br>    return block_address |
 
 ## 返回值说明
 
