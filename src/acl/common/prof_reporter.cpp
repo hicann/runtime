@@ -22,7 +22,8 @@ bool IsDumpToStdEnabled()
 
 namespace acl {
 bool AclProfilingReporter::profRun = false;
-AclProfilingReporter::AclProfilingReporter(const AclProfType apiId) : aclApi_(apiId)
+AclProfilingReporter::AclProfilingReporter(const AclProfType apiId, const bool isReportKernelName)
+    : aclApi_(apiId), isReportKernelName_(isReportKernelName)
 {
     if (profRun && (!IsDumpToStdEnabled())) {
         startTime_ = MsprofSysCycleTime();
@@ -41,6 +42,12 @@ AclProfilingReporter::~AclProfilingReporter() noexcept
         api.threadId = static_cast<uint32_t>(tid);
         api.level = MSPROF_REPORT_ACL_LEVEL;
         api.type = static_cast<uint32_t>(aclApi_);
+        if (isReportKernelName_) {
+            static uint64_t defaultKernelHash = MsprofStr2Id("Refer_to_kernelName", strlen("Refer_to_kernelName"));
+            api.level = MSPROF_REPORT_NODE_LEVEL;
+            api.type = MSPROF_REPORT_NODE_LAUNCH_TYPE;
+            api.itemId = defaultKernelHash;
+        }
         (void)MsprofReportApi(true, &api);
     }
 }

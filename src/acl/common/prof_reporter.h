@@ -348,15 +348,17 @@ enum AclProfType {
 
 class ACL_FUNC_VISIBILITY AclProfilingReporter {
 public:
-    explicit AclProfilingReporter(const AclProfType apiId);
+    explicit AclProfilingReporter(const AclProfType apiId, const bool isReportKernelName = false);
     virtual ~AclProfilingReporter() noexcept;
     static bool profRun;
 
 private:
     uint64_t startTime_ = 0UL;
     const AclProfType aclApi_;
+    bool isReportKernelName_ = false;
 };
 
 } // namespace acl
 #define ACL_PROFILING_REG(apiId) const acl::AclProfilingReporter profilingReporter(apiId)
+#define ACL_PROFILING_REG_WITH_KERNEL_NAME(apiId) const acl::AclProfilingReporter profilingReporter(apiId, true)
 #endif // ACL_PROFI_REPORTER_H_

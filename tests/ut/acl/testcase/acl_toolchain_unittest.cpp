@@ -594,6 +594,53 @@ TEST_F(UTEST_ACL_toolchain, AclProfilingReporter_6)
     EXPECT_NE(AclProfilingManager::GetInstance().Init(), ACL_SUCCESS);
 }
 
+extern MsprofApi g_lastReportedProfApi;
+extern uint32_t g_profReportApiCount;
+
+TEST_F(UTEST_ACL_toolchain, AclProfilingReporter_7)
+{
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), MsprofRegTypeInfo(_, _, _)).WillRepeatedly(Return(0));
+    EXPECT_EQ(AclProfilingManager::GetInstance().Init(), ACL_SUCCESS);
+    g_lastReportedProfApi = MsprofApi{};
+    g_profReportApiCount = 0;
+
+    AclProfilingReporter reporter(acl::AclProfType::AclrtLaunchKernelWithArgsArray, true);
+    reporter.~AclProfilingReporter();
+
+    EXPECT_EQ(g_profReportApiCount, 1U);
+    EXPECT_EQ(g_lastReportedProfApi.level, MSPROF_REPORT_NODE_LEVEL);
+    EXPECT_EQ(g_lastReportedProfApi.type, MSPROF_REPORT_NODE_LAUNCH_TYPE);
+    EXPECT_EQ(g_lastReportedProfApi.itemId, 12345ULL);
+    EXPECT_EQ(g_lastReportedProfApi.beginTime, 1000ULL);
+    EXPECT_EQ(g_lastReportedProfApi.endTime, 1000ULL);
+
+    EXPECT_EQ(AclProfilingManager::GetInstance().UnInit(), ACL_SUCCESS);
+    g_lastReportedProfApi = MsprofApi{};
+    g_profReportApiCount = 0;
+}
+
+TEST_F(UTEST_ACL_toolchain, AclProfilingReporter_8)
+{
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), MsprofRegTypeInfo(_, _, _)).WillRepeatedly(Return(0));
+    EXPECT_EQ(AclProfilingManager::GetInstance().Init(), ACL_SUCCESS);
+    g_lastReportedProfApi = MsprofApi{};
+    g_profReportApiCount = 0;
+
+    AclProfilingReporter reporter(acl::AclProfType::AclrtLaunchKernelWithArgsArray);
+    reporter.~AclProfilingReporter();
+
+    EXPECT_EQ(g_profReportApiCount, 1U);
+    EXPECT_EQ(g_lastReportedProfApi.level, MSPROF_REPORT_ACL_LEVEL);
+    EXPECT_EQ(g_lastReportedProfApi.type, static_cast<uint32_t>(acl::AclProfType::AclrtLaunchKernelWithArgsArray));
+    EXPECT_EQ(g_lastReportedProfApi.itemId, 0ULL);
+    EXPECT_EQ(g_lastReportedProfApi.beginTime, 1000ULL);
+    EXPECT_EQ(g_lastReportedProfApi.endTime, 1000ULL);
+
+    EXPECT_EQ(AclProfilingManager::GetInstance().UnInit(), ACL_SUCCESS);
+    g_lastReportedProfApi = MsprofApi{};
+    g_profReportApiCount = 0;
+}
+
 TEST_F(UTEST_ACL_toolchain, AclProfiling_PROF_TYPE_TO_NAMES)
 {
     EXPECT_CALL(MockFunctionTest::aclStubInstance(), MsprofRegTypeInfo(_, _, _))

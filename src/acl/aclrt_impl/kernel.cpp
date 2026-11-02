@@ -573,7 +573,7 @@ aclError aclrtLaunchKernelWithHostArgsImpl(
 aclError aclrtLaunchKernelWithArgsArrayImpl(
     void* func, uint32_t numBlocks, aclrtStream stream, aclrtLaunchKernelCfg* cfg, void** args)
 {
-    ACL_PROFILING_REG(acl::AclProfType::AclrtLaunchKernelWithArgsArray);
+    ACL_PROFILING_REG_WITH_KERNEL_NAME(acl::AclProfType::AclrtLaunchKernelWithArgsArray);
     ACL_LOG_INFO("Start to execute aclrtLaunchKernelWithArgsArray");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(func);
     ACL_REQUIRES_POSITIVE_REPORT(numBlocks);
@@ -602,7 +602,7 @@ aclError aclrtLaunchSIMTKernelWithArgsArrayImpl(
     void* func, dim3 gridDim, dim3 blockDim, size_t dynUbufSize, aclrtStream stream, aclrtLaunchKernelCfg* cfg,
     void** args)
 {
-    ACL_PROFILING_REG(acl::AclProfType::AclrtLaunchSIMTKernelWithArgsArray);
+    ACL_PROFILING_REG_WITH_KERNEL_NAME(acl::AclProfType::AclrtLaunchSIMTKernelWithArgsArray);
     ACL_LOG_INFO("Start to execute aclrtLaunchSIMTKernelWithArgsArray");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(func);
 
@@ -638,7 +638,7 @@ aclError aclrtLaunchSIMTKernelWithHostArgsImpl(
     void* func, dim3 gridDim, dim3 blockDim, size_t dynUbufSize, aclrtStream stream, aclrtLaunchKernelCfg* cfg,
     void* hostArgs, size_t argsSize, aclrtPlaceHolderInfo* placeHolderArray, size_t placeHolderNum)
 {
-    ACL_PROFILING_REG(acl::AclProfType::AclrtLaunchSIMTKernelWithHostArgs);
+    ACL_PROFILING_REG_WITH_KERNEL_NAME(acl::AclProfType::AclrtLaunchSIMTKernelWithHostArgs);
     ACL_LOG_INFO("Start to execute aclrtLaunchSIMTKernelWithHostArgs");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(func);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(hostArgs);
