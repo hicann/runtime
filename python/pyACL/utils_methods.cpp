@@ -66,12 +66,16 @@ bool GetValueFromPyDict(PyObject* pyDict, const char* keyName, int& value)
         return true;
     }
 
-    int tmp = static_cast<int>(PyLong_AsLong(pyObj));
+    long tmp = PyLong_AsLong(pyObj);
     if (PyErr_Occurred()) {
         PyErr_SetString(PyExc_ValueError, "PyLong_AsLong failed");
         return false;
     }
-    value = tmp;
+    if (tmp < INT_MIN || tmp > INT_MAX) {
+        PyErr_SetString(PyExc_ValueError, "value exceeds int range");
+        return false;
+    }
+    value = static_cast<int>(tmp);
     return true;
 }
 
@@ -82,12 +86,16 @@ bool GetValueFromPyDict(PyObject* pyDict, const char* keyName, short& value)
         return true;
     }
 
-    short tmp = static_cast<short>(PyLong_AsLong(pyObj));
+    long tmp = PyLong_AsLong(pyObj);
     if (PyErr_Occurred()) {
         PyErr_SetString(PyExc_ValueError, "PyLong_AsLong failed");
         return false;
     }
-    value = tmp;
+    if (tmp < SHRT_MIN || tmp > SHRT_MAX) {
+        PyErr_SetString(PyExc_ValueError, "value exceeds short range");
+        return false;
+    }
+    value = static_cast<short>(tmp);
     return true;
 }
 
