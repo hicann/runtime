@@ -153,6 +153,53 @@ RTS_API rtError_t rtDumpDeInit(void);
  */
 RTS_API rtError_t rtStreamAddToModel(rtStream_t stm, rtModel_t captureMdl);
 
+/**
+ * @ingroup rt_model
+ * @brief register an HCCL stream with a normal model or an ACL Graph
+ * @param [in] stream: non-null original HCCL stream in the current context
+ * @param [in] mdl: non-null model in the current context
+ * @details Duplicate registration succeeds. Normal models only record the association; the stream's
+ * execution binding is unchanged. ACL Graphs use the existing stream capture procedure.
+ * The caller must keep the stream alive until all associated models finish using it.
+ * @return ACL_RT_SUCCESS for success, or the corresponding Runtime error
+ */
+RTS_API rtError_t rtModelAddHcclStream(rtStream_t stream, rtModel_t mdl);
+
+/**
+ * @ingroup rt_model
+ * @brief get the unique original HCCL streams registered with this model
+ * @param [in] mdl: valid non-null model; only its own registrations are returned
+ * @param [out] streams: caller-owned array of borrowed stream handles; nullptr queries the count
+ * @param [in,out] numStreams: required non-null pointer; when streams is non-null, its input value is
+ * the array capacity in elements. On success it receives the actual count; on failure it remains unchanged.
+ * Its input value is ignored when streams is nullptr.
+ * @details The query is independent of the current context and does not change it.
+ * To query only the count, pass streams as nullptr. Each call uses one snapshot of the registered set.
+ * If the array capacity is insufficient, the array and numStreams remain unchanged.
+ * Registration may increase the count between calls; query the count again, resize the array and retry.
+ * On success, only the returned number of array elements are written and unused slots remain unchanged.
+ * All failures leave outputs unchanged. Ordering is unspecified; querying does not retain streams.
+ * Serialize resource destruction with querying and handle use.
+ * Returned handles are borrowed and must only be used while their resources remain alive.
+ * @return ACL_RT_SUCCESS for success, ACL_ERROR_RT_INSUFFICIENT_INPUT_ARRAY for insufficient capacity,
+ * or the corresponding Runtime error
+ */
+RTS_API rtError_t rtModelGetHcclStream(rtModel_t mdl, rtStream_t* streams, uint32_t* numStreams);
+
+/**
+ * @ingroup rt_model
+ * @brief get the model directly bound to a stream for execution
+ * @param [in] stream: valid non-null stream
+ * @param [out] mdl: required non-null pointer to receive a borrowed model handle
+ * @details The query is independent of the current context and does not change it.
+ * An unbound stream succeeds and writes nullptr, including HCCL streams only registered with a model.
+ * Capture relationships are not followed. Failures leave the output unchanged.
+ * Stream binding/unbinding and resource destruction must be serialized with querying and use of the
+ * borrowed model handle.
+ * @return ACL_RT_SUCCESS for success, or the corresponding Runtime error
+ */
+RTS_API rtError_t rtGetModelByStream(rtStream_t stream, rtModel_t* mdl);
+
 /*
  * @ingroup rt_model
  * @brief enable debug for dump overflow exception

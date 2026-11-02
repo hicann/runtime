@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include <vector>
 #include "api_c.h"
 #include "api.hpp"
 #include "api_handle_guard.h"
@@ -17,6 +18,10 @@
 #include "global_state_manager.hpp"
 #include "api_handle_guard.h"
 #include "label.hpp"
+#include "model.hpp"
+#include "runtime.hpp"
+#include "stream.hpp"
+#include "rt_external_model.h"
 
 using namespace cce::runtime;
 
@@ -33,6 +38,69 @@ rtError_t rtModelCreate(rtModel_t* mdl, uint32_t flag)
     const rtError_t error = apiInstance->ModelCreate(RtPtrToPtr<Model**>(mdl), flag);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     Model* realModel = RtPtrToPtr<Model*>(*mdl);
+    *mdl = ExportEmbeddedHandle<rtModel_t>(realModel);
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtModelAddHcclStream(rtStream_t stream, rtModel_t mdl)
+{
+    GLOBAL_STATE_WAIT_IF_LOCKED();
+    const Runtime* const rtInstance = Runtime::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
+    Api* const api = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(api);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(mdl, Model, modelObj);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stream, Stream, streamObj);
+    const rtError_t error = api->HcclStreamAddToModel(streamObj, modelObj);
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtModelGetHcclStream(rtModel_t mdl, rtStream_t* streams, uint32_t* numStreams)
+{
+    GLOBAL_STATE_WAIT_IF_LOCKED();
+    PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(numStreams, RT_ERROR_INVALID_VALUE);
+    Api* const api = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(api);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(mdl, Model, modelObj);
+    std::vector<Stream*> hcclStreams;
+    const rtError_t error = api->ModelGetHcclStream(modelObj, hcclStreams);
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    const uint32_t required = static_cast<uint32_t>(hcclStreams.size());
+    if (streams == nullptr) {
+        *numStreams = required;
+        return ACL_RT_SUCCESS;
+    }
+    const uint32_t capacity = *numStreams;
+    COND_RETURN_AND_MSG_OUTER(
+        capacity < required, GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INSUFFICIENT_INPUT_ARRAY), ErrorCode::EE1011,
+        "Obtaining HCCL streams registered with a model", capacity, "numStreams",
+        RtFmtMsg(
+            "The array space is insufficient for the HCCL streams registered with model (model_id=%u). "
+            "Required capacity is %u",
+            modelObj->Id_(), required));
+    for (uint32_t i = 0U; i < required; ++i) {
+        streams[i] = ExportEmbeddedHandle<rtStream_t>(hcclStreams[i]);
+    }
+    *numStreams = required;
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtGetModelByStream(rtStream_t stream, rtModel_t* mdl)
+{
+    GLOBAL_STATE_WAIT_IF_LOCKED();
+    Api* const api = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(api);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stream, Stream, streamObj);
+    const rtError_t error = api->GetModelByStream(streamObj, RtPtrToPtr<Model**>(mdl));
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    Model* const realModel = RtPtrToPtr<Model*>(*mdl);
     *mdl = ExportEmbeddedHandle<rtModel_t>(realModel);
     return ACL_RT_SUCCESS;
 }

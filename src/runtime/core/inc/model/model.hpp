@@ -178,6 +178,8 @@ public:
     rtError_t UnBindSqPerStream(Stream* const streamIn);
     rtError_t ModelGetStreams(Stream** streams, uint32_t* numStreams) const;
     rtError_t ModelGetTasks(void** tasks, uint32_t* numTasks) const;
+    rtError_t RegisterHcclStream(Stream* const stm);
+    virtual rtError_t CollectHcclStreams(std::vector<Stream*>& streams) const;
     rtError_t ModelDestroyRegisterCallback(rtCallback_t const fn, const void* ptr);
     rtError_t ModelDestroyUnregisterCallback(rtCallback_t const fn);
     rtError_t CacheLastTaskExtendInfo(const Stream* const stm, const char* infoPtr, const size_t infoSize);
@@ -435,6 +437,8 @@ private:
     std::map<int32_t, std::map<uint32_t, std::string>> extendInfos_;
     std::set<MdlDestroyCallbackInfo> mdlDestroyCallbackSet_;
     std::mutex mdlDestroyCallbackMutex_;
+    mutable std::mutex hcclStreamsMutex_;
+    std::set<Stream*> hcclStreams_; // Non-owning original HCCL streams for normal models.
 };
 } // namespace runtime
 } // namespace cce

@@ -91,6 +91,29 @@ protected:
     virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
+TEST_F(TinyStubTest, hccl_model_stream_public_apis_preserve_outputs_on_invalid_arguments)
+{
+    uint32_t count = 17U;
+    rtStream_t stream = static_cast<void*>(&count);
+    rtModel_t model = static_cast<void*>(&count);
+    EXPECT_EQ(rtModelAddHcclStream(nullptr, nullptr), ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(rtModelGetHcclStream(nullptr, &stream, &count), ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(count, 17U);
+    EXPECT_EQ(stream, static_cast<void*>(&count));
+    EXPECT_EQ(rtGetModelByStream(nullptr, &model), ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(model, static_cast<void*>(&count));
+}
+
+TEST_F(TinyStubTest, hccl_model_stream_internal_capture_providers)
+{
+    ApiImpl impl;
+    EXPECT_EQ(impl.HcclStreamAddToModel(nullptr, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
+    CaptureModel model;
+    std::vector<Stream*> streams{nullptr};
+    EXPECT_EQ(model.CollectHcclStreams(streams), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(streams, (std::vector<Stream*>{nullptr}));
+}
+
 TEST_F(TinyStubTest, ipc_memory_impl_lifecycle_not_support)
 {
     EXPECT_FALSE(IsImplIpcMemorySupported());

@@ -1206,6 +1206,17 @@ void CaptureModel::ProcessExternalRecordNormalCqe(TaskInfo* const taskInfo, cons
     updateInfo_.totalRecvCqeCnt.Add(1U);
 }
 
+rtError_t CaptureModel::CollectHcclStreams(std::vector<Stream*>& streams) const
+{
+    const std::lock_guard<std::mutex> guard(Context_()->GetCaptureLock());
+    streams.clear();
+    streams.reserve(addStreamMap_.size());
+    for (const auto& entry : addStreamMap_) {
+        streams.push_back(entry.first);
+    }
+    return RT_ERROR_NONE;
+}
+
 rtError_t CaptureModel::AddStreamToCaptureModel(Stream* const stm)
 {
     int32_t streamId = stm->Id_();

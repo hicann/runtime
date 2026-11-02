@@ -703,6 +703,11 @@ public:
 
     rtError_t SetKernelDfxInfoCallback(rtKernelDfxInfoType type, rtKernelDfxInfoProFunc func) override;
 
+    rtError_t HcclStreamAddToModel(Stream* const stm, Model* const mdl) override;
+    rtError_t HcclStreamAddToNormalModel(Stream* const stm, Model* const mdl) override;
+    rtError_t ModelGetHcclStream(const Model* const mdl, std::vector<Stream*>& streams) override;
+    rtError_t GetModelByStream(Stream* const stm, Model** const mdl) override;
+
 protected:
     static rtError_t CheckEventAndStreamDevice(
         const Event* const evt, const Stream* const stm, const char_t* const funcDesc);

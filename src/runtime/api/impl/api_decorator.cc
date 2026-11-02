@@ -1864,6 +1864,26 @@ rtError_t ApiDecorator::SetKernelDfxInfoCallback(rtKernelDfxInfoType type, rtKer
     return impl_->SetKernelDfxInfoCallback(type, func);
 }
 
+rtError_t ApiDecorator::HcclStreamAddToModel(Stream* const stm, Model* const mdl)
+{
+    return impl_->HcclStreamAddToModel(stm, mdl);
+}
+
+rtError_t ApiDecorator::HcclStreamAddToNormalModel(Stream* const stm, Model* const mdl)
+{
+    return impl_->HcclStreamAddToNormalModel(stm, mdl);
+}
+
+rtError_t ApiDecorator::ModelGetHcclStream(const Model* const mdl, std::vector<Stream*>& streams)
+{
+    return impl_->ModelGetHcclStream(mdl, streams);
+}
+
+rtError_t ApiDecorator::GetModelByStream(Stream* const stm, Model** const mdl)
+{
+    return impl_->GetModelByStream(stm, mdl);
+}
+
 rtError_t ApiDecorator::ModelGetStreams(const Model* const mdl, Stream** streams, uint32_t* numStreams)
 {
     return impl_->ModelGetStreams(mdl, streams, numStreams);

@@ -733,6 +733,7 @@ add_executable(runtime_utest_api_910B
     stub/rt_utest_api_common_defination.cc
     main.cc
     rt_utest_api_cloudv2.cc
+    ../../rt_utest_hccl_model_stream.cc
     rt_utest_api.cc
     rt_utest_api_test.cc
     rt_error_code_test.cc

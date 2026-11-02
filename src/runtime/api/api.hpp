@@ -794,6 +794,10 @@ public:
     virtual rtError_t SetKernelDfxInfoCallback(rtKernelDfxInfoType type, rtKernelDfxInfoProFunc func) = 0;
 
     virtual rtError_t ModelGetTasks(const Model* const mdl, void** tasks, uint32_t* numTasks) = 0;
+    virtual rtError_t HcclStreamAddToModel(Stream* const stm, Model* const mdl) = 0;
+    virtual rtError_t HcclStreamAddToNormalModel(Stream* const stm, Model* const mdl) = 0;
+    virtual rtError_t ModelGetHcclStream(const Model* const mdl, std::vector<Stream*>& streams) = 0;
+    virtual rtError_t GetModelByStream(Stream* const stm, Model** const mdl) = 0;
 };
 } // namespace runtime
 } // namespace cce

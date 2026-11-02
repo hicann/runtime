@@ -13,6 +13,9 @@
 #include "securec.h"
 #include "runtime/rt.h"
 #include "runtime/event.h"
+#include "rt_external_model.h"
+#include "api_handle_guard.h"
+#include "rt_capture_model_mock_helper.hpp"
 #include "runtime/rts/rts_stream.h"
 #include "stream_launch_blocking.hpp"
 #define private public
@@ -13421,4 +13424,67 @@ TEST_F(ApiDavidTest, api_impl_kernel_addr_with_mock)
 
     error = impl.KernelGetAddrAndPrefCntV2(nullptr, 0U, nullptr, 0U, nullptr);
     EXPECT_NE(error, RT_ERROR_NONE);
+}
+
+TEST_F(ApiDavidTest, HcclNormalModelRegistrationAndQueries)
+{
+    rtModel_t model = nullptr;
+    ASSERT_EQ(rtModelCreate(&model, 0U), ACL_RT_SUCCESS);
+    EXPECT_EQ(rtModelAddHcclStream(streamHandle_, model), ACL_RT_SUCCESS);
+    EXPECT_EQ(rtModelAddHcclStream(streamHandle_, model), ACL_RT_SUCCESS);
+    uint32_t count = 0U;
+    EXPECT_EQ(rtModelGetHcclStream(model, nullptr, &count), ACL_RT_SUCCESS);
+    EXPECT_EQ(count, 1U);
+    rtStream_t result[2] = {nullptr, streamHandle_};
+    count = 0U;
+    EXPECT_EQ(rtModelGetHcclStream(model, result, &count), ACL_ERROR_RT_INSUFFICIENT_INPUT_ARRAY);
+    EXPECT_EQ(count, 0U);
+    EXPECT_EQ(result[0], nullptr);
+    EXPECT_EQ(result[1], streamHandle_);
+    count = 2U;
+    EXPECT_EQ(rtModelGetHcclStream(model, result, &count), ACL_RT_SUCCESS);
+    EXPECT_EQ(count, 1U);
+    EXPECT_EQ(result[0], streamHandle_);
+    EXPECT_EQ(result[1], streamHandle_);
+    rtModel_t bound = model;
+    EXPECT_EQ(rtGetModelByStream(streamHandle_, &bound), ACL_RT_SUCCESS);
+    EXPECT_EQ(bound, nullptr);
+    EXPECT_EQ(rtStreamAddToModel(streamHandle_, model), ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(rtModelDestroy(model), ACL_RT_SUCCESS);
+}
+
+TEST_F(ApiDavidTest, HcclCaptureModelRegistrationAndQueries)
+{
+    // The driver stub does not complete control-SQ tasks; keep capture and query logic real.
+    MOCKER_CPP_VIRTUAL(stream_, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+    rtStream_t hcclStream = nullptr;
+    ASSERT_EQ(rtStreamCreate(&hcclStream, 0), ACL_RT_SUCCESS);
+    ASSERT_EQ(rtStreamBeginCapture(streamHandle_, RT_STREAM_CAPTURE_MODE_GLOBAL), ACL_RT_SUCCESS);
+    rtModel_t model = nullptr;
+    rtStreamCaptureStatus status = RT_STREAM_CAPTURE_STATUS_NONE;
+    ASSERT_EQ(rtStreamGetCaptureInfo(streamHandle_, &status, &model), ACL_RT_SUCCESS);
+    EXPECT_EQ(rtModelAddHcclStream(hcclStream, model), ACL_RT_SUCCESS);
+    EXPECT_EQ(rtModelAddHcclStream(hcclStream, model), ACL_RT_SUCCESS);
+    rtStream_t result = nullptr;
+    uint32_t count = 0U;
+    EXPECT_EQ(rtModelGetHcclStream(model, &result, &count), ACL_ERROR_RT_INSUFFICIENT_INPUT_ARRAY);
+    EXPECT_EQ(count, 0U);
+    EXPECT_EQ(result, nullptr);
+    count = 1U;
+    EXPECT_EQ(rtModelGetHcclStream(model, &result, &count), ACL_RT_SUCCESS);
+    EXPECT_EQ(count, 1U);
+    EXPECT_EQ(result, hcclStream);
+    rtModel_t bound = model;
+    EXPECT_EQ(rtGetModelByStream(hcclStream, &bound), ACL_RT_SUCCESS);
+    EXPECT_EQ(bound, nullptr);
+    Stream* const sink = rt_ut::UnwrapOrNull<Stream>(hcclStream)->GetCaptureStream();
+    ASSERT_NE(sink, nullptr);
+    EXPECT_EQ(rtGetModelByStream(ExportEmbeddedHandle<rtStream_t>(sink), &bound), ACL_RT_SUCCESS);
+    EXPECT_EQ(bound, model);
+    MOCK_CAPTURE_MODEL_LOAD_COMPLETE(streamHandle_);
+    EXPECT_EQ(rtStreamEndCapture(streamHandle_, &model), ACL_RT_SUCCESS);
+    // The driver stub cannot advance device SQ tails during capture-model teardown.
+    MOCKER_CPP(&Model::UnBindSqPerStream).stubs().will(returnValue(RT_ERROR_NONE));
+    EXPECT_EQ(rtModelDestroy(model), ACL_RT_SUCCESS);
+    EXPECT_EQ(rtStreamDestroy(hcclStream), ACL_RT_SUCCESS);
 }

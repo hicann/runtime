@@ -166,6 +166,8 @@ public:
 
     void AddExeNotify(Notify* notify) { executeNotifyList_.push_back(notify); }
 
+    rtError_t CollectHcclStreams(std::vector<Stream*>& streams) const override;
+
     const std::map<Stream*, std::vector<Stream*>>& GetAddStreamMap() { return addStreamMap_; }
 
     bool CheckIsUserAddStream(Stream* stm)

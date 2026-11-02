@@ -96,6 +96,12 @@ static bool CaptureFuncRegister()
 static bool g_captureFuncRegister = CaptureFuncRegister();
 } // namespace
 
+rtError_t CaptureModel::CollectHcclStreams(std::vector<Stream*>& streams) const
+{
+    UNUSED(streams);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 CaptureModel::CaptureModel(ModelType type) : Model(type) {}
 
 CaptureModel::~CaptureModel() noexcept {}

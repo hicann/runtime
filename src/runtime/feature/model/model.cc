@@ -13,6 +13,7 @@
 #include <algorithm>
 #endif
 #include <cstring>
+#include <new>
 #include <functional>
 #include "aicpu_sched/common/aicpu_task_struct.h"
 #include "davinci_kernel_task.h"
@@ -290,6 +291,7 @@ void Model::FinalizeHostStateOnExit() noexcept
     // Notify owns driver notify id, so direct exit must not delete it.
     endGraphNotify_ = nullptr;
     streams_.clear();
+    hcclStreams_.clear();
     headStreams_.clear();
     argLoaderRecord_.clear();
     dmaAddrRecord_.clear();
@@ -2394,6 +2396,20 @@ rtError_t Model::MemWaitDevAlloc(void** devMem, const Device* const dev)
     }
     *devMem = RtValueToPtr<void*>((RtPtrToValue)(currentAddr_) + allocTimes_ * MEM_WAIT_SPLIT_SIZE);
     allocTimes_++;
+    return RT_ERROR_NONE;
+}
+
+rtError_t Model::RegisterHcclStream(Stream* const stm)
+{
+    const std::lock_guard<std::mutex> guard(hcclStreamsMutex_);
+    (void)hcclStreams_.insert(stm);
+    return RT_ERROR_NONE;
+}
+
+rtError_t Model::CollectHcclStreams(std::vector<Stream*>& streams) const
+{
+    const std::lock_guard<std::mutex> guard(hcclStreamsMutex_);
+    streams.assign(hcclStreams_.begin(), hcclStreams_.end());
     return RT_ERROR_NONE;
 }
 

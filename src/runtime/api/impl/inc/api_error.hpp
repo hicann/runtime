@@ -668,6 +668,10 @@ public:
 
     rtError_t SetKernelDfxInfoCallback(rtKernelDfxInfoType type, rtKernelDfxInfoProFunc func) override;
 
+    rtError_t HcclStreamAddToModel(Stream* const stm, Model* const mdl) override;
+    rtError_t ModelGetHcclStream(const Model* const mdl, std::vector<Stream*>& streams) override;
+    rtError_t GetModelByStream(Stream* const stm, Model** const mdl) override;
+
 private:
     rtError_t CheckArgs(const rtArgsEx_t* const argsInfo) const;
     rtError_t CheckCfg(const rtTaskCfgInfo_t* const cfgInfo) const;
