@@ -229,11 +229,21 @@ void TaskResManageDavid::ShowDfxInfo(void) const
         return;
     }
 
+    const uint16_t head = taskResAHead_.Value();
+    const uint16_t tail = taskResATail_.Value();
+    const char_t* headTaskTypeName = "UNKNOWN";
+    uint32_t headTaskType = static_cast<uint32_t>(TS_TASK_TYPE_RESERVED);
+    if (head != tail) {
+        const TaskInfo& headTask = taskRes_[head].taskInfo;
+        headTaskTypeName = (headTask.typeName == nullptr) ? "UNKNOWN" : headTask.typeName;
+        headTaskType = static_cast<uint32_t>(headTask.type);
+    }
+    const bool isFull = ((tail + 1U) % taskPoolNum_) == head;
     RT_LOG(
-        RT_LOG_EVENT, "stream_id=%d, task res info, taskResHead=%hu, taskResTail=%hu", streamId_, taskResAHead_.Value(),
-        taskResATail_.Value());
-    const uint32_t headStart = (taskResAHead_.Value() + taskPoolNum_ - 5U) % taskPoolNum_;
-    const uint32_t tailStart = (taskResATail_.Value() + taskPoolNum_ - 5U) % taskPoolNum_;
+        RT_LOG_EVENT, "stream_id=%d, task res head=%hu, tail=%hu, head_task_type=%u(%s), isFull=%d", streamId_, head,
+        tail, headTaskType, headTaskTypeName, isFull);
+    const uint32_t headStart = (head + taskPoolNum_ - 5U) % taskPoolNum_;
+    const uint32_t tailStart = (tail + taskPoolNum_ - 5U) % taskPoolNum_;
     uint32_t headIndex[SHOW_DFX_INFO_TASK_NUM] = {0};
     uint32_t tailIndex[SHOW_DFX_INFO_TASK_NUM] = {0};
 

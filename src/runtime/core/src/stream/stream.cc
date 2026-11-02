@@ -91,7 +91,7 @@ TIMESTAMP_EXTERN(rtStreamDestroy_drvMemFreeManaged_arg);
 constexpr uint32_t ERROR_MESSAGE_MAX_SIZE = 10U;
 __THREAD_LOCAL__ bool Stream::isNeedStreamAsyncRecycle_ = false;
 
-constexpr uint64_t TASK_SENDING_WAIT_CHECK_TIME = 840000U;
+constexpr uint64_t TASK_SENDING_WAIT_CHECK_TIME = 180000U;
 constexpr uint16_t TASK_SENDING_WAIT_CHECK_COUNT = 2U;
 constexpr uint16_t SQE_DEPTH_1k = 1024U;
 Stream::Stream(Device* const dev, const uint32_t prio) : Stream(dev, prio, 0U) {}
