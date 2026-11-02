@@ -11,6 +11,7 @@
 #ifndef KERNEL_DFX_DUMPER_H
 #define KERNEL_DFX_DUMPER_H
 #include <atomic>
+#include "dfx_struct.h"
 #include <mutex>
 #include <string>
 #include <thread>
@@ -25,6 +26,7 @@ struct DumpDfxInfo {
     std::string path;
     std::shared_ptr<uint8_t> data;
     uint32_t length;
+    bool isBlockInfo = false;
 };
 
 void DumpKernelDfxInfoCallback(
@@ -47,9 +49,17 @@ public:
 private:
     int32_t PushDfxInfoToQueue(DumpDfxInfo& dfxInfo);
     void RecordDfxInfoToDisk(DumpDfxInfo& dfxInfo);
+    void MarkBlockInfoWritten(const std::string& filePath);
+    void MarkBlockInfoFailed(const std::string& filePath);
     bool InitDumpPath(const std::string& dumpPath);
     std::string GetDfxTypeStr(const rtKernelDfxInfoType rtDfxType);
     std::string GetCoreTypeStr(uint32_t coreType);
+    rtKernelDfxInfoType GetValidBlockInfoType();
+    void DumpBlockInfo(const rtDfxParseParam* param, const std::string& filePath);
+    void ExecuteKernelDfxInfoFuncLocked(const rtDfxParseParam* param, const uint8_t* buffer, uint64_t length);
+    int32_t DumpKernelDfxInfoLocked(
+        rtKernelDfxInfoType dfxType, uint32_t coreType, uint32_t coreId, const uint8_t* buffer, size_t length,
+        bool isBlockInfo = false);
     void GetRegisterDfxTypes(const std::vector<std::string>& cfgDfxTypes, std::set<rtKernelDfxInfoType>& rtDfxTypes);
     bool IsEnabled();
     bool IsEnabled(const rtKernelDfxInfoType dfxType);
@@ -62,6 +72,9 @@ private:
     std::atomic<bool> taskInit_ = false;
     std::atomic<bool> taskRunning_ = false;
     bool destructed_ = false;
+    std::set<std::string> blockInfoWrittenFiles_;
+    std::set<std::string> blockInfoPendingFiles_;
+    std::mutex blockInfoMutex_;
     std::thread taskThread_;
     std::mutex mutex_;
     std::unique_ptr<BoundQueueMemory<DumpDfxInfo>> dumpDfxInfoQueue_;

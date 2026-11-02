@@ -12,8 +12,9 @@
 #define DFX_INFO_PARSER_H
 
 #include <atomic>
+#include <map>
 #include <mutex>
-#include <unordered_map>
+#include <tuple>
 
 #include "common/singleton.h"
 #include "rt_inner_dfx.h"
@@ -32,8 +33,9 @@ public:
 
 private:
     bool registered_;
+    std::mutex lifecycleMutex_;
     std::mutex tlvCntMutex_;
-    std::unordered_map<uint64_t, uint64_t> tlvCntMap_;
+    std::map<std::tuple<uint32_t, uint32_t, uint32_t>, uint64_t> tlvCntMap_;
     static std::atomic<bool> profCtrlRegistered_;
     static void RegisterProfCtrlCallbackOnce();
     void AddTlvCnt(const rtDfxParseParam* param, uint64_t consumedTlvCnt);

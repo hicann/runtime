@@ -111,7 +111,9 @@ using DumpShapeInfo = cce::runtime::DumpShapeInfo;
 using DumpTimeStampInfoMsg = cce::runtime::DumpTimeStampInfoMsg;
 using DumpTensorPosition = cce::runtime::DumpTensorPosition;
 using cce::runtime::RT_DUMP_SHAPE_MAX_SIZE;
+using cce::runtime::RT_KERNEL_DFX_INFO_CORE_TYPE_AIC;
 using cce::runtime::RT_KERNEL_DFX_INFO_CORE_TYPE_AICPU;
+using cce::runtime::RT_KERNEL_DFX_INFO_CORE_TYPE_AIV;
 using cce::runtime::RT_KERNEL_DFX_INFO_CORE_TYPE_SIMT;
 using DfxDumpType = cce::runtime::DumpType;
 
@@ -1030,13 +1032,39 @@ bool ValidateDumpBlockSnapshot(const rtDfxParseParam* param, const BlockInfo*& b
             static_cast<unsigned long long>(param->writeIdx), param->coreType, param->coreId, param->deviceId);
         return false;
     }
-    if (param->readIdx > param->writeIdx) {
+    // Keep the same call-site checks as V1:
+    // AIC/AIV indices are physical offsets; ParsePrintf checks both offsets against remainLen.
+    // SIMT/AICPU indices are monotonic; ParseSimtPrintf and ParseAicpuPrintf check readIdx <= writeIdx.
+    if ((param->coreType == RT_KERNEL_DFX_INFO_CORE_TYPE_AIC) ||
+        (param->coreType == RT_KERNEL_DFX_INFO_CORE_TYPE_AIV)) {
+        if ((param->readIdx > blockInfo->remainLen) || (param->writeIdx > blockInfo->remainLen)) {
+            IDE_LOGW(
+                "Invalid dfx block snapshot: readIdx=%llu or writeIdx=%llu is greater than remainLen=%u, datalen=%llu, "
+                "coreType=%u, coreId=%u, deviceId=%u.",
+                static_cast<unsigned long long>(param->readIdx), static_cast<unsigned long long>(param->writeIdx),
+                blockInfo->remainLen, static_cast<unsigned long long>(param->datalen), param->coreType, param->coreId,
+                param->deviceId);
+            return false;
+        }
+    } else if (
+        (param->coreType == RT_KERNEL_DFX_INFO_CORE_TYPE_SIMT) ||
+        (param->coreType == RT_KERNEL_DFX_INFO_CORE_TYPE_AICPU)) {
+        if (param->readIdx > param->writeIdx) {
+            IDE_LOGW(
+                "Invalid dfx block snapshot: readIdx=%llu is greater than writeIdx=%llu, remainLen=%u, "
+                "datalen=%llu, coreType=%u, coreId=%u, deviceId=%u.",
+                static_cast<unsigned long long>(param->readIdx), static_cast<unsigned long long>(param->writeIdx),
+                blockInfo->remainLen, static_cast<unsigned long long>(param->datalen), param->coreType, param->coreId,
+                param->deviceId);
+            return false;
+        }
+    } else {
         IDE_LOGW(
-            "Invalid dfx block snapshot: readIdx=%llu is greater than writeIdx=%llu, remainLen=%u, "
-            "datalen=%llu, coreType=%u, coreId=%u, deviceId=%u.",
+            "Invalid dfx block snapshot: unknown coreType=%u, datalen=%llu, readIdx=%llu, writeIdx=%llu, coreId=%u, "
+            "deviceId=%u.",
+            param->coreType, static_cast<unsigned long long>(param->datalen),
             static_cast<unsigned long long>(param->readIdx), static_cast<unsigned long long>(param->writeIdx),
-            blockInfo->remainLen, static_cast<unsigned long long>(param->datalen), param->coreType, param->coreId,
-            param->deviceId);
+            param->coreId, param->deviceId);
         return false;
     }
 
@@ -1054,11 +1082,10 @@ bool PrepareDumpReadBuffer(
     }
 
     const uint64_t readIdx = param->readIdx % blockInfo->remainLen;
-    const uint64_t writeIdx = param->writeIdx % blockInfo->remainLen;
-    if (param->writeIdx - param->readIdx >= blockInfo->remainLen) {
+    if ((param->writeIdx >= param->readIdx) && (param->writeIdx - param->readIdx >= blockInfo->remainLen)) {
         totalReadBufLen = blockInfo->remainLen;
         dumpInfoVec.resize(totalReadBufLen, 0U);
-        const uint64_t validStartIdx = writeIdx;
+        const uint64_t validStartIdx = param->writeIdx % blockInfo->remainLen;
         (void)memcpy_s(
             dumpInfoVec.data(), blockInfo->remainLen - validStartIdx, dumpStartAddr + validStartIdx,
             blockInfo->remainLen - validStartIdx);
@@ -1070,6 +1097,7 @@ bool PrepareDumpReadBuffer(
         return true;
     }
 
+    const uint64_t writeIdx = param->writeIdx % blockInfo->remainLen;
     if (readIdx > writeIdx) {
         totalReadBufLen = blockInfo->remainLen - readIdx + writeIdx;
         dumpInfoVec.resize(totalReadBufLen, 0U);
@@ -1159,6 +1187,7 @@ DfxInfoParser::~DfxInfoParser() { UnInit(); }
 
 int32_t DfxInfoParser::Init()
 {
+    std::lock_guard<std::mutex> lock(lifecycleMutex_);
     if (registered_) {
         IDE_LOGI("DfxInfoParser already registered.");
         return ADUMP_SUCCESS;
@@ -1169,7 +1198,6 @@ int32_t DfxInfoParser::Init()
     const rtError_t ret = rtRegisterParseDfxInfoFunc(ParseDfxInfoCallback);
     if (ret != RT_ERROR_NONE) {
         IDE_LOGE("Register parse dfx info callback failed, ret=%u.", ret);
-        UnInit();
         return ADUMP_FAILED;
     }
     registered_ = true;
@@ -1179,6 +1207,7 @@ int32_t DfxInfoParser::Init()
 
 void DfxInfoParser::UnInit()
 {
+    std::lock_guard<std::mutex> lock(lifecycleMutex_);
     // profapi 不支持反注册，ProfCtrlCallback 为进程级注册（见 RegisterProfCtrlCallbackOnce），
     // 此处仅注销 DfxInfo 解析回调；UnInit 后 ProfCtrlCallback 仍可能被 profapi 触发并更新 g_profSwitch，
     // 该状态更新无副作用（不上报数据），符合设计预期。
@@ -1188,9 +1217,9 @@ void DfxInfoParser::UnInit()
             IDE_LOGE("Unregister parse dfx info callback failed, ret=%u.", ret);
         } else {
             registered_ = false;
+            ClearTlvCntState();
         }
     }
-    ClearTlvCntState();
 }
 
 void DfxInfoParser::AddTlvCnt(const rtDfxParseParam* param, uint64_t consumedTlvCnt)
@@ -1198,7 +1227,7 @@ void DfxInfoParser::AddTlvCnt(const rtDfxParseParam* param, uint64_t consumedTlv
     if (consumedTlvCnt == 0U) {
         return;
     }
-    const uint64_t key = (static_cast<uint64_t>(param->deviceId) << 32U) | param->coreType;
+    const auto key = std::make_tuple(param->deviceId, param->coreType, param->coreId);
     std::lock_guard<std::mutex> lock(tlvCntMutex_);
     tlvCntMap_[key] += consumedTlvCnt;
 }
@@ -1208,13 +1237,13 @@ uint64_t DfxInfoParser::GetTlvCnt(const rtDfxParseParam* param, uint64_t packIdx
     if (packIdx == std::numeric_limits<uint64_t>::max()) {
         return 0U;
     }
-    const uint64_t key = (static_cast<uint64_t>(param->deviceId) << 32U) | param->coreType;
+    const auto key = std::make_tuple(param->deviceId, param->coreType, param->coreId);
     std::lock_guard<std::mutex> lock(tlvCntMutex_);
     auto iter = tlvCntMap_.find(key);
     if (iter == tlvCntMap_.end()) {
         return 0U;
     }
-    if (packIdx < iter->second) {
+    if (((param->readIdx == 0U) && (iter->second != 0U)) || (packIdx < iter->second)) {
         iter->second = 0U;
     }
     return iter->second;
@@ -1228,6 +1257,7 @@ void DfxInfoParser::ClearTlvCntState()
 
 void DfxInfoParser::ParseDfxInfo(const rtDfxParseParam* param, uint64_t* consumedLen)
 {
+    std::lock_guard<std::mutex> lock(lifecycleMutex_);
     if (consumedLen == nullptr) {
         return;
     }
@@ -1262,6 +1292,13 @@ void DfxInfoParser::ParseDfxInfo(const rtDfxParseParam* param, uint64_t* consume
     if ((param->coreType == RT_KERNEL_DFX_INFO_CORE_TYPE_SIMT) ||
         (param->coreType == RT_KERNEL_DFX_INFO_CORE_TYPE_AICPU)) {
         *consumedLen = dataLen;
+    } else if (
+        ((param->coreType == RT_KERNEL_DFX_INFO_CORE_TYPE_AIC) ||
+         (param->coreType == RT_KERNEL_DFX_INFO_CORE_TYPE_AIV)) &&
+        (param->readIdx > param->writeIdx)) {
+        // V2 callback protocol uses consumedLen as a processed flag for SIMD;
+        // return the linearized length to avoid the V1 physical-index unsigned underflow.
+        *consumedLen = totalReadBufLen;
     } else {
         *consumedLen = (param->writeIdx - param->readIdx);
     }

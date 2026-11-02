@@ -42,6 +42,26 @@ static const std::map<rtKernelDfxInfoType, std::string> DFX_TYPE_STR_MAP = {
     {rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_TIME_STAMP, KERNEL_DFX_TYPE_TIMESTAMP},
     {rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_BLOCK_INFO, KERNEL_DFX_TYPE_BLOCKINFO}};
 
+static rtKernelDfxInfoType GetrtKernelDfxInfoType(const cce::runtime::DumpType type)
+{
+    switch (type) {
+        case cce::runtime::DumpType::DUMP_SCALAR:
+        case cce::runtime::DumpType::DUMP_SIMT_PRINTF:
+        case cce::runtime::DumpType::DUMP_AICPU:
+            return rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_PRINTF;
+        case cce::runtime::DumpType::DUMP_ASSERT:
+        case cce::runtime::DumpType::DUMP_SIMT_ASSERT:
+            return rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_ASSERT;
+        case cce::runtime::DumpType::DUMP_TENSOR:
+        case cce::runtime::DumpType::DUMP_SHAPE:
+            return rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_TENSOR;
+        case cce::runtime::DumpType::DUMP_TIMESTAMP:
+            return rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_TIME_STAMP;
+        default:
+            return rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_INVALID;
+    }
+}
+
 void DumpKernelDfxInfoCallback(
     rtKernelDfxInfoType dfxType, uint32_t coreType, uint32_t coreId, const uint8_t* buffer, size_t length)
 {
@@ -111,9 +131,28 @@ void KernelDfxDumper::RecordDfxInfoToDisk(DumpDfxInfo& dfxInfo)
     IdeErrorT err = FileUtils::WriteFile(path.GetString(), dfxInfo.data.get(), dfxInfo.length, -1);
     if (err != IDE_DAEMON_NONE_ERROR) {
         IDE_LOGE("Cannot write the dfx info into path[%s]! err: %d", path.GetCString(), err);
+        if (dfxInfo.isBlockInfo) {
+            MarkBlockInfoFailed(dfxInfo.path);
+        }
         return;
     }
     IDE_LOGI("Record the dfx info into path[%s] success.", path.GetCString());
+    if (dfxInfo.isBlockInfo) {
+        MarkBlockInfoWritten(dfxInfo.path);
+    }
+}
+
+void KernelDfxDumper::MarkBlockInfoWritten(const std::string& filePath)
+{
+    std::lock_guard<std::mutex> lock(blockInfoMutex_);
+    (void)blockInfoPendingFiles_.erase(filePath);
+    (void)blockInfoWrittenFiles_.insert(filePath);
+}
+
+void KernelDfxDumper::MarkBlockInfoFailed(const std::string& filePath)
+{
+    std::lock_guard<std::mutex> lock(blockInfoMutex_);
+    (void)blockInfoPendingFiles_.erase(filePath);
 }
 
 int32_t KernelDfxDumper::InitTask()
@@ -182,6 +221,11 @@ void KernelDfxDumper::UnInit()
     if (dumpDfxInfoQueue_) {
         dumpDfxInfoQueue_.reset();
     }
+    {
+        std::lock_guard<std::mutex> blockInfoLock(blockInfoMutex_);
+        blockInfoWrittenFiles_.clear();
+        blockInfoPendingFiles_.clear();
+    }
 }
 
 void KernelDfxDumper::PrepareFork() { Instance().mutex_.lock(); }
@@ -195,6 +239,8 @@ void KernelDfxDumper::PostForkChild()
     instance.taskRunning_ = false;
     instance.dumpPath_.clear();
     instance.enabledDfxTypes_.clear();
+    instance.blockInfoWrittenFiles_.clear();
+    instance.blockInfoPendingFiles_.clear();
     // 释放线程控制权
     if (instance.taskThread_.joinable()) {
         instance.taskThread_.detach();
@@ -312,6 +358,17 @@ bool KernelDfxDumper::IsEnabled(const rtKernelDfxInfoType dfxType)
 
 bool KernelDfxDumper::IsEnabled() { return !enabledDfxTypes_.empty(); }
 
+rtKernelDfxInfoType KernelDfxDumper::GetValidBlockInfoType()
+{
+    if (IsEnabled(rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_DEFAULT)) {
+        return rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_DEFAULT;
+    }
+    if (IsEnabled(rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_BLOCK_INFO)) {
+        return rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_BLOCK_INFO;
+    }
+    return rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_INVALID;
+}
+
 std::string KernelDfxDumper::GetDfxInfoFilePath(uint32_t coreId, std::string& coreType)
 {
     std::string fileName = "asc_kernel_data_" + coreType + "_" + std::to_string(coreId) + ".bin";
@@ -322,6 +379,13 @@ int32_t KernelDfxDumper::DumpKernelDfxInfo(
     rtKernelDfxInfoType dfxType, uint32_t coreType, uint32_t coreId, const uint8_t* buffer, size_t length)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    return DumpKernelDfxInfoLocked(dfxType, coreType, coreId, buffer, length);
+}
+
+int32_t KernelDfxDumper::DumpKernelDfxInfoLocked(
+    rtKernelDfxInfoType dfxType, uint32_t coreType, uint32_t coreId, const uint8_t* buffer, size_t length,
+    bool isBlockInfo)
+{
     IDE_CTRL_VALUE_WARN(!destructed_, return ADUMP_FAILED, "KernelDfxDumper has been destructed.");
 
     std::string dfxTypeStr = GetDfxTypeStr(dfxType);
@@ -349,20 +413,72 @@ int32_t KernelDfxDumper::DumpKernelDfxInfo(
         IDE_LOGE("Cannot copy the dfx info to the new buffer! err: %d", err);
         return ADUMP_FAILED;
     }
-    DumpDfxInfo dfxInfo{GetDfxInfoFilePath(coreId, coreTypeStr), data, static_cast<uint32_t>(length)};
+    DumpDfxInfo dfxInfo{GetDfxInfoFilePath(coreId, coreTypeStr), data, static_cast<uint32_t>(length), isBlockInfo};
     return PushDfxInfoToQueue(dfxInfo);
+}
+
+void KernelDfxDumper::DumpBlockInfo(const rtDfxParseParam* param, const std::string& filePath)
+{
+    std::lock_guard<std::mutex> blockInfoLock(blockInfoMutex_);
+    if ((blockInfoWrittenFiles_.find(filePath) != blockInfoWrittenFiles_.end()) ||
+        (blockInfoPendingFiles_.find(filePath) != blockInfoPendingFiles_.end())) {
+        return;
+    }
+    const rtKernelDfxInfoType blockInfoType = GetValidBlockInfoType();
+    if (blockInfoType == rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_INVALID) {
+        return;
+    }
+    (void)blockInfoPendingFiles_.insert(filePath);
+    if (DumpKernelDfxInfoLocked(
+            blockInfoType, param->coreType, param->coreId, static_cast<const uint8_t*>(param->data),
+            sizeof(cce::runtime::BlockInfo), true) != ADUMP_SUCCESS) {
+        (void)blockInfoPendingFiles_.erase(filePath);
+        return;
+    }
+}
+
+void KernelDfxDumper::ExecuteKernelDfxInfoFuncLocked(
+    const rtDfxParseParam* param, const uint8_t* buffer, uint64_t length)
+{
+    if (IsEnabled(rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_DEFAULT)) {
+        (void)DumpKernelDfxInfoLocked(
+            rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_DEFAULT, param->coreType, param->coreId, buffer,
+            static_cast<size_t>(length));
+        return;
+    }
+    uint64_t offset = 0U;
+    while (offset < length) {
+        const uint64_t remainingLen = length - offset;
+        if (remainingLen < sizeof(cce::runtime::DumpInfoHead)) {
+            return;
+        }
+        const auto* dumpHead = reinterpret_cast<const cce::runtime::DumpInfoHead*>(buffer + offset);
+        const uint64_t dumpInfoLen = sizeof(cce::runtime::DumpInfoHead) + static_cast<uint64_t>(dumpHead->infoLen);
+        if (dumpInfoLen > remainingLen) {
+            return;
+        }
+        const rtKernelDfxInfoType dfxType = GetrtKernelDfxInfoType(dumpHead->type);
+        if ((dfxType != rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_INVALID) && IsEnabled(dfxType)) {
+            (void)DumpKernelDfxInfoLocked(
+                dfxType, param->coreType, param->coreId, buffer + offset, static_cast<size_t>(dumpInfoLen));
+        }
+        offset += dumpInfoLen;
+    }
 }
 
 void KernelDfxDumper::DumpKernelDfxInfoBlock(const rtDfxParseParam* param, const uint8_t* buffer, uint64_t length)
 {
-    if (param == nullptr || buffer == nullptr || length == 0U) {
+    if (param == nullptr || param->data == nullptr || param->datalen < sizeof(cce::runtime::BlockInfo) ||
+        buffer == nullptr || length == 0U) {
         return;
     }
     std::string coreTypeStr = GetCoreTypeStr(param->coreType);
     if (coreTypeStr.empty()) {
         return;
     }
-    (void)DumpKernelDfxInfo(
-        RT_KERNEL_DFX_INFO_BLOCK_INFO, param->coreType, param->coreId, buffer, static_cast<size_t>(length));
+    std::lock_guard<std::mutex> lock(mutex_);
+    const std::string filePath = GetDfxInfoFilePath(param->coreId, coreTypeStr);
+    DumpBlockInfo(param, filePath);
+    ExecuteKernelDfxInfoFuncLocked(param, buffer, length);
 }
 } // namespace Adx

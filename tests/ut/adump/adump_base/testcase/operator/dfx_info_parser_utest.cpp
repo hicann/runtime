@@ -19,6 +19,7 @@
 #include "mmpa_api.h"
 #include "path.h"
 #include "utils.h"
+#include "file_utils.h"
 #define protected public
 #define private public
 
@@ -436,6 +437,62 @@ TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SimtPackIdxStopsUncommittedTlv)
     EXPECT_EQ(consumedLen, firstLen);
 }
 
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_AicPhysicalWraparoundPreservesV1ContentOrder)
+{
+    BlockBuffer block(256U);
+    const uint32_t firstLen = BuildPrintfTlv(block.dumpStartAddr, "tail printf");
+    const uint32_t secondLen = BuildAssertTlv(block.dumpStartAddr + firstLen, "head assert");
+    const uint32_t readIdx = block.remainLen - firstLen;
+    const uint32_t writeIdx = secondLen;
+    std::vector<uint8_t> expectedData(block.dumpStartAddr, block.dumpStartAddr + firstLen + secondLen);
+    WriteRingData(block, readIdx, expectedData.data(), expectedData.size());
+
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), readIdx, writeIdx, 0U, 0U);
+    testing::internal::CaptureStdout();
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(consumedLen, firstLen + secondLen);
+    const size_t firstPos = output.find("tail printf");
+    const size_t secondPos = output.find("head assert");
+    ASSERT_NE(firstPos, std::string::npos);
+    ASSERT_NE(secondPos, std::string::npos);
+    EXPECT_LT(firstPos, secondPos);
+}
+
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SimtInvalidTypeSkipsConsumption)
+{
+    BlockBuffer block(256U);
+    const uint32_t firstLen = BuildPrintfTlv(block.dumpStartAddr, "first simt", true);
+    (void)BuildInvalidTypeTlv(block.dumpStartAddr + firstLen);
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0U, firstLen + sizeof(DumpInfoHead), 2U, 0U);
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    EXPECT_EQ(consumedLen, firstLen + sizeof(DumpInfoHead));
+}
+
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_AicpuFifoReinitResetsTlvCnt)
+{
+    BlockBuffer firstBlock(256U);
+    const uint32_t firstLen = BuildAicpuTlv(firstBlock.dumpStartAddr, "old fifo");
+    auto* writeInfo =
+        reinterpret_cast<BlockWriteInfo*>(firstBlock.blockAddr + firstBlock.data.size() - sizeof(BlockWriteInfo));
+    writeInfo->packIdx = 1U;
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(firstBlock.blockAddr, firstBlock.data.size(), 0U, firstLen, 3U, 0U);
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    EXPECT_EQ(consumedLen, firstLen);
+
+    BlockBuffer secondBlock(256U);
+    const uint32_t secondLen = BuildAicpuTlv(secondBlock.dumpStartAddr, "new fifo");
+    writeInfo =
+        reinterpret_cast<BlockWriteInfo*>(secondBlock.blockAddr + secondBlock.data.size() - sizeof(BlockWriteInfo));
+    writeInfo->packIdx = 1U;
+    param = MakeParam(secondBlock.blockAddr, secondBlock.data.size(), 0U, secondLen, 3U, 0U);
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    EXPECT_EQ(consumedLen, secondLen);
+}
+
 TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_AicpuTruncatedTlvAfterCompleteTlv)
 {
     BlockBuffer block(256U);
@@ -585,7 +642,7 @@ TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SimtWraparoundPartialHeaderAfterCom
     EXPECT_EQ(consumedLen, tlvLen);
 }
 
-TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_Overflow)
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_AicWriteIdxOutOfRange)
 {
     uint32_t remainLen = 128;
     BlockBuffer block(remainLen);
@@ -593,7 +650,7 @@ TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_Overflow)
     uint64_t consumedLen = 0U;
     rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, remainLen + 10);
     DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
-    EXPECT_EQ(consumedLen, remainLen + 10);
+    EXPECT_EQ(consumedLen, 0U);
 }
 
 TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_ExactlyFullPreservesContentOrder)
@@ -663,7 +720,7 @@ TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_Wraparound_CrossBoundary)
     (void)memcpy_s(block.dumpStartAddr + readOff, firstPartLen, tlvBuf.data(), firstPartLen);
     (void)memcpy_s(block.dumpStartAddr, secondPartLen, tlvBuf.data() + firstPartLen, secondPartLen);
     uint64_t consumedLen = 0U;
-    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), readOff, readOff + tlvLen);
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), readOff, readOff + tlvLen, 2U, 0U);
     DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
     EXPECT_EQ(consumedLen, tlvLen);
 }
@@ -919,13 +976,20 @@ TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_DumpKernelDfxInfoBlock_Success)
     DumpDfxConfig config;
     config.dfxTypes.push_back("printf");
     config.dumpPath = workspace.Root() + "/ascendDumpPath";
+    KernelDfxDumper::Instance().UnInit();
+    GlobalMockObject::verify();
+    KernelDfxDumper::Instance().UnInit();
+    GlobalMockObject::verify();
+    KernelDfxDumper::Instance().UnInit();
+    MOCKER(mmGetDiskFreeSpace).stubs().will(invoke(MmGetDiskFreeSpaceSuccessStub));
     ASSERT_EQ(KernelDfxDumper::Instance().EnableDfxDumper(config), ADUMP_SUCCESS);
     ASSERT_TRUE(KernelDfxDumper::Instance().IsEnabled(RT_KERNEL_DFX_INFO_BLOCK_INFO));
 
     BlockBuffer block(256);
     const uint32_t tlvLen = BuildPrintfTlv(block.dumpStartAddr, "dump block test");
     rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, tlvLen, 0U, 0U);
-    const Path dumpFile = Path(KernelDfxDumper::Instance().dumpPath_).Concat("asc_kernel_data_aic_0.bin");
+    Path dumpFile = Path(KernelDfxDumper::Instance().dumpPath_).Concat("asc_kernel_data_aic_0.bin");
+    const std::string expectedFilePath = dumpFile.GetString();
     const std::string expectedContent(reinterpret_cast<const char*>(block.dumpStartAddr), tlvLen);
     MOCKER(mmGetDiskFreeSpace).stubs().will(invoke(MmGetDiskFreeSpaceSuccessStub));
 
@@ -936,10 +1000,144 @@ TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_DumpKernelDfxInfoBlock_Success)
         usleep(100000U);
     }
 
-    ASSERT_TRUE(dumpFile.Exist());
+    Path actualDumpFile(expectedFilePath);
+    ASSERT_TRUE(actualDumpFile.Exist());
+    const std::string actualContent = ReadFileToString(actualDumpFile.GetString());
+    ASSERT_EQ(actualContent.size(), sizeof(BlockInfo) + tlvLen);
+    EXPECT_EQ(
+        actualContent.compare(0U, sizeof(BlockInfo), reinterpret_cast<const char*>(block.blockAddr), sizeof(BlockInfo)),
+        0);
+    EXPECT_EQ(actualContent.compare(sizeof(BlockInfo), tlvLen, expectedContent.c_str(), tlvLen), 0);
+}
+
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_DumpKernelDfxInfoBlock_WritesBlockInfoOnce)
+{
+    Tools::CaseWorkspace workspace("Test_DfxParser_DumpBlockHeaderOnce");
+    DumpDfxConfig config;
+    config.dfxTypes.push_back("printf");
+    config.dumpPath = workspace.Root() + "/ascendDumpPath";
+    ASSERT_EQ(KernelDfxDumper::Instance().EnableDfxDumper(config), ADUMP_SUCCESS);
+
+    GlobalMockObject::verify();
+
+    BlockBuffer block(256);
+    const uint32_t tlvLen = BuildPrintfTlv(block.dumpStartAddr, "dump block test");
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, tlvLen, 0U, 0U);
+    Path dumpFile = Path(KernelDfxDumper::Instance().dumpPath_).Concat("asc_kernel_data_aic_0.bin");
+    MOCKER(mmGetDiskFreeSpace).stubs().will(invoke(MmGetDiskFreeSpaceSuccessStub));
+
+    KernelDfxDumper::Instance().DumpKernelDfxInfoBlock(&param, block.dumpStartAddr, tlvLen);
+    KernelDfxDumper::Instance().DumpKernelDfxInfoBlock(&param, block.dumpStartAddr, tlvLen);
+
+    KernelDfxDumper::Instance().UnInitTask();
+    while (KernelDfxDumper::Instance().taskRunning_) {
+        usleep(100000U);
+    }
+
     const std::string actualContent = ReadFileToString(dumpFile.GetString());
-    ASSERT_EQ(actualContent.size(), tlvLen);
-    EXPECT_EQ(actualContent, expectedContent);
+    ASSERT_FALSE(actualContent.empty());
+    ASSERT_EQ(actualContent.size(), sizeof(BlockInfo) + tlvLen * 2U);
+    EXPECT_EQ(
+        actualContent.compare(0U, sizeof(BlockInfo), reinterpret_cast<const char*>(block.blockAddr), sizeof(BlockInfo)),
+        0);
+    EXPECT_EQ(
+        actualContent.compare(sizeof(BlockInfo), tlvLen, reinterpret_cast<const char*>(block.dumpStartAddr), tlvLen),
+        0);
+    EXPECT_EQ(
+        actualContent.compare(
+            sizeof(BlockInfo) + tlvLen, tlvLen, reinterpret_cast<const char*>(block.dumpStartAddr), tlvLen),
+        0);
+}
+
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_DumpKernelDfxInfoBlock_RetriesHeaderAfterWriteFailure)
+{
+    Tools::CaseWorkspace workspace("Test_DfxParser_DumpBlockHeaderRetry");
+    DumpDfxConfig config;
+    config.dfxTypes.push_back("printf");
+    config.dumpPath = workspace.Root() + "/ascendDumpPath";
+    ASSERT_EQ(KernelDfxDumper::Instance().EnableDfxDumper(config), ADUMP_SUCCESS);
+
+    GlobalMockObject::verify();
+
+    BlockBuffer block(256);
+    const uint32_t tlvLen = BuildPrintfTlv(block.dumpStartAddr, "retry header");
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, tlvLen, 0U, 0U);
+    Path dumpFile = Path(KernelDfxDumper::Instance().dumpPath_).Concat("asc_kernel_data_aic_0.bin");
+    MOCKER(mmGetDiskFreeSpace).stubs().will(invoke(MmGetDiskFreeSpaceSuccessStub));
+    MOCKER(Adx::FileUtils::WriteFile).stubs().will(returnValue(1)).then(returnValue(0)).then(returnValue(0));
+
+    KernelDfxDumper::Instance().DumpKernelDfxInfoBlock(&param, block.dumpStartAddr, tlvLen);
+    KernelDfxDumper::Instance().UnInitTask();
+    while (KernelDfxDumper::Instance().taskRunning_) {
+        usleep(100000U);
+    }
+
+    GlobalMockObject::verify();
+    KernelDfxDumper::Instance().UnInit();
+    MOCKER(mmGetDiskFreeSpace).stubs().will(invoke(MmGetDiskFreeSpaceSuccessStub));
+    ASSERT_EQ(KernelDfxDumper::Instance().EnableDfxDumper(config), ADUMP_SUCCESS);
+    dumpFile = Path(KernelDfxDumper::Instance().dumpPath_).Concat("asc_kernel_data_aic_0.bin");
+    const std::string expectedFilePath = dumpFile.GetString();
+    KernelDfxDumper::Instance().DumpKernelDfxInfoBlock(&param, block.dumpStartAddr, tlvLen);
+    KernelDfxDumper::Instance().UnInitTask();
+    while (KernelDfxDumper::Instance().taskRunning_) {
+        usleep(100000U);
+    }
+
+    const std::string actualContent = ReadFileToString(expectedFilePath);
+    ASSERT_FALSE(actualContent.empty());
+    ASSERT_EQ(actualContent.size(), sizeof(BlockInfo) + tlvLen);
+    EXPECT_EQ(
+        actualContent.compare(0U, sizeof(BlockInfo), reinterpret_cast<const char*>(block.blockAddr), sizeof(BlockInfo)),
+        0);
+}
+
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_DumpKernelDfxInfoBlock_RetriesHeaderWhenTlvSucceeds)
+{
+    Tools::CaseWorkspace workspace("Test_DfxParser_DumpBlockHeaderRetryAfterTlv");
+    DumpDfxConfig config;
+    config.dfxTypes.push_back("printf");
+    config.dumpPath = workspace.Root() + "/ascendDumpPath";
+    ASSERT_EQ(KernelDfxDumper::Instance().EnableDfxDumper(config), ADUMP_SUCCESS);
+
+    GlobalMockObject::verify();
+
+    BlockBuffer block(256);
+    const uint32_t tlvLen = BuildPrintfTlv(block.dumpStartAddr, "retry header after tlv");
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, tlvLen, 0U, 0U);
+    const std::string filePath =
+        Path(KernelDfxDumper::Instance().dumpPath_).Concat("asc_kernel_data_aic_0.bin").GetString();
+    MOCKER(mmGetDiskFreeSpace).stubs().will(invoke(MmGetDiskFreeSpaceSuccessStub));
+    MOCKER(Adx::FileUtils::WriteFile).stubs().will(returnValue(1)).then(returnValue(0)).then(returnValue(0));
+
+    KernelDfxDumper::Instance().DumpKernelDfxInfoBlock(&param, block.dumpStartAddr, tlvLen);
+    KernelDfxDumper::Instance().UnInitTask();
+    while (KernelDfxDumper::Instance().taskRunning_) {
+        usleep(100000U);
+    }
+
+    EXPECT_TRUE(
+        KernelDfxDumper::Instance().blockInfoPendingFiles_.find(filePath) ==
+        KernelDfxDumper::Instance().blockInfoPendingFiles_.end());
+    EXPECT_TRUE(
+        KernelDfxDumper::Instance().blockInfoWrittenFiles_.find(filePath) ==
+        KernelDfxDumper::Instance().blockInfoWrittenFiles_.end());
+
+    GlobalMockObject::verify();
+    MOCKER(mmGetDiskFreeSpace).stubs().will(invoke(MmGetDiskFreeSpaceSuccessStub));
+    ASSERT_EQ(KernelDfxDumper::Instance().InitTask(), ADUMP_SUCCESS);
+    KernelDfxDumper::Instance().DumpKernelDfxInfoBlock(&param, block.dumpStartAddr, tlvLen);
+    KernelDfxDumper::Instance().UnInitTask();
+    while (KernelDfxDumper::Instance().taskRunning_) {
+        usleep(100000U);
+    }
+
+    EXPECT_TRUE(
+        KernelDfxDumper::Instance().blockInfoPendingFiles_.find(filePath) ==
+        KernelDfxDumper::Instance().blockInfoPendingFiles_.end());
+    EXPECT_TRUE(
+        KernelDfxDumper::Instance().blockInfoWrittenFiles_.find(filePath) !=
+        KernelDfxDumper::Instance().blockInfoWrittenFiles_.end());
 }
 
 TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_TensorWithShapeAndData)
