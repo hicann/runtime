@@ -1403,7 +1403,7 @@ PyObject* WrapAclMdlGetAippDataSize(PyObject* /* self */, PyObject* args)
     CHECK_NULL(PyArg_ParseTuple(args, "K", &batchSize), "acl.mdl.get_aipp_data_size args parse failed");
 
     aclError ret = aclmdlGetAippDataSize(batchSize, &memSize);
-    return Py_BuildValue("Ii", memSize, ret);
+    return Py_BuildValue("ki", memSize, ret);
 }
 
 PyObject* WrapAclMdlCreateExecConfigHandle(PyObject* /* self */, PyObject* /* args */)
