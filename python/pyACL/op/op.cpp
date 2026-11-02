@@ -373,6 +373,7 @@ PyObject* WrapAclOpSetAttrListString(PyObject* /* self */, PyObject* args)
     int size = static_cast<int>(PyList_Size(pyValuesList));
     CHECK_NULL(size >= 0, "list is empty", PyExc_ValueError);
     std::vector<std::string> fileNameArray;
+    fileNameArray.assign(static_cast<size_t>(size), std::string());
     std::vector<const char*> values(size + 1, nullptr);
     for (int i = 0; i < size; i++) {
         PyObject* object = PyList_GetItem(pyValuesList, i);
@@ -384,7 +385,7 @@ PyObject* WrapAclOpSetAttrListString(PyObject* /* self */, PyObject* args)
             PyErr_SetString(PyExc_RuntimeError, "PyBytes_AsString failed");
             return nullptr;
         }
-        fileNameArray.push_back(str);
+        fileNameArray[i] = str;
         Py_XDECREF(bytes);
         values[i] = fileNameArray[i].data();
     }
