@@ -63,7 +63,7 @@ PyObject* WrapAclRtAllocatorSetObjToDesc(PyObject* /* self */, PyObject* args)
 static void* AllocatorAllocFunc(const aclrtAllocator allocator, const size_t size)
 {
     PyGILState_STATE state = PyGILState_Ensure();
-    PyObject* argslist = Py_BuildValue("kI", allocator, size);
+    PyObject* argslist = Py_BuildValue("kK", allocator, static_cast<unsigned long long>(size));
 
     PyObject* result = PyObject_CallObject(g_allocFunc, argslist);
 
@@ -139,7 +139,7 @@ PyObject* WrapAclRtAllocatorSetFreeFuncToDesc(PyObject* /* self */, PyObject* ar
 static void* AllocatorAllocAdviseFunc(const aclrtAllocator allocator, const size_t size, const aclrtAllocatorAddr addr)
 {
     PyGILState_STATE state = PyGILState_Ensure();
-    PyObject* argslist = Py_BuildValue("kIk", allocator, size, addr);
+    PyObject* argslist = Py_BuildValue("kKk", allocator, static_cast<unsigned long long>(size), addr);
 
     PyObject* result = PyObject_CallObject(g_allocAdviseFunc, argslist);
 
