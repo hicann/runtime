@@ -169,7 +169,7 @@ inline const char* GetAllocBufTypeDesc(acltdtAllocBufType type)
         return it->second;
     }
     static thread_local char enumBuf[32];
-    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%u)", static_cast<uint32_t>(type));
+    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1U, "UNKNOWN(%u)", static_cast<uint32_t>(type));
     enumBuf[sizeof(enumBuf) - 1U] = '\0';
     return enumBuf;
 }

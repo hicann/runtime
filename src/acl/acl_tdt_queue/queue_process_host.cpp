@@ -210,8 +210,8 @@ aclError QueueProcessorHost::SendBindUnbindMsg(
     }
     bqs::QsProcMsgRsp* const rsp = reinterpret_cast<bqs::QsProcMsgRsp*>(ack.buf);
     if (rsp->retCode != 0) {
-        ACL_LOG_INNER_ERROR(
-            "Failed to %s queue routes. Service response code=%d.", isBind ? "bind" : "unbind", rsp->retCode);
+        const char_t* const operation = isBind ? "bind" : "unbind";
+        ACL_LOG_INNER_ERROR("Failed to %s queue routes. Service response code=%d.", operation, rsp->retCode);
         (void)rtFree(devPtr);
         devPtr = nullptr;
         return ACL_ERROR_FAILURE;
