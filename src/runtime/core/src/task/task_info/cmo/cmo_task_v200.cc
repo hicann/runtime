@@ -19,20 +19,16 @@ namespace runtime {
 void ConstructDavidSqeForCmoTaskCommon(
     TaskInfo* const taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo, CmoSqeConstructor cmoSqeConstructor)
 {
+    UNUSED(cmoSqeConstructor);
     rtDavidSqe_t* davidSqe = static_cast<rtDavidSqe_t*>(sqe);
     uint64_t sqBaseAddr = sqeInfo.sqBaseAddr;
     Stream* const stm = taskInfo->stream;
     Model* cmoModel = stm->Model_();
-    CmoTaskInfo* const cmoTsk = &(taskInfo->u.cmoTask);
     if ((cmoModel != nullptr) && (cmoModel->GetModelType() == RT_MODEL_NORMAL)) {
         // CmoTask for model stream.
         ConstructDavidCmoAddrSqe(taskInfo, davidSqe, sqBaseAddr);
     } else {
-        if ((cmoTsk->cmoSqeInfo.opCode == RT_CMO_PREFETCH) || (cmoTsk->cmoSqeInfo.opCode == RT_CMO_WRITEBACK)) {
-            cmoSqeConstructor(taskInfo, davidSqe, sqBaseAddr);
-        } else {
-            ConstructDavidCmoSdmaSqe(taskInfo, davidSqe, sqBaseAddr);
-        }
+        ConstructDavidCmoSdmaSqe(taskInfo, davidSqe, sqBaseAddr);
     }
 }
 

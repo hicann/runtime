@@ -1219,11 +1219,11 @@ TEST_F(DavidTaskTest, construct_davidsqe_for_cmotask)
     cmoTask.opCode = RT_CMO_PREFETCH;
     CmoTaskInit(&task, &cmoTask, stream_, 0);
     ToConstructDavidSqe(&task, static_cast<void*>(&sqe1), sqeInfo);
-    EXPECT_EQ(sqe1.cmoSqe.header.type, RT_DAVID_SQE_TYPE_CMO);
+    EXPECT_EQ(sqe1.cmoSqe.header.type, RT_STARS_SQE_TYPE_SDMA);
     cmoTask.opCode = RT_CMO_WRITEBACK;
     CmoTaskInit(&task, &cmoTask, stream_, 0);
     ToConstructDavidSqe(&task, static_cast<void*>(&sqe1), sqeInfo);
-    EXPECT_EQ(sqe1.cmoSqe.header.type, RT_DAVID_SQE_TYPE_CMO);
+    EXPECT_EQ(sqe1.cmoSqe.header.type, RT_STARS_SQE_TYPE_SDMA);
     cmoTask.opCode = RT_CMO_INVALID;
     CmoTaskInit(&task, &cmoTask, stream_, 0);
     ToConstructDavidSqe(&task, static_cast<void*>(&sqe2), sqeInfo);

@@ -571,7 +571,7 @@ TEST_F(Arch9201TaskTest, construct_davidsqe_for_cmotask_arch9201_prefetch)
     EXPECT_EQ(task.type, TS_TASK_TYPE_CMO);
 
     ToConstructDavidSqe(&task, static_cast<void*>(&sqe), sqeInfo);
-    EXPECT_EQ(sqe.cmoSqe.header.type, RT_DAVID_SQE_TYPE_CMO);
+    EXPECT_EQ(sqe.cmoSqe.header.type, RT_STARS_SQE_TYPE_SDMA);
     TaskUnInitProc(&task);
 }
 
@@ -592,7 +592,7 @@ TEST_F(Arch9201TaskTest, construct_davidsqe_for_cmotask_arch9201_writeback)
     EXPECT_EQ(task.type, TS_TASK_TYPE_CMO);
 
     ToConstructDavidSqe(&task, static_cast<void*>(&sqe), sqeInfo);
-    EXPECT_EQ(sqe.cmoSqe.header.type, RT_DAVID_SQE_TYPE_CMO);
+    EXPECT_EQ(sqe.cmoSqe.header.type, RT_STARS_SQE_TYPE_SDMA);
     TaskUnInitProc(&task);
 }
 
@@ -706,7 +706,7 @@ TEST_F(Arch9201TaskTest, construct_davidsqe_for_cmotask_arch9201_complete_and_pr
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
     ToConstructDavidSqe(&task, static_cast<void*>(&sqe), sqeInfo);
-    EXPECT_EQ(sqe.cmoSqe.header.type, RT_DAVID_SQE_TYPE_CMO);
+    EXPECT_EQ(sqe.cmoSqe.header.type, RT_STARS_SQE_TYPE_SDMA);
 
     uint32_t errorCode = 0;
     SetResult(&task, &errorCode, 1);
