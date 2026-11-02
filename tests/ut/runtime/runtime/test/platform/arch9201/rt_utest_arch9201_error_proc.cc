@@ -129,6 +129,9 @@ protected:
     }
 };
 
+class Arch920xAiCoreSyncMatchErrorProcTest : public Arch9201ErrorProcTest,
+                                             public testing::WithParamInterface<rtChipType_t> {};
+
 // ============================================================================
 // 1. 错误映射表注册 + 错误 bit 查询纯函数验证
 //    覆盖：arch9201 映射表非空且含代表性错误码、10个处理函数全部注册、
@@ -200,6 +203,37 @@ TEST_F(Arch9201ErrorProcTest, ErrorMapRegistrationAndBitLookup)
     ProcessDavidStarsCoreErrorMapInfo(&coreErrInfo, errorString, errorCode, CHIP_CLOUD_V5);
     EXPECT_EQ(errorString, "timeout or trap error.");
 }
+
+TEST_P(Arch920xAiCoreSyncMatchErrorProcTest, SubErrorsAreIncludedInCoreErrorLog)
+{
+    rtSetDevice(1);
+    Device* const device = Runtime::Instance()->DeviceRetain(1, 0);
+    ASSERT_NE(device, nullptr);
+    device->SetChipType(GetParam());
+    DeviceErrorProc* const errorProc = new DeviceErrorProc(device);
+    DevRingBufferCtlInfo* const ctlInfo = static_cast<DevRingBufferCtlInfo*>(malloc(DEVICE_ERROR_EXT_RINGBUFFER_SIZE));
+    ASSERT_NE(ctlInfo, nullptr);
+
+    RingBufferElementInfo* const info = InitRingBuffer(ctlInfo, 1U);
+    StarsDeviceErrorInfoRingBuffer* const errorInfo = reinterpret_cast<StarsDeviceErrorInfoRingBuffer*>(info + 1);
+    info->errorType = AICORE_ERROR;
+    errorInfo->u.davidCoreErrorInfo.comm.type = AICORE_ERROR;
+    errorInfo->u.davidCoreErrorInfo.comm.coreNum = 2U;
+    errorInfo->u.davidCoreErrorInfo.info[0U].subErrType = 4U;
+    errorInfo->u.davidCoreErrorInfo.info[1U].subErrType = 5U;
+
+    ClearLastDlogRecordLine();
+    EXPECT_EQ(errorProc->ProcessStarv2OneElementInRingBuffer(ctlInfo, 0U, 1U), RT_ERROR_NONE);
+    EXPECT_TRUE(DlogRecordContains("subErrStr: The set and wait instructions do not match."));
+    EXPECT_TRUE(DlogRecordContains("subErrStr: A cross-core synchronization check error occurred."));
+
+    free(ctlInfo);
+    CleanupErrorProc(errorProc, device);
+    rtDeviceReset(1);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    Arch920xChips, Arch920xAiCoreSyncMatchErrorProcTest, testing::Values(CHIP_CLOUD_V5, CHIP_CLOUD_V6));
 
 // ============================================================================
 // 2. ProcessStarv2OneElementInRingBuffer 全路径 + 无效输入合并验证

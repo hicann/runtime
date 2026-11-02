@@ -607,6 +607,7 @@ private:
     rtError_t InitCtrlSQ();
     rtError_t InitQosCfg();
     rtError_t InitSwapBufferInfo();
+    rtError_t InitAiCoreTaskSyncCheck();
     rtError_t GetQosInfoByIpc();
     void ReleaseOwnedObjectsOnDestroy() noexcept;
     void ReleaseDriverResourcesOnDestroy() noexcept;

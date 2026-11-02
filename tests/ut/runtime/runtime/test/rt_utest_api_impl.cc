@@ -205,6 +205,21 @@ private:
 static void ApiImplTest_Stream_Cb(void* arg) {}
 
 namespace {
+class AiCoreTaskSyncCheckStateGuard {
+public:
+    explicit AiCoreTaskSyncCheckStateGuard(Device* const device)
+        : device_(device), originalEnabled_(device->IsAiCoreTaskSyncCheckEnabled())
+    {
+        device_->SetAiCoreTaskSyncCheckEnabled(true);
+    }
+
+    ~AiCoreTaskSyncCheckStateGuard() { device_->SetAiCoreTaskSyncCheckEnabled(originalEnabled_); }
+
+private:
+    Device* const device_;
+    const bool originalEnabled_;
+};
+
 struct DevMemAllocRetryTestData {
     uint32_t callCount = 0U;
     rtError_t retryResult = RT_ERROR_NONE;
@@ -386,6 +401,54 @@ drvError_t HalEschedQueryInfoHostCpuStub(
     return HostCpuDeviceResult(devId);
 }
 } // namespace
+
+TEST_F(ApiImplTest, DebugRegisterRejectsWhenAiCoreTaskSyncCheckEnabled)
+{
+    rtModel_t modelHandle = nullptr;
+    ASSERT_EQ(rtModelCreate(&modelHandle, 0U), RT_ERROR_NONE);
+    Model* const model = rt_ut::UnwrapOrNull<Model>(modelHandle);
+    ASSERT_NE(model, nullptr);
+    Context* const context = model->Context_();
+    ASSERT_NE(context, nullptr);
+    Device* const device = context->Device_();
+    ASSERT_NE(device, nullptr);
+    AiCoreTaskSyncCheckStateGuard syncCheckGuard(device);
+
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DebugRegister).expects(never());
+    uint64_t debugAddr = 0x1000U;
+    uint32_t streamId = UINT32_MAX;
+    uint32_t taskId = UINT32_MAX;
+
+    EXPECT_EQ(apiError.DebugRegister(model, 0U, &debugAddr, &streamId, &taskId), RT_ERROR_DEBUG_REGISTER_FAILED);
+    EXPECT_EQ(streamId, UINT32_MAX);
+    EXPECT_EQ(taskId, UINT32_MAX);
+    EXPECT_EQ(rtModelDestroy(modelHandle), RT_ERROR_NONE);
+}
+
+TEST_F(ApiImplTest, DebugRegisterForStreamRejectsWhenAiCoreTaskSyncCheckEnabled)
+{
+    Context* const context = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(context, nullptr);
+    Stream* const stream = context->DefaultStream_();
+    ASSERT_NE(stream, nullptr);
+    Device* const device = stream->Device_();
+    ASSERT_NE(device, nullptr);
+    AiCoreTaskSyncCheckStateGuard syncCheckGuard(device);
+
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::DebugRegisterForStream).expects(never());
+    uint64_t debugAddr = 0x1000U;
+    uint32_t streamId = UINT32_MAX;
+    uint32_t taskId = UINT32_MAX;
+
+    EXPECT_EQ(
+        apiError.DebugRegisterForStream(stream, 0U, &debugAddr, &streamId, &taskId), RT_ERROR_DEBUG_REGISTER_FAILED);
+    EXPECT_EQ(streamId, UINT32_MAX);
+    EXPECT_EQ(taskId, UINT32_MAX);
+}
 
 TEST_F(ApiImplTest, ApiImplRtConfigInvalidParam)
 {

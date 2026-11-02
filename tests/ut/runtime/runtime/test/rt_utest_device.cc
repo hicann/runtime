@@ -54,6 +54,54 @@ static uint64_t g_expectAicCond = 0U;
 static uint64_t g_expectRsvExt0 = 0U;
 static uint32_t g_expectAicCondIndex = 1U;
 
+namespace {
+constexpr char_t AICORE_SYNC_MATCH_CHECK_ENV_NAME[] = "ASCEND_AICORE_SYNC_MATCH_CHECK";
+
+int32_t GetEnabledAiCoreTaskSyncCheckEnvStub(const char_t* const name, char_t* const value, const uint32_t len)
+{
+    EXPECT_STREQ(name, AICORE_SYNC_MATCH_CHECK_ENV_NAME);
+    EXPECT_EQ(len, 2U);
+    value[0U] = '1';
+    value[1U] = '\0';
+    return EN_OK;
+}
+
+int32_t GetDisabledAiCoreTaskSyncCheckEnvStub(const char_t* const name, char_t* const value, const uint32_t len)
+{
+    EXPECT_STREQ(name, AICORE_SYNC_MATCH_CHECK_ENV_NAME);
+    EXPECT_EQ(len, 2U);
+    value[0U] = '0';
+    value[1U] = '\0';
+    return EN_OK;
+}
+
+drvError_t EnableAiCoreTaskSyncCheckStub(
+    const uint32_t devId, const int32_t cmd, void* const param, const size_t paramSize, void* const out,
+    size_t* const outSize)
+{
+    EXPECT_EQ(devId, 0U);
+    EXPECT_EQ(cmd, TSDRV_CTL_CMD_CTRL_MSG);
+    EXPECT_EQ(paramSize, sizeof(tsdrv_ctrl_msg));
+    EXPECT_NE(param, nullptr);
+    EXPECT_NE(out, nullptr);
+    EXPECT_NE(outSize, nullptr);
+    if ((param == nullptr) || (out == nullptr) || (outSize == nullptr)) {
+        return DRV_ERROR_INVALID_VALUE;
+    }
+    EXPECT_EQ(*outSize, sizeof(ts_ctrl_msg_body_t));
+
+    const auto* const controlMessage = static_cast<const tsdrv_ctrl_msg*>(param);
+    EXPECT_EQ(controlMessage->msg_len, sizeof(ts_ctrl_msg_body_t));
+    EXPECT_NE(controlMessage->msg, nullptr);
+    if (controlMessage->msg == nullptr) {
+        return DRV_ERROR_INVALID_VALUE;
+    }
+    const auto* const request = static_cast<const ts_ctrl_msg_body_t*>(controlMessage->msg);
+    EXPECT_EQ(request->type, OP_ENABLE_AICORE_SYNC_CHECK);
+    return DRV_ERROR_NONE;
+}
+} // namespace
+
 class CtrlSQSetupFailStream : public Stream {
 public:
     explicit CtrlSQSetupFailStream(Device* const dev) : Stream(dev, 0U, RT_STREAM_PRIMARY_DEFAULT) {}
@@ -82,6 +130,67 @@ protected:
 
     virtual void TearDown() { ut::ResetPrimaryDeviceIfActiveWithDeviceDown(); }
 };
+
+class AiCoreTaskSyncCheckDeviceTest : public testing::Test {
+protected:
+    void TearDown() override { GlobalMockObject::verify(); }
+};
+
+TEST_F(AiCoreTaskSyncCheckDeviceTest, FeatureUnsupportedSkipsEnvironmentAndDriver)
+{
+    RawDevice device(0U);
+    MOCKER_CPP_VIRTUAL(device, &RawDevice::CheckFeatureSupport)
+        .expects(once())
+        .with(TS_FEATURE_AICORE_SYNC_MATCH_CHECK)
+        .will(returnValue(false));
+    MOCKER(mmGetEnv).expects(never());
+    MOCKER(halTsdrvCtl).expects(never());
+
+    EXPECT_EQ(device.InitAiCoreTaskSyncCheck(), RT_ERROR_NONE);
+    EXPECT_FALSE(device.IsAiCoreTaskSyncCheckEnabled());
+}
+
+TEST_F(AiCoreTaskSyncCheckDeviceTest, DisabledEnvironmentSkipsDriver)
+{
+    RawDevice device(0U);
+    MOCKER_CPP_VIRTUAL(device, &RawDevice::CheckFeatureSupport)
+        .expects(once())
+        .with(TS_FEATURE_AICORE_SYNC_MATCH_CHECK)
+        .will(returnValue(true));
+    MOCKER(mmGetEnv).expects(once()).will(invoke(GetDisabledAiCoreTaskSyncCheckEnvStub));
+    MOCKER(halTsdrvCtl).expects(never());
+
+    EXPECT_EQ(device.InitAiCoreTaskSyncCheck(), RT_ERROR_NONE);
+    EXPECT_FALSE(device.IsAiCoreTaskSyncCheckEnabled());
+}
+
+TEST_F(AiCoreTaskSyncCheckDeviceTest, EnabledEnvironmentEnablesDeviceCheck)
+{
+    RawDevice device(0U);
+    MOCKER_CPP_VIRTUAL(device, &RawDevice::CheckFeatureSupport)
+        .expects(once())
+        .with(TS_FEATURE_AICORE_SYNC_MATCH_CHECK)
+        .will(returnValue(true));
+    MOCKER(mmGetEnv).expects(once()).will(invoke(GetEnabledAiCoreTaskSyncCheckEnvStub));
+    MOCKER(halTsdrvCtl).expects(once()).will(invoke(EnableAiCoreTaskSyncCheckStub));
+
+    EXPECT_EQ(device.InitAiCoreTaskSyncCheck(), RT_ERROR_NONE);
+    EXPECT_TRUE(device.IsAiCoreTaskSyncCheckEnabled());
+}
+
+TEST_F(AiCoreTaskSyncCheckDeviceTest, DriverFailureKeepsDeviceCheckDisabled)
+{
+    RawDevice device(0U);
+    MOCKER_CPP_VIRTUAL(device, &RawDevice::CheckFeatureSupport)
+        .expects(once())
+        .with(TS_FEATURE_AICORE_SYNC_MATCH_CHECK)
+        .will(returnValue(true));
+    MOCKER(mmGetEnv).expects(once()).will(invoke(GetEnabledAiCoreTaskSyncCheckEnvStub));
+    MOCKER(halTsdrvCtl).expects(once()).will(returnValue(DRV_ERROR_INVALID_VALUE));
+
+    EXPECT_EQ(device.InitAiCoreTaskSyncCheck(), RT_GET_DRV_ERRCODE(DRV_ERROR_INVALID_VALUE));
+    EXPECT_FALSE(device.IsAiCoreTaskSyncCheckEnabled());
+}
 
 TEST_F(DeviceTest, module_alloc_03)
 {

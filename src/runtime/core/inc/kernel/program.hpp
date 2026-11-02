@@ -9,6 +9,7 @@
  */
 #ifndef __CCE_RUNTIME_PROGRAM_HPP__
 #define __CCE_RUNTIME_PROGRAM_HPP__
+#include <memory>
 #include <vector>
 #include <string>
 #include <map>
@@ -270,10 +271,15 @@ public:
     void SetDeviceSoAndNameInvalid(const uint32_t deviceId);
     bool IsDeviceSoAndNameValid(const uint32_t deviceId);
     static rtError_t BinaryMemCopySync(
-        void* const devMem, const uint32_t adviseSize, const uint32_t size, void* const data,
+        void* const devMem, const uint32_t adviseSize, const uint32_t size, const void* const data,
         const Device* const device, const bool readonly);
     static rtError_t BinaryPoolMemCopySync(
-        void* const devMem, const uint32_t size, void* const data, const Device* const device, const bool readonly);
+        void* const devMem, const uint32_t size, const void* const data, const Device* const device,
+        const bool readonly);
+    static rtError_t PrepareOperatorBinaryForAiCoreTaskSyncCheck(
+        const Device* const device, const void* const binaryData, const uint32_t binarySize,
+        std::unique_ptr<uint8_t[]>& patchedBinary, const void*& dataToLoad);
+    static void PatchOperatorBinaryForAiCoreTaskSyncCheck(void* const binaryData, const uint32_t binarySize);
 
     rtOpExceptionCallback ExchangeOpExceptionCallback(rtOpExceptionCallback callback, void* userData)
     {

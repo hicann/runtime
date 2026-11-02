@@ -10,7 +10,9 @@
 #include "raw_device.hpp"
 #include "device_enum_desc.hpp"
 
+#include <array>
 #include <chrono>
+#include "mmpa/mmpa_api.h"
 #include "aicpu_dfx.hpp"
 #include "device.hpp"
 #include "device_snapshot.hpp"
@@ -60,6 +62,10 @@ constexpr uint32_t WAIT_PRINTF_THREAD_TIME_MAX = 1000U;
 bool g_isAddrFlatDevice = false;
 
 namespace {
+constexpr char_t AICORE_SYNC_MATCH_CHECK_ENV[] = "ASCEND_AICORE_SYNC_MATCH_CHECK";
+constexpr char_t AICORE_SYNC_MATCH_CHECK_ENABLE_VALUE = '1';
+constexpr size_t AICORE_SYNC_MATCH_CHECK_ENV_BUFFER_SIZE = 2U;
+
 void UnregisterDcacheLockOpProgram(Program*& program)
 {
     if (program == nullptr) {
@@ -1157,6 +1163,52 @@ rtError_t RawDevice::InitSwapBufferInfo()
     return error;
 }
 
+static rtError_t EnableAiCoreTaskSyncCheckOnDevice(Device* const dev)
+{
+    COND_RETURN_WARN(&halTsdrvCtl == nullptr, RT_ERROR_DRV_NOT_SUPPORT, "[drv api] halTsdrvCtl does not exist.");
+    ts_ctrl_msg_body_t request = {};
+    ts_ctrl_msg_body_t response = {};
+    size_t responseSize = sizeof(ts_ctrl_msg_body_t);
+
+    request.type = OP_ENABLE_AICORE_SYNC_CHECK;
+    const uint32_t tsId = dev->DevGetTsId();
+    struct tsdrv_ctrl_msg controlMessage = {};
+    controlMessage.tsid = tsId;
+    controlMessage.msg_len = sizeof(ts_ctrl_msg_body_t);
+    controlMessage.msg = static_cast<void*>(&request);
+    const uint32_t deviceId = dev->Id_();
+    const drvError_t drvRet = halTsdrvCtl(
+        deviceId, TSDRV_CTL_CMD_CTRL_MSG, static_cast<void*>(&controlMessage), sizeof(tsdrv_ctrl_msg),
+        static_cast<void*>(&response), &responseSize);
+
+    COND_RETURN_ERROR_MSG_CALL(
+        ERR_MODULE_DRV, drvRet != DRV_ERROR_NONE, RT_GET_DRV_ERRCODE(drvRet), "device_id=%u, ts_id=%u, drvRetCode=%d.",
+        deviceId, tsId, static_cast<int32_t>(drvRet));
+    return RT_ERROR_NONE;
+}
+
+rtError_t RawDevice::InitAiCoreTaskSyncCheck()
+{
+    if (!CheckFeatureSupport(TS_FEATURE_AICORE_SYNC_MATCH_CHECK)) {
+        RT_LOG(RT_LOG_INFO, "Current device does not support AI Core task synchronization match check.");
+        return RT_ERROR_NONE;
+    }
+
+    std::array<char_t, AICORE_SYNC_MATCH_CHECK_ENV_BUFFER_SIZE> envValue{};
+    const bool isEnabled =
+        ((mmGetEnv(AICORE_SYNC_MATCH_CHECK_ENV, envValue.data(), static_cast<uint32_t>(envValue.size())) == EN_OK) &&
+         (envValue[0U] == AICORE_SYNC_MATCH_CHECK_ENABLE_VALUE) && (envValue[1U] == '\0'));
+    if (!isEnabled) {
+        return RT_ERROR_NONE;
+    }
+
+    const rtError_t error = EnableAiCoreTaskSyncCheckOnDevice(this);
+    if (error == RT_ERROR_NONE) {
+        SetAiCoreTaskSyncCheckEnabled(true);
+    }
+    return error;
+}
+
 rtError_t RawDevice::Start()
 {
     COND_RETURN_INFO(primaryStream_ != nullptr, RT_ERROR_NONE, "primaryStream exists");
@@ -1262,6 +1314,11 @@ rtError_t RawDevice::Start()
     error = AllocProfSwitchAddr();
     ERROR_GOTO(
         error, ERROR_STOP, "Failed to allocate the prof switch address, retCode=%#x.", static_cast<uint32_t>(error));
+
+    error = InitAiCoreTaskSyncCheck();
+    ERROR_GOTO(
+        error, ERROR_STOP, "Failed to initialize AI Core task synchronization check, retCode=%#x.",
+        static_cast<uint32_t>(error));
 
     return RT_ERROR_NONE;
 

@@ -86,6 +86,7 @@ constexpr uint32_t TSD_CLOSE_EX_FLAG_QUICK_CLOSE = 1U;
 constexpr uint32_t PAGE_FAULT_CNT_THRESHOLD = 5000U; // 单次aicore可能发生最多缺页数量48*48
 constexpr uint64_t PAGE_FAULT_TIME_THRESHOLD = 2000U;
 constexpr uint32_t KERNEL_INFO_EXT_MAX = 4096U;
+
 enum AiCpuProfilingConfig : uint32_t {
     PROFILING_FEATURE_SWITCH = 0U,      // bit0 means profiling start or profiling stop
     PROFILING_FEATURE_KERNEL_MODE = 1U, // bit1 means profiling mode of kernel
@@ -1731,7 +1732,6 @@ rtError_t Runtime::Init()
     InitNpuCollectPath();
     InitLaunchBlocking();
     InitStreamSyncMode();
-
     FindDcacheLockOp();
 
     // CC 特性初始化放在 Runtime 初始化末尾；失败时进入统一清理流程释放已初始化资源。
@@ -5009,7 +5009,8 @@ rtError_t Runtime::BinaryLoad(const Device* const device, Program* const prog)
 {
     void* devMem = nullptr;
     void* baseAddr = nullptr;
-    void* data = nullptr;
+    const void* data = nullptr;
+    std::unique_ptr<uint8_t[]> patchedBinary;
     bool readonly = true;
     uint32_t size = 0U;
     uint32_t alignSize = 0U;
@@ -5029,6 +5030,12 @@ rtError_t Runtime::BinaryLoad(const Device* const device, Program* const prog)
         RT_LOG_INNER_MSG(
             RT_LOG_ERROR, "Module load failed, prog size should be larger than 0, but current prog size is 0.");
         return RT_ERROR_PROGRAM_SIZE;
+    }
+    if (prog->GetDefaultKernelAttrType() != RT_KERNEL_ATTR_TYPE_AICPU) {
+        error = Program::PrepareOperatorBinaryForAiCoreTaskSyncCheck(device, data, size, patchedBinary, data);
+        ERROR_RETURN(
+            error, "Failed to prepare operator binary for AI Core task synchronization check, retCode=%#x.",
+            static_cast<uint32_t>(error));
     }
 
     TIMESTAMP_BEGIN(rtBinaryLoad_DevMemAlloc);

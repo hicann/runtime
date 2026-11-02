@@ -34,11 +34,13 @@ constexpr uint32_t TS_SDMA_STATUS_POISON_ERROR = 0xAU;
 } // namespace
 
 enum RtAixSubErrorType : std::uint8_t {
-    AIC_TRAP_RD_OVERFLOW = 0, /* aicore trap read out of bounds */
-    AIC_TRAP_WR_OVERFLOW,     /* aicore trap write out of bounds */
-    AIV_TRAP_RD_OVERFLOW,     /* vector core trap read out of bounds */
-    AIV_TRAP_WR_OVERFLOW,     /* vector core trap write out of bounds */
-    SUB_ERROR_TYPE_RESERVE    /* NA */
+    AIC_TRAP_RD_OVERFLOW = 0,         /* aicore trap read out of bounds */
+    AIC_TRAP_WR_OVERFLOW,             /* aicore trap write out of bounds */
+    AIV_TRAP_RD_OVERFLOW,             /* vector core trap read out of bounds */
+    AIV_TRAP_WR_OVERFLOW,             /* vector core trap write out of bounds */
+    AICORE_SYNC_SET_WAIT_UNMATCHED,   /*set/wait 不配对*/
+    AICORE_SYNC_CROSS_CORE_UNMATCHED, /*核间同步检查出错*/
+    SUB_ERROR_TYPE_RESERVE            /* NA */
 };
 
 static const std::unordered_map<uint64_t, std::string> g_davidErrorMapInfo = {
@@ -363,6 +365,21 @@ static void ProcessDavidStarsCoreErrorOneMapInfo(
     return;
 }
 
+void GetSubErrString(const DavidOneCoreErrorInfo* const info, std::string& subErrString)
+{
+    switch (info->subErrType) {
+        case AICORE_SYNC_SET_WAIT_UNMATCHED:
+            subErrString = "The set and wait instructions do not match";
+            break;
+        case AICORE_SYNC_CROSS_CORE_UNMATCHED:
+            subErrString = "A cross-core synchronization check error occurred";
+            break;
+        default:
+            subErrString = "N/A";
+    }
+    return;
+}
+
 void ProcessDavidStarsCoreErrorMapInfo(
     const DavidOneCoreErrorInfo* const info, std::string& errorString, std::string& errorCode, rtChipType_t chipType)
 {
@@ -683,7 +700,8 @@ static std::string QueryAndFormatRasFaultDavid(
 // 格式化 David 核心 error 信息到 aicoreBuffer，并根据 RAS 命中情况走 EZ2001 或 EZ9999 路径
 static void PrintDavidCoreInfo(
     const StarsDeviceErrorInfo* const info, const uint32_t coreIdx, const uint64_t errorNumber,
-    const std::string& errorString, const std::string& errorCode, const std::string& rasFaultDesc)
+    const std::string& errorString, const std::string& errorCode, const std::string& rasFaultDesc,
+    const std::string& subErrString)
 {
     constexpr size_t AICORE_BUF_LEN = 4096U;
     std::array<char, AICORE_BUF_LEN> aicoreBuffer{};
@@ -699,7 +717,7 @@ static void PrintDavidCoreInfo(
         "cube error info: %#" PRIx64 ", l1 error info: %#" PRIx64 ", "
         "aic error mask: %#" PRIx64 ", para base: %#" PRIx64 ", mte error: %#" PRIx64 ", "
         "aic cond: %#" PRIx64 ".\n"
-        "The extend info: errcode:(%s) errorStr: %s subErrType: %#x.",
+        "The extend info: errcode:(%s) errorStr: %s subErrType: %#x subErrStr: %s.",
         info->u.davidCoreErrorInfo.comm.chipId, info->u.davidCoreErrorInfo.comm.dieId, errorNumber,
         GetStarsRingBufferHeadMsg(info->u.davidCoreErrorInfo.comm.type).c_str(),
         info->u.davidCoreErrorInfo.info[coreIdx].coreId, errorCode.c_str(),
@@ -710,7 +728,7 @@ static void PrintDavidCoreInfo(
         info->u.davidCoreErrorInfo.info[coreIdx].l1ErrInfo, info->u.davidCoreErrorInfo.info[coreIdx].aicErrorMask,
         info->u.davidCoreErrorInfo.info[coreIdx].paraBase, info->u.davidCoreErrorInfo.info[coreIdx].mteError[0],
         info->u.davidCoreErrorInfo.info[coreIdx].aicCond, errorCode.c_str(), errorString.c_str(),
-        info->u.davidCoreErrorInfo.info[coreIdx].subErrType);
+        info->u.davidCoreErrorInfo.info[coreIdx].subErrType, subErrString.c_str());
     if (!rasFaultDesc.empty()) {
         RT_LOG_OUTER_MSG_IMPL(ErrorCode::EZ2001, aicoreBuffer.data(), "RAS", rasFaultDesc);
     } else {
@@ -752,10 +770,12 @@ rtError_t ProcessDavidStarsCoreErrorInfo(
 
         std::string errorString;
         std::string errorCode;
+        std::string subErrString;
         ProcessDavidStarsCoreErrorMapInfo(
             &(info->u.davidCoreErrorInfo.info[coreIdx]), errorString, errorCode, dev->GetChipType());
         AddExceptionRegInfo(info, coreIdx, type, errTaskPtr);
-        PrintDavidCoreInfo(info, coreIdx, errorNumber, errorString, errorCode, rasFaultDesc);
+        GetSubErrString(&(info->u.davidCoreErrorInfo.info[coreIdx]), subErrString);
+        PrintDavidCoreInfo(info, coreIdx, errorNumber, errorString, errorCode, rasFaultDesc, subErrString);
     }
     if ((errTaskPtr != nullptr) && (errTaskPtr->type == TS_TASK_TYPE_FUSION_KERNEL)) {
         TaskFailCallBackForFusionKernelTask(errTaskPtr, dev->Id_(), nullptr, RT_FUSION_AICORE_CCU);

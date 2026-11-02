@@ -249,6 +249,7 @@ rtError_t ProcessDavidStarsCoreErrorInfo(
     const DeviceErrorProc* const insPtr);
 void ProcessDavidStarsCoreErrorMapInfo(
     const DavidOneCoreErrorInfo* const info, std::string& errorString, std::string& errorCode, rtChipType_t chipType);
+void GetSubErrString(const DavidOneCoreErrorInfo* const info, std::string& subErrString);
 rtError_t ProcessDavidStarsCcuErrorInfo(
     const StarsDeviceErrorInfo* const info, const uint64_t errorNumber, const Device* const dev,
     const DeviceErrorProc* const insPtr);

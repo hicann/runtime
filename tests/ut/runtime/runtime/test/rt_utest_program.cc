@@ -7,34 +7,84 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include <array>
+#include <memory>
+#include "gtest/gtest.h"
+#include "mockcpp/mockcpp.hpp"
 #include "driver/ascend_hal.h"
 #include "runtime/rt.h"
+#include "runtime.hpp"
 #include "program.hpp"
 #include "device.hpp"
 #include "module.hpp"
 #include "context.hpp"
-#include "gtest/gtest.h"
-#include "mockcpp/mockcpp.hpp"
 #include "raw_device.hpp"
 
 using namespace testing;
 using namespace cce::runtime;
 
-static uint64_t g_capturedDevMemAllocFlag = 0U;
+namespace {
+constexpr uint32_t AICORE_END_INSTRUCTION_FOR_TEST = 0x41600000U;
+constexpr uint32_t AICORE_BREAK_INSTRUCTION_FOR_TEST = 0x41800000U;
+constexpr uint32_t AICORE_OTHER_INSTRUCTION_FOR_TEST = 0x12345678U;
+
+struct BinaryCopyCapture {
+    uint64_t devMemAllocFlag = 0U;
+    uint64_t size = 0U;
+    uint32_t callCount = 0U;
+    uint32_t firstInstruction = 0U;
+    rtMemcpyKind_t kind = RT_MEMCPY_HOST_TO_HOST;
+};
+
+static BinaryCopyCapture g_binaryCopyCapture;
+
+class AiCoreTaskSyncCheckStateGuard {
+public:
+    AiCoreTaskSyncCheckStateGuard(Device* const device, const bool enabled)
+        : device_(device), originalEnabled_(device->IsAiCoreTaskSyncCheckEnabled())
+    {
+        device_->SetAiCoreTaskSyncCheckEnabled(enabled);
+    }
+
+    ~AiCoreTaskSyncCheckStateGuard() { device_->SetAiCoreTaskSyncCheckEnabled(originalEnabled_); }
+
+private:
+    Device* const device_;
+    const bool originalEnabled_;
+};
 
 static rtError_t DevMemAllocFlagCaptureStub(
     Driver* const driver, void** const dptr, const uint64_t size, const rtMemType_t type, const uint32_t deviceId,
     const DevMemAllocConfig* const config, const uint64_t curFlag)
 {
     UNUSED(driver);
-    UNUSED(dptr);
     UNUSED(size);
     UNUSED(type);
     UNUSED(deviceId);
     UNUSED(config);
-    g_capturedDevMemAllocFlag = curFlag;
-    return RT_ERROR_DRV_ERR;
+    g_binaryCopyCapture.devMemAllocFlag = curFlag;
+    *dptr = reinterpret_cast<void*>(0x1000U);
+    return RT_ERROR_NONE;
 }
+
+static rtError_t BinaryMemCopyCaptureStub(
+    Driver* const driver, void* const dst, const uint64_t destMax, const void* const src, const uint64_t size,
+    const rtMemcpyKind_t kind)
+{
+    UNUSED(driver);
+    UNUSED(dst);
+    UNUSED(destMax);
+    ++g_binaryCopyCapture.callCount;
+    g_binaryCopyCapture.size = size;
+    g_binaryCopyCapture.kind = kind;
+    if ((src != nullptr) && (size >= sizeof(g_binaryCopyCapture.firstInstruction))) {
+        (void)memcpy_s(
+            &g_binaryCopyCapture.firstInstruction, sizeof(g_binaryCopyCapture.firstInstruction), src,
+            sizeof(g_binaryCopyCapture.firstInstruction));
+    }
+    return RT_ERROR_NONE;
+}
+} // namespace
 
 class ProgramTest : public testing::Test {
 protected:
@@ -51,67 +101,195 @@ protected:
     }
 };
 
-TEST_F(ProgramTest, ModuleLoadDevMemAllocUsesRequiredBackupType)
+TEST_F(ProgramTest, ModuleLoadCopiesPatchedBinaryAndPreservesSourceForAiCoreTaskSyncCheck)
 {
     Context* ctx = Runtime::Instance()->CurrentContext();
     ASSERT_NE(ctx, nullptr);
     Device* device = ctx->Device_();
     ASSERT_NE(device, nullptr);
+    AiCoreTaskSyncCheckStateGuard syncCheckGuard(device, true);
     Runtime* rtInstance = const_cast<Runtime*>(Runtime::Instance());
     const rtChipType_t originRtChipType = rtInstance->GetChipType();
     const rtChipType_t originDevChipType = device->GetChipType();
     rtInstance->SetChipType(CHIP_MINI);
     device->SetChipType(CHIP_MINI);
 
-    uint8_t binary[] = {0x01, 0x02, 0x03, 0x04};
+    uint32_t binary[] = {AICORE_END_INSTRUCTION_FOR_TEST};
     PlainProgram prog(RT_KERNEL_ATTR_TYPE_AICORE);
     prog.binary_ = binary;
     prog.binarySize_ = sizeof(binary);
-    Module module(device);
-
-    g_capturedDevMemAllocFlag = 0U;
+    g_binaryCopyCapture = {};
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::DevMemAllocWithFlag)
         .expects(once())
         .with(
             mockcpp::any(), mockcpp::any(), eq(RT_MEMORY_HBM), eq(static_cast<uint32_t>(device->Id_())), mockcpp::any(),
             mockcpp::any())
         .will(invoke(DevMemAllocFlagCaptureStub));
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::MemCopySync).expects(once()).will(invoke(BinaryMemCopyCaptureStub));
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::DevMemFree).stubs().will(returnValue(RT_ERROR_NONE));
 
-    EXPECT_EQ(module.Load(&prog), RT_ERROR_DRV_ERR);
-    EXPECT_NE(g_capturedDevMemAllocFlag & static_cast<uint64_t>(MEM_SNAPSHOT_REQUIRED), 0U);
+    {
+        Module module(device);
+        EXPECT_EQ(module.Load(&prog), RT_ERROR_NONE);
+    }
+
+    EXPECT_NE(g_binaryCopyCapture.devMemAllocFlag & static_cast<uint64_t>(MEM_SNAPSHOT_REQUIRED), 0U);
+    EXPECT_EQ(g_binaryCopyCapture.callCount, 1U);
+    EXPECT_EQ(g_binaryCopyCapture.size, sizeof(binary));
+    EXPECT_EQ(g_binaryCopyCapture.kind, RT_MEMCPY_HOST_TO_DEVICE);
+    EXPECT_EQ(g_binaryCopyCapture.firstInstruction, AICORE_BREAK_INSTRUCTION_FOR_TEST);
+    EXPECT_EQ(binary[0], AICORE_END_INSTRUCTION_FOR_TEST);
+    prog.SetBinBaseAddr(nullptr, device->Id_());
+    prog.SetBinAlignBaseAddr(nullptr, device->Id_());
     rtInstance->SetChipType(originRtChipType);
     device->SetChipType(originDevChipType);
 }
 
-TEST_F(ProgramTest, RuntimeBinaryLoadDevMemAllocUsesRequiredBackupType)
+TEST_F(ProgramTest, RuntimeBinaryLoadCopiesPatchedBinaryAndPreservesSourceForAiCoreTaskSyncCheck)
 {
     Context* ctx = Runtime::Instance()->CurrentContext();
     ASSERT_NE(ctx, nullptr);
     Device* device = ctx->Device_();
     ASSERT_NE(device, nullptr);
+    AiCoreTaskSyncCheckStateGuard syncCheckGuard(device, true);
     Runtime* rtInstance = const_cast<Runtime*>(Runtime::Instance());
     const rtChipType_t originRtChipType = rtInstance->GetChipType();
     const rtChipType_t originDevChipType = device->GetChipType();
     rtInstance->SetChipType(CHIP_MINI);
     device->SetChipType(CHIP_MINI);
 
-    uint8_t binary[] = {0x01, 0x02, 0x03, 0x04};
+    uint32_t binary[] = {AICORE_END_INSTRUCTION_FOR_TEST};
     PlainProgram prog(RT_KERNEL_ATTR_TYPE_AICORE);
     prog.binary_ = binary;
     prog.binarySize_ = sizeof(binary);
 
-    g_capturedDevMemAllocFlag = 0U;
+    g_binaryCopyCapture = {};
     MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::DevMemAllocWithFlag)
         .expects(once())
         .with(
             mockcpp::any(), mockcpp::any(), eq(RT_MEMORY_HBM), eq(static_cast<uint32_t>(device->Id_())), mockcpp::any(),
             mockcpp::any())
         .will(invoke(DevMemAllocFlagCaptureStub));
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::MemCopySync).expects(once()).will(invoke(BinaryMemCopyCaptureStub));
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::DevMemFree).stubs().will(returnValue(RT_ERROR_NONE));
 
-    EXPECT_EQ(Runtime::Instance()->BinaryLoad(device, &prog), RT_ERROR_DRV_ERR);
-    EXPECT_NE(g_capturedDevMemAllocFlag & static_cast<uint64_t>(MEM_SNAPSHOT_REQUIRED), 0U);
+    EXPECT_EQ(Runtime::Instance()->BinaryLoad(device, &prog), RT_ERROR_NONE);
+    EXPECT_NE(g_binaryCopyCapture.devMemAllocFlag & static_cast<uint64_t>(MEM_SNAPSHOT_REQUIRED), 0U);
+    EXPECT_EQ(g_binaryCopyCapture.callCount, 1U);
+    EXPECT_EQ(g_binaryCopyCapture.size, sizeof(binary));
+    EXPECT_EQ(g_binaryCopyCapture.kind, RT_MEMCPY_HOST_TO_DEVICE);
+    EXPECT_EQ(g_binaryCopyCapture.firstInstruction, AICORE_BREAK_INSTRUCTION_FOR_TEST);
+    EXPECT_EQ(binary[0], AICORE_END_INSTRUCTION_FOR_TEST);
+    EXPECT_EQ(Runtime::Instance()->BinaryUnLoad(device, &prog), RT_ERROR_NONE);
     rtInstance->SetChipType(originRtChipType);
     device->SetChipType(originDevChipType);
+}
+
+TEST_F(ProgramTest, KeepEndInstructionWhenAiCoreTaskSyncCheckDisabled)
+{
+    Context* ctx = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(ctx, nullptr);
+    Device* device = ctx->Device_();
+    ASSERT_NE(device, nullptr);
+    AiCoreTaskSyncCheckStateGuard syncCheckGuard(device, false);
+    uint32_t binary[] = {AICORE_END_INSTRUCTION_FOR_TEST};
+    std::unique_ptr<uint8_t[]> patchedBinary;
+    const void* dataToLoad = nullptr;
+
+    EXPECT_EQ(
+        Program::PrepareOperatorBinaryForAiCoreTaskSyncCheck(device, binary, sizeof(binary), patchedBinary, dataToLoad),
+        RT_ERROR_NONE);
+
+    EXPECT_EQ(binary[0], AICORE_END_INSTRUCTION_FOR_TEST);
+    EXPECT_EQ(dataToLoad, binary);
+    EXPECT_EQ(patchedBinary.get(), nullptr);
+}
+
+TEST_F(ProgramTest, PreparePatchedBinaryForAiCoreTaskSyncCheckPreservesSourceBinary)
+{
+    Context* ctx = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(ctx, nullptr);
+    Device* device = ctx->Device_();
+    ASSERT_NE(device, nullptr);
+    AiCoreTaskSyncCheckStateGuard syncCheckGuard(device, true);
+    const uint32_t binary[] = {AICORE_END_INSTRUCTION_FOR_TEST};
+    std::unique_ptr<uint8_t[]> patchedBinary;
+    const void* dataToLoad = nullptr;
+
+    ASSERT_EQ(
+        Program::PrepareOperatorBinaryForAiCoreTaskSyncCheck(device, binary, sizeof(binary), patchedBinary, dataToLoad),
+        RT_ERROR_NONE);
+    ASSERT_NE(patchedBinary.get(), nullptr);
+    ASSERT_EQ(dataToLoad, patchedBinary.get());
+
+    uint32_t instruction = 0U;
+    ASSERT_EQ(memcpy_s(&instruction, sizeof(instruction), dataToLoad, sizeof(instruction)), EOK);
+    EXPECT_EQ(instruction, AICORE_BREAK_INSTRUCTION_FOR_TEST);
+    EXPECT_EQ(binary[0], AICORE_END_INSTRUCTION_FOR_TEST);
+}
+
+TEST_F(ProgramTest, PrepareOperatorBinaryRejectsNullDevice)
+{
+    uint32_t binary = AICORE_END_INSTRUCTION_FOR_TEST;
+    std::unique_ptr<uint8_t[]> patchedBinary(new uint8_t[1U]);
+    const void* dataToLoad = nullptr;
+
+    EXPECT_EQ(
+        Program::PrepareOperatorBinaryForAiCoreTaskSyncCheck(
+            nullptr, &binary, sizeof(binary), patchedBinary, dataToLoad),
+        RT_ERROR_DEVICE_NULL);
+    EXPECT_EQ(patchedBinary.get(), nullptr);
+    EXPECT_EQ(dataToLoad, &binary);
+}
+
+TEST_F(ProgramTest, PrepareOperatorBinaryRejectsNullBinaryWhenCheckEnabled)
+{
+    Context* ctx = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(ctx, nullptr);
+    Device* device = ctx->Device_();
+    ASSERT_NE(device, nullptr);
+    AiCoreTaskSyncCheckStateGuard syncCheckGuard(device, true);
+    std::unique_ptr<uint8_t[]> patchedBinary(new uint8_t[1U]);
+    const void* dataToLoad = &patchedBinary;
+
+    EXPECT_EQ(
+        Program::PrepareOperatorBinaryForAiCoreTaskSyncCheck(
+            device, nullptr, sizeof(uint32_t), patchedBinary, dataToLoad),
+        RT_ERROR_PROGRAM_DATA);
+    EXPECT_EQ(patchedBinary.get(), nullptr);
+    EXPECT_EQ(dataToLoad, nullptr);
+}
+
+TEST_F(ProgramTest, PatchOperatorBinaryKeepsIncompleteInstruction)
+{
+    std::array<uint8_t, sizeof(uint32_t) - 1U> binary = {0x00U, 0x00U, 0x60U};
+    const auto originalBinary = binary;
+
+    Program::PatchOperatorBinaryForAiCoreTaskSyncCheck(binary.data(), binary.size());
+
+    EXPECT_EQ(binary, originalBinary);
+}
+
+TEST_F(ProgramTest, PatchOperatorBinaryReplacesAlignedEndInstructionsAndPreservesTrailingBytes)
+{
+    const std::array<uint32_t, 3U> instructions = {
+        AICORE_END_INSTRUCTION_FOR_TEST, AICORE_OTHER_INSTRUCTION_FOR_TEST, AICORE_END_INSTRUCTION_FOR_TEST};
+    std::array<uint8_t, sizeof(instructions) + 2U> binary = {};
+    ASSERT_EQ(memcpy_s(binary.data(), binary.size(), instructions.data(), sizeof(instructions)), EOK);
+    binary[sizeof(instructions)] = 0x60U;
+    binary[sizeof(instructions) + 1U] = 0x41U;
+
+    Program::PatchOperatorBinaryForAiCoreTaskSyncCheck(binary.data(), binary.size());
+
+    std::array<uint32_t, 3U> patchedInstructions = {};
+    ASSERT_EQ(
+        memcpy_s(patchedInstructions.data(), sizeof(patchedInstructions), binary.data(), sizeof(patchedInstructions)),
+        EOK);
+    EXPECT_EQ(patchedInstructions[0U], AICORE_BREAK_INSTRUCTION_FOR_TEST);
+    EXPECT_EQ(patchedInstructions[1U], AICORE_OTHER_INSTRUCTION_FOR_TEST);
+    EXPECT_EQ(patchedInstructions[2U], AICORE_BREAK_INSTRUCTION_FOR_TEST);
+    EXPECT_EQ(binary[sizeof(instructions)], 0x60U);
+    EXPECT_EQ(binary[sizeof(instructions) + 1U], 0x41U);
 }
 
 TEST_F(ProgramTest, Program_Process_ELF)

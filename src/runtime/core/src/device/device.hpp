@@ -255,6 +255,10 @@ public:
 
     bool IsAddrFlatDev() const { return g_isAddrFlatDevice; }
 
+    bool IsAiCoreTaskSyncCheckEnabled() const { return aiCoreTaskSyncCheckEnabled_; }
+
+    void SetAiCoreTaskSyncCheckEnabled(const bool enabled) { aiCoreTaskSyncCheckEnabled_ = enabled; }
+
     bool IsDeviceRelease() const { return isDeviceRelease_; }
 
     void SetDeviceRelease() { isDeviceRelease_ = true; }
@@ -505,6 +509,7 @@ private:
     bool isPageFault_{false};
     bool isDeviceRelease_{false};
     bool isDoingRecycling_{false};
+    bool aiCoreTaskSyncCheckEnabled_{false};
     Atomic<bool> isAicpuProcessStopPending_{false};
     Atomic<bool> isAicpuMonitorClosed_{false};
     Atomic<bool> hasCustomProcess_{false};

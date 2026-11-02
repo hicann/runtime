@@ -31,6 +31,11 @@
 
 namespace cce {
 namespace runtime {
+namespace {
+constexpr uint32_t AICORE_END_INSTRUCTION = 0x41600000U;
+constexpr uint32_t AICORE_BREAK_INSTRUCTION = 0x41800000U;
+constexpr uint32_t AICORE_INSTRUCTION_SIZE = sizeof(uint32_t);
+} // namespace
 
 static rtError_t AllocAndCopyHbmBufImpl(
     const Device* const dev, const void* const hostBuf, const size_t bufSize, void** const devBuf,
@@ -679,6 +684,73 @@ rtError_t Program::Load2Device()
     load2DeviceLock_.Unlock();
     RT_LOG(RT_LOG_DEBUG, "Program was loaded to device successfully.");
     return error;
+}
+
+rtError_t Program::PrepareOperatorBinaryForAiCoreTaskSyncCheck(
+    const Device* const device, const void* const binaryData, const uint32_t binarySize,
+    std::unique_ptr<uint8_t[]>& patchedBinary, const void*& dataToLoad)
+{
+    patchedBinary.reset();
+    dataToLoad = binaryData;
+    NULL_PTR_RETURN_MSG(device, RT_ERROR_DEVICE_NULL);
+    if (!device->IsAiCoreTaskSyncCheckEnabled()) {
+        return RT_ERROR_NONE;
+    }
+
+    NULL_PTR_RETURN_MSG(binaryData, RT_ERROR_PROGRAM_DATA);
+    std::unique_ptr<uint8_t[]> binaryCopy(new (std::nothrow) uint8_t[binarySize]);
+    COND_RETURN_AND_MSG_OUTER(binaryCopy == nullptr, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013, binarySize, "new");
+
+    const errno_t ret = memcpy_s(binaryCopy.get(), binarySize, binaryData, binarySize);
+    COND_RETURN_ERROR_MSG_CALL(
+        ERR_MODULE_SYSTEM, ret != EOK, RT_ERROR_SEC_HANDLE,
+        "Failed to copy operator binary for AI Core task synchronization check, size=%u(bytes), retCode=%d.",
+        binarySize, ret);
+
+    PatchOperatorBinaryForAiCoreTaskSyncCheck(binaryCopy.get(), binarySize);
+    dataToLoad = binaryCopy.get();
+    patchedBinary = std::move(binaryCopy);
+    return RT_ERROR_NONE;
+}
+
+void Program::PatchOperatorBinaryForAiCoreTaskSyncCheck(void* const binaryData, const uint32_t binarySize)
+{
+    if ((binaryData == nullptr) || (binarySize < AICORE_INSTRUCTION_SIZE)) {
+        RT_LOG(RT_LOG_DEBUG, "Operator binary has no complete 4-byte instruction, size=%u(bytes).", binarySize);
+        return;
+    }
+
+    auto* const binaryBytes = RtPtrToPtr<uint8_t*>(binaryData);
+    uint32_t replacedEndInstructionCount = 0U;
+
+    for (uint32_t offset = 0U; offset <= (binarySize - AICORE_INSTRUCTION_SIZE); offset += AICORE_INSTRUCTION_SIZE) {
+        uint32_t instruction = 0U;
+        const errno_t readRet =
+            memcpy_s(&instruction, AICORE_INSTRUCTION_SIZE, binaryBytes + offset, AICORE_INSTRUCTION_SIZE);
+        if (readRet != EOK) {
+            RT_LOG(
+                RT_LOG_ERROR, "Read operator binary instruction failed, offset=%u(bytes), retCode=%d.", offset,
+                readRet);
+            return;
+        }
+
+        if (instruction == AICORE_END_INSTRUCTION) {
+            instruction = AICORE_BREAK_INSTRUCTION;
+            const errno_t writeRet =
+                memcpy_s(binaryBytes + offset, AICORE_INSTRUCTION_SIZE, &instruction, AICORE_INSTRUCTION_SIZE);
+            if (writeRet != EOK) {
+                RT_LOG(RT_LOG_ERROR, "Replace END instruction failed, offset=%u(bytes), retCode=%d.", offset, writeRet);
+                return;
+            }
+            replacedEndInstructionCount++;
+        }
+
+        RT_LOG(RT_LOG_DEBUG, "Operator binary instruction, offset=%u(bytes), data=%08x.", offset, instruction);
+    }
+
+    RT_LOG(
+        RT_LOG_DEBUG, "Operator binary processing finished, size=%u(bytes), replaced END instruction count=%u.",
+        binarySize, replacedEndInstructionCount);
 }
 
 uint32_t Program::GetMaxMinStackSize() const
@@ -1511,8 +1583,8 @@ rtError_t BinaryMemAdvise(
 TIMESTAMP_EXTERN(BinaryMemCpy);
 
 rtError_t Program::BinaryMemCopySync(
-    void* const devMem, const uint32_t adviseSize, const uint32_t size, void* const data, const Device* const device,
-    const bool readonly)
+    void* const devMem, const uint32_t adviseSize, const uint32_t size, const void* const data,
+    const Device* const device, const bool readonly)
 {
     const uint32_t devId = device->Id_();
     Driver* const curDrv = device->Driver_();
@@ -1552,7 +1624,7 @@ rtError_t Program::BinaryMemCopySync(
 }
 
 rtError_t Program::BinaryPoolMemCopySync(
-    void* const devMem, const uint32_t size, void* const data, const Device* const device, const bool readonly)
+    void* const devMem, const uint32_t size, const void* const data, const Device* const device, const bool readonly)
 {
     const uint32_t devId = device->Id_();
     Driver* const curDrv = device->Driver_();

@@ -3808,6 +3808,11 @@ rtError_t ApiErrorDecorator::DebugRegister(
         (mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL), RT_ERROR_FEATURE_NOT_SUPPORT,
         "Capture model does not support debug registration.");
 
+    COND_RETURN_AND_MSG_OUTER(
+        mdl->Context_()->Device_()->IsAiCoreTaskSyncCheckEnabled(), RT_ERROR_DEBUG_REGISTER_FAILED, ErrorCode::EE1016,
+        "Registering a debugging callback for a model",
+        "AI Core task synchronization check is enabled and cannot be used together with debug registration");
+
     const rtError_t error = impl_->DebugRegister(mdl, flag, addr, streamId, taskId);
     const uint32_t modelId = mdl->Id_();
     RT_LOG(RT_LOG_INFO, "model_id=%u, flag=%u, streamId=%u, taskId=%u", modelId, flag, *streamId, *taskId);
@@ -3844,6 +3849,11 @@ rtError_t ApiErrorDecorator::DebugRegisterForStream(
         streamId, RT_ERROR_INVALID_VALUE, "Registering a debugging callback for a stream");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         taskId, RT_ERROR_INVALID_VALUE, "Registering a debugging callback for a stream");
+
+    COND_RETURN_AND_MSG_OUTER(
+        curStm->Device_()->IsAiCoreTaskSyncCheckEnabled(), RT_ERROR_DEBUG_REGISTER_FAILED, ErrorCode::EE1016,
+        "Registering a debugging callback for a stream",
+        "AI Core task synchronization check is enabled and cannot be used together with debug registration");
 
     const int32_t id = curStm->Id_();
     RT_LOG(RT_LOG_INFO, "stream_id = %d, flag = %u", id, flag);

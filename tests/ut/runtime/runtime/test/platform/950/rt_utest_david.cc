@@ -3734,6 +3734,26 @@ TEST_F(DavidTaskTest, null_task_dev_error_proc_for_fusion)
     delete errorProc;
 }
 
+TEST_F(DavidTaskTest, AiCoreSyncMatchSubErrorsAreIncludedInDavidLog)
+{
+    StarsDeviceErrorInfo errorInfo = {};
+    errorInfo.u.davidCoreErrorInfo.comm.type = AICORE_ERROR;
+    errorInfo.u.davidCoreErrorInfo.comm.coreNum = 2U;
+    errorInfo.u.davidCoreErrorInfo.comm.flag = static_cast<uint8_t>(AixErrClass::AIX_ERROR_NA);
+    errorInfo.u.davidCoreErrorInfo.info[0U].subErrType = 4U;
+    errorInfo.u.davidCoreErrorInfo.info[1U].subErrType = 5U;
+
+    ClearLastDlogRecordLine();
+    EXPECT_EQ(ProcessDavidStarsCoreErrorInfo(&errorInfo, 0U, dev_, nullptr), RT_ERROR_NONE);
+    EXPECT_TRUE(DlogRecordContains("subErrStr: The set and wait instructions do not match."));
+    EXPECT_TRUE(DlogRecordContains("subErrStr: A cross-core synchronization check error occurred."));
+
+    DavidOneCoreErrorInfo unknownErrorInfo = {};
+    std::string subErrString = "unexpected";
+    GetSubErrString(&unknownErrorInfo, subErrString);
+    EXPECT_EQ(subErrString, "N/A");
+}
+
 TEST_F(DavidTaskTest, aicore_task_dev_error_proc)
 {
     DeviceErrorProc* errorProc = new DeviceErrorProc(dev_);

@@ -108,6 +108,7 @@ typedef enum {
     TS_FEATURE_ACLGRAPH_COND_OP = 51, // ACL Graph support cond op
     TS_FEATURE_SQ_DYNAMIC_ENABLE_CQE = 52,
     TS_FEATURE_SIMT_STK_SHARE = 53,
+    TS_FEATURE_AICORE_SYNC_MATCH_CHECK = 55,
 } rtTschFeature;
 
 typedef enum {
