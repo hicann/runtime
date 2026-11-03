@@ -413,7 +413,7 @@ static rtError_t SubmitLoadCompleteDirectly(Model* const mdl, Stream* const stre
     Stream* dstStm = stream;
     rtError_t error = CheckTaskCanSend(stream);
     ERROR_RETURN_MSG_INNER(
-        error, "Failed to check stream, stream_id=%d, retCode=%#x.", stream->Id_(), static_cast<uint32_t>(error));
+        error, "Failed to check stream (stream_id=%d), retCode=%#x.", stream->Id_(), static_cast<uint32_t>(error));
     stream->StreamLock();
     maintainceTask = stream->AllocTask(nullptr, TS_TASK_TYPE_MODEL_MAINTAINCE, error);
     COND_PROC_RETURN_ERROR_MSG_INNER(maintainceTask == nullptr, error, stream->StreamUnLock();
@@ -470,7 +470,7 @@ rtError_t ModelLoadCompleteByStream(Model* const mdl)
     } else {
         error = SubmitLoadCompleteDirectly(mdl, stream);
     }
-    ERROR_RETURN_MSG_INNER(error, "Failed to submit load complete task, retCode=%#x.", static_cast<uint32_t>(error));
+    ERROR_RETURN(error, "Failed to submit load complete task, retCode=%#x.", static_cast<uint32_t>(error));
     mdl->SetNeedSubmitTask(true);
 
     if (isNeedLoadAicpuModel) {

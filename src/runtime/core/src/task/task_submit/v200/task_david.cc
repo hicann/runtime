@@ -649,7 +649,7 @@ rtError_t SubmitTaskPostProc(Stream* const stm, uint32_t pos, bool isNeedStreamS
 
     error = TryRecycleTask(stm);
     COND_RETURN_ERROR_MSG_INNER(
-        error != RT_ERROR_NONE, error, "TryRecycleTask failed, retCode=%#x.", static_cast<uint32_t>(error));
+        error != RT_ERROR_NONE, error, "Trying to recycle the task failed, retCode=%#x.", static_cast<uint32_t>(error));
     return RT_ERROR_NONE;
 }
 

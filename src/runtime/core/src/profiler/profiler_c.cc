@@ -46,13 +46,13 @@ rtError_t ProfTraceEx(
     TaskInfo* rtProfTraceExTask = nullptr;
     rtError_t error = CheckTaskCanSend(stm);
     ERROR_RETURN_MSG_INNER(
-        error, "Failed to check stream, stream_id=%d, retCode=%#x.", stm->Id_(), static_cast<uint32_t>(error));
+        error, "Failed to check stream (stream_id=%d), retCode=%#x.", stm->Id_(), static_cast<uint32_t>(error));
     uint32_t pos = 0xFFFFU;
     Stream* dstStm = stm;
     stm->StreamLock();
     rtProfTraceExTask = stm->AllocTask(nullptr, TS_TASK_TYPE_PROFILER_TRACE_EX, error);
     COND_PROC_RETURN_ERROR_MSG_INNER(rtProfTraceExTask == nullptr, error, stm->StreamUnLock();
-                                     , "Failed to allocate task, stream_id=%d, retCode=%#x.", stm->Id_(),
+                                     , "Failed to allocate task (stream_id=%d), retCode=%#x.", stm->Id_(),
                                      static_cast<uint32_t>(error));
     pos = rtProfTraceExTask->id;
     dstStm = rtProfTraceExTask->stream;
@@ -60,13 +60,13 @@ rtError_t ProfTraceEx(
     rtProfTraceExTask->stmArgPos = static_cast<DavidStream*>(dstStm)->GetArgPos();
     error = DavidSendTask(rtProfTraceExTask, dstStm);
     ERROR_PROC_RETURN_MSG_INNER(error, TaskUnInitProc(rtProfTraceExTask); TaskRollBack(dstStm, pos);
-                                stm->StreamUnLock();, "Failed to send task, stream_id=%d, retCode=%#x.", stm->Id_(),
+                                stm->StreamUnLock();, "Failed to send task (stream_id=%d), retCode=%#x.", stm->Id_(),
                                                     static_cast<uint32_t>(error));
     stm->StreamUnLock();
     SET_THREAD_TASKID_AND_STREAMID(dstStm->GetExposedStreamId(), rtProfTraceExTask->taskSn);
     error = SubmitTaskPostProc(dstStm, pos);
     ERROR_RETURN_MSG_INNER(
-        error, "Failed to recycle task, stream_id=%d, retCode=%#x.", stm->Id_(), static_cast<uint32_t>(error));
+        error, "Failed to recycle task (stream_id=%d), retCode=%#x.", stm->Id_(), static_cast<uint32_t>(error));
     return error;
 }
 

@@ -1783,13 +1783,15 @@ rtError_t DavidStream::HandleTaskDefault(
 rtError_t DavidStream::UpdateMemcpyTaskAndSqe(TaskInfo* task, Stream* const stream) const
 {
     rtError_t error = UpdateMemcpyTaskInfoForSnapshot(task);
-    ERROR_RETURN_MSG_INNER(error, "Failed to update memcpy dma for snapshot, ret=%#x.", error);
+    ERROR_RETURN(error, "Failed to update memcpy dma for snapshot, ret=%#x.", error);
 
     stream->StreamLock();
     const ScopeGuard streamLockGuard([stream]() { stream->StreamUnLock(); });
 
     error = UpdateDavidKernelTaskSubmit(task, stream);
-    ERROR_RETURN_MSG_INNER(error, "UpdateDavidKernelTaskSubmit failed, ret=%#x.", error);
+    ERROR_RETURN_MSG_INNER(
+        error, "Failed to update the kernel task (task_id=%hu) on stream (stream_id=%d), retCode=%#x.", task->id,
+        stream->Id_(), static_cast<uint32_t>(error));
     return RT_ERROR_NONE;
 }
 

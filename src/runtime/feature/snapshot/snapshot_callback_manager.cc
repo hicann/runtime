@@ -52,8 +52,10 @@ rtError_t SnapshotCallbackManager::RegisterCallback(rtSnapShotStage stage, rtSna
     COND_RETURN_AND_MSG_OUTER(
         callBackIter != callBackList.end(), RT_ERROR_SNAPSHOT_REGISTER_CALLBACK_FAILED, ErrorCode::EE1017,
         "Registering the callback function related to snapshot operations", "callback",
-        "The callback function " + std::to_string(RtPtrToValue(callback)) + " has been registered for stage " +
-            std::string(GetStageString(stage)) + " and cannot be registered again");
+        RtFmtMsg(
+            "The callback function %#" PRIx64 " has been registered for stage %s(%d) and "
+            "cannot be registered again",
+            RtPtrToValue(callback), GetStageString(stage), static_cast<int32_t>(stage)));
     callBackList.push_back({callback, args});
     RT_LOG(RT_LOG_EVENT, "register snapshot callback finish, stage:%s, callback=%p.", GetStageString(stage), callback);
     return RT_ERROR_NONE;
@@ -73,7 +75,8 @@ rtError_t SnapshotCallbackManager::UnregisterCallback(rtSnapShotStage stage, rtS
     if (callbackMap_.find(stage) == callbackMap_.end()) {
         RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
             ErrorCode::EE1017, "Deregistering the callback function related to snapshot operations", "callback",
-            "no callback was registered for stage " + std::string(GetStageString(stage)));
+            RtFmtMsg(
+                "No callback was registered for stage %s(%d)", GetStageString(stage), static_cast<int32_t>(stage)));
         return RT_ERROR_INVALID_VALUE;
     }
 
@@ -84,8 +87,9 @@ rtError_t SnapshotCallbackManager::UnregisterCallback(rtSnapShotStage stage, rtS
     COND_RETURN_AND_MSG_OUTER(
         callBackIter == callBackList.end(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
         "Deregistering the callback function related to snapshot operations", "callback",
-        "The callback function " + std::to_string(RtPtrToValue(callback)) + " has not been registered for stage " +
-            std::string(GetStageString(stage)));
+        RtFmtMsg(
+            "The callback function %#" PRIx64 " has not been registered for stage %s(%d)", RtPtrToValue(callback),
+            GetStageString(stage), static_cast<int32_t>(stage)));
     (void)callBackList.erase(callBackIter);
     RT_LOG(
         RT_LOG_EVENT, "unregister snapshot callback successfully, stage:%s, callback=%p.", GetStageString(stage),

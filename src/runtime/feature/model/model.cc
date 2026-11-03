@@ -478,17 +478,15 @@ rtError_t Model::EnterBindStream(Stream* const streamIn, const uint32_t flag)
             Stream* const execStream = context_->DefaultStream_();
             error = ModelBindTaskSubmit(execStream, streamIn, flag);
             ERROR_RETURN_MSG_INNER(
-                error, "Failed to submit model bind task, model_id=%u, stream_id=%d, retCode=%#x.", Id_(),
-                streamIn->Id_(), error);
+                error, "Failed to submit the model (model_id=%d) bind task for stream (stream_id=%d), retCode=%#x.",
+                id_, streamIn->Id_(), static_cast<uint32_t>(error));
             error = execStream->Synchronize();
         }
         if (error != RT_ERROR_NONE) {
             streamIn->SetModel(nullptr);
             streamIn->SetBindFlag(false);
             RT_LOG_INNER_MSG(
-                RT_LOG_ERROR,
-                "Stream bind failed, "
-                "stream_id=%d, model_id=%d, default stream sync error, retCode=%#x!",
+                RT_LOG_ERROR, "Failed to bind the stream (stream_id=%d) to the model (model_id=%d), retCode=%#x.",
                 streamIn->Id_(), id_, static_cast<uint32_t>(error));
             return error;
         }
@@ -1106,7 +1104,7 @@ rtError_t Model::LoadCompleteByStream(void)
     Stream* stream = nullptr;
     rtError_t syncError = RT_ERROR_NONE;
     rtError_t error = LoadCompleteByStreamPrep(stream);
-    ERROR_RETURN_MSG_INNER(error, "Preprocess of load completion failed, retCode=%#x.", static_cast<uint32_t>(error));
+    ERROR_RETURN(error, "Preprocess of load completion failed, retCode=%#x.", static_cast<uint32_t>(error));
     /* Mini should notify TS model load success for benchmarks,
     and decoupling model load with NPU power for lite */
     TaskInfo submitTask = {};
@@ -1161,7 +1159,7 @@ rtError_t Model::LoadCompleteByStream(void)
         ERROR_RETURN_MSG_INNER(error, "SendAicpuModelLoadMsg failed, retCode=%#x.", static_cast<uint32_t>(error));
     }
     error = LoadCompleteByStreamPostp(stream);
-    ERROR_RETURN_MSG_INNER(error, "Postprocess of load completion failed, retCode=%#x.", static_cast<uint32_t>(error));
+    ERROR_RETURN(error, "Postprocess of load completion failed, retCode=%#x.", static_cast<uint32_t>(error));
 
     return error;
 ERROR_TASK:

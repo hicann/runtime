@@ -1154,7 +1154,7 @@ rtError_t ApiErrorDecorator::MultipleTaskInfoLaunch(
             const uint32_t pos = taskInfo->taskDesc[idx].u.dvppTaskDesc.aicpuTaskPos;
             COND_RETURN_AND_MSG_OUTER(
                 pos >= stm->GetSqDepth(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1003, "Delivering a DVPP Multiple task",
-                pos, RtFmtMsg("taskInfo->taskDesc[%u].u.dvppTaskDesc.aicpuTaskPos", idx),
+                pos, RtFmtMsg("taskInfo->taskDesc[%zu].u.dvppTaskDesc.aicpuTaskPos", idx),
                 RtFmtMsg("must be less than %u", stm->GetSqDepth()));
         } else if (taskInfo->taskDesc[idx].type == RT_MULTIPLE_TASK_TYPE_AICPU) {
             NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
@@ -2318,10 +2318,15 @@ rtError_t ApiErrorDecorator::MemcpyAsyncPtr(
         (count > MAX_MEMCPY_SIZE_OF_D2D), RT_ERROR_INVALID_VALUE,
         "Performing asynchronous memory copy using the address description on the device", count,
         RtFmtMsg("(0, %u]", MAX_MEMCPY_SIZE_OF_D2D));
-    COND_RETURN_AND_MSG_OUTER(
-        (RtPtrToValue(memcpyAddrInfo) % 64ULL) != 0ULL, RT_ERROR_INVALID_VALUE, ErrorCode::EE1011,
-        "Performing asynchronous memory copy using the address description on the device", memcpyAddrInfo,
-        "memcpyAddrInfo", "memcpyAddrInfo is not 64-byte aligned");
+    if ((RtPtrToValue(memcpyAddrInfo) % 64ULL) != 0ULL) {
+        const char_t* const paramDesc = isMemcpyDesc ? "desc" : "memcpyAddrInfo";
+        const char_t* const funcDesc =
+            isMemcpyDesc ? "Performing asynchronous memory copy using the memory copy descriptor" :
+                           "Performing asynchronous memory copy using the address description on the device";
+        RT_LOG_OUTER_MSG_IMPL(
+            ErrorCode::EE1011, funcDesc, memcpyAddrInfo, paramDesc, RtFmtMsg("The address must be 64-byte aligned"));
+        return RT_ERROR_INVALID_VALUE;
+    }
 
     if (isMemcpyDesc == false) {
         Context* curCtx = nullptr;
@@ -2346,7 +2351,7 @@ rtError_t ApiErrorDecorator::MemcpyAsyncPtr(
         }
     }
     const rtError_t error = impl_->MemcpyAsyncPtr(memcpyAddrInfo, destMax, count, stm, cfgInfo, isMemcpyDesc);
-    ERROR_RETURN_MSG_INNER(error, "Memcpy async ptr failed, stream=%p, count=%" PRIu64 "B.", stm, count);
+    ERROR_RETURN(error, "Memcpy async ptr failed, stream=%p, count=%" PRIu64 "B.", stm, count);
     return error;
 }
 
@@ -2532,13 +2537,17 @@ rtError_t ApiErrorDecorator::MemcpyAsyncWithDesc(
 
     rtPtrAttributes_t descAttributes;
     const rtError_t error = impl_->PtrGetAttributes(desc, &descAttributes);
+    COND_RETURN_AND_MSG_OUTER(
+        error == RT_ERROR_INVALID_VALUE, error, ErrorCode::EE1017,
+        "Performing asynchronous memory copy using the memory copy descriptor", "desc",
+        "Ensure that desc points to valid device memory");
     COND_RETURN_ERROR_MSG_INNER(
         error != RT_ERROR_NONE, error, "Get desc pointer attributes failed, retCode=%#x.",
         static_cast<uint32_t>(error));
-    COND_RETURN_ERROR_MSG_INNER(
-        descAttributes.location.type != RT_MEMORY_LOC_DEVICE, RT_ERROR_INVALID_VALUE,
-        "rtsMemcpyAsyncWithDesc failed, desc addr type=%s is invalid!",
-        MemLocationTypeToString(descAttributes.location.type).c_str());
+    COND_RETURN_AND_MSG_OUTER(
+        descAttributes.location.type != RT_MEMORY_LOC_DEVICE, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
+        "Performing asynchronous memory copy using the memory copy descriptor", "desc",
+        "The address must point to device memory");
 
     rtTaskCfgInfo_t cfgInfo = {};
     (void)memset_s(&cfgInfo, sizeof(rtTaskCfgInfo_t), 0, sizeof(rtTaskCfgInfo_t));

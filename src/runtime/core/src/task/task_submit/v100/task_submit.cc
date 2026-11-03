@@ -137,7 +137,7 @@ rtError_t AllocTaskAndSendDc(TaskInfo* submitTask, Stream* stm, uint32_t* const 
     TIMESTAMP_BEGIN(TryRecycleTaskV1);
     rtError_t error = engine->TryRecycleTask(stm);
     TIMESTAMP_END(TryRecycleTaskV1);
-    COND_RETURN_ERROR_MSG_INNER(
+    COND_RETURN_ERROR(
         error != RT_ERROR_NONE, error, "TryRecycleTask failed, retCode=%#x.", static_cast<uint32_t>(error));
 
     constexpr uint16_t perDetectTimes = 1000U;
@@ -531,9 +531,18 @@ rtError_t StarsAllocTaskAndSend(TaskInfo* submitTask, Stream* stm, uint32_t* con
     const rtError_t status = stm->abortStatus_;
     if (status != RT_ERROR_NONE) {
         stm->StreamUnLock();
-        RT_LOG(
-            RT_LOG_ERROR, "stream is in abort status, device_id=%u, stream_id=%u, abort status=%u", devId, stm->Id_(),
-            status);
+        if (status == RT_ERROR_STREAM_ABORT) {
+            RT_LOG_OUTER_MSG_IMPL(
+                ErrorCode::EE1018, "Submitting a task to a stream",
+                RtFmtMsg(
+                    "Stream (stream_id=%d) on device (device_id=%u) is in abort state. Submit tasks only after the "
+                    "stream abort operation has completed successfully",
+                    stm->Id_(), devId));
+        } else {
+            RT_LOG_INNER_MSG(
+                RT_LOG_ERROR, "Stream (stream_id=%d) has an abnormal status (status=%#x) on device (device_id=%u).",
+                stm->Id_(), status, devId);
+        }
         return status;
     }
 
@@ -569,6 +578,18 @@ rtError_t StarsAllocTaskAndSend(TaskInfo* submitTask, Stream* stm, uint32_t* con
         error = stm->abortStatus_;
         if (error != RT_ERROR_NONE) {
             stm->StreamUnLock();
+            if (error == RT_ERROR_STREAM_ABORT) {
+                RT_LOG_OUTER_MSG_IMPL(
+                    ErrorCode::EE1018, "Submitting a task to a stream",
+                    RtFmtMsg(
+                        "Stream (stream_id=%d) on device (device_id=%u) is in abort state. Submit tasks only after the "
+                        "stream abort operation has completed successfully",
+                        stm->Id_(), devId));
+            } else {
+                RT_LOG_INNER_MSG(
+                    RT_LOG_ERROR, "Stream (stream_id=%d) has an abnormal status (status=%#x) on device (device_id=%u).",
+                    stm->Id_(), static_cast<uint32_t>(error), devId);
+            }
             return error;
         }
         TIMESTAMP_BEGIN(TaskRes_AllocTask);

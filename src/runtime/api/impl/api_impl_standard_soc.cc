@@ -897,8 +897,14 @@ rtError_t ApiImpl::LaunchSqeUpdateTask(
         dev, RT_ERROR_INVALID_VALUE, "Delivering the Submission Queue Entry (SQE) update task");
 
     StreamSqCqManage* const streamSqCqManagePtr = dev->GetStreamSqCqManage();
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        streamSqCqManagePtr, RT_ERROR_INVALID_VALUE, "Delivering the Submission Queue Entry (SQE) update task");
+    if (streamSqCqManagePtr == nullptr) {
+        RT_LOG(
+            RT_LOG_ERROR,
+            "StreamSqCqManage is null when delivering the Submission Queue Entry (SQE) update task, dev_id=%u, "
+            "stream_id=%u.",
+            dev->Id_(), streamId);
+        return RT_ERROR_INVALID_VALUE;
+    }
 
     TaskFactory* const devTaskFactory = dev->GetTaskFactory();
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(

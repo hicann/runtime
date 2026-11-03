@@ -1128,7 +1128,7 @@ rtError_t Engine::SendTask(TaskInfo* const workTask, uint16_t& taskId, uint32_t*
     rtError_t error = TryRecycleTask(stm);
     TIMESTAMP_END(TryRecycleTask);
 
-    COND_RETURN_ERROR_MSG_INNER(
+    COND_RETURN_ERROR(
         error != RT_ERROR_NONE, error, "Try recycle task failed, retCode=%#x.", static_cast<uint32_t>(error));
 
     uint8_t failCount = 0U;
@@ -1171,6 +1171,18 @@ rtError_t Engine::SendTask(TaskInfo* const workTask, uint16_t& taskId, uint32_t*
     const rtError_t status = stm->abortStatus_;
     if (status != RT_ERROR_NONE) {
         stm->StreamUnLock();
+        if (status == RT_ERROR_STREAM_ABORT) {
+            RT_LOG_OUTER_MSG_IMPL(
+                ErrorCode::EE1018, "Submitting a task to a stream",
+                RtFmtMsg(
+                    "Stream (stream_id=%d) on device (device_id=%u) is in abort state. Submit tasks only after the "
+                    "stream abort operation has completed successfully",
+                    stm->Id_(), devId));
+        } else {
+            RT_LOG_INNER_MSG(
+                RT_LOG_ERROR, "Stream (stream_id=%d) has an abnormal status=%#x on device (device_id=%u).", stm->Id_(),
+                static_cast<uint32_t>(status), devId);
+        }
         return status;
     }
     device_->GetTaskFactory()->SetSerialId(stm, workTask);

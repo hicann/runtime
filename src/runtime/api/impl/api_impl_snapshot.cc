@@ -62,9 +62,12 @@ rtError_t ApiImplSnapshot::SnapShotProcessBackup(const rtSnapShotBackupArgs* con
     GlobalStateManager& globalStateManagerInstance = GlobalStateManager::GetInstance();
     std::unique_lock<std::mutex> lock(globalStateManagerInstance.GetStateMtx());
     if (globalStateManagerInstance.GetCurrentState() != RT_PROCESS_STATE_LOCKED) {
-        RT_LOG(
-            RT_LOG_ERROR, "current state is not the locked state, current state is %s",
-            GlobalStateManager::StateToString(globalStateManagerInstance.GetCurrentState()));
+        RT_LOG_OUTER_MSG_IMPL(
+            ErrorCode::EE1018, "Backing up the process snapshot",
+            RtFmtMsg(
+                "Current process state is %s. Before calling aclrtSnapShotProcessBackup, call aclrtSnapShotProcessLock "
+                "first to ensure that the current process is in the LOCKED state",
+                GlobalStateManager::StateToString(globalStateManagerInstance.GetCurrentState())));
         return RT_ERROR_SNAPSHOT_BACKUP_FAILED;
     }
 
@@ -83,9 +86,13 @@ rtError_t ApiImplSnapshot::SnapShotProcessRestore(const rtSnapShotRestoreArgs* c
     GlobalStateManager& globalStateManagerInstance = GlobalStateManager::GetInstance();
     std::unique_lock<std::mutex> lock(globalStateManagerInstance.GetStateMtx());
     if (globalStateManagerInstance.GetCurrentState() != RT_PROCESS_STATE_BACKED_UP) {
-        RT_LOG(
-            RT_LOG_ERROR, "current state is not the RT_PROCESS_STATE_BACKED_UP state, current state is %s",
-            GlobalStateManager::StateToString(globalStateManagerInstance.GetCurrentState()));
+        RT_LOG_OUTER_MSG_IMPL(
+            ErrorCode::EE1018, "Restoring the process snapshot",
+            RtFmtMsg(
+                "Current process state is %s. Before calling aclrtSnapShotProcessRestore, call "
+                "aclrtSnapShotProcessLock and aclrtSnapShotProcessBackup first to ensure that the current process is "
+                "in the BACKED_UP state",
+                GlobalStateManager::StateToString(globalStateManagerInstance.GetCurrentState())));
         return RT_ERROR_SNAPSHOT_RESTORE_FAILED;
     }
 

@@ -47,9 +47,12 @@ rtError_t GlobalStateManager::Locked()
     {
         std::unique_lock<std::mutex> lock(stateMtx_);
         if (currentState_.load() != RT_PROCESS_STATE_RUNNING) {
-            RT_LOG(
-                RT_LOG_ERROR, "current state is not the running state, current state is %s",
-                StateToString(currentState_.load()));
+            RT_LOG_OUTER_MSG_IMPL(
+                ErrorCode::EE1018, "Locking the process snapshot",
+                RtFmtMsg(
+                    "Current process state is %s. Before calling aclrtSnapShotProcessLock, ensure that the current "
+                    "process is in the RUNNING state",
+                    StateToString(currentState_.load())));
             return RT_ERROR_SNAPSHOT_LOCK_FAILED;
         }
 
@@ -73,10 +76,12 @@ rtError_t GlobalStateManager::Unlocked()
     {
         std::unique_lock<std::mutex> lock(stateMtx_);
         if ((currentState_.load() != RT_PROCESS_STATE_LOCKED) && (currentState_.load() != RT_PROCESS_STATE_BACKED_UP)) {
-            RT_LOG(
-                RT_LOG_ERROR,
-                "current state is not the RT_PROCESS_STATE_LOCKED or RT_PROCESS_STATE_BACKED_UP, current state is %s",
-                StateToString(currentState_.load()));
+            RT_LOG_OUTER_MSG_IMPL(
+                ErrorCode::EE1018, "Unlocking the process snapshot",
+                RtFmtMsg(
+                    "Current process state is %s. Before calling aclrtSnapShotProcessUnlock, ensure that the current "
+                    "process is in the LOCKED or BACKED_UP state",
+                    StateToString(currentState_.load())));
             return RT_ERROR_SNAPSHOT_UNLOCK_FAILED;
         }
         currentState_.store(RT_PROCESS_STATE_RUNNING);
@@ -162,16 +167,21 @@ rtError_t GlobalStateManager::WaitForAllBackgroundThreadLocked() const
 
     while (lockedBackgroundThreadCount_.load() < totalCount) {
         if (currentState_.load() != RT_PROCESS_STATE_LOCKED) {
-            RT_LOG(
-                RT_LOG_ERROR, "State changed during background thread waiting, now state is %s",
-                StateToString(currentState_.load()));
+            RT_LOG_OUTER_MSG_IMPL(
+                ErrorCode::EE1018, "Locking the process snapshot",
+                RtFmtMsg(
+                    "Current process state is %s. The process state changed while waiting for the background threads "
+                    "to be locked, because another thread may have called a snapshot API"
+                    " concurrently or the process may be exiting",
+                    StateToString(currentState_.load())));
             return RT_ERROR_SNAPSHOT_LOCK_FAILED;
         }
-
         if (std::chrono::steady_clock::now() - startTime >= timeout) {
-            RT_LOG(
-                RT_LOG_ERROR, "Timeout: only %u/%u background threads locked", lockedBackgroundThreadCount_.load(),
-                totalCount);
+            RT_LOG_INNER_MSG(
+                RT_LOG_ERROR,
+                "Timeout waiting for background threads to lock when locking the process snapshot: only %u/%u "
+                "background threads were locked within %lld seconds.",
+                lockedBackgroundThreadCount_.load(), totalCount, static_cast<long long>(timeout.count()));
             return RT_ERROR_SNAPSHOT_LOCK_TIMEOUT;
         }
 
@@ -191,15 +201,21 @@ rtError_t GlobalStateManager::WaitForAllBackgroundThreadUnlocked() const
 
     while (lockedBackgroundThreadCount_.load() != 0U) {
         if (currentState_.load() != RT_PROCESS_STATE_RUNNING) {
-            RT_LOG(
-                RT_LOG_ERROR, "State changed during background thread unlocked, now state is %s",
-                StateToString(currentState_.load()));
+            RT_LOG_OUTER_MSG_IMPL(
+                ErrorCode::EE1018, "Unlocking the process snapshot",
+                RtFmtMsg(
+                    "Current process state is %s. The process state changed while waiting for the background threads "
+                    "to be unlocked, because another thread may have called aclrtSnapShotProcessLock concurrently",
+                    StateToString(currentState_.load())));
             return RT_ERROR_SNAPSHOT_UNLOCK_FAILED;
         }
 
         if (std::chrono::steady_clock::now() - startTime >= timeout) {
-            RT_LOG(
-                RT_LOG_ERROR, "There are still %u threads in the locked state.", lockedBackgroundThreadCount_.load());
+            RT_LOG_INNER_MSG(
+                RT_LOG_ERROR,
+                "Timeout waiting for background threads to unlock when unlocking the process snapshot: %u "
+                "background threads were still in the locked state after %lld seconds.",
+                lockedBackgroundThreadCount_.load(), static_cast<long long>(timeout.count()));
             return RT_ERROR_SNAPSHOT_UNLOCK_FAILED;
         }
 

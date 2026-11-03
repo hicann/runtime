@@ -1620,8 +1620,8 @@ rtError_t Stream::TearDown(const bool terminal, bool flag)
     WaitAsyncRecycleThreadOnTearDown(starsFlag);
     RecycleDelayedTasksAfterTearDown(true);
     error = UnsubscribeStreamReportOnTearDown(rt);
-    ERROR_RETURN_MSG_INNER(
-        error, "Failed to unsubscribe streamId(%d), retCode=%#x.", stmId, static_cast<uint32_t>(error));
+    ERROR_RETURN(
+        error, "Failed to unsubscribe stream (stream_id=%d), retCode=%#x.", stmId, static_cast<uint32_t>(error));
 
     (void)SendFlipTaskWithStreamId(this);
     // on stars, there is no need to send destroy task
@@ -4097,9 +4097,9 @@ rtError_t Stream::StarsWaitForTask(const uint32_t taskId, const bool isNeedWaitS
         this->SetSyncRemainTime(-1);
         StreamSyncUnLock();
         if (errorCode != RT_ERROR_NONE) {
-            RT_LOG(
-                RT_LOG_ERROR, "Query Task status failed, device_id=%u, stream_id=%d, retCode=%#x", deviceId, streamId_,
-                errorCode);
+            RT_LOG_INNER_MSG(
+                RT_LOG_ERROR, "Failed to query task (stream_id=%d, device_id=%u) status, retCode=%#x.", streamId_,
+                deviceId, static_cast<uint32_t>(errorCode));
             return errorCode;
         }
 

@@ -91,10 +91,18 @@ rtError_t Model::CheckRestoredSqStatus(void)
         const uint32_t sqId = s->GetSqId();
         rtError_t ret = dev->Driver_()->GetSqEnable(deviceId, tsId, sqId, enable);
         ERROR_RETURN(ret, "Get SQ %u status failed, retCode=%#x.", sqId, static_cast<uint32_t>(ret));
-        COND_RETURN_ERROR(enable, RT_ERROR_STREAM_INVALID, "The stream[%d->%u] status exception.", streamId, sqId);
+        COND_RETURN_AND_MSG_INNER(
+            enable, RT_ERROR_STREAM_INVALID,
+            "The status of the restored SQ (stream_id=%d, sq_id=%u, model_id=%d) is abnormal: expected enable is "
+            "false, "
+            "but actual enable is true.",
+            streamId, sqId, id_);
         ret = dev->Driver_()->GetSqHead(deviceId, tsId, sqId, sqHead);
         ERROR_RETURN(ret, "Get SQ %u head failed, retCode=%#x.", sqId, static_cast<uint32_t>(ret));
-        COND_RETURN_ERROR(sqHead != 0U, RT_ERROR_STREAM_INVALID, "The SQ %d head %hu is invalid.", sqId, sqHead);
+        COND_RETURN_AND_MSG_INNER(
+            (sqHead != 0U), RT_ERROR_STREAM_INVALID,
+            "The head of the restored SQ (stream_id=%d, sq_id=%u, model_id=%d) is abnormal: expected 0, actual %hu.",
+            streamId, sqId, id_, sqHead);
         // 当前驱动二级SQ队列的任务可能仍处于异步恢复过程中，此时查询得到的tail值可能仅为中间状态，其最终正确性将在后续的
         // LoadCompleteByStreamPostp流程中进行最终校验。
     }
@@ -171,18 +179,20 @@ rtError_t Model::ReBuild(void)
     RT_LOG(RT_LOG_EVENT, "Begin to rebuild model, id=%d.", id_);
 
     rtError_t error = ReSetup();
-    ERROR_RETURN_MSG_INNER(error, "ReSetup model failed. retCode=%#x.", static_cast<uint32_t>(error));
+    ERROR_RETURN_MSG_INNER(
+        error, "Failed to set up model (model_id=%d) again, retCode=%#x.", id_, static_cast<uint32_t>(error));
 
     ResetForRestore();
 
     error = ReBindStreams();
-    ERROR_RETURN_MSG_INNER(error, "ReBind stream failed. retCode=%#x.", static_cast<uint32_t>(error));
+    ERROR_RETURN_MSG_INNER(
+        error, "Failed to rebind streams (model_id=%d), retCode=%#x.", id_, static_cast<uint32_t>(error));
 
     error = SinkSqTasksRestore();
-    ERROR_RETURN_MSG_INNER(error, "Restore tasks failed. retCode=%#x.", static_cast<uint32_t>(error));
+    ERROR_RETURN_MSG_INNER(error, "Failed to restore tasks, retCode=%#x.", static_cast<uint32_t>(error));
 
     error = CheckRestoredSqStatus();
-    ERROR_RETURN_MSG_INNER(error, "Check SQ status failed. retCode=%#x.", static_cast<uint32_t>(error));
+    ERROR_RETURN_MSG_INNER(error, "Failed to check SQ status, retCode=%#x.", static_cast<uint32_t>(error));
 
     if (context_->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_TASK_ALLOC_FROM_STREAM_POOL)) {
         error = ModelLoadCompleteByStream(this);
@@ -190,10 +200,12 @@ rtError_t Model::ReBuild(void)
         error = LoadCompleteByStream();
     }
 
-    ERROR_RETURN_MSG_INNER(error, "ReLoad complete failed. retCode=%#x.", static_cast<uint32_t>(error));
+    ERROR_RETURN_MSG_INNER(
+        error, "Failed to complete model (model_id=%d) load by stream, retCode=%#x.", id_,
+        static_cast<uint32_t>(error));
 
     error = UpdateSnapShotSqe();
-    ERROR_RETURN_MSG_INNER(error, "Update sqe failed. retCode=%#x.", static_cast<uint32_t>(error));
+    ERROR_RETURN_MSG_INNER(error, "Failed to update SQE, retCode=%#x.", static_cast<uint32_t>(error));
 
     RT_LOG(RT_LOG_EVENT, "Success to rebuild model, id=%d.", id_);
     return RT_ERROR_NONE;

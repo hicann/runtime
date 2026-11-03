@@ -50,7 +50,9 @@ rtError_t CbSubscribe::AssignGroupId(
         if (groupId < 0) {
             RT_LOG_INNER_MSG(
                 RT_LOG_ERROR,
-                "Failed to assign callback subscription group id because group id is full, max_group_num=%u, "
+                "Failed to allocate a callback subscription group ID. Possible causes: "
+                "1. The maximum group count is 0. 2. Host memory allocation for the group bitmap failed. "
+                "3. All group IDs are already allocated. max_group_num=%u, "
                 "thread_id=%" PRIu64 ", device_id=%u, ts_id=%u, stream_id=%d, retCode=%#x.",
                 maxGroupNum_, threadId, stm->Device_()->Id_(), stm->Device_()->DevGetTsId(), stm->Id_(),
                 static_cast<uint32_t>(RT_ERROR_SUBSCRIBE_GROUP));
@@ -72,9 +74,11 @@ rtError_t CbSubscribe::CheckForInsert(
     StreamMapIt& streamIter)
 {
     if (CheckExistInStreamMap(stm)) {
-        RT_LOG_INNER_MSG(
-            RT_LOG_ERROR, "Stream already exists in stream map, streamId=%d, devId=%u, threadId=%" PRIu64, stm->Id_(),
-            stm->Device_()->Id_(), threadId);
+        RT_LOG_OUTER_MSG_IMPL(
+            ErrorCode::EE1017, "Subscribing the report callback", "stream",
+            RtFmtMsg(
+                "The stream (stream_id=%d, device_id=%u) has already been subscribed", stm->Id_(),
+                stm->Device_()->Id_()));
         return RT_ERROR_SUBSCRIBE_STREAM;
     }
     if (CheckExistInThreadMap(threadId, stm, threadIdIter, devIdTsIdIter, streamIter)) {
@@ -83,11 +87,14 @@ rtError_t CbSubscribe::CheckForInsert(
         return RT_ERROR_SUBSCRIBE_THREAD;
     }
     if ((threadIdIter != subscribeMapByThreadId_.end()) && (devIdTsIdIter == threadIdIter->second.end())) {
-        RT_LOG_INNER_MSG(
-            RT_LOG_ERROR,
-            "Cannot find callback subscription by thread key, thread_id=%" PRIu64 ", stream_id=%d, "
-            "device_id=%u, ts_id=%u.",
-            threadId, stm->Id_(), stm->Device_()->Id_(), stm->Device_()->DevGetTsId());
+        RT_LOG_OUTER_MSG_IMPL(
+            ErrorCode::EE1017, "Subscribing the report callback", "threadId or stream",
+            RtFmtMsg(
+                "The thread (thread_id=%" PRIu64 ") has already subscribed on device %u and TS %u. One thread can "
+                "subscribe on only one device and TS. The current stream (stream_id=%d) belongs to device %u and TS %u",
+                threadId, RT_CB_SUBSCRIBE_GET_DEV_ID(threadIdIter->second.begin()->first),
+                RT_CB_SUBSCRIBE_GET_TS_ID(threadIdIter->second.begin()->first), stm->Id_(), stm->Device_()->Id_(),
+                stm->Device_()->DevGetTsId()));
         return RT_ERROR_SUBSCRIBE_THREAD;
     }
     return RT_ERROR_NONE;
@@ -192,16 +199,25 @@ rtError_t CbSubscribe::Delete(const uint64_t threadId, Stream* const stm)
     if (!CheckExistInStreamMap(stm)) {
         subscribeLock_.unlock();
         const auto streamId = stm->Id_();
-        RT_LOG_INNER_MSG(
-            RT_LOG_ERROR, "Stream does not exist in stream map, streamId=%d, threadId=%" PRIu64, streamId, threadId);
+        RT_LOG_OUTER_MSG_IMPL(
+            ErrorCode::EE1018, "Unsubscribing the report callback",
+            RtFmtMsg(
+                "The stream (stream_id=%d, device_id=%u) has not been subscribed", streamId, stm->Device_()->Id_()));
+        RT_LOG(
+            RT_LOG_ERROR, "Stream does not exist in stream map, streamId=%d, threadId=%" PRIu64 ".", streamId,
+            threadId);
         return RT_ERROR_SUBSCRIBE_STREAM;
     }
 
     if (!CheckExistInThreadMap(threadId, stm, it, it2, it3)) {
         subscribeLock_.unlock();
         const auto streamId = stm->Id_();
-        RT_LOG_INNER_MSG(
-            RT_LOG_ERROR, "Stream does not exist in thread map, streamId=%d, threadId=%" PRIu64, streamId, threadId);
+        RT_LOG_OUTER_MSG_IMPL(
+            ErrorCode::EE1017, "Unsubscribing the report callback", "threadId or stream",
+            RtFmtMsg(
+                "The stream (stream_id=%d, device_id=%u) was not subscribed using the supplied thread ID "
+                "(thread_id=%" PRIu64 "). Unsubscribe with the thread ID used for subscribing",
+                streamId, stm->Device_()->Id_(), threadId));
         return RT_ERROR_SUBSCRIBE_THREAD;
     }
     const uint32_t sqId = it3->second.sqId;
@@ -215,8 +231,9 @@ rtError_t CbSubscribe::Delete(const uint64_t threadId, Stream* const stm)
         Event* const event = it3->second.u.event;
         if (event != nullptr) {
             const rtError_t error = event->WaitForBusy();
-            COND_PROC_RETURN_ERROR(
-                (error != RT_ERROR_NONE), error, subscribeLock_.unlock(), "stream_id=%d is aborted", stm->Id_());
+            COND_PROC_RETURN_ERROR_MSG_INNER(
+                (error != RT_ERROR_NONE), error, subscribeLock_.unlock(),
+                "Failed to wait for the event of the stream (stream_id=%d) to be idle.", stm->Id_());
             delete event;
         }
     }
@@ -264,7 +281,9 @@ rtError_t CbSubscribe::Delete(Stream* const stm)
     if (!CheckExistInStreamMap(stm, itStream)) {
         subscribeLock_.unlock();
         const auto streamId = stm->Id_();
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Stream does not exist in stream map, streamId=%d", streamId);
+        RT_LOG_INNER_MSG(
+            RT_LOG_ERROR, "The stream (stream_id=%d, device_id=%u) has not been subscribed.", streamId,
+            stm->Device_()->Id_());
         return RT_ERROR_SUBSCRIBE_STREAM;
     }
     threadId = itStream->second.threadId;
@@ -272,7 +291,10 @@ rtError_t CbSubscribe::Delete(Stream* const stm)
         subscribeLock_.unlock();
         const auto streamId = stm->Id_();
         RT_LOG_INNER_MSG(
-            RT_LOG_ERROR, "Stream does not exist in thread map, streamId=%d, threadId=%" PRIu64, streamId, threadId);
+            RT_LOG_ERROR,
+            "The stream (stream_id=%d, device_id=%u) was not subscribed using the thread ID "
+            "(thread_id=%" PRIu64 ").",
+            streamId, stm->Device_()->Id_(), threadId);
         return RT_ERROR_SUBSCRIBE_THREAD;
     }
 
@@ -287,8 +309,9 @@ rtError_t CbSubscribe::Delete(Stream* const stm)
         Event* const event = it3->second.u.event;
         if (event != nullptr) {
             const rtError_t error = event->WaitForBusy();
-            COND_PROC_RETURN_ERROR(
-                (error != RT_ERROR_NONE), error, subscribeLock_.unlock(), "stream_id=%d is aborted", stm->Id_());
+            COND_PROC_RETURN_ERROR_MSG_INNER(
+                (error != RT_ERROR_NONE), error, subscribeLock_.unlock(),
+                "Failed to wait for the event of the stream (stream_id=%d) to be idle.", stm->Id_());
             delete event;
         }
     }
@@ -433,7 +456,8 @@ rtError_t CbSubscribe::GetGroupIdByStreamId(const uint32_t devId, const int32_t 
     const auto it = subscribeMapByStreamId_.find(key);
     if (it == subscribeMapByStreamId_.end()) {
         subscribeLock_.unlock();
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Cannot find subscribe info, streamId=%d, devId=%u", streamId, devId);
+        RT_LOG_INNER_MSG(
+            RT_LOG_ERROR, "Cannot find subscription for stream (stream_id=%d, device_id=%u).", streamId, devId);
         return RT_ERROR_SUBSCRIBE_STREAM;
     }
     *groupId = static_cast<uint32_t>(it->second.groupId);
@@ -448,7 +472,8 @@ rtError_t CbSubscribe::GetEventByStreamId(const uint32_t devId, const int32_t st
     const auto it = subscribeMapByStreamId_.find(key);
     if (it == subscribeMapByStreamId_.end()) {
         subscribeLock_.unlock();
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Cannot find subscribe info, streamId=%d, devId=%u", streamId, devId);
+        RT_LOG_INNER_MSG(
+            RT_LOG_ERROR, "Cannot find subscription for stream (stream_id=%d, device_id=%u).", streamId, devId);
         return RT_ERROR_SUBSCRIBE_STREAM;
     }
     *evt = it->second.u.event;
@@ -463,7 +488,8 @@ rtError_t CbSubscribe::GetNotifyByStreamId(const uint32_t devId, const int32_t s
     const auto it = subscribeMapByStreamId_.find(key);
     if (it == subscribeMapByStreamId_.end()) {
         subscribeLock_.unlock();
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Cannot find subscribe info, streamId=%d, devId=%u", streamId, devId);
+        RT_LOG_INNER_MSG(
+            RT_LOG_ERROR, "Cannot find subscription for stream (stream_id=%d, device_id=%u).", streamId, devId);
         return RT_ERROR_SUBSCRIBE_STREAM;
     }
     *notify = it->second.u.notify;
@@ -478,7 +504,8 @@ rtError_t CbSubscribe::GetCqIdByStreamId(const uint32_t devId, const int32_t str
     const auto it = subscribeMapByStreamId_.find(key);
     if (it == subscribeMapByStreamId_.end()) {
         subscribeLock_.unlock();
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Cannot find subscribe info, streamId=%d, devId=%u", streamId, devId);
+        RT_LOG_INNER_MSG(
+            RT_LOG_ERROR, "Cannot find subscription for stream (stream_id=%d, device_id=%u).", streamId, devId);
         return RT_ERROR_SUBSCRIBE_STREAM;
     }
     *cqId = it->second.cqId;
@@ -493,7 +520,8 @@ rtError_t CbSubscribe::GetSqIdByStreamId(const uint32_t devId, const int32_t str
     const auto it = subscribeMapByStreamId_.find(key);
     if (it == subscribeMapByStreamId_.end()) {
         subscribeLock_.unlock();
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Cannot find subscribe info, streamId=%d, devId=%u", streamId, devId);
+        RT_LOG_INNER_MSG(
+            RT_LOG_ERROR, "Cannot find subscription for stream (stream_id=%d, device_id=%u).", streamId, devId);
         return RT_ERROR_SUBSCRIBE_STREAM;
     }
     *sqId = it->second.sqId;
@@ -508,7 +536,8 @@ rtError_t CbSubscribe::GetThreadIdByStreamId(const uint32_t devId, const int32_t
     const auto it = subscribeMapByStreamId_.find(key);
     if (it == subscribeMapByStreamId_.end()) {
         subscribeLock_.unlock();
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Cannot find subscribe info, streamId=%d, devId=%u", streamId, devId);
+        RT_LOG_INNER_MSG(
+            RT_LOG_ERROR, "Cannot find subscription for stream (stream_id=%d, device_id=%u).", streamId, devId);
         return RT_ERROR_SUBSCRIBE_STREAM;
     }
     *threadId = it->second.threadId;

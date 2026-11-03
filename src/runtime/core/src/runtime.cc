@@ -4522,7 +4522,7 @@ rtError_t Runtime::UnSubscribeReport(const uint64_t threadId, Stream* const stm)
 {
     NULL_PTR_RETURN_MSG(cbSubscribe_, RT_ERROR_SUBSCRIBE_NULL);
     const rtError_t error = cbSubscribe_->Delete(threadId, stm);
-    ERROR_RETURN_MSG_INNER(
+    ERROR_RETURN(
         error, "Unsubscribe report failed, streamId=%d, threadId=%" PRIu64 ", retCode=%#x.", stm->Id_(), threadId,
         static_cast<uint32_t>(error));
     stm->SetSubscribeFlag(StreamSubscribeFlag::SUBSCRIBE_NONE);
@@ -4533,7 +4533,7 @@ rtError_t Runtime::SubscribeReport(const uint64_t threadId, Stream* const stm, v
 {
     NULL_PTR_RETURN_MSG(cbSubscribe_, RT_ERROR_SUBSCRIBE_NULL);
     const rtError_t error = cbSubscribe_->Insert(threadId, stm, evtNotify);
-    ERROR_RETURN_MSG_INNER(
+    ERROR_RETURN(
         error, "Subscribe report failed, streamId=%d, threadId=%" PRIu64 ", retCode=%#x.", stm->Id_(), threadId,
         static_cast<uint32_t>(error));
     stm->SetSubscribeFlag(StreamSubscribeFlag::SUBSCRIBE_USER);
@@ -4544,7 +4544,7 @@ rtError_t Runtime::UnSubscribeReport(Stream* const stm)
 {
     NULL_PTR_RETURN_MSG(cbSubscribe_, RT_ERROR_SUBSCRIBE_NULL);
     const rtError_t error = cbSubscribe_->Delete(stm);
-    ERROR_RETURN_MSG_INNER(
+    ERROR_RETURN(
         error, "Unsubscribe report failed, streamId=%d, retCode=%#x.", stm->Id_(), static_cast<uint32_t>(error));
     stm->SetSubscribeFlag(StreamSubscribeFlag::SUBSCRIBE_NONE);
     return error;
@@ -6158,7 +6158,7 @@ rtError_t Runtime::SubscribeCallback(const uint64_t threadId, Stream* stm, void*
 {
     NULL_PTR_RETURN_MSG(cbSubscribe_, RT_ERROR_SUBSCRIBE_NULL);
     const rtError_t error = cbSubscribe_->SubscribeCallback(threadId, stm, evtNotify);
-    ERROR_RETURN_MSG_INNER(
+    ERROR_RETURN(
         error, "SubscribeCallback failed, stream_id=%d, threadId=%" PRIu64 ", retCode=%#x.", stm->Id_(), threadId,
         static_cast<uint32_t>(error));
     stm->SetSubscribeFlag(StreamSubscribeFlag::SUBSCRIBE_RUNTIME);

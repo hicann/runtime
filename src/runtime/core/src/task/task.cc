@@ -225,10 +225,15 @@ TaskInfo* TaskFactory::Alloc(Stream* stream, tsTaskType_t taskType, rtError_t& e
             COND_RETURN_AND_MSG_OUTER(
                 !exitFlag_ && (id < 0) && (errCode == RT_ERROR_TASK_OUT_OF_RANGE), nullptr, ErrorCode::EE1019,
                 "Allocating task info", "The number of pending tasks in the stream exceeds the limit");
+            COND_RETURN_AND_MSG_OUTER(
+                !exitFlag_ && (id < 0) && (errCode == RT_ERROR_TASK_NEW), nullptr, ErrorCode::EE1013,
+                sizeof(TaskIdManager), "new");
             COND_RETURN_ERROR_MSG_INNER(
                 exitFlag_ || (id < 0), nullptr, "Failed to alloc task id, stream_id=%d.", stream->Id_());
         }
     } else {
+        COND_RETURN_AND_MSG_OUTER(
+            (id < 0) && (errCode == RT_ERROR_TASK_NEW), nullptr, ErrorCode::EE1013, sizeof(TaskIdManager), "new");
         COND_RETURN_ERROR_MSG_INNER(id < 0, nullptr, "Failed to alloc task id, stream_id=%d.", stream->Id_());
         stream->PushPersistentTaskID(static_cast<uint32_t>(id));
     }

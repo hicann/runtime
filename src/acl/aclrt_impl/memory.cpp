@@ -1669,8 +1669,20 @@ aclError aclrtGetBufUserDataImpl(const aclrtMbuf buf, void* dataPtr, size_t size
     uint64_t bufSize = 0U;
     void* tmpDataPtr = nullptr;
     ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMbufGetPrivInfo(buf, &tmpDataPtr, &bufSize), rtMbufGetPrivInfo);
-    ACL_CHECK_LESS_UINT(size + offset, static_cast<size_t>(bufSize));
-    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(tmpDataPtr);
+    if (size + offset > static_cast<size_t>(bufSize)) {
+        ACL_LOG_ERROR(
+            "%s failed because the sum of size and offset is greater than %zu, size=%zu, offset=%zu.", __func__,
+            static_cast<size_t>(bufSize), size, offset);
+        std::string errMsg = acl::AclErrorLogManager::FormatStr(
+            "The sum of size and offset is greater than %zu bytes, size=%zu, offset=%zu", static_cast<size_t>(bufSize),
+            size, offset);
+        std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
+        acl::AclErrorLogManager::ReportInputError(
+            acl::INVALID_PARAM_NO_VALUE_MSG, std::vector<const char*>({"func", "param", "reason"}),
+            std::vector<const char*>({funcName.c_str(), "size or offset", errMsg.c_str()}));
+        return ACL_ERROR_INVALID_PARAM;
+    }
+    ACL_CHECK_INVALID_PARAM_NO_VALUE(tmpDataPtr != nullptr, "buf", "The buffer has no user data area");
     const void* const srcAddr = static_cast<uint8_t*>(tmpDataPtr) + offset;
     const auto ret = memcpy_s(dataPtr, size, srcAddr, size);
     if (ret != EOK) {
@@ -1713,8 +1725,20 @@ aclError aclrtSetBufUserDataImpl(aclrtMbuf buf, const void* dataPtr, size_t size
     uint64_t bufSize = 0U;
     void* tmpDataPtr = nullptr;
     ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMbufGetPrivInfo(buf, &tmpDataPtr, &bufSize), rtMbufGetPrivInfo);
-    ACL_CHECK_LESS_UINT(size + offset, static_cast<size_t>(bufSize));
-    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(tmpDataPtr);
+    if (size + offset > static_cast<size_t>(bufSize)) {
+        ACL_LOG_ERROR(
+            "%s failed because the sum of size and offset is greater than %zu, size=%zu, offset=%zu.", __func__,
+            static_cast<size_t>(bufSize), size, offset);
+        std::string errMsg = acl::AclErrorLogManager::FormatStr(
+            "The sum of size and offset is greater than %zu bytes, size=%zu, offset=%zu", static_cast<size_t>(bufSize),
+            size, offset);
+        std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
+        acl::AclErrorLogManager::ReportInputError(
+            acl::INVALID_PARAM_NO_VALUE_MSG, std::vector<const char*>({"func", "param", "reason"}),
+            std::vector<const char*>({funcName.c_str(), "size or offset", errMsg.c_str()}));
+        return ACL_ERROR_INVALID_PARAM;
+    }
+    ACL_CHECK_INVALID_PARAM_NO_VALUE(tmpDataPtr != nullptr, "buf", "The mbuf has no user data area");
     void* const destAddr = static_cast<uint8_t*>(tmpDataPtr) + offset;
     const size_t destMax = static_cast<size_t>(bufSize) - offset;
     const auto ret = memcpy_s(destAddr, destMax, dataPtr, size);

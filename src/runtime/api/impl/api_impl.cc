@@ -3856,24 +3856,33 @@ rtError_t ApiImpl::CacheLastTaskExtendInfo(const char* const extendInfoPtr, cons
 
     Device* const dev = curContext->Device_();
     StreamSqCqManage* const streamSqCqManagePtr = dev->GetStreamSqCqManage();
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        streamSqCqManagePtr, RT_ERROR_INVALID_VALUE, "Caching the extended information of the latest task");
+    if (streamSqCqManagePtr == nullptr) {
+        RT_LOG(
+            RT_LOG_ERROR,
+            "StreamSqCqManage is null when caching the extended information of the latest task, dev_id=%u, "
+            "stream_id=%u.",
+            dev->Id_(), lastStreamId);
+        return RT_ERROR_INVALID_VALUE;
+    }
 
     Stream* stm = nullptr;
     rtError_t error = streamSqCqManagePtr->GetStreamById(lastStreamId, &stm);
-    COND_RETURN_ERROR_MSG_INNER(
-        ((error != RT_ERROR_NONE) || (stm == nullptr)), error,
-        "Query stream failed, dev_id=%u, stream_id=%u, retCode=%#x.", dev->Id_(), lastStreamId,
-        static_cast<uint32_t>(error));
+    COND_RETURN_AND_MSG_OUTER(
+        ((error != RT_ERROR_NONE) || (stm == nullptr)), error, ErrorCode::EE1018,
+        "Caching the extended information of the latest task",
+        RtFmtMsg(
+            "The stream of the latest task was not found on the current device (last stream_id=%u). "
+            "Ensure that a task has been submitted on the current thread and that its stream is still available",
+            lastStreamId));
 
-    COND_RETURN_ERROR_MSG_INNER(
-        stm->Context_() != curContext, RT_ERROR_STREAM_CONTEXT, "Stream is not in current ctx, stream_id=%u.",
-        lastStreamId);
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        stm, curContext, RT_ERROR_STREAM_CONTEXT, "Caching the extended information of the latest task");
 
     Model* model = stm->Model_();
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        model, RT_ERROR_MODEL_NULL, "Caching the extended information of the latest task");
-
+    COND_RETURN_AND_MSG_OUTER(
+        (model == nullptr), RT_ERROR_MODEL_NULL, ErrorCode::EE1018,
+        "Caching the extended information of the latest task",
+        RtFmtMsg("The stream (stream_id=%u) of the last submitted task is not bound to a model", lastStreamId));
     return model->CacheLastTaskExtendInfo(stm, extendInfoPtr, infoSize);
 }
 
@@ -4522,7 +4531,7 @@ rtError_t ApiImpl::ProcessReport(const int32_t timeout, const bool noLog)
                     rtHostFuncCommand_t* command = nullptr;
                     (void)rt->GetSqIdByStreamId(deviceId, static_cast<int32_t>(report[idx].streamId), &sqId);
                     ret = curDrv->SqCommandOccupy(deviceId, tsId, sqId, &command, 1U);
-                    ERROR_RETURN_MSG_INNER(ret, "SqCommandOccupy failed, sqId=%u, retCode=%#x", sqId, ret);
+                    ERROR_RETURN(ret, "SqCommandOccupy failed, sqId=%u, retCode=%#x.", sqId, ret);
                     NULL_PTR_RETURN_MSG(command, RT_ERROR_DRV_COMMAND);
                     if (Runtime::Instance()->ChipIsHaveStars()) {
                         command->u.record_msg.cmdType = STARS_CALLBACK_EVENT_RECORD_CMDTYPE;
@@ -4539,7 +4548,7 @@ rtError_t ApiImpl::ProcessReport(const int32_t timeout, const bool noLog)
                         command->u.sq_send_msg.cqTail = 0U;
                     }
                     ret = curDrv->SqCommandSend(deviceId, tsId, sqId, command, 1U);
-                    ERROR_RETURN_MSG_INNER(ret, "SqCommandSend failed, sqId=%u, retCode=%#x", sqId, ret);
+                    ERROR_RETURN(ret, "SqCommandSend failed, sqId=%u, retCode=%#x.", sqId, ret);
                 }
                 ret = curDrv->CqReportRelease(&report[idx], deviceId, cqidValue, tsId, noLog);
             }
@@ -6683,23 +6692,32 @@ rtError_t ApiImpl::CacheLastTaskOpInfo(const void* const infoPtr, const size_t i
 
     Device* const dev = curCtx->Device_();
     StreamSqCqManage* const streamSqCqManagePtr = dev->GetStreamSqCqManage();
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        streamSqCqManagePtr, RT_ERROR_INVALID_VALUE, "Caching the operator information of the latest task");
+    if (streamSqCqManagePtr == nullptr) {
+        RT_LOG(
+            RT_LOG_ERROR,
+            "StreamSqCqManage is null when caching the operator information of the latest task, dev_id=%u, "
+            "stream_id=%u.",
+            dev->Id_(), lastStreamId);
+        return RT_ERROR_INVALID_VALUE;
+    }
 
     Stream* stm = nullptr;
     rtError_t error = streamSqCqManagePtr->GetStreamById(lastStreamId, &stm);
-    COND_RETURN_ERROR_MSG_INNER(
-        ((error != RT_ERROR_NONE) || (stm == nullptr)), error,
-        "Query stream failed, dev_id=%u, stream_id=%u, retCode=%#x.", dev->Id_(), lastStreamId,
-        static_cast<uint32_t>(error));
-
+    COND_RETURN_AND_MSG_OUTER(
+        ((error != RT_ERROR_NONE) || (stm == nullptr)), error, ErrorCode::EE1018,
+        "Caching the operator information of the latest task",
+        RtFmtMsg(
+            "The stream of the latest task was not found on the current device (last stream_id=%u). "
+            "Ensure that a task has been submitted on the current thread and that its stream is still available",
+            lastStreamId));
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Caching the operator information of the latest task");
 
     Model* mdl = stm->Model_();
-    COND_RETURN_ERROR_MSG_INNER(
-        mdl == nullptr || mdl->GetModelType() != RT_MODEL_CAPTURE_MODEL, RT_ERROR_MODEL_NULL,
-        "Stream (stream_id=%u) is not bound to a model or the bound model is not a CAPTURE model", lastStreamId);
+    COND_RETURN_AND_MSG_OUTER(
+        (mdl == nullptr || mdl->GetModelType() != RT_MODEL_CAPTURE_MODEL), RT_ERROR_MODEL_NULL, ErrorCode::EE1018,
+        "Caching the operator information of the latest task",
+        RtFmtMsg("The stream (stream_id=%u) of the last submitted task is not bound to an ACL Graph", lastStreamId));
 
     CaptureModel* captureMdl = dynamic_cast<CaptureModel*>(mdl);
     return captureMdl->CacheLastTaskOpInfo(infoPtr, infoSize, stm);

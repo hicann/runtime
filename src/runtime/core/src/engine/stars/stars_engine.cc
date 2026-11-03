@@ -332,6 +332,12 @@ rtError_t StarsEngine::AddTaskToStream(TaskInfo* const workTask, const uint32_t 
     while (unlikely(error != RT_ERROR_NONE)) {
         stm->StarsStmDfxCheck(beginCnt, endCnt, checkCount);
         if (stm->GetBeingAbortedFlag()) {
+            RT_LOG_OUTER_MSG_IMPL(
+                ErrorCode::EE1018, "Submitting a task to a stream",
+                RtFmtMsg(
+                    "Stream (stream_id=%d) on device (device_id=%u) is in abort state. Submit tasks only after the "
+                    "stream abort operation has completed successfully",
+                    stm->Id_(), stm->Device_()->Id_()));
             RT_LOG(
                 RT_LOG_ERROR, "stream status is stream abort, device_id=%u, stream_id=%d.", stm->Device_()->Id_(),
                 stm->Id_());
@@ -816,6 +822,14 @@ rtError_t StarsEngine::TryRecycleTask(Stream* const stm)
     const rtError_t status = stm->abortStatus_;
     if (status == RT_ERROR_STREAM_ABORT || status == RT_ERROR_DEVICE_TASK_ABORT) {
         stm->StreamSyncUnLock();
+        if (status == RT_ERROR_STREAM_ABORT) {
+            RT_LOG_OUTER_MSG_IMPL(
+                ErrorCode::EE1018, "Submitting a task to a stream",
+                RtFmtMsg(
+                    "Stream (stream_id=%d) on device (device_id=%u) is in abort state. Submit tasks only after the "
+                    "stream abort operation has completed successfully",
+                    stm->Id_(), devId));
+        }
         RT_LOG(
             RT_LOG_ERROR,
             "Failed to recycle task. Reason: stream is in abort status, device_id=%u, stream_id=%d, pendingNum=%hu, "
@@ -825,9 +839,8 @@ rtError_t StarsEngine::TryRecycleTask(Stream* const stm)
     }
 
     error = dev->Driver_()->GetSqHead(devId, tsId, sqId, sqHead);
-    COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, stm->StreamSyncUnLock();
-                           , "Failed to query SQ head, retCode=%#x.", static_cast<uint32_t>(error));
-
+    COND_PROC_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, stm->StreamSyncUnLock();
+                                     , "Failed to query SQ head, retCode=%#x.", static_cast<uint32_t>(error));
     const uint32_t rtsqDepth = stm->GetSqDepth();
     // pendingMax is rtsqDepth * 3U / 4U; recycle task if rtsq space used more than 3/4
     sqeNum = (((taskTail + rtsqDepth) - sqHead) % rtsqDepth);

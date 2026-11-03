@@ -29,7 +29,10 @@ rtError_t ProfilerTrace(const uint64_t id, const bool notifyFlag, const uint32_t
     TaskInfo submitTask = {};
     rtError_t errorReason;
     TaskInfo* rtProfTraceTask = stm->AllocTask(&submitTask, TS_TASK_TYPE_PROFILER_TRACE, errorReason);
-    NULL_PTR_RETURN_MSG(rtProfTraceTask, errorReason);
+    COND_RETURN_ERROR_MSG_INNER(
+        rtProfTraceTask == nullptr, errorReason,
+        "Failed to allocate a profiling trace task for stream (stream_id=%d), retCode=%#x.", stm->Id_(),
+        static_cast<uint32_t>(errorReason));
 
     error = ProfilerTraceTaskInit(rtProfTraceTask, id, notifyFlag, flags);
     ERROR_GOTO_MSG_INNER(
@@ -68,7 +71,10 @@ rtError_t ProfTraceEx(
     TaskInfo submitTask = {};
     rtError_t errorReason;
     TaskInfo* rtProfTraceExTask = stm->AllocTask(&submitTask, TS_TASK_TYPE_PROFILER_TRACE_EX, errorReason);
-    NULL_PTR_RETURN_MSG(rtProfTraceExTask, errorReason);
+    COND_RETURN_ERROR_MSG_INNER(
+        rtProfTraceExTask == nullptr, errorReason,
+        "Failed to allocate a profiling trace task for stream (stream_id=%d), retCode=%#x.", stm->Id_(),
+        static_cast<uint32_t>(errorReason));
 
     error = ProfilerTraceExTaskInit(rtProfTraceExTask, id, modelId, tagId);
     ERROR_GOTO(

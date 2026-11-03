@@ -2094,8 +2094,8 @@ rtError_t CaptureModel::SetShapeInfo(
     err = memcpy_s(RtValueToPtr<void*>(offset), infoSize, infoPtr, infoSize);
     if (err != EOK) {
         std::stringstream ss;
-        ss << std::hex << "dest=0x" << RtPtrToValue(RtValueToPtr<void*>(offset)) << ", opInfoPtr=0x"
-           << RtPtrToValue(infoPtr) << std::dec << ", destMax=" << infoSize << ", opInfoSize=" << infoSize << ".";
+        ss << std::hex << "dest=0x" << RtPtrToValue(RtValueToPtr<void*>(offset)) << ", src=0x" << RtPtrToValue(infoPtr)
+           << std::dec << ", destMax=" << infoSize << ", count=" << infoSize << ".";
         RT_LOG_OUTER_MSG_IMPL(
             ErrorCode::EE1020, "Setting shape information", "memcpy_s", std::to_string(err).c_str(), strerror(err),
             ss.str().c_str());
@@ -2139,11 +2139,11 @@ rtError_t CaptureModel::CacheLastTaskOpInfo(const void* const infoPtr, const siz
 {
     if (GetModelCacheOpInfoSwitch() == 0U) {
         RT_LOG_OUTER_MSG_IMPL(
-            ErrorCode::EE1018, "rtCacheLastTaskOpInfo",
-            "The operator information cache function is not enabled. "
-            "Call the rtSetStreamAttribute API to enable the operator information cache function first, "
-            "model_id=" +
-                std::to_string(Id_()) + ", stream_id=" + std::to_string(stm->Id_()));
+            ErrorCode::EE1018, "Caching the operator information of the latest task",
+            RtFmtMsg(
+                "The operator information cache is disabled for the stream (stream_id=%d, model_id=%u). "
+                "Call the aclrtSetStreamAttribute API to enable the operator information cache function first",
+                stm->Id_(), Id_()));
         return RT_ERROR_MODEL_OP_CACHE_CLOSED;
     }
 

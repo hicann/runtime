@@ -362,7 +362,11 @@ rtError_t DeviceErrorProc::RingBufferRestore()
     error = devDrv->MemCopySync(
         deviceRingBufferAddr_, static_cast<uint64_t>(ringBufferSize_), hostdata.data(),
         static_cast<uint64_t>(ringBufferSize_), RT_MEMCPY_HOST_TO_DEVICE, false);
-    ERROR_RETURN(error, "Failed to memcpy from host to dev, len=%u(bytes), errorcode=%u.", ringBufferSize_, error);
+    ERROR_RETURN_MSG_INNER(
+        error,
+        "Failed to copy runtime capability data to the device ring buffer during the process snapshot "
+        "restore, size=%u(bytes), device_id=%u, retCode=%#x.",
+        ringBufferSize_, device_->Id_(), static_cast<uint32_t>(error));
 
     // create task to transfer the addr to device.
     if (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_TASK_ALLOC_FROM_STREAM_POOL)) {
