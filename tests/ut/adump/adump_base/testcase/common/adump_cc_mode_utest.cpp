@@ -164,33 +164,48 @@ TEST_F(CcModeUtest, CcModeSilentlySkipsDataOutputEntryPoints)
     DumpManager::Instance().AddExceptionOpV2(operatorInfoV2);
 }
 
-TEST_F(CcModeUtest, CcModeSkipsKernelDfxCallback)
+TEST_F(CcModeUtest, CcModeSkipsKernelDfxParsing)
 {
     SetStubCcMode(NORMAL_CC_MODE, RT_ERROR_NONE);
-    const uint8_t buffer[] = "kernel dfx";
+    uint8_t buffer[] = "kernel dfx";
     MOCKER(memcpy_s).expects(never());
 
-    DumpKernelDfxInfoCallback(rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_DEFAULT, 0U, 0U, buffer, sizeof(buffer));
+    rtDfxParseParam param{};
+    param.data = buffer;
+    param.datalen = sizeof(buffer);
+    param.readIdx = 0U;
+    param.writeIdx = sizeof(buffer);
+    param.coreType = 3U; // AICPU
+    param.deviceId = 0U;
+    uint64_t consumedLen = 0U;
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    EXPECT_EQ(consumedLen, sizeof(buffer));
 }
 
-TEST_F(CcModeUtest, CcModeKernelDfxCallbackDoesNotDependOnCurrentDevice)
+TEST_F(CcModeUtest, CcModeKernelDfxParsingDoesNotDependOnCurrentDevice)
 {
     SetStubCcModeForDevice(0, NORMAL_CC_MODE, RT_ERROR_NONE);
-    const uint8_t buffer[] = "kernel dfx";
+    uint8_t buffer[] = "kernel dfx";
     MOCKER(rtGetDevice).expects(never());
     MOCKER(memcpy_s).expects(never());
 
-    DumpKernelDfxInfoCallback(rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_DEFAULT, 0U, 0U, buffer, sizeof(buffer));
+    rtDfxParseParam param{};
+    param.data = buffer;
+    param.datalen = sizeof(buffer);
+    param.readIdx = 0U;
+    param.writeIdx = sizeof(buffer);
+    param.coreType = 3U; // AICPU
+    param.deviceId = 0U;
+    uint64_t consumedLen = 0U;
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
     EXPECT_EQ(GetStubCcModeQueryCount(), 1U);
 }
 
-TEST_F(CcModeUtest, CcModeAdditionalAllowsKernelDfxCallback)
+TEST_F(CcModeUtest, CcModeAdditionalAllowsKernelDfxParsing)
 {
+    ResetCcModeCacheForUt();
     SetStubCcMode(ADDITIONAL_CC_MODE, RT_ERROR_NONE);
-    const uint8_t buffer[] = "kernel dfx";
-    MOCKER(&KernelDfxDumper::DumpKernelDfxInfo).expects(once()).will(returnValue(ADUMP_SUCCESS));
-
-    DumpKernelDfxInfoCallback(rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_DEFAULT, 0U, 0U, buffer, sizeof(buffer));
+    EXPECT_FALSE(IsCcDumpRestricted(0));
 }
 
 TEST_F(CcModeUtest, CcModeExceptionEntrySkipsDumpAndFailOpenKeepsValidation)

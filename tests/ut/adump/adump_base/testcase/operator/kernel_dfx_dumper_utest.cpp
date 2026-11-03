@@ -17,6 +17,7 @@
 #define private public
 
 #include "kernel_dfx_dumper.h"
+#include "dfx_info_parser.h"
 #include "rt_inner_dfx.h"
 #include "lib_path.h"
 #include "file_utils.h"
@@ -137,12 +138,48 @@ TEST_F(KernelDfxDumperUtest, Test_DfxDumper_EnableWithConfig)
     (void)system("rm -rf ./Test_DfxDumper_EnableWithConfig");
 }
 
-TEST_F(KernelDfxDumperUtest, Test_DfxDumper_EnableFailsWhenKernelDfxCallbackRegistrationFails)
+TEST_F(KernelDfxDumperUtest, Test_DfxDumper_EnableRegistersDfxInfoParser)
+{
+    (void)system("rm -rf ./Test_DfxDumper_EnableRegistersDfxInfoParser");
+    (void)system("mkdir ./Test_DfxDumper_EnableRegistersDfxInfoParser");
+
+    DumpDfxConfig dumpDfxConfig;
+    dumpDfxConfig.dfxTypes.push_back("all");
+    dumpDfxConfig.dumpPath = "./Test_DfxDumper_EnableRegistersDfxInfoParser/ascendDumpPath";
+    const int32_t ret = KernelDfxDumper::Instance().EnableDfxDumper(dumpDfxConfig);
+
+    EXPECT_EQ(ret, ADUMP_SUCCESS);
+    EXPECT_EQ(DfxInfoParser::Instance().registered_, true);
+
+    (void)system("rm -rf ./Test_DfxDumper_EnableRegistersDfxInfoParser");
+}
+
+TEST_F(KernelDfxDumperUtest, Test_DfxDumper_EnableSkipsRepeatedDfxInfoParserInit)
+{
+    (void)system("rm -rf ./Test_DfxDumper_EnableSkipsRepeatedDfxInfoParserInit");
+    (void)system("mkdir ./Test_DfxDumper_EnableSkipsRepeatedDfxInfoParserInit");
+
+    DumpDfxConfig dumpDfxConfig;
+    dumpDfxConfig.dfxTypes.push_back("all");
+    dumpDfxConfig.dumpPath = "./Test_DfxDumper_EnableSkipsRepeatedDfxInfoParserInit/ascendDumpPath";
+    KernelDfxDumper::Instance().parserInitialized_.store(true);
+    MOCKER(rtRegisterParseDfxInfoFunc).expects(never());
+
+    const int32_t ret = KernelDfxDumper::Instance().EnableDfxDumper(dumpDfxConfig);
+
+    EXPECT_EQ(ret, ADUMP_SUCCESS);
+    EXPECT_EQ(KernelDfxDumper::Instance().IsEnabled(rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_DEFAULT), true);
+    EXPECT_EQ(KernelDfxDumper::Instance().parserInitialized_.load(), true);
+
+    (void)system("rm -rf ./Test_DfxDumper_EnableSkipsRepeatedDfxInfoParserInit");
+}
+
+TEST_F(KernelDfxDumperUtest, Test_DfxDumper_EnableFailsWhenDfxInfoParserRegistrationFails)
 {
     DumpDfxConfig dumpDfxConfig;
     dumpDfxConfig.dfxTypes.push_back("all");
     dumpDfxConfig.dumpPath = "./Test_DfxDumper_EnableFailsWhenKernelDfxCallbackRegistrationFails";
-    MOCKER(rtSetKernelDfxInfoCallback).stubs().will(returnValue(static_cast<rtError_t>(1)));
+    MOCKER(rtRegisterParseDfxInfoFunc).stubs().will(returnValue(static_cast<rtError_t>(1)));
 
     const int32_t ret = KernelDfxDumper::Instance().EnableDfxDumper(dumpDfxConfig);
 

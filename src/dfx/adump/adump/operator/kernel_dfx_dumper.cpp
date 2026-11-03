@@ -19,8 +19,8 @@
 #include "file_utils.h"
 #include "log/adx_log.h"
 #include "dump_config_converter.h"
+#include "dfx_info_parser.h"
 #include "kernel_dfx_dumper.h"
-#include "adump_cc_mode.h"
 
 namespace Adx {
 static const int32_t WAIT_TASK_INTERVAL_TIME = 500;
@@ -60,17 +60,6 @@ static rtKernelDfxInfoType GetrtKernelDfxInfoType(const cce::runtime::DumpType t
         default:
             return rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_INVALID;
     }
-}
-
-void DumpKernelDfxInfoCallback(
-    rtKernelDfxInfoType dfxType, uint32_t coreType, uint32_t coreId, const uint8_t* buffer, size_t length)
-{
-    // CC mode is global: once enabled, all logical devices are in CC mode.
-    if (IsCcDumpRestricted(0)) {
-        return;
-    }
-
-    (void)KernelDfxDumper::Instance().DumpKernelDfxInfo(dfxType, coreType, coreId, buffer, length);
 }
 
 int32_t KernelDfxDumper::PushDfxInfoToQueue(DumpDfxInfo& dfxInfo)
@@ -213,6 +202,8 @@ int32_t KernelDfxDumper::UnInitTask()
 
 void KernelDfxDumper::UnInit()
 {
+    DfxInfoParser::Instance().UnInit();
+    parserInitialized_.store(false);
     std::lock_guard<std::mutex> lock(mutex_);
     destructed_ = true;
     UnInitTask();
@@ -260,6 +251,11 @@ KernelDfxDumper::KernelDfxDumper()
     if (ret != 0) {
         IDE_LOGW("call pthread_atfork failed, ret: %d", ret);
     }
+    ret = DfxInfoParser::Instance().Init();
+    parserInitialized_.store(ret == ADUMP_SUCCESS);
+    if (ret != ADUMP_SUCCESS) {
+        IDE_LOGE("Initialize dfx info parser failed, ret=%d.", ret);
+    }
     EnableDfxDumper();
 }
 
@@ -303,20 +299,22 @@ int32_t KernelDfxDumper::EnableDfxDumper(const DumpDfxConfig config)
     if (config.dfxTypes.empty() || config.dumpPath.empty()) {
         return ADUMP_SUCCESS;
     }
+    if (!parserInitialized_.load()) {
+        IDE_CTRL_VALUE_FAILED(
+            DfxInfoParser::Instance().Init() == ADUMP_SUCCESS, return ADUMP_FAILED,
+            "Initialize dfx info parser failed.");
+        parserInitialized_.store(true);
+    }
     std::lock_guard<std::mutex> lock(mutex_);
     destructed_ = false;
     std::set<rtKernelDfxInfoType> rtDfxTypes;
     GetRegisterDfxTypes(config.dfxTypes, rtDfxTypes);
     for (auto& rtDfxType : rtDfxTypes) {
         if (!IsEnabled(rtDfxType)) {
-            rtError_t ret = rtSetKernelDfxInfoCallback(rtDfxType, DumpKernelDfxInfoCallback);
-            IDE_CTRL_VALUE_FAILED(
-                ret == RT_ERROR_NONE, return ADUMP_FAILED,
-                "Register the dfx info dump callback to RTS failed! dfxType=%d, ret=%d", rtDfxType, ret);
             enabledDfxTypes_.insert(rtDfxType);
-            IDE_LOGI("Register the dfx info dump callback to RTS success. dfxType=%d", rtDfxType);
+            IDE_LOGI("Enable dfx info dump. dfxType=%d", rtDfxType);
         } else {
-            IDE_LOGI("The dfx info dump callback has been registered to RTS. dfxType=%d", rtDfxType);
+            IDE_LOGI("The dfx info dump has been enabled. dfxType=%d", rtDfxType);
         }
     }
     IDE_CTRL_VALUE_FAILED(
