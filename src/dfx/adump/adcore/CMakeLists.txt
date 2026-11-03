@@ -49,7 +49,7 @@ set(adcoreSrcList
 )
 
 if(PRODUCT STREQUAL "ascend031" OR
-        PRODUCT STREQUAL "ascend5162a")
+        PRODUCT STREQUAL "ascend5162")
     list(APPEND adcoreSrcList
         ${CMAKE_CURRENT_LIST_DIR}/hdc/hdc_api_stub.cpp
     )
@@ -94,7 +94,7 @@ target_compile_definitions(adcore PRIVATE
     $<$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>:OS_TYPE=1>
     $<$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>:SECUREC_USING_STD_SECURE_LIB=0>
     $<$<STREQUAL:${PRODUCT},ascend031>:TINY_COMPILE>
-    $<$<STREQUAL:${PRODUCT},ascend5162a>:TINY_COMPILE>
+    $<$<STREQUAL:${PRODUCT},ascend5162>:TINY_COMPILE>
 )
 
 if(${TARGET_SYSTEM_NAME} STREQUAL "Windows")
