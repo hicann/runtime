@@ -178,7 +178,7 @@ public:
     rtError_t UnBindSqPerStream(Stream* const streamIn);
     rtError_t ModelGetStreams(Stream** streams, uint32_t* numStreams) const;
     rtError_t ModelGetTasks(void** tasks, uint32_t* numTasks) const;
-    rtError_t RegisterHcclStream(Stream* const stm);
+    rtError_t RegisterHcclStream(Stream* const stream);
     virtual rtError_t CollectHcclStreams(std::vector<Stream*>& streams) const;
     rtError_t ModelDestroyRegisterCallback(rtCallback_t const fn, const void* ptr);
     rtError_t ModelDestroyUnregisterCallback(rtCallback_t const fn);

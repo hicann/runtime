@@ -6573,15 +6573,20 @@ rtError_t ApiErrorDecorator::HcclStreamAddToModel(Stream* const stream, Model* c
             captureModel->IsSubCaptureModel(), RT_ERROR_FEATURE_NOT_SUPPORT,
             "sub ACL Graph does not support adding streams");
     }
+    rtError_t ret = RT_ERROR_NONE;
     switch (modelType) {
         case RT_MODEL_CAPTURE_MODEL:
-            return impl_->HcclStreamAddToModel(stream, mdl);
+            ret = impl_->HcclStreamAddToModel(stream, mdl);
+            break;
         case RT_MODEL_NORMAL:
-            return impl_->HcclStreamAddToNormalModel(stream, mdl);
+            ret = impl_->HcclStreamAddToNormalModel(stream, mdl);
+            break;
         default:
             RT_LOG(RT_LOG_WARNING, "Unsupported model type %s", ModelTypeToString(modelType).c_str());
-            return RT_ERROR_FEATURE_NOT_SUPPORT;
+            ret = RT_ERROR_FEATURE_NOT_SUPPORT;
+            break;
     }
+    return ret;
 }
 
 rtError_t ApiErrorDecorator::ModelGetHcclStream(const Model* const mdl, std::vector<Stream*>& streams)

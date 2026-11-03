@@ -687,10 +687,10 @@ public:
 
     rtError_t SetKernelDfxInfoCallback(rtKernelDfxInfoType type, rtKernelDfxInfoProFunc func) override;
 
-    rtError_t HcclStreamAddToModel(Stream* const stm, Model* const mdl) override;
-    rtError_t HcclStreamAddToNormalModel(Stream* const stm, Model* const mdl) override;
+    rtError_t HcclStreamAddToModel(Stream* const stream, Model* const mdl) override;
+    rtError_t HcclStreamAddToNormalModel(Stream* const stream, Model* const mdl) override;
     rtError_t ModelGetHcclStream(const Model* const mdl, std::vector<Stream*>& streams) override;
-    rtError_t GetModelByStream(Stream* const stm, Model** const mdl) override;
+    rtError_t GetModelByStream(Stream* const stream, Model** const mdl) override;
 
 protected:
     Api* impl_;

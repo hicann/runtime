@@ -2397,10 +2397,10 @@ rtError_t Model::MemWaitDevAlloc(void** devMem, const Device* const dev)
     return RT_ERROR_NONE;
 }
 
-rtError_t Model::RegisterHcclStream(Stream* const stm)
+rtError_t Model::RegisterHcclStream(Stream* const stream)
 {
     const std::lock_guard<std::mutex> guard(hcclStreamsMutex_);
-    (void)hcclStreams_.insert(stm);
+    (void)hcclStreams_.insert(stream);
     return RT_ERROR_NONE;
 }
 

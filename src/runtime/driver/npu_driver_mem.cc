@@ -2074,7 +2074,7 @@ rtError_t NpuDriver::MemManagedGetAttr(
         RT_LOG(RT_LOG_WARNING, "[drv api] halMemManagedRangeGetAttributes does not support."),
         "Querying a policy attribute value of UVM",
         "The driver interface halMemManagedRangeGetAttributes does not exist.");
-    const size_t attribute_num = 1U;
+    constexpr size_t attribute_num = 1U;
     const drvError_t drvRet = halMemManagedRangeGetAttributes(
         &data, &dataSize, RtPtrToPtr<uint32_t*>(&attribute), attribute_num, (DVdeviceptr)(uintptr_t)(ptr), size);
     if (drvRet != DRV_ERROR_NONE) {
