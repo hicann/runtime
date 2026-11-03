@@ -280,6 +280,7 @@ set(runtimeut_platform_list
     ${TOP_DIR}/src/runtime/config/mini_v3/dev_info_reg.cc
     ${TOP_DIR}/src/runtime/config/nano/dev_info_reg.cc
     ${TOP_DIR}/src/runtime/config/tiny/dev_info_reg.cc
+    ${TOP_DIR}/src/runtime/config/arch5162/dev_info_reg.cc
     ${TOP_DIR}/src/runtime/config/arch9201/dev_info_reg.cc
     ${TOP_DIR}/src/runtime/config/arch9202/dev_info_reg.cc
     ${TOP_DIR}/src/runtime/config/xpu/dev_info_reg.cc

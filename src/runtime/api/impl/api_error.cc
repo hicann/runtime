@@ -1895,6 +1895,17 @@ rtError_t ApiErrorDecorator::EventCreate(Event** const evt, const uint64_t flag)
             "RT_EVENT_MC2(0x10U) and RT_EVENT_EXTERNAL(0x20U) do not support OR combination with other flags");
     }
 
+    const rtChipType_t chipType = Runtime::Instance()->GetChipType();
+    COND_PROC_RETURN_AND_MSG_OUTER(
+        (flag == RT_EVENT_EXTERNAL) &&
+            (!IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_MODEL_ACL_GRAPH)),
+        RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1006,
+        RT_LOG(RT_LOG_WARNING, "chip type(%d) does not support external event.", static_cast<int32_t>(chipType)),
+        "Event creation", RtFmtMsg("Parameter flag value %" PRIu64, flag),
+        RtFmtMsg(
+            "The current chip type (%d) does not support ACL Graph, so external events cannot be created",
+            static_cast<int32_t>(chipType)));
+
     const rtError_t error = impl_->EventCreate(evt, flag);
     ERROR_RETURN(error, "Create event failed.");
     RT_LOG(RT_LOG_DEBUG, "event create success, flag = %" PRIu64 "", flag);

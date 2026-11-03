@@ -12,6 +12,7 @@
 #include "driver/ascend_hal.h"
 #define private public
 #include "runtime/rt.h"
+#include "runtime/event.h"
 #include "securec.h"
 #include "context.hpp"
 #include "notify.hpp"
@@ -61,6 +62,7 @@
 #include "api_impl_kernel_args.hpp"
 #include "api_impl_ipc_memory.hpp"
 #include "thread_local_container.hpp"
+#include "dev_info_manage.h"
 #include "maintenance_task.h"
 #include "stream_c.hpp"
 #include "fast_recover.hpp"
@@ -3246,6 +3248,28 @@ TEST_F(ApiImplTest, rtSetDeviceWithFlags_04)
     rtError_t error;
     error = rtSetDeviceWithFlags(100, 2);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+}
+
+TEST_F(ApiImplTest, ExternalEventRejectedWithoutAclGraphFeature)
+{
+    MOCKER_CPP(&DevInfoManage::IsSupportChipFeature).expects(once()).will(returnValue(false));
+    ClearLastDlogRecordLine();
+    rtEvent_t event = nullptr;
+    EXPECT_EQ(rtEventCreateWithFlag(&event, RT_EVENT_EXTERNAL), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(event, nullptr);
+    EXPECT_TRUE(DlogRecordContains("rtEventCreateWithFlag execution failed, the feature is not supported."));
+}
+
+TEST_F(ApiImplTest, ExternalEventRejectedOnArch5162)
+{
+    const rtChipType_t originalChipType = GlobalContainer::GetRtChipType();
+    GlobalContainer::SetRtChipType(CHIP_5162A);
+    ClearLastDlogRecordLine();
+    rtEvent_t event = nullptr;
+    EXPECT_EQ(rtEventCreateWithFlag(&event, RT_EVENT_EXTERNAL), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(event, nullptr);
+    EXPECT_TRUE(DlogRecordContains("rtEventCreateWithFlag execution failed, the feature is not supported."));
+    GlobalContainer::SetRtChipType(originalChipType);
 }
 
 TEST_F(ApiImplTest, api_event_query_invalid_parameter)
