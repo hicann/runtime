@@ -2170,7 +2170,7 @@ rtError_t RawDevice::GetStarsVersion()
 {
 #ifndef CFG_DEV_PLATFORM_PC
     if (!IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_GET_STARS_VERSION)) {
-        COND_PROC(IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_STREAM_DQS_INTER_CHIP),
+        COND_PROC(IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MOCK_TS_VERSION),
                   SetTschVersion(static_cast<uint32_t>(TS_VERSION_LATEST)););
         return RT_ERROR_NONE;
     }

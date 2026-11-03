@@ -84,6 +84,7 @@ static const std::unordered_set<RtOptionalFeatureType> CHIP_MC62CM12A_FEATURE{
     RtOptionalFeatureType::RT_FEATURE_IPC_NOTIFY,
     RtOptionalFeatureType::RT_FEATURE_MEM_POOL_ALIGN,
     RtOptionalFeatureType::RT_FEATURE_STREAM_DQS_INTER_CHIP,
+    RtOptionalFeatureType::RT_FEATURE_MOCK_TS_VERSION,
     RtOptionalFeatureType::RT_FEATURE_DEVICE_MEM_COPY_DOT_D2D_ONLY,
     RtOptionalFeatureType::RT_FEATURE_KERNEL_ARGS_FROM_STREAM_POOL,
     RtOptionalFeatureType::RT_FEATURE_DEVICE_GROUP,

@@ -23,6 +23,7 @@ static const std::unordered_set<RtOptionalFeatureType> CHIP_5162A_FEATURE{
     RtOptionalFeatureType::RT_FEATURE_DEVICE_SPM_POOL,
     RtOptionalFeatureType::RT_FEATURE_DEVICE_GET_RESOURCE_NUM_DYNAMIC,
     RtOptionalFeatureType::RT_FEATURE_DEVICE_MEM_COPY_DOT_D2D_ONLY,
+    RtOptionalFeatureType::RT_FEATURE_MOCK_TS_VERSION,
     RtOptionalFeatureType::RT_FEATURE_DFX_ARGS_DOT_ALLOC_ERROR_LOG,
     RtOptionalFeatureType::RT_FEATURE_KERNEL_ELF_NO_FUNC_TYPE,
     RtOptionalFeatureType::RT_FEATURE_KERNEL_UMA_SUPER_ARGS_ALLOC,
