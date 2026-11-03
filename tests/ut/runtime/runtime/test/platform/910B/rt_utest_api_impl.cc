@@ -61,9 +61,22 @@
 #include "inner_thread_local.hpp"
 #include "rt_capture_model_mock_helper.hpp"
 #include "api_impl_device_topology.hpp"
+#include "api_handle_guard.h"
 
 using namespace testing;
 using namespace cce::runtime;
+
+static rtError_t ValidateNullModelHandle(rtModel_t, Model*& outRealObj, const char_t*)
+{
+    outRealObj = nullptr;
+    return RT_ERROR_NONE;
+}
+
+static rtError_t ValidateNullStreamHandle(rtStream_t, Stream*& outRealObj, const char_t*)
+{
+    outRealObj = nullptr;
+    return RT_ERROR_NONE;
+}
 
 TEST(ApiImplDeviceTopology910BTest, PciInvalidParam)
 {
@@ -2087,6 +2100,74 @@ TEST_F(CloudV2ApiImplTest, rtsModelBindStream_StreamAlreadyBound)
 
     error = rtStreamDestroy(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2ApiImplTest, rtsModelBindStream_RollbackWhenSqLockFails)
+{
+    rtModel_t model;
+    rtStream_t stream;
+    ASSERT_EQ(rtsModelCreate(&model, 0), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamCreateWithFlags(&stream, 0, RT_STREAM_PERSISTENT), RT_ERROR_NONE);
+
+    Stream* const streamObj = rt_ut::UnwrapOrNull<Stream>(stream);
+    ASSERT_NE(streamObj, nullptr);
+    streamObj->SetIsSupportASyncRecycle(true);
+    Api* const api = const_cast<Api*>(Runtime::runtime_->api_);
+    MOCKER_CPP_VIRTUAL(api, &Api::SetStreamSqLockUnlock)
+        .stubs()
+        .will(returnValue(RT_ERROR_INVALID_VALUE))
+        .then(returnValue(RT_ERROR_NONE));
+
+    EXPECT_EQ(rtsModelBindStream(model, stream, RT_MODEL_STREAM_FLAG_DEFAULT), ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_FALSE(streamObj->IsModelStream());
+    EXPECT_TRUE(streamObj->GetIsSupportASyncRecycle());
+
+    EXPECT_EQ(rtsModelBindStream(model, stream, RT_MODEL_STREAM_FLAG_DEFAULT), RT_ERROR_NONE);
+    EXPECT_TRUE(streamObj->IsModelStream());
+    EXPECT_EQ(rtsModelUnbindStream(model, stream), RT_ERROR_NONE);
+    EXPECT_TRUE(streamObj->GetIsSupportASyncRecycle());
+    EXPECT_EQ(rtsModelDestroy(model), RT_ERROR_NONE);
+    EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2ApiImplTest, rtsModelBindStream_RollbackFailureWithNullModel)
+{
+    rtModel_t model;
+    rtStream_t stream;
+    ASSERT_EQ(rtsModelCreate(&model, 0), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamCreateWithFlags(&stream, 0, RT_STREAM_PERSISTENT), RT_ERROR_NONE);
+
+    Api* const api = const_cast<Api*>(Runtime::runtime_->api_);
+    MOCKER(ValidateModelHandleForApi).stubs().will(invoke(ValidateNullModelHandle));
+    MOCKER_CPP_VIRTUAL(api, &Api::ModelBindStream).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(api, &Api::SetStreamSqLockUnlock).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER_CPP_VIRTUAL(api, &Api::ModelUnbindStream).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+
+    EXPECT_EQ(rtsModelBindStream(model, stream, RT_MODEL_STREAM_FLAG_DEFAULT), ACL_ERROR_RT_PARAM_INVALID);
+
+    GlobalMockObject::reset();
+    EXPECT_EQ(rtsModelDestroy(model), RT_ERROR_NONE);
+    EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2ApiImplTest, rtsModelBindStream_RollbackFailureWithNullStream)
+{
+    rtModel_t model;
+    rtStream_t stream;
+    ASSERT_EQ(rtsModelCreate(&model, 0), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamCreateWithFlags(&stream, 0, RT_STREAM_PERSISTENT), RT_ERROR_NONE);
+
+    Api* const api = const_cast<Api*>(Runtime::runtime_->api_);
+    MOCKER(ValidateStreamHandleForApi).stubs().will(invoke(ValidateNullStreamHandle));
+    MOCKER_CPP_VIRTUAL(api, &Api::ModelBindStream).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(api, &Api::SetStreamSqLockUnlock).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER_CPP_VIRTUAL(api, &Api::ModelUnbindStream).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+
+    EXPECT_EQ(rtsModelBindStream(model, stream, RT_MODEL_STREAM_FLAG_DEFAULT), ACL_ERROR_RT_PARAM_INVALID);
+
+    GlobalMockObject::reset();
+    EXPECT_EQ(rtsModelDestroy(model), RT_ERROR_NONE);
+    EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
 }
 
 TEST_F(CloudV2ApiImplTest, rtsModelBindStream_NonPersistentStream)

@@ -1736,6 +1736,7 @@ rtError_t Context::ModelUnbindStream(Model* const mdl, Stream* const stm)
     if (!stm->IsModelStream() && !(stm->IsAutoSplitSq() && stm->IsSlaveStream())) {
         streams_.push_back(stm);
     }
+    stm->RestoreIsSupportASyncRecycleAfterModelUnbind();
 COMPLETE:
     return error;
 }
@@ -1753,6 +1754,7 @@ rtError_t Context::ModelBindStream(Model* const mdl, Stream* const stm, const ui
         error, COMPLETE, "Failed to bind the stream to the model, model_id=%u, stream_id=%d, retCode=%#x.", modelId,
         streamId, error);
 
+    stm->SaveIsSupportASyncRecycleBeforeModelBind();
     stm->SetIsSupportASyncRecycle(false);
     streams_.remove(stm);
 COMPLETE:
@@ -1772,6 +1774,7 @@ rtError_t Context::ModelAddStream(Model* const mdl, Stream* const stm, const uin
         error, "Failed to add the stream to the model, model_id=%u, stream_id=%d, retCode=%#x.", modelId, streamId,
         error);
 
+    stm->SaveIsSupportASyncRecycleBeforeModelBind();
     stm->SetIsSupportASyncRecycle(false);
     streams_.remove(stm);
 

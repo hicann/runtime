@@ -151,21 +151,33 @@ rtError_t rtsModelBindStream(rtModel_t mdl, rtStream_t stm, uint32_t flag)
     COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER(
         (bindStream != nullptr) && ((bindStream->Flags() & RT_STREAM_PERSISTENT) == 0), RT_ERROR_INVALID_VALUE,
         ErrorCode::EE1017, __func__, "stm", "Non-persistent stream cannot be bound to a model");
+    const int32_t streamId = (bindStream == nullptr) ? -1 : bindStream->Id_();
+    const uint32_t modelId = (realModel == nullptr) ? UINT32_MAX : realModel->Id_();
     if ((bindStream != nullptr) && bindStream->IsModelStream()) {
         const Model* const bindModel = bindStream->Model_();
         RT_LOG_OUTER_MSG_IMPL(
-            ErrorCode::EE1007, bindStream->Id_(),
+            ErrorCode::EE1007, streamId,
             RtFmtMsg(
                 "The current stream has been bound to a model (model_id=%u) and cannot be bound to the input model "
                 "(model_id=%u)",
-                (bindModel == nullptr) ? UINT32_MAX : bindModel->Id_(), realModel->Id_()));
+                (bindModel == nullptr) ? UINT32_MAX : bindModel->Id_(), modelId));
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_STREAM_MODEL);
     }
 
     rtError_t error = apiInstance->ModelBindStream(realModel, bindStream, flag);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     error = apiInstance->SetStreamSqLockUnlock(bindStream, true);
-    ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    if (error != RT_ERROR_NONE) {
+        const rtError_t rollbackError = apiInstance->ModelUnbindStream(realModel, bindStream);
+        if (rollbackError != RT_ERROR_NONE) {
+            RT_LOG(
+                RT_LOG_ERROR,
+                "Failed to rollback model stream binding after SQ lock failure, "
+                "stream_id=%d, model_id=%u, retCode=%#x.",
+                streamId, modelId, static_cast<uint32_t>(rollbackError));
+        }
+        ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    }
     return ACL_RT_SUCCESS;
 }
 

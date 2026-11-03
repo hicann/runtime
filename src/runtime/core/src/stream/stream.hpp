@@ -578,6 +578,13 @@ public:
 
     bool GetIsSupportASyncRecycle() const { return isSupportASyncRecycle_; }
 
+    void SaveIsSupportASyncRecycleBeforeModelBind() { isSupportASyncRecycleBeforeModelBind_ = isSupportASyncRecycle_; }
+
+    void RestoreIsSupportASyncRecycleAfterModelUnbind()
+    {
+        isSupportASyncRecycle_ = isAutoSplitSq_ || isSoftwareSqEnable_ ? false : isSupportASyncRecycleBeforeModelBind_;
+    }
+
     void SetRecycleEndTaskId(uint16_t taskId) { recycleEndTaskId_.Set(taskId); }
 
     uint16_t GetRecycleEndTaskId() const { return recycleEndTaskId_.Value(); }
@@ -1085,6 +1092,7 @@ private:
     bool streamFastSync_{false};
     uint32_t streamGeOpTag_;
     bool isSupportASyncRecycle_{false};
+    bool isSupportASyncRecycleBeforeModelBind_{false};
     static __THREAD_LOCAL__ bool isNeedStreamAsyncRecycle_;
     bool isFlowCtrl{false};             // Indicating has flow ctrl in this stream
     Atomic<uint32_t> taskPosHead_;      // only for stars
