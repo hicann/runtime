@@ -87,8 +87,7 @@ rtError_t ApiImplXpu::ResetXpuDevice(const rtXpuDevType devType, const uint32_t 
     return error;
 }
 
-rtError_t ApiImplXpu::XpuSetTaskFailCallback(
-    const rtXpuDevType devType, const char_t* const moduleName, void* const callback)
+rtError_t ApiImplXpu::XpuSetTaskFailCallback(const rtXpuDevType devType, const char_t* moduleName, void* callback)
 {
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         devType != RT_DEV_TYPE_DPU, RT_ERROR_INVALID_VALUE, "Setting the callback function for XPU task exceptions",

@@ -26,19 +26,18 @@ rtError_t ApiImplXpu::ResetXpuDevice(const rtXpuDevType devType, const uint32_t 
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t ApiImplXpu::GetXpuDevCount(const rtXpuDevType devType, uint32_t* const devNum)
+rtError_t ApiImplXpu::GetXpuDevCount(const rtXpuDevType devType, uint32_t* devCount)
 {
     UNUSED(devType);
-    UNUSED(devNum);
+    UNUSED(devCount);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t ApiImplXpu::XpuSetTaskFailCallback(
-    const rtXpuDevType devType, const char_t* const devName, void* const callBack)
+rtError_t ApiImplXpu::XpuSetTaskFailCallback(const rtXpuDevType devType, const char_t* moduleName, void* callback)
 {
     UNUSED(devType);
-    UNUSED(devName);
-    UNUSED(callBack);
+    UNUSED(moduleName);
+    UNUSED(callback);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 

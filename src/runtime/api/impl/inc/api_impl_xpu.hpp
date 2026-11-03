@@ -18,10 +18,10 @@ namespace runtime {
 // Runtime APIXPU implement
 class ApiImplXpu : public ApiXpu {
 public:
-    rtError_t SetXpuDevice(const rtXpuDevType devType, uint32_t devId) override;
-    rtError_t ResetXpuDevice(const rtXpuDevType devType, uint32_t devId) override;
-    rtError_t GetXpuDevCount(const rtXpuDevType devType, uint32_t* devNum) override;
-    rtError_t XpuSetTaskFailCallback(const rtXpuDevType devType, const char_t* devName, void* callBack) override;
+    rtError_t SetXpuDevice(const rtXpuDevType devType, const uint32_t devId) override;
+    rtError_t ResetXpuDevice(const rtXpuDevType devType, const uint32_t devId) override;
+    rtError_t GetXpuDevCount(const rtXpuDevType devType, uint32_t* devCount) override;
+    rtError_t XpuSetTaskFailCallback(const rtXpuDevType devType, const char_t* moduleName, void* callback) override;
 };
 
 } // namespace runtime

@@ -30,10 +30,10 @@ public:
     // Get ApiXpu instance
     static ApiXpu* Instance();
 
-    virtual rtError_t SetXpuDevice(const rtXpuDevType devType, uint32_t devId) = 0;
-    virtual rtError_t ResetXpuDevice(const rtXpuDevType devType, uint32_t devId) = 0;
-    virtual rtError_t GetXpuDevCount(const rtXpuDevType devType, uint32_t* devNum) = 0;
-    virtual rtError_t XpuSetTaskFailCallback(const rtXpuDevType devType, const char_t* devName, void* callBack) = 0;
+    virtual rtError_t SetXpuDevice(const rtXpuDevType devType, const uint32_t devId) = 0;
+    virtual rtError_t ResetXpuDevice(const rtXpuDevType devType, const uint32_t devId) = 0;
+    virtual rtError_t GetXpuDevCount(const rtXpuDevType devType, uint32_t* devCount) = 0;
+    virtual rtError_t XpuSetTaskFailCallback(const rtXpuDevType devType, const char_t* moduleName, void* callback) = 0;
 };
 } // namespace runtime
 } // namespace cce
