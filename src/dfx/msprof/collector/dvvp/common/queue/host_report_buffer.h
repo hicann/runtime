@@ -12,7 +12,6 @@
 #define HOST_REPORT_BUFFER_H
 
 #include <atomic>
-#include <algorithm>
 #include <mutex>
 #include <cstddef>
 #include <cstdint>
@@ -42,8 +41,6 @@ constexpr size_t HOST_CACHE_LINE_SIZE = 64; // 64: common cache line size on x86
 constexpr uint8_t HOST_RECORD_UNCOMMITTED = 0;
 constexpr uint8_t HOST_RECORD_COMMITTED = 1;
 constexpr uint8_t HOST_RECORD_DISCARDED = 2;
-constexpr uint8_t HOST_COMMIT_FAST_PATH = 0;
-constexpr uint8_t HOST_COMMIT_METADATA_PATH = 1;
 
 #if defined(__x86_64__) || defined(__i386__) || defined(_M_X64) || defined(_M_IX86)
 #define HOST_CPU_PAUSE() __builtin_ia32_pause()
@@ -60,22 +57,9 @@ inline void DeleteHostBuffer(void* buffer)
     }
 }
 
-inline void DeleteHostCommitSize(std::atomic<uint32_t>* buffer)
-{
-    if (buffer != nullptr) {
-        delete[] buffer;
-    }
-}
-
-inline void DeleteHostRecordState(std::atomic<uint8_t>* buffer)
-{
-    if (buffer != nullptr) {
-        delete[] buffer;
-    }
-}
-
 } // namespace
 
+// Each aging partition supports multiple producers and one consumer at a time.
 class HostReportBuffer {
 public:
     explicit HostReportBuffer(size_t recordSize);
@@ -93,9 +77,9 @@ private:
         std::atomic<size_t>* read;
         std::atomic<size_t>* write;
         std::atomic<size_t>* writeIdle;
+        std::atomic<size_t>* discardedSize;
         std::atomic<uint32_t>* commitSize;
         std::atomic<uint8_t>* recordState;
-        std::atomic<uint8_t>* commitMode;
         size_t capacity;
     };
 
@@ -103,18 +87,22 @@ private:
     static size_t GetBufferUsedSize(
         const std::atomic<size_t>& readIndex, const std::atomic<size_t>& writeIndex, size_t capacity);
     bool IsAvail(const void* begin, size_t recordCount) const;
-    static void CheckBufferOverflow(
-        const std::atomic<size_t>& readIndex, const std::atomic<size_t>& writeIndex, size_t capacity);
-    bool PushWithFetchAdd(
-        const Cursor& cursor, uint32_t aging, const void* data, size_t dataSize, size_t inSize, std::mutex& pushMutex);
+    static bool TryReserveSpace(const Cursor& cursor, std::atomic<size_t>& reservedSize, size_t inSize);
+    static void ReleaseReservedSize(std::atomic<size_t>& reservedSize, size_t size);
+    bool PushFullPath(
+        const Cursor& cursor, uint32_t aging, const void* data, size_t dataSize, size_t inSize,
+        std::atomic<size_t>& overflowDiscardSize, std::atomic<size_t>& reservedSize);
     bool CopyToRingBuffer(const Cursor& cursor, uint32_t aging, const void* data, size_t dataSize, size_t writeCursor);
     static void AdvanceCommitIndex(const Cursor& cursor);
-    static void RestoreFastPathIfDrained(const Cursor& cursor, std::mutex& pushMutex);
+    static void MarkReservedBatch(const Cursor& cursor, size_t writeCursor, size_t inSize, uint8_t state);
+    void SkipInvalidRecord(const Cursor& cursor, size_t readCursor);
+    static void CheckBufferOverflow(
+        const std::atomic<size_t>& readIndex, const std::atomic<size_t>& writeIndex, size_t capacity);
+    static size_t GetPendingDiscardedSize(size_t usedSize, const std::atomic<size_t>& discardedSize);
 
     size_t recordSize_;
     size_t capacity_;
     size_t maxCycles_;
-    volatile bool isQuit_;
     bool isInited_;
     std::string name_;
     uint8_t* dataQueue_;
@@ -133,17 +121,18 @@ private:
     alignas(HOST_CACHE_LINE_SIZE) std::atomic<size_t> unagingReadIndex_;
     alignas(HOST_CACHE_LINE_SIZE) std::atomic<size_t> unagingWriteIndex_;
     alignas(HOST_CACHE_LINE_SIZE) std::atomic<size_t> unagingWriteIdleIndex_;
-    alignas(HOST_CACHE_LINE_SIZE) std::atomic<uint8_t> agingCommitMode_;
-    alignas(HOST_CACHE_LINE_SIZE) std::atomic<uint8_t> unagingCommitMode_;
-    std::mutex agingPushMutex_;
-    std::mutex unagingPushMutex_;
+    alignas(HOST_CACHE_LINE_SIZE) std::atomic<size_t> agingDiscardedSize_;
+    alignas(HOST_CACHE_LINE_SIZE) std::atomic<size_t> unagingDiscardedSize_;
+    alignas(HOST_CACHE_LINE_SIZE) std::atomic<size_t> agingReservedSize_;
+    alignas(HOST_CACHE_LINE_SIZE) std::atomic<size_t> unagingReservedSize_;
+    alignas(HOST_CACHE_LINE_SIZE) std::atomic<size_t> agingOverflowDiscardSize_;
+    alignas(HOST_CACHE_LINE_SIZE) std::atomic<size_t> unagingOverflowDiscardSize_;
 };
 
 inline HostReportBuffer::HostReportBuffer(size_t recordSize)
     : recordSize_(recordSize),
       capacity_(0),
       maxCycles_(HOST_REPORT_BUFFER_MAX_CYCLES),
-      isQuit_(false),
       isInited_(false),
       name_("HostReportBuffer"),
       dataQueue_(nullptr),
@@ -158,8 +147,12 @@ inline HostReportBuffer::HostReportBuffer(size_t recordSize)
     unagingReadIndex_.store(0);
     unagingWriteIndex_.store(0);
     unagingWriteIdleIndex_.store(0);
-    agingCommitMode_.store(HOST_COMMIT_FAST_PATH);
-    unagingCommitMode_.store(HOST_COMMIT_FAST_PATH);
+    agingDiscardedSize_.store(0);
+    unagingDiscardedSize_.store(0);
+    agingReservedSize_.store(0);
+    unagingReservedSize_.store(0);
+    agingOverflowDiscardSize_.store(0);
+    unagingOverflowDiscardSize_.store(0);
 }
 
 inline HostReportBuffer::~HostReportBuffer() { UnInit(); }
@@ -179,14 +172,13 @@ inline void HostReportBuffer::Init(size_t capacity, const std::string& name)
     if ((dataQueue_ == nullptr) || (commitSize_ == nullptr) || (recordState_ == nullptr)) {
         MSPROF_LOGE("Failed to init report buffer");
         DeleteHostBuffer(dataQueue_);
-        DeleteHostCommitSize(commitSize_);
-        DeleteHostRecordState(recordState_);
+        delete[] commitSize_;
+        delete[] recordState_;
         dataQueue_ = nullptr;
         commitSize_ = nullptr;
         recordState_ = nullptr;
         return;
     }
-    isQuit_ = false;
     agingCapacity_ = (capacity_ < 4U) ? (capacity_ - capacity_ / 4U) : ((capacity_ * 3U + 3U) / 4U);
     unagingCapacity_ = capacity - agingCapacity_;
     agingReadIndex_.store(0);
@@ -195,8 +187,12 @@ inline void HostReportBuffer::Init(size_t capacity, const std::string& name)
     unagingReadIndex_.store(0);
     unagingWriteIndex_.store(0);
     unagingWriteIdleIndex_.store(0);
-    agingCommitMode_.store(HOST_COMMIT_FAST_PATH);
-    unagingCommitMode_.store(HOST_COMMIT_FAST_PATH);
+    agingDiscardedSize_.store(0);
+    unagingDiscardedSize_.store(0);
+    agingReservedSize_.store(0);
+    unagingReservedSize_.store(0);
+    agingOverflowDiscardSize_.store(0);
+    unagingOverflowDiscardSize_.store(0);
     isInited_ = true;
 }
 
@@ -206,12 +202,11 @@ inline void HostReportBuffer::UnInit()
         return;
     }
     isInited_ = false;
-    isQuit_ = true;
     CheckBufferOverflow(agingReadIndex_, agingWriteIndex_, agingCapacity_);
     CheckBufferOverflow(unagingReadIndex_, unagingWriteIndex_, unagingCapacity_);
     DeleteHostBuffer(dataQueue_);
-    DeleteHostCommitSize(commitSize_);
-    DeleteHostRecordState(recordState_);
+    delete[] commitSize_;
+    delete[] recordState_;
     dataQueue_ = nullptr;
     commitSize_ = nullptr;
     recordState_ = nullptr;
@@ -219,110 +214,105 @@ inline void HostReportBuffer::UnInit()
     const size_t totalWriteCount = agingWriteIndex_.exchange(0) + unagingWriteIndex_.exchange(0);
     MSPROF_EVENT(
         "total_size_report [%s] read count: %zu, write count: %zu", name_.c_str(), totalReadCount, totalWriteCount);
+    const size_t overflowDiscardCount = agingOverflowDiscardSize_.exchange(0) + unagingOverflowDiscardSize_.exchange(0);
+    MSPROF_EVENT("total_size_report [%s] overflow discard count: %zu", name_.c_str(), overflowDiscardCount);
     agingWriteIdleIndex_.store(0);
     unagingWriteIdleIndex_.store(0);
-    agingCommitMode_.store(HOST_COMMIT_FAST_PATH);
-    unagingCommitMode_.store(HOST_COMMIT_FAST_PATH);
+    agingDiscardedSize_.store(0);
+    unagingDiscardedSize_.store(0);
+    agingReservedSize_.store(0);
+    unagingReservedSize_.store(0);
+    agingOverflowDiscardSize_.store(0);
+    unagingOverflowDiscardSize_.store(0);
 }
 
 inline HostReportBuffer::Cursor HostReportBuffer::GetCursor(uint32_t aging)
 {
     if (aging != 0U) {
-        return Cursor{&agingReadIndex_, &agingWriteIndex_, &agingWriteIdleIndex_, commitSize_,
-                      recordState_,     &agingCommitMode_, agingCapacity_};
+        return Cursor{&agingReadIndex_, &agingWriteIndex_, &agingWriteIdleIndex_, &agingDiscardedSize_,
+                      commitSize_,      recordState_,      agingCapacity_};
     }
-    return Cursor{
-        &unagingReadIndex_,
-        &unagingWriteIndex_,
-        &unagingWriteIdleIndex_,
-        commitSize_ + agingCapacity_,
-        recordState_ + agingCapacity_,
-        &unagingCommitMode_,
-        unagingCapacity_};
+    return Cursor{&unagingReadIndex_,     &unagingWriteIndex_,          &unagingWriteIdleIndex_,
+                  &unagingDiscardedSize_, commitSize_ + agingCapacity_, recordState_ + agingCapacity_,
+                  unagingCapacity_};
 }
 
 inline int32_t HostReportBuffer::BatchPush(uint32_t aging, const void* data, size_t dataSize)
 {
-    if (!isInited_ || isQuit_) {
+    if (!isInited_) {
         MSPROF_LOGW("Ring buffer %s is not initialized.", name_.c_str());
         return MSPROF_ERROR_UNINITIALIZE;
     }
-    if (dataSize == 0U || dataSize % recordSize_ != 0U) {
+    if (data == nullptr || dataSize == 0U || dataSize % recordSize_ != 0U) {
         MSPROF_LOGW(
             "Invalid batch push input, buffer name: %s, record size: %zu, data size: %zu", name_.c_str(), recordSize_,
             dataSize);
         return MSPROF_ERROR_CONFIG_INVALID;
     }
+
     const Cursor cursor = GetCursor(aging);
     const size_t inSize = dataSize / recordSize_;
-    std::mutex& pushMutex = (aging != 0U) ? agingPushMutex_ : unagingPushMutex_;
-    if (!PushWithFetchAdd(cursor, aging, data, dataSize, inSize, pushMutex)) {
-        return MSPROF_ERROR_CONFIG_INVALID;
+    std::atomic<size_t>& reservedSize = (aging != 0U) ? agingReservedSize_ : unagingReservedSize_;
+    std::atomic<size_t>& overflowDiscardSize = (aging != 0U) ? agingOverflowDiscardSize_ : unagingOverflowDiscardSize_;
+    if (!TryReserveSpace(cursor, reservedSize, inSize)) {
+        if (!PushFullPath(cursor, aging, data, dataSize, inSize, overflowDiscardSize, reservedSize)) {
+            return MSPROF_ERROR_CONFIG_INVALID;
+        }
+        return MSPROF_ERROR_NONE;
     }
-    return MSPROF_ERROR_NONE;
+
+    const size_t writeCursor = cursor.writeIdle->fetch_add(inSize, std::memory_order_acq_rel);
+    const size_t index = writeCursor % cursor.capacity;
+    const size_t offset = index * recordSize_;
+    uint8_t* buffer = dataQueue_ + ((aging != 0U) ? 0U : (agingCapacity_ * recordSize_));
+    if (offset + dataSize <= cursor.capacity * recordSize_) {
+        if (memcpy_s(buffer + offset, dataSize, data, dataSize) == EOK) {
+            MarkReservedBatch(cursor, writeCursor, inSize, HOST_RECORD_COMMITTED);
+            return MSPROF_ERROR_NONE;
+        }
+    } else {
+        const size_t endSize = (cursor.capacity - index) * recordSize_;
+        const size_t frontSize = dataSize - endSize;
+        if ((memcpy_s(buffer + offset, endSize, data, endSize) == EOK) &&
+            (memcpy_s(buffer, frontSize, static_cast<const uint8_t*>(data) + endSize, frontSize) == EOK)) {
+            MarkReservedBatch(cursor, writeCursor, inSize, HOST_RECORD_COMMITTED);
+            return MSPROF_ERROR_NONE;
+        }
+    }
+
+    MSPROF_LOGE("Failed to copy report buffer data, buffer name: %s", name_.c_str());
+    MarkReservedBatch(cursor, writeCursor, inSize, HOST_RECORD_DISCARDED);
+    return MSPROF_ERROR_CONFIG_INVALID;
 }
 
-inline bool HostReportBuffer::PushWithFetchAdd(
-    const Cursor& cursor, uint32_t aging, const void* data, size_t dataSize, size_t inSize, std::mutex& pushMutex)
+inline bool HostReportBuffer::PushFullPath(
+    const Cursor& cursor, uint32_t aging, const void* data, size_t dataSize, size_t inSize,
+    std::atomic<size_t>& overflowDiscardSize, std::atomic<size_t>& reservedSize)
 {
     size_t cycles = 0;
-    size_t currWriteCursor = 0;
-    bool fastPath = cursor.commitMode->load(std::memory_order_acquire) == HOST_COMMIT_FAST_PATH;
     while (true) {
-        {
-            std::lock_guard<std::mutex> lock(pushMutex);
-            currWriteCursor = cursor.writeIdle->fetch_add(inSize, std::memory_order_acq_rel);
-            const size_t currReadCursor = cursor.read->load(std::memory_order_acquire);
-            if ((currWriteCursor >= currReadCursor) &&
-                ((currWriteCursor - currReadCursor) + inSize <= (cursor.capacity - 1U))) {
-                break;
+        if (TryReserveSpace(cursor, reservedSize, inSize)) {
+            const size_t writeCursor = cursor.writeIdle->fetch_add(inSize, std::memory_order_acq_rel);
+            if (!CopyToRingBuffer(cursor, aging, data, dataSize, writeCursor)) {
+                MSPROF_LOGE("Failed to replay report buffer data, buffer name: %s", name_.c_str());
+                MarkReservedBatch(cursor, writeCursor, inSize, HOST_RECORD_DISCARDED);
+                return false;
             }
+            MarkReservedBatch(cursor, writeCursor, inSize, HOST_RECORD_COMMITTED);
+            return true;
+        }
 
-            if (fastPath) {
-                cursor.commitMode->store(HOST_COMMIT_METADATA_PATH, std::memory_order_release);
-                fastPath = false;
-            }
-            cursor.writeIdle->store(currWriteCursor, std::memory_order_release);
-            cycles++;
-            if (cycles >= maxCycles_) {
-                cursor.commitSize[currWriteCursor % cursor.capacity].store(
-                    static_cast<uint32_t>(inSize), std::memory_order_release);
-                cursor.recordState[currWriteCursor % cursor.capacity].store(
-                    HOST_RECORD_DISCARDED, std::memory_order_release);
-                AdvanceCommitIndex(cursor);
-                MSPROF_LOGW(
-                    "Report buffer cycle overflow, drop data, buffer name: %s, capacity: %zu, write cursor: %zu, "
-                    "read cursor: %zu, in size: %zu",
-                    name_.c_str(), cursor.capacity, currWriteCursor, currReadCursor, inSize);
-                return true;
-            }
+        cycles++;
+        if (cycles >= maxCycles_) {
+            MSPROF_LOGW(
+                "Report buffer cycle overflow, drop data, buffer name: %s, capacity: %zu, in size: %zu", name_.c_str(),
+                cursor.capacity, inSize);
+            (void)overflowDiscardSize.fetch_add(inSize, std::memory_order_acq_rel);
+            return true;
         }
-        usleep(HOST_PUSH_WAIT_TIME);
-    }
 
-    if (cursor.commitMode->load(std::memory_order_acquire) == HOST_COMMIT_METADATA_PATH) {
-        if (!CopyToRingBuffer(cursor, aging, data, dataSize, currWriteCursor)) {
-            cursor.writeIdle->store(currWriteCursor, std::memory_order_release);
-            return false;
-        }
-        const size_t index = currWriteCursor % cursor.capacity;
-        cursor.commitSize[index].store(static_cast<uint32_t>(inSize), std::memory_order_release);
-        cursor.recordState[index].store(HOST_RECORD_COMMITTED, std::memory_order_release);
-        AdvanceCommitIndex(cursor);
-    } else {
-        std::lock_guard<std::mutex> lock(pushMutex);
-        if (!CopyToRingBuffer(cursor, aging, data, dataSize, currWriteCursor)) {
-            cursor.writeIdle->store(currWriteCursor, std::memory_order_release);
-            return false;
-        }
-        while (cursor.write->load(std::memory_order_acquire) != currWriteCursor) {
-            pushMutex.unlock();
-            HOST_CPU_PAUSE();
-            pushMutex.lock();
-        }
-        cursor.write->store(currWriteCursor + inSize, std::memory_order_release);
+        (void)usleep(HOST_PUSH_WAIT_TIME);
     }
-    return true;
 }
 
 inline bool HostReportBuffer::CopyToRingBuffer(
@@ -361,42 +351,52 @@ inline void HostReportBuffer::AdvanceCommitIndex(const Cursor& cursor)
         }
 
         const size_t next = committed + size;
-        size_t expected = committed;
-        if (!cursor.write->compare_exchange_weak(
-                expected, next, std::memory_order_acq_rel, std::memory_order_acquire)) {
-            return;
+        if (state == HOST_RECORD_COMMITTED) {
+            cursor.commitSize[index].store(0U, std::memory_order_release);
+            cursor.recordState[index].store(HOST_RECORD_UNCOMMITTED, std::memory_order_release);
         }
+        cursor.write->store(next, std::memory_order_release);
         committed = next;
     }
 }
 
-inline void HostReportBuffer::RestoreFastPathIfDrained(const Cursor& cursor, std::mutex& pushMutex)
+inline void HostReportBuffer::MarkReservedBatch(const Cursor& cursor, size_t writeCursor, size_t inSize, uint8_t state)
 {
-    std::lock_guard<std::mutex> lock(pushMutex);
-    const size_t read = cursor.read->load(std::memory_order_acquire);
-    const size_t write = cursor.write->load(std::memory_order_acquire);
-    const size_t writeIdle = cursor.writeIdle->load(std::memory_order_acquire);
-    if ((read == write) && (write == writeIdle)) {
-        const size_t index = read % cursor.capacity;
-        cursor.recordState[index].store(HOST_RECORD_UNCOMMITTED, std::memory_order_release);
-        cursor.commitSize[index].store(0U, std::memory_order_release);
-        cursor.commitMode->store(HOST_COMMIT_FAST_PATH, std::memory_order_release);
+    const size_t index = writeCursor % cursor.capacity;
+    cursor.commitSize[index].store(static_cast<uint32_t>(inSize), std::memory_order_release);
+    cursor.recordState[index].store(state, std::memory_order_release);
+    if (state == HOST_RECORD_DISCARDED) {
+        (void)cursor.discardedSize->fetch_add(inSize, std::memory_order_release);
     }
+}
+
+inline bool HostReportBuffer::TryReserveSpace(const Cursor& cursor, std::atomic<size_t>& reservedSize, size_t inSize)
+{
+    const size_t oldReservedSize = reservedSize.fetch_add(inSize, std::memory_order_acq_rel);
+    if (oldReservedSize + inSize <= cursor.capacity - 1U) {
+        return true;
+    }
+
+    (void)reservedSize.fetch_sub(inSize, std::memory_order_acq_rel);
+    return false;
+}
+
+inline void HostReportBuffer::ReleaseReservedSize(std::atomic<size_t>& reservedSize, size_t size)
+{
+    (void)reservedSize.fetch_sub(size, std::memory_order_acq_rel);
 }
 
 inline void* HostReportBuffer::BatchPop(uint32_t aging, size_t& popSize, bool popForce)
 {
-    if (!isInited_ || popSize == 0U || popSize % recordSize_ != 0U) {
-        popSize = 0;
+    if (!isInited_ || popSize == 0) {
         return nullptr;
     }
 
     const Cursor cursor = GetCursor(aging);
     size_t currReadCursor = cursor.read->load(std::memory_order_relaxed);
+    AdvanceCommitIndex(cursor);
+    currReadCursor = cursor.read->load(std::memory_order_relaxed);
     size_t currWriteCursor = cursor.write->load(std::memory_order_acquire);
-    if (cursor.commitMode->load(std::memory_order_acquire) == HOST_COMMIT_METADATA_PATH) {
-        AdvanceCommitIndex(cursor);
-    }
     while (currReadCursor < currWriteCursor) {
         const size_t index = currReadCursor % cursor.capacity;
         const uint32_t commitSize = cursor.commitSize[index].load(std::memory_order_acquire);
@@ -408,16 +408,14 @@ inline void* HostReportBuffer::BatchPop(uint32_t aging, size_t& popSize, bool po
         if (state == HOST_RECORD_DISCARDED) {
             currReadCursor += commitSize;
             cursor.read->store(currReadCursor, std::memory_order_release);
+            (void)cursor.discardedSize->fetch_sub(commitSize, std::memory_order_acq_rel);
+            ReleaseReservedSize(
+                (cursor.capacity == agingCapacity_) ? agingReservedSize_ : unagingReservedSize_, commitSize);
             cursor.recordState[index].store(HOST_RECORD_UNCOMMITTED, std::memory_order_release);
             cursor.commitSize[index].store(0U, std::memory_order_release);
             continue;
         }
         break;
-    }
-
-    if (cursor.commitMode->load(std::memory_order_acquire) == HOST_COMMIT_METADATA_PATH) {
-        currWriteCursor = cursor.write->load(std::memory_order_acquire);
-        RestoreFastPathIfDrained(cursor, (aging != 0U) ? agingPushMutex_ : unagingPushMutex_);
     }
 
     if (currReadCursor == currWriteCursor) {
@@ -439,11 +437,7 @@ inline void* HostReportBuffer::BatchPop(uint32_t aging, size_t& popSize, bool po
     const size_t tailSize = (cursor.capacity - currIndex) * recordSize_;
     if (offerSize <= tailSize) {
         if (!IsAvail(buffer + currOffset, offerSize / recordSize_)) {
-            MSPROF_LOGW(
-                "Report buffer invalid record, skip data, buffer name: %s, read cursor: %zu, write cursor: %zu, "
-                "record size: %zu",
-                name_.c_str(), currReadCursor, currWriteCursor, recordSize_);
-            cursor.read->store(currReadCursor + 1U, std::memory_order_release);
+            SkipInvalidRecord(cursor, currReadCursor);
             popSize = 0;
             return nullptr;
         }
@@ -452,11 +446,7 @@ inline void* HostReportBuffer::BatchPop(uint32_t aging, size_t& popSize, bool po
     }
 
     if (!IsAvail(buffer + currOffset, tailSize / recordSize_)) {
-        MSPROF_LOGW(
-            "Report buffer invalid record, skip data, buffer name: %s, read cursor: %zu, write cursor: %zu, "
-            "record size: %zu",
-            name_.c_str(), currReadCursor, currWriteCursor, recordSize_);
-        cursor.read->store(currReadCursor + 1U, std::memory_order_release);
+        SkipInvalidRecord(cursor, currReadCursor);
         popSize = 0;
         return nullptr;
     }
@@ -467,22 +457,30 @@ inline void* HostReportBuffer::BatchPop(uint32_t aging, size_t& popSize, bool po
 
 inline void HostReportBuffer::BatchPopBufferIndexShift(void* popPtr, size_t popSize)
 {
-    if ((popPtr == nullptr) || (popSize == 0U) || (popSize % recordSize_ != 0U)) {
+    if (popPtr == nullptr || popSize == 0) {
         return;
     }
 
     const bool isAging = (popPtr < static_cast<void*>(dataQueue_ + (agingCapacity_ * recordSize_)));
     Cursor cursor = GetCursor(isAging ? 1U : 0U);
-    if (memset_s(popPtr, popSize, 0, popSize) != EOK) {
-        return;
-    }
+    (void)memset_s(popPtr, popSize, 0, popSize);
     cursor.read->fetch_add(popSize / recordSize_, std::memory_order_release);
+    ReleaseReservedSize(isAging ? agingReservedSize_ : unagingReservedSize_, popSize / recordSize_);
 }
 
 inline size_t HostReportBuffer::GetUsedSize() const
 {
-    return GetBufferUsedSize(agingReadIndex_, agingWriteIndex_, agingCapacity_) +
-           GetBufferUsedSize(unagingReadIndex_, unagingWriteIndex_, unagingCapacity_);
+    const size_t agingUsedSize = GetBufferUsedSize(agingReadIndex_, agingWriteIdleIndex_, agingCapacity_);
+    const size_t unagingUsedSize = GetBufferUsedSize(unagingReadIndex_, unagingWriteIdleIndex_, unagingCapacity_);
+    const size_t agingDiscardedSize = GetPendingDiscardedSize(agingUsedSize, agingDiscardedSize_);
+    const size_t unagingDiscardedSize = GetPendingDiscardedSize(unagingUsedSize, unagingDiscardedSize_);
+    return (agingUsedSize - agingDiscardedSize) + (unagingUsedSize - unagingDiscardedSize);
+}
+
+inline size_t HostReportBuffer::GetPendingDiscardedSize(size_t usedSize, const std::atomic<size_t>& discardedSize)
+{
+    const size_t pendingDiscardedSize = discardedSize.load(std::memory_order_acquire);
+    return pendingDiscardedSize > usedSize ? usedSize : pendingDiscardedSize;
 }
 
 inline size_t HostReportBuffer::GetBufferUsedSize(
@@ -506,6 +504,15 @@ inline bool HostReportBuffer::IsAvail(const void* begin, size_t recordCount) con
         }
     }
     return true;
+}
+
+inline void HostReportBuffer::SkipInvalidRecord(const Cursor& cursor, size_t readCursor)
+{
+    MSPROF_LOGW(
+        "Report buffer invalid record, skip data, buffer name: %s, read cursor: %zu, record size: %zu", name_.c_str(),
+        readCursor, recordSize_);
+    cursor.read->store(readCursor + 1U, std::memory_order_release);
+    ReleaseReservedSize((cursor.capacity == agingCapacity_) ? agingReservedSize_ : unagingReservedSize_, 1U);
 }
 
 inline void HostReportBuffer::CheckBufferOverflow(

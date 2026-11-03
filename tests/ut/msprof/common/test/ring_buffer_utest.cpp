@@ -295,6 +295,49 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, HostReportBuffer_BatchPopSkipsInvalidRecor
     EXPECT_EQ(nullptr, popPtr);
     EXPECT_EQ(0U, popSize);
     EXPECT_EQ(0U, bq.GetUsedSize());
+    EXPECT_EQ(1U, bq.agingReadIndex_.load());
+    bq.UnInit();
+}
+
+TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, HostReportBuffer_BatchPopSkipsInvalidRecordAndContinues)
+{
+    struct HostRecord {
+        uint16_t magic;
+        uint16_t value;
+    };
+
+    HostReportBuffer bq(sizeof(HostRecord));
+    const std::string name = "HostReportBufferSkipInvalid";
+    bq.Init(8, name);
+    HostRecord data = {};
+    data.magic = MSPROF_REPORT_DATA_MAGIC_NUM;
+    data.value = 0xFFFFU;
+
+    ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(1U, &data, sizeof(HostRecord)));
+    data.magic = 0U;
+    ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(1U, &data, sizeof(HostRecord)));
+    data.magic = MSPROF_REPORT_DATA_MAGIC_NUM;
+    data.value = 0x1234U;
+    ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(1U, &data, sizeof(HostRecord)));
+
+    size_t popSize = 2U * sizeof(HostRecord);
+    void* popPtr = bq.BatchPop(1U, popSize, true);
+    EXPECT_EQ(nullptr, popPtr);
+    EXPECT_EQ(0U, popSize);
+
+    popSize = sizeof(HostRecord);
+    popPtr = bq.BatchPop(1U, popSize, true);
+    EXPECT_EQ(nullptr, popPtr);
+    EXPECT_EQ(0U, popSize);
+
+    popSize = sizeof(HostRecord);
+    popPtr = bq.BatchPop(1U, popSize, true);
+    ASSERT_NE(nullptr, popPtr);
+    const HostRecord* record = static_cast<const HostRecord*>(popPtr);
+    EXPECT_EQ(0x1234U, record->value);
+    bq.BatchPopBufferIndexShift(popPtr, popSize);
+    EXPECT_EQ(0U, bq.GetUsedSize());
+    EXPECT_EQ(3U, bq.agingReadIndex_.load());
     bq.UnInit();
 }
 
@@ -306,20 +349,20 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, HostReportBuffer_BatchPushRejectsInvalidDa
     };
 
     HostReportBuffer bq(sizeof(HostRecord));
-    const std::string name = "HostReportBufferInvalidSize";
+    const std::string name = "HostReportBufferInvalidDataSize";
     bq.Init(8, name);
-    HostRecord data = {};
-    data.magic = MSPROF_REPORT_DATA_MAGIC_NUM;
+    HostRecord data[2] = {};
 
-    EXPECT_EQ(MSPROF_ERROR_CONFIG_INVALID, bq.BatchPush(1U, &data, 0U));
-    EXPECT_EQ(MSPROF_ERROR_CONFIG_INVALID, bq.BatchPush(1U, &data, sizeof(HostRecord) / 2U));
+    EXPECT_EQ(MSPROF_ERROR_CONFIG_INVALID, bq.BatchPush(1U, nullptr, sizeof(HostRecord)));
+    EXPECT_EQ(MSPROF_ERROR_CONFIG_INVALID, bq.BatchPush(1U, data, 0U));
+    EXPECT_EQ(MSPROF_ERROR_CONFIG_INVALID, bq.BatchPush(1U, data, sizeof(HostRecord) + 1U));
     EXPECT_EQ(0U, bq.GetUsedSize());
     EXPECT_EQ(0U, bq.agingWriteIdleIndex_.load());
     EXPECT_EQ(0U, bq.agingWriteIndex_.load());
     bq.UnInit();
 }
 
-TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, HostReportBuffer_MetadataBuffersAreSplitByPartition)
+TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, HostReportBuffer_FastPathCommitsThroughBatchMetadata)
 {
     struct HostRecord {
         uint16_t magic;
@@ -327,44 +370,30 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, HostReportBuffer_MetadataBuffersAreSplitBy
     };
 
     HostReportBuffer bq(sizeof(HostRecord));
-    const std::string name = "HostReportBufferSplitMetadata";
-    bq.Init(8, name);
-    HostRecord data = {};
-    data.magic = MSPROF_REPORT_DATA_MAGIC_NUM;
-    data.value = 0x1234U;
+    const std::string name = "HostReportBufferFastPath";
+    bq.Init(16, name);
+    HostRecord data[4] = {};
+    for (size_t i = 0; i < sizeof(data) / sizeof(data[0]); i++) {
+        data[i].magic = MSPROF_REPORT_DATA_MAGIC_NUM;
+        data[i].value = static_cast<uint16_t>(i);
+    }
 
-    ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(1U, &data, sizeof(HostRecord)));
-    ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(0U, &data, sizeof(HostRecord)));
-    bq.agingCommitMode_.store(HOST_COMMIT_METADATA_PATH);
-    bq.unagingCommitMode_.store(HOST_COMMIT_METADATA_PATH);
-    bq.commitSize_[0].store(1);
-    bq.recordState_[0].store(HOST_RECORD_DISCARDED);
-    bq.commitSize_[bq.agingCapacity_].store(1);
-    bq.recordState_[bq.agingCapacity_].store(HOST_RECORD_DISCARDED);
-    bq.agingWriteIndex_.store(1U);
-    bq.agingWriteIdleIndex_.store(1U);
-    bq.unagingWriteIndex_.store(1U);
-    bq.unagingWriteIdleIndex_.store(1U);
+    ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(1U, data, sizeof(data)));
+    EXPECT_EQ(4U, bq.agingWriteIdleIndex_.load());
+    EXPECT_EQ(4U, bq.commitSize_[0U].load());
+    EXPECT_EQ(HOST_RECORD_COMMITTED, bq.recordState_[0U].load());
 
-    size_t popSize = sizeof(HostRecord);
+    size_t popSize = sizeof(data);
     void* popPtr = bq.BatchPop(1U, popSize, false);
-    EXPECT_EQ(nullptr, popPtr);
-    EXPECT_EQ(0U, popSize);
-    EXPECT_EQ(0U, bq.commitSize_[0].load());
-    EXPECT_EQ(HOST_RECORD_UNCOMMITTED, bq.recordState_[0].load());
-    EXPECT_EQ(1U, bq.commitSize_[bq.agingCapacity_].load());
-    EXPECT_EQ(HOST_RECORD_DISCARDED, bq.recordState_[bq.agingCapacity_].load());
-
-    popSize = sizeof(HostRecord);
-    popPtr = bq.BatchPop(0U, popSize, false);
-    EXPECT_EQ(nullptr, popPtr);
-    EXPECT_EQ(0U, popSize);
-    EXPECT_EQ(0U, bq.commitSize_[bq.agingCapacity_].load());
-    EXPECT_EQ(HOST_RECORD_UNCOMMITTED, bq.recordState_[bq.agingCapacity_].load());
+    ASSERT_NE(nullptr, popPtr);
+    ASSERT_EQ(sizeof(data), popSize);
+    EXPECT_EQ(0, memcmp(popPtr, data, popSize));
+    bq.BatchPopBufferIndexShift(popPtr, popSize);
+    EXPECT_EQ(0U, bq.GetUsedSize());
     bq.UnInit();
 }
 
-TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, HostReportBuffer_FastPathWaitsForEarlierProducer)
+TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, HostReportBuffer_BatchPushKeepsReservedOrder)
 {
     struct HostRecord {
         uint16_t magic;
@@ -372,7 +401,7 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, HostReportBuffer_FastPathWaitsForEarlierPr
     };
 
     HostReportBuffer bq(sizeof(HostRecord));
-    const std::string name = "HostReportBufferOrderedFastPath";
+    const std::string name = "HostReportBufferOrderedBatch";
     bq.Init(16, name);
     HostRecord first = {};
     first.magic = MSPROF_REPORT_DATA_MAGIC_NUM;
@@ -381,24 +410,7 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, HostReportBuffer_FastPathWaitsForEarlierPr
     second.magic = MSPROF_REPORT_DATA_MAGIC_NUM;
     second.value = 2U;
 
-    std::mutex& pushMutex = bq.agingPushMutex_;
-    std::thread firstProducer([&]() {
-        std::unique_lock<std::mutex> lock(pushMutex);
-        const size_t firstCursor = bq.agingWriteIdleIndex_.fetch_add(1U, std::memory_order_acq_rel);
-        lock.unlock();
-        EXPECT_EQ(0U, firstCursor);
-        std::this_thread::sleep_for(std::chrono::milliseconds(30U));
-        const size_t index = firstCursor % bq.agingCapacity_;
-        ASSERT_EQ(
-            EOK, memcpy_s(bq.dataQueue_ + index * sizeof(HostRecord), sizeof(HostRecord), &first, sizeof(HostRecord)));
-        std::lock_guard<std::mutex> commitLock(pushMutex);
-        while (bq.agingWriteIndex_.load() != firstCursor) {
-            pushMutex.unlock();
-            HOST_CPU_PAUSE();
-            pushMutex.lock();
-        }
-        bq.agingWriteIndex_.store(firstCursor + 1U, std::memory_order_release);
-    });
+    std::thread firstProducer([&]() { ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(1U, &first, sizeof(HostRecord))); });
     std::thread secondProducer([&]() {
         std::this_thread::sleep_for(std::chrono::milliseconds(10U));
         ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(1U, &second, sizeof(HostRecord)));
@@ -407,7 +419,10 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, HostReportBuffer_FastPathWaitsForEarlierPr
     firstProducer.join();
     secondProducer.join();
     EXPECT_EQ(2U, bq.agingWriteIdleIndex_.load());
-    EXPECT_EQ(2U, bq.agingWriteIndex_.load());
+    EXPECT_EQ(1U, bq.commitSize_[0U].load());
+    EXPECT_EQ(HOST_RECORD_COMMITTED, bq.recordState_[0U].load());
+    EXPECT_EQ(1U, bq.commitSize_[1U].load());
+    EXPECT_EQ(HOST_RECORD_COMMITTED, bq.recordState_[1U].load());
 
     size_t popSize = 2 * sizeof(HostRecord);
     void* popPtr = bq.BatchPop(1U, popSize, false);
@@ -419,7 +434,7 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, HostReportBuffer_FastPathWaitsForEarlierPr
     bq.UnInit();
 }
 
-TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, HostReportBuffer_BatchPushKeepsOneFreeRecord)
+TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, HostReportBuffer_ConcurrentBatchPushKeepsReservedOrder)
 {
     struct HostRecord {
         uint16_t magic;
@@ -427,34 +442,40 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, HostReportBuffer_BatchPushKeepsOneFreeReco
     };
 
     HostReportBuffer bq(sizeof(HostRecord));
-    const std::string name = "HostReportBufferKeepsOneFreeRecord";
-    bq.Init(8, name);
-    HostRecord data[4] = {};
-    for (size_t i = 0; i < sizeof(data) / sizeof(data[0]); i++) {
-        data[i].magic = MSPROF_REPORT_DATA_MAGIC_NUM;
-        data[i].value = static_cast<uint16_t>(i);
-    }
+    const std::string name = "HostReportBufferConcurrentOrder";
+    bq.Init(16, name);
+    HostRecord first = {};
+    first.magic = MSPROF_REPORT_DATA_MAGIC_NUM;
+    first.value = 1U;
+    HostRecord second = {};
+    second.magic = MSPROF_REPORT_DATA_MAGIC_NUM;
+    second.value = 2U;
 
-    ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(1U, data, sizeof(data)));
-    size_t popSize = 3 * sizeof(HostRecord);
+    std::atomic<bool> firstPushFinished{false};
+    std::thread firstProducer([&]() {
+        ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(1U, &first, sizeof(HostRecord)));
+        firstPushFinished.store(true, std::memory_order_release);
+    });
+    std::thread secondProducer([&]() {
+        while (!firstPushFinished.load(std::memory_order_acquire)) {
+            std::this_thread::yield();
+        }
+        ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(1U, &second, sizeof(HostRecord)));
+    });
+    firstProducer.join();
+    secondProducer.join();
+
+    size_t popSize = 2U * sizeof(HostRecord);
     void* popPtr = bq.BatchPop(1U, popSize, true);
     ASSERT_NE(nullptr, popPtr);
-
-    HostRecord next = {};
-    next.magic = MSPROF_REPORT_DATA_MAGIC_NUM;
-    next.value = 0xFFFFU;
-    ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(1U, &next, sizeof(HostRecord)));
-
-    const HostRecord* popped = static_cast<const HostRecord*>(popPtr);
-    for (size_t i = 0; i < popSize / sizeof(HostRecord); i++) {
-        EXPECT_EQ(static_cast<uint16_t>(i), popped[i].value);
-    }
+    const HostRecord* records = static_cast<const HostRecord*>(popPtr);
+    EXPECT_EQ(1U, records[0].value);
+    EXPECT_EQ(2U, records[1].value);
     bq.BatchPopBufferIndexShift(popPtr, popSize);
-    EXPECT_EQ(2U, bq.GetUsedSize());
     bq.UnInit();
 }
 
-TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, HostReportBuffer_BatchPushFullUsesOneRecordGap)
+TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, HostReportBuffer_DoesNotExposeUnfinishedReservedBatch)
 {
     struct HostRecord {
         uint16_t magic;
@@ -462,7 +483,85 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, HostReportBuffer_BatchPushFullUsesOneRecor
     };
 
     HostReportBuffer bq(sizeof(HostRecord));
-    const std::string name = "HostReportBufferOneRecordGap";
+    const std::string name = "HostReportBufferUnfinishedReserved";
+    bq.Init(16, name);
+
+    HostRecord oldRecord = {};
+    oldRecord.magic = MSPROF_REPORT_DATA_MAGIC_NUM;
+    oldRecord.value = 0xFFFFU;
+    ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(1U, &oldRecord, sizeof(HostRecord)));
+    size_t popSize = sizeof(HostRecord);
+    void* popPtr = bq.BatchPop(1U, popSize, true);
+    ASSERT_NE(nullptr, popPtr);
+    bq.BatchPopBufferIndexShift(popPtr, popSize);
+
+    HostRecord second = {};
+    second.magic = MSPROF_REPORT_DATA_MAGIC_NUM;
+    second.value = 2U;
+
+    std::thread firstProducer([&bq]() {
+        const size_t firstCursor = bq.agingWriteIdleIndex_.fetch_add(1U, std::memory_order_acq_rel);
+        EXPECT_EQ(1U, firstCursor);
+        std::this_thread::sleep_for(std::chrono::milliseconds(100U));
+    });
+    std::thread secondProducer([&bq, &second]() {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10U));
+        ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(1U, &second, sizeof(HostRecord)));
+    });
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(40U));
+    EXPECT_LE(bq.agingWriteIndex_.load(), 1U);
+
+    firstProducer.join();
+    secondProducer.join();
+    bq.UnInit();
+}
+
+TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, HostReportBuffer_ReplaysOriginalReservedBatch)
+{
+    struct HostRecord {
+        uint16_t magic;
+        uint16_t value;
+    };
+
+    HostReportBuffer bq(sizeof(HostRecord));
+    const std::string name = "HostReportBufferReplayReserved";
+    bq.Init(8, name);
+    HostRecord data = {};
+    data.magic = MSPROF_REPORT_DATA_MAGIC_NUM;
+    data.value = 0x1234U;
+
+    for (size_t i = 0; i < 5U; i++) {
+        ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(1U, &data, sizeof(HostRecord)));
+    }
+
+    size_t popSize = 5U * sizeof(HostRecord);
+    void* popPtr = bq.BatchPop(1U, popSize, true);
+    ASSERT_NE(nullptr, popPtr);
+    bq.BatchPopBufferIndexShift(popPtr, popSize);
+
+    data.value = 0x5678U;
+    ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(1U, &data, sizeof(HostRecord)));
+    EXPECT_EQ(1U, bq.GetUsedSize());
+
+    popSize = sizeof(HostRecord);
+    popPtr = bq.BatchPop(1U, popSize, true);
+    ASSERT_NE(nullptr, popPtr);
+    const HostRecord* record = static_cast<const HostRecord*>(popPtr);
+    EXPECT_EQ(0x5678U, record->value);
+    bq.BatchPopBufferIndexShift(popPtr, popSize);
+    bq.UnInit();
+}
+
+TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, HostReportBuffer_TimesOutAndDiscardsReservedBatch)
+{
+    struct HostRecord {
+        uint16_t magic;
+        uint16_t value;
+    };
+
+    HostReportBuffer bq(sizeof(HostRecord));
+    const std::string name = "HostReportBufferFullTimeout";
     bq.Init(8, name);
     bq.maxCycles_ = 1;
     HostRecord data[4] = {};
@@ -473,11 +572,62 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, HostReportBuffer_BatchPushFullUsesOneRecor
 
     ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(1U, data, 4 * sizeof(HostRecord)));
     ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(1U, data + 2, sizeof(HostRecord)));
-    EXPECT_EQ(5U, bq.GetUsedSize());
-
     ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(1U, data, sizeof(HostRecord)));
-    EXPECT_EQ(5U, bq.GetUsedSize());
     EXPECT_EQ(5U, bq.agingWriteIdleIndex_.load());
+    EXPECT_EQ(0U, bq.commitSize_[5].load());
+    EXPECT_EQ(HOST_RECORD_UNCOMMITTED, bq.recordState_[5].load());
+    EXPECT_EQ(1U, bq.agingOverflowDiscardSize_.load());
+
+    size_t popSize = 5U * sizeof(HostRecord);
+    void* popPtr = bq.BatchPop(1U, popSize, true);
+    ASSERT_NE(nullptr, popPtr);
+    bq.BatchPopBufferIndexShift(popPtr, popSize);
+    EXPECT_EQ(0U, bq.GetUsedSize());
+
+    popSize = sizeof(HostRecord);
+    popPtr = bq.BatchPop(1U, popSize, true);
+    EXPECT_EQ(nullptr, popPtr);
+    EXPECT_EQ(0U, popSize);
+    EXPECT_EQ(0U, bq.GetUsedSize());
+    EXPECT_EQ(1U, bq.agingOverflowDiscardSize_.load());
+    bq.UnInit();
+}
+
+TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, HostReportBuffer_ConsecutiveTimeoutsDoNotOverwriteMetadata)
+{
+    struct HostRecord {
+        uint16_t magic;
+        uint16_t value;
+    };
+
+    HostReportBuffer bq(sizeof(HostRecord));
+    const std::string name = "HostReportBufferConsecutiveTimeout";
+    bq.Init(8, name);
+    bq.maxCycles_ = 1;
+    HostRecord data[4] = {};
+    for (size_t i = 0; i < sizeof(data) / sizeof(data[0]); i++) {
+        data[i].magic = MSPROF_REPORT_DATA_MAGIC_NUM;
+        data[i].value = static_cast<uint16_t>(i);
+    }
+
+    ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(1U, data, 4U * sizeof(HostRecord)));
+    ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(1U, data, sizeof(HostRecord)));
+    ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(1U, data, sizeof(HostRecord)));
+    ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(1U, data, sizeof(HostRecord)));
+
+    EXPECT_EQ(5U, bq.agingWriteIdleIndex_.load());
+    EXPECT_EQ(4U, bq.commitSize_[0].load());
+    EXPECT_EQ(HOST_RECORD_COMMITTED, bq.recordState_[0].load());
+    EXPECT_EQ(0U, bq.commitSize_[1].load());
+    EXPECT_EQ(HOST_RECORD_UNCOMMITTED, bq.recordState_[1].load());
+    EXPECT_EQ(2U, bq.agingOverflowDiscardSize_.load());
+
+    size_t popSize = 5U * sizeof(HostRecord);
+    void* popPtr = bq.BatchPop(1U, popSize, true);
+    ASSERT_NE(nullptr, popPtr);
+    bq.BatchPopBufferIndexShift(popPtr, popSize);
+    EXPECT_EQ(0U, bq.GetUsedSize());
+    EXPECT_EQ(2U, bq.agingOverflowDiscardSize_.load());
     bq.UnInit();
 }
 
@@ -499,8 +649,6 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, HostReportBuffer_ConcurrentBatchPushDoesNo
     std::atomic<size_t> pushedRecords{0};
     std::atomic<size_t> consumedRecords{0};
     std::atomic<size_t> corruptRecords{0};
-    std::atomic<size_t> invalidMagicRecords{0};
-    std::atomic<size_t> duplicateSeqRecords{0};
     std::vector<bool> seen(targetRecords, false);
     std::vector<std::thread> producers;
     for (uint32_t producer = 0; producer < producerCount; producer++) {
@@ -532,14 +680,9 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, HostReportBuffer_ConcurrentBatchPushDoesNo
             const HostRecord* records = static_cast<const HostRecord*>(popPtr);
             const size_t recordCount = popSize / sizeof(HostRecord);
             for (size_t i = 0; i < recordCount; i++) {
-                if (records[i].magic != MSPROF_REPORT_DATA_MAGIC_NUM) {
+                if ((records[i].magic != MSPROF_REPORT_DATA_MAGIC_NUM) || (records[i].seq >= targetRecords) ||
+                    seen[records[i].seq]) {
                     corruptRecords.fetch_add(1, std::memory_order_relaxed);
-                    invalidMagicRecords.fetch_add(1, std::memory_order_relaxed);
-                } else if (records[i].seq >= targetRecords) {
-                    corruptRecords.fetch_add(1, std::memory_order_relaxed);
-                } else if (seen[records[i].seq]) {
-                    corruptRecords.fetch_add(1, std::memory_order_relaxed);
-                    duplicateSeqRecords.fetch_add(1, std::memory_order_relaxed);
                 } else {
                     seen[records[i].seq] = true;
                 }
@@ -557,387 +700,9 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, HostReportBuffer_ConcurrentBatchPushDoesNo
     EXPECT_EQ(targetRecords, pushedRecords.load());
     EXPECT_EQ(targetRecords, consumedRecords.load());
     EXPECT_EQ(0U, corruptRecords.load());
-    EXPECT_EQ(0U, invalidMagicRecords.load());
-    EXPECT_EQ(0U, duplicateSeqRecords.load());
     for (size_t i = 0; i < targetRecords; i++) {
         EXPECT_TRUE(seen[i]) << "missing sequence: " << i;
     }
-    bq.UnInit();
-}
-
-TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, HostReportBuffer_BatchPopSkipsReservedSlots)
-{
-    struct HostRecord {
-        uint16_t magic;
-        uint16_t value;
-    };
-
-    HostReportBuffer bq(sizeof(HostRecord));
-    const std::string name = "HostReportBufferSkipReserved";
-    bq.Init(16, name);
-    HostRecord data[4] = {};
-    for (size_t i = 0; i < sizeof(data) / sizeof(data[0]); i++) {
-        data[i].magic = MSPROF_REPORT_DATA_MAGIC_NUM;
-        data[i].value = static_cast<uint16_t>(i);
-    }
-
-    ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(1U, data, sizeof(data)));
-    bq.agingCommitMode_.store(HOST_COMMIT_METADATA_PATH);
-    bq.commitSize_[4].store(2);
-    bq.recordState_[4].store(HOST_RECORD_DISCARDED);
-    bq.agingWriteIndex_.store(6);
-    bq.agingWriteIdleIndex_.store(6);
-
-    size_t popSize = 2 * sizeof(HostRecord);
-    void* popPtr = bq.BatchPop(1U, popSize, false);
-    ASSERT_NE(nullptr, popPtr);
-    ASSERT_EQ(2 * sizeof(HostRecord), popSize);
-    const HostRecord* records = static_cast<const HostRecord*>(popPtr);
-    EXPECT_EQ(0U, records[0].value);
-    EXPECT_EQ(1U, records[1].value);
-    bq.BatchPopBufferIndexShift(popPtr, popSize);
-
-    popPtr = bq.BatchPop(1U, popSize, false);
-    ASSERT_NE(nullptr, popPtr);
-    ASSERT_EQ(2 * sizeof(HostRecord), popSize);
-    records = static_cast<const HostRecord*>(popPtr);
-    EXPECT_EQ(2U, records[0].value);
-    EXPECT_EQ(3U, records[1].value);
-    bq.BatchPopBufferIndexShift(popPtr, popSize);
-
-    popPtr = bq.BatchPop(1U, popSize, false);
-    EXPECT_EQ(nullptr, popPtr);
-    EXPECT_EQ(0U, popSize);
-
-    EXPECT_EQ(0U, bq.commitSize_[4].load());
-    EXPECT_EQ(6U, bq.agingReadIndex_.load());
-    bq.UnInit();
-}
-
-TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, HostReportBuffer_FastPathSkipsCommitMetadata)
-{
-    struct HostRecord {
-        uint16_t magic;
-        uint16_t value;
-    };
-
-    HostReportBuffer bq(sizeof(HostRecord));
-    const std::string name = "HostReportBufferFastPath";
-    bq.Init(16, name);
-    HostRecord data[4] = {};
-    for (size_t i = 0; i < sizeof(data) / sizeof(data[0]); i++) {
-        data[i].magic = MSPROF_REPORT_DATA_MAGIC_NUM;
-        data[i].value = static_cast<uint16_t>(i);
-    }
-
-    ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(1U, data, sizeof(data)));
-    EXPECT_EQ(HOST_COMMIT_FAST_PATH, bq.agingCommitMode_.load());
-    EXPECT_EQ(4U, bq.agingWriteIndex_.load());
-    for (size_t i = 0; i < 4U; i++) {
-        EXPECT_EQ(0U, bq.commitSize_[i].load());
-        EXPECT_EQ(HOST_RECORD_UNCOMMITTED, bq.recordState_[i].load());
-    }
-
-    size_t popSize = sizeof(data);
-    void* popPtr = bq.BatchPop(1U, popSize, false);
-    ASSERT_NE(nullptr, popPtr);
-    ASSERT_EQ(sizeof(data), popSize);
-    EXPECT_EQ(0, memcmp(popPtr, data, popSize));
-    bq.BatchPopBufferIndexShift(popPtr, popSize);
-    EXPECT_EQ(0U, bq.GetUsedSize());
-    bq.UnInit();
-}
-
-TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, HostReportBuffer_FullSwitchesToCommitMetadata)
-{
-    struct HostRecord {
-        uint16_t magic;
-        uint16_t value;
-    };
-
-    HostReportBuffer bq(sizeof(HostRecord));
-    const std::string name = "HostReportBufferMetadataSwitch";
-    bq.Init(8, name);
-    bq.maxCycles_ = 1;
-    HostRecord data[4] = {};
-    for (size_t i = 0; i < sizeof(data) / sizeof(data[0]); i++) {
-        data[i].magic = MSPROF_REPORT_DATA_MAGIC_NUM;
-        data[i].value = static_cast<uint16_t>(i);
-    }
-
-    ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(1U, data, 4 * sizeof(HostRecord)));
-    ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(1U, data + 2, sizeof(HostRecord)));
-    EXPECT_EQ(5U, bq.GetUsedSize());
-    EXPECT_EQ(HOST_COMMIT_FAST_PATH, bq.agingCommitMode_.load());
-
-    ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(1U, data, sizeof(HostRecord)));
-    EXPECT_EQ(5U, bq.GetUsedSize());
-    EXPECT_EQ(HOST_COMMIT_METADATA_PATH, bq.agingCommitMode_.load());
-    EXPECT_EQ(1U, bq.commitSize_[5].load());
-    EXPECT_EQ(HOST_RECORD_DISCARDED, bq.recordState_[5].load());
-    bq.UnInit();
-}
-
-TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, HostReportBuffer_MetadataModeRestoresAfterBufferDrained)
-{
-    struct HostRecord {
-        uint16_t magic;
-        uint16_t value;
-    };
-
-    HostReportBuffer bq(sizeof(HostRecord));
-    const std::string name = "HostReportBufferMetadataStays";
-    bq.Init(8, name);
-    bq.maxCycles_ = 1;
-    HostRecord data[4] = {};
-    for (size_t i = 0; i < sizeof(data) / sizeof(data[0]); i++) {
-        data[i].magic = MSPROF_REPORT_DATA_MAGIC_NUM;
-        data[i].value = static_cast<uint16_t>(i);
-    }
-
-    ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(1U, data, sizeof(data)));
-    ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(1U, data + 2, sizeof(HostRecord)));
-    ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(1U, data, sizeof(HostRecord)));
-    ASSERT_EQ(HOST_COMMIT_METADATA_PATH, bq.agingCommitMode_.load());
-
-    size_t popSize = 5 * sizeof(HostRecord);
-    void* popPtr = bq.BatchPop(1U, popSize, true);
-    ASSERT_NE(nullptr, popPtr);
-    ASSERT_EQ(5 * sizeof(HostRecord), popSize);
-    bq.BatchPopBufferIndexShift(popPtr, popSize);
-
-    popSize = sizeof(HostRecord);
-    popPtr = bq.BatchPop(1U, popSize, false);
-    EXPECT_EQ(nullptr, popPtr);
-    EXPECT_EQ(0U, popSize);
-    EXPECT_EQ(HOST_COMMIT_FAST_PATH, bq.agingCommitMode_.load());
-
-    ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(1U, data + 1, sizeof(HostRecord)));
-    EXPECT_EQ(HOST_COMMIT_FAST_PATH, bq.agingCommitMode_.load());
-    EXPECT_EQ(0U, bq.commitSize_[5].load());
-    EXPECT_EQ(HOST_RECORD_UNCOMMITTED, bq.recordState_[5].load());
-    EXPECT_EQ(6U, bq.agingWriteIndex_.load());
-    EXPECT_EQ(6U, bq.agingWriteIdleIndex_.load());
-
-    popSize = sizeof(HostRecord);
-    popPtr = bq.BatchPop(1U, popSize, false);
-    ASSERT_NE(nullptr, popPtr);
-    const HostRecord* record = static_cast<const HostRecord*>(popPtr);
-    EXPECT_EQ(1U, record->value);
-    bq.BatchPopBufferIndexShift(popPtr, popSize);
-    EXPECT_EQ(0U, bq.GetUsedSize());
-    bq.UnInit();
-}
-
-TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, HostReportBuffer_UnagingMetadataModeRestoresAfterBufferDrained)
-{
-    struct HostRecord {
-        uint16_t magic;
-        uint16_t value;
-    };
-
-    HostReportBuffer bq(sizeof(HostRecord));
-    const std::string name = "HostReportBufferUnagingRestore";
-    bq.Init(8, name);
-    HostRecord data = {};
-    data.magic = MSPROF_REPORT_DATA_MAGIC_NUM;
-
-    ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(0U, &data, sizeof(HostRecord)));
-    bq.unagingCommitMode_.store(HOST_COMMIT_METADATA_PATH);
-    bq.commitSize_[0].store(1);
-    bq.recordState_[0].store(HOST_RECORD_COMMITTED);
-    bq.unagingWriteIndex_.store(1U);
-    bq.unagingWriteIdleIndex_.store(1U);
-
-    size_t popSize = sizeof(HostRecord);
-    void* popPtr = bq.BatchPop(0U, popSize, false);
-    ASSERT_NE(nullptr, popPtr);
-    ASSERT_EQ(sizeof(HostRecord), popSize);
-    bq.BatchPopBufferIndexShift(popPtr, popSize);
-
-    popSize = sizeof(HostRecord);
-    popPtr = bq.BatchPop(0U, popSize, false);
-    EXPECT_EQ(nullptr, popPtr);
-    EXPECT_EQ(0U, popSize);
-    EXPECT_EQ(HOST_COMMIT_FAST_PATH, bq.unagingCommitMode_.load());
-
-    data.value = 0xFFFFU;
-    ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(0U, &data, sizeof(HostRecord)));
-    EXPECT_EQ(HOST_COMMIT_FAST_PATH, bq.unagingCommitMode_.load());
-    EXPECT_EQ(0U, bq.commitSize_[1].load());
-    EXPECT_EQ(HOST_RECORD_UNCOMMITTED, bq.recordState_[1].load());
-    EXPECT_EQ(2U, bq.unagingWriteIndex_.load());
-    EXPECT_EQ(2U, bq.unagingWriteIdleIndex_.load());
-    bq.UnInit();
-}
-
-TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, HostReportBuffer_MetadataModeSkipsConsecutiveDiscardedBatches)
-{
-    struct HostRecord {
-        uint16_t magic;
-        uint16_t value;
-    };
-
-    HostReportBuffer bq(sizeof(HostRecord));
-    const std::string name = "HostReportBufferConsecutiveDiscarded";
-    bq.Init(8, name);
-    HostRecord data[2] = {};
-    for (size_t i = 0; i < sizeof(data) / sizeof(data[0]); i++) {
-        data[i].magic = MSPROF_REPORT_DATA_MAGIC_NUM;
-        data[i].value = static_cast<uint16_t>(i);
-    }
-
-    ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(1U, data, sizeof(data)));
-    bq.agingCommitMode_.store(HOST_COMMIT_METADATA_PATH);
-    bq.commitSize_[0].store(2);
-    bq.recordState_[0].store(HOST_RECORD_COMMITTED);
-    bq.agingWriteIndex_.store(2);
-    bq.agingWriteIdleIndex_.store(2);
-
-    size_t popSize = 2 * sizeof(HostRecord);
-    void* popPtr = bq.BatchPop(1U, popSize, false);
-    ASSERT_NE(nullptr, popPtr);
-    ASSERT_EQ(2 * sizeof(HostRecord), popSize);
-    bq.BatchPopBufferIndexShift(popPtr, popSize);
-    ASSERT_EQ(2U, bq.agingReadIndex_.load());
-
-    bq.commitSize_[2].store(1);
-    bq.recordState_[2].store(HOST_RECORD_DISCARDED);
-    bq.commitSize_[3].store(1);
-    bq.recordState_[3].store(HOST_RECORD_DISCARDED);
-    bq.agingWriteIndex_.store(4);
-    bq.agingWriteIdleIndex_.store(4);
-
-    HostRecord next = {};
-    next.magic = MSPROF_REPORT_DATA_MAGIC_NUM;
-    next.value = 0xFFFFU;
-    ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(1U, &next, sizeof(HostRecord)));
-    EXPECT_EQ(5U, bq.agingWriteIndex_.load());
-    EXPECT_EQ(5U, bq.agingWriteIdleIndex_.load());
-
-    popSize = sizeof(HostRecord);
-    popPtr = bq.BatchPop(1U, popSize, false);
-    ASSERT_NE(nullptr, popPtr);
-    const HostRecord* record = static_cast<const HostRecord*>(popPtr);
-    EXPECT_EQ(0xFFFFU, record->value);
-    bq.BatchPopBufferIndexShift(popPtr, popSize);
-
-    EXPECT_EQ(5U, bq.agingReadIndex_.load());
-    EXPECT_EQ(0U, bq.commitSize_[2].load());
-    EXPECT_EQ(HOST_RECORD_UNCOMMITTED, bq.recordState_[2].load());
-    EXPECT_EQ(0U, bq.commitSize_[3].load());
-    EXPECT_EQ(HOST_RECORD_UNCOMMITTED, bq.recordState_[3].load());
-    EXPECT_EQ(0U, bq.GetUsedSize());
-    bq.UnInit();
-}
-
-TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, HostReportBuffer_MetadataModeKeepsModeWhileSlotReserved)
-{
-    struct HostRecord {
-        uint16_t magic;
-        uint16_t value;
-    };
-
-    HostReportBuffer bq(sizeof(HostRecord));
-    const std::string name = "HostReportBufferReservedSlot";
-    bq.Init(8, name);
-    bq.agingCommitMode_.store(HOST_COMMIT_METADATA_PATH);
-    bq.agingWriteIndex_.store(1U);
-    bq.agingWriteIdleIndex_.store(2U);
-
-    size_t popSize = sizeof(HostRecord);
-    void* popPtr = bq.BatchPop(1U, popSize, false);
-    EXPECT_EQ(nullptr, popPtr);
-    EXPECT_EQ(0U, popSize);
-    EXPECT_EQ(HOST_COMMIT_METADATA_PATH, bq.agingCommitMode_.load());
-    bq.UnInit();
-}
-
-TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, HostReportBuffer_ConcurrentBatchPushCommitsInOrder)
-{
-    struct HostRecord {
-        uint16_t magic;
-        uint32_t seq;
-    };
-    constexpr uint32_t producerCount = 8;
-    constexpr size_t batchRecords = 64;
-    constexpr size_t totalBatches = 3125;
-    constexpr size_t targetRecords = totalBatches * batchRecords;
-
-    HostReportBuffer bq(sizeof(HostRecord));
-    const std::string name = "HostReportBufferConcurrent";
-    bq.Init(8192, name);
-    std::atomic<bool> failed{false};
-    std::atomic<size_t> nextBatch{0};
-    std::atomic<size_t> pushedRecords{0};
-    std::atomic<size_t> corruptRecords{0};
-    std::vector<std::thread> producers;
-    for (uint32_t p = 0; p < producerCount; p++) {
-        producers.emplace_back([&]() {
-            std::vector<HostRecord> data(batchRecords);
-            size_t retries = 0;
-            for (;;) {
-                size_t expected = nextBatch.load(std::memory_order_acquire);
-                if (expected >= totalBatches || failed.load(std::memory_order_acquire)) {
-                    return;
-                }
-                if (!nextBatch.compare_exchange_weak(expected, expected + 1, std::memory_order_acq_rel)) {
-                    continue;
-                }
-                for (size_t i = 0; i < data.size(); i++) {
-                    data[i].magic = MSPROF_REPORT_DATA_MAGIC_NUM;
-                    data[i].seq = static_cast<uint16_t>(expected + i);
-                }
-                if (bq.BatchPush(1U, data.data(), data.size() * sizeof(HostRecord)) == MSPROF_ERROR_NONE) {
-                    pushedRecords.fetch_add(batchRecords, std::memory_order_relaxed);
-                    retries = 0;
-                } else {
-                    nextBatch.fetch_sub(1, std::memory_order_acq_rel);
-                    retries++;
-                    if (retries > 1000000U) {
-                        failed.store(true, std::memory_order_release);
-                        return;
-                    }
-                    std::this_thread::yield();
-                }
-            }
-        });
-    }
-
-    std::thread consumer([&]() {
-        while (!failed.load(std::memory_order_acquire)) {
-            size_t popSize = 256 * sizeof(HostRecord);
-            void* popPtr = bq.BatchPop(1U, popSize, true);
-            if (popPtr == nullptr) {
-                std::this_thread::yield();
-                continue;
-            }
-            const HostRecord* records = static_cast<const HostRecord*>(popPtr);
-            for (size_t i = 0; i < popSize / sizeof(HostRecord); i++) {
-                if ((records[i].magic != MSPROF_REPORT_DATA_MAGIC_NUM) || (records[i].seq >= targetRecords)) {
-                    corruptRecords.fetch_add(1, std::memory_order_relaxed);
-                }
-            }
-            bq.BatchPopBufferIndexShift(popPtr, popSize);
-        }
-    });
-
-    const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(3);
-    while (pushedRecords.load(std::memory_order_acquire) < targetRecords) {
-        if (std::chrono::steady_clock::now() > deadline) {
-            failed.store(true, std::memory_order_release);
-            break;
-        }
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    }
-    failed.store(true, std::memory_order_release);
-    for (auto& producer : producers) {
-        producer.join();
-    }
-    consumer.join();
-
-    EXPECT_EQ(targetRecords, pushedRecords.load());
-    EXPECT_EQ(0U, corruptRecords.load());
     bq.UnInit();
 }
 
