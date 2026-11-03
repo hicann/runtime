@@ -18,7 +18,7 @@ namespace cce {
 namespace runtime {
 constexpr uint32_t EVENT_INIT_CNT = (2U * 1024U * 1024U);
 constexpr uint32_t PER_POOL_CNT = EVENT_INIT_CNT;
-constexpr uint16_t MAX_POOL_CNT = 1024U; // total count: PER_POOL_CNT * MAX_POOL_CNT = 2G
+constexpr uint16_t MAX_POOL_CNT = 1023U; // Reserve 1 pool to keep expanded event IDs within int32_t.
 constexpr int32_t EVENT_INIT_VALUE = UINT16_MAX + 1;
 class Device;
 class EventExpandingPool : public NoCopy {
