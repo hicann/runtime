@@ -7,6 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include <array>
 #include "runtime.hpp"
 #include "thread_local_container.hpp"
 #include "error_message_manage.hpp"
@@ -244,8 +245,7 @@ void TaskResManageDavid::ShowDfxInfo(void) const
         tail, headTaskType, headTaskTypeName, isFull);
     const uint32_t headStart = (head + taskPoolNum_ - 5U) % taskPoolNum_;
     const uint32_t tailStart = (tail + taskPoolNum_ - 5U) % taskPoolNum_;
-    uint32_t headIndex[SHOW_DFX_INFO_TASK_NUM] = {0};
-    uint32_t tailIndex[SHOW_DFX_INFO_TASK_NUM] = {0};
+    std::array<uint32_t, SHOW_DFX_INFO_TASK_NUM> headIndex{};
 
     for (uint32_t index = 0; index < SHOW_DFX_INFO_TASK_NUM; index++) {
         headIndex[index] = (headStart + index) % taskPoolNum_;
@@ -255,6 +255,7 @@ void TaskResManageDavid::ShowDfxInfo(void) const
         taskRes_[headIndex[0U]].taskInfo.id, taskRes_[headIndex[1U]].taskInfo.id, taskRes_[headIndex[2U]].taskInfo.id,
         taskRes_[headIndex[3U]].taskInfo.id, taskRes_[headIndex[4U]].taskInfo.id, taskRes_[headIndex[5U]].taskInfo.id);
 
+    std::array<uint32_t, SHOW_DFX_INFO_TASK_NUM> tailIndex{};
     for (uint32_t index = 0; index < SHOW_DFX_INFO_TASK_NUM; index++) {
         tailIndex[index] = (tailStart + index) % taskPoolNum_;
     }
