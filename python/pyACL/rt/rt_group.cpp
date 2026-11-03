@@ -76,10 +76,15 @@ PyObject* WrapAclRtGetGroupInfoDetail(PyObject* /* self */, PyObject* args)
         PyErr_SetString(PyExc_RuntimeError, "aclrtGetGroupInfoDetail failed");
         return nullptr;
     }
-    PyObject* pList = PyList_New(paramRetRize); // new reference
+    if (paramRetRize % sizeof(attrValue[0]) != 0) {
+        PyErr_SetString(PyExc_RuntimeError, "aclrtGetGroupInfoDetail returned invalid attribute size");
+        return nullptr;
+    }
+    const size_t attrCount = paramRetRize / sizeof(attrValue[0]);
+    PyObject* pList = PyList_New(attrCount); // new reference
     CHECK_NULL(pList, "memory malloc failed", PyExc_MemoryError);
 
-    for (size_t i = 0; i < paramRetRize; ++i) {
+    for (size_t i = 0; i < attrCount; ++i) {
         PyList_SetItem(pList, i, Py_BuildValue("i", attrValue[i])); // NPY_INT
     }
 
