@@ -57,11 +57,14 @@ static const char_t* g_functionMetaTypeStr[] = {
     "RT_FUNCTION_TYPE_PARAM_SUMMARY",            // 16
     "RT_FUNCTION_TYPE_PARAM_INFO",               // 17
     "RT_FUNCTION_TYPE_SCHED_MODE_INFO",          // 18
+    "unknown(19)",                               // 19
+    "unknown(20)",                               // 20
+    "RT_FUNCTION_TYPE_COMPAT_MODE"               // 21
 };
 
 static std::string GetFunctionMetaTypeStr(const uint16_t type)
 {
-    if ((type == 0U) || (type > RT_FUNCTION_TYPE_SCHED_MODE_INFO)) {
+    if ((type == 0U) || (type > RT_FUNCTION_TYPE_COMPAT_MODE)) {
         return "unknown(" + std::to_string(type) + ")";
     }
     return g_functionMetaTypeStr[type];
@@ -432,13 +435,13 @@ rtError_t RefreshSymbolAddress(rtElfData* elfData)
         (elfData->symbolAddr.g_opL2CacheHintCfg != nullptr)) {
         uint64_t* addr = elfData->symbolAddr.g_opL2CacheHintCfg;
         const rtError_t error = curDrv->GetL2CacheOffset(drvDeviceId, &sourceAddr);
-        // stars v2不支持该特性，直接返回
-        if (error == RT_ERROR_FEATURE_NOT_SUPPORT) {
-            return RT_ERROR_NONE;
+        // stars v2不支持该特性，但仍需处理其他符号。
+        if (error != RT_ERROR_FEATURE_NOT_SUPPORT) {
+            COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "Get L2Cache address failed.");
+            *addr = sourceAddr;
+            RT_LOG(
+                RT_LOG_DEBUG, "Set global variable address in binary, g_opL2CacheHintCfg = %p, addr = %p", *addr, addr);
         }
-        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "Get L2Cache address failed.");
-        *addr = sourceAddr;
-        RT_LOG(RT_LOG_DEBUG, "Set global variable address in binary, g_opL2CacheHintCfg = %p, addr = %p", *addr, addr);
     }
     if (((elfData->ascendMetaFlag & KERNEL_SIMT_PRINT_FIFO_ADDR_BIT) != 0) &&
         (elfData->symbolAddr.g_sysSimtPrintFifoSpace != nullptr)) {
@@ -456,6 +459,16 @@ rtError_t RefreshSymbolAddress(rtElfData* elfData)
         COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "Get printf fifo space address failed.");
         *addr = sourceAddr;
         RT_LOG(RT_LOG_DEBUG, "Set global variable address in binary, g_sysPrintFifoSpace=%p, addr=%p", *addr, addr);
+    }
+
+    if (((elfData->ascendMetaFlag & KERNEL_USER_BUFF_ADDR_BIT) != 0U) &&
+        (elfData->symbolAddr.g_sysCV11CompatCV12WorkSpace != nullptr)) {
+        uint64_t* addr = elfData->symbolAddr.g_sysCV11CompatCV12WorkSpace;
+        sourceAddr = curCtx->Device_()->GetUserBufAddr();
+        *addr = sourceAddr;
+        RT_LOG(
+            RT_LOG_DEBUG, "Set global variable address in binary, g_sysCV11CompatCV12WorkSpace=0x%" PRIx64 ", addr=%p",
+            *addr, addr);
     }
     return RT_ERROR_NONE;
 }
@@ -513,6 +526,12 @@ void SetSymbolAddress(
                 // SIMT维侧空间地址
                 elfData->symbolAddr.g_sysSimtPrintFifoSpace = addr;
                 RT_LOG(RT_LOG_DEBUG, "Parse Elf, &g_sysSimtPrintFifoSpace = %p", addr);
+            }
+            if (((elfData->ascendMetaFlag & KERNEL_USER_BUFF_ADDR_BIT) != 0U) &&
+                (symbol == "g_sysCV11CompatCV12WorkSpace")) {
+                // 用户缓冲区地址
+                elfData->symbolAddr.g_sysCV11CompatCV12WorkSpace = addr;
+                RT_LOG(RT_LOG_DEBUG, "Parse Elf, g_sysCV11CompatCV12WorkSpace = %p", addr);
             }
         }
         internalSym++;
@@ -719,6 +738,17 @@ static rtError_t ElfParseTlvInfo(uint16_t tlvType, const uint8_t* buf, ElfKernel
                      RtPtrToPtr<const uint8_t*, const uint32_t*>(&(earlyStartInfo->earlyStartEnable)),
                      sizeof(uint32_t))) == 1U);
             break;
+        case RT_FUNCTION_TYPE_COMPAT_MODE: {
+            const ElfKernelCompatModeInfo* const compatModeInfo = RtPtrToPtr<const ElfKernelCompatModeInfo*>(buf);
+            const uint16_t tlvLength = static_cast<uint16_t>(
+                GetByte(RtPtrToPtr<const uint8_t*>(&(compatModeInfo->head.length)), sizeof(uint16_t)));
+            tlvInfo->compatMode =
+                (tlvLength >= sizeof(compatModeInfo->compatMode)) ?
+                    static_cast<uint32_t>(
+                        GetByte(RtPtrToPtr<const uint8_t*>(&(compatModeInfo->compatMode)), sizeof(uint32_t))) :
+                    0U;
+            break;
+        }
         case RT_FUNCTION_TYPE_FUNCTION_ENTRY_INFO:
             functionEntryInfo = RtPtrToPtr<const ElfKernelFunctionEntryInfo*>(buf);
             tlvLength = static_cast<uint16_t>(GetByte(
@@ -878,6 +908,7 @@ static void KernelMetaInfoInit(RtKernelMetaInfo* const kernelMetaInfo)
     kernelMetaInfo->schedMode = static_cast<uint32_t>(RT_SCHEM_MODE_NORMAL);
     kernelMetaInfo->userArgsNum = USER_ARGS_MAX_NUM;
     kernelMetaInfo->earlyStartEnable = false;
+    kernelMetaInfo->compatMode = 0U;
     kernelMetaInfo->minStackSize = 0U;
     kernelMetaInfo->paramInfos = nullptr;
     kernelMetaInfo->paramCount = 0U;
@@ -898,6 +929,7 @@ static void kernelInfoInit(rtElfData* const elfData, Elf_Internal_Shdr* section,
     kernelInfo->dfxSize = static_cast<uint16_t>(section->sh_size);
     kernelInfo->elfDataFlag = static_cast<int32_t>(elfData->elf_header.e_ident[EI_DATA]);
     kernelInfo->earlyStartEnable = false;
+    kernelInfo->compatMode = 0U;
     kernelInfo->functionEntry = 0U;
     kernelInfo->functionEntryFlag = KERNEL_FUNCTION_ENTRY_DISABLE;
     kernelInfo->isSupportFuncEntry = false;
@@ -1191,6 +1223,7 @@ rtError_t UpdateKernelsInfo(
         metaInfo->kernelVfType = iter->second->kernelVfType;
         metaInfo->shareMemSize = iter->second->shareMemSize;
         metaInfo->earlyStartEnable = iter->second->earlyStartEnable;
+        metaInfo->compatMode = iter->second->compatMode;
 
         /* update kernel params info */
         rtError_t error = UpdateCachedParamInfos(metaInfo, iter->second, kernels[index].name);
@@ -1821,7 +1854,7 @@ static rtError_t GetMetaInfoInternal(
     std::vector<std::pair<void*, uint32_t>>& metaInfo)
 {
     NULL_PTR_RETURN(elfData, RT_ERROR_INVALID_VALUE);
-    if ((type > RT_FUNCTION_TYPE_SCHED_MODE_INFO) || (type == 0U)) {
+    if ((type == 0U) || ((type > RT_FUNCTION_TYPE_SCHED_MODE_INFO) && (type != RT_FUNCTION_TYPE_COMPAT_MODE))) {
         const std::string typeStr = GetFunctionMetaTypeStr(type);
         RT_LOG(RT_LOG_WARNING, "Meta type %s is invalid.", typeStr.c_str());
         return RT_ERROR_FEATURE_NOT_SUPPORT;

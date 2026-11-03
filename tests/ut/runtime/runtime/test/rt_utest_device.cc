@@ -192,6 +192,51 @@ TEST_F(AiCoreTaskSyncCheckDeviceTest, DriverFailureKeepsDeviceCheckDisabled)
     EXPECT_FALSE(device.IsAiCoreTaskSyncCheckEnabled());
 }
 
+TEST(UserBufDeviceTest, AllocAndFreeUserBufAddr)
+{
+    constexpr char_t COMPAT_MODE_ENV[] = "ASCEND_OP_COMPATIBILITY_MODE";
+    const char_t* const previousEnv = getenv(COMPAT_MODE_ENV);
+    const bool hadPreviousEnv = previousEnv != nullptr;
+    const std::string previousValue = hadPreviousEnv ? previousEnv : "";
+    setenv(COMPAT_MODE_ENV, "0", 1);
+    EXPECT_EQ(rtSetDevice(0), RT_ERROR_NONE);
+
+    {
+        void* allocatedAddr = reinterpret_cast<void*>(0x1234000UL);
+        NpuDriver driver;
+        RawDevice device(0U);
+        device.driver_ = &driver;
+        DevProperties properties{};
+        properties.userBufferSize = USER_BUFFER_SIZE_64M;
+        device.RefreshDevProperties(properties);
+        MOCKER(halMemAlloc)
+            .expects(once())
+            .with(
+                outBoundP(&allocatedAddr, sizeof(allocatedAddr)), eq(static_cast<UINT64>(USER_BUFFER_SIZE_64M)),
+                mockcpp::any())
+            .will(returnValue(DRV_ERROR_NONE));
+        MOCKER(halMemFree).expects(once()).with(eq(allocatedAddr)).will(returnValue(DRV_ERROR_NONE));
+
+        setenv(COMPAT_MODE_ENV, "1", 1);
+        EXPECT_EQ(device.AllocUserBufAddr(), RT_ERROR_NONE);
+        EXPECT_EQ(device.GetUserBufAddr(), RtPtrToValue(allocatedAddr));
+        device.FreeUserBufAddr();
+        EXPECT_EQ(device.GetUserBufAddr(), 0UL);
+        device.FreeUserBufAddr();
+        device.driver_ = nullptr;
+        GlobalMockObject::verify();
+        GlobalMockObject::reset();
+    }
+
+    setenv(COMPAT_MODE_ENV, "0", 1);
+    ut::ResetPrimaryDeviceIfActiveWithDeviceDown();
+    if (hadPreviousEnv) {
+        setenv(COMPAT_MODE_ENV, previousValue.c_str(), 1);
+    } else {
+        unsetenv(COMPAT_MODE_ENV);
+    }
+}
+
 TEST_F(DeviceTest, module_alloc_03)
 {
     rtError_t error;

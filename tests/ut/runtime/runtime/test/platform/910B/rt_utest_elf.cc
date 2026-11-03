@@ -27,6 +27,7 @@
 #include "thread_local_container.hpp"
 
 #include "elf.hpp"
+#include "kernel_utils.hpp"
 #include "api_impl.hpp"
 #include "api_decorator.hpp"
 #include "rt_unwrap.h"
@@ -1630,6 +1631,91 @@ TEST_F(CloudV2ELFTest, ElfParseTlvInfo_Sched_Mode)
     GetKernelTlvInfo(RtPtrToPtr<uint8_t*>(&kernelSchedModeInfo), sizeof(ElfKernelSchedModeInfo), &tlvInfo);
     EXPECT_EQ(tlvInfo.schedMode, 1);
 }
+
+TEST_F(CloudV2ELFTest, ElfParseTlvInfo_Compat_Mode)
+{
+    ElfFuncTypeInfo typeInfo{};
+    typeInfo.head.type = RT_FUNCTION_TYPE_KERNEL_TYPE;
+    typeInfo.head.length = sizeof(typeInfo.funcType);
+    ElfKernelInfo noCompatInfo{};
+    GetKernelTlvInfo(RtPtrToPtr<uint8_t*>(&typeInfo), sizeof(typeInfo), &noCompatInfo);
+    EXPECT_EQ(noCompatInfo.compatMode, 0U);
+
+    ElfKernelCompatModeInfo info{};
+    info.head.type = RT_FUNCTION_TYPE_COMPAT_MODE;
+    info.head.length = sizeof(info) - sizeof(ElfTlvHead);
+    ElfKernelInfo tlvInfo{};
+
+    info.compatMode = 1U;
+    GetKernelTlvInfo(RtPtrToPtr<uint8_t*>(&info), sizeof(info), &tlvInfo);
+    EXPECT_EQ(tlvInfo.compatMode, 1U);
+
+    info.compatMode = 0U;
+    GetKernelTlvInfo(RtPtrToPtr<uint8_t*>(&info), sizeof(info), &tlvInfo);
+    EXPECT_EQ(tlvInfo.compatMode, 0U);
+
+    struct {
+        ElfTlvHead head;
+        uint8_t value;
+    } byteInfo{{RT_FUNCTION_TYPE_COMPAT_MODE, sizeof(uint8_t)}, 1U};
+    GetKernelTlvInfo(RtPtrToPtr<uint8_t*>(&byteInfo), sizeof(byteInfo.head) + sizeof(byteInfo.value), &tlvInfo);
+    EXPECT_EQ(tlvInfo.compatMode, 0U);
+
+    info.compatMode = 2U;
+    GetKernelTlvInfo(RtPtrToPtr<uint8_t*>(&info), sizeof(info), &tlvInfo);
+    EXPECT_EQ(tlvInfo.compatMode, 2U);
+
+    info.compatMode = 1U;
+    info.head.length = 2U;
+    GetKernelTlvInfo(RtPtrToPtr<uint8_t*>(&info), sizeof(ElfTlvHead) + 2U, &tlvInfo);
+    EXPECT_EQ(tlvInfo.compatMode, 0U);
+
+    info.head.length = 0U;
+    GetKernelTlvInfo(RtPtrToPtr<uint8_t*>(&info), sizeof(info), &tlvInfo);
+    EXPECT_EQ(tlvInfo.compatMode, 0U);
+
+    struct {
+        ElfTlvHead head;
+        uint8_t value[sizeof(uint32_t) + 1U];
+    } extendedInfo{};
+    extendedInfo.head.type = RT_FUNCTION_TYPE_COMPAT_MODE;
+    extendedInfo.head.length = sizeof(extendedInfo.value);
+    extendedInfo.value[0] = 1U;
+    GetKernelTlvInfo(
+        RtPtrToPtr<uint8_t*>(&extendedInfo), sizeof(extendedInfo.head) + sizeof(extendedInfo.value), &tlvInfo);
+    EXPECT_EQ(tlvInfo.compatMode, 1U);
+
+    struct {
+        ElfKernelCompatModeInfo invalid;
+        ElfFuncTypeInfo nextInfo;
+    } chainedInfo{};
+    chainedInfo.invalid.head.type = RT_FUNCTION_TYPE_COMPAT_MODE;
+    chainedInfo.invalid.head.length = sizeof(chainedInfo.invalid.compatMode);
+    chainedInfo.invalid.compatMode = 2U;
+    chainedInfo.nextInfo.head.type = RT_FUNCTION_TYPE_KERNEL_TYPE;
+    chainedInfo.nextInfo.head.length = sizeof(chainedInfo.nextInfo.funcType);
+    chainedInfo.nextInfo.funcType = 3U;
+    GetKernelTlvInfo(RtPtrToPtr<uint8_t*>(&chainedInfo), sizeof(chainedInfo), &tlvInfo);
+    EXPECT_EQ(tlvInfo.compatMode, 2U);
+    EXPECT_EQ(tlvInfo.funcType, 3U);
+
+    info.head.length = sizeof(uint32_t);
+    tlvInfo.compatMode = 1U;
+    GetKernelTlvInfo(RtPtrToPtr<uint8_t*>(&info), sizeof(ElfTlvHead) + 1U, &tlvInfo);
+    EXPECT_EQ(tlvInfo.compatMode, 1U);
+}
+
+TEST_F(CloudV2ELFTest, Compat_Mode_Launch_Value)
+{
+    uint16_t launchBlockDim = 0U;
+
+    EXPECT_EQ(GetLaunchBlockDim(7U, launchBlockDim), RT_ERROR_NONE);
+    EXPECT_EQ(launchBlockDim, 14U);
+    EXPECT_EQ(GetLaunchBlockDim(UINT16_MAX / 2U, launchBlockDim), RT_ERROR_NONE);
+    EXPECT_EQ(launchBlockDim, UINT16_MAX - 1U);
+    EXPECT_EQ(GetLaunchBlockDim((UINT16_MAX / 2U) + 1U, launchBlockDim), RT_ERROR_INVALID_VALUE);
+}
+
 TEST_F(CloudV2ELFTest, ElfProgramGetGlobalSymbol_ElfDataNull)
 {
     ElfProgram* prog = new ElfProgram();

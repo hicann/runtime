@@ -21,6 +21,7 @@
 #include "task_execute_time.h"
 #include "fusion_task.h"
 #include "enum_desc.hpp"
+#include "kernel_utils.hpp"
 
 namespace cce {
 namespace runtime {
@@ -165,9 +166,15 @@ static rtError_t PreProcAicAivTaskForFusion(
     ERROR_RETURN(
         error, "Failed to prepare kernel launch, stream_id=%d, retCode=%#x.", stm->Id_(), static_cast<uint32_t>(error));
 
+    uint16_t launchBlockDim = static_cast<uint16_t>(coreDim);
+    if (registeredKernel->GetCompatMode() == 1U) {
+        error = GetLaunchBlockDim(coreDim, launchBlockDim);
+        ERROR_RETURN_MSG_INNER(error, "Failed to calculate fusion launch blockDim, blockDim=%u.", coreDim);
+    }
+
     mixType = registeredKernel->GetMixType();
     aicAivInfo->kernelAttrType = kernelAttrType;
-    aicAivInfo->dimNum = coreDim;
+    aicAivInfo->dimNum = launchBlockDim;
     aicAivInfo->mixType = mixType;
     aicAivInfo->funcAddr = addr1;
     aicAivInfo->funcAddr1 = addr2;

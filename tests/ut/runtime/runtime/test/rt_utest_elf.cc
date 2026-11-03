@@ -18,6 +18,7 @@
 #include "kernel.hpp"
 #include "binary_loader.hpp"
 #include "raw_device.hpp"
+#include "context.hpp"
 #undef private
 #undef protected
 #include <stdio.h>
@@ -962,10 +963,10 @@ TEST_F(ELFTest, UpdateKernelsInfo)
 
 TEST_F(ELFTest, SymbolAddress)
 {
-    const uint64_t numSyms = 4;
+    const uint64_t numSyms = 5;
     rtElfData* elfData;
     elfData = new rtElfData;
-    elfData->ascendMetaFlag = 0x1F;
+    elfData->ascendMetaFlag = 0x3FU | KERNEL_USER_BUFF_ADDR_BIT;
     elfData->elf_header.e_shnum = 1;
     elfData->obj_ptr_origin = nullptr;
 
@@ -977,20 +978,23 @@ TEST_F(ELFTest, SymbolAddress)
     string var2 = "g_opL2CacheHintCfg";
     string var3 = "g_sysPrintFifoSpace";
     string var4 = "g_sysSimtPrintFifoSpace";
-    const uint64_t strSize = var1.size() + 1U + var2.size() + 1U + var3.size() + 1U + var4.size() + 1U;
+    string var5 = "g_sysCV11CompatCV12WorkSpace";
+    const uint64_t strSize =
+        var1.size() + 1U + var2.size() + 1U + var3.size() + 1U + var4.size() + 1U + var5.size() + 1U;
     std::unique_ptr<char_t[]> strTbl(new (std::nothrow) char_t[strSize]);
+    memcpy_s(strTbl.get(), strSize, var1.c_str(), var1.size() + 1U);
     memcpy_s(
-        strTbl.get(), var1.size() + 1U + var2.size() + 1U + var3.size() + 1U + var4.size() + 1U, var1.c_str(),
-        var1.size() + 1U);
+        strTbl.get() + var1.size() + 1U, var2.size() + 1U + var3.size() + 1U + var4.size() + 1U + var5.size() + 1U,
+        var2.c_str(), var2.size() + 1U);
     memcpy_s(
-        strTbl.get() + var1.size() + 1U, var2.size() + 1U + var3.size() + 1U + var4.size() + 1U, var2.c_str(),
-        var2.size() + 1U);
+        strTbl.get() + var1.size() + 1U + var2.size() + 1U, var3.size() + 1U + var4.size() + 1U + var5.size() + 1U,
+        var3.c_str(), var3.size() + 1U);
     memcpy_s(
-        strTbl.get() + var1.size() + 1U + var2.size() + 1U, var3.size() + 1U + var4.size() + 1U, var3.c_str(),
-        var3.size() + 1U);
+        strTbl.get() + var1.size() + 1U + var2.size() + 1U + var3.size() + 1U, var4.size() + 1U + var5.size() + 1U,
+        var4.c_str(), var4.size() + 1U);
     memcpy_s(
-        strTbl.get() + var1.size() + 1U + var2.size() + 1U + var3.size() + 1U, var4.size() + 1U, var4.c_str(),
-        var4.size() + 1U);
+        strTbl.get() + var1.size() + 1U + var2.size() + 1U + var3.size() + 1U + var4.size() + 1U, var5.size() + 1U,
+        var5.c_str(), var5.size() + 1U);
 
     std::unique_ptr<Elf_Internal_Sym[]> symTab(new (std::nothrow) Elf_Internal_Sym[numSyms]);
     Elf_Internal_Sym* psym = symTab.get();
@@ -999,6 +1003,7 @@ TEST_F(ELFTest, SymbolAddress)
     uint64_t g_opL2CacheHintCfg = 0;
     uint64_t g_sysPrintFifoSpace = 0;
     uint64_t g_sysSimtPrintFifoSpace = 0;
+    uint64_t g_sysCV11CompatCV12WorkSpace = 0;
 
     // 设置 g_sysFftsAddr 符号信息
     psym->st_name = 0;
@@ -1027,6 +1032,13 @@ TEST_F(ELFTest, SymbolAddress)
     psym->st_shndx = 0;
     psym->st_info = STT_OBJECT;
 
+    // 设置 g_sysCV11CompatCV12WorkSpace 符号信息
+    ++psym;
+    psym->st_name = var1.size() + 1U + var2.size() + 1U + var3.size() + 1U + var4.size() + 1U;
+    psym->st_value = reinterpret_cast<uint64_t>(&g_sysCV11CompatCV12WorkSpace);
+    psym->st_shndx = 0;
+    psym->st_info = STT_OBJECT;
+
     elfData->elf_header.e_shnum = 0;
     SetSymbolAddress(strTbl.get(), symTab.get(), numSyms, elfData);
 
@@ -1034,6 +1046,7 @@ TEST_F(ELFTest, SymbolAddress)
 
     elfData->elf_header.e_shnum = 1;
     SetSymbolAddress(strTbl.get(), symTab.get(), numSyms, elfData);
+    EXPECT_EQ(elfData->symbolAddr.g_sysCV11CompatCV12WorkSpace, &g_sysCV11CompatCV12WorkSpace);
 
     rtError_t error = rtDeviceSetLimit(0, RT_LIMIT_TYPE_SIMD_PRINTF_FIFO_SIZE_PER_CORE, 87);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
@@ -1047,12 +1060,22 @@ TEST_F(ELFTest, SymbolAddress)
     error = rtDeviceSetLimit(0, RT_LIMIT_TYPE_SIMT_PRINTF_FIFO_SIZE, 4 * 1024 * 1024);
     EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
 
+    Context* currentContext = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(currentContext, nullptr);
+    RawDevice* device = static_cast<RawDevice*>(currentContext->Device_());
+    ASSERT_NE(device, nullptr);
+    const uint64_t originalUserBufAddr = device->userBufAddr_;
+    constexpr uint64_t expectedUserBufAddr = 0x1234000UL;
+    device->userBufAddr_ = expectedUserBufAddr;
+
     error = RefreshSymbolAddress(elfData);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(g_sysCV11CompatCV12WorkSpace, expectedUserBufAddr);
 
     elfData->ascendMetaFlag = 0x10;
     error = RefreshSymbolAddress(elfData);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    device->userBufAddr_ = originalUserBufAddr;
 
     delete[] elfData->section_headers;
     elfData->section_headers = nullptr;

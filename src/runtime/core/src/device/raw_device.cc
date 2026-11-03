@@ -1320,6 +1320,10 @@ rtError_t RawDevice::Start()
         error, ERROR_STOP, "Failed to initialize AI Core task synchronization check, retCode=%#x.",
         static_cast<uint32_t>(error));
 
+    error = AllocUserBufAddr();
+    ERROR_GOTO(
+        error, ERROR_STOP, "Failed to allocate the user buffer address, retCode=%#x.", static_cast<uint32_t>(error));
+
     return RT_ERROR_NONE;
 
 ERROR_STOP:
@@ -1409,6 +1413,49 @@ void RawDevice::FreeProfSwitchAddr(void)
     if (profSwitchAddr_ != 0UL) {
         (void)driver_->DevMemFree(RtValueToPtr<void*>(profSwitchAddr_), deviceId_);
         profSwitchAddr_ = 0UL;
+    }
+
+    return;
+}
+
+rtError_t RawDevice::AllocUserBufAddr(void)
+{
+    const uint32_t userBufferSize = GetDevProperties().userBufferSize;
+    if (userBufferSize == 0U) {
+        return RT_ERROR_NONE;
+    }
+
+    constexpr size_t OP_COMPAT_MODE_ENV_SIZE = 2U;
+    std::array<char_t, OP_COMPAT_MODE_ENV_SIZE> opCompatModeEnv{};
+    auto ret =
+        mmGetEnv("ASCEND_OP_COMPATIBILITY_MODE", opCompatModeEnv.data(), static_cast<uint32_t>(opCompatModeEnv.size()));
+    if ((ret != EN_OK) || (opCompatModeEnv[0U] != '1') || (opCompatModeEnv[1U] != '\0')) {
+        return RT_ERROR_NONE;
+    }
+    RT_LOG(RT_LOG_EVENT, "ASCEND_OP_COMPATIBILITY_MODE is enabled.");
+
+    void* addr = nullptr;
+    const rtError_t error = Driver_()->DevMemAllocWithBackupFlag(
+        &addr, static_cast<uint64_t>(userBufferSize), RT_MEMORY_HBM, deviceId_,
+        DevMemBackupType::SNAPSHOT_OPTIONAL_BACKUP);
+    COND_RETURN_ERROR(
+        error != RT_ERROR_NONE, error,
+        "alloc user buffer failed, "
+        "device_id=%u, retCode=%#x",
+        deviceId_, static_cast<uint32_t>(error));
+
+    userBufAddr_ = RtPtrToValue(addr);
+    return RT_ERROR_NONE;
+}
+
+void RawDevice::FreeUserBufAddr(void)
+{
+    if (userBufAddr_ != 0UL) {
+        const rtError_t error = driver_->DevMemFree(RtValueToPtr<void*>(userBufAddr_), deviceId_);
+        COND_LOG_WARN(
+            error != RT_ERROR_NONE, "user buffer free failed, device_id=%u, retCode=%#x!", deviceId_,
+            static_cast<uint32_t>(error));
+        userBufAddr_ = 0UL;
     }
 
     return;
@@ -1538,6 +1585,7 @@ rtError_t RawDevice::Stop()
     SetPageFaultBaseCnt(0U);
     SetPageFaultBaseTime(0U);
     FreeProfSwitchAddr();
+    FreeUserBufAddr();
     FreeFftsPlusArgHandleCache();
     return engine_->Stop();
 }

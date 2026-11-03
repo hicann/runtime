@@ -249,6 +249,10 @@ public:
 
     bool GetEarlyStartEnable() const { return earlyStartEnable_; }
 
+    void SetCompatMode(uint32_t compatMode) { compatMode_ = compatMode; }
+
+    uint32_t GetCompatMode() const { return compatMode_; }
+
 private:
     Program* program_;
     uint32_t aicpuKernelType_ = static_cast<uint32_t>(KERNEL_TYPE_RESERVED);
@@ -275,6 +279,7 @@ private:
     bool isSupportOverFlow_ = true;
     bool isStlKernel_ = false;
     bool earlyStartEnable_{false};
+    uint32_t compatMode_{0U};
 
     const void* dfxAddr_;
     uint16_t dfxSize_;

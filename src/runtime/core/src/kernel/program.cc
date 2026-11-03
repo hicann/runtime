@@ -1229,6 +1229,7 @@ void ElfProgram::SetKernelAttribute(const RtKernel* const kernel, Kernel* const 
     kernelObj->SetParamCount(metaInfo->paramCount);
     kernelObj->SetHasParamSummary(metaInfo->hasParamSummary);
     kernelObj->SetEarlyStartEnable(metaInfo->earlyStartEnable);
+    kernelObj->SetCompatMode(metaInfo->compatMode);
 
     uint16_t sysParamNum = 0U;
     if (kernelObj->IsSupportOverFlow()) {
@@ -1932,6 +1933,9 @@ rtError_t ElfProgram::MergeKernel(const RtKernel* const elfkernelInfo, Kernel* o
     }
 
     oldKernel->SetEarlyStartEnable(oldKernel->GetEarlyStartEnable() || metaInfo->earlyStartEnable);
+    if (metaInfo->compatMode == 1U) {
+        oldKernel->SetCompatMode(1U);
+    }
 
     (void)GetPrefetchCnt(oldKernel);
 

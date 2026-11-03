@@ -630,6 +630,7 @@ typedef enum {
     RT_FUNCTION_TYPE_PARAM_SUMMARY = 16U,
     RT_FUNCTION_TYPE_PARAM_INFO = 17U,
     RT_FUNCTION_TYPE_SCHED_MODE_INFO = 18U,
+    RT_FUNCTION_TYPE_COMPAT_MODE = 21U,
 } rtFunctionMetaType;
 
 typedef enum tagRtXpuDevType { RT_DEV_TYPE_DPU = 0, RT_DEV_TYPE_REV } rtXpuDevType;

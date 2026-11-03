@@ -25,6 +25,16 @@
 
 namespace cce {
 namespace runtime {
+rtError_t GetLaunchBlockDim(const uint32_t blockDim, uint16_t& launchBlockDim)
+{
+    if (blockDim > (UINT16_MAX / 2U)) {
+        RT_LOG_OUTER_MSG_INVALID_PARAM_WITH_DESC("Starting the compute task", blockDim, "[1, 32767]");
+        return RT_ERROR_INVALID_VALUE;
+    }
+    launchBlockDim = static_cast<uint16_t>(blockDim * 2U);
+    return RT_ERROR_NONE;
+}
+
 void ComputeRatio(uint16_t ratio[2], uint32_t mixType, uint32_t taskRatio)
 {
     ratio[0] = 0U;

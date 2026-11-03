@@ -175,6 +175,11 @@ struct ElfKernelEarlyStartInfo {
     uint32_t earlyStartEnable;
 };
 
+struct ElfKernelCompatModeInfo {
+    ElfTlvHead head;
+    uint32_t compatMode;
+};
+
 constexpr uint8_t KERNEL_FUNCTION_ENTRY_DISABLE = 0x80U;
 
 struct ElfKernelFunctionEntryInfo {
@@ -236,6 +241,7 @@ struct ElfKernelInfo {
     int32_t elfDataFlag;
     uint16_t userArgsNum;
     bool earlyStartEnable;
+    uint32_t compatMode;
     uint32_t minStackSize;
     uint64_t functionEntry;
     bool isSupportFuncEntry;
@@ -365,6 +371,7 @@ struct RtKernelMetaInfo {
     uint64_t paramTotalSize;
     bool hasParamSummary;
     bool earlyStartEnable;
+    uint32_t compatMode;
 };
 
 struct RtKernel final {
@@ -379,12 +386,14 @@ constexpr uint32_t KERNEL_FFTS_ADDR_BIT = 0x2U;
 constexpr uint32_t KERNEL_SYSTEM_RUN_CFG_ADDR_BIT = 0x4U;
 constexpr uint32_t KERNEL_SIMT_PRINT_FIFO_ADDR_BIT = 0x8U;
 constexpr uint32_t KERNEL_ASSERT_PRINT_FIFO_ADDR_BIT = 0x10U;
+constexpr uint32_t KERNEL_USER_BUFF_ADDR_BIT = 0x40U;
 
 struct rtElfSymbolAddr {
     uint64_t* g_sysFftsAddr = nullptr;
     uint64_t* g_opL2CacheHintCfg = nullptr;
     uint64_t* g_sysPrintFifoSpace = nullptr;
     uint64_t* g_sysSimtPrintFifoSpace = nullptr;
+    uint64_t* g_sysCV11CompatCV12WorkSpace = nullptr;
 };
 
 struct rtElfData {

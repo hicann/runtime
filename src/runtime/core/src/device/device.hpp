@@ -481,6 +481,9 @@ public:
     virtual void ProfSwitchDisable() = 0;
     virtual void ProfSwitchEnable() = 0;
     virtual uint64_t GetProfSwitchAddr(void) = 0;
+    virtual rtError_t AllocUserBufAddr(void) = 0;
+    virtual void FreeUserBufAddr(void) = 0;
+    virtual uint64_t GetUserBufAddr(void) const = 0;
     virtual CtrlSQ& GetCtrlSQ(void) const = 0;
     virtual void RegisterProgram(Program* prog) = 0;
     virtual void UnRegisterProgram(Program* prog) = 0;

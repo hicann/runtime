@@ -271,7 +271,7 @@ static constexpr DevProperties CHIP_CLOUD_V6_PROPERTIES = {
     .icachePrefetchUnits = ICACHE_PREFETCH_UNIT,
     .simtStackUseMaxDavidDieNum = false,
     .modelScheduleSoftware = false,
-    .userBufferSize = USER_BUFFER_SIZE_64M,
+    .userBufferSize = 0U,
 };
 
 REGISTER_DEV_PROPERTIES(CHIP_CLOUD_V6, CHIP_CLOUD_V6_PROPERTIES);

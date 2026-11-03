@@ -381,7 +381,12 @@ rtError_t StreamLaunchKernelV1(
         dstStm = kernelTask->stream;
     }
 
-    AicTaskInit(kernelTask, registeredKernel, kernelAttrType, static_cast<uint16_t>(coreDim), taskCfg, false);
+    uint16_t launchBlockDim = static_cast<uint16_t>(coreDim);
+    if ((registeredKernel != nullptr) && (registeredKernel->GetCompatMode() == 1U)) {
+        error = GetLaunchBlockDim(coreDim, launchBlockDim);
+        ERROR_RETURN_MSG_INNER(error, "Failed to calculate launch blockDim, blockDim=%u.", coreDim);
+    }
+    AicTaskInit(kernelTask, registeredKernel, kernelAttrType, launchBlockDim, taskCfg, false);
     // for simt
     error = CheckDynSizeValid(kernelTask, registeredKernel);
     COND_RETURN_ERROR(
@@ -506,7 +511,12 @@ rtError_t StreamLaunchKernelWithHandle(
         dstStm = kernelTask->stream;
     }
 
-    AicTaskInit(kernelTask, registeredKernel, kernelAttrType, static_cast<uint16_t>(coreDim), taskCfg, false);
+    uint16_t launchBlockDim = static_cast<uint16_t>(coreDim);
+    if ((registeredKernel != nullptr) && (registeredKernel->GetCompatMode() == 1U)) {
+        error = GetLaunchBlockDim(coreDim, launchBlockDim);
+        ERROR_RETURN_MSG_INNER(error, "Failed to calculate launch blockDim, blockDim=%u.", coreDim);
+    }
+    AicTaskInit(kernelTask, registeredKernel, kernelAttrType, launchBlockDim, taskCfg, false);
     error = CheckDynSizeValid(kernelTask, registeredKernel);
     COND_RETURN_ERROR(
         error != RT_ERROR_NONE, error, "Failed to check SIMT shared memory size, stream_id=%d, retCode=%#x.",
@@ -636,7 +646,12 @@ rtError_t StreamLaunchKernelV2(
         pos = kernelTask->id;
         dstStm = kernelTask->stream;
     }
-    AicTaskInit(kernelTask, kernel, kernelAttrType, static_cast<uint16_t>(coreDim), extendAgrs->taskCfg, false);
+    uint16_t launchBlockDim = static_cast<uint16_t>(coreDim);
+    if ((kernel != nullptr) && (kernel->GetCompatMode() == 1U)) {
+        error = GetLaunchBlockDim(coreDim, launchBlockDim);
+        ERROR_RETURN_MSG_INNER(error, "Failed to calculate launch blockDim, blockDim=%u.", coreDim);
+    }
+    AicTaskInit(kernelTask, kernel, kernelAttrType, launchBlockDim, extendAgrs->taskCfg, false);
 
     error = CheckDynSizeValid(kernelTask, kernel);
     COND_RETURN_ERROR(

@@ -557,6 +557,9 @@ public:
     void ProfSwitchDisable() override;
     void ProfSwitchEnable() override;
     uint64_t GetProfSwitchAddr(void) override { return profSwitchAddr_; }
+    rtError_t AllocUserBufAddr(void) override;
+    void FreeUserBufAddr(void) override;
+    uint64_t GetUserBufAddr(void) const override { return userBufAddr_; }
 
     CtrlSQ& GetCtrlSQ(void) const override { return *(ctrlSQ_.get()); }
 
@@ -750,6 +753,7 @@ private:
     std::mutex exceptionRegMutex_;
     bool isSupportStopOnStreamError_{false};
     uint64_t profSwitchAddr_{0UL};
+    uint64_t userBufAddr_{0UL};
     Atomic<uint64_t> c2cCtrlAddr_{0UL};
     Atomic<uint32_t> c2cCtrlAddrLen_{0U};
 

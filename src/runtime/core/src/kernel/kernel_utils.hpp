@@ -18,6 +18,7 @@
 namespace cce {
 namespace runtime {
 void ComputeRatio(uint16_t ratio[2], uint32_t mixType, uint32_t taskRatio);
+rtError_t GetLaunchBlockDim(uint32_t blockDim, uint16_t& launchBlockDim);
 rtError_t ConvertTaskType(const TaskInfo* const task, rtTaskType* type);
 rtError_t GetKernelTaskParams(const TaskInfo* const taskInfo, rtTaskParams* const params);
 rtError_t CacheKernelTaskParams(TaskInfo* const taskInfo, const rtTaskParams* const params);
