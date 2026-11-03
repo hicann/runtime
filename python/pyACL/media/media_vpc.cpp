@@ -64,6 +64,23 @@ static bool ProcessArray(PyObject& numList, uint32_t& numArray, int size)
     return true;
 }
 
+static bool CheckBatchRoiArrayLength(const std::vector<uint32_t>& roiNums, size_t batchSize, size_t roiArraySize)
+{
+    size_t totalRoiCount = 0;
+    for (size_t i = 0; i < batchSize; ++i) {
+        if (roiNums[i] > roiArraySize - totalRoiCount) {
+            PyErr_SetString(PyExc_ValueError, "the roiNums total does not match the ROI array length");
+            return false;
+        }
+        totalRoiCount += roiNums[i];
+    }
+    if (totalRoiCount != roiArraySize) {
+        PyErr_SetString(PyExc_ValueError, "the roiNums total does not match the ROI array length");
+        return false;
+    }
+    return true;
+}
+
 PyObject* WrapAclDvppVpcBatchCropAsync(PyObject* /* self */, PyObject* args)
 {
     acldvppChannelDesc* channelDesc = nullptr;
@@ -87,6 +104,7 @@ PyObject* WrapAclDvppVpcBatchCropAsync(PyObject* /* self */, PyObject* args)
 
     std::vector<uint32_t> roiNums(size + 1);
     CHECK_NULL(ProcessArray(*roiNumsList, *(roiNums.data()), size))
+    CHECK_NULL(CheckBatchRoiArrayLength(roiNums, static_cast<size_t>(size), static_cast<size_t>(cropSize)));
     std::vector<acldvppRoiConfig*> cropAreas(cropSize + 1, nullptr);
     CHECK_NULL(ConvertPyListToPtrArray(cropAreasList, cropSize, cropAreas.data()));
 
@@ -149,6 +167,7 @@ PyObject* WrapAclDvppVpcBatchCropAndPasteAsync(PyObject* /* self */, PyObject* a
     CHECK_NULL(CheckArgsAndGetSize(*roiNumsList, *cropAreasList, *pasteAreasList, size, cropSize));
     std::vector<uint32_t> roiNums(size + 1);
     CHECK_NULL(ProcessArray(*roiNumsList, *(roiNums.data()), size));
+    CHECK_NULL(CheckBatchRoiArrayLength(roiNums, static_cast<size_t>(size), static_cast<size_t>(cropSize)));
     std::vector<acldvppRoiConfig*> cropAreas(cropSize + 1, nullptr);
     std::vector<acldvppRoiConfig*> pasteAreas(cropSize + 1, nullptr);
     CHECK_NULL(ConvertPyListToPtrArray(cropAreasList, cropSize, cropAreas.data()));
@@ -408,6 +427,7 @@ PyObject* WrapAclDvppVpcBatchCropResizeAsync(PyObject* /* self */, PyObject* arg
 
     CHECK_NULL(PyList_Check(cropAreasObj), "argument 5 is not list");
     ssize_t cropAreasSize = PyList_Size(cropAreasObj);
+    CHECK_NULL(CheckBatchRoiArrayLength(roiNums, static_cast<size_t>(roiNumsSize), static_cast<size_t>(cropAreasSize)));
     std::vector<acldvppRoiConfig*> cropAreas(cropAreasSize + 1, nullptr);
     CHECK_NULL(ConvertPyListToPtrArray(cropAreasObj, static_cast<int>(cropAreasSize), cropAreas.data()));
 
@@ -461,11 +481,13 @@ PyObject* WrapAclDvppVpcBatchCropResizePasteAsync(PyObject* /* self */, PyObject
 
     CHECK_NULL(PyList_Check(cropAreasObj), "argument 5 is not list");
     ssize_t cropAreasSize = PyList_Size(cropAreasObj);
+    CHECK_NULL(CheckBatchRoiArrayLength(roiNums, static_cast<size_t>(roiNumsSize), static_cast<size_t>(cropAreasSize)));
     std::vector<acldvppRoiConfig*> cropAreas(cropAreasSize + 1, nullptr);
     CHECK_NULL(ConvertPyListToPtrArray(cropAreasObj, static_cast<int>(cropAreasSize), cropAreas.data()));
 
     CHECK_NULL(PyList_Check(pasteAreasObj), "argument 6 is not list");
     ssize_t pasteAreasSize = PyList_Size(pasteAreasObj);
+    CHECK_NULL(pasteAreasSize == cropAreasSize, "cropAreas and pasteAreas lengths differ", PyExc_ValueError);
     std::vector<acldvppRoiConfig*> pasteAreas(pasteAreasSize + 1, nullptr);
     CHECK_NULL(ConvertPyListToPtrArray(pasteAreasObj, static_cast<int>(pasteAreasSize), pasteAreas.data()));
 
@@ -499,11 +521,13 @@ PyObject* WrapAclDvppVpcBatchCropResizeMakeBorderAsync(PyObject* /* self */, PyO
 
     CHECK_NULL(PyList_Check(cropAreasObj), "the fifth argument is not list");
     ssize_t cropAreasSize = PyList_Size(cropAreasObj);
+    CHECK_NULL(CheckBatchRoiArrayLength(roiNums, static_cast<size_t>(roiNumsSize), static_cast<size_t>(cropAreasSize)));
     std::vector<acldvppRoiConfig*> cropAreas(cropAreasSize + 1, nullptr);
     CHECK_NULL(ConvertPyListToPtrArray(cropAreasObj, static_cast<int>(cropAreasSize), cropAreas.data()));
 
     CHECK_NULL(PyList_Check(borderCfgsObj), "the sixth argument is not list");
     ssize_t borderCfgsSize = PyList_Size(borderCfgsObj);
+    CHECK_NULL(borderCfgsSize == cropAreasSize, "cropAreas and borderCfgs lengths differ", PyExc_ValueError);
     std::vector<acldvppBorderConfig*> borderCfgs(borderCfgsSize + 1, nullptr);
     CHECK_NULL(ConvertPyListToPtrArray(borderCfgsObj, static_cast<int>(borderCfgsSize), borderCfgs.data()));
 
