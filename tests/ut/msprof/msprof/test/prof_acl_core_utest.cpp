@@ -179,7 +179,33 @@ public:
 protected:
     virtual void SetUp() { RegisterTryPop(); }
     virtual void TearDown() { GlobalMockObject::verify(); }
+
+    static int32_t InitSystemModeStage()
+    {
+        EXPECT_EQ(0, systemModeStage_);
+        systemModeStage_ = 1;
+        return PROFILING_SUCCESS;
+    }
+
+    static int32_t RunSystemModeStage(
+        const SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams>&, const std::string&)
+    {
+        EXPECT_EQ(1, systemModeStage_);
+        systemModeStage_ = 2;
+        return PROFILING_SUCCESS;
+    }
+
+    static int32_t FinalizeSystemModeStage()
+    {
+        EXPECT_EQ(2, systemModeStage_);
+        systemModeStage_ = 3;
+        return MSPROF_ERROR_NONE;
+    }
+
+    static int systemModeStage_;
 };
+
+int MSPROF_ACL_CORE_UTEST::systemModeStage_ = 0;
 
 int aclApiSubscribeCount = 0;
 
@@ -1338,6 +1364,74 @@ TEST_F(MSPROF_ACL_CORE_UTEST, AclEnvSystemModeRunnerTest)
         .will(returnValue(false));
 
     EXPECT_EQ(MSPROF_ERROR_CONFIG_INVALID, Msprofiler::Api::ProfAclMgr::instance()->MsprofInitAclEnv(envsV));
+}
+
+TEST_F(MSPROF_ACL_CORE_UTEST, AclEnvSystemModeInitializesProfManagerBeforeRunner)
+{
+    GlobalMockObject::verify();
+    std::string envsV("{\"result_dir\":\"/tmp\", \"devices\":\"1\", \"job_id\":\"1\", \"profMode\":\"system\"}");
+    const std::string selfPath = "/home";
+    MOCKER(&analysis::dvvp::common::utils::Utils::GetSelfPath).stubs().will(returnValue(selfPath));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::CallbackInitPrecheck).stubs().will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(
+        &analysis::dvvp::common::validation::ParamValidation::CheckStorageLimit,
+        bool(ParamValidation::*)(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams>, const std::string&) const)
+        .stubs()
+        .will(returnValue(true));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::InitSystemMode)
+        .expects(once())
+        .will(returnValue(static_cast<int32_t>(PROFILING_SUCCESS)));
+    MOCKER_CPP(&analysis::dvvp::runner::RuntimeSystemModeRunner::Run)
+        .expects(once())
+        .will(returnValue(static_cast<int32_t>(PROFILING_SUCCESS)));
+
+    EXPECT_EQ(PROFILING_SUCCESS, Msprofiler::Api::ProfAclMgr::instance()->MsprofInitAclEnv(envsV));
+}
+
+TEST_F(MSPROF_ACL_CORE_UTEST, AclEnvSystemModeFinalizesAfterRunner)
+{
+    GlobalMockObject::verify();
+    std::string envsV("{\"result_dir\":\"/tmp\", \"devices\":\"1\", \"job_id\":\"1\", \"profMode\":\"system\"}");
+    const std::string selfPath = "/home";
+    MOCKER(&analysis::dvvp::common::utils::Utils::GetSelfPath).stubs().will(returnValue(selfPath));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::CallbackInitPrecheck).stubs().will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(
+        &analysis::dvvp::common::validation::ParamValidation::CheckStorageLimit,
+        bool(ParamValidation::*)(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams>, const std::string&) const)
+        .stubs()
+        .will(returnValue(true));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::InitSystemMode)
+        .expects(once())
+        .will(invoke(&MSPROF_ACL_CORE_UTEST::InitSystemModeStage));
+    MOCKER_CPP(&analysis::dvvp::runner::RuntimeSystemModeRunner::Run)
+        .expects(once())
+        .will(invoke(&MSPROF_ACL_CORE_UTEST::RunSystemModeStage));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::MsprofFinalizeHandle)
+        .expects(once())
+        .will(invoke(&MSPROF_ACL_CORE_UTEST::FinalizeSystemModeStage));
+
+    EXPECT_EQ(PROFILING_SUCCESS, Msprofiler::Api::ProfAclMgr::instance()->MsprofInitAclEnv(envsV));
+    EXPECT_EQ(3, systemModeStage_);
+}
+
+TEST_F(MSPROF_ACL_CORE_UTEST, AclEnvSystemModeInitFailedSetsModeToOff)
+{
+    GlobalMockObject::verify();
+    std::string envsV("{\"result_dir\":\"/tmp\", \"devices\":\"1\", \"job_id\":\"1\", \"profMode\":\"system\"}");
+    const std::string selfPath = "/home";
+    MOCKER(&analysis::dvvp::common::utils::Utils::GetSelfPath).stubs().will(returnValue(selfPath));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::CallbackInitPrecheck).stubs().will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(
+        &analysis::dvvp::common::validation::ParamValidation::CheckStorageLimit,
+        bool(ParamValidation::*)(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams>, const std::string&) const)
+        .stubs()
+        .will(returnValue(true));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::InitSystemMode)
+        .expects(once())
+        .will(returnValue(static_cast<int32_t>(PROFILING_FAILED)));
+    MOCKER_CPP(&analysis::dvvp::runner::RuntimeSystemModeRunner::Run).expects(never());
+
+    EXPECT_EQ(MSPROF_ERROR, Msprofiler::Api::ProfAclMgr::instance()->MsprofInitAclEnv(envsV));
 }
 
 TEST_F(MSPROF_ACL_CORE_UTEST, SystemModeRunnerPlatformInitFailed)

@@ -160,6 +160,8 @@ public:
 
 public:
     int32_t Init();
+    int32_t InitSystemMode();
+    int32_t FinishSystemMode();
     int32_t UnInit();
 
     /* Precheck rule:

@@ -668,12 +668,15 @@ static ProfAclMgr* profAclMgrObjPtr = NULL;
 static std::mutex g_sigHandlerMtx;
 static bool g_sigHandlerRegistered = false;
 static bool g_sigHandlerUnregistering = false;
-static volatile sig_atomic_t g_sigintReceived = 0; // 信号处理使用，符合 POSIX async-signal-safe
-static std::atomic<bool> g_sigWatcherQuit{false};  // 改为 atomic 以符合 C++ 内存模型
+static volatile sig_atomic_t g_sigintReceived = 0;       // 信号处理使用，符合 POSIX async-signal-safe
+static volatile sig_atomic_t g_systemSigintReceived = 0; // 系统级模式专用停止标志
+static std::atomic<bool> g_sigWatcherQuit{false};        // 改为 atomic 以符合 C++ 内存模型
 static std::unique_ptr<std::thread> g_sigWatcherThread;
 static struct sigaction oldSigAction;
+static struct sigaction systemOldSigAction;
+static bool g_systemSigHandlerRegistered = false;
 
-bool ProfAclMgr::IsSigintShutdownInProgress() const { return g_sigintReceived != 0; }
+bool ProfAclMgr::IsSigintShutdownInProgress() const { return (g_sigintReceived != 0) || (g_systemSigintReceived != 0); }
 
 // forward declaration: SigintWatcherThread references newSigHandler by address
 static void newSigHandler(int signum);
@@ -756,6 +759,13 @@ static void newSigHandler(int signum)
     g_sigintReceived = static_cast<sig_atomic_t>(signum);
 }
 
+static void newSystemSigHandler(int signum)
+{
+    // System mode uses its own stop flag. The system runner performs finalization
+    // synchronously before MsprofInit returns, so no watcher thread is needed.
+    g_systemSigintReceived = static_cast<sig_atomic_t>(signum);
+}
+
 static void RegisterSiganlHandler(ProfAclMgr* ptr)
 {
     std::lock_guard<std::mutex> lk(g_sigHandlerMtx);
@@ -801,6 +811,46 @@ static void RegisterSiganlHandler(ProfAclMgr* ptr)
     MSPROF_LOGI("RegisterSiganlHandler done");
 }
 
+static int32_t RegisterSystemSiganlHandler()
+{
+    std::lock_guard<std::mutex> lk(g_sigHandlerMtx);
+    if (g_systemSigHandlerRegistered) {
+        MSPROF_LOGI("System mode SIGINT handler already registered, skip");
+        return PROFILING_SUCCESS;
+    }
+    if (g_sigHandlerRegistered || g_sigHandlerUnregistering) {
+        MSPROF_LOGE("Common SIGINT handler already registered, system mode handler cannot replace it");
+        return PROFILING_FAILED;
+    }
+
+    struct sigaction newAction;
+    (void)memset_s(&newAction, sizeof(newAction), 0, sizeof(newAction));
+    newAction.sa_handler = newSystemSigHandler;
+    (void)sigemptyset(&newAction.sa_mask);
+    g_systemSigintReceived = 0;
+    if (sigaction(SIGINT, &newAction, &systemOldSigAction) != 0) {
+        MSPROF_LOGE("Failed to register system mode SIGINT handler");
+        return PROFILING_FAILED;
+    }
+    g_systemSigHandlerRegistered = true;
+    MSPROF_LOGI("RegisterSystemSiganlHandler done");
+    return PROFILING_SUCCESS;
+}
+
+static void UnregisterSystemSiganlHandler()
+{
+    std::lock_guard<std::mutex> lk(g_sigHandlerMtx);
+    if (!g_systemSigHandlerRegistered) {
+        return;
+    }
+    if (sigaction(SIGINT, &systemOldSigAction, nullptr) != 0) {
+        MSPROF_LOGE("Failed to restore system mode SIGINT handler");
+    }
+    g_systemSigHandlerRegistered = false;
+    g_systemSigintReceived = 0;
+    MSPROF_LOGI("UnregisterSystemSiganlHandler done");
+}
+
 /**
  * Init resources for acl api call
  */
@@ -808,6 +858,11 @@ int32_t ProfAclMgr::Init()
 {
     MSPROF_LOGI("ProfAclMgr Init");
     RegisterSiganlHandler(this);
+    return InitResources();
+}
+
+int32_t ProfAclMgr::InitResources()
+{
     if (isReady_) {
         return PROFILING_SUCCESS;
     }
@@ -821,9 +876,27 @@ int32_t ProfAclMgr::Init()
     return PROFILING_SUCCESS;
 }
 
+int32_t ProfAclMgr::InitSystemMode()
+{
+    MSPROF_LOGI("ProfAclMgr InitSystemMode");
+    if (RegisterSystemSiganlHandler() != PROFILING_SUCCESS) {
+        return PROFILING_FAILED;
+    }
+    return InitResources();
+}
+
+int32_t ProfAclMgr::FinishSystemMode()
+{
+    MSPROF_LOGI("ProfAclMgr FinishSystemMode");
+    (void)MsprofFinalizeHandle();
+    UnregisterSystemSiganlHandler();
+    return PROFILING_SUCCESS;
+}
+
 int32_t ProfAclMgr::UnInit()
 {
     UnregisterSigalHandler();
+    UnregisterSystemSiganlHandler();
     params_ = nullptr;
     devTasks_.clear();
     statsDevSet_.clear();
@@ -2388,7 +2461,7 @@ int32_t ProfAclMgr::MsprofInitGeOptions(VOID_PTR data, uint32_t len)
 int32_t ProfAclMgr::MsprofInitAclEnv(const std::string& envValue)
 {
     MSPROF_EVENT("Init profiling for CommandLine");
-    std::lock_guard<std::mutex> lk(mtx_);
+    std::unique_lock<std::mutex> lk(mtx_);
     int32_t ret = CallbackInitPrecheck();
     if (ret != PROFILING_SUCCESS) {
         return MSPROF_ERROR_NONE;
@@ -2437,7 +2510,15 @@ int32_t ProfAclMgr::MsprofInitAclEnv(const std::string& envValue)
         "MsprofInitAclEnv, mode:%d, dataTypeConfig:0x%llx, baseDir:%s", mode_, dataTypeConfig_,
         Utils::BaseName(baseDir_).c_str());
     if (IsSystemMode()) {
-        return analysis::dvvp::runner::RuntimeSystemModeRunner::Run(params_, baseDir_);
+        if (InitSystemMode() != PROFILING_SUCCESS) {
+            MSPROF_LOGE("Failed to init profiling resources before system mode runner");
+            SetModeToOff();
+            return MSPROF_ERROR;
+        }
+        const int32_t runRet = analysis::dvvp::runner::RuntimeSystemModeRunner::Run(params_, baseDir_);
+        lk.unlock();
+        (void)FinishSystemMode();
+        return runRet;
     }
     return MSPROF_ERROR_NONE;
 }

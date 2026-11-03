@@ -407,6 +407,9 @@ int32_t RuntimeSystemModeRunner::WaitSysTask() const
         Utils::UsleepInterupt(SYSTEM_MODE_WAIT_SLICE_US);
         times++;
     }
+    if (times < cycles) {
+        MSPROF_LOGI("System mode wait exited early by signal, waited %u slices, configured %u slices", times, cycles);
+    }
     return PROFILING_SUCCESS;
 }
 

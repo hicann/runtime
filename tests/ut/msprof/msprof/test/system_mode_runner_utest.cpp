@@ -89,6 +89,20 @@ TEST_F(SYSTEM_MODE_RUNNER_UTEST, WaitSysTaskReturnsImmediatelyWithoutPeriod)
     EXPECT_EQ(PROFILING_SUCCESS, runner.WaitSysTask());
 }
 
+TEST_F(SYSTEM_MODE_RUNNER_UTEST, WaitSysTaskReportsEarlySignalExit)
+{
+    auto params = std::make_shared<ProfileParams>();
+    params->profiling_period = 60;
+    analysis::dvvp::runner::RuntimeSystemModeRunner runner(params, "PROF_test");
+
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::IsSigintShutdownInProgress)
+        .stubs()
+        .will(invoke(&SYSTEM_MODE_RUNNER_UTEST::SigintShutdownInProgress));
+    MOCKER(Utils::UsleepInterupt).stubs();
+
+    EXPECT_EQ(PROFILING_SUCCESS, runner.WaitSysTask());
+}
+
 TEST_F(SYSTEM_MODE_RUNNER_UTEST, DeviceFailureStopsStartedTasks)
 {
     auto params = std::make_shared<ProfileParams>();

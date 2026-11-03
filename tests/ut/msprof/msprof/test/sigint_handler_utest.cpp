@@ -138,6 +138,56 @@ TEST_F(SigintHandlerUtest, SigintWatcherThreadCallsMsprofFinalize)
     mgr->UnInit();
 }
 
+TEST_F(SigintHandlerUtest, SystemModeSigintHandlerSkipsWatcherFinalizeAndRedelivery)
+{
+    g_customSigHandlerCalled = false;
+    g_finalizeCalled = false;
+    signal(SIGINT, CustomerSigHandlerWithFlag);
+
+    MOCKER(OsalSleep).stubs().will(invoke(OsalSleepNoopStub));
+    MOCKER_CPP(&ProfAclMgr::MsprofFinalizeHandle).stubs().will(invoke(FinalizeAndSetFlag));
+
+    auto* mgr = ProfAclMgr::instance();
+    mgr->isReady_ = true;
+    mgr->InitSystemMode();
+    raise(SIGINT);
+
+    int waitMs = 0;
+    while (waitMs < 20) {
+        usleep(1000);
+        waitMs++;
+    }
+    EXPECT_FALSE(g_finalizeCalled.load());
+    EXPECT_FALSE(g_customSigHandlerCalled.load());
+    EXPECT_EQ(analysis::dvvp::common::error::PROFILING_SUCCESS, mgr->FinishSystemMode());
+    EXPECT_TRUE(g_finalizeCalled.load());
+    EXPECT_FALSE(g_customSigHandlerCalled.load());
+
+    ProfSignalHandler restored = signal(SIGINT, CustomerSigHandlerWithFlag);
+    EXPECT_EQ(restored, CustomerSigHandlerWithFlag);
+}
+
+TEST_F(SigintHandlerUtest, SystemModeFinishFinalizesBeforeRestoringHandler)
+{
+    g_customSigHandlerCalled = false;
+    g_finalizeCalled = false;
+    signal(SIGINT, CustomerSigHandlerWithFlag);
+
+    MOCKER_CPP(&ProfAclMgr::MsprofFinalizeHandle).stubs().will(invoke(FinalizeAndSetFlag));
+
+    auto* mgr = ProfAclMgr::instance();
+    mgr->isReady_ = true;
+    mgr->InitSystemMode();
+
+    EXPECT_EQ(analysis::dvvp::common::error::PROFILING_SUCCESS, mgr->FinishSystemMode());
+    EXPECT_TRUE(g_finalizeCalled.load());
+    EXPECT_FALSE(g_customSigHandlerCalled.load());
+
+    ProfSignalHandler restored = signal(SIGINT, SIG_IGN);
+    EXPECT_EQ(restored, CustomerSigHandlerWithFlag);
+    signal(SIGINT, SIG_DFL);
+}
+
 TEST_F(SigintHandlerUtest, SigintWatcherSkipsRedeliveryWhenUnInitRunsDuringFinalize)
 {
     g_customSigHandlerCalled = false;
