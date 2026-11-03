@@ -21,7 +21,7 @@ bool BufferAllocator::openHugeBuff_ = false;
 
 BufferAllocator::BufferAllocator(
     const uint32_t size, const uint32_t initCnt, const uint32_t maxCnt, const Strategy stg,
-    const AllocFuncPtr allocFunctionPtr, const FreeFuncPtr freeFunctionPtr, void* const allocParam,
+    AllocFuncPtr const allocFunctionPtr, FreeFuncPtr const freeFunctionPtr, void* const allocParam,
     const bool enablePoolRelease)
     : NoCopy(),
       allocStrategy_(stg),
@@ -29,7 +29,7 @@ BufferAllocator::BufferAllocator(
       initCount_((initCnt < maxCnt) ? initCnt : maxCnt),
       maxCount_(maxCnt),
       poolSize_(0),
-      bitmap_(maxCnt <= static_cast<uint32_t>(BUFF_SLIP_NUMBER) ? maxCnt : BUFF_SLIP_NUMBER),
+      bitmap_(maxCnt <= static_cast<uint32_t>(BUFF_SLIP_NUMBER) ? maxCnt : static_cast<uint32_t>(BUFF_SLIP_NUMBER)),
       para_(allocParam),
       pool_(nullptr),
       currentCount_((initCnt < maxCnt) ? initCnt : maxCnt),
@@ -44,7 +44,7 @@ BufferAllocator::BufferAllocator(
     }
 
     poolSize_ = GetPoolIndex(maxCount_ - 1U) + 1U;
-    const uint32_t poolArraySize = (GetPoolIndex(maxCount_ - 1U) + 1U) * sizeof(uint8_t*);
+    const uint32_t poolArraySize = static_cast<uint32_t>((GetPoolIndex(maxCount_ - 1U) + 1U) * sizeof(uint8_t*));
     pool_ = RtPtrToPtr<uint8_t**>(malloc(static_cast<size_t>(poolArraySize)));
     if (pool_ == nullptr) {
         RT_LOG(RT_LOG_ERROR, "Failed to malloc pool array, size=%u(bytes).", poolArraySize);
@@ -243,7 +243,7 @@ bool BufferAllocator::PrepareAllocatedId(const int32_t id, const bool isLogError
     }
 }
 
-bool BufferAllocator::InitializePool(const uint32_t poolIdx, const PoolState failureState, const bool isLogError)
+bool BufferAllocator::InitializePool(const uint32_t poolIdx, const PoolState failureState, const bool isLogError) const
 {
     const size_t size = static_cast<size_t>(GetPoolCount(poolIdx)) * itemSize_;
     void* const ptr = allocFunc_(size, para_);
@@ -254,6 +254,9 @@ bool BufferAllocator::InitializePool(const uint32_t poolIdx, const PoolState fai
     }
     pool_[poolIdx] = RtPtrToPtr<uint8_t*>(ptr);
     poolMeta_[poolIdx].state.Set(PoolState::INITIALIZED);
+    if (failureState == PoolState::RELEASED) {
+        RT_LOG(RT_LOG_DEBUG, "Rebuild buffer pool memory, poolIdx=%u, size=%zu(bytes).", poolIdx, size);
+    }
     return true;
 }
 
@@ -302,6 +305,9 @@ void BufferAllocator::FreeById(const int32_t id)
     pool_[poolIdx] = nullptr;
     freeFunc_(ptr, para_);
     poolMeta_[poolIdx].state.Set(PoolState::RELEASED);
+    RT_LOG(
+        RT_LOG_DEBUG, "Release buffer pool memory, poolIdx=%u, size=%zu(bytes).", poolIdx,
+        static_cast<size_t>(GetPoolCount(poolIdx)) * itemSize_);
 }
 
 void* BufferAllocator::GetItemById(const int32_t id, const bool isLogError) const

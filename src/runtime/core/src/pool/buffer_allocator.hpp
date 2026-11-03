@@ -29,9 +29,9 @@ public:
     typedef void* (*AllocFuncPtr)(size_t size, void* para);
     typedef void (*FreeFuncPtr)(void* addr, void* para);
     explicit BufferAllocator(
-        const uint32_t size, const uint32_t initCnt = 256, const uint32_t maxCnt = 0x10000,
-        const Strategy stg = EXPONENTIAL, const AllocFuncPtr allocFunctionPtr = DefaultAlloc,
-        const FreeFuncPtr freeFunctionPtr = DefaultFree, void* const allocParam = nullptr,
+        const uint32_t size, const uint32_t initCnt = 256U, const uint32_t maxCnt = 0x10000U,
+        const Strategy stg = EXPONENTIAL, AllocFuncPtr const allocFunctionPtr = &DefaultAlloc,
+        FreeFuncPtr const freeFunctionPtr = &DefaultFree, void* const allocParam = nullptr,
         const bool enablePoolRelease = false);
     ~BufferAllocator() override;
     static bool openHugeBuff_;
@@ -55,9 +55,8 @@ private:
     enum class PoolState : uint8_t { UNEXPANDED, INITIALIZING, INITIALIZED, RELEASED };
 
     struct PoolMeta {
-        PoolMeta() : availableItemCount(0U), state(PoolState::UNEXPANDED) {}
-        Atomic<uint32_t> availableItemCount;
-        Atomic<PoolState> state;
+        Atomic<uint32_t> availableItemCount{0U};
+        Atomic<PoolState> state{PoolState::UNEXPANDED};
     };
 
     static void* DefaultAlloc(size_t size, void* para)
@@ -105,7 +104,7 @@ private:
     int32_t AllocBitMap(uint32_t curCount);
     void FreeBitmapId(int32_t id);
     bool PrepareAllocatedId(int32_t id, bool isLogError);
-    bool InitializePool(uint32_t poolIdx, PoolState failureState, bool isLogError);
+    bool InitializePool(uint32_t poolIdx, PoolState failureState, bool isLogError) const;
     void RollbackAllocatedId(int32_t id, uint32_t poolIdx);
     int32_t FinishAllocatedId(int32_t id, bool isLogError, bool& canRetry);
     int32_t AllocIdWithoutRetryInner(bool isLogError, bool& canRetry);
@@ -131,8 +130,8 @@ private:
     void* const para_;
     uint8_t* volatile* pool_;
     uint32_t volatile currentCount_;
-    const AllocFuncPtr allocFunc_;
-    const FreeFuncPtr freeFunc_;
+    AllocFuncPtr const allocFunc_;
+    FreeFuncPtr const freeFunc_;
     const bool enablePoolRelease_;
     PoolMeta* poolMeta_{nullptr};
     mutable std::shared_mutex poolMutex_;
