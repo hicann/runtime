@@ -337,6 +337,10 @@ PyObject* WrapAclVdecSendFrame(PyObject* /* self */, PyObject* args)
     aclError ret = aclvdecSendFrame(channelDesc, input, output, config, reinterpret_cast<void*>(wrapData));
     PyEval_RestoreThread(state);
 
+    if (ret != ACL_SUCCESS) {
+        Py_XDECREF(wrapData->userData);
+        delete wrapData;
+    }
     return Py_BuildValue("i", ret);
 }
 
@@ -366,6 +370,10 @@ PyObject* WrapAclVdecSendSkippedFrame(PyObject* /* self */, PyObject* args)
     aclError ret = aclvdecSendSkippedFrame(channelDesc, input, config, reinterpret_cast<void*>(wrapData));
     PyEval_RestoreThread(state);
 
+    if (ret != ACL_SUCCESS) {
+        Py_XDECREF(wrapData->userData);
+        delete wrapData;
+    }
     return Py_BuildValue("i", ret);
 }
 
