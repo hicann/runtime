@@ -103,8 +103,6 @@ PyObject* WrapStartThread(PyObject* /* self */, PyObject* args)
 
     if (PyArg_ParseTuple(args, "OO", &pyFunc, &pyFuncArgs)) {
         CHECK_NULL(PyCallable_Check(pyFunc), "parameter must be callable");
-        Py_XINCREF(pyFunc);
-        Py_XINCREF(pyFuncArgs);
     } else {
         ACL_APP_LOG(ACL_ERROR, "acl.util.start_thread args parse failed");
         return nullptr;
@@ -112,6 +110,8 @@ PyObject* WrapStartThread(PyObject* /* self */, PyObject* args)
 
     auto data = new (std::nothrow) PyFuncStruct;
     CHECK_NULL(data, "new failed", PyExc_MemoryError);
+    Py_XINCREF(pyFunc);
+    Py_XINCREF(pyFuncArgs);
     data->pyFunc = pyFunc;
     data->pyFuncArgs = pyFuncArgs;
 
@@ -126,6 +126,11 @@ PyObject* WrapStartThread(PyObject* /* self */, PyObject* args)
         PyEval_RestoreThread(state);
     }
 
+    if (thrErr != 0) {
+        Py_XDECREF(data->pyFunc);
+        Py_XDECREF(data->pyFuncArgs);
+        delete data;
+    }
     return Py_BuildValue("Ki", thrId, thrErr);
 }
 
