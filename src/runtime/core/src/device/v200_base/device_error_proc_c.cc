@@ -376,6 +376,7 @@ void GetSubErrString(const DavidOneCoreErrorInfo* const info, std::string& subEr
             break;
         default:
             subErrString = "N/A";
+            break;
     }
     return;
 }

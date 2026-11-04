@@ -1163,7 +1163,7 @@ rtError_t RawDevice::InitSwapBufferInfo()
     return error;
 }
 
-static rtError_t EnableAiCoreTaskSyncCheckOnDevice(Device* const dev)
+static rtError_t EnableAiCoreTaskSyncCheckOnDevice(const Device* const dev)
 {
     COND_RETURN_WARN(&halTsdrvCtl == nullptr, RT_ERROR_DRV_NOT_SUPPORT, "[drv api] halTsdrvCtl does not exist.");
     ts_ctrl_msg_body_t request = {};
