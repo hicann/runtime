@@ -17,6 +17,7 @@
 #include "weak_ascend_hal.h"
 #include "tsd_log.h"
 #include "tsd_util_func.h"
+#include "tsd_sha256.h"
 #include "common_util_func.h"
 
 using namespace tsd;
@@ -325,6 +326,18 @@ TEST_F(TsdUtilFuncTest, CalFileSha256HashValue_KnownContent_ReturnsExpectedDiges
     ASSERT_TRUE(file.IsValid());
 
     EXPECT_EQ(CalFileSha256HashValue(file.Path()), "ee63779c8078ead9b4c682d6bd8662edac699d851ed85cd120d3236609bb3253");
+}
+
+TEST_F(TsdUtilFuncTest, CalFileSha256HashValue_MultiBlockFile_MatchesOneShotDigest)
+{
+    // 2*64KB + 1234 字节，覆盖整块、跨块、尾块三种读取路径
+    const std::string content(2U * 64U * 1024U + 1234U, 'a');
+    ScopedTempFile file(content);
+    ASSERT_TRUE(file.IsValid());
+
+    const std::string expected =
+        tsd::sha256::ComputeHexString(reinterpret_cast<const uint8_t*>(content.data()), content.size());
+    EXPECT_EQ(CalFileSha256HashValue(file.Path()), expected);
 }
 
 TEST_F(TsdUtilFuncTest, CalFileSha256HashValueNotExist)

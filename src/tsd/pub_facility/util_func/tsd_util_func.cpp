@@ -26,6 +26,7 @@
 #include <cstdlib>
 #include <sstream>
 #include <iomanip>
+#include <vector>
 #include "basic_define.h"
 #include "weak_ascend_hal.h"
 #include "tsd_sha256.h"
@@ -378,12 +379,32 @@ std::string CalFileSha256HashValue(const std::string& filePath)
         return "";
     }
 
-    std::stringstream fileBuffer;
-    fileBuffer << curFile.rdbuf();
-    std::string fileBinaryValue = fileBuffer.str();
-    std::string hashHex =
-        sha256::ComputeHexString(PtrToPtr<const char, const uint8_t>(fileBinaryValue.c_str()), fileBinaryValue.size());
-    curFile.close();
+    // 分块读取并流式计算，避免整文件载入内存导致大文件场景内存激增
+    constexpr size_t READ_BLOCK_SIZE = 64U * 1024U;
+    std::vector<uint8_t> readBuffer(READ_BLOCK_SIZE);
+    sha256::Context ctx;
+    sha256::Init(ctx);
+    while (!curFile.eof()) {
+        curFile.read(reinterpret_cast<char*>(readBuffer.data()), static_cast<std::streamsize>(READ_BLOCK_SIZE));
+        const std::streamsize readLen = curFile.gcount();
+        if (readLen > 0) {
+            sha256::Update(ctx, readBuffer.data(), static_cast<size_t>(readLen));
+        }
+        if (curFile.bad()) {
+            TSD_RUN_WARN("Reading file:%s was not successful, reason:%s", filePath.c_str(), SafeStrerror().c_str());
+            return "";
+        }
+    }
+
+    uint8_t hash[sha256::DIGEST_LENGTH] = {0};
+    sha256::Final(ctx, hash);
+    constexpr char hexDigits[] = "0123456789abcdef";
+    std::string hashHex;
+    hashHex.reserve(sha256::DIGEST_LENGTH * 2U);
+    for (uint32_t i = 0U; i < sha256::DIGEST_LENGTH; ++i) {
+        hashHex.push_back(hexDigits[hash[i] >> 4U]);
+        hashHex.push_back(hexDigits[hash[i] & 0x0FU]);
+    }
     return hashHex;
 }
 

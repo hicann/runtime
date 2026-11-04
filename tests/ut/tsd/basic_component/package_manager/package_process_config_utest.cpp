@@ -134,49 +134,6 @@ TEST_F(PackageProcessConfigTest, GetConfigDetailInfo_ExistingAndMissingNames_Ret
     EXPECT_EQ(res1.hostTruePath, "");
 }
 
-TEST_F(PackageProcessConfigTest, SetConfigDataOnServer_ValidPackageName_ReturnsTrue)
-{
-    PackageProcessConfig* pkgcfg = PackageProcessConfig::GetInstance();
-    SinkPackageConfig hdcConfig;
-    hdcConfig.set_package_name("Ascend_aicpu_sys.tar.gz");
-    bool ret = pkgcfg->SetConfigDataOnServer(hdcConfig);
-    EXPECT_EQ(ret, true);
-}
-
-TEST_F(PackageProcessConfigTest, ParseConfigDataFromProtoBuf_AllEntriesAccepted_ReturnsOk)
-{
-    HDCMessage msg;
-    PackageProcessConfig* pkgcfg = PackageProcessConfig::GetInstance();
-    msg.set_real_device_id(0U);
-    msg.set_type(HDCMessage::TSD_UPDATE_PACKAGE_PROCESS_CONFIG);
-    for (uint32_t index = 0; index < 101; index++) {
-        std::string tmpName = "Ascend.tar.gz" + std::to_string(index);
-        SinkPackageConfig* curConf = msg.add_sink_pkg_con_list();
-        curConf->set_package_name(tmpName);
-        curConf->set_file_dec_dst_dir(0);
-    }
-    MOCKER_CPP(&PackageProcessConfig::SetConfigDataOnServer).stubs().will(returnValue(true));
-    auto ret = pkgcfg->ParseConfigDataFromProtoBuf(msg);
-    EXPECT_EQ(ret, TSD_OK);
-}
-
-TEST_F(PackageProcessConfigTest, ParseConfigDataFromProtoBuf_EntryRejected_ReturnsStartFail)
-{
-    HDCMessage msg;
-    PackageProcessConfig* pkgcfg = PackageProcessConfig::GetInstance();
-    msg.set_real_device_id(0U);
-    msg.set_type(HDCMessage::TSD_UPDATE_PACKAGE_PROCESS_CONFIG);
-    MOCKER_CPP(&PackageProcessConfig::SetConfigDataOnServer).stubs().will(returnValue(false));
-    for (uint32_t index = 0; index < 2; index++) {
-        std::string tmpName = "Ascend.tar.gz" + std::to_string(index);
-        SinkPackageConfig* curConf = msg.add_sink_pkg_con_list();
-        curConf->set_package_name(tmpName);
-        curConf->set_file_dec_dst_dir(0);
-    }
-    auto ret = pkgcfg->ParseConfigDataFromProtoBuf(msg);
-    EXPECT_EQ(ret, TSD_START_FAIL);
-}
-
 TEST_F(PackageProcessConfigTest, GetHostFilePath_AccessiblePackage_ReturnsPackagePath)
 {
     PackageProcessConfig* pkgcfg = PackageProcessConfig::GetInstance();

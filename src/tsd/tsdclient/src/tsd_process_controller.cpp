@@ -506,6 +506,10 @@ TSD_StatusT TsdProcessController::ProcessQueueGrant(
         return TSD_INTERNAL_ERROR;
     }
     const uint32_t queueNum = static_cast<uint32_t>(outLen / sizeof(queueInfoList->queQueryQuesOfProcInfo[0U]));
+    if (queueNum > MAX_QUEUE_NUM) {
+        TSD_ERROR("[TsdClient] QueueInfo queueNum[%u] exceeds max[%u]", queueNum, static_cast<uint32_t>(MAX_QUEUE_NUM));
+        return TSD_INTERNAL_ERROR;
+    }
     TSD_RUN_INFO("[TsdClient] ProcessQueueGrant queueNum[%u]", queueNum);
     for (uint32_t i = 0U; i < queueNum; ++i) {
         const uint32_t queueId = static_cast<uint32_t>(queueInfoList->queQueryQuesOfProcInfo[i].qid);

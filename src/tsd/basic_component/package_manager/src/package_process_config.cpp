@@ -50,49 +50,6 @@ PackConfDetail PackageProcessConfig::GetConfigDetailInfo(const std::string& srcP
     }
 }
 
-bool PackageProcessConfig::SetConfigDataOnServer(const SinkPackageConfig& hdcConfig)
-{
-    const std::string pkgName = hdcConfig.package_name();
-    auto iter = configMap_.find(pkgName);
-    if (iter != configMap_.end()) {
-        iter->second.decDstDir = static_cast<DeviceInstallPath>(hdcConfig.file_dec_dst_dir());
-        TSD_RUN_INFO(
-            "update package:%s config, dest dir:%u", pkgName.c_str(), static_cast<uint32_t>(iter->second.decDstDir));
-    } else {
-        if (configMap_.size() >= MAX_CONFIG_NUM) {
-            TSD_RUN_WARN("current config map is full:%zu, threshold is:%zu", configMap_.size(), MAX_CONFIG_NUM);
-            return true;
-        }
-        PackConfDetail tempNode;
-        tempNode.decDstDir = static_cast<DeviceInstallPath>(hdcConfig.file_dec_dst_dir());
-        tempNode.validFlag = true;
-        tempNode.PrintfInfo(pkgName);
-        try {
-            configMap_[pkgName] = tempNode;
-            TSD_RUN_INFO("insert package:%s config", pkgName.c_str());
-        } catch (...) {
-            TSD_ERROR("insert package config to map failed");
-            return false;
-        }
-    }
-    return true;
-}
-
-TSD_StatusT PackageProcessConfig::ParseConfigDataFromProtoBuf(const HDCMessage& hdcMsg)
-{
-    const std::lock_guard<std::mutex> lk(configMut_);
-    for (auto j = 0; j < hdcMsg.sink_pkg_con_list_size(); j++) {
-        const SinkPackageConfig& hdcConfig = hdcMsg.sink_pkg_con_list(j);
-        if (!SetConfigDataOnServer(hdcConfig)) {
-            TSD_RUN_WARN("invalid config data, pkg config index:%d, name:%s", j, hdcConfig.package_name().c_str());
-            return TSD_START_FAIL;
-        }
-    }
-    hashCode_ = hdcMsg.package_config_hash_code();
-    TSD_RUN_INFO("package config has stored hash code:%s", hashCode_.c_str());
-    return TSD_OK;
-}
-
 std::string PackageProcessConfig::GetHostFilePath(const std::string& fileDir, const std::string& fileName) const
 {
     std::string configPath;

@@ -57,7 +57,6 @@ class PackageProcessConfig {
 public:
     static PackageProcessConfig* GetInstance();
     PackConfDetail GetConfigDetailInfo(const std::string& srcPath);
-    TSD_StatusT ParseConfigDataFromProtoBuf(const HDCMessage& hdcMsg);
     TSD_StatusT ParseConfigDataFromFile(const std::string& pkgTitle);
     void ConstructPkgConfigMsg(HDCMessage& hdcMsg);
     bool IsNeedToUpdateConfig(const HDCMessage& hdcMsg) const;
@@ -72,7 +71,6 @@ public:
     bool HasCompatPluginPackage() const;
 
 private:
-    bool SetConfigDataOnServer(const SinkPackageConfig& hdcConfig);
     bool SetConfigDataOnHost(std::ifstream& inFile, const std::string& fileName, const std::string& pkgTitle);
     std::string GetHostFilePath(const std::string& fileDir, const std::string& fileName) const;
     bool SetPkgHostTruePath(PackConfDetail& tempNode, const std::string& pkgName, const std::string& pkgTitle) const;

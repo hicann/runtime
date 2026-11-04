@@ -63,6 +63,11 @@ drvError_t halQueueQueryFake(
         queueInfoList->qInfo[1].attr = {0, 0, 1, 0};
         return DRV_ERROR_NONE;
     }
+    if (g_Choice == 4) {
+        // 对齐但超过 QueueQueryOutput 缓冲区容量，模拟驱动回填异常
+        outPut->outLen = sizeof(QueueQueryOutput) + sizeof(QueQueryQuesOfProcInfo);
+        return DRV_ERROR_NONE;
+    }
     cout << "Wrong choice" << endl;
     return DRV_ERROR_NOT_EXIST;
 }
@@ -303,6 +308,21 @@ TEST_F(TsdProcessControllerTest, SyncQueueAuthority_InvalidQueue_RemainsFailed)
     auto ret = processModeManager.tsdCtrl_.SyncQueueAuthority();
     EXPECT_EQ(ret, TSD_INTERNAL_ERROR);
     ret = processModeManager.tsdCtrl_.SyncQueueAuthority();
+    EXPECT_EQ(ret, TSD_INTERNAL_ERROR);
+}
+
+TEST_F(TsdProcessControllerTest, SyncQueueAuthority_OutOfRangeOutLen_ReturnsError)
+{
+    MOCKER(drvDeviceGetBareTgid).stubs().will(returnValue(1000));
+    MOCKER(halQueueGrant).stubs().will(returnValue(1));
+    MOCKER(halQueueInit).stubs().will(returnValue(0));
+
+    g_Choice = 4;
+    MOCKER(halQueryDevpid).stubs().will(invoke(halQueryDevpidFake));
+    MOCKER(halQueueQuery).stubs().will(invoke(halQueueQueryFake));
+
+    ProcessModeManager processModeManager(deviceId, 0);
+    auto ret = processModeManager.tsdCtrl_.SyncQueueAuthority();
     EXPECT_EQ(ret, TSD_INTERNAL_ERROR);
 }
 
