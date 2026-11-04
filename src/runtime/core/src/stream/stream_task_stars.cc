@@ -99,7 +99,14 @@ rtError_t StreamCmoAddrTaskLaunch(
     Driver* const devDrv = device->Driver_();
     if (devDrv != nullptr) {
         constexpr uint64_t dstMax = 8ULL;
-        error = devDrv->MemCopySync(starsCmoAddrInfo, dstMax, &sdmaCmoSqe, dstMax, RT_MEMCPY_HOST_TO_DEVICE);
+        DevDynInfoProcFunc func{};
+        if ((GET_DEV_INFO_PROC_FUNC(Runtime::Instance()->GetChipType(), func) == RT_ERROR_NONE) &&
+            (func.memProcFunc.memCopySync != nullptr)) {
+            error =
+                func.memProcFunc.memCopySync(starsCmoAddrInfo, dstMax, &sdmaCmoSqe, dstMax, RT_MEMCPY_HOST_TO_DEVICE);
+        } else {
+            error = devDrv->MemCopySync(starsCmoAddrInfo, dstMax, &sdmaCmoSqe, dstMax, RT_MEMCPY_HOST_TO_DEVICE);
+        }
         ERROR_GOTO(
             error, ERROR_RECYCLE,
             "Failed to memcpy from host to dev, device_id=%u, size=%" PRIu64 "(bytes), retCode=%#x.", device->Id_(),

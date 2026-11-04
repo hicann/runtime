@@ -2215,6 +2215,29 @@ TEST_F(CCManagerTest, Manager_UnsupportedCopyKind_ReturnsContinueExecute)
         RT_ERROR_CONTINUE_EXECUTE);
 }
 
+TEST_F(CCManagerTest, Manager_MemcpyEntryPoints_EmptyInputs)
+{
+    EXPECT_EQ(
+        CCManager::CCMemcpyAsync(
+            nullptr, 0U, nullptr, 0U, RT_MEMCPY_DEVICE_TO_DEVICE, nullptr, nullptr, nullptr, true, nullptr),
+        RT_ERROR_CONTINUE_EXECUTE);
+    EXPECT_EQ(
+        CCManager::SubmitCcMemcpy2DTasks(nullptr, 0U, nullptr, 0U, 0U, 0U, nullptr, RT_MEMCPY_HOST_TO_DEVICE),
+        RT_ERROR_NONE);
+
+    rtMemcpyBatchAttr attrs[1]{};
+    EXPECT_EQ(
+        CCManager::SubmitCcMemcpyBatchTasks(
+            nullptr, nullptr, nullptr, nullptr, 0U, attrs, nullptr, 0U, nullptr, nullptr),
+        RT_ERROR_NONE);
+}
+
+TEST_F(CCManagerTest, Manager_MemSetEntryPoints_InvalidInputs)
+{
+    EXPECT_EQ(CCManager::CCDevMemSetAsync(nullptr, nullptr, 0U, 0U, 0U), RT_ERROR_STREAM_NULL);
+    EXPECT_EQ(CCManager::CCDevMemSetD32(nullptr, 0U, 0U, 0U, nullptr, true), RT_ERROR_INVALID_VALUE);
+}
+
 TEST_F(CCManagerTest, Manager_RegCCManagerProcFunc_Fail)
 {
     MOCKER_CPP(&DevInfoManage::RegDevInfoProcFunc).stubs().will(returnValue(false));

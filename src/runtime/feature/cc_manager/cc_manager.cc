@@ -426,7 +426,7 @@ rtError_t CCManager::SubmitCcMemcpyTask(
 rtError_t CCManager::CCMemCopySync(
     void* const dst, const uint64_t destMax, const void* const src, const uint64_t cnt, const rtMemcpyKind_t kind)
 {
-    RT_LOG(RT_LOG_INFO, "test CCMemCopySync");
+    RT_LOG(RT_LOG_INFO, "CCMemCopySync in, kind=%s.", MemcpyKindToStr(kind));
     (void)destMax;
     (void)kind; // CC 同步拷贝按地址属性推导方向，非CC模式驱动会校准，CC需要在Runtime校准
 
@@ -462,7 +462,7 @@ rtError_t CCManager::CCMemcpyAsync(
     Stream* const stm, const rtTaskCfgInfo_t* const cfgInfo, const struct rtD2DAddrCfgInfo_t* const addrCfg,
     bool checkKind, const rtMemcpyConfig_t* const memcpyConfig)
 {
-    RT_LOG(RT_LOG_INFO, "test CCMemcpyAsync");
+    RT_LOG(RT_LOG_INFO, "CCMemcpyAsync in, kind=%s.", MemcpyKindToStr(kind));
     (void)addrCfg;
     (void)memcpyConfig;
     (void)destMax;
@@ -478,11 +478,11 @@ rtError_t CCManager::CCMemcpyAsync(
     rtMemcpyKind_t cpyKind = kind;
     std::shared_ptr<void> guardMem;
 
-    rtError_t ret = RT_ERROR_NONE;
     if (kind == RT_MEMCPY_DEVICE_TO_DEVICE) {
         return RT_ERROR_CONTINUE_EXECUTE;
     }
 
+    rtError_t ret = RT_ERROR_NONE;
     if (kind == RT_MEMCPY_HOST_TO_DEVICE_EX) {
         // H->Buffer->D 单独处理
         ret = PrepareCcAsyncH2dEx(curStm, submitSrc, cnt, cpyKind, guardMem);
@@ -506,7 +506,7 @@ rtError_t CCManager::SubmitCcMemcpy2DTasks(
     void* const dst, const uint64_t dstPitch, const void* const src, const uint64_t srcPitch, const uint64_t width,
     const uint64_t height, Stream* const stm, const rtMemcpyKind_t kind)
 {
-    RT_LOG(RT_LOG_INFO, "test SubmitCcMemcpy2DTasks");
+    RT_LOG(RT_LOG_INFO, "SubmitCcMemcpy2DTasks in, kind=%s.", MemcpyKindToStr(kind));
     uint8_t* const dstBase = static_cast<uint8_t*>(dst);
     const uint8_t* const srcBase = static_cast<const uint8_t*>(src);
     for (uint64_t row = 0U; row < height; ++row) {
@@ -525,6 +525,7 @@ rtError_t CCManager::CCMemCopy2DAsync(
     void* const dst, const uint64_t dstPitch, const void* const src, const uint64_t srcPitch, const uint64_t width,
     const uint64_t height, Stream* const stm, const rtMemcpyKind_t kind, const rtMemcpyKind newKind)
 {
+    RT_LOG(RT_LOG_INFO, "CCMemCopy2DAsync in, kind=%s.", MemcpyKindToStr(kind));
     (void)newKind;
     if ((kind != RT_MEMCPY_HOST_TO_DEVICE) && (kind != RT_MEMCPY_DEVICE_TO_HOST)) {
         return RT_ERROR_CONTINUE_EXECUTE;
@@ -548,6 +549,7 @@ rtError_t CCManager::CCMemCopy2DSync(
     void* const dst, const uint64_t dstPitch, const void* const src, const uint64_t srcPitch, const uint64_t width,
     const uint64_t height, const rtMemcpyKind_t kind, const rtMemcpyKind newKind)
 {
+    RT_LOG(RT_LOG_INFO, "CCMemCopy2DSync in, kind=%s.", MemcpyKindToStr(kind));
     (void)newKind;
     if ((kind != RT_MEMCPY_HOST_TO_DEVICE) && (kind != RT_MEMCPY_DEVICE_TO_HOST)) {
         return RT_ERROR_CONTINUE_EXECUTE;
@@ -574,7 +576,7 @@ rtError_t CCManager::SubmitCcMemcpyBatchTasks(
     const rtMemcpyBatchAttr* const attrs, const size_t* const attrsIdxs, const size_t numAttrs, size_t* const failIdx,
     Stream* const stm)
 {
-    RT_LOG(RT_LOG_INFO, "test SubmitCcMemcpyBatchTasks");
+    RT_LOG(RT_LOG_INFO, "SubmitCcMemcpyBatchTasks in");
     size_t attrIdx = 0U;
     rtMemcpyBatchAttr memAttr = attrs[0];
     rtPtrAttributes_t dstAttr{};
@@ -704,6 +706,7 @@ rtError_t CCManager::CCDevMemSet(
 rtError_t CCManager::CCDevMemSetAsync(
     Stream* const stm, void* const ptr, const uint64_t destMax, const uint32_t fillVal, const uint64_t fillCount)
 {
+    RT_LOG(RT_LOG_INFO, "CCDevMemSetAsync in, count=%" PRIu64 ", value=%u.", fillCount, fillVal);
     COND_RETURN_ERROR(stm == nullptr, RT_ERROR_STREAM_NULL, "CC memset stream is null.");
     COND_RETURN_ERROR(ptr == nullptr, RT_ERROR_INVALID_VALUE, "CC memset ptr is null.");
     if (fillCount == 0U) {
@@ -720,6 +723,7 @@ rtError_t CCManager::CCDevMemSetD32(
     void* const dst, const uint64_t destMax, const uint32_t value, const uint64_t count, Stream* const stm,
     const bool isAsync)
 {
+    RT_LOG(RT_LOG_INFO, "CCDevMemSetD32 in, count=%" PRIu64 ", value=%u.", count, value);
     COND_RETURN_ERROR(dst == nullptr, RT_ERROR_INVALID_VALUE, "CC memset dst is null.");
     if (count == 0U) {
         return RT_ERROR_NONE;
