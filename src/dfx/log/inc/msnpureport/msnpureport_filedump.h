@@ -45,7 +45,7 @@ const MsnpureportFileDumpTable MSNPUREPORT_FILE_DUMP_INFO[] = {
     {"ao_self", "ao_info", "ao_info", "/var/ao_info_collect.sh", "7", 305000, (TYPE_7), true},
     {"ao_cnt", "ao_info", "ao_info", "/var/ao_info_collect.sh", "8", 605000, (TYPE_8), true},
     {"ao_uart", "ao_info", "ao_info", "/var/ao_info_collect.sh", "9", 305000, (TYPE_9), true},
-    {"ccu_info", "ccu_info", "ccu_info", "/var/ccu_info_collect.sh", NULL, 100000, (TYPE_10), true},
+    {"ccu_info", "ccu_info", "ccu_info", "/var/ccu_info_collect.sh", NULL, 100000, (TYPE_10), false},
     {"network_info", "network_info", "network_info", "/var/network_info_collect.sh", NULL, 40000, (TYPE_11), false},
 };
 #endif
