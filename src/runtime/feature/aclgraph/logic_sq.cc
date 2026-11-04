@@ -59,6 +59,7 @@ rtError_t LogicSq::SetUp(const uint32_t logicSqId, const uint32_t reserveSqeNum)
 
 rtError_t LogicSq::AllocDeviceSqeAddr(const uint32_t additionalSqeNum)
 {
+    const std::lock_guard<std::mutex> lock(deviceSqeAddrMutex_);
     if (deviceSqeAddr_ != nullptr) {
         return RT_ERROR_NONE;
     }
@@ -84,7 +85,7 @@ rtError_t LogicSq::AllocDeviceSqeAddr(const uint32_t additionalSqeNum)
         return ret;
     }
 
-    SetDeviceSqeAddr(RtPtrToPtr<void*>(sqBaseAddr));
+    deviceSqeAddr_ = RtPtrToPtr<void*>(sqBaseAddr);
     SetDeviceSqeSize(allocMemSize);
     SetSqMemOrderType(memOrderType);
 

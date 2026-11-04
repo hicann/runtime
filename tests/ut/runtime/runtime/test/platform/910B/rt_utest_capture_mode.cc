@@ -9,6 +9,9 @@
  */
 
 #include "driver/ascend_hal.h"
+#include <atomic>
+#include <mutex>
+#include <thread>
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 #include "securec.h"
@@ -45,6 +48,7 @@
 #include "capture_model_utils.hpp"
 #include "logic_sq.hpp"
 #include "logic_sq_manage.hpp"
+#include "sq_addr_memory_pool.hpp"
 #include "stream_jetty_handler.h"
 #undef private
 #undef protected
@@ -3031,6 +3035,47 @@ TEST_F(CloudV2CaptureModelTest, LogicSqHwPosMapping)
     manager.UnbindRtsqFromLogicSq(4U);
     EXPECT_EQ(manager.GetLogicSqIdByRtsqId(4U, logicSqId), RT_ERROR_INVALID_VALUE);
     manager.FreeLogicSq(managedSq->Id_());
+}
+
+TEST_F(CloudV2CaptureModelTest, AllocDeviceSqeAddrConcurrentCallsAllocateOnce)
+{
+    Context* const context = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(context, nullptr);
+    LogicSq logicSq(context->Device_());
+    uint64_t* deviceSqeAddr = reinterpret_cast<uint64_t*>(0x1000UL);
+    MOCKER_CPP(&SqAddrMemoryOrder::AllocSqAddr)
+        .expects(once())
+        .with(mockcpp::any(), outBoundP(&deviceSqeAddr))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&SqAddrMemoryOrder::FreeSqAddr).stubs().will(returnValue(RT_ERROR_NONE));
+
+    std::unique_lock<std::mutex> allocationLock(logicSq.deviceSqeAddrMutex_);
+    std::atomic<uint32_t> readyCount{0U};
+    std::atomic<bool> start{false};
+    rtError_t firstRet = RT_ERROR_INVALID_VALUE;
+    rtError_t secondRet = RT_ERROR_INVALID_VALUE;
+    const auto allocDeviceSqeAddr = [&](rtError_t& ret) {
+        readyCount++;
+        while (!start.load()) {
+            std::this_thread::yield();
+        }
+        ret = logicSq.AllocDeviceSqeAddr(1U);
+    };
+    std::thread first([&]() { allocDeviceSqeAddr(firstRet); });
+    std::thread second([&]() { allocDeviceSqeAddr(secondRet); });
+
+    while (readyCount.load() != 2U) {
+        std::this_thread::yield();
+    }
+    start = true;
+    allocationLock.unlock();
+
+    first.join();
+    second.join();
+
+    EXPECT_EQ(firstRet, RT_ERROR_NONE);
+    EXPECT_EQ(secondRet, RT_ERROR_NONE);
+    EXPECT_EQ(logicSq.GetDeviceSqeAddr(), deviceSqeAddr);
 }
 
 TEST_F(CloudV2CaptureModelTest, AllocSqCqAndBindInternalNoResource)

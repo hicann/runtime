@@ -12,6 +12,7 @@
 
 #include <cstdint>
 #include <map>
+#include <mutex>
 #include "base.hpp"
 
 namespace cce {
@@ -42,8 +43,16 @@ public:
     uint32_t GetHostSqeSize() const { return hostSqeSize_; }
     void SetHostSqeSize(const uint32_t size) { hostSqeSize_ = size; }
 
-    void* GetDeviceSqeAddr() const { return deviceSqeAddr_; }
-    void SetDeviceSqeAddr(void* const addr) { deviceSqeAddr_ = addr; }
+    void* GetDeviceSqeAddr() const
+    {
+        const std::lock_guard<std::mutex> lock(deviceSqeAddrMutex_);
+        return deviceSqeAddr_;
+    }
+    void SetDeviceSqeAddr(void* const addr)
+    {
+        const std::lock_guard<std::mutex> lock(deviceSqeAddrMutex_);
+        deviceSqeAddr_ = addr;
+    }
 
     uint32_t GetDeviceSqeSize() const { return deviceSqeSize_; }
     void SetDeviceSqeSize(const uint32_t size) { deviceSqeSize_ = size; }
@@ -85,6 +94,7 @@ private:
     uint32_t streamId_{UINT32_MAX};
     uint32_t nextLogicSqId_{UINT32_MAX};
     std::map<uint32_t, std::pair<uint32_t, uint32_t>> hwPosToTask_; // key: hwPos, pair<streamId, pos>
+    mutable std::mutex deviceSqeAddrMutex_;
 };
 
 } // namespace runtime
