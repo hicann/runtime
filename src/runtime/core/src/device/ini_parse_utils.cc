@@ -14,6 +14,7 @@
 #include <cinttypes>
 #include <string>
 
+#include "base.hpp"
 #include "platform_manager_v2.h"
 
 namespace cce {

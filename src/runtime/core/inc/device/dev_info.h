@@ -9,8 +9,12 @@
  */
 #ifndef CCE_RUNTIME_DEV_INFO_H
 #define CCE_RUNTIME_DEV_INFO_H
+#include <cstddef>
 #include <cstdint>
-#include "base.hpp"
+
+#include "runtime/base.h"
+#include "runtime/mem.h"
+#include "soc/soc_define.hpp"
 
 namespace cce {
 namespace runtime {
