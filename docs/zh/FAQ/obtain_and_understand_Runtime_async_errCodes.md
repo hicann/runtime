@@ -33,12 +33,14 @@ fault kernel_name=Add_ee98c6628030785f610b924ab1557b31
 
 在遇错继续模式下，如果Stream上多个任务执行失败，后发生的错误可能覆盖先前的错误信息，导致无法获取首次错误。
 
+```cpp
 // 后续操作基于错误假设继续执行
 myKernel<<<8, nullptr, stream>>>();
 aclrtMemcpyAsync(hostPtr, hostSize, devPtr, devSize,
                  ACL_MEMCPY_DEVICE_TO_HOST, stream);
 aclrtSynchronizeStream(stream);
 // 此时才发现错误，但难以定位是哪个异步任务失败
+```
 
 ## 可能原因
 
