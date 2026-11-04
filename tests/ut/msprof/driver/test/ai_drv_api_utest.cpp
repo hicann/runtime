@@ -1126,6 +1126,96 @@ TEST_F(DRIVER_AI_DRV_API_TEST, DrvGetDeviceTime)
     EXPECT_EQ(PROFILING_SUCCESS, analysis::dvvp::driver::DrvGetDeviceTime(deviceId, startMono, cntvct));
 }
 
+TEST_F(DRIVER_AI_DRV_API_TEST, DrvGetDeviceMonotonicSuccess)
+{
+    GlobalMockObject::verify();
+    uint64_t startMono = 0;
+    int64_t outMono = 123456789;
+    MOCKER(halGetDeviceInfo).stubs().with(any(), any(), any(), outBoundP(&outMono)).will(returnValue(DRV_ERROR_NONE));
+
+    EXPECT_EQ(PROFILING_SUCCESS, analysis::dvvp::driver::DrvGetDeviceMonotonic(0, startMono));
+    EXPECT_EQ(static_cast<uint64_t>(outMono), startMono);
+    GlobalMockObject::verify();
+}
+
+TEST_F(DRIVER_AI_DRV_API_TEST, DrvGetDeviceMonotonicNotSupportIsNotFatal)
+{
+    GlobalMockObject::verify();
+    uint64_t startMono = 0;
+    MOCKER(halGetDeviceInfo).stubs().will(returnValue(DRV_ERROR_NOT_SUPPORT));
+
+    // Not supported is logged but must not fail the caller.
+    EXPECT_EQ(PROFILING_SUCCESS, analysis::dvvp::driver::DrvGetDeviceMonotonic(0, startMono));
+    GlobalMockObject::verify();
+}
+
+TEST_F(DRIVER_AI_DRV_API_TEST, DrvGetDeviceMonotonicFailure)
+{
+    GlobalMockObject::verify();
+    uint64_t startMono = 0;
+    MOCKER(halGetDeviceInfo).stubs().will(returnValue(DRV_ERROR_NO_DEVICE));
+
+    EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::driver::DrvGetDeviceMonotonic(0, startMono));
+    GlobalMockObject::verify();
+}
+
+TEST_F(DRIVER_AI_DRV_API_TEST, DrvGetDeviceCntvctSuccess)
+{
+    GlobalMockObject::verify();
+    uint64_t cntvct = 0;
+    int64_t outCntvct = 987654321;
+    MOCKER(halGetDeviceInfo).stubs().with(any(), any(), any(), outBoundP(&outCntvct)).will(returnValue(DRV_ERROR_NONE));
+
+    EXPECT_EQ(PROFILING_SUCCESS, analysis::dvvp::driver::DrvGetDeviceCntvct(0, cntvct));
+    EXPECT_EQ(static_cast<uint64_t>(outCntvct), cntvct);
+    GlobalMockObject::verify();
+}
+
+TEST_F(DRIVER_AI_DRV_API_TEST, DrvGetDeviceCntvctNotSupportIsNotFatal)
+{
+    GlobalMockObject::verify();
+    uint64_t cntvct = 0;
+    MOCKER(halGetDeviceInfo).stubs().will(returnValue(DRV_ERROR_NOT_SUPPORT));
+
+    EXPECT_EQ(PROFILING_SUCCESS, analysis::dvvp::driver::DrvGetDeviceCntvct(0, cntvct));
+    GlobalMockObject::verify();
+}
+
+TEST_F(DRIVER_AI_DRV_API_TEST, DrvGetDeviceCntvctFailure)
+{
+    GlobalMockObject::verify();
+    uint64_t cntvct = 0;
+    MOCKER(halGetDeviceInfo).stubs().will(returnValue(DRV_ERROR_NO_DEVICE));
+
+    EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::driver::DrvGetDeviceCntvct(0, cntvct));
+    GlobalMockObject::verify();
+}
+
+TEST_F(DRIVER_AI_DRV_API_TEST, DrvGetDeviceTimeShouldNotFetchCntvctWhenMonotonicFails)
+{
+    GlobalMockObject::verify();
+    uint64_t startMono = 0;
+    uint64_t cntvct = 0;
+    // Only one driver call is expected: monotonic fails, cntvct must not be queried.
+    MOCKER(halGetDeviceInfo).expects(exactly(1)).will(returnValue(DRV_ERROR_NO_DEVICE));
+
+    EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::driver::DrvGetDeviceTime(0, startMono, cntvct));
+    GlobalMockObject::verify();
+}
+
+TEST_F(DRIVER_AI_DRV_API_TEST, DrvGetDeviceCntvctKeepsSuccessLogByDefault)
+{
+    GlobalMockObject::verify();
+    uint64_t cntvct = 0;
+    int64_t outCntvct = 666;
+    MOCKER(halGetDeviceInfo).stubs().with(any(), any(), any(), outBoundP(&outCntvct)).will(returnValue(DRV_ERROR_NONE));
+
+    ResetLastDlogRecordMsg();
+    EXPECT_EQ(PROFILING_SUCCESS, analysis::dvvp::driver::DrvGetDeviceCntvct(0, cntvct));
+    EXPECT_NE(std::string::npos, std::string(GetLastDlogRecordMsg()).find("Succeeded to DrvGetDeviceTime cntvct"));
+    GlobalMockObject::verify();
+}
+
 TEST_F(DRIVER_AI_DRV_API_TEST, DrvGetHostFreq)
 {
     GlobalMockObject::verify();

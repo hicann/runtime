@@ -268,38 +268,51 @@ int32_t DrvGetAiCoreNum(uint32_t deviceId, int64_t& aiCoreNum)
 
 int32_t DrvGetDeviceTime(uint32_t deviceId, uint64_t& startMono, uint64_t& cntvct)
 {
+    int32_t ret = DrvGetDeviceMonotonic(deviceId, startMono);
+    if (ret == PROFILING_FAILED) {
+        return PROFILING_FAILED;
+    }
+    return DrvGetDeviceCntvct(deviceId, cntvct);
+}
+
+int32_t DrvGetDeviceMonotonic(uint32_t deviceId, uint64_t& startMono)
+{
     int64_t time = 0;
     drvError_t ret = MsprofDrvApi::instance()->halGetDeviceInfo(
         deviceId, static_cast<int32_t>(MODULE_TYPE_SYSTEM), static_cast<int32_t>(INFO_TYPE_MONOTONIC_RAW), &time);
     if (ret == DRV_ERROR_NONE) {
-        MSPROF_LOGI("Succeeded to DrvGetDeviceTime startMono, devId=%u, startMono=%llu ns", deviceId, startMono);
         startMono = static_cast<uint64_t>(time);
-    } else if (ret == DRV_ERROR_NOT_SUPPORT) {
-        MSPROF_LOGW(
-            "Driver doesn't support DrvGetDeviceTime startMono by halGetDeviceInfo interface, "
-            "deviceId=%u, ret=%d",
-            deviceId, static_cast<int32_t>(ret));
-    } else {
-        MSPROF_LOGE("Failed to DrvGetDeviceTime startMono, deviceId=%u, ret=%d", deviceId, static_cast<int32_t>(ret));
-        return PROFILING_FAILED;
+        MSPROF_LOGI("Succeeded to DrvGetDeviceTime startMono, devId=%u, startMono=%" PRIu64 " ns", deviceId, startMono);
+        return PROFILING_SUCCESS;
     }
+    if (ret == DRV_ERROR_NOT_SUPPORT) {
+        // Not fatal: the caller may still use the other clock.
+        MSPROF_LOGW(
+            "Driver doesn't support DrvGetDeviceMonotonic, deviceId=%u, ret=%d", deviceId, static_cast<int32_t>(ret));
+        return PROFILING_SUCCESS;
+    }
+    MSPROF_LOGE("Failed to DrvGetDeviceMonotonic, deviceId=%u, ret=%d", deviceId, static_cast<int32_t>(ret));
+    return PROFILING_FAILED;
+}
 
-    ret = MsprofDrvApi::instance()->halGetDeviceInfo(
+int32_t DrvGetDeviceCntvct(uint32_t deviceId, uint64_t& cntvct)
+{
+    int64_t time = 0;
+    drvError_t ret = MsprofDrvApi::instance()->halGetDeviceInfo(
         deviceId, static_cast<int32_t>(MODULE_TYPE_SYSTEM), static_cast<int32_t>(INFO_TYPE_SYS_COUNT), &time);
     if (ret == DRV_ERROR_NONE) {
         cntvct = static_cast<uint64_t>(time);
         MSPROF_LOGI("Succeeded to DrvGetDeviceTime cntvct, devId=%u, cntvct=%" PRIu64, deviceId, cntvct);
-    } else if (ret == DRV_ERROR_NOT_SUPPORT) {
-        MSPROF_LOGW(
-            "Driver doesn't support DrvGetDeviceTime cntvct by halGetDeviceInfo interface, "
-            "deviceId=%u, ret=%d",
-            deviceId, static_cast<int32_t>(ret));
-    } else {
-        MSPROF_LOGE("Failed to DrvGetDeviceTime cntvct, deviceId=%u, ret=%d", deviceId, static_cast<int32_t>(ret));
-        return PROFILING_FAILED;
+        return PROFILING_SUCCESS;
     }
-
-    return PROFILING_SUCCESS;
+    if (ret == DRV_ERROR_NOT_SUPPORT) {
+        // Not fatal: the caller may still use the other clock.
+        MSPROF_LOGW(
+            "Driver doesn't support DrvGetDeviceCntvct, deviceId=%u, ret=%d", deviceId, static_cast<int32_t>(ret));
+        return PROFILING_SUCCESS;
+    }
+    MSPROF_LOGE("Failed to DrvGetDeviceCntvct, deviceId=%u, ret=%d", deviceId, static_cast<int32_t>(ret));
+    return PROFILING_FAILED;
 }
 
 std::string DrvGetDevIdsStr()

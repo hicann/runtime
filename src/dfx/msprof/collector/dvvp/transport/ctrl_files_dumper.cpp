@@ -33,7 +33,12 @@ using namespace analysis::dvvp::transport;
 int CtrlFilesDumper::DumpCollectionTimeInfo(uint32_t deviceId, bool isHostProfiling, bool isStart)
 {
     std::string devIdStr = std::to_string(deviceId);
-    auto collectionTime = Utils::GetHostTime();
+    // Sample both clocks back-to-back as raw numbers: formatting the wall clock into a
+    // string here would let a preemption slip in between the two samples.
+    uint64_t collectionTimeUs = 0;
+    const bool collectionTimeValid = Utils::GetHostTimeUs(collectionTimeUs);
+    auto monotonicRaw = Utils::GetClockMonotonicRaw();
+    const std::string collectionTime = collectionTimeValid ? std::to_string(collectionTimeUs) : "";
     MSPROF_LOGI("[DumpCollectionTimeInfo]collectionTime:%s us, isStart:%d", collectionTime.c_str(), isStart);
     analysis::dvvp::message::CollectionTimeInfo timeInfo;
     if (!isStart) {
@@ -43,7 +48,7 @@ int CtrlFilesDumper::DumpCollectionTimeInfo(uint32_t deviceId, bool isHostProfil
         timeInfo.collectionTimeBegin = collectionTime;
         timeInfo.collectionDateBegin = Utils::TimestampToTime(collectionTime, TIME_US);
     }
-    timeInfo.clockMonotonicRaw = std::to_string(Utils::GetClockMonotonicRaw());
+    timeInfo.clockMonotonicRaw = std::to_string(monotonicRaw);
     NanoJson::Json timeInfoJson;
     timeInfo.ToObject(timeInfoJson);
     std::string content = timeInfoJson.ToString();

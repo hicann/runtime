@@ -1566,19 +1566,27 @@ bool Utils::CheckBinValid(const std::string& binPath)
     return true;
 }
 
-std::string Utils::GetHostTime()
+bool Utils::GetHostTimeUs(uint64_t& hostTimeUs)
 {
-    std::string hostTime;
     OsalTimeval tv;
 
     (void)memset_s(&tv, sizeof(tv), 0, sizeof(tv));
     if (OsalGetTimeOfDay(&tv, nullptr) != OSAL_EN_OK) {
-        MSPROF_LOGE("[GetHostTime]Failed to get time of day.");
-    } else {
-        const int32_t timeUs = 1000000;
-        hostTime = std::to_string(static_cast<uint64_t>(tv.tv_sec) * timeUs + static_cast<uint64_t>(tv.tv_usec));
+        MSPROF_LOGE("[GetHostTimeUs]Failed to get time of day.");
+        return false;
     }
-    return hostTime;
+    const int32_t timeUs = 1000000;
+    hostTimeUs = static_cast<uint64_t>(tv.tv_sec) * static_cast<uint64_t>(timeUs) + static_cast<uint64_t>(tv.tv_usec);
+    return true;
+}
+
+std::string Utils::GetHostTime()
+{
+    uint64_t hostTimeUs = 0;
+    if (!GetHostTimeUs(hostTimeUs)) {
+        return "";
+    }
+    return std::to_string(hostTimeUs);
 }
 
 void Utils::GenTimeLineJsonFile(std::string path, const std::string& strData)

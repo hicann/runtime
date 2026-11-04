@@ -376,6 +376,9 @@ public:
     static bool CheckInputArgsLength(int32_t argc, CONST_CHAR_PTR argv[]);
     static bool CheckBinValid(const std::string& binPath);
     static int32_t DumpFile(const std::string& output, CONST_CHAR_PTR data, std::size_t length);
+    // Wall clock in microseconds since the epoch. Returns false when the clock cannot be read.
+    // Kept free of any string formatting so callers can sample it back-to-back with another clock.
+    static bool GetHostTimeUs(uint64_t& hostTimeUs);
     static std::string GetHostTime();
     static void GenTimeLineJsonFile(std::string path, const std::string& strData);
     template <typename TO, typename TI>

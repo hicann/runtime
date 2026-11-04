@@ -39,6 +39,11 @@ int32_t DrvGetAiCoreNum(uint32_t deviceId, int64_t& aiCoreNum);
 int32_t DrvGetAivNum(uint32_t deviceId, int64_t& aivNum);
 int32_t DrvGetPlatformInfo(uint32_t& platformInfo);
 int32_t DrvGetDeviceTime(uint32_t deviceId, uint64_t& startMono, uint64_t& cntvct);
+// Read device monotonic / cntvct separately. DrvGetDeviceTime issues two serial
+// driver calls, so a host->device delay exists between the two clocks; callers
+// that need to calibrate it use these single-clock interfaces.
+int32_t DrvGetDeviceMonotonic(uint32_t deviceId, uint64_t& startMono);
+int32_t DrvGetDeviceCntvct(uint32_t deviceId, uint64_t& cntvct);
 std::string DrvGetDevIdsStr();
 bool DrvCheckIfHelperHost();
 bool DrvGetHostFreq(std::string& freq);

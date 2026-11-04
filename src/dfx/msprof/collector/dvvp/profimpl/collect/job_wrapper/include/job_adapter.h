@@ -106,6 +106,8 @@ public:
         }
 
         uint64_t minDelta = 0;
+        uint64_t minCntvctDiff = 0;
+        bool hasCntvctDiff = false;
         for (int32_t i = 0; i < GET_TIME_COUNT; i++) {
             const uint64_t t1 = GenClockTimer(devIndexId, devicemonotonic);
             auto mT1 = Utils::GetClockMonotonicRaw();
@@ -127,7 +129,29 @@ public:
                 // It is assumed that the timeline obtained by the api is at the same time, the error is 0
                 hostCntvctDiff_ = 0;
             }
+
+            // Measure the host->device half-trip delay of cntvct separately (ns).
+            // DrvGetDeviceTime reads the two device clocks in serial, so the delay
+            // between them is not covered by the pairing above.
+            uint64_t probeCntvct = 0;
+            auto mBefore = Utils::GetClockMonotonicRaw();
+            int32_t probeRet = analysis::dvvp::driver::DrvGetDeviceCntvct(devIndexId, probeCntvct);
+            auto mAfter = Utils::GetClockMonotonicRaw();
+            if (probeRet != PROFILING_SUCCESS) {
+                continue;
+            }
+            uint64_t cntvctDiff = (mAfter >= mBefore) ? ((mAfter - mBefore) >> 1U) : 0;
+            if (!hasCntvctDiff || cntvctDiff < minCntvctDiff) {
+                minCntvctDiff = cntvctDiff;
+                devCntvctDiff_ = cntvctDiff;
+                hasCntvctDiff = true;
+            }
         }
+        // Device events are converted as (tick - devCntvct) / freq + hostMonotonic, so
+        // adding the half-trip delay to hostMonotonic shifts the whole device timeline
+        // back by the sampling latency. Without it the device clock anchor is early.
+        hostMonotonicStart_ += devCntvctDiff_;
+        MSPROF_LOGI("devId:%u cntvct half-trip delay compensated: %" PRIu64 " ns", devIndexId, devCntvctDiff_);
     }
 
     uint64_t GenClockTimer(uint32_t devIndexId, uint64_t& startMono) const
@@ -162,6 +186,7 @@ protected:
     uint64_t hostCntvctDiff_;
     uint64_t devMonotonic_;
     uint64_t devCntvct_;
+    uint64_t devCntvctDiff_{0};
     analysis::dvvp::message::StatusInfo status_;
 
 private:

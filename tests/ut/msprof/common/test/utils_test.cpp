@@ -1318,3 +1318,28 @@ TEST_F(COMMON_UTILS_UTILS_TEST, CheckPathWithInvalidCharWillReturnTrueWhenPathDo
 {
     EXPECT_TRUE(Utils::CheckPathWithInvalidChar("/tmp/valid_path"));
 }
+
+TEST_F(COMMON_UTILS_UTILS_TEST, GetHostTimeUs)
+{
+    GlobalMockObject::verify();
+    uint64_t hostTimeUs = 0;
+    ASSERT_TRUE(Utils::GetHostTimeUs(hostTimeUs));
+    EXPECT_NE(0U, hostTimeUs);
+    // The numeric interface and the string interface must report the same clock.
+    const std::string hostTime = Utils::GetHostTime();
+    ASSERT_FALSE(hostTime.empty());
+    uint64_t parsedHostTime = 0;
+    ASSERT_TRUE(Utils::StrToUint64(parsedHostTime, hostTime));
+    EXPECT_LE(hostTimeUs, parsedHostTime);
+}
+
+TEST_F(COMMON_UTILS_UTILS_TEST, GetHostTimeUsWillReturnFalseWhenGetTimeOfDayFails)
+{
+    GlobalMockObject::verify();
+    MOCKER(OsalGetTimeOfDay).stubs().will(returnValue(OSAL_EN_ERROR));
+    uint64_t hostTimeUs = 0;
+    EXPECT_FALSE(Utils::GetHostTimeUs(hostTimeUs));
+    EXPECT_EQ(0U, hostTimeUs);
+    EXPECT_STREQ("", Utils::GetHostTime().c_str());
+    GlobalMockObject::verify();
+}
