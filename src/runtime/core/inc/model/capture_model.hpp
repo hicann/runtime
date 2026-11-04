@@ -257,7 +257,7 @@ public:
 
     void ModelSqOperUnLock(void) { return sqBindMutex_.unlock(); }
 
-    void ResetTrackDataReportFlag() { trackDataReportFlag_ = false; }
+    void ResetTrackDataReportFlag();
 
     uint32_t GenerateSeqId() { return seqId_++; }
 
@@ -427,6 +427,9 @@ private:
     uint32_t refCount_{0U};
     bool isNeedUpdateEndGraph_{false};
     uint64_t beginCaptureTimeStamp_{0UL};
+    // false表示当前Track采集尚未上报Graph元数据，true表示已上报。
+    // 运行期间的读写由trackDataReportMutex_保护；Stop复位为false后，下一轮replay重新上报。
+    std::mutex trackDataReportMutex_;
     bool trackDataReportFlag_{false};
     std::atomic<uint32_t> seqId_{0};
     std::set<void*> argLoaderBackup_;

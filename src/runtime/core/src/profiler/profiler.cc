@@ -750,20 +750,6 @@ rtError_t Profiler::ReportCacheTrack(uint32_t cacheFlag)
 void Profiler::RuntimeProfilerStop(void) const
 {
     RT_LOG(RT_LOG_INFO, "ProfilerStop");
-    const Runtime* const rtInstance = Runtime::Instance();
-    Context* curCtx = rtInstance->CurrentContext();
-    if (curCtx != nullptr) {
-        SpinLock& modelLock = curCtx->GetModelLock();
-        modelLock.Lock();
-        for (auto it : curCtx->GetModelList()) {
-            if (it != nullptr && it->GetModelType() == RT_MODEL_CAPTURE_MODEL) {
-                CaptureModel* captureMdl = dynamic_cast<CaptureModel*>(it);
-                captureMdl->ResetTrackDataReportFlag();
-            }
-        }
-        modelLock.Unlock();
-    }
-
     const auto ret = ProfilingAgent::Instance().UnInit();
     COND_RETURN_VOID(ret != RT_ERROR_NONE, "runtime UnInit profiling failed, retCode=%#x.", ret);
 }

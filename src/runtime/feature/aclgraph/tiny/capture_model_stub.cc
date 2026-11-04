@@ -440,6 +440,8 @@ Stream* CaptureModel::GetOriginalCaptureStream(void) const { return nullptr; }
 
 void CaptureModel::ReportCacheTrackData() {}
 
+void CaptureModel::ResetTrackDataReportFlag() {}
+
 rtError_t CaptureModel::BuildLogicSqs() { return RT_ERROR_FEATURE_NOT_SUPPORT; }
 
 rtError_t CaptureModel::AllocAllLogicSqDeviceAddr(const uint32_t additionalSqeNum)

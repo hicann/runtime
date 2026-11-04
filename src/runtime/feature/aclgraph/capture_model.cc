@@ -389,6 +389,7 @@ void CaptureModel::ReportTrackData(Profiler* profiler)
         }
     }
 
+    // 调用方持有trackDataReportMutex_，后续replay无需重复上报当前Track采集的Graph任务元数据。
     trackDataReportFlag_ = true;
 }
 
@@ -400,6 +401,12 @@ void CaptureModel::ReportTrackDataForAllModels(Profiler* profiler)
     models.insert(models.end(), subs.begin(), subs.end());
 
     for (CaptureModel* curMdl : models) {
+        if (curMdl != this) {
+            // 当前Model的锁由ReportCacheTrackData持有，子Model需要获取各自的锁保护flag写入。
+            const std::lock_guard<std::mutex> lock(curMdl->trackDataReportMutex_);
+            curMdl->ReportTrackData(profiler);
+            continue;
+        }
         curMdl->ReportTrackData(profiler);
     }
 
@@ -408,6 +415,8 @@ void CaptureModel::ReportTrackDataForAllModels(Profiler* profiler)
 
 void CaptureModel::ReportCacheTrackData()
 {
+    // 加锁与Stop复位串行；true表示当前Track采集已完成元数据上报，无需再次上报。
+    const std::lock_guard<std::mutex> lock(trackDataReportMutex_);
     if (trackDataReportFlag_) {
         return;
     }
@@ -418,6 +427,13 @@ void CaptureModel::ReportCacheTrackData()
     ReportTrackDataForAllModels(profilerPtr);
     ReportedStreamInfoForProfilingForAllModels();
     ReportShapeInfoForProfilingForAllModels();
+}
+
+void CaptureModel::ResetTrackDataReportFlag()
+{
+    // 等待正在进行的元数据上报结束，再把flag设置为false，下一轮Track采集重新上报。
+    const std::lock_guard<std::mutex> lock(trackDataReportMutex_);
+    trackDataReportFlag_ = false;
 }
 
 std::vector<CaptureModel*>& CaptureModel::GetAllSubCaptureModels()
@@ -717,6 +733,7 @@ void CaptureModel::FinalizeHostStateOnExit() noexcept
     }
     argLoaderBackup_.clear();
     isNeedUpdateEndGraph_ = false;
+    // 进程退出时模型不再参与replay，避免在硬退出清理路径中额外加锁。
     trackDataReportFlag_ = false;
 }
 

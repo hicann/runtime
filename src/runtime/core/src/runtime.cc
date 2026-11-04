@@ -4348,6 +4348,8 @@ rtError_t Runtime::RuntimeTrackProfilerStop(
                 profiler_->SetTrackProfEnable(false);
                 SetTrackProfFlag(false);
                 trackProfilingType_ &= (~(PROF_RUNTIME_TRACE_MASK));
+                // 本轮Track采集结束后复位Graph元数据上报状态，保证下一轮动态采集重新上报。
+                ContextManage::ResetCaptureModelTrackDataReportFlag();
                 if (apiProfilingType_ == 0ULL) {
                     profiler_->RuntimeProfilerStop();
                 }
@@ -4357,6 +4359,8 @@ rtError_t Runtime::RuntimeTrackProfilerStop(
                 profiler_->SetTrackProfEnable(false);
                 SetTrackProfFlag(false);
                 trackProfilingType_ &= (~(PROF_RUNTIME_TRACE_MASK));
+                // 本轮Track采集结束后复位Graph元数据上报状态，保证下一轮动态采集重新上报。
+                ContextManage::ResetCaptureModelTrackDataReportFlag();
                 if (apiProfilingType_ == 0ULL) {
                     profiler_->RuntimeProfilerStop();
                 }

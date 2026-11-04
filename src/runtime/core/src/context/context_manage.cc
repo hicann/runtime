@@ -10,6 +10,7 @@
 #include <mutex>
 #include "context_manage.hpp"
 #include "context.hpp"
+#include "capture_model.hpp"
 #include "inner_thread_local.hpp"
 #include "context_data_manage.h"
 #include "npu_driver.hpp"
@@ -169,6 +170,38 @@ bool ContextManage::IsActiveContextOnDevice(Context* const ctx, const int32_t de
         return false;
     }
     return dev->Id_() == static_cast<uint32_t>(devId);
+}
+
+void ContextManage::ResetCaptureModelTrackDataReportFlag()
+{
+    uint32_t contextCount = 0U;
+    uint32_t resetModelCount = 0U;
+    // Track采集状态是进程级的，但动态采集命令由独立线程处理，其CurrentContext可能为空或不是业务Context
+    // 因此在Track采集全部停止后，遍历Runtime管理的全部Context，复位其中CaptureModel的元数据上报flag
+    const ReadProtect contextSetGuard(&g_ctxMan.GetSetRwLock());
+    for (Context* const ctx : g_ctxMan.GetSetObj()) {
+        if (ctx == nullptr) {
+            continue;
+        }
+        contextCount++;
+        // 防止遍历期间业务线程从Context中移除并销毁Model。
+        SpinLock& modelLock = ctx->GetModelLock();
+        modelLock.Lock();
+        for (Model* const model : ctx->GetModelList()) {
+            if ((model == nullptr) || (model->GetModelType() != RT_MODEL_CAPTURE_MODEL)) {
+                continue;
+            }
+            CaptureModel* const captureModel = dynamic_cast<CaptureModel*>(model);
+            if (captureModel != nullptr) {
+                captureModel->ResetTrackDataReportFlag();
+                resetModelCount++;
+            }
+        }
+        modelLock.Unlock();
+    }
+    RT_LOG(
+        RT_LOG_INFO, "Reset capture model track data report flag, context_count=%u, capture_model_count=%u.",
+        contextCount, resetModelCount);
 }
 
 bool ContextManage::AcquireInactiveContextForDestroy(Context* const ctx, rtError_t* errorCode)

@@ -7,6 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include <thread>
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 #include "securec.h"
@@ -20,6 +21,7 @@
 #include "api_profile_log_decorator.hpp"
 #include "profiler_struct.hpp"
 #include "context.hpp"
+#include "context_manage.hpp"
 #include "raw_device.hpp"
 #include "event.hpp"
 #include "notify.hpp"
@@ -4344,9 +4346,9 @@ TEST_F(ProfilerTest, ChangeTrackDataTaskType_MixAicTask)
     EXPECT_EQ(runtimeTrack.taskType, TS_TASK_TYPE_KERNEL_MIX_AIC);
 }
 
-// ==================== RuntimeProfilerStop 覆盖 ====================
+// ==================== RuntimeProfilerStop和CaptureModel复位覆盖 ====================
 
-// RuntimeProfilerStop: curCtx 为 nullptr → 跳过 model 遍历，直接 UnInit
+// RuntimeProfilerStop不再依赖当前Context，只负责UnInit
 TEST_F(ProfilerTest, RuntimeProfilerStop_NullContext)
 {
     Runtime* rt = ((Runtime*)Runtime::Instance());
@@ -4361,8 +4363,8 @@ TEST_F(ProfilerTest, RuntimeProfilerStop_NullContext)
     GlobalMockObject::verify();
 }
 
-// RuntimeProfilerStop: ctx 含 capture model → 调用 ResetTrackDataReportFlag
-TEST_F(ProfilerTest, RuntimeProfilerStop_WithCaptureModel)
+// Profiling控制线程没有Context时，仍复位所有Context中的CaptureModel
+TEST_F(ProfilerTest, ResetCaptureModelTrackDataReportFlag_WithoutCurrentContext)
 {
     Runtime* rt = ((Runtime*)Runtime::Instance());
     profiler = rt->profiler_;
@@ -4378,19 +4380,23 @@ TEST_F(ProfilerTest, RuntimeProfilerStop_WithCaptureModel)
     captureMdl->trackDataReportFlag_ = true;
     ctx->models_.push_back(captureMdl);
 
-    MOCKER_CPP(&ProfilingAgent::UnInit).stubs().will(returnValue(RT_ERROR_NONE));
-    profiler->RuntimeProfilerStop();
+    Context* resetThreadCtx = ctx;
+    std::thread resetThread([&]() {
+        resetThreadCtx = rt->CurrentContext();
+        ContextManage::ResetCaptureModelTrackDataReportFlag();
+    });
+    resetThread.join();
 
+    EXPECT_EQ(resetThreadCtx, nullptr);
     EXPECT_FALSE(captureMdl->trackDataReportFlag_);
 
     ctx->models_.remove(captureMdl);
     delete captureMdl;
     ReleasePrimaryContextForProfiler(devId);
-    GlobalMockObject::verify();
 }
 
-// RuntimeProfilerStop: ctx 含非 capture model → 不调 ResetTrackDataReportFlag
-TEST_F(ProfilerTest, RuntimeProfilerStop_WithNormalModel)
+// 全Context复位忽略非CaptureModel
+TEST_F(ProfilerTest, ResetCaptureModelTrackDataReportFlag_WithNormalModel)
 {
     Runtime* rt = ((Runtime*)Runtime::Instance());
     profiler = rt->profiler_;
@@ -4404,13 +4410,11 @@ TEST_F(ProfilerTest, RuntimeProfilerStop_WithNormalModel)
     normalMdl->context_ = ctx;
     ctx->models_.push_back(normalMdl);
 
-    MOCKER_CPP(&ProfilingAgent::UnInit).stubs().will(returnValue(RT_ERROR_NONE));
-    profiler->RuntimeProfilerStop();
+    ContextManage::ResetCaptureModelTrackDataReportFlag();
 
     ctx->models_.remove(normalMdl);
     delete normalMdl;
     ReleasePrimaryContextForProfiler(devId);
-    GlobalMockObject::verify();
 }
 
 // RuntimeProfilerStop: UnInit 失败 → COND_RETURN_VOID 提前返回

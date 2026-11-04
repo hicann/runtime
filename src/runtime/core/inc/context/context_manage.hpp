@@ -48,6 +48,7 @@ public:
     static Device* GetActiveContextDevice(Context* const ctx);
     static bool IsContextOnDevice(Context* const ctx, const int32_t devId);
     static bool IsActiveContextOnDevice(Context* const ctx, const int32_t devId);
+    static void ResetCaptureModelTrackDataReportFlag();
     // Validate inactive explicit context before destroy. This does not acquire an API-level in-use reference.
     static bool AcquireInactiveContextForDestroy(Context* const ctx, rtError_t* errorCode = nullptr);
     static rtError_t RemoveContextFromSet(Context* const eraseCtx);
