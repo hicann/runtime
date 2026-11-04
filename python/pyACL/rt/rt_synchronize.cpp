@@ -172,17 +172,21 @@ PyObject* WrapAclRtLaunchCallback(PyObject* /* self */, PyObject* args)
 
     CHECK_NULL(PyCallable_Check(fn), "parameter must be callable");
 
-    Py_XINCREF(fn);
-    Py_XINCREF(pyInputsList);
-
     // set callback
     auto data = new (std::nothrow) PyFuncStruct;
     CHECK_NULL(data, "new failed", PyExc_MemoryError);
+    Py_XINCREF(fn);
+    Py_XINCREF(pyInputsList);
     data->pyFunc = fn;
     data->pyFuncArgs = pyInputsList;
 
     aclError ret = aclrtLaunchCallback(
         LaunchCallFunc, static_cast<void*>(data), static_cast<aclrtCallbackBlockType>(blockType), stream);
+    if (ret != ACL_SUCCESS) {
+        Py_XDECREF(data->pyFunc);
+        Py_XDECREF(data->pyFuncArgs);
+        delete data;
+    }
     return Py_BuildValue("i", ret);
 }
 
