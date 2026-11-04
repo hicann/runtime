@@ -249,7 +249,7 @@ uint32_t PlatFormInfos::GetCoreNumByType(const std::string& core_type)
         core_num = core_num_str.empty() ? 0 : std::stoi(core_num_str.c_str());
     } catch (...) {
         PF_LOGW("Unable to load core_num[%s].", core_num_str.c_str());
-        return -1;
+        return UINT32_MAX;
     }
     PF_LOGD("Get PlatFormInfos::core_num %u|%s, core_type %s", core_num, core_num_str.c_str(), core_type.c_str());
     return core_num;
