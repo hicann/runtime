@@ -14,6 +14,7 @@
 
 import sys
 import logging
+import os
 import numpy as np
 
 # for float16
@@ -26,6 +27,10 @@ logger = logging.getLogger(__name__)
 
 
 def verify_result(output, golden):
+    element_size = np.dtype(np.float16).itemsize
+    if os.path.getsize(output) % element_size or os.path.getsize(golden) % element_size:
+        logger.error("output and golden must contain complete float16 elements")
+        return False
     output = np.fromfile(output, dtype=np.float16).reshape(-1)
     golden = np.fromfile(golden, dtype=np.float16).reshape(-1)
     if golden.size == 0 or output.size != golden.size:
