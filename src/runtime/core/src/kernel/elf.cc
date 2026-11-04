@@ -59,7 +59,7 @@ static const char_t* g_functionMetaTypeStr[] = {
     "RT_FUNCTION_TYPE_SCHED_MODE_INFO",          // 18
     "unknown(19)",                               // 19
     "unknown(20)",                               // 20
-    "RT_FUNCTION_TYPE_COMPAT_MODE"               // 21
+    "RT_FUNCTION_TYPE_COMPAT_MODE",              // 21
 };
 
 static std::string GetFunctionMetaTypeStr(const uint16_t type)
@@ -421,7 +421,7 @@ rtError_t RefreshSymbolAddress(rtElfData* elfData)
         const rtError_t error = curCtx->Device_()->GetPrintFifoAddrAndCreateThread(&sourceAddr, PRINT_SIMD);
         COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "Get printf fifo space address failed.");
         *addr = sourceAddr;
-        RT_LOG(RT_LOG_DEBUG, "Set global variable address in binary, g_sysPrintFifoSpace = %p, addr = %p", *addr, addr);
+        RT_LOG(RT_LOG_DEBUG, "Set global variable address in binary, g_sysPrintFifoSpace=%p, addr=%p", *addr, addr);
     }
     if (((elfData->ascendMetaFlag & KERNEL_FFTS_ADDR_BIT) != 0) && (elfData->symbolAddr.g_sysFftsAddr != nullptr)) {
         uint64_t* addr = elfData->symbolAddr.g_sysFftsAddr;
@@ -429,7 +429,7 @@ rtError_t RefreshSymbolAddress(rtElfData* elfData)
         const rtError_t error = curDrv->GetC2cCtrlAddr(drvDeviceId, &sourceAddr, &sourceAddrLen);
         COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "Get ffts address failed.");
         *addr = sourceAddr;
-        RT_LOG(RT_LOG_DEBUG, "Set global variable address in binary, g_sysFftsAddr = %p, addr = %p", *addr, addr);
+        RT_LOG(RT_LOG_DEBUG, "Set global variable address in binary, g_sysFftsAddr=%p, addr=%p", *addr, addr);
     }
     if (((elfData->ascendMetaFlag & KERNEL_SYSTEM_RUN_CFG_ADDR_BIT) != 0) &&
         (elfData->symbolAddr.g_opL2CacheHintCfg != nullptr)) {
@@ -439,8 +439,7 @@ rtError_t RefreshSymbolAddress(rtElfData* elfData)
         if (error != RT_ERROR_FEATURE_NOT_SUPPORT) {
             COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "Get L2Cache address failed.");
             *addr = sourceAddr;
-            RT_LOG(
-                RT_LOG_DEBUG, "Set global variable address in binary, g_opL2CacheHintCfg = %p, addr = %p", *addr, addr);
+            RT_LOG(RT_LOG_DEBUG, "Set global variable address in binary, g_opL2CacheHintCfg=%p, addr=%p", *addr, addr);
         }
     }
     if (((elfData->ascendMetaFlag & KERNEL_SIMT_PRINT_FIFO_ADDR_BIT) != 0) &&
@@ -449,9 +448,7 @@ rtError_t RefreshSymbolAddress(rtElfData* elfData)
         const rtError_t error = curCtx->Device_()->GetPrintFifoAddrAndCreateThread(&sourceAddr, PRINT_SIMT);
         COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "Get simt printf fifo space address failed.");
         *addr = sourceAddr;
-        RT_LOG(
-            RT_LOG_DEBUG, "Set global variable address in binary, g_sysSimtPrintFifoSpace = %p, addr = %p", *addr,
-            addr);
+        RT_LOG(RT_LOG_DEBUG, "Set global variable address in binary, g_sysSimtPrintFifoSpace=%p, addr=%p", *addr, addr);
     }
     if (IsAssertOnly(elfData->ascendMetaFlag) && (elfData->symbolAddr.g_sysPrintFifoSpace != nullptr)) {
         uint64_t* addr = elfData->symbolAddr.g_sysPrintFifoSpace;
@@ -503,35 +500,35 @@ void SetSymbolAddress(
             if (((elfData->ascendMetaFlag & KERNEL_PRINT_FIFO_ADDR_BIT) != 0) && (symbol == "g_sysPrintFifoSpace")) {
                 // 维侧空间地址
                 elfData->symbolAddr.g_sysPrintFifoSpace = addr;
-                RT_LOG(RT_LOG_DEBUG, "Parse Elf, &g_sysPrintFifoSpace = %p", addr);
+                RT_LOG(RT_LOG_DEBUG, "Parse Elf, &g_sysPrintFifoSpace=%p", addr);
             }
             if (((elfData->ascendMetaFlag & KERNEL_ASSERT_PRINT_FIFO_ADDR_BIT) != 0U) &&
                 (symbol == "g_sysPrintFifoSpace")) {
                 // assert和printf共用一个空间
                 elfData->symbolAddr.g_sysPrintFifoSpace = addr;
-                RT_LOG(RT_LOG_DEBUG, "Parse Elf, assert g_sysPrintFifoSpace addr = %p", addr);
+                RT_LOG(RT_LOG_DEBUG, "Parse Elf, assert g_sysPrintFifoSpace addr=%p", addr);
             }
             if (((elfData->ascendMetaFlag & KERNEL_FFTS_ADDR_BIT) != 0) && (symbol == "g_sysFftsAddr")) {
                 // FFTS 硬同步地址
                 elfData->symbolAddr.g_sysFftsAddr = addr;
-                RT_LOG(RT_LOG_DEBUG, "Parse Elf, &g_sysFftsAddr = %p", addr);
+                RT_LOG(RT_LOG_DEBUG, "Parse Elf, &g_sysFftsAddr=%p", addr);
             }
             if (((elfData->ascendMetaFlag & KERNEL_SYSTEM_RUN_CFG_ADDR_BIT) != 0) && (symbol == "g_opL2CacheHintCfg")) {
                 // 双页表地址
                 elfData->symbolAddr.g_opL2CacheHintCfg = addr;
-                RT_LOG(RT_LOG_DEBUG, "Parse Elf, &g_opL2CacheHintCfg = %p", addr);
+                RT_LOG(RT_LOG_DEBUG, "Parse Elf, &g_opL2CacheHintCfg=%p", addr);
             }
             if (((elfData->ascendMetaFlag & KERNEL_SIMT_PRINT_FIFO_ADDR_BIT) != 0) &&
                 (symbol == "g_sysSimtPrintFifoSpace")) {
                 // SIMT维侧空间地址
                 elfData->symbolAddr.g_sysSimtPrintFifoSpace = addr;
-                RT_LOG(RT_LOG_DEBUG, "Parse Elf, &g_sysSimtPrintFifoSpace = %p", addr);
+                RT_LOG(RT_LOG_DEBUG, "Parse Elf, &g_sysSimtPrintFifoSpace=%p", addr);
             }
             if (((elfData->ascendMetaFlag & KERNEL_USER_BUFF_ADDR_BIT) != 0U) &&
                 (symbol == "g_sysCV11CompatCV12WorkSpace")) {
                 // 用户缓冲区地址
                 elfData->symbolAddr.g_sysCV11CompatCV12WorkSpace = addr;
-                RT_LOG(RT_LOG_DEBUG, "Parse Elf, g_sysCV11CompatCV12WorkSpace = %p", addr);
+                RT_LOG(RT_LOG_DEBUG, "Parse Elf, g_sysCV11CompatCV12WorkSpace=%p", addr);
             }
         }
         internalSym++;
@@ -740,7 +737,7 @@ static rtError_t ElfParseTlvInfo(uint16_t tlvType, const uint8_t* buf, ElfKernel
             break;
         case RT_FUNCTION_TYPE_COMPAT_MODE: {
             const ElfKernelCompatModeInfo* const compatModeInfo = RtPtrToPtr<const ElfKernelCompatModeInfo*>(buf);
-            const uint16_t tlvLength = static_cast<uint16_t>(
+            tlvLength = static_cast<uint16_t>(
                 GetByte(RtPtrToPtr<const uint8_t*>(&(compatModeInfo->head.length)), sizeof(uint16_t)));
             tlvInfo->compatMode =
                 (tlvLength >= sizeof(compatModeInfo->compatMode)) ?

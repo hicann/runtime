@@ -1427,7 +1427,7 @@ rtError_t RawDevice::AllocUserBufAddr(void)
 
     constexpr size_t OP_COMPAT_MODE_ENV_SIZE = 2U;
     std::array<char_t, OP_COMPAT_MODE_ENV_SIZE> opCompatModeEnv{};
-    auto ret =
+    const auto ret =
         mmGetEnv("ASCEND_OP_COMPATIBILITY_MODE", opCompatModeEnv.data(), static_cast<uint32_t>(opCompatModeEnv.size()));
     if ((ret != EN_OK) || (opCompatModeEnv[0U] != '1') || (opCompatModeEnv[1U] != '\0')) {
         return RT_ERROR_NONE;
