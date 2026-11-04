@@ -38,6 +38,7 @@ int32_t main()
     constexpr uint32_t blockDim = 1;
     int writeValue = 123;
     WriteDo(blockDim, stream, devPtr, writeValue);
+    CHECK_ERROR(aclrtSynchronizeStream(stream));
     INFO_LOG("Write data %d to the device address %p", writeValue, devPtr);
 
     // Export the shareable memory identifier

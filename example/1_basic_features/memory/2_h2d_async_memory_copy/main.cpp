@@ -49,6 +49,7 @@ int32_t main()
     aclrtSynchronizeStream(stream);
     constexpr uint32_t blockDim = 1;
     ReadDo(blockDim, stream, devPtrB);
+    CHECK_ERROR(aclrtSynchronizeStream(stream));
 
     // Release resource of the host and device
     aclrtDestroyStreamForce(stream);

@@ -49,14 +49,15 @@ int32_t main()
 
     constexpr uint32_t blockDim = 1;
     ReadDo(blockDim, stream, static_cast<int*>(devPtr));
+    CHECK_ERROR(aclrtSynchronizeStream(stream));
+
+    // Close the imported memory before notifying the exporting process.
+    CHECK_ERROR(aclrtIpcMemClose(memName));
 
     // Write the completion flag to the file
     int32_t flag = 1;
     memory::WriteFile("file/flag.bin", "file/flag.bin.done", &flag, sizeof(flag));
     INFO_LOG("Process B: complete ipc memory sharing");
-
-    // Release memory resources
-    CHECK_ERROR(aclrtIpcMemClose(memName));
 
     aclrtDestroyStreamForce(stream);
     aclrtFree(devPtr);
