@@ -311,7 +311,7 @@ public:
     do {                                                                                                       \
         if ((param) != (expect)) {                                                                             \
             const std::string paramVal = std::to_string(param);                                                \
-            const std::string expectVal = std::to_string(static_cast<long long>(expect));                      \
+            const std::string expectVal = std::to_string(static_cast<int64_t>(expect));                        \
             ACL_LOG_ERROR(                                                                                     \
                 "[Check][PARAM]%s is a reserved parameter and must be %s, current value=%s", #param,           \
                 expectVal.c_str(), paramVal.c_str());                                                          \
