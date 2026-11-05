@@ -17,14 +17,16 @@
 
 ### 2.1 使用场景
 
+以下为接口调用流程片段。`kernel1`、`kernel2`为已加载的`aclrtFuncHandle`，`numBlocks`为启动核数，`argsData1`/`argsSize1`和`argsData2`/`argsSize2`分别为已准备的Kernel参数数据及其字节数；相关流和参数需由调用方提前初始化。
+
 - **场景一**：单算子流捕获
   ```cpp
   // 开始捕获
   aclError ret = aclmdlRICaptureBegin(stream, ACL_MODEL_RI_CAPTURE_MODE_GLOBAL);
   
   // 执行算子序列（任务被记录而非立即执行）
-  aclrtKernelLaunch(stream, kernel1, ...);
-  aclrtKernelLaunch(stream, kernel2, ...);
+  aclrtLaunchKernel(kernel1, numBlocks, argsData1, argsSize1, stream);
+  aclrtLaunchKernel(kernel2, numBlocks, argsData2, argsSize2, stream);
   
   // 结束捕获，获得 CaptureModel
   aclmdlRI captureModel;
@@ -53,8 +55,8 @@
   aclmdlRICaptureTaskGrpBegin(stream);
   
   // 执行一系列任务
-  aclrtKernelLaunch(stream, kernel1, ...);
-  aclrtKernelLaunch(stream, kernel2, ...);
+  aclrtLaunchKernel(kernel1, numBlocks, argsData1, argsSize1, stream);
+  aclrtLaunchKernel(kernel2, numBlocks, argsData2, argsSize2, stream);
   
   // 结束任务组，获得 TaskGroup handle
   TaskGroup *handle;
@@ -103,11 +105,11 @@
   
   // 6. 对每个条件子图进行捕获（使用单独的流，条件子图通过 aclmdlRICaptureToModelRIBegin 绑定）
   aclmdlRICaptureToModelRIBegin(stream2, subModels[0], ACL_MODEL_RI_CAPTURE_MODE_GLOBAL);
-  aclrtKernelLaunch(stream2, kernel1, ...);
+  aclrtLaunchKernel(kernel1, numBlocks, argsData1, argsSize1, stream2);
   aclmdlRICaptureEnd(stream2, nullptr); // 条件子图 0 结束捕获
   
   aclmdlRICaptureToModelRIBegin(stream3, subModels[1], ACL_MODEL_RI_CAPTURE_MODE_GLOBAL);
-  aclrtKernelLaunch(stream3, kernel2, ...);
+  aclrtLaunchKernel(kernel2, numBlocks, argsData2, argsSize2, stream3);
   aclmdlRICaptureEnd(stream3, nullptr); // 条件子图 1 结束捕获
   
   // 7. 结束父图捕获（所有条件子图必须已 EndCapture，否则返回错误）
