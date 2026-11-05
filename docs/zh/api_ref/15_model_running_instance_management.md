@@ -1957,7 +1957,8 @@ aclError aclmdlRITaskDisable(aclmdlRITask task)
 
 ### 约束说明
 
-对于同一个模型运行实例，本接口不支持并发调用。
+- 对于同一个模型运行实例，本接口不支持并发调用。
+- 不支持将以下任务的状态设置为disable：通过aclrtRecordEventWithFlag接口下发且flag为ACL_EVENT_RECORD_EXTERNAL的任务，该任务用于实现图与外部Stream之间的同步，以及图与图之间的同步。若执行该操作，将导致模型状态异常，无法正常执行。
 
 <br>
 <br>
@@ -2018,7 +2019,7 @@ aclError aclmdlRIUpdate(aclmdlRI modelRI)
 ### 约束说明
 
 - 由于Profiling不支持在模型执行过程中动态更新上报的算子参数，因此若需分析Profiling数据，必须在模型首次执行前完成所有参数的更新。
-- 若需要更新模型中Event Record类型的任务信息，且更新后的任务类型仍为Event Record，此时接口调用顺序应为：先调用aclmdlRITaskSetParams接口，再执行模型（对应aclmdlRIExecute接口或aclmdlRIExecuteAsync接口），无需在模型执行之前调用aclmdlRIUpdate接口。若调用aclmdlRIUpdate接口，将导致模型状态异常，无法正常执行。
+- 若需要更新模型中Event Record类型的任务信息，且更新后的任务类型仍为Event Record，此时接口调用顺序应为：先调用aclmdlRITaskSetParams接口，再执行模型（对应aclmdlRIExecuteAsync接口），无需在模型执行之前调用aclmdlRIUpdate接口。若调用aclmdlRIUpdate接口，将导致模型状态异常，无法正常执行。
 
 <br>
 <br>

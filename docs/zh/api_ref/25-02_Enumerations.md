@@ -393,7 +393,7 @@ typedef enum {
 typedef enum aclmdlRITaskType {
     ACL_MODEL_RI_TASK_DEFAULT,      // 除以下类型之外的其他类型
     ACL_MODEL_RI_TASK_KERNEL,       // Cube Core或Vector Core上计算任务
-    ACL_MODEL_RI_TASK_EVENT_RECORD, // Event Record任务，通常对应aclrtRecordEvent接口下发的任务
+    ACL_MODEL_RI_TASK_EVENT_RECORD, // Event Record任务，通常对应aclrtRecordEvent或aclrtRecordEventWithFlag接口下发的任务
     ACL_MODEL_RI_TASK_EVENT_WAIT,   // Event Wait任务，通常对应aclrtStreamWaitEvent或aclrtStreamWaitEventWithTimeout接口下发的任务
     ACL_MODEL_RI_TASK_EVENT_RESET,  // Event Reset任务，通常对应aclrtResetEvent接口下发的任务
     ACL_MODEL_RI_TASK_VALUE_WRITE,  // Value Write任务，通常对应aclrtValueWrite接口下发的任务
