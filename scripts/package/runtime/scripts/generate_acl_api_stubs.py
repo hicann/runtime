@@ -106,7 +106,7 @@ def parse_wrapper(path: Path) -> Dict[str, AclApiEntry]:
             continue
         for raw_entry in parse_wrapper_entries(body):
             impl_name = normalize_field(raw_entry["symbol"])
-            public_name = impl_name.removesuffix("Impl")
+            public_name = impl_name[:-4] if impl_name.endswith("Impl") else impl_name
             if public_name in entries:
                 raise ValueError(f"{path}: duplicate ACL API {public_name}")
             entries[public_name] = AclApiEntry(
