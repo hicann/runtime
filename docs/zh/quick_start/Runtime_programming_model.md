@@ -79,10 +79,11 @@ Runtime API采用同步和异步两种执行模式，具有以下典型特征：
 
 > **流程图与下方步骤的关系说明**：上方流程图描绘的是Host侧和Device侧任务调度与执行的内部机制，而下方步骤1~10从用户编程视角描述了完整的Runtime调用流程。两者处于不同抽象层次，其中**步骤5~8**涉及的内存拷贝与计算任务下发与同步，其内部执行机制正是上方流程图所描绘的内容。
 
-1. Device初始化，以Device 0为例。
+1. 初始化Runtime并指定Device，以Device 0为例。
 
    ```c
    int32_t devId=0;
+   aclInit(nullptr);
    aclrtSetDevice(devId);
    ```
 
@@ -191,10 +192,12 @@ Runtime API采用同步和异步两种执行模式，具有以下典型特征：
    aclrtFreeHost(hostPtr);
    ```
 
-10. 释放Device资源。
+10. 销毁Stream，释放Device资源并去初始化Runtime。
 
     ```c
+    aclrtDestroyStream(stream1);
     aclrtResetDeviceForce(devId);
+    aclFinalize();
     ```
 
 ## Runtime主要编程概念
@@ -252,6 +255,7 @@ aclrtSetCurrentContext(ctx1);
 aclrtDestroyContext(ctx1);  // 当前线程正关联ctx1，销毁ctx1时会同时将线程与ctx1去关联
 // 线程关联的context: NA
 aclrtResetDeviceForce(0);
+aclFinalize();
 ```
 
 ## 默认Context和默认Stream的使用场景
@@ -282,6 +286,7 @@ aclrtSynchronizeStream(nullptr);
 /* 等待计算任务全部完成，用户根据需要获取计算任务的输出结果 */
 ......
 aclrtResetDeviceForce(0);  // 释放Device 0，对应的默认Context及默认Stream生命周期也终止
+aclFinalize();
 ```
 
 ## 编写高性能应用程序的建议
