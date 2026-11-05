@@ -25,6 +25,7 @@
 #include "notify_task.h"
 #include "common_task.h"
 #include "event_task.h"
+#include "capture_model.hpp"
 
 namespace cce {
 namespace runtime {
@@ -372,6 +373,10 @@ rtError_t SubmitNotifyWaitTask(
     error = dev->SubmitTask(waitTask);
     if (error != RT_ERROR_NONE) {
         return error;
+    }
+    if (isEndGraphNotify && waitTask->u.endGraphNotifyWaitTask.isSoftwareSqCaptureModel) {
+        CaptureModel* const captureModel = static_cast<CaptureModel*>(waitTask->u.endGraphNotifyWaitTask.endGraphModel);
+        captureModel->SetEndGraphNotifyWaitSubmitted();
     }
     waitTaskRecycle.ReleaseGuard();
 

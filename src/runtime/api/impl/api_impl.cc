@@ -6879,6 +6879,7 @@ rtError_t ApiImpl::ModelUpdate(Model* mdl)
     CaptureModel* const captureModel = dynamic_cast<CaptureModel*>(mdl);
     GraphUpdateInfo& graphUpdateInfo = captureModel->GetGraphUpdateInfo();
 
+    const std::lock_guard<std::mutex> executeLock(captureModel->GetExecutionOrderMutex());
     const std::lock_guard<std::mutex> graphUpdateLock(graphUpdateInfo.updateMutex);
     if (captureModel->GetCaptureModelStatus() == RtCaptureModelStatus::READY) {
         return RT_ERROR_NONE;

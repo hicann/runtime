@@ -334,6 +334,10 @@ public:
 
     GraphUpdateInfo& GetGraphUpdateInfo() { return updateInfo_; }
 
+    std::mutex& GetExecutionOrderMutex() { return executionOrderMutex_; }
+
+    void SetEndGraphNotifyWaitSubmitted() { isEndGraphNotifyWaitSubmitted_ = true; }
+
     void InsertGraphUpdateTask(TaskInfo* const taskInfo);
     void ClearGraphUpdateTask();
     bool HasExternalEvent() { return !externalRecordEventItems_.empty(); }
@@ -425,6 +429,7 @@ private:
     std::mutex sqBindMutex_;
     std::list<CondHandle*> condHandles_; // 模型下发的condHandle
     uint32_t refCount_{0U};
+    bool isEndGraphNotifyWaitSubmitted_{false};
     bool isNeedUpdateEndGraph_{false};
     uint64_t beginCaptureTimeStamp_{0UL};
     // false表示当前Track采集尚未上报Graph元数据，true表示已上报。

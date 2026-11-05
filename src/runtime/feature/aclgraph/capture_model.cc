@@ -633,11 +633,14 @@ rtError_t CaptureModel::ExecuteCommon(Stream* const stm, int32_t timeout, const 
     if (error != RT_ERROR_NONE) {
         return error;
     }
+    isEndGraphNotifyWaitSubmitted_ = false;
     error = ExecuteModel(stm, timeout, executeMode, &refreshInfo);
+    if ((error == RT_ERROR_NONE) || isEndGraphNotifyWaitSubmitted_) {
+        executeRefGuard.ReleaseGuard();
+    }
     if (error != RT_ERROR_NONE) {
         return error;
     }
-    executeRefGuard.ReleaseGuard();
     return PostModelExecute(stm, &refreshInfo);
 }
 
@@ -2005,7 +2008,6 @@ rtError_t CaptureModel::Update(void)
 {
     uint32_t releaseSqNum = 0U;
     uint32_t releaseNtyNum = 0U;
-    const std::lock_guard<std::mutex> executeLock(executionOrderMutex_);
     if (IsCaptureModelRunning()) {
         RT_LOG_OUTER_MSG_IMPL(
             ErrorCode::EE1017, "Checking whether the capture model is updatable", "modelRI",

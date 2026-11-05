@@ -20,6 +20,7 @@
 #include "profiler_c.hpp"
 #include "rt_log.h"
 #include "ctrl_sq.hpp"
+#include "capture_model.hpp"
 
 namespace cce {
 namespace runtime {
@@ -60,6 +61,10 @@ rtError_t SubmitNotifyWait(
     ERROR_RETURN_MSG_INNER(
         error, "Failed to submit notify wait task, stream_id=%d, retCode=%#x", streamIn->Id_(),
         static_cast<uint32_t>(error));
+    if (isEndGraphNotify && waitTask->u.endGraphNotifyWaitTask.isSoftwareSqCaptureModel) {
+        CaptureModel* const captureModel = static_cast<CaptureModel*>(waitTask->u.endGraphNotifyWaitTask.endGraphModel);
+        captureModel->SetEndGraphNotifyWaitSubmitted();
+    }
     tskErrRecycle.ReleaseGuard();
     streamIn->StreamUnLock();
     SET_THREAD_TASKID_AND_STREAMID(dstStm->GetExposedStreamId(), waitTask->taskSn);

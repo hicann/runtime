@@ -19,6 +19,7 @@
 #define protected public
 #include "runtime.hpp"
 #include "model.hpp"
+#include "model_c.hpp"
 #include "capture_model.hpp"
 #include "runtime/feature/aclgraph/stream_capture.hpp"
 #include "cond_handle/cond_handle.hpp"
@@ -2158,6 +2159,31 @@ TEST_F(CloudV2CaptureModelTest, capture_mode_try_recycle)
 
     rtFree(srcPtr);
     rtFree(dstPtr);
+}
+
+TEST_F(CloudV2CaptureModelTest, execute_failure_after_end_graph_wait_does_not_release_ref_early)
+{
+    rtStream_t captureStream = nullptr;
+    rtStream_t executeStream = nullptr;
+    rtModel_t model = nullptr;
+    ASSERT_EQ(rtStreamCreate(&captureStream, 0), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamCreate(&executeStream, 0), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamBeginCapture(captureStream, RT_STREAM_CAPTURE_MODE_GLOBAL), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamEndCapture(captureStream, &model), RT_ERROR_NONE);
+
+    MOCKER(ModelSerialSchedPostProc).expects(once()).will(returnValue(RT_ERROR_INVALID_VALUE));
+    EXPECT_EQ(rtModelExecute(model, executeStream, 0), ACL_ERROR_RT_PARAM_INVALID);
+
+    CaptureModel* const captureModel = static_cast<CaptureModel*>(rt_ut::UnwrapOrNull<Model>(model));
+    ASSERT_NE(captureModel, nullptr);
+    EXPECT_EQ(captureModel->refCount_, 1U);
+
+    EXPECT_EQ(rtStreamSynchronize(executeStream), RT_ERROR_NONE);
+    captureModel->CaptureModelExecuteFinish(RT_ERROR_NONE);
+    EXPECT_EQ(captureModel->refCount_, 0U);
+    EXPECT_EQ(rtModelDestroy(model), RT_ERROR_NONE);
+    EXPECT_EQ(rtStreamDestroy(captureStream), RT_ERROR_NONE);
+    EXPECT_EQ(rtStreamDestroy(executeStream), RT_ERROR_NONE);
 }
 
 TEST_F(CloudV2CaptureModelTest, poll_end_graph_notify)
