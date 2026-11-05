@@ -21,10 +21,6 @@
 ```bash
 # ${install_root} 替换为 CANN 安装根目录，默认安装在`/usr/local/Ascend`目录
 source ${install_root}/cann/set_env.sh
-export ASCEND_INSTALL_PATH=${install_root}/cann
-
-# Profiling 样例的 run.sh 还会读取 ASCEND_HOME_PATH，请一并设置为同一路径
-export ASCEND_HOME_PATH=${install_root}/cann
 
 # 编译运行
 bash run.sh
