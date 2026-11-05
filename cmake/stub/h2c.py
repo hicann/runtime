@@ -39,11 +39,19 @@ def collect_content(file_path):
         change_line, left, right = 0, 0, 0
         skip = False
         for i in content:
-            if i.strip(" ").startswith(r"//") or i.strip(" ").startswith(r"/**"):
-                skip = True
             if skip:
-                if i.strip(" ").startswith(r"//") or i.strip(" ").startswith(r"*/"):
-                    skip = False
+                if "*/" not in i:
+                    continue
+                i = i.split("*/", 1)[1]
+                skip = False
+            if i.lstrip().startswith("//"):
+                continue
+            if i.lstrip().startswith("/**"):
+                if "*/" not in i:
+                    skip = True
+                    continue
+                i = i.split("*/", 1)[1]
+            if not i.strip():
                 continue
             left += i.count('(')
             right += i.count(')')
