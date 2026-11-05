@@ -220,6 +220,16 @@ TEST_F(JOB_WRAPPER_PROF_TsTrack_JOB_TEST, Init)
     EXPECT_EQ(PROFILING_SUCCESS, profTsTrackJob->Init(collectionJobCfg_));
 }
 
+TEST_F(JOB_WRAPPER_PROF_TsTrack_JOB_TEST, InitFailedInSystemMode)
+{
+    auto profTsTrackJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfTsTrackJob>();
+    collectionJobCfg_->comParams->params->hostProfiling = false;
+    collectionJobCfg_->comParams->params->profMode = MSVP_PROF_SYSTEM_MODE;
+    collectionJobCfg_->comParams->params->ts_keypoint = "on";
+
+    EXPECT_EQ(PROFILING_FAILED, profTsTrackJob->Init(collectionJobCfg_));
+}
+
 TEST_F(JOB_WRAPPER_PROF_TsTrack_JOB_TEST, Process)
 {
     GlobalMockObject::verify();

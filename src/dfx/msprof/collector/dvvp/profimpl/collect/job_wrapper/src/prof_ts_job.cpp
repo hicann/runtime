@@ -167,6 +167,10 @@ int32_t ProfTsTrackJob::Init(const SHARED_PTR_ALIA<CollectionJobCfg> cfg)
     if (cfg->comParams->params->hostProfiling) {
         return PROFILING_FAILED;
     }
+    if (cfg->comParams->params->profMode.compare(MSVP_PROF_SYSTEM_MODE) == 0) {
+        MSPROF_LOGI("[ProfTsTrackJob]Ts track job not enable in system mode.");
+        return PROFILING_FAILED;
+    }
     if (cfg->comParams->params->ts_task_track.compare("on") != 0 &&
         cfg->comParams->params->ts_cpu_usage.compare("on") != 0 &&
         cfg->comParams->params->ai_core_status.compare("on") != 0 &&
