@@ -4745,7 +4745,7 @@ rtError_t ApiErrorDecorator::CheckArchCompatibility(
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         canCompatible, RT_ERROR_INVALID_VALUE, "Checking operator instruction compatibility based on the SoC version");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
-        omSocVersion[0U] == '\0', RT_ERROR_INVALID_VALUE,
+        *omSocVersion == '\0', RT_ERROR_INVALID_VALUE,
         "Checking operator instruction compatibility based on the SoC version", "\"\"", "omSocVersion", "not empty");
 
     const rtError_t error = impl_->CheckArchCompatibility(socVersion, omSocVersion, canCompatible);

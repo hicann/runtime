@@ -177,4 +177,4 @@ Runtime API中的废弃项（例如接口、返回码等），自指定版本在
 
 - [ACL\_EVENT\_EXTERNAL](07_event_management.md#aclrtCreateEventWithFlag)宏
 
-    `ACL_EVENT_EXTERNAL`宏在CANN 9.3.0版本标记为废弃，将在2027年12月30日之后的版本删除，请调用[aclrtCreateEventExWithFlag](07_event_management.md#aclrtCreateEventExWithFlag)接口并设置`ACL_EVENT_SYNC`创建Event，再使用[aclrtRecordEventWithFlag](07_event_management.md#aclrtRecordEventWithFlag)接口和[aclrtStreamWaitEventWithFlag](07_event_management.md#aclrtStreamWaitEventWithFlag)接口。
+    `ACL_EVENT_EXTERNAL`宏在CANN 9.3.0版本标记为废弃，将在2027年12月30日之后的版本删除，请调用[aclrtCreateEventExWithFlag](07_event_management.md#aclrtCreateEventExWithFlag)接口并设置`ACL_EVENT_SYNC`创建Event，再配合[aclrtRecordEventWithFlag](07_event_management.md#aclrtRecordEventWithFlag)、[aclrtStreamWaitEventWithFlag](07_event_management.md#aclrtStreamWaitEventWithFlag)等接口使用。
