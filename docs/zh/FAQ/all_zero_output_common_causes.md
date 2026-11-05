@@ -63,8 +63,8 @@ if (error != ACL_RT_SUCCESS) {
 ```cpp
 // 检查tensor描述符的数据类型
 aclDataType inputType, outputType;
-aclGetTensorDescType(inputDesc, &inputType);
-aclGetTensorDescType(outputDesc, &outputType);
+inputType = aclGetTensorDescType(inputDesc);
+outputType = aclGetTensorDescType(outputDesc);
 
 if (inputType != outputType) {
     printf("Warning: Input type %d != Output type %d\n", inputType, outputType);
@@ -72,8 +72,8 @@ if (inputType != outputType) {
 
 // 确认数据格式（ND、NCHW等）匹配
 aclFormat inputFormat, outputFormat;
-aclGetTensorDescFormat(inputDesc, &inputFormat);
-aclGetTensorDescFormat(outputDesc, &outputFormat);
+inputFormat = aclGetTensorDescFormat(inputDesc);
+outputFormat = aclGetTensorDescFormat(outputDesc);
 
 printf("Input format: %d, Output format: %d\n", inputFormat, outputFormat);
 ```
