@@ -101,6 +101,10 @@ aclError aclrtCreateStream(aclrtStream *stream)
 <!-- end id4 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/06_stream_management_res.md#id23 -->
 
+<!-- npu="5162A" id21 -->
+- 对于Hisilicon5162A，Stream最大数为128。
+<!-- end id21 -->
+
 <br>
 <br>
 <br>
@@ -213,6 +217,11 @@ aclError aclrtCreateStreamWithConfig(aclrtStream *stream, uint32_t priority, uin
 ### 返回值说明
 
 返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+### 约束说明
+<!-- npu="5162A" id22 -->
+对于Hisilicon5162A，flag不支持ACL\_STREAM\_FAST\_LAUNCH、ACL\_STREAM\_CPU\_SCHEDULE和ACL\_STREAM\_DEVICE\_USE\_ONLY。
+<!-- end id22 -->
 
 <br>
 <br>
