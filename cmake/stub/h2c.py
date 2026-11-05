@@ -81,6 +81,8 @@ def collect_functions(file_path):
             else:
                 signatures.append(i)
         if "#endif" in i:
+            if not signatures:
+                continue
             if "#if" in signatures[-1]:
                 signatures.pop()
                 if_num -= 1

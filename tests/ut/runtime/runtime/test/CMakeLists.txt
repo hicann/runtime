@@ -21,6 +21,7 @@ add_custom_target(runtime_api_stub_generator_ut
     COMMAND ${CMAKE_COMMAND} -E env --unset=PYTHONHOME --unset=PYTHONPATH ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_gen_dynamic_stub_multiline.py
     COMMAND ${CMAKE_COMMAND} -E env --unset=PYTHONHOME --unset=PYTHONPATH ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_h2c_default_output.py
     COMMAND ${CMAKE_COMMAND} -E env --unset=PYTHONHOME --unset=PYTHONPATH ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_error_manager_stub_eof.py
+    COMMAND ${CMAKE_COMMAND} -E env --unset=PYTHONHOME --unset=PYTHONPATH ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_h2c_empty_guard.py
     COMMAND ${CMAKE_COMMAND} -E env --unset=PYTHONHOME --unset=PYTHONPATH ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_unzip_tool_output.py
     WORKING_DIRECTORY ${TOP_DIR}
     COMMENT "Running Runtime and ACL API stub generator unit tests"
