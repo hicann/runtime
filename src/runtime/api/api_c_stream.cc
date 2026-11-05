@@ -554,7 +554,7 @@ RTS_API rtError_t rtStreamCreateByGrp(rtStream_t* stm, int32_t priority, uint32_
     const rtError_t ret =
         apiInstance->StreamCreate(RtPtrToPtr<Stream**>(stm), priority, flags, RtPtrToPtr<DvppGrp*>(grp));
     TIMESTAMP_END(rtStreamCreateByGrp);
-    COND_RETURN_WITH_NOLOG(ret == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT)
+    COND_RETURN_WITH_NOLOG(ret == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
     Stream* realStream = RtPtrToPtr<Stream*>(*stm);
     *stm = ExportEmbeddedHandle<rtStream_t>(realStream);

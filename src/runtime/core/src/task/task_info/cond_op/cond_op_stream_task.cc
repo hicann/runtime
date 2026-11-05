@@ -459,8 +459,8 @@ rtError_t InitFuncCallParaForStmLblSwiByIdxTask(TaskInfo* taskInfo, rtStarsLabel
 
 rtError_t PrepareSqeInfoForStmLblSwiByIdxTask(TaskInfo* taskInfo)
 {
-    rtStarsLabelSwitchByIndexFc_t fc;
-    rtStarsLabelSwitchByIndexFcPara_t fcPara;
+    rtStarsLabelSwitchByIndexFc_t fc = {};
+    rtStarsLabelSwitchByIndexFcPara_t fcPara = {};
     Stream* stm = taskInfo->stream;
 
     rtError_t ret = AllocFuncCallMemForStmLblSwiByIdxTask(taskInfo);

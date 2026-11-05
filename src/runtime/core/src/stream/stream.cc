@@ -1927,7 +1927,8 @@ rtError_t Stream::CheckContextStatus(const bool isBlockDefaultStream) const
                 , "Device %u is faulty, ret=%#x.", device_->Id_(), status);
             status = device_->GetDeviceStatus();
             COND_RETURN_ERROR_MSG_INNER(
-                status != RT_ERROR_NONE, status, "Device %u is faulty, status=%d.", device_->Id_(), status);
+                status != RT_ERROR_NONE, status, "Device %u is faulty, status=%#x.", device_->Id_(),
+                static_cast<uint32_t>(status));
         }
         return RT_ERROR_NONE;
     } else {
