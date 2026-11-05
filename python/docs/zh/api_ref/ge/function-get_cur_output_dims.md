@@ -50,7 +50,7 @@
 
 | 返回值 | 说明 |
 | --- | --- |
-| dims | dict，输出实际维度信息。<br>若tensor的name长度大于127，则在输出的dims.name时，接口会将tensor的name转换为“acl_modelId_${id}_input_${index}_${随机字符串} ”格式（如果转换后的tensor的name与模型中已有的tensor的name冲突，则会在转换后的name尾部增加“_${随机字符串} ”，否则不会增加随机字符串），并在转换后的name与原name之间建立映射关系，用户可调用[acl.mdl.get_tensor_real_name](function-get_tensor_real_name.md)接口，传入转换后的name，获取原name（若向接口传入原name，则获取的还是原name）；若tensor的name长度小于或等于127，则在输出的dims.name时，按tensor的name输出。 |
+| dims | dict，输出实际维度信息。<br>若tensor的name长度大于127，则在输出的dims.name时，接口会将tensor的name转换为“acl_modelId_${id}_output_${index}_${随机字符串} ”格式（如果转换后的tensor的name与模型中已有的tensor的name冲突，则会在转换后的name尾部增加“_${随机字符串} ”，否则不会增加随机字符串），并在转换后的name与原name之间建立映射关系，用户可调用[acl.mdl.get_tensor_real_name](function-get_tensor_real_name.md)接口，传入转换后的name，获取原name（若向接口传入原name，则获取的还是原name）；若tensor的name长度小于或等于127，则在输出的dims.name时，按tensor的name输出。 |
 | ret | int，错误码。<br> 返回0表示成功。<br> 返回[其它值](aclError.md)表示失败。 |
 
 ## 约束说明

@@ -75,7 +75,7 @@
 | --- | --- |
 | handle | int，存放物理内存信息的handle。<br>需先在本进程调用[acl.rt.malloc_physical](function-malloc_physical.md)接口申请物理内存，该接口调用成功，会返回一个handle。<br>handle与shareableHandle是一一对应的关系，在同一个进程中，不允许一对多、或多对一，否则报错，例如重复调用本接口导出时则会返回报错。 |
 | handle_type | int，预留参数，当前固定输入ACL_MEM_HANDLE_TYPE_NONE = 0。 |
-| flags | int，是否启用进程白名单校验。<br>取值为如下：<br>0x0：ACL_RT_VMM_EXPORT_FLAG_DEFAULT，默认值，启用进程白名单校验。<br>配置为该值时，需单独调用[acl.rt.mem_set_pid_to_shareable_handle](function-mem_set_pid_to_shareable_handle.md)接口将使用shareable_handle的进程ID设置为白名单。<br>0x1：ACL_RT_IPC_MEM_EXPORT_FLAG_DISABLE_PID_VALIDATION，关闭进程白名单校验。<br>配置为该值时，则无需调用[acl.rt.mem_set_pid_to_shareable_handle](function-mem_set_pid_to_shareable_handle.md)接口。 |
+| flags | int，是否启用进程白名单校验。<br>取值为如下：<br>0x0：ACL_RT_VMM_EXPORT_FLAG_DEFAULT，默认值，启用进程白名单校验。<br>配置为该值时，需单独调用[acl.rt.mem_set_pid_to_shareable_handle](function-mem_set_pid_to_shareable_handle.md)接口将使用shareable_handle的进程ID设置为白名单。<br>0x1：ACL_RT_VMM_EXPORT_FLAG_DISABLE_PID_VALIDATION，关闭进程白名单校验。<br>配置为该值时，则无需调用[acl.rt.mem_set_pid_to_shareable_handle](function-mem_set_pid_to_shareable_handle.md)接口。 |
 
 ## 返回值说明
 

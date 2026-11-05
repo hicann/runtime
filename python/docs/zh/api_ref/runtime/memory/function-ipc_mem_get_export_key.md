@@ -74,7 +74,7 @@
 | dev_ptr | int，Device内存地址。 |
 | size | int，内存大小，单位Byte。 |
 | len | int，key的长度，固定配置为65。 |
-| flags | int，是否启用进程白名单校验。<br>取值如下：<br>0x0：ACL_RT_IPC_MEM_EXPORT_FLAG_DEFAULT，默认值，启用进程白名单校验。配置为该值时，需单独调用[acl.rt.ipc_mem_set_import_pid](function-ipc_mem_get_export_key.md)接口将使用共享内存key的进程ID设置为白名单。<br>0x1：ACL_RT_IPC_MEM_EXPORT_FLAG_DISABLE_PID_VALIDATION，关闭进程白名单校验。配置为该值时，则无需调用[acl.rt.ipc_mem_set_import_pid](function-ipc_mem_set_import_pid.md)接口。 |
+| flags | int，是否启用进程白名单校验。<br>取值如下：<br>0x0：ACL_RT_IPC_MEM_EXPORT_FLAG_DEFAULT，默认值，启用进程白名单校验。配置为该值时，需单独调用[acl.rt.ipc_mem_set_import_pid](function-ipc_mem_set_import_pid.md)接口将使用共享内存key的进程ID设置为白名单。<br>0x1：ACL_RT_IPC_MEM_EXPORT_FLAG_DISABLE_PID_VALIDATION，关闭进程白名单校验。配置为该值时，则无需调用[acl.rt.ipc_mem_set_import_pid](function-ipc_mem_set_import_pid.md)接口。 |
 
 ## 返回值说明
 

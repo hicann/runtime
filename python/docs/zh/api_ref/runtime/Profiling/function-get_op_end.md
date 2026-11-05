@@ -47,7 +47,7 @@
 | --- | --- |
 | op_info | int，指定算子信息的内存地址。 |
 | op_info_len | int，算子信息的长度。 |
-| index | int，指定获取第几个算子的算子名称。<br>用户调用[acl.prof.get_op_num](function-get_op_num.md)接口获取算子数量后，这个index的取值范围：[0, (算子数量- 1)]。 |
+| index | int，指定获取第几个算子的结束时间。<br>用户调用[acl.prof.get_op_num](function-get_op_num.md)接口获取算子数量后，这个index的取值范围：[0, (算子数量- 1)]。 |
 
 ## 返回值说明
 

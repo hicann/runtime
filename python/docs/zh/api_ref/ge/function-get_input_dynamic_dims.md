@@ -51,7 +51,7 @@
 
 | 返回值 | 说明 |
 | --- | --- |
-| dims_out | list，获取输入的动态维度信息。dims_out参数是一个列表，模型有几个输入，则该列表就有几个元素。列表中的每个元素都是一个[aclmdlIODims](aclmdlIODims.md)的字典，aclmdlIODims字典中的dims是一个列表，该列表中的每个元素对应每一档中的具体值。例如：dims_out, ret = acl.mdl.get_input_dynamic_dims(model_desc, -1, gear_count) |
+| dims_out | list，获取输入的动态维度信息。列表元素个数等于模型支持的动态维度档位数（gear_count）；每个元素对应一个动态维度档位。每个元素都是一个[aclmdlIODims](aclmdlIODims.md)的字典，其中dims按模型输入顺序拼接该档位下所有输入Tensor的维度，dimCount为拼接后的维度总数。例如：dims_out, ret = acl.mdl.get_input_dynamic_dims(model_desc, -1, gear_count) |
 | ret | int，错误码。<br> 返回0表示成功。<br> 返回[其它值](aclError.md)表示失败。 |
 
 ## 约束说明

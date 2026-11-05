@@ -47,11 +47,11 @@
 | 参数名 | 说明 |
 | --- | --- |
 | model_desc | int，aclmdlDesc类型数据的指针地址。需提前调用[acl.mdl.create_desc](function-create_desc.md)接口创建aclmdlDesc类型的数据。 |
-| index | int，指定获取第几个输入的大小，index值从0开始。 |
+| index | int，指定获取第几个输出的维度信息，index值从0开始。 |
 
 ## 返回值说明
 
 | 返回值 | 说明 |
 | --- | --- |
-| dims | dict，针对多batch或多种宽高的场景，按照该字典的数组返回其支持的最大档的组合，具体请参见[aclmdlIODims](aclmdlIODims.md)。针对动态Batch、动态分辨率（宽高）的场景，输入tensor的dims中batch size或宽高为<br> 1，表示其动态可变。例如，输入tensor的format为NCHW，在动态Batch场景下，动态可变的输入tensor的dims为[-1,3,224,224]；在动态分辨率场景下，动态可变的输入tensor的dims为[1,3,-1,-1]。举例中的斜体部分以实际情况为准。若tensor的name长度大于127，则在输出的dims.name时，接口会将tensor的name转换为“acl_modelId_${id}_input_${index}_${随机字符串} ”格式（如果转换后的tensor的name与模型中已有的tensor的name冲突，则会在转换后的name尾部增加“_${随机字符串} ”，否则不会增加随机字符串），并在转换后的name与原name之间建立映射关系，用户可调用[acl.mdl.get_tensor_real_name](function-get_tensor_real_name.md)接口，传入转换后的name，获取原name（若向接口传入原name，则获取的还是原name）；若tensor的name长度小于或等于127，则在输出的dims.name时，按tensor的name输出。 |
+| dims | dict，针对多batch或多种宽高的场景，按照该字典的数组返回其支持的最大档的组合，具体请参见[aclmdlIODims](aclmdlIODims.md)。针对动态Batch、动态分辨率（宽高）的场景，输出tensor的dims中batch size或宽高为<br> 1，表示其动态可变。例如，输出tensor的format为NCHW，在动态Batch场景下，动态可变的输出tensor的dims为[-1,3,224,224]；在动态分辨率场景下，动态可变的输出tensor的dims为[1,3,-1,-1]。举例中的斜体部分以实际情况为准。若tensor的name长度大于127，则在输出的dims.name时，接口会将tensor的name转换为“acl_modelId_${id}_output_${index}_${随机字符串} ”格式（如果转换后的tensor的name与模型中已有的tensor的name冲突，则会在转换后的name尾部增加“_${随机字符串} ”，否则不会增加随机字符串），并在转换后的name与原name之间建立映射关系，用户可调用[acl.mdl.get_tensor_real_name](function-get_tensor_real_name.md)接口，传入转换后的name，获取原name（若向接口传入原name，则获取的还是原name）；若tensor的name长度小于或等于127，则在输出的dims.name时，按tensor的name输出。 |
 | ret | int，错误码。<br> 返回0表示成功。<br> 返回[其它值](aclError.md)表示失败。 |

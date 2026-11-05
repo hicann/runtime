@@ -5,8 +5,8 @@
 - 规则1：开发人员的环境异常或者代码逻辑错误，可以通过优化环境或代码逻辑的方式解决问题，此时返回码定义为：1XXXXX。
 - 规则2：资源不足（Stream、内存等）、开发人员编程时使用的接口或参数与当前硬件不匹配，可以通过在编程时合理使用资源的方式解决，此时返回码定义为：2XXXXX。
 - 规则3：业务功能异常，比如队列满、队列空等，此时返回码定义为3XXXXX。
-- 规则4：软硬件内部异常，包括软件内部错误、Device执行失败等，用户无法解决问题，需要将问题反馈给技术支持，此时返回码定义为：5XXXXX。您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。
-- 规则5：无法识别的错误，当前都映射为500000。您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。
+- 规则4：软硬件内部异常，包括软件内部错误、Device执行失败等，用户无法解决问题，需要将问题反馈给技术支持，此时返回码定义为：5XXXXX。您可以获取日志后提交ISSUE。
+- 规则5：无法识别的错误，当前都映射为500000。您可以获取日志后提交ISSUE。
 
 **表 1** 返回码列表
 
@@ -71,15 +71,15 @@
 | ACL_ERROR_MEMORY_ADDRESS_UNALIGNED = 200003 | 内存地址未对齐。 | 请检查内存地址是否符合接口要求。 |
 | ACL_ERROR_RESOURCE_NOT_MATCH = 200004 | 资源不匹配。 | 请检查调用接口时，是否传入正确的Stream、Context等资源。 |
 | ACL_ERROR_INVALID_RESOURCE_HANDLE = 200005 | 无效的资源句柄。 | 请检查调用接口时，传入的Stream、Context等资源是否已被销毁或占用。 |
-| ACL_ERROR_FEATURE_UNSUPPORTED = 200006 | 特性不支持。 | 您可以获取日志后单击<a href="https://www.hiascend.com/support" target="_blank" rel="noopener noreferrer">Link</a>联系技术支持。 |
+| ACL_ERROR_FEATURE_UNSUPPORTED = 200006 | 特性不支持。 | 您可以获取日志后提交ISSUE。 |
 | ACL_ERROR_PROF_MODULES_UNSUPPORTED = 200007 | 下发了不支持的Profiling配置。 | 请参考[Profiling数据采集接口](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/latest/API/runtimeapi/aclpythondevg_01_0847.html)中的说明检查Profiling的配置是否正确。 |
 | ACL_ERROR_STORAGE_OVER_LIMIT = 300000 | 超出存储上限。 | 请检查硬件环境上的存储剩余情况。 |
-| ACL_ERROR_INTERNAL_ERROR = 500000 | 未知内部错误。 | 您可以获取日志后单击<a href="https://www.hiascend.com/support" target="_blank" rel="noopener noreferrer">Link</a>联系技术支持。 |
-| ACL_ERROR_FAILURE = 500001 | 系统内部ACL的错误。 | 您可以获取日志后单击<a href="https://www.hiascend.com/support" target="_blank" rel="noopener noreferrer">Link</a>联系技术支持。 |
-| ACL_ERROR_GE_FAILURE = 500002 | 系统内部GE的错误。 | 您可以获取日志后单击<a href="https://www.hiascend.com/support" target="_blank" rel="noopener noreferrer">Link</a>联系技术支持。 |
-| ACL_ERROR_RT_FAILURE = 500003 | 系统内部RUNTIME的错误。 | 您可以获取日志后单击<a href="https://www.hiascend.com/support" target="_blank" rel="noopener noreferrer">Link</a>联系技术支持。 |
-| ACL_ERROR_DRV_FAILURE = 500004 | 系统内部DRV（Driver）的错误。 | 您可以获取日志后单击<a href="https://www.hiascend.com/support" target="_blank" rel="noopener noreferrer">Link</a>联系技术支持。 |
-| ACL_ERROR_PROFILING_FAILURE = 500005 | Profiling相关错误。 | 您可以获取日志后单击<a href="https://www.hiascend.com/support" target="_blank" rel="noopener noreferrer">Link</a>联系技术支持。 |
+| ACL_ERROR_INTERNAL_ERROR = 500000 | 未知内部错误。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_FAILURE = 500001 | 系统内部ACL的错误。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_GE_FAILURE = 500002 | 系统内部GE的错误。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_FAILURE = 500003 | 系统内部RUNTIME的错误。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_DRV_FAILURE = 500004 | 系统内部DRV（Driver）的错误。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_PROFILING_FAILURE = 500005 | Profiling相关错误。 | 您可以获取日志后提交ISSUE。 |
 
 **表 2** 内部RUNTIME的返回码列表
 
@@ -110,9 +110,9 @@
 | ACL_ERROR_RT_SYSPARAMOPT_NOT_SET = 107021 | 获取当前Context中的系统参数值失败。 | 未设置当前Context中的系统参数值。 |
 | ACL_ERROR_RT_DEVICE_TASK_ABORT = 107022 | Device上的任务丢弃操作与其它操作冲突。 | 该错误码是由于调用`acl.rt.device_task_abort`接口停止Device上的任务与其它接口操作冲突，用户需排查代码逻辑，等待`acl.rt.device_task_abort`接口执行完成后，才执行其它操作。 |
 | ACL_ERROR_RT_STREAM_ABORT = 107023 | 正在清除Stream上的任务。 | 正在清除指定Stream上的任务，不支持同步等待该Stream上的任务执行。 |
-| ACL_ERROR_RT_FEATURE_NOT_SUPPORT = 207000 | 特性不支持。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
+| ACL_ERROR_RT_FEATURE_NOT_SUPPORT = 207000 | 特性不支持。 | 您可以获取日志后提交ISSUE。 |
 | ACL_ERROR_RT_MEMORY_ALLOCATION = 207001 | 内存申请失败。 | 请检查硬件环境上的存储剩余情况。 |
-| ACL_ERROR_RT_MEMORY_FREE = 207002 | 内存释放失败。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
+| ACL_ERROR_RT_MEMORY_FREE = 207002 | 内存释放失败。 | 您可以获取日志后提交ISSUE。 |
 | ACL_ERROR_RT_AICORE_OVER_FLOW = 207003 | aicore算子运算溢出。 | 请检查对应的aicore算子运算是否有溢出。 |
 | ACL_ERROR_RT_NO_DEVICE = 207004 | Device不可用。 | 请检查Device是否正常运行。 |
 | ACL_ERROR_RT_RESOURCE_ALLOC_FAIL = 207005 | 内存申请失败。 | 请检查硬件环境上的存储剩余情况。 |
@@ -121,86 +121,86 @@
 | ACL_ERROR_RT_NO_STREAM_RESOURCE = 207008 | Stream资源不足。 | 请参考`acl.rt.create_stream`接口处的说明检查Stream数量是否符合要求。 |
 | ACL_ERROR_RT_NO_NOTIFY_RESOURCE = 207009 | 系统内部Notify资源不足。 | 数据预处理的并发任务太多或模型推理时消耗资源太多，建议尝试减少并发任务或卸载部分模型。 |
 | ACL_ERROR_RT_NO_MODEL_RESOURCE = 207010 | 模型资源不足。 | 建议卸载部分模型。 |
-| ACL_ERROR_RT_NO_CDQ_RESOURCE = 207011 | Runtime内部资源不足。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
+| ACL_ERROR_RT_NO_CDQ_RESOURCE = 207011 | Runtime内部资源不足。 | 您可以获取日志后提交ISSUE。 |
 | ACL_ERROR_RT_OVER_LIMIT = 207012 | 队列数目超出上限。 | 请销毁不需要的队列之后再创建新的队列。 |
 | ACL_ERROR_RT_QUEUE_EMPTY = 207013 | 队列为空。 | 不能从空队列中获取数据，请先向队列中添加数据，再获取。 |
 | ACL_ERROR_RT_QUEUE_FULL = 207014 | 队列已满。 | 不能向已满的队列中添加数据，请先从队列中获取数据，再添加。 |
 | ACL_ERROR_RT_REPEATED_INIT = 207015 | 队列重复初始化。 | 建议初始化一次队列即可，不要重复初始化。 |
 | ACL_ERROR_RT_DEVIDE_OOM = 207018 | Device侧内存耗尽。 | 排查Device上的内存使用情况，并根据Device上的内存规格合理规划内存的使用。 |
 | static const int32_t ACL_ERROR_RT_FEATURE_NOT_SUPPORT_UPDATE_OP = 207019 | 当前驱动版本不支持更新该算子。 | 请检查驱动版本。<br>您可以单击[Link](https://www.hiascend.com/hardware/firmware-drivers/commercial)，在“固件与驱动”页面下载Ascend HDK 25.0.RC1或更高版本的驱动安装包，并参考相应版本的文档进行安装、升级。 |
-| ACL_ERROR_RT_INTERNAL_ERROR = 507000 | Host上的runtime模块内部错误。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_TS_ERROR = 507001 | Device上的task scheduler模块内部错误。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_STREAM_TASK_FULL = 507002 | stream上的task数量满。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_STREAM_TASK_EMPTY = 507003 | stream上的task数量为空。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_STREAM_NOT_COMPLETE = 507004 | stream上的task未全部执行完成。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_END_OF_SEQUENCE = 507005 | AI CPU上的task执行完成。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_EVENT_NOT_COMPLETE = 507006 | event未完成。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_CONTEXT_RELEASE_ERROR = 507007 | context释放失败。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_SOC_VERSION = 507008 | 获取soc version失败。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_TASK_TYPE_NOT_SUPPORT = 507009 | 不支持的task类型。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_LOST_HEARTBEAT = 507010 | task scheduler丢失心跳。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_MODEL_EXECUTE = 507011 | 模型执行失败。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_REPORT_TIMEOUT = 507012 | 获取task scheduler的消息失败。 | 排查接口的超时时间设置是否过短，适当增长超时时间。如果增长超时时间后，依然有超时报错，再排查日志。<br>您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_SYS_DMA = 507013 | system dma（Direct Memory Access）硬件执行错误。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_AICORE_TIMEOUT = 507014 | aicore执行超时。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_AICORE_EXCEPTION = 507015 | aicore执行异常。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_AICORE_TRAP_EXCEPTION = 507016 | aicore trap执行异常。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_AICPU_TIMEOUT = 507017 | aicpu执行超时。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_AICPU_EXCEPTION = 507018 | aicpu执行异常。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_AICPU_DATADUMP_RSP_ERR = 507019 | aicpu执行数据dump后未给task scheduler返回响应。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_AICPU_MODEL_RSP_ERR = 507020 | aicpu执行模型后未给task scheduler返回响应。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_PROFILING_ERROR = 507021 | profiling功能执行异常。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_IPC_ERROR = 507022 | 进程间通信异常。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_MODEL_ABORT_NORMAL = 507023 | 模型退出。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_KERNEL_UNREGISTERING = 507024 | 算子正在去注册。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_RINGBUFFER_NOT_INIT = 507025 | ringbuffer（环形缓冲区）功能未初始化。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_RINGBUFFER_NO_DATA = 507026 | ringbuffer（环形缓冲区）没有数据。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_KERNEL_LOOKUP = 507027 | RUNTIME内部的kernel未注册。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_KERNEL_DUPLICATE = 507028 | 重复注册RUNTIME内部的kernel。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_DEBUG_REGISTER_FAIL = 507029 | debug功能注册失败。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_DEBUG_UNREGISTER_FAIL = 507030 | debug功能去注册失败。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_LABEL_CONTEXT = 507031 | 标签不在当前Context内。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_PROGRAM_USE_OUT = 507032 | 注册的program数量超过限制。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_DEV_SETUP_ERROR = 507033 | Device启动失败。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_VECTOR_CORE_TIMEOUT = 507034 | vector core执行超时。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_VECTOR_CORE_EXCEPTION = 507035 | vector core执行异常。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_VECTOR_CORE_TRAP_EXCEPTION = 507036 | vector core trap执行异常。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_CDQ_BATCH_ABNORMAL = 507037 | Runtime内部资源申请异常。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_DIE_MODE_CHANGE_ERROR = 507038 | die模式修改异常，不能修改die模式。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_DIE_SET_ERROR = 507039 | 单die模式不能指定die。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_INVALID_DIEID = 507040 | 指定die id错误。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_DIE_MODE_NOT_SET = 507041 | die模式没有设置。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_AICORE_TRAP_READ_OVERFLOW = 507042 | aicore trap读越界异常。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_AICORE_TRAP_WRITE_OVERFLOW = 507043 | aicore trap写越界异常。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_VECTOR_CORE_TRAP_READ_OVERFLOW = 507044 | vector core trap读越界异常。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_VECTOR_CORE_TRAP_WRITE_OVERFLOW = 507045 | vector core trap写越界异常。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_STREAM_SYNC_TIMEOUT = 507046 | 在指定的超时等待事件中，指定的stream中所有任务还没有执行完成。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_EVENT_SYNC_TIMEOUT = 507047 | 在指定的Event同步等待中，超过指定时间，该Event还有没有执行完。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_FFTS_PLUS_TIMEOUT = 507048 | 内部任务执行超时。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_FFTS_PLUS_EXCEPTION = 507049 | 内部任务执行异常。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_FFTS_PLUS_TRAP_EXCEPTION = 507050 | 内部任务trap异常。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_SEND_MSG = 507051 | 数据入队过程中消息发送失败。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_COPY_DATA = 507052 | 数据入队过程中内存拷贝失败。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_DEVICE_MEM_ERROR = 507053 | 出现内存UCE（uncorrect error，指系统硬件不能直接处理恢复内存错误）的错误虚拟地址。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_HBM_MULTI_BIT_ECC_ERROR = 507054 | HBM比特ECC故障。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
+| ACL_ERROR_RT_INTERNAL_ERROR = 507000 | Host上的runtime模块内部错误。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_TS_ERROR = 507001 | Device上的task scheduler模块内部错误。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_STREAM_TASK_FULL = 507002 | stream上的task数量满。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_STREAM_TASK_EMPTY = 507003 | stream上的task数量为空。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_STREAM_NOT_COMPLETE = 507004 | stream上的task未全部执行完成。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_END_OF_SEQUENCE = 507005 | AI CPU上的task执行完成。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_EVENT_NOT_COMPLETE = 507006 | event未完成。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_CONTEXT_RELEASE_ERROR = 507007 | context释放失败。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_SOC_VERSION = 507008 | 获取soc version失败。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_TASK_TYPE_NOT_SUPPORT = 507009 | 不支持的task类型。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_LOST_HEARTBEAT = 507010 | task scheduler丢失心跳。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_MODEL_EXECUTE = 507011 | 模型执行失败。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_REPORT_TIMEOUT = 507012 | 获取task scheduler的消息失败。 | 排查接口的超时时间设置是否过短，适当增长超时时间。如果增长超时时间后，依然有超时报错，再排查日志。<br>您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_SYS_DMA = 507013 | system dma（Direct Memory Access）硬件执行错误。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_AICORE_TIMEOUT = 507014 | aicore执行超时。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_AICORE_EXCEPTION = 507015 | aicore执行异常。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_AICORE_TRAP_EXCEPTION = 507016 | aicore trap执行异常。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_AICPU_TIMEOUT = 507017 | aicpu执行超时。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_AICPU_EXCEPTION = 507018 | aicpu执行异常。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_AICPU_DATADUMP_RSP_ERR = 507019 | aicpu执行数据dump后未给task scheduler返回响应。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_AICPU_MODEL_RSP_ERR = 507020 | aicpu执行模型后未给task scheduler返回响应。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_PROFILING_ERROR = 507021 | profiling功能执行异常。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_IPC_ERROR = 507022 | 进程间通信异常。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_MODEL_ABORT_NORMAL = 507023 | 模型退出。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_KERNEL_UNREGISTERING = 507024 | 算子正在去注册。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_RINGBUFFER_NOT_INIT = 507025 | ringbuffer（环形缓冲区）功能未初始化。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_RINGBUFFER_NO_DATA = 507026 | ringbuffer（环形缓冲区）没有数据。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_KERNEL_LOOKUP = 507027 | RUNTIME内部的kernel未注册。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_KERNEL_DUPLICATE = 507028 | 重复注册RUNTIME内部的kernel。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_DEBUG_REGISTER_FAIL = 507029 | debug功能注册失败。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_DEBUG_UNREGISTER_FAIL = 507030 | debug功能去注册失败。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_LABEL_CONTEXT = 507031 | 标签不在当前Context内。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_PROGRAM_USE_OUT = 507032 | 注册的program数量超过限制。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_DEV_SETUP_ERROR = 507033 | Device启动失败。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_VECTOR_CORE_TIMEOUT = 507034 | vector core执行超时。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_VECTOR_CORE_EXCEPTION = 507035 | vector core执行异常。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_VECTOR_CORE_TRAP_EXCEPTION = 507036 | vector core trap执行异常。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_CDQ_BATCH_ABNORMAL = 507037 | Runtime内部资源申请异常。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_DIE_MODE_CHANGE_ERROR = 507038 | die模式修改异常，不能修改die模式。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_DIE_SET_ERROR = 507039 | 单die模式不能指定die。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_INVALID_DIEID = 507040 | 指定die id错误。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_DIE_MODE_NOT_SET = 507041 | die模式没有设置。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_AICORE_TRAP_READ_OVERFLOW = 507042 | aicore trap读越界异常。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_AICORE_TRAP_WRITE_OVERFLOW = 507043 | aicore trap写越界异常。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_VECTOR_CORE_TRAP_READ_OVERFLOW = 507044 | vector core trap读越界异常。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_VECTOR_CORE_TRAP_WRITE_OVERFLOW = 507045 | vector core trap写越界异常。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_STREAM_SYNC_TIMEOUT = 507046 | 在指定的超时等待事件中，指定的stream中所有任务还没有执行完成。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_EVENT_SYNC_TIMEOUT = 507047 | 在指定的Event同步等待中，超过指定时间，该Event还有没有执行完。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_FFTS_PLUS_TIMEOUT = 507048 | 内部任务执行超时。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_FFTS_PLUS_EXCEPTION = 507049 | 内部任务执行异常。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_FFTS_PLUS_TRAP_EXCEPTION = 507050 | 内部任务trap异常。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_SEND_MSG = 507051 | 数据入队过程中消息发送失败。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_COPY_DATA = 507052 | 数据入队过程中内存拷贝失败。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_DEVICE_MEM_ERROR = 507053 | 出现内存UCE（uncorrect error，指系统硬件不能直接处理恢复内存错误）的错误虚拟地址。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_HBM_MULTI_BIT_ECC_ERROR = 507054 | HBM比特ECC故障。 | 您可以获取日志后提交ISSUE。 |
 | ACL_ERROR_RT_SUSPECT_DEVICE_MEM_ERROR = 507055 | 多进程、多Device场景下，可能出现内存UCE错误。 | 由于当前Device访问的对端Device内存发生故障，用户需排查对端Device进程的错误信息。 |
 | ACL_ERROR_RT_LINK_ERROR = 507056 | 多Device场景下，两个Device之间的通信断链。 | 建议重试，若依然报错，则需检查两个Device之间的通信链路。 |
 | ACL_ERROR_RT_SUSPECT_REMOTE_ERROR = 507057 | 多进程、多Device场景下，对端Device内存可能出现故障，或者当前Device内存访问越界。 | 用户需排查对端Device进程的错误信息或当前Device的内存访问情况。 |
-| ACL_ERROR_RT_DRV_INTERNAL_ERROR = 507899 | Driver模块内部错误。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_AICPU_INTERNAL_ERROR = 507900 | AI CPU模块内部错误。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_SOCKET_CLOSE = 507901 | 内部HDC（Host Device Communication）会话链接断开。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_AICPU_INFO_LOAD_RSP_ERR = 507902 | AI CPU调度处理失败。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_STREAM_CAPTURE_INVALIDATED = 507903 | 模型捕获异常。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_RT_COMM_OP_RETRY_FAIL = 507904 | 通信算子重执行失败 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_SNAPSHOT_LOCK_TIMEOUT = 507905 | 调用aclrtSnapShotProcessLock接口超时。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_SNAPSHOT_LOCK_FAILED = 507906 | 锁定当前进程失败。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_SNAPSHOT_UNLOCK_FAILED = 507907 | 解锁当前进程失败。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_SNAPSHOT_BACKUP_FAILED = 507908 | 备份快照进程失败。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_SNAPSHOT_RESTORE_FAILED = 507909 | 恢复快照进程失败。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_HOST_MEMORY_ALREADY_REGISTERED = 507910 | Host内存已经被注册。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_HOST_MEMORY_NOT_REGISTERED = 507911 | 待取消注册的Host内存未曾注册。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_SNAPSHOT_CALLBACK_FAILED = 507912 | 快照某个阶段，执行回调函数失败。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_SNAPSHOT_REGISTER_CALLBACK_FAILED = 507913 | 注册回调函数失败。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
+| ACL_ERROR_RT_DRV_INTERNAL_ERROR = 507899 | Driver模块内部错误。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_AICPU_INTERNAL_ERROR = 507900 | AI CPU模块内部错误。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_SOCKET_CLOSE = 507901 | 内部HDC（Host Device Communication）会话链接断开。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_AICPU_INFO_LOAD_RSP_ERR = 507902 | AI CPU调度处理失败。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_STREAM_CAPTURE_INVALIDATED = 507903 | 模型捕获异常。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_RT_COMM_OP_RETRY_FAIL = 507904 | 通信算子重执行失败 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_SNAPSHOT_LOCK_TIMEOUT = 507905 | 调用aclrtSnapShotProcessLock接口超时。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_SNAPSHOT_LOCK_FAILED = 507906 | 锁定当前进程失败。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_SNAPSHOT_UNLOCK_FAILED = 507907 | 解锁当前进程失败。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_SNAPSHOT_BACKUP_FAILED = 507908 | 备份快照进程失败。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_SNAPSHOT_RESTORE_FAILED = 507909 | 恢复快照进程失败。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_HOST_MEMORY_ALREADY_REGISTERED = 507910 | Host内存已经被注册。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_HOST_MEMORY_NOT_REGISTERED = 507911 | 待取消注册的Host内存未曾注册。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_SNAPSHOT_CALLBACK_FAILED = 507912 | 快照某个阶段，执行回调函数失败。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_SNAPSHOT_REGISTER_CALLBACK_FAILED = 507913 | 注册回调函数失败。 | 您可以获取日志后提交ISSUE。 |
 
 **表 3** 内部GE的返回码列表
 
@@ -231,14 +231,14 @@
 | ACL_ERROR_GE_DEVICE_MEMORY_ALLOCATION_FAILED = 245002 | 申请Device内存失败。 | Device内存已用完，无法继续申请，请释放部分Device内存，再重新尝试。 |
 | ACL_ERROR_GE_USER_RAISE_EXCEPTION = 345103 | 用户自定义函数主动抛异常。 | 用户可根据DataFlowInfo中设置的UserData识别出来哪个输入的数据执行报错了，再根据报错排查问题。 |
 | ACL_ERROR_GE_DATA_NOT_ALIGNED = 345104 | 数据未对齐。 | 若用户自定义函数存在多个输出时，需排查用户代码中是否少设置输出，缺少输出可能会导致数据对齐异常。 |
-| ACL_ERROR_GE_INTERNAL_ERROR = 545000 | 未知内部错误。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_GE_LOAD_MODEL = 545001 | 系统内部加载模型失败。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_GE_EXEC_LOAD_MODEL_PARTITION_FAILED = 545002 | 系统内部加载模型失败。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_GE_EXEC_LOAD_WEIGHT_PARTITION_FAILED = 545003 | 系统内部加载模型权值失败。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_GE_EXEC_LOAD_TASK_PARTITION_FAILED = 545004 | 系统内部加载模型任务失败。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_GE_EXEC_LOAD_KERNEL_PARTITION_FAILED = 545005 | 系统内部加载模型算子失败。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_GE_EXEC_RELEASE_MODEL_DATA = 545006 | 系统内释放模型空间失败。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_GE_COMMAND_HANDLE = 545007 | 系统内命令操作失败。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_GE_GET_TENSOR_INFO = 545008 | 系统内获取张量数据失败。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_GE_UNLOAD_MODEL = 545009 | 系统内卸载模型空间失败。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
-| ACL_ERROR_GE_MODEL_EXECUTE_TIMEOUT = 545601 | 模型执行超时。 | 您可以获取日志后单击[Link](https://www.hiascend.com/support)联系技术支持。 |
+| ACL_ERROR_GE_INTERNAL_ERROR = 545000 | 未知内部错误。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_GE_LOAD_MODEL = 545001 | 系统内部加载模型失败。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_GE_EXEC_LOAD_MODEL_PARTITION_FAILED = 545002 | 系统内部加载模型失败。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_GE_EXEC_LOAD_WEIGHT_PARTITION_FAILED = 545003 | 系统内部加载模型权值失败。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_GE_EXEC_LOAD_TASK_PARTITION_FAILED = 545004 | 系统内部加载模型任务失败。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_GE_EXEC_LOAD_KERNEL_PARTITION_FAILED = 545005 | 系统内部加载模型算子失败。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_GE_EXEC_RELEASE_MODEL_DATA = 545006 | 系统内释放模型空间失败。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_GE_COMMAND_HANDLE = 545007 | 系统内命令操作失败。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_GE_GET_TENSOR_INFO = 545008 | 系统内获取张量数据失败。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_GE_UNLOAD_MODEL = 545009 | 系统内卸载模型空间失败。 | 您可以获取日志后提交ISSUE。 |
+| ACL_ERROR_GE_MODEL_EXECUTE_TIMEOUT = 545601 | 模型执行超时。 | 您可以获取日志后提交ISSUE。 |

@@ -53,4 +53,4 @@
 
 ## 约束说明
 
-与[acl.prof.finalize](function-finalize- 2.md)接口配对使用，先调用aclprofInit接口再调用aclprofFinalize接口。
+与[acl.prof.finalize](function-finalize-Profiling.md)接口配对使用，先调用aclprofInit接口再调用aclprofFinalize接口。

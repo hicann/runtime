@@ -50,7 +50,7 @@
 
 | 返回值 | 说明 |
 | --- | --- |
-| granularity | int，内存申请粒度，单位为Byte，当前只支持2M。 |
+| granularity | int，内存申请粒度，单位为Byte，由prop指定的内存属性及产品支持能力决定。 |
 | ret | int，错误码，返回0表示成功，返回[其它值](../datatypes/aclError.md)表示失败。 |
 
 <!-- npu="310b" id7 -->

@@ -51,4 +51,4 @@
 
 ## 约束说明
 
-与[acl.prof.init](function-init- 1.md)接口配对使用，先调用acl.prof.init接口再调用acl.prof.finalize接口。
+与[acl.prof.init](function-init-Profiling.md)接口配对使用，先调用acl.prof.init接口再调用acl.prof.finalize接口。

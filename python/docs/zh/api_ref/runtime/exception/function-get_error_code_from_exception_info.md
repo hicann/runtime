@@ -49,4 +49,4 @@
 
 | 返回值 | 说明 |
 | --- | --- |
-| ret | int，错误码，返回0表示成功，返回[其它值](../datatypes/aclError.md)表示失败，返回值为“0xFFFFFFFF”（以十六进制为例）时表示Device异常。 |
+| ret | int，异常信息中记录的错误码；info为空时返回“0xFFFFFFFF”（以十六进制为例）。 |

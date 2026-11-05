@@ -26,5 +26,5 @@ Atlas A3系列产品，不支持该枚举值。
 | ACL_GROUP_AIV_INT = 1 | 指定Group对应的vector core个数，属性值的数据类型为整型。 |
 | ACL_GROUP_AIC_INT = 2 | 指定Group对应的aicpu线程数，属性值的数据类型为整型。 |
 | ACL_GROUP_SDMANUM_INT = 3 | 内存异步拷贝的通道数，属性值的数据类型为整型。 |
-| ACL_GROUP_SDMANUM_INT = 4 | 指定Group下可以被同时调度执行的Stream个数，小于或等于32，当前系统级最大一共可以同时调度32个Stream。属性值的数据类型为整型。 |
+| ACL_GROUP_ASQNUM_INT = 4 | 指定Group下可以被同时调度执行的Stream个数，小于或等于32，当前系统级最大一共可以同时调度32个Stream。属性值的数据类型为整型。 |
 | ACL_GROUP_GROUPID_INT = 5 | 指定Group的ID。属性值的数据类型为整型。 |

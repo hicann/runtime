@@ -32,7 +32,7 @@ msproftx用于记录事件发生的时间跨度的结束时间。
 - **C函数原型**
 
     ```c
-    aclError aclprofRangeStop(uint32_t *rangeId)
+    aclError aclprofRangeStop(uint32_t rangeId)
     ```
 
 - **python函数**

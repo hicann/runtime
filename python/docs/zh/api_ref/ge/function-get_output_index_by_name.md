@@ -44,7 +44,7 @@
 | 参数名 | 说明 |
 | --- | --- |
 | model_desc | int，aclmdlDesc类型数据的指针地址。需提前调用[acl.mdl.create_desc](function-create_desc.md)接口创建aclmdlDesc类型的数据。 |
-| name | str，指定输入名称。 |
+| name | str，指定模型中的输出名称。 |
 
 ## 返回值说明
 

@@ -46,7 +46,7 @@
 | 参数名 | 说明 |
 | --- | --- |
 | dataset | int，表示模型执行的输入或输出数据结构的指针地址。 |
-| index | int，表示第几个输入或输出的序号。模型存在多个输入、输出时，为避免序号出错，可以先调用[acl.mdl.get_input_name_by_index](function-get_input_name_by_index.md)、[acl.mdl.get_output_name_by_index](function-get_output_size_by_index.md)接口获取输入、输出的名称，根据输入、输出名称所对应的index来设置。 |
+| index | int，表示第几个输入或输出的序号。模型存在多个输入、输出时，为避免序号出错，可以先调用[acl.mdl.get_input_name_by_index](function-get_input_name_by_index.md)、[acl.mdl.get_output_name_by_index](function-get_output_name_by_index.md)接口获取输入、输出的名称，根据输入、输出名称所对应的index来设置。 |
 
 ## 返回值说明
 
