@@ -71,7 +71,8 @@ ACL_MEMCPY_INNER_DEVICE_TO_DEVICE只表示同Device内复制，需要在描述�
 
 ```c
 int32_t canAccess = 0;
-aclrtDeviceCanAccessPeer(&canAccess, srcDeviceId, dstDeviceId);
+// 查询即将启用的访问方向：dstDeviceId -> srcDeviceId。
+aclrtDeviceCanAccessPeer(&canAccess, dstDeviceId, srcDeviceId);
 if (canAccess != 0) {
     aclrtSetDevice(dstDeviceId);
     aclrtDeviceEnablePeerAccess(srcDeviceId, 0);
