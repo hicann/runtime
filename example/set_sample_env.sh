@@ -135,8 +135,11 @@ _set_soc_select_cann_path() {
 _set_soc_need_build_helper() {
     local src="$1"
     local bin="$2"
+    local cache_file="$3"
+    local cache_key="$4"
 
-    [[ ! -x "${bin}" || "${src}" -nt "${bin}" ]]
+    [[ ! -x "${bin}" || "${src}" -nt "${bin}" || ! -f "${cache_file}" ]] && return 0
+    [[ "$(cat "${cache_file}" 2>/dev/null)" != "${cache_key}" ]]
 }
 
 _set_soc_build_helper() {
@@ -146,6 +149,8 @@ _set_soc_build_helper() {
     local build_dir="${helper_dir}/build"
     local bin="${build_dir}/get_soc_version"
     local tmp_bin="${bin}.$$"
+    local cache_file="${bin}.paths"
+    local cache_key
     local build_output
     local -a compile_cmd
 
@@ -163,8 +168,10 @@ _set_soc_build_helper() {
         return 1
     fi
 
-    # Rebuild only when the binary is missing or the helper source changed.
-    if ! _set_soc_need_build_helper "${src}" "${bin}"; then
+    # The helper embeds the library search path, so changing CANN layouts
+    # requires a rebuild even when its source has not changed.
+    cache_key="${_set_soc_include_dir}|${_set_soc_lib_dir}"
+    if ! _set_soc_need_build_helper "${src}" "${bin}" "${cache_file}" "${cache_key}"; then
         return 0
     fi
 
@@ -194,11 +201,13 @@ _set_soc_build_helper() {
         return 1
     fi
 
+    rm -f "${cache_file}"
     if ! mv "${tmp_bin}" "${bin}"; then
         rm -f "${tmp_bin}"
         _set_soc_acl_error="Failed to update ACL helper binary: ${bin}."
         return 1
     fi
+    printf '%s\n' "${cache_key}" > "${cache_file}" || rm -f "${cache_file}"
     return 0
 }
 
