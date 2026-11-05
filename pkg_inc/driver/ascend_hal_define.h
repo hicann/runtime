@@ -686,6 +686,7 @@ typedef struct {
     unsigned int mngPoolBlkObjSize;
     unsigned int mngPoolBlkOffset;
     unsigned int mngPoolGroupId;
+    unsigned long long createSyscnt;
 } DqsPoolInfo;
 
 /*=========================== Memory Manage ===========================*/
