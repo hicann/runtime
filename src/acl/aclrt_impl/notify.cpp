@@ -10,6 +10,8 @@
 
 #include "acl_rt_impl.h"
 
+#include <cinttypes>
+
 #include "runtime/event.h"
 #include "runtime/base.h"
 #include "runtime/rts/rts_event.h"
@@ -25,7 +27,7 @@ extern "C" {
 aclError aclrtCreateNotifyImpl(aclrtNotify* notify, uint64_t flag)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtCreateNotify);
-    ACL_LOG_INFO("start to execute aclrtCreateNotify, flag is [%lu]", flag);
+    ACL_LOG_INFO("start to execute aclrtCreateNotify, flag is [%" PRIu64 "]", flag);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(notify);
 
     ACL_REQUIRES_RTS_OK(rtsNotifyCreate(static_cast<rtNotify_t*>(notify), flag));
@@ -96,7 +98,7 @@ aclError aclrtNotifyBatchResetImpl(aclrtNotify* notifies, size_t num)
 aclError aclrtNotifyGetExportKeyImpl(aclrtNotify notify, char* key, size_t len, uint64_t flags)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtNotifyGetExportKey);
-    ACL_LOG_INFO("start to execute aclrtNotifyGetExportKey, len is [%zu], flags is [%lu]", len, flags);
+    ACL_LOG_INFO("start to execute aclrtNotifyGetExportKey, len is [%zu], flags is [%" PRIu64 "]", len, flags);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(notify);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(key);
     ACL_CHECK_INVALID_VALUE_WITH_EXPECT_RET(
@@ -111,7 +113,7 @@ aclError aclrtNotifyGetExportKeyImpl(aclrtNotify notify, char* key, size_t len, 
 aclError aclrtNotifyImportByKeyImpl(aclrtNotify* notify, const char* key, uint64_t flags)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtNotifyImportByKey);
-    ACL_LOG_INFO("start to execute aclrtNotifyImportByKey, flags is [%lu]", flags);
+    ACL_LOG_INFO("start to execute aclrtNotifyImportByKey, flags is [%" PRIu64 "]", flags);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(notify);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(key);
 
@@ -150,7 +152,7 @@ aclError aclrtNotifySetImportPidInterServerImpl(aclrtNotify notify, aclrtServerP
 aclError aclrtCntNotifyCreateImpl(aclrtCntNotify* cntNotify, uint64_t flag)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtCntNotifyCreate);
-    ACL_LOG_INFO("start to execute aclrtCntNotifyCreate, flag is [%lu]", flag);
+    ACL_LOG_INFO("start to execute aclrtCntNotifyCreate, flag is [%" PRIu64 "]", flag);
 
     ACL_REQUIRES_RTS_OK(rtCntNotifyCreateServer(static_cast<rtCntNotify_t*>(cntNotify), flag));
 

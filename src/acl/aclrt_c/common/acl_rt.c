@@ -7,6 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include <inttypes.h>
 #include <string.h>
 #include "log_inner.h"
 #include "runtime/rt.h"
@@ -64,7 +65,7 @@ aclError aclInit(const char* configPath)
         ACL_LOG_ERROR("Add refCount err");
         return ACL_ERROR_INTERNAL_ERROR;
     }
-    ACL_LOG_INFO("Increased refCount: %lu", (uint64_t)gInitRefCount.refCount);
+    ACL_LOG_INFO("Increased refCount: %" PRIu64, (uint64_t)gInitRefCount.refCount);
     return ACL_SUCCESS;
 }
 
@@ -78,7 +79,7 @@ static void DeinitHookFunc(RefObj* obj)
 aclError aclFinalize()
 {
     ReleaseObjRef(&gInitRefCount, DeinitHookFunc);
-    ACL_LOG_INFO("Decreased refCount: %lu", (uint64_t)gInitRefCount.refCount);
+    ACL_LOG_INFO("Decreased refCount: %" PRIu64, (uint64_t)gInitRefCount.refCount);
     return ACL_SUCCESS;
 }
 

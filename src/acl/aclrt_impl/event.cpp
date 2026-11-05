@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include <cinttypes>
 #include <mutex>
 #include "acl_rt_impl.h"
 #include "runtime/event.h"
@@ -275,12 +276,12 @@ aclError aclrtSetOpExecuteTimeOutWithMsImpl(uint32_t timeout)
 aclError aclrtSetOpExecuteTimeOutV2Impl(uint64_t timeout, uint64_t* actualTimeout)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtSetOpExecuteTimeOutV2);
-    ACL_LOG_INFO("start to execute aclrtSetOpExecuteTimeOutV2, timeout = %zu us", timeout);
+    ACL_LOG_INFO("start to execute aclrtSetOpExecuteTimeOutV2, timeout = %" PRIu64 " us", timeout);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(actualTimeout);
     ACL_REQUIRES_RTS_OK(rtSetOpExecuteTimeOutV2(timeout, actualTimeout));
     ACL_LOG_INFO(
-        "successfully execute aclrtSetOpExecuteTimeOutV2, timeout = %zu us, actual timeout = %zu us", timeout,
-        *actualTimeout);
+        "successfully execute aclrtSetOpExecuteTimeOutV2, timeout = %" PRIu64 " us, actual timeout = %" PRIu64 " us",
+        timeout, *actualTimeout);
     return ACL_SUCCESS;
 }
 
@@ -290,7 +291,7 @@ aclError aclrtGetOpTimeOutIntervalImpl(uint64_t* interval)
     ACL_LOG_INFO("start to execute aclrtGetOpTimeOutIntervalImpl");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(interval);
     ACL_REQUIRES_RTS_OK(rtGetOpTimeOutInterval(interval));
-    ACL_LOG_INFO("successfully execute aclrtGetOpTimeOutIntervalImpl, interval = %zu us", *interval);
+    ACL_LOG_INFO("successfully execute aclrtGetOpTimeOutIntervalImpl, interval = %" PRIu64 " us", *interval);
     return ACL_SUCCESS;
 }
 

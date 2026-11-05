@@ -9,6 +9,7 @@
  */
 
 #include "tensor_data_transfer.h"
+#include <cinttypes>
 #include <map>
 #include <mutex>
 #include <sstream>
@@ -326,7 +327,7 @@ aclError TensorDatasetSerializesV2(const acltdtDataset* dataset, std::vector<acl
         item.dataPtr = dataset->blobs[i]->dataPtr;
         itemVec.emplace_back(item);
         ACL_LOG_DEBUG(
-            "TensorDatasetSerializesWithQueue, dataType %d, tensorType %d, dimNum %u, dataLen %lu",
+            "TensorDatasetSerializesWithQueue, dataType %d, tensorType %d, dimNum %u, dataLen %" PRIu64,
             item.ctrlInfo.dataType, item.ctrlInfo.tensorType, item.ctrlInfo.dimNum, item.ctrlInfo.dataLen);
     }
     return ACL_SUCCESS;
@@ -543,7 +544,7 @@ aclError UnpackageRecvDataInfo(uint8_t* outputHostAddr, size_t size, std::vector
         item.ctrlInfo = *tmp;
         ACL_LOG_INFO(
             "UnpackInfo version %d, dataType %d, curCnt %u, cnt %u, tensorType %d, dimNum %u, "
-            "dynamicBitSize %u, sliceNum %u, sliceId %u, dataLen %lu",
+            "dynamicBitSize %u, sliceNum %u, sliceId %u, dataLen %" PRIu64,
             tmp->version, tmp->dataType, tmp->curCnt, tmp->cnt, tmp->tensorType, tmp->dimNum, tmp->dynamicBitSize,
             static_cast<uint32_t>(tmp->sliceNum), static_cast<uint32_t>(tmp->sliceId), tmp->dataLen);
         offset += sizeof(ItemInfo);
@@ -555,17 +556,17 @@ aclError UnpackageRecvDataInfo(uint8_t* outputHostAddr, size_t size, std::vector
             }
             int64_t dimTmp = *(reinterpret_cast<int64_t*>(outputHostAddr + offset));
             item.dims.push_back(dimTmp);
-            ACL_LOG_INFO("current dims[%u] is %ld", j, dimTmp);
+            ACL_LOG_INFO("current dims[%u] is %" PRId64, j, dimTmp);
             offset += sizeof(int64_t);
         }
 
-        if (offset > size || tmp->dataLen > size - offset) {
-            ACL_LOG_ERROR("offset is %zu, data len is %lu, size is %zu", offset, tmp->dataLen, size);
+        if ((offset > size) || (tmp->dataLen > static_cast<uint64_t>(size - offset))) {
+            ACL_LOG_ERROR("offset is %zu, data len is %" PRIu64 ", size is %zu", offset, tmp->dataLen, size);
             return ACL_ERROR_FAILURE;
         }
         if (tmp->dataLen > 0U) {
             item.priorityDataPtr_ = outputHostAddr + offset;
-            offset += tmp->dataLen;
+            offset += static_cast<size_t>(tmp->dataLen);
         } else {
             ACL_LOG_INFO("data length is 0");
         }

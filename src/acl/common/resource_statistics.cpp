@@ -9,6 +9,7 @@
  */
 #include "resource_statistics.h"
 
+#include <cinttypes>
 #include <map>
 #include <string>
 
@@ -106,7 +107,8 @@ void ResourceStatistics::TraverseStatistics() const
         }
 
         ACL_LOG_EVENT(
-            "The ResourceType:%s, applyTotal = %lu, applySucc = %lu, releaseTotal = %lu, releaseSucc = %lu",
+            "The ResourceType:%s, applyTotal = %" PRIu64 ", applySucc = %" PRIu64 ", releaseTotal = %" PRIu64
+            ", releaseSucc = %" PRIu64,
             resourceTypeToString.c_str(), counter_[i].appplyReleaseValue[APPLY_TOTAL].load(std::memory_order_relaxed),
             counter_[i].appplyReleaseValue[APPLY_SUCCESS].load(std::memory_order_relaxed),
             counter_[i].appplyReleaseValue[RELEASE_TOTAL].load(std::memory_order_relaxed),

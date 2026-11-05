@@ -9,6 +9,7 @@
  */
 
 #include "acl_rt_impl.h"
+#include <cinttypes>
 #include <map>
 #include "securec.h"
 #include "runtime/kernel.h"
@@ -628,7 +629,7 @@ aclError aclrtLaunchSIMTKernelWithArgsArrayImpl(
 aclError aclrtGetFloatOverflowStatusImpl(void* outputAddr, uint64_t outputSize, aclrtStream stream)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtGetFloatOverflowStatus);
-    ACL_LOG_INFO("start to execute aclrtGetFloatOverflowStatus, outputSize = %lu", outputSize);
+    ACL_LOG_INFO("start to execute aclrtGetFloatOverflowStatus, outputSize = %" PRIu64, outputSize);
     ACL_REQUIRES_RTS_OK(rtsGetFloatOverflowStatus(outputAddr, outputSize, static_cast<rtStream_t>(stream)));
     ACL_LOG_INFO("successfully execute aclrtGetFloatOverflowStatus");
     return ACL_SUCCESS;
@@ -680,7 +681,7 @@ aclError aclrtNpuGetFloatOverFlowStatusImpl(
     void* outputAddr, uint64_t outputSize, uint32_t checkMode, aclrtStream stream)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtNpuGetFloatOverFlowStatus);
-    ACL_LOG_INFO("start to execute aclrtNpuGetFloatOverFlowStatus, outputSize = %lu", outputSize);
+    ACL_LOG_INFO("start to execute aclrtNpuGetFloatOverFlowStatus, outputSize = %" PRIu64, outputSize);
     ACL_REQUIRES_RTS_OK(
         rtsNpuGetFloatOverFlowStatus(outputAddr, outputSize, checkMode, static_cast<rtStream_t>(stream)));
     ACL_LOG_INFO("successfully execute aclrtNpuGetFloatOverFlowStatus");

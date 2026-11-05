@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include <cinttypes>
 #include <map>
 #include <mutex>
 #include <algorithm>
@@ -490,7 +491,7 @@ aclError aclrtMallocHostWithCfgImpl(void** ptr, uint64_t size, aclrtMallocConfig
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtMallocHostWithCfg);
     ACL_ADD_APPLY_TOTAL_COUNT(acl::ACL_STATISTICS_MALLOC_FREE);
-    ACL_LOG_DEBUG("start to execute aclrtMallocHostWithCfg, size = %zu", size);
+    ACL_LOG_DEBUG("start to execute aclrtMallocHostWithCfg, size = %" PRIu64, size);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(ptr);
     ACL_REQUIRES_POSITIVE_REPORT(size);
     ACL_REQUIRES_RTS_OK(rtsMallocHost(ptr, size, reinterpret_cast<rtMallocConfig_t*>(cfg)));
@@ -1302,8 +1303,8 @@ aclError aclrtMemMapNoAccessImpl(void* virPtr, size_t size, size_t offset, aclrt
     ACL_PROFILING_REG(acl::AclProfType::AclrtMemMapNoAccess);
     ACL_ADD_APPLY_TOTAL_COUNT(acl::ACL_STATISTICS_MAP_UNMAP_MEMORY);
     ACL_LOG_DEBUG(
-        "start to execute aclrtMemMapNoAccess, virPtr = %p, size = %zu, offset = %zu, flags = %llu", virPtr, size,
-        offset, static_cast<unsigned long long>(flags));
+        "start to execute aclrtMemMapNoAccess, virPtr = %p, size = %zu, offset = %zu, flags = %" PRIu64, virPtr, size,
+        offset, flags);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(virPtr);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(handle);
     ACL_REQUIRES_POSITIVE_REPORT(size);
@@ -1581,7 +1582,7 @@ aclError aclrtReduceAsyncImpl(
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtReduceAsync);
     ACL_LOG_DEBUG(
-        "start to execute aclrtReduceAsync, count = [%lu], kind = [%s], type = [%s]", count,
+        "start to execute aclrtReduceAsync, count = [%" PRIu64 "], kind = [%s], type = [%s]", count,
         acl::GetReduceKindDesc(kind), acl::GetDataTypeDesc(type));
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(dst);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(src);
@@ -1698,7 +1699,8 @@ aclError aclrtGetBufUserDataImpl(const aclrtMbuf buf, void* dataPtr, size_t size
             std::vector<const char*>(
                 {funcName.c_str(), "memcpy_s", retVal.c_str(), strerror(ret), extendInfo.c_str()}));
         ACL_LOG_ERROR(
-            "call memcpy_s failed, result = %d, size = %zu, bufSize = %lu, offset = %zu", ret, size, bufSize, offset);
+            "call memcpy_s failed, result = %d, size = %zu, bufSize = %" PRIu64 ", offset = %zu", ret, size, bufSize,
+            offset);
         return ACL_ERROR_FAILURE;
     }
     return ACL_SUCCESS;
@@ -1755,7 +1757,8 @@ aclError aclrtSetBufUserDataImpl(aclrtMbuf buf, const void* dataPtr, size_t size
             std::vector<const char*>(
                 {funcName.c_str(), "memcpy_s", retVal.c_str(), strerror(ret), extendInfo.c_str()}));
         ACL_LOG_ERROR(
-            "call memcpy_s failed, result = %d, size = %zu, bufSize = %lu, offset = %zu", ret, size, bufSize, offset);
+            "call memcpy_s failed, result = %d, size = %zu, bufSize = %" PRIu64 ", offset = %zu", ret, size, bufSize,
+            offset);
         return ACL_ERROR_FAILURE;
     }
     return ACL_SUCCESS;
@@ -1915,7 +1918,8 @@ aclError aclrtIpcMemGetExportKeyImpl(void* devPtr, size_t size, char* key, size_
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtIpcMemGetExportKey);
     ACL_LOG_INFO(
-        "start to execute aclrtIpcMemGetExportKey, size is [%zu], len is [%zu], flags is [%lu]", size, len, flags);
+        "start to execute aclrtIpcMemGetExportKey, size is [%zu], len is [%zu], flags is [%" PRIu64 "]", size, len,
+        flags);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(devPtr);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(key);
     ACL_CHECK_INVALID_VALUE_WITH_EXPECT_RET(
@@ -1936,7 +1940,7 @@ aclError aclrtIpcMemCloseImpl(const char* key)
 aclError aclrtIpcMemImportByKeyImpl(void** devPtr, const char* key, uint64_t flags)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtIpcMemImportByKey);
-    ACL_LOG_INFO("start to execute aclrtIpcMemImportByKey, flags is [%lu]", flags);
+    ACL_LOG_INFO("start to execute aclrtIpcMemImportByKey, flags is [%" PRIu64 "]", flags);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(devPtr);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(key);
     const auto rtErr = rtsIpcMemImportByKey(devPtr, key, flags);
@@ -2012,7 +2016,8 @@ aclError aclrtIpcMemSetAttrImpl(const char* key, aclrtIpcMemAttrType type, uint6
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtIpcMemSetAttr);
     ACL_LOG_INFO(
-        "start to execute aclrtIpcMemSetAttr, type is [%s], attr is [%lu]", acl::GetIpcMemAttrTypeDesc(type), attr);
+        "start to execute aclrtIpcMemSetAttr, type is [%s], attr is [%" PRIu64 "]", acl::GetIpcMemAttrTypeDesc(type),
+        attr);
     const auto rtErr = rtIpcSetMemoryAttr(key, type, attr);
     if (rtErr == RT_ERROR_NONE) {
         ACL_LOG_INFO("successfully execute aclrtIpcMemSetAttr");

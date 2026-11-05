@@ -11,6 +11,8 @@
 #include "acl_rt_impl.h"
 #include "acl_rt_impl_base.h"
 
+#include <cinttypes>
+
 #include "runtime/context.h"
 #include "runtime/rts/rts_context.h"
 #include "runtime/dev.h"
@@ -157,7 +159,7 @@ aclError aclrtCtxSetSysParamOptImpl(aclSysParamOpt opt, int64_t value)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtCtxSetSysParamOpt);
     ACL_LOG_INFO(
-        "start to execute aclrtCtxSetSysParamOpt, opt = %s, value = %ld.", acl::GetSysParamOptDesc(opt), value);
+        "start to execute aclrtCtxSetSysParamOpt, opt = %s, value = %" PRId64 ".", acl::GetSysParamOptDesc(opt), value);
     return SetSysParamOpt(opt, value, true);
 }
 
@@ -165,7 +167,8 @@ aclError aclrtGetSysParamOptImpl(aclSysParamOpt opt, int64_t* value) { return Ge
 
 aclError aclrtSetSysParamOptImpl(aclSysParamOpt opt, int64_t value)
 {
-    ACL_LOG_INFO("start to execute aclrtSetSysParamOpt, opt = %s, value = %ld.", acl::GetSysParamOptDesc(opt), value);
+    ACL_LOG_INFO(
+        "start to execute aclrtSetSysParamOpt, opt = %s, value = %" PRId64 ".", acl::GetSysParamOptDesc(opt), value);
     return SetSysParamOpt(opt, value, false);
 }
 

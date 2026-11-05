@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include <cinttypes>
 #include <unordered_map>
 #include "acl_rt_impl.h"
 
@@ -278,9 +279,9 @@ aclError aclrtStreamWaitEventWithFlagImpl(aclrtStream stream, aclrtEvent event, 
 aclError aclrtSetStreamFailureModeImpl(aclrtStream stream, uint64_t mode)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtSetStreamFailureMode);
-    ACL_LOG_INFO("start to execute aclrtSetStreamFailureMode, mode is %lu", mode);
+    ACL_LOG_INFO("start to execute aclrtSetStreamFailureMode, mode is %" PRIu64, mode);
     ACL_REQUIRES_RTS_OK(rtStreamSetMode(static_cast<rtStream_t>(stream), mode));
-    ACL_LOG_INFO("successfully execute aclrtSetStreamFailureMode, mode is %lu", mode);
+    ACL_LOG_INFO("successfully execute aclrtSetStreamFailureMode, mode is %" PRIu64, mode);
     return ACL_SUCCESS;
 }
 

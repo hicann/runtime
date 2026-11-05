@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include <cinttypes>
 #include <mutex>
 #include "acl_rt_impl.h"
 #include "runtime/rts/rts_kernel.h"
@@ -36,9 +37,9 @@ extern "C" {
 
 aclError aclrtSubscribeReportImpl(uint64_t threadId, aclrtStream stream)
 {
-    ACL_LOG_INFO("start to execute aclrtSubscribeReport, threadId is %lu.", threadId);
+    ACL_LOG_INFO("start to execute aclrtSubscribeReport, threadId is %" PRIu64 ".", threadId);
     ACL_REQUIRES_RTS_OK(rtSubscribeReport(threadId, static_cast<rtStream_t>(stream)));
-    ACL_LOG_INFO("successfully execute aclrtSubscribeReport, threadId is %lu.", threadId);
+    ACL_LOG_INFO("successfully execute aclrtSubscribeReport, threadId is %" PRIu64 ".", threadId);
     return ACL_SUCCESS;
 }
 
@@ -226,9 +227,9 @@ aclError aclrtProcessReportImpl(int32_t timeout)
 
 aclError aclrtUnSubscribeReportImpl(uint64_t threadId, aclrtStream stream)
 {
-    ACL_LOG_INFO("start to execute aclrtUnSubscribeReport, threadId is %lu.", threadId);
+    ACL_LOG_INFO("start to execute aclrtUnSubscribeReport, threadId is %" PRIu64 ".", threadId);
     ACL_REQUIRES_RTS_OK(rtUnSubscribeReport(threadId, static_cast<rtStream_t>(stream)));
-    ACL_LOG_INFO("successfully execute aclrtUnSubscribeReport, threadId is %lu.", threadId);
+    ACL_LOG_INFO("successfully execute aclrtUnSubscribeReport, threadId is %" PRIu64 ".", threadId);
     return ACL_SUCCESS;
 }
 

@@ -10,6 +10,7 @@
 
 #include "acl/acl.h"
 
+#include <cinttypes>
 #include <cstdint>
 #include <mutex>
 #include <fstream>
@@ -110,7 +111,7 @@ aclError GetPlatformInfoWithKey(const std::string& key, int64_t* value)
         ACL_LOG_INNER_ERROR("Failed to convert strVal[%s] to digital value.", strVal.c_str());
         return ACL_ERROR_INTERNAL_ERROR;
     }
-    ACL_LOG_INFO("Successfully get platform info, key = %s, value = %ld", key.c_str(), *value);
+    ACL_LOG_INFO("Successfully get platform info, key = %s, value = %" PRId64, key.c_str(), *value);
 #endif
     return ACL_SUCCESS;
 }
@@ -264,7 +265,8 @@ int32_t UpdateOpSystemRunCfg(void* cfgAddr, uint32_t cfgLen)
     uint64_t* addr = static_cast<uint64_t*>(cfgAddr);
     *addr = offset;
 
-    ACL_LOG_INFO("execute UpdateOpSystemRunCfg successfully, l2 cache offset is %lu, device id = %d", offset, devId);
+    ACL_LOG_INFO(
+        "execute UpdateOpSystemRunCfg successfully, l2 cache offset is %" PRIu64 ", device id = %d", offset, devId);
     return ACL_RT_SUCCESS;
 }
 
@@ -387,7 +389,7 @@ aclError aclInitImpl(const char* configPath)
     auto& aclInitRefCount = acl::GetAclInitRefCount();
     if (aclInitRefCount > 0) {
         aclInitRefCount++;
-        ACL_LOG_INFO("repeatedly initialized, new aclInitRefCount: %lu", aclInitRefCount);
+        ACL_LOG_INFO("repeatedly initialized, new aclInitRefCount: %" PRIu64, aclInitRefCount);
         return ACL_ERROR_REPEAT_INITIALIZE;
     }
 
@@ -540,7 +542,7 @@ aclError aclInitImpl(const char* configPath)
             aclInitJsonPath = configPath;
         }
     }
-    ACL_LOG_INFO("successfully execute aclInit, aclInitRefCount is %lu", aclInitRefCount);
+    ACL_LOG_INFO("successfully execute aclInit, aclInitRefCount is %" PRIu64, aclInitRefCount);
     return ACL_SUCCESS;
 }
 
@@ -660,7 +662,8 @@ aclError aclFinalizeReferenceImpl(uint64_t* refCount)
             *refCount = aclInitRefCount;
         }
         ACL_LOG_INFO(
-            "Found multiple acl references, reducing aclInitRefCount by 1. New aclInitRefCount: %lu", aclInitRefCount);
+            "Found multiple acl references, reducing aclInitRefCount by 1. New aclInitRefCount: %" PRIu64,
+            aclInitRefCount);
         return ACL_SUCCESS;
     }
     // 如果计数器小于1，报错

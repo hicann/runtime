@@ -251,7 +251,7 @@ aclError aclrtSetDeviceSatModeImpl(aclrtFloatOverflowMode mode)
 aclError aclrtGetOverflowStatusImpl(void* outputAddr, size_t outputSize, aclrtStream stream)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtGetOverflowStatus);
-    ACL_LOG_INFO("start to execute aclrtGetOverflowStatus, outputSize = %lu", outputSize);
+    ACL_LOG_INFO("start to execute aclrtGetOverflowStatus, outputSize = %zu", outputSize);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(outputAddr);
     ACL_REQUIRES_RTS_OK(rtGetDeviceSatStatus(outputAddr, outputSize, static_cast<rtStream_t>(stream)));
     ACL_LOG_INFO("successfully execute aclrtGetOverflowStatus");

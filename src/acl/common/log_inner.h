@@ -110,23 +110,23 @@ public:
 #define UNLIKELY(expr) (expr)
 
 #ifdef RUN_TEST
-#define ACL_LOG_INFO(fmt, ...)                                                                                         \
-    do {                                                                                                               \
-        if (acl::AclLog::IsLogOutputEnable(ACL_INFO)) {                                                                \
-            constexpr const char_t* const funcName = __FUNCTION__;                                                     \
-            printf(                                                                                                    \
-                "INFO %d %s:%s:%d: " #fmt "\n", acl::AclLog::GetTid(), acl::format_cast(funcName), __FILE__, __LINE__, \
-                ##__VA_ARGS__);                                                                                        \
-        }                                                                                                              \
+#define ACL_LOG_INFO(fmt, ...)                                                                                  \
+    do {                                                                                                        \
+        if (acl::AclLog::IsLogOutputEnable(ACL_INFO)) {                                                         \
+            constexpr const char_t* const funcName = __FUNCTION__;                                              \
+            printf(                                                                                             \
+                "INFO %d %s:%s:%d: \"" fmt "\"\n", acl::AclLog::GetTid(), acl::format_cast(funcName), __FILE__, \
+                __LINE__, ##__VA_ARGS__);                                                                       \
+        }                                                                                                       \
     } while (false)
-#define ACL_LOG_DEBUG(fmt, ...)                                                                               \
-    do {                                                                                                      \
-        if (acl::AclLog::IsLogOutputEnable(ACL_DEBUG)) {                                                      \
-            constexpr const char_t* const funcName = __FUNCTION__;                                            \
-            printf(                                                                                           \
-                "DEBUG %d %s:%s:%d: " #fmt "\n", acl::AclLog::GetTid(), acl::format_cast(funcName), __FILE__, \
-                __LINE__, ##__VA_ARGS__);                                                                     \
-        }                                                                                                     \
+#define ACL_LOG_DEBUG(fmt, ...)                                                                                  \
+    do {                                                                                                         \
+        if (acl::AclLog::IsLogOutputEnable(ACL_DEBUG)) {                                                         \
+            constexpr const char_t* const funcName = __FUNCTION__;                                               \
+            printf(                                                                                              \
+                "DEBUG %d %s:%s:%d: \"" fmt "\"\n", acl::AclLog::GetTid(), acl::format_cast(funcName), __FILE__, \
+                __LINE__, ##__VA_ARGS__);                                                                        \
+        }                                                                                                        \
     } while (false)
 #define ACL_LOG_WARN(fmt, ...)                                                                                         \
     do {                                                                                                               \
@@ -158,14 +158,14 @@ public:
             "ERROR %d %s:%s:%d:" fmt "\n", acl::AclLog::GetTid(), acl::format_cast(funcName), __FILE__, __LINE__, \
             ##__VA_ARGS__);                                                                                       \
     } while (false)
-#define ACL_LOG_EVENT(fmt, ...)                                                                               \
-    do {                                                                                                      \
-        if (acl::AclLog::IsEventLogOutputEnable()) {                                                          \
-            constexpr const char_t* const funcName = __FUNCTION__;                                            \
-            printf(                                                                                           \
-                "EVENT %d %s:%s:%d: " #fmt "\n", acl::AclLog::GetTid(), acl::format_cast(funcName), __FILE__, \
-                __LINE__, ##__VA_ARGS__);                                                                     \
-        }                                                                                                     \
+#define ACL_LOG_EVENT(fmt, ...)                                                                                  \
+    do {                                                                                                         \
+        if (acl::AclLog::IsEventLogOutputEnable()) {                                                             \
+            constexpr const char_t* const funcName = __FUNCTION__;                                               \
+            printf(                                                                                              \
+                "EVENT %d %s:%s:%d: \"" fmt "\"\n", acl::AclLog::GetTid(), acl::format_cast(funcName), __FILE__, \
+                __LINE__, ##__VA_ARGS__);                                                                        \
+        }                                                                                                        \
     } while (false)
 #else
 #define ACL_LOG_INFO(fmt, ...)                                                                                        \

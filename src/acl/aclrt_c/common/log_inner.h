@@ -38,9 +38,9 @@ static inline uint64_t GetTid(void)
         printf("[DEBUG][%s:%d]%ld:" #fmt "\n", __FILE__, __LINE__, (long int)GetTid(), ##__VA_ARGS__); \
     } while (false)
 
-#define ACL_LOG_INFO(fmt, ...)                                                                        \
-    do {                                                                                              \
-        printf("[INFO][%s:%d]%ld:" #fmt "\n", __FILE__, __LINE__, (long int)GetTid(), ##__VA_ARGS__); \
+#define ACL_LOG_INFO(fmt, ...)                                                                           \
+    do {                                                                                                 \
+        printf("[INFO][%s:%d]%ld:\"" fmt "\"\n", __FILE__, __LINE__, (long int)GetTid(), ##__VA_ARGS__); \
     } while (false)
 
 #define ACL_LOG_WARN(fmt, ...)                                                                           \

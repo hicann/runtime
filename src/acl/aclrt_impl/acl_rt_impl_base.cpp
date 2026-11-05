@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "acl_rt_impl_base.h"
+#include <cinttypes>
 #include <mutex>
 #include <string>
 #include <fstream>
@@ -111,8 +112,8 @@ aclError UpdatePlatformInfoWithDevice(int32_t deviceId)
     }
     (void)g_platformInfoInitSet.emplace(deviceId);
     ACL_LOG_INFO(
-        "Successfully updated platform info with device, deviceId = %d, aicCnt = %u, vecCoreCnt = %ld, "
-        "cubeCoreCnt = %ld",
+        "Successfully updated platform info with device, deviceId = %d, aicCnt = %u, vecCoreCnt = %" PRId64
+        ", cubeCoreCnt = %" PRId64,
         deviceId, aicCnt, vecCoreCnt, cubeCoreCnt);
 #endif
     return ACL_SUCCESS;

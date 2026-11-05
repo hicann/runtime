@@ -136,9 +136,9 @@ bool JsonParser::IsValidFileName(const char_t* const fileName)
             acl::INVALID_FILE_MSG, std::vector<const char*>({"path", "reason"}),
             std::vector<const char*>({trustedPath, reason.c_str()}));
         ACL_LOG_ERROR(
-            "[Check][FileSize]config file %s size[%ld] is larger than "
-            "max config file Bytes[%ld]",
-            trustedPath, pathStat.st_size, MAX_CONFIG_FILE_BYTE);
+            "[Check][FileSize]config file %s size[%" PRId64 "] is larger than "
+            "max config file Bytes[%" PRId64 "]",
+            trustedPath, static_cast<int64_t>(pathStat.st_size), MAX_CONFIG_FILE_BYTE);
         return false;
     }
     return true;
