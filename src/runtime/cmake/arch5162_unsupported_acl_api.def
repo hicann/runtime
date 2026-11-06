@@ -14,14 +14,14 @@
 // https://gitcode.com/cann/runtime/merge_requests/4630
 //
 // Stubs whose return types cannot carry ACL_ERROR_RT_FEATURE_NOT_SUPPORT:
-// NULLPTR: aclCreateDataBuffer, aclGetDataBufferAddr, aclrtAllocatorCreateDesc, aclrtCreateBinary,
+// NULLPTR: aclCreateDataBuffer, aclGetDataBufferAddr, aclrtAllocatorCreateDesc,
 //          aclrtCreateGroupInfo.
 // INVALID_EXCEPTION_INFO: aclrtGetDeviceIdFromExceptionInfo, aclrtGetErrorCodeFromExceptionInfo,
 //                         aclrtGetStreamIdFromExceptionInfo, aclrtGetTaskIdFromExceptionInfo,
 //                         aclrtGetThreadIdFromExceptionInfo.
 // ZERO: aclDataTypeSize, aclFloat16ToFloat, aclFloatToFloat16, aclGetDataBufferSize, aclGetDataBufferSizeV2.
-// ACL wrapper entries not listed below become weak real providers. Keep this count unchanged when adding a new
-// unsupported ACL API. Only change it after arch5162 product support is explicitly confirmed.
+// ACL wrapper entries not listed below become weak real providers. Adding a new unsupported ACL API leaves this
+// count unchanged; moving an existing real provider to a stub decreases it.
 
 ACL_API_CATALOG_VERSION(1)
 ACL_API_REAL_PROVIDER_COUNT(94)
@@ -85,6 +85,7 @@ ACL_API_STUB(aclrtAllocatorUnregister, RT_FEATURE_NOT_SUPPORT)
 ACL_API_STUB(aclrtAppendBufChain, RT_FEATURE_NOT_SUPPORT)
 ACL_API_STUB(aclrtBinaryEnumerateFunctions, RT_FEATURE_NOT_SUPPORT)
 ACL_API_STUB(aclrtBinaryGetDevAddress, RT_FEATURE_NOT_SUPPORT)
+ACL_API_STUB(aclrtBinaryGetFunctionByEntry, RT_FEATURE_NOT_SUPPORT)
 ACL_API_STUB(aclrtBinaryGetFunctionCount, RT_FEATURE_NOT_SUPPORT)
 ACL_API_STUB(aclrtBinaryGetGlobal, RT_FEATURE_NOT_SUPPORT)
 ACL_API_STUB(aclrtBinaryLoad, RT_FEATURE_NOT_SUPPORT)
@@ -106,12 +107,10 @@ ACL_API_STUB(aclrtCntNotifyRecord, RT_FEATURE_NOT_SUPPORT)
 ACL_API_STUB(aclrtCntNotifyReset, RT_FEATURE_NOT_SUPPORT)
 ACL_API_STUB(aclrtCntNotifyWaitWithTimeout, RT_FEATURE_NOT_SUPPORT)
 ACL_API_STUB(aclrtCopyBufRef, RT_FEATURE_NOT_SUPPORT)
-ACL_API_STUB(aclrtCreateBinary, NULLPTR)
 ACL_API_STUB(aclrtCreateGroupInfo, NULLPTR)
 ACL_API_STUB(aclrtCtxGetFloatOverflowAddr, RT_FEATURE_NOT_SUPPORT)
 ACL_API_STUB(aclrtCtxGetSysParamOpt, RT_FEATURE_NOT_SUPPORT)
 ACL_API_STUB(aclrtCtxSetSysParamOpt, RT_FEATURE_NOT_SUPPORT)
-ACL_API_STUB(aclrtDestroyBinary, RT_FEATURE_NOT_SUPPORT)
 ACL_API_STUB(aclrtDestroyGroupInfo, RT_FEATURE_NOT_SUPPORT)
 ACL_API_STUB(aclrtDeviceCanAccessPeer, RT_FEATURE_NOT_SUPPORT)
 ACL_API_STUB(aclrtDeviceDisablePeerAccess, RT_FEATURE_NOT_SUPPORT)
@@ -337,4 +336,5 @@ ACL_API_STUB(aclrtUnmapMem, RT_FEATURE_NOT_SUPPORT)
 ACL_API_STUB(aclrtUnuseStreamResInCurrentThread, RT_FEATURE_NOT_SUPPORT)
 ACL_API_STUB(aclrtUseStreamResInCurrentThread, RT_FEATURE_NOT_SUPPORT)
 ACL_API_STUB(aclrtValueWait, RT_FEATURE_NOT_SUPPORT)
+ACL_API_STUB(aclrtValueWrite, RT_FEATURE_NOT_SUPPORT)
 ACL_API_STUB(aclsysGetCANNVersion, RT_FEATURE_NOT_SUPPORT)

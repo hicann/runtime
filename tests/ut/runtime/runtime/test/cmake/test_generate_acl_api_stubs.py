@@ -157,14 +157,16 @@ ACL_API_STUB(aclZero, ZERO)
         self.assertEqual(real_provider_count, 94)
         self.assertEqual(len(entries), 312)
         self.assertEqual(
-            sum(entry.policy == "RT_FEATURE_NOT_SUPPORT" for entry in entries), 297
+            sum(entry.policy == "RT_FEATURE_NOT_SUPPORT" for entry in entries), 298
         )
-        self.assertEqual(sum(entry.policy == "NULLPTR" for entry in entries), 5)
+        self.assertEqual(sum(entry.policy == "NULLPTR" for entry in entries), 4)
         self.assertEqual(sum(entry.policy == "INVALID_EXCEPTION_INFO" for entry in entries), 5)
         self.assertEqual(sum(entry.policy == "ZERO" for entry in entries), 5)
         GENERATOR.validate_real_provider_count(wrapper, entries, real_provider_count)
         policies = dict(product_entries)
         self.assertEqual(policies["aclmdlRIGetTasks"], "RT_FEATURE_NOT_SUPPORT")
+        self.assertEqual(policies["aclrtValueWrite"], "RT_FEATURE_NOT_SUPPORT")
+        self.assertEqual(policies["aclrtBinaryGetFunctionByEntry"], "RT_FEATURE_NOT_SUPPORT")
         for name in (
             "aclrtGetDeviceIdFromExceptionInfo",
             "aclrtGetErrorCodeFromExceptionInfo",
@@ -177,7 +179,7 @@ ACL_API_STUB(aclZero, ZERO)
         for name in (
             "aclFloat16ToFloat",
             "aclmdlRIGetTasks",
-            "aclrtCreateBinary",
+            "aclrtBinaryGetFunctionByEntry",
             "aclrtGetRunMode",
             "aclrtMallocAlign32",
             "aclrtNonBlockingLaunchBegin",
@@ -185,6 +187,7 @@ ACL_API_STUB(aclZero, ZERO)
             "aclrtRecordEventWithFlag",
             "aclrtSetExceptionInfoCallback",
             "aclrtTaskUpdateAsync",
+            "aclrtValueWrite",
         ):
             self.assertIn(name, unsupported_names)
         for name in (
@@ -192,6 +195,8 @@ ACL_API_STUB(aclZero, ZERO)
             "aclGetRecentErrMsg",
             "aclInit",
             "aclmdlInitDump",
+            "aclrtCreateBinary",
+            "aclrtDestroyBinary",
             "aclrtGetDevice",
             "aclrtGetOpExecuteTimeout",
             "aclrtGetOpTimeOutInterval",

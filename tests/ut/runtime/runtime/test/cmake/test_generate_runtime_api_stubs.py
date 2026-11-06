@@ -157,11 +157,11 @@ RUNTIME_API_STUB(rtNoop)
         self.assertFalse(set(names) - set(catalog))
         self.assertEqual(names, sorted(names))
         self.assertEqual(len(catalog), 791)
-        self.assertEqual(len(names), 658)
-        self.assertEqual(len(set(catalog) - set(names)), 133)
+        self.assertEqual(len(names), 659)
+        self.assertEqual(len(set(catalog) - set(names)), 132)
         self.assertEqual(
             sum(catalog[name].policy == "FEATURE_NOT_SUPPORT" for name in names),
-            654,
+            655,
         )
         self.assertEqual(
             sum(catalog[name].policy == "SUCCESS_NOOP" for name in names), 3
@@ -234,8 +234,10 @@ RUNTIME_API_STUB(rtNoop)
             "rtsMalloc",
             "rtsLaunchUpdateTask",
             "rtsModelAbort",
+            "rtsValueWrite",
         ):
             self.assertIn(api, names)
+        self.assertEqual(catalog["rtsValueWrite"].policy, "FEATURE_NOT_SUPPORT")
         self.assertNotIn("rtDeinit", names)
         self.assertNotIn("rtGetDevice", names)
         self.assertEqual(catalog["rtDeinit"].policy, "VOID_NOOP")
