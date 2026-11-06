@@ -104,7 +104,7 @@ private:
     int32_t AllocBitMap(uint32_t curCount);
     void FreeBitmapId(int32_t id);
     bool PrepareAllocatedId(int32_t id, bool isLogError);
-    bool InitializePool(uint32_t poolIdx, PoolState failureState, bool isLogError) const;
+    bool InitializePool(const uint32_t poolIdx, const PoolState failureState, const bool isLogError) const;
     void RollbackAllocatedId(int32_t id, uint32_t poolIdx);
     int32_t FinishAllocatedId(int32_t id, bool isLogError, bool& canRetry);
     int32_t AllocIdWithoutRetryInner(bool isLogError, bool& canRetry);
