@@ -6,6 +6,7 @@
 
 | 文档 | 内容 | 适用场景 |
 |------|------|----------|
+| [Agent Skill 开发规范 V1.0](agent-skill-guidelines.md) | 图灵解决方案平台开发部 Agent Skill 开发规范，包含创建条件、内容组织、权限、评测、发布和维护要求 | 开发、评审、发布或维护 Agent Skill 时，结合规范适用范围和组件内部规范参考 |
 | [design_document_template.md](design_document_template.md) | Runtime 设计文档模板，包含接口、架构、文档同步和 DT 检查项 | 输出设计方案、接口设计、特性设计时 |
 | [coding-guidelines.md](coding-guidelines.md) | Runtime 代码实现时应遵守的统一编码规范 | 日常开发、自检、`/runtime-code-review`、PR 评审时 |
 | [ut-coding-guidelines.md](ut-coding-guidelines.md) | Runtime UT 代码的硬性规范，补充测试实现层面的约束 | 编写、修改、审查 UT 代码时 |
