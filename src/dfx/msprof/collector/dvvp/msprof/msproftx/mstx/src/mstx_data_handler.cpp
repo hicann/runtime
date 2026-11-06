@@ -125,17 +125,54 @@ std::vector<MsprofTxInfo> MstxDataHandler::SplitMstxInfo(const MstxInfo& info)
 
 void MstxDataHandler::ReportData()
 {
-    if (mstxDataBuf_.GetUsedSize() == 0) {
-        return;
-    }
-    MstxInfo info;
-    for (;;) {
-        if (!mstxDataBuf_.TryPop(info)) {
-            break;
+    if (mstxDataBuf_.GetUsedSize() != 0) {
+        MstxInfo info;
+        for (;;) {
+            if (!mstxDataBuf_.TryPop(info)) {
+                break;
+            }
+            auto splitInfos = SplitMstxInfo(info);
+            for (auto& splitInfo : splitInfos) {
+                MsprofTxManager::instance()->ReportData(splitInfo);
+            }
         }
-        auto splitInfos = SplitMstxInfo(info);
-        for (auto& splitInfo : splitInfos) {
-            MsprofTxManager::instance()->ReportData(splitInfo);
+    }
+    ReportResourceNames();
+}
+
+void MstxDataHandler::ReportResourceNames()
+{
+    std::vector<MstxResourceNameInfo> names;
+    {
+        std::lock_guard<std::mutex> lock(resourceNameMutex_);
+        if (resourceNameBuf_.empty()) {
+            return;
+        }
+        names.swap(resourceNameBuf_);
+    }
+    for (const auto& item : names) {
+        // 复用既有 256 字节 stamp 帧，仅以 infoType=2 区分资源命名记录；
+        // 字段映射（与解析侧一致）：category=resourceType, eventType=identifierKind,
+        // markId=identifier, startTime=timestamp, domain=domainId, message=name
+        MsprofTxInfo txInfo{};
+        txInfo.infoType = 2; // resource naming record
+        auto& stamp = txInfo.value.stampInfo;
+        stamp.processId = processId_;
+        stamp.threadId = item.threadId;
+        stamp.category = item.resourceType;
+        stamp.eventType = item.identifierKind;
+        stamp.markId = item.identifier;
+        stamp.startTime = item.timestamp;
+        stamp.endTime = 0;
+        stamp.domain = item.domainNameHash;
+        size_t copyLen = std::min(item.name.size(), static_cast<size_t>(MAX_MESSAGE_LEN - 1));
+        if (memcpy_s(stamp.message, MAX_MESSAGE_LEN, item.name.c_str(), copyLen) != EOK) {
+            MSPROF_LOGE("memcpy_s failed for resource name %s", item.name.c_str());
+            continue;
+        }
+        stamp.message[copyLen] = '\0';
+        if (MsprofTxManager::instance()->ReportData(txInfo) != PROFILING_SUCCESS) {
+            MSPROF_LOGW("report resource name failed, identifier %lu", item.identifier);
         }
     }
 }

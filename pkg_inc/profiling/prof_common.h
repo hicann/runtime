@@ -780,7 +780,7 @@ struct MsprofStampInfo {
 
 #define MSPROF_TX_VALUE_MAX_LEN 224 // 224 + 8 = 232: additional data len
 struct MsprofTxInfo {
-    uint16_t infoType;              // 0: Mark; 1: MarkEx
+    uint16_t infoType;              // 0: Mark; 1: MarkEx; 2: ResourceName
     uint16_t res0;
     uint32_t res1;
     union {
