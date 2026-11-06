@@ -600,7 +600,7 @@ aclprofStepInfo* aclprofCreateStepInfo()
 - 使用aclprofDestroyStepInfo接口销毁aclprofStepInfo类型的数据，如不销毁会导致内存未被释放。
 - 与[aclprofDestroyStepInfo](#aclprofDestroyStepInfo)接口配对使用，先调用aclprofCreateStepInfo接口再调用aclprofDestroyStepInfo接口。
 
-### 返回值
+### 返回值说明
 
 - 返回aclprofStepInfo类型的指针，表示成功。
 - 返回nullptr，表示失败。
@@ -615,7 +615,7 @@ aclprofStepInfo* aclprofCreateStepInfo()
 ## aclprofDestroyStepInfo
 
 ```c
-void aclprofDestroyStepInfo(aclprofStepInfo* stepinfo)
+void aclprofDestroyStepInfo(aclprofStepInfo* stepInfo)
 ```
 
 ### 产品支持情况
@@ -659,7 +659,7 @@ void aclprofDestroyStepInfo(aclprofStepInfo* stepinfo)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| stepinfo | 输入 | 指定迭代信息。需提前调用[aclprofCreateStepInfo](#aclprofCreateStepInfo)接口创建[aclprofStepInfo](#aclprofStepInfo)类型的数据。 |
+| stepInfo | 输入 | 指定迭代信息。需提前调用[aclprofCreateStepInfo](#aclprofCreateStepInfo)接口创建[aclprofStepInfo](#aclprofStepInfo)类型的数据。 |
 
 <br>
 
