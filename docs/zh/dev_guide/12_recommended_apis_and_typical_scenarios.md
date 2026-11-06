@@ -110,7 +110,7 @@ aclrtRecordEvent(event, stream);
 aclrtEventRecordedStatus status;
 aclrtQueryEventStatus(event, &status);
 // ACL_EVENT_RECORDED_STATUS_COMPLETE    → 任务已完成
-// ACL_EVENT_RECORDED_STATUS_NOT_COMPLETE → 任务未完成
+// ACL_EVENT_RECORDED_STATUS_NOT_READY → 任务未完成
 
 aclrtDestroyEvent(event);
 ```
