@@ -1322,8 +1322,8 @@ rtError_t Model::SubmitExecuteTask(Stream* const streamIn)
             RtPtrToValue(aicpuModelInfo_));
     } else {
         ERROR_RETURN_MSG_INNER(
-            RT_ERROR_MODEL_EXECUTOR, "Unsupported executor type=%u, modelId=%d, retCode=%#x.", executeType, id_,
-            static_cast<uint32_t>(RT_ERROR_MODEL_EXECUTOR));
+            RT_ERROR_MODEL_EXECUTOR, "Unsupported executor type=%s, modelId=%d, retCode=%#x.",
+            ModelExecutorToString(executeType).c_str(), id_, static_cast<uint32_t>(RT_ERROR_MODEL_EXECUTOR));
     }
 
     if (unlikely(error != RT_ERROR_NONE)) {

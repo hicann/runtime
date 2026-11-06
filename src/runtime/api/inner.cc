@@ -188,9 +188,9 @@ rtError_t rtGeneralCtrlInner(uintptr_t* ctl, uint32_t num, uint32_t type)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
     PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(ctl, RT_ERROR_INVALID_VALUE);
-    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM(
-        (type >= static_cast<uint32_t>(RT_GNL_CTRL_TYPE_MAX)), RT_ERROR_INVALID_VALUE, type,
-        "less than " + std::to_string(RT_GNL_CTRL_TYPE_MAX));
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM_NAME(
+        (type >= static_cast<uint32_t>(RT_GNL_CTRL_TYPE_MAX)), RT_ERROR_INVALID_VALUE, GeneralCtrlValueToString(type),
+        "type", RtFmtMsg("less than RT_GNL_CTRL_TYPE_MAX(%u)", static_cast<uint32_t>(RT_GNL_CTRL_TYPE_MAX)));
 
     COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER(
         (g_genCtrPro[type].funcCall == nullptr), RT_ERROR_INVALID_VALUE, ErrorCode::EE1004, __func__,

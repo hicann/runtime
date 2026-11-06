@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Copyright (c) 2025 Huawei Technologies Co., Ltd.
  * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
  * CANN Open Software License Agreement Version 2.0 (the "License").
@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "enum_desc.hpp"
 #include "api_c.h"
 #include "api.hpp"
 #include "api_handle_guard.h"
@@ -449,7 +450,9 @@ rtError_t rtStreamWaitEventWithFlag(rtStream_t stm, rtEvent_t evt, uint32_t time
     TIMESTAMP_BEGIN(rtStreamWaitEventWithFlag);
     COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM(
         flag == RT_EVENT_WAIT_EXTERNAL && (timeout != 0U), RT_ERROR_INVALID_VALUE, timeout,
-        "0, only timeout=0 supported when flag is RT_EVENT_WAIT_EXTERNAL");
+        RtFmtMsg(
+            "0, only timeout=0 supported when flag is RT_EVENT_WAIT_EXTERNAL(0x%X)",
+            static_cast<uint32_t>(RT_EVENT_WAIT_EXTERNAL)));
     const rtError_t ret = apiInstance->StreamWaitEvent(exeStream, waitEvent, 0U, flag);
     TIMESTAMP_END(rtStreamWaitEventWithFlag);
 
@@ -621,9 +624,13 @@ rtError_t rtsStreamDestroy(rtStream_t stm, uint64_t flags)
 {
     constexpr uint64_t STREAM_DESTROY_VALID_FLAGS = (RT_STREAM_DESTORY_FLAG_DEFAULT | RT_STREAM_DESTORY_FLAG_FORCE);
 
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
-        (flags & (~STREAM_DESTROY_VALID_FLAGS)) != 0U, ACL_ERROR_RT_PARAM_INVALID, flags,
-        "RT_STREAM_DESTORY_FLAG_DEFAULT(0x0ULL) or RT_STREAM_DESTORY_FLAG_FORCE(0x1ULL)");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(
+        (flags & (~STREAM_DESTROY_VALID_FLAGS)) != 0U, ACL_ERROR_RT_PARAM_INVALID, StreamDestroyFlagToString(flags),
+        "flags",
+        RtFmtMsg(
+            "RT_STREAM_DESTORY_FLAG_DEFAULT(0x%X) or RT_STREAM_DESTORY_FLAG_FORCE(0x%X)",
+            static_cast<uint32_t>(RT_STREAM_DESTORY_FLAG_DEFAULT),
+            static_cast<uint32_t>(RT_STREAM_DESTORY_FLAG_FORCE)));
     if ((flags & RT_STREAM_DESTORY_FLAG_FORCE) != 0U) {
         return rtStreamDestroyForce(stm);
     }

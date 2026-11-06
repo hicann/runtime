@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "enum_desc.hpp"
 #include "api_impl_v201.hpp"
 
 #include "context.hpp"
@@ -49,7 +50,9 @@ rtError_t ApiImplV201::ModelAttrSet(Model* const mdl, const rtModelAttr attrId, 
     COND_RETURN_AND_MSG_INVALID_CONTEXT_MODEL_WITH_FUNC_DESC(
         mdl, curCtx, RT_ERROR_MODEL_CONTEXT, "Setting a model attribute");
     if (attrId != RT_MODEL_ATTR_SCH_MODE) {
-        RT_LOG_OUTER_MSG_INVALID_PARAM(attrId, "only RT_MODEL_ATTR_SCH_MODE is supported");
+        RT_LOG_OUTER_MSG_WITH_FUNC(
+            ErrorCode::EE1003, ModelAttrToString(attrId), "attrId",
+            RtFmtMsg("RT_MODEL_ATTR_SCH_MODE(%d)", static_cast<int32_t>(RT_MODEL_ATTR_SCH_MODE)));
         return RT_ERROR_INVALID_VALUE;
     }
     const rtMdlSchMode schMode = *(static_cast<rtMdlSchMode*>(value));

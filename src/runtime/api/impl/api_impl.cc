@@ -1784,8 +1784,8 @@ rtError_t ApiImpl::GetAvailStreamNum(const uint32_t streamType, uint32_t* const 
     if (streamType == RT_HUGE_STREAM) {
         COND_RETURN_ERROR_MSG_INNER(
             props.maxAllocHugeStreamNum == 0U, RT_ERROR_FEATURE_NOT_SUPPORT,
-            "Get max stream and task failed, unsupported huge stream mode in chipType=%d, streamType=%u",
-            static_cast<int32_t>(chipType), streamType);
+            "Get max stream and task failed, unsupported huge stream mode in chipType=%d, streamType=%s",
+            static_cast<int32_t>(chipType), StreamTypeToString(streamType).c_str());
         *streamCount = props.maxAllocHugeStreamNum;
         return RT_ERROR_NONE;
     }
@@ -1876,9 +1876,9 @@ rtError_t ApiImpl::SetDeviceFailureMode(uint64_t failureMode)
         currentMode != CONTINUE_ON_FAILURE, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1016,
         "Setting the fault handling mode of a device",
         RtFmtMsg(
-            "The current failure mode of device %u is %u."
-            " This operation is supported only when the device is in CONTINUE_ON_FAILURE mode",
-            dev->Id_(), currentMode));
+            "The current failure mode of device %u is %s. This operation is supported only when the device is in "
+            "CONTINUE_ON_FAILURE(%d) mode",
+            dev->Id_(), StreamFailureModeToString(currentMode).c_str(), static_cast<int32_t>(CONTINUE_ON_FAILURE)));
 
     dev->SetDevFailureMode(failureMode);
     RT_LOG(RT_LOG_INFO, "Set device=%u failure mode success, failureMode=%llu.", dev->Id_(), failureMode);
@@ -6191,9 +6191,9 @@ rtError_t ApiImpl::GetStackBuffer(
         RT_LOG(RT_LOG_WARNING, "stackType=%u is not supported.", stackType);
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
-        ((stackType > RT_STACK_TYPE_SIMT)), RT_ERROR_INVALID_VALUE, "Obtaining the stack buffer", stackType,
-        "[0, " + std::to_string(RT_STACK_TYPE_SIMT) + "]");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
+        ((stackType > RT_STACK_TYPE_SIMT)), RT_ERROR_INVALID_VALUE, "Obtaining the stack buffer",
+        StackTypeToString(stackType), "stackType", "[0, " + std::to_string(RT_STACK_TYPE_SIMT) + "]");
     return cce::runtime::GetStackBuffer(
         RtPtrToPtr<const Program*>(binHandle), deviceId, stackType, coreType, coreId, stack, stackSize,
         curCtx->Device_());

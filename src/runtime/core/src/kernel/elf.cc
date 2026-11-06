@@ -7,6 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "enum_desc.hpp"
 #include "elf.hpp"
 #include <cstdlib>
 #include "securec.h"
@@ -1817,7 +1818,8 @@ rtError_t GetBinaryMetaInfo(
         return RT_ERROR_NONE;
     }
     ERROR_RETURN_MSG_INNER(
-        error, "Get meta section failed, meta type=%u, numOfMeta=%zu, ret=%d.", type, numOfMeta, error);
+        error, "Get meta section failed, meta type=%s, numOfMeta=%zu, ret=%d.", BinaryMetaTypeToString(type).c_str(),
+        numOfMeta, error);
 
     auto metaInfo = GetMetaInfo(elfData, section, type);
     // numOfMeta为0不需要特殊处理

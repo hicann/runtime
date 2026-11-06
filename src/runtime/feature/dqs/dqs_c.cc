@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "enum_desc.hpp"
 #include "dqs_c.hpp"
 
 #include "task_david.hpp"
@@ -369,9 +370,12 @@ static rtError_t DqsSchedConfigCheck(const rtDqsSchedCfg_t* const cfg)
 {
     // type check
     const uint8_t type = cfg->type;
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         (type != RT_DQS_SCHED_TYPE_DSS) && (type != RT_DQS_SCHED_TYPE_NN) && (type != RT_DQS_SCHED_TYPE_VPC),
-        RT_ERROR_INVALID_VALUE, "Verifying the validity of the task scheduling configuration", type, "[1, 3]");
+        RT_ERROR_INVALID_VALUE, "Verifying the validity of the task scheduling configuration",
+        DqsSchedTypeToString(type), "type",
+        RtFmtMsg(
+            "[%u, %u]", static_cast<uint32_t>(RT_DQS_SCHED_TYPE_NN), static_cast<uint32_t>(RT_DQS_SCHED_TYPE_DSS)));
 
     // inputQueueNum check
     const uint8_t inQueNum = cfg->inputQueueNum;

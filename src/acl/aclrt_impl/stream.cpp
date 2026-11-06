@@ -262,13 +262,22 @@ aclError aclrtStreamWaitEventWithFlagImpl(aclrtStream stream, aclrtEvent event, 
     ACL_PROFILING_REG(acl::AclProfType::AclrtStreamWaitEventWithFlag);
     ACL_LOG_INFO("start to execute aclrtStreamWaitEventWithFlag");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(event);
-    ACL_CHECK_INVALID_VALUE_WITH_EXPECT_RET(
-        (flag == ACL_EVENT_WAIT_DEFAULT) || (flag == ACL_EVENT_WAIT_EXTERNAL), flag,
-        "ACL_EVENT_WAIT_DEFAULT or ACL_EVENT_WAIT_EXTERNAL", ACL_ERROR_INVALID_PARAM);
+    ACL_CHECK_INVALID_VALUE_WITH_DESC(
+        (flag == ACL_EVENT_WAIT_DEFAULT) || (flag == ACL_EVENT_WAIT_EXTERNAL),
+        acl::GetEventOperationFlagDesc(flag, false).c_str(), "flag",
+        acl::FormatEnumExpectedDesc(
+            "ACL_EVENT_WAIT_DEFAULT(%u) or ACL_EVENT_WAIT_EXTERNAL(%u)", static_cast<uint32_t>(RT_EVENT_WAIT_DEFAULT),
+            static_cast<uint32_t>(RT_EVENT_WAIT_EXTERNAL))
+            .c_str(),
+        ACL_ERROR_INVALID_PARAM);
 
     if (flag == ACL_EVENT_WAIT_EXTERNAL) {
         ACL_CHECK_INVALID_VALUE_WITH_EXPECT_RET(
-            timeout == 0U, timeout, "0 when flag is ACL_EVENT_WAIT_EXTERNAL", ACL_ERROR_INVALID_PARAM);
+            timeout == 0U, timeout,
+            acl::FormatEnumExpectedDesc(
+                "0 when flag is ACL_EVENT_WAIT_EXTERNAL(%u)", static_cast<uint32_t>(RT_EVENT_WAIT_EXTERNAL))
+                .c_str(),
+            ACL_ERROR_INVALID_PARAM);
     }
 
     ACL_REQUIRES_RTS_OK(

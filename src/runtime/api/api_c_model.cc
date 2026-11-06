@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Copyright (c) 2025 Huawei Technologies Co., Ltd.
  * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
  * CANN Open Software License Agreement Version 2.0 (the "License").
@@ -9,6 +9,7 @@
  */
 
 #include <vector>
+#include "enum_desc.hpp"
 #include "api_c.h"
 #include "api.hpp"
 #include "api_handle_guard.h"
@@ -141,9 +142,12 @@ VISIBILITY_DEFAULT
 rtError_t rtsModelBindStream(rtModel_t mdl, rtStream_t stm, uint32_t flag)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME(
         ((flag != RT_MODEL_STREAM_FLAG_HEAD) && (flag != RT_MODEL_STREAM_FLAG_DEFAULT)), ACL_ERROR_RT_PARAM_INVALID,
-        flag, "RT_MODEL_STREAM_FLAG_HEAD or RT_MODEL_STREAM_FLAG_DEFAULT");
+        ModelStreamFlagToString(flag), "flag",
+        RtFmtMsg(
+            "RT_MODEL_STREAM_FLAG_HEAD(0x%X) or RT_MODEL_STREAM_FLAG_DEFAULT(0x%X)",
+            static_cast<uint32_t>(RT_MODEL_STREAM_FLAG_HEAD), static_cast<uint32_t>(RT_MODEL_STREAM_FLAG_DEFAULT)));
     Api* const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     RT_VALIDATE_AND_UNWRAP_OBJECT(mdl, Model, realModel);

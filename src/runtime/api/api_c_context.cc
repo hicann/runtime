@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Copyright (c) 2025 Huawei Technologies Co., Ltd.
  * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
  * CANN Open Software License Agreement Version 2.0 (the "License").
@@ -30,8 +30,9 @@ rtError_t rtsCtxCreate(rtContext_t* createCtx, uint64_t flags, int32_t devId)
     GLOBAL_STATE_WAIT_IF_LOCKED();
     Api* const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM(
-        (flags > static_cast<uint64_t>(RT_CONTEXT_NORMAL_MODE)), RT_ERROR_INVALID_VALUE, flags, "0");
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM_NAME(
+        (flags > static_cast<uint64_t>(RT_CONTEXT_NORMAL_MODE)), RT_ERROR_INVALID_VALUE, ContextFlagToString(flags),
+        "flags", RtFmtMsg("RT_CONTEXT_NORMAL_MODE(%d)", static_cast<int32_t>(RT_CONTEXT_NORMAL_MODE)));
 
     const rtError_t error = apiInstance->ContextCreate(RtPtrToPtr<Context**>(createCtx), devId);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);

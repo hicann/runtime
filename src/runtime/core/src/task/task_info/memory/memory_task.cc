@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "enum_desc.hpp"
 #include "memory_task.h"
 #include "stream.hpp"
 #include "runtime.hpp"
@@ -912,7 +913,8 @@ rtError_t CacheEventRecordTaskParams(TaskInfo* taskInfo, const rtTaskParams* par
     const rtEventRecordTaskParams& recordParams = params->eventRecordTaskParams;
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         recordParams.recordFlag != RT_EVENT_RECORD_EXTERNAL, RT_ERROR_INVALID_VALUE, "Setting task parameters",
-        recordParams.recordFlag, "params->eventRecordTaskParams.recordFlag", "RT_EVENT_RECORD_EXTERNAL(1)");
+        RtEventRecordFlagToString(recordParams.recordFlag), "params->eventRecordTaskParams.recordFlag",
+        RtFmtMsg("RT_EVENT_RECORD_EXTERNAL(0x%X)", static_cast<uint32_t>(RT_EVENT_RECORD_EXTERNAL)));
 
     Event* newEvent = nullptr;
     rtError_t error = GetValidatedObject<Event>(recordParams.event, newEvent);

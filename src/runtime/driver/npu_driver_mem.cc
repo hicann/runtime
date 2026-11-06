@@ -1546,8 +1546,9 @@ rtError_t NpuDriver::DevMemAllocCached(
         DRV_MALLOC_ERROR_PROCESS(
             drvRet, moduleId,
             "[drv api] halMemAlloc failed: "
-            "memPolicy=%u, device_id=%u, type=%u, size=%" PRIu64 "(bytes), drvRetCode=%d, drvFlag=%" PRIu64 ", %s",
-            memPolicy, deviceId, type, size, static_cast<int32_t>(drvRet), drvFlag, errorStr.c_str());
+            "memPolicy=%s, device_id=%u, type=%u, size=%" PRIu64 "(bytes), drvRetCode=%d, drvFlag=%" PRIu64 ", %s",
+            MemoryPolicyToString(memPolicy).c_str(), deviceId, type, size, static_cast<int32_t>(drvRet), drvFlag,
+            errorStr.c_str());
         return rtErrorCode;
     }
     return RT_ERROR_NONE;

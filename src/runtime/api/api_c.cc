@@ -521,8 +521,13 @@ rtError_t rtAicpuKernelLaunchExWithArgs(
     RT_LOG(RT_LOG_INFO, "kernel_type=%u, flags=%u", kernelType, flags);
     if ((kernelType != KERNEL_TYPE_FWK) && (kernelType != KERNEL_TYPE_AICPU) &&
         (kernelType != KERNEL_TYPE_AICPU_CUSTOM) && (kernelType != KERNEL_TYPE_AICPU_KFC)) {
-        RT_LOG_OUTER_MSG_INVALID_PARAM(
-            kernelType, "KERNEL_TYPE_FWK, KERNEL_TYPE_AICPU, KERNEL_TYPE_AICPU_CUSTOM, or KERNEL_TYPE_AICPU_KFC");
+        RT_LOG_OUTER_MSG_WITH_FUNC(
+            ErrorCode::EE1003, KernelTypeToString(kernelType), "kernelType",
+            RtFmtMsg(
+                "KERNEL_TYPE_FWK(%d), KERNEL_TYPE_AICPU(%d), KERNEL_TYPE_AICPU_CUSTOM(%d), or "
+                "KERNEL_TYPE_AICPU_KFC(%d)",
+                static_cast<int32_t>(KERNEL_TYPE_FWK), static_cast<int32_t>(KERNEL_TYPE_AICPU),
+                static_cast<int32_t>(KERNEL_TYPE_AICPU_CUSTOM), static_cast<int32_t>(KERNEL_TYPE_AICPU_KFC)));
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
     }
 

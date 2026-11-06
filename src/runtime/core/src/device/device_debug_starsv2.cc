@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "enum_desc.hpp"
 #include "device_debug_c.hpp"
 #include "program.hpp"
 #include "inner_kernel.h"
@@ -52,13 +53,13 @@ static rtError_t CheckCoreParam(
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
 
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         ((stackType > RT_STACK_TYPE_SIMT)), RT_ERROR_INVALID_VALUE,
-        "Verifying the validity of the compute core type and stack type", stackType,
+        "Verifying the validity of the compute core type and stack type", StackTypeToString(stackType), "stackType",
         "[0, " + std::to_string(RT_STACK_TYPE_SIMT) + "]");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         ((coreType > RT_CORE_TYPE_AIV)), RT_ERROR_INVALID_VALUE,
-        "Verifying the validity of the compute core type and stack type", coreType,
+        "Verifying the validity of the compute core type and stack type", CoreTypeToString(coreType), "coreType",
         "[0, " + std::to_string(RT_CORE_TYPE_AIV) + "]");
 
     const uint32_t aicNum = device->GetDevProperties().aicNum;

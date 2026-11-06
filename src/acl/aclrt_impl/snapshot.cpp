@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "utils/data_type_utils.h"
 #include "acl_rt_impl.h"
 #include "runtime/rts/rts_snapshot.h"
 #include "common/log_inner.h"
@@ -67,9 +68,15 @@ aclError aclrtSnapShotProcessBackupImpl(int pid, aclrtSnapShotBackupArgs* args)
     if (args == nullptr) {
         ACL_REQUIRES_RTS_OK(rtSnapShotProcessBackup());
     } else {
-        ACL_CHECK_INVALID_PARAM_NO_VALUE(
-            args->backupFlags <= ACL_RT_SNAPSHOT_BACKUP_INCLUDE_OPTIONAL, "args->backupFlags",
-            "backupFlags must be 0 or 1");
+        ACL_CHECK_INVALID_VALUE_WITH_DESC(
+            args->backupFlags <= ACL_RT_SNAPSHOT_BACKUP_INCLUDE_OPTIONAL,
+            acl::GetSnapshotBackupFlagDesc(args->backupFlags).c_str(), "args->backupFlags",
+            acl::FormatEnumExpectedDesc(
+                "ACL_RT_SNAPSHOT_BACKUP_REQUIRED_ONLY(%u) or ACL_RT_SNAPSHOT_BACKUP_INCLUDE_OPTIONAL(%u)",
+                static_cast<uint32_t>(ACL_RT_SNAPSHOT_BACKUP_REQUIRED_ONLY),
+                static_cast<uint32_t>(ACL_RT_SNAPSHOT_BACKUP_INCLUDE_OPTIONAL))
+                .c_str(),
+            ACL_ERROR_INVALID_PARAM);
         ACL_REQUIRES_RTS_OK(rtSnapShotProcessBackupWithArgs(reinterpret_cast<const rtSnapShotBackupArgs*>(args)));
     }
 
@@ -89,9 +96,15 @@ aclError aclrtSnapShotProcessRestoreImpl(int pid, aclrtSnapShotRestoreArgs* args
     if (args == nullptr) {
         ACL_REQUIRES_RTS_OK(rtSnapShotProcessRestore());
     } else {
-        ACL_CHECK_INVALID_PARAM_NO_VALUE(
-            args->restoreFlags <= ACL_RT_SNAPSHOT_RESTORE_INCLUDE_OPTIONAL, "args->restoreFlags",
-            "restoreFlags must be 0 or 1");
+        ACL_CHECK_INVALID_VALUE_WITH_DESC(
+            args->restoreFlags <= ACL_RT_SNAPSHOT_RESTORE_INCLUDE_OPTIONAL,
+            acl::GetSnapshotRestoreFlagDesc(args->restoreFlags).c_str(), "args->restoreFlags",
+            acl::FormatEnumExpectedDesc(
+                "ACL_RT_SNAPSHOT_RESTORE_REQUIRED_ONLY(%u) or ACL_RT_SNAPSHOT_RESTORE_INCLUDE_OPTIONAL(%u)",
+                static_cast<uint32_t>(ACL_RT_SNAPSHOT_RESTORE_REQUIRED_ONLY),
+                static_cast<uint32_t>(ACL_RT_SNAPSHOT_RESTORE_INCLUDE_OPTIONAL))
+                .c_str(),
+            ACL_ERROR_INVALID_PARAM);
         ACL_REQUIRES_RTS_OK(rtSnapShotProcessRestoreWithArgs(reinterpret_cast<const rtSnapShotRestoreArgs*>(args)));
     }
 

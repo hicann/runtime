@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "enum_desc.hpp"
 #include "device_debug_c.hpp"
 #include "runtime.hpp"
 #include "program.hpp"
@@ -30,9 +31,9 @@ constexpr uint64_t L1_SIZE = 1048576;
 
 rtError_t CheckCoreParam(const uint32_t coreType, const uint32_t coreId)
 {
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         (coreType != 0 && coreType != 1), RT_ERROR_INVALID_VALUE,
-        "Verifying the validity of the compute core type and stack type", coreType,
+        "Verifying the validity of the compute core type and stack type", CoreTypeToString(coreType), "coreType",
         "[0, " + std::to_string(RT_CORE_TYPE_AIV) + "]");
     if (coreType == 0) {
         COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(

@@ -648,7 +648,11 @@ aclError aclrtMemAllocManagedImpl(void** ptr, uint64_t size, uint32_t flag)
     ACL_PROFILING_REG(acl::AclProfType::AclrtMemAllocManaged);
     ACL_LOG_DEBUG("start to execute aclrtMemAllocManaged");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(ptr);
-    ACL_REQUIRES_PARAM_EQUAL_REPORT(flag, ACL_RT_MEM_ATTACH_GLOBAL);
+    ACL_CHECK_INVALID_VALUE_WITH_DESC(
+        flag == ACL_RT_MEM_ATTACH_GLOBAL, acl::GetMemAttachFlagDesc(flag).c_str(), "flag",
+        acl::FormatEnumExpectedDesc("ACL_RT_MEM_ATTACH_GLOBAL(%u)", static_cast<uint32_t>(ACL_RT_MEM_ATTACH_GLOBAL))
+            .c_str(),
+        ACL_ERROR_INVALID_PARAM);
     ACL_REQUIRES_RTS_OK(rtMemAllocManaged(ptr, size, RT_MEMORY_ATTACH_GLOBAL, acl::APP_MODE_ID_U16));
     return ACL_SUCCESS;
 }

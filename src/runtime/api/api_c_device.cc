@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "enum_desc.hpp"
 #include "api_c.h"
 #include "api.hpp"
 #include "api_handle_guard.h"
@@ -702,7 +703,12 @@ rtError_t rtSetDeviceWithFlags(int32_t deviceId, uint64_t flags)
         NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstanceNoTSD);
         error = apiInstanceNoTSD->SetDevice(deviceId);
     } else {
-        RT_LOG_OUTER_MSG_INVALID_PARAM(flags, "RT_DEVICE_FLAG_DEFAULT(0) or RT_DEVICE_FLAG_NOT_START_CPU_SCHED(1)");
+        RT_LOG_OUTER_MSG_WITH_FUNC(
+            ErrorCode::EE1003, DeviceFlagToString(flags), "flags",
+            RtFmtMsg(
+                "RT_DEVICE_FLAG_DEFAULT(0x%X) or RT_DEVICE_FLAG_NOT_START_CPU_SCHED(0x%X)",
+                static_cast<uint32_t>(RT_DEVICE_FLAG_DEFAULT),
+                static_cast<uint32_t>(RT_DEVICE_FLAG_NOT_START_CPU_SCHED)));
         error = RT_ERROR_INVALID_VALUE;
     }
     ERROR_RETURN_WITH_EXT_ERRCODE(error);

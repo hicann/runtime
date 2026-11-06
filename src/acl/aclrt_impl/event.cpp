@@ -110,9 +110,14 @@ aclError aclrtRecordEventWithFlagImpl(aclrtEvent event, aclrtStream stream, uint
     ACL_PROFILING_REG(acl::AclProfType::AclrtRecordEventWithFlag);
     ACL_LOG_INFO("start to execute aclrtRecordEventWithFlag");
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(event);
-    ACL_CHECK_INVALID_VALUE_WITH_EXPECT_RET(
-        (flag == ACL_EVENT_RECORD_DEFAULT) || (flag == ACL_EVENT_RECORD_EXTERNAL), flag,
-        "ACL_EVENT_RECORD_DEFAULT or ACL_EVENT_RECORD_EXTERNAL", ACL_ERROR_INVALID_PARAM);
+    ACL_CHECK_INVALID_VALUE_WITH_DESC(
+        (flag == ACL_EVENT_RECORD_DEFAULT) || (flag == ACL_EVENT_RECORD_EXTERNAL),
+        acl::GetEventOperationFlagDesc(flag, true).c_str(), "flag",
+        acl::FormatEnumExpectedDesc(
+            "ACL_EVENT_RECORD_DEFAULT(%u) or ACL_EVENT_RECORD_EXTERNAL(%u)",
+            static_cast<uint32_t>(RT_EVENT_RECORD_DEFAULT), static_cast<uint32_t>(RT_EVENT_RECORD_EXTERNAL))
+            .c_str(),
+        ACL_ERROR_INVALID_PARAM);
 
     if (flag == ACL_EVENT_RECORD_DEFAULT) {
         return aclrtRecordEventImpl(event, stream);

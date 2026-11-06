@@ -386,16 +386,20 @@ rtError_t rtsCmoAsyncWithBarrier(void* srcAddrPtr, size_t srcLen, rtCmoOpCode cm
         case RT_CMO_INVALID:
             COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER(
                 logicId == 0, RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, __func__, "0", "logicId",
-                "If parameter cmoType is equal to RT_CMO_INVALID"
-                ", the value of parameter logicId cannot be 0");
+                RtFmtMsg(
+                    "If parameter cmoType is equal to RT_CMO_INVALID(%d), the value of parameter logicId cannot be 0",
+                    static_cast<int32_t>(RT_CMO_INVALID)));
             break;
         case RT_CMO_PREFETCH:
         case RT_CMO_WRITEBACK:
         case RT_CMO_FLUSH:
             COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER(
                 logicId != 0, RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, __func__, std::to_string(logicId), "logicId",
-                "If parameter cmoType is equal to"
-                " RT_CMO_PREFETCH, RT_CMO_WRITEBACK, or RT_CMO_FLUSH, the value of parameter logicId should be 0");
+                RtFmtMsg(
+                    "If parameter cmoType is equal to RT_CMO_PREFETCH(%d), RT_CMO_WRITEBACK(%d), or RT_CMO_FLUSH(%d), "
+                    "the value of parameter logicId should be 0",
+                    static_cast<int32_t>(RT_CMO_PREFETCH), static_cast<int32_t>(RT_CMO_WRITEBACK),
+                    static_cast<int32_t>(RT_CMO_FLUSH)));
             break;
         default:
             RT_LOG(
@@ -425,10 +429,12 @@ rtError_t rtsLaunchBarrierTask(rtBarrierTaskInfo_t* taskInfo, rtStream_t stm, ui
         taskInfo->logicIdNum, "[1, " + std::to_string(RT_CMO_MAX_BARRIER_NUM) + "]");
     // loop cmoInfo array to validate whether cmoType is 1(invalid) or not
     for (uint8_t i = 0; i < taskInfo->logicIdNum; i++) {
-        auto cmoInfo = taskInfo->cmoInfo[i];
+        const auto& cmoInfo = taskInfo->cmoInfo[i];
         // if cmoType!=invalid return error
-        COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM(
-            cmoInfo.cmoType != RT_CMO_INVALID, RT_ERROR_INVALID_VALUE, cmoInfo.cmoType, "CMO_INVALID(8)");
+        COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM_NAME(
+            cmoInfo.cmoType != RT_CMO_INVALID, RT_ERROR_INVALID_VALUE,
+            CmoOpCodeToString(static_cast<rtCmoOpCode_t>(cmoInfo.cmoType)), "cmoInfo.cmoType",
+            RtFmtMsg("RT_CMO_INVALID(%d)", static_cast<int32_t>(RT_CMO_INVALID)));
         COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM(
             cmoInfo.logicId == 0, RT_ERROR_INVALID_VALUE, cmoInfo.logicId, "not equal to 0");
     }

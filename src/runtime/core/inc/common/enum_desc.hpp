@@ -13,6 +13,7 @@
 
 #include <cstdint>
 #include <string>
+#include <initializer_list>
 #include "runtime/config.h"
 #include "runtime/mem_base.h"
 #include "runtime/mem.h"
@@ -53,9 +54,6 @@ static inline std::string RtFeatureTypeToString(const rtFeatureType_t type)
 
 static inline std::string EventOperationFlagToString(const uint32_t flag, const bool isRecord)
 {
-    if (flag == UINT32_MAX) {
-        return "UNINITIALIZED";
-    }
     if (flag == 0U) {
         return isRecord ? "EVENT_RECORD_DEFAULT(0)" : "EVENT_WAIT_DEFAULT(0)";
     }
@@ -421,6 +419,44 @@ const char_t* DevAttrToString(const rtDevAttr attr);
 std::string HacTypeToString(const rtHacType type);
 std::string MemPoolAttrToString(const rtMemPoolAttr attr);
 std::string DeviceStatusToString(const rtDeviceStatus status);
+
+struct ErrMsgNamedValue {
+    constexpr ErrMsgNamedValue(const uint64_t itemValue, const char* const itemName, const bool hex = false)
+        : value(itemValue), name(itemName), useHex(hex)
+    {}
+
+    const uint64_t value;
+    const char* const name;
+    const bool useHex;
+};
+
+std::string NamedValueDescription(const ErrMsgNamedValue& item);
+std::string EnumValueDescription(const int64_t value, const std::initializer_list<ErrMsgNamedValue> names);
+std::string KernelTypeToString(const int64_t value);
+std::string DeviceFlagToString(const uint64_t value);
+std::string MemInfoQueryTypeToString(const uint32_t value);
+std::string GeneralCtrlValueToString(const uint32_t value);
+std::string FloatOverflowValueToString(const uint32_t value);
+std::string ContextFlagToString(const uint64_t value);
+std::string StreamDestroyFlagToString(const uint64_t value);
+std::string ModelStreamFlagToString(const int64_t value);
+std::string DqsSchedTypeToString(const int64_t value);
+std::string CoreTypeToString(const int64_t value);
+std::string ShapeFlagToString(const int64_t value);
+std::string SchedModeToString(const int64_t value);
+std::string ModuleTypeToString(const int64_t value);
+std::string IpcMemAttrTypeToString(const int64_t value);
+std::string IpcMemAttrToString(const uint64_t value);
+std::string ModelAttrToString(const int64_t value);
+std::string ModelSchedModeToString(const int64_t value);
+std::string ModelExecutorToString(const int64_t value);
+std::string AclEventWaitFlagToString(const uint32_t value);
+std::string AclEventRecordFlagToString(const uint32_t value);
+std::string RtEventRecordFlagToString(const uint32_t value);
+std::string NotifyExportFlagToString(const int64_t value);
+std::string MemoryPolicyToString(const uint64_t value);
+std::string BinaryMetaTypeToString(const int64_t value);
+std::string StackTypeToString(const int64_t value);
 
 } // namespace runtime
 } // namespace cce

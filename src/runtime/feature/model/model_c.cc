@@ -7,6 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "enum_desc.hpp"
 #include <string>
 #include "model_c.hpp"
 #include "notify_c.hpp"
@@ -352,8 +353,8 @@ rtError_t ModelSubmitExecuteTask(Model* const mdl, Notify* const notify, Stream*
         RT_LOG_DEBUG, "execute stream, model execute type=%u, model_id=%u, stream_id=%d.", executeType, mdl->Id_(),
         streamIn->Id_());
     COND_RETURN_ERROR_MSG_INNER(
-        (executeType > EXECUTOR_AICPU), RT_ERROR_MODEL_EXECUTOR, "Unsupported executor type=%u, modelId=%u.",
-        executeType, mdl->Id_());
+        (executeType > EXECUTOR_AICPU), RT_ERROR_MODEL_EXECUTOR, "Unsupported executor type=%s, modelId=%u.",
+        ModelExecutorToString(executeType).c_str(), mdl->Id_());
 
     if (executeType != EXECUTOR_AICPU) {
         error = ModelSerialSchedPreProc(streamIn, notify, mdl);

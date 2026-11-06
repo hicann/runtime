@@ -12,6 +12,7 @@
 #include "driver_enum_desc.hpp"
 #include "capture_model_enum_desc.hpp"
 #include "enum_desc.hpp"
+#include "task_enum_desc.hpp"
 #include "osal.hpp"
 #include "program.hpp"
 #include "stream.hpp"
@@ -33,6 +34,16 @@
 
 namespace cce {
 namespace runtime {
+static std::string MemWaitValueFlagToString(const uint32_t flag)
+{
+    static const std::initializer_list<ErrMsgNamedValue> names = {
+        {MEM_WAIT_VALUE_TYPE_GEQ, "MEM_WAIT_VALUE_TYPE_GEQ"}, {MEM_WAIT_VALUE_TYPE_EQ, "MEM_WAIT_VALUE_TYPE_EQ"},
+        {MEM_WAIT_VALUE_TYPE_AND, "MEM_WAIT_VALUE_TYPE_AND"}, {MEM_WAIT_VALUE_TYPE_NOR, "MEM_WAIT_VALUE_TYPE_NOR"},
+        {MEM_WAIT_VALUE_TYPE_MAX, "MEM_WAIT_VALUE_TYPE_MAX"},
+    };
+    return EnumValueDescription(flag, names);
+}
+
 constexpr int16_t MODEL_SCH_GROUP_ID_MIN = 0;
 constexpr int16_t MODEL_SCH_GROUP_ID_MAX = 4;
 constexpr size_t MAX_SHAPE_INFO_SIZE = 1024U * 64U;
@@ -488,13 +499,14 @@ rtError_t ApiErrorDecorator::GetMemcpyConfigAttr(rtMemcpyAttribute_t* attr, RtMe
             configInfo->checkBitmap = attr->value.checkBitmap;
             break;
         default:
-            const char_t* const attrName =
-                (attr->id == RT_MEMCPY_ATTRIBUTE_RSV) ?
-                    "MEMCPY_ATTRIBUTE_RSV" :
-                    ((attr->id == RT_MEMCPY_ATTRIBUTE_MAX) ? "MEMCPY_ATTRIBUTE_MAX" : "UNKNOWN");
+            static const std::initializer_list<ErrMsgNamedValue> names = {
+                {RT_MEMCPY_ATTRIBUTE_RSV, "MEMCPY_ATTRIBUTE_RSV"},
+                {RT_MEMCPY_ATTRIBUTE_MAX, "MEMCPY_ATTRIBUTE_MAX"},
+            };
+            const std::string attrDesc = EnumValueDescription(static_cast<int32_t>(attr->id), names);
             RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
-                ErrorCode::EE1003, "Obtaining configuration attributes of memory copy",
-                RtFmtMsg("%s(%d)", attrName, static_cast<int32_t>(attr->id)), "attr->id", 1);
+                ErrorCode::EE1003, "Obtaining configuration attributes of memory copy", attrDesc, "attr->id",
+                RtFmtMsg("MEMCPY_ATTRIBUTE_CHECK(%d)", static_cast<int32_t>(RT_MEMCPY_ATTRIBUTE_CHECK)));
             error = RT_ERROR_INVALID_VALUE;
             break;
     }
@@ -511,10 +523,10 @@ rtError_t ApiErrorDecorator::KernelGetAddrAndPrefCnt(
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         prefetchCnt, RT_ERROR_INVALID_VALUE,
         "Obtaining the on-device execution address and instruction prefetch count of the kernel function");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         (flag > RT_DYNAMIC_SHAPE_KERNEL), RT_ERROR_INVALID_VALUE,
-        "Obtaining the on-device execution address and instruction prefetch count of the kernel function", flag,
-        "[0, " + std::to_string(RT_DYNAMIC_SHAPE_KERNEL) + "]");
+        "Obtaining the on-device execution address and instruction prefetch count of the kernel function",
+        ShapeFlagToString(flag), "flag", "[0, " + std::to_string(RT_DYNAMIC_SHAPE_KERNEL) + "]");
 
     if (flag == RT_STATIC_SHAPE_KERNEL) {
         NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
@@ -549,10 +561,10 @@ rtError_t ApiErrorDecorator::KernelGetAddrAndPrefCntV2(
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         kernelInfo, RT_ERROR_INVALID_VALUE,
         "Obtaining the on-device execution address and instruction prefetch count of the kernel function");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         (flag > RT_DYNAMIC_SHAPE_KERNEL), RT_ERROR_INVALID_VALUE,
-        "Obtaining the on-device execution address and instruction prefetch count of the kernel function", flag,
-        "[0, " + std::to_string(RT_DYNAMIC_SHAPE_KERNEL) + "]");
+        "Obtaining the on-device execution address and instruction prefetch count of the kernel function",
+        ShapeFlagToString(flag), "flag", "[0, " + std::to_string(RT_DYNAMIC_SHAPE_KERNEL) + "]");
     COND_RETURN_AND_MSG_OUTER(
         invalidFlag == true, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
         "Obtaining the on-device execution address and instruction prefetch count of the kernel function",
@@ -985,9 +997,9 @@ static rtError_t CheckKernelLaunchCfg(const rtKernelLaunchCfg_t* const cfg, cons
         "The RT_LAUNCH_KERNEL_ATTR_TIMEOUT(7) and RT_LAUNCH_KERNEL_ATTR_TIMEOUT_US(8) attributes cannot be carried at "
         "the same time");
 
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         schedMode >= static_cast<uint8_t>(RT_SCHEM_MODE_END), RT_ERROR_INVALID_VALUE,
-        "Checking the parameter configuration before kernel delivery", schedMode,
+        "Checking the parameter configuration before kernel delivery", SchedModeToString(schedMode), "schedMode",
         "[0, " + std::to_string(RT_SCHEM_MODE_END) + ")");
 
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
@@ -1193,7 +1205,8 @@ rtError_t ApiErrorDecorator::MultipleTaskInfoLaunch(
                 ERR_MODULE_GE, error, "check argsInfo failed, retCode=%#x.", static_cast<uint32_t>(error));
         } else {
             RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
-                ErrorCode::EE1003, "Delivering a DVPP Multiple task", taskInfo->taskDesc[idx].type,
+                ErrorCode::EE1003, "Delivering a DVPP Multiple task",
+                MultipleTaskTypeToString(static_cast<rtMultipleTaskType_t>(taskInfo->taskDesc[idx].type)),
                 "taskInfo->taskDesc[" + std::to_string(idx) + "].type",
                 "[0, " + std::to_string(RT_MULTIPLE_TASK_TYPE_MAX) + ")");
             return RT_ERROR_INVALID_VALUE;
@@ -1379,15 +1392,18 @@ rtError_t ApiErrorDecorator::StreamWaitEvent(
     Stream* const stm, Event* const evt, const uint32_t timeout, const uint32_t flag)
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(evt, RT_ERROR_INVALID_VALUE, "Triggering event waiting");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         ((flag != RT_EVENT_WAIT_DEFAULT) && (flag != RT_EVENT_WAIT_EXTERNAL)), RT_ERROR_INVALID_VALUE,
-        "Triggering event waiting", flag, "ACL_EVENT_WAIT_DEFAULT(0) or ACL_EVENT_WAIT_EXTERNAL(1)");
+        "Triggering event waiting", AclEventWaitFlagToString(flag), "flag",
+        RtFmtMsg(
+            "ACL_EVENT_WAIT_DEFAULT(%d) or ACL_EVENT_WAIT_EXTERNAL(%d)", static_cast<int32_t>(RT_EVENT_WAIT_DEFAULT),
+            static_cast<int32_t>(RT_EVENT_WAIT_EXTERNAL)));
     COND_RETURN_AND_MSG_OUTER(
         ((evt->GetEventFlag() == static_cast<uint32_t>(RT_EVENT_MC2)) ||
          (((evt->GetEventFlag() & static_cast<uint32_t>(RT_EVENT_MC2)) != 0U) &&
           ((evt->GetEventFlag() & (~static_cast<uint32_t>(RT_EVENT_MC2))) != 0U))),
         RT_ERROR_INVALID_VALUE, ErrorCode::EE1006, "Triggering event waiting",
-        "Parameter evt.eventFlag_ value " + std::to_string(evt->GetEventFlag()),
+        RtFmtMsg("Parameter evt.eventFlag_ value %" PRIu64, evt->GetEventFlag()),
         "Device-only events can be called only on the device");
     COND_RETURN_WARN(
         ((evt->GetEventFlag() == static_cast<uint32_t>(RT_EVENT_IPC)) && (stm != nullptr) && (stm->IsCapturing())),
@@ -1611,9 +1627,9 @@ static rtError_t ValidateStreamFailureModeGet(Stream* const stm, uint64_t* const
 
 static rtError_t ValidateStreamOverflowSwitchSet(const Stream* const stm, const uint32_t flags)
 {
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         flags >= static_cast<uint32_t>(RT_OVERFLOW_MODE_UNDEF), RT_ERROR_INVALID_VALUE,
-        "Setting the stream overflow/underflow detection switch", flags,
+        "Setting the stream overflow/underflow detection switch", FloatOverflowValueToString(flags), "flags",
         "[" + std::to_string(RT_OVERFLOW_MODE_SATURATION) + ", " + std::to_string(RT_OVERFLOW_MODE_UNDEF) + ")");
     COND_RETURN_AND_MSG_OUTER(
         (stm != nullptr) && (stm->IsCapturing()), RT_ERROR_STREAM_CAPTURED, ErrorCode::EE1016,
@@ -1891,7 +1907,7 @@ rtError_t ApiErrorDecorator::EventCreate(Event** const evt, const uint64_t flag)
     for (const uint64_t itemFlag : solelyFlag) {
         COND_RETURN_AND_MSG_OUTER(
             (((flag & (itemFlag)) != 0UL) && ((flag & (~itemFlag)) != 0UL)), RT_ERROR_INVALID_VALUE, ErrorCode::EE1006,
-            "Event creation", "Parameter flag value " + std::to_string(flag),
+            "Event creation", RtFmtMsg("Parameter flag value %" PRIu64, flag),
             "RT_EVENT_MC2(0x10U) and RT_EVENT_EXTERNAL(0x20U) do not support OR combination with other flags");
     }
 
@@ -1920,7 +1936,7 @@ rtError_t ApiErrorDecorator::EventCreateEx(Event** const evt, const uint64_t fla
     for (const uint64_t itemFlag : solelyFlag) {
         COND_RETURN_AND_MSG_OUTER(
             (((flag & itemFlag) != 0UL) && ((flag & (~itemFlag)) != 0UL)), RT_ERROR_INVALID_VALUE, ErrorCode::EE1006,
-            "Event creation", "Parameter flag value " + std::to_string(flag),
+            "Event creation", RtFmtMsg("Parameter flag value %" PRIu64, flag),
             "RT_EVENT_MC2(0x10U), RT_EVENT_EXTERNAL(0x20U), and RT_EVENT_IPC(0x40U) do not support OR combination "
             "with other flags");
     }
@@ -1959,15 +1975,18 @@ rtError_t ApiErrorDecorator::EventDestroySync(Event* evt)
 rtError_t ApiErrorDecorator::EventRecord(Event* const evt, Stream* const stm, const uint32_t flag)
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(evt, RT_ERROR_INVALID_VALUE, "Event recording");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         ((flag != RT_EVENT_RECORD_DEFAULT) && (flag != RT_EVENT_RECORD_EXTERNAL)), RT_ERROR_INVALID_VALUE,
-        "Event recording", flag, "ACL_EVENT_RECORD_DEFAULT(0) or ACL_EVENT_RECORD_EXTERNAL(1)");
+        "Event recording", AclEventRecordFlagToString(flag), "flag",
+        RtFmtMsg(
+            "ACL_EVENT_RECORD_DEFAULT(%d) or ACL_EVENT_RECORD_EXTERNAL(%d)",
+            static_cast<int32_t>(RT_EVENT_RECORD_DEFAULT), static_cast<int32_t>(RT_EVENT_RECORD_EXTERNAL)));
     COND_RETURN_AND_MSG_OUTER(
         ((evt->GetEventFlag() == static_cast<uint32_t>(RT_EVENT_MC2)) ||
          (((evt->GetEventFlag() & static_cast<uint32_t>(RT_EVENT_MC2)) != 0U) &&
           ((evt->GetEventFlag() & (~static_cast<uint32_t>(RT_EVENT_MC2))) != 0U))),
         RT_ERROR_INVALID_VALUE, ErrorCode::EE1006, "Event recording",
-        "Parameter evt.eventFlag_ value " + std::to_string(evt->GetEventFlag()),
+        RtFmtMsg("Parameter evt.eventFlag_ value %" PRIu64, evt->GetEventFlag()),
         "Device-only events can be called only on the device");
     COND_RETURN_WARN(
         ((evt->GetEventFlag() == static_cast<uint32_t>(RT_EVENT_IPC)) && (stm != nullptr) && (stm->IsCapturing())),
@@ -2006,7 +2025,7 @@ rtError_t ApiErrorDecorator::EventReset(Event* const evt, Stream* const stm)
          (((evt->GetEventFlag() & static_cast<uint32_t>(RT_EVENT_MC2)) != 0U) &&
           ((evt->GetEventFlag() & (~static_cast<uint32_t>(RT_EVENT_MC2))) != 0U))),
         RT_ERROR_INVALID_VALUE, ErrorCode::EE1006, "Event reset",
-        "Parameter evt.eventFlag_ value " + std::to_string(evt->GetEventFlag()),
+        RtFmtMsg("Parameter evt.eventFlag_ value %" PRIu64, evt->GetEventFlag()),
         "Device-only events can be called only on the device");
     COND_RETURN_WARN(
         evt->GetEventFlag() == static_cast<uint32_t>(RT_EVENT_IPC), RT_ERROR_FEATURE_NOT_SUPPORT,
@@ -3150,9 +3169,10 @@ rtError_t ApiErrorDecorator::MemGetInfoByType(const int32_t devId, const rtMemTy
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         (devId < 0), RT_ERROR_DEVICE_ID, "Querying information about different types of memory", devId,
         "greater than or equal to 0");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         (type >= RT_MEM_INFO_TYPE_MAX), RT_ERROR_INVALID_VALUE, "Querying information about different types of memory",
-        type, "[" + std::to_string(RT_MEM_INFO_TYPE_DDR_SIZE) + ", " + std::to_string(RT_MEM_INFO_TYPE_MAX) + ")");
+        MemInfoQueryTypeToString(type), "type",
+        "[" + std::to_string(RT_MEM_INFO_TYPE_DDR_SIZE) + ", " + std::to_string(RT_MEM_INFO_TYPE_MAX) + ")");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         info, RT_ERROR_INVALID_VALUE, "Querying information about different types of memory");
     rtError_t error;
@@ -3372,9 +3392,10 @@ rtError_t ApiErrorDecorator::DeviceGetStreamPriorityRange(int32_t* const leastPr
 rtError_t ApiErrorDecorator::GetDeviceInfo(
     const uint32_t deviceId, const int32_t moduleType, const int32_t infoType, int64_t* const val)
 {
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         moduleType == MODULE_TYPE_HOST_AICPU, RT_ERROR_INVALID_VALUE, "Obtaining information about a specified device",
-        moduleType, "not equal to HOST_AICPU(8)");
+        ModuleTypeToString(moduleType), "moduleType",
+        RtFmtMsg("not equal to HOST_AICPU(%d)", static_cast<int32_t>(RT_MODULE_TYPE_HOST_AICPU)));
     uint32_t realDeviceId;
     rtError_t error = Runtime::Instance()->ChgUserDevIdToDeviceId(deviceId, &realDeviceId);
     COND_RETURN_ERROR(
@@ -3557,12 +3578,12 @@ rtError_t ApiErrorDecorator::IpcSetMemoryAttr(const char* name, uint32_t type, u
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         name, RT_ERROR_INVALID_VALUE, "Setting the attribute for IPC-based memory sharing");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
-        (type >= RT_ATTR_TYPE_MAX), RT_ERROR_INVALID_VALUE, "Setting the attribute for IPC-based memory sharing", type,
-        "[0, " + std::to_string(RT_ATTR_TYPE_MAX) + ")");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
+        (type >= RT_ATTR_TYPE_MAX), RT_ERROR_INVALID_VALUE, "Setting the attribute for IPC-based memory sharing",
+        IpcMemAttrTypeToString(type), "type", "[0, " + std::to_string(RT_ATTR_TYPE_MAX) + ")");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         (attr >= RT_IPC_MEM_ATTR_MAX), RT_ERROR_INVALID_VALUE, "Setting the attribute for IPC-based memory sharing",
-        attr, "[0, " + std::to_string(RT_IPC_MEM_ATTR_MAX) + ")");
+        IpcMemAttrToString(attr), "attr", "[0, " + std::to_string(RT_IPC_MEM_ATTR_MAX) + ")");
     return impl_->IpcSetMemoryAttr(name, type, attr);
 }
 
@@ -3640,10 +3661,11 @@ rtError_t ApiErrorDecorator::ModelBindStream(Model* const mdl, Stream* const stm
 
     COND_RETURN_AND_MSG_OUTER(
         (curStm->Flags() & RT_STREAM_CP_PROCESS_USE) != 0U, RT_ERROR_STREAM_INVALID, ErrorCode::EE1011,
-        "Binding a model running instance to a stream", "ACL_STREAM_DEVICE_USE_ONLY", "stream flag",
+        "Binding a model running instance to a stream",
+        RtFmtMsg("ACL_STREAM_DEVICE_USE_ONLY(0x%X)", static_cast<uint32_t>(RT_STREAM_CP_PROCESS_USE)), "stream flag",
         RtFmtMsg(
-            "Stream (stream_id=%d) with the flag ACL_STREAM_DEVICE_USE_ONLY cannot be bound to a model",
-            curStm->Id_()));
+            "Stream (stream_id=%d) with the flag ACL_STREAM_DEVICE_USE_ONLY(0x%X) cannot be bound to a model",
+            curStm->Id_(), static_cast<uint32_t>(RT_STREAM_CP_PROCESS_USE)));
     COND_RETURN_ERROR_MSG_INNER(
         curStm->IsBindDvppGrp(), RT_ERROR_STREAM_BIND_GRP,
         "Stream (stream_id=%d) of the specified DVPP group cannot be bound to a model", curStm->Id_());
@@ -3658,9 +3680,11 @@ rtError_t ApiErrorDecorator::ModelBindStream(Model* const mdl, Stream* const stm
 
     COND_RETURN_AND_MSG_OUTER(
         (curStm->Flags() & RT_STREAM_FAST_LAUNCH) != 0, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1011,
-        "Binding a model running instance to a stream", "ACL_STREAM_FAST_LAUNCH", "stream flag",
+        "Binding a model running instance to a stream",
+        RtFmtMsg("ACL_STREAM_FAST_LAUNCH(0x%X)", static_cast<uint32_t>(RT_STREAM_FAST_LAUNCH)), "stream flag",
         RtFmtMsg(
-            "Stream (stream_id=%d) with the flag ACL_STREAM_FAST_LAUNCH cannot be bound to a model", curStm->Id_()));
+            "Stream (stream_id=%d) with the flag ACL_STREAM_FAST_LAUNCH(0x%X) cannot be bound to a model",
+            curStm->Id_(), static_cast<uint32_t>(RT_STREAM_FAST_LAUNCH)));
 
     COND_RETURN_AND_MSG_OUTER(
         ((curStm->Flags() & (RT_STREAM_PERSISTENT | RT_STREAM_AICPU)) == 0), RT_ERROR_INVALID_VALUE, ErrorCode::EE1011,
@@ -3926,15 +3950,17 @@ rtError_t ApiErrorDecorator::ModelAttrSet(Model* const mdl, const rtModelAttr at
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(mdl, RT_ERROR_INVALID_VALUE, "Setting a model attribute");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(value, RT_ERROR_INVALID_VALUE, "Setting a model attribute");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
-        attrId != RT_MODEL_ATTR_SCH_MODE, RT_ERROR_INVALID_VALUE, "Setting a model attribute", attrId,
-        std::to_string(static_cast<int32_t>(RT_MODEL_ATTR_SCH_MODE)));
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
+        attrId != RT_MODEL_ATTR_SCH_MODE, RT_ERROR_INVALID_VALUE, "Setting a model attribute",
+        ModelAttrToString(attrId), "attrId",
+        RtFmtMsg("RT_MODEL_ATTR_SCH_MODE(%d)", static_cast<int32_t>(RT_MODEL_ATTR_SCH_MODE)));
     const rtMdlSchMode schMode = *(static_cast<rtMdlSchMode*>(value));
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         (schMode != RT_MDL_SCH_DEFAULT) && (schMode != RT_MDL_SCH_EXCLUSIVE), RT_ERROR_INVALID_VALUE,
-        "Setting a model attribute", schMode,
-        std::to_string(static_cast<int32_t>(RT_MDL_SCH_DEFAULT)) + " or " +
-            std::to_string(static_cast<int32_t>(RT_MDL_SCH_EXCLUSIVE)));
+        "Setting a model attribute", ModelSchedModeToString(schMode), "schMode",
+        RtFmtMsg(
+            "RT_MDL_SCH_DEFAULT(%d) or RT_MDL_SCH_EXCLUSIVE(%d)", static_cast<int32_t>(RT_MDL_SCH_DEFAULT),
+            static_cast<int32_t>(RT_MDL_SCH_EXCLUSIVE)));
 
     const rtError_t error = impl_->ModelAttrSet(mdl, attrId, value);
     ERROR_RETURN(error, "ModelAttrSet failed, attrId=%d.", static_cast<int32_t>(attrId));
@@ -3967,10 +3993,12 @@ rtError_t ApiErrorDecorator::ModelExecutorSet(Model* const mdl, const uint8_t fl
     COND_RETURN_AND_MSG_OUTER(
         mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL, RT_ERROR_INVALID_VALUE, ErrorCode::EE1016,
         "Setting the executor type of a model", "ACL Graph mode is not supported");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         !((flags == EXECUTOR_TS) || (flags == EXECUTOR_AICPU)), RT_ERROR_INVALID_VALUE,
-        "Setting the executor type of a model", flags,
-        std::to_string(EXECUTOR_TS) + " or " + std::to_string(EXECUTOR_AICPU));
+        "Setting the executor type of a model", ModelExecutorToString(flags), "flags",
+        RtFmtMsg(
+            "EXECUTOR_TS(0x%X) or EXECUTOR_AICPU(0x%X)", static_cast<uint32_t>(EXECUTOR_TS),
+            static_cast<uint32_t>(EXECUTOR_AICPU)));
     const rtError_t error = impl_->ModelExecutorSet(mdl, flags);
     ERROR_RETURN(error, "Set model executor failed flags=%hhu.", flags);
     return error;
@@ -4083,8 +4111,11 @@ rtError_t ApiErrorDecorator::NotifyCreate(const int32_t deviceId, Notify** const
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         (flag & static_cast<uint32_t>(~static_cast<uint32_t>(RT_NOTIFY_FLAG_MAX))) != 0U, RT_ERROR_INVALID_VALUE,
         "Notify creation", flag,
-        std::to_string(RT_NOTIFY_FLAG_DEFAULT) + " , " + std::to_string(RT_NOTIFY_FLAG_DOWNLOAD_TO_DEV) + " , " +
-            std::to_string(RT_NOTIFY_FLAG_SHR_ID_SHADOW) + " or " + std::to_string(RT_NOTIFY_FLAG_MAX));
+        RtFmtMsg(
+            "RT_NOTIFY_FLAG_DEFAULT(0x%X), RT_NOTIFY_FLAG_DOWNLOAD_TO_DEV(0x%X), RT_NOTIFY_FLAG_SHR_ID_SHADOW(0x%X), "
+            "or RT_NOTIFY_FLAG_MAX(0x%X)",
+            static_cast<uint32_t>(RT_NOTIFY_FLAG_DEFAULT), static_cast<uint32_t>(RT_NOTIFY_FLAG_DOWNLOAD_TO_DEV),
+            static_cast<uint32_t>(RT_NOTIFY_FLAG_SHR_ID_SHADOW), static_cast<uint32_t>(RT_NOTIFY_FLAG_MAX)));
 
     error = impl_->NotifyCreate(realDeviceId, notify, flag);
     ERROR_RETURN(error, "Create notify failed, device id=%d.", deviceId);
@@ -4192,10 +4223,13 @@ rtError_t ApiErrorDecorator::IpcSetNotifyName(
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
 
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         ((flag != RT_NOTIFY_EXPORT_FLAG_DISABLE_PID_VALIDATION) && (flag != RT_NOTIFY_FLAG_DEFAULT)),
-        RT_ERROR_INVALID_VALUE, "Setting a Notify as an IPC Notify", flag,
-        std::to_string(RT_NOTIFY_FLAG_DEFAULT) + " or " + std::to_string(RT_NOTIFY_EXPORT_FLAG_DISABLE_PID_VALIDATION));
+        RT_ERROR_INVALID_VALUE, "Setting a Notify as an IPC Notify", NotifyExportFlagToString(flag), "flag",
+        RtFmtMsg(
+            "RT_NOTIFY_FLAG_DEFAULT(0x%X) or RT_NOTIFY_EXPORT_FLAG_DISABLE_PID_VALIDATION(0x%X)",
+            static_cast<uint32_t>(RT_NOTIFY_FLAG_DEFAULT),
+            static_cast<uint32_t>(RT_NOTIFY_EXPORT_FLAG_DISABLE_PID_VALIDATION)));
 
     const rtError_t error = impl_->IpcSetNotifyName(notify, name, len, flag);
     ERROR_RETURN(error, "Ipc set notify name failed, name=%s, len=%u(bytes).", name, len);
@@ -6223,9 +6257,10 @@ rtError_t ApiErrorDecorator::MemWaitValue(
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         devAddr, RT_ERROR_INVALID_VALUE,
         "Unblocking the data in the specified memory when the data meets certain conditions");
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
         (flag >= static_cast<uint32_t>(MEM_WAIT_VALUE_TYPE_MAX)), RT_ERROR_INVALID_VALUE,
-        "Unblocking the data in the specified memory when the data meets certain conditions", flag,
+        "Unblocking the data in the specified memory when the data meets certain conditions",
+        MemWaitValueFlagToString(flag), "flag",
         "[0, " + std::to_string(static_cast<uint32_t>(MEM_WAIT_VALUE_TYPE_MAX)) + ")");
 
     rtError_t error = RT_ERROR_NONE;

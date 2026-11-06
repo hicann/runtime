@@ -51,8 +51,10 @@ rtError_t ValidateStreamLaunchBlockingSet(const Stream* const stream, const uint
             RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1016, "Setting the stream launch blocking mode",
             RtFmtMsg(
                 "Stream (stream_id=%d) does not support launch blocking control because it is a model stream, a bound "
-                "stream, or has RT_STREAM_PERSISTENT, RT_STREAM_AICPU, or RT_STREAM_CP_PROCESS_USE set",
-                stream->Id_()));
+                "stream, or has RT_STREAM_PERSISTENT(0x%X), RT_STREAM_AICPU(0x%X), or RT_STREAM_CP_PROCESS_USE(0x%X) "
+                "set",
+                stream->Id_(), static_cast<uint32_t>(RT_STREAM_PERSISTENT), static_cast<uint32_t>(RT_STREAM_AICPU),
+                static_cast<uint32_t>(RT_STREAM_CP_PROCESS_USE)));
         COND_RETURN_AND_MSG_OUTER(
             stream->IsCapturing(), RT_ERROR_STREAM_CAPTURED, ErrorCode::EE1016,
             "Setting the stream launch blocking mode",
@@ -75,8 +77,10 @@ rtError_t ValidateStreamLaunchBlockingGet(const Stream* const stream)
             RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1016, "Obtaining the stream launch blocking mode",
             RtFmtMsg(
                 "Stream (stream_id=%d) does not support launch blocking control because it is a model stream, a bound "
-                "stream, or has RT_STREAM_PERSISTENT, RT_STREAM_AICPU, or RT_STREAM_CP_PROCESS_USE set",
-                stream->Id_()));
+                "stream, or has RT_STREAM_PERSISTENT(0x%X), RT_STREAM_AICPU(0x%X), or RT_STREAM_CP_PROCESS_USE(0x%X) "
+                "set",
+                stream->Id_(), static_cast<uint32_t>(RT_STREAM_PERSISTENT), static_cast<uint32_t>(RT_STREAM_AICPU),
+                static_cast<uint32_t>(RT_STREAM_CP_PROCESS_USE)));
         COND_RETURN_AND_MSG_OUTER(
             stream->IsCapturing(), RT_ERROR_STREAM_CAPTURED, ErrorCode::EE1016,
             "Obtaining the stream launch blocking mode",
@@ -100,8 +104,9 @@ rtError_t ApiErrorDecorator::NonBlockingLaunchBegin(Stream* const stream, const 
         RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1016, "Starting a non-blocking launch section",
         RtFmtMsg(
             "Stream (stream_id=%d) does not support launch blocking control because it is a model stream, a bound "
-            "stream, or has RT_STREAM_PERSISTENT, RT_STREAM_AICPU, or RT_STREAM_CP_PROCESS_USE set",
-            targetStm->Id_()));
+            "stream, or has RT_STREAM_PERSISTENT(0x%X), RT_STREAM_AICPU(0x%X), or RT_STREAM_CP_PROCESS_USE(0x%X) set",
+            targetStm->Id_(), static_cast<uint32_t>(RT_STREAM_PERSISTENT), static_cast<uint32_t>(RT_STREAM_AICPU),
+            static_cast<uint32_t>(RT_STREAM_CP_PROCESS_USE)));
     COND_RETURN_AND_MSG_OUTER(
         targetStm->IsCapturing(), RT_ERROR_STREAM_CAPTURED, ErrorCode::EE1016, "Starting a non-blocking launch section",
         RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", targetStm->Id_()));
@@ -123,8 +128,9 @@ rtError_t ApiErrorDecorator::NonBlockingLaunchEnd(Stream* const stream, const ui
         RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1016, "Ending a non-blocking launch section",
         RtFmtMsg(
             "Stream (stream_id=%d) does not support launch blocking control because it is a model stream, a bound "
-            "stream, or has RT_STREAM_PERSISTENT, RT_STREAM_AICPU, or RT_STREAM_CP_PROCESS_USE set",
-            targetStm->Id_()));
+            "stream, or has RT_STREAM_PERSISTENT(0x%X), RT_STREAM_AICPU(0x%X), or RT_STREAM_CP_PROCESS_USE(0x%X) set",
+            targetStm->Id_(), static_cast<uint32_t>(RT_STREAM_PERSISTENT), static_cast<uint32_t>(RT_STREAM_AICPU),
+            static_cast<uint32_t>(RT_STREAM_CP_PROCESS_USE)));
     COND_RETURN_AND_MSG_OUTER(
         targetStm->IsCapturing(), RT_ERROR_STREAM_CAPTURED, ErrorCode::EE1016, "Ending a non-blocking launch section",
         RtFmtMsg("Stream (stream_id=%d) during the capture stage is not supported", targetStm->Id_()));
@@ -508,14 +514,16 @@ rtError_t ApiErrorDecorator::StreamTaskClean(Stream* const stm)
     COND_RETURN_AND_MSG_OUTER(
         ((stm->Flags() & RT_STREAM_PERSISTENT) == 0U), RT_ERROR_STREAM_INVALID, ErrorCode::EE1011,
         "Clearing tasks in a stream", RtFmtMsg("%#x", stm->Flags()), "stream flag",
-        RtFmtMsg("Stream (stream_id=%d) flags must include RT_STREAM_PERSISTENT(0x01U)", stm->Id_()));
+        RtFmtMsg(
+            "Stream (stream_id=%d) flags must include RT_STREAM_PERSISTENT(0x%X)", stm->Id_(),
+            static_cast<uint32_t>(RT_STREAM_PERSISTENT)));
     COND_RETURN_AND_MSG_OUTER(
         (!stm->GetBindFlag()), RT_ERROR_STREAM_INVALID, ErrorCode::EE1017, "Clearing tasks in a stream", "stream",
         RtFmtMsg("Stream (stream_id=%d) must be bound to a model", stm->Id_()));
     COND_RETURN_AND_MSG_OUTER(
         ((stm->Flags() & RT_STREAM_AICPU) != 0U), RT_ERROR_STREAM_INVALID, ErrorCode::EE1011,
-        "Clearing tasks in a stream", "RT_STREAM_AICPU", "stream flag",
-        RtFmtMsg("AICPU stream (stream_id=%d) does not support stream task clearance", stm->Id_()));
+        "Clearing tasks in a stream", RtFmtMsg("RT_STREAM_AICPU(0x%X)", static_cast<uint32_t>(RT_STREAM_AICPU)),
+        "stream flag", RtFmtMsg("AICPU stream (stream_id=%d) does not support stream task clearance", stm->Id_()));
     NULL_PTR_RETURN_MSG(stm->Model_(), RT_ERROR_STREAM_MODEL);
     COND_RETURN_AND_MSG_OUTER(
         (!stm->Model_()->IsModelLoadComplete()), RT_ERROR_STREAM_INVALID, ErrorCode::EE1017,

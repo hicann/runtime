@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Copyright (c) 2025 Huawei Technologies Co., Ltd.
  * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
  * CANN Open Software License Agreement Version 2.0 (the "License").
@@ -120,7 +120,11 @@ rtError_t rtsNotifyCreate(rtNotify_t* notify, uint64_t flag)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();
     if (flag != RT_NOTIFY_FLAG_DEFAULT && flag != RT_NOTIFY_FLAG_DOWNLOAD_TO_DEV) {
-        RT_LOG_OUTER_MSG_INVALID_PARAM(flag, "RT_NOTIFY_FLAG_DEFAULT or RT_NOTIFY_FLAG_DOWNLOAD_TO_DEV");
+        RT_LOG_OUTER_MSG_INVALID_PARAM(
+            flag,
+            RtFmtMsg(
+                "RT_NOTIFY_FLAG_DEFAULT(0x%X) or RT_NOTIFY_FLAG_DOWNLOAD_TO_DEV(0x%X)",
+                static_cast<uint32_t>(RT_NOTIFY_FLAG_DEFAULT), static_cast<uint32_t>(RT_NOTIFY_FLAG_DOWNLOAD_TO_DEV)));
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
     }
     int32_t deviceId = 0;
@@ -209,9 +213,9 @@ rtError_t rtsNotifyGetExportKey(rtNotify_t notify, char_t* key, uint32_t len, ui
 VISIBILITY_DEFAULT
 rtError_t rtsNotifyImportByKey(rtNotify_t* notify, const char_t* key, uint64_t flag)
 {
-    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM(
-        flag > static_cast<uint64_t>(MAX_UINT32_NUM), RT_ERROR_INVALID_VALUE, flag,
-        RtFmtMsg("[0, %u]", MAX_UINT32_NUM));
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM_NAME(
+        flag > static_cast<uint64_t>(MAX_UINT32_NUM), RT_ERROR_INVALID_VALUE, RtFmtMsg("UNKNOWN(%" PRIu64 ")", flag),
+        "flag", RtFmtMsg("[0, %u]", MAX_UINT32_NUM));
     return rtIpcOpenNotifyWithFlag(notify, key, static_cast<uint32_t>(flag));
 }
 

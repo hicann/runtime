@@ -180,7 +180,12 @@ aclError GetTdtDataTypeByAclDataType(acltdtTensorType aclType, tdt::TdtDataType&
                 acl::INVALID_VALUE_MSG, std::vector<const char*>({"func", "value", "param", "expect"}),
                 std::vector<const char*>(
                     {"Obtaining the tdt data type", acl::GetTensorTypeDesc(aclType), "aclType",
-                     "ACL_TENSOR_DATA_END_OF_SEQUENCE or ACL_TENSOR_DATA_TENSOR or ACL_TENSOR_DATA_ABNORMAL"}));
+                     acl::FormatEnumExpectedDesc(
+                         "ACL_TENSOR_DATA_END_OF_SEQUENCE(%u) or ACL_TENSOR_DATA_TENSOR(%u) or "
+                         "ACL_TENSOR_DATA_ABNORMAL(%u)",
+                         static_cast<uint32_t>(ACL_TENSOR_DATA_END_OF_SEQUENCE),
+                         static_cast<uint32_t>(ACL_TENSOR_DATA_TENSOR), static_cast<uint32_t>(ACL_TENSOR_DATA_ABNORMAL))
+                         .c_str()}));
             return ACL_ERROR_INVALID_PARAM;
         }
     }
@@ -207,7 +212,12 @@ aclError GetTdtDataTypeByAclDataTypeV2(acltdtTensorType aclType, int32_t& tdtDat
                 acl::INVALID_VALUE_MSG, std::vector<const char*>({"func", "value", "param", "expect"}),
                 std::vector<const char*>(
                     {"Obtaining the tdt data type", acl::GetTensorTypeDesc(aclType), "aclType",
-                     "ACL_TENSOR_DATA_END_OF_SEQUENCE or ACL_TENSOR_DATA_TENSOR or ACL_TENSOR_DATA_ABNORMAL"}));
+                     acl::FormatEnumExpectedDesc(
+                         "ACL_TENSOR_DATA_END_OF_SEQUENCE(%u) or ACL_TENSOR_DATA_TENSOR(%u) or "
+                         "ACL_TENSOR_DATA_ABNORMAL(%u)",
+                         static_cast<uint32_t>(ACL_TENSOR_DATA_END_OF_SEQUENCE),
+                         static_cast<uint32_t>(ACL_TENSOR_DATA_TENSOR), static_cast<uint32_t>(ACL_TENSOR_DATA_ABNORMAL))
+                         .c_str()}));
             return ACL_ERROR_INVALID_PARAM;
         }
     }

@@ -26,6 +26,63 @@
 
 namespace acl {
 
+// Only unsigned 32-bit enum values and %u placeholders are accepted by this helper.
+// Each argument needs at most 10 digits; N already includes the format's null terminator.
+template <size_t N, typename... Values>
+inline std::string FormatEnumExpectedDesc(const char (&format)[N], const Values... values)
+{
+    char description[N + sizeof...(Values) * 10U] = {};
+    const int32_t ret = snprintf_s(
+        description, sizeof(description), sizeof(description) - 1U, format, static_cast<uint32_t>(values)...);
+    return (ret >= 0) ? description : "";
+}
+
+// Names used by the enum descriptions below are bounded literals.
+inline std::string FormatEnumValueDesc(const char* const name, const uint32_t value)
+{
+    char description[128] = {};
+    const int32_t ret = snprintf_s(description, sizeof(description), sizeof(description) - 1U, "%s(%u)", name, value);
+    return (ret >= 0) ? description : "";
+}
+
+inline std::string GetEventOperationFlagDesc(const uint32_t flag, const bool isRecord)
+{
+    const char* name = "UNKNOWN";
+    if (flag == 0U) {
+        name = isRecord ? "ACL_EVENT_RECORD_DEFAULT" : "ACL_EVENT_WAIT_DEFAULT";
+    } else if (flag == 1U) {
+        name = isRecord ? "ACL_EVENT_RECORD_EXTERNAL" : "ACL_EVENT_WAIT_EXTERNAL";
+    }
+    return FormatEnumValueDesc(name, flag);
+}
+
+inline std::string GetMemAttachFlagDesc(const uint32_t flag)
+{
+    return FormatEnumValueDesc(flag == ACL_RT_MEM_ATTACH_GLOBAL ? "ACL_RT_MEM_ATTACH_GLOBAL" : "UNKNOWN", flag);
+}
+
+inline std::string GetSnapshotBackupFlagDesc(const uint32_t flag)
+{
+    const char* name = "UNKNOWN";
+    if (flag == ACL_RT_SNAPSHOT_BACKUP_REQUIRED_ONLY) {
+        name = "ACL_RT_SNAPSHOT_BACKUP_REQUIRED_ONLY";
+    } else if (flag == ACL_RT_SNAPSHOT_BACKUP_INCLUDE_OPTIONAL) {
+        name = "ACL_RT_SNAPSHOT_BACKUP_INCLUDE_OPTIONAL";
+    }
+    return FormatEnumValueDesc(name, flag);
+}
+
+inline std::string GetSnapshotRestoreFlagDesc(const uint32_t flag)
+{
+    const char* name = "UNKNOWN";
+    if (flag == ACL_RT_SNAPSHOT_RESTORE_REQUIRED_ONLY) {
+        name = "ACL_RT_SNAPSHOT_RESTORE_REQUIRED_ONLY";
+    } else if (flag == ACL_RT_SNAPSHOT_RESTORE_INCLUDE_OPTIONAL) {
+        name = "ACL_RT_SNAPSHOT_RESTORE_INCLUDE_OPTIONAL";
+    }
+    return FormatEnumValueDesc(name, flag);
+}
+
 const char* GetDataTypeDesc(aclDataType type);
 const char* GetMemcpyKindDesc(aclrtMemcpyKind kind);
 

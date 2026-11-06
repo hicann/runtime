@@ -184,7 +184,11 @@ aclError aclrtLaunchCallbackImpl(aclrtCallback fn, void* userData, aclrtCallback
     ACL_LOG_INFO("start to execute aclrtLaunchCallback.");
     ACL_CHECK_INVALID_VALUE_WITH_DESC(
         (blockType == ACL_CALLBACK_BLOCK || blockType == ACL_CALLBACK_NO_BLOCK),
-        acl::GetCallbackBlockTypeDesc(blockType), "blockType", "ACL_CALLBACK_BLOCK or ACL_CALLBACK_NO_BLOCK",
+        acl::GetCallbackBlockTypeDesc(blockType), "blockType",
+        acl::FormatEnumExpectedDesc(
+            "ACL_CALLBACK_BLOCK(%u) or ACL_CALLBACK_NO_BLOCK(%u)", static_cast<uint32_t>(ACL_CALLBACK_BLOCK),
+            static_cast<uint32_t>(ACL_CALLBACK_NO_BLOCK))
+            .c_str(),
         ACL_ERROR_INVALID_PARAM);
     const bool isBlock = (blockType == ACL_CALLBACK_BLOCK);
     ACL_REQUIRES_RTS_OK(

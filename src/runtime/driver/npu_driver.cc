@@ -7,6 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "enum_desc.hpp"
 #include "npu_driver.hpp"
 #include "driver/ascend_hal.h"
 #include "driver/ascend_inpackage_hal.h"
@@ -572,6 +573,15 @@ rtError_t NpuDriver::CreateIpcMem(
     return RT_ERROR_NONE;
 }
 
+static std::string DriverIpcAttrTypeToString(const uint32_t type)
+{
+    static const std::initializer_list<ErrMsgNamedValue> names = {
+        {RT_ATTR_TYPE_MEM_MAP, "RT_ATTR_TYPE_MEM_MAP"},
+        {SHMEM_ATTR_TYPE_NO_WLIST_IN_SERVER, "SHMEM_ATTR_TYPE_NO_WLIST_IN_SERVER"},
+    };
+    return EnumValueDescription(type, names);
+}
+
 rtError_t NpuDriver::SetIpcMemAttr(const char* name, uint32_t type, uint64_t attr)
 {
     COND_RETURN_WARN(
@@ -579,12 +589,8 @@ rtError_t NpuDriver::SetIpcMemAttr(const char* name, uint32_t type, uint64_t att
     const drvError_t drvRet = halShmemSetAttribute(name, type, attr);
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(
-            drvRet, "halShmemSetAttribute call failed, drvRetCode=%d, type=%u(%s), attr=%" PRIu64 ".",
-            static_cast<int32_t>(drvRet), type,
-            (type == RT_ATTR_TYPE_MEM_MAP)               ? "ATTR_TYPE_MEM_MAP" :
-            (type == SHMEM_ATTR_TYPE_NO_WLIST_IN_SERVER) ? "SHMEM_ATTR_TYPE_NO_WLIST_IN_SERVER" :
-                                                           "UNKNOWN",
-            attr);
+            drvRet, "halShmemSetAttribute call failed, drvRetCode=%d, type=%s, attr=%" PRIu64 ".",
+            static_cast<int32_t>(drvRet), DriverIpcAttrTypeToString(type).c_str(), attr);
         return RT_GET_DRV_ERRCODE(drvRet);
     }
     RT_LOG(RT_LOG_DEBUG, "set ipc mem attr success, name=%s, type=%u, attr=%" PRIx64 ".", name, type, attr);
