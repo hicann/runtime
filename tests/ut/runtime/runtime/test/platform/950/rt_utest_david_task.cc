@@ -3593,7 +3593,7 @@ TEST_F(DavidCondHandleTest, SubmitCaptureConditionTaskInitFailedWithOriginalCapt
     ASSERT_NE(originalStream->GetCaptureStream(), nullptr);
     ASSERT_EQ(originalStream->GetCaptureStream()->Model_(), parentModelObj);
 
-    auto* const condHandle = new CondHandle(parentModelObj, 0U, static_cast<rtCondHandleFlag_t>(0));
+    auto* const condHandle = new CondHandle(parentModelObj, static_cast<rtCondHandleFlag_t>(0));
     condHandle->SetCondType(RT_COND_TASK_TYPE_IF);
     condHandle->SetCondSize(1U);
     MOCKER(CaptureConditionTaskInit).expects(once()).will(returnValue(RT_ERROR_MEMORY_ALLOCATION));
@@ -3886,8 +3886,8 @@ TEST_F(DavidCondHandleTest, FindStreamIdInSubModels_FoundInNestedSubModel)
     nestedModel->SetSubCaptureModelEnable();
     nestedModel->SetSoftwareSqEnable();
 
-    auto* outerCond = new CondHandle(parentModel, 0, static_cast<rtCondHandleFlag_t>(0));
-    auto* innerCond = new CondHandle(subModel, 0, static_cast<rtCondHandleFlag_t>(0));
+    auto* outerCond = new CondHandle(parentModel, static_cast<rtCondHandleFlag_t>(0));
+    auto* innerCond = new CondHandle(subModel, static_cast<rtCondHandleFlag_t>(0));
     outerCond->PushBackSubModel(subModel);
     innerCond->PushBackSubModel(nestedModel);
     parentModel->condHandleTaskMap_[std::make_tuple(-1, static_cast<uint16_t>(0))] = outerCond;

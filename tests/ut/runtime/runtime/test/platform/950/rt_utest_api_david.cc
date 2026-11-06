@@ -11918,7 +11918,7 @@ TEST_F(ApiDavidTaskGetParamsTest, TestTaskGetParamsNewTaskTypes)
     EXPECT_EQ(params.hostTaskParams.fn, callback);
     EXPECT_EQ(params.hostTaskParams.userData, userData);
 
-    CondHandle condHandle(model_, 0U, static_cast<rtCondHandleFlag_t>(0));
+    CondHandle condHandle(model_, static_cast<rtCondHandleFlag_t>(0));
     InitEmbeddedInnerHandle(&condHandle);
     condHandle.SetCondType(RT_COND_TASK_TYPE_IF);
     condHandle.SetCondSize(2U);

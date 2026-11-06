@@ -228,11 +228,11 @@ rtError_t ApiImpl::ModelCondHandleCreate(
     rtError_t error = CheckCaptureModelSupportCondOp(curCtx->Device_());
     COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
 
-    CondHandle* condHandle = new (std::nothrow) CondHandle(mdl, defaultValue, flag);
+    CondHandle* condHandle = new (std::nothrow) CondHandle(mdl, flag);
     COND_RETURN_AND_MSG_OUTER(
         (condHandle == nullptr), RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013, sizeof(CondHandle), "new");
 
-    error = condHandle->Setup(curCtx);
+    error = condHandle->Setup(curCtx, defaultValue);
     if (error != RT_ERROR_NONE) {
         DELETE_O(condHandle);
         return error;

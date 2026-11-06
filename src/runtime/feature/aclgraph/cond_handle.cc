@@ -28,12 +28,8 @@
 namespace cce {
 namespace runtime {
 
-CondHandle::CondHandle(Model* mdl, uint32_t defaultValue, rtCondHandleFlag_t flag)
-    : NoCopy(),
-      model_(mdl),
-      defaultValue_(defaultValue),
-      flag_(flag),
-      condType_(static_cast<rtCondTaskType_t>(RT_COND_TASK_TYPE_MAX))
+CondHandle::CondHandle(Model* mdl, rtCondHandleFlag_t flag)
+    : NoCopy(), model_(mdl), flag_(flag), condType_(static_cast<rtCondTaskType_t>(RT_COND_TASK_TYPE_MAX))
 {}
 
 CondHandle::~CondHandle() noexcept
@@ -51,20 +47,30 @@ CondHandle::~CondHandle() noexcept
     }
 
     subCaptureModels_.clear();
+    if (context_ == nullptr) {
+        return;
+    }
 
-    if (devAddr_ != nullptr && context_ != nullptr) {
-        Device* dev = context_->Device_();
-        if (dev != nullptr) {
-            (void)dev->Driver_()->DevMemFree(devAddr_, dev->Id_());
-        }
+    Device* dev = context_->Device_();
+    if (dev == nullptr) {
+        return;
+    }
+
+    if (devAddr_ != nullptr) {
+        (void)dev->Driver_()->DevMemFree(devAddr_, dev->Id_());
+    }
+
+    if (defaultValue_ != nullptr) {
+        (void)dev->Driver_()->HostMemFree(defaultValue_);
     }
 
     devAddr_ = nullptr;
     context_ = nullptr;
     model_ = nullptr;
+    defaultValue_ = nullptr;
 }
 
-rtError_t CondHandle::Setup(Context* ctx)
+rtError_t CondHandle::Setup(Context* ctx, uint32_t defaultValue)
 {
     if (ctx == nullptr) {
         RT_LOG(RT_LOG_ERROR, "Context is null, failed to setup cond handle.");
@@ -98,9 +104,17 @@ rtError_t CondHandle::Setup(Context* ctx)
     error = driver->MemSetSync(devAddr_, sizeof(uint64_t), 0U, sizeof(uint64_t));
     ERROR_RETURN(error, "Failed to memset devAddr, retCode=%#x.", static_cast<uint32_t>(error));
 
+    void* hostPtr = nullptr;
+    error = driver->HostMemAlloc(&hostPtr, sizeof(uint64_t), dev->Id_());
+    ERROR_RETURN(
+        error, "Host alloc failed, size=%" PRIu64 "B, retCode=%#x.", sizeof(uint64_t), static_cast<uint32_t>(error));
+    NULL_PTR_RETURN_MSG(hostPtr, RT_ERROR_MEMORY_ALLOCATION);
+    defaultValue_ = RtPtrToPtr<uint64_t*>(hostPtr);
+    *defaultValue_ = defaultValue;
+
     RT_LOG(
         RT_LOG_DEBUG, "CondHandle setup success, model_id=%u, default_value=%" PRIu64 ", flag=%s, dev_addr=%p.",
-        model_->Id_(), defaultValue_, CondHandleFlagToString(flag_).c_str(), devAddr_);
+        model_->Id_(), *defaultValue_, CondHandleFlagToString(flag_).c_str(), devAddr_);
 
     InitEmbeddedInnerHandle(this);
     CaptureModel* captureModel = dynamic_cast<CaptureModel*>(model_);
@@ -140,13 +154,13 @@ rtError_t CondHandle::InitCondTaskByDefValue(Stream* const stm)
     // defaultValue_ 构造后不变，可直接作为拷贝任务的 host 源
     uint64_t realSize = 0;
     const rtError_t error = MemcopyAsync(
-        devAddr_, sizeof(uint64_t), &defaultValue_, sizeof(uint64_t), RT_MEMCPY_HOST_TO_DEVICE, stm, &realSize);
+        devAddr_, sizeof(uint64_t), defaultValue_, sizeof(uint64_t), RT_MEMCPY_HOST_TO_DEVICE, stm, &realSize);
     ERROR_RETURN(
         error,
         "Failed to init cond default value, condFlag=%s, condType=%s, condSize=%u, defValue=%" PRIu64 ", retCode=%#x.",
-        CondHandleFlagToString(flag_).c_str(), CondTaskTypeToString(condType_).c_str(), condSize_, defaultValue_,
+        CondHandleFlagToString(flag_).c_str(), CondTaskTypeToString(condType_).c_str(), condSize_, *defaultValue_,
         static_cast<uint32_t>(error));
-    RT_LOG(RT_LOG_DEBUG, "defValue=%" PRIu64 ", condType=%s", defaultValue_, CondTaskTypeToString(condType_).c_str());
+    RT_LOG(RT_LOG_DEBUG, "defValue=%" PRIu64 ", condType=%s", *defaultValue_, CondTaskTypeToString(condType_).c_str());
 
     return RT_ERROR_NONE;
 }
