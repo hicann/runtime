@@ -52,7 +52,7 @@ public:
     virtual rtError_t SetAicpuAttr(const char_t* const key, const char_t* const value) const = 0;
     virtual rtError_t SubscribeReport(const uint64_t threadId, Stream* const stm, void* evtNotify) = 0;
     virtual rtError_t UnSubscribeReport(Stream* const stm) = 0;
-    virtual Context* GetPriCtxByDeviceId(const uint32_t deviceId, uint32_t tsId) = 0;
+    virtual Context* GetPriCtxByDeviceId(const uint32_t deviceId, uint32_t tsId, const bool polling = true) = 0;
     virtual rtError_t GetElfOffset(void* const elfData, const uint32_t elfLen, uint32_t* offset) const = 0;
     virtual rtError_t GetKernelBin(const char_t* const binFileName, char_t** const buffer, uint32_t* length) const = 0;
     virtual rtError_t FreeKernelBin(char_t* const buffer) const = 0;

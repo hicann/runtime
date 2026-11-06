@@ -946,7 +946,7 @@ void PrintErrorInfoForDavinciTask(TaskInfo* taskInfo, const uint32_t devId)
             STREAM_REPORT_ERR_MSG(reportStream, ERR_MODULE_TBE, "[AIC_INFO] after execute:%s", mixCtxInfo.c_str());
         }
 
-        Context* const contextPtr = Runtime::Instance()->GetPriCtxByDeviceId(devId, tsId);
+        Context* const contextPtr = Runtime::Instance()->GetPriCtxByDeviceId(devId, tsId, false);
         if (unlikely(contextPtr == nullptr)) {
             STREAM_REPORT_ERR_MSG(
                 reportStream, ERR_MODULE_TBE,

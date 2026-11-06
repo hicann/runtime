@@ -4630,7 +4630,7 @@ bool Runtime::IsHostFuncCbReg(const Stream* const stm) const
     return cbSubscribe_->IsExistInStreamMap(stm);
 }
 
-Context* Runtime::GetPriCtxByDeviceId(const uint32_t deviceId, uint32_t tsId)
+Context* Runtime::GetPriCtxByDeviceId(const uint32_t deviceId, uint32_t tsId, const bool polling)
 {
     if (deviceId >= RT_MAX_DEV_NUM) {
         RT_LOG_INNER_MSG(
@@ -4649,7 +4649,10 @@ Context* Runtime::GetPriCtxByDeviceId(const uint32_t deviceId, uint32_t tsId)
     }
 
     RefObject<Context*>& refObj = priCtxs_[deviceId][tsId];
-    Context* const ctx = refObj.GetPrimaryCtxCallBackFlag() ? refObj.GetVal(false) : refObj.GetVal();
+    if (!polling && refObj.IsUpdating()) {
+        return nullptr;
+    }
+    Context* const ctx = (refObj.GetPrimaryCtxCallBackFlag() || !polling) ? refObj.GetVal(false) : refObj.GetVal();
     if (!ContextManage::IsActiveContextOnDevice(ctx, static_cast<int32_t>(deviceId))) {
         RT_LOG(RT_LOG_DEBUG, "Primary context is unavailable, deviceId=%u, tsId=%u, ctx=%p.", deviceId, tsId, ctx);
         return nullptr;

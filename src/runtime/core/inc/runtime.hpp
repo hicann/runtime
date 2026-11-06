@@ -316,7 +316,7 @@ public:
     rtError_t GetSqIdByStreamId(const uint32_t devId, const int32_t streamId, uint32_t* const sqId);
     rtError_t GetThreadIdByStreamId(const uint32_t devId, const int32_t streamId, uint64_t* const threadId);
     bool IsHostFuncCbReg(const Stream* const stm) const;
-    Context* GetPriCtxByDeviceId(const uint32_t deviceId, uint32_t tsId) override;
+    Context* GetPriCtxByDeviceId(const uint32_t deviceId, uint32_t tsId, const bool polling = true) override;
     void SetInternalThreadContext(Context* const ctx);
     RefObject<Context*>* GetRefPriCtx(const uint32_t deviceId, const uint32_t tsId);
     rtError_t SetTimeoutConfig(

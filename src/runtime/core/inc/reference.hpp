@@ -126,6 +126,8 @@ public:
 
     uint64_t GetRefCount() const { return count_.Value() & (~REF_UPDATING); }
 
+    bool IsUpdating() const { return (count_.Value() & REF_UPDATING) != 0ULL; }
+
     // called after IncRef return 0.
     void SetVal(T val)
     {

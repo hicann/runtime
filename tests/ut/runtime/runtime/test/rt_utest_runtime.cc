@@ -1422,6 +1422,24 @@ TEST_F(RuntimeTest, GetPriCtxByDeviceId_InvalidTsId)
     EXPECT_EQ(rtInstance->GetPriCtxByDeviceId(0, RT_MAX_TS_ID + 1), nullptr);
 }
 
+TEST_F(RuntimeTest, GetPriCtxByDeviceId_NoPollingWhileUpdating)
+{
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    RefObject<Context*>* refObject = rtInstance->GetRefPriCtx(0, 0);
+    ASSERT_NE(refObject, nullptr);
+    Context* ctx = rtInstance->GetPriCtxByDeviceId(0, 0, false);
+    ASSERT_NE(ctx, nullptr);
+    ASSERT_EQ(refObject->GetRefCount(), 1ULL);
+
+    ASSERT_FALSE(refObject->DecRef());
+    const ScopeGuard restoreRef([refObject, ctx]() { EXPECT_TRUE(refObject->RestoreValAfterFailedReset(ctx)); });
+    const uint64_t updatingRef = refObject->GetRef();
+
+    EXPECT_EQ(rtInstance->GetPriCtxByDeviceId(0, 0, false), nullptr);
+    EXPECT_EQ(refObject->GetRef(), updatingRef);
+    EXPECT_EQ(refObject->GetVal(false), ctx);
+}
+
 TEST_F(RuntimeTest, GetRefPriCtx_InvalidDevId)
 {
     Runtime* rtInstance = (Runtime*)Runtime::Instance();
