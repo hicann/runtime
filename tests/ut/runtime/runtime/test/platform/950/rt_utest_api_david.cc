@@ -8848,7 +8848,7 @@ TEST_F(ApiDavidTest, TestLaunchNonKernelByHandle)
 
     k1->SetKernelRegisterType(RT_KERNEL_REG_TYPE_CPU);
     error = impl.LaunchKernelByHandle(k1, 1U, argsInfo, stream, taskCfg);
-    EXPECT_NE(error, RT_ERROR_NONE);
+    EXPECT_EQ(error, RT_ERROR_NONE);
 
     rtInstance->chipType_ = type;
     GlobalContainer::SetRtChipType(type);

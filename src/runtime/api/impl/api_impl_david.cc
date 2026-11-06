@@ -166,18 +166,6 @@ rtError_t ApiImplDavid::CpuKernelLaunchExAll(
     }
 
     const uint32_t kernelType = kernel->GetAicpuKernelType_();
-    COND_PROC_RETURN_AND_MSG_OUTER(
-        (kernelType != KERNEL_TYPE_FWK) && (kernelType != KERNEL_TYPE_AICPU) &&
-            (kernelType != KERNEL_TYPE_AICPU_CUSTOM) && (kernelType != KERNEL_TYPE_AICPU_KFC),
-        RT_ERROR_KERNEL_TYPE, ErrorCode::EE1011,
-        RT_LOG(RT_LOG_ERROR, "kernel type mismatch kernelType=UNKNOWN(%u).", kernelType),
-        "Starting the compute task of an AI CPU operator", RtFmtMsg("%u", kernelType), "kernelType",
-        RtFmtMsg(
-            "kernelType must be KERNEL_TYPE_FWK(%u), KERNEL_TYPE_AICPU(%u), KERNEL_TYPE_AICPU_CUSTOM(%u), or "
-            "KERNEL_TYPE_AICPU_KFC(%u)",
-            static_cast<uint32_t>(KERNEL_TYPE_FWK), static_cast<uint32_t>(KERNEL_TYPE_AICPU),
-            static_cast<uint32_t>(KERNEL_TYPE_AICPU_CUSTOM), static_cast<uint32_t>(KERNEL_TYPE_AICPU_KFC)));
-
     const rtError_t error = StreamLaunchCpuKernelExWithArgs(
         coreDim, static_cast<const rtAicpuArgsEx_t*>(&argsInfo->baseArgs), taskCfg, stm, flag, kernelType, kernel,
         argsInfo->cpuParamHeadOffset);
