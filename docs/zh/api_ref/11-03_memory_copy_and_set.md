@@ -171,6 +171,9 @@ aclError aclrtMemcpyAsync(void *dst, size_t destMax, const void *src, size_t cou
 <!-- npu="310p" id8 -->
 - Control CPU开放形态下，在Device上运行应用时，若调用本接口传入的kind为ACL\_MEMCPY\_HOST\_TO\_DEVICE或ACL\_MEMCPY\_DEVICE\_TO\_HOST或ACL\_MEMCPY\_HOST\_TO\_HOST，系统内部将默认使用ACL\_MEMCPY\_DEVICE\_TO\_DEVICE执行Device内的内存复制。
 <!-- end id8 -->
+<!-- npu="5162A" id5018 -->
+- 对于Hisilicon5162A，若调用本接口传入的kind涉及Host（例如ACL\_MEMCPY\_HOST\_TO\_DEVICE或ACL\_MEMCPY\_DEVICE\_TO\_HOST或ACL\_MEMCPY\_HOST\_TO\_HOST），系统内部将默认使用ACL\_MEMCPY\_DEVICE\_TO\_DEVICE执行Device内的内存复制。
+<!-- end id5018 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-03_memory_copy_and_set_res.md#id18 -->
 
 <br>
