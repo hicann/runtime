@@ -138,7 +138,6 @@ rtError_t LaunchMultipleTaskInfo(
                 RT_LOG(
                     RT_LOG_ERROR, "submit dvpp task failed, stream_id=%d, sqeType=%hu", streamId,
                     multipleTaskInfo->taskDesc[idx].u.dvppTaskDesc.sqe.sqeHeader.type);
-                (void)dev->GetTaskFactory()->Recycle(multipleTask);
             }
             break;
         }

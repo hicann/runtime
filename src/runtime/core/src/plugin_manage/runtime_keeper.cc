@@ -326,7 +326,9 @@ Runtime* RuntimeKeeper::BootRuntime()
         const rtError_t error = MsprofRegisterCallback(RUNTIME, &rtProfilingCommandHandle);
         if (error != RT_ERROR_NONE) {
             RT_LOG_CALL_MSG(ERR_MODULE_PROFILE, "Failed to register runtime profiling callback, ret=%d.", error);
-            DELETE_O(runtime_);
+            DestroyRuntimeImpl(runtime_, handle);
+            runtime_ = nullptr;
+            (void)mmDlclose(handle);
             bootStage_.Set(BOOT_INIT);
             return nullptr;
         }

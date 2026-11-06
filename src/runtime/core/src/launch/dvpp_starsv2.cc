@@ -160,9 +160,9 @@ rtError_t LaunchMultipleTaskInfo(
         if ((multipleTaskInfo->taskDesc[idx].type == RT_MULTIPLE_TASK_TYPE_DVPP) &&
             (multipleTaskInfo->taskDesc[idx].u.dvppTaskDesc.sqe.sqeHeader.reserved == 1U)) {
             error = StarsLaunchDvppRRProcess(dstStm);
-            ERROR_PROC_RETURN_MSG_INNER(error, TaskUnInitProc(multipleTask);
-                                        , "Failed to submit DVPP task, stream_id=%d, sqeType=%hu.", streamId,
-                                        multipleTaskInfo->taskDesc[idx].u.dvppTaskDesc.sqe.sqeHeader.type);
+            ERROR_RETURN_MSG_INNER(
+                error, "Failed to submit DVPP task, stream_id=%d, sqeType=%hu.", streamId,
+                multipleTaskInfo->taskDesc[idx].u.dvppTaskDesc.sqe.sqeHeader.type);
             break;
         }
     }

@@ -313,11 +313,12 @@ void* TaskAllocator::GetItemBySerial(const int32_t streamId, const int32_t seria
         RT_LOG(RT_LOG_WARNING, "Cannot get task, serial_id=%d is invalid", serial);
         return nullptr;
     }
+    const uint16_t taskId = it2->second;
     serialLock.unlock();
 
-    RT_LOG(RT_LOG_DEBUG, "stream_id=%d, task_id=%hu, serial_id=%d", streamId, it2->second, serial);
+    RT_LOG(RT_LOG_DEBUG, "stream_id=%d, task_id=%hu, serial_id=%d", streamId, taskId, serial);
     rtError_t errCode = RT_ERROR_NONE;
-    return GetItemById(streamId, static_cast<int32_t>(it2->second), errCode);
+    return GetItemById(streamId, taskId, errCode);
 }
 
 } // namespace runtime
