@@ -211,7 +211,7 @@ aclError aclrtMemManagedPrefetchBatchAsync(const void** ptrs, size_t* sizes, siz
 | sizes           |   输入    | 内存预取长度数组，用于存放每一段要预取的UVM内存长度，单位Byte。每段长度要求2MB对齐，取值范围为(0, 3TB]。 |
 | count           |   输入    | ptrs和sizes数组长度。                                        |
 | prefetchLocs    |   输入    | 物理内存的位置信息数组，每个位置信息都包含id和type两个成员。类型定义请参见[aclrtMemManagedLocation](25-04_Structs.md#aclrtMemManagedLocation)。 |
-| prefetchLocIdxs |   输入    | 物理内存预取信息索引数组，用于指定prefetchLocs数组中的每个物理地址适用的预取范围。对于prefetchLocs[k]指定的物理地址，将预取ptrs数组中从第prefetchLocIdxs[k]个下标到第prefetchLocIdxs[k+1]-1个下标指向元素的UVM内存地址，同时对于prefetchLocs[numPrefetchLocs-1]指定的物理地址，将预取ptrs数组中从第指定的物理地址，将预取ptrs数组中从第prefetchLocIdxs[numPrefetchLocs-1]个下标到第count-1个下标指向元素的UVM内存地址。 |
+| prefetchLocIdxs |   输入    | 物理内存预取信息索引数组，用于指定prefetchLocs数组中的每个物理地址适用的预取范围。对于prefetchLocs[k]指定的物理地址，将预取ptrs数组中从第prefetchLocIdxs[k]个下标到第prefetchLocIdxs[k+1]-1个下标指向元素的UVM内存地址，同时对于prefetchLocs[numPrefetchLocs-1]指定的物理地址，将预取ptrs数组中从第prefetchLocIdxs[numPrefetchLocs-1]个下标到第count-1个下标指向元素的UVM内存地址。 |
 | numPrefetchLocs |   输入    | prefetchLocs和prefetchLocIdxs数组的长度。                    |
 | flags           |   输入    | 预留参数。当前固定配置为0。                                  |
 | stream          |   输入    | 指定执行内存预取任务的Stream。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。 |
