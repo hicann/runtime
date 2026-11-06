@@ -10,6 +10,7 @@
 
 #include "global_state_manager.hpp"
 #include <chrono>
+#include <cinttypes>
 #include <thread>
 #include "base.hpp"
 
@@ -180,8 +181,8 @@ rtError_t GlobalStateManager::WaitForAllBackgroundThreadLocked() const
             RT_LOG_INNER_MSG(
                 RT_LOG_ERROR,
                 "Timeout waiting for background threads to lock when locking the process snapshot: only %u/%u "
-                "background threads were locked within %lld seconds.",
-                lockedBackgroundThreadCount_.load(), totalCount, static_cast<long long>(timeout.count()));
+                "background threads were locked within %" PRId64 " seconds.",
+                lockedBackgroundThreadCount_.load(), totalCount, static_cast<std::int64_t>(timeout.count()));
             return RT_ERROR_SNAPSHOT_LOCK_TIMEOUT;
         }
 
@@ -214,8 +215,8 @@ rtError_t GlobalStateManager::WaitForAllBackgroundThreadUnlocked() const
             RT_LOG_INNER_MSG(
                 RT_LOG_ERROR,
                 "Timeout waiting for background threads to unlock when unlocking the process snapshot: %u "
-                "background threads were still in the locked state after %lld seconds.",
-                lockedBackgroundThreadCount_.load(), static_cast<long long>(timeout.count()));
+                "background threads were still in the locked state after %" PRId64 " seconds.",
+                lockedBackgroundThreadCount_.load(), static_cast<std::int64_t>(timeout.count()));
             return RT_ERROR_SNAPSHOT_UNLOCK_FAILED;
         }
 

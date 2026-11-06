@@ -59,9 +59,14 @@ rtError_t ProfTraceEx(
     (void)ProfilerTraceExTaskInit(rtProfTraceExTask, id, modelId, tagId);
     rtProfTraceExTask->stmArgPos = static_cast<DavidStream*>(dstStm)->GetArgPos();
     error = DavidSendTask(rtProfTraceExTask, dstStm);
-    ERROR_PROC_RETURN_MSG_INNER(error, TaskUnInitProc(rtProfTraceExTask); TaskRollBack(dstStm, pos);
-                                stm->StreamUnLock();, "Failed to send task (stream_id=%d), retCode=%#x.", stm->Id_(),
-                                                    static_cast<uint32_t>(error));
+    ERROR_PROC_RETURN_MSG_INNER(
+        error,
+        {
+            TaskUnInitProc(rtProfTraceExTask);
+            TaskRollBack(dstStm, pos);
+            stm->StreamUnLock();
+        },
+        "Failed to send task (stream_id=%d), retCode=%#x.", stm->Id_(), static_cast<uint32_t>(error));
     stm->StreamUnLock();
     SET_THREAD_TASKID_AND_STREAMID(dstStm->GetExposedStreamId(), rtProfTraceExTask->taskSn);
     error = SubmitTaskPostProc(dstStm, pos);
