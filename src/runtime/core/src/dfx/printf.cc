@@ -1755,7 +1755,11 @@ rtError_t ParseAicpuPrintfV2(void* addr, const size_t blockSize, Driver* curDrv,
         if (ret != RT_ERROR_NONE) {
             return ret;
         }
-        readInfo->readIdx = readIdx + consumedLen;
+        if (writeInfo->writeIdx - readIdx > blockInfo->remainLen) {
+            readInfo->readIdx = writeInfo->writeIdx;
+        } else {
+            readInfo->readIdx = readIdx + consumedLen;
+        }
     } else {
         RT_LOG(
             RT_LOG_WARNING,
