@@ -35,7 +35,9 @@
 #include <atomic>
 #include <cstring>
 #include <fstream>
+#include <limits>
 #include <thread>
+#include <tuple>
 #include "prof_ctrl_callback_manager.hpp"
 #include "api_error.hpp"
 #include "profiling_agent.hpp"
@@ -1179,6 +1181,46 @@ TEST_F(ProfileApiTest, rtProfSetProSwitch)
 
     ProfCtrlCallbackManager::Instance().DelAllData();
     StubProfilingDelAll();
+}
+
+class ProfileApiInvalidDevCountTest : public ProfileApiTest,
+                                      public testing::WithParamInterface<std::tuple<uint32_t, uint32_t, bool>> {};
+
+TEST_P(ProfileApiInvalidDevCountTest, rtProfSetProSwitchRejectsBeforeSideEffects)
+{
+    rtProfCommandHandle_t profilerConfig = {};
+    profilerConfig.devNums = std::get<0>(GetParam());
+    profilerConfig.type = std::get<1>(GetParam());
+    MOCKER(RtIsHeterogenous).stubs().will(returnValue(std::get<2>(GetParam())));
+    MOCKER_CPP(&ProfCtrlCallbackManager::SaveProfSwitchData).expects(never());
+    MOCKER_CPP(&ProfCtrlCallbackManager::Notify).expects(never());
+    MOCKER_CPP_VIRTUAL(Api::Instance(), &Api::ProfilerStart).expects(never());
+    MOCKER_CPP_VIRTUAL(Api::Instance(), &Api::ProfilerStop).expects(never());
+
+    EXPECT_EQ(rtProfSetProSwitch(&profilerConfig, sizeof(profilerConfig)), ACL_ERROR_RT_PARAM_INVALID);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    DeviceCountOverflow, ProfileApiInvalidDevCountTest,
+    testing::Combine(
+        testing::Values(RT_PROF_MAX_DEV_NUM + 1U, 100U, std::numeric_limits<uint32_t>::max()),
+        testing::Values(
+            static_cast<uint32_t>(PROF_COMMANDHANDLE_TYPE_START), static_cast<uint32_t>(PROF_COMMANDHANDLE_TYPE_STOP),
+            static_cast<uint32_t>(PROF_COMMANDHANDLE_TYPE_MODEL_UNSUBSCRIBE)),
+        testing::Values(false, true)));
+
+TEST_F(ProfileApiTest, rtProfSetProSwitchAcceptsDeviceCountBoundaries)
+{
+    MOCKER(RtIsHeterogenous).stubs().will(returnValue(false));
+    MOCKER_CPP(&ProfCtrlCallbackManager::SaveProfSwitchData).expects(exactly(3));
+    MOCKER_CPP(&ProfCtrlCallbackManager::Notify).expects(exactly(3));
+    rtProfCommandHandle_t profilerConfig = {};
+    profilerConfig.type = PROF_COMMANDHANDLE_TYPE_MODEL_UNSUBSCRIBE;
+    for (const uint32_t devCount : {0U, 1U, static_cast<uint32_t>(RT_PROF_MAX_DEV_NUM)}) {
+        SCOPED_TRACE(devCount);
+        profilerConfig.devNums = devCount;
+        EXPECT_EQ(rtProfSetProSwitch(&profilerConfig, sizeof(profilerConfig)), ACL_RT_SUCCESS);
+    }
 }
 
 TEST_F(ProfileApiTest, rtSetDeviceIdByGeModelIdx)

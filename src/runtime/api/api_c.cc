@@ -1506,9 +1506,12 @@ rtError_t rtProfSetProSwitch(void* data, uint32_t len)
         RT_LOG_OUTER_MSG_INVALID_PARAM(len, sizeof(rtProfCommandHandle_t));
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
     }
-    ProfCtrlCallbackManager::Instance().SaveProfSwitchData(static_cast<rtProfCommandHandle_t*>(data), len);
-    ProfCtrlCallbackManager::Instance().Notify(static_cast<uint32_t>(RT_PROF_CTRL_SWITCH), data, len);
     rtProfCommandHandle_t* const profilerConfig = static_cast<rtProfCommandHandle_t*>(data);
+    COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM_NAME(
+        profilerConfig->devNums > RT_PROF_MAX_DEV_NUM, RT_ERROR_INVALID_VALUE, profilerConfig->devNums, "devNums",
+        RtFmtMsg("[0, %u]", static_cast<uint32_t>(RT_PROF_MAX_DEV_NUM)));
+    ProfCtrlCallbackManager::Instance().SaveProfSwitchData(profilerConfig, len);
+    ProfCtrlCallbackManager::Instance().Notify(static_cast<uint32_t>(RT_PROF_CTRL_SWITCH), data, len);
     RT_LOG(
         RT_LOG_INFO, "profSwitch:%#" PRIx64 ", profSwitchHi:%#" PRIx64 ", type:%u", profilerConfig->profSwitch,
         profilerConfig->profSwitchHi, profilerConfig->type);
