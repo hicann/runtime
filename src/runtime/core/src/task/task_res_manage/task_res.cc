@@ -228,7 +228,7 @@ void TaskResManage::ResetTaskRes()
 uint16_t TaskResManage::GetTaskPoolSizeByChipType(const rtChipType_t chipType) const
 {
     DevProperties prop;
-    rtError_t ret = GET_DEV_PROPERTIES(chipType, prop);
+    const rtError_t ret = GET_DEV_PROPERTIES(chipType, prop);
     COND_RETURN_ERROR_MSG_INNER(
         ret != RT_ERROR_NONE, 0U, "GetDevProperties failed, chip type=%d.", static_cast<int32_t>(chipType));
     if (prop.taskPoolSizeFromRtsqDepth) {

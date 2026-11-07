@@ -369,9 +369,9 @@ rtError_t ApiImpl::GetDeviceVirtualInfo(uint32_t deviceId, int64_t* val) const
     drvError = halGetDeviceSplitMode(deviceId, &split_mode);
     if (drvError == DRV_ERROR_NONE) {
         if (split_mode == RT_VMNG_NORMAL_NONE_SPLIT_MODE) {
-            *val = static_cast<int64_t>(RT_NO_SPLIT_MODE);
+            *val = static_cast<int64_t>(SplitMode::RT_NO_SPLIT_MODE);
         } else if (split_mode == RT_VMNG_VIRTUAL_SPLIT_MODE || split_mode == RT_VMNG_CONTAINER_SPLIT_MODE) {
-            *val = static_cast<int64_t>(RT_SPLIT_MODE);
+            *val = static_cast<int64_t>(SplitMode::RT_SPLIT_MODE);
         } else {
             RT_LOG(RT_LOG_WARNING, "Invalid split mode=%u.", split_mode);
         }

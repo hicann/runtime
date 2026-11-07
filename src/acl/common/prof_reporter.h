@@ -360,5 +360,5 @@ private:
 
 } // namespace acl
 #define ACL_PROFILING_REG(apiId) const acl::AclProfilingReporter profilingReporter(apiId)
-#define ACL_PROFILING_REG_WITH_KERNEL_NAME(apiId) const acl::AclProfilingReporter profilingReporter(apiId, true)
+#define ACL_PROFILING_REG_WITH_KERNEL_NAME(apiId) const acl::AclProfilingReporter profilingReporter((apiId), true)
 #endif // ACL_PROFI_REPORTER_H_
