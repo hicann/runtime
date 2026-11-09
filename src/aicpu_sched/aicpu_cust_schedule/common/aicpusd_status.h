@@ -117,14 +117,14 @@ constexpr int32_t AICPU_SCHEDULE_ERROR_FROM_DRV = 21206;
         }                                                                                                       \
     } while (0)
 
-#define aicpusd_run_warn(fmt, ...)                                                                                   \
-    do {                                                                                                             \
-        if ((&CheckLogLevel != nullptr) && (&DlogRecord != nullptr)) {                                               \
-            dlog_warn(                                                                                               \
-                static_cast<int32_t>(static_cast<uint32_t>(CCECPU) | static_cast<uint32_t>(RUN_LOG_MASK)),           \
-                "[%s][tid:%llu][%s] " fmt, &__FUNCTION__[0], AicpuSchedule::GetTid(), AicpuSchedule::AICPUSD_MODULE, \
-                ##__VA_ARGS__);                                                                                      \
-        }                                                                                                            \
+#define aicpusd_run_warn(fmt, ...)                                                                                  \
+    do {                                                                                                            \
+        if ((&CheckLogLevel != nullptr) && (&DlogRecord != nullptr)) {                                              \
+            dlog_warn(                                                                                              \
+                static_cast<int32_t>(static_cast<uint32_t>(CCECPU) | static_cast<uint32_t>(RUN_LOG_MASK)),          \
+                "[%s][tid:%lu][%s] " fmt, &__FUNCTION__[0], AicpuSchedule::GetTid(), AicpuSchedule::AICPUSD_MODULE, \
+                ##__VA_ARGS__);                                                                                     \
+        }                                                                                                           \
     } while (0)
 
 #define UNUSED(expr)  \

@@ -304,6 +304,7 @@ void AsyncEventManager::ProcessOpEvent(const uint32_t eventId, const uint32_t su
     AsyncEventInfo info = {};
     info.eventId = eventId;
     info.subEventId = subEventId;
+    std::map<OpInfo, EventProcessCallBack> opMapCopy;
     {
         const std::unique_lock<std::mutex> lk(g_opMapMutex);
         const auto iter = g_opAsyncTaskMap.find(info);
@@ -311,15 +312,15 @@ void AsyncEventManager::ProcessOpEvent(const uint32_t eventId, const uint32_t su
             AICPUE_LOGW("AsyncEventManager no async task to deal with.");
             return;
         }
-        const auto& opMap = iter->second;
-        for (auto& kv : opMap) {
-            const auto& opInfo = kv.first;
-            EventProcessCallBack taskCb = kv.second;
-            AICPUE_LOGI(
-                "AsyncEventManager ProcessOpEvent for streamId[%u], taskId[%lu], threadIndex[%u]", opInfo.streamId,
-                opInfo.taskId, opInfo.threadIndex);
-            taskCb(param);
-        }
+        opMapCopy = iter->second;
+    }
+    for (auto& kv : opMapCopy) {
+        const auto& opInfo = kv.first;
+        EventProcessCallBack taskCb = kv.second;
+        AICPUE_LOGI(
+            "AsyncEventManager ProcessOpEvent for streamId[%u], taskId[%lu], threadIndex[%u]", opInfo.streamId,
+            opInfo.taskId, opInfo.threadIndex);
+        taskCb(param);
     }
     AICPUE_LOGI("AsyncEventManager ProcessOpEvent eventId = %u, subEventId = %u end!", eventId, subEventId);
     return;

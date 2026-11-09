@@ -114,3 +114,54 @@ TEST_F(AicpusdModelStatisticTEST, StatModelInputAndOutputFailed)
     EXPECT_EQ(AicpuSdModelStatistic::GetInstance().modelStatArray_[1U].useFlag, false);
     AicpuSdModelStatistic::GetInstance().modelStatArray_[1U].useFlag = true;
 }
+
+TEST_F(AicpusdModelStatisticTEST, StatModelInputInvalidDimNumSkip)
+{
+    AicpuSdModelStatistic::GetInstance().InitModelStatInfo();
+    std::vector<uint64_t> totalSizeList;
+    totalSizeList.push_back(123UL);
+
+    // delVecSize(0) < curVecSize(1), dimNum invalid in AddNewDataToStatVec path: skip
+    std::vector<ModelConfigTensorDesc> curStatVec;
+    ModelConfigTensorDesc invalidDes = {};
+    invalidDes.dtype = 0;
+    invalidDes.shape[0] = -1; // invalid dimNum
+    curStatVec.push_back(invalidDes);
+    AicpuSdModelStatistic::GetInstance().StatNNModelInput(1U, totalSizeList, curStatVec);
+    EXPECT_EQ(AicpuSdModelStatistic::GetInstance().modelStatArray_[1U].inputStatVec.size(), 0U);
+
+    // valid input, stat vec grows to 1
+    std::vector<ModelConfigTensorDesc> curStatVec2;
+    ModelConfigTensorDesc validDes = {};
+    validDes.dtype = 0;
+    validDes.shape[0] = 1;
+    validDes.shape[1] = 2;
+    curStatVec2.push_back(validDes);
+    AicpuSdModelStatistic::GetInstance().StatNNModelInput(1U, totalSizeList, curStatVec2);
+    EXPECT_EQ(AicpuSdModelStatistic::GetInstance().modelStatArray_[1U].inputStatVec.size(), 1U);
+
+    // delVecSize(1) == curVecSize(1), dimNum invalid in UpdateStatVecInfo path: skip
+    std::vector<ModelConfigTensorDesc> curStatVec3;
+    ModelConfigTensorDesc invalidDes2 = {};
+    invalidDes2.dtype = 0;
+    invalidDes2.shape[0] = MAX_DIM_SIZE + 1; // invalid dimNum
+    curStatVec3.push_back(invalidDes2);
+    AicpuSdModelStatistic::GetInstance().StatNNModelInput(1U, totalSizeList, curStatVec3);
+    const auto& statInfo = AicpuSdModelStatistic::GetInstance().modelStatArray_[1U].inputStatVec[0];
+    EXPECT_EQ(statInfo.minSize, 123UL);
+    EXPECT_EQ(statInfo.maxSize, 123UL);
+}
+
+TEST_F(AicpusdModelStatisticTEST, StatModelOutputInvalidDimNum)
+{
+    AicpuSdModelStatistic::GetInstance().InitModelStatInfo();
+    RuntimeTensorDesc runDesc = {};
+    runDesc.dtype = 0;
+    runDesc.shape[0] = -1; // invalid dimNum
+    AicpuSdModelStatistic::GetInstance().StatNNModelOutput(1U, &runDesc, 1);
+    EXPECT_EQ(AicpuSdModelStatistic::GetInstance().modelStatArray_[1U].outputStatVec.size(), 0U);
+
+    runDesc.shape[0] = MAX_DIM_SIZE + 1; // invalid dimNum
+    AicpuSdModelStatistic::GetInstance().StatNNModelOutput(1U, &runDesc, 1);
+    EXPECT_EQ(AicpuSdModelStatistic::GetInstance().modelStatArray_[1U].outputStatVec.size(), 0U);
+}

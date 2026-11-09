@@ -19,6 +19,7 @@
 #undef private
 #include "aicpusd_context.h"
 #include "aicpusd_model_execute.h"
+#include "operator_kernel_common.h"
 #include "operator_kernel_stub.h"
 
 using namespace AicpuSchedule;
@@ -34,6 +35,16 @@ int32_t CheckAndParseBatchDeqBufParamsStub(
     batchDeqBufInfo.mbufAddrs = &batchDequeueInfoMbufAddrs[0];
     batchDeqBufInfo.deviceIds = &batchDequeueInfoDeviceIds[0];
     return AICPU_SCHEDULE_OK;
+}
+
+using NothrowArrayNewFunc = void* (*)(std::size_t, const std::nothrow_t&);
+
+// simulate nothrow new[] allocation failure to cover vecUniquePtr alloc failed branch
+void* NothrowArrayNewFail(std::size_t size, const std::nothrow_t& tag)
+{
+    (void)size;
+    (void)tag;
+    return nullptr;
 }
 } // namespace
 
@@ -299,4 +310,138 @@ TEST_F(OperatorKernelModelBatchDequeueBuffTest, ModelDequeueBuffTaskKernel_TryOn
     BufEnQueueBuffInfo queue{0, 0, (uint64_t)&mbuf};
     int32_t ret = kernel_.ModelDequeueBuffTaskKernel(queue, runContextT, true);
     EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
+}
+
+TEST_F(OperatorKernelModelBatchDequeueBuffTest, ModelBatchDequeueBuff_AttachDequeueFail_ReturnErr)
+{
+    MOCKER_CPP(&OperatorKernelModelBatchDequeueBuff::CheckAndParseBatchDeqBufParams)
+        .stubs()
+        .will(invoke(CheckAndParseBatchDeqBufParamsStub));
+    MOCKER_CPP(&OperatorKernelModelBatchDequeueBuff::ModelDequeueBuffTaskKernel).stubs().will(returnValue(-2));
+    AicpuTaskInfo taskT;
+    taskT.taskID = 1;
+    char tmpBuf[128] = {0};
+    Mbuf* mbuf = (Mbuf*)tmpBuf;
+    BufEnQueueBuffInfo queue{0, 0, (uint64_t)&mbuf};
+    taskT.paraBase = (uint64_t)&queue;
+    int32_t ret = kernel_.Compute(taskT, runContextT);
+    EXPECT_EQ(ret, -2);
+    GlobalMockObject::verify();
+}
+
+TEST_F(OperatorKernelModelBatchDequeueBuffTest, DequeueBuff_SetDataLenFail_UnGuardBuf)
+{
+    AicpuModel aicpuModel;
+    MOCKER_CPP(&AicpuModelManager::GetModel).stubs().will(returnValue(&aicpuModel));
+    uint64_t respLen = sizeof(struct buff_iovec) + sizeof(struct iovec_info);
+    MOCKER(halQueuePeek)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), outBoundP(&respLen), mockcpp::any())
+        .will(returnValue(DRV_ERROR_NONE));
+    char tmpBuf[128] = {0};
+    Mbuf* mbuf = (Mbuf*)tmpBuf;
+    MOCKER_CPP(&BufManager::MallocAndGuardBuf).stubs().will(returnValue(mbuf));
+    MOCKER(halMbufSetDataLen).stubs().will(returnValue(-1));
+    MOCKER_CPP(&BufManager::UnGuardBuf).expects(once()).will(returnValue((int32_t)0));
+    BufEnQueueBuffInfo queue{0, 0, (uint64_t)&mbuf};
+    int32_t ret = kernel_.ModelDequeueBuffTaskKernel(queue, runContextT);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_FROM_DRV);
+}
+
+TEST_F(OperatorKernelModelBatchDequeueBuffTest, DequeueBuff_GetPrivInfoFail_UnGuardBuf)
+{
+    AicpuModel aicpuModel;
+    MOCKER_CPP(&AicpuModelManager::GetModel).stubs().will(returnValue(&aicpuModel));
+    uint64_t respLen = sizeof(struct buff_iovec) + sizeof(struct iovec_info);
+    MOCKER(halQueuePeek)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), outBoundP(&respLen), mockcpp::any())
+        .will(returnValue(DRV_ERROR_NONE));
+    char tmpBuf[128] = {0};
+    Mbuf* mbuf = (Mbuf*)tmpBuf;
+    MOCKER_CPP(&BufManager::MallocAndGuardBuf).stubs().will(returnValue(mbuf));
+    MOCKER(halMbufSetDataLen).stubs().will(returnValue(static_cast<int>(DRV_ERROR_NONE)));
+    MOCKER(halMbufGetPrivInfo).stubs().will(returnValue(-1));
+    MOCKER_CPP(&BufManager::UnGuardBuf).expects(once()).will(returnValue((int32_t)0));
+    BufEnQueueBuffInfo queue{0, 0, (uint64_t)&mbuf};
+    int32_t ret = kernel_.ModelDequeueBuffTaskKernel(queue, runContextT);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_FROM_DRV);
+}
+
+TEST_F(OperatorKernelModelBatchDequeueBuffTest, DequeueBuff_GetMbufDataPtrFail_UnGuardBuf)
+{
+    AicpuModel aicpuModel;
+    MOCKER_CPP(&AicpuModelManager::GetModel).stubs().will(returnValue(&aicpuModel));
+    uint64_t respLen = sizeof(struct buff_iovec) + sizeof(struct iovec_info);
+    MOCKER(halQueuePeek)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), outBoundP(&respLen), mockcpp::any())
+        .will(returnValue(DRV_ERROR_NONE));
+    char tmpBuf[128] = {0};
+    Mbuf* mbuf = (Mbuf*)tmpBuf;
+    MOCKER_CPP(&BufManager::MallocAndGuardBuf).stubs().will(returnValue(mbuf));
+    MOCKER(halMbufSetDataLen).stubs().will(returnValue(static_cast<int>(DRV_ERROR_NONE)));
+    MOCKER(halMbufGetPrivInfo).stubs().will(invoke(halMbufGetPrivInfoFake));
+    MOCKER_CPP(&OperatorKernelCommon::GetMbufDataPtr).stubs().will(returnValue(-1));
+    MOCKER_CPP(&BufManager::UnGuardBuf).expects(once()).will(returnValue((int32_t)0));
+    BufEnQueueBuffInfo queue{0, 0, (uint64_t)&mbuf};
+    int32_t ret = kernel_.ModelDequeueBuffTaskKernel(queue, runContextT);
+    EXPECT_EQ(ret, -1);
+}
+
+TEST_F(OperatorKernelModelBatchDequeueBuffTest, DequeueBuff_DeQueueBuffFail_UnGuardBuf)
+{
+    AicpuModel aicpuModel;
+    MOCKER_CPP(&AicpuModelManager::GetModel).stubs().will(returnValue(&aicpuModel));
+    uint64_t respLen = sizeof(struct buff_iovec) + sizeof(struct iovec_info);
+    MOCKER(halQueuePeek)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), outBoundP(&respLen), mockcpp::any())
+        .will(returnValue(DRV_ERROR_NONE));
+    char tmpBuf[128] = {0};
+    Mbuf* mbuf = (Mbuf*)tmpBuf;
+    MOCKER_CPP(&BufManager::MallocAndGuardBuf).stubs().will(returnValue(mbuf));
+    MOCKER(halMbufSetDataLen).stubs().will(returnValue(static_cast<int>(DRV_ERROR_NONE)));
+    MOCKER(halMbufGetPrivInfo).stubs().will(invoke(halMbufGetPrivInfoFake));
+    MOCKER_CPP(&OperatorKernelCommon::GetMbufDataPtr).stubs().will(returnValue(AICPU_SCHEDULE_OK));
+    MOCKER(halQueueDeQueueBuff).stubs().will(returnValue(static_cast<drvError_t>(-1)));
+    MOCKER_CPP(&BufManager::UnGuardBuf).expects(once()).will(returnValue((int32_t)0));
+    BufEnQueueBuffInfo queue{0, 0, (uint64_t)&mbuf};
+    int32_t ret = kernel_.ModelDequeueBuffTaskKernel(queue, runContextT);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_FROM_DRV);
+}
+
+TEST_F(OperatorKernelModelBatchDequeueBuffTest, DequeueBuff_AllocVecFail_UnGuardBuf)
+{
+    AicpuModel aicpuModel;
+    MOCKER_CPP(&AicpuModelManager::GetModel).stubs().will(returnValue(&aicpuModel));
+    uint64_t respLen = sizeof(struct buff_iovec) + sizeof(struct iovec_info);
+    MOCKER(halQueuePeek)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), outBoundP(&respLen), mockcpp::any())
+        .will(returnValue(DRV_ERROR_NONE));
+    char tmpBuf[128] = {0};
+    Mbuf* mbuf = (Mbuf*)tmpBuf;
+    MOCKER_CPP(&BufManager::MallocAndGuardBuf).stubs().will(returnValue(mbuf));
+    MOCKER(halMbufSetDataLen).stubs().will(returnValue(static_cast<int>(DRV_ERROR_NONE)));
+    MOCKER(halMbufGetPrivInfo).stubs().will(invoke(halMbufGetPrivInfoFake));
+    MOCKER_CPP(&OperatorKernelCommon::GetMbufDataPtr).stubs().will(returnValue(AICPU_SCHEDULE_OK));
+    MOCKER(static_cast<NothrowArrayNewFunc>(&operator new[])).expects(once()).will(invoke(NothrowArrayNewFail));
+    MOCKER_CPP(&BufManager::UnGuardBuf).expects(once()).will(returnValue((int32_t)0));
+    BufEnQueueBuffInfo queue{0, 0, (uint64_t)&mbuf};
+    int32_t ret = kernel_.ModelDequeueBuffTaskKernel(queue, runContextT);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_INNER_ERROR);
+}
+
+TEST_F(OperatorKernelModelBatchDequeueBuffTest, AlignBatchDequeueBuff_AlignTimestampFail)
+{
+    AicpuModel aicpuModel;
+    MOCKER_CPP(&AicpuModelManager::GetModel).stubs().will(returnValue(&aicpuModel));
+    BatchDequeueBuffInfo batchDeqBuffInfo = {};
+    batchDeqBuffInfo.mbufAddrs = &batchDequeueInfoMbufAddrs[0];
+    batchDeqBuffInfo.queueIds = &batchDequeueInfoQueueIds[0];
+    batchDeqBuffInfo.deviceIds = &batchDequeueInfoDeviceIds[0];
+    MOCKER_CPP(&OperatorKernelModelBatchDequeueBuff::AlignTimestamp).stubs().will(returnValue(-1));
+    int32_t ret = kernel_.AlignBatchDequeueBuff(batchDeqBuffInfo, runContextT);
+    EXPECT_EQ(ret, -1);
 }

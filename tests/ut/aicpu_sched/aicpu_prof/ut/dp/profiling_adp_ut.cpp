@@ -308,6 +308,16 @@ TEST_F(ProfilingAdpUt, BuildProfMiAdditionalData_Test_Success)
     EXPECT_EQ(ReportDataInfo->queueSize, expReportData.queueSize);
 }
 
+TEST_F(ProfilingAdpUt, BuildProfMiAdditionalData_Test_InvalidFormat_DataLenZero)
+{
+    const std::string sendData = "invalid-format-without-enough-fields";
+    MsprofAdditionalInfo reportData = {};
+    reportData.dataLen = 100U; // preset non-zero to verify reset behavior
+    ProfilingAdp::GetInstance().reportCallback_ = nullptr;
+    ProfilingAdp::GetInstance().BuildProfMiAdditionalData(sendData, reportData);
+    EXPECT_EQ(reportData.dataLen, 0U);
+}
+
 TEST_F(ProfilingAdpUt, ReleaseProfilingWithAdditionalFlagFail)
 {
     ProfilingAdp::GetInstance().reportCallback_ = nullptr;

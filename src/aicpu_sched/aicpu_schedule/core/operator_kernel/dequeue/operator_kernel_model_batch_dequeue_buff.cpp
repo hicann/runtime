@@ -49,6 +49,10 @@ int32_t OperatorKernelModelBatchDequeueBuff::Compute(const AicpuTaskInfo& kernel
             *pending = true;
             return AICPU_SCHEDULE_OK;
         }
+        if (res != AICPU_SCHEDULE_OK) {
+            aicpusd_err("ModelAttachAndDequeueBuff failed! ret[%d]", res);
+            return res;
+        }
     }
 
     if (batchDeqBufInfo.alignOffsets != nullptr) {
@@ -134,7 +138,7 @@ int32_t OperatorKernelModelBatchDequeueBuff::ModelDequeueBuffTaskKernel(
     const int32_t deqRet = DequeueBuff(bufInfo, taskContext, respLen, queueId, deviceId);
     if (deqRet != AICPU_SCHEDULE_OK) {
         aicpusd_warn(
-            "DequeueBuff failed from queue[%u] in device[%u] failed, deqRet[%d], respLen[%u]", queueId, deviceId,
+            "DequeueBuff failed from queue[%u] in device[%u] failed, deqRet[%d], respLen[%llu]", queueId, deviceId,
             static_cast<int32_t>(deqRet), respLen);
     }
     return deqRet;
@@ -148,13 +152,14 @@ int32_t OperatorKernelModelBatchDequeueBuff::DequeueBuff(
     Mbuf** const mBufPptr = reinterpret_cast<Mbuf**>(static_cast<uintptr_t>(bufInfo.mBufPtr));
     Mbuf* outMBuf = BufManager::GetInstance().MallocAndGuardBuf(respLen, taskContext.modelId);
     if (outMBuf == nullptr) {
-        aicpusd_err("Failed to alloc mbuf, respLen[%u], modelId[%u].", respLen, taskContext.modelId);
+        aicpusd_err("Failed to alloc mbuf, respLen[%llu], modelId[%u].", respLen, taskContext.modelId);
         AicpuMonitor::GetInstance().SendKillMsgToTsd();
         return AICPU_SCHEDULE_ERROR_FROM_DRV;
     }
     auto drvRet = halMbufSetDataLen(outMBuf, static_cast<uint64_t>(respLen));
     if (drvRet != DRV_ERROR_NONE) {
         aicpusd_err("halMbufSetDataLen error, queue id:%u, drvRet=%d", queueId, drvRet);
+        (void)BufManager::GetInstance().UnGuardBuf(taskContext.modelId, outMBuf);
         return AICPU_SCHEDULE_ERROR_FROM_DRV;
     }
 
@@ -163,6 +168,7 @@ int32_t OperatorKernelModelBatchDequeueBuff::DequeueBuff(
     drvRet = halMbufGetPrivInfo(outMBuf, &headBuf, &headSize);
     if (drvRet != DRV_ERROR_NONE) {
         aicpusd_err("Failed to get head info in input information, ret[%d].", drvRet);
+        (void)BufManager::GetInstance().UnGuardBuf(taskContext.modelId, outMBuf);
         return AICPU_SCHEDULE_ERROR_FROM_DRV;
     }
 
@@ -170,6 +176,7 @@ int32_t OperatorKernelModelBatchDequeueBuff::DequeueBuff(
     drvRet = OperatorKernelCommon::GetMbufDataPtr(PtrToValue(&outMBuf), &dataAddrPtr);
     if (drvRet != AICPU_SCHEDULE_OK) {
         aicpusd_err("Failed to get mbuf data addr. ret is [%d]", drvRet);
+        (void)BufManager::GetInstance().UnGuardBuf(taskContext.modelId, outMBuf);
         return drvRet;
     }
 
@@ -177,6 +184,7 @@ int32_t OperatorKernelModelBatchDequeueBuff::DequeueBuff(
     std::unique_ptr<char_t[]> vecUniquePtr(new (std::nothrow) char_t[totalLen], std::default_delete<char_t[]>());
     if (vecUniquePtr == nullptr) {
         aicpusd_err("failed to alloc memory for vecUniquePtr, size[%zu].", totalLen);
+        (void)BufManager::GetInstance().UnGuardBuf(taskContext.modelId, outMBuf);
         return AICPU_SCHEDULE_ERROR_INNER_ERROR;
     }
     buff_iovec* const buffvec = reinterpret_cast<buff_iovec*>(vecUniquePtr.get());
@@ -190,6 +198,7 @@ int32_t OperatorKernelModelBatchDequeueBuff::DequeueBuff(
         aicpusd_err(
             "halQueueDeQueueBuff to queue[%u] in device[%d] failed, error[%d]", queueId, deviceId,
             static_cast<int32_t>(drvRet));
+        (void)BufManager::GetInstance().UnGuardBuf(taskContext.modelId, outMBuf);
         return AICPU_SCHEDULE_ERROR_FROM_DRV;
     }
 
@@ -216,7 +225,7 @@ int32_t OperatorKernelModelBatchDequeueBuff::AlignBatchDequeueBuff(
         uint32_t minTimestampIndex = 0U;
         auto ret = AlignTimestamp(batchDeqInfo, taskContext, maxAlignTimestamp, minAlignTimestamp, minTimestampIndex);
         if (ret != AICPU_SCHEDULE_OK) {
-            aicpusd_err("AlignTimestamp failed! ret[%ld]", ret);
+            aicpusd_err("AlignTimestamp failed! ret[%d]", ret);
             return ret;
         }
         if ((maxAlignTimestamp - minAlignTimestamp) <= batchDeqInfo.alignInterval) {
@@ -232,7 +241,7 @@ int32_t OperatorKernelModelBatchDequeueBuff::AlignBatchDequeueBuff(
             return AICPU_SCHEDULE_OK;
         }
         if (ret != AICPU_SCHEDULE_OK) {
-            aicpusd_err("ModelDequeueBuffTaskKernel failed! ret[%ld]", ret);
+            aicpusd_err("ModelDequeueBuffTaskKernel failed! ret[%d]", ret);
             return ret;
         }
     }

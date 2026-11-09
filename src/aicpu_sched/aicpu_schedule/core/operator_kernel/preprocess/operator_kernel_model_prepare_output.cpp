@@ -147,7 +147,6 @@ void OperatorKernelPrepareOutputBase::MarkStaticNNOutPutIndex(const uint32_t mod
 int32_t OperatorKernelPrepareOutputBase::PrepareOutWithTensorDesc(
     const AicpuTaskInfo& kernelTaskInfo, const bool zeroCpy, const RunContext& taskContext) const
 {
-    MarkStaticNNOutPutIndex(taskContext.modelId);
     ProcessOutputInfo* const info = PtrToPtr<void, ProcessOutputInfo>(ValueToPtr(kernelTaskInfo.paraBase));
     if (info == nullptr) {
         aicpusd_err(
@@ -163,6 +162,7 @@ int32_t OperatorKernelPrepareOutputBase::PrepareOutWithTensorDesc(
             kernelTaskInfo.taskID);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
+    MarkStaticNNOutPutIndex(taskContext.modelId);
     RuntimeTensorDesc* const tensorDesc = PtrToPtr<void, RuntimeTensorDesc>(
         ValueToPtr(kernelTaskInfo.paraBase + static_cast<uint64_t>(sizeof(ProcessOutputInfo))));
     return PrepareOutput(*info, taskContext, zeroCpy, tensorDesc);

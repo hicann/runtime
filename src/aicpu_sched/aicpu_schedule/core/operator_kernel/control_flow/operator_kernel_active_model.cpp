@@ -32,9 +32,13 @@ int32_t OperatorKernelActiveModel::Compute(const AicpuTaskInfo& kernelTaskInfo, 
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
 
+    if (*modelIdPtr != taskContext.modelId) {
+        aicpusd_warn(
+            "modelId mismatch: paraBase[%u] vs context[%u], using paraBase.", *modelIdPtr, taskContext.modelId);
+    }
     aicpusd_info("Begin to active modelId[%u].", *modelIdPtr);
     AICPUSubEventInfo subEventInfo = {};
-    subEventInfo.modelId = taskContext.modelId;
+    subEventInfo.modelId = *modelIdPtr;
     return AicpuMsgSend::SendAICPUSubEvent(
         PtrToPtr<AICPUSubEventInfo, const char_t>(&subEventInfo), static_cast<uint32_t>(sizeof(AICPUSubEventInfo)),
         AICPU_SUB_EVENT_ACTIVE_MODEL, GE_GROUP_ID, true);

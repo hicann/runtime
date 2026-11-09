@@ -141,6 +141,10 @@ StatusCode AicpuModelManager::TransModelInfo(
     std::vector<StreamInfo>& streamInfos, std::vector<QueInfo>& queInfos, std::vector<ModelCfgInfo>* const modelcfgs)
 {
     const ModelInfo* const curModelInfo = PtrToPtr<const void, const ModelInfo>(ptr);
+    if (curModelInfo->modelId >= MAX_MODEL_COUNT) {
+        aicpusd_err("modelId[%u] exceeds MAX_MODEL_COUNT[%u].", curModelInfo->modelId, MAX_MODEL_COUNT);
+        return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
+    }
     aicpuModelInfo.moduleID = curModelInfo->modelId;
     aicpuModelInfo.tsId = 0U;
     // transform stream and task info

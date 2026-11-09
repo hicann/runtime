@@ -66,6 +66,7 @@ AicpuSdModelStatistic& AicpuSdModelStatistic::GetInstance()
 
 void AicpuSdModelStatistic::StatNNModelExecTime(const uint32_t modelId)
 {
+    const std::lock_guard<std::mutex> lock(statMutex_);
     if (modelId >= MAX_MODEL_COUNT) {
         aicpusd_err("invalid modelId:%u, max:%u", modelId, MAX_MODEL_COUNT);
         return;
@@ -122,6 +123,7 @@ void AicpuSdModelStatistic::AddNewDataToStatVec(
 void AicpuSdModelStatistic::StatNNModelInput(
     const uint32_t modelId, const std::vector<uint64_t>& totalSizeList, std::vector<ModelConfigTensorDesc>& curStatVec)
 {
+    const std::lock_guard<std::mutex> lock(statMutex_);
     if ((modelId >= MAX_MODEL_COUNT) || (totalSizeList.size() != curStatVec.size())) {
         aicpusd_err(
             "invalid modelId:%u, max:%u, size list:%zu, stat list:%zu", modelId, MAX_MODEL_COUNT, totalSizeList.size(),
@@ -133,6 +135,11 @@ void AicpuSdModelStatistic::StatNNModelInput(
     const size_t curVecSize = curStatVec.size();
     const size_t curMinSize = delVecSize < curVecSize ? delVecSize : curVecSize;
     for (size_t index = 0; index < curMinSize; index++) {
+        const int64_t dimNum = curStatVec[index].shape[0];
+        if ((dimNum < 0) || (dimNum > MAX_DIM_SIZE)) {
+            aicpusd_err("invalid shape dimNum[%lld] at index[%zu], modelId[%u], skip.", dimNum, index, modelId);
+            continue;
+        }
         UpdateStatVecInfo(delVec[index], totalSizeList[index], &(curStatVec[index].shape[0]));
         aicpusd_info(
             "index:%zu max size:%llu, min size:%llu, min shape size:%zu, max shape size:%zu", index,
@@ -141,6 +148,11 @@ void AicpuSdModelStatistic::StatNNModelInput(
 
     if (delVecSize < curVecSize) {
         for (size_t i = curMinSize; i < curVecSize; i++) {
+            const int64_t dimNum = curStatVec[i].shape[0];
+            if ((dimNum < 0) || (dimNum > MAX_DIM_SIZE)) {
+                aicpusd_err("invalid shape dimNum[%lld] at index[%zu], modelId[%u], skip.", dimNum, i, modelId);
+                continue;
+            }
             AddNewDataToStatVec(delVec, totalSizeList[i], &(curStatVec[i].shape[0]));
         }
     }
@@ -148,6 +160,7 @@ void AicpuSdModelStatistic::StatNNModelInput(
 
 void AicpuSdModelStatistic::InitModelStatInfo()
 {
+    const std::lock_guard<std::mutex> lock(statMutex_);
     for (uint32_t index = 0; index < MAX_MODEL_COUNT; index++) {
         modelStatArray_[index].useFlag = false;
         modelStatArray_[index].maxExecTime = 0UL;
@@ -162,6 +175,7 @@ void AicpuSdModelStatistic::InitModelStatInfo()
 
 void AicpuSdModelStatistic::MarNNModelStartTime(const uint32_t modelId)
 {
+    const std::lock_guard<std::mutex> lock(statMutex_);
     if (modelId >= MAX_MODEL_COUNT) {
         aicpusd_err("invalid modelId:%u, max:%u", modelId, MAX_MODEL_COUNT);
         return;
@@ -174,6 +188,7 @@ void AicpuSdModelStatistic::MarNNModelStartTime(const uint32_t modelId)
 void AicpuSdModelStatistic::StatNNModelOutput(
     const uint32_t modelId, const RuntimeTensorDesc* const tensorDesc, const int32_t nextIndex)
 {
+    const std::lock_guard<std::mutex> lock(statMutex_);
     if ((modelId >= MAX_MODEL_COUNT) || (nextIndex <= 0) || (tensorDesc == nullptr)) {
         aicpusd_err("invalid modelId:%u, max:%u, nextIndex:%d", modelId, MAX_MODEL_COUNT, nextIndex);
         return;
@@ -182,8 +197,13 @@ void AicpuSdModelStatistic::StatNNModelOutput(
     std::vector<InAndOutParamStatInfo>& delVec = modelStatArray_[modelId].outputStatVec;
     const size_t curDelSize = delVec.size();
     int64_t curTotalSize = 0;
+    const int64_t dimNum = tensorDesc->shape[0];
+    if ((dimNum < 0) || (dimNum > MAX_DIM_SIZE)) {
+        aicpusd_err("invalid shape dimNum[%lld], modelId[%u], max[%lld]", dimNum, modelId, MAX_DIM_SIZE);
+        return;
+    }
     const int32_t ret =
-        AicpuUtil::CalcDataSizeByShape(&(tensorDesc->shape[1]), tensorDesc->shape[0], tensorDesc->dtype, curTotalSize);
+        AicpuUtil::CalcDataSizeByShape(&(tensorDesc->shape[1]), dimNum, tensorDesc->dtype, curTotalSize);
     if ((ret != AICPU_SCHEDULE_OK) || (curTotalSize < 0)) {
         aicpusd_warn("cannot get size from tensordesc, ret[%d], size[%lld]", ret, curTotalSize);
         return;

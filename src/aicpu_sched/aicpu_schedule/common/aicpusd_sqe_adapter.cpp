@@ -466,7 +466,7 @@ void AicpuSqeAdapter::GetAicpuDataDumpInfoLoadV0(AicpuDataDumpInfoLoad& info)
 {
     TsToAicpuDataDumpInfoLoad tmpinfo = sqe_.u.ts_to_aicpu_datadumploadinfo;
     aicpusd_info(
-        "Get aicpu data dump load info: dumpinfoPtr[%p], length[%u], task_id[%u],stream_id[%u].", tmpinfo.dumpinfoPtr,
+        "Get aicpu data dump load info: dumpinfoPtr[%llu], length[%u], task_id[%u],stream_id[%u].", tmpinfo.dumpinfoPtr,
         tmpinfo.length, tmpinfo.task_id, tmpinfo.stream_id);
     info.dumpinfoPtr = tmpinfo.dumpinfoPtr;
     info.length = tmpinfo.length;
@@ -478,7 +478,7 @@ void AicpuSqeAdapter::GetAicpuDataDumpInfoLoadV1(AicpuDataDumpInfoLoad& info)
 {
     TsToAicpuDataDumpInfoloadMsg tmpinfo = msg_Info_.u.ts_to_aicpu_datadump_info_load;
     aicpusd_info(
-        "Get aicpu data dump load info: dumpinfoPtr[%p], length[%u], task_id[%u],stream_id[%u].", tmpinfo.dumpinfoPtr,
+        "Get aicpu data dump load info: dumpinfoPtr[%llu], length[%u], task_id[%u],stream_id[%u].", tmpinfo.dumpinfoPtr,
         tmpinfo.length, tmpinfo.task_id, tmpinfo.stream_id);
     info.dumpinfoPtr = tmpinfo.dumpinfoPtr;
     info.length = tmpinfo.length;

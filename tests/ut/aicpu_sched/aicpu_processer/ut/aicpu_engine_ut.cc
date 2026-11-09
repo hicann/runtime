@@ -451,3 +451,27 @@ TEST_F(AicpuEngineUTest, AeAddSoInWhiteList)
     ret = AeAddSoInWhiteList(nullptr);
     EXPECT_EQ(AE_STATUS_BAD_PARAM, ret);
 }
+
+TEST_F(AicpuEngineUTest, aeBatchLoadKernelSo_FwkInstanceNull)
+{
+    MOCKER_CPP(&cce::AIKernelsLibFWK::GetInstance)
+        .stubs()
+        .will(returnValue(static_cast<cce::AIKernelsLibFWK*>(nullptr)));
+    const char* tfKernelSoName = "libtf_kernels.so";
+    const uint32_t loadSoNum = 1;
+    const char* soNames[loadSoNum] = {tfKernelSoName};
+    aeStatus_t ret = aeBatchLoadKernelSo(aicpu::KERNEL_TYPE_AICPU, loadSoNum, soNames);
+    EXPECT_EQ(AE_STATUS_INNER_ERROR, ret);
+}
+
+TEST_F(AicpuEngineUTest, aeBatchLoadKernelSo_AicpuInstanceNull)
+{
+    MOCKER_CPP(&cce::AIKernelsLibAiCpu::GetInstance)
+        .stubs()
+        .will(returnValue(static_cast<cce::AIKernelsLibAiCpu*>(nullptr)));
+    const char* aicpuKernelSoName = "libaicpu_kernels.so";
+    const uint32_t loadSoNum = 1;
+    const char* soNames[loadSoNum] = {aicpuKernelSoName};
+    aeStatus_t ret = aeBatchLoadKernelSo(aicpu::KERNEL_TYPE_AICPU, loadSoNum, soNames);
+    EXPECT_EQ(AE_STATUS_INNER_ERROR, ret);
+}

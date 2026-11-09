@@ -228,3 +228,44 @@ TEST_F(OperatorKernelModelPrepareOutputTest, ModelBufferPrepareOutputWithTensorD
     EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID);
     EXPECT_EQ(BufManager::GetInstance().modelBufs_[modelId].size(), calcGuardBufSize(false));
 }
+
+TEST_F(OperatorKernelModelPrepareOutputTest, ModelPrepareOutWithTensorDesc_NullPara_NotMarkIndex)
+{
+    AicpuModel markModel;
+    markModel.ResetStaticNNModelOutputIndex();
+    MOCKER_CPP(&AicpuModelManager::GetModel).stubs().will(returnValue(&markModel));
+    AicpuTaskInfo taskT;
+    taskT.taskID = 1;
+    taskT.paraBase = 0;
+    int ret = prepareTensorKernel_.Compute(taskT, runContextT);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID);
+    // MarkStaticNNOutPutIndex is called after paraBase check, index must not be increased on null para
+    EXPECT_EQ(markModel.GetCurStaticNNModelOutputIndex(), 0U);
+}
+
+TEST_F(OperatorKernelModelPrepareOutputTest, ModelPrepareOutWithTensorDesc_Success_MarkIndex)
+{
+    MOCKER(halMbufGetBuffAddr).stubs().will(invoke(halMbufGetBuffAddrFake));
+    MOCKER(halMbufGetPrivInfo).stubs().will(invoke(halMbufGetPrivInfoFake));
+    MOCK_MBUF_ALLOCK_FAKE()
+    AicpuModel markModel;
+    markModel.ResetStaticNNModelOutputIndex();
+    MOCKER_CPP(&AicpuModelManager::GetModel).stubs().will(returnValue(&markModel));
+    AicpuTaskInfo taskT;
+    taskT.taskID = 1;
+    int32_t srcVal = 1;
+    int32_t dstVal = 1;
+    Mbuf* inMbuf = (Mbuf*)&srcVal;
+    Mbuf* outMbuf = (Mbuf*)&dstVal;
+    uint8_t buff[sizeof(ProcessOutputInfo) + sizeof(RuntimeTensorDesc)] = {0};
+    ProcessOutputInfo* preOutputInfo = (ProcessOutputInfo*)(buff);
+    preOutputInfo->dataSize = sizeof(int32_t);
+    preOutputInfo->outMBuf = (uint64_t)&outMbuf;
+    preOutputInfo->srcPtr = (uint64_t)&srcVal;
+    preOutputInfo->inMBuf = (uint64_t)&inMbuf;
+    taskT.paraBase = (uint64_t)buff;
+    int ret = prepareTensorKernel_.Compute(taskT, runContextT);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
+    // MarkStaticNNOutPutIndex is called after all parameter checks
+    EXPECT_EQ(markModel.GetCurStaticNNModelOutputIndex(), 1U);
+}

@@ -63,6 +63,16 @@ int halMbufGetPrivInfoStub4(Mbuf* mbuf, void** priv, unsigned int* size)
 
 uint32_t batchDequeueInfoAlignOffsets[2] = {0, 0};
 
+int32_t CheckAndParseBatchDequeueParamsWithAlignStub(
+    OperatorKernelModelBatchDequeue* obj, const AicpuTaskInfo& kernelTaskInfo, const RunContext& taskContext,
+    BatchDequeueInfo& batchDeqInfo)
+{
+    batchDeqInfo.inputNums = 1;
+    batchDeqInfo.queueIds = &batchDequeueInfoQueueIds[0];
+    batchDeqInfo.mbufAddrs = &batchDequeueInfoMbufAddrs[0];
+    batchDeqInfo.alignOffsets = &batchDequeueInfoAlignOffsets[0];
+    return AICPU_SCHEDULE_OK;
+}
 } // namespace
 
 class OperatorKernelModelBatchDequeueTest : public OperatorKernelTest {
@@ -270,4 +280,63 @@ TEST_F(OperatorKernelModelBatchDequeueTest, ModelBatchDequeue_AlreadyDequeued_Re
     int32_t ret = kernel_.Compute(task, runContextT);
     EXPECT_EQ(ret, 0);
     GlobalMockObject::verify();
+}
+
+TEST_F(OperatorKernelModelBatchDequeueTest, ModelBatchDequeue_GetModelNullInCompute)
+{
+    MOCKER_CPP(&OperatorKernelModelBatchDequeue::CheckAndParseBatchDequeueParams)
+        .stubs()
+        .will(invoke(CheckAndParseBatchDequeueParamsStub));
+    AicpuModel* nullModel = nullptr;
+    MOCKER_CPP(&AicpuModelManager::GetModel).stubs().will(returnValue(nullModel));
+    const AicpuTaskInfo task = {};
+    int32_t ret = kernel_.Compute(task, runContextT);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID);
+}
+
+TEST_F(OperatorKernelModelBatchDequeueTest, ModelBatchDequeue_AlignBatchDequeueFail_ResetInputsIsDequeue)
+{
+    MOCKER_CPP(&OperatorKernelModelBatchDequeue::CheckAndParseBatchDequeueParams)
+        .stubs()
+        .will(invoke(CheckAndParseBatchDequeueParamsWithAlignStub));
+    AicpuModel aicpuModel;
+    auto& inputsIsDequeue = aicpuModel.MutableInputsIsDequeue();
+    inputsIsDequeue.resize(1, true);
+    MOCKER_CPP(&AicpuModelManager::GetModel).stubs().will(returnValue(&aicpuModel));
+    MOCKER_CPP(&OperatorKernelModelBatchDequeue::DequeueTask).stubs().will(returnValue((int32_t)0));
+    MOCKER_CPP(&OperatorKernelModelBatchDequeue::AlignBatchDequeue).stubs().will(returnValue(-1));
+    const AicpuTaskInfo task = {};
+    int32_t ret = kernel_.Compute(task, runContextT);
+    EXPECT_EQ(ret, -1);
+    EXPECT_EQ(inputsIsDequeue[0], false);
+    GlobalMockObject::verify();
+}
+
+TEST_F(OperatorKernelModelBatchDequeueTest, ModelBatchDequeue_AlignBatchDequeuePending_ResetInputsIsDequeue)
+{
+    MOCKER_CPP(&OperatorKernelModelBatchDequeue::CheckAndParseBatchDequeueParams)
+        .stubs()
+        .will(invoke(CheckAndParseBatchDequeueParamsWithAlignStub));
+    AicpuModel aicpuModel;
+    auto& inputsIsDequeue = aicpuModel.MutableInputsIsDequeue();
+    inputsIsDequeue.resize(1, true);
+    MOCKER_CPP(&AicpuModelManager::GetModel).stubs().will(returnValue(&aicpuModel));
+    MOCKER_CPP(&OperatorKernelModelBatchDequeue::DequeueTask).stubs().will(returnValue((int32_t)0));
+    MOCKER_CPP(&OperatorKernelModelBatchDequeue::AlignBatchDequeue).stubs().will(returnValue(0));
+    runContextT.pending = true;
+    const AicpuTaskInfo task = {};
+    int32_t ret = kernel_.Compute(task, runContextT);
+    runContextT.pending = false;
+    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(inputsIsDequeue[0], false);
+    GlobalMockObject::verify();
+}
+
+TEST_F(OperatorKernelModelBatchDequeueTest, AlignBatchDequeue_GetModelNull)
+{
+    AicpuModel* nullModel = nullptr;
+    MOCKER_CPP(&AicpuModelManager::GetModel).stubs().will(returnValue(nullModel));
+    BatchDequeueInfo batchDeqInfo = {};
+    int32_t ret = kernel_.AlignBatchDequeue(batchDeqInfo, runContextT);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID);
 }

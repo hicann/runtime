@@ -27,7 +27,14 @@ int32_t OperatorKernelModelBatchDequeue::Compute(const AicpuTaskInfo& kernelTask
     if (ret != AICPU_SCHEDULE_OK) {
         return ret;
     }
-    auto& inputsIsDequeue = AicpuModelManager::GetInstance().GetModel(taskContext.modelId)->MutableInputsIsDequeue();
+    const auto model = AicpuModelManager::GetInstance().GetModel(taskContext.modelId);
+    if (model == nullptr) {
+        aicpusd_err(
+            "Cannot get model by modelId:[%u], streamId[%u], taskId[%u].", taskContext.modelId, taskContext.streamId,
+            kernelTaskInfo.taskID);
+        return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
+    }
+    auto& inputsIsDequeue = model->MutableInputsIsDequeue();
     aicpusd_info("batch dequeue for %u queues.", batchDeqInfo.inputNums);
     for (uint32_t i = 0U; i < batchDeqInfo.inputNums; ++i) {
         if (inputsIsDequeue[i]) {
@@ -48,6 +55,7 @@ int32_t OperatorKernelModelBatchDequeue::Compute(const AicpuTaskInfo& kernelTask
     if (batchDeqInfo.alignOffsets != nullptr) {
         ret = AlignBatchDequeue(batchDeqInfo, taskContext);
         if ((ret != AICPU_SCHEDULE_OK) || (taskContext.pending)) {
+            inputsIsDequeue.assign(inputsIsDequeue.size(), false);
             return ret;
         }
     }
@@ -114,8 +122,13 @@ int32_t OperatorKernelModelBatchDequeue::DoModelDequeue(BufEnQueueInfo& bufInfo,
 int32_t OperatorKernelModelBatchDequeue::AlignBatchDequeue(
     BatchDequeueInfo& batchDeqInfo, const RunContext& taskContext) const
 {
-    // model has been checked, not nullptr
-    auto& inputsIsDequeue = AicpuModelManager::GetInstance().GetModel(taskContext.modelId)->MutableInputsIsDequeue();
+    // model has been checked, still re-check for TOCTOU safety
+    const auto model = AicpuModelManager::GetInstance().GetModel(taskContext.modelId);
+    if (model == nullptr) {
+        aicpusd_err("Cannot get model by modelId:[%u].", taskContext.modelId);
+        return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
+    }
+    auto& inputsIsDequeue = model->MutableInputsIsDequeue();
     while (true) {
         uint32_t maxAlignTimestamp = 0U;
         uint32_t minAlignTimestamp = UINT32_MAX;

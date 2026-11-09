@@ -98,12 +98,22 @@ aeStatus_t AIKernelsLibManger::BatchLoadKernelSo(
     }
 
     if (!tfSoVec.empty()) {
-        if (AIKernelsLibFWK::GetInstance()->BatchLoadKernelSo(kernelType, tfSoVec) != AE_STATUS_SUCCESS) {
+        AIKernelsLibFWK* fwkKernel = AIKernelsLibFWK::GetInstance();
+        if (fwkKernel == nullptr) {
+            AE_ERR_LOG(AE_MODULE_ID, "Get FWK kernelLib is NULL");
+            return AE_STATUS_INNER_ERROR;
+        }
+        if (fwkKernel->BatchLoadKernelSo(kernelType, tfSoVec) != AE_STATUS_SUCCESS) {
             AE_WARN_LOG(AE_MODULE_ID, "batch load kernel so failed.");
         }
     }
     if (!aicpuSoVec.empty()) {
-        if (AIKernelsLibAiCpu::GetInstance()->BatchLoadKernelSo(kernelType, aicpuSoVec) != AE_STATUS_SUCCESS) {
+        AIKernelsLibAiCpu* aicpuKernel = AIKernelsLibAiCpu::GetInstance();
+        if (aicpuKernel == nullptr) {
+            AE_ERR_LOG(AE_MODULE_ID, "Get AiCpu kernelLib is NULL");
+            return AE_STATUS_INNER_ERROR;
+        }
+        if (aicpuKernel->BatchLoadKernelSo(kernelType, aicpuSoVec) != AE_STATUS_SUCCESS) {
             AE_WARN_LOG(AE_MODULE_ID, "batch load kernel so failed.");
         }
     }

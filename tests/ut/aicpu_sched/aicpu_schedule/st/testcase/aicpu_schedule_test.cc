@@ -2147,7 +2147,8 @@ TEST_F(AICPUScheduleTEST, ProcessInputDump_baseaddr_null)
         task.inputsBaseAddr_.push_back(baseAddr);
         task.inputsAddrType_.push_back(0);
         task.UpdateDumpData();
-        EXPECT_EQ(task.ProcessInputDump(task.baseDumpData_, "", IdeDumpStart(nullptr)), AICPU_SCHEDULE_OK);
+        IDE_SESSION dumpSession = IdeDumpStart(nullptr);
+        EXPECT_EQ(task.ProcessInputDump(task.baseDumpData_, "", dumpSession), AICPU_SCHEDULE_OK);
     }
 }
 
@@ -2161,7 +2162,8 @@ TEST_F(AICPUScheduleTEST, ProcessOutputDump_baseaddr_null)
         task.outputsBaseAddr_.push_back(baseAddr);
         task.outputsAddrType_.push_back(0);
         task.UpdateDumpData();
-        EXPECT_EQ(task.ProcessOutputDump(task.baseDumpData_, "", IdeDumpStart(nullptr)), AICPU_SCHEDULE_OK);
+        IDE_SESSION dumpSession = IdeDumpStart(nullptr);
+        EXPECT_EQ(task.ProcessOutputDump(task.baseDumpData_, "", dumpSession), AICPU_SCHEDULE_OK);
     }
 }
 
@@ -2175,7 +2177,8 @@ TEST_F(AICPUScheduleTEST, ProcessInputDump_data_addr_null)
         task.inputsBaseAddr_.push_back((uint64_t)(&addr));
         task.inputsAddrType_.push_back(0);
         task.UpdateDumpData();
-        EXPECT_EQ(task.ProcessInputDump(task.baseDumpData_, "", IdeDumpStart(nullptr)), AICPU_SCHEDULE_OK);
+        IDE_SESSION dumpSession = IdeDumpStart(nullptr);
+        EXPECT_EQ(task.ProcessInputDump(task.baseDumpData_, "", dumpSession), AICPU_SCHEDULE_OK);
     }
 }
 
@@ -2189,7 +2192,8 @@ TEST_F(AICPUScheduleTEST, ProcessOutputDump_data_addr_null)
         task.outputsBaseAddr_.push_back((uint64_t)(&addr));
         task.outputsAddrType_.push_back(0);
         task.UpdateDumpData();
-        EXPECT_EQ(task.ProcessOutputDump(task.baseDumpData_, "", IdeDumpStart(nullptr)), AICPU_SCHEDULE_OK);
+        IDE_SESSION dumpSession = IdeDumpStart(nullptr);
+        EXPECT_EQ(task.ProcessOutputDump(task.baseDumpData_, "", dumpSession), AICPU_SCHEDULE_OK);
     }
 }
 
@@ -2229,8 +2233,8 @@ TEST_F(AICPUScheduleTEST, ProcessInputDump_invalid_threadId)
         task.inputsOffset_.push_back(offset);
         task.inputsSize_.push_back(offset * invalidThread + 1);
         task.UpdateDumpData();
-        EXPECT_EQ(
-            task.ProcessInputDump(task.baseDumpData_, "", IdeDumpStart(nullptr)), AICPU_SCHEDULE_ERROR_DUMP_FAILED);
+        IDE_SESSION dumpSession = IdeDumpStart(nullptr);
+        EXPECT_EQ(task.ProcessInputDump(task.baseDumpData_, "", dumpSession), AICPU_SCHEDULE_ERROR_DUMP_FAILED);
     }
 }
 
@@ -2249,8 +2253,8 @@ TEST_F(AICPUScheduleTEST, ProcessOutputDump_invalid_threadId)
         task.outputOffset_.push_back(offset);
         task.outputSize_.push_back(offset * invalidThread + 1);
         task.UpdateDumpData();
-        EXPECT_EQ(
-            task.ProcessOutputDump(task.baseDumpData_, "", IdeDumpStart(nullptr)), AICPU_SCHEDULE_ERROR_DUMP_FAILED);
+        IDE_SESSION dumpSession = IdeDumpStart(nullptr);
+        EXPECT_EQ(task.ProcessOutputDump(task.baseDumpData_, "", dumpSession), AICPU_SCHEDULE_ERROR_DUMP_FAILED);
     }
 }
 
@@ -2266,8 +2270,8 @@ TEST_F(AICPUScheduleTEST, ProcessInputDump_memcpy_fail)
         task.inputsAddrType_.push_back(0);
         task.taskType_ = aicpu::dump::Task::AICPU;
         task.UpdateDumpData();
-        EXPECT_EQ(
-            task.ProcessInputDump(task.baseDumpData_, "", IdeDumpStart(nullptr)), AICPU_SCHEDULE_ERROR_DUMP_FAILED);
+        IDE_SESSION dumpSession = IdeDumpStart(nullptr);
+        EXPECT_EQ(task.ProcessInputDump(task.baseDumpData_, "", dumpSession), AICPU_SCHEDULE_ERROR_DUMP_FAILED);
     }
 }
 
@@ -2283,8 +2287,8 @@ TEST_F(AICPUScheduleTEST, ProcessOutputDump_memcpy_fail)
         task.outputsAddrType_.push_back(0);
         task.taskType_ = aicpu::dump::Task::AICPU;
         task.UpdateDumpData();
-        EXPECT_EQ(
-            task.ProcessOutputDump(task.baseDumpData_, "", IdeDumpStart(nullptr)), AICPU_SCHEDULE_ERROR_DUMP_FAILED);
+        IDE_SESSION dumpSession = IdeDumpStart(nullptr);
+        EXPECT_EQ(task.ProcessOutputDump(task.baseDumpData_, "", dumpSession), AICPU_SCHEDULE_ERROR_DUMP_FAILED);
     }
 }
 
@@ -2302,8 +2306,8 @@ TEST_F(AICPUScheduleTEST, ProcessInputDump_dump_fail)
         task.buffSize_ = 4;
         task.buff_.reset(new char[task.buffSize_]);
         MOCKER(IdeDumpData).stubs().will(returnValue(IDE_DAEMON_UNKNOW_ERROR));
-        EXPECT_EQ(
-            task.ProcessInputDump(task.baseDumpData_, "", IdeDumpStart(nullptr)), AICPU_SCHEDULE_ERROR_DUMP_FAILED);
+        IDE_SESSION dumpSession = IdeDumpStart(nullptr);
+        EXPECT_EQ(task.ProcessInputDump(task.baseDumpData_, "", dumpSession), AICPU_SCHEDULE_ERROR_DUMP_FAILED);
     }
 }
 
@@ -2321,8 +2325,8 @@ TEST_F(AICPUScheduleTEST, ProcessOutputDump_dump_fail)
         task.buffSize_ = 4;
         task.buff_.reset(new char[task.buffSize_]);
         MOCKER(IdeDumpData).stubs().will(returnValue(IDE_DAEMON_UNKNOW_ERROR));
-        EXPECT_EQ(
-            task.ProcessOutputDump(task.baseDumpData_, "", IdeDumpStart(nullptr)), AICPU_SCHEDULE_ERROR_DUMP_FAILED);
+        IDE_SESSION dumpSession = IdeDumpStart(nullptr);
+        EXPECT_EQ(task.ProcessOutputDump(task.baseDumpData_, "", dumpSession), AICPU_SCHEDULE_ERROR_DUMP_FAILED);
     }
 }
 
@@ -2342,7 +2346,8 @@ TEST_F(AICPUScheduleTEST, ProcessOutputDump_input_size_0)
         uint64_t buffSize = 0;
         opInput->set_size(buffSize);
         OpDumpTask task(0, 0);
-        EXPECT_EQ(task.ProcessInputDump(dumpData, "", IdeDumpStart(nullptr)), AICPU_SCHEDULE_OK);
+        IDE_SESSION dumpSession = IdeDumpStart(nullptr);
+        EXPECT_EQ(task.ProcessInputDump(dumpData, "", dumpSession), AICPU_SCHEDULE_OK);
     }
 }
 
@@ -2354,7 +2359,8 @@ TEST_F(AICPUScheduleTEST, ProcessOutputDump_output_size_0)
         uint64_t buffSize = 0;
         opOutput->set_size(buffSize);
         OpDumpTask task(0, 0);
-        EXPECT_EQ(task.ProcessOutputDump(dumpData, "", IdeDumpStart(nullptr)), AICPU_SCHEDULE_OK);
+        IDE_SESSION dumpSession = IdeDumpStart(nullptr);
+        EXPECT_EQ(task.ProcessOutputDump(dumpData, "", dumpSession), AICPU_SCHEDULE_OK);
     }
 }
 
@@ -3766,6 +3772,23 @@ TEST_F(AICPUScheduleTEST, AicpuLoadModelWithQ_Success)
     ModelStreamInfo modelStreamInfo = {0, 0, 1, &modelTaskInfo};
     ModelInfo modelInfo = {}; //{0, 1, &modelStreamInfo, 1, &modelQueueInfo, };
     modelInfo.modelId = 0U;
+    modelInfo.aicpuStreamNum = 1U;
+    modelInfo.streams = &modelStreamInfo;
+    modelInfo.queueNum = 1U;
+    modelInfo.queues = &modelQueueInfo;
+
+    int ret = AicpuLoadModelWithQ((void*)(&modelInfo));
+    EXPECT_EQ(ret, AICPU_SCHEDULE_FAIL);
+}
+
+TEST_F(AICPUScheduleTEST, AicpuLoadModelWithQ_ModelIdOutOfRange)
+{
+    printf("=======================AicpuLoadModelWithQ_ModelIdOutOfRange=====================\n");
+    ModelQueueInfo modelQueueInfo = {0, 0};
+    ModelTaskInfo modelTaskInfo = {0, 0, 0};
+    ModelStreamInfo modelStreamInfo = {0, 0, 1, &modelTaskInfo};
+    ModelInfo modelInfo = {};
+    modelInfo.modelId = MAX_MODEL_COUNT; // out of range, TransModelInfo must reject it
     modelInfo.aicpuStreamNum = 1U;
     modelInfo.streams = &modelStreamInfo;
     modelInfo.queueNum = 1U;

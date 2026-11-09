@@ -58,7 +58,7 @@ uint64_t NowMicros()
     uint64_t cntfrq;
     AsmCntvc(cntvct);
     AsmCntfrq(cntfrq);
-    return static_cast<uint64_t>(cntvct * 1000000ULL / cntfrq); // lint !e573
+    return (cntvct / cntfrq) * 1000000ULL + ((cntvct % cntfrq) * 1000000ULL) / cntfrq;
 #else
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
@@ -119,7 +119,7 @@ void GetMicrosAndSysTick(uint64_t& micros, uint64_t& tick)
     uint64_t cntfrq;
     AsmCntvc(cntvct);
     AsmCntfrq(cntfrq);
-    micros = static_cast<uint64_t>(cntvct * 1000000ULL / cntfrq);
+    micros = (cntvct / cntfrq) * 1000000ULL + ((cntvct % cntfrq) * 1000000ULL) / cntfrq;
     tick = cntvct;
 #else
     struct timespec ts;
@@ -680,6 +680,7 @@ void ProfilingAdp::BuildProfMiAdditionalData(const std::string& sendData, Msprof
     }
     if (data.size() != TOTAL_LEN) {
         AICPU_LOG_ERROR("Data format is not as expected.");
+        reportData.dataLen = 0;
         return;
     }
 

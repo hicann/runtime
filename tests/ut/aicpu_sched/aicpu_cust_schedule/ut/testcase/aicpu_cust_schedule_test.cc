@@ -1813,7 +1813,7 @@ TEST_F(AICPUCustScheduleTEST, OpenKernelSoByAicpuEvent_failed3)
     struct TsdSubEventInfo msg;
     const int msgLen = 17;
     (void)memcpy_s(msg.priMsg, msgLen, "libcpu_kernels.so", 17);
-    MOCKER(strcpy_s).stubs().will(returnValue(ERANGE));
+    MOCKER(strncpy_s).stubs().will(returnValue(ERANGE));
     int ret = CustomOpExecutor::GetInstance().OpenKernelSoByAicpuEvent(&msg);
     EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_INNER_ERROR);
 }

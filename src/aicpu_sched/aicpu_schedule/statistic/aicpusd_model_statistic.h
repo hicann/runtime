@@ -12,6 +12,7 @@
 #include <map>
 #include <vector>
 #include <chrono>
+#include <mutex>
 #include "aicpusd_status.h"
 #include "aicpusd_common.h"
 #include "aicpu_context.h"
@@ -64,6 +65,7 @@ private:
     AicpuSdModelStatistic();
     virtual ~AicpuSdModelStatistic();
     ModelStatInfo modelStatArray_[MAX_MODEL_COUNT];
+    mutable std::mutex statMutex_;
 };
 } // namespace AicpuSchedule
 #endif

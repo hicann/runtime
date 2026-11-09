@@ -61,9 +61,9 @@ int32_t CustomOpExecutor::OpenKernelSoByAicpuEvent(const struct TsdSubEventInfo*
         return AicpuSchedule::AICPU_SCHEDULE_ERROR_INNER_ERROR;
     }
     event_info_priv privEventInfo = {};
-    const errno_t errRet = strcpy_s(privEventInfo.msg, EVENT_MAX_MSG_LEN, msg->priMsg);
+    const errno_t errRet = strncpy_s(privEventInfo.msg, EVENT_MAX_MSG_LEN, msg->priMsg, sizeof(msg->priMsg));
     if (errRet != EOK) {
-        aicpusd_err("Copy %s failed, error[%d]", msg->priMsg, errRet);
+        aicpusd_err("Copy %.96s failed, error[%d]", msg->priMsg, errRet);
         return AicpuSchedule::AICPU_SCHEDULE_ERROR_INNER_ERROR;
     }
     privEventInfo.msg_len = strnlen(privEventInfo.msg, MAX_CUST_SO_NAME_LEN);
