@@ -36,7 +36,7 @@ rtError_t ApiImplDavid::LaunchKernelV2(
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Starting the compute task of the corresponding operator");
     if (!kernel->Program_()->IsDeviceSoAndNameValid(dev->Id_())) {
-        RT_LOG(RT_LOG_WARNING, "kernel is invalid, device_id=%d", curCtx->Device_()->Id_());
+        RT_LOG(RT_LOG_WARNING, "kernel is invalid, device_id=%u", curCtx->Device_()->Id_());
         return RT_ERROR_KERNEL_INVALID;
     }
     // For the new launch logic, the nop task delivery is hidden in the launchKernel. only for aic/aiv kernel

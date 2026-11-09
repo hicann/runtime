@@ -47,7 +47,7 @@ rtError_t ApiImplDavid::LaunchKernelV2(
     }
 
     if (!kernel->Program_()->IsDeviceSoAndNameValid(curCtx->Device_()->Id_())) {
-        RT_LOG(RT_LOG_WARNING, "Failed to validate kernel program, device_id=%d.", curCtx->Device_()->Id_());
+        RT_LOG(RT_LOG_WARNING, "Failed to validate kernel program, device_id=%u.", curCtx->Device_()->Id_());
         return RT_ERROR_KERNEL_INVALID;
     }
     // For the new launch logic, the nop task delivery is hidden in the launchKernel. only for aic/aiv kernel
