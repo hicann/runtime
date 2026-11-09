@@ -47,38 +47,45 @@ inline std::string FormatEnumValueDesc(const char* const name, const uint32_t va
 
 inline std::string GetEventOperationFlagDesc(const uint32_t flag, const bool isRecord)
 {
-    const char* name = "UNKNOWN";
+    const char* name;
     if (flag == 0U) {
         name = isRecord ? "ACL_EVENT_RECORD_DEFAULT" : "ACL_EVENT_WAIT_DEFAULT";
     } else if (flag == 1U) {
         name = isRecord ? "ACL_EVENT_RECORD_EXTERNAL" : "ACL_EVENT_WAIT_EXTERNAL";
+    } else {
+        name = "UNKNOWN";
     }
     return FormatEnumValueDesc(name, flag);
 }
 
 inline std::string GetMemAttachFlagDesc(const uint32_t flag)
 {
-    return FormatEnumValueDesc(flag == ACL_RT_MEM_ATTACH_GLOBAL ? "ACL_RT_MEM_ATTACH_GLOBAL" : "UNKNOWN", flag);
+    const char* const name = flag == ACL_RT_MEM_ATTACH_GLOBAL ? "ACL_RT_MEM_ATTACH_GLOBAL" : "UNKNOWN";
+    return FormatEnumValueDesc(name, flag);
 }
 
 inline std::string GetSnapshotBackupFlagDesc(const uint32_t flag)
 {
-    const char* name = "UNKNOWN";
+    const char* name;
     if (flag == ACL_RT_SNAPSHOT_BACKUP_REQUIRED_ONLY) {
         name = "ACL_RT_SNAPSHOT_BACKUP_REQUIRED_ONLY";
     } else if (flag == ACL_RT_SNAPSHOT_BACKUP_INCLUDE_OPTIONAL) {
         name = "ACL_RT_SNAPSHOT_BACKUP_INCLUDE_OPTIONAL";
+    } else {
+        name = "UNKNOWN";
     }
     return FormatEnumValueDesc(name, flag);
 }
 
 inline std::string GetSnapshotRestoreFlagDesc(const uint32_t flag)
 {
-    const char* name = "UNKNOWN";
+    const char* name;
     if (flag == ACL_RT_SNAPSHOT_RESTORE_REQUIRED_ONLY) {
         name = "ACL_RT_SNAPSHOT_RESTORE_REQUIRED_ONLY";
     } else if (flag == ACL_RT_SNAPSHOT_RESTORE_INCLUDE_OPTIONAL) {
         name = "ACL_RT_SNAPSHOT_RESTORE_INCLUDE_OPTIONAL";
+    } else {
+        name = "UNKNOWN";
     }
     return FormatEnumValueDesc(name, flag);
 }

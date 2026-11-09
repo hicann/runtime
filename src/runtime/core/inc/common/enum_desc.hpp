@@ -420,7 +420,8 @@ std::string HacTypeToString(const rtHacType type);
 std::string MemPoolAttrToString(const rtMemPoolAttr attr);
 std::string DeviceStatusToString(const rtDeviceStatus status);
 
-struct ErrMsgNamedValue {
+class ErrMsgNamedValue {
+public:
     constexpr ErrMsgNamedValue(const uint64_t itemValue, const char* const itemName, const bool hex = false)
         : value(itemValue), name(itemName), useHex(hex)
     {}

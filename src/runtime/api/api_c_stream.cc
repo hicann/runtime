@@ -23,6 +23,7 @@
 #include "stream.hpp"
 #include "stream_mem_pool.hpp"
 #include <vector>
+#include <cinttypes>
 #define INVALID_UINT32 (0xFFFFFFFFU)
 
 using namespace cce::runtime;
@@ -628,9 +629,9 @@ rtError_t rtsStreamDestroy(rtStream_t stm, uint64_t flags)
         (flags & (~STREAM_DESTROY_VALID_FLAGS)) != 0U, ACL_ERROR_RT_PARAM_INVALID, StreamDestroyFlagToString(flags),
         "flags",
         RtFmtMsg(
-            "RT_STREAM_DESTORY_FLAG_DEFAULT(0x%X) or RT_STREAM_DESTORY_FLAG_FORCE(0x%X)",
-            static_cast<uint32_t>(RT_STREAM_DESTORY_FLAG_DEFAULT),
-            static_cast<uint32_t>(RT_STREAM_DESTORY_FLAG_FORCE)));
+            "RT_STREAM_DESTORY_FLAG_DEFAULT(0x%" PRIX64 ") or RT_STREAM_DESTORY_FLAG_FORCE(0x%" PRIX64 ")",
+            static_cast<uint64_t>(RT_STREAM_DESTORY_FLAG_DEFAULT),
+            static_cast<uint64_t>(RT_STREAM_DESTORY_FLAG_FORCE)));
     if ((flags & RT_STREAM_DESTORY_FLAG_FORCE) != 0U) {
         return rtStreamDestroyForce(stm);
     }

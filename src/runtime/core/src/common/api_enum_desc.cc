@@ -12,11 +12,8 @@
 #include "securec.h"
 #include <cinttypes>
 #include "runtime/context.h"
-#include "runtime/event.h"
 #include "runtime/rt_inner_event.h"
 #include "runtime/rts/rts_event.h"
-#include "runtime/stream.h"
-#include "runtime/rt_model.h"
 #include "runtime/rts/rts_model.h"
 #include "runtime/rts/rts_stream.h"
 #include "runtime/rt_inner_model.h"
@@ -141,7 +138,7 @@ std::string EnumValueDescription(const int64_t value, const std::initializer_lis
 
 std::string KernelTypeToString(const int64_t value)
 {
-    static const std::initializer_list<ErrMsgNamedValue> names = {
+    static constexpr std::initializer_list<ErrMsgNamedValue> names = {
         {KERNEL_TYPE_CCE, "KERNEL_TYPE_CCE"},
         {KERNEL_TYPE_FWK, "KERNEL_TYPE_FWK"},
         {KERNEL_TYPE_AICPU, "KERNEL_TYPE_AICPU"},
@@ -167,7 +164,7 @@ std::string DeviceFlagToString(const uint64_t value)
 
 std::string MemInfoQueryTypeToString(const uint32_t value)
 {
-    static const std::initializer_list<ErrMsgNamedValue> names = {
+    static constexpr std::initializer_list<ErrMsgNamedValue> names = {
         {RT_MEM_INFO_TYPE_DDR_SIZE, "RT_MEM_INFO_TYPE_DDR_SIZE", true},
         {RT_MEM_INFO_TYPE_HBM_SIZE, "RT_MEM_INFO_TYPE_HBM_SIZE", true},
         {RT_MEM_INFO_TYPE_DDR_P2P_SIZE, "RT_MEM_INFO_TYPE_DDR_P2P_SIZE", true},
@@ -189,7 +186,7 @@ std::string GeneralCtrlValueToString(const uint32_t value)
     if (value < static_cast<uint32_t>(RT_GNL_CTRL_TYPE_MAX)) {
         return GnlCtrlTypeToString(static_cast<rtGeneralCtrlType_t>(value));
     }
-    static const std::initializer_list<ErrMsgNamedValue> names = {
+    static constexpr std::initializer_list<ErrMsgNamedValue> names = {
         {RT_GNL_CTRL_TYPE_MAX, "RT_GNL_CTRL_TYPE_MAX"},
     };
     return EnumValueDescription(value, names);
@@ -197,7 +194,7 @@ std::string GeneralCtrlValueToString(const uint32_t value)
 
 std::string FloatOverflowValueToString(const uint32_t value)
 {
-    static const std::initializer_list<ErrMsgNamedValue> names = {
+    static constexpr std::initializer_list<ErrMsgNamedValue> names = {
         {RT_OVERFLOW_MODE_SATURATION, "RT_OVERFLOW_MODE_SATURATION"},
         {RT_OVERFLOW_MODE_INFNAN, "RT_OVERFLOW_MODE_INFNAN"},
         {RT_OVERFLOW_MODE_UNDEF, "RT_OVERFLOW_MODE_UNDEF"},
@@ -226,7 +223,7 @@ std::string StreamDestroyFlagToString(const uint64_t value)
 
 std::string ModelStreamFlagToString(const int64_t value)
 {
-    static const std::initializer_list<ErrMsgNamedValue> names = {
+    static constexpr std::initializer_list<ErrMsgNamedValue> names = {
         {RT_MODEL_STREAM_FLAG_HEAD, "RT_MODEL_STREAM_FLAG_HEAD", true},
         {RT_MODEL_STREAM_FLAG_DEFAULT, "RT_MODEL_STREAM_FLAG_DEFAULT", true},
     };
@@ -235,7 +232,7 @@ std::string ModelStreamFlagToString(const int64_t value)
 
 std::string DqsSchedTypeToString(const int64_t value)
 {
-    static const std::initializer_list<ErrMsgNamedValue> names = {
+    static constexpr std::initializer_list<ErrMsgNamedValue> names = {
         {RT_DQS_SCHED_TYPE_NN, "RT_DQS_SCHED_TYPE_NN"},
         {RT_DQS_SCHED_TYPE_VPC, "RT_DQS_SCHED_TYPE_VPC"},
         {RT_DQS_SCHED_TYPE_DSS, "RT_DQS_SCHED_TYPE_DSS"},
@@ -245,7 +242,7 @@ std::string DqsSchedTypeToString(const int64_t value)
 
 std::string CoreTypeToString(const int64_t value)
 {
-    static const std::initializer_list<ErrMsgNamedValue> names = {
+    static constexpr std::initializer_list<ErrMsgNamedValue> names = {
         {RT_CORE_TYPE_AIC, "RT_CORE_TYPE_AIC"},
         {RT_CORE_TYPE_AIV, "RT_CORE_TYPE_AIV"},
     };
@@ -254,7 +251,7 @@ std::string CoreTypeToString(const int64_t value)
 
 std::string ShapeFlagToString(const int64_t value)
 {
-    static const std::initializer_list<ErrMsgNamedValue> names = {
+    static constexpr std::initializer_list<ErrMsgNamedValue> names = {
         {RT_STATIC_SHAPE_KERNEL, "RT_STATIC_SHAPE_KERNEL", true},
         {RT_DYNAMIC_SHAPE_KERNEL, "RT_DYNAMIC_SHAPE_KERNEL", true},
     };
@@ -263,7 +260,7 @@ std::string ShapeFlagToString(const int64_t value)
 
 std::string SchedModeToString(const int64_t value)
 {
-    static const std::initializer_list<ErrMsgNamedValue> names = {
+    static constexpr std::initializer_list<ErrMsgNamedValue> names = {
         {RT_SCHEM_MODE_NORMAL, "RT_SCHEM_MODE_NORMAL"},
         {RT_SCHEM_MODE_BATCH, "RT_SCHEM_MODE_BATCH"},
         {RT_SCHEM_MODE_END, "RT_SCHEM_MODE_END"},
@@ -273,7 +270,7 @@ std::string SchedModeToString(const int64_t value)
 
 std::string ModuleTypeToString(const int64_t value)
 {
-    static const std::initializer_list<ErrMsgNamedValue> names = {
+    static constexpr std::initializer_list<ErrMsgNamedValue> names = {
         {RT_MODULE_TYPE_SYSTEM, "RT_MODULE_TYPE_SYSTEM"},
         {RT_MODULE_TYPE_AICPU, "RT_MODULE_TYPE_AICPU"},
         {RT_MODULE_TYPE_CCPU, "RT_MODULE_TYPE_CCPU"},
@@ -291,7 +288,7 @@ std::string ModuleTypeToString(const int64_t value)
 
 std::string IpcMemAttrTypeToString(const int64_t value)
 {
-    static const std::initializer_list<ErrMsgNamedValue> names = {
+    static constexpr std::initializer_list<ErrMsgNamedValue> names = {
         {RT_ATTR_TYPE_MEM_MAP, "RT_ATTR_TYPE_MEM_MAP"},
         {RT_ATTR_TYPE_MAX, "RT_ATTR_TYPE_MAX"},
     };
@@ -300,7 +297,7 @@ std::string IpcMemAttrTypeToString(const int64_t value)
 
 std::string IpcMemAttrToString(const uint64_t value)
 {
-    static const std::initializer_list<ErrMsgNamedValue> names = {
+    static constexpr std::initializer_list<ErrMsgNamedValue> names = {
         {RT_IPC_MEM_ATTR_SIO, "RT_IPC_MEM_ATTR_SIO"},
         {RT_IPC_MEM_ATTR_HCCS, "RT_IPC_MEM_ATTR_HCCS"},
         {RT_IPC_MEM_ATTR_UB_ONE_PORT_PATH, "RT_IPC_MEM_ATTR_UB_ONE_PORT_PATH"},
@@ -317,7 +314,7 @@ std::string IpcMemAttrToString(const uint64_t value)
 
 std::string ModelAttrToString(const int64_t value)
 {
-    static const std::initializer_list<ErrMsgNamedValue> names = {
+    static constexpr std::initializer_list<ErrMsgNamedValue> names = {
         {RT_MODEL_ATTR_SCH_MODE, "RT_MODEL_ATTR_SCH_MODE"},
         {RT_MODEL_ATTR_BUFF, "RT_MODEL_ATTR_BUFF"},
     };
@@ -326,7 +323,7 @@ std::string ModelAttrToString(const int64_t value)
 
 std::string ModelSchedModeToString(const int64_t value)
 {
-    static const std::initializer_list<ErrMsgNamedValue> names = {
+    static constexpr std::initializer_list<ErrMsgNamedValue> names = {
         {RT_MDL_SCH_DEFAULT, "RT_MDL_SCH_DEFAULT"},
         {RT_MDL_SCH_EXCLUSIVE, "RT_MDL_SCH_EXCLUSIVE"},
     };
@@ -335,7 +332,7 @@ std::string ModelSchedModeToString(const int64_t value)
 
 std::string ModelExecutorToString(const int64_t value)
 {
-    static const std::initializer_list<ErrMsgNamedValue> names = {
+    static constexpr std::initializer_list<ErrMsgNamedValue> names = {
         {EXECUTOR_NONE, "EXECUTOR_NONE", true},
         {EXECUTOR_TS, "EXECUTOR_TS", true},
         {EXECUTOR_AICPU, "EXECUTOR_AICPU", true},
@@ -345,7 +342,7 @@ std::string ModelExecutorToString(const int64_t value)
 
 std::string AclEventWaitFlagToString(const uint32_t value)
 {
-    static const std::initializer_list<ErrMsgNamedValue> names = {
+    static constexpr std::initializer_list<ErrMsgNamedValue> names = {
         {RT_EVENT_WAIT_DEFAULT, "ACL_EVENT_WAIT_DEFAULT"},
         {RT_EVENT_WAIT_EXTERNAL, "ACL_EVENT_WAIT_EXTERNAL"},
     };
@@ -354,7 +351,7 @@ std::string AclEventWaitFlagToString(const uint32_t value)
 
 std::string AclEventRecordFlagToString(const uint32_t value)
 {
-    static const std::initializer_list<ErrMsgNamedValue> names = {
+    static constexpr std::initializer_list<ErrMsgNamedValue> names = {
         {RT_EVENT_RECORD_DEFAULT, "ACL_EVENT_RECORD_DEFAULT"},
         {RT_EVENT_RECORD_EXTERNAL, "ACL_EVENT_RECORD_EXTERNAL"},
     };
@@ -363,7 +360,7 @@ std::string AclEventRecordFlagToString(const uint32_t value)
 
 std::string RtEventRecordFlagToString(const uint32_t value)
 {
-    static const std::initializer_list<ErrMsgNamedValue> names = {
+    static constexpr std::initializer_list<ErrMsgNamedValue> names = {
         {RT_EVENT_RECORD_DEFAULT, "RT_EVENT_RECORD_DEFAULT", true},
         {RT_EVENT_RECORD_EXTERNAL, "RT_EVENT_RECORD_EXTERNAL", true},
     };
@@ -372,7 +369,7 @@ std::string RtEventRecordFlagToString(const uint32_t value)
 
 std::string NotifyExportFlagToString(const int64_t value)
 {
-    static const std::initializer_list<ErrMsgNamedValue> names = {
+    static constexpr std::initializer_list<ErrMsgNamedValue> names = {
         {RT_NOTIFY_FLAG_DEFAULT, "RT_NOTIFY_FLAG_DEFAULT", true},
         {RT_NOTIFY_EXPORT_FLAG_DISABLE_PID_VALIDATION, "RT_NOTIFY_EXPORT_FLAG_DISABLE_PID_VALIDATION", true},
     };
@@ -381,7 +378,7 @@ std::string NotifyExportFlagToString(const int64_t value)
 
 std::string MemoryPolicyToString(const uint64_t value)
 {
-    static const std::initializer_list<ErrMsgNamedValue> names = {
+    static constexpr std::initializer_list<ErrMsgNamedValue> names = {
         {RT_MEMORY_POLICY_NONE, "RT_MEMORY_POLICY_NONE", true},
         {RT_MEMORY_POLICY_HUGE_PAGE_FIRST, "RT_MEMORY_POLICY_HUGE_PAGE_FIRST", true},
         {RT_MEMORY_POLICY_HUGE_PAGE_ONLY, "RT_MEMORY_POLICY_HUGE_PAGE_ONLY", true},
@@ -402,7 +399,7 @@ std::string MemoryPolicyToString(const uint64_t value)
 
 std::string BinaryMetaTypeToString(const int64_t value)
 {
-    static const std::initializer_list<ErrMsgNamedValue> names = {
+    static constexpr std::initializer_list<ErrMsgNamedValue> names = {
         {RT_BINARY_TYPE_BIN_VERSION, "RT_BINARY_TYPE_BIN_VERSION"},
         {RT_BINARY_TYPE_DEBUG_INFO, "RT_BINARY_TYPE_DEBUG_INFO"},
         {RT_BINARY_TYPE_DYNAMIC_PARAM, "RT_BINARY_TYPE_DYNAMIC_PARAM"},
@@ -418,7 +415,7 @@ std::string BinaryMetaTypeToString(const int64_t value)
 
 std::string StackTypeToString(const int64_t value)
 {
-    static const std::initializer_list<ErrMsgNamedValue> names = {
+    static constexpr std::initializer_list<ErrMsgNamedValue> names = {
         {RT_STACK_TYPE_SCALAR, "RT_STACK_TYPE_SCALAR"},
         {RT_STACK_TYPE_SIMT, "RT_STACK_TYPE_SIMT"},
     };

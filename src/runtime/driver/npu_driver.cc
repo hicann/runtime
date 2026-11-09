@@ -575,7 +575,7 @@ rtError_t NpuDriver::CreateIpcMem(
 
 static std::string DriverIpcAttrTypeToString(const uint32_t type)
 {
-    static const std::initializer_list<ErrMsgNamedValue> names = {
+    static constexpr std::initializer_list<ErrMsgNamedValue> names = {
         {RT_ATTR_TYPE_MEM_MAP, "RT_ATTR_TYPE_MEM_MAP"},
         {SHMEM_ATTR_TYPE_NO_WLIST_IN_SERVER, "SHMEM_ATTR_TYPE_NO_WLIST_IN_SERVER"},
     };

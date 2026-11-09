@@ -37,7 +37,7 @@ namespace cce {
 namespace runtime {
 static std::string MemWaitValueFlagToString(const uint32_t flag)
 {
-    static const std::initializer_list<ErrMsgNamedValue> names = {
+    static constexpr std::initializer_list<ErrMsgNamedValue> names = {
         {MEM_WAIT_VALUE_TYPE_GEQ, "MEM_WAIT_VALUE_TYPE_GEQ"}, {MEM_WAIT_VALUE_TYPE_EQ, "MEM_WAIT_VALUE_TYPE_EQ"},
         {MEM_WAIT_VALUE_TYPE_AND, "MEM_WAIT_VALUE_TYPE_AND"}, {MEM_WAIT_VALUE_TYPE_NOR, "MEM_WAIT_VALUE_TYPE_NOR"},
         {MEM_WAIT_VALUE_TYPE_MAX, "MEM_WAIT_VALUE_TYPE_MAX"},
@@ -525,7 +525,7 @@ rtError_t ApiErrorDecorator::GetMemcpyConfigAttr(rtMemcpyAttribute_t* attr, RtMe
             configInfo->checkBitmap = attr->value.checkBitmap;
             break;
         default:
-            static const std::initializer_list<ErrMsgNamedValue> names = {
+            static constexpr std::initializer_list<ErrMsgNamedValue> names = {
                 {RT_MEMCPY_ATTRIBUTE_RSV, "MEMCPY_ATTRIBUTE_RSV"},
                 {RT_MEMCPY_ATTRIBUTE_MAX, "MEMCPY_ATTRIBUTE_MAX"},
             };
