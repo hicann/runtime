@@ -876,6 +876,24 @@ static rtError_t ProcCaptureStmSubscribeInfo(const Stream* const stm, const bool
     return RT_ERROR_NONE;
 }
 
+static rtError_t EnsureCallbackSubscribed(Stream* const stm, const uint64_t threadId)
+{
+    Runtime* const rtInstance = Runtime::Instance();
+    if (!rtInstance->JudgeNeedSubscribe(threadId, stm, stm->Device_()->Id_())) {
+        return RT_ERROR_NONE;
+    }
+
+    Notify* curNotify = nullptr;
+    rtError_t ret = rtInstance->ApiImpl_()->NotifyCreate(
+        static_cast<int32_t>(stm->Device_()->Id_()), &curNotify, RT_NOTIFY_DEFAULT);
+    ERROR_RETURN(ret, "Call NotifyCreate failed for callback, ret=%#x.", ret);
+    ret = rtInstance->SubscribeCallback(threadId, stm, static_cast<void*>(curNotify));
+    if (ret != RT_ERROR_NONE) {
+        (void)rtInstance->ApiImpl_()->NotifyDestroy(curNotify);
+    }
+    return RT_ERROR_NONE;
+}
+
 static rtError_t CallbackLaunchForDavid(
     const rtCallback_t callBackFunc, void* const fnData, Stream* const stm, const bool isBlock, Notify*& notify,
     const uint64_t threadId)
@@ -905,8 +923,18 @@ static rtError_t CallbackLaunchForDavid(
     ERROR_RETURN_MSG_INNER(
         error, "Failed to proc capture stream subscribe info, stream_id=%d, capture stream_id=%d, error=%#x.", streamId,
         dstStm->Id_(), static_cast<uint32_t>(error));
+    const bool needTaskStreamSubscribe =
+        isBlock && (threadId != MAX_UINT64_NUM) && !stm->IsCapturing() && (dstStm != stm);
+    if (needTaskStreamSubscribe) {
+        // auto-split 下任务可能落在 slave 流，按实际承载任务的 dstStm 订阅，保证 SQE 中 Cq/Group/StreamId 能查到。
+        error = EnsureCallbackSubscribed(dstStm, threadId);
+        ERROR_RETURN_MSG_INNER(
+            error, "Failed to subscribe callback for task stream, stream_id=%d, task_stream_id=%d, error=%#x.",
+            streamId, dstStm->Id_(), static_cast<uint32_t>(error));
+    }
     if (isBlock) {
-        error = GetNotifyInfoForCallbackLaunchWithBlock(stm, notifyId, notify);
+        Stream* const notifyStm = needTaskStreamSubscribe ? dstStm : stm;
+        error = GetNotifyInfoForCallbackLaunchWithBlock(notifyStm, notifyId, notify);
         ERROR_RETURN_MSG_INNER(
             error, "Failed to get notify info, stream_id=%d may have capture stream_id=%d, error=%#x.", streamId,
             dstStm->Id_(), static_cast<uint32_t>(error));
