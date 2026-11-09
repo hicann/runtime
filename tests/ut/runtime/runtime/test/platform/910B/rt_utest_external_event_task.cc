@@ -30,6 +30,7 @@
 #include "common_task.h"
 #include "event_task.h"
 #include "memory_task.h"
+#include "notify_task.h"
 #include "task_info_v100.h"
 #include "rt_unwrap.h"
 #include "stars_external_event_cond_isa_helper.hpp"
@@ -1136,6 +1137,51 @@ TEST_F(ExternalEventTaskTest910B, CompletedUpdateItemsStopAtFutureLaunch)
     TaskInfo commonTask = {};
     commonTask.type = TS_TASK_TYPE_KERNEL_AICORE;
     TaskUpdateItemPostProc(&commonTask, firstItem);
+}
+
+TEST_F(ExternalEventTaskTest910B, NonTimelineExternalRecordUpdateItemIsNotEnqueuedOnFollowingLaunch)
+{
+    rtStream_t stream = nullptr;
+    ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
+    Stream* const streamObj = rt_ut::UnwrapOrNull<Stream>(stream);
+    ASSERT_NE(streamObj, nullptr);
+
+    Event oldEvent(nullptr, 0U, nullptr);
+    Event updatedEvent(nullptr, 0U, nullptr);
+    TaskUpdateInfo taskUpdate = {};
+    TaskInfo taskInfo = {};
+    taskInfo.stream = streamObj;
+    taskInfo.id = 1U;
+    taskInfo.type = TS_TASK_TYPE_CAPTURE_RECORD_EXTERNAL;
+    taskInfo.updateInfo = &taskUpdate;
+    taskInfo.u.writeValTask.cqeFlag = TASK_WR_CQE_NEVER;
+    taskUpdate.latestParams.u.eventRecordUpdateParams.event = &updatedEvent;
+
+    CaptureModel model(RT_MODEL_CAPTURE_MODEL);
+    model.context_ = Runtime::Instance()->CurrentContext();
+    ASSERT_EQ(
+        model.AddExternalRecordEvent(&oldEvent, static_cast<uint32_t>(streamObj->Id_()), taskInfo.id), RT_ERROR_NONE);
+    model.InsertGraphUpdateTask(&taskInfo);
+    MOCKER(GetTaskInfo).stubs().will(returnValue(&taskInfo));
+
+    ASSERT_EQ(model.PrepareGraphUpdateProc(nullptr), RT_ERROR_NONE);
+    ASSERT_EQ(taskUpdate.updateQueue.size(), 1U);
+    ASSERT_EQ(model.updateInfo_.curApplyUpdateTask.count(&taskInfo), 1U);
+
+    TaskInfo endGraphTask = {};
+    endGraphTask.bindFlag = 1U;
+    endGraphTask.u.endGraphNotifyWaitTask.launchNo = 1U;
+    endGraphTask.u.endGraphNotifyWaitTask.updateTask = new std::set<TaskInfo*>();
+    endGraphTask.u.endGraphNotifyWaitTask.updateTask->swap(model.updateInfo_.curApplyUpdateTask);
+    DoCompleteSuccessForEndGraphNotifyWaitTask(&endGraphTask, 0U);
+    EXPECT_TRUE(taskUpdate.updateQueue.empty());
+    EXPECT_EQ(taskInfo.u.writeValTask.event, &updatedEvent);
+
+    ASSERT_EQ(model.PrepareGraphUpdateProc(nullptr), RT_ERROR_NONE);
+    EXPECT_TRUE(model.updateInfo_.curApplyUpdateTask.empty());
+    EXPECT_TRUE(taskUpdate.updateQueue.empty());
+
+    EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
 }
 
 TEST_F(ExternalEventTaskTest910B, UpdateHostSqeBufferCopiesEntireExternalRecordTask)

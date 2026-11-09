@@ -1102,8 +1102,9 @@ rtError_t CaptureModel::PrepareExternalRecordTaskUpdateInfo(
         const TaskWrCqeFlag lastCqeFlag = taskInfo->u.writeValTask.cqeFlag;
         TaskWrCqeFlag newCqeFlag = TASK_WR_CQE_NEVER;
         uint64_t expectCqeNo = 0U;
+        const bool isTimelineEvent = event->IsEventWithTimeline();
 
-        if (event->IsEventWithTimeline()) {
+        if (isTimelineEvent) {
             taskInfo->u.writeValTask.expectCqeCnt++;
             updateInfo.totalNeedCqeCnt++;
             taskInfo->stream->AddCqePendingCnt();
@@ -1131,18 +1132,20 @@ rtError_t CaptureModel::PrepareExternalRecordTaskUpdateInfo(
             count++;
         }
 
-        TaskUpdateItem updateItem = {};
-        updateItem.launchNo = updateInfo.launchCnt + 1U;
-        updateItem.u.eventRecordInfo.event = event;
-        updateItem.u.eventRecordInfo.expectCqeNo = expectCqeNo;
-        /**
-         * event发生改变，flag没变，不带time， 需要刷新event指针 ，所以要入queue
-         * event发生改变，flag改变，不带timeline 到 带timeline，肯定要入queue
-         * event发生改变，flag改变，带timeline 到 不带timeline，肯定要入queue
-         * event未发生改变，flag 自身带timeline， 肯定要入queue
-         */
-        const std::lock_guard<std::mutex> queueLock(taskInfo->updateInfo->updateMutex);
-        taskInfo->updateInfo->updateQueue.push(updateItem);
+        if ((updateInfo.curApplyUpdateTask.count(taskInfo) > 0U) || isTimelineEvent) {
+            TaskUpdateItem updateItem = {};
+            updateItem.launchNo = updateInfo.launchCnt + 1U;
+            updateItem.u.eventRecordInfo.event = event;
+            updateItem.u.eventRecordInfo.expectCqeNo = expectCqeNo;
+            /**
+             * event发生改变，flag没变，不带time， 需要刷新event指针 ，所以要入queue
+             * event发生改变，flag改变，不带timeline 到 带timeline，肯定要入queue
+             * event发生改变，flag改变，带timeline 到 不带timeline，肯定要入queue
+             * event未发生改变，flag 自身带timeline， 肯定要入queue
+             */
+            const std::lock_guard<std::mutex> queueLock(taskInfo->updateInfo->updateMutex);
+            taskInfo->updateInfo->updateQueue.push(updateItem);
+        }
     }
 
     return RT_ERROR_NONE;
