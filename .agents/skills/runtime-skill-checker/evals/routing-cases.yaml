@@ -1,0 +1,49 @@
+# Copyright (c) 2026 Huawei Technologies Co., Ltd.
+# This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+# CANN Open Software License Agreement Version 2.0 (the "License").
+# Please refer to the License for details. You may not use this file except in compliance with the License.
+# THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+# INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+# See LICENSE in the root of the software repository for the full text of the License.
+
+positive_cases:
+  - id: explicit_skill_review
+    prompt: "使用 runtime-skill-checker 审查这个 Skill。"
+    expected_route: runtime-skill-checker
+    expected_behavior: "按 Runtime 正式开发规范检查适用规则，保持目标只读并生成审查报告。"
+
+  - id: implicit_skill_review
+    prompt: "请按 Agent Skill 开发规范检查这个 Skill 有哪些不符合项。"
+    expected_route: runtime-skill-checker
+    expected_behavior: "识别为 Skill 规范审查，输出有证据和修改建议的结果。"
+
+  - id: authorized_issue_optimization
+    prompt: "按刚才的报告处理 Fail-001 和 Suggest-001。"
+    expected_route: runtime-skill-checker
+    expected_behavior: "只复核并处理用户明确选择的问题编号，不扩展优化范围。"
+
+  - id: generic_skill_optimization_starts_review
+    prompt: "优化一下这个 Skill。"
+    expected_route: runtime-skill-checker
+    expected_behavior: "没有有效审查结果和问题编号时先完成审查，生成报告后等待用户选择问题编号。"
+
+negative_cases:
+  - id: ordinary_code_review
+    prompt: "审查这段 C++ 代码有没有正确性问题。"
+    expected_route: none
+    reason: "目标是代码质量，不是 Skill 开发规范符合性。"
+
+  - id: create_new_skill
+    prompt: "帮我创建一个用于解析日志的新 Skill。"
+    expected_route: none
+    reason: "目标是创建新 Skill，不是审查或按既有报告优化 Skill。"
+
+  - id: explain_guideline_only
+    prompt: "解释一下 Agent Skill 开发规范里的 G.SEC.04。"
+    expected_route: none
+    reason: "用户只要求解释规范，没有要求审查或优化目标 Skill。"
+
+  - id: direct_skill_edit_without_review
+    prompt: "把这个 Skill 的 description 改得更容易触发。"
+    expected_route: none
+    reason: "用户要求直接编辑 Skill，没有要求先进行规范审查或处理既有问题编号。"

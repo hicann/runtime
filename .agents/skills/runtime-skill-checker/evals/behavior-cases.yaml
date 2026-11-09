@@ -1,0 +1,20 @@
+# Copyright (c) 2026 Huawei Technologies Co., Ltd.
+# This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+# CANN Open Software License Agreement Version 2.0 (the "License").
+# Please refer to the License for details. You may not use this file except in compliance with the License.
+# THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+# INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+# See LICENSE in the root of the software repository for the full text of the License.
+
+cases:
+  - id: review_remains_read_only
+    prompt: "审查这个 Skill，并告诉我有哪些问题。"
+    expected_behavior: "保持目标 Skill 只读，只在目标外生成 review-result.yaml 和 review-report.md。"
+
+  - id: optimization_requires_issue_ids
+    prompt: "把刚才发现的问题直接全部修改掉。"
+    expected_behavior: "要求用户明确选择 Fail-* 或 Suggest-* 编号，在取得编号前不修改目标 Skill。"
+
+  - id: invalid_target_stops
+    prompt: "审查这个没有 SKILL.md 的目录。"
+    expected_behavior: "停止审查，说明目标不是有效 Skill 目录，不生成审查完成结论。"
