@@ -708,6 +708,7 @@ private:
     rtError_t CacheLastTaskOpInfo(const void* const infoPtr, const size_t infoSize) override;
     rtError_t CacheLastTaskExtendInfo(const char* const extendInfoPtr, const size_t infoSize) override;
 
+    rtError_t ModelTaskCopyArgsDeviceBuffer(rtTask_t task, void** devBufferAddr, size_t* size) override;
     rtError_t TaskGetParams(rtTask_t task, rtTaskParams* const params) override;
     rtError_t TaskSetParams(rtTask_t task, rtTaskParams* const params, Kernel* const kernel) override;
     rtError_t KernelTaskGetAttribute(

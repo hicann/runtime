@@ -526,6 +526,10 @@ RUNTIME_API(standard_soc, rtError_t, rtLaunchKernelWithArgsArray,
     ( void* func, uint32_t numBlocks, rtStream_t stm, rtKernelLaunchCfg_t* cfg, void** args),
     (func, numBlocks, stm, cfg, args), FEATURE_NOT_SUPPORT, EXPORT)
 
+RUNTIME_API(task, rtError_t, rtModelTaskCopyArgsDeviceBuffer,
+    (rtTask_t task, void** devBufferAddr, size_t* size),
+    (task, devBufferAddr, size), FEATURE_NOT_SUPPORT, EXPORT)
+
 RUNTIME_API(task, rtError_t, rtModelTaskGetParams,
     (rtTask_t task, rtTaskParams* params),
     (task, params), FEATURE_NOT_SUPPORT, EXPORT)

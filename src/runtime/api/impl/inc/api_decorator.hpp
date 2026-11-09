@@ -680,6 +680,7 @@ public:
     rtError_t GetFuncHandleFromExceptionInfo(const rtExceptionInfo_t* info, Kernel** const funcHandle) override;
 
     // task
+    rtError_t ModelTaskCopyArgsDeviceBuffer(rtTask_t task, void** devBufferAddr, size_t* size) override;
     rtError_t TaskGetParams(rtTask_t task, rtTaskParams* const params) override;
     rtError_t TaskSetParams(rtTask_t task, rtTaskParams* const params, Kernel* const kernel) override;
     rtError_t KernelTaskGetAttribute(

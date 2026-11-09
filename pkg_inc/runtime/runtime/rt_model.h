@@ -589,6 +589,24 @@ RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t
     rtModelDebugJsonPrint(rtModel_t mdl, const char* path, uint32_t flags);
 
 RT_RUNTIME_DEPRECATED_DECLS_END
+
+/**
+ * @ingroup rt_model
+ * @brief Synchronously back up the loaded device arguments of an AclGraph kernel task.
+ * @note Copies the current execution buffer, independently of cached SetParams updates.
+ *       The returned buffer is owned by the model and remains valid until model destruction.
+ *       The caller must not free it and must ensure that source loading has completed successfully
+ *       and that the source arguments remain valid and stable throughout the copy.
+ *       This API does not wait for previous argument uploads, model execution, or other streams.
+ *       Each successful call creates a new buffer; previous backups remain valid until model destruction.
+ * @param task [in] A valid kernel task belonging to an AclGraph model.
+ * @param devBufferAddr [out] Address of the independent device argument buffer.
+ * @param size [out] Number of copied bytes, including any implicit parameter prefix.
+ * @retval RT_ERROR_NONE Success. Output values are valid only on success.
+ * @retval OtherValues Failure.
+ */
+RTS_API rtError_t rtModelTaskCopyArgsDeviceBuffer(rtTask_t task, void** devBufferAddr, size_t* size);
+
 #if defined(__cplusplus)
 }
 #endif

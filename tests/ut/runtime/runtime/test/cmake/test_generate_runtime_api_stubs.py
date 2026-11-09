@@ -130,6 +130,22 @@ RUNTIME_API_STUB(rtNoop)
             },
         )
 
+    def test_kernel_args_copy_has_exported_unsupported_stubs(self):
+        _, catalog = GENERATOR.parse_catalog(
+            REPO_ROOT / "src/runtime/api/runtime_api_stub_catalog.def"
+        )
+        name = "rtModelTaskCopyArgsDeviceBuffer"
+        self.assertTrue(name in catalog, "missing kernel args Copy API")
+        for product in ("tiny", "arch5162"):
+            _, names = GENERATOR.parse_product_def(
+                REPO_ROOT / f"src/runtime/cmake/{product}_unsupported_runtime_api.def"
+            )
+            self.assertIn(name, names)
+            source = GENERATOR.render_source(product, [catalog[name]])
+            self.assertIn("void** devBufferAddr", source)
+            self.assertIn("size_t* size", source)
+            self.assertIn("return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;", source)
+
     def test_product_stubs_do_not_report_errmsg(self):
         catalog_path = REPO_ROOT / "src/runtime/api/runtime_api_stub_catalog.def"
         _, catalog = GENERATOR.parse_catalog(catalog_path)
@@ -156,12 +172,12 @@ RUNTIME_API_STUB(rtNoop)
         self.assertEqual(catalog_version, product_version)
         self.assertFalse(set(names) - set(catalog))
         self.assertEqual(names, sorted(names))
-        self.assertEqual(len(catalog), 791)
-        self.assertEqual(len(names), 659)
+        self.assertEqual(len(catalog), 792)
+        self.assertEqual(len(names), 660)
         self.assertEqual(len(set(catalog) - set(names)), 132)
         self.assertEqual(
             sum(catalog[name].policy == "FEATURE_NOT_SUPPORT" for name in names),
-            655,
+            656,
         )
         self.assertEqual(
             sum(catalog[name].policy == "SUCCESS_NOOP" for name in names), 3

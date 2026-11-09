@@ -133,6 +133,7 @@ set(runtimeut_src_aclgraph_list
     ${TOP_DIR}/src/runtime/feature/aclgraph/api_error_aclgraph.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/model_aclgraph.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/capture_model.cc
+    ${TOP_DIR}/src/runtime/feature/aclgraph/capture_model_args_backup.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/logic_sq.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/logic_sq_utils.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/logic_sq_manage.cc
@@ -692,6 +693,7 @@ add_executable(runtime_utest_task_910B
     rt_utest_set_device_failure_mode.cc
     rt_utest_dcache_lock.cc
     rt_utest_capture_mode_update.cc
+    rt_utest_model_task_copy_args.cc
     rt_utest_capture_mode.cc
     rt_utest_model_ri.cc
     rt_utest_customer_stack_size.cc

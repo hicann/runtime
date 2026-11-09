@@ -774,6 +774,7 @@ private:
         void* dst, size_t destMax, void* src, size_t size, const rtMemcpyBatchAttr& memAttr, rtPtrAttributes_t& dstAttr,
         rtPtrAttributes_t& srcAttr, rtMemcpyKind_t& kind);
     // task
+    rtError_t ModelTaskCopyArgsDeviceBuffer(rtTask_t task, void** devBufferAddr, size_t* size) override;
     rtError_t TaskGetParams(rtTask_t task, rtTaskParams* const params) override;
     rtError_t TaskSetParams(rtTask_t task, rtTaskParams* const params, Kernel* const kernel) override;
     rtError_t KernelTaskGetAttribute(

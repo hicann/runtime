@@ -172,6 +172,7 @@ CaptureModel::~CaptureModel() noexcept
     ReleaseNotifyListOnDestroy(addStreamNotifyList_);
     ReleaseNotifyListOnDestroy(executeNotifyList_);
     ReleaseArgLoaderBackupOnDestroy();
+    ReleaseArgsDeviceBufferBackups(true);
     for (auto condHandle : condHandles_) {
         DELETE_O(condHandle);
     }
@@ -718,6 +719,7 @@ rtError_t CaptureModel::TearDown()
 
 void CaptureModel::FinalizeHostStateOnExit() noexcept
 {
+    ReleaseArgsDeviceBufferBackups(false);
     singleOperStmIdAndCaptureStmIdMap_.clear();
     singleOperEvents_.clear();
     captureEvents_.clear();

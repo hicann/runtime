@@ -18,6 +18,7 @@
 #include "device_sq_cq_pool.hpp"
 #include "cond_handle.hpp"
 #include "logic_sq.hpp"
+#include <list>
 #include <mutex>
 #include <set>
 #include <tuple>
@@ -341,6 +342,7 @@ public:
     void InsertGraphUpdateTask(TaskInfo* const taskInfo);
     void ClearGraphUpdateTask();
     bool HasExternalEvent() { return !externalRecordEventItems_.empty(); }
+    rtError_t CopyTaskArgsDeviceBuffer(TaskInfo* taskInfo, void** devBufferAddr, size_t* size);
 
 private:
     rtError_t AllocSqCqProc(const uint32_t logicSqNum) const;
@@ -353,6 +355,8 @@ private:
     void ClearStreamActiveTask(void);
     void ReleaseNotifyListOnDestroy(std::vector<Notify*>& notifyList);
     void ReleaseArgLoaderBackupOnDestroy();
+    void ReleaseArgsDeviceBufferBackups(bool releaseDeviceMemory);
+    std::list<void*> argsDeviceBufferBackups_;
     void FinalizeHostStateOnExit() noexcept;
     Stream* GetOriginalCaptureStream(void) const;
     rtError_t CheckExecuteReady(void) const;

@@ -786,6 +786,7 @@ public:
     virtual rtError_t GetFuncHandleFromExceptionInfo(const rtExceptionInfo_t* info, Kernel** const funcHandle) = 0;
 
     // task
+    virtual rtError_t ModelTaskCopyArgsDeviceBuffer(rtTask_t task, void** devBufferAddr, size_t* size) = 0;
     virtual rtError_t TaskGetParams(rtTask_t task, rtTaskParams* const params) = 0;
     virtual rtError_t TaskSetParams(rtTask_t task, rtTaskParams* const params, Kernel* const kernel) = 0;
     virtual rtError_t KernelTaskGetAttribute(

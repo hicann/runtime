@@ -729,6 +729,14 @@ rtError_t ApiImpl::ModelTaskUpdate(
 
 rtError_t ApiImpl::DeviceL2CacheFlush() { return RT_ERROR_FEATURE_NOT_SUPPORT; }
 
+rtError_t ApiImpl::ModelTaskCopyArgsDeviceBuffer(rtTask_t task, void** devBufferAddr, size_t* size)
+{
+    UNUSED(task);
+    UNUSED(devBufferAddr);
+    UNUSED(size);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 rtError_t ApiImpl::TaskGetParams(rtTask_t task, rtTaskParams* const params)
 {
     UNUSED(task);

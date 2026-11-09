@@ -45,6 +45,7 @@ target_link_libraries(runtime_utest_api_david PRIVATE
 
 ###################################################################################################
 add_executable(runtime_utest_task_david
+    ${TOP_DIR}/src/runtime/api/api_c_task.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_standard_soc.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_soma.cc
@@ -54,6 +55,7 @@ add_executable(runtime_utest_task_david
     rt_utest_david_task_send.cc
     rt_utest_david_task.cc
     rt_utest_david_model_c.cc
+    rt_utest_model_task_copy_args.cc
     rt_utest_david_event.cc
     rt_utest_david_stream.cc
     rt_utest_david_elf.cc

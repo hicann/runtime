@@ -459,6 +459,7 @@ set(libruntime_cmodel_src_files
     ${RUNTIME_FEATURE_DIR}/aclgraph/model_aclgraph.cc
     ${RUNTIME_FEATURE_DIR}/model/model_rebuild.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/capture_model.cc
+    ${RUNTIME_FEATURE_DIR}/aclgraph/capture_model_args_backup.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/logic_sq.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/logic_sq_utils.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/logic_sq_manage.cc
@@ -607,6 +608,7 @@ set(libruntime_cmodel_v200_src_files
     ${RUNTIME_FEATURE_DIR}/aclgraph/model_aclgraph.cc
     ${RUNTIME_FEATURE_DIR}/model/model_rebuild.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/capture_model.cc
+    ${RUNTIME_FEATURE_DIR}/aclgraph/capture_model_args_backup.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/logic_sq.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/logic_sq_utils.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/logic_sq_manage.cc

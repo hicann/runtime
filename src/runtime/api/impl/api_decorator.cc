@@ -1843,6 +1843,11 @@ rtError_t ApiDecorator::GetFuncHandleFromExceptionInfo(const rtExceptionInfo_t* 
     return impl_->GetFuncHandleFromExceptionInfo(info, funcHandle);
 }
 
+rtError_t ApiDecorator::ModelTaskCopyArgsDeviceBuffer(rtTask_t task, void** devBufferAddr, size_t* size)
+{
+    return impl_->ModelTaskCopyArgsDeviceBuffer(task, devBufferAddr, size);
+}
+
 rtError_t ApiDecorator::TaskGetParams(rtTask_t task, rtTaskParams* const params)
 {
     return impl_->TaskGetParams(task, params);

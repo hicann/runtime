@@ -1272,6 +1272,26 @@ static rtError_t GetTaskParamsWithUpdate(const TaskInfo* const taskInfo, rtTaskP
     }
 }
 
+rtError_t ApiImpl::ModelTaskCopyArgsDeviceBuffer(rtTask_t task, void** devBufferAddr, size_t* size)
+{
+    TaskInfo* const taskInfo = static_cast<TaskInfo*>(task);
+    Stream* const stm = taskInfo->stream;
+    NULL_PTR_RETURN(stm, RT_ERROR_STREAM_NULL);
+    CaptureModel* const model = dynamic_cast<CaptureModel*>(stm->Model_());
+    COND_RETURN_WARN(model == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT, "Only ACL Graph supports kernel argument backup.");
+    COND_RETURN_WARN(
+        model->IsSubCaptureModel(), RT_ERROR_FEATURE_NOT_SUPPORT,
+        "Sub ACL Graph does not support kernel argument backup.");
+    const rtError_t error = CheckCaptureModelSupportSoftwareSq(stm->Device_());
+    COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
+    rtTaskType type = RT_TASK_DEFAULT;
+    const rtError_t typeError = ConvertTaskType(taskInfo, &type);
+    COND_RETURN_WITH_NOLOG(typeError != RT_ERROR_NONE, typeError);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        type != RT_TASK_KERNEL, RT_ERROR_INVALID_VALUE, "Backing up kernel task arguments", type, "TASK_KERNEL");
+    return model->CopyTaskArgsDeviceBuffer(taskInfo, devBufferAddr, size);
+}
+
 rtError_t ApiImpl::TaskGetParams(rtTask_t task, rtTaskParams* const params)
 {
     const TaskInfo* const taskInfo = RtPtrToPtr<const TaskInfo*>(task);

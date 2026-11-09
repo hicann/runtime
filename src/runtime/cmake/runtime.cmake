@@ -361,6 +361,7 @@ set(libruntime_v100_src_files
     ${RUNTIME_FEATURE_DIR}/aclgraph/v100/capture_adapt_v100.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v100/capture_model_adapt_v100.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/capture_model.cc
+    ${RUNTIME_FEATURE_DIR}/aclgraph/capture_model_args_backup.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/logic_sq.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/logic_sq_utils.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/logic_sq_manage.cc

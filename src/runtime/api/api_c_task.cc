@@ -53,6 +53,19 @@ RTS_API rtError_t rtTaskGetSeqId(rtTask_t task, uint32_t* id)
 }
 
 VISIBILITY_DEFAULT
+RTS_API rtError_t rtModelTaskCopyArgsDeviceBuffer(rtTask_t task, void** devBufferAddr, size_t* size)
+{
+    GLOBAL_STATE_WAIT_IF_LOCKED();
+    Api* const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    const rtError_t error = apiInstance->ModelTaskCopyArgsDeviceBuffer(task, devBufferAddr, size);
+    COND_RETURN_WITH_NOLOG(
+        (error == RT_ERROR_FEATURE_NOT_SUPPORT || error == RT_ERROR_DRV_NOT_SUPPORT), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
 RTS_API rtError_t rtModelTaskGetParams(rtTask_t task, rtTaskParams* params)
 {
     Api* const apiInstance = Api::Instance();

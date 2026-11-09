@@ -533,7 +533,7 @@ drvError_t halSqCqAllocate(uint32_t devId, struct halSqCqInputInfo* in, struct h
 
 drvError_t halSqCqFree(uint32_t devId, struct halSqCqFreeInfo* in)
 {
-    g_sqcqIdBitmap.FreeId(in->sqId);
+    g_sqcqIdBitmap.FreeId(in->type == DRV_LOGIC_TYPE ? in->cqId : in->sqId);
     if (in->type == DRV_SHM_TYPE) {
         if (Runtime::Instance()->GetChipType() == CHIP_DAVID) {
             memset(&logicCqReport, 0, sizeof(rtCqReport_t));
@@ -543,7 +543,7 @@ drvError_t halSqCqFree(uint32_t devId, struct halSqCqFreeInfo* in)
     } else if (in->type == DRV_LOGIC_TYPE) {
         std::lock_guard<std::mutex> lock(logicMutex);
         uint32_t streamId = logicCqStreamId[in->cqId];
-        logicCqStreamId.erase(in->sqId);
+        logicCqStreamId.erase(in->cqId);
     }
     return DRV_ERROR_NONE;
 }

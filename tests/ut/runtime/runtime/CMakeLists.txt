@@ -308,6 +308,7 @@ set(runtimeut_src_aclgraph_list
     ${TOP_DIR}/src/runtime/feature/aclgraph/api_error_aclgraph.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/model_aclgraph.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/capture_model.cc
+    ${TOP_DIR}/src/runtime/feature/aclgraph/capture_model_args_backup.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/logic_sq.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/logic_sq_utils.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/logic_sq_manage.cc
@@ -431,6 +432,7 @@ set(runtimeut_src_tiny_exclude_list
     ${TOP_DIR}/src/runtime/feature/aclgraph/v100/api_impl_capture_event.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/model_aclgraph.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/capture_model.cc
+    ${TOP_DIR}/src/runtime/feature/aclgraph/capture_model_args_backup.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/logic_sq.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/logic_sq_utils.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/logic_sq_manage.cc

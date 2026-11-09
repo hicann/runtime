@@ -1042,6 +1042,26 @@ TEST_F(DavidStreamTest, davidstream_IsReclaimAsync)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
+TEST_F(DavidStreamTest, LogicCqFreeReusesReleasedId)
+{
+    halSqCqInputInfo input = {};
+    input.type = DRV_LOGIC_TYPE;
+    halSqCqOutputInfo output = {};
+    ASSERT_EQ(halSqCqAllocate(0U, &input, &output), DRV_ERROR_NONE);
+    const uint32_t cqId = output.cqId;
+    ASSERT_NE(cqId, UINT32_MAX);
+
+    halSqCqFreeInfo freeInfo = {};
+    freeInfo.type = DRV_LOGIC_TYPE;
+    freeInfo.cqId = cqId;
+    ASSERT_EQ(halSqCqFree(0U, &freeInfo), DRV_ERROR_NONE);
+    for (uint32_t i = 0U; i < 2048U; ++i) {
+        ASSERT_EQ(halSqCqAllocate(0U, &input, &output), DRV_ERROR_NONE);
+        ASSERT_EQ(output.cqId, cqId);
+        ASSERT_EQ(halSqCqFree(0U, &freeInfo), DRV_ERROR_NONE);
+    }
+}
+
 TEST_F(DavidStreamTest, TestCreateStreamAndGet)
 {
     MOCKER_CPP_VIRTUAL((NpuDriver*)device_->Driver_(), &NpuDriver::DevMemAllocWithBackupFlag)

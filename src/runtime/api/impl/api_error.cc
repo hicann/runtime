@@ -6578,6 +6578,16 @@ rtError_t ApiErrorDecorator::GetFuncHandleFromExceptionInfo(const rtExceptionInf
     return impl_->GetFuncHandleFromExceptionInfo(info, funcHandle);
 }
 
+rtError_t ApiErrorDecorator::ModelTaskCopyArgsDeviceBuffer(rtTask_t task, void** devBufferAddr, size_t* size)
+{
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(devBufferAddr, RT_ERROR_INVALID_VALUE, "Backing up kernel task arguments");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(size, RT_ERROR_INVALID_VALUE, "Backing up kernel task arguments");
+    *devBufferAddr = nullptr;
+    *size = 0U;
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(task, RT_ERROR_INVALID_VALUE, "Backing up kernel task arguments");
+    return impl_->ModelTaskCopyArgsDeviceBuffer(task, devBufferAddr, size);
+}
+
 rtError_t ApiErrorDecorator::TaskGetParams(rtTask_t task, rtTaskParams* const params)
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(task, RT_ERROR_INVALID_VALUE, "Obtaining task parameter information");
