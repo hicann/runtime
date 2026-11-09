@@ -99,6 +99,14 @@ int halMbufGetBuffAddrFake2(Mbuf* mbuf, void** buf)
     *(char**)buf = allocFakeMBuf;
     return DRV_ERROR_NONE;
 }
+
+uint32_t g_mbufFreeCount = 0U;
+int halMbufFreeCountFake(Mbuf* mbuf)
+{
+    (void)mbuf;
+    g_mbufFreeCount++;
+    return DRV_ERROR_NONE;
+}
 } // namespace
 
 TEST_F(BQS_QUEUE_MANAGER_UTest, InitSuccess1)
@@ -516,6 +524,28 @@ TEST_F(BQS_QUEUE_MANAGER_UTest, HandleAsynMemBuffEventSuccess)
     instance.asyncMemDequeueBuffQId_ = 101;
     bool ret = instance.HandleAsynMemBuffEvent(0);
     EXPECT_EQ(ret, true);
+}
+
+// both flags set: mbufs dequeued from both queues must be freed
+TEST_F(BQS_QUEUE_MANAGER_UTest, HandleAsynMemBuffEventBothQueuesFree)
+{
+    MOCKER(halQueueDeQueue)
+        .stubs()
+        .will(returnValue((int)DRV_ERROR_NONE))
+        .then(returnValue((int)DRV_ERROR_NONE))
+        .then(returnValue((int)DRV_ERROR_QUEUE_EMPTY))
+        .then(returnValue((int)DRV_ERROR_QUEUE_EMPTY));
+    MOCKER(halMbufFree).stubs().will(invoke(halMbufFreeCountFake));
+    instance.asyncMemDequeueBuffQId_ = 101;
+    instance.asyncMemEnqueueBuffQId_ = 102;
+    instance.isTriggeredByAsyncMemDequeue_ = true;
+    instance.isTriggeredByAsyncMemEnqueue_ = true;
+    g_mbufFreeCount = 0U;
+    bool ret = instance.HandleAsynMemBuffEvent(0);
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(2U, g_mbufFreeCount);
+    EXPECT_EQ(false, instance.isTriggeredByAsyncMemDequeue_);
+    EXPECT_EQ(false, instance.isTriggeredByAsyncMemEnqueue_);
 }
 
 TEST_F(BQS_QUEUE_MANAGER_UTest, HandleFullToNotFullEventResumeSuccess)

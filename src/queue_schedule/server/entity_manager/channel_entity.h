@@ -227,6 +227,11 @@ private:
 
     FsmStatus DoProbe(uint64_t& dataCount, HcclMessage& msg, uint64_t& probeSuccTick);
 
+    /**
+     * @brief rollback hcclData_: free cached mbuf and clear all fields
+     */
+    void ClearHcclData();
+
     void UpdateStatisticForBody(const uint64_t reqProcTickCost);
 
     void UpdateStatisticForHead(const uint64_t reqProcTickCost);

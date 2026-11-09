@@ -1146,18 +1146,19 @@ int32_t DgwClient::CalcConfigInfoLen(
                 return static_cast<int32_t>(BQS_STATUS_PARAM_INVALID);
             }
 
-            for (uint32_t rdx = 0; rdx < cfgInfo.cfg.groupCfg.endpointNum; rdx++) {
+            const uint32_t endpointNum = cfgInfo.cfg.groupCfg.endpointNum;
+            if ((endpointNum == 0U) || (endpointNum > MAX_ENDPOINTS_NUM_IN_SINGLE_GROUP)) {
+                BQS_LOG_ERROR("endpoint num[%u] is invalid.", endpointNum);
+                return static_cast<int32_t>(BQS_STATUS_PARAM_INVALID);
+            }
+
+            for (uint32_t rdx = 0; rdx < endpointNum; rdx++) {
                 const auto pRet = ProcessEndpointDeviceId(endpoints[rdx]);
                 if (pRet != static_cast<int32_t>(BQS_STATUS_OK)) {
                     return static_cast<int32_t>(BQS_STATUS_PARAM_INVALID);
                 }
             }
 
-            const uint32_t endpointNum = cfgInfo.cfg.groupCfg.endpointNum;
-            if ((endpointNum == 0U) || (endpointNum > MAX_ENDPOINTS_NUM_IN_SINGLE_GROUP)) {
-                BQS_LOG_ERROR("endpoint num[%u] is invalid.", endpointNum);
-                return static_cast<int32_t>(BQS_STATUS_PARAM_INVALID);
-            }
             const size_t endpointsLen = endpointNum * sizeof(Endpoint);
             cfgLen += (sizeof(cfgInfo) + endpointsLen);
             (void)dataList.emplace_back(std::make_pair(PtrToValue(&cfgInfo), sizeof(ConfigInfo)));

@@ -716,6 +716,74 @@ TEST_F(EntityUTest, ChannelEntity_ReceiveMbufData_Fail)
     subscribers.subscribeManagers_.clear();
 }
 
+// receive failure paths must rollback hcclData_
+TEST_F(EntityUTest, ChannelEntity_ReceiveFail_RollbackHcclData)
+{
+    uint64_t hcclHandle = 100UL;
+    HcclComm hcclComm = &hcclHandle;
+    dgw::CommChannel channel(hcclComm, 1U, 1U, 0U, 1U, 1U, 1U);
+    dgw::EntityMaterial material = {};
+    material.eType = dgw::EntityType::ENTITY_TAG;
+    material.channel = &channel;
+    ChannelEntity entity(material, 0U);
+    auto& subscribers = bqs::Subscribers::GetInstance();
+    subscribers.InitSubscribeManagers(std::set<uint32_t>{0U}, 0U);
+    EXPECT_EQ(entity.Init(FsmState::FSM_IDLE_STATE, EntityDirection::DIRECTION_SEND), FsmStatus::FSM_SUCCESS);
+
+    uint32_t placeHolder = 0U;
+    void* ptr = (void*)&placeHolder;
+    Mbuf* fakeMbuf = reinterpret_cast<Mbuf*>(0x1234UL);
+    MOCKER(halMbufAlloc)
+        .stubs()
+        .with(mockcpp::any(), outBoundP(&fakeMbuf))
+        .will(returnValue(static_cast<int32_t>(DRV_ERROR_NONE)));
+    // 1st call success for case1, 2nd call fail for case3
+    MOCKER(halMbufGetPrivInfo)
+        .stubs()
+        .with(mockcpp::any(), outBoundP(&ptr), mockcpp::any())
+        .will(returnValue(static_cast<int32_t>(DRV_ERROR_NONE)))
+        .then(returnValue(static_cast<int32_t>(DRV_ERROR_NO_DEVICE)));
+    MOCKER(halMbufGetBuffAddr)
+        .stubs()
+        .with(mockcpp::any(), outBoundP(&ptr))
+        .will(returnValue(static_cast<int32_t>(DRV_ERROR_NONE)));
+    MOCKER(HcclImrecv).stubs().will(returnValue(1));
+    HcclMessage msg = {};
+
+    // HcclImrecv fail
+    entity.hcclData_.dataSize = 1U;
+    EXPECT_EQ(entity.ReceiveMbufData(msg), FsmStatus::FSM_FAILED);
+    EXPECT_EQ(nullptr, entity.hcclData_.mbuf);
+    EXPECT_EQ(nullptr, entity.hcclData_.headBuf);
+    EXPECT_EQ(0UL, entity.hcclData_.dataSize);
+    EXPECT_EQ(0UL, entity.hcclData_.headSize);
+    EXPECT_EQ(0UL, entity.hcclData_.mbufHeadSize);
+
+    // HcclImrecv fail
+    entity.hcclData_.dataSize = 1U;
+    entity.hcclData_.headSize = 1U;
+    entity.hcclData_.mbuf = fakeMbuf;
+    entity.hcclData_.headBuf = ptr;
+    entity.hcclData_.mbufHeadSize = 1U;
+    EXPECT_EQ(entity.ReceiveMbufHead(msg), FsmStatus::FSM_FAILED);
+    EXPECT_EQ(nullptr, entity.hcclData_.mbuf);
+    EXPECT_EQ(nullptr, entity.hcclData_.headBuf);
+    EXPECT_EQ(0UL, entity.hcclData_.dataSize);
+    EXPECT_EQ(0UL, entity.hcclData_.headSize);
+    EXPECT_EQ(0UL, entity.hcclData_.mbufHeadSize);
+
+    // AllocMbuf fail
+    entity.hcclData_.dataSize = 1U;
+    EXPECT_EQ(entity.ReceiveMbufData(msg), FsmStatus::FSM_FAILED);
+    EXPECT_EQ(nullptr, entity.hcclData_.mbuf);
+    EXPECT_EQ(nullptr, entity.hcclData_.headBuf);
+    EXPECT_EQ(0UL, entity.hcclData_.dataSize);
+    EXPECT_EQ(0UL, entity.hcclData_.mbufHeadSize);
+
+    entity.Uninit();
+    subscribers.subscribeManagers_.clear();
+}
+
 TEST_F(EntityUTest, ChannelEntity_DoSendData_Fail)
 {
     dgw::EntityMaterial material = {};

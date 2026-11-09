@@ -173,6 +173,7 @@ private:
     void ClearQueue(const uint32_t queueId, const QUEUE_EVENT_TYPE eventType) const;
     void MakeUpF2NFMbuf(const uint32_t index);
     void MakeUpMbuf(Mbuf** mbufPtr) const;
+    void DrainAsynMemBuffQueue(bool& triggerFlag, const uint32_t queueId);
 
 private:
     uint32_t deviceId_;

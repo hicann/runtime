@@ -389,6 +389,19 @@ FsmStatus ChannelEntity::ReceiveDataForLink(HcclMessage& msg)
     return FsmStatus::FSM_SUCCESS;
 }
 
+void ChannelEntity::ClearHcclData()
+{
+    if (hcclData_.mbuf != nullptr) {
+        DGW_LOG_INFO("Free Mbuf for entity[%s].", entityDesc_.c_str());
+        (void)halMbufFree(hcclData_.mbuf);
+    }
+    hcclData_.headSize = 0UL;
+    hcclData_.dataSize = 0UL;
+    hcclData_.mbuf = nullptr;
+    hcclData_.headBuf = nullptr;
+    hcclData_.mbufHeadSize = 0UL;
+}
+
 FsmStatus ChannelEntity::ReceiveMbufData(HcclMessage& msg)
 {
     Mbuf* mbuf = nullptr;
@@ -397,6 +410,7 @@ FsmStatus ChannelEntity::ReceiveMbufData(HcclMessage& msg)
     const uint64_t dataSize = hcclData_.dataSize;
     const auto ret = AllocMbuf(mbuf, headBuf, dataBuf, dataSize);
     if (ret != FsmStatus::FSM_SUCCESS) {
+        ClearHcclData();
         return ret;
     }
     statInfo_.allocMbufTimes++;
@@ -414,6 +428,7 @@ FsmStatus ChannelEntity::ReceiveMbufData(HcclMessage& msg)
         DGW_LOG_ERROR("HcclImrecv fail for entity:[%s], ret:[%d].", entityDesc_.c_str(), hcclRet);
         statInfo_.hcclImrecvFailTimes++;
         // unable to handle irecv error
+        ClearHcclData();
         bqs::StatisticManager::GetInstance().HcclMpiRecvFailStat();
         return FsmStatus::FSM_FAILED;
     }
@@ -454,10 +469,7 @@ FsmStatus ChannelEntity::ReceiveMbufHead(HcclMessage& msg)
         DGW_LOG_ERROR("HcclImrecv fail for entity:[%s], ret:[%d].", entityDesc_.c_str(), hcclRet);
         statInfo_.hcclImrecvFailTimes++;
         // unable to handle irecv error
-        if (mbuf != nullptr) {
-            DGW_LOG_INFO("Free Mbuf for entity[%s].", entityDesc_.c_str());
-            (void)halMbufFree(mbuf);
-        }
+        ClearHcclData();
         bqs::StatisticManager::GetInstance().HcclMpiRecvFailStat();
         return FsmStatus::FSM_FAILED;
     }

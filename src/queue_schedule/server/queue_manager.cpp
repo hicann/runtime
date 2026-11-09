@@ -648,52 +648,40 @@ BqsStatus QueueManager::EnqueueAsynMemBuffEvent()
 }
 
 /**
+ * drain one asyn mem buff queue: dequeue and free mbuf until queue empty or driver error,
+ * clear trigger flag on empty, keep flag on error for retry
+ * @return NA
+ */
+void QueueManager::DrainAsynMemBuffQueue(bool& triggerFlag, const uint32_t queueId)
+{
+    while (triggerFlag) {
+        Mbuf* mbufPtr = nullptr;
+        const int32_t ret = halQueueDeQueue(deviceId_, queueId, PtrToPtr<Mbuf*, void*>(&mbufPtr));
+        if (ret == DRV_ERROR_QUEUE_EMPTY) {
+            triggerFlag = false;
+            return;
+        }
+        if (ret != DRV_ERROR_NONE) {
+            BQS_LOG_ERROR("halQueueDeQueue error, queue id:[%u], ret=[%d]", queueId, ret);
+            return;
+        }
+        StatisticManager::GetInstance().AsynMemDequeueStat();
+        const int32_t freeRet = halMbufFree(mbufPtr);
+        if (freeRet != DRV_ERROR_NONE) {
+            BQS_LOG_ERROR("halMbufFree error, queue id:[%u], ret=[%d]", queueId, freeRet);
+        }
+    }
+}
+
+/**
  * handle the event of Aysn mem buffer
  * @return true:has handle Aysn mem buffer msg, false:not handle
  */
 bool QueueManager::HandleAsynMemBuffEvent(const uint32_t index)
 {
     (void)index;
-    Mbuf* mbufPtr = nullptr;
-    int32_t ret = DRV_ERROR_RESERVED;
-    bool isTriggered = false;
-    while (true) {
-        uint32_t asyncMemBuffQId = 0;
-        if (isTriggeredByAsyncMemDequeue_) {
-            isTriggered = true;
-            asyncMemBuffQId = asyncMemDequeueBuffQId_;
-            ret = halQueueDeQueue(deviceId_, asyncMemDequeueBuffQId_, PtrToPtr<Mbuf*, void*>(&mbufPtr));
-        }
-
-        if (isTriggeredByAsyncMemEnqueue_) {
-            isTriggered = true;
-            asyncMemBuffQId = asyncMemEnqueueBuffQId_;
-            ret = halQueueDeQueue(deviceId_, asyncMemEnqueueBuffQId_, PtrToPtr<Mbuf*, void*>(&mbufPtr));
-        }
-
-        if (ret == DRV_ERROR_QUEUE_EMPTY || ret == DRV_ERROR_RESERVED) {
-            if (isTriggeredByAsyncMemDequeue_) {
-                isTriggeredByAsyncMemDequeue_ = false;
-            }
-            if (isTriggeredByAsyncMemEnqueue_) {
-                isTriggeredByAsyncMemEnqueue_ = false;
-            }
-            break;
-        }
-
-        if (ret != DRV_ERROR_NONE) {
-            BQS_LOG_ERROR("halQueueDeQueue error, queue id:[%u], ret=[%d]", asyncMemBuffQId, ret);
-            break;
-        }
-
-        if (isTriggered) {
-            StatisticManager::GetInstance().AsynMemDequeueStat();
-            ret = halMbufFree(mbufPtr);
-            if (ret != DRV_ERROR_NONE) {
-                BQS_LOG_ERROR("halMbufFree error, queue id:[%u], ret=[%d]", asyncMemBuffQId, ret);
-            }
-        }
-    }
+    DrainAsynMemBuffQueue(isTriggeredByAsyncMemDequeue_, asyncMemDequeueBuffQId_);
+    DrainAsynMemBuffQueue(isTriggeredByAsyncMemEnqueue_, asyncMemEnqueueBuffQId_);
     return true;
 }
 

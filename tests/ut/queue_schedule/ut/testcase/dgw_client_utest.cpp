@@ -330,6 +330,12 @@ TEST_F(DgwClientUtest, CalcConfigInfoLenErr)
         static_cast<int32_t>(BQS_STATUS_PARAM_INVALID),
         dgwClient->CalcConfigInfoLen(cfgInfo, cfgLen, dataList, myRoutes, existing_ptr));
 
+    // endpointNum exceeds MAX_ENDPOINTS_NUM_IN_SINGLE_GROUP(1000), must be rejected before traversal
+    cfgInfo.cfg.groupCfg.endpointNum = 1001U;
+    EXPECT_EQ(
+        static_cast<int32_t>(BQS_STATUS_PARAM_INVALID),
+        dgwClient->CalcConfigInfoLen(cfgInfo, cfgLen, dataList, myRoutes, existing_ptr));
+
     cfgInfo.cmd = ConfigCmd::DGW_CFG_CMD_RESERVED;
     EXPECT_EQ(
         static_cast<int32_t>(BQS_STATUS_PARAM_INVALID),
