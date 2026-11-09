@@ -1144,7 +1144,7 @@ rtError_t ApiImpl::LaunchNonKernelByHandle(
             hostArgsInfos == nullptr, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013, sizeof(rtHostInputInfo_t) * phNum,
             "new");
         error = ConvertCpuArgsByArgsHandle(cpuKernelArgs, argHandle, hostArgsInfos, phNum);
-        COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, DELETE_A(hostArgsInfos), "convert args failed.");
+        COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, DELETE_A(hostArgsInfos), "Convert args failed.");
         error = CpuKernelLaunchEx(kernel, blockDim, &cpuKernelArgs, taskCfg, curStm, flag);
         DELETE_A(hostArgsInfos);
         ERROR_RETURN(
@@ -1176,13 +1176,13 @@ rtError_t ApiImpl::LaunchNonKernelByHandle(
         (hostArgsInfos == nullptr), RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013, sizeof(rtHostInputInfo_t) * phNum,
         "new");
     error = ConvertArgsByArgsHandle(argsInfo, argHandle, hostArgsInfos, phNum);
-    COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, DELETE_A(hostArgsInfos), "convert args failed.");
+    COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, DELETE_A(hostArgsInfos), "Convert args failed.");
     rtStreamLaunchKernelV2ExtendArgs_t launchKernelExtendArgs = {};
     launchKernelExtendArgs.argsInfo = &argsInfo;
     launchKernelExtendArgs.taskCfg = &taskCfg;
     error = StreamLaunchKernelV2(kernel, blockDim, curStm, &launchKernelExtendArgs, isVecLaunch);
     DELETE_A(hostArgsInfos);
-    ERROR_RETURN(error, "launch kernel failed, blockDim=%u, streamId=%d, error=%#x", blockDim, curStm->Id_(), error);
+    ERROR_RETURN(error, "Launch kernel failed, blockDim=%u, streamId=%d, error=%#x", blockDim, curStm->Id_(), error);
 
     return RT_ERROR_NONE;
 }
@@ -6600,7 +6600,7 @@ rtError_t ApiImpl::LaunchHostFunc(Stream* const stm, const rtCallback_t callBack
     if (!curCtx->GetCallBackThreadExistFlag()) {
         COND_PROC_RETURN_ERROR_MSG_INNER(
             (curCtx->CreateContextCallBackThread() != RT_ERROR_NONE), RT_ERROR_MEMORY_ALLOCATION,
-            curCtx->callbackTheadMutex_.unlock(), "create callback thread failed.");
+            curCtx->callbackTheadMutex_.unlock(), "Create callback thread failed.");
         curCtx->SetCallBackThreadExistFlag();
     }
     curCtx->callbackTheadMutex_.unlock();

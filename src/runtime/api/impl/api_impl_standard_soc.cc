@@ -287,7 +287,7 @@ rtError_t ApiImpl::GetBinaryDeviceBaseAddr(const Program* const prog, void** dev
     Context* curCtx = Runtime::Instance()->CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     if (prog->GetBinAlignBaseAddr(curCtx->Device_()->Id_()) == nullptr) {
-        RT_LOG(RT_LOG_ERROR, "device addr is NULL, make sure that the kernel launch process has been invoked.");
+        RT_LOG(RT_LOG_ERROR, "Device addr is NULL, make sure that the kernel launch process has been invoked.");
         return RT_ERROR_PROGRAM_DATA;
     } else {
         *deviceBase = const_cast<void*>(prog->GetBinAlignBaseAddr(curCtx->Device_()->Id_()));
@@ -415,14 +415,14 @@ rtError_t ApiImpl::GetDeviceInfoFromPlatformInfo(
     fe::PlatFormInfos platformInfos;
     platformRet = fe::PlatformInfoManager::GeInstance().GetRuntimePlatformInfosByDevice(deviceId, platformInfos);
     if (platformRet != 0U) {
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "get runtime platformInfos by device failed, deviceId=%d", deviceId);
+        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Get runtime platformInfos by device failed, deviceId=%d", deviceId);
         return RT_ERROR_INVALID_VALUE;
     }
 
     std::string strVal;
     if (!platformInfos.GetPlatformResWithLock(label, key, strVal)) {
         RT_LOG_INNER_MSG(
-            RT_LOG_ERROR, "get platform res failed, label=%s, key=%s socVersion=%s", label.c_str(), key.c_str(),
+            RT_LOG_ERROR, "Get platform res failed, label=%s, key=%s, socVersion=%s", label.c_str(), key.c_str(),
             socVersion.c_str());
         return RT_ERROR_INVALID_VALUE;
     }
@@ -511,7 +511,7 @@ rtError_t ApiImpl::NotifyReset(Notify* const notify)
 
     Device* const dev = curCtx->Device_();
     if (!dev->IsStarsPlatform()) {
-        RT_LOG(RT_LOG_ERROR, "feature support only in stars platform");
+        RT_LOG(RT_LOG_ERROR, "Feature support only in stars platform");
         RT_LOG_OUTER_MSG_WITH_FUNC_DESC(ErrorCode::EE1005, "notify resetting");
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
@@ -553,7 +553,7 @@ rtError_t ApiImpl::IpcSetNotifyName(Notify* const notify, char_t* const name, co
     const uint32_t notifyId = notify->GetNotifyId();
     rtError_t error = notify->CreateIpcNotify(name, len);
     ERROR_RETURN(
-        error, "CreateIpcNotify failed, notify_id=%u, name=%s, len=%u retCode=%#x", notifyId, name, len,
+        error, "CreateIpcNotify failed, notify_id=%u, name=%s, len=%u, retCode=%#x", notifyId, name, len,
         static_cast<uint32_t>(error));
 
     if ((flag & RT_NOTIFY_EXPORT_FLAG_DISABLE_PID_VALIDATION) != 0UL) {
@@ -569,7 +569,7 @@ rtError_t ApiImpl::IpcOpenNotify(Notify** const notify, const char_t* const name
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     Device* const dev = curCtx->Device_();
-    COND_RETURN_ERROR(dev == nullptr, RT_ERROR_INVALID_VALUE, "device is NULL.");
+    COND_RETURN_ERROR(dev == nullptr, RT_ERROR_INVALID_VALUE, "Device is NULL.");
 
     if ((flag & RT_NOTIFY_FLAG_DOWNLOAD_TO_DEV) != 0) {
         const bool isMc2SupportHccl = CheckSupportMC2Feature(dev);
@@ -725,7 +725,7 @@ rtError_t ApiImpl::SyncGetDevMsg(
         StreamFactory::CreateStream(dev, 0U), [](Stream* ptr) { ptr->Destructor(); });
     COND_RETURN_AND_MSG_OUTER((stm == nullptr), RT_ERROR_STREAM_NEW, ErrorCode::EE1013, sizeof(Stream), "new");
     rtError_t error = stm->Setup();
-    ERROR_RETURN_MSG_INNER(error, "stream setup failed, retCode=%#x.", static_cast<uint32_t>(error));
+    ERROR_RETURN_MSG_INNER(error, "Stream setup failed, retCode=%#x.", static_cast<uint32_t>(error));
     const std::function<void()> streamTearDownFunc = [&stm]() {
         const auto ret = (stm->TearDown());
         // Disable thread stream destroy task will delete stream
@@ -764,7 +764,8 @@ rtError_t ApiImpl::GetDevErrMsg(const rtGetMsgCallback callback)
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     Device* const dev = curCtx->Device_();
     rtError_t error = dev->GetDeviceStatus();
-    ERROR_RETURN(error, "device_id=%u, status=%#x is abnormal.", dev->Id_(), static_cast<uint32_t>(error));
+    ERROR_RETURN(
+        error, "Device status is abnormal, device_id=%u, status=%#x.", dev->Id_(), static_cast<uint32_t>(error));
     // stars do nothing in device, so do not need to send task.
     COND_PROC((dev->IsStarsPlatform()), callback("", 0U); RT_LOG(RT_LOG_DEBUG, "Do not need to send task.");
               return RT_ERROR_NONE);
@@ -959,7 +960,7 @@ rtError_t ApiImpl::LaunchSqeUpdateTask(
         return cce::runtime::LaunchSqeUpdateTask(src, cnt, sqId, pos, curStm);
     } else {
         COND_RETURN_ERROR_MSG_INNER(
-            task->u.starsCommTask.randomDevAddr == nullptr, RT_ERROR_INVALID_VALUE, "randomDevAddr is null.");
+            task->u.starsCommTask.randomDevAddr == nullptr, RT_ERROR_INVALID_VALUE, "The randomDevAddr is null.");
         // randomDevAddr + RANDOM_INPUT_PARAM_SIZE bytes used as dsa update aicpu op's output sqe addr
         constexpr uint32_t randomIuputParamSize = 16U;
         void* outputSqeAddr = RtPtrToPtr<void*, uint8_t*>(
@@ -1051,7 +1052,7 @@ rtError_t ApiImpl::LaunchSqeUpdateTask(
 
         error = StreamLaunchCpuKernelExWithArgs(
             1U, &argsInfo, nullptr, curStm, RT_KERNEL_DEFAULT, KERNEL_TYPE_AICPU_KFC, nullptr);
-        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "update dsa failed, due to launch cpu task failed.");
+        COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "Update dsa failed, due to launch cpu task failed.");
         RT_LOG(RT_LOG_INFO, "launch dsa update cpu task success.");
         // LaunchSqeUpdateTask only update sqe from offset=DSA_SQE_UPDATE_OFFSET, so need add offset.
         constexpr uint32_t dsaSqeUpdateOffset = 16U;
@@ -1170,7 +1171,7 @@ rtError_t ApiImpl::InvalidCache(const uint64_t base, const size_t len)
 static rtError_t GetTaskParamsWithoutUpdate(const TaskInfo* const taskInfo, rtTaskParams* const params)
 {
     rtError_t error = ConvertTaskType(taskInfo, &params->type);
-    ERROR_RETURN(error, "get task type failed, retCode=%d.", error);
+    ERROR_RETURN(error, "Get task type failed, retCode=%d.", error);
     switch (taskInfo->type) {
         case TS_TASK_TYPE_KERNEL_AICORE:
         case TS_TASK_TYPE_KERNEL_AIVEC:
