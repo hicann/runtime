@@ -380,7 +380,7 @@ static rtError_t CheckArgsForFusionKernel(const rtFusionArgsEx_t* const argsInfo
             NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
                 argsInfo->hostInputInfoPtr, RT_ERROR_INVALID_VALUE,
                 "Checking the validity of fusion kernel startup parameters");
-            for (int16_t i = 0U; i < argsInfo->hostInputInfoNum; i++) {
+            for (uint16_t i = 0U; i < argsInfo->hostInputInfoNum; i++) {
                 COND_RETURN_AND_MSG_OUTER(
                     argsInfo->hostInputInfoPtr[i].addrOffset >= argsInfo->argsSize, RT_ERROR_INVALID_VALUE,
                     ErrorCode::EE1017, "Checking the validity of fusion kernel startup parameters",
