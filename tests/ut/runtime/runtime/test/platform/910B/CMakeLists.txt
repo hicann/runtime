@@ -523,7 +523,7 @@ set(RUNTIME_TEST_INC_DIR_COMMON
     ${TOP_DIR}/src/runtime/feature/cntnotify
     ${TOP_DIR}/src/runtime/core/inc/engine/hwts
     ${TOP_DIR}/src/runtime/core/inc/dqs
-    ${TOP_DIR}/src/runtime/api
+    ${TOP_DIR}/src/runtime/api/inc
     ${TOP_DIR}/src/runtime/api/impl
     ${TOP_DIR}/src/runtime/api/impl/inc
     ${TOP_DIR}/src/runtime/core/src/engine
