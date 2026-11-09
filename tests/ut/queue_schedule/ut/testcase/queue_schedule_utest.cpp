@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include <atomic>
+#include <new>
 #include <unordered_set>
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
@@ -16,6 +17,7 @@
 #define protected public
 #include "hccl/hccl_types_in.h"
 #include "entity_manager.h"
+#include "group_entity.h"
 #include "server/bind_relation.h"
 #include "server/queue_schedule.h"
 #include "server/queue_manager.h"
@@ -3495,4 +3497,36 @@ TEST_F(QueueScheduleUTest, F2NF_with_halEschedWaitEventFail)
 
     controlThread.join();
 }
+TEST_F(QueueScheduleUTest, TryPushCatchesDynamicRequestAllocationFailure)
+{
+    struct ThrowingGroup : dgw::GroupEntity {
+        using GroupEntity::GroupEntity;
+        void ReprocessInTryPush(const dgw::Entity&, dgw::DynamicRequestPtr&, uint32_t&) override
+        {
+            throw std::bad_alloc();
+        }
+    };
+    dgw::EntityMaterial material = {};
+    material.eType = dgw::EntityType::ENTITY_GROUP;
+    material.groupPolicy = bqs::GroupPolicy::DYNAMIC;
+    material.id = 4001U;
+    dgw::GroupEntity source(material, 0U);
+    material.id = 4002U;
+    auto destination = std::make_shared<ThrowingGroup>(material, 0U);
+    OptionalArg args = {};
+    args.eType = dgw::EntityType::ENTITY_GROUP;
+    EntityInfo srcInfo(4001U, 0U, &args);
+    EntityInfo dstInfo(4002U, 0U, &args);
+    dstInfo.SetEntity(destination);
+    auto& relations = BindRelation::GetInstance().srcToDstRelation_;
+    relations[srcInfo].insert(dstInfo);
+    MOCKER_CPP(&dgw::DynamicSchedMgr::SendRequest).expects(never());
+
+    dgw::TryPushState state;
+    EXPECT_EQ(state.PreProcess(source), dgw::FsmStatus::FSM_FAILED);
+    EXPECT_TRUE(source.GetSendDataObjs().empty());
+    EXPECT_FALSE(source.GetWaitDecisionState());
+    relations.erase(srcInfo);
+}
+
 } // namespace bqs

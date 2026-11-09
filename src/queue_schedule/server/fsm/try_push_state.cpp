@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include <new>
 #include "bind_relation.h"
 #include "common/bqs_log.h"
 #include "fsm/try_push_state.h"
@@ -72,9 +73,14 @@ FsmStatus TryPushState::PreProcess(Entity& entity)
 
     std::shared_ptr<DynamicSchedMgr::RequestInfo> dynamicRequest = nullptr;
     uint32_t schedCfgKey = 0U;
-    for (auto reprocessEntity : reprocessDstEntities) {
-        dataObj->AddRecvEntity(reprocessEntity);
-        reprocessEntity->ReprocessInTryPush(entity, dynamicRequest, schedCfgKey);
+    try {
+        for (auto reprocessEntity : reprocessDstEntities) {
+            dataObj->AddRecvEntity(reprocessEntity);
+            reprocessEntity->ReprocessInTryPush(entity, dynamicRequest, schedCfgKey);
+        }
+    } catch (const std::bad_alloc& error) {
+        DGW_LOG_ERROR("Fail to build dynamic request for entity:%u, error:%s.", entity.GetId(), error.what());
+        return FsmStatus::FSM_FAILED;
     }
     const auto sendRet = SendRequestForDynamicGroup(dynamicRequest, schedCfgKey, entity);
     if (sendRet != FsmStatus::FSM_SUCCESS) {
