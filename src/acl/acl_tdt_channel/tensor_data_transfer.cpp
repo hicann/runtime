@@ -10,6 +10,7 @@
 
 #include "tensor_data_transfer.h"
 #include <cinttypes>
+#include <limits>
 #include <map>
 #include <mutex>
 #include <sstream>
@@ -593,6 +594,14 @@ aclError TensorDataitemSerialize(
     uint32_t currentCnt = 0;
     size_t lastDataSize = 0U;
     for (size_t i = 0; i < itemVec.size(); ++i) {
+        const uint64_t rawDataLen = itemVec[i].ctrlInfo.dataLen;
+        if (rawDataLen > std::numeric_limits<size_t>::max()) {
+            ACL_LOG_ERROR(
+                "item index %zu data length %llu exceeds size_t maximum %zu", i,
+                static_cast<unsigned long long>(rawDataLen), std::numeric_limits<size_t>::max());
+            return ACL_ERROR_INVALID_PARAM;
+        }
+        const size_t dataLen = static_cast<size_t>(rawDataLen);
         itemVec[i].ctrlInfo.curCnt = currentCnt;
         itemVec[i].ctrlInfo.cnt = itemVec.size();
         const size_t ctrlSize = sizeof(ItemInfo) + itemVec[i].dims.size() * sizeof(int64_t);
@@ -630,14 +639,14 @@ aclError TensorDataitemSerialize(
         ACL_REQUIRES_OK(SaveCtrlSharedPtrToVec(memType, qItem, ctrlSharedPtr, ctrlSharedPtrVec));
         qBufVec.push_back(qItem);
 
-        if (itemVec[i].ctrlInfo.dataLen > 0U) {
-            rtMemQueueBuffInfo tmpQItem = {itemVec[i].dataPtr.get(), itemVec[i].ctrlInfo.dataLen};
+        if (dataLen > 0U) {
+            rtMemQueueBuffInfo tmpQItem = {itemVec[i].dataPtr.get(), dataLen};
             qBufVec.push_back(tmpQItem);
         } else {
             ACL_LOG_DEBUG("no need to insert data buf");
         }
         // current total size is (64n + lastDataSize)
-        lastDataSize = itemVec[i].ctrlInfo.dataLen;
+        lastDataSize = dataLen;
         ++currentCnt;
     }
     return ACL_SUCCESS;

@@ -17,6 +17,7 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <cstdint>
 #include <memory>
 
 #include "tdt_host_interface.h"
@@ -50,7 +51,8 @@ extern aclError TensorDatasetSerializesV2(const acltdtDataset* dataset, std::vec
 extern aclError TensorDatasetDeserializesV2(const std::vector<aclTdtDataItemInfo>& itemVec, acltdtDataset* dataset);
 extern aclError UnpackageRecvDataInfo(uint8_t* outputHostAddr, size_t size, std::vector<aclTdtDataItemInfo>& itemVec);
 extern aclError TensorDataitemSerialize(
-    std::vector<aclTdtDataItemInfo>& itemVec, std::vector<rtMemQueueBuffInfo>& qBufVec);
+    std::vector<aclTdtDataItemInfo>& itemVec, const datasetMemType memType, std::vector<rtMemQueueBuffInfo>& qBufVec,
+    std::vector<std::shared_ptr<uint8_t>>& ctrlSharedPtrVec);
 extern aclError GetOrMallocHostMem(
     const acltdtChannelHandle* handle, acltdtDataset* dataset, size_t bufLen, void*& hostPtr);
 } // namespace acl
@@ -587,6 +589,102 @@ TEST_F(UTEST_tensor_data_transfer, TensorDatasetDeserializesV2)
     EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
     acltdtDestroyDataset(dataset);
 }
+
+TEST_F(UTEST_tensor_data_transfer, TensorDataitemSerializeZeroLengthProducesControlOnly)
+{
+    std::vector<aclTdtDataItemInfo> itemVec(1);
+    std::vector<rtMemQueueBuffInfo> qBufVec;
+    std::vector<std::shared_ptr<uint8_t>> ctrlSharedPtrVec;
+
+    ASSERT_EQ(TensorDataitemSerialize(itemVec, MEM_HOST, qBufVec, ctrlSharedPtrVec), ACL_SUCCESS);
+    ASSERT_EQ(qBufVec.size(), 1U);
+    ASSERT_EQ(ctrlSharedPtrVec.size(), 1U);
+    EXPECT_EQ(qBufVec[0].addr, ctrlSharedPtrVec[0].get());
+    ASSERT_EQ(qBufVec[0].len, 64U);
+    ItemInfo wireInfo;
+    memcpy(&wireInfo, qBufVec[0].addr, sizeof(wireInfo));
+    EXPECT_EQ(wireInfo.dataLen, 0U);
+    EXPECT_EQ(wireInfo.curCnt, 0U);
+    EXPECT_EQ(wireInfo.cnt, 1U);
+    EXPECT_EQ(wireInfo.dimNum, 0U);
+    EXPECT_EQ(wireInfo.dynamicBitSize, 0U);
+}
+
+TEST_F(UTEST_tensor_data_transfer, TensorDataitemSerializePreservesPayloadsAndNextControlPadding)
+{
+    std::vector<aclTdtDataItemInfo> itemVec(2);
+    itemVec[0].dataPtr = std::shared_ptr<uint8_t>(new uint8_t[3]{1, 2, 3}, std::default_delete<uint8_t[]>());
+    itemVec[0].ctrlInfo.dataLen = 3U;
+    itemVec[1].dataPtr = std::shared_ptr<uint8_t>(new uint8_t[2]{4, 5}, std::default_delete<uint8_t[]>());
+    itemVec[1].ctrlInfo.dataLen = 2U;
+    std::vector<rtMemQueueBuffInfo> qBufVec;
+    std::vector<std::shared_ptr<uint8_t>> ctrlSharedPtrVec;
+
+    ASSERT_EQ(TensorDataitemSerialize(itemVec, MEM_HOST, qBufVec, ctrlSharedPtrVec), ACL_SUCCESS);
+    ASSERT_EQ(qBufVec.size(), 4U);
+    ASSERT_EQ(ctrlSharedPtrVec.size(), 2U);
+    EXPECT_EQ(qBufVec[0].addr, ctrlSharedPtrVec[0].get());
+    ASSERT_EQ(qBufVec[0].len, 64U);
+    EXPECT_EQ(qBufVec[1].addr, itemVec[0].dataPtr.get());
+    EXPECT_EQ(qBufVec[1].len, 3U);
+    EXPECT_EQ(qBufVec[2].addr, ctrlSharedPtrVec[1].get());
+    ASSERT_EQ(qBufVec[2].len, 125U);
+    EXPECT_EQ(qBufVec[1].len + qBufVec[2].len, 128U);
+    EXPECT_EQ(qBufVec[3].addr, itemVec[1].dataPtr.get());
+    EXPECT_EQ(qBufVec[3].len, 2U);
+    for (size_t i = 0; i < itemVec.size(); ++i) {
+        ItemInfo wireInfo;
+        memcpy(&wireInfo, qBufVec[i * 2].addr, sizeof(wireInfo));
+        EXPECT_EQ(wireInfo.dataLen, i == 0U ? 3U : 2U);
+        EXPECT_EQ(wireInfo.curCnt, i);
+        EXPECT_EQ(wireInfo.cnt, 2U);
+        EXPECT_EQ(wireInfo.dimNum, 0U);
+        EXPECT_EQ(wireInfo.dynamicBitSize, i == 0U ? 0U : 61U);
+    }
+}
+
+TEST_F(UTEST_tensor_data_transfer, TensorDataitemSerializePreservesSizeMaxLength)
+{
+    std::vector<aclTdtDataItemInfo> itemVec(1);
+    // Serialization only describes this payload; it must not read or allocate SIZE_MAX bytes.
+    itemVec[0].dataPtr = std::make_shared<uint8_t>(0);
+    itemVec[0].ctrlInfo.dataLen = SIZE_MAX;
+    std::vector<rtMemQueueBuffInfo> qBufVec;
+    std::vector<std::shared_ptr<uint8_t>> ctrlSharedPtrVec;
+
+    ASSERT_EQ(TensorDataitemSerialize(itemVec, MEM_HOST, qBufVec, ctrlSharedPtrVec), ACL_SUCCESS);
+    ASSERT_EQ(qBufVec.size(), 2U);
+    ASSERT_EQ(ctrlSharedPtrVec.size(), 1U);
+    EXPECT_EQ(qBufVec[0].addr, ctrlSharedPtrVec[0].get());
+    ASSERT_EQ(qBufVec[0].len, 64U);
+    EXPECT_EQ(qBufVec[1].addr, itemVec[0].dataPtr.get());
+    EXPECT_EQ(qBufVec[1].len, SIZE_MAX);
+    ItemInfo wireInfo;
+    memcpy(&wireInfo, qBufVec[0].addr, sizeof(wireInfo));
+    EXPECT_EQ(wireInfo.dataLen, static_cast<uint64_t>(SIZE_MAX));
+    EXPECT_EQ(wireInfo.curCnt, 0U);
+    EXPECT_EQ(wireInfo.cnt, 1U);
+    EXPECT_EQ(wireInfo.dynamicBitSize, 0U);
+}
+
+#if SIZE_MAX < UINT64_MAX
+TEST_F(UTEST_tensor_data_transfer, TensorDataitemSerializeRejectsLengthAboveSizeMax)
+{
+    const uint64_t invalidLengths[] = {static_cast<uint64_t>(SIZE_MAX) + 1U, UINT64_MAX};
+    for (const uint64_t dataLen : invalidLengths) {
+        SCOPED_TRACE(dataLen);
+        std::vector<aclTdtDataItemInfo> itemVec(1);
+        itemVec[0].dataPtr = std::make_shared<uint8_t>(0);
+        itemVec[0].ctrlInfo.dataLen = dataLen;
+        std::vector<rtMemQueueBuffInfo> qBufVec;
+        std::vector<std::shared_ptr<uint8_t>> ctrlSharedPtrVec;
+
+        EXPECT_EQ(TensorDataitemSerialize(itemVec, MEM_HOST, qBufVec, ctrlSharedPtrVec), ACL_ERROR_INVALID_PARAM);
+        EXPECT_TRUE(qBufVec.empty());
+        EXPECT_TRUE(ctrlSharedPtrVec.empty());
+    }
+}
+#endif
 
 TEST_F(UTEST_tensor_data_transfer, acltdtSendTensorV2)
 {
