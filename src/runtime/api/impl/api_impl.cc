@@ -5749,6 +5749,7 @@ rtError_t ApiImpl::CmoAddrTaskLaunch(
     Stream* curStm = stm;
     if (curStm == nullptr) {
         curStm = curCtx->DefaultStream_();
+        NULL_STREAM_PTR_RETURN_MSG(curStm);
     }
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         curStm, curCtx, RT_ERROR_STREAM_CONTEXT,
