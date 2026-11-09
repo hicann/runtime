@@ -1759,7 +1759,7 @@ aclError aclmdlRITaskGetParams(aclmdlRITask task, aclmdlRITaskParams* params)
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
 | task | 输入 | 指定任务。类型定义请参见[aclmdlRITask](25-05_Typedefs.md#aclmdlRITask)。 |
-| params | 输出 | 参数信息。类型定义请参见[aclmdlRITaskParams](25-04_Structs.md#aclmdlRITaskParams)。 <br>params中返回的任何指针所指向的内存与当前任务相关，由Runtime负责管理，调用者不得修改或释放。该内存在任务销毁前始终有效。 |
+| params | 输出 | 参数信息。类型定义请参见[aclmdlRITaskParams](25-04_Structs.md#aclmdlRITaskParams)。 <br>params中返回的任何指针所指向的内存与当前任务相关，由Runtime负责管理，调用者不得修改或释放。该内存在下一次成功调用[aclmdlRITaskSetParams](#aclmdlRITaskSetParams)设置同一任务的参数后即失效（此时Runtime会释放旧的缓存），或随任务销毁而失效。若需要在再次设置参数后继续使用这些数据，请先自行拷贝保存。其中ACL_RT_KERNEL_ARGS_DEVICE_BUFFER形态返回的Device指针为调用者设置时提供的零拷贝指针，由调用者自行管理，不在上述失效范围内。 |
 
 ### 返回值说明
 

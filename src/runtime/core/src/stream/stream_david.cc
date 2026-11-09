@@ -458,7 +458,7 @@ void DavidStream::BuildTraceEventForTask(TaskInfo* const task, const uint32_t fl
         std::string kernelNameStr = (kernel != nullptr) ? kernel->Name_() : "AICORE_KERNEL";
         taskName = kernelNameStr;
         if ((flags & DEBUG_JSON_PRINT_VERBOSE) != 0U) {
-            SetTraceKernelArgs(aicTaskInfo, task->id, record.args);
+            SetTraceKernelArgs(task, task->id, record.args);
         }
     } else if (task->type == TS_TASK_TYPE_KERNEL_AICPU) {
         AicpuTaskInfo* aicpuTaskInfo = &(task->u.aicpuTaskInfo);
@@ -1422,12 +1422,6 @@ void DavidStream::ArgReleaseSingleTask(TaskInfo* const taskInfo, bool freeStmPoo
         } else {
             if (argManage_ != nullptr) {
                 argManage_->RecycleDevLoader(commDavinciInfo->argHandle);
-            }
-            LaunchParam& launchParam = taskInfo->u.aicTaskInfo.launchParam;
-            if (launchParam.placeHoderPtr != nullptr) {
-                delete[] launchParam.placeHoderPtr;
-                launchParam.placeHoderPtr = nullptr;
-                launchParam.placeHoderNum = 0U;
             }
         }
 

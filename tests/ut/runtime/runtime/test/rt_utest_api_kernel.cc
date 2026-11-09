@@ -29,6 +29,7 @@
 #include "base_david.hpp"
 #include "elf.hpp"
 #include "rt_unwrap.h"
+#include "runtime/rt_inner_task.h"
 #include "common/rt_utest_context_reset_helper.hpp"
 #undef private
 #include "api_handle_guard.h"
@@ -2079,7 +2080,7 @@ TEST_F(ApiKernelTest, TestRtCheckArgsWithType_SimtArray_ParamCountPositiveNullAr
     SimtArgsArray simtArgs = {};
     simtArgs.gridDim = {1, 1, 1};
     simtArgs.blockDim = {1, 1, 1};
-    simtArgs.argsArrayInfo = nullptr;
+    simtArgs.argsArray = nullptr;
 
     RtArgsWithType argsWithType;
     argsWithType.type = RT_SIMT_ARGS_ARRAY;
@@ -2107,7 +2108,7 @@ TEST_F(ApiKernelTest, TestRtCheckArgsWithType_SimtArray_ParamCountPositiveWithAr
     SimtArgsArray simtArgs = {};
     simtArgs.gridDim = {2, 2, 2};
     simtArgs.blockDim = {4, 4, 4};
-    simtArgs.argsArrayInfo = argsArray;
+    simtArgs.argsArray = argsArray;
 
     RtArgsWithType argsWithType;
     argsWithType.type = RT_SIMT_ARGS_ARRAY;
@@ -2333,5 +2334,179 @@ TEST_F(ApiKernelTest, TestRtCheckArgsWithType_SimtHost_NotSimtKernel)
     rtError_t error = apiError.CheckArgsWithType(kernel, &argsWithType);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 
+    delete kernel;
+}
+
+// The argsArray null check is gated on paramCount > 0: a kernel that declares parameters may not be
+// launched with a null array even though the argsArrayInfo wrapper itself is present
+TEST_F(ApiKernelTest, TestRtCheckArgsWithType_ArrayParamCountPositiveNullArgsArray)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+
+    Kernel* kernel = CreateTestKernelForCheckArgs(RT_KERNEL_ATTR_TYPE_AICORE, RT_KERNEL_REG_TYPE_NON_CPU, true, 5);
+    ASSERT_NE(kernel, nullptr);
+
+    ArgsArrayInfo argsArrayInfo = {};
+    argsArrayInfo.argsArray = nullptr;
+    RtArgsWithType argsWithType = {};
+    argsWithType.type = RT_ARGS_ARRAY;
+    argsWithType.args.argsArrayInfo = &argsArrayInfo;
+
+    rtError_t error = apiError.CheckArgsWithType(kernel, &argsWithType);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    DestroyTestKernel(kernel);
+}
+
+// ... while a zero-param kernel has nothing for the array to point at and must still be accepted
+TEST_F(ApiKernelTest, TestRtCheckArgsWithType_ArrayZeroParamCountNullArgsArrayAllowed)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+
+    Kernel* kernel = CreateTestKernelForCheckArgs(RT_KERNEL_ATTR_TYPE_AICORE, RT_KERNEL_REG_TYPE_NON_CPU, true);
+    ASSERT_NE(kernel, nullptr);
+    kernel->SetParamCount(0);
+
+    ArgsArrayInfo argsArrayInfo = {};
+    argsArrayInfo.argsArray = nullptr;
+    RtArgsWithType argsWithType = {};
+    argsWithType.type = RT_ARGS_ARRAY;
+    argsWithType.args.argsArrayInfo = &argsArrayInfo;
+
+    rtError_t error = apiError.CheckArgsWithType(kernel, &argsWithType);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    DestroyTestKernel(kernel);
+}
+
+namespace {
+// The dual-form func is resolved at the api layer (api_c_task.cc) and handed to the decorator, so these
+// cases pass the kernel explicitly. The exported handle is still installed on params.simtKernelTaskParams.func
+// to keep the ABI struct realistic, since the decorator forwards params to impl_ unchanged.
+// AIV_TYPE_SIMT_VF_ONLY is 3. The caller owns the ElfProgram, so these kernels are released with plain
+// delete, not DestroyTestKernel.
+Kernel* CreateSimtKernelForTaskSetParams(ElfProgram* program)
+{
+    Kernel* kernel =
+        new (std::nothrow) Kernel("testSimtKernel", 0, program, RT_KERNEL_ATTR_TYPE_AICORE, 2048, 1024, 0, 0, 0);
+    if (kernel == nullptr) {
+        return nullptr;
+    }
+    kernel->SetKernelVfType_(3U);
+    kernel->SetHasParamSummary(true);
+    kernel->SetParamCount(0);
+    return kernel;
+}
+
+void FillSimtTaskParamsDims(rtTaskParams* params)
+{
+    params->type = RT_TASK_SIMT_KERNEL;
+    params->simtKernelTaskParams.gridDimX = 1U;
+    params->simtKernelTaskParams.gridDimY = 1U;
+    params->simtKernelTaskParams.gridDimZ = 1U;
+    params->simtKernelTaskParams.blockDimX = 1U;
+    params->simtKernelTaskParams.blockDimY = 1U;
+    params->simtKernelTaskParams.blockDimZ = 1U;
+}
+} // namespace
+
+// SIMT accepts ARRAY and HOST_BUFFER only; a DEVICE_BUFFER request is rejected by the decorator before
+// impl_ is reached, so the task handle only has to be non-null
+TEST_F(ApiKernelTest, TestRtTaskSetParams_SimtUnsupportedArgsType)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    Kernel* kernel = CreateSimtKernelForTaskSetParams(&program);
+    ASSERT_NE(kernel, nullptr);
+
+    rtTaskParams params = {};
+    FillSimtTaskParamsDims(&params);
+    params.simtKernelTaskParams.func = rt_ut::InitAndExportHandle<rtFuncHandle>(kernel);
+    params.simtKernelTaskParams.argsType = RT_KERNEL_ARGS_DEVICE_BUFFER;
+
+    uint64_t taskStorage = 0U;
+    rtError_t error = apiError.TaskSetParams(reinterpret_cast<rtTask_t>(&taskStorage), &params, kernel);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    rt_ut::ResetEmbeddedHandle(kernel);
+    delete kernel;
+}
+
+// every placeHolder offset must fall inside hostArgsSize, mirroring the launch-side HOST_BUFFER check
+TEST_F(ApiKernelTest, TestRtTaskSetParams_SimtHostPlaceHolderOffsetInvalid)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    Kernel* kernel = CreateSimtKernelForTaskSetParams(&program);
+    ASSERT_NE(kernel, nullptr);
+
+    uint8_t hostArgs[16] = {};
+    rtPlaceHolderInfo_t placeHolder[1] = {};
+    placeHolder[0].addrOffset = 64U; // beyond hostArgsSize
+    placeHolder[0].dataOffset = 0U;
+
+    rtTaskParams params = {};
+    FillSimtTaskParamsDims(&params);
+    params.simtKernelTaskParams.func = rt_ut::InitAndExportHandle<rtFuncHandle>(kernel);
+    params.simtKernelTaskParams.argsType = RT_KERNEL_ARGS_HOST_BUFFER;
+    params.simtKernelTaskParams.hostBuffer.hostArgs = hostArgs;
+    params.simtKernelTaskParams.hostBuffer.hostArgsSize = sizeof(hostArgs);
+    params.simtKernelTaskParams.hostBuffer.placeHolderArray = placeHolder;
+    params.simtKernelTaskParams.hostBuffer.placeHolderNum = 1U;
+
+    uint64_t taskStorage = 0U;
+    rtError_t error = apiError.TaskSetParams(reinterpret_cast<rtTask_t>(&taskStorage), &params, kernel);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    rt_ut::ResetEmbeddedHandle(kernel);
+    delete kernel;
+}
+
+// func resolution moved to the api layer, so what the decorator itself must still reject is a SIMT
+// request that arrives without a resolved kernel; it reports before touching impl_
+TEST_F(ApiKernelTest, TestRtTaskSetParams_SimtNullKernel)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+
+    rtTaskParams params = {};
+    FillSimtTaskParamsDims(&params);
+    uint64_t notAKernel = 0U;
+    params.simtKernelTaskParams.func = &notAKernel;
+    params.simtKernelTaskParams.argsType = RT_KERNEL_ARGS_ARRAY;
+
+    uint64_t taskStorage = 0U;
+    rtError_t error = apiError.TaskSetParams(reinterpret_cast<rtTask_t>(&taskStorage), &params, nullptr);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+}
+
+// a well-formed SIMT ARRAY request passes the decorator and is forwarded to impl_ unchanged
+TEST_F(ApiKernelTest, TestRtTaskSetParams_SimtArrayValid)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+    MOCKER_CPP_VIRTUAL(&impl, &ApiImpl::TaskSetParams).stubs().will(returnValue(RT_ERROR_NONE));
+
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    Kernel* kernel = CreateSimtKernelForTaskSetParams(&program);
+    ASSERT_NE(kernel, nullptr);
+
+    rtTaskParams params = {};
+    FillSimtTaskParamsDims(&params);
+    params.simtKernelTaskParams.func = rt_ut::InitAndExportHandle<rtFuncHandle>(kernel);
+    params.simtKernelTaskParams.argsType = RT_KERNEL_ARGS_ARRAY;
+    params.simtKernelTaskParams.argsArray = nullptr; // paramCount is 0, so no array is required
+
+    uint64_t taskStorage = 0U;
+    rtError_t error = apiError.TaskSetParams(reinterpret_cast<rtTask_t>(&taskStorage), &params, kernel);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    rt_ut::ResetEmbeddedHandle(kernel);
     delete kernel;
 }

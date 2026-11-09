@@ -1255,7 +1255,7 @@ rtError_t ApiImpl::LaunchKernelV2(
         }
         case RT_ARGS_ARRAY: {
             rtArgsEx_t argsEx = {};
-            error = ConvertArgsArrayToArgsEx(argsEx, kernel, argsWithType->args.argsArrayInfo);
+            error = ConvertArgsArrayToArgsEx(argsEx, kernel, argsWithType->args.argsArrayInfo->argsArray);
             if (error != RT_ERROR_NONE) {
                 break;
             }
@@ -1263,6 +1263,8 @@ rtError_t ApiImpl::LaunchKernelV2(
             rtStreamLaunchKernelV2ExtendArgs_t launchKernelExtendArgs = {};
             launchKernelExtendArgs.argsInfo = &argsEx;
             launchKernelExtendArgs.taskCfg = &taskCfg;
+            launchKernelExtendArgs.argsArrayInfo = argsWithType->args.argsArrayInfo;
+            launchKernelExtendArgs.argsType = RT_ARGS_ARRAY;
             error = StreamLaunchKernelV2(kernel, blockDim, curStm, &launchKernelExtendArgs, isVecLaunch);
             break;
         }
@@ -6843,6 +6845,15 @@ static rtError_t UpdateCachedParamsToTask(const std::set<TaskInfo*>& updateTasks
         TaskUpdateParams& latestParams = taskInfo->updateInfo->latestParams;
         rtError_t error = RT_ERROR_NONE;
         switch (latestParams.type) {
+            case RT_TASK_SIMT_KERNEL:
+                // SIMT task params are not applied by model update yet: skip the task so it keeps its loaded
+                // parameters (mirroring the RT_TASK_DISABLE skip); the SIMT header rebuild is not wired up yet
+                RT_LOG(
+                    RT_LOG_INFO,
+                    "skip updating the simt task, stream_id=%d, task_id=%hu, the task keeps its "
+                    "loaded parameters.",
+                    taskInfo->stream->Id_(), taskInfo->id);
+                continue;
             case RT_TASK_KERNEL:
                 error = UpdateKernelParams(taskInfo, &(latestParams.u.kernelUpdateParams));
                 break;
@@ -7025,9 +7036,10 @@ rtError_t ApiImpl::ModelTaskDisable(rtTask_t task)
     error = ConvertTaskType(taskInfo, &taskType);
     ERROR_PROC_RETURN_MSG_INNER(error, captureModel->SetCaptureModelStatus(RtCaptureModelStatus::FAULT);
                                 , "get task type failed, retCode=%#x.", error);
-    const bool isSupportedTaskType = (taskType == RT_TASK_KERNEL) || (taskType == RT_TASK_EVENT_RECORD) ||
-                                     (taskType == RT_TASK_EVENT_WAIT) || (taskType == RT_TASK_EVENT_RESET) ||
-                                     (taskType == RT_TASK_VALUE_WRITE) || (taskType == RT_TASK_VALUE_WAIT);
+    const bool isSupportedTaskType = (taskType == RT_TASK_KERNEL) || (taskType == RT_TASK_SIMT_KERNEL) ||
+                                     (taskType == RT_TASK_EVENT_RECORD) || (taskType == RT_TASK_EVENT_WAIT) ||
+                                     (taskType == RT_TASK_EVENT_RESET) || (taskType == RT_TASK_VALUE_WRITE) ||
+                                     (taskType == RT_TASK_VALUE_WAIT);
     const bool cannotDisable = !isSupportedTaskType || (taskInfo->type == TS_TASK_TYPE_CAPTURE_RECORD_EXTERNAL);
     COND_PROC(cannotDisable, captureModel->SetCaptureModelStatus(RtCaptureModelStatus::FAULT));
     COND_RETURN_AND_MSG_OUTER(

@@ -317,6 +317,26 @@ TEST_F(StarsTaskTest, SaveTaskInfoInitializesCommonFieldsWithoutFullTaskInitiali
     EXPECT_EQ(savedTask.stmArgPos, 5U);
 }
 
+// launch args 缓存（TaskUpdateInfo）挂在栈上 submitTask，SaveTaskInfo 是它到池内 TaskInfo 的唯一桥：
+// 不转移则 OBP 硬件 SQ + TaskRes 路径下缓存随栈对象析构而丢失（功能失效）且堆块泄漏。
+TEST_F(StarsTaskTest, SaveTaskInfoTransfersUpdateInfoToPooledTaskAndNullsSource)
+{
+    TaskInfo submitTask = {};
+    TaskInfo savedTask = {};
+    savedTask.stream = stream_;
+    submitTask.updateInfo = new (std::nothrow) TaskUpdateInfo();
+    ASSERT_NE(submitTask.updateInfo, nullptr);
+    TaskUpdateInfo* const cached = submitTask.updateInfo;
+
+    SaveTaskInfo(&savedTask, &submitTask);
+
+    EXPECT_EQ(savedTask.updateInfo, cached);
+    EXPECT_EQ(submitTask.updateInfo, nullptr);
+
+    TaskUpdateInfoFree(&savedTask);
+    EXPECT_EQ(savedTask.updateInfo, nullptr);
+}
+
 TEST_F(StarsTaskTest, CheckSqeSize)
 {
     constexpr size_t sqeSize = 64;

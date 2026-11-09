@@ -210,7 +210,7 @@ rtError_t PcieArgManage::LoadSimtArgsFromArray(
     }
 
     void* kernelArgsStart = static_cast<char*>(argsBuffer) + SIMT_IMPLICIT_PARAM_SIZE;
-    error = CopyKernelParamsToBuffer(kernel, simtArgsArray->argsArrayInfo, kernelArgsStart);
+    error = CopyKernelParamsToBuffer(kernel, simtArgsArray->argsArray, kernelArgsStart);
     if (error != RT_ERROR_NONE) {
         FreeFail(result);
         return error;

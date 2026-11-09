@@ -14,6 +14,7 @@
 #include "stream.hpp"
 #include "runtime.hpp"
 #include "thread_local_container.hpp"
+#include "kernel_utils.hpp"
 #include "fwk_adpt_struct.h"
 #include "rt_stars_define.h"
 #include "context.hpp"
@@ -495,12 +496,6 @@ static void ArgReleaseForAicTaskUnInit(TaskInfo* taskInfo)
     if (aicTaskInfo->sqeDevBuf != nullptr) {
         (void)(dev->Driver_())->DevMemFree(aicTaskInfo->sqeDevBuf, dev->Id_());
         aicTaskInfo->sqeDevBuf = nullptr;
-    }
-
-    if (aicTaskInfo->launchParam.placeHoderPtr != nullptr) {
-        delete[] (aicTaskInfo->launchParam.placeHoderPtr);
-        aicTaskInfo->launchParam.placeHoderPtr = nullptr;
-        aicTaskInfo->launchParam.placeHoderNum = 0U;
     }
 }
 

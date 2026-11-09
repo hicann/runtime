@@ -216,14 +216,18 @@ int ModelFallbackWorkflow::ApplyFallback(const SelectedTasks& selected)
 {
     const aclmdlRIKernelTaskParams& original = selected.mainParams.kernelTaskParams;
     if (selected.mainParams.type != ACL_MODEL_RI_TASK_KERNEL || original.funcHandle != mainFunction_ ||
-        original.isHostArgs != 0 || original.argsSize != sizeof(KernelArgs) || original.numBlocks != 1) {
+        original.argsType != ACL_RT_KERNEL_ARGS_HOST_BUFFER || original.hostBuffer.hostArgsSize != sizeof(KernelArgs) ||
+        original.numBlocks != 1) {
         ERROR_LOG("The main task parameters do not match the captured Kernel launch.");
         return -1;
     }
     fallbackMainArgs_ = {backupInput_, mainOutput_};
     aclmdlRITaskParams updated = selected.mainParams;
-    updated.kernelTaskParams.args = &fallbackMainArgs_;
-    updated.kernelTaskParams.isHostArgs = 1;
+    updated.kernelTaskParams.argsType = ACL_RT_KERNEL_ARGS_HOST_BUFFER;
+    updated.kernelTaskParams.hostBuffer.hostArgs = &fallbackMainArgs_;
+    updated.kernelTaskParams.hostBuffer.hostArgsSize = sizeof(KernelArgs);
+    updated.kernelTaskParams.hostBuffer.placeHolderArray = nullptr;
+    updated.kernelTaskParams.hostBuffer.placeHolderNum = 0;
     CHECK_ERROR(aclmdlRITaskSetParams(selected.main, &updated));
     CHECK_ERROR(aclmdlRITaskDisable(selected.optional));
     CHECK_ERROR(aclmdlRIUpdate(model_));

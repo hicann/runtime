@@ -20,6 +20,7 @@
 #include "elf.hpp"
 #include "runtime/kernel.h"
 #include "error_message_manage.hpp"
+#include "api_handle_guard.h"
 #include "runtime/mem.h"
 #include "npu_driver.hpp"
 #include "capture_model_utils.hpp"
@@ -325,7 +326,8 @@ static rtError_t CheckCpuArgsInfo(const rtCpuKernelArgs_t* const argsInfo)
     return RT_ERROR_NONE;
 }
 
-static rtError_t CheckSimtArgsArray(const Kernel* kernel, const RtArgsWithType* const argsWithType)
+// SIMT capability + param metadata, shared by the launch path and aclmdlRITaskSetParams
+static rtError_t CheckSimtKernelCapability(const Kernel* kernel)
 {
     const uint32_t kernelVfType = kernel->KernelVfType_();
     const bool isSimtKernel = (kernelVfType == static_cast<uint32_t>(AivTypeFlag::AIV_TYPE_SIMT_VF_ONLY)) ||
@@ -336,81 +338,102 @@ static rtError_t CheckSimtArgsArray(const Kernel* kernel, const RtArgsWithType* 
     COND_RETURN_AND_MSG_OUTER(
         !kernel->HasParamSummary(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Checking SIMT parameters", "kernel",
         "Kernel does not have param info, please check whether kernel version is matched");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        argsWithType->args.simtArgsArray, RT_ERROR_INVALID_VALUE, "Checking SIMT parameters");
-    const SimtArgsArray* simtArgs = argsWithType->args.simtArgsArray;
+    return RT_ERROR_NONE;
+}
+
+// isDim3Form selects the field-name form printed in messages: gridDim.x (launch) vs gridDimX (Set)
+static rtError_t CheckSimtDims(const rtDim3& gridDim, const rtDim3& blockDim, const bool isDim3Form)
+{
     COND_RETURN_AND_MSG_OUTER(
-        (simtArgs->gridDim.x == 0U) || (simtArgs->gridDim.y == 0U) || (simtArgs->gridDim.z == 0U),
-        RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Checking SIMT parameters", "gridDim",
+        (gridDim.x == 0U) || (gridDim.y == 0U) || (gridDim.z == 0U), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
+        "Checking SIMT parameters", "gridDim",
         RtFmtMsg(
-            "gridDim.x, gridDim.y, gridDim.z must all be greater than 0, actual gridDim=[%u,%u,%u]",
-            simtArgs->gridDim.x, simtArgs->gridDim.y, simtArgs->gridDim.z));
+            "%s must all be greater than 0, actual gridDim=[%u,%u,%u]",
+            (isDim3Form ? "gridDim.x, gridDim.y, gridDim.z" : "gridDimX, gridDimY, gridDimZ"), gridDim.x, gridDim.y,
+            gridDim.z));
     COND_RETURN_AND_MSG_OUTER(
-        (simtArgs->blockDim.x == 0U) || (simtArgs->blockDim.y == 0U) || (simtArgs->blockDim.z == 0U),
-        RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Checking SIMT parameters", "blockDim",
+        (blockDim.x == 0U) || (blockDim.y == 0U) || (blockDim.z == 0U), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
+        "Checking SIMT parameters", "blockDim",
         RtFmtMsg(
-            "blockDim.x, blockDim.y, blockDim.z must all be greater than 0, actual blockDim=[%u,%u,%u]",
-            simtArgs->blockDim.x, simtArgs->blockDim.y, simtArgs->blockDim.z));
-    if (kernel->GetParamCount() > 0U) {
-        NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-            argsWithType->args.simtArgsArray->argsArrayInfo, RT_ERROR_INVALID_VALUE, "Checking SIMT parameters");
+            "%s must all be greater than 0, actual blockDim=[%u,%u,%u]",
+            (isDim3Form ? "blockDim.x, blockDim.y, blockDim.z" : "blockDimX, blockDimY, blockDimZ"), blockDim.x,
+            blockDim.y, blockDim.z));
+    return RT_ERROR_NONE;
+}
+
+// isDim3Form selects the size-field name printed in messages: argsSize (launch) vs hostArgsSize (Set)
+static rtError_t CheckSimtPlaceHolder(
+    const rtPlaceHolderInfo_t* const placeHolderArray, const uint32_t placeHolderNum, const uint32_t argsSize,
+    const bool isDim3Form)
+{
+    for (uint32_t i = 0U; i < placeHolderNum; i++) {
+        COND_RETURN_AND_MSG_OUTER(
+            placeHolderArray[i].addrOffset >= argsSize, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
+            "Checking SIMT parameters",
+            RtFmtMsg("placeHolderArray[%u].addrOffset or %s", i, (isDim3Form ? "argsSize" : "hostArgsSize")),
+            RtFmtMsg(
+                "Parameter placeHolderArray[%u].addrOffset %u should be less than parameter %s %u", i,
+                placeHolderArray[i].addrOffset, (isDim3Form ? "argsSize" : "hostArgsSize"), argsSize));
+        COND_RETURN_AND_MSG_OUTER(
+            placeHolderArray[i].dataOffset >= argsSize, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
+            "Checking SIMT parameters",
+            RtFmtMsg("placeHolderArray[%u].dataOffset or %s", i, (isDim3Form ? "argsSize" : "hostArgsSize")),
+            RtFmtMsg(
+                "Parameter placeHolderArray[%u].dataOffset %u should be less than parameter %s %u", i,
+                placeHolderArray[i].dataOffset, (isDim3Form ? "argsSize" : "hostArgsSize"), argsSize));
     }
     return RT_ERROR_NONE;
 }
 
-static rtError_t CheckSimtArgsHost(const Kernel* kernel, const RtArgsWithType* const argsWithType)
+// ARRAY form core, shared by both paths
+static rtError_t CheckSimtDimsAndArray(
+    const Kernel* kernel, const rtDim3& gridDim, const rtDim3& blockDim, void** const argsArray, const bool isDim3Form)
 {
-    const uint32_t kernelVfType = kernel->KernelVfType_();
-    const bool isSimtKernel = (kernelVfType == static_cast<uint32_t>(AivTypeFlag::AIV_TYPE_SIMT_VF_ONLY)) ||
-                              (kernelVfType == static_cast<uint32_t>(AivTypeFlag::AIV_TYPE_SIMD_SIMT_MIX_VF));
-    COND_RETURN_AND_MSG_OUTER(
-        !isSimtKernel, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Checking SIMT parameters", "kernel",
-        "current API only supports SIMT kernel");
-    COND_RETURN_AND_MSG_OUTER(
-        !kernel->HasParamSummary(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Checking SIMT parameters", "kernel",
-        "Kernel does not have param info, please check whether kernel version is matched");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        argsWithType->args.simtArgsHost, RT_ERROR_INVALID_VALUE, "Checking SIMT parameters");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        argsWithType->args.simtArgsHost->hostArgs, RT_ERROR_INVALID_VALUE, "Checking SIMT parameters");
-    ZERO_RETURN_AND_MSG_OUTER_WITH_FUNC_DESC(
-        argsWithType->args.simtArgsHost->argsSize, "Verifying the validity of kernel parameters");
-    const SimtArgsHost* simtArgs = argsWithType->args.simtArgsHost;
-    COND_RETURN_AND_MSG_OUTER(
-        (simtArgs->gridDim.x == 0U) || (simtArgs->gridDim.y == 0U) || (simtArgs->gridDim.z == 0U),
-        RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Checking SIMT parameters", "gridDim",
-        RtFmtMsg(
-            "gridDim.x, gridDim.y, gridDim.z must all be greater than 0, actual gridDim=[%u,%u,%u]",
-            simtArgs->gridDim.x, simtArgs->gridDim.y, simtArgs->gridDim.z));
-    COND_RETURN_AND_MSG_OUTER(
-        (simtArgs->blockDim.x == 0U) || (simtArgs->blockDim.y == 0U) || (simtArgs->blockDim.z == 0U),
-        RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Checking SIMT parameters", "blockDim",
-        RtFmtMsg(
-            "blockDim.x, blockDim.y, blockDim.z must all be greater than 0, actual blockDim=[%u,%u,%u]",
-            simtArgs->blockDim.x, simtArgs->blockDim.y, simtArgs->blockDim.z));
-    const uint32_t argsSize = argsWithType->args.simtArgsHost->argsSize;
-    const uint32_t placeHolderNum = argsWithType->args.simtArgsHost->placeHolderNum;
-    if (placeHolderNum > 0U) {
-        NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-            argsWithType->args.simtArgsHost->placeHolderArray, RT_ERROR_INVALID_VALUE, "Checking SIMT parameters");
-        for (uint32_t i = 0U; i < placeHolderNum; i++) {
-            COND_RETURN_AND_MSG_OUTER(
-                argsWithType->args.simtArgsHost->placeHolderArray[i].addrOffset >= argsSize, RT_ERROR_INVALID_VALUE,
-                ErrorCode::EE1017, "Checking SIMT parameters",
-                RtFmtMsg("placeHolderArray[%u].addrOffset or argsSize", i),
-                RtFmtMsg(
-                    "Parameter placeHolderArray[%u].addrOffset %u should be less than parameter argsSize %u", i,
-                    argsWithType->args.simtArgsHost->placeHolderArray[i].addrOffset, argsSize));
-            COND_RETURN_AND_MSG_OUTER(
-                argsWithType->args.simtArgsHost->placeHolderArray[i].dataOffset >= argsSize, RT_ERROR_INVALID_VALUE,
-                ErrorCode::EE1017, "Checking SIMT parameters",
-                RtFmtMsg("placeHolderArray[%u].dataOffset or argsSize", i),
-                RtFmtMsg(
-                    "Parameter placeHolderArray[%u].dataOffset %u should be less than parameter argsSize %u", i,
-                    argsWithType->args.simtArgsHost->placeHolderArray[i].dataOffset, argsSize));
-        }
+    rtError_t error = CheckSimtDims(gridDim, blockDim, isDim3Form);
+    ERROR_RETURN(error, "check simt dims failed, retCode=%#x.", static_cast<uint32_t>(error));
+    if (kernel->GetParamCount() > 0U) {
+        NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(argsArray, RT_ERROR_INVALID_VALUE, "Checking SIMT parameters");
     }
     return RT_ERROR_NONE;
+}
+
+// HOST_BUFFER form core, shared by both paths
+static rtError_t CheckSimtDimsAndHost(
+    const void* const hostArgs, const uint32_t argsSize, const rtPlaceHolderInfo_t* const placeHolderArray,
+    const uint32_t placeHolderNum, const rtDim3& gridDim, const rtDim3& blockDim, const bool isDim3Form)
+{
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(hostArgs, RT_ERROR_INVALID_VALUE, "Checking SIMT parameters");
+    ZERO_RETURN_AND_MSG_OUTER_WITH_FUNC_DESC(argsSize, "Verifying the validity of kernel parameters");
+    rtError_t error = CheckSimtDims(gridDim, blockDim, isDim3Form);
+    ERROR_RETURN(error, "check simt dims failed, retCode=%#x.", static_cast<uint32_t>(error));
+    if (placeHolderNum > 0U) {
+        NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(placeHolderArray, RT_ERROR_INVALID_VALUE, "Checking SIMT parameters");
+        error = CheckSimtPlaceHolder(placeHolderArray, placeHolderNum, argsSize, isDim3Form);
+        ERROR_RETURN(error, "check simt placeHolder failed, retCode=%#x.", static_cast<uint32_t>(error));
+    }
+    return RT_ERROR_NONE;
+}
+
+static rtError_t CheckSimtArgsArray(const Kernel* kernel, const RtArgsWithType* const argsWithType)
+{
+    rtError_t error = CheckSimtKernelCapability(kernel);
+    ERROR_RETURN(error, "check simt kernel capability failed, retCode=%#x.", static_cast<uint32_t>(error));
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
+        argsWithType->args.simtArgsArray, RT_ERROR_INVALID_VALUE, "Checking SIMT parameters");
+    const SimtArgsArray* const simtArgs = argsWithType->args.simtArgsArray;
+    return CheckSimtDimsAndArray(kernel, simtArgs->gridDim, simtArgs->blockDim, simtArgs->argsArray, true);
+}
+
+static rtError_t CheckSimtArgsHost(const Kernel* kernel, const RtArgsWithType* const argsWithType)
+{
+    rtError_t error = CheckSimtKernelCapability(kernel);
+    ERROR_RETURN(error, "check simt kernel capability failed, retCode=%#x.", static_cast<uint32_t>(error));
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
+        argsWithType->args.simtArgsHost, RT_ERROR_INVALID_VALUE, "Checking SIMT parameters");
+    const SimtArgsHost* const simtArgs = argsWithType->args.simtArgsHost;
+    return CheckSimtDimsAndHost(
+        simtArgs->hostArgs, simtArgs->argsSize, simtArgs->placeHolderArray, simtArgs->placeHolderNum, simtArgs->gridDim,
+        simtArgs->blockDim, true);
 }
 
 rtError_t ApiErrorDecorator::CheckArgsWithType(const Kernel* kernel, const RtArgsWithType* const argsWithType) const
@@ -435,9 +458,12 @@ rtError_t ApiErrorDecorator::CheckArgsWithType(const Kernel* kernel, const RtArg
             COND_RETURN_AND_MSG_OUTER(
                 !kernel->HasParamSummary(), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
                 "Operator parameter verification", "kernel", "Kernel does not have parameter information");
+            NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
+                argsWithType->args.argsArrayInfo, RT_ERROR_INVALID_VALUE, "Operator parameter verification");
             if (kernel->GetParamCount() > 0U) {
                 NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-                    argsWithType->args.argsArrayInfo, RT_ERROR_INVALID_VALUE, "Operator parameter verification");
+                    argsWithType->args.argsArrayInfo->argsArray, RT_ERROR_INVALID_VALUE,
+                    "Operator parameter verification");
             }
             break;
         }
@@ -6559,11 +6585,49 @@ rtError_t ApiErrorDecorator::TaskGetParams(rtTask_t task, rtTaskParams* const pa
     return impl_->TaskGetParams(task, params);
 }
 
-rtError_t ApiErrorDecorator::TaskSetParams(rtTask_t task, rtTaskParams* const params)
+// Set-side SIMT validation entry: reuses the launch check cores, so Set matches the two SIMT launch APIs
+static rtError_t CheckSimtTaskParams(const Kernel* const kernel, const rtSimtKernelTaskParams* const sp)
+{
+    // defensive only: func is resolved in api_c_task.cc; guards internal callers passing no kernel
+    COND_RETURN_AND_MSG_OUTER(
+        (kernel == nullptr), RT_ERROR_INVALID_VALUE, ErrorCode::EE1004, "Setting task parameters",
+        "params->simtKernelTaskParams->func");
+    rtError_t error = RT_ERROR_NONE;
+    // the ABI struct carries the dims as six scalars; rebuild the rtDim3 the shared checks expect
+    const rtDim3 gridDim = {sp->gridDimX, sp->gridDimY, sp->gridDimZ};
+    const rtDim3 blockDim = {sp->blockDimX, sp->blockDimY, sp->blockDimZ};
+    if (sp->argsType == RT_KERNEL_ARGS_ARRAY) {
+        error = CheckSimtKernelCapability(kernel);
+        if (error == RT_ERROR_NONE) {
+            error = CheckSimtDimsAndArray(kernel, gridDim, blockDim, sp->argsArray, false);
+        }
+    } else if (sp->argsType == RT_KERNEL_ARGS_HOST_BUFFER) {
+        error = CheckSimtKernelCapability(kernel);
+        if (error == RT_ERROR_NONE) {
+            // the ABI size_t fields are narrowed to uint32, as on the acl -> rt boundary of the launch path
+            error = CheckSimtDimsAndHost(
+                sp->hostBuffer.hostArgs, static_cast<uint32_t>(sp->hostBuffer.hostArgsSize),
+                sp->hostBuffer.placeHolderArray, static_cast<uint32_t>(sp->hostBuffer.placeHolderNum), gridDim,
+                blockDim, false);
+        }
+    } else {
+        RT_LOG_OUTER_MSG_IMPL(
+            ErrorCode::EE1003, "Setting task parameters", KernelArgsTypeToString(sp->argsType),
+            "params->simtKernelTaskParams->argsType", "KERNEL_ARGS_ARRAY(1) or KERNEL_ARGS_HOST_BUFFER(2)");
+        error = RT_ERROR_INVALID_VALUE;
+    }
+    return error;
+}
+
+rtError_t ApiErrorDecorator::TaskSetParams(rtTask_t task, rtTaskParams* const params, Kernel* const kernel)
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(task, RT_ERROR_INVALID_VALUE, "Setting task parameters");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(params, RT_ERROR_INVALID_VALUE, "Setting task parameters");
-    return impl_->TaskSetParams(task, params);
+    if (params->type == RT_TASK_SIMT_KERNEL) {
+        rtError_t error = CheckSimtTaskParams(kernel, &(params->simtKernelTaskParams));
+        ERROR_RETURN(error, "check simt task params form failed, retCode=%#x.", static_cast<uint32_t>(error));
+    }
+    return impl_->TaskSetParams(task, params, kernel);
 }
 
 rtError_t ApiErrorDecorator::KernelTaskGetAttribute(

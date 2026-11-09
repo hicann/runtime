@@ -629,6 +629,17 @@ typedef union {
     uint32_t reserve[4];
 } aclrtStreamAttrValue;
 
+typedef struct {
+    uint32_t addrOffset;
+    uint32_t dataOffset;
+} aclrtPlaceHolderInfo;
+
+typedef enum aclrtKernelArgsType {
+    ACL_RT_KERNEL_ARGS_ARRAY = 1,
+    ACL_RT_KERNEL_ARGS_HOST_BUFFER = 2,
+    ACL_RT_KERNEL_ARGS_DEVICE_BUFFER = 3,
+} aclrtKernelArgsType;
+
 typedef enum aclmdlRITaskType {
     ACL_MODEL_RI_TASK_DEFAULT,
     ACL_MODEL_RI_TASK_KERNEL,
@@ -645,17 +656,55 @@ typedef enum aclmdlRITaskType {
     ACL_MODEL_RI_TASK_COND,
     ACL_MODEL_RI_TASK_NOTIFY_RECORD,
     ACL_MODEL_RI_TASK_NOTIFY_WAIT,
+    ACL_MODEL_RI_TASK_SIMT_KERNEL,
 } aclmdlRITaskType;
 
 typedef struct aclmdlRIKernelTaskParams {
-    aclrtFuncHandle funcHandle;
+    void* funcHandle;
     aclrtLaunchKernelCfg* cfg;
-    void* args;
-    uint32_t isHostArgs;
-    size_t argsSize;
+    void* args;                // legacy args form, read on Set only when argsType is 0; on Get reports the loaded args
+    uint32_t isHostArgs;       // legacy args form, 0: device memory, non-0: host memory; always 0 on Get
+    size_t argsSize;           // legacy args form, size of args; on Get reports the loaded args size
     uint32_t numBlocks;
-    uint32_t rsv[10];
+    aclrtKernelArgsType argsType; // ACL_RT_KERNEL_ARGS_ARRAY/HOST_BUFFER/DEVICE_BUFFER
+    union {
+        void** argsArray; // ACL_RT_KERNEL_ARGS_ARRAY
+        struct {
+            void* hostArgs;
+            size_t hostArgsSize;
+            aclrtPlaceHolderInfo* placeHolderArray;
+            size_t placeHolderNum;
+        } hostBuffer; // ACL_RT_KERNEL_ARGS_HOST_BUFFER
+        struct {
+            void* deviceArgs;
+            size_t deviceArgsSize;
+        } deviceBuffer; // ACL_RT_KERNEL_ARGS_DEVICE_BUFFER
+    };
+    uint32_t rsv[2];
 } aclmdlRIKernelTaskParams;
+
+typedef struct aclmdlRISimtKernelTaskParams {
+    void* func;
+    uint32_t gridDimX;
+    uint32_t gridDimY;
+    uint32_t gridDimZ;
+    uint32_t blockDimX;
+    uint32_t blockDimY;
+    uint32_t blockDimZ;
+    size_t dynUbufSize;
+    aclrtLaunchKernelCfg* cfg;    // returns nullptr on Get, used on Set only
+    aclrtKernelArgsType argsType; // ARRAY or HOST_BUFFER (see aclrtKernelArgsType)
+    uint8_t rsv0[4];
+    union {
+        void** argsArray; // ACL_RT_KERNEL_ARGS_ARRAY
+        struct {
+            void* hostArgs;
+            size_t hostArgsSize;
+            aclrtPlaceHolderInfo* placeHolderArray;
+            size_t placeHolderNum;
+        } hostBuffer; // ACL_RT_KERNEL_ARGS_HOST_BUFFER
+    };
+} aclmdlRISimtKernelTaskParams;
 
 typedef struct aclmdlRIEventRecordTaskParams {
     aclrtEvent event;
@@ -746,6 +795,7 @@ typedef struct aclmdlRITaskParams {
     union {
         uint8_t rsv2[128];
         struct aclmdlRIKernelTaskParams kernelTaskParams;
+        struct aclmdlRISimtKernelTaskParams simtKernelTaskParams;
         struct aclmdlRIEventRecordTaskParams eventRecordTaskParams;
         struct aclmdlRIEventWaitTaskParams eventWaitTaskParams;
         struct aclmdlRIEventResetTaskParams eventResetTaskParams;
@@ -859,11 +909,6 @@ typedef struct {
 #define ACL_RT_DEVS_TOPOLOGY_SYS 0x10ULL
 #define ACL_RT_DEVS_TOPOLOGY_SIO 0x20ULL
 #define ACL_RT_DEVS_TOPOLOGY_HCCS_SW 0x40ULL
-
-typedef struct {
-    uint32_t addrOffset;
-    uint32_t dataOffset;
-} aclrtPlaceHolderInfo;
 
 typedef struct {
     uint8_t isAddr;

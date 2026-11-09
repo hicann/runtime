@@ -574,13 +574,10 @@ TEST_F(Arch5162TaskTest, DavinciTaskUnInit_aicore)
     taskInfo.u.aicTaskInfo.comm.argHandle = nullptr;
     taskInfo.u.aicTaskInfo.descBuf = nullptr;
     taskInfo.u.aicTaskInfo.sqeDevBuf = nullptr;
-    taskInfo.u.aicTaskInfo.launchParam.placeHoderPtr = new (std::nothrow) rtHostInputInfo_t[2];
-    ;
     DavinciTaskUnInit(&taskInfo);
     EXPECT_EQ(taskInfo.u.aicTaskInfo.comm.argHandle, nullptr);
     EXPECT_EQ(taskInfo.u.aicTaskInfo.descBuf, nullptr);
     EXPECT_EQ(taskInfo.u.aicTaskInfo.sqeDevBuf, nullptr);
-    EXPECT_EQ(taskInfo.u.aicTaskInfo.launchParam.placeHoderPtr, nullptr);
     delete stream;
     delete device;
 }

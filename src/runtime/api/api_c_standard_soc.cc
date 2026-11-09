@@ -1626,9 +1626,12 @@ rtError_t rtLaunchKernelWithArgsArray(
         RT_LOG(RT_LOG_WARNING, "XPU does not support rtLaunchKernelWithArgsArray");
         return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;
     }
+    ArgsArrayInfo argsArrayInfo = {};
+    argsArrayInfo.argsArray = args;
+    argsArrayInfo.launchFunc = func;
     RtArgsWithType argsWithType = {};
     argsWithType.type = RT_ARGS_ARRAY;
-    argsWithType.args.argsArrayInfo = args;
+    argsWithType.args.argsArrayInfo = &argsArrayInfo;
 
     RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     Kernel* kernel = nullptr;
@@ -1924,6 +1927,7 @@ rtError_t rtLaunchSIMTKernelWithHostArgs(
     simtArgsHost.placeHolderArray = placeHolderArray;
     simtArgsHost.placeHolderNum = placeHolderNum;
     simtArgsHost.dynUbufSize = dynUbufSize;
+    simtArgsHost.launchFunc = func;
 
     RtArgsWithType argsWithType = {};
     argsWithType.type = RT_SIMT_ARGS_HOST;
@@ -2066,8 +2070,9 @@ rtError_t rtLaunchSIMTKernelWithArgsArray(
     SimtArgsArray simtArgsArray = {};
     simtArgsArray.gridDim = gridDim;
     simtArgsArray.blockDim = blockDim;
-    simtArgsArray.argsArrayInfo = args;
+    simtArgsArray.argsArray = args;
     simtArgsArray.dynUbufSize = dynUbufSize;
+    simtArgsArray.launchFunc = func;
 
     RtArgsWithType argsWithType = {};
     argsWithType.type = RT_SIMT_ARGS_ARRAY;

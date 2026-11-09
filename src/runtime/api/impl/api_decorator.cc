@@ -1848,9 +1848,9 @@ rtError_t ApiDecorator::TaskGetParams(rtTask_t task, rtTaskParams* const params)
     return impl_->TaskGetParams(task, params);
 }
 
-rtError_t ApiDecorator::TaskSetParams(rtTask_t task, rtTaskParams* const params)
+rtError_t ApiDecorator::TaskSetParams(rtTask_t task, rtTaskParams* const params, Kernel* const kernel)
 {
-    return impl_->TaskSetParams(task, params);
+    return impl_->TaskSetParams(task, params, kernel);
 }
 
 rtError_t ApiDecorator::KernelTaskGetAttribute(

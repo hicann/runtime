@@ -41,17 +41,63 @@ typedef enum {
     RT_TASK_COND,
     RT_TASK_NOTIFY_RECORD,
     RT_TASK_NOTIFY_WAIT,
+    RT_TASK_SIMT_KERNEL,
 } rtTaskType;
 
+typedef enum rtKernelArgsType {
+    RT_KERNEL_ARGS_UNSET = 0, // argsType not filled: the args/isHostArgs/argsSize fields carry the form
+    RT_KERNEL_ARGS_ARRAY = 1,
+    RT_KERNEL_ARGS_HOST_BUFFER = 2,
+    RT_KERNEL_ARGS_DEVICE_BUFFER = 3,
+} rtKernelArgsType;
+
 typedef struct rtKernelTaskParams {
-    rtFuncHandle funcHandle;
+    void* funcHandle;
     rtKernelLaunchCfg_t* cfg;
-    void* args;
-    uint32_t isHostArgs;
-    size_t argsSize;
+    void* args;                // legacy args form, read on Set only when argsType is 0; on Get reports the loaded args
+    uint32_t isHostArgs;       // legacy args form, 0: device memory, non-0: host memory; always 0 on Get
+    size_t argsSize;           // legacy args form, size of args; on Get reports the loaded args size
     uint32_t numBlocks;
-    uint32_t rsv[10];
+    rtKernelArgsType argsType; // RT_KERNEL_ARGS_ARRAY/HOST_BUFFER/DEVICE_BUFFER
+    union {
+        void** argsArray;      // RT_KERNEL_ARGS_ARRAY
+        struct {
+            void* hostArgs;
+            size_t hostArgsSize;
+            rtPlaceHolderInfo_t* placeHolderArray;
+            size_t placeHolderNum;
+        } hostBuffer; // RT_KERNEL_ARGS_HOST_BUFFER
+        struct {
+            void* deviceArgs;
+            size_t deviceArgsSize;
+        } deviceBuffer; // RT_KERNEL_ARGS_DEVICE_BUFFER
+    };
+    uint32_t rsv[2];
 } rtKernelTaskParams;
+
+typedef struct rtSimtKernelTaskParams {
+    void* func;
+    // flattened scalars mirroring aclmdlRISimtKernelTaskParams, layout matches rtDim3 gridDim + blockDim
+    uint32_t gridDimX;
+    uint32_t gridDimY;
+    uint32_t gridDimZ;
+    uint32_t blockDimX;
+    uint32_t blockDimY;
+    uint32_t blockDimZ;
+    size_t dynUbufSize;
+    rtKernelLaunchCfg_t* cfg;  // returns nullptr on Get, used on Set only
+    rtKernelArgsType argsType; // ARRAY or HOST_BUFFER (see rtKernelArgsType)
+    uint8_t rsv0[4];
+    union {
+        void** argsArray; // RT_KERNEL_ARGS_ARRAY
+        struct {
+            void* hostArgs;
+            size_t hostArgsSize;
+            rtPlaceHolderInfo_t* placeHolderArray;
+            size_t placeHolderNum;
+        } hostBuffer; // RT_KERNEL_ARGS_HOST_BUFFER
+    };
+} rtSimtKernelTaskParams;
 
 typedef struct rtEventRecordTaskParams {
     rtEvent_t event;
@@ -142,6 +188,7 @@ typedef struct rtTaskParams {
     union {
         uint8_t rsv2[128];
         struct rtKernelTaskParams kernelTaskParams;
+        struct rtSimtKernelTaskParams simtKernelTaskParams;
         struct rtEventRecordTaskParams eventRecordTaskParams;
         struct rtEventWaitTaskParams eventWaitTaskParams;
         struct rtEventResetTaskParams eventResetTaskParams;

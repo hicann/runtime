@@ -1134,6 +1134,247 @@ TEST_F(ArgManagePcieTest, stream_launch_kernel_recycle_aicpu)
     delete stm;
 }
 
+// FreeKernelUpdateInfoBuffers dispatches on argsType: ARRAY frees the single-allocation base, HOST frees
+// both deep copies, DEVICE leaves the user pointer alone, and an unfilled entry (argsType 0) is a no-op.
+// Every branch must also null what it frees, which is what makes repeated release safe.
+TEST_F(ArgManagePcieTest, FreeKernelUpdateInfoBuffers_ReleasesAndNulls)
+{
+    KernelTaskUpdateInfo arrayInfo = {};
+    arrayInfo.argsType = RT_KERNEL_ARGS_ARRAY;
+    arrayInfo.argsArray = reinterpret_cast<void**>(new (std::nothrow) uint8_t[64]);
+    ASSERT_NE(arrayInfo.argsArray, nullptr);
+    FreeKernelUpdateInfoBuffers(arrayInfo);
+    EXPECT_EQ(arrayInfo.argsArray, nullptr);
+    FreeKernelUpdateInfoBuffers(arrayInfo); // second release must not delete twice
+    EXPECT_EQ(arrayInfo.argsArray, nullptr);
+
+    KernelTaskUpdateInfo hostInfo = {};
+    hostInfo.argsType = RT_KERNEL_ARGS_HOST_BUFFER;
+    hostInfo.hostBuffer.hostArgs = new (std::nothrow) uint8_t[32];
+    hostInfo.hostBuffer.hostArgsSize = 32U;
+    hostInfo.hostBuffer.placeHolderArray = new (std::nothrow) rtPlaceHolderInfo_t[2];
+    hostInfo.hostBuffer.placeHolderNum = 2U;
+    ASSERT_NE(hostInfo.hostBuffer.hostArgs, nullptr);
+    ASSERT_NE(hostInfo.hostBuffer.placeHolderArray, nullptr);
+    FreeKernelUpdateInfoBuffers(hostInfo);
+    EXPECT_EQ(hostInfo.hostBuffer.hostArgs, nullptr);
+    EXPECT_EQ(hostInfo.hostBuffer.placeHolderArray, nullptr);
+
+    void* const userDevicePtr = reinterpret_cast<void*>(0x1234);
+    KernelTaskUpdateInfo deviceInfo = {};
+    deviceInfo.argsType = RT_KERNEL_ARGS_DEVICE_BUFFER;
+    deviceInfo.deviceBuffer.deviceArgs = userDevicePtr;
+    deviceInfo.deviceBuffer.deviceArgsSize = 16U;
+    FreeKernelUpdateInfoBuffers(deviceInfo);
+    EXPECT_EQ(deviceInfo.deviceBuffer.deviceArgs, userDevicePtr); // user-owned, never freed
+
+    KernelTaskUpdateInfo emptyInfo = {};
+    emptyInfo.argsArray = reinterpret_cast<void**>(0x5678);
+    FreeKernelUpdateInfoBuffers(emptyInfo); // argsType 0: no branch runs
+    EXPECT_EQ(emptyInfo.argsArray, reinterpret_cast<void**>(0x5678));
+
+    SimtKernelTaskUpdateInfo simtInfo = {};
+    simtInfo.argsType = RT_KERNEL_ARGS_HOST_BUFFER;
+    simtInfo.hostBuffer.hostArgs = new (std::nothrow) uint8_t[32];
+    simtInfo.hostBuffer.placeHolderArray = new (std::nothrow) rtPlaceHolderInfo_t[1];
+    simtInfo.hostBuffer.placeHolderNum = 1U;
+    ASSERT_NE(simtInfo.hostBuffer.hostArgs, nullptr);
+    ASSERT_NE(simtInfo.hostBuffer.placeHolderArray, nullptr);
+    FreeKernelUpdateInfoBuffers(simtInfo); // same template, SIMT instantiation
+    EXPECT_EQ(simtInfo.hostBuffer.hostArgs, nullptr);
+    EXPECT_EQ(simtInfo.hostBuffer.placeHolderArray, nullptr);
+}
+
+// The release gates on type, not on isValid: isValid is the read-side publish marker, so an entry that was
+// filled but never published still owns its buffers and must release them. This asserts the object itself
+// is released; that the ARRAY block goes with it is only observable under LSan (an --asan build), because
+// DELETE_O runs whichever way the gate falls. FreeKernelUpdateInfoBuffers_ReleasesAndNulls covers the
+// release primitive with directly observable nulling.
+TEST_F(ArgManagePcieTest, TaskUpdateInfoFree_UnpublishedEntry_StillReleases)
+{
+    TaskInfo task = {};
+    task.type = TS_TASK_TYPE_KERNEL_AICORE;
+    TaskUpdateInfo* info = new (std::nothrow) TaskUpdateInfo{};
+    ASSERT_NE(info, nullptr);
+    info->latestParams.isValid = 0U; // never published
+    info->latestParams.type = RT_TASK_KERNEL;
+    info->latestParams.u.kernelUpdateParams.argsType = RT_KERNEL_ARGS_ARRAY;
+    info->latestParams.u.kernelUpdateParams.argsArray = reinterpret_cast<void**>(new (std::nothrow) uint8_t[64]);
+    ASSERT_NE(info->latestParams.u.kernelUpdateParams.argsArray, nullptr);
+    task.updateInfo = info;
+
+    TaskUpdateInfoFree(&task);
+
+    EXPECT_EQ(task.updateInfo, nullptr);
+}
+
+TEST_F(ArgManagePcieTest, TaskUpdateInfoFree_SimtEntry_Releases)
+{
+    TaskInfo task = {};
+    task.type = TS_TASK_TYPE_KERNEL_AIVEC;
+    TaskUpdateInfo* info = new (std::nothrow) TaskUpdateInfo{};
+    ASSERT_NE(info, nullptr);
+    info->latestParams.isValid = 1U;
+    info->latestParams.type = RT_TASK_SIMT_KERNEL;
+    info->latestParams.u.simtKernelUpdateParams.argsType = RT_KERNEL_ARGS_HOST_BUFFER;
+    info->latestParams.u.simtKernelUpdateParams.hostBuffer.hostArgs = new (std::nothrow) uint8_t[32];
+    info->latestParams.u.simtKernelUpdateParams.hostBuffer.hostArgsSize = 32U;
+    info->latestParams.u.simtKernelUpdateParams.hostBuffer.placeHolderArray = new (std::nothrow) rtPlaceHolderInfo_t[1];
+    info->latestParams.u.simtKernelUpdateParams.hostBuffer.placeHolderNum = 1U;
+    ASSERT_NE(info->latestParams.u.simtKernelUpdateParams.hostBuffer.hostArgs, nullptr);
+    ASSERT_NE(info->latestParams.u.simtKernelUpdateParams.hostBuffer.placeHolderArray, nullptr);
+    task.updateInfo = info;
+
+    TaskUpdateInfoFree(&task);
+
+    EXPECT_EQ(task.updateInfo, nullptr);
+}
+
+// A non-kernel entry holds no runtime-owned heap (Event pointer and POD params), so neither release
+// branch may run; the object itself is still deleted.
+TEST_F(ArgManagePcieTest, TaskUpdateInfoFree_NonKernelType_DeletesObjectOnly)
+{
+    TaskInfo task = {};
+    task.type = TS_TASK_TYPE_MEM_WRITE_VALUE;
+    TaskUpdateInfo* info = new (std::nothrow) TaskUpdateInfo{};
+    ASSERT_NE(info, nullptr);
+    info->latestParams.isValid = 1U;
+    info->latestParams.type = RT_TASK_VALUE_WRITE;
+    task.updateInfo = info;
+
+    TaskUpdateInfoFree(&task);
+
+    EXPECT_EQ(task.updateInfo, nullptr);
+}
+
+TEST_F(ArgManagePcieTest, TaskUpdateInfoFree_NullUpdateInfo_NoOp)
+{
+    TaskInfo task = {};
+    task.type = TS_TASK_TYPE_KERNEL_AICORE;
+    task.updateInfo = nullptr;
+
+    TaskUpdateInfoFree(&task); // must short-circuit before touching latestParams
+
+    EXPECT_EQ(task.updateInfo, nullptr);
+}
+
+// The queue drain runs for every task type; external event record tasks are the ones that actually
+// enqueue (CaptureModel::PrepareExternalRecordTaskUpdateInfo), so use that shape
+TEST_F(ArgManagePcieTest, TaskUpdateInfoFree_DrainsPendingUpdateQueue)
+{
+    TaskInfo task = {};
+    task.type = TS_TASK_TYPE_CAPTURE_RECORD_EXTERNAL;
+    TaskUpdateInfo* info = new (std::nothrow) TaskUpdateInfo{};
+    ASSERT_NE(info, nullptr);
+    info->latestParams.isValid = 1U;
+    info->latestParams.type = RT_TASK_EVENT_RECORD;
+    TaskUpdateItem item = {};
+    item.launchNo = 1U;
+    info->updateQueue.push(item);
+    info->updateQueue.push(item);
+    ASSERT_EQ(info->updateQueue.size(), 2U);
+    task.updateInfo = info;
+
+    TaskUpdateInfoFree(&task);
+
+    EXPECT_EQ(task.updateInfo, nullptr);
+}
+
+// The software-SQ rollback path releases through StreamLaunchKernelRecycle and then again through
+// TaskRollBack -> Recycle -> TaskUnInitProc; DELETE_O nulls the pointer so the second call is a no-op.
+TEST_F(ArgManagePcieTest, TaskUpdateInfoFree_TwiceIsIdempotent)
+{
+    TaskInfo task = {};
+    task.type = TS_TASK_TYPE_KERNEL_AICORE;
+    TaskUpdateInfo* info = new (std::nothrow) TaskUpdateInfo{};
+    ASSERT_NE(info, nullptr);
+    info->latestParams.isValid = 1U;
+    info->latestParams.type = RT_TASK_KERNEL;
+    info->latestParams.u.kernelUpdateParams.argsType = RT_KERNEL_ARGS_HOST_BUFFER;
+    info->latestParams.u.kernelUpdateParams.hostBuffer.hostArgs = new (std::nothrow) uint8_t[32];
+    info->latestParams.u.kernelUpdateParams.hostBuffer.hostArgsSize = 32U;
+    info->latestParams.u.kernelUpdateParams.hostBuffer.placeHolderArray = new (std::nothrow) rtPlaceHolderInfo_t[1];
+    info->latestParams.u.kernelUpdateParams.hostBuffer.placeHolderNum = 1U;
+    ASSERT_NE(info->latestParams.u.kernelUpdateParams.hostBuffer.hostArgs, nullptr);
+    ASSERT_NE(info->latestParams.u.kernelUpdateParams.hostBuffer.placeHolderArray, nullptr);
+    task.updateInfo = info;
+
+    TaskUpdateInfoFree(&task);
+    EXPECT_EQ(task.updateInfo, nullptr);
+    TaskUpdateInfoFree(&task);
+    EXPECT_EQ(task.updateInfo, nullptr);
+}
+
+// A failed launch on a plain (non software-SQ) stream rolls the slot back through RollbackTail, which
+// frees nothing, so StreamLaunchKernelRecycle is the only release point for the launch args cache.
+TEST_F(ArgManagePcieTest, StreamLaunchKernelRecycle_ReleasesUpdateInfo)
+{
+    DavidStream* stm = CreatePcieDavidStream(device_);
+    ASSERT_NE(stm, nullptr);
+    ASSERT_EQ(stm->CreateStreamArgRes(), RT_ERROR_NONE);
+
+    TaskInfo task = {};
+    task.type = TS_TASK_TYPE_KERNEL_AICORE;
+    task.stream = stm;
+    task.isUpdateSinkSqe = 0U;
+    task.u.aicTaskInfo.comm.argHandle = nullptr;
+    TaskUpdateInfo* info = new (std::nothrow) TaskUpdateInfo{};
+    ASSERT_NE(info, nullptr);
+    info->latestParams.isValid = 1U;
+    info->latestParams.type = RT_TASK_KERNEL;
+    info->latestParams.u.kernelUpdateParams.argsType = RT_KERNEL_ARGS_ARRAY;
+    info->latestParams.u.kernelUpdateParams.argsArray = reinterpret_cast<void**>(new (std::nothrow) uint8_t[64]);
+    ASSERT_NE(info->latestParams.u.kernelUpdateParams.argsArray, nullptr);
+    task.updateInfo = info;
+
+    TaskInfo* taskPtr = &task;
+    StarsArgLoaderResult result = {};
+    StreamLaunchKernelRecycle(result, taskPtr, nullptr, stm);
+
+    EXPECT_EQ(taskPtr, nullptr);
+    EXPECT_EQ(task.updateInfo, nullptr); // cache released, not left for RollbackTail to lose
+
+    stm->ReleaseStreamArgRes();
+    delete stm;
+}
+
+// isUpdateSinkSqe marks a live task reused by task-group update: it is not being destroyed, so its cache
+// must survive and only the flag is cleared.
+TEST_F(ArgManagePcieTest, StreamLaunchKernelRecycle_UpdateSinkSqe_KeepsCache)
+{
+    DavidStream* stm = CreatePcieDavidStream(device_);
+    ASSERT_NE(stm, nullptr);
+    ASSERT_EQ(stm->CreateStreamArgRes(), RT_ERROR_NONE);
+
+    TaskInfo task = {};
+    task.type = TS_TASK_TYPE_KERNEL_AICORE;
+    task.stream = stm;
+    task.isUpdateSinkSqe = 1U;
+    task.u.aicTaskInfo.comm.argHandle = nullptr;
+    TaskUpdateInfo* info = new (std::nothrow) TaskUpdateInfo{};
+    ASSERT_NE(info, nullptr);
+    info->latestParams.isValid = 1U;
+    info->latestParams.type = RT_TASK_KERNEL;
+    info->latestParams.u.kernelUpdateParams.argsType = RT_KERNEL_ARGS_ARRAY;
+    info->latestParams.u.kernelUpdateParams.argsArray = reinterpret_cast<void**>(new (std::nothrow) uint8_t[64]);
+    ASSERT_NE(info->latestParams.u.kernelUpdateParams.argsArray, nullptr);
+    task.updateInfo = info;
+
+    TaskInfo* taskPtr = &task;
+    StarsArgLoaderResult result = {};
+    StreamLaunchKernelRecycle(result, taskPtr, nullptr, stm);
+
+    EXPECT_EQ(taskPtr, &task);           // task kept
+    EXPECT_EQ(task.updateInfo, info);    // cache kept
+    EXPECT_EQ(task.isUpdateSinkSqe, 0U); // flag cleared for the following TaskRollBack
+
+    TaskUpdateInfoFree(&task);           // test-owned cleanup
+    EXPECT_EQ(task.updateInfo, nullptr);
+
+    stm->ReleaseStreamArgRes();
+    delete stm;
+}
+
 // LoadArgsInfo with LP_FFTS
 TEST_F(ArgManagePcieTest, load_args_ffts_path)
 {
@@ -1205,7 +1446,7 @@ static void TestLoadSimtArgsFromArraySuccessCommon(DavidStream* stm, bool needPc
     char realArgs1[64] = {0};
     char realArgs2[64] = {0};
     void* argsArray[2] = {realArgs1, realArgs2};
-    simtArgs.argsArrayInfo = argsArray;
+    simtArgs.argsArray = argsArray;
 
     StarsArgLoaderResult result = {nullptr, nullptr, nullptr, UINT32_MAX};
 
@@ -1249,7 +1490,7 @@ static void TestLoadSimtArgsFromArrayAllocCopyPtrFailCommon(DavidStream* stm, bo
     simtArgs.gridDim = {1, 1, 1};
     simtArgs.blockDim = {1, 1, 1};
     void* argsArray[2] = {(void*)0x100, (void*)0x200};
-    simtArgs.argsArrayInfo = argsArray;
+    simtArgs.argsArray = argsArray;
 
     StarsArgLoaderResult result = {nullptr, nullptr, nullptr, UINT32_MAX};
 
@@ -1306,7 +1547,7 @@ static void TestLoadSimtArgsFromArrayMemcpyFailCommon(DavidStream* stm, bool nee
     simtArgs.gridDim = {1, 1, 1};
     simtArgs.blockDim = {1, 1, 1};
     void* argsArray[2] = {(void*)0x100, (void*)0x200};
-    simtArgs.argsArrayInfo = argsArray;
+    simtArgs.argsArray = argsArray;
 
     StarsArgLoaderResult result = {nullptr, nullptr, nullptr, UINT32_MAX};
 
@@ -1351,7 +1592,7 @@ static void TestLoadSimtArgsFromArrayCopyKernelParamsFailCommon(DavidStream* stm
     simtArgs.gridDim = {1, 1, 1};
     simtArgs.blockDim = {1, 1, 1};
     void* argsArray[2] = {(void*)0x100, (void*)0x200};
-    simtArgs.argsArrayInfo = argsArray;
+    simtArgs.argsArray = argsArray;
 
     StarsArgLoaderResult result = {nullptr, nullptr, nullptr, UINT32_MAX};
 

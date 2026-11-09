@@ -18,6 +18,7 @@ struct 类型数据。
 - [aclmdlRIMemsetTaskParams](#aclmdlRIMemsetTaskParams)
 - [aclmdlRINotifyRecordTaskParams](#aclmdlRINotifyRecordTaskParams)
 - [aclmdlRINotifyWaitTaskParams](#aclmdlRINotifyWaitTaskParams)
+- [aclmdlRISimtKernelTaskParams](#aclmdlRISimtKernelTaskParams)
 - [aclmdlRITaskParams](#aclmdlRITaskParams)
 - [aclmdlRIValueWaitTaskParams](#aclmdlRIValueWaitTaskParams)
 - [aclmdlRIValueWriteTaskParams](#aclmdlRIValueWriteTaskParams)
@@ -251,24 +252,43 @@ typedef struct aclmdlRIHostTaskParams {
 
 ```c
 typedef struct aclmdlRIKernelTaskParams {
-    aclrtFuncHandle funcHandle;
+    void* funcHandle;
     aclrtLaunchKernelCfg* cfg;
     void* args;
     uint32_t isHostArgs;
     size_t argsSize;
     uint32_t numBlocks;
-    uint32_t rsv[10];
+    aclrtKernelArgsType argsType;
+    union {
+        void** argsArray;
+        struct {
+            void* hostArgs;
+            size_t hostArgsSize;
+            aclrtPlaceHolderInfo* placeHolderArray;
+            size_t placeHolderNum;
+        } hostBuffer;
+        struct {
+            void* deviceArgs;
+            size_t deviceArgsSize;
+        } deviceBuffer;
+    };
+    uint32_t rsv[2];
 } aclmdlRIKernelTaskParams;
 ```
 
 | 成员名称 | 描述 |
 | --- | --- |
-| funcHandle | 核函数句柄。类型定义请参见[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)。 |
-| cfg | 下发算子任务的配置信息。类型定义请参见[aclrtLaunchKernelCfg](#aclrtLaunchKernelCfg)。 |
-| args | 存放核函数所有入参数据的地址指针。 |
-| isHostArgs | 标识args的内存属性。该参数在查询接口中固定为0。<br>取值如下：<br><br>  - 0：Device内存。<br>  - 1：Host内存。 |
-| argsSize | args参数处的内存大小，单位Byte。 |
+| funcHandle | 核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel，仅适用于Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
+| cfg | 下发算子任务的配置信息。查询接口中固定返回nullptr，仅设置接口使用，不指定配置时可为nullptr。类型定义请参见[aclrtLaunchKernelCfg](#aclrtLaunchKernelCfg)。 |
+| args | 存放核函数所有入参数据的地址指针。兼容保留的旧形态字段：设置接口在argsType为0时，按本字段与isHostArgs、argsSize解释入参；查询接口返回任务实际加载使用的参数地址（Device内存）。推荐改用argsType对应的union成员表达入参数据地址。 |
+| isHostArgs | 标识args的内存属性。兼容保留的旧形态字段，设置接口仅在argsType为0时生效；查询接口固定返回0。<br>取值如下：<br><br>  - 0：Device内存。<br>  - 1：Host内存。 |
+| argsSize | args参数处的内存大小，单位Byte。兼容保留的旧形态字段，设置接口仅在argsType为0时生效；查询接口返回任务实际加载使用的参数大小。推荐改用argsType对应的union成员表达入参数据大小。 |
 | numBlocks | 指定核函数将会在几个核上执行。 |
+| argsType | 参数形态。类型定义请参见[aclrtKernelArgsType](25-02_Enumerations.md#aclrtKernelArgsType)。<br>查询接口（aclmdlRITaskGetParams）返回该任务实际的参数形态。<br>设置接口（aclmdlRITaskSetParams）推荐使用aclrtKernelArgsType中枚举值，并填写union中对应成员。argsType为0时兼容旧形态字段args、isHostArgs、argsSize。 |
+| argsArray | 参数指针数组（ACL_RT_KERNEL_ARGS_ARRAY形态）。查询接口输出，指向Runtime内部只读内存，在下次设置或任务销毁后失效；设置接口输入，各元素指向用户参数数据，参数数组需与核函数参数的顺序与数量一一对应，否则会导致未定义行为。 |
+| hostBuffer.hostArgs / hostBuffer.hostArgsSize | Host参数块及其大小（ACL_RT_KERNEL_ARGS_HOST_BUFFER形态）。查询接口输出指向Runtime内部只读内存，在下次设置或任务销毁后失效。 |
+| hostBuffer.placeHolderArray / hostBuffer.placeHolderNum | placeholder信息数组及其个数，语义与launch接口aclrtLaunchKernelWithHostArgs的入参一致。 |
+| deviceBuffer.deviceArgs / deviceBuffer.deviceArgsSize | Device参数地址及其大小（ACL_RT_KERNEL_ARGS_DEVICE_BUFFER形态），设置时零拷贝。查询接口原样返回设置时提供的Device指针（零拷贝，用户持有其所有权）。 |
 | rsv | 预留参数。 |
 
 <br>
@@ -415,6 +435,54 @@ typedef struct aclmdlRINotifyWaitTaskParams {
 
 <br>
 
+<a id="aclmdlRISimtKernelTaskParams"></a>
+
+## aclmdlRISimtKernelTaskParams
+
+```c
+typedef struct aclmdlRISimtKernelTaskParams {
+    void* func;
+    uint32_t gridDimX;
+    uint32_t gridDimY;
+    uint32_t gridDimZ;
+    uint32_t blockDimX;
+    uint32_t blockDimY;
+    uint32_t blockDimZ;
+    size_t dynUbufSize;
+    aclrtLaunchKernelCfg* cfg;
+    aclrtKernelArgsType argsType;
+    uint8_t rsv0[4];
+    union {
+        void** argsArray;
+        struct {
+            void* hostArgs;
+            size_t hostArgsSize;
+            aclrtPlaceHolderInfo* placeHolderArray;
+            size_t placeHolderNum;
+        } hostBuffer;
+    };
+} aclmdlRISimtKernelTaskParams;
+```
+
+| 成员名称 | 描述 |
+| --- | --- |
+| func | 核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel，仅适用于Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
+| gridDimX | Grid维度的X分量。设置接口（aclmdlRITaskSetParams）要求gridDimX、gridDimY、gridDimZ三者均大于0，否则返回错误。语义与launch接口aclrtLaunchSIMTKernelWithArgsArray的gridDim入参的x分量一致。 |
+| gridDimY | Grid维度的Y分量。取值约束同gridDimX。 |
+| gridDimZ | Grid维度的Z分量。取值约束同gridDimX。 |
+| blockDimX | Block维度的X分量。设置接口（aclmdlRITaskSetParams）要求blockDimX、blockDimY、blockDimZ三者均大于0，否则返回错误。语义与launch接口aclrtLaunchSIMTKernelWithArgsArray的blockDim入参的x分量一致。 |
+| blockDimY | Block维度的Y分量。取值约束同blockDimX。 |
+| blockDimZ | Block维度的Z分量。取值约束同blockDimX。 |
+| dynUbufSize | 动态UB大小，单位Byte。 |
+| cfg | 下发算子任务的配置信息。查询接口中固定返回nullptr，仅设置接口使用，不指定配置时可为nullptr。类型定义请参见[aclrtLaunchKernelCfg](#aclrtLaunchKernelCfg)。 |
+| argsType | 参数形态，仅支持ACL_RT_KERNEL_ARGS_ARRAY或ACL_RT_KERNEL_ARGS_HOST_BUFFER。类型定义请参见[aclrtKernelArgsType](25-02_Enumerations.md#aclrtKernelArgsType)。<br>查询接口（aclmdlRITaskGetParams）返回该任务实际的参数形态。<br>设置接口（aclmdlRITaskSetParams）要求填入非0值，并填写union中对应成员。 |
+| rsv0 | 预留参数。 |
+| argsArray | 参数指针数组（ACL_RT_KERNEL_ARGS_ARRAY形态）。查询接口输出，指向Runtime内部只读内存，在下次设置或任务销毁后失效；设置接口输入，各元素指向用户参数数据，参数数组需与核函数参数的顺序与数量一一对应，否则会导致未定义行为。 |
+| hostBuffer.hostArgs / hostBuffer.hostArgsSize | Host参数块及其大小（ACL_RT_KERNEL_ARGS_HOST_BUFFER形态）。查询接口输出指向Runtime内部只读内存，在下次设置或任务销毁后失效。 |
+| hostBuffer.placeHolderArray / hostBuffer.placeHolderNum | placeholder信息数组及其个数，语义与launch接口aclrtLaunchSIMTKernelWithHostArgs的入参一致。 |
+
+<br>
+
 <a id="aclmdlRITaskParams"></a>
 
 ## aclmdlRITaskParams
@@ -431,6 +499,7 @@ typedef struct aclmdlRITaskParams {
     union {
         uint8_t rsv2[128];
         struct aclmdlRIKernelTaskParams kernelTaskParams;
+        struct aclmdlRISimtKernelTaskParams simtKernelTaskParams;
         struct aclmdlRIEventRecordTaskParams eventRecordTaskParams;
         struct aclmdlRIEventWaitTaskParams eventWaitTaskParams;
         struct aclmdlRIEventResetTaskParams eventResetTaskParams;
@@ -457,6 +526,7 @@ typedef struct aclmdlRITaskParams {
 | rsv1 | 预留参数。 |
 | rsv2 | 预留参数。 |
 | kernelTaskParams | 算子任务的参数。类型定义请参见[aclmdlRIKernelTaskParams](#aclmdlRIKernelTaskParams)。 |
+| simtKernelTaskParams | SIMT算子任务的参数，type为ACL_MODEL_RI_TASK_SIMT_KERNEL时有效。类型定义请参见[aclmdlRISimtKernelTaskParams](#aclmdlRISimtKernelTaskParams)。 |
 | eventRecordTaskParams | Event Record任务（通常对应aclrtRecordEvent接口下发的任务）的参数。类型定义请参见[aclmdlRIEventRecordTaskParams](#aclmdlRIEventRecordTaskParams)。<br>该参数作为查询接口的输出，设置接口无需关注。 |
 | eventWaitTaskParams | Event Wait任务（通常对应aclrtStreamWaitEvent或aclrtStreamWaitEventWithTimeout接口下发的任务）的参数。类型定义请参见[aclmdlRIEventWaitTaskParams](#aclmdlRIEventWaitTaskParams)。<br>该参数作为查询接口的输出，设置接口无需关注。 |
 | eventResetTaskParams | Event Reset任务（通常对应aclrtResetEvent接口下发的任务）的参数。类型定义请参见[aclmdlRIEventResetTaskParams](#aclmdlRIEventResetTaskParams)。<br>该参数作为查询接口的输出，设置接口无需关注。 |

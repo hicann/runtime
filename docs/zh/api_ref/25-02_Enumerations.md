@@ -52,6 +52,7 @@ enum 类型数据。
 - [aclrtHostMemMapCapability](#aclrtHostMemMapCapability)
 - [aclrtHostRegisterType](#aclrtHostRegisterType)
 - [aclrtIpcMemAttrType](#aclrtIpcMemAttrType)
+- [aclrtKernelArgsType](#aclrtKernelArgsType)
 - [aclrtKernelType](#aclrtKernelType)
 - [aclrtLastErrLevel](#aclrtLastErrLevel)
 - [aclrtLaunchKernelAttrId](#aclrtLaunchKernelAttrId)
@@ -406,6 +407,7 @@ typedef enum aclmdlRITaskType {
     ACL_MODEL_RI_TASK_COND,         // 条件任务，通常对应aclmdlRIAddCondTask接口下发的任务
     ACL_MODEL_RI_TASK_NOTIFY_RECORD, // Notify Record任务，通常对应aclrtRecordNotify接口下发的任务
     ACL_MODEL_RI_TASK_NOTIFY_WAIT,  // Notify Wait任务，通常对应aclrtWaitAndResetNotify接口下发的任务
+    ACL_MODEL_RI_TASK_SIMT_KERNEL,  // SIMT计算任务，对应aclrtLaunchSIMTKernelWithArgsArray或aclrtLaunchSIMTKernelWithHostArgs接口下发的任务
 } aclmdlRITaskType;
 ```
 
@@ -1566,6 +1568,20 @@ typedef enum {
 typedef enum {
     ACL_RT_IPC_MEM_ATTR_ACCESS_LINK,    // 通信方式
 } aclrtIpcMemAttrType;
+```
+
+<br>
+
+<a id="aclrtKernelArgsType"></a>
+
+## aclrtKernelArgsType
+
+```c
+typedef enum aclrtKernelArgsType {
+    ACL_RT_KERNEL_ARGS_ARRAY = 1,       // 指针数组形态，参数以逐个指针方式表达，对应aclrtLaunchKernelWithArgsArray等接口
+    ACL_RT_KERNEL_ARGS_HOST_BUFFER = 2, // Host内存块形态，对应Host内存上连续的参数块，可携带placeholder信息
+    ACL_RT_KERNEL_ARGS_DEVICE_BUFFER = 3, // Device内存块形态，直接使用Device侧参数地址，设置时零拷贝
+} aclrtKernelArgsType;
 ```
 
 <br>

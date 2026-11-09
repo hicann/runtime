@@ -513,9 +513,11 @@ rtError_t InternalLaunchUpdateKernelSubmit(
 
 rtError_t InternalLaunchKernelSubmit(
     const Context* const ctx, TaskInfo*& submitTask, Stream*& stm, const rtArgsEx_t*& argsInfo,
-    StarsArgLoaderResult& result, const Program* const programPtr)
+    StarsArgLoaderResult& result, const rtStreamLaunchKernelV2ExtendArgs_t* const extendArgs,
+    const Program* const programPtr)
 {
-    SetKernelLaunchParams(stm, argsInfo, *submitTask);
+    rtError_t error = SetKernelLaunchParams(stm, argsInfo, *submitTask, extendArgs);
+    ERROR_RETURN(error, "cache kernel launch params failed, retCode=%#x.", static_cast<uint32_t>(error));
     if (submitTask->isUpdateSinkSqe == 1U) {
         return InternalLaunchUpdateKernelSubmit(ctx, submitTask, stm, argsInfo, result);
     }
@@ -530,7 +532,7 @@ rtError_t InternalLaunchKernelSubmit(
     }
 
     TIMESTAMP_BEGIN(rtKernelLaunch_SubmitTask);
-    const rtError_t error = ctx->Device_()->SubmitTask(submitTask);
+    error = ctx->Device_()->SubmitTask(submitTask);
     TIMESTAMP_END(rtKernelLaunch_SubmitTask);
 
     ERROR_RETURN_MSG_INNER(error, "Failed to submit kernel task, retCode=%#x.", error);
@@ -696,7 +698,7 @@ rtError_t StreamLaunchKernelV2(
         argsInfo->isNoNeedH2DCopy);
 
     TIMESTAMP_BEGIN(rtLaunchKernel_SubMit);
-    error = InternalLaunchKernelSubmit(ctx, kernTask, stm, argsInfo, result, nullptr);
+    error = InternalLaunchKernelSubmit(ctx, kernTask, stm, argsInfo, result, extendAgrs, nullptr);
     TIMESTAMP_END(rtLaunchKernel_SubMit);
 
     ERROR_GOTO_MSG_INNER(error, ERROR_FREE, "kernel launch submit failed.");
@@ -845,7 +847,7 @@ rtError_t StreamLaunchKernelV1(
         aicTask->qos, aicTask->partId, aicTask->schemMode, aicTask->inputArgsSize.infoAddr,
         aicTask->inputArgsSize.atomicIndex, argsInfo->isNoNeedH2DCopy, kernTask->isUpdateSinkSqe);
 
-    error = InternalLaunchKernelSubmit(ctx, kernTask, stm, argsInfo, result, prog);
+    error = InternalLaunchKernelSubmit(ctx, kernTask, stm, argsInfo, result, nullptr, prog);
     ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "kernel launch submit failed.");
     return RT_ERROR_NONE;
 
@@ -1007,7 +1009,7 @@ rtError_t StreamLaunchKernelWithHandle(
         argsInfo->isNoNeedH2DCopy, kernTask->isUpdateSinkSqe);
 
     TIMESTAMP_BEGIN(rtKernelLaunchWithHandle_SubMit);
-    error = InternalLaunchKernelSubmit(ctx, kernTask, stm, argsInfo, result, prog);
+    error = InternalLaunchKernelSubmit(ctx, kernTask, stm, argsInfo, result, nullptr, prog);
     TIMESTAMP_END(rtKernelLaunchWithHandle_SubMit);
 
     ERROR_GOTO_MSG_INNER(error, ERROR_FREE, "kernel launch submit failed.");

@@ -1174,7 +1174,8 @@ static rtError_t GetTaskParamsWithoutUpdate(const TaskInfo* const taskInfo, rtTa
     switch (taskInfo->type) {
         case TS_TASK_TYPE_KERNEL_AICORE:
         case TS_TASK_TYPE_KERNEL_AIVEC:
-            error = GetKernelTaskParams(taskInfo, params);
+            error = (params->type == RT_TASK_SIMT_KERNEL) ? GetSimtKernelTaskParams(taskInfo, params) :
+                                                            GetKernelTaskParams(taskInfo, params);
             break;
         case TS_TASK_TYPE_EVENT_RECORD:
             error = GetEventRecordTaskParams(taskInfo, params);
@@ -1255,6 +1256,8 @@ static rtError_t GetTaskParamsWithUpdate(const TaskInfo* const taskInfo, rtTaskP
     switch (latestType) {
         case RT_TASK_KERNEL:
             return GetKernelTaskParams(taskInfo, params);
+        case RT_TASK_SIMT_KERNEL:
+            return GetSimtKernelTaskParams(taskInfo, params);
         case RT_TASK_EVENT_RECORD:
             return GetEventRecordLastestParams(taskInfo, params);
         case RT_TASK_VALUE_WRITE:
@@ -1302,7 +1305,17 @@ rtError_t ApiImpl::TaskGetParams(rtTask_t task, rtTaskParams* const params)
     return GetTaskParamsWithoutUpdate(taskInfo, params);
 }
 
-rtError_t ApiImpl::TaskSetParams(rtTask_t task, rtTaskParams* const params)
+// free the old snapshot's heap buffers (Set success path only); the free nulls members, hence non-const
+static void FreeOldKernelUpdateInfo(TaskUpdateParams& oldLatestParams)
+{
+    if (oldLatestParams.type == RT_TASK_KERNEL) {
+        FreeKernelUpdateInfoBuffers(oldLatestParams.u.kernelUpdateParams);
+    } else if (oldLatestParams.type == RT_TASK_SIMT_KERNEL) {
+        FreeKernelUpdateInfoBuffers(oldLatestParams.u.simtKernelUpdateParams);
+    }
+}
+
+rtError_t ApiImpl::TaskSetParams(rtTask_t task, rtTaskParams* const params, Kernel* const kernel)
 {
     TaskInfo* const taskInfo = static_cast<TaskInfo*>(task);
     rtError_t error = CheckCaptureModelForUpdate(taskInfo->stream);
@@ -1330,16 +1343,16 @@ rtError_t ApiImpl::TaskSetParams(rtTask_t task, rtTaskParams* const params)
     }
 
     const TaskUpdateInfo* const taskUpdate = taskInfo->updateInfo;
-
-    const uint8_t* oldKernelArgs = nullptr;
-    if ((taskUpdate->latestParams.type == RT_TASK_KERNEL) &&
-        (taskUpdate->latestParams.u.kernelUpdateParams.isHostArgs != 0U)) {
-        oldKernelArgs = RtPtrToPtr<uint8_t*>(taskUpdate->latestParams.u.kernelUpdateParams.args);
-    }
+    TaskUpdateParams oldLatestParams = taskUpdate->latestParams;
     switch (params->type) {
-        case RT_TASK_KERNEL:
-            error = CacheKernelTaskParams(taskInfo, params);
+        case RT_TASK_KERNEL: {
+            error = CacheKernelTaskParams(taskInfo, params, kernel);
             break;
+        }
+        case RT_TASK_SIMT_KERNEL: {
+            error = CacheSimtKernelTaskParams(taskInfo, params, kernel);
+            break;
+        }
         case RT_TASK_EVENT_RECORD:
             error = CacheEventRecordTaskParams(taskInfo, params);
             break;
@@ -1354,7 +1367,7 @@ rtError_t ApiImpl::TaskSetParams(rtTask_t task, rtTaskParams* const params)
         default:
             RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
                 ErrorCode::EE1003, "Setting task parameters", TaskTypeToString(params->type), "params->type",
-                "TASK_KERNEL(1), TASK_EVENT_RECORD(2) for external event record tasks, "
+                "TASK_KERNEL(1), TASK_SIMT_KERNEL(15), TASK_EVENT_RECORD(2) for external event record tasks, "
                 "TASK_VALUE_WRITE(5), or TASK_VALUE_WAIT(6)");
             error = RT_ERROR_INVALID_VALUE;
             break;
@@ -1364,8 +1377,7 @@ rtError_t ApiImpl::TaskSetParams(rtTask_t task, rtTaskParams* const params)
         RT_LOG(RT_LOG_ERROR, "Failed to set task params, retCode=%#x.", error);
         return error;
     }
-    // free old host args.
-    DELETE_A(oldKernelArgs);
+    FreeOldKernelUpdateInfo(oldLatestParams);
     captureModel->InsertGraphUpdateTask(taskInfo);
     taskInfo->updateInfo->latestParams.isValid = 1U;
     taskInfo->updateFlag = static_cast<uint8_t>(TaskUpdateFlag::RT_TASK_UPDATE);

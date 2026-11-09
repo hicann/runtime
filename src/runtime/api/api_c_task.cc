@@ -9,6 +9,7 @@
  */
 #include "api_c.h"
 #include "api.hpp"
+#include "api_handle_guard.h"
 #include "rt.h"
 #include "global_state_manager.hpp"
 
@@ -69,7 +70,18 @@ RTS_API rtError_t rtModelTaskSetParams(rtTask_t task, rtTaskParams* params)
     GLOBAL_STATE_WAIT_IF_LOCKED();
     Api* const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    const rtError_t error = apiInstance->TaskSetParams(task, params);
+    // resolve the dual-form func (symbol or handle) here: the platform runtime libraries do not link
+    // api_handle_guard.cc (ConvertFuncToKernel); a null func leaves kernel null, the EE1004 guards report it
+    Kernel* kernel = nullptr;
+    if ((params != nullptr) && ((params->type == RT_TASK_KERNEL) || (params->type == RT_TASK_SIMT_KERNEL))) {
+        const void* const func = (params->type == RT_TASK_SIMT_KERNEL) ? params->simtKernelTaskParams.func :
+                                                                         params->kernelTaskParams.funcHandle;
+        const rtError_t convError = ConvertFuncToKernel(apiInstance, func, kernel, __func__);
+        if (convError != RT_ERROR_NONE) {
+            return convError;
+        }
+    }
+    const rtError_t error = apiInstance->TaskSetParams(task, params, kernel);
     COND_RETURN_WITH_NOLOG(
         (error == RT_ERROR_FEATURE_NOT_SUPPORT || error == RT_ERROR_DRV_NOT_SUPPORT), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);

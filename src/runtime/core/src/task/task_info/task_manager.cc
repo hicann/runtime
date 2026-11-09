@@ -17,6 +17,7 @@
 #include "driver.hpp"
 #include "stars.hpp"
 #include "task_fail_callback_manager.hpp"
+#include "kernel_utils.hpp"
 #include "memory_task.h"
 #include "ffts_task.h"
 #include "cond_op_label_task.h"
@@ -414,14 +415,16 @@ rtError_t WaitAsyncCopyComplete(TaskInfo* taskInfo)
     return RT_ERROR_NONE;
 }
 
-static void TaskUpdateInfoFree(TaskInfo* taskInfo)
+void TaskUpdateInfoFree(TaskInfo* taskInfo)
 {
     COND_PROC((taskInfo->updateInfo == nullptr), return);
     TaskUpdateParams& latestParams = taskInfo->updateInfo->latestParams;
-    if ((latestParams.isValid == 1U) && (latestParams.type == RT_TASK_KERNEL) &&
-        (latestParams.u.kernelUpdateParams.isHostArgs == 1U)) {
-        auto ptr = RtPtrToPtr<uint8_t*>(latestParams.u.kernelUpdateParams.args);
-        DELETE_A(ptr);
+    // gate on type only: type selects the active union member; gating the release on isValid would
+    // skip the buffers of an entry that was filled but never published
+    if (latestParams.type == RT_TASK_KERNEL) {
+        FreeKernelUpdateInfoBuffers(latestParams.u.kernelUpdateParams);
+    } else if (latestParams.type == RT_TASK_SIMT_KERNEL) {
+        FreeKernelUpdateInfoBuffers(latestParams.u.simtKernelUpdateParams);
     }
     {
         const std::lock_guard<std::mutex> taskUpdateLock(taskInfo->updateInfo->updateMutex);
@@ -1033,6 +1036,11 @@ void SaveTaskInfo(TaskInfo* const taskInfo, TaskInfo* submitTask)
     taskInfo->sqeNum = submitTask->sqeNum;
     taskInfo->needPostProc = submitTask->needPostProc;
     taskInfo->stmArgPos = submitTask->stmArgPos;
+
+    // Transfer the heap-owned launch args cache: on the hardware-SQ + TaskRes path it is built on
+    // the caller's stack submitTask, and this copy is the only bridge (nulling the source keeps release idempotent)
+    taskInfo->updateInfo = submitTask->updateInfo;
+    submitTask->updateInfo = nullptr;
 
     /* SaveTaskInfo only for new process */
     SetTaskTag(taskInfo);

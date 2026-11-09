@@ -11095,7 +11095,9 @@ TEST_F(ApiDavidTest, LaunchKernelByArgsWithType_RT_ARGS_ARRAY)
     argsWithType.type = RT_ARGS_ARRAY;
 
     void* argsArray[2] = {(void*)0x100, (void*)0x200};
-    argsWithType.args.argsArrayInfo = argsArray;
+    ArgsArrayInfo argsArrayInfo = {};
+    argsArrayInfo.argsArray = argsArray;
+    argsWithType.args.argsArrayInfo = &argsArrayInfo;
 
     TaskCfg taskCfg = {};
 
@@ -11670,6 +11672,9 @@ TEST_F(ApiDavidTest, StreamWriteValuePtr_InvalidSize)
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 }
 
+// 非 ARRAY 形态：仍走 Stream::LoadArgsInfo 的 LP_GENERIC 路径。
+// David 的 SQE 是 AIC/AIV 一体化格式，mix 调度信息内联在 SQE 字段里，args 内存不含 FFTS context 头，
+// 故加载策略与 mixType 无关，没有 OBP 那样的 LP_MIX/LP_NO_MIX 分叉。
 TEST_F(ApiDavidTest, TestLoadKernelArgsStarsV2)
 {
     rtArgsEx_t argsInfo = {};
@@ -11680,8 +11685,60 @@ TEST_F(ApiDavidTest, TestLoadKernelArgsStarsV2)
 
     StarsArgLoaderResult result = {};
     MOCKER_CPP(&DavidStream::LoadArgsInfo<rtArgsEx_t>).stubs().will(returnValue(RT_ERROR_NONE));
-    rtError_t error = LoadKernelArgs(stream_, &argsInfo, result);
+    rtError_t error = LoadKernelArgs(stream_, &argsInfo, result, nullptr, RT_KERNEL_ARGS_HOST_BUFFER, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+// ARRAY 形态分派到 DavidStream::LoadArgsFromArray（对齐 launch 的 LoadArgsForStreamLaunchV2），
+// 而不是 LoadArgsInfo。用两个 mock 的返回值差异证明分支选择：LoadArgsInfo 返回错误、
+// LoadArgsFromArray 返回成功，整体成功即说明走的是 ARRAY 分支。
+TEST_F(ApiDavidTest, TestLoadKernelArgsStarsV2ArrayForm)
+{
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICORE);
+    Program* program = &stubProg;
+    Kernel kernelMock("test", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICORE, 10);
+    kernelMock.SetParamCount(2);
+    kernelMock.SetParamTotalSize(48ULL);
+    kernelMock.SetHasParamSummary(true);
+
+    char src1[16] = {0};
+    char src2[32] = {0};
+    void* argsArray[2] = {src1, src2};
+
+    rtArgsEx_t argsInfo = {};
+    argsInfo.argsSize = 48U;
+    argsInfo.isNoNeedH2DCopy = 0U;
+
+    StarsArgLoaderResult result = {};
+    MOCKER_CPP(&DavidStream::LoadArgsInfo<rtArgsEx_t>).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER_CPP(&DavidStream::LoadArgsFromArray).stubs().will(returnValue(RT_ERROR_NONE));
+    rtError_t error = LoadKernelArgs(stream_, &argsInfo, result, &kernelMock, RT_KERNEL_ARGS_ARRAY, argsArray);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
+
+// ARRAY 形态的加载失败必须原样上抛，使 UpdateKernelParams 中止本次更新，
+// 而不是静默把任务留在旧参数上（此前 ARRAY 是被整体跳过的，正是这种静默行为）。
+TEST_F(ApiDavidTest, TestLoadKernelArgsStarsV2ArrayFormPropagatesError)
+{
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICORE);
+    Program* program = &stubProg;
+    Kernel kernelMock("test", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICORE, 10);
+    kernelMock.SetParamCount(2);
+    kernelMock.SetParamTotalSize(48ULL);
+    kernelMock.SetHasParamSummary(true);
+
+    char src1[16] = {0};
+    char src2[32] = {0};
+    void* argsArray[2] = {src1, src2};
+
+    rtArgsEx_t argsInfo = {};
+    argsInfo.argsSize = 48U;
+    argsInfo.isNoNeedH2DCopy = 0U;
+
+    StarsArgLoaderResult result = {};
+    MOCKER_CPP(&DavidStream::LoadArgsFromArray).stubs().will(returnValue(RT_ERROR_MEMORY_ALLOCATION));
+    rtError_t error = LoadKernelArgs(stream_, &argsInfo, result, &kernelMock, RT_KERNEL_ARGS_ARRAY, argsArray);
+    EXPECT_EQ(error, RT_ERROR_MEMORY_ALLOCATION);
 }
 
 TEST_F(ApiDavidTest, TestPostUpdateKernelParamsStarsV2)
@@ -12654,7 +12711,7 @@ TEST_F(ApiDavidTest, api_decorator_task_forwarding)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::TaskSetParams).stubs().will(returnValue(RT_ERROR_NONE));
-    error = api.TaskSetParams(task, &params);
+    error = api.TaskSetParams(task, &params, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::TaskGetType).stubs().will(returnValue(RT_ERROR_NONE));

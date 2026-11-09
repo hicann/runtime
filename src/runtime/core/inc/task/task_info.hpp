@@ -183,6 +183,7 @@ void TaskFailCallBack(
     const uint32_t streamId, const uint32_t taskId, const uint32_t threadId, const uint32_t retCode,
     const Device* const dev, bool isNeedTransTaskId = false);
 void TaskUnInitProc(TaskInfo* taskInfo);
+void TaskUpdateInfoFree(TaskInfo* taskInfo);
 void SetResult(TaskInfo* taskInfo, const void* const data, const uint32_t dataSize);
 void SetStarsResult(TaskInfo* taskInfo, const rtCqReport_t& logicCq);
 rtError_t WaitAsyncCopyComplete(TaskInfo* taskInfo);

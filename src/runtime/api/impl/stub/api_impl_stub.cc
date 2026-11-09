@@ -736,10 +736,11 @@ rtError_t ApiImpl::TaskGetParams(rtTask_t task, rtTaskParams* const params)
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t ApiImpl::TaskSetParams(rtTask_t task, rtTaskParams* const params)
+rtError_t ApiImpl::TaskSetParams(rtTask_t task, rtTaskParams* const params, Kernel* const kernel)
 {
     UNUSED(task);
     UNUSED(params);
+    UNUSED(kernel);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 

@@ -50,6 +50,7 @@
 #include "maintenance_task.h"
 #include "sq_addr_memory_pool.hpp"
 #include "capture_model_utils.hpp"
+#include "capture_model.hpp"
 #include "davinci_kernel_task.h"
 #include "kernel_fusion_task.h"
 #include "event_task.h"
@@ -61,20 +62,40 @@
 namespace cce {
 namespace runtime {
 namespace {
-void CheckAndPrintPlaceHolder(const LaunchParam& launchParam, const uint32_t offset, std::stringstream& ss)
+void CheckAndPrintPlaceHolder(
+    const rtPlaceHolderInfo_t* const placeHolderArray, const size_t placeHolderNum, const uint32_t offset,
+    std::stringstream& ss)
 {
-    for (uint16_t i = 0; i < launchParam.placeHoderNum; i++) {
-        if (offset == launchParam.placeHoderPtr[i].addrOffset) {
+    if (placeHolderArray == nullptr) {
+        return;
+    }
+    for (size_t i = 0; i < placeHolderNum; i++) {
+        if (offset == placeHolderArray[i].addrOffset) {
             ss << "(placeHolderAddr" << i << ")";
             return;
         }
-        if (offset == launchParam.placeHoderPtr[i].dataOffset) {
+        if (offset == placeHolderArray[i].dataOffset) {
             ss << "(placeHolderData" << i << ")";
             return;
         }
     }
 }
 
+// build the hex string of the args content, marking placeholder slots when the table is present
+static std::string BuildTraceArgsString(
+    uint8_t* const hostData, const uint32_t totalLen, const rtPlaceHolderInfo_t* const placeHolderArray,
+    const size_t placeHolderNum)
+{
+    std::stringstream ss;
+    for (uint32_t i = 0U; i < totalLen; ++i) {
+        CheckAndPrintPlaceHolder(placeHolderArray, placeHolderNum, i * static_cast<uint32_t>(sizeof(uint64_t)), ss);
+        ss << "0x" << std::hex << std::setw(16) << std::setfill('0') << *(RtPtrToPtr<uint64_t*>(hostData) + i);
+        if (i + 1U < totalLen) {
+            ss << " ";
+        }
+    }
+    return ss.str();
+}
 } // namespace
 
 TIMESTAMP_EXTERN(rtStreamCreate_drvMemAllocL2buffAddr);
@@ -5234,15 +5255,19 @@ void Stream::FillTaskExtendInfo(const TaskInfo* task, TraceEvent& record) const
     }
 }
 
-void Stream::SetTraceKernelArgs(const AicTaskInfo* const aicTaskInfo, const uint16_t taskId, TraceArgs& args) const
+void Stream::SetTraceKernelArgs(const TaskInfo* const taskInfo, const uint16_t taskId, TraceArgs& args) const
 {
     RT_LOG(
         RT_LOG_DEBUG, "Start to set trace kernel args, device_id=%u, stream_id=%d, taskId=%u.", device_->Id_(), Id_(),
         taskId);
-    const void* const deviceAddr = aicTaskInfo->comm.args;
-    const uint32_t argsSize = aicTaskInfo->comm.argsSize;
+    const AicTaskInfo* const aicTaskInfo = &(taskInfo->u.aicTaskInfo);
+    // For SIMT tasks, skip the implicit header (sync counter + dim params) to trace only the user area
+    const uint32_t simtOffset = aicTaskInfo->simtParamOffset;
     COND_RETURN_VOID(
-        ((deviceAddr == nullptr) || (argsSize == 0U)), "Can't find kernel args! streamId=%d, taskId=%u", Id_(), taskId);
+        ((aicTaskInfo->comm.args == nullptr) || (aicTaskInfo->comm.argsSize <= simtOffset)),
+        "Can't find kernel args! streamId=%d, taskId=%u", Id_(), taskId);
+    const void* const deviceAddr = static_cast<const uint8_t*>(aicTaskInfo->comm.args) + simtOffset;
+    const uint32_t argsSize = aicTaskInfo->comm.argsSize - simtOffset;
 
     std::vector<uint8_t> hostData(argsSize + 1U, 0U);
     const rtError_t error = device_->Driver_()->MemCopySync(
@@ -5250,18 +5275,34 @@ void Stream::SetTraceKernelArgs(const AicTaskInfo* const aicTaskInfo, const uint
         RT_MEMCPY_DEVICE_TO_HOST);
     COND_RETURN_VOID((error != RT_ERROR_NONE), "Call d2h memcpy failed! ret=%d", error);
 
+    // placeHolder table from the merged cache, read under the graph update lock against a concurrent Set
     const uint32_t totalLen = argsSize / static_cast<uint32_t>(sizeof(uint64_t));
-    std::stringstream ss;
-    for (uint32_t i = 0U; i < totalLen; ++i) {
-        CheckAndPrintPlaceHolder(aicTaskInfo->launchParam, i * static_cast<uint32_t>(sizeof(uint64_t)), ss);
-        // 每个u64数值按16进制，16位打印完整，用0补齐
-        ss << "0x" << std::hex << std::setw(16) << std::setfill('0') << *(RtPtrToPtr<uint64_t*>(&hostData[0U]) + i);
-        if (i + 1 < totalLen) {
-            ss << " ";
+    CaptureModel* const captureModel = dynamic_cast<CaptureModel*>(Model_());
+    if (captureModel != nullptr) {
+        const std::lock_guard<std::mutex> graphUpdateLock(captureModel->GetGraphUpdateInfo().updateMutex);
+        const rtPlaceHolderInfo_t* placeHolderArray = nullptr;
+        size_t placeHolderNum = 0U;
+        const TaskUpdateInfo* const updateInfo = taskInfo->updateInfo;
+        if ((updateInfo != nullptr) && (updateInfo->latestParams.isValid == 1U)) {
+            if (updateInfo->latestParams.type == RT_TASK_KERNEL) {
+                const KernelTaskUpdateInfo& kernelUpdateInfo = updateInfo->latestParams.u.kernelUpdateParams;
+                if (kernelUpdateInfo.argsType == RT_KERNEL_ARGS_HOST_BUFFER) {
+                    placeHolderArray = kernelUpdateInfo.hostBuffer.placeHolderArray;
+                    placeHolderNum = kernelUpdateInfo.hostBuffer.placeHolderNum;
+                }
+            } else if (updateInfo->latestParams.type == RT_TASK_SIMT_KERNEL) {
+                const SimtKernelTaskUpdateInfo& kernelUpdateInfo = updateInfo->latestParams.u.simtKernelUpdateParams;
+                if (kernelUpdateInfo.argsType == RT_KERNEL_ARGS_HOST_BUFFER) {
+                    placeHolderArray = kernelUpdateInfo.hostBuffer.placeHolderArray;
+                    placeHolderNum = kernelUpdateInfo.hostBuffer.placeHolderNum;
+                }
+            }
         }
+        args.kernelArgs = BuildTraceArgsString(&hostData[0U], totalLen, placeHolderArray, placeHolderNum);
+    } else { // non-capture model: no cached kernel args entry, annotate without placeholders
+        args.kernelArgs = BuildTraceArgsString(&hostData[0U], totalLen, nullptr, 0U);
     }
     args.argsSize = argsSize;
-    args.kernelArgs = ss.str();
 }
 
 void Stream::ConstructTraceEventFromTask(TaskInfo* const task, const uint32_t flags, TraceEvent& record) const
@@ -5277,7 +5318,7 @@ void Stream::ConstructTraceEventFromTask(TaskInfo* const task, const uint32_t fl
         taskType = GetTaskTypeForMixKernel(kernel->GetMixType(), taskType);
         taskName = kernel->Name_();
         if ((flags & DEBUG_JSON_PRINT_VERBOSE) != 0U) {
-            SetTraceKernelArgs(aicTaskInfo, task->id, record.args);
+            SetTraceKernelArgs(task, task->id, record.args);
         }
     } else if (task->type == TS_TASK_TYPE_KERNEL_AICPU) {
         AicpuTaskInfo* aicpuTaskInfo = &(task->u.aicpuTaskInfo);

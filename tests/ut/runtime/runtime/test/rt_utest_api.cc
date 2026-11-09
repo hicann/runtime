@@ -8391,7 +8391,7 @@ TEST_F(ApiTest, api_decorator_task_forwarding)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::TaskSetParams).stubs().will(returnValue(RT_ERROR_NONE));
-    error = api.TaskSetParams(task, &params);
+    error = api.TaskSetParams(task, &params, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER_CPP_VIRTUAL(impl, &ApiImpl::TaskGetType).stubs().will(returnValue(RT_ERROR_NONE));

@@ -81,11 +81,14 @@ rtError_t CheckDynSizeValid(TaskInfo* const taskInfo, const Kernel* const kernel
         kernel, taskInfo->stream, aicTaskInfo->dynamicShareMemSize, aicTaskInfo->simtDcuSmSize);
 }
 
-static void SetArgsAix(
+static rtError_t SetArgsAix(
     const Stream* const stm, const rtArgsEx_t* const argsInfo, TaskInfo* const taskInfo,
-    StarsArgLoaderResult* const result)
+    StarsArgLoaderResult* const result, const rtStreamLaunchKernelV2ExtendArgs_t* extendArgs)
 {
-    SetKernelLaunchParams(stm, argsInfo, *taskInfo);
+    const rtError_t error = SetKernelLaunchParams(stm, argsInfo, *taskInfo, extendArgs);
+    ERROR_RETURN(
+        error, "Failed to cache kernel launch params, stream_id=%d, retCode=%#x.", stm->Id_(),
+        static_cast<uint32_t>(error));
     AicTaskInfo* aicTask = &(taskInfo->u.aicTaskInfo);
     aicTask->comm.argsSize = argsInfo->argsSize;
     aicTask->comm.args = result->kerArgs;
@@ -98,6 +101,7 @@ static void SetArgsAix(
     taskInfo->stmArgPos = static_cast<DavidStream*>(taskInfo->stream)->GetArgPos();
     result->stmArgPos = UINT32_MAX;
     result->handle = nullptr;
+    return RT_ERROR_NONE;
 }
 
 static void SetSimtTaskParams(AicTaskInfo* aicTask, const rtStreamLaunchKernelV2ExtendArgs_t* extendArgs)
@@ -115,14 +119,14 @@ static void SetSimtTaskParams(AicTaskInfo* aicTask, const rtStreamLaunchKernelV2
 }
 
 rtError_t StreamLaunchArgsArray(
-    Kernel* kernel, const uint32_t coreDim, Stream* stm, void** argsArrayInfo, TaskCfg& taskCfg)
+    Kernel* kernel, const uint32_t coreDim, Stream* stm, ArgsArrayInfo* argsArrayInfo, TaskCfg& taskCfg)
 {
     rtArgsEx_t nonCpuArgsInfo = {};
     nonCpuArgsInfo.argsSize = static_cast<uint32_t>(kernel->GetParamTotalSize());
     rtStreamLaunchKernelV2ExtendArgs_t launchKernelExtendArgs = {};
     launchKernelExtendArgs.argsInfo = &nonCpuArgsInfo;
     launchKernelExtendArgs.taskCfg = &taskCfg;
-    launchKernelExtendArgs.argsArray = argsArrayInfo;
+    launchKernelExtendArgs.argsArrayInfo = argsArrayInfo;
     launchKernelExtendArgs.argsType = RT_ARGS_ARRAY;
     return StreamLaunchKernelV2(kernel, coreDim, stm, &launchKernelExtendArgs);
 }
@@ -396,9 +400,12 @@ rtError_t StreamLaunchKernelV1(
     ERROR_RETURN_MSG_INNER(
         error, "Failed to load args, stream_id=%d, useArgPool=%u, retCode=%#x.", stm->Id_(), useArgPool,
         static_cast<uint32_t>(error));
-    SetArgsAix(stm, argsInfo, kernelTask, &result);
     AicTaskInfo* aicTask = &(kernelTask->u.aicTaskInfo);
+    // SetArgsAix -> SetKernelLaunchParams reads aicTaskInfo.kernel in capture mode, so it must be assigned first
     aicTask->kernel = const_cast<Kernel*>(registeredKernel);
+    error = SetArgsAix(stm, argsInfo, kernelTask, &result, nullptr);
+    ERROR_RETURN_MSG_INNER(
+        error, "Failed to set launch args, stream_id=%d, retCode=%#x.", stm->Id_(), static_cast<uint32_t>(error));
     aicTask->funcAddr = addr1;
     aicTask->funcAddr1 = addr2;
     aicTask->progHandle = prog;
@@ -529,7 +536,9 @@ rtError_t StreamLaunchKernelWithHandle(
     aicTask->kernel = const_cast<Kernel*>(registeredKernel);
     aicTask->progHandle = (prog != nullptr) ? prog : RtPtrToPtr<Program*>(progHandle);
     aicTask->tilingKey = tilingKey;
-    SetArgsAix(stm, argsInfo, kernelTask, &result);
+    error = SetArgsAix(stm, argsInfo, kernelTask, &result, nullptr);
+    ERROR_RETURN_MSG_INNER(
+        error, "Failed to set launch args, stream_id=%d, retCode=%#x.", stm->Id_(), static_cast<uint32_t>(error));
     aicTask->funcAddr = addr1;
     aicTask->funcAddr1 = addr2;
     RT_LOG(
@@ -575,8 +584,8 @@ static rtError_t LoadArgsForStreamLaunchV2(
     } else if (extendAgrs->simtArgsHost != nullptr) {
         error = static_cast<DavidStream*>(dstStm)->LoadSimtHostArgs(useArgPool, extendAgrs->simtArgsHost, &result);
     } else if (extendAgrs->argsType == RT_ARGS_ARRAY) {
-        error =
-            static_cast<DavidStream*>(dstStm)->LoadArgsFromArray(useArgPool, kernel, extendAgrs->argsArray, &result);
+        error = static_cast<DavidStream*>(dstStm)->LoadArgsFromArray(
+            useArgPool, kernel, extendAgrs->argsArrayInfo->argsArray, &result);
     } else {
         error = static_cast<DavidStream*>(dstStm)->LoadArgsInfo(argsInfo, useArgPool, &result);
     }
@@ -667,7 +676,9 @@ rtError_t StreamLaunchKernelV2(
     aicTask->progHandle = prog;
     aicTask->funcAddr = kernelPc1;
     aicTask->funcAddr1 = kernelPc2;
-    SetArgsAix(stm, argsInfo, kernelTask, &result);
+    error = SetArgsAix(stm, argsInfo, kernelTask, &result, extendAgrs);
+    ERROR_RETURN_MSG_INNER(
+        error, "Failed to set launch args, stream_id=%d, retCode=%#x.", stm->Id_(), static_cast<uint32_t>(error));
     aicTask->comm.argsSize = argsInfo->argsSize;
     SetSimtTaskParams(aicTask, extendAgrs);
     RT_LOG(

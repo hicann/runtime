@@ -539,6 +539,23 @@ std::string TaskTypeToString(const rtTaskType type)
             return "TASK_NOTIFY_RECORD(13)";
         case RT_TASK_NOTIFY_WAIT:
             return "TASK_NOTIFY_WAIT(14)";
+        case RT_TASK_SIMT_KERNEL:
+            return "TASK_SIMT_KERNEL(15)";
+        default:
+            return RtFmtMsg("UNKNOWN(%d)", static_cast<int32_t>(type));
+    }
+}
+
+// follows the TaskTypeToString convention: the enumerator name without the ACL_RT_ prefix, plus its value
+std::string KernelArgsTypeToString(const rtKernelArgsType type)
+{
+    switch (type) {
+        case RT_KERNEL_ARGS_ARRAY:
+            return "KERNEL_ARGS_ARRAY(1)";
+        case RT_KERNEL_ARGS_HOST_BUFFER:
+            return "KERNEL_ARGS_HOST_BUFFER(2)";
+        case RT_KERNEL_ARGS_DEVICE_BUFFER:
+            return "KERNEL_ARGS_DEVICE_BUFFER(3)";
         default:
             return RtFmtMsg("UNKNOWN(%d)", static_cast<int32_t>(type));
     }

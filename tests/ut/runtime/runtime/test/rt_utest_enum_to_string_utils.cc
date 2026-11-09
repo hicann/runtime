@@ -87,6 +87,36 @@ TEST(EnumToStringUtilsTest, InfoTypeToStringKnownValue)
 
 TEST(EnumToStringUtilsTest, InfoTypeToStringUnknownValue) { EXPECT_EQ(InfoTypeToString(100U), "UNKNOWN(100)"); }
 
+TEST(EnumToStringUtilsTest, TaskTypeToStringKnownValue)
+{
+    EXPECT_EQ(TaskTypeToString(RT_TASK_DEFAULT), "TASK_DEFAULT(0)");
+    EXPECT_EQ(TaskTypeToString(RT_TASK_KERNEL), "TASK_KERNEL(1)");
+    EXPECT_EQ(TaskTypeToString(RT_TASK_EVENT_RECORD), "TASK_EVENT_RECORD(2)");
+    EXPECT_EQ(TaskTypeToString(RT_TASK_EVENT_WAIT), "TASK_EVENT_WAIT(3)");
+    EXPECT_EQ(TaskTypeToString(RT_TASK_EVENT_RESET), "TASK_EVENT_RESET(4)");
+    EXPECT_EQ(TaskTypeToString(RT_TASK_VALUE_WRITE), "TASK_VALUE_WRITE(5)");
+    EXPECT_EQ(TaskTypeToString(RT_TASK_VALUE_WAIT), "TASK_VALUE_WAIT(6)");
+    EXPECT_EQ(TaskTypeToString(RT_TASK_SIMT_KERNEL), "TASK_SIMT_KERNEL(15)");
+}
+
+TEST(EnumToStringUtilsTest, TaskTypeToStringUnknownValue)
+{
+    EXPECT_EQ(TaskTypeToString(static_cast<rtTaskType>(100)), "UNKNOWN(100)");
+}
+
+// 与 TaskTypeToString 同约定：枚举名去掉 ACL_RT_ 前缀，并附带其数值
+TEST(EnumToStringUtilsTest, KernelArgsTypeToStringKnownValue)
+{
+    EXPECT_EQ(KernelArgsTypeToString(RT_KERNEL_ARGS_ARRAY), "KERNEL_ARGS_ARRAY(1)");
+    EXPECT_EQ(KernelArgsTypeToString(RT_KERNEL_ARGS_HOST_BUFFER), "KERNEL_ARGS_HOST_BUFFER(2)");
+    EXPECT_EQ(KernelArgsTypeToString(RT_KERNEL_ARGS_DEVICE_BUFFER), "KERNEL_ARGS_DEVICE_BUFFER(3)");
+}
+
+TEST(EnumToStringUtilsTest, KernelArgsTypeToStringUnknownValue)
+{
+    EXPECT_EQ(KernelArgsTypeToString(static_cast<rtKernelArgsType>(100)), "UNKNOWN(100)");
+}
+
 TEST(EnumToStringUtilsTest, ErrorLogEnumDescriptions)
 {
     EXPECT_EQ(DevRunningStateToString(DEV_RUNNING_NORMAL), "DEV_RUNNING_NORMAL(0)");

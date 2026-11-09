@@ -709,7 +709,7 @@ private:
     rtError_t CacheLastTaskExtendInfo(const char* const extendInfoPtr, const size_t infoSize) override;
 
     rtError_t TaskGetParams(rtTask_t task, rtTaskParams* const params) override;
-    rtError_t TaskSetParams(rtTask_t task, rtTaskParams* const params) override;
+    rtError_t TaskSetParams(rtTask_t task, rtTaskParams* const params, Kernel* const kernel) override;
     rtError_t KernelTaskGetAttribute(
         rtTask_t task, rtLaunchKernelAttrId attrId, rtLaunchKernelAttrVal_t* attrValue) override;
 };

@@ -110,6 +110,9 @@ void StreamLaunchKernelRecycle(
     if (recycleTask != nullptr) {
         if (recycleTask->isUpdateSinkSqe == 0U) {
             davidStm->ArgReleaseSingleTask(recycleTask, false);
+            // the launch args cache in recycleTask->updateInfo is not owned by ArgReleaseSingleTask, and
+            // TaskRollBack only reaches TaskUnInitProc on software-SQ/auto-split streams; release here (idempotent)
+            TaskUpdateInfoFree(recycleTask);
             recycleTask = nullptr;
         } else {
             recycleTask->isUpdateSinkSqe = 0U;

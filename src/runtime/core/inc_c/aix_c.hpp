@@ -20,7 +20,7 @@ struct StarsArgLoaderResult;
 struct rtStreamLaunchKernelV2ExtendArgs_t {
     const rtArgsEx_t* argsInfo;
     const TaskCfg* taskCfg;
-    void** argsArray;
+    ArgsArrayInfo* argsArrayInfo;
     SimtArgsArray* simtArgsArray;
     SimtArgsHost* simtArgsHost;
     ArgsType argsType;
@@ -45,7 +45,7 @@ rtError_t CheckAndGetTotalShareMemorySize(
 rtError_t StreamLaunchSimtArgsArray(
     Kernel* kernel, const uint32_t coreDim, Stream* stm, SimtArgsArray* simtArgsArray, TaskCfg& taskCfg);
 rtError_t StreamLaunchArgsArray(
-    Kernel* kernel, const uint32_t coreDim, Stream* stm, void** argsArrayInfo, TaskCfg& taskCfg);
+    Kernel* kernel, const uint32_t coreDim, Stream* stm, ArgsArrayInfo* argsArrayInfo, TaskCfg& taskCfg);
 
 rtError_t StreamLaunchSimtArgsHost(
     Kernel* kernel, const uint32_t coreDim, Stream* stm, SimtArgsHost* simtArgsHost, TaskCfg& taskCfg);

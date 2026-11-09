@@ -2601,7 +2601,10 @@ TaskInfo* createTaskInfo()
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    TaskInfo* taskInfo = (TaskInfo*)malloc(sizeof(TaskInfo));
+    // 必须清零：ConvertTaskType 经 IsPureSimtTask 读取 u.aicTaskInfo.simtParamOffset，
+    // 真实任务由 TaskFactory::Alloc 做 memset_s 全清零，此处手工构造需与之等价，
+    // 否则 simtParamOffset 为堆垃圾，AICORE/AIVEC 任务会被误判成 RT_TASK_SIMT_KERNEL
+    TaskInfo* taskInfo = (TaskInfo*)calloc(1, sizeof(TaskInfo));
     taskInfo->id = 0;
     taskInfo->stream = rt_ut::UnwrapOrNull<Stream>(stream);
     taskInfo->taskOwner = static_cast<uint8_t>(TaskOwner::RT_TASK_USER);

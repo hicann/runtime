@@ -4152,7 +4152,7 @@ TEST_F(TaskTestDavid, StreamLaunchSimtArgsArrayDispatchToLoadSimtArgsFromArray)
     SimtArgsArray simtArgs = {};
     simtArgs.gridDim = {1, 1, 1};
     simtArgs.blockDim = {1, 1, 1};
-    simtArgs.argsArrayInfo = nullptr;
+    simtArgs.argsArray = nullptr;
     simtArgs.dynUbufSize = 0;
 
     TaskCfg taskCfg = {};

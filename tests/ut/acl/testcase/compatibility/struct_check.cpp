@@ -18,6 +18,54 @@
 #undef private
 #endif
 
+#include <cstddef>
+#include <type_traits>
+// rt_inner_task.h uses rtPlaceHolderInfo_t but does not define it (kernel.cpp gets it transitively
+// from runtime/rts/rts_kernel.h); include the declaring header first so the mirror compiles cleanly
+#include "rts/rts_kernel.h"
+#include "runtime/rt_inner_task.h"
+
+// layout mirror guards between the acl ABI (acl_rt.h) and the rt internal mirror (rt_inner_task.h):
+// aclmdlRITaskParams is passed to rtModelTaskGetParams/SetParams via reinterpret_cast, so any drift
+// between the two headers silently corrupts the data flow. These asserts fail the build on drift.
+static_assert(
+    sizeof(aclmdlRIKernelTaskParams) == sizeof(rtKernelTaskParams),
+    "aclmdlRIKernelTaskParams must mirror rtKernelTaskParams");
+static_assert(
+    sizeof(aclmdlRISimtKernelTaskParams) == sizeof(rtSimtKernelTaskParams),
+    "aclmdlRISimtKernelTaskParams must mirror rtSimtKernelTaskParams");
+static_assert(sizeof(aclmdlRITaskParams) == sizeof(rtTaskParams), "aclmdlRITaskParams must mirror rtTaskParams");
+static_assert(
+    offsetof(aclmdlRIKernelTaskParams, argsType) == offsetof(rtKernelTaskParams, argsType),
+    "argsType offset must match between aclmdlRIKernelTaskParams and rtKernelTaskParams");
+static_assert(
+    static_cast<int32_t>(ACL_MODEL_RI_TASK_SIMT_KERNEL) == static_cast<int32_t>(RT_TASK_SIMT_KERNEL),
+    "ACL_MODEL_RI_TASK_SIMT_KERNEL must equal RT_TASK_SIMT_KERNEL");
+static_assert(
+    static_cast<int32_t>(ACL_RT_KERNEL_ARGS_ARRAY) == static_cast<int32_t>(RT_KERNEL_ARGS_ARRAY),
+    "ACL_RT_KERNEL_ARGS_ARRAY must equal RT_KERNEL_ARGS_ARRAY");
+// the SIMT dims are flattened scalars on both sides, so pin the 24 byte dim region: gridDimX/blockDimX
+// give its start and midpoint, dynUbufSize gives its end, leaving no room for padding drift
+static_assert(
+    offsetof(aclmdlRISimtKernelTaskParams, gridDimX) == offsetof(rtSimtKernelTaskParams, gridDimX),
+    "gridDimX offset must match between aclmdlRISimtKernelTaskParams and rtSimtKernelTaskParams");
+static_assert(
+    offsetof(aclmdlRISimtKernelTaskParams, blockDimX) == offsetof(rtSimtKernelTaskParams, blockDimX),
+    "blockDimX offset must match between aclmdlRISimtKernelTaskParams and rtSimtKernelTaskParams");
+static_assert(
+    offsetof(aclmdlRISimtKernelTaskParams, dynUbufSize) == offsetof(rtSimtKernelTaskParams, dynUbufSize),
+    "dynUbufSize offset must match between aclmdlRISimtKernelTaskParams and rtSimtKernelTaskParams");
+// sizeof equality cannot catch this: a member with a user-provided constructor inside the anonymous union
+// deletes the default constructor while leaving the layout untouched
+static_assert(
+    std::is_trivially_default_constructible<aclmdlRITaskParams>::value,
+    "aclmdlRITaskParams must stay default constructible for C++ source compatibility");
+// absolute size pins: the outer union carries an explicit rsv2[128] floor, so the 200-byte assert above
+// cannot detect a change in the inner structs; pin them directly. Both structs measured 88 bytes when
+// the argsType union was carved out of the reserved area (see aclmdlRIKernelTaskParams test below)
+static_assert(sizeof(aclmdlRIKernelTaskParams) == 88U, "aclmdlRIKernelTaskParams ABI size must stay 88 bytes");
+static_assert(sizeof(aclmdlRISimtKernelTaskParams) == 88U, "aclmdlRISimtKernelTaskParams ABI size must stay 88 bytes");
+
 class UTEST_ACL_compatibility_struct_check : public testing::Test {
 public:
     UTEST_ACL_compatibility_struct_check() {}

@@ -78,8 +78,15 @@ rtError_t GetPrefetchCnt(Kernel* const kernel)
     return RT_ERROR_NONE;
 }
 
-rtError_t LoadKernelArgs(Stream* stm, const rtArgsEx_t* argsInfo, StarsArgLoaderResult& result)
+// aclGraph 更新加载：ARRAY 走与 launch 相同的 LoadArgsFromArray，其余走 LP_GENERIC（SQE 一体化格式，
+// 无 FFTS 头，无需 LP_MIX 分叉）；useArgPool 恒 false 与 launch 一致（IsCapturing() 使然，不占参数池）。
+rtError_t LoadKernelArgs(
+    Stream* stm, const rtArgsEx_t* argsInfo, StarsArgLoaderResult& result, const Kernel* kernel,
+    rtKernelArgsType argsType, void** argsArray)
 {
+    if (argsType == RT_KERNEL_ARGS_ARRAY) {
+        return static_cast<DavidStream*>(stm)->LoadArgsFromArray(false, kernel, argsArray, &result);
+    }
     return stm->LoadArgsInfo(argsInfo, false, &result, LoadPolicy::LP_GENERIC);
 }
 

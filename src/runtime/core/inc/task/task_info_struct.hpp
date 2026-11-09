@@ -44,10 +44,46 @@ typedef struct tagTaskInfoStru TaskInfo;
 struct KernelTaskUpdateInfo {
     Kernel* kernel;
     TaskCfg taskCfg;
-    void* args;
-    size_t argsSize;
-    uint32_t isHostArgs;
+    rtKernelArgsType argsType;
+    union { // mirrors the rtKernelTaskParams ABI union; only the member matching argsType is valid
+        // RT_KERNEL_ARGS_ARRAY: deep-copied array, base of the single [ptr array][param bytes] block
+        void** argsArray;
+        struct {
+            void* hostArgs; // RT_KERNEL_ARGS_HOST_BUFFER: deep copy
+            size_t hostArgsSize;
+            rtPlaceHolderInfo_t* placeHolderArray;
+            size_t placeHolderNum;
+        } hostBuffer;
+        struct {
+            void* deviceArgs; // RT_KERNEL_ARGS_DEVICE_BUFFER: user pointer, zero copy
+            size_t deviceArgsSize;
+        } deviceBuffer;
+    };
     uint32_t numBlocks;
+    // echoed by Get: the original func from launch/Set, or the kernel handle when no raw func
+    const void* launchFunc;
+};
+
+// SIMT counterpart of KernelTaskUpdateInfo; no deviceBuffer, args always go through a host copy
+struct SimtKernelTaskUpdateInfo {
+    Kernel* kernel;
+    TaskCfg taskCfg;
+    rtKernelArgsType argsType; // RT_KERNEL_ARGS_ARRAY or RT_KERNEL_ARGS_HOST_BUFFER
+    union {
+        // RT_KERNEL_ARGS_ARRAY: deep-copied array, base of the [ptr array][user params] block (header added at load)
+        void** argsArray;
+        struct {
+            void* hostArgs; // RT_KERNEL_ARGS_HOST_BUFFER: deep-copied user params (header added at load)
+            size_t hostArgsSize;
+            rtPlaceHolderInfo_t* placeHolderArray; // deep-copied, user-region offsets
+            size_t placeHolderNum;
+        } hostBuffer;
+    };
+    uint32_t numBlocks; // gridDim.x * gridDim.y * gridDim.z
+    rtDim3 gridDim;
+    rtDim3 blockDim;
+    size_t dynUbufSize;
+    const void* launchFunc; // same semantics as KernelTaskUpdateInfo::launchFunc
 };
 
 struct EventRecordTaskUpdateInfo {
@@ -63,6 +99,7 @@ struct TaskUpdateParams {
     union {
         uint8_t rsv2[64];
         KernelTaskUpdateInfo kernelUpdateParams;
+        SimtKernelTaskUpdateInfo simtKernelUpdateParams;
         EventRecordTaskUpdateInfo eventRecordUpdateParams;
         rtValueWriteTaskParams valueWriteUpdateParams;
         rtValueWaitTaskParams valueWaitUpdateParams;

@@ -72,11 +72,17 @@ struct RtArgsHandle {
     ParaDetail para[0];
 };
 
+struct ArgsArrayInfo {
+    void** argsArray;
+    const void* launchFunc; // original func parameter from launch API, for Model RI task caching
+};
+
 struct SimtArgsArray {
     rtDim3 gridDim;
     rtDim3 blockDim;
-    void** argsArrayInfo;
+    void** argsArray;
     size_t dynUbufSize;
+    const void* launchFunc; // original func parameter from launch API, for Model RI task caching
 };
 
 struct SimtArgsHost {
@@ -87,6 +93,7 @@ struct SimtArgsHost {
     rtPlaceHolderInfo_t* placeHolderArray;
     uint32_t placeHolderNum;
     size_t dynUbufSize;
+    const void* launchFunc; // original func parameter from launch API, for Model RI task caching
 };
 
 enum ArgsType : int32_t {
@@ -105,7 +112,7 @@ struct RtArgsWithType {
         rtArgsEx_t* nonCpuArgsInfo;
         rtCpuKernelArgs_t* cpuArgsInfo;
         RtArgsHandle* argHandle;
-        void** argsArrayInfo;
+        ArgsArrayInfo* argsArrayInfo;
         SimtArgsArray* simtArgsArray;
         SimtArgsHost* simtArgsHost;
     } args;

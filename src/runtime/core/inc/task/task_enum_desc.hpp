@@ -63,6 +63,8 @@ static inline std::string MultipleTaskTypeToString(const rtMultipleTaskType_t ty
 
 std::string TaskTypeToString(const rtTaskType type);
 
+std::string KernelArgsTypeToString(const rtKernelArgsType type);
+
 } // namespace runtime
 } // namespace cce
 

@@ -15,6 +15,7 @@
 #undef private
 #include "kernel.hpp"
 #include "kernel_utils.hpp"
+#include "task_info.hpp"
 #include "thread_local_container.hpp"
 #include "para_convertor.hpp"
 #include "args_buffer_guard.hpp"
@@ -397,6 +398,322 @@ TEST_F(KernelTest, Kernel_ParamInfo_CopyParamsToBuffer_Success)
 
     rtError_t error = CopyKernelParamsToBuffer(kernel, argsArray, dest);
     EXPECT_EQ(error, RT_ERROR_NONE);
+
+    delete kernel;
+}
+
+// M1（b043e8fb1）：CopyKernelParamsToBuffer 新增的 outArgsArray 回填分支。
+// 回填值必须是 dest 内该参数的目标地址（dest + paramInfo.offset），调用方
+// CreateArgsArrayBlock 据此把 placeHolder 表指向 block 内部；故除地址外还校验
+// 经回填指针读到的就是刚拷入的数据。
+TEST_F(KernelTest, Kernel_ParamInfo_CopyParamsToBuffer_BackfillsOutArgsArray)
+{
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
+    Program* program = &stubProg;
+    Kernel* kernel = new Kernel("test", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 10);
+
+    std::shared_ptr<ElfParamInfo[]> paramInfos(new ElfParamInfo[2]);
+    paramInfos[0].info.offset = 0;
+    paramInfos[0].info.size = 16;
+    paramInfos[1].info.offset = 16;
+    paramInfos[1].info.size = 32;
+
+    kernel->SetHasParamSummary(true);
+    kernel->SetParamCount(2);
+    kernel->SetParamInfos(paramInfos);
+
+    char src1[16] = {0};
+    char src2[32] = {0};
+    (void)memset_s(src1, sizeof(src1), 0xA1, sizeof(src1));
+    (void)memset_s(src2, sizeof(src2), 0xB2, sizeof(src2));
+    void* argsArray[2] = {src1, src2};
+    char dest[48] = {0};
+    void* outArgsArray[2] = {nullptr, nullptr};
+
+    rtError_t error = CopyKernelParamsToBuffer(kernel, argsArray, dest, outArgsArray);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(outArgsArray[0], static_cast<void*>(dest));
+    EXPECT_EQ(outArgsArray[1], static_cast<void*>(dest + 16));
+    EXPECT_EQ(static_cast<unsigned char*>(outArgsArray[0])[0], 0xA1U);
+    EXPECT_EQ(static_cast<unsigned char*>(outArgsArray[1])[0], 0xB2U);
+
+    delete kernel;
+}
+
+// 入口空指针守卫：kernel/argsArray/dest 任一为空即返回 RT_ERROR_INVALID_VALUE，
+// 且不得因 outArgsArray 非空而先行回填。
+TEST_F(KernelTest, Kernel_ParamInfo_CopyParamsToBuffer_NullEntryGuard)
+{
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
+    Program* program = &stubProg;
+    Kernel* kernel = new Kernel("test", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 10);
+
+    char src[16] = {0};
+    void* argsArray[1] = {src};
+    char dest[16] = {0};
+    void* outArgsArray[1] = {nullptr};
+
+    EXPECT_EQ(CopyKernelParamsToBuffer(nullptr, argsArray, dest, outArgsArray), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(CopyKernelParamsToBuffer(kernel, nullptr, dest, outArgsArray), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(CopyKernelParamsToBuffer(kernel, argsArray, nullptr, outArgsArray), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(outArgsArray[0], nullptr);
+
+    delete kernel;
+}
+
+// §14.14（690bfe0cd）：GetKernelTaskParams 删除 fallback 分支后，缺缓存必须报 EE1004，
+// 不得再从 H2D 后的设备缓冲区合成答案（那会把 funcHandle 报成 GetInnerHandle()、
+// argsType 强制成 DEVICE_BUFFER）。唯一可达触发是 DEFAULT_TILING_KEY：
+// stream_c.cc:66-72 令 registeredKernel = nullptr 且成功返回，SetKernelLaunchParams 因而不建缓存。
+TEST_F(KernelTest, Kernel_TaskParams_GetKernelTaskParams_NoCacheReportsInvalidValue)
+{
+    TaskInfo taskInfo{};
+    rtTaskParams params{};
+
+    // 子情形一：launch 未建缓存，updateInfo 为空
+    taskInfo.updateInfo = nullptr;
+    EXPECT_EQ(GetKernelTaskParams(&taskInfo, &params), RT_ERROR_INVALID_VALUE);
+    // 守卫必须在写 params->type 之前返回：merge-base 的实现在函数首行就置 RT_TASK_KERNEL，
+    // 再走 fallback 合成答案；此断言即钉住"上报而非合成"，并保证失败时出参不被部分改写
+    EXPECT_EQ(params.type, RT_TASK_DEFAULT);
+
+    // 子情形二：updateInfo 已分配但尚未 publish（isValid != 1）
+    TaskUpdateInfo updateInfo{};
+    updateInfo.latestParams.isValid = 0U;
+    taskInfo.updateInfo = &updateInfo;
+    EXPECT_EQ(GetKernelTaskParams(&taskInfo, &params), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(params.type, RT_TASK_DEFAULT);
+}
+
+// §14.14：SIMT 形态同一守卫。本函数为 PR 全新增加（merge-base 无），故此处钉的是新代码契约。
+// 注释已说明 SIMT 侧连"无缓存"都不可达（SetSimtTaskParams 是 simtParamOffset 的唯一写者，
+// 且每次 SIMT launch 都经 StreamLaunchKernelV2 在入口解引用 kernel），因此只验证守卫不被绕过。
+TEST_F(KernelTest, Kernel_TaskParams_GetSimtKernelTaskParams_NoCacheReportsInvalidValue)
+{
+    TaskInfo taskInfo{};
+    rtTaskParams params{};
+
+    taskInfo.updateInfo = nullptr;
+    EXPECT_EQ(GetSimtKernelTaskParams(&taskInfo, &params), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(params.type, RT_TASK_DEFAULT);
+
+    TaskUpdateInfo updateInfo{};
+    updateInfo.latestParams.isValid = 0U;
+    taskInfo.updateInfo = &updateInfo;
+    EXPECT_EQ(GetSimtKernelTaskParams(&taskInfo, &params), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(params.type, RT_TASK_DEFAULT);
+}
+
+// CacheSimtKernelTaskParams 是 aclmdlRITaskSetParams 的 SIMT 缓存装配入口。
+// 其成功路径末尾的 CommitKernelUpdateInfo 无条件解引用 taskInfo->stream 并 dynamic_cast 成
+// CaptureModel，且假定 updateInfo 已由调用方（api_impl_standard_soc.cc:1295）分配，故成功路径
+// 只能由 910B 捕获态 E2E 覆盖。此处直调覆盖三个入口守卫，以及 ARRAY 形态从装配到
+// CacheArgsArrayForm 失败返回的完整链路（该链路在触及 stream 之前就已返回）。
+TEST_F(KernelTest, Kernel_TaskParams_CacheSimtKernelTaskParams_GuardsAndArrayForm)
+{
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
+    Program* program = &stubProg;
+    Kernel* kernel = new Kernel("test", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 10);
+
+    std::shared_ptr<ElfParamInfo[]> paramInfos(new ElfParamInfo[2]);
+    paramInfos[0].info.offset = 0;
+    paramInfos[0].info.size = 16;
+    paramInfos[1].info.offset = 16;
+    paramInfos[1].info.size = 32;
+    kernel->SetHasParamSummary(true);
+    kernel->SetParamCount(2);
+    kernel->SetParamInfos(paramInfos);
+    // 非零才会越过 CacheArgsArrayForm 的零参数短路，进入 CreateArgsArrayBlock
+    kernel->SetParamTotalSize(48ULL);
+
+    TaskInfo taskInfo{};
+    rtTaskParams params{};
+    params.type = RT_TASK_SIMT_KERNEL;
+
+    // 守卫一：CheckCacheKernelTaskCommon 要求任务类型是 AICORE 或 AIVEC
+    taskInfo.type = TS_TASK_TYPE_CAPTURE_WAIT;
+    EXPECT_EQ(CacheSimtKernelTaskParams(&taskInfo, &params, kernel), RT_ERROR_INVALID_VALUE);
+
+    // 守卫二：CheckCacheKernelTaskCommon 要求 params->taskGrp 为空
+    taskInfo.type = TS_TASK_TYPE_KERNEL_AICORE;
+    int taskGrp = 0;
+    params.taskGrp = &taskGrp;
+    EXPECT_EQ(CacheSimtKernelTaskParams(&taskInfo, &params, kernel), RT_ERROR_INVALID_VALUE);
+    params.taskGrp = nullptr;
+
+    // 守卫三：目标任务必须是纯 SIMT 任务（simtParamOffset != 0）
+    taskInfo.u.aicTaskInfo.simtParamOffset = 0U;
+    EXPECT_EQ(CacheSimtKernelTaskParams(&taskInfo, &params, kernel), RT_ERROR_INVALID_VALUE);
+    taskInfo.u.aicTaskInfo.simtParamOffset = 64U;
+
+    // 守卫四：kernel 为空
+    EXPECT_EQ(CacheSimtKernelTaskParams(&taskInfo, &params, nullptr), RT_ERROR_INVALID_VALUE);
+
+    // ARRAY 形态装配：cfg 允许为空（ConvertLaunchCfgToTaskCfg 显式支持），
+    // argsArray[0] 为空使 CopyKernelParamsToBuffer 报 EE1004，CreateArgsArrayBlock
+    // 随即释放已分配的块并返回，故不泄漏也不触及 stream
+    void* argsArray[2] = {nullptr, nullptr};
+    params.simtKernelTaskParams.func = kernel;
+    params.simtKernelTaskParams.cfg = nullptr;
+    params.simtKernelTaskParams.gridDimX = 2U;
+    params.simtKernelTaskParams.gridDimY = 3U;
+    params.simtKernelTaskParams.gridDimZ = 1U;
+    params.simtKernelTaskParams.blockDimX = 32U;
+    params.simtKernelTaskParams.blockDimY = 1U;
+    params.simtKernelTaskParams.blockDimZ = 1U;
+    params.simtKernelTaskParams.dynUbufSize = 128U;
+    params.simtKernelTaskParams.argsType = RT_KERNEL_ARGS_ARRAY;
+    params.simtKernelTaskParams.argsArray = argsArray;
+    EXPECT_EQ(CacheSimtKernelTaskParams(&taskInfo, &params, kernel), RT_ERROR_INVALID_VALUE);
+    // 装配失败不得发布缓存
+    EXPECT_EQ(taskInfo.updateInfo, nullptr);
+
+    delete kernel;
+}
+
+// CacheKernelTaskParams 是 aclmdlRITaskSetParams 的非 SIMT 缓存装配入口，与 SIMT 版同样
+// 只在成功路径末尾的 CommitKernelUpdateInfo 才需要真实 stream/CaptureModel，故此处直调
+// 覆盖全部入口守卫与两种 args 形态的校验链（均在触及 stream 之前返回）。
+TEST_F(KernelTest, Kernel_TaskParams_CacheKernelTaskParams_GuardsAndArgsForms)
+{
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
+    Program* program = &stubProg;
+    Kernel* kernel = new Kernel("test", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 10);
+
+    std::shared_ptr<ElfParamInfo[]> paramInfos(new ElfParamInfo[2]);
+    paramInfos[0].info.offset = 0;
+    paramInfos[0].info.size = 16;
+    paramInfos[1].info.offset = 16;
+    paramInfos[1].info.size = 32;
+    kernel->SetHasParamSummary(true);
+    kernel->SetParamCount(2);
+    kernel->SetParamInfos(paramInfos);
+    kernel->SetParamTotalSize(48ULL);
+
+    TaskInfo taskInfo{};
+    taskInfo.type = TS_TASK_TYPE_KERNEL_AICORE;
+    rtTaskParams params{};
+    params.type = RT_TASK_KERNEL;
+    params.kernelTaskParams.argsType = RT_KERNEL_ARGS_ARRAY;
+
+    // 入口守卫：kernel 为空
+    EXPECT_EQ(CacheKernelTaskParams(&taskInfo, &params, nullptr), RT_ERROR_INVALID_VALUE);
+
+    // argsType 为 0 时按旧形态解释三字段；此处三字段全空，由还原后的 args 判空守卫
+    // 按历史行为报 EE1004（而非 argsType 域错误）
+    params.kernelTaskParams.argsType = static_cast<rtKernelArgsType>(0);
+    EXPECT_EQ(CacheKernelTaskParams(&taskInfo, &params, kernel), RT_ERROR_INVALID_VALUE);
+    params.kernelTaskParams.argsType = RT_KERNEL_ARGS_ARRAY;
+
+    // ARRAY 形态：AICPU 注册类型不支持
+    kernel->SetKernelRegisterType(RT_KERNEL_REG_TYPE_CPU);
+    EXPECT_EQ(CacheKernelTaskParams(&taskInfo, &params, kernel), RT_ERROR_FEATURE_NOT_SUPPORT);
+    kernel->SetKernelRegisterType(RT_KERNEL_REG_TYPE_NON_CPU);
+
+    // ARRAY 形态：paramCount > 0 时 argsArray 不得为空
+    params.kernelTaskParams.argsArray = nullptr;
+    EXPECT_EQ(CacheKernelTaskParams(&taskInfo, &params, kernel), RT_ERROR_INVALID_VALUE);
+
+    // ARRAY 形态：kernel 缺参数描述信息
+    kernel->SetHasParamSummary(false);
+    char src[16] = {0};
+    void* argsArray[2] = {src, src};
+    params.kernelTaskParams.argsArray = argsArray;
+    EXPECT_EQ(CacheKernelTaskParams(&taskInfo, &params, kernel), RT_ERROR_INVALID_VALUE);
+    kernel->SetHasParamSummary(true);
+
+    // ARRAY 形态：装配时 argsArray[0] 为空使 CopyKernelParamsToBuffer 报错，
+    // CreateArgsArrayBlock 释放已分配的块后返回，故不泄漏也不触及 stream
+    void* badArgsArray[2] = {nullptr, nullptr};
+    params.kernelTaskParams.argsArray = badArgsArray;
+    EXPECT_EQ(CacheKernelTaskParams(&taskInfo, &params, kernel), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(taskInfo.updateInfo, nullptr);
+
+    // HOST_BUFFER 形态：hostArgs 为空
+    params.kernelTaskParams.argsType = RT_KERNEL_ARGS_HOST_BUFFER;
+    params.kernelTaskParams.hostBuffer.hostArgs = nullptr;
+    EXPECT_EQ(CacheKernelTaskParams(&taskInfo, &params, kernel), RT_ERROR_INVALID_VALUE);
+
+    // HOST_BUFFER 形态：hostArgsSize 为 0
+    char hostArgs[32] = {0};
+    params.kernelTaskParams.hostBuffer.hostArgs = hostArgs;
+    params.kernelTaskParams.hostBuffer.hostArgsSize = 0U;
+    EXPECT_EQ(CacheKernelTaskParams(&taskInfo, &params, kernel), RT_ERROR_INVALID_VALUE);
+
+    // HOST_BUFFER 形态：placeHolderNum > 0 但数组为空
+    params.kernelTaskParams.hostBuffer.hostArgsSize = sizeof(hostArgs);
+    params.kernelTaskParams.hostBuffer.placeHolderNum = 1U;
+    params.kernelTaskParams.hostBuffer.placeHolderArray = nullptr;
+    EXPECT_EQ(CacheKernelTaskParams(&taskInfo, &params, kernel), RT_ERROR_INVALID_VALUE);
+
+    // HOST_BUFFER 形态：placeHolder 偏移越界，CheckPlaceHolderOffsets 报错
+    rtPlaceHolderInfo_t placeHolder{};
+    placeHolder.addrOffset = 64U;
+    placeHolder.dataOffset = 0U;
+    params.kernelTaskParams.hostBuffer.placeHolderArray = &placeHolder;
+    EXPECT_EQ(CacheKernelTaskParams(&taskInfo, &params, kernel), RT_ERROR_INVALID_VALUE);
+
+    // dataOffset 越界同样被拒
+    placeHolder.addrOffset = 0U;
+    placeHolder.dataOffset = 64U;
+    EXPECT_EQ(CacheKernelTaskParams(&taskInfo, &params, kernel), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(taskInfo.updateInfo, nullptr);
+
+    // HOST_BUFFER 形态：placeHolder 偏移合法，但 memcpy_s 失败使深拷贝报错，经 HOST_BUFFER
+    // 错误分支返回，不触及 stream。此处同时充当"argsType 是形态判别位"的鉴别断言：故意让遗留
+    // 三字段非零（GetParams 会回填它们，故 Get→改→Set 往返必然如此），若遗留字段仍被拒绝会得到
+    // INVALID_VALUE，实际拿到 SEC_HANDLE 即证明确实走进了 HOST_BUFFER 深拷贝、遗留字段被忽略
+    placeHolder.addrOffset = 8U;
+    placeHolder.dataOffset = 16U;
+    params.kernelTaskParams.args = hostArgs;
+    params.kernelTaskParams.isHostArgs = 1U;
+    params.kernelTaskParams.argsSize = sizeof(hostArgs);
+    MOCKER(memcpy_s).stubs().will(returnValue(1));
+    EXPECT_EQ(CacheKernelTaskParams(&taskInfo, &params, kernel), RT_ERROR_SEC_HANDLE);
+    EXPECT_EQ(taskInfo.updateInfo, nullptr);
+
+    delete kernel;
+}
+
+// 旧形态（args/isHostArgs/argsSize）的入口守卫：argsType 为 0 时按历史版本解释三字段，
+// 校验顺序与错误码与历史实现逐字一致。成功路径末尾的 CommitKernelUpdateInfo 会解引用
+// taskInfo->stream 并 dynamic_cast 成 CaptureModel，故成功路径由 910B 捕获态用例覆盖，
+// 此处只覆盖在触及 stream 之前就返回的守卫。
+TEST_F(KernelTest, Kernel_TaskParams_CacheKernelTaskParams_LegacyArgsFormGuards)
+{
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
+    Program* program = &stubProg;
+    Kernel* kernel = new Kernel("test", 0ULL, program, RT_KERNEL_ATTR_TYPE_AICPU, 10);
+
+    TaskInfo taskInfo{};
+    taskInfo.type = TS_TASK_TYPE_KERNEL_AICORE;
+    rtTaskParams params{};
+    params.type = RT_TASK_KERNEL;
+    // argsType 保持 0，即旧形态
+
+    // 全空输入：历史行为是按 args 判空报 EE1004，不是 argsType 域错误
+    EXPECT_EQ(CacheKernelTaskParams(&taskInfo, &params, kernel), RT_ERROR_INVALID_VALUE);
+
+    // args 为空
+    params.kernelTaskParams.argsSize = 16U;
+    EXPECT_EQ(CacheKernelTaskParams(&taskInfo, &params, kernel), RT_ERROR_INVALID_VALUE);
+
+    // argsSize 为 0
+    char legacyArgs[16] = {0};
+    params.kernelTaskParams.args = legacyArgs;
+    params.kernelTaskParams.argsSize = 0U;
+    EXPECT_EQ(CacheKernelTaskParams(&taskInfo, &params, kernel), RT_ERROR_INVALID_VALUE);
+
+    // argsType 是判别位：非零时遗留三字段被忽略而非拒绝。此处 argsType 为 HOST_BUFFER 而
+    // hostBuffer.hostArgs 为空，报的是 HOST_BUFFER 形态自身的守卫，与遗留字段取值无关
+    params.kernelTaskParams.argsSize = sizeof(legacyArgs);
+    params.kernelTaskParams.isHostArgs = 1U;
+    params.kernelTaskParams.argsType = RT_KERNEL_ARGS_HOST_BUFFER;
+    params.kernelTaskParams.hostBuffer.hostArgs = nullptr;
+    EXPECT_EQ(CacheKernelTaskParams(&taskInfo, &params, kernel), RT_ERROR_INVALID_VALUE);
+
+    // 任一守卫失败都不得发布缓存
+    EXPECT_EQ(taskInfo.updateInfo, nullptr);
 
     delete kernel;
 }

@@ -14,6 +14,7 @@
 #include "load_policy.hpp"
 #include "task_info.hpp"
 #include "stars_arg_manager.hpp"
+#include "para_convertor.hpp"
 
 namespace cce {
 namespace runtime {
@@ -24,9 +25,23 @@ rtError_t GetPrefetchCnt(Kernel* const kernel)
     return RT_ERROR_NONE;
 }
 
-rtError_t LoadKernelArgs(Stream* stm, const rtArgsEx_t* argsInfo, StarsArgLoaderResult& result)
+// aclGraph 更新加载：ARRAY 按 launch 同一入口展平，三形态恒走 LP_NO_MIX（与 mixOpt=0 强配对，错配
+// 会把 FFTS context 写进 args 头部踩踏；capture 期为 LP_MIX+mixOpt=1，翻转安全，旧值配对释放）。
+rtError_t LoadKernelArgs(
+    Stream* stm, const rtArgsEx_t* argsInfo, StarsArgLoaderResult& result, const Kernel* kernel,
+    rtKernelArgsType argsType, void** argsArray)
 {
-    return stm->LoadArgsInfo(argsInfo, false, &result, LoadPolicy::LP_NO_MIX);
+    rtArgsEx_t convertedArgs = {};
+    const rtArgsEx_t* flatArgs = argsInfo;
+    if (argsType == RT_KERNEL_ARGS_ARRAY) {
+        const rtError_t error = ConvertArgsArrayToArgsEx(convertedArgs, kernel, argsArray);
+        ERROR_RETURN(
+            error, "Failed to flatten the cached args array, retCode=%#x, stream_id=%d.", static_cast<uint32_t>(error),
+            stm->Id_());
+        flatArgs = &convertedArgs;
+    }
+    // 恒 LP_NO_MIX 的不变式（与 mixOpt=0 强配对）在唯一的加载落点处单源化
+    return stm->LoadArgsInfo(flatArgs, false, &result, LoadPolicy::LP_NO_MIX);
 }
 
 rtError_t PostUpdateKernelParams(TaskInfo* taskInfo) { return WaitAsyncCopyComplete(taskInfo); }

@@ -201,7 +201,7 @@ rtError_t UbArgManage::LoadSimtArgsFromArray(
             RtPtrToValue(implicitData), totalArgsSize - SIMT_SYNC_COUNTER_SIZE, SIMT_DIM_PARAM_SIZE));
 
     void* kernelArgsStart = static_cast<char*>(argsBuffer) + SIMT_IMPLICIT_PARAM_SIZE;
-    error = CopyKernelParamsToBuffer(kernel, simtArgsArray->argsArrayInfo, kernelArgsStart);
+    error = CopyKernelParamsToBuffer(kernel, simtArgsArray->argsArray, kernelArgsStart);
     if (error != RT_ERROR_NONE) {
         FreeFail(result);
         return error;

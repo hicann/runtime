@@ -520,7 +520,7 @@ public:
     rtError_t GetLastFinishTaskId(const uint32_t taskId, uint32_t& currId, int32_t timeout);
     virtual bool IsWaitFinish(const uint32_t finishedTaskId, const uint32_t submittedTaskId);
     void ReportErrorMessage(const uint32_t errCode, const std::string& errMsg);
-    void SetTraceKernelArgs(const AicTaskInfo* const aicTaskInfo, const uint16_t taskId, TraceArgs& args) const;
+    void SetTraceKernelArgs(const TaskInfo* const taskInfo, const uint16_t taskId, TraceArgs& args) const;
 
     bool IsDebugRegister(void) const { return isDebugRegister_; }
 
