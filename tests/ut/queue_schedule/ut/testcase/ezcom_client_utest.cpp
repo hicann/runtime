@@ -323,3 +323,31 @@ TEST_F(EZCOM_CLIENT_UTest, ParseGetPagedBindRespMsgSuccess)
     EXPECT_EQ(ret, 10);
     EXPECT_EQ(total, 10);
 }
+
+namespace {
+uint32_t g_ezcomRetryCallCount = 0U;
+
+int EzcomRetryWithAllocatedResponse(int fd, struct EzcomRequest* req, struct EzcomResponse* resp)
+{
+    if (g_ezcomRetryCallCount++ == 0U) {
+        resp->id = 123U;
+        resp->size = 16U;
+        resp->data = new uint8_t[resp->size];
+        return -EAGAIN;
+    }
+    EXPECT_EQ(resp->data, nullptr);
+    EXPECT_EQ(resp->size, 0U);
+    EXPECT_EQ(resp->id, 0U);
+    return EzcomRPCSyncFake(fd, req, resp);
+}
+} // namespace
+
+TEST_F(EZCOM_CLIENT_UTest, RetryClearsResponseFromFailedAttempt)
+{
+    g_ezcomRetryCallCount = 0U;
+    MOCKER(EzcomRPCSync).expects(exactly(2)).will(invoke(EzcomRetryWithAllocatedResponse));
+    bqs::BQSMsg request;
+    bqs::BQSMsg response;
+    EXPECT_EQ(bqs::EzcomClient::GetInstance(0)->SendBqsMsg(request, response), bqs::BQS_STATUS_OK);
+    EXPECT_EQ(g_ezcomRetryCallCount, 2U);
+}

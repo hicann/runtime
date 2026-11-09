@@ -160,6 +160,10 @@ void SubModuleInterface::ReportErrMsgToTsd(const int32_t errCode) const
 int32_t SubModuleInterface::StartQueueScheduleModule(const struct TsdSubEventInfo* const eventInfo)
 {
     BQS_LOG_RUN_INFO("enter queue schedule sub module start process.");
+    if (eventInfo == nullptr) {
+        BQS_LOG_ERROR("Queue schedule start eventInfo is nullptr.");
+        return -1;
+    }
     // set event key
     SetTsdEventKey(eventInfo);
 

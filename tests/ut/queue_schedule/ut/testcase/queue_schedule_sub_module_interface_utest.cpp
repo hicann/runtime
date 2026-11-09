@@ -320,3 +320,9 @@ TEST_F(QsSubModuleInterfaceUtest, StubTsdEventClientFuncTest)
     ret = SubModuleProcessResponse(0, TSD_QS, 123, 0, TSD_EVENT_START_QS_MODULE_RSP);
     EXPECT_EQ(ret, 0);
 }
+
+TEST_F(QsSubModuleInterfaceUtest, StartRejectsNullEventBeforeReadingArguments)
+{
+    MOCKER_CPP(&SubModuleInterface::ParseArgsFromFile).expects(never());
+    EXPECT_EQ(StartQueueScheduleModule(nullptr), -1);
+}

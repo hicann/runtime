@@ -11,6 +11,8 @@
 #include <iostream>
 #include <cstdint>
 #include <climits>
+#include <sys/mman.h>
+#include <unistd.h>
 #include "securec.h"
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
@@ -1504,4 +1506,45 @@ TEST_F(RouterServerUtest, ManageQsEventParmERR)
     curServer.ManageQsEvent();
     EXPECT_EQ(curServer.deviceId_, 0U);
     curServer.Destroy();
+}
+
+TEST_F(RouterServerUtest, CreateHcomHandleRejectsTruncatedRankTableLength)
+{
+    ConfigInfoOperator op(1U);
+    MOCKER_CPP(&ConfigInfoOperator::QueryGroupAllocInfo).stubs().will(returnValue(BQS_STATUS_OK));
+    HcomHandleInfo info = {};
+    info.rankTableLen = static_cast<uint64_t>(UINT32_MAX) + 2UL;
+    EXPECT_EQ(
+        op.CreateHcomHandle(reinterpret_cast<uintptr_t>(&info), sizeof(info) + sizeof(CfgRetInfo)),
+        BQS_STATUS_PARAM_INVALID);
+}
+
+TEST_F(RouterServerUtest, CreateHcomHandleRejectsMissingHeader)
+{
+    ConfigInfoOperator op(1U);
+    MOCKER_CPP(&ConfigInfoOperator::QueryGroupAllocInfo).stubs().will(returnValue(BQS_STATUS_OK));
+    EXPECT_EQ(op.CreateHcomHandle(0U, sizeof(HcomHandleInfo)), BQS_STATUS_PARAM_INVALID);
+    HcomHandleInfo info = {};
+    EXPECT_EQ(op.CreateHcomHandle(reinterpret_cast<uintptr_t>(&info), sizeof(info) - 1U), BQS_STATUS_PARAM_INVALID);
+}
+
+TEST_F(RouterServerUtest, DestroyHcomHandleRejectsNullBuffer)
+{
+    ConfigInfoOperator op(1U);
+    EXPECT_EQ(op.DestroyHcomHandle(0U, sizeof(HcomHandleInfo)), BQS_STATUS_PARAM_INVALID);
+}
+
+TEST_F(RouterServerUtest, DestroyHcomHandleRejectsShortHeaderBeforeReadingFields)
+{
+    ConfigInfoOperator op(1U);
+    const size_t pageSize = static_cast<size_t>(getpagesize());
+    void* const buffer = mmap(nullptr, pageSize, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    ASSERT_NE(buffer, MAP_FAILED);
+    const ScopeGuard unmapGuard([buffer, pageSize]() { (void)munmap(buffer, pageSize); });
+
+    // An incomplete header must be rejected without reading the protected memory.
+    EXPECT_EQ(op.DestroyHcomHandle(reinterpret_cast<uintptr_t>(buffer), 0U), BQS_STATUS_PARAM_INVALID);
+    EXPECT_EQ(
+        op.DestroyHcomHandle(reinterpret_cast<uintptr_t>(buffer), sizeof(HcomHandleInfo) - 1U),
+        BQS_STATUS_PARAM_INVALID);
 }

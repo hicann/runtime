@@ -287,15 +287,21 @@ BqsStatus ConfigInfoOperator::CreateHcomHandle(const uintptr_t mbufData, const u
     if (queryGroupRet != BQS_STATUS_OK) {
         return queryGroupRet;
     }
+    if ((mbufData == 0U) || (dataLen < sizeof(HcomHandleInfo))) {
+        BQS_LOG_ERROR("Invalid hcom handle buffer, dataLen[%lu].", dataLen);
+        return BQS_STATUS_PARAM_INVALID;
+    }
     HcomHandleInfo* const info = PtrToPtr<void, HcomHandleInfo>(ValueToPtr(mbufData));
-    if (info->rankTableLen == 0UL) {
+    if ((info->rankTableLen == 0UL) || (info->rankTableLen > UINT32_MAX)) {
         BQS_LOG_ERROR("Invalid rank table len[%lu].", info->rankTableLen);
         return BQS_STATUS_PARAM_INVALID;
     }
 
     uint32_t tempAddHcomTab = 0U;
     bool isOverflow = false;
-    BqsCheckAssign32UAdd(static_cast<uint32_t>(sizeof(HcomHandleInfo)), info->rankTableLen, tempAddHcomTab, isOverflow);
+    BqsCheckAssign32UAdd(
+        static_cast<uint32_t>(sizeof(HcomHandleInfo)), static_cast<uint32_t>(info->rankTableLen), tempAddHcomTab,
+        isOverflow);
     if (isOverflow) {
         BQS_LOG_ERROR("tempAddHcomTab[%u] is invalid.", tempAddHcomTab);
         return BQS_STATUS_PARAM_INVALID;
@@ -358,6 +364,10 @@ BqsStatus ConfigInfoOperator::CreateHcomHandle(const uintptr_t mbufData, const u
 
 BqsStatus ConfigInfoOperator::DestroyHcomHandle(const uintptr_t mbufData, const uint64_t dataLen) const
 {
+    if ((mbufData == 0U) || (dataLen < sizeof(HcomHandleInfo))) {
+        BQS_LOG_ERROR("Invalid hcom handle buffer, dataLen[%lu].", dataLen);
+        return BQS_STATUS_PARAM_INVALID;
+    }
     HcomHandleInfo* const info = PtrToPtr<void, HcomHandleInfo>(ValueToPtr(mbufData));
     // check dataLen
     bool overFlow = false;
@@ -1407,8 +1417,8 @@ BqsStatus ConfigInfoOperator::ProcessInitDynamicSched() const
         BQS_LOG_ERROR(
             "Fail to subscribe enque event of [qid:%u-deviceId:%u-isclientQ:%d] or "
             "subscribe full-to-notfull event of [qid:%u-deviceId:%u-isclientQ:%d]",
-            schedCfgInfo.responseQue.queueId, schedCfgInfo.responseQue.deviceId, schedCfgInfo.responseQue.isClientQ,
-            schedCfgInfo.requestQue.queueId, schedCfgInfo.requestQue.deviceId, schedCfgInfo.responseQue.isClientQ);
+            schedCfgInfo.requestQue.queueId, schedCfgInfo.requestQue.deviceId, schedCfgInfo.requestQue.isClientQ,
+            schedCfgInfo.responseQue.queueId, schedCfgInfo.responseQue.deviceId, schedCfgInfo.responseQue.isClientQ);
         resultVec[0UL]->retCode = static_cast<int32_t>(BQS_STATUS_INNER_ERROR);
         return BQS_STATUS_INNER_ERROR;
     }

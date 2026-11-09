@@ -101,21 +101,23 @@ BqsStatus EzcomClient::SendBqsMsg(const BQSMsg& bqsReqMsg, BQSMsg& bqsRespMsg) c
 
     EzcomRequest req = {.id = 0U, .data = PtrToPtr<char_t, uint8_t>(reqData.get()), .size = reqLength};
     struct EzcomResponse resp = {0U};
-    // Send msg and get response
-    BQS_LOG_INFO("EzcomRPCSync begin, fd:%d, msg size:%u", clientFd_, reqLength);
-    int32_t err = EzcomRPCSync(clientFd_, &req, &resp);
-    if (err == -EAGAIN) {
-        err = EzcomRPCSync(clientFd_, &req, &resp);
-        BQS_LOG_INFO("Need to retry ezcom send, fd=%d", clientFd_);
-    }
-
-    // scope resp.data
     const ScopeGuard respDataGuard([&resp]() {
         if (resp.data != nullptr) {
             delete[] resp.data;
             resp.data = nullptr;
         }
     });
+
+    // Send msg and get response.
+    BQS_LOG_INFO("EzcomRPCSync begin, fd:%d, msg size:%u", clientFd_, reqLength);
+    int32_t err = EzcomRPCSync(clientFd_, &req, &resp);
+    if (err == -EAGAIN) {
+        // Release any response from the failed attempt before the RPC overwrites it.
+        delete[] resp.data;
+        resp = {};
+        err = EzcomRPCSync(clientFd_, &req, &resp);
+        BQS_LOG_INFO("Need to retry ezcom send, fd=%d", clientFd_);
+    }
 
     if ((err < 0) || (resp.data == nullptr)) {
         BQS_LOG_ERROR("EasyRPCSync failed: %d", err);
