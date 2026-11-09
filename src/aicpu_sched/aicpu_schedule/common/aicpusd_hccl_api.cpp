@@ -201,13 +201,13 @@ int32_t MBufferPool::Init(const uint32_t blockNum, const uint32_t blockSize, con
         poolSize_ = poolInfo.blk_total_len;
         const auto res = StubHcclRegisterGlobalMemory(poolAddr_, poolSize_);
         if (res != HCCL_SUCCESS) {
-            aicpusd_err("Fail to register memory, res is %d.", static_cast<int32_t>(res));
+            aicpusd_run_warn("Unable to register memory, res is %d.", static_cast<int32_t>(res));
         } else {
             isRegister_ = true;
             aicpusd_info("Successfully registered memory[%lu] bytes", poolSize_);
         }
     } else {
-        aicpusd_err("halBuffGetInfo fail, ret is %d", poolInfoRet);
+        aicpusd_run_warn("halBuffGetInfo not success, ret is %d", poolInfoRet);
     }
     aicpusd_info("create pool success, blockSize: %u bytes, blockNum: %u", blockSize, blockNum);
     return RET_SUCCESS;

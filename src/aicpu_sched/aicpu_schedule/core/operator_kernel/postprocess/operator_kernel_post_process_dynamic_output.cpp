@@ -38,8 +38,8 @@ int32_t OperatorKernelPostProcessDynamicOutput::Compute(
         PtrToPtr<void, PostprocessDynamicOutputKernelArgs>(ValueToPtr(kernelTaskInfo.paraBase));
     if ((param->outputsNum > 0U) && ((param->outputDynamicFlagsAddr == 0U) || (param->outputMbufAddrsAddr == 0U))) {
         aicpusd_err(
-            "Parameter invalid: outputsNum[%u], outputDynamicFlagsAddr[%u], outputMbufAddrsAddr[%u]", param->outputsNum,
-            param->outputDynamicFlagsAddr, param->outputMbufAddrsAddr);
+            "Parameter invalid: outputsNum[%u], outputDynamicFlagsAddr[%lu], outputMbufAddrsAddr[%lu]",
+            param->outputsNum, param->outputDynamicFlagsAddr, param->outputMbufAddrsAddr);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
 
@@ -315,7 +315,7 @@ int32_t OperatorKernelPostProcessDynamicOutput::FreeMbuf(
         (void)modelPtr->UnGardModelBuf(*respPptrs);
     }
     if ((param->inputsNum > 0U) && (param->inputMbufAddrsAddr == 0U)) {
-        aicpusd_err("Invalid inputsNum[%u], inputMbufAddrsAddr[%u]", param->inputsNum, param->inputMbufAddrsAddr);
+        aicpusd_err("Invalid inputsNum[%u], inputMbufAddrsAddr[%lu]", param->inputsNum, param->inputMbufAddrsAddr);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
     uint64_t* const inputPptrs = PtrToPtr<void, uint64_t>(ValueToPtr(param->inputMbufAddrsAddr));

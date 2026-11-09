@@ -289,13 +289,13 @@ int32_t LoadOpFromBuffTsKernel::Compute(const aicpu::HwtsTsKernel& tsKernelInfo)
         const std::lock_guard<std::mutex> lk(mutexForStartCustProcess_);
         constexpr uint32_t soNum = 1U;
         const char_t* soNames[soNum] = {realSoName.data()};
-        auto it = alreadyLoadSoName_.insert(realSoName);
-        if (it.second == true) {
+        if (alreadyLoadSoName_.find(realSoName) == alreadyLoadSoName_.end()) {
             const int32_t startRet = StartCustProcess(soNum, &soNames[0UL]);
             if (startRet != AICPU_SCHEDULE_OK) {
                 aicpusd_err("Get aicpu group, start up and add group to cust aicpu failed.");
                 return AICPU_SCHEDULE_ERROR_INNER_ERROR;
             }
+            alreadyLoadSoName_.insert(realSoName);
         } else {
             aicpusd_run_info("[%s] is already loaded.", realSoName.c_str());
         }
@@ -367,6 +367,7 @@ int32_t BatchLoadSoFromBuffTsKernel::Compute(const aicpu::HwtsTsKernel& tsKernel
     }
 
     std::vector<std::string> soNameVec;
+    soNameVec.reserve(static_cast<size_t>(soNum));
     for (uint32_t i = 0U; i < soNum; i++) {
         std::string realSoName;
         LoadOpFromBufArgs* const custSo = PtrToPtr<void, LoadOpFromBufArgs>(ValueToPtr(custSoInfo)) + i;

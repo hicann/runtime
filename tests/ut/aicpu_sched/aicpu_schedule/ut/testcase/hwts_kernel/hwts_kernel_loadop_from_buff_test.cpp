@@ -102,7 +102,8 @@ TEST_F(LoadOpFromBuffKernelTest, TsKernelLoadOpFromBuf_01)
     pid_t hostPid = AicpuDrvManager::GetInstance().GetHostPid();
     MOCKER_CPP(&CustOperationCommon::StartCustProcess)
         .stubs()
-        .will(returnValue((int32_t)AICPU_SCHEDULE_ERROR_INNER_ERROR));
+        .will(returnValue((int32_t)AICPU_SCHEDULE_ERROR_INNER_ERROR))
+        .then(returnValue((int32_t)AICPU_SCHEDULE_OK));
     MOCKER_CPP(&AicpuCustSoManager::CheckAndCreateSoFile).stubs().will(returnValue((int32_t)AICPU_SCHEDULE_OK));
     std::vector<uint32_t> deviceVec;
     deviceVec.push_back(1);
@@ -138,13 +139,17 @@ TEST_F(LoadOpFromBuffKernelTest, TsKernelLoadOpFromBuf_01)
     }
     int retStatus = kernel_.Compute(tsKernelInfo);
     EXPECT_EQ(retStatus, AICPU_SCHEDULE_ERROR_INNER_ERROR);
+    // success
     retStatus = kernel_.Compute(tsKernelInfo);
+    EXPECT_EQ(retStatus, AICPU_SCHEDULE_OK);
+    // repeated
+    retStatus = kernel_.Compute(tsKernelInfo);
+    EXPECT_EQ(retStatus, AICPU_SCHEDULE_OK);
     deviceVec[0] = 0;
     AicpuDrvManager::GetInstance().InitDrvMgr(deviceVec, hostPid, 0, hasThread);
     std::string command = "rm -rf ";
     command.append(dirName).append("cust_aicpu_0_3200").append("/");
     int ret = system(command.c_str());
-    EXPECT_EQ(retStatus, AICPU_SCHEDULE_OK);
 }
 
 TEST_F(LoadOpFromBuffKernelTest, TsKernelLoadOpFromBuf_failed1)

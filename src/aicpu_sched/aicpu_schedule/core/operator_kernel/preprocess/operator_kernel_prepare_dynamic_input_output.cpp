@@ -38,8 +38,8 @@ int32_t PrepareDynamicInputOutputBase::PrepareDynamicInputOutput(
         ((param->outputsNum != 0U) && ((param->outputTensorSizesAddr == 0U) || (param->outputMbufAddrsAddr == 0U))) ||
         (param->reqMsgMbufAddr == 0U)) {
         aicpusd_err(
-            "input or output invalid, input: {inputNums[%u], inputDynamicFlagsAddr[%u], inputMbufAddr[%u]}, "
-            "output: {outputNums[%u], outputTensorSizeAddr[%u], outputMbufAddr[%u]}, reqMsgMbufAddr[%u].",
+            "input or output invalid, input: {inputNums[%u], inputDynamicFlagsAddr[%lu], inputMbufAddr[%lu]}, "
+            "output: {outputNums[%u], outputTensorSizeAddr[%lu], outputMbufAddr[%lu]}, reqMsgMbufAddr[%lu].",
             param->inputsNum, param->inputDynamicFlagsAddr, param->inputMbufAddrsAddr, param->outputsNum,
             param->outputTensorSizesAddr, param->outputMbufAddrsAddr, param->reqMsgMbufAddr);
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;

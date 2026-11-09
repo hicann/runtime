@@ -269,6 +269,18 @@ TEST_F(OperatorKernelPostProcessDynamicOutputTest, PostprocessFreeMbuf_success)
     EXPECT_EQ(kernel_.FreeMbuf(&param, runContextT), AICPU_SCHEDULE_OK);
 }
 
+TEST_F(OperatorKernelPostProcessDynamicOutputTest, PostprocessFreeMbuf_fail_invalidInputParam)
+{
+    AicpuModel aicpuModel;
+    aicpuModel.modelId_ = modelId;
+    MOCKER_CPP(&AicpuModelManager::GetModel).stubs().will(returnValue(&aicpuModel));
+
+    PostprocessDynamicOutputKernelArgs param = {};
+    param.inputsNum = 1U;
+    param.inputMbufAddrsAddr = 0U;
+    EXPECT_EQ(kernel_.FreeMbuf(&param, runContextT), AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID);
+}
+
 TEST_F(OperatorKernelPostProcessDynamicOutputTest, ModelPostprocessDynamicOutput_success)
 {
     MOCKER(halMbufAllocEx).stubs().will(invoke(halMbufAllocFakeByAlloc));
@@ -364,6 +376,19 @@ TEST_F(OperatorKernelPostProcessDynamicOutputTest, ModelPostprocessDynamicOutput
     taskT.paraBase = PtrToValue(&param);
     EXPECT_EQ(kernel_.Compute(taskT, runContextT), AICPU_SCHEDULE_OK);
     BufManager::GetInstance().UnGuardBuf(modelId, mbuf);
+}
+
+TEST_F(OperatorKernelPostProcessDynamicOutputTest, ModelPostprocessDynamicOutput_fail_invalidOutputParam)
+{
+    PostprocessDynamicOutputKernelArgs param = {};
+    param.outputsNum = 1U;
+    AicpuTaskInfo taskT = {};
+    taskT.paraBase = PtrToValue(&param);
+    EXPECT_EQ(kernel_.Compute(taskT, runContextT), AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID);
+
+    std::vector<uint32_t> dynamicFlags = {0U};
+    param.outputDynamicFlagsAddr = PtrToValue(dynamicFlags.data());
+    EXPECT_EQ(kernel_.Compute(taskT, runContextT), AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID);
 }
 
 TEST_F(OperatorKernelPostProcessDynamicOutputTest, OptimizedMemCopy_fail)

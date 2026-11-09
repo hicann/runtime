@@ -107,7 +107,7 @@ int32_t AicpuScheduleInterface::InitAICPUScheduler(
     // get aicpu run mode
     const int32_t getRet = GetCurrentRunMode(isOnline);
     if (getRet != AICPU_SCHEDULE_OK) {
-        aicpusd_err("getRet is not ok:%u", getRet);
+        aicpusd_err("getRet is not ok:%d", getRet);
         return getRet;
     }
     if (AicpuDrvManager::GetInstance().InitDrvMgr(deviceVec, hostPid, vfId, true, runMode_, hostProcName) !=
@@ -171,7 +171,7 @@ int32_t AicpuScheduleInterface::DettachDeviceInDestroy(const std::vector<uint32_
             aicpusd_err("Failed to detach device[%u], result[%d].", deviceVec[i], ret);
             return ret;
         }
-        aicpusd_info("Successfully detached AICPU scheduler, device[%d].", deviceVec[i]);
+        aicpusd_info("Successfully detached AICPU scheduler, device[%u].", deviceVec[i]);
     }
     return AICPU_SCHEDULE_OK;
 }
