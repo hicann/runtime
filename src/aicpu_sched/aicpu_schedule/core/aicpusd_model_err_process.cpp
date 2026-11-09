@@ -241,7 +241,11 @@ void AicpuModelErrProc::RecordAicoreOpErrLog(
 void AicpuModelErrProc::RecordAicpuOpErrLog(
     const RunContext& taskContext, const AicpuTaskInfo& kernelTaskInfo, const uint32_t resultCode)
 {
-    const auto kernelName = PtrToPtr<const void, const char_t>(ValueToPtr(kernelTaskInfo.kernelName));
+    const char_t* kernelName = PtrToPtr<const void, const char_t>(ValueToPtr(kernelTaskInfo.kernelName));
+    if (kernelName == nullptr) {
+        static const char_t emptyKernelName[] = "";
+        kernelName = emptyKernelName;
+    }
     aicpusd_err(
         "Aicpu report aicpu error to ts. modelId=%u, streamId=%u, taskId=%u, kernelType=%u, ret=%u, "
         "kernelName=%s",

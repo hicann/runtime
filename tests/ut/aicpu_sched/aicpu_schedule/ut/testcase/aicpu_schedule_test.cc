@@ -2576,6 +2576,28 @@ TEST_F(AICPUScheduleTEST, ProcessInputDump_memcpy_fail)
     }
 }
 
+TEST_F(AICPUScheduleTEST, FillEventPrivHwtsInfoSerialNoUnique)
+{
+    AicpuTopicMailbox mb = {};
+    mb.pid = 1U;
+    mb.mailboxId = 7U;
+    mb.kernelType = 3U;
+
+    event_info firstEvent = {};
+    event_info secondEvent = {};
+    const int32_t firstRet = AicpuEventManager::GetInstance().FillEventPrivHwtsInfo(mb, firstEvent);
+    const int32_t secondRet = AicpuEventManager::GetInstance().FillEventPrivHwtsInfo(mb, secondEvent);
+    EXPECT_EQ(firstRet, AICPU_SCHEDULE_OK);
+    EXPECT_EQ(secondRet, AICPU_SCHEDULE_OK);
+
+    const hwts_ts_task* const firstTask = PtrToPtr<char, hwts_ts_task>(firstEvent.priv.msg);
+    const hwts_ts_task* const secondTask = PtrToPtr<char, hwts_ts_task>(secondEvent.priv.msg);
+    EXPECT_EQ(firstTask->mailbox_id, 7U);
+    EXPECT_EQ(secondTask->mailbox_id, 7U);
+    EXPECT_EQ(firstEvent.priv.msg_len, static_cast<uint32_t>(sizeof(hwts_ts_task)));
+    EXPECT_EQ(secondTask->serial_no, firstTask->serial_no + 1ULL);
+}
+
 TEST_F(AICPUScheduleTEST, ProcessOutputDump_memcpy_fail)
 {
     OpDumpTask task(0, 0);

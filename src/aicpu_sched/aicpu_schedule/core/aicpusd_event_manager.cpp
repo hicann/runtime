@@ -1172,7 +1172,7 @@ int32_t AicpuEventManager::FillEventPrivHwtsInfo(const AicpuTopicMailbox& mb, ev
     hwts_ts_task* task = PtrToPtr<char, hwts_ts_task>(eventInfo.priv.msg);
     task->mailbox_id = mb.mailboxId;
     task->kernel_info.pid = mb.pid;
-    task->serial_no = serialNo;
+    task->serial_no = serialNo.fetch_add(1UL);
     task->kernel_info.kernel_type = mb.kernelType;
     task->kernel_info.batchMode = mb.batchMode;
     task->kernel_info.satMode = mb.satMode;
@@ -1189,8 +1189,6 @@ int32_t AicpuEventManager::FillEventPrivHwtsInfo(const AicpuTopicMailbox& mb, ev
     task->kernel_info.taskID = rtsTask->extraFieldPtr;
 
     eventInfo.priv.msg_len = static_cast<uint32_t>(sizeof(hwts_ts_task));
-
-    serialNo++;
 
     return AICPU_SCHEDULE_OK;
 }

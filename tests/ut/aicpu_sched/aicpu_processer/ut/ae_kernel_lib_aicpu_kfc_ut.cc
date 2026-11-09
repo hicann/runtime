@@ -191,6 +191,16 @@ TEST_F(AIKernelsLibAiCpuKFCUTest, CallKFCKernelApi_UT_GlobalApiSuccess)
     EXPECT_EQ(AE_STATUS_SUCCESS, ret);
 }
 
+TEST_F(AIKernelsLibAiCpuKFCUTest, CallKFCKernelApi_UT_SoNameNull_GlobalApiSuccess)
+{
+    kernel_.kernelSo = 0; // 空so名：修复前strnlen解引用空指针崩溃，修复后归一为空串走全局符号查找
+    std::string kernelName = "TestSoNullOk";
+    kernel_.kernelName = (uintptr_t)kernelName.data();
+    MOCKER(dlsym).stubs().will(returnValue((void*)HcclKernelSuccessStub));
+    int32_t ret = AIKernelsLibAiCpuKFC_->CallKernelApi(aicpu::KERNEL_TYPE_AICPU_KFC, &kernel_);
+    EXPECT_EQ(AE_STATUS_SUCCESS, ret);
+}
+
 TEST_F(AIKernelsLibAiCpuKFCUTest, CallKFCKernelApi_UT_SonameGetApiSuccessButNull_GlobalFail)
 {
     std::string kernelSo = "libTest.so";

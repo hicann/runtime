@@ -109,6 +109,10 @@ int32_t AIKernelsLibAiCpuKFC::GetApiBySoname(
     const aicpu::KernelType kernelType, const char_t* kernelSoName, AicpuKFCOpFuncPtr& opFuncPtr,
     const char_t* kernelName)
 {
+    if (kernelSoName == nullptr) {
+        static const char_t emptySoName[] = "";
+        kernelSoName = emptySoName;
+    }
     const uint32_t soNameLen = strnlen(kernelSoName, AE_MAX_SO_NAME + 1);
     if (soNameLen == 0) {
         if (GetApiGlobal(opFuncPtr, kernelName) != AE_STATUS_SUCCESS) {

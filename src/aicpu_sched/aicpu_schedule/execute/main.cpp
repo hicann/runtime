@@ -256,6 +256,8 @@ void StopQsSubModuleInAicpu(const uint32_t deviceId, const uint32_t hostPid, con
         reinterpret_cast<SubProcEventCallBackFuncInfo>(dlsym(g_qslibHandle, "StopQueueScheduleModule"));
     if (stopQsFunc == nullptr) {
         aicpusd_err("cannot find StopQueueScheduleModule");
+        UnRegEventMsgCallBackFunc(TSD_EVENT_START_QS_MODULE);
+        UnRegEventMsgCallBackFunc(TSD_EVENT_STOP_QS_MODULE);
         (void)dlclose(g_qslibHandle);
         g_qslibHandle = nullptr;
         return;
@@ -264,6 +266,8 @@ void StopQsSubModuleInAicpu(const uint32_t deviceId, const uint32_t hostPid, con
     if (ret != 0) {
         aicpusd_err("StopQueueScheduleModule fail");
     }
+    UnRegEventMsgCallBackFunc(TSD_EVENT_START_QS_MODULE);
+    UnRegEventMsgCallBackFunc(TSD_EVENT_STOP_QS_MODULE);
     (void)dlclose(g_qslibHandle);
     g_qslibHandle = nullptr;
 }
@@ -293,6 +297,8 @@ bool SendVfMsgToDrv(const uint32_t cmd, const uint32_t deviceId, const uint32_t 
 void CloseQslibHandle()
 {
     if (g_qslibHandle != nullptr) {
+        UnRegEventMsgCallBackFunc(TSD_EVENT_START_QS_MODULE);
+        UnRegEventMsgCallBackFunc(TSD_EVENT_STOP_QS_MODULE);
         (void)dlclose(g_qslibHandle);
         g_qslibHandle = nullptr;
         return;

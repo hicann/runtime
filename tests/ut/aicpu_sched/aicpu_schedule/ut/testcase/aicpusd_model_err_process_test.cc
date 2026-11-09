@@ -231,6 +231,32 @@ TEST_F(AICPUModelErrProcTEST, RecordAicpuOpErrLogFail)
     modelErrProc.RecordAicpuOpErrLog(ctx, taskInfo, resultCode);
 }
 
+TEST_F(AICPUModelErrProcTEST, RecordAicpuOpErrLogKernelNameNull)
+{
+    AicpuModel model;
+    model.modelTsId_ = 0;
+    MOCKER_CPP(&AicpuModelManager::GetModel).stubs().will(returnValue(&model));
+
+    RunContext ctx = {.modelId = 0};
+    AicpuTaskInfo taskInfo = {};
+    taskInfo.kernelName = 0; // 空kernelName：修复前strnlen解引用空指针崩溃，修复后归一为空串继续执行
+    const uint32_t resultCode = 1U;
+
+    AicpuModelErrProc modelErrProc;
+    const uint32_t buffLen = 1024;
+    std::unique_ptr<char[]> buff(new (std::nothrow) char[buffLen]());
+    memset(buff.get(), 0, buffLen);
+    modelErrProc.SetLogBuffAddr(0, PtrToValue(buff.get()), buffLen);
+    modelErrProc.RecordAicpuOpErrLog(ctx, taskInfo, resultCode);
+
+    const aicpu::AicpuErrMsgInfo* const errInfo = PtrToPtr<char, aicpu::AicpuErrMsgInfo>(buff.get());
+    EXPECT_EQ(errInfo->errType, static_cast<uint8_t>(aicpu::AicpuErrMsgType::ERR_MSG_TYPE_AICPU));
+    EXPECT_EQ(errInfo->errorCode, resultCode);
+    EXPECT_EQ(errInfo->modelId, ctx.modelId);
+    EXPECT_EQ(errInfo->streamId, ctx.streamId);
+    EXPECT_EQ(strnlen(errInfo->opName, sizeof(errInfo->opName)), 0U);
+}
+
 TEST_F(AICPUModelErrProcTEST, RecordAicpuOpErrLogNoModelFail)
 {
     MOCKER_CPP(&AicpuModelManager::GetModel).stubs().will(returnValue((AicpuModel*)nullptr));

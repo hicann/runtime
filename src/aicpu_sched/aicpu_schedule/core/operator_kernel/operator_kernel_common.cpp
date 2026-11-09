@@ -217,7 +217,7 @@ int32_t OperatorKernelCommon::DoUpdateDataPtr(FusionInfo& info, const int32_t fu
     aicpusd_info("Fusion offset index = %d, total offset byte size = %lu.", fusionOffset, totalOffset);
     if (totalOffset > info.dataSize - sizeof(RuntimeTensorDesc)) {
         aicpusd_err(
-            "Fusion offset[%lu] is invalid, must <= data size[%u] - %zu.", totalOffset, info.dataSize,
+            "Fusion offset[%lu] is invalid, must <= data size[%lu] - %zu.", totalOffset, info.dataSize,
             sizeof(RuntimeTensorDesc));
         return AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
     }
@@ -277,7 +277,7 @@ int32_t OperatorKernelCommon::GetMbufAddrAndSize(
     auto ret = halMbufGetBuffSize(mbuf, dataLenPtr);
     if ((ret != static_cast<int32_t>(DRV_ERROR_NONE)) || (*dataLenPtr < dataLenThreshold)) {
         aicpusd_err(
-            "Fail to get buff size for mbuf, model:[%u], ret=[%d], dataLen[%u] vs dataLenThreshold[%u]", modelId, ret,
+            "Fail to get buff size for mbuf, model:[%u], ret=[%d], dataLen[%lu] vs dataLenThreshold[%lu]", modelId, ret,
             *dataLenPtr, dataLenThreshold);
         return AICPU_SCHEDULE_ERROR_DRV_ERR;
     }
