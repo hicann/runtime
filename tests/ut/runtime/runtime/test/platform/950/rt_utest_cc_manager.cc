@@ -29,6 +29,7 @@
 #include "npu_driver.hpp"
 #include "osal.hpp"
 #include "mmpa_api.h"
+#include "memcpy_c.hpp"
 
 #define private public
 #define protected public
@@ -65,14 +66,28 @@ bool gPcieRegFail = false;
 bool gPcieMappedNull = false;
 uint32_t gDevMemFreeCount = 0U;
 bool gDevMemAllocReturnFail = false;
-bool gHostRegFail = false;
-uint32_t gHostUnregisterCount = 0U;
+bool gHostDmaMapFail = false;
+uint32_t gHostDmaUnmapCount = 0U;
 uint32_t gHostMemFreeCount = 0U;
 bool gInStreamCreate = false;
 uint32_t gHostAllocCount = 0U;
 uint32_t gHostAllocFailAt = 0U;
 uint32_t gFakeDeviceId = 0U;
 bool gDrvMemcpyFail = false;
+struct MemRange {
+    DVdeviceptr baseAddr = 0U;
+    size_t allocSize = 0U;
+};
+struct MemRangeStubState {
+    drvError_t result = DRV_ERROR_NONE;
+    DVdeviceptr baseAddr = 0U;
+    size_t allocSize = 0U;
+    DVdeviceptr queriedAddr = 0U;
+    uint32_t callCount = 0U;
+    std::vector<MemRange> ranges;
+    std::vector<DVdeviceptr> queriedAddrs;
+};
+MemRangeStubState gMemRangeStub;
 std::atomic<DVdeviceptr> gObservedD2HDst{0U};
 CCSliceQueue* gObservedD2HQueue = nullptr;
 uint32_t gExpectedD2HSlice = UINT32_MAX;
@@ -95,6 +110,54 @@ drvError_t DrvMemcpyStub(DVdeviceptr dst, size_t destMax, DVdeviceptr src, size_
         gAllowD2HNextConsume.store(true);
     }
     return DRV_ERROR_NONE;
+}
+
+drvError_t MemGetAddressRangeStub(DVdeviceptr ptr, DVdeviceptr* pbase, size_t* psize)
+{
+    gMemRangeStub.queriedAddr = ptr;
+    gMemRangeStub.queriedAddrs.emplace_back(ptr);
+    ++gMemRangeStub.callCount;
+    if (gMemRangeStub.result != DRV_ERROR_NONE) {
+        return gMemRangeStub.result;
+    }
+    for (const auto& range : gMemRangeStub.ranges) {
+        if ((ptr >= range.baseAddr) && ((ptr - range.baseAddr) < range.allocSize)) {
+            if (pbase != nullptr) {
+                *pbase = range.baseAddr;
+            }
+            if (psize != nullptr) {
+                *psize = range.allocSize;
+            }
+            return DRV_ERROR_NONE;
+        }
+    }
+    if (!gMemRangeStub.ranges.empty()) {
+        return DRV_ERROR_INVALID_VALUE;
+    }
+    if (pbase != nullptr) {
+        *pbase = gMemRangeStub.baseAddr;
+    }
+    if (psize != nullptr) {
+        *psize = gMemRangeStub.allocSize;
+    }
+    return DRV_ERROR_NONE;
+}
+
+void MockMemGetAddressRange(
+    const DVdeviceptr baseAddr, const size_t allocSize, const drvError_t result = DRV_ERROR_NONE)
+{
+    gMemRangeStub = {};
+    gMemRangeStub.result = result;
+    gMemRangeStub.baseAddr = baseAddr;
+    gMemRangeStub.allocSize = allocSize;
+    MOCKER(halMemGetAddressRange).stubs().will(invoke(MemGetAddressRangeStub));
+}
+
+void MockMemGetAddressRanges(const std::vector<MemRange>& ranges)
+{
+    gMemRangeStub = {};
+    gMemRangeStub.ranges = ranges;
+    MOCKER(halMemGetAddressRange).stubs().will(invoke(MemGetAddressRangeStub));
 }
 
 uint32_t FakeDeviceIdStub(Device* dev)
@@ -202,28 +265,24 @@ rtError_t DevMemAllocEntryStub(
     return DevMemAllocStub(driver, dptr, size, type, deviceId, config, 0U);
 }
 
-rtError_t HostRegisterStub(Driver* drv, void* ptr, uint64_t size, uint32_t type, void** devPtr, uint32_t deviceId)
+rtError_t HostDmaMapStub(Driver* drv, void* ptr, uint64_t size, uint32_t deviceId)
 {
     (void)drv;
+    (void)ptr;
     (void)size;
-    (void)type;
     (void)deviceId;
-    if (gHostRegFail) {
+    if (gHostDmaMapFail) {
         return RT_ERROR_MEMORY_ALLOCATION;
-    }
-    if ((devPtr != nullptr) && (ptr != nullptr)) {
-        *devPtr = ptr;
     }
     return RT_ERROR_NONE;
 }
 
-rtError_t HostUnregisterStub(Driver* drv, void* ptr, uint32_t deviceId, bool supportDrvPinReg)
+rtError_t HostDmaUnmapStub(Driver* drv, void* ptr, uint32_t deviceId)
 {
     (void)drv;
     (void)ptr;
     (void)deviceId;
-    (void)supportDrvPinReg;
-    ++gHostUnregisterCount;
+    ++gHostDmaUnmapCount;
     return RT_ERROR_NONE;
 }
 
@@ -368,14 +427,15 @@ protected:
         gPcieMappedNull = false;
         gDevMemFreeCount = 0U;
         gDevMemAllocReturnFail = false;
-        gHostRegFail = false;
-        gHostUnregisterCount = 0U;
+        gHostDmaMapFail = false;
+        gHostDmaUnmapCount = 0U;
         gHostMemFreeCount = 0U;
         gInStreamCreate = false;
         gHostAllocCount = 0U;
         gHostAllocFailAt = 0U;
         gFakeDeviceId = 0U;
         gDrvMemcpyFail = false;
+        gMemRangeStub = {};
         gObservedD2HDst.store(0U);
         gObservedD2HQueue = nullptr;
         gExpectedD2HSlice = UINT32_MAX;
@@ -782,9 +842,9 @@ TEST_F(CCManagerTest, Worker_Init_Destroy)
     CCrypto crypto;
 
     MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostMemAlloc).stubs().will(invoke(HostMemAllocStub));
-    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostRegister).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostUnregister).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostMemFree).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostDmaMap).stubs().will(invoke(HostDmaMapStub));
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostDmaUnmap).stubs().will(invoke(HostDmaUnmapStub));
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostMemFree).stubs().will(invoke(HostMemFreeStub));
 
     rtError_t ret = worker.Init(0, 1024, &queue, dev, &crypto);
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -792,6 +852,9 @@ TEST_F(CCManagerTest, Worker_Init_Destroy)
 
     queue.Shutdown();
     worker.Destroy();
+    worker.Destroy();
+    EXPECT_EQ(gHostDmaUnmapCount, 1U);
+    EXPECT_EQ(gHostMemFreeCount, 1U);
 
     ((Runtime*)Runtime::Instance())->DeviceRelease(dev);
 }
@@ -827,35 +890,37 @@ TEST_F(CCManagerTest, Worker_Init_ErrorPaths)
     }
 
     MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostMemAlloc).stubs().will(invoke(HostMemAllocStub));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostRegister).stubs().will(invoke(HostRegisterStub));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostUnregister).stubs().will(invoke(HostUnregisterStub));
+    MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostDmaMap).stubs().will(invoke(HostDmaMapStub));
+    MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostDmaUnmap).stubs().will(invoke(HostDmaUnmapStub));
     MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostMemFree).stubs().will(invoke(HostMemFreeStub));
     MOCKER_CPP_VIRTUAL(realDriver, &Driver::DevMemAllocWithBackupFlag).stubs().will(invoke(DevMemAllocEntryStub));
 
-    // // ② HostRegister 失败：hostCryptoBuf 已申请，需 HostMemFree 回滚
-    // {
-    //     CCWorker worker;
-    //     CCMemcpyTaskQueue queue;
-    //     CCrypto crypto;
-    //     gHostRegFail = true;
-    //     gHostMemFreeCount = 0U;
-    //     EXPECT_NE(worker.Init(0, 1024, &queue, dev, &crypto), RT_ERROR_NONE);
-    //     EXPECT_EQ(gHostMemFreeCount, 1U);
-    // }
+    // ② HostDmaMap 失败：hostCryptoBuf 已申请，需 HostMemFree 回滚
+    {
+        CCWorker worker;
+        CCMemcpyTaskQueue queue;
+        CCrypto crypto;
+        gHostDmaMapFail = true;
+        gHostMemFreeCount = 0U;
+        EXPECT_NE(worker.Init(0, 1024, &queue, dev, &crypto), RT_ERROR_NONE);
+        EXPECT_EQ(gHostDmaUnmapCount, 0U);
+        EXPECT_EQ(gHostMemFreeCount, 1U);
+    }
 
-    // // ③ Device Buffer 申请失败：HostRegister 已成功，需 HostUnregister + HostMemFree 回滚
-    // {
-    //     CCWorker worker;
-    //     CCMemcpyTaskQueue queue;
-    //     CCrypto crypto;
-    //     gHostRegFail = false;
-    //     gDevMemAllocReturnFail = true;
-    //     gHostUnregisterCount = 0U;
-    //     gHostMemFreeCount = 0U;
-    //     EXPECT_NE(worker.Init(0, 1024, &queue, dev, &crypto), RT_ERROR_NONE);
-    //     EXPECT_EQ(gHostUnregisterCount, 1U);
-    //     EXPECT_EQ(gHostMemFreeCount, 1U);
-    // }
+    // ③ Device Buffer 申请失败：HostDmaMap 已成功，需 HostDmaUnmap + HostMemFree 回滚
+    {
+        CCWorker worker;
+        CCMemcpyTaskQueue queue;
+        CCrypto crypto;
+        gHostDmaMapFail = false;
+        gDevMemAllocReturnFail = true;
+        gHostDmaUnmapCount = 0U;
+        gHostMemFreeCount = 0U;
+        EXPECT_NE(worker.Init(0, 1024, &queue, dev, &crypto), RT_ERROR_NONE);
+        EXPECT_EQ(gHostDmaUnmapCount, 1U);
+        EXPECT_EQ(gHostMemFreeCount, 1U);
+        gDevMemAllocReturnFail = false;
+    }
 
     ((Runtime*)Runtime::Instance())->DeviceRelease(dev);
 }
@@ -1807,8 +1872,8 @@ TEST_F(CCManagerTest, CCResManage_Init_CreatesOneWorker)
     ASSERT_NE(ctrlStm, nullptr);
     MOCKER_CPP_VIRTUAL(ctrlStm, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostMemAlloc).stubs().will(invoke(HostMemAllocStub));
-    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostRegister).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostUnregister).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostDmaMap).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostDmaUnmap).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostMemFree).stubs().will(returnValue(RT_ERROR_NONE));
 
     CCResManage resource(dev);
@@ -1835,8 +1900,8 @@ TEST_F(CCManagerTest, CCResManage_SubmitTask_GrowsOneWorkerPerSubmitUpToSix)
     ASSERT_NE(ctrlStm, nullptr);
     MOCKER_CPP_VIRTUAL(ctrlStm, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostMemAlloc).stubs().will(invoke(HostMemAllocStub));
-    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostRegister).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostUnregister).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostDmaMap).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostDmaUnmap).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostMemFree).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::DevMemAllocWithBackupFlag).stubs().will(invoke(DevMemAllocEntryStub));
     MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::DevMemAllocWithFlag).stubs().will(invoke(DevMemAllocStub));
@@ -1872,8 +1937,8 @@ TEST_F(CCManagerTest, CCResManage_SubmitTask_ContinuesWithExistingWorkerWhenExpa
     ASSERT_NE(ctrlStm, nullptr);
     MOCKER_CPP_VIRTUAL(ctrlStm, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostMemAlloc).stubs().will(invoke(HostMemAllocStub));
-    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostRegister).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostUnregister).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostDmaMap).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostDmaUnmap).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostMemFree).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::DevMemAllocWithBackupFlag).stubs().will(invoke(DevMemAllocEntryStub));
     MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::DevMemAllocWithFlag).stubs().will(invoke(DevMemAllocStub));
@@ -1956,8 +2021,8 @@ TEST_F(CCManagerTest, CCResManage_Init_ErrorPaths)
     ASSERT_NE(ctrlStm, nullptr);
     MOCKER_CPP_VIRTUAL(ctrlStm, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostMemAlloc).stubs().will(invoke(HostMemAllocStub));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostRegister).stubs().will(invoke(HostRegisterStub));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostUnregister).stubs().will(invoke(HostUnregisterStub));
+    MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostDmaMap).stubs().will(invoke(HostDmaMapStub));
+    MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostDmaUnmap).stubs().will(invoke(HostDmaUnmapStub));
     MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostMemFree).stubs().will(invoke(HostMemFreeStub));
     MOCKER_CPP_VIRTUAL(realDriver, &Driver::DevMemAllocWithBackupFlag).stubs().will(invoke(DevMemAllocEntryStub));
     MOCKER_CPP_VIRTUAL(realDriver, &Driver::DevMemAllocWithFlag).stubs().will(invoke(DevMemAllocStub));
@@ -2091,8 +2156,8 @@ TEST_F(CCManagerTest, CCResManage_SubmitTask_Basics)
     ASSERT_NE(ctrlStm, nullptr);
     MOCKER_CPP_VIRTUAL(ctrlStm, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostMemAlloc).stubs().will(invoke(HostMemAllocStub));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostRegister).stubs().will(invoke(HostRegisterStub));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostUnregister).stubs().will(invoke(HostUnregisterStub));
+    MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostDmaMap).stubs().will(invoke(HostDmaMapStub));
+    MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostDmaUnmap).stubs().will(invoke(HostDmaUnmapStub));
     MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostMemFree).stubs().will(invoke(HostMemFreeStub));
     MOCKER_CPP_VIRTUAL(realDriver, &Driver::DevMemAllocWithBackupFlag).stubs().will(invoke(DevMemAllocEntryStub));
     MOCKER_CPP_VIRTUAL(realDriver, &Driver::DevMemAllocWithFlag).stubs().will(invoke(DevMemAllocStub));
@@ -2132,8 +2197,8 @@ TEST_F(CCManagerTest, Manager_InitDeviceResource_RepeatedInit)
     ASSERT_NE(ctrlStm, nullptr);
     MOCKER_CPP_VIRTUAL(ctrlStm, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostMemAlloc).stubs().will(invoke(HostMemAllocStub));
-    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostRegister).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostUnregister).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostDmaMap).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostDmaUnmap).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostMemFree).stubs().will(returnValue(RT_ERROR_NONE));
 
     CCManager manager;
@@ -2189,8 +2254,8 @@ TEST_F(CCManagerTest, Manager_ReleaseDeviceResource_Basics)
     ASSERT_NE(ctrlStm, nullptr);
     MOCKER_CPP_VIRTUAL(ctrlStm, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostMemAlloc).stubs().will(invoke(HostMemAllocStub));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostRegister).stubs().will(invoke(HostRegisterStub));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostUnregister).stubs().will(invoke(HostUnregisterStub));
+    MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostDmaMap).stubs().will(invoke(HostDmaMapStub));
+    MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostDmaUnmap).stubs().will(invoke(HostDmaUnmapStub));
     MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostMemFree).stubs().will(invoke(HostMemFreeStub));
     MOCKER_CPP_VIRTUAL(realDriver, &Driver::DevMemAllocWithBackupFlag).stubs().will(invoke(DevMemAllocEntryStub));
     MOCKER_CPP_VIRTUAL(realDriver, &Driver::DevMemAllocWithFlag).stubs().will(invoke(DevMemAllocStub));
@@ -2215,6 +2280,83 @@ TEST_F(CCManagerTest, Manager_UnsupportedCopyKind_ReturnsContinueExecute)
         RT_ERROR_CONTINUE_EXECUTE);
 }
 
+TEST_F(CCManagerTest, CheckMemAddrRangeValid_AllocationBoundary)
+{
+    constexpr uint64_t allocBase = 0x1000U;
+    constexpr size_t allocSize = 0x100U;
+    constexpr uint64_t offset = 0x80U;
+    MockMemGetAddressRange(allocBase, allocSize);
+
+    const void* const address = RtValueToPtr<const void*>(allocBase + offset);
+    EXPECT_EQ(CheckMemAddrRangeValid(address, allocSize - offset), RT_ERROR_NONE);
+    EXPECT_EQ(CheckMemAddrRangeValid(address, allocSize - offset + 1U), RT_ERROR_DRV_ERR);
+    ASSERT_EQ(gMemRangeStub.queriedAddrs.size(), 3U);
+    EXPECT_EQ(gMemRangeStub.queriedAddrs[0], allocBase + offset);
+    EXPECT_EQ(gMemRangeStub.queriedAddrs[1], allocBase + offset);
+    EXPECT_EQ(gMemRangeStub.queriedAddrs[2], allocBase + allocSize);
+}
+
+TEST_F(CCManagerTest, CheckMemAddrRangeValid_ContinuousVmmMappings)
+{
+    constexpr uint64_t allocBase = 0x1000000U;
+    constexpr size_t segmentSize = 2U * 1024U * 1024U;
+    constexpr uint64_t copySize = 5U * 1024U * 1024U;
+    MockMemGetAddressRanges({
+        {allocBase, segmentSize},
+        {allocBase + segmentSize, segmentSize},
+        {allocBase + (2U * segmentSize), segmentSize},
+    });
+
+    EXPECT_EQ(CheckMemAddrRangeValid(RtValueToPtr<const void*>(allocBase), copySize), RT_ERROR_NONE);
+    ASSERT_EQ(gMemRangeStub.queriedAddrs.size(), 3U);
+    EXPECT_EQ(gMemRangeStub.queriedAddrs[0], allocBase);
+    EXPECT_EQ(gMemRangeStub.queriedAddrs[1], allocBase + segmentSize);
+    EXPECT_EQ(gMemRangeStub.queriedAddrs[2], allocBase + (2U * segmentSize));
+}
+
+TEST_F(CCManagerTest, CheckMemAddrRangeValid_AddressOutsideAllocation)
+{
+    constexpr uint64_t allocBase = 0x2000U;
+    constexpr size_t allocSize = 0x100U;
+    MockMemGetAddressRange(allocBase, allocSize);
+
+    EXPECT_EQ(CheckMemAddrRangeValid(RtValueToPtr<const void*>(allocBase - 1U), 1U), RT_ERROR_DRV_ERR);
+    EXPECT_EQ(CheckMemAddrRangeValid(RtValueToPtr<const void*>(allocBase + allocSize + 1U), 1U), RT_ERROR_DRV_ERR);
+    EXPECT_EQ(gMemRangeStub.callCount, 2U);
+}
+
+TEST_F(CCManagerTest, CheckMemAddrRangeValid_HalFailure)
+{
+    MockMemGetAddressRange(0U, 0U, DRV_ERROR_NOT_SUPPORT);
+
+    EXPECT_EQ(CheckMemAddrRangeValid(RtValueToPtr<const void*>(0x4000U), 1U), RT_ERROR_DRV_NOT_SUPPORT);
+    EXPECT_EQ(gMemRangeStub.callCount, 1U);
+}
+
+TEST_F(CCManagerTest, CCMemCopy2DSync_ChecksDeviceAddressRange)
+{
+    uint8_t deviceBuffer[128] = {};
+    uint8_t hostBuffer[128] = {};
+    constexpr uint64_t pitch = 64U;
+    constexpr uint64_t width = 32U;
+    constexpr uint64_t height = 2U;
+    constexpr size_t rangeSize = 96U;
+    MockMemGetAddressRange(RtPtrToValue(deviceBuffer), rangeSize - 1U);
+
+    EXPECT_EQ(
+        CCManager::CCMemCopy2DSync(deviceBuffer, pitch, hostBuffer, pitch, width, height, RT_MEMCPY_HOST_TO_DEVICE),
+        RT_ERROR_DRV_ERR);
+
+    EXPECT_EQ(
+        CCManager::CCMemCopy2DSync(hostBuffer, pitch, deviceBuffer, pitch, width, height, RT_MEMCPY_DEVICE_TO_HOST),
+        RT_ERROR_DRV_ERR);
+    ASSERT_EQ(gMemRangeStub.queriedAddrs.size(), 4U);
+    EXPECT_EQ(gMemRangeStub.queriedAddrs[0], RtPtrToValue(deviceBuffer));
+    EXPECT_EQ(gMemRangeStub.queriedAddrs[1], RtPtrToValue(deviceBuffer) + rangeSize - 1U);
+    EXPECT_EQ(gMemRangeStub.queriedAddrs[2], RtPtrToValue(deviceBuffer));
+    EXPECT_EQ(gMemRangeStub.queriedAddrs[3], RtPtrToValue(deviceBuffer) + rangeSize - 1U);
+}
+
 TEST_F(CCManagerTest, Manager_MemcpyEntryPoints_EmptyInputs)
 {
     EXPECT_EQ(
@@ -2223,7 +2365,7 @@ TEST_F(CCManagerTest, Manager_MemcpyEntryPoints_EmptyInputs)
         RT_ERROR_CONTINUE_EXECUTE);
     EXPECT_EQ(
         CCManager::SubmitCcMemcpy2DTasks(nullptr, 0U, nullptr, 0U, 0U, 0U, nullptr, RT_MEMCPY_HOST_TO_DEVICE),
-        RT_ERROR_NONE);
+        RT_ERROR_INVALID_VALUE);
 
     rtMemcpyBatchAttr attrs[1]{};
     EXPECT_EQ(
@@ -2271,8 +2413,8 @@ TEST_F(CCManagerTest, Manager_GetOrCreateStreamResource_Integration)
     ASSERT_NE(ctrlStm, nullptr);
     MOCKER_CPP_VIRTUAL(ctrlStm, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostMemAlloc).stubs().will(invoke(HostMemAllocStub));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostRegister).stubs().will(invoke(HostRegisterStub));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostUnregister).stubs().will(invoke(HostUnregisterStub));
+    MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostDmaMap).stubs().will(invoke(HostDmaMapStub));
+    MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostDmaUnmap).stubs().will(invoke(HostDmaUnmapStub));
     MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostMemFree).stubs().will(invoke(HostMemFreeStub));
     MOCKER_CPP_VIRTUAL(realDriver, &Driver::DevMemAllocWithBackupFlag).stubs().will(invoke(DevMemAllocEntryStub));
     MOCKER_CPP_VIRTUAL(realDriver, &Driver::DevMemAllocWithFlag).stubs().will(invoke(DevMemAllocStub));
@@ -2362,8 +2504,8 @@ TEST_F(CCManagerTest, InitCcFeature_CcModeFlow)
     ASSERT_NE(ctrlStm, nullptr);
     MOCKER_CPP_VIRTUAL(ctrlStm, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostMemAlloc).stubs().will(invoke(HostMemAllocStub));
-    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostRegister).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostUnregister).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostDmaMap).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostDmaUnmap).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostMemFree).stubs().will(returnValue(RT_ERROR_NONE));
     ASSERT_EQ(registeredProcFunc.ccProcFunc.devResourceInit(dev), RT_ERROR_NONE);
 

@@ -507,6 +507,12 @@ rtError_t CCManager::SubmitCcMemcpy2DTasks(
     const uint64_t height, Stream* const stm, const rtMemcpyKind_t kind)
 {
     RT_LOG(RT_LOG_INFO, "SubmitCcMemcpy2DTasks in, kind=%s.", MemcpyKindToStr(kind));
+    const void* const devAddr = (kind == RT_MEMCPY_HOST_TO_DEVICE) ? dst : src;
+    const uint64_t devPitch = (kind == RT_MEMCPY_HOST_TO_DEVICE) ? dstPitch : srcPitch;
+    const uint64_t rangeSize = (height - 1U) * devPitch + width;
+    const rtError_t error = CheckMemAddrRangeValid(devAddr, rangeSize);
+    COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
+
     uint8_t* const dstBase = static_cast<uint8_t*>(dst);
     const uint8_t* const srcBase = static_cast<const uint8_t*>(src);
     for (uint64_t row = 0U; row < height; ++row) {

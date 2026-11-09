@@ -62,9 +62,8 @@ private:
     Device* device_{nullptr};
     Thread* thread_{nullptr};
     CCrypto* crypto_{nullptr};
-    void* hostCryptoBuf_{nullptr}; // Host buffer (for HostRegister and encrypt/decrypt)
-    void* hostCryptoDevPtr_{nullptr};
-    bool hostCryptoRegistered_{false};
+    void* hostCryptoBuf_{nullptr}; // Host buffer (for HostDmaMap and encrypt/decrypt)
+    bool hostCryptoDmaMapped_{false};
     void* deviceBuffers_[CC_BUFFER_SLOT_NUM]{nullptr, nullptr};
 
     CCMemcpyTaskQueue* taskQueue_{nullptr};

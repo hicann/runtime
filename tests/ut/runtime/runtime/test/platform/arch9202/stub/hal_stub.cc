@@ -577,9 +577,13 @@ drvError_t halHostRegister(void* hostPtr, UINT64 size, UINT32 flag, UINT32 devid
     return DRV_ERROR_NONE;
 }
 
+drvError_t halHostDmaMap(void* hostPtr, UINT64 size, UINT32 flag, UINT32 devid) { return DRV_ERROR_NONE; }
+
 drvError_t halMemHostGetDevPointer(void* srcPtr, UINT32 devid, void** dstPtr) { return DRV_ERROR_NONE; }
 
 drvError_t halHostUnregister(void* hostPtr, UINT32 devid) { return DRV_ERROR_NONE; }
+
+drvError_t halHostDmaUnmap(void* hostPtr, UINT32 devid) { return DRV_ERROR_NONE; }
 
 drvError_t halHostUnregisterEx(void* srcPtr, UINT32 devid, UINT32 flag) { return DRV_ERROR_NONE; }
 

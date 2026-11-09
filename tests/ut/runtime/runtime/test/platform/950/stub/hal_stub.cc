@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include <stdarg.h>
+#include <limits>
 
 #include "securec.h"
 #include "driver/ascend_hal.h"
@@ -60,6 +61,17 @@ DVresult drvMemSmmuQuery(DVdevice device, UINT32* SSID) { return DRV_ERROR_NONE;
 drvError_t halGetAPIVersion(int* halAPIVersion)
 {
     *halAPIVersion = __HAL_API_VERSION;
+    return DRV_ERROR_NONE;
+}
+
+drvError_t halMemGetAddressRange(DVdeviceptr ptr, DVdeviceptr* pbase, size_t* psize)
+{
+    if (pbase != nullptr) {
+        *pbase = ptr;
+    }
+    if (psize != nullptr) {
+        *psize = std::numeric_limits<size_t>::max();
+    }
     return DRV_ERROR_NONE;
 }
 
@@ -775,7 +787,11 @@ drvError_t halHostRegister(void* hostPtr, UINT64 size, UINT32 flag, UINT32 devid
     return DRV_ERROR_NONE;
 }
 
+drvError_t halHostDmaMap(void* hostPtr, UINT64 size, UINT32 flag, UINT32 devid) { return DRV_ERROR_NONE; }
+
 drvError_t halHostUnregister(void* hostPtr, UINT32 devid) { return DRV_ERROR_NONE; }
+
+drvError_t halHostDmaUnmap(void* hostPtr, UINT32 devid) { return DRV_ERROR_NONE; }
 
 drvError_t halHostUnregisterEx(void* srcPtr, UINT32 devid, UINT32 flag) { return DRV_ERROR_NONE; }
 

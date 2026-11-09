@@ -51,14 +51,13 @@ rtError_t CCWorker::Init(
     }
     hostCryptoBuf_ = rawBuf;
 
-    ret = device_->Driver_()->HostRegister(
-        hostCryptoBuf_, maxSliceSize_, RT_MEM_HOST_REGISTER_PINNED, &hostCryptoDevPtr_, device_->Id_());
+    ret = device_->Driver_()->HostDmaMap(hostCryptoBuf_, maxSliceSize_, device_->Id_());
     if (ret != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_ERROR, "CC worker %u failed to register hostCryptoBuf, ret=%#x", workerId_, ret);
+        RT_LOG(RT_LOG_ERROR, "CC worker %u failed to DMA map hostCryptoBuf, ret=%#x", workerId_, ret);
         Destroy();
         return ret;
     }
-    hostCryptoRegistered_ = true;
+    hostCryptoDmaMapped_ = true;
 
     for (uint32_t i = 0U; i < CC_BUFFER_SLOT_NUM; ++i) {
         ret = device_->Driver_()->DevMemAllocWithBackupFlag(
@@ -102,13 +101,12 @@ void CCWorker::Destroy()
         DELETE_O(thread_);
     }
 
-    if (hostCryptoRegistered_ && (device_ != nullptr) && (device_->Driver_() != nullptr)) {
-        rtError_t ret = device_->Driver_()->HostUnregister(hostCryptoBuf_, device_->Id_());
+    if (hostCryptoDmaMapped_ && (device_ != nullptr) && (device_->Driver_() != nullptr)) {
+        rtError_t ret = device_->Driver_()->HostDmaUnmap(hostCryptoBuf_, device_->Id_());
         if (ret != RT_ERROR_NONE) {
-            RT_LOG(RT_LOG_ERROR, "CC worker %u: HostUnregister failed, ret=%#x", workerId_, ret);
+            RT_LOG(RT_LOG_ERROR, "CC worker %u: HostDmaUnmap failed, ret=%#x", workerId_, ret);
         }
-        hostCryptoRegistered_ = false;
-        hostCryptoDevPtr_ = nullptr;
+        hostCryptoDmaMapped_ = false;
     }
 
     if (hostCryptoBuf_ != nullptr) {
@@ -252,10 +250,8 @@ rtError_t CCWorker::ProcessSlices(CCMemcpyTask& task, CCStreamResManage* const r
         size_t sliceSize = std::min(static_cast<size_t>(CC_PLAINTEXT_SLICE_SIZE), totalSize - offset);
 
         if (task.kind == RT_MEMCPY_HOST_TO_DEVICE) {
-            RT_LOG(RT_LOG_INFO, "test ProcessH2DSlice, sliceIdx=%u", i);
             ret = ProcessH2DSlice(task, resource, i, offset, sliceSize);
         } else if (task.kind == RT_MEMCPY_DEVICE_TO_HOST) {
-            RT_LOG(RT_LOG_INFO, "test ProcessD2HSlice, sliceIdx=%u", i);
             ret = ProcessD2HSlice(task, resource, i, offset, sliceSize);
         } else {
             RT_LOG(RT_LOG_ERROR, "CC worker %u: unsupported memcpy kind %d", workerId_, task.kind);
@@ -272,7 +268,6 @@ rtError_t CCWorker::ProcessSlices(CCMemcpyTask& task, CCStreamResManage* const r
 
 rtError_t CCWorker::ProcessTask(CCMemcpyTask& task)
 {
-    RT_LOG(RT_LOG_INFO, "test ProcessTask");
     std::shared_ptr<Stream> stream;
     CCStreamResManage* resource = nullptr;
     uint32_t sliceNum = 0;

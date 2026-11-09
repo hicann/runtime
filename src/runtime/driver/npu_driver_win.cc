@@ -50,11 +50,26 @@ rtError_t NpuDriver::HostRegister(void* ptr, uint64_t size, uint32_t type, void*
     return RT_ERROR_NONE;
 }
 
+rtError_t NpuDriver::HostDmaMap(void* ptr, uint64_t size, const uint32_t deviceId)
+{
+    UNUSED(ptr);
+    UNUSED(size);
+    UNUSED(deviceId);
+    return RT_ERROR_NONE;
+}
+
 rtError_t NpuDriver::HostUnregister(void* ptr, const uint32_t deviceId, const bool supportDrvPinReg)
 {
     UNUSED(ptr);
     UNUSED(deviceId);
     UNUSED(supportDrvPinReg);
+    return RT_ERROR_NONE;
+}
+
+rtError_t NpuDriver::HostDmaUnmap(void* ptr, const uint32_t deviceId)
+{
+    UNUSED(ptr);
+    UNUSED(deviceId);
     return RT_ERROR_NONE;
 }
 

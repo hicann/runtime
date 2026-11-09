@@ -76,8 +76,14 @@ public:
     // Register host memory.
     rtError_t HostRegister(void* ptr, uint64_t size, uint32_t type, void** devPtr, const uint32_t deviceId) override;
 
+    // Map host memory for confidential computing DMA.
+    rtError_t HostDmaMap(void* ptr, uint64_t size, const uint32_t deviceId) override;
+
     // Unegister host memory.
     rtError_t HostUnregister(void* ptr, const uint32_t deviceId, const bool supportDrvPinReg = false) override;
+
+    // Unmap host memory for confidential computing DMA.
+    rtError_t HostDmaUnmap(void* ptr, const uint32_t deviceId) override;
 
     // Query host memory mapping capabilities.
     rtError_t HostMemMapCapabilities(

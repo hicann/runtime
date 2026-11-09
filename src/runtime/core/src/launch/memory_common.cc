@@ -16,6 +16,7 @@
 #include "context.hpp"
 #include "context_manage.hpp"
 #include "device.hpp"
+#include "npu_driver.hpp"
 #include "reduce_task.h"
 #include "runtime.hpp"
 #include "task.hpp"
@@ -73,6 +74,43 @@ rtError_t GetPtrAttributes(const void* const ptr, rtPtrAttributes_t* const attri
         COND_RETURN_ERROR_MSG_INNER(
             error != RT_ERROR_NONE, error, "Failed to convert the driver device ID %u to user device ID, retCode=%#x",
             drvDeviceId, static_cast<uint32_t>(error));
+    }
+    return RT_ERROR_NONE;
+}
+
+rtError_t CheckMemAddrRangeValid(const void* const addr, const uint64_t size)
+{
+    COND_RETURN_ERROR(addr == nullptr, RT_ERROR_INVALID_VALUE, "Memory address is null.");
+    COND_RETURN_ERROR(size == 0U, RT_ERROR_INVALID_VALUE, "Memory range size is 0.");
+
+    uint64_t queryAddr = RtPtrToValue(addr);
+    uint64_t remainingSize = size;
+    while (remainingSize > 0U) {
+        void* baseAddr = nullptr;
+        size_t allocSize = 0U;
+        void* const queryPtr = RtValueToPtr<void*>(queryAddr);
+        const rtError_t error = NpuDriver::MemGetAddressRange(queryPtr, &baseAddr, &allocSize);
+        ERROR_RETURN(
+            error, "Failed to get memory address range, address=%p, size=%" PRIu64 ", retCode=%#x.", queryPtr,
+            remainingSize, static_cast<uint32_t>(error));
+
+        const uint64_t baseValue = RtPtrToValue(baseAddr);
+        COND_RETURN_ERROR(
+            queryAddr < baseValue, RT_ERROR_DRV_ERR,
+            "Memory address is before allocation base, address=%p, allocation_base=%p.", queryPtr, baseAddr);
+
+        const uint64_t offset = queryAddr - baseValue;
+        COND_RETURN_ERROR(
+            offset >= allocSize, RT_ERROR_DRV_ERR,
+            "Memory address is outside allocation, address=%p, allocation_base=%p, allocation_size=%zu.", queryPtr,
+            baseAddr, allocSize);
+
+        const uint64_t availableSize = allocSize - offset;
+        if (remainingSize <= availableSize) {
+            return RT_ERROR_NONE;
+        }
+        queryAddr += availableSize;
+        remainingSize -= availableSize;
     }
     return RT_ERROR_NONE;
 }

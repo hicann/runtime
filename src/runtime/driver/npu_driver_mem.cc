@@ -248,6 +248,25 @@ rtError_t NpuDriver::HostRegister(void* ptr, uint64_t size, uint32_t type, void*
     return RT_ERROR_NONE;
 }
 
+rtError_t NpuDriver::HostDmaMap(void* ptr, uint64_t size, const uint32_t deviceId)
+{
+    COND_RETURN_WARN(
+        &halHostDmaMap == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT, "[drv api] halHostDmaMap does not exist.");
+
+    const uint32_t flag = 0U;
+    const drvError_t drvRet = halHostDmaMap(ptr, static_cast<UINT64>(size), flag, deviceId);
+    RT_LOG(
+        RT_LOG_DEBUG, "halHostDmaMap: drvRetCode=%d, device_id=%u, MemSize=%" PRIu64 "!", static_cast<int32_t>(drvRet),
+        deviceId, size);
+    if (drvRet != DRV_ERROR_NONE) {
+        DRV_ERROR_PROCESS(
+            drvRet, "Call driver api halHostDmaMap failed, drvRetCode=%d, drvDevId=%u.", static_cast<int32_t>(drvRet),
+            deviceId);
+        return (drvRet == DRV_ERROR_BUSY) ? RT_ERROR_HOST_MEMORY_ALREADY_REGISTERED : RT_GET_DRV_ERRCODE(drvRet);
+    }
+    return RT_ERROR_NONE;
+}
+
 rtError_t NpuDriver::HostUnregister(void* ptr, const uint32_t deviceId, const bool supportDrvPinReg)
 {
     if (!IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MEM_HOST_REGISTER)) {
@@ -282,6 +301,23 @@ rtError_t NpuDriver::HostUnregister(void* ptr, const uint32_t deviceId, const bo
     }
 
     RT_LOG(RT_LOG_DEBUG, "HostUnregister: device_id=%u, drvRetCode=%d!", deviceId, static_cast<int32_t>(drvRet));
+    return RT_ERROR_NONE;
+}
+
+rtError_t NpuDriver::HostDmaUnmap(void* ptr, const uint32_t deviceId)
+{
+    COND_RETURN_WARN(
+        &halHostDmaUnmap == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT, "[drv api] halHostDmaUnmap does not exist.");
+
+    const drvError_t drvRet = halHostDmaUnmap(ptr, deviceId);
+    if (drvRet != DRV_ERROR_NONE) {
+        DRV_ERROR_PROCESS(
+            drvRet, "Call driver api halHostDmaUnmap failed, drvRetCode=%d, drvDevId=%u.", static_cast<int32_t>(drvRet),
+            deviceId);
+        return (drvRet == DRV_ERROR_NOT_EXIST) ? RT_ERROR_HOST_MEMORY_NOT_REGISTERED : RT_GET_DRV_ERRCODE(drvRet);
+    }
+
+    RT_LOG(RT_LOG_DEBUG, "HostDmaUnmap: device_id=%u, drvRetCode=%d!", deviceId, static_cast<int32_t>(drvRet));
     return RT_ERROR_NONE;
 }
 

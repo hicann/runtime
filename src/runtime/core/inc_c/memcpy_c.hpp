@@ -18,6 +18,7 @@
 namespace cce {
 namespace runtime {
 rtError_t GetPtrAttributes(const void* const ptr, rtPtrAttributes_t* const attributes);
+rtError_t CheckMemAddrRangeValid(const void* const addr, const uint64_t size);
 rtError_t CheckMemCpyAttr(
     const void* const dst, const void* const src, const rtMemcpyBatchAttr& memAttr, rtPtrAttributes_t& dstAttr,
     rtPtrAttributes_t& srcAttr);

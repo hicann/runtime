@@ -2465,6 +2465,21 @@ DLLEXPORT drvError_t halHostRegister(void* src_ptr, UINT64 size, UINT32 flag, UI
 
 /**
  * @ingroup driver
+ * @brief Map host memory for device DMA access.
+ * @attention Only PCIe devices in a confidential VM are supported.
+ * @attention Supports malloc, host SVM, and local VMM host mappings.
+ * @attention Overlapping mappings are unsupported. Unmap.
+ * @param [in] hostPtr: start address of the host memory range.
+ * @param [in] size: size of the memory range in bytes.
+ * @param [in] flag: reserved, must be 0.
+ * @param [in] devid: device id used to create the DMA mapping.
+ * @return DRV_ERROR_NONE : success
+ * @return DV_ERROR_XXX : map fail
+ */
+DLLEXPORT drvError_t halHostDmaMap(void* hostPtr, UINT64 size, UINT32 flag, UINT32 devid);
+
+/**
+ * @ingroup driver
  * @brief This command is used to unregister src share memory.
  * @attention null
  * @param [in] src_ptr: requested the src share memory pointer.
@@ -2473,6 +2488,17 @@ DLLEXPORT drvError_t halHostRegister(void* src_ptr, UINT64 size, UINT32 flag, UI
  * @return DV_ERROR_XXX : unregister fail
  */
 DLLEXPORT drvError_t halHostUnregister(void* src_ptr, UINT32 devid);
+
+/**
+ * @ingroup driver
+ * @brief Unmap host memory previously mapped by halHostDmaMap.
+ * @attention The input address and device id must be the same as those passed to halHostDmaMap.
+ * @param [in] hostPtr: start address passed to halHostDmaMap.
+ * @param [in] devid: device id passed to halHostDmaMap.
+ * @return DRV_ERROR_NONE : success
+ * @return DV_ERROR_XXX : unmap fail
+ */
+DLLEXPORT drvError_t halHostDmaUnmap(void* hostPtr, UINT32 devid);
 
 /**
  * @ingroup driver

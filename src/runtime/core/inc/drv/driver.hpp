@@ -125,8 +125,14 @@ public:
     // Register host memory.
     virtual rtError_t HostRegister(void* ptr, uint64_t size, uint32_t type, void** devPtr, const uint32_t deviceId) = 0;
 
+    // Map host memory for confidential computing DMA.
+    virtual rtError_t HostDmaMap(void* ptr, uint64_t size, const uint32_t deviceId) = 0;
+
     // Unegister host memory.
     virtual rtError_t HostUnregister(void* ptr, const uint32_t deviceId, const bool supportDrvPinReg = false) = 0;
+
+    // Unmap host memory for confidential computing DMA.
+    virtual rtError_t HostDmaUnmap(void* ptr, const uint32_t deviceId) = 0;
 
     // Get device pointer from host pointer
     virtual rtError_t HostGetDevPointer(

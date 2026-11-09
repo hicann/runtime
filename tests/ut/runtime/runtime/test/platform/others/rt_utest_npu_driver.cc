@@ -4318,6 +4318,75 @@ TEST_F(NpuDriverTest, host_register_02)
     delete dev;
 }
 
+uint32_t gHalHostDmaMapCallCount = 0U;
+
+drvError_t HalHostDmaMapStub(void* hostPtr, UINT64 size, UINT32 flag, UINT32 deviceId)
+{
+    ++gHalHostDmaMapCallCount;
+    EXPECT_NE(hostPtr, nullptr);
+    EXPECT_EQ(size, static_cast<UINT64>(100U));
+    EXPECT_EQ(flag, 0U);
+    EXPECT_EQ(deviceId, 0U);
+    return DRV_ERROR_NONE;
+}
+
+drvError_t HalHostDmaUnmapStub(void* hostPtr, UINT32 deviceId)
+{
+    EXPECT_NE(hostPtr, nullptr);
+    EXPECT_EQ(deviceId, 0U);
+    return DRV_ERROR_NONE;
+}
+
+TEST_F(NpuDriverTest, host_dma_map)
+{
+    int32_t ptr = 0;
+    NpuDriver driver;
+
+    gHalHostDmaMapCallCount = 0U;
+    MOCKER(halHostDmaMap).expects(once()).will(invoke(HalHostDmaMapStub));
+    EXPECT_EQ(driver.HostDmaMap(&ptr, 100U, 0U), RT_ERROR_NONE);
+    EXPECT_EQ(gHalHostDmaMapCallCount, 1U);
+
+    MOCKER(halHostDmaUnmap).expects(once()).will(invoke(HalHostDmaUnmapStub));
+    EXPECT_EQ(driver.HostDmaUnmap(&ptr, 0U), RT_ERROR_NONE);
+}
+
+TEST_F(NpuDriverTest, host_dma_map_failed)
+{
+    int32_t ptr = 0;
+    NpuDriver driver;
+
+    MOCKER(halHostDmaMap).expects(once()).will(returnValue(DRV_ERROR_INVALID_VALUE));
+    EXPECT_EQ(driver.HostDmaMap(&ptr, 100U, 0U), RT_GET_DRV_ERRCODE(DRV_ERROR_INVALID_VALUE));
+
+    MOCKER(halHostDmaUnmap).expects(once()).will(returnValue(DRV_ERROR_INVALID_VALUE));
+    EXPECT_EQ(driver.HostDmaUnmap(&ptr, 0U), RT_GET_DRV_ERRCODE(DRV_ERROR_INVALID_VALUE));
+}
+
+TEST_F(NpuDriverTest, host_dma_map_special_error)
+{
+    int32_t ptr = 0;
+    NpuDriver driver;
+
+    MOCKER(halHostDmaMap).expects(once()).will(returnValue(DRV_ERROR_BUSY));
+    EXPECT_EQ(driver.HostDmaMap(&ptr, 100U, 0U), RT_ERROR_HOST_MEMORY_ALREADY_REGISTERED);
+
+    MOCKER(halHostDmaUnmap).expects(once()).will(returnValue(DRV_ERROR_NOT_EXIST));
+    EXPECT_EQ(driver.HostDmaUnmap(&ptr, 0U), RT_ERROR_HOST_MEMORY_NOT_REGISTERED);
+}
+
+TEST_F(NpuDriverTest, host_dma_map_driver_not_support)
+{
+    int32_t ptr = 0;
+    NpuDriver driver;
+
+    MOCKER(halHostDmaMap).expects(once()).will(returnValue(DRV_ERROR_NOT_SUPPORT));
+    EXPECT_EQ(driver.HostDmaMap(&ptr, 100U, 0U), RT_GET_DRV_ERRCODE(DRV_ERROR_NOT_SUPPORT));
+
+    MOCKER(halHostDmaUnmap).expects(once()).will(returnValue(DRV_ERROR_NOT_SUPPORT));
+    EXPECT_EQ(driver.HostDmaUnmap(&ptr, 0U), RT_GET_DRV_ERRCODE(DRV_ERROR_NOT_SUPPORT));
+}
+
 TEST_F(NpuDriverTest, host_register_03)
 {
     rtError_t error;
