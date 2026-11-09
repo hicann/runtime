@@ -346,6 +346,33 @@ TEST_F(ProcessModeManagerTest, GetLogLevel_EnvironmentMalformed_UsesDlogLevel)
     EXPECT_EQ(processModeManager.logLevel_, "104");
 }
 
+TEST_F(ProcessModeManagerTest, GetLogLevel_ModuleLevelsConfigured_UpdatesSharedContext)
+{
+    char env[] = "CCECPU=1:AICPU=2";
+    MOCKER(mmSysGetEnv).stubs().will(returnValue(&env[0U]));
+    ProcessModeManager processModeManager(deviceId, PROCESS_MODE);
+    EXPECT_EQ(processModeManager.sharedCtx_.ccecpuLogLevel, "1");
+    EXPECT_EQ(processModeManager.sharedCtx_.aicpuLogLevel, "2");
+}
+
+TEST_F(ProcessModeManagerTest, GetLogLevel_ModuleLevelsContainRegexCharacters_ParsesValidEntries)
+{
+    char env[] = "OTHER=[1]:CCECPU=0:AICPU=3";
+    MOCKER(mmSysGetEnv).stubs().will(returnValue(&env[0U]));
+    ProcessModeManager processModeManager(deviceId, PROCESS_MODE);
+    EXPECT_EQ(processModeManager.sharedCtx_.ccecpuLogLevel, "0");
+    EXPECT_EQ(processModeManager.sharedCtx_.aicpuLogLevel, "3");
+}
+
+TEST_F(ProcessModeManagerTest, GetLogLevel_InvalidModuleLevels_KeepsDefaults)
+{
+    char env[] = "CCECPU=4:AICPU=-1:CCECPU=abc:AICPU=99999999999999999999:OTHER=1:CCECPU";
+    MOCKER(mmSysGetEnv).stubs().will(returnValue(&env[0U]));
+    ProcessModeManager processModeManager(deviceId, PROCESS_MODE);
+    EXPECT_TRUE(processModeManager.sharedCtx_.ccecpuLogLevel.empty());
+    EXPECT_TRUE(processModeManager.sharedCtx_.aicpuLogLevel.empty());
+}
+
 TEST_F(ProcessModeManagerTest, Open_CommonInterfaceUnsupported_ReturnsError)
 {
     ProcessModeManager processModeManager(deviceId, 0);

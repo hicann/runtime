@@ -172,9 +172,7 @@ void ProcessModeManager::GetLogLevel()
         if (ValidateStr(envEventLevel.c_str(), eventPattern.c_str())) {
             eventLevelString = envEventLevel;
         }
-        if (ValidateStr(envModuleLogLevel.c_str(), envModuleLogLevel.c_str())) {
-            ParseModuleLogLevel(envModuleLogLevel);
-        }
+        ParseModuleLogLevel(envModuleLogLevel);
     }
     logLevel_ = eventLevelString + "0" + logLevelString;
     TSD_INFO("[TsdClient] Get Log Level[%s]", logLevel_.c_str());
