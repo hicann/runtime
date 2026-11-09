@@ -189,6 +189,7 @@ set(libruntime_cmodel_v200_task_src_files
     ${RUNTIME_CORE_DIR}/src/task/task_info/memory/memory_task_v200.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/davinci/davinci_kernel_task_v200.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/davinci/davinci_kernel_task_arch920x.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/dma/ubdma_task_arch920x.cc
 )
 
 set(libruntime_cmodel_api_src_files_cmodel

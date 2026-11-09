@@ -153,6 +153,7 @@ set(runtimeut_david_series_common_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/maintenance/float_status_task_v200_base.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/timeout_set/timeout_set_task_v200_base.cc
     ${TOP_DIR}/src/runtime/core/src/task/stars_external_event_cond_isa_helper.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/dma/ubdma_task_arch920x.cc
 
 )
 
@@ -495,6 +496,7 @@ set(runtimeut_src_tiny_exclude_list
     ${TOP_DIR}/src/runtime/feature/xpu/xpu_task_fail_callback_data_manager.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/memory/memory_task_v100_external_event.cc
     ${TOP_DIR}/src/runtime/core/src/task/stars_external_event_cond_isa_helper.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/dma/ubdma_task_arch920x.cc
 )
 
 set(runtimeut_src_tiny_include_list

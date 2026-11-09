@@ -36,6 +36,7 @@
 
 namespace cce {
 namespace runtime {
+constexpr uint32_t UBDMA_CQE_JETTY_INFO_NUM = 2U;
 
 #pragma pack(push)
 #pragma pack(1)
@@ -340,6 +341,12 @@ struct RtLogicCqReportMsg {
     volatile uint32_t pay_load;
 };
 
+struct TaskJettyStatus {
+    uint16_t jettyId;
+    uint8_t status;
+    uint8_t subStatus;
+};
+
 /**
  * @ingroup engine or starsEngine
  * @brief the type definition of logic cq for all chipType(total 32 bytes).
@@ -362,6 +369,7 @@ struct rtLogicCqReport_t {
     union {
         volatile uint64_t timeStamp;
         volatile uint16_t sqeIndex;
+        TaskJettyStatus info[UBDMA_CQE_JETTY_INFO_NUM];
     } u1;
     /* Union description:
      *  Internal: enque_timestamp temporarily used as dfx
@@ -395,6 +403,7 @@ struct rtCqReport_t {
     union {
         volatile uint64_t timeStamp;
         volatile uint16_t sqeIndex;
+        TaskJettyStatus info[UBDMA_CQE_JETTY_INFO_NUM];
     } u1;
     /* Union description:
      *  Internal: enque_timestamp temporarily used as dfx

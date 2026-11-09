@@ -25,11 +25,6 @@ namespace runtime {
 #if F_DESC("UbDbSendTask")
 constexpr uint32_t STARS_UBDMA_EXIST_ERROR = 0xFFU;
 constexpr uint32_t JETTY_WORK_REQUEST_FLUSHED = 0x6U;
-static unordered_map<uint32_t, string> ubdmaTaskErr{
-    {1U, "unsupported opcode!"},      {2U, "local operation error!"},
-    {3U, "remote operation error!"},  {4U, "transaction retry counter exceeded!"},
-    {5U, "transaction ack timeout!"}, {6U, "jetty work request flushed!"}};
-
 rtError_t UbDbSendTaskInit(TaskInfo* taskInfo, const rtUbDbInfo_t* dbInfo, const uint16_t source)
 {
     TaskCommonInfoInit(taskInfo);
@@ -116,7 +111,16 @@ void DoCompleteSuccessForUbDmaDbModeTask(TaskInfo* taskInfo, const uint32_t devI
 }
 #endif
 
-void SetResultForUbDmaTask(TaskInfo* taskInfo, const rtCqReport_t& logicCq)
+const unordered_map<uint32_t, string>& GetUbDmaTaskErrorMap()
+{
+    static const unordered_map<uint32_t, string> ubDmaTaskErrors = {
+        {1U, "unsupported opcode!"},      {2U, "local operation error!"},
+        {3U, "remote operation error!"},  {4U, "transaction retry counter exceeded!"},
+        {5U, "transaction ack timeout!"}, {6U, "jetty work request flushed!"}};
+    return ubDmaTaskErrors;
+}
+
+void SetUbDmaErrorCode(TaskInfo* taskInfo, const rtCqReport_t& logicCq)
 {
     if ((logicCq.errorType & RT_STARS_EXIST_ERROR) != 0U) {
         static uint32_t errMap[TS_STARS_ERROR_MAX_INDEX] = {
@@ -126,13 +130,21 @@ void SetResultForUbDmaTask(TaskInfo* taskInfo, const rtCqReport_t& logicCq)
             static_cast<uint32_t>(BitScan(static_cast<uint64_t>(logicCq.errorType & RT_STARS_EXIST_ERROR)));
         taskInfo->errorCode = errMap[errorIndex];
     }
+}
+
+static void SetResultForUbDmaTask(TaskInfo* taskInfo, const rtCqReport_t& logicCq)
+{
+    SetUbDmaErrorCode(taskInfo, logicCq);
     if (taskInfo->errorCode == TS_ERROR_TASK_SW_STATUS_ERROR) {
         return;
     }
-    const uint32_t ubTaskErr = logicCq.errorCode & STARS_UBDMA_EXIST_ERROR;
+    const uint32_t ubTaskErr =
+        logicCq.errorCode & STARS_UBDMA_EXIST_ERROR; // cqe info: merge_status = status0 | status1
     RT_LOG(RT_LOG_WARNING, "ubdma report cqe status :0x%x", ubTaskErr);
-    if ((ubdmaTaskErr.count(ubTaskErr) != 0) && (ubTaskErr != JETTY_WORK_REQUEST_FLUSHED)) {
-        RT_LOG(RT_LOG_ERROR, "ubdma complete status of the cqe :%s", ubdmaTaskErr[ubTaskErr].c_str());
+    const auto& ubDmaTaskErrors = GetUbDmaTaskErrorMap();
+    const auto errorIt = ubDmaTaskErrors.find(ubTaskErr);
+    if ((errorIt != ubDmaTaskErrors.end()) && (ubTaskErr != JETTY_WORK_REQUEST_FLUSHED)) {
+        RT_LOG(RT_LOG_ERROR, "ubdma complete status of the cqe :%s", errorIt->second.c_str());
     }
 }
 
@@ -231,7 +243,7 @@ uint32_t GetSendSqeNumForDirectWqeTask(const TaskInfo* const taskInfo)
 }
 #endif
 
-static void ConstructDavidSqeForUbDirectSendTask(TaskInfo* taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
+void ConstructDavidSqeForUbDirectSendTask(TaskInfo* taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
 {
     rtDavidSqe_t* davidSqe = static_cast<rtDavidSqe_t*>(sqe);
     uint64_t sqBaseAddr = sqeInfo.sqBaseAddr;
@@ -275,7 +287,7 @@ static void ConstructDavidSqeForUbDirectSendTask(TaskInfo* taskInfo, void* const
     UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 
-static void ConstructDavidSqeForUbDbSendTask(TaskInfo* taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
+void ConstructDavidSqeForUbDbSendTask(TaskInfo* taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
 {
     rtDavidSqe_t* davidSqe = static_cast<rtDavidSqe_t*>(sqe);
     UNUSED(sqeInfo);
@@ -329,7 +341,7 @@ static bool UbDmaTaskRegister()
         .setStarsResultFunc = &SetResultForUbDmaTask,
     };
 
-    const auto& chips = GetDavidChips();
+    constexpr rtChipType_t chips[] = {CHIP_DAVID, CHIP_ASCEND_350, CHIP_MC62CM12A, CHIP_MC32DM11A};
     for (const auto chip : chips) {
         RegTaskFunc(chip, TS_TASK_TYPE_UB_DB_SEND, ubDbFuncs);
         RegTaskFunc(chip, TS_TASK_TYPE_DIRECT_SEND, directSendFuncs);

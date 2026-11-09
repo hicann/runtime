@@ -588,7 +588,6 @@ void StarsV2DoCompleteSuccessForMemcpyAsyncTask(TaskInfo* const taskInfo, const 
 rtError_t UbDbSendTaskInit(TaskInfo* taskInfo, const rtUbDbInfo_t* dbInfo, const uint16_t source);
 void PrintErrorInfoForUbDbSendTask(TaskInfo* taskInfo, const uint32_t devId);
 void DoCompleteSuccessForUbDmaDbModeTask(TaskInfo* taskInfo, const uint32_t devId);
-void SetResultForUbDmaTask(TaskInfo* taskInfo, const rtCqReport_t& logicCq);
 void UbDirectSendTaskInit(TaskInfo* taskInfo, rtUbWqeInfo_t* wqeInfo);
 void PrintErrorInfoForUbDirectSendTask(TaskInfo* taskInfo, const uint32_t devId);
 void DoCompleteSuccessForUbDmaDirectWqeModeTask(TaskInfo* taskInfo, const uint32_t devId);
@@ -642,6 +641,10 @@ void ConstructDavidSqeForCallbackLaunchTask(TaskInfo* const taskInfo, void* cons
 
 rtError_t WriteValuePtrTaskInit(TaskInfo* taskInfo, Event* event, const void* const pointedAddr, TaskWrCqeFlag cqeFlag);
 void ConstructDavidSqeForWriteValueTask(TaskInfo* const taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo);
+void ConstructDavidSqeForUbDirectSendTask(TaskInfo* taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo);
+void ConstructDavidSqeForUbDbSendTask(TaskInfo* taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo);
+const std::unordered_map<uint32_t, std::string>& GetUbDmaTaskErrorMap();
+void SetUbDmaErrorCode(TaskInfo* taskInfo, const rtCqReport_t& logicCq);
 } // namespace runtime
 } // namespace cce
 #endif // __CCE_RUNTIME_STARS_DAVID_HPP__
