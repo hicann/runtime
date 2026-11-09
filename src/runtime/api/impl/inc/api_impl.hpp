@@ -17,7 +17,7 @@ namespace cce {
 namespace runtime {
 
 // RT split mode
-enum class SplitMode {
+enum class SplitMode : int32_t {
     RT_NO_SPLIT_MODE = 0,
     RT_SPLIT_MODE = 1,
 };
