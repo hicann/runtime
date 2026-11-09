@@ -284,12 +284,11 @@ TEST_F(ArgsCopyTest, IndependentSnapshotsSurviveSourceChangeAndTaskDestruction)
     EXPECT_EQ(state_.frees, 2U);
 }
 
-TEST_F(ArgsCopyTest, CopiesKernelTypesExactLengthsAndSimtPrefix)
+TEST_F(ArgsCopyTest, CopiesKernelTypesAndExactLengths)
 {
     for (auto type : {TS_TASK_TYPE_KERNEL_AICORE, TS_TASK_TYPE_KERNEL_AIVEC}) {
         task_.type = type;
         for (uint32_t size : {1U, 7U, 63U, 64U, 65U}) {
-            task_.u.aicTaskInfo.simtParamOffset = (type == TS_TASK_TYPE_KERNEL_AIVEC && size >= 32U) ? 32U : 0U;
             task_.u.aicTaskInfo.comm.argsSize = size;
             Copy();
         }
@@ -302,8 +301,7 @@ TEST_F(ArgsCopyTest, CopiesLoadedArgsDespitePendingParamsDisableOrUploadHandle)
     std::array<uint8_t, 8> cached{};
     update.latestParams.isValid = 1U;
     update.latestParams.type = RT_TASK_KERNEL;
-    update.latestParams.u.kernelUpdateParams.args = cached.data();
-    update.latestParams.u.kernelUpdateParams.argsSize = cached.size();
+    auto& pending = update.latestParams.u.kernelUpdateParams;
     task_.updateInfo = &update;
     task_.updateFlag = static_cast<uint8_t>(TaskUpdateFlag::RT_TASK_DISABLE);
     model_->SetCaptureModelStatus(RtCaptureModelStatus::UPDATING);
@@ -314,8 +312,13 @@ TEST_F(ArgsCopyTest, CopiesLoadedArgsDespitePendingParamsDisableOrUploadHandle)
     handle.kerArgs = source_.data();
     MOCKER_CPP(&H2DCopyMgr::H2DMemCopyWaitFinish).expects(never());
     task_.u.aicTaskInfo.comm.argHandle = &handle;
-    for (uint32_t host : {0U, 1U}) {
-        update.latestParams.u.kernelUpdateParams.isHostArgs = host;
+    for (auto argsType : {RT_KERNEL_ARGS_DEVICE_BUFFER, RT_KERNEL_ARGS_HOST_BUFFER}) {
+        pending.argsType = argsType;
+        if (argsType == RT_KERNEL_ARGS_HOST_BUFFER) {
+            pending.hostBuffer = {cached.data(), cached.size(), nullptr, 0U};
+        } else {
+            pending.deviceBuffer = {cached.data(), cached.size()};
+        }
         Copy();
     }
     task_.u.aicTaskInfo.comm.argHandle = nullptr;
@@ -335,6 +338,10 @@ TEST_F(ArgsCopyTest, RejectsNonKernelAndInnerTasksWithoutAllocating)
         task_.type = type;
         ExpectFailure();
     }
+    task_.type = TS_TASK_TYPE_KERNEL_AIVEC;
+    task_.u.aicTaskInfo.simtParamOffset = SIMT_IMPLICIT_PARAM_SIZE;
+    ExpectFailure(ACL_ERROR_RT_PARAM_INVALID);
+    task_.u.aicTaskInfo.simtParamOffset = 0U;
     task_.type = TS_TASK_TYPE_KERNEL_AICORE;
     task_.taskOwner = static_cast<uint8_t>(TaskOwner::RT_TASK_INNER);
     ExpectFailure();
