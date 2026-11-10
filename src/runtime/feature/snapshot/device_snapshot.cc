@@ -190,6 +190,10 @@ rtError_t DeviceSnapshot::OpMemoryRestore(void)
 
 rtError_t DeviceSnapshot::ArgsPoolConvertAddr(H2DCopyMgr* const mgr) const
 {
+    if (mgr == nullptr) {
+        return RT_ERROR_NONE;
+    }
+
     rtError_t ret = RT_ERROR_NONE;
     if (mgr->GetPolicy() == COPY_POLICY_ASYNC_PCIE_DMA) {
         ret = mgr->ArgsPoolConvertAddr();

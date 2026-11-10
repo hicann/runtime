@@ -704,6 +704,11 @@ TEST_F(DavidSnapshotTest, DeviceSnapshotUbArgsPoolRestore_NotConnectUb)
     rt->SetConnectUbFlag(true);
 }
 
+TEST_F(DavidSnapshotTest, DeviceSnapshotArgsPoolConvertAddr_NullMgr)
+{
+    EXPECT_EQ(deviceSnapshot_->ArgsPoolConvertAddr(nullptr), RT_ERROR_NONE);
+}
+
 TEST_F(DavidSnapshotTest, DeviceSnapshotUbArgsPoolRestore_Success)
 {
     Runtime* rt = Runtime::Instance();
