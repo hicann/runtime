@@ -612,7 +612,7 @@ TEST_F(EventTestDavid, TestElapsedTime)
     DavidEvent* endEvt = static_cast<DavidEvent*>(rt_ut::UnwrapOrNull<Event>(end));
     endEvt->SetRecord(false);
 
-    float32_t timeInterval = 0;
+    float32_t timeInterval = 123.0F;
     error = endEvt->ElapsedTime(&timeInterval, startEvt);
     EXPECT_EQ(error, RT_ERROR_EVENT_RECORDER_NULL);
 
@@ -625,11 +625,21 @@ TEST_F(EventTestDavid, TestElapsedTime)
     EXPECT_EQ(startEvt->TimeStamp(), UINT64_MAX);
     EXPECT_EQ(endEvt->TimeStamp(), UINT64_MAX);
     error = endEvt->ElapsedTime(&timeInterval, startEvt);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    EXPECT_FLOAT_EQ(timeInterval, 0.0F);
+    EXPECT_EQ(error, RT_ERROR_EVENT_TIMESTAMP_INVALID);
+    EXPECT_FLOAT_EQ(timeInterval, 123.0F);
 
     startEvt->SetTimeStamp(10240000);
+    error = endEvt->ElapsedTime(&timeInterval, startEvt);
+    EXPECT_EQ(error, RT_ERROR_EVENT_TIMESTAMP_INVALID);
+    EXPECT_FLOAT_EQ(timeInterval, 123.0F);
+
+    startEvt->SetTimeStamp(UINT64_MAX);
     endEvt->SetTimeStamp(20480000);
+    error = endEvt->ElapsedTime(&timeInterval, startEvt);
+    EXPECT_EQ(error, RT_ERROR_EVENT_TIMESTAMP_INVALID);
+    EXPECT_FLOAT_EQ(timeInterval, 123.0F);
+
+    startEvt->SetTimeStamp(10240000);
     error = endEvt->ElapsedTime(&timeInterval, startEvt);
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_FLOAT_EQ(timeInterval, 10.24F);
