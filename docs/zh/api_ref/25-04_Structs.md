@@ -18,7 +18,6 @@ struct 类型数据。
 - [aclmdlRIMemsetTaskParams](#aclmdlRIMemsetTaskParams)
 - [aclmdlRINotifyRecordTaskParams](#aclmdlRINotifyRecordTaskParams)
 - [aclmdlRINotifyWaitTaskParams](#aclmdlRINotifyWaitTaskParams)
-- [aclmdlRISimtKernelTaskParams](#aclmdlRISimtKernelTaskParams)
 - [aclmdlRITaskParams](#aclmdlRITaskParams)
 - [aclmdlRIValueWaitTaskParams](#aclmdlRIValueWaitTaskParams)
 - [aclmdlRIValueWriteTaskParams](#aclmdlRIValueWriteTaskParams)
@@ -435,54 +434,6 @@ typedef struct aclmdlRINotifyWaitTaskParams {
 
 <br>
 
-<a id="aclmdlRISimtKernelTaskParams"></a>
-
-## aclmdlRISimtKernelTaskParams
-
-```c
-typedef struct aclmdlRISimtKernelTaskParams {
-    void* func;
-    uint32_t gridDimX;
-    uint32_t gridDimY;
-    uint32_t gridDimZ;
-    uint32_t blockDimX;
-    uint32_t blockDimY;
-    uint32_t blockDimZ;
-    size_t dynUbufSize;
-    aclrtLaunchKernelCfg* cfg;
-    aclrtKernelArgsType argsType;
-    uint8_t rsv0[4];
-    union {
-        void** argsArray;
-        struct {
-            void* hostArgs;
-            size_t hostArgsSize;
-            aclrtPlaceHolderInfo* placeHolderArray;
-            size_t placeHolderNum;
-        } hostBuffer;
-    };
-} aclmdlRISimtKernelTaskParams;
-```
-
-| 成员名称 | 描述 |
-| --- | --- |
-| func | 核函数指针。此处可以是`__global__`声明的核函数名（比如myKernel，仅适用于Ascend C语言开发自定义算子并基于毕昇编译器进行Host和Device代码混合编译的场景），也可以是[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)类型的核函数句柄。 |
-| gridDimX | Grid维度的X分量。设置接口（aclmdlRITaskSetParams）要求gridDimX、gridDimY、gridDimZ三者均大于0，否则返回错误。语义与launch接口aclrtLaunchSIMTKernelWithArgsArray的gridDim入参的x分量一致。 |
-| gridDimY | Grid维度的Y分量。取值约束同gridDimX。 |
-| gridDimZ | Grid维度的Z分量。取值约束同gridDimX。 |
-| blockDimX | Block维度的X分量。设置接口（aclmdlRITaskSetParams）要求blockDimX、blockDimY、blockDimZ三者均大于0，否则返回错误。语义与launch接口aclrtLaunchSIMTKernelWithArgsArray的blockDim入参的x分量一致。 |
-| blockDimY | Block维度的Y分量。取值约束同blockDimX。 |
-| blockDimZ | Block维度的Z分量。取值约束同blockDimX。 |
-| dynUbufSize | 动态UB大小，单位Byte。 |
-| cfg | 下发算子任务的配置信息。查询接口中固定返回nullptr，仅设置接口使用，不指定配置时可为nullptr。类型定义请参见[aclrtLaunchKernelCfg](#aclrtLaunchKernelCfg)。 |
-| argsType | 参数形态，仅支持ACL_RT_KERNEL_ARGS_ARRAY或ACL_RT_KERNEL_ARGS_HOST_BUFFER。类型定义请参见[aclrtKernelArgsType](25-02_Enumerations.md#aclrtKernelArgsType)。<br>查询接口（aclmdlRITaskGetParams）返回该任务实际的参数形态。<br>设置接口（aclmdlRITaskSetParams）要求填入非0值，并填写union中对应成员。 |
-| rsv0 | 预留参数。 |
-| argsArray | 参数指针数组（ACL_RT_KERNEL_ARGS_ARRAY形态）。查询接口输出，指向Runtime内部只读内存，在下次设置或任务销毁后失效；设置接口输入，各元素指向用户参数数据，参数数组需与核函数参数的顺序与数量一一对应，否则会导致未定义行为。 |
-| hostBuffer.hostArgs / hostBuffer.hostArgsSize | Host参数块及其大小（ACL_RT_KERNEL_ARGS_HOST_BUFFER形态）。查询接口输出指向Runtime内部只读内存，在下次设置或任务销毁后失效。 |
-| hostBuffer.placeHolderArray / hostBuffer.placeHolderNum | placeholder信息数组及其个数，语义与launch接口aclrtLaunchSIMTKernelWithHostArgs的入参一致。 |
-
-<br>
-
 <a id="aclmdlRITaskParams"></a>
 
 ## aclmdlRITaskParams
@@ -499,7 +450,6 @@ typedef struct aclmdlRITaskParams {
     union {
         uint8_t rsv2[128];
         struct aclmdlRIKernelTaskParams kernelTaskParams;
-        struct aclmdlRISimtKernelTaskParams simtKernelTaskParams;
         struct aclmdlRIEventRecordTaskParams eventRecordTaskParams;
         struct aclmdlRIEventWaitTaskParams eventWaitTaskParams;
         struct aclmdlRIEventResetTaskParams eventResetTaskParams;
@@ -526,7 +476,6 @@ typedef struct aclmdlRITaskParams {
 | rsv1 | 预留参数。 |
 | rsv2 | 预留参数。 |
 | kernelTaskParams | 算子任务的参数。类型定义请参见[aclmdlRIKernelTaskParams](#aclmdlRIKernelTaskParams)。 |
-| simtKernelTaskParams | SIMT算子任务的参数，type为ACL_MODEL_RI_TASK_SIMT_KERNEL时有效。类型定义请参见[aclmdlRISimtKernelTaskParams](#aclmdlRISimtKernelTaskParams)。 |
 | eventRecordTaskParams | Event Record任务（通常对应aclrtRecordEvent接口下发的任务）的参数。类型定义请参见[aclmdlRIEventRecordTaskParams](#aclmdlRIEventRecordTaskParams)。<br>该参数作为查询接口的输出，设置接口无需关注。 |
 | eventWaitTaskParams | Event Wait任务（通常对应aclrtStreamWaitEvent或aclrtStreamWaitEventWithTimeout接口下发的任务）的参数。类型定义请参见[aclmdlRIEventWaitTaskParams](#aclmdlRIEventWaitTaskParams)。<br>该参数作为查询接口的输出，设置接口无需关注。 |
 | eventResetTaskParams | Event Reset任务（通常对应aclrtResetEvent接口下发的任务）的参数。类型定义请参见[aclmdlRIEventResetTaskParams](#aclmdlRIEventResetTaskParams)。<br>该参数作为查询接口的输出，设置接口无需关注。 |
