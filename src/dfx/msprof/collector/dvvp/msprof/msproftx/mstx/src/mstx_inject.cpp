@@ -433,42 +433,34 @@ static_assert(
     static_cast<int>(MSTX_API_MODULE_CORE_NAME) == 4,
     "MSTX_API_MODULE_CORE_NAME must match mstx client enum (CORE_MEM occupies 3)");
 
+namespace {
+// 本通道实现的 mstx 模块表填充清单。只遍历本仓真正实现的模块，对端枚举里多出来的
+// 模块号既不查询也不当作失败：注册失败会让 mstx 客户端清空全部函数指针，
+// mark/range 打点会整体缺失且没有运行期日志。
+// CORE_MEM 本仓不实现，故不在清单内。
+const MstxModuleBinder kMstxModuleBinders[] = {
+    {MSTX_API_MODULE_CORE, SetMstxModuleCoreApi},
+    {MSTX_API_MODULE_CORE_DOMAIN, SetMstxModuleCoreDomainApi},
+    {MSTX_API_MODULE_CORE_NAME, SetMstxModuleCoreNameApi},
+};
+} // namespace
+
 int GetModuleTableFunc(MstxGetModuleFuncTableFunc getFuncTable)
 {
-    int retVal = MSTX_SUCCESS;
     unsigned int outSize = 0;
-    MstxFuncTable outTable;
-    static std::vector<unsigned int> CheckOutTableSizes = {
-        0, MSTX_FUNC_END, MSTX_FUNC_DOMAIN_END, 0, MSTX_FUNC_NAME_END};
-    for (size_t i = MSTX_API_MODULE_CORE; i < MSTX_API_MODULE_SIZE; i++) {
-        if (getFuncTable(static_cast<MstxFuncModule>(i), &outTable, &outSize) != MSTX_SUCCESS) {
-            MSPROF_LOGW("Failed to get func table for module %zu", i);
+    MstxFuncTable outTable = nullptr;
+    for (const auto& binder : kMstxModuleBinders) {
+        if (getFuncTable(binder.module, &outTable, &outSize) != MSTX_SUCCESS) {
+            MSPROF_LOGW("Failed to get func table for module %d", static_cast<int>(binder.module));
             continue;
         }
-        switch (i) {
-            case MSTX_API_MODULE_CORE:
-                SetMstxModuleCoreApi(outTable, outSize);
-                break;
-            case MSTX_API_MODULE_CORE_DOMAIN:
-                SetMstxModuleCoreDomainApi(outTable, outSize);
-                break;
-            case MSTX_API_MODULE_CORE_MEM:
-                // 本仓不实现 mstx mem 系列接口，跳过但不算失败
-                break;
-            case MSTX_API_MODULE_CORE_NAME:
-                SetMstxModuleCoreNameApi(outTable, outSize);
-                break;
-            default:
-                MSPROF_LOGE("Invalid func module type");
-                retVal = MSTX_FAIL;
-                break;
+        if (outTable == nullptr || outSize == 0) {
+            continue;
         }
-        if (retVal == MSTX_FAIL) {
-            break;
-        }
-        MSPROF_LOGI("Succeed to get func table for module %zu", i);
+        binder.setter(outTable, outSize);
+        MSPROF_LOGI("Succeed to get func table for module %d", static_cast<int>(binder.module));
     }
-    return retVal;
+    return MSTX_SUCCESS;
 }
 
 int InitInjectionMstx(MstxGetModuleFuncTableFunc getFuncTable)

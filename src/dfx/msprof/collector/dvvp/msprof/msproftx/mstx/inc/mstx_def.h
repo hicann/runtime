@@ -100,4 +100,11 @@ typedef MstxFuncPointer** MstxFuncTable;
 typedef int (*MstxGetModuleFuncTableFunc)(MstxFuncModule module, MstxFuncTable* outTable, unsigned int* outSize);
 typedef int (*MstxInitInjectionFunc)(MstxGetModuleFuncTableFunc);
 
+// mstx 模块表填充器：module 是本仓实现的模块号，setter 负责把实现写进对端提供的函数表。
+// 各通道的遍历范围由自己的实现清单决定，不依赖对端枚举值 MSTX_API_MODULE_SIZE。
+struct MstxModuleBinder {
+    MstxFuncModule module;
+    void (*setter)(MstxFuncTable outTable, unsigned int outSize);
+};
+
 #endif

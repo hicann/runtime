@@ -102,6 +102,29 @@ int FakeGetTableEmpty(MstxFuncModule, MstxFuncTable* outTable, unsigned int* out
     return MSTX_SUCCESS;
 }
 
+// A getFuncTable that emulates a client exposing more modules than this channel
+// implements (CORE_MEM / CORE_NAME / unknown ids all return a valid table).
+// Injection must still succeed: a non-zero return makes the mstx client null out
+// every function pointer, so mark/range data silently disappears.
+MstxFuncPointer g_coreSlots[MSTX_FUNC_END] = {nullptr};
+MstxFuncPointer* g_coreTable[MSTX_FUNC_END] = {&g_coreSlots[0], &g_coreSlots[1], &g_coreSlots[2], &g_coreSlots[3],
+                                               &g_coreSlots[4], &g_coreSlots[5], &g_coreSlots[6], &g_coreSlots[7]};
+MstxFuncPointer g_otherSlots[MSTX_FUNC_DOMAIN_END] = {nullptr};
+MstxFuncPointer* g_otherTable[MSTX_FUNC_DOMAIN_END] = {&g_otherSlots[0], &g_otherSlots[1], &g_otherSlots[2],
+                                                       &g_otherSlots[3], &g_otherSlots[4], &g_otherSlots[5]};
+
+int FakeGetTableWithExtraModules(MstxFuncModule module, MstxFuncTable* outTable, unsigned int* outSize)
+{
+    if (module == MSTX_API_MODULE_CORE) {
+        *outTable = g_coreTable;
+        *outSize = MSTX_FUNC_END;
+    } else {
+        *outTable = g_otherTable;
+        *outSize = MSTX_FUNC_DOMAIN_END;
+    }
+    return MSTX_SUCCESS;
+}
+
 } // namespace
 
 class PROF_MSTX_PLUGIN_UTEST : public testing::Test {
@@ -226,6 +249,16 @@ TEST_F(PROF_MSTX_PLUGIN_UTEST, InitInjectionMstx_EmptyTable)
 {
     // outTable null / outSize 0 path -> SetMstxModule* skipped via 'continue'.
     EXPECT_EQ(MSTX_SUCCESS, ::InitInjectionMstx(FakeGetTableEmpty));
+}
+
+TEST_F(PROF_MSTX_PLUGIN_UTEST, InitInjectionMstx_IgnoresModulesNotImplementedHere)
+{
+    // 客户端暴露了本通道未实现的模块（CORE_MEM/CORE_NAME/未知 id）时，注册必须仍然成功，
+    // 否则 mstx 客户端会清空全部函数指针，mark/range 打点整体消失。
+    EXPECT_EQ(MSTX_SUCCESS, ::InitInjectionMstx(FakeGetTableWithExtraModules));
+    EXPECT_NE(nullptr, g_coreSlots[MSTX_FUNC_MARKA]);
+    EXPECT_NE(nullptr, g_coreSlots[MSTX_FUNC_RANGE_STARTA]);
+    EXPECT_NE(nullptr, g_coreSlots[MSTX_FUNC_RANGE_END]);
 }
 
 TEST_F(PROF_MSTX_PLUGIN_UTEST, InitInjectionMstx_RealRoundTrip)

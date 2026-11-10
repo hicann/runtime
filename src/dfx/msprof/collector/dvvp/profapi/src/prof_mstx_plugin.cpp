@@ -15,6 +15,7 @@
 #include <unordered_map>
 #include <array>
 #include "prof_load_api.h"
+#include "msprof_dlog.h"
 
 namespace {
 template <typename T, size_t N>
@@ -307,35 +308,32 @@ void SetMstxModuleCoreDomainApi(MstxFuncTable outTable, unsigned int size)
     }
 }
 
+namespace {
+// 本通道实现的 mstx 模块表填充清单。只遍历本仓真正实现的模块：
+// 对端枚举里多出来的模块号既不查询也不当作失败——注入返回失败会让 mstx 客户端
+// 清空全部函数指针（mark/range 等入口），表现为打点数据整体缺失且无日志。
+const MstxModuleBinder kMstxModuleBinders[] = {
+    {MSTX_API_MODULE_CORE, SetMstxModuleCoreApi},
+    {MSTX_API_MODULE_CORE_DOMAIN, SetMstxModuleCoreDomainApi},
+};
+} // namespace
+
 int GetModuleTableFunc(MstxGetModuleFuncTableFunc getFuncTable)
 {
-    int retVal = MSTX_SUCCESS;
     unsigned int outSize = 0;
-    MstxFuncTable outTable;
-    static std::vector<unsigned int> CheckOutTableSizes = {0, MSTX_FUNC_END, MSTX_FUNC_DOMAIN_END, 0};
-    for (size_t i = MSTX_API_MODULE_CORE; i < MSTX_API_MODULE_SIZE; i++) {
-        if (getFuncTable(static_cast<MstxFuncModule>(i), &outTable, &outSize) != MSTX_SUCCESS) {
+    MstxFuncTable outTable = nullptr;
+    for (const auto& binder : kMstxModuleBinders) {
+        if (getFuncTable(binder.module, &outTable, &outSize) != MSTX_SUCCESS) {
+            MSPROF_LOGW("Failed to get func table for module %d", static_cast<int>(binder.module));
             continue;
         }
         if (outTable == nullptr || outSize == 0) {
             continue;
         }
-        switch (i) {
-            case MSTX_API_MODULE_CORE:
-                SetMstxModuleCoreApi(outTable, outSize);
-                break;
-            case MSTX_API_MODULE_CORE_DOMAIN:
-                SetMstxModuleCoreDomainApi(outTable, outSize);
-                break;
-            default:
-                retVal = MSTX_FAIL;
-                break;
-        }
-        if (retVal == MSTX_FAIL) {
-            break;
-        }
+        binder.setter(outTable, outSize);
+        MSPROF_LOGI("Succeed to get func table for module %d", static_cast<int>(binder.module));
     }
-    return retVal;
+    return MSTX_SUCCESS;
 }
 
 int MsprofMstxGetModuleFuncTable(MstxFuncModule module, MstxFuncTable* outTable, unsigned int* outSize)

@@ -9,6 +9,7 @@
  */
 
 #include <thread>
+#include <vector>
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 #include "mstx_data_handler.h"
@@ -130,6 +131,35 @@ int GetFuncTableReturnValidOutsizeStub(MstxFuncModule module, MstxFuncTable* out
     return MSTX_SUCCESS;
 }
 
+// 模拟客户端对 CORE/CORE_DOMAIN/CORE_NAME 都提供可写表；CORE_MEM 与未知模块号拿不到表。
+// 同时记录被查询的模块，用于校验本仓只查询自己实现的模块。
+MstxFuncPointer g_nameSlots[MSTX_FUNC_NAME_END] = {nullptr};
+MstxFuncPointer* g_nameTable[MSTX_FUNC_NAME_END] = {&g_nameSlots[0], &g_nameSlots[1], &g_nameSlots[2], &g_nameSlots[3],
+                                                    &g_nameSlots[4], &g_nameSlots[5], &g_nameSlots[6], &g_nameSlots[7]};
+std::vector<MstxFuncModule> g_queriedModules;
+
+int GetFuncTableQueriedModulesStub(MstxFuncModule module, MstxFuncTable* outTable, unsigned int* outSize)
+{
+    g_queriedModules.push_back(module);
+    switch (module) {
+        case MSTX_API_MODULE_CORE:
+            *outTable = g_ctx.mstxCoreFuncTable;
+            *outSize = MSTX_FUNC_END;
+            break;
+        case MSTX_API_MODULE_CORE_DOMAIN:
+            *outTable = g_ctx.mstxCore2FuncTable;
+            *outSize = MSTX_FUNC_DOMAIN_END;
+            break;
+        case MSTX_API_MODULE_CORE_NAME:
+            *outTable = g_nameTable;
+            *outSize = MSTX_FUNC_NAME_END;
+            break;
+        default:
+            return MSTX_FAIL;
+    }
+    return MSTX_SUCCESS;
+}
+
 TEST_F(MstxUtest, GetModuleTableFuncWillReturnSuccWhenCallGetFuncTableFailed)
 {
     EXPECT_EQ(MSTX_SUCCESS, MsprofMstxApi::GetModuleTableFunc(GetFuncTableReturnFailStub));
@@ -143,6 +173,20 @@ TEST_F(MstxUtest, GetModuleTableFuncWillReturnSuccWhenGetFuncTableReturnInvalidO
 TEST_F(MstxUtest, GetModuleTableFuncWillReturnSuccWhenGetFuncTableReturnValidOutsize)
 {
     EXPECT_EQ(MSTX_SUCCESS, MsprofMstxApi::GetModuleTableFunc(GetFuncTableReturnValidOutsizeStub));
+}
+
+TEST_F(MstxUtest, GetModuleTableFuncQueriesOnlyImplementedModulesAndFillsCoreName)
+{
+    g_queriedModules.clear();
+    g_nameSlots[MSTX_FUNC_NAME_OS_THREAD] = nullptr;
+    EXPECT_EQ(MSTX_SUCCESS, MsprofMstxApi::GetModuleTableFunc(GetFuncTableQueriedModulesStub));
+    // 只查询本仓实现的模块：CORE_MEM（未实现）与未知模块号不应被查询
+    ASSERT_EQ(3U, g_queriedModules.size());
+    EXPECT_EQ(MSTX_API_MODULE_CORE, g_queriedModules[0]);
+    EXPECT_EQ(MSTX_API_MODULE_CORE_DOMAIN, g_queriedModules[1]);
+    EXPECT_EQ(MSTX_API_MODULE_CORE_NAME, g_queriedModules[2]);
+    // CORE_NAME 表必须被填充
+    EXPECT_NE(nullptr, g_nameSlots[MSTX_FUNC_NAME_OS_THREAD]);
 }
 
 TEST_F(MstxUtest, MstxDataHandlerWillSaveDataWhileRunSucc)
