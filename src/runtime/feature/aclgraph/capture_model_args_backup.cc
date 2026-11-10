@@ -13,7 +13,7 @@
 
 namespace cce {
 namespace runtime {
-rtError_t CaptureModel::CopyTaskArgsDeviceBuffer(TaskInfo* taskInfo, void** devBufferAddr, size_t* size)
+rtError_t CaptureModel::CopyTaskArgsDeviceBuffer(const TaskInfo* taskInfo, void** devBufferAddr, size_t* size)
 {
     const std::lock_guard<std::mutex> lock(updateInfo_.updateMutex);
     const auto& comm = taskInfo->u.aicTaskInfo.comm;

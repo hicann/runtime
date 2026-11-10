@@ -342,7 +342,7 @@ public:
     void InsertGraphUpdateTask(TaskInfo* const taskInfo);
     void ClearGraphUpdateTask();
     bool HasExternalEvent() { return !externalRecordEventItems_.empty(); }
-    rtError_t CopyTaskArgsDeviceBuffer(TaskInfo* taskInfo, void** devBufferAddr, size_t* size);
+    rtError_t CopyTaskArgsDeviceBuffer(const TaskInfo* taskInfo, void** devBufferAddr, size_t* size);
 
 private:
     rtError_t AllocSqCqProc(const uint32_t logicSqNum) const;
