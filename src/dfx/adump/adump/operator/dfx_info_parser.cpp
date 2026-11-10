@@ -108,6 +108,8 @@ using BlockWriteInfo = cce::runtime::BlockWriteInfo;
 using DumpInfoHead = cce::runtime::DumpInfoHead;
 using DumpTensorInfo = cce::runtime::DumpTensorInfo;
 using DumpShapeInfo = cce::runtime::DumpShapeInfo;
+using DumpSuperTensorHeader = cce::runtime::DumpSuperTensorHeader;
+using DumpSuperTensorBody = cce::runtime::DumpSuperTensorBody;
 using DumpTimeStampInfoMsg = cce::runtime::DumpTimeStampInfoMsg;
 using DumpTensorPosition = cce::runtime::DumpTensorPosition;
 using cce::runtime::RT_DUMP_SHAPE_MAX_SIZE;
@@ -162,6 +164,12 @@ const std::unordered_map<uint16_t, std::string> POSITION_MAP = {
     {static_cast<uint16_t>(DumpTensorPosition::FIXBUF), "FIXBUF"},
     {static_cast<uint16_t>(DumpTensorPosition::REG), "REG"},
 };
+
+static std::string PositionToString(const uint16_t position)
+{
+    const auto& positionIter = POSITION_MAP.find(position);
+    return (positionIter != POSITION_MAP.end()) ? positionIter->second : std::to_string(position);
+}
 
 template <typename T>
 inline T ParseParam(const uint8_t* beginAddr, const uint32_t paramIndex)
@@ -837,6 +845,17 @@ void PrintTensorWithoutShape(const DumpTensorInfo* const tensorHead, const size_
     }
 }
 
+static size_t ClipTensorDataSize(const uint32_t dumpSize, const size_t availableDataSize)
+{
+    // dumpSize 为实际数据长度，超可用长度按可用长度裁剪；dumpSize 为 0 表示未指定，取可用长度
+    if (static_cast<size_t>(dumpSize) > availableDataSize) {
+        IDE_LOGW(
+            "Tensor data size[%u bytes] exceeds available data size[%zu bytes]; print available data only.", dumpSize,
+            availableDataSize);
+    }
+    return (dumpSize == 0U) ? availableDataSize : std::min(static_cast<size_t>(dumpSize), availableDataSize);
+}
+
 void PrintDumpTensor(const DumpInfoHead* dumpHead, const uint32_t coreType, std::vector<size_t>& shape)
 {
     IDE_LOGI("Dump tensor length %u bytes.", dumpHead->infoLen);
@@ -856,19 +875,10 @@ void PrintDumpTensor(const DumpInfoHead* dumpHead, const uint32_t coreType, std:
     }
 
     const std::string addrToHex = ToHex(tensorHead->addr);
-    const auto& positionIter = POSITION_MAP.find(tensorHead->position);
-    const std::string position = (positionIter != POSITION_MAP.end()) ?
-                                     positionIter->second :
-                                     std::to_string(static_cast<uint32_t>(tensorHead->position));
+    const std::string position = PositionToString(tensorHead->position);
     const uint32_t dumpDataSize = tensorHead->dumpSize;
     const size_t availableDataSize = static_cast<size_t>(dumpHead->infoLen) - sizeof(DumpTensorInfo);
-    if (static_cast<size_t>(dumpDataSize) > availableDataSize) {
-        IDE_LOGW(
-            "Dump tensor data size[%u bytes] exceeds available data size[%zu bytes]; print available data only.",
-            dumpDataSize, availableDataSize);
-    }
-    const size_t actualDataSize =
-        (dumpDataSize == 0U) ? availableDataSize : std::min(static_cast<size_t>(dumpDataSize), availableDataSize);
+    const size_t actualDataSize = ClipTensorDataSize(dumpDataSize, availableDataSize);
     const size_t actualDataNum = actualDataSize / dataTypeSize;
 
     // shape priority: tensorShape > dumpShape
@@ -888,6 +898,316 @@ void PrintDumpTensor(const DumpInfoHead* dumpHead, const uint32_t coreType, std:
         shape = {};
     } else {
         PrintTensorWithoutShape(tensorHead, actualDataNum);
+    }
+}
+
+template <typename T>
+static void PrintSuperTensorElem(const T* nums, const SuperTensorSegInfo& seg, const size_t i)
+{
+    const size_t globalIdx = seg.elemBase + i;
+    size_t cnt = 0U;
+    for (const size_t s : seg.tmpShape) {
+        if ((globalIdx + 1U) % s == 0) {
+            cnt++;
+        }
+    }
+    std::cout << std::to_string(ConvertToStd(nums[i]));
+    if (seg.finishAtEnd && (globalIdx == seg.totalElemNum - 1U)) {
+        std::cout << std::string(seg.tmpShape.size(), ']') << std::endl;
+        return;
+    }
+    if (cnt > 0U) {
+        std::cout << std::string(cnt, ']') << ",\n" << std::string(cnt, '[');
+    } else {
+        std::cout << ",";
+    }
+}
+
+static void PrintSuperTensorBoolElem(const uint8_t* data, const SuperTensorSegInfo& seg, const size_t i)
+{
+    const size_t globalIdx = seg.elemBase + i;
+    size_t cnt = 0U;
+    for (const size_t s : seg.tmpShape) {
+        if ((globalIdx + 1U) % s == 0) {
+            cnt++;
+        }
+    }
+    std::cout << (bool(data[i]) ? "1" : "0");
+    if (seg.finishAtEnd && (globalIdx == seg.totalElemNum - 1U)) {
+        std::cout << std::string(seg.tmpShape.size(), ']') << std::endl;
+        return;
+    }
+    if (cnt > 0U) {
+        std::cout << std::string(cnt, ']') << ",\n" << std::string(cnt, '[');
+    } else {
+        std::cout << ",";
+    }
+}
+
+template <typename T>
+static void PrintSuperTensorSegment(const uint8_t* data, const size_t elemNum, const SuperTensorSegInfo& seg)
+{
+    const T* nums = reinterpret_cast<const T*>(data);
+    for (size_t i = 0U; i < elemNum; ++i) {
+        PrintSuperTensorElem(nums, seg, i);
+    }
+}
+
+static void PrintSuperTensorBoolSegment(const uint8_t* data, const size_t elemNum, const SuperTensorSegInfo& seg)
+{
+    for (size_t i = 0U; i < elemNum; ++i) {
+        PrintSuperTensorBoolElem(data, seg, i);
+    }
+}
+
+const std::unordered_map<uint32_t, std::function<void(const uint8_t*, const size_t, const SuperTensorSegInfo&)>>
+    PRINT_SUPER_SEGMENT_CALLS{
+        {GE_DT_UINT8, &PrintSuperTensorSegment<uint8_t>},
+        {GE_DT_INT8, &PrintSuperTensorSegment<int8_t>},
+        {GE_DT_INT16, &PrintSuperTensorSegment<int16_t>},
+        {GE_DT_UINT16, &PrintSuperTensorSegment<uint16_t>},
+        {GE_DT_INT32, &PrintSuperTensorSegment<int32_t>},
+        {GE_DT_UINT32, &PrintSuperTensorSegment<uint32_t>},
+        {GE_DT_INT64, &PrintSuperTensorSegment<int64_t>},
+        {GE_DT_UINT64, &PrintSuperTensorSegment<uint64_t>},
+        {GE_DT_FLOAT, &PrintSuperTensorSegment<float>},
+        {GE_DT_FLOAT16, &PrintSuperTensorSegment<fp16_t>},
+        {GE_DT_BOOL, &PrintSuperTensorBoolSegment},
+        {GE_DT_BF16, &PrintSuperTensorSegment<BFloat16>},
+        {GE_DT_HIFLOAT8, &PrintSuperTensorSegment<HiFloat8>},
+        {GE_DT_FLOAT8_E5M2, &PrintSuperTensorSegment<Fp8E5M2>},
+        {GE_DT_FLOAT8_E4M3FN, &PrintSuperTensorSegment<Fp8E4M3>},
+        {GE_DT_FLOAT8_E8M0, &PrintSuperTensorSegment<Fp8E8M0>}};
+
+static std::vector<size_t> BuildSuperTensorTmpShape(const SuperTensorPrintCtx& ctx)
+{
+    std::vector<size_t> tmpShape;
+    tmpShape.reserve(RT_DUMP_SHAPE_MAX_SIZE);
+    for (uint32_t i = 0U; (i < ctx.dim) && (i < RT_DUMP_SHAPE_MAX_SIZE); ++i) {
+        if (ctx.shape[i] == 0U) { // 维度为 0 的 shape 不参与括号对齐，按平铺处理
+            break;
+        }
+        tmpShape.push_back(ctx.shape[i]);
+    }
+    for (int32_t i = static_cast<int32_t>(tmpShape.size()) - 2; i >= 0; --i) {
+        if (tmpShape[i] > (std::numeric_limits<size_t>::max() / tmpShape[i + 1])) {
+            IDE_LOGW(
+                "The accumulated product of super tensor shape dimensions exceeds the maximum value %zu of size_t, "
+                "desc=%u; print without shape brackets.",
+                std::numeric_limits<size_t>::max(), ctx.desc);
+            return {};
+        }
+        tmpShape[i] *= tmpShape[i + 1];
+    }
+    return tmpShape;
+}
+
+// 超大 Tensor 打屏上限：1M 字节。超过后剩余数据以 "..." 省略并告警，完整数据走落盘
+constexpr size_t MAX_SUPER_TENSOR_PRINT_BYTES = 1024U * 1024U;
+
+static void PrintSuperTensorTruncationWarn(const SuperTensorPrintCtx& ctx)
+{
+    std::cout << "..." << std::endl;
+    std::cout << "Warning: the tensor data is too large. Only the first " << MAX_SUPER_TENSOR_PRINT_BYTES
+              << " bytes are printed and the rest is omitted. To view the full data, set the environment variable "
+                 "ASCEND_DUMP_PATH to enable dumping it to disk, and then use the show_kernel_debug_data tool to view "
+                 "it."
+              << std::endl;
+    IDE_LOGW(
+        "Super tensor desc=%u data is too large (%lu bytes); only the first %zu bytes are printed. "
+        "Set ASCEND_DUMP_PATH to enable dumping to disk, then use show_kernel_debug_data to view the full data.",
+        ctx.desc, ctx.length, MAX_SUPER_TENSOR_PRINT_BYTES);
+}
+
+static void PrintSuperTensorDataSegment(
+    const uint8_t* data, const size_t dataLen, SuperTensorPrintCtx& ctx, const bool isLastSegment)
+{
+    uint16_t dataTypeSize = 0U;
+    if (!GetDataTypeSize(ctx.dataType, dataTypeSize)) {
+        return;
+    }
+    const auto& iter = PRINT_SUPER_SEGMENT_CALLS.find(ctx.dataType);
+    if (iter == PRINT_SUPER_SEGMENT_CALLS.end()) {
+        return;
+    }
+    // 已忽略打屏，本 tensor 后续分片不再打屏
+    if (ctx.printTruncated) {
+        return;
+    }
+    const std::vector<size_t> tmpShape = BuildSuperTensorTmpShape(ctx);
+    const size_t totalElemNum = static_cast<size_t>(ctx.length / dataTypeSize);
+    const size_t elemBase = static_cast<size_t>(ctx.printedOffset / dataTypeSize);
+    if (((dataLen / dataTypeSize) == 0U) && isLastSegment && (elemBase >= totalElemNum)) {
+        std::cout << "[]" << std::endl;
+        return;
+    }
+    const size_t printedLen = static_cast<size_t>(ctx.printedOffset);
+    // 前序分片已打满，本段整体忽略打屏
+    if (printedLen >= MAX_SUPER_TENSOR_PRINT_BYTES) {
+        ctx.printTruncated = true;
+        PrintSuperTensorTruncationWarn(ctx);
+        return;
+    }
+    const size_t remainBytes = MAX_SUPER_TENSOR_PRINT_BYTES - printedLen;
+    const bool truncated = (dataLen > remainBytes);
+    const size_t actualLen = truncated ? remainBytes : dataLen;
+    const size_t elemNum = actualLen / dataTypeSize;
+    // 首段（printedOffset == 0）打起始括号，与整段打印的开头一致
+    if ((elemBase == 0U) && !tmpShape.empty() && (elemNum > 0U)) {
+        std::cout << std::string(tmpShape.size(), '[');
+    }
+    // 触发省略时 "..." 取代收尾括号，本段不再按末段收尾
+    const SuperTensorSegInfo seg{std::move(tmpShape), elemBase, totalElemNum, isLastSegment && !truncated};
+    (iter->second)(data, elemNum, seg);
+    if (truncated) {
+        ctx.printTruncated = true;
+        PrintSuperTensorTruncationWarn(ctx);
+    }
+}
+
+static DfxStreamKey GetDfxStreamKey(const rtDfxParseParam* param)
+{
+    return DfxStreamKey(param->deviceId, param->coreType, param->coreId);
+}
+
+static bool InitSuperTensorCtx(
+    const DumpSuperTensorHeader* header, const rtDfxParseParam* param, SuperTensorPrintCtx& ctx, uint16_t& dataTypeSize)
+{
+    const uint32_t dataType = header->dataType;
+    const std::string dtype = DataTypeToString(dataType);
+    if (!GetDataTypeSize(dataType, dataTypeSize)) {
+        IDE_LOGW("The %s data type does not support the dump super tensor, dataType=%u.", dtype.c_str(), dataType);
+        return false;
+    }
+    if (header->length == 0U) {
+        IDE_LOGE("Super tensor total length is 0, desc=%u.", header->desc);
+        return false;
+    }
+    if (header->offset != 0U) {
+        IDE_LOGE("Super tensor header offset[%lu] is not 0, desc=%u.", header->offset, header->desc);
+        return false;
+    }
+    if (ctx.valid) {
+        // 本流上一 super tensor 未完成即被新 header 覆盖，数据流被打断（设备重启/协议违例）
+        IDE_LOGE(
+            "Super tensor desc=%u is not finished (printed=%lu/%lu bytes) when a new header arrives, "
+            "stream(dev=%u,coreType=%u,coreId=%u), desc=%u; the unfinished one is discarded.",
+            ctx.desc, ctx.printedOffset, ctx.length, param->deviceId, param->coreType, param->coreId, header->desc);
+    }
+
+    ctx.valid = true;
+    ctx.dataType = dataType;
+    ctx.desc = header->desc;
+    ctx.addr = header->addr;
+    ctx.position = header->position;
+    ctx.blockIdx = header->blockIdx;
+    ctx.dim = std::min(header->dim, RT_DUMP_SHAPE_MAX_SIZE);
+    for (uint32_t i = 0U; i < RT_DUMP_SHAPE_MAX_SIZE; ++i) {
+        ctx.shape[i] = (i < ctx.dim) ? header->shape[i] : 0U;
+    }
+    ctx.length = header->length;
+    ctx.printedOffset = 0U;
+    ctx.printTruncated = false;
+    return true;
+}
+
+static void PrintSuperTensorMetaLine(
+    const DumpSuperTensorHeader* header, const uint32_t coreType, const uint16_t dataTypeSize)
+{
+    const std::string addrToHex = ToHex(header->addr);
+    const std::string position = PositionToString(header->position);
+    const size_t dumpSizeElem = static_cast<size_t>(header->length) / dataTypeSize;
+    const std::string dtype = DataTypeToString(header->dataType);
+
+    std::string blockInfo = "[";
+    blockInfo += (coreType == 0U) ? "AIC " : "AIV ";
+    blockInfo += "Block " + std::to_string(header->blockIdx) + "]";
+    std::cout << blockInfo.c_str() << " DumpTensor: desc=" << std::dec << header->desc << ", addr=0x" << addrToHex;
+    std::cout << ", data_type=" << dtype << ", position=" << position << ", dump_size=" << dumpSizeElem << std::endl;
+    IDE_LOGI(
+        "%s DumpSuperTensor: desc=%u, addr=0x%s, data_type=%s, position=%s, dump_size=%zu, tensor_bytes=%lu.",
+        blockInfo.c_str(), header->desc, addrToHex.c_str(), dtype.c_str(), position.c_str(), dumpSizeElem,
+        header->length);
+}
+
+void PrintDumpSuperTensor(const DumpInfoHead* dumpHead, const rtDfxParseParam* param, SuperTensorPrintCtx& ctx)
+{
+    if (static_cast<size_t>(dumpHead->infoLen) < sizeof(DumpSuperTensorHeader)) {
+        IDE_LOGW(
+            "The value of dumpHead->infoLen %u must be greater than or equal to that of DumpSuperTensorHeader %zu.",
+            dumpHead->infoLen, sizeof(DumpSuperTensorHeader));
+        return;
+    }
+    uint16_t dataTypeSize = 0U;
+    const DumpSuperTensorHeader* const header = reinterpret_cast<const DumpSuperTensorHeader*>(dumpHead->infoMsg);
+    if (!InitSuperTensorCtx(header, param, ctx, dataTypeSize)) {
+        return;
+    }
+    const uint32_t coreType = param->coreType;
+
+    const size_t availableDataSize = static_cast<size_t>(dumpHead->infoLen) - sizeof(DumpSuperTensorHeader);
+    const size_t actualDataSize = ClipTensorDataSize(header->dumpSize, availableDataSize);
+    PrintSuperTensorMetaLine(header, coreType, dataTypeSize);
+
+    const bool isLastSegment = (actualDataSize >= static_cast<size_t>(header->length));
+    PrintSuperTensorDataSegment(
+        reinterpret_cast<const uint8_t*>(dumpHead->infoMsg) + sizeof(DumpSuperTensorHeader), actualDataSize, ctx,
+        isLastSegment);
+    ctx.printedOffset += actualDataSize;
+    if (isLastSegment) {
+        ctx.valid = false;
+        IDE_LOGI("Super tensor desc=%u printed done, length=%lu bytes.", header->desc, header->length);
+    }
+}
+
+static bool MatchSuperTensorBody(const DumpSuperTensorBody* body, const SuperTensorPrintCtx& ctx)
+{
+    if (!ctx.valid) {
+        IDE_LOGE(
+            "Super tensor body does not match any opened tensor, valid=%d, bodyLength=%lu, bodyOffset=%lu.",
+            static_cast<int32_t>(ctx.valid), body->length, body->offset);
+        return false;
+    }
+    if (body->length != ctx.length) {
+        IDE_LOGE(
+            "Super tensor body length=%lu does not match ctx length=%lu, desc=%u, bodyOffset=%lu; drop it.",
+            body->length, ctx.length, ctx.desc, body->offset);
+        return false;
+    }
+    if (body->offset != ctx.printedOffset) {
+        IDE_LOGE(
+            "Super tensor body offset=%lu is not continuous with printedOffset=%lu, desc=%u, length=%lu; drop it.",
+            body->offset, ctx.printedOffset, ctx.desc, ctx.length);
+        return false;
+    }
+    return true;
+}
+
+void PrintDumpSuperTensorBody(const DumpInfoHead* dumpHead, SuperTensorPrintCtx& ctx)
+{
+    if (static_cast<size_t>(dumpHead->infoLen) < sizeof(DumpSuperTensorBody)) {
+        IDE_LOGW(
+            "The value of dumpHead->infoLen %u must be greater than or equal to that of DumpSuperTensorBody %zu.",
+            dumpHead->infoLen, sizeof(DumpSuperTensorBody));
+        return;
+    }
+    const DumpSuperTensorBody* const body = reinterpret_cast<const DumpSuperTensorBody*>(dumpHead->infoMsg);
+    if (!MatchSuperTensorBody(body, ctx)) {
+        return;
+    }
+
+    const size_t availableDataSize = static_cast<size_t>(dumpHead->infoLen) - sizeof(DumpSuperTensorBody);
+    const size_t actualDataSize = ClipTensorDataSize(body->dumpSize, availableDataSize);
+
+    const uint64_t nextOffset = body->offset + static_cast<uint64_t>(actualDataSize);
+    const bool isLastSegment = (nextOffset >= ctx.length);
+    PrintSuperTensorDataSegment(
+        reinterpret_cast<const uint8_t*>(dumpHead->infoMsg) + sizeof(DumpSuperTensorBody), actualDataSize, ctx,
+        isLastSegment);
+    ctx.printedOffset = nextOffset;
+    if (isLastSegment) {
+        ctx.valid = false;
+        IDE_LOGI("Super tensor desc=%u printed done, length=%lu bytes.", ctx.desc, ctx.length);
     }
 }
 
@@ -962,8 +1282,8 @@ void ReportTimeStampInfo(const std::vector<MsprofAicTimeStampInfo>& timeStampInf
 }
 
 void PrintDumpInfo(
-    const DumpInfoHead* dumpHead, const uint32_t blockId, const uint32_t coreType, std::vector<size_t>& shapeInfo,
-    std::vector<MsprofAicTimeStampInfo>& timeStampInfo)
+    const DumpInfoHead* dumpHead, const rtDfxParseParam* param, std::vector<size_t>& shapeInfo,
+    std::vector<MsprofAicTimeStampInfo>& timeStampInfo, std::map<DfxStreamKey, SuperTensorPrintCtx>& ctxMap)
 {
     switch (dumpHead->type) {
         case DfxDumpType::DUMP_SCALAR:
@@ -977,10 +1297,16 @@ void PrintDumpInfo(
             GetDumpShape(dumpHead, shapeInfo);
             break;
         case DfxDumpType::DUMP_TENSOR:
-            PrintDumpTensor(dumpHead, coreType, shapeInfo);
+            PrintDumpTensor(dumpHead, param->coreType, shapeInfo);
             break;
         case DfxDumpType::DUMP_TIMESTAMP:
-            PrintDumpTimestamp(dumpHead, blockId, timeStampInfo);
+            PrintDumpTimestamp(dumpHead, param->coreId, timeStampInfo);
+            break;
+        case DfxDumpType::DUMP_SUPER_TENSOR:
+            PrintDumpSuperTensor(dumpHead, param, ctxMap[GetDfxStreamKey(param)]);
+            break;
+        case DfxDumpType::DUMP_SUPER_TENSOR_BODY:
+            PrintDumpSuperTensorBody(dumpHead, ctxMap[GetDfxStreamKey(param)]);
             break;
         case DfxDumpType::DUMP_SKIP:
             IDE_LOGI("Skip this dump info for the type.");
@@ -1115,7 +1441,8 @@ bool PrepareDumpReadBuffer(
 
 uint64_t ParseDumpReadBuffer(
     const rtDfxParseParam* param, const uint8_t* dumpReadStartAddr, const uint64_t totalReadBufLen,
-    const uint64_t packIdx, const uint64_t tlvCnt, uint64_t& consumedTlvCnt)
+    const uint64_t packIdx, const uint64_t tlvCnt, uint64_t& consumedTlvCnt,
+    std::map<DfxStreamKey, SuperTensorPrintCtx>& ctxMap)
 {
     std::vector<size_t> shape;
     std::vector<MsprofAicTimeStampInfo> timeStampInfo;
@@ -1140,7 +1467,7 @@ uint64_t ParseDumpReadBuffer(
                 break;
             }
         } else {
-            PrintDumpInfo(dumpHead, param->coreId, param->coreType, shape, timeStampInfo);
+            PrintDumpInfo(dumpHead, param, shape, timeStampInfo, ctxMap);
         }
         dataLen += step;
         ++currentTlvCnt;
@@ -1220,6 +1547,8 @@ void DfxInfoParser::UnInit()
             ClearTlvCntState();
         }
     }
+    // dump 关闭时清空 super tensor 打印上下文表兜底，避免残留状态影响下次采集
+    superTensorCtxMap_.clear();
 }
 
 void DfxInfoParser::AddTlvCnt(const rtDfxParseParam* param, uint64_t consumedTlvCnt)
@@ -1227,7 +1556,7 @@ void DfxInfoParser::AddTlvCnt(const rtDfxParseParam* param, uint64_t consumedTlv
     if (consumedTlvCnt == 0U) {
         return;
     }
-    const auto key = std::make_tuple(param->deviceId, param->coreType, param->coreId);
+    const DfxStreamKey key = GetDfxStreamKey(param);
     std::lock_guard<std::mutex> lock(tlvCntMutex_);
     tlvCntMap_[key] += consumedTlvCnt;
 }
@@ -1237,7 +1566,7 @@ uint64_t DfxInfoParser::GetTlvCnt(const rtDfxParseParam* param, uint64_t packIdx
     if (packIdx == std::numeric_limits<uint64_t>::max()) {
         return 0U;
     }
-    const auto key = std::make_tuple(param->deviceId, param->coreType, param->coreId);
+    const DfxStreamKey key = GetDfxStreamKey(param);
     std::lock_guard<std::mutex> lock(tlvCntMutex_);
     auto iter = tlvCntMap_.find(key);
     if (iter == tlvCntMap_.end()) {
@@ -1274,6 +1603,7 @@ void DfxInfoParser::ParseDfxInfo(const rtDfxParseParam* param, uint64_t* consume
     if (param == nullptr || param->data == nullptr || param->datalen == 0U) {
         return;
     }
+    IDE_LOGD("Dfx info come in. dev=%u, coreType=%u, coreId=%u.", param->deviceId, param->coreType, param->coreId);
     uint64_t totalReadBufLen = 0U;
     const uint8_t* dumpReadStartAddr = nullptr;
     std::vector<uint8_t> dumpInfoVec;
@@ -1286,8 +1616,8 @@ void DfxInfoParser::ParseDfxInfo(const rtDfxParseParam* param, uint64_t* consume
     const uint64_t packIdx = writeInfo->packIdx;
     const uint64_t tlvCnt = GetTlvCnt(param, packIdx);
     uint64_t consumedTlvCnt = 0U;
-    const uint64_t dataLen =
-        ParseDumpReadBuffer(param, dumpReadStartAddr, totalReadBufLen, packIdx, tlvCnt, consumedTlvCnt);
+    const uint64_t dataLen = ParseDumpReadBuffer(
+        param, dumpReadStartAddr, totalReadBufLen, packIdx, tlvCnt, consumedTlvCnt, superTensorCtxMap_);
     AddTlvCnt(param, consumedTlvCnt);
     if ((param->coreType == RT_KERNEL_DFX_INFO_CORE_TYPE_SIMT) ||
         (param->coreType == RT_KERNEL_DFX_INFO_CORE_TYPE_AICPU)) {

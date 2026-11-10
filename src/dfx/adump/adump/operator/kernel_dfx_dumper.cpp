@@ -54,6 +54,8 @@ static rtKernelDfxInfoType GetrtKernelDfxInfoType(const cce::runtime::DumpType t
             return rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_ASSERT;
         case cce::runtime::DumpType::DUMP_TENSOR:
         case cce::runtime::DumpType::DUMP_SHAPE:
+        case cce::runtime::DumpType::DUMP_SUPER_TENSOR:
+        case cce::runtime::DumpType::DUMP_SUPER_TENSOR_BODY:
             return rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_TENSOR;
         case cce::runtime::DumpType::DUMP_TIMESTAMP:
             return rtKernelDfxInfoType::RT_KERNEL_DFX_INFO_TIME_STAMP;

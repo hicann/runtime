@@ -43,6 +43,9 @@ enum class DumpType : uint32_t {
     DUMP_BUFO,
     DUMP_SKIP,
     DUMP_AICPU,
+    // 超大 Tensor（tensor 元信息 + 数据）
+    DUMP_SUPER_TENSOR = 12,
+    DUMP_SUPER_TENSOR_BODY = 13,
     DUMP_SIMT_ASSERT = 0xF0E00F0EU,
     DUMP_SIMT_PRINTF = 0xF0F00F0FU,
     DUMP_WAIT = 0xF0A55A0FU
@@ -98,6 +101,31 @@ struct DumpShapeInfo {
     uint32_t dim = 0U;
     uint32_t shape[RT_DUMP_SHAPE_MAX_SIZE] = {0U};
     uint32_t resv;
+};
+
+// 超大 Tensor 首块：tensor 元信息 + 首段数据
+struct DumpSuperTensorHeader {
+    uint32_t addr = 0;     // dump 地址（AscendC 侧名 tensorAddr）
+    uint32_t dataType = 0; // 数据类型
+    uint32_t desc = 0;     // 用户标识
+    uint32_t bufferId = 0; // 保留位（AscendC 未使用，填 0）
+    uint16_t position = 0; // GM/UB/L1/L0C...
+    uint16_t blockIdx = 0;
+    uint32_t dim = 0;
+    uint32_t shape[RT_DUMP_SHAPE_MAX_SIZE] = {0U};
+    uint32_t resv = 0;
+    uint64_t length = 0;   // tensor 总长（字节）（AscendC 侧名 tensorLength）
+    uint64_t offset = 0;   // 本块起始偏移（首块恒为 0）（AscendC 侧名 tensorOffset）
+    uint32_t dumpSize = 0; // 本块实际数据长度（不含对齐尾）
+};
+
+// 超大 Tensor 数据块：无 tensor 元信息
+struct DumpSuperTensorBody {
+    uint32_t resv1 = 0;
+    uint32_t resv2 = 0;
+    uint64_t length = 0;   // 与首块 length 一致（AscendC 侧名 tensorLength）
+    uint64_t offset = 0;   // 本块起始偏移（AscendC 侧名 tensorOffset）
+    uint32_t dumpSize = 0; // 本块实际数据长度（不含对齐尾）
 };
 
 constexpr uint32_t RT_KERNEL_DFX_INFO_CORE_TYPE_AIC = 0U;

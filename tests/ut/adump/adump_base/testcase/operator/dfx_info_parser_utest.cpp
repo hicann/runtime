@@ -35,6 +35,8 @@ using cce::runtime::BlockReadInfo;
 using cce::runtime::BlockWriteInfo;
 using cce::runtime::DumpInfoHead;
 using cce::runtime::DumpShapeInfo;
+using cce::runtime::DumpSuperTensorBody;
+using cce::runtime::DumpSuperTensorHeader;
 using cce::runtime::DumpTensorInfo;
 using cce::runtime::DumpTimeStampInfoMsg;
 
@@ -59,6 +61,21 @@ static DumpInfoHead* WriteTlv(uint8_t* buf, cce::runtime::DumpType type, uint32_
     head->type = type;
     head->infoLen = infoLen;
     return head;
+}
+
+// 统计子串出现次数（非重叠）：供 1M 截断用例验证 "..."/告警只输出一次
+static size_t CountOccurrences(const std::string& str, const std::string& sub)
+{
+    if (sub.empty()) {
+        return 0U;
+    }
+    size_t cnt = 0U;
+    size_t pos = str.find(sub);
+    while (pos != std::string::npos) {
+        ++cnt;
+        pos = str.find(sub, pos + sub.size());
+    }
+    return cnt;
 }
 
 class DfxInfoParserUtest : public testing::Test {
@@ -176,6 +193,58 @@ protected:
             (void)memcpy_s(head->infoMsg + sizeof(DumpTensorInfo), tensorDataLen, tensorData, tensorDataLen);
         }
         return sizeof(DumpInfoHead) + sizeof(DumpTensorInfo) + tensorDataLen;
+    }
+
+    // 构造超大 tensor 首块 TLV：infoLen 含对齐尾，dumpSize 为实际数据长度
+    static uint32_t BuildSuperTensorHeaderTlv(
+        uint8_t* buf, uint32_t dataType, uint32_t dim, const uint32_t* shape, uint64_t length, uint32_t dumpSize,
+        const uint8_t* data, size_t dataLen, uint32_t padLen = 0U)
+    {
+        DumpInfoHead* head =
+            WriteTlv(buf, cce::runtime::DumpType::DUMP_SUPER_TENSOR, sizeof(DumpSuperTensorHeader) + dataLen + padLen);
+        DumpSuperTensorHeader* superHead = reinterpret_cast<DumpSuperTensorHeader*>(head->infoMsg);
+        superHead->addr = 0x800U;
+        superHead->dataType = dataType;
+        superHead->desc = 200U;
+        superHead->bufferId = 0U;
+        superHead->position = 0U;
+        superHead->blockIdx = 1U;
+        superHead->dim = dim;
+        for (uint32_t i = 0U; i < dim && i < cce::runtime::RT_DUMP_SHAPE_MAX_SIZE; ++i) {
+            superHead->shape[i] = shape[i];
+        }
+        superHead->length = length;
+        superHead->offset = 0U;
+        superHead->dumpSize = dumpSize;
+        if (data != nullptr && dataLen > 0) {
+            (void)memcpy_s(head->infoMsg + sizeof(DumpSuperTensorHeader), dataLen, data, dataLen);
+        }
+        return sizeof(DumpInfoHead) + sizeof(DumpSuperTensorHeader) + dataLen + padLen;
+    }
+
+    // 无 shape 快捷构造（dim=0 平铺打印场景）
+    static uint32_t BuildSuperTensorHeaderTlv(
+        uint8_t* buf, uint32_t dataType, uint64_t length, uint32_t dumpSize, const uint8_t* data, size_t dataLen,
+        uint32_t padLen = 0U)
+    {
+        return BuildSuperTensorHeaderTlv(buf, dataType, 0U, nullptr, length, dumpSize, data, dataLen, padLen);
+    }
+
+    // 构造超大 tensor 后续分块 TLV
+    static uint32_t BuildSuperTensorBodyTlv(
+        uint8_t* buf, uint64_t length, uint64_t offset, uint32_t dumpSize, const uint8_t* data, size_t dataLen,
+        uint32_t padLen = 0U)
+    {
+        DumpInfoHead* head = WriteTlv(
+            buf, cce::runtime::DumpType::DUMP_SUPER_TENSOR_BODY, sizeof(DumpSuperTensorBody) + dataLen + padLen);
+        DumpSuperTensorBody* body = reinterpret_cast<DumpSuperTensorBody*>(head->infoMsg);
+        body->length = length;
+        body->offset = offset;
+        body->dumpSize = dumpSize;
+        if (data != nullptr && dataLen > 0) {
+            (void)memcpy_s(head->infoMsg + sizeof(DumpSuperTensorBody), dataLen, data, dataLen);
+        }
+        return sizeof(DumpInfoHead) + sizeof(DumpSuperTensorBody) + dataLen + padLen;
     }
 
     static uint32_t BuildSkipTlv(uint8_t* buf)
@@ -2152,4 +2221,943 @@ TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_MultipleTimestampsWithProfSwitch)
 
     SetProfSwitch(0);
     DfxInfoParser::Instance().UnInit();
+}
+
+// ===== 超大 Tensor（DUMP_SUPER_TENSOR / DUMP_SUPER_TENSOR_BODY）用例 =====
+
+// 单包完成：header 一块即包含整个 tensor（dumpSize == length）
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorSinglePacket)
+{
+    BlockBuffer block(512);
+    const uint8_t tensorData[] = {10, 20, 30, 40};
+    const uint32_t tlvLen = BuildSuperTensorHeaderTlv(
+        block.dumpStartAddr, 4U, sizeof(tensorData), sizeof(tensorData), tensorData, sizeof(tensorData));
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, tlvLen);
+    testing::internal::CaptureStdout();
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(consumedLen, tlvLen);
+    EXPECT_NE(output.find("DumpTensor: desc=200"), std::string::npos);
+    EXPECT_NE(output.find("dump_size=4"), std::string::npos);
+    EXPECT_NE(output.find("10,20,30,40"), std::string::npos) << output;
+    // 单包完成，上下文应清空
+    EXPECT_EQ(DfxInfoParser::Instance().superTensorCtxMap_[std::make_tuple(0U, 0U, 0U)].valid, false);
+}
+
+// 分片完成：header 首段 + 多个 body 续打 + 完成判定（offset + dumpSize == length）
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorMultiPacketWithShape)
+{
+    BlockBuffer block(1024);
+    uint32_t off = 0;
+    const uint32_t shape[] = {3, 4};
+    const uint8_t seg0[] = {1, 2, 3, 4};
+    const uint8_t seg1[] = {5, 6, 7, 8};
+    const uint8_t seg2[] = {9, 10, 11, 12};
+    off += BuildSuperTensorHeaderTlv(block.dumpStartAddr + off, 4U, 2U, shape, 12U, sizeof(seg0), seg0, sizeof(seg0));
+    off += BuildSuperTensorBodyTlv(block.dumpStartAddr + off, 12U, 4U, sizeof(seg1), seg1, sizeof(seg1));
+    off += BuildSuperTensorBodyTlv(block.dumpStartAddr + off, 12U, 8U, sizeof(seg2), seg2, sizeof(seg2));
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, off);
+    testing::internal::CaptureStdout();
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(consumedLen, off);
+    EXPECT_NE(output.find("DumpTensor: desc=200"), std::string::npos);
+    EXPECT_NE(output.find("dump_size=12"), std::string::npos);
+    // shape 括号对齐：与整段打印 [[1,2,3,4],\n[5,6,7,8],\n[9,10,11,12]] 一致（跨分片续算全局下标）
+    EXPECT_NE(output.find("[[1,2,3,4],\n[5,6,7,8],\n[9,10,11,12]]"), std::string::npos) << output;
+    EXPECT_EQ(DfxInfoParser::Instance().superTensorCtxMap_[std::make_tuple(0U, 0U, 0U)].valid, false);
+}
+
+// body 无打开上下文（首包丢失）：丢弃 + 告警，不影响后续 TLV 消费
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorBodyWithoutHeader)
+{
+    BlockBuffer block(512);
+    const uint8_t seg1[] = {5, 6, 7, 8};
+    const uint32_t bodyTlvLen = BuildSuperTensorBodyTlv(block.dumpStartAddr, 12U, 4U, sizeof(seg1), seg1, sizeof(seg1));
+    const std::string msg = "after body";
+    const uint32_t printfTlvLen = BuildPrintfTlv(block.dumpStartAddr + bodyTlvLen, msg);
+    const uint32_t off = bodyTlvLen + printfTlvLen;
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, off);
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    EXPECT_EQ(consumedLen, off); // body 被丢弃但 TLV 帧仍被消费
+    // 孤儿 body 经 operator[] 插入本流空表项（valid=false），不污染其他流；表项待 header 填充
+    EXPECT_EQ(DfxInfoParser::Instance().superTensorCtxMap_[std::make_tuple(0U, 0U, 0U)].valid, false);
+    DfxInfoParser::Instance().superTensorCtxMap_.clear();
+}
+
+// body length 与上下文不匹配：丢弃该 body
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorBodyLengthMismatch)
+{
+    BlockBuffer block(512);
+    uint32_t off = 0;
+    const uint32_t shape[] = {2, 2};
+    const uint8_t seg0[] = {1, 2};
+    const uint8_t seg1[] = {3, 4};
+    off += BuildSuperTensorHeaderTlv(block.dumpStartAddr + off, 4U, 2U, shape, 4U, sizeof(seg0), seg0, sizeof(seg0));
+    // body 的 length 与 header 不同（8 != 4），应丢弃
+    off += BuildSuperTensorBodyTlv(block.dumpStartAddr + off, 8U, 2U, sizeof(seg1), seg1, sizeof(seg1));
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, off);
+    testing::internal::CaptureStdout();
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(consumedLen, off);
+    EXPECT_NE(output.find("1,2"), std::string::npos) << output;
+    EXPECT_EQ(output.find("3,4"), std::string::npos) << output; // 不匹配的 body 不打印
+    EXPECT_EQ(DfxInfoParser::Instance().superTensorCtxMap_[std::make_tuple(0U, 0U, 0U)].valid, true); // 上下文仍未完成
+    DfxInfoParser::Instance().superTensorCtxMap_.clear(); // 清理，避免影响其他用例
+}
+
+// header infoLen 不足结构体长度：丢弃 + 不崩溃
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorHeaderInfoLenTooSmall)
+{
+    BlockBuffer block(256);
+    WriteTlv(block.dumpStartAddr, cce::runtime::DumpType::DUMP_SUPER_TENSOR, 4);
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, sizeof(DumpInfoHead) + 4);
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    EXPECT_EQ(consumedLen, sizeof(DumpInfoHead) + 4);
+}
+
+// body infoLen 不足结构体长度：丢弃 + 不崩溃
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorBodyInfoLenTooSmall)
+{
+    BlockBuffer block(256);
+    WriteTlv(block.dumpStartAddr, cce::runtime::DumpType::DUMP_SUPER_TENSOR_BODY, 4);
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, sizeof(DumpInfoHead) + 4);
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    EXPECT_EQ(consumedLen, sizeof(DumpInfoHead) + 4);
+}
+
+// dumpSize 超可用长度（含对齐尾）：按可用长度裁剪打印
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorDumpSizeClipped)
+{
+    BlockBuffer block(512);
+    const uint8_t tensorData[] = {1, 2, 3, 4};
+    const uint32_t padLen = 4U; // 对齐尾
+    // infoLen = sizeof(header) + 4 数据 + 4 对齐尾，可用数据 8 字节；dumpSize 声明 12 超可用，按 8 裁剪
+    const uint32_t tlvLen =
+        BuildSuperTensorHeaderTlv(block.dumpStartAddr, 4U, 8U, 12U, tensorData, sizeof(tensorData), padLen);
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, tlvLen);
+    testing::internal::CaptureStdout();
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(consumedLen, tlvLen);
+    EXPECT_NE(output.find("exceeds available data size[8 bytes]"), std::string::npos) << output;
+    EXPECT_NE(output.find("1,2,3,4"), std::string::npos) << output;
+}
+
+// 不支持的数据类型：日志提示不输出数据
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorUnsupportedDataType)
+{
+    BlockBuffer block(512);
+    const uint32_t tlvLen = BuildSuperTensorHeaderTlv(block.dumpStartAddr, 999U, 4U, 4U, nullptr, 0U);
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, tlvLen);
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    EXPECT_EQ(consumedLen, tlvLen);
+    EXPECT_EQ(DfxInfoParser::Instance().superTensorCtxMap_[std::make_tuple(0U, 0U, 0U)].valid, false);
+}
+
+// super tensor 前后其他类型 TLV（普通 printf/普通 tensor），上下文不受影响
+// 注：设备侧已确认 super tensor 的 header/body 顺序写入、无交错分块，故不在 header 与 body 之间夹其他 TLV
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorWithOtherTlvAround)
+{
+    BlockBuffer block(512);
+    uint32_t off = 0;
+    const std::string msg = "printf before super tensor";
+    off += BuildPrintfTlv(block.dumpStartAddr + off, msg);
+    const uint32_t shape[] = {2, 2};
+    const uint8_t seg0[] = {1, 2};
+    off += BuildSuperTensorHeaderTlv(block.dumpStartAddr + off, 4U, 2U, shape, 4U, sizeof(seg0), seg0, sizeof(seg0));
+    const uint8_t seg1[] = {3, 4};
+    off += BuildSuperTensorBodyTlv(block.dumpStartAddr + off, 4U, 2U, sizeof(seg1), seg1, sizeof(seg1));
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, off);
+    testing::internal::CaptureStdout();
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(consumedLen, off);
+    EXPECT_NE(output.find("printf before super tensor"), std::string::npos);
+    EXPECT_NE(output.find("[[1,2],\n[3,4]]"), std::string::npos) << output;
+    EXPECT_EQ(DfxInfoParser::Instance().superTensorCtxMap_[std::make_tuple(0U, 0U, 0U)].valid, false);
+}
+
+// length 为 0：丢弃 + 告警
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorZeroLength)
+{
+    BlockBuffer block(512);
+    const uint32_t tlvLen = BuildSuperTensorHeaderTlv(block.dumpStartAddr, 4U, 0U, 4U, nullptr, 0U);
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, tlvLen);
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    EXPECT_EQ(consumedLen, tlvLen);
+    EXPECT_EQ(DfxInfoParser::Instance().superTensorCtxMap_[std::make_tuple(0U, 0U, 0U)].valid, false);
+}
+
+// 跨回调续打：header 在上一包、body 在下一包（模拟多次 block 快照回调），上下文跨回调驻留
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorAcrossCallbacks)
+{
+    // 第一包：header + 首段
+    BlockBuffer block1(512);
+    uint32_t off1 = 0;
+    const uint32_t shape[] = {2, 3};
+    const uint8_t seg0[] = {1, 2, 3};
+    off1 += BuildSuperTensorHeaderTlv(block1.dumpStartAddr + off1, 4U, 2U, shape, 6U, sizeof(seg0), seg0, sizeof(seg0));
+    uint64_t consumedLen1 = 0U;
+    rtDfxParseParam param1 = MakeParam(block1.blockAddr, block1.data.size(), 0, off1);
+    testing::internal::CaptureStdout();
+    DfxInfoParser::Instance().ParseDfxInfo(&param1, &consumedLen1);
+    const std::string output1 = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(consumedLen1, off1);
+    EXPECT_EQ(DfxInfoParser::Instance().superTensorCtxMap_[std::make_tuple(0U, 0U, 0U)].valid, true);
+
+    // 第二包（模拟新 block 快照回调）：剩余 body，完成整 tensor
+    BlockBuffer block2(512);
+    const uint8_t seg1[] = {4, 5, 6};
+    const uint32_t off2 = BuildSuperTensorBodyTlv(block2.dumpStartAddr, 6U, 3U, sizeof(seg1), seg1, sizeof(seg1));
+    uint64_t consumedLen2 = 0U;
+    rtDfxParseParam param2 = MakeParam(block2.blockAddr, block2.data.size(), 0, off2);
+    testing::internal::CaptureStdout();
+    DfxInfoParser::Instance().ParseDfxInfo(&param2, &consumedLen2);
+    const std::string output2 = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(consumedLen2, off2);
+    EXPECT_NE(output2.find("4,5,6"), std::string::npos) << output2;
+    EXPECT_EQ(
+        DfxInfoParser::Instance().superTensorCtxMap_[std::make_tuple(0U, 0U, 0U)].valid,
+        false); // offset + dumpSize == length 完成
+}
+
+// ===== 超大 Tensor 补充用例（对齐 asc-devkit asc_dump_super_tensor_impl 真实行为） =====
+
+// 设备侧真实对齐参数：ASC_ONE_DATABLOCK_SIZE = 32B（L0C 为 1024B），alignDumpLen = align_up(dumpSize, 32)
+constexpr uint32_t SUPER_TENSOR_ALIGN = 32U;
+
+// bool 类型分段：header + body 续打，值按 1/0 输出、shape 括号对齐
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorBoolSegments)
+{
+    BlockBuffer block(512);
+    uint32_t off = 0;
+    const uint32_t shape[] = {2, 2};
+    const uint8_t seg0[] = {1, 0};
+    const uint8_t seg1[] = {1, 1};
+    off += BuildSuperTensorHeaderTlv(block.dumpStartAddr + off, 12U, 2U, shape, 4U, sizeof(seg0), seg0, sizeof(seg0));
+    off += BuildSuperTensorBodyTlv(block.dumpStartAddr + off, 4U, 2U, sizeof(seg1), seg1, sizeof(seg1));
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, off);
+    testing::internal::CaptureStdout();
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(consumedLen, off);
+    EXPECT_NE(output.find("data_type=bool"), std::string::npos) << output;
+    EXPECT_NE(output.find("[[1,0],\n[1,1]]"), std::string::npos) << output;
+    EXPECT_EQ(DfxInfoParser::Instance().superTensorCtxMap_[std::make_tuple(0U, 0U, 0U)].valid, false);
+}
+
+// float16 类型分段：跨分片元素续打，fp16 转换后数值正确
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorFloat16Segments)
+{
+    BlockBuffer block(512);
+    uint32_t off = 0;
+    const uint8_t seg0[] = {0x00, 0x3C}; // fp16 1.0
+    const uint8_t seg1[] = {0x00, 0x40}; // fp16 2.0
+    off += BuildSuperTensorHeaderTlv(block.dumpStartAddr + off, 1U, 4U, sizeof(seg0), seg0, sizeof(seg0));
+    off += BuildSuperTensorBodyTlv(block.dumpStartAddr + off, 4U, 2U, sizeof(seg1), seg1, sizeof(seg1));
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, off);
+    testing::internal::CaptureStdout();
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(consumedLen, off);
+    EXPECT_NE(output.find("data_type=float16"), std::string::npos) << output;
+    EXPECT_NE(output.find("1.000000,2.000000"), std::string::npos) << output;
+    EXPECT_EQ(DfxInfoParser::Instance().superTensorCtxMap_[std::make_tuple(0U, 0U, 0U)].valid, false);
+}
+
+// int32 类型跨 body 边界续打：分片边界不落在元素边界上时，各分片按整元素数打印
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorInt32AcrossBody)
+{
+    BlockBuffer block(512);
+    uint32_t off = 0;
+    const int32_t data[] = {100, 200, 300, 400};
+    // 首段 1 个元素（4B），第二段 3 个元素（12B）
+    off +=
+        BuildSuperTensorHeaderTlv(block.dumpStartAddr + off, 3U, 16U, 4U, reinterpret_cast<const uint8_t*>(data), 4U);
+    off += BuildSuperTensorBodyTlv(
+        block.dumpStartAddr + off, 16U, 4U, 12U, reinterpret_cast<const uint8_t*>(data) + 4U, 12U);
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, off);
+    testing::internal::CaptureStdout();
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(consumedLen, off);
+    EXPECT_NE(output.find("data_type=int32"), std::string::npos) << output;
+    EXPECT_NE(output.find("100,200,300,400"), std::string::npos) << output;
+    EXPECT_EQ(DfxInfoParser::Instance().superTensorCtxMap_[std::make_tuple(0U, 0U, 0U)].valid, false);
+}
+
+// dim 超 8 维上限：上下文按前 8 维截断，不崩溃
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorDimExceedsMax)
+{
+    BlockBuffer block(512);
+    const uint32_t shape[] = {2, 2, 2, 2, 2, 2, 2, 2, 2, 2}; // 10 维
+    const uint8_t data[] = {1, 2, 3, 4};
+    const uint32_t tlvLen =
+        BuildSuperTensorHeaderTlv(block.dumpStartAddr, 4U, 10U, shape, sizeof(data), sizeof(data), data, sizeof(data));
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, tlvLen);
+    testing::internal::CaptureStdout();
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(consumedLen, tlvLen);
+    EXPECT_EQ(
+        DfxInfoParser::Instance().superTensorCtxMap_[std::make_tuple(0U, 0U, 0U)].dim,
+        cce::runtime::RT_DUMP_SHAPE_MAX_SIZE);
+    EXPECT_EQ(DfxInfoParser::Instance().superTensorCtxMap_[std::make_tuple(0U, 0U, 0U)].valid, false); // 单块即完成
+    DfxInfoParser::Instance().superTensorCtxMap_.clear();
+}
+
+// 设备侧真实行为：set_dump_shape_info 把未用维填 1（dim=2 时 shape={2,3,1,1,1,1,1,1}），解析只看前 dim 维
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorShapeUnusedDimsFilledWithOne)
+{
+    BlockBuffer block(512);
+    const uint32_t shape[] = {2, 3, 1, 1, 1, 1, 1, 1}; // 未用维填 1
+    const uint8_t data[] = {1, 2, 3, 4, 5, 6};
+    const uint32_t tlvLen =
+        BuildSuperTensorHeaderTlv(block.dumpStartAddr, 4U, 2U, shape, sizeof(data), sizeof(data), data, sizeof(data));
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, tlvLen);
+    testing::internal::CaptureStdout();
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(consumedLen, tlvLen);
+    // 仅按 dim=2 的 {2,3} 对齐括号，不受尾部 1 的影响
+    EXPECT_NE(output.find("[[1,2,3],\n[4,5,6]]"), std::string::npos) << output;
+}
+
+// AIV coreType：元信息行前缀为 AIV
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorAivCoreType)
+{
+    BlockBuffer block(512);
+    const uint8_t data[] = {1, 2};
+    const uint32_t tlvLen =
+        BuildSuperTensorHeaderTlv(block.dumpStartAddr, 4U, sizeof(data), sizeof(data), data, sizeof(data));
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, tlvLen, 1U, 0U); // coreType=AIV
+    testing::internal::CaptureStdout();
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(consumedLen, tlvLen);
+    EXPECT_NE(output.find("[AIV Block 1] DumpTensor: desc=200"), std::string::npos) << output;
+    EXPECT_EQ(output.find("[AIC Block 1] DumpTensor: desc=200"), std::string::npos) << output;
+}
+
+// header offset 非 0（协议违例）：丢弃，不残留上下文
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorHeaderOffsetNonZero)
+{
+    BlockBuffer block(512);
+    DumpInfoHead* head =
+        WriteTlv(block.dumpStartAddr, cce::runtime::DumpType::DUMP_SUPER_TENSOR, sizeof(DumpSuperTensorHeader) + 4U);
+    DumpSuperTensorHeader* superHead = reinterpret_cast<DumpSuperTensorHeader*>(head->infoMsg);
+    superHead->dataType = 4U;
+    superHead->desc = 200U;
+    superHead->dim = 0U;
+    superHead->length = 8U;
+    superHead->offset = 4U; // 非 0，协议违例
+    superHead->dumpSize = 4U;
+    const uint8_t data[] = {1, 2, 3, 4};
+    (void)memcpy_s(head->infoMsg + sizeof(DumpSuperTensorHeader), sizeof(data), data, sizeof(data));
+    const uint32_t tlvLen = sizeof(DumpInfoHead) + sizeof(DumpSuperTensorHeader) + 4U;
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, tlvLen);
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    EXPECT_EQ(consumedLen, tlvLen);
+    EXPECT_EQ(DfxInfoParser::Instance().superTensorCtxMap_[std::make_tuple(0U, 0U, 0U)].valid, false); // 未打开上下文
+}
+
+// dumpSize=0：按可用长度整块打印（与现有 DumpTensor 的 dumpSize=0 语义一致）
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorDumpSizeZeroMeansWholeBlock)
+{
+    BlockBuffer block(512);
+    const uint8_t data[] = {10, 20, 30, 40, 50, 60};
+    const uint32_t tlvLen = BuildSuperTensorHeaderTlv(block.dumpStartAddr, 4U, 6U, 0U, data, sizeof(data));
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, tlvLen);
+    testing::internal::CaptureStdout();
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(consumedLen, tlvLen);
+    // dumpSize=0 且 dump_size（元素数）按 length 计
+    EXPECT_NE(output.find("dump_size=6"), std::string::npos) << output;
+    EXPECT_NE(output.find("10,20,30,40,50,60"), std::string::npos) << output;
+}
+
+// 设备侧按 32B 对齐补尾（alignDumpLen = align_up(dumpSize, 32)）：对齐尾不参与打印，只打印 dumpSize 有效数据
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorDeviceAlignmentTail)
+{
+    BlockBuffer block(512);
+    const uint8_t seg0[] = {1, 2, 3};                                             // dumpSize=3
+    const uint32_t pad0 = SUPER_TENSOR_ALIGN - sizeof(seg0) % SUPER_TENSOR_ALIGN; // 对齐到 32B
+    const uint8_t seg1[] = {4, 5, 6};                                             // dumpSize=3
+    const uint32_t pad1 = SUPER_TENSOR_ALIGN - sizeof(seg1) % SUPER_TENSOR_ALIGN;
+    uint32_t off = 0;
+    off += BuildSuperTensorHeaderTlv(block.dumpStartAddr + off, 4U, 6U, sizeof(seg0), seg0, sizeof(seg0), pad0);
+    off += BuildSuperTensorBodyTlv(block.dumpStartAddr + off, 6U, 3U, sizeof(seg1), seg1, sizeof(seg1), pad1);
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, off);
+    testing::internal::CaptureStdout();
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(consumedLen, off);
+    EXPECT_NE(output.find("1,2,3"), std::string::npos) << output;
+    EXPECT_NE(output.find("4,5,6"), std::string::npos) << output;
+    // 对齐尾是 0 填充，若误打印会出现 ",0," 串（数据本身无 0 值）
+    EXPECT_EQ(output.find("1,2,3,0"), std::string::npos) << output;
+    EXPECT_EQ(output.find("3,0,0"), std::string::npos) << output;
+    EXPECT_EQ(DfxInfoParser::Instance().superTensorCtxMap_[std::make_tuple(0U, 0U, 0U)].valid, false);
+}
+
+// body 分片 dumpSize 超余量（nextOffset > length，>= 完成判定语义）：按完成处理
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorBodyOvershootCompletes)
+{
+    BlockBuffer block(512);
+    uint32_t off = 0;
+    const uint8_t seg0[] = {1, 2};
+    const uint8_t seg1[] = {3, 4, 5, 6, 7, 8}; // 6 字节 > 剩余 2 字节
+    off += BuildSuperTensorHeaderTlv(block.dumpStartAddr + off, 4U, 4U, sizeof(seg0), seg0, sizeof(seg0));
+    off += BuildSuperTensorBodyTlv(block.dumpStartAddr + off, 4U, 2U, sizeof(seg1), seg1, sizeof(seg1));
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, off);
+    testing::internal::CaptureStdout();
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(consumedLen, off);
+    EXPECT_EQ(DfxInfoParser::Instance().superTensorCtxMap_[std::make_tuple(0U, 0U, 0U)].valid, false); // 超出即完成
+}
+
+// body dumpSize=0：按可用长度（含对齐尾）整块续打
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorBodyDumpSizeZero)
+{
+    BlockBuffer block(512);
+    uint32_t off = 0;
+    const uint8_t seg0[] = {1, 2};
+    const uint8_t seg1[] = {3, 4};
+    off += BuildSuperTensorHeaderTlv(block.dumpStartAddr + off, 4U, 4U, sizeof(seg0), seg0, sizeof(seg0));
+    off += BuildSuperTensorBodyTlv(block.dumpStartAddr + off, 4U, 2U, 0U, seg1, sizeof(seg1));
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, off);
+    testing::internal::CaptureStdout();
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(consumedLen, off);
+    EXPECT_NE(output.find("3,4"), std::string::npos) << output;
+    EXPECT_EQ(DfxInfoParser::Instance().superTensorCtxMap_[std::make_tuple(0U, 0U, 0U)].valid, false);
+}
+
+// 环形回绕：header TLV 落在缓冲尾部、body TLV 绕回头部（AIC 物理偏移回绕），分片续打正常
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorRingBufferWrap)
+{
+    const uint8_t seg0[] = {1, 2};
+    const uint8_t seg1[] = {3, 4};
+    // 先在连续内存构造完整流，再按 AicPhysicalWraparoundPreservesV1ContentOrder 模式写入环形缓冲
+    std::vector<uint8_t> stream(
+        sizeof(DumpInfoHead) + sizeof(DumpSuperTensorHeader) + sizeof(seg0) + sizeof(DumpInfoHead) +
+            sizeof(DumpSuperTensorBody) + sizeof(seg1),
+        0);
+    const uint32_t tlv0Len = BuildSuperTensorHeaderTlv(stream.data(), 4U, 4U, sizeof(seg0), seg0, sizeof(seg0));
+    const uint32_t tlv1Len = BuildSuperTensorBodyTlv(stream.data() + tlv0Len, 4U, 2U, sizeof(seg1), seg1, sizeof(seg1));
+    const uint32_t totalLen = tlv0Len + tlv1Len;
+
+    BlockBuffer block(256U);
+    // header 放尾部，body 绕回头部：readIdx 指向 header 起点，writeIdx 为 body 绕回后的结束位置
+    const uint32_t readIdx = block.remainLen - tlv0Len;
+    WriteRingData(block, readIdx, stream.data(), totalLen);
+    const uint32_t writeIdx = totalLen - tlv0Len;
+
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), readIdx, writeIdx);
+    testing::internal::CaptureStdout();
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(consumedLen, totalLen);
+    EXPECT_NE(output.find("1,2"), std::string::npos) << output;
+    EXPECT_NE(output.find("3,4"), std::string::npos) << output;
+    EXPECT_EQ(DfxInfoParser::Instance().superTensorCtxMap_[std::make_tuple(0U, 0U, 0U)].valid, false);
+}
+
+// UnInit 清空打印上下文兜底：残留的未完成 super tensor 不影响下一用例
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorUnInitClearsCtx)
+{
+    BlockBuffer block(512);
+    const uint32_t shape[] = {2, 2};
+    const uint8_t seg0[] = {1, 2};
+    const uint32_t tlvLen =
+        BuildSuperTensorHeaderTlv(block.dumpStartAddr, 4U, 2U, shape, 4U, sizeof(seg0), seg0, sizeof(seg0));
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, tlvLen);
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    ASSERT_EQ(DfxInfoParser::Instance().superTensorCtxMap_[std::make_tuple(0U, 0U, 0U)].valid, true); // 尚未完成
+
+    DfxInfoParser::Instance().UnInit(); // TearDown 也会调用，此处显式触发验证兜底
+    EXPECT_EQ(DfxInfoParser::Instance().superTensorCtxMap_[std::make_tuple(0U, 0U, 0U)].valid, false);
+    EXPECT_EQ(DfxInfoParser::Instance().superTensorCtxMap_[std::make_tuple(0U, 0U, 0U)].length, 0U);
+}
+
+// 同一回调内连续两个 super tensor：第一个完成后第二个 header 覆写上下文，互不串扰
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorTwoTensorsSequential)
+{
+    BlockBuffer block(1024);
+    uint32_t off = 0;
+    const uint8_t t1s0[] = {1, 2, 3};
+    const uint8_t t1s1[] = {4, 5, 6};
+    const uint8_t t2s0[] = {7, 8, 9};
+    const uint8_t t2s1[] = {10, 11, 12};
+    off += BuildSuperTensorHeaderTlv(block.dumpStartAddr + off, 4U, 6U, 3U, t1s0, sizeof(t1s0));
+    off += BuildSuperTensorBodyTlv(block.dumpStartAddr + off, 6U, 3U, 3U, t1s1, sizeof(t1s1));
+    off += BuildSuperTensorHeaderTlv(block.dumpStartAddr + off, 4U, 6U, 3U, t2s0, sizeof(t2s0));
+    off += BuildSuperTensorBodyTlv(block.dumpStartAddr + off, 6U, 3U, 3U, t2s1, sizeof(t2s1));
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, off);
+    testing::internal::CaptureStdout();
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(consumedLen, off);
+    EXPECT_NE(output.find("1,2,3,4,5,6"), std::string::npos) << output;
+    EXPECT_NE(output.find("7,8,9,10,11,12"), std::string::npos) << output;
+    EXPECT_EQ(DfxInfoParser::Instance().superTensorCtxMap_[std::make_tuple(0U, 0U, 0U)].valid, false);
+}
+
+// 超大元素数 length（>4G 字节）：uint64 长度不截断，dump_size 元素数正确
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorLargeTensorLength)
+{
+    BlockBuffer block(512);
+    const uint8_t data[] = {1, 2, 3, 4};
+    constexpr uint64_t hugeLength = 8ULL * 1024ULL * 1024ULL * 1024ULL; // 8G 字节
+    const uint32_t tlvLen =
+        BuildSuperTensorHeaderTlv(block.dumpStartAddr, 4U, hugeLength, sizeof(data), data, sizeof(data));
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, tlvLen);
+    testing::internal::CaptureStdout();
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(consumedLen, tlvLen);
+    EXPECT_NE(output.find("tensor_bytes=" + std::to_string(hugeLength)), std::string::npos) << output;
+    EXPECT_EQ(DfxInfoParser::Instance().superTensorCtxMap_[std::make_tuple(0U, 0U, 0U)].length, hugeLength);
+    EXPECT_EQ(
+        DfxInfoParser::Instance().superTensorCtxMap_[std::make_tuple(0U, 0U, 0U)].valid, true); // 8G 只到了 4B，未完成
+    DfxInfoParser::Instance().superTensorCtxMap_.clear();
+}
+
+// header infoLen 不足但已含完整头字段（infoLen 恰等于 sizeof）：dumpSize=0、无数据段，上下文打开但无输出数据
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorHeaderOnlyNoData)
+{
+    BlockBuffer block(512);
+    DumpInfoHead* head =
+        WriteTlv(block.dumpStartAddr, cce::runtime::DumpType::DUMP_SUPER_TENSOR, sizeof(DumpSuperTensorHeader));
+    DumpSuperTensorHeader* superHead = reinterpret_cast<DumpSuperTensorHeader*>(head->infoMsg);
+    superHead->dataType = 4U;
+    superHead->desc = 200U;
+    superHead->dim = 0U;
+    superHead->length = 8U;
+    superHead->offset = 0U;
+    superHead->dumpSize = 0U;
+    const uint32_t tlvLen = sizeof(DumpInfoHead) + sizeof(DumpSuperTensorHeader);
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, tlvLen);
+    testing::internal::CaptureStdout();
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(consumedLen, tlvLen);
+    EXPECT_NE(output.find("DumpTensor: desc=200"), std::string::npos) << output;
+    EXPECT_EQ(
+        DfxInfoParser::Instance().superTensorCtxMap_[std::make_tuple(0U, 0U, 0U)].valid,
+        true); // 8 字节还没到，上下文保持打开
+    DfxInfoParser::Instance().superTensorCtxMap_.clear();
+}
+
+// body dumpSize 超可用长度（含对齐尾）：按可用长度裁剪续打，告警含 desc
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorBodyDumpSizeClipped)
+{
+    BlockBuffer block(512);
+    uint32_t off = 0;
+    const uint8_t seg0[] = {1, 2};
+    const uint8_t seg1[] = {3, 4};
+    const uint32_t padLen = 4U;
+    off += BuildSuperTensorHeaderTlv(block.dumpStartAddr + off, 4U, 4U, sizeof(seg0), seg0, sizeof(seg0));
+    // body infoLen = sizeof(body) + 2 数据 + 4 对齐尾 = 38 → 可用 6 字节；dumpSize 声明 12 超可用
+    off += BuildSuperTensorBodyTlv(block.dumpStartAddr + off, 4U, 2U, 12U, seg1, sizeof(seg1), padLen);
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, off);
+    testing::internal::CaptureStdout();
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(consumedLen, off);
+    EXPECT_NE(output.find("exceeds available data size[6 bytes]"), std::string::npos) << output;
+    EXPECT_NE(output.find("3,4"), std::string::npos) << output;
+    EXPECT_EQ(
+        DfxInfoParser::Instance().superTensorCtxMap_[std::make_tuple(0U, 0U, 0U)].valid,
+        false); // 2+6 >= 4 裁剪后仍完成
+}
+
+// 空 tensor 分段（length 有效但数据不足 1 个元素）+ 尾段补空：输出空括号收尾
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorEmptySegmentTail)
+{
+    BlockBuffer block(512);
+    uint32_t off = 0;
+    const uint8_t seg0[] = {1, 2};
+    off += BuildSuperTensorHeaderTlv(block.dumpStartAddr + off, 4U, 2U, sizeof(seg0), seg0, sizeof(seg0));
+    // 尾 body 携带 0 字节有效数据（dumpSize=0 且无数据载荷），nextOffset=2+0=2 >= length=2 判完成
+    off += BuildSuperTensorBodyTlv(block.dumpStartAddr + off, 2U, 2U, 0U, nullptr, 0U);
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, off);
+    testing::internal::CaptureStdout();
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(consumedLen, off);
+    EXPECT_NE(output.find("1,2"), std::string::npos) << output;
+    EXPECT_EQ(
+        DfxInfoParser::Instance().superTensorCtxMap_[std::make_tuple(0U, 0U, 0U)].valid, false); // 完成判定覆盖空尾段
+}
+
+// header shape 某维为 0：按无 shape 平铺打印（维度 0 视为无效，不参与括号对齐）
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorZeroDimInShape)
+{
+    BlockBuffer block(512);
+    const uint32_t shape[] = {0, 4}; // 第一维为 0
+    const uint8_t data[] = {1, 2, 3, 4};
+    const uint32_t tlvLen =
+        BuildSuperTensorHeaderTlv(block.dumpStartAddr, 4U, 2U, shape, sizeof(data), sizeof(data), data, sizeof(data));
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, tlvLen);
+    testing::internal::CaptureStdout();
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(consumedLen, tlvLen);
+    // 无括号平铺输出，不出现 0 除/异常括号
+    EXPECT_NE(output.find("1,2,3,4"), std::string::npos) << output;
+    EXPECT_EQ(output.find("[["), std::string::npos) << output;
+}
+
+// bf16 类型分段：跨分片转换正确（0x3F80 = 1.0）
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorBFloat16Segments)
+{
+    BlockBuffer block(512);
+    uint32_t off = 0;
+    const uint8_t seg0[] = {0x80, 0x3F}; // bf16 1.0
+    const uint8_t seg1[] = {0x00, 0x40}; // bf16 2.0
+    off += BuildSuperTensorHeaderTlv(block.dumpStartAddr + off, 27U, 4U, sizeof(seg0), seg0, sizeof(seg0));
+    off += BuildSuperTensorBodyTlv(block.dumpStartAddr + off, 4U, 2U, sizeof(seg1), seg1, sizeof(seg1));
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, off);
+    testing::internal::CaptureStdout();
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(consumedLen, off);
+    EXPECT_NE(output.find("data_type=bfloat16"), std::string::npos) << output;
+    EXPECT_NE(output.find("1.000000,2.000000"), std::string::npos) << output;
+}
+
+// 3 维 shape 跨分片：深层括号嵌套对齐（[2,2,2]，body 从中间层切入）
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorThreeDimShape)
+{
+    BlockBuffer block(512);
+    uint32_t off = 0;
+    const uint32_t shape[] = {2, 2, 2};
+    const uint8_t seg0[] = {1, 2, 3, 4}; // 2x2x2 的前半：[[1,2],[3,4]],
+    const uint8_t seg1[] = {5, 6, 7, 8}; // 后半：[[5,6],[7,8]]]
+    off += BuildSuperTensorHeaderTlv(block.dumpStartAddr + off, 4U, 3U, shape, 8U, sizeof(seg0), seg0, sizeof(seg0));
+    off += BuildSuperTensorBodyTlv(block.dumpStartAddr + off, 8U, 4U, sizeof(seg1), seg1, sizeof(seg1));
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, off);
+    testing::internal::CaptureStdout();
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(consumedLen, off);
+    EXPECT_NE(output.find("[[[1,2],\n[3,4]],\n[[5,6],\n[7,8]]]"), std::string::npos) << output;
+}
+
+// ===== 检视意见修复配套用例（MR 6098：offset 连续性 / 流来源 / shape 乘积溢出 / header 重入） =====
+
+// body offset 与 printedOffset 不连续（gap）：丢弃该 body + 告警，后续正确 body 仍可续打
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorBodyOffsetGapDropped)
+{
+    BlockBuffer block(512);
+    uint32_t off = 0;
+    const uint32_t shape[] = {2, 2};
+    const uint8_t seg0[] = {1, 2};
+    const uint8_t gapSeg[] = {9, 9}; // offset 跳到 4（应为 2）
+    const uint8_t seg2[] = {3, 4};
+    off += BuildSuperTensorHeaderTlv(block.dumpStartAddr + off, 4U, 2U, shape, 4U, sizeof(seg0), seg0, sizeof(seg0));
+    off += BuildSuperTensorBodyTlv(block.dumpStartAddr + off, 4U, 4U, sizeof(gapSeg), gapSeg, sizeof(gapSeg));
+    off += BuildSuperTensorBodyTlv(block.dumpStartAddr + off, 4U, 2U, sizeof(seg2), seg2, sizeof(seg2));
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, off);
+    testing::internal::CaptureStdout();
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(consumedLen, off);
+    EXPECT_NE(output.find("not continuous with printedOffset=2"), std::string::npos) << output;
+    EXPECT_EQ(output.find("9,9"), std::string::npos) << output; // gap 段不打印
+    // 期望串会被 gap 告警（slog stub 打 stdout）打断，拆开验证：起始段与完成段均存在
+    EXPECT_NE(output.find("[[1,2],"), std::string::npos) << output; // 起始段已打印
+    EXPECT_NE(output.find("3,4]]"), std::string::npos) << output;   // 完成段正常续打收尾
+    EXPECT_EQ(DfxInfoParser::Instance().superTensorCtxMap_[std::make_tuple(0U, 0U, 0U)].valid, false);
+}
+
+// body offset 回退（overlap，重复段）：丢弃 + 不重复打印
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorBodyOffsetOverlapDropped)
+{
+    BlockBuffer block(512);
+    uint32_t off = 0;
+    const uint8_t seg0[] = {1, 2};
+    const uint8_t overlapSeg[] = {9, 9}; // offset 回退到 0（应为 2）
+    off += BuildSuperTensorHeaderTlv(block.dumpStartAddr + off, 4U, 4U, sizeof(seg0), seg0, sizeof(seg0));
+    off +=
+        BuildSuperTensorBodyTlv(block.dumpStartAddr + off, 4U, 0U, sizeof(overlapSeg), overlapSeg, sizeof(overlapSeg));
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, off);
+    testing::internal::CaptureStdout();
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(consumedLen, off);
+    EXPECT_NE(output.find("not continuous with printedOffset=2"), std::string::npos) << output;
+    EXPECT_EQ(output.find("9,9"), std::string::npos) << output;
+    EXPECT_NE(output.find("1,2"), std::string::npos) << output;
+}
+
+// 双流（不同 coreId 回调）并发 dump 超大 tensor：ctx 表按流隔离，各自独立续打互不覆盖
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorTwoStreamsInterleaved)
+{
+    const uint32_t shape[] = {2, 2};
+    const auto key0 = std::make_tuple(0U, 0U, 0U); // coreId=0 的流
+    const auto key1 = std::make_tuple(0U, 0U, 1U); // coreId=1 的流
+    uint64_t consumedLen = 0U;
+
+    // 流0：header（desc=200，数据 1,2）
+    BlockBuffer b1(512);
+    const uint8_t seg0[] = {1, 2};
+    const uint32_t len1 =
+        BuildSuperTensorHeaderTlv(b1.dumpStartAddr, 4U, 2U, shape, 4U, sizeof(seg0), seg0, sizeof(seg0));
+    rtDfxParseParam p1 = MakeParam(b1.blockAddr, b1.data.size(), 0, len1, 0U, 0U);
+    DfxInfoParser::Instance().ParseDfxInfo(&p1, &consumedLen);
+    ASSERT_EQ(DfxInfoParser::Instance().superTensorCtxMap_[key0].valid, true);
+
+    // 流1：header（desc=201，数据 5,6）——旧实现会覆盖流0 的上下文；ctx 表下各自独立
+    BlockBuffer b2(512);
+    const uint8_t seg1[] = {5, 6};
+    DumpInfoHead* head =
+        WriteTlv(b2.dumpStartAddr, cce::runtime::DumpType::DUMP_SUPER_TENSOR, sizeof(DumpSuperTensorHeader) + 2U);
+    DumpSuperTensorHeader* superHead = reinterpret_cast<DumpSuperTensorHeader*>(head->infoMsg);
+    superHead->dataType = 4U;
+    superHead->desc = 201U;
+    superHead->dim = 2U;
+    superHead->shape[0] = 2U;
+    superHead->shape[1] = 2U;
+    superHead->length = 4U;
+    superHead->offset = 0U;
+    superHead->dumpSize = 2U;
+    (void)memcpy_s(head->infoMsg + sizeof(DumpSuperTensorHeader), 2U, seg1, 2U);
+    const uint32_t len2 = sizeof(DumpInfoHead) + sizeof(DumpSuperTensorHeader) + 2U;
+    rtDfxParseParam p2 = MakeParam(b2.blockAddr, b2.data.size(), 0, len2, 0U, 1U);
+    DfxInfoParser::Instance().ParseDfxInfo(&p2, &consumedLen);
+    ASSERT_EQ(DfxInfoParser::Instance().superTensorCtxMap_[key1].valid, true);
+    ASSERT_EQ(DfxInfoParser::Instance().superTensorCtxMap_[key0].valid, true); // 流0 上下文未被覆盖
+
+    // 两流 body 交错到达：流0 续打 3,4 完成；流1 续打 7,8 完成
+    const uint8_t seg2[] = {3, 4}; // 流0 第二段
+    const uint8_t seg3[] = {7, 8}; // 流1 第二段
+    testing::internal::CaptureStdout();
+    BlockBuffer b3(512);
+    const uint32_t len3 = BuildSuperTensorBodyTlv(b3.dumpStartAddr, 4U, 2U, sizeof(seg2), seg2, sizeof(seg2));
+    rtDfxParseParam p3 = MakeParam(b3.blockAddr, b3.data.size(), 0, len3, 0U, 0U); // 流0 body
+    DfxInfoParser::Instance().ParseDfxInfo(&p3, &consumedLen);
+    BlockBuffer b4(512);
+    const uint32_t len4 = BuildSuperTensorBodyTlv(b4.dumpStartAddr, 4U, 2U, sizeof(seg3), seg3, sizeof(seg3));
+    rtDfxParseParam p4 = MakeParam(b4.blockAddr, b4.data.size(), 0, len4, 0U, 1U); // 流1 body
+    DfxInfoParser::Instance().ParseDfxInfo(&p4, &consumedLen);
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_NE(output.find("3,4]]"), std::string::npos) << output; // 流0 完整
+    EXPECT_NE(output.find("7,8]]"), std::string::npos) << output; // 流1 完整
+    EXPECT_EQ(DfxInfoParser::Instance().superTensorCtxMap_[key0].valid, false);
+    EXPECT_EQ(DfxInfoParser::Instance().superTensorCtxMap_[key1].valid, false);
+    DfxInfoParser::Instance().superTensorCtxMap_.clear();
+}
+
+// 跨流 header（新流覆盖未完成上下文）：告警旧 tensor 未完成，新 tensor 数据正确打印
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorHeaderReentryWarns)
+{
+    BlockBuffer block(512);
+    const uint32_t shape[] = {2, 2};
+    const uint8_t seg0[] = {1, 2};
+    const uint32_t tlvLen =
+        BuildSuperTensorHeaderTlv(block.dumpStartAddr, 4U, 2U, shape, 4U, sizeof(seg0), seg0, sizeof(seg0));
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param1 = MakeParam(block.blockAddr, block.data.size(), 0, tlvLen, 0U, 0U);
+    DfxInfoParser::Instance().ParseDfxInfo(&param1, &consumedLen);
+    ASSERT_EQ(
+        DfxInfoParser::Instance().superTensorCtxMap_[std::make_tuple(0U, 0U, 0U)].valid, true); // 旧 tensor 未完成
+
+    // 新 header（不同 desc）到达：告警覆盖，新 tensor 单包完成
+    BlockBuffer block2(512);
+    const uint8_t data2[] = {7, 8, 9, 10};
+    DumpInfoHead* head =
+        WriteTlv(block2.dumpStartAddr, cce::runtime::DumpType::DUMP_SUPER_TENSOR, sizeof(DumpSuperTensorHeader) + 4U);
+    DumpSuperTensorHeader* superHead = reinterpret_cast<DumpSuperTensorHeader*>(head->infoMsg);
+    superHead->dataType = 4U;
+    superHead->desc = 300U;
+    superHead->dim = 0U;
+    superHead->length = 4U;
+    superHead->offset = 0U;
+    superHead->dumpSize = 4U;
+    (void)memcpy_s(head->infoMsg + sizeof(DumpSuperTensorHeader), sizeof(data2), data2, sizeof(data2));
+    const uint32_t tlv2Len = sizeof(DumpInfoHead) + sizeof(DumpSuperTensorHeader) + 4U;
+    rtDfxParseParam param2 = MakeParam(block2.blockAddr, block2.data.size(), 0, tlv2Len, 0U, 0U);
+    testing::internal::CaptureStdout();
+    DfxInfoParser::Instance().ParseDfxInfo(&param2, &consumedLen);
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_NE(output.find("is not finished (printed=2/4"), std::string::npos) << output;
+    EXPECT_NE(output.find("desc=300"), std::string::npos) << output; // 新 tensor 元信息
+    EXPECT_NE(output.find("7,8,9,10"), std::string::npos) << output; // 新 tensor 数据
+    EXPECT_EQ(DfxInfoParser::Instance().superTensorCtxMap_[std::make_tuple(0U, 0U, 0U)].valid, false);
+}
+
+// shape 后缀乘积溢出（2^72 回绕 0）：降级平铺打印 + 告警，不除零不崩溃
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorShapeProductOverflow)
+{
+    BlockBuffer block(512);
+    // 65536^4 * 4^4 = 2^72 > size_t(64)，后缀乘积回绕为 0
+    const uint32_t shape[] = {65536, 65536, 65536, 65536, 4, 4, 4, 4};
+    const uint8_t data[] = {1, 2, 3, 4};
+    const uint32_t tlvLen =
+        BuildSuperTensorHeaderTlv(block.dumpStartAddr, 4U, 8U, shape, sizeof(data), sizeof(data), data, sizeof(data));
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, tlvLen);
+    testing::internal::CaptureStdout();
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen); // 修复前此处 SIGFPE（x86）
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(consumedLen, tlvLen);
+    EXPECT_NE(output.find("exceeds the maximum value"), std::string::npos) << output;
+    EXPECT_NE(output.find("1,2,3,4"), std::string::npos) << output; // 平铺打印数据完整
+    EXPECT_EQ(DfxInfoParser::Instance().superTensorCtxMap_[std::make_tuple(0U, 0U, 0U)].valid, false);
+}
+
+// ===== 1M 打屏上限用例：超限以 "..." 省略 + 告警（ASCEND_DUMP_PATH 落盘 + show_kernel_debug_data） =====
+// 注：元素计数用完整元素值（如 "777777"）而非单字符——slog stub 把 IDE_LOGx 也打到 stdout，
+// 行号/tid/dump_size 等数字会污染单字符计数；完整值仅数据行命中，计数确定性有保证。
+
+// 单包超 1M：只打前 1M 数据（262144 个 int32），"..." 省略 + 告警一次，consumedLen 仍为整包（完成判定不受截断影响）
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorPrintLimitSinglePacket)
+{
+    constexpr size_t limitBytes = 1024U * 1024U; // 与 MAX_SUPER_TENSOR_PRINT_BYTES 一致
+    constexpr uint16_t int32Size = 4U;
+    constexpr int32_t elemVal = 777777;
+    const size_t totalBytes = limitBytes + int32Size; // 超 1M 一个元素
+    std::vector<int32_t> tensorData(totalBytes / int32Size, elemVal);
+    BlockBuffer block(totalBytes + 256U);
+    const uint32_t tlvLen = BuildSuperTensorHeaderTlv(
+        block.dumpStartAddr, 3U, totalBytes, totalBytes, reinterpret_cast<const uint8_t*>(tensorData.data()),
+        totalBytes);
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, tlvLen);
+    testing::internal::CaptureStdout();
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(consumedLen, tlvLen); // 整包消费，截断只影响打屏
+    EXPECT_EQ(CountOccurrences(output, "777777"), limitBytes / int32Size) << output; // 恰好打 1M 字节
+    EXPECT_NE(output.find("..."), std::string::npos) << output;                      // "..." 省略
+    EXPECT_NE(output.find("ASCEND_DUMP_PATH"), std::string::npos) << output;         // 落盘指引
+    EXPECT_NE(output.find("show_kernel_debug_data"), std::string::npos) << output;   // 工具指引
+    EXPECT_EQ(DfxInfoParser::Instance().superTensorCtxMap_[std::make_tuple(0U, 0U, 0U)].valid, false); // 仍正常完成
+}
+
+// 恰好 1M（不超限）：不截断、"..." 与告警均不出现（边界）
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorPrintLimitExactBytes)
+{
+    constexpr size_t limitBytes = 1024U * 1024U;
+    constexpr uint16_t int32Size = 4U;
+    constexpr int32_t elemVal = 777777;
+    std::vector<int32_t> tensorData(limitBytes / int32Size, elemVal);
+    BlockBuffer block(limitBytes + 256U);
+    const uint32_t tlvLen = BuildSuperTensorHeaderTlv(
+        block.dumpStartAddr, 3U, limitBytes, limitBytes, reinterpret_cast<const uint8_t*>(tensorData.data()),
+        limitBytes);
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, tlvLen);
+    testing::internal::CaptureStdout();
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(consumedLen, tlvLen);
+    EXPECT_EQ(CountOccurrences(output, "777777"), limitBytes / int32Size) << output; // 全量打印
+    EXPECT_EQ(output.find("..."), std::string::npos) << output;                      // 恰好 1M 不省略
+    EXPECT_EQ(output.find("too large"), std::string::npos) << output;
+    EXPECT_EQ(DfxInfoParser::Instance().superTensorCtxMap_[std::make_tuple(0U, 0U, 0U)].valid, false);
+}
+
+// 分片跨 1M 边界：首段打满 1M，跨界 body 只补打差额，再后续 body 全省略；"..." 与打屏告警各一次；
+// ctx 推进/完成不受截断影响
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorPrintLimitCrossSegment)
+{
+    constexpr size_t limitBytes = 1024U * 1024U;
+    constexpr uint16_t int32Size = 4U;
+    const size_t seg0Len = limitBytes - 4U; // 首段打 1M-4（262143 个元素）
+    const size_t seg1Len = 8U;              // body1 跨界：只补打 4 字节（1 个元素）即满 1M
+    const size_t seg2Len = 8U;              // body2 完全省略
+    const size_t totalBytes = seg0Len + seg1Len + seg2Len;
+    std::vector<int32_t> seg0(seg0Len / int32Size, 111111);
+    std::vector<int32_t> seg1(seg1Len / int32Size, 222222);
+    std::vector<int32_t> seg2(seg2Len / int32Size, 333333);
+    BlockBuffer block(totalBytes + 512U);
+    uint32_t off = 0U;
+    off += BuildSuperTensorHeaderTlv(
+        block.dumpStartAddr + off, 3U, totalBytes, seg0Len, reinterpret_cast<const uint8_t*>(seg0.data()), seg0Len);
+    off += BuildSuperTensorBodyTlv(
+        block.dumpStartAddr + off, totalBytes, seg0Len, seg1Len, reinterpret_cast<const uint8_t*>(seg1.data()),
+        seg1Len);
+    off += BuildSuperTensorBodyTlv(
+        block.dumpStartAddr + off, totalBytes, seg0Len + seg1Len, seg2Len,
+        reinterpret_cast<const uint8_t*>(seg2.data()), seg2Len);
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, off);
+    testing::internal::CaptureStdout();
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(consumedLen, off);
+    // 首段全打（262143 个）；body1 跨界只补打 1 个元素；body2 全省略
+    EXPECT_EQ(CountOccurrences(output, "111111"), seg0Len / int32Size) << output;
+    EXPECT_EQ(CountOccurrences(output, "222222"), 1U) << output;
+    EXPECT_EQ(CountOccurrences(output, "333333"), 0U) << output;
+    // "..." 与打屏告警（cout 行以 "Warning:" 开头）各一次
+    EXPECT_EQ(CountOccurrences(output, "..."), 1U) << output;
+    EXPECT_EQ(CountOccurrences(output, "Warning: the tensor data is too large"), 1U) << output;
+    EXPECT_NE(output.find("show_kernel_debug_data"), std::string::npos) << output;
+    EXPECT_EQ(
+        DfxInfoParser::Instance().superTensorCtxMap_[std::make_tuple(0U, 0U, 0U)].valid, false); // 完成不受截断影响
+}
+
+// 截断后的后续 tensor：省略标志随新 header 复位，新 tensor 从头打屏
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorPrintLimitResetByNewHeader)
+{
+    constexpr size_t limitBytes = 1024U * 1024U;
+    const size_t bigLen = limitBytes + 8U;
+    std::vector<uint8_t> bigData(bigLen, 9U);
+    const uint8_t smallData[] = {5, 6, 7, 8};
+    BlockBuffer block(bigLen + sizeof(smallData) + 512U);
+    uint32_t off = 0U;
+    off += BuildSuperTensorHeaderTlv(block.dumpStartAddr + off, 4U, bigLen, bigLen, bigData.data(), bigLen);
+    off += BuildSuperTensorHeaderTlv(
+        block.dumpStartAddr + off, 4U, sizeof(smallData), sizeof(smallData), smallData, sizeof(smallData));
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, off);
+    testing::internal::CaptureStdout();
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(consumedLen, off);
+    EXPECT_NE(output.find("5,6,7,8"), std::string::npos) << output; // 新 tensor 未被旧省略标志影响
+    EXPECT_NE(output.find("..."), std::string::npos) << output;     // 旧 tensor 的省略仍可见
+    EXPECT_EQ(DfxInfoParser::Instance().superTensorCtxMap_[std::make_tuple(0U, 0U, 0U)].valid, false);
 }

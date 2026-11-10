@@ -15,13 +15,40 @@
 #include <map>
 #include <mutex>
 #include <tuple>
+#include <vector>
 
 #include "common/singleton.h"
 #include "rt_inner_dfx.h"
 #include "base/log_types.h"
+#include "dfx_struct.h"
 #include "profiling/prof_common.h"
 
 namespace Adx {
+
+// 超大 Tensor 打印上下文：仅存元信息与偏移，不持数据，跨解析回调驻留；按流各持一份
+struct SuperTensorPrintCtx {
+    bool valid = false;    // 是否有打开的 super tensor
+    uint32_t dataType = 0; // 数据类型，body 续打用
+    uint32_t desc = 0;
+    uint32_t addr = 0;
+    uint16_t position = 0;
+    uint16_t blockIdx = 0;
+    uint32_t dim = 0;
+    uint32_t shape[cce::runtime::RT_DUMP_SHAPE_MAX_SIZE] = {0U};
+    uint64_t length = 0; // body 归属匹配与完成判定用
+    uint64_t printedOffset = 0; // 已消费偏移（tensor 级绝对偏移，= 下一 body 的 offset），截断忽略同样计入
+    bool printTruncated = false; // 超规格打屏上限已忽略，后续分片只推进偏移不打数据
+};
+
+// 超大 Tensor 分片打屏的段信息：全局下标续算 + 括号对齐 + 收尾控制
+struct SuperTensorSegInfo {
+    std::vector<size_t> tmpShape; // 后缀累积 shape，空表示平铺
+    size_t elemBase = 0;          // 本段首元素的全局下标
+    size_t totalElemNum = 0;      // 整 tensor 元素数
+    bool finishAtEnd = false;     // 本段末元素是否收尾（"]" + 换行）
+};
+
+using DfxStreamKey = std::tuple<uint32_t, uint32_t, uint32_t>;
 
 class DfxInfoParser : public Common::Singleton::Singleton<DfxInfoParser> {
 public:
@@ -35,7 +62,8 @@ private:
     bool registered_;
     std::mutex lifecycleMutex_;
     std::mutex tlvCntMutex_;
-    std::map<std::tuple<uint32_t, uint32_t, uint32_t>, uint64_t> tlvCntMap_;
+    std::map<DfxStreamKey, uint64_t> tlvCntMap_;
+    std::map<DfxStreamKey, SuperTensorPrintCtx> superTensorCtxMap_;
     static std::atomic<bool> profCtrlRegistered_;
     static void RegisterProfCtrlCallbackOnce();
     void AddTlvCnt(const rtDfxParseParam* param, uint64_t consumedTlvCnt);
