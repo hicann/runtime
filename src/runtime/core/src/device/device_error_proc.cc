@@ -1803,9 +1803,11 @@ rtError_t DeviceErrorProc::ProcessOneElementInRingBufferImpl(
         const RingBufferElementInfo* const elementInfo = GetRingBufferElement(ctlInfo, elementSize, head);
 
         const uint32_t taskType = (taskPtr == nullptr) ? 0xFFU : static_cast<uint32_t>(taskPtr->type);
-        RT_LOG(
-            RT_LOG_DEBUG, "head=%u, tail=%u, task_type=%s(%u).", head, tail,
-            ((taskPtr != nullptr) && (taskPtr->typeName != nullptr)) ? taskPtr->typeName : "Unknown", taskType);
+        const char_t* taskTypeName = "Unknown";
+        if ((taskPtr != nullptr) && (taskPtr->typeName != nullptr)) {
+            taskTypeName = taskPtr->typeName;
+        }
+        RT_LOG(RT_LOG_DEBUG, "head=%u, tail=%u, task_type=%s(%u).", head, tail, taskTypeName, taskType);
 
         head = (head + 1U) % (ctlInfo->ringBufferLen);
 
