@@ -157,7 +157,7 @@ rtError_t ParseAicpuPrintInfoImpl(RawDevice* device)
         userDeviceId = device->deviceId_;
     }
     rtError_t ret;
-    const rtParseDfxInfoFunc cb = GetParseDfxInfoFunc();
+    rtParseDfxInfoFunc const cb = GetParseDfxInfoFunc();
     if (cb != nullptr) {
         ret = ParseAicpuPrintfV2(
             device->aicpuPrintfAddr_, static_cast<size_t>(device->aicpuPrintfMemSize_), device->driver_, userDeviceId);

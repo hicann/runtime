@@ -1441,7 +1441,7 @@ rtError_t ParsePrintfV2(void* addr, const size_t blockSize, Driver* curDrv, uint
         COND_RETURN_ERROR(
             (ret != RT_ERROR_NONE), ret, "MemCopySync h2d failed, ret=%u, deviceId=%u", ret, userDeviceId);
 
-        rtParseDfxInfoFunc cb = GetParseDfxInfoFunc();
+        rtParseDfxInfoFunc const cb = GetParseDfxInfoFunc();
         if (cb != nullptr) {
             uint64_t consumedLen = 0U;
             rtDfxParseParam param = {blockAddr,       static_cast<uint64_t>(blockSize),
@@ -1496,7 +1496,7 @@ rtError_t ParseSimtPrintfV2(void* addr, const size_t blockSize, Driver* curDrv, 
     }
 
     const uint64_t readIdx = readInfo->readIdx;
-    rtParseDfxInfoFunc cb = GetParseDfxInfoFunc();
+    rtParseDfxInfoFunc const cb = GetParseDfxInfoFunc();
     if (cb != nullptr) {
         uint64_t consumedLen = 0U;
         rtDfxParseParam param = {blockAddr,           static_cast<uint64_t>(blockSize),  readIdx,
@@ -1714,7 +1714,7 @@ rtError_t ParseAicpuPrintfV2(void* addr, const size_t blockSize, Driver* curDrv,
     }
 
     const uint64_t readIdx = readInfo->readIdx;
-    const rtParseDfxInfoFunc cb = GetParseDfxInfoFunc();
+    rtParseDfxInfoFunc const cb = GetParseDfxInfoFunc();
     if (cb != nullptr) {
         uint64_t consumedLen = 0U;
         rtDfxParseParam param = {blockAddr,           static_cast<uint64_t>(blockSize),   readIdx,
