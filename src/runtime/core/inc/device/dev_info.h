@@ -12,8 +12,9 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "runtime/base.h"
-#include "runtime/mem.h"
+#include "mem.h"
+#include "mem_base.h"
+#include "rt_external_mem.h"
 #include "soc/soc_define.hpp"
 
 namespace cce {
