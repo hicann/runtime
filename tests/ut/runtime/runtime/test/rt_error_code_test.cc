@@ -590,3 +590,18 @@ TEST_F(RtErrorCodeTest, Ez2001TemplateInnerNewlineSanitized)
     // Fault 前面应该是空格而不是 \n
     EXPECT_EQ(g_lastDlogRecordLine[faultPos - 1U], ' ');
 }
+
+// 验证 BinaryGetGlobal 空指针校验触发的 EE1004 打印内容正确:
+// 宏展开为 ErrorCodeProcess(EE1004, ..., {funDesc, "binHandle"}), funDesc 取自 api_error.cc 中
+// NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(binHandle, RT_ERROR_INVALID_VALUE, funDesc)
+TEST_F(RtErrorCodeTest, BinaryGetGlobalNullBinHandleErrMsg)
+{
+    ClearLastDlogRecordLine();
+    std::vector<std::string> values = {"Querying the address and size of a device global variable", "binHandle"};
+    PrintErrMsgToLog(ErrorCode::EE1004, __FILE__, __LINE__, "BinaryGetGlobal", values);
+    ASSERT_FALSE(g_lastDlogRecordLine.empty());
+    // EE1004 模板: "%s failed because %s cannot be a NULL pointer. ErrorCode=EE1004.\n"
+    EXPECT_TRUE(DlogRecordContains(
+        "Querying the address and size of a device global variable failed because binHandle cannot be a NULL "
+        "pointer. ErrorCode=EE1004."));
+}

@@ -5839,6 +5839,8 @@ rtError_t ApiErrorDecorator::GetStackBuffer(
 rtError_t ApiErrorDecorator::BinaryGetGlobal(
     const Program* const binHandle, const char* name, void** dptr, size_t* size)
 {
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
+        binHandle, RT_ERROR_INVALID_VALUE, "Querying the address and size of a device global variable");
     if (binHandle->GetKernelRegType() == RT_KERNEL_REG_TYPE_CPU) {
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }

@@ -387,3 +387,28 @@ TEST_F(ApiAbnormalTest, rtMemcpyAsyncExSizeZeroNoOp)
     rtError_t error = rtMemcpyAsyncEx(NULL, 0U, NULL, 0U, RT_MEMCPY_DEVICE_TO_DEVICE, NULL, NULL);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 }
+
+TEST_F(ApiAbnormalTest, BinaryGetGlobalNullBinHandleTest)
+{
+    ApiImpl impl;
+    ApiErrorDecorator api(&impl);
+    void* dptr = nullptr;
+    size_t size = 0U;
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::BinaryGetGlobal).expects(never());
+    rtError_t error = api.BinaryGetGlobal(nullptr, "globalVar", &dptr, &size);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+}
+
+TEST_F(ApiAbnormalTest, BinaryGetGlobalForwardingTest)
+{
+    ApiImpl impl;
+    ApiErrorDecorator api(&impl);
+    void* dptr = nullptr;
+    size_t size = 0U;
+
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::BinaryGetGlobal).stubs().will(returnValue(RT_ERROR_NONE));
+    PlainProgram program;
+    rtError_t error = api.BinaryGetGlobal(&program, "globalVar", &dptr, &size);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+}
