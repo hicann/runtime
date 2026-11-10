@@ -122,6 +122,26 @@ TEST_F(AICPUSDWorkerTEST, CreateWorkTest_sem_wait_fail)
     EXPECT_NE(ret, 0);
 }
 
+TEST_F(AICPUSDWorkerTEST, CreateWorkerInitFailThreadStatusExit)
+{
+    ThreadPool& tp = ThreadPool::Instance();
+    MOCKER_CPP(&ThreadPool::AddPidToTask).stubs().will(returnValue(static_cast<int32_t>(AICPU_SCHEDULE_OK)));
+    MOCKER_CPP(&AicpuDrvManager::GetAicpuPhysIndex).stubs().will(returnValue(static_cast<uint32_t>(INVALID_AICPU_ID)));
+    MOCKER(halEschedSubscribeEvent).stubs().will(returnValue(DRV_ERROR_NOT_SUPPORT));
+    MOCKER_CPP(&AicpuMonitor::Run).stubs().will(returnValue(static_cast<int32_t>(AICPU_SCHEDULE_OK)));
+    setenv("PROCMGR_AICPU_CPUSET", "0", 1);
+
+    AicpuDrvManager& drvMgr = AicpuDrvManager::GetInstance();
+    drvMgr.deviceVec_ = {0U};
+    drvMgr.deviceNum_ = 1U;
+    drvMgr.aicpuNumPerDev_ = 1U;
+
+    const int32_t ret = tp.CreateWorker(SCHED_MODE_INTERRUPT);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_INIT_FAILED);
+    ASSERT_FALSE(tp.threadStatusList_.empty());
+    EXPECT_EQ(tp.threadStatusList_[0U], ThreadStatus::THREAD_EXIT);
+}
+
 TEST_F(AICPUSDWorkerTEST, SetThreadStatusSuccess)
 {
     ThreadPool tp;

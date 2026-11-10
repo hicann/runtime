@@ -233,6 +233,7 @@ void ThreadPool::Work(const size_t threadIndex, const uint32_t deviceId, const A
         aicpusd_err(
             "Init work for sched mode failed, mode=%s(%u)", GetEnumName(schedMode).c_str(),
             static_cast<uint32_t>(schedMode));
+        AicpuSchedule::ThreadPool::Instance().SetThreadStatus(threadIndex, ThreadStatus::THREAD_EXIT);
         AicpuSchedule::ThreadPool::Instance().PostSem(threadIndex);
         return;
     }
