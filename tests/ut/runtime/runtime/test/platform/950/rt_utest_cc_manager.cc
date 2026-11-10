@@ -2280,6 +2280,40 @@ TEST_F(CCManagerTest, Manager_UnsupportedCopyKind_ReturnsContinueExecute)
         RT_ERROR_CONTINUE_EXECUTE);
 }
 
+TEST_F(CCManagerTest, Manager_SyncCopyInCcModeReturnsFeatureNotSupportOnContextAbort)
+{
+    gCcMode = HAL_CC_MODE_NORMAL;
+    Context* const curCtx = Runtime::Instance()->CurrentContext(true, DEFAULT_DEVICE_ID);
+    ASSERT_NE(curCtx, nullptr);
+    Stream* const curStm = curCtx->DefaultStream_();
+    ASSERT_NE(curStm, nullptr);
+    Driver* const driver = curCtx->Device_()->Driver_();
+    ASSERT_NE(driver, nullptr);
+
+    uint8_t dst[16] = {};
+    uint8_t src[16] = {};
+    rtPtrAttributes_t dstAttributes = {};
+    dstAttributes.location.type = RT_MEMORY_LOC_DEVICE;
+    dstAttributes.location.id = 0U;
+    rtPtrAttributes_t srcAttributes = {};
+    srcAttributes.location.type = RT_MEMORY_LOC_HOST;
+    srcAttributes.location.id = 0U;
+
+    MOCKER_CPP_VIRTUAL(driver, &Driver::PtrGetAttributes)
+        .expects(once())
+        .with(eq(static_cast<const void*>(dst)), outBoundP(&dstAttributes, sizeof(dstAttributes)))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::PtrGetAttributes)
+        .expects(once())
+        .with(eq(static_cast<const void*>(src)), outBoundP(&srcAttributes, sizeof(srcAttributes)))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(curStm, &Stream::CheckContextStatus).expects(once()).will(returnValue(RT_ERROR_STREAM_ABORT));
+
+    EXPECT_EQ(
+        CCManager::CCMemCopySync(dst, sizeof(dst), src, sizeof(src), RT_MEMCPY_HOST_TO_DEVICE),
+        RT_ERROR_FEATURE_NOT_SUPPORT);
+}
+
 TEST_F(CCManagerTest, CheckMemAddrRangeValid_AllocationBoundary)
 {
     constexpr uint64_t allocBase = 0x1000U;

@@ -445,9 +445,11 @@ rtError_t CCManager::CCMemCopySync(
     COND_RETURN_ERROR(curStm == nullptr, RT_ERROR_STREAM_NULL, "CC default stream is null.");
     // 遇错即停场景，提前拦截报错说明，否则下面流同步还是会报错
     ret = curStm->CheckContextStatus();
-    COND_RETURN_ERROR(
-        ret != RT_ERROR_NONE, RT_ERROR_FEATURE_NOT_SUPPORT,
-        "Context is aborted, status=%#x. synchronous CC memory copy is not support", static_cast<uint32_t>(ret));
+    COND_RETURN_AND_MSG_OUTER(
+        ret != RT_ERROR_NONE, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1016,
+        "Synchronous memory copy in confidential computing mode",
+        "The current context has entered the failure state, and synchronous memory copy is not supported in "
+        "confidential computing mode in this state");
 
     ret = SubmitCcMemcpyTask(dst, src, cnt, cpyKind, curStm);
     COND_RETURN_ERROR(ret != RT_ERROR_NONE, ret, "Submit CC memcpy sync task failed, ret=%#x.", ret);
