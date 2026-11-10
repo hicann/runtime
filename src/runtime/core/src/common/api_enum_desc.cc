@@ -120,16 +120,16 @@ std::string SysParamOptToString(const rtSysParamOpt option)
 
 std::string NamedValueDescription(const ErrMsgNamedValue& item)
 {
-    if (item.useHex) {
-        return RtFmtMsg("%s(0x%" PRIX64 ")", item.name, item.value);
+    if (item.IsHex()) {
+        return RtFmtMsg("%s(0x%" PRIX64 ")", item.GetName(), item.GetValue());
     }
-    return RtFmtMsg("%s(%" PRIu64 ")", item.name, item.value);
+    return RtFmtMsg("%s(%" PRIu64 ")", item.GetName(), item.GetValue());
 }
 
 std::string EnumValueDescription(const int64_t value, const std::initializer_list<ErrMsgNamedValue> names)
 {
     for (const auto& item : names) {
-        if (value == static_cast<int64_t>(item.value)) {
+        if (value == static_cast<int64_t>(item.GetValue())) {
             return NamedValueDescription(item);
         }
     }
@@ -305,7 +305,7 @@ std::string IpcMemAttrToString(const uint64_t value)
         {RT_IPC_MEM_ATTR_MAX, "RT_IPC_MEM_ATTR_MAX"},
     };
     for (const auto& item : names) {
-        if (value == item.value) {
+        if (value == item.GetValue()) {
             return NamedValueDescription(item);
         }
     }
@@ -390,7 +390,7 @@ std::string MemoryPolicyToString(const uint64_t value)
         {RT_MEMORY_POLICY_HUGE1G_PAGE_ONLY_P2P, "RT_MEMORY_POLICY_HUGE1G_PAGE_ONLY_P2P", true},
     };
     for (const auto& item : names) {
-        if (value == item.value) {
+        if (value == item.GetValue()) {
             return NamedValueDescription(item);
         }
     }

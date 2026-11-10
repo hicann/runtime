@@ -423,12 +423,19 @@ std::string DeviceStatusToString(const rtDeviceStatus status);
 class ErrMsgNamedValue {
 public:
     constexpr ErrMsgNamedValue(const uint64_t itemValue, const char* const itemName, const bool hex = false)
-        : value(itemValue), name(itemName), useHex(hex)
+        : value_(itemValue), name_(itemName), useHex_(hex)
     {}
 
-    const uint64_t value;
-    const char* const name;
-    const bool useHex;
+    uint64_t GetValue() const { return value_; }
+
+    const char* GetName() const { return name_; }
+
+    bool IsHex() const { return useHex_; }
+
+private:
+    const uint64_t value_;
+    const char* const name_;
+    const bool useHex_;
 };
 
 std::string NamedValueDescription(const ErrMsgNamedValue& item);
