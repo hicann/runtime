@@ -50,3 +50,6 @@ The enumerations are described as follows:
 - ACL_PROF_HOST_SYS = 8: process-level data profiling switch on the host. The value can be `cpu` or `mem`.
 - ACL_PROF_HOST_SYS_USAGE = 9: system and all-process data profiling switch on the host. The value can be `cpu` or `mem`.
 - ACL_PROF_HOST_SYS_USAGE_FREQ = 10: frequency of collecting CPU and memory usage data. The value range is [1, 50].
+  - ACL_PROF_FTRACE = 17: switch for collecting host ftrace events. The value is a `subsystem/event` string; separate multiple events with commas, for example `sched/sched_switch,irq/irq_handler_entry`. It requires a mounted tracefs and either root permission or passwordless sudo (`sudo -n`).
+  - ACL_PROF_FTRACE_PERIOD = 18: host ftrace collection window in seconds. The value range is [0, 86400] and the default value is 0, which means the window follows the profiling lifetime.
+  - ACL_PROF_FTRACE_BUFSIZE = 19: host ftrace ring buffer size per CPU in KB. The value range is [1024, 4194304] and the default value is 4096. A larger buffer is less likely to drop events but uses more host kernel memory.

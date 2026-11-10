@@ -23,6 +23,7 @@ namespace {
 std::vector<FeatureRecord> FEATURE_V1 = {
     {"ATTR\0", "1\0", "2\0", "all\0", "all\0", "It not support feature: ATTR!\0"},
     {"AICORE_SHAPE\0", "1\0", "1\0", "all\0", "all\0", "It not support feature: AICORE_SHAPE!\0"},
+    {"FTRACE\0", "1\0", "1\0", "all\0", "all\0", "It not support feature: FTRACE!\0"},
 };
 
 std::unordered_map<PlatformType, std::vector<FeatureRecord>> FEATURE_V2_TABLE = {
@@ -31,6 +32,7 @@ std::unordered_map<PlatformType, std::vector<FeatureRecord>> FEATURE_V2_TABLE = 
          {"ATTR\0", "1\0", "2\0", "all\0", "all\0", "It not support feature: ATTR!\0"},
          {"MemoryAccess\0", "1\0", "2\0", "all\0", "all\0", "It not support feature: MEMORY_ACCESS!\0"},
          {"AICORE_SHAPE\0", "1\0", "1\0", "all\0", "all\0", "It not support feature: AICORE_SHAPE!\0"},
+         {"FTRACE\0", "1\0", "1\0", "all\0", "all\0", "It not support feature: FTRACE!\0"},
      }},
 };
 

@@ -48,7 +48,7 @@ TEST_F(FeatureManagerTest, GetIncompatibleFeaturesWillReturnV1FeaturesWhenIsV2Fa
     FeatureRecord* features = FeatureManager::instance()->GetIncompatibleFeatures(&featureSize, false);
 
     ASSERT_NE(features, nullptr);
-    EXPECT_EQ(featureSize, 2);
+    EXPECT_EQ(featureSize, 3);
     EXPECT_STREQ(features[0].featureName, "ATTR");
     EXPECT_STREQ(features[0].info.compatibility, "1");
     EXPECT_STREQ(features[0].info.featureVersion, "2");
@@ -60,6 +60,8 @@ TEST_F(FeatureManagerTest, GetIncompatibleFeaturesWillReturnV1FeaturesWhenIsV2Fa
     EXPECT_STREQ(features[1].info.featureVersion, "1");
     EXPECT_STREQ(features[1].info.affectedComponent, "all");
     EXPECT_STREQ(features[1].info.affectedComponentVersion, "all");
+    EXPECT_STREQ(features[2].featureName, "FTRACE");
+    EXPECT_STREQ(features[2].info.compatibility, "1");
 }
 
 TEST_F(FeatureManagerTest, GetIncompatibleFeaturesWillReturnV2FeaturesWhenIsV2TrueAndPlatformIsV410)
@@ -74,7 +76,7 @@ TEST_F(FeatureManagerTest, GetIncompatibleFeaturesWillReturnV2FeaturesWhenIsV2Tr
     FeatureRecord* features = FeatureManager::instance()->GetIncompatibleFeatures(&featureSize, true);
 
     ASSERT_NE(features, nullptr);
-    EXPECT_EQ(featureSize, 3);
+    EXPECT_EQ(featureSize, 4);
 
     EXPECT_STREQ(features[0].featureName, "ATTR");
     EXPECT_STREQ(features[0].info.compatibility, "1");
@@ -85,6 +87,8 @@ TEST_F(FeatureManagerTest, GetIncompatibleFeaturesWillReturnV2FeaturesWhenIsV2Tr
     EXPECT_STREQ(features[2].featureName, "AICORE_SHAPE");
     EXPECT_STREQ(features[2].info.compatibility, "1");
     EXPECT_STREQ(features[2].info.featureVersion, "1");
+    EXPECT_STREQ(features[3].featureName, "FTRACE");
+    EXPECT_STREQ(features[3].info.compatibility, "1");
 
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType).reset();
 }
@@ -101,10 +105,12 @@ TEST_F(FeatureManagerTest, GetIncompatibleFeaturesWillReturnV1FeaturesWhenIsV2Tr
     FeatureRecord* features = FeatureManager::instance()->GetIncompatibleFeatures(&featureSize, true);
 
     ASSERT_NE(features, nullptr);
-    EXPECT_EQ(featureSize, 2);
+    EXPECT_EQ(featureSize, 3);
     EXPECT_STREQ(features[0].featureName, "ATTR");
     EXPECT_STREQ(features[1].featureName, "AICORE_SHAPE");
     EXPECT_STREQ(features[1].info.featureVersion, "1");
+    EXPECT_STREQ(features[2].featureName, "FTRACE");
+    EXPECT_STREQ(features[2].info.featureVersion, "1");
 
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType).reset();
 }

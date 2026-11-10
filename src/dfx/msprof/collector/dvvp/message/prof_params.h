@@ -198,6 +198,12 @@ struct ProfileParams : public BaseInfo {
     std::string host_network_profiling;
     int host_disk_freq;
 
+    // host ftrace (collected by standalone bin, see ftrace_design.md)
+    std::string host_ftrace_profiling; // "on"/"off"
+    std::string host_ftrace_events;    // "sched/sched_switch,irq/irq_handler_entry"
+    int host_ftrace_period;            // seconds, 0 by default, means follow profiling lifetime
+    int host_ftrace_bufsize;           // per-CPU ring buffer, KB
+
     // for parse, query and export
     std::string pythonPath;
     std::string parseSwitch;
@@ -303,6 +309,10 @@ struct ProfileParams : public BaseInfo {
           hostAllPidMemProfiling("off"),
           host_network_profiling("off"),
           host_disk_freq(DEFAULT_PROFILING_INTERVAL_50MS),
+          host_ftrace_profiling("off"),
+          host_ftrace_events(""),
+          host_ftrace_period(0),
+          host_ftrace_bufsize(4096),
           pythonPath(""),
           parseSwitch("off"),
           querySwitch("off"),
@@ -460,6 +470,10 @@ struct ProfileParams : public BaseInfo {
         // host
         SET_VALUE(object, host_sys);
         SET_VALUE(object, host_sys_pid);
+        SET_VALUE(object, host_ftrace_profiling);
+        SET_VALUE(object, host_ftrace_events);
+        SET_VALUE(object, host_ftrace_period);
+        SET_VALUE(object, host_ftrace_bufsize);
         SET_VALUE(object, host_disk_profiling);
         SET_VALUE(object, host_osrt_profiling);
         SET_VALUE(object, host_numa_profiling);
@@ -532,6 +546,10 @@ struct ProfileParams : public BaseInfo {
         // host
         FROM_STRING_VALUE(object, host_sys);
         FROM_INT_VALUE(object, host_sys_pid, HOST_PID_DEFAULT);
+        FROM_STRING_VALUE(object, host_ftrace_profiling);
+        FROM_STRING_VALUE(object, host_ftrace_events);
+        FROM_INT_VALUE(object, host_ftrace_period, 0);
+        FROM_INT_VALUE(object, host_ftrace_bufsize, 4096);
         FROM_STRING_VALUE(object, hostSysUsage);
         FROM_INT_VALUE(object, hostProfilingSamplingInterval, DEFAULT_PROFILING_INTERVAL_20MS);
         FROM_STRING_VALUE(object, host_disk_profiling);

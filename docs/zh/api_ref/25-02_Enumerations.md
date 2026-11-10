@@ -653,7 +653,10 @@ typedef enum {
     ACL_PROF_OPTYPE                     = 14,
     ACL_PROF_NTS_METRICS                = 15,
     ACL_PROF_PATH                       = 16,
-    ACL_PROF_ARGS_MAX                   = 17
+    ACL_PROF_FTRACE                     = 17,
+    ACL_PROF_FTRACE_PERIOD              = 18,
+    ACL_PROF_FTRACE_BUFSIZE             = 19,
+    ACL_PROF_ARGS_MAX                   = 20
 } aclprofConfigType;
 ```
 <!-- @ref: runtime/res/docs/zh/api_ref/25-02_Enumerations_res.md#id17 -->
@@ -713,6 +716,9 @@ Atlas A3系列产品：不支持ACL\_PROF\_OPTYPE。
 - ACL\_PROF\_HOST\_SYS\_USAGE：Host侧系统和所有进程的性能数据采集开关，取值包括cpu和mem。
 - ACL\_PROF\_HOST\_SYS\_USAGE\_FREQ：CPU利用率、内存利用率的采集频率，范围\[1,50\]。
 - ACL\_PROF\_NTS\_METRICS：V380 PMU信息和NTS task运行时间统计信息采集开关，取值只能是PipeUtilization。
+- ACL\_PROF\_FTRACE：Host侧ftrace事件的采集开关，取值为`子系统/事件`形式的字符串，多项时用英文逗号隔开，例如`sched/sched_switch,irq/irq_handler_entry`。需要内核已挂载tracefs，并具备root权限或免密sudo权限（`sudo -n`），采集结果用于将Host侧调度、中断事件与AI任务性能数据关联。
+- ACL\_PROF\_FTRACE\_PERIOD：Host侧ftrace的采集窗口，单位为秒，取值范围为[0, 86400]，默认值0。取值为0时表示跟随profiling生命周期，即从采集开始持续到采集结束。
+- ACL\_PROF\_FTRACE\_BUFSIZE：Host侧ftrace每个CPU的ring buffer大小，单位为KB，取值范围为[1024, 4194304]，默认值4096。buffer越大越不容易丢事件，但会占用更多Host侧内核内存。
 - ACL\_PROF\_PATH：设置数据落盘路径。
 
 <br>

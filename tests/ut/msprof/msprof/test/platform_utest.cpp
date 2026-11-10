@@ -213,7 +213,13 @@ TEST_F(PLATFORM_UTEST, AclprofSetConfigRejectsInvalidNtsMetricsArgs)
 {
     EXPECT_EQ(static_cast<int32_t>(ACL_PROF_OPTYPE) + 1, static_cast<int32_t>(ACL_PROF_NTS_METRICS));
     EXPECT_EQ(static_cast<int32_t>(ACL_PROF_NTS_METRICS) + 1, static_cast<int32_t>(ACL_PROF_PATH));
-    EXPECT_EQ(static_cast<int32_t>(ACL_PROF_PATH) + 1, static_cast<int32_t>(ACL_PROF_ARGS_MAX));
+    // The host ftrace config types were appended to aclprofConfigType. 17 stays reserved (it was
+    // the old ACL_PROF_ARGS_MAX sentinel), so the new types start at ACL_PROF_PATH + 2 and the
+    // boundary assertion walks that tail instead of assuming ACL_PROF_ARGS_MAX == ACL_PROF_PATH + 1.
+    EXPECT_EQ(static_cast<int32_t>(ACL_PROF_PATH) + 1, static_cast<int32_t>(ACL_PROF_FTRACE));
+    EXPECT_EQ(static_cast<int32_t>(ACL_PROF_FTRACE) + 1, static_cast<int32_t>(ACL_PROF_FTRACE_PERIOD));
+    EXPECT_EQ(static_cast<int32_t>(ACL_PROF_FTRACE_PERIOD) + 1, static_cast<int32_t>(ACL_PROF_FTRACE_BUFSIZE));
+    EXPECT_EQ(static_cast<int32_t>(ACL_PROF_FTRACE_BUFSIZE) + 1, static_cast<int32_t>(ACL_PROF_ARGS_MAX));
 
     std::string config("PipeUtilization");
     EXPECT_EQ(ACL_ERROR_INVALID_PARAM, aclprofSetConfig(ACL_PROF_NTS_METRICS, config.c_str(), 0));

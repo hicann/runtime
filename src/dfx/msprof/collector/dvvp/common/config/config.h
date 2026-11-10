@@ -246,6 +246,23 @@ constexpr char HOST_SYS_NUMA[] = "numa";
 constexpr char HOST_SYS_THREADS_SYNC[] = "threads-sync";
 constexpr char HOST_SYS_CACHE[] = "cache";
 
+// host ftrace collection (see ftrace_design.md)
+constexpr char FTRACE_COLLECTOR_BIN[] = "ftrace_collector";
+constexpr char FTRACE_OUTPUT_SUB_DIR[] = "data/ftrace";
+constexpr char FTRACE_LOCK_PREFIX[] = ".msprof_ftrace.";
+constexpr char FTRACE_LOCK_SUFFIX[] = ".lock";
+constexpr int32_t FTRACE_MAX_PERIOD_SEC = 86400;
+constexpr int32_t FTRACE_MIN_BUFSIZE_KB = 1024;
+constexpr int32_t FTRACE_MAX_BUFSIZE_KB = 4194304;
+constexpr int32_t FTRACE_DEFAULT_BUFSIZE_KB = 4096;
+// Exit code contract shared with ftrace_collector: it must stay equal to
+// Ftrace::ExitCode::EXIT_LOCK_BUSY in the oam-tools collector's ftrace_types.h.
+constexpr int32_t FTRACE_EXIT_LOCK_BUSY = 7;
+constexpr uint32_t FTRACE_STOP_TIMEOUT_MS = 60 * 1000;
+constexpr uint32_t FTRACE_POLL_INTERVAL_MS = 100;
+// keep in sync with FTRACE_LEASE_STALE_SEC in the oam-tools collector's ftrace_types.h
+constexpr int32_t FTRACE_LOCK_STALE_SEC = 15;
+
 constexpr char OUTPUT_RECORD[] = "profiling_output_record";
 
 // keypoint op's name/type

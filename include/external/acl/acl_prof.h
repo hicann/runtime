@@ -93,7 +93,10 @@ typedef enum {
     ACL_PROF_OPTYPE = 14,
     ACL_PROF_NTS_METRICS = 15,
     ACL_PROF_PATH = 16,
-    ACL_PROF_ARGS_MAX = 17
+    ACL_PROF_FTRACE = 17,        // host ftrace event list: "sys/ev,sys/ev"
+    ACL_PROF_FTRACE_PERIOD = 18, // host ftrace window in seconds, 0 follows profiling
+    ACL_PROF_FTRACE_BUFSIZE = 19, // host ftrace ring buffer per CPU in KB
+    ACL_PROF_ARGS_MAX = 20
 } aclprofConfigType;
 
 typedef enum { ACL_PROF_MESSAGE_TYPE_TENSOR_INFO = 0 } aclprofMessageType;

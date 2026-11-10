@@ -4628,7 +4628,12 @@ TEST_F(MSPROF_ACL_CORE_UTEST, aclprofSetConfigNtsMetricsBasicValidation)
 {
     EXPECT_EQ(static_cast<int32_t>(ACL_PROF_OPTYPE) + 1, static_cast<int32_t>(ACL_PROF_NTS_METRICS));
     EXPECT_EQ(static_cast<int32_t>(ACL_PROF_NTS_METRICS) + 1, static_cast<int32_t>(ACL_PROF_PATH));
-    EXPECT_EQ(static_cast<int32_t>(ACL_PROF_PATH) + 1, static_cast<int32_t>(ACL_PROF_ARGS_MAX));
+    // The host ftrace config types follow ACL_PROF_PATH directly, and ACL_PROF_ARGS_MAX closes
+    // the list one past ACL_PROF_FTRACE_PERIOD.
+    EXPECT_EQ(static_cast<int32_t>(ACL_PROF_PATH) + 1, static_cast<int32_t>(ACL_PROF_FTRACE));
+    EXPECT_EQ(static_cast<int32_t>(ACL_PROF_FTRACE) + 1, static_cast<int32_t>(ACL_PROF_FTRACE_PERIOD));
+    EXPECT_EQ(static_cast<int32_t>(ACL_PROF_FTRACE_PERIOD) + 1, static_cast<int32_t>(ACL_PROF_FTRACE_BUFSIZE));
+    EXPECT_EQ(static_cast<int32_t>(ACL_PROF_FTRACE_BUFSIZE) + 1, static_cast<int32_t>(ACL_PROF_ARGS_MAX));
 
     std::string config("TaskTime");
     EXPECT_EQ(ACL_ERROR_INVALID_PARAM, aclprofSetConfig(ACL_PROF_NTS_METRICS, config.c_str(), config.size()));
@@ -5131,7 +5136,9 @@ TEST_F(MSPROF_ACL_CORE_UTEST, MsprofSetConfigInvalidConfigReportsInputErrorForOp
         {ACL_PROF_OPTYPE, "ACL_PROF_OPTYPE", "total length should not exceed 256"},
         {ACL_PROF_NTS_METRICS, "ACL_PROF_NTS_METRICS", "PipeUtilization"},
         {ACL_PROF_PATH, "ACL_PROF_PATH", "valid profiling result path"},
-        {ACL_PROF_ARGS_MAX, "17", "invalid or out of range"}};
+        // The reported parameter for an out-of-range type is the numeric value of the type, so
+        // derive it instead of hard coding the current boundary.
+        {ACL_PROF_ARGS_MAX, std::to_string(static_cast<int32_t>(ACL_PROF_ARGS_MAX)), "invalid or out of range"}};
 
     MOCKER_CPP(&Analysis::Dvvp::Host::Adapter::ProfParamsAdapter::CheckApiConfigSupport)
         .stubs()

@@ -14,7 +14,8 @@ endif()
 add_subdirectory(msprof)
 add_subdirectory(profapi)
 add_subdirectory(msprofiler)
-add_subdirectory(profhal)
+add_subdirectory(profhal)# The ftrace collector binary is built and packaged by the oam-tools repository now
+# (tools/profiler/bin/ftrace_collector); only the host side job that drives it stays here.
 
 set(hdcCpp
     profhal/adx/stub/adx_prof_api.cpp
@@ -239,6 +240,10 @@ set(profimplInc
     msprofbin/include
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
+
+# host ftrace job: implementation is platform neutral (the Windows path returns
+# PROFILING_NOTSUPPORT), so it is always compiled in.
+list(APPEND profimplCpp profimpl/collect/job_wrapper/src/prof_host_ftrace_job.cpp)
 
 set(profimplFwcSrc
     ${profimplCpp}

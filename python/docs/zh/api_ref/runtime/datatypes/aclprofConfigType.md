@@ -50,3 +50,6 @@ Atlas 200I/500 A2推理产品：不支持ACL\_PROF\_SYS\_INTERCONNECTION\_FREQ�
 - ACL\_PROF\_HOST\_SYS = 8：Host侧进程级别的性能数据采集开关，取值包括cpu和mem。
 - ACL\_PROF\_HOST\_SYS\_USAGE = 9：Host侧系统和所有进程的性能数据采集开关，取值包括cpu和mem。
 - ACL\_PROF\_HOST\_SYS\_USAGE\_FREQ = 10：CPU利用率、内存利用率的采集频率，范围[1,50]。
+- ACL\_PROF\_FTRACE = 17：Host侧ftrace事件的采集开关，取值为`子系统/事件`形式的字符串，多项时用英文逗号隔开，例如`sched/sched_switch,irq/irq_handler_entry`。需要内核已挂载tracefs，并具备root权限或免密sudo权限（`sudo -n`）。
+- ACL\_PROF\_FTRACE\_PERIOD = 18：Host侧ftrace的采集窗口，单位为秒，取值范围为[0, 86400]，默认值0，取值为0时表示跟随profiling生命周期。
+- ACL\_PROF\_FTRACE\_BUFSIZE = 19：Host侧ftrace每个CPU的ring buffer大小，单位为KB，取值范围为[1024, 4194304]，默认值4096。buffer越大越不容易丢事件，但会占用更多Host侧内核内存。

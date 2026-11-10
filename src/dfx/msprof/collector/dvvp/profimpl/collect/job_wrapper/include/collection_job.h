@@ -76,6 +76,8 @@ enum ProfCollectionJobE {
     HOST_PTHREAD_COLLECTION_JOB,
     HOST_DISKIO_COLLECTION_JOB,
     HOST_CCA_MS_JOB,
+    // host ftrace (standalone collector bin)
+    HOST_FTRACE_COLLECTION_JOB,
     // diagnostic collection
     DIAGNOSTIC_COLLECTION_JOB,
     NTS_PMU_COLLECTION_JOB,

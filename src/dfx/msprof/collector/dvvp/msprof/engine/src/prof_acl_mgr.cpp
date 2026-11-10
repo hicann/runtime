@@ -93,7 +93,10 @@ const char* GetAclProfConfigTypeName(aclprofConfigType type)
         "ACL_PROF_SYS_CPU_FREQ",
         "ACL_PROF_OPTYPE",
         "ACL_PROF_NTS_METRICS",
-        "ACL_PROF_PATH"};
+        "ACL_PROF_PATH",
+        "ACL_PROF_FTRACE",
+        "ACL_PROF_FTRACE_PERIOD",
+        "ACL_PROF_FTRACE_BUFSIZE"};
     const size_t configTypeNamesSize = sizeof(configTypeNames) / sizeof(configTypeNames[0]);
 
     const int32_t index = static_cast<int32_t>(type);

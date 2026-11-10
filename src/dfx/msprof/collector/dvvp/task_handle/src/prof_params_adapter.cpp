@@ -233,6 +233,12 @@ int32_t ProfParamsAdapter::CheckApiConfigSupport(aclprofConfigType type) const
     if (type == ACL_PROF_PATH) {
         return PROFILING_SUCCESS;
     }
+    // Host ftrace is not tied to a platform feature: the collection job itself verifies root or
+    // passwordless sudo, the tracefs mount and the requested events, and degrades to "no ftrace
+    // data" when any of them is missing. Treat both config types like ACL_PROF_PATH.
+    if (type == ACL_PROF_FTRACE || type == ACL_PROF_FTRACE_PERIOD || type == ACL_PROF_FTRACE_BUFSIZE) {
+        return PROFILING_SUCCESS;
+    }
     if (platformAclApiMap.find(type) != platformAclApiMap.end()) {
         for (const auto& feature : platformAclApiMap.at(type)) {
             if (Platform::instance()->CheckIfSupport(feature)) {
@@ -348,6 +354,29 @@ int32_t ProfParamsAdapter::CheckApiConfigIsValidTwo(
             if (ParamValidation::instance()->CheckArgRange("ACL_PROF_DVPP_FREQ", config, 1, 100)) {
                 params->dvpp_profiling = "on";
                 params->dvpp_sampling_interval = HZ_CONVERT_MS / std::stoul(config.c_str());
+                return PROFILING_SUCCESS;
+            }
+            break;
+        case ACL_PROF_FTRACE:
+            // host ftrace: the event list is already normalised by the front end
+            if (!config.empty()) {
+                params->host_ftrace_events = config;
+                params->host_ftrace_profiling = "on";
+                return PROFILING_SUCCESS;
+            }
+            break;
+        case ACL_PROF_FTRACE_PERIOD:
+            // [0, 86400] seconds, 0 means follow the profiling lifetime
+            if (ParamValidation::instance()->CheckArgRange("ACL_PROF_FTRACE_PERIOD", config, 0, 86400)) {
+                params->host_ftrace_period = std::stoi(config);
+                return PROFILING_SUCCESS;
+            }
+            break;
+        case ACL_PROF_FTRACE_BUFSIZE:
+            // [1024, 4194304] KB per CPU, the same range the msprof CLI enforces
+            if (ParamValidation::instance()->CheckArgRange(
+                    "ACL_PROF_FTRACE_BUFSIZE", config, FTRACE_MIN_BUFSIZE_KB, FTRACE_MAX_BUFSIZE_KB)) {
+                params->host_ftrace_bufsize = std::stoi(config);
                 return PROFILING_SUCCESS;
             }
             break;
