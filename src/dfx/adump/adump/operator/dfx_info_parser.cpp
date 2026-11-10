@@ -1333,6 +1333,17 @@ bool PrintSimtDumpInfo(const DumpInfoHead* dumpHead)
     }
 }
 
+bool IsTargetDumpType(const rtDfxParseParam* param, const DumpInfoHead* dumpHead)
+{
+    if (param->coreType == RT_KERNEL_DFX_INFO_CORE_TYPE_SIMT) {
+        return dumpHead->type == DfxDumpType::DUMP_SIMT_ASSERT || dumpHead->type == DfxDumpType::DUMP_SIMT_PRINTF;
+    }
+    if (param->coreType == RT_KERNEL_DFX_INFO_CORE_TYPE_AICPU) {
+        return dumpHead->type == DfxDumpType::DUMP_AICPU;
+    }
+    return true;
+}
+
 bool ValidateDumpBlockSnapshot(const rtDfxParseParam* param, const BlockInfo*& blockInfo, const uint8_t*& dumpStartAddr)
 {
     if (param->datalen < BLOCK_METADATA_LEN) {
@@ -1411,7 +1422,7 @@ bool PrepareDumpReadBuffer(
     if ((param->writeIdx >= param->readIdx) && (param->writeIdx - param->readIdx >= blockInfo->remainLen)) {
         totalReadBufLen = blockInfo->remainLen;
         dumpInfoVec.resize(totalReadBufLen, 0U);
-        const uint64_t validStartIdx = param->writeIdx % blockInfo->remainLen;
+        const uint64_t validStartIdx = readIdx;
         (void)memcpy_s(
             dumpInfoVec.data(), blockInfo->remainLen - validStartIdx, dumpStartAddr + validStartIdx,
             blockInfo->remainLen - validStartIdx);
@@ -1460,6 +1471,9 @@ uint64_t ParseDumpReadBuffer(
         const DumpInfoHead* dumpHead = reinterpret_cast<const DumpInfoHead*>(dumpReadStartAddr + dataLen);
         const uint64_t step = sizeof(DumpInfoHead) + static_cast<uint64_t>(dumpHead->infoLen);
         if (step > remainingLen) {
+            break;
+        }
+        if (!IsTargetDumpType(param, dumpHead)) {
             break;
         }
         if (param->coreType == RT_KERNEL_DFX_INFO_CORE_TYPE_SIMT) {
@@ -1544,9 +1558,9 @@ void DfxInfoParser::UnInit()
             IDE_LOGE("Unregister parse dfx info callback failed, ret=%u.", ret);
         } else {
             registered_ = false;
-            ClearTlvCntState();
         }
     }
+    ClearTlvCntState();
     // dump 关闭时清空 super tensor 打印上下文表兜底，避免残留状态影响下次采集
     superTensorCtxMap_.clear();
 }

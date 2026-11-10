@@ -492,6 +492,22 @@ TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_AicpuPackIdxAccumulatesAcrossRounds
     EXPECT_EQ(consumedLen, secondLen);
 }
 
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_AicpuInvalidTypeStopsConsumption)
+{
+    BlockBuffer block(256U);
+    const uint32_t firstLen = BuildAicpuTlv(block.dumpStartAddr, "first aicpu");
+    (void)BuildInvalidTypeTlv(block.dumpStartAddr + firstLen);
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0U, firstLen + sizeof(DumpInfoHead), 3U, 0U);
+
+    testing::internal::CaptureStdout();
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    const std::string output = testing::internal::GetCapturedStdout();
+
+    EXPECT_EQ(consumedLen, firstLen);
+    ASSERT_NE(output.find("first aicpu"), std::string::npos) << output;
+}
+
 TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SimtPackIdxStopsUncommittedTlv)
 {
     BlockBuffer block(256);
@@ -537,7 +553,7 @@ TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SimtInvalidTypeSkipsConsumption)
     uint64_t consumedLen = 0U;
     rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0U, firstLen + sizeof(DumpInfoHead), 2U, 0U);
     DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
-    EXPECT_EQ(consumedLen, firstLen + sizeof(DumpInfoHead));
+    EXPECT_EQ(consumedLen, firstLen);
 }
 
 TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_AicpuFifoReinitResetsTlvCnt)
@@ -551,6 +567,7 @@ TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_AicpuFifoReinitResetsTlvCnt)
     rtDfxParseParam param = MakeParam(firstBlock.blockAddr, firstBlock.data.size(), 0U, firstLen, 3U, 0U);
     DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
     EXPECT_EQ(consumedLen, firstLen);
+    DfxInfoParser::Instance().ClearTlvCntState();
 
     BlockBuffer secondBlock(256U);
     const uint32_t secondLen = BuildAicpuTlv(secondBlock.dumpStartAddr, "new fifo");
@@ -668,8 +685,8 @@ TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_Simt_InvalidTypeThenPrintf)
     testing::internal::CaptureStdout();
     DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
     const std::string output = testing::internal::GetCapturedStdout();
-    EXPECT_EQ(consumedLen, off);
-    EXPECT_NE(output.find("after invalid type"), std::string::npos);
+    EXPECT_EQ(consumedLen, 0U);
+    EXPECT_EQ(output.find("after invalid type"), std::string::npos);
 }
 
 TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_Simt_InvalidType)
@@ -679,7 +696,7 @@ TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_Simt_InvalidType)
     uint64_t consumedLen = 0U;
     rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, tlvLen, 2U, 0U);
     DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
-    EXPECT_EQ(consumedLen, tlvLen);
+    EXPECT_EQ(consumedLen, 0U);
 }
 
 TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SimtPartialHeader)
@@ -754,7 +771,8 @@ TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_OverwritePreservesRetainedContentOr
     WriteRingData(block, startOffset, input.data(), totalLen);
 
     uint64_t consumedLen = 0U;
-    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0U, totalLen + startOffset, 2U, 0U);
+    rtDfxParseParam param =
+        MakeParam(block.blockAddr, block.data.size(), startOffset, block.remainLen + startOffset, 2U, 0U);
     testing::internal::CaptureStdout();
     DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
     const std::string output = testing::internal::GetCapturedStdout();
@@ -782,7 +800,7 @@ TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_Wraparound_CrossBoundary)
     uint32_t remainLen = 256;
     BlockBuffer block(remainLen);
     std::vector<uint8_t> tlvBuf(64, 0);
-    uint32_t tlvLen = BuildPrintfTlv(tlvBuf.data(), "wrap");
+    uint32_t tlvLen = BuildPrintfTlv(tlvBuf.data(), "wrap", true);
     uint32_t readOff = remainLen - 16;
     uint32_t firstPartLen = remainLen - readOff;
     uint32_t secondPartLen = tlvLen - firstPartLen;
