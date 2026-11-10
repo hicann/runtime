@@ -570,6 +570,14 @@ TEST_F(DavidStreamTest, auto_split_task_clean)
     rtModel_t rtModel;
     rtError_t error = rtModelCreate(&rtModel, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    // Task cleanup does not need the device-side bind command or its CQ report.
+    MOCKER_CPP(&CtrlSQ::SendModelBindMsg)
+        .expects(once())
+        .with(eq(rt_ut::UnwrapOrNull<Model>(rtModel)), eq(realStream), eq(0U))
+        .will(invoke(+[](CtrlSQ*, Model*, Stream* boundStream, const uint32_t) {
+            boundStream->SetIsTsBind(true);
+            return RT_ERROR_NONE;
+        }));
     error = rtModelBindStream(rtModel, stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
     Stream* stream2 = nullptr;
@@ -953,21 +961,58 @@ TEST_F(DavidStreamTest, record_task_fail_0)
 
 TEST_F(DavidStreamTest, maintence_task)
 {
-    rtDavidSqe_t* sqe = (rtDavidSqe_t*)malloc(sizeof(rtDavidSqe_t));
-    uint64_t oldSqAddr = stream_->GetSqBaseAddr();
-    uint64_t newSqAddr = reinterpret_cast<uint64_t>(sqe);
-    stream_->Device_()->GetStreamSqCqManage()->sqIdToStreamIdMap_[0] = stream_->Id_();
-    stream_->SetSqBaseAddr(newSqAddr);
-    TaskResManageDavid* taskResMang = ((TaskResManageDavid*)(static_cast<Stream*>(stream_)->taskResMang_));
-    TaskInfo reportTask = {};
-    reportTask.taskSn = 0U;
-    reportTask.stream = stream_;
-    MOCKER(GetTaskInfo).stubs().will(returnValue(&reportTask));
-    rtError_t res = ((DavidStream*)stream_)->SubmitMaintenanceTask(MT_STREAM_RECYCLE_TASK, false, 0, 0, false);
-    EXPECT_EQ(res, RT_ERROR_NONE);
-    taskResMang->ResetTaskRes();
-    stream_->SetSqBaseAddr(oldSqAddr);
-    free(sqe);
+    rtDavidSqe_t sqe{};
+    const uint64_t oldSqAddr = stream_->GetSqBaseAddr();
+    const ScopeGuard restoreSqAddr([&]() { stream_->SetSqBaseAddr(oldSqAddr); });
+    stream_->SetSqBaseAddr(reinterpret_cast<uint64_t>(&sqe));
+    auto* const taskResources = static_cast<TaskResManageDavid*>(stream_->taskResMang_);
+    ASSERT_NE(taskResources, nullptr);
+    ASSERT_EQ(taskResources->GetResHead(), 0U);
+    ASSERT_EQ(taskResources->GetResTail(), 0U);
+
+    // This case checks construction/submission. Complete and reclaim the real task locally.
+    uint32_t submittedPos = UINT32_MAX;
+    const ScopeGuard resetPostProcMock(
+        []() { GlobalMockObject::reset(reinterpret_cast<const void*>(&SubmitTaskPostProc)); });
+    const ScopeGuard reclaimTask([&]() {
+        if (submittedPos != UINT32_MAX) {
+            TaskInfo* const pendingTask = taskResources->GetTaskInfo(submittedPos);
+            if (pendingTask != nullptr) {
+                rtCqReport_t report{};
+                report.streamId = static_cast<uint16_t>(pendingTask->taskSn);
+                report.taskId = static_cast<uint16_t>(pendingTask->taskSn >> 16U);
+                report.sqHead = static_cast<uint16_t>(submittedPos);
+                bool finished = false;
+                bool hasError = false;
+                EXPECT_EQ(
+                    ProcReport(
+                        device_, static_cast<uint32_t>(stream_->Id_()), submittedPos, 1U, &report, finished, hasError),
+                    RT_ERROR_NONE);
+                EXPECT_TRUE(finished);
+                EXPECT_FALSE(hasError);
+            }
+        }
+        EXPECT_EQ(
+            FinishedTaskReclaim(stream_, false, taskResources->GetResHead(), taskResources->GetResTail()),
+            RT_ERROR_NONE);
+        EXPECT_EQ(taskResources->GetPendingNum(), 0U);
+    });
+    MOCKER(SubmitTaskPostProc)
+        .expects(once())
+        .with(eq(stream_), spy(submittedPos), mockcpp::any(), mockcpp::any())
+        .will(returnValue(RT_ERROR_NONE));
+
+    ASSERT_EQ(
+        static_cast<DavidStream*>(stream_)->SubmitMaintenanceTask(MT_STREAM_RECYCLE_TASK, false, 0, 0U, false),
+        RT_ERROR_NONE);
+    TaskInfo* const task = taskResources->GetTaskInfo(submittedPos);
+    ASSERT_NE(task, nullptr);
+    EXPECT_EQ(task->stream, stream_);
+    EXPECT_EQ(task->type, TS_TASK_TYPE_MAINTENANCE);
+    EXPECT_EQ(task->u.maintenanceTaskInfo.mtType, MT_STREAM_RECYCLE_TASK);
+    EXPECT_EQ(sqe.phSqe.taskType, TS_TASK_TYPE_MAINTENANCE);
+    EXPECT_EQ(sqe.phSqe.header.wrCqe, 1U);
+    GlobalMockObject::verify();
 }
 
 TEST_F(DavidStreamTest, record_task_fail_1)

@@ -2793,6 +2793,10 @@ TEST_F(ContextTest, LAUNCH_KERNEL_WITH_HANDLE_MIX)
     Stream* stream = (Stream*)ctx->DefaultStream_();
     error = StreamLaunchKernelWithHandle(realProg, 1, 1, &argsInfo, stream, 0, NULL);
 
+    // Drain real completions before fixture cleanup resets stream counters.
+    ctx->Device_()->WaitCompletion();
+    EXPECT_EQ(stream->GetPendingNum(), 0U);
+
     error = rtDevBinaryUnRegister(m_handle);
     EXPECT_EQ(error, RT_ERROR_NONE);
     (void)((Runtime*)Runtime::Instance())->PrimaryContextRelease(0);

@@ -464,7 +464,6 @@ drvError_t halCqReportGet(uint32_t devId, struct halReportGetInput* in, struct h
             out->reportPtr = &logicReport;
         }
 
-        out->reportPtr = &logicReport;
         out->count = 1;
         return DRV_ERROR_NONE;
     }
@@ -493,6 +492,9 @@ drvError_t halCqReportGet(uint32_t devId, struct halReportGetInput* in, struct h
 drvError_t halSqCqAllocate(uint32_t devId, struct halSqCqInputInfo* in, struct halSqCqOutputInfo* out)
 {
     int32_t sqCqId = g_sqcqIdBitmap.AllocId();
+    if (sqCqId < 0) {
+        return DRV_ERROR_NO_RESOURCES;
+    }
     if ((in->flag & TSDRV_FLAG_SPECIFIED_SQ_ID) == TSDRV_FLAG_SPECIFIED_SQ_ID) {
         out->sqId = in->sqId;
     } else {
@@ -533,7 +535,8 @@ drvError_t halSqCqAllocate(uint32_t devId, struct halSqCqInputInfo* in, struct h
 
 drvError_t halSqCqFree(uint32_t devId, struct halSqCqFreeInfo* in)
 {
-    g_sqcqIdBitmap.FreeId(in->type == DRV_LOGIC_TYPE ? in->cqId : in->sqId);
+    const uint32_t resourceId = (in->type == DRV_LOGIC_TYPE) ? in->cqId : in->sqId;
+    g_sqcqIdBitmap.FreeId(resourceId);
     if (in->type == DRV_SHM_TYPE) {
         if (Runtime::Instance()->GetChipType() == CHIP_DAVID) {
             memset(&logicCqReport, 0, sizeof(rtCqReport_t));
@@ -542,7 +545,6 @@ drvError_t halSqCqFree(uint32_t devId, struct halSqCqFreeInfo* in)
         }
     } else if (in->type == DRV_LOGIC_TYPE) {
         std::lock_guard<std::mutex> lock(logicMutex);
-        uint32_t streamId = logicCqStreamId[in->cqId];
         logicCqStreamId.erase(in->cqId);
     }
     return DRV_ERROR_NONE;
@@ -1171,16 +1173,21 @@ drvError_t halMemcpyWait(struct DMA_ADDR* dmaAddr) { return DRV_ERROR_NONE; }
 
 drvError_t halCqReportRecv(uint32_t devId, struct halReportRecvInfo* info)
 {
-    struct halReportGetInput repGetInputInfo;
-    struct halReportGetOutput repGetOutputInfo;
+    struct halReportGetInput repGetInputInfo = {};
+    struct halReportGetOutput repGetOutputInfo = {};
     repGetInputInfo.type = DRV_LOGIC_TYPE;
     repGetInputInfo.tsId = info->tsId;
     repGetInputInfo.cqId = info->cqId;
     repGetOutputInfo.count = 0U;
     repGetOutputInfo.reportPtr = nullptr;
     halCqReportGet(devId, &repGetInputInfo, &repGetOutputInfo);
-    rtLogicReport_t* report = (rtLogicReport_t*)info->cqe_addr;
-    *report = *((rtLogicReport_t*)repGetOutputInfo.reportPtr);
+    if (Runtime::Instance()->GetChipType() == CHIP_DAVID) {
+        auto* const report = reinterpret_cast<rtCqReport_t*>(info->cqe_addr);
+        *report = *static_cast<const rtCqReport_t*>(repGetOutputInfo.reportPtr);
+    } else {
+        auto* const report = reinterpret_cast<rtLogicReport_t*>(info->cqe_addr);
+        *report = *static_cast<const rtLogicReport_t*>(repGetOutputInfo.reportPtr);
+    }
     info->report_cqe_num = 1;
     return DRV_ERROR_NONE;
 }

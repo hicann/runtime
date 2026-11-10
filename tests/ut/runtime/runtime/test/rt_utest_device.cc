@@ -1508,38 +1508,40 @@ TEST_F(DeviceTest, STARS_NoCoreTimeoutDfx_NullInputReturnsSuccess)
 
 TEST_F(DeviceTest, STARS_NoCoreTimeoutDfx_MatchedTaskIsMarkedFromRingbuffer)
 {
-    rtSetDevice(1);
-    Device* const device = Runtime::Instance()->DeviceRetain(1, 0);
-    ASSERT_NE(device, nullptr);
+    RawDevice device(1U);
+    device.properties_.maxSupportTaskNum = 1U;
+    device.streamSqCqManage_ = new StreamSqCqManage(&device);
+    device.taskFactory_ = new TaskFactory(&device);
+    ASSERT_EQ(device.taskFactory_->Init(), RT_ERROR_NONE);
 
-    constexpr uint16_t streamId = 7U;
-    constexpr uint16_t taskId = 11U;
-    TaskInfo taskInfo = {};
+    Stream stream(&device, 0U);
+    const ScopeGuard detachStream([&]() { stream.device_ = nullptr; });
+    stream.streamId_ = 7;
+    rtError_t error = RT_ERROR_NONE;
+    TaskInfo* const taskInfo = device.taskFactory_->Alloc(&stream, TS_TASK_TYPE_PROFILER_TRACE, error);
+    ASSERT_NE(taskInfo, nullptr);
+    const ScopeGuard recycleTask([&]() { device.taskFactory_->Recycle(taskInfo); });
+    device.taskFactory_->SetSerialId(&stream, taskInfo);
+
     StarsDeviceErrorInfo errorInfo = {};
-    errorInfo.u.starsNoCoreTimeoutDfxInfo.comm.streamId = streamId;
-    errorInfo.u.starsNoCoreTimeoutDfxInfo.comm.taskId = taskId;
+    errorInfo.u.starsNoCoreTimeoutDfxInfo.comm.streamId = static_cast<uint16_t>(stream.Id_());
+    errorInfo.u.starsNoCoreTimeoutDfxInfo.comm.taskId = taskInfo->id;
     errorInfo.u.starsNoCoreTimeoutDfxInfo.acsqId = 3U;
     errorInfo.u.starsNoCoreTimeoutDfxInfo.accType = ACC_TYPE_AICPU;
-    MOCKER_CPP(&TaskFactory::GetTask)
-        .expects(once())
-        .with(static_cast<int32_t>(streamId), taskId)
-        .will(returnValue(&taskInfo));
 
-    const rtError_t ret = DeviceErrorProc::ProcessStarsNoCoreTimeoutDfxInfo(&errorInfo, 19U, device, nullptr);
+    const rtError_t ret = DeviceErrorProc::ProcessStarsNoCoreTimeoutDfxInfo(&errorInfo, 19U, &device, nullptr);
 
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    EXPECT_TRUE(taskInfo.isRingbufferGet);
-    GlobalMockObject::verify();
-    GlobalMockObject::reset();
-    Runtime::Instance()->DeviceRelease(device);
-    EXPECT_EQ(rtDeviceReset(1), RT_ERROR_NONE);
+    EXPECT_TRUE(taskInfo->isRingbufferGet);
 }
 
 TEST_F(DeviceTest, STARS_NoCoreTimeoutDfx_MissingTaskReturnsSuccess)
 {
-    rtSetDevice(1);
-    Device* const device = Runtime::Instance()->DeviceRetain(1, 0);
-    ASSERT_NE(device, nullptr);
+    RawDevice device(1U);
+    device.properties_.maxSupportTaskNum = 1U;
+    device.streamSqCqManage_ = new StreamSqCqManage(&device);
+    device.taskFactory_ = new TaskFactory(&device);
+    ASSERT_EQ(device.taskFactory_->Init(), RT_ERROR_NONE);
 
     constexpr uint16_t streamId = 9U;
     constexpr uint16_t taskId = 13U;
@@ -1548,18 +1550,10 @@ TEST_F(DeviceTest, STARS_NoCoreTimeoutDfx_MissingTaskReturnsSuccess)
     errorInfo.u.starsNoCoreTimeoutDfxInfo.comm.taskId = taskId;
     errorInfo.u.starsNoCoreTimeoutDfxInfo.acsqId = 5U;
     errorInfo.u.starsNoCoreTimeoutDfxInfo.accType = ACC_TYPE_SDMA;
-    MOCKER_CPP(&TaskFactory::GetTask)
-        .expects(once())
-        .with(static_cast<int32_t>(streamId), taskId)
-        .will(returnValue(static_cast<TaskInfo*>(nullptr)));
 
-    const rtError_t ret = DeviceErrorProc::ProcessStarsNoCoreTimeoutDfxInfo(&errorInfo, 23U, device, nullptr);
+    const rtError_t ret = DeviceErrorProc::ProcessStarsNoCoreTimeoutDfxInfo(&errorInfo, 23U, &device, nullptr);
 
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    GlobalMockObject::verify();
-    GlobalMockObject::reset();
-    Runtime::Instance()->DeviceRelease(device);
-    EXPECT_EQ(rtDeviceReset(1), RT_ERROR_NONE);
 }
 
 TEST_F(DeviceTest, STARS_AicoreTimeoutDfxSlotInfo1)

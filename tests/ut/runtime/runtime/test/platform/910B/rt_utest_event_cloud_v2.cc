@@ -280,9 +280,7 @@ TEST_F(EventTest910B, query)
         EXPECT_EQ(status, RT_EVENT_INIT);
     }
 
-    Stream* const stm = rt_ut::UnwrapOrNull<Stream>(stream);
-    ASSERT_NE(stm, nullptr);
-    stm->pendingNum_.Set(0U);
+    // Consume the event task report before destroying the stream.
     error = rtStreamSynchronize(stream);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 

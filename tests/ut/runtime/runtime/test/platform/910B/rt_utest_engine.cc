@@ -47,6 +47,7 @@
 #include "model_execute_task.h"
 #include "rt_unwrap.h"
 #include "../../task_test_helper.h"
+#include "global_state_manager.hpp"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -100,6 +101,48 @@ protected:
     Stream* stream_ = nullptr;
     Engine* engine_ = nullptr;
     rtStream_t streamHandle_ = 0;
+};
+
+// Pause monitors before installing Runtime HDC mocks, including on retained devices.
+class EngineSocketCloseTest : public testing::Test {
+protected:
+    void SetUp() override
+    {
+        ASSERT_EQ(rtSetDevice(0), RT_ERROR_NONE);
+        deviceRetained_ = true;
+        const rtError_t error = GlobalStateManager::GetInstance().Locked();
+        backgroundThreadsLocked_ = (error == RT_ERROR_NONE);
+        ASSERT_EQ(error, RT_ERROR_NONE);
+        primaryDevice_ = Runtime::Instance()->GetDevice(0U, 0U);
+        ASSERT_NE(primaryDevice_, nullptr);
+        previousStatus_ = primaryDevice_->GetDevStatus();
+        previousRunningState_ = primaryDevice_->GetDevRunningState();
+    }
+
+    void TearDown() override
+    {
+        const ScopeGuard resumeThreads([&]() {
+            GlobalMockObject::reset();
+            if (backgroundThreadsLocked_) {
+                EXPECT_EQ(GlobalStateManager::GetInstance().Unlocked(), RT_ERROR_NONE);
+            }
+            if (deviceRetained_) {
+                EXPECT_EQ(rtDeviceReset(0), RT_ERROR_NONE);
+            }
+        });
+        GlobalMockObject::verify();
+        if (primaryDevice_ != nullptr) {
+            ASSERT_EQ(Runtime::Instance()->GetDevice(0U, 0U), primaryDevice_);
+            EXPECT_EQ(primaryDevice_->GetDevStatus(), previousStatus_);
+            EXPECT_EQ(primaryDevice_->GetDevRunningState(), previousRunningState_);
+        }
+    }
+
+    bool deviceRetained_ = false;
+    bool backgroundThreadsLocked_ = false;
+    Device* primaryDevice_ = nullptr;
+    rtError_t previousStatus_ = RT_ERROR_NONE;
+    uint32_t previousRunningState_ = DEV_RUNNING_NORMAL;
 };
 
 class SubmitFailScheduler : public FifoScheduler {
@@ -636,16 +679,17 @@ TEST_F(EngineTest, ReportSocketCloseProc_01)
     EXPECT_EQ(engine->GetDevRunningState(), DEV_RUNNING_NORMAL);
 }
 
-TEST_F(EngineTest, ReportSocketCloseProc_02)
+TEST_F(EngineSocketCloseTest, ReportSocketCloseProc_02)
 {
     MOCKER(drvGetPlatformInfo).stubs().will(invoke(drvGetPlatformInfo_offline_stub));
     MOCKER_CPP(&Runtime::GetHdcConctStatus).stubs().will(returnValue(RT_ERROR_NONE));
-    std::unique_ptr<Engine> engine = std::make_unique<AsyncHwtsEngine>(device_);
+    auto device = std::make_unique<RawDevice>(0U);
+    std::unique_ptr<Engine> engine = std::make_unique<AsyncHwtsEngine>(device.get());
     engine->ReportSocketCloseProc();
     EXPECT_EQ(engine->GetDevRunningState(), DEV_RUNNING_NORMAL);
 }
 
-TEST_F(EngineTest, ReportSocketCloseProc_03)
+TEST_F(EngineSocketCloseTest, ReportSocketCloseProc_03)
 {
     int32_t hdcStat = static_cast<int32_t>(HDC_SESSION_STATUS_CONNECT);
     MOCKER_CPP(&Runtime::GetHdcConctStatus)
@@ -653,7 +697,8 @@ TEST_F(EngineTest, ReportSocketCloseProc_03)
         .with(mockcpp::any(), outBound(hdcStat))
         .will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP(&TaskFailCallBackManager::Notify).stubs();
-    std::unique_ptr<Engine> engine = std::make_unique<AsyncHwtsEngine>(device_);
+    auto device = std::make_unique<RawDevice>(0U);
+    std::unique_ptr<Engine> engine = std::make_unique<AsyncHwtsEngine>(device.get());
     engine->ReportSocketCloseProcV2();
     EXPECT_EQ(engine->GetDevRunningState(), DEV_RUNNING_NORMAL);
 }
@@ -1427,10 +1472,10 @@ TEST_F(EngineTest, CheckReportSimuFlag_TS_REPORT_MSG_TYPE_STARS_CQE)
     GlobalMockObject::reset();
 }
 
-TEST_F(EngineTest, ReportSocketCloseProc_RT_ERROR_SOCKET_CLOSE)
+TEST_F(EngineSocketCloseTest, ReportSocketCloseProc_RT_ERROR_SOCKET_CLOSE)
 {
-    RawDevice* device = new RawDevice(0);
-    std::unique_ptr<Engine> engine = std::make_unique<AsyncHwtsEngine>(device);
+    auto device = std::make_unique<RawDevice>(0U);
+    std::unique_ptr<Engine> engine = std::make_unique<AsyncHwtsEngine>(device.get());
     int32_t hdcStat = static_cast<int32_t>(HDC_SESSION_STATUS_CLOSE);
     MOCKER_CPP(&Runtime::GetHdcConctStatus)
         .stubs()
@@ -1445,8 +1490,6 @@ TEST_F(EngineTest, ReportSocketCloseProc_RT_ERROR_SOCKET_CLOSE)
     engine->ReportSocketCloseProcV2();
     EXPECT_EQ(engine->GetDevice()->GetDevStatus(), RT_ERROR_SOCKET_CLOSE);
     engine->SetDevRunningState(DEV_RUNNING_NORMAL);
-    delete device;
-    GlobalMockObject::reset();
 }
 
 TEST_F(EngineTest, SendingWait_failCount)
@@ -1649,24 +1692,13 @@ TEST_F(EngineTest, ProcessTask_pciebar)
     GlobalMockObject::verify();
 }
 
-class EngineTest1 : public testing::Test {
-protected:
-    static void SetUpTestCase() { std::cout << "engine test1 start" << std::endl; }
-
-    static void TearDownTestCase() { std::cout << "engine test1 start end" << std::endl; }
-
-    virtual void SetUp() {}
-
-    virtual void TearDown() { GlobalMockObject::verify(); }
-};
-
 drvError_t drvGetPlatformInfo_offline_stub1(uint32_t* info)
 {
     *info = RT_RUN_MODE_ONLINE;
     return DRV_ERROR_NONE;
 }
 
-TEST_F(EngineTest1, ReportSocketCloseProc_04)
+TEST_F(EngineSocketCloseTest, ReportSocketCloseProc_04)
 {
     MOCKER(drvGetPlatformInfo).stubs().will(invoke(drvGetPlatformInfo_offline_stub1));
     int32_t hdcStat = static_cast<int32_t>(HDC_SESSION_STATUS_CLOSE);
@@ -1676,13 +1708,12 @@ TEST_F(EngineTest1, ReportSocketCloseProc_04)
         .will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP(&Runtime::SetWatchDogDevStatus).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP(&TaskFailCallBackManager::Notify).stubs();
-    RawDevice* device = new RawDevice(0);
-    std::unique_ptr<Engine> engine = std::make_unique<AsyncHwtsEngine>(device);
+    auto device = std::make_unique<RawDevice>(0U);
+    std::unique_ptr<Engine> engine = std::make_unique<AsyncHwtsEngine>(device.get());
     engine->ReportSocketCloseProc();
     EXPECT_EQ(engine->GetDevRunningState(), DEV_RUNNING_DOWN);
     device->SetDevStatus(RT_ERROR_NONE);
     engine->SetDevRunningState(DEV_RUNNING_NORMAL);
-    delete device;
 }
 
 static rtExceptionInfo_t stub_exceptionInfo;
@@ -1693,7 +1724,7 @@ void TaskFailCallBackNotify_stub(rtExceptionInfo_t* const exceptionInfo)
 }
 
 // hdc close, offline, call ReportStatusFailProc
-TEST_F(EngineTest1, ReportSocketCloseProc_05)
+TEST_F(EngineSocketCloseTest, ReportSocketCloseProc_05)
 {
     MOCKER(drvGetPlatformInfo).stubs().will(invoke(drvGetPlatformInfo_offline_stub));
     int32_t hdcStat = static_cast<int32_t>(HDC_SESSION_STATUS_CLOSE);
@@ -1705,15 +1736,14 @@ TEST_F(EngineTest1, ReportSocketCloseProc_05)
     MOCKER(TaskFailCallBackNotify).stubs().will(invoke(TaskFailCallBackNotify_stub));
 
     stub_exceptionInfo.retcode = 0U; // init stub status
-    RawDevice* device = new RawDevice(0);
-    std::unique_ptr<Engine> engine = std::make_unique<AsyncHwtsEngine>(device);
+    auto device = std::make_unique<RawDevice>(0U);
+    std::unique_ptr<Engine> engine = std::make_unique<AsyncHwtsEngine>(device.get());
     engine->ReportSocketCloseProc();
     EXPECT_EQ(stub_exceptionInfo.retcode, static_cast<uint32_t>(RT_TRANS_EXT_ERRCODE(RT_ERROR_SOCKET_CLOSE)));
-    delete device;
 }
 
 // hdc close, online, don't call ReportStatusFailProc
-TEST_F(EngineTest1, ReportSocketCloseProc_06)
+TEST_F(EngineSocketCloseTest, ReportSocketCloseProc_06)
 {
     MOCKER(drvGetPlatformInfo).stubs().will(invoke(drvGetPlatformInfo_offline_stub1));
     int32_t hdcStat = static_cast<int32_t>(HDC_SESSION_STATUS_CLOSE);
@@ -1725,9 +1755,8 @@ TEST_F(EngineTest1, ReportSocketCloseProc_06)
     MOCKER(TaskFailCallBackNotify).stubs().will(invoke(TaskFailCallBackNotify_stub));
 
     stub_exceptionInfo.retcode = 0U; // init stub status
-    RawDevice* device = new RawDevice(0);
-    std::unique_ptr<Engine> engine = std::make_unique<AsyncHwtsEngine>(device);
+    auto device = std::make_unique<RawDevice>(0U);
+    std::unique_ptr<Engine> engine = std::make_unique<AsyncHwtsEngine>(device.get());
     engine->ReportSocketCloseProc();
     EXPECT_EQ(stub_exceptionInfo.retcode, 0U);
-    delete device;
 }
