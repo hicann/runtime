@@ -2,6 +2,7 @@ name: Experience Request|体验需求
 description: 当您在CANN Runtime开发体验过程中发现可改进的问题时，请使用此模板。
 title: "[Experience Request|体验需求]: "
 labels: ["requirement"]
+type: "需求"
 body:
   - type: markdown
     attributes:
