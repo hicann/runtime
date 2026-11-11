@@ -981,6 +981,8 @@ rtError_t StreamWriteValue(rtWriteValueInfo_t* const info, Stream* const stm)
     rtError_t error = CheckTaskCanSend(stm);
     ERROR_RETURN_MSG_INNER(
         error, "Failed to check stream, stream_id=%d, retCode=%#x.", streamId, static_cast<uint32_t>(error));
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
+        info->value, RT_ERROR_INVALID_VALUE, "Writing data to the specified memory");
     Stream* dstStm = stm;
     stm->StreamLock();
     writeValTask = stm->AllocTask(nullptr, TS_TASK_TYPE_WRITE_VALUE, error);
@@ -1020,6 +1022,8 @@ rtError_t StreamWriteValuePtr(
             ErrorCode::EE1017, "Writing data to the specified memory", "addr", "address is not aligned by awsize");
         return RT_ERROR_INVALID_VALUE;
     }
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
+        writeValueInfo->value, RT_ERROR_INVALID_VALUE, "Writing data to the specified memory");
 
     rtError_t error = RT_ERROR_NONE;
     const int32_t streamId = stm->Id_();

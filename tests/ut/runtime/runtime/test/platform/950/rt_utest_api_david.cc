@@ -11672,6 +11672,20 @@ TEST_F(ApiDavidTest, StreamWriteValuePtr_InvalidSize)
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
 }
 
+TEST_F(ApiDavidTest, StreamWriteValue_NullValue)
+{
+    rtWriteValueInfo_t info = {0x1000U, WRITE_VALUE_SIZE_TYPE_8BIT, nullptr};
+
+    EXPECT_EQ(StreamWriteValue(&info, stream_), RT_ERROR_INVALID_VALUE);
+}
+
+TEST_F(ApiDavidTest, StreamWriteValuePtr_NullValue)
+{
+    rtWriteValueInfo_t info = {0x1000U, WRITE_VALUE_SIZE_TYPE_8BIT, nullptr};
+
+    EXPECT_EQ(StreamWriteValuePtr(&info, stream_, nullptr), RT_ERROR_INVALID_VALUE);
+}
+
 // 非 ARRAY 形态：仍走 Stream::LoadArgsInfo 的 LP_GENERIC 路径。
 // David 的 SQE 是 AIC/AIV 一体化格式，mix 调度信息内联在 SQE 字段里，args 内存不含 FFTS context 头，
 // 故加载策略与 mixType 无关，没有 OBP 那样的 LP_MIX/LP_NO_MIX 分叉。
