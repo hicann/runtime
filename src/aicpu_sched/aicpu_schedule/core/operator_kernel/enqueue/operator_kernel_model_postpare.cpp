@@ -84,11 +84,10 @@ int32_t OperatorKernelModelPostpare::DoPostpare(AicpuPostpareInfo& msgInfo, cons
         mbufPtrVector.emplace_back(static_cast<uint64_t>(reinterpret_cast<uintptr_t>(mbufPtrlist + i)));
     }
     const auto ret = BatchEnque(taskContext, mbufPtrVector.data(), outQueueIdList, msgInfo.outQueueNum);
-    if (ret != AICPU_SCHEDULE_OK) {
-        return ret;
+    if ((ret == AICPU_SCHEDULE_OK) && (!taskContext.pending)) {
+        return OperatorKernelModelRepeat::SendModelRepeatEvent(taskContext.modelId);
     }
-
-    return OperatorKernelModelRepeat::SendModelRepeatEvent(taskContext.modelId);
+    return ret;
 }
 
 REGISTER_OPERATOR_KERNEL(KERNEL_MODEL_POSTPARE, OperatorKernelModelPostpare);

@@ -406,7 +406,6 @@ int32_t ProfilingAdp::UninitProcess()
         retUnInit = AdprofAicpuStopFunc();
     }
     if (retUnInit == static_cast<int32_t>(ProfStatusCode::PROFILINE_SUCCESS)) {
-        aicpu::ProfSoManager::GetInstance()->UnloadSo();
         profilingFlag_ = 0;
         initFlag_ = false;
     }

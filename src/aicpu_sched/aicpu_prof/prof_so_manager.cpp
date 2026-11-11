@@ -102,8 +102,6 @@ void* ProfSoManager::GetFunc(const std::string& name) const
     return nullptr;
 }
 
-ProfSoManager::~ProfSoManager() { UnloadSo(); }
-
 int32_t AdprofAicpuStartRegisterFunc(AicpuStartFunc aicpuStartCallback, const struct AicpuStartPara* para)
 {
     void* const func = aicpu::ProfSoManager::GetInstance()->GetFunc("AdprofAicpuStartRegister");

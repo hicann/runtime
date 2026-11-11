@@ -272,11 +272,16 @@ TEST_F(ProfilingAdpUt, NewMemoryToStoreDataFail)
 
 TEST_F(ProfilingAdpUt, SendProcessFailed)
 {
+    auto profSoManager = ProfSoManager::GetInstance();
+    profSoManager->soHandle_ = nullptr;
+    profSoManager->UnloadSo();
+    aicpu::UpdateMode(true);
     MOCKER(dlopen).stubs().will(returnValue((void*)1));
     MOCKER(dlsym).stubs().will(invoke(dlsymNullFake));
     MOCKER(dlclose).stubs().will(returnValue(0));
     ReporterData reportData = {0};
     ProfilingAdp::GetInstance().reportCallback_ = nullptr;
+    ProfilingAdp::GetInstance().isProfApiSo_ = false;
     int ret = ProfilingAdp::GetInstance().SendProcess(reportData);
     EXPECT_EQ(ret, -1);
 }

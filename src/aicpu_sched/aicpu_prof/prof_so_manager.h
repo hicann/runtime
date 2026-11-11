@@ -42,8 +42,6 @@ class ProfSoManager {
 public:
     static ProfSoManager* GetInstance();
 
-    virtual ~ProfSoManager();
-
     /**
      * load msprof so
      */
