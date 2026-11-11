@@ -172,12 +172,12 @@ RUNTIME_API_STUB(rtNoop)
         self.assertEqual(catalog_version, product_version)
         self.assertFalse(set(names) - set(catalog))
         self.assertEqual(names, sorted(names))
-        self.assertEqual(len(catalog), 792)
-        self.assertEqual(len(names), 660)
+        self.assertEqual(len(catalog), 795)
+        self.assertEqual(len(names), 663)
         self.assertEqual(len(set(catalog) - set(names)), 132)
         self.assertEqual(
             sum(catalog[name].policy == "FEATURE_NOT_SUPPORT" for name in names),
-            656,
+            659,
         )
         self.assertEqual(
             sum(catalog[name].policy == "SUCCESS_NOOP" for name in names), 3
@@ -241,8 +241,11 @@ RUNTIME_API_STUB(rtNoop)
             "rtDeviceGetP2PAtomicCapabilities",
             "rtEventRecordWithFlag",
             "rtGetDevMsg",
+            "rtGetModelByStream",
             "rtMemGetAddressRange",
             "rtMemMapSelectedLink",
+            "rtModelAddHcclStream",
+            "rtModelGetHcclStream",
             "rtModelGetId",
             "rtModelGetTasks",
             "rtRegTaskFailCallbackByModule",

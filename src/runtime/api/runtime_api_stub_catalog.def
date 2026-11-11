@@ -2812,9 +2812,17 @@ RUNTIME_API(memory, rtError_t, rtMemcpyHostTask,
      rtStream_t stm),
     (dst, destMax, src, cnt, kind, stm), FEATURE_NOT_SUPPORT, EXPORT)
 
+RUNTIME_API(model, rtError_t, rtGetModelByStream,
+    (rtStream_t stream, rtModel_t* mdl),
+    (stream, mdl), FEATURE_NOT_SUPPORT, EXPORT)
+
 RUNTIME_API(model, rtError_t, rtModelAbort,
     (rtModel_t mdl),
     (mdl), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(model, rtError_t, rtModelAddHcclStream,
+    (rtStream_t stream, rtModel_t mdl),
+    (stream, mdl), FEATURE_NOT_SUPPORT, EXPORT)
 
 RUNTIME_API(model, rtError_t, rtModelBindStream,
     (rtModel_t mdl, rtStream_t stm, uint32_t flag),
@@ -2839,6 +2847,10 @@ RUNTIME_API(model, rtError_t, rtModelExecutorSet,
 RUNTIME_API(model, rtError_t, rtModelExit,
     (rtModel_t mdl, rtStream_t stm),
     (mdl, stm), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(model, rtError_t, rtModelGetHcclStream,
+    (rtModel_t mdl, rtStream_t* streams, uint32_t* numStreams),
+    (mdl, streams, numStreams), FEATURE_NOT_SUPPORT, EXPORT)
 
 RUNTIME_API(model, rtError_t, rtModelGetTaskId,
     (rtModel_t mdl, uint32_t* taskId, uint32_t* streamId),
