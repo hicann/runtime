@@ -7041,11 +7041,17 @@ rtError_t ApiImpl::ModelTaskDisable(rtTask_t task)
                                      (taskType == RT_TASK_EVENT_RECORD) || (taskType == RT_TASK_EVENT_WAIT) ||
                                      (taskType == RT_TASK_EVENT_RESET) || (taskType == RT_TASK_VALUE_WRITE) ||
                                      (taskType == RT_TASK_VALUE_WAIT);
-    const bool cannotDisable = !isSupportedTaskType || (taskInfo->type == TS_TASK_TYPE_CAPTURE_RECORD_EXTERNAL);
+    const bool isExternalEventRecord = (taskInfo->type == TS_TASK_TYPE_CAPTURE_RECORD_EXTERNAL);
+    const bool cannotDisable = !isSupportedTaskType || isExternalEventRecord;
     COND_PROC(cannotDisable, captureModel->SetCaptureModelStatus(RtCaptureModelStatus::FAULT));
     COND_RETURN_AND_MSG_OUTER(
         cannotDisable, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Setting the status of a specified task to disabled",
-        "taskType", RtFmtMsg("Current task type cannot be reset"));
+        "taskType",
+        RtFmtMsg(
+            "Current task type is %s%s and cannot be disabled. Supported task types are "
+            "TASK_KERNEL(1), TASK_SIMT_KERNEL(15), TASK_EVENT_RECORD(2) (excluding external event record), "
+            "TASK_EVENT_WAIT(3), TASK_EVENT_RESET(4), TASK_VALUE_WRITE(5), and TASK_VALUE_WAIT(6)",
+            TaskTypeToString(taskType).c_str(), isExternalEventRecord ? " for external event record" : ""));
 
     captureModel->InsertGraphUpdateTask(taskInfo);
     captureModel->ClearShapeInfo(taskInfo->stream->Id_(), GetTaskId(taskInfo));
