@@ -32,6 +32,9 @@
 #define MAX_GROUP_FILE_NUM 500
 #define MIN_GROUP_FILE_SIZE (1 * 1024)
 #define MAX_GROUP_FILE_SIZE (20 * 1024)
+// selflog line buffer is 1024 bytes including timestamp, "[INFO] file:line: " prefix and
+// newline; keep each printed chunk below that budget so trailing module names survive
+#define GROUP_LOG_LINE_SAFE_LEN 896U // 1024 - 128, overhead reserved with margin
 
 STATIC bool g_groupLogEnabled = false;
 STATIC GeneralGroupInfo g_groupInfo = {0};
@@ -698,6 +701,11 @@ STATIC void PrintGroupConfig(void)
                 char tmpStr[CONF_VALUE_MAX_LEN + 1] = {0};
                 int32_t ret = sprintf_s(tmpStr, CONF_VALUE_MAX_LEN, " %s", modSet[moduleId].moduleName);
                 ONE_ACT_ERR_LOG(ret < 0, break, "sprintf fail for %s.", modSet[moduleId].moduleName);
+                /* the default group holds all 256 modules, exceeding one log line; flush by chunk */
+                if (strnlen(moduleStr, CONF_VALUE_MAX_LEN) + strlen(tmpStr) >= GROUP_LOG_LINE_SAFE_LEN) {
+                    SELF_LOG_INFO("%s", moduleStr);
+                    moduleStr[0] = '\0';
+                }
                 errno_t err = strncat_s(moduleStr, CONF_VALUE_MAX_LEN, tmpStr, strlen(tmpStr));
                 ONE_ACT_ERR_LOG(err != EOK, break, "strncat_s fail.");
             }

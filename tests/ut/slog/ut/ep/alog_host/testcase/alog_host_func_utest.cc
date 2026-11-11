@@ -801,8 +801,8 @@ TEST_F(EP_ALOG_HOST_FUNC_UTEST, DlogSetLevelForUbModule)
     DlogDestructor();
 }
 
-// UNIFIEDBUS reuses discarded id 15, so INVALID_MODULE_ID stays at 76. Guards
-// against a regression that would shift the sentinel or accept an out-of-range id.
+// INVALID_MODULE_ID stays at 256. Guards against a regression that would shift
+// the sentinel or accept an out-of-range id.
 TEST_F(EP_ALOG_HOST_FUNC_UTEST, DlogSetLevelModuleIdBoundary)
 {
     DlogConstructor();
