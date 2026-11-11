@@ -597,8 +597,8 @@ aclError TensorDataitemSerialize(
         const uint64_t rawDataLen = itemVec[i].ctrlInfo.dataLen;
         if (rawDataLen > std::numeric_limits<size_t>::max()) {
             ACL_LOG_ERROR(
-                "item index %zu data length %llu exceeds size_t maximum %zu", i,
-                static_cast<unsigned long long>(rawDataLen), std::numeric_limits<size_t>::max());
+                "item index %zu data length %" PRIu64 " exceeds size_t maximum %zu", i, rawDataLen,
+                std::numeric_limits<size_t>::max());
             return ACL_ERROR_INVALID_PARAM;
         }
         const size_t dataLen = static_cast<size_t>(rawDataLen);
