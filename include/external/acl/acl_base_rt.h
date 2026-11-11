@@ -413,6 +413,15 @@ ACL_FUNC_VISIBILITY void aclAppLog(
  */
 ACL_FUNC_VISIBILITY const char* aclrtGetSocName();
 
+/**
+ * @ingroup AscendCL
+ * @brief get soc series
+ *
+ * @retval null for failed
+ * @retval OtherValues success
+ */
+ACL_FUNC_VISIBILITY const char* aclrtGetSocSeries();
+
 #define ACL_APP_LOG(level, fmt, ...) aclAppLog(level, __FUNCTION__, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
 
 /**

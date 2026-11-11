@@ -31,9 +31,22 @@ constexpr size_t SOC_VERSION_LEN = 128U;
 std::recursive_mutex aclInitMutex;
 uint64_t aclInitRefCount = 0;
 std::string aclConfigStr;
+std::mutex aclSocSeriesMutex;
+std::string aclSocSeries;
+constexpr uint32_t SOC_SERIES_LEN = 128U;
+constexpr const char_t* VERSION_SECTION = "version";
+constexpr const char_t* SHORT_SOC_VERSION_FIELD = "Short_SoC_version";
 } // namespace
 
 namespace acl {
+#ifdef RUN_TEST
+void ResetSocSeriesForTest()
+{
+    const std::lock_guard<std::mutex> lock(aclSocSeriesMutex);
+    aclSocSeries.clear();
+}
+#endif
+
 constexpr int32_t MODULE_TYPE_VECTOR_CORE = 7;
 constexpr int32_t MODULE_TYPE_AICORE = 4;
 constexpr int32_t INFO_TYPE_CORE_NUM = 3;
@@ -198,6 +211,26 @@ const char* aclrtGetSocNameImpl()
     }
     ACL_LOG_INFO("execute aclrtGetSocName successfully");
     return aclSocVersion.c_str();
+}
+
+const char* aclrtGetSocSeriesImpl()
+{
+    const std::unique_lock<std::mutex> lock(aclSocSeriesMutex);
+    if (aclSocSeries.empty()) {
+        char_t value[SOC_SERIES_LEN] = {};
+        const rtError_t rtErr =
+            rtGetSocSpec(VERSION_SECTION, SHORT_SOC_VERSION_FIELD, value, static_cast<uint32_t>(sizeof(value)));
+        if (rtErr != RT_ERROR_NONE) {
+            ACL_LOG_INFO("Cannot get soc series, runtime retCode=%d", static_cast<int32_t>(rtErr));
+            return nullptr;
+        }
+        if (value[0] == '\0') {
+            ACL_LOG_INFO("Cannot get soc series, runtime returned an empty value");
+            return nullptr;
+        }
+        aclSocSeries = value;
+    }
+    return aclSocSeries.c_str();
 }
 
 aclError aclrtGetVersionImpl(int32_t* majorVersion, int32_t* minorVersion, int32_t* patchVersion)

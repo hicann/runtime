@@ -69,6 +69,7 @@ extern void GetPaddingSize(size_t* paddingSize);
 extern int32_t UpdateOpSystemRunCfg(void* cfgAddr, uint32_t cfgLen);
 extern bool GetAclInitFlag();
 extern void resetAclJsonHash();
+extern void ResetSocSeriesForTest();
 extern uint64_t& GetAclInitRefCount();
 extern aclError HandleEventModeConfig(const char_t* const configPath);
 } // namespace acl
@@ -214,9 +215,14 @@ protected:
     virtual void SetUp()
     {
         MockFunctionTest::aclStubInstance().ResetToDefaultMock();
+        ResetSocSeriesForTest();
         ON_CALL(MockFunctionTest::aclStubInstance(), GetPlatformResWithLock(_, _)).WillByDefault(Return(true));
     }
-    virtual void TearDown() { Mock::VerifyAndClear((void*)(&MockFunctionTest::aclStubInstance())); }
+    virtual void TearDown()
+    {
+        ResetSocSeriesForTest();
+        Mock::VerifyAndClear((void*)(&MockFunctionTest::aclStubInstance()));
+    }
     static void TearDownTestCase() { (void)aclFinalize(); }
 
 protected:
@@ -3203,4 +3209,63 @@ TEST_F(UTEST_ACL_Common, MemHandleTypeDescUsesPublicNameAndNumericValue)
     EXPECT_STREQ(GetMemHandleTypeDesc(ACL_MEM_HANDLE_TYPE_NONE), "ACL_MEM_HANDLE_TYPE_NONE(0)");
     EXPECT_STREQ(GetMemHandleTypeDesc(ACL_MEM_HANDLE_TYPE_POSIX), "ACL_MEM_HANDLE_TYPE_POSIX(2)");
     EXPECT_STREQ(GetMemHandleTypeDesc(static_cast<aclrtMemHandleType>(89)), "UNKNOWN(89)");
+}
+
+namespace {
+rtError_t RtGetSocSeriesSuccess(const char* label, const char* key, char* value, uint32_t valueLen)
+{
+    EXPECT_EQ(std::string(label), "version");
+    EXPECT_EQ(std::string(key), "Short_SoC_version");
+    const errno_t rc = strcpy_s(value, valueLen, "Ascend310P");
+    EXPECT_EQ(rc, EOK);
+    return RT_ERROR_NONE;
+}
+} // namespace
+
+TEST_F(UTEST_ACL_Common, aclrtGetSocSeries_fail)
+{
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtGetSocSpec(_, _, _, _))
+        .WillOnce(Return(ACL_ERROR_RT_FEATURE_NOT_SUPPORT));
+
+    EXPECT_EQ(aclrtGetSocSeries(), nullptr);
+}
+
+TEST_F(UTEST_ACL_Common, aclrtGetSocSeries_retryAfterFailure)
+{
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtGetSocSpec(_, _, _, _))
+        .WillOnce(Return(ACL_ERROR_RT_FEATURE_NOT_SUPPORT))
+        .WillOnce(Invoke(RtGetSocSeriesSuccess));
+
+    EXPECT_EQ(aclrtGetSocSeries(), nullptr);
+
+    const char* series = aclrtGetSocSeries();
+    ASSERT_NE(series, nullptr);
+    EXPECT_STREQ(series, "Ascend310P");
+}
+
+TEST_F(UTEST_ACL_Common, aclrtGetSocSeries_retryAfterEmptyResult)
+{
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtGetSocSpec(_, _, _, _))
+        .WillOnce(DoAll(SetArgPointee<2>('\0'), Return(RT_ERROR_NONE)))
+        .WillOnce(Invoke(RtGetSocSeriesSuccess));
+
+    EXPECT_EQ(aclrtGetSocSeries(), nullptr);
+
+    const char* series = aclrtGetSocSeries();
+    ASSERT_NE(series, nullptr);
+    EXPECT_STREQ(series, "Ascend310P");
+    EXPECT_EQ(aclrtGetSocSeries(), series);
+}
+
+TEST_F(UTEST_ACL_Common, aclrtGetSocSeries_success)
+{
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtGetSocSpec(_, _, _, _)).WillOnce(Invoke(RtGetSocSeriesSuccess));
+
+    const char* series = aclrtGetSocSeries();
+    ASSERT_NE(series, nullptr);
+    EXPECT_STREQ(series, "Ascend310P");
+
+    // second call hits the ACL cache; rtGetSocSpec is not called again (WillOnce).
+    EXPECT_EQ(aclrtGetSocSeries(), series);
+    EXPECT_STREQ(aclrtGetSocSeries(), "Ascend310P");
 }

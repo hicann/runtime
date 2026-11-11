@@ -24,6 +24,9 @@ namespace {
 const aclError HOOK_RET_VALUE = static_cast<aclError>(999991);
 const aclError CHAIN_INNER_RET = static_cast<aclError>(999992);
 const aclError CHAIN_OUTER_RET = static_cast<aclError>(999993);
+constexpr char SOC_SERIES_HOOK_VALUE[] = "HookSocSeries";
+
+const char* DummyGetSocSeriesHook() { return SOC_SERIES_HOOK_VALUE; }
 
 // Signature of aclrtGetDevice for hook testing: a simple query api.
 // aclError aclrtGetDevice(int32_t *deviceId);
@@ -76,7 +79,14 @@ protected:
             ASSERT_EQ(setRet, ACL_SUCCESS);
         }
     }
-    void TearDown() override {}
+    void TearDown() override
+    {
+        if (socSeriesRestoreFunc_ != nullptr) {
+            EXPECT_EQ(aclrtApiInjectionSetFunc("aclrtGetSocSeries", socSeriesRestoreFunc_), ACL_SUCCESS);
+        }
+    }
+
+    aclrtApiFunc socSeriesRestoreFunc_ = nullptr;
 };
 
 // Initial state: originFunc == currentFunc for every hookable api.
@@ -286,6 +296,30 @@ TEST_F(UTEST_AclRtApiHook, MdlRiApiHookRedirects)
     EXPECT_EQ(callRet, HOOK_RET_VALUE);
 
     ASSERT_EQ(aclrtApiInjectionSetFunc("aclmdlRIDestroy", origin), ACL_SUCCESS);
+}
+
+TEST_F(UTEST_AclRtApiHook, SocSeriesApiIsHookable)
+{
+    aclrtApiFunc originFunc = nullptr;
+    aclrtApiFunc currentFunc = nullptr;
+    ASSERT_EQ(aclrtApiInjectionGetFunc("aclrtGetSocSeries", &originFunc, &currentFunc), ACL_SUCCESS);
+    ASSERT_NE(originFunc, nullptr);
+    ASSERT_EQ(originFunc, currentFunc);
+    socSeriesRestoreFunc_ = currentFunc;
+
+    const aclrtApiFunc hookFunc = reinterpret_cast<aclrtApiFunc>(DummyGetSocSeriesHook);
+    ASSERT_EQ(aclrtApiInjectionSetFunc("aclrtGetSocSeries", hookFunc), ACL_SUCCESS);
+
+    aclrtApiFunc newOriginFunc = nullptr;
+    ASSERT_EQ(aclrtApiInjectionGetFunc("aclrtGetSocSeries", &newOriginFunc, &currentFunc), ACL_SUCCESS);
+    EXPECT_EQ(newOriginFunc, originFunc);
+    EXPECT_EQ(currentFunc, hookFunc);
+    EXPECT_EQ(aclrtGetSocSeries(), SOC_SERIES_HOOK_VALUE);
+
+    ASSERT_EQ(aclrtApiInjectionSetFunc("aclrtGetSocSeries", originFunc), ACL_SUCCESS);
+    ASSERT_EQ(aclrtApiInjectionGetFunc("aclrtGetSocSeries", &newOriginFunc, &currentFunc), ACL_SUCCESS);
+    EXPECT_EQ(newOriginFunc, originFunc);
+    EXPECT_EQ(originFunc, currentFunc);
 }
 
 #if __GNUC__ >= 8

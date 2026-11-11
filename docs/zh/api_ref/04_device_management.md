@@ -12,6 +12,7 @@
 - [`aclError aclrtGetDeviceUtilizationRate(int32_t deviceId, aclrtUtilizationInfo *utilizationInfo)`](#aclrtGetDeviceUtilizationRate)：查询Device上Cube、Vector、AI CPU等的利用率。
 - [`aclError aclrtQueryDeviceStatus(int32_t deviceId, aclrtDeviceStatus *deviceStatus)`](#aclrtQueryDeviceStatus)：查询Device状态是正常可用、还是异常不可用。
 - [`const char *aclrtGetSocName()`](#aclrtGetSocName)：查询当前运行环境的AI处理器版本。
+- [`const char *aclrtGetSocSeries()`](#aclrtGetSocSeries)：查询当前运行环境中的AI处理器所属产品系列。
 - [`aclError aclrtSetDeviceSatMode(aclrtFloatOverflowMode mode)`](#aclrtSetDeviceSatMode)：设置当前Device的浮点计算结果输出模式。
 - [`aclError aclrtGetDeviceSatMode(aclrtFloatOverflowMode *mode)`](#aclrtGetDeviceSatMode)：查询当前Device的浮点计算结果输出模式。
 - [`aclError aclrtDeviceCanAccessPeer(int32_t *canAccessPeer, int32_t deviceId, int32_t peerDeviceId)`](#aclrtDeviceCanAccessPeer)：查询Device之间是否支持数据交互。
@@ -692,6 +693,62 @@ const char *aclrtGetSocName()
 返回AI处理器版本字符串的指针。
 
 如果通过该接口获取芯片版本失败，则返回空指针；如果运行环境上Device数量大于1，则固定返回Device 0的AI处理器版本名称。
+
+<br>
+<br>
+<br>
+
+<a id="aclrtGetSocSeries"></a>
+
+## aclrtGetSocSeries
+
+```c
+const char *aclrtGetSocSeries()
+```
+
+### 产品支持情况
+
+<!-- npu="950" id4129 -->
+- Ascend 950PR&950DT系列产品：支持
+<!-- end id4129 -->
+<!-- npu="A3" id4130 -->
+- Atlas A3系列产品：支持
+<!-- end id4130 -->
+<!-- npu="910b" id4131 -->
+- Atlas A2系列产品：支持
+<!-- end id4131 -->
+<!-- npu="310b" id4132 -->
+- Atlas 200I/500 A2推理产品：支持
+<!-- end id4132 -->
+<!-- npu="310p" id4133 -->
+- Atlas推理系列产品：支持
+<!-- end id4133 -->
+<!-- npu="910" id4134 -->
+- Atlas训练系列产品：支持
+<!-- end id4134 -->
+<!-- npu="IPV350" id4135 -->
+- IPV350：不支持
+<!-- end id4135 -->
+<!-- npu="5162A" id4136 -->
+- Ascend5162A：不支持
+<!-- end id4136 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id50 -->
+
+### 功能说明
+
+查询当前运行环境中的AI处理器所属产品系列。
+
+### 参数说明
+
+无
+
+### 返回值说明
+
+返回AI处理器所属产品系列字符串的指针。
+
+如果通过该接口获取产品系列失败或查询结果为空字符串，则返回空指针；
+
+首次成功结果按进程缓存，后续调用返回相同的系列名，不随Device或Context切换重新查询。查询失败或查询结果为空不写入缓存，后续调用可以重试。
 
 <br>
 <br>

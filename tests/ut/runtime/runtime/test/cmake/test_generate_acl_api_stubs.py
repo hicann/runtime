@@ -86,12 +86,12 @@ class GenerateAclApiStubsTest(unittest.TestCase):
             REPO_ROOT / "src/acl/aclrt_impl/acl_rt_wrapper.h"
         )
 
-        self.assertEqual(len(entries), 406)
+        self.assertEqual(len(entries), 407)
         self.assertEqual(
             sum(entry.return_type == "aclError" for entry in entries.values()), 389
         )
         self.assertEqual(
-            sum(entry.return_type != "aclError" for entry in entries.values()), 17
+            sum(entry.return_type != "aclError" for entry in entries.values()), 18
         )
         self.assertEqual(
             entries["aclrtRecordEventWithFlag"].impl_name,
@@ -155,11 +155,11 @@ ACL_API_STUB(aclZero, ZERO)
 
         self.assertEqual(version, 1)
         self.assertEqual(real_provider_count, 94)
-        self.assertEqual(len(entries), 312)
+        self.assertEqual(len(entries), 313)
         self.assertEqual(
             sum(entry.policy == "RT_FEATURE_NOT_SUPPORT" for entry in entries), 298
         )
-        self.assertEqual(sum(entry.policy == "NULLPTR" for entry in entries), 4)
+        self.assertEqual(sum(entry.policy == "NULLPTR" for entry in entries), 5)
         self.assertEqual(sum(entry.policy == "INVALID_EXCEPTION_INFO" for entry in entries), 5)
         self.assertEqual(sum(entry.policy == "ZERO" for entry in entries), 5)
         GENERATOR.validate_real_provider_count(wrapper, entries, real_provider_count)
@@ -167,6 +167,18 @@ ACL_API_STUB(aclZero, ZERO)
         self.assertEqual(policies["aclmdlRIGetTasks"], "RT_FEATURE_NOT_SUPPORT")
         self.assertEqual(policies["aclrtValueWrite"], "RT_FEATURE_NOT_SUPPORT")
         self.assertEqual(policies["aclrtBinaryGetFunctionByEntry"], "RT_FEATURE_NOT_SUPPORT")
+        self.assertEqual(policies["aclrtGetSocSeries"], "NULLPTR")
+        series_entry = next(entry for entry in entries if entry.public_name == "aclrtGetSocSeries")
+        self.assertEqual(
+            GENERATOR.render_stub(series_entry),
+            "ACL_FUNC_VISIBILITY\nconst char* aclrtGetSocSeriesImpl()\n{\n    return nullptr;\n}",
+        )
+        report_path = self.root / "arch5162_provider.csv"
+        GENERATOR.write_report(report_path, "arch5162", wrapper, entries)
+        with report_path.open(encoding="utf-8", newline="") as report:
+            providers = {row["acl_api"]: row for row in csv.DictReader(report)}
+        self.assertEqual(providers["aclrtGetSocSeries"]["provider"], "strong_stub")
+        self.assertEqual(providers["aclrtGetSocSeries"]["policy"], "NULLPTR")
         for name in (
             "aclrtGetDeviceIdFromExceptionInfo",
             "aclrtGetErrorCodeFromExceptionInfo",
@@ -181,6 +193,7 @@ ACL_API_STUB(aclZero, ZERO)
             "aclmdlRIGetTasks",
             "aclrtBinaryGetFunctionByEntry",
             "aclrtGetRunMode",
+            "aclrtGetSocSeries",
             "aclrtMallocAlign32",
             "aclrtNonBlockingLaunchBegin",
             "aclrtNonBlockingLaunchEnd",
