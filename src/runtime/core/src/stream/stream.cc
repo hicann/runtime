@@ -1430,13 +1430,24 @@ rtError_t Stream::ReAllocStreamId()
 
 rtError_t Stream::ReBuildDriverStreamResource()
 {
-    rtError_t error = device_->Driver_()->StreamIdReservedFree(streamId_, device_->Id_(), device_->DevGetTsId());
+    Driver* const drv = device_->Driver_();
+    const uint32_t deviceId = device_->Id_();
+    const uint32_t tsId = device_->DevGetTsId();
+    rtError_t error = drv->StreamIdReservedFree(streamId_, deviceId, tsId);
     COND_RETURN_ERROR(
-        error, error, "free stream id failed, streamId=%d, deviceId=%u, ret=%d.", streamId_, device_->Id_(), error);
-    error = device_->Driver_()->ReAllocResourceId(
-        device_->Id_(), device_->DevGetTsId(), priority_, static_cast<uint32_t>(streamId_), DRV_STREAM_ID);
+        error, error, "free stream id failed, streamId=%d, deviceId=%u, ret=%d.", streamId_, deviceId, error);
+    error = drv->ReAllocResourceId(deviceId, tsId, priority_, static_cast<uint32_t>(streamId_), DRV_STREAM_ID);
     COND_RETURN_ERROR(
-        error, error, "realloc stream id failed, streamId=%d, deviceId=%u, ret=%d.", streamId_, device_->Id_(), error);
+        error, error, "realloc stream id failed, streamId=%d, deviceId=%u, ret=%d.", streamId_, deviceId, error);
+
+    if (!IsSoftwareSqEnable() || (logicalCqId_ == MAX_UINT32_NUM)) {
+        return RT_ERROR_NONE;
+    }
+
+    error = drv->StreamBindLogicCq(deviceId, tsId, streamId_, logicalCqId_);
+    COND_RETURN_ERROR(
+        error, error, "bind stream and logic cq failed, streamId=%d, logicCqId=%u, deviceId=%u, ret=%d.", streamId_,
+        logicalCqId_, deviceId, error);
     return error;
 }
 

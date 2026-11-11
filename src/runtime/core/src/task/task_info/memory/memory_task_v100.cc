@@ -740,6 +740,9 @@ void ConstructSqeForCaptureExternalRecordTask(TaskInfo* taskInfo, void* const sq
         } else {
             command[1].commonSqe.sqeHeader.wr_cqe = (writeValueTask->cqeFlag == TASK_WR_CQE_NEVER) ? 0U : 1U;
         }
+        RT_LOG(
+            RT_LOG_INFO, "stream_id=%d, task_id=%hu, cqeFlag=%u, wrCqe=%u.", taskInfo->stream->Id_(), taskInfo->id,
+            writeValueTask->cqeFlag, command[1].commonSqe.sqeHeader.wr_cqe);
     }
 }
 

@@ -1103,7 +1103,6 @@ rtError_t CaptureModel::PrepareExternalRecordTaskUpdateInfo(
         TaskWrCqeFlag newCqeFlag = TASK_WR_CQE_NEVER;
         uint64_t expectCqeNo = 0U;
         const bool isTimelineEvent = event->IsEventWithTimeline();
-
         if (isTimelineEvent) {
             taskInfo->u.writeValTask.expectCqeCnt++;
             updateInfo.totalNeedCqeCnt++;

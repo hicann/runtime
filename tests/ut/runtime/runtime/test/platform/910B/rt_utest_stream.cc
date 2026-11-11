@@ -571,3 +571,110 @@ TEST_F(CloudV2StreamTest, StreamUpdateSnapShotSqe_RoutingToDeviceSq_EmptyList)
     delete stream;
     rtInstance->DeviceRelease(device);
 }
+
+TEST_F(CloudV2StreamTest, ReBuildDriverStreamResource_RebindSoftwareSqLogicCqSuccess)
+{
+    Runtime* rtInstance = Runtime::Instance();
+    Device* device = rtInstance->DeviceRetain(0, 0);
+    ASSERT_NE(device, nullptr);
+    Stream* stream = new Stream(device, 3U);
+    ASSERT_NE(stream, nullptr);
+    stream->streamId_ = 17;
+    stream->SetLogicalCqId(23U);
+    stream->SetSoftWareSqEnable();
+
+    Driver* driver = device->Driver_();
+    MOCKER_CPP_VIRTUAL(driver, &Driver::StreamIdReservedFree)
+        .expects(once())
+        .with(eq(17), eq(device->Id_()), eq(device->DevGetTsId()))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::ReAllocResourceId)
+        .expects(once())
+        .with(eq(device->Id_()), eq(device->DevGetTsId()), eq(3U), eq(17U), eq(DRV_STREAM_ID), eq(0U))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::LogicCqAllocateV2).expects(never());
+    MOCKER_CPP_VIRTUAL(driver, &Driver::StreamBindLogicCq)
+        .expects(once())
+        .with(eq(device->Id_()), eq(device->DevGetTsId()), eq(17U), eq(23U), eq(0U))
+        .will(returnValue(RT_ERROR_NONE));
+
+    EXPECT_EQ(stream->ReBuildDriverStreamResource(), RT_ERROR_NONE);
+
+    GlobalMockObject::verify();
+    stream->device_ = nullptr;
+    delete stream;
+    rtInstance->DeviceRelease(device);
+}
+
+TEST_F(CloudV2StreamTest, ReBuildDriverStreamResource_LogicCqBindFailed)
+{
+    Runtime* rtInstance = Runtime::Instance();
+    Device* device = rtInstance->DeviceRetain(0, 0);
+    ASSERT_NE(device, nullptr);
+    Stream* stream = new Stream(device, 0U);
+    ASSERT_NE(stream, nullptr);
+    stream->streamId_ = 17;
+    stream->SetLogicalCqId(23U);
+    stream->SetSoftWareSqEnable();
+
+    Driver* driver = device->Driver_();
+    MOCKER_CPP_VIRTUAL(driver, &Driver::StreamIdReservedFree).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::ReAllocResourceId).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::LogicCqAllocateV2).expects(never());
+    MOCKER_CPP_VIRTUAL(driver, &Driver::StreamBindLogicCq).expects(once()).will(returnValue(RT_ERROR_DRV_NOT_SUPPORT));
+
+    EXPECT_EQ(stream->ReBuildDriverStreamResource(), RT_ERROR_DRV_NOT_SUPPORT);
+
+    GlobalMockObject::verify();
+    stream->device_ = nullptr;
+    delete stream;
+    rtInstance->DeviceRelease(device);
+}
+
+TEST_F(CloudV2StreamTest, ReBuildDriverStreamResource_NonSoftwareSqSkipsLogicCqRestore)
+{
+    Runtime* rtInstance = Runtime::Instance();
+    Device* device = rtInstance->DeviceRetain(0, 0);
+    ASSERT_NE(device, nullptr);
+    Stream* stream = new Stream(device, 0U);
+    ASSERT_NE(stream, nullptr);
+    stream->streamId_ = 17;
+    stream->SetLogicalCqId(23U);
+
+    Driver* driver = device->Driver_();
+    MOCKER_CPP_VIRTUAL(driver, &Driver::StreamIdReservedFree).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::ReAllocResourceId).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::LogicCqAllocateV2).expects(never());
+    MOCKER_CPP_VIRTUAL(driver, &Driver::StreamBindLogicCq).expects(never());
+
+    EXPECT_EQ(stream->ReBuildDriverStreamResource(), RT_ERROR_NONE);
+
+    GlobalMockObject::verify();
+    stream->device_ = nullptr;
+    delete stream;
+    rtInstance->DeviceRelease(device);
+}
+
+TEST_F(CloudV2StreamTest, ReBuildDriverStreamResource_UnassignedLogicCqSkipsRebind)
+{
+    Runtime* rtInstance = Runtime::Instance();
+    Device* device = rtInstance->DeviceRetain(0, 0);
+    ASSERT_NE(device, nullptr);
+    Stream* stream = new Stream(device, 0U);
+    ASSERT_NE(stream, nullptr);
+    stream->streamId_ = 17;
+    stream->SetSoftWareSqEnable();
+
+    Driver* driver = device->Driver_();
+    MOCKER_CPP_VIRTUAL(driver, &Driver::StreamIdReservedFree).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::ReAllocResourceId).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::LogicCqAllocateV2).expects(never());
+    MOCKER_CPP_VIRTUAL(driver, &Driver::StreamBindLogicCq).expects(never());
+
+    EXPECT_EQ(stream->ReBuildDriverStreamResource(), RT_ERROR_NONE);
+
+    GlobalMockObject::verify();
+    stream->device_ = nullptr;
+    delete stream;
+    rtInstance->DeviceRelease(device);
+}
