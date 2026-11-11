@@ -125,7 +125,7 @@ void* NothrowNewFailForApiEvent(size_t size, const std::nothrow_t& tag)
 
 class ApiEventTestEvent : public Event {
 public:
-    ApiEventTestEvent() : Event(nullptr, RT_EVENT_DEFAULT, nullptr) {}
+    explicit ApiEventTestEvent(uint64_t flag = RT_EVENT_DEFAULT) : Event(nullptr, flag, nullptr) {}
 
     rtError_t Query() override
     {
@@ -3322,6 +3322,16 @@ TEST_F(ApiImplTest, api_event_query_success)
     EXPECT_TRUE(startEvent.isQueryWaitStatusCalled);
     EXPECT_TRUE(endEvent.isElapsedTimeCalled);
     EXPECT_TRUE(startEvent.isGetTimeStampCalled);
+}
+
+TEST_F(ApiImplTest, api_event_get_timestamp_without_timeline_rejected)
+{
+    ApiImplEvent impl;
+    ApiEventTestEvent event(RT_EVENT_DDSYNC_NS);
+    uint64_t timeStamp = 123U;
+    EXPECT_EQ(impl.EventGetTimeStamp(&timeStamp, &event), RT_ERROR_EVENT_TIMESTAMP_INVALID);
+    EXPECT_FALSE(event.isGetTimeStampCalled);
+    EXPECT_EQ(timeStamp, 123U);
 }
 
 TEST_F(ApiImplTest, api_event_query_wait_status_uses_default_device_context)

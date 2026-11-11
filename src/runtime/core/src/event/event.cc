@@ -1462,6 +1462,14 @@ rtError_t Event::GetTimeStamp(uint64_t* const recTimestamp)
         RT_LOG(
             RT_LOG_ERROR, "Event timestamp is invalid, event_id=%d, record_state=%s(%u).", EventId_(),
             EventStateName(latestRecord.state), static_cast<uint32_t>(latestRecord.state));
+        COND_RETURN_AND_MSG_OUTER(
+            latestRecord.state == RECORDING, RT_ERROR_EVENT_TIMESTAMP_INVALID, ErrorCode::EE1018,
+            "Obtaining an Event timestamp",
+            RtFmtMsg(
+                "The timestamp for Event (event_id=%d) is not ready. "
+                "Call rtEventSynchronize or rtStreamSynchronize to wait for the latest "
+                "Event record to complete before querying its timestamp",
+                EventId_()));
         return RT_ERROR_EVENT_TIMESTAMP_INVALID;
     }
     const float32_t freq = device_->GetDevProperties().eventTimestampFreq;

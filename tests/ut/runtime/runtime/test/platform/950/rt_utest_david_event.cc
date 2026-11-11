@@ -672,25 +672,30 @@ TEST_F(EventTestDavid, TestElapsedTimeCrossBackend)
 TEST_F(EventTestDavid, TestGetTimeStamp)
 {
     rtError_t error;
-    rtEvent_t event;
-    rtEvent_t end;
-    rtStream_t stream;
+    rtEvent_t event = nullptr;
 
-    rtEventCreate(&event);
+    ASSERT_EQ(rtEventCreate(&event), ACL_RT_SUCCESS);
     DavidEvent* evt = static_cast<DavidEvent*>(rt_ut::UnwrapOrNull<Event>(event));
-    uint64_t recTimestamp = 0UL;
+    ASSERT_NE(evt, nullptr);
+    uint64_t recTimestamp = 123U;
     evt->SetRecord(false);
 
     error = evt->GetTimeStamp(&recTimestamp);
     EXPECT_EQ(error, RT_ERROR_EVENT_RECORDER_NULL);
+    EXPECT_EQ(recTimestamp, 123U);
 
-    evt->SetRecord(true);
+    const DavidRecordTaskInfo recordInfo = {stream_->Id_(), 1U, 0U};
+    evt->UpdateLatestRecord(recordInfo, DavidEventState_t::EVT_NOT_RECORDED, UINT64_MAX);
     error = evt->GetTimeStamp(&recTimestamp);
     EXPECT_EQ(error, RT_ERROR_EVENT_TIMESTAMP_INVALID);
+    EXPECT_EQ(recTimestamp, 123U);
+    EXPECT_EQ(evt->GetRecordStatus(), DavidEventState_t::EVT_NOT_RECORDED);
 
-    evt->timestamp_ = 1;
+    evt->UpdateLatestRecord(recordInfo, DavidEventState_t::EVT_RECORDED, 2000U);
     error = evt->GetTimeStamp(&recTimestamp);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(recTimestamp, 2U);
+    EXPECT_EQ(evt->GetRecordStatus(), DavidEventState_t::EVT_RECORDED);
 
     error = rtEventDestroy(event);
     EXPECT_EQ(error, ACL_RT_SUCCESS);

@@ -167,6 +167,13 @@ rtError_t ApiImplEvent::EventGetTimeStamp(uint64_t* const timeStamp, Event* cons
     COND_RETURN_AND_MSG_OUTER(
         evt->IsCapturing(), RT_ERROR_EVENT_CAPTURED, ErrorCode::EE1016, "Obtaining the event execution end time",
         RtFmtMsg("Event %d during the capture stage is not supported", evt->EventId_()));
+    COND_RETURN_AND_MSG_OUTER(
+        !evt->IsEventWithTimeline(), RT_ERROR_EVENT_TIMESTAMP_INVALID, ErrorCode::EE1017,
+        "Obtaining an Event timestamp", "event",
+        RtFmtMsg(
+            "Event (event_id=%d) was created with flag %" PRIu64 ", which does not include RT_EVENT_TIME_LINE(8). "
+            "Create the Event with RT_EVENT_TIME_LINE enabled",
+            evt->EventId_(), evt->GetEventFlag()));
     return evt->GetTimeStamp(timeStamp);
 }
 

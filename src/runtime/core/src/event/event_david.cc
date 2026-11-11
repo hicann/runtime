@@ -452,6 +452,14 @@ rtError_t DavidEvent::GetTimeStamp(uint64_t* const recTimestamp)
         RT_LOG(
             RT_LOG_ERROR, "Event timestamp is invalid, event_id=%d, record_state=%u.", EventId_(),
             static_cast<uint32_t>(recordState));
+        COND_RETURN_AND_MSG_OUTER(
+            recordState == DavidEventState_t::EVT_NOT_RECORDED, RT_ERROR_EVENT_TIMESTAMP_INVALID, ErrorCode::EE1018,
+            "Obtaining an Event timestamp",
+            RtFmtMsg(
+                "The timestamp for Event (event_id=%d) is not ready. "
+                "Call rtEventSynchronize or rtStreamSynchronize to wait for the latest "
+                "Event record to complete before querying its timestamp",
+                EventId_()));
         return RT_ERROR_EVENT_TIMESTAMP_INVALID;
     }
     *recTimestamp = curUs / (static_cast<uint64_t>(RT_DEFAULT_TIMESTAMP_FREQ) / 1000U);

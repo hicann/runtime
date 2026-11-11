@@ -556,6 +556,20 @@ TEST_F(EventTest910B, TestElapsedTimeInvalidFreq)
     delete stub;
 }
 
+TEST_F(EventTest910B, TestGetTimeStampBeforeRecordComplete)
+{
+    Event event(device_, RT_EVENT_TIME_LINE, nullptr);
+    RecordTaskInfo recordInfo = {0, 1U, RECORDING};
+    event.UpdateLatestRecord(recordInfo);
+    uint64_t recTimestamp = 123U;
+
+    EXPECT_EQ(event.GetTimeStamp(&recTimestamp), RT_ERROR_EVENT_TIMESTAMP_INVALID);
+    EXPECT_EQ(recTimestamp, 123U);
+    EXPECT_TRUE(event.HasRecord());
+    EXPECT_EQ(event.GetLatestRecord().state, RECORDING);
+    EXPECT_EQ(event.TimeStamp(), UINT64_MAX);
+}
+
 TEST_F(EventTest910B, TestGetTimeStampInvalidFreq)
 {
     rtError_t error;
