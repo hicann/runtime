@@ -7,6 +7,7 @@
 # INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
+include(${RUNTIME_DIR}/version.cmake)
 
 add_library(rt_aicpu_kernels SHARED
     rt_kernel_dsa_update.cpp
@@ -26,4 +27,30 @@ target_link_libraries(rt_aicpu_kernels PRIVATE
 target_compile_options(rt_aicpu_kernels PRIVATE
     -fvisibility=hidden
     -fvisibility-inlines-hidden
+)
+
+
+cann_pack_targets_and_files(
+  OUTPUT_TARGET "pack_cann_rt_compat"
+  OUTPUT "cann-rt-compat.tar.gz"
+  TAR_ROOT_DIR "aicpu_kernels_device"
+  TARGETS rt_aicpu_kernels
+  MANIFEST "rt_compat_bin_hash.cfg"
+  GEN_INI
+)
+
+add_cann_sign_file(
+  INPUT "cann-rt-compat.tar.gz"
+  CONFIG "${RUNTIME_DIR}/scripts/package/sign.xml"
+  RESULT_VAR "rt_compat_sign_file"
+  VERSION "${CANN_UNIFIED_VERSION}"
+  OUTPUT_TARGET "sign_cann_rt_compat"
+  DEPENDS pack_cann_rt_compat
+)
+
+install(FILES
+  ${rt_compat_sign_file}
+  ${CMAKE_CURRENT_BINARY_DIR}/cann-rt-compat.ini
+  DESTINATION lib
+  OPTIONAL
 )

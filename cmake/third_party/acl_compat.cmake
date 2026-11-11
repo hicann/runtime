@@ -33,12 +33,18 @@ if (ENABLE_OPEN_SRC AND NOT EXISTS "${CMAKE_BINARY_DIR}/include_acl")
             EXCLUDE_FROM_ALL TRUE
     )
     set(DST_LIB_DIR "${CMAKE_BINARY_DIR}/lib_acl")
+    set(DST_COMPAT_DIR "${CMAKE_BINARY_DIR}/compat")
     set(DST_INCLUDE_DIR "${CMAKE_BINARY_DIR}/include_acl")
     add_custom_target(_copy_acl_headers_and_libs
         COMMAND ${CMAKE_COMMAND} -E make_directory "${DST_LIB_DIR}"
         COMMAND ${CMAKE_COMMAND} -E copy_directory "${ACL_SOURCE_DIR}/lib64" "${DST_LIB_DIR}"
         COMMAND ${CMAKE_COMMAND} -E make_directory "${DST_INCLUDE_DIR}"
         COMMAND ${CMAKE_COMMAND} -E copy_directory "${ACL_SOURCE_DIR}/include" "${DST_INCLUDE_DIR}"
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${DST_COMPAT_DIR}"
+        COMMAND ${CMAKE_COMMAND}
+            "-DSOURCE_DIR=${ACL_SOURCE_DIR}/compat"
+            "-DDESTINATION_DIR=${DST_COMPAT_DIR}"
+            -P "${CMAKE_CURRENT_LIST_DIR}/../copy_optional_directory.cmake"
         DEPENDS acl_compat_tar 
         COMMENT "Copying ACL lib/include to lib_acl and include_acl"
         VERBATIM
