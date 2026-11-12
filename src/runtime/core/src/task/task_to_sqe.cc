@@ -35,6 +35,15 @@ rtError_t ConstructSqeByTaskInput(const rtTaskInput_t* const taskInput, uint32_t
         (type != RT_TASK_TYPE_KERNEL_NANO_AICORE) && (type != RT_TASK_TYPE_KERNEL_NANO_AICPU_HOSTFUNC),
         RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "rtTaskBuild", "taskInput->compilerInfo.taskType",
         "The current task type does not support this operation");
+
+    if ((taskBufferType == HWTS_STATIC_TASK_DESC) || (taskBufferType == HWTS_DYNAMIC_TASK_DESC)) {
+        const uint32_t requiredSize = static_cast<uint32_t>(
+            (taskBufferType == HWTS_STATIC_TASK_DESC) ? sizeof(rtStaticSqe_t) : sizeof(rtDynamicSqe_t));
+        COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
+            taskInput->bufferLen < requiredSize, RT_ERROR_INVALID_VALUE, "Constructing task delivery parameters",
+            taskInput->bufferLen, "taskInput->bufferLen", RtFmtMsg("greater than or equal to %u bytes", requiredSize));
+    }
+
     pfnNanoTaskToSqe funcHandle = g_BufToFunc[taskBufferType][type];
     if (funcHandle == nullptr) {
         return RT_ERROR_INVALID_VALUE;
