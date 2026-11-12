@@ -29,9 +29,6 @@ struct DumpDfxInfo {
     bool isBlockInfo = false;
 };
 
-void DumpKernelDfxInfoCallback(
-    rtKernelDfxInfoType dfxType, uint32_t coreType, uint32_t coreId, const uint8_t* buffer, size_t length);
-
 class KernelDfxDumper : public Adx::Common::Singleton::Singleton<KernelDfxDumper> {
 public:
     KernelDfxDumper();
@@ -71,6 +68,7 @@ private:
     std::string dumpPath_;
     std::atomic<bool> taskInit_ = false;
     std::atomic<bool> taskRunning_ = false;
+    std::atomic<bool> parserInitialized_ = false;
     bool destructed_ = false;
     std::set<std::string> blockInfoWrittenFiles_;
     std::set<std::string> blockInfoPendingFiles_;
