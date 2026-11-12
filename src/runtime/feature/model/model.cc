@@ -2046,7 +2046,7 @@ rtError_t Model::ModelAbort()
 
         error = streamObj->Synchronize();
         ERROR_GOTO_MSG_INNER(
-            error, ERROR_RECYCLE, "Failed to synchronize model abort stream, retCode=%#x.",
+            error, ERROR_DESTROY, "Failed to synchronize model abort stream, retCode=%#x.",
             static_cast<uint32_t>(error));
         if (!dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MODEL_ABORT_USE_DEFAULT_STREAM)) {
             error = context_->StreamDestroy(streamObj);
@@ -2077,7 +2077,7 @@ rtError_t Model::ModelAbort()
         streamObj->Id_());
     error = streamObj->Synchronize();
     ERROR_GOTO_MSG_INNER(
-        error, ERROR_RECYCLE, "Failed to synchronize model abort stream, retCode=%#x.", static_cast<uint32_t>(error));
+        error, ERROR_DESTROY, "Failed to synchronize model abort stream, retCode=%#x.", static_cast<uint32_t>(error));
 
     error = context_->StreamDestroy(streamObj);
     ERROR_RETURN_MSG_INNER(error, "Failed to destroy model abort stream, retCode=%#x.", static_cast<uint32_t>(error));

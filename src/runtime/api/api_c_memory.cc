@@ -412,7 +412,7 @@ rtError_t rtsCmoAsyncWithBarrier(void* srcAddrPtr, size_t srcLen, rtCmoOpCode cm
 
     rtCmoTaskInfo_t taskInfo = {};
     taskInfo.opCode = cmoType;
-    taskInfo.lengthInner = static_cast<int32_t>(srcLen);
+    taskInfo.lengthInner = static_cast<uint32_t>(srcLen);
     taskInfo.sourceAddr = RtPtrToValue(srcAddrPtr);
     taskInfo.logicId = logicId;
 

@@ -103,6 +103,10 @@ rtError_t DirectHwtsEngine::Init()
         return error;
     }
     error = shmCq_.Init(device_);
+    if (error != RT_ERROR_NONE) {
+        (void)devDrv->LogicCqFree(device_->Id_(), device_->DevGetTsId(), logicCqId_);
+        logicCqId_ = MAX_UINT32_NUM;
+    }
     if (error == RT_ERROR_DRV_INPUT) {
         return error;
     }

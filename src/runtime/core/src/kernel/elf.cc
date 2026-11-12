@@ -1154,7 +1154,7 @@ static rtError_t UpdateCachedParamInfos(
         return RT_ERROR_INVALID_VALUE;
     }
 
-    metaInfo->paramInfos = std::shared_ptr<ElfParamInfo[]>(new (std::nothrow) ElfParamInfo[kernelInfo->paramCount]);
+    metaInfo->paramInfos = std::shared_ptr<ElfParamInfo[]>(new (std::nothrow) ElfParamInfo[kernelInfo->paramCount]());
 
     if (metaInfo->paramInfos == nullptr) {
         RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1013, sizeof(ElfParamInfo) * kernelInfo->paramCount, "new");

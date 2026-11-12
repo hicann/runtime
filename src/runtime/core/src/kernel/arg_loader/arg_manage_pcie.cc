@@ -26,7 +26,10 @@ rtError_t PcieArgManage::MallocArgMem(void*& devAddr, void*& hostAddr)
 {
     UNUSED(hostAddr);
     Device* const dev = stream_->Device_();
-    devAddr = stream_->taskResMang_->MallocPcieBarBuffer(argPoolSize_, dev, false);
+    devAddr = nullptr;
+    if (stream_->taskResMang_ != nullptr) {
+        devAddr = stream_->taskResMang_->MallocPcieBarBuffer(argPoolSize_, dev, false);
+    }
     if (devAddr == nullptr) {
         RT_LOG(
             RT_LOG_WARNING, "Alloc stream args pool pcie bar mem failed, size=%u, device_id=%u.", argPoolSize_,

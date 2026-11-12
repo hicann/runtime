@@ -517,10 +517,20 @@ rtError_t Program::BuildTilingTbl(TilingTabl** tilingTab, uint32_t* kernelLen)
         return RT_ERROR_PROGRAM_SIZE;
     }
 
-    uint64_t function1;
-    uint64_t function2;
     for (uint32_t i = 0; i < size; i++) {
-        (void)KernelTable_[i].kernel->GetFunctionDevAddr(function1, function2);
+        uint64_t function1 = 0;
+        uint64_t function2 = 0;
+        const rtError_t error = KernelTable_[i].kernel->GetFunctionDevAddr(function1, function2);
+        if (error != RT_ERROR_NONE) {
+            RT_LOG(
+                RT_LOG_ERROR,
+                "Failed to get kernel device address when building tiling table, "
+                "program_id=%u, kernel_name=%s, index=%u, retCode=%#x.",
+                Id_(), KernelTable_[i].kernel->Name_().c_str(), i, static_cast<uint32_t>(error));
+            free(tilingTabInfo);
+            kernelMapLock_.Unlock();
+            return error;
+        }
         tilingTabInfo[i].tilingKey = KernelTable_[i].TilingKey;
         tilingTabInfo[i].pcInfo[0] = function1;
         tilingTabInfo[i].pcInfo[1] = function2;
@@ -562,12 +572,20 @@ rtError_t Program::DavidBuildTilingTblForNewFlow(TilingTablForDavid** tilingTab,
     COND_PROC_RETURN_AND_MSG_OUTER(
         tilingTabInfo == nullptr, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013, kernelMapLock_.Unlock(),
         sizeof(TilingTablForDavid) * size, "malloc");
-    uint64_t function1 = 0ULL;
-    uint64_t function2 = 0ULL;
-    rtError_t err = RT_ERROR_NONE;
     for (uint32_t i = 0; i < size; i++) {
-        err = KernelTable_[i].kernel->GetFunctionDevAddr(function1, function2);
-        COND_PROC(err != RT_ERROR_NONE, continue);
+        uint64_t function1 = 0;
+        uint64_t function2 = 0;
+        const rtError_t error = KernelTable_[i].kernel->GetFunctionDevAddr(function1, function2);
+        if (error != RT_ERROR_NONE) {
+            RT_LOG(
+                RT_LOG_ERROR,
+                "Failed to get kernel device address when building tiling table, "
+                "program_id=%u, kernel_name=%s, index=%u, retCode=%#x.",
+                Id_(), KernelTable_[i].kernel->Name_().c_str(), i, static_cast<uint32_t>(error));
+            free(tilingTabInfo);
+            kernelMapLock_.Unlock();
+            return error;
+        }
         tilingTabInfo[i].tilingKey = KernelTable_[i].TilingKey;
         tilingTabInfo[i].pcInfo[0] = function1;
         tilingTabInfo[i].pcInfo[1] = function2;
@@ -612,10 +630,20 @@ rtError_t Program::BuildTilingTblForDavid(const Module* mdl, TilingTablForDavid*
         return RT_ERROR_PROGRAM_SIZE;
     }
 
-    uint64_t function1;
-    uint64_t function2;
     for (uint32_t i = 0; i < size; i++) {
-        (void)mdl->GetFunction(KernelTable_[i].kernel, &function1, &function2);
+        uint64_t function1 = 0;
+        uint64_t function2 = 0;
+        rtError_t error = mdl->GetFunction(KernelTable_[i].kernel, &function1, &function2);
+        if (error != RT_ERROR_NONE) {
+            RT_LOG(
+                RT_LOG_ERROR,
+                "Failed to get module kernel function when building tiling table, "
+                "program_id=%u, kernel_name=%s, index=%u, retCode=%#x.",
+                Id_(), KernelTable_[i].kernel->Name_().c_str(), i, static_cast<uint32_t>(error));
+            free(tilingTabInfo);
+            kernelMapLock_.Unlock();
+            return error;
+        }
         tilingTabInfo[i].tilingKey = KernelTable_[i].TilingKey;
         tilingTabInfo[i].pcInfo[0] = function1;
         tilingTabInfo[i].pcInfo[1] = function2;

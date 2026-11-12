@@ -7,6 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include <memory>
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 #include "securec.h"
@@ -67,10 +68,15 @@ static void SetupDriverMockForPcieWithAllocFailure()
     static char realMemBuffer[4096 * 1024];
     void* memBase = realMemBuffer;
     MOCKER_CPP_VIRTUAL(drv, &Driver::DevMemAllocWithFlag)
-        .stubs()
-        .with(outBoundP(&memBase, sizeof(memBase)), mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .expects(exactly(2))
+        .with(
+            outBoundP(&memBase, sizeof(memBase)), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(),
+            mockcpp::any())
         .will(returnValue(1))
         .then(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(drv, &Driver::PcieHostRegister).expects(once()).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(drv, &Driver::PcieHostUnRegister).expects(once()).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(drv, &Driver::DevMemFree).expects(once()).will(returnValue(RT_ERROR_NONE));
     MOCKER(memcpy_s).stubs().will(returnValue(NULL));
 }
 
@@ -722,7 +728,12 @@ TEST_F(ArgManagePcieTest, stream_arg_res_create)
 {
     GlobalMockObject::reset();
     rtError_t ret = RT_ERROR_NONE;
-    DavidStream* stm = new (std::nothrow) DavidStream(device_, 0, RT_STREAM_FAST_LAUNCH, nullptr);
+    std::unique_ptr<DavidStream> stm(new (std::nothrow) DavidStream(device_, 0, RT_STREAM_FAST_LAUNCH, nullptr));
+    ASSERT_NE(stm, nullptr);
+    ASSERT_EQ(stm->CreateStreamTaskRes(), RT_ERROR_NONE);
+    ASSERT_NE(stm->taskResMang_, nullptr);
+    const uint8_t initialArgStreamNum = device_->GetArgStreamNum();
+    Runtime::Instance()->SetConnectUbFlag(false);
 
     SetupDriverMockForPcieWithAllocFailure();
 
@@ -730,17 +741,44 @@ TEST_F(ArgManagePcieTest, stream_arg_res_create)
     ret = stm->CreateStreamArgRes();
     EXPECT_EQ(ret, RT_ERROR_NONE);
     EXPECT_EQ(stm->isHasArgPool_, false);
+    EXPECT_EQ(device_->GetArgStreamNum(), initialArgStreamNum);
     stm->ReleaseStreamArgRes();
 
     ret = stm->CreateStreamArgRes();
     EXPECT_EQ(ret, RT_ERROR_NONE);
     EXPECT_NE(stm->ArgManagePtr(), nullptr);
-    EXPECT_EQ(stm->isHasArgPool_, true);
-    EXPECT_EQ(device_->argStreamNum_, 1);
+    EXPECT_TRUE(stm->isHasArgPool_);
+    EXPECT_EQ(device_->GetArgStreamNum(), initialArgStreamNum + 1U);
     stm->ReleaseStreamArgRes();
-    EXPECT_EQ(device_->argStreamNum_, 0);
+    EXPECT_EQ(device_->GetArgStreamNum(), initialArgStreamNum);
 
-    delete stm;
+    stm->ReleaseStreamTaskRes();
+    stm.reset();
+    GlobalMockObject::verify();
+}
+
+TEST_F(ArgManagePcieTest, stream_arg_res_create_without_task_res)
+{
+    std::unique_ptr<DavidStream> stm(new (std::nothrow) DavidStream(device_, 0, RT_STREAM_FAST_LAUNCH, nullptr));
+    ASSERT_NE(stm, nullptr);
+    ASSERT_EQ(stm->taskResMang_, nullptr);
+    Runtime::Instance()->SetConnectUbFlag(false);
+    const uint8_t initialArgStreamNum = device_->GetArgStreamNum();
+    Driver* drv = device_->Driver_();
+    MOCKER_CPP_VIRTUAL(drv, &Driver::CheckSupportPcieBarCopy).expects(never());
+    MOCKER_CPP_VIRTUAL(drv, &Driver::DevMemAllocWithFlag).expects(never());
+    MOCKER_CPP_VIRTUAL(drv, &Driver::PcieHostRegister).expects(never());
+
+    EXPECT_EQ(stm->CreateStreamArgRes(), RT_ERROR_NONE);
+    EXPECT_NE(stm->ArgManagePtr(), nullptr);
+    EXPECT_FALSE(stm->isHasArgPool_);
+    EXPECT_EQ(device_->GetArgStreamNum(), initialArgStreamNum);
+
+    stm->ReleaseStreamArgRes();
+    EXPECT_EQ(stm->ArgManagePtr(), nullptr);
+    EXPECT_EQ(device_->GetArgStreamNum(), initialArgStreamNum);
+    stm.reset();
+    GlobalMockObject::verify();
 }
 
 // Tier1-1: ShouldCopyByPolicy 各策略分支覆盖
@@ -853,12 +891,24 @@ TEST_F(ArgManagePcieTest, pcie_stm_arg_pool_alloc)
     void* memAddr = memPool;
     MockPcieDriverForArgPool(memAddr);
 
-    DavidStream* stm =
-        new (std::nothrow) DavidStream(device_, RT_STREAM_PRIORITY_DEFAULT, RT_STREAM_FAST_LAUNCH, nullptr);
+    std::unique_ptr<DavidStream> stm(
+        new (std::nothrow) DavidStream(device_, RT_STREAM_PRIORITY_DEFAULT, RT_STREAM_FAST_LAUNCH, nullptr));
+    ASSERT_NE(stm, nullptr);
+    ASSERT_EQ(stm->CreateStreamTaskRes(), RT_ERROR_NONE);
+    ASSERT_NE(stm->taskResMang_, nullptr);
+    const uint8_t initialArgStreamNum = device_->GetArgStreamNum();
+    Driver* drv = device_->Driver_();
+    MOCKER_CPP_VIRTUAL(drv, &Driver::DevMemAllocWithFlag)
+        .expects(once())
+        .with(
+            outBoundP(&memAddr, sizeof(memAddr)), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(),
+            mockcpp::any())
+        .will(returnValue(RT_ERROR_NONE));
     Runtime::Instance()->SetConnectUbFlag(false);
     rtError_t ret = stm->CreateStreamArgRes();
-    EXPECT_EQ(ret, RT_ERROR_NONE);
-    EXPECT_EQ(stm->isHasArgPool_, true);
+    ASSERT_EQ(ret, RT_ERROR_NONE);
+    ASSERT_TRUE(stm->isHasArgPool_);
+    EXPECT_EQ(device_->GetArgStreamNum(), initialArgStreamNum + 1U);
 
     StarsArgManager* mgr = stm->ArgManagePtr();
     ASSERT_NE(mgr, nullptr);
@@ -866,8 +916,9 @@ TEST_F(ArgManagePcieTest, pcie_stm_arg_pool_alloc)
     // alloc success
     StarsArgLoaderResult result = {nullptr, nullptr, nullptr, UINT32_MAX};
     bool res = mgr->AllocStmPool(512, &result);
-    EXPECT_EQ(res, true);
+    EXPECT_TRUE(res);
     EXPECT_NE(result.kerArgs, nullptr);
+    EXPECT_EQ(result.kerArgs, memAddr);
     EXPECT_NE(result.stmArgPos, UINT32_MAX);
 
     // recycle
@@ -876,7 +927,10 @@ TEST_F(ArgManagePcieTest, pcie_stm_arg_pool_alloc)
 
     // release（覆盖 FreeArgMem：PcieHostUnRegister + DevMemFree）
     stm->ReleaseStreamArgRes();
-    delete stm;
+    EXPECT_EQ(device_->GetArgStreamNum(), initialArgStreamNum);
+    stm->ReleaseStreamTaskRes();
+    stm.reset();
+    GlobalMockObject::verify();
 }
 
 // ── 公共 helper：创建 PCIe DavidStream 并 mock driver ──

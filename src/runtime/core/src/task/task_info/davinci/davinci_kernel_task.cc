@@ -813,16 +813,17 @@ rtError_t GetArgsInfo(TaskInfo* taskInfo)
     AicTaskInfo* aicTaskInfo = &(taskInfo->u.aicTaskInfo);
     const uint64_t tilingKey = aicTaskInfo->tilingKey;
     void* hostMem = nullptr;
+    COND_RETURN_ERROR_MSG_INNER(
+        (aicTaskInfo->comm.args == nullptr) || (aicTaskInfo->comm.argsSize <= aicTaskInfo->simtParamOffset),
+        RT_ERROR_INVALID_VALUE, "GetArgsInfo failed, argsSize=%u, simtParamOffset=%u.", aicTaskInfo->comm.argsSize,
+        aicTaskInfo->simtParamOffset);
     const uint32_t argSize = aicTaskInfo->comm.argsSize - aicTaskInfo->simtParamOffset;
     const uint8_t* argsBase = static_cast<const uint8_t*>(aicTaskInfo->comm.args) + aicTaskInfo->simtParamOffset;
-    COND_RETURN_ERROR_MSG_INNER(
-        (aicTaskInfo->comm.args == nullptr) || (argSize == 0U), RT_ERROR_INVALID_VALUE,
-        "GetArgsInfo failed, address size=%u.", argSize);
     const auto dev = taskInfo->stream->Device_();
     rtError_t error = dev->Driver_()->HostMemAlloc(&hostMem, static_cast<uint64_t>(argSize) + 1U, dev->Id_());
     ERROR_RETURN(error, "Malloc host memory for args failed, retCode=%#x", static_cast<uint32_t>(error));
     error = dev->Driver_()->MemCopySync(
-        hostMem, static_cast<uint64_t>(argSize + 1U), argsBase, static_cast<uint64_t>(argSize),
+        hostMem, static_cast<uint64_t>(argSize) + 1U, argsBase, static_cast<uint64_t>(argSize),
         RT_MEMCPY_DEVICE_TO_HOST);
     COND_PROC_RETURN_ERROR(
         error != RT_ERROR_NONE, error, (void)dev->Driver_()->HostMemFree(hostMem),
