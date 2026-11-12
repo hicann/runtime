@@ -12,6 +12,7 @@
 #include <iostream>
 #include <fstream>
 #include <algorithm>
+#include <array>
 #include <cctype>
 #include <csignal>
 #include <cstring>
@@ -385,7 +386,7 @@ std::string CalFileSha256HashValue(const std::string& filePath)
     sha256::Context ctx;
     sha256::Init(ctx);
     while (!curFile.eof()) {
-        curFile.read(reinterpret_cast<char*>(readBuffer.data()), static_cast<std::streamsize>(READ_BLOCK_SIZE));
+        curFile.read(PtrToPtr<uint8_t, char>(readBuffer.data()), static_cast<std::streamsize>(READ_BLOCK_SIZE));
         const std::streamsize readLen = curFile.gcount();
         if (readLen > 0) {
             sha256::Update(ctx, readBuffer.data(), static_cast<size_t>(readLen));
@@ -396,14 +397,15 @@ std::string CalFileSha256HashValue(const std::string& filePath)
         }
     }
 
-    uint8_t hash[sha256::DIGEST_LENGTH] = {0};
-    sha256::Final(ctx, hash);
-    constexpr char hexDigits[] = "0123456789abcdef";
+    std::array<uint8_t, sha256::DIGEST_LENGTH> hash{};
+    sha256::Final(ctx, hash.data());
+    constexpr std::array<char, 16U> hexDigits = {'0', '1', '2', '3', '4', '5', '6', '7',
+                                                 '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
     std::string hashHex;
     hashHex.reserve(sha256::DIGEST_LENGTH * 2U);
-    for (uint32_t i = 0U; i < sha256::DIGEST_LENGTH; ++i) {
-        hashHex.push_back(hexDigits[hash[i] >> 4U]);
-        hashHex.push_back(hexDigits[hash[i] & 0x0FU]);
+    for (const auto value : hash) {
+        hashHex.push_back(hexDigits[value >> 4U]);
+        hashHex.push_back(hexDigits[value & 0x0FU]);
     }
     return hashHex;
 }

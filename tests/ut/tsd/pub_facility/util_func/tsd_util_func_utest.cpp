@@ -340,6 +340,30 @@ TEST_F(TsdUtilFuncTest, CalFileSha256HashValue_MultiBlockFile_MatchesOneShotDige
     EXPECT_EQ(CalFileSha256HashValue(file.Path()), expected);
 }
 
+TEST_F(TsdUtilFuncTest, CalFileSha256HashValue_EmptyFile_ReturnsEmptyContentDigest)
+{
+    ScopedTempFile file;
+    ASSERT_TRUE(file.IsValid());
+
+    EXPECT_EQ(CalFileSha256HashValue(file.Path()), "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+}
+
+TEST_F(TsdUtilFuncTest, CalFileSha256HashValue_ExactBlock_ReturnsExpectedDigest)
+{
+    ScopedTempFile file(std::string(64U * 1024U, 'a'));
+    ASSERT_TRUE(file.IsValid());
+
+    EXPECT_EQ(CalFileSha256HashValue(file.Path()), "bf718b6f653bebc184e1479f1935b8da974d701b893afcf49e701f3e2f9f9c5a");
+}
+
+TEST_F(TsdUtilFuncTest, CalFileSha256HashValue_ReadFails_ReturnsEmptyString)
+{
+    ScopedTempDir dir;
+    ASSERT_TRUE(dir.IsValid());
+
+    EXPECT_EQ(CalFileSha256HashValue(dir.Path()), "");
+}
+
 TEST_F(TsdUtilFuncTest, CalFileSha256HashValueNotExist)
 {
     ScopedTempFile file;
