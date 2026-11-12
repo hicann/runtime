@@ -1506,14 +1506,26 @@ rtError_t ParseSimtPrintfV2(void* addr, const size_t blockSize, Driver* curDrv, 
         // walk+遍历DumpInfoHead并解析打印，返回实际消费的字节数consumedLen
         // runtime根据consumedLen清零已读区并推进readIdx，未消费的数据（半包）留存待下一轮
         cb(&param, &consumedLen);
-        COND_RETURN_DEBUG(
-            (consumedLen == 0U), RT_ERROR_NONE,
-            "consumedLen=0, readIdx=%" PRIu64 ", writeIdx=%" PRIu64 ", data retained for next round", readIdx,
-            writeInfo->writeIdx);
+        if (consumedLen == 0U) {
+            if (writeInfo->writeIdx - readIdx >= blockInfo->remainLen) {
+                readInfo->readIdx = writeInfo->writeIdx;
+                void* const deviceReadAddr = RtValueToPtr<void*>(RtPtrToValue(addr) + sizeof(BlockInfo));
+                ret = curDrv->MemCopySync(
+                    deviceReadAddr, sizeof(BlockReadInfo), readInfo, sizeof(BlockReadInfo), RT_MEMCPY_HOST_TO_DEVICE,
+                    false);
+                COND_RETURN_WARN(
+                    (ret != RT_ERROR_NONE), ret, "MemCopySync h2d failed, ret=%u, deviceId=%u", ret, userDeviceId);
+            }
+            RT_LOG(
+                RT_LOG_DEBUG,
+                "consumedLen=0, readIdx=%" PRIu64 ", writeIdx=%" PRIu64 ", data retained for next round, deviceId=%u",
+                readIdx, writeInfo->writeIdx, userDeviceId);
+            return RT_ERROR_NONE;
+        }
         // SIMT: writeIdx 单调递增，用绝对值差判断溢出，取模判断回绕
         const uint64_t readIdxMod = readIdx % blockInfo->remainLen;
         uint64_t availableData;
-        if (writeInfo->writeIdx - readIdx > blockInfo->remainLen) {
+        if (writeInfo->writeIdx - readIdx >= blockInfo->remainLen) {
             availableData = blockInfo->remainLen;
             RT_LOG(
                 RT_LOG_WARNING,
@@ -1564,8 +1576,11 @@ rtError_t ParseSimtPrintfV2(void* addr, const size_t blockSize, Driver* curDrv, 
             ", coreType=%u, coreId=%u, deviceId=%u",
             consumedLen, readIdx, writeInfo->writeIdx, RT_KERNEL_DFX_INFO_CORE_TYPE_SIMT, 0U, userDeviceId);
 
-        // 更新读指针。溢出但仍有消费时保留既有 clamp 语义，下一轮继续读取剩余数据。
-        readInfo->readIdx = readIdx + consumedLen;
+        if (writeInfo->writeIdx - readIdx > blockInfo->remainLen) {
+            readInfo->readIdx = writeInfo->writeIdx;
+        } else {
+            readInfo->readIdx = readIdx + consumedLen;
+        }
     } else {
         RT_LOG(
             RT_LOG_WARNING,
@@ -1722,7 +1737,7 @@ rtError_t ParseAicpuPrintfV2(void* addr, const size_t blockSize, Driver* curDrv,
                                  userDeviceId};
         cb(&param, &consumedLen);
         if (consumedLen == 0U) {
-            if (writeInfo->writeIdx - readIdx > blockInfo->remainLen) {
+            if (writeInfo->writeIdx - readIdx >= blockInfo->remainLen) {
                 readInfo->readIdx = writeInfo->writeIdx;
                 void* const deviceReadAddr = RtValueToPtr<void*>(RtPtrToValue(addr) + sizeof(BlockInfo));
                 ret = curDrv->MemCopySync(

@@ -497,7 +497,7 @@ TEST_F(ParseSimtPrintfV2Test, WhenNoData_ExpectCallbackNotCalled)
     EXPECT_FALSE(g_capture.called);
 }
 
-TEST_F(ParseSimtPrintfV2Test, WhenRingBufferOverflow_ExpectClampedToRemainLen)
+TEST_F(ParseSimtPrintfV2Test, WhenRingBufferOverflow_ExpectReadIdxResetToWriteIdx)
 {
     rtError_t error = rtSetDevice(0);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -523,7 +523,7 @@ TEST_F(ParseSimtPrintfV2Test, WhenRingBufferOverflow_ExpectClampedToRemainLen)
 
     EXPECT_TRUE(g_capture.called);
     BlockReadInfo* readInfo = RtPtrToPtr<BlockReadInfo*>(hostData.data() + sizeof(BlockInfo));
-    EXPECT_EQ(readInfo->readIdx, testReadIdx + blockInfo->remainLen);
+    EXPECT_EQ(readInfo->readIdx, testWriteIdx);
 }
 
 TEST_F(ParseSimtPrintfV2Test, WhenRemainLenZero_ExpectInvalidValue)

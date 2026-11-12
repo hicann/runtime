@@ -107,6 +107,14 @@ void ConstructSimtBlock(uint8_t* buf, size_t blockSize, uint64_t readIdx, uint64
     writeInfo->writeIdx = writeIdx;
 }
 
+void ConstructExactlyFullSimtBlock(uint8_t* buf, size_t blockSize, uint64_t readIdx, uint64_t writeIdx)
+{
+    ConstructSimtBlock(buf, blockSize, readIdx, writeIdx);
+    BlockInfo* blockInfo = RtPtrToPtr<BlockInfo*>(buf);
+    BlockWriteInfo* writeInfo = RtPtrToPtr<BlockWriteInfo*>(buf + blockSize - sizeof(BlockWriteInfo));
+    writeInfo->writeIdx = readIdx + blockInfo->remainLen;
+}
+
 uint64_t ConstructAicpuBlock(
     uint8_t* buf, size_t blockSize, uint64_t readIdx, uint32_t tlvCount, uint32_t infoLen, uint64_t packIdx)
 {
@@ -529,7 +537,7 @@ TEST_F(ParseSimtPrintfV2Test, WhenNoData_ExpectCallbackNotCalled)
     EXPECT_FALSE(g_capture.called);
 }
 
-TEST_F(ParseSimtPrintfV2Test, WhenRingBufferOverflow_ExpectClampedToRemainLen)
+TEST_F(ParseSimtPrintfV2Test, WhenRingBufferOverflow_ExpectReadIdxResetToWriteIdx)
 {
     rtError_t error = rtSetDevice(0);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -555,7 +563,113 @@ TEST_F(ParseSimtPrintfV2Test, WhenRingBufferOverflow_ExpectClampedToRemainLen)
 
     EXPECT_TRUE(g_capture.called);
     BlockReadInfo* readInfo = RtPtrToPtr<BlockReadInfo*>(hostData.data() + sizeof(BlockInfo));
-    EXPECT_EQ(readInfo->readIdx, testReadIdx + blockInfo->remainLen);
+    EXPECT_EQ(readInfo->readIdx, testWriteIdx);
+}
+
+TEST_F(ParseSimtPrintfV2Test, WhenRingBufferOverflowAndNoConsumption_ExpectReadIdxResetToWriteIdx)
+{
+    rtError_t error = rtSetDevice(0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    RawDevice* dev = (RawDevice*)rtInstance->GetDevice(0U, 0U);
+    const size_t blockSize = 1024U;
+    std::vector<uint8_t> hostData(blockSize, 0);
+
+    const uint64_t testReadIdx = 13U;
+    const uint64_t testWriteIdx = 2000U;
+    ConstructSimtBlock(hostData.data(), blockSize, testReadIdx, testWriteIdx);
+
+    (void)SetParseDfxInfoFunc(nullptr);
+    (void)SetParseDfxInfoFunc(TestParseDfxInfoCallback);
+    ResetCapture(0U);
+
+    error = ParseSimtPrintfV2(hostData.data(), blockSize, dev->driver_, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    EXPECT_TRUE(g_capture.called);
+    BlockReadInfo* readInfo = RtPtrToPtr<BlockReadInfo*>(hostData.data() + sizeof(BlockInfo));
+    EXPECT_EQ(readInfo->readIdx, testWriteIdx);
+}
+
+TEST_F(ParseSimtPrintfV2Test, WhenRingBufferExactlyFullAndNoConsumption_ExpectReadIdxResetToWriteIdx)
+{
+    rtError_t error = rtSetDevice(0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    RawDevice* dev = (RawDevice*)rtInstance->GetDevice(0U, 0U);
+    const size_t blockSize = 1024U;
+    std::vector<uint8_t> hostData(blockSize, 0);
+
+    const uint64_t testReadIdx = 13U;
+    ConstructExactlyFullSimtBlock(hostData.data(), blockSize, testReadIdx, testReadIdx + 1U);
+    const BlockInfo* blockInfo = RtPtrToPtr<const BlockInfo*>(hostData.data());
+    const uint64_t testWriteIdx = testReadIdx + blockInfo->remainLen;
+
+    (void)SetParseDfxInfoFunc(nullptr);
+    (void)SetParseDfxInfoFunc(TestParseDfxInfoCallback);
+    ResetCapture(0U);
+
+    error = ParseSimtPrintfV2(hostData.data(), blockSize, dev->driver_, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    EXPECT_TRUE(g_capture.called);
+    BlockReadInfo* readInfo = RtPtrToPtr<BlockReadInfo*>(hostData.data() + sizeof(BlockInfo));
+    EXPECT_EQ(readInfo->readIdx, testWriteIdx);
+}
+
+TEST_F(ParseSimtPrintfV2Test, WhenRingBufferExactlyFullAndPartialConsumption_ExpectReadIdxAdvancedByConsumedLen)
+{
+    rtError_t error = rtSetDevice(0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    RawDevice* dev = (RawDevice*)rtInstance->GetDevice(0U, 0U);
+    const size_t blockSize = 1024U;
+    std::vector<uint8_t> hostData(blockSize, 0);
+
+    const uint64_t testReadIdx = 13U;
+    ConstructExactlyFullSimtBlock(hostData.data(), blockSize, testReadIdx, testReadIdx + 1U);
+    const BlockInfo* blockInfo = RtPtrToPtr<const BlockInfo*>(hostData.data());
+    const uint64_t testWriteIdx = testReadIdx + blockInfo->remainLen;
+
+    (void)SetParseDfxInfoFunc(nullptr);
+    (void)SetParseDfxInfoFunc(TestParseDfxInfoCallback);
+    ResetCapture(24U);
+
+    error = ParseSimtPrintfV2(hostData.data(), blockSize, dev->driver_, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    EXPECT_TRUE(g_capture.called);
+    BlockReadInfo* readInfo = RtPtrToPtr<BlockReadInfo*>(hostData.data() + sizeof(BlockInfo));
+    EXPECT_EQ(readInfo->readIdx, testReadIdx + 24U);
+}
+
+TEST_F(ParseSimtPrintfV2Test, WhenRingBufferOverflowAndPartialConsumption_ExpectReadIdxResetToWriteIdx)
+{
+    rtError_t error = rtSetDevice(0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    RawDevice* dev = (RawDevice*)rtInstance->GetDevice(0U, 0U);
+    const size_t blockSize = 1024U;
+    std::vector<uint8_t> hostData(blockSize, 0);
+
+    const uint64_t testReadIdx = 13U;
+    const uint64_t testWriteIdx = 2000U;
+    ConstructSimtBlock(hostData.data(), blockSize, testReadIdx, testWriteIdx);
+
+    (void)SetParseDfxInfoFunc(nullptr);
+    (void)SetParseDfxInfoFunc(TestParseDfxInfoCallback);
+    ResetCapture(24U);
+
+    error = ParseSimtPrintfV2(hostData.data(), blockSize, dev->driver_, 0U);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    EXPECT_TRUE(g_capture.called);
+    BlockReadInfo* readInfo = RtPtrToPtr<BlockReadInfo*>(hostData.data() + sizeof(BlockInfo));
+    EXPECT_EQ(readInfo->readIdx, testWriteIdx);
 }
 
 TEST_F(ParseSimtPrintfV2Test, WhenRemainLenZero_ExpectInvalidValue)
@@ -787,6 +901,55 @@ TEST_F(ParseAicpuPrintfV2Test, WhenConsumedLenZeroAndOverflow_ExpectReadIdxReset
     EXPECT_TRUE(g_capture.called);
     BlockReadInfo* readInfo = RtPtrToPtr<BlockReadInfo*>(hostData.data() + sizeof(BlockInfo));
     EXPECT_EQ(readInfo->readIdx, writeInfo->writeIdx);
+    EXPECT_EQ(dev->GetAicpuPrintTlvCnt(), tlvCnt);
+}
+
+TEST_F(ParseAicpuPrintfV2Test, WhenConsumedLenZeroAndExactlyFull_ExpectReadIdxResetToWriteIdx)
+{
+    ASSERT_EQ(rtSetDevice(0), RT_ERROR_NONE);
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    RawDevice* dev = (RawDevice*)rtInstance->GetDevice(0U, 0U);
+    ASSERT_NE(dev, nullptr);
+
+    const size_t blockSize = 1024U;
+    std::vector<uint8_t> hostData(blockSize, 0);
+    const uint64_t tlvCnt = dev->GetAicpuPrintTlvCnt();
+    (void)ConstructAicpuBlock(hostData.data(), blockSize, 0U, 1U, 16U, tlvCnt + 1U);
+    BlockInfo* blockInfo = RtPtrToPtr<BlockInfo*>(hostData.data());
+    BlockWriteInfo* writeInfo = RtPtrToPtr<BlockWriteInfo*>(hostData.data() + blockSize - sizeof(BlockWriteInfo));
+    writeInfo->writeIdx = static_cast<uint64_t>(blockInfo->remainLen);
+    (void)SetParseDfxInfoFunc(TestParseDfxInfoCallback);
+    ResetCapture(0U);
+
+    EXPECT_EQ(ParseAicpuPrintfV2(hostData.data(), blockSize, dev->driver_, 0U), RT_ERROR_NONE);
+    EXPECT_TRUE(g_capture.called);
+    BlockReadInfo* readInfo = RtPtrToPtr<BlockReadInfo*>(hostData.data() + sizeof(BlockInfo));
+    EXPECT_EQ(readInfo->readIdx, writeInfo->writeIdx);
+    EXPECT_EQ(dev->GetAicpuPrintTlvCnt(), tlvCnt);
+}
+
+TEST_F(ParseAicpuPrintfV2Test, WhenExactlyFullAndPartialConsumption_ExpectReadIdxAdvancedByConsumedLen)
+{
+    ASSERT_EQ(rtSetDevice(0), RT_ERROR_NONE);
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    RawDevice* dev = (RawDevice*)rtInstance->GetDevice(0U, 0U);
+    ASSERT_NE(dev, nullptr);
+
+    const size_t blockSize = 1024U;
+    std::vector<uint8_t> hostData(blockSize, 0);
+    const uint64_t tlvCnt = dev->GetAicpuPrintTlvCnt();
+    (void)ConstructAicpuBlock(hostData.data(), blockSize, 0U, 1U, 16U, tlvCnt);
+    BlockInfo* blockInfo = RtPtrToPtr<BlockInfo*>(hostData.data());
+    BlockWriteInfo* writeInfo = RtPtrToPtr<BlockWriteInfo*>(hostData.data() + blockSize - sizeof(BlockWriteInfo));
+    writeInfo->writeIdx = static_cast<uint64_t>(blockInfo->remainLen);
+    constexpr uint64_t testConsumedLen = 24U;
+    (void)SetParseDfxInfoFunc(TestParseDfxInfoCallback);
+    ResetCapture(testConsumedLen);
+
+    EXPECT_EQ(ParseAicpuPrintfV2(hostData.data(), blockSize, dev->driver_, 0U), RT_ERROR_NONE);
+    EXPECT_TRUE(g_capture.called);
+    BlockReadInfo* readInfo = RtPtrToPtr<BlockReadInfo*>(hostData.data() + sizeof(BlockInfo));
+    EXPECT_EQ(readInfo->readIdx, testConsumedLen);
     EXPECT_EQ(dev->GetAicpuPrintTlvCnt(), tlvCnt);
 }
 
