@@ -17,7 +17,9 @@
 #include "mockcpp/mockcpp.hpp"
 #include "queue/ring_buffer.h"
 #include "queue/report_buffer.h"
+#define private public
 #include "queue/host_report_buffer.h"
+#undef private
 #include "queue/block_buffer.h"
 #include "queue/variable_block_buffer.h"
 #include "prof_api.h"
@@ -25,6 +27,16 @@
 #include "utils/utils.h"
 
 using namespace analysis::dvvp::common::queue;
+
+static HostReportBuffer* g_discardOrderBuffer = nullptr;
+
+static void ReleaseReservedSpaceOrderCheck(std::atomic<size_t>& reservedSize, size_t size)
+{
+    ASSERT_NE(nullptr, g_discardOrderBuffer);
+    EXPECT_EQ(0U, g_discardOrderBuffer->commitSize_[0U].load());
+    EXPECT_EQ(HOST_RECORD_UNCOMMITTED, g_discardOrderBuffer->recordState_[0U].load());
+    reservedSize.fetch_sub(size, std::memory_order_acq_rel);
+}
 
 class COMMON_QUEUE_RING_BUFFER_TEST : public testing::Test {
 protected:
@@ -553,6 +565,40 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, HostReportBuffer_ReplaysOriginalReservedBa
     bq.UnInit();
 }
 
+TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, HostReportBuffer_DiscardedMetadataIsResetBeforeSpaceRelease)
+{
+    struct HostRecord {
+        uint16_t magic;
+        uint16_t value;
+    };
+
+    HostReportBuffer bq(sizeof(HostRecord));
+    g_discardOrderBuffer = &bq;
+    bq.Init(8, "HostReportBufferDiscardOrder");
+    HostRecord data[3] = {};
+    for (size_t i = 0; i < sizeof(data) / sizeof(data[0]); i++) {
+        data[i].magic = MSPROF_REPORT_DATA_MAGIC_NUM;
+        data[i].value = static_cast<uint16_t>(i);
+    }
+
+    const uint8_t* overlappingData = bq.dataQueue_ + sizeof(HostRecord);
+    EXPECT_EQ(MSPROF_ERROR_CONFIG_INVALID, bq.BatchPush(1U, overlappingData, sizeof(data)));
+    EXPECT_EQ(3U, bq.agingWriteIdleIndex_.load());
+    EXPECT_EQ(3U, bq.commitSize_[0U].load());
+    EXPECT_EQ(HOST_RECORD_DISCARDED, bq.recordState_[0U].load());
+
+    MOCKER_CPP(&HostReportBuffer::ReleaseReservedSize).stubs().will(invoke(ReleaseReservedSpaceOrderCheck));
+    size_t popSize = 3U * sizeof(HostRecord);
+    EXPECT_EQ(nullptr, bq.BatchPop(1U, popSize, true));
+    GlobalMockObject::verify();
+
+    EXPECT_EQ(3U, bq.agingReadIndex_.load());
+    EXPECT_EQ(0U, bq.commitSize_[0U].load());
+    EXPECT_EQ(HOST_RECORD_UNCOMMITTED, bq.recordState_[0U].load());
+    EXPECT_EQ(0U, bq.agingReservedSize_.load());
+    bq.UnInit();
+}
+
 TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, HostReportBuffer_TimesOutAndDiscardsReservedBatch)
 {
     struct HostRecord {
@@ -572,7 +618,7 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, HostReportBuffer_TimesOutAndDiscardsReserv
 
     ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(1U, data, 4 * sizeof(HostRecord)));
     ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(1U, data + 2, sizeof(HostRecord)));
-    ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(1U, data, sizeof(HostRecord)));
+    ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPushWait(1U, data, sizeof(HostRecord)));
     EXPECT_EQ(5U, bq.agingWriteIdleIndex_.load());
     EXPECT_EQ(0U, bq.commitSize_[5].load());
     EXPECT_EQ(HOST_RECORD_UNCOMMITTED, bq.recordState_[5].load());
@@ -611,8 +657,8 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, HostReportBuffer_ConsecutiveTimeoutsDoNotO
     }
 
     ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(1U, data, 4U * sizeof(HostRecord)));
-    ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(1U, data, sizeof(HostRecord)));
-    ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(1U, data, sizeof(HostRecord)));
+    ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPushWait(1U, data, sizeof(HostRecord)));
+    ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPushWait(1U, data, sizeof(HostRecord)));
     ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(1U, data, sizeof(HostRecord)));
 
     EXPECT_EQ(5U, bq.agingWriteIdleIndex_.load());
@@ -628,6 +674,72 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, HostReportBuffer_ConsecutiveTimeoutsDoNotO
     bq.BatchPopBufferIndexShift(popPtr, popSize);
     EXPECT_EQ(0U, bq.GetUsedSize());
     EXPECT_EQ(2U, bq.agingOverflowDiscardSize_.load());
+    bq.UnInit();
+}
+
+TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, HostReportBuffer_FastPushDropsCurrentBatchWithoutWaiting)
+{
+    struct HostRecord {
+        uint16_t magic;
+        uint16_t value;
+    };
+
+    HostReportBuffer bq(sizeof(HostRecord));
+    bq.Init(8, "HostReportBufferFastPushDrop");
+    bq.maxCycles_ = 1;
+    HostRecord data[4] = {};
+    for (size_t i = 0; i < sizeof(data) / sizeof(data[0]); i++) {
+        data[i].magic = MSPROF_REPORT_DATA_MAGIC_NUM;
+        data[i].value = static_cast<uint16_t>(i);
+    }
+
+    ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(1U, data, 4U * sizeof(HostRecord)));
+    ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(1U, data + 2, sizeof(HostRecord)));
+    EXPECT_EQ(5U, bq.agingWriteIdleIndex_.load());
+    EXPECT_EQ(5U, bq.agingReservedSize_.load());
+    EXPECT_EQ(0U, bq.agingOverflowDiscardSize_.load());
+
+    data[3].value = 0x1234U;
+    MOCKER(usleep).expects(never()).will(returnValue(0));
+    ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(1U, data + 3, sizeof(HostRecord)));
+    GlobalMockObject::verify();
+
+    EXPECT_EQ(5U, bq.agingWriteIdleIndex_.load());
+    EXPECT_EQ(5U, bq.agingReservedSize_.load());
+    EXPECT_EQ(1U, bq.agingOverflowDiscardSize_.load());
+    EXPECT_EQ(5U, bq.GetUsedSize());
+
+    size_t popSize = 5U * sizeof(HostRecord);
+    void* popPtr = bq.BatchPop(1U, popSize, true);
+    ASSERT_NE(nullptr, popPtr);
+    const HostRecord* records = static_cast<const HostRecord*>(popPtr);
+    EXPECT_EQ(2U, records[4].value);
+    bq.BatchPopBufferIndexShift(popPtr, popSize);
+    EXPECT_EQ(0U, bq.GetUsedSize());
+    bq.UnInit();
+}
+
+TEST_F(COMMON_QUEUE_RING_BUFFER_TEST, HostReportBuffer_FastPushDropsOverflowBatchWithoutWaiting)
+{
+    HostReportBuffer bq(sizeof(MsprofAdditionalInfo));
+    bq.Init(2048, "HostReportBufferFastPushDrop");
+    MsprofAdditionalInfo data = {};
+    data.magicNumber = MSPROF_REPORT_DATA_MAGIC_NUM;
+    constexpr size_t totalPushes = 100000;
+    constexpr size_t usableSize = 1535;
+
+    // No usleep assertion here on purpose: mocking the global usleep symbol also intercepts the
+    // logging backend and the CI instrumentation (LD_PRELOAD), which legally sleep during this
+    // 100K-record loop and aborted the UT twice in CI (never, then atMost(64)). The no-wait
+    // guarantee is structural: BatchPushImpl never routes waitConsumer=false into PushFullPath,
+    // and a wait-path regression turns this case into an hours-long run caught by the CI timeout.
+    for (size_t i = 0; i < totalPushes; ++i) {
+        ASSERT_EQ(MSPROF_ERROR_NONE, bq.BatchPush(1U, &data, sizeof(MsprofAdditionalInfo)));
+    }
+
+    EXPECT_EQ(usableSize, bq.agingWriteIdleIndex_.load());
+    EXPECT_EQ(usableSize, bq.GetUsedSize());
+    EXPECT_EQ(totalPushes - usableSize, bq.agingOverflowDiscardSize_.load());
     bq.UnInit();
 }
 

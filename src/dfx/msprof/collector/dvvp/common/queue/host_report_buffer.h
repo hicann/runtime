@@ -37,7 +37,8 @@ constexpr uint32_t HOST_CARDINALITY_RING_BUFF = 2;      // 2^n cardinal number
 namespace {
 constexpr size_t HOST_REPORT_BUFFER_MAX_CYCLES = 2048;
 constexpr uint32_t HOST_PUSH_WAIT_TIME = 1;
-constexpr size_t HOST_CACHE_LINE_SIZE = 64; // 64: common cache line size on x86_64/aarch64
+constexpr size_t HOST_DISCARD_LOG_INTERVAL = 65536; // 65536: log the first and every 64K dropped records
+constexpr size_t HOST_CACHE_LINE_SIZE = 64;         // 64: common cache line size on x86_64/aarch64
 constexpr uint8_t HOST_RECORD_UNCOMMITTED = 0;
 constexpr uint8_t HOST_RECORD_COMMITTED = 1;
 constexpr uint8_t HOST_RECORD_DISCARDED = 2;
@@ -68,6 +69,7 @@ public:
     void Init(size_t capacity, const std::string& name);
     void UnInit();
     int32_t BatchPush(uint32_t aging, const void* data, size_t dataSize);
+    int32_t BatchPushWait(uint32_t aging, const void* data, size_t dataSize);
     void* BatchPop(uint32_t aging, size_t& popSize, bool popForce);
     void BatchPopBufferIndexShift(void* popPtr, size_t popSize);
     size_t GetUsedSize() const;
@@ -89,6 +91,8 @@ private:
     bool IsAvail(const void* begin, size_t recordCount) const;
     static bool TryReserveSpace(const Cursor& cursor, std::atomic<size_t>& reservedSize, size_t inSize);
     static void ReleaseReservedSize(std::atomic<size_t>& reservedSize, size_t size);
+    int32_t BatchPushImpl(uint32_t aging, const void* data, size_t dataSize, bool waitConsumer);
+    void DropCurrentBatch(std::atomic<size_t>& overflowDiscardSize, size_t inSize) const;
     bool PushFullPath(
         const Cursor& cursor, uint32_t aging, const void* data, size_t dataSize, size_t inSize,
         std::atomic<size_t>& overflowDiscardSize, std::atomic<size_t>& reservedSize);
@@ -239,6 +243,16 @@ inline HostReportBuffer::Cursor HostReportBuffer::GetCursor(uint32_t aging)
 
 inline int32_t HostReportBuffer::BatchPush(uint32_t aging, const void* data, size_t dataSize)
 {
+    return BatchPushImpl(aging, data, dataSize, false);
+}
+
+inline int32_t HostReportBuffer::BatchPushWait(uint32_t aging, const void* data, size_t dataSize)
+{
+    return BatchPushImpl(aging, data, dataSize, true);
+}
+
+inline int32_t HostReportBuffer::BatchPushImpl(uint32_t aging, const void* data, size_t dataSize, bool waitConsumer)
+{
     if (!isInited_) {
         MSPROF_LOGW("Ring buffer %s is not initialized.", name_.c_str());
         return MSPROF_ERROR_UNINITIALIZE;
@@ -254,9 +268,24 @@ inline int32_t HostReportBuffer::BatchPush(uint32_t aging, const void* data, siz
     const size_t inSize = dataSize / recordSize_;
     std::atomic<size_t>& reservedSize = (aging != 0U) ? agingReservedSize_ : unagingReservedSize_;
     std::atomic<size_t>& overflowDiscardSize = (aging != 0U) ? agingOverflowDiscardSize_ : unagingOverflowDiscardSize_;
+    if (!waitConsumer) {
+        // Full-buffer fast check: one relaxed load instead of the add/sub rollback pair. A stale
+        // (too small) read falls through to the strict TryReserveSpace below; a stale (too large)
+        // read only drops a batch that a racing consumer may have just freed, which stays within the
+        // drop-on-full contract.
+        const size_t used = reservedSize.load(std::memory_order_relaxed);
+        if (used + inSize > cursor.capacity - 1U) {
+            DropCurrentBatch(overflowDiscardSize, inSize);
+            return MSPROF_ERROR_NONE;
+        }
+    }
     if (!TryReserveSpace(cursor, reservedSize, inSize)) {
-        if (!PushFullPath(cursor, aging, data, dataSize, inSize, overflowDiscardSize, reservedSize)) {
-            return MSPROF_ERROR_CONFIG_INVALID;
+        if (waitConsumer) {
+            if (!PushFullPath(cursor, aging, data, dataSize, inSize, overflowDiscardSize, reservedSize)) {
+                return MSPROF_ERROR_CONFIG_INVALID;
+            }
+        } else {
+            DropCurrentBatch(overflowDiscardSize, inSize);
         }
         return MSPROF_ERROR_NONE;
     }
@@ -285,6 +314,22 @@ inline int32_t HostReportBuffer::BatchPush(uint32_t aging, const void* data, siz
     return MSPROF_ERROR_CONFIG_INVALID;
 }
 
+inline void HostReportBuffer::DropCurrentBatch(std::atomic<size_t>& overflowDiscardSize, size_t inSize) const
+{
+    // Diagnostic-only counter read at UnInit and in UT: no cross-thread ordering dependency, so the
+    // relaxed order avoids needless fences on the hottest (full-buffer) path.
+    const size_t beforeDiscard = overflowDiscardSize.fetch_add(inSize, std::memory_order_relaxed);
+    const size_t afterDiscard = beforeDiscard + inSize;
+    const bool crossesLogInterval =
+        (beforeDiscard / HOST_DISCARD_LOG_INTERVAL) != (afterDiscard / HOST_DISCARD_LOG_INTERVAL);
+    if ((beforeDiscard == 0U) || crossesLogInterval) {
+        // Event level: warning is disabled by the default log level, so drops must stay visible there.
+        MSPROF_EVENT(
+            "Report buffer full, drop data, buffer name: %s, batch size: %zu, total discarded: %zu", name_.c_str(),
+            inSize, afterDiscard);
+    }
+}
+
 inline bool HostReportBuffer::PushFullPath(
     const Cursor& cursor, uint32_t aging, const void* data, size_t dataSize, size_t inSize,
     std::atomic<size_t>& overflowDiscardSize, std::atomic<size_t>& reservedSize)
@@ -304,10 +349,8 @@ inline bool HostReportBuffer::PushFullPath(
 
         cycles++;
         if (cycles >= maxCycles_) {
-            MSPROF_LOGW(
-                "Report buffer cycle overflow, drop data, buffer name: %s, capacity: %zu, in size: %zu", name_.c_str(),
-                cursor.capacity, inSize);
-            (void)overflowDiscardSize.fetch_add(inSize, std::memory_order_acq_rel);
+            // Reuse DropCurrentBatch so both drop paths share the same counter order and log cadence.
+            DropCurrentBatch(overflowDiscardSize, inSize);
             return true;
         }
 
@@ -407,12 +450,12 @@ inline void* HostReportBuffer::BatchPop(uint32_t aging, size_t& popSize, bool po
 
         if (state == HOST_RECORD_DISCARDED) {
             currReadCursor += commitSize;
+            cursor.commitSize[index].store(0U, std::memory_order_release);
+            cursor.recordState[index].store(HOST_RECORD_UNCOMMITTED, std::memory_order_release);
             cursor.read->store(currReadCursor, std::memory_order_release);
             (void)cursor.discardedSize->fetch_sub(commitSize, std::memory_order_acq_rel);
             ReleaseReservedSize(
                 (cursor.capacity == agingCapacity_) ? agingReservedSize_ : unagingReservedSize_, commitSize);
-            cursor.recordState[index].store(HOST_RECORD_UNCOMMITTED, std::memory_order_release);
-            cursor.commitSize[index].store(0U, std::memory_order_release);
             continue;
         }
         break;
