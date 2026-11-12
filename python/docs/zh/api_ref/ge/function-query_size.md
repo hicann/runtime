@@ -51,7 +51,7 @@
 | --- | --- |
 | work_size | int，模型执行时所需的工作内存的大小，单位Byte。 |
 | weight_size | int，模型执行时所需权值内存的大小，单位Byte。 |
-| ret | int，错误码，返回0表示成功，返回[其它值](aclError.md)表示失败。 |
+| ret | int，错误码，返回0表示成功，返回[其他值](aclError.md)表示失败。 |
 
 ## 约束说明
 

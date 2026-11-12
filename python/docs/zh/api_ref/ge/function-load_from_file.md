@@ -25,7 +25,7 @@
 
 从文件加载离线模型数据，由系统内部管理内存。
 
-本接口中通过modelPath参数传入的文件是\*.om模型文件。关于如何获取om模型文件，请参见[《ATC离线模型编译工具》](https://hiascend.com/document/redirect/cannCommunityATC)中的 [--mode](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/latest/devaids/atctool/docs/zh/user_guides/atc_tools/CLI_options/--model.md)”。
+本接口中通过modelPath参数传入的文件是\*.om模型文件。关于如何获取om模型文件，请参见[《ATC离线模型编译工具》](https://hiascend.com/document/redirect/cannCommunityATC)中的 [--model](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/latest/devaids/atctool/docs/zh/user_guides/atc_tools/CLI_options/--model.md)。
 
 若对om模型文件大小有限制，本接口还支持加载外置权重文件，但需在构建模型时，将权重保存在单独的文件中。例如在使用ATC工具生成om文件时，将--external\_weight参数设置为1（1表示将原始网络中的Const/Constant节点的权重保存在单独的文件中），且该文件保存在与om文件同级的weight目录下），那么在使用本接口加载om文件时，需将weight目录与om文件放在同级目录下，这时本接口会自行到weight目录下查找权重文件，否则可能会导致单独的权重文件加载不成功。
 

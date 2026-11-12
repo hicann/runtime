@@ -45,10 +45,10 @@
 
 | 参数名 | 说明 |
 | --- | --- |
-| op_type | str，指定算子类型名称字符串类型。 |
-| input_desc | list，算子输入Tensor的描述，整形列表。 |
-| output_desc | list，算子输出Tensor的描述，整形列表。 |
-| op_attr | int，算子属性指针地址，此对象使用调用[acl.op.create_attr](function-create_attr.md)创建。 |
+| op_type | str，指定算子类型名称。 |
+| input_desc | list，算子输入Tensor的描述，整型列表。 |
+| output_desc | list，算子输出Tensor的描述，整型列表。 |
+| op_attr | int，算子属性指针地址，此对象使用[acl.op.create_attr](function-create_attr.md)创建。 |
 
 ## 返回值说明
 

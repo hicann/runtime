@@ -63,7 +63,7 @@
     3. 调用acl.mdl.execute\_v2接口指定模型执行时需要的配置信息，并进行模型执行。
     4. 模型加载成功后，调用[acl.mdl.destroy\_exec\_config\_handle](function-destroy_exec_config_handle.md)接口销毁。
 
-- 其他约束与[acl.mdl.execute](function-execute.md)一致。
+- 其它约束与[acl.mdl.execute](function-execute.md)一致。
 
 ## 资源参考
 

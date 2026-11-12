@@ -44,8 +44,8 @@
 | 参数名 | 说明 |
 | --- | --- |
 | handle | int，指定执行算子的handle，指针地址。需提前调用[acl.op.create_handle](function-create_handle.md)接口创建aclopHandle类型的数据。 |
-| inputs | list，算子输入Tensor，整形列表，包含多个aclDataBuffer数据地址对象。需提前调用`acl.create_data_buffer`接口创建aclDataBuffer类型的数据。 |
-| outputs | list，算子输出Tensor，整形列表，包含多个aclDataBuffer数据地址对象。需提前调用`acl.create_data_buffer`接口创建aclDataBuffer类型的数据。 |
+| inputs | list，算子输入Tensor，整型列表，包含多个aclDataBuffer数据地址对象。需提前调用`acl.create_data_buffer`接口创建aclDataBuffer类型的数据。 |
+| outputs | list，算子输出Tensor，整型列表，包含多个aclDataBuffer数据地址对象。需提前调用`acl.create_data_buffer`接口创建aclDataBuffer类型的数据。 |
 | stream | int，执行算子所在的Stream，stream地址对象。 |
 
 ## 返回值说明

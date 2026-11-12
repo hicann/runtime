@@ -44,13 +44,13 @@
 | 参数名 | 说明 |
 | --- | --- |
 | model_desc | int，aclmdlDesc类型数据的指针地址。需提前调用[acl.mdl.create_desc](function-create_desc.md)接口创建aclmdlDesc类型的数据。 |
-| index | int，指定获取第几个输入的大小，“index”取值从0开始。 |
+| index | int，指定获取第几个输入的大小，“index”值从0开始。 |
 
 ## 返回值说明
 
 | 返回值 | 说明 |
 | --- | --- |
-| size | int，返回指定输入的大小，单位是Byte。<br> 针对动态Batch、动态分辨率（宽高）的场景，返回最大档位对应的输入的大小。<br> 静态场景下，返回指定输入的大小。单位是Byte。 |
+| size | int，返回指定输入的大小，单位是Byte。<br> 针对动态Batch、动态分辨率（宽高）的场景，返回最大档位对应的输入大小。<br> 静态场景下，返回指定输入的大小。单位是Byte。 |
 
 ## 约束说明
 

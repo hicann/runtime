@@ -12,5 +12,5 @@
 | ACL_MDL_MEC_TIMETHR_SIZET = 7 | 预留配置。 |
 
 <!-- npu="950,A3,910b,910,310p,310b" id7 -->
-注意，当前版本仅支持ACL_\MDL\_STREAM\_SYNC\_TIMEOUT和ACL\_MDL\_EVENT\_SYNC\_TIMEOUT。
+注意，当前版本仅支持ACL\_MDL\_STREAM\_SYNC\_TIMEOUT和ACL\_MDL\_EVENT\_SYNC\_TIMEOUT。
 <!-- end id7 -->

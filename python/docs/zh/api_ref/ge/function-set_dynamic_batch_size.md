@@ -45,8 +45,8 @@
 | --- | --- |
 | model_id | int，模型ID。调用模型加载接口（例如[acl.mdl.load_from_file](function-load_from_file.md)接口、[acl.mdl.load_from_mem](function-load_from_mem.md)等）成功后，会返回模型ID，该ID作为本接口的输入。 |
 | dataset | int，表示模型的输入数据对应的指针地址。使用aclmdlDataset类型的数据描述模型推理时的输入数据，输入的内存地址、内存大小用aclDataBuffer类型的数据来描述，具体请参见[acl.mdl.load_from_file](function-load_from_file.md)。 |
-| index | int，标识动态Batch输入的输入index，需调用[acl.mdl.get_input_index_by_name](function-get_input_index_by_name.md)接口获取，动态Batch和动态分辨率输入的名称固定为ascend_mbatch_shape_data，动态AIPP输入的名称固定为ascend_dynamic_aipp_data。 |
-| batch_size | int，指定模型推理时的批量大小Batch。此处设置的batch_size只能为模型构建时设置的Batch档位中的其中一档，也可调用[acl.mdl.get_dynamic_batch](function-get_dynamic_batch.md)接口获取指定模型支持的Batch档位数以及每一档中的Batch数。 |
+| index | int，标识动态Batch输入的index，需调用[acl.mdl.get_input_index_by_name](function-get_input_index_by_name.md)接口获取，动态Batch和动态分辨率输入的名称固定为ascend_mbatch_shape_data，动态AIPP输入的名称固定为ascend_dynamic_aipp_data。 |
+| batch_size | int，指定模型推理时的批量大小Batch。此处设置的batch_size只能为模型构建时设置的Batch档位中的一档，也可调用[acl.mdl.get_dynamic_batch](function-get_dynamic_batch.md)接口获取指定模型支持的Batch档位数以及每一档中的Batch数。 |
 
 ## 返回值说明
 

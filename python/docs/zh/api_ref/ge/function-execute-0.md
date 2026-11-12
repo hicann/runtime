@@ -47,10 +47,10 @@
 | 参数名 | 说明 |
 | --- | --- |
 | op_type | str，指定算子类型名称。 |
-| input_desc | list，表示算子输入Tensor的描述, 整形列表，包含多个acl的Tensor描述地址对象。 |
-| inputs | list，表示算子输入Tensor，整形列表，包含多个aclDataBuffer数据地址对象。 |
-| output_desc | list，表示算子输出Tensor的描述，整形列表，包含多个acl的Tensor描述地址对象。 |
-| outputs | list，表示算子输出Tensor，整形列表，包含多个aclDataBuffer数据地址对象。 |
+| input_desc | list，表示算子输入Tensor的描述, 整型列表，包含多个acl的Tensor描述地址对象。 |
+| inputs | list，表示算子输入Tensor，整型列表，包含多个aclDataBuffer数据地址对象。 |
+| output_desc | list，表示算子输出Tensor的描述，整型列表，包含多个acl的Tensor描述地址对象。 |
+| outputs | list，表示算子输出Tensor，整型列表，包含多个aclDataBuffer数据地址对象。 |
 | attr | int，算子的属性地址对象。 |
 | stream | int，该算子需要加载的Stream对象。 |
 

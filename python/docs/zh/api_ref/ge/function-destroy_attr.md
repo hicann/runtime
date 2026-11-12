@@ -43,7 +43,7 @@
 
 | 参数名 | 说明 |
 | --- | --- |
-| attr | int，待销毁的aclopAttr类型数据指针地址，此对象使用调用[acl.op.create_attr](function-create_attr.md)创建。 |
+| attr | int，待销毁的aclopAttr类型数据指针地址，此对象通过调用[acl.op.create_attr](function-create_attr.md)创建。 |
 
 ## 返回值说明
 

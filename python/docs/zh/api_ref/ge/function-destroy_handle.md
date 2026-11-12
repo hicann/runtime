@@ -43,7 +43,7 @@
 
 | 参数名 | 说明 |
 | --- | --- |
-| handle | int，待销毁的acl的算子Handle的指针地址。 |
+| handle | int，待销毁的acl算子Handle的指针地址。 |
 
 ## 返回值说明
 

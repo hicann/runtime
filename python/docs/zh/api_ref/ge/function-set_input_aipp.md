@@ -58,7 +58,7 @@
 
 ## 约束说明
 
-- 经过动态AIPP处理后的图像的宽、高必须与原始模型中输入Shape中的宽、高保持一致。
+- 经过动态AIPP处理后的图像的宽、高必须与原始模型输入Shape中的宽、高保持一致。
 - 多Batch场景下，根据每个Batch的配置计算出动态AIPP后输出图片的宽、高，经过动态AIPP后每个Batch的输出图片宽、高必须是一致的。计算输出图片宽、高的计算公式如表1。
 - 抠图或者缩放或者补边之后，对图片宽、高的校验规则如下，其中，aippOutputW、aippOutputH分别表示AIPP输出图片的宽、高，其它参数是[acl.mdl.set\_aipp\_src\_image\_size](function-set_aipp_src_image_size.md)、[acl.mdl.set\_aipp\_crop\_params](function-set_aipp_crop_params.md)、[acl.mdl.set\_aipp\_padding\_params](function-set_aipp_padding_params.md)接口的入参。
 

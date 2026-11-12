@@ -23,7 +23,7 @@
 
 ## 功能说明
 
-调用[acl.create\_tensor\_desc](function-create_tensor_desc.md)接口创建Tensor描述信息后，可通过acl.set\_tensor\_dynamic\_input接口设置算子动态输入的动态输入属性的名称。
+调用[acl.create\_tensor\_desc](function-create_tensor_desc.md)接口创建Tensor描述信息后，可通过acl.set\_tensor\_dynamic\_input接口设置算子动态输入属性的名称。
 
 ## 函数原型
 

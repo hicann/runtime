@@ -52,7 +52,7 @@ AIPP支持的几种操作的计算方式及其计算顺序如下：抠图-\>色�
 
 | 返回值 | 说明 |
 | --- | --- |
-| aipp_info | dict，获取指定输入上静态AIPP的配置信息，具体请参见[aclAippInfo](aclAippInfo.md)。详细说明及参数解释，请参考[《ATC离线模型编译工具》](https://hiascend.com/document/redirect/cannCommunityATC)。 |
+| aipp_info | dict，获取指定输入上静态AIPP的配置信息，具体请参见[aclAippInfo](aclAippInfo.md)。详细说明及参数解释，请参见[《ATC离线模型编译工具》](https://hiascend.com/document/redirect/cannCommunityATC)。 |
 | ret | int，错误码。<br> 返回0表示成功。<br> 返回[其它值](aclError.md)表示失败。 |
 
 ## 约束说明

@@ -48,7 +48,7 @@
 | dtc_pixel_var_reci_chn1 | float，通道1的方差，默认值为1.0，取值范围：[-65504, 65504]。 |
 | dtc_pixel_var_reci_chn2 | float，通道2的方差，默认值为1.0，取值范围：[-65504, 65504]。 |
 | dtc_pixel_var_reci_chn3 | float，通道3的方差，如果只有3个通道，则该参数传默认值1.0，取值范围：[-65504, 65504]。 |
-| batch_index | int，指定对第几个Batch上的图片设置通道均值，默认为0，取值范围：[0, batch_size)，batch_size是在调用acl.mdl.create_aipp接口创建aclmdlAIPP类型的数据时设置。 |
+| batch_index | int，指定对第几个Batch上的图片设置通道方差，默认为0，取值范围：[0, batch_size)，batch_size是在调用acl.mdl.create_aipp接口创建aclmdlAIPP类型的数据时设置。 |
 
 ## 返回值说明
 
