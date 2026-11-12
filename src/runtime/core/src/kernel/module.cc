@@ -138,8 +138,8 @@ rtError_t Module::Load(Program* const prog)
         size == 0U, FAIL_FREE, error, RT_ERROR_PROGRAM_SIZE,
         "Failed to load the module because the program size (which should be greater than 0) is 0.");
     NULL_PTR_GOTO_MSG_INNER(data, FAIL_FREE, error, RT_ERROR_PROGRAM_DATA);
-    if (kernelAttrType != RT_KERNEL_ATTR_TYPE_AICPU) {
-        error = Program::PrepareOperatorBinaryForAiCoreTaskSyncCheck(device_, data, size, patchedBinary, data);
+    if (kernelAttrType != RT_KERNEL_ATTR_TYPE_AICPU && !prog->IsDcacheLockOp()) {
+        error = Program::PrepareOperatorBinaryForAiCoreTaskSyncCheck(device_, data, size, patchedBinary);
         ERROR_GOTO(
             error, FAIL_FREE, "Failed to prepare operator binary for AI Core task synchronization check, retCode=%#x.",
             static_cast<uint32_t>(error));

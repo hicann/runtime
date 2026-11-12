@@ -194,10 +194,10 @@ TEST_F(ProgramTest, KeepEndInstructionWhenAiCoreTaskSyncCheckDisabled)
     AiCoreTaskSyncCheckStateGuard syncCheckGuard(device, false);
     uint32_t binary[] = {AICORE_END_INSTRUCTION_FOR_TEST};
     std::unique_ptr<uint8_t[]> patchedBinary;
-    const void* dataToLoad = nullptr;
+    const void* dataToLoad = binary;
 
     EXPECT_EQ(
-        Program::PrepareOperatorBinaryForAiCoreTaskSyncCheck(device, binary, sizeof(binary), patchedBinary, dataToLoad),
+        Program::PrepareOperatorBinaryForAiCoreTaskSyncCheck(device, dataToLoad, sizeof(binary), patchedBinary),
         RT_ERROR_NONE);
 
     EXPECT_EQ(binary[0], AICORE_END_INSTRUCTION_FOR_TEST);
@@ -214,10 +214,10 @@ TEST_F(ProgramTest, PreparePatchedBinaryForAiCoreTaskSyncCheckPreservesSourceBin
     AiCoreTaskSyncCheckStateGuard syncCheckGuard(device, true);
     const uint32_t binary[] = {AICORE_END_INSTRUCTION_FOR_TEST};
     std::unique_ptr<uint8_t[]> patchedBinary;
-    const void* dataToLoad = nullptr;
+    const void* dataToLoad = binary;
 
     ASSERT_EQ(
-        Program::PrepareOperatorBinaryForAiCoreTaskSyncCheck(device, binary, sizeof(binary), patchedBinary, dataToLoad),
+        Program::PrepareOperatorBinaryForAiCoreTaskSyncCheck(device, dataToLoad, sizeof(binary), patchedBinary),
         RT_ERROR_NONE);
     ASSERT_NE(patchedBinary.get(), nullptr);
     ASSERT_EQ(dataToLoad, patchedBinary.get());
@@ -232,11 +232,10 @@ TEST_F(ProgramTest, PrepareOperatorBinaryRejectsNullDevice)
 {
     uint32_t binary = AICORE_END_INSTRUCTION_FOR_TEST;
     std::unique_ptr<uint8_t[]> patchedBinary(new uint8_t[1U]);
-    const void* dataToLoad = nullptr;
+    const void* dataToLoad = &binary;
 
     EXPECT_EQ(
-        Program::PrepareOperatorBinaryForAiCoreTaskSyncCheck(
-            nullptr, &binary, sizeof(binary), patchedBinary, dataToLoad),
+        Program::PrepareOperatorBinaryForAiCoreTaskSyncCheck(nullptr, dataToLoad, sizeof(binary), patchedBinary),
         RT_ERROR_DEVICE_NULL);
     EXPECT_EQ(patchedBinary.get(), nullptr);
     EXPECT_EQ(dataToLoad, &binary);
@@ -250,11 +249,10 @@ TEST_F(ProgramTest, PrepareOperatorBinaryRejectsNullBinaryWhenCheckEnabled)
     ASSERT_NE(device, nullptr);
     AiCoreTaskSyncCheckStateGuard syncCheckGuard(device, true);
     std::unique_ptr<uint8_t[]> patchedBinary(new uint8_t[1U]);
-    const void* dataToLoad = &patchedBinary;
+    const void* dataToLoad = nullptr;
 
     EXPECT_EQ(
-        Program::PrepareOperatorBinaryForAiCoreTaskSyncCheck(
-            device, nullptr, sizeof(uint32_t), patchedBinary, dataToLoad),
+        Program::PrepareOperatorBinaryForAiCoreTaskSyncCheck(device, dataToLoad, sizeof(uint32_t), patchedBinary),
         RT_ERROR_PROGRAM_DATA);
     EXPECT_EQ(patchedBinary.get(), nullptr);
     EXPECT_EQ(dataToLoad, nullptr);

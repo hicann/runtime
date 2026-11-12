@@ -277,8 +277,8 @@ public:
         void* const devMem, const uint32_t size, const void* const data, const Device* const device,
         const bool readonly);
     static rtError_t PrepareOperatorBinaryForAiCoreTaskSyncCheck(
-        const Device* const device, const void* const binaryData, const uint32_t binarySize,
-        std::unique_ptr<uint8_t[]>& patchedBinary, const void*& dataToLoad);
+        const Device* const device, const void*& binaryDataToLoad, const uint32_t binarySize,
+        std::unique_ptr<uint8_t[]>& patchedBinary);
     static void PatchOperatorBinaryForAiCoreTaskSyncCheck(void* const binaryData, const uint32_t binarySize);
 
     rtOpExceptionCallback ExchangeOpExceptionCallback(rtOpExceptionCallback callback, void* userData)

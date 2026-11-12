@@ -5038,8 +5038,8 @@ rtError_t Runtime::BinaryLoad(const Device* const device, Program* const prog)
             RT_LOG_ERROR, "Module load failed, prog size should be larger than 0, but current prog size is 0.");
         return RT_ERROR_PROGRAM_SIZE;
     }
-    if (prog->GetDefaultKernelAttrType() != RT_KERNEL_ATTR_TYPE_AICPU) {
-        error = Program::PrepareOperatorBinaryForAiCoreTaskSyncCheck(device, data, size, patchedBinary, data);
+    if (prog->GetDefaultKernelAttrType() != RT_KERNEL_ATTR_TYPE_AICPU && !prog->IsDcacheLockOp()) {
+        error = Program::PrepareOperatorBinaryForAiCoreTaskSyncCheck(device, data, size, patchedBinary);
         ERROR_RETURN(
             error, "Failed to prepare operator binary for AI Core task synchronization check, retCode=%#x.",
             static_cast<uint32_t>(error));

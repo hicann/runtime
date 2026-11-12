@@ -687,28 +687,27 @@ rtError_t Program::Load2Device()
 }
 
 rtError_t Program::PrepareOperatorBinaryForAiCoreTaskSyncCheck(
-    const Device* const device, const void* const binaryData, const uint32_t binarySize,
-    std::unique_ptr<uint8_t[]>& patchedBinary, const void*& dataToLoad)
+    const Device* const device, const void*& binaryDataToLoad, const uint32_t binarySize,
+    std::unique_ptr<uint8_t[]>& patchedBinary)
 {
     patchedBinary.reset();
-    dataToLoad = binaryData;
     NULL_PTR_RETURN_MSG(device, RT_ERROR_DEVICE_NULL);
     if (!device->IsAiCoreTaskSyncCheckEnabled()) {
         return RT_ERROR_NONE;
     }
 
-    NULL_PTR_RETURN_MSG(binaryData, RT_ERROR_PROGRAM_DATA);
+    NULL_PTR_RETURN_MSG(binaryDataToLoad, RT_ERROR_PROGRAM_DATA);
     std::unique_ptr<uint8_t[]> binaryCopy(new (std::nothrow) uint8_t[binarySize]);
     COND_RETURN_AND_MSG_OUTER(binaryCopy == nullptr, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013, binarySize, "new");
 
-    const errno_t ret = memcpy_s(binaryCopy.get(), binarySize, binaryData, binarySize);
+    const errno_t ret = memcpy_s(binaryCopy.get(), binarySize, binaryDataToLoad, binarySize);
     COND_RETURN_ERROR_MSG_CALL(
         ERR_MODULE_SYSTEM, ret != EOK, RT_ERROR_SEC_HANDLE,
         "Failed to copy operator binary for AI Core task synchronization check, size=%u(bytes), retCode=%d.",
         binarySize, ret);
 
     PatchOperatorBinaryForAiCoreTaskSyncCheck(binaryCopy.get(), binarySize);
-    dataToLoad = binaryCopy.get();
+    binaryDataToLoad = binaryCopy.get();
     patchedBinary = std::move(binaryCopy);
     return RT_ERROR_NONE;
 }
