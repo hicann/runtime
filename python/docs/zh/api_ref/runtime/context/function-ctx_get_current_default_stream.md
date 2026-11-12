@@ -23,7 +23,7 @@
 
 ## 功能说明
 
-获取Context上的默认Sream。
+获取Context上的默认Stream。
 
 ## 函数原型
 

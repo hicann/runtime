@@ -33,7 +33,7 @@ Dump数据回调函数取消注册接口。
 
 - 执行两个不同的模型，通过回调获取Dump数据，该场景下，只要不调用[函数：dump\_unreg\_callback](function-dump_unreg_callback.md)接口取消注册回调函数，则可通过回调函数获取两个模型的dump数据：
 
-    [函数：init](../init/function-init.md)接口--\>[函数：dump\_reg\_callback](function-dump_reg_callback.md)接口--\>[函数：init\_dump](function-init_dump.md)接口--\>模型1加载--\>模型1执行--\>--\>模型2加载--\>模型2执行--\>[函数：finalize\_dump](function-finalize_dump.md)接口--\>模型卸载--\>[函数：dump\_unreg\_callback](function-dump_unreg_callback.md)接口--\>[函数：finalize](../init/function-finalize.md)接口
+    [函数：init](../init/function-init.md)接口--\>[函数：dump\_reg\_callback](function-dump_reg_callback.md)接口--\>[函数：init\_dump](function-init_dump.md)接口--\>模型1加载--\>模型1执行--\>模型2加载--\>模型2执行--\>[函数：finalize\_dump](function-finalize_dump.md)接口--\>模型卸载--\>[函数：dump\_unreg\_callback](function-dump_unreg_callback.md)接口--\>[函数：finalize](../init/function-finalize.md)接口
 
 ## 函数原型
 

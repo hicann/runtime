@@ -23,7 +23,7 @@
 
 ## 功能说明
 
-为msproftx事件标记携带字符串描述，在Profiling解析并导出结果中msprof\_tx summary数据展示。
+为msproftx事件标记携带字符串描述，在Profiling解析并导出结果中msproftx summary数据展示。
 
 ## 函数原型
 

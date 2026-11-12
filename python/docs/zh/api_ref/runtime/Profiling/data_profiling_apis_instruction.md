@@ -31,4 +31,4 @@
 
   - **错误的接口调用顺序示例如下**，以“一个用户APP进程内，如果连续调用多次[acl.prof.start](function-start.md)接口，指定的Device重复”为例：
 
-        [acl.init](../init/function-init.md)接口--\>[acl.prof.init](function-init-Profiling.md)接口--\>[acl.prof.start](function-start.md)接（指定Device 0和Device 1）--\>[acl.prof.start](function-start.md)接口（指定Device 1和Device 2）--\>模型1加载--\>模型1执行--\>模型2加载--\>模型2执行--\>[acl.prof.stop](function-stop.md)接口--\>[acl.prof.stop](function-stop.md)接口--\>[acl.prof.finalize](function-finalize-Profiling.md)--\>执行其它任务--\>模型卸载--\>[acl.finalize](../init/function-finalize.md)接口
+        [acl.init](../init/function-init.md)接口--\>[acl.prof.init](function-init-Profiling.md)接口--\>[acl.prof.start](function-start.md)接口（指定Device 0和Device 1）--\>[acl.prof.start](function-start.md)接口（指定Device 1和Device 2）--\>模型1加载--\>模型1执行--\>模型2加载--\>模型2执行--\>[acl.prof.stop](function-stop.md)接口--\>[acl.prof.stop](function-stop.md)接口--\>[acl.prof.finalize](function-finalize-Profiling.md)--\>执行其它任务--\>模型卸载--\>[acl.finalize](../init/function-finalize.md)接口

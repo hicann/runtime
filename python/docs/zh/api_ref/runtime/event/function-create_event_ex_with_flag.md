@@ -42,7 +42,7 @@
 
 | 参数名 | 说明 |
 | --- | --- |
-| flag | int，Event指针的flag，可支持以下选项。<br>**0x00000008：ACL_EVENT_TIME_LINE**，表示创建的Event数量不受限制且创建出来的Event可用于统计两个Event之间的耗时。<br>**0x00000001：ACL_EVENT_SYNC**，表示创建的Event数量受限且创建出来的可用于多Stream间的同步等待。<br>**0x00000002：ACL_EVENT_CAPTURE_STREAM_PROGRESS**，表示创建的Event用于跟踪Stream的任务执行进度。 |
+| flag | int，Event的flag，可支持以下选项。<br>**0x00000008：ACL_EVENT_TIME_LINE**，表示创建的Event数量不受限制且创建出来的Event可用于统计两个Event之间的耗时。<br>**0x00000001：ACL_EVENT_SYNC**，表示创建的Event数量受限且创建出来的Event可用于多Stream间的同步等待。<br>**0x00000002：ACL_EVENT_CAPTURE_STREAM_PROGRESS**，表示创建的Event用于跟踪Stream的任务执行进度。 |
 
 ## 返回值说明
 

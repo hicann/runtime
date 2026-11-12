@@ -25,7 +25,7 @@
 
 获取指定算子的算子名称。
 
-建议用户新建一个线程，在新线程内调用该接口，否则可能阻塞主线程中的其它任务调度。
+建议用户新建一个线程，在新线程内调用该接口，否则可能阻塞主线程中的其他任务调度。
 
 [acl.prof.get\_op\_name\_v2](function-get_op_name_v2.md)和[acl.prof.get\_op\_name](function-get_op_name.md)接口功能一致，但[acl.prof.get\_op\_name\_v2](function-get_op_name_v2.md)接口会获取算子名称长度，并分配相应的空间，不需要用户传参来指定算子名称所需空间大小，建议优先使用[acl.prof.get\_op\_name\_v2](function-get_op_name_v2.md)接口。
 
@@ -56,4 +56,4 @@
 | 返回值 | 说明 |
 | --- | --- |
 | op_name | str，算子名称。 |
-| ret | int，错误码。<br>返回0表示成功。<br>返回[其它值](../datatypes/aclError.md)表示失败。 |
+| ret | int，错误码。<br>返回0表示成功。<br>返回[其他值](../datatypes/aclError.md)表示失败。 |

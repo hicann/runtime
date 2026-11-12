@@ -43,7 +43,7 @@
 
 | 参数名 | 说明 |
 | --- | --- |
-| cann_attr | int，特性列表枚举值，一次查询可指定其中一项，具体请参见[aclCannAttr](../datatypes/aclCannAttr.md)。 |
+| cann_attr | int，特性枚举值，一次查询可指定其中一项，具体请参见[aclCannAttr](../datatypes/aclCannAttr.md)。 |
 
 ## 返回值说明
 

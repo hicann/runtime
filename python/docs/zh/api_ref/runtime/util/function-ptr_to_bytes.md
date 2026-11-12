@@ -54,4 +54,4 @@ bytes_out = acl.util.ptr_to_bytes(ptr, size)
 bytes_out = acl.util.ptr_to_bytes(bytes_ptr, size)
 ```
 
-由于**acl.util.ptr\_to\_bytes**会导致数据性能下降，更建议使用函数：[acl.util.bytes\_to\_ptr](function-bytes_to_ptr.md)的数据进行后续运算。
+由于**acl.util.ptr\_to\_bytes**会导致性能下降，更建议使用函数：[acl.util.bytes\_to\_ptr](function-bytes_to_ptr.md)的数据进行后续运算。

@@ -61,7 +61,7 @@ Dump数据回调函数注册接口。
 
 | 参数名 | 说明 |
 | --- | --- |
-| mdl_dump_callback | 用于接收回调数据的回调函数，有如下两个参数：<br>dump_chunk：dict，在实现mdl_dump_callback函数时可以获取dump_chunk中的data_fuf、buf_len等参数值，用于获取Dump数据及其数据长度：<br>{<br>"file_name": file_name, // 待落盘的Dump数据文件名<br>"data_buf": data_buf, // Dump数据的内存地址<br>"buf_len": buf_len, // data_buf数据长度，单位Byte<br>"is_last_chunk": is_last_chunk, // 标识Dump数据是否为最后一个分片，0表示不是最后一个分片，1表示最后一个分片<br>"offset": offset, // Dump数据文件内容的偏移，其中-1表示文件追加内容<br>"flag": flag // 预留Dump数据标识，当前数据无标识<br>} |
+| mdl_dump_callback | 用于接收回调数据的回调函数，有如下两个参数：<br>dump_chunk：dict，在实现mdl_dump_callback函数时可以获取dump_chunk中的data_buf、buf_len等参数值，用于获取Dump数据及其数据长度：<br>{<br>"file_name": file_name, // 待落盘的Dump数据文件名<br>"data_buf": data_buf, // Dump数据的内存地址<br>"buf_len": buf_len, // data_buf数据长度，单位Byte<br>"is_last_chunk": is_last_chunk, // 标识Dump数据是否为最后一个分片，0表示不是最后一个分片，1表示最后一个分片<br>"offset": offset, // Dump数据文件内容的偏移，其中-1表示文件追加内容<br>"flag": flag // 预留Dump数据标识，当前数据无标识<br>} |
 | flag | int，在调用回调接口后是否还落盘dump数据。<br>0：不落盘，当前仅支持0 |
 
 ## 返回值说明

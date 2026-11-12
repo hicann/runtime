@@ -43,7 +43,7 @@
 
 | 参数名 | 说明 |
 | --- | --- |
-| value | int，待转化的数据，[aclFloat16](../datatypes/aclFloat16.md)类型的数据。 |
+| value | int，待转换的数据，[aclFloat16](../datatypes/aclFloat16.md)类型的数据。 |
 
 ## 返回值说明
 

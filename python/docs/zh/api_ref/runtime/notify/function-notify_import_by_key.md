@@ -46,7 +46,7 @@
 | 参数名 | 说明 |
 | --- | --- |
 | key | str，Notify共享名称。<br>必须先调用[acl.rt.notify_get_export_key](function-notify_get_export_key.md)接口获取指定Notify的共享名称，再作为参数传入。 |
-| flags | int，是否开启两个Device之间的数据交互。<br>取值为如下：<br>0x0：ACL_RT_NOTIFY_IMPORT_FLAG_DEFAULT，默认值，关闭两个Device之间的数据交互。<br>配置为该值时，需单独调用[acl.rt.device_enable_peer_access](../device/function-device_enable_peer_access.md)接口开启两个Device之间的数据交互。<br>0x02：ACL_RT_NOTIFY_IMPORT_FLAG_ENABLE_PEER_ACCESS，开启两个Device之间的数据交互。<br>配置为该值时，则无需调用[acl.rt.device_enable_peer_access](../device/function-device_enable_peer_access.md)接口。 |
+| flags | int，是否开启两个Device之间的数据交互。<br>取值如下：<br>0x0：ACL_RT_NOTIFY_IMPORT_FLAG_DEFAULT，默认值，关闭两个Device之间的数据交互。<br>配置为该值时，需单独调用[acl.rt.device_enable_peer_access](../device/function-device_enable_peer_access.md)接口开启两个Device之间的数据交互。<br>0x02：ACL_RT_NOTIFY_IMPORT_FLAG_ENABLE_PEER_ACCESS，开启两个Device之间的数据交互。<br>配置为该值时，则无需调用[acl.rt.device_enable_peer_access](../device/function-device_enable_peer_access.md)接口。 |
 
 ## 返回值说明
 

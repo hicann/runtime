@@ -44,7 +44,7 @@
 | 参数名 | 说明 |
 | --- | --- |
 | func_handle | int，核函数句柄。<br>调用[acl.rt.binary_get_function](function-binary_get_function.md)获取核函数句柄，再将其作为入参传入本接口。 |
-| user_args_size | int，在内存中存放参数列表数据所需的大小，单位为Byte。<br>每个参数数据的内存大小都需要8字节对齐，这里的user_args_size是这些对齐后的参数数据内存大小相加的总和。 |
+| user_args_size | int，在内存中存放参数列表数据所需的大小，单位为Byte。<br>每个参数数据的内存大小都需要8字节对齐，这里的user_args_size是这些对齐后的参数数据内存大小的总和。 |
 
 ## 返回值说明
 

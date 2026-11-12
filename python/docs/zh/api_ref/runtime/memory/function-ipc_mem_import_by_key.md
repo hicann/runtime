@@ -30,7 +30,7 @@
 - **C函数原型**
 
     ```c
-    aclError aclrtIpcMemImportByKey(void **devPtr, const char *key, uint64_t flag)
+    aclError aclrtIpcMemImportByKey(void **devPtr, const char *key, uint64_t flags)
     ```
 
 - **python函数**
@@ -44,7 +44,7 @@
 | 参数名 | 说明 |
 | --- | --- |
 | key | str，共享内存key。 |
-| flags | 是否开启两个Device之间的数据交互。<br>取值为如下：<br>0x0：ACL_RT_IPC_MEM_IMPORT_FLAG_DEFAULT，默认值，关闭两个Device之间的数据交互。配置为该值时，需单独调用[acl.rt.device_enable_peer_access](../device/function-device_enable_peer_access.md)接口开启两个Device之间的数据交互。<br>0x1：ACL_RT_IPC_MEM_IMPORT_FLAG_ENABLE_PEER_ACCESS，开启两个Device之间的数据交互。配置为该值时，则无需调用[acl.rt.device_enable_peer_access](../device/function-device_enable_peer_access.md)接口。 |
+| flags | 是否开启两个Device之间的数据交互。<br>取值如下：<br>0x0：ACL_RT_IPC_MEM_IMPORT_FLAG_DEFAULT，默认值，关闭两个Device之间的数据交互。配置为该值时，需单独调用[acl.rt.device_enable_peer_access](../device/function-device_enable_peer_access.md)接口开启两个Device之间的数据交互。<br>0x1：ACL_RT_IPC_MEM_IMPORT_FLAG_ENABLE_PEER_ACCESS，开启两个Device之间的数据交互。配置为该值时，则无需调用[acl.rt.device_enable_peer_access](../device/function-device_enable_peer_access.md)接口。 |
 
 ## 返回值说明
 

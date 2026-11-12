@@ -23,7 +23,7 @@
 
 ## 功能说明
 
-若使用[acl.rt.binary\_load\_from\_data](function-binary_load_from_data.md)接口加载AI CPU算子二进制数据，还需配合使用本接口注册AI CPU算子信息，得到对应的func\_handle。本接口只用于AI CPU算子，其它算子会返回报错ACL\_ERROR\_RT\_PARAM\_INVALID。
+若使用[acl.rt.binary\_load\_from\_data](function-binary_load_from_data.md)接口加载AI CPU算子二进制数据，还需配合使用本接口注册AI CPU算子信息，得到对应的func\_handle。本接口只用于AI CPU算子，其他算子会返回报错ACL\_ERROR\_RT\_PARAM\_INVALID。
 
 ## 函数原型
 

@@ -47,7 +47,7 @@
 | --- | --- |
 | ptr | Host内存地址。<br>Host内存地址需4K页对齐。<br>当os内核版本为5.10或更低时，使用非锁页内存会导致异常，因此必须调用aclrtMallocHost接口来申请Host锁页内存。<br>当os内核版本为5.10以上时，支持使用非锁页的Host内存，因此既支持调用aclrtMallocHost接口申请Host锁页内存，也支持使用malloc接口申请Host非锁页内存。 |
 | size | 内存大小，单位Byte。 |
-| flag | 内存注册类型。<br>0x2：ACL_HOST_REG_MAPPED：将Host内存映射注册为Device可访问的内存地址，再配合调用[acl.rt.host_get_device_pointer](function-host_get_device_pointer.md)接口获取映射后的Device内存地址。<br>0x4：ACL_HOST_REG_IOMEMORY：将Host上第三方PCIe设备的IO space（寄存器、缓存）映射注册为Device可访问，包括读写。使用该值时不支持锁业内存，因此该值不能与ACL_HOST_REG_PINNED组合使用。预留选项，当前不支持。<br>0x8：ACL_HOST_REG_READONLY：Host内存映射注册为Device只读。预留选项，当前不支持。<br>0x10000000：ACL_HOST_REG_PINNED：将Host非锁页内存注册为锁页内存。 |
+| flag | 内存注册类型。<br>0x2：ACL_HOST_REG_MAPPED：将Host内存映射注册为Device可访问的内存地址，再配合调用[acl.rt.host_get_device_pointer](function-host_get_device_pointer.md)接口获取映射后的Device内存地址。<br>0x4：ACL_HOST_REG_IOMEMORY：将Host上第三方PCIe设备的IO space（寄存器、缓存）映射注册为Device可访问，包括读写。使用该值时不支持锁页内存，因此该值不能与ACL_HOST_REG_PINNED组合使用。预留选项，当前不支持。<br>0x8：ACL_HOST_REG_READONLY：Host内存映射注册为Device只读。预留选项，当前不支持。<br>0x10000000：ACL_HOST_REG_PINNED：将Host非锁页内存注册为锁页内存。 |
 
 ## 返回值说明
 

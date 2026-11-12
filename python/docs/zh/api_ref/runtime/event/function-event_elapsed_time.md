@@ -55,4 +55,4 @@
 
 ## 约束说明
 
-接口调用顺序：调用[acl.rt.create\_event](function-create_event.md)/[acl.rt.create\_event\_with\_flag](function-create_event_with_flag.md)接口创建event- - \>调用[acl.rt.record\_event](function-record_event.md)接口在同一个stream中记录起始event、结尾event- - \>调用[acl.rt.synchronize\_stream](../stream/function-synchronize_stream.md)接口阻塞应用程序运行，直到指定Stream中的所有任务都完成- - \>调用[acl.rt.event\_elapsed\_time](function-event_elapsed_time.md)接口统计两个Event之间的耗时。
+接口调用顺序：调用[acl.rt.create\_event](function-create_event.md)/[acl.rt.create\_event\_with\_flag](function-create_event_with_flag.md)接口创建event->调用[acl.rt.record\_event](function-record_event.md)接口在同一个stream中记录起始event、结尾event->调用[acl.rt.synchronize\_stream](../stream/function-synchronize_stream.md)接口阻塞应用程序运行，直到指定Stream中的所有任务都完成->调用[acl.rt.event\_elapsed\_time](function-event_elapsed_time.md)接口统计两个Event之间的耗时。

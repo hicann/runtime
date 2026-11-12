@@ -50,4 +50,4 @@
 | 返回值 | 说明 |
 | --- | --- |
 | stream_id | int，stream ID。 |
-| ret | int，返回0表示成功，返回其他值表示失败，请参见[其它值](../datatypes/aclError.md)。 |
+| ret | int，返回0表示成功，返回其它值表示失败，请参见[其它值](../datatypes/aclError.md)。 |

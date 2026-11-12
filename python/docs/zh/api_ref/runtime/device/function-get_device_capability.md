@@ -44,7 +44,7 @@
 | 参数名 | 说明 |
 | --- | --- |
 | device_id | int，Device ID。 |
-| dev_feature_type | int, 枚举值，具体请参见新增数据结构[aclrtDevFeatureType](../datatypes/aclrtDevFeatureType.md)。 |
+| dev_feature_type | int, 枚举值，具体请参见[aclrtDevFeatureType](../datatypes/aclrtDevFeatureType.md)。 |
 
 ## 返回值说明
 

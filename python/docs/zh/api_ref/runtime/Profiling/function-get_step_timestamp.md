@@ -23,7 +23,7 @@
 
 ## 功能说明
 
-利用[单算子加载与执行接口](../Kernel/Kernel_loading_and_execution.md)实现训练的场景下，使用本接口用于标记迭代开始与结束时间，为后续Profiling解析提供迭代标识，以便以迭代为粒度展示性能数据。
+利用[单算子加载与执行接口](../Kernel/Kernel_loading_and_execution.md)实现训练的场景下，使用本接口标记迭代开始与结束时间，为后续Profiling解析提供迭代标识，以便以迭代为粒度展示性能数据。
 
 ## 函数原型
 

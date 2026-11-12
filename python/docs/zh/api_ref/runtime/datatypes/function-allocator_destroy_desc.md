@@ -29,13 +29,13 @@
 - **C函数原型**
 
     ```c
-    aclError aclrtAllocatorDestroyDesc(aclrtAllocatorDesc alloctorDesc)
+    aclError aclrtAllocatorDestroyDesc(aclrtAllocatorDesc allocatorDesc)
     ```
 
 - **python函数**
 
     ```python
-    ret = acl.rt.allocator_destroy_desc(alloctorDesc)
+    ret = acl.rt.allocator_destroy_desc(allocatorDesc)
     ```
 
 ## 参数说明

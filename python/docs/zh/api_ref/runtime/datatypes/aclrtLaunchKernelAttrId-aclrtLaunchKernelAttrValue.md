@@ -27,7 +27,7 @@
 
     numBlocks偏移量。
 
-  - **如果numBlocks ≤ AI Core核数**，则无需使用Vector Core上计算，可将engineType配置为ACL\_RT\_ENGINE\_TYPE\_AIC（表示在AI Core上计算），则此处的blockDimOffset配置为0。
+  - **如果numBlocks ≤ AI Core核数**，则无需使用Vector Core，可将engineType配置为ACL\_RT\_ENGINE\_TYPE\_AIC（表示在AI Core上计算），则此处的blockDimOffset配置为0。
   - **如果numBlocks \> AI Core核数**，则需：
 
     - 在一个Stream上下发任务，将engineType配置为ACL\_RT\_ENGINE\_TYPE\_AIC（表示在AI Core上计算），此处的blockDimOffset配置为0。

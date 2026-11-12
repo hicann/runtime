@@ -25,7 +25,7 @@
 
 acl.prof.mark\_ex打点接口。
 
-调用此接口向配置的Stream流上下发打点任务，用于标识Host侧打点与Device侧打点任务的关系。
+调用此接口向配置的Stream流下发打点任务，用于标识Host侧打点与Device侧打点任务的关系。
 
 ## 函数原型
 

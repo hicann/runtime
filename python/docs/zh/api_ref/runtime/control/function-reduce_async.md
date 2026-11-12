@@ -48,7 +48,7 @@
 | dst | int，目的内存地址指针。 |
 | src | int，源内存地址指针。 |
 | count | int，源内存大小，单位为Byte。 |
-| kind | int，操作类型。具体请参见新增数据结构[aclrtReduceKind](../datatypes/aclrtReduceKind.md)。 |
+| kind | int，操作类型。具体请参见[aclrtReduceKind](../datatypes/aclrtReduceKind.md)。 |
 | type | int，数据类型。<br>具体请参见[aclDataType](../datatypes/aclDataType.md)。 |
 | stream | int，指定Stream。如果使用默认Stream，此处设置为0。 |
 | reserve | int，预留参数。当前固定传NULL。 |
@@ -61,7 +61,7 @@
 
 ## 约束说明
 
-dts、src必须跟stream所在的Device是同一个设备。
+dst、src必须跟stream所在的Device是同一个设备。
 <!-- npu="A3" id7 -->
 Atlas A3系列产品支持如下类型：int8、int16、int32、fp16、fp32、bf16。
 <!-- end id7 -->

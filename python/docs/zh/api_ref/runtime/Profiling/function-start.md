@@ -25,7 +25,7 @@
 
 下发Profiling请求，使能对应数据的采集。
 
-用户可根据需要，在模型执行过程中按需调用[acl.prof.start](function-start.md)接口，Profiling采集到的数据为调用该接口之后的数据。
+用户可根据需要，在模型执行过程中调用[acl.prof.start](function-start.md)接口，Profiling采集到的数据为调用该接口之后的数据。
 
 ## 函数原型
 

@@ -50,4 +50,4 @@
 | 返回值 | 说明 |
 | --- | --- |
 | version | dict，CANN软件包版本号，具体请参见[aclCANNPackageVersion](../datatypes/aclCANNPackageVersion.md)。 |
-| ret | int，返回0表示成功，返回其他值表示失败，请参见[其它值](../datatypes/aclError.md)。 |
+| ret | int，返回0表示成功，返回其他值表示失败，请参见[其他值](../datatypes/aclError.md)。 |

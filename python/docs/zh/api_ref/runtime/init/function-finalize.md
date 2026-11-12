@@ -55,7 +55,7 @@
 
 ## 约束说明
 
-应用的进程退出前，应显式调用该接口或[acl.finalize\_reference](function-finalize_reference.md)接口实现去初始化，否则可能会导致异常，例如应用进程退出时有异常报错。
+应用进程退出前，应显式调用该接口或[acl.finalize\_reference](function-finalize_reference.md)接口实现去初始化，否则可能会导致异常，例如应用进程退出时有异常报错。
 
 不建议在析构函数中调用acl.finalize或[acl.finalize\_reference](function-finalize_reference.md)接口，否则在进程退出时可能由于单例析构顺序未知而导致进程异常退出的问题。
 

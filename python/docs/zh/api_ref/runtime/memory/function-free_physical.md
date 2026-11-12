@@ -45,7 +45,7 @@
 
 | 参数名 | 说明 |
 | --- | --- |
-| handle | int，待释放的物理地址信息handle。 |
+| handle | int，待释放的物理内存handle。 |
 
 ## 返回值说明
 

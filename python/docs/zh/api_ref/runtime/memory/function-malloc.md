@@ -89,7 +89,7 @@
 - 针对ACL\_MEM\_MALLOC\_HUGE\_FIRST\_P2P、ACL\_MEM\_MALLOC\_HUGE\_ONLY\_P2P内存分配规则，建议使用[acl.rt.malloc\_with\_cfg](function-malloc_with_cfg.md)接口，否则可能存在性能问题或无法申请到内存。
 - 使用[acl.rt.malloc](../memory/function-malloc.md)接口申请的内存，需要通过[acl.rt.free](../memory/function-free.md)接口释放内存。
 - 频繁调用[acl.rt.malloc](../memory/function-malloc.md)接口申请内存、调用[acl.rt.free](../memory/function-free.md)接口释放内存，会损耗性能，建议用户提前做内存预先分配或二次管理，避免频繁申请/释放内存。
-- 调用[acl.rt.malloc](../memory/function-malloc.md)接口申请内存时，会对用户输入的size按向上对齐成32字节整数倍后，再多加32字节。
+- 调用[acl.rt.malloc](../memory/function-malloc.md)接口申请内存时，会对用户输入的size向上对齐成32字节整数倍后，再多加32字节。
 
     若用户使用本接口申请大块内存并自行划分、管理内存时，每段内存需同时满足以下需求：
 

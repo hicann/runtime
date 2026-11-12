@@ -83,7 +83,7 @@
   - 调用[媒体数据处理V1]( https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/latest/acce/dvpp/aclpythondevg_01_0220.html)版本的接口对图片进行抠图、缩放等操作时，调用[acl.media.dvpp\_malloc]( https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/latest/acce/dvpp/aclpythondevg_01_0223.html)接口申请内存。
   - 调用[媒体数据处理V2]( https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/latest/acce/dvpp/aclpythondevg_01_0411.html)版本的接口对图片进行抠图、缩放等操作时，调用[acl.himpi.dvpp\_malloc]( https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/latest/acce/dvpp/aclpythondevg_01_0416.html)接口申请内存。
 
-- 本接口分配的内存不会进行对内容进行初始化。
+- 本接口分配的内存不会对内容进行初始化。
 
 - 本接口内部不会进行隐式的Device同步或流同步。如果申请内存成功或申请内存失败会立刻返回结果。
 - policy处仅支持配置单个枚举项，不支持配置多个枚举项位或。

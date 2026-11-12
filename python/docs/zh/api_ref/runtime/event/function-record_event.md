@@ -23,9 +23,9 @@
 
 ## 功能说明
 
-在Stream中记录一个Event。本接口被调用时，会捕获当前Stream上已下发的任务并记录到Event事件中，因此后续若调用[acl.rt.query\_event\_status](function-query_event_status.md)或[acl.rt.stream\_wait\_event](function-stream_wait_event.md)接口时，会检查或等待该Event事件中所捕获的任务都已经完成。
+在Stream中记录一个Event。本接口被调用时，会捕获当前Stream上已下发的任务并记录到Event中，因此后续若调用[acl.rt.query\_event\_status](function-query_event_status.md)或[acl.rt.stream\_wait\_event](function-stream_wait_event.md)接口时，会检查或等待该Event中所捕获的任务都已经完成。
 
-对于使用[acl rt.create\_event\_ex\_with\_flag](function-create_event_ex_with_flag.md)创建的Event：
+对于使用[acl.rt.create\_event\_ex\_with\_flag](function-create_event_ex_with_flag.md)创建的Event：
 
 - **本接口支持对同一个Event多次record实现Event复用**，每次Record会重新捕获当前Stream上已下发的任务，并覆盖保存到Event中。在调用[acl.rt.stream\_wait\_event](function-stream_wait_event.md)接口时，会使用最近一次Event中所保存的任务，且不会被后续的acl.rt.record\_event调用影响。
 - **在首次调用本接口前**，由于Event中没有任务，因此调用[acl.rt.query\_event\_status](function-query_event_status.md)接口时会返回“ACL\_EVENT\_RECORDED\_STATUS\_COMPLETE”。

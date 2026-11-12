@@ -49,4 +49,4 @@
 
 | 返回值 | 说明 |
 | --- | --- |
-| device_id | int，返回异常信息中的Device设备号，返回值为“0xFFFFFFFF”（以十六进制为例）时表示异常信息为空。 |
+| device_id | int，返回异常信息中的Device ID，返回值为“0xFFFFFFFF”（以十六进制为例）时表示异常信息为空。 |

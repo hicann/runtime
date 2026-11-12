@@ -56,7 +56,7 @@
 
 - 各产品型号对limit资源类型的支持情况不同，对于不支持的资源类型，接口返回ACL\_ERROR\_RT\_FEATURE\_NOT\_SUPPORT。
 - 本接口建议在acl.init接口之后、acl.rt.set\_device接口之前调用，确保资源限制的配置生效。
-- 若涉及多次调用acl.rt.set\_device接口，由于acl.rt.set\_device、acl.rt.reset\_device接口内部涉及引用计数，两者配对使用，引用计数减到0之后，调用本接口配置资源限制值之后，再调用acl.rt.set\_device接口，配置才可以生效。调用顺序如下所示：
+- 若涉及多次调用acl.rt.set\_device接口，由于acl.rt.set\_device、acl.rt.reset\_device接口内部涉及引用计数，两者配对使用，引用计数减到0之后，调用本接口配置资源限制值，再调用acl.rt.set\_device接口，配置才可以生效。调用顺序如下所示：
 
     ```text
     acl.init-->acl.rt.device_set_limit（第一次调用接口设置）-->acl.rt.set_device（这时资源限制的配置生效）-->业务处理-->acl.rt.reset_device（重置Device资源）-->acl.rt.device_set_limit（第二次调用接口设置）-->acl.rt.set_device（这时资源限制的配置生效）

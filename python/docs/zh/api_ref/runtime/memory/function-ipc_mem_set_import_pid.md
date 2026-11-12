@@ -46,7 +46,7 @@
 | 参数名 | 说明 |
 | --- | --- |
 | key | str，共享内存key。 |
-| pids | list，用于存放白名单进程ID的数组。<br>进程ID可调用[acl.rt.device_get_bare_tgid](../device/function-device_get_bare_tgid.md)接口获取，Docker场景下获取到的是物理机上的进程ID，非Docker场景下获取到的是进程ID。 |
+| pid | list，用于存放白名单进程ID的数组。<br>进程ID可调用[acl.rt.device_get_bare_tgid](../device/function-device_get_bare_tgid.md)接口获取，Docker场景下获取到的是物理机上的进程ID，非Docker场景下获取到的是进程ID。 |
 
 ## 返回值说明
 

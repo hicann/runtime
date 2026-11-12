@@ -55,7 +55,7 @@ aclProfConfig类型数据可以只创建一次、多处使用，用户需要保�
 
 | 返回值 | 说明 |
 | --- | --- |
-| prof_config | int。<br>返回非0值表示成功，返回值为返回aclprofConfig类型的指针地址。<br>返回0表示失败。 |
+| prof_config | int。<br>返回非0值表示成功，返回值为aclprofConfig类型的指针地址。<br>返回0表示失败。 |
 
 ## 约束说明
 

@@ -44,7 +44,7 @@
 | 参数名 | 说明 |
 | --- | --- |
 | device_id | int，指定Device的ID。 |
-| peer_dev_id | int，指定Device的ID。<br>用户调[acl.rt.get_device_count](function-get_device_count.md)接口获取可用的Device数量后，这个Device ID的取值范围：[0, (可用的Device数量-1)]。 |
+| peer_device_id | int，指定Device的ID。<br>用户调[acl.rt.get_device_count](function-get_device_count.md)接口获取可用的Device数量后，这个Device ID的取值范围：[0, (可用的Device数量-1)]。 |
 
 ## 返回值说明
 

@@ -54,11 +54,11 @@
 
 ## 约束说明
 
-- 本接口分配的内存不会对内容进行初始化，建议在使用内存前先调用[acl.rt.memset](function-memset.md)接口先初始化内存，清除内存中的随机数。
+- 本接口分配的内存不会对内容进行初始化，建议在使用内存前先调用[acl.rt.memset](function-memset.md)接口初始化内存，清除内存中的随机数。
 - 本接口内部不会进行隐式的Device同步或流同步。如果申请内存成功或申请内存失败会立刻返回结果。
 - 使用acl.rt.malloc\_host接口申请的内存，需要通过[acl.rt.free\_host](function-free_host.md)接口释放内存。
 - 使用acl.rt.malloc\_host接口分配过多的锁页内存，将导致操作系统用于分页的物理内存变少，从而降低系统整体的性能。
-- 频繁调用acl.rt.malloc\_host接口申请内存、调用[acl.rt.free\_host](function-free_host.md)接口释放内存，会损耗性能，建议用户提前做内存预先分配或二次管理，避免频繁申请/释放内存。
+- 频繁调用acl.rt.malloc\_host接口申请内存、调用[acl.rt.free\_host](function-free_host.md)接口释放内存，会损耗性能，建议用户提前做内存分配或二次管理，避免频繁申请/释放内存。
 <!-- npu="310p" id7 -->
 - 针对Ascend RC形态、Control CPU开放形态，Host与Device是合一的，所以申请Host内存也等同于申请Device内存。此外，申请内存时，按普通页申请。如果需要64字节对齐的首地址，用户需自行处理对齐问题。
 <!-- end id7 -->

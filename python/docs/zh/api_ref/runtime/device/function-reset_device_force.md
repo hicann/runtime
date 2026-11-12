@@ -71,7 +71,7 @@ acl.rt.set_device(1) -> acl.rt.set_device(1) -> acl.rt.reset_device_force(1)
     线程2：acl.rt.set_device(1)                                acl.rt.reset_device_force(1)
     ```
 
-    多线程场景下，正确方式是应在线程执行的最后，调用一次acl.rt.reset\_device\_force释放Device资源，如下所示：
+    多线程场景下，正确方式是在线程执行的最后，调用一次acl.rt.reset\_device\_force释放Device资源，如下所示：
 
     ```python
     时间线 ------------------------------------------------------------------------------>

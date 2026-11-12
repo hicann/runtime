@@ -43,7 +43,7 @@
 
 | 参数名 | 说明 |
 | --- | --- |
-| model_id | int，待订阅的网络模型的ID。<br>调用`acl.mdl.load_from_file`<br>接口`acl.mdl.load_from_mem`<br>接口`acl.mdl.load_from_file_with_mem`<br>接口`acl.mdl.load_from_mem_with_mem`<br>接口加载模型成功后，会返回模型ID。 |
+| model_id | int，待订阅的网络模型的ID。<br>调用`acl.mdl.load_from_file`接口加载模型成功后，会返回模型ID。 |
 | subscribe_config | int，待订阅的配置信息。调用[acl.prof.create_subscribe_config](function-create_subscribe_config.md)接口创建配置数据。 |
 
 ## 返回值说明

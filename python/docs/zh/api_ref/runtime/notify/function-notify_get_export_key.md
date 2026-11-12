@@ -23,7 +23,7 @@
 
 ## 功能说明
 
-将本进程中指定Notify设置为IPC（Inter- Process Communication） Notify，并返回key（即Notify共享名称），用于在多Device上不同进程间实现任务同步，调用本接口前，需调用[acl.rt.device\_enable\_peer\_access](../device/function-device_enable_peer_access.md)接口开启两个Device之间的数据交互。
+将本进程中指定Notify设置为IPC（Inter-Process Communication） Notify，并返回key（即Notify共享名称），用于在多Device上不同进程间实现任务同步，调用本接口前，需调用[acl.rt.device\_enable\_peer\_access](../device/function-device_enable_peer_access.md)接口开启两个Device之间的数据交互。
 
 **本接口需与以下其它关键接口配合使用**，以便实现多Device上不同进程间的任务同步，此处以Device 0上的A进程、Device 1上的B进程为例，说明两个进程间的任务同步接口调用流程:
 

@@ -23,7 +23,7 @@
 
 ## 功能说明
 
-获取aclDataBuffer类型中的数据的内存地址。
+获取aclDataBuffer类型中数据的内存地址。
 
 ## 函数原型
 
@@ -49,4 +49,4 @@
 
 | 返回值 | 说明 |
 | --- | --- |
-| output | int，aclDataBuffer类型中的数据的指针地址。 |
+| output | int，aclDataBuffer类型中数据的指针地址。 |
