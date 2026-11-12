@@ -2453,15 +2453,15 @@ DLLEXPORT DV_ONLINE int drvMemDeviceClose(uint32_t devid);
  * support in Linux versions below 5.19.
  * 6. HOST_SVM_MAP_DEV don't support in virt machine.
  * 7. Not support vmm va, use may result in unexpected behavior.
- * @param [in] src_ptr: requested the src share memory pointer, srcPtr must be page aligned.
+ * @param [in] srcPtr: requested the src share memory pointer, srcPtr must be page aligned.
  * @param [in] size: requested byte size.
  * @param [in] flag:  requested memory parameter, the flag is made by map type and proc type.
  * @param [in] devid:  requested input device id when map_type is't DEV_SVM_MAP_HOST.
- * @param [out] dst_ptr: level-2 pointer that stores the address of the allocated dst memory pointer.
+ * @param [out] dstPtr: level-2 pointer that stores the address of the allocated dst memory pointer.
  * @return DRV_ERROR_NONE : success
  * @return DV_ERROR_XXX : register fail
  */
-DLLEXPORT drvError_t halHostRegister(void* src_ptr, UINT64 size, UINT32 flag, UINT32 devid, void** dst_ptr);
+DLLEXPORT drvError_t halHostRegister(void* srcPtr, UINT64 size, UINT32 flag, UINT32 devid, void** dstPtr);
 
 /**
  * @ingroup driver
@@ -2482,12 +2482,12 @@ DLLEXPORT drvError_t halHostDmaMap(void* hostPtr, UINT64 size, UINT32 flag, UINT
  * @ingroup driver
  * @brief This command is used to unregister src share memory.
  * @attention null
- * @param [in] src_ptr: requested the src share memory pointer.
+ * @param [in] srcPtr: requested the src share memory pointer.
  * @param [in] devid:  requested input device id when srcPtr isn't in svm range.
  * @return DRV_ERROR_NONE : success
  * @return DV_ERROR_XXX : unregister fail
  */
-DLLEXPORT drvError_t halHostUnregister(void* src_ptr, UINT32 devid);
+DLLEXPORT drvError_t halHostUnregister(void* srcPtr, UINT32 devid);
 
 /**
  * @ingroup driver

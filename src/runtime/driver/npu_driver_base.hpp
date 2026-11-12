@@ -171,8 +171,8 @@ unsigned int __attribute__((weak)) halGetMaxResMapType(void);
 drvError_t __attribute__((weak)) halHostUnregisterEx(void* srcPtr, UINT32 devid, UINT32 flag);
 drvError_t __attribute__((weak)) halHostRegisterCapabilities(UINT32 devid, UINT32 acc_module_type, UINT32* mem_map_cap);
 drvError_t __attribute__((weak)) halHostRegister(void* srcPtr, UINT64 size, UINT32 flag, UINT32 devid, void** dstPtr);
-drvError_t __attribute__((weak)) halHostDmaMap(void* srcPtr, UINT64 size, UINT32 flag, UINT32 devid);
-drvError_t __attribute__((weak)) halHostDmaUnmap(void* srcPtr, UINT32 devid);
+drvError_t __attribute__((weak)) halHostDmaMap(void* hostPtr, UINT64 size, UINT32 flag, UINT32 devid);
+drvError_t __attribute__((weak)) halHostDmaUnmap(void* hostPtr, UINT32 devid);
 drvError_t __attribute__((weak)) halShmemSetAttribute(const char* name, uint32_t type, uint64_t attr);
 drvError_t __attribute__((weak))
 halMemShareHandleSetAttribute(uint64_t shareableHandle, enum ShareHandleAttrType type, struct ShareHandleAttr attr);

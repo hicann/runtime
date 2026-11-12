@@ -130,9 +130,9 @@ drvError_t halSqCqConfig(uint32_t devId, struct halSqCqConfigInfo* info)
     return DRV_ERROR_NONE;
 }
 
-drvError_t halHostRegister(void* hostPtr, UINT64 size, UINT32 flag, UINT32 devid, void** devPtr)
+drvError_t halHostRegister(void* srcPtr, UINT64 size, UINT32 flag, UINT32 devid, void** devPtr)
 {
-    UNUSED(hostPtr);
+    UNUSED(srcPtr);
     UNUSED(size);
     UNUSED(devid);
     UNUSED(flag);
@@ -149,9 +149,9 @@ drvError_t halHostDmaMap(void* hostPtr, UINT64 size, UINT32 flag, UINT32 devid)
     return DRV_ERROR_NONE;
 }
 
-drvError_t halHostUnregister(void* hostPtr, UINT32 devid)
+drvError_t halHostUnregister(void* srcPtr, UINT32 devid)
 {
-    UNUSED(hostPtr);
+    UNUSED(srcPtr);
     UNUSED(devid);
     return DRV_ERROR_NONE;
 }

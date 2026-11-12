@@ -253,7 +253,7 @@ rtError_t NpuDriver::HostDmaMap(void* ptr, uint64_t size, const uint32_t deviceI
     COND_RETURN_WARN(
         &halHostDmaMap == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT, "[drv api] halHostDmaMap does not exist.");
 
-    const uint32_t flag = 0U;
+    constexpr uint32_t flag = 0U;
     const drvError_t drvRet = halHostDmaMap(ptr, static_cast<UINT64>(size), flag, deviceId);
     RT_LOG(
         RT_LOG_DEBUG, "halHostDmaMap: drvRetCode=%d, device_id=%u, MemSize=%" PRIu64 "!", static_cast<int32_t>(drvRet),
