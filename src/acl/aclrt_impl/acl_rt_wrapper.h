@@ -536,7 +536,7 @@
       (virPtr, size, alignment, expectPtr, flags))                                                                     \
     _(aclError, aclrtMemGetAddressRange, (void* ptr, void** pbase, size_t* psize), (ptr, pbase, psize))                \
     _(const char*, aclrtGetSocName, (), ())                                                                            \
-    _(const char*, aclrtGetSocSeries, (), ())                                                                          \
+    _(const char*, aclrtGetSocSeries, (void), ())                                                                      \
     _(aclError, aclrtGetVersion, (int32_t * majorVersion, int32_t * minorVersion, int32_t * patchVersion),             \
       (majorVersion, minorVersion, patchVersion))                                                                      \
     _(aclError, aclrtMemP2PMap, (void* devPtr, size_t size, int32_t dstDevId, uint64_t flags),                         \

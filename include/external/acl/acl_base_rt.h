@@ -420,7 +420,7 @@ ACL_FUNC_VISIBILITY const char* aclrtGetSocName();
  * @retval null for failed
  * @retval OtherValues success
  */
-ACL_FUNC_VISIBILITY const char* aclrtGetSocSeries();
+ACL_FUNC_VISIBILITY const char* aclrtGetSocSeries(void);
 
 #define ACL_APP_LOG(level, fmt, ...) aclAppLog(level, __FUNCTION__, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
 

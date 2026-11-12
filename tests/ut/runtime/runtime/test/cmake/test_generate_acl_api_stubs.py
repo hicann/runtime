@@ -171,7 +171,7 @@ ACL_API_STUB(aclZero, ZERO)
         series_entry = next(entry for entry in entries if entry.public_name == "aclrtGetSocSeries")
         self.assertEqual(
             GENERATOR.render_stub(series_entry),
-            "ACL_FUNC_VISIBILITY\nconst char* aclrtGetSocSeriesImpl()\n{\n    return nullptr;\n}",
+            "ACL_FUNC_VISIBILITY\nconst char* aclrtGetSocSeriesImpl(void)\n{\n    return nullptr;\n}",
         )
         report_path = self.root / "arch5162_provider.csv"
         GENERATOR.write_report(report_path, "arch5162", wrapper, entries)

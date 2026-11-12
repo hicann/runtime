@@ -213,7 +213,7 @@ const char* aclrtGetSocNameImpl()
     return aclSocVersion.c_str();
 }
 
-const char* aclrtGetSocSeriesImpl()
+const char* aclrtGetSocSeriesImpl(void)
 {
     const std::unique_lock<std::mutex> lock(aclSocSeriesMutex);
     if (aclSocSeries.empty()) {
