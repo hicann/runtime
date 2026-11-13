@@ -86,6 +86,13 @@ rtError_t StreamLaunchKernelEx(const void* const args, const uint32_t argsSize, 
         (error != RT_ERROR_NONE), error,
         "The current stream status does not meet the conditions for sending the task, stream_id=%d, retCode=%#x.",
         streamId, static_cast<uint32_t>(error));
+    DeviceSchedGate* gate = stm->Device_()->GetSchedGate();
+    if (gate != nullptr) {
+        error = gate->TryInsertGateWait(stm, TS_TASK_TYPE_KERNEL_AICPU);
+        ERROR_RETURN(
+            error, "Failed to prepare the scheduling gate wait for stream (stream_id=%d), retCode=%#x.", stm->Id_(),
+            static_cast<uint32_t>(error));
+    }
     uint32_t pos = 0xFFFFU;
     Stream* dstStm = stm;
     std::function<void()> const errRecycle = [&kernelTask, &stm, &pos, &dstStm]() {
@@ -218,6 +225,13 @@ rtError_t StreamLaunchCpuKernel(
         error,
         "The current stream status does not meet the conditions for sending the task. stream_id=%d, retCode=%#x.",
         streamId, static_cast<uint32_t>(error));
+    DeviceSchedGate* gate = stm->Device_()->GetSchedGate();
+    if (gate != nullptr) {
+        error = gate->TryInsertGateWait(stm, TS_TASK_TYPE_KERNEL_AICPU);
+        ERROR_RETURN(
+            error, "Failed to prepare the scheduling gate wait for stream (stream_id=%d), retCode=%#x.", stm->Id_(),
+            static_cast<uint32_t>(error));
+    }
     DavidStream* davidStm = static_cast<DavidStream*>(stm);
     const bool useArgPool = UseArgsPool(davidStm, argsInfo, false);
 
@@ -355,6 +369,13 @@ rtError_t StreamLaunchCpuKernelExWithArgs(
         error,
         "The current stream status does not meet the conditions for sending the task, stream_id=%d, retCode=%#x.",
         streamId, static_cast<uint32_t>(error));
+    DeviceSchedGate* gate = stm->Device_()->GetSchedGate();
+    if (gate != nullptr) {
+        error = gate->TryInsertGateWait(stm, TS_TASK_TYPE_KERNEL_AICPU);
+        ERROR_RETURN(
+            error, "Failed to prepare the scheduling gate wait for stream (stream_id=%d), retCode=%#x.", stm->Id_(),
+            static_cast<uint32_t>(error));
+    }
     DavidStream* davidStm = static_cast<DavidStream*>(stm);
     const bool useArgPool = UseArgsPool(davidStm, argsInfo, false);
 

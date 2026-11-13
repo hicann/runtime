@@ -953,6 +953,22 @@ RUNTIME_API(device, rtError_t, rtDeviceSynchronizeWithTimeout,
     (int32_t timeout),
     (timeout), FEATURE_NOT_SUPPORT, EXPORT)
 
+RUNTIME_API(device, rtError_t, rtDeviceSetSuspendConfig,
+    (int32_t deviceId, const rtDeviceSuspendConfig* config),
+    (deviceId, config), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(device, rtError_t, rtDeviceGetSuspendConfig,
+    (int32_t deviceId, rtDeviceSuspendConfig* config),
+    (deviceId, config), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(device, rtError_t, rtDeviceSuspendExecution,
+    (int32_t deviceId, uint32_t flag),
+    (deviceId, flag), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(device, rtError_t, rtDeviceResumeExecution,
+    (int32_t deviceId, uint32_t flag),
+    (deviceId, flag), FEATURE_NOT_SUPPORT, EXPORT)
+
 RUNTIME_API(device, rtError_t, rtDeviceTaskAbort,
     (int32_t devId, uint32_t timeout),
     (devId, timeout), FEATURE_NOT_SUPPORT, EXPORT)

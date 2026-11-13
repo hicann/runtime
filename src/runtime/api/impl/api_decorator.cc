@@ -687,6 +687,26 @@ rtError_t ApiDecorator::DeviceGetLimit(const rtLimitType_t type, uint32_t* val)
 
 rtError_t ApiDecorator::DeviceSynchronize(const int32_t timeout) { return impl_->DeviceSynchronize(timeout); }
 
+rtError_t ApiDecorator::DeviceSetSuspendConfig(const int32_t deviceId, const rtDeviceSuspendConfig* const config)
+{
+    return impl_->DeviceSetSuspendConfig(deviceId, config);
+}
+
+rtError_t ApiDecorator::DeviceGetSuspendConfig(const int32_t deviceId, rtDeviceSuspendConfig* const config)
+{
+    return impl_->DeviceGetSuspendConfig(deviceId, config);
+}
+
+rtError_t ApiDecorator::DeviceSuspendExecution(const int32_t deviceId, const uint32_t flag)
+{
+    return impl_->DeviceSuspendExecution(deviceId, flag);
+}
+
+rtError_t ApiDecorator::DeviceResumeExecution(const int32_t deviceId, const uint32_t flag)
+{
+    return impl_->DeviceResumeExecution(deviceId, flag);
+}
+
 rtError_t ApiDecorator::DeviceTaskAbort(const int32_t devId, const uint32_t timeout)
 {
     return impl_->DeviceTaskAbort(devId, timeout);

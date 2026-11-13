@@ -31,6 +31,7 @@
 #include "mem_type.hpp"
 #include "utils.h"
 #include "runtime_handle_guard.h"
+#include "rt_inner_device.h"
 #include "rt_inner_event.h"
 
 namespace cce {

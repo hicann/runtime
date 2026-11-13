@@ -399,6 +399,10 @@ public:
     virtual rtError_t DeviceSetLimit(const int32_t devId, const rtLimitType_t type, const uint32_t val) = 0;
     virtual rtError_t DeviceGetLimit(const rtLimitType_t type, uint32_t* val) = 0;
     virtual rtError_t DeviceSynchronize(const int32_t timeout = -1) = 0;
+    virtual rtError_t DeviceSetSuspendConfig(const int32_t deviceId, const rtDeviceSuspendConfig* const config) = 0;
+    virtual rtError_t DeviceGetSuspendConfig(const int32_t deviceId, rtDeviceSuspendConfig* const config) = 0;
+    virtual rtError_t DeviceSuspendExecution(const int32_t deviceId, const uint32_t flag) = 0;
+    virtual rtError_t DeviceResumeExecution(const int32_t deviceId, const uint32_t flag) = 0;
     virtual rtError_t DeviceTaskAbort(const int32_t devId, const uint32_t timeout) = 0;
     virtual rtError_t DeviceGetStreamPriorityRange(int32_t* const leastPriority, int32_t* const greatestPriority) = 0;
     virtual rtError_t GetDeviceInfo(

@@ -91,6 +91,26 @@ target_link_libraries(runtime_utest_task_david PRIVATE
 ###################################################################################################
 
 ###################################################################################################
+# Suspend configuration must be tested before a device is opened. Isolate the
+# fixture from legacy suites which retain device 0 between test cases.
+add_executable(runtime_utest_sched_gate
+    ${TOP_DIR}/src/runtime/api/api_c_task.cc
+    ${TOP_DIR}/src/runtime/driver/npu_driver.cc
+    ${TOP_DIR}/src/runtime/driver/npu_driver_standard_soc.cc
+    ${TOP_DIR}/src/runtime/driver/npu_driver_soma.cc
+    stub/hal_stub.cc
+    main.cc
+    rt_utest_sched_gate.cc
+)
+target_include_directories(runtime_utest_sched_gate PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../..)
+target_link_libraries(runtime_utest_sched_gate PRIVATE
+    $<BUILD_INTERFACE:runtime_utest_intf_pub>
+    -Wl,--whole-archive
+    runtime_ut_stub_static_lib
+    runtime_ut_david_static_lib
+    -Wl,--no-whole-archive
+)
+
 add_executable(runtime_utest_xpu
     ${TOP_DIR}/src/runtime/driver/npu_driver.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_standard_soc.cc

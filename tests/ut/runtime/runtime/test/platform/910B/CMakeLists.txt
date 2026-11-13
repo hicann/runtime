@@ -8,6 +8,7 @@
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
 set(runtime_raw_device_adpt_common_list
+    ${TOP_DIR}/src/runtime/core/src/device/device_sched_gate_stub.cc
     ${TOP_DIR}/src/runtime/core/src/device/raw_device_adpt_comm.cc
     ${TOP_DIR}/src/runtime/core/src/device/dev_simt_stack_checker.cc
 )

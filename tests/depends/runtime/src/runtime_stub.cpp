@@ -3632,6 +3632,26 @@ rtError_t rtMemUceRepair(const uint32_t deviceId, rtMemUceInfo* memUceInfo)
     return MockFunctionTest::aclStubInstance().rtMemUceRepair(deviceId, memUceInfo);
 }
 
+rtError_t rtDeviceSetSuspendConfig(const int32_t deviceId, const rtDeviceSuspendConfig* const config)
+{
+    return MockFunctionTest::aclStubInstance().rtDeviceSetSuspendConfig(deviceId, config);
+}
+
+rtError_t rtDeviceGetSuspendConfig(const int32_t deviceId, rtDeviceSuspendConfig* const config)
+{
+    return MockFunctionTest::aclStubInstance().rtDeviceGetSuspendConfig(deviceId, config);
+}
+
+rtError_t rtDeviceSuspendExecution(const int32_t deviceId, const uint32_t flag)
+{
+    return MockFunctionTest::aclStubInstance().rtDeviceSuspendExecution(deviceId, flag);
+}
+
+rtError_t rtDeviceResumeExecution(const int32_t deviceId, const uint32_t flag)
+{
+    return MockFunctionTest::aclStubInstance().rtDeviceResumeExecution(deviceId, flag);
+}
+
 rtError_t rtDeviceTaskAbort(int32_t devId, uint32_t timeout)
 {
     return MockFunctionTest::aclStubInstance().rtDeviceTaskAbort(devId, timeout);

@@ -288,6 +288,7 @@ void StreamCapture::UpdateCascadeStreamInfo(Stream* stm, Stream* newCaptureStrea
             static_cast<uint16_t>(curCaptureStream->Id_()), static_cast<uint16_t>(newCaptureStream->Id_()));
         captureModel->InsertSingleOperStmIdAndCaptureStmId(stm->Id_(), newCaptureStream->Id_());
     }
+    newCaptureStream->SetSchedOperatorCount(curCaptureStream->GetSchedOperatorCount());
     stm->UpdateCaptureStream(newCaptureStream);
 }
 

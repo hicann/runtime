@@ -50,6 +50,7 @@ set(UT_FILES
     "acl_data_buffer_unittest.cpp"
     "acl_fp16_unittest.cpp"
     "acl_runtime_unittest.cpp"
+    "acl_suspend_unittest.cpp"
     "acl_mbuf_unittest.cpp"
     "acl_symbol_unittest.cpp"
     "acl_tensorDataTransfer_unittest.cpp"

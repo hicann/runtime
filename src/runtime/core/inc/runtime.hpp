@@ -24,6 +24,7 @@
 #include "runtime_intf.hpp"
 #include "dev_info.h"
 #include "rt_mem_queue.h"
+#include "rt_inner_device.h"
 
 extern "C" {
 drvError_t __attribute__((weak))
@@ -276,6 +277,9 @@ public:
     rtError_t PrimaryContextRelease(const uint32_t devId, const bool isForceReset = false);
 
     Device* DeviceRetain(const uint32_t devId, const uint32_t tsId);
+    rtError_t SetSuspendConfig(const uint32_t deviceId, const rtDeviceSuspendConfig& config);
+    rtError_t GetSuspendConfig(const uint32_t deviceId, rtDeviceSuspendConfig* const config);
+    rtError_t ControlSchedGate(const uint32_t deviceId, const bool resume);
     void DeviceRelease(Device* dev, const bool isForceReset = false);
     Device* GetDevice(const uint32_t devId, const uint32_t tsId, bool polling = true);
 
@@ -849,6 +853,7 @@ private:
     ApiXpu* apiImplXpu_;
 
     RefObject<Context*> priCtxs_[RT_MAX_DEV_NUM][RT_MAX_TS_NUM];
+    rtDeviceSuspendConfig suspendConfigs_[RT_MAX_DEV_NUM + 1]{};    // protected by devices_[id][RT_TSC_ID]
     RefObject<Device*> devices_[RT_MAX_DEV_NUM + 1][RT_MAX_TS_NUM]; // Last one is stub device
     uint32_t deviceCustomerStackSize_{KERNEL_STACK_SIZE_32K}; // 全局共享，所有device生效，向上取整到16KB对齐
     uint32_t printblockLen_{SIMD_FIFO_PER_CORE_SIZE_32K}; // 全局共享

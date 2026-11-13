@@ -163,6 +163,10 @@ public:
     rtError_t DeviceResourceClean(int32_t devId) override;
     rtError_t DeviceSetLimit(const int32_t devId, const rtLimitType_t type, const uint32_t val) override;
     rtError_t DeviceGetLimit(const rtLimitType_t type, uint32_t* val) override;
+    rtError_t DeviceSetSuspendConfig(const int32_t deviceId, const rtDeviceSuspendConfig* const config) override;
+    rtError_t DeviceGetSuspendConfig(const int32_t deviceId, rtDeviceSuspendConfig* const config) override;
+    rtError_t DeviceSuspendExecution(const int32_t deviceId, const uint32_t flag) override;
+    rtError_t DeviceResumeExecution(const int32_t deviceId, const uint32_t flag) override;
     rtError_t DeviceTaskAbort(const int32_t devId, const uint32_t timeout) override;
     rtError_t GetErrorVerbose(const uint32_t deviceId, rtErrorInfo* const errorInfo) override;
     rtError_t RepairError(const uint32_t deviceId, const rtErrorInfo* const errorInfo) override;

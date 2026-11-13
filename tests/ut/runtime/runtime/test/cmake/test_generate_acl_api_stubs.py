@@ -86,9 +86,9 @@ class GenerateAclApiStubsTest(unittest.TestCase):
             REPO_ROOT / "src/acl/aclrt_impl/acl_rt_wrapper.h"
         )
 
-        self.assertEqual(len(entries), 407)
+        self.assertEqual(len(entries), 411)
         self.assertEqual(
-            sum(entry.return_type == "aclError" for entry in entries.values()), 389
+            sum(entry.return_type == "aclError" for entry in entries.values()), 393
         )
         self.assertEqual(
             sum(entry.return_type != "aclError" for entry in entries.values()), 18
@@ -155,9 +155,9 @@ ACL_API_STUB(aclZero, ZERO)
 
         self.assertEqual(version, 1)
         self.assertEqual(real_provider_count, 94)
-        self.assertEqual(len(entries), 313)
+        self.assertEqual(len(entries), 317)
         self.assertEqual(
-            sum(entry.policy == "RT_FEATURE_NOT_SUPPORT" for entry in entries), 298
+            sum(entry.policy == "RT_FEATURE_NOT_SUPPORT" for entry in entries), 302
         )
         self.assertEqual(sum(entry.policy == "NULLPTR" for entry in entries), 5)
         self.assertEqual(sum(entry.policy == "INVALID_EXCEPTION_INFO" for entry in entries), 5)

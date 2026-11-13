@@ -271,6 +271,7 @@ set(runtime_src_device_list
     ${RUNTIME_CORE_DIR}/src/device/raw_device.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device_res.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device_adpt_comm.cc
+    ${RUNTIME_CORE_DIR}/src/device/device_sched_gate_stub.cc
     ${RUNTIME_CORE_DIR}/src/device/sq_addr_memory_pool.cc
     ${RUNTIME_CORE_DIR}/src/device/ctrl_sq_stub.cc
     ${RUNTIME_CORE_DIR}/src/device/device_error_stub.cc

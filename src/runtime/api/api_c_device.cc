@@ -415,6 +415,54 @@ RTS_API rtError_t rtDeviceStatusQuery(const uint32_t devId, rtDeviceStatus* devi
 }
 
 VISIBILITY_DEFAULT
+rtError_t rtDeviceSetSuspendConfig(const int32_t deviceId, const rtDeviceSuspendConfig* const config)
+{
+    GLOBAL_STATE_WAIT_IF_LOCKED();
+    Api* const api = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(api);
+    const rtError_t error = api->DeviceSetSuspendConfig(deviceId, config);
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtDeviceGetSuspendConfig(const int32_t deviceId, rtDeviceSuspendConfig* const config)
+{
+    GLOBAL_STATE_WAIT_IF_LOCKED();
+    Api* const api = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(api);
+    const rtError_t error = api->DeviceGetSuspendConfig(deviceId, config);
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtDeviceSuspendExecution(const int32_t deviceId, const uint32_t flag)
+{
+    GLOBAL_STATE_WAIT_IF_LOCKED();
+    Api* const api = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(api);
+    const rtError_t error = api->DeviceSuspendExecution(deviceId, flag);
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtDeviceResumeExecution(const int32_t deviceId, const uint32_t flag)
+{
+    GLOBAL_STATE_WAIT_IF_LOCKED();
+    Api* const api = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(api);
+    const rtError_t error = api->DeviceResumeExecution(deviceId, flag);
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
 rtError_t rtDeviceTaskAbort(int32_t devId, uint32_t timeout)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();

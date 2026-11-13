@@ -12,6 +12,34 @@
 namespace cce {
 namespace runtime {
 
+rtError_t ApiErrorDecorator::DeviceSetSuspendConfig(const int32_t deviceId, const rtDeviceSuspendConfig* const config)
+{
+    UNUSED(deviceId);
+    UNUSED(config);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiErrorDecorator::DeviceGetSuspendConfig(const int32_t deviceId, rtDeviceSuspendConfig* const config)
+{
+    UNUSED(deviceId);
+    UNUSED(config);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiErrorDecorator::DeviceSuspendExecution(const int32_t deviceId, const uint32_t flag)
+{
+    UNUSED(deviceId);
+    UNUSED(flag);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiErrorDecorator::DeviceResumeExecution(const int32_t deviceId, const uint32_t flag)
+{
+    UNUSED(deviceId);
+    UNUSED(flag);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 rtError_t ValidateStreamLaunchBlockingSet(const Stream* const stream, const uint32_t launchBlockingMode)
 {
     UNUSED(stream);

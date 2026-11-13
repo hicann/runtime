@@ -2164,6 +2164,28 @@ rtError_t ApiImplDavid::GetMemUceInfo(const uint32_t deviceId, rtMemUceInfo* mem
     return RT_ERROR_NONE;
 }
 
+rtError_t ApiImplDavid::DeviceSetSuspendConfig(const int32_t deviceId, const rtDeviceSuspendConfig* const config)
+{
+    return Runtime::Instance()->SetSuspendConfig(deviceId, *config);
+}
+
+rtError_t ApiImplDavid::DeviceGetSuspendConfig(const int32_t deviceId, rtDeviceSuspendConfig* const config)
+{
+    return Runtime::Instance()->GetSuspendConfig(deviceId, config);
+}
+
+rtError_t ApiImplDavid::DeviceSuspendExecution(const int32_t deviceId, const uint32_t flag)
+{
+    UNUSED(flag);
+    return Runtime::Instance()->ControlSchedGate(deviceId, false);
+}
+
+rtError_t ApiImplDavid::DeviceResumeExecution(const int32_t deviceId, const uint32_t flag)
+{
+    UNUSED(flag);
+    return Runtime::Instance()->ControlSchedGate(deviceId, true);
+}
+
 rtError_t ApiImplDavid::DeviceTaskAbort(const int32_t devId, const uint32_t timeout)
 {
     return DavidDeviceTaskAbort(devId, timeout);

@@ -1159,6 +1159,7 @@ rtError_t DavidStream::JudgeHeadTailPos(rtEventStatus_t* const status, uint16_t 
 
 void DavidStream::ResetDavidStreamConstruct()
 {
+    InitSchedOperatorCount();
     publicQueueHead_ = 0U;
     publicQueueTail_ = 0U;
     recordVersion_.Set(0);

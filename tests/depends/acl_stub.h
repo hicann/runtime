@@ -983,6 +983,10 @@ public:
     MOCK_METHOD1(rtUnRegKernelLaunchFillFunc, rtError_t(const char* symbol));
     MOCK_METHOD2(rtGetMemUceInfo, rtError_t(const uint32_t, rtMemUceInfo*));
     MOCK_METHOD2(rtMemUceRepair, rtError_t(const uint32_t, rtMemUceInfo*));
+    MOCK_METHOD2(rtDeviceSetSuspendConfig, rtError_t(int32_t, const rtDeviceSuspendConfig*));
+    MOCK_METHOD2(rtDeviceGetSuspendConfig, rtError_t(int32_t, rtDeviceSuspendConfig*));
+    MOCK_METHOD2(rtDeviceSuspendExecution, rtError_t(int32_t, uint32_t));
+    MOCK_METHOD2(rtDeviceResumeExecution, rtError_t(int32_t, uint32_t));
     MOCK_METHOD2(rtDeviceTaskAbort, rtError_t(int32_t, uint32_t));
     MOCK_METHOD2(rtMemQueueReset, rtError_t(int32_t, uint32_t));
     MOCK_METHOD2(rtRegStreamStateCallback, rtError_t(const char* regName, rtStreamStateCallback callback));

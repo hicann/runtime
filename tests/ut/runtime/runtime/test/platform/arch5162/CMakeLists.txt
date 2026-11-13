@@ -240,6 +240,7 @@ set(runtimeut_src_device_list
     ${TOP_DIR}/src/runtime/core/src/device/raw_device.cc
     ${TOP_DIR}/src/runtime/core/src/device/raw_device_res.cc
     ${TOP_DIR}/src/runtime/core/src/device/raw_device_adpt_comm.cc
+    ${TOP_DIR}/src/runtime/core/src/device/device_sched_gate_stub.cc
     ${TOP_DIR}/src/runtime/core/src/device/sq_addr_memory_pool.cc
     ${TOP_DIR}/src/runtime/core/src/device/ctrl_sq_stub.cc
     ${TOP_DIR}/src/runtime/core/src/device/device_error_stub.cc

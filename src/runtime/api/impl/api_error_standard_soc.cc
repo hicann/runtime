@@ -27,6 +27,114 @@
 
 namespace cce {
 namespace runtime {
+
+rtError_t ApiErrorDecorator::DeviceSetSuspendConfig(const int32_t deviceId, const rtDeviceSuspendConfig* const config)
+{
+    Runtime* rt = Runtime::Instance();
+    if (!IS_SUPPORT_CHIP_FEATURE(rt->GetChipType(), RtOptionalFeatureType::RT_FEATURE_TASK_FUSION) ||
+        !IS_SUPPORT_CHIP_FEATURE(rt->GetChipType(), RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
+        RT_LOG(
+            RT_LOG_WARNING, "Chip type(%d) does not support device execution suspend and resume.",
+            static_cast<int32_t>(rt->GetChipType()));
+        return RT_ERROR_FEATURE_NOT_SUPPORT;
+    }
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
+        config, RT_ERROR_INVALID_VALUE, "Configuring device execution suspension and resumption");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
+        static_cast<uint32_t>(config->mode) >= RT_DEVICE_SUSPEND_MODE_MAX, RT_ERROR_INVALID_VALUE,
+        "Configuring device execution suspension and resumption",
+        RtFmtMsg("UNKNOWN(%d)", static_cast<int32_t>(config->mode)), "config->mode",
+        "RT_DEVICE_SUSPEND_MODE_DISABLE(0) or RT_DEVICE_SUSPEND_MODE_DEVICE(1)");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        config->taskInterval > MAX_DEVICE_SUSPEND_TASK_INTERVAL, RT_ERROR_INVALID_VALUE,
+        "Configuring device execution suspension and resumption", config->taskInterval,
+        RtFmtMsg("[0, %u]", MAX_DEVICE_SUSPEND_TASK_INTERVAL));
+    constexpr size_t reservedCount = sizeof(config->reserved) / sizeof(config->reserved[0]);
+    for (size_t i = 0U; i < reservedCount; ++i) {
+        COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
+            config->reserved[i] != 0U, RT_ERROR_INVALID_VALUE, "Configuring device execution suspension and resumption",
+            config->reserved[i], RtFmtMsg("config->reserved[%zu]", i), "0");
+    }
+    uint32_t realDevId = 0U;
+    rtError_t error = rt->ChgUserDevIdToDeviceId(static_cast<uint32_t>(deviceId), &realDevId);
+    COND_RETURN_ERROR(
+        error != RT_ERROR_NONE, error, "Failed to convert the user device ID %u to driver device ID.", deviceId);
+    error = rt->CheckDeviceIdIsValid(static_cast<int32_t>(realDevId));
+    COND_RETURN_ERROR(
+        error != RT_ERROR_NONE, error, "drv devId is invalid, devId=%u, drv devId=%u, retCode=%#x", deviceId, realDevId,
+        static_cast<uint32_t>(error));
+    return impl_->DeviceSetSuspendConfig(static_cast<int32_t>(realDevId), config);
+}
+
+rtError_t ApiErrorDecorator::DeviceGetSuspendConfig(const int32_t deviceId, rtDeviceSuspendConfig* const config)
+{
+    Runtime* rt = Runtime::Instance();
+    if (!IS_SUPPORT_CHIP_FEATURE(rt->GetChipType(), RtOptionalFeatureType::RT_FEATURE_TASK_FUSION) ||
+        !IS_SUPPORT_CHIP_FEATURE(rt->GetChipType(), RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
+        RT_LOG(
+            RT_LOG_WARNING, "Chip type(%d) does not support device execution suspend and resume.",
+            static_cast<int32_t>(rt->GetChipType()));
+        return RT_ERROR_FEATURE_NOT_SUPPORT;
+    }
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
+        config, RT_ERROR_INVALID_VALUE, "Querying the device suspend/resume configuration");
+    uint32_t realDevId = 0U;
+    rtError_t error = rt->ChgUserDevIdToDeviceId(static_cast<uint32_t>(deviceId), &realDevId);
+    COND_RETURN_ERROR(
+        error != RT_ERROR_NONE, error, "Failed to convert the user device ID %u to driver device ID.", deviceId);
+    error = rt->CheckDeviceIdIsValid(static_cast<int32_t>(realDevId));
+    COND_RETURN_ERROR(
+        error != RT_ERROR_NONE, error, "drv devId is invalid, devId=%u, drv devId=%u, retCode=%#x", deviceId, realDevId,
+        static_cast<uint32_t>(error));
+    return impl_->DeviceGetSuspendConfig(static_cast<int32_t>(realDevId), config);
+}
+
+rtError_t ApiErrorDecorator::DeviceSuspendExecution(const int32_t deviceId, const uint32_t flag)
+{
+    Runtime* rt = Runtime::Instance();
+    if (!IS_SUPPORT_CHIP_FEATURE(rt->GetChipType(), RtOptionalFeatureType::RT_FEATURE_TASK_FUSION) ||
+        !IS_SUPPORT_CHIP_FEATURE(rt->GetChipType(), RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
+        RT_LOG(
+            RT_LOG_WARNING, "Chip type(%d) does not support device execution suspend and resume.",
+            static_cast<int32_t>(rt->GetChipType()));
+        return RT_ERROR_FEATURE_NOT_SUPPORT;
+    }
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        flag != 0U, RT_ERROR_INVALID_VALUE, "Suspending device execution", flag, "0");
+    uint32_t realDevId = 0U;
+    rtError_t error = rt->ChgUserDevIdToDeviceId(static_cast<uint32_t>(deviceId), &realDevId);
+    COND_RETURN_ERROR(
+        error != RT_ERROR_NONE, error, "Failed to convert the user device ID %u to driver device ID.", deviceId);
+    error = rt->CheckDeviceIdIsValid(static_cast<int32_t>(realDevId));
+    COND_RETURN_ERROR(
+        error != RT_ERROR_NONE, error, "drv devId is invalid, devId=%u, drv devId=%u, retCode=%#x", deviceId, realDevId,
+        static_cast<uint32_t>(error));
+    return impl_->DeviceSuspendExecution(static_cast<int32_t>(realDevId), flag);
+}
+
+rtError_t ApiErrorDecorator::DeviceResumeExecution(const int32_t deviceId, const uint32_t flag)
+{
+    Runtime* rt = Runtime::Instance();
+    if (!IS_SUPPORT_CHIP_FEATURE(rt->GetChipType(), RtOptionalFeatureType::RT_FEATURE_TASK_FUSION) ||
+        !IS_SUPPORT_CHIP_FEATURE(rt->GetChipType(), RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
+        RT_LOG(
+            RT_LOG_WARNING, "Chip type(%d) does not support device execution suspend and resume.",
+            static_cast<int32_t>(rt->GetChipType()));
+        return RT_ERROR_FEATURE_NOT_SUPPORT;
+    }
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        flag != 0U, RT_ERROR_INVALID_VALUE, "Resuming device execution", flag, "0");
+    uint32_t realDevId = 0U;
+    rtError_t error = rt->ChgUserDevIdToDeviceId(static_cast<uint32_t>(deviceId), &realDevId);
+    COND_RETURN_ERROR(
+        error != RT_ERROR_NONE, error, "Failed to convert the user device ID %u to driver device ID.", deviceId);
+    error = rt->CheckDeviceIdIsValid(static_cast<int32_t>(realDevId));
+    COND_RETURN_ERROR(
+        error != RT_ERROR_NONE, error, "drv devId is invalid, devId=%u, drv devId=%u, retCode=%#x", deviceId, realDevId,
+        static_cast<uint32_t>(error));
+    return impl_->DeviceResumeExecution(static_cast<int32_t>(realDevId), flag);
+}
+
 constexpr uint32_t TASK_ABORT_TIMEOUT_MAX = (36 * 60 * 1000U); // 36min
 constexpr uint32_t LAUNCH_BLOCKING_UNSUPPORTED_STREAM_FLAGS =
     RT_STREAM_PERSISTENT | RT_STREAM_AICPU | RT_STREAM_CP_PROCESS_USE;

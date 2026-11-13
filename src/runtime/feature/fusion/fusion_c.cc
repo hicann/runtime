@@ -487,6 +487,17 @@ rtError_t LaunchFusionKernel(Stream* stm, void* const fusionKernelInfo, rtFusion
     error = CheckTaskCanSend(stm);
     ERROR_PROC_RETURN_MSG_INNER(error, rt->PutProgram(prog);
                                 , "stream_id=%d check failed, retCode=%#x.", stm->Id_(), static_cast<uint32_t>(error));
+    DeviceSchedGate* gate = stm->Device_()->GetSchedGate();
+    if (gate != nullptr) {
+        error = gate->TryInsertGateWait(stm, TS_TASK_TYPE_FUSION_KERNEL);
+        if (error != RT_ERROR_NONE) {
+            rt->PutProgram(prog);
+            RT_LOG(
+                RT_LOG_ERROR, "Failed to prepare the scheduling gate wait for stream (stream_id=%d), retCode=%#x.",
+                stm->Id_(), static_cast<uint32_t>(error));
+            return error;
+        }
+    }
     DavidStream* davidStm = static_cast<DavidStream*>(stm);
     const bool useArgPool = UseArgsPool(davidStm, argsInfo, stm->IsTaskGroupUpdate());
     uint32_t pos = 0xFFFFU;

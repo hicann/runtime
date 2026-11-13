@@ -342,6 +342,13 @@ rtError_t StreamLaunchKernelV1(
     ERROR_RETURN_MSG_INNER(
         error, "Failed to check task send status, stream_id=%d, retCode=%#x.", stm->Id_(),
         static_cast<uint32_t>(error));
+    DeviceSchedGate* gate = stm->Device_()->GetSchedGate();
+    if (gate != nullptr) {
+        error = gate->TryInsertGateWait(stm, TS_TASK_TYPE_KERNEL_AICORE);
+        ERROR_RETURN(
+            error, "Failed to prepare the scheduling gate wait for stream (stream_id=%d), retCode=%#x.", stm->Id_(),
+            static_cast<uint32_t>(error));
+    }
     error = StreamLaunchKernelPrepare(
         stm, registeredKernel, prog, kernelAttrType, launchMdl, stubFunc, addr1, addr2, nullptr, 0);
     COND_RETURN_ERROR_MSG_INNER(
@@ -471,6 +478,13 @@ rtError_t StreamLaunchKernelWithHandle(
     ERROR_RETURN_MSG_INNER(
         error, "Failed to check task send status, stream_id=%d, retCode=%#x.", stm->Id_(),
         static_cast<uint32_t>(error));
+    DeviceSchedGate* gate = stm->Device_()->GetSchedGate();
+    if (gate != nullptr) {
+        error = gate->TryInsertGateWait(stm, TS_TASK_TYPE_KERNEL_AICORE);
+        ERROR_RETURN(
+            error, "Failed to prepare the scheduling gate wait for stream (stream_id=%d), retCode=%#x.", stm->Id_(),
+            static_cast<uint32_t>(error));
+    }
     error = StreamLaunchKernelPrepare(
         stm, registeredKernel, prog, kernelAttrType, launchMdl, nullptr, addr1, addr2, progHandle, tilingKey);
     COND_RETURN_ERROR_MSG_INNER(
@@ -618,6 +632,13 @@ rtError_t StreamLaunchKernelV2(
     ERROR_RETURN_MSG_INNER(
         error, "Failed to check task send status, stream_id=%d, retCode=%#x.", stm->Id_(),
         static_cast<uint32_t>(error));
+    DeviceSchedGate* gate = stm->Device_()->GetSchedGate();
+    if (gate != nullptr) {
+        error = gate->TryInsertGateWait(stm, TS_TASK_TYPE_KERNEL_AICORE);
+        ERROR_RETURN(
+            error, "Failed to prepare the scheduling gate wait for stream (stream_id=%d), retCode=%#x.", stm->Id_(),
+            static_cast<uint32_t>(error));
+    }
 
     error = kernel->GetFunctionDevAddr(kernelPc1, kernelPc2);
     ERROR_RETURN_MSG_INNER(error, "Failed to get kernel function address.");

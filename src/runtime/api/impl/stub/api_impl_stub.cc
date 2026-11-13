@@ -14,6 +14,34 @@
 namespace cce {
 namespace runtime {
 
+rtError_t ApiImpl::DeviceSetSuspendConfig(const int32_t deviceId, const rtDeviceSuspendConfig* const config)
+{
+    UNUSED(deviceId);
+    UNUSED(config);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::DeviceGetSuspendConfig(const int32_t deviceId, rtDeviceSuspendConfig* const config)
+{
+    UNUSED(deviceId);
+    UNUSED(config);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::DeviceSuspendExecution(const int32_t deviceId, const uint32_t flag)
+{
+    UNUSED(deviceId);
+    UNUSED(flag);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::DeviceResumeExecution(const int32_t deviceId, const uint32_t flag)
+{
+    UNUSED(deviceId);
+    UNUSED(flag);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 rtError_t ApiImpl::BinaryEnumerateFunctions(
     const Program* const binHandle, Kernel** const funcHandles, const uint32_t numFunctions,
     uint32_t* const actualCount)

@@ -342,6 +342,10 @@ enum AclProfType {
     AclrtGetThreadLastTaskIdAndStreamId,
     AclmdlRIGetTasks,
     AclmdlRISetAttribute,
+    AclrtDeviceSetSuspendConfig,
+    AclrtDeviceGetSuspendConfig,
+    AclrtDeviceSuspendExecution,
+    AclrtDeviceResumeExecution,
     // this is the end, can not add after AclRtProfTypeEnd
     AclRtProfTypeEnd
 };

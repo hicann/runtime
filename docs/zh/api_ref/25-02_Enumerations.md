@@ -40,6 +40,7 @@ enum 类型数据。
 - [aclrtDevFeatureType](#aclrtDevFeatureType)
 - [aclrtDeviceLimit](#aclrtDeviceLimit)
 - [aclrtDeviceStatus](#aclrtDeviceStatus)
+- [aclrtDeviceSuspendMode](#aclrtDeviceSuspendMode)
 - [aclrtDevResLimitType](#aclrtDevResLimitType)
 - [aclrtEngineType](#aclrtEngineType)
 - [aclrtEventRecordedStatus](#aclrtEventRecordedStatus)
@@ -1311,6 +1312,23 @@ typedef enum aclrtDeviceStatus {
     ACL_RT_DEVICE_STATUS_END = 0xFFFF,   // 预留值
 } aclrtDeviceStatus;
 ```
+
+<br>
+
+<a id="aclrtDeviceSuspendMode"></a>
+
+## aclrtDeviceSuspendMode
+
+```c
+typedef enum aclrtDeviceSuspendMode {
+    ACL_RT_DEVICE_SUSPEND_MODE_DISABLE = 0,  // 关闭Device任务执行暂停、恢复功能
+    ACL_RT_DEVICE_SUSPEND_MODE_DEVICE = 1,   // 使能Device任务执行暂停、恢复功能
+} aclrtDeviceSuspendMode;
+```
+
+用于[aclrtDeviceSuspendConfig](25-04_Structs.md#aclrtDeviceSuspendConfig)结构体的mode成员。默认值为ACL_RT_DEVICE_SUSPEND_MODE_DISABLE。
+
+ACL_RT_DEVICE_SUSPEND_MODE_DEVICE表示使能该功能，不表示任务已暂停。使能后，可通过[aclrtDeviceSuspendExecution](04_device_management.md#aclrtDeviceSuspendExecution)和[aclrtDeviceResumeExecution](04_device_management.md#aclrtDeviceResumeExecution)接口控制任务执行。
 
 <br>
 

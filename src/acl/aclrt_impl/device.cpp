@@ -283,6 +283,69 @@ aclError aclrtQueryDeviceStatusImpl(int32_t deviceId, aclrtDeviceStatus* deviceS
     return ACL_SUCCESS;
 }
 
+aclError aclrtDeviceSetSuspendConfigImpl(const int32_t deviceId, const aclrtDeviceSuspendConfig* const config)
+{
+    ACL_PROFILING_REG(acl::AclProfType::AclrtDeviceSetSuspendConfig);
+    ACL_LOG_INFO("start to execute aclrtDeviceSetSuspendConfig, deviceId = %d.", deviceId);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(config);
+    ACL_CHECK_INVALID_VALUE_WITH_DESC(
+        (config->mode == ACL_RT_DEVICE_SUSPEND_MODE_DISABLE) || (config->mode == ACL_RT_DEVICE_SUSPEND_MODE_DEVICE),
+        acl::AclErrorLogManager::FormatStr("UNKNOWN(%d)", static_cast<int32_t>(config->mode)).c_str(), "config->mode",
+        "ACL_RT_DEVICE_SUSPEND_MODE_DISABLE(0) or ACL_RT_DEVICE_SUSPEND_MODE_DEVICE(1)", ACL_ERROR_INVALID_PARAM);
+    const uint32_t taskIntervalMax = MAX_DEVICE_SUSPEND_TASK_INTERVAL;
+    ACL_CHECK_INVALID_VALUE_WITH_EXPECT_RET(
+        config->taskInterval <= taskIntervalMax, config->taskInterval,
+        acl::AclErrorLogManager::FormatStr("[0, %u]", taskIntervalMax).c_str(), ACL_ERROR_INVALID_PARAM);
+    constexpr size_t reservedCount = sizeof(config->reserved) / sizeof(config->reserved[0]);
+    for (size_t i = 0U; i < reservedCount; ++i) {
+        ACL_CHECK_INVALID_PARAM_WITH_REASON_DESC_RET(
+            config->reserved[i] != 0U, std::to_string(config->reserved[i]).c_str(),
+            acl::AclErrorLogManager::FormatStr("config->reserved[%zu]", i).c_str(), "Reserved fields must be 0",
+            ACL_ERROR_INVALID_PARAM);
+    }
+    rtDeviceSuspendConfig rtConfig{};
+    rtConfig.mode = static_cast<rtDeviceSuspendMode>(config->mode);
+    rtConfig.taskInterval = config->taskInterval;
+    ACL_REQUIRES_RTS_OK(rtDeviceSetSuspendConfig(deviceId, &rtConfig));
+    ACL_LOG_INFO("successfully execute aclrtDeviceSetSuspendConfig, deviceId = %d.", deviceId);
+    return ACL_SUCCESS;
+}
+
+aclError aclrtDeviceGetSuspendConfigImpl(const int32_t deviceId, aclrtDeviceSuspendConfig* const config)
+{
+    ACL_PROFILING_REG(acl::AclProfType::AclrtDeviceGetSuspendConfig);
+    ACL_LOG_INFO("start to execute aclrtDeviceGetSuspendConfig, deviceId = %d.", deviceId);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(config);
+    rtDeviceSuspendConfig rtConfig{};
+    ACL_REQUIRES_RTS_OK(rtDeviceGetSuspendConfig(deviceId, &rtConfig));
+    aclrtDeviceSuspendConfig result{};
+    result.mode = static_cast<aclrtDeviceSuspendMode>(rtConfig.mode);
+    result.taskInterval = rtConfig.taskInterval;
+    *config = result;
+    ACL_LOG_INFO("successfully execute aclrtDeviceGetSuspendConfig, deviceId = %d.", deviceId);
+    return ACL_SUCCESS;
+}
+
+aclError aclrtDeviceSuspendExecutionImpl(const int32_t deviceId, const uint32_t flag)
+{
+    ACL_PROFILING_REG(acl::AclProfType::AclrtDeviceSuspendExecution);
+    ACL_LOG_INFO("start to execute aclrtDeviceSuspendExecution, deviceId = %d, flag = %u.", deviceId, flag);
+    ACL_CHECK_RESERVED_PARAM_REPORT_RET(flag, 0U, ACL_ERROR_INVALID_PARAM);
+    ACL_REQUIRES_RTS_OK(rtDeviceSuspendExecution(deviceId, flag));
+    ACL_LOG_INFO("successfully execute aclrtDeviceSuspendExecution, deviceId = %d.", deviceId);
+    return ACL_SUCCESS;
+}
+
+aclError aclrtDeviceResumeExecutionImpl(const int32_t deviceId, const uint32_t flag)
+{
+    ACL_PROFILING_REG(acl::AclProfType::AclrtDeviceResumeExecution);
+    ACL_LOG_INFO("start to execute aclrtDeviceResumeExecution, deviceId = %d, flag = %u.", deviceId, flag);
+    ACL_CHECK_RESERVED_PARAM_REPORT_RET(flag, 0U, ACL_ERROR_INVALID_PARAM);
+    ACL_REQUIRES_RTS_OK(rtDeviceResumeExecution(deviceId, flag));
+    ACL_LOG_INFO("successfully execute aclrtDeviceResumeExecution, deviceId = %d.", deviceId);
+    return ACL_SUCCESS;
+}
+
 aclError aclrtDeviceTaskAbortImpl(int32_t deviceId, uint32_t timeout)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtDeviceTaskAbort);

@@ -1,6 +1,6 @@
 # 4. Device管理
 
-本章节描述 CANN Runtime 的设备管理接口，用于设备的设置、重置、查询、同步及 P2P 访问等操作。
+本章节描述 CANN Runtime 的设备管理接口，用于设备的设置、重置、查询、同步、任务执行暂停与恢复及 P2P 访问等操作。
 
 - [`aclError aclrtSetDevice(int32_t deviceId)`](#aclrtSetDevice)：指定当前线程中用于运算的Device。在不同线程中支持调用aclrtSetDevice接口指定同一个Device用于运算。
 - [`aclError aclrtResetDevice(int32_t deviceId)`](#aclrtResetDevice)：复位当前运算的Device，释放Device上的资源。
@@ -47,6 +47,10 @@
 - [`aclError aclrtDeviceSetLimit(aclrtDeviceLimit limit, size_t value)`](#aclrtDeviceSetLimit)：设置当前进程的Device资源限制，例如SIMT算子栈空间大小、SIMT Printf维测空间大小等。
 - [`aclError aclrtDeviceGetLimit(aclrtDeviceLimit limit, size_t *value)`](#aclrtDeviceGetLimit)：获取当前进程的Device资源限制。
 - [`aclError aclrtDeviceL2CacheFlush(void* rsv)`](#aclrtDeviceL2CacheFlush)：清空当前Device的L2 Cache。
+- [`aclError aclrtDeviceSetSuspendConfig(int32_t deviceId, const aclrtDeviceSuspendConfig *config)`](#aclrtDeviceSetSuspendConfig)：设置当前进程中指定Device的任务执行暂停、恢复配置。
+- [`aclError aclrtDeviceGetSuspendConfig(int32_t deviceId, aclrtDeviceSuspendConfig *config)`](#aclrtDeviceGetSuspendConfig)：获取当前进程中指定Device的任务执行暂停、恢复配置。
+- [`aclError aclrtDeviceSuspendExecution(int32_t deviceId, uint32_t flag)`](#aclrtDeviceSuspendExecution)：暂停当前进程中指定Device的任务执行。
+- [`aclError aclrtDeviceResumeExecution(int32_t deviceId, uint32_t flag)`](#aclrtDeviceResumeExecution)：恢复当前进程中指定Device的任务执行。
 
 <a id="aclrtSetDevice"></a>
 
@@ -2814,3 +2818,276 @@ aclError aclrtDeviceL2CacheFlush(void* rsv)
 - 昇腾虚拟化实例场景下不支持调用本接口。
 - 不建议高频调用本接口，频繁调用会对业务性能产生影响。
 - 若清空期间该Device上存在并发业务在执行，L2 Cache可能会被再次占用，导致本次清空操作无效。
+
+<br>
+<br>
+<br>
+
+<a id="aclrtDeviceSetSuspendConfig"></a>
+
+## aclrtDeviceSetSuspendConfig
+
+```c
+aclError aclrtDeviceSetSuspendConfig(int32_t deviceId, const aclrtDeviceSuspendConfig *config)
+```
+
+**须知：本接口为试验特性，后续版本可能会存在变更，不支持应用于生产环境中。**
+
+### 产品支持情况
+
+<!-- npu="950" id5045 -->
+- Ascend 950PR&950DT系列产品：支持
+<!-- end id5045 -->
+<!-- npu="A3" id5046 -->
+- Atlas A3系列产品：不支持
+<!-- end id5046 -->
+<!-- npu="910b" id5047 -->
+- Atlas A2系列产品：不支持
+<!-- end id5047 -->
+<!-- npu="310b" id5048 -->
+- Atlas 200I/500 A2推理产品：不支持
+<!-- end id5048 -->
+<!-- npu="310p" id5049 -->
+- Atlas推理系列产品：不支持
+<!-- end id5049 -->
+<!-- npu="910" id5050 -->
+- Atlas训练系列产品：不支持
+<!-- end id5050 -->
+<!-- npu="IPV350" id5051 -->
+- IPV350：不支持
+<!-- end id5051 -->
+<!-- npu="5162A" id5052 -->
+- Hisilicon5162A：不支持
+<!-- end id5052 -->
+
+### 功能说明
+
+设置当前进程中指定Device的任务执行暂停、恢复配置。默认关闭该功能，不同Device可分别配置。
+
+将config中的mode设置为ACL_RT_DEVICE_SUSPEND_MODE_DEVICE后，系统按taskInterval指定的算子任务间隔在Stream上设置等待点。后续可通过[aclrtDeviceSuspendExecution](#aclrtDeviceSuspendExecution)接口使任务在等待点暂停，通过[aclrtDeviceResumeExecution](#aclrtDeviceResumeExecution)接口恢复任务执行。使能该功能不会立即暂停任务。
+
+将mode设置为ACL_RT_DEVICE_SUSPEND_MODE_DISABLE可关闭该功能。若Device已打开，关闭时会先解除已有等待点的阻塞，待恢复控制操作完成后停止设置新的等待点。若关闭操作失败，配置保持不变。
+
+### 参数说明
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | :---: | --- |
+| deviceId | 输入 | Device ID。<br>用户调用[aclrtGetDeviceCount](#aclrtGetDeviceCount)接口获取可用的Device数量后，这个Device ID的取值范围：[0, (可用的Device数量-1)] |
+| config | 输入 | 任务执行暂停、恢复配置，不能为空指针。类型定义请参见[aclrtDeviceSuspendConfig](25-04_Structs.md#aclrtDeviceSuspendConfig)。<br>mode用于使能或关闭该功能；taskInterval取值范围为[0, 1024]，使能时设置为0表示使用默认值8；reserved数组中的所有元素必须设置为0。 |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+### 约束说明
+
+- 调用本接口前，需先调用[aclInit](02_initialization_and_deinitialization.md#aclInit)接口完成初始化。
+- 使能该功能或修改taskInterval时，必须在当前进程打开指定Device之前调用本接口，例如在调用[aclrtSetDevice](#aclrtSetDevice)或[aclrtCreateContext](05_context_management.md#aclrtCreateContext)接口之前。Device打开前可重复配置，后配置的覆盖先配置的。
+- Device打开后，仅允许将mode从ACL_RT_DEVICE_SUSPEND_MODE_DEVICE改为ACL_RT_DEVICE_SUSPEND_MODE_DISABLE。不支持在Device打开后使能该功能、修改算子任务间隔或重复关闭该功能。
+- 关闭该功能后，若需重新使能，必须先释放当前进程在该Device上的所有Context及Device资源，确保Device已关闭，再重新配置并打开Device。若通过aclrtSetDevice接口打开Device，需注意与[aclrtResetDevice](#aclrtResetDevice)接口配对调用，引用计数减到0后才会真正释放对应资源。
+- 该功能不支持与快照备份、恢复功能同时使用。
+
+典型调用顺序如下所示：
+
+`aclInit`-->`aclrtDeviceSetSuspendConfig`（mode设置为ACL_RT_DEVICE_SUSPEND_MODE_DEVICE）-->`aclrtSetDevice`-->下发业务任务-->`aclrtDeviceSuspendExecution`-->`aclrtDeviceResumeExecution`-->同步等待业务任务完成-->`aclrtResetDevice`-->`aclFinalize`
+
+<br>
+<br>
+<br>
+
+<a id="aclrtDeviceGetSuspendConfig"></a>
+
+## aclrtDeviceGetSuspendConfig
+
+```c
+aclError aclrtDeviceGetSuspendConfig(int32_t deviceId, aclrtDeviceSuspendConfig *config)
+```
+
+**须知：本接口为试验特性，后续版本可能会存在变更，不支持应用于生产环境中。**
+
+### 产品支持情况
+
+<!-- npu="950" id5053 -->
+- Ascend 950PR&950DT系列产品：支持
+<!-- end id5053 -->
+<!-- npu="A3" id5054 -->
+- Atlas A3系列产品：不支持
+<!-- end id5054 -->
+<!-- npu="910b" id5055 -->
+- Atlas A2系列产品：不支持
+<!-- end id5055 -->
+<!-- npu="310b" id5056 -->
+- Atlas 200I/500 A2推理产品：不支持
+<!-- end id5056 -->
+<!-- npu="310p" id5057 -->
+- Atlas推理系列产品：不支持
+<!-- end id5057 -->
+<!-- npu="910" id5058 -->
+- Atlas训练系列产品：不支持
+<!-- end id5058 -->
+<!-- npu="IPV350" id5059 -->
+- IPV350：不支持
+<!-- end id5059 -->
+<!-- npu="5162A" id5060 -->
+- Hisilicon5162A：不支持
+<!-- end id5060 -->
+
+### 功能说明
+
+获取当前进程中指定Device的任务执行暂停、恢复配置。本接口不会打开Device，在Device打开前、打开后均可查询。
+
+- 未配置或已关闭该功能时，返回的config中mode为ACL_RT_DEVICE_SUSPEND_MODE_DISABLE，taskInterval为0。
+- 已使能该功能时，返回的mode为ACL_RT_DEVICE_SUSPEND_MODE_DEVICE，taskInterval为实际生效的算子任务间隔。若设置配置时taskInterval为0，则查询结果为默认值8。
+- 接口调用成功后，reserved数组中的所有元素均为0。
+
+本接口仅查询配置，不用于判断Device上的任务是否已暂停。
+
+### 参数说明
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | :---: | --- |
+| deviceId | 输入 | Device ID。<br>用户调用[aclrtGetDeviceCount](#aclrtGetDeviceCount)接口获取可用的Device数量后，这个Device ID的取值范围：[0, (可用的Device数量-1)] |
+| config | 输出 | 任务执行暂停、恢复配置，不能为空指针。由调用者申请结构体内存，并将地址传入本接口。类型定义请参见[aclrtDeviceSuspendConfig](25-04_Structs.md#aclrtDeviceSuspendConfig)。 |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+### 约束说明
+
+调用本接口前，需先调用[aclInit](02_initialization_and_deinitialization.md#aclInit)接口完成初始化。
+
+<br>
+<br>
+<br>
+
+<a id="aclrtDeviceSuspendExecution"></a>
+
+## aclrtDeviceSuspendExecution
+
+```c
+aclError aclrtDeviceSuspendExecution(int32_t deviceId, uint32_t flag)
+```
+
+**须知：本接口为试验特性，后续版本可能会存在变更，不支持应用于生产环境中。**
+
+### 产品支持情况
+
+<!-- npu="950" id5061 -->
+- Ascend 950PR&950DT系列产品：支持
+<!-- end id5061 -->
+<!-- npu="A3" id5062 -->
+- Atlas A3系列产品：不支持
+<!-- end id5062 -->
+<!-- npu="910b" id5063 -->
+- Atlas A2系列产品：不支持
+<!-- end id5063 -->
+<!-- npu="310b" id5064 -->
+- Atlas 200I/500 A2推理产品：不支持
+<!-- end id5064 -->
+<!-- npu="310p" id5065 -->
+- Atlas推理系列产品：不支持
+<!-- end id5065 -->
+<!-- npu="910" id5066 -->
+- Atlas训练系列产品：不支持
+<!-- end id5066 -->
+<!-- npu="IPV350" id5067 -->
+- IPV350：不支持
+<!-- end id5067 -->
+<!-- npu="5162A" id5068 -->
+- Hisilicon5162A：不支持
+<!-- end id5068 -->
+
+### 功能说明
+
+暂停当前进程中指定Device的任务执行。本接口与[aclrtDeviceResumeExecution](#aclrtDeviceResumeExecution)接口配合使用。
+
+系统按照[aclrtDeviceSetSuspendConfig](#aclrtDeviceSetSuspendConfig)接口配置的算子任务间隔在Stream上设置等待点。调用本接口后，任务执行到等待点时暂停，直到调用aclrtDeviceResumeExecution接口恢复执行。
+
+本接口为同步接口，阻塞当前线程，直到暂停控制操作完成。接口返回成功不表示所有任务均已停止，已通过等待点的任务仍可继续执行。
+
+### 参数说明
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | :---: | --- |
+| deviceId | 输入 | Device ID。<br>用户调用[aclrtGetDeviceCount](#aclrtGetDeviceCount)接口获取可用的Device数量后，这个Device ID的取值范围：[0, (可用的Device数量-1)] |
+| flag | 输入 | 预留参数，当前必须设置为0。 |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+### 约束说明
+
+- 调用本接口前，需先调用[aclInit](02_initialization_and_deinitialization.md#aclInit)接口完成初始化，在打开指定Device前通过[aclrtDeviceSetSuspendConfig](#aclrtDeviceSetSuspendConfig)接口将mode设置为ACL_RT_DEVICE_SUSPEND_MODE_DEVICE，再打开该Device。
+- 调用本接口时，该Device的任务执行暂停、恢复功能必须处于使能状态。
+- 本接口作用于当前进程中指定Device，调用线程无需设置当前Context。本接口不会隐式打开Device。
+- 暂停通过Stream上的等待点生效，不会抢占或中断已开始执行的算子。
+- 若暂停控制操作已下发，但接口返回失败，不保证任务执行状态回退至调用前的状态。
+- 该功能不支持与快照备份、恢复功能同时使用。
+
+<br>
+<br>
+<br>
+
+<a id="aclrtDeviceResumeExecution"></a>
+
+## aclrtDeviceResumeExecution
+
+```c
+aclError aclrtDeviceResumeExecution(int32_t deviceId, uint32_t flag)
+```
+
+**须知：本接口为试验特性，后续版本可能会存在变更，不支持应用于生产环境中。**
+
+### 产品支持情况
+
+<!-- npu="950" id5069 -->
+- Ascend 950PR&950DT系列产品：支持
+<!-- end id5069 -->
+<!-- npu="A3" id5070 -->
+- Atlas A3系列产品：不支持
+<!-- end id5070 -->
+<!-- npu="910b" id5071 -->
+- Atlas A2系列产品：不支持
+<!-- end id5071 -->
+<!-- npu="310b" id5072 -->
+- Atlas 200I/500 A2推理产品：不支持
+<!-- end id5072 -->
+<!-- npu="310p" id5073 -->
+- Atlas推理系列产品：不支持
+<!-- end id5073 -->
+<!-- npu="910" id5074 -->
+- Atlas训练系列产品：不支持
+<!-- end id5074 -->
+<!-- npu="IPV350" id5075 -->
+- IPV350：不支持
+<!-- end id5075 -->
+<!-- npu="5162A" id5076 -->
+- Hisilicon5162A：不支持
+<!-- end id5076 -->
+
+### 功能说明
+
+恢复当前进程中指定Device的任务执行，使通过[aclrtDeviceSuspendExecution](#aclrtDeviceSuspendExecution)接口暂停在等待点的任务继续执行。
+
+本接口为同步接口，阻塞当前线程，直到恢复控制操作完成。接口返回成功不表示业务任务已执行完成。若需要等待业务任务完成，需在恢复执行后调用[aclrtSynchronizeStream](06_stream_management.md#aclrtSynchronizeStream)或[aclrtSynchronizeDevice](#aclrtSynchronizeDevice)等同步接口。
+
+### 参数说明
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | :---: | --- |
+| deviceId | 输入 | Device ID。<br>用户调用[aclrtGetDeviceCount](#aclrtGetDeviceCount)接口获取可用的Device数量后，这个Device ID的取值范围：[0, (可用的Device数量-1)] |
+| flag | 输入 | 预留参数，当前必须设置为0。 |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+### 约束说明
+
+- 调用本接口前，需先调用[aclInit](02_initialization_and_deinitialization.md#aclInit)接口完成初始化，在打开指定Device前通过[aclrtDeviceSetSuspendConfig](#aclrtDeviceSetSuspendConfig)接口将mode设置为ACL_RT_DEVICE_SUSPEND_MODE_DEVICE，再打开该Device。
+- 调用本接口时，该Device的任务执行暂停、恢复功能必须处于使能状态。
+- 本接口作用于当前进程中指定Device，调用线程无需设置当前Context。本接口不会隐式打开Device。
+- 若恢复控制操作已下发，但接口返回失败，不保证任务执行状态回退至调用前的状态。
+- 该功能不支持与快照备份、恢复功能同时使用。

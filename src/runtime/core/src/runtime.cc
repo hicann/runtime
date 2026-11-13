@@ -3206,6 +3206,96 @@ rtError_t Runtime::InitOpExecTimeout(const Device* dev)
     return RT_ERROR_NONE;
 }
 
+rtError_t Runtime::SetSuspendConfig(const uint32_t deviceId, const rtDeviceSuspendConfig& config)
+{
+    if (deviceId >= RT_MAX_DEV_NUM) {
+        RT_LOG(RT_LOG_ERROR, "Failed to set suspend config, invalid device_id(%u).", deviceId);
+        return RT_ERROR_DEVICE_ID;
+    }
+    RefObject<Device*>& refObj = devices_[deviceId][RT_TSC_ID];
+    while (!refObj.IsValIdle()) {
+        std::this_thread::yield();
+    }
+    const ScopeGuard unlock([&refObj]() { refObj.ChangeValStatus(refObj.STATUS_IDLE); });
+    Device* device = refObj.GetVal(false);
+    if (device != nullptr) {
+        COND_RETURN_AND_MSG_OUTER(
+            config.mode != RT_DEVICE_SUSPEND_MODE_DISABLE, RT_ERROR_INVALID_VALUE, ErrorCode::EE1018,
+            "Configuring device execution suspension and resumption",
+            RtFmtMsg(
+                "Device-level execution suspension and resumption cannot be enabled or reconfigured "
+                "while device (device_id=%u) is open. "
+                "Close the device before changing the suspend/resume configuration",
+                deviceId));
+        COND_RETURN_AND_MSG_OUTER(
+            suspendConfigs_[deviceId].mode == RT_DEVICE_SUSPEND_MODE_DISABLE, RT_ERROR_INVALID_VALUE, ErrorCode::EE1016,
+            "Configuring device execution suspension and resumption",
+            RtFmtMsg(
+                "Execution suspension and resumption are disabled for device (device_id=%u). "
+                "Close the device before changing the suspend/resume configuration",
+                deviceId));
+        DeviceSchedGate* gate = device->GetSchedGate();
+        if (gate != nullptr) {
+            // Open the gate before disabling control so existing waits can still complete.
+            const rtError_t error = gate->Resume();
+            COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
+            gate->DisableInsertion();
+        }
+    }
+    suspendConfigs_[deviceId].mode = config.mode;
+    suspendConfigs_[deviceId].taskInterval =
+        (config.mode == RT_DEVICE_SUSPEND_MODE_DISABLE) ? 0U : (config.taskInterval == 0U ? 8U : config.taskInterval);
+    return RT_ERROR_NONE;
+}
+
+rtError_t Runtime::GetSuspendConfig(const uint32_t deviceId, rtDeviceSuspendConfig* const config)
+{
+    if (deviceId >= RT_MAX_DEV_NUM) {
+        RT_LOG(RT_LOG_ERROR, "Failed to get suspend config, invalid device_id(%u).", deviceId);
+        return RT_ERROR_DEVICE_ID;
+    }
+    COND_RETURN_ERROR(
+        config == nullptr, RT_ERROR_INVALID_VALUE,
+        "Failed to query the device suspend/resume configuration: internal config pointer is null.");
+    RefObject<Device*>& refObj = devices_[deviceId][RT_TSC_ID];
+    while (!refObj.IsValIdle()) {
+        std::this_thread::yield();
+    }
+    *config = suspendConfigs_[deviceId];
+    refObj.ChangeValStatus(refObj.STATUS_IDLE);
+    return RT_ERROR_NONE;
+}
+
+rtError_t Runtime::ControlSchedGate(const uint32_t deviceId, const bool resume)
+{
+    if (deviceId >= RT_MAX_DEV_NUM) {
+        return RT_ERROR_DEVICE_ID;
+    }
+    RefObject<Device*>& refObj = devices_[deviceId][RT_TSC_ID];
+    while (!refObj.IsValIdle()) {
+        std::this_thread::yield();
+    }
+    const ScopeGuard unlock([&refObj]() { refObj.ChangeValStatus(refObj.STATUS_IDLE); });
+    Device* device = refObj.GetVal(false);
+    const char_t* const funcDesc = resume ? "Resuming device execution" : "Suspending device execution";
+    COND_PROC_RETURN_AND_MSG_OUTER(
+        device == nullptr, RT_ERROR_DEVICE_NULL, ErrorCode::EE1018,
+        RT_LOG(RT_LOG_ERROR, "%s failed: device (device_id=%u) is not open.", funcDesc, deviceId), funcDesc,
+        RtFmtMsg(
+            "Device (device_id=%u) is not open. Configure device execution suspension and resumption before "
+            "opening the device, then open it before %s execution",
+            deviceId, resume ? "resuming" : "suspending"));
+    DeviceSchedGate* gate = device->GetSchedGate();
+    COND_RETURN_AND_MSG_OUTER(
+        (gate == nullptr) || (suspendConfigs_[deviceId].mode == RT_DEVICE_SUSPEND_MODE_DISABLE), RT_ERROR_INVALID_VALUE,
+        ErrorCode::EE1016, funcDesc,
+        RtFmtMsg(
+            "Execution suspension and resumption are not enabled for device (device_id=%u). "
+            "Close the device, enable device-level execution suspension and resumption, and reopen the device",
+            deviceId));
+    return resume ? gate->Resume() : gate->Suspend();
+}
+
 Device* Runtime::DeviceRetain(const uint32_t devId, const uint32_t tsId)
 {
     Device* dev = nullptr;
@@ -3268,6 +3358,15 @@ Device* Runtime::DeviceRetain(const uint32_t devId, const uint32_t tsId)
             }
             dev->SetAtraceHandle(curAtraceHandle);
 
+            if ((tsId == RT_TSC_ID) && (suspendConfigs_[devId].mode == RT_DEVICE_SUSPEND_MODE_DEVICE)) {
+                error = dev->SetupSchedGate(suspendConfigs_[devId].taskInterval);
+                if (error != RT_ERROR_NONE) {
+                    // Start succeeded; stop task callbacks before rollback destroys the gate and its event.
+                    dev->SetDeviceRelease();
+                    (void)dev->Stop();
+                }
+                ERROR_GOTO(error, DEV_ROLLBACK, "Failed to initialize scheduling gate, device_id=%u.", devId);
+            }
             refObj.SetVal(dev);
             NotifyProcWhenNewDevice(devId);
             OpenDeviceProfiling(devId, dev);
@@ -3336,6 +3435,9 @@ void Runtime::FinalizeDeviceRelease(RefObject<Device*>& refObj, Device* dev, con
     profConfLock_.Unlock();
     dev->SetDeviceRelease();
     (void)dev->Stop();
+    if (tsId == RT_TSC_ID) {
+        suspendConfigs_[devId] = {};
+    }
     refObj.ResetVal();
     if (!isExiting_) {
         NotifyProcWhenReleaseDevice(devId);

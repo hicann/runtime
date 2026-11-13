@@ -552,6 +552,7 @@ set(runtimeut_src_tiny_include_list
 )
 
 set(runtime_raw_device_adpt_common_list
+    ${TOP_DIR}/src/runtime/core/src/device/device_sched_gate_stub.cc
     ${TOP_DIR}/src/runtime/core/src/device/raw_device_adpt_comm.cc
     ${TOP_DIR}/src/runtime/core/src/device/dev_simt_stack_checker.cc
 )
@@ -565,6 +566,7 @@ set(runtime_v201_simt_adpt_list
 )
 
 set(runtime_raw_device_adpt_david_list
+    ${TOP_DIR}/src/runtime/core/src/device/device_sched_gate.cc
     ${TOP_DIR}/src/runtime/core/src/device/raw_device_adpt_david.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_dcache_lock_david.cpp
 )
@@ -1287,6 +1289,7 @@ add_executable(runtime_utest_api
     test/rt_utest_api_context.cc
     test/rt_utest_api_device.cc
     test/rt_utest_api_device_topology.cc
+    test/rt_utest_sched_gate_stub.cc
     test/rt_utest_api_event_route.cc
     test/rt_utest_api_vmm_route.cc
     test/rt_utest_api_esched_route.cc
@@ -1884,6 +1887,7 @@ add_executable(runtime_utest_task_v201
     stub/hal_stub.cc
     test/main.cc
     test/platform/others/rt_utest_v201_task_singlef.cc
+    test/platform/others/rt_utest_suspend_v201.cc
     test/platform/others/rt_utest_v201_task.cc
     test/platform/others/rt_utest_v201L_task.cc
 )
@@ -2081,6 +2085,7 @@ set(RUNTIME_TARGET_V201
 set(RUNTIME_TARGET_DAVID
     runtime_utest_api_david
     runtime_utest_task_david
+    runtime_utest_sched_gate
     runtime_utest_xpu
     runtime_utest_arch9201
     runtime_utest_arch9202
@@ -2106,6 +2111,7 @@ set(RUNTIME_TARGET
     runtime_utest_task_910B
     runtime_utest_task_normal
     runtime_utest_task_david
+    runtime_utest_sched_gate
     runtime_utest_xpu
     runtime_utest_dc
     runtime_utest_api_others

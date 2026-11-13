@@ -14,8 +14,22 @@
 #include "base.h"
 
 #if defined(__cplusplus)
+constexpr uint32_t MAX_DEVICE_SUSPEND_TASK_INTERVAL = 1024U;
+
 extern "C" {
 #endif
+
+typedef enum rtDeviceSuspendMode {
+    RT_DEVICE_SUSPEND_MODE_DISABLE = 0,
+    RT_DEVICE_SUSPEND_MODE_DEVICE = 1,
+    RT_DEVICE_SUSPEND_MODE_MAX,
+} rtDeviceSuspendMode;
+
+typedef struct rtDeviceSuspendConfig {
+    rtDeviceSuspendMode mode;
+    uint32_t taskInterval;
+    uint32_t reserved[6];
+} rtDeviceSuspendConfig;
 
 typedef enum rtAtomicOperationCapability {
     RT_ATOMIC_CAPABILITY_SIGNED = 1U << 0U,
@@ -110,6 +124,48 @@ RTS_API rtError_t rtDeviceL2CacheFlush(void* rsv);
  * @return RT_ERROR_FEATURE_NOT_SUPPORT driver does not support this feature
  */
 RTS_API rtError_t rtDeviceGetCcMode(int32_t deviceId, int32_t* mode);
+
+/**
+ * @ingroup dvrt_dev
+ * @brief Set the execution suspend configuration for the specified device in the current process
+ * @param [in] deviceId  the logical device ID
+ * @param [in] config  configuration, cannot be NULL. mode must be RT_DEVICE_SUSPEND_MODE_DISABLE or
+ *                     RT_DEVICE_SUSPEND_MODE_DEVICE. taskInterval must be in [0, 1024]; when enabled,
+ *                     0 selects the default interval of 8 operators. All reserved elements must be 0.
+ * @return RT_ERROR_NONE for success
+ * @return Other values for failure
+ */
+RTS_API rtError_t rtDeviceSetSuspendConfig(int32_t deviceId, const rtDeviceSuspendConfig* config);
+
+/**
+ * @ingroup dvrt_dev
+ * @brief Get the execution suspend configuration for the specified device in the current process
+ * @param [in] deviceId  the logical device ID
+ * @param [out] config   configuration, cannot be NULL. All reserved elements are set to 0 on success.
+ * @return RT_ERROR_NONE for success
+ * @return Other values for failure
+ */
+RTS_API rtError_t rtDeviceGetSuspendConfig(int32_t deviceId, rtDeviceSuspendConfig* config);
+
+/**
+ * @ingroup dvrt_dev
+ * @brief Suspend execution at gate waits on the specified device in the current process
+ * @param [in] deviceId  the logical device ID
+ * @param [in] flag  reserved parameter, must be 0
+ * @return RT_ERROR_NONE when the gate Reset operation has completed
+ * @return Other values for failure
+ */
+RTS_API rtError_t rtDeviceSuspendExecution(int32_t deviceId, uint32_t flag);
+
+/**
+ * @ingroup dvrt_dev
+ * @brief Resume execution at gate waits on the specified device in the current process
+ * @param [in] deviceId  the logical device ID
+ * @param [in] flag  reserved parameter, must be 0
+ * @return RT_ERROR_NONE when the gate Record operation has completed
+ * @return Other values for failure
+ */
+RTS_API rtError_t rtDeviceResumeExecution(int32_t deviceId, uint32_t flag);
 
 #if defined(__cplusplus)
 }

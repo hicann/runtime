@@ -248,6 +248,12 @@
     _(aclError, aclrtGetMemUceInfo,                                                                                    \
       (int32_t deviceId, aclrtMemUceInfo * memUceInfoArray, size_t arraySize, size_t * retSize),                       \
       (deviceId, memUceInfoArray, arraySize, retSize))                                                                 \
+    _(aclError, aclrtDeviceSetSuspendConfig, (int32_t deviceId, const aclrtDeviceSuspendConfig* config),               \
+      (deviceId, config))                                                                                              \
+    _(aclError, aclrtDeviceGetSuspendConfig, (int32_t deviceId, aclrtDeviceSuspendConfig * config),                    \
+      (deviceId, config))                                                                                              \
+    _(aclError, aclrtDeviceSuspendExecution, (int32_t deviceId, uint32_t flag), (deviceId, flag))                      \
+    _(aclError, aclrtDeviceResumeExecution, (int32_t deviceId, uint32_t flag), (deviceId, flag))                       \
     _(aclError, aclrtDeviceTaskAbort, (int32_t deviceId, uint32_t timeout), (deviceId, timeout))                       \
     _(aclError, aclrtMemUceRepair, (int32_t deviceId, aclrtMemUceInfo * memUceInfoArray, size_t arraySize),            \
       (deviceId, memUceInfoArray, arraySize))                                                                          \

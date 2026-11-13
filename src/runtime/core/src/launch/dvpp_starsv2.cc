@@ -125,6 +125,13 @@ rtError_t LaunchMultipleTaskInfo(
     rtError_t error = CheckTaskCanSend(stm);
     ERROR_RETURN_MSG_INNER(
         error, "Failed to check stream, stream_id=%d, retCode=%#x.", streamId, static_cast<uint32_t>(error));
+    DeviceSchedGate* gate = stm->Device_()->GetSchedGate();
+    if (gate != nullptr) {
+        error = gate->TryInsertGateWait(stm, TS_TASK_TYPE_MULTIPLE_TASK);
+        ERROR_RETURN(
+            error, "Failed to prepare the scheduling gate wait for stream (stream_id=%d), retCode=%#x.", stm->Id_(),
+            static_cast<uint32_t>(error));
+    }
     uint32_t pos = 0xFFFFU;
     Stream* dstStm = stm;
     TaskInfo* multipleTask = nullptr;

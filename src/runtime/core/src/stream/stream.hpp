@@ -257,6 +257,23 @@ public:
     rtError_t WaitEvent(Event* const evt, const uint32_t timeout);
 
     void StreamLock();
+    uint32_t GetSchedOperatorCount() const { return schedOperatorCount_; }
+    void SetSchedOperatorCount(const uint32_t count) { schedOperatorCount_ = count; }
+    // Start a new counting lifecycle; UINT32_MAX keeps the first gate wait pending.
+    void InitSchedOperatorCount() { schedOperatorCount_ = UINT32_MAX; }
+    void ResetSchedOperatorCount() { schedOperatorCount_ = 0U; }
+    void CountSchedOperator(const uint32_t interval)
+    {
+        if (schedOperatorCount_ < interval) {
+            ++schedOperatorCount_;
+        }
+    }
+
+private:
+    // Physical-stream count under submission serialization; UINT32_MAX means the first wait is pending.
+    uint32_t schedOperatorCount_ = UINT32_MAX;
+
+public:
     void StreamUnLock();
 
     void ModelExecuteGroupLock();

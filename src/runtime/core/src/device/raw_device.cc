@@ -203,6 +203,7 @@ void RawDevice::ReleaseOwnedObjectsOnDestroy() noexcept
 
 void RawDevice::ReleaseDriverResourcesOnDestroy() noexcept
 {
+    ReleaseSchedGate();
     if (driver_ != nullptr) {
         if (sqVirtualArrBaseAddr_ != nullptr) {
             (void)driver_->DevMemFree(sqVirtualArrBaseAddr_, deviceId_);

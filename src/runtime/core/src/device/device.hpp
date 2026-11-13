@@ -30,6 +30,7 @@
 #include "idevice_snapshot_ops.hpp"
 #include "event_expanding.hpp"
 #include "qos.hpp"
+#include "device_sched_gate.hpp"
 
 #define STREAM_MESSAGE_QUEUE_SIZE (RT_MAX_STREAM_ID * 3U)
 
@@ -508,6 +509,27 @@ public:
     bool GetIsDoingRecycling() const { return isDoingRecycling_; }
     void SetIsDoingRecycling(const bool flag) { isDoingRecycling_ = flag; }
 
+    DeviceSchedGate* GetSchedGate() const { return schedGate_.get(); }
+    void ReleaseSchedGate()
+    {
+        if (schedGate_ != nullptr) {
+            schedGate_->Release();
+            schedGate_.reset();
+        }
+    }
+    rtError_t SetupSchedGate(const uint32_t interval)
+    {
+        if (schedGate_ != nullptr) {
+            return RT_ERROR_NONE;
+        }
+        schedGate_.reset(new (std::nothrow) DeviceSchedGate(this, interval));
+        if (schedGate_ == nullptr) {
+            RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1013, sizeof(DeviceSchedGate), "new");
+            return RT_ERROR_MEMORY_ALLOCATION;
+        }
+        return schedGate_->Setup();
+    }
+
 private:
     bool isPageFault_{false};
     bool isDeviceRelease_{false};
@@ -520,6 +542,7 @@ private:
     std::mutex devErrProLock_;
     std::mutex argStreamMutex_;
     std::mutex hcclStreamIndexMutex_; // lock for hcclStreamSize_
+    std::unique_ptr<DeviceSchedGate> schedGate_;
 };
 } // namespace runtime
 } // namespace cce

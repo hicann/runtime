@@ -30,6 +30,7 @@ struct 类型数据。
 - [aclrtBinaryLoadOptionValue](#aclrtBinaryLoadOptionValue)
 - [aclrtCntNotifyRecordInfo](#aclrtCntNotifyRecordInfo)
 - [aclrtCntNotifyWaitInfo](#aclrtCntNotifyWaitInfo)
+- [aclrtDeviceSuspendConfig](#aclrtDeviceSuspendConfig)
 - [aclrtDropoutBitmaskInfo](#aclrtDropoutBitmaskInfo)
 - [aclrtIpcEventHandle](#aclrtIpcEventHandle)
 - [aclrtLaunchKernelAttr](#aclrtLaunchKernelAttr)
@@ -674,6 +675,30 @@ typedef struct {
 ```
 
 mode结构体定义请参见[aclrtCntNotifyWaitMode](25-02_Enumerations.md#aclrtCntNotifyWaitMode)。
+
+<br>
+
+<a id="aclrtDeviceSuspendConfig"></a>
+
+## aclrtDeviceSuspendConfig
+
+```c
+typedef struct aclrtDeviceSuspendConfig {
+    aclrtDeviceSuspendMode mode;
+    uint32_t taskInterval;
+    uint32_t reserved[6];
+} aclrtDeviceSuspendConfig;
+```
+
+用于[aclrtDeviceSetSuspendConfig](04_device_management.md#aclrtDeviceSetSuspendConfig)和[aclrtDeviceGetSuspendConfig](04_device_management.md#aclrtDeviceGetSuspendConfig)接口，设置或查询当前进程中指定Device的任务执行暂停、恢复配置。
+
+### 成员说明
+
+| 成员名 | 说明 |
+| --- | --- |
+| mode | 任务执行暂停、恢复模式。类型定义请参见[aclrtDeviceSuspendMode](25-02_Enumerations.md#aclrtDeviceSuspendMode)。<br>ACL_RT_DEVICE_SUSPEND_MODE_DISABLE：关闭该功能，默认值。<br>ACL_RT_DEVICE_SUSPEND_MODE_DEVICE：使能该功能。 |
+| taskInterval | Stream上设置等待点的算子任务间隔，按算子任务数量计数。取值范围为[0, 1024]。<br>使能该功能时，设置为0表示使用默认值8，设置为[1, 1024]范围内的值表示使用指定间隔。<br>关闭该功能时，该成员仍需满足取值范围要求，但不生效。查询配置时，若该功能已使能，返回实际生效的间隔；若未配置或已关闭，返回0。 |
+| reserved | 预留参数。设置配置时，数组中的所有元素必须设置为0；查询配置成功后，数组中的所有元素均为0。 |
 
 <br>
 

@@ -191,6 +191,7 @@ static rtError_t TryCreateAutoSplitSlaveStream(Stream* const masterStm, uint32_t
     }
 
     // 添加到列表
+    newSlaveStream->SetSchedOperatorCount(prevStream->GetSchedOperatorCount());
     masterStm->GetSlaveStreams().push_back(newSlaveStream);
 
     // 释放锁执行 stream active
@@ -469,6 +470,9 @@ rtError_t DavidSendTask(TaskInfo* taskInfo, Stream* const stm)
     void* sqeAddr = static_cast<void*>(sqeBuffer.data);
     const uint16_t pos = taskInfo->id; // aclgraph扩流场景用不上这个字段
     const Device* dev = stm->Device_();
+    DeviceSchedGate* gate = dev->GetSchedGate();
+    const bool isOperator =
+        (gate != nullptr) && DeviceSchedGate::IsOperatorTask(taskInfo->type) && (taskInfo->isUpdateSinkSqe == 0U);
     const uint32_t devId = dev->Id_();
     const uint32_t tsId = dev->DevGetTsId();
     const uint32_t sqId = stm->GetSqId();
@@ -502,7 +506,11 @@ rtError_t DavidSendTask(TaskInfo* taskInfo, Stream* const stm)
 
     // auto-split stream 处理：SQE 写入 host SQ buffer
     if (stm->IsAutoSplitSq()) {
-        return WriteAutoSplitSqeToHostBuffer(taskInfo, stm, sqeAddr);
+        error = WriteAutoSplitSqeToHostBuffer(taskInfo, stm, sqeAddr);
+        if ((error == RT_ERROR_NONE) && isOperator) {
+            gate->CountSubmittedOperator(stm);
+        }
+        return error;
     }
 
     if (stm->IsSoftwareSqEnable()) {
@@ -525,6 +533,9 @@ rtError_t DavidSendTask(TaskInfo* taskInfo, Stream* const stm)
             "device_id=%u, ts_id=%u, sq_id=%u, stream_id=%d, task_id=%hu, flip_num=%u, task_sn=%u, task_type=%u(%s)",
             devId, tsId, sqId, stm->Id_(), taskInfo->id, stm->GetTaskIdFlipNum(), taskInfo->taskSn,
             static_cast<uint32_t>(taskInfo->type), GetTaskDescByType(taskInfo->type));
+        if ((error == RT_ERROR_NONE) && isOperator) {
+            gate->CountSubmittedOperator(stm);
+        }
         return error;
     }
 
@@ -559,6 +570,9 @@ rtError_t DavidSendTask(TaskInfo* taskInfo, Stream* const stm)
             static_cast<int32_t>(drvRet), devId, stm->Id_(), tryCount);
     }
     if (drvRet == DRV_ERROR_NONE) {
+        if (isOperator) {
+            gate->CountSubmittedOperator(stm);
+        }
         SetFlipTaskNum(stm, pos, taskInfo->sqeNum);
     }
     RT_LOG(

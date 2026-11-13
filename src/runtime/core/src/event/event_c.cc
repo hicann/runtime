@@ -217,12 +217,20 @@ rtError_t EvtWait(Event* const evt, Stream* const stm, const uint32_t timeout)
     pos = tsk->id;
     dstStm = tsk->stream;
     DavidEventWaitTaskInit(tsk, davidEvt, eventId, timeout);
+    DeviceSchedGate* gate = dev->GetSchedGate();
+    const bool isGateEvent = (gate != nullptr) && (evt == gate->GateEvent());
+    if (isGateEvent) {
+        tsk->taskOwner = static_cast<uint8_t>(TaskOwner::RT_TASK_INNER);
+    }
 
     tsk->stmArgPos = static_cast<DavidStream*>(dstStm)->GetArgPos();
     error = DavidSendTask(tsk, dstStm);
     ERROR_PROC_RETURN_MSG_INNER(error, TaskUnInitProc(tsk); TaskRollBack(dstStm, pos); stm->StreamUnLock();
                                 , "Failed to submit wait task, stream_id=%d, retCode=%#x.", stm->Id_(),
                                 static_cast<uint32_t>(error));
+    if (isGateEvent) {
+        dstStm->ResetSchedOperatorCount();
+    }
     stm->StreamUnLock();
     SET_THREAD_TASKID_AND_STREAMID(dstStm->GetExposedStreamId(), tsk->taskSn);
     error = SubmitTaskPostProc(dstStm, pos);

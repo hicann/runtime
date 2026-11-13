@@ -1211,6 +1211,17 @@ typedef enum aclrtAtomicOperation {
     ACL_RT_ATOMIC_OPERATION_SIMD_SCALAR_EXCH = 44,
 } aclrtAtomicOperation;
 
+typedef enum aclrtDeviceSuspendMode {
+    ACL_RT_DEVICE_SUSPEND_MODE_DISABLE = 0,
+    ACL_RT_DEVICE_SUSPEND_MODE_DEVICE = 1,
+} aclrtDeviceSuspendMode;
+
+typedef struct aclrtDeviceSuspendConfig {
+    aclrtDeviceSuspendMode mode;
+    uint32_t taskInterval;
+    uint32_t reserved[6];
+} aclrtDeviceSuspendConfig;
+
 /**
  * @ingroup AscendCL
  * @brief acl initialize
@@ -3647,6 +3658,94 @@ ACL_FUNC_VISIBILITY aclError aclrtGetMemUceInfo(
  * @retval OtherValues Failure
  */
 ACL_FUNC_VISIBILITY aclError aclrtDeviceTaskAbort(int32_t deviceId, uint32_t timeout);
+
+/**
+ * @ingroup AscendCL
+ * @brief Set the execution suspend configuration for the specified device in the current process
+ *
+ * @par Function
+ * The feature is disabled by default. Before opening the device, repeated calls replace the configuration.
+ * After opening the device, only a transition from DEVICE to DISABLE is allowed. Disabling releases existing
+ * gate waits and confirms the gate Record operation before stopping new wait insertion. If the operation fails,
+ * the configuration remains unchanged. Re-enabling requires closing and configuring the device again.
+ *
+ * @par Restriction
+ * aclInit must be called first. This feature is supported only on David. Snapshot backup and restore are not supported.
+ *
+ * @param [in] deviceId  device ID
+ * @param [in] config  configuration, cannot be NULL. mode must be ACL_RT_DEVICE_SUSPEND_MODE_DISABLE or
+ *                    ACL_RT_DEVICE_SUSPEND_MODE_DEVICE. taskInterval must be in [0, 1024]; when enabled,
+ *                    0 selects the default interval of 8 operators. All reserved elements must be 0.
+ *
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclrtDeviceSetSuspendConfig(int32_t deviceId, const aclrtDeviceSuspendConfig* config);
+
+/**
+ * @ingroup AscendCL
+ * @brief Get the execution suspend configuration for the specified device in the current process
+ *
+ * @par Function
+ * Reads the configuration in either mode without opening the device. If the feature is not configured or is
+ * disabled, returns DISABLE with taskInterval set to 0. When enabled, returns the effective operator interval.
+ * This function does not query whether execution is suspended.
+ *
+ * @par Restriction
+ * aclInit must be called first. This feature is supported only on David.
+ *
+ * @param [in] deviceId  device ID
+ * @param [out] config  configuration, cannot be NULL. All reserved elements are set to 0 on success.
+ *
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclrtDeviceGetSuspendConfig(int32_t deviceId, aclrtDeviceSuspendConfig* config);
+
+/**
+ * @ingroup AscendCL
+ * @brief Suspend execution at gate waits on the specified device in the current process
+ *
+ * @par Function
+ * Resets the shared gate Event and waits for the control operation to complete. A successful return does not
+ * mean that all user tasks have stopped: tasks that have already passed a gate wait may continue executing.
+ * If the control operation has been submitted but the function fails, the gate state is not guaranteed to roll back.
+ *
+ * @par Restriction
+ * aclInit must be called first. The device must be open with suspend mode set to DEVICE. This feature is
+ * supported only on David. The calling thread does not need to set the current context; this function does not
+ * implicitly open the device.
+ *
+ * @param [in] deviceId  device ID
+ * @param [in] flag  reserved parameter, must be 0
+ *
+ * @retval ACL_SUCCESS The gate Reset operation has completed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclrtDeviceSuspendExecution(int32_t deviceId, uint32_t flag);
+
+/**
+ * @ingroup AscendCL
+ * @brief Resume execution at gate waits on the specified device in the current process
+ *
+ * @par Function
+ * Records the shared gate Event and waits for the control operation to complete, allowing tasks blocked at
+ * gate waits to proceed. A successful return does not mean that user tasks have completed.
+ * If the control operation has been submitted but the function fails, the gate state is not guaranteed to roll back.
+ *
+ * @par Restriction
+ * aclInit must be called first. The device must be open with suspend mode set to DEVICE. This feature is
+ * supported only on David. The calling thread does not need to set the current context; this function does not
+ * implicitly open the device.
+ *
+ * @param [in] deviceId  device ID
+ * @param [in] flag  reserved parameter, must be 0
+ *
+ * @retval ACL_SUCCESS The gate Record operation has completed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclrtDeviceResumeExecution(int32_t deviceId, uint32_t flag);
+
 
 /**`
  * @ingroup AscendCL
