@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "task_to_sqe.hpp"
+#include <cstddef>
 #include <cinttypes>
 #include "event.hpp"
 #include "task_enum_desc.hpp"
@@ -37,11 +38,13 @@ rtError_t ConstructSqeByTaskInput(const rtTaskInput_t* const taskInput, uint32_t
         "The current task type does not support this operation");
 
     if ((taskBufferType == HWTS_STATIC_TASK_DESC) || (taskBufferType == HWTS_DYNAMIC_TASK_DESC)) {
-        const uint32_t requiredSize = static_cast<uint32_t>(
-            (taskBufferType == HWTS_STATIC_TASK_DESC) ? sizeof(rtStaticSqe_t) : sizeof(rtDynamicSqe_t));
+        std::size_t requiredSize = sizeof(rtStaticSqe_t);
+        if (taskBufferType == HWTS_DYNAMIC_TASK_DESC) {
+            requiredSize = sizeof(rtDynamicSqe_t);
+        }
         COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
             taskInput->bufferLen < requiredSize, RT_ERROR_INVALID_VALUE, "Constructing task delivery parameters",
-            taskInput->bufferLen, "taskInput->bufferLen", RtFmtMsg("greater than or equal to %u bytes", requiredSize));
+            taskInput->bufferLen, "taskInput->bufferLen", RtFmtMsg("greater than or equal to %zu bytes", requiredSize));
     }
 
     pfnNanoTaskToSqe funcHandle = g_BufToFunc[taskBufferType][type];
