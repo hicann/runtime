@@ -4675,6 +4675,8 @@ rtError_t ApiErrorDecorator::GetFaultEvent(
     const int32_t deviceId, rtDmsEventFilter* filter, rtDmsFaultEvent* dmsEvent, uint32_t len, uint32_t* eventCount)
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(filter, RT_ERROR_INVALID_VALUE, "input filter is null");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(dmsEvent, RT_ERROR_INVALID_VALUE, "input dmsEvent is null");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(eventCount, RT_ERROR_INVALID_VALUE, "input eventCount is null");
     Runtime* const rtInstance = Runtime::Instance();
     COND_RETURN_ERROR_MSG_INNER(rtInstance == nullptr, RT_ERROR_INSTANCE_NULL, "Runtime instance is null");
     const rtChipType_t chipType = rtInstance->GetChipType();

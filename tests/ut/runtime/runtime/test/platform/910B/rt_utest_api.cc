@@ -1354,14 +1354,19 @@ TEST_F(CloudV2ApiTest3, TEST_Stars_Launch)
 TEST_F(CloudV2ApiTest3, test_get_fault_event)
 {
     rtError_t error;
-    Runtime* rtInstance = (Runtime*)Runtime::Instance();
-    uint32_t eventCount;
+    uint32_t eventCount = 0U;
+    rtDmsEventFilter filter = {};
+    rtDmsFaultEvent dmsEvent = {};
+    MOCKER(halGetFaultEvent).expects(once()).will(returnValue(DRV_ERROR_NONE));
     error = rtGetFaultEvent(0, nullptr, nullptr, 10, &eventCount);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
-    rtDmsEventFilter filter;
-    rtDmsFaultEvent dmsEvent;
-    MOCKER(halGetFaultEvent).stubs().will(returnValue(DRV_ERROR_NONE));
+    error = rtGetFaultEvent(0, &filter, nullptr, sizeof(rtDmsFaultEvent), &eventCount);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+
+    error = rtGetFaultEvent(0, &filter, &dmsEvent, sizeof(rtDmsFaultEvent), nullptr);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+
     error = rtGetFaultEvent(0, &filter, &dmsEvent, sizeof(rtDmsFaultEvent), &eventCount);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
