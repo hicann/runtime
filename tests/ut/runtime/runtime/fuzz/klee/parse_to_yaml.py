@@ -68,7 +68,7 @@ def write_all(file_name, content):
         file_handle.close()
     
         return True
-    except:
+    except Exception:
         print("write_all, failed to write")
     
     return False
