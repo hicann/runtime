@@ -861,6 +861,11 @@ rtError_t rtEventElapsedTime(float32_t* timeInterval, rtEvent_t startEvent, rtEv
     RT_VALIDATE_AND_UNWRAP_OBJECT(endEvent, Event, endEventPtr);
     const rtError_t error = apiEventInstance->EventElapsedTime(timeInterval, startEventPtr, endEventPtr);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    if (error == RT_ERROR_EVENT_TIMESTAMP_INVALID) {
+        RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
+            ErrorCode::EE1017, "Computing the elapsed time between two events", "startEvent or endEvent",
+            "At least one Event has no valid timestamp");
+    }
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
 }
