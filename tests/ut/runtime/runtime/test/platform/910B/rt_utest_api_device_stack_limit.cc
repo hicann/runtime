@@ -306,19 +306,16 @@ TEST_F(DeviceLimitTest, GetLimit_WithoutSetDevice_ReturnsScalar)
 
 // ==================== Value Range Boundary Tests ====================
 
-// Scenario: STACK_SIZE input UINT32_MAX, validate alignment overflow behavior
-// Expected: SetDeviceCustomerStackSize alignment overflow wraps around, scalar gets wrong value (known risk, test
-// records current behavior)
 TEST_F(DeviceLimitTest, SetLimit_StackSize_UINT32_MAX)
 {
+    ASSERT_EQ(rtDeviceSetLimit(0, RT_LIMIT_TYPE_STACK_SIZE, 65536U), RT_ERROR_NONE);
     rtError_t ret = rtDeviceSetLimit(0, RT_LIMIT_TYPE_STACK_SIZE, UINT32_MAX);
-    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_NE(ret, RT_ERROR_NONE);
 
     uint32_t val = 0U;
     ret = rtDeviceGetLimit(RT_LIMIT_TYPE_STACK_SIZE, &val);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    // UINT32_MAX alignment overflow may wrap to a small value, recording current behavior
-    // Expected: AllocCustomerStackPhyBase will reject during SetDevice (>maxCustomerStackSize)
+    EXPECT_EQ(val, 65536U);
 }
 
 // Scenario: SIMD_FIFO input 0, validate range rejection
@@ -417,17 +414,16 @@ TEST_F(DeviceLimitTest, SetLimit_Concurrent_SimdFifo_NoCrash)
 
 // ==================== Exception Value Tests (value=-1 and oversized values) ====================
 
-// Scenario: STACK_SIZE passes -1 (implicitly converted to uint32_t=4294967295=UINT32_MAX)
-// Expected: SetDeviceCustomerStackSize alignment overflow, scalar gets wrong value; SetLimit does not reject
 TEST_F(DeviceLimitTest, SetLimit_StackSize_NegativeOne)
 {
+    ASSERT_EQ(rtDeviceSetLimit(0, RT_LIMIT_TYPE_STACK_SIZE, 65536U), RT_ERROR_NONE);
     rtError_t ret = rtDeviceSetLimit(0, RT_LIMIT_TYPE_STACK_SIZE, static_cast<uint32_t>(-1));
-    EXPECT_EQ(ret, RT_ERROR_NONE); // SetLimit does not reject
+    EXPECT_NE(ret, RT_ERROR_NONE);
 
     uint32_t val = 0U;
     ret = rtDeviceGetLimit(RT_LIMIT_TYPE_STACK_SIZE, &val);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    // Scalar gets the overflowed value, will be rejected by maxCustomerStackSize during SetDevice
+    EXPECT_EQ(val, 65536U);
 }
 
 // Scenario: STACK_SIZE passes oversized value 1MB, SetLimit does not reject, SetDevice should be rejected by

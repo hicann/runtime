@@ -3060,7 +3060,7 @@ rtError_t ApiImpl::DeviceSetLimit(const int32_t devId, const rtLimitType_t type,
     rtError_t ret = RT_ERROR_NONE;
     if (type == RT_LIMIT_TYPE_STACK_SIZE) {
         Runtime* rt = Runtime::Instance();
-        rt->SetDeviceCustomerStackSize(val);
+        ret = rt->SetDeviceCustomerStackSize(val);
     } else if (type == RT_LIMIT_TYPE_SIMD_PRINTF_FIFO_SIZE_PER_CORE) {
         Runtime* rt = Runtime::Instance();
         std::unique_lock<std::mutex> lock(rt->GetSimdFifoMutex());

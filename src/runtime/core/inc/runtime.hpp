@@ -633,12 +633,21 @@ public:
     HbmRasProcStatus GetHbmRasProcFlag() const { return hbmRasProcFlag_; }
 
     // 目前只会在aclInit里面调用一次
-    void SetDeviceCustomerStackSize(uint32_t val)
+    rtError_t SetDeviceCustomerStackSize(uint32_t val)
     {
+        if (val > UINT32_MAX - (KERNEL_STACK_SIZE_16K - 1U)) {
+            RT_LOG(
+                RT_LOG_ERROR,
+                "Customer stack size alignment would overflow UINT32_MAX; "
+                "keeping the previous setting, requestedSize=%u.",
+                val);
+            return RT_ERROR_INVALID_VALUE;
+        }
         if (val > KERNEL_STACK_SIZE_32K) {
             val = (val + KERNEL_STACK_SIZE_16K - 1U) / KERNEL_STACK_SIZE_16K * KERNEL_STACK_SIZE_16K;
             deviceCustomerStackSize_ = val;
         }
+        return RT_ERROR_NONE;
     }
 
     uint32_t GetDeviceCustomerStackSize() const { return deviceCustomerStackSize_; }

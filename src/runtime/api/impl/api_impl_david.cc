@@ -2000,8 +2000,7 @@ rtError_t ApiImplDavid::DeviceSetLimit(const int32_t devId, const rtLimitType_t 
         return error;
     } else if (type == RT_LIMIT_TYPE_STACK_SIZE) {
         std::unique_lock<std::mutex> lock(rt->GetSimtStackMutex());
-        rt->SetDeviceCustomerStackSize(val);
-        return RT_ERROR_NONE;
+        return rt->SetDeviceCustomerStackSize(val);
     } else if (type == RT_LIMIT_TYPE_SIMD_PRINTF_FIFO_SIZE_PER_CORE) {
         std::unique_lock<std::mutex> lock(rt->GetSimdFifoMutex());
         return rt->SetSimdPrintFifoSize(val);

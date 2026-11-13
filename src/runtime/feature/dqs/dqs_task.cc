@@ -1834,8 +1834,8 @@ static void InitFuncCallParaForDqsAdspcTask(
         "dqs adspc task function call param: qmngrEnqRegAddr=%#llx, qmngrOwRegAddr=%#llx, "
         "mbufFreeRegAddr=%#llx, cqeHeadTailMask=%#x, cqeSize=%#x, cqDepth=%#x, mbufHandle=%#x, cqeBaseAddr=%#llx, "
         "cqeCopyAddr=%#llx, cqHeadRegAddr=%#llx, cqTailRegAddr=%#llx, dfxAddr=%#" PRIx64,
-        fcPara.qmngrEnqRegAddr, fcPara.qmngrOwRegAddr, fcPara.mbufFreeRegAddr, fcPara.cqeHeadTailMask, fcPara.cqDepth,
-        fcPara.cqeSize, fcPara.mbufHandle, fcPara.cqeBaseAddr, fcPara.cqeCopyAddr, fcPara.cqHeadRegAddr,
+        fcPara.qmngrEnqRegAddr, fcPara.qmngrOwRegAddr, fcPara.mbufFreeRegAddr, fcPara.cqeHeadTailMask, fcPara.cqeSize,
+        fcPara.cqDepth, fcPara.mbufHandle, fcPara.cqeBaseAddr, fcPara.cqeCopyAddr, fcPara.cqHeadRegAddr,
         fcPara.cqTailRegAddr, fcPara.dfxAddr);
 }
 
