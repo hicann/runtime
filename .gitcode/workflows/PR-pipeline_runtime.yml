@@ -51,6 +51,9 @@ stages:
         container:
           image: swr.cn-north-4.myhuaweicloud.com/ci_cann/ubuntu20.04.05_x86:k8s_v1.1006
       JOB_pre:
+        permissions:
+          repository: read
+          id-token: write
         name: Test_PreBuild
         uses: cann/.gitcode/.gitcode/workflows/pre_action.yml@master
     pre:
@@ -60,6 +63,9 @@ stages:
     name: Compile
     jobs:
       JOB_Compile_Ascend_X86:
+        permissions:
+          repository: read
+          id-token: write
         name: Compile_Ascend_X86
         uses: .gitcode/workflows/compile_action.yml
         with:
@@ -69,6 +75,9 @@ stages:
           arch: 'x64'
           spec: 'large'
       JOB_Compile_Ascend_ARM:
+        permissions:
+          repository: read
+          id-token: write
         name: Compile_Ascend_ARM
         uses: .gitcode/workflows/compile_action.yml
         with:
@@ -78,6 +87,9 @@ stages:
           arch: 'arm64'
           spec: 'xlarge'
       JOB_Compile_Ascend_X86_ubuntu24:
+        permissions:
+          repository: read
+          id-token: write
         name: Compile_Ascend_X86_ubuntu24
         uses: .gitcode/workflows/compile_action.yml
         with:
@@ -87,6 +99,9 @@ stages:
           arch: 'x64'
           spec: 'large'
       JOB_Compile_Ascend_ARM_ubuntu24:
+        permissions:
+          repository: read
+          id-token: write
         name: Compile_Ascend_ARM_ubuntu24
         uses: .gitcode/workflows/compile_action.yml
         with:
@@ -96,12 +111,18 @@ stages:
           arch: 'arm64'
           spec: 'xlarge'
       JOB_codecheck_action:
+        permissions:
+          repository: read
+          id-token: write
         name: CodeCheck
         uses: cann/.gitcode/.gitcode/workflows/codecheck_action.yml@master
         with:
           precommit_image_version: ${{ jobs.JOB_image.outputs.precommit }}
           codecheck_image_version: ${{ jobs.JOB_image.outputs.codecheck }}
       JOB_staticcheck_md_check:
+        permissions:
+          repository: read
+          id-token: write
         name: CodeCheck_staticcheck_md_check
         uses: .gitcode/workflows/staticcheck_action.yml
         with:
@@ -130,6 +151,9 @@ stages:
         container:
           image: swr.cn-north-4.myhuaweicloud.com/ci_cann/${{ jobs.JOB_image.outputs.API_Check }}
       JOB_UT_Test_acl:
+        permissions:
+          repository: read
+          id-token: write
         name: UT_Test_acl
         uses: .gitcode/workflows/llt_action.yml
         with:
@@ -139,6 +163,9 @@ stages:
           spec: 'large'
           image_version: ${{ jobs.JOB_image.outputs.UT_Test_acl }}
       JOB_UT_Test_rts_v201:
+        permissions:
+          repository: read
+          id-token: write
         name: UT_Test_rts_v201
         uses: .gitcode/workflows/llt_action.yml
         with:
@@ -148,6 +175,9 @@ stages:
           spec: 'large'
           image_version: ${{ jobs.JOB_image.outputs.UT_Test_acl }}
       JOB_UT_Test_rts_c:
+        permissions:
+          repository: read
+          id-token: write
         name: UT_Test_rts_c
         uses: .gitcode/workflows/llt_action.yml
         with:
@@ -157,6 +187,9 @@ stages:
           spec: 'large'
           image_version: ${{ jobs.JOB_image.outputs.UT_Test_acl }}
       JOB_UT_Test_rts_david:
+        permissions:
+          repository: read
+          id-token: write
         name: UT_Test_rts_david
         uses: .gitcode/workflows/llt_action.yml
         with:
@@ -166,6 +199,9 @@ stages:
           spec: 'large'
           image_version: ${{ jobs.JOB_image.outputs.UT_Test_acl }}
       JOB_UT_Test_rts_910b:
+        permissions:
+          repository: read
+          id-token: write
         name: UT_Test_rts_910b
         uses: .gitcode/workflows/llt_action.yml
         with:
@@ -175,6 +211,9 @@ stages:
           spec: 'large'
           image_version: ${{ jobs.JOB_image.outputs.UT_Test_acl }}
       JOB_UT_Test_rts_common:
+        permissions:
+          repository: read
+          id-token: write
         name: UT_Test_rts_common
         uses: .gitcode/workflows/llt_action.yml
         with:
@@ -184,6 +223,9 @@ stages:
           spec: 'xlarge'
           image_version: ${{ jobs.JOB_image.outputs.UT_Test_acl }}
       JOB_UT_Test_platform:
+        permissions:
+          repository: read
+          id-token: write
         name: UT_Test_platform
         uses: .gitcode/workflows/llt_action.yml
         with:
@@ -193,6 +235,9 @@ stages:
           spec: 'xlarge'
           image_version: ${{ jobs.JOB_image.outputs.UT_Test_platform }}
       JOB_UT_Test_qs:
+        permissions:
+          repository: read
+          id-token: write
         name: UT_Test_qs
         uses: .gitcode/workflows/llt_action.yml
         with:
@@ -202,6 +247,9 @@ stages:
           spec: 'large'
           image_version: ${{ jobs.JOB_image.outputs.UT_Test_qs }}
       JOB_UT_Test_aicpusd:
+        permissions:
+          repository: read
+          id-token: write
         name: UT_Test_aicpusd
         uses: .gitcode/workflows/llt_action.yml
         with:
@@ -211,6 +259,9 @@ stages:
           spec: '2xlarge'
           image_version: ${{ jobs.JOB_image.outputs.UT_Test_aicpusd }}
       JOB_UT_Test_tsd:
+        permissions:
+          repository: read
+          id-token: write
         name: UT_Test_tsd
         uses: .gitcode/workflows/llt_action.yml
         with:
@@ -220,6 +271,9 @@ stages:
           spec: 'xlarge'
           image_version: ${{ jobs.JOB_image.outputs.UT_Test_tsd }}
       JOB_UT_Test_error_manager:
+        permissions:
+          repository: read
+          id-token: write
         name: UT_Test_error_manager
         uses: .gitcode/workflows/llt_action.yml
         with:
@@ -230,6 +284,9 @@ stages:
           image_version: ${{ jobs.JOB_image.outputs.UT_Test_dfx }}
         if: env.TARGET_BRANCH != '9.0.0'
       JOB_UT_Test_slog:
+        permissions:
+          repository: read
+          id-token: write
         name: UT_Test_slog
         uses: .gitcode/workflows/llt_action.yml
         with:
@@ -240,6 +297,9 @@ stages:
           image_version: ${{ jobs.JOB_image.outputs.UT_Test_dfx }}
         if: env.TARGET_BRANCH != '9.0.0'
       JOB_UT_Test_atrace:
+        permissions:
+          repository: read
+          id-token: write
         name: UT_Test_atrace
         uses: .gitcode/workflows/llt_action.yml
         with:
@@ -250,6 +310,9 @@ stages:
           image_version: ${{ jobs.JOB_image.outputs.UT_Test_dfx }}
         if: env.TARGET_BRANCH != '9.0.0'
       JOB_UT_Test_msprof_part1:
+        permissions:
+          repository: read
+          id-token: write
         name: UT_Test_msprof_part1
         uses: .gitcode/workflows/llt_action.yml
         with:
@@ -260,6 +323,9 @@ stages:
           image_version: ${{ jobs.JOB_image.outputs.UT_Test_dfx }}
         if: env.TARGET_BRANCH == 'master'
       JOB_UT_Test_msprof_part2:
+        permissions:
+          repository: read
+          id-token: write
         name: UT_Test_msprof_part2
         uses: .gitcode/workflows/llt_action.yml
         with:
@@ -270,6 +336,9 @@ stages:
           image_version: ${{ jobs.JOB_image.outputs.UT_Test_dfx }}
         if: env.TARGET_BRANCH == 'master'
       JOB_UT_Test_adump:
+        permissions:
+          repository: read
+          id-token: write
         name: UT_Test_adump
         uses: .gitcode/workflows/llt_action.yml
         with:
@@ -280,6 +349,9 @@ stages:
           image_version: ${{ jobs.JOB_image.outputs.UT_Test_dfx }}
         if: env.TARGET_BRANCH != '9.0.0'
       JOB_UT_Test_mmpa:
+        permissions:
+          repository: read
+          id-token: write
         name: UT_Test_mmpa
         uses: .gitcode/workflows/llt_action.yml
         with:
@@ -289,6 +361,9 @@ stages:
           spec: 'large'
           image_version: ${{ jobs.JOB_image.outputs.UT_Test_mmpa }}
       JOB_UT_Test_camodel_check:
+        permissions:
+          repository: read
+          id-token: write
         name: UT_Test_camodel_check
         uses: .gitcode/workflows/llt_action.yml
         with:
@@ -299,6 +374,9 @@ stages:
           image_version: ${{ jobs.JOB_image.outputs.UT_Test_camodel }}
         if: env.TARGET_BRANCH == 'master'
       JOB_UT_Test_msprof:
+        permissions:
+          repository: read
+          id-token: write
         name: UT_Test_msprof
         uses: .gitcode/workflows/llt_action.yml
         with:
@@ -316,6 +394,9 @@ stages:
     select: selected_by_default
     jobs:
       JOB_ut_report_rts:
+        permissions:
+          repository: read
+          id-token: write
         name: ut_report_rts
         steps:
           -
@@ -325,6 +406,15 @@ stages:
             with:
               ref: ${{ atomgit.event.pull_request.merge_commit_sha }}
               allow-unsafe-pr-checkout: true
+          -
+            name: oidc_auth
+            uses: huaweicloud-oidc-auth
+            with:
+              audience: ${{ secrets.audience }}
+              agency_urn: ${{ secrets.agency_urn }}
+              provider_urn: ${{ secrets.provider_urn }}
+              region: cn-north-4
+              duration: 3600
           -
             name: download
             uses: obs-download
@@ -353,8 +443,6 @@ stages:
             with:
               endpoint: "https://obs.cn-north-4.myhuaweicloud.com"
               bucket: "ascend-ci"
-              access-key: ${{secrets.AK}}
-              secret-key: ${{secrets.SK}}
               artifact-path: |
                 ${{ steps.process_checkout.outputs.path }}/ut_cov_*.tar.gz
               object-prefix: ${{ env.obs_path }}/
@@ -363,6 +451,9 @@ stages:
         container:
           image: swr.cn-north-4.myhuaweicloud.com/ci_cann/${{ jobs.JOB_image.outputs.UT_Test_acl }}
       JOB_ut_report_dfx_msprof:
+        permissions:
+          repository: read
+          id-token: write
         name: ut_report_dfx_msprof
         steps:
           -
@@ -372,6 +463,15 @@ stages:
             with:
               ref: ${{ atomgit.event.pull_request.merge_commit_sha }}
               allow-unsafe-pr-checkout: true
+          -
+            name: oidc_auth
+            uses: huaweicloud-oidc-auth
+            with:
+              audience: ${{ secrets.audience }}
+              agency_urn: ${{ secrets.agency_urn }}
+              provider_urn: ${{ secrets.provider_urn }}
+              region: cn-north-4
+              duration: 3600
           -
             name: download
             uses: obs-download
@@ -400,8 +500,6 @@ stages:
             with:
               endpoint: "https://obs.cn-north-4.myhuaweicloud.com"
               bucket: "ascend-ci"
-              access-key: ${{secrets.AK}}
-              secret-key: ${{secrets.SK}}
               artifact-path: |
                 ${{ steps.process_checkout.outputs.path }}/ut_cov_*.tar.gz
               object-prefix: ${{ env.obs_path }}/
@@ -416,6 +514,9 @@ stages:
     name: PreSmoke
     jobs:
       PreSmoke_A2:
+        permissions:
+          repository: read
+          id-token: write
         name: PreSmoke_A2
         steps:
           -
@@ -426,13 +527,20 @@ stages:
               ref: ${{ atomgit.event.pull_request.merge_commit_sha }}
               allow-unsafe-pr-checkout: true
           -
+            name: oidc_auth
+            uses: huaweicloud-oidc-auth
+            with:
+              audience: ${{ secrets.audience }}
+              agency_urn: ${{ secrets.agency_urn }}
+              provider_urn: ${{ secrets.provider_urn }}
+              region: cn-north-4
+              duration: 3600
+          -
             name: download
             uses: obs-download
             with:
               endpoint: "https://obs.cn-north-4.myhuaweicloud.com"
               bucket: "ascend-ci"
-              access-key: ${{ secrets.AK }}
-              secret-key: ${{ secrets.SK }}
               key: |
                 ${{ env.obs_path }}/pr_filelist.txt
                 ${{ env.obs_path }}/pr_filelist_mod.txt
@@ -447,8 +555,6 @@ stages:
               export smoke_run_file_url=${{jobs.JOB_Compile_Ascend_ARM.outputs.arm_run_url}}
               export repo_name=${{env.repo_name}}
               export pr_id=${{ env.MERGE_ID }}
-              export AK=${{secrets.AK}}
-              export SK=${{secrets.SK}}
               export WORKSPACE=${{ steps.process_checkout.outputs.path }}
               cd ${{ steps.process_checkout.outputs.path }}
               bash ${{ steps.process_checkout.outputs.path }}/pre_smoke.sh
@@ -457,8 +563,6 @@ stages:
             with:
               endpoint: "https://obs.cn-north-4.myhuaweicloud.com"
               bucket: "ascend-ci"
-              access-key: ${{ secrets.AK }}
-              secret-key: ${{ secrets.SK }}
               artifact-path: "${{ steps.process_checkout.outputs.path }}/slog*.tar.gz"
               object-prefix: ${obs_smoke_path}/plog/
 
