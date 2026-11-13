@@ -1320,7 +1320,11 @@ rtError_t ApiImpl::TaskGetParams(rtTask_t task, rtTaskParams* const params)
 
     (void)memset_s(params, sizeof(rtTaskParams), 0, sizeof(rtTaskParams));
     const std::lock_guard<std::mutex> graphUpdateLock(captureModel->GetGraphUpdateInfo().updateMutex);
-    if ((taskInfo->updateInfo != nullptr) && (taskInfo->updateInfo->latestParams.isValid == 1U)) {
+    const bool useCache = (taskInfo->updateInfo != nullptr) && (taskInfo->updateInfo->latestParams.isValid == 1U);
+    RT_LOG(
+        RT_LOG_DEBUG, "stream_id=%d, task_id=%hu, useCache=%u, updateInfoAddr=%p.", stm->Id_(), taskInfo->id,
+        static_cast<uint32_t>(useCache), taskInfo->updateInfo);
+    if (useCache) {
         return GetTaskParamsWithUpdate(taskInfo, params);
     }
     return GetTaskParamsWithoutUpdate(taskInfo, params);

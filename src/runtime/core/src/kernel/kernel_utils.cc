@@ -176,8 +176,7 @@ rtError_t ConvertTaskType(const TaskInfo* const task, rtTaskType* type)
     return RT_ERROR_NONE;
 }
 
-static rtError_t AppendKernelTaskCommonParams(
-    const TaskInfo* const taskInfo, rtTaskParams* const params, void* const logFuncHandle, const size_t logArgsSize)
+static rtError_t AppendKernelTaskCommonParams(const TaskInfo* const taskInfo, rtTaskParams* const params)
 {
     Stream* stm = taskInfo->stream;
     Model* mdl = stm->Model_();
@@ -193,23 +192,19 @@ static rtError_t AppendKernelTaskCommonParams(
     size_t infoSize = 0;
     params->opInfoPtr = captureModel->GetShapeInfo(stm->Id_(), GetTaskId(taskInfo), infoSize);
     params->opInfoSize = infoSize;
-
-    RT_LOG(
-        RT_LOG_INFO,
-        "stream_id=%d, task_id=%hu, typeName=%s, task type=%d, rtTaskType=%s, funcHandle=%p, argsSize=%zu, "
-        "opInfoPtr=%p, opInfoSize=%zu",
-        stm->Id_(), taskInfo->id, taskInfo->typeName, taskInfo->type, TaskTypeToString(params->type).c_str(),
-        logFuncHandle, logArgsSize, params->opInfoPtr, params->opInfoSize);
     return RT_ERROR_NONE;
 }
 
 // map the cached args form onto the ABI struct; DEVICE_BUFFER is kernel-form only (compiled away for SIMT)
 template <typename UpdateInfoT, typename TaskParamsT>
-static void FillArgsFormFromCache(const UpdateInfoT& info, TaskParamsT* const out, size_t& logArgsSize)
+static void FillArgsFormFromCache(
+    const UpdateInfoT& info, TaskParamsT* const out, size_t& logArgsSize, const void*& logArgsAddr)
 {
     if (info.argsType == RT_KERNEL_ARGS_ARRAY) {
         out->argsType = RT_KERNEL_ARGS_ARRAY;
         out->argsArray = info.argsArray;
+        logArgsAddr = info.argsArray;
+        logArgsSize = static_cast<size_t>(info.kernel->GetParamTotalSize());
     } else if (info.argsType == RT_KERNEL_ARGS_HOST_BUFFER) {
         out->argsType = RT_KERNEL_ARGS_HOST_BUFFER;
         out->hostBuffer.hostArgs = info.hostBuffer.hostArgs;
@@ -217,12 +212,14 @@ static void FillArgsFormFromCache(const UpdateInfoT& info, TaskParamsT* const ou
         out->hostBuffer.placeHolderArray = info.hostBuffer.placeHolderArray;
         out->hostBuffer.placeHolderNum = info.hostBuffer.placeHolderNum;
         logArgsSize = info.hostBuffer.hostArgsSize;
+        logArgsAddr = info.hostBuffer.hostArgs;
     } else if constexpr (std::is_same_v<UpdateInfoT, KernelTaskUpdateInfo>) {
         // DEVICE_BUFFER (Set/launch validate argsType, no other value can be cached)
         out->argsType = RT_KERNEL_ARGS_DEVICE_BUFFER;
         out->deviceBuffer.deviceArgs = info.deviceBuffer.deviceArgs;
         out->deviceBuffer.deviceArgsSize = info.deviceBuffer.deviceArgsSize;
         logArgsSize = info.deviceBuffer.deviceArgsSize;
+        logArgsAddr = info.deviceBuffer.deviceArgs;
     }
 }
 
@@ -242,12 +239,22 @@ rtError_t GetKernelTaskParams(const TaskInfo* const taskInfo, rtTaskParams* cons
     kernelTaskParams->cfg = nullptr;
     kernelTaskParams->numBlocks = kernelUpdateInfo.numBlocks;
     size_t logArgsSize = 0U;
-    FillArgsFormFromCache(kernelUpdateInfo, kernelTaskParams, logArgsSize);
+    const void* logArgsAddr = nullptr;
+    FillArgsFormFromCache(kernelUpdateInfo, kernelTaskParams, logArgsSize, logArgsAddr);
     // 兼容回填：旧三字段仍返回任务实际加载的参数地址（Device 内存），供旧调用方使用
     kernelTaskParams->args = taskInfo->u.aicTaskInfo.comm.args;
     kernelTaskParams->isHostArgs = 0U;
     kernelTaskParams->argsSize = static_cast<size_t>(taskInfo->u.aicTaskInfo.comm.argsSize);
-    return AppendKernelTaskCommonParams(taskInfo, params, kernelTaskParams->funcHandle, logArgsSize);
+    const rtError_t error = AppendKernelTaskCommonParams(taskInfo, params);
+    RT_LOG(
+        RT_LOG_INFO,
+        "stream_id=%d, task_id=%hu, task_type=%d(%s), kernel_name=%s, funcHandle=%p, numBlocks=%u, argsType=%s, "
+        "argsAddr=%p, argsSize=%zu, loadedArgsAddr=%p, loadedArgsSize=%zu, opInfoPtr=%p, opInfoSize=%zu.",
+        taskInfo->stream->Id_(), taskInfo->id, taskInfo->type, taskInfo->typeName,
+        kernelUpdateInfo.kernel->Name_().c_str(), kernelTaskParams->funcHandle, kernelTaskParams->numBlocks,
+        KernelArgsTypeToString(kernelUpdateInfo.argsType).c_str(), logArgsAddr, logArgsSize, kernelTaskParams->args,
+        kernelTaskParams->argsSize, params->opInfoPtr, params->opInfoSize);
+    return error;
 }
 
 rtError_t GetSimtKernelTaskParams(const TaskInfo* const taskInfo, rtTaskParams* const params)
@@ -271,8 +278,20 @@ rtError_t GetSimtKernelTaskParams(const TaskInfo* const taskInfo, rtTaskParams* 
     simtTaskParams->blockDimZ = kernelUpdateInfo.blockDim.z;
     simtTaskParams->dynUbufSize = kernelUpdateInfo.dynUbufSize;
     size_t logArgsSize = 0U;
-    FillArgsFormFromCache(kernelUpdateInfo, simtTaskParams, logArgsSize);
-    return AppendKernelTaskCommonParams(taskInfo, params, simtTaskParams->func, logArgsSize);
+    const void* logArgsAddr = nullptr;
+    FillArgsFormFromCache(kernelUpdateInfo, simtTaskParams, logArgsSize, logArgsAddr);
+    const rtError_t error = AppendKernelTaskCommonParams(taskInfo, params);
+    RT_LOG(
+        RT_LOG_INFO,
+        "stream_id=%d, task_id=%hu, task_type=%d(%s), kernel_name=%s, func=%p, gridDim=[%u,%u,%u], "
+        "blockDim=[%u,%u,%u], dynUbufSize=%zu, argsType=%s, argsAddr=%p, argsSize=%zu, opInfoPtr=%p, opInfoSize=%zu.",
+        taskInfo->stream->Id_(), taskInfo->id, taskInfo->type, taskInfo->typeName,
+        kernelUpdateInfo.kernel->Name_().c_str(), simtTaskParams->func, simtTaskParams->gridDimX,
+        simtTaskParams->gridDimY, simtTaskParams->gridDimZ, simtTaskParams->blockDimX, simtTaskParams->blockDimY,
+        simtTaskParams->blockDimZ, simtTaskParams->dynUbufSize,
+        KernelArgsTypeToString(kernelUpdateInfo.argsType).c_str(), logArgsAddr, logArgsSize, params->opInfoPtr,
+        params->opInfoSize);
+    return error;
 }
 
 static rtError_t CheckCacheKernelTaskCommon(TaskInfo* const taskInfo, const rtTaskParams* const params)
@@ -300,10 +319,15 @@ void FreeKernelUpdateInfoBuffers(KernelUpdateInfoT& kernelUpdateInfo)
     switch (kernelUpdateInfo.argsType) {
         case RT_KERNEL_ARGS_ARRAY:
             // argsArray is the base of the single allocation holding the pointer array and the params
+            RT_LOG(RT_LOG_DEBUG, "free cached args array block, argsArrayAddr=%p.", kernelUpdateInfo.argsArray);
             delete[] static_cast<uint8_t*>(static_cast<void*>(kernelUpdateInfo.argsArray));
             kernelUpdateInfo.argsArray = nullptr;
             break;
         case RT_KERNEL_ARGS_HOST_BUFFER:
+            RT_LOG(
+                RT_LOG_DEBUG, "free cached host args, hostArgsAddr=%p, hostArgsSize=%zu, placeHolderAddr=%p.",
+                kernelUpdateInfo.hostBuffer.hostArgs, kernelUpdateInfo.hostBuffer.hostArgsSize,
+                kernelUpdateInfo.hostBuffer.placeHolderArray);
             delete[] static_cast<uint8_t*>(kernelUpdateInfo.hostBuffer.hostArgs);
             kernelUpdateInfo.hostBuffer.hostArgs = nullptr;
             delete[] kernelUpdateInfo.hostBuffer.placeHolderArray;
@@ -421,6 +445,10 @@ static rtError_t DeepCopyHostArgsWithPlaceHolder(
             return error;
         }
     }
+    RT_LOG(
+        RT_LOG_DEBUG,
+        "srcAddr=%p, copiedAddr=%p, size=%zu, placeHolderSrcAddr=%p, placeHolderCopiedAddr=%p, placeHolderNum=%zu.",
+        hostArgs, copiedArgs, hostArgsSize, placeHolderArray, copiedPlaceHolder, placeHolderNum);
     return RT_ERROR_NONE;
 }
 
@@ -463,6 +491,9 @@ static rtError_t CacheArgsArrayForm(const Kernel* const kernel, void** const src
     const rtError_t error = CreateArgsArrayBlock(kernel, srcArgsArray, argsBlock);
     ERROR_RETURN(error, "create args array block failed, retCode=%#x.", static_cast<uint32_t>(error));
     info.argsArray = reinterpret_cast<void**>(argsBlock);
+    RT_LOG(
+        RT_LOG_DEBUG, "srcArgsArrayAddr=%p, blockAddr=%p, paramCount=%u.", srcArgsArray, argsBlock,
+        kernel->GetParamCount());
     return RT_ERROR_NONE;
 }
 
@@ -545,15 +576,30 @@ rtError_t CacheSimtKernelTaskParams(TaskInfo* const taskInfo, const rtTaskParams
     kernelUpdateInfo.dynUbufSize = simtTaskParams->dynUbufSize;
     kernelUpdateInfo.launchFunc = simtTaskParams->func;
     // cache the original params only (no implicit header assembly, the header is generated at load time)
+    const void* argsAddr = nullptr; // 活跃形态的缓存地址与大小，仅用于日志
+    size_t argsSize = 0U;
     if (simtTaskParams->argsType == RT_KERNEL_ARGS_ARRAY) {
         error = CacheArgsArrayForm(kernel, simtTaskParams->argsArray, kernelUpdateInfo);
         ERROR_RETURN(error, "cache simt args array failed, retCode=%#x.", static_cast<uint32_t>(error));
+        argsAddr = kernelUpdateInfo.argsArray;
+        argsSize = static_cast<size_t>(kernel->GetParamTotalSize());
     } else {
         error = CacheHostBufferForm(
             simtTaskParams->hostBuffer.hostArgs, simtTaskParams->hostBuffer.hostArgsSize,
             simtTaskParams->hostBuffer.placeHolderArray, simtTaskParams->hostBuffer.placeHolderNum, kernelUpdateInfo);
         ERROR_RETURN(error, "cache simt host args failed, retCode=%#x.", static_cast<uint32_t>(error));
+        argsAddr = kernelUpdateInfo.hostBuffer.hostArgs;
+        argsSize = kernelUpdateInfo.hostBuffer.hostArgsSize;
     }
+    RT_LOG(
+        RT_LOG_DEBUG,
+        "stream_id=%d, task_id=%hu, kernel_name=%s, func=%p, cfg=%p, gridDim=[%u,%u,%u], blockDim=[%u,%u,%u], "
+        "dynUbufSize=%zu, argsType=%s, argsAddr=%p, argsSize=%zu, opInfoPtr=%p, opInfoSize=%zu.",
+        taskInfo->stream->Id_(), taskInfo->id, kernel->Name_().c_str(), simtTaskParams->func, simtTaskParams->cfg,
+        simtTaskParams->gridDimX, simtTaskParams->gridDimY, simtTaskParams->gridDimZ, simtTaskParams->blockDimX,
+        simtTaskParams->blockDimY, simtTaskParams->blockDimZ, simtTaskParams->dynUbufSize,
+        KernelArgsTypeToString(kernelUpdateInfo.argsType).c_str(), argsAddr, argsSize, params->opInfoPtr,
+        params->opInfoSize);
     return CommitKernelUpdateInfo(taskInfo, params, RT_TASK_SIMT_KERNEL, kernelUpdateInfo);
 }
 
@@ -571,6 +617,8 @@ rtError_t CacheKernelTaskParams(TaskInfo* const taskInfo, const rtTaskParams* co
     ERROR_RETURN(error, "convert task cfg failed, retCode=%#x.", error);
 
     KernelTaskUpdateInfo kernelUpdateInfo = {};
+    const void* argsAddr = nullptr; // 活跃形态的缓存地址与大小，仅用于日志
+    size_t argsSize = 0U;
     // level-2 dispatch on argsType; non-zero leaves the legacy fields ignored, GetParams backfills them
     switch (kernelTaskParams->argsType) {
         case RT_KERNEL_ARGS_UNSET: {
@@ -578,6 +626,12 @@ rtError_t CacheKernelTaskParams(TaskInfo* const taskInfo, const rtTaskParams* co
             if (error != RT_ERROR_NONE) {
                 return error;
             }
+            // 旧形态经转换后为 HOST_BUFFER（深拷贝）或 DEVICE_BUFFER（零拷贝）
+            argsAddr = (kernelTaskParams->isHostArgs != 0U) ?
+                           static_cast<const void*>(kernelUpdateInfo.hostBuffer.hostArgs) :
+                           static_cast<const void*>(kernelUpdateInfo.deviceBuffer.deviceArgs);
+            argsSize = (kernelTaskParams->isHostArgs != 0U) ? kernelUpdateInfo.hostBuffer.hostArgsSize :
+                                                              kernelUpdateInfo.deviceBuffer.deviceArgsSize;
             break;
         }
         case RT_KERNEL_ARGS_ARRAY: {
@@ -597,6 +651,8 @@ rtError_t CacheKernelTaskParams(TaskInfo* const taskInfo, const rtTaskParams* co
             if (error != RT_ERROR_NONE) {
                 return error;
             }
+            argsAddr = kernelUpdateInfo.argsArray;
+            argsSize = static_cast<size_t>(kernel->GetParamTotalSize());
             break;
         }
         case RT_KERNEL_ARGS_HOST_BUFFER: {
@@ -624,6 +680,8 @@ rtError_t CacheKernelTaskParams(TaskInfo* const taskInfo, const rtTaskParams* co
             if (error != RT_ERROR_NONE) {
                 return error;
             }
+            argsAddr = kernelUpdateInfo.hostBuffer.hostArgs;
+            argsSize = kernelUpdateInfo.hostBuffer.hostArgsSize;
             break;
         }
         case RT_KERNEL_ARGS_DEVICE_BUFFER: {
@@ -637,6 +695,8 @@ rtError_t CacheKernelTaskParams(TaskInfo* const taskInfo, const rtTaskParams* co
             kernelUpdateInfo.argsType = RT_KERNEL_ARGS_DEVICE_BUFFER;
             kernelUpdateInfo.deviceBuffer.deviceArgs = kernelTaskParams->deviceBuffer.deviceArgs;
             kernelUpdateInfo.deviceBuffer.deviceArgsSize = kernelTaskParams->deviceBuffer.deviceArgsSize;
+            argsAddr = kernelUpdateInfo.deviceBuffer.deviceArgs;
+            argsSize = kernelUpdateInfo.deviceBuffer.deviceArgsSize;
             break;
         }
         default: {
@@ -647,6 +707,13 @@ rtError_t CacheKernelTaskParams(TaskInfo* const taskInfo, const rtTaskParams* co
             return RT_ERROR_INVALID_VALUE;
         }
     }
+    RT_LOG(
+        RT_LOG_DEBUG,
+        "stream_id=%d, task_id=%hu, kernel_name=%s, funcHandle=%p, cfg=%p, numBlocks=%u, argsType=%s, "
+        "argsAddr=%p, argsSize=%zu, opInfoPtr=%p, opInfoSize=%zu.",
+        taskInfo->stream->Id_(), taskInfo->id, kernel->Name_().c_str(), kernelTaskParams->funcHandle,
+        kernelTaskParams->cfg, kernelTaskParams->numBlocks, KernelArgsTypeToString(kernelUpdateInfo.argsType).c_str(),
+        argsAddr, argsSize, params->opInfoPtr, params->opInfoSize);
     return CommitKernelTaskCache(taskInfo, params, kernel, taskCfg, kernelTaskParams, kernelUpdateInfo);
 }
 
@@ -666,6 +733,10 @@ static rtError_t BuildKernelArgsLoadInput(
             argsInfo.argsSize = static_cast<uint32_t>(paramTotalSize);
             argsInfo.isNoNeedH2DCopy = (paramTotalSize == 0ULL) ? 1U : 0U;
             argsArray = kernelUpdateInfo->argsArray;
+            RT_LOG(
+                RT_LOG_DEBUG, "argsType=%s, argsArrayAddr=%p, argsSize=%u, isNoNeedH2DCopy=%u.",
+                KernelArgsTypeToString(RT_KERNEL_ARGS_ARRAY).c_str(), argsArray, argsInfo.argsSize,
+                static_cast<uint32_t>(argsInfo.isNoNeedH2DCopy));
             return RT_ERROR_NONE;
         }
         case RT_KERNEL_ARGS_HOST_BUFFER: {
@@ -681,6 +752,12 @@ static rtError_t BuildKernelArgsLoadInput(
                     RtPtrToPtr<rtHostInputInfo_t*>(kernelUpdateInfo->hostBuffer.placeHolderArray);
                 argsInfo.hostInputInfoNum = static_cast<uint16_t>(kernelUpdateInfo->hostBuffer.placeHolderNum);
             }
+            RT_LOG(
+                RT_LOG_DEBUG,
+                "argsType=%s, argsAddr=%p, argsSize=%u, hostInputInfoAddr=%p, "
+                "hostInputInfoNum=%u.",
+                KernelArgsTypeToString(RT_KERNEL_ARGS_HOST_BUFFER).c_str(), argsInfo.args, argsInfo.argsSize,
+                argsInfo.hostInputInfoPtr, static_cast<uint32_t>(argsInfo.hostInputInfoNum));
             return RT_ERROR_NONE;
         }
         case RT_KERNEL_ARGS_DEVICE_BUFFER: {
@@ -690,11 +767,17 @@ static rtError_t BuildKernelArgsLoadInput(
             COND_RETURN_ERROR(
                 (argsInfo.args == nullptr) || (argsInfo.argsSize == 0U), RT_ERROR_MODEL_UPDATE_FAILED,
                 "cached DEVICE_BUFFER args are invalid, args=%p, argsSize=%u.", argsInfo.args, argsInfo.argsSize);
+            RT_LOG(
+                RT_LOG_DEBUG, "argsType=%s, argsAddr=%p, argsSize=%u, isNoNeedH2DCopy=%u.",
+                KernelArgsTypeToString(RT_KERNEL_ARGS_DEVICE_BUFFER).c_str(), argsInfo.args, argsInfo.argsSize,
+                static_cast<uint32_t>(argsInfo.isNoNeedH2DCopy));
             return RT_ERROR_NONE;
         }
         default: {
             // Set 与 launch 都已校验 argsType，此处纯防御
-            RT_LOG(RT_LOG_ERROR, "unsupported cached argsType=%d.", static_cast<int32_t>(kernelUpdateInfo->argsType));
+            RT_LOG(
+                RT_LOG_ERROR, "unsupported cached argsType=%s.",
+                KernelArgsTypeToString(kernelUpdateInfo->argsType).c_str());
             return RT_ERROR_MODEL_UPDATE_FAILED;
         }
     }
@@ -762,12 +845,12 @@ rtError_t UpdateKernelParams(TaskInfo* const taskInfo, KernelTaskUpdateInfo* con
     ERROR_RETURN(error, "PostUpdateKernelParams failed, retCode=%#x.", error);
     RT_LOG(
         RT_LOG_INFO,
-        "device_id=%u, stream_id=%d, task_id=%hu, kernelAttrType=%s, kernel_name=%s, argsType=%d, arg_size=%u, "
+        "device_id=%u, stream_id=%d, task_id=%hu, kernelAttrType=%s, kernel_name=%s, argsType=%s, arg_size=%u, "
         "blockDim=%u, taskRation=%u, funcType=%u, addr1=0x%llx, addr2=0x%llx, "
         "mixType=%u, kernelFlag=0x%x, qos=%u, partId=%u, schemMode=%u, infoAddr=%p, atomicIndex=%u, "
         "shareMemSize=%u, kernelVfType=%u, dynamicShareMemSize=%u, simtDcuSmSize=%u.",
         dev->Id_(), stm->Id_(), taskInfo->id, KernelAttrTypeToString(kernelAttrType).c_str(), kernel->Name_().c_str(),
-        static_cast<int32_t>(kernelUpdateInfo->argsType), argsInfo.argsSize, kernelUpdateInfo->numBlocks,
+        KernelArgsTypeToString(kernelUpdateInfo->argsType).c_str(), argsInfo.argsSize, kernelUpdateInfo->numBlocks,
         kernel->GetTaskRation(), kernel->GetFuncType(), kernelPc1, kernelPc2, mixType, aicTask->comm.kernelFlag,
         aicTask->qos, aicTask->partId, aicTask->schemMode, aicTask->inputArgsSize.infoAddr,
         aicTask->inputArgsSize.atomicIndex, kernel->ShareMemSize_(), kernel->KernelVfType_(),
@@ -951,6 +1034,7 @@ static rtError_t DeepCopyHostArgs(const void* const hostArgs, const size_t hostA
             "Failed to copy the host kernel arguments for caching", RtFmtMsg("hostArgsSize=%zu.", hostArgsSize));
         return RT_ERROR_SEC_HANDLE;
     }
+    RT_LOG(RT_LOG_DEBUG, "srcAddr=%p, copiedAddr=%p, size=%zu.", hostArgs, copiedArgs, hostArgsSize);
     return RT_ERROR_NONE;
 }
 
@@ -999,7 +1083,8 @@ static void CommitLaunchCache(TaskUpdateParams& latestParams, const rtTaskType t
 
 // build and commit the SIMT cache entry; a copy failure leaves the old entry untouched and fails the launch
 static rtError_t SetSimtKernelLaunchParams(
-    const rtStreamLaunchKernelV2ExtendArgs_t* const extendArgs, Kernel* const kernel, TaskUpdateParams& latestParams)
+    const rtStreamLaunchKernelV2ExtendArgs_t* const extendArgs, Kernel* const kernel, TaskInfo& task,
+    TaskUpdateParams& latestParams)
 {
     SimtKernelTaskUpdateInfo kernelUpdateInfo = {};
     kernelUpdateInfo.kernel = kernel;
@@ -1038,6 +1123,9 @@ static rtError_t SetSimtKernelLaunchParams(
         ERROR_RETURN(error, "cache simt launch args array failed, retCode=%#x.", static_cast<uint32_t>(error));
     }
     CommitLaunchCache(latestParams, RT_TASK_SIMT_KERNEL, kernelUpdateInfo);
+    RT_LOG(
+        RT_LOG_INFO, "cache simt launch args success, stream_id=%d, task_id=%hu, argsType=%s.", task.stream->Id_(),
+        task.id, KernelArgsTypeToString(kernelUpdateInfo.argsType).c_str());
     return RT_ERROR_NONE;
 }
 
@@ -1087,6 +1175,9 @@ static rtError_t SetNormalKernelLaunchParams(
         kernelUpdateInfo.hostBuffer.placeHolderNum = mergedPlaceHolderNum;
     }
     CommitLaunchCache(latestParams, RT_TASK_KERNEL, kernelUpdateInfo);
+    RT_LOG(
+        RT_LOG_INFO, "cache launch args success, stream_id=%d, task_id=%hu, argsType=%s.", task.stream->Id_(), task.id,
+        KernelArgsTypeToString(kernelUpdateInfo.argsType).c_str());
     return RT_ERROR_NONE;
 }
 
@@ -1123,7 +1214,7 @@ rtError_t SetKernelLaunchParams(
     const bool isSimtForm =
         (extendArgs != nullptr) && ((extendArgs->simtArgsArray != nullptr) || (extendArgs->simtArgsHost != nullptr));
     if (isSimtForm) {
-        return SetSimtKernelLaunchParams(extendArgs, kernel, latestParams);
+        return SetSimtKernelLaunchParams(extendArgs, kernel, task, latestParams);
     }
     return SetNormalKernelLaunchParams(argsInfo, extendArgs, task, kernel, latestParams);
 }
