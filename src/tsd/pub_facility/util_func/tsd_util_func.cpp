@@ -403,9 +403,9 @@ std::string CalFileSha256HashValue(const std::string& filePath)
                                                  '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
     std::string hashHex;
     hashHex.reserve(sha256::DIGEST_LENGTH * 2U);
-    for (const auto value : hash) {
-        hashHex.push_back(hexDigits[value >> 4U]);
-        hashHex.push_back(hexDigits[value & 0x0FU]);
+    for (const uint8_t value : hash) {
+        hashHex.push_back(hexDigits[static_cast<size_t>(value >> 4U)]);
+        hashHex.push_back(hexDigits[static_cast<size_t>(value & 0x0FU)]);
     }
     return hashHex;
 }
