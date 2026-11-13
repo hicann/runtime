@@ -16,7 +16,7 @@ This topic describes the shared queue management APIs, which are used for queue 
 - [`aclError acltdtGrantQueue(uint32_t qid, int32_t pid, uint32_t permission, int32_t timeout)`](#acltdtGrantQueue): Grants queue-related permissions to other processes, such as the enqueue (adding data to the queue) permission and the dequeue (obtaining data from the queue) permission, when inter-process queue information sharing is required.
 - [`aclError acltdtAttachQueue(uint32_t qid, int32_t timeout, uint32_t *permission)`](#acltdtAttachQueue): Confirms that the current process has the corresponding permissions on the queue in the authorized process when inter-process queue information sharing is required.
 
-<a id="acltdtCreateQueue"></a>
+<a class="method_anchor" id="acltdtCreateQueue"></a>
 
 ## acltdtCreateQueue
 
@@ -65,7 +65,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="acltdtDestroyQueue"></a>
+<a class="method_anchor" id="acltdtDestroyQueue"></a>
 
 ## acltdtDestroyQueue
 
@@ -113,7 +113,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="acltdtEnqueueData"></a>
+<a class="method_anchor" id="acltdtEnqueueData"></a>
 
 ## acltdtEnqueueData
 
@@ -167,7 +167,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="acltdtDequeueData"></a>
+<a class="method_anchor" id="acltdtDequeueData"></a>
 
 ## acltdtDequeueData
 
@@ -221,7 +221,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="acltdtEnqueue"></a>
+<a class="method_anchor" id="acltdtEnqueue"></a>
 
 ## acltdtEnqueue
 
@@ -271,7 +271,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="acltdtDequeue"></a>
+<a class="method_anchor" id="acltdtDequeue"></a>
 
 ## acltdtDequeue
 
@@ -321,7 +321,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="acltdtBindQueueRoutes"></a>
+<a class="method_anchor" id="acltdtBindQueueRoutes"></a>
 
 ## acltdtBindQueueRoutes
 
@@ -380,7 +380,7 @@ This API returns success only when all queue relationships are bound successfull
 <br>
 <br>
 
-<a id="acltdtUnbindQueueRoutes"></a>
+<a class="method_anchor" id="acltdtUnbindQueueRoutes"></a>
 
 ## acltdtUnbindQueueRoutes
 
@@ -430,7 +430,7 @@ This API returns success only when all queue relationships are unbound successfu
 <br>
 <br>
 
-<a id="acltdtQueryQueueRoutes"></a>
+<a class="method_anchor" id="acltdtQueryQueueRoutes"></a>
 
 ## acltdtQueryQueueRoutes
 
@@ -479,7 +479,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="acltdtGrantQueue"></a>
+<a class="method_anchor" id="acltdtGrantQueue"></a>
 
 ## acltdtGrantQueue
 
@@ -532,7 +532,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="acltdtAttachQueue"></a>
+<a class="method_anchor" id="acltdtAttachQueue"></a>
 
 ## acltdtAttachQueue
 

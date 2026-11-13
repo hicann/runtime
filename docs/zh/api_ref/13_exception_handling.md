@@ -3,7 +3,7 @@
 本章节描述 CANN Runtime 的异常处理接口，包括错误信息获取、异常回调注册、内存 UCE 修复及任务中止。
 
 - [`const char *aclGetRecentErrMsg()`](#aclGetRecentErrMsg)：获取并清空与本接口在同一个进程或线程中的其它acl接口调用失败时的错误描述信息。
-- [`aclError aclrtSetExceptionInfoCallback(aclrtExceptionInfoCallback callback)`](#aclrtSetExceptionInfoCallback_deprecated)：设置进程级异常回调函数。若多次设置异常回调函数，以最后一次设置为准。（废弃接口，请使用[`aclrtExceptionInfoCallbackRegister`](#aclrtExceptionInfoCallbackRegister)接口或者[`aclrtExceptionInfoCallbackUnregister`](#aclrtExceptionInfoCallbackUnregister)接口）
+- [`aclError aclrtSetExceptionInfoCallback(aclrtExceptionInfoCallback callback)`](#aclrtSetExceptionInfoCallback)：设置进程级异常回调函数。若多次设置异常回调函数，以最后一次设置为准。（废弃接口，请使用[`aclrtExceptionInfoCallbackRegister`](#aclrtExceptionInfoCallbackRegister)接口或者[`aclrtExceptionInfoCallbackUnregister`](#aclrtExceptionInfoCallbackUnregister)接口）
 - [`aclError aclrtExceptionInfoCallbackRegister(aclrtExceptionInfoCallback callback)`](#aclrtExceptionInfoCallbackRegister)：注册进程级异常回调函数，支持注册多个不同的回调函数。
 - [`aclError aclrtExceptionInfoCallbackUnregister(aclrtExceptionInfoCallback callback)`](#aclrtExceptionInfoCallbackUnregister)：注销通过aclrtExceptionInfoCallbackRegister接口注册的进程级异常回调函数。
 - [`uint32_t aclrtGetTaskIdFromExceptionInfo(const aclrtExceptionInfo *info)`](#aclrtGetTaskIdFromExceptionInfo)：获取异常信息中的任务ID。
@@ -20,7 +20,7 @@
 - [`aclError aclrtRepairError(int32_t deviceId, const aclrtErrorInfo *errorInfo)`](#aclrtRepairError)：基于[aclrtGetErrorVerbose](#aclrtGetErrorVerbose)接口获取的详细信息进行故障恢复，此接口应该在提交任务中止之后调用。
 - [`aclError aclrtSetDeviceTaskAbortCallback(const char *regName, aclrtDeviceTaskAbortCallback callback, void *args)`](#aclrtSetDeviceTaskAbortCallback)：调用本接口注册回调函数，用于在调用[aclrtDeviceTaskAbort](#aclrtDeviceTaskAbort)接口前后触发该回调函数。
 
-<a id="aclGetRecentErrMsg"></a>
+<a class="method_anchor" id="aclGetRecentErrMsg"></a>
 
 ## aclGetRecentErrMsg
 
@@ -72,7 +72,7 @@ const char *aclGetRecentErrMsg()
 <br>
 <br>
 
-<a id="aclrtSetExceptionInfoCallback_deprecated"></a>
+<a class="method_anchor" id="aclrtSetExceptionInfoCallback"></a>
 
 ## aclrtSetExceptionInfoCallback (废弃)
 
@@ -206,7 +206,7 @@ aclmdlExecute(modelId, input, output);
 <br>
 <br>
 
-<a id="aclrtExceptionInfoCallbackRegister"></a>
+<a class="method_anchor" id="aclrtExceptionInfoCallbackRegister"></a>
 
 ## aclrtExceptionInfoCallbackRegister
 
@@ -240,9 +240,9 @@ aclError aclrtExceptionInfoCallbackRegister(aclrtExceptionInfoCallback callback)
 
 注册进程级异常回调函数。通过本接口可以注册多个函数指针值不同的异常回调函数。callback参数中的函数指针不同，则表示异常回调函数不同。重复调用本接口注册同一个回调函数时返回成功，但Runtime只会保留最后一次注册信息。
 
-通过本接口注册的异常回调函数可与通过[aclrtSetExceptionInfoCallback (废弃)](#aclrtSetExceptionInfoCallback_deprecated)接口设置的回调函数共存。当Device任务执行异常并进入Runtime异常通知流程时，系统会将异常信息通知给通过本接口或[aclrtSetExceptionInfoCallback (废弃)](#aclrtSetExceptionInfoCallback_deprecated)接口注册的异常回调函数。
+通过本接口注册的异常回调函数可与通过[aclrtSetExceptionInfoCallback (废弃)](#aclrtSetExceptionInfoCallback)接口设置的回调函数共存。当Device任务执行异常并进入Runtime异常通知流程时，系统会将异常信息通知给通过本接口或[aclrtSetExceptionInfoCallback (废弃)](#aclrtSetExceptionInfoCallback)接口注册的异常回调函数。
 
-同一个回调函数既通过[aclrtSetExceptionInfoCallback (废弃)](#aclrtSetExceptionInfoCallback_deprecated)接口设置，又通过本接口注册时，Runtime会将其保存为两个相互独立的注册项。回调函数在本次通知中会被调用两次，两次调用的先后顺序不做保证。
+同一个回调函数既通过[aclrtSetExceptionInfoCallback (废弃)](#aclrtSetExceptionInfoCallback)接口设置，又通过本接口注册时，Runtime会将其保存为两个相互独立的注册项。回调函数在本次通知中会被调用两次，两次调用的先后顺序不做保证。
 
 ### 参数说明
 
@@ -344,7 +344,7 @@ aclmdlExecute(modelId, input, output);
 <br>
 <br>
 
-<a id="aclrtExceptionInfoCallbackUnregister"></a>
+<a class="method_anchor" id="aclrtExceptionInfoCallbackUnregister"></a>
 
 ## aclrtExceptionInfoCallbackUnregister
 
@@ -376,7 +376,7 @@ aclError aclrtExceptionInfoCallbackUnregister(aclrtExceptionInfoCallback callbac
 
 ### 功能说明
 
-注销通过[aclrtExceptionInfoCallbackRegister](#aclrtExceptionInfoCallbackRegister)接口注册的进程级异常回调函数。不支持注销通过[aclrtSetExceptionInfoCallback (废弃)](#aclrtSetExceptionInfoCallback_deprecated)接口设置的回调函数。
+注销通过[aclrtExceptionInfoCallbackRegister](#aclrtExceptionInfoCallbackRegister)接口注册的进程级异常回调函数。不支持注销通过[aclrtSetExceptionInfoCallback (废弃)](#aclrtSetExceptionInfoCallback)接口设置的回调函数。
 
 ### 参数说明
 
@@ -432,7 +432,7 @@ aclrtExceptionInfoCallbackUnregister(callbackB);
 <br>
 <br>
 
-<a id="aclrtGetTaskIdFromExceptionInfo"></a>
+<a class="method_anchor" id="aclrtGetTaskIdFromExceptionInfo"></a>
 
 ## aclrtGetTaskIdFromExceptionInfo
 
@@ -464,13 +464,13 @@ uint32_t aclrtGetTaskIdFromExceptionInfo(const aclrtExceptionInfo *info)
 
 ### 功能说明
 
-获取异常信息中的任务ID。Runtime向异常回调函数传入aclrtExceptionInfo指针；本章中通过[aclrtSetExceptionInfoCallback (废弃)](#aclrtSetExceptionInfoCallback_deprecated)接口设置或通过[aclrtExceptionInfoCallbackRegister](#aclrtExceptionInfoCallbackRegister)接口注册的进程级异常回调函数均可调用本接口读取该字段。
+获取异常信息中的任务ID。Runtime向异常回调函数传入aclrtExceptionInfo指针；本章中通过[aclrtSetExceptionInfoCallback (废弃)](#aclrtSetExceptionInfoCallback)接口设置或通过[aclrtExceptionInfoCallbackRegister](#aclrtExceptionInfoCallbackRegister)接口注册的进程级异常回调函数均可调用本接口读取该字段。
 
 ### 参数说明
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| info | 输入 | 异常信息的指针。<br>在执行任务之前调用[aclrtSetExceptionInfoCallback (废弃)](#aclrtSetExceptionInfoCallback_deprecated)接口或者[aclrtExceptionInfoCallbackRegister](#aclrtExceptionInfoCallbackRegister)接口，系统会将产生异常的任务ID、Stream ID、线程ID、Device ID存放在aclrtExceptionInfo结构体中。 |
+| info | 输入 | 异常信息的指针。<br>在执行任务之前调用[aclrtSetExceptionInfoCallback (废弃)](#aclrtSetExceptionInfoCallback)接口或者[aclrtExceptionInfoCallbackRegister](#aclrtExceptionInfoCallbackRegister)接口，系统会将产生异常的任务ID、Stream ID、线程ID、Device ID存放在aclrtExceptionInfo结构体中。 |
 
 ### 返回值说明
 
@@ -480,7 +480,7 @@ uint32_t aclrtGetTaskIdFromExceptionInfo(const aclrtExceptionInfo *info)
 <br>
 <br>
 
-<a id="aclrtGetStreamIdFromExceptionInfo"></a>
+<a class="method_anchor" id="aclrtGetStreamIdFromExceptionInfo"></a>
 
 ## aclrtGetStreamIdFromExceptionInfo
 
@@ -512,13 +512,13 @@ uint32_t aclrtGetStreamIdFromExceptionInfo(const aclrtExceptionInfo *info)
 
 ### 功能说明
 
-获取异常信息中的Stream ID。Runtime向异常回调函数传入aclrtExceptionInfo指针；本章中通过[aclrtSetExceptionInfoCallback (废弃)](#aclrtSetExceptionInfoCallback_deprecated)接口设置或通过[aclrtExceptionInfoCallbackRegister](#aclrtExceptionInfoCallbackRegister)接口注册的进程级异常回调函数均可调用本接口读取该字段。
+获取异常信息中的Stream ID。Runtime向异常回调函数传入aclrtExceptionInfo指针；本章中通过[aclrtSetExceptionInfoCallback (废弃)](#aclrtSetExceptionInfoCallback)接口设置或通过[aclrtExceptionInfoCallbackRegister](#aclrtExceptionInfoCallbackRegister)接口注册的进程级异常回调函数均可调用本接口读取该字段。
 
 ### 参数说明
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| info | 输入 | 异常信息的指针。<br>在执行任务之前调用[aclrtSetExceptionInfoCallback (废弃)](#aclrtSetExceptionInfoCallback_deprecated)接口或者[aclrtExceptionInfoCallbackRegister](#aclrtExceptionInfoCallbackRegister)接口，系统会将产生异常的任务ID、Stream ID、线程ID、Device ID存放在aclrtExceptionInfo结构体中。该指针由Runtime管理，仅在本次回调执行期间有效。 |
+| info | 输入 | 异常信息的指针。<br>在执行任务之前调用[aclrtSetExceptionInfoCallback (废弃)](#aclrtSetExceptionInfoCallback)接口或者[aclrtExceptionInfoCallbackRegister](#aclrtExceptionInfoCallbackRegister)接口，系统会将产生异常的任务ID、Stream ID、线程ID、Device ID存放在aclrtExceptionInfo结构体中。该指针由Runtime管理，仅在本次回调执行期间有效。 |
 
 ### 返回值说明
 
@@ -528,7 +528,7 @@ uint32_t aclrtGetStreamIdFromExceptionInfo(const aclrtExceptionInfo *info)
 <br>
 <br>
 
-<a id="aclrtGetThreadIdFromExceptionInfo"></a>
+<a class="method_anchor" id="aclrtGetThreadIdFromExceptionInfo"></a>
 
 ## aclrtGetThreadIdFromExceptionInfo
 
@@ -560,13 +560,13 @@ uint32_t aclrtGetThreadIdFromExceptionInfo(const aclrtExceptionInfo *info)
 
 ### 功能说明
 
-获取异常信息中的线程ID。Runtime向异常回调函数传入aclrtExceptionInfo指针；本章中通过[aclrtSetExceptionInfoCallback (废弃)](#aclrtSetExceptionInfoCallback_deprecated)接口设置或通过[aclrtExceptionInfoCallbackRegister](#aclrtExceptionInfoCallbackRegister)接口注册的进程级异常回调函数均可调用本接口读取该字段。
+获取异常信息中的线程ID。Runtime向异常回调函数传入aclrtExceptionInfo指针；本章中通过[aclrtSetExceptionInfoCallback (废弃)](#aclrtSetExceptionInfoCallback)接口设置或通过[aclrtExceptionInfoCallbackRegister](#aclrtExceptionInfoCallbackRegister)接口注册的进程级异常回调函数均可调用本接口读取该字段。
 
 ### 参数说明
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| info | 输入 | 异常信息的指针。<br>在执行任务之前调用[aclrtSetExceptionInfoCallback (废弃)](#aclrtSetExceptionInfoCallback_deprecated)接口或者[aclrtExceptionInfoCallbackRegister](#aclrtExceptionInfoCallbackRegister)接口，系统会将产生异常的任务ID、Stream ID、线程ID、Device ID存放在aclrtExceptionInfo结构体中。 |
+| info | 输入 | 异常信息的指针。<br>在执行任务之前调用[aclrtSetExceptionInfoCallback (废弃)](#aclrtSetExceptionInfoCallback)接口或者[aclrtExceptionInfoCallbackRegister](#aclrtExceptionInfoCallbackRegister)接口，系统会将产生异常的任务ID、Stream ID、线程ID、Device ID存放在aclrtExceptionInfo结构体中。 |
 
 ### 返回值说明
 
@@ -576,7 +576,7 @@ uint32_t aclrtGetThreadIdFromExceptionInfo(const aclrtExceptionInfo *info)
 <br>
 <br>
 
-<a id="aclrtGetDeviceIdFromExceptionInfo"></a>
+<a class="method_anchor" id="aclrtGetDeviceIdFromExceptionInfo"></a>
 
 ## aclrtGetDeviceIdFromExceptionInfo
 
@@ -608,13 +608,13 @@ uint32_t aclrtGetDeviceIdFromExceptionInfo(const aclrtExceptionInfo *info)
 
 ### 功能说明
 
-获取异常信息中的Device ID。Runtime向异常回调函数传入aclrtExceptionInfo指针；本章中通过[aclrtSetExceptionInfoCallback (废弃)](#aclrtSetExceptionInfoCallback_deprecated)接口设置或通过[aclrtExceptionInfoCallbackRegister](#aclrtExceptionInfoCallbackRegister)接口注册的进程级异常回调函数均可调用本接口读取该字段。
+获取异常信息中的Device ID。Runtime向异常回调函数传入aclrtExceptionInfo指针；本章中通过[aclrtSetExceptionInfoCallback (废弃)](#aclrtSetExceptionInfoCallback)接口设置或通过[aclrtExceptionInfoCallbackRegister](#aclrtExceptionInfoCallbackRegister)接口注册的进程级异常回调函数均可调用本接口读取该字段。
 
 ### 参数说明
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| info | 输入 | 异常信息的指针。<br>在执行任务之前调用[aclrtSetExceptionInfoCallback (废弃)](#aclrtSetExceptionInfoCallback_deprecated)接口或者[aclrtExceptionInfoCallbackRegister](#aclrtExceptionInfoCallbackRegister)接口，系统会将产生异常的任务ID、Stream ID、线程ID、Device ID存放在aclrtExceptionInfo结构体中。该指针由Runtime管理，仅在本次回调执行期间有效。 |
+| info | 输入 | 异常信息的指针。<br>在执行任务之前调用[aclrtSetExceptionInfoCallback (废弃)](#aclrtSetExceptionInfoCallback)接口或者[aclrtExceptionInfoCallbackRegister](#aclrtExceptionInfoCallbackRegister)接口，系统会将产生异常的任务ID、Stream ID、线程ID、Device ID存放在aclrtExceptionInfo结构体中。该指针由Runtime管理，仅在本次回调执行期间有效。 |
 
 ### 返回值说明
 
@@ -624,7 +624,7 @@ uint32_t aclrtGetDeviceIdFromExceptionInfo(const aclrtExceptionInfo *info)
 <br>
 <br>
 
-<a id="aclrtGetErrorCodeFromExceptionInfo"></a>
+<a class="method_anchor" id="aclrtGetErrorCodeFromExceptionInfo"></a>
 
 ## aclrtGetErrorCodeFromExceptionInfo
 
@@ -656,13 +656,13 @@ uint32_t aclrtGetErrorCodeFromExceptionInfo(const aclrtExceptionInfo *info)
 
 ### 功能说明
 
-获取异常信息中的错误码。Runtime向异常回调函数传入aclrtExceptionInfo指针；本章中通过[aclrtSetExceptionInfoCallback (废弃)](#aclrtSetExceptionInfoCallback_deprecated)接口设置或通过[aclrtExceptionInfoCallbackRegister](#aclrtExceptionInfoCallbackRegister)接口注册的进程级异常回调函数均可调用本接口读取该字段。
+获取异常信息中的错误码。Runtime向异常回调函数传入aclrtExceptionInfo指针；本章中通过[aclrtSetExceptionInfoCallback (废弃)](#aclrtSetExceptionInfoCallback)接口设置或通过[aclrtExceptionInfoCallbackRegister](#aclrtExceptionInfoCallbackRegister)接口注册的进程级异常回调函数均可调用本接口读取该字段。
 
 ### 参数说明
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| info | 输入 | 异常信息的指针。<br>在执行任务之前调用[aclrtSetExceptionInfoCallback (废弃)](#aclrtSetExceptionInfoCallback_deprecated)接口或者[aclrtExceptionInfoCallbackRegister](#aclrtExceptionInfoCallbackRegister)接口，系统会将产生异常的任务ID、Stream ID、线程ID、Device ID、错误码存放在aclrtExceptionInfo结构体中。 |
+| info | 输入 | 异常信息的指针。<br>在执行任务之前调用[aclrtSetExceptionInfoCallback (废弃)](#aclrtSetExceptionInfoCallback)接口或者[aclrtExceptionInfoCallbackRegister](#aclrtExceptionInfoCallbackRegister)接口，系统会将产生异常的任务ID、Stream ID、线程ID、Device ID、错误码存放在aclrtExceptionInfo结构体中。 |
 
 ### 返回值说明
 
@@ -672,7 +672,7 @@ uint32_t aclrtGetErrorCodeFromExceptionInfo(const aclrtExceptionInfo *info)
 <br>
 <br>
 
-<a id="aclrtPeekAtLastError"></a>
+<a class="method_anchor" id="aclrtPeekAtLastError"></a>
 
 ## aclrtPeekAtLastError
 
@@ -720,7 +720,7 @@ aclError aclrtPeekAtLastError(aclrtLastErrLevel level)
 <br>
 <br>
 
-<a id="aclrtGetLastError"></a>
+<a class="method_anchor" id="aclrtGetLastError"></a>
 
 ## aclrtGetLastError
 
@@ -768,7 +768,7 @@ aclError aclrtGetLastError(aclrtLastErrLevel level)
 <br>
 <br>
 
-<a id="aclrtGetMemUceInfo"></a>
+<a class="method_anchor" id="aclrtGetMemUceInfo"></a>
 
 ## aclrtGetMemUceInfo
 
@@ -821,7 +821,7 @@ aclError aclrtGetMemUceInfo(int32_t deviceId, aclrtMemUceInfo *memUceInfoArray, 
 <br>
 <br>
 
-<a id="aclrtMemUceRepair"></a>
+<a class="method_anchor" id="aclrtMemUceRepair"></a>
 
 ## aclrtMemUceRepair
 
@@ -873,7 +873,7 @@ aclError aclrtMemUceRepair(int32_t deviceId, aclrtMemUceInfo *memUceInfoArray, s
 <br>
 <br>
 
-<a id="aclrtDeviceTaskAbort"></a>
+<a class="method_anchor" id="aclrtDeviceTaskAbort"></a>
 
 ## aclrtDeviceTaskAbort
 
@@ -928,7 +928,7 @@ aclError aclrtDeviceTaskAbort(int32_t deviceId, uint32_t timeout)
 <br>
 <br>
 
-<a id="aclrtGetErrorVerbose"></a>
+<a class="method_anchor" id="aclrtGetErrorVerbose"></a>
 
 ## aclrtGetErrorVerbose
 
@@ -984,7 +984,7 @@ aclError aclrtGetErrorVerbose(int32_t deviceId, aclrtErrorInfo *errorInfo);
 <br>
 <br>
 
-<a id="aclrtRepairError"></a>
+<a class="method_anchor" id="aclrtRepairError"></a>
 
 ## aclrtRepairError
 
@@ -1035,7 +1035,7 @@ aclError aclrtRepairError(int32_t deviceId, const aclrtErrorInfo *errorInfo)
 <br>
 <br>
 
-<a id="aclrtSetDeviceTaskAbortCallback"></a>
+<a class="method_anchor" id="aclrtSetDeviceTaskAbortCallback"></a>
 
 ## aclrtSetDeviceTaskAbortCallback
 

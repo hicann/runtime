@@ -11,7 +11,7 @@ This topic describes the label management APIs of CANN Runtime, which are used t
 - [`aclError aclrtDestroyLabelList(aclrtLabelList labelList)`](#aclrtDestroyLabelList): Destroys a label list.
 - [`aclError aclrtSwitchLabelByIndex(void *ptr, uint32_t maxValue, aclrtLabelList labelList, aclrtStream stream)`](#aclrtSwitchLabelByIndex): Switches to the corresponding label position based on the label index, executes the tasks on the stream where the label resides, and stops the tasks on the current stream. This is an asynchronous API.
 
-<a id="aclrtCreateLabel"></a>
+<a class="method_anchor" id="aclrtCreateLabel"></a>
 
 ## aclrtCreateLabel
 
@@ -61,7 +61,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtSetLabel"></a>
+<a class="method_anchor" id="aclrtSetLabel"></a>
 
 ## aclrtSetLabel
 
@@ -110,7 +110,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtDestroyLabel"></a>
+<a class="method_anchor" id="aclrtDestroyLabel"></a>
 
 ## aclrtDestroyLabel
 
@@ -158,7 +158,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtCreateLabelList"></a>
+<a class="method_anchor" id="aclrtCreateLabelList"></a>
 
 ## aclrtCreateLabelList
 
@@ -208,7 +208,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtDestroyLabelList"></a>
+<a class="method_anchor" id="aclrtDestroyLabelList"></a>
 
 ## aclrtDestroyLabelList
 
@@ -256,7 +256,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtSwitchLabelByIndex"></a>
+<a class="method_anchor" id="aclrtSwitchLabelByIndex"></a>
 
 ## aclrtSwitchLabelByIndex
 

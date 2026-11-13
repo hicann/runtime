@@ -10,7 +10,7 @@ This topic provides the APIs for operating data types, including **create**, **s
     - [aclCreateDataBuffer](#aclCreateDataBuffer)
     - [aclDestroyDataBuffer](#aclDestroyDataBuffer)
     - [aclGetDataBufferAddr](#aclGetDataBufferAddr)
-    - [aclGetDataBufferSize (Deprecated)](#aclGetDataBufferSize_deprecated)
+    - [aclGetDataBufferSize (Deprecated)](#aclGetDataBufferSize)
     - [aclGetDataBufferSizeV2](#aclGetDataBufferSizeV2)
     - [aclUpdateDataBuffer](#aclUpdateDataBuffer)
 - [aclprofConfig](#aclprofConfig)
@@ -71,7 +71,7 @@ This topic provides the APIs for operating data types, including **create**, **s
 
 <br>
 
-<a id="aclDataBuffer"></a>
+<a class="method_anchor" id="aclDataBuffer"></a>
 
 ## aclDataBuffer
 
@@ -81,7 +81,7 @@ This topic provides the APIs for operating data types, including **create**, **s
 
 - **[aclGetDataBufferAddr](#aclGetDataBufferAddr)**
 
-- **[aclGetDataBufferSize (Deprecated)](#aclGetDataBufferSize_deprecated)**
+- **[aclGetDataBufferSize (Deprecated)](#aclGetDataBufferSize)**
 
 - **[aclGetDataBufferSizeV2](#aclGetDataBufferSizeV2)**
 
@@ -89,7 +89,7 @@ This topic provides the APIs for operating data types, including **create**, **s
 
 <br>
 
-<a id="aclCreateDataBuffer"></a>
+<a class="method_anchor" id="aclCreateDataBuffer"></a>
 
 ## aclCreateDataBuffer
 
@@ -138,7 +138,7 @@ Returns a pointer of the data of the **aclDataBuffer** type.
 
 <br>
 
-<a id="aclDestroyDataBuffer"></a>
+<a class="method_anchor" id="aclDestroyDataBuffer"></a>
 
 ## aclDestroyDataBuffer
 
@@ -186,7 +186,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 
 <br>
 
-<a id="aclGetDataBufferAddr"></a>
+<a class="method_anchor" id="aclGetDataBufferAddr"></a>
 
 ## aclGetDataBufferAddr
 
@@ -232,7 +232,7 @@ Returns the memory address of the data of the **aclDataBuffer** type.
 
 <br>
 
-<a id="aclGetDataBufferSize_deprecated"></a>
+<a class="method_anchor" id="aclGetDataBufferSize"></a>
 
 ## aclGetDataBufferSize (Deprecated)
 
@@ -280,7 +280,7 @@ Returns the memory size of the data of the **aclDataBuffer** type.
 
 <br>
 
-<a id="aclGetDataBufferSizeV2"></a>
+<a class="method_anchor" id="aclGetDataBufferSizeV2"></a>
 
 ## aclGetDataBufferSizeV2
 
@@ -326,7 +326,7 @@ Returns the memory size of the data of the **aclDataBuffer** type.
 
 <br>
 
-<a id="aclUpdateDataBuffer"></a>
+<a class="method_anchor" id="aclUpdateDataBuffer"></a>
 
 ## aclUpdateDataBuffer
 
@@ -376,7 +376,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 
 <br>
 
-<a id="aclprofConfig"></a>
+<a class="method_anchor" id="aclprofConfig"></a>
 
 ## aclprofConfig
 
@@ -386,7 +386,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 
 <br>
 
-<a id="aclprofCreateConfig"></a>
+<a class="method_anchor" id="aclprofCreateConfig"></a>
 
 ## aclprofCreateConfig
 
@@ -449,7 +449,7 @@ To destroy data of the **aclprofConfig** type, use [aclprofDestroyConfig](#aclpr
 
 <br>
 
-<a id="aclprofDestroyConfig"></a>
+<a class="method_anchor" id="aclprofDestroyConfig"></a>
 
 ## aclprofDestroyConfig
 
@@ -499,7 +499,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 
 <br>
 
-<a id="aclprofStepInfo"></a>
+<a class="method_anchor" id="aclprofStepInfo"></a>
 
 ## aclprofStepInfo
 
@@ -509,7 +509,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 
 <br>
 
-<a id="aclprofCreateStepInfo"></a>
+<a class="method_anchor" id="aclprofCreateStepInfo"></a>
 
 ## aclprofCreateStepInfo
 
@@ -558,7 +558,7 @@ Creates an **aclprofStepInfo** object to describe iteration information.
 
 <br>
 
-<a id="aclprofDestroyStepInfo"></a>
+<a class="method_anchor" id="aclprofDestroyStepInfo"></a>
 
 ## aclprofDestroyStepInfo
 
@@ -605,7 +605,7 @@ Destroys data of the **aclprofStepInfo** type created via the [aclprofCreateStep
 
 <br>
 
-<a id="aclprofSubscribeConfig"></a>
+<a class="method_anchor" id="aclprofSubscribeConfig"></a>
 
 ## aclprofSubscribeConfig
 
@@ -615,7 +615,7 @@ Destroys data of the **aclprofStepInfo** type created via the [aclprofCreateStep
 
 <br>
 
-<a id="aclprofCreateSubscribeConfig"></a>
+<a class="method_anchor" id="aclprofCreateSubscribeConfig"></a>
 
 ## aclprofCreateSubscribeConfig
 
@@ -671,7 +671,7 @@ To destroy data of the **aclprofSubscribeConfig** type, use [aclprofDestroySubsc
 
 <br>
 
-<a id="aclprofDestroySubscribeConfig"></a>
+<a class="method_anchor" id="aclprofDestroySubscribeConfig"></a>
 
 ## aclprofDestroySubscribeConfig
 
@@ -722,7 +722,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 
 <br>
 
-<a id="aclrtAllocatorDesc"></a>
+<a class="method_anchor" id="aclrtAllocatorDesc"></a>
 
 ## aclrtAllocatorDesc
 
@@ -742,7 +742,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 
 <br>
 
-<a id="aclrtAllocatorCreateDesc"></a>
+<a class="method_anchor" id="aclrtAllocatorCreateDesc"></a>
 
 ## aclrtAllocatorCreateDesc
 
@@ -783,7 +783,7 @@ Creates data of the **aclrtAllocatorDesc** type, which indicates the Allocator d
 
 <br>
 
-<a id="aclrtAllocatorDestroyDesc"></a>
+<a class="method_anchor" id="aclrtAllocatorDestroyDesc"></a>
 
 ## aclrtAllocatorDestroyDesc
 
@@ -829,7 +829,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 
 <br>
 
-<a id="aclrtAllocatorSetObjToDesc"></a>
+<a class="method_anchor" id="aclrtAllocatorSetObjToDesc"></a>
 
 ## aclrtAllocatorSetObjToDesc
 
@@ -876,7 +876,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 
 <br>
 
-<a id="aclrtAllocatorSetAllocFuncToDesc"></a>
+<a class="method_anchor" id="aclrtAllocatorSetAllocFuncToDesc"></a>
 
 ## aclrtAllocatorSetAllocFuncToDesc
 
@@ -923,7 +923,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 
 <br>
 
-<a id="aclrtAllocatorSetAllocAdviseFuncToDesc"></a>
+<a class="method_anchor" id="aclrtAllocatorSetAllocAdviseFuncToDesc"></a>
 
 ## aclrtAllocatorSetAllocAdviseFuncToDesc
 
@@ -970,7 +970,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 
 <br>
 
-<a id="aclrtAllocatorSetFreeFuncToDesc"></a>
+<a class="method_anchor" id="aclrtAllocatorSetFreeFuncToDesc"></a>
 
 ## aclrtAllocatorSetFreeFuncToDesc
 
@@ -1017,7 +1017,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 
 <br>
 
-<a id="aclrtAllocatorSetGetAddrFromBlockFuncToDesc"></a>
+<a class="method_anchor" id="aclrtAllocatorSetGetAddrFromBlockFuncToDesc"></a>
 
 ## aclrtAllocatorSetGetAddrFromBlockFuncToDesc
 
@@ -1064,7 +1064,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 
 <br>
 
-<a id="aclrtStreamConfigHandle"></a>
+<a class="method_anchor" id="aclrtStreamConfigHandle"></a>
 
 ## aclrtStreamConfigHandle
 
@@ -1074,7 +1074,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 
 <br>
 
-<a id="aclrtCreateStreamConfigHandle"></a>
+<a class="method_anchor" id="aclrtCreateStreamConfigHandle"></a>
 
 ## aclrtCreateStreamConfigHandle
 
@@ -1121,7 +1121,7 @@ None
 
 <br>
 
-<a id="aclrtDestroyStreamConfigHandle"></a>
+<a class="method_anchor" id="aclrtDestroyStreamConfigHandle"></a>
 
 ## aclrtDestroyStreamConfigHandle
 
@@ -1167,7 +1167,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 
 <br>
 
-<a id="acltdtDataItem"></a>
+<a class="method_anchor" id="acltdtDataItem"></a>
 
 ## acltdtDataItem
 
@@ -1189,7 +1189,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 
 <br>
 
-<a id="acltdtCreateDataItem"></a>
+<a class="method_anchor" id="acltdtCreateDataItem"></a>
 
 ## acltdtCreateDataItem
 
@@ -1248,7 +1248,7 @@ To destroy data of the **acltdtDataItem** type, use [acltdtDestroyDataItem](#acl
 
 <br>
 
-<a id="acltdtDestroyDataItem"></a>
+<a class="method_anchor" id="acltdtDestroyDataItem"></a>
 
 ## acltdtDestroyDataItem
 
@@ -1294,7 +1294,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 
 <br>
 
-<a id="acltdtGetTensorTypeFromItem"></a>
+<a class="method_anchor" id="acltdtGetTensorTypeFromItem"></a>
 
 ## acltdtGetTensorTypeFromItem
 
@@ -1340,7 +1340,7 @@ For details, see [acltdtTensorType](25-02_Enumerations.md#acltdtTensorType).
 
 <br>
 
-<a id="acltdtGetDataTypeFromItem"></a>
+<a class="method_anchor" id="acltdtGetDataTypeFromItem"></a>
 
 ## acltdtGetDataTypeFromItem
 
@@ -1386,7 +1386,7 @@ Returns the obtained data type. For details about the type definition, see [aclD
 
 <br>
 
-<a id="acltdtGetDataAddrFromItem"></a>
+<a class="method_anchor" id="acltdtGetDataAddrFromItem"></a>
 
 ## acltdtGetDataAddrFromItem
 
@@ -1432,7 +1432,7 @@ Returns the data address of the normal data.
 
 <br>
 
-<a id="acltdtGetDataSizeFromItem"></a>
+<a class="method_anchor" id="acltdtGetDataSizeFromItem"></a>
 
 ## acltdtGetDataSizeFromItem
 
@@ -1478,7 +1478,7 @@ Returns the obtained data length.
 
 <br>
 
-<a id="acltdtGetDimNumFromItem"></a>
+<a class="method_anchor" id="acltdtGetDimNumFromItem"></a>
 
 ## acltdtGetDimNumFromItem
 
@@ -1524,7 +1524,7 @@ Returns the number of dimensions obtained.
 
 <br>
 
-<a id="acltdtGetDimsFromItem"></a>
+<a class="method_anchor" id="acltdtGetDimsFromItem"></a>
 
 ## acltdtGetDimsFromItem
 
@@ -1572,7 +1572,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 
 <br>
 
-<a id="acltdtDataset"></a>
+<a class="method_anchor" id="acltdtDataset"></a>
 
 ## acltdtDataset
 
@@ -1590,7 +1590,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 
 <br>
 
-<a id="acltdtCreateDataset"></a>
+<a class="method_anchor" id="acltdtCreateDataset"></a>
 
 ## acltdtCreateDataset
 
@@ -1637,7 +1637,7 @@ None
 
 <br>
 
-<a id="acltdtDestroyDataset"></a>
+<a class="method_anchor" id="acltdtDestroyDataset"></a>
 
 ## acltdtDestroyDataset
 
@@ -1683,7 +1683,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 
 <br>
 
-<a id="acltdtGetDataItem"></a>
+<a class="method_anchor" id="acltdtGetDataItem"></a>
 
 ## acltdtGetDataItem
 
@@ -1731,7 +1731,7 @@ Obtains the n-th **acltdtDataItem** in **acltdtDataset**.
 
 <br>
 
-<a id="acltdtAddDataItem"></a>
+<a class="method_anchor" id="acltdtAddDataItem"></a>
 
 ## acltdtAddDataItem
 
@@ -1778,7 +1778,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 
 <br>
 
-<a id="acltdtGetDatasetSize"></a>
+<a class="method_anchor" id="acltdtGetDatasetSize"></a>
 
 ## acltdtGetDatasetSize
 
@@ -1824,7 +1824,7 @@ Returns the number of **acltdtDataItem** objects.
 
 <br>
 
-<a id="acltdtGetDatasetName"></a>
+<a class="method_anchor" id="acltdtGetDatasetName"></a>
 
 ## acltdtGetDatasetName
 
@@ -1870,7 +1870,7 @@ Returns the pointer to the descriptor that identifies an **acltdtDataset** (equi
 
 <br>
 
-<a id="acltdtQueueAttr"></a>
+<a class="method_anchor" id="acltdtQueueAttr"></a>
 
 ## acltdtQueueAttr
 
@@ -1884,7 +1884,7 @@ Returns the pointer to the descriptor that identifies an **acltdtDataset** (equi
 
 <br>
 
-<a id="acltdtCreateQueueAttr"></a>
+<a class="method_anchor" id="acltdtCreateQueueAttr"></a>
 
 ## acltdtCreateQueueAttr
 
@@ -1929,7 +1929,7 @@ None
 
 <br>
 
-<a id="acltdtDestroyQueueAttr"></a>
+<a class="method_anchor" id="acltdtDestroyQueueAttr"></a>
 
 ## acltdtDestroyQueueAttr
 
@@ -1975,7 +1975,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 
 <br>
 
-<a id="acltdtSetQueueAttr"></a>
+<a class="method_anchor" id="acltdtSetQueueAttr"></a>
 
 ## acltdtSetQueueAttr
 
@@ -2024,7 +2024,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 
 <br>
 
-<a id="acltdtGetQueueAttr"></a>
+<a class="method_anchor" id="acltdtGetQueueAttr"></a>
 
 ## acltdtGetQueueAttr
 
@@ -2074,7 +2074,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 
 <br>
 
-<a id="acltdtQueueRoute"></a>
+<a class="method_anchor" id="acltdtQueueRoute"></a>
 
 ## acltdtQueueRoute
 
@@ -2086,7 +2086,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 
 <br>
 
-<a id="acltdtCreateQueueRoute"></a>
+<a class="method_anchor" id="acltdtCreateQueueRoute"></a>
 
 ## acltdtCreateQueueRoute
 
@@ -2134,7 +2134,7 @@ Creates data of the **acltdtQueueRoute** type, indicating the creation of a queu
 
 <br>
 
-<a id="acltdtDestroyQueueRoute"></a>
+<a class="method_anchor" id="acltdtDestroyQueueRoute"></a>
 
 ## acltdtDestroyQueueRoute
 
@@ -2180,7 +2180,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 
 <br>
 
-<a id="acltdtGetQueueRouteParam"></a>
+<a class="method_anchor" id="acltdtGetQueueRouteParam"></a>
 
 ## acltdtGetQueueRouteParam
 
@@ -2230,7 +2230,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 
 <br>
 
-<a id="acltdtQueueRouteList"></a>
+<a class="method_anchor" id="acltdtQueueRouteList"></a>
 
 ## acltdtQueueRouteList
 
@@ -2246,7 +2246,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 
 <br>
 
-<a id="acltdtCreateQueueRouteList"></a>
+<a class="method_anchor" id="acltdtCreateQueueRouteList"></a>
 
 ## acltdtCreateQueueRouteList
 
@@ -2291,7 +2291,7 @@ None
 
 <br>
 
-<a id="acltdtDestroyQueueRouteList"></a>
+<a class="method_anchor" id="acltdtDestroyQueueRouteList"></a>
 
 ## acltdtDestroyQueueRouteList
 
@@ -2337,7 +2337,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 
 <br>
 
-<a id="acltdtAddQueueRoute"></a>
+<a class="method_anchor" id="acltdtAddQueueRoute"></a>
 
 ## acltdtAddQueueRoute
 
@@ -2384,7 +2384,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 
 <br>
 
-<a id="acltdtGetQueueRoute"></a>
+<a class="method_anchor" id="acltdtGetQueueRoute"></a>
 
 ## acltdtGetQueueRoute
 
@@ -2432,7 +2432,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 
 <br>
 
-<a id="acltdtGetQueueRouteNum"></a>
+<a class="method_anchor" id="acltdtGetQueueRouteNum"></a>
 
 ## acltdtGetQueueRouteNum
 
@@ -2478,7 +2478,7 @@ Returns the number of routes.
 
 <br>
 
-<a id="acltdtQueueRouteQueryInfo"></a>
+<a class="method_anchor" id="acltdtQueueRouteQueryInfo"></a>
 
 ## acltdtQueueRouteQueryInfo
 
@@ -2490,7 +2490,7 @@ Returns the number of routes.
 
 <br>
 
-<a id="acltdtCreateQueueRouteQueryInfo"></a>
+<a class="method_anchor" id="acltdtCreateQueueRouteQueryInfo"></a>
 
 ## acltdtCreateQueueRouteQueryInfo
 
@@ -2535,7 +2535,7 @@ None
 
 <br>
 
-<a id="acltdtDestroyQueueRouteQueryInfo"></a>
+<a class="method_anchor" id="acltdtDestroyQueueRouteQueryInfo"></a>
 
 ## acltdtDestroyQueueRouteQueryInfo
 
@@ -2581,7 +2581,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 
 <br>
 
-<a id="acltdtSetQueueRouteQueryInfo"></a>
+<a class="method_anchor" id="acltdtSetQueueRouteQueryInfo"></a>
 
 ## acltdtSetQueueRouteQueryInfo
 

@@ -22,7 +22,7 @@
 
 ---
 
-<a id="aclprofCreateStamp"></a>
+<a class="method_anchor" id="aclprofCreateStamp"></a>
 
 ## aclprofCreateStamp
 
@@ -69,7 +69,7 @@ void *aclprofCreateStamp()
 <br>
 <br>
 
-<a id="aclprofSetStampTraceMessage"></a>
+<a class="method_anchor" id="aclprofSetStampTraceMessage"></a>
 
 ## aclprofSetStampTraceMessage
 
@@ -123,7 +123,7 @@ aclError aclprofSetStampTraceMessage(void *stamp, const char *msg, uint32_t msgL
 <br>
 <br>
 
-<a id="aclprofMark"></a>
+<a class="method_anchor" id="aclprofMark"></a>
 
 ## aclprofMark
 
@@ -176,7 +176,7 @@ msproftx标记瞬时事件。
 <br>
 <br>
 
-<a id="aclprofMarkEx"></a>
+<a class="method_anchor" id="aclprofMarkEx"></a>
 
 ## aclprofMarkEx
 
@@ -230,7 +230,7 @@ aclprofMarkEx打点接口。
 <br>
 <br>
 
-<a id="aclprofPush"></a>
+<a class="method_anchor" id="aclprofPush"></a>
 
 ## aclprofPush
 
@@ -286,7 +286,7 @@ msproftx用于记录事件发生的时间跨度的开始时间。
 <br>
 <br>
 
-<a id="aclprofPop"></a>
+<a class="method_anchor" id="aclprofPop"></a>
 
 ## aclprofPop
 
@@ -336,7 +336,7 @@ msproftx用于记录事件发生的时间跨度的结束时间。
 <br>
 <br>
 
-<a id="aclprofRangeStart"></a>
+<a class="method_anchor" id="aclprofRangeStart"></a>
 
 ## aclprofRangeStart
 
@@ -392,7 +392,7 @@ msproftx用于记录事件发生的时间跨度的开始时间。
 <br>
 <br>
 
-<a id="aclprofRangeStop"></a>
+<a class="method_anchor" id="aclprofRangeStop"></a>
 
 ## aclprofRangeStop
 
@@ -448,7 +448,7 @@ msproftx用于记录事件发生的时间跨度的结束时间。
 <br>
 <br>
 
-<a id="aclprofRangePushEx"></a>
+<a class="method_anchor" id="aclprofRangePushEx"></a>
 
 ## aclprofRangePushEx
 
@@ -502,7 +502,7 @@ aclError aclprofRangePushEx(aclprofEventAttributes *attr)
 <br>
 <br>
 
-<a id="aclprofRangePop"></a>
+<a class="method_anchor" id="aclprofRangePop"></a>
 
 ## aclprofRangePop
 
@@ -550,7 +550,7 @@ aclError aclprofRangePop()
 <br>
 <br>
 
-<a id="aclprofDestroyStamp"></a>
+<a class="method_anchor" id="aclprofDestroyStamp"></a>
 
 ## aclprofDestroyStamp
 
@@ -598,7 +598,7 @@ void aclprofDestroyStamp(void *stamp)
 
 与[aclprofCreateStamp](#aclprofCreateStamp)接口配对使用，在[aclprofStop](19-01_data_profiling_apis.md#aclprofStop)接口前调用。
 
-<a id="aclprofStr2Id"></a>
+<a class="method_anchor" id="aclprofStr2Id"></a>
 
 ## aclprofStr2Id
 

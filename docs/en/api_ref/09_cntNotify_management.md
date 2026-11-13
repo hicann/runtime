@@ -1,6 +1,6 @@
 # 9. CntNotify Management
 
-<!-- md-trans-meta sourceCommit=unknown translatedAt=2026-10-23T03:58:35.016Z pushedAt=2026-10-29T02:19:06.455Z nl=2 -->
+<!-- md-trans-meta sourceCommit=31ae292a88c1a38674abaa350b60eba724bab178 translatedAt=2026-11-06T11:17:48.377Z pushedAt=2026-11-09T08:17:01.537Z nl=2 -->
 
 This chapter describes the CntNotify (count notify) management APIs of CANN Runtime, which are used to create, record, wait for, and destroy CntNotify.
 
@@ -11,7 +11,7 @@ This chapter describes the CntNotify (count notify) management APIs of CANN Runt
 - [`aclError aclrtCntNotifyGetId(aclrtCntNotify cntNotify, uint32_t *notifyId)`](#aclrtCntNotifyGetId): Obtains the ID of a CntNotify.
 - [`aclError aclrtCntNotifyDestroy(aclrtCntNotify cntNotify)`](#aclrtCntNotifyDestroy): Destroys a CntNotify.
 
-<a id="aclrtCntNotifyCreate"></a>
+<a class="method_anchor" id="aclrtCntNotifyCreate"></a>
 
 ## aclrtCntNotifyCreate
 
@@ -62,7 +62,7 @@ CntNotify is also commonly used for status/action communication notifications be
 <br>
 <br>
 
-<a id="aclrtCntNotifyRecord"></a>
+<a class="method_anchor" id="aclrtCntNotifyRecord"></a>
 
 ## aclrtCntNotifyRecord
 
@@ -114,7 +114,7 @@ When used together with aclrtCntNotifyWaitWithTimeout, aclrtCntNotifyRecord is m
 <br>
 <br>
 
-<a id="aclrtCntNotifyWaitWithTimeout"></a>
+<a class="method_anchor" id="aclrtCntNotifyWaitWithTimeout"></a>
 
 ## aclrtCntNotifyWaitWithTimeout
 
@@ -164,7 +164,7 @@ Blocks the specified stream until the specified CntNotify completes. This is an 
 <br>
 <br>
 
-<a id="aclrtCntNotifyReset"></a>
+<a class="method_anchor" id="aclrtCntNotifyReset"></a>
 
 ## aclrtCntNotifyReset
 
@@ -213,7 +213,7 @@ Resets a CntNotify and sets its count value to 0. This is an asynchronous API.
 <br>
 <br>
 
-<a id="aclrtCntNotifyGetId"></a>
+<a class="method_anchor" id="aclrtCntNotifyGetId"></a>
 
 ## aclrtCntNotifyGetId
 
@@ -262,7 +262,7 @@ Obtains the ID of a CntNotify.
 <br>
 <br>
 
-<a id="aclrtCntNotifyDestroy"></a>
+<a class="method_anchor" id="aclrtCntNotifyDestroy"></a>
 
 ## aclrtCntNotifyDestroy
 

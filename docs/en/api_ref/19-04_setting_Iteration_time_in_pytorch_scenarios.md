@@ -6,7 +6,7 @@ This topic describes the API for marking iteration time in PyTorch scenarios.
 
 - [`aclError aclprofGetStepTimestamp(aclprofStepInfo* stepInfo, aclprofStepTag tag, aclrtStream stream)`](#aclprofGetStepTimestamp): Marks the start and end time of iterations in training scenarios implemented through the single operator model execution API, providing iteration identifiers for subsequent profiling parsing so that performance data can be displayed at iteration granularity.
 
-<a id="aclprofGetStepTimestamp"></a>
+<a class="method_anchor" id="aclprofGetStepTimestamp"></a>
 
 ## aclprofGetStepTimestamp
 

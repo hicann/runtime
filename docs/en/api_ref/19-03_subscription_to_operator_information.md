@@ -1,5 +1,7 @@
 # 19-03 Operator Information Subscription
 
+<!-- md-trans-meta sourceCommit=31ae292a88c1a38674abaa350b60eba724bab178 translatedAt=2026-11-06T11:33:03.035Z pushedAt=2026-11-09T10:34:58.424Z nl=2 -->
+
 This section describes the APIs for subscribing to operator execution information in a model, including operator type, name, and execution time.
 
 - [`aclError aclprofModelSubscribe(uint32_t modelId, const aclprofSubscribeConfig *profSubscribeConfig)`](#aclprofModelSubscribe): Subscribes to basic operator information, including operator name, operator type, and operator execution time, in a network.
@@ -27,7 +29,10 @@ Do not call these APIs together with [profiling APIs](19-01_data_profiling_apis.
 
 - **Call Requirements**:
     - Call [aclprofModelSubscribe](#aclprofModelSubscribe) before model execution. If you call [aclprofModelSubscribe](#aclprofModelSubscribe) during model execution, profiling only collects data after the call. This may lead to incomplete data.
-    - [aclprofModelSubscribe](#aclprofModelSubscribe) must be paired with [aclprofModelUnSubscribe](#aclprofModelUnSubscribe). Do not call [aclprofModelSubscribe](#aclprofModelSubscribe) multiple times to subscribe to the same model before calling [aclprofModelUnSubscribe](#aclprofModelUnSubscribe).
+    - The [aclprofModelSubscribe](#aclprofModelSubscribe) API must be paired with the [aclprofModelUnSubscribe](#aclprofModelUnSubscribe) API. Do not call the
+
+        [aclprofModelSubscribe](#aclprofModelSubscribe) API multiple times to repeatedly subscribe to the same model before calling the [aclprofModelUnSubscribe](#aclprofModelUnSubscribe) API.
+
     - Do not subscribe to a model ID that does not exist.
     - Do not unsubscribe from a model ID that does not exist or was never subscribed to.
     - If multiple models are loaded on the same device, you must use the same subscription configuration for all models.
@@ -43,7 +48,7 @@ Do not call these APIs together with [profiling APIs](19-01_data_profiling_apis.
 
 ---
 
-<a id="aclprofModelSubscribe"></a>
+<a class="method_anchor" id="aclprofModelSubscribe"></a>
 
 ## aclprofModelSubscribe
 
@@ -80,10 +85,10 @@ Subscribes to basic operator information, including operator name, operator type
 
 | Parameter | Input/Output | Description |
 | --- | :---: | --- |
-| modelId | Input | ID of the model to subscribe to.<br>After loading a model by calling aclmdlLoadFromFile, aclmdlLoadFromMem, aclmdlLoadFromFileWithMem, or aclmdlLoadFromMemWithMem, the model ID is returned. |
+| modelId | Input | ID of the model to subscribe to.<br>After loading a model by calling aclmdlLoadFromFile, aclmdlLoadFromMem, aclmdlLoadFromFileWithMem, or aclmdlLoadFromMemWithMem, the model ID is returned.|
 | profSubscribeConfig | Input | Subscription configuration.<br>Create the aclprofSubscribeConfig data first by calling [aclprofCreateSubscribeConfig](25-03_Operation_APIs.md#aclprofCreateSubscribeConfig). |
 
-### Return Values
+### Return Value
 
 0: success; others: failure. For details, see [aclError](25-01_aclError.md#aclError).
 
@@ -95,7 +100,7 @@ This API must be paired with [aclprofModelUnSubscribe](#aclprofModelUnSubscribe)
 <br>
 <br>
 
-<a id="aclprofModelUnSubscribe"></a>
+<a class="method_anchor" id="aclprofModelUnSubscribe"></a>
 
 ## aclprofModelUnSubscribe
 
@@ -135,7 +140,7 @@ Unsubscribes from basic operator information, including operator name, operator 
 | --- | :---: | --- |
 | modelId | Input | ID of the subscribed model. |
 
-### Return Values
+### Return Value
 
 0: success; others: failure. For details, see [aclError](25-01_aclError.md#aclError).
 
@@ -147,7 +152,7 @@ This API must be paired with [aclprofModelSubscribe](#aclprofModelSubscribe).
 <br>
 <br>
 
-<a id="aclprofGetOpDescSize"></a>
+<a class="method_anchor" id="aclprofGetOpDescSize"></a>
 
 ## aclprofGetOpDescSize
 
@@ -188,7 +193,7 @@ You are advised to create a new thread and call this API in that thread. Otherwi
 | --- | :---: | --- |
 | opDescSize | Output | Size of the operator data structure. |
 
-### Return Values
+### Return Value
 
 0: success; others: failure. For details, see [aclError](25-01_aclError.md#aclError).
 
@@ -196,7 +201,7 @@ You are advised to create a new thread and call this API in that thread. Otherwi
 <br>
 <br>
 
-<a id="aclprofGetOpNum"></a>
+<a class="method_anchor" id="aclprofGetOpNum"></a>
 
 ## aclprofGetOpNum
 
@@ -240,7 +245,7 @@ You are advised to create a new thread and call this API in that thread. Otherwi
 | opInfoLen | Input | Length of the operator information. |
 | opNumber | Output | Number of operators. |
 
-### Return Values
+### Return Value
 
 0: success; others: failure. For details, see [aclError](25-01_aclError.md#aclError).
 
@@ -248,7 +253,7 @@ You are advised to create a new thread and call this API in that thread. Otherwi
 <br>
 <br>
 
-<a id="aclprofGetOpTypeLen"></a>
+<a class="method_anchor" id="aclprofGetOpTypeLen"></a>
 
 ## aclprofGetOpTypeLen
 
@@ -293,7 +298,7 @@ You are advised to create a new thread and call this API in that thread. Otherwi
 | index | Input | Specifies which operator's type name to get.<br>After calling [aclprofGetOpNum](#aclprofGetOpNum) to get the operator count, the index range is [0, (Operator count − 1)]. |
 | opTypeLen | Output | Length of opType. |
 
-### Return Values
+### Return Value
 
 0: success; others: failure. For details, see [aclError](25-01_aclError.md#aclError).
 
@@ -301,7 +306,7 @@ You are advised to create a new thread and call this API in that thread. Otherwi
 <br>
 <br>
 
-<a id="aclprofGetOpType"></a>
+<a class="method_anchor" id="aclprofGetOpType"></a>
 
 ## aclprofGetOpType
 
@@ -346,7 +351,7 @@ You are advised to create a new thread and call this API in that thread. Otherwi
 | opType | Output | Operator type name. |
 | opTypeLen | Input | Actual memory allocation length for opType. You are advised to set this value to at least the value returned by aclprofGetOpTypeLen, or the content may be truncated. |
 
-### Return Values
+### Return Value
 
 0: success; others: failure. For details, see [aclError](25-01_aclError.md#aclError).
 
@@ -354,14 +359,13 @@ You are advised to create a new thread and call this API in that thread. Otherwi
 <br>
 <br>
 
-<a id="aclprofGetOpNameLen"></a>
+<a class="method_anchor" id="aclprofGetOpNameLen"></a>
 
 ## aclprofGetOpNameLen
 
 ```c
 aclError aclprofGetOpNameLen(const void *opInfo, size_t opInfoLen, uint32_t index, size_t *opNameLen)
 ```
-
 
 ### Applicable Products
 
@@ -399,7 +403,7 @@ You are advised to create a new thread and call this API in that thread. Otherwi
 | index | Input | Specifies which operator's name length to get.<br>After calling [aclprofGetOpNum](#aclprofGetOpNum) to get the operator count, the index range is [0, (Operator count − 1)]. |
 | opNameLen | Output | The actual memory allocation length for opName. |
 
-### Return Values
+### Return Value
 
 0: success; others: failure. For details, see [aclError](25-01_aclError.md#aclError).
 
@@ -407,7 +411,7 @@ You are advised to create a new thread and call this API in that thread. Otherwi
 <br>
 <br>
 
-<a id="aclprofGetOpName"></a>
+<a class="method_anchor" id="aclprofGetOpName"></a>
 
 ## aclprofGetOpName
 
@@ -453,7 +457,7 @@ You are advised to create a new thread and call this API in that thread. Otherwi
 | opName | Output | The operator name. |
 | opNameLen | Input | Actual memory allocation length for opName. You are advised to set this value to at least the value returned by aclprofGetOpNameLen, or the content may be truncated. |
 
-### Return Values
+### Return Value
 
 0: success; others: failure. For details, see [aclError](25-01_aclError.md#aclError).
 
@@ -461,7 +465,7 @@ You are advised to create a new thread and call this API in that thread. Otherwi
 <br>
 <br>
 
-<a id="aclprofGetOpStart"></a>
+<a class="method_anchor" id="aclprofGetOpStart"></a>
 
 ## aclprofGetOpStart
 
@@ -513,7 +517,7 @@ The start time of operator execution.
 <br>
 <br>
 
-<a id="aclprofGetOpEnd"></a>
+<a class="method_anchor" id="aclprofGetOpEnd"></a>
 
 ## aclprofGetOpEnd
 
@@ -564,7 +568,7 @@ The end time of operator execution.
 <br>
 <br>
 
-<a id="aclprofGetOpDuration"></a>
+<a class="method_anchor" id="aclprofGetOpDuration"></a>
 
 ## aclprofGetOpDuration
 
@@ -616,7 +620,7 @@ The execution time of the operator.
 <br>
 <br>
 
-<a id="aclprofGetModelId"></a>
+<a class="method_anchor" id="aclprofGetModelId"></a>
 
 ## aclprofGetModelId
 
@@ -668,7 +672,7 @@ The model ID.
 <br>
 <br>
 
-<a id="aclprofGetOpFlag"></a>
+<a class="method_anchor" id="aclprofGetOpFlag"></a>
 
 ## aclprofGetOpFlag
 
@@ -729,7 +733,7 @@ typedef enum {
 <br>
 <br>
 
-<a id="aclprofGetOpAttriValue"></a>
+<a class="method_anchor" id="aclprofGetOpAttriValue"></a>
 
 ## aclprofGetOpAttriValue
 

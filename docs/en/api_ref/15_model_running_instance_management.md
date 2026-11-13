@@ -1,6 +1,6 @@
 # 15. Model Running Instance Management
 
-<!-- md-trans-meta sourceCommit=unknown translatedAt=2026-10-26T07:07:38.680Z pushedAt=2026-10-29T06:32:11.883Z nl=2 -->
+<!-- md-trans-meta sourceCommit=592d153befca8bbb9089ee4e63722c39aabe7552 translatedAt=2026-11-06T11:27:38.392Z pushedAt=2026-11-09T09:18:16.176Z nl=2 -->
 
 This section describes CANN Runtime's model running instance management APIs, which are used for RI capture, construction, execution, and task management.
 
@@ -44,7 +44,7 @@ This section describes CANN Runtime's model running instance management APIs, wh
 - [`aclError aclmdlRIAddCondTask(aclmdlRICondTaskParams params, aclrtStream stream, uint32_t flags)`](#aclmdlRIAddCondTask): Dispatches a conditional task on the stream.
 - [`aclError aclmdlRICaptureToModelRIBegin(aclrtStream stream, aclmdlRI modelRI, aclmdlRICaptureMode mode)`](#aclmdlRICaptureToModelRIBegin): Starts capturing tasks dispatched on the stream into the specified model running instance.
 
-<a id="aclmdlRICaptureBegin"></a>
+<a class="method_anchor" id="aclmdlRICaptureBegin"></a>
 
 ## aclmdlRICaptureBegin
 
@@ -101,7 +101,7 @@ Tasks captured between aclmdlRICaptureBegin and [aclmdlRICaptureEnd](#aclmdlRICa
 <br>
 <br>
 
-<a id="aclmdlRICaptureGetInfo"></a>
+<a class="method_anchor" id="aclmdlRICaptureGetInfo"></a>
 
 ## aclmdlRICaptureGetInfo
 
@@ -151,7 +151,7 @@ Obtains the capture information of a stream, including the capture status and th
 <br>
 <br>
 
-<a id="aclmdlRICaptureThreadExchangeMode"></a>
+<a class="method_anchor" id="aclmdlRICaptureThreadExchangeMode"></a>
 
 ## aclmdlRICaptureThreadExchangeMode
 
@@ -207,7 +207,7 @@ It is recommended to call this API between [aclmdlRICaptureBegin](#aclmdlRICaptu
 <br>
 <br>
 
-<a id="aclmdlRICaptureEnd"></a>
+<a class="method_anchor" id="aclmdlRICaptureEnd"></a>
 
 ## aclmdlRICaptureEnd
 
@@ -250,7 +250,7 @@ In the [aclmdlRICaptureBegin](#aclmdlRICaptureBegin) API, if mode is set to a va
 | Parameter | Input/Output | Description |
 | --- | :---: | --- |
 | stream | Input | Specifies the stream. For the type definition, see [aclrtStream](25-05_Typedefs.md#aclrtStream). |
-| modelRI | Output | Model Running Instance, which is used for temporarily storing the captured tasks. See [aclmdlRI](25-05_Typedefs.md#aclmdlRI) for the type definition.<br>When ending the main capture started by [aclmdlRICaptureBegin](#aclmdlRICaptureBegin), this parameter must be a non-null pointer used to return the Model Running Instance.<br>When ending the sub-model capture bound by [aclmdlRICaptureToModelRIBegin](#aclmdlRICaptureToModelRIBegin), this parameter can be nullptr. |
+| modelRI | Output | Model running instance, which is used to temporarily store the captured tasks. For the type definition, see [aclmdlRI](25-05_Typedefs.md#aclmdlRI).<br>When the main capture started by [aclmdlRICaptureBegin](#aclmdlRICaptureBegin) is ended, this parameter must be a non-null pointer used to return the model running instance.<br>When the sub-model capture bound by [aclmdlRICaptureToModelRIBegin](#aclmdlRICaptureToModelRIBegin) is ended, this parameter can be set to nullptr. |
 
 ### Return Values
 
@@ -260,7 +260,7 @@ In the [aclmdlRICaptureBegin](#aclmdlRICaptureBegin) API, if mode is set to a va
 <br>
 <br>
 
-<a id="aclmdlRICaptureTaskGrpBegin"></a>
+<a class="method_anchor" id="aclmdlRICaptureTaskGrpBegin"></a>
 
 ## aclmdlRICaptureTaskGrpBegin
 
@@ -312,7 +312,7 @@ If the API returns ACL\_ERROR\_RT\_TASK\_TYPE\_NOT\_SUPPORT when a task is dispa
 <br>
 <br>
 
-<a id="aclmdlRICaptureTaskGrpEnd"></a>
+<a class="method_anchor" id="aclmdlRICaptureTaskGrpEnd"></a>
 
 ## aclmdlRICaptureTaskGrpEnd
 
@@ -363,7 +363,7 @@ The [aclmdlRICaptureTaskGrpBegin](#aclmdlRICaptureTaskGrpBegin) API and this API
 <br>
 <br>
 
-<a id="aclmdlRICaptureTaskUpdateBegin"></a>
+<a class="method_anchor" id="aclmdlRICaptureTaskUpdateBegin"></a>
 
 ## aclmdlRICaptureTaskUpdateBegin
 
@@ -431,7 +431,7 @@ For Atlas A2 products and Atlas A3 products, if the Ascend HDK version bundled w
 <br>
 <br>
 
-<a id="aclmdlRICaptureTaskUpdateEnd"></a>
+<a class="method_anchor" id="aclmdlRICaptureTaskUpdateEnd"></a>
 
 ## aclmdlRICaptureTaskUpdateEnd
 
@@ -487,7 +487,7 @@ A single Device supports updating a maximum of 1024\*1024 tasks simultaneously. 
 <br>
 <br>
 
-<a id="aclmdlRIDebugJsonPrint"></a>
+<a class="method_anchor" id="aclmdlRIDebugJsonPrint"></a>
 
 ## aclmdlRIDebugJsonPrint
 
@@ -537,7 +537,7 @@ In maintenance and test scenarios, this API exports the model running instance i
 <br>
 <br>
 
-<a id="aclmdlRIDebugPrint"></a>
+<a class="method_anchor" id="aclmdlRIDebugPrint"></a>
 
 ## aclmdlRIDebugPrint
 
@@ -585,7 +585,7 @@ In maintenance and test scenarios, this API prints internal model information, i
 <br>
 <br>
 
-<a id="aclmdlRIBuildBegin"></a>
+<a class="method_anchor" id="aclmdlRIBuildBegin"></a>
 
 ## aclmdlRIBuildBegin
 
@@ -638,7 +638,7 @@ After all tasks are executed, if the model running instance is no longer needed,
 <br>
 <br>
 
-<a id="aclmdlRIBindStream"></a>
+<a class="method_anchor" id="aclmdlRIBindStream"></a>
 
 ## aclmdlRIBindStream
 
@@ -688,7 +688,7 @@ Binds a model running instance to a stream.
 <br>
 <br>
 
-<a id="aclmdlRIEndTask"></a>
+<a class="method_anchor" id="aclmdlRIEndTask"></a>
 
 ## aclmdlRIEndTask
 
@@ -737,7 +737,7 @@ Marks the end of task dispatch on a stream.
 <br>
 <br>
 
-<a id="aclmdlRIBuildEnd"></a>
+<a class="method_anchor" id="aclmdlRIBuildEnd"></a>
 
 ## aclmdlRIBuildEnd
 
@@ -790,7 +790,7 @@ After this API is called, you are not allowed to dispatch tasks to the stream bo
 <br>
 <br>
 
-<a id="aclmdlRIUnbindStream"></a>
+<a class="method_anchor" id="aclmdlRIUnbindStream"></a>
 
 ## aclmdlRIUnbindStream
 
@@ -839,7 +839,7 @@ Unbinds a model running instance from a stream.
 <br>
 <br>
 
-<a id="aclmdlRIExecute"></a>
+<a class="method_anchor" id="aclmdlRIExecute"></a>
 
 ## aclmdlRIExecute
 
@@ -888,7 +888,7 @@ Executes the model.
 <br>
 <br>
 
-<a id="aclmdlRIExecuteAsync"></a>
+<a class="method_anchor" id="aclmdlRIExecuteAsync"></a>
 
 ## aclmdlRIExecuteAsync
 
@@ -937,7 +937,7 @@ Executes the model. This is an asynchronous API.
 <br>
 <br>
 
-<a id="aclmdlRIDestroy"></a>
+<a class="method_anchor" id="aclmdlRIDestroy"></a>
 
 ## aclmdlRIDestroy
 
@@ -985,7 +985,7 @@ Destroys a model running instance.
 <br>
 <br>
 
-<a id="aclmdlRISetName"></a>
+<a class="method_anchor" id="aclmdlRISetName"></a>
 
 ## aclmdlRISetName
 
@@ -1034,7 +1034,7 @@ Sets the name of a model running instance. If the name is set multiple times for
 <br>
 <br>
 
-<a id="aclmdlRIGetName"></a>
+<a class="method_anchor" id="aclmdlRIGetName"></a>
 
 ## aclmdlRIGetName
 
@@ -1084,7 +1084,7 @@ Obtains the name of the model running instance. If aclmdlRISetName is not called
 <br>
 <br>
 
-<a id="aclmdlRIGetId"></a>
+<a class="method_anchor" id="aclmdlRIGetId"></a>
 
 ## aclmdlRIGetId
 
@@ -1135,7 +1135,7 @@ Obtains the ID of the model running instance.
 <br>
 <br>
 
-<a id="aclrtCheckArchCompatibility"></a>
+<a class="method_anchor" id="aclrtCheckArchCompatibility"></a>
 
 ## aclrtCheckArchCompatibility
 
@@ -1184,7 +1184,7 @@ Determines whether operator instructions are compatible based on the AI processo
 <br>
 <br>
 
-<a id="aclmdlRIAbort"></a>
+<a class="method_anchor" id="aclmdlRIAbort"></a>
 
 ## aclmdlRIAbort
 
@@ -1240,7 +1240,7 @@ This API cannot be used in model capture (ACL Graph) scenarios.
 <br>
 <br>
 
-<a id="aclmdlRIGetStreams"></a>
+<a class="method_anchor" id="aclmdlRIGetStreams"></a>
 
 ## aclmdlRIGetStreams
 
@@ -1297,7 +1297,7 @@ All streams associated with the model running instance can be obtained by callin
 <br>
 <br>
 
-<a id="aclmdlRIGetTasksByStream"></a>
+<a class="method_anchor" id="aclmdlRIGetTasksByStream"></a>
 
 ## aclmdlRIGetTasksByStream
 
@@ -1356,7 +1356,7 @@ All tasks in a specified stream can be obtained by calling this API twice:
 <br>
 <br>
 
-<a id="aclmdlRITaskGetSeqId"></a>
+<a class="method_anchor" id="aclmdlRITaskGetSeqId"></a>
 
 ## aclmdlRITaskGetSeqId
 
@@ -1413,7 +1413,7 @@ For the same model running instance, this API does not support concurrent calls.
 <br>
 <br>
 
-<a id="aclmdlRITaskGetParams"></a>
+<a class="method_anchor" id="aclmdlRITaskGetParams"></a>
 
 ## aclmdlRITaskGetParams
 
@@ -1470,7 +1470,7 @@ For the same model running instance, this API does not support concurrent calls.
 <br>
 <br>
 
-<a id="aclmdlRITaskSetParams"></a>
+<a class="method_anchor" id="aclmdlRITaskSetParams"></a>
 
 ## aclmdlRITaskSetParams
 
@@ -1528,7 +1528,7 @@ Before calling this API, use [aclmdlRIGetTasksByStream](#aclmdlRIGetTasksByStrea
 <br>
 <br>
 
-<a id="aclmdlRIKernelTaskGetAttribute"></a>
+<a class="method_anchor" id="aclmdlRIKernelTaskGetAttribute"></a>
 
 ## aclmdlRIKernelTaskGetAttribute
 
@@ -1586,7 +1586,7 @@ For the same model running instance, this API does not support concurrent calls.
 <br>
 <br>
 
-<a id="aclmdlRITaskDisable"></a>
+<a class="method_anchor" id="aclmdlRITaskDisable"></a>
 
 ## aclmdlRITaskDisable
 
@@ -1642,7 +1642,7 @@ For the same model running instance, this API does not support concurrent calls.
 <br>
 <br>
 
-<a id="aclmdlRIUpdate"></a>
+<a class="method_anchor" id="aclmdlRIUpdate"></a>
 
 ## aclmdlRIUpdate
 
@@ -1696,7 +1696,7 @@ Because Profiling does not support dynamically updating the reported operator pa
 <br>
 <br>
 
-<a id="aclmdlRITaskGetType"></a>
+<a class="method_anchor" id="aclmdlRITaskGetType"></a>
 
 ## aclmdlRITaskGetType
 
@@ -1749,7 +1749,7 @@ Before calling this API, call [aclmdlRIGetTasksByStream](#aclmdlRIGetTasksByStre
 <br>
 <br>
 
-<a id="aclmdlRIDestroyRegisterCallback"></a>
+<a class="method_anchor" id="aclmdlRIDestroyRegisterCallback"></a>
 
 ## aclmdlRIDestroyRegisterCallback
 
@@ -1801,7 +1801,7 @@ Registers a callback function that is invoked when the model running instance is
 <br>
 <br>
 
-<a id="aclmdlRIDestroyUnregisterCallback"></a>
+<a class="method_anchor" id="aclmdlRIDestroyUnregisterCallback"></a>
 
 ## aclmdlRIDestroyUnregisterCallback
 
@@ -1852,7 +1852,7 @@ Cancels the callback function registered through the [aclmdlRIDestroyRegisterCal
 <br>
 <br>
 
-<a id="aclmdlRICondHandleCreate"></a>
+<a class="method_anchor" id="aclmdlRICondHandleCreate"></a>
 
 ## aclmdlRICondHandleCreate
 
@@ -1907,7 +1907,7 @@ When flag is set to ACL\_MODEL\_RI\_COND\_HANDLE\_ASSIGN\_DEFAULT, the condition
 <br>
 <br>
 
-<a id="aclmdlRICondHandleGetCondPtr"></a>
+<a class="method_anchor" id="aclmdlRICondHandleGetCondPtr"></a>
 
 ## aclmdlRICondHandleGetCondPtr
 
@@ -1960,7 +1960,7 @@ To manage the condition value by yourself, call this API to obtain the pointer a
 <br>
 <br>
 
-<a id="aclmdlRIAddCondTask"></a>
+<a class="method_anchor" id="aclmdlRIAddCondTask"></a>
 
 ## aclmdlRIAddCondTask
 
@@ -2014,7 +2014,7 @@ The conditional task parameters include the condition handle (condition value, d
 <br>
 <br>
 
-<a id="aclmdlRICaptureToModelRIBegin"></a>
+<a class="method_anchor" id="aclmdlRICaptureToModelRIBegin"></a>
 
 ## aclmdlRICaptureToModelRIBegin
 

@@ -6,7 +6,7 @@
 - [`size_t aclDataTypeSize(aclDataType dataType)`](#aclDataTypeSize)：获取aclDataType数据的大小，单位Byte。
 - [`float aclFloat16ToFloat(aclFloat16 value)`](#aclFloat16ToFloat)：将[aclFloat16](25-05_Typedefs.md#aclFloat16)类型的数据转换为float（指float32）类型的数据。
 - [`aclFloat16 aclFloatToFloat16(float value)`](#aclFloatToFloat16)：将float（指float32）类型的数据转换为[aclFloat16](25-05_Typedefs.md#aclFloat16)类型的数据。
-- [`aclError aclrtGetVersion(int32_t *majorVersion, int32_t *minorVersion, int32_t *patchVersion)`](#aclrtGetVersion_deprecated)：查询接口版本号，acl接口版本号命名采用：A.B.C模式，其中，A表示有不兼容修改，B表示新增接口，C表示bug修复。（废弃接口，请使用aclsysGetVersionNum接口或者 aclsysGetVersionStr接口）
+- [`aclError aclrtGetVersion(int32_t *majorVersion, int32_t *minorVersion, int32_t *patchVersion)`](#aclrtGetVersion)：查询接口版本号，acl接口版本号命名采用：A.B.C模式，其中，A表示有不兼容修改，B表示新增接口，C表示bug修复。（废弃接口，请使用aclsysGetVersionNum接口或者 aclsysGetVersionStr接口）
 - [`aclError aclsysGetCANNVersion(aclCANNPackageName name, aclCANNPackageVersion *version)`](#aclsysGetCANNVersion)：查询CANN软件包版本号。
 - [`aclError aclGetCannAttributeList(const aclCannAttr **cannAttrList, size_t *num)`](#aclGetCannAttributeList)：查询运行环境中CANN软件和对应AI处理器支持的特性列表。
 - [`aclError aclGetCannAttribute(aclCannAttr cannAttr, int32_t *value)`](#aclGetCannAttribute)：查询运行环境是否支持指定的CANN特性。
@@ -90,7 +90,7 @@ ACL_APP_LOG(ACL_INFO, "load model success, modelId is %u", modelId);
 <br>
 <br>
 
-<a id="aclDataTypeSize"></a>
+<a class="method_anchor" id="aclDataTypeSize"></a>
 
 ## aclDataTypeSize
 
@@ -138,7 +138,7 @@ size_t aclDataTypeSize(aclDataType dataType)
 <br>
 <br>
 
-<a id="aclFloat16ToFloat"></a>
+<a class="method_anchor" id="aclFloat16ToFloat"></a>
 
 ## aclFloat16ToFloat
 
@@ -188,7 +188,7 @@ float aclFloat16ToFloat(aclFloat16 value)
 <br>
 <br>
 
-<a id="aclFloatToFloat16"></a>
+<a class="method_anchor" id="aclFloatToFloat16"></a>
 
 ## aclFloatToFloat16
 
@@ -240,7 +240,7 @@ aclFloat16 aclFloatToFloat16(float value)
 <br>
 <br>
 
-<a id="aclrtGetVersion_deprecated"></a>
+<a class="method_anchor" id="aclrtGetVersion"></a>
 
 ## aclrtGetVersion（废弃）
 
@@ -292,7 +292,7 @@ aclError aclrtGetVersion(int32_t *majorVersion, int32_t *minorVersion, int32_t *
 <br>
 <br>
 
-<a id="aclsysGetCANNVersion"></a>
+<a class="method_anchor" id="aclsysGetCANNVersion"></a>
 
 ## aclsysGetCANNVersion（废弃）
 
@@ -343,7 +343,7 @@ aclError aclsysGetCANNVersion(aclCANNPackageName name, aclCANNPackageVersion *ve
 <br>
 <br>
 
-<a id="aclGetCannAttributeList"></a>
+<a class="method_anchor" id="aclGetCannAttributeList"></a>
 
 ## aclGetCannAttributeList
 
@@ -392,7 +392,7 @@ aclError aclGetCannAttributeList(const aclCannAttr **cannAttrList, size_t *num)
 <br>
 <br>
 
-<a id="aclGetCannAttribute"></a>
+<a class="method_anchor" id="aclGetCannAttribute"></a>
 
 ## aclGetCannAttribute
 
@@ -441,7 +441,7 @@ aclError aclGetCannAttribute(aclCannAttr cannAttr, int32_t *value)
 <br>
 <br>
 
-<a id="aclGetDeviceCapability"></a>
+<a class="method_anchor" id="aclGetDeviceCapability"></a>
 
 ## aclGetDeviceCapability
 
@@ -491,7 +491,7 @@ aclError aclGetDeviceCapability(uint32_t deviceId, aclDeviceInfo deviceInfo, int
 <br>
 <br>
 
-<a id="aclrtCacheLastTaskOpInfo"></a>
+<a class="method_anchor" id="aclrtCacheLastTaskOpInfo"></a>
 
 ## aclrtCacheLastTaskOpInfo
 
@@ -560,7 +560,7 @@ aclError aclrtCacheLastTaskOpInfo(const void * const infoPtr, const size_t infoS
 <br>
 <br>
 
-<a id="aclrtCacheLastTaskExtendInfo"></a>
+<a class="method_anchor" id="aclrtCacheLastTaskExtendInfo"></a>
 
 ## aclrtCacheLastTaskExtendInfo
 
@@ -610,7 +610,7 @@ aclError aclrtCacheLastTaskExtendInfo(const char* const extendInfoPtr, const siz
 <br>
 <br>
 
-<a id="aclrtProfTrace"></a>
+<a class="method_anchor" id="aclrtProfTrace"></a>
 
 ## aclrtProfTrace
 
@@ -660,7 +660,7 @@ aclError aclrtProfTrace(void *userdata, int32_t length, aclrtStream stream)
 <br>
 <br>
 
-<a id="aclsysGetVersionNum"></a>
+<a class="method_anchor" id="aclsysGetVersionNum"></a>
 
 ## aclsysGetVersionNum
 
@@ -715,7 +715,7 @@ aclError aclsysGetVersionNum(char *pkgName, int32_t *versionNum)
 <br>
 <br>
 
-<a id="aclsysGetVersionStr"></a>
+<a class="method_anchor" id="aclsysGetVersionStr"></a>
 
 ## aclsysGetVersionStr
 
@@ -764,7 +764,7 @@ aclError aclsysGetVersionStr(char *pkgName, char *versionStr)
 <br>
 <br>
 
-<a id="aclplatformGetDeviceInfo"></a>
+<a class="method_anchor" id="aclplatformGetDeviceInfo"></a>
 
 ## aclplatformGetDeviceInfo
 
@@ -814,7 +814,7 @@ aclError aclplatformGetDeviceInfo(aclplatformDevInfo infoType, char *value, uint
 <br>
 <br>
 
-<a id="aclplatformGetInstructionInfo"></a>
+<a class="method_anchor" id="aclplatformGetInstructionInfo"></a>
 
 ## aclplatformGetInstructionInfo
 
@@ -870,7 +870,7 @@ aclError aclplatformGetInstructionInfo(aclplatformCoreType type,
 <br>
 <br>
 
-<a id="aclrtCreateStreamV2"></a>
+<a class="method_anchor" id="aclrtCreateStreamV2"></a>
 
 ## aclrtCreateStreamV2
 
@@ -926,7 +926,7 @@ aclError aclrtCreateStreamV2(aclrtStream *stream, const aclrtStreamConfigHandle 
 <br>
 <br>
 
-<a id="aclrtSetStreamConfigOpt"></a>
+<a class="method_anchor" id="aclrtSetStreamConfigOpt"></a>
 
 ## aclrtSetStreamConfigOpt
 
@@ -984,7 +984,7 @@ aclError aclrtSetStreamConfigOpt(aclrtStreamConfigHandle *handle, aclrtStreamCon
 <br>
 <br>
 
-<a id="aclrtSubscribeHostFunc"></a>
+<a class="method_anchor" id="aclrtSubscribeHostFunc"></a>
 
 ## aclrtSubscribeHostFunc
 
@@ -1038,7 +1038,7 @@ aclError aclrtSubscribeHostFunc(uint64_t hostFuncThreadId, aclrtStream exeStream
 <br>
 <br>
 
-<a id="aclrtProcessHostFunc"></a>
+<a class="method_anchor" id="aclrtProcessHostFunc"></a>
 
 ## aclrtProcessHostFunc
 
@@ -1088,7 +1088,7 @@ aclError aclrtProcessHostFunc(int32_t timeout)
 <br>
 <br>
 
-<a id="aclrtUnSubscribeHostFunc"></a>
+<a class="method_anchor" id="aclrtUnSubscribeHostFunc"></a>
 
 ## aclrtUnSubscribeHostFunc
 

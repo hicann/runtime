@@ -6,7 +6,7 @@
 - [`aclError aclrtAllocatorGetByStream(aclrtStream stream, aclrtAllocatorDesc *allocatorDesc, aclrtAllocator *allocator, aclrtAllocatorAllocFunc *allocFunc, aclrtAllocatorFreeFunc *freeFunc, aclrtAllocatorAllocAdviseFunc *allocAdviseFunc, aclrtAllocatorGetAddrFromBlockFunc *getAddrFromBlockFunc)`](#aclrtAllocatorGetByStream)：根据Stream查询用户注册的Allocator信息。
 - [`aclError aclrtAllocatorUnregister(aclrtStream stream)`](#aclrtAllocatorUnregister)：用户销毁Allocator前，需调用本接口取消注册用户提供的Allocator以及Allocator对应的回调函数。
 
-<a id="aclrtAllocatorRegister"></a>
+<a class="method_anchor" id="aclrtAllocatorRegister"></a>
 
 ## aclrtAllocatorRegister
 
@@ -68,7 +68,7 @@ aclError aclrtAllocatorRegister(aclrtStream stream, aclrtAllocatorDesc allocator
 <br>
 <br>
 
-<a id="aclrtAllocatorGetByStream"></a>
+<a class="method_anchor" id="aclrtAllocatorGetByStream"></a>
 
 ## aclrtAllocatorGetByStream
 
@@ -122,7 +122,7 @@ aclError aclrtAllocatorGetByStream(aclrtStream stream, aclrtAllocatorDesc *alloc
 <br>
 <br>
 
-<a id="aclrtAllocatorUnregister"></a>
+<a class="method_anchor" id="aclrtAllocatorUnregister"></a>
 
 ## aclrtAllocatorUnregister
 

@@ -12,7 +12,7 @@
 - [`aclError acltdtGetSliceInfoFromItem(const acltdtDataItem *dataItem, size_t *sliceNum, size_t* sliceId)`](#acltdtGetSliceInfoFromItem)：用于输出Tensor分片信息。
 - [`aclError acltdtCleanChannel(acltdtChannelHandle *handle)`](#acltdtCleanChannel)：清空通道中的所有数据。
 
-<a id="acltdtCreateChannel"></a>
+<a class="method_anchor" id="acltdtCreateChannel"></a>
 
 ## acltdtCreateChannel
 
@@ -66,7 +66,7 @@ acltdtChannelHandle *acltdtCreateChannel(uint32_t deviceId, const char *name)
 <br>
 <br>
 
-<a id="acltdtCreateChannelWithCapacity"></a>
+<a class="method_anchor" id="acltdtCreateChannelWithCapacity"></a>
 
 ## acltdtCreateChannelWithCapacity
 
@@ -117,7 +117,7 @@ acltdtChannelHandle *acltdtCreateChannelWithCapacity(uint32_t deviceId, const ch
 <br>
 <br>
 
-<a id="acltdtSendTensor"></a>
+<a class="method_anchor" id="acltdtSendTensor"></a>
 
 ## acltdtSendTensor
 
@@ -171,7 +171,7 @@ aclError acltdtSendTensor(const acltdtChannelHandle *handle, const acltdtDataset
 <br>
 <br>
 
-<a id="acltdtReceiveTensor"></a>
+<a class="method_anchor" id="acltdtReceiveTensor"></a>
 
 ## acltdtReceiveTensor
 
@@ -225,7 +225,7 @@ aclError acltdtReceiveTensor(const acltdtChannelHandle *handle, acltdtDataset *d
 <br>
 <br>
 
-<a id="acltdtStopChannel"></a>
+<a class="method_anchor" id="acltdtStopChannel"></a>
 
 ## acltdtStopChannel
 
@@ -273,7 +273,7 @@ aclError acltdtStopChannel(acltdtChannelHandle *handle)
 <br>
 <br>
 
-<a id="acltdtDestroyChannel"></a>
+<a class="method_anchor" id="acltdtDestroyChannel"></a>
 
 ## acltdtDestroyChannel
 
@@ -321,7 +321,7 @@ aclError acltdtDestroyChannel(acltdtChannelHandle *handle)
 <br>
 <br>
 
-<a id="acltdtQueryChannelSize"></a>
+<a class="method_anchor" id="acltdtQueryChannelSize"></a>
 
 ## acltdtQueryChannelSize
 
@@ -370,7 +370,7 @@ aclError acltdtQueryChannelSize(const acltdtChannelHandle *handle, size_t *size)
 <br>
 <br>
 
-<a id="acltdtGetSliceInfoFromItem"></a>
+<a class="method_anchor" id="acltdtGetSliceInfoFromItem"></a>
 
 ## acltdtGetSliceInfoFromItem
 
@@ -422,7 +422,7 @@ aclError acltdtGetSliceInfoFromItem(const acltdtDataItem *dataItem, size_t *slic
 <br>
 <br>
 
-<a id="acltdtCleanChannel"></a>
+<a class="method_anchor" id="acltdtCleanChannel"></a>
 
 ## acltdtCleanChannel
 

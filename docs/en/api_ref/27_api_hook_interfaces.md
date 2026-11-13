@@ -1,13 +1,13 @@
 # 27. API Hook
 
-<!-- md-trans-meta sourceCommit=unknown translatedAt=2026-10-23T03:59:46.315Z pushedAt=2026-10-29T02:19:06.464Z nl=2 -->
+<!-- md-trans-meta sourceCommit=31ae292a88c1a38674abaa350b60eba724bab178 translatedAt=2026-11-06T11:42:10.502Z pushedAt=2026-11-09T10:57:44.624Z nl=2 -->
 
 This chapter describes the API hook APIs of CANN Runtime, which allow performance analysis tools (such as Profiling) to intercept some Runtime APIs (referring to APIs whose names start with aclrt or aclmdlRI, excluding the APIs in this chapter) by injecting hook functions.
 
 - [`aclError aclrtApiInjectionSetFunc(const char* name, aclrtApiFunc func)`](#aclrtApiInjectionSetFunc): Sets the current implementation function pointer of the Runtime API with the specified name to the specified hook function.
 - [`aclError aclrtApiInjectionGetFunc(const char* name, aclrtApiFunc* originFunc, aclrtApiFunc* currentFunc)`](#aclrtApiInjectionGetFunc): Obtains the original implementation function pointer and the current implementation function pointer of the Runtime API with the specified name.
 
-<a id="aclrtApiInjectionSetFunc"></a>
+<a class="method_anchor" id="aclrtApiInjectionSetFunc"></a>
 
 ## aclrtApiInjectionSetFunc
 
@@ -65,7 +65,7 @@ You can inject a hook function through this API to intercept and count Runtime A
 <br>
 <br>
 
-<a id="aclrtApiInjectionGetFunc"></a>
+<a class="method_anchor" id="aclrtApiInjectionGetFunc"></a>
 
 ## aclrtApiInjectionGetFunc
 

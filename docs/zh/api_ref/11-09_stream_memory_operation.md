@@ -5,7 +5,7 @@
 - [`aclError aclrtValueWrite(void* devAddr, uint64_t value, uint32_t flag, aclrtStream stream)`](#aclrtValueWrite)：向指定内存中写数据。异步接口。
 - [`aclError aclrtValueWait(void* devAddr, uint64_t value, uint32_t flag, aclrtStream stream)`](#aclrtValueWait)：等待指定内存中的数据满足一定条件后解除阻塞。异步接口。
 
-<a id="aclrtValueWrite"></a>
+<a class="method_anchor" id="aclrtValueWrite"></a>
 
 ## aclrtValueWrite
 
@@ -56,7 +56,7 @@ aclError aclrtValueWrite(void* devAddr, uint64_t value, uint32_t flag, aclrtStre
 <br>
 <br>
 
-<a id="aclrtValueWait"></a>
+<a class="method_anchor" id="aclrtValueWait"></a>
 
 ## aclrtValueWait
 

@@ -13,7 +13,7 @@ This topic describes the unified/managed memory APIs, which are used for memory 
 - [`aclError aclrtMemP2PMap(void *devPtr, size_t size, int32_t dstDevId, uint64_t flags)`](#aclrtMemP2PMap): Establishes a memory page table mapping between two devices within the same process to enable cross-device memory access. Before performing this operation, call [aclrtDeviceEnablePeerAccess](04_device_management.md#aclrtDeviceEnablePeerAccess) to enable data interaction between the two devices.
 - [`aclError aclrtPointerGetAttributes(const void *ptr, aclrtPtrAttributes *attributes)`](#aclrtPointerGetAttributes): Obtains memory attribute information, including whether the memory resides on the host or device, the page table size, and other information.
 
-<a id="aclrtMemAllocManaged"></a>
+<a class="method_anchor" id="aclrtMemAllocManaged"></a>
 
 ## aclrtMemAllocManaged
 
@@ -49,7 +49,7 @@ The memory allocated by this API is not initialized. It is recommended that you 
 <br>
 <br>
 
-<a id="aclrtMemManagedAdvise"></a>
+<a class="method_anchor" id="aclrtMemManagedAdvise"></a>
 
 ## aclrtMemManagedAdvise
 
@@ -82,7 +82,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtMemManagedGetAttr"></a>
+<a class="method_anchor" id="aclrtMemManagedGetAttr"></a>
 
 ## aclrtMemManagedGetAttr
 
@@ -118,7 +118,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtMemManagedGetAttrs"></a>
+<a class="method_anchor" id="aclrtMemManagedGetAttrs"></a>
 
 ## aclrtMemManagedGetAttrs
 
@@ -155,7 +155,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtMemManagedPrefetchAsync"></a>
+<a class="method_anchor" id="aclrtMemManagedPrefetchAsync"></a>
 
 ## aclrtMemManagedPrefetchAsync
 
@@ -189,7 +189,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtMemManagedPrefetchBatchAsync"></a>
+<a class="method_anchor" id="aclrtMemManagedPrefetchBatchAsync"></a>
 
 ## aclrtMemManagedPrefetchBatchAsync
 
@@ -231,7 +231,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtMemP2PMap"></a>
+<a class="method_anchor" id="aclrtMemP2PMap"></a>
 
 ## aclrtMemP2PMap
 
@@ -283,7 +283,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtPointerGetAttributes"></a>
+<a class="method_anchor" id="aclrtPointerGetAttributes"></a>
 
 ## aclrtPointerGetAttributes
 

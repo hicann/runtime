@@ -5,7 +5,7 @@
 - [`aclError aclrtApiInjectionSetFunc(const char* name, aclrtApiFunc func)`](#aclrtApiInjectionSetFunc)：将指定名称的Runtime接口的当前实现函数指针设置为指定的Hook函数。
 - [`aclError aclrtApiInjectionGetFunc(const char* name, aclrtApiFunc* originFunc, aclrtApiFunc* currentFunc)`](#aclrtApiInjectionGetFunc)：获取指定名称的Runtime接口的原始实现函数指针和当前实现函数指针。
 
-<a id="aclrtApiInjectionSetFunc"></a>
+<a class="method_anchor" id="aclrtApiInjectionSetFunc"></a>
 
 ## aclrtApiInjectionSetFunc
 
@@ -63,7 +63,7 @@ aclError aclrtApiInjectionSetFunc(const char* name, aclrtApiFunc func)
 <br>
 <br>
 
-<a id="aclrtApiInjectionGetFunc"></a>
+<a class="method_anchor" id="aclrtApiInjectionGetFunc"></a>
 
 ## aclrtApiInjectionGetFunc
 

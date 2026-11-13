@@ -1,8 +1,8 @@
 # Typedefs
 
-<!-- md-trans-meta sourceCommit=unknown translatedAt=2026-10-23T03:59:11.564Z pushedAt=2026-10-29T02:19:06.457Z nl=2 -->
+<!-- md-trans-meta sourceCommit=3f5504c5843eecced660cfd07db801011884d75a translatedAt=2026-11-06T11:40:42.934Z pushedAt=2026-11-09T10:47:16.693Z nl=2 -->
 
-This chapter describes the typedef data types.
+Typedef data types.
 
 <br>
 
@@ -37,7 +37,7 @@ This chapter describes the typedef data types.
 
 ## aclFloat16
 
-This data type is used only for data transfer and cannot be used for operations such as addition, subtraction, multiplication, and division.
+This data type is used only for data transfer and cannot be used for arithmetic operations such as addition, subtraction, multiplication, or division.
 
 ```c
 typedef uint16_t aclFloat16;
@@ -190,7 +190,7 @@ typedef void* aclrtFuncHandle;
 ## aclrtLabel
 
 ```c
-typedef void *aclrtLabel;
+typedef void *aclrtLabel; 
 ```
 
 <br>

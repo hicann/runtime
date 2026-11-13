@@ -1,6 +1,6 @@
 # 8. Notify Management
 
-<!-- md-trans-meta sourceCommit=31ae292a88c1a38674abaa350b60eba724bab178 translatedAt=2026-10-26T14:01:50.871Z pushedAt=2026-10-28T03:37:20.287Z -->
+<!-- md-trans-meta sourceCommit=09c468b359b0e393f15436d7e1fc8eb9a77bcab0 translatedAt=2026-11-06T11:17:26.989Z pushedAt=2026-11-09T08:15:13.936Z nl=2 -->
 
 This topic describes the Notify management APIs of CANN Runtime, which are used to create, record, wait for/reset, and share Notify across processes.
 
@@ -15,7 +15,7 @@ This topic describes the Notify management APIs of CANN Runtime, which are used 
 - [`aclError aclrtNotifySetImportPidInterServer(aclrtNotify notify, aclrtServerPid *serverPids, size_t num)`](#aclrtNotifySetImportPidInterServer): Sets the process trustlist for a shared Notify.
 - [`aclError aclrtNotifyImportByKey(aclrtNotify *notify, const char *key, uint64_t flags)`](#aclrtNotifyImportByKey): Obtains the information of the key in the current process and returns the Notify pointer that can be used in the current process.
 
-<a id="aclrtCreateNotify"></a>
+<a class="method_anchor" id="aclrtCreateNotify"></a>
 
 ## aclrtCreateNotify
 
@@ -82,7 +82,7 @@ The number of Notifies supported varies with the hardware model.
 <br>
 <br>
 
-<a id="aclrtDestroyNotify"></a>
+<a class="method_anchor" id="aclrtDestroyNotify"></a>
 
 ## aclrtDestroyNotify
 
@@ -130,7 +130,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtRecordNotify"></a>
+<a class="method_anchor" id="aclrtRecordNotify"></a>
 
 ## aclrtRecordNotify
 
@@ -181,7 +181,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtWaitAndResetNotify"></a>
+<a class="method_anchor" id="aclrtWaitAndResetNotify"></a>
 
 ## aclrtWaitAndResetNotify
 
@@ -221,7 +221,7 @@ Blocks the execution of the specified stream until the specified Notify is compl
 | --- | :---: | --- |
 | notify | Input | Notify to wait for. For details about the type definition, see [aclrtNotify](25-05_Typedefs.md#aclrtNotify). |
 | stream | Input | Stream. For details about the type definition, see [aclrtStream](25-05_Typedefs.md#aclrtStream).<br>In a multi-stream synchronous waiting scenario, for example, when Stream2 waits for Stream1, set this parameter to Stream2. |
-| timeout | Input | Timeout period for waiting.<br>The value options are as follows:<br><br>  - **0**: permanent waiting.<br>  - **>0**: specific timeout period, in seconds. |
+| timeout | Input | Timeout period for waiting.<br>The value options are as follows:<br><br>  - **0**: permanent waiting.<br>  - **>0**: specific timeout period, in milliseconds. |
 
 ### Return Values
 
@@ -231,7 +231,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtGetNotifyId"></a>
+<a class="method_anchor" id="aclrtGetNotifyId"></a>
 
 ## aclrtGetNotifyId
 
@@ -280,7 +280,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtNotifyBatchReset"></a>
+<a class="method_anchor" id="aclrtNotifyBatchReset"></a>
 
 ## aclrtNotifyBatchReset
 
@@ -333,7 +333,7 @@ This operation is not supported in the Ascend virtualization instance scenario.
 <br>
 <br>
 
-<a id="aclrtNotifyGetExportKey"></a>
+<a class="method_anchor" id="aclrtNotifyGetExportKey"></a>
 
 ## aclrtNotifyGetExportKey
 
@@ -414,7 +414,7 @@ This operation is not supported in the Ascend virtualization instance scenario.
 <br>
 <br>
 
-<a id="aclrtNotifySetImportPid"></a>
+<a class="method_anchor" id="aclrtNotifySetImportPid"></a>
 
 ## aclrtNotifySetImportPid
 
@@ -473,7 +473,7 @@ This operation is not supported in the Ascend virtualization instance scenario.
 <br>
 <br>
 
-<a id="aclrtNotifySetImportPidInterServer"></a>
+<a class="method_anchor" id="aclrtNotifySetImportPidInterServer"></a>
 
 ## aclrtNotifySetImportPidInterServer
 
@@ -527,7 +527,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtNotifyImportByKey"></a>
+<a class="method_anchor" id="aclrtNotifyImportByKey"></a>
 
 ## aclrtNotifyImportByKey
 

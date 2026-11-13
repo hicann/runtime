@@ -1,6 +1,6 @@
 # Runtime API Reference
 
-<!-- md-trans-meta sourceCommit=unknown translatedAt=2026-10-23T03:59:46.459Z pushedAt=2026-10-29T02:19:06.467Z nl=2 -->
+<!-- md-trans-meta sourceCommit=9e853a104abaf7f282dbc8146676c59474c01477 translatedAt=2026-11-06T11:42:15.380Z pushedAt=2026-11-09T10:58:14.585Z nl=2 -->
 
 - [1. Overview](01_overview.md)
 - [2. Initialization and Deinitialization](02_initialization_and_deinitialization.md)

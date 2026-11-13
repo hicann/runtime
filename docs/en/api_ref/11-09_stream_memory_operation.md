@@ -7,7 +7,7 @@ This topic describes the memory value write and wait APIs, which are used to asy
 - [`aclError aclrtValueWrite(void* devAddr, uint64_t value, uint32_t flag, aclrtStream stream)`](#aclrtValueWrite): Writes data to the specified memory. This is an asynchronous API.
 - [`aclError aclrtValueWait(void* devAddr, uint64_t value, uint32_t flag, aclrtStream stream)`](#aclrtValueWait): Waits until the data in the specified memory meets certain conditions and then releases the block. This is an asynchronous API.
 
-<a id="aclrtValueWrite"></a>
+<a class="method_anchor" id="aclrtValueWrite"></a>
 
 ## aclrtValueWrite
 
@@ -58,7 +58,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtValueWait"></a>
+<a class="method_anchor" id="aclrtValueWait"></a>
 
 ## aclrtValueWait
 

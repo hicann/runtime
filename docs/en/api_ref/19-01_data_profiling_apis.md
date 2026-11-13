@@ -1,5 +1,7 @@
 # 19-01 Profiling APIs
 
+<!-- md-trans-meta sourceCommit=31ae292a88c1a38674abaa350b60eba724bab178 translatedAt=2026-11-06T11:32:02.562Z pushedAt=2026-11-09T10:32:12.609Z nl=2 -->
+
 This section describes the core profiling APIs that initialize, configure, and start/stop profiling.
 
 - [`aclError aclprofInit(const char *profilerResultPath, size_t length)`](#aclprofInit): Initializes profiling and sets the path to the file that stores profile data.
@@ -45,7 +47,7 @@ Do not call these APIs together with the [Operator Information Subscription](19-
 
 ---
 
-<a id="aclprofInit"></a>
+<a class="method_anchor" id="aclprofInit"></a>
 
 ## aclprofInit
 
@@ -97,7 +99,7 @@ This API must be paired with [aclprofFinalize](#aclprofFinalize). Call aclprofIn
 <br>
 <br>
 
-<a id="aclprofSetConfig"></a>
+<a class="method_anchor" id="aclprofSetConfig"></a>
 
 ## aclprofSetConfig
 
@@ -152,7 +154,7 @@ Call aclprofSetConfig before [aclprofStart](#aclprofStart). Calling this API is 
 <br>
 <br>
 
-<a id="aclprofStart"></a>
+<a class="method_anchor" id="aclprofStart"></a>
 
 ## aclprofStart
 
@@ -206,7 +208,7 @@ This API must be paired with [aclprofStop](#aclprofStop). Call aclprofStart befo
 <br>
 <br>
 
-<a id="aclprofStop"></a>
+<a class="method_anchor" id="aclprofStop"></a>
 
 ## aclprofStop
 
@@ -258,7 +260,7 @@ This API must be paired with [aclprofStart](#aclprofStart). Call aclprofStart be
 <br>
 <br>
 
-<a id="aclprofFinalize"></a>
+<a class="method_anchor" id="aclprofFinalize"></a>
 
 ## aclprofFinalize
 

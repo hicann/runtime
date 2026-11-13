@@ -46,7 +46,7 @@
 
 ---
 
-<a id="aclprofModelSubscribe"></a>
+<a class="method_anchor" id="aclprofModelSubscribe"></a>
 
 ## aclprofModelSubscribe
 
@@ -98,7 +98,7 @@ aclError aclprofModelSubscribe(uint32_t modelId, const aclprofSubscribeConfig *p
 <br>
 <br>
 
-<a id="aclprofModelUnSubscribe"></a>
+<a class="method_anchor" id="aclprofModelUnSubscribe"></a>
 
 ## aclprofModelUnSubscribe
 
@@ -150,7 +150,7 @@ aclError aclprofModelUnSubscribe(uint32_t modelId)
 <br>
 <br>
 
-<a id="aclprofGetOpDescSize"></a>
+<a class="method_anchor" id="aclprofGetOpDescSize"></a>
 
 ## aclprofGetOpDescSize
 
@@ -199,7 +199,7 @@ aclError aclprofGetOpDescSize(size_t *opDescSize)
 <br>
 <br>
 
-<a id="aclprofGetOpNum"></a>
+<a class="method_anchor" id="aclprofGetOpNum"></a>
 
 ## aclprofGetOpNum
 
@@ -251,7 +251,7 @@ aclError aclprofGetOpNum(const void *opInfo, size_t opInfoLen, uint32_t *opNumbe
 <br>
 <br>
 
-<a id="aclprofGetOpTypeLen"></a>
+<a class="method_anchor" id="aclprofGetOpTypeLen"></a>
 
 ## aclprofGetOpTypeLen
 
@@ -304,7 +304,7 @@ aclError aclprofGetOpTypeLen(const void *opInfo, size_t opInfoLen, uint32_t inde
 <br>
 <br>
 
-<a id="aclprofGetOpType"></a>
+<a class="method_anchor" id="aclprofGetOpType"></a>
 
 ## aclprofGetOpType
 
@@ -357,7 +357,7 @@ aclError aclprofGetOpType(const void *opInfo, size_t opInfoLen, uint32_t index, 
 <br>
 <br>
 
-<a id="aclprofGetOpNameLen"></a>
+<a class="method_anchor" id="aclprofGetOpNameLen"></a>
 
 ## aclprofGetOpNameLen
 
@@ -409,7 +409,7 @@ aclError aclprofGetOpNameLen(const void *opInfo, size_t opInfoLen, uint32_t inde
 <br>
 <br>
 
-<a id="aclprofGetOpName"></a>
+<a class="method_anchor" id="aclprofGetOpName"></a>
 
 ## aclprofGetOpName
 
@@ -463,7 +463,7 @@ aclError aclprofGetOpName(const void *opInfo, size_t opInfoLen, uint32_t index, 
 <br>
 <br>
 
-<a id="aclprofGetOpStart"></a>
+<a class="method_anchor" id="aclprofGetOpStart"></a>
 
 ## aclprofGetOpStart
 
@@ -515,7 +515,7 @@ uint64_t aclprofGetOpStart(const void *opInfo, size_t opInfoLen, uint32_t index)
 <br>
 <br>
 
-<a id="aclprofGetOpEnd"></a>
+<a class="method_anchor" id="aclprofGetOpEnd"></a>
 
 ## aclprofGetOpEnd
 
@@ -566,7 +566,7 @@ uint64_t aclprofGetOpEnd(const void *opInfo, size_t opInfoLen, uint32_t index)
 <br>
 <br>
 
-<a id="aclprofGetOpDuration"></a>
+<a class="method_anchor" id="aclprofGetOpDuration"></a>
 
 ## aclprofGetOpDuration
 
@@ -618,7 +618,7 @@ uint64_t aclprofGetOpDuration(const void *opInfo, size_t opInfoLen, uint32_t ind
 <br>
 <br>
 
-<a id="aclprofGetModelId"></a>
+<a class="method_anchor" id="aclprofGetModelId"></a>
 
 ## aclprofGetModelId
 
@@ -670,7 +670,7 @@ size_t aclprofGetModelId(const void *opInfo, size_t opInfoLen, uint32_t index)
 <br>
 <br>
 
-<a id="aclprofGetOpFlag"></a>
+<a class="method_anchor" id="aclprofGetOpFlag"></a>
 
 ## aclprofGetOpFlag
 
@@ -731,7 +731,7 @@ typedef enum {
 <br>
 <br>
 
-<a id="aclprofGetOpAttriValue"></a>
+<a class="method_anchor" id="aclprofGetOpAttriValue"></a>
 
 ## aclprofGetOpAttriValue
 

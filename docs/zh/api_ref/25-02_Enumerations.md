@@ -945,7 +945,7 @@ typedef enum {
     ACL_DEV_ATTR_MAX_BLOCK_DIM_Z = 212,
 
     ACL_DEV_ATTR_TOTAL_GLOBAL_MEM_SIZE = 301,
-    ACL_DEV_ATTR_L2_CACHE_SIZE,
+    ACL_DEV_ATTR_L2_CACHE_SIZE = 302,
     ACL_DEV_ATTR_SMP_ID = 401U,
     ACL_DEV_ATTR_PHY_CHIP_ID = 402U,
     ACL_DEV_ATTR_SUPER_POD_DEVICE_ID = 403U,
@@ -1095,6 +1095,10 @@ typedef enum {
 - ACL\_DEV\_ATTR\_TOTAL\_GLOBAL\_MEM\_SIZE
 
     Device上的可用总内存，单位Byte。
+
+- ACL\_DEV\_ATTR\_L2\_CACHE\_SIZE
+
+    L2 Cache（二级缓存）大小，单位Byte。
 
 - ACL\_DEV\_ATTR\_SMP\_ID
 

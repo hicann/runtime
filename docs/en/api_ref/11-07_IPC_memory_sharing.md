@@ -1,17 +1,17 @@
 # 11-07 IPC Inter-Process Memory Sharing
 
-<!-- md-trans-meta sourceCommit=unknown translatedAt=2026-10-22T02:04:03.456Z pushedAt=2026-10-23T08:42:47.670Z -->
+<!-- md-trans-meta sourceCommit=31ae292a88c1a38674abaa350b60eba724bab178 translatedAt=2026-11-06T11:22:42.809Z pushedAt=2026-11-09T09:04:15.896Z nl=2 -->
 
 This chapter describes the IPC (Inter-Process Communication) inter-process memory sharing APIs, which are used for cross-process memory export and import.
 
 - [`aclError aclrtIpcMemGetExportKey(void *devPtr, size_t size, char *key, size_t len, uint64_t flags)`](#aclrtIpcMemGetExportKey): Sets the specified device memory as IPC (Inter-Process Communication) shared memory in the current process and returns the shared memory key for subsequent sharing of the memory with other processes.
-- [`aclError aclrtIpcMemSetImportPid(const char *key, int32_t *pid, size_t num)`](#aclrtIpcMemSetImportPid): Sets the process whitelist for IPC shared memory.
-- [`aclError aclrtIpcMemImportPidInterServer(const char *key, aclrtServerPid *serverPids, size_t num)`](#aclrtIpcMemImportPidInterServer): For SuperPoD products in the Atlas A3 products, sets the process whitelist for IPC shared memory in batches.
+- [`aclError aclrtIpcMemSetImportPid(const char *key, int32_t *pid, size_t num)`](#aclrtIpcMemSetImportPid): Sets the process trustlist for IPC shared memory.
+- [`aclError aclrtIpcMemImportPidInterServer(const char *key, aclrtServerPid *serverPids, size_t num)`](#aclrtIpcMemImportPidInterServer): Sets the process trustlists for IPC shared memory in batches for the supernode products in Atlas A3 products.
 - [`aclError aclrtIpcMemImportByKey(void **devPtr, const char *key, uint64_t flags)`](#aclrtIpcMemImportByKey): Imports the key information in the current process and returns the device memory address pointer that the current process can use.
 - [`aclError aclrtIpcMemSetAttr(const char *key, aclrtIpcMemAttrType type, uint64_t attr)`](#aclrtIpcMemSetAttr): Sets the attribute information of IPC shared memory.
 - [`aclError aclrtIpcMemClose(const char *key)`](#aclrtIpcMemClose): Closes the IPC shared memory. This API must be called in both the process that calls [aclrtIpcMemImportByKey](#aclrtIpcMemImportByKey) and the process that calls [aclrtIpcMemGetExportKey](#aclrtIpcMemGetExportKey).
 
-<a id="aclrtIpcMemGetExportKey"></a>
+<a class="method_anchor" id="aclrtIpcMemGetExportKey"></a>
 
 ## aclrtIpcMemGetExportKey
 
@@ -51,7 +51,7 @@ Sets the specified device memory in the current process as IPC (Inter-Process Co
     1. Call [aclrtMalloc](11-01_device_memory_malloc_and_free.md#aclrtMalloc) to allocate memory.
     2. Call [aclrtIpcMemGetExportKey](#aclrtIpcMemGetExportKey) to export the shared memory key.
 
-        When calling [aclrtIpcMemGetExportKey](#aclrtIpcMemGetExportKey), you can specify whether to enable process whitelist validation. If enabled, you must separately call [aclrtIpcMemSetImportPid](#aclrtIpcMemSetImportPid) to set the process ID of process B to the whitelist; otherwise, there is no need to call [aclrtIpcMemSetImportPid](#aclrtIpcMemSetImportPid).
+        When calling [aclrtIpcMemGetExportKey](#aclrtIpcMemGetExportKey), you can specify whether to enable process trustlist validation. If enabled, you must separately call [aclrtIpcMemSetImportPid](#aclrtIpcMemSetImportPid) to set the process ID of process B to the trustlist; otherwise, there is no need to call [aclrtIpcMemSetImportPid](#aclrtIpcMemSetImportPid).
 
     3. Call [aclrtIpcMemClose](#aclrtIpcMemClose) to close the IPC shared memory.
 
@@ -80,7 +80,7 @@ Sets the specified device memory in the current process as IPC (Inter-Process Co
 | size | Input | Memory size, in bytes. |
 | key | Output | Shared memory key, which is a character array of length `len`. |
 | len | Input | Length of the key, fixed to 65. |
-| flags | Input | Whether to enable process whitelist validation.<br>The value is one of the following macros:<br><br>  - ACL_RT_IPC_MEM_EXPORT_FLAG_DEFAULT: default value, which enables process whitelist validation. When this value is configured, call [aclrtIpcMemSetImportPid](#aclrtIpcMemSetImportPid) separately to add the process ID that uses the shared memory key to the whitelist.<br>  - ACL_RT_IPC_MEM_EXPORT_FLAG_DISABLE_PID_VALIDATION: disables process whitelist validation. When this value is configured, there is no need to call [aclrtIpcMemSetImportPid](#aclrtIpcMemSetImportPid).<br><br><br>The macros are defined as follows:<br>#define ACL_RT_IPC_MEM_EXPORT_FLAG_DEFAULT  0x0UL<br>#define ACL_RT_IPC_MEM_EXPORT_FLAG_DISABLE_PID_VALIDATION 0x1UL |
+| flags | Input | Whether to enable process trustlist validation.<br>The value is one of the following macros:<br><br>  - ACL_RT_IPC_MEM_EXPORT_FLAG_DEFAULT: default value, which enables process trustlist validation. When this value is configured, call [aclrtIpcMemSetImportPid](#aclrtIpcMemSetImportPid) separately to add the process ID that uses the shared memory key to the trustlist.<br>  - ACL_RT_IPC_MEM_EXPORT_FLAG_DISABLE_PID_VALIDATION: disables process trustlist validation. When this value is configured, there is no need to call [aclrtIpcMemSetImportPid](#aclrtIpcMemSetImportPid).<br><br><br>The macros are defined as follows:<br>#define ACL_RT_IPC_MEM_EXPORT_FLAG_DEFAULT  0x0UL<br>#define ACL_RT_IPC_MEM_EXPORT_FLAG_DISABLE_PID_VALIDATION 0x1UL |
 
 ### Return Values
 
@@ -95,7 +95,7 @@ When two processes on different devices share memory through IPC, as shown in th
 When process B uses the shared memory address, note the following requirements (these requirements do not apply when two processes on the same device share memory through IPC):
 
 <!-- npu="310p" id1 -->
-- On Atlas inference products, when calling [aclrtMalloc](11-01_device_memory_malloc_and_free.md#aclrtMalloc) to allocate device memory, select the P2P type for policy, for example, ACL\_MEM\_MALLOC\_HUGE\_FIRST\_P2P.
+- On Atlas inference products, when calling the [aclrtMalloc](11-01_device_memory_malloc_and_free.md#aclrtMalloc) API to allocate device memory, select the P2P type for policy, for example ACL\_MEM\_MALLOC\_HUGE\_FIRST\_P2P.
 <!-- end id1 -->
 - During memory copy, the copy direction cannot be automatically determined based on the source memory address pointer and the destination memory address pointer. Memory copy operations in the Host-\>Device or Device-\>Host direction are not supported, for both synchronous and asynchronous copy. Synchronous memory copy within the same device is not supported, but asynchronous memory copy within the same device is supported.
 - Cross-chip access by the cube unit and vector unit is supported.
@@ -104,7 +104,7 @@ When process B uses the shared memory address, note the following requirements (
 <br>
 <br>
 
-<a id="aclrtIpcMemSetImportPid"></a>
+<a class="method_anchor" id="aclrtIpcMemSetImportPid"></a>
 
 ## aclrtIpcMemSetImportPid
 
@@ -136,7 +136,7 @@ aclError aclrtIpcMemSetImportPid(const char *key, int32_t *pid, size_t num)
 
 ### Description
 
-Sets the process whitelist for IPC shared memory.
+Sets the process trustlist for IPC shared memory.
 
 Use this interface together with other interfaces to achieve the purpose of memory sharing. For details, refer to the description of the [aclrtIpcMemGetExportKey](#aclrtIpcMemGetExportKey) interface.
 
@@ -145,8 +145,8 @@ Use this interface together with other interfaces to achieve the purpose of memo
 | Parameter Name | Input/Output | Description |
 | --- | :---: | --- |
 | key | Input | Memory key obtained through the [aclrtIpcMemGetExportKey](#aclrtIpcMemGetExportKey) API. |
-| pid | Input | Array used to store the whitelist process IDs.<br>The process ID can be obtained by calling the [aclrtDeviceGetBareTgid](04_device_management.md#aclrtDeviceGetBareTgid) API. In a Docker scenario, the obtained ID is the process ID on the physical machine; in a non-Docker scenario, the obtained ID is the process ID. |
-| num | Input | Number of whitelist processes, which must be consistent with the size of the pid parameter array. |
+| pid | Input | Array used to store the trustlisted process IDs.<br>The process ID can be obtained by calling the [aclrtDeviceGetBareTgid](04_device_management.md#aclrtDeviceGetBareTgid) API. In a Docker scenario, the obtained ID is the process ID on the physical machine; in a non-Docker scenario, the obtained ID is the process ID. |
+| num | Input | Number of trustlist processes, which must be consistent with the size of the pid parameter array. |
 
 ### Return Values
 
@@ -156,7 +156,7 @@ Returns 0 on success and other values on failure. For details, see [aclError](25
 <br>
 <br>
 
-<a id="aclrtIpcMemImportPidInterServer"></a>
+<a class="method_anchor" id="aclrtIpcMemImportPidInterServer"></a>
 
 ## aclrtIpcMemImportPidInterServer
 
@@ -167,31 +167,31 @@ aclError aclrtIpcMemImportPidInterServer(const char *key, aclrtServerPid *server
 ### Applicable Products
 
 <!-- npu="950" id519 -->
-- Ascend 950PR&950DT products: Not Supported
+- Ascend 950PR&950DT products: Not supported
 <!-- end id519 -->
 <!-- npu="A3" id520 -->
 - Atlas A3 products: Supported
 <!-- end id520 -->
 <!-- npu="910b" id521 -->
-- Atlas A2 products: Not Supported
+- Atlas A2 products: Not supported
 <!-- end id521 -->
 <!-- npu="310b" id522 -->
-- Atlas 200I/500 A2 inference products: Not Supported
+- Atlas 200I/500 A2 inference products: Not supported
 <!-- end id522 -->
 <!-- npu="310p" id523 -->
-- Atlas inference products: Not Supported
+- Atlas inference products: Not supported
 <!-- end id523 -->
 <!-- npu="910" id524 -->
-- Atlas training products: Not Supported
+- Atlas training products: Not supported
 <!-- end id524 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/11-07_IPC_memory_sharing_res.md#id3 -->
 
 ### Description
 
-Sets the process whitelist for IPC shared memory in batches.
+Sets the process trustlists for IPC shared memory in batches.
 
 <!-- npu="A3" id2 -->
-This API applies to SuperPoD products in the Atlas A3 products.
+This API applies only to the supernode products in Atlas A3 products.
 <!-- end id2 -->
 
 ### Parameters
@@ -199,7 +199,7 @@ This API applies to SuperPoD products in the Atlas A3 products.
 | Parameter Name | Input/Output | Description |
 | --- | :---: | --- |
 | key | Input | Name used for inter-process sharing.<br>You must first call [aclrtIpcMemGetExportKey](#aclrtIpcMemGetExportKey) to obtain the shared memory key, and then pass it as an input parameter. |
-| serverPids | Input | Whitelist information array. For the type definition, see [aclrtServerPid](25-04_Structs.md#aclrtServerPid). |
+| serverPids | Input | Trustlist information array. For the type definition, see [aclrtServerPid](25-04_Structs.md#aclrtServerPid). |
 | num | Input | Size of the serverPids array. |
 
 ### Return Values
@@ -210,7 +210,7 @@ Returns 0 on success and other values on failure. For details, see [aclError](25
 <br>
 <br>
 
-<a id="aclrtIpcMemImportByKey"></a>
+<a class="method_anchor" id="aclrtIpcMemImportByKey"></a>
 
 ## aclrtIpcMemImportByKey
 
@@ -262,7 +262,7 @@ Returns 0 on success and other values on failure. For details, see [aclError](25
 <br>
 <br>
 
-<a id="aclrtIpcMemSetAttr"></a>
+<a class="method_anchor" id="aclrtIpcMemSetAttr"></a>
 
 ## aclrtIpcMemSetAttr
 
@@ -341,7 +341,7 @@ Returns 0 on success and other values on failure. For details, see [aclError](25
 <br>
 <br>
 
-<a id="aclrtIpcMemClose"></a>
+<a class="method_anchor" id="aclrtIpcMemClose"></a>
 
 ## aclrtIpcMemClose
 
@@ -375,7 +375,7 @@ aclError aclrtIpcMemClose(const char *key)
 
 Closes the IPC shared memory. This API must be called in the process that calls [aclrtIpcMemImportByKey](#aclrtIpcMemImportByKey) and in the process that calls [aclrtIpcMemGetExportKey](#aclrtIpcMemGetExportKey).
 
-For the same shared memory key, the process that calls [aclrtIpcMemGetExportKey](#aclrtIpcMemGetExportKey) can call [aclrtIpcMemClose](#aclrtIpcMemClose) only after all processes that call [aclrtIpcMemImportByKey](#aclrtIpcMemImportByKey) have called [aclrtIpcMemClose](#aclrtIpcMemClose). Otherwise, an exception may occur.
+For the same shared memory key, the process that calls [aclrtIpcMemGetExportKey](#aclrtIpcMemGetExportKey) can call aclrtIpcMemClose only after all processes that call [aclrtIpcMemImportByKey](#aclrtIpcMemImportByKey) have called aclrtIpcMemClose. Otherwise, an exception may occur.
 
 This API must be used together with other APIs to achieve memory sharing. For details, see the description of the [aclrtIpcMemGetExportKey](#aclrtIpcMemGetExportKey) API.
 

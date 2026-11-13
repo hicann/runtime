@@ -1,6 +1,6 @@
 # 11-01 Device Memory Allocation and Release
 
-<!-- md-trans-meta sourceCommit=unknown translatedAt=2026-10-22T02:04:51.021Z pushedAt=2026-10-23T06:55:39.106Z -->
+<!-- md-trans-meta sourceCommit=be113e8125a2a8c7ff54fc96bb9a5e053217e879 translatedAt=2026-11-06T11:19:19.773Z pushedAt=2026-11-09T08:26:10.938Z nl=2 -->
 
 This chapter describes the APIs for allocating and releasing device memory.
 
@@ -17,7 +17,7 @@ This chapter describes the APIs for allocating and releasing device memory.
 - [`aclError aclrtGetMemUsageInfo(int32_t deviceId, aclrtMemUsageInfo *memUsageInfo, size_t inputNum, size_t *outputNum)`](#aclrtGetMemUsageInfo): Queries the memory usage information of components, including the component name, current memory size, and peak memory size.
 - [`aclError aclrtCheckMemType(void** addrList, uint32_t size, uint32_t memType, uint32_t *checkResult, uint32_t reserve)`](#aclrtCheckMemType): Checks the device memory type.
 
-<a id="aclrtMalloc"></a>
+<a class="method_anchor" id="aclrtMalloc"></a>
 
 ## aclrtMalloc
 
@@ -94,10 +94,10 @@ Returns 0 on success and other values on failure. For details, see [aclError](25
 ### Constraints
 
 <!-- @ref: runtime/res/docs/zh/api_ref/11-01_device_memory_malloc_and_free_res.md#id14 -->
-- The memory allocated by this API is not initialized. Before using the memory, call [aclrtMemset](11-03_memory_copy_and_set.md#aclrtMemset) to initialize it and clear the random values in the memory.
+- The memory allocated by this API is not initialized. It is recommended that you call the [aclrtMemset](11-03_memory_copy_and_set.md#aclrtMemset) API to initialize the memory before using it, so as to clear the random data in the memory.
 - This API does not perform implicit device synchronization or stream synchronization internally. It returns the result immediately whether the memory allocation succeeds or fails.
 - For policy, only a single enum member can be configured. Configuring multiple enum members with bitwise OR is not supported.
-  
+
 - For the ACL\_MEM\_MALLOC\_HUGE\_FIRST\_P2P and ACL\_MEM\_MALLOC\_HUGE\_ONLY\_P2P memory allocation rules, use the aclrtMallocWithCfg API. Otherwise, performance issues may occur or memory may fail to be allocated.
 - Frequently calling aclrtMalloc to allocate memory and [aclrtFree](#aclrtFree) to free memory degrades performance. Pre-allocate or re-manage memory in advance to avoid frequent memory allocation and release.
 - If you need to allocate a large block of memory and divide and manage it by yourself, each memory segment must meet the following requirements, where len indicates the size of a memory segment and ALIGN\_UP\[len,k\] indicates alignment upwards to k bytes: \(\(len-1\)/k+1\)\*k:
@@ -138,7 +138,7 @@ Returns 0 on success and other values on failure. For details, see [aclError](25
 <br>
 <br>
 
-<a id="aclrtMallocAlign32"></a>
+<a class="method_anchor" id="aclrtMallocAlign32"></a>
 
 ## aclrtMallocAlign32
 
@@ -257,7 +257,7 @@ Returns 0 on success and other values on failure. For details, see [aclError](25
 <br>
 <br>
 
-<a id="aclrtMallocCached"></a>
+<a class="method_anchor" id="aclrtMallocCached"></a>
 
 ## aclrtMallocCached
 
@@ -313,7 +313,7 @@ For policy, only a single enum member can be configured, and configuring multipl
 <br>
 <br>
 
-<a id="aclrtMemFlush"></a>
+<a class="method_anchor" id="aclrtMemFlush"></a>
 
 ## aclrtMemFlush
 
@@ -364,7 +364,7 @@ Returns 0 on success and other values on failure. For details, see [aclError](25
 <br>
 <br>
 
-<a id="aclrtMemInvalidate"></a>
+<a class="method_anchor" id="aclrtMemInvalidate"></a>
 
 ## aclrtMemInvalidate
 
@@ -415,7 +415,7 @@ In this version, users do not need to handle cache coherence between the CPU and
 <br>
 <br>
 
-<a id="aclrtMallocWithCfg"></a>
+<a class="method_anchor" id="aclrtMallocWithCfg"></a>
 
 ## aclrtMallocWithCfg
 
@@ -479,7 +479,7 @@ The policy parameter supports configuring a single enum member or multiple enum 
 <br>
 <br>
 
-<a id="aclrtMallocForTaskScheduler"></a>
+<a class="method_anchor" id="aclrtMallocForTaskScheduler"></a>
 
 ## aclrtMallocForTaskScheduler
 
@@ -532,7 +532,7 @@ Returns 0 on success and other values on failure. For details, see [aclError](25
 <br>
 <br>
 
-<a id="aclrtFree"></a>
+<a class="method_anchor" id="aclrtFree"></a>
 
 ## aclrtFree
 
@@ -586,7 +586,7 @@ The [aclrtFree](#aclrtFree) API can only free the device memory allocated by Run
 <br>
 <br>
 
-<a id="aclrtFreeWithDevSync"></a>
+<a class="method_anchor" id="aclrtFreeWithDevSync"></a>
 
 ## aclrtFreeWithDevSync
 
@@ -636,7 +636,7 @@ Returns 0 on success and other values on failure. For details, see [aclError](25
 <br>
 <br>
 
-<a id="aclrtGetMemInfo"></a>
+<a class="method_anchor" id="aclrtGetMemInfo"></a>
 
 ## aclrtGetMemInfo
 
@@ -691,7 +691,7 @@ Returns 0 on success and other values on failure. For details, see [aclError](25
 <br>
 <br>
 
-<a id="aclrtGetMemUsageInfo"></a>
+<a class="method_anchor" id="aclrtGetMemUsageInfo"></a>
 
 ## aclrtGetMemUsageInfo
 
@@ -742,7 +742,7 @@ Returns 0 on success and other values on failure. For details, see [aclError](25
 <br>
 <br>
 
-<a id="aclrtCheckMemType"></a>
+<a class="method_anchor" id="aclrtCheckMemType"></a>
 
 ## aclrtCheckMemType
 

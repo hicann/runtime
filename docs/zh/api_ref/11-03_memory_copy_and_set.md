@@ -4,7 +4,7 @@
 
 - [`aclError aclrtMemcpy(void *dst, size_t destMax, const void *src, size_t count, aclrtMemcpyKind kind)`](#aclrtMemcpy)：实现内存复制。
 - [`aclError aclrtMemcpyAsync(void *dst, size_t destMax, const void *src, size_t count, aclrtMemcpyKind kind, aclrtStream stream)`](#aclrtMemcpyAsync)：实现内存复制。
-- [`aclError aclrtMemcpyAsyncWithCondition(void *dst, size_t destMax, const void *src, size_t count, aclrtMemcpyKind kind, aclrtStream stream)`](#aclrtMemcpyAsyncWithCondition_deprecated)：实现内存复制。（废弃接口，请使用aclrtMemcpyAsync接口）
+- [`aclError aclrtMemcpyAsyncWithCondition(void *dst, size_t destMax, const void *src, size_t count, aclrtMemcpyKind kind, aclrtStream stream)`](#aclrtMemcpyAsyncWithCondition)：实现内存复制。（废弃接口，请使用aclrtMemcpyAsync接口）
 - [`aclError aclrtMemcpyBatch(void **dsts, size_t *destMaxs, void **srcs, size_t *sizes, size_t numBatches, aclrtMemcpyBatchAttr *attrs, size_t *attrsIndexes, size_t numAttrs, size_t *failIndex)`](#aclrtMemcpyBatch)：实现批量内存复制。
 - [`aclError aclrtMemcpyBatchAsync(void **dsts, size_t *destMaxs, void **srcs, size_t *sizes, size_t numBatches, aclrtMemcpyBatchAttr *attrs, size_t *attrsIndexes, size_t numAttrs, size_t *failIndex, aclrtStream stream)`](#aclrtMemcpyBatchAsync)：实现批量内存复制。
 - [`aclError aclrtMemcpyBatchV2(void **dsts, size_t *destMaxs, void **srcs, size_t *sizes, size_t numBatches, aclrtMemcpyBatchAttr *attrs, size_t *attrsIndexes, size_t numAttrs)`](#aclrtMemcpyBatchV2)：实现批量内存复制。
@@ -20,7 +20,7 @@
 - [`aclError aclrtMemsetD32(void *ptr, size_t memSize, uint32_t value, size_t N)`](#aclrtMemsetD32)：初始化内存，将内存中的内容设置为指定的32位无符号整数值，按元素填充。
 - [`aclError aclrtMemsetD32Async(void *ptr, size_t memSize, uint32_t value, size_t N, aclrtStream stream)`](#aclrtMemsetD32Async)：初始化内存，将内存中的内容设置为指定的32位无符号整数值。异步接口。
 
-<a id="aclrtMemcpy"></a>
+<a class="method_anchor" id="aclrtMemcpy"></a>
 
 ## aclrtMemcpy
 
@@ -97,7 +97,7 @@ aclError aclrtMemcpy(void *dst, size_t destMax, const void *src, size_t count, a
 <br>
 <br>
 
-<a id="aclrtMemcpyAsync"></a>
+<a class="method_anchor" id="aclrtMemcpyAsync"></a>
 
 ## aclrtMemcpyAsync
 
@@ -165,7 +165,7 @@ aclError aclrtMemcpyAsync(void *dst, size_t destMax, const void *src, size_t cou
 <br>
 <br>
 
-<a id="aclrtMemcpyAsyncWithCondition_deprecated"></a>
+<a class="method_anchor" id="aclrtMemcpyAsyncWithCondition"></a>
 
 ## aclrtMemcpyAsyncWithCondition（废弃）
 
@@ -235,7 +235,7 @@ aclError aclrtMemcpyAsyncWithCondition(void *dst, size_t destMax, const void *sr
 <br>
 <br>
 
-<a id="aclrtMemcpyBatch"></a>
+<a class="method_anchor" id="aclrtMemcpyBatch"></a>
 
 ## aclrtMemcpyBatch
 
@@ -300,7 +300,7 @@ aclError aclrtMemcpyBatch(void **dsts, size_t *destMaxs, void **srcs, size_t *si
 <br>
 <br>
 
-<a id="aclrtMemcpyBatchAsync"></a>
+<a class="method_anchor" id="aclrtMemcpyBatchAsync"></a>
 
 ## aclrtMemcpyBatchAsync
 
@@ -366,7 +366,7 @@ aclError aclrtMemcpyBatchAsync(void **dsts, size_t *destMaxs, void **srcs, size_
 <br>
 <br>
 
-<a id="aclrtMemcpyBatchV2"></a>
+<a class="method_anchor" id="aclrtMemcpyBatchV2"></a>
 
 ## aclrtMemcpyBatchV2
 
@@ -432,7 +432,7 @@ aclError aclrtMemcpyBatchV2(void **dsts, size_t *destMaxs, void **srcs, size_t *
 <br>
 <br>
 
-<a id="aclrtMemcpyBatchAsyncV2"></a>
+<a class="method_anchor" id="aclrtMemcpyBatchAsyncV2"></a>
 
 ## aclrtMemcpyBatchAsyncV2
 
@@ -499,7 +499,7 @@ aclError aclrtMemcpyBatchAsyncV2(void **dsts, size_t *destMaxs, void **srcs, siz
 <br>
 <br>
 
-<a id="aclrtMemcpy2d"></a>
+<a class="method_anchor" id="aclrtMemcpy2d"></a>
 
 ## aclrtMemcpy2d
 
@@ -569,7 +569,7 @@ aclError aclrtMemcpy2d(void *dst, size_t dpitch, const void *src, size_t spitch,
 <br>
 <br>
 
-<a id="aclrtMemcpy2dAsync"></a>
+<a class="method_anchor" id="aclrtMemcpy2dAsync"></a>
 
 ## aclrtMemcpy2dAsync
 
@@ -647,7 +647,7 @@ aclError aclrtMemcpy2dAsync(void *dst, size_t dpitch, const void *src, size_t sp
 <br>
 <br>
 
-<a id="aclrtGetMemcpyDescSize"></a>
+<a class="method_anchor" id="aclrtGetMemcpyDescSize"></a>
 
 ## aclrtGetMemcpyDescSize
 
@@ -698,7 +698,7 @@ aclError aclrtGetMemcpyDescSize(aclrtMemcpyKind kind, size_t *descSize)
 <br>
 <br>
 
-<a id="aclrtSetMemcpyDesc"></a>
+<a class="method_anchor" id="aclrtSetMemcpyDesc"></a>
 
 ## aclrtSetMemcpyDesc
 
@@ -753,7 +753,7 @@ aclError aclrtSetMemcpyDesc(void *desc, aclrtMemcpyKind kind, void *srcAddr, voi
 <br>
 <br>
 
-<a id="aclrtMemcpyAsyncWithDesc"></a>
+<a class="method_anchor" id="aclrtMemcpyAsyncWithDesc"></a>
 
 ## aclrtMemcpyAsyncWithDesc
 
@@ -811,7 +811,7 @@ aclError aclrtMemcpyAsyncWithDesc(void *desc, aclrtMemcpyKind kind, aclrtStream 
 <br>
 <br>
 
-<a id="aclrtMemcpyAsyncWithOffset"></a>
+<a class="method_anchor" id="aclrtMemcpyAsyncWithOffset"></a>
 
 ## aclrtMemcpyAsyncWithOffset
 
@@ -866,7 +866,7 @@ aclError aclrtMemcpyAsyncWithOffset(void **dst, size_t destMax, size_t dstDataOf
 <br>
 <br>
 
-<a id="aclrtMemset"></a>
+<a class="method_anchor" id="aclrtMemset"></a>
 
 ## aclrtMemset
 
@@ -923,7 +923,7 @@ aclError aclrtMemset(void *devPtr, size_t maxCount, int32_t value, size_t count)
 <br>
 <br>
 
-<a id="aclrtMemsetAsync"></a>
+<a class="method_anchor" id="aclrtMemsetAsync"></a>
 
 ## aclrtMemsetAsync
 
@@ -977,7 +977,7 @@ aclError aclrtMemsetAsync(void *devPtr, size_t maxCount, int32_t value, size_t c
 <br>
 <br>
 
-<a id="aclrtMemsetD32"></a>
+<a class="method_anchor" id="aclrtMemsetD32"></a>
 
 ## aclrtMemsetD32
 
@@ -1034,7 +1034,7 @@ aclError aclrtMemsetD32(void *ptr, size_t memSize, uint32_t value, size_t N)
 <br>
 <br>
 
-<a id="aclrtMemsetD32Async"></a>
+<a class="method_anchor" id="aclrtMemsetD32Async"></a>
 
 ## aclrtMemsetD32Async
 

@@ -1,6 +1,6 @@
 # 16. Computing Power Group Query and Settings
 
-<!-- md-trans-meta sourceCommit=unknown translatedAt=2026-10-26T07:07:03.401Z pushedAt=2026-10-29T06:32:11.877Z nl=2 -->
+<!-- md-trans-meta sourceCommit=31ae292a88c1a38674abaa350b60eba724bab178 translatedAt=2026-11-06T11:27:33.786Z pushedAt=2026-11-09T09:20:26.188Z nl=2 -->
 
 This section describes CANN Runtime's computing power group APIs, which are used to set, query, and obtain information about AI Core groups.
 
@@ -11,7 +11,7 @@ This section describes CANN Runtime's computing power group APIs, which are used
 - [`aclrtGroupInfo *aclrtCreateGroupInfo()`](#aclrtCreateGroupInfo): Creates a contiguous memory block of the aclrtGroupInfo type based on the number of groups actually supported, and returns the corresponding pointer.
 - [`aclError aclrtDestroyGroupInfo(aclrtGroupInfo *groupInfo)`](#aclrtDestroyGroupInfo): Destroys data of the aclrtGroupInfo type and releases the associated memory.
 
-<a id="aclrtSetGroup"></a>
+<a class="method_anchor" id="aclrtSetGroup"></a>
 
 ## aclrtSetGroup
 
@@ -58,7 +58,7 @@ Specifies which group's computing power is used for the current computation. Thi
 <!-- npu="310p" id1 -->
 ### Constraints
 
-For Atlas inference products, this API can be called in open Control CPU mode, but cannot in Ascend EP mode.
+This API can be called only in the control CPU open form of Atlas inference products. It cannot be called in the Ascend EP form of Atlas inference products.
 
 **acl API call sequence**: Call [aclrtSetDevice](04_device_management.md#aclrtSetDevice) to specify the computing device --\> call [aclrtGetAllGroupInfo](#aclrtGetAllGroupInfo) to obtain all group information --\> call [aclrtGetGroupCount](#aclrtGetGroupCount) to obtain the number of groups --\> call [aclrtGetGroupInfoDetail](#aclrtGetGroupInfoDetail) to obtain the information of a specified group --\> call [aclrtSetGroup](#aclrtSetGroup) to set the group --\> execute other tasks --\> call [aclrtResetDevice](04_device_management.md#aclrtResetDevice) to release the computing device.
 
@@ -70,7 +70,7 @@ Before calling the acl API to set a computing power group, you must first call t
 <br>
 <br>
 
-<a id="aclrtGetGroupCount"></a>
+<a class="method_anchor" id="aclrtGetGroupCount"></a>
 
 ## aclrtGetGroupCount
 
@@ -117,7 +117,7 @@ Queries the number of groups available in the current context.
 <!-- npu="310p" id2 -->
 ### Constraints
 
-For Atlas inference products, this API can be called in open Control CPU mode, but cannot in Ascend EP mode.
+This API can be called only in the control CPU open form of Atlas inference products. It cannot be called in the Ascend EP form of Atlas inference products.
 
 **acl API call sequence**: Call [aclrtSetDevice](04_device_management.md#aclrtSetDevice) to specify the computing device --\> call [aclrtGetAllGroupInfo](#aclrtGetAllGroupInfo) to obtain all group information --\> call [aclrtGetGroupCount](#aclrtGetGroupCount) to obtain the number of groups --\> call [aclrtGetGroupInfoDetail](#aclrtGetGroupInfoDetail) to obtain the information of a specified group --\> call [aclrtSetGroup](#aclrtSetGroup) to set the group --\> execute other tasks --\> call [aclrtResetDevice](04_device_management.md#aclrtResetDevice) to release the computing device.
 
@@ -129,7 +129,7 @@ Before calling the acl API to set a computing power group, you must first call t
 <br>
 <br>
 
-<a id="aclrtGetAllGroupInfo"></a>
+<a class="method_anchor" id="aclrtGetAllGroupInfo"></a>
 
 ## aclrtGetAllGroupInfo
 
@@ -176,7 +176,7 @@ Queries the detailed computing power information of all groups available in the 
 <!-- npu="310p" id3 -->
 ### Constraints
 
-For Atlas inference products, this API can be called in open Control CPU mode, but cannot in Ascend EP mode.
+This API can be called only in the control CPU open form of Atlas inference products. It cannot be called in the Ascend EP form of Atlas inference products.
 
 **acl API call sequence**: Call [aclrtSetDevice](04_device_management.md#aclrtSetDevice) to specify the computing device --\> call [aclrtGetAllGroupInfo](#aclrtGetAllGroupInfo) to obtain all group information --\> call [aclrtGetGroupCount](#aclrtGetGroupCount) to obtain the number of groups --\> call [aclrtGetGroupInfoDetail](#aclrtGetGroupInfoDetail) to obtain the information of a specified group --\> call [aclrtSetGroup](#aclrtSetGroup) to set the group --\> execute other tasks --\> call [aclrtResetDevice](04_device_management.md#aclrtResetDevice) to release the computing device.
 
@@ -188,7 +188,7 @@ Before calling the acl API to set a computing power group, you must first call t
 <br>
 <br>
 
-<a id="aclrtGetGroupInfoDetail"></a>
+<a class="method_anchor" id="aclrtGetGroupInfoDetail"></a>
 
 ## aclrtGetGroupInfoDetail
 
@@ -240,7 +240,7 @@ Queries the computing power information of a specified group in the current cont
 <!-- npu="310p" id4 -->
 ### Constraints
 
-For Atlas inference products, this API can be called in open Control CPU mode, but cannot in Ascend EP mode.
+This API can be called only in the control CPU open form of Atlas inference products. It cannot be called in the Ascend EP form of Atlas inference products.
 
 **acl API call sequence**: Call [aclrtSetDevice](04_device_management.md#aclrtSetDevice) to specify the computing device --\> call [aclrtGetAllGroupInfo](#aclrtGetAllGroupInfo) to obtain all group information --\> call [aclrtGetGroupCount](#aclrtGetGroupCount) to obtain the number of groups --\> call [aclrtGetGroupInfoDetail](#aclrtGetGroupInfoDetail) to obtain the information of a specified group --\> call [aclrtSetGroup](#aclrtSetGroup) to set the group --\> execute other tasks --\> call [aclrtResetDevice](04_device_management.md#aclrtResetDevice) to release the computing device.
 
@@ -252,7 +252,7 @@ Before calling the acl API to set a computing power group, you must first call t
 <br>
 <br>
 
-<a id="aclrtCreateGroupInfo"></a>
+<a class="method_anchor" id="aclrtCreateGroupInfo"></a>
 
 ## aclrtCreateGroupInfo
 
@@ -299,14 +299,14 @@ Returns a pointer of the aclrtGroupInfo type, or nullptr if no group exists or g
 <!-- npu="310p" id5 -->
 ### Constraints
 
-For Atlas inference products, this API can be called in open Control CPU mode, but cannot in Ascend EP mode.
+This API can be called only in the control CPU open form of Atlas inference products. It cannot be called in the Ascend EP form of Atlas inference products.
 <!-- end id5 -->
 
 <br>
 <br>
 <br>
 
-<a id="aclrtDestroyGroupInfo"></a>
+<a class="method_anchor" id="aclrtDestroyGroupInfo"></a>
 
 ## aclrtDestroyGroupInfo
 
@@ -353,5 +353,5 @@ Destroys data of the aclrtGroupInfo type and releases the associated memory. Onl
 <!-- npu="310p" id6 -->
 ### Constraints
 
-For Atlas inference products, this API can be called in open Control CPU mode, but cannot in Ascend EP mode.
+This API can be called only in the control CPU open form of Atlas inference products. It cannot be called in the Ascend EP form of Atlas inference products.
 <!-- end id6 -->

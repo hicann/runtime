@@ -1,6 +1,6 @@
 # 11-10 Stream Ordered Memory Allocation
 
-<!-- md-trans-meta sourceCommit=unknown translatedAt=2026-10-20T01:55:00.919Z pushedAt=2026-10-29T01:32:45.652Z nl=2 -->
+<!-- md-trans-meta sourceCommit=24ca51095ac0bf93e3b457b14c8c227ba61d7798 translatedAt=2026-11-06T11:22:36.282Z pushedAt=2026-11-09T08:52:09.000Z nl=2 -->
 
 This section describes the Stream Ordered Memory Allocation (SOMA) APIs of CANN Runtime, which create and configure memory pools and asynchronously allocate and release memory.
 
@@ -218,7 +218,7 @@ int main() {
 
 ---
 
-<a id="aclrtMemPoolCreate"></a>
+<a class="method_anchor" id="aclrtMemPoolCreate"></a>
 
 ## aclrtMemPoolCreate
 
@@ -226,29 +226,7 @@ int main() {
 aclError aclrtMemPoolCreate(aclrtMemPool *memPool, const aclrtMemPoolProps *poolProps)
 ```
 
-**Note: This API is an experimental feature and may change in future releases. Do not use it in production.**
-
-### Applicable Products
-
-<!-- npu="950" id3039 -->
-- Ascend 950PR&950DT products: Not supported
-<!-- end id3039 -->
-<!-- npu="A3" id3040 -->
-- Atlas A3 products: Not supported
-<!-- end id3040 -->
-<!-- npu="910b" id3041 -->
-- Atlas A2 products: Supported
-<!-- end id3041 -->
-<!-- npu="310b" id3042 -->
-- Atlas 200I/500 A2 inference products: Not supported
-<!-- end id3042 -->
-<!-- npu="310p" id3043 -->
-- Atlas inference products: Not supported
-<!-- end id3043 -->
-<!-- npu="910" id3044 -->
-- Atlas training products: Not supported
-<!-- end id3044 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/11-10_ordered_stream_memory_allocation_res.md#id1 -->
+**Caution: This is a reserved API and is not supported yet.**
 
 ### Function
 
@@ -269,7 +247,7 @@ Creates a memory pool.
 <br>
 <br>
 
-<a id="aclrtMemPoolDestroy"></a>
+<a class="method_anchor" id="aclrtMemPoolDestroy"></a>
 
 ## aclrtMemPoolDestroy
 
@@ -277,29 +255,7 @@ Creates a memory pool.
 aclError aclrtMemPoolDestroy(const aclrtMemPool memPool)
 ```
 
-**Note: This API is an experimental feature and may change in future releases. Do not use it in production.**
-
-### Applicable Products
-
-<!-- npu="950" id1555 -->
-- Ascend 950PR&950DT products: Not supported
-<!-- end id1555 -->
-<!-- npu="A3" id1556 -->
-- Atlas A3 products: Not supported
-<!-- end id1556 -->
-<!-- npu="910b" id1557 -->
-- Atlas A2 products: Supported
-<!-- end id1557 -->
-<!-- npu="310b" id1558 -->
-- Atlas 200I/500 A2 inference products: Not supported
-<!-- end id1558 -->
-<!-- npu="310p" id1559 -->
-- Atlas inference products: Not supported
-<!-- end id1559 -->
-<!-- npu="910" id1560 -->
-- Atlas training products: Not supported
-<!-- end id1560 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/11-10_ordered_stream_memory_allocation_res.md#id2 -->
+**Caution: This is a reserved API and is not supported yet.**
 
 ### Function
 
@@ -319,7 +275,7 @@ Destroys the memory pool created by calling [aclrtMemPoolCreate](#aclrtMemPoolCr
 <br>
 <br>
 
-<a id="aclrtMemPoolSetAttr"></a>
+<a class="method_anchor" id="aclrtMemPoolSetAttr"></a>
 
 ## aclrtMemPoolSetAttr
 
@@ -327,29 +283,7 @@ Destroys the memory pool created by calling [aclrtMemPoolCreate](#aclrtMemPoolCr
 aclError aclrtMemPoolSetAttr(aclrtMemPool memPool, aclrtMemPoolAttr attr, void *value)
 ```
 
-**Note: This API is an experimental feature and may change in future releases. Do not use it in production.**
-
-### Applicable Products
-
-<!-- npu="950" id1485 -->
-- Ascend 950PR&950DT products: Not supported
-<!-- end id1485 -->
-<!-- npu="A3" id1486 -->
-- Atlas A3 products: Not supported
-<!-- end id1486 -->
-<!-- npu="910b" id1487 -->
-- Atlas A2 products: Supported
-<!-- end id1487 -->
-<!-- npu="310b" id1488 -->
-- Atlas 200I/500 A2 inference products: Not supported
-<!-- end id1488 -->
-<!-- npu="310p" id1489 -->
-- Atlas inference products: Not supported
-<!-- end id1489 -->
-<!-- npu="910" id1490 -->
-- Atlas training products: Not supported
-<!-- end id1490 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/11-10_ordered_stream_memory_allocation_res.md#id3 -->
+**Caution: This is a reserved API and is not supported yet.**
 
 ### Function
 
@@ -373,7 +307,7 @@ If the same attribute of the same memory pool is set multiple times, the last se
 <br>
 <br>
 
-<a id="aclrtMemPoolGetAttr"></a>
+<a class="method_anchor" id="aclrtMemPoolGetAttr"></a>
 
 ## aclrtMemPoolGetAttr
 
@@ -381,29 +315,7 @@ If the same attribute of the same memory pool is set multiple times, the last se
 aclError aclrtMemPoolGetAttr(aclrtMemPool memPool, aclrtMemPoolAttr attr, void *value)
 ```
 
-**Note: This API is an experimental feature and may change in future releases. Do not use it in production.**
-
-### Applicable Products
-
-<!-- npu="950" id1695 -->
-- Ascend 950PR&950DT products: Not supported
-<!-- end id1695 -->
-<!-- npu="A3" id1696 -->
-- Atlas A3 products: Unsupported
-<!-- end id1696 -->
-<!-- npu="910b" id1697 -->
-- Atlas A2 products: Supported
-<!-- end id1697 -->
-<!-- npu="310b" id1698 -->
-- Atlas 200I/500 A2 inference products: Unsupported
-<!-- end id1698 -->
-<!-- npu="310p" id1699 -->
-- Atlas inference products: Unsupported
-<!-- end id1699 -->
-<!-- npu="910" id1700 -->
-- Atlas training products: Unsupported
-<!-- end id1700 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/11-10_ordered_stream_memory_allocation_res.md#id4 -->
+**Caution: This is a reserved API and is not supported yet.**
 
 ### Function
 
@@ -427,7 +339,7 @@ If an attribute is not set via [aclrtMemPoolSetAttr](#aclrtMemPoolSetAttr), its 
 <br>
 <br>
 
-<a id="aclrtMemPoolMallocAsync"></a>
+<a class="method_anchor" id="aclrtMemPoolMallocAsync"></a>
 
 ## aclrtMemPoolMallocAsync
 
@@ -435,29 +347,7 @@ If an attribute is not set via [aclrtMemPoolSetAttr](#aclrtMemPoolSetAttr), its 
 aclError aclrtMemPoolMallocAsync(void **ptr, size_t size, aclrtMemPool memPool, aclrtStream stream)
 ```
 
-**Note: This API is an experimental feature and may change in future releases. Do not use it in production.**
-
-### Applicable Products
-
-<!-- npu="950" id1569 -->
-- Ascend 950PR&950DT products: Not supported
-<!-- end id1569 -->
-<!-- npu="A3" id1570 -->
-- Atlas A3 products: Not supported
-<!-- end id1570 -->
-<!-- npu="910b" id1571 -->
-- Atlas A2 products: Supported
-<!-- end id1571 -->
-<!-- npu="310b" id1572 -->
-- Atlas 200I/500 A2 inference products: Not supported
-<!-- end id1572 -->
-<!-- npu="310p" id1573 -->
-- Atlas inference products: Not supported
-<!-- end id1573 -->
-<!-- npu="910" id1574 -->
-- Atlas training products: Not supported
-<!-- end id1574 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/11-10_ordered_stream_memory_allocation_res.md#id5 -->
+**Caution: This is a reserved API and is not supported yet.**
 
 ### Function
 
@@ -480,7 +370,7 @@ Allocates memory of a specified size from the memory pool. This is an asynchrono
 <br>
 <br>
 
-<a id="aclrtMemPoolFreeAsync"></a>
+<a class="method_anchor" id="aclrtMemPoolFreeAsync"></a>
 
 ## aclrtMemPoolFreeAsync
 
@@ -488,29 +378,7 @@ Allocates memory of a specified size from the memory pool. This is an asynchrono
 aclError aclrtMemPoolFreeAsync(void *ptr, aclrtStream stream)
 ```
 
-**Note: This API is an experimental feature and may change in future releases. Do not use it in production.**
-
-### Applicable Products
-
-<!-- npu="950" id512 -->
-- Ascend 950PR&950DT products: Not supported
-<!-- end id512 -->
-<!-- npu="A3" id513 -->
-- Atlas A3 products: Not supported
-<!-- end id513 -->
-<!-- npu="910b" id514 -->
-- Atlas A2 products: Supported
-<!-- end id514 -->
-<!-- npu="310b" id515 -->
-- Atlas 200I/500 A2 inference products: Not supported
-<!-- end id515 -->
-<!-- npu="310p" id516 -->
-- Atlas inference products: Not supported
-<!-- end id516 -->
-<!-- npu="910" id517 -->
-- Atlas training products: Not supported
-<!-- end id517 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/11-10_ordered_stream_memory_allocation_res.md#id6 -->
+**Caution: This is a reserved API and is not supported yet.**
 
 ### Function
 
@@ -531,7 +399,7 @@ Destroys the memory allocated by calling [aclrtMemPoolMallocAsync](#aclrtMemPool
 <br>
 <br>
 
-<a id="aclrtMemPoolTrimTo"></a>
+<a class="method_anchor" id="aclrtMemPoolTrimTo"></a>
 
 ## aclrtMemPoolTrimTo
 
@@ -539,29 +407,7 @@ Destroys the memory allocated by calling [aclrtMemPoolMallocAsync](#aclrtMemPool
 aclError aclrtMemPoolTrimTo(aclrtMemPool memPool, size_t minBytesToKeep)
 ```
 
-**Note: This API is an experimental feature and may change in future releases. Do not use it in production.**
-
-### Applicable Products
-
-<!-- npu="950" id1030 -->
-- Ascend 950PR&950DT products: Not supported
-<!-- end id1030 -->
-<!-- npu="A3" id1031 -->
-- Atlas A3 products: Not supported
-<!-- end id1031 -->
-<!-- npu="910b" id1032 -->
-- Atlas A2 products: Supported
-<!-- end id1032 -->
-<!-- npu="310b" id1033 -->
-- Atlas 200I/500 A2 inference products: Not supported
-<!-- end id1033 -->
-<!-- npu="310p" id1034 -->
-- Atlas inference products: Not supported
-<!-- end id1034 -->
-<!-- npu="910" id1035 -->
-- Atlas training products: Not supported
-<!-- end id1035 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/11-10_ordered_stream_memory_allocation_res.md#id7 -->
+**Caution: This is a reserved API and is not supported yet.**
 
 ### Function
 

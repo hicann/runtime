@@ -1,55 +1,55 @@
 # 4. Device Management
 
-<!-- md-trans-meta sourceCommit=unknown translatedAt=2026-10-26T07:07:37.277Z pushedAt=2026-10-29T06:32:11.880Z nl=2 -->
+<!-- md-trans-meta sourceCommit=2b506c041939cfa1f457195b1850e3e6baccb633 translatedAt=2026-11-06T11:15:59.714Z pushedAt=2026-11-09T07:56:46.278Z nl=2 -->
 
-This section describes CANN Runtime's device management APIs, which are used for device setting, resetting, query, synchronization, and P2P access.
+This chapter describes the device management APIs of CANN Runtime, which are used for device setting, resetting, querying, synchronization, and P2P access.
 
-- [`aclError aclrtSetDevice(int32_t deviceId)`](#aclrtSetDevice): Specifies the device used for computation in the current thread. You can call aclrtSetDevice in different threads to specify the same device for computation.
-- [`aclError aclrtResetDevice(int32_t deviceId)`](#aclrtResetDevice): Resets the current device used for computation and releases resources on the device.
-- [`aclError aclrtResetDeviceForce(int32_t deviceId)`](#aclrtResetDeviceForce): Resets the current device used for computation and releases resources on the device.
-- [`aclError aclrtGetDevice(int32_t *deviceId)`](#aclrtGetDevice): Obtains the ID of the device currently in use.
-- [`aclError aclrtGetRunMode(aclrtRunMode *runMode)`](#aclrtGetRunMode): Obtains the operating mode of the current AI software stack.
-- [`aclError aclrtSetTsDevice(aclrtTsId tsId)`](#aclrtSetTsDevice): Sets the Task Schedule to be used for this computation.
-- [`aclError aclrtGetDeviceCount(uint32_t *count)`](#aclrtGetDeviceCount): Obtains the number of available devices.
-- [`aclError aclrtGetDeviceUtilizationRate(int32_t deviceId, aclrtUtilizationInfo *utilizationInfo)`](#aclrtGetDeviceUtilizationRate): Queries the utilization of Cube, Vector, and AI CPU on the device.
-- [`aclError aclrtQueryDeviceStatus(int32_t deviceId, aclrtDeviceStatus *deviceStatus)`](#aclrtQueryDeviceStatus): Queries whether the device status is normal and available or abnormal and unavailable.
-- [`const char *aclrtGetSocName()`](#aclrtGetSocName): Queries the AI processor version in the runtime environment.
-- [`aclError aclrtSetDeviceSatMode(aclrtFloatOverflowMode mode)`](#aclrtSetDeviceSatMode): Sets the output mode of floating-point computation results on the current device.
-- [`aclError aclrtGetDeviceSatMode(aclrtFloatOverflowMode *mode)`](#aclrtGetDeviceSatMode): Queries the output mode of floating-point computation results on the current device.
-- [`aclError aclrtDeviceCanAccessPeer(int32_t *canAccessPeer, int32_t deviceId, int32_t peerDeviceId)`](#aclrtDeviceCanAccessPeer): Queries whether data exchange is supported between devices.
-- [`aclError aclrtDeviceEnablePeerAccess(int32_t peerDeviceId, uint32_t flags)`](#aclrtDeviceEnablePeerAccess): Enables data exchange between the current device and the specified device. Enabling data exchange is device-level.
-- [`aclError aclrtDeviceDisablePeerAccess(int32_t peerDeviceId)`](#aclrtDeviceDisablePeerAccess): Disables data exchange between the current device and the specified device. Disabling data exchange is device-level.
-- [`aclError aclrtDevicePeerAccessStatus(int32_t deviceId, int32_t peerDeviceId, int32_t *status)`](#aclrtDevicePeerAccessStatus): Queries the data exchange status between two devices.
-- [`aclError aclrtGetOverflowStatus(void *outputAddr, size_t outputSize, aclrtStream stream)`](#aclrtGetOverflowStatus): Obtains the overflow status of tasks on all streams under the current device and copies the status value to the device memory requested by the user. This API is asynchronous.
-- [`aclError aclrtResetOverflowStatus(aclrtStream stream)`](#aclrtResetOverflowStatus): Clears the overflow status of tasks on all streams under the current device. This API is asynchronous.
-- [`aclError aclrtGetFloatOverflowStatus(void *outputAddr, uint64_t outputSize, aclrtStream stream)`](#aclrtGetFloatOverflowStatus): Gets the overflow status of floating-point operations on the current device and writes the status value to the device memory allocated by the user. This API is asynchronous.
-- [`aclError aclrtResetFloatOverflowStatus(aclrtStream stream)`](#aclrtResetFloatOverflowStatus): Clears the overflow status of floating-point operations on the current device. This API is asynchronous.
-- [`aclError aclrtNpuGetFloatOverFlowStatus(void *outputAddr, uint64_t outputSize, uint32_t checkMode, aclrtStream stream)`](#aclrtNpuGetFloatOverFlowStatus): Dispatches a task to get the overflow status of floating-point operations and writes the status value to the device memory allocated by the user. This API is asynchronous.
-- [`aclError aclrtNpuClearFloatOverFlowStatus(uint32_t checkMode, aclrtStream stream)`](#aclrtNpuClearFloatOverFlowStatus): Dispatches a task to clear the overflow status of floating-point operations. This API is asynchronous.
-- [`aclError aclrtSynchronizeDevice(void)`](#aclrtSynchronizeDevice): Blocks the current thread until the device corresponding to the context bound to the current thread completes computation.
-- [`aclError aclrtSynchronizeDeviceWithTimeout(int32_t timeout)`](#aclrtSynchronizeDeviceWithTimeout): Blocks the current thread until the device corresponding to the context bound to the current thread completes computation.
-- [`aclError aclrtGetDeviceInfo(uint32_t deviceId, aclrtDevAttr attr, int64_t *value)`](#aclrtGetDeviceInfo): Gets information about the specified device.
-- [`aclError aclrtDeviceGetStreamPriorityRange(int32_t *leastPriority, int32_t *greatestPriority)`](#aclrtDeviceGetStreamPriorityRange): Queries the lowest and highest stream priorities supported by the hardware.
+- [`aclError aclrtSetDevice(int32_t deviceId)`](#aclrtSetDevice): Specifies the Device used for computation in the current thread. You can call aclrtSetDevice in different threads to specify the same Device for computation.
+- [`aclError aclrtResetDevice(int32_t deviceId)`](#aclrtResetDevice): Resets the Device currently used for computation and releases resources on the Device.
+- [`aclError aclrtResetDeviceForce(int32_t deviceId)`](#aclrtResetDeviceForce): Resets the Device currently used for computation and releases resources on the Device.
+- [`aclError aclrtGetDevice(int32_t *deviceId)`](#aclrtGetDevice): Obtains the ID of the Device currently in use.
+- [`aclError aclrtGetRunMode(aclrtRunMode *runMode)`](#aclrtGetRunMode): Obtains the running mode of the current AI software stack.
+- [`aclError aclrtSetTsDevice(aclrtTsId tsId)`](#aclrtSetTsDevice): Sets the Task Schedule to be used for the current computation.
+- [`aclError aclrtGetDeviceCount(uint32_t *count)`](#aclrtGetDeviceCount): Obtains the number of available Devices.
+- [`aclError aclrtGetDeviceUtilizationRate(int32_t deviceId, aclrtUtilizationInfo *utilizationInfo)`](#aclrtGetDeviceUtilizationRate): Queries the utilization of Cube, Vector, AI CPU, and other components on the Device.
+- [`aclError aclrtQueryDeviceStatus(int32_t deviceId, aclrtDeviceStatus *deviceStatus)`](#aclrtQueryDeviceStatus): Queries whether the Device is in a normal usable state or an abnormal unusable state.
+- [`const char *aclrtGetSocName()`](#aclrtGetSocName): Queries the AI processor version of the current running environment.
+- [`aclError aclrtSetDeviceSatMode(aclrtFloatOverflowMode mode)`](#aclrtSetDeviceSatMode): Sets the output mode of floating-point computation results on the current Device.
+- [`aclError aclrtGetDeviceSatMode(aclrtFloatOverflowMode *mode)`](#aclrtGetDeviceSatMode): Queries the output mode of floating-point computation results on the current Device.
+- [`aclError aclrtDeviceCanAccessPeer(int32_t *canAccessPeer, int32_t deviceId, int32_t peerDeviceId)`](#aclrtDeviceCanAccessPeer): Queries whether data interaction is supported between Devices.
+- [`aclError aclrtDeviceEnablePeerAccess(int32_t peerDeviceId, uint32_t flags)`](#aclrtDeviceEnablePeerAccess): Enables data interaction between the current Device and the specified Device. Enabling data interaction is performed at the Device level.
+- [`aclError aclrtDeviceDisablePeerAccess(int32_t peerDeviceId)`](#aclrtDeviceDisablePeerAccess): Disables the data interaction function between the current Device and the specified Device. Disabling the data interaction function is performed at the Device level.
+- [`aclError aclrtDevicePeerAccessStatus(int32_t deviceId, int32_t peerDeviceId, int32_t *status)`](#aclrtDevicePeerAccessStatus): Queries the data interaction status between two Devices.
+- [`aclError aclrtGetOverflowStatus(void *outputAddr, size_t outputSize, aclrtStream stream)`](#aclrtGetOverflowStatus): Obtains the overflow status of tasks on all Streams under the current Device and copies the status value to the Device memory requested by the user. Asynchronous API.
+- [`aclError aclrtResetOverflowStatus(aclrtStream stream)`](#aclrtResetOverflowStatus): Clears the overflow status of tasks on all Streams under the current Device. Asynchronous API.
+- [`aclError aclrtGetFloatOverflowStatus(void *outputAddr, uint64_t outputSize, aclrtStream stream)`](#aclrtGetFloatOverflowStatus): Obtains the overflow status of floating-point operations on the current Device and writes the status value to the Device memory allocated by the user. Asynchronous API.
+- [`aclError aclrtResetFloatOverflowStatus(aclrtStream stream)`](#aclrtResetFloatOverflowStatus): Clears the overflow status of floating-point operations on the current Device. Asynchronous API.
+- [`aclError aclrtNpuGetFloatOverFlowStatus(void *outputAddr, uint64_t outputSize, uint32_t checkMode, aclrtStream stream)`](#aclrtNpuGetFloatOverFlowStatus): Dispatches a task to obtain the floating-point operation overflow status and writes the status value to the Device memory allocated by the user. Asynchronous API.
+- [`aclError aclrtNpuClearFloatOverFlowStatus(uint32_t checkMode, aclrtStream stream)`](#aclrtNpuClearFloatOverFlowStatus): Dispatches a task to clear the floating-point operation overflow status. Asynchronous API.
+- [`aclError aclrtSynchronizeDevice(void)`](#aclrtSynchronizeDevice): Blocks the current thread until the Device corresponding to the Context bound to the current thread completes computation.
+- [`aclError aclrtSynchronizeDeviceWithTimeout(int32_t timeout)`](#aclrtSynchronizeDeviceWithTimeout): Blocks the current thread until the Device corresponding to the Context bound to the current thread completes computation.
+- [`aclError aclrtGetDeviceInfo(uint32_t deviceId, aclrtDevAttr attr, int64_t *value)`](#aclrtGetDeviceInfo): Obtains information about the specified Device.
+- [`aclError aclrtDeviceGetStreamPriorityRange(int32_t *leastPriority, int32_t *greatestPriority)`](#aclrtDeviceGetStreamPriorityRange): Queries the lowest and highest Stream priorities supported by the hardware.
 - [`aclError aclrtGetDeviceCapability(int32_t deviceId, aclrtDevFeatureType devFeatureType, int32_t *value)`](#aclrtGetDeviceCapability): Queries the supported feature information.
-- [`aclError aclrtGetDevicesTopo(uint32_t deviceId, uint32_t otherDeviceId, uint64_t *value)`](#aclrtGetDevicesTopo): Gets the network topology relationship between two devices.
+- [`aclError aclrtGetDevicesTopo(uint32_t deviceId, uint32_t otherDeviceId, uint64_t *value)`](#aclrtGetDevicesTopo): Obtains the network topology relationship between two Devices.
 - [`aclError aclrtRegDeviceStateCallback(const char *regName, aclrtDeviceStateCallback callback, void *args)`](#aclrtRegDeviceStateCallback): Registers a device state callback function. Duplicate registration is not supported.
-- [`aclError aclrtGetLogicDevIdByUserDevId(const int32_t userDevid, int32_t *const logicDevId)`](#aclrtGetLogicDevIdByUserDevId): Obtains the corresponding logical device ID based on the user device ID.
-- [`aclError aclrtGetUserDevIdByLogicDevId(const int32_t logicDevId, int32_t *const userDevid)`](#aclrtGetUserDevIdByLogicDevId): Obtains the corresponding user device ID based on the logical device ID.
-- [`aclError aclrtGetLogicDevIdByPhyDevId(const int32_t phyDevId, int32_t *const logicDevId)`](#aclrtGetLogicDevIdByPhyDevId): Obtains the corresponding logical device ID based on the physical device ID.
-- [`aclError aclrtGetPhyDevIdByLogicDevId(const int32_t logicDevId, int32_t *const phyDevId)`](#aclrtGetPhyDevIdByLogicDevId): Obtains the corresponding physical device ID based on the logical device ID.
-- [`aclError aclrtGetUserDevIdByPhyDevId(const int32_t phyDevId, int32_t *const userDevId)`](#aclrtGetUserDevIdByPhyDevId): Obtains the corresponding user device ID based on the physical device ID.
-- [`aclError aclrtGetPhyDevIdByUserDevId(const int32_t userDevId, int32_t *const phyDevId)`](#aclrtGetPhyDevIdByUserDevId): Obtains the corresponding physical device ID based on the user device ID.
+- [`aclError aclrtGetLogicDevIdByUserDevId(const int32_t userDevid, int32_t *const logicDevId)`](#aclrtGetLogicDevIdByUserDevId): Obtains the logical device ID corresponding to a user device ID.
+- [`aclError aclrtGetUserDevIdByLogicDevId(const int32_t logicDevId, int32_t *const userDevid)`](#aclrtGetUserDevIdByLogicDevId): Obtains the user device ID corresponding to a logical device ID.
+- [`aclError aclrtGetLogicDevIdByPhyDevId(const int32_t phyDevId, int32_t *const logicDevId)`](#aclrtGetLogicDevIdByPhyDevId): Obtains the logical device ID corresponding to a physical device ID.
+- [`aclError aclrtGetPhyDevIdByLogicDevId(const int32_t logicDevId, int32_t *const phyDevId)`](#aclrtGetPhyDevIdByLogicDevId): Obtains the physical device ID corresponding to a logical device ID.
+- [`aclError aclrtGetUserDevIdByPhyDevId(const int32_t phyDevId, int32_t *const userDevId)`](#aclrtGetUserDevIdByPhyDevId): Obtains the user device ID corresponding to a physical device ID.
+- [`aclError aclrtGetPhyDevIdByUserDevId(const int32_t userDevId, int32_t *const phyDevId)`](#aclrtGetPhyDevIdByUserDevId): Obtains the physical device ID corresponding to a user device ID.
 - [`aclError aclrtDeviceGetUuid(int32_t deviceId, aclrtUuid *uuid)`](#aclrtDeviceGetUuid): Obtains the UUID (Universally Unique Identifier) of a device.
-- [`aclError aclrtDeviceGetPCIBusId(int32_t deviceId, char *pciBusId, int32_t len)`](#aclrtDeviceGetPCIBusId): Obtains the PCI bus ID of the corresponding device based on the device ID.
-- [`aclError aclrtDeviceGetByPCIBusId(const char *pciBusId, int32_t *deviceId)`](#aclrtDeviceGetByPCIBusId): Obtains the corresponding device ID based on the PCI bus ID.
+- [`aclError aclrtDeviceGetPCIBusId(int32_t deviceId, char *pciBusId, int32_t len)`](#aclrtDeviceGetPCIBusId): Obtains the PCI bus ID string of the corresponding device based on the device ID.
+- [`aclError aclrtDeviceGetByPCIBusId(const char *pciBusId, int32_t *deviceId)`](#aclrtDeviceGetByPCIBusId): Obtains the corresponding device ID based on the PCI bus ID string.
 - [`aclError aclrtDeviceGetBareTgid(int32_t *pid)`](#aclrtDeviceGetBareTgid): Obtains the process ID of the current process.
-- [`aclError aclrtDeviceGetHostAtomicCapabilities(uint32_t* capabilities, const aclrtAtomicOperation* operations, const uint32_t count, int32_t deviceId)`](#aclrtDeviceGetHostAtomicCapabilities): Queries the details of atomic operations supported between a specified device and the host.
-- [`aclError aclrtDeviceGetP2PAtomicCapabilities(uint32_t* capabilities, const aclrtAtomicOperation* operations, const uint32_t count, int32_t srcDeviceId, int32_t dstDeviceId)`](#aclrtDeviceGetP2PAtomicCapabilities): Queries the details of atomic operations supported between two devices within an AI Server. An AI Server is a general term for a server form composed of multiple devices.
-- [`aclError aclrtDeviceSetLimit(aclrtDeviceLimit limit, size_t value)`](#aclrtDeviceSetLimit): Sets the device resource limits of the current process, such as the SIMT operator stack size and the SIMT Printf buffer size.
-- [`aclError aclrtDeviceGetLimit(aclrtDeviceLimit limit, size_t *value)`](#aclrtDeviceGetLimit): Obtains the device resource limits of the current process.
-- [`aclError aclrtDeviceL2CacheFlush(void* rsv)`](#aclrtDeviceL2CacheFlush): Flushes the L2 Cache of the current device.
+- [`aclError aclrtDeviceGetHostAtomicCapabilities(uint32_t* capabilities, const aclrtAtomicOperation* operations, const uint32_t count, int32_t deviceId)`](#aclrtDeviceGetHostAtomicCapabilities): Queries the details of atomic operations supported between a specified Device and the Host.
+- [`aclError aclrtDeviceGetP2PAtomicCapabilities(uint32_t* capabilities, const aclrtAtomicOperation* operations, const uint32_t count, int32_t srcDeviceId, int32_t dstDeviceId)`](#aclrtDeviceGetP2PAtomicCapabilities): Queries the details of atomic operations supported between two Devices within an AI Server. An AI Server is a general term for a server form composed of multiple Devices.
+- [`aclError aclrtDeviceSetLimit(aclrtDeviceLimit limit, size_t value)`](#aclrtDeviceSetLimit): Sets the Device resource limits of the current process, such as the SIMT operator stack size and the SIMT Printf diagnostic space size.
+- [`aclError aclrtDeviceGetLimit(aclrtDeviceLimit limit, size_t *value)`](#aclrtDeviceGetLimit): Obtains the Device resource limits of the current process.
+- [`aclError aclrtDeviceL2CacheFlush(void* rsv)`](#aclrtDeviceL2CacheFlush): Flushes the L2 cache of the current Device.
 
-<a id="aclrtSetDevice"></a>
+<a class="method_anchor" id="aclrtSetDevice"></a>
 
 ## aclrtSetDevice
 
@@ -81,19 +81,19 @@ aclError aclrtSetDevice(int32_t deviceId)
 
 ### Function
 
-Sets the compute device in the current thread. aclrtSetDevice can be called to specify the same device for computation in different threads.
+Specifies the device used for computation in the current thread. In different threads, you can call aclrtSetDevice to specify the same device for computation.
 
 <!-- npu="950,A3,910b,910,310p,310b" id1 -->
-If there are multiple devices, aclrtSetDevice can be called in the process to switch to another device.
+In a multi-device scenario, you can call aclrtSetDevice within a process to switch to another device.
 <!-- end id1 -->
 
-Calling this API implicitly creates a default context that contains a default stream. In multiple threads of the same process, if aclrtSetDevice is called and the same device is specified for computation, these threads share the same default context.
+Calling this API implicitly creates a default context, which contains a default stream. If multiple threads in the same process call aclrtSetDevice and specify the same device for computation, these threads share the same default context.
 
 ### Parameters
 
 | Parameter | Input/Output | Description |
 | --- | :---: | --- |
-| deviceId | Input | device ID.<br>After you call [aclrtGetDeviceCount](#aclrtGetDeviceCount) to obtain the number of available devices, the value range of this device ID is [0, (number of available devices - 1)]. |
+| deviceId | Input | Device ID.<br>After you call [aclrtGetDeviceCount](#aclrtGetDeviceCount) to obtain the number of available devices, the value range of this device ID is [0, (Number of available devices - 1)]. |
 
 ### Return Values
 
@@ -101,13 +101,13 @@ Calling this API implicitly creates a default context that contains a default st
 
 ### Constraints
 
-After calling aclrtSetDevice to specify the device for computation, if the resources on the device are no longer needed, call [aclrtResetDevice](#aclrtResetDevice) or [aclrtResetDeviceForce](#aclrtResetDeviceForce) to release the device resources used by the current process in a timely manner. If the Reset API is not called, the device resources used by the current process are also released when the process exits:
+After you call aclrtSetDevice to specify the device for computation, if the resources on the device are no longer needed, call [aclrtResetDevice](#aclrtResetDevice) or [aclrtResetDeviceForce](#aclrtResetDeviceForce) to release the device resources used by the current process in a timely manner. If you do not call the reset API, the device resources used by the current process are also released when the process exits:
 
-- If [aclrtResetDevice](#aclrtResetDevice) is called to release device resources:
+- If you call [aclrtResetDevice](#aclrtResetDevice) to release the device resources:
 
-  The aclrtResetDevice API internally uses reference counting. It is recommended that aclrtResetDevice be used in pairs with [aclrtSetDevice](#aclrtSetDevice). Each call to aclrtSetDevice increments the reference count by one, and each call to aclrtResetDevice decrements the reference count by one. The resources on the device are actually released only when the reference count reaches 0.
+  aclrtResetDevice internally uses reference counting. It is recommended that aclrtResetDevice be used in pairs with [aclrtSetDevice](#aclrtSetDevice). Each call to aclrtSetDevice increments the reference count by one, and each call to aclrtResetDevice decrements the reference count by one. The resources on the device are actually released only when the reference count reaches zero.
 
-- If [aclrtResetDeviceForce](#aclrtResetDeviceForce) is called to release device resources:
+- If you call [aclrtResetDeviceForce](#aclrtResetDeviceForce) to release the device resources:
 
   aclrtResetDeviceForce can be used in pairs with aclrtSetDevice, or it can be used without pairing. If it is not used in pairs, after aclrtSetDevice is called once or multiple times for the same device in a process, calling aclrtResetDeviceForce only once releases the resources on the device.
 
@@ -115,7 +115,7 @@ After calling aclrtSetDevice to specify the device for computation, if the resou
 <br>
 <br>
 
-<a id="aclrtResetDevice"></a>
+<a class="method_anchor" id="aclrtResetDevice"></a>
 
 ## aclrtResetDevice
 
@@ -147,11 +147,11 @@ aclError aclrtResetDevice(int32_t deviceId)
 
 ### Function
 
-Resets the current compute device and releases the resources on the device. The resources to be released include the default context, default stream, and all streams created in the default context. If tasks in the default context or default stream have not yet completed, the system will wait for the tasks to finish before releasing the resources.
+Resets the Device on which the current computation is running and releases the resources on the Device. The released resources include the default Context, the default Stream, and all Streams created under the default Context. If tasks under the default Context or the default Stream have not completed, the system waits for the tasks to complete before releasing the resources.
 
-The aclrtResetDevice API internally uses reference counting. It is recommended that aclrtResetDevice be used in pairs with [aclrtSetDevice](#aclrtSetDevice). Each call to aclrtSetDevice increments the reference count by one, and each call to aclrtResetDevice decrements the reference count by one. The resources on the device are actually released only when the reference count reaches 0.
+The aclrtResetDevice API internally involves reference counting. It is recommended that the aclrtResetDevice API be used in pairs with the [aclrtSetDevice](#aclrtSetDevice) API. Each call to the aclrtSetDevice API increments the reference count by one, and each call to the aclrtResetDevice API decrements the reference count by one. The resources on the Device are actually released only when the reference count drops to zero.
 
-If aclrtSetDevice is called multiple times without calling aclrtResetDevice to release the device resources used by the current thread, the device resources used by the current process are also released when the process exits.
+If the aclrtSetDevice API is called multiple times without calling the aclrtResetDevice API to release the Device resources used by the current thread, the Device resources used by the current process are also released when the process exits.
 
 ### Parameters
 
@@ -165,15 +165,15 @@ If aclrtSetDevice is called multiple times without calling aclrtResetDevice to r
 
 ### Constraints
 
-If there are explicitly created contexts, streams, or events on the device to be reset, you are advised to follow the following calling sequence before resetting. Otherwise, exceptions may occur.
+If explicitly created Contexts, Streams, and Events exist on the Device to be reset, it is recommended that you follow the API call sequence below before resetting; otherwise, service exceptions may occur.
 
-**API call sequence**: Call [aclrtDestroyEvent](07_event_management.md#aclrtDestroyEvent) to release the event/Call [aclrtDestroyStream](06_stream_management.md#aclrtDestroyStream) to release the explicitly created stream**--\> Call [aclrtDestroyContext](05_context_management.md#aclrtDestroyContext) to release the explicitly created context--\>** Call aclrtResetDevice
+**API call sequence**: Call the [aclrtDestroyEvent](07_event_management.md#aclrtDestroyEvent) API to release Events / call the [aclrtDestroyStream](06_stream_management.md#aclrtDestroyStream) API to release explicitly created Streams**--\> **call the [aclrtDestroyContext](05_context_management.md#aclrtDestroyContext) API to release explicitly created Contexts**--\>**call the aclrtResetDevice API
 
 <br>
 <br>
 <br>
 
-<a id="aclrtResetDeviceForce"></a>
+<a class="method_anchor" id="aclrtResetDeviceForce"></a>
 
 ## aclrtResetDeviceForce
 
@@ -205,9 +205,9 @@ aclError aclrtResetDeviceForce(int32_t deviceId)
 
 ### Function
 
-Resets the current compute device and releases the resources on the device. The resources to be released include the default context, default stream, and all streams created in the default context. If tasks in the default context or default stream have not yet completed, the system will wait for the tasks to finish before releasing the resources.
+Resets the Device on which the current computation is running and releases the resources on the Device. The released resources include the default Context, the default Stream, and all Streams created under the default Context. If tasks under the default Context or the default Stream have not completed, the system waits for the tasks to complete before releasing the resources.
 
-aclrtResetDeviceForce can be used in pairs with aclrtSetDevice, or it can be used without pairing. If it is not used in pairs, after aclrtSetDevice is called once or multiple times for the same device in a process, calling aclrtResetDeviceForce only once releases the resources on the device.
+The aclrtResetDeviceForce API can be used in pair with the aclrtSetDevice API, or it can be used without pairing with the aclrtSetDevice API. If it is not used in pair, after aclrtSetDevice is called once or multiple times for the same Device in a process, calling aclrtResetDeviceForce only once releases the resources on the Device.
 
 ```text
 // Used in pair with the aclrtSetDevice API:
@@ -229,7 +229,7 @@ aclrtSetDevice(1) -> aclrtSetDevice(1) -> aclrtResetDeviceForce(1)
 
 ### Constraints
 
-- In a multi-thread scenario, if each thread calls the [aclrtSetDevice](#aclrtSetDevice) API and the aclrtResetDeviceForce API for the same device, as shown below, the aclrtResetDeviceForce API in thread 2 returns an error because the aclrtResetDeviceForce API in thread 1 has already released the resources of Device 1:
+- In a multi-thread scenario, if each thread calls the [aclrtSetDevice](#aclrtSetDevice) API and the aclrtResetDeviceForce API for the same Device as shown below, the aclrtResetDeviceForce API in thread 2 returns an error, because the aclrtResetDeviceForce API in thread 1 has already released the resources of Device 1:
 
     ```text
     Timeline ----------------------------------------------------------------------------->
@@ -237,7 +237,7 @@ aclrtSetDevice(1) -> aclrtSetDevice(1) -> aclrtResetDeviceForce(1)
     Thread 2: aclrtSetDevice(1)                                   aclrtResetDeviceForce(1)
     ```
 
-    In a multi-thread scenario, the correct approach is to call aclrtResetDeviceForce once at the end of thread execution to release the device resources, as shown below:
+    In a multi-thread scenario, the correct approach is to call aclrtResetDeviceForce once at the end of thread execution to release the Device resources, as shown below:
 
     ```text
     Timeline ----------------------------------------------------------------------------->
@@ -248,16 +248,16 @@ aclrtSetDevice(1) -> aclrtSetDevice(1) -> aclrtResetDeviceForce(1)
 - The [aclrtResetDevice](#aclrtResetDevice) API and the aclrtResetDeviceForce API can be used together. However, when they are mixed, if the call counts or call order of the two Reset APIs are incorrect, the API returns an error.
 
     ```text
-    # Correct approach when mixing:
-    # Both Reset APIs are paired with the Set API, and aclrtResetDeviceForce is called after aclrtResetDevice.
+    # Correct usage when mixed:
+    # Both Reset APIs are paired with the Set API respectively, and the aclrtResetDeviceForce API is called after the aclrtResetDevice API.
     aclrtSetDevice(1) -> aclrtResetDevice(1) -> aclrtSetDevice(1) -> aclrtResetDeviceForce(1)
     aclrtSetDevice(1) -> aclrtSetDevice(1) -> aclrtResetDevice(1) -> aclrtResetDeviceForce(1)
     
-    # Incorrect usage when mixing the two APIs:
-    # aclrtResetDevice internally uses reference counting. Each call to aclrtResetDevice decrements the reference count by 1. When the reference count reaches 0, the resources on the Device are actually released. Calling aclrtResetDevice or aclrtResetDeviceForce again after that returns an error.
+    # Incorrect usage when mixed:
+    # The aclrtResetDevice API involves reference counting. Each time the aclrtResetDevice API is called, the reference count decreases by 1. When the reference count reaches 0, the resources on the Device are actually released. Calling the aclrtResetDevice or aclrtResetDeviceForce API again at this point returns an error.
     aclrtSetDevice(1) -> aclrtSetDevice(1) -> aclrtResetDevice(1)-->aclrtResetDevice(1)-->aclrtResetDeviceForce(1)
     aclrtSetDevice(1) -> aclrtSetDevice(1) -> aclrtResetDevice(1)-->aclrtResetDeviceForce(1)-->aclrtResetDeviceForce(1)
-    # aclrtResetDeviceForce must be called after aclrtResetDevice; otherwise, the API returns an error.
+    # The aclrtResetDeviceForce API must be called after the aclrtResetDevice API; otherwise, the API returns an error.
     aclrtSetDevice(1) -> aclrtSetDevice(1) -> aclrtResetDeviceForce(1)-->aclrtResetDevice(1)
     ```
 
@@ -265,7 +265,7 @@ aclrtSetDevice(1) -> aclrtSetDevice(1) -> aclrtResetDeviceForce(1)
 <br>
 <br>
 
-<a id="aclrtGetDevice"></a>
+<a class="method_anchor" id="aclrtGetDevice"></a>
 
 ## aclrtGetDevice
 
@@ -297,13 +297,13 @@ aclError aclrtGetDevice(int32_t *deviceId)
 
 ### Function
 
-Obtains the ID of the device currently in use.
+Obtains the ID of the Device currently in use.
 
 ### Parameters
 
 | Parameter | Input/Output | Description |
 | --- | :---: | --- |
-| deviceId | Output | Pointer to the device ID. |
+| deviceId | Output | Pointer to the Device ID. |
 
 ### Return Values
 
@@ -311,13 +311,13 @@ Obtains the ID of the device currently in use.
 
 ### Constraints
 
-If no compute device is specified in advance (for example, by calling the [aclrtSetDevice](#aclrtSetDevice) API), an error is returned when the aclrtGetDevice API is called.
+If no compute device is specified in advance (for example, by calling [aclrtSetDevice](#aclrtSetDevice)), the aclrtGetDevice API returns an error.
 
 <br>
 <br>
 <br>
 
-<a id="aclrtGetRunMode"></a>
+<a class="method_anchor" id="aclrtGetRunMode"></a>
 
 ## aclrtGetRunMode
 
@@ -349,13 +349,13 @@ aclError aclrtGetRunMode(aclrtRunMode *runMode)
 
 ### Function
 
-Obtains the operating mode of the current AI software stack.
+Obtains the running mode of the current AI software stack.
 
 ### Parameters
 
 | Parameter | Input/Output | Description |
 | --- | :---: | --- |
-| runMode | Output | Pointer to the operating mode. For the type definition, see [aclrtRunMode](25-02_Enumerations.md#aclrtRunMode). |
+| runMode | Output | Pointer to the running mode. For the type definition, see [aclrtRunMode](25-02_Enumerations.md#aclrtRunMode). |
 
 ### Return Values
 
@@ -365,7 +365,7 @@ Obtains the operating mode of the current AI software stack.
 <br>
 <br>
 
-<a id="aclrtSetTsDevice"></a>
+<a class="method_anchor" id="aclrtSetTsDevice"></a>
 
 ## aclrtSetTsDevice
 
@@ -397,7 +397,7 @@ aclError aclrtSetTsDevice(aclrtTsId tsId)
 
 ### Function
 
-Sets the task schedule required for the computation.
+Sets the Task Schedule to be used for this computation.
 
 ### Parameters
 
@@ -409,8 +409,8 @@ aclrtTsId is defined as follows:
 
 ```c
 typedef enum aclrtTsId {
-    ACL_TS_ID_AICORE  = 0,  // Use AI CORE Task Schedule.
-    ACL_TS_ID_AIVECTOR = 1, // Use VECTOR Core Task Schedule.
+    ACL_TS_ID_AICORE  = 0,  // Use the AI CORE Task Schedule.
+    ACL_TS_ID_AIVECTOR = 1, // Use the VECTOR Core Task Schedule.
     ACL_TS_ID_RESERVED = 2, 
 } aclrtTsId;
 ```
@@ -423,7 +423,7 @@ typedef enum aclrtTsId {
 <br>
 <br>
 
-<a id="aclrtGetDeviceCount"></a>
+<a class="method_anchor" id="aclrtGetDeviceCount"></a>
 
 ## aclrtGetDeviceCount
 
@@ -471,7 +471,7 @@ Obtains the number of available devices.
 <br>
 <br>
 
-<a id="aclrtGetDeviceUtilizationRate"></a>
+<a class="method_anchor" id="aclrtGetDeviceUtilizationRate"></a>
 
 ## aclrtGetDeviceUtilizationRate
 
@@ -503,14 +503,14 @@ aclError aclrtGetDeviceUtilizationRate(int32_t deviceId, aclrtUtilizationInfo *u
 
 ### Function
 
-Queries the utilization of the Cube, Vector, AI CPU, and other components on a device.
+Queries the utilization of the Cube, Vector, AI CPU, and other units on a Device.
 
 ### Parameters
 
 | Parameter | Input/Output | Description |
 | --- | :---: | --- |
-| deviceId | Input | device ID.<br>After you call [aclrtGetDeviceCount](#aclrtGetDeviceCount) to obtain the number of available devices, the value range of this device ID is [0, (number of available devices - 1)]. |
-| utilizationInfo | Output | Pointer to the utilization information struct. For the type definition, see [aclrtUtilizationInfo](25-04_Structs.md#aclrtUtilizationInfo). |
+| deviceId | Input | Device ID.<br>After the user calls [aclrtGetDeviceCount](#aclrtGetDeviceCount) to obtain the number of available devices, the value range of this device ID is [0, (Number of available devices - 1)]. |
+| utilizationInfo | Output | Pointer to the utilization information struct. See [aclrtUtilizationInfo](25-04_Structs.md#aclrtUtilizationInfo) for the type definition. |
 
 ### Return Values
 
@@ -518,18 +518,18 @@ Queries the utilization of the Cube, Vector, AI CPU, and other components on a d
 
 ### Constraints
 
-- When this API queries Vector utilization, a query result of -1 indicates that Vector does not exist.
-- The current version does not support querying device memory utilization. If memory utilization is queried through this API, the returned utilization is -1.
-- When profiling is enabled, this API cannot be called to query the usage, and the returned value has no meaning.
+- When this API is used to query the Vector utilization, a result of -1 indicates that Vector does not exist.
+- The current version does not support querying the Device memory utilization. If the memory utilization is queried through this API, the returned utilization is -1.
+- When Profiling is enabled, this API cannot be used to query the utilization, and the return value of the API is meaningless.
 <!-- npu="910b,910,310p" id5 -->
-- For Ascend virtual instances, this API cannot be called to query the usage, and the returned value has no meaning.
+- In the Ascend virtualization instance scenario, this API cannot be used to query the utilization, and the return value of the API is meaningless.
 <!-- end id5 -->
 
 <br>
 <br>
 <br>
 
-<a id="aclrtQueryDeviceStatus"></a>
+<a class="method_anchor" id="aclrtQueryDeviceStatus"></a>
 
 ## aclrtQueryDeviceStatus
 
@@ -561,14 +561,14 @@ aclError aclrtQueryDeviceStatus(int32_t deviceId, aclrtDeviceStatus *deviceStatu
 
 ### Function
 
-Queries the status of a device (normal or abnormal).
+Queries whether the device status is normal and available, or abnormal and unavailable.
 
 ### Parameters
 
 | Parameter | Input/Output | Description |
 | --- | :---: | --- |
-| deviceId | Input | Device ID.<br>After you call [aclrtGetDeviceCount](#aclrtGetDeviceCount) to obtain the number of available devices, the value range of this device ID is [0, (number of available devices - 1)]. |
-| deviceStatus | Output | device status. See [aclrtDeviceStatus](25-02_Enumerations.md#aclrtDeviceStatus) for the type definition. |
+| deviceId | Input | Device ID.<br>After you call [aclrtGetDeviceCount](#aclrtGetDeviceCount) to obtain the number of available devices, the value range of this device ID is [0, (Number of available devices - 1)]. |
+| deviceStatus | Output | Device status. For details about the type definition, see [aclrtDeviceStatus](25-02_Enumerations.md#aclrtDeviceStatus). |
 
 ### Return Values
 
@@ -578,7 +578,7 @@ Queries the status of a device (normal or abnormal).
 <br>
 <br>
 
-<a id="aclrtGetSocName"></a>
+<a class="method_anchor" id="aclrtGetSocName"></a>
 
 ## aclrtGetSocName
 
@@ -610,23 +610,23 @@ const char *aclrtGetSocName()
 
 ### Function
 
-Queries the AI processor version of the runtime environment.
+Queries the AI processor version of the current running environment.
 
 ### Parameters
 
-None
+None.
 
 ### Return Values
 
 Returns a pointer to the AI processor version string.
 
-If the chip version fails to be obtained through this API, a null pointer is returned. If the number of devices in the runtime environment is greater than 1, the AI processor version name of Device 0 is always returned.
+If the chip version fails to be obtained through this API, a null pointer is returned. If the number of Devices in the running environment is greater than 1, the AI processor version name of Device 0 is always returned.
 
 <br>
 <br>
 <br>
 
-<a id="aclrtSetDeviceSatMode"></a>
+<a class="method_anchor" id="aclrtSetDeviceSatMode"></a>
 
 ## aclrtSetDeviceSatMode
 
@@ -658,9 +658,9 @@ aclError aclrtSetDeviceSatMode(aclrtFloatOverflowMode mode)
 
 ### Function
 
-Sets the output mode of the floating-point computation result of the device.
+Sets the output mode of floating-point computation results on the current Device.
 
-The setting takes effect only for the streams created on the device after this API call.
+After this API is called successfully, the configured mode takes effect on Streams newly created on the Device, but not on Streams created before the call.
 
 ### Parameters
 
@@ -676,7 +676,7 @@ The setting takes effect only for the streams created on the device after this A
 <br>
 <br>
 
-<a id="aclrtGetDeviceSatMode"></a>
+<a class="method_anchor" id="aclrtGetDeviceSatMode"></a>
 
 ## aclrtGetDeviceSatMode
 
@@ -708,13 +708,13 @@ aclError aclrtGetDeviceSatMode(aclrtFloatOverflowMode *mode)
 
 ### Function
 
-Queries the output mode of the floating-point computation result of the device.
+Queries the floating-point computation result output mode of the current Device.
 
 ### Parameters
 
 | Parameter | Input/Output | Description |
 | --- | :---: | --- |
-| mode | Output | Obtains the output mode of floating-point computation results. For the type definition, see [aclrtFloatOverflowMode](25-02_Enumerations.md#aclrtFloatOverflowMode). |
+| mode | Output | Obtains the floating-point computation result output mode. For the type definition, see [aclrtFloatOverflowMode](25-02_Enumerations.md#aclrtFloatOverflowMode). |
 
 ### Return Values
 
@@ -724,7 +724,7 @@ Queries the output mode of the floating-point computation result of the device.
 <br>
 <br>
 
-<a id="aclrtDeviceCanAccessPeer"></a>
+<a class="method_anchor" id="aclrtDeviceCanAccessPeer"></a>
 
 ## aclrtDeviceCanAccessPeer
 
@@ -756,15 +756,15 @@ aclError aclrtDeviceCanAccessPeer(int32_t *canAccessPeer, int32_t deviceId, int3
 
 ### Function
 
-Queries whether data exchange is supported between devices.
+Queries whether data interaction is supported between devices.
 
 ### Parameters
 
 | Parameter | Input/Output | Description |
 | --- | :---: | --- |
-| canAccessPeer | Output | Whether data exchange is supported. 1 indicates supported, and 0 indicates not supported. |
-| deviceId | Input | ID of the specified device. It cannot be the same as the peerDeviceId parameter value.<br>After you call [aclrtGetDeviceCount](#aclrtGetDeviceCount) to obtain the number of available devices, the value range of this device ID is [0, (number of available devices - 1)]. |
-| peerDeviceId | Input | ID of the specified device. It cannot be the same as the deviceId parameter value.<br>After you call [aclrtGetDeviceCount](#aclrtGetDeviceCount) to obtain the number of available devices, the value range of this device ID is [0, (number of available devices - 1)]. |
+| canAccessPeer | Output | Whether data interaction is supported. 1 indicates supported, and 0 indicates not supported. |
+| deviceId | Input | ID of the specified device, which cannot be the same as the peerDeviceId parameter value.<br>After you call the [aclrtGetDeviceCount](#aclrtGetDeviceCount) API to obtain the number of available devices, the value range of this device ID is [0, (Number of available devices - 1)]. |
+| peerDeviceId | Input | ID of the specified device, which cannot be the same as the deviceId parameter value.<br>After you call the [aclrtGetDeviceCount](#aclrtGetDeviceCount) API to obtain the number of available devices, the value range of this device ID is [0, (Number of available devices - 1)]. |
 
 ### Return Values
 
@@ -772,19 +772,19 @@ Queries whether data exchange is supported between devices.
 
 ### Constraints
 
-- This API supports data exchange only in physical machines and containers.
-- This API supports data exchange only between devices in the same PCIe switch. In AI Server applications, data exchange between devices is supported even when they reside in different PCIe switches.
-- This API supports data exchange only between devices in the same physical machine or container.
-- This API supports data exchange only between devices within the same process and across threads, and does not support data exchange between devices in different processes.
+- Only physical machine and container scenarios are supported.
+- Only data interaction between devices within the same PCIe switch is supported. In the AI Server scenario, data interaction between devices is also supported even across PCIe switches.
+- Only data interaction between devices within the same physical machine or container is supported.
+- Only data interaction between devices within the same process and between threads is supported. Data interaction between devices across different processes is not supported.
 <!-- npu="310p" id6 -->
-- For Atlas inference products in the open Control CPU mode, when the application runs on the Control CPU of a device, this API does not support data exchange between devices.
+- For Atlas inference products, in the Control CPU open form, when the application runs on the Control CPU of a device, this API does not support data interaction between devices.
 <!-- end id6 -->
 
 <br>
 <br>
 <br>
 
-<a id="aclrtDeviceEnablePeerAccess"></a>
+<a class="method_anchor" id="aclrtDeviceEnablePeerAccess"></a>
 
 ## aclrtDeviceEnablePeerAccess
 
@@ -816,17 +816,17 @@ aclError aclrtDeviceEnablePeerAccess(int32_t peerDeviceId, uint32_t flags)
 
 ### Function
 
-Enables data exchange between the current device and a specified device. Enabling data exchange is device-level.
+Enables data interaction between the current device and a specified device. Enabling data interaction is device-level.
 
-Data exchange enabled by calling this API is unidirectional. For example, if the current device ID is 0 and you call aclrtDeviceEnablePeerAccess to specify Device ID 1, only data exchange from Device 0 to Device 1 is possible. To enable data exchange from Device 1 to Device 0, switch the current device to Device 1 and call aclrtDeviceEnablePeerAccess again to specify device ID 0. Only then can data exchange from Device 1 to Device 0 be achieved.
+Enabling data interaction between devices by calling this API is unidirectional. For example, if the current device ID is 0 and you call aclrtDeviceEnablePeerAccess to specify device ID 1, only data interaction from device 0 to device 1 is available. To enable data interaction from device 1 to device 0, switch the current device to device 1 and call aclrtDeviceEnablePeerAccess again to specify device ID 0. Only then can data interaction from device 1 to device 0 be implemented.
 
-You can call [aclrtDeviceCanAccessPeer](#aclrtDeviceCanAccessPeer) in advance to query whether data exchange is possible between the current device and the specified device. After enabling data exchange between devices, you can call [aclrtDeviceDisablePeerAccess](#aclrtDeviceDisablePeerAccess) to disable it.
+You can call [aclrtDeviceCanAccessPeer](#aclrtDeviceCanAccessPeer) in advance to query whether data interaction is possible between the current device and a specified device. After enabling data interaction between devices, you can call [aclrtDeviceDisablePeerAccess](#aclrtDeviceDisablePeerAccess) to disable it.
 
 ### Parameters
 
 | Parameter | Input/Output | Description |
 | --- | :---: | --- |
-| peerDeviceId | Input | Specified device ID, which cannot be the same as the current device ID.<br>After you call [aclrtGetDeviceCount](#aclrtGetDeviceCount) to obtain the number of available devices, the value range of this device ID is [0, (number of available devices - 1)]. |
+| peerDeviceId | Input | Specified device ID, which cannot be the same as the current device ID.<br>After you call [aclrtGetDeviceCount](#aclrtGetDeviceCount) to obtain the number of available devices, the value range of this device ID is [0, (Number of available devices - 1)]. |
 | flags | Input | Reserved parameter, which must be set to 0. |
 
 ### Return Values
@@ -836,14 +836,14 @@ You can call [aclrtDeviceCanAccessPeer](#aclrtDeviceCanAccessPeer) in advance to
 <!-- npu="310p" id7 -->
 ### Constraints
 
-For Atlas inference products in the open Control CPU mode, when the application runs on the Control CPU of a device, this API does not support data exchange between devices.
+For Atlas inference products, in the Control CPU open form, when the application runs on the Control CPU of a device, this API does not support data interaction between devices.
 <!-- end id7 -->
 
 <br>
 <br>
 <br>
 
-<a id="aclrtDeviceDisablePeerAccess"></a>
+<a class="method_anchor" id="aclrtDeviceDisablePeerAccess"></a>
 
 ## aclrtDeviceDisablePeerAccess
 
@@ -875,15 +875,15 @@ aclError aclrtDeviceDisablePeerAccess(int32_t peerDeviceId)
 
 ### Function
 
-Disables the data exchange function between the current device and a specified device. Disabling the data exchange function is device-level.
+Disables the data interaction function between the current Device and a specified Device. Disabling the data interaction function is performed at the Device level.
 
-After the data exchange between the current device and a specified device is enabled by calling [aclrtDeviceEnablePeerAccess](#aclrtDeviceEnablePeerAccess), you can call aclrtDeviceDisablePeerAccess to disable the data exchange function.
+After calling [aclrtDeviceEnablePeerAccess](#aclrtDeviceEnablePeerAccess) to enable data interaction between the current Device and a specified Device, you can call aclrtDeviceDisablePeerAccess to disable the data interaction function.
 
 ### Parameters
 
 | Parameter | Input/Output | Description |
 | --- | :---: | --- |
-| peerDeviceId | Input | device ID, which cannot be the same as the ID of the current device.<br>After you call [aclrtGetDeviceCount](#aclrtGetDeviceCount) to obtain the number of available devices, the value range of this device ID is [0, (number of available devices - 1)]. |
+| peerDeviceId | Input | Device ID, which cannot be the same as the ID of the current Device.<br>After you call [aclrtGetDeviceCount](#aclrtGetDeviceCount) to obtain the number of available Devices, the value range of this Device ID is [0, (number of available Devices - 1)]. |
 
 ### Return Values
 
@@ -892,14 +892,14 @@ After the data exchange between the current device and a specified device is ena
 <!-- npu="310p" id8 -->
 ### Constraints
 
-For Atlas inference products in the open Control CPU mode, when the application runs on the Control CPU of a device, this API does not support data exchange between devices.
+For Atlas inference products, in the Control CPU open form, when the application runs on the Control CPU of a Device, this API does not support data interaction between Devices.
 <!-- end id8 -->
 
 <br>
 <br>
 <br>
 
-<a id="aclrtDevicePeerAccessStatus"></a>
+<a class="method_anchor" id="aclrtDevicePeerAccessStatus"></a>
 
 ## aclrtDevicePeerAccessStatus
 
@@ -931,15 +931,15 @@ aclError aclrtDevicePeerAccessStatus(int32_t deviceId, int32_t peerDeviceId, int
 
 ### Function
 
-Queries the data exchange status between two devices.
+Queries the data interaction status between two devices.
 
 ### Parameters
 
 | Parameter | Input/Output | Description |
 | --- | :---: | --- |
-| deviceId | Input | ID of the specified device.<br>After you call [aclrtGetDeviceCount](#aclrtGetDeviceCount) to obtain the number of available devices, the value range of this device ID is [0, (number of available devices - 1)]. |
-| peerDeviceId | Input | ID of the specified device.<br>After you call [aclrtGetDeviceCount](#aclrtGetDeviceCount) to obtain the number of available devices, the value range of this device ID is [0, (number of available devices - 1)]. |
-| status | Output | Device status. 0 indicates that data exchange is not enabled; 1 indicates that data exchange is enabled. |
+| deviceId | Input | ID of the specified device.<br>After you call [aclrtGetDeviceCount](#aclrtGetDeviceCount) to obtain the number of available devices, the value range of this device ID is [0, (Number of available devices - 1)]. |
+| peerDeviceId | Input | ID of the specified device.<br>After you call [aclrtGetDeviceCount](#aclrtGetDeviceCount) to obtain the number of available devices, the value range of this device ID is [0, (Number of available devices - 1)]. |
+| status | Output | Device status. 0 indicates that data interaction is not enabled; 1 indicates that data interaction is enabled. |
 
 ### Return Values
 
@@ -947,13 +947,13 @@ Queries the data exchange status between two devices.
 
 ### Constraints
 
-This API can only query the data exchange status of two devices whose IDs are within the value range. If the input device ID is out of the range [0, (number of available devices – 1)], the query result is 0 or the error code ACL_ERROR_RT_PARAM_INVALID is returned.
+This API can only be used to query the data interaction status of the devices corresponding to two device IDs within the value range. If the passed device ID is outside the range [0, (Number of available devices - 1)], the API returns 0 as the query result or directly returns the error code ACL_ERROR_RT_PARAM_INVALID.
 
 <br>
 <br>
 <br>
 
-<a id="aclrtGetOverflowStatus"></a>
+<a class="method_anchor" id="aclrtGetOverflowStatus"></a>
 
 ## aclrtGetOverflowStatus
 
@@ -985,15 +985,15 @@ aclError aclrtGetOverflowStatus(void *outputAddr, size_t outputSize, aclrtStream
 
 ### Function
 
-Queries the overflow status of tasks on all streams in the current device and copies the status value to the device memory that you requested. This API is asynchronous.
+Obtains the overflow status of tasks on all streams under the current device and copies the status value to the device memory allocated by you. Asynchronous API.
 
 ### Parameters
 
 | Parameter | Input/Output | Description |
 | --- | :---: | --- |
-| outputAddr | Input&Output | Device memory allocated by the user, for example, through the aclrtMalloc API. |
+| outputAddr | Input/Output | Device memory allocated by you, for example, allocated by calling aclrtMalloc. |
 | outputSize | Input | Size of the device memory to be allocated, in bytes. The fixed size is 64 bytes. |
-| stream | Input | Specified stream used to dispatch the overflow status query task. See [aclrtStream](25-05_Typedefs.md#aclrtStream) for the type definition. |
+| stream | Input | Stream used to dispatch the overflow status query task. For details about the type definition, see [aclrtStream](25-05_Typedefs.md#aclrtStream). |
 
 ### Return Values
 
@@ -1002,14 +1002,14 @@ Queries the overflow status of tasks on all streams in the current device and co
 <!-- npu="950,A3,910b" id9 -->
 ### Constraints
 
-For Ascend 950PR&950DT products, Atlas A3 products, and Atlas A2 products, the overflow status queried by this API is process-level.
+For Ascend 950PR&950DT products, Atlas A3 products, and Atlas A2 products, the overflow status obtained by calling this API is at the process level.
 <!-- end id9 -->
 
 <br>
 <br>
 <br>
 
-<a id="aclrtResetOverflowStatus"></a>
+<a class="method_anchor" id="aclrtResetOverflowStatus"></a>
 
 ## aclrtResetOverflowStatus
 
@@ -1041,13 +1041,13 @@ aclError aclrtResetOverflowStatus(aclrtStream stream)
 
 ### Function
 
-Resets the overflow status of tasks on all streams in the current device. This API is asynchronous.
+Clears the overflow status of tasks on all streams under the current Device. Asynchronous API.
 
 ### Parameters
 
 | Parameter | Input/Output | Description |
 | --- | :---: | --- |
-| stream | Input | Specifies the stream used to dispatch the overflow status reset task. See [aclrtStream](25-05_Typedefs.md#aclrtStream) for the type definition. |
+| stream | Input | Stream used to dispatch the overflow status reset task. For details about the type definition, see [aclrtStream](25-05_Typedefs.md#aclrtStream). |
 
 ### Return Values
 
@@ -1056,14 +1056,14 @@ Resets the overflow status of tasks on all streams in the current device. This A
 <!-- npu="950,A3,910b" id10 -->
 ### Constraints
 
-For Ascend 950PR&950DT products, Atlas A3 products, and Atlas A2 products, the overflow status cleared by this API is process-level.
+For Ascend 950PR&950DT products, Atlas A3 products, and Atlas A2 products, the overflow status cleared by this API is at the process level.
 <!-- end id10 -->
 
 <br>
 <br>
 <br>
 
-<a id="aclrtGetFloatOverflowStatus"></a>
+<a class="method_anchor" id="aclrtGetFloatOverflowStatus"></a>
 
 ## aclrtGetFloatOverflowStatus
 
@@ -1098,17 +1098,17 @@ aclError aclrtGetFloatOverflowStatus(void *outputAddr, uint64_t outputSize, aclr
 
 ### Function
 
-Obtains the floating-point operation overflow status on the current device and writes the status value to the device memory allocated by you.
+Obtains the overflow status of floating-point operations on the current Device and writes the status value to the Device memory allocated by the user.
 
-This API is asynchronous. A successful call only indicates that the task has been submitted, not that the task has been executed. After calling this API, call a synchronous API (for example, [aclrtSynchronizeStream](06_stream_management.md#aclrtSynchronizeStream)) to ensure that the task has been executed.
+This is an asynchronous API. A successful call only indicates that the task has been dispatched, not that the task has been executed. After calling this API, call a synchronous wait API (for example, [aclrtSynchronizeStream](06_stream_management.md#aclrtSynchronizeStream)) to ensure that the task has been executed.
 
 ### Parameters
 
 | Parameter | Input/Output | Description |
 | --- | :---: | --- |
-| outputAddr | Input&Output | As an input, outputAddr is a first-level address, which is the device memory address passed in by the user for storing the overflow status. The address cannot be empty, and the memory size cannot be smaller than outputSize.<br>As an output, this memory stores the overflow status data of floating-point operations on the current device. |
-| outputSize | Input | Size of the device memory pointed to by outputAddr, in bytes, fixed at 64 bytes. |
-| stream | Input | Specified stream used to dipatch the overflow status query task. See [aclrtStream](25-05_Typedefs.md#aclrtStream) for the type definition. |
+| outputAddr | Input/Output | As an input, outputAddr is a first-level address, which is the Device memory address passed by the user to store the overflow status. The address cannot be empty, and the memory size cannot be smaller than outputSize.<br>As an output, this memory stores the floating-point operation overflow status data on the current Device. |
+| outputSize | Input | Size of the Device memory pointed to by outputAddr, in bytes. The value is fixed at 64 bytes. |
+| stream | Input | Stream used to dispatch the overflow status query task. For details about the type definition, see [aclrtStream](25-05_Typedefs.md#aclrtStream). |
 
 ### Return Values
 
@@ -1118,13 +1118,13 @@ This API is asynchronous. A successful call only indicates that the task has bee
 
 - This API cannot be called during the stream capture phase.
 - This API can only be used in pair with [aclrtResetFloatOverflowStatus](#aclrtResetFloatOverflowStatus).
-- For Ascend 950PR&950DT products, Atlas A3 products, and Atlas A2 products, the overflow status queried by this API is process-level.
+- For Ascend 950PR&950DT products, Atlas A3 products, and Atlas A2 products, the overflow status obtained by this API is process-level.
 
 <br>
 <br>
 <br>
 
-<a id="aclrtResetFloatOverflowStatus"></a>
+<a class="method_anchor" id="aclrtResetFloatOverflowStatus"></a>
 
 ## aclrtResetFloatOverflowStatus
 
@@ -1159,15 +1159,15 @@ aclError aclrtResetFloatOverflowStatus(aclrtStream stream)
 
 ### Function
 
-Clears the overflow status of floating-point operations on the current device.
+Clears the overflow status of floating-point operations on the current Device.
 
-This API is asynchronous. A successful call only indicates that the task has been submitted, not that the task has been executed. After calling this API, call a synchronous API (for example, [aclrtSynchronizeStream](06_stream_management.md#aclrtSynchronizeStream)) to ensure that the task has been executed.
+This is an asynchronous API. A successful call only indicates that the task has been dispatched, not that the task has been executed. After calling this API, call a synchronous wait API (for example, [aclrtSynchronizeStream](06_stream_management.md#aclrtSynchronizeStream)) to ensure that the task has been executed.
 
 ### Parameters
 
 | Parameter | Input/Output | Description |
 | --- | :---: | --- |
-| stream | Input | Specifies the stream used to dispatch the overflow status clearing task. See [aclrtStream](25-05_Typedefs.md#aclrtStream) for the type definition. |
+| stream | Input | Stream used to dispatch the overflow status clearing task. For details about the type definition, see [aclrtStream](25-05_Typedefs.md#aclrtStream). |
 
 ### Return Values
 
@@ -1182,7 +1182,7 @@ This API is asynchronous. A successful call only indicates that the task has bee
 <br>
 <br>
 
-<a id="aclrtNpuGetFloatOverFlowStatus"></a>
+<a class="method_anchor" id="aclrtNpuGetFloatOverFlowStatus"></a>
 
 ## aclrtNpuGetFloatOverFlowStatus
 
@@ -1218,20 +1218,20 @@ aclError aclrtNpuGetFloatOverFlowStatus(
 
 ### Function
 
-Obtains the floating-point operation overflow status on the current device and writes the status value to the device memory allocated by you.
+Obtains the overflow status of floating-point operations on the current Device and writes the status value to the Device memory allocated by the user.
 
-The difference between this API and [aclrtGetFloatOverflowStatus](#aclrtGetFloatOverflowStatus) lies in the meaning of the outputAddr parameter: for aclrtGetFloatOverflowStatus, outputAddr is a first-level address that directly points to the actual output memory; for this API, outputAddr is a second-level address, and the device memory it points to stores the address of the actual output memory.
+The difference between this API and [aclrtGetFloatOverflowStatus](#aclrtGetFloatOverflowStatus) lies in the meaning of the outputAddr parameter: for aclrtGetFloatOverflowStatus, outputAddr is a first-level address that directly points to the actual output memory; for this API, outputAddr is a second-level address, and the Device memory it points to stores the address of the actual output memory.
 
-This API is asynchronous. A successful call only indicates that the task has been submitted, not that the task has been executed. After calling this API, call a synchronous API (for example, [aclrtSynchronizeStream](06_stream_management.md#aclrtSynchronizeStream)) to ensure that the task has been executed.
+This is an asynchronous API. A successful call only indicates that the task has been dispatched, not that the task has been executed. After calling this API, call a synchronous wait API (for example, [aclrtSynchronizeStream](06_stream_management.md#aclrtSynchronizeStream)) to ensure that the task has been executed.
 
 ### Parameters
 
 | Parameter | Input/Output | Description |
 | --- | :---: | --- |
-| outputAddr | Input&Output | As an input, outputAddr is a second-level address. The device memory it points to must store the address of the actual output memory, and the size of the actual output memory cannot be smaller than outputSize. outputAddr cannot be empty.<br>As an output, the actual output memory stores the queried floating-point operation overflow status data. |
+| outputAddr | Input/Output | As an input, outputAddr is a second-level address. The Device memory it points to must store the address of the actual output memory, and the size of the actual output memory cannot be smaller than outputSize. outputAddr cannot be empty.<br>As an output, the actual output memory stores the obtained floating-point operation overflow status data. |
 | outputSize | Input | Size of the actual output memory, in bytes, fixed at 64 bytes. |
-| checkMode | Input | Reserved parameter, currently fixed to 0. |
-| stream | Input | Specifies the stream used to submit the floating-point operation overflow status query task. See [aclrtStream](25-05_Typedefs.md#aclrtStream) for the type definition. |
+| checkMode | Input | Reserved parameter, which is currently fixed to 0. |
+| stream | Input | Stream used to dispatch the floating-point operation overflow status query task. For details about the type definition, see [aclrtStream](25-05_Typedefs.md#aclrtStream). |
 
 ### Return Values
 
@@ -1246,7 +1246,7 @@ This API is asynchronous. A successful call only indicates that the task has bee
 <br>
 <br>
 
-<a id="aclrtNpuClearFloatOverFlowStatus"></a>
+<a class="method_anchor" id="aclrtNpuClearFloatOverFlowStatus"></a>
 
 ## aclrtNpuClearFloatOverFlowStatus
 
@@ -1283,14 +1283,14 @@ aclError aclrtNpuClearFloatOverFlowStatus(uint32_t checkMode, aclrtStream stream
 
 Dispatches a task on the specified stream to clear the floating-point operation overflow status.
 
-This API is asynchronous. A successful call only indicates that the task has been submitted, not that the task has been executed. After calling this API, call a synchronous API (for example, [aclrtSynchronizeStream](06_stream_management.md#aclrtSynchronizeStream)) to ensure that the task has been executed.
+This is an asynchronous API. A successful call only indicates that the task has been dispatched, not that it has been executed. After calling this API, call a synchronous wait API (for example, [aclrtSynchronizeStream](06_stream_management.md#aclrtSynchronizeStream)) to ensure that the task has been executed.
 
 ### Parameters
 
 | Parameter | Input/Output | Description |
 | --- | :---: | --- |
-| checkMode | Input | Reserved parameter, currently fixed to 0. |
-| stream | Input | Stream used to dispatch the floating-point operation overflow status clearing task. For the type definition, see [aclrtStream](25-05_Typedefs.md#aclrtStream). |
+| checkMode | Input | Reserved parameter, which is currently fixed to 0. |
+| stream | Input | Stream on which the floating-point operation overflow status clearing task is dispatched. For details about the type definition, see [aclrtStream](25-05_Typedefs.md#aclrtStream). |
 
 ### Return Values
 
@@ -1304,7 +1304,7 @@ This API cannot be called during the stream capture phase.
 <br>
 <br>
 
-<a id="aclrtSynchronizeDevice"></a>
+<a class="method_anchor" id="aclrtSynchronizeDevice"></a>
 
 ## aclrtSynchronizeDevice
 
@@ -1336,11 +1336,11 @@ aclError aclrtSynchronizeDevice(void)
 
 ### Function
 
-Blocks the current thread until the device corresponding to the context bound to the current thread completes its computation.
+Blocks the current thread until the Device associated with the Context bound to the current thread completes its operations.
 
 ### Parameters
 
-None
+None.
 
 ### Return Values
 
@@ -1350,7 +1350,7 @@ None
 <br>
 <br>
 
-<a id="aclrtSynchronizeDeviceWithTimeout"></a>
+<a class="method_anchor" id="aclrtSynchronizeDeviceWithTimeout"></a>
 
 ## aclrtSynchronizeDeviceWithTimeout
 
@@ -1382,15 +1382,15 @@ aclError aclrtSynchronizeDeviceWithTimeout(int32_t timeout)
 
 ### Function
 
-Blocks the current thread until the device corresponding to the context bound to the current thread completes computation. This API is an enhancement of [aclrtSynchronizeDevice](#aclrtSynchronizeDevice) that allows you to set a timeout. When an application exception occurs, the API exits on its own based on the configured timeout, and returns ACL\_ERROR\_RT\_STREAM\_SYNC\_TIMEOUT upon timeout exit.
+Blocks the current thread until the Device corresponding to the Context bound to the current thread completes computation. This API is an enhanced version of [aclrtSynchronizeDevice](#aclrtSynchronizeDevice) that allows you to set a timeout, so that when the application is abnormal, it can exit on its own based on the configured timeout. When the API exits due to timeout, it returns ACL\_ERROR\_RT\_STREAM\_SYNC\_TIMEOUT.
 
-If there are multiple devices, this API is called to wait for the device corresponding to the current context.
+In a multi-Device scenario, calling this API waits for the Device corresponding to the current Context.
 
 ### Parameters
 
 | Parameter | Input/Output | Description |
 | --- | :---: | --- |
-| timeout | Input | Timeout of the API.<br>Valid values are as follows:<br><br>  - -1: Wait indefinitely, which is the same as the [aclrtSynchronizeDevice](#aclrtSynchronizeDevice) API.<br>  - >0: Configure a specific timeout in milliseconds. |
+| timeout | Input | Timeout of the API.<br>The value options are as follows:<br><br>  - -1: permanent waiting, which is the same as the [aclrtSynchronizeDevice](#aclrtSynchronizeDevice) API.<br>  - >0: specific timeout, in milliseconds. |
 
 ### Return Values
 
@@ -1400,7 +1400,7 @@ If there are multiple devices, this API is called to wait for the device corresp
 <br>
 <br>
 
-<a id="aclrtGetDeviceInfo"></a>
+<a class="method_anchor" id="aclrtGetDeviceInfo"></a>
 
 ## aclrtGetDeviceInfo
 
@@ -1438,8 +1438,8 @@ Obtains information about a specified device.
 
 | Parameter | Input/Output | Description |
 | --- | :---: | --- |
-| deviceId | Input | device ID.<br>After you call [aclrtGetDeviceCount](#aclrtGetDeviceCount) to obtain the number of available devices, the value range of this device ID is [0, (number of available devices - 1)]. |
-| attr | Input | Attribute. See [aclrtDevAttr](25-02_Enumerations.md#aclrtDevAttr) for the type definition. |
+| deviceId | Input | Device ID.<br>After the user calls [aclrtGetDeviceCount](#aclrtGetDeviceCount) to obtain the number of available devices, the value range of this device ID is [0, (Number of available devices - 1)]. |
+| attr | Input | Attribute. For details about the type definition, see [aclrtDevAttr](25-02_Enumerations.md#aclrtDevAttr). |
 | value | Output | Attribute value. |
 
 ### Return Values
@@ -1450,7 +1450,7 @@ Obtains information about a specified device.
 <br>
 <br>
 
-<a id="aclrtDeviceGetStreamPriorityRange"></a>
+<a class="method_anchor" id="aclrtDeviceGetStreamPriorityRange"></a>
 
 ## aclrtDeviceGetStreamPriorityRange
 
@@ -1482,14 +1482,14 @@ aclError aclrtDeviceGetStreamPriorityRange(int32_t *leastPriority, int32_t *grea
 
 ### Function
 
-Queries the minimum and maximum stream priorities supported by the hardware.
+Queries the lowest and highest stream priorities supported by the hardware.
 
 ### Parameters
 
 | Parameter | Input/Output | Description |
 | --- | :---: | --- |
-| leastPriority | Output | Minimum priority. |
-| greatestPriority | Output | Maximum priority. |
+| leastPriority | Output | Lowest priority. |
+| greatestPriority | Output | Highest priority. |
 
 ### Return Values
 
@@ -1499,7 +1499,7 @@ Queries the minimum and maximum stream priorities supported by the hardware.
 <br>
 <br>
 
-<a id="aclrtGetDeviceCapability"></a>
+<a class="method_anchor" id="aclrtGetDeviceCapability"></a>
 
 ## aclrtGetDeviceCapability
 
@@ -1537,8 +1537,8 @@ Queries the supported feature information.
 
 | Parameter | Input/Output | Description |
 | --- | :---: | --- |
-| deviceId | Input | device ID.<br>After you call [aclrtGetDeviceCount](#aclrtGetDeviceCount) to obtain the number of available devices, the value range of this device ID is [0, (number of available devices - 1)]. |
-| devFeatureType | Input | Feature type. For the type definition, see [aclrtDevFeatureType](25-02_Enumerations.md#aclrtDevFeatureType). |
+| deviceId | Input | Device ID.<br>After the user calls [aclrtGetDeviceCount](#aclrtGetDeviceCount) to obtain the number of available devices, the value range of this device ID is [0, (Number of available devices - 1)]. |
+| devFeatureType | Input | Feature type. For details about the type definition, see [aclrtDevFeatureType](25-02_Enumerations.md#aclrtDevFeatureType). |
 | value | Output | Whether the feature is supported.<br><br>  - ACL_DEV_FEATURE_NOT_SUPPORT(0): Not supported<br>  - ACL_DEV_FEATURE_SUPPORT(1): Supported<br><br><br>The related macro definitions are as follows:<br>#define ACL_DEV_FEATURE_SUPPORT  0x00000001<br>#define ACL_DEV_FEATURE_NOT_SUPPORT 0x00000000 |
 
 ### Return Values
@@ -1549,7 +1549,7 @@ Queries the supported feature information.
 <br>
 <br>
 
-<a id="aclrtGetDevicesTopo"></a>
+<a class="method_anchor" id="aclrtGetDevicesTopo"></a>
 
 ## aclrtGetDevicesTopo
 
@@ -1581,19 +1581,19 @@ aclError aclrtGetDevicesTopo(uint32_t deviceId, uint32_t otherDeviceId, uint64_t
 
 ### Function
 
-Obtains the network topology between two devices.
+Obtains the network topology relationship between two devices.
 
 <!-- npu="310b" id11 -->
-This API cannot be called in the Ascend RC mode of Atlas 200I/500 A2 inference products.
+This API cannot be called in the Ascend RC form of the Atlas 200I/500 A2 inference product.
 <!-- end id11 -->
 
 ### Parameters
 
 | Parameter | Input/Output | Description |
 | --- | :---: | --- |
-| deviceId | Input | ID of the specified device.<br>After you call [aclrtGetDeviceCount](#aclrtGetDeviceCount) to obtain the number of available devices, the value range of this device ID is [0, (number of available devices - 1)]. |
-| otherDeviceId | Input | ID of the specified device.<br>After you call [aclrtGetDeviceCount](#aclrtGetDeviceCount) to obtain the number of available devices, the value range of this device ID is [0, (number of available devices - 1)]. |
-| value | Output | Topology relationship between the two devices.<br><br>  - ACL_RT_DEVS_TOPOLOGY_HCCS: Connected through HCCS. HCCS (Huawei Cache Coherence System) is used for high-speed interconnection between CPUs and NPUs.<br>  - ACL_RT_DEVS_TOPOLOGY_PIX: Connected through the same PCIe Switch.<br>  - ACL_RT_DEVS_TOPOLOGY_PHB: Connected through a PCIe Host Bridge.<br>  - ACL_RT_DEVS_TOPOLOGY_SYS: Connected through SMP (Symmetric Multiprocessing). NUMA nodes are interconnected through SMP.<br>  - ACL_RT_DEVS_TOPOLOGY_SIO: On-chip interconnection, through which two dies are connected.<br>  - ACL_RT_DEVS_TOPOLOGY_HCCS_SW: Connected through an HCCS Switch.<br>  - ACL_RT_DEVS_TOPOLOGY_PIB: Reserved value, not supported yet.<br><br>The macro definitions are as follows:<br>#define ACL_RT_DEVS_TOPOLOGY_HCCS  0x01ULL<br>#define ACL_RT_DEVS_TOPOLOGY_PIX  0x02ULL<br>#define ACL_RT_DEVS_TOPOLOGY_PHB  0x08ULL<br>#define ACL_RT_DEVS_TOPOLOGY_SYS  0x10ULL<br>#define ACL_RT_DEVS_TOPOLOGY_SIO  0x20ULL<br>#define ACL_RT_DEVS_TOPOLOGY_HCCS_SW  0x40ULL<br>#define ACL_RT_DEVS_TOPOLOGY_PIB  0x04ULL |
+| deviceId | Input | ID of the specified device.<br>After you call [aclrtGetDeviceCount](#aclrtGetDeviceCount) to obtain the number of available devices, the value range of this device ID is [0, (Number of available devices - 1)]. |
+| otherDeviceId | Input | ID of the specified device.<br>After you call [aclrtGetDeviceCount](#aclrtGetDeviceCount) to obtain the number of available devices, the value range of this device ID is [0, (Number of available devices - 1)]. |
+| value | Output | Topology relationship between the two devices.<br><br>  - ACL_RT_DEVS_TOPOLOGY_HCCS: Connected through HCCS. HCCS (Huawei Cache Coherence System) is used for high-speed interconnection between CPUs and NPUs.<br>  - ACL_RT_DEVS_TOPOLOGY_PIX: Connected through the same PCIe switch.<br>  - ACL_RT_DEVS_TOPOLOGY_PHB: Connected through a PCIe host bridge.<br>  - ACL_RT_DEVS_TOPOLOGY_SYS: Connected through SMP (Symmetric Multiprocessing). NUMA nodes are interconnected through SMP.<br>  - ACL_RT_DEVS_TOPOLOGY_SIO: On-chip connection, through which two dies are connected.<br>  - ACL_RT_DEVS_TOPOLOGY_HCCS_SW: Connected through an HCCS switch.<br>  - ACL_RT_DEVS_TOPOLOGY_PIB: Reserved value, not supported yet.<br><br>The macro definitions are as follows:<br>#define ACL_RT_DEVS_TOPOLOGY_HCCS  0x01ULL<br>#define ACL_RT_DEVS_TOPOLOGY_PIX  0x02ULL<br>#define ACL_RT_DEVS_TOPOLOGY_PHB  0x08ULL<br>#define ACL_RT_DEVS_TOPOLOGY_SYS  0x10ULL<br>#define ACL_RT_DEVS_TOPOLOGY_SIO  0x20ULL<br>#define ACL_RT_DEVS_TOPOLOGY_HCCS_SW  0x40ULL<br>#define ACL_RT_DEVS_TOPOLOGY_PIB  0x04ULL |
 
 ### Return Values
 
@@ -1603,7 +1603,7 @@ This API cannot be called in the Ascend RC mode of Atlas 200I/500 A2 inference p
 <br>
 <br>
 
-<a id="aclrtRegDeviceStateCallback"></a>
+<a class="method_anchor" id="aclrtRegDeviceStateCallback"></a>
 
 ## aclrtRegDeviceStateCallback
 
@@ -1635,7 +1635,7 @@ aclError aclrtRegDeviceStateCallback(const char *regName, aclrtDeviceStateCallba
 
 ### Function
 
-Registers a callback function for device state changes. Duplicate registration is not supported.
+Registers a device state callback function. Duplicate registration is not supported.
 
 When the device state changes (for example, when APIs such as [aclrtSetDevice](#aclrtSetDevice) and [aclrtResetDevice](#aclrtResetDevice) are called), the Runtime module triggers the callback function.
 
@@ -1643,8 +1643,8 @@ When the device state changes (for example, when APIs such as [aclrtSetDevice](#
 
 | Parameter | Input/Output | Description |
 | --- | :---: | --- |
-| regName | Input | Registration name, which must be unique and cannot be empty. The input string must end with \0. |
-| callback | Input | Callback function. If callback is not NULL, the callback function is registered; if it is NULL, the callback function is unregistered.<br>The prototype of the callback function is as follows:<br>typedef enum {<br>   ACL_RT_DEVICE_STATE_SET_PRE = 0, // Before calling a set API (for example, aclrtSetDevice)<br>   ACL_RT_DEVICE_STATE_SET_POST,  // After calling a set API (for example, aclrtSetDevice)<br>   ACL_RT_DEVICE_STATE_RESET_PRE,  // Before calling a reset API (for example, aclrtResetDevice)<br>   ACL_RT_DEVICE_STATE_RESET_POST, // After calling a reset API (for example, aclrtResetDevice)<br>} aclrtDeviceState;<br>typedef void (*aclrtDeviceStateCallback)(uint32_t devId, aclrtDeviceState state, void* args); |
+| regName | Input | Registration name, which must be unique and cannot be empty. The input string must end with **\0**. |
+| callback | Input | Callback function. If callback is not NULL, the callback function is registered; if it is NULL, the callback function is unregistered.<br>The prototype of the callback function is as follows:<br>typedef enum {<br>   ACL_RT_DEVICE_STATE_SET_PRE = 0, // Before the set API (for example, aclrtSetDevice) is called.<br>   ACL_RT_DEVICE_STATE_SET_POST,  // After the set API (for example, aclrtSetDevice) is called.<br>   ACL_RT_DEVICE_STATE_RESET_PRE,  // Before the reset API (for example, aclrtResetDevice) is called.<br>   ACL_RT_DEVICE_STATE_RESET_POST, // After the reset API (for example, aclrtResetDevice) is called.<br>} aclrtDeviceState;<br>typedef void (*aclrtDeviceStateCallback)(uint32_t devId, aclrtDeviceState state, void* args); |
 | args | Input | Pointer to the user data to be passed to the callback function. |
 
 ### Return Values
@@ -1655,7 +1655,7 @@ When the device state changes (for example, when APIs such as [aclrtSetDevice](#
 <br>
 <br>
 
-<a id="aclrtGetLogicDevIdByUserDevId"></a>
+<a class="method_anchor" id="aclrtGetLogicDevIdByUserDevId"></a>
 
 ## aclrtGetLogicDevIdByUserDevId
 
@@ -1687,34 +1687,34 @@ aclError aclrtGetLogicDevIdByUserDevId(const int32_t userDevid, int32_t *const l
 
 ### Function
 
-Obtains the logical device ID based on the user device ID.
+Obtains the logical device ID corresponding to a user device ID.
 
 ### Parameters
 
 | Parameter | Input/Output | Description |
 | --- | :---: | --- |
-| userDevid | Input | User device ID. |
-| logicDevId | Output | Logical device ID. |
+| userDevid | Input | User Device ID. |
+| logicDevId | Output | Logical Device ID. |
 
 ### Return Values
 
 0: success; others: failure. For details, see [aclError](25-01_aclError.md#aclError).
 
-### Relationships Between the User Device ID, Logical Device ID, and Physical Device ID
+### Relationship Between User Device ID, Logical Device ID, and Physical Device ID
 
-If the `ASCEND\_RT\_VISIBLE\_DEVICES` environment variable is not set, the logical device ID is the same as the user device ID. In non-container scenarios, the physical device ID is the same as the logical device ID.
+If the ASCEND\_RT\_VISIBLE\_DEVICES environment variable is not set, the Logical Device ID is the same as the User Device ID. In a non-container scenario, the Physical Device ID is the same as the Logical Device ID.
 
-The following figure uses a container scenario with the ASCEND\_RT\_VISIBLE\_DEVICES environment variable set as an example to illustrate the relationship among the three: the device IDs set through the ASCEND\_RT\_VISIBLE\_DEVICES environment variable are **1** and 2, and the corresponding device index values are **0** and 1. The user device ID set through the [aclrtSetDevice](#aclrtSetDevice) API is **0**, that is, the corresponding device index value is **0**. Therefore, User Device ID = **0** corresponds to Logical Device ID = **1**, and Logical Device ID = **1** in the container is mapped to Physical Device ID = **6**. As a result, the physical device with ID 6 is ultimately used for computation.
+The following figure uses a container scenario with the ASCEND\_RT\_VISIBLE\_DEVICES environment variable set as an example to illustrate the relationship among the three: the Device IDs set through the ASCEND\_RT\_VISIBLE\_DEVICES environment variable are **1** and 2 in sequence, and the corresponding Device index values are **0** and 1 in sequence. The User Device ID set through the [aclrtSetDevice](#aclrtSetDevice) API is **0**, that is, the corresponding Device index value is **0**. Therefore, User Device ID = **0** corresponds to Logical Device ID = **1**. The Logical Device ID = **1** in the container is then mapped to Physical Device ID = **6**. As a result, the physical device with ID 6 is ultimately used for computation.
 
 ![](figures/UserDevId_LogicDevId_PhyDevId.png)
 
-For details about the ASCEND\_RT\_VISIBLE\_DEVICES environment, see [*Environment Variables*](../env_vars/ASCEND_RT_VISIBLE_DEVICES.md).
+For details about the ASCEND\_RT\_VISIBLE\_DEVICES environment, see [Environment Variable Reference](../env_vars/ASCEND_RT_VISIBLE_DEVICES.md).
 
 <br>
 <br>
 <br>
 
-<a id="aclrtGetUserDevIdByLogicDevId"></a>
+<a class="method_anchor" id="aclrtGetUserDevIdByLogicDevId"></a>
 
 ## aclrtGetUserDevIdByLogicDevId
 
@@ -1746,34 +1746,34 @@ aclError aclrtGetUserDevIdByLogicDevId(const int32_t logicDevId, int32_t *const 
 
 ### Function
 
-Obtains the user device ID based on the logical device ID.
+Obtains the User Device ID corresponding to a Logical Device ID.
 
 ### Parameters
 
 | Parameter | Input/Output | Description |
 | --- | :---: | --- |
-| logicDevId | Input | Logical device ID. |
-| userDevid | Output | User device ID. |
+| logicDevId | Input | Logical Device ID. |
+| userDevid | Output | User Device ID. |
 
 ### Return Values
 
 0: success; others: failure. For details, see [aclError](25-01_aclError.md#aclError).
 
-### Relationships Between the User Device ID, Logical Device ID, and Physical Device ID
+### Relationship Between User Device ID, Logical Device ID, and Physical Device ID
 
-If the `ASCEND\_RT\_VISIBLE\_DEVICES` environment variable is not set, the logical device ID is the same as the user device ID. In non-container scenarios, the physical device ID is the same as the logical device ID.
+If the ASCEND\_RT\_VISIBLE\_DEVICES environment variable is not set, the Logical Device ID is the same as the User Device ID. In a non-container scenario, the Physical Device ID is the same as the Logical Device ID.
 
-The following figure uses a container scenario with the ASCEND\_RT\_VISIBLE\_DEVICES environment variable set as an example to illustrate the relationship among the three: the device IDs set through the ASCEND\_RT\_VISIBLE\_DEVICES environment variable are **1** and 2, and the corresponding device index values are **0** and 1. The user device ID set through the [aclrtSetDevice](#aclrtSetDevice) API is **0**, that is, the corresponding device index value is **0**. Therefore, User Device ID = **0** corresponds to Logical Device ID = **1**, and Logical Device ID = **1** in the container is mapped to Physical Device ID = **6**. As a result, the physical device with ID 6 is ultimately used for computation.
+The following figure uses a container scenario with the ASCEND\_RT\_VISIBLE\_DEVICES environment variable set as an example to illustrate the relationship among the three IDs: the Device IDs set through the ASCEND\_RT\_VISIBLE\_DEVICES environment variable are **1** and 2 in sequence, and the corresponding Device index values are **0** and 1 in sequence. The User Device ID set through the [aclrtSetDevice](#aclrtSetDevice) API is **0**, that is, the corresponding Device index value is **0**. Therefore, User Device ID = **0** corresponds to Logical Device ID = **1**, and Logical Device ID = **1** in the container is mapped to Physical Device ID = **6**. As a result, the physical device with ID 6 is ultimately used for computation.
 
 ![](figures/UserDevId_LogicDevId_PhyDevId.png)
 
-For details about the ASCEND\_RT\_VISIBLE\_DEVICES environment, see [*Environment Variables*](../env_vars/ASCEND_RT_VISIBLE_DEVICES.md).
+For details about the ASCEND\_RT\_VISIBLE\_DEVICES environment, see [Environment Variable Reference](../env_vars/ASCEND_RT_VISIBLE_DEVICES.md).
 
 <br>
 <br>
 <br>
 
-<a id="aclrtGetLogicDevIdByPhyDevId"></a>
+<a class="method_anchor" id="aclrtGetLogicDevIdByPhyDevId"></a>
 
 ## aclrtGetLogicDevIdByPhyDevId
 
@@ -1805,7 +1805,7 @@ aclError aclrtGetLogicDevIdByPhyDevId(const int32_t phyDevId, int32_t *const log
 
 ### Function
 
-Obtains the logical device ID based on the physical device ID.
+Obtains the logical device ID corresponding to a physical device ID.
 
 **Note: The semantics of the logical device ID in this API are described incorrectly; it actually corresponds to the user device ID. To fix this issue, Runtime provides the [aclrtGetUserDevIdByPhyDevId](#aclrtGetUserDevIdByPhyDevId) API as a replacement.**
 
@@ -1820,21 +1820,21 @@ Obtains the logical device ID based on the physical device ID.
 
 0: success; others: failure. For details, see [aclError](25-01_aclError.md#aclError).
 
-### Relationships Between the User Device ID, Logical Device ID, and Physical Device ID
+### Relationship Among User Device ID, Logical Device ID, and Physical Device ID
 
-If the `ASCEND\_RT\_VISIBLE\_DEVICES` environment variable is not set, the logical device ID is the same as the user device ID. In non-container scenarios, the physical device ID is the same as the logical device ID.
+If the ASCEND\_RT\_VISIBLE\_DEVICES environment variable is not set, the Logical Device ID is the same as the User Device ID. In a non-container scenario, the Physical Device ID is the same as the Logical Device ID.
 
-The following figure uses a container scenario with the ASCEND\_RT\_VISIBLE\_DEVICES environment variable set as an example to illustrate the relationship among the three: the device IDs set through the ASCEND\_RT\_VISIBLE\_DEVICES environment variable are **1** and 2, and the corresponding device index values are **0** and 1. The user device ID set through the [aclrtSetDevice](#aclrtSetDevice) API is **0**, that is, the corresponding device index value is **0**. Therefore, User Device ID = **0** corresponds to Logical Device ID = **1**, and Logical Device ID = **1** in the container is mapped to Physical Device ID = **6**. As a result, the physical device with ID 6 is ultimately used for computation.
+The following figure uses a container scenario with the ASCEND\_RT\_VISIBLE\_DEVICES environment variable set as an example to illustrate the relationship among the three. The Device IDs set through the ASCEND\_RT\_VISIBLE\_DEVICES environment variable are **1** and 2, and the corresponding Device index values are **0** and 1. The User Device ID set through the [aclrtSetDevice](#aclrtSetDevice) API is **0**, which corresponds to Device index value **0**. Therefore, User Device ID = **0** corresponds to Logical Device ID = **1**, and Logical Device ID = **1** in the container is mapped to Physical Device ID = **6**. As a result, the physical device with ID 6 is ultimately used for computation.
 
 ![](figures/UserDevId_LogicDevId_PhyDevId.png)
 
-For details about the ASCEND\_RT\_VISIBLE\_DEVICES environment, see [*Environment Variables*](../env_vars/ASCEND_RT_VISIBLE_DEVICES.md).
+For details about the ASCEND\_RT\_VISIBLE\_DEVICES environment, see [Environment Variable Reference](../env_vars/ASCEND_RT_VISIBLE_DEVICES.md).
 
 <br>
 <br>
 <br>
 
-<a id="aclrtGetPhyDevIdByLogicDevId"></a>
+<a class="method_anchor" id="aclrtGetPhyDevIdByLogicDevId"></a>
 
 ## aclrtGetPhyDevIdByLogicDevId
 
@@ -1866,36 +1866,36 @@ aclError aclrtGetPhyDevIdByLogicDevId(const int32_t logicDevId, int32_t *const p
 
 ### Function
 
-Obtains the physical device ID based on the logical device ID.
+Obtains the corresponding Physical Device ID based on the Logical Device ID.
 
-**Note: The semantics of the logical device ID in this API are described incorrectly; it actually corresponds to the user device ID. To fix this issue, Runtime provides the [aclrtGetPhyDevIdByUserDevId](#aclrtGetPhyDevIdByUserDevId) API as a replacement.**
+**Note: The semantics of the Logical Device ID in this API are incorrectly described; it actually corresponds to the User Device ID. To fix this issue, Runtime provides the [aclrtGetPhyDevIdByUserDevId](#aclrtGetPhyDevIdByUserDevId) API as a replacement.**
 
 ### Parameters
 
 | Parameter | Input/Output | Description |
 | --- | :---: | --- |
-| logicDevId | Input | Logical device ID (the parameter is actually userDevId). |
-| phyDevId | Output | Physical device ID. |
+| logicDevId | Input | Logical Device ID (the parameter is actually userDevId). |
+| phyDevId | Output | Physical Device ID. |
 
 ### Return Values
 
 0: success; others: failure. For details, see [aclError](25-01_aclError.md#aclError).
 
-### Relationships Between the User Device ID, Logical Device ID, and Physical Device ID
+### Relationship Among User Device ID, Logical Device ID, and Physical Device ID
 
-If the `ASCEND\_RT\_VISIBLE\_DEVICES` environment variable is not set, the logical device ID is the same as the user device ID. In non-container scenarios, the physical device ID is the same as the logical device ID.
+If the ASCEND\_RT\_VISIBLE\_DEVICES environment variable is not set, the logical device ID is the same as the user device ID. In a non-container scenario, the physical device ID is the same as the logical device ID.
 
-The following figure uses a container scenario with the ASCEND\_RT\_VISIBLE\_DEVICES environment variable set as an example to illustrate the relationship among the three: the device IDs set through the ASCEND\_RT\_VISIBLE\_DEVICES environment variable are **1** and 2, and the corresponding device index values are **0** and 1. The user device ID set through the [aclrtSetDevice](#aclrtSetDevice) API is **0**, that is, the corresponding device index value is **0**. Therefore, User Device ID = **0** corresponds to Logical Device ID = **1**, and Logical Device ID = **1** in the container is mapped to Physical Device ID = **6**. As a result, the physical device with ID 6 is ultimately used for computation.
+The following figure uses a container scenario with the ASCEND\_RT\_VISIBLE\_DEVICES environment variable set as an example to illustrate the relationship among the three: the device IDs set through the ASCEND\_RT\_VISIBLE\_DEVICES environment variable are **1** and 2, and the corresponding device index values are **0** and 1. The user device ID set through the [aclrtSetDevice](#aclrtSetDevice) API is **0**, that is, the corresponding device index value is **0**. Therefore, user device ID = **0** corresponds to logical device ID = **1**, and logical device ID = **1** in the container is mapped to physical device ID = **6**. As a result, the physical device with ID 6 is ultimately used for computation.
 
 ![](figures/UserDevId_LogicDevId_PhyDevId.png)
 
-For details about the ASCEND\_RT\_VISIBLE\_DEVICES environment, see [*Environment Variables*](../env_vars/ASCEND_RT_VISIBLE_DEVICES.md).
+For details about the ASCEND\_RT\_VISIBLE\_DEVICES environment, see [Environment Variable Reference](../env_vars/ASCEND_RT_VISIBLE_DEVICES.md).
 
 <br>
 <br>
 <br>
 
-<a id="aclrtGetUserDevIdByPhyDevId"></a>
+<a class="method_anchor" id="aclrtGetUserDevIdByPhyDevId"></a>
 
 ## aclrtGetUserDevIdByPhyDevId
 
@@ -1927,34 +1927,34 @@ aclError aclrtGetUserDevIdByPhyDevId(const int32_t phyDevId, int32_t *const user
 
 ### Function
 
-Obtains the user device ID based on the physical device ID.
+Obtains the corresponding User Device ID based on the Physical Device ID.
 
 ### Parameters
 
 | Parameter | Input/Output | Description |
 | --- | :---: | --- |
-| phyDevId | Input | Physical device ID. |
-| userDevId | Output | User device ID. |
+| phyDevId | Input | Physical Device ID. |
+| userDevId | Output | User Device ID. |
 
 ### Return Values
 
 0: success; others: failure. For details, see [aclError](25-01_aclError.md#aclError).
 
-### Relationships Between the User Device ID, Logical Device ID, and Physical Device ID
+### Relationship Among User Device ID, Logical Device ID, and Physical Device ID
 
-If the `ASCEND\_RT\_VISIBLE\_DEVICES` environment variable is not set, the logical device ID is the same as the user device ID. In non-container scenarios, the physical device ID is the same as the logical device ID.
+If the ASCEND\_RT\_VISIBLE\_DEVICES environment variable is not set, the Logical Device ID is the same as the User Device ID. In a non-container scenario, the Physical Device ID is the same as the Logical Device ID.
 
-The following figure uses a container scenario with the ASCEND\_RT\_VISIBLE\_DEVICES environment variable set as an example to illustrate the relationship among the three: the device IDs set through the ASCEND\_RT\_VISIBLE\_DEVICES environment variable are **1** and 2, and the corresponding device index values are **0** and 1. The user device ID set through the [aclrtSetDevice](#aclrtSetDevice) API is **0**, that is, the corresponding device index value is **0**. Therefore, User Device ID = **0** corresponds to Logical Device ID = **1**, and Logical Device ID = **1** in the container is mapped to Physical Device ID = **6**. As a result, the physical device with ID 6 is ultimately used for computation.
+The following figure uses a container scenario with the ASCEND\_RT\_VISIBLE\_DEVICES environment variable set as an example to illustrate the relationship among the three: the Device IDs set through the ASCEND\_RT\_VISIBLE\_DEVICES environment variable are **1** and 2 in sequence, and the corresponding Device index values are **0** and 1 in sequence. The User Device ID set through the [aclrtSetDevice](#aclrtSetDevice) API is **0**, that is, the corresponding Device index value is **0**. Therefore, User Device ID = **0** corresponds to Logical Device ID = **1**, and Logical Device ID = **1** in the container is mapped to Physical Device ID = **6**. As a result, the physical device with ID 6 is ultimately used for computation.
 
 ![](figures/UserDevId_LogicDevId_PhyDevId.png)
 
-For details about the ASCEND\_RT\_VISIBLE\_DEVICES environment, see [*Environment Variables*](../env_vars/ASCEND_RT_VISIBLE_DEVICES.md).
+For details about the ASCEND\_RT\_VISIBLE\_DEVICES environment, see [Environment Variable Reference](../env_vars/ASCEND_RT_VISIBLE_DEVICES.md).
 
 <br>
 <br>
 <br>
 
-<a id="aclrtGetPhyDevIdByUserDevId"></a>
+<a class="method_anchor" id="aclrtGetPhyDevIdByUserDevId"></a>
 
 ## aclrtGetPhyDevIdByUserDevId
 
@@ -1986,34 +1986,34 @@ aclError aclrtGetPhyDevIdByUserDevId(const int32_t userDevId, int32_t *const phy
 
 ### Function
 
-Obtains the physical device ID based on the user device ID.
+Obtains the physical device ID corresponding to a user device ID.
 
 ### Parameters
 
 | Parameter | Input/Output | Description |
 | --- | :---: | --- |
-| userDevId | Input | User device ID. |
-| phyDevId | Output | Physical device ID. |
+| userDevId | Input | User Device ID. |
+| phyDevId | Output | Physical Device ID. |
 
 ### Return Values
 
 0: success; others: failure. For details, see [aclError](25-01_aclError.md#aclError).
 
-### Relationships Between the User Device ID, Logical Device ID, and Physical Device ID
+### Relationship Among User Device ID, Logical Device ID, and Physical Device ID
 
-If the `ASCEND\_RT\_VISIBLE\_DEVICES` environment variable is not set, the logical device ID is the same as the user device ID. In non-container scenarios, the physical device ID is the same as the logical device ID.
+If the ASCEND\_RT\_VISIBLE\_DEVICES environment variable is not set, the logical device ID is the same as the user device ID. In a non-container scenario, the physical device ID is the same as the logical device ID.
 
-The following figure uses a container scenario with the ASCEND\_RT\_VISIBLE\_DEVICES environment variable set as an example to illustrate the relationship among the three: the device IDs set through the ASCEND\_RT\_VISIBLE\_DEVICES environment variable are **1** and 2, and the corresponding device index values are **0** and 1. The user device ID set through the [aclrtSetDevice](#aclrtSetDevice) API is **0**, that is, the corresponding device index value is **0**. Therefore, User Device ID = **0** corresponds to Logical Device ID = **1**, and Logical Device ID = **1** in the container is mapped to Physical Device ID = **6**. As a result, the physical device with ID 6 is ultimately used for computation.
+The following figure uses a container scenario with the ASCEND\_RT\_VISIBLE\_DEVICES environment variable set as an example to illustrate the relationship among the three: the Device IDs set through the ASCEND\_RT\_VISIBLE\_DEVICES environment variable are **1** and 2 in sequence, and the corresponding Device index values are **0** and 1 in sequence. The user device ID set through the [aclrtSetDevice](#aclrtSetDevice) API is **0**, that is, the corresponding Device index value is **0**. Therefore, user device ID = **0** corresponds to logical device ID = **1**, and logical device ID = **1** in the container is mapped to physical device ID = **6**. As a result, the physical device with ID 6 is ultimately used for computation.
 
 ![](figures/UserDevId_LogicDevId_PhyDevId.png)
 
-For details about the ASCEND\_RT\_VISIBLE\_DEVICES environment, see [*Environment Variables*]().
+For details about the ASCEND\_RT\_VISIBLE\_DEVICES environment, see [Environment Variable Reference](../env_vars/ASCEND_RT_VISIBLE_DEVICES.md).
 
 <br>
 <br>
 <br>
 
-<a id="aclrtDeviceGetUuid"></a>
+<a class="method_anchor" id="aclrtDeviceGetUuid"></a>
 
 ## aclrtDeviceGetUuid
 
@@ -2045,14 +2045,14 @@ aclError aclrtDeviceGetUuid(int32_t deviceId, aclrtUuid *uuid)
 
 ### Function
 
-Obtains the universally unique identifier (UUID) of a device.
+Obtains the UUID (Universally Unique Identifier) of a Device.
 
 ### Parameters
 
 | Parameter | Input/Output | Description |
 | --- | :---: | --- |
-| deviceId | Input | Device ID, which must be consistent with the device ID in the [aclrtSetDevice](#aclrtSetDevice) API. |
-| uuid | Output | Unique identifier of the device. See [aclrtUuid](25-04_Structs.md#aclrtUuid) for the type definition. |
+| deviceId | Input | Device ID, which must be consistent with the Device ID in the [aclrtSetDevice](#aclrtSetDevice) API. |
+| uuid | Output | Unique identifier of the Device. For the type definition, see [aclrtUuid](25-04_Structs.md#aclrtUuid). |
 
 ### Return Values
 
@@ -2062,7 +2062,7 @@ Obtains the universally unique identifier (UUID) of a device.
 <br>
 <br>
 
-<a id="aclrtDeviceGetPCIBusId"></a>
+<a class="method_anchor" id="aclrtDeviceGetPCIBusId"></a>
 
 ## aclrtDeviceGetPCIBusId
 
@@ -2094,15 +2094,15 @@ aclError aclrtDeviceGetPCIBusId(int32_t deviceId, char *pciBusId, int32_t len)
 
 ### Function
 
-Obtains the PCI bus ID of the device corresponding to the device ID. The PCI bus ID is in the format `domain:bus:device.function`, for example, `0000:3d:00.0`.
+Obtains the PCI Bus ID string of the device corresponding to the Device ID. The PCI Bus ID string is in the format `domain:bus:device.function`, for example, `0000:3d:00.0`.
 
 ### Parameters
 
 | Parameter | Input/Output | Description |
 | --- | :---: | --- |
-| deviceId | Input | Device ID, which must be consistent with the device ID in the [aclrtSetDevice](#aclrtSetDevice) API. |
-| pciBusId | Output | Pointer to the buffer used to store the PCI bus ID. |
-| len | Input | Buffer length, which must be greater than or equal to 13. The PCI bus ID consists of 12 characters plus the trailing `\0`, totaling 13 bytes. |
+| deviceId | Input | Device ID, which must be consistent with the Device ID in the [aclrtSetDevice](#aclrtSetDevice) API. |
+| pciBusId | Output | Pointer to the buffer for storing the PCI Bus ID string. |
+| len | Input | Buffer length, which must be greater than or equal to 13. The PCI Bus ID string consists of 12 characters plus the trailing `\0`, totaling 13 bytes. |
 
 ### Return Values
 
@@ -2110,14 +2110,14 @@ Obtains the PCI bus ID of the device corresponding to the device ID. The PCI bus
 
 ### Constraints
 
-- In virtual machine or container scenarios, the returned value is the virtual PCI Bus ID allocated by the virtualization layer. It is only guaranteed to be valid in format and unique within the current virtual machine or container, and is not guaranteed to be consistent with the physical machine or unique across virtual machines.
-- For devices using non-PCIe interconnect topologies (such as Huawei Cache Coherence System and Unified Bus), this API returns `ACL_ERROR_RT_FEATURE_NOT_SUPPORT`.
+- In a virtual machine or container scenario, the returned value is the virtual PCI Bus ID allocated by the virtualization layer. It is only guaranteed to be valid in format and unique within the current virtual machine or container, and is not guaranteed to be consistent with the physical machine or unique across virtual machines.
+- For devices in non-PCIe interconnect forms (such as Huawei Cache Coherence System and Unified Bus), this API returns `ACL_ERROR_RT_FEATURE_NOT_SUPPORT`.
 
 <br>
 <br>
 <br>
 
-<a id="aclrtDeviceGetByPCIBusId"></a>
+<a class="method_anchor" id="aclrtDeviceGetByPCIBusId"></a>
 
 ## aclrtDeviceGetByPCIBusId
 
@@ -2149,14 +2149,14 @@ aclError aclrtDeviceGetByPCIBusId(const char *pciBusId, int32_t *deviceId)
 
 ### Function
 
-Obtains the corresponding device ID based on a PCI bus ID. The PCI bus ID is in the format `domain:bus:device.function`, for example, `0000:3d:00.0`.
+Obtains the Device ID corresponding to a PCI Bus ID string. The PCI Bus ID string is in the format `domain:bus:device.function`, for example, `0000:3d:00.0`.
 
 ### Parameters
 
 | Parameter | Input/Output | Description |
 | --- | :---: | --- |
-| pciBusId | Input | PCI bus ID in the format `domain:bus:device.function`. |
-| deviceId | Output | Device ID, which must be consistent with the device ID in the [aclrtSetDevice](#aclrtSetDevice) API. |
+| pciBusId | Input | PCI Bus ID string in the format `domain:bus:device.function`. |
+| deviceId | Output | Device ID, consistent with the Device ID in [aclrtSetDevice](#aclrtSetDevice). |
 
 ### Return Values
 
@@ -2164,13 +2164,13 @@ Obtains the corresponding device ID based on a PCI bus ID. The PCI bus ID is in 
 
 ### Constraints
 
-- For devices using non-PCIe interconnect topologies (such as Huawei Cache Coherence System and Unified Bus), this API returns `ACL_ERROR_RT_FEATURE_NOT_SUPPORT`.
+- For devices in non-PCIe interconnect topologies (such as Huawei Cache Coherence System and Unified Bus), this API returns `ACL_ERROR_RT_FEATURE_NOT_SUPPORT`.
 
 <br>
 <br>
 <br>
 
-<a id="aclrtDeviceGetBareTgid"></a>
+<a class="method_anchor" id="aclrtDeviceGetBareTgid"></a>
 
 ## aclrtDeviceGetBareTgid
 
@@ -2202,9 +2202,9 @@ aclError aclrtDeviceGetBareTgid(int32_t *pid)
 
 ### Function
 
-Obtains the ID of the current process.
+Obtains the process ID of the current process.
 
-Internally, this API has been adapted to both physical machine and virtual machine scenarios when obtaining the process ID. You only need to call this API to obtain the process ID and then configure other APIs to use it (for the workflow, see [aclrtMemExportToShareableHandle](11-04_virtual_memory_management.md#aclrtMemExportToShareableHandle)) to achieve physical memory sharing. If you do not call this API and obtain the process ID on your own, subsequent use of the process ID may be abnormal.
+This API has adapted to both physical machine and virtual machine scenarios when obtaining the process ID. You only need to call this API to obtain the process ID and then configure it for use by other APIs (for the usage flow, see [aclrtMemExportToShareableHandle](11-04_virtual_memory_management.md#aclrtMemExportToShareableHandle)) to achieve physical memory sharing. If you do not call this API and obtain the process ID on your own, subsequent use of the process ID may be abnormal.
 
 ### Parameters
 
@@ -2220,7 +2220,7 @@ Internally, this API has been adapted to both physical machine and virtual machi
 <br>
 <br>
 
-<a id="aclrtDeviceGetHostAtomicCapabilities"></a>
+<a class="method_anchor" id="aclrtDeviceGetHostAtomicCapabilities"></a>
 
 ## aclrtDeviceGetHostAtomicCapabilities
 
@@ -2252,16 +2252,16 @@ aclError aclrtDeviceGetHostAtomicCapabilities(uint32_t* capabilities, const aclr
 
 ### Function
 
-Queries the details of the atomic operations supported between a specified device and the host.
+Queries the details of atomic operations supported between a specified device and the host.
 
 ### Parameters
 
 | Parameter | Input/Output | Description |
 | --- | :---: | --- |
-| capabilities | Output | Array of atomic operation capability masks, with the same length as the count parameter. Each element in the array is a bit mask, where each bit indicates whether the atomic operation is supported for a specific data type: 1 indicates supported, and 0 indicates not supported. See [aclrtAtomicOperationCapability](25-02_Enumerations.md#aclrtAtomicOperationCapability) for the type definition. |
-| operations | Input | Array of atomic operations to query, with the same length as the count parameter. See [aclrtAtomicOperation](25-02_Enumerations.md#aclrtAtomicOperation) for the type definition. |
-| count | Input | Number of atomic operations to query. Its value must match the length of the capabilities and operations arrays; otherwise, undefined behavior may occur. |
-| deviceId | Input | Device ID.<br>After you call [aclrtGetDeviceCount](#aclrtGetDeviceCount) to obtain the number of available devices, the value range of this device ID is [0, (number of available devices - 1)]. |
+| capabilities | Output | Array of atomic operation support capabilities, with a length equal to the value of count. Each element in the array is a bit mask, where each bit indicates whether an atomic operation on a specific data type is supported: 1 indicates supported and 0 indicates not supported. See [aclrtAtomicOperationCapability](25-02_Enumerations.md#aclrtAtomicOperationCapability) for the type definition. |
+| operations | Input | Array of atomic operations to query, with a length equal to the value of count. See [aclrtAtomicOperation](25-02_Enumerations.md#aclrtAtomicOperation) for the type definition. |
+| count | Input | Number of atomic operations to query. Its value must be consistent with the lengths of the capabilities and operations arrays; otherwise, undefined behavior may occur. |
+| deviceId | Input | Device ID.<br>After you call [aclrtGetDeviceCount](#aclrtGetDeviceCount) to obtain the number of available devices, the value range of this device ID is [0, (Number of available devices - 1)]. |
 
 ### Return Values
 
@@ -2271,7 +2271,7 @@ Queries the details of the atomic operations supported between a specified devic
 <br>
 <br>
 
-<a id="aclrtDeviceGetP2PAtomicCapabilities"></a>
+<a class="method_anchor" id="aclrtDeviceGetP2PAtomicCapabilities"></a>
 
 ## aclrtDeviceGetP2PAtomicCapabilities
 
@@ -2303,23 +2303,23 @@ aclError aclrtDeviceGetP2PAtomicCapabilities(uint32_t* capabilities, const aclrt
 
 ### Function
 
-Queries the details of atomic operations supported between two devices in an AI Server. An AI Server is a general term for a server form that typically consists of multiple devices.
+Queries the details of atomic operations supported between two devices in an AI Server. An AI Server is a general term for a server form that consists of multiple devices.
 
 ### Parameters
 
 | Parameter | Input/Output | Description |
 | --- | :---: | --- |
-| capabilities | Output | Array of atomic operation capability masks, with the same length as the count parameter. Each element in the array is a bit mask, where each bit indicates whether the atomic operation is supported for a specific data type: 1 indicates supported, and 0 indicates not supported. See [aclrtAtomicOperationCapability](25-02_Enumerations.md#aclrtAtomicOperationCapability) for the type definition. |
-| operations | Input | Array of atomic operations to query, with the same length as the count parameter. See [aclrtAtomicOperation](25-02_Enumerations.md#aclrtAtomicOperation) for the type definition. |
-| count | Input | Number of atomic operations to query. Its value must match the length of the capabilities and operations arrays; otherwise, undefined behavior may occur. |
-| srcDeviceId | Input | Device ID.<br>After you call [aclrtGetDeviceCount](#aclrtGetDeviceCount) to obtain the number of available devices, the value range of this device ID is [0, (number of available devices - 1)]. |
-| dstDeviceId | Input | Device ID.<br>After you call [aclrtGetDeviceCount](#aclrtGetDeviceCount) to obtain the number of available devices, the value range of this device ID is [0, (number of available devices - 1)]. |
+| capabilities | Output | Array of atomic operation support capabilities. The array length is the same as the value of count. Each element in the array is a bit mask, where each bit indicates whether an atomic operation on a specific data type is supported. 1 indicates supported, and 0 indicates not supported. For the type definition, see [aclrtAtomicOperationCapability](25-02_Enumerations.md#aclrtAtomicOperationCapability). |
+| operations | Input | Array of atomic operations to be queried. The array length is the same as the value of count. For the type definition, see [aclrtAtomicOperation](25-02_Enumerations.md#aclrtAtomicOperation). |
+| count | Input | Number of atomic operations to be queried. Its value must be the same as the length of the capabilities and operations arrays. Otherwise, undefined behavior may occur. |
+| srcDeviceId | Input | Device ID.<br>After the user calls [aclrtGetDeviceCount](#aclrtGetDeviceCount) to obtain the number of available devices, the value range of this device ID is [0, (Number of available devices - 1)]. |
+| dstDeviceId | Input | Device ID.<br>After the user calls [aclrtGetDeviceCount](#aclrtGetDeviceCount) to obtain the number of available devices, the value range of this device ID is [0, (Number of available devices - 1)]. |
 
 ### Return Values
 
 0: success; others: failure. For details, see [aclError](25-01_aclError.md#aclError).
 
-<a id="aclrtDeviceSetLimit"></a>
+<a class="method_anchor" id="aclrtDeviceSetLimit"></a>
 
 ## aclrtDeviceSetLimit
 
@@ -2351,14 +2351,14 @@ aclError aclrtDeviceSetLimit(aclrtDeviceLimit limit, size_t value)
 
 ### Function
 
-Sets the device resource limit of the current process, such as the Single Instruction Multiple Thread (SIMT) operator stack size and SIMT Printf buffer size.
+Sets the Device resource limits of the current process, such as the SIMT (Single Instruction Multiple Thread) operator stack size and the SIMT Printf diagnostic space size.
 
 ### Parameters
 
 | Parameter | Input/Output | Description |
 | --- | :---: | --- |
-| limit | Input | Resource type. For details, see the [aclrtDeviceLimit](25-02_Enumerations.md#aclrtDeviceLimit) enumeration. |
-| value | Input | Resource limit size, in bytes. The value of this parameter depends on the limit type. For details, see the [aclrtDeviceLimit](25-02_Enumerations.md#aclrtDeviceLimit) enumeration. |
+| limit | Input | Resource type. For the value range, see the [aclrtDeviceLimit](25-02_Enumerations.md#aclrtDeviceLimit) enumeration. |
+| value | Input | Size of the resource limit, in bytes. The value of this parameter depends on the limit type. For details, see the [aclrtDeviceLimit](25-02_Enumerations.md#aclrtDeviceLimit) enumeration. |
 
 ### Return Values
 
@@ -2366,21 +2366,21 @@ Sets the device resource limit of the current process, such as the Single Instru
 
 ### Constraints
 
-- Different product models support different limit resource types. For unsupported resource types, the API returns `ACL_ERROR_RT_FEATURE_NOT_SUPPORT`.
-- It is recommended that you call this API after `aclInit` and before `aclrtSetDevice` to ensure that the resource limit configuration takes effect.
-- If `aclrtSetDevice` is called multiple times, note that `aclrtSetDevice` and `aclrtResetDevice` internally involve reference counting and must be used in pairs. After the reference count drops to 0, call this API to configure the resource limit, and then call `aclrtSetDevice` again for the configuration to take effect. The call sequence is as follows:
+- The limit resource types supported vary by product model. For unsupported resource types, the API returns `ACL_ERROR_RT_FEATURE_NOT_SUPPORT`.
+- You are advised to call this API after `aclInit` and before `aclrtSetDevice` to ensure that the resource limit configuration takes effect.
+- If `aclrtSetDevice` is called multiple times, note that `aclrtSetDevice` and `aclrtResetDevice` involve reference counting internally and must be used in pairs. After the reference count drops to 0, configure the resource limit value by calling this API, and then call `aclrtSetDevice` again for the configuration to take effect. The calling sequence is as follows:
 
-  `aclInit`-->`aclrtDeviceSetLimit` (first call to set the limit)-->`aclrtSetDevice` (the resource limit configuration takes effect)-->service processing-->`aclrtResetDevice` (reset device resources)-->`aclrtDeviceSetLimit` (second call to set the limit)-->`aclrtSetDevice` (the resource limit configuration takes effect)
+  `aclInit`-->`aclrtDeviceSetLimit` (first call to set the configuration)-->`aclrtSetDevice` (the resource limit configuration takes effect)-->service processing-->`aclrtResetDevice` (reset Device resources)-->`aclrtDeviceSetLimit` (second call to set the configuration)-->`aclrtSetDevice` (the resource limit configuration takes effect)
 
-- You can use either this API or `aclInit` to configure resource limits, such as the SIMT operator stack size and SIMT Printf buffer size. Using this API is more flexible and convenient for adjusting resource limits. If the resource limit is configured using both methods, the later configuration will overwrite the previous one.
-- The device resource limit configured using this API applies to the current process. All devices share the same configuration, and different resource limits cannot be set for different devices.
-- This API internally uses Device0 for configuration. If the `ASCEND_RT_VISIBLE_DEVICES` environment variable is set and does not include Device0, configuring resource limits through this API or `aclInit` will fail. Therefore, if you use the `ASCEND_RT_VISIBLE_DEVICES` environment variable, ensure that its value includes Device0.
+- You can configure resource limit values, such as the SIMT operator stack size and the SIMT Printf diagnostic space size, through either this API or `aclInit`. Configuring through this API is more flexible and makes it easier to adjust resource limit values. If resource limit values are configured through both methods, the later configuration overrides the earlier one.
+- The Device resource limits configured through this API apply to the current process. All Devices share the same configuration, and you cannot set different resource limit values for different Devices.
+- This API internally uses Device0 for configuration. If the `ASCEND_RT_VISIBLE_DEVICES` environment variable is set and does not include Device0, configuring resource limit values through either this API or `aclInit` will fail. Therefore, if you use the `ASCEND_RT_VISIBLE_DEVICES` environment variable, ensure that its value includes Device0.
 
 <br>
 <br>
 <br>
 
-<a id="aclrtDeviceGetLimit"></a>
+<a class="method_anchor" id="aclrtDeviceGetLimit"></a>
 
 ## aclrtDeviceGetLimit
 
@@ -2412,14 +2412,14 @@ aclError aclrtDeviceGetLimit(aclrtDeviceLimit limit, size_t *value)
 
 ### Function
 
-Obtains the device resource limits of the current process.
+Obtains the device resource limit of the current process.
 
 ### Parameters
 
 | Parameter | Input/Output | Description |
 | --- | :---: | --- |
-| limit | Input | Resource type. For details, see the [aclrtDeviceLimit](25-02_Enumerations.md#aclrtDeviceLimit) enumeration. |
-| value | Output | Resource limit size, in bytes. It cannot be nullptr. |
+| limit | Input | Resource type. For values, see the [aclrtDeviceLimit](25-02_Enumerations.md#aclrtDeviceLimit) enumeration. |
+| value | Output | Size of the resource limit, in bytes. Cannot be nullptr. |
 
 ### Return Values
 
@@ -2427,23 +2427,23 @@ Obtains the device resource limits of the current process.
 
 ### Constraints
 
-- The device resource limits configured through the `aclrtDeviceSetLimit` API apply to the current process. All devices share the same configuration, and querying on any device returns the same value.
+- The Device resource limits configured through the `aclrtDeviceSetLimit` API apply to the current process. All Devices share the same configuration, and querying on any Device returns the same value.
 - This API returns the instantaneous value of the current process and does not guarantee thread safety under concurrent access by multiple threads.
-- For example: first call `aclrtDeviceSetLimit` to set the stack size to A, and then call `aclrtSetDevice` to make it take effect. At this point, querying through the `aclrtDeviceGetLimit` API returns A, and the actual resource limit is also A. Then call `aclrtDeviceSetLimit` again to change it to B, but do not call `aclrtSetDevice` again. At this point, querying through the `aclrtDeviceGetLimit` API returns B, while the actual resource limit remains A.
+- For example: first call `aclrtDeviceSetLimit` to set the stack size to A, and then call `aclrtSetDevice` to make it take effect. At this point, calling the `aclrtDeviceGetLimit` API returns A, and the actual resource limit is also A. Then call `aclrtDeviceSetLimit` again to change it to B without calling `aclrtSetDevice` again. At this point, calling the `aclrtDeviceGetLimit` API returns B, while the actual resource limit remains A.
 
 <!-- npu="A3,910b" id3276 -->
 - For Atlas A3 products and Atlas A2 products, querying `ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE`, `ACL_RT_DEV_LIMIT_SIMT_DVG_WARP_STACK_SIZE`, or `ACL_RT_DEV_LIMIT_SIMT_PRINTF_FIFO_SIZE` returns `ACL_ERROR_RT_FEATURE_NOT_SUPPORT`.
 <!-- end id3276 -->
 
 <!-- npu="950" id3277 -->
-- For Ascend 950PR&950DT products, querying `ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE` returns the aligned value multiplied by 32 (the number of threads per warp). For example, if 256 is set, the query returns 8192. Querying `ACL_RT_DEV_LIMIT_SIMT_DVG_WARP_STACK_SIZE` returns the aligned value (without multiplying by the number of threads). For example, if 512 is set, the query returns 512.
+- For Ascend 950PR&950DT products, querying `ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE` returns the aligned value multiplied by 32 (the number of threads per warp). For example, if 256 is set, the query returns 8192. Querying `ACL_RT_DEV_LIMIT_SIMT_DVG_WARP_STACK_SIZE` returns the aligned value without multiplying by the number of threads. For example, if 512 is set, the query returns 512.
 <!-- end id3277 -->
 
 <br>
 <br>
 <br>
 
-<a id="aclrtDeviceL2CacheFlush"></a>
+<a class="method_anchor" id="aclrtDeviceL2CacheFlush"></a>
 
 ## aclrtDeviceL2CacheFlush
 
@@ -2475,15 +2475,15 @@ aclError aclrtDeviceL2CacheFlush(void* rsv)
 
 ### Function
 
-Flushes the L2 cache of the current device. The API returns only after the L2 cache flush is complete.
+Flushes the L2 cache of the current Device. When the API returns, the L2 cache flush is complete.
 
-The current device is specified by the [aclrtSetDevice](#aclrtSetDevice) API.
+The current Device is specified by the [aclrtSetDevice](#aclrtSetDevice) API.
 
 ### Parameters
 
 | Parameter | Input/Output | Description |
 | --- | :---: | --- |
-| rsv | Input | Reserved parameter. nullptr must be passed. |
+| rsv | Input | Reserved parameter, which must be set to nullptr. |
 
 ### Return Values
 
@@ -2491,6 +2491,6 @@ The current device is specified by the [aclrtSetDevice](#aclrtSetDevice) API.
 
 ### Constraints
 
-- This API is not supported in Ascend virtual instance scenarios.
-- Calling this API at a high frequency is not recommended, as frequent calls may affect service performance.
-- If concurrent services are running on the device during the flush, the L2 cache may be occupied again, making this flush operation ineffective.
+- This API cannot be called in Ascend virtualization instance scenarios.
+- Frequent calls to this API are not recommended, as they may affect service performance.
+- If concurrent services are running on the Device during the flush, the L2 cache may be occupied again, making this flush operation ineffective.

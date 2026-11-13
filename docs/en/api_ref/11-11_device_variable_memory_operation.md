@@ -1,6 +1,6 @@
 # 11-11 Device Variable Memory Operations
 
-<!-- md-trans-meta sourceCommit=unknown translatedAt=2026-10-23T03:59:52.387Z pushedAt=2026-10-29T02:19:06.470Z nl=2 -->
+<!-- md-trans-meta sourceCommit=31ae292a88c1a38674abaa350b60eba724bab178 translatedAt=2026-11-06T11:23:49.344Z pushedAt=2026-11-09T08:54:08.445Z nl=2 -->
 
 This chapter describes the APIs related to device variable memory operations, allowing you to access and operate device variables.
 
@@ -11,7 +11,7 @@ This chapter describes the APIs related to device variable memory operations, al
 - [`aclError aclrtMemcpyToSymbol(const void *symbol, const void *src, size_t count, size_t offset, aclrtMemcpyKind kind)`](#aclrtMemcpyToSymbol): Implements synchronous memory copy from the host to a device variable.
 - [`aclError aclrtMemcpyToSymbolAsync(const void *symbol, const void *src, size_t count, size_t offset, aclrtMemcpyKind kind, aclrtStream stream)`](#aclrtMemcpyToSymbolAsync): Implements asynchronous memory copy from the host to a device variable.
 
-<a id="aclrtGetSymbolAddress"></a>
+<a class="method_anchor" id="aclrtGetSymbolAddress"></a>
 
 ## aclrtGetSymbolAddress
 
@@ -69,7 +69,7 @@ Obtains the address of a device variable.
 <br>
 <br>
 
-<a id="aclrtGetSymbolSize"></a>
+<a class="method_anchor" id="aclrtGetSymbolSize"></a>
 
 ## aclrtGetSymbolSize
 
@@ -122,7 +122,7 @@ Obtains the memory size occupied by a device variable.
 <br>
 <br>
 
-<a id="aclrtMemcpyFromSymbol"></a>
+<a class="method_anchor" id="aclrtMemcpyFromSymbol"></a>
 
 ## aclrtMemcpyFromSymbol
 
@@ -180,7 +180,7 @@ Implements synchronous memory copy of data from a device variable to the host. I
 <br>
 <br>
 
-<a id="aclrtMemcpyFromSymbolAsync"></a>
+<a class="method_anchor" id="aclrtMemcpyFromSymbolAsync"></a>
 
 ## aclrtMemcpyFromSymbolAsync
 
@@ -243,7 +243,7 @@ The host memory in this API supports page-locked memory (for example, memory all
 <br>
 <br>
 
-<a id="aclrtMemcpyToSymbol"></a>
+<a class="method_anchor" id="aclrtMemcpyToSymbol"></a>
 
 ## aclrtMemcpyToSymbol
 
@@ -300,7 +300,7 @@ Implements synchronous memory copy from host data to a device variable. It is us
 <br>
 <br>
 
-<a id="aclrtMemcpyToSymbolAsync"></a>
+<a class="method_anchor" id="aclrtMemcpyToSymbolAsync"></a>
 
 ## aclrtMemcpyToSymbolAsync
 

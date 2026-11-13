@@ -36,7 +36,7 @@ ${INSTALL_DIR}请替换为CANN软件安装后文件存储路径。以root用户�
 <br>
 <br>
 
-<a id="AlogRecord"></a>
+<a class="method_anchor" id="AlogRecord"></a>
 
 ## AlogRecord
 
@@ -96,7 +96,7 @@ AlogRecord(SLOG, DLOG_TYPE_RUN, DLOG_INFO, "test run log");
 <br>
 <br>
 
-<a id="AlogCheckDebugLevel"></a>
+<a class="method_anchor" id="AlogCheckDebugLevel"></a>
 
 ## AlogCheckDebugLevel
 
@@ -160,7 +160,7 @@ if(AlogCheckDebugLevel(SLOG, DLOG_INFO) == 1) {
 <br>
 <br>
 
-<a id="acllogRecord"></a>
+<a class="method_anchor" id="acllogRecord"></a>
 
 ## acllogRecord
 
@@ -216,7 +216,7 @@ acllogRecord(0xff00 | RUN_LOG_MASK, DLOG_INFO, "user module run log");
 <br>
 <br>
 
-<a id="acllogVaList"></a>
+<a class="method_anchor" id="acllogVaList"></a>
 
 ## acllogVaList
 
@@ -283,7 +283,7 @@ LogUserModule(0xff00 | RUN_LOG_MASK, DLOG_INFO, "user module run log");
 <br>
 <br>
 
-<a id="acllogCheckDebugLevel"></a>
+<a class="method_anchor" id="acllogCheckDebugLevel"></a>
 
 ## acllogCheckDebugLevel
 
@@ -344,7 +344,7 @@ if (acllogCheckDebugLevel(0xff00, DLOG_INFO) == 1) {
 <br>
 <br>
 
-<a id="acllogRegisterCallback"></a>
+<a class="method_anchor" id="acllogRegisterCallback"></a>
 
 ## acllogRegisterCallback
 
@@ -419,7 +419,7 @@ int32_t ret = acllogRegisterCallback(LogCallback, NULL, OUTPUT_TYPE_BOTH, &handl
 <br>
 <br>
 
-<a id="acllogUnregisterCallback"></a>
+<a class="method_anchor" id="acllogUnregisterCallback"></a>
 
 ## acllogUnregisterCallback
 

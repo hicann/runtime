@@ -112,7 +112,7 @@
 8. 释放运行时资源，包括调用[aclrtDestroyStream](06_stream_management.md#aclrtDestroyStream)接口释放Stream、调用[aclrtResetDevice](04_device_management.md#aclrtResetDevice)接口释放Device上的资源。
 9. 调用[aclFinalize](02_initialization_and_deinitialization.md#aclFinalize)接口去初始化。
 
-<a id="aclrtBinaryLoadFromFile"></a>
+<a class="method_anchor" id="aclrtBinaryLoadFromFile"></a>
 
 ## aclrtBinaryLoadFromFile
 
@@ -168,7 +168,7 @@ aclError aclrtBinaryLoadFromFile(const char* binPath, aclrtBinaryLoadOptions *op
 <br>
 <br>
 
-<a id="aclrtBinaryLoadFromData"></a>
+<a class="method_anchor" id="aclrtBinaryLoadFromData"></a>
 
 ## aclrtBinaryLoadFromData
 
@@ -223,7 +223,7 @@ aclError aclrtBinaryLoadFromData(const void *data, size_t length, const aclrtBin
 <br>
 <br>
 
-<a id="aclrtBinaryGetFunction"></a>
+<a class="method_anchor" id="aclrtBinaryGetFunction"></a>
 
 ## aclrtBinaryGetFunction
 
@@ -275,7 +275,7 @@ aclError aclrtBinaryGetFunction(const aclrtBinHandle binHandle, const char *kern
 <br>
 <br>
 
-<a id="aclrtBinaryGetFunctionByEntry"></a>
+<a class="method_anchor" id="aclrtBinaryGetFunctionByEntry"></a>
 
 ## aclrtBinaryGetFunctionByEntry
 
@@ -307,7 +307,7 @@ aclError aclrtBinaryGetFunctionByEntry(aclrtBinHandle binHandle, uint64_t funcEn
 <br>
 <br>
 
-<a id="aclrtBinaryGetDevAddress"></a>
+<a class="method_anchor" id="aclrtBinaryGetDevAddress"></a>
 
 ## aclrtBinaryGetDevAddress
 
@@ -357,7 +357,7 @@ aclError aclrtBinaryGetDevAddress(const aclrtBinHandle binHandle, void **binAddr
 <br>
 <br>
 
-<a id="aclrtBinaryGetGlobal"></a>
+<a class="method_anchor" id="aclrtBinaryGetGlobal"></a>
 
 ## aclrtBinaryGetGlobal
 
@@ -408,7 +408,7 @@ aclError aclrtBinaryGetGlobal(aclrtBinHandle binHandle, const char *name, void *
 <br>
 <br>
 
-<a id="aclrtBinarySetExceptionCallback"></a>
+<a class="method_anchor" id="aclrtBinarySetExceptionCallback"></a>
 
 ## aclrtBinarySetExceptionCallback
 
@@ -460,7 +460,7 @@ aclError aclrtBinarySetExceptionCallback(aclrtBinHandle binHandle, aclrtOpExcept
 <br>
 <br>
 
-<a id="aclrtGetArgsFromExceptionInfo"></a>
+<a class="method_anchor" id="aclrtGetArgsFromExceptionInfo"></a>
 
 ## aclrtGetArgsFromExceptionInfo
 
@@ -512,7 +512,7 @@ aclError aclrtGetArgsFromExceptionInfo(const aclrtExceptionInfo *info, void **de
 <br>
 <br>
 
-<a id="aclrtGetFuncHandleFromExceptionInfo"></a>
+<a class="method_anchor" id="aclrtGetFuncHandleFromExceptionInfo"></a>
 
 ## aclrtGetFuncHandleFromExceptionInfo
 
@@ -563,7 +563,7 @@ aclError aclrtGetFuncHandleFromExceptionInfo(const aclrtExceptionInfo *info, acl
 <br>
 <br>
 
-<a id="aclrtGetFunctionAddr"></a>
+<a class="method_anchor" id="aclrtGetFunctionAddr"></a>
 
 ## aclrtGetFunctionAddr
 
@@ -615,7 +615,7 @@ aclError aclrtGetFunctionAddr(const void *func, void **aicAddr, void **aivAddr)
 <br>
 <br>
 
-<a id="aclrtGetFunctionSize"></a>
+<a class="method_anchor" id="aclrtGetFunctionSize"></a>
 
 ## aclrtGetFunctionSize
 
@@ -666,7 +666,7 @@ aclError aclrtGetFunctionSize(const void *func, size_t *aicSize, size_t *aivSize
 <br>
 <br>
 
-<a id="aclrtGetFunctionName"></a>
+<a class="method_anchor" id="aclrtGetFunctionName"></a>
 
 ## aclrtGetFunctionName
 
@@ -716,7 +716,7 @@ aclError aclrtGetFunctionName(const void *func, uint32_t maxLen, char *name)
 <br>
 <br>
 
-<a id="aclrtGetFunctionAttribute"></a>
+<a class="method_anchor" id="aclrtGetFunctionAttribute"></a>
 
 ## aclrtGetFunctionAttribute
 
@@ -768,7 +768,7 @@ aclError aclrtGetFunctionAttribute(const void *func, aclrtFuncAttribute attrType
 <br>
 <br>
 
-<a id="aclrtGetHardwareSyncAddr"></a>
+<a class="method_anchor" id="aclrtGetHardwareSyncAddr"></a>
 
 ## aclrtGetHardwareSyncAddr
 
@@ -816,7 +816,7 @@ aclError aclrtGetHardwareSyncAddr(void **addr)
 <br>
 <br>
 
-<a id="aclrtRegisterCpuFunc"></a>
+<a class="method_anchor" id="aclrtRegisterCpuFunc"></a>
 
 ## aclrtRegisterCpuFunc
 
@@ -869,7 +869,7 @@ aclError aclrtRegisterCpuFunc(const aclrtBinHandle handle, const char *funcName,
 <br>
 <br>
 
-<a id="aclrtKernelArgsInit"></a>
+<a class="method_anchor" id="aclrtKernelArgsInit"></a>
 
 ## aclrtKernelArgsInit
 
@@ -922,7 +922,7 @@ aclError aclrtKernelArgsInit(aclrtFuncHandle funcHandle, aclrtArgsHandle *argsHa
 <br>
 <br>
 
-<a id="aclrtKernelArgsInitByUserMem"></a>
+<a class="method_anchor" id="aclrtKernelArgsInitByUserMem"></a>
 
 ## aclrtKernelArgsInitByUserMem
 
@@ -977,7 +977,7 @@ aclError aclrtKernelArgsInitByUserMem(aclrtFuncHandle funcHandle, aclrtArgsHandl
 <br>
 <br>
 
-<a id="aclrtKernelArgsGetMemSize"></a>
+<a class="method_anchor" id="aclrtKernelArgsGetMemSize"></a>
 
 ## aclrtKernelArgsGetMemSize
 
@@ -1027,7 +1027,7 @@ aclError aclrtKernelArgsGetMemSize(aclrtFuncHandle funcHandle, size_t userArgsSi
 <br>
 <br>
 
-<a id="aclrtKernelArgsGetHandleMemSize"></a>
+<a class="method_anchor" id="aclrtKernelArgsGetHandleMemSize"></a>
 
 ## aclrtKernelArgsGetHandleMemSize
 
@@ -1076,7 +1076,7 @@ aclError aclrtKernelArgsGetHandleMemSize(aclrtFuncHandle funcHandle, size_t *mem
 <br>
 <br>
 
-<a id="aclrtKernelArgsAppend"></a>
+<a class="method_anchor" id="aclrtKernelArgsAppend"></a>
 
 ## aclrtKernelArgsAppend
 
@@ -1129,7 +1129,7 @@ aclError aclrtKernelArgsAppend(aclrtArgsHandle argsHandle, void *param, size_t p
 <br>
 <br>
 
-<a id="aclrtKernelArgsAppendPlaceHolder"></a>
+<a class="method_anchor" id="aclrtKernelArgsAppendPlaceHolder"></a>
 
 ## aclrtKernelArgsAppendPlaceHolder
 
@@ -1180,7 +1180,7 @@ aclError aclrtKernelArgsAppendPlaceHolder(aclrtArgsHandle argsHandle, aclrtParam
 <br>
 <br>
 
-<a id="aclrtKernelArgsGetPlaceHolderBuffer"></a>
+<a class="method_anchor" id="aclrtKernelArgsGetPlaceHolderBuffer"></a>
 
 ## aclrtKernelArgsGetPlaceHolderBuffer
 
@@ -1231,7 +1231,7 @@ aclError aclrtKernelArgsGetPlaceHolderBuffer(aclrtArgsHandle argsHandle, aclrtPa
 <br>
 <br>
 
-<a id="aclrtKernelArgsParaUpdate"></a>
+<a class="method_anchor" id="aclrtKernelArgsParaUpdate"></a>
 
 ## aclrtKernelArgsParaUpdate
 
@@ -1282,7 +1282,7 @@ aclError aclrtKernelArgsParaUpdate(aclrtArgsHandle argsHandle, aclrtParamHandle 
 <br>
 <br>
 
-<a id="aclrtKernelArgsFinalize"></a>
+<a class="method_anchor" id="aclrtKernelArgsFinalize"></a>
 
 ## aclrtKernelArgsFinalize
 
@@ -1330,7 +1330,7 @@ aclError aclrtKernelArgsFinalize(aclrtArgsHandle argsHandle)
 <br>
 <br>
 
-<a id="aclrtLaunchKernel"></a>
+<a class="method_anchor" id="aclrtLaunchKernel"></a>
 
 ## aclrtLaunchKernel
 
@@ -1380,7 +1380,7 @@ aclError aclrtLaunchKernel(aclrtFuncHandle funcHandle, uint32_t numBlocks, const
 
 ### 参考资源
 
-<a id="launch_kernel_comparison"></a>
+<a class="method_anchor" id="launch_kernel_comparison"></a>
 
 下表的几个接口都用于启用对应算子的计算任务，但功能和使用方式有所不同：
 
@@ -1398,7 +1398,7 @@ aclError aclrtLaunchKernel(aclrtFuncHandle funcHandle, uint32_t numBlocks, const
 <br>
 <br>
 
-<a id="aclrtLaunchKernelV2"></a>
+<a class="method_anchor" id="aclrtLaunchKernelV2"></a>
 
 ## aclrtLaunchKernelV2
 
@@ -1455,7 +1455,7 @@ aclError aclrtLaunchKernelV2(aclrtFuncHandle funcHandle, uint32_t numBlocks, con
 <br>
 <br>
 
-<a id="aclrtLaunchKernelWithConfig"></a>
+<a class="method_anchor" id="aclrtLaunchKernelWithConfig"></a>
 
 ## aclrtLaunchKernelWithConfig
 
@@ -1514,7 +1514,7 @@ aclError aclrtLaunchKernelWithConfig(aclrtFuncHandle funcHandle, uint32_t numBlo
 <br>
 <br>
 
-<a id="aclrtLaunchKernelWithHostArgs"></a>
+<a class="method_anchor" id="aclrtLaunchKernelWithHostArgs"></a>
 
 ## aclrtLaunchKernelWithHostArgs
 
@@ -1573,7 +1573,7 @@ aclError aclrtLaunchKernelWithHostArgs(aclrtFuncHandle funcHandle, uint32_t numB
 <br>
 <br>
 
-<a id="aclrtLaunchKernelWithArgsArray"></a>
+<a class="method_anchor" id="aclrtLaunchKernelWithArgsArray"></a>
 
 ## aclrtLaunchKernelWithArgsArray
 
@@ -1634,7 +1634,7 @@ aclError aclrtLaunchKernelWithArgsArray(void *func, uint32_t numBlocks, aclrtStr
 <br>
 <br>
 
-<a id="aclrtCreateBinary"></a>
+<a class="method_anchor" id="aclrtCreateBinary"></a>
 
 ## aclrtCreateBinary
 
@@ -1697,7 +1697,7 @@ Ascend RC形态或Control CPU开放形态下，data参数处需申请Device上�
 <br>
 <br>
 
-<a id="aclrtDestroyBinary"></a>
+<a class="method_anchor" id="aclrtDestroyBinary"></a>
 
 ## aclrtDestroyBinary
 
@@ -1747,7 +1747,7 @@ aclError aclrtDestroyBinary(aclrtBinary binary)
 <br>
 <br>
 
-<a id="aclrtBinaryLoad"></a>
+<a class="method_anchor" id="aclrtBinaryLoad"></a>
 
 ## aclrtBinaryLoad
 
@@ -1796,7 +1796,7 @@ aclError aclrtBinaryLoad(const aclrtBinary binary, aclrtBinHandle *binHandle)
 <br>
 <br>
 
-<a id="aclrtBinaryUnLoad"></a>
+<a class="method_anchor" id="aclrtBinaryUnLoad"></a>
 
 ## aclrtBinaryUnLoad
 
@@ -1849,7 +1849,7 @@ aclError aclrtBinaryUnLoad(aclrtBinHandle binHandle)
 <br>
 <br>
 
-<a id="aclrtFunctionGetBinary"></a>
+<a class="method_anchor" id="aclrtFunctionGetBinary"></a>
 
 ## aclrtFunctionGetBinary
 
@@ -1898,7 +1898,7 @@ aclError aclrtFunctionGetBinary(const void *func, aclrtBinHandle *binHandle)
 <br>
 <br>
 
-<a id="aclrtFunctionGetParamCount"></a>
+<a class="method_anchor" id="aclrtFunctionGetParamCount"></a>
 
 ## aclrtFunctionGetParamCount
 
@@ -1949,7 +1949,7 @@ aclError aclrtFunctionGetParamCount(const void *func, size_t *paramCount)
 <br>
 <br>
 
-<a id="aclrtFunctionGetParamInfo"></a>
+<a class="method_anchor" id="aclrtFunctionGetParamInfo"></a>
 
 ## aclrtFunctionGetParamInfo
 
@@ -2001,7 +2001,7 @@ aclError aclrtFunctionGetParamInfo(const void *func, size_t paramIndex, size_t *
 <br>
 <br>
 
-<a id="aclrtFunctionGetAvailDynUbufPerBlock"></a>
+<a class="method_anchor" id="aclrtFunctionGetAvailDynUbufPerBlock"></a>
 
 ## aclrtFunctionGetAvailDynUbufPerBlock
 
@@ -2053,7 +2053,7 @@ aclError aclrtFunctionGetAvailDynUbufPerBlock(const void *func, uint32_t flags, 
 <br>
 <br>
 
-<a id="aclrtGetFuncBySymbol"></a>
+<a class="method_anchor" id="aclrtGetFuncBySymbol"></a>
 
 ## aclrtGetFuncBySymbol
 
@@ -2110,7 +2110,7 @@ aclError aclrtGetFuncBySymbol(const void *symbol, aclrtFuncHandle *funcHandle)
 <br>
 <br>
 
-<a id="aclrtLaunchSIMTKernelWithArgsArray"></a>
+<a class="method_anchor" id="aclrtLaunchSIMTKernelWithArgsArray"></a>
 
 ## aclrtLaunchSIMTKernelWithArgsArray
 
@@ -2172,7 +2172,7 @@ aclError aclrtLaunchSIMTKernelWithArgsArray(void *func, dim3 gridDim, dim3 block
 <br>
 <br>
 
-<a id="aclrtLaunchSIMTKernelWithHostArgs"></a>
+<a class="method_anchor" id="aclrtLaunchSIMTKernelWithHostArgs"></a>
 
 ## aclrtLaunchSIMTKernelWithHostArgs
 
@@ -2238,7 +2238,7 @@ aclError aclrtLaunchSIMTKernelWithHostArgs(void *func, dim3 gridDim, dim3 blockD
 <br>
 <br>
 
-<a id="aclrtBinaryGetFunctionCount"></a>
+<a class="method_anchor" id="aclrtBinaryGetFunctionCount"></a>
 
 ## aclrtBinaryGetFunctionCount
 
@@ -2288,7 +2288,7 @@ aclError aclrtBinaryGetFunctionCount(const aclrtBinHandle binHandle, uint32_t *c
 <br>
 <br>
 <br>
-<a id="aclrtBinaryEnumerateFunctions"></a>
+<a class="method_anchor" id="aclrtBinaryEnumerateFunctions"></a>
 
 ## aclrtBinaryEnumerateFunctions
 

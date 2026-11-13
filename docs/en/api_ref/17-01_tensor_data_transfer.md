@@ -1,6 +1,6 @@
 # 17-01 Tensor Data Transfer
 
-<!-- md-trans-meta sourceCommit=unknown translatedAt=2026-10-23T03:59:12.496Z pushedAt=2026-10-29T02:19:06.459Z nl=2 -->
+<!-- md-trans-meta sourceCommit=592d153befca8bbb9089ee4e63722c39aabe7552 translatedAt=2026-11-06T11:28:49.601Z pushedAt=2026-11-09T10:30:40.765Z nl=2 -->
 
 This chapter describes the tensor data transfer APIs, which are used to create channels and send and receive tensor data between the host and the device.
 
@@ -14,7 +14,7 @@ This chapter describes the tensor data transfer APIs, which are used to create c
 - [`aclError acltdtGetSliceInfoFromItem(const acltdtDataItem *dataItem, size_t *sliceNum, size_t* sliceId)`](#acltdtGetSliceInfoFromItem): Outputs tensor shard information.
 - [`aclError acltdtCleanChannel(acltdtChannelHandle *handle)`](#acltdtCleanChannel): Clears all data in the channel.
 
-<a id="acltdtCreateChannel"></a>
+<a class="method_anchor" id="acltdtCreateChannel"></a>
 
 ## acltdtCreateChannel
 
@@ -68,7 +68,7 @@ For Atlas training products, this API can be used only in Ascend virtualization 
 <br>
 <br>
 
-<a id="acltdtCreateChannelWithCapacity"></a>
+<a class="method_anchor" id="acltdtCreateChannelWithCapacity"></a>
 
 ## acltdtCreateChannelWithCapacity
 
@@ -119,7 +119,7 @@ Creates data of the acltdtChannelHandle type, which indicates a channel with a c
 <br>
 <br>
 
-<a id="acltdtSendTensor"></a>
+<a class="method_anchor" id="acltdtSendTensor"></a>
 
 ## acltdtSendTensor
 
@@ -163,7 +163,7 @@ Sends preprocessed data from the host to the device.
 | --- | :---: | --- |
 | handle | Input | Specified channel.<br>Call [acltdtCreateChannel](#acltdtCreateChannel) API or the [acltdtCreateChannelWithCapacity](#acltdtCreateChannelWithCapacity) API in advance to create data of the acltdtChannelHandle type. |
 | dataset | Input | Pointer to the data sent to the device. See [acltdtDataset](25-03_Operation_APIs.md#acltdtDataset) for the type definition. |
-| timeout | Input | Timeout duration to wait.<br>For a channel created by the [acltdtCreateChannel](#acltdtCreateChannel) API, only `-1` (blocking mode, wait indefinitely) is supported. Passing any other value returns `ACL_ERROR_INVALID_PARAM`.<br>For a channel created by the [acltdtCreateChannelWithCapacity](#acltdtCreateChannelWithCapacity) API, the value range of this parameter is as follows:<br>  - `-1`: Blocking mode. Wait indefinitely until the data is sent.<br>  - `0`: Non-blocking mode. When the channel is full, the channel-full error is returned directly, and you can set the retry interval.<br>  - > 0: A specific timeout duration in milliseconds. When the channel is full, an error is returned after the timeout duration is reached. The timeout duration is affected by the operating system and generally deviates within one time slice of the operating system. For example, if one time slice of the operating system is 4 ms and you set the timeout duration to 1 ms, the actual timeout duration ranges from 1 ms to 5 ms. Under high CPU load, the timeout duration may still fluctuate. |
+| timeout | Input | Timeout duration for waiting.<br>For a channel created through the [acltdtCreateChannel](#acltdtCreateChannel) API, only -1 (blocking mode, wait indefinitely) is supported. Passing any other value returns ACL_ERROR_INVALID_PARAM.<br>For a channel created through the [acltdtCreateChannelWithCapacity](#acltdtCreateChannelWithCapacity) API, the value range of this parameter is as follows:<br>  - -1: blocking mode: wait indefinitely until data sending is complete.<br>  - 0: non-blocking mode. When the channel is full, the channel-full error is returned directly, and the user can set the retry interval.<br>  - >0: specific timeout duration, in milliseconds. When the channel is full, an error is returned after the timeout duration is reached. The timeout duration is affected by the operating system and generally deviates within one time slice of the operating system. For example, if one time slice of the operating system is 4 ms and the user sets the timeout duration to 1 ms, the actual timeout duration ranges from 1 ms to 5 ms. Under high CPU load, the timeout duration may still fluctuate. |
 
 ### Return Values
 
@@ -173,7 +173,7 @@ Sends preprocessed data from the host to the device.
 <br>
 <br>
 
-<a id="acltdtReceiveTensor"></a>
+<a class="method_anchor" id="acltdtReceiveTensor"></a>
 
 ## acltdtReceiveTensor
 
@@ -217,7 +217,7 @@ Receives data sent from the device to the host.
 | --- | :---: | --- |
 | handle | Input | Specified channel.<br>Call the [acltdtCreateChannel](#acltdtCreateChannel) API or the [acltdtCreateChannelWithCapacity](#acltdtCreateChannelWithCapacity) API in advance to create data of the acltdtChannelHandle type. |
 | dataset | Output | Pointer to the received device data. See [acltdtDataset](25-03_Operation_APIs.md#acltdtDataset) for the type definition. |
-| timeout | Input | Timeout duration.<br>For a channel created by the [acltdtCreateChannel](#acltdtCreateChannel) API, only `-1` (blocking mode, waiting indefinitely) is supported. Passing any other value returns `ACL_ERROR_INVALID_PARAM`.<br>For a channel created by the [acltdtCreateChannelWithCapacity](#acltdtCreateChannelWithCapacity) API, the value range of this parameter is as follows:<br>  - `-1`: Blocking mode. Wait indefinitely until data reception is complete.<br>  - `0`: Non-blocking mode. When the channel is empty, the empty-channel error is returned directly, and you can set the retry interval.<br>  - > 0: A specific timeout duration in milliseconds. When the channel is empty, an error is returned after the timeout duration is reached. The timeout duration is affected by the operating system and generally deviates within one time slice of the operating system. For example, if one time slice of the operating system is 4 ms and you set the timeout duration to 1 ms, the actual timeout duration ranges from 1 ms to 5 ms. Under high CPU load, the timeout duration may still fluctuate. |
+| timeout | Input | Timeout duration for waiting.<br>For a channel created through the [acltdtCreateChannel](#acltdtCreateChannel) API, only -1 (blocking mode, wait indefinitely) is supported. Passing any other value returns ACL_ERROR_INVALID_PARAM.<br>For a channel created through the [acltdtCreateChannelWithCapacity](#acltdtCreateChannelWithCapacity) API, the value range of this parameter is as follows:<br>  - -1: blocking mode: wait indefinitely until data reception is complete.<br>  - 0: non-blocking mode. When the channel is empty, the channel-empty error is returned directly, and the user can set the retry interval.<br>  - >0: specific timeout duration, in milliseconds. When the channel is empty, an error is returned after the timeout duration is reached. The timeout duration is affected by the operating system and generally deviates within one time slice of the operating system. For example, if one time slice of the operating system is 4 ms and the user sets the timeout duration to 1 ms, the actual timeout duration ranges from 1 ms to 5 ms. Under high CPU load, the timeout duration may still fluctuate. |
 
 ### Return Values
 
@@ -227,7 +227,7 @@ Receives data sent from the device to the host.
 <br>
 <br>
 
-<a id="acltdtStopChannel"></a>
+<a class="method_anchor" id="acltdtStopChannel"></a>
 
 ## acltdtStopChannel
 
@@ -275,7 +275,7 @@ When sending data by calling the acltdtSendTensor API or receiving data by calli
 <br>
 <br>
 
-<a id="acltdtDestroyChannel"></a>
+<a class="method_anchor" id="acltdtDestroyChannel"></a>
 
 ## acltdtDestroyChannel
 
@@ -323,7 +323,7 @@ Destroys data of the acltdtChannelHandle type. Only the acltdtChannelHandle type
 <br>
 <br>
 
-<a id="acltdtQueryChannelSize"></a>
+<a class="method_anchor" id="acltdtQueryChannelSize"></a>
 
 ## acltdtQueryChannelSize
 
@@ -372,7 +372,7 @@ Queries the number of messages in the queue channel.
 <br>
 <br>
 
-<a id="acltdtGetSliceInfoFromItem"></a>
+<a class="method_anchor" id="acltdtGetSliceInfoFromItem"></a>
 
 ## acltdtGetSliceInfoFromItem
 
@@ -424,7 +424,7 @@ Outputs tensor shard information.
 <br>
 <br>
 
-<a id="acltdtCleanChannel"></a>
+<a class="method_anchor" id="acltdtCleanChannel"></a>
 
 ## acltdtCleanChannel
 

@@ -1,7 +1,5 @@
 # 17. Data Transmission
 
-<!-- md-trans-meta sourceCommit=unknown translatedAt=2026-10-26T07:06:40.785Z pushedAt=2026-10-29T06:32:11.872Z nl=2 -->
-
 This section describes CANN Runtime's data transmission APIs, covering tensor data transfer, shared queue management, and shared buffer management.
 
 This API category contains the following subcategories:

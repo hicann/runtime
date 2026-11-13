@@ -1,6 +1,6 @@
 # 14. Kernel Loading and Execution
 
-<!-- md-trans-meta sourceCommit=05fffb44081c4ad02311fd558ebfc634dff61d4b translatedAt=2026-10-23T11:24:18.578Z pushedAt=2026-10-27T06:44:39.557Z -->
+<!-- md-trans-meta sourceCommit=592d153befca8bbb9089ee4e63722c39aabe7552 translatedAt=2026-11-06T11:25:29.673Z pushedAt=2026-11-09T09:15:24.729Z nl=2 -->
 
 This topic describes the kernel loading and execution APIs of CANN Runtime, including binary loading, function obtaining, argument assembly, and kernel launch.
 
@@ -114,7 +114,7 @@ The key process is described as follows:
 8. Release runtime resources, including calling [aclrtDestroyStream](06_stream_management.md#aclrtDestroyStream) to release the stream and calling [aclrtResetDevice](04_device_management.md#aclrtResetDevice) to release resources on the device.
 9. Call [aclFinalize](02_initialization_and_deinitialization.md#aclFinalize) for deinitialization.
 
-<a id="aclrtBinaryLoadFromFile"></a>
+<a class="method_anchor" id="aclrtBinaryLoadFromFile"></a>
 
 ## aclrtBinaryLoadFromFile
 
@@ -170,7 +170,7 @@ An operator binary compiled for a specific product model must be used on a produ
 <br>
 <br>
 
-<a id="aclrtBinaryLoadFromData"></a>
+<a class="method_anchor" id="aclrtBinaryLoadFromData"></a>
 
 ## aclrtBinaryLoadFromData
 
@@ -225,7 +225,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtBinaryGetFunction"></a>
+<a class="method_anchor" id="aclrtBinaryGetFunction"></a>
 
 ## aclrtBinaryGetFunction
 
@@ -277,7 +277,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtBinaryGetFunctionByEntry"></a>
+<a class="method_anchor" id="aclrtBinaryGetFunctionByEntry"></a>
 
 ## aclrtBinaryGetFunctionByEntry
 
@@ -309,7 +309,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtBinaryGetDevAddress"></a>
+<a class="method_anchor" id="aclrtBinaryGetDevAddress"></a>
 
 ## aclrtBinaryGetDevAddress
 
@@ -359,7 +359,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtBinaryGetGlobal"></a>
+<a class="method_anchor" id="aclrtBinaryGetGlobal"></a>
 
 ## aclrtBinaryGetGlobal
 
@@ -410,7 +410,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtBinarySetExceptionCallback"></a>
+<a class="method_anchor" id="aclrtBinarySetExceptionCallback"></a>
 
 ## aclrtBinarySetExceptionCallback
 
@@ -462,7 +462,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtGetArgsFromExceptionInfo"></a>
+<a class="method_anchor" id="aclrtGetArgsFromExceptionInfo"></a>
 
 ## aclrtGetArgsFromExceptionInfo
 
@@ -514,7 +514,7 @@ Returns **ACL_ERROR_INVALID_EXCEPTION_INFO** when **info** is a null pointer.
 <br>
 <br>
 
-<a id="aclrtGetFuncHandleFromExceptionInfo"></a>
+<a class="method_anchor" id="aclrtGetFuncHandleFromExceptionInfo"></a>
 
 ## aclrtGetFuncHandleFromExceptionInfo
 
@@ -565,7 +565,7 @@ Returns **ACL_ERROR_INVALID_EXCEPTION_INFO** when **info** is a null pointer.
 <br>
 <br>
 
-<a id="aclrtGetFunctionAddr"></a>
+<a class="method_anchor" id="aclrtGetFunctionAddr"></a>
 
 ## aclrtGetFunctionAddr
 
@@ -617,7 +617,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtGetFunctionSize"></a>
+<a class="method_anchor" id="aclrtGetFunctionSize"></a>
 
 ## aclrtGetFunctionSize
 
@@ -651,7 +651,6 @@ aclError aclrtGetFunctionSize(const void *func, size_t *aicSize, size_t *aivSize
 
 Obtains the size of the kernel function code segment.
 
-
 ### Parameters
 
 | Name | Input/Output | Description |
@@ -668,7 +667,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtGetFunctionName"></a>
+<a class="method_anchor" id="aclrtGetFunctionName"></a>
 
 ## aclrtGetFunctionName
 
@@ -707,7 +706,7 @@ Obtains the kernel function name.
 | Name | Input/Output | Description |
 | --- | :---: | --- |
 | func | Input | Kernel function pointer. This can be a kernel function name declared with `__global__` (for example, **myKernel**, which is applicable only to the scenario where custom operators are developed in Ascend C and host and device code are compiled together based on the BiSheng compiler), or a kernel function handle of the [aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle) type. |
-| maxLen | Input | Maximum memory size, in bytes, that the user requests for storing the kernel function name. |
+| maxLen | Input | Buffer capacity, in bytes, that the user requests to store the kernel function name. The value of **maxLen** must be greater than or equal to the byte length of the kernel function name plus 1 to accommodate the trailing null character `\0`. If the capacity is insufficient, the API returns a parameter error. |
 | name | Output | Kernel function name. |
 
 ### Return Values
@@ -718,7 +717,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtGetFunctionAttribute"></a>
+<a class="method_anchor" id="aclrtGetFunctionAttribute"></a>
 
 ## aclrtGetFunctionAttribute
 
@@ -752,8 +751,6 @@ aclError aclrtGetFunctionAttribute(const void *func, aclrtFuncAttribute attrType
 
 Obtains the kernel function attribute information in the operator binary file.
 
-
-
 ### Parameters
 
 | Name | Input/Output | Description |
@@ -770,7 +767,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtGetHardwareSyncAddr"></a>
+<a class="method_anchor" id="aclrtGetHardwareSyncAddr"></a>
 
 ## aclrtGetHardwareSyncAddr
 
@@ -818,7 +815,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtRegisterCpuFunc"></a>
+<a class="method_anchor" id="aclrtRegisterCpuFunc"></a>
 
 ## aclrtRegisterCpuFunc
 
@@ -871,7 +868,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtKernelArgsInit"></a>
+<a class="method_anchor" id="aclrtKernelArgsInit"></a>
 
 ## aclrtKernelArgsInit
 
@@ -924,7 +921,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtKernelArgsInitByUserMem"></a>
+<a class="method_anchor" id="aclrtKernelArgsInitByUserMem"></a>
 
 ## aclrtKernelArgsInitByUserMem
 
@@ -979,7 +976,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtKernelArgsGetMemSize"></a>
+<a class="method_anchor" id="aclrtKernelArgsGetMemSize"></a>
 
 ## aclrtKernelArgsGetMemSize
 
@@ -1029,7 +1026,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtKernelArgsGetHandleMemSize"></a>
+<a class="method_anchor" id="aclrtKernelArgsGetHandleMemSize"></a>
 
 ## aclrtKernelArgsGetHandleMemSize
 
@@ -1078,7 +1075,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtKernelArgsAppend"></a>
+<a class="method_anchor" id="aclrtKernelArgsAppend"></a>
 
 ## aclrtKernelArgsAppend
 
@@ -1131,7 +1128,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtKernelArgsAppendPlaceHolder"></a>
+<a class="method_anchor" id="aclrtKernelArgsAppendPlaceHolder"></a>
 
 ## aclrtKernelArgsAppendPlaceHolder
 
@@ -1182,7 +1179,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtKernelArgsGetPlaceHolderBuffer"></a>
+<a class="method_anchor" id="aclrtKernelArgsGetPlaceHolderBuffer"></a>
 
 ## aclrtKernelArgsGetPlaceHolderBuffer
 
@@ -1233,7 +1230,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtKernelArgsParaUpdate"></a>
+<a class="method_anchor" id="aclrtKernelArgsParaUpdate"></a>
 
 ## aclrtKernelArgsParaUpdate
 
@@ -1284,7 +1281,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtKernelArgsFinalize"></a>
+<a class="method_anchor" id="aclrtKernelArgsFinalize"></a>
 
 ## aclrtKernelArgsFinalize
 
@@ -1332,7 +1329,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtLaunchKernel"></a>
+<a class="method_anchor" id="aclrtLaunchKernel"></a>
 
 ## aclrtLaunchKernel
 
@@ -1382,7 +1379,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 
 ### Reference Resources
 
-<a id="launch_kernel_comparison"></a>
+<a class="method_anchor" id="launch_kernel_comparison"></a>
 
 The following APIs are all used to launch the computation task of the corresponding operator, but they differ in functionality and usage.
 
@@ -1400,7 +1397,7 @@ The following APIs are all used to launch the computation task of the correspond
 <br>
 <br>
 
-<a id="aclrtLaunchKernelV2"></a>
+<a class="method_anchor" id="aclrtLaunchKernelV2"></a>
 
 ## aclrtLaunchKernelV2
 
@@ -1457,7 +1454,7 @@ For a comparison of the features and usage of each launch API, see the [launch A
 <br>
 <br>
 
-<a id="aclrtLaunchKernelWithConfig"></a>
+<a class="method_anchor" id="aclrtLaunchKernelWithConfig"></a>
 
 ## aclrtLaunchKernelWithConfig
 
@@ -1516,7 +1513,7 @@ For a comparison of the features and usage of each launch API, see the [launch A
 <br>
 <br>
 
-<a id="aclrtLaunchKernelWithHostArgs"></a>
+<a class="method_anchor" id="aclrtLaunchKernelWithHostArgs"></a>
 
 ## aclrtLaunchKernelWithHostArgs
 
@@ -1575,7 +1572,7 @@ For a comparison of the features and usage of each launch API, see the [launch A
 <br>
 <br>
 
-<a id="aclrtLaunchKernelWithArgsArray"></a>
+<a class="method_anchor" id="aclrtLaunchKernelWithArgsArray"></a>
 
 ## aclrtLaunchKernelWithArgsArray
 
@@ -1636,7 +1633,7 @@ For a comparison of the features and usage of each launch API, see the [launch A
 <br>
 <br>
 
-<a id="aclrtCreateBinary"></a>
+<a class="method_anchor" id="aclrtCreateBinary"></a>
 
 ## aclrtCreateBinary
 
@@ -1699,7 +1696,7 @@ In the Ascend RC form or control CPU open form, the **data** parameter requires 
 <br>
 <br>
 
-<a id="aclrtDestroyBinary"></a>
+<a class="method_anchor" id="aclrtDestroyBinary"></a>
 
 ## aclrtDestroyBinary
 
@@ -1749,7 +1746,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtBinaryLoad"></a>
+<a class="method_anchor" id="aclrtBinaryLoad"></a>
 
 ## aclrtBinaryLoad
 
@@ -1798,7 +1795,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtBinaryUnLoad"></a>
+<a class="method_anchor" id="aclrtBinaryUnLoad"></a>
 
 ## aclrtBinaryUnLoad
 
@@ -1851,7 +1848,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtFunctionGetBinary"></a>
+<a class="method_anchor" id="aclrtFunctionGetBinary"></a>
 
 ## aclrtFunctionGetBinary
 
@@ -1900,7 +1897,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtFunctionGetParamCount"></a>
+<a class="method_anchor" id="aclrtFunctionGetParamCount"></a>
 
 ## aclrtFunctionGetParamCount
 
@@ -1951,7 +1948,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtFunctionGetParamInfo"></a>
+<a class="method_anchor" id="aclrtFunctionGetParamInfo"></a>
 
 ## aclrtFunctionGetParamInfo
 
@@ -1985,7 +1982,6 @@ aclError aclrtFunctionGetParamInfo(const void *func, size_t paramIndex, size_t *
 
 Obtains the kernel function parameter information (offset and size) based on the index.
 
-
 ### Parameters
 
 | Name | Input/Output | Description |
@@ -2003,7 +1999,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtFunctionGetAvailDynUbufPerBlock"></a>
+<a class="method_anchor" id="aclrtFunctionGetAvailDynUbufPerBlock"></a>
 
 ## aclrtFunctionGetAvailDynUbufPerBlock
 
@@ -2055,7 +2051,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtGetFuncBySymbol"></a>
+<a class="method_anchor" id="aclrtGetFuncBySymbol"></a>
 
 ## aclrtGetFuncBySymbol
 
@@ -2112,7 +2108,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtLaunchSIMTKernelWithArgsArray"></a>
+<a class="method_anchor" id="aclrtLaunchSIMTKernelWithArgsArray"></a>
 
 ## aclrtLaunchSIMTKernelWithArgsArray
 
@@ -2174,7 +2170,7 @@ For a comparison of the features and usage of each launch API, see the [launch A
 <br>
 <br>
 
-<a id="aclrtLaunchSIMTKernelWithHostArgs"></a>
+<a class="method_anchor" id="aclrtLaunchSIMTKernelWithHostArgs"></a>
 
 ## aclrtLaunchSIMTKernelWithHostArgs
 
@@ -2240,7 +2236,7 @@ For a comparison of the features and usage of each launch API, see the [launch A
 <br>
 <br>
 
-<a id="aclrtBinaryGetFunctionCount"></a>
+<a class="method_anchor" id="aclrtBinaryGetFunctionCount"></a>
 
 ## aclrtBinaryGetFunctionCount
 
@@ -2290,7 +2286,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 <br>
-<a id="aclrtBinaryEnumerateFunctions"></a>
+<a class="method_anchor" id="aclrtBinaryEnumerateFunctions"></a>
 
 ## aclrtBinaryEnumerateFunctions
 

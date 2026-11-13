@@ -8,7 +8,7 @@
     - [aclCreateDataBuffer](#aclCreateDataBuffer)
     - [aclDestroyDataBuffer](#aclDestroyDataBuffer)
     - [aclGetDataBufferAddr](#aclGetDataBufferAddr)
-    - [aclGetDataBufferSize（废弃）](#aclGetDataBufferSize_deprecated)
+    - [aclGetDataBufferSize（废弃）](#aclGetDataBufferSize)
     - [aclGetDataBufferSizeV2](#aclGetDataBufferSizeV2)
     - [aclUpdateDataBuffer](#aclUpdateDataBuffer)
 - [aclprofConfig](#aclprofConfig)
@@ -69,7 +69,7 @@
 
 <br>
 
-<a id="aclDataBuffer"></a>
+<a class="method_anchor" id="aclDataBuffer"></a>
 
 ## aclDataBuffer
 
@@ -79,7 +79,7 @@
 
 - **[aclGetDataBufferAddr](#aclGetDataBufferAddr)**
 
-- **[aclGetDataBufferSize（废弃）](#aclGetDataBufferSize_deprecated)**
+- **[aclGetDataBufferSize（废弃）](#aclGetDataBufferSize)**
 
 - **[aclGetDataBufferSizeV2](#aclGetDataBufferSizeV2)**
 
@@ -87,7 +87,7 @@
 
 <br>
 
-<a id="aclCreateDataBuffer"></a>
+<a class="method_anchor" id="aclCreateDataBuffer"></a>
 
 ## aclCreateDataBuffer
 
@@ -136,7 +136,7 @@ aclDataBuffer *aclCreateDataBuffer(void *data, size_t size)
 
 <br>
 
-<a id="aclDestroyDataBuffer"></a>
+<a class="method_anchor" id="aclDestroyDataBuffer"></a>
 
 ## aclDestroyDataBuffer
 
@@ -184,7 +184,7 @@ aclError aclDestroyDataBuffer(const aclDataBuffer *dataBuffer)
 
 <br>
 
-<a id="aclGetDataBufferAddr"></a>
+<a class="method_anchor" id="aclGetDataBufferAddr"></a>
 
 ## aclGetDataBufferAddr
 
@@ -230,7 +230,7 @@ void *aclGetDataBufferAddr(const aclDataBuffer *dataBuffer)
 
 <br>
 
-<a id="aclGetDataBufferSize_deprecated"></a>
+<a class="method_anchor" id="aclGetDataBufferSize"></a>
 
 ## aclGetDataBufferSize（废弃）
 
@@ -278,7 +278,7 @@ aclDataBuffer类型中数据的内存大小。
 
 <br>
 
-<a id="aclGetDataBufferSizeV2"></a>
+<a class="method_anchor" id="aclGetDataBufferSizeV2"></a>
 
 ## aclGetDataBufferSizeV2
 
@@ -324,7 +324,7 @@ aclDataBuffer类型中数据的内存大小。
 
 <br>
 
-<a id="aclUpdateDataBuffer"></a>
+<a class="method_anchor" id="aclUpdateDataBuffer"></a>
 
 ## aclUpdateDataBuffer
 
@@ -374,7 +374,7 @@ aclError aclUpdateDataBuffer(aclDataBuffer *dataBuffer, void *data, size_t size)
 
 <br>
 
-<a id="aclprofConfig"></a>
+<a class="method_anchor" id="aclprofConfig"></a>
 
 ## aclprofConfig
 
@@ -384,7 +384,7 @@ aclError aclUpdateDataBuffer(aclDataBuffer *dataBuffer, void *data, size_t size)
 
 <br>
 
-<a id="aclprofCreateConfig"></a>
+<a class="method_anchor" id="aclprofCreateConfig"></a>
 
 ## aclprofCreateConfig
 
@@ -447,7 +447,7 @@ aclprofConfig类型数据可以只创建一次、多处使用，用户需要保�
 
 <br>
 
-<a id="aclprofDestroyConfig"></a>
+<a class="method_anchor" id="aclprofDestroyConfig"></a>
 
 ## aclprofDestroyConfig
 
@@ -497,7 +497,7 @@ aclError aclprofDestroyConfig(const aclprofConfig *profilerConfig)
 
 <br>
 
-<a id="aclprofStepInfo"></a>
+<a class="method_anchor" id="aclprofStepInfo"></a>
 
 ## aclprofStepInfo
 
@@ -507,7 +507,7 @@ aclError aclprofDestroyConfig(const aclprofConfig *profilerConfig)
 
 <br>
 
-<a id="aclprofCreateStepInfo"></a>
+<a class="method_anchor" id="aclprofCreateStepInfo"></a>
 
 ## aclprofCreateStepInfo
 
@@ -556,7 +556,7 @@ aclprofStepInfo* aclprofCreateStepInfo()
 
 <br>
 
-<a id="aclprofDestroyStepInfo"></a>
+<a class="method_anchor" id="aclprofDestroyStepInfo"></a>
 
 ## aclprofDestroyStepInfo
 
@@ -603,7 +603,7 @@ void aclprofDestroyStepInfo(aclprofStepInfo* stepinfo)
 
 <br>
 
-<a id="aclprofSubscribeConfig"></a>
+<a class="method_anchor" id="aclprofSubscribeConfig"></a>
 
 ## aclprofSubscribeConfig
 
@@ -613,7 +613,7 @@ void aclprofDestroyStepInfo(aclprofStepInfo* stepinfo)
 
 <br>
 
-<a id="aclprofCreateSubscribeConfig"></a>
+<a class="method_anchor" id="aclprofCreateSubscribeConfig"></a>
 
 ## aclprofCreateSubscribeConfig
 
@@ -669,7 +669,7 @@ aclprofSubscribeConfig *aclprofCreateSubscribeConfig(int8_t timeInfoSwitch, aclp
 
 <br>
 
-<a id="aclprofDestroySubscribeConfig"></a>
+<a class="method_anchor" id="aclprofDestroySubscribeConfig"></a>
 
 ## aclprofDestroySubscribeConfig
 
@@ -720,7 +720,7 @@ aclError aclprofDestroySubscribeConfig(const aclprofSubscribeConfig *profSubscri
 
 <br>
 
-<a id="aclrtAllocatorDesc"></a>
+<a class="method_anchor" id="aclrtAllocatorDesc"></a>
 
 ## aclrtAllocatorDesc
 
@@ -740,7 +740,7 @@ aclError aclprofDestroySubscribeConfig(const aclprofSubscribeConfig *profSubscri
 
 <br>
 
-<a id="aclrtAllocatorCreateDesc"></a>
+<a class="method_anchor" id="aclrtAllocatorCreateDesc"></a>
 
 ## aclrtAllocatorCreateDesc
 
@@ -781,7 +781,7 @@ aclrtAllocatorDesc aclrtAllocatorCreateDesc()
 
 <br>
 
-<a id="aclrtAllocatorDestroyDesc"></a>
+<a class="method_anchor" id="aclrtAllocatorDestroyDesc"></a>
 
 ## aclrtAllocatorDestroyDesc
 
@@ -827,7 +827,7 @@ aclError aclrtAllocatorDestroyDesc(aclrtAllocatorDesc allocatorDesc)
 
 <br>
 
-<a id="aclrtAllocatorSetObjToDesc"></a>
+<a class="method_anchor" id="aclrtAllocatorSetObjToDesc"></a>
 
 ## aclrtAllocatorSetObjToDesc
 
@@ -874,7 +874,7 @@ aclError aclrtAllocatorSetObjToDesc(aclrtAllocatorDesc allocatorDesc,  aclrtAllo
 
 <br>
 
-<a id="aclrtAllocatorSetAllocFuncToDesc"></a>
+<a class="method_anchor" id="aclrtAllocatorSetAllocFuncToDesc"></a>
 
 ## aclrtAllocatorSetAllocFuncToDesc
 
@@ -921,7 +921,7 @@ aclError aclrtAllocatorSetAllocFuncToDesc(aclrtAllocatorDesc allocatorDesc, aclr
 
 <br>
 
-<a id="aclrtAllocatorSetAllocAdviseFuncToDesc"></a>
+<a class="method_anchor" id="aclrtAllocatorSetAllocAdviseFuncToDesc"></a>
 
 ## aclrtAllocatorSetAllocAdviseFuncToDesc
 
@@ -968,7 +968,7 @@ aclError aclrtAllocatorSetAllocAdviseFuncToDesc(aclrtAllocatorDesc allocatorDesc
 
 <br>
 
-<a id="aclrtAllocatorSetFreeFuncToDesc"></a>
+<a class="method_anchor" id="aclrtAllocatorSetFreeFuncToDesc"></a>
 
 ## aclrtAllocatorSetFreeFuncToDesc
 
@@ -1015,7 +1015,7 @@ aclError aclrtAllocatorSetFreeFuncToDesc(aclrtAllocatorDesc allocatorDesc, aclrt
 
 <br>
 
-<a id="aclrtAllocatorSetGetAddrFromBlockFuncToDesc"></a>
+<a class="method_anchor" id="aclrtAllocatorSetGetAddrFromBlockFuncToDesc"></a>
 
 ## aclrtAllocatorSetGetAddrFromBlockFuncToDesc
 
@@ -1062,7 +1062,7 @@ aclError aclrtAllocatorSetGetAddrFromBlockFuncToDesc(aclrtAllocatorDesc allocato
 
 <br>
 
-<a id="aclrtStreamConfigHandle"></a>
+<a class="method_anchor" id="aclrtStreamConfigHandle"></a>
 
 ## aclrtStreamConfigHandle
 
@@ -1072,7 +1072,7 @@ aclError aclrtAllocatorSetGetAddrFromBlockFuncToDesc(aclrtAllocatorDesc allocato
 
 <br>
 
-<a id="aclrtCreateStreamConfigHandle"></a>
+<a class="method_anchor" id="aclrtCreateStreamConfigHandle"></a>
 
 ## aclrtCreateStreamConfigHandle
 
@@ -1119,7 +1119,7 @@ aclrtStreamConfigHandle *aclrtCreateStreamConfigHandle(void)
 
 <br>
 
-<a id="aclrtDestroyStreamConfigHandle"></a>
+<a class="method_anchor" id="aclrtDestroyStreamConfigHandle"></a>
 
 ## aclrtDestroyStreamConfigHandle
 
@@ -1165,7 +1165,7 @@ aclError aclrtDestroyStreamConfigHandle(aclrtStreamConfigHandle *handle)
 
 <br>
 
-<a id="acltdtDataItem"></a>
+<a class="method_anchor" id="acltdtDataItem"></a>
 
 ## acltdtDataItem
 
@@ -1187,7 +1187,7 @@ aclError aclrtDestroyStreamConfigHandle(aclrtStreamConfigHandle *handle)
 
 <br>
 
-<a id="acltdtCreateDataItem"></a>
+<a class="method_anchor" id="acltdtCreateDataItem"></a>
 
 ## acltdtCreateDataItem
 
@@ -1246,7 +1246,7 @@ size_t size)
 
 <br>
 
-<a id="acltdtDestroyDataItem"></a>
+<a class="method_anchor" id="acltdtDestroyDataItem"></a>
 
 ## acltdtDestroyDataItem
 
@@ -1292,7 +1292,7 @@ aclError acltdtDestroyDataItem(acltdtDataItem *dataItem)
 
 <br>
 
-<a id="acltdtGetTensorTypeFromItem"></a>
+<a class="method_anchor" id="acltdtGetTensorTypeFromItem"></a>
 
 ## acltdtGetTensorTypeFromItem
 
@@ -1338,7 +1338,7 @@ acltdtTensorType acltdtGetTensorTypeFromItem(const acltdtDataItem *dataItem)
 
 <br>
 
-<a id="acltdtGetDataTypeFromItem"></a>
+<a class="method_anchor" id="acltdtGetDataTypeFromItem"></a>
 
 ## acltdtGetDataTypeFromItem
 
@@ -1384,7 +1384,7 @@ aclDataType acltdtGetDataTypeFromItem(const acltdtDataItem *dataItem)
 
 <br>
 
-<a id="acltdtGetDataAddrFromItem"></a>
+<a class="method_anchor" id="acltdtGetDataAddrFromItem"></a>
 
 ## acltdtGetDataAddrFromItem
 
@@ -1430,7 +1430,7 @@ void *acltdtGetDataAddrFromItem(const acltdtDataItem *dataItem)
 
 <br>
 
-<a id="acltdtGetDataSizeFromItem"></a>
+<a class="method_anchor" id="acltdtGetDataSizeFromItem"></a>
 
 ## acltdtGetDataSizeFromItem
 
@@ -1476,7 +1476,7 @@ size_t acltdtGetDataSizeFromItem(const acltdtDataItem *dataItem)
 
 <br>
 
-<a id="acltdtGetDimNumFromItem"></a>
+<a class="method_anchor" id="acltdtGetDimNumFromItem"></a>
 
 ## acltdtGetDimNumFromItem
 
@@ -1522,7 +1522,7 @@ size_t acltdtGetDimNumFromItem(const acltdtDataItem *dataItem)
 
 <br>
 
-<a id="acltdtGetDimsFromItem"></a>
+<a class="method_anchor" id="acltdtGetDimsFromItem"></a>
 
 ## acltdtGetDimsFromItem
 
@@ -1570,7 +1570,7 @@ aclError acltdtGetDimsFromItem(const acltdtDataItem *dataItem, int64_t *dims, si
 
 <br>
 
-<a id="acltdtDataset"></a>
+<a class="method_anchor" id="acltdtDataset"></a>
 
 ## acltdtDataset
 
@@ -1588,7 +1588,7 @@ aclError acltdtGetDimsFromItem(const acltdtDataItem *dataItem, int64_t *dims, si
 
 <br>
 
-<a id="acltdtCreateDataset"></a>
+<a class="method_anchor" id="acltdtCreateDataset"></a>
 
 ## acltdtCreateDataset
 
@@ -1635,7 +1635,7 @@ acltdtDataset *acltdtCreateDataset()
 
 <br>
 
-<a id="acltdtDestroyDataset"></a>
+<a class="method_anchor" id="acltdtDestroyDataset"></a>
 
 ## acltdtDestroyDataset
 
@@ -1681,7 +1681,7 @@ aclError acltdtDestroyDataset(acltdtDataset *dataset)
 
 <br>
 
-<a id="acltdtGetDataItem"></a>
+<a class="method_anchor" id="acltdtGetDataItem"></a>
 
 ## acltdtGetDataItem
 
@@ -1729,7 +1729,7 @@ acltdtDataItem *acltdtGetDataItem(const acltdtDataset *dataset, size_t index)
 
 <br>
 
-<a id="acltdtAddDataItem"></a>
+<a class="method_anchor" id="acltdtAddDataItem"></a>
 
 ## acltdtAddDataItem
 
@@ -1776,7 +1776,7 @@ aclError acltdtAddDataItem(acltdtDataset *dataset, acltdtDataItem *dataItem)
 
 <br>
 
-<a id="acltdtGetDatasetSize"></a>
+<a class="method_anchor" id="acltdtGetDatasetSize"></a>
 
 ## acltdtGetDatasetSize
 
@@ -1822,7 +1822,7 @@ acltdtDataItem的个数。
 
 <br>
 
-<a id="acltdtGetDatasetName"></a>
+<a class="method_anchor" id="acltdtGetDatasetName"></a>
 
 ## acltdtGetDatasetName
 
@@ -1868,7 +1868,7 @@ const char *acltdtGetDatasetName(const acltdtDataset *dataset)
 
 <br>
 
-<a id="acltdtQueueAttr"></a>
+<a class="method_anchor" id="acltdtQueueAttr"></a>
 
 ## acltdtQueueAttr
 
@@ -1882,7 +1882,7 @@ const char *acltdtGetDatasetName(const acltdtDataset *dataset)
 
 <br>
 
-<a id="acltdtCreateQueueAttr"></a>
+<a class="method_anchor" id="acltdtCreateQueueAttr"></a>
 
 ## acltdtCreateQueueAttr
 
@@ -1927,7 +1927,7 @@ acltdtQueueAttr *acltdtCreateQueueAttr()
 
 <br>
 
-<a id="acltdtDestroyQueueAttr"></a>
+<a class="method_anchor" id="acltdtDestroyQueueAttr"></a>
 
 ## acltdtDestroyQueueAttr
 
@@ -1973,7 +1973,7 @@ aclError acltdtDestroyQueueAttr(const acltdtQueueAttr *attr)
 
 <br>
 
-<a id="acltdtSetQueueAttr"></a>
+<a class="method_anchor" id="acltdtSetQueueAttr"></a>
 
 ## acltdtSetQueueAttr
 
@@ -2022,7 +2022,7 @@ aclError acltdtSetQueueAttr(acltdtQueueAttr *attr, acltdtQueueAttrType type, siz
 
 <br>
 
-<a id="acltdtGetQueueAttr"></a>
+<a class="method_anchor" id="acltdtGetQueueAttr"></a>
 
 ## acltdtGetQueueAttr
 
@@ -2072,7 +2072,7 @@ aclError acltdtGetQueueAttr(const acltdtQueueAttr *attr, acltdtQueueAttrType typ
 
 <br>
 
-<a id="acltdtQueueRoute"></a>
+<a class="method_anchor" id="acltdtQueueRoute"></a>
 
 ## acltdtQueueRoute
 
@@ -2084,7 +2084,7 @@ aclError acltdtGetQueueAttr(const acltdtQueueAttr *attr, acltdtQueueAttrType typ
 
 <br>
 
-<a id="acltdtCreateQueueRoute"></a>
+<a class="method_anchor" id="acltdtCreateQueueRoute"></a>
 
 ## acltdtCreateQueueRoute
 
@@ -2132,7 +2132,7 @@ acltdtQueueRoute* acltdtCreateQueueRoute(uint32_t srcId, uint32_t dstId)
 
 <br>
 
-<a id="acltdtDestroyQueueRoute"></a>
+<a class="method_anchor" id="acltdtDestroyQueueRoute"></a>
 
 ## acltdtDestroyQueueRoute
 
@@ -2178,7 +2178,7 @@ aclError acltdtDestroyQueueRoute(const acltdtQueueRoute *route)
 
 <br>
 
-<a id="acltdtGetQueueRouteParam"></a>
+<a class="method_anchor" id="acltdtGetQueueRouteParam"></a>
 
 ## acltdtGetQueueRouteParam
 
@@ -2228,7 +2228,7 @@ aclError acltdtGetQueueRouteParam(const acltdtQueueRoute *route, acltdtQueueRout
 
 <br>
 
-<a id="acltdtQueueRouteList"></a>
+<a class="method_anchor" id="acltdtQueueRouteList"></a>
 
 ## acltdtQueueRouteList
 
@@ -2244,7 +2244,7 @@ aclError acltdtGetQueueRouteParam(const acltdtQueueRoute *route, acltdtQueueRout
 
 <br>
 
-<a id="acltdtCreateQueueRouteList"></a>
+<a class="method_anchor" id="acltdtCreateQueueRouteList"></a>
 
 ## acltdtCreateQueueRouteList
 
@@ -2289,7 +2289,7 @@ acltdtQueueRouteList* acltdtCreateQueueRouteList()
 
 <br>
 
-<a id="acltdtDestroyQueueRouteList"></a>
+<a class="method_anchor" id="acltdtDestroyQueueRouteList"></a>
 
 ## acltdtDestroyQueueRouteList
 
@@ -2335,7 +2335,7 @@ aclError acltdtDestroyQueueRouteList(const acltdtQueueRouteList *routeList)
 
 <br>
 
-<a id="acltdtAddQueueRoute"></a>
+<a class="method_anchor" id="acltdtAddQueueRoute"></a>
 
 ## acltdtAddQueueRoute
 
@@ -2382,7 +2382,7 @@ aclError acltdtAddQueueRoute(acltdtQueueRouteList *routeList, const acltdtQueueR
 
 <br>
 
-<a id="acltdtGetQueueRoute"></a>
+<a class="method_anchor" id="acltdtGetQueueRoute"></a>
 
 ## acltdtGetQueueRoute
 
@@ -2430,7 +2430,7 @@ aclError acltdtGetQueueRoute(const acltdtQueueRouteList *routeList, size_t index
 
 <br>
 
-<a id="acltdtGetQueueRouteNum"></a>
+<a class="method_anchor" id="acltdtGetQueueRouteNum"></a>
 
 ## acltdtGetQueueRouteNum
 
@@ -2476,7 +2476,7 @@ size_t acltdtGetQueueRouteNum(const acltdtQueueRouteList *routeList)
 
 <br>
 
-<a id="acltdtQueueRouteQueryInfo"></a>
+<a class="method_anchor" id="acltdtQueueRouteQueryInfo"></a>
 
 ## acltdtQueueRouteQueryInfo
 
@@ -2488,7 +2488,7 @@ size_t acltdtGetQueueRouteNum(const acltdtQueueRouteList *routeList)
 
 <br>
 
-<a id="acltdtCreateQueueRouteQueryInfo"></a>
+<a class="method_anchor" id="acltdtCreateQueueRouteQueryInfo"></a>
 
 ## acltdtCreateQueueRouteQueryInfo
 
@@ -2533,7 +2533,7 @@ acltdtQueueRouteQueryInfo* acltdtCreateQueueRouteQueryInfo()
 
 <br>
 
-<a id="acltdtDestroyQueueRouteQueryInfo"></a>
+<a class="method_anchor" id="acltdtDestroyQueueRouteQueryInfo"></a>
 
 ## acltdtDestroyQueueRouteQueryInfo
 
@@ -2579,7 +2579,7 @@ aclError acltdtDestroyQueueRouteQueryInfo(const acltdtQueueRouteQueryInfo *info)
 
 <br>
 
-<a id="acltdtSetQueueRouteQueryInfo"></a>
+<a class="method_anchor" id="acltdtSetQueueRouteQueryInfo"></a>
 
 ## acltdtSetQueueRouteQueryInfo
 

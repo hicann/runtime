@@ -17,7 +17,7 @@
 - [`aclError aclrtRandomNumAsync(const aclrtRandomNumTaskInfo *taskInfo, const aclrtStream stream, void *reserve)`](#aclrtRandomNumAsync)：下发并执行随机数生成任务。异步接口。
 - [`aclError aclrtTaskUpdateAsync(aclrtStream taskStream, uint32_t taskId, aclrtTaskUpdateInfo *info, aclrtStream execStream)`](#aclrtTaskUpdateAsync)：刷新目标任务的信息。异步接口。
 
-<a id="aclrtLaunchCallback"></a>
+<a class="method_anchor" id="aclrtLaunchCallback"></a>
 
 ## aclrtLaunchCallback
 
@@ -85,7 +85,7 @@ aclError aclrtLaunchCallback(aclrtCallback fn, void *userData, aclrtCallbackBloc
 <br>
 <br>
 
-<a id="aclrtSubscribeReport"></a>
+<a class="method_anchor" id="aclrtSubscribeReport"></a>
 
 ## aclrtSubscribeReport
 
@@ -153,7 +153,7 @@ aclError aclrtSubscribeReport(uint64_t threadId, aclrtStream stream)
 <br>
 <br>
 
-<a id="aclrtProcessReport"></a>
+<a class="method_anchor" id="aclrtProcessReport"></a>
 
 ## aclrtProcessReport
 
@@ -210,7 +210,7 @@ aclError aclrtProcessReport(int32_t timeout)
 <br>
 <br>
 
-<a id="aclrtUnSubscribeReport"></a>
+<a class="method_anchor" id="aclrtUnSubscribeReport"></a>
 
 ## aclrtUnSubscribeReport
 
@@ -268,7 +268,7 @@ aclError aclrtUnSubscribeReport(uint64_t threadId, aclrtStream stream)
 <br>
 <br>
 
-<a id="aclrtGetOpTimeOutInterval"></a>
+<a class="method_anchor" id="aclrtGetOpTimeOutInterval"></a>
 
 ## aclrtGetOpTimeOutInterval
 
@@ -321,7 +321,7 @@ aclError aclrtGetOpTimeOutInterval(uint64_t *interval)
 <br>
 <br>
 
-<a id="aclrtSetOpExecuteTimeOut"></a>
+<a class="method_anchor" id="aclrtSetOpExecuteTimeOut"></a>
 
 ## aclrtSetOpExecuteTimeOut
 
@@ -413,7 +413,7 @@ aclError aclrtSetOpExecuteTimeOut(uint32_t timeout)
 <br>
 <br>
 
-<a id="aclrtSetOpExecuteTimeOutV2"></a>
+<a class="method_anchor" id="aclrtSetOpExecuteTimeOutV2"></a>
 
 ## aclrtSetOpExecuteTimeOutV2
 
@@ -474,7 +474,7 @@ aclError aclrtSetOpExecuteTimeOutV2(uint64_t timeout,  uint64_t *actualTimeout)
 <br>
 <br>
 
-<a id="aclrtSetOpExecuteTimeOutWithMs"></a>
+<a class="method_anchor" id="aclrtSetOpExecuteTimeOutWithMs"></a>
 
 ## aclrtSetOpExecuteTimeOutWithMs
 
@@ -524,7 +524,7 @@ aclError aclrtSetOpExecuteTimeOutWithMs(uint32_t timeout)
 <br>
 <br>
 
-<a id="aclrtGetOpExecuteTimeout"></a>
+<a class="method_anchor" id="aclrtGetOpExecuteTimeout"></a>
 
 ## aclrtGetOpExecuteTimeout
 
@@ -576,7 +576,7 @@ aclError aclrtGetOpExecuteTimeout(uint32_t *const timeoutMs)
 <br>
 <br>
 
-<a id="aclrtGetThreadLastTaskId"></a>
+<a class="method_anchor" id="aclrtGetThreadLastTaskId"></a>
 
 ## aclrtGetThreadLastTaskId
 
@@ -624,7 +624,7 @@ aclError aclrtGetThreadLastTaskId(uint32_t *taskId)
 <br>
 <br>
 
-<a id="aclrtReduceAsync"></a>
+<a class="method_anchor" id="aclrtReduceAsync"></a>
 
 ## aclrtReduceAsync
 
@@ -708,7 +708,7 @@ Atlas训练系列产品仅支持fp32类型。
 <br>
 <br>
 
-<a id="aclrtLaunchHostFunc"></a>
+<a class="method_anchor" id="aclrtLaunchHostFunc"></a>
 
 ## aclrtLaunchHostFunc
 
@@ -766,7 +766,7 @@ aclError aclrtLaunchHostFunc(aclrtStream stream, aclrtHostFunc fn, void *args)
 <br>
 <br>
 
-<a id="aclrtRandomNumAsync"></a>
+<a class="method_anchor" id="aclrtRandomNumAsync"></a>
 
 ## aclrtRandomNumAsync
 
@@ -816,7 +816,7 @@ aclError aclrtRandomNumAsync(const aclrtRandomNumTaskInfo *taskInfo, const aclrt
 <br>
 <br>
 
-<a id="aclrtTaskUpdateAsync"></a>
+<a class="method_anchor" id="aclrtTaskUpdateAsync"></a>
 
 ## aclrtTaskUpdateAsync
 

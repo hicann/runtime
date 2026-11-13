@@ -29,7 +29,7 @@ This topic describes the stream management APIs of CANN Runtime, which are used 
 - [`aclError aclrtStreamGetPriority(aclrtStream stream, uint32_t *priority)`](#aclrtStreamGetPriority): Obtains the priority of the specified stream.
 - [`aclError aclrtStreamGetFlags(aclrtStream stream, uint32_t *flags)`](#aclrtStreamGetFlags): Obtains the flag set when the stream is created.
 
-<a id="aclrtCreateStream"></a>
+<a class="method_anchor" id="aclrtCreateStream"></a>
 
 ## aclrtCreateStream
 
@@ -101,7 +101,7 @@ Different hardware models support different maximum numbers of streams. If multi
 <br>
 <br>
 
-<a id="aclrtCreateStreamWithConfig"></a>
+<a class="method_anchor" id="aclrtCreateStreamWithConfig"></a>
 
 ## aclrtCreateStreamWithConfig
 
@@ -208,7 +208,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtDestroyStream"></a>
+<a class="method_anchor" id="aclrtDestroyStream"></a>
 
 ## aclrtDestroyStream
 
@@ -262,7 +262,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtDestroyStreamForce"></a>
+<a class="method_anchor" id="aclrtDestroyStreamForce"></a>
 
 ## aclrtDestroyStreamForce
 
@@ -314,7 +314,7 @@ When calling this API to destroy a specified stream, ensure that the stream is i
 <br>
 <br>
 
-<a id="aclrtSetStreamOverflowSwitch"></a>
+<a class="method_anchor" id="aclrtSetStreamOverflowSwitch"></a>
 
 ## aclrtSetStreamOverflowSwitch
 
@@ -367,7 +367,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtGetStreamOverflowSwitch"></a>
+<a class="method_anchor" id="aclrtGetStreamOverflowSwitch"></a>
 
 ## aclrtGetStreamOverflowSwitch
 
@@ -416,7 +416,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtSetStreamFailureMode"></a>
+<a class="method_anchor" id="aclrtSetStreamFailureMode"></a>
 
 ## aclrtSetStreamFailureMode
 
@@ -479,7 +479,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtStreamQuery"></a>
+<a class="method_anchor" id="aclrtStreamQuery"></a>
 
 ## aclrtStreamQuery
 
@@ -532,7 +532,7 @@ For a stream created in the following manner, the status found through this API 
 <br>
 <br>
 
-<a id="aclrtSynchronizeStream"></a>
+<a class="method_anchor" id="aclrtSynchronizeStream"></a>
 
 ## aclrtSynchronizeStream
 
@@ -584,7 +584,7 @@ A stream created in the following manner does not trigger any service processing
 <br>
 <br>
 
-<a id="aclrtSynchronizeStreamWithTimeout"></a>
+<a class="method_anchor" id="aclrtSynchronizeStreamWithTimeout"></a>
 
 ## aclrtSynchronizeStreamWithTimeout
 
@@ -637,7 +637,7 @@ A stream created in the following manner does not trigger any service processing
 <br>
 <br>
 
-<a id="aclrtNonBlockingLaunchBegin"></a>
+<a class="method_anchor" id="aclrtNonBlockingLaunchBegin"></a>
 
 ## aclrtNonBlockingLaunchBegin
 
@@ -713,7 +713,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtNonBlockingLaunchEnd"></a>
+<a class="method_anchor" id="aclrtNonBlockingLaunchEnd"></a>
 
 ## aclrtNonBlockingLaunchEnd
 
@@ -783,7 +783,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtStreamAbort"></a>
+<a class="method_anchor" id="aclrtStreamAbort"></a>
 
 ## aclrtStreamAbort
 
@@ -841,7 +841,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtStreamGetId"></a>
+<a class="method_anchor" id="aclrtStreamGetId"></a>
 
 ## aclrtStreamGetId
 
@@ -890,7 +890,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtGetStreamAvailableNum"></a>
+<a class="method_anchor" id="aclrtGetStreamAvailableNum"></a>
 
 ## aclrtGetStreamAvailableNum
 
@@ -938,7 +938,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtSetStreamAttribute"></a>
+<a class="method_anchor" id="aclrtSetStreamAttribute"></a>
 
 ## aclrtSetStreamAttribute
 
@@ -1005,7 +1005,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtGetStreamAttribute"></a>
+<a class="method_anchor" id="aclrtGetStreamAttribute"></a>
 
 ## aclrtGetStreamAttribute
 
@@ -1071,7 +1071,7 @@ For Atlas 200I/500 A2 inference products, Atlas inference products, and Atlas tr
 <br>
 <br>
 
-<a id="aclrtActiveStream"></a>
+<a class="method_anchor" id="aclrtActiveStream"></a>
 
 ## aclrtActiveStream
 
@@ -1122,7 +1122,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtSwitchStream"></a>
+<a class="method_anchor" id="aclrtSwitchStream"></a>
 
 ## aclrtSwitchStream
 
@@ -1178,7 +1178,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtRegStreamStateCallback"></a>
+<a class="method_anchor" id="aclrtRegStreamStateCallback"></a>
 
 ## aclrtRegStreamStateCallback
 
@@ -1240,7 +1240,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtStreamStop"></a>
+<a class="method_anchor" id="aclrtStreamStop"></a>
 
 ## aclrtStreamStop
 
@@ -1293,7 +1293,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtPersistentTaskClean"></a>
+<a class="method_anchor" id="aclrtPersistentTaskClean"></a>
 
 ## aclrtPersistentTaskClean
 
@@ -1343,7 +1343,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtStreamGetPriority"></a>
+<a class="method_anchor" id="aclrtStreamGetPriority"></a>
 
 ## aclrtStreamGetPriority
 
@@ -1392,7 +1392,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtStreamGetFlags"></a>
+<a class="method_anchor" id="aclrtStreamGetFlags"></a>
 
 ## aclrtStreamGetFlags
 

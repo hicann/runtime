@@ -8,7 +8,7 @@ This topic describes the custom Allocator APIs, which are used to register, quer
 - [`aclError aclrtAllocatorGetByStream(aclrtStream stream, aclrtAllocatorDesc *allocatorDesc, aclrtAllocator *allocator, aclrtAllocatorAllocFunc *allocFunc, aclrtAllocatorFreeFunc *freeFunc, aclrtAllocatorAllocAdviseFunc *allocAdviseFunc, aclrtAllocatorGetAddrFromBlockFunc *getAddrFromBlockFunc)`](#aclrtAllocatorGetByStream): Queries the Allocator information registered by the user based on the stream.
 - [`aclError aclrtAllocatorUnregister(aclrtStream stream)`](#aclrtAllocatorUnregister): Unregisters the Allocator provided by the user and the callback functions corresponding to the Allocator before the user destroys the Allocator.
 
-<a id="aclrtAllocatorRegister"></a>
+<a class="method_anchor" id="aclrtAllocatorRegister"></a>
 
 ## aclrtAllocatorRegister
 
@@ -70,7 +70,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtAllocatorGetByStream"></a>
+<a class="method_anchor" id="aclrtAllocatorGetByStream"></a>
 
 ## aclrtAllocatorGetByStream
 
@@ -124,7 +124,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtAllocatorUnregister"></a>
+<a class="method_anchor" id="aclrtAllocatorUnregister"></a>
 
 ## aclrtAllocatorUnregister
 

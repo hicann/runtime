@@ -1,6 +1,6 @@
 # 1. Overview
 
-<!-- md-trans-meta sourceCommit=unknown translatedAt=2026-10-20T01:50:08.776Z pushedAt=2026-10-29T01:32:38.416Z nl=2 -->
+<!-- md-trans-meta sourceCommit=0d259c501b2f5c821b3ac578a0b5ff3cfc2cf960 translatedAt=2026-11-06T11:14:05.456Z pushedAt=2026-11-09T06:58:56.054Z nl=2 -->
 
 This section describes the basic concepts of the CANN Runtime APIs, header files and library files, synchronous/asynchronous APIs, and deprecated APIs.
 
@@ -8,7 +8,7 @@ This section describes the basic concepts of the CANN Runtime APIs, header files
 
 ### API Categories
 
-Typically, an API name starts with the prefix `acl`, in the naming style of acl_*API category abbreviation*_*, where * indicates the operation verb and object, both starting with an uppercase letter. For ease of description, all APIs in this document are called acl APIs.
+Typically, an API name starts with the prefix `acl`, in the naming style of acl_*API category abbreviation*_*, where* indicates the operation verb and object, both starting with an uppercase letter. For ease of description, all APIs in this document are called acl APIs.
 
 **Table 1**  Key API categories
 
@@ -28,10 +28,10 @@ After the firmware, drivers, and CANN software package are installed, an applica
 
 You need to include the dependent files based on the actually used acl APIs. The purpose of each header file is described in the following table.
 
-The header files of the acl APIs are stored in the `${INSTALL_DIR}/include/` directory, and the library files are stored in the `${INSTALL_DIR}/lib64/` directory. Replace `${INSTALL_DIR}` with the path for storing files after the CANN software packages are installed. For example, for the root user, the default path is `/usr/local/Ascend/cann`.
+The header files of acl APIs are stored in the **"\${INSTALL_DIR}/include/"** directory, and the library files are stored in the **"\${INSTALL_DIR}/lib64/"** directory. Replace **\${INSTALL_DIR}** with the file storage path after CANN software installation. For example, if you install CANN as the **root** user, the default file storage path after installation is **/usr/local/Ascend/cann**.
 
->**Note:** 
->When building a program that uses acl APIs, use the library files that match the header files in `include`. Referencing redundant library files (for example, `libascendcl.a`) may cause function exceptions or compatibility issues during subsequent iterations.
+>**CAUTION:**
+>When compiling acl API programs, link against the library files corresponding to the included header files. If redundant library files (for example, **libascendcl.a**) are referenced, version features may become abnormal or compatibility issues may arise when upgrading to a subsequent version.
 
 **Table 2**  Header files
 
@@ -83,23 +83,23 @@ Deprecated items in the Runtime APIs (such as APIs and return codes), once decla
 
 ### APIs
 
-- [aclGetDataBufferSize](25-03_Operation_APIs.md#aclGetDataBufferSize_deprecated)
+- [aclGetDataBufferSize](25-03_Operation_APIs.md#aclGetDataBufferSize)
 
     This API will be deprecated in a subsequent version. Use [aclGetDataBufferSizeV2](25-03_Operation_APIs.md#aclGetDataBufferSizeV2) instead.
 
-- [aclrtQueryEvent](07_event_management.md#aclrtQueryEvent_deprecated)
+- [aclrtQueryEvent](07_event_management.md#aclrtQueryEvent)
 
     This API will be deprecated in a subsequent version. Use [aclrtQueryEventStatus](07_event_management.md#aclrtQueryEventStatus) instead.
 
-- [aclrtGetVersion](24_other_APIs.md#aclrtGetVersion_deprecated)
+- [aclrtGetVersion](24_other_APIs.md#aclrtGetVersion)
 
     This API will be deprecated in a subsequent version. Use [aclsysGetVersionNum](24_other_APIs.md#aclsysGetVersionNum) or [aclsysGetVersionStr](24_other_APIs.md#aclsysGetVersionStr) instead.
 
-- [aclrtMemcpyAsyncWithCondition](11-03_memory_copy_and_set.md#aclrtMemcpyAsyncWithCondition_deprecated)
+- [aclrtMemcpyAsyncWithCondition](11-03_memory_copy_and_set.md#aclrtMemcpyAsyncWithCondition)
 
     This API will be deprecated in a subsequent version. Use [aclrtMemcpyAsync](11-03_memory_copy_and_set.md#aclrtMemcpyAsync) instead.
 
-- [aclrtSetExceptionInfoCallback](13_exception_handling.md#aclrtSetExceptionInfoCallback_deprecated)
+- [aclrtSetExceptionInfoCallback](13_exception_handling.md#aclrtSetExceptionInfoCallback)
 
     This API will be deprecated in a subsequent version. Use [aclrtExceptionInfoCallbackRegister](13_exception_handling.md#aclrtExceptionInfoCallbackRegister) or [aclrtExceptionInfoCallbackUnregister](13_exception_handling.md#aclrtExceptionInfoCallbackUnregister) instead.
 
@@ -140,5 +140,5 @@ Deprecated items in the Runtime APIs (such as APIs and return codes), once decla
 ### Enumerations
 
 - `ACL_OPT_STRONG_CONSISTENCY` in the [aclSysParamOpt](25-02_Enumerations.md#aclsysparamopt) enumeration
-  
+
     `ACL_OPT_STRONG_CONSISTENCY` in this enumeration will be deprecated in a subsequent version. Use `ACL_OPT_DETERMINISTIC` instead.

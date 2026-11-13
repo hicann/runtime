@@ -11,7 +11,7 @@
 - [`aclError aclrtMemP2PMap(void *devPtr, size_t size, int32_t dstDevId, uint64_t flags)`](#aclrtMemP2PMap)：本接口用于建立同一进程内两个Device之间的内存页表映射，以实现跨Device的内存访问，但在进行此操作前，需先调用[aclrtDeviceEnablePeerAccess](04_device_management.md#aclrtDeviceEnablePeerAccess)接口以开启两个Device间的数据交互。
 - [`aclError aclrtPointerGetAttributes(const void *ptr, aclrtPtrAttributes *attributes)`](#aclrtPointerGetAttributes)：获取内存属性信息，包括内存是位于Host还是Device、页表大小等信息。
 
-<a id="aclrtMemAllocManaged"></a>
+<a class="method_anchor" id="aclrtMemAllocManaged"></a>
 
 ## aclrtMemAllocManaged
 
@@ -47,7 +47,7 @@ aclError aclrtMemAllocManaged(void **ptr, uint64_t size, uint32_t flag)
 <br>
 <br>
 
-<a id="aclrtMemManagedAdvise"></a>
+<a class="method_anchor" id="aclrtMemManagedAdvise"></a>
 
 ## aclrtMemManagedAdvise
 
@@ -80,7 +80,7 @@ aclError aclrtMemManagedAdvise(const void *const ptr, uint64_t size, aclrtMemMan
 <br>
 <br>
 
-<a id="aclrtMemManagedGetAttr"></a>
+<a class="method_anchor" id="aclrtMemManagedGetAttr"></a>
 
 ## aclrtMemManagedGetAttr
 
@@ -116,7 +116,7 @@ aclError aclrtMemManagedGetAttr(aclrtMemManagedRangeAttribute attribute, const v
 <br>
 <br>
 
-<a id="aclrtMemManagedGetAttrs"></a>
+<a class="method_anchor" id="aclrtMemManagedGetAttrs"></a>
 
 ## aclrtMemManagedGetAttrs
 
@@ -153,7 +153,7 @@ aclError aclrtMemManagedGetAttrs(aclrtMemManagedRangeAttribute *attributes, size
 <br>
 <br>
 
-<a id="aclrtMemManagedPrefetchAsync"></a>
+<a class="method_anchor" id="aclrtMemManagedPrefetchAsync"></a>
 
 ## aclrtMemManagedPrefetchAsync
 
@@ -187,7 +187,7 @@ aclError aclrtMemManagedPrefetchAsync(const void* ptr, size_t size, aclrtMemMana
 <br>
 <br>
 
-<a id="aclrtMemManagedPrefetchBatchAsync"></a>
+<a class="method_anchor" id="aclrtMemManagedPrefetchBatchAsync"></a>
 
 ## aclrtMemManagedPrefetchBatchAsync
 
@@ -229,7 +229,7 @@ aclError aclrtMemManagedPrefetchBatchAsync(const void** ptrs, size_t* sizes, siz
 <br>
 <br>
 
-<a id="aclrtMemP2PMap"></a>
+<a class="method_anchor" id="aclrtMemP2PMap"></a>
 
 ## aclrtMemP2PMap
 
@@ -281,7 +281,7 @@ aclError aclrtMemP2PMap(void *devPtr, size_t size, int32_t dstDevId, uint64_t fl
 <br>
 <br>
 
-<a id="aclrtPointerGetAttributes"></a>
+<a class="method_anchor" id="aclrtPointerGetAttributes"></a>
 
 ## aclrtPointerGetAttributes
 

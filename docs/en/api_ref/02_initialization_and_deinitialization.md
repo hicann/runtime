@@ -1,6 +1,6 @@
 # 2. Initialization and Deinitialization
 
-<!-- md-trans-meta sourceCommit=unknown translatedAt=2026-10-22T02:04:43.315Z pushedAt=2026-10-22T09:42:59.975Z -->
+<!-- md-trans-meta sourceCommit=be113e8125a2a8c7ff54fc96bb9a5e053217e879 translatedAt=2026-11-06T11:14:18.126Z pushedAt=2026-11-09T07:19:27.364Z nl=2 -->
 
 This chapter describes the initialization and deinitialization APIs of CANN Runtime, including initialization and deinitialization of the ACL environment and related callback registration.
 
@@ -12,7 +12,7 @@ This chapter describes the initialization and deinitialization APIs of CANN Runt
 - [`aclError aclFinalizeCallbackRegister(aclRegisterCallbackType type, aclFinalizeCallbackFunc cbFunc, void *userData)`](#aclFinalizeCallbackRegister): Registers a deinitialization callback function.
 - [`aclError aclFinalizeCallbackUnRegister(aclRegisterCallbackType type, aclFinalizeCallbackFunc cbFunc)`](#aclFinalizeCallbackUnRegister): If the callback function does not need to be triggered, call this API to unregister the callback function.
 
-<a id="aclInit"></a>
+<a class="method_anchor" id="aclInit"></a>
 
 ## aclInit
 
@@ -91,33 +91,33 @@ Returns 0 on success and other values on failure. See [aclError](25-01_aclError.
 
 ### Model Dump Configuration and Single Operator Dump Configuration
 
-**Model dump configuration** (used to export the input and output data of each operator layer in a model) and **single operator dump configuration** (used to export the input and output data of a single operator). The exported data is used for comparison with a specified model or operator to locate precision issues. For the specific comparison method, see [*Precision Debugging Tool User Guide*](https://hiascend.com/en/document/redirect/CannCommunityToolAccucacy). **This dump configuration is disabled by default.**
+The exported data of **model dump configuration** (used to export the input and output data of each operator layer in a model) and **single-operator dump configuration** (used to export the input and output data of a single operator) is used for comparison with a specified model or operator to locate precision issues. For the specific comparison method, see [Precision Debugging Tool User Guide](https://www.hiascend.com/document/detail/en/CANNCommunityEdition/920/devaids/ModelAccuracyAnalyzer/atlasaccuracy_16_0001.html). **The dump configurations are disabled by default.**
 
 To enable the dump configuration through this API, configure the path for saving the dump data through the dump\_path parameter.
 
 The following is an example of the model dump configuration:
 
 ```json
-{                                                                                            
+{
     "dump":{
-        "dump_list":[                                                                        
+        "dump_list":[
             {    "model_name":"ResNet-101"
             },
-            {                                                                                
+            {
                 "model_name":"ResNet-50",
                 "layer":[
                       "conv1conv1_relu",
                       "res2a_branch2ares2a_branch2a_relu",
                       "res2a_branch1",
                       "pool1"
-                ] 
-            }  
-        ],  
+                ]
+            }
+        ],
         "dump_path":"/home/output",
                 "dump_mode":"output",
         "dump_op_switch":"off",
                 "dump_data":"tensor"
-    }                                                                                        
+    }
 }
 ```
 
@@ -127,7 +127,7 @@ In the single operator call scenario, the following is an example of the dump co
 {
     "dump":{
         "dump_path":"/home/output",
-        "dump_list":[{}], 
+        "dump_list":[{}],
     "dump_op_switch":"on",
         "dump_data":"tensor"
     }
@@ -186,7 +186,7 @@ The detailed configuration description and constraints are as follows:
 - To view the exported dump file content, see the "Fault Locating Tool \> msaicerr Tool Usage Guide \> Parsing Dump Files" chapter in [*Troubleshooting*](https://gitcode.com/cann/docs/blob/9.2.0/docs/en/troubleshooting/troubleshooting_intro.md).
 
     <!-- npu="A3,910b" id7 -->
-    If dump\_scene is set to aic\_err\_detail\_dump, use the msDebug tool to view the exported dump file content. For details, see [*Operator Development Tool User Guide*](https://hiascend.com/en/document/redirect/CannCommunityopdev).
+    If dump\_scene is set to aic\_err\_detail\_dump, use the msDebug tool to view the content of the exported dump files. For details, see [Operator Development Tool User Guide](https://www.hiascend.com/document/detail/en/CANNCommunityEdition/920/devaids/optool/docs/en/quick_start/msdebug_quick_start.md).
     <!-- end id7 -->
 <!-- end id6 -->
 
@@ -212,7 +212,7 @@ The detailed configuration description and constraints are as follows:
 - If dump\_debug is not configured or dump\_debug is set to off, the overflow operator configuration is not enabled.
 - If the overflow operator configuration is enabled, dump\_path must be configured, which specifies the storage path for exporting dump files.
 
-    After the exported data files are obtained, see [*Precision Debugging Tool User Guide*](https://hiascend.com/en/document/redirect/CannCommunityToolAccucacy) for how to parse the files.
+    After obtaining the exported data files, parse the files by referring to [Precision Debugging Tool User Guide](https://www.hiascend.com/document/detail/en/CANNCommunityEdition/920/devaids/ModelAccuracyAnalyzer/atlasaccuracy_16_0001.html).
 
     dump\_path supports configuring an absolute path or a relative path:
 
@@ -258,7 +258,7 @@ The detailed configuration description and constraints are as follows:
 
 - When operator Dump Watch mode is enabled, dump\_path must be configured to specify the storage path for exporting dump files.
 
-    The dump files collected here cannot be viewed directly with a text tool. To view the content of a dump file, first convert the dump file to a numpy-format file, and then view the numpy-format file through Python. For detailed conversion steps, see [*Precision Debugging Tool User Guide*](https://hiascend.com/en/document/redirect/CannCommunityToolAccucacy).
+    The dump files collected here cannot be viewed directly with a text tool. To view the content of a dump file, first convert the dump file to a numpy format file, and then view the numpy-format file through Python. For detailed conversion steps, see [Precision Debugging Tool User Guide](https://www.hiascend.com/document/detail/en/CANNCommunityEdition/920/devaids/ModelAccuracyAnalyzer/atlasaccuracy_16_0001.html).
 
     dump\_path supports configuring an absolute path or a relative path:
 
@@ -333,7 +333,7 @@ The detailed configuration description and constraints are as follows:
 
 ### Profiling Information Collection Configuration
 
-**Profiling information collection configuration**: For the configuration example, description, and constraints, see [*Performance Tuning Tool User Guide*](https://www.hiascend.com/document/detail/en/CANNCommunityEdition/9.2.0/devaids/Profiling/atlasprofiling_16_0001.html). **Profiling information collection configuration is disabled by default.**
+**Profiling information collection configuration**: For the configuration example, description, and constraints, see [Performance Tuning Tool User Guide](https://gitcode.com/cann/docs/blob/9.2.0/docs/en/profiling/profiling_menu.md). **Profiling information collection configuration is disabled by default.**
 
 It is recommended that dump information and profiling collected information not be configured at the same time. Otherwise, the dump operation affects system performance, causing the performance data metrics collected by profiling to be inaccurate.
 
@@ -458,9 +458,9 @@ The following is an example of the content in the configuration file:
 
 ```json
 {
-  "StackSize": {      
-    "simt_stack_size": 1024,            
-    "simt_divergence_stack_size": 512   
+  "StackSize": {
+    "simt_stack_size": 1024,
+    "simt_divergence_stack_size": 512
   }
 }
 ```
@@ -514,7 +514,7 @@ The following is an example in the configuration file:
 <br>
 <br>
 
-<a id="aclFinalize"></a>
+<a class="method_anchor" id="aclFinalize"></a>
 
 ## aclFinalize
 
@@ -549,7 +549,7 @@ aclError aclFinalize()
 Deinitialization function used to release the resources used by the acl APIs within the process.
 
 <!-- npu="950,A3,910b,910,310p,310b" id29 -->
-For scenarios where device service logs are reported back to the host, this API adds a 2000 ms delay by default (the actual maximum delay can reach 2000 ms) to ensure that ERROR-level and EVENT-level logs are completely reported back and prevent loss. You can set the ASCEND\_LOG\_DEVICE\_FLUSH\_TIMEOUT environment variable to 0 (command example: export ASCEND\_LOG\_DEVICE\_FLUSH\_TIMEOUT=0) to cancel this default delay. For a detailed description of the ASCEND\_LOG\_DEVICE\_FLUSH\_TIMEOUT environment variable, see “ASCEND\_LOG\_DEVICE\_FLUSH\_TIMEOUT” in [*Environment Variable Reference*](../env_vars/ASCEND_LOG_DEVICE_FLUSH_TIMEOUT.md).
+For scenarios where device service logs are reported back to the host, this API adds a 2000 ms delay by default (the actual maximum delay can reach 2000 ms) to ensure that ERROR-level and EVENT-level logs are completely reported back and prevent loss. You can set the ASCEND\_LOG\_DEVICE\_FLUSH\_TIMEOUT environment variable to 0 (command example: export ASCEND\_LOG\_DEVICE\_FLUSH\_TIMEOUT=0) to cancel this default delay. For a detailed description of the ASCEND\_LOG\_DEVICE\_FLUSH\_TIMEOUT environment variable, see ASCEND\_LOG\_DEVICE\_FLUSH\_TIMEOUT in [Environment Variable Reference](../env_vars/ASCEND_LOG_DEVICE_FLUSH_TIMEOUT.md).
 <!-- end id29 -->
 
 ### Parameters
@@ -570,7 +570,7 @@ It is not recommended to call aclFinalize or [aclFinalizeReference](#aclFinalize
 <br>
 <br>
 
-<a id="aclFinalizeReference"></a>
+<a class="method_anchor" id="aclFinalizeReference"></a>
 
 ## aclFinalizeReference
 
@@ -626,7 +626,7 @@ It is not recommended to call [aclFinalize](#aclFinalize) or aclFinalizeReferenc
 <br>
 <br>
 
-<a id="aclInitCallbackRegister"></a>
+<a class="method_anchor" id="aclInitCallbackRegister"></a>
 
 ## aclInitCallbackRegister
 
@@ -678,7 +678,7 @@ Returns 0 on success and other values on failure. See [aclError](25-01_aclError.
 <br>
 <br>
 
-<a id="aclInitCallbackUnRegister"></a>
+<a class="method_anchor" id="aclInitCallbackUnRegister"></a>
 
 ## aclInitCallbackUnRegister
 
@@ -727,7 +727,7 @@ Returns 0 on success and other values on failure. See [aclError](25-01_aclError.
 <br>
 <br>
 
-<a id="aclFinalizeCallbackRegister"></a>
+<a class="method_anchor" id="aclFinalizeCallbackRegister"></a>
 
 ## aclFinalizeCallbackRegister
 
@@ -779,7 +779,7 @@ Returns 0 on success and other values on failure. See [aclError](25-01_aclError.
 <br>
 <br>
 
-<a id="aclFinalizeCallbackUnRegister"></a>
+<a class="method_anchor" id="aclFinalizeCallbackUnRegister"></a>
 
 ## aclFinalizeCallbackUnRegister
 

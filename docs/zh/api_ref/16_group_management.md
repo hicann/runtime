@@ -9,7 +9,7 @@
 - [`aclrtGroupInfo *aclrtCreateGroupInfo()`](#aclrtCreateGroupInfo)：根据实际支持的Group数量创建aclrtGroupInfo类型的连续内存块，并返回对应指针。
 - [`aclError aclrtDestroyGroupInfo(aclrtGroupInfo *groupInfo)`](#aclrtDestroyGroupInfo)：销毁aclrtGroupInfo类型的数据，释放相关的内存。
 
-<a id="aclrtSetGroup"></a>
+<a class="method_anchor" id="aclrtSetGroup"></a>
 
 ## aclrtSetGroup
 
@@ -68,7 +68,7 @@ aclError aclrtSetGroup(int32_t groupId)
 <br>
 <br>
 
-<a id="aclrtGetGroupCount"></a>
+<a class="method_anchor" id="aclrtGetGroupCount"></a>
 
 ## aclrtGetGroupCount
 
@@ -127,7 +127,7 @@ aclError  aclrtGetGroupCount(uint32_t *count)
 <br>
 <br>
 
-<a id="aclrtGetAllGroupInfo"></a>
+<a class="method_anchor" id="aclrtGetAllGroupInfo"></a>
 
 ## aclrtGetAllGroupInfo
 
@@ -186,7 +186,7 @@ aclError  aclrtGetAllGroupInfo(aclrtGroupInfo *groupInfo)
 <br>
 <br>
 
-<a id="aclrtGetGroupInfoDetail"></a>
+<a class="method_anchor" id="aclrtGetGroupInfoDetail"></a>
 
 ## aclrtGetGroupInfoDetail
 
@@ -250,7 +250,7 @@ aclError  aclrtGetGroupInfoDetail(const aclrtGroupInfo *groupInfo, int32_t group
 <br>
 <br>
 
-<a id="aclrtCreateGroupInfo"></a>
+<a class="method_anchor" id="aclrtCreateGroupInfo"></a>
 
 ## aclrtCreateGroupInfo
 
@@ -304,7 +304,7 @@ aclrtGroupInfo *aclrtCreateGroupInfo()
 <br>
 <br>
 
-<a id="aclrtDestroyGroupInfo"></a>
+<a class="method_anchor" id="aclrtDestroyGroupInfo"></a>
 
 ## aclrtDestroyGroupInfo
 

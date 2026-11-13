@@ -24,7 +24,7 @@ This topic describes the msproftx extension APIs, which are used for custom perf
 
 ---
 
-<a id="aclprofCreateStamp"></a>
+<a class="method_anchor" id="aclprofCreateStamp"></a>
 
 ## aclprofCreateStamp
 
@@ -71,7 +71,7 @@ This API is used in pairs with the [aclprofDestroyStamp](#aclprofDestroyStamp) A
 <br>
 <br>
 
-<a id="aclprofSetStampTraceMessage"></a>
+<a class="method_anchor" id="aclprofSetStampTraceMessage"></a>
 
 ## aclprofSetStampTraceMessage
 
@@ -125,7 +125,7 @@ This API is called between the [aclprofCreateStamp](#aclprofCreateStamp) API and
 <br>
 <br>
 
-<a id="aclprofMark"></a>
+<a class="method_anchor" id="aclprofMark"></a>
 
 ## aclprofMark
 
@@ -178,7 +178,7 @@ This API is called between the [aclprofCreateStamp](#aclprofCreateStamp) API and
 <br>
 <br>
 
-<a id="aclprofMarkEx"></a>
+<a class="method_anchor" id="aclprofMarkEx"></a>
 
 ## aclprofMarkEx
 
@@ -232,7 +232,7 @@ None
 <br>
 <br>
 
-<a id="aclprofPush"></a>
+<a class="method_anchor" id="aclprofPush"></a>
 
 ## aclprofPush
 
@@ -288,7 +288,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclprofPop"></a>
+<a class="method_anchor" id="aclprofPop"></a>
 
 ## aclprofPop
 
@@ -338,7 +338,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclprofRangeStart"></a>
+<a class="method_anchor" id="aclprofRangeStart"></a>
 
 ## aclprofRangeStart
 
@@ -394,7 +394,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclprofRangeStop"></a>
+<a class="method_anchor" id="aclprofRangeStop"></a>
 
 ## aclprofRangeStop
 
@@ -450,7 +450,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclprofRangePushEx"></a>
+<a class="method_anchor" id="aclprofRangePushEx"></a>
 
 ## aclprofRangePushEx
 
@@ -504,7 +504,7 @@ This API is used in pairs with [aclprofRangePop](#aclprofRangePop). You need to 
 <br>
 <br>
 
-<a id="aclprofRangePop"></a>
+<a class="method_anchor" id="aclprofRangePop"></a>
 
 ## aclprofRangePop
 
@@ -552,7 +552,7 @@ This API is used in pairs with [aclprofRangePushEx](#aclprofRangePushEx). You ne
 <br>
 <br>
 
-<a id="aclprofDestroyStamp"></a>
+<a class="method_anchor" id="aclprofDestroyStamp"></a>
 
 ## aclprofDestroyStamp
 
@@ -600,7 +600,7 @@ None
 
 This API is used in pairs with the [aclprofCreateStamp](#aclprofCreateStamp) API, and must be called before the [aclprofStop](19-01_data_profiling_apis.md#aclprofStop) API.
 
-<a id="aclprofStr2Id"></a>
+<a class="method_anchor" id="aclprofStr2Id"></a>
 
 ## aclprofStr2Id
 

@@ -6,7 +6,7 @@ This topic describes the APIs for memory copy and configuration between host and
 
 - [`aclError aclrtMemcpy(void *dst, size_t destMax, const void *src, size_t count, aclrtMemcpyKind kind)`](#aclrtMemcpy): Implements memory copy.
 - [`aclError aclrtMemcpyAsync(void *dst, size_t destMax, const void *src, size_t count, aclrtMemcpyKind kind, aclrtStream stream)`](#aclrtMemcpyAsync): Implements memory copy.
-- [`aclError aclrtMemcpyAsyncWithCondition(void *dst, size_t destMax, const void *src, size_t count, aclrtMemcpyKind kind, aclrtStream stream)`](#aclrtMemcpyAsyncWithCondition_deprecated): Implements memory copy. (This API is deprecated. Use the **aclrtMemcpyAsync** API instead.)
+- [`aclError aclrtMemcpyAsyncWithCondition(void *dst, size_t destMax, const void *src, size_t count, aclrtMemcpyKind kind, aclrtStream stream)`](#aclrtMemcpyAsyncWithCondition): Implements memory copy. (This API is deprecated. Use the **aclrtMemcpyAsync** API instead.)
 - [`aclError aclrtMemcpyBatch(void **dsts, size_t *destMaxs, void **srcs, size_t *sizes, size_t numBatches, aclrtMemcpyBatchAttr *attrs, size_t *attrsIndexes, size_t numAttrs, size_t *failIndex)`](#aclrtMemcpyBatch): Implements batch memory copy.
 - [`aclError aclrtMemcpyBatchAsync(void **dsts, size_t *destMaxs, void **srcs, size_t *sizes, size_t numBatches, aclrtMemcpyBatchAttr *attrs, size_t *attrsIndexes, size_t numAttrs, size_t *failIndex, aclrtStream stream)`](#aclrtMemcpyBatchAsync): Implements batch memory copy.
 - [`aclError aclrtMemcpyBatchV2(void **dsts, size_t *destMaxs, void **srcs, size_t *sizes, size_t numBatches, aclrtMemcpyBatchAttr *attrs, size_t *attrsIndexes, size_t numAttrs)`](#aclrtMemcpyBatchV2): Implements batch memory copy.
@@ -22,7 +22,7 @@ This topic describes the APIs for memory copy and configuration between host and
 - [`aclError aclrtMemsetD32(void *ptr, size_t memSize, uint32_t value, size_t N)`](#aclrtMemsetD32): Initializes memory and sets the content in memory as the specified 32-bit unsigned integer value, filled by element.
 - [`aclError aclrtMemsetD32Async(void *ptr, size_t memSize, uint32_t value, size_t N, aclrtStream stream)`](#aclrtMemsetD32Async): Initializes memory and sets the content in memory as the specified 32-bit unsigned integer value. This is an asynchronous API.
 
-<a id="aclrtMemcpy"></a>
+<a class="method_anchor" id="aclrtMemcpy"></a>
 
 ## aclrtMemcpy
 
@@ -99,7 +99,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtMemcpyAsync"></a>
+<a class="method_anchor" id="aclrtMemcpyAsync"></a>
 
 ## aclrtMemcpyAsync
 
@@ -167,7 +167,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtMemcpyAsyncWithCondition_deprecated"></a>
+<a class="method_anchor" id="aclrtMemcpyAsyncWithCondition"></a>
 
 ## aclrtMemcpyAsyncWithCondition (Deprecated)
 
@@ -237,7 +237,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtMemcpyBatch"></a>
+<a class="method_anchor" id="aclrtMemcpyBatch"></a>
 
 ## aclrtMemcpyBatch
 
@@ -302,7 +302,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtMemcpyBatchAsync"></a>
+<a class="method_anchor" id="aclrtMemcpyBatchAsync"></a>
 
 ## aclrtMemcpyBatchAsync
 
@@ -368,7 +368,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtMemcpyBatchV2"></a>
+<a class="method_anchor" id="aclrtMemcpyBatchV2"></a>
 
 ## aclrtMemcpyBatchV2
 
@@ -434,7 +434,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtMemcpyBatchAsyncV2"></a>
+<a class="method_anchor" id="aclrtMemcpyBatchAsyncV2"></a>
 
 ## aclrtMemcpyBatchAsyncV2
 
@@ -501,7 +501,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtMemcpy2d"></a>
+<a class="method_anchor" id="aclrtMemcpy2d"></a>
 
 ## aclrtMemcpy2d
 
@@ -571,7 +571,7 @@ The following figure shows the memory copy diagram of this API.
 <br>
 <br>
 
-<a id="aclrtMemcpy2dAsync"></a>
+<a class="method_anchor" id="aclrtMemcpy2dAsync"></a>
 
 ## aclrtMemcpy2dAsync
 
@@ -649,7 +649,7 @@ The following figure shows the memory copy diagram of this API.
 <br>
 <br>
 
-<a id="aclrtGetMemcpyDescSize"></a>
+<a class="method_anchor" id="aclrtGetMemcpyDescSize"></a>
 
 ## aclrtGetMemcpyDescSize
 
@@ -700,7 +700,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtSetMemcpyDesc"></a>
+<a class="method_anchor" id="aclrtSetMemcpyDesc"></a>
 
 ## aclrtSetMemcpyDesc
 
@@ -755,7 +755,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtMemcpyAsyncWithDesc"></a>
+<a class="method_anchor" id="aclrtMemcpyAsyncWithDesc"></a>
 
 ## aclrtMemcpyAsyncWithDesc
 
@@ -813,7 +813,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtMemcpyAsyncWithOffset"></a>
+<a class="method_anchor" id="aclrtMemcpyAsyncWithOffset"></a>
 
 ## aclrtMemcpyAsyncWithOffset
 
@@ -868,7 +868,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtMemset"></a>
+<a class="method_anchor" id="aclrtMemset"></a>
 
 ## aclrtMemset
 
@@ -925,7 +925,7 @@ This API will immediately initialize the memory, and no implicit device synchron
 <br>
 <br>
 
-<a id="aclrtMemsetAsync"></a>
+<a class="method_anchor" id="aclrtMemsetAsync"></a>
 
 ## aclrtMemsetAsync
 
@@ -979,7 +979,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtMemsetD32"></a>
+<a class="method_anchor" id="aclrtMemsetD32"></a>
 
 ## aclrtMemsetD32
 
@@ -1036,7 +1036,7 @@ This API will immediately initialize the memory, and no implicit device synchron
 <br>
 <br>
 
-<a id="aclrtMemsetD32Async"></a>
+<a class="method_anchor" id="aclrtMemsetD32Async"></a>
 
 ## aclrtMemsetD32Async
 

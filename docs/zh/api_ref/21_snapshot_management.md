@@ -9,7 +9,7 @@
 - [`aclError aclrtSnapShotCallbackRegister(aclrtSnapShotStage stage, aclrtSnapShotCallBack callback, void *args)`](#aclrtSnapShotCallbackRegister)：注册一个回调函数，该回调函数将在快照操作的不同阶段被调用。不支持重复注册。
 - [`aclError aclrtSnapShotCallbackUnregister(aclrtSnapShotStage stage, aclrtSnapShotCallBack callback)`](#aclrtSnapShotCallbackUnregister)：取消注册回调函数。取消注册之后，对应快照阶段将不再调用该回调函数。
 
-<a id="aclrtSnapShotProcessLock"></a>
+<a class="method_anchor" id="aclrtSnapShotProcessLock"></a>
 
 ## aclrtSnapShotProcessLock
 
@@ -63,7 +63,7 @@ aclError aclrtSnapShotProcessLock(int pid, void* reserve)
 <br>
 <br>
 
-<a id="aclrtSnapShotProcessBackup"></a>
+<a class="method_anchor" id="aclrtSnapShotProcessBackup"></a>
 
 ## aclrtSnapShotProcessBackup
 
@@ -117,7 +117,7 @@ aclError aclrtSnapShotProcessBackup(int pid, aclrtSnapShotBackupArgs *args)
 <br>
 <br>
 
-<a id="aclrtSnapShotProcessRestore"></a>
+<a class="method_anchor" id="aclrtSnapShotProcessRestore"></a>
 
 ## aclrtSnapShotProcessRestore
 
@@ -175,7 +175,7 @@ aclError aclrtSnapShotProcessRestore(int pid, aclrtSnapShotRestoreArgs *args)
 <br>
 <br>
 
-<a id="aclrtSnapShotProcessUnlock"></a>
+<a class="method_anchor" id="aclrtSnapShotProcessUnlock"></a>
 
 ## aclrtSnapShotProcessUnlock
 
@@ -229,7 +229,7 @@ aclError aclrtSnapShotProcessUnlock(int pid, void* reserve)
 <br>
 <br>
 
-<a id="aclrtSnapShotCallbackRegister"></a>
+<a class="method_anchor" id="aclrtSnapShotCallbackRegister"></a>
 
 ## aclrtSnapShotCallbackRegister
 
@@ -282,7 +282,7 @@ aclError aclrtSnapShotCallbackRegister(aclrtSnapShotStage stage, aclrtSnapShotCa
 <br>
 <br>
 
-<a id="aclrtSnapShotCallbackUnregister"></a>
+<a class="method_anchor" id="aclrtSnapShotCallbackUnregister"></a>
 
 ## aclrtSnapShotCallbackUnregister
 

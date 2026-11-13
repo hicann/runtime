@@ -1,6 +1,6 @@
 # 18. Dump Configuration
 
-<!-- md-trans-meta sourceCommit=31ae292a88c1a38674abaa350b60eba724bab178 translatedAt=2026-10-23T11:55:49.128Z pushedAt=2026-10-26T12:31:50.304Z -->
+<!-- md-trans-meta sourceCommit=be113e8125a2a8c7ff54fc96bb9a5e053217e879 translatedAt=2026-11-06T11:31:18.482Z pushedAt=2026-11-09T10:33:13.497Z nl=2 -->
 
 This topic describes the dump configuration APIs of CANN Runtime, which are used to initialize, configure, and register callbacks for operator data dump.
 
@@ -15,7 +15,7 @@ This topic describes the dump configuration APIs of CANN Runtime, which are used
 - [`aclError acldumpGetExceptionInfoPath(char *path, size_t maxLen)`](#acldumpGetExceptionInfoPath): Obtains the storage path of the exception operator dump data, so that users can save custom maintenance and test data to this path. The exported data is used to analyze AI Core errors.
 - [`aclError acldumpSaveExceptionInfo(const char *fileName, const char *userTag, const acldumpTensorInfo *tensors, size_t tensorCount)`](#acldumpSaveExceptionInfo): Saves custom exception operator tensor data to the storage path of the exception operator dump data. The exported data is used to analyze AI Core errors.
 
-<a id="aclmdlInitDump"></a>
+<a class="method_anchor" id="aclmdlInitDump"></a>
 
 ## aclmdlInitDump
 
@@ -91,7 +91,7 @@ The [aclInit](02_initialization_and_deinitialization.md#aclInit) API is also pro
 <br>
 <br>
 
-<a id="aclmdlSetDump"></a>
+<a class="method_anchor" id="aclmdlSetDump"></a>
 
 ## aclmdlSetDump
 
@@ -156,33 +156,33 @@ Returns **0** if the operation is successful; returns other values if the operat
 
 ### Model Dump Configuration and Single-Operator Dump Configuration
 
-The exported data of **model dump configuration** (used to export the input and output data of each operator layer in a model) and **single-operator dump configuration** (used to export the input and output data of a single operator)  is used for comparison with a specified model or operator to locate precision issues. For the specific comparison method, see [Precision Debugging Tool User Guide](https://hiascend.com/document/redirect/CannCommunityToolAccucacy). **The dump configurations are disabled by default.**
+The exported data of **model dump configuration** (used to export the input and output data of each operator layer in a model) and **single-operator dump configuration** (used to export the input and output data of a single operator) is used for comparison with a specified model or operator to locate precision issues. For the specific comparison method, see [Precision Debugging Tool User Guide](https://www.hiascend.com/document/detail/en/CANNCommunityEdition/920/devaids/ModelAccuracyAnalyzer/atlasaccuracy_16_0001.html). **The dump configurations are disabled by default.**
 
 To enable the dump configuration through this API, configure the path for saving dump data through the **dump\_path** parameter.
 
 The following is an example of the model dump configuration:
 
 ```json
-{                                                                                            
+{
     "dump":{
-        "dump_list":[                                                                        
+        "dump_list":[
             {    "model_name":"ResNet-101"
             },
-            {                                                                                
+            {
                 "model_name":"ResNet-50",
                 "layer":[
                       "conv1conv1_relu",
                       "res2a_branch2ares2a_branch2a_relu",
                       "res2a_branch1",
                       "pool1"
-                ] 
-            }  
-        ],  
+                ]
+            }
+        ],
         "dump_path":"/home/output",
                 "dump_mode":"output",
         "dump_op_switch":"off",
                 "dump_data":"tensor"
-    }                                                                                        
+    }
 }
 ```
 
@@ -192,14 +192,14 @@ The following is an example of the single-operator dump configuration:
 {
     "dump":{
         "dump_path":"/home/output",
-        "dump_list":[{}], 
+        "dump_list":[{}],
     "dump_op_switch":"on",
         "dump_data":"tensor"
     }
 }
 ```
 
-<a id="exception_dump_config"></a>
+<a class="method_anchor" id="exception_dump_config"></a>
 
 ### Configuration File Example (Exception Operator Dump Configuration)
 
@@ -252,7 +252,7 @@ The detailed configuration description and constraints are as follows:
 - To view the content of the exported dump files, see the "Fault Locating Tool \> msaicerr Tool Usage Guide \> Parsing Dump Files" section in [Troubleshooting](https://gitcode.com/cann/docs/blob/9.2.0/docs/en/troubleshooting/troubleshooting_intro.md).
 
     <!-- npu="A3,910b" id3 -->
-    If the **dump\_scene parameter** is set to **aic\_err\_detail\_dump**, use the msDebug tool to view the exported dump file content. For details, see [Operator Development Tool User Guide](https://hiascend.com/document/redirect/CannCommunityopdev).
+    If the **dump\_scene** parameter is set to **aic\_err\_detail\_dump**, use the msDebug tool to view the content of the exported dump files. For details, see [Operator Development Tool User Guide](https://www.hiascend.com/document/detail/en/CANNCommunityEdition/920/devaids/optool/docs/en/quick_start/msdebug_quick_start.md).
     <!-- end id3 -->
 <!-- end id2 -->
 
@@ -278,7 +278,7 @@ The detailed configuration description and constraints are as follows:
 - If **dump\_debug** is not set or **dump\_debug** is set to **off**, the overflow operator configuration is not enabled.
 - If the overflow operator configuration is enabled, **dump\_path** must be set to specify the storage path of the exported dump files.
 
-    After obtaining the exported data files, parse the files by referring to [Precision Debugging Tool User Guide](https://hiascend.com/document/redirect/CannCommunityToolAccucacy).
+    After obtaining the exported data files, parse the files by referring to [Precision Debugging Tool User Guide](https://www.hiascend.com/document/detail/en/CANNCommunityEdition/920/devaids/ModelAccuracyAnalyzer/atlasaccuracy_16_0001.html).
 
     **dump\_path** supports an absolute path or a relative path:
 
@@ -322,7 +322,7 @@ The detailed configuration description and constraints are as follows:
 
 - When the operator dump watch mode is enabled, **dump\_path** must be set to specify the storage path for exported dump files.
 
-    The dump files collected here cannot be viewed directly with a text tool. To view the content of a dump file, first convert the dump file to a numpy format file, and then view the numpy-format file through Python. For detailed conversion steps, see [Precision Debugging Tool User Guide](https://hiascend.com/document/redirect/CannCommunityToolAccucacy).
+    The dump files collected here cannot be viewed directly with a text tool. To view the content of a dump file, first convert the dump file to a numpy format file, and then view the numpy-format file through Python. For detailed conversion steps, see [Precision Debugging Tool User Guide](https://www.hiascend.com/document/detail/en/CANNCommunityEdition/920/devaids/ModelAccuracyAnalyzer/atlasaccuracy_16_0001.html).
 
     **dump\_path** supports an absolute path or a relative path:
 
@@ -391,7 +391,7 @@ Currently, the [aclInit](02_initialization_and_deinitialization.md#aclInit) API 
 <br>
 <br>
 
-<a id="acldumpRegCallback"></a>
+<a class="method_anchor" id="acldumpRegCallback"></a>
 
 ## acldumpRegCallback
 
@@ -476,7 +476,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="acldumpUnregCallback"></a>
+<a class="method_anchor" id="acldumpUnregCallback"></a>
 
 ## acldumpUnregCallback
 
@@ -532,7 +532,7 @@ None
 <br>
 <br>
 
-<a id="acldumpGetPath"></a>
+<a class="method_anchor" id="acldumpGetPath"></a>
 
 ## acldumpGetPath
 
@@ -582,7 +582,7 @@ Returns the path of the dump data. If a null pointer is returned, no dump path i
 <br>
 <br>
 
-<a id="aclmdlFinalizeDump"></a>
+<a class="method_anchor" id="aclmdlFinalizeDump"></a>
 
 ## aclmdlFinalizeDump
 
@@ -653,7 +653,7 @@ The [aclInit](02_initialization_and_deinitialization.md#aclInit) API is also pro
 <br>
 <br>
 
-<a id="aclopStartDumpArgs"></a>
+<a class="method_anchor" id="aclopStartDumpArgs"></a>
 
 ## aclopStartDumpArgs
 
@@ -710,7 +710,7 @@ This API can be used only in single-operator API execution scenarios (for exampl
 <br>
 <br>
 
-<a id="aclopStopDumpArgs"></a>
+<a class="method_anchor" id="aclopStopDumpArgs"></a>
 
 ## aclopStopDumpArgs
 
@@ -766,7 +766,7 @@ This API can be used only in the single-operator API execution scenario (for exa
 <br>
 <br>
 
-<a id="acldumpGetExceptionInfoPath"></a>
+<a class="method_anchor" id="acldumpGetExceptionInfoPath"></a>
 
 ## acldumpGetExceptionInfoPath
 
@@ -822,7 +822,7 @@ Returns **0 (ACL_SUCCESS)** if the operation is successful; returns other values
 <br>
 <br>
 
-<a id="acldumpSaveExceptionInfo"></a>
+<a class="method_anchor" id="acldumpSaveExceptionInfo"></a>
 
 ## acldumpSaveExceptionInfo
 

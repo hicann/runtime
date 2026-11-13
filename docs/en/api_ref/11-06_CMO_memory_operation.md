@@ -1,6 +1,6 @@
 # 11-06 CMO Cache Operations
 
-<!-- md-trans-meta sourceCommit=unknown translatedAt=2026-10-23T03:58:14.560Z pushedAt=2026-10-29T02:19:06.452Z nl=2 -->
+<!-- md-trans-meta sourceCommit=31ae292a88c1a38674abaa350b60eba724bab178 translatedAt=2026-11-06T11:21:49.033Z pushedAt=2026-11-09T08:39:56.721Z nl=2 -->
 
 This chapter describes the cache maintenance operations (CMO) APIs, which are used for cache refresh and invalidation operations.
 
@@ -11,7 +11,7 @@ This chapter describes the cache maintenance operations (CMO) APIs, which are us
 - [`aclError aclrtCmoSetDesc(void *cmoDesc, void *src, size_t size)`](#aclrtCmoSetDesc): Sets the cache memory descriptor. After this API is called, the source memory address and memory size are recorded in the cache memory descriptor.
 - [`aclError aclrtCmoAsyncWithDesc(void *cmoDesc, aclrtCmoType cmoType, aclrtStream stream, const void *reserve)`](#aclrtCmoAsyncWithDesc): Uses the memory descriptor (second-level pointer method) to operate on the cache memory on the device. This is an asynchronous API.
 
-<a id="aclrtCmoAsync"></a>
+<a class="method_anchor" id="aclrtCmoAsync"></a>
 
 ## aclrtCmoAsync
 
@@ -62,7 +62,7 @@ Performs cache memory operations on the device. This is an asynchronous API.
 <br>
 <br>
 
-<a id="aclrtCmoAsyncWithBarrier"></a>
+<a class="method_anchor" id="aclrtCmoAsyncWithBarrier"></a>
 
 ## aclrtCmoAsyncWithBarrier
 
@@ -114,7 +114,7 @@ Performs cache memory operations on the device and carries a `barrierId`, which 
 <br>
 <br>
 
-<a id="aclrtCmoWaitBarrier"></a>
+<a class="method_anchor" id="aclrtCmoWaitBarrier"></a>
 
 ## aclrtCmoWaitBarrier
 
@@ -164,7 +164,7 @@ Waits for the Invalid memory operation task with the specified `barrierId` to co
 <br>
 <br>
 
-<a id="aclrtCmoGetDescSize"></a>
+<a class="method_anchor" id="aclrtCmoGetDescSize"></a>
 
 ## aclrtCmoGetDescSize
 
@@ -212,7 +212,7 @@ Obtains the memory size occupied by the cache memory descriptor on the current d
 <br>
 <br>
 
-<a id="aclrtCmoSetDesc"></a>
+<a class="method_anchor" id="aclrtCmoSetDesc"></a>
 
 ## aclrtCmoSetDesc
 
@@ -262,7 +262,7 @@ Sets the cache memory descriptor. After this API is called, the source memory ad
 <br>
 <br>
 
-<a id="aclrtCmoAsyncWithDesc"></a>
+<a class="method_anchor" id="aclrtCmoAsyncWithDesc"></a>
 
 ## aclrtCmoAsyncWithDesc
 

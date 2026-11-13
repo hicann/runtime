@@ -5,7 +5,7 @@
 This topic describes the exception handling APIs of CANN Runtime, including error information obtaining, exception callback registration, memory UCE repair, and task abort.
 
 - [`const char *aclGetRecentErrMsg()`](#aclGetRecentErrMsg): Obtains and clears the error description information generated when other acl APIs in the same process or thread as this API fail to be called.
-- [`aclError aclrtSetExceptionInfoCallback(aclrtExceptionInfoCallback callback)`](#aclrtSetExceptionInfoCallback_deprecated): Sets a process-level exception callback function. If the exception callback function is set multiple times, the last setting takes effect. (Deprecated API. Use the [`aclrtExceptionInfoCallbackRegister`](#aclrtExceptionInfoCallbackRegister) API or the [`aclrtExceptionInfoCallbackUnregister`](#aclrtExceptionInfoCallbackUnregister) API instead.)
+- [`aclError aclrtSetExceptionInfoCallback(aclrtExceptionInfoCallback callback)`](#aclrtSetExceptionInfoCallback): Sets a process-level exception callback function. If the exception callback function is set multiple times, the last setting takes effect. (Deprecated API. Use the [`aclrtExceptionInfoCallbackRegister`](#aclrtExceptionInfoCallbackRegister) API or the [`aclrtExceptionInfoCallbackUnregister`](#aclrtExceptionInfoCallbackUnregister) API instead.)
 - [`aclError aclrtExceptionInfoCallbackRegister(aclrtExceptionInfoCallback callback)`](#aclrtExceptionInfoCallbackRegister): Registers a process-level exception callback function. You can register multiple different callback functions.
 - [`aclError aclrtExceptionInfoCallbackUnregister(aclrtExceptionInfoCallback callback)`](#aclrtExceptionInfoCallbackUnregister): Unregisters the process-level exception callback function registered through the **aclrtExceptionInfoCallbackRegister** API.
 - [`uint32_t aclrtGetTaskIdFromExceptionInfo(const aclrtExceptionInfo *info)`](#aclrtGetTaskIdFromExceptionInfo): Obtains the task ID from the exception information.
@@ -22,7 +22,7 @@ This topic describes the exception handling APIs of CANN Runtime, including erro
 - [`aclError aclrtRepairError(int32_t deviceId, const aclrtErrorInfo *errorInfo)`](#aclrtRepairError): Performs fault rectification based on the detailed information obtained by the [aclrtGetErrorVerbose](#aclrtGetErrorVerbose) API. This API should be called after task abort is submitted.
 - [`aclError aclrtSetDeviceTaskAbortCallback(const char *regName, aclrtDeviceTaskAbortCallback callback, void *args)`](#aclrtSetDeviceTaskAbortCallback): Registers a callback function, which is triggered before and after the [aclrtDeviceTaskAbort](#aclrtDeviceTaskAbort) API is called.
 
-<a id="aclGetRecentErrMsg"></a>
+<a class="method_anchor" id="aclGetRecentErrMsg"></a>
 
 ## aclGetRecentErrMsg
 
@@ -74,7 +74,7 @@ Returns **nullptr** when the error description information fails to be obtained.
 <br>
 <br>
 
-<a id="aclrtSetExceptionInfoCallback_deprecated"></a>
+<a class="method_anchor" id="aclrtSetExceptionInfoCallback"></a>
 
 ## aclrtSetExceptionInfoCallback (Deprecated)
 
@@ -208,7 +208,7 @@ aclmdlExecute(modelId, input, output);
 <br>
 <br>
 
-<a id="aclrtExceptionInfoCallbackRegister"></a>
+<a class="method_anchor" id="aclrtExceptionInfoCallbackRegister"></a>
 
 ## aclrtExceptionInfoCallbackRegister
 
@@ -242,15 +242,15 @@ aclError aclrtExceptionInfoCallbackRegister(aclrtExceptionInfoCallback callback)
 
 Registers a process-level exception callback function. This API can be used to register multiple exception callback functions with different function pointer values. If the function pointers in the **callback** parameter are different, the exception callback functions are considered different. Repeatedly calling this API to register the same callback function returns success, but Runtime retains only the last registration information.
 
-The exception callback function registered through this API can coexist with the callback function set through the [aclrtSetExceptionInfoCallback (Deprecated)](#aclrtSetExceptionInfoCallback_deprecated) API. When a device task execution exception occurs and the task enters the Runtime exception notification flow, the system notifies the exception information to the exception callback function registered through this API or the [aclrtSetExceptionInfoCallback (Deprecated)](#aclrtSetExceptionInfoCallback_deprecated) API.
+The exception callback function registered through this API can coexist with the callback function set through the [aclrtSetExceptionInfoCallback (Deprecated)](#aclrtSetExceptionInfoCallback) API. When a device task execution exception occurs and the task enters the Runtime exception notification flow, the system notifies the exception information to the exception callback function registered through this API or the [aclrtSetExceptionInfoCallback (Deprecated)](#aclrtSetExceptionInfoCallback) API.
 
-When the same callback function is both set through the [aclrtSetExceptionInfoCallback (Deprecated)](#aclrtSetExceptionInfoCallback_deprecated) API and registered through this API, Runtime saves them as two mutually independent registration entries. The callback function is called twice in this notification, and the order of the two calls is not guaranteed.
+When the same callback function is both set through the [aclrtSetExceptionInfoCallback (Deprecated)](#aclrtSetExceptionInfoCallback) API and registered through this API, Runtime saves them as two mutually independent registration entries. The callback function is called twice in this notification, and the order of the two calls is not guaranteed.
 
 ### Parameters
 
 | Name | Input/Output | Description |
 | --- | :---: | --- |
-| callback | Input | Callback function to be registered, which cannot be **NULL**.<br>The function prototype of the callback function is:<br>typedef void (*aclrtExceptionInfoCallback)(aclrtExceptionInfo *exceptionInfo); |
+| callback | Input | Callback function to be registered, which cannot be **NULL**.<br>The function prototype of the callback function is:<br>typedef void (*aclrtExceptionInfoCallback)(aclrtExceptionInfo*exceptionInfo); |
 
 ### Return Values
 
@@ -346,7 +346,7 @@ aclmdlExecute(modelId, input, output);
 <br>
 <br>
 
-<a id="aclrtExceptionInfoCallbackUnregister"></a>
+<a class="method_anchor" id="aclrtExceptionInfoCallbackUnregister"></a>
 
 ## aclrtExceptionInfoCallbackUnregister
 
@@ -378,7 +378,7 @@ aclError aclrtExceptionInfoCallbackUnregister(aclrtExceptionInfoCallback callbac
 
 ### Description
 
-Unregisters the process-level exception callback function registered through the [aclrtExceptionInfoCallbackRegister](#aclrtExceptionInfoCallbackRegister) API. Unregistering the callback function set through the [aclrtSetExceptionInfoCallback (Deprecated)](#aclrtSetExceptionInfoCallback_deprecated) API is not supported.
+Unregisters the process-level exception callback function registered through the [aclrtExceptionInfoCallbackRegister](#aclrtExceptionInfoCallbackRegister) API. Unregistering the callback function set through the [aclrtSetExceptionInfoCallback (Deprecated)](#aclrtSetExceptionInfoCallback) API is not supported.
 
 ### Parameters
 
@@ -434,7 +434,7 @@ aclrtExceptionInfoCallbackUnregister(callbackB);
 <br>
 <br>
 
-<a id="aclrtGetTaskIdFromExceptionInfo"></a>
+<a class="method_anchor" id="aclrtGetTaskIdFromExceptionInfo"></a>
 
 ## aclrtGetTaskIdFromExceptionInfo
 
@@ -466,13 +466,13 @@ uint32_t aclrtGetTaskIdFromExceptionInfo(const aclrtExceptionInfo *info)
 
 ### Description
 
-Obtains the task ID from the exception information. Runtime passes an **aclrtExceptionInfo** pointer to the exception callback function. Both the process-level exception callback function set through [aclrtSetExceptionInfoCallback (Deprecated)](#aclrtSetExceptionInfoCallback_deprecated) and the one registered through [aclrtExceptionInfoCallbackRegister](#aclrtExceptionInfoCallbackRegister) can call this API to read this field.
+Obtains the task ID from the exception information. Runtime passes an **aclrtExceptionInfo** pointer to the exception callback function. Both the process-level exception callback function set through [aclrtSetExceptionInfoCallback (Deprecated)](#aclrtSetExceptionInfoCallback) and the one registered through [aclrtExceptionInfoCallbackRegister](#aclrtExceptionInfoCallbackRegister) can call this API to read this field.
 
 ### Parameters
 
 | Name | Input/Output | Description |
 | --- | :---: | --- |
-| info | Input | Pointer to the exception information.<br>Before task execution, call [aclrtSetExceptionInfoCallback (Deprecated)](#aclrtSetExceptionInfoCallback_deprecated) or [aclrtExceptionInfoCallbackRegister](#aclrtExceptionInfoCallbackRegister). The system stores the task ID, stream ID, thread ID, and device ID of the exception in the **aclrtExceptionInfo** struct. |
+| info | Input | Pointer to the exception information.<br>Before task execution, call [aclrtSetExceptionInfoCallback (Deprecated)](#aclrtSetExceptionInfoCallback) or [aclrtExceptionInfoCallbackRegister](#aclrtExceptionInfoCallbackRegister). The system stores the task ID, stream ID, thread ID, and device ID of the exception in the **aclrtExceptionInfo** struct. |
 
 ### Return Values
 
@@ -482,7 +482,7 @@ Returns the task ID from the exception information. A return value of **0xFFFFFF
 <br>
 <br>
 
-<a id="aclrtGetStreamIdFromExceptionInfo"></a>
+<a class="method_anchor" id="aclrtGetStreamIdFromExceptionInfo"></a>
 
 ## aclrtGetStreamIdFromExceptionInfo
 
@@ -514,13 +514,13 @@ uint32_t aclrtGetStreamIdFromExceptionInfo(const aclrtExceptionInfo *info)
 
 ### Description
 
-Obtains the stream ID from the exception information. The Runtime passes an **aclrtExceptionInfo** pointer to the exception callback function. Both the process-level exception callback function set through the [aclrtSetExceptionInfoCallback (Deprecated)](#aclrtSetExceptionInfoCallback_deprecated) API and the one registered through the [aclrtExceptionInfoCallbackRegister](#aclrtExceptionInfoCallbackRegister) API described in this topic can call this API to read this field.
+Obtains the stream ID from the exception information. The Runtime passes an **aclrtExceptionInfo** pointer to the exception callback function. Both the process-level exception callback function set through the [aclrtSetExceptionInfoCallback (Deprecated)](#aclrtSetExceptionInfoCallback) API and the one registered through the [aclrtExceptionInfoCallbackRegister](#aclrtExceptionInfoCallbackRegister) API described in this topic can call this API to read this field.
 
 ### Parameters
 
 | Name | Input/Output | Description |
 | --- | :---: | --- |
-| info | Input | Pointer to the exception information.<br>Before task execution, call the [aclrtSetExceptionInfoCallback (Deprecated)](#aclrtSetExceptionInfoCallback_deprecated) API or the [aclrtExceptionInfoCallbackRegister](#aclrtExceptionInfoCallbackRegister) API. The system stores the task ID, stream ID, thread ID, and device ID of the task that generated the exception in the **aclrtExceptionInfo** struct. This pointer is managed by Runtime and is valid only during the current callback execution. |
+| info | Input | Pointer to the exception information.<br>Before task execution, call the [aclrtSetExceptionInfoCallback (Deprecated)](#aclrtSetExceptionInfoCallback) API or the [aclrtExceptionInfoCallbackRegister](#aclrtExceptionInfoCallbackRegister) API. The system stores the task ID, stream ID, thread ID, and device ID of the task that generated the exception in the **aclrtExceptionInfo** struct. This pointer is managed by Runtime and is valid only during the current callback execution. |
 
 ### Return Values
 
@@ -530,7 +530,7 @@ Returns the stream ID in the exception information. A return value of **0xFFFFFF
 <br>
 <br>
 
-<a id="aclrtGetThreadIdFromExceptionInfo"></a>
+<a class="method_anchor" id="aclrtGetThreadIdFromExceptionInfo"></a>
 
 ## aclrtGetThreadIdFromExceptionInfo
 
@@ -562,13 +562,13 @@ uint32_t aclrtGetThreadIdFromExceptionInfo(const aclrtExceptionInfo *info)
 
 ### Description
 
-Obtains the thread ID from the exception information. Runtime passes an **aclrtExceptionInfo** pointer to the exception callback function. Both the process-level exception callback function set through [aclrtSetExceptionInfoCallback (Deprecated)](#aclrtSetExceptionInfoCallback_deprecated) and the one registered through [aclrtExceptionInfoCallbackRegister](#aclrtExceptionInfoCallbackRegister) can call this API to read this field.
+Obtains the thread ID from the exception information. Runtime passes an **aclrtExceptionInfo** pointer to the exception callback function. Both the process-level exception callback function set through [aclrtSetExceptionInfoCallback (Deprecated)](#aclrtSetExceptionInfoCallback) and the one registered through [aclrtExceptionInfoCallbackRegister](#aclrtExceptionInfoCallbackRegister) can call this API to read this field.
 
 ### Parameters
 
 | Name | Input/Output | Description |
 | --- | :---: | --- |
-| info | Input | Pointer to the exception information.<br>Before task execution, call [aclrtSetExceptionInfoCallback (Deprecated)](#aclrtSetExceptionInfoCallback_deprecated) or [aclrtExceptionInfoCallbackRegister](#aclrtExceptionInfoCallbackRegister). The system stores the task ID, stream ID, thread ID, and device ID of the exception in the **aclrtExceptionInfo** struct. |
+| info | Input | Pointer to the exception information.<br>Before task execution, call [aclrtSetExceptionInfoCallback (Deprecated)](#aclrtSetExceptionInfoCallback) or [aclrtExceptionInfoCallbackRegister](#aclrtExceptionInfoCallbackRegister). The system stores the task ID, stream ID, thread ID, and device ID of the exception in the **aclrtExceptionInfo** struct. |
 
 ### Return Values
 
@@ -578,7 +578,7 @@ Returns the thread ID in the exception information. A return value of **0xFFFFFF
 <br>
 <br>
 
-<a id="aclrtGetDeviceIdFromExceptionInfo"></a>
+<a class="method_anchor" id="aclrtGetDeviceIdFromExceptionInfo"></a>
 
 ## aclrtGetDeviceIdFromExceptionInfo
 
@@ -610,13 +610,13 @@ uint32_t aclrtGetDeviceIdFromExceptionInfo(const aclrtExceptionInfo *info)
 
 ### Description
 
-Obtains the device ID from the exception information. Runtime passes an **aclrtExceptionInfo** pointer to the exception callback function. Both the process-level exception callback function set through the [aclrtSetExceptionInfoCallback (Deprecated)](#aclrtSetExceptionInfoCallback_deprecated) API and the one registered through the [aclrtExceptionInfoCallbackRegister](#aclrtExceptionInfoCallbackRegister) API described in this topic can call this API to read this field.
+Obtains the device ID from the exception information. Runtime passes an **aclrtExceptionInfo** pointer to the exception callback function. Both the process-level exception callback function set through the [aclrtSetExceptionInfoCallback (Deprecated)](#aclrtSetExceptionInfoCallback) API and the one registered through the [aclrtExceptionInfoCallbackRegister](#aclrtExceptionInfoCallbackRegister) API described in this topic can call this API to read this field.
 
 ### Parameters
 
 | Name | Input/Output | Description |
 | --- | :---: | --- |
-| info | Input | Pointer to the exception information.<br>Before a task is executed, call the [aclrtSetExceptionInfoCallback (Deprecated)](#aclrtSetExceptionInfoCallback_deprecated) API or the [aclrtExceptionInfoCallbackRegister](#aclrtExceptionInfoCallbackRegister) API. The system stores the task ID, Stream ID, thread ID, and device ID of the task that generated the exception in the **aclrtExceptionInfo** struct. This pointer is managed by Runtime and is valid only during the current callback execution. |
+| info | Input | Pointer to the exception information.<br>Before a task is executed, call the [aclrtSetExceptionInfoCallback (Deprecated)](#aclrtSetExceptionInfoCallback) API or the [aclrtExceptionInfoCallbackRegister](#aclrtExceptionInfoCallbackRegister) API. The system stores the task ID, Stream ID, thread ID, and device ID of the task that generated the exception in the **aclrtExceptionInfo** struct. This pointer is managed by Runtime and is valid only during the current callback execution. |
 
 ### Return Values
 
@@ -626,7 +626,7 @@ Returns the device ID in the exception information. A return value of **0xFFFFFF
 <br>
 <br>
 
-<a id="aclrtGetErrorCodeFromExceptionInfo"></a>
+<a class="method_anchor" id="aclrtGetErrorCodeFromExceptionInfo"></a>
 
 ## aclrtGetErrorCodeFromExceptionInfo
 
@@ -658,13 +658,13 @@ uint32_t aclrtGetErrorCodeFromExceptionInfo(const aclrtExceptionInfo *info)
 
 ### Description
 
-Obtains the error code from the exception information. Runtime passes an **aclrtExceptionInfo** pointer to the exception callback function. Both the process-level exception callback function set through the [aclrtSetExceptionInfoCallback (Deprecated)](#aclrtSetExceptionInfoCallback_deprecated) API and the one registered through the [aclrtExceptionInfoCallbackRegister](#aclrtExceptionInfoCallbackRegister) API described in this topic can call this API to read this field.
+Obtains the error code from the exception information. Runtime passes an **aclrtExceptionInfo** pointer to the exception callback function. Both the process-level exception callback function set through the [aclrtSetExceptionInfoCallback (Deprecated)](#aclrtSetExceptionInfoCallback) API and the one registered through the [aclrtExceptionInfoCallbackRegister](#aclrtExceptionInfoCallbackRegister) API described in this topic can call this API to read this field.
 
 ### Parameters
 
 | Name | Input/Output | Description |
 | --- | :---: | --- |
-| info | Input | Pointer to the exception information.<br>Before task execution, call the [aclrtSetExceptionInfoCallback (Deprecated)](#aclrtSetExceptionInfoCallback_deprecated) API or the [aclrtExceptionInfoCallbackRegister](#aclrtExceptionInfoCallbackRegister) API. The system stores the task ID, stream ID, thread ID, device ID, and error code of the exception in the **aclrtExceptionInfo** struct. |
+| info | Input | Pointer to the exception information.<br>Before task execution, call the [aclrtSetExceptionInfoCallback (Deprecated)](#aclrtSetExceptionInfoCallback) API or the [aclrtExceptionInfoCallbackRegister](#aclrtExceptionInfoCallbackRegister) API. The system stores the task ID, stream ID, thread ID, device ID, and error code of the exception in the **aclrtExceptionInfo** struct. |
 
 ### Return Values
 
@@ -674,7 +674,7 @@ Returns the error code in the exception information. A return value of **0xFFFFF
 <br>
 <br>
 
-<a id="aclrtPeekAtLastError"></a>
+<a class="method_anchor" id="aclrtPeekAtLastError"></a>
 
 ## aclrtPeekAtLastError
 
@@ -722,7 +722,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtGetLastError"></a>
+<a class="method_anchor" id="aclrtGetLastError"></a>
 
 ## aclrtGetLastError
 
@@ -770,7 +770,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtGetMemUceInfo"></a>
+<a class="method_anchor" id="aclrtGetMemUceInfo"></a>
 
 ## aclrtGetMemUceInfo
 
@@ -823,7 +823,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtMemUceRepair"></a>
+<a class="method_anchor" id="aclrtMemUceRepair"></a>
 
 ## aclrtMemUceRepair
 
@@ -875,7 +875,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtDeviceTaskAbort"></a>
+<a class="method_anchor" id="aclrtDeviceTaskAbort"></a>
 
 ## aclrtDeviceTaskAbort
 
@@ -930,7 +930,7 @@ The current API is supported only in the stop-on-error scenario. Otherwise, unpr
 <br>
 <br>
 
-<a id="aclrtGetErrorVerbose"></a>
+<a class="method_anchor" id="aclrtGetErrorVerbose"></a>
 
 ## aclrtGetErrorVerbose
 
@@ -986,7 +986,7 @@ For Atlas A3 products and Atlas A2 products, only **ACL_RT_NO_ERROR** (no error)
 <br>
 <br>
 
-<a id="aclrtRepairError"></a>
+<a class="method_anchor" id="aclrtRepairError"></a>
 
 ## aclrtRepairError
 
@@ -1037,7 +1037,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtSetDeviceTaskAbortCallback"></a>
+<a class="method_anchor" id="aclrtSetDeviceTaskAbortCallback"></a>
 
 ## aclrtSetDeviceTaskAbortCallback
 

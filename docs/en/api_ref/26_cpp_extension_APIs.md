@@ -1,6 +1,6 @@
 # 26. C++ Extension APIs
 
-<!-- md-trans-meta sourceCommit=unknown translatedAt=2026-10-23T04:03:52.913Z pushedAt=2026-10-29T03:20:12.685Z nl=2 -->
+<!-- md-trans-meta sourceCommit=213bb540e7cb7a1b1c68c574dc99ea56a3468970 translatedAt=2026-11-06T11:41:39.905Z pushedAt=2026-11-09T11:13:20.114Z nl=2 -->
 
 This chapter describes C++ extension APIs, including APIs for function overloading and template encapsulation, which simplify API calls in C++ scenarios and provide type-safe memory operations.
 
@@ -39,7 +39,7 @@ This chapter describes C++ extension APIs, including APIs for function overloadi
 <br>
 <br>
 
-<a id="aclrtSynchronizeDevice"></a>
+<a class="method_anchor" id="aclrtSynchronizeDevice"></a>
 
 ## aclrtSynchronizeDevice
 
@@ -89,7 +89,7 @@ This API is an encapsulated API applicable only to C++ programs. Inside the API,
 <br>
 <br>
 
-<a id="aclrtSynchronizeStream"></a>
+<a class="method_anchor" id="aclrtSynchronizeStream"></a>
 
 ## aclrtSynchronizeStream
 
@@ -140,7 +140,7 @@ This API is an encapsulated API applicable only to C++ programs. Inside the API,
 <br>
 <br>
 
-<a id="aclrtSynchronizeEvent"></a>
+<a class="method_anchor" id="aclrtSynchronizeEvent"></a>
 
 ## aclrtSynchronizeEvent
 
@@ -193,7 +193,7 @@ This API is an encapsulated API applicable only to C++ programs. Inside the API,
 <br>
 <br>
 
-<a id="aclrtStreamWaitEvent"></a>
+<a class="method_anchor" id="aclrtStreamWaitEvent"></a>
 
 ## aclrtStreamWaitEvent
 
@@ -245,7 +245,7 @@ This API is an encapsulated API applicable only to C++ programs. Inside the API,
 <br>
 <br>
 
-<a id="aclrtCreateStream"></a>
+<a class="method_anchor" id="aclrtCreateStream"></a>
 
 ## aclrtCreateStream
 
@@ -297,7 +297,7 @@ This API is an encapsulated API applicable only to C++ programs. Inside the API,
 <br>
 <br>
 
-<a id="aclrtSetOpExecuteTimeOut"></a>
+<a class="method_anchor" id="aclrtSetOpExecuteTimeOut"></a>
 
 ## aclrtSetOpExecuteTimeOut
 
@@ -352,7 +352,7 @@ Same as the constraints of the C API [aclrtSetOpExecuteTimeOutV2](12_execution_c
 <br>
 <br>
 
-<a id="aclrtCreateEvent"></a>
+<a class="method_anchor" id="aclrtCreateEvent"></a>
 
 ## aclrtCreateEvent
 
@@ -393,7 +393,7 @@ This API is an encapsulated API applicable only to C++ programs. Inside the API,
 | Parameter | Input/Output | Description |
 | --- | --- | --- |
 | event | Output | Event pointer. See [aclrtEvent](25-05_Typedefs.md#aclrtEvent) for the type definition. |
-| flag | Input | Flag of the event pointer.<br>`flag` is a bitmap. You can set `flag` to a single macro or perform an OR operation on multiple macros.<br>Currently, `flag` can be set to the following macros:<br>  - `ACL_EVENT_TIME_LINE`: This bit indicates that the created event needs to record timestamp information. Note: Using the timestamp function affects the performance of event-related APIs.<br>  - `ACL_EVENT_SYNC`: This bit indicates that the created event supports synchronization across multiple streams.<br>  - `ACL_EVENT_CAPTURE_STREAM_PROGRESS`: This bit indicates that the created event is used to track the task execution progress of a stream.<br>  - `ACL_EVENT_IPC`: This bit indicates that the created event is used for inter-process communication. For details, see [aclrtIpcGetEventHandle](07_event_management.md#aclrtIpcGetEventHandle). Note: On Ascend 950DT products, this flag is not supported for creating an event. This flag cannot be ORed with other flags. An event created with this flag cannot be used in the following APIs or scenarios: [aclrtResetEvent](07_event_management.md#aclrtResetEvent), [aclrtQueryEvent](07_event_management.md#aclrtQueryEvent_deprecated), [aclrtQueryEventWaitStatus](07_event_management.md#aclrtQueryEventWaitStatus), [aclrtEventElapsedTime](07_event_management.md#aclrtEventElapsedTime), [aclrtEventGetTimestamp](07_event_management.md#aclrtEventGetTimestamp), [aclrtGetEventId](07_event_management.md#aclrtGetEventId), and model capture scenarios (see the description in [aclmdlRICaptureBegin](15_model_running_instance_management.md#aclmdlRICaptureBegin)). Otherwise, an error is returned.<br><br><br>The macros are defined as follows:<br>#define ACL_EVENT_TIME_LINE 0x00000008U<br>#define ACL_EVENT_SYNC 0x00000001U<br>#define ACL_EVENT_CAPTURE_STREAM_PROGRESS 0x00000002U<br>#define ACL_EVENT_IPC 0x00000040U |
+| flag | Input | Flag of the event pointer.<br>`flag` is a bitmap. You can set `flag` to a single macro or perform an OR operation on multiple macros.<br>Currently, `flag` can be set to the following macros:<br>  - `ACL_EVENT_TIME_LINE`: This bit indicates that the created event needs to record timestamp information. Note: Using the timestamp function affects the performance of event-related APIs.<br>  - `ACL_EVENT_SYNC`: This bit indicates that the created event supports synchronization across multiple streams.<br>  - `ACL_EVENT_CAPTURE_STREAM_PROGRESS`: This bit indicates that the created event is used to track the task execution progress of a stream.<br>  - `ACL_EVENT_IPC`: This bit indicates that the created event is used for inter-process communication. For details, see [aclrtIpcGetEventHandle](07_event_management.md#aclrtIpcGetEventHandle). Note: On Ascend 950DT products, this flag is not supported for creating an event. This flag cannot be ORed with other flags. An event created with this flag cannot be used in the following APIs or scenarios: [aclrtResetEvent](07_event_management.md#aclrtResetEvent), [aclrtQueryEvent](07_event_management.md#aclrtQueryEvent), [aclrtQueryEventWaitStatus](07_event_management.md#aclrtQueryEventWaitStatus), [aclrtEventElapsedTime](07_event_management.md#aclrtEventElapsedTime), [aclrtEventGetTimestamp](07_event_management.md#aclrtEventGetTimestamp), [aclrtGetEventId](07_event_management.md#aclrtGetEventId), and model capture scenarios (see the description in [aclmdlRICaptureBegin](15_model_running_instance_management.md#aclmdlRICaptureBegin)). Otherwise, an error is returned.<br><br><br>The macros are defined as follows:<br>#define ACL_EVENT_TIME_LINE 0x00000008U<br>#define ACL_EVENT_SYNC 0x00000001U<br>#define ACL_EVENT_CAPTURE_STREAM_PROGRESS 0x00000002U<br>#define ACL_EVENT_IPC 0x00000040U |
 
 ### Return Values
 
@@ -407,7 +407,7 @@ Same as the constraints of the C API [aclrtCreateEventExWithFlag](07_event_manag
 <br>
 <br>
 
-<a id="aclrtMemcpyBatch"></a>
+<a class="method_anchor" id="aclrtMemcpyBatch"></a>
 
 ## aclrtMemcpyBatch
 
@@ -475,7 +475,7 @@ Same as the constraints of the C API [aclrtMemcpyBatchV2](11-03_memory_copy_and_
 <br>
 <br>
 
-<a id="aclrtMemcpyBatchAsync"></a>
+<a class="method_anchor" id="aclrtMemcpyBatchAsync"></a>
 
 ## aclrtMemcpyBatchAsync
 
@@ -544,7 +544,7 @@ Same as the constraints of the C API [aclrtMemcpyBatchAsyncV2](11-03_memory_copy
 <br>
 <br>
 
-<a id="aclrtPointerGetAttributes"></a>
+<a class="method_anchor" id="aclrtPointerGetAttributes"></a>
 
 ## aclrtPointerGetAttributes
 
@@ -596,7 +596,7 @@ This API is an encapsulated API applicable only to C++ programs. Inside the API,
 <br>
 <br>
 
-<a id="aclrtHostRegister"></a>
+<a class="method_anchor" id="aclrtHostRegister"></a>
 
 ## aclrtHostRegister
 
@@ -644,7 +644,7 @@ This API is an encapsulated API applicable only to C++ programs. Inside the API,
 | size | Input | Memory size, in bytes. |
 | type | Input | Memory registration type. See [aclrtHostRegisterType](25-02_Enumerations.md#aclrtHostRegisterType) for the type definition. |
 | devPtr | Output | Device-accessible memory address to which the host memory is mapped.<br>This address can be accessed only on the device, for example, as a kernel function parameter for the AI Core on the device to access. For memory processing on the host side, use the original host memory address. |
-| flag | Input | Memory registration type.<br>The value is one of the following macros. You can configure a single macro or multiple macros with bitwise OR (for example, ACL_HOST_REG_MAPPED \| ACL_HOST_REG_PINNED).<br><br>  - ACL_HOST_REG_MAPPED: Maps and registers the host memory as a device-accessible memory address, and then calls the [aclrtHostGetDevicePointer](11-02_host_memory_management.md#aclrtHostGetDevicePointer) API to obtain the mapped device memory address.<br>  - ACL_HOST_REG_IOMEMORY: Maps and registers the IO space (registers and cache) of a third-party PCIe device on the host as device-accessible, including read and write. Page-locked memory is not supported when this macro is used. Therefore, this macro cannot be combined with ACL_HOST_REG_PINNED.<br>  - ACL_HOST_REG_READONLY: Maps and registers the host memory as device read-only.<br>  - ACL_HOST_REG_PINNED: Registers host non-page-locked memory as page-locked memory. Host non-page-locked memory can be allocated through C/C++ standard library functions (such as malloc, calloc, and new) or the default mmap system call. This macro is applicable only to host non-page-locked memory. If host page-locked memory is passed, the API returns an error.<br><br><br>The macros are defined as follows:<br>#define ACL_HOST_REG_MAPPED 0x2UL<br>#define ACL_HOST_REG_IOMEMORY 0x4UL<br>#define ACL_HOST_REG_READONLY 0x8UL<br>#define ACL_HOST_REG_PINNED 0X10000000UL |
+| flag | Input | Memory registration type.<br>The value is one of the following macros. You can configure a single macro or a bitwise OR of multiple macros (for example, ACL_HOST_REG_MAPPED \| ACL_HOST_REG_PINNED).<br><br>  - ACL_HOST_REG_MAPPED: Registers the host memory mapping as a memory address accessible by the device, and then calls the [aclrtHostGetDevicePointer](11-02_host_memory_management.md#aclrtHostGetDevicePointer) API to obtain the mapped device memory address.<br>  - ACL_HOST_REG_IOMEMORY: Registers the I/O space (registers and cache) mapping of a third-party PCIe device on the host as accessible by the device, including read and write. Page-locked memory is not supported when this macro is used, so this macro cannot be combined with ACL_HOST_REG_PINNED.<br>  - ACL_HOST_REG_READONLY: Registers the host memory mapping as read-only for the device.<br>  - ACL_HOST_REG_PINNED: Registers the host page-unlocked memory as page-locked memory. Host page-unlocked memory can be requested through C/C++ standard library functions (such as malloc, calloc, and new) or the default mmap system call. This macro applies only to host page-unlocked memory; if host page-locked memory is passed, the API returns an error.<br><br><br>The macro definitions are as follows:<br>#define ACL_HOST_REG_MAPPED 0x2UL<br>#define ACL_HOST_REG_IOMEMORY 0x4UL<br>#define ACL_HOST_REG_READONLY 0x8UL<br>#define ACL_HOST_REG_PINNED 0X10000000UL |
 
 ### Return Values
 
@@ -654,7 +654,7 @@ This API is an encapsulated API applicable only to C++ programs. Inside the API,
 <br>
 <br>
 
-<a id="aclrtHostGetDevicePointer"></a>
+<a class="method_anchor" id="aclrtHostGetDevicePointer"></a>
 
 ## aclrtHostGetDevicePointer
 
@@ -707,7 +707,7 @@ This API is an encapsulated API applicable only to C++ programs. Inside the API,
 <br>
 <br>
 
-<a id="aclrtHostUnregister"></a>
+<a class="method_anchor" id="aclrtHostUnregister"></a>
 
 ## aclrtHostUnregister
 
@@ -760,7 +760,7 @@ This API is an encapsulated API applicable only to C++ programs. Inside the API,
 <br>
 <br>
 
-<a id="aclrtMemAllocManaged"></a>
+<a class="method_anchor" id="aclrtMemAllocManaged"></a>
 
 ## aclrtMemAllocManaged
 
@@ -817,7 +817,7 @@ Same as the constraints of the C API [aclrtMemAllocManaged](11-05_unified_addres
 <br>
 <br>
 
-<a id="aclrtMemManagedPrefetchAsync"></a>
+<a class="method_anchor" id="aclrtMemManagedPrefetchAsync"></a>
 
 ## aclrtMemManagedPrefetchAsync
 
@@ -874,7 +874,7 @@ This API is an encapsulated API applicable only to C++ programs. Inside the API,
 <br>
 <br>
 
-<a id="aclrtMemManagedPrefetchBatchAsync"></a>
+<a class="method_anchor" id="aclrtMemManagedPrefetchBatchAsync"></a>
 
 ## aclrtMemManagedPrefetchBatchAsync
 
@@ -942,7 +942,7 @@ Same as the constraints of the C API [aclrtMemManagedPrefetchBatchAsync](11-05_u
 <br>
 <br>
 
-<a id="aclrtMalloc"></a>
+<a class="method_anchor" id="aclrtMalloc"></a>
 
 ## aclrtMalloc
 
@@ -1001,7 +1001,7 @@ This API is an encapsulated API applicable only to C++ programs. Inside the API,
 <br>
 <br>
 
-<a id="aclrtMallocHost"></a>
+<a class="method_anchor" id="aclrtMallocHost"></a>
 
 ## aclrtMallocHost
 
@@ -1056,7 +1056,7 @@ This API is an encapsulated API applicable only to C++ programs. Inside the API,
 <br>
 <br>
 
-<a id="aclrtMemcpy"></a>
+<a class="method_anchor" id="aclrtMemcpy"></a>
 
 ## aclrtMemcpy
 
@@ -1115,7 +1115,7 @@ Same as the constraints of the C API [aclrtMemcpy](11-03_memory_copy_and_set.md#
 <br>
 <br>
 
-<a id="aclrtMemcpyAsync"></a>
+<a class="method_anchor" id="aclrtMemcpyAsync"></a>
 
 ## aclrtMemcpyAsync
 
@@ -1177,7 +1177,7 @@ Same as the constraints of the C API [aclrtMemcpyAsync](11-03_memory_copy_and_se
 <br>
 <br>
 
-<a id="aclrtMemcpy2d"></a>
+<a class="method_anchor" id="aclrtMemcpy2d"></a>
 
 ## aclrtMemcpy2d
 
@@ -1238,7 +1238,7 @@ Same as the constraints of the C API [aclrtMemcpy2d](11-03_memory_copy_and_set.m
 <br>
 <br>
 
-<a id="aclrtMemcpy2dAsync"></a>
+<a class="method_anchor" id="aclrtMemcpy2dAsync"></a>
 
 ## aclrtMemcpy2dAsync
 
@@ -1302,7 +1302,7 @@ Same as the constraints of the C API [aclrtMemcpy2dAsync](11-03_memory_copy_and_
 <br>
 <br>
 
-<a id="aclrtGetSymbolAddress"></a>
+<a class="method_anchor" id="aclrtGetSymbolAddress"></a>
 
 ## aclrtGetSymbolAddress
 
@@ -1364,7 +1364,7 @@ This API is an encapsulated API applicable only to C++ programs. Inside the API,
 <br>
 <br>
 
-<a id="aclrtGetSymbolSize"></a>
+<a class="method_anchor" id="aclrtGetSymbolSize"></a>
 
 ## aclrtGetSymbolSize
 
@@ -1420,7 +1420,7 @@ Same as the constraints of the [aclrtGetSymbolAddress](#aclrtGetSymbolAddress) A
 <br>
 <br>
 
-<a id="aclrtMemcpyFromSymbol"></a>
+<a class="method_anchor" id="aclrtMemcpyFromSymbol"></a>
 
 ## aclrtMemcpyFromSymbol
 
@@ -1481,7 +1481,7 @@ Same as the constraints of the [aclrtGetSymbolAddress](#aclrtGetSymbolAddress) A
 <br>
 <br>
 
-<a id="aclrtMemcpyFromSymbolAsync"></a>
+<a class="method_anchor" id="aclrtMemcpyFromSymbolAsync"></a>
 
 ## aclrtMemcpyFromSymbolAsync
 
@@ -1546,7 +1546,7 @@ This API is an encapsulated API applicable only to C++ programs. Inside the API,
 <br>
 <br>
 
-<a id="aclrtMemcpyToSymbol"></a>
+<a class="method_anchor" id="aclrtMemcpyToSymbol"></a>
 
 ## aclrtMemcpyToSymbol
 
@@ -1605,7 +1605,7 @@ Same as the constraints of the [aclrtGetSymbolAddress](#aclrtGetSymbolAddress) A
 <br>
 <br>
 
-<a id="aclrtMemcpyToSymbolAsync"></a>
+<a class="method_anchor" id="aclrtMemcpyToSymbolAsync"></a>
 
 ## aclrtMemcpyToSymbolAsync
 

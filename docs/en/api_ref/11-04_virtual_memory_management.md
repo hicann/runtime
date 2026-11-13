@@ -1,6 +1,6 @@
 # 11-04 Virtual Memory Management
 
-<!-- md-trans-meta sourceCommit=31ae292a88c1a38674abaa350b60eba724bab178 translatedAt=2026-10-23T11:49:22.812Z pushedAt=2026-10-28T01:15:39.436Z -->
+<!-- md-trans-meta sourceCommit=520c3d830a4c38f0ac54928aeb209203279d2a03 translatedAt=2026-11-06T11:21:35.708Z pushedAt=2026-11-09T08:40:12.943Z nl=2 -->
 
 This topic describes the virtual memory management APIs, including physical memory allocation, virtual address reservation, memory mapping, and cross-process sharing.
 
@@ -27,7 +27,7 @@ This topic describes the virtual memory management APIs, including physical memo
 - [`aclError aclrtMemMapSelectedLink(void *virPtrDst, size_t size, void *virPtrSrc, uint32_t linkIdx)`](#aclrtMemMapSelectedLink): Maps the virtual address **virPtrSrc** to its correponding physical address. The HCCS link or SIO link can be selected through **linkIdx**.
 - [`aclError aclrtMemMapSetLink(aclrtDrvMemHandle handle, aclrtMemLinkType adviceLink)`](#aclrtMemMapSetLink): Sets the access link type used by the physical memory handle during mapping.
 
-<a id="aclrtMallocPhysical"></a>
+<a class="method_anchor" id="aclrtMallocPhysical"></a>
 
 ## aclrtMallocPhysical
 
@@ -83,10 +83,28 @@ Returns **0** if the operation is successful; returns other values if the operat
 <!-- npu="310b" id1 -->
 - For Atlas 200I/500 A2 inference products, the Ascend RC form does not support calling this API.
 <!-- end id1 -->
+<!-- npu="A3,910b,910,310p,310b" id33 -->
+- For the following product models, when the memory location **aclrtPhysicalMemProp.location.type** is set to **ACL\_MEM\_LOCATION\_TYPE\_HOST\_NUMA** and the memory attribute type **aclrtPhysicalMemProp.memAttr** is a normal memory option (for example, **ACL\_MEM\_NORMAL**), requesting memory with this parameter combination is not supported.
+    <!-- npu="A3" id38 -->
+    - Atlas A3 products
+    <!-- end id38 -->
+    <!-- npu="910b" id39 -->
+    - Atlas A2 products
+    <!-- end id39 -->
+    <!-- npu="310b" id40 -->
+    - Atlas 200I/500 A2 inference products
+    <!-- end id40 -->
+    <!-- npu="310p" id41 -->
+    - Atlas inference products
+    <!-- end id41 -->
+    <!-- npu="910" id42 -->
+    - Atlas training products
+    <!-- end id42 -->
+<!-- end id33 -->
 <!-- npu="A3" id2 -->
-- For supernode products in Atlas A3 products, when the memory location **aclrtPhysicalMemProp.location.type** is set to **ACL\_MEM\_LOCATION\_TYPE\_HOST\_NUMA** and the memory attribute type **aclrtPhysicalMemProp.aclrtMemAttr** is a P2P option (for example, **ACL\_MEM\_P2P\_HUGE**), the maximum memory size that can be requested varies depending on the server model and BIOS version. It is recommended to attempt the request through the **aclrtMallocPhysical** API according to the memory plan to confirm whether the memory is sufficient.
+- For supernode products in Atlas A3 products, when the memory location **aclrtPhysicalMemProp.location.type** is set to **ACL\_MEM\_LOCATION\_TYPE\_HOST\_NUMA** and the memory attribute type **aclrtPhysicalMemProp.memAttr** is a P2P option (for example, **ACL\_MEM\_P2P\_HUGE**), the maximum memory size that can be requested varies depending on the server model and BIOS version. It is recommended to attempt the request through the **aclrtMallocPhysical** API according to the memory plan to confirm whether the memory is sufficient.
 <!-- end id2 -->
-- The memory attribute type **aclrtPhysicalMemProp.aclrtMemAttr** currently supports only the following options:
+- The memory attribute type **aclrtPhysicalMemProp.memAttr** currently supports only the following options:
     - **ACL\_MEM\_NORMAL**: normal memory.
     - **ACL\_MEM\_HUGE**: huge-page memory aligned to a 2 MB granularity.
     - **ACL\_MEM\_HUGE1G**: huge-page memory aligned to a 1 GB granularity, supported only on devices.
@@ -140,7 +158,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtFreePhysical"></a>
+<a class="method_anchor" id="aclrtFreePhysical"></a>
 
 ## aclrtFreePhysical
 
@@ -196,7 +214,7 @@ On Atlas 200I/500 A2 inference products, this API is not supported in the Ascend
 <br>
 <br>
 
-<a id="aclrtReserveMemAddress"></a>
+<a class="method_anchor" id="aclrtReserveMemAddress"></a>
 
 ## aclrtReserveMemAddress
 
@@ -270,7 +288,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtReserveMemAddressNoUCMemory"></a>
+<a class="method_anchor" id="aclrtReserveMemAddressNoUCMemory"></a>
 
 ## aclrtReserveMemAddressNoUCMemory
 
@@ -328,7 +346,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtReleaseMemAddress"></a>
+<a class="method_anchor" id="aclrtReleaseMemAddress"></a>
 
 ## aclrtReleaseMemAddress
 
@@ -394,7 +412,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtMapMem"></a>
+<a class="method_anchor" id="aclrtMapMem"></a>
 
 ## aclrtMapMem
 
@@ -462,7 +480,7 @@ For Atlas 200I/500 A2 inference products, this API is not supported in the Ascen
 <br>
 <br>
 
-<a id="aclrtMemMapNoAccess"></a>
+<a class="method_anchor" id="aclrtMemMapNoAccess"></a>
 
 ## aclrtMemMapNoAccess
 
@@ -518,7 +536,7 @@ The difference between this API and the **aclrtMapMem** API is that after this A
 | **handle** | Input | Handle of the physical memory information. For details about the type definition, see [aclrtDrvMemHandle](25-05_Typedefs.md#aclrtDrvMemHandle).<br>When a whole segment of virtual addresses reserved through the [aclrtReserveMemAddress](#aclrtReserveMemAddress) API is managed and divided by the user, it cannot be bound to physical addresses requested on two devices at the same time.<br>When a whole segment of virtual addresses reserved through the [aclrtReserveMemAddress](#aclrtReserveMemAddress) API is managed and divided by the user, it cannot be bound to the handles output by the [aclrtMallocPhysical](#aclrtMallocPhysical), [aclrtMemImportFromShareableHandle](#aclrtMemImportFromShareableHandle), and [aclrtMemImportFromShareableHandleV2](#aclrtMemImportFromShareableHandleV2) APIs at the same time. |
 | **flags** | Input | Reserved parameter, which can only be set to **0** currently. |
 
-### Return Value
+### Return Values
 
 Returns **0** if the operation is successful; returns other values if the operation fails. For details, see [aclError](25-01_aclError.md#aclError).
 
@@ -538,7 +556,7 @@ For Atlas A2 products, Atlas A3 products, and Ascend 950PR&950DT products, this 
 <br>
 <br>
 
-<a id="aclrtUnmapMem"></a>
+<a class="method_anchor" id="aclrtUnmapMem"></a>
 
 ## aclrtUnmapMem
 
@@ -592,7 +610,7 @@ For Atlas 200I/500 A2 inference products, this API is not supported in the Ascen
 <br>
 <br>
 
-<a id="aclrtMemExportToShareableHandle"></a>
+<a class="method_anchor" id="aclrtMemExportToShareableHandle"></a>
 
 ## aclrtMemExportToShareableHandle
 
@@ -688,7 +706,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtMemSetPidToShareableHandle"></a>
+<a class="method_anchor" id="aclrtMemSetPidToShareableHandle"></a>
 
 ## aclrtMemSetPidToShareableHandle
 
@@ -740,7 +758,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtMemImportFromShareableHandle"></a>
+<a class="method_anchor" id="aclrtMemImportFromShareableHandle"></a>
 
 ## aclrtMemImportFromShareableHandle
 
@@ -799,7 +817,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtMemExportToShareableHandleV2"></a>
+<a class="method_anchor" id="aclrtMemExportToShareableHandleV2"></a>
 
 ## aclrtMemExportToShareableHandleV2
 
@@ -870,7 +888,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtMemSetPidToShareableHandleV2"></a>
+<a class="method_anchor" id="aclrtMemSetPidToShareableHandleV2"></a>
 
 ## aclrtMemSetPidToShareableHandleV2
 
@@ -925,7 +943,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtMemImportFromShareableHandleV2"></a>
+<a class="method_anchor" id="aclrtMemImportFromShareableHandleV2"></a>
 
 ## aclrtMemImportFromShareableHandleV2
 
@@ -986,7 +1004,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtMemGetAllocationGranularity"></a>
+<a class="method_anchor" id="aclrtMemGetAllocationGranularity"></a>
 
 ## aclrtMemGetAllocationGranularity
 
@@ -1044,7 +1062,7 @@ On Atlas 200I/500 A2 inference products, this API is not supported in the Ascend
 <br>
 <br>
 
-<a id="aclrtMemSetAccess"></a>
+<a class="method_anchor" id="aclrtMemSetAccess"></a>
 
 ## aclrtMemSetAccess
 
@@ -1095,7 +1113,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtMemGetAccess"></a>
+<a class="method_anchor" id="aclrtMemGetAccess"></a>
 
 ## aclrtMemGetAccess
 
@@ -1145,7 +1163,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtMemRetainAllocationHandle"></a>
+<a class="method_anchor" id="aclrtMemRetainAllocationHandle"></a>
 
 ## aclrtMemRetainAllocationHandle
 
@@ -1204,7 +1222,7 @@ On Atlas 200I/500 A2 inference products, this API is not supported in the Ascend
 <br>
 <br>
 
-<a id="aclrtMemGetAllocationPropertiesFromHandle"></a>
+<a class="method_anchor" id="aclrtMemGetAllocationPropertiesFromHandle"></a>
 
 ## aclrtMemGetAllocationPropertiesFromHandle
 
@@ -1259,7 +1277,7 @@ On Atlas 200I/500 A2 inference products, this API is not supported in the Ascend
 <br>
 <br>
 
-<a id="aclrtMemGetAddressRange"></a>
+<a class="method_anchor" id="aclrtMemGetAddressRange"></a>
 
 ## aclrtMemGetAddressRange
 
@@ -1317,7 +1335,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtMemMapSelectedLink"></a>
+<a class="method_anchor" id="aclrtMemMapSelectedLink"></a>
 
 ## aclrtMemMapSelectedLink
 
@@ -1372,7 +1390,7 @@ If the start address of the **virPtrSrc** virtual memory is mapped to multiple d
 <br>
 <br>
 
-<a id="aclrtMemMapSetLink"></a>
+<a class="method_anchor" id="aclrtMemMapSetLink"></a>
 
 ## aclrtMemMapSetLink
 

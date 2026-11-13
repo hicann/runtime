@@ -45,7 +45,7 @@
 
 ---
 
-<a id="aclprofInit"></a>
+<a class="method_anchor" id="aclprofInit"></a>
 
 ## aclprofInit
 
@@ -97,7 +97,7 @@ aclError aclprofInit(const char *profilerResultPath, size_t length)
 <br>
 <br>
 
-<a id="aclprofSetConfig"></a>
+<a class="method_anchor" id="aclprofSetConfig"></a>
 
 ## aclprofSetConfig
 
@@ -152,7 +152,7 @@ aclprofCreateConfig接口的扩展接口，用于设置性能数据采集参数�
 <br>
 <br>
 
-<a id="aclprofStart"></a>
+<a class="method_anchor" id="aclprofStart"></a>
 
 ## aclprofStart
 
@@ -206,7 +206,7 @@ aclError aclprofStart(const aclprofConfig *profilerConfig)
 <br>
 <br>
 
-<a id="aclprofStop"></a>
+<a class="method_anchor" id="aclprofStop"></a>
 
 ## aclprofStop
 
@@ -258,7 +258,7 @@ aclError aclprofStop(const aclprofConfig *profilerConfig)
 <br>
 <br>
 
-<a id="aclprofFinalize"></a>
+<a class="method_anchor" id="aclprofFinalize"></a>
 
 ## aclprofFinalize
 

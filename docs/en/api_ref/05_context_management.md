@@ -1,6 +1,6 @@
 # 5. Context Management
 
-<!-- md-trans-meta sourceCommit=unknown translatedAt=2026-10-20T01:53:30.947Z pushedAt=2026-10-29T01:32:41.463Z nl=2 -->
+<!-- md-trans-meta sourceCommit=31ae292a88c1a38674abaa350b60eba724bab178 translatedAt=2026-11-06T11:14:03.987Z pushedAt=2026-11-09T07:49:33.114Z nl=2 -->
 
 This section describes the context management APIs of CANN Runtime, used for creating, destroying, and switching contexts and configuring parameters.
 
@@ -14,7 +14,7 @@ This section describes the context management APIs of CANN Runtime, used for cre
 - [`aclError aclrtGetPrimaryCtxState(int32_t deviceId, uint32_t *flags, int32_t *active)`](#aclrtGetPrimaryCtxState): Obtains the status of the default context.
 - [`aclError aclrtCtxGetFloatOverflowAddr(void **overflowAddr)`](#aclrtCtxGetFloatOverflowAddr): In saturation mode, obtains the device memory address that stores the overflow flag. The address must later be passed to the AI Core operator as the workspace parameter.
 
-<a id="aclrtCreateContext"></a>
+<a class="method_anchor" id="aclrtCreateContext"></a>
 
 ## aclrtCreateContext
 
@@ -68,7 +68,7 @@ If aclrtCreateContext is not explicitly called to create a context, the system u
 - A context created by calling this API contains a default stream.
 
     <!-- npu="310p" id1 -->
-    The EP standard form of Atlas inference products is excluded, whose context contains two streams: one default stream and the other for performing internal synchronization.
+    Except for the EP standard form of Atlas inference products, the context contains two streams: a default stream and a stream for internal synchronization.
     <!-- end id1 -->
 
 - If [aclrtSetDevice](04_device_management.md#aclrtSetDevice) is not called in an application, when aclrtCreateContext is called for the first time, the system internally binds a default stream to the device based on the device ID passed to this API (only one default stream is bound to a device). Therefore, when aclrtCreateContext is called for the first time, the quantity of occupied streams equals the number of the default stream bound to the device plus the number of streams contained in the context.
@@ -77,7 +77,7 @@ If aclrtCreateContext is not explicitly called to create a context, the system u
 <br>
 <br>
 
-<a id="aclrtDestroyContext"></a>
+<a class="method_anchor" id="aclrtDestroyContext"></a>
 
 ## aclrtDestroyContext
 
@@ -125,7 +125,7 @@ Destroys a context and releases its resources. Only a context created by calling
 <br>
 <br>
 
-<a id="aclrtSetCurrentContext"></a>
+<a class="method_anchor" id="aclrtSetCurrentContext"></a>
 
 ## aclrtSetCurrentContext
 
@@ -184,7 +184,7 @@ Sets the context of a thread.
 <br>
 <br>
 
-<a id="aclrtGetCurrentContext"></a>
+<a class="method_anchor" id="aclrtGetCurrentContext"></a>
 
 ## aclrtGetCurrentContext
 
@@ -234,7 +234,7 @@ If [aclrtSetCurrentContext](#aclrtSetCurrentContext) is called multiple times to
 <br>
 <br>
 
-<a id="aclrtCtxSetSysParamOpt"></a>
+<a class="method_anchor" id="aclrtCtxSetSysParamOpt"></a>
 
 ## aclrtCtxSetSysParamOpt
 
@@ -285,7 +285,7 @@ This API differs from [aclrtSetSysParamOpt](03_runtime_configuration.md#aclrtSet
 <br>
 <br>
 
-<a id="aclrtCtxGetSysParamOpt"></a>
+<a class="method_anchor" id="aclrtCtxGetSysParamOpt"></a>
 
 ## aclrtCtxGetSysParamOpt
 
@@ -336,7 +336,7 @@ A system parameter has no default value. If [aclrtCtxSetSysParamOpt](#aclrtCtxSe
 <br>
 <br>
 
-<a id="aclrtCtxGetCurrentDefaultStream"></a>
+<a class="method_anchor" id="aclrtCtxGetCurrentDefaultStream"></a>
 
 ## aclrtCtxGetCurrentDefaultStream
 
@@ -384,7 +384,7 @@ Obtains the default stream on the context.
 <br>
 <br>
 
-<a id="aclrtGetPrimaryCtxState"></a>
+<a class="method_anchor" id="aclrtGetPrimaryCtxState"></a>
 
 ## aclrtGetPrimaryCtxState
 
@@ -434,7 +434,7 @@ Obtains the state of the default context.
 <br>
 <br>
 
-<a id="aclrtCtxGetFloatOverflowAddr"></a>
+<a class="method_anchor" id="aclrtCtxGetFloatOverflowAddr"></a>
 
 ## aclrtCtxGetFloatOverflowAddr
 

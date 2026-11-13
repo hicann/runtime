@@ -1,6 +1,6 @@
 # 7. Event Management
 
-<!-- md-trans-meta sourceCommit=unknown translatedAt=2026-10-20T01:59:33.768Z pushedAt=2026-10-29T01:32:43.296Z nl=2 -->
+<!-- md-trans-meta sourceCommit=09c468b359b0e393f15436d7e1fc8eb9a77bcab0 translatedAt=2026-11-06T11:15:43.792Z pushedAt=2026-11-09T08:03:47.093Z nl=2 -->
 
 This section describes the event management APIs of CANN Runtime, used for event creation, recording, synchronization, timing, and cross-process sharing via IPC.
 
@@ -11,7 +11,7 @@ This section describes the event management APIs of CANN Runtime, used for event
 - [`aclError aclrtRecordEvent(aclrtEvent event, aclrtStream stream)`](#aclrtRecordEvent): Records an event in the specified stream. This is an asynchronous API.
 - [`aclError aclrtRecordEventWithFlag(aclrtEvent event, aclrtStream stream, uint32_t flag)`](#aclrtRecordEventWithFlag): Records an event in the specified stream. This is an asynchronous API, an enhancement of [aclrtRecordEvent](#aclrtRecordEvent) and supports flag configuration. Different flags serve different use cases.
 - [`aclError aclrtResetEvent(aclrtEvent event, aclrtStream stream)`](#aclrtResetEvent): Resets an event to restore its initial state, so that the event object can be reused. This is an asynchronous API.
-- [`aclError aclrtQueryEvent(aclrtEvent event, aclrtEventStatus *status)`](#aclrtQueryEvent_deprecated): Queries whether the event recorded by [aclrtRecordEvent](#aclrtRecordEvent) called in the same thread as this API has completed execution.
+- [`aclError aclrtQueryEvent(aclrtEvent event, aclrtEventStatus *status)`](#aclrtQueryEvent): Queries whether the event recorded by [aclrtRecordEvent](#aclrtRecordEvent) called in the same thread as this API has completed execution.
 - [`aclError aclrtQueryEventStatus(aclrtEvent event, aclrtEventRecordedStatus *status)`](#aclrtQueryEventStatus): Queries the execution status of all tasks captured by the event. For details about event capture, see [aclrtRecordEvent](#aclrtRecordEvent).
 - [`aclError aclrtQueryEventWaitStatus(aclrtEvent event, aclrtEventWaitStatus *status)`](#aclrtQueryEventWaitStatus): Queries whether all wait tasks corresponding to the event are complete after [aclrtStreamWaitEvent](#aclrtStreamWaitEvent) is called.
 - [`aclError aclrtSynchronizeEvent(aclrtEvent event)`](#aclrtSynchronizeEvent): Blocks the current thread until all tasks captured by the event complete.
@@ -27,7 +27,7 @@ This section describes the event management APIs of CANN Runtime, used for event
 - [`aclError aclrtIpcGetEventHandle(aclrtEvent event, aclrtIpcEventHandle *handle)`](#aclrtIpcGetEventHandle): Sets the specified event in the current process as an IPC (Inter-Process Communication) event and returns its handle to synchronize tasks across processes on the same device or on multiple devices.
 - [`aclError aclrtIpcOpenEventHandle(aclrtIpcEventHandle handle, aclrtEvent *event)`](#aclrtIpcOpenEventHandle): Obtains the handle information in the current process and returns the event pointer that can be used by the current process.
 
-<a id="aclrtCreateEvent"></a>
+<a class="method_anchor" id="aclrtCreateEvent"></a>
 
 ## aclrtCreateEvent
 
@@ -110,7 +110,7 @@ Creates an event. The created event can be used in use cases such as measuring t
 <br>
 <br>
 
-<a id="aclrtCreateEventWithFlag"></a>
+<a class="method_anchor" id="aclrtCreateEventWithFlag"></a>
 
 ## aclrtCreateEventWithFlag
 
@@ -208,7 +208,7 @@ The allowed number of events varies by hardware model.
 <br>
 <br>
 
-<a id="aclrtCreateEventExWithFlag"></a>
+<a class="method_anchor" id="aclrtCreateEventExWithFlag"></a>
 
 ## aclrtCreateEventExWithFlag
 
@@ -247,7 +247,7 @@ Creates an event with a flag. Events with different flags serve different purpos
 | Parameter | Input/Output | Description |
 | --- | :---: | --- |
 | event | Output | Pointer to the event. For the type definition, see [aclrtEvent](25-05_Typedefs.md#aclrtEvent). |
-| flag | Input | Flag of the event.<br>The flag is a bitmap. It can be set to a single macro or the result of the OR operation on multiple macros.<br>Currently, the flag can be set to the following macros:<br><br>  - ACL_EVENT_TIME_LINE: Enabling this bit indicates that the created event needs to record timestamp information. Note that enabling timestamps affects the performance of event-related APIs.<br>  - ACL_EVENT_SYNC: Enabling this bit indicates that the created event supports synchronization between multiple streams.<br>  - ACL_EVENT_CAPTURE_STREAM_PROGRESS: Enabling this bit indicates that the created event is used to track the task execution progress of a stream.<br>  - ACL_EVENT_IPC: Enabling this bit indicates that the created event is used for inter-process communication (IPC). For details, see [aclrtIpcGetEventHandle](#aclrtIpcGetEventHandle). Note that this flag cannot be combined with other flags using the bitwise OR operation. Ascend 950DT products do not support creating an event with this flag. The event created with this flag cannot be used in the following APIs or use cases: [aclrtResetEvent](#aclrtResetEvent), [aclrtQueryEvent](#aclrtQueryEvent_deprecated), [aclrtQueryEventWaitStatus](#aclrtQueryEventWaitStatus), [aclrtEventElapsedTime](#aclrtEventElapsedTime), [aclrtEventGetTimestamp](#aclrtEventGetTimestamp), [aclrtGetEventId](#aclrtGetEventId), or model capture (see the description in [aclmdlRICaptureBegin](15_model_running_instance_management.md#aclmdlRICaptureBegin)). Otherwise, an error is returned.<br><br><br>The macros are defined as follows:<br>#define ACL_EVENT_TIME_LINE 0x00000008U<br>#define ACL_EVENT_SYNC 0x00000001U<br>#define ACL_EVENT_CAPTURE_STREAM_PROGRESS 0x00000002U<br>#define ACL_EVENT_IPC 0x00000040U |
+| flag | Input | Flag of the event.<br>The flag is a bitmap. It can be set to a single macro or the result of the OR operation on multiple macros.<br>Currently, the flag can be set to the following macros:<br><br>  - ACL_EVENT_TIME_LINE: Enabling this bit indicates that the created event needs to record timestamp information. Note that enabling timestamps affects the performance of event-related APIs.<br>  - ACL_EVENT_SYNC: Enabling this bit indicates that the created event supports synchronization between multiple streams.<br>  - ACL_EVENT_CAPTURE_STREAM_PROGRESS: Enabling this bit indicates that the created event is used to track the task execution progress of a stream.<br>  - ACL_EVENT_IPC: Enabling this bit indicates that the created event is used for inter-process communication (IPC). For details, see [aclrtIpcGetEventHandle](#aclrtIpcGetEventHandle). Note that this flag cannot be combined with other flags using the bitwise OR operation. Ascend 950DT products do not support creating an event with this flag. The event created with this flag cannot be used in the following APIs or use cases: [aclrtResetEvent](#aclrtResetEvent), [aclrtQueryEvent](#aclrtQueryEvent), [aclrtQueryEventWaitStatus](#aclrtQueryEventWaitStatus), [aclrtEventElapsedTime](#aclrtEventElapsedTime), [aclrtEventGetTimestamp](#aclrtEventGetTimestamp), [aclrtGetEventId](#aclrtGetEventId), or model capture (see the description in [aclmdlRICaptureBegin](15_model_running_instance_management.md#aclmdlRICaptureBegin)). Otherwise, an error is returned.<br><br><br>The macros are defined as follows:<br>#define ACL_EVENT_TIME_LINE 0x00000008U<br>#define ACL_EVENT_SYNC 0x00000001U<br>#define ACL_EVENT_CAPTURE_STREAM_PROGRESS 0x00000002U<br>#define ACL_EVENT_IPC 0x00000040U |
 
 ### Return Values
 
@@ -255,7 +255,7 @@ Creates an event with a flag. Events with different flags serve different purpos
 
 ### Constraints
 
-- The event created using this API cannot be used in the following APIs: [aclrtResetEvent](#aclrtResetEvent), [aclrtQueryEvent](#aclrtQueryEvent_deprecated), and [aclrtQueryEventWaitStatus](#aclrtQueryEventWaitStatus). Otherwise, an error is returned.
+- The event created using this API cannot be used in the following APIs: [aclrtResetEvent](#aclrtResetEvent), [aclrtQueryEvent](#aclrtQueryEvent), and [aclrtQueryEventWaitStatus](#aclrtQueryEventWaitStatus). Otherwise, an error is returned.
 
 - If the flag value **does not include** the macro ACL_EVENT_SYNC, the event created by this API cannot be used in [aclrtStreamWaitEvent](#aclrtStreamWaitEvent). If the flag value **includes** the macro ACL_EVENT_SYNC, the event resources are not actually requested. They are requested only when [aclrtRecordEvent](#aclrtRecordEvent) is called. Therefore, when [aclrtRecordEvent](#aclrtRecordEvent) is called, the thread may be blocked, waiting for the event resources to be released.
 
@@ -292,7 +292,7 @@ Creates an event with a flag. Events with different flags serve different purpos
 <br>
 <br>
 
-<a id="aclrtDestroyEvent"></a>
+<a class="method_anchor" id="aclrtDestroyEvent"></a>
 
 ## aclrtDestroyEvent
 
@@ -344,7 +344,7 @@ When calling aclrtDestroyEvent to destroy an event, make sure that no other API 
 <br>
 <br>
 
-<a id="aclrtRecordEvent"></a>
+<a class="method_anchor" id="aclrtRecordEvent"></a>
 
 ## aclrtRecordEvent
 
@@ -402,7 +402,7 @@ In addition, for an event created by using [aclrtCreateEventExWithFlag](#aclrtCr
 <br>
 <br>
 
-<a id="aclrtRecordEventWithFlag"></a>
+<a class="method_anchor" id="aclrtRecordEventWithFlag"></a>
 
 ## aclrtRecordEventWithFlag
 
@@ -461,7 +461,7 @@ This API has the following constraints:
 <br>
 <br>
 
-<a id="aclrtResetEvent"></a>
+<a class="method_anchor" id="aclrtResetEvent"></a>
 
 ## aclrtResetEvent
 
@@ -520,7 +520,7 @@ Only the events created by calling [aclrtCreateEventWithFlag](#aclrtCreateEventW
 <br>
 <br>
 
-<a id="aclrtQueryEvent_deprecated"></a>
+<a class="method_anchor" id="aclrtQueryEvent"></a>
 
 ## aclrtQueryEvent (Deprecated)
 
@@ -571,7 +571,7 @@ Queries whether the event recorded by [aclrtRecordEvent](#aclrtRecordEvent) in t
 <br>
 <br>
 
-<a id="aclrtQueryEventStatus"></a>
+<a class="method_anchor" id="aclrtQueryEventStatus"></a>
 
 ## aclrtQueryEventStatus
 
@@ -624,7 +624,7 @@ If you call [aclrtRecordEvent](#aclrtRecordEvent) and aclrtQueryEventStatus in d
 <br>
 <br>
 
-<a id="aclrtQueryEventWaitStatus"></a>
+<a class="method_anchor" id="aclrtQueryEventWaitStatus"></a>
 
 ## aclrtQueryEventWaitStatus
 
@@ -677,7 +677,7 @@ This API is not supported for events created by calling [aclrtCreateEventExWithF
 <br>
 <br>
 
-<a id="aclrtSynchronizeEvent"></a>
+<a class="method_anchor" id="aclrtSynchronizeEvent"></a>
 
 ## aclrtSynchronizeEvent
 
@@ -725,7 +725,7 @@ Blocks the current thread until all tasks captured by the event complete. For de
 <br>
 <br>
 
-<a id="aclrtSynchronizeEventWithTimeout"></a>
+<a class="method_anchor" id="aclrtSynchronizeEventWithTimeout"></a>
 
 ## aclrtSynchronizeEventWithTimeout
 
@@ -776,7 +776,7 @@ Blocks the current thread until all tasks captured by the event complete (see [a
 <br>
 <br>
 
-<a id="aclrtEventElapsedTime"></a>
+<a class="method_anchor" id="aclrtEventElapsedTime"></a>
 
 ## aclrtEventElapsedTime
 
@@ -828,7 +828,7 @@ This API must be used together with other key APIs. API call order: Call [aclrtC
 <br>
 <br>
 
-<a id="aclrtStreamWaitEvent"></a>
+<a class="method_anchor" id="aclrtStreamWaitEvent"></a>
 
 ## aclrtStreamWaitEvent
 
@@ -883,7 +883,7 @@ Within a process, after [aclInit](02_initialization_and_deinitialization.md#aclI
 <br>
 <br>
 
-<a id="aclrtStreamWaitEventWithFlag"></a>
+<a class="method_anchor" id="aclrtStreamWaitEventWithFlag"></a>
 
 ## aclrtStreamWaitEventWithFlag
 
@@ -924,7 +924,7 @@ This API is an enhancement of [aclrtStreamWaitEvent](#aclrtStreamWaitEvent) and 
 | --- | :---: | --- |
 |stream|Input| Specified stream. For the type definition, see [aclrtStream](25-05_Typedefs.md#aclrtStream).<br>When flag is `ACL_EVENT_WAIT_EXTERNAL`, this parameter can be used only in graph capture (ACL Graph) use cases, and the stream specified by `stream` must be in the capturing state.|
 |event|Input| Event to wait on. For the type definition, see [aclrtEvent](25-05_Typedefs.md#aclrtEvent).<br>When `flag` is `ACL_EVENT_WAIT_EXTERNAL`, the event can be created only by calling [aclrtCreateEventExWithFlag](#aclrtCreateEventExWithFlag), and `flag` must be `ACL_EVENT_SYNC`. Other flags or other APIs for creating events are not supported.|
-|timeout|Input| Timeout duration, in milliseconds.<br>When `flag` is `ACL_EVENT_WAIT_DEFAULT`, this API functions equivalently to [aclrtStreamWaitEventWithTimeout](#aclrtStreamWaitEventWithTimeout), but the `timeout` type of this API is uint32_t.<br>When `flag` is `ACL_EVENT_WAIT_EXTERNAL`, `timeout` can be set only to `0`, indicating that it never times out.|
+|timeout|Input| Timeout duration, in milliseconds.<br>When flag is `ACL_EVENT_WAIT_DEFAULT`, the function is equivalent to the [aclrtStreamWaitEventWithTimeout](#aclrtStreamWaitEventWithTimeout) API, but the `timeout` parameter of this API is of the uint32_t type.<br>When flag is `ACL_EVENT_WAIT_EXTERNAL`, the `timeout` parameter can only be set to 0, which means it never times out.|
 |flag|Input| Behavior of the wait action. The value of `flag` is as follows:<br>- When `flag` is `ACL_EVENT_WAIT_DEFAULT`, it is the default flag, applicable to common use cases, and equivalent to [aclrtStreamWaitEventWithTimeout](#aclrtStreamWaitEventWithTimeout).<br>- When `flag` is `ACL_EVENT_WAIT_EXTERNAL`, it is dedicated to graph capture use cases. When you are capturing tasks on a stream into a computation graph, this flag indicates that the wait is for an event outside the graph. It is used to synchronize a graph with an external stream, or a graph with another graph.<br><br>Macro definitions:<br>#define ACL_EVENT_WAIT_DEFAULT 0x00U<br>#define ACL_EVENT_WAIT_EXTERNAL 0x01U<br> |
 
 ### Return Values
@@ -943,7 +943,7 @@ The constraints of this API are as follows:
 <br>
 <br>
 
-<a id="aclrtStreamWaitEventWithTimeout"></a>
+<a class="method_anchor" id="aclrtStreamWaitEventWithTimeout"></a>
 
 ## aclrtStreamWaitEventWithTimeout
 
@@ -983,7 +983,7 @@ Blocks the execution of the specified stream until the specified event completes
 | --- | :---: | --- |
 | stream | Input | Specified stream. For the type definition, see [aclrtStream](25-05_Typedefs.md#aclrtStream).<br>When multiple streams wait synchronously, for example, when Stream2 waits for Stream1, set this parameter to Stream2. |
 | event | Input | Event to wait on. For the type definition, see [aclrtEvent](25-05_Typedefs.md#aclrtEvent). |
-| timeout | Input | Timeout duration.<br>Value: >=0, in milliseconds. `0` indicates that the wait never times out. |
+| timeout | Input | Timeout duration.<br>A value greater than or equal to 0 is used to configure the specific timeout duration, in milliseconds. 0 means no timeout. |
 
 ### Return Values
 
@@ -993,7 +993,7 @@ Blocks the execution of the specified stream until the specified event completes
 <br>
 <br>
 
-<a id="aclrtSetOpWaitTimeout"></a>
+<a class="method_anchor" id="aclrtSetOpWaitTimeout"></a>
 
 ## aclrtSetOpWaitTimeout
 
@@ -1047,7 +1047,7 @@ In a process, after [aclInit](02_initialization_and_deinitialization.md#aclInit)
 <br>
 <br>
 
-<a id="aclrtEventGetTimestamp"></a>
+<a class="method_anchor" id="aclrtEventGetTimestamp"></a>
 
 ## aclrtEventGetTimestamp
 
@@ -1098,7 +1098,7 @@ This API must be used together with other key APIs. The API call order is as fol
 <br>
 <br>
 
-<a id="aclrtGetEventId"></a>
+<a class="method_anchor" id="aclrtGetEventId"></a>
 
 ## aclrtGetEventId
 
@@ -1147,7 +1147,7 @@ Obtains the ID of a specified event.
 <br>
 <br>
 
-<a id="aclrtGetEventAvailNum"></a>
+<a class="method_anchor" id="aclrtGetEventAvailNum"></a>
 
 ## aclrtGetEventAvailNum
 
@@ -1195,7 +1195,7 @@ Queries the number of available events on the current device.
 <br>
 <br>
 
-<a id="aclrtIpcGetEventHandle"></a>
+<a class="method_anchor" id="aclrtIpcGetEventHandle"></a>
 
 ## aclrtIpcGetEventHandle
 
@@ -1232,12 +1232,10 @@ Sets the specified event in the current process as an Inter-Process Communicatio
 
 **This API must be used together with the following other key APIs.** The following uses process A and process B as an example:
 
-<a id="li288673614297"></a>
-
 1. In process A:
     1. Call [aclrtCreateEventExWithFlag](#aclrtCreateEventExWithFlag) to create an event with `flag` set to `ACL_EVENT_IPC`.
     2. Call aclrtIpcGetEventHandle to obtain the event handle for inter-process communication.
-    3. Call [aclrtRecordEvent](#aclrtRecordEvent) to insert the event created in [1.a](#li288673614297) into the Stream.
+    3. Call [aclrtRecordEvent](#aclrtRecordEvent) to insert the created event whose flag is `ACL_EVENT_IPC` into the Stream.
 
 2. In process B:
     1. Call [aclrtIpcOpenEventHandle](#aclrtIpcOpenEventHandle) to obtain the information about the event handle in process A, and return the event pointer that can be used by the current process.
@@ -1259,7 +1257,7 @@ Sets the specified event in the current process as an Inter-Process Communicatio
 <br>
 <br>
 
-<a id="aclrtIpcOpenEventHandle"></a>
+<a class="method_anchor" id="aclrtIpcOpenEventHandle"></a>
 
 ## aclrtIpcOpenEventHandle
 

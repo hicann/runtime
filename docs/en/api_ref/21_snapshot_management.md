@@ -1,6 +1,6 @@
 # 21. Snapshot Management
 
-<!-- md-trans-meta sourceCommit=unknown translatedAt=2026-10-20T02:03:12.286Z pushedAt=2026-10-29T01:32:49.012Z nl=2 -->
+<!-- md-trans-meta sourceCommit=31ae292a88c1a38674abaa350b60eba724bab178 translatedAt=2026-11-06T11:33:44.655Z pushedAt=2026-11-09T10:39:05.144Z nl=2 -->
 
 This section describes the snapshot management APIs of CANN Runtime, which lock, back up, and restore processes, and register callbacks.
 
@@ -11,7 +11,7 @@ This section describes the snapshot management APIs of CANN Runtime, which lock,
 - [`aclError aclrtSnapShotCallbackRegister(aclrtSnapShotStage stage, aclrtSnapShotCallBack callback, void *args)`](#aclrtSnapShotCallbackRegister): Registers a callback function, which will be called at different stages of the snapshot operation. Repeated registration is not supported.
 - [`aclError aclrtSnapShotCallbackUnregister(aclrtSnapShotStage stage, aclrtSnapShotCallBack callback)`](#aclrtSnapShotCallbackUnregister): Unregisters a callback function. After unregistration, the callback function will no longer be called at the corresponding snapshot stage.
 
-<a id="aclrtSnapShotProcessLock"></a>
+<a class="method_anchor" id="aclrtSnapShotProcessLock"></a>
 
 ## aclrtSnapShotProcessLock
 
@@ -65,7 +65,7 @@ Before calling this API, ensure that the current process is in the RUNNING state
 <br>
 <br>
 
-<a id="aclrtSnapShotProcessBackup"></a>
+<a class="method_anchor" id="aclrtSnapShotProcessBackup"></a>
 
 ## aclrtSnapShotProcessBackup
 
@@ -79,7 +79,7 @@ aclError aclrtSnapShotProcessBackup(int pid, aclrtSnapShotBackupArgs *args)
 
 <!-- npu="950" id1380 -->
 - Ascend 950PR products: Supported
-- Ascend 950DT products: Not Supported
+- Ascend 950DT products: Not supported
 <!-- end id1380 -->
 <!-- npu="A3" id1381 -->
 - Atlas A3 products: Supported
@@ -88,13 +88,13 @@ aclError aclrtSnapShotProcessBackup(int pid, aclrtSnapShotBackupArgs *args)
 - Atlas A2 products: Supported
 <!-- end id1382 -->
 <!-- npu="310b" id1383 -->
-- Atlas 200I/500 A2 inference products: Not Supported
+- Atlas 200I/500 A2 inference products: Not supported
 <!-- end id1383 -->
 <!-- npu="310p" id1384 -->
-- Atlas inference products: Not Supported
+- Atlas inference products: Not supported
 <!-- end id1384 -->
 <!-- npu="910" id1385 -->
-- Atlas training products: Not Supported
+- Atlas training products: Not supported
 <!-- end id1385 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/21_snapshot_management_res.md#id2 -->
 
@@ -119,7 +119,7 @@ Before calling this API, ensure that the current process is in the LOCKED state.
 <br>
 <br>
 
-<a id="aclrtSnapShotProcessRestore"></a>
+<a class="method_anchor" id="aclrtSnapShotProcessRestore"></a>
 
 ## aclrtSnapShotProcessRestore
 
@@ -177,7 +177,7 @@ Restore and backup must be performed on the same device (with the same device ID
 <br>
 <br>
 
-<a id="aclrtSnapShotProcessUnlock"></a>
+<a class="method_anchor" id="aclrtSnapShotProcessUnlock"></a>
 
 ## aclrtSnapShotProcessUnlock
 
@@ -191,7 +191,7 @@ aclError aclrtSnapShotProcessUnlock(int pid, void* reserve)
 
 <!-- npu="950" id2822 -->
 - Ascend 950PR products: Supported
-- Ascend 950DT products: Not Supported
+- Ascend 950DT products: Not supported
 <!-- end id2822 -->
 <!-- npu="A3" id2823 -->
 - Atlas A3 products: Supported
@@ -200,13 +200,13 @@ aclError aclrtSnapShotProcessUnlock(int pid, void* reserve)
 - Atlas A2 products: Supported
 <!-- end id2824 -->
 <!-- npu="310b" id2825 -->
-- Atlas 200I/500 A2 inference products: Not Supported
+- Atlas 200I/500 A2 inference products: Not supported
 <!-- end id2825 -->
 <!-- npu="310p" id2826 -->
-- Atlas inference products: Not Supported
+- Atlas inference products: Not supported
 <!-- end id2826 -->
 <!-- npu="910" id2827 -->
-- Atlas training products: Not Supported
+- Atlas training products: Not supported
 <!-- end id2827 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/21_snapshot_management_res.md#id4 -->
 
@@ -231,7 +231,7 @@ Before calling this API, ensure that the current process is in the LOCKED or BAC
 <br>
 <br>
 
-<a id="aclrtSnapShotCallbackRegister"></a>
+<a class="method_anchor" id="aclrtSnapShotCallbackRegister"></a>
 
 ## aclrtSnapShotCallbackRegister
 
@@ -245,7 +245,7 @@ aclError aclrtSnapShotCallbackRegister(aclrtSnapShotStage stage, aclrtSnapShotCa
 
 <!-- npu="950" id2766 -->
 - Ascend 950PR products: Supported
-- Ascend 950DT products: Not Supported
+- Ascend 950DT products: Not supported
 <!-- end id2766 -->
 <!-- npu="A3" id2767 -->
 - Atlas A3 products: Supported
@@ -254,13 +254,13 @@ aclError aclrtSnapShotCallbackRegister(aclrtSnapShotStage stage, aclrtSnapShotCa
 - Atlas A2 products: Supported
 <!-- end id2768 -->
 <!-- npu="310b" id2769 -->
-- Atlas 200I/500 A2 inference products: Not Supported
+- Atlas 200I/500 A2 inference products: Not supported
 <!-- end id2769 -->
 <!-- npu="310p" id2770 -->
-- Atlas inference products: Not Supported
+- Atlas inference products: Not supported
 <!-- end id2770 -->
 <!-- npu="910" id2771 -->
-- Atlas training products: Not Supported
+- Atlas training products: Not supported
 <!-- end id2771 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/21_snapshot_management_res.md#id5 -->
 
@@ -284,7 +284,7 @@ Registers a callback function that is called at different stages of snapshot ope
 <br>
 <br>
 
-<a id="aclrtSnapShotCallbackUnregister"></a>
+<a class="method_anchor" id="aclrtSnapShotCallbackUnregister"></a>
 
 ## aclrtSnapShotCallbackUnregister
 

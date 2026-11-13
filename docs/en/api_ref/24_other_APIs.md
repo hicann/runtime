@@ -8,7 +8,7 @@ This topic describes other auxiliary APIs of CANN Runtime, including version que
 - [`size_t aclDataTypeSize(aclDataType dataType)`](#aclDataTypeSize): Obtains the size of data of the **aclDataType** type, in bytes.
 - [`float aclFloat16ToFloat(aclFloat16 value)`](#aclFloat16ToFloat): Converts data of the [aclFloat16](25-05_Typedefs.md#aclFloat16) type to data of the float (float32) type.
 - [`aclFloat16 aclFloatToFloat16(float value)`](#aclFloatToFloat16): Converts data of the float (float32) type to data of the [aclFloat16](25-05_Typedefs.md#aclFloat16) type.
-- [`aclError aclrtGetVersion(int32_t *majorVersion, int32_t *minorVersion, int32_t *patchVersion)`](#aclrtGetVersion_deprecated): Obtains the API version number. The acl API version number uses the A.B.C naming pattern, where A indicates incompatible modifications, B indicates newly added APIs, and C indicates bug fixes. (Deprecated API. Use the **aclsysGetVersionNum** or the **aclsysGetVersionStr** API instead.)
+- [`aclError aclrtGetVersion(int32_t *majorVersion, int32_t *minorVersion, int32_t *patchVersion)`](#aclrtGetVersion): Obtains the API version number. The acl API version number uses the A.B.C naming pattern, where A indicates incompatible modifications, B indicates newly added APIs, and C indicates bug fixes. (Deprecated API. Use the **aclsysGetVersionNum** or the **aclsysGetVersionStr** API instead.)
 - [`aclError aclsysGetCANNVersion(aclCANNPackageName name, aclCANNPackageVersion *version)`](#aclsysGetCANNVersion): Obtains the CANN software package version number.
 - [`aclError aclGetCannAttributeList(const aclCannAttr **cannAttrList, size_t *num)`](#aclGetCannAttributeList): Obtains the list of features supported by the CANN software and the corresponding AI processors in the runtime environment.
 - [`aclError aclGetCannAttribute(aclCannAttr cannAttr, int32_t *value)`](#aclGetCannAttribute): Obtains whether the runtime environment supports the specified CANN feature.
@@ -92,7 +92,7 @@ ACL_APP_LOG(ACL_INFO, "load model success, modelId is %u", modelId);
 <br>
 <br>
 
-<a id="aclDataTypeSize"></a>
+<a class="method_anchor" id="aclDataTypeSize"></a>
 
 ## aclDataTypeSize
 
@@ -140,7 +140,7 @@ Returns the size of data of the **aclDataType** type, in bytes.
 <br>
 <br>
 
-<a id="aclFloat16ToFloat"></a>
+<a class="method_anchor" id="aclFloat16ToFloat"></a>
 
 ## aclFloat16ToFloat
 
@@ -190,7 +190,7 @@ Returns the converted data.
 <br>
 <br>
 
-<a id="aclFloatToFloat16"></a>
+<a class="method_anchor" id="aclFloatToFloat16"></a>
 
 ## aclFloatToFloat16
 
@@ -242,7 +242,7 @@ Returns the converted data.
 <br>
 <br>
 
-<a id="aclrtGetVersion_deprecated"></a>
+<a class="method_anchor" id="aclrtGetVersion"></a>
 
 ## aclrtGetVersion (Deprecated)
 
@@ -294,7 +294,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclsysGetCANNVersion"></a>
+<a class="method_anchor" id="aclsysGetCANNVersion"></a>
 
 ## aclsysGetCANNVersion (Deprecated)
 
@@ -345,7 +345,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclGetCannAttributeList"></a>
+<a class="method_anchor" id="aclGetCannAttributeList"></a>
 
 ## aclGetCannAttributeList
 
@@ -394,7 +394,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclGetCannAttribute"></a>
+<a class="method_anchor" id="aclGetCannAttribute"></a>
 
 ## aclGetCannAttribute
 
@@ -443,7 +443,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclGetDeviceCapability"></a>
+<a class="method_anchor" id="aclGetDeviceCapability"></a>
 
 ## aclGetDeviceCapability
 
@@ -493,7 +493,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtCacheLastTaskOpInfo"></a>
+<a class="method_anchor" id="aclrtCacheLastTaskOpInfo"></a>
 
 ## aclrtCacheLastTaskOpInfo
 
@@ -562,7 +562,7 @@ This API must be used together with the following other key APIs to control the 
 <br>
 <br>
 
-<a id="aclrtCacheLastTaskExtendInfo"></a>
+<a class="method_anchor" id="aclrtCacheLastTaskExtendInfo"></a>
 
 ## aclrtCacheLastTaskExtendInfo
 
@@ -611,7 +611,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtProfTrace"></a>
+<a class="method_anchor" id="aclrtProfTrace"></a>
 
 ## aclrtProfTrace
 
@@ -661,7 +661,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclsysGetVersionNum"></a>
+<a class="method_anchor" id="aclsysGetVersionNum"></a>
 
 ## aclsysGetVersionNum
 
@@ -716,7 +716,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclsysGetVersionStr"></a>
+<a class="method_anchor" id="aclsysGetVersionStr"></a>
 
 ## aclsysGetVersionStr
 
@@ -765,7 +765,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclplatformGetDeviceInfo"></a>
+<a class="method_anchor" id="aclplatformGetDeviceInfo"></a>
 
 ## aclplatformGetDeviceInfo
 
@@ -815,7 +815,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclplatformGetInstructionInfo"></a>
+<a class="method_anchor" id="aclplatformGetInstructionInfo"></a>
 
 ## aclplatformGetInstructionInfo
 
@@ -871,7 +871,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtCreateStreamV2"></a>
+<a class="method_anchor" id="aclrtCreateStreamV2"></a>
 
 ## aclrtCreateStreamV2
 
@@ -927,7 +927,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtSetStreamConfigOpt"></a>
+<a class="method_anchor" id="aclrtSetStreamConfigOpt"></a>
 
 ## aclrtSetStreamConfigOpt
 
@@ -985,7 +985,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtSubscribeHostFunc"></a>
+<a class="method_anchor" id="aclrtSubscribeHostFunc"></a>
 
 ## aclrtSubscribeHostFunc
 
@@ -1039,7 +1039,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtProcessHostFunc"></a>
+<a class="method_anchor" id="aclrtProcessHostFunc"></a>
 
 ## aclrtProcessHostFunc
 
@@ -1089,7 +1089,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtUnSubscribeHostFunc"></a>
+<a class="method_anchor" id="aclrtUnSubscribeHostFunc"></a>
 
 ## aclrtUnSubscribeHostFunc
 

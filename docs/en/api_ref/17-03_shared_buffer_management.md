@@ -16,7 +16,7 @@ This topic describes the shared buffer management APIs, which are used for buffe
 - [`aclError acltdtGetBufChainNum(acltdtBuf headBuf, uint32_t *num)`](#acltdtGetBufChainNum): Obtains the number of shared buffers in the shared buffer chain.
 - [`aclError acltdtGetBufFromChain(acltdtBuf headBuf, uint32_t index, acltdtBuf *buf)`](#acltdtGetBufFromChain): Obtains the Mbuf at the specified index in the Mbuf chain.
 
-<a id="acltdtAllocBuf"></a>
+<a class="method_anchor" id="acltdtAllocBuf"></a>
 
 ## acltdtAllocBuf
 
@@ -76,7 +76,7 @@ For Atlas 200I/500 A2 inference products, this API can be used only in the Ascen
 <br>
 <br>
 
-<a id="acltdtFreeBuf"></a>
+<a class="method_anchor" id="acltdtFreeBuf"></a>
 
 ## acltdtFreeBuf
 
@@ -124,7 +124,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="acltdtGetBufData"></a>
+<a class="method_anchor" id="acltdtGetBufData"></a>
 
 ## acltdtGetBufData
 
@@ -176,7 +176,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="acltdtSetBufUserData"></a>
+<a class="method_anchor" id="acltdtSetBufUserData"></a>
 
 ## acltdtSetBufUserData
 
@@ -227,7 +227,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="acltdtGetBufUserData"></a>
+<a class="method_anchor" id="acltdtGetBufUserData"></a>
 
 ## acltdtGetBufUserData
 
@@ -278,7 +278,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="acltdtSetBufDataLen"></a>
+<a class="method_anchor" id="acltdtSetBufDataLen"></a>
 
 ## acltdtSetBufDataLen
 
@@ -329,7 +329,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="acltdtGetBufDataLen"></a>
+<a class="method_anchor" id="acltdtGetBufDataLen"></a>
 
 ## acltdtGetBufDataLen
 
@@ -380,7 +380,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="acltdtCopyBufRef"></a>
+<a class="method_anchor" id="acltdtCopyBufRef"></a>
 
 ## acltdtCopyBufRef
 
@@ -435,7 +435,7 @@ For Atlas 200I/500 A2 inference products, this API can be used only in the Ascen
 <br>
 <br>
 
-<a id="acltdtAppendBufChain"></a>
+<a class="method_anchor" id="acltdtAppendBufChain"></a>
 
 ## acltdtAppendBufChain
 
@@ -484,7 +484,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="acltdtGetBufChainNum"></a>
+<a class="method_anchor" id="acltdtGetBufChainNum"></a>
 
 ## acltdtGetBufChainNum
 
@@ -533,7 +533,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="acltdtGetBufFromChain"></a>
+<a class="method_anchor" id="acltdtGetBufFromChain"></a>
 
 ## acltdtGetBufFromChain
 

@@ -14,7 +14,7 @@
 - [`aclError acltdtGrantQueue(uint32_t qid, int32_t pid, uint32_t permission, int32_t timeout)`](#acltdtGrantQueue)：进程间需要共享队列信息时，可以调用本接口给其它进程授予队列相关的权限，例如Enqueue（指向队列中添加数据）权限、Dequeue（指从队列中获取数据）权限等。
 - [`aclError acltdtAttachQueue(uint32_t qid, int32_t timeout, uint32_t *permission)`](#acltdtAttachQueue)：进程间需要共享队列信息时，在被授权的进程中调用本接口确认当前进程对队列有相应权限。
 
-<a id="acltdtCreateQueue"></a>
+<a class="method_anchor" id="acltdtCreateQueue"></a>
 
 ## acltdtCreateQueue
 
@@ -63,7 +63,7 @@ aclError acltdtCreateQueue(const acltdtQueueAttr *attr, uint32_t *qid)
 <br>
 <br>
 
-<a id="acltdtDestroyQueue"></a>
+<a class="method_anchor" id="acltdtDestroyQueue"></a>
 
 ## acltdtDestroyQueue
 
@@ -111,7 +111,7 @@ aclError acltdtDestroyQueue(uint32_t qid)
 <br>
 <br>
 
-<a id="acltdtEnqueueData"></a>
+<a class="method_anchor" id="acltdtEnqueueData"></a>
 
 ## acltdtEnqueueData
 
@@ -165,7 +165,7 @@ aclError acltdtEnqueueData(uint32_t qid, const void *data, size_t dataSize, cons
 <br>
 <br>
 
-<a id="acltdtDequeueData"></a>
+<a class="method_anchor" id="acltdtDequeueData"></a>
 
 ## acltdtDequeueData
 
@@ -219,7 +219,7 @@ aclError acltdtDequeueData(uint32_t qid, void *data, size_t dataSize, size_t *re
 <br>
 <br>
 
-<a id="acltdtEnqueue"></a>
+<a class="method_anchor" id="acltdtEnqueue"></a>
 
 ## acltdtEnqueue
 
@@ -269,7 +269,7 @@ aclError acltdtEnqueue(uint32_t qid, acltdtBuf buf, int32_t timeout)
 <br>
 <br>
 
-<a id="acltdtDequeue"></a>
+<a class="method_anchor" id="acltdtDequeue"></a>
 
 ## acltdtDequeue
 
@@ -319,7 +319,7 @@ aclError acltdtDequeue(uint32_t qid, acltdtBuf *buf, int32_t timeout)
 <br>
 <br>
 
-<a id="acltdtBindQueueRoutes"></a>
+<a class="method_anchor" id="acltdtBindQueueRoutes"></a>
 
 ## acltdtBindQueueRoutes
 
@@ -378,7 +378,7 @@ aclError acltdtBindQueueRoutes(acltdtQueueRouteList *qRouteList)
 <br>
 <br>
 
-<a id="acltdtUnbindQueueRoutes"></a>
+<a class="method_anchor" id="acltdtUnbindQueueRoutes"></a>
 
 ## acltdtUnbindQueueRoutes
 
@@ -428,7 +428,7 @@ aclError acltdtUnbindQueueRoutes(acltdtQueueRouteList *qRouteList)
 <br>
 <br>
 
-<a id="acltdtQueryQueueRoutes"></a>
+<a class="method_anchor" id="acltdtQueryQueueRoutes"></a>
 
 ## acltdtQueryQueueRoutes
 
@@ -477,7 +477,7 @@ aclError acltdtQueryQueueRoutes(const acltdtQueueRouteQueryInfo *queryInfo, aclt
 <br>
 <br>
 
-<a id="acltdtGrantQueue"></a>
+<a class="method_anchor" id="acltdtGrantQueue"></a>
 
 ## acltdtGrantQueue
 
@@ -530,7 +530,7 @@ aclError acltdtGrantQueue(uint32_t qid, int32_t pid, uint32_t permission, int32_
 <br>
 <br>
 
-<a id="acltdtAttachQueue"></a>
+<a class="method_anchor" id="acltdtAttachQueue"></a>
 
 ## acltdtAttachQueue
 

@@ -1,6 +1,6 @@
 # Enumerations
 
-<!-- md-trans-meta sourceCommit=2f8767a8ea410c0e1fd4474732451a0c69efd6b1 translatedAt=2026-10-23T11:25:58.435Z pushedAt=2026-10-28T01:48:16.249Z -->
+<!-- md-trans-meta sourceCommit=38b96f2f5dac11a35f0826562336a151f2fda79e translatedAt=2026-11-06T11:38:45.408Z pushedAt=2026-11-09T10:44:40.410Z nl=2 -->
 
 This topic provides data of the enum type.
 
@@ -947,7 +947,7 @@ typedef enum {
     ACL_DEV_ATTR_MAX_BLOCK_DIM_Z = 212,
 
     ACL_DEV_ATTR_TOTAL_GLOBAL_MEM_SIZE = 301,
-    ACL_DEV_ATTR_L2_CACHE_SIZE,
+    ACL_DEV_ATTR_L2_CACHE_SIZE = 302,
     ACL_DEV_ATTR_SMP_ID = 401U,
     ACL_DEV_ATTR_PHY_CHIP_ID = 402U,
     ACL_DEV_ATTR_SUPER_POD_DEVICE_ID = 403U,
@@ -1097,6 +1097,10 @@ The enumeration item descriptions are as follows:
 - ACL\_DEV\_ATTR\_TOTAL\_GLOBAL\_MEM\_SIZE
 
     Total available memory on the device, in bytes.
+
+- ACL\_DEV\_ATTR\_L2\_CACHE\_SIZE
+
+    L2 cache size, in bytes.
 
 - ACL\_DEV\_ATTR\_SMP\_ID
 
@@ -2344,6 +2348,7 @@ typedef enum {
 | ACL_OPT_DETERMINISTIC | Whether to enable deterministic computation.<br><br>Value range [0, 4):<br>  - **0**: disable deterministic computation. This is the default value.<br>  - **1**: enable deterministic computation.<br>  - **2**: enable strong consistency computation. The computation result is deterministic and independent of the data location (equivalent to the deprecated **ACL_OPT_STRONG_CONSISTENCY**).<br>  - **3**: enable batch consistency computation. In machine learning or high-performance computing, when a sample is placed into a batch of any size or its order within the batch is adjusted, the final output computation result of that sample must remain bit-wise identical. In simple terms: "The computation result of a single sample has nothing to do with which group it belongs to (batch size) or its position in the group (batch index)."<br><br>When deterministic computation is enabled, the operator produces the same output across multiple executions under the same hardware and input. However, enabling deterministic computation often slows down operator execution.<br>By default, deterministic computation is disabled, and the operator may produce different results across multiple executions under the same hardware and input. This difference generally arises because asynchronous multi-threaded execution in the operator implementation causes the accumulation order of floating-point numbers to change.<br>It is generally recommended not to enable deterministic computation, because deterministic computation often slows down operator execution and thus affects performance. When the model produces different results across multiple executions, or during precision tuning, deterministic computation can be enabled to assist in model debugging and tuning. |
 | ACL_OPT_ENABLE_DEBUG_KERNEL | Whether to enable out-of-bounds access detection for global memory during the operator execution phase.<br><br>  - **0**: disable out-of-bounds memory access detection. This is the default value.<br>  - **1**: enable out-of-bounds memory access detection.<br><br>Before compiling the operator, call the **aclSetCompileopt** API to set **ACL_OP_DEBUG_OPTION** to **oom**, and at the same time call the **aclrtCtxSetSysParamOpt** API (whose scope is the context) or the **aclrtSetSysParamOpt** API (whose scope is the process) to set **ACL_OPT_ENABLE_DEBUG_KERNEL** to **1**, thereby enabling out-of-bounds access detection for global memory. During operator execution, if an out-of-bounds memory access occurs when reading or writing data from global memory (for example, reading operator input data or writing operator output data), the error code "EZ9999" is returned, indicating an operator AI Core error. |
 | ACL_OPT_STRONG_CONSISTENCY | Whether to enable strong consistency computation.<br>**0**: disable strong consistency computation. This is the default value.<br>**1**: enable strong consistency computation.<br>When strong consistency computation is enabled, the computation result is deterministic, and multiple executions produce the same output. In addition, the computation result is independent of the data location. For example, during cube multiplication, the accumulation order of different rows may differ, which may cause slight differences in the computation results of the same data in different rows. However, with strong consistency computation enabled, as long as the input is the same, the computation result remains consistent even in different rows.<br>By default, strong consistency computation is disabled, which may cause inconsistent computation results when the same data is located in different rows.<br>It is generally recommended not to enable strong consistency computation, because it slows down operator execution and affects performance. Strong consistency computation should be enabled only when it is necessary to strictly guarantee consistent computation results for the same data at different locations, or during precision tuning, to assist in model debugging and optimization.<br>Caution: This enumeration item will be deprecated in later versions. Use `ACL_OPT_DETERMINISTIC` instead.|
+| ACL_OPT_ENABLE_KERNEL_EARLY_START | Reserved value. |
 
 <br>
 

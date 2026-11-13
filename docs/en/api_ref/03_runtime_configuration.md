@@ -16,7 +16,7 @@ This topic describes the runtime configuration APIs of CANN Runtime, which are u
 - [`aclError aclrtUnuseStreamResInCurrentThread(aclrtStream stream)`](#aclrtUnuseStreamResInCurrentThread): Cancels the use of the device resource limit on the specified stream in the current thread.
 - [`aclError aclrtGetResInCurrentThread(aclrtDevResLimitType type, uint32_t *value)`](#aclrtGetResInCurrentThread): Obtains the device resources available in the current thread.
 
-<a id="aclrtSetSysParamOpt"></a>
+<a class="method_anchor" id="aclrtSetSysParamOpt"></a>
 
 ## aclrtSetSysParamOpt
 
@@ -67,7 +67,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtGetSysParamOpt"></a>
+<a class="method_anchor" id="aclrtGetSysParamOpt"></a>
 
 ## aclrtGetSysParamOpt
 
@@ -118,7 +118,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtGetDeviceResLimit"></a>
+<a class="method_anchor" id="aclrtGetDeviceResLimit"></a>
 
 ## aclrtGetDeviceResLimit
 
@@ -170,7 +170,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtSetDeviceResLimit"></a>
+<a class="method_anchor" id="aclrtSetDeviceResLimit"></a>
 
 ## aclrtSetDeviceResLimit
 
@@ -230,7 +230,7 @@ The setting by this API takes effect only on tasks dispatched subsequently. For 
 <br>
 <br>
 
-<a id="aclrtResetDeviceResLimit"></a>
+<a class="method_anchor" id="aclrtResetDeviceResLimit"></a>
 
 ## aclrtResetDeviceResLimit
 
@@ -278,7 +278,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtGetStreamResLimit"></a>
+<a class="method_anchor" id="aclrtGetStreamResLimit"></a>
 
 ## aclrtGetStreamResLimit
 
@@ -330,7 +330,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtSetStreamResLimit"></a>
+<a class="method_anchor" id="aclrtSetStreamResLimit"></a>
 
 ## aclrtSetStreamResLimit
 
@@ -384,7 +384,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtResetStreamResLimit"></a>
+<a class="method_anchor" id="aclrtResetStreamResLimit"></a>
 
 ## aclrtResetStreamResLimit
 
@@ -432,7 +432,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtUseStreamResInCurrentThread"></a>
+<a class="method_anchor" id="aclrtUseStreamResInCurrentThread"></a>
 
 ## aclrtUseStreamResInCurrentThread
 
@@ -480,7 +480,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtUnuseStreamResInCurrentThread"></a>
+<a class="method_anchor" id="aclrtUnuseStreamResInCurrentThread"></a>
 
 ## aclrtUnuseStreamResInCurrentThread
 
@@ -528,7 +528,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtGetResInCurrentThread"></a>
+<a class="method_anchor" id="aclrtGetResInCurrentThread"></a>
 
 ## aclrtGetResInCurrentThread
 

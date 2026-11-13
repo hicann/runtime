@@ -15,7 +15,7 @@ This topic describes the APIs for allocating, releasing, and registering host me
 - [`aclError aclrtHostMemMapCapabilities(uint32_t deviceId, aclrtHacType hacType, aclrtHostMemMapCapability *capabilities)`](#aclrtHostMemMapCapabilities): Queries whether the specified hardware driver accelerator supports accessing the memory registered through the [aclrtHostRegister](#aclrtHostRegister) API.
 - [`aclError aclrtHostUnregister(void *ptr)`](#aclrtHostUnregister): Unregisters the host memory.
 
-<a id="aclrtMallocHost"></a>
+<a class="method_anchor" id="aclrtMallocHost"></a>
 
 ## aclrtMallocHost
 
@@ -81,7 +81,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtMallocHostWithCfg"></a>
+<a class="method_anchor" id="aclrtMallocHostWithCfg"></a>
 
 ## aclrtMallocHostWithCfg
 
@@ -137,7 +137,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtFreeHost"></a>
+<a class="method_anchor" id="aclrtFreeHost"></a>
 
 ## aclrtFreeHost
 
@@ -187,7 +187,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtFreeHostWithDevSync"></a>
+<a class="method_anchor" id="aclrtFreeHostWithDevSync"></a>
 
 ## aclrtFreeHostWithDevSync
 
@@ -237,7 +237,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtHostRegister"></a>
+<a class="method_anchor" id="aclrtHostRegister"></a>
 
 ## aclrtHostRegister
 
@@ -290,7 +290,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtHostRegisterV2"></a>
+<a class="method_anchor" id="aclrtHostRegisterV2"></a>
 
 ## aclrtHostRegisterV2
 
@@ -342,7 +342,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtHostGetDevicePointer"></a>
+<a class="method_anchor" id="aclrtHostGetDevicePointer"></a>
 
 ## aclrtHostGetDevicePointer
 
@@ -392,7 +392,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtHostMemMapCapabilities"></a>
+<a class="method_anchor" id="aclrtHostMemMapCapabilities"></a>
 
 ## aclrtHostMemMapCapabilities
 
@@ -442,7 +442,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtHostUnregister"></a>
+<a class="method_anchor" id="aclrtHostUnregister"></a>
 
 ## aclrtHostUnregister
 
@@ -492,7 +492,7 @@ Returns **0** if the operation is successful; returns other values if the operat
 <br>
 <br>
 
-<a id="aclrtHostGetDevicePointerAddrRange"></a>
+<a class="method_anchor" id="aclrtHostGetDevicePointerAddrRange"></a>
 
 ## aclrtHostGetDevicePointerAddrRange
 

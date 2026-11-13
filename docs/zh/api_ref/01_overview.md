@@ -81,23 +81,23 @@ Runtime API中的废弃项（例如接口、返回码等），自指定版本在
 
 ### 接口
 
-- [aclGetDataBufferSize](25-03_Operation_APIs.md#aclGetDataBufferSize_deprecated)接口
+- [aclGetDataBufferSize](25-03_Operation_APIs.md#aclGetDataBufferSize)接口
 
     此接口后续版本会废弃，请使用[aclGetDataBufferSizeV2](25-03_Operation_APIs.md#aclGetDataBufferSizeV2)接口。
 
-- [aclrtQueryEvent](07_event_management.md#aclrtQueryEvent_deprecated)接口
+- [aclrtQueryEvent](07_event_management.md#aclrtQueryEvent)接口
 
     此接口后续版本会废弃，请使用[aclrtQueryEventStatus](07_event_management.md#aclrtQueryEventStatus)接口。
 
-- [aclrtGetVersion](24_other_APIs.md#aclrtGetVersion_deprecated)接口
+- [aclrtGetVersion](24_other_APIs.md#aclrtGetVersion)接口
 
     此接口后续版本会废弃，请使用[aclsysGetVersionNum](24_other_APIs.md#aclsysGetVersionNum)接口或[aclsysGetVersionStr](24_other_APIs.md#aclsysGetVersionStr)接口。
 
-- [aclrtMemcpyAsyncWithCondition](11-03_memory_copy_and_set.md#aclrtMemcpyAsyncWithCondition_deprecated)接口
+- [aclrtMemcpyAsyncWithCondition](11-03_memory_copy_and_set.md#aclrtMemcpyAsyncWithCondition)接口
 
     此接口后续版本会废弃，请使用[aclrtMemcpyAsync](11-03_memory_copy_and_set.md#aclrtMemcpyAsync)接口。
 
-- [aclrtSetExceptionInfoCallback](13_exception_handling.md#aclrtSetExceptionInfoCallback_deprecated)接口
+- [aclrtSetExceptionInfoCallback](13_exception_handling.md#aclrtSetExceptionInfoCallback)接口
 
     此接口后续版本会废弃，请使用[aclrtExceptionInfoCallbackRegister](13_exception_handling.md#aclrtExceptionInfoCallbackRegister)接口或[aclrtExceptionInfoCallbackUnregister](13_exception_handling.md#aclrtExceptionInfoCallbackUnregister)。
 

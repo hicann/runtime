@@ -1,6 +1,6 @@
 # Structs
 
-<!-- md-trans-meta sourceCommit=unknown translatedAt=2026-10-22T02:22:17.365Z pushedAt=2026-10-27T09:40:14.324Z -->
+<!-- md-trans-meta sourceCommit=2f8767a8ea410c0e1fd4474732451a0c69efd6b1 translatedAt=2026-11-06T11:39:16.822Z pushedAt=2026-11-09T10:46:54.845Z nl=2 -->
 
 Data of the struct type.
 
@@ -517,7 +517,7 @@ typedef struct aclrtLaunchKernelAttr {
 } aclrtLaunchKernelAttr;
 ```
 
-When launching a kernel, each attribute consists of an attribute identifier [aclrtLaunchKernelAttr](#aclrtLaunchKernelAttr).id and its corresponding attribute value [aclrtLaunchKernelAttr](#aclrtLaunchKernelAttr).value. For example, when [aclrtLaunchKernelAttr](#aclrtLaunchKernelAttr).id is ACL\_RT\_LAUNCH\_KERNEL\_ATTR\_SCHEM\_MODE, [aclrtLaunchKernelAttr](#aclrtLaunchKernelAttr).value must be configured based on the value of schemMode.
+When launching a kernel, each attribute consists of an attribute identifier aclrtLaunchKernelAttr.id and its corresponding attribute value aclrtLaunchKernelAttr.value. For example, when [aclrtLaunchKernelAttr](#aclrtLaunchKernelAttr).id is set to ACL\_RT\_LAUNCH\_KERNEL\_ATTR\_SCHEM\_MODE, [aclrtLaunchKernelAttr](#aclrtLaunchKernelAttr).value must be configured based on the value of schemMode.
 
 For the definition of [aclrtLaunchKernelAttr](#aclrtLaunchKernelAttr).id, please refer to [aclrtLaunchKernelAttrId](25-02_Enumerations.md#aclrtLaunchKernelAttrId).
 
@@ -763,7 +763,7 @@ For the memory location, see the definition in [aclrtMemLocationType](25-02_Enum
 ```c
 typedef struct {
     aclrtMemManagedLocationType type;  // Memory location
-    int32_t id;                        // Device ID or NUMA (Non-Uniform Memory Access) ID
+    int32_t id;                        // Device ID or Non-Uniform Memory Access (NUMA) ID
 } aclrtMemManagedLocation;
 ```
 
@@ -1024,7 +1024,7 @@ typedef struct {
 | Member Name | Description |
 | --- | --- |
 | sdid | For the SuperPoD product in Atlas A3 products, sdid (SuperPOD Device ID) indicates the unique device identifier in the SuperPoD product. It can be obtained in advance by calling the [aclGetDeviceInfo](04_device_management.md#aclrtGetDeviceInfo) API. |
-| pid | Whitelist array of process IDs on the host. |
+| pid | Trustlist array of process IDs on the host. |
 | num | Length of the pid array. |
 
 <br>

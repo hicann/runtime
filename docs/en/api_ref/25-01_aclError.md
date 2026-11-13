@@ -1,6 +1,6 @@
 # aclError Return Code List
 
-<!-- md-trans-meta sourceCommit=31ae292a88c1a38674abaa350b60eba724bab178 translatedAt=2026-10-23T12:04:46.817Z pushedAt=2026-10-27T08:37:18.806Z -->
+<!-- md-trans-meta sourceCommit=72ad505978aa2a456f844d9ca39de6bb2ec24d86 translatedAt=2026-11-06T11:39:12.227Z pushedAt=2026-11-09T11:29:38.331Z nl=2 -->
 
 This topic provides the aclError return code list.
 
@@ -21,8 +21,8 @@ Return code definition rules:
 - Rule 1: If the developer's environment is abnormal or the code logic is incorrect, the problem can be resolved by optimizing the environment or code logic. In this case, the return code is defined as 1XXXXX.
 - Rule 2: If resources are insufficient (stream, memory, etc.) or the APIs or parameters used by the developer during programming do not match the current hardware, the problem can be resolved by using resources properly during programming. In this case, the return code is defined as 2XXXXX.
 - Rule 3: If a service function is abnormal, such as a full queue or an empty queue, the return code is defined as 3XXXXX.
-- Rule 4: If an internal software or hardware exception occurs, including internal software errors and device execution failures, the user cannot resolve the problem and needs to report it to technical support. In this case, the return code is defined as 5XXXXX. You can obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support.
-- Rule 5: Unidentified errors are currently all mapped to 500000. You can obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support.
+- Rule 4: If an internal software or hardware exception occurs, such as an internal software error or a device execution failure, the problem cannot be resolved by the user and must be reported to technical support. In this case, the return code is defined as 5XXXXX. You can obtain logs and submit an issue.
+- Rule 5: Unidentified errors are currently all mapped to 500000. You can obtain logs and submit an issue.
 
 <a id="table1323834101720"></a>
 **Table 1**  ACL return code list
@@ -92,15 +92,15 @@ Return code definition rules:
 | static const int ACL_ERROR_MEMORY_ADDRESS_UNALIGNED = 200003; | Memory address not aligned. | Check whether the memory address meets the API requirements. |
 | static const int ACL_ERROR_RESOURCE_NOT_MATCH = 200004; | Resource mismatch. | Check whether correct resources such as streams and contexts are passed when calling the API. |
 | static const int ACL_ERROR_INVALID_RESOURCE_HANDLE = 200005; | Invalid resource handle. | Check whether the resources such as streams and contexts passed when calling the API have been destroyed or occupied. |
-| static const int ACL_ERROR_FEATURE_UNSUPPORTED = 200006; | Feature not supported. | You can obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
+| static const int ACL_ERROR_FEATURE_UNSUPPORTED = 200006; | Feature not supported. | You can obtain the logs and submit an issue. |
 | static const int ACL_ERROR_PROF_MODULES_UNSUPPORTED = 200007; | Unsupported profiling configuration dispatched. | Check whether the profiling configuration is correct based on the description in **aclprofCreateConfig**. |
 | static const int ACL_ERROR_STORAGE_OVER_LIMIT = 300000; | Storage limit exceeded. | Check the remaining storage in the hardware environment. |
-| static const int ACL_ERROR_INTERNAL_ERROR = 500000; | Unknown internal error. | You can obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| static const int ACL_ERROR_FAILURE = 500001; | Internal error. | You can obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| static const int ACL_ERROR_GE_FAILURE = 500002; | Error in the Graph Engine (GE) module. | You can obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| static const int ACL_ERROR_RT_FAILURE = 500003; | Error in the RUNTIME module. | You can obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| static const int ACL_ERROR_DRV_FAILURE = 500004; | Error in the Driver module. | You can obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| static const int ACL_ERROR_PROFILING_FAILURE = 500005; | Error in the Profiling module. | You can obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
+| static const int ACL_ERROR_INTERNAL_ERROR = 500000; | Unknown internal error. | You can obtain the logs and submit an issue. |
+| static const int ACL_ERROR_FAILURE = 500001; | Internal error. | You can obtain the logs and submit an issue. |
+| static const int ACL_ERROR_GE_FAILURE = 500002; | Error in the Graph Engine (GE) module. | You can obtain the logs and submit an issue. |
+| static const int ACL_ERROR_RT_FAILURE = 500003; | Error in the RUNTIME module. | You can obtain the logs and submit an issue. |
+| static const int ACL_ERROR_DRV_FAILURE = 500004; | Error in the Driver module. | You can obtain the logs and submit an issue. |
+| static const int ACL_ERROR_PROFILING_FAILURE = 500005; | Error in the Profiling module. | You can obtain the logs and submit an issue. |
 
 <a id="table1089051917356"></a>
 **Table 2**  Return code list for passthrough RUNTIME
@@ -152,102 +152,102 @@ Return code definition rules:
 | #define  ACL_ERROR_RT_SYMBOL_NOT_FOUND  107042 | The symbol is not found. | Check whether the global variable name is consistent with the global variable name in the operator binary. |
 | #define  ACL_ERROR_RT_INVALID_SYMBOL  107043 | Invalid symbol. | Check whether the variable name is declared in the device code. |
 | #define  ACL_ERROR_RT_INVALID_DEVICE_FUNCTION  107044 | Invalid kernel function symbol. | Check whether the kernel function is declared in the device code. |
-| #define  ACL_ERROR_RT_FEATURE_NOT_SUPPORT  207000 | The feature is not supported. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
+| #define  ACL_ERROR_RT_FEATURE_NOT_SUPPORT  207000 | Feature not supported. | You can obtain the logs and submit an issue. |
 | #define  ACL_ERROR_RT_MEMORY_ALLOCATION  207001 | Memory request failed. | Check the remaining storage in the hardware environment. |
-| #define  ACL_ERROR_RT_MEMORY_FREE  207002 | Memory release failed. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
+| #define  ACL_ERROR_RT_MEMORY_FREE  207002 | Memory release failed. | You can obtain the logs and submit an issue. |
 | #define  ACL_ERROR_RT_AICORE_OVER_FLOW  207003 | AI Core operator computation overflow. | Check whether the corresponding AI Core operator computation overflows. You can find the overflowing operator based on the dump data and then locate the specific operator problem. |
 | #define  ACL_ERROR_RT_NO_DEVICE  207004 | The device is unavailable. | Check whether the device is running properly. |
 | #define  ACL_ERROR_RT_RESOURCE_ALLOC_FAIL  207005 | Resource request failed. | Check the usage of resources such as streams and release unused resources in a timely manner. |
 | #define  ACL_ERROR_RT_NO_PERMISSION  207006 | No operation permission. | Check whether the user permission for running the application is correct. |
 | #define  ACL_ERROR_RT_NO_EVENT_RESOURCE  207007 | Insufficient event resources. | Check whether the number of events meets the requirements based on the description in the **aclrtCreateEvent** API. |
-| #define  ACL_ERROR_RT_NO_STREAM_RESOURCE  207008 | Insufficient stream resources. | Check whether the number of streams meets the requirements based on the description in the aclrtCreateStream API. |
+| #define  ACL_ERROR_RT_NO_STREAM_RESOURCE  207008 | Insufficient stream resources. | Check whether the number of streams meets the requirements based on the description in the **aclrtCreateStream** API. |
 | #define  ACL_ERROR_RT_NO_NOTIFY_RESOURCE  207009 | Insufficient internal Notify resources in the system. | There are too many concurrent tasks for media data processing or too many resources are consumed during model inference. It is recommended to reduce concurrent tasks or unload some models. |
 | #define  ACL_ERROR_RT_NO_MODEL_RESOURCE  207010 | Insufficient model resources. | It is recommended to unload some models. |
-| #define  ACL_ERROR_RT_NO_CDQ_RESOURCE  207011 | Insufficient internal runtime resources. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
+| #define  ACL_ERROR_RT_NO_CDQ_RESOURCE  207011 | Insufficient internal runtime resources. | You can obtain the logs and submit an issue. |
 | #define  ACL_ERROR_RT_OVER_LIMIT  207012 | The number of queues exceeds the upper limit. | Destroy the queues that are no longer needed before creating new queues. |
 | #define  ACL_ERROR_RT_QUEUE_EMPTY  207013 | The queue is empty. | Data cannot be obtained from an empty queue. Add data to the queue first, and then obtain it. |
 | #define  ACL_ERROR_RT_QUEUE_FULL  207014 | The queue is full. | Data cannot be added to a full queue. Obtain data from the queue first, and then add it. |
 | #define  ACL_ERROR_RT_REPEATED_INIT  207015 | The queue is repeatedly initialized. | It is recommended to initialize the queue only once and avoid repeated initialization. |
 | #define  ACL_ERROR_RT_DEVICE_OOM  207018 | The device-side memory is exhausted. | Check the memory usage on the device and plan the memory usage properly based on the memory specifications of the device. |
 | #define  ACL_ERROR_RT_FEATURE_NOT_SUPPORT_UPDATE_OP  207019 | The current driver version does not support updating this operator. | Check the driver version.<br>You can click [Link](https://www.hiascend.com/hardware/firmware-drivers/commercial) to download the driver installation package of Ascend HDK 25.0.RC1 or later on the firmware and driver page, and install or upgrade it by referring to the documentation of the corresponding version. |
-| #define  ACL_ERROR_RT_TIMEOUT  207020 | Driver execution timeout. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
+| #define  ACL_ERROR_RT_TIMEOUT  207020 | Driver execution timeout. | You can obtain the logs and submit an issue. |
 | #define  ACL_ERROR_RT_LINK_TYPE_NOT_SUPPORTED  207021 | The specified link type is not supported. | Check whether the hardware supports the used link type. |
-| #define  ACL_ERROR_RT_INTERNAL_ERROR  507000 | Internal error in the Runtime module. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_TS_ERROR  507001 | Internal error in the task scheduler module on the device. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_STREAM_TASK_FULL  507002 | The number of tasks on the stream is full. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_STREAM_TASK_EMPTY  507003 | The number of tasks on the stream is empty. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_STREAM_NOT_COMPLETE  507004 | Not all tasks on the stream have been executed. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_END_OF_SEQUENCE  507005 | The task on the AI CPU has been executed. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_EVENT_NOT_COMPLETE  507006 | The event is not complete. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_CONTEXT_RELEASE_ERROR  507007 | Failed to release the context. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_SOC_VERSION  507008 | Failed to obtain the SoC version. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_TASK_TYPE_NOT_SUPPORT  507009 | Unsupported task type. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_LOST_HEARTBEAT  507010 | The task scheduler lost the heartbeat. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_MODEL_EXECUTE  507011 | Model execution failed. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_REPORT_TIMEOUT  507012 | Failed to obtain the message from the task scheduler. | Check whether the timeout period of the API is set too short. If yes, increase the timeout period appropriately. If the timeout error persists after increasing the timeout period, check the logs.<br>Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_SYS_DMA  507013 | System Direct Memory Access (DMA) hardware execution error. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_AICORE_TIMEOUT  507014 | AI Core execution timeout. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support.<br>For details about the logs, see *Log Reference*. |
-| #define  ACL_ERROR_RT_AICORE_EXCEPTION  507015 | AI Core execution exception. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_AICORE_TRAP_EXCEPTION  507016 | AI Core trap execution exception. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_AICPU_TIMEOUT  507017 | AI CPU execution timeout. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_AICPU_EXCEPTION  507018 | AI CPU execution exception. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_AICPU_DATADUMP_RSP_ERR  507019 | The AI CPU does not return a response to the task scheduler after data dump. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_AICPU_MODEL_RSP_ERR  507020 | The AI CPU does not return a response to the task scheduler after model execution. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_PROFILING_ERROR  507021 | Profiling function execution exception. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_IPC_ERROR  507022 | Inter-process communication exception. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_MODEL_ABORT_NORMAL  507023 | The model exits. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_KERNEL_UNREGISTERING  507024 | The operator is being unregistered. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_RINGBUFFER_NOT_INIT  507025 | The ring buffer feature is not initialized. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_RINGBUFFER_NO_DATA  507026 | The ring buffer has no data. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_KERNEL_LOOKUP  507027 | The kernel inside RUNTIME is not registered. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_KERNEL_DUPLICATE  507028 | The kernel inside RUNTIME is repeatedly registered. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_DEBUG_REGISTER_FAIL  507029 | Failed to register the debug feature. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_DEBUG_UNREGISTER_FAIL  507030 | Failed to unregister the debug feature. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_LABEL_CONTEXT  507031 | The label is not in the current context. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_PROGRAM_USE_OUT  507032 | The number of registered programs exceeds the limit. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_DEV_SETUP_ERROR  507033 | Failed to start the device. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_VECTOR_CORE_TIMEOUT  507034 | Vector Core execution timeout. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_VECTOR_CORE_EXCEPTION  507035 | Vector Core execution exception. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_VECTOR_CORE_TRAP_EXCEPTION  507036 | Vector Core trap execution exception. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_CDQ_BATCH_ABNORMAL  507037 | Runtime internal resource request exception. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_DIE_MODE_CHANGE_ERROR  507038 | DIE mode modification exception. The DIE mode cannot be modified. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_DIE_SET_ERROR  507039 | The DIE cannot be specified in single-DIE mode. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_INVALID_DIEID  507040 | The specified DIE ID is incorrect. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_DIE_MODE_NOT_SET  507041 | The DIE mode is not set. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_AICORE_TRAP_READ_OVERFLOW  507042 | AI Core trap out-of-bounds read exception. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_AICORE_TRAP_WRITE_OVERFLOW  507043 | AI Core trap out-of-bounds write exception. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_VECTOR_CORE_TRAP_READ_OVERFLOW  507044 | Vector Core trap out-of-bounds read exception. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_VECTOR_CORE_TRAP_WRITE_OVERFLOW  507045 | Vector Core trap out-of-bounds write exception. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_STREAM_SYNC_TIMEOUT  507046 | In the specified timeout wait event, not all tasks in the specified stream have completed execution. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_EVENT_SYNC_TIMEOUT  507047 | In the specified event synchronization wait, the event has not completed execution in the specified time. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_FFTS_PLUS_TIMEOUT  507048 | Internal task execution timeout. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_FFTS_PLUS_EXCEPTION  507049 | Internal task execution exception. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_FFTS_PLUS_TRAP_EXCEPTION  507050 | Internal task trap exception. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_SEND_MSG  507051 | Message sending failed during data enqueueing. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_COPY_DATA  507052 | Memory copy failed during data enqueueing. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
+| #define  ACL_ERROR_RT_INTERNAL_ERROR  507000 | Internal error in the Runtime module. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_TS_ERROR  507001 | Internal error in the task scheduler module on the device. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_STREAM_TASK_FULL  507002 | The number of tasks on the stream is full. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_STREAM_TASK_EMPTY  507003 | The number of tasks on the stream is empty. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_STREAM_NOT_COMPLETE  507004 | Not all tasks on the stream have been executed. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_END_OF_SEQUENCE  507005 | The task on the AI CPU has been executed. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_EVENT_NOT_COMPLETE  507006 | The event is not complete. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_CONTEXT_RELEASE_ERROR  507007 | Failed to release the context. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_SOC_VERSION  507008 | Failed to obtain the SoC version. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_TASK_TYPE_NOT_SUPPORT  507009 | Unsupported task type. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_LOST_HEARTBEAT  507010 | The task scheduler lost the heartbeat. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_MODEL_EXECUTE  507011 | Model execution failed. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_REPORT_TIMEOUT  507012 | Failed to obtain the message from the task scheduler. | Check whether the timeout setting of the API is too short. If yes, increase the timeout appropriately. If the timeout error persists after the timeout increases, check the logs.<br>You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_SYS_DMA  507013 | System Direct Memory Access (DMA) hardware execution error. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_AICORE_TIMEOUT  507014 | AI Core execution timeout. | You can obtain the logs and submit an issue.<br>For details about the logs, see *Log Reference*. |
+| #define  ACL_ERROR_RT_AICORE_EXCEPTION  507015 | AI Core execution exception. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_AICORE_TRAP_EXCEPTION  507016 | AI Core trap execution exception. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_AICPU_TIMEOUT  507017 | AI CPU execution timeout. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_AICPU_EXCEPTION  507018 | AI CPU execution exception. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_AICPU_DATADUMP_RSP_ERR  507019 | The AI CPU does not return a response to the task scheduler after data dump. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_AICPU_MODEL_RSP_ERR  507020 | The AI CPU does not return a response to the task scheduler after model execution. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_PROFILING_ERROR  507021 | Profiling function execution exception. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_IPC_ERROR  507022 | Inter-process communication exception. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_MODEL_ABORT_NORMAL  507023 | The model exits. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_KERNEL_UNREGISTERING  507024 | The operator is being unregistered. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_RINGBUFFER_NOT_INIT  507025 | The ring buffer feature is not initialized. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_RINGBUFFER_NO_DATA  507026 | The ring buffer has no data. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_KERNEL_LOOKUP  507027 | The kernel inside RUNTIME is not registered. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_KERNEL_DUPLICATE  507028 | The kernel inside RUNTIME is repeatedly registered. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_DEBUG_REGISTER_FAIL  507029 | Failed to register the debug feature. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_DEBUG_UNREGISTER_FAIL  507030 | Failed to unregister the debug feature. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_LABEL_CONTEXT  507031 | The label is not in the current context. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_PROGRAM_USE_OUT  507032 | The number of registered programs exceeds the limit. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_DEV_SETUP_ERROR  507033 | Failed to start the device. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_VECTOR_CORE_TIMEOUT  507034 | Vector Core execution timeout. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_VECTOR_CORE_EXCEPTION  507035 | Vector Core execution exception. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_VECTOR_CORE_TRAP_EXCEPTION  507036 | Vector Core trap execution exception. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_CDQ_BATCH_ABNORMAL  507037 | Runtime internal resource request exception. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_DIE_MODE_CHANGE_ERROR  507038 | DIE mode modification exception. The DIE mode cannot be modified. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_DIE_SET_ERROR  507039 | The DIE cannot be specified in single-DIE mode. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_INVALID_DIEID  507040 | The specified DIE ID is incorrect. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_DIE_MODE_NOT_SET  507041 | The DIE mode is not set. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_AICORE_TRAP_READ_OVERFLOW  507042 | AI Core trap out-of-bounds read exception. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_AICORE_TRAP_WRITE_OVERFLOW  507043 | AI Core trap out-of-bounds write exception. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_VECTOR_CORE_TRAP_READ_OVERFLOW  507044 | Vector Core trap out-of-bounds read exception. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_VECTOR_CORE_TRAP_WRITE_OVERFLOW  507045 | Vector Core trap out-of-bounds write exception. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_STREAM_SYNC_TIMEOUT  507046 | In the specified timeout wait event, not all tasks in the specified stream have completed execution. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_EVENT_SYNC_TIMEOUT  507047 | In the specified event synchronization wait, the event has not completed execution in the specified time. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_FFTS_PLUS_TIMEOUT  507048 | Internal task execution timeout. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_FFTS_PLUS_EXCEPTION  507049 | Internal task execution exception. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_FFTS_PLUS_TRAP_EXCEPTION  507050 | Internal task trap exception. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_SEND_MSG  507051 | Message sending failed during data enqueueing. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_COPY_DATA  507052 | Memory copy failed during data enqueueing. | You can obtain the logs and submit an issue. |
 | #define  ACL_ERROR_RT_DEVICE_MEM_ERROR  507053 | An erroneous virtual address with a memory UCE (uncorrectable error, meaning a memory error that the system hardware cannot directly handle and recover) has occurred. | Obtain and fix the erroneous virtual address of the memory UCE based on the description in the **aclrtGetMemUceInfo** API. |
-| #define  ACL_ERROR_RT_HBM_MULTI_BIT_ECC_ERROR  507054 | HBM multi-bit ECC fault. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
+| #define  ACL_ERROR_RT_HBM_MULTI_BIT_ECC_ERROR  507054 | HBM multi-bit ECC fault. | You can obtain the logs and submit an issue. |
 | #define  ACL_ERROR_RT_SUSPECT_DEVICE_MEM_ERROR  507055 | In multi-process and multi-device scenarios, a memory UCE error may occur. | Because the memory of the peer device accessed by the current device has failed, the user needs to check the error information of the peer device process. |
 | #define  ACL_ERROR_RT_LINK_ERROR  507056 | In multi-device scenarios, the communication between two devices is disconnected. | Retry is recommended. If the error persists, check the communication link between the two devices. |
 | #define  ACL_ERROR_RT_SUSPECT_REMOTE_ERROR  507057 | In multi-process and multi-device scenarios, the memory of the peer device may have failed, or the memory access of the current device is out of bounds. | The user needs to check the error information of the peer device process or the memory access of the current device. |
-| #define  ACL_ERROR_RT_DRV_INTERNAL_ERROR  507899 | Internal error in the Driver module. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_AICPU_INTERNAL_ERROR  507900 | Internal error in the AI CPU module. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_SOCKET_CLOSE  507901 | The internal Host Device Communication (HDC) session connection is disconnected. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_AICPU_INFO_LOAD_RSP_ERR  507902 | AI CPU scheduling processing failed. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_STREAM_CAPTURE_INVALIDATED  507903 | Model capture exception. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define ACL_ERROR_RT_COMM_OP_RETRY_FAIL  507904 | Communication operator re-execution failed. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_SNAPSHOT_LOCK_TIMEOUT  507905 | The **aclrtSnapShotProcessLock** API call timed out. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_SNAPSHOT_LOCK_FAILED  507906 | Failed to lock the current process. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_SNAPSHOT_UNLOCK_FAILED  507907 | Failed to unlock the current process. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_SNAPSHOT_BACKUP_FAILED  507908 | Failed to back up the snapshot process. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_SNAPSHOT_RESTORE_FAILED  507909 | Failed to restore the snapshot process. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_HOST_MEMORY_ALREADY_REGISTERED  507910 | The host memory has already been registered. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_HOST_MEMORY_NOT_REGISTERED  507911 | The host memory to be deregistered has not been registered. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_SNAPSHOT_CALLBACK_FAILED  507912 | Failed to execute the callback function at a certain snapshot stage. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_SNAPSHOT_REGISTER_CALLBACK_FAILED  507913 | Failed to register the callback function. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_L3_PORT_ERROR  507914 | L3 port error. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_CCU_TIMEOUT  507915 | CCU execution timeout. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| #define  ACL_ERROR_RT_CCU_EXCEPTION  507916 | CCU execution exception. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
+| #define  ACL_ERROR_RT_DRV_INTERNAL_ERROR  507899 | Internal error in the Driver module. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_AICPU_INTERNAL_ERROR  507900 | Internal error in the AI CPU module. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_SOCKET_CLOSE  507901 | The internal Host Device Communication (HDC) session connection is disconnected. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_AICPU_INFO_LOAD_RSP_ERR  507902 | AI CPU scheduling processing failed. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_STREAM_CAPTURE_INVALIDATED  507903 | Model capture exception. | You can obtain the logs and submit an issue. |
+| #define ACL_ERROR_RT_COMM_OP_RETRY_FAIL  507904 | Communication operator re-execution failed. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_SNAPSHOT_LOCK_TIMEOUT  507905 | The **aclrtSnapShotProcessLock** API call timed out. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_SNAPSHOT_LOCK_FAILED  507906 | Failed to lock the current process. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_SNAPSHOT_UNLOCK_FAILED  507907 | Failed to unlock the current process. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_SNAPSHOT_BACKUP_FAILED  507908 | Failed to back up the snapshot process. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_SNAPSHOT_RESTORE_FAILED  507909 | Failed to restore the snapshot process. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_HOST_MEMORY_ALREADY_REGISTERED  507910 | The host memory has already been registered. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_HOST_MEMORY_NOT_REGISTERED  507911 | The host memory to be deregistered has not been registered. | You can obtain the logs and submit an ISSUE. |
+| #define  ACL_ERROR_SNAPSHOT_CALLBACK_FAILED  507912 | Failed to execute the callback function at a certain snapshot stage. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_SNAPSHOT_REGISTER_CALLBACK_FAILED  507913 | Failed to register the callback function. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_L3_PORT_ERROR  507914 | L3 port error. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_CCU_TIMEOUT  507915 | CCU execution timeout. | You can obtain the logs and submit an issue. |
+| #define  ACL_ERROR_RT_CCU_EXCEPTION  507916 | CCU execution exception. | You can obtain the logs and submit an issue. |
 
 <a id="table153902340461"></a>
 **Table 3**  Return code list for passthrough GE
@@ -280,15 +280,15 @@ Return code definition rules:
 | uint32_t  ACL_ERROR_GE_SUBHEALTHY = 345102; | Sub-healthy state. | The state after the redeployment action triggered by a device or process exception is completed is the sub-healthy state. In the sub-healthy state, related APIs can be called normally. |
 | static const uint32_t ACL_ERROR_GE_USER_RAISE_EXCEPTION = 345103; | The user-defined function actively throws an exception. | The user can identify which input data caused the execution error based on **UserData** set in **DataFlowInfo**, and then troubleshoot the issue based on the error. |
 | static const uint32_t ACL_ERROR_GE_DATA_NOT_ALIGNED = 345104; | Data is not aligned. | If the user-defined function has multiple outputs, check whether the user code has set too few outputs. Missing outputs may cause data alignment exceptions. |
-| uint32_t ACL_ERROR_GE_INTERNAL_ERROR = 545000; | Unknown internal error. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| uint32_t ACL_ERROR_GE_LOAD_MODEL = 545001; | Failed to load the model internally in the system. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| uint32_t ACL_ERROR_GE_EXEC_LOAD_MODEL_PARTITION_FAILED = 545002; | Failed to load the model internally in the system. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| uint32_t ACL_ERROR_GE_EXEC_LOAD_WEIGHT_PARTITION_FAILED = 545003; | Failed to load the model weights internally in the system. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| uint32_t ACL_ERROR_GE_EXEC_LOAD_TASK_PARTITION_FAILED = 545004; | Failed to load the model tasks internally in the system. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| uint32_t ACL_ERROR_GE_EXEC_LOAD_KERNEL_PARTITION_FAILED = 545005; | Failed to load the model operators internally in the system. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| uint32_t ACL_ERROR_GE_EXEC_RELEASE_MODEL_DATA = 545006; | Failed to release the model space internally in the system. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| uint32_t ACL_ERROR_GE_COMMAND_HANDLE = 545007; | Command operation failed internally in the system. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| uint32_t ACL_ERROR_GE_GET_TENSOR_INFO = 545008; | Failed to obtain tensor data internally in the system. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| uint32_t ACL_ERROR_GE_UNLOAD_MODEL = 545009; | Failed to unload the model space internally in the system. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
-| uint32_t ACL_ERROR_GE_MODEL_EXECUTE_TIMEOUT = 545601; | Model execution timeout. | Obtain the logs and click [Link](https://www.hiascend.com/support) to contact technical support. |
+| uint32_t ACL_ERROR_GE_INTERNAL_ERROR = 545000; | Unknown internal error. | Obtain the logs and submit an issue. |
+| uint32_t ACL_ERROR_GE_LOAD_MODEL = 545001; | Failed to load the model internally in the system. | Obtain the logs and submit an issue. |
+| uint32_t ACL_ERROR_GE_EXEC_LOAD_MODEL_PARTITION_FAILED = 545002; | Failed to load the model internally in the system. | Obtain the logs and submit an issue. |
+| uint32_t ACL_ERROR_GE_EXEC_LOAD_WEIGHT_PARTITION_FAILED = 545003; | Failed to load the model weights internally in the system. | Obtain the logs and submit an issue. |
+| uint32_t ACL_ERROR_GE_EXEC_LOAD_TASK_PARTITION_FAILED = 545004; | Failed to load the model tasks internally in the system. | Obtain the logs and submit an issue. |
+| uint32_t ACL_ERROR_GE_EXEC_LOAD_KERNEL_PARTITION_FAILED = 545005; | Failed to load the model operators internally in the system. | Obtain the logs and submit an issue. |
+| uint32_t ACL_ERROR_GE_EXEC_RELEASE_MODEL_DATA = 545006; | Failed to release the model space internally in the system. | Obtain the logs and submit an issue. |
+| uint32_t ACL_ERROR_GE_COMMAND_HANDLE = 545007; | Command operation failed internally in the system. | Obtain the logs and submit an issue. |
+| uint32_t ACL_ERROR_GE_GET_TENSOR_INFO = 545008; | Failed to obtain tensor data internally in the system. | Obtain the logs and submit an issue. |
+| uint32_t ACL_ERROR_GE_UNLOAD_MODEL = 545009; | Failed to unload the model space internally in the system. | Obtain the logs and submit an issue. |
+| uint32_t ACL_ERROR_GE_MODEL_EXECUTE_TIMEOUT = 545601; | Model execution timeout. | Obtain the logs and submit an issue. |
 | uint32_t ACL_ERROR_GE_REDEPLOYING = 545602; | Redeployment in progress. | Wait for the redeployment action to complete and then call the related APIs again. |

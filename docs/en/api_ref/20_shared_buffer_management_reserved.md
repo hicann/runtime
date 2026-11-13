@@ -1,6 +1,6 @@
 # 20. Shared Buffer Management (Reserved, Not Supported in This Version)
 
-<!-- md-trans-meta sourceCommit=unknown translatedAt=2026-10-20T02:02:24.107Z pushedAt=2026-10-29T01:32:47.341Z nl=2 -->
+<!-- md-trans-meta sourceCommit=31ae292a88c1a38674abaa350b60eba724bab178 translatedAt=2026-11-06T11:33:42.853Z pushedAt=2026-11-09T10:37:28.801Z nl=2 -->
 
 This section describes the reserved shared buffer management APIs (not supported in the current version).
 
@@ -16,7 +16,7 @@ This section describes the reserved shared buffer management APIs (not supported
 - [`aclError aclrtGetBufFromChain(aclrtMbuf headBuf, uint32_t index, aclrtMbuf *buf)`](#aclrtGetBufFromChain): Obtains the index-th shared buffer from the mbuf chain.
 - [`aclError aclrtGetBufChainNum(aclrtMbuf headBuf, uint32_t *num)`](#aclrtGetBufChainNum): Obtains the number of shared buffers in the mbuf chain.
 
-<a id="aclrtAllocBuf"></a>
+<a class="method_anchor" id="aclrtAllocBuf"></a>
 
 ## aclrtAllocBuf
 
@@ -43,7 +43,7 @@ Allocates a shared buffer of a specified size.
 <br>
 <br>
 
-<a id="aclrtFreeBuf"></a>
+<a class="method_anchor" id="aclrtFreeBuf"></a>
 
 ## aclrtFreeBuf
 
@@ -69,7 +69,7 @@ Releases the shared buffer allocated by calling [aclrtAllocBuf](#aclrtAllocBuf).
 <br>
 <br>
 
-<a id="aclrtGetBufData"></a>
+<a class="method_anchor" id="aclrtGetBufData"></a>
 
 ## aclrtGetBufData
 
@@ -81,7 +81,7 @@ aclError aclrtGetBufData(const aclrtMbuf buf, void **dataPtr, size_t *size)
 
 Obtains the pointer and length of the data area of a shared buffer. You can use this pointer to fill in data.
 
-API call order: After a shared buffer is allocated by calling [aclrtAllocBuf](#aclrtAllocBuf) or [aclrtCopyBufRef](#aclrtCopyBufRef), you must call [aclrtGetBufData](#aclrtGetBufData) to obtain the memory pointer and length of the shared buffer, fill valid data into the memory, and then call [aclrtSetBufDataLen](#aclrtSetBufDataLen) to set the length of the valid data in the shared buffer. The length must be smaller than the size obtained by [aclrtGetBufData](#aclrtGetBufData).
+API calling sequence: After a shared buffer is requested by calling [aclrtAllocBuf](#aclrtAllocBuf) or [aclrtCopyBufRef](#aclrtCopyBufRef), the user needs to call [aclrtGetBufData](#aclrtGetBufData) to obtain the memory pointer and length of the shared buffer, then fill valid data into the memory, and finally call [aclrtSetBufDataLen](#aclrtSetBufDataLen) to set the valid data length in the shared buffer. The length must be less than the size obtained by [aclrtGetBufData](#aclrtGetBufData).
 
 ### Parameters
 
@@ -99,7 +99,7 @@ API call order: After a shared buffer is allocated by calling [aclrtAllocBuf](#a
 <br>
 <br>
 
-<a id="aclrtSetBufUserData"></a>
+<a class="method_anchor" id="aclrtSetBufUserData"></a>
 
 ## aclrtSetBufUserData
 
@@ -115,7 +115,7 @@ Sets the data in the private data area of a shared buffer. The data is copied fr
 
 | Parameter | Input/Output | Description |
 | --- | :---: | --- |
-| buf | Input | Shared buffer. For the type definition, see [aclrtMbuf](25-05_Typedefs.md#aclrtMbuf).<br>Must be allocated by calling [aclrtAllocBuf](#aclrtAllocBuf) or [aclrtCopyBufRef](#aclrtCopyBufRef). |
+| buf | Input | Shared buffer. For details about the type definition, see [aclrtMbuf](25-05_Typedefs.md#aclrtMbuf).<br>It must be obtained by calling [aclrtAllocBuf](#aclrtAllocBuf) or [aclrtCopyBufRef](#aclrtCopyBufRef). |
 | dataPtr | Input | Pointer to the memory address that stores the user data. |
 | size | Input | Length of the user data. The unit is byte.<br>The data length must be less than or equal to 96 bytes. |
 | offset | Input | Address offset. The unit is byte.<br>The offset must be less than or equal to 96 bytes. |
@@ -128,7 +128,7 @@ Sets the data in the private data area of a shared buffer. The data is copied fr
 <br>
 <br>
 
-<a id="aclrtGetBufUserData"></a>
+<a class="method_anchor" id="aclrtGetBufUserData"></a>
 
 ## aclrtGetBufUserData
 
@@ -157,7 +157,7 @@ Gets the data in the private data area of a shared buffer, and copies the data t
 <br>
 <br>
 
-<a id="aclrtGetBufDataLen"></a>
+<a class="method_anchor" id="aclrtGetBufDataLen"></a>
 
 ## aclrtGetBufDataLen
 
@@ -186,7 +186,7 @@ After setting the length of valid data in a shared buffer by calling [aclrtSetBu
 <br>
 <br>
 
-<a id="aclrtSetBufDataLen"></a>
+<a class="method_anchor" id="aclrtSetBufDataLen"></a>
 
 ## aclrtSetBufDataLen
 
@@ -215,7 +215,7 @@ Returns 0 on success, or a non-zero value on failure. See also [aclError](25-01_
 <br>
 <br>
 
-<a id="aclrtCopyBufRef"></a>
+<a class="method_anchor" id="aclrtCopyBufRef"></a>
 
 ## aclrtCopyBufRef
 
@@ -242,7 +242,7 @@ Copies a reference to the data area of a shared buffer, and creates and returns 
 <br>
 <br>
 
-<a id="aclrtAppendBufChain"></a>
+<a class="method_anchor" id="aclrtAppendBufChain"></a>
 
 ## aclrtAppendBufChain
 
@@ -269,7 +269,7 @@ Appends a shared buffer to an mbuf chain. A shared buffer chain supports a maxim
 <br>
 <br>
 
-<a id="aclrtGetBufFromChain"></a>
+<a class="method_anchor" id="aclrtGetBufFromChain"></a>
 
 ## aclrtGetBufFromChain
 
@@ -297,7 +297,7 @@ Gets the index-th shared buffer from an mbuf chain.
 <br>
 <br>
 
-<a id="aclrtGetBufChainNum"></a>
+<a class="method_anchor" id="aclrtGetBufChainNum"></a>
 
 ## aclrtGetBufChainNum
 

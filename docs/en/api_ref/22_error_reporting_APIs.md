@@ -1,6 +1,6 @@
 # 22. Error Reporting APIs
 
-<!-- md-trans-meta sourceCommit=unknown translatedAt=2026-10-22T02:06:35.466Z pushedAt=2026-10-26T06:25:57.889Z -->
+<!-- md-trans-meta sourceCommit=31ae292a88c1a38674abaa350b60eba724bab178 translatedAt=2026-11-06T11:35:19.437Z pushedAt=2026-11-09T10:43:04.186Z nl=2 -->
 
 This chapter describes the error reporting APIs, which are used to register and report various predefined and custom error messages.
 
@@ -27,7 +27,7 @@ Replace ${INSTALL_DIR} with the path where CANN software files are stored after 
 <br>
 <br>
 
-<a id="ReportInnerErrMsg"></a>
+<a class="method_anchor" id="ReportInnerErrMsg"></a>
 
 ## ReportInnerErrMsg
 
@@ -61,7 +61,7 @@ int32_t ReportInnerErrMsg(const char_t *file_name, const char_t *func, uint32_t 
 
 Reports the predefined internal error messages of CANN, along with some information about the call site, such as the file name, function name, and line number.
 
-When this API is used, if the format string provided by the user exceeds 1024 characters (including the trailing \0), the API returns error code -1, indicating failure. For example, if the format string is "Error:%s" and the passed string is 1000 characters long, the total length is 1007 with "Error:" and the trailing “\0”, so the API call succeeds. However, if the passed string is 1020 characters long, the total length becomes 1027 with "Error:" and the trailing “\0”, which exceeds 1024, so the API call fails.
+When this API is used, if the format string provided by the user exceeds 1024 characters (including the trailing \0), the API returns error code -1, indicating failure. For example, if the format string is "Error:%s" and the passed string is 1000 characters long, the total length is 1007 with "Error:" and the trailing "\0", so the API call succeeds. However, if the passed string is 1020 characters long, the total length becomes 1027 with "Error:" and the trailing "\0", which exceeds 1024, so the API call fails.
 
 For this API, the macro REPORT_INNER_ERR_MSG that encapsulates it is also provided. The macro is defined as follows:
 
@@ -90,7 +90,7 @@ For this API, the macro REPORT_INNER_ERR_MSG that encapsulates it is also provid
 <br>
 <br>
 
-<a id="ReportPredefinedErrMsg"></a>
+<a class="method_anchor" id="ReportPredefinedErrMsg"></a>
 
 ## ReportPredefinedErrMsg
 
@@ -161,7 +161,7 @@ For this API, the macro **REPORT_PREDEFINED_ERR_MSG** that encapsulates this API
 <br>
 <br>
 
-<a id="ReportUserDefinedErrMsg"></a>
+<a class="method_anchor" id="ReportUserDefinedErrMsg"></a>
 
 ## ReportUserDefinedErrMsg
 
@@ -216,7 +216,7 @@ When this API is used, if the length of the format string provided by the user e
 <br>
 <br>
 
-<a id="RegisterFormatErrorMessage"></a>
+<a class="method_anchor" id="RegisterFormatErrorMessage"></a>
 
 ## RegisterFormatErrorMessage
 

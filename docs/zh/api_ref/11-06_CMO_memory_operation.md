@@ -9,7 +9,7 @@
 - [`aclError aclrtCmoSetDesc(void *cmoDesc, void *src, size_t size)`](#aclrtCmoSetDesc)：设置Cache内存描述符，此接口调用完成后，会将源内存地址、内存大小记录到Cache内存描述符中。
 - [`aclError aclrtCmoAsyncWithDesc(void *cmoDesc, aclrtCmoType cmoType, aclrtStream stream, const void *reserve)`](#aclrtCmoAsyncWithDesc)：使用内存描述符（二级指针方式）操作Device上的Cache内存。异步接口。
 
-<a id="aclrtCmoAsync"></a>
+<a class="method_anchor" id="aclrtCmoAsync"></a>
 
 ## aclrtCmoAsync
 
@@ -60,7 +60,7 @@ aclError aclrtCmoAsync(void *src, size_t size, aclrtCmoType cmoType, aclrtStream
 <br>
 <br>
 
-<a id="aclrtCmoAsyncWithBarrier"></a>
+<a class="method_anchor" id="aclrtCmoAsyncWithBarrier"></a>
 
 ## aclrtCmoAsyncWithBarrier
 
@@ -112,7 +112,7 @@ aclError aclrtCmoAsyncWithBarrier(void *src, size_t size, aclrtCmoType cmoType, 
 <br>
 <br>
 
-<a id="aclrtCmoWaitBarrier"></a>
+<a class="method_anchor" id="aclrtCmoWaitBarrier"></a>
 
 ## aclrtCmoWaitBarrier
 
@@ -162,7 +162,7 @@ aclError aclrtCmoWaitBarrier(aclrtBarrierTaskInfo *taskInfo, aclrtStream stream,
 <br>
 <br>
 
-<a id="aclrtCmoGetDescSize"></a>
+<a class="method_anchor" id="aclrtCmoGetDescSize"></a>
 
 ## aclrtCmoGetDescSize
 
@@ -210,7 +210,7 @@ aclError aclrtCmoGetDescSize(size_t *size)
 <br>
 <br>
 
-<a id="aclrtCmoSetDesc"></a>
+<a class="method_anchor" id="aclrtCmoSetDesc"></a>
 
 ## aclrtCmoSetDesc
 
@@ -260,7 +260,7 @@ aclError aclrtCmoSetDesc(void *cmoDesc, void *src, size_t size)
 <br>
 <br>
 
-<a id="aclrtCmoAsyncWithDesc"></a>
+<a class="method_anchor" id="aclrtCmoAsyncWithDesc"></a>
 
 ## aclrtCmoAsyncWithDesc
 

@@ -25,7 +25,7 @@ ${INSTALL_DIR}请替换为CANN软件安装后文件存储路径。以root用户�
 <br>
 <br>
 
-<a id="ReportInnerErrMsg"></a>
+<a class="method_anchor" id="ReportInnerErrMsg"></a>
 
 ## ReportInnerErrMsg
 
@@ -88,7 +88,7 @@ int32_t ReportInnerErrMsg(const char_t *file_name, const char_t *func, uint32_t 
 <br>
 <br>
 
-<a id="ReportPredefinedErrMsg"></a>
+<a class="method_anchor" id="ReportPredefinedErrMsg"></a>
 
 ## ReportPredefinedErrMsg
 
@@ -159,7 +159,7 @@ int32_t ReportInnerErrMsg(const char_t *file_name, const char_t *func, uint32_t 
 <br>
 <br>
 
-<a id="ReportUserDefinedErrMsg"></a>
+<a class="method_anchor" id="ReportUserDefinedErrMsg"></a>
 
 ## ReportUserDefinedErrMsg
 
@@ -214,7 +214,7 @@ int32_t ReportUserDefinedErrMsg(const char *error_code, const char *format, ...)
 <br>
 <br>
 
-<a id="RegisterFormatErrorMessage"></a>
+<a class="method_anchor" id="RegisterFormatErrorMessage"></a>
 
 ## RegisterFormatErrorMessage
 

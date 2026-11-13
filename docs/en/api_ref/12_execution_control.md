@@ -1,6 +1,6 @@
 # 12. Execution Control
 
-<!-- md-trans-meta sourceCommit=unknown translatedAt=2026-10-23T03:59:15.798Z pushedAt=2026-10-29T02:19:06.462Z nl=2 -->
+<!-- md-trans-meta sourceCommit=31ae292a88c1a38674abaa350b60eba724bab178 translatedAt=2026-11-06T11:24:53.866Z pushedAt=2026-11-09T09:12:51.191Z nl=2 -->
 
 This chapter describes the execution control APIs of CANN Runtime, including callback function launch, host function subscription, timeout setting, and asynchronous Reduce operations.
 
@@ -19,7 +19,7 @@ This chapter describes the execution control APIs of CANN Runtime, including cal
 - [`aclError aclrtRandomNumAsync(const aclrtRandomNumTaskInfo *taskInfo, const aclrtStream stream, void *reserve)`](#aclrtRandomNumAsync): Delivers and executes a random number generation task. This is an asynchronous API.
 - [`aclError aclrtTaskUpdateAsync(aclrtStream taskStream, uint32_t taskId, aclrtTaskUpdateInfo *info, aclrtStream execStream)`](#aclrtTaskUpdateAsync): Refreshes the information of the target task. This is an asynchronous API.
 
-<a id="aclrtLaunchCallback"></a>
+<a class="method_anchor" id="aclrtLaunchCallback"></a>
 
 ## aclrtLaunchCallback
 
@@ -87,7 +87,7 @@ The callback function involves shared resources (for example, locks). Therefore,
 <br>
 <br>
 
-<a id="aclrtSubscribeReport"></a>
+<a class="method_anchor" id="aclrtSubscribeReport"></a>
 
 ## aclrtSubscribeReport
 
@@ -155,7 +155,7 @@ If the number of threads registered by calling this API within a single process 
 <br>
 <br>
 
-<a id="aclrtProcessReport"></a>
+<a class="method_anchor" id="aclrtProcessReport"></a>
 
 ## aclrtProcessReport
 
@@ -212,7 +212,7 @@ Sets the timeout duration and waits for the callback task delivered by the [aclr
 <br>
 <br>
 
-<a id="aclrtUnSubscribeReport"></a>
+<a class="method_anchor" id="aclrtUnSubscribeReport"></a>
 
 ## aclrtUnSubscribeReport
 
@@ -270,7 +270,7 @@ Cancels thread registration so that callback functions on the stream are no long
 <br>
 <br>
 
-<a id="aclrtGetOpTimeOutInterval"></a>
+<a class="method_anchor" id="aclrtGetOpTimeOutInterval"></a>
 
 ## aclrtGetOpTimeOutInterval
 
@@ -305,7 +305,7 @@ aclError aclrtGetOpTimeOutInterval(uint64_t *interval)
 Obtains the minimum interval of the operator timeout configuration supported by the hardware, in microseconds.
 
 <!-- npu="910,310p,310b" id9 -->
-For Atlas 200I/500 A2 inference products, Atlas inference products, and Atlas training products, this API can only obtain the minimum interval of AI Core operators.
+For Atlas 200I/500 A2 inference products, Atlas inference products, and Atlas training products, calling this API can only obtain the minimum time interval of AI Core operators.
 <!-- end id9 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/12_execution_control_res.md#id16 -->
 
@@ -323,7 +323,7 @@ For Atlas 200I/500 A2 inference products, Atlas inference products, and Atlas tr
 <br>
 <br>
 
-<a id="aclrtSetOpExecuteTimeOut"></a>
+<a class="method_anchor" id="aclrtSetOpExecuteTimeOut"></a>
 
 ## aclrtSetOpExecuteTimeOut
 
@@ -360,7 +360,7 @@ Sets the timeout duration for operator execution, in seconds. If this API is cal
 If a timeout duration is carried when the operator is delivered, that timeout duration takes precedence over the one set by this API.
 
 <!-- npu="950,A3,910b" id10 -->
-For Ascend 950PR&950DT products, Atlas A3 products, and Atlas A2 products, you are advised to use the aclrtSetOpExecuteTimeOutV2 API, which returns the timeout duration that actually takes effect.
+For Ascend 950PR&950DT products, Atlas A3 products, and Atlas A2 products, it is recommended to use the aclrtSetOpExecuteTimeOutV2 API, which returns the timeout duration that actually takes effect.
 <!-- end id10 -->
 
 ### Parameters
@@ -378,36 +378,36 @@ For Ascend 950PR&950DT products, Atlas A3 products, and Atlas A2 products, you a
 
 - If this API is not called, the default timeout durations of AI Core operators and AI CPU operators vary by product:
     <!-- npu="950" id12 -->
-    - For Ascend 950PR&950DT products, the default timeout duration of AI Core operators and AI CPU operators is 1091 seconds.
+    - For Ascend 950PR&950DT products, the default timeout duration of AI Core operators and AI CPU operators is 1,091 seconds.
     <!-- end id12 -->
     <!-- npu="A3" id13 -->
-    - For Atlas A3 products, the default timeout duration of AI Core operators and AI CPU operators is 1091 seconds.
+    - For Atlas A3 products, the default timeout duration of AI Core operators and AI CPU operators is 1,091 seconds.
     <!-- end id13 -->
     <!-- npu="910b" id14 -->
-    - For Atlas A2 products, the default timeout duration of AI Core operators and AI CPU operators is 1091 seconds.
+    - For Atlas A2 products, the default timeout duration of AI Core operators and AI CPU operators is 1,091 seconds.
     <!-- end id14 -->
     <!-- npu="310b" id15 -->
-    - For Atlas 200I/500 A2 inference products, in Ascend EP mode, the default timeout duration of AI Core operators and AI CPU operators is 1091 seconds; in Ascend RC mode, the default timeout duration of AI Core operators is 1091 seconds, and that of AI CPU operators is 28 seconds.
+    - For Atlas 200I/500 A2 inference products, in Ascend EP form, the default timeout duration of AI Core operators and AI CPU operators is 1,091 seconds; in Ascend RC form, the default timeout duration of AI Core operators is 1,091 seconds, and the default timeout duration of AI CPU operators is 28 seconds.
     <!-- end id15 -->
     <!-- npu="310p" id16 -->
-    - For Atlas inference products, the default timeout duration of AI Core operators is 547 seconds, and that of AI CPU operators is 28 seconds.
+    - For Atlas inference products, the default timeout duration of AI Core operators is 547 seconds, and the default timeout duration of AI CPU operators is 28 seconds.
     <!-- end id16 -->
     <!-- npu="910" id17 -->
-    - For Atlas training products, the default timeout duration of AI Core operators is 68 seconds, and that of AI CPU operators is 28 seconds.
+    - For Atlas training products, the default timeout duration of AI Core operators is 68 seconds, and the default timeout duration of AI CPU operators is 28 seconds.
     <!-- end id17 -->
 
 - Due to architectural differences among product models, the maximum timeout durations of AI Core operators and AI CPU operators differ:
     <!-- npu="950,A3,910b" id18 -->
-    - For Ascend 950PR&950DT products, Atlas A3 products, and Atlas A2 products, the maximum timeout duration of AI Core operators and AI CPU operators is interval × 254. Unit: microsecond. The interval can be obtained by calling aclrtGetOpTimeOutInterval.
-    <!-- end id18 -->
+    - For Ascend 950PR&950DT products, Atlas A3 products, and Atlas A2 products, the maximum timeout duration of AI Core operators and AI CPU operators is interval \* 254, in microseconds. The interval can be obtained by calling the aclrtGetOpTimeOutInterval API.
+    <!-- end id18 -->   
     <!-- npu="310b" id19 -->
-    - For Atlas 200I/500 A2 inference products, the maximum timeout duration of AI Core operators and AI CPU operators is 1091 seconds.
+    - For Atlas 200I/500 A2 inference products, the maximum timeout duration of AI Core operators and AI CPU operators is 1,091 seconds.
     <!-- end id19 -->
     <!-- npu="310p" id20 -->
-    - For Atlas inference products, the maximum timeout duration of AI Core operators is 547 seconds, and the maximum timeout duration for AI CPU operators cannot be set.
+    - For Atlas inference products, the maximum timeout duration of AI Core operators is 547 seconds, and the maximum timeout duration of AI CPU operators cannot be set.
     <!-- end id20 -->
     <!-- npu="910" id21 -->
-    - For Atlas training products, the maximum timeout duration of AI Core operators and AI CPU operators is 2176 seconds.
+    - For Atlas training products, the maximum timeout duration of AI Core operators and AI CPU operators is 2,176 seconds.
     <!-- end id21 -->
 <!-- end id11 -->
 
@@ -415,7 +415,7 @@ For Ascend 950PR&950DT products, Atlas A3 products, and Atlas A2 products, you a
 <br>
 <br>
 
-<a id="aclrtSetOpExecuteTimeOutV2"></a>
+<a class="method_anchor" id="aclrtSetOpExecuteTimeOutV2"></a>
 
 ## aclrtSetOpExecuteTimeOutV2
 
@@ -453,7 +453,7 @@ Sets the timeout duration for operator execution, in microseconds. If a timeout 
 
 | Parameter | Input/Output | Description |
 | --- | :---: | --- |
-| timeout | Input | Sets the timeout duration, in microseconds.<br>When this parameter is set to `0`, the maximum timeout duration is used.<br> When the time interval obtained by calling aclrtGetOpTimeOutInterval is less than 100000 microseconds and the timeout parameter is set to `0`, the AI Core operator never times out. |
+| timeout | Input | Timeout duration, in microseconds.<br>When this parameter is set to 0, the maximum timeout duration is used.<br>When the time interval obtained by calling the aclrtGetOpTimeOutInterval API is less than 100,000 microseconds and the timeout parameter is set to 0, the AI Core operator never times out. |
 | actualTimeout | Output | Returns the timeout duration that actually takes effect, in microseconds.<br> If the AI Core operator never times out, the value output by this parameter is the maximum value of `uint64_t`. |
 
 ### Return Values
@@ -463,11 +463,11 @@ Sets the timeout duration for operator execution, in microseconds. If a timeout 
 ### Constraints
 
 <!-- npu="950,A3,910b" id22 -->
-For Ascend 950PR&950DT products, Atlas A3 products, and Atlas A2 products, when the time interval obtained by calling aclrtGetOpTimeoutInterval is less than 100000 microseconds and the timeout parameter is set to 0, the AI Core operator never times out. In this case, the value output by the `actualTimeout` parameter is the maximum value of uint64\_t.
+For Ascend 950PR&950DT products, Atlas A3 products, and Atlas A2 products, when the time interval obtained by calling the aclrtGetOpTimeoutInterval API is less than 100,000 microseconds and the timeout parameter is set to 0, AI Core operators never time out. In this case, the value output by the actualTimeout parameter is the maximum value of uint64\_t.
 <!-- end id22 -->
 
 <!-- npu="910,310p" id23 -->
-For Atlas inference products and Atlas training products, this API can only set the timeout duration for AI Core operator execution.
+For Atlas inference products and Atlas training products, this API can only set the execution timeout of AI Core operators.
 <!-- end id23 -->
 
 <!-- @ref: runtime/res/docs/zh/api_ref/12_execution_control_res.md#id17 -->
@@ -476,7 +476,7 @@ For Atlas inference products and Atlas training products, this API can only set 
 <br>
 <br>
 
-<a id="aclrtSetOpExecuteTimeOutWithMs"></a>
+<a class="method_anchor" id="aclrtSetOpExecuteTimeOutWithMs"></a>
 
 ## aclrtSetOpExecuteTimeOutWithMs
 
@@ -526,7 +526,7 @@ Sets the timeout duration for operator execution, in milliseconds.
 <br>
 <br>
 
-<a id="aclrtGetOpExecuteTimeout"></a>
+<a class="method_anchor" id="aclrtGetOpExecuteTimeout"></a>
 
 ## aclrtGetOpExecuteTimeout
 
@@ -561,7 +561,7 @@ aclError aclrtGetOpExecuteTimeout(uint32_t *const timeoutMs)
 Obtains the timeout duration for operator execution.
 
 <!-- npu="950,A3,910b" id24 -->
-For Ascend 950PR&950DT products, Atlas A3 products, and Atlas A2 products, if the operator never times out, the value output by this parameter is the maximum value of `uint32_t`.
+For Ascend 950PR&950DT products, Atlas A3 products, and Atlas A2 products, if the operator never times out, the value output by this parameter is the maximum value of uint32_t.
 <!-- end id24 -->
 
 ### Parameters
@@ -578,7 +578,7 @@ For Ascend 950PR&950DT products, Atlas A3 products, and Atlas A2 products, if th
 <br>
 <br>
 
-<a id="aclrtGetThreadLastTaskId"></a>
+<a class="method_anchor" id="aclrtGetThreadLastTaskId"></a>
 
 ## aclrtGetThreadLastTaskId
 
@@ -626,7 +626,7 @@ Obtains the ID of the last task delivered by the current thread.
 <br>
 <br>
 
-<a id="aclrtReduceAsync"></a>
+<a class="method_anchor" id="aclrtReduceAsync"></a>
 
 ## aclrtReduceAsync
 
@@ -681,23 +681,23 @@ Performs a Reduce operation, including SUM, MIN, and MAX. This is an asynchronou
 `dst` and `src` must be on the same device as the device where the stream resides.
 
 <!-- npu="950" id25 -->
-Ascend 950PR&950DT products support the following data types: int8, int16, int32, uint32, fp16, fp32, and bf16.
+Ascend 950PR&950DT products support the following data types: int8, int16, int32, uint32, fp16, fp32, bf16.
 <!-- end id25 -->
 
 <!-- npu="A3" id26 -->
-Atlas A3 products support the following data types: int8, int16, int32, fp16, fp32, and bf16.
+Atlas A3 products support the following data types: int8, int16, int32, fp16, fp32, bf16.
 <!-- end id26 -->
 
 <!-- npu="910b" id27 -->
-Atlas A2 products support the following data types: int8, int16, int32, fp16, fp32, and bf16.
+Atlas A2 products support the following data types: int8, int16, int32, fp16, fp32, bf16.
 <!-- end id27 -->
 
 <!-- npu="310b" id28 -->
-Atlas 200I/500 A2 inference products support the following data types: int8, int16, int32, fp16, and fp32.
+Atlas 200I/500 A2 inference products support the following data types: int8, int16, int32, fp16, fp32.
 <!-- end id28 -->
 
 <!-- npu="310p" id29 -->
-Atlas inference products support the following data types: fp32, fp16, and int16.
+Atlas inference products support the following data types: fp32, fp16, int16.
 <!-- end id29 -->
 
 <!-- npu="910" id30 -->
@@ -710,7 +710,7 @@ Atlas training products support only the fp32 type.
 <br>
 <br>
 
-<a id="aclrtLaunchHostFunc"></a>
+<a class="method_anchor" id="aclrtLaunchHostFunc"></a>
 
 ## aclrtLaunchHostFunc
 
@@ -768,7 +768,7 @@ The callback function involves shared resources (for example, locks). Therefore,
 <br>
 <br>
 
-<a id="aclrtRandomNumAsync"></a>
+<a class="method_anchor" id="aclrtRandomNumAsync"></a>
 
 ## aclrtRandomNumAsync
 
@@ -818,7 +818,7 @@ Delivers and executes a random number generation task. This is an asynchronous A
 <br>
 <br>
 
-<a id="aclrtTaskUpdateAsync"></a>
+<a class="method_anchor" id="aclrtTaskUpdateAsync"></a>
 
 ## aclrtTaskUpdateAsync
 
@@ -868,5 +868,5 @@ Refreshes the information of the target task. This is an asynchronous API.
 <!-- npu="950" id31 -->
 ### Constraints
 
-Ascend 950PR&950DT products do not support updating `ACL_RT_UPDATE_RANDOM_TASK` (random number generation task).
+Ascend 950PR&950DT products do not support updating ACL_RT_UPDATE_RANDOM_TASK (random number generation task).
 <!-- end id31 -->
