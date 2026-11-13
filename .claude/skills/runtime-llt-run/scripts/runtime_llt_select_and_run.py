@@ -1245,7 +1245,7 @@ def non_coverable_changed_lines(repo: Path | None, path: str, lines: list[int]) 
 def is_non_coverable_source_line(stripped: str) -> bool:
     if not stripped:
         return True
-    if stripped in {"{", "}", "};", "};", ":", "public:", "private:", "protected:"}:
+    if stripped in {"{", "}", "};", ":", "public:", "private:", "protected:"}:
         return True
     if stripped.startswith(("//", "/*", "*")) or stripped.endswith("*/"):
         return True
