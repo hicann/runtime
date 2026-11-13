@@ -2719,11 +2719,15 @@ rtError_t ApiImpl::MemsetAsync(
 
 rtError_t ApiImpl::MemGetInfo(size_t* const freeSize, size_t* const totalSize)
 {
-    RT_LOG(RT_LOG_DEBUG, "mem get info free=%zu, total=%zu.", *freeSize, *totalSize);
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
-    return curCtx->Device_()->Driver_()->MemGetInfo(curCtx->Device_()->Id_(), true, freeSize, totalSize);
+    const rtError_t error =
+        curCtx->Device_()->Driver_()->MemGetInfo(curCtx->Device_()->Id_(), true, freeSize, totalSize);
+    if (error == RT_ERROR_NONE) {
+        RT_LOG(RT_LOG_DEBUG, "mem get info free=%zu, total=%zu.", *freeSize, *totalSize);
+    }
+    return error;
 }
 
 rtError_t ApiImpl::MemGetInfoByType(const int32_t devId, const rtMemType_t type, rtMemInfo_t* const info)
@@ -5055,6 +5059,13 @@ rtError_t ApiImpl::GetMemUceInfo(const uint32_t deviceId, rtMemUceInfo* memUceIn
         }
     }
     GlobalContainer::UceMutexUnlock();
+    COND_RETURN_WARN(
+        error == RT_ERROR_FEATURE_NOT_SUPPORT, RT_ERROR_FEATURE_NOT_SUPPORT,
+        "Getting memory UCE info is not supported.");
+    if (error != RT_ERROR_NONE) {
+        RT_LOG(RT_LOG_ERROR, "GetMemUceInfo failed, drv devId=%u, error=%d.", deviceId, error);
+        return error;
+    }
     (void)mmGetTimeOfDay(&tv[index++], nullptr);
     for (int32_t i = 1; i < index; ++i) {
         RT_LOG(
