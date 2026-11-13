@@ -1468,6 +1468,8 @@ aclError aclrtPersistentTaskClean(aclrtStream stream)
 
 ACL\_STREAM\_PERSISTENT类型的Stream需调用[aclrtCreateStreamWithConfig](#aclrtCreateStreamWithConfig)接口创建。
 
+**注意：调用本接口前，需确保指定Stream对应的设备侧任务队列（SQ）处于disable状态，否则接口返回失败。**
+
 ### 参数说明
 
 | 参数名 | 输入/输出 | 说明 |
