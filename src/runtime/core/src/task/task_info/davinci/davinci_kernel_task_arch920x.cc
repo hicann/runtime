@@ -263,12 +263,17 @@ static void SetStarsResultByErrorType(TaskInfo* taskInfo, const rtCqReport_t& lo
     }
 }
 
+static void Arch920xDoCompleteSuccessForAicAivTask(TaskInfo* taskInfo, const uint32_t devId)
+{
+    PreCheckTaskErr(taskInfo, devId);
+}
+
 static bool DavinciKernelTaskRegister()
 {
     TaskFuncSingle aicAivFuncs = {
         .toCommandFunc = &ToCommandBodyForAicAivTask,
         .toSqeFunc = &ConstructArch920xAicAivSqeForDavinciTask,
-        .doCompleteSuccFunc = &StarsV2DoCompleteSuccessForDavinciTask,
+        .doCompleteSuccFunc = &Arch920xDoCompleteSuccessForAicAivTask,
         .taskUnInitFunc = &StarsV2DavinciTaskUnInit,
         .waitAsyncCpCompleteFunc = nullptr,
         .printErrorInfoFunc = &PrintErrorInfoForDavinciTask,

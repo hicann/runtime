@@ -149,7 +149,7 @@ TaskInfo* GetRealReportFaultTaskForModelExecuteTask(TaskInfo* const taskInfo)
     return taskPtr;
 }
 
-void ReportErrorInfoForModelExecuteTask(TaskInfo* const taskInfo, const uint32_t devId)
+void ReportErrorInfoForModelExecuteTask(TaskInfo* const taskInfo, const uint32_t devId, const bool skipAicCallback)
 {
     ModelExecuteTaskInfo* modelExecuteTaskInfo = &(taskInfo->u.modelExecuteTaskInfo);
     Stream* const stream = taskInfo->stream;
@@ -197,12 +197,17 @@ void ReportErrorInfoForModelExecuteTask(TaskInfo* const taskInfo, const uint32_t
             static_cast<uint32_t>(stream->Id_()), taskInfo->id, taskPtr->drvErr, taskInfo->drvErr);
         stream->SetDrvErr(static_cast<uint32_t>(RT_ERROR_SOCKET_CLOSE));
     }
+    if (skipAicCallback &&
+        ((taskPtr->type == TS_TASK_TYPE_KERNEL_AICORE) || (taskPtr->type == TS_TASK_TYPE_KERNEL_AIVEC))) {
+        return;
+    }
     TaskFailCallBack(
         modelExecuteTaskInfo->errorStreamId, modelExecuteTaskInfo->errorTaskId, taskInfo->tid, errorCode,
         stream->Device_(), true);
 }
 
-void DoCompleteSuccessForModelExecuteTask(TaskInfo* const taskInfo, const uint32_t devId)
+static void DoCompleteSuccessForModelExecuteTaskImpl(
+    TaskInfo* const taskInfo, const uint32_t devId, const bool skipAicCallback)
 {
     ModelExecuteTaskInfo* modelExecuteTaskInfo = &(taskInfo->u.modelExecuteTaskInfo);
     Stream* const stream = taskInfo->stream;
@@ -217,11 +222,21 @@ void DoCompleteSuccessForModelExecuteTask(TaskInfo* const taskInfo, const uint32
             }
         }
         stream->SetErrCode(errorCode);
-        ReportErrorInfoForModelExecuteTask(taskInfo, devId);
+        ReportErrorInfoForModelExecuteTask(taskInfo, devId, skipAicCallback);
     }
     if ((!Runtime::Instance()->GetDisableThread()) && (modelExecuteTaskInfo->model != nullptr)) {
         modelExecuteTaskInfo->model->ExecuteComplete();
     }
+}
+
+void DoCompleteSuccessForModelExecuteTask(TaskInfo* const taskInfo, const uint32_t devId)
+{
+    DoCompleteSuccessForModelExecuteTaskImpl(taskInfo, devId, false);
+}
+
+void Arch920xDoCompleteSuccessForModelExecuteTask(TaskInfo* const taskInfo, const uint32_t devId)
+{
+    DoCompleteSuccessForModelExecuteTaskImpl(taskInfo, devId, true);
 }
 
 void ModelExecuteTaskaProcError(TaskInfo* const taskInfo, const uint32_t errCode)
@@ -291,7 +306,7 @@ void DoCompleteStarsErrorForModelExecuteTask(TaskInfo* const taskInfo, const uin
     } else {
         ModelExecuteTaskaProcError(taskInfo, errCode);
     }
-    DoCompleteSuccessForModelExecuteTask(taskInfo, devId);
+    Complete(taskInfo, devId);
 }
 
 rtError_t WaitExecFinishForModelExecuteTask(const TaskInfo* const taskInfo)

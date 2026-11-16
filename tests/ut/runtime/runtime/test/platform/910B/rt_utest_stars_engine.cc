@@ -101,7 +101,6 @@ rtError_t InitNormalSyncTask(TaskInfo* task, Stream* stm, Event* event, NormalSy
 }
 } // namespace
 
-void ReportErrorInfoForModelExecuteTask(TaskInfo* const taskInfo, const uint32_t devId);
 } // namespace runtime
 } // namespace cce
 

@@ -51,7 +51,6 @@ constexpr uint32_t TS_SDMA_STATUS_LINK_ERROR = 0x9U;
 constexpr uint32_t TS_SDMA_STATUS_POISON_ERROR = 0xAU;
 } // namespace
 
-void ReportErrorInfoForModelExecuteTask(TaskInfo* const taskInfo, const uint32_t devId);
 } // namespace runtime
 } // namespace cce
 

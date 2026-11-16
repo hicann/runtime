@@ -25,6 +25,8 @@
 #include "thread_local_container.hpp"
 #include "stars_david.hpp"
 #include "stream_sqcq_manage.hpp"
+#include "runtime_task_manager.h"
+#include "model_execute_task.h"
 #include "rt_unwrap.h"
 #undef private
 #undef protected
@@ -93,6 +95,11 @@ void PrintErrorInfoStub(TaskInfo* taskInfo, const uint32_t devId)
 }
 
 uint32_t g_callCnt = 0;
+void TaskFailCallBackStub(const uint32_t, const uint32_t, const uint32_t, const uint32_t, const Device* const, bool)
+{
+    g_callCnt++;
+}
+
 void TaskFailCallFusionStub(rtExceptionInfo_t* exceptionInfo)
 {
     UNUSED(exceptionInfo);
@@ -542,6 +549,69 @@ TEST_F(Arch9201ErrorProcTest, ProcessStarv2OneElement_AicoreAicpuFusionError)
     rtStreamDestroy(streamHandle);
     free(ctlInfo);
     CleanupErrorProc(errorProc, device);
+    rtDeviceReset(1);
+}
+
+TEST_F(Arch9201ErrorProcTest, AicAndModelCompletionCallbacks)
+{
+    rtSetDevice(1);
+    Device* device = ((Runtime*)Runtime::Instance())->DeviceRetain(1, 0);
+    ASSERT_NE(device, nullptr);
+
+    MOCKER(StreamNopTask).stubs().will(returnValue(RT_ERROR_NONE));
+    rtStream_t streamHandle = nullptr;
+    ASSERT_EQ(rtStreamCreate(&streamHandle, 0), RT_ERROR_NONE);
+    Stream* stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
+    ASSERT_NE(stream, nullptr);
+
+    MOCKER(PrintErrorInfo).stubs();
+    MOCKER(TaskFailCallBack).stubs().will(invoke(TaskFailCallBackStub));
+    g_callCnt = 0U;
+
+    TaskInfo aicTask = {};
+    aicTask.stream = stream;
+    aicTask.type = TS_TASK_TYPE_KERNEL_AICORE;
+    aicTask.errorCode = TS_ERROR_AICORE_MTE_ERROR;
+    aicTask.mte_error = TS_ERROR_AICORE_MTE_ERROR;
+    const auto aicComplete = g_taskFuncArrays[device->GetChipType()].doCompleteSuccFunc[aicTask.type];
+    ASSERT_NE(aicComplete, nullptr);
+    EXPECT_EQ(aicComplete, g_taskFuncArrays[device->GetChipType()].doCompleteSuccFunc[TS_TASK_TYPE_KERNEL_AIVEC]);
+    aicComplete(&aicTask, device->Id_());
+    EXPECT_EQ(g_callCnt, 0U);
+    EXPECT_EQ(aicTask.mte_error, 0U);
+    EXPECT_EQ(stream->GetErrCode(), TS_ERROR_AICORE_MTE_ERROR);
+
+    TaskInfo modelTask = {};
+    modelTask.stream = stream;
+    modelTask.type = TS_TASK_TYPE_MODEL_EXECUTE;
+    modelTask.errorCode = TS_MODEL_STREAM_EXE_FAILED;
+    modelTask.u.modelExecuteTaskInfo.errorStreamId = stream->Id_();
+    modelTask.u.modelExecuteTaskInfo.errorTaskId = 1U;
+
+    TaskInfo faultTask = {};
+    faultTask.stream = stream;
+    faultTask.type = TS_TASK_TYPE_KERNEL_AICORE;
+    faultTask.typeName = "AICORE";
+    MOCKER(GetRealReportFaultTaskForModelExecuteTask).stubs().will(returnValue(&faultTask));
+
+    const auto doComplete = g_taskFuncArrays[device->GetChipType()].doCompleteSuccFunc[TS_TASK_TYPE_MODEL_EXECUTE];
+    ASSERT_EQ(doComplete, &Arch920xDoCompleteSuccessForModelExecuteTask);
+    Complete(&modelTask, device->Id_());
+    EXPECT_EQ(g_callCnt, 0U);
+    EXPECT_EQ(faultTask.errorCode, TS_MODEL_STREAM_EXE_FAILED);
+
+    faultTask.type = TS_TASK_TYPE_KERNEL_AIVEC;
+    faultTask.typeName = "AIVEC";
+    Complete(&modelTask, device->Id_());
+    EXPECT_EQ(g_callCnt, 0U);
+
+    faultTask.type = TS_TASK_TYPE_KERNEL_AICPU;
+    faultTask.typeName = "AICPU";
+    Complete(&modelTask, device->Id_());
+    EXPECT_EQ(g_callCnt, 1U);
+
+    EXPECT_EQ(rtStreamDestroy(streamHandle), RT_ERROR_NONE);
+    ((Runtime*)Runtime::Instance())->DeviceRelease(device);
     rtDeviceReset(1);
 }
 

@@ -20,6 +20,7 @@ rtError_t ModelExecuteTaskInit(
 void ToCommandBodyForModelExecuteTask(TaskInfo* const taskInfo, rtCommand_t* const command);
 void ModelExecuteTaskUnInit(TaskInfo* const taskInfo);
 void DoCompleteSuccessForModelExecuteTask(TaskInfo* const taskInfo, const uint32_t devId);
+void Arch920xDoCompleteSuccessForModelExecuteTask(TaskInfo* const taskInfo, const uint32_t devId);
 void PrintErrorInfoForModelExecuteTask(TaskInfo* const taskInfo, const uint32_t devId);
 void SetStarsResultForModelExecuteTask(TaskInfo* const taskInfo, const rtCqReport_t& logicCq);
 TaskInfo* GetRealReportFaultTaskForModelExecuteTask(TaskInfo* const taskInfo);
@@ -29,7 +30,8 @@ rtError_t ConstructFuncCallParaForModelExecuteTask(TaskInfo* taskInfo, rtStarsMo
 rtError_t PrepareSqeInfoForModelExecuteTask(TaskInfo* const taskInfo);
 rtError_t FreeFuncCallHostMemAndSvmMem(TaskInfo* const taskInfo);
 void ReportEndGraphWaitError(const TaskInfo* taskInfo, const uint32_t devId);
-void ReportErrorInfoForModelExecuteTask(TaskInfo* const taskInfo, const uint32_t devId);
+void ReportErrorInfoForModelExecuteTask(
+    TaskInfo* const taskInfo, const uint32_t devId, const bool skipAicCallback = false);
 rtError_t WaitExecFinishForModelExecuteTask(const TaskInfo* const taskInfo);
 void ModelExecuteTaskaProcError(TaskInfo* const taskInfo, const uint32_t errCode);
 void DoCompleteStarsErrorForModelExecuteTask(TaskInfo* const taskInfo, const uint32_t devId, const uint32_t errCode);

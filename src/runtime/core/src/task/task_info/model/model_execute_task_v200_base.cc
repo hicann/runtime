@@ -17,6 +17,7 @@
 #include "stars_cond_isa_helper.hpp"
 #include "model_execute_task.h"
 #include "runtime_task_manager.h"
+#include "arch920x.hpp"
 
 namespace cce {
 namespace runtime {
@@ -71,6 +72,10 @@ static bool ModelExecuteTaskRegister()
 
     const auto& chips = GetDavidChips();
     for (const auto chip : chips) {
+        RegTaskFunc(chip, TS_TASK_TYPE_MODEL_EXECUTE, funcs);
+    }
+    funcs.doCompleteSuccFunc = &Arch920xDoCompleteSuccessForModelExecuteTask;
+    for (const auto chip : GetArch920xChips()) {
         RegTaskFunc(chip, TS_TASK_TYPE_MODEL_EXECUTE, funcs);
     }
     return true;
