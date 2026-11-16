@@ -198,6 +198,8 @@ protected:
     rtError_t GetDevRunningStreamSnapshotMsg(rtGetMsgCallback const callback) override;
 
 private:
+    rtError_t SetPersistingL2CacheSize(const uint32_t val);
+    rtError_t GetPersistingL2CacheSize(uint32_t* const val);
     rtError_t CaptureRecordEvent(Context* const ctx, Event* const evt, Stream* const stm);
     rtError_t CaptureResetEvent(const Event* const evt, Stream* const stm);
     rtError_t GetCaptureEvent(

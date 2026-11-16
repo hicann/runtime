@@ -7248,12 +7248,15 @@ TEST_F(UTEST_ACL_Runtime, aclrtResetDeviceResLimit_success)
     EXPECT_EQ(ret, ACL_SUCCESS);
 }
 
-// Scenario: pass invalid enum value(99), ACL layer AclLimitToRtLimit returns RESERVED, should return param error
+// Scenario: invalid enum values must be rejected before calling Runtime.
 // Coverage path: enum mapping invalid value validation
 TEST_F(UTEST_ACL_Runtime, aclrtDeviceSetLimit_failed_with_invalid_limit)
 {
-    const auto ret = aclrtDeviceSetLimit(static_cast<aclrtDeviceLimit>(99), 1024U);
-    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtDeviceSetLimit(_, _, _)).Times(0);
+    for (const int32_t limit : {6, 99}) {
+        SCOPED_TRACE(limit);
+        EXPECT_EQ(aclrtDeviceSetLimit(static_cast<aclrtDeviceLimit>(limit), 1024U), ACL_ERROR_INVALID_PARAM);
+    }
 }
 
 // Scenario: RT layer rtDeviceSetLimit returns error, ACL layer should propagate error code
@@ -7284,16 +7287,17 @@ TEST_F(UTEST_ACL_Runtime, aclrtDeviceGetLimit_failed_with_null_value)
     EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
 }
 
-// Scenario: GetLimit with invalid enum value(99), should return param error
+// Scenario: invalid enum values must leave output unchanged and must not call Runtime.
 // Coverage path: Get-side enum mapping invalid value validation
 TEST_F(UTEST_ACL_Runtime, aclrtDeviceGetLimit_failed_with_invalid_limit)
 {
     ErrorMsgCapture capture;
     EXPECT_CALL(MockFunctionTest::aclStubInstance(), ReportPredefinedErrMsg(_, _, _))
         .WillOnce(Invoke(&capture, &ErrorMsgCapture::Capture));
-    size_t value = 0U;
+    size_t value = 123U;
     const auto ret = aclrtDeviceGetLimit(static_cast<aclrtDeviceLimit>(99), &value);
     EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+    EXPECT_EQ(value, 123U);
     EXPECT_EQ(capture.errorCode, "EH0007");
     EXPECT_THAT(capture.keys, ElementsAre("func", "value", "param", "expect"));
     EXPECT_THAT(
@@ -7301,8 +7305,8 @@ TEST_F(UTEST_ACL_Runtime, aclrtDeviceGetLimit_failed_with_invalid_limit)
         ElementsAre(
             "aclrtDeviceGetLimit", "UNKNOWN(99)", "limit",
             "ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE(0), ACL_RT_DEV_LIMIT_SIMT_DVG_WARP_STACK_SIZE(1), "
-            "ACL_RT_DEV_LIMIT_SIMD_STACK_SIZE(2), ACL_RT_DEV_LIMIT_SIMD_PRINTF_FIFO_SIZE_PER_CORE(3), or "
-            "ACL_RT_DEV_LIMIT_SIMT_PRINTF_FIFO_SIZE(4)"));
+            "ACL_RT_DEV_LIMIT_SIMD_STACK_SIZE(2), ACL_RT_DEV_LIMIT_SIMD_PRINTF_FIFO_SIZE_PER_CORE(3), "
+            "ACL_RT_DEV_LIMIT_SIMT_PRINTF_FIFO_SIZE(4), or ACL_RT_DEV_LIMIT_PERSISTING_L2CACHE_SIZE(5)"));
 }
 
 TEST_F(UTEST_ACL_Runtime, aclrtDeviceGetLimit_success)
@@ -7322,9 +7326,9 @@ TEST_F(UTEST_ACL_Runtime, aclrtDeviceGetLimit_unsupported_type_returns_error)
     EXPECT_NE(ret, ACL_SUCCESS);
 }
 
-// UC-ACL-NEW-01: cover Set/Get roundtrip for all 5 valid limit types
+// UC-ACL-NEW-01: cover Set/Get roundtrip for all 6 valid limit types
 // For each ACL enum value, execute Set → Get, verify mock layer receives correct RT enum value and returns success
-TEST_F(UTEST_ACL_Runtime, aclrtDeviceSetGetLimit_all_five_types_roundtrip)
+TEST_F(UTEST_ACL_Runtime, aclrtDeviceSetGetLimit_all_six_types_roundtrip)
 {
     struct LimitTestCase {
         aclrtDeviceLimit aclLimit;
@@ -7337,6 +7341,7 @@ TEST_F(UTEST_ACL_Runtime, aclrtDeviceSetGetLimit_all_five_types_roundtrip)
         {ACL_RT_DEV_LIMIT_SIMD_STACK_SIZE, 65536U, 3},
         {ACL_RT_DEV_LIMIT_SIMD_PRINTF_FIFO_SIZE_PER_CORE, 131072U, 4},
         {ACL_RT_DEV_LIMIT_SIMT_PRINTF_FIFO_SIZE, 4096U, 5},
+        {ACL_RT_DEV_LIMIT_PERSISTING_L2CACHE_SIZE, 1024U, 6},
     };
     for (const auto& tc : cases) {
         EXPECT_CALL(

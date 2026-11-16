@@ -188,6 +188,7 @@ typedef enum tagRtLimitType {
     RT_LIMIT_TYPE_STACK_SIZE = 3, // max stack size for each core, bytes
     RT_LIMIT_TYPE_SIMD_PRINTF_FIFO_SIZE_PER_CORE = 4,
     RT_LIMIT_TYPE_SIMT_PRINTF_FIFO_SIZE = 5,
+    RT_LIMIT_TYPE_PERSISTING_L2CACHE_SIZE = 6,
     RT_LIMIT_TYPE_RESERVED,
 } rtLimitType_t;
 
@@ -594,7 +595,7 @@ RTS_API rtError_t rtGetSocSpec(const char* label, const char* key, char* val, co
 // clang-format on
 enum { rt_ext_base_common_end_line_guard_ = __LINE__ }; // CCE_RUNTIME_BASE_COMMON_DATA END
 RT_STATIC_ASSERT(
-    ((rt_ext_base_common_end_line_guard_ - rt_ext_base_common_begin_line_guard_) == 557),
+    ((rt_ext_base_common_end_line_guard_ - rt_ext_base_common_begin_line_guard_) == 558),
     "Inside CCE_RUNTIME_BASE_COMMON_DATA is the data shared between rt_external_base.h and base.h. "
     "Adding data structures is not allowed; please add them outside the macro definition.");
 

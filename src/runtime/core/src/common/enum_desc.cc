@@ -311,8 +311,10 @@ std::string LimitTypeToString(const rtLimitType_t type)
             return "LIMIT_TYPE_SIMD_PRINTF_FIFO_SIZE_PER_CORE(4)";
         case RT_LIMIT_TYPE_SIMT_PRINTF_FIFO_SIZE:
             return "LIMIT_TYPE_SIMT_PRINTF_FIFO_SIZE(5)";
+        case RT_LIMIT_TYPE_PERSISTING_L2CACHE_SIZE:
+            return "LIMIT_TYPE_PERSISTING_L2CACHE_SIZE(6)";
         case RT_LIMIT_TYPE_RESERVED:
-            return "LIMIT_TYPE_RESERVED(6)";
+            return "LIMIT_TYPE_RESERVED(7)";
         default:
             return RtFmtMsg("UNKNOWN(%d)", static_cast<int32_t>(type));
     }

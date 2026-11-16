@@ -667,6 +667,8 @@ const char* GetDeviceLimitDesc(aclrtDeviceLimit limit)
             return "RT_DEV_LIMIT_SIMD_PRINTF_FIFO_SIZE_PER_CORE(3)";
         case ACL_RT_DEV_LIMIT_SIMT_PRINTF_FIFO_SIZE:
             return "RT_DEV_LIMIT_SIMT_PRINTF_FIFO_SIZE(4)";
+        case ACL_RT_DEV_LIMIT_PERSISTING_L2CACHE_SIZE:
+            return "RT_DEV_LIMIT_PERSISTING_L2CACHE_SIZE(5)";
         default:
             break;
     }

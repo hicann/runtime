@@ -2663,7 +2663,7 @@ aclError aclrtDeviceSetLimit(aclrtDeviceLimit limit, size_t value)
 
 ### 功能说明
 
-设置当前进程的Device资源限制，例如SIMT（Single Instruction Multiple Thread）算子栈空间大小、SIMT Printf维测空间大小等。
+设置当前Device资源限制，例如SIMT（Single Instruction Multiple Thread）算子栈空间大小、SIMT Printf维测空间大小等。
 
 ### 参数说明
 
@@ -2679,14 +2679,20 @@ aclError aclrtDeviceSetLimit(aclrtDeviceLimit limit, size_t value)
 ### 约束说明
 
 - 各产品型号对limit资源类型的支持情况不同，对于不支持的资源类型，接口返回`ACL_ERROR_RT_FEATURE_NOT_SUPPORT`。
-- 本接口建议在`aclInit`接口之后、`aclrtSetDevice`接口之前调用，确保资源限制的配置生效。
-- 若涉及多次调用`aclrtSetDevice`接口，由于`aclrtSetDevice`、`aclrtResetDevice`接口内部涉及引用计数，两者配对使用，引用计数减到0之后，调用本接口配置资源限制值之后，再调用`aclrtSetDevice`接口，配置才可以生效。调用顺序如下所示：
+- 通过本接口配置SIMD相关选项（例如limit为ACL_RT_DEV_LIMIT_SIMD_STACK_SIZE）及SIMT相关选项（例如limit为ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE）的资源限制时，建议在调用[aclInit](02_initialization_and_deinitialization.md#aclInit)接口之后、[aclrtSetDevice](#aclrtSetDevice)接口之前调用本接口，确保资源限制配置生效。
 
-  `aclInit`-->`aclrtDeviceSetLimit`（第一次调用接口设置）-->`aclrtSetDevice`（这时资源限制的配置生效）-->业务处理-->`aclrtResetDevice`（重置Device资源）-->`aclrtDeviceSetLimit`（第二次调用接口设置）-->`aclrtSetDevice`（这时资源限制的配置生效）
+  若涉及多次调用[aclrtSetDevice](#aclrtSetDevice)接口，由于[aclrtSetDevice](#aclrtSetDevice)、[aclrtResetDevice](#aclrtResetDevice)接口内部涉及引用计数，两者配对使用，引用计数减到0之后，调用本接口配置资源限制值之后，再调用[aclrtSetDevice](#aclrtSetDevice)接口，配置才可以生效。调用顺序如下所示：
 
-- 通过本接口或`aclInit`接口均可配置资源限制值，例如SIMT算子栈空间大小、SIMT Printf维测空间大小等。其中，通过本接口配置更为灵活，便于调整资源限制值。若通过两种方式配置资源限制值，则后配置的覆盖先配置的。
-- 通过本接口配置的Device资源限制作用于当前进程，所有Device共用同一套配置，无法为不同的Device设置不同的资源限制值。
-- 本接口内部固定使用Device0进行设置。若设置了`ASCEND_RT_VISIBLE_DEVICES`环境变量且该变量中不包含Device0，则通过本接口或`aclInit`接口配置资源限制值均会失败。因此，若使用`ASCEND_RT_VISIBLE_DEVICES`环境变量，需确保其值中包含Device0。
+  [aclInit](02_initialization_and_deinitialization.md#aclInit)-->[aclrtDeviceSetLimit](#aclrtDeviceSetLimit)（第一次调用接口设置）-->[aclrtSetDevice](#aclrtSetDevice)（这时资源限制的配置生效）-->业务处理-->[aclrtResetDevice](#aclrtResetDevice)（重置Device资源）-->[aclrtDeviceSetLimit](#aclrtDeviceSetLimit)（第二次调用接口设置）-->[aclrtSetDevice](#aclrtSetDevice)（这时资源限制的配置生效）
+
+  通过本接口或[aclInit](02_initialization_and_deinitialization.md#aclInit)接口均可配置资源限制值，例如SIMT算子栈空间大小、SIMT Printf维测空间大小等。其中，通过本接口配置更为灵活，便于调整资源限制值。若通过两种方式配置资源限制值，则后配置的覆盖先配置的。
+- 通过本接口配置SIMD相关选项（例如limit为ACL_RT_DEV_LIMIT_SIMD_STACK_SIZE）及SIMT相关选项（例如limit为     ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE）的资源限制时，这些配置作用于当前进程，所有Device共用同一套配置，无法为不同的Device设置不同的资源限制值。
+
+  本接口内部固定使用Device0进行设置。若设置了`ASCEND_RT_VISIBLE_DEVICES`环境变量且该变量中不包含Device0，则通过本接口或[aclInit](02_initialization_and_deinitialization.md#aclInit)接口配置资源限制值均会失败。因此，若使用`ASCEND_RT_VISIBLE_DEVICES`环境变量，需确保其值中包含Device0。
+
+<!-- npu="950" id12 -->
+- 通过本接口配置L2 Cache持久化大小时，limit参数应设置为`ACL_RT_DEV_LIMIT_PERSISTING_L2CACHE_SIZE`，该配置仅Ascend 950PR&950DT系列产品支持。L2 Cache持久化大小为Device级别配置，因此在设置该大小前，需先指定用于运算的Device（例如调用[aclrtSetDevice](#aclrtSetDevice)接口）。当调用[aclrtResetDevice](#aclrtResetDevice)引用计数减到0，实际释放Device资源时，当前Device的L2 Cache持久化大小将被恢复为0。
+<!-- end id12 -->
 
 <br>
 <br>
@@ -2730,7 +2736,7 @@ aclError aclrtDeviceGetLimit(aclrtDeviceLimit limit, size_t *value)
 
 ### 功能说明
 
-获取当前进程的Device资源限制。
+获取当前Device资源限制。
 
 ### 参数说明
 
@@ -2745,12 +2751,17 @@ aclError aclrtDeviceGetLimit(aclrtDeviceLimit limit, size_t *value)
 
 ### 约束说明
 
-- 通过`aclrtDeviceSetLimit`接口配置的Device资源限制作用于当前进程，所有Device共用同一套配置，任意Device上查询返回相同值。
-- 通过本接口获取的是当前进程的瞬时值，不保证多线程并发安全。
-- 例如：首先调用`aclrtDeviceSetLimit`将栈大小设置为A，随后调用`aclrtSetDevice`使其生效。此时，调用`aclrtDeviceGetLimit`接口查询得到的值为A，且资源限制的大小亦为A。随后再次调用`aclrtDeviceSetLimit`将其修改为B，但未重新调用`aclrtSetDevice`。此时，调用`aclrtDeviceGetLimit`接口查询得到的值为B，而实际资源限制的大小仍为A。
+- 通过[aclrtDeviceSetLimit](#aclrtDeviceSetLimit)接口配置的SIMD相关选项及SIMT相关选项的资源限制，这些配置作用于当前进程，所有Device共用同一套配置，任意Device上查询返回相同值。
+- 当查询SIMD相关选项及SIMT相关选项的资源限制，通过本接口获取的是当前进程的瞬时值，不保证多线程并发安全。
+
+  例如：首先调用[aclrtDeviceSetLimit](#aclrtDeviceSetLimit)将栈大小设置为A，随后调用[aclrtSetDevice](#aclrtSetDevice)使其生效。此时，调用[aclrtDeviceGetLimit](#aclrtDeviceGetLimit)接口查询得到的值为A，且资源限制的大小亦为A。随后再次调用[aclrtDeviceSetLimit](#aclrtDeviceSetLimit)将其修改为B，但未重新调用[aclrtSetDevice](#aclrtSetDevice)。此时，调用[aclrtDeviceGetLimit](#aclrtDeviceGetLimit)接口查询得到的值为B，而实际资源限制的大小仍为A。
+
+<!-- npu="950" id13 -->
+- 当查询L2 Cache持久化大小时，需先指定用于运算的Device（例如调用[aclrtSetDevice](#aclrtSetDevice)接口），不同Device可返回不同值。仅Ascend 950PR&950DT系列产品支持查询该配置。
+<!-- end id13 -->
 
 <!-- npu="A3,910b" id3276 -->
-- 对于Atlas A3系列产品、Atlas A2系列产品，查询`ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE`、`ACL_RT_DEV_LIMIT_SIMT_DVG_WARP_STACK_SIZE`、`ACL_RT_DEV_LIMIT_SIMT_PRINTF_FIFO_SIZE`时返回`ACL_ERROR_RT_FEATURE_NOT_SUPPORT`。
+- 对于Atlas A3系列产品、Atlas A2系列产品，查询`ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE`、`ACL_RT_DEV_LIMIT_SIMT_DVG_WARP_STACK_SIZE`、`ACL_RT_DEV_LIMIT_SIMT_PRINTF_FIFO_SIZE`、`ACL_RT_DEV_LIMIT_PERSISTING_L2CACHE_SIZE`时返回`ACL_ERROR_RT_FEATURE_NOT_SUPPORT`。
 <!-- end id3276 -->
 
 <!-- npu="950" id3277 -->
