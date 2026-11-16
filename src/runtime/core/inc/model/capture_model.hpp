@@ -82,7 +82,7 @@ struct GraphUpdateInfo {
     std::mutex updateMutex;
     std::set<TaskInfo*> updateTask;         /* 通过set接口设置下来的更新任务 */
     std::set<TaskInfo*> curApplyUpdateTask; /* 本次graph launch时，应用的更新任务 */
-    void* hostSqeUpdateAddr{nullptr};
+    std::vector<std::shared_ptr<void>> hostSqeUpdateBuffers;
 };
 
 class CaptureModel : public Model {
@@ -383,11 +383,13 @@ private:
     void ReportCacheTrackData();
     rtError_t InitAllSubCaptureModelCondTaskByDefValue(Stream* const stm);
     rtError_t PrepareGraphUpdateProc(Stream* const exeStm);
+    rtError_t PrepareTaskUpdate(
+        TaskInfo* const taskInfo, std::vector<void*>& dsts, std::vector<void*>& srcs, std::vector<size_t>& sizes);
     rtError_t PrepareExternalRecordTaskUpdateInfo(
-        void* hostSqeUpdateAddrBase, const uint64_t sqeTotalSize, std::vector<void*>& dsts, std::vector<void*>& srcs,
-        std::vector<size_t>& sizes, uint16_t& count);
+        TaskInfo* const taskInfo, std::vector<void*>& dsts, std::vector<void*>& srcs, std::vector<size_t>& sizes);
+    rtError_t PrepareExternalRecordReplayInfo();
     void SwapUpdateTask();
-    rtError_t UpdateExternalRecordEventItems(uint32_t& updateSqeNum);
+    rtError_t CheckUpdateTask();
     std::vector<CaptureModel*>& GetAllSubCaptureModels();
     void RestoreJettyForSnapshot();
     rtError_t RefreshJettyInfoList();

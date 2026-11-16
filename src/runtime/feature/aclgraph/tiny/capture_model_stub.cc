@@ -375,24 +375,29 @@ rtError_t CaptureModel::PrepareGraphUpdateProc(Stream* const exeStm)
 
 void CaptureModel::SwapUpdateTask() { return; }
 
-rtError_t CaptureModel::UpdateExternalRecordEventItems(uint32_t& updateSqeNum)
+rtError_t CaptureModel::CheckUpdateTask() { return RT_ERROR_FEATURE_NOT_SUPPORT; }
+
+rtError_t CaptureModel::PrepareTaskUpdate(
+    TaskInfo* const taskInfo, std::vector<void*>& dsts, std::vector<void*>& srcs, std::vector<size_t>& sizes)
 {
-    UNUSED(updateSqeNum);
+    UNUSED(taskInfo);
+    UNUSED(dsts);
+    UNUSED(srcs);
+    UNUSED(sizes);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
 rtError_t CaptureModel::PrepareExternalRecordTaskUpdateInfo(
-    void* hostSqeUpdateAddrBase, const uint64_t sqeTotalSize, std::vector<void*>& dsts, std::vector<void*>& srcs,
-    std::vector<size_t>& sizes, uint16_t& count)
+    TaskInfo* const taskInfo, std::vector<void*>& dsts, std::vector<void*>& srcs, std::vector<size_t>& sizes)
 {
-    UNUSED(hostSqeUpdateAddrBase);
-    UNUSED(sqeTotalSize);
+    UNUSED(taskInfo);
     UNUSED(dsts);
     UNUSED(srcs);
     UNUSED(sizes);
-    UNUSED(count);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
+
+rtError_t CaptureModel::PrepareExternalRecordReplayInfo() { return RT_ERROR_FEATURE_NOT_SUPPORT; }
 
 rtError_t CaptureModel::AllocateExternalRefreshTable() { return RT_ERROR_FEATURE_NOT_SUPPORT; }
 

@@ -195,11 +195,9 @@ TEST_F(Arch5162TaskTest, CaptureModelUpdateStubs)
     CaptureModel model(RT_MODEL_CAPTURE_MODEL);
     TaskInfo taskInfo = {};
     const rtCqReport_t logicCq = {};
-    uint32_t updateSqeNum = 0U;
     std::vector<void*> dsts;
     std::vector<void*> srcs;
     std::vector<size_t> sizes;
-    uint16_t count = 0U;
 
     model.InsertGraphUpdateTask(&taskInfo);
     model.ClearGraphUpdateTask();
@@ -207,9 +205,10 @@ TEST_F(Arch5162TaskTest, CaptureModelUpdateStubs)
     model.ProcessExternalRecordNormalCqe(&taskInfo, logicCq);
     EXPECT_EQ(model.PrepareGraphUpdateProc(nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
     model.SwapUpdateTask();
-    EXPECT_EQ(model.UpdateExternalRecordEventItems(updateSqeNum), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(
-        model.PrepareExternalRecordTaskUpdateInfo(nullptr, 0U, dsts, srcs, sizes, count), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(model.CheckUpdateTask(), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(model.PrepareTaskUpdate(&taskInfo, dsts, srcs, sizes), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(model.PrepareExternalRecordTaskUpdateInfo(&taskInfo, dsts, srcs, sizes), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(model.PrepareExternalRecordReplayInfo(), RT_ERROR_FEATURE_NOT_SUPPORT);
     TaskClearForUpdate(&taskInfo);
     PopCompletedUpdateItems(&taskInfo, 1U);
 }

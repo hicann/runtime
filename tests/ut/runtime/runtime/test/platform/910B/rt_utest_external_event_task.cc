@@ -10,6 +10,8 @@
 
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
+#include <cstdlib>
+#include <cstring>
 #include "runtime/rt.h"
 #include "runtime/event.h"
 #include "runtime/rt_inner_event.h"
@@ -85,6 +87,61 @@ void CreateRecordedSoftwareEvent(
     ASSERT_NE(streamObj, nullptr);
     ASSERT_NE(eventObj, nullptr);
     EnableSoftwareRecord(eventObj, &recordValue, eventId);
+}
+
+void InitExternalRecordUpdateTask(
+    TaskInfo& taskInfo, TaskUpdateInfo& taskUpdate, Stream* stream, const uint16_t taskId, Event* oldEvent,
+    Event* updatedEvent)
+{
+    taskInfo.stream = stream;
+    taskInfo.id = taskId;
+    taskInfo.pos = taskId;
+    taskInfo.type = TS_TASK_TYPE_CAPTURE_RECORD_EXTERNAL;
+    taskInfo.sqeNum = static_cast<uint8_t>(GetSendSqeNum(&taskInfo));
+    taskInfo.updateInfo = &taskUpdate;
+    taskInfo.u.writeValTask.event = oldEvent;
+    taskInfo.u.writeValTask.cqeFlag = oldEvent->IsEventWithTimeline() ? TASK_WR_CQE_ALWAYS : TASK_WR_CQE_NEVER;
+    taskUpdate.latestParams.type = RT_TASK_EVENT_RECORD;
+    taskUpdate.latestParams.isValid = 1U;
+    taskUpdate.latestParams.u.eventRecordUpdateParams.event = updatedEvent;
+}
+
+rtError_t AllocateGraphUpdateHostMemory(Driver*, void** addr, uint64_t size, uint32_t, uint16_t, uint32_t)
+{
+    *addr = std::malloc(size);
+    return (*addr == nullptr) ? RT_ERROR_MEMORY_ALLOCATION : RT_ERROR_NONE;
+}
+
+rtError_t FreeGraphUpdateHostMemory(Driver*, void* addr)
+{
+    std::free(addr);
+    return RT_ERROR_NONE;
+}
+
+rtError_t BuildGraphUpdateSqes(TaskInfo* taskInfo, void* hostAddr)
+{
+    EXPECT_EQ(taskInfo->u.writeValTask.cqeFlag, TASK_WR_CQE_ALWAYS);
+    std::memset(hostAddr, taskInfo->id, sizeof(rtStarsSqe_t) * GetSendSqeNum(taskInfo));
+    return RT_ERROR_NONE;
+}
+
+rtError_t VerifyIndependentGraphUpdateCopies(
+    void** dsts, const size_t* destMaxs, void** srcs, const size_t* sizes, size_t count, Stream*)
+{
+    EXPECT_EQ(count, 2U);
+    if (count != 2U) {
+        return RT_ERROR_INVALID_VALUE;
+    }
+    EXPECT_NE(srcs[0], srcs[1]);
+    for (size_t index = 0U; index < count; ++index) {
+        EXPECT_NE(srcs[index], nullptr);
+        EXPECT_NE(dsts[index], nullptr);
+        EXPECT_EQ(reinterpret_cast<uint64_t>(dsts[index]), 0x1000ULL + index * sizeof(rtStarsSqe_t) * 2U);
+        EXPECT_EQ(sizes[index], sizeof(rtStarsSqe_t) * 2U);
+        EXPECT_EQ(destMaxs[index], sizes[index]);
+        EXPECT_EQ(*static_cast<uint8_t*>(srcs[index]), 7U + index);
+    }
+    return RT_ERROR_NONE;
 }
 } // namespace
 
@@ -1043,7 +1100,7 @@ TEST_F(ExternalEventTaskTest910B, ExternalRecordUpdateBuildsSqeRefreshAndConsume
 
     Event oldEvent(nullptr, RT_EVENT_DEFAULT, nullptr);
     Event timelineEvent(nullptr, RT_EVENT_TIME_LINE, nullptr);
-    Event waitEvent(nullptr, RT_EVENT_DEFAULT, nullptr);
+    Event waitEvent(nullptr, RT_EVENT_DDSYNC_NS, nullptr);
     CaptureModel model(RT_MODEL_CAPTURE_MODEL);
     model.context_ = Runtime::Instance()->CurrentContext();
 
@@ -1062,33 +1119,35 @@ TEST_F(ExternalEventTaskTest910B, ExternalRecordUpdateBuildsSqeRefreshAndConsume
     ASSERT_EQ(model.AddExternalWaitEvent(&waitEvent, streamId, taskInfo.id + 1U), RT_ERROR_NONE);
     model.InsertGraphUpdateTask(&taskInfo);
 
-    uint32_t updateSqeNum = 0U;
-    ASSERT_EQ(model.UpdateExternalRecordEventItems(updateSqeNum), RT_ERROR_NONE);
-    EXPECT_EQ(updateSqeNum, GetSendSqeNum(&taskInfo));
+    ASSERT_EQ(model.CheckUpdateTask(), RT_ERROR_NONE);
     EXPECT_EQ(model.externalRecordEventItems_.begin()->second, &timelineEvent);
+    EXPECT_EQ(model.updateInfo_.updateTask.count(&taskInfo), 1U);
+    model.SwapUpdateTask();
     EXPECT_TRUE(model.updateInfo_.updateTask.empty());
     EXPECT_EQ(model.updateInfo_.curApplyUpdateTask.count(&taskInfo), 1U);
+    taskUpdate.latestParams.u.eventRecordUpdateParams.event = &waitEvent;
+    model.InsertGraphUpdateTask(&taskInfo);
 
-    rtStarsSqe_t hostUpdateSqes[2] = {};
     std::vector<void*> dsts;
     std::vector<void*> srcs;
     std::vector<size_t> sizes;
-    uint16_t count = 0U;
     MOCKER(GetTaskInfo).stubs().will(returnValue(&taskInfo));
     MOCKER(UpdateHostSqeBufferAndCopySqeByTask).expects(once()).will(returnValue(RT_ERROR_NONE));
-    ASSERT_EQ(
-        model.PrepareExternalRecordTaskUpdateInfo(hostUpdateSqes, sizeof(hostUpdateSqes), dsts, srcs, sizes, count),
-        RT_ERROR_NONE);
-    ASSERT_EQ(count, 1U);
+    ASSERT_EQ(model.PrepareTaskUpdate(&taskInfo, dsts, srcs, sizes), RT_ERROR_NONE);
     ASSERT_EQ(dsts.size(), 1U);
     ASSERT_EQ(srcs.size(), 1U);
     ASSERT_EQ(sizes.size(), 1U);
-    EXPECT_EQ(srcs[0], hostUpdateSqes);
-    EXPECT_EQ(sizes[0], sizeof(hostUpdateSqes));
+    ASSERT_EQ(model.updateInfo_.hostSqeUpdateBuffers.size(), 1U);
+    EXPECT_EQ(srcs[0], model.updateInfo_.hostSqeUpdateBuffers.front().get());
+    EXPECT_EQ(sizes[0], sizeof(rtStarsSqe_t) * 2U);
+    EXPECT_EQ(taskInfo.u.writeValTask.cqeFlag, TASK_WR_CQE_ALWAYS);
+    ASSERT_EQ(model.PrepareExternalRecordReplayInfo(), RT_ERROR_NONE);
     EXPECT_EQ(taskInfo.u.writeValTask.expectCqeCnt, 1U);
     EXPECT_EQ(taskInfo.u.writeValTask.cqeFlag, TASK_WR_CQE_ALWAYS);
     EXPECT_EQ(streamObj->GetCqePendingCnt(), 1U);
     ASSERT_EQ(taskUpdate.updateQueue.size(), 1U);
+    EXPECT_EQ(taskUpdate.updateQueue.front().u.eventRecordInfo.event, &timelineEvent);
+    EXPECT_EQ(model.updateInfo_.updateTask.count(&taskInfo), 1U);
 
     uint8_t eventValue = 0U;
     timelineEvent.PublishSoftwareRecordResource(&eventValue, 17, streamObj->Id_(), taskInfo.id, 1U);
@@ -1208,6 +1267,391 @@ TEST_F(ExternalEventTaskTest910B, UpdateHostSqeBufferCopiesEntireExternalRecordT
 
     streamObj->SetSqeBuffer(oldSqeBuffer);
     streamObj->SetSqeBufferSize(oldSqeBufferSize);
+    EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
+}
+
+TEST_F(ExternalEventTaskTest910B, GraphUpdateRejectsExternalRecordWaitConflictBeforeAllocation)
+{
+    rtStream_t stream = nullptr;
+    ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
+    Stream* const streamObj = rt_ut::UnwrapOrNull<Stream>(stream);
+    ASSERT_NE(streamObj, nullptr);
+    Event oldEvent(nullptr, RT_EVENT_DDSYNC_NS, nullptr);
+    Event updatedEvent(nullptr, RT_EVENT_DDSYNC_NS | RT_EVENT_TIME_LINE, nullptr);
+    TaskUpdateInfo taskUpdate = {};
+    TaskInfo taskInfo = {};
+    InitExternalRecordUpdateTask(taskInfo, taskUpdate, streamObj, 7U, &oldEvent, &updatedEvent);
+    CaptureModel model(RT_MODEL_CAPTURE_MODEL);
+    model.context_ = streamObj->Context_();
+    const uint32_t streamId = static_cast<uint32_t>(streamObj->Id_());
+    ASSERT_EQ(model.AddExternalRecordEvent(&oldEvent, streamId, taskInfo.id), RT_ERROR_NONE);
+    ASSERT_EQ(model.AddExternalWaitEvent(&updatedEvent, streamId, 8U), RT_ERROR_NONE);
+    model.InsertGraphUpdateTask(&taskInfo);
+    MOCKER_CPP_VIRTUAL(streamObj->Device_()->Driver_(), &Driver::HostMemAlloc).expects(never());
+    MOCKER(BatchSendH2DAsyncTask).expects(never());
+
+    EXPECT_EQ(model.PrepareGraphUpdateProc(streamObj), RT_ERROR_MODEL_EXE_FAILED);
+    EXPECT_EQ(model.externalRecordEventItems_.begin()->second, &oldEvent);
+    EXPECT_EQ(model.updateInfo_.updateTask.count(&taskInfo), 1U);
+    EXPECT_TRUE(model.updateInfo_.curApplyUpdateTask.empty());
+    EXPECT_TRUE(model.updateInfo_.hostSqeUpdateBuffers.empty());
+    EXPECT_TRUE(taskUpdate.updateQueue.empty());
+    EXPECT_EQ(model.updateInfo_.launchCnt, 0U);
+    GlobalMockObject::verify();
+    EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
+}
+
+TEST_F(ExternalEventTaskTest910B, ExternalUpdateValidationUsesFinalMappingForEventSwap)
+{
+    rtStream_t stream = nullptr;
+    ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
+    Stream* const streamObj = rt_ut::UnwrapOrNull<Stream>(stream);
+    ASSERT_NE(streamObj, nullptr);
+    Event firstEvent(nullptr, RT_EVENT_DDSYNC_NS, nullptr);
+    Event secondEvent(nullptr, RT_EVENT_DDSYNC_NS, nullptr);
+    TaskInfo tasks[2] = {};
+    TaskUpdateInfo updates[2] = {};
+    InitExternalRecordUpdateTask(tasks[0], updates[0], streamObj, 7U, &firstEvent, &secondEvent);
+    InitExternalRecordUpdateTask(tasks[1], updates[1], streamObj, 8U, &secondEvent, &firstEvent);
+    CaptureModel model(RT_MODEL_CAPTURE_MODEL);
+    model.context_ = streamObj->Context_();
+    const uint32_t streamId = static_cast<uint32_t>(streamObj->Id_());
+    ASSERT_EQ(model.AddExternalRecordEvent(&firstEvent, streamId, tasks[0].id), RT_ERROR_NONE);
+    ASSERT_EQ(model.AddExternalRecordEvent(&secondEvent, streamId, tasks[1].id), RT_ERROR_NONE);
+    model.InsertGraphUpdateTask(&tasks[0]);
+    model.InsertGraphUpdateTask(&tasks[1]);
+
+    ASSERT_EQ(model.CheckUpdateTask(), RT_ERROR_NONE);
+    EXPECT_EQ(model.externalRecordEventItems_.at(std::make_tuple(streamId, tasks[0].id)), &secondEvent);
+    EXPECT_EQ(model.externalRecordEventItems_.at(std::make_tuple(streamId, tasks[1].id)), &firstEvent);
+    EXPECT_EQ(model.updateInfo_.updateTask.size(), 2U);
+    EXPECT_TRUE(model.updateInfo_.curApplyUpdateTask.empty());
+    EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
+}
+
+TEST_F(ExternalEventTaskTest910B, GraphUpdateAllocatesIndependentBuffersAndReleasesThemAtEndGraph)
+{
+    rtStream_t stream = nullptr;
+    ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
+    Stream* const streamObj = rt_ut::UnwrapOrNull<Stream>(stream);
+    ASSERT_NE(streamObj, nullptr);
+    Event oldEvents[2] = {{nullptr, RT_EVENT_DDSYNC_NS, nullptr}, {nullptr, RT_EVENT_DDSYNC_NS, nullptr}};
+    Event updatedEvents[2] = {
+        {nullptr, RT_EVENT_DDSYNC_NS | RT_EVENT_TIME_LINE, nullptr},
+        {nullptr, RT_EVENT_DDSYNC_NS | RT_EVENT_TIME_LINE, nullptr}};
+    TaskInfo tasks[2] = {};
+    TaskUpdateInfo updates[2] = {};
+    CaptureModel model(RT_MODEL_CAPTURE_MODEL);
+    model.context_ = streamObj->Context_();
+    model.SetSoftwareSqEnable();
+    for (size_t index = 0U; index < 2U; ++index) {
+        InitExternalRecordUpdateTask(
+            tasks[index], updates[index], streamObj, static_cast<uint16_t>(7U + index), &oldEvents[index],
+            &updatedEvents[index]);
+        ASSERT_EQ(
+            model.AddExternalRecordEvent(&oldEvents[index], static_cast<uint32_t>(streamObj->Id_()), tasks[index].id),
+            RT_ERROR_NONE);
+        model.InsertGraphUpdateTask(&tasks[index]);
+        MOCKER(GetTaskInfo)
+            .stubs()
+            .with(any(), any(), eq(static_cast<uint32_t>(tasks[index].id)), any())
+            .will(returnValue(&tasks[index]));
+    }
+    Driver* const driver = streamObj->Device_()->Driver_();
+    MOCKER_CPP_VIRTUAL(driver, &Driver::HostMemAlloc).expects(exactly(2)).will(invoke(AllocateGraphUpdateHostMemory));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::HostMemFree).expects(exactly(2)).will(invoke(FreeGraphUpdateHostMemory));
+    MOCKER(UpdateHostSqeBufferAndCopySqeByTask).expects(exactly(2)).will(invoke(BuildGraphUpdateSqes));
+    MOCKER(BatchSendH2DAsyncTask).expects(once()).will(invoke(VerifyIndependentGraphUpdateCopies));
+    MOCKER_CPP(&Stream::GetDeviceSqeAddrByPos)
+        .expects(once())
+        .with(eq(7U))
+        .will(returnValue(reinterpret_cast<void*>(0x1000ULL)));
+    MOCKER_CPP(&Stream::GetDeviceSqeAddrByPos)
+        .expects(once())
+        .with(eq(8U))
+        .will(returnValue(reinterpret_cast<void*>(0x1080ULL)));
+
+    ASSERT_EQ(model.PrepareGraphUpdateProc(streamObj), RT_ERROR_NONE);
+    ASSERT_EQ(model.updateInfo_.hostSqeUpdateBuffers.size(), 2U);
+    EXPECT_TRUE(model.updateInfo_.updateTask.empty());
+    EXPECT_EQ(model.updateInfo_.curApplyUpdateTask.size(), 2U);
+    EXPECT_EQ(model.updateInfo_.launchCnt, 1U);
+    std::weak_ptr<void> firstBuffer = model.updateInfo_.hostSqeUpdateBuffers[0];
+    std::weak_ptr<void> secondBuffer = model.updateInfo_.hostSqeUpdateBuffers[1];
+    Notify notify(0, 0U);
+    notify.SetEndGraphModel(&model);
+    TaskInfo endGraphTask = {};
+    endGraphTask.stream = streamObj;
+    ASSERT_EQ(EndGraphNotifyWaitTaskInit(&endGraphTask, 0U, 0U, &notify), RT_ERROR_NONE);
+    EXPECT_TRUE(model.updateInfo_.hostSqeUpdateBuffers.empty());
+    ASSERT_NE(endGraphTask.u.endGraphNotifyWaitTask.hostSqeUpdateBuffers, nullptr);
+    EXPECT_EQ(endGraphTask.u.endGraphNotifyWaitTask.hostSqeUpdateBuffers->size(), 2U);
+    EXPECT_FALSE(firstBuffer.expired());
+    EXPECT_FALSE(secondBuffer.expired());
+    endGraphTask.bindFlag = 1U;
+    endGraphTask.u.endGraphNotifyWaitTask.isSoftwareSqCaptureModel = false;
+
+    DoCompleteSuccessForEndGraphNotifyWaitTask(&endGraphTask, 0U);
+    EXPECT_TRUE(firstBuffer.expired());
+    EXPECT_TRUE(secondBuffer.expired());
+    EXPECT_EQ(endGraphTask.u.endGraphNotifyWaitTask.hostSqeUpdateBuffers, nullptr);
+    EXPECT_TRUE(updates[0].updateQueue.empty());
+    EXPECT_TRUE(updates[1].updateQueue.empty());
+    EndGraphNotifyWaitTaskUnInit(&endGraphTask);
+    streamObj->SubCqePendingCnt();
+    streamObj->SubCqePendingCnt();
+    GlobalMockObject::verify();
+    EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
+}
+
+TEST_F(ExternalEventTaskTest910B, EndGraphHostBufferOwnerAllocationFailureCleansTransferredTasksForCurrentLaunch)
+{
+    rtStream_t stream = nullptr;
+    ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
+    Stream* const streamObj = rt_ut::UnwrapOrNull<Stream>(stream);
+    ASSERT_NE(streamObj, nullptr);
+    CaptureModel model(RT_MODEL_CAPTURE_MODEL);
+    model.context_ = streamObj->Context_();
+    model.SetSoftwareSqEnable();
+    TaskUpdateInfo taskUpdate = {};
+    TaskInfo taskInfo = {};
+    taskInfo.type = TS_TASK_TYPE_CAPTURE_RECORD_EXTERNAL;
+    taskInfo.updateInfo = &taskUpdate;
+    TaskUpdateItem currentItem = {};
+    currentItem.launchNo = 7U;
+    TaskUpdateItem futureItem = {};
+    futureItem.launchNo = 8U;
+    taskUpdate.updateQueue.push(currentItem);
+    taskUpdate.updateQueue.push(futureItem);
+    model.updateInfo_.launchCnt = 7U;
+    model.updateInfo_.totalNeedCqeCnt = 3U;
+    model.updateInfo_.isCurExecuteNeedCqe = 1U;
+    model.updateInfo_.curApplyUpdateTask.insert(&taskInfo);
+    model.updateInfo_.hostSqeUpdateBuffers.push_back(std::make_shared<int>(0));
+    std::weak_ptr<void> retainedBuffer = model.updateInfo_.hostSqeUpdateBuffers.front();
+    Notify notify(0, 0U);
+    notify.SetEndGraphModel(&model);
+    TaskInfo endGraphTask = {};
+    endGraphTask.stream = streamObj;
+    auto* const taskSet = new std::set<TaskInfo*>();
+    MOCKER(static_cast<NothrowNewFunc>(&operator new))
+        .expects(exactly(2))
+        .will(returnValue(static_cast<void*>(taskSet)))
+        .then(invoke(NothrowNewFail));
+
+    EXPECT_EQ(EndGraphNotifyWaitTaskInit(&endGraphTask, 0U, 0U, &notify), RT_ERROR_MEMORY_ALLOCATION);
+    EXPECT_TRUE(model.updateInfo_.curApplyUpdateTask.empty());
+    EXPECT_EQ(endGraphTask.u.endGraphNotifyWaitTask.updateTask, taskSet);
+    EXPECT_EQ(endGraphTask.u.endGraphNotifyWaitTask.launchNo, 7U);
+    EXPECT_EQ(endGraphTask.u.endGraphNotifyWaitTask.expectTotalRecvCqeCnt, 3U);
+    EXPECT_TRUE(endGraphTask.u.endGraphNotifyWaitTask.isCurExecuteNeedCqe);
+    EXPECT_EQ(endGraphTask.u.endGraphNotifyWaitTask.hostSqeUpdateBuffers, nullptr);
+    EndGraphNotifyWaitTaskUnInit(&endGraphTask);
+    EXPECT_EQ(endGraphTask.u.endGraphNotifyWaitTask.updateTask, nullptr);
+    ASSERT_EQ(taskUpdate.updateQueue.size(), 1U);
+    EXPECT_EQ(taskUpdate.updateQueue.front().launchNo, 8U);
+    EXPECT_EQ(model.updateInfo_.hostSqeUpdateBuffers.size(), 1U);
+    EXPECT_FALSE(retainedBuffer.expired());
+    GlobalMockObject::verify();
+    EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
+}
+
+TEST_F(ExternalEventTaskTest910B, GraphUpdateAllocationFailureReleasesPreparedBuffersWithoutRollback)
+{
+    rtStream_t stream = nullptr;
+    ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
+    Stream* const streamObj = rt_ut::UnwrapOrNull<Stream>(stream);
+    ASSERT_NE(streamObj, nullptr);
+    Event oldEvents[2] = {{nullptr, RT_EVENT_DDSYNC_NS, nullptr}, {nullptr, RT_EVENT_DDSYNC_NS, nullptr}};
+    Event updatedEvents[2] = {
+        {nullptr, RT_EVENT_DDSYNC_NS | RT_EVENT_TIME_LINE, nullptr},
+        {nullptr, RT_EVENT_DDSYNC_NS | RT_EVENT_TIME_LINE, nullptr}};
+    TaskInfo tasks[2] = {};
+    TaskUpdateInfo updates[2] = {};
+    CaptureModel model(RT_MODEL_CAPTURE_MODEL);
+    model.context_ = streamObj->Context_();
+    for (size_t index = 0U; index < 2U; ++index) {
+        InitExternalRecordUpdateTask(
+            tasks[index], updates[index], streamObj, static_cast<uint16_t>(7U + index), &oldEvents[index],
+            &updatedEvents[index]);
+        ASSERT_EQ(
+            model.AddExternalRecordEvent(&oldEvents[index], static_cast<uint32_t>(streamObj->Id_()), tasks[index].id),
+            RT_ERROR_NONE);
+        model.InsertGraphUpdateTask(&tasks[index]);
+    }
+    Driver* const driver = streamObj->Device_()->Driver_();
+    void* hostAddr = std::malloc(sizeof(rtStarsSqe_t) * 2U);
+    ASSERT_NE(hostAddr, nullptr);
+    MOCKER_CPP_VIRTUAL(driver, &Driver::HostMemAlloc)
+        .expects(exactly(2))
+        .with(outBoundP(&hostAddr))
+        .will(returnValue(RT_ERROR_NONE))
+        .then(returnValue(RT_ERROR_MEMORY_ALLOCATION));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::HostMemFree).expects(once()).will(invoke(FreeGraphUpdateHostMemory));
+    MOCKER(UpdateHostSqeBufferAndCopySqeByTask).expects(once()).will(invoke(BuildGraphUpdateSqes));
+    MOCKER(BatchSendH2DAsyncTask).expects(never());
+
+    EXPECT_EQ(model.PrepareGraphUpdateProc(streamObj), RT_ERROR_MEMORY_ALLOCATION);
+    EXPECT_TRUE(model.updateInfo_.hostSqeUpdateBuffers.empty());
+    EXPECT_TRUE(model.updateInfo_.updateTask.empty());
+    ASSERT_EQ(model.updateInfo_.curApplyUpdateTask.size(), 2U);
+    EXPECT_EQ(model.updateInfo_.launchCnt, 0U);
+    for (size_t index = 0U; index < 2U; ++index) {
+        EXPECT_EQ(
+            tasks[index].u.writeValTask.cqeFlag,
+            (&tasks[index] == *model.updateInfo_.curApplyUpdateTask.begin()) ? TASK_WR_CQE_ALWAYS : TASK_WR_CQE_NEVER);
+        EXPECT_EQ(tasks[index].u.writeValTask.expectCqeCnt, 0U);
+        EXPECT_TRUE(updates[index].updateQueue.empty());
+        EXPECT_EQ(
+            model.externalRecordEventItems_.at(
+                std::make_tuple(static_cast<uint32_t>(streamObj->Id_()), tasks[index].id)),
+            &updatedEvents[index]);
+    }
+    GlobalMockObject::verify();
+    EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
+}
+
+TEST_F(ExternalEventTaskTest910B, GraphUpdateSqePreparationFailureReleasesBufferWithoutRollback)
+{
+    rtStream_t stream = nullptr;
+    ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
+    Stream* const streamObj = rt_ut::UnwrapOrNull<Stream>(stream);
+    ASSERT_NE(streamObj, nullptr);
+    Event oldEvent(nullptr, RT_EVENT_DDSYNC_NS, nullptr);
+    Event updatedEvent(nullptr, RT_EVENT_DDSYNC_NS | RT_EVENT_TIME_LINE, nullptr);
+    TaskUpdateInfo taskUpdate = {};
+    TaskInfo taskInfo = {};
+    InitExternalRecordUpdateTask(taskInfo, taskUpdate, streamObj, 7U, &oldEvent, &updatedEvent);
+    CaptureModel model(RT_MODEL_CAPTURE_MODEL);
+    model.context_ = streamObj->Context_();
+    ASSERT_EQ(
+        model.AddExternalRecordEvent(&oldEvent, static_cast<uint32_t>(streamObj->Id_()), taskInfo.id), RT_ERROR_NONE);
+    model.InsertGraphUpdateTask(&taskInfo);
+    Driver* const driver = streamObj->Device_()->Driver_();
+    MOCKER_CPP_VIRTUAL(driver, &Driver::HostMemAlloc).expects(once()).will(invoke(AllocateGraphUpdateHostMemory));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::HostMemFree).expects(once()).will(invoke(FreeGraphUpdateHostMemory));
+    MOCKER(UpdateHostSqeBufferAndCopySqeByTask).expects(once()).will(returnValue(RT_ERROR_DRV_ERR));
+    MOCKER(BatchSendH2DAsyncTask).expects(never());
+
+    EXPECT_EQ(model.PrepareGraphUpdateProc(streamObj), RT_ERROR_DRV_ERR);
+    EXPECT_TRUE(model.updateInfo_.hostSqeUpdateBuffers.empty());
+    EXPECT_EQ(taskInfo.u.writeValTask.cqeFlag, TASK_WR_CQE_ALWAYS);
+    EXPECT_EQ(model.externalRecordEventItems_.begin()->second, &updatedEvent);
+    EXPECT_TRUE(model.updateInfo_.updateTask.empty());
+    EXPECT_EQ(model.updateInfo_.curApplyUpdateTask.count(&taskInfo), 1U);
+    EXPECT_TRUE(taskUpdate.updateQueue.empty());
+    EXPECT_EQ(model.updateInfo_.launchCnt, 0U);
+    GlobalMockObject::verify();
+    EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
+}
+
+TEST_F(ExternalEventTaskTest910B, GraphUpdateBatchFailureRetainsBuffersWithoutRollback)
+{
+    rtStream_t stream = nullptr;
+    ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
+    Stream* const streamObj = rt_ut::UnwrapOrNull<Stream>(stream);
+    ASSERT_NE(streamObj, nullptr);
+    Event oldEvent(nullptr, RT_EVENT_DDSYNC_NS, nullptr);
+    Event updatedEvent(nullptr, RT_EVENT_DDSYNC_NS | RT_EVENT_TIME_LINE, nullptr);
+    TaskUpdateInfo taskUpdate = {};
+    TaskInfo taskInfo = {};
+    InitExternalRecordUpdateTask(taskInfo, taskUpdate, streamObj, 7U, &oldEvent, &updatedEvent);
+    Driver* const driver = streamObj->Device_()->Driver_();
+    MOCKER_CPP_VIRTUAL(driver, &Driver::HostMemAlloc).expects(once()).will(invoke(AllocateGraphUpdateHostMemory));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::HostMemFree).expects(once()).will(invoke(FreeGraphUpdateHostMemory));
+    MOCKER(UpdateHostSqeBufferAndCopySqeByTask).expects(once()).will(invoke(BuildGraphUpdateSqes));
+    MOCKER(BatchSendH2DAsyncTask).expects(once()).will(returnValue(RT_ERROR_DRV_ERR));
+    std::weak_ptr<void> retainedBuffer;
+    {
+        CaptureModel model(RT_MODEL_CAPTURE_MODEL);
+        model.context_ = streamObj->Context_();
+        ASSERT_EQ(
+            model.AddExternalRecordEvent(&oldEvent, static_cast<uint32_t>(streamObj->Id_()), taskInfo.id),
+            RT_ERROR_NONE);
+        model.InsertGraphUpdateTask(&taskInfo);
+
+        EXPECT_EQ(model.PrepareGraphUpdateProc(streamObj), RT_ERROR_DRV_ERR);
+        ASSERT_EQ(model.updateInfo_.hostSqeUpdateBuffers.size(), 1U);
+        retainedBuffer = model.updateInfo_.hostSqeUpdateBuffers.front();
+        EXPECT_FALSE(retainedBuffer.expired());
+        EXPECT_EQ(model.externalRecordEventItems_.begin()->second, &updatedEvent);
+        EXPECT_TRUE(model.updateInfo_.updateTask.empty());
+        EXPECT_EQ(model.updateInfo_.curApplyUpdateTask.count(&taskInfo), 1U);
+        EXPECT_EQ(taskInfo.u.writeValTask.cqeFlag, TASK_WR_CQE_ALWAYS);
+        EXPECT_TRUE(taskUpdate.updateQueue.empty());
+        EXPECT_EQ(model.updateInfo_.launchCnt, 0U);
+        EXPECT_EQ(model.PrepareGraphUpdateProc(streamObj), RT_ERROR_INVALID_VALUE);
+    }
+    EXPECT_TRUE(retainedBuffer.expired());
+    GlobalMockObject::verify();
+    EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
+}
+
+TEST_F(ExternalEventTaskTest910B, GraphUpdateRejectsUnsupportedTaskWithoutReadingExternalParams)
+{
+    CaptureModel model(RT_MODEL_CAPTURE_MODEL);
+    model.context_ = Runtime::Instance()->CurrentContext();
+    TaskInfo taskInfo = {};
+    taskInfo.type = TS_TASK_TYPE_MEMCPY;
+    model.InsertGraphUpdateTask(&taskInfo);
+    MOCKER_CPP_VIRTUAL(model.context_->Device_()->Driver_(), &Driver::HostMemAlloc).expects(never());
+    MOCKER(BatchSendH2DAsyncTask).expects(never());
+
+    EXPECT_EQ(model.CheckUpdateTask(), RT_ERROR_MODEL_EXE_FAILED);
+    EXPECT_EQ(model.PrepareGraphUpdateProc(nullptr), RT_ERROR_MODEL_EXE_FAILED);
+    EXPECT_EQ(model.updateInfo_.updateTask.count(&taskInfo), 1U);
+    EXPECT_TRUE(model.updateInfo_.curApplyUpdateTask.empty());
+    EXPECT_TRUE(model.updateInfo_.hostSqeUpdateBuffers.empty());
+    EXPECT_EQ(model.updateInfo_.launchCnt, 0U);
+}
+
+TEST_F(ExternalEventTaskTest910B, TimelineExternalRecordMaintainsCqeTrackingWithoutPendingUpdates)
+{
+    rtStream_t stream = nullptr;
+    ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
+    Stream* const streamObj = rt_ut::UnwrapOrNull<Stream>(stream);
+    ASSERT_NE(streamObj, nullptr);
+    Event timelineEvent(nullptr, RT_EVENT_TIME_LINE, nullptr);
+    TaskUpdateInfo taskUpdate = {};
+    TaskInfo taskInfo = {};
+    InitExternalRecordUpdateTask(taskInfo, taskUpdate, streamObj, 7U, &timelineEvent, &timelineEvent);
+    CaptureModel model(RT_MODEL_CAPTURE_MODEL);
+    model.context_ = streamObj->Context_();
+    ASSERT_EQ(
+        model.AddExternalRecordEvent(&timelineEvent, static_cast<uint32_t>(streamObj->Id_()), taskInfo.id),
+        RT_ERROR_NONE);
+    MOCKER(GetTaskInfo).stubs().will(returnValue(&taskInfo));
+    MOCKER_CPP_VIRTUAL(streamObj->Device_()->Driver_(), &Driver::HostMemAlloc).expects(never());
+    MOCKER(BatchSendH2DAsyncTask).expects(never());
+
+    ASSERT_EQ(model.PrepareGraphUpdateProc(streamObj), RT_ERROR_NONE);
+    ASSERT_EQ(model.PrepareGraphUpdateProc(streamObj), RT_ERROR_NONE);
+    EXPECT_EQ(model.updateInfo_.launchCnt, 2U);
+    EXPECT_EQ(model.updateInfo_.totalNeedCqeCnt, 2U);
+    EXPECT_EQ(taskInfo.u.writeValTask.expectCqeCnt, 2U);
+    EXPECT_EQ(taskUpdate.updateQueue.size(), 2U);
+    EXPECT_EQ(streamObj->GetCqePendingCnt(), 2U);
+    EXPECT_TRUE(model.updateInfo_.curApplyUpdateTask.empty());
+    const rtCqReport_t logicCq = {};
+    model.ProcessExternalRecordNormalCqe(&taskInfo, logicCq);
+    model.ProcessExternalRecordNormalCqe(&taskInfo, logicCq);
+    EXPECT_TRUE(taskUpdate.updateQueue.empty());
+    EXPECT_EQ(streamObj->GetCqePendingCnt(), 0U);
+    EXPECT_EQ(model.updateInfo_.totalRecvCqeCnt.Value(), 2U);
+    model.SetSoftwareSqEnable();
+    Notify notify(0, 0U);
+    notify.SetEndGraphModel(&model);
+    TaskInfo endGraphTask = {};
+    endGraphTask.stream = streamObj;
+    MOCKER(static_cast<NothrowNewFunc>(&operator new)).expects(never());
+    ASSERT_EQ(EndGraphNotifyWaitTaskInit(&endGraphTask, 0U, 0U, &notify), RT_ERROR_NONE);
+    EXPECT_EQ(endGraphTask.u.endGraphNotifyWaitTask.updateTask, nullptr);
+    EXPECT_EQ(endGraphTask.u.endGraphNotifyWaitTask.hostSqeUpdateBuffers, nullptr);
+    EXPECT_EQ(endGraphTask.u.endGraphNotifyWaitTask.launchNo, 2U);
+    EXPECT_EQ(endGraphTask.u.endGraphNotifyWaitTask.expectTotalRecvCqeCnt, 2U);
+    EXPECT_TRUE(endGraphTask.u.endGraphNotifyWaitTask.isCurExecuteNeedCqe);
+    EndGraphNotifyWaitTaskUnInit(&endGraphTask);
+    GlobalMockObject::verify();
     EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
 }
 

@@ -463,7 +463,7 @@ struct EndGraphNotifyWaitTaskInfo {
     uint32_t launchNo;
     uint64_t expectTotalRecvCqeCnt;
     std::set<TaskInfo*>* updateTask;
-    void* hostSqeUpdateAddr; // release when end graph task is finished
+    std::vector<std::shared_ptr<void>>* hostSqeUpdateBuffers;
     bool isSoftwareSqCaptureModel;
     bool isCurExecuteNeedCqe;
 };

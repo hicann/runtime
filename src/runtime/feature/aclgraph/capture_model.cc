@@ -186,10 +186,7 @@ CaptureModel::~CaptureModel() noexcept
     }
     logicSqs_.clear();
 
-    if (GetGraphUpdateInfo().hostSqeUpdateAddr != nullptr) {
-        (void)Context_()->Device_()->Driver_()->HostMemFree(GetGraphUpdateInfo().hostSqeUpdateAddr);
-        GetGraphUpdateInfo().hostSqeUpdateAddr = nullptr;
-    }
+    updateInfo_.hostSqeUpdateBuffers.clear();
     updateInfo_.updateTask.clear();
     updateInfo_.curApplyUpdateTask.clear();
 }
@@ -1012,10 +1009,9 @@ rtError_t CaptureModel::PrepareExternalEventRefreshInfo(ExternalEventRefreshInfo
     return RT_ERROR_NONE;
 }
 
-rtError_t CaptureModel::UpdateExternalRecordEventItems(uint32_t& updateSqeNum)
+rtError_t CaptureModel::CheckUpdateTask()
 {
     std::map<std::tuple<uint32_t, uint32_t>, Event*> updatedEventItems;
-    uint32_t pendingUpdateSqeNum = 0U;
     for (const auto& taskInfo : updateInfo_.updateTask) {
         COND_RETURN_AND_MSG_OUTER(
             taskInfo->type != TS_TASK_TYPE_CAPTURE_RECORD_EXTERNAL, RT_ERROR_MODEL_EXE_FAILED, ErrorCode::EE1017,
@@ -1035,12 +1031,6 @@ rtError_t CaptureModel::UpdateExternalRecordEventItems(uint32_t& updateSqeNum)
         Event* const newEvent = taskInfo->updateInfo->latestParams.u.eventRecordUpdateParams.event;
         NULL_PTR_RETURN_MSG(newEvent, RT_ERROR_INVALID_VALUE);
         (void)updatedEventItems.emplace(key, newEvent);
-
-        const TaskWrCqeFlag lastCqeFlag = taskInfo->u.writeValTask.cqeFlag;
-        const TaskWrCqeFlag newCqeFlag = newEvent->IsEventWithTimeline() ? TASK_WR_CQE_ALWAYS : TASK_WR_CQE_NEVER;
-        if (lastCqeFlag != newCqeFlag) {
-            pendingUpdateSqeNum += GetSendSqeNum(taskInfo);
-        }
     }
 
     std::unordered_set<Event*> usedEvents;
@@ -1072,9 +1062,6 @@ rtError_t CaptureModel::UpdateExternalRecordEventItems(uint32_t& updateSqeNum)
     for (const auto& updatedEventItem : updatedEventItems) {
         externalRecordEventItems_.find(updatedEventItem.first)->second = updatedEventItem.second;
     }
-
-    updateSqeNum = pendingUpdateSqeNum;
-    SwapUpdateTask();
     return RT_ERROR_NONE;
 }
 
@@ -1086,12 +1073,59 @@ void CaptureModel::SwapUpdateTask()
     return;
 }
 
+rtError_t CaptureModel::PrepareTaskUpdate(
+    TaskInfo* const taskInfo, std::vector<void*>& dsts, std::vector<void*>& srcs, std::vector<size_t>& sizes)
+{
+    switch (taskInfo->type) {
+        case TS_TASK_TYPE_CAPTURE_RECORD_EXTERNAL:
+            return PrepareExternalRecordTaskUpdateInfo(taskInfo, dsts, srcs, sizes);
+        default:
+            return RT_ERROR_MODEL_EXE_FAILED;
+    }
+}
+
 rtError_t CaptureModel::PrepareExternalRecordTaskUpdateInfo(
-    void* hostSqeUpdateAddrBase, const uint64_t sqeTotalSize, std::vector<void*>& dsts, std::vector<void*>& srcs,
-    std::vector<size_t>& sizes, uint16_t& count)
+    TaskInfo* const taskInfo, std::vector<void*>& dsts, std::vector<void*>& srcs, std::vector<size_t>& sizes)
+{
+    const auto key =
+        std::make_tuple(static_cast<uint32_t>(taskInfo->stream->Id_()), static_cast<uint32_t>(taskInfo->id));
+    const auto eventItem = externalRecordEventItems_.find(key);
+    COND_RETURN_ERROR(
+        (eventItem == externalRecordEventItems_.end()), RT_ERROR_INVALID_VALUE,
+        "task is not match, model_id=%u, stream_id=%d, task_id=%hu.", Id_(), taskInfo->stream->Id_(), taskInfo->id);
+    Event* const event = eventItem->second;
+    const TaskWrCqeFlag lastCqeFlag = taskInfo->u.writeValTask.cqeFlag;
+    const TaskWrCqeFlag newCqeFlag = event->IsEventWithTimeline() ? TASK_WR_CQE_ALWAYS : TASK_WR_CQE_NEVER;
+    if (lastCqeFlag == newCqeFlag) {
+        return RT_ERROR_NONE;
+    }
+
+    const size_t copySize = sizeof(rtStarsSqe_t) * static_cast<size_t>(GetSendSqeNum(taskInfo));
+    Driver* const deviceDrv = Context_()->Device_()->Driver_();
+    void* hostAddr = nullptr;
+    rtError_t error = deviceDrv->HostMemAlloc(&hostAddr, copySize, Context_()->Device_()->Id_());
+    COND_PROC((error != RT_ERROR_NONE), return error;);
+    NULL_PTR_RETURN_MSG(hostAddr, RT_ERROR_MEMORY_ALLOCATION);
+    std::shared_ptr<void> hostBuffer(hostAddr, [deviceDrv](void* addr) {
+        if (!Runtime::IsProcessExiting(Runtime::Instance())) {
+            (void)deviceDrv->HostMemFree(addr);
+        }
+    });
+
+    taskInfo->u.writeValTask.cqeFlag = newCqeFlag;
+    error = UpdateHostSqeBufferAndCopySqeByTask(taskInfo, hostAddr);
+    COND_PROC((error != RT_ERROR_NONE), return error;);
+
+    srcs.push_back(hostAddr);
+    dsts.push_back(taskInfo->stream->GetDeviceSqeAddrByPos(taskInfo->pos));
+    sizes.push_back(copySize);
+    updateInfo_.hostSqeUpdateBuffers.push_back(std::move(hostBuffer));
+    return RT_ERROR_NONE;
+}
+
+rtError_t CaptureModel::PrepareExternalRecordReplayInfo()
 {
     GraphUpdateInfo& updateInfo = GetGraphUpdateInfo();
-    uint64_t offset = 0U;
     updateInfo.isCurExecuteNeedCqe = 0;
     for (const auto& taskRef : externalRecordEventItems_) {
         Event* event = taskRef.second;
@@ -1099,7 +1133,6 @@ rtError_t CaptureModel::PrepareExternalRecordTaskUpdateInfo(
         const uint32_t taskId = std::get<1>(taskRef.first);
         TaskInfo* const taskInfo = GetTaskInfo(Context_()->Device_(), streamId, taskId);
         COND_PROC((taskInfo == nullptr), return RT_ERROR_INVALID_VALUE;);
-        const TaskWrCqeFlag lastCqeFlag = taskInfo->u.writeValTask.cqeFlag;
         TaskWrCqeFlag newCqeFlag = TASK_WR_CQE_NEVER;
         uint64_t expectCqeNo = 0U;
         const bool isTimelineEvent = event->IsEventWithTimeline();
@@ -1113,23 +1146,6 @@ rtError_t CaptureModel::PrepareExternalRecordTaskUpdateInfo(
         }
 
         taskInfo->u.writeValTask.cqeFlag = newCqeFlag;
-
-        if (lastCqeFlag != newCqeFlag) {
-            const size_t copySize = sizeof(rtStarsSqe_t) * static_cast<size_t>(GetSendSqeNum(taskInfo));
-            COND_RETURN_ERROR(
-                ((offset + copySize) > sqeTotalSize), RT_ERROR_INVALID_VALUE,
-                "offset is invalid, model_id=%u, offset=%lu, sqeTotalSize=%lu.", Id_(), offset, sqeTotalSize);
-            void* const hostAddr = RtPtrToPtr<void*>(RtPtrToPtr<uint8_t*>(hostSqeUpdateAddrBase) + offset);
-            const rtError_t error = UpdateHostSqeBufferAndCopySqeByTask(taskInfo, hostAddr);
-            COND_PROC((error != RT_ERROR_NONE), return error;);
-
-            srcs.push_back(hostAddr);
-            dsts.push_back(taskInfo->stream->GetDeviceSqeAddrByPos(taskInfo->pos));
-            sizes.push_back(copySize);
-
-            offset += static_cast<uint64_t>(copySize);
-            count++;
-        }
 
         if ((updateInfo.curApplyUpdateTask.count(taskInfo) > 0U) || isTimelineEvent) {
             TaskUpdateItem updateItem = {};
@@ -1152,40 +1168,37 @@ rtError_t CaptureModel::PrepareExternalRecordTaskUpdateInfo(
 
 rtError_t CaptureModel::PrepareGraphUpdateProc(Stream* const exeStm)
 {
-    uint32_t updateSqeNum = 0U;
-    uint64_t sqeTotalSize = 0UL;
     GraphUpdateInfo& updateInfo = GetGraphUpdateInfo();
-    rtError_t error = RT_ERROR_NONE;
-    {
-        const std::lock_guard<std::mutex> graphUpdateLock(updateInfo.updateMutex);
-        error = UpdateExternalRecordEventItems(updateSqeNum);
-        COND_PROC((error != RT_ERROR_NONE), return error;);
-    }
-
-    if (updateSqeNum != 0U) {
-        COND_RETURN_ERROR(
-            (updateInfo.hostSqeUpdateAddr != nullptr), RT_ERROR_INVALID_VALUE,
-            "host sqe update addr must be null, model_id=%u.", Id_());
-        sqeTotalSize = updateSqeNum * static_cast<uint64_t>(sizeof(rtStarsSqe_t));
-        Driver* const deviceDrv = Context_()->Device_()->Driver_();
-        error = deviceDrv->HostMemAlloc(&(updateInfo.hostSqeUpdateAddr), sqeTotalSize, Context_()->Device_()->Id_());
-        COND_PROC((error != RT_ERROR_NONE), return error;);
-    }
-
     std::vector<void*> dsts;
     std::vector<void*> srcs;
     std::vector<size_t> sizes;
-    uint16_t count = 0U;
-    error = PrepareExternalRecordTaskUpdateInfo(updateInfo.hostSqeUpdateAddr, sqeTotalSize, dsts, srcs, sizes, count);
-    COND_PROC((error != RT_ERROR_NONE), return error;);
-
-    if (count != 0U) {
-        error = BatchSendH2DAsyncTask(
-            dsts.data(), sizes.data(), srcs.data(), sizes.data(), static_cast<size_t>(count), exeStm);
+    rtError_t error = RT_ERROR_NONE;
+    {
+        const std::lock_guard<std::mutex> graphUpdateLock(updateInfo.updateMutex);
         COND_RETURN_ERROR(
-            (error != RT_ERROR_NONE), error, "sqe batch update async failed, model_id=%u, count=%hu.", Id_(), count);
+            !updateInfo.hostSqeUpdateBuffers.empty(), RT_ERROR_INVALID_VALUE,
+            "host sqe update buffers must be empty, model_id=%u.", Id_());
+        error = CheckUpdateTask();
+        COND_PROC((error != RT_ERROR_NONE), return error;);
+        SwapUpdateTask();
     }
 
+    ScopeGuard releaseBuffers([&updateInfo]() { updateInfo.hostSqeUpdateBuffers.clear(); });
+    for (TaskInfo* const taskInfo : updateInfo.curApplyUpdateTask) {
+        error = PrepareTaskUpdate(taskInfo, dsts, srcs, sizes);
+        COND_PROC((error != RT_ERROR_NONE), return error;);
+    }
+    releaseBuffers.ReleaseGuard();
+
+    if (!srcs.empty()) {
+        error = BatchSendH2DAsyncTask(dsts.data(), sizes.data(), srcs.data(), sizes.data(), srcs.size(), exeStm);
+        COND_RETURN_ERROR(
+            (error != RT_ERROR_NONE), error, "sqe batch update async failed, model_id=%u, count=%zu.", Id_(),
+            srcs.size());
+    }
+
+    error = PrepareExternalRecordReplayInfo();
+    COND_PROC((error != RT_ERROR_NONE), return error;);
     updateInfo.launchCnt++;
 
     return RT_ERROR_NONE;

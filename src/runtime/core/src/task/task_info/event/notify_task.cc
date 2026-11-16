@@ -386,20 +386,25 @@ rtError_t AttachExternalEventsRes(TaskInfo* taskInfo, Model* captureModel)
 
 rtError_t AttachGraphUpdateRes(TaskInfo* const taskInfo, CaptureModel* const captureModel)
 {
-    auto updateTask = std::unique_ptr<std::set<TaskInfo*>>(new (std::nothrow) std::set<TaskInfo*>());
-    COND_RETURN_AND_MSG_OUTER(
-        updateTask == nullptr, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013, sizeof(std::set<TaskInfo*>), "new");
-
     EndGraphNotifyWaitTaskInfo* const endGraphWaitTask = &(taskInfo->u.endGraphNotifyWaitTask);
     GraphUpdateInfo& updateInfo = captureModel->GetGraphUpdateInfo();
     endGraphWaitTask->launchNo = updateInfo.launchCnt;
     endGraphWaitTask->expectTotalRecvCqeCnt = updateInfo.totalNeedCqeCnt;
-    updateTask->swap(updateInfo.curApplyUpdateTask);
-    endGraphWaitTask->updateTask = updateTask.release();
-    endGraphWaitTask->hostSqeUpdateAddr = updateInfo.hostSqeUpdateAddr;
-    updateInfo.hostSqeUpdateAddr = nullptr;
     endGraphWaitTask->isCurExecuteNeedCqe = updateInfo.isCurExecuteNeedCqe;
-
+    if (!updateInfo.curApplyUpdateTask.empty()) {
+        endGraphWaitTask->updateTask = new (std::nothrow) std::set<TaskInfo*>();
+        COND_RETURN_AND_MSG_OUTER(
+            endGraphWaitTask->updateTask == nullptr, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013,
+            sizeof(std::set<TaskInfo*>), "new");
+        endGraphWaitTask->updateTask->swap(updateInfo.curApplyUpdateTask);
+    }
+    if (!updateInfo.hostSqeUpdateBuffers.empty()) {
+        endGraphWaitTask->hostSqeUpdateBuffers = new (std::nothrow) std::vector<std::shared_ptr<void>>();
+        COND_RETURN_AND_MSG_OUTER(
+            endGraphWaitTask->hostSqeUpdateBuffers == nullptr, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013,
+            sizeof(std::vector<std::shared_ptr<void>>), "new");
+        endGraphWaitTask->hostSqeUpdateBuffers->swap(updateInfo.hostSqeUpdateBuffers);
+    }
     return RT_ERROR_NONE;
 }
 
@@ -419,7 +424,7 @@ rtError_t EndGraphNotifyWaitTaskInit(
     endGraphWaitTask->timeout = timeOutNum;
     endGraphWaitTask->externalEventsRes = nullptr;
     endGraphWaitTask->updateTask = nullptr;
-    endGraphWaitTask->hostSqeUpdateAddr = nullptr;
+    endGraphWaitTask->hostSqeUpdateBuffers = nullptr;
     endGraphWaitTask->isCurExecuteNeedCqe = false;
     CaptureModel* const captureModel = dynamic_cast<CaptureModel*>(endGraphWaitTask->endGraphModel);
     endGraphWaitTask->isSoftwareSqCaptureModel = (captureModel != nullptr) && captureModel->IsSoftwareSqEnable();
@@ -445,11 +450,7 @@ void EndGraphNotifyWaitTaskUnInit(TaskInfo* taskInfo)
     }
     DELETE_O(endGraphWaitTask->updateTask);
 
-    if (endGraphWaitTask->hostSqeUpdateAddr != nullptr) {
-        Driver* const deviceDrv = taskInfo->stream->Device_()->Driver_();
-        (void)deviceDrv->HostMemFree(endGraphWaitTask->hostSqeUpdateAddr);
-        endGraphWaitTask->hostSqeUpdateAddr = nullptr;
-    }
+    DELETE_O(endGraphWaitTask->hostSqeUpdateBuffers);
 }
 
 static void MapNotifyErrorCodeForFastRecovery(TaskInfo* taskInfo, const uint32_t devId)
@@ -574,11 +575,7 @@ void DoCompleteSuccessForEndGraphNotifyWaitTask(TaskInfo* taskInfo, const uint32
     }
 
     DELETE_O(endGraphWaitTask->updateTask);
-    if (endGraphWaitTask->hostSqeUpdateAddr != nullptr) {
-        Driver* const deviceDrv = taskInfo->stream->Device_()->Driver_();
-        (void)deviceDrv->HostMemFree(endGraphWaitTask->hostSqeUpdateAddr);
-        endGraphWaitTask->hostSqeUpdateAddr = nullptr;
-    }
+    DELETE_O(endGraphWaitTask->hostSqeUpdateBuffers);
 
     if (Runtime::Instance()->ChipIsHaveStars() && (taskInfo->bindFlag == 0U)) {
         Stream* const stream = taskInfo->stream;
