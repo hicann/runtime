@@ -23,6 +23,7 @@
 #include "event.hpp"
 #include "event_task.h"
 #include "notify.hpp"
+#include "notify_task.h"
 #include "profiler.hpp"
 #include "api_impl.hpp"
 #include "api.hpp"
@@ -1164,6 +1165,35 @@ rtError_t CaptureModel::PrepareExternalRecordReplayInfo()
     }
 
     return RT_ERROR_NONE;
+}
+
+rtError_t AttachGraphUpdateRes(TaskInfo* const taskInfo, CaptureModel* const captureModel)
+{
+    EndGraphNotifyWaitTaskInfo* const endGraphWaitTask = &(taskInfo->u.endGraphNotifyWaitTask);
+    GraphUpdateInfo& updateInfo = captureModel->GetGraphUpdateInfo();
+    endGraphWaitTask->launchNo = updateInfo.launchCnt;
+    endGraphWaitTask->expectTotalRecvCqeCnt = updateInfo.totalNeedCqeCnt;
+    endGraphWaitTask->isCurExecuteNeedCqe = updateInfo.isCurExecuteNeedCqe;
+    if (!updateInfo.curApplyUpdateTask.empty()) {
+        endGraphWaitTask->updateTask = new (std::nothrow) std::set<TaskInfo*>();
+        COND_RETURN_AND_MSG_OUTER(
+            endGraphWaitTask->updateTask == nullptr, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013,
+            sizeof(std::set<TaskInfo*>), "new");
+        endGraphWaitTask->updateTask->swap(updateInfo.curApplyUpdateTask);
+    }
+    if (!updateInfo.hostSqeUpdateBuffers.empty()) {
+        endGraphWaitTask->hostSqeUpdateBuffers = new (std::nothrow) std::vector<std::shared_ptr<void>>();
+        COND_RETURN_AND_MSG_OUTER(
+            endGraphWaitTask->hostSqeUpdateBuffers == nullptr, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013,
+            sizeof(std::vector<std::shared_ptr<void>>), "new");
+        endGraphWaitTask->hostSqeUpdateBuffers->swap(updateInfo.hostSqeUpdateBuffers);
+    }
+    return RT_ERROR_NONE;
+}
+
+void ReleaseGraphUpdateHostBuffers(TaskInfo* const taskInfo)
+{
+    DELETE_O(taskInfo->u.endGraphNotifyWaitTask.hostSqeUpdateBuffers);
 }
 
 rtError_t CaptureModel::PrepareGraphUpdateProc(Stream* const exeStm)

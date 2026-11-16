@@ -16,6 +16,8 @@
 
 namespace cce {
 namespace runtime {
+class CaptureModel;
+
 rtError_t NotifyRecordTaskInit(
     TaskInfo* taskInfo, const uint32_t notifyIndex, const int32_t deviceIndex, const uint32_t phyIndex,
     const SingleBitNotifyRecordInfo* const singleInfo, const rtCntNtyRecordInfo_t* const countInfo, void* const notify,
@@ -36,6 +38,8 @@ void ToCommandBodyForNotifyWaitTask(TaskInfo* taskInfo, rtCommand_t* const comma
 void DoCompleteSuccessForNotifyWaitTask(TaskInfo* taskInfo, const uint32_t devId);
 void PrintErrorInfoForNotifyWaitTask(TaskInfo* const taskInfo, const uint32_t devId);
 rtError_t AttachExternalEventsRes(TaskInfo* taskInfo, Model* captureModel);
+rtError_t AttachGraphUpdateRes(TaskInfo* const taskInfo, CaptureModel* const captureModel);
+void ReleaseGraphUpdateHostBuffers(TaskInfo* const taskInfo);
 void NotifyWaitTaskUnInit(TaskInfo* taskInfo);
 TaskInfo* GetRealReportFaultTaskForNotifyWaitTask(TaskInfo* const taskInfo, const void* info);
 rtError_t EndGraphNotifyWaitTaskInit(

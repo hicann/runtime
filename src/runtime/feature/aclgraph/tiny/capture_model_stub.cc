@@ -10,6 +10,7 @@
 #include "capture_model.hpp"
 #include "capture_func.hpp"
 #include "capture_model_utils.hpp"
+#include "notify_task.h"
 #include "logic_sq.hpp"
 #include "logic_sq_manage.hpp"
 
@@ -366,6 +367,15 @@ rtError_t CaptureModel::PrepareExternalEventRefreshInfo(ExternalEventRefreshInfo
     UNUSED(refreshInfo);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
+
+rtError_t AttachGraphUpdateRes(TaskInfo* const taskInfo, CaptureModel* const captureModel)
+{
+    UNUSED(taskInfo);
+    UNUSED(captureModel);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+void ReleaseGraphUpdateHostBuffers(TaskInfo* const taskInfo) { UNUSED(taskInfo); }
 
 rtError_t CaptureModel::PrepareGraphUpdateProc(Stream* const exeStm)
 {

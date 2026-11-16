@@ -384,30 +384,6 @@ rtError_t AttachExternalEventsRes(TaskInfo* taskInfo, Model* captureModel)
     return RT_ERROR_NONE;
 }
 
-rtError_t AttachGraphUpdateRes(TaskInfo* const taskInfo, CaptureModel* const captureModel)
-{
-    EndGraphNotifyWaitTaskInfo* const endGraphWaitTask = &(taskInfo->u.endGraphNotifyWaitTask);
-    GraphUpdateInfo& updateInfo = captureModel->GetGraphUpdateInfo();
-    endGraphWaitTask->launchNo = updateInfo.launchCnt;
-    endGraphWaitTask->expectTotalRecvCqeCnt = updateInfo.totalNeedCqeCnt;
-    endGraphWaitTask->isCurExecuteNeedCqe = updateInfo.isCurExecuteNeedCqe;
-    if (!updateInfo.curApplyUpdateTask.empty()) {
-        endGraphWaitTask->updateTask = new (std::nothrow) std::set<TaskInfo*>();
-        COND_RETURN_AND_MSG_OUTER(
-            endGraphWaitTask->updateTask == nullptr, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013,
-            sizeof(std::set<TaskInfo*>), "new");
-        endGraphWaitTask->updateTask->swap(updateInfo.curApplyUpdateTask);
-    }
-    if (!updateInfo.hostSqeUpdateBuffers.empty()) {
-        endGraphWaitTask->hostSqeUpdateBuffers = new (std::nothrow) std::vector<std::shared_ptr<void>>();
-        COND_RETURN_AND_MSG_OUTER(
-            endGraphWaitTask->hostSqeUpdateBuffers == nullptr, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013,
-            sizeof(std::vector<std::shared_ptr<void>>), "new");
-        endGraphWaitTask->hostSqeUpdateBuffers->swap(updateInfo.hostSqeUpdateBuffers);
-    }
-    return RT_ERROR_NONE;
-}
-
 rtError_t EndGraphNotifyWaitTaskInit(
     TaskInfo* taskInfo, const uint32_t notifyIndex, const uint32_t timeOutNum, Notify* notify)
 {
@@ -450,7 +426,7 @@ void EndGraphNotifyWaitTaskUnInit(TaskInfo* taskInfo)
     }
     DELETE_O(endGraphWaitTask->updateTask);
 
-    DELETE_O(endGraphWaitTask->hostSqeUpdateBuffers);
+    ReleaseGraphUpdateHostBuffers(taskInfo);
 }
 
 static void MapNotifyErrorCodeForFastRecovery(TaskInfo* taskInfo, const uint32_t devId)
@@ -575,7 +551,7 @@ void DoCompleteSuccessForEndGraphNotifyWaitTask(TaskInfo* taskInfo, const uint32
     }
 
     DELETE_O(endGraphWaitTask->updateTask);
-    DELETE_O(endGraphWaitTask->hostSqeUpdateBuffers);
+    ReleaseGraphUpdateHostBuffers(taskInfo);
 
     if (Runtime::Instance()->ChipIsHaveStars() && (taskInfo->bindFlag == 0U)) {
         Stream* const stream = taskInfo->stream;
