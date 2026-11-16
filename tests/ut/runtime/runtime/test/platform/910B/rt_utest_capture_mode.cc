@@ -9,9 +9,11 @@
  */
 
 #include "driver/ascend_hal.h"
+#include <algorithm>
 #include <atomic>
 #include <mutex>
 #include <thread>
+#include <vector>
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 #include "securec.h"
@@ -26,6 +28,7 @@
 #include "rt_unwrap.h"
 #include "rt_capture_model_mock_helper.hpp"
 #include "raw_device.hpp"
+#include "stars_engine.hpp"
 #include "module.hpp"
 #include "notify.hpp"
 #include "event.hpp"
@@ -1374,31 +1377,58 @@ protected:
     static void TearDownTestCase() {}
 
     std::string socVersion_;
+    RawDevice* device_ = nullptr;
+    const uint8_t* previousCapability_ = nullptr;
+    uint32_t previousCapabilityLen_ = 0U;
+    uint32_t previousCapabilityDepth_ = 0U;
+    std::vector<uint8_t> capability_;
 
     virtual void SetUp()
     {
         rtSetDevice(0);
         socVersion_ = GlobalContainer::GetSocVersion();
         GlobalContainer::SetSocVersion("Ascend910B2");
-        Device* device = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
-        MOCKER_CPP_VIRTUAL(device, &Device::CheckFeatureSupport)
-            .stubs()
-            .with(eq(TS_FEATURE_SOFTWARE_SQ_ENABLE))
-            .will(returnValue(true));
-        MOCKER_CPP_VIRTUAL(device, &Device::CheckFeatureSupport)
-            .stubs()
-            .with(eq(TS_FEATURE_ACLGRAPH_COND_OP))
-            .will(returnValue(true));
-        MOCKER_CPP_VIRTUAL(device, &Device::CheckFeatureSupport)
-            .stubs()
-            .with(eq(TS_FEATURE_SQ_DYNAMIC_ENABLE_CQE))
-            .will(returnValue(true));
+        device_ = static_cast<RawDevice*>(Runtime::Instance()->GetDevice(0U, 0U));
+        auto* engine = static_cast<StarsEngine*>(device_->Engine_());
+        engine->DestroyRecycleThread();
+        previousCapability_ = device_->tschCapability_;
+        previousCapabilityLen_ = device_->tschCapaLen_;
+        previousCapabilityDepth_ = device_->tschCapaDepth_;
+        const uint32_t requiredLen = TS_FEATURE_AICORE_SYNC_MATCH_CHECK / ONE_BYTE_BITS + 1U;
+        const bool hasCapability = previousCapability_ != nullptr && previousCapabilityDepth_ != 0U;
+        const uint32_t depth = hasCapability ? previousCapabilityDepth_ : requiredLen;
+        capability_.resize(std::max(previousCapabilityLen_, std::min(requiredLen, depth)), 0U);
+        if (hasCapability) {
+            std::copy_n(previousCapability_, previousCapabilityLen_, capability_.begin());
+        } else {
+            // Preserve the legacy feature results when no TSCH capability table is installed.
+            for (uint32_t feature = 0U; feature <= TS_FEATURE_AICORE_SYNC_MATCH_CHECK; ++feature) {
+                if (device_->CheckFeatureSupport(feature)) {
+                    capability_[feature / ONE_BYTE_BITS] |= 1U << (feature % ONE_BYTE_BITS);
+                }
+            }
+        }
+        for (const auto feature :
+             {TS_FEATURE_SOFTWARE_SQ_ENABLE, TS_FEATURE_ACLGRAPH_COND_OP, TS_FEATURE_SQ_DYNAMIC_ENABLE_CQE}) {
+            capability_[(feature / ONE_BYTE_BITS) % depth] |= 1U << (feature % ONE_BYTE_BITS);
+        }
+        // Use real feature queries, including those made by the background recycler.
+        device_->tschCapability_ = capability_.data();
+        device_->tschCapaLen_ = static_cast<uint32_t>(capability_.size());
+        device_->tschCapaDepth_ = depth;
+        engine->CreateRecycleThread();
         MOCKER(CheckCaptureModelSupportSoftwareSq).stubs().will(returnValue(RT_ERROR_NONE));
     }
 
     virtual void TearDown()
     {
+        auto* engine = static_cast<StarsEngine*>(device_->Engine_());
+        engine->DestroyRecycleThread();
+        device_->tschCapability_ = previousCapability_;
+        device_->tschCapaLen_ = previousCapabilityLen_;
+        device_->tschCapaDepth_ = previousCapabilityDepth_;
         GlobalContainer::SetSocVersion(socVersion_);
+        engine->CreateRecycleThread();
         rtDeviceReset(0);
         GlobalMockObject::verify();
     }

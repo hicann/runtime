@@ -1681,6 +1681,9 @@ TEST_F(ModelTest, save_aicpu_stream_task)
     command.type = TS_TASK_TYPE_KERNEL_AICORE;
     error = model->SaveAicpuStreamTask(stream_var, &command);
     EXPECT_EQ(error, RT_ERROR_NONE);
+
+    error = rtStreamDestroy(stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
 TEST_F(ModelTest, model_abort)

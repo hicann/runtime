@@ -3178,6 +3178,9 @@ TEST_F(StreamTest, rtsStreamLaunchBlockingAttribute_nullStreamUsesDefaultStream)
     EXPECT_EQ(
         StreamLaunchBlocking::SetLaunchBlockingMode(defaultStream, RT_STREAM_LAUNCH_BLOCKING_MODE_CTRL_BY_ENV),
         RT_ERROR_NONE);
+
+    // Finish device initialization tasks before the fixture resets stream counters.
+    ctx->Device_()->WaitCompletion();
 }
 
 TEST_F(StreamTest, rtsStreamLaunchBlockingAttribute_rejectsUnsupportedStreams)
