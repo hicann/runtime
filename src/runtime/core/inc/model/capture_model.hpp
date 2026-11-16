@@ -106,6 +106,7 @@ public:
 
     void EnterCaptureNotify(const int32_t singleOperStmId, const int32_t captureStmId);
     void ExitCaptureNotify();
+    void ExitCaptureNotifyForSingleModel();
 
     void SetCaptureModelStatus(RtCaptureModelStatus status) { captureModelStatus_ = status; }
 

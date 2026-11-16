@@ -390,7 +390,6 @@ void StreamCapture::ExitCapture(Stream* stm)
         CaptureModel* const captureModel = dynamic_cast<CaptureModel*>(captureStream->Model_());
         if (captureModel != nullptr) {
             captureModel->ExitCaptureNotify();
-            captureModel->SetModelCacheOpInfoSwitch(0U);
         }
     }
 

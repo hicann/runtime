@@ -1316,7 +1316,7 @@ void CaptureModel::EnterCaptureNotify(const int32_t singleOperStmId, const int32
     InsertSingleOperStmIdAndCaptureStmId(singleOperStmId, captureStmId);
 }
 
-void CaptureModel::ExitCaptureNotify()
+void CaptureModel::ExitCaptureNotifyForSingleModel()
 {
     SetCaptureModelStatus(RtCaptureModelStatus::READY);
 
@@ -1340,6 +1340,21 @@ void CaptureModel::ExitCaptureNotify()
     }
     singleOperEvents_.clear();
 }
+
+void CaptureModel::ExitCaptureNotify()
+{
+    std::vector<CaptureModel*> models;
+    models.push_back(this);
+    auto& subs = GetAllSubCaptureModels();
+    models.insert(models.end(), subs.begin(), subs.end());
+
+    for (CaptureModel* curMdl : models) {
+        COND_PROC(curMdl->GetCaptureModelStatus() == RtCaptureModelStatus::READY, continue;)
+        curMdl->ExitCaptureNotifyForSingleModel();
+        curMdl->SetModelCacheOpInfoSwitch(0U);
+    }
+}
+
 const TaskGroup* CaptureModel::GetTaskGroup(uint16_t streamId, uint16_t taskId)
 {
     const std::unique_lock<std::mutex> lk(taskGroupListMutex_);
