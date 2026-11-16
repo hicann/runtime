@@ -1191,11 +1191,6 @@ rtError_t AttachGraphUpdateRes(TaskInfo* const taskInfo, CaptureModel* const cap
     return RT_ERROR_NONE;
 }
 
-void ReleaseGraphUpdateHostBuffers(TaskInfo* const taskInfo)
-{
-    DELETE_O(taskInfo->u.endGraphNotifyWaitTask.hostSqeUpdateBuffers);
-}
-
 rtError_t CaptureModel::PrepareGraphUpdateProc(Stream* const exeStm)
 {
     GraphUpdateInfo& updateInfo = GetGraphUpdateInfo();

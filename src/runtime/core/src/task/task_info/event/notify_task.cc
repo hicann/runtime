@@ -426,7 +426,7 @@ void EndGraphNotifyWaitTaskUnInit(TaskInfo* taskInfo)
     }
     DELETE_O(endGraphWaitTask->updateTask);
 
-    ReleaseGraphUpdateHostBuffers(taskInfo);
+    DELETE_O(endGraphWaitTask->hostSqeUpdateBuffers);
 }
 
 static void MapNotifyErrorCodeForFastRecovery(TaskInfo* taskInfo, const uint32_t devId)
@@ -551,7 +551,7 @@ void DoCompleteSuccessForEndGraphNotifyWaitTask(TaskInfo* taskInfo, const uint32
     }
 
     DELETE_O(endGraphWaitTask->updateTask);
-    ReleaseGraphUpdateHostBuffers(taskInfo);
+    DELETE_O(endGraphWaitTask->hostSqeUpdateBuffers);
 
     if (Runtime::Instance()->ChipIsHaveStars() && (taskInfo->bindFlag == 0U)) {
         Stream* const stream = taskInfo->stream;

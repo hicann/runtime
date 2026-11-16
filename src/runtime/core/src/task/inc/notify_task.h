@@ -39,7 +39,6 @@ void DoCompleteSuccessForNotifyWaitTask(TaskInfo* taskInfo, const uint32_t devId
 void PrintErrorInfoForNotifyWaitTask(TaskInfo* const taskInfo, const uint32_t devId);
 rtError_t AttachExternalEventsRes(TaskInfo* taskInfo, Model* captureModel);
 rtError_t AttachGraphUpdateRes(TaskInfo* const taskInfo, CaptureModel* const captureModel);
-void ReleaseGraphUpdateHostBuffers(TaskInfo* const taskInfo);
 void NotifyWaitTaskUnInit(TaskInfo* taskInfo);
 TaskInfo* GetRealReportFaultTaskForNotifyWaitTask(TaskInfo* const taskInfo, const void* info);
 rtError_t EndGraphNotifyWaitTaskInit(

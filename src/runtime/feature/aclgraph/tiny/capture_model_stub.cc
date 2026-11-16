@@ -375,8 +375,6 @@ rtError_t AttachGraphUpdateRes(TaskInfo* const taskInfo, CaptureModel* const cap
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-void ReleaseGraphUpdateHostBuffers(TaskInfo* const taskInfo) { UNUSED(taskInfo); }
-
 rtError_t CaptureModel::PrepareGraphUpdateProc(Stream* const exeStm)
 {
     UNUSED(exeStm);
