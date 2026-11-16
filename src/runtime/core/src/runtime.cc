@@ -2914,38 +2914,10 @@ bool Runtime::HasRuntimeExitHostState() const
            (aicpuStreamIdBitmap_ != nullptr) || (cbSubscribe_ != nullptr) || (hbmRasThread_ != nullptr);
 }
 
-void Runtime::ResetPersistingL2CacheSizes()
-{
-    for (uint32_t deviceId = 0U; deviceId < RT_MAX_DEV_NUM; ++deviceId) {
-        ResetPersistingL2CacheSizes(deviceId);
-    }
-}
-
-void Runtime::ResetPersistingL2CacheSizes(const uint32_t deviceId)
-{
-    if (!persistingL2CacheSet_[deviceId].load()) {
-        return;
-    }
-
-    // The driver treats an all-zero config as a reset; no capacity query is needed.
-    L2CachePersistConfig bufContext{};
-    const rtError_t error = NpuDriver::SetDeviceInfoByBuff(
-        deviceId, MODULE_TYPE_QOS, INFO_TYPE_L2_PERSIST_CAP, &bufContext, sizeof(bufContext));
-    if (error == RT_ERROR_NONE) {
-        persistingL2CacheSet_[deviceId].store(false);
-    } else {
-        RT_LOG(
-            RT_LOG_WARNING, "Reset persisting L2 cache size failed, device_id=%u, retCode=%#x.", deviceId,
-            static_cast<uint32_t>(error));
-    }
-    RT_LOG(RT_LOG_DEBUG, "Reset persisting L2 cache size done, device_id=%u.", deviceId);
-}
-
 void Runtime::PrepareProcessExitNoThrow()
 {
     SetRuntimeExiting(true);
     isExiting_ = true;
-    ResetPersistingL2CacheSizes();
     GlobalStateManager::GetInstance().ForceUnlocked();
     DestroyReportRasThread();
     (void)WaitMonitorExit();
@@ -3466,8 +3438,6 @@ void Runtime::FinalizeDeviceRelease(RefObject<Device*>& refObj, Device* dev, con
     if (tsId == RT_TSC_ID) {
         suspendConfigs_[devId] = {};
     }
-    // Reset while the driver is still open, before detaching the device slot.
-    ResetPersistingL2CacheSizes(devId);
     refObj.ResetVal();
     if (!isExiting_) {
         NotifyProcWhenReleaseDevice(devId);

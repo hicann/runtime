@@ -196,7 +196,6 @@ public:
     ~Runtime() override;
     rtError_t Init() override;
     void PrepareProcessExitNoThrow();
-    void MarkPersistingL2CacheSet(const uint32_t deviceId) { persistingL2CacheSet_[deviceId].store(true); }
     // Singleton instance.
     static Runtime* Instance()
     {
@@ -749,8 +748,6 @@ private:
     void PrimaryContextCallBack(const Context* const ctx, const uint32_t devId);
     void PrimaryContextCallBackAfterTeardown(const uint32_t devId) const;
     bool HasRuntimeExitHostState() const;
-    void ResetPersistingL2CacheSizes();
-    void ResetPersistingL2CacheSizes(const uint32_t deviceId);
     bool AcquirePrimaryXpuContextForRelease(Context*& ctx);
     rtError_t FinalizePrimaryXpuContextRelease(Context* ctx);
     rtError_t StartAicpuExecutorTracked(const uint32_t devId, const uint32_t tsId, bool* aicpuExecutorStarted) const;
@@ -976,7 +973,6 @@ private:
     DevProperties curChipProperties_;
     std::mutex memMapSelectedLinkMutex_;
     bool isRuntimeExiting_{false};
-    std::atomic<bool> persistingL2CacheSet_[RT_MAX_DEV_NUM]{};
     ApiEvent* apiEvent_;
     ApiEvent* apiImplEvent_;
     ApiSnapshot* apiSnapshot_;

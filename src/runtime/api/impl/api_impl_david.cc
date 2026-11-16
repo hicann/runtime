@@ -61,7 +61,6 @@
 #include "task.hpp"
 #include "context_data_manage.h"
 #include "enum_desc.hpp"
-#include "npu_driver.hpp"
 
 namespace cce {
 namespace runtime {
@@ -1984,68 +1983,6 @@ static rtError_t SetLimitSizeByType(const rtLimitType_t type, const uint32_t val
     return RT_ERROR_NONE;
 }
 
-rtError_t ApiImplDavid::SetPersistingL2CacheSize(const uint32_t val)
-{
-    Context* const curCtx = CurrentContext();
-    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    Device* const dev = curCtx->Device_();
-    NULL_PTR_RETURN(dev, RT_ERROR_DEVICE_NULL);
-    const uint32_t deviceId = dev->Id_();
-    COND_RETURN_ERROR(deviceId >= RT_MAX_DEV_NUM, RT_ERROR_INVALID_VALUE, "Invalid driver device ID %u.", deviceId);
-
-    int64_t totalCapacity = 0;
-    rtError_t error = GetDeviceInfoByAttr(deviceId, RT_DEV_ATTR_L2_CACHE_SIZE, &totalCapacity);
-    ERROR_RETURN(error, "Get L2 cache capacity failed, device_id=%u.", deviceId);
-    COND_RETURN_ERROR(
-        (totalCapacity < 0) || (static_cast<uint64_t>(totalCapacity) > UINT32_MAX), RT_ERROR_INVALID_VALUE,
-        "L2 cache capacity cannot be represented by uint32_t, device_id=%u.", deviceId);
-    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
-        static_cast<int64_t>(val) > totalCapacity, RT_ERROR_INVALID_VALUE, "Setting the persisting L2 cache size",
-        RtFmtMsg("%u", val), "val", RtFmtMsg("[0, %" PRId64 "]", totalCapacity));
-
-    L2CachePersistConfig bufContext{};
-    bufContext.total_capacity = static_cast<uint32_t>(totalCapacity);
-    bufContext.persist_capacity = val;
-    error = NpuDriver::SetDeviceInfoByBuff(
-        deviceId, MODULE_TYPE_QOS, INFO_TYPE_L2_PERSIST_CAP, &bufContext, sizeof(bufContext));
-    COND_RETURN_AND_MSG_OUTER(
-        error == RT_ERROR_DRV_NOT_SUPPORT, RT_ERROR_DRV_NOT_SUPPORT, ErrorCode::EE1006, "Setting the device limit",
-        "ACL_RT_DEV_LIMIT_PERSISTING_L2CACHE_SIZE(5)",
-        "The driver does not support setting the persisting L2 cache size");
-    ERROR_RETURN(error, "Set persisting L2 cache size failed, device_id=%u.", deviceId);
-    Runtime::Instance()->MarkPersistingL2CacheSet(deviceId);
-    RT_LOG(
-        RT_LOG_DEBUG, "SetPersistingL2CacheSize success, val=%u, totalCapacity=%u.", val,
-        static_cast<uint32_t>(totalCapacity));
-    return RT_ERROR_NONE;
-}
-
-rtError_t ApiImplDavid::GetPersistingL2CacheSize(uint32_t* const val)
-{
-    NULL_PTR_RETURN(val, RT_ERROR_INVALID_VALUE);
-
-    Context* const curCtx = CurrentContext();
-    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    Device* const dev = curCtx->Device_();
-    NULL_PTR_RETURN(dev, RT_ERROR_DEVICE_NULL);
-
-    L2CachePersistConfig bufContext{};
-    int32_t size = static_cast<int32_t>(sizeof(bufContext));
-    const rtError_t error =
-        NpuDriver::GetDeviceInfoByBuff(dev->Id_(), MODULE_TYPE_QOS, INFO_TYPE_L2_PERSIST_CAP, &bufContext, &size);
-    COND_RETURN_AND_MSG_OUTER(
-        (error == RT_ERROR_DRV_INPUT) || (error == RT_ERROR_DRV_NOT_SUPPORT), RT_ERROR_DRV_NOT_SUPPORT,
-        ErrorCode::EE1006, "Getting the device limit", "ACL_RT_DEV_LIMIT_PERSISTING_L2CACHE_SIZE(5)",
-        "The driver does not support querying the persisting L2 cache size");
-    ERROR_RETURN(error, "Get persisting L2 cache size failed, device_id=%u.", dev->Id_());
-    COND_RETURN_ERROR(
-        size != static_cast<int32_t>(sizeof(bufContext)), RT_ERROR_DRV_ERR,
-        "Invalid persisting L2 cache info size, size=%d.", size);
-    *val = bufContext.persist_capacity;
-    RT_LOG(RT_LOG_DEBUG, "GetPersistingL2CacheSize success, val=%u.", *val);
-    return RT_ERROR_NONE;
-}
-
 rtError_t ApiImplDavid::DeviceSetLimit(const int32_t devId, const rtLimitType_t type, const uint32_t val)
 {
     RT_LOG(
@@ -2070,8 +2007,6 @@ rtError_t ApiImplDavid::DeviceSetLimit(const int32_t devId, const rtLimitType_t 
     } else if (type == RT_LIMIT_TYPE_SIMT_PRINTF_FIFO_SIZE) {
         std::unique_lock<std::mutex> lock(rt->GetSimtFifoMutex());
         return rt->SetSimtPrintFifoSize(val);
-    } else if (type == RT_LIMIT_TYPE_PERSISTING_L2CACHE_SIZE) {
-        return SetPersistingL2CacheSize(val);
     } else {
         // no op
     }
@@ -2105,9 +2040,6 @@ rtError_t ApiImplDavid::DeviceGetLimit(const rtLimitType_t type, uint32_t* val)
         *val = static_cast<uint32_t>(rt->GetSimtWarpStkSize());
     } else if (type == RT_LIMIT_TYPE_SIMT_DVG_WARP_STACK_SIZE) {
         *val = rt->GetSimtDvgWarpStkSize();
-    } else if (type == RT_LIMIT_TYPE_PERSISTING_L2CACHE_SIZE) {
-        const rtError_t error = GetPersistingL2CacheSize(val);
-        COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
     } else {
         RT_LOG(RT_LOG_WARNING, "Limit type is not supported, type=%s", LimitTypeToString(type).c_str());
         return RT_ERROR_FEATURE_NOT_SUPPORT;

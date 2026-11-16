@@ -666,7 +666,6 @@ static constexpr rtLimitType_t ACL_TO_RT_LIMIT_TABLE[] = {
     RT_LIMIT_TYPE_STACK_SIZE,
     RT_LIMIT_TYPE_SIMD_PRINTF_FIFO_SIZE_PER_CORE,
     RT_LIMIT_TYPE_SIMT_PRINTF_FIFO_SIZE,
-    RT_LIMIT_TYPE_PERSISTING_L2CACHE_SIZE,
 };
 static constexpr size_t ACL_TO_RT_LIMIT_TABLE_SIZE = sizeof(ACL_TO_RT_LIMIT_TABLE) / sizeof(ACL_TO_RT_LIMIT_TABLE[0]);
 
@@ -690,11 +689,7 @@ aclError aclrtDeviceSetLimitImpl(aclrtDeviceLimit limit, size_t value)
         const char_t* const limitStr = acl::GetDeviceLimitDesc(limit);
         acl::AclErrorLogManager::ReportInputError(
             acl::INVALID_VALUE_MSG, std::vector<const char*>({"func", "value", "param", "expect"}),
-            std::vector<const char*>(
-                {funcName.c_str(), limitStr, "limit",
-                 "ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE(0), ACL_RT_DEV_LIMIT_SIMT_DVG_WARP_STACK_SIZE(1), "
-                 "ACL_RT_DEV_LIMIT_SIMD_STACK_SIZE(2), ACL_RT_DEV_LIMIT_SIMD_PRINTF_FIFO_SIZE_PER_CORE(3), "
-                 "ACL_RT_DEV_LIMIT_SIMT_PRINTF_FIFO_SIZE(4), or ACL_RT_DEV_LIMIT_PERSISTING_L2CACHE_SIZE(5)"}));
+            std::vector<const char*>({funcName.c_str(), limitStr, "limit", "[0, 4]"}));
         return ACL_ERROR_INVALID_PARAM;
     }
     if (value > static_cast<size_t>(UINT32_MAX)) {
@@ -736,8 +731,8 @@ aclError aclrtDeviceGetLimitImpl(aclrtDeviceLimit limit, size_t* value)
             std::vector<const char*>(
                 {funcName.c_str(), limitStr, "limit",
                  "ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE(0), ACL_RT_DEV_LIMIT_SIMT_DVG_WARP_STACK_SIZE(1), "
-                 "ACL_RT_DEV_LIMIT_SIMD_STACK_SIZE(2), ACL_RT_DEV_LIMIT_SIMD_PRINTF_FIFO_SIZE_PER_CORE(3), "
-                 "ACL_RT_DEV_LIMIT_SIMT_PRINTF_FIFO_SIZE(4), or ACL_RT_DEV_LIMIT_PERSISTING_L2CACHE_SIZE(5)"}));
+                 "ACL_RT_DEV_LIMIT_SIMD_STACK_SIZE(2), ACL_RT_DEV_LIMIT_SIMD_PRINTF_FIFO_SIZE_PER_CORE(3), or "
+                 "ACL_RT_DEV_LIMIT_SIMT_PRINTF_FIFO_SIZE(4)"}));
         return ACL_ERROR_INVALID_PARAM;
     }
     uint32_t rtValue = 0U;

@@ -421,15 +421,7 @@ typedef enum {
     INFO_TYPE_L2BUFF_INVALID_CACHE = 65,
     INFO_TYPE_PCIE_ID_INFO,
     INFO_TYPE_HOST_NUMA_NODE,
-    INFO_TYPE_L2_PERSIST_CAP = 69,
 } DEV_INFO_TYPE;
-
-#define QOS_CFG_RESERVED_LEN 8
-struct L2CachePersistConfig {
-    unsigned int total_capacity;
-    unsigned int persist_capacity;
-    int reserved[QOS_CFG_RESERVED_LEN];
-};
 
 /**
  * @ingroup driver

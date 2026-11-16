@@ -847,17 +847,3 @@ TEST_F(CloudV2ApiDeviceTest, rtDeviceGetP2PAtomicCapabilities)
     EXPECT_EQ(capabilities[1], 57U);
     EXPECT_EQ(capabilities[2], 0U);
 }
-
-TEST_F(CloudV2ApiDeviceTest, PersistingL2CacheSetIsNotSupported)
-{
-    MOCKER(halSetDeviceInfoByBuff).expects(never());
-    EXPECT_EQ(rtDeviceSetLimit(0, RT_LIMIT_TYPE_PERSISTING_L2CACHE_SIZE, 512U), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
-}
-
-TEST_F(CloudV2ApiDeviceTest, PersistingL2CacheGetIsNotSupported)
-{
-    MOCKER(halGetDeviceInfoByBuff).expects(never());
-    uint32_t value = 123U;
-    EXPECT_EQ(rtDeviceGetLimit(RT_LIMIT_TYPE_PERSISTING_L2CACHE_SIZE, &value), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(value, 123U);
-}

@@ -2592,7 +2592,6 @@ typedef enum aclrtDeviceLimit {
     ACL_RT_DEV_LIMIT_SIMD_STACK_SIZE = 2,
     ACL_RT_DEV_LIMIT_SIMD_PRINTF_FIFO_SIZE_PER_CORE = 3,
     ACL_RT_DEV_LIMIT_SIMT_PRINTF_FIFO_SIZE = 4,
-    ACL_RT_DEV_LIMIT_PERSISTING_L2CACHE_SIZE = 5,
 } aclrtDeviceLimit;
 ```
 
@@ -2601,7 +2600,7 @@ typedef enum aclrtDeviceLimit {
 <!-- end id106 -->
 
 <!-- npu="A3,910b" id107 -->
-对于Atlas A3系列产品、Atlas A2系列产品，仅支持SIMD相关选项（例如`ACL_RT_DEV_LIMIT_SIMD_STACK_SIZE`），不支持SIMT相关选项（例如`ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE`），不支持`ACL_RT_DEV_LIMIT_PERSISTING_L2CACHE_SIZE`。
+对于Atlas A3系列产品、Atlas A2系列产品，仅支持SIMD相关选项（例如`ACL_RT_DEV_LIMIT_SIMD_STACK_SIZE`），不支持SIMT相关选项（例如`ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE`）。
 <!-- end id107 -->
 
 各枚举项的说明如下：
@@ -2625,5 +2624,3 @@ typedef enum aclrtDeviceLimit {
 - `ACL_RT_DEV_LIMIT_SIMD_PRINTF_FIFO_SIZE_PER_CORE`：用于控制每个Core上SIMD算子可以Printf打印的空间大小，单位Byte。默认值为32768Byte（即32KB）。设置为`ACL_RT_DEV_LIMIT_SIMD_PRINTF_FIFO_SIZE_PER_CORE`类型时，value取值必须是8Byte的整数倍，如果传入的不是8Byte的整数倍，则接口内部会自动向上取整，确保其为8Byte的整数倍。value的取值范围为[1024, 67108864]Byte，即[1KB, 64MB]。
 
 - `ACL_RT_DEV_LIMIT_SIMT_PRINTF_FIFO_SIZE`：用于控制SIMT算子可以Printf打印的空间大小，单位Byte。默认值为2097152Byte（即2MB）。设置为`ACL_RT_DEV_LIMIT_SIMT_PRINTF_FIFO_SIZE`类型时，value取值必须是8Byte的整数倍，如果传入的不是8Byte的整数倍，则接口内部会自动向上取整，确保其为8Byte的整数倍。value的取值范围为[1048576, 67108864]Byte，即[1, 64]MB。
-
-- `ACL_RT_DEV_LIMIT_PERSISTING_L2CACHE_SIZE`：用于设置或查询当前Device的L2 Cache持久化大小，单位Byte。设置范围为[0, L2 Cache大小]，L2 Cache大小可通过[aclrtGetDeviceInfo](04_device_management.md#aclrtGetDeviceInfo)查询`ACL_DEV_ATTR_L2_CACHE_SIZE`获取。设置L2 Cache持久化大小时，设置值按档位生效，向上对齐取值。最终生效值可通过[aclrtDeviceGetLimit](04_device_management.md#aclrtDeviceGetLimit)接口获取。示例：L2 Cache大小为117440512Byte（即112MB），共划分为8个档位，每个档位间隔14MB；若配置为16777216Byte（即16M），最终生效值向上对齐到最近档位，结果为29360128Byte（即28M）。
