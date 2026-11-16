@@ -62,6 +62,7 @@
 #include "task_recycle.hpp"
 #include "securec.h"
 #include "npu_driver.hpp"
+#include "osal.hpp"
 #include "task_submit.hpp"
 #include "thread_local_container.hpp"
 #include "../../rt_utest_config_define.hpp"
@@ -2497,6 +2498,98 @@ TEST_F(TaskTestDavid, TestSyncTaskSuccess)
     EXPECT_EQ(ret, RT_ERROR_NONE);
     ret = rtStreamDestroy(stream);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+}
+
+TEST_F(TaskTestDavid, SyncTaskCheckResultSkipWhenTaskResMangIsNull)
+{
+    rtStream_t stream = 0;
+    ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
+    ScopeGuard streamGuard([&stream]() { EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE); });
+    Stream* const stm = rt_ut::UnwrapOrNull<Stream>(stream);
+    ASSERT_NE(stm, nullptr);
+
+    // 临时置空管理器并模拟超时，验证局部判空保护。
+    TaskResManage* const savedTaskResMang = stm->taskResMang_;
+    ScopeGuard taskResGuard([stm, savedTaskResMang]() { stm->taskResMang_ = savedTaskResMang; });
+    stm->taskResMang_ = nullptr;
+
+    MOCKER(SyncTask).stubs().will(returnValue(RT_ERROR_STREAM_SYNC_TIMEOUT));
+    EXPECT_EQ(SubmitTaskPostProc(stm, 0, true, 1), RT_ERROR_STREAM_SYNC_TIMEOUT);
+}
+
+TEST_F(TaskTestDavid, StarsGetMaxTryCountZeroWhenTaskResMangIsNull)
+{
+    rtStream_t stream = 0;
+    ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
+    ScopeGuard streamGuard([&stream]() { EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE); });
+    Stream* const stm = rt_ut::UnwrapOrNull<Stream>(stream);
+    ASSERT_NE(stm, nullptr);
+
+    // 空管理器流的 pendingNum 为 0，StarsWaitForTask 会提前返回，不会进入 record 任务的同步超时路径。
+    TaskResManage* const savedTaskResMang = stm->taskResMang_;
+    ScopeGuard taskResGuard([stm, savedTaskResMang]() { stm->taskResMang_ = savedTaskResMang; });
+    stm->taskResMang_ = nullptr;
+
+    EXPECT_EQ(stm->GetPendingNum(), 0U);
+#ifdef CFG_DEV_PLATFORM_PC
+    // PC/仿真构建走固定阈值分支；空管理器流 maxTryCount==0 的守卫仅在非 PC 构建生效。
+    EXPECT_EQ(stm->StarsGetMaxTryCount(), static_cast<rtError_t>(RT_QUERY_TIMES_THRESHOLD_STARS));
+#else
+    EXPECT_EQ(stm->StarsGetMaxTryCount(), RT_ERROR_NONE);
+#endif
+}
+
+TEST_F(TaskTestDavid, SyncTaskCheckResultClearsOnlyTargetTaskOnTimeout)
+{
+    rtStream_t stream = 0;
+    ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
+    ScopeGuard streamGuard([&stream]() { EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE); });
+    Stream* const stm = rt_ut::UnwrapOrNull<Stream>(stream);
+    ASSERT_NE(stm, nullptr);
+    TaskResManageDavid* const taskResMng = static_cast<TaskResManageDavid*>(stm->taskResMang_);
+    ASSERT_NE(taskResMng, nullptr);
+    ScopeGuard taskResGuard([taskResMng]() { taskResMng->ResetTaskRes(); });
+
+    TaskInfo* firstTask = nullptr;
+    uint32_t firstPos = UINT32_MAX;
+    ASSERT_EQ(taskResMng->AllocTaskInfoAndPos(1U, firstPos, &firstTask), RT_ERROR_NONE);
+    ASSERT_NE(firstTask, nullptr);
+
+    TaskInfo* secondTask = nullptr;
+    uint32_t secondPos = UINT32_MAX;
+    ASSERT_EQ(taskResMng->AllocTaskInfoAndPos(1U, secondPos, &secondTask), RT_ERROR_NONE);
+    ASSERT_NE(secondTask, nullptr);
+    ASSERT_NE(firstPos, secondPos);
+    firstTask->isCqeNeedConcern = true;
+    secondTask->isCqeNeedConcern = true;
+
+    MOCKER(SyncTask).stubs().will(returnValue(RT_ERROR_STREAM_SYNC_TIMEOUT));
+    EXPECT_EQ(SubmitTaskPostProc(stm, secondPos, true, 1), RT_ERROR_STREAM_SYNC_TIMEOUT);
+    EXPECT_FALSE(secondTask->isCqeNeedConcern);
+    EXPECT_TRUE(firstTask->isCqeNeedConcern);
+}
+
+TEST_F(TaskTestDavid, SyncTaskCheckResultSkipWhenErrorIsNotTimeout)
+{
+    rtStream_t stream = 0;
+    ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
+    ScopeGuard streamGuard([&stream]() { EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE); });
+    Stream* const stm = rt_ut::UnwrapOrNull<Stream>(stream);
+    ASSERT_NE(stm, nullptr);
+    TaskResManageDavid* const taskResMng = static_cast<TaskResManageDavid*>(stm->taskResMang_);
+    ASSERT_NE(taskResMng, nullptr);
+    ScopeGuard taskResGuard([taskResMng]() { taskResMng->ResetTaskRes(); });
+
+    TaskInfo* task = nullptr;
+    uint32_t pos = UINT32_MAX;
+    ASSERT_EQ(taskResMng->AllocTaskInfoAndPos(1U, pos, &task), RT_ERROR_NONE);
+    ASSERT_NE(task, nullptr);
+    task->isCqeNeedConcern = true;
+
+    // 非超时错误直接返回，不查询任务，也不清理标志。
+    MOCKER(SyncTask).stubs().will(returnValue(RT_ERROR_DRV_ERR));
+    EXPECT_EQ(SubmitTaskPostProc(stm, pos, true, 1), RT_ERROR_DRV_ERR);
+    EXPECT_TRUE(task->isCqeNeedConcern);
 }
 
 TEST_F(TaskTestDavid, TestAllocAutoSplitTaskInfo)

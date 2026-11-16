@@ -47,6 +47,11 @@ static void SyncTaskCheckResult(const rtError_t error, const Stream* const stm, 
         return;
     }
 
+    // auto-split / software SQ 流不创建 taskResMang_，stm->taskResMang_为nullptr，防御性判空返回。
+    if (unlikely(stm->taskResMang_ == nullptr)) {
+        return;
+    }
+
     TaskInfo* const procTask = stm->taskResMang_->GetTaskInfo(pos);
     if (procTask != nullptr) {
         procTask->isCqeNeedConcern = false;

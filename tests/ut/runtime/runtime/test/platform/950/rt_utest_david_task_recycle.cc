@@ -571,6 +571,48 @@ TEST_F(DavidTaskRecycleTest, ProcLogicCqReport)
     ((Runtime*)Runtime::Instance())->DeviceRelease(device);
 }
 
+TEST_F(DavidTaskRecycleTest, ProcLogicCqReportClearsCqeConcern)
+{
+    Device* device = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
+    uint32_t support = RT_CAPABILITY_SUPPORT;
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::CheckSupportPcieBarCopy)
+        .stubs()
+        .with(mockcpp::any(), outBound(support), mockcpp::any())
+        .will(returnValue(RT_ERROR_NONE));
+
+    void* addr = &support;
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::DevMemAllocWithBackupFlag)
+        .stubs()
+        .with(
+            outBoundP(&addr, sizeof(void*)), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(),
+            mockcpp::any())
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::PcieHostRegister).stubs().will(returnValue(RT_ERROR_NONE));
+
+    rtStream_t stream = nullptr;
+    EXPECT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
+    Stream* const stm = rt_ut::UnwrapOrNull<Stream>(stream);
+    EXPECT_NE(stm, nullptr);
+    stm->SetSqMemAttr(false);
+    stm->SetSyncRemainTime(1);
+    stm->SetFailureMode(STOP_ON_FAILURE);
+
+    TaskInfo taskInfo = {0};
+    taskInfo.stream = stm;
+    taskInfo.isCqeNeedConcern = true;
+
+    rtCqReport_t report = {0};
+    report.errorType = RT_STARS_EXIST_ERROR;
+    device->SetHasTaskError(true);
+    MOCKER_CPP(&Stream::GetError).stubs().will(returnValue(RT_ERROR_MODEL_ABORT_NORMAL));
+    ProcLogicCqReport(device, report, &taskInfo);
+    EXPECT_FALSE(taskInfo.isCqeNeedConcern);
+
+    GlobalMockObject::verify();
+    EXPECT_EQ(rtStreamDestroy(stream), ACL_RT_SUCCESS);
+    ((Runtime*)Runtime::Instance())->DeviceRelease(device);
+}
+
 TEST_F(DavidTaskRecycleTest, TryRecycleTaskV2)
 {
     Device* device = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
