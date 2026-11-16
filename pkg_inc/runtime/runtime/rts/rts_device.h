@@ -27,6 +27,8 @@ RT_RUNTIME_DEPRECATED_DECLS_BEGIN
 #define FEATURE_SUPPORT 1U
 #define FEATURE_NOT_SUPPORT 0U
 
+#ifndef RT_DEVICE_ATTR_DEFINED
+#define RT_DEVICE_ATTR_DEFINED
 typedef enum {
     RT_DEV_ATTR_AICPU_CORE_NUM = 1U,
     RT_DEV_ATTR_AICORE_CORE_NUM = 101U,
@@ -68,6 +70,7 @@ typedef enum {
 
     RT_DEV_ATTR_MAX
 } rtDevAttr;
+#endif // RT_DEVICE_ATTR_DEFINED
 
 // 通过HCCS连接的两个NPU之间的拓扑互联关系
 #define RT_DEVS_TOPOLOGY_HCCS 0x01ULL
@@ -118,6 +121,8 @@ RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsSetDev
  */
 RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsSetTsDevice(uint32_t tsId);
 
+#ifndef RT_DEVICE_GET_INFO_DECLARED
+#define RT_DEVICE_GET_INFO_DECLARED
 /**
  * @ingroup rts_device
  * @brief get device information.
@@ -129,6 +134,7 @@ RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtsSetTsD
  */
 RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t
     rtsDeviceGetInfo(uint32_t deviceId, rtDevAttr attr, int64_t* val);
+#endif // RT_DEVICE_GET_INFO_DECLARED
 
 /**
  * @ingroup rts_device

@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "runtime/rt_inner_device.h"
 #include "enum_desc.hpp"
 #include "capture_model_enum_desc.hpp"
 #include "device_enum_desc.hpp"
@@ -447,6 +448,9 @@ std::string LaunchKernelAttrIdToString(const rtLaunchKernelAttrId id)
 
 const char_t* DevAttrToString(const rtDevAttr attr)
 {
+    if (attr == RT_DEV_ATTR_HOST_NUMA_ID) {
+        return "DEV_ATTR_HOST_NUMA_ID(411)";
+    }
     static thread_local char enumBuf[32];
     switch (attr) {
         case RT_DEV_ATTR_AICPU_CORE_NUM:

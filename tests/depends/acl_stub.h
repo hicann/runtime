@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "runtime/rt_inner_device.h"
 #include "platform/platform_info.h"
 #include "base/err_mgr.h"
 #include "tdt/tdt_host_interface.h"
@@ -26,7 +27,6 @@
 #include "runtime/rt_inner_model.h"
 #include "runtime/rt_inner_stream.h"
 #include "runtime/rt_inner_task.h"
-#include "runtime/rt_inner_device.h"
 #include "runtime/kernel.h"
 #include "runtime/base.h"
 #include "runtime/config.h"

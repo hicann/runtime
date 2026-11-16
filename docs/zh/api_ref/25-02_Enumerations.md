@@ -991,6 +991,7 @@ typedef enum {
     ACL_DEV_ATTR_HD_CONNECT_TYPE = 408U,
     ACL_DEV_ATTR_DEVICE_FORM_FACTOR = 409U,
     ACL_DEV_ATTR_SUPER_POD_CHASSIS_ID = 410U,
+    ACL_DEV_ATTR_HOST_NUMA_ID = 411U,
     ACL_DEV_ATTR_IS_VIRTUAL = 501U,
 
     ACL_DEV_ATTR_NPU_ARCH = 601U,
@@ -1208,6 +1209,20 @@ typedef enum {
     <!-- npu="950" id108 -->
     仅Ascend 950PR&950DT系列产品支持该选项。
     <!-- end id108 -->
+
+    对于不支持该选项的产品型号，返回报错。
+
+- ACL\_DEV\_ATTR\_HOST\_NUMA\_ID
+
+    距离指定Device最近的Host NUMA节点ID。
+
+    取值如下：
+    - 大于等于0: 查询到距离指定Device最近的Host NUMA节点ID。
+    - -1：系统不支持NUMA。
+
+    <!-- npu="950,A3,910b" id111 -->
+    仅Ascend 950PR&950DT系列产品、Atlas A3系列产品、Atlas A2系列产品支持该选项。
+    <!-- end id111 -->
 
     对于不支持该选项的产品型号，返回报错。
 

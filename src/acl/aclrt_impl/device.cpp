@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "runtime/rt_inner_device.h"
 #include "acl_rt_impl.h"
 #include "acl_rt_impl_base.h"
 #include "runtime/dev.h"
@@ -19,7 +20,6 @@
 #include "common/error_codes_inner.h"
 #include "common/prof_reporter.h"
 #include "common/resource_statistics.h"
-#include "runtime/rt_inner_device.h"
 #include "utils/data_type_utils.h"
 
 namespace {

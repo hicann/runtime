@@ -7,6 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "runtime/rt_inner_device.h"
 #include <limits>
 #include <new>
 #include <set>
@@ -84,7 +85,6 @@
 #include "memory_task.h"
 #include "rt_inner_model.h"
 #include "rt_inner_stream.h"
-#include "rt_inner_device.h"
 #include "rt_inner_task.h"
 #include "task_enum_desc.hpp"
 #include "rt_inner_mem.h"
@@ -3169,6 +3169,10 @@ rtError_t ApiImpl::GetDeviceInfo(
     }
 
     error = curDrv->GetDevInfo(deviceId, moduleType, infoType, val);
+    if ((moduleType == MODULE_TYPE_SYSTEM) && (infoType == INFO_TYPE_HOST_NUMA_NODE)) {
+        // Preserve the signed NUMA node ID, including the -1 sentinel.
+        return error;
+    }
     uint32_t temp = static_cast<uint32_t>(*val);
     if (curDrv->GetDevProperties().reduceAicNum && (temp == RT_AICORE_NUM_25) && (moduleType == MODULE_TYPE_AICORE) &&
         (infoType == INFO_TYPE_CORE_NUM)) {
@@ -7193,6 +7197,7 @@ rtError_t ApiImpl::GetDeviceInfoByAttr(uint32_t deviceId, rtDevAttr attr, int64_
         {RT_DEV_ATTR_SMP_ID, {MODULE_TYPE_SYSTEM, INFO_TYPE_MASTERID}},
         {RT_DEV_ATTR_HD_CONNECT_TYPE, {MODULE_TYPE_SYSTEM, INFO_TYPE_HD_CONNECT_TYPE}},
         {RT_DEV_ATTR_DEVICE_FORM_FACTOR, {MODULE_TYPE_SYSTEM, INFO_TYPE_PRODUCT_TYPE}},
+        {RT_DEV_ATTR_HOST_NUMA_ID, {MODULE_TYPE_SYSTEM, INFO_TYPE_HOST_NUMA_NODE}},
     };
 
     const auto it = devInfoMap.find(attr);

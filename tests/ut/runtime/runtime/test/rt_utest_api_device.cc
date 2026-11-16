@@ -7,6 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "runtime/rt_inner_device.h"
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 #include "driver/ascend_hal.h"
@@ -196,6 +197,61 @@ TEST_F(ApiDeviceTest, TestRtsDeviceGetInfo)
     CheckDeviceInfoNpuArch(devid, val);
     CheckDeviceInfoVirtualAttrs(devid, val);
 }
+
+class ApiDeviceHostNumaTest : public ApiDeviceTest, public testing::WithParamInterface<int64_t> {
+protected:
+    void TearDown() override
+    {
+        GlobalMockObject::verify();
+        ApiDeviceTest::TearDown();
+    }
+};
+
+TEST_P(ApiDeviceHostNumaTest, TestRtsDeviceGetInfoHostNumaIdPreservesValue)
+{
+    int64_t expected = GetParam();
+    int64_t value = 123;
+    MOCKER(halGetDeviceInfo)
+        .expects(once())
+        .with(
+            eq(0U), eq(static_cast<int32_t>(MODULE_TYPE_SYSTEM)), eq(static_cast<int32_t>(INFO_TYPE_HOST_NUMA_NODE)),
+            outBoundP(&expected, sizeof(expected)))
+        .will(returnValue(DRV_ERROR_NONE));
+
+    EXPECT_EQ(rtsDeviceGetInfo(0U, RT_DEV_ATTR_HOST_NUMA_ID, &value), RT_ERROR_NONE);
+    EXPECT_EQ(value, expected);
+}
+
+INSTANTIATE_TEST_SUITE_P(HostNumaIds, ApiDeviceHostNumaTest, testing::Values(int64_t{-1}, int64_t{0}, int64_t{3}));
+
+class ApiDeviceHostNumaErrorTest : public ApiDeviceTest, public testing::WithParamInterface<drvError_t> {
+protected:
+    void TearDown() override
+    {
+        GlobalMockObject::verify();
+        ApiDeviceTest::TearDown();
+    }
+};
+
+TEST_P(ApiDeviceHostNumaErrorTest, TestRtsDeviceGetInfoHostNumaIdDriverFailure)
+{
+    const drvError_t driverError = GetParam();
+    const rtError_t expected =
+        driverError == DRV_ERROR_NOT_SUPPORT ? ACL_ERROR_RT_FEATURE_NOT_SUPPORT : ACL_ERROR_RT_PARAM_INVALID;
+    int64_t value = 123;
+    MOCKER(halGetDeviceInfo)
+        .expects(once())
+        .with(
+            eq(0U), eq(static_cast<int32_t>(MODULE_TYPE_SYSTEM)), eq(static_cast<int32_t>(INFO_TYPE_HOST_NUMA_NODE)),
+            mockcpp::any())
+        .will(returnValue(driverError));
+
+    EXPECT_EQ(rtsDeviceGetInfo(0U, RT_DEV_ATTR_HOST_NUMA_ID, &value), expected);
+    EXPECT_EQ(value, 123);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    HostNumaErrors, ApiDeviceHostNumaErrorTest, testing::Values(DRV_ERROR_NOT_SUPPORT, DRV_ERROR_INVALID_VALUE));
 
 TEST_F(ApiDeviceTest, TestRtsDeviceGetInfoSuperPodChassisIdMapping)
 {

@@ -11,6 +11,7 @@
 #ifndef CCE_RUNTIME_ENUM_DESC_HPP
 #define CCE_RUNTIME_ENUM_DESC_HPP
 
+#include "runtime/rt_inner_device.h"
 #include <cstdint>
 #include <string>
 #include <initializer_list>

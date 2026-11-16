@@ -7,6 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "runtime/rt_inner_device.h"
 #include <string>
 #include <cassert>
 #include <iostream>
@@ -6285,6 +6286,32 @@ TEST_F(UTEST_ACL_Runtime, aclrtGetDeviceInfo_hd_connect_type)
     ret = aclrtGetDeviceInfo(deviceId, ACL_DEV_ATTR_HD_CONNECT_TYPE, &value);
     EXPECT_EQ(ret, ACL_SUCCESS);
     EXPECT_TRUE(value >= ACL_HOST_DEVICE_CONNECT_TYPE_PCIE && value <= ACL_HOST_DEVICE_CONNECT_TYPE_UB);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtGetDeviceInfo_host_numa_id_negative_one)
+{
+    int64_t value = 123;
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtsDeviceGetInfo(0U, RT_DEV_ATTR_HOST_NUMA_ID, &value))
+        .WillOnce(DoAll(SetArgPointee<2>(int64_t{-1}), Return(RT_ERROR_NONE)));
+
+    EXPECT_EQ(aclrtGetDeviceInfo(0U, ACL_DEV_ATTR_HOST_NUMA_ID, &value), ACL_SUCCESS);
+    EXPECT_EQ(value, -1);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtGetDeviceInfo_host_numa_id_null_value)
+{
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtsDeviceGetInfo(_, _, _)).Times(0);
+    EXPECT_EQ(aclrtGetDeviceInfo(0U, ACL_DEV_ATTR_HOST_NUMA_ID, nullptr), ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtGetDeviceInfo_host_numa_id_not_supported)
+{
+    int64_t value = 123;
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtsDeviceGetInfo(0U, RT_DEV_ATTR_HOST_NUMA_ID, &value))
+        .WillOnce(Return(ACL_ERROR_RT_FEATURE_NOT_SUPPORT));
+
+    EXPECT_EQ(aclrtGetDeviceInfo(0U, ACL_DEV_ATTR_HOST_NUMA_ID, &value), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(value, 123);
 }
 
 TEST_F(UTEST_ACL_Runtime, aclrtGetDeviceInfo_super_pod_chassis_id)

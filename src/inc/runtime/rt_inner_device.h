@@ -70,6 +70,67 @@ typedef enum rtAtomicOperation {
     RT_ATOMIC_OPERATION_SIMD_SCALAR_EXCH = 44,
 } rtAtomicOperation;
 
+#ifndef RT_DEVICE_ATTR_DEFINED
+#define RT_DEVICE_ATTR_DEFINED
+typedef enum {
+    RT_DEV_ATTR_AICPU_CORE_NUM = 1U,
+    RT_DEV_ATTR_AICORE_CORE_NUM = 101U,
+    RT_DEV_ATTR_CUBE_CORE_NUM = 102U,
+
+    RT_DEV_ATTR_VECTOR_CORE_NUM = 201U,
+    RT_DEV_ATTR_WARP_SIZE = 202U,
+    RT_DEV_ATTR_MAX_THREAD_PER_VECTOR_CORE = 203U,
+    RT_DEV_ATTR_LOCAL_MEM_PER_VECTOR_CORE RT_DEPRECATED_MESSAGE("Use RT_DEV_ATTR_UBUF_PER_VECTOR_CORE instead") =
+        204U, // DEPRECATED: Use RT_DEV_ATTR_UBUF_PER_VECTOR_CORE
+    RT_DEV_ATTR_UBUF_PER_VECTOR_CORE = 204U,
+    RT_DEV_ATTR_MAX_GRID_DIM_X = 205U,
+    RT_DEV_ATTR_MAX_GRID_DIM_Y = 206U,
+    RT_DEV_ATTR_MAX_GRID_DIM_Z = 207U,
+    RT_DEV_ATTR_MAX_BLOCK_PER_GRID = 208U,
+    RT_DEV_ATTR_MAX_THREADS_PER_BLOCK = 209U,
+    RT_DEV_ATTR_MAX_BLOCK_DIM_X = 210U,
+    RT_DEV_ATTR_MAX_BLOCK_DIM_Y = 211U,
+    RT_DEV_ATTR_MAX_BLOCK_DIM_Z = 212U,
+
+    RT_DEV_ATTR_TOTAL_GLOBAL_MEM_SIZE = 301U, /* total available global mem */
+    RT_DEV_ATTR_L2_CACHE_SIZE = 302U,
+
+    // MODULE_TYPE_SYSTEM
+    RT_DEV_ATTR_SMP_ID = 401U,               // indicates whether devices are on the same OS
+    RT_DEV_ATTR_PHY_CHIP_ID = 402U,          // physical chip id
+    RT_DEV_ATTR_SUPER_POD_DEVICE_ID = 403U,  // super pod device id
+    RT_DEV_ATTR_SUPER_POD_SERVER_ID = 404U,  // super pod server id
+    RT_DEV_ATTR_SUPER_POD_ID = 405U,         // super pod id
+    RT_DEV_ATTR_CUST_OP_PRIVILEGE = 406U,    // indicates whether the custom operator privilege is enabled
+    RT_DEV_ATTR_MAINBOARD_ID = 407U,         // mainboard id
+    RT_DEV_ATTR_HD_CONNECT_TYPE = 408U,      // host-device connect type
+    RT_DEV_ATTR_DEVICE_FORM_FACTOR = 409U,   // device form factor (pod/server/pcie card)
+    RT_DEV_ATTR_SUPER_POD_CHASSIS_ID = 410U, // super pod chassis id
+    RT_DEV_ATTR_HOST_NUMA_ID = 411U,         // nearest host NUMA node id
+
+    RT_DEV_ATTR_IS_VIRTUAL = 501U,           // is_virtual
+
+    RT_DEV_ATTR_NPU_ARCH = 601U,             // npu arch
+
+    RT_DEV_ATTR_MAX
+} rtDevAttr;
+#endif // RT_DEVICE_ATTR_DEFINED
+
+#ifndef RT_DEVICE_GET_INFO_DECLARED
+#define RT_DEVICE_GET_INFO_DECLARED
+/**
+ * @ingroup rts_device
+ * @brief get device information.
+ * @param [in] device the device id
+ * @param [in] attr device attr
+ * @param [out] val   the device info
+ * @return RT_ERROR_NONE for ok
+ * @return RT_ERROR_DRV_ERR for error
+ */
+RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t
+    rtsDeviceGetInfo(uint32_t deviceId, rtDevAttr attr, int64_t* val);
+#endif // RT_DEVICE_GET_INFO_DECLARED
+
 /**
  * @ingroup dvrt_dev
  * @brief get h2d atomic capabilities by device id
