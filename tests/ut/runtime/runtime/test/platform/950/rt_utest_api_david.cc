@@ -6869,7 +6869,7 @@ TEST_F(ApiDavidTest, ConstructDavidSqeForMemsetAsyncTask_basic)
     EXPECT_EQ(memcpySqe->sns, 1U);
 }
 
-constexpr uint64_t MEMSET_CHUNK_MAX_LEN = 0x80000000ULL;
+constexpr uint64_t MEMSET_CHUNK_MAX_LEN = 0x100000000ULL;
 struct MemsetChunkRecord {
     void* targetPtr;
     uint64_t targetSize;
@@ -6903,6 +6903,7 @@ TEST_F(ApiDavidTest, DevMemSetAsyncByMemset_ChunkSplit)
     EXPECT_EQ(error, RT_ERROR_NONE);
     ASSERT_EQ(g_memsetChunkRecords.size(), 1U);
     EXPECT_EQ(g_memsetChunkRecords[0].fillCount, MEMSET_CHUNK_MAX_LEN);
+    EXPECT_EQ(g_memsetChunkRecords[0].targetSize, MEMSET_CHUNK_MAX_LEN);
 
     g_memsetChunkRecords.clear();
     error = DevMemSetAsyncByMemset(stream_, basePtr, MEMSET_CHUNK_MAX_LEN + 4U, 0xABABABABU, MEMSET_CHUNK_MAX_LEN + 4U);
@@ -6917,6 +6918,7 @@ TEST_F(ApiDavidTest, DevMemSetAsyncByMemset_ChunkSplit)
     g_memsetChunkRecords.clear();
     error = DevMemSetAsyncByMemset(stream_, basePtr, 64U, 0xABABABABU, 0U);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    // 零长透传下发单个零长任务：零长入参由 memset 系列 C API 入口拦截，本函数不重复判断
     ASSERT_EQ(g_memsetChunkRecords.size(), 1U);
     EXPECT_EQ(g_memsetChunkRecords[0].fillCount, 0U);
 
@@ -6942,6 +6944,39 @@ TEST_F(ApiDavidTest, DevMemSetAsyncByMemset_ChunkSplit)
     EXPECT_EQ(g_memsetChunkRecords.size(), 2U);
     g_memsetSendFailAt = 0U;
     GlobalMockObject::verify();
+}
+
+// "0 即 4GB" 硬件编码约定的回归看护：整 4G 块 fillCount 截断到 32bit lengthMove 后必须为 0；
+// 若截断被改回限幅/2G 拆分，或编码约定被破坏，本用例失败
+TEST_F(ApiDavidTest, ConstructDavidSqeForMemsetAsyncTask_FourGbLengthMoveZero)
+{
+    for (const uint32_t elementSize : {1U, 4U}) {
+        TaskInfo taskInfo = {};
+        taskInfo.stream = stream_;
+        taskInfo.taskSn = 43U;
+        void* const ptr = reinterpret_cast<void*>(0x1000U);
+        MemsetAsyncTaskInit(&taskInfo, ptr, MEMSET_CHUNK_MAX_LEN, 0xABABABABU, MEMSET_CHUNK_MAX_LEN, elementSize);
+
+        rtDavidSqe_t sqe = {};
+        TaskSqeInfo sqeInfo = {};
+        sqeInfo.sqBaseAddr = reinterpret_cast<uint64_t>(&sqe);
+        ConstructDavidSqeForMemsetAsyncTask(&taskInfo, &sqe, sqeInfo);
+
+        EXPECT_EQ(sqe.memcpyAsyncSqe.opcode, RT_STARS_MEMCPY_ASYNC_OP_KIND_MEMSET);
+        EXPECT_EQ(sqe.memcpyAsyncSqe.u.strideMode0.lengthMove, 0U);
+    }
+
+    // 反例看护：非 4G 的常规长度按原值编码，不受截断影响
+    TaskInfo taskInfo = {};
+    taskInfo.stream = stream_;
+    taskInfo.taskSn = 44U;
+    void* const ptr = reinterpret_cast<void*>(0x1000U);
+    MemsetAsyncTaskInit(&taskInfo, ptr, 0x12345678U, 0xABABABABU, 0x12345678U);
+    rtDavidSqe_t sqe = {};
+    TaskSqeInfo sqeInfo = {};
+    sqeInfo.sqBaseAddr = reinterpret_cast<uint64_t>(&sqe);
+    ConstructDavidSqeForMemsetAsyncTask(&taskInfo, &sqe, sqeInfo);
+    EXPECT_EQ(sqe.memcpyAsyncSqe.u.strideMode0.lengthMove, 0x12345678U);
 }
 
 uint32_t gabort_times = 0U;

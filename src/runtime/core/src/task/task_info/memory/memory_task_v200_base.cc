@@ -688,7 +688,8 @@ void ConstructDavidSqeForMemsetAsyncTask(TaskInfo* const taskInfo, void* const s
     memcpySqe->srcSubStreamId = 1U;
     memcpySqe->u.strideMode0.dstSubStreamId = 1U;
     const uint64_t destAddr = RtPtrToValue(memsetTask->targetPtr);
-    memcpySqe->u.strideMode0.lengthMove = memsetTask->fillCount;
+    // lengthMove 为 32bit，硬件语义 0 表示 4GB：整 4G 块的 fillCount(0x1_0000_0000) 截断为 0 即预期编码
+    memcpySqe->u.strideMode0.lengthMove = static_cast<uint32_t>(memsetTask->fillCount);
     memcpySqe->u.strideMode0.srcAddrLow = static_cast<uint32_t>(destAddr & 0x00000000FFFFFFFFU);
     memcpySqe->u.strideMode0.srcAddrHigh = static_cast<uint32_t>((destAddr & 0xFFFFFFFF00000000U) >> UINT32_BIT_NUM);
     memcpySqe->u.strideMode0.dstAddrLow = memsetTask->fillValue;

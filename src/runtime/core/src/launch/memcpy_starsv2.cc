@@ -354,10 +354,11 @@ rtError_t DevMemSetAsyncByMemset(
     Stream* const stm, void* const ptr, const uint64_t destMax, const uint32_t fillVal, const uint64_t fillCount,
     const uint32_t elementSize)
 {
-    // SQE 的 lengthMove 为 32bit 字段（单次上限 4GB-1），取能放入 u32 的最大 2 的幂（2GB）：
-    // 保证分块后各块起始地址继承首地址的对齐（如 4 字节对齐），且整块长度为 4 的倍数，
-    // 满足 D32 memset 按 32bit 字填充的语义；若取 UINT32_MAX（奇数）会破坏后续块的对齐
-    constexpr uint64_t MEMSET_SQE_MAX_LEN = 0x80000000ULL;
+    // SQE 的 lengthMove 为 32bit 字段，硬件语义取值 0 表示 4GB：整块 4GB 截断后恰为 0，即单块上限可取 4GB。
+    // 取 2 的幂保证分块后各块起始地址继承首地址的对齐（如 4 字节对齐），且整块长度为 4 的倍数，
+    // 满足 D32 memset 按 32bit 字填充的语义。
+    // 零长入参已由 memset 系列 C API 入口统一拦截（count==0 直接返回成功），此处不再重复判断
+    constexpr uint64_t MEMSET_SQE_MAX_LEN = 0x100000000ULL; // 4GB，截断到 lengthMove 为 0，硬件语义即 4G
     uint64_t doneSize = 0ULL;
     do {
         const uint64_t chunkSize = std::min(fillCount - doneSize, MEMSET_SQE_MAX_LEN);
