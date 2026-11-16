@@ -19,6 +19,7 @@
 
 namespace Adx {
 constexpr float ADX_QUEUE_FULL_SIZE = 0.85f;
+constexpr uint64_t ADX_QUEUE_MIN_FREE_MEM = 1024ULL * 1024ULL * 1024ULL;
 constexpr const char* MEM_USAGE_V1 = "/sys/fs/cgroup/memory/memory.usage_in_bytes";
 constexpr const char* MEM_USAGE_V2 = "/sys/fs/cgroup/memory.current";
 constexpr const char* MEM_LIMIT_V1 = "/sys/fs/cgroup/memory/memory.limit_in_bytes";
@@ -119,7 +120,8 @@ private:
             }
             return (memUsage > ADX_QUEUE_FULL_SIZE * memLimit_) && dataQueue_.size() > queueSize;
         }
-        return (info.freeram < (info.totalram * (1 - ADX_QUEUE_FULL_SIZE))) && dataQueue_.size() > queueSize;
+        return (info.freeram < (info.totalram * (1 - ADX_QUEUE_FULL_SIZE))) && dataQueue_.size() > queueSize &&
+               (info.freeram < ADX_QUEUE_MIN_FREE_MEM);
     }
 
     uint64_t InitMemLimit() const

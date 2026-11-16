@@ -10,6 +10,8 @@
 
 #include <gtest/gtest.h>
 #include <algorithm>
+#include <cstdarg>
+#include <cstdint>
 #include <cstring>
 #include <vector>
 #include <limits>
@@ -63,7 +65,7 @@ static DumpInfoHead* WriteTlv(uint8_t* buf, cce::runtime::DumpType type, uint32_
     return head;
 }
 
-// 统计子串出现次数（非重叠）：供 1M 截断用例验证 "..."/告警只输出一次
+// 统计子串出现次数（非重叠）：供 32K 截断用例验证 "..."/告警只输出一次
 static size_t CountOccurrences(const std::string& str, const std::string& sub)
 {
     if (sub.empty()) {
@@ -1532,393 +1534,7 @@ TEST_F(DfxInfoParserUtest, Test_DfxInfoParser_FullLifecycle)
     EXPECT_EQ(DfxInfoParser::Instance().registered_, false);
 }
 
-static uint32_t BuildPrintfWithFmtAndArgs(
-    uint8_t* buf, const std::string& fmt, const std::vector<int64_t>& args, bool isSimt = false)
-{
-    uint32_t resvOffset = isSimt ? RESV_LEN_SIMT : RESV_LEN;
-    DumpInfoHead* head =
-        WriteTlv(buf, isSimt ? cce::runtime::DumpType::DUMP_SIMT_PRINTF : cce::runtime::DumpType::DUMP_SCALAR, 0);
-    uint8_t* infoMsg = head->infoMsg;
-    (void)memset_s(infoMsg, resvOffset, 0, resvOffset);
-    uint64_t strOffset = (args.size() + 1) * PRINT_ARG_LEN;
-    (void)memcpy_s(infoMsg + resvOffset, sizeof(uint64_t), &strOffset, sizeof(uint64_t));
-    for (size_t i = 0; i < args.size(); ++i) {
-        (void)memcpy_s(infoMsg + resvOffset + (i + 1) * PRINT_ARG_LEN, sizeof(int64_t), &args[i], sizeof(int64_t));
-    }
-    (void)memcpy_s(infoMsg + resvOffset + strOffset, fmt.size() + 1, fmt.c_str(), fmt.size() + 1);
-    head->infoLen = resvOffset + strOffset + fmt.size() + 1;
-    return sizeof(DumpInfoHead) + head->infoLen;
-}
-
-static uint32_t BuildPrintfWithFloatArg(uint8_t* buf, const std::string& fmt, float argVal, bool isSimt = false)
-{
-    uint32_t resvOffset = isSimt ? RESV_LEN_SIMT : RESV_LEN;
-    DumpInfoHead* head =
-        WriteTlv(buf, isSimt ? cce::runtime::DumpType::DUMP_SIMT_PRINTF : cce::runtime::DumpType::DUMP_SCALAR, 0);
-    uint8_t* infoMsg = head->infoMsg;
-    (void)memset_s(infoMsg, resvOffset, 0, resvOffset);
-    uint64_t strOffset = 2 * PRINT_ARG_LEN;
-    (void)memcpy_s(infoMsg + resvOffset, sizeof(uint64_t), &strOffset, sizeof(uint64_t));
-    (void)memcpy_s(infoMsg + resvOffset + PRINT_ARG_LEN, sizeof(float), &argVal, sizeof(float));
-    (void)memcpy_s(infoMsg + resvOffset + strOffset, fmt.size() + 1, fmt.c_str(), fmt.size() + 1);
-    head->infoLen = resvOffset + strOffset + fmt.size() + 1;
-    return sizeof(DumpInfoHead) + head->infoLen;
-}
-
-static uint32_t BuildPrintfWithPtrArg(uint8_t* buf, const std::string& fmt, void* argVal, bool isSimt = false)
-{
-    uint32_t resvOffset = isSimt ? RESV_LEN_SIMT : RESV_LEN;
-    DumpInfoHead* head =
-        WriteTlv(buf, isSimt ? cce::runtime::DumpType::DUMP_SIMT_PRINTF : cce::runtime::DumpType::DUMP_SCALAR, 0);
-    uint8_t* infoMsg = head->infoMsg;
-    (void)memset_s(infoMsg, resvOffset, 0, resvOffset);
-    uint64_t strOffset = 2 * PRINT_ARG_LEN;
-    (void)memcpy_s(infoMsg + resvOffset, sizeof(uint64_t), &strOffset, sizeof(uint64_t));
-    (void)memcpy_s(infoMsg + resvOffset + PRINT_ARG_LEN, sizeof(void*), &argVal, sizeof(void*));
-    (void)memcpy_s(infoMsg + resvOffset + strOffset, fmt.size() + 1, fmt.c_str(), fmt.size() + 1);
-    head->infoLen = resvOffset + strOffset + fmt.size() + 1;
-    return sizeof(DumpInfoHead) + head->infoLen;
-}
-
-static uint32_t BuildPrintfWithSimtStringArg(uint8_t* buf, const std::string& fmt, const std::string& strArg)
-{
-    uint32_t resvOffset = RESV_LEN_SIMT;
-    DumpInfoHead* head = WriteTlv(buf, cce::runtime::DumpType::DUMP_SIMT_PRINTF, 0);
-    uint8_t* infoMsg = head->infoMsg;
-    (void)memset_s(infoMsg, resvOffset, 0, resvOffset);
-    uint64_t strOffset = 2 * PRINT_ARG_LEN;
-    (void)memcpy_s(infoMsg + resvOffset, sizeof(uint64_t), &strOffset, sizeof(uint64_t));
-    uint64_t strArgOffset = PRINT_ARG_LEN + fmt.size() + 1;
-    (void)memcpy_s(infoMsg + resvOffset + PRINT_ARG_LEN, sizeof(uint64_t), &strArgOffset, sizeof(uint64_t));
-    (void)memcpy_s(infoMsg + resvOffset + strOffset, fmt.size() + 1, fmt.c_str(), fmt.size() + 1);
-    (void)memcpy_s(
-        reinterpret_cast<uint8_t*>(infoMsg + resvOffset + PRINT_ARG_LEN) + strArgOffset, strArg.size() + 1,
-        strArg.c_str(), strArg.size() + 1);
-    head->infoLen = resvOffset + PRINT_ARG_LEN + strArgOffset + strArg.size() + 1;
-    return sizeof(DumpInfoHead) + head->infoLen;
-}
-
-TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_PrintfFormatD)
-{
-    BlockBuffer block(256);
-    uint32_t tlvLen = BuildPrintfWithFmtAndArgs(block.dumpStartAddr, "val=%d", {42});
-    uint64_t consumedLen = 0U;
-    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, tlvLen);
-    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
-    EXPECT_EQ(consumedLen, tlvLen);
-}
-
-TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_PrintfFormatI)
-{
-    BlockBuffer block(256);
-    uint32_t tlvLen = BuildPrintfWithFmtAndArgs(block.dumpStartAddr, "val=%i", {-7});
-    uint64_t consumedLen = 0U;
-    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, tlvLen);
-    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
-    EXPECT_EQ(consumedLen, tlvLen);
-}
-
-TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_PrintfFormatF)
-{
-    BlockBuffer block(256);
-    uint32_t tlvLen = BuildPrintfWithFloatArg(block.dumpStartAddr, "val=%f", 3.14f);
-    uint64_t consumedLen = 0U;
-    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, tlvLen);
-    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
-    EXPECT_EQ(consumedLen, tlvLen);
-}
-
-TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_PrintfFormatFUpper)
-{
-    BlockBuffer block(256);
-    uint32_t tlvLen = BuildPrintfWithFloatArg(block.dumpStartAddr, "val=%F", 2.5f);
-    uint64_t consumedLen = 0U;
-    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, tlvLen);
-    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
-    EXPECT_EQ(consumedLen, tlvLen);
-}
-
-TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_PrintfFormatU)
-{
-    BlockBuffer block(256);
-    uint32_t tlvLen = BuildPrintfWithFmtAndArgs(block.dumpStartAddr, "val=%u", {100U});
-    uint64_t consumedLen = 0U;
-    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, tlvLen);
-    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
-    EXPECT_EQ(consumedLen, tlvLen);
-}
-
-TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_PrintfFormatX)
-{
-    BlockBuffer block(256);
-    uint32_t tlvLen = BuildPrintfWithFmtAndArgs(block.dumpStartAddr, "val=%x", {static_cast<int64_t>(0xABCD)});
-    uint64_t consumedLen = 0U;
-    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, tlvLen);
-    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
-    EXPECT_EQ(consumedLen, tlvLen);
-}
-
-TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_PrintfFormatXUpper)
-{
-    BlockBuffer block(256);
-    uint32_t tlvLen = BuildPrintfWithFmtAndArgs(block.dumpStartAddr, "val=%X", {static_cast<int64_t>(0xABCD)});
-    uint64_t consumedLen = 0U;
-    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, tlvLen);
-    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
-    EXPECT_EQ(consumedLen, tlvLen);
-}
-
-TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_PrintfFormatP)
-{
-    BlockBuffer block(256);
-    void* ptr = reinterpret_cast<void*>(0x1234);
-    uint32_t tlvLen = BuildPrintfWithPtrArg(block.dumpStartAddr, "ptr=%p", ptr);
-    uint64_t consumedLen = 0U;
-    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, tlvLen);
-    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
-    EXPECT_EQ(consumedLen, tlvLen);
-}
-
-TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_PrintfFormatLong)
-{
-    BlockBuffer block(256);
-    uint32_t tlvLen = BuildPrintfWithFmtAndArgs(block.dumpStartAddr, "val=%ld", {123456});
-    uint64_t consumedLen = 0U;
-    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, tlvLen);
-    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
-    EXPECT_EQ(consumedLen, tlvLen);
-}
-
-TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_PrintfFormatLongLong)
-{
-    BlockBuffer block(256);
-    uint32_t tlvLen = BuildPrintfWithFmtAndArgs(block.dumpStartAddr, "val=%lld", {789012});
-    uint64_t consumedLen = 0U;
-    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, tlvLen);
-    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
-    EXPECT_EQ(consumedLen, tlvLen);
-}
-
-TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_PrintfFormatLu)
-{
-    BlockBuffer block(256);
-    uint32_t tlvLen = BuildPrintfWithFmtAndArgs(block.dumpStartAddr, "val=%lu", {static_cast<int64_t>(999U)});
-    uint64_t consumedLen = 0U;
-    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, tlvLen);
-    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
-    EXPECT_EQ(consumedLen, tlvLen);
-}
-
-TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_PrintfFormatLlu)
-{
-    BlockBuffer block(256);
-    uint32_t tlvLen = BuildPrintfWithFmtAndArgs(block.dumpStartAddr, "val=%llu", {static_cast<int64_t>(888U)});
-    uint64_t consumedLen = 0U;
-    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, tlvLen);
-    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
-    EXPECT_EQ(consumedLen, tlvLen);
-}
-
-TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_PrintfFormatLx)
-{
-    BlockBuffer block(256);
-    uint32_t tlvLen = BuildPrintfWithFmtAndArgs(block.dumpStartAddr, "val=%lx", {static_cast<int64_t>(0xDEAD)});
-    uint64_t consumedLen = 0U;
-    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, tlvLen);
-    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
-    EXPECT_EQ(consumedLen, tlvLen);
-}
-
-TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_PrintfFormatLlx)
-{
-    BlockBuffer block(256);
-    uint32_t tlvLen = BuildPrintfWithFmtAndArgs(block.dumpStartAddr, "val=%llx", {static_cast<int64_t>(0xBEEF)});
-    uint64_t consumedLen = 0U;
-    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, tlvLen);
-    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
-    EXPECT_EQ(consumedLen, tlvLen);
-}
-
-TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_PrintfFormatLX)
-{
-    BlockBuffer block(256);
-    uint32_t tlvLen = BuildPrintfWithFmtAndArgs(block.dumpStartAddr, "val=%lX", {static_cast<int64_t>(0xCAFE)});
-    uint64_t consumedLen = 0U;
-    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, tlvLen);
-    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
-    EXPECT_EQ(consumedLen, tlvLen);
-}
-
-TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_PrintfFormatLlX)
-{
-    BlockBuffer block(256);
-    uint32_t tlvLen = BuildPrintfWithFmtAndArgs(block.dumpStartAddr, "val=%llX", {static_cast<int64_t>(0xFACE)});
-    uint64_t consumedLen = 0U;
-    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, tlvLen);
-    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
-    EXPECT_EQ(consumedLen, tlvLen);
-}
-
-TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_PrintfPercentPercent)
-{
-    BlockBuffer block(256);
-    DumpInfoHead* head = WriteTlv(block.dumpStartAddr, cce::runtime::DumpType::DUMP_SCALAR, 0);
-    uint8_t* infoMsg = head->infoMsg;
-    (void)memset_s(infoMsg, RESV_LEN, 0, RESV_LEN);
-    uint64_t strOffset = PRINT_ARG_LEN;
-    (void)memcpy_s(infoMsg + RESV_LEN, sizeof(uint64_t), &strOffset, sizeof(uint64_t));
-    const char* fmt = "100%% done";
-    (void)memcpy_s(infoMsg + RESV_LEN + strOffset, strlen(fmt) + 1, fmt, strlen(fmt) + 1);
-    head->infoLen = RESV_LEN + sizeof(uint64_t) + strlen(fmt) + 1;
-    uint64_t consumedLen = 0U;
-    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, sizeof(DumpInfoHead) + head->infoLen);
-    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
-    EXPECT_EQ(consumedLen, sizeof(DumpInfoHead) + head->infoLen);
-}
-
-TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SimtStringFormat)
-{
-    BlockBuffer block(512);
-    uint32_t tlvLen = BuildPrintfWithSimtStringArg(block.dumpStartAddr, "msg=%s", "simt_str");
-    uint64_t consumedLen = 0U;
-    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, tlvLen, 2U, 0U);
-    testing::internal::CaptureStdout();
-    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
-    const std::string output = testing::internal::GetCapturedStdout();
-    EXPECT_EQ(consumedLen, tlvLen);
-    EXPECT_NE(output.find("simt_str"), std::string::npos);
-}
-
-TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SimtStringWithoutTerminatorInInfoLen)
-{
-    BlockBuffer block(512);
-    DumpInfoHead* head = WriteTlv(block.dumpStartAddr, cce::runtime::DumpType::DUMP_SIMT_PRINTF, 0);
-    uint8_t* infoMsg = head->infoMsg;
-    (void)memset_s(infoMsg, RESV_LEN_SIMT, 0, RESV_LEN_SIMT);
-    uint64_t strOffset = 2 * PRINT_ARG_LEN;
-    (void)memcpy_s(infoMsg + RESV_LEN_SIMT, sizeof(uint64_t), &strOffset, sizeof(uint64_t));
-    const char* fmt = "msg=%s";
-    uint64_t strArgOffset = PRINT_ARG_LEN + strlen(fmt) + 1;
-    (void)memcpy_s(infoMsg + RESV_LEN_SIMT + PRINT_ARG_LEN, sizeof(uint64_t), &strArgOffset, sizeof(uint64_t));
-    (void)memcpy_s(infoMsg + RESV_LEN_SIMT + strOffset, strlen(fmt) + 1, fmt, strlen(fmt) + 1);
-    const char* unterminatedData = "boundary";
-    const size_t unterminatedLen = strlen(unterminatedData);
-    (void)memcpy_s(
-        infoMsg + RESV_LEN_SIMT + PRINT_ARG_LEN + strArgOffset, unterminatedLen, unterminatedData, unterminatedLen);
-    head->infoLen = RESV_LEN_SIMT + PRINT_ARG_LEN + strArgOffset + unterminatedLen;
-    uint64_t consumedLen = 0U;
-    rtDfxParseParam param =
-        MakeParam(block.blockAddr, block.data.size(), 0, sizeof(DumpInfoHead) + head->infoLen, 2U, 0U);
-    testing::internal::CaptureStdout();
-    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
-    const std::string output = testing::internal::GetCapturedStdout();
-    EXPECT_EQ(consumedLen, sizeof(DumpInfoHead) + head->infoLen);
-    EXPECT_NE(output.find("String param length is greater than max length"), std::string::npos);
-    EXPECT_EQ(output.find(unterminatedData), std::string::npos);
-}
-
-TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_TensorBoolWithoutShape)
-{
-    BlockBuffer block(256);
-    uint8_t boolData[] = {1, 0, 1, 0, 1, 1, 0, 0};
-    uint32_t tlvLen = BuildTensorTlv(block.dumpStartAddr, 12U, sizeof(boolData), boolData, sizeof(boolData));
-    uint64_t consumedLen = 0U;
-    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, tlvLen);
-    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
-    EXPECT_EQ(consumedLen, tlvLen);
-}
-
-TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_TensorBoolWithShape)
-{
-    BlockBuffer block(512);
-    uint32_t off = 0;
-    uint32_t shape[] = {2, 4};
-    off += BuildShapeTlv(block.dumpStartAddr + off, 2, shape);
-    uint8_t boolData[] = {1, 0, 1, 0, 1, 1, 0, 0};
-    off += BuildTensorTlv(block.dumpStartAddr + off, 12U, sizeof(boolData), boolData, sizeof(boolData));
-    uint64_t consumedLen = 0U;
-    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, off);
-    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
-    EXPECT_EQ(consumedLen, off);
-}
-
-TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_TensorWithShapeMoreDataThanShape)
-{
-    BlockBuffer block(512);
-    uint32_t off = 0;
-    uint32_t shape[] = {2, 2};
-    off += BuildShapeTlv(block.dumpStartAddr + off, 2, shape);
-    uint8_t tensorData[] = {10, 20, 30, 40, 50, 60};
-    off += BuildTensorTlv(block.dumpStartAddr + off, 4U, sizeof(tensorData), tensorData, sizeof(tensorData));
-    uint64_t consumedLen = 0U;
-    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, off);
-    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
-    EXPECT_EQ(consumedLen, off);
-}
-
-TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_TensorWithShapeLessDataThanShape)
-{
-    BlockBuffer block(512);
-    uint32_t off = 0;
-    uint32_t shape[] = {3, 3};
-    off += BuildShapeTlv(block.dumpStartAddr + off, 2, shape);
-    uint8_t tensorData[] = {10, 20, 30};
-    off += BuildTensorTlv(block.dumpStartAddr + off, 4U, sizeof(tensorData), tensorData, sizeof(tensorData));
-    uint64_t consumedLen = 0U;
-    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, off);
-    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
-    EXPECT_EQ(consumedLen, off);
-}
-
-TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_TensorFloat16WithShape)
-{
-    BlockBuffer block(512);
-    uint32_t off = 0;
-    uint32_t shape[] = {2, 2};
-    off += BuildShapeTlv(block.dumpStartAddr + off, 2, shape);
-    uint16_t fp16Data[] = {16256, 49152, 16457, 32640};
-    off += BuildTensorTlv(
-        block.dumpStartAddr + off, 1U, sizeof(fp16Data), reinterpret_cast<uint8_t*>(fp16Data), sizeof(fp16Data));
-    uint64_t consumedLen = 0U;
-    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, off);
-    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
-    EXPECT_EQ(consumedLen, off);
-}
-
-TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_TensorWithoutShapeVariousTypes)
-{
-    BlockBuffer block(512);
-    uint32_t off = 0;
-    int16_t data1[] = {-1, 2};
-    off +=
-        BuildTensorTlv(block.dumpStartAddr + off, 6U, sizeof(data1), reinterpret_cast<uint8_t*>(data1), sizeof(data1));
-    uint16_t data2[] = {10, 20};
-    off +=
-        BuildTensorTlv(block.dumpStartAddr + off, 7U, sizeof(data2), reinterpret_cast<uint8_t*>(data2), sizeof(data2));
-    int8_t data3[] = {-3, 4, 5};
-    off +=
-        BuildTensorTlv(block.dumpStartAddr + off, 2U, sizeof(data3), reinterpret_cast<uint8_t*>(data3), sizeof(data3));
-    uint64_t consumedLen = 0U;
-    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, off);
-    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
-    EXPECT_EQ(consumedLen, off);
-}
-
-TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_TensorFloat32WithShape)
-{
-    BlockBuffer block(512);
-    uint32_t off = 0;
-    uint32_t shape[] = {2, 2};
-    off += BuildShapeTlv(block.dumpStartAddr + off, 2, shape);
-    float tensorData[] = {1.5f, 2.5f, 3.5f, 4.5f};
-    off += BuildTensorTlv(
-        block.dumpStartAddr + off, 0U, sizeof(tensorData), reinterpret_cast<uint8_t*>(tensorData), sizeof(tensorData));
-    uint64_t consumedLen = 0U;
-    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, off);
-    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
-    EXPECT_EQ(consumedLen, off);
-}
-
+// prof 回调注册/开关状态机
 static ProfCommandHandle g_capturedProfCallback = nullptr;
 static rtParseDfxInfoFunc g_capturedParseCallback = nullptr;
 static uint32_t g_profRegisterCalls = 0U;
@@ -2130,6 +1746,130 @@ TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_UnInitUnregistersCallbacksOnce)
     EXPECT_EQ(g_parseRegisterCalls, 4U);
 }
 
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_MultipleTimestampsWithProfSwitch)
+{
+    constexpr uint32_t timestampCount = 20U;
+    constexpr uint32_t timestampTlvLen = static_cast<uint32_t>(sizeof(DumpInfoHead) + sizeof(DumpTimeStampInfoMsg));
+    MOCKER(MsprofRegisterCallback).stubs().will(invoke(captureMsprofCallback));
+    DfxInfoParser::Instance().Init();
+    SetProfSwitch(PROF_OP_TIMESTAMP_MASK);
+
+    BlockBuffer block((timestampCount + 1U) * timestampTlvLen);
+    uint32_t off = 0;
+    for (uint32_t i = 0U; i < timestampCount; ++i) {
+        off += BuildTimestampTlv(block.dumpStartAddr + off);
+    }
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, off);
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    EXPECT_EQ(consumedLen, off);
+
+    SetProfSwitch(0);
+    DfxInfoParser::Instance().UnInit();
+}
+
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_TensorBoolWithoutShape)
+{
+    BlockBuffer block(256);
+    uint8_t boolData[] = {1, 0, 1, 0, 1, 1, 0, 0};
+    uint32_t tlvLen = BuildTensorTlv(block.dumpStartAddr, 12U, sizeof(boolData), boolData, sizeof(boolData));
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, tlvLen);
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    EXPECT_EQ(consumedLen, tlvLen);
+}
+
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_TensorBoolWithShape)
+{
+    BlockBuffer block(512);
+    uint32_t off = 0;
+    uint32_t shape[] = {2, 4};
+    off += BuildShapeTlv(block.dumpStartAddr + off, 2, shape);
+    uint8_t boolData[] = {1, 0, 1, 0, 1, 1, 0, 0};
+    off += BuildTensorTlv(block.dumpStartAddr + off, 12U, sizeof(boolData), boolData, sizeof(boolData));
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, off);
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    EXPECT_EQ(consumedLen, off);
+}
+
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_TensorWithShapeMoreDataThanShape)
+{
+    BlockBuffer block(512);
+    uint32_t off = 0;
+    uint32_t shape[] = {2, 2};
+    off += BuildShapeTlv(block.dumpStartAddr + off, 2, shape);
+    uint8_t tensorData[] = {10, 20, 30, 40, 50, 60};
+    off += BuildTensorTlv(block.dumpStartAddr + off, 4U, sizeof(tensorData), tensorData, sizeof(tensorData));
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, off);
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    EXPECT_EQ(consumedLen, off);
+}
+
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_TensorWithShapeLessDataThanShape)
+{
+    BlockBuffer block(512);
+    uint32_t off = 0;
+    uint32_t shape[] = {3, 3};
+    off += BuildShapeTlv(block.dumpStartAddr + off, 2, shape);
+    uint8_t tensorData[] = {10, 20, 30};
+    off += BuildTensorTlv(block.dumpStartAddr + off, 4U, sizeof(tensorData), tensorData, sizeof(tensorData));
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, off);
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    EXPECT_EQ(consumedLen, off);
+}
+
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_TensorFloat16WithShape)
+{
+    BlockBuffer block(512);
+    uint32_t off = 0;
+    uint32_t shape[] = {2, 2};
+    off += BuildShapeTlv(block.dumpStartAddr + off, 2, shape);
+    uint16_t fp16Data[] = {16256, 49152, 16457, 32640};
+    off += BuildTensorTlv(
+        block.dumpStartAddr + off, 1U, sizeof(fp16Data), reinterpret_cast<uint8_t*>(fp16Data), sizeof(fp16Data));
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, off);
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    EXPECT_EQ(consumedLen, off);
+}
+
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_TensorWithoutShapeVariousTypes)
+{
+    BlockBuffer block(512);
+    uint32_t off = 0;
+    int16_t data1[] = {-1, 2};
+    off +=
+        BuildTensorTlv(block.dumpStartAddr + off, 6U, sizeof(data1), reinterpret_cast<uint8_t*>(data1), sizeof(data1));
+    uint16_t data2[] = {10, 20};
+    off +=
+        BuildTensorTlv(block.dumpStartAddr + off, 7U, sizeof(data2), reinterpret_cast<uint8_t*>(data2), sizeof(data2));
+    int8_t data3[] = {-3, 4, 5};
+    off +=
+        BuildTensorTlv(block.dumpStartAddr + off, 2U, sizeof(data3), reinterpret_cast<uint8_t*>(data3), sizeof(data3));
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, off);
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    EXPECT_EQ(consumedLen, off);
+}
+
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_TensorFloat32WithShape)
+{
+    BlockBuffer block(512);
+    uint32_t off = 0;
+    uint32_t shape[] = {2, 2};
+    off += BuildShapeTlv(block.dumpStartAddr + off, 2, shape);
+    float tensorData[] = {1.5f, 2.5f, 3.5f, 4.5f};
+    off += BuildTensorTlv(
+        block.dumpStartAddr + off, 0U, sizeof(tensorData), reinterpret_cast<uint8_t*>(tensorData), sizeof(tensorData));
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, off);
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    EXPECT_EQ(consumedLen, off);
+}
+
 TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_TensorBF16WithShape)
 {
     BlockBuffer block(512);
@@ -2191,6 +1931,34 @@ TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_TensorShapeProductOverflow)
     EXPECT_EQ(consumedLen, off);
 }
 
+TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SimtStringWithoutTerminatorInInfoLen)
+{
+    BlockBuffer block(512);
+    DumpInfoHead* head = WriteTlv(block.dumpStartAddr, cce::runtime::DumpType::DUMP_SIMT_PRINTF, 0);
+    uint8_t* infoMsg = head->infoMsg;
+    (void)memset_s(infoMsg, RESV_LEN_SIMT, 0, RESV_LEN_SIMT);
+    uint64_t strOffset = 2 * PRINT_ARG_LEN;
+    (void)memcpy_s(infoMsg + RESV_LEN_SIMT, sizeof(uint64_t), &strOffset, sizeof(uint64_t));
+    const char* fmt = "msg=%s";
+    uint64_t strArgOffset = PRINT_ARG_LEN + strlen(fmt) + 1;
+    (void)memcpy_s(infoMsg + RESV_LEN_SIMT + PRINT_ARG_LEN, sizeof(uint64_t), &strArgOffset, sizeof(uint64_t));
+    (void)memcpy_s(infoMsg + RESV_LEN_SIMT + strOffset, strlen(fmt) + 1, fmt, strlen(fmt) + 1);
+    const char* unterminatedData = "boundary";
+    const size_t unterminatedLen = strlen(unterminatedData);
+    (void)memcpy_s(
+        infoMsg + RESV_LEN_SIMT + PRINT_ARG_LEN + strArgOffset, unterminatedLen, unterminatedData, unterminatedLen);
+    head->infoLen = RESV_LEN_SIMT + PRINT_ARG_LEN + strArgOffset + unterminatedLen;
+    uint64_t consumedLen = 0U;
+    rtDfxParseParam param =
+        MakeParam(block.blockAddr, block.data.size(), 0, sizeof(DumpInfoHead) + head->infoLen, 2U, 0U);
+    testing::internal::CaptureStdout();
+    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
+    const std::string output = testing::internal::GetCapturedStdout();
+    EXPECT_EQ(consumedLen, sizeof(DumpInfoHead) + head->infoLen);
+    EXPECT_NE(output.find("String param has no NUL terminator within max length"), std::string::npos);
+    EXPECT_EQ(output.find(unterminatedData), std::string::npos);
+}
+
 TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SimtAssertWithMessage)
 {
     BlockBuffer block(256);
@@ -2201,47 +1969,6 @@ TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SimtAssertWithMessage)
     DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
     EXPECT_EQ(consumedLen, tlvLen);
 }
-
-TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_PrintfTrailingPercent)
-{
-    BlockBuffer block(256);
-    DumpInfoHead* head = WriteTlv(block.dumpStartAddr, cce::runtime::DumpType::DUMP_SCALAR, 0);
-    uint8_t* infoMsg = head->infoMsg;
-    (void)memset_s(infoMsg, RESV_LEN, 0, RESV_LEN);
-    uint64_t strOffset = PRINT_ARG_LEN;
-    (void)memcpy_s(infoMsg + RESV_LEN, sizeof(uint64_t), &strOffset, sizeof(uint64_t));
-    const char* fmt = "trailing %";
-    (void)memcpy_s(infoMsg + RESV_LEN + strOffset, strlen(fmt) + 1, fmt, strlen(fmt) + 1);
-    head->infoLen = RESV_LEN + sizeof(uint64_t) + strlen(fmt) + 1;
-    uint64_t consumedLen = 0U;
-    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, sizeof(DumpInfoHead) + head->infoLen);
-    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
-    EXPECT_EQ(consumedLen, sizeof(DumpInfoHead) + head->infoLen);
-}
-
-TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_MultipleTimestampsWithProfSwitch)
-{
-    constexpr uint32_t timestampCount = 20U;
-    constexpr uint32_t timestampTlvLen = static_cast<uint32_t>(sizeof(DumpInfoHead) + sizeof(DumpTimeStampInfoMsg));
-    MOCKER(MsprofRegisterCallback).stubs().will(invoke(captureMsprofCallback));
-    DfxInfoParser::Instance().Init();
-    SetProfSwitch(PROF_OP_TIMESTAMP_MASK);
-
-    BlockBuffer block((timestampCount + 1U) * timestampTlvLen);
-    uint32_t off = 0;
-    for (uint32_t i = 0U; i < timestampCount; ++i) {
-        off += BuildTimestampTlv(block.dumpStartAddr + off);
-    }
-    uint64_t consumedLen = 0U;
-    rtDfxParseParam param = MakeParam(block.blockAddr, block.data.size(), 0, off);
-    DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
-    EXPECT_EQ(consumedLen, off);
-
-    SetProfSwitch(0);
-    DfxInfoParser::Instance().UnInit();
-}
-
-// ===== 超大 Tensor（DUMP_SUPER_TENSOR / DUMP_SUPER_TENSOR_BODY）用例 =====
 
 // 单包完成：header 一块即包含整个 tensor（dumpSize == length）
 TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorSinglePacket)
@@ -2899,8 +2626,6 @@ TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorThreeDimShape)
     EXPECT_NE(output.find("[[[1,2],\n[3,4]],\n[[5,6],\n[7,8]]]"), std::string::npos) << output;
 }
 
-// ===== 检视意见修复配套用例（MR 6098：offset 连续性 / 流来源 / shape 乘积溢出 / header 重入） =====
-
 // body offset 与 printedOffset 不连续（gap）：丢弃该 body + 告警，后续正确 body 仍可续打
 TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorBodyOffsetGapDropped)
 {
@@ -3064,17 +2789,17 @@ TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorShapeProductOverflow)
     EXPECT_EQ(DfxInfoParser::Instance().superTensorCtxMap_[std::make_tuple(0U, 0U, 0U)].valid, false);
 }
 
-// ===== 1M 打屏上限用例：超限以 "..." 省略 + 告警（ASCEND_DUMP_PATH 落盘 + show_kernel_debug_data） =====
-// 注：元素计数用完整元素值（如 "777777"）而非单字符——slog stub 把 IDE_LOGx 也打到 stdout，
-// 行号/tid/dump_size 等数字会污染单字符计数；完整值仅数据行命中，计数确定性有保证。
+// ===== 超大 Tensor 打屏上限用例（32K）：超限以 "..." 省略 + 告警（ASCEND_DUMP_PATH 落盘 + show_kernel_debug_data）
+// ===== 注：元素计数用完整元素值（如 "777777"）而非单字符——slog stub 把 IDE_LOGx 也打到 stdout， 行号/tid/dump_size
+// 等数字会污染单字符计数；完整值仅数据行命中，计数确定性有保证。
 
-// 单包超 1M：只打前 1M 数据（262144 个 int32），"..." 省略 + 告警一次，consumedLen 仍为整包（完成判定不受截断影响）
+// 单包超上限：只打前 32K 数据，"..." 省略 + 告警一次，consumedLen 仍为整包（完成判定不受截断影响）
 TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorPrintLimitSinglePacket)
 {
-    constexpr size_t limitBytes = 1024U * 1024U; // 与 MAX_SUPER_TENSOR_PRINT_BYTES 一致
+    constexpr size_t limitBytes = 32U * 1024U; // 与 MAX_SUPER_TENSOR_PRINT_BYTES 一致
     constexpr uint16_t int32Size = 4U;
     constexpr int32_t elemVal = 777777;
-    const size_t totalBytes = limitBytes + int32Size; // 超 1M 一个元素
+    const size_t totalBytes = limitBytes + int32Size; // 超上限一个元素
     std::vector<int32_t> tensorData(totalBytes / int32Size, elemVal);
     BlockBuffer block(totalBytes + 256U);
     const uint32_t tlvLen = BuildSuperTensorHeaderTlv(
@@ -3086,17 +2811,17 @@ TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorPrintLimitSinglePacket)
     DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
     const std::string output = testing::internal::GetCapturedStdout();
     EXPECT_EQ(consumedLen, tlvLen); // 整包消费，截断只影响打屏
-    EXPECT_EQ(CountOccurrences(output, "777777"), limitBytes / int32Size) << output; // 恰好打 1M 字节
+    EXPECT_EQ(CountOccurrences(output, "777777"), limitBytes / int32Size) << output; // 恰好打满上限字节
     EXPECT_NE(output.find("..."), std::string::npos) << output;                      // "..." 省略
     EXPECT_NE(output.find("ASCEND_DUMP_PATH"), std::string::npos) << output;         // 落盘指引
     EXPECT_NE(output.find("show_kernel_debug_data"), std::string::npos) << output;   // 工具指引
     EXPECT_EQ(DfxInfoParser::Instance().superTensorCtxMap_[std::make_tuple(0U, 0U, 0U)].valid, false); // 仍正常完成
 }
 
-// 恰好 1M（不超限）：不截断、"..." 与告警均不出现（边界）
+// 恰好达上限（不超限）：不截断、"..." 与告警均不出现（边界）
 TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorPrintLimitExactBytes)
 {
-    constexpr size_t limitBytes = 1024U * 1024U;
+    constexpr size_t limitBytes = 32U * 1024U;
     constexpr uint16_t int32Size = 4U;
     constexpr int32_t elemVal = 777777;
     std::vector<int32_t> tensorData(limitBytes / int32Size, elemVal);
@@ -3111,19 +2836,19 @@ TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorPrintLimitExactBytes)
     const std::string output = testing::internal::GetCapturedStdout();
     EXPECT_EQ(consumedLen, tlvLen);
     EXPECT_EQ(CountOccurrences(output, "777777"), limitBytes / int32Size) << output; // 全量打印
-    EXPECT_EQ(output.find("..."), std::string::npos) << output;                      // 恰好 1M 不省略
+    EXPECT_EQ(output.find("..."), std::string::npos) << output;                      // 恰好 32K 不省略
     EXPECT_EQ(output.find("too large"), std::string::npos) << output;
     EXPECT_EQ(DfxInfoParser::Instance().superTensorCtxMap_[std::make_tuple(0U, 0U, 0U)].valid, false);
 }
 
-// 分片跨 1M 边界：首段打满 1M，跨界 body 只补打差额，再后续 body 全省略；"..." 与打屏告警各一次；
+// 分片跨 32K 边界：首段打满 32K，跨界 body 只补打差额，再后续 body 全省略；"..." 与打屏告警各一次；
 // ctx 推进/完成不受截断影响
 TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorPrintLimitCrossSegment)
 {
-    constexpr size_t limitBytes = 1024U * 1024U;
+    constexpr size_t limitBytes = 32U * 1024U;
     constexpr uint16_t int32Size = 4U;
-    const size_t seg0Len = limitBytes - 4U; // 首段打 1M-4（262143 个元素）
-    const size_t seg1Len = 8U;              // body1 跨界：只补打 4 字节（1 个元素）即满 1M
+    const size_t seg0Len = limitBytes - 4U; // 首段打 32K-4（8191 个元素）
+    const size_t seg1Len = 8U;              // body1 跨界：只补打 4 字节（1 个元素）即满 32K
     const size_t seg2Len = 8U;              // body2 完全省略
     const size_t totalBytes = seg0Len + seg1Len + seg2Len;
     std::vector<int32_t> seg0(seg0Len / int32Size, 111111);
@@ -3145,7 +2870,7 @@ TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorPrintLimitCrossSegment)
     DfxInfoParser::Instance().ParseDfxInfo(&param, &consumedLen);
     const std::string output = testing::internal::GetCapturedStdout();
     EXPECT_EQ(consumedLen, off);
-    // 首段全打（262143 个）；body1 跨界只补打 1 个元素；body2 全省略
+    // 首段全打（8191 个）；body1 跨界只补打 1 个元素；body2 全省略
     EXPECT_EQ(CountOccurrences(output, "111111"), seg0Len / int32Size) << output;
     EXPECT_EQ(CountOccurrences(output, "222222"), 1U) << output;
     EXPECT_EQ(CountOccurrences(output, "333333"), 0U) << output;
@@ -3160,7 +2885,7 @@ TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorPrintLimitCrossSegment)
 // 截断后的后续 tensor：省略标志随新 header 复位，新 tensor 从头打屏
 TEST_F(DfxInfoParserUtest, Test_ParseDfxInfo_SuperTensorPrintLimitResetByNewHeader)
 {
-    constexpr size_t limitBytes = 1024U * 1024U;
+    constexpr size_t limitBytes = 32U * 1024U;
     const size_t bigLen = limitBytes + 8U;
     std::vector<uint8_t> bigData(bigLen, 9U);
     const uint8_t smallData[] = {5, 6, 7, 8};

@@ -54,6 +54,7 @@ set(ascendDumpBaseSrcList
     ${ADUMP_ADUMP_DIR}/operator/operator_dumper.cpp
     ${ADUMP_ADUMP_DIR}/operator/kernel_dfx_dumper.cpp
     ${ADUMP_ADUMP_DIR}/operator/dfx_info_parser.cpp
+    ${ADUMP_ADUMP_DIR}/operator/dfx_printf_parser.cpp
     ${ADUMP_ADUMP_DIR}/printf/dump_printf/dump_printf.cpp
     ${ADUMP_ADUMP_DIR}/printf/dump_printf/dump_printf_platform.cpp
     ${ADUMP_ADUMP_DIR}/printf/fp16_t.cpp

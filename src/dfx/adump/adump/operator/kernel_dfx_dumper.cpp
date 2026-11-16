@@ -68,7 +68,7 @@ int32_t KernelDfxDumper::PushDfxInfoToQueue(DumpDfxInfo& dfxInfo)
 {
     IDE_CTRL_VALUE_WARN(taskInit_, return ADUMP_FAILED, "The dfx dump task is not started or has been stopped.");
     if (dumpDfxInfoQueue_->IsFull()) {
-        IDE_LOGE("Cannot push the dfx info into the queue. Memory usage exceeds 85% or queue size exceeds 60!");
+        IDE_LOGE("Cannot push the dfx info into the queue. Memory usage exceeds 85%% or queue size exceeds 60!");
         return ADUMP_FAILED;
     } else {
         if (dumpDfxInfoQueue_->Push(dfxInfo)) {

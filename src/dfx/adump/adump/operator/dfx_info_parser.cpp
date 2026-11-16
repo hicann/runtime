@@ -10,6 +10,7 @@
 
 #include "dfx_info_parser.h"
 
+#include <cstdint>
 #include <sstream>
 #include <string>
 #include <unordered_map>
@@ -31,6 +32,7 @@
 #include "adump_cc_mode.h"
 #include "dump_printf.h"
 #include "kernel_dfx_dumper.h"
+#include "dfx_printf_parser.h"
 
 namespace Adx {
 namespace {
@@ -71,8 +73,6 @@ uint64_t GetProfSwitchData() { return g_profSwitch.load(std::memory_order_relaxe
 constexpr uint32_t PRINT_ARG_LEN = 8U;
 constexpr uint32_t RESV_LEN = 8U;
 constexpr uint32_t RESV_LEN_SIMT = 40U;
-constexpr uint32_t PRINT_MSG_LEN_OFFSET = 12U;
-constexpr uint32_t SIMT_PRINT_MSG_LEN_OFFSET = 44U;
 constexpr size_t MAX_LOG_LENGTH = 256U;
 constexpr uint16_t INT16_SIZE = 2U;
 constexpr uint16_t INT32_SIZE = 4U;
@@ -120,20 +120,14 @@ using cce::runtime::RT_KERNEL_DFX_INFO_CORE_TYPE_SIMT;
 using DfxDumpType = cce::runtime::DumpType;
 
 constexpr uint64_t BLOCK_METADATA_LEN = sizeof(BlockInfo) + sizeof(BlockReadInfo) + sizeof(BlockWriteInfo);
+// 超大 Tensor 打屏上限：32K 字节。超过后剩余数据以 "..." 忽略并告警，完整数据走落盘
+constexpr size_t MAX_SUPER_TENSOR_PRINT_BYTES = 32U * 1024U;
 
 template <typename T>
 std::string ToHex(T num)
 {
     std::stringstream stream;
     stream << std::hex << num;
-    return stream.str();
-}
-
-template <typename T>
-std::string ToUpperHex(T num)
-{
-    std::stringstream stream;
-    stream << std::uppercase << std::hex << num;
     return stream.str();
 }
 
@@ -171,219 +165,6 @@ static std::string PositionToString(const uint16_t position)
     return (positionIter != POSITION_MAP.end()) ? positionIter->second : std::to_string(position);
 }
 
-template <typename T>
-inline T ParseParam(const uint8_t* beginAddr, const uint32_t paramIndex)
-{
-    const T* paramAddr = reinterpret_cast<const T*>(beginAddr + paramIndex * PRINT_ARG_LEN);
-    return *paramAddr;
-}
-
-static void PrintFormatD(const uint8_t* paramBegin, std::string& printInfo, const uint32_t paramIndex)
-{
-    const int64_t paramInfo = ParseParam<int64_t>(paramBegin, paramIndex);
-    printInfo += std::to_string(paramInfo);
-}
-
-static void PrintFormatI(const uint8_t* paramBegin, std::string& printInfo, const uint32_t paramIndex)
-{
-    const int64_t paramInfo = ParseParam<int64_t>(paramBegin, paramIndex);
-    printInfo += std::to_string(paramInfo);
-}
-
-static void PrintFormatF(const uint8_t* paramBegin, std::string& printInfo, const uint32_t paramIndex)
-{
-    const float paramInfo = ParseParam<float>(paramBegin, paramIndex);
-    printInfo += std::to_string(paramInfo);
-}
-
-static void PrintFormatFUpper(const uint8_t* paramBegin, std::string& printInfo, const uint32_t paramIndex)
-{
-    const float paramInfo = ParseParam<float>(paramBegin, paramIndex);
-    printInfo += std::to_string(paramInfo);
-}
-
-static void PrintFormatU(const uint8_t* paramBegin, std::string& printInfo, const uint32_t paramIndex)
-{
-    const uint64_t paramInfo = ParseParam<uint64_t>(paramBegin, paramIndex);
-    printInfo += std::to_string(paramInfo);
-}
-
-static void PrintFormatP(const uint8_t* paramBegin, std::string& printInfo, const uint32_t paramIndex)
-{
-    const void* paramInfo = ParseParam<void*>(paramBegin, paramIndex);
-    std::stringstream stream;
-    stream << paramInfo;
-    printInfo += stream.str();
-}
-
-static void PrintFormatX(const uint8_t* paramBegin, std::string& printInfo, const uint32_t paramIndex)
-{
-    const int64_t paramInfo = ParseParam<int64_t>(paramBegin, paramIndex);
-    printInfo += ToHex(paramInfo);
-}
-
-static void PrintFormatXUpper(const uint8_t* paramBegin, std::string& printInfo, const uint32_t paramIndex)
-{
-    const int64_t paramInfo = ParseParam<int64_t>(paramBegin, paramIndex);
-    printInfo += ToUpperHex(paramInfo);
-}
-
-static void PrintFormatS(const uint8_t* paramBegin, std::string& printInfo, const uint32_t paramIndex)
-{
-    // DumpInfoHead 中infoMsg前面就是当前dump块的Len，占4字节,infoMsg前面是8字节的预留字段
-    const uint64_t infoLen = *reinterpret_cast<const uint32_t*>(paramBegin - PRINT_MSG_LEN_OFFSET);
-    const uint64_t paramOffset = RESV_LEN + static_cast<uint64_t>(paramIndex) * PRINT_ARG_LEN;
-    if ((paramOffset > infoLen) || ((infoLen - paramOffset) < PRINT_ARG_LEN)) {
-        IDE_LOGW(
-            "String param index[%u] is outside info length[%llu bytes].", paramIndex,
-            static_cast<unsigned long long>(infoLen));
-        return;
-    }
-    const uint64_t* offsetAddr = reinterpret_cast<const uint64_t*>(paramBegin + paramIndex * PRINT_ARG_LEN);
-    const uint64_t strOffset = *offsetAddr;
-    const uint64_t maxStrOffset = infoLen - paramOffset;
-    if ((strOffset < PRINT_ARG_LEN) || (strOffset > maxStrOffset)) {
-        IDE_LOGW(
-            "Invalid string param offset[%llu]. Expected range is [%u, %llu].",
-            static_cast<unsigned long long>(strOffset), PRINT_ARG_LEN, static_cast<unsigned long long>(maxStrOffset));
-        return;
-    }
-    const char* data = reinterpret_cast<const char*>(offsetAddr) + strOffset;
-    const size_t maxLen = static_cast<size_t>(maxStrOffset - strOffset);
-    const size_t dataLen = strnlen(data, maxLen);
-    IDE_LOGD("Get string param length[%zu bytes], max length[%zu bytes].", dataLen, maxLen);
-    if (dataLen == maxLen) {
-        IDE_LOGW("String param length is greater than max length[%zu bytes]", maxLen);
-        return;
-    }
-    std::stringstream stream;
-    stream << data;
-    printInfo += stream.str();
-}
-
-static void SimtPrintFormatS(const uint8_t* paramBegin, std::string& printInfo, const uint32_t paramIndex)
-{
-    // DumpInfoHead 中infoMsg前面就是当前dump块的Len，占4字节,infoMsg前面是40字节的预留字段
-    const uint64_t infoLen = *reinterpret_cast<const uint32_t*>(paramBegin - SIMT_PRINT_MSG_LEN_OFFSET);
-    const uint64_t paramOffset = RESV_LEN_SIMT + static_cast<uint64_t>(paramIndex) * PRINT_ARG_LEN;
-    if ((paramOffset > infoLen) || ((infoLen - paramOffset) < PRINT_ARG_LEN)) {
-        IDE_LOGW(
-            "String param index[%u] is outside info length[%llu bytes].", paramIndex,
-            static_cast<unsigned long long>(infoLen));
-        return;
-    }
-    const uint64_t* offsetAddr = reinterpret_cast<const uint64_t*>(paramBegin + paramIndex * PRINT_ARG_LEN);
-    const uint64_t strOffset = *offsetAddr;
-    const uint64_t maxStrOffset = infoLen - paramOffset;
-    if ((strOffset < PRINT_ARG_LEN) || (strOffset > maxStrOffset)) {
-        IDE_LOGW(
-            "Invalid string param offset[%llu]. Expected range is [%u, %llu].",
-            static_cast<unsigned long long>(strOffset), PRINT_ARG_LEN, static_cast<unsigned long long>(maxStrOffset));
-        return;
-    }
-    const char* data = reinterpret_cast<const char*>(offsetAddr) + strOffset;
-    const size_t maxLen = static_cast<size_t>(maxStrOffset - strOffset);
-    const size_t dataLen = strnlen(data, maxLen);
-    IDE_LOGD("Get string param length[%zu bytes], max length[%zu bytes].", dataLen, maxLen);
-    if (dataLen == maxLen) {
-        IDE_LOGW("String param length is greater than max length[%zu bytes]", maxLen);
-        return;
-    }
-    std::stringstream stream;
-    stream << data;
-    printInfo += stream.str();
-}
-
-const std::unordered_map<std::string, std::function<void(const uint8_t*, std::string&, const uint32_t)>>
-    SIMT_PRINT_FORMAT_CALLS{
-        {"d", &PrintFormatD},       {"ld", &PrintFormatD},       {"lld", &PrintFormatD},  {"i", &PrintFormatI},
-        {"li", &PrintFormatI},      {"lli", &PrintFormatI},      {"f", &PrintFormatF},    {"F", &PrintFormatFUpper},
-        {"u", &PrintFormatU},       {"lu", &PrintFormatU},       {"llu", &PrintFormatU},  {"p", &PrintFormatP},
-        {"x", &PrintFormatX},       {"lx", &PrintFormatX},       {"llx", &PrintFormatX},  {"X", &PrintFormatXUpper},
-        {"lX", &PrintFormatXUpper}, {"llX", &PrintFormatXUpper}, {"s", &SimtPrintFormatS}};
-
-const std::unordered_map<std::string, std::function<void(const uint8_t*, std::string&, const uint32_t)>>
-    SIMD_PRINT_FORMAT_CALLS{
-        {"d", &PrintFormatD},       {"ld", &PrintFormatD},       {"lld", &PrintFormatD}, {"i", &PrintFormatI},
-        {"li", &PrintFormatI},      {"lli", &PrintFormatI},      {"f", &PrintFormatF},   {"F", &PrintFormatFUpper},
-        {"u", &PrintFormatU},       {"lu", &PrintFormatU},       {"llu", &PrintFormatU}, {"p", &PrintFormatP},
-        {"x", &PrintFormatX},       {"lx", &PrintFormatX},       {"llx", &PrintFormatX}, {"X", &PrintFormatXUpper},
-        {"lX", &PrintFormatXUpper}, {"llX", &PrintFormatXUpper}, {"s", &PrintFormatS}};
-
-std::string ParseFormat(const char* format)
-{
-    std::string temp;
-    if ((*format) == 'l') {
-        temp += std::string(format, 1);
-        format++;
-        if (((*format) != '\0') && ((*format) == 'l')) {
-            temp += std::string(format, 1);
-            format++;
-            if ((*format) != '\0') {
-                temp += std::string(format, 1);
-                return temp;
-            }
-        } else if ((*format) != '\0') {
-            temp += std::string(format, 1);
-            return temp;
-        } else {
-            // no op
-        }
-    }
-    temp += std::string(format, 1);
-    return temp;
-}
-
-void ParsePrintToLog(
-    const char* format, const uint8_t* paramBegin, const uint32_t paramNum, const bool isAssert, uint32_t flag)
-{
-    const auto& formatMap = (flag == PRINT_SIMT) ? SIMT_PRINT_FORMAT_CALLS : SIMD_PRINT_FORMAT_CALLS;
-    uint32_t paramIndex = 0U;
-    std::string printInfo = "";
-    while ((*format) != '\0') {
-        if ((*format) != '%') {
-            printInfo += *format;
-            format++;
-            continue;
-        }
-        format++;
-        const std::string& tempFormat = ParseFormat(format);
-        const auto& iter = formatMap.find(tempFormat);
-        if (iter == formatMap.end()) {
-            printInfo += "%";
-            if (tempFormat[0] == '%') { // 支持 %% 打印
-                format++;
-                continue;
-            }
-            IDE_LOGW("The print format [%%%s] is illegal.", tempFormat.c_str());
-            if (tempFormat[0] != '\0') { // 正文末尾不是%的处理
-                printInfo += tempFormat;
-                format += tempFormat.size();
-            }
-            break;
-        }
-        paramIndex++;
-        if (paramIndex > paramNum) {
-            IDE_LOGW(
-                "There are too many placeholders (>=%u). The actual number of parameters is %u.", paramIndex, paramNum);
-            break;
-        }
-        (iter->second)(paramBegin, printInfo, paramIndex);
-        format += tempFormat.size();
-    }
-
-    const size_t infoLen = printInfo.size();
-    for (size_t curIdx = 0; curIdx < infoLen; curIdx += MAX_LOG_LENGTH) {
-        const size_t curLen = (curIdx + MAX_LOG_LENGTH) > infoLen ? (infoLen - curIdx) : MAX_LOG_LENGTH;
-        (void)printf("%s", printInfo.substr(curIdx, curLen).c_str());
-        if (isAssert) {
-            IDE_LOGE("%s", printInfo.substr(curIdx, curLen).c_str());
-        } else {
-            IDE_LOGI("PrintInfo: %s", printInfo.substr(curIdx, curLen).c_str());
-        }
-    }
-}
-
 void PrintDumpBase(const DumpInfoHead* dumpHead, uint32_t flag)
 {
     const uint32_t resvOffset = (flag == PRINT_SIMT) ? RESV_LEN_SIMT : RESV_LEN;
@@ -415,7 +196,9 @@ void PrintDumpBase(const DumpInfoHead* dumpHead, uint32_t flag)
 
     const bool isAssert =
         (dumpHead->type == DfxDumpType::DUMP_ASSERT || dumpHead->type == DfxDumpType::DUMP_SIMT_ASSERT);
-    ParsePrintToLog(str, reinterpret_cast<const uint8_t*>(dumpHead->infoMsg + resvOffset), argsNum, isAssert, flag);
+    const PrintfRenderCtx ctx{
+        reinterpret_cast<const uint8_t*>(dumpHead->infoMsg + resvOffset), argsNum, dumpHead->infoLen, resvOffset};
+    ParsePrintToLog(str, ctx, isAssert);
 }
 
 void PrintDump(const DumpInfoHead* dumpHead) { PrintDumpBase(dumpHead, PRINT_SIMD); }
@@ -1002,20 +785,18 @@ static std::vector<size_t> BuildSuperTensorTmpShape(const SuperTensorPrintCtx& c
     return tmpShape;
 }
 
-// 超大 Tensor 打屏上限：1M 字节。超过后剩余数据以 "..." 省略并告警，完整数据走落盘
-constexpr size_t MAX_SUPER_TENSOR_PRINT_BYTES = 1024U * 1024U;
-
 static void PrintSuperTensorTruncationWarn(const SuperTensorPrintCtx& ctx)
 {
     std::cout << "..." << std::endl;
     std::cout << "Warning: the tensor data is too large. Only the first " << MAX_SUPER_TENSOR_PRINT_BYTES
               << " bytes are printed and the rest is omitted. To view the full data, set the environment variable "
-                 "ASCEND_DUMP_PATH to enable dumping it to disk, and then use the show_kernel_debug_data tool to view "
-                 "it."
+                 "ASCEND_DUMP_PATH or ASCEND_WORK_PATH to enable dumping it to disk, and then use the "
+                 "show_kernel_debug_data tool to view it."
               << std::endl;
     IDE_LOGW(
         "Super tensor desc=%u data is too large (%lu bytes); only the first %zu bytes are printed. "
-        "Set ASCEND_DUMP_PATH to enable dumping to disk, then use show_kernel_debug_data to view the full data.",
+        "Set ASCEND_DUMP_PATH or ASCEND_WORK_PATH to enable dumping to disk, then use show_kernel_debug_data "
+        "to view the full data.",
         ctx.desc, ctx.length, MAX_SUPER_TENSOR_PRINT_BYTES);
 }
 
