@@ -2524,10 +2524,11 @@ aicpu::status_t GetAicpuRunModeSOCKET1(aicpu::AicpuRunMode& runMode)
     }
     return AICPU_ERROR_FAILED;
 }
-void SendMc2CreateThreadMsgToMain_stub()
+int32_t SendMc2CreateThreadMsgToMain_stub()
 {
     struct TsdSubEventInfo* msg = nullptr;
     CreateCustMc2MaintenanceThread(msg);
+    return AICPU_SCHEDULE_OK;
 }
 
 TEST_F(AICPUCustScheduleTEST, ST_StartMC2MaintenanceThread)
@@ -2580,8 +2581,16 @@ TEST_F(AICPUCustScheduleTEST, ST_SetMc2MaintenanceThreadAffinity)
     ret = AicpuCustMc2MaintenanceThread::GetInstance(0).SetCustMc2MaintenanceThreadAffinity();
     EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID);
     setenv("PROCMGR_AICPU_CPUSET", "0", 1);
+    GlobalMockObject::verify();
+    MOCKER(pthread_setaffinity_np).expects(once()).will(invoke(+[](pthread_t, size_t, const cpu_set_t* mask) {
+        EXPECT_EQ(CPU_COUNT(mask), 1);
+        EXPECT_NE(CPU_ISSET(0, mask), 0);
+        return 0;
+    }));
     ret = AicpuCustMc2MaintenanceThread::GetInstance(0).SetCustMc2MaintenanceThreadAffinity();
-    MOCKER(pthread_setaffinity_np).stubs().will(returnValue(2));
+    EXPECT_EQ(ret, AICPU_SCHEDULE_OK);
+    GlobalMockObject::verify();
+    MOCKER(pthread_setaffinity_np).stubs().will(returnValue(EINVAL));
     ret = AicpuCustMc2MaintenanceThread::GetInstance(0).SetCustMc2MaintenanceThreadAffinity();
     EXPECT_EQ(ret, AICPU_SCHEDULE_ERROR_INNER_ERROR);
     AicpuDrvManager::GetInstance().ccpuIdVec_.clear();
@@ -2643,11 +2652,12 @@ TEST_F(AICPUCustScheduleTEST, StartMC2MaintenanceThread_AICPU_SCHEDULE_THREAD_AL
     MOCKER(sem_wait).stubs().will(returnValue(0));
     MOCKER(sem_post).stubs().will(returnValue(0));
     MOCKER(sem_destroy).stubs().will(returnValue(0));
-    MOCKER(&halEschedSubmitEvent).stubs().will(returnValue(1));
+    MOCKER(&halEschedSubmitEvent).stubs().will(returnValue(DRV_ERROR_NONE));
     int ret = 0;
     ret = StartMC2MaintenanceThread(&func111, nullptr, &stopfunc111, nullptr);
     EXPECT_EQ(ret, AicpuSchedule::AICPU_SCHEDULE_OK);
     ret = StartMC2MaintenanceThread(&func111, nullptr, &stopfunc111, nullptr);
+    EXPECT_EQ(ret, AICPU_SCHEDULE_THREAD_ALREADY_EXISTS);
     AicpuSchedule::AicpuCustMc2MaintenanceThread::GetInstance(0).initFlag_ = true;
     AicpuCustMc2MaintenanceThread::GetInstance(0).UnitCustMc2MaintenanceProcess();
     AicpuCustMc2MaintenanceThread::GetInstance(0).StopProcessEventFunc();
@@ -2744,13 +2754,23 @@ TEST_F(AICPUCustScheduleTEST, CreateMc2MaintenanceThread_failed_St)
 TEST_F(AICPUCustScheduleTEST, StartMC2MaintenanceThread_sem_wait_failed_St)
 {
     MOCKER(sem_init).stubs().will(returnValue(0));
-    MOCKER(sem_wait).stubs().will(returnValue(-1));
+    MOCKER(sem_wait).expects(never());
     MOCKER(sem_post).stubs().will(returnValue(0));
-    MOCKER(sem_destroy).stubs().will(returnValue(0));
+    MOCKER(sem_destroy).expects(once()).will(returnValue(0));
+    MOCKER(halEschedSubmitEvent).stubs().will(returnValue(DRV_ERROR_INNER_ERR));
     int ret = 0;
     AicpuSchedule::AicpuCustMc2MaintenanceThread::GetInstance(0).initFlag_ = false;
     ret = StartMC2MaintenanceThread(&func111, nullptr, &stopfunc111, nullptr);
     EXPECT_EQ(ret, AicpuSchedule::AICPU_SCHEDULE_ERROR_INIT_FAILED);
+    EXPECT_FALSE(AicpuCustMc2MaintenanceThread::GetInstance(0).initFlag_);
+    GlobalMockObject::verify();
+    MOCKER(sem_init).stubs().will(returnValue(0));
+    MOCKER(sem_wait).expects(once()).will(returnValue(-1));
+    MOCKER(sem_destroy).expects(once()).will(returnValue(0));
+    MOCKER(halEschedSubmitEvent).stubs().will(returnValue(DRV_ERROR_NONE));
+    ret = StartMC2MaintenanceThread(&func111, nullptr, &stopfunc111, nullptr);
+    EXPECT_EQ(ret, AicpuSchedule::AICPU_SCHEDULE_ERROR_INIT_FAILED);
+    GlobalMockObject::verify();
     AicpuSchedule::AicpuCustMc2MaintenanceThread::GetInstance(0).initFlag_ = true;
     AicpuCustMc2MaintenanceThread::GetInstance(0).UnitCustMc2MaintenanceProcess();
     AicpuCustMc2MaintenanceThread::GetInstance(0).StopProcessEventFunc();

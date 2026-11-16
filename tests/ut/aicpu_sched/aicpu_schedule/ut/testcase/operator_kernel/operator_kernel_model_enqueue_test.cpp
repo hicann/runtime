@@ -178,3 +178,19 @@ TEST_F(OperatorKernelModelEnqueueTest, SetMbufNullData_success)
         PtrAdd<uint8_t>(PtrToPtr<char, uint8_t>(&head[0U]), 256U, 256U - sizeof(MbufHeadMsg)));
     EXPECT_TRUE((msg->dataFlag & MBUF_HEAD_DATA_FLAG_MASK) == static_cast<uint8_t>(DataFlag::DFLOW_NULL_DATA_FLAG));
 }
+TEST_F(OperatorKernelModelEnqueueTest, OversizedHeaderDoesNotDereferenceNull)
+{
+    constexpr uint32_t oversizedHeaderSize = MBUF_HEAD_MAX_SIZE + sizeof(MbufHeadMsg);
+    uint8_t header[oversizedHeaderSize] = {};
+    AicpuModel model;
+    model.nullDataFlag_ = true;
+    model.abnormalEnabled_ = true;
+    constexpr int32_t modelError = 7;
+    model.SetModelRetCode(modelError);
+    MOCKER_CPP(&AicpuModelManager::GetModel).stubs().will(returnValue(&model));
+    kernel_.SetMbufRetCode(0U, header, oversizedHeaderSize);
+    kernel_.SetMbufNullData(0U, header, oversizedHeaderSize);
+    for (const auto byte : header) {
+        EXPECT_EQ(byte, 0U);
+    }
+}

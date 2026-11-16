@@ -64,7 +64,7 @@ private:
     /*
      * 给主线程发送启动CustMc2维测线程的事件
      */
-    void SendCustMc2CreateThreadMsgToMain() const;
+    int32_t SendCustMc2CreateThreadMsgToMain() const;
     /*
      * CustMc2Maintenance 线程初始化
      */

@@ -92,7 +92,8 @@ int32_t OperatorKernelEnqueueBase::EnqueueTask(BufEnQueueInfo& bufInfo, const Ru
 void OperatorKernelEnqueueBase::SetMbufRetCode(
     const uint32_t modelId, void* const headBuf, const uint32_t headSize) const
 {
-    if ((headBuf != nullptr) && (static_cast<size_t>(headSize) >= sizeof(MbufHeadMsg))) {
+    if ((headBuf != nullptr) && (static_cast<size_t>(headSize) >= sizeof(MbufHeadMsg)) &&
+        (static_cast<size_t>(headSize) < MBUF_HEAD_MAX_SIZE + sizeof(MbufHeadMsg))) {
         int32_t retCode = 0;
         const auto model = AicpuModelManager::GetInstance().GetModel(modelId);
         if (model != nullptr) {
@@ -124,7 +125,8 @@ void OperatorKernelEnqueueBase::SetMbufEndOfSequence(
 void OperatorKernelEnqueueBase::SetMbufNullData(
     const uint32_t modelId, void* const headBuf, const uint32_t headSize) const
 {
-    if ((headBuf != nullptr) && (static_cast<size_t>(headSize) >= sizeof(MbufHeadMsg))) {
+    if ((headBuf != nullptr) && (static_cast<size_t>(headSize) >= sizeof(MbufHeadMsg)) &&
+        (static_cast<size_t>(headSize) < MBUF_HEAD_MAX_SIZE + sizeof(MbufHeadMsg))) {
         const auto model = AicpuModelManager::GetInstance().GetModel(modelId);
         if ((model != nullptr) && model->GetNullDataFlag()) {
             MbufHeadMsg* const msg = PtrToPtr<uint8_t, MbufHeadMsg>(PtrAdd<uint8_t>(

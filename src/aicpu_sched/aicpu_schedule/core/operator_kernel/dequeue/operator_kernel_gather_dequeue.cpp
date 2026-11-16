@@ -187,6 +187,11 @@ bool OperatorKernelGatherDequeue::DequeAndCheckIfReady(
     uint32_t* const deviceIds = PtrToPtr<void, uint32_t>(ValueToPtr(batchDeqInfo->deviceIdAddr));
     DeployContext deployCtx = DeployContext::DEVICE;
     (void)GetAicpuDeployContext(deployCtx);
+    if ((deployCtx != DeployContext::DEVICE) && ((deviceTypes == nullptr) || (deviceIds == nullptr))) {
+        aicpusd_err("deviceTypeAddr or deviceIdAddr is null");
+        gatherRet = AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID;
+        return true;
+    }
     uint64_t loopCnt = 0UL;
     while (true) {
         loopCnt++;

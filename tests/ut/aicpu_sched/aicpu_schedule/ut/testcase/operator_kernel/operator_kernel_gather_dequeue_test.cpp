@@ -273,3 +273,25 @@ TEST_F(OperatorKernelGatherDequeueTest, ModelGatherDeque_EmptyOnClientQ)
 
     EXPECT_EQ(kernel_.Compute(taskT, runContextT), AICPU_SCHEDULE_OK);
 }
+TEST_F(OperatorKernelGatherDequeueTest, HostDeviceArraysMustBePresent)
+{
+    MOCKER(GetAicpuDeployContext).stubs().with(outBound(DeployContext::HOST)).will(returnValue(AICPU_SCHEDULE_OK));
+    GatherDequeParam param = {};
+    RunContext context = {};
+    AicpuModel model;
+    uint32_t queueId = 0U;
+    uint32_t deviceId = 0U;
+    uint32_t deviceType = 0U;
+    int32_t result = AICPU_SCHEDULE_OK;
+    bool blocked = false;
+    param.inputNums = 1U;
+    param.queueIdsAddr = PtrToValue(&queueId);
+    param.deviceIdAddr = PtrToValue(&deviceId);
+    EXPECT_TRUE(kernel_.DequeAndCheckIfReady(&param, result, &model, context, blocked));
+    EXPECT_EQ(result, AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID);
+    result = AICPU_SCHEDULE_OK;
+    param.deviceIdAddr = 0U;
+    param.deviceTypeAddr = PtrToValue(&deviceType);
+    EXPECT_TRUE(kernel_.DequeAndCheckIfReady(&param, result, &model, context, blocked));
+    EXPECT_EQ(result, AICPU_SCHEDULE_ERROR_PARAMETER_NOT_VALID);
+}

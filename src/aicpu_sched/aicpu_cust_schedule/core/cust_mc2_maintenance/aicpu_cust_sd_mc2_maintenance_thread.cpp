@@ -49,7 +49,7 @@ AicpuCustMc2MaintenanceThread::AicpuCustMc2MaintenanceThread(uint32_t type)
       stopProcessEventFuncParam_(nullptr),
       type_(type)
 {}
-void AicpuCustMc2MaintenanceThread::SendCustMc2CreateThreadMsgToMain() const
+int32_t AicpuCustMc2MaintenanceThread::SendCustMc2CreateThreadMsgToMain() const
 {
     TsdSubEventInfo msg = {};
     event_summary eventInfo = {};
@@ -67,9 +67,10 @@ void AicpuCustMc2MaintenanceThread::SendCustMc2CreateThreadMsgToMain() const
     const drvError_t ret = halEschedSubmitEvent(deviceId, &eventInfo);
     if (ret != DRV_ERROR_NONE) {
         aicpusd_err("Failed to submit, eventId: [%d], ret: [%d].", TSD_EVENT_START_MC2_THREAD, ret);
+        return AICPU_SCHEDULE_ERROR_INIT_FAILED;
     }
 
-    return;
+    return AICPU_SCHEDULE_OK;
 }
 
 int32_t AicpuCustMc2MaintenanceThread::CreateCustMc2MaintenanceThread()
@@ -126,7 +127,11 @@ int32_t AicpuCustMc2MaintenanceThread::InitCustMc2MaintenanceProcess(
         aicpusd_err("workerSme_ init failed, type[%u], %s", type_, strerror(errno));
         return AICPU_SCHEDULE_ERROR_INIT_FAILED;
     }
-    SendCustMc2CreateThreadMsgToMain();
+    ret = SendCustMc2CreateThreadMsgToMain();
+    if (ret != AICPU_SCHEDULE_OK) {
+        sem_destroy(&workerSme_);
+        return ret;
+    }
     const int32_t semWaitRet = sem_wait(&workerSme_);
     if (semWaitRet == -1) {
         sem_destroy(&workerSme_);
@@ -153,6 +158,7 @@ int32_t AicpuCustMc2MaintenanceThread::SetCustMc2MaintenanceThreadAffinity()
         pthread_t threadId = pthread_self();
         threadId_ = GetTid();
         cpu_set_t cpuset;
+        CPU_ZERO(&cpuset);
         for (const auto cpuId : ccpuIds) {
             CPU_SET(cpuId, &cpuset);
             aicpusd_info(

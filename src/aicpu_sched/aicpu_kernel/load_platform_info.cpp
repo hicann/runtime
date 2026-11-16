@@ -24,6 +24,7 @@ extern "C" {
 __attribute__((visibility("default"))) uint32_t LoadCustPlatform(void* args)
 {
     KERNEL_LOG_INFO("Begin loading the custom platform");
+    KERNEL_CHECK_NULLPTR(args, aicpu::KERNEL_STATUS_PARAM_INVALID, "LoadCustPlatform args nullptr");
     auto load_args = PtrToPtr<void, LoadPlatformInfosArgs>(args);
     const uint64_t input_info = load_args->args;
     const uint32_t info_len = static_cast<uint32_t>(load_args->args_size);

@@ -104,3 +104,7 @@ TEST_F(TEST_PlatformRebuild_UTest, LoadCustPlatform_01)
     }
     EXPECT_EQ(ret, KERNEL_STATUS_OK);
 }
+TEST_F(TEST_PlatformRebuild_UTest, LoadCustPlatformRejectsNullArgs)
+{
+    EXPECT_EQ(LoadCustPlatform(nullptr), KERNEL_STATUS_PARAM_INVALID);
+}
