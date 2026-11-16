@@ -64,7 +64,7 @@ DOWNLOAD_LIST=(
     "${OBS_URL}/makeself/makeself-release-2.5.0.tar.gz 705d0376db9109a8ef1d4f3876c9997ee6bed454a23619e1dbc03d25033e46ea makeself-release-2.5.0.tar.gz"
     "${OBS_URL}/makeself/fix/makeself-2.5.0.patch 0ecac3fe200221353322626900d5257a59d98347f83653b98456e08475994486 patch/makeself-2.5.0.patch"
     # Version and SHA256 match cmake/fetch_cann_cmake.cmake.
-    "https://raw.gitcode.com/cann/cmake/archive/refs/heads/master-059.tar.gz 9e59939b5c97c9498293969df22ab2dd40e450700c51f84f117d065880f40d25 cmake-master-059.tar.gz"
+    "https://raw.gitcode.com/cann/cmake/archive/refs/heads/master-059.tar.gz 9cb9def78f6baaf0146d06565cd2e14d00399f00e4def1e98c90cfd552a48bf2 cmake-master-059.tar.gz"
 )
 
 TEMP_FILE=""
