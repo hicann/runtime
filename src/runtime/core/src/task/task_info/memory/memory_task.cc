@@ -984,7 +984,6 @@ rtError_t CacheWaitValueTaskParams(TaskInfo* taskInfo, rtTaskParams* params)
 
 rtError_t UpdateWriteValueTaskParams(TaskInfo* const taskInfo, const TaskUpdateParams* const params)
 {
-    BackupTaskArgHandle(taskInfo);
     TaskClearForUpdate(taskInfo);
     (void)MemWriteValueTaskInit(
         taskInfo, params->u.valueWriteUpdateParams.devAddr, params->u.valueWriteUpdateParams.value);
@@ -1006,7 +1005,6 @@ rtError_t UpdateWriteValueTaskParams(TaskInfo* const taskInfo, const TaskUpdateP
 
 rtError_t UpdateWaitValueTaskParams(TaskInfo* const taskInfo, const TaskUpdateParams* const params)
 {
-    BackupTaskArgHandle(taskInfo);
     TaskClearForUpdate(taskInfo);
     // 需要先赋值类型，此类型会影响Init中的内存申请方式
     taskInfo->type = TS_TASK_TYPE_MEM_WAIT_VALUE;

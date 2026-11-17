@@ -172,7 +172,6 @@ CaptureModel::~CaptureModel() noexcept
 
     ReleaseNotifyListOnDestroy(addStreamNotifyList_);
     ReleaseNotifyListOnDestroy(executeNotifyList_);
-    ReleaseArgLoaderBackupOnDestroy();
     ReleaseArgsDeviceBufferBackups(true);
     for (auto condHandle : condHandles_) {
         DELETE_O(condHandle);
@@ -690,15 +689,6 @@ void CaptureModel::ReleaseNotifyListOnDestroy(std::vector<Notify*>& notifyList)
     notifyList.clear();
 }
 
-void CaptureModel::ReleaseArgLoaderBackupOnDestroy()
-{
-    ArgLoader* const argLoaderObj = Context_()->Device_()->ArgLoader_();
-    for (auto argHandle : argLoaderBackup_) {
-        (void)argLoaderObj->Release(argHandle);
-    }
-    argLoaderBackup_.clear();
-}
-
 rtError_t CaptureModel::TearDown()
 {
     Runtime* const rt = Runtime::Instance();
@@ -734,7 +724,6 @@ void CaptureModel::FinalizeHostStateOnExit() noexcept
         const std::lock_guard<std::mutex> lock(rdmaPiValueModifyTaskInfoMutex_);
         rdmaPiValueModifyTaskInfoMap_.clear();
     }
-    argLoaderBackup_.clear();
     isNeedUpdateEndGraph_ = false;
     // 进程退出时模型不再参与replay，避免在硬退出清理路径中额外加锁。
     trackDataReportFlag_ = false;
@@ -2053,11 +2042,11 @@ void CaptureModel::CaptureModelExecuteFinish(const uint32_t errCode)
     return;
 }
 
-void CaptureModel::BackupArgHandle(const uint16_t streamId, const uint16_t taskId)
+void CaptureModel::ReleaseTaskArgHandle(const uint16_t streamId, const uint16_t taskId)
 {
-    void* argHandle = GetAndEraseArgHandle(streamId, taskId);
+    void* const argHandle = GetAndEraseArgHandle(streamId, taskId);
     if (argHandle != nullptr) {
-        (void)argLoaderBackup_.insert(argHandle);
+        (void)Context_()->Device_()->ArgLoader_()->Release(argHandle);
     }
 }
 

@@ -52,6 +52,7 @@
 #include "xpu_aicpu_c.hpp"
 #include "model.hpp"
 #include "capture_model.hpp"
+#include "capture_func.hpp"
 #include "capture_adapt.hpp"
 #include "capture_model_utils.hpp"
 #include "logic_sq.hpp"
@@ -1028,7 +1029,9 @@ TEST_F(TinyStubTest, capture_model_task_stub)
 {
     CaptureModel captureModel(RT_MODEL_NORMAL);
     EXPECT_EQ(captureModel.GetTaskGroup(0, 0), nullptr);
-    captureModel.BackupArgHandle(0, 0);
+    captureModel.ReleaseTaskArgHandle(0, 0);
+    ASSERT_NE(GetCaptureFunc().releaseArgHandle, nullptr);
+    GetCaptureFunc().releaseArgHandle(&captureModel, 0, 0);
     EXPECT_EQ(captureModel.Update(), RT_ERROR_FEATURE_NOT_SUPPORT);
     uint32_t notifyCount = 0;
     EXPECT_EQ(captureModel.ReleaseNotifyId(notifyCount), RT_ERROR_FEATURE_NOT_SUPPORT);

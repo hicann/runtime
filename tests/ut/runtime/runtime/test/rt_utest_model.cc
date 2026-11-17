@@ -1153,7 +1153,6 @@ TEST_F(ModelTest, CaptureModelFinalizeHostStateOnExitClearsCaptureContainers)
     model.executeNotifyList_.push_back(nullptr);
     model.taskGroupStmIds_.insert(7U);
     model.rdmaPiValueModifyTaskInfoMap_[8U] = {};
-    model.argLoaderBackup_.insert(nullptr);
     model.isNeedUpdateEndGraph_ = true;
     model.trackDataReportFlag_ = true;
 
@@ -1167,7 +1166,6 @@ TEST_F(ModelTest, CaptureModelFinalizeHostStateOnExitClearsCaptureContainers)
     EXPECT_TRUE(model.executeNotifyList_.empty());
     EXPECT_TRUE(model.taskGroupStmIds_.empty());
     EXPECT_TRUE(model.rdmaPiValueModifyTaskInfoMap_.empty());
-    EXPECT_TRUE(model.argLoaderBackup_.empty());
     EXPECT_FALSE(model.isNeedUpdateEndGraph_);
     EXPECT_FALSE(model.trackDataReportFlag_);
 }

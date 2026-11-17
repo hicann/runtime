@@ -3637,8 +3637,8 @@ rtError_t Stream::HandleTaskUpdate(TaskInfo* workTask, Model* model, uint8_t* sq
     RT_LOG(
         RT_LOG_INFO, "update task begin, stream_id=%d, task_id=%hu, task_type=%d(%s).", streamId_, workTask->id,
         workTask->type, workTask->typeName);
-    // 将model中的argsHandle备份，然后将新的argsHandle添加到model中
-    GetCaptureFunc().backupArgHandle(model, static_cast<uint16_t>(streamId_), workTask->id);
+    // Release the old model-owned args before Complete records the replacement handle.
+    GetCaptureFunc().releaseArgHandle(model, static_cast<uint16_t>(streamId_), workTask->id);
     model->SetKernelTaskId(static_cast<uint32_t>(workTask->id), streamId_);
     rtTsCommand_t cmdLocal = {};
     cmdLocal.cmdType = RT_TASK_COMMAND_TYPE_STARS_SQE;
@@ -3674,8 +3674,8 @@ rtError_t Stream::HandleTaskDisable(TaskInfo* workTask, Model* model)
     RT_LOG(
         RT_LOG_INFO, "disable task, stream_id=%d, task_id=%hu, task_type=%d(%s).", streamId_, workTask->id,
         workTask->type, workTask->typeName);
-    // 保存argsHandle
-    GetCaptureFunc().backupArgHandle(model, static_cast<uint16_t>(streamId_), workTask->id);
+    // Release the model-owned args before recycling the disabled task.
+    GetCaptureFunc().releaseArgHandle(model, static_cast<uint16_t>(streamId_), workTask->id);
     // 释放老的taskInfo 释放mix任务的subContext
     (void)device_->GetTaskFactory()->Recycle(workTask);
     return RT_ERROR_NONE;

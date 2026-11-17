@@ -11799,38 +11799,6 @@ TEST_F(ApiDavidTest, TestPostUpdateKernelParamsStarsV2)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
-TEST_F(ApiDavidTest, TestBackupTaskArgHandleStarsV2)
-{
-    DavidStream* davidStream = static_cast<DavidStream*>(stream_);
-    davidStream->argHandleRecycleList_.clear();
-
-    TaskInfo valueWaitTask = {};
-    valueWaitTask.stream = stream_;
-    valueWaitTask.type = TS_TASK_TYPE_MEM_WAIT_VALUE;
-    valueWaitTask.u.aicTaskInfo.comm.argHandle = reinterpret_cast<void*>(0x3000000000001UL);
-    BackupTaskArgHandle(&valueWaitTask);
-    EXPECT_EQ(valueWaitTask.u.aicTaskInfo.comm.argHandle, reinterpret_cast<void*>(0x3000000000001UL));
-    EXPECT_TRUE(davidStream->argHandleRecycleList_.empty());
-
-    TaskInfo aivTask = {};
-    aivTask.stream = stream_;
-    aivTask.type = TS_TASK_TYPE_KERNEL_AIVEC;
-    BackupTaskArgHandle(&aivTask);
-    EXPECT_TRUE(davidStream->argHandleRecycleList_.empty());
-
-    TaskInfo aicTask = {};
-    void* argHandle = reinterpret_cast<void*>(0x12345678UL);
-    aicTask.stream = stream_;
-    aicTask.type = TS_TASK_TYPE_KERNEL_AICORE;
-    aicTask.u.aicTaskInfo.comm.argHandle = argHandle;
-    BackupTaskArgHandle(&aicTask);
-    ASSERT_EQ(davidStream->argHandleRecycleList_.size(), 1U);
-    EXPECT_EQ(davidStream->argHandleRecycleList_[0], argHandle);
-    EXPECT_EQ(aicTask.u.aicTaskInfo.comm.argHandle, nullptr);
-
-    davidStream->argHandleRecycleList_.clear();
-}
-
 TEST_F(ApiDavidTest, TestTaskGetParamsStarsV2Case)
 {
     ApiImplDavid apiImpl;

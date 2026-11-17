@@ -61,7 +61,5 @@ rtError_t CheckDynSizeValid(TaskInfo* const taskInfo, const Kernel* const kernel
     return RT_ERROR_NONE;
 }
 
-void BackupTaskArgHandle(TaskInfo* taskInfo) { UNUSED(taskInfo); }
-
 } // namespace runtime
 } // namespace cce

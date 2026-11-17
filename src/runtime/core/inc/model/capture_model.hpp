@@ -286,7 +286,7 @@ public:
     uint32_t GetLoadCompleteNotifyid() const { return loadCompleteNotifyId_; }
 
     const TaskGroup* GetTaskGroup(uint16_t streamId, uint16_t taskId);
-    void BackupArgHandle(const uint16_t streamId, const uint16_t taskId);
+    void ReleaseTaskArgHandle(const uint16_t streamId, const uint16_t taskId);
     rtError_t Update(void);
     void ProcessExternalRecordNormalCqe(TaskInfo* const taskInfo, const rtCqReport_t& logicCq);
 
@@ -355,7 +355,6 @@ private:
     void RollbackAllSqCq(void);
     void ClearStreamActiveTask(void);
     void ReleaseNotifyListOnDestroy(std::vector<Notify*>& notifyList);
-    void ReleaseArgLoaderBackupOnDestroy();
     void ReleaseArgsDeviceBufferBackups(bool releaseDeviceMemory);
     std::list<void*> argsDeviceBufferBackups_;
     void FinalizeHostStateOnExit() noexcept;
@@ -444,7 +443,6 @@ private:
     std::mutex trackDataReportMutex_;
     bool trackDataReportFlag_{false};
     std::atomic<uint32_t> seqId_{0};
-    std::set<void*> argLoaderBackup_;
     std::mutex jettyMutex_;
     bool jettyBindFlag_{false}; // 表示当前model里normal jetty的绑定状态 -- 改成 jettyBindFlag_
     std::mutex condHandleTaskMapLock_;

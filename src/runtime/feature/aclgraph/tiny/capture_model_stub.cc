@@ -20,9 +20,9 @@ namespace runtime {
 namespace {
 Model* GetModelIfCapture(Model* const model) { return dynamic_cast<CaptureModel*>(model); }
 
-void BackupCaptureArgHandle(Model* const model, const uint16_t streamId, const uint16_t taskId)
+void ReleaseCaptureArgHandle(Model* const model, const uint16_t streamId, const uint16_t taskId)
 {
-    dynamic_cast<CaptureModel*>(model)->BackupArgHandle(streamId, taskId);
+    dynamic_cast<CaptureModel*>(model)->ReleaseTaskArgHandle(streamId, taskId);
 }
 
 bool IsCaptureFinish(const Model* const model)
@@ -80,7 +80,7 @@ static bool CaptureFuncRegister()
         .allocCaptureTask = &AllocCaptureTaskStub,
         .generateSeqId = nullptr,
         .getModelIfCapture = &GetModelIfCapture,
-        .backupArgHandle = &BackupCaptureArgHandle,
+        .releaseArgHandle = &ReleaseCaptureArgHandle,
         .isCaptureFinish = &IsCaptureFinish,
         .cacheCaptureTaskId = &CacheCaptureTaskIdStub,
         .getCacheOpInfoSwitch = &GetCacheOpInfoSwitchStub,
@@ -229,7 +229,7 @@ const TaskGroup* CaptureModel::GetTaskGroup(uint16_t streamId, uint16_t taskId)
     return nullptr;
 }
 
-void CaptureModel::BackupArgHandle(const uint16_t streamId, const uint16_t taskId)
+void CaptureModel::ReleaseTaskArgHandle(const uint16_t streamId, const uint16_t taskId)
 {
     UNUSED(streamId);
     UNUSED(taskId);

@@ -859,55 +859,6 @@ TEST_F(DavidStreamTest, DavidrtStreamStop_03)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
-TEST_F(DavidStreamTest, AddArgHandleToRecycleList_Normal)
-{
-    // 测试正常添加 argHandle
-    DavidStream* stream = new DavidStream(device_, 0, 0, nullptr);
-    void* handle1 = reinterpret_cast<void*>(0x12345678);
-    void* handle2 = reinterpret_cast<void*>(0x87654321);
-
-    stream->AddArgHandleToRecycleList(handle1);
-    stream->AddArgHandleToRecycleList(handle2);
-
-    EXPECT_EQ(stream->argHandleRecycleList_.size(), 2U);
-    EXPECT_EQ(stream->argHandleRecycleList_[0], handle1);
-    EXPECT_EQ(stream->argHandleRecycleList_[1], handle2);
-
-    delete stream;
-}
-
-TEST_F(DavidStreamTest, AddArgHandleToRecycleList_Nullptr)
-{
-    // 测试添加 nullptr
-    DavidStream* stream = new DavidStream(device_, 0, 0, nullptr);
-
-    stream->AddArgHandleToRecycleList(nullptr);
-
-    EXPECT_EQ(stream->argHandleRecycleList_.size(), 0U);
-
-    delete stream;
-}
-
-TEST_F(DavidStreamTest, Destructor_ArgHandleRecycleList)
-{
-    // 测试析构函数中回收 argHandleRecycleList_
-    DavidStream* stream = new DavidStream(device_, 0, 0, nullptr);
-    void* handle1 = reinterpret_cast<void*>(0x12345678);
-    void* handle2 = reinterpret_cast<void*>(0x87654321);
-
-    stream->argHandleRecycleList_.push_back(handle1);
-    stream->argHandleRecycleList_.push_back(handle2);
-
-    // mock RecycleDevLoader
-    if (stream->argManage_ != nullptr) {
-        MOCKER_CPP_VIRTUAL(stream->argManage_, &StarsArgManager::RecycleDevLoader)
-            .stubs()
-            .will(returnValue(RT_ERROR_NONE));
-    }
-
-    delete stream;
-}
-
 TEST_F(DavidStreamTest, DavidrtStreamRecover_01)
 {
     RawDevice* device = new RawDevice(0);
@@ -1644,7 +1595,6 @@ TEST_F(DavidStreamTest, DestructorOnExitSkipsArgHandleRecycle)
     ASSERT_NE(davidStream->ArgManagePtr(), nullptr);
 
     davidStream->SetArgHandle(reinterpret_cast<void*>(0x1U));
-    davidStream->AddArgHandleToRecycleList(reinterpret_cast<void*>(0x2U));
     Runtime* const rt = static_cast<Runtime*>(Runtime::Instance());
     const bool oldExiting = rt->isExiting_;
     rt->isExiting_ = true;
@@ -1679,33 +1629,12 @@ TEST_F(DavidStreamTest, SetAicoreArgsSuperKernel_HandleNull)
     delete stream;
 }
 
-TEST_F(DavidStreamTest, BackupTaskArgHandle_ArgHandleNull)
-{
-    DavidStream* stream = new DavidStream(device_, 0, 0, nullptr);
-    TaskInfo taskInfo = {0};
-    taskInfo.stream = stream;
-    taskInfo.u.aicTaskInfo.comm.argHandle = nullptr;
+#include "../../data/elf.h"
 
-    BackupTaskArgHandle(&taskInfo);
-
-    EXPECT_EQ(stream->argHandleRecycleList_.size(), 0U);
-    EXPECT_EQ(taskInfo.u.aicTaskInfo.comm.argHandle, nullptr);
-
-    delete stream;
-}
-
-TEST_F(DavidStreamTest, BackupTaskArgHandle_Normal)
-{
-    DavidStream* stream = new DavidStream(device_, 0, 0, nullptr);
-    TaskInfo taskInfo = {0};
-    taskInfo.stream = stream;
-    taskInfo.u.aicTaskInfo.comm.argHandle = reinterpret_cast<void*>(0x12345678);
-
-    BackupTaskArgHandle(&taskInfo);
-
-    EXPECT_EQ(stream->argHandleRecycleList_.size(), 1U);
-    EXPECT_EQ(stream->argHandleRecycleList_[0], reinterpret_cast<void*>(0x12345678));
-    EXPECT_EQ(taskInfo.u.aicTaskInfo.comm.argHandle, nullptr);
-
-    delete stream;
-}
+#define ARGS_RECLAIM_EMULATE_DEVICE_MEMORY
+#define ARGS_RECLAIM_TEST_CLASS ModelTaskArgsDirectReclaimDavidTest
+#define ARGS_RECLAIM_TEST_BASE DavidStreamTest
+#include "../../rt_utest_model_task_args_direct_reclaim.hpp"
+#undef ARGS_RECLAIM_TEST_BASE
+#undef ARGS_RECLAIM_TEST_CLASS
+#undef ARGS_RECLAIM_EMULATE_DEVICE_MEMORY

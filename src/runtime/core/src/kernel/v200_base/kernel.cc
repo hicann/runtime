@@ -109,18 +109,5 @@ void SetAicoreArgsSuperKernel(TaskInfo* taskInfo, const rtArgsEx_t* argsInfo, St
     result.handle = nullptr;
 }
 
-void BackupTaskArgHandle(TaskInfo* taskInfo)
-{
-    if ((taskInfo->type != TS_TASK_TYPE_KERNEL_AICORE) && (taskInfo->type != TS_TASK_TYPE_KERNEL_AIVEC)) {
-        return;
-    }
-
-    AicTaskInfo* aicTask = &(taskInfo->u.aicTaskInfo);
-    if (aicTask->comm.argHandle != nullptr) {
-        static_cast<DavidStream*>(taskInfo->stream)->AddArgHandleToRecycleList(aicTask->comm.argHandle);
-        aicTask->comm.argHandle = nullptr;
-    }
-}
-
 } // namespace runtime
 } // namespace cce

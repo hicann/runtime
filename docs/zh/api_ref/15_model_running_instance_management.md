@@ -1767,7 +1767,9 @@ aclError aclmdlRITaskGetParams(aclmdlRITask task, aclmdlRITaskParams* params)
 
 ### 约束说明
 
-对于同一个模型运行实例，本接口不支持并发调用。
+- 对于同一个模型运行实例，本接口不支持并发调用。
+- 对于Kernel任务，Runtime分配的原始Device args可能在[aclmdlRIUpdate](#aclmdlRIUpdate)应用参数更新或任务禁用的过程中释放。进入该更新流程后，调用者不得继续使用旧地址；更新失败也不保证保留旧参数。需要跨更新使用参数内容时，必须在更新前建立独立副本。
+- 不得将Runtime分配的原始Device args作为同一任务或其他任务的Device args重新传给[aclmdlRITaskSetParams](#aclmdlRITaskSetParams)。
 
 <br>
 <br>
@@ -1832,6 +1834,7 @@ aclError aclmdlRITaskSetParams(aclmdlRITask task, aclmdlRITaskParams* params)
 
 - 对于同一个模型运行实例，本接口不支持并发调用。
 - 在更新任务参数信息时，用户需确保修改后的模型运行实例中各任务的依赖关系正确，否则可能会导致后续业务异常，例如模型执行异常。
+- Kernel任务传入Device args时，调用者负责保证该内存在使用期间有效。不得原样回传Runtime管理的原始Device args；需要复用其内容时，应先建立独立副本，避免更新过程中旧内存被释放。
 
 <br>
 <br>

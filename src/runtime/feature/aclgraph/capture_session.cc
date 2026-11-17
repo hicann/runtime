@@ -1145,9 +1145,9 @@ uint32_t GenerateSeqId(Model* const model) { return dynamic_cast<CaptureModel*>(
 
 Model* GetModelIfCapture(Model* const model) { return dynamic_cast<CaptureModel*>(model); }
 
-void BackupCaptureArgHandle(Model* const model, const uint16_t streamId, const uint16_t taskId)
+void ReleaseCaptureArgHandle(Model* const model, const uint16_t streamId, const uint16_t taskId)
 {
-    dynamic_cast<CaptureModel*>(model)->BackupArgHandle(streamId, taskId);
+    dynamic_cast<CaptureModel*>(model)->ReleaseTaskArgHandle(streamId, taskId);
 }
 
 bool IsCaptureFinish(const Model* const model)
@@ -1167,7 +1167,7 @@ static bool CaptureFuncRegister()
         .allocCaptureTask = &StreamCapture::AllocTask,
         .generateSeqId = &GenerateSeqId,
         .getModelIfCapture = &GetModelIfCapture,
-        .backupArgHandle = &BackupCaptureArgHandle,
+        .releaseArgHandle = &ReleaseCaptureArgHandle,
         .isCaptureFinish = &IsCaptureFinish,
         .cacheCaptureTaskId = &CacheCaptureTaskId,
         .getCacheOpInfoSwitch = &GetStreamCacheOpInfoSwitch,

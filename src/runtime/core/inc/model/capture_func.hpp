@@ -36,7 +36,7 @@ using PfnSetTaskGroupErrCode = void (*)(const Stream* stm, rtError_t errorCode);
 using PfnAllocCaptureTask = rtError_t (*)(Stream* stm, tsTaskType_t taskType, uint32_t sqeNum, TaskInfo** task);
 using PfnGenerateCaptureSeqId = uint32_t (*)(Model* model);
 using PfnGetModelIfCapture = Model* (*)(Model* model);
-using PfnBackupCaptureArgHandle = void (*)(Model* model, uint16_t streamId, uint16_t taskId);
+using PfnReleaseCaptureArgHandle = void (*)(Model* model, uint16_t streamId, uint16_t taskId);
 using PfnIsCaptureFinish = bool (*)(const Model* model);
 using PfnCacheCaptureTaskId = void (*)(Stream* stm, uint16_t taskId);
 using PfnGetCacheOpInfoSwitch = uint32_t (*)(const Stream* stm);
@@ -56,7 +56,7 @@ struct CaptureFunc {
     PfnAllocCaptureTask allocCaptureTask;
     PfnGenerateCaptureSeqId generateSeqId;
     PfnGetModelIfCapture getModelIfCapture;
-    PfnBackupCaptureArgHandle backupArgHandle;
+    PfnReleaseCaptureArgHandle releaseArgHandle;
     PfnIsCaptureFinish isCaptureFinish;
     PfnCacheCaptureTaskId cacheCaptureTaskId;
     PfnGetCacheOpInfoSwitch getCacheOpInfoSwitch;

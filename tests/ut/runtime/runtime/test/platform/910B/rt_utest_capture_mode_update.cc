@@ -1906,3 +1906,9 @@ TEST_F(CloudV2CaptureModelUpdateTest, rtModelTaskSetValueParam002)
 
     GlobalMockObject::verify();
 }
+
+#define ARGS_RECLAIM_TEST_CLASS ModelTaskArgsDirectReclaim910BTest
+#define ARGS_RECLAIM_TEST_BASE CloudV2CaptureModelUpdateTest
+#include "../../rt_utest_model_task_args_direct_reclaim.hpp"
+#undef ARGS_RECLAIM_TEST_BASE
+#undef ARGS_RECLAIM_TEST_CLASS

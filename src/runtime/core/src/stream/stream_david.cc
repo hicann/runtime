@@ -74,13 +74,6 @@ DavidStream::~DavidStream()
 
 void DavidStream::RecycleArgHandlesOnDestroy()
 {
-    for (auto handle : argHandleRecycleList_) {
-        if (argManage_ != nullptr) {
-            argManage_->RecycleDevLoader(handle);
-        }
-    }
-    argHandleRecycleList_.clear();
-
     if (this->GetArgHandle() != nullptr) {
         this->ArgManagePtr()->RecycleDevLoader(this->GetArgHandle());
         this->SetArgHandle(nullptr);
@@ -232,13 +225,6 @@ void DavidStream::FreeStreamIdAndSqCq()
     }
     if (GetSqIdMemAddr() != 0UL) {
         device_->FreeSqIdMemAddr(GetSqIdMemAddr());
-    }
-}
-
-void DavidStream::AddArgHandleToRecycleList(void* argHandle)
-{
-    if (argHandle != nullptr) {
-        argHandleRecycleList_.push_back(argHandle);
     }
 }
 
@@ -1699,7 +1685,7 @@ rtError_t DavidStream::HandleTaskUpdate(TaskInfo* workTask, Model* model, uint8_
     RT_LOG(
         RT_LOG_INFO, "update task begin, stream_id=%d, task_id=%hu, task_type=%d(%s).", streamId_, workTask->id,
         workTask->type, workTask->typeName);
-    // 被更新的task的argsHandle已在stream中备份，此处不需要再备份
+    // TaskClearForUpdate has already released the old task-owned args.
     model->SetKernelTaskId(static_cast<uint32_t>(workTask->id), streamId_);
     TaskSqeBuffer sqeBuffer = {};
     const TaskSqeInfo sqeInfo = {0ULL, 0ULL};
@@ -1734,8 +1720,6 @@ rtError_t DavidStream::HandleTaskDisable(TaskInfo* workTask, Model* model)
     RT_LOG(
         RT_LOG_INFO, "disable task, stream_id=%d, task_id=%hu, task_type=%d(%s).", streamId_, workTask->id,
         workTask->type, workTask->typeName);
-    // 保存argsHandle到stream上
-    BackupTaskArgHandle(workTask);
     // 释放老的taskInfo 释放mix任务的subContext
     (void)device_->GetTaskFactory()->Recycle(workTask);
     return RT_ERROR_NONE;

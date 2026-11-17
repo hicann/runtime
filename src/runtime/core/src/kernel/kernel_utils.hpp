@@ -44,7 +44,6 @@ rtError_t LoadKernelArgs(
     rtKernelArgsType argsType, void** argsArray);
 rtError_t PostUpdateKernelParams(TaskInfo* taskInfo);
 void SetAicoreArgsSuperKernel(TaskInfo* taskInfo, const rtArgsEx_t* argsInfo, StarsArgLoaderResult& result);
-void BackupTaskArgHandle(TaskInfo* taskInfo);
 rtError_t CheckDynSizeValid(TaskInfo* const taskInfo, const Kernel* const kernel);
 } // namespace runtime
 } // namespace cce

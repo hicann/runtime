@@ -799,7 +799,6 @@ rtError_t UpdateKernelParams(TaskInfo* const taskInfo, KernelTaskUpdateInfo* con
         error, "failed to build the args load input, retCode=%#x, device_id=%u, stream_id=%d, task_id=%hu.", error,
         dev->Id_(), stm->Id_(), taskInfo->id);
 
-    BackupTaskArgHandle(taskInfo);
     TaskClearForUpdate(taskInfo);
 
     uint8_t mixType = NO_MIX;
