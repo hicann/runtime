@@ -411,6 +411,7 @@ public:
     virtual rtError_t rtModelKernelTaskGetAttribute(
         rtTask_t task, rtLaunchKernelAttrId attrId, rtLaunchKernelAttrVal_t* attrValue);
     virtual rtError_t rtModelTaskDisable(rtTask_t task);
+    virtual rtError_t rtModelTaskGetEnabled(rtTask_t task, uint32_t* isEnabled);
     virtual rtError_t rtModelUpdate(rtModel_t mdl);
     virtual rtError_t rtModelCondHandleCreate(
         rtModel_t mdl, uint32_t defaultLaunchValue, rtCondHandleFlag_t flag, rtCondHandle_t* handle);
@@ -1051,6 +1052,7 @@ public:
         rtModelKernelTaskGetAttribute,
         rtError_t(rtTask_t task, rtLaunchKernelAttrId attrId, rtLaunchKernelAttrVal_t* attrValue));
     MOCK_METHOD1(rtModelTaskDisable, rtError_t(rtTask_t task));
+    MOCK_METHOD2(rtModelTaskGetEnabled, rtError_t(rtTask_t task, uint32_t* isEnabled));
     MOCK_METHOD1(rtModelUpdate, rtError_t(rtModel_t mdl));
     MOCK_METHOD4(
         rtModelCondHandleCreate,

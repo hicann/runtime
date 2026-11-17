@@ -327,5 +327,14 @@ rtError_t ApiImpl::StreamAddCondTask(rtCondTaskParams params, Stream* const stm,
     return captureSession->StreamAddCondTask(realHandle, params, stm, flags);
 }
 
+rtError_t ApiImpl::ModelTaskGetEnabled(rtTask_t task, uint32_t* isEnabled)
+{
+    UNUSED(task);
+    // Disabled tasks are currently destroyed, so all valid tasks are enabled. Disabled state support will be added
+    // later.
+    *isEnabled = 1U;
+    return RT_ERROR_NONE;
+}
+
 } // namespace runtime
 } // namespace cce

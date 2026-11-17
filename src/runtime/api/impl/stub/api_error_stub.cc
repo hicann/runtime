@@ -497,5 +497,12 @@ rtError_t ApiErrorDecorator::GetModelByStream(Stream* const stream, Model** cons
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
+rtError_t ApiErrorDecorator::ModelTaskGetEnabled(rtTask_t task, uint32_t* isEnabled)
+{
+    UNUSED(task);
+    UNUSED(isEnabled);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 } // namespace runtime
 } // namespace cce

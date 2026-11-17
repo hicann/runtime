@@ -274,6 +274,16 @@ RTS_API rtError_t rtModelTaskDisable(rtTask_t task);
 
 /**
  * @ingroup rt_task
+ * @brief Get task enabled status; the compatibility implementation reports enabled.
+ * @param [in] task Valid task handle.
+ * @param [out] isEnabled Task status: 1 for enabled, 0 for disabled.
+ * @return RT_ERROR_NONE for success
+ * @return RT_ERROR_INVALID_VALUE for null input
+ */
+RTS_API rtError_t rtModelTaskGetEnabled(rtTask_t task, uint32_t* isEnabled);
+
+/**
+ * @ingroup rt_task
  * @brief cache extended info for the last task, specifically for debugging
  * @param [in] extendInfoPtr: pointer to the extended task information buffer
  * @param [in] infoSize: size of the buffer

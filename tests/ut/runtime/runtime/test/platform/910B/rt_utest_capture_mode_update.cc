@@ -1385,6 +1385,27 @@ TEST_F(CloudV2CaptureModelUpdateTest, rtModelUpdate_Success)
     GlobalMockObject::verify();
 }
 
+TEST_F(CloudV2CaptureModelUpdateTest, rtModelTaskGetEnabled_Success)
+{
+    TaskInfo task = {};
+    uint32_t isEnabled = 0U;
+    EXPECT_EQ(rtModelTaskGetEnabled(&task, &isEnabled), RT_ERROR_NONE);
+    EXPECT_EQ(isEnabled, 1U);
+}
+
+TEST_F(CloudV2CaptureModelUpdateTest, rtModelTaskGetEnabled_NullTask)
+{
+    uint32_t isEnabled = 9U;
+    EXPECT_EQ(rtModelTaskGetEnabled(nullptr, &isEnabled), ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(isEnabled, 9U);
+}
+
+TEST_F(CloudV2CaptureModelUpdateTest, rtModelTaskGetEnabled_NullOutput)
+{
+    TaskInfo task = {};
+    EXPECT_EQ(rtModelTaskGetEnabled(&task, nullptr), ACL_ERROR_RT_PARAM_INVALID);
+}
+
 TEST_F(CloudV2CaptureModelUpdateTest, rtModelTaskDisable_Success)
 {
     rtContext_t ctx;

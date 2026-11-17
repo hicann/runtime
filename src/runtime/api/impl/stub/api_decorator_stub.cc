@@ -120,5 +120,10 @@ rtError_t ApiDecorator::StreamAddCondTask(rtCondTaskParams params, Stream* const
     return impl_->StreamAddCondTask(params, stm, flags);
 }
 
+rtError_t ApiDecorator::ModelTaskGetEnabled(rtTask_t task, uint32_t* isEnabled)
+{
+    return impl_->ModelTaskGetEnabled(task, isEnabled);
+}
+
 } // namespace runtime
 } // namespace cce

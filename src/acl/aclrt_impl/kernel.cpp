@@ -132,6 +132,14 @@ aclError aclmdlRITaskDisableImpl(aclmdlRITask task)
     return ACL_SUCCESS;
 }
 
+aclError aclmdlRITaskGetEnabledImpl(aclmdlRITask task, uint32_t* isEnabled)
+{
+    ACL_PROFILING_REG(acl::AclProfType::AclmdlRITaskGetEnabled);
+    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(
+        rtModelTaskGetEnabled(static_cast<rtTask_t>(task), isEnabled), rtModelTaskGetEnabled);
+    return ACL_SUCCESS;
+}
+
 aclError aclrtLaunchKernelImpl(
     aclrtFuncHandle funcHandle, uint32_t numBlocks, const void* argsData, size_t argsSize, aclrtStream stream)
 {

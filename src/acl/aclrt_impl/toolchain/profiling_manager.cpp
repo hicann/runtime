@@ -316,6 +316,7 @@ const std::map<AclProfType, std::string> PROF_TYPE_TO_NAMES = {
     {AclProfType::aclmdlRIKernelTaskGetAttribute, "aclmdlRIKernelTaskGetAttribute"},
     {AclProfType::AclmdlRIUpdate, "aclmdlRIUpdate"},
     {AclProfType::AclmdlRITaskDisable, "aclmdlRITaskDisable"},
+    {AclProfType::AclmdlRITaskGetEnabled, "aclmdlRITaskGetEnabled"},
     {AclProfType::AclrtMemManagedAdvise, "aclrtMemManagedAdvise"},
     {AclProfType::AclrtMemManagedGetAttr, "aclrtMemManagedGetAttr"},
     {AclProfType::AclrtMemManagedGetAttrs, "aclrtMemManagedGetAttrs"},

@@ -43,6 +43,7 @@
 - [`aclError aclmdlRICondHandleGetCondPtr(aclmdlRICondHandle handle, uint64_t **ptr)`](#aclmdlRICondHandleGetCondPtr)：获取条件句柄的Device内存指针，存储条件值，用于条件任务执行时选择执行模型运行实例。
 - [`aclError aclmdlRIAddCondTask(aclmdlRICondTaskParams params, aclrtStream stream, uint32_t flags)`](#aclmdlRIAddCondTask)：在Stream上下发条件任务。
 - [`aclError aclmdlRICaptureToModelRIBegin(aclrtStream stream, aclmdlRI modelRI, aclmdlRICaptureMode mode)`](#aclmdlRICaptureToModelRIBegin)：开始捕获Stream上下发的任务到指定的模型运行实例中。
+- [`aclError aclmdlRITaskGetEnabled(aclmdlRITask task, uint32_t *isEnabled)`](#aclmdlRITaskGetEnabled)：查询任务是否处于启用状态。
 
 <a class="method_anchor" id="aclmdlRICaptureBegin"></a>
 
@@ -2461,3 +2462,69 @@ aclmdlRICaptureToModelRIBegin和[aclmdlRICaptureEnd](#aclmdlRICaptureEnd)接口�
 ### 约束说明
 
 条件子图的接口使用限制，请参见[aclmdlRIAddCondTask接口的约束说明](#conditional_submodel_constraints)。
+
+<br>
+<br>
+<br>
+
+<a id="aclmdlRITaskGetEnabled"></a>
+
+## aclmdlRITaskGetEnabled
+
+```c
+aclError aclmdlRITaskGetEnabled(aclmdlRITask task, uint32_t *isEnabled)
+```
+
+**须知：本接口为试验特性，后续版本可能会存在变更，不支持应用于生产环境中。**
+
+### 产品支持情况
+
+<!-- npu="950" id84301 -->
+- Ascend 950PR&950DT系列产品：支持
+<!-- end id84301 -->
+<!-- npu="A3" id84302 -->
+- Atlas A3系列产品：支持
+<!-- end id84302 -->
+<!-- npu="910b" id84303 -->
+- Atlas A2系列产品：支持
+<!-- end id84303 -->
+<!-- npu="310b" id84304 -->
+- Atlas 200I/500 A2推理产品：不支持
+<!-- end id84304 -->
+<!-- npu="310p" id84305 -->
+- Atlas推理系列产品：不支持
+<!-- end id84305 -->
+<!-- npu="910" id84306 -->
+- Atlas训练系列产品：不支持
+<!-- end id84306 -->
+<!-- npu="IPV350" id84307 -->
+- IPV350：不支持
+<!-- end id84307 -->
+<!-- npu="5162A" id84308 -->
+- Hisilicon5162A：不支持
+<!-- end id84308 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id42 -->
+
+### 功能说明
+
+查询指定任务是否处于启用状态。输出值为1表示enabled（启用），为0表示disabled（禁用）。处于enabled状态时，任务可以被调度；处于disabled状态时，任务不再参与调度。
+
+调用本接口之前，先调用[aclmdlRIGetTasks](#aclmdlRIGetTasks)或[aclmdlRIGetTasksByStream](#aclmdlRIGetTasksByStream)接口获取任务，再根据指定任务查询其启用状态。
+
+### 参数说明
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | :---: | --- |
+| task | 输入 | 指定任务，不能为NULL。类型定义请参见[aclmdlRITask](25-05_Typedefs.md#aclmdlRITask)。 |
+| isEnabled | 输出 | 用于存放任务启用状态的指针，由调用方提供，不能为NULL。调用成功时，1表示启用，0表示禁用；调用失败时，不修改该指针指向的值。 |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+task或isEnabled为空时返回ACL_ERROR_RT_PARAM_INVALID。不支持该接口的产品返回ACL_ERROR_RT_FEATURE_NOT_SUPPORT。
+
+### 约束说明
+
+- 调用本接口查询时，传入的任务句柄必须有效，不可使用已销毁的任务句柄。例如：通过[aclmdlRITaskDisable](#aclmdlRITaskDisable)禁用的任务，在调用[aclmdlRIUpdate](#aclmdlRIUpdate)更新模型时会被销毁，销毁后无法再通过本接口查询。不得与会导致任务句柄失效的模型更新或模型销毁操作并发调用。
+- 本接口不会触发模型执行、任务更新或设备同步，不可用于查询任务是否执行完成。

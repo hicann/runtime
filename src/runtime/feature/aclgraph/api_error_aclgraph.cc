@@ -235,5 +235,12 @@ rtError_t ApiErrorDecorator::StreamAddCondTask(rtCondTaskParams params, Stream* 
     return impl_->StreamAddCondTask(params, stm, flags);
 }
 
+rtError_t ApiErrorDecorator::ModelTaskGetEnabled(rtTask_t task, uint32_t* isEnabled)
+{
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(task, RT_ERROR_INVALID_VALUE, "Getting the enabled status of a task");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(isEnabled, RT_ERROR_INVALID_VALUE, "Getting the enabled status of a task");
+    return impl_->ModelTaskGetEnabled(task, isEnabled);
+}
+
 } // namespace runtime
 } // namespace cce

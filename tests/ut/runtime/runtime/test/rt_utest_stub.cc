@@ -144,6 +144,23 @@ TEST_F(TinyStubTest, hccl_model_stream_internal_providers_not_support_and_preser
     EXPECT_EQ(streams, (std::vector<Stream*>{nullptr}));
 }
 
+TEST_F(TinyStubTest, model_task_get_enabled_not_support)
+{
+    ApiImpl impl;
+    ApiErrorDecorator errorApi(&impl);
+    ApiDecorator api(&errorApi);
+    uint32_t isEnabled = 9U;
+    rtTask_t task = &isEnabled;
+
+    EXPECT_EQ(impl.ModelTaskGetEnabled(task, &isEnabled), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(isEnabled, 9U);
+    EXPECT_EQ(errorApi.ModelTaskGetEnabled(task, &isEnabled), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(isEnabled, 9U);
+    EXPECT_EQ(api.ModelTaskGetEnabled(task, &isEnabled), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(isEnabled, 9U);
+    EXPECT_EQ(errorApi.ModelTaskGetEnabled(nullptr, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
+}
+
 TEST_F(TinyStubTest, ipc_memory_impl_lifecycle_not_support)
 {
     EXPECT_FALSE(IsImplIpcMemorySupported());

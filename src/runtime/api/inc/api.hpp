@@ -521,6 +521,7 @@ public:
     virtual rtError_t ModelDestroyRegisterCallback(Model* const mdl, const rtCallback_t fn, void* ptr) = 0;
     virtual rtError_t ModelDestroyUnregisterCallback(Model* const mdl, rtCallback_t const fn) = 0;
     virtual rtError_t ModelTaskDisable(rtTask_t task) = 0;
+    virtual rtError_t ModelTaskGetEnabled(rtTask_t task, uint32_t* isEnabled) = 0;
     virtual rtError_t ModelCondHandleCreate(
         Model* const mdl, uint32_t defaultValue, rtCondHandleFlag_t flag, CondHandle** const handle) = 0;
     virtual rtError_t ModelCondHandleGetCondPtr(CondHandle* const handle, uint64_t** const devPtr) = 0;

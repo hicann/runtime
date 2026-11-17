@@ -127,6 +127,17 @@ rtError_t rtModelTaskDisable(rtTask_t task)
     return ACL_RT_SUCCESS;
 }
 
+VISIBILITY_DEFAULT
+RTS_API rtError_t rtModelTaskGetEnabled(rtTask_t task, uint32_t* isEnabled)
+{
+    Api* const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    const rtError_t error = apiInstance->ModelTaskGetEnabled(task, isEnabled);
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    return ACL_RT_SUCCESS;
+}
+
 #ifdef __cplusplus
 }
 #endif // __cplusplus

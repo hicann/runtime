@@ -554,6 +554,10 @@ RUNTIME_API(task, rtError_t, rtModelTaskDisable,
     (rtTask_t task),
     (task), FEATURE_NOT_SUPPORT, EXPORT)
 
+RUNTIME_API(task, rtError_t, rtModelTaskGetEnabled,
+    (rtTask_t task, uint32_t* isEnabled),
+    (task, isEnabled), FEATURE_NOT_SUPPORT, EXPORT)
+
 RUNTIME_API(standard_soc, rtError_t, rtFuncGetSize,
     (const void* func, size_t* aicSize, size_t* aivSize),
     (func, aicSize, aivSize), FEATURE_NOT_SUPPORT, EXPORT)

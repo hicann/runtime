@@ -440,6 +440,31 @@ TEST_F(UTEST_ACL_Modelri, TestaclmdlRITaskDisable)
     EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
 }
 
+TEST_F(UTEST_ACL_Modelri, TestaclmdlRITaskGetEnabled)
+{
+    uint32_t taskStorage = 0U;
+    aclmdlRITask task = &taskStorage;
+    uint32_t isEnabled = 0U;
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtModelTaskGetEnabled(task, &isEnabled))
+        .WillOnce(DoAll(SetArgPointee<1>(1U), Return(RT_ERROR_NONE)));
+    EXPECT_EQ(aclmdlRITaskGetEnabled(task, &isEnabled), ACL_SUCCESS);
+    EXPECT_EQ(isEnabled, 1U);
+}
+
+TEST_F(UTEST_ACL_Modelri, TestaclmdlRITaskGetEnabledInvalidParams)
+{
+    uint32_t taskStorage = 0U;
+    aclmdlRITask task = &taskStorage;
+    uint32_t isEnabled = 9U;
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtModelTaskGetEnabled(nullptr, &isEnabled))
+        .WillOnce(Return(ACL_ERROR_RT_PARAM_INVALID));
+    EXPECT_EQ(aclmdlRITaskGetEnabled(nullptr, &isEnabled), ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(isEnabled, 9U);
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtModelTaskGetEnabled(task, nullptr))
+        .WillOnce(Return(ACL_ERROR_RT_PARAM_INVALID));
+    EXPECT_EQ(aclmdlRITaskGetEnabled(task, nullptr), ACL_ERROR_RT_PARAM_INVALID);
+}
+
 TEST_F(UTEST_ACL_Modelri, TestaclmdlRIUpdate)
 {
     aclmdlRI modelRI = (aclmdlRI)0x01;

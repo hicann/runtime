@@ -2499,6 +2499,15 @@ rtError_t aclStub::rtModelTaskDisable(rtTask_t task)
     return RT_ERROR_NONE;
 }
 
+rtError_t aclStub::rtModelTaskGetEnabled(rtTask_t task, uint32_t* isEnabled)
+{
+    if (task == nullptr || isEnabled == nullptr) {
+        return ACL_ERROR_RT_PARAM_INVALID;
+    }
+    *isEnabled = 1U;
+    return RT_ERROR_NONE;
+}
+
 rtError_t aclStub::rtModelUpdate(rtModel_t mdl)
 {
     (void)mdl;
@@ -4563,6 +4572,11 @@ rtError_t rtModelKernelTaskGetAttribute(rtTask_t task, rtLaunchKernelAttrId attr
 }
 
 rtError_t rtModelTaskDisable(rtTask_t task) { return MockFunctionTest::aclStubInstance().rtModelTaskDisable(task); }
+
+rtError_t rtModelTaskGetEnabled(rtTask_t task, uint32_t* isEnabled)
+{
+    return MockFunctionTest::aclStubInstance().rtModelTaskGetEnabled(task, isEnabled);
+}
 
 rtError_t rtModelUpdate(rtModel_t mdl) { return MockFunctionTest::aclStubInstance().rtModelUpdate(mdl); }
 

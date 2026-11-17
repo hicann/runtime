@@ -808,5 +808,12 @@ rtError_t ApiImpl::GetModelByStream(Stream* const stream, Model** const mdl)
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
+rtError_t ApiImpl::ModelTaskGetEnabled(rtTask_t task, uint32_t* isEnabled)
+{
+    UNUSED(task);
+    UNUSED(isEnabled);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 } // namespace runtime
 } // namespace cce

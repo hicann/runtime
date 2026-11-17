@@ -4132,6 +4132,17 @@ ACL_FUNC_VISIBILITY aclError aclmdlRITaskDisable(aclmdlRITask task);
 
 /**
  * @ingroup AscendCL
+ * @brief Get the enabled status of a task
+ * @note This API is experimental, may change in future versions, and is not supported for production use.
+ * @param [in] task Valid task handle. A task destroyed by model update must not be used.
+ * @param [out] isEnabled Task status: 1 for enabled, 0 for disabled.
+ * @retval ACL_SUCCESS The status is obtained successfully.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclmdlRITaskGetEnabled(aclmdlRITask task, uint32_t* isEnabled);
+
+/**
+ * @ingroup AscendCL
  * @brief Finalize kernel args
  * @param [in] argsHandle
  * @retval ACL_SUCCESS The function is successfully executed.

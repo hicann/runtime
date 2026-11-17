@@ -666,6 +666,7 @@
       (modelRI, tasks, numTasks))                                                                                     \
     _(aclError, aclmdlRITaskGetType, (aclmdlRITask task, aclmdlRITaskType * type), (task, type))                      \
     _(aclError, aclmdlRITaskDisable, (aclmdlRITask task), (task))                                                     \
+    _(aclError, aclmdlRITaskGetEnabled, (aclmdlRITask task, uint32_t * isEnabled), (task, isEnabled))                 \
     _(aclError, aclmdlRIDestroyRegisterCallback, (aclmdlRI modelRI, aclrtCallback func, void* userData),              \
       (modelRI, func, userData))                                                                                      \
     _(aclError, aclmdlRIDestroyUnregisterCallback, (aclmdlRI modelRI, aclrtCallback func), (modelRI, func))           \
