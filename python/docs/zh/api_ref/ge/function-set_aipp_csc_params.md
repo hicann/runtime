@@ -36,7 +36,7 @@ BGR转YUV：
 | V |   | cscMatrixR2C0 cscMatrixR2C1 cscMatrixR2C2 | | R |        | cscOutputBiasR2 |
 ```
 
-色域转换参数值与转换前图片的格式、转换后图片的格式强相关，您可以参见[《ATC离线模型编译工具》](https://hiascend.com/document/redirect/cannCommunityATC)下的色域转换配置说明，按照转换前图片格式、转换后图片格式来配置色域转换参数。如果手册中列举的图片格式不满足要求，您需自行根据实际需求配置色域转换参数。
+色域转换参数值与转换前图片的格式、转换后图片的格式强相关，您可以参见《[ATC离线模型编译工具](https://hiascend.com/document/redirect/cannCommunityATC)》下的色域转换配置说明，按照转换前图片格式、转换后图片格式来配置色域转换参数。如果手册中列举的图片格式不满足要求，您需自行根据实际需求配置色域转换参数。
 
 ## 函数原型
 

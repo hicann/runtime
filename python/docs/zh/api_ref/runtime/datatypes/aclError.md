@@ -23,7 +23,7 @@
 | ACL_ERROR_PARSE_FILE = 100006 | 解析文件失败。 | 请检查文件内容是否合法。 |
 | ACL_ERROR_FILE_MISSING_ATTR = 100007 | 文件缺失参数。 | 请检查文件内容是否完整。 |
 | ACL_ERROR_FILE_ATTR_INVALID = 100008 | 文件参数无效。 | 请检查文件中参数值是否正确。 |
-| ACL_ERROR_INVALID_DUMP_CONFIG = 100009 | 无效的Dump配置。 | 请检查Dump配置是否正确，详细配置请参见[《精度调试工具》](https://hiascend.com/document/redirect/CannCommunityToolAccucacy)。 |
+| ACL_ERROR_INVALID_DUMP_CONFIG = 100009 | 无效的Dump配置。 | 请检查Dump配置是否正确，详细配置请参见《[精度调试工具](https://hiascend.com/document/redirect/CannCommunityToolAccucacy)》。 |
 | ACL_ERROR_INVALID_PROFILING_CONFIG = 100010 | 无效的Profiling配置。 | 请检查Profiling配置是否正确。 |
 | ACL_ERROR_INVALID_MODEL_ID = 100011 | 无效的模型ID。 | 请检查模型ID是否正确、模型是否正确加载。 |
 | ACL_ERROR_DESERIALIZE_MODEL = 100012 | 反序列化模型失败。 | 模型可能与当前版本不匹配，请重新构建模型。 |
@@ -54,7 +54,7 @@
 | ACL_ERROR_REPEAT_FINALIZE = 100037 | 重复去初始化。 | 请检查是否重复调用acl.finalize接口进行去初始化。 |
 | ACL_ERROR_NOT_STATIC_AIPP = 100038<br>**须知：此返回码后续版本会废弃，请使用ACL_ERROR_GE_AIPP_NOT_EXIST返回码。** | 静态AIPP配置信息不存在。 | 调用acl.mdl.get_first_aipp_info接口时，请传入正确的index值。 |
 | ACL_ERROR_COMPILING_STUB_MODE = 100039 | 运行应用前配置的动态库路径是编译桩的路径，不是正确的动态库路径。 | 请检查动态库路径的配置，确保使用运行模式的动态库。 |
-| ACL_ERROR_PROF_ALREADY_RUN = 100042 | 已存在采集Profiling数据的任务。 | - 请检查代码逻辑，"通过调用pyacl API方式采集Profiling数据"的配置不能与其它方式的Profiling配置并存，只能保留一种，各种方式的Profiling采集配置请参见[《性能调优工具》](https://hiascend.com/document/redirect/CannCommunityToolProfiling)。<br>- 请检查是否对同一个Device重复下发了多次Profiling配置，请参考[Profiling数据采集接口](../Profiling/data_profiling_apis.md)中的接口调用要求、接口调用顺序调整代码逻辑。 |
+| ACL_ERROR_PROF_ALREADY_RUN = 100042 | 已存在采集Profiling数据的任务。 | - 请检查代码逻辑，"通过调用pyacl API方式采集Profiling数据"的配置不能与其它方式的Profiling配置并存，只能保留一种，各种方式的Profiling采集配置请参见《[性能调优工具](https://hiascend.com/document/redirect/CannCommunityToolProfiling)》。<br>- 请检查是否对同一个Device重复下发了多次Profiling配置，请参考[Profiling数据采集接口](../Profiling/data_profiling_apis.md)中的接口调用要求、接口调用顺序调整代码逻辑。 |
 | ACL_ERROR_PROF_NOT_RUN = 100043 | 未使用[acl.prof.init](../Profiling/function-init-Profiling.md)接口先进行Profiling初始化。 | 请检查采集Profiling数据的接口调用顺序，参考[Profiling数据采集接口](../Profiling/data_profiling_apis.md)中的说明。 |
 | ACL_ERROR_DUMP_ALREADY_RUN = 100044 | 已存在获取Dump数据的任务。 | 请检查在调用[acl.mdl.init_dump](../dump/function-init_dump.md)接口、[acl.mdl.set_dump](../dump/function-set_dump.md)接口、[acl.mdl.finalize_dump](../dump/function-finalize_dump.md)接口配置Dump信息前，是否已调用[acl.init](../init/function-init.md)接口配置Dump信息，如是，请调整代码逻辑，保留一种方式配置Dump信息即可。 |
 | ACL_ERROR_DUMP_NOT_RUN = 100045 | 未使用[acl.mdl.init_dump](../dump/function-init_dump.md)接口先进行Dump初始化。 | 请检查获取Dump数据的接口调用顺序，参考[acl.mdl.init_dump](../dump/function-init_dump.md)接口处的说明。 |

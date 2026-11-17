@@ -61,4 +61,4 @@
 **图 1**
 ![](../figures/deviceid.png)
 
-关于ASCEND\_RT\_VISIBLE\_DEVICES环境的详细介绍请参见[《环境变量参考》](https://hiascend.com/document/redirect/CannCommunityEnvRef)。
+关于ASCEND\_RT\_VISIBLE\_DEVICES环境的详细介绍请参见《[环境变量参考](https://hiascend.com/document/redirect/CannCommunityEnvRef)》。
