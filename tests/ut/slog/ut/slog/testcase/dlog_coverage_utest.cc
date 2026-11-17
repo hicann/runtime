@@ -314,6 +314,26 @@ TEST_F(DlogAttrUtest, PidAndPoolingAccessors)
     EXPECT_EQ(0U, DlogGetGid());
 }
 
+/* issue #1112: ASCEND_LOG_GID applies to DlogGetGid at attr init. The
+ * fallback-to-primary part is covered by ep_alog_host_utest, which links the
+ * real ToolGetUserGroupId; the stub here is a no-op that never refreshes
+ * uid/gid, so only the apply path is asserted (root bypasses the group
+ * membership check). */
+TEST_F(DlogAttrUtest, GroupIdByEnv)
+{
+    if (geteuid() != 0) {
+        GTEST_SKIP() << "requires root to bypass the group membership check";
+    }
+    (void)setenv("ASCEND_LOG_GID", "12345", 1);
+    DlogInitGlobalAttr();
+    EXPECT_EQ(12345U, DlogGetGid());
+    /* restore deterministic gid=0 for later suites (stub keeps previous value) */
+    (void)setenv("ASCEND_LOG_GID", "0", 1);
+    DlogInitGlobalAttr();
+    EXPECT_EQ(0U, DlogGetGid());
+    (void)unsetenv("ASCEND_LOG_GID");
+}
+
 /* ====================================================================== */
 /* dlog_socket.c                                                          */
 /* ====================================================================== */

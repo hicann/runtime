@@ -104,9 +104,53 @@ bool DlogIsPoolingDevice(void)
     return (g_dlogAttr.systemAttr.serverType == PRODUCT_TYPE_QT); // return true; for qingtian
 }
 
+/* issue #1112: same membership rule as the kernel's in_group_p() chown(2)
+ * check — root may set any gid, other users only gids of their own process
+ * group set; an invalid ASCEND_LOG_GID falls back to the primary group here
+ * instead of failing every later fchown with EPERM */
+STATIC bool DlogIsGroupMember(uint32_t gid)
+{
+    if (geteuid() == 0) {
+        return true;
+    }
+    if ((gid == (uint32_t)getgid()) || (gid == (uint32_t)getegid())) {
+        return true;
+    }
+    int32_t groupNum = getgroups(0, NULL);
+    if (groupNum <= 0) {
+        return false;
+    }
+    gid_t* groupList = (gid_t*)malloc((size_t)groupNum * sizeof(gid_t));
+    if (groupList == NULL) {
+        return false;
+    }
+    bool isMember = false;
+    if (getgroups(groupNum, groupList) == groupNum) {
+        for (int32_t i = 0; i < groupNum; i++) {
+            if ((uint32_t)groupList[i] == gid) {
+                isMember = true;
+                break;
+            }
+        }
+    }
+    free(groupList);
+    return isMember;
+}
+
 STATIC void DlogInitUserGroupId(void)
 {
     (void)ToolGetUserGroupId(&g_dlogAttr.systemAttr.uid, &g_dlogAttr.systemAttr.gid);
+    const char* envGid = getenv(LOG_ENV_ASCEND_LOG_GID);
+    if (envGid == NULL) {
+        return;
+    }
+    uint32_t envVal = 0;
+    if ((LogStrToUint(envGid, &envVal) != LOG_SUCCESS) || (!DlogIsGroupMember(envVal))) {
+        SELF_LOG_WARN("invalid %s(%s), use process primary group.", LOG_ENV_ASCEND_LOG_GID, envGid);
+        return;
+    }
+    g_dlogAttr.systemAttr.gid = envVal;
+    SELF_LOG_INFO("set log gid by env %s(%u).", LOG_ENV_ASCEND_LOG_GID, envVal);
 }
 
 uint32_t DlogGetUid(void) { return g_dlogAttr.systemAttr.uid; }

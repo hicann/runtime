@@ -13,6 +13,11 @@
 
 #include "log_platform.h"
 
+/* issue #1112: env id for overriding the group id used when plog chowns its
+ * log directories/files; read via getenv because the mmpa env registry is
+ * deprecated for new variables */
+#define LOG_ENV_ASCEND_LOG_GID "ASCEND_LOG_GID"
+
 #if (OS_TYPE_DEF == LINUX)
 
 #include <errno.h>
@@ -184,6 +189,10 @@ INT32 ToolChownPath(const CHAR* path);
 INT32 ToolLChownPath(const CHAR* path);
 INT32 ToolFChownPath(INT32 fd);
 
+/* issue #1112: SYS_OK plus *gid only when ASCEND_LOG_GID parses and passes the
+ * membership check; query-only, never chowns (gates the plog tree convergence) */
+INT32 ToolGetEnvLogGid(UINT32* gid);
+
 // socket interface
 toolSockHandle ToolSocket(INT32 sockFamily, INT32 type, INT32 protocol);
 INT32 ToolBind(toolSockHandle sockFd, const ToolSockAddr* addr, toolSocklen addrLen);
@@ -324,6 +333,10 @@ INT32 ToolGetUserGroupId(UINT32* uid, UINT32* gid);
 INT32 ToolChownPath(const CHAR* path);
 INT32 ToolLChownPath(const CHAR* path);
 INT32 ToolFChownPath(INT32 fd);
+
+/* issue #1112: SYS_OK plus *gid only when ASCEND_LOG_GID parses and passes the
+ * membership check; query-only, never chowns (gates the plog tree convergence) */
+INT32 ToolGetEnvLogGid(UINT32* gid);
 
 // socket interface
 toolSockHandle ToolSocket(INT32 sockFamily, INT32 type, INT32 protocol);

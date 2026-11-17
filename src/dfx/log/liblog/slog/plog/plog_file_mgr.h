@@ -44,6 +44,7 @@ typedef struct { // log file list parameter
     char rootPath[MAX_FILEPATH_LEN + 1U];
     PlogFileList hostLogList[LOG_TYPE_NUM];
     PlogFileList* deviceLogList[LOG_TYPE_NUM];
+    bool envGidConverged; // issue #1112: legacy-tree chown-to-env-gid done flag (per manager lifetime)
 } PlogFileMgrInfo;
 
 LogStatus PlogFileMgrInit(void);

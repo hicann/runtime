@@ -672,3 +672,84 @@ TEST_F(SYS_PACKAGE_TEST, ToolLChownPath)
     MOCKER(lchown).stubs().will(returnValue(SYS_OK));
     EXPECT_EQ(SYS_OK, ToolLChownPath("/test"));
 }
+
+/* issue #1112: ASCEND_LOG_GID overrides the chown group of the Tool*ChownPath
+ * family when the value parses as a uint32 gid the current user belongs to. */
+TEST_F(SYS_PACKAGE_TEST, ToolChownPathEnvGid)
+{
+    char path[128] = "/tmp/log_ut_envgid_a";
+    int fd = open(path, O_CREAT | O_WRONLY, 0644);
+    ASSERT_GE(fd, 0);
+    (void)close(fd);
+
+    char gidStr[16] = {0};
+    (void)snprintf_s(gidStr, sizeof(gidStr), sizeof(gidStr) - 1U, "%u", (unsigned)getgid());
+    (void)setenv("ASCEND_LOG_GID", gidStr, 1);
+    EXPECT_EQ(SYS_OK, ToolChownPath(path));
+    struct stat st = {0};
+    EXPECT_EQ(0, stat(path, &st));
+    EXPECT_EQ((gid_t)getgid(), st.st_gid);
+
+    (void)unlink(path);
+    (void)unsetenv("ASCEND_LOG_GID");
+}
+
+TEST_F(SYS_PACKAGE_TEST, ToolChownPathEnvGidFallback)
+{
+    const char* invalidValues[] = {"abc", "", "-1", "4294967296", "12x"};
+    for (size_t i = 0; i < sizeof(invalidValues) / sizeof(invalidValues[0]); i++) {
+        char path[128] = "/tmp/log_ut_envgid_b";
+        int fd = open(path, O_CREAT | O_WRONLY, 0644);
+        ASSERT_GE(fd, 0);
+        (void)close(fd);
+
+        (void)setenv("ASCEND_LOG_GID", invalidValues[i], 1);
+        EXPECT_EQ(SYS_OK, ToolChownPath(path)) << "env=" << invalidValues[i];
+        struct stat st = {0};
+        EXPECT_EQ(0, stat(path, &st));
+        EXPECT_EQ((gid_t)getgid(), st.st_gid) << "env=" << invalidValues[i];
+
+        (void)unlink(path);
+    }
+    (void)unsetenv("ASCEND_LOG_GID");
+}
+
+TEST_F(SYS_PACKAGE_TEST, ToolChownPathEnvGidNotMember)
+{
+    char path[128] = "/tmp/log_ut_envgid_b2";
+    int fd = open(path, O_CREAT | O_WRONLY, 0644);
+    ASSERT_GE(fd, 0);
+    (void)close(fd);
+
+    (void)setenv("ASCEND_LOG_GID", "4294967294", 1);
+    EXPECT_EQ(SYS_OK, ToolChownPath(path));
+    struct stat st = {0};
+    EXPECT_EQ(0, stat(path, &st));
+    if (geteuid() == 0) {
+        EXPECT_EQ((gid_t)4294967294U, st.st_gid);
+    } else {
+        EXPECT_EQ((gid_t)getgid(), st.st_gid);
+    }
+
+    (void)unlink(path);
+    (void)unsetenv("ASCEND_LOG_GID");
+}
+
+TEST_F(SYS_PACKAGE_TEST, ToolFChownPathEnvGid)
+{
+    char path[128] = "/tmp/log_ut_envgid_c";
+    int fd = open(path, O_CREAT | O_WRONLY, 0644);
+    ASSERT_GE(fd, 0);
+
+    char gidStr[16] = {0};
+    (void)snprintf_s(gidStr, sizeof(gidStr), sizeof(gidStr) - 1U, "%u", (unsigned)getgid());
+    (void)setenv("ASCEND_LOG_GID", gidStr, 1);
+    EXPECT_EQ(SYS_OK, ToolFChownPath(fd));
+    struct stat st = {0};
+    EXPECT_EQ(0, fstat(fd, &st));
+    EXPECT_EQ((gid_t)getgid(), st.st_gid);
+
+    (void)close(fd);
+    (void)unlink(path);
+    (void)unsetenv("ASCEND_LOG_GID");
+}

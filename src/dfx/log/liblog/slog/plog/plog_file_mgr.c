@@ -413,9 +413,69 @@ PlogWrite(PlogFileList* pstSubInfo, const StLogDataBlock* pstLogData, char* cons
     return LOG_SUCCESS;
 }
 
+/* issue #1112 review: chown an existing tree entry to the env gid. Only paths
+ * that exist are converged; failures warn at a limited rate and never block
+ * the write path (ownership adjustment is an enhancement, write permission is
+ * governed by the owner/group bits independently). */
+STATIC void PlogConvergeEnvGidOne(const char* path)
+{
+    if (ToolAccess(path) != SYS_OK) {
+        return;
+    }
+    int32_t ret = ToolChownPath(path);
+    NO_ACT_WARN_LOG(ret != SYS_OK, "converge %s failed, ret=%d.", path, ret);
+}
+
+/* issue #1112 review (Major): LogMkdir only chowns dirs it creates, so on
+ * upgrade or a second run the legacy tree keeps the old group while new files
+ * get the env gid - the target group then cannot traverse the 0750 dirs.
+ * Converge the plog-managed tree (root path, sort dirs and per-list log
+ * dirs; never anything above the root path) once per manager lifetime.
+ * issue #1112 review round3 (Major): convergence is gated on the env gid
+ * passing parse + membership validation - an invalid or non-member value must
+ * never chown existing dirs back to the primary group (legacy dirs keep
+ * their established gid), so the "invalid value keeps default behaviour"
+ * semantics is preserved; the hot write path only pays one bool check. */
+STATIC void PlogConvergeEnvGid(void)
+{
+    if ((g_plogFileList == NULL) || g_plogFileList->envGidConverged) {
+        return;
+    }
+    g_plogFileList->envGidConverged = true;
+    UINT32 envGid = 0;
+    if (ToolGetEnvLogGid(&envGid) != SYS_OK) {
+        return;
+    }
+
+    PlogConvergeEnvGidOne(g_plogFileList->rootPath);
+
+    const char* sortDirName[(int32_t)LOG_TYPE_NUM] = {DEBUG_DIR_NAME, SECURITY_DIR_NAME, RUN_DIR_NAME};
+    for (int32_t i = (int32_t)DEBUG_LOG; i < (int32_t)LOG_TYPE_NUM; i++) {
+        char sortPath[MAX_FILEDIR_LEN + 1U] = {0};
+        int32_t ret = snprintf_s(
+            sortPath, MAX_FILEDIR_LEN + 1U, MAX_FILEDIR_LEN, "%s/%s", g_plogFileList->rootPath, sortDirName[i]);
+        NO_ACT_ERR_LOG(ret == -1, "snprintf_s sort path failed, err=%s.", strerror(ToolGetErrorCode()));
+        if (ret != -1) {
+            PlogConvergeEnvGidOne(sortPath);
+        }
+        PlogConvergeEnvGidOne(g_plogFileList->hostLogList[i].aucFilePath);
+    }
+
+    for (uint32_t iType = 0; iType < (uint32_t)LOG_TYPE_NUM; iType++) {
+        if (g_plogFileList->deviceLogList[iType] == NULL) {
+            continue;
+        }
+        for (uint32_t idx = 0; idx < g_plogFileList->deviceNum; idx++) {
+            PlogConvergeEnvGidOne(g_plogFileList->deviceLogList[iType][idx].aucFilePath);
+        }
+    }
+}
+
 STATIC LogStatus PlogMkdir(const char* logPath)
 {
     ONE_ACT_NO_LOG(logPath == NULL, return LOG_FAILURE);
+
+    PlogConvergeEnvGid();
 
     int32_t ret = ToolAccess((const char*)logPath);
     ONE_ACT_NO_LOG(ret == SYS_OK, return LOG_SUCCESS);

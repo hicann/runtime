@@ -399,6 +399,200 @@ TEST_F(PlogFileMgrCovUtest, GetValidPath_EnoentFallback)
     GlobalMockObject::reset();
 }
 
+/* TC: issue #1112 ASCEND_LOG_GID — DlogGetGid env override at attr init.
+ * Full fallback matrix is proven here (ep links the real ToolGetUserGroupId,
+ * unlike log_slogd_utest whose stub is a no-op). */
+TEST_F(PlogFileMgrCovUtest, DlogGetGid_EnvOverride)
+{
+    unsetenv("ASCEND_LOG_GID");
+    DlogInitGlobalAttr();
+    EXPECT_EQ((uint32_t)getgid(), DlogGetGid()); /* baseline: primary group */
+
+    setenv("ASCEND_LOG_GID", "abc", 1);
+    DlogInitGlobalAttr();
+    EXPECT_EQ((uint32_t)getgid(), DlogGetGid()); /* invalid value falls back */
+
+    setenv("ASCEND_LOG_GID", "12345", 1);
+    DlogInitGlobalAttr();
+    if (geteuid() == 0) {
+        EXPECT_EQ(12345U, DlogGetGid());             /* root bypasses membership check */
+    } else {
+        EXPECT_EQ((uint32_t)getgid(), DlogGetGid()); /* non-member falls back */
+    }
+
+    unsetenv("ASCEND_LOG_GID");
+    DlogInitGlobalAttr();
+    EXPECT_EQ((uint32_t)getgid(), DlogGetGid()); /* restored */
+}
+
+/* TC: issue #1112 ASCEND_LOG_GID end-to-end. A valid env gid (a group the
+ * user belongs to; as root any gid, choosing a non-default one so the change
+ * is observable) applies to both plog directories (LogMkdir -> ToolChownPath)
+ * and log files (PlogChownPath -> DlogGetGid), while uid and mode stay put. */
+TEST_F(PlogFileMgrCovUtest, WriteHostLog_EnvGidFileAndDir)
+{
+    gid_t envGid = (geteuid() == 0) ? (gid_t)1 : (gid_t)getgid();
+    char gidStr[16] = {0};
+    (void)snprintf_s(gidStr, sizeof(gidStr), sizeof(gidStr) - 1U, "%u", (unsigned)envGid);
+    setenv("ASCEND_LOG_GID", gidStr, 1);
+    DlogInitGlobalAttr(); /* production flow: attr init happens before first write */
+    ASSERT_EQ(LOG_SUCCESS, PlogFileMgrInit());
+
+    char msg[64] = "issue1112 env gid log";
+    ASSERT_EQ(LOG_SUCCESS, PlogWriteHostLog(DEBUG_LOG, msg, (uint32_t)strlen(msg)));
+
+    struct stat st = {0};
+    char dir[300] = {0};
+    (void)snprintf_s(dir, sizeof(dir), sizeof(dir) - 1U, "%s/debug/plog", PATH_ROOT);
+    ASSERT_EQ(0, stat(dir, &st));
+    EXPECT_EQ(envGid, st.st_gid);
+    EXPECT_EQ(0750U, (unsigned)(st.st_mode & 0777));
+    EXPECT_EQ((uid_t)getuid(), st.st_uid);
+
+    PlogFileMgrInfo* fl = PlogGetFileMgrInfo();
+    ASSERT_NE(nullptr, fl);
+    PlogFileList* list = &fl->hostLogList[DEBUG_LOG];
+    char file[600] = {0};
+    (void)snprintf_s(
+        file, sizeof(file), sizeof(file) - 1U, "%s/%s", list->aucFilePath, list->aucFileName[list->currIndex]);
+    ASSERT_EQ(0, stat(file, &st));
+    EXPECT_EQ(envGid, st.st_gid);
+    EXPECT_EQ(0640U, (unsigned)(st.st_mode & 0777));
+    EXPECT_EQ((uid_t)getuid(), st.st_uid);
+
+    /* cleanup: restore attr state for subsequent suites */
+    unsetenv("ASCEND_LOG_GID");
+    DlogInitGlobalAttr();
+}
+
+/* TC: issue #1112 review (Major) — ASCEND_LOG_GID must also converge the
+ * ownership of ALREADY-EXISTING plog directories: on upgrade or a second run
+ * the log tree exists with the old (primary) group; with the env set, the next
+ * run must chown the existing tree to the env gid, otherwise the target group
+ * cannot traverse the 0750 dirs to reach the new 0640 log files.
+ * Phase 1 creates the tree without the env (legacy state), phase 2 re-inits
+ * and writes with the env set, then asserts every tree level converged. */
+TEST_F(PlogFileMgrCovUtest, WriteHostLog_EnvGidConvergeExistingDirs)
+{
+    gid_t envGid = (geteuid() == 0) ? (gid_t)1 : (gid_t)getgid();
+    char gidStr[16] = {0};
+    (void)snprintf_s(gidStr, sizeof(gidStr), sizeof(gidStr) - 1U, "%u", (unsigned)envGid);
+
+    /* phase 1: legacy run without the env — tree created with the primary group */
+    unsetenv("ASCEND_LOG_GID");
+    DlogInitGlobalAttr();
+    ASSERT_EQ(LOG_SUCCESS, PlogFileMgrInit());
+    char msg[64] = "issue1112 converge phase1";
+    ASSERT_EQ(LOG_SUCCESS, PlogWriteHostLog(DEBUG_LOG, msg, (uint32_t)strlen(msg)));
+    PlogFileMgrExit();
+
+    /* phase 2: run with the env set — existing tree must converge to env gid */
+    setenv("ASCEND_LOG_GID", gidStr, 1);
+    DlogInitGlobalAttr();
+    ASSERT_EQ(LOG_SUCCESS, PlogFileMgrInit());
+    (void)snprintf_s(msg, sizeof(msg), sizeof(msg) - 1U, "issue1112 converge phase2");
+    ASSERT_EQ(LOG_SUCCESS, PlogWriteHostLog(DEBUG_LOG, msg, (uint32_t)strlen(msg)));
+
+    struct stat st = {0};
+    char rootDir[300] = {0};
+    char debugDir[300] = {0};
+    char plogDir[300] = {0};
+    (void)snprintf_s(rootDir, sizeof(rootDir), sizeof(rootDir) - 1U, "%s", PATH_ROOT);
+    (void)snprintf_s(debugDir, sizeof(debugDir), sizeof(debugDir) - 1U, "%s/debug", PATH_ROOT);
+    (void)snprintf_s(plogDir, sizeof(plogDir), sizeof(plogDir) - 1U, "%s/debug/plog", PATH_ROOT);
+    ASSERT_EQ(0, stat(rootDir, &st));
+    EXPECT_EQ(envGid, st.st_gid);
+    ASSERT_EQ(0, stat(debugDir, &st));
+    EXPECT_EQ(envGid, st.st_gid);
+    ASSERT_EQ(0, stat(plogDir, &st));
+    EXPECT_EQ(envGid, st.st_gid);
+
+    PlogFileMgrInfo* fl = PlogGetFileMgrInfo();
+    ASSERT_NE(nullptr, fl);
+    PlogFileList* list = &fl->hostLogList[DEBUG_LOG];
+    char file[600] = {0};
+    (void)snprintf_s(
+        file, sizeof(file), sizeof(file) - 1U, "%s/%s", list->aucFilePath, list->aucFileName[list->currIndex]);
+    ASSERT_EQ(0, stat(file, &st));
+    EXPECT_EQ(envGid, st.st_gid);
+
+    /* cleanup: restore attr state for subsequent suites */
+    unsetenv("ASCEND_LOG_GID");
+    DlogInitGlobalAttr();
+}
+
+/* TC: issue #1112 review round3 (Major) — an invalid ASCEND_LOG_GID must NOT
+ * converge the legacy tree: dirs once owned by a valid env gid keep that gid
+ * when the next run misconfigures the value (parse/member check fails), so
+ * the established "invalid value keeps default behaviour" semantics is not
+ * broken by the convergence path. Files do fall back on every write via
+ * PlogChownPath (pre-existing behaviour), only directories are protected. */
+TEST_F(PlogFileMgrCovUtest, WriteHostLog_EnvGidInvalidKeepExistingDirs)
+{
+    gid_t legacyGid = (geteuid() == 0) ? (gid_t)1 : (gid_t)getgid();
+    char gidStr[16] = {0};
+    (void)snprintf_s(gidStr, sizeof(gidStr), sizeof(gidStr) - 1U, "%u", (unsigned)legacyGid);
+
+    /* phase 1: valid env gid — tree created and owned by it */
+    setenv("ASCEND_LOG_GID", gidStr, 1);
+    DlogInitGlobalAttr();
+    ASSERT_EQ(LOG_SUCCESS, PlogFileMgrInit());
+    char msg[64] = "issue1112 keepdirs phase1";
+    ASSERT_EQ(LOG_SUCCESS, PlogWriteHostLog(DEBUG_LOG, msg, (uint32_t)strlen(msg)));
+    PlogFileMgrExit();
+
+    /* phase 2: misconfigured value — legacy dirs must keep the legacy gid */
+    setenv("ASCEND_LOG_GID", "abc", 1);
+    DlogInitGlobalAttr();
+    ASSERT_EQ(LOG_SUCCESS, PlogFileMgrInit());
+    (void)snprintf_s(msg, sizeof(msg), sizeof(msg) - 1U, "issue1112 keepdirs phase2");
+    ASSERT_EQ(LOG_SUCCESS, PlogWriteHostLog(DEBUG_LOG, msg, (uint32_t)strlen(msg)));
+
+    struct stat st = {0};
+    char debugDir[300] = {0};
+    char plogDir[300] = {0};
+    (void)snprintf_s(debugDir, sizeof(debugDir), sizeof(debugDir) - 1U, "%s/debug", PATH_ROOT);
+    (void)snprintf_s(plogDir, sizeof(plogDir), sizeof(plogDir) - 1U, "%s/debug/plog", PATH_ROOT);
+    ASSERT_EQ(0, stat(debugDir, &st));
+    EXPECT_EQ(legacyGid, st.st_gid);
+    ASSERT_EQ(0, stat(plogDir, &st));
+    EXPECT_EQ(legacyGid, st.st_gid);
+
+    /* cleanup: restore attr state for subsequent suites */
+    unsetenv("ASCEND_LOG_GID");
+    DlogInitGlobalAttr();
+}
+
+/* TC: issue #1112 ASCEND_LOG_GID invalid value — behaviour identical to the
+ * pre-feature baseline: dirs and files keep the process primary group. */
+TEST_F(PlogFileMgrCovUtest, WriteHostLog_EnvGidInvalidFallback)
+{
+    setenv("ASCEND_LOG_GID", "abc", 1);
+    DlogInitGlobalAttr();
+    ASSERT_EQ(LOG_SUCCESS, PlogFileMgrInit());
+
+    char msg[64] = "issue1112 invalid env gid log";
+    ASSERT_EQ(LOG_SUCCESS, PlogWriteHostLog(DEBUG_LOG, msg, (uint32_t)strlen(msg)));
+
+    struct stat st = {0};
+    char dir[300] = {0};
+    (void)snprintf_s(dir, sizeof(dir), sizeof(dir) - 1U, "%s/debug/plog", PATH_ROOT);
+    ASSERT_EQ(0, stat(dir, &st));
+    EXPECT_EQ((gid_t)getgid(), st.st_gid);
+
+    PlogFileMgrInfo* fl = PlogGetFileMgrInfo();
+    ASSERT_NE(nullptr, fl);
+    PlogFileList* list = &fl->hostLogList[DEBUG_LOG];
+    char file[600] = {0};
+    (void)snprintf_s(
+        file, sizeof(file), sizeof(file) - 1U, "%s/%s", list->aucFilePath, list->aucFileName[list->currIndex]);
+    ASSERT_EQ(0, stat(file, &st));
+    EXPECT_EQ((gid_t)getgid(), st.st_gid);
+
+    unsetenv("ASCEND_LOG_GID");
+    DlogInitGlobalAttr();
+}
+
 /* TC: ASCEND_WORK_PATH as a non-existent multi-level absolute path is created
  * and logs fall under the configured path. */
 TEST_F(PlogFileMgrCovUtest, FileMgrInit_WorkPathAbsoluteMultiLevel)

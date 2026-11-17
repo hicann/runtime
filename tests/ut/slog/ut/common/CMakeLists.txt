@@ -13,6 +13,7 @@ set(ADX_SOURCE_PATH ${TOP_DIR}/src/dfx/adump)
 ###################################################################
 set(libCommonSrc
     ${LOG_SOURCE_PATH}/utils/log_system_api.c
+    ${LOG_SOURCE_PATH}/utils/log_print_syslog.c
     ${LOG_SOURCE_PATH}/utils/log_buffer/log_ring_buffer.c
     ${CMAKE_CURRENT_SOURCE_DIR}/test/main.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/test/log-sys-package-ut.cc
@@ -36,6 +37,7 @@ target_include_directories(log_common_utest PRIVATE
 
 target_compile_definitions(log_common_utest PRIVATE
     _LOG_UT_
+    WRITE_TO_SYSLOG
 )
 
 target_link_libraries(log_common_utest PRIVATE

@@ -9,6 +9,7 @@
  */
 
 #include "log_system_api.h"
+#include "log_print.h"
 
 #if (OS_TYPE_DEF == LINUX)
 #include <sys/prctl.h>
@@ -869,6 +870,83 @@ INT32 ToolGetUserGroupId(UINT32* uid, UINT32* gid)
     }
 }
 
+/* issue #1112: membership check mirrors the kernel's in_group_p() rule for
+ * chown(2): root (CAP_CHOWN) may set any gid, other users only gids from
+ * their own process group set, so an invalid ASCEND_LOG_GID is rejected
+ * here instead of failing every later chown with EPERM */
+STATIC bool LocalIsGroupMember(UINT32 gid)
+{
+    if (geteuid() == 0) {
+        return true;
+    }
+    if ((gid == (UINT32)getgid()) || (gid == (UINT32)getegid())) {
+        return true;
+    }
+    INT32 groupNum = getgroups(0, NULL);
+    if (groupNum <= 0) {
+        return false;
+    }
+    gid_t* groupList = (gid_t*)malloc((size_t)groupNum * sizeof(gid_t));
+    if (groupList == NULL) {
+        return false;
+    }
+    bool isMember = false;
+    if (getgroups(groupNum, groupList) == groupNum) {
+        for (INT32 i = 0; i < groupNum; i++) {
+            if ((UINT32)groupList[i] == gid) {
+                isMember = true;
+                break;
+            }
+        }
+    }
+    free(groupList);
+    return isMember;
+}
+
+/* issue #1112: parse ASCEND_LOG_GID (decimal, 0..UINT32_MAX, full
+ * consumption — same reject set as LogStrToUint) and verify membership;
+ * SYS_OK only when the env is set to a gid the chown below will accept */
+STATIC INT32 LocalGetEnvLogGid(UINT32* gid)
+{
+    const CHAR* env = getenv(LOG_ENV_ASCEND_LOG_GID);
+    if ((env == NULL) || (gid == NULL)) {
+        return SYS_ERROR;
+    }
+
+    errno = 0;
+    CHAR* endPtr = NULL;
+    UINT64 value = strtoul(env, &endPtr, 10);
+    if ((env == endPtr) || (*endPtr != '\0')) {
+        SELF_LOG_WARN("invalid %s(%s), use process primary group.", LOG_ENV_ASCEND_LOG_GID, env);
+        return SYS_ERROR;
+    }
+    if ((((value == 0U) || (value == ULONG_MAX)) && (errno == ERANGE)) || (value > (UINT64)UINT_MAX)) {
+        SELF_LOG_WARN("invalid %s(%s), use process primary group.", LOG_ENV_ASCEND_LOG_GID, env);
+        return SYS_ERROR;
+    }
+
+    UINT32 envGid = (UINT32)value;
+    if (!LocalIsGroupMember(envGid)) {
+        SELF_LOG_WARN(
+            "%s(%u) is not a group of current user, use process primary group.", LOG_ENV_ASCEND_LOG_GID, envGid);
+        return SYS_ERROR;
+    }
+    *gid = envGid;
+    return SYS_OK;
+}
+
+/* issue #1112 review round3: query-only entry for callers that must gate on the
+ * env gid validity (e.g. the plog legacy-tree convergence) without triggering a
+ * chown: SYS_OK only when ASCEND_LOG_GID parses and passes the membership check,
+ * so an invalid or non-member value never mutates existing ownership. */
+INT32 ToolGetEnvLogGid(UINT32* gid)
+{
+    if (gid == NULL) {
+        return SYS_ERROR;
+    }
+    return LocalGetEnvLogGid(gid);
+}
+
 INT32 ToolChownPath(const CHAR* path)
 {
     if ((path == NULL) || (strlen(path) == 0)) {
@@ -881,6 +959,7 @@ INT32 ToolChownPath(const CHAR* path)
     if (ret != SYS_OK) {
         return SYS_ERROR;
     }
+    (void)LocalGetEnvLogGid(&gid);
 
     ret = ToolChown(path, uid, gid);
     if (ret != SYS_OK) {
@@ -901,6 +980,7 @@ INT32 ToolLChownPath(const CHAR* path)
     if (ret != SYS_OK) {
         return SYS_ERROR;
     }
+    (void)LocalGetEnvLogGid(&gid);
 
     ret = lchown(path, uid, gid);
     if (ret != SYS_OK) {
@@ -921,6 +1001,7 @@ INT32 ToolFChownPath(INT32 fd)
     if (ret != SYS_OK) {
         return SYS_ERROR;
     }
+    (void)LocalGetEnvLogGid(&gid);
 
     ret = fchown(fd, uid, gid);
     if (ret < 0) {
@@ -1060,5 +1141,11 @@ INT32 ToolChownPath(const CHAR* path) { return SYS_OK; }
 INT32 ToolLChownPath(const CHAR* path) { return SYS_OK; }
 
 INT32 ToolFChownPath(INT32 fd) { return SYS_OK; }
+
+INT32 ToolGetEnvLogGid(UINT32* gid)
+{
+    (void)gid;
+    return SYS_ERROR;
+}
 
 #endif
