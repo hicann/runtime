@@ -193,6 +193,7 @@ public:
     }
 
     bool IsCapturing() const;
+    rtError_t CheckCaptureEvent(const char* const functionDescription, const char* const eventName) const;
     bool IsRecordOrigCaptureStream(const Stream* const stm) const;
     bool ToBeCaptured(const Stream* const stm) const;
     void SoftwareModeEnable(void) { isHardwareMode_ = false; }

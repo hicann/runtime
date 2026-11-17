@@ -13,6 +13,13 @@
 namespace cce {
 namespace runtime {
 
+rtError_t Event::CheckCaptureEvent(const char* const functionDescription, const char* const eventName) const
+{
+    UNUSED(functionDescription);
+    UNUSED(eventName);
+    return RT_ERROR_NONE;
+}
+
 bool Event::IsRecordOrigCaptureStream(const Stream* const stm) const
 {
     UNUSED(stm);

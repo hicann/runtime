@@ -8,11 +8,20 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "event.hpp"
+#include "error_message_manage.hpp"
 #include "stream_capture.hpp"
 #include "stream.hpp"
 
 namespace cce {
 namespace runtime {
+
+rtError_t Event::CheckCaptureEvent(const char* const functionDescription, const char* const eventName) const
+{
+    COND_RETURN_AND_MSG_OUTER(
+        GetCaptureStream() != nullptr, RT_ERROR_INVALID_VALUE, ErrorCode::EE1016, functionDescription,
+        RtFmtMsg("%s (event_id=%d) in the capture model is not supported", eventName, EventId_()));
+    return RT_ERROR_NONE;
+}
 
 bool Event::IsRecordOrigCaptureStream(const Stream* const stm) const
 {

@@ -2073,6 +2073,9 @@ rtError_t ApiErrorDecorator::EventSynchronize(Event* const evt, const int32_t ti
         (timeout < -1) || (timeout == 0), RT_ERROR_INVALID_VALUE, "Event synchronization", timeout,
         "greater than or equal to -1 and not equal to 0");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(evt, RT_ERROR_INVALID_VALUE, "Event synchronization");
+    COND_RETURN_AND_MSG_OUTER(
+        evt->GetCaptureStream() != nullptr, RT_ERROR_INVALID_VALUE, ErrorCode::EE1016, "Event synchronization",
+        RtFmtMsg("Event (event_id=%d) in the capture model is not supported", evt->EventId_()));
     COND_RETURN_WARN(
         evt->GetEventFlag() == RT_EVENT_EXTERNAL, RT_ERROR_FEATURE_NOT_SUPPORT,
         "The external event does not support synchronization.");

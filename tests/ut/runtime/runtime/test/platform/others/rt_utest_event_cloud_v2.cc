@@ -22,6 +22,7 @@
 #include "task_info.hpp"
 #include "runtime.hpp"
 #include "api_impl.hpp"
+#include "api_impl_event.hpp"
 #include "context.hpp"
 #include "npu_driver.hpp"
 #undef protected
@@ -171,6 +172,34 @@ TEST_F(EventTest910, event_destroy_invalidates_handle_when_delete_is_delayed)
     EXPECT_EQ(destroyedEvent, nullptr);
 
     delete evt;
+}
+
+TEST_F(EventTest910, event_elapsed_time_rejects_capture_stream)
+{
+    ApiImplEvent apiImpl;
+    Event startEvent;
+    Event endEvent;
+    rtStream_t stream = nullptr;
+    ASSERT_EQ(rtStreamCreate(&stream, 0), ACL_RT_SUCCESS);
+    Stream* captureStream = rt_ut::UnwrapOrNull<Stream>(stream);
+    ASSERT_NE(captureStream, nullptr);
+    float32_t elapsedTime = 0.0F;
+
+    EXPECT_FALSE(startEvent.IsCapturing());
+    EXPECT_FALSE(endEvent.IsCapturing());
+    startEvent.SetCaptureStream(captureStream);
+    uint64_t timeStamp = 0;
+    EXPECT_EQ(apiImpl.EventGetTimeStamp(&timeStamp, &startEvent), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(apiImpl.EventElapsedTime(&elapsedTime, &startEvent, &endEvent), RT_ERROR_INVALID_VALUE);
+    startEvent.SetCaptureStream(nullptr);
+    endEvent.SetCaptureStream(captureStream);
+    EXPECT_EQ(apiImpl.EventElapsedTime(&elapsedTime, &startEvent, &endEvent), RT_ERROR_INVALID_VALUE);
+    endEvent.SetCaptureStream(nullptr);
+
+    MOCKER_CPP_VIRTUAL(&endEvent, &Event::ElapsedTime).expects(once()).will(returnValue(RT_ERROR_NONE));
+    EXPECT_EQ(apiImpl.EventElapsedTime(&elapsedTime, &startEvent, &endEvent), RT_ERROR_NONE);
+    GlobalMockObject::verify();
+    EXPECT_EQ(rtStreamDestroy(stream), ACL_RT_SUCCESS);
 }
 
 TEST_F(EventTest910, event_elapse_arg)

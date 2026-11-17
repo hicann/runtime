@@ -1690,20 +1690,38 @@ TEST_F(CloudV2CaptureModelUpdateTest, rtModelTaskEventParam001)
     ret = rtStreamGetTasks(inputStreams[1], inputTasks, &numTask);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
+    // EndCapture has completed. The original event is usable, but handles
+    // returned for graph tasks must reject host queries and synchronization.
+    rtEventStatus_t originalStatus = RT_EVENT_INIT;
+    EXPECT_EQ(rtEventQueryStatus(event, &originalStatus), RT_ERROR_NONE);
+    EXPECT_EQ(rtEventSynchronize(event), RT_ERROR_NONE);
+    const auto checkCaptureEvent = [](rtEvent_t captureEvent) {
+        ASSERT_NE(captureEvent, nullptr);
+        rtEventStatus_t status = RT_EVENT_INIT;
+        rtEventWaitStatus_t waitStatus = EVENT_STATUS_NOT_READY;
+        EXPECT_EQ(rtEventQueryStatus(captureEvent, &status), ACL_ERROR_RT_PARAM_INVALID);
+        EXPECT_EQ(rtEventQueryWaitStatus(captureEvent, &waitStatus), ACL_ERROR_RT_PARAM_INVALID);
+        EXPECT_EQ(rtEventSynchronize(captureEvent), ACL_ERROR_RT_PARAM_INVALID);
+        EXPECT_EQ(rtEventSynchronizeWithTimeout(captureEvent, 1), ACL_ERROR_RT_PARAM_INVALID);
+    };
+
     rtTaskParams params;
     ret = rtModelTaskGetParams(inputTasks[0], &params);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     EXPECT_EQ(params.type, RT_TASK_EVENT_RECORD);
+    checkCaptureEvent(params.eventRecordTaskParams.event);
     ret = rtModelTaskSetParams(inputTasks[0], &params);
     EXPECT_EQ(ret, 107000);
 
     ret = rtModelTaskGetParams(inputTasks[1], &params);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     EXPECT_EQ(params.type, RT_TASK_EVENT_WAIT);
+    checkCaptureEvent(params.eventWaitTaskParams.event);
 
     ret = rtModelTaskGetParams(inputTasks[2], &params);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     EXPECT_EQ(params.type, RT_TASK_EVENT_RESET);
+    checkCaptureEvent(params.eventResetTaskParams.event);
 
     ret = rtModelDestroy(model);
     EXPECT_EQ(ret, RT_ERROR_NONE);
