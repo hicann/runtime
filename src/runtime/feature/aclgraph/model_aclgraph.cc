@@ -80,5 +80,19 @@ rtError_t Model::ModelDebugJsonPrint(const char* path, const unsigned int flags)
     return RT_ERROR_NONE;
 }
 
+rtError_t Model::RegisterHcclStream(Stream* const stream)
+{
+    const std::lock_guard<std::mutex> guard(hcclStreamsMutex_);
+    (void)hcclStreams_.insert(stream);
+    return RT_ERROR_NONE;
+}
+
+rtError_t Model::CollectHcclStreams(std::vector<Stream*>& streams) const
+{
+    const std::lock_guard<std::mutex> guard(hcclStreamsMutex_);
+    streams.assign(hcclStreams_.begin(), hcclStreams_.end());
+    return RT_ERROR_NONE;
+}
+
 } // namespace runtime
 } // namespace cce

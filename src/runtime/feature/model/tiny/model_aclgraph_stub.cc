@@ -23,5 +23,17 @@ rtError_t Model::ModelDebugJsonPrint(const char* path, const unsigned int flags)
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
+rtError_t Model::RegisterHcclStream(Stream* const stream)
+{
+    UNUSED(stream);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t Model::CollectHcclStreams(std::vector<Stream*>& streams) const
+{
+    UNUSED(streams);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 } // namespace runtime
 } // namespace cce

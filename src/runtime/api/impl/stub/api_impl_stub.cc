@@ -780,5 +780,33 @@ rtError_t ApiImpl::TaskSetParams(rtTask_t task, rtTaskParams* const params, Kern
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
+rtError_t ApiImpl::HcclStreamAddToModel(Stream* const stream, Model* const mdl)
+{
+    UNUSED(stream);
+    UNUSED(mdl);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::HcclStreamAddToNormalModel(Stream* const stream, Model* const mdl)
+{
+    UNUSED(stream);
+    UNUSED(mdl);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::ModelGetHcclStream(const Model* const mdl, std::vector<Stream*>& streams)
+{
+    UNUSED(mdl);
+    UNUSED(streams);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::GetModelByStream(Stream* const stream, Model** const mdl)
+{
+    UNUSED(stream);
+    UNUSED(mdl);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 } // namespace runtime
 } // namespace cce
