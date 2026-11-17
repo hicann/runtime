@@ -294,8 +294,9 @@ aclError aclrtDeviceSetSuspendConfigImpl(const int32_t deviceId, const aclrtDevi
         "ACL_RT_DEVICE_SUSPEND_MODE_DISABLE(0) or ACL_RT_DEVICE_SUSPEND_MODE_DEVICE(1)", ACL_ERROR_INVALID_PARAM);
     const uint32_t taskIntervalMax = MAX_DEVICE_SUSPEND_TASK_INTERVAL;
     ACL_CHECK_INVALID_VALUE_WITH_EXPECT_RET(
-        config->taskInterval <= taskIntervalMax, config->taskInterval,
-        acl::AclErrorLogManager::FormatStr("[0, %u]", taskIntervalMax).c_str(), ACL_ERROR_INVALID_PARAM);
+        (config->mode != ACL_RT_DEVICE_SUSPEND_MODE_DEVICE) || (config->taskInterval <= taskIntervalMax),
+        config->taskInterval, acl::AclErrorLogManager::FormatStr("[0, %u]", taskIntervalMax).c_str(),
+        ACL_ERROR_INVALID_PARAM);
     constexpr size_t reservedCount = sizeof(config->reserved) / sizeof(config->reserved[0]);
     for (size_t i = 0U; i < reservedCount; ++i) {
         ACL_CHECK_INVALID_PARAM_WITH_REASON_DESC_RET(

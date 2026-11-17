@@ -2870,21 +2870,18 @@ aclError aclrtDeviceSetSuspendConfig(int32_t deviceId, const aclrtDeviceSuspendC
 <!-- npu="5162A" id5052 -->
 - Hisilicon5162A：不支持
 <!-- end id5052 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id51 -->
 
 ### 功能说明
 
-设置当前进程中指定Device的任务执行暂停、恢复配置。默认关闭该功能，不同Device可分别配置。
-
-将config中的mode设置为ACL_RT_DEVICE_SUSPEND_MODE_DEVICE后，系统按taskInterval指定的算子任务间隔在Stream上设置等待点。后续可通过[aclrtDeviceSuspendExecution](#aclrtDeviceSuspendExecution)接口使任务在等待点暂停，通过[aclrtDeviceResumeExecution](#aclrtDeviceResumeExecution)接口恢复任务执行。使能该功能不会立即暂停任务。
-
-将mode设置为ACL_RT_DEVICE_SUSPEND_MODE_DISABLE可关闭该功能。若Device已打开，关闭时会先解除已有等待点的阻塞，待恢复控制操作完成后停止设置新的等待点。若关闭操作失败，配置保持不变。
+设置当前进程中指定Device的任务执行暂停/恢复配置。默认关闭该功能，不同Device可分别配置。
 
 ### 参数说明
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
 | deviceId | 输入 | Device ID。<br>用户调用[aclrtGetDeviceCount](#aclrtGetDeviceCount)接口获取可用的Device数量后，这个Device ID的取值范围：[0, (可用的Device数量-1)] |
-| config | 输入 | 任务执行暂停、恢复配置，不能为空指针。类型定义请参见[aclrtDeviceSuspendConfig](25-04_Structs.md#aclrtDeviceSuspendConfig)。<br>mode用于使能或关闭该功能；taskInterval取值范围为[0, 1024]，使能时设置为0表示使用默认值8；reserved数组中的所有元素必须设置为0。 |
+| config | 输入 | 任务执行暂停/恢复配置，不能为空指针。类型定义请参见[aclrtDeviceSuspendConfig](25-04_Structs.md#aclrtDeviceSuspendConfig)。<br>将config中的mode设置为ACL_RT_DEVICE_SUSPEND_MODE_DEVICE后，系统按taskInterval指定的计算类任务间隔在Stream上设置等待点。后续可通过[aclrtDeviceSuspendExecution](#aclrtDeviceSuspendExecution)接口使任务在等待点暂停，通过[aclrtDeviceResumeExecution](#aclrtDeviceResumeExecution)接口恢复任务执行。开启该功能不会立即暂停任务。<br>将config中的mode设置为ACL_RT_DEVICE_SUSPEND_MODE_DISABLE可关闭该功能。在调用[aclrtSetDevice](#aclrtSetDevice)接口之后，关闭时会先解除已有等待点的阻塞。若关闭操作失败，配置保持不变。 |
 
 ### 返回值说明
 
@@ -2892,15 +2889,22 @@ aclError aclrtDeviceSetSuspendConfig(int32_t deviceId, const aclrtDeviceSuspendC
 
 ### 约束说明
 
-- 调用本接口前，需先调用[aclInit](02_initialization_and_deinitialization.md#aclInit)接口完成初始化。
-- 使能该功能或修改taskInterval时，必须在当前进程打开指定Device之前调用本接口，例如在调用[aclrtSetDevice](#aclrtSetDevice)或[aclrtCreateContext](05_context_management.md#aclrtCreateContext)接口之前。Device打开前可重复配置，后配置的覆盖先配置的。
-- Device打开后，仅允许将mode从ACL_RT_DEVICE_SUSPEND_MODE_DEVICE改为ACL_RT_DEVICE_SUSPEND_MODE_DISABLE。不支持在Device打开后使能该功能、修改算子任务间隔或重复关闭该功能。
-- 关闭该功能后，若需重新使能，必须先释放当前进程在该Device上的所有Context及Device资源，确保Device已关闭，再重新配置并打开Device。若通过aclrtSetDevice接口打开Device，需注意与[aclrtResetDevice](#aclrtResetDevice)接口配对调用，引用计数减到0后才会真正释放对应资源。
-- 该功能不支持与快照备份、恢复功能同时使用。
+- 需在调用[aclInit](02_initialization_and_deinitialization.md#aclInit)接口之后、调用[aclrtSetDevice](#aclrtSetDevice)接口之前调用本接口开启Device级别的任务暂停/恢复功能。调用[aclrtSetDevice](#aclrtSetDevice)接口前可重复配置，以最后一次配置为准。
 
-典型调用顺序如下所示：
+  本接口需配合其他接口一起使用，典型调用顺序如下所示：
 
-`aclInit`-->`aclrtDeviceSetSuspendConfig`（mode设置为ACL_RT_DEVICE_SUSPEND_MODE_DEVICE）-->`aclrtSetDevice`-->下发业务任务-->`aclrtDeviceSuspendExecution`-->`aclrtDeviceResumeExecution`-->同步等待业务任务完成-->`aclrtResetDevice`-->`aclFinalize`
+  [aclInit](02_initialization_and_deinitialization.md#aclInit)-->[aclrtDeviceSetSuspendConfig](#aclrtDeviceSetSuspendConfig)（mode设置为ACL_RT_DEVICE_SUSPEND_MODE_DEVICE）-->[aclrtDeviceGetSuspendConfig](#aclrtDeviceGetSuspendConfig)-->[aclrtSetDevice](#aclrtSetDevice)-->[aclrtDeviceGetSuspendConfig](#aclrtDeviceGetSuspendConfig)-->下发业务任务-->[aclrtDeviceSuspendExecution](#aclrtDeviceSuspendExecution)-->[aclrtDeviceResumeExecution](#aclrtDeviceResumeExecution)-->同步等待业务任务完成-->[aclrtResetDevice](#aclrtResetDevice)-->[aclFinalize](02_initialization_and_deinitialization.md#aclFinalize)
+
+  调用[aclrtDeviceSuspendExecution](#aclrtDeviceSuspendExecution)接口时，不会中断已开始执行的算子。
+
+- 调用[aclrtSetDevice](#aclrtSetDevice)接口之后、调用[aclrtResetDevice](#aclrtResetDevice)接口之前，仅允许将mode从ACL_RT_DEVICE_SUSPEND_MODE_DEVICE改为ACL_RT_DEVICE_SUSPEND_MODE_DISABLE。关闭该功能后，若需重新开启，还需依次调用本接口、[aclrtSetDevice](#aclrtSetDevice)接口。
+- 对于通过[aclrtCreateStreamWithConfig](06_stream_management.md#aclrtCreateStreamWithConfig)接口创建的Stream，若flag中包含ACL_STREAM_CPU_SCHEDULE或ACL_STREAM_DEVICE_USE_ONLY，则该功能不会在该Stream上插入等待任务。
+- 该功能不支持与[快照管理功能](21_snapshot_management.md)、[故障恢复功能](13_exception_handling.md#aclrtRepairError)同时使用。
+- 图编译场景下，若开启该功能，可能导致未定义行为，不建议开启该功能。
+- ACL Graph场景下，插入等待任务会限制SuperKernel（SK）的算子融合范围。例如，taskInterval设置为8时，单个SK最多可融合8个算子。
+- 在通算融合算子、分布式业务中，若多个Kernel之间存在同步依赖，不同节点插入的等待任务位置不一致，可能导致Kernel持续等待，无法完成执行。
+- 任务执行暂停后，若持续下发任务，可能导致任务队列满，引发报错。用户需合理调整任务下发时机，或暂停下发，待任务执行恢复后再继续下发。
+- 若已设置流同步接口等待超时或算子执行超时时间，又设置任务执行暂停，可能会导致超时报错。用户需在暂停任务执行前，合理调整相关超时时间。
 
 <br>
 <br>
@@ -2942,14 +2946,11 @@ aclError aclrtDeviceGetSuspendConfig(int32_t deviceId, aclrtDeviceSuspendConfig 
 <!-- npu="5162A" id5060 -->
 - Hisilicon5162A：不支持
 <!-- end id5060 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id52 -->
 
 ### 功能说明
 
-获取当前进程中指定Device的任务执行暂停、恢复配置。本接口不会打开Device，在Device打开前、打开后均可查询。
-
-- 未配置或已关闭该功能时，返回的config中mode为ACL_RT_DEVICE_SUSPEND_MODE_DISABLE，taskInterval为0。
-- 已使能该功能时，返回的mode为ACL_RT_DEVICE_SUSPEND_MODE_DEVICE，taskInterval为实际生效的算子任务间隔。若设置配置时taskInterval为0，则查询结果为默认值8。
-- 接口调用成功后，reserved数组中的所有元素均为0。
+获取当前进程中指定Device的任务执行暂停/恢复配置。在调用[aclrtSetDevice](#aclrtSetDevice)接口前后均可查询。
 
 本接口仅查询配置，不用于判断Device上的任务是否已暂停。
 
@@ -2958,7 +2959,7 @@ aclError aclrtDeviceGetSuspendConfig(int32_t deviceId, aclrtDeviceSuspendConfig 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
 | deviceId | 输入 | Device ID。<br>用户调用[aclrtGetDeviceCount](#aclrtGetDeviceCount)接口获取可用的Device数量后，这个Device ID的取值范围：[0, (可用的Device数量-1)] |
-| config | 输出 | 任务执行暂停、恢复配置，不能为空指针。由调用者申请结构体内存，并将地址传入本接口。类型定义请参见[aclrtDeviceSuspendConfig](25-04_Structs.md#aclrtDeviceSuspendConfig)。 |
+| config | 输出 | 任务执行暂停/恢复配置，不能为空指针。由调用者申请结构体内存，并将地址传入本接口。类型定义请参见[aclrtDeviceSuspendConfig](25-04_Structs.md#aclrtDeviceSuspendConfig)。 |
 
 ### 返回值说明
 
@@ -2966,7 +2967,7 @@ aclError aclrtDeviceGetSuspendConfig(int32_t deviceId, aclrtDeviceSuspendConfig 
 
 ### 约束说明
 
-调用本接口前，需先调用[aclInit](02_initialization_and_deinitialization.md#aclInit)接口完成初始化。
+接口约束与[aclrtDeviceSetSuspendConfig](#aclrtDeviceSetSuspendConfig)保持一致。
 
 <br>
 <br>
@@ -3008,14 +3009,13 @@ aclError aclrtDeviceSuspendExecution(int32_t deviceId, uint32_t flag)
 <!-- npu="5162A" id5068 -->
 - Hisilicon5162A：不支持
 <!-- end id5068 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id53 -->
 
 ### 功能说明
 
 暂停当前进程中指定Device的任务执行。本接口与[aclrtDeviceResumeExecution](#aclrtDeviceResumeExecution)接口配合使用。
 
-系统按照[aclrtDeviceSetSuspendConfig](#aclrtDeviceSetSuspendConfig)接口配置的算子任务间隔在Stream上设置等待点。调用本接口后，任务执行到等待点时暂停，直到调用aclrtDeviceResumeExecution接口恢复执行。
-
-本接口为同步接口，阻塞当前线程，直到暂停控制操作完成。接口返回成功不表示所有任务均已停止，已通过等待点的任务仍可继续执行。
+Runtime按照[aclrtDeviceSetSuspendConfig](#aclrtDeviceSetSuspendConfig)接口配置的计算类任务间隔在Stream上设置等待点。调用本接口后，任务执行到等待点时暂停，直到调用[aclrtDeviceResumeExecution](#aclrtDeviceResumeExecution)接口恢复执行。
 
 ### 参数说明
 
@@ -3028,14 +3028,11 @@ aclError aclrtDeviceSuspendExecution(int32_t deviceId, uint32_t flag)
 
 返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
+接口返回成功不表示所有任务均已停止，已通过等待点的任务仍可继续执行。
+
 ### 约束说明
 
-- 调用本接口前，需先调用[aclInit](02_initialization_and_deinitialization.md#aclInit)接口完成初始化，在打开指定Device前通过[aclrtDeviceSetSuspendConfig](#aclrtDeviceSetSuspendConfig)接口将mode设置为ACL_RT_DEVICE_SUSPEND_MODE_DEVICE，再打开该Device。
-- 调用本接口时，该Device的任务执行暂停、恢复功能必须处于使能状态。
-- 本接口作用于当前进程中指定Device，调用线程无需设置当前Context。本接口不会隐式打开Device。
-- 暂停通过Stream上的等待点生效，不会抢占或中断已开始执行的算子。
-- 若暂停控制操作已下发，但接口返回失败，不保证任务执行状态回退至调用前的状态。
-- 该功能不支持与快照备份、恢复功能同时使用。
+接口约束与[aclrtDeviceSetSuspendConfig](#aclrtDeviceSetSuspendConfig)保持一致。
 
 <br>
 <br>
@@ -3077,12 +3074,11 @@ aclError aclrtDeviceResumeExecution(int32_t deviceId, uint32_t flag)
 <!-- npu="5162A" id5076 -->
 - Hisilicon5162A：不支持
 <!-- end id5076 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id54 -->
 
 ### 功能说明
 
 恢复当前进程中指定Device的任务执行，使通过[aclrtDeviceSuspendExecution](#aclrtDeviceSuspendExecution)接口暂停在等待点的任务继续执行。
-
-本接口为同步接口，阻塞当前线程，直到恢复控制操作完成。接口返回成功不表示业务任务已执行完成。若需要等待业务任务完成，需在恢复执行后调用[aclrtSynchronizeStream](06_stream_management.md#aclrtSynchronizeStream)或[aclrtSynchronizeDevice](#aclrtSynchronizeDevice)等同步接口。
 
 ### 参数说明
 
@@ -3095,10 +3091,8 @@ aclError aclrtDeviceResumeExecution(int32_t deviceId, uint32_t flag)
 
 返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
+接口返回成功不表示任务已执行完成。若需要等待任务完成，需在恢复执行后调用同步等待接口(例如[aclrtSynchronizeStream](06_stream_management.md#aclrtSynchronizeStream))。
+
 ### 约束说明
 
-- 调用本接口前，需先调用[aclInit](02_initialization_and_deinitialization.md#aclInit)接口完成初始化，在打开指定Device前通过[aclrtDeviceSetSuspendConfig](#aclrtDeviceSetSuspendConfig)接口将mode设置为ACL_RT_DEVICE_SUSPEND_MODE_DEVICE，再打开该Device。
-- 调用本接口时，该Device的任务执行暂停、恢复功能必须处于使能状态。
-- 本接口作用于当前进程中指定Device，调用线程无需设置当前Context。本接口不会隐式打开Device。
-- 若恢复控制操作已下发，但接口返回失败，不保证任务执行状态回退至调用前的状态。
-- 该功能不支持与快照备份、恢复功能同时使用。
+接口约束与[aclrtDeviceSetSuspendConfig](#aclrtDeviceSetSuspendConfig)保持一致。

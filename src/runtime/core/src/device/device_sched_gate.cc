@@ -54,7 +54,11 @@ rtError_t DeviceSchedGate::Setup()
     }
     Stream* ctrl = device_->GetCtrlSQStream(nullptr);
     if ((ctrl == nullptr) || !ctrl->IsCtrlSQStream()) {
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Failed to get ctrl stream.");
+        RT_LOG(
+            RT_LOG_ERROR,
+            "Failed to initialize the scheduling gate for device (device_id=%u): "
+            "the internal control stream is unavailable.",
+            device_->Id_());
         return RT_ERROR_STREAM_NULL;
     }
     event_.reset(new (std::nothrow) DavidEvent(device_, RT_EVENT_DDSYNC_NS, nullptr, false));
