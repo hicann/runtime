@@ -1502,9 +1502,9 @@ TEST_F(CloudV2CondHandleTest, CondHandleWhileE2E)
     ASSERT_EQ(taskCount, 2U);
     rtTask_t streamTasks[2] = {};
     ASSERT_EQ(rtStreamGetTasks(capturedStream, streamTasks, &taskCount), RT_ERROR_NONE);
-    ASSERT_EQ(taskCount, 2U);
+    ASSERT_EQ(taskCount, 1U);
     EXPECT_EQ(modelTasks[0], streamTasks[0]);
-    EXPECT_EQ(modelTasks[1], streamTasks[1]);
+    EXPECT_EQ(streamTasks[1], nullptr);
 
     rtTaskType taskType = RT_TASK_DEFAULT;
     ASSERT_EQ(rtTaskGetType(modelTasks[0], &taskType), RT_ERROR_NONE);
@@ -2579,16 +2579,30 @@ TEST_F(CloudV2CaptureModelTest, stream_get_tasks_normal)
 
     rtStream_t* inputStreams = createModelAndGetStreams(&model, &stream);
 
+    // AddStream 的收尾 Record/Wait 保留可见，只有图尾 Record 被过滤。
+    rtTaskType types[2] = {};
+    for (uint32_t i = 0U; i < 2U; ++i) {
+        uint32_t count = 0U;
+        ASSERT_EQ(rtStreamGetTasks(inputStreams[i], nullptr, &count), RT_ERROR_NONE);
+        ASSERT_EQ(count, 1U);
+        rtTask_t task = nullptr;
+        ASSERT_EQ(rtStreamGetTasks(inputStreams[i], &task, &count), RT_ERROR_NONE);
+        ASSERT_EQ(rtTaskGetType(task, &types[i]), RT_ERROR_NONE);
+    }
+    EXPECT_TRUE(
+        (types[0] == RT_TASK_NOTIFY_RECORD && types[1] == RT_TASK_NOTIFY_WAIT) ||
+        (types[1] == RT_TASK_NOTIFY_RECORD && types[0] == RT_TASK_NOTIFY_WAIT));
+
     uint32_t numTasks = 0;
     error = rtStreamGetTasks(inputStreams[1], nullptr, &numTasks);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    EXPECT_EQ(numTasks, 2);
+    EXPECT_EQ(numTasks, 1);
 
     // input numTasks = actual task num
     rtTask_t* tasks = (rtTask_t*)malloc(sizeof(rtTask_t) * numTasks);
     error = rtStreamGetTasks(inputStreams[1], tasks, &numTasks);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    EXPECT_EQ(numTasks, 2);
+    EXPECT_EQ(numTasks, 1);
 
     // input numTasks < actual task num
     uint32_t numTasksLess = 0;
@@ -2602,7 +2616,8 @@ TEST_F(CloudV2CaptureModelTest, stream_get_tasks_normal)
     rtTask_t* inputTasksLarger = (rtTask_t*)malloc(sizeof(rtTask_t) * numTasksLarger);
     error = rtStreamGetTasks(inputStreams[1], inputTasksLarger, &numTasksLarger);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    EXPECT_EQ(numTasksLarger, 2);
+    EXPECT_EQ(numTasksLarger, 1);
+    EXPECT_EQ(inputTasksLarger[1], nullptr);
 
     error = rtModelDestroy(model);
     EXPECT_EQ(error, RT_ERROR_NONE);

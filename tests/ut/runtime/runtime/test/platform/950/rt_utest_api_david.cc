@@ -13559,6 +13559,18 @@ TEST_F(ApiDavidTest, HcclCaptureModelRegistrationAndQueries)
     EXPECT_EQ(rtStreamEndCapture(streamHandle_, &model), ACL_RT_SUCCESS);
     // The driver stub cannot advance device SQ tails during capture-model teardown.
     MOCKER_CPP(&Model::UnBindSqPerStream).stubs().will(returnValue(RT_ERROR_NONE));
+    for (Stream* captureStream : rt_ut::UnwrapOrNull<Model>(model)->StreamList_()) {
+        uint32_t visibleTasks = 0U;
+        ASSERT_EQ(captureStream->StreamGetTasks(nullptr, &visibleTasks), RT_ERROR_NONE);
+        ASSERT_EQ(visibleTasks, 1U);
+        rtTask_t task = nullptr;
+        ASSERT_EQ(captureStream->StreamGetTasks(&task, &visibleTasks), RT_ERROR_NONE);
+        ASSERT_NE(task, nullptr);
+        // HCCL 加流的收尾 Record/Wait 保留可见，主捕获流的图尾 Record 被过滤。
+        EXPECT_EQ(
+            static_cast<TaskInfo*>(task)->type,
+            captureStream == sink ? TS_TASK_TYPE_NOTIFY_RECORD : TS_TASK_TYPE_NOTIFY_WAIT);
+    }
     EXPECT_EQ(rtModelDestroy(model), ACL_RT_SUCCESS);
     EXPECT_EQ(rtStreamDestroy(hcclStream), ACL_RT_SUCCESS);
 }

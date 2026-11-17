@@ -681,6 +681,9 @@ TEST_F(RtApiTest, capture_api_21)
     ASSERT_NE(captureSession, nullptr);
     error = captureSession->StreamAddToCaptureModelProc(streamEx, modelEx);
     EXPECT_EQ(error, RT_ERROR_MODEL_CAPTURE_STATUS);
+    uint32_t visibleTasks = 1U;
+    EXPECT_EQ(modelEx->StreamList_().front()->StreamGetTasks(nullptr, &visibleTasks), RT_ERROR_NONE);
+    EXPECT_EQ(visibleTasks, 0U);
 
     error = rtStreamDestroy(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);

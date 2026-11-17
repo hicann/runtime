@@ -14,6 +14,7 @@
 #include "context.hpp"
 #include "device.hpp"
 #include "runtime_handle_guard.h"
+#include "task_info.hpp"
 
 #define RT_NOTIFY_GET_EVENT_ID(key) ((key)&0x3FFU)
 #define RT_NOTIFY_FLAG_SHR_ID_SHADOW (0x1U << 6)
@@ -56,6 +57,8 @@ public:
     Model* GetEndGraphModel() const { return endGraphModel_; }
 
     void SetNotifyFlag(uint32_t flag) { notifyFlag_ = flag; }
+    void SetNotifyOwner(TaskOwner owner) { notifyOwner_ = owner; }
+    TaskOwner NotifyOwner_() const { return notifyOwner_; }
 
     uint32_t GetServiceId() const { return srvId_; }
 
@@ -110,6 +113,7 @@ private:
     bool isPod_;
     Device* dev_{nullptr};
     uint64_t notifyVa_{0ULL};
+    TaskOwner notifyOwner_{TaskOwner::RT_TASK_USER};
 };
 } // namespace runtime
 } // namespace cce

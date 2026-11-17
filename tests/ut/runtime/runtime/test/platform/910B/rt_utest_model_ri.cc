@@ -122,6 +122,33 @@ protected:
     std::vector<rtTask_t> expected_;
 };
 
+TEST_F(ModelRIGetTasksTest, stream_get_tasks_filters_inner_tasks)
+{
+    ASSERT_EQ(PrepareModelWithTasks({3U}), RT_ERROR_NONE);
+    Stream* const stream = taskInfos_[0].stream;
+    for (const size_t index : {0U, 2U}) {
+        taskInfos_[index].taskOwner = static_cast<uint8_t>(TaskOwner::RT_TASK_INNER);
+    }
+    taskInfos_[1].type = TS_TASK_TYPE_KERNEL_AICPU;
+    MockTaskLookup();
+    uint32_t count = 0U;
+    ASSERT_EQ(stream->StreamGetTasks(nullptr, &count), RT_ERROR_NONE);
+    EXPECT_EQ(count, 1U);
+    rtTask_t tasks[2] = {expected_[0], expected_[2]};
+    count = 2U;
+    ASSERT_EQ(stream->StreamGetTasks(tasks, &count), RT_ERROR_NONE);
+    EXPECT_EQ(count, 1U);
+    EXPECT_EQ(tasks[0], expected_[1]);
+    EXPECT_EQ(tasks[1], nullptr);
+    count = 0U;
+    EXPECT_EQ(stream->StreamGetTasks(tasks, &count), RT_ERROR_INSUFFICIENT_INPUT_ARRAY);
+    taskInfos_[1].taskOwner = static_cast<uint8_t>(TaskOwner::RT_TASK_INNER);
+    count = 2U;
+    ASSERT_EQ(stream->StreamGetTasks(tasks, &count), RT_ERROR_NONE);
+    EXPECT_EQ(count, 0U);
+    EXPECT_EQ(tasks[0], nullptr);
+}
+
 TEST_F(ModelRIGetTasksTest, model_get_tasks_normal)
 {
     ASSERT_EQ(PrepareModelWithTasks({2U, 3U}), RT_ERROR_NONE);
@@ -256,6 +283,8 @@ TEST_F(ModelRIGetTasksTest, model_get_tasks_factory_lookup_failed)
     EXPECT_EQ(count, 8U); // ByStream preserves the input count on a factory lookup error.
     // Task pointers are validated before writing any output elements.
     EXPECT_EQ(tasks, std::vector<rtTask_t>(8U, model_));
+    count = 0U;
+    EXPECT_EQ(taskInfos_[2].stream->StreamGetTasks(nullptr, &count), RT_ERROR_INVALID_VALUE);
 }
 
 TEST_F(ModelRIGetTasksTest, model_get_tasks_context_null)

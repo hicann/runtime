@@ -54,6 +54,26 @@ protected:
     }
 };
 
+TEST_F(NotifyTest, NotifyRecordAndWaitInheritOwner)
+{
+    Notify notify(0U, 0U);
+    EXPECT_EQ(notify.NotifyOwner_(), TaskOwner::RT_TASK_USER);
+    Stream* const stream = Runtime::Instance()->CurrentContext()->DefaultStream_();
+    const SingleBitNotifyRecordInfo info{};
+    for (const TaskOwner owner : {TaskOwner::RT_TASK_USER, TaskOwner::RT_TASK_INNER}) {
+        notify.SetNotifyOwner(owner);
+        TaskInfo tasks[2]{};
+        for (auto& task : tasks) {
+            task.stream = stream;
+        }
+        ASSERT_EQ(NotifyRecordTaskInit(&tasks[0], 3U, 0, 0U, &info, nullptr, &notify, false), RT_ERROR_NONE);
+        ASSERT_EQ(NotifyWaitTaskInit(&tasks[1], 3U, 500U, nullptr, &notify, false), RT_ERROR_NONE);
+        const auto expectedOwner = static_cast<uint8_t>(owner);
+        EXPECT_EQ(tasks[0].taskOwner, expectedOwner);
+        EXPECT_EQ(tasks[1].taskOwner, expectedOwner);
+    }
+}
+
 drvError_t halShrIdOpen_stub(const char* name, struct drvShrIdInfo* info)
 {
     info->devid = 0;

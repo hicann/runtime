@@ -829,6 +829,8 @@ static rtError_t GetNotifyInfoForCallbackLaunchWithBlock(const Stream* const stm
     ret = Runtime::Instance()->GetNotifyByStreamId(stm->Device_()->Id_(), stm->AllocTaskStreamId(), &curNotify);
     COND_RETURN_ERROR(ret != RT_ERROR_NONE, ret, "Call GetNotifyByStreamId failed for block callback, ret=%#x.", ret);
     NULL_PTR_RETURN_MSG(curNotify, RT_ERROR_NOTIFY_NULL);
+    // 隐藏hostcallback任务隐式notify
+    curNotify->SetNotifyOwner(TaskOwner::RT_TASK_INNER);
     notifyId = static_cast<int32_t>(curNotify->GetNotifyId());
     notify = curNotify;
     return RT_ERROR_NONE;

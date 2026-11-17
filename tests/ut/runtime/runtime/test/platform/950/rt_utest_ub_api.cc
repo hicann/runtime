@@ -1545,6 +1545,14 @@ TEST_F(ApiTestUb1, PROCESS_REPORT_DAVID)
     stream_->SetSqBaseAddr(newSqAddr);
     error = rtCallbackLaunch(stub_func, nullptr, streamHandle_, true);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    TaskInfo* waitTask = stream_->Device_()->GetTaskFactory()->GetTask(stream_->Id_(), stream_->GetLastTaskId());
+    ASSERT_NE(waitTask, nullptr);
+    EXPECT_EQ(waitTask->type, TS_TASK_TYPE_NOTIFY_WAIT);
+    EXPECT_EQ(waitTask->taskOwner, static_cast<uint8_t>(TaskOwner::RT_TASK_INNER));
+    TaskInfo* hostTask = stream_->Device_()->GetTaskFactory()->GetTask(stream_->Id_(), waitTask->id - 1U);
+    ASSERT_NE(hostTask, nullptr);
+    EXPECT_EQ(hostTask->type, TS_TASK_TYPE_HOSTFUNC_CALLBACK);
+    EXPECT_EQ(hostTask->taskOwner, static_cast<uint8_t>(TaskOwner::RT_TASK_USER));
     stream_->SetSqBaseAddr(oldSqAddr);
     free(sqe);
     TaskResManageDavid* taskResMang = ((TaskResManageDavid*)(static_cast<Stream*>(stream_)->taskResMang_));

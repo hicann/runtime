@@ -5667,27 +5667,31 @@ rtError_t Stream::StreamGetTasks(void** tasks, uint32_t* numTasks)
         const std::lock_guard<std::mutex> stmLock(streamMutex_);
         taskIdList = delayRecycleTaskid_;
     }
-    const uint32_t taskNum = static_cast<uint32_t>(taskIdList.size());
-    if (tasks == nullptr) {
-        *numTasks = taskNum;
-        RT_LOG(
-            RT_LOG_INFO, "tasks is nullptr, the number of all tasks in the stream is %u, deviceId=%u, streamId=%d.",
-            *numTasks, device_->Id_(), streamId_);
-        return RT_ERROR_NONE;
-    }
-    const uint32_t retTaskNum = std::min(*numTasks, taskNum);
+    const uint32_t capacity = *numTasks;
+    uint32_t taskNum = 0U;
     TaskFactory* taskFactory = device_->GetTaskFactory();
-    for (uint32_t i = 0U; i < retTaskNum; i++) {
-        const uint16_t taskId = taskIdList[i];
+    // 过滤内部任务，修正任务数量
+    for (const uint16_t taskId : taskIdList) {
         TaskInfo* task = taskFactory->GetTask(streamId_, taskId);
         if (task == nullptr) {
             RT_LOG(RT_LOG_ERROR, "task is nullptr, deviceId=%u, streamId=%d.", device_->Id_(), streamId_);
             return RT_ERROR_INVALID_VALUE;
         }
-        tasks[i] = RtPtrToPtr<void*>(task);
+        if (task->taskOwner == static_cast<uint8_t>(TaskOwner::RT_TASK_INNER)) {
+            continue;
+        }
+        if ((tasks != nullptr) && (taskNum < capacity)) {
+            tasks[taskNum] = RtPtrToPtr<void*>(task);
+        }
+        ++taskNum;
     }
+    if (tasks == nullptr) {
+        *numTasks = taskNum;
+        return RT_ERROR_NONE;
+    }
+    const uint32_t retTaskNum = std::min(capacity, taskNum);
     // 如果numTasks大于实际task数量，剩余空间填充null
-    for (uint32_t i = retTaskNum; i < *numTasks; i++) {
+    for (uint32_t i = retTaskNum; i < capacity; i++) {
         tasks[i] = nullptr;
     }
     *numTasks = retTaskNum;

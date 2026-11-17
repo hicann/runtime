@@ -1846,7 +1846,11 @@ rtError_t Context::GetCaptureModelEndGraphNotify(Model* const mdl, Stream* const
         }
     }
 
-    COND_PROC(captureModel != nullptr, captureModel->SetIsNeedUpdateEndGraph(true););
+    if (captureModel != nullptr) {
+        // 隐藏endcapture时下的内部notify
+        notify->SetNotifyOwner(TaskOwner::RT_TASK_INNER);
+        captureModel->SetIsNeedUpdateEndGraph(true);
+    }
 
     ntf = notify;
     return error;

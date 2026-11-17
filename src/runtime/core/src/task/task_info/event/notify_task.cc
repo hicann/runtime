@@ -105,6 +105,9 @@ rtError_t NotifyRecordTaskInit(
         }
         notifyRecord->uPtr.notify = static_cast<Notify*>(notify);
         notifyRecord->uInfo.singleBitNtfyInfo = *singleInfo;
+        if (notifyRecord->uPtr.notify->NotifyOwner_() == TaskOwner::RT_TASK_INNER) {
+            taskInfo->taskOwner = static_cast<uint8_t>(TaskOwner::RT_TASK_INNER);
+        }
     }
     return RT_ERROR_NONE;
 }
@@ -344,6 +347,10 @@ rtError_t NotifyWaitTaskInit(
         notifyWaitTask->cntNtfyInfo = *cntNtfyInfo;
     } else {
         notifyWaitTask->u.notify = static_cast<Notify*>(inNotify);
+        if ((notifyWaitTask->u.notify != nullptr) &&
+            (notifyWaitTask->u.notify->NotifyOwner_() == TaskOwner::RT_TASK_INNER)) {
+            taskInfo->taskOwner = static_cast<uint8_t>(TaskOwner::RT_TASK_INNER);
+        }
     }
     return RT_ERROR_NONE;
 }
