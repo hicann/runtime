@@ -49,11 +49,18 @@ rtError_t ApiImpl::GetCaptureEvent(
         stm->Id_(), captureStm->Id_(), evt->EventId_(), eventId);
 
     Event* newEvent = nullptr;
-    const bool isHardwareEvent = IsUseHardwareEvent(stm->Device_());
+    Device* const dev = stm->Device_();
+    const bool isHardwareEvent = IsUseHardwareEvent(dev);
+    // The gating result is the event's extend-id mark (isExtendId), passed into
+    // EventCreateWithExtendId and kept as Event::isExtendId_ for the whole lifetime.
+    const bool isExtendId =
+        (!dev->IsStarsPlatform() && dev->CheckFeatureSupport(TS_FEATURE_CAPTURE_SUPPORT_EXTEND_EVENT));
     if (isHardwareEvent) {
-        error = EventCreate(&newEvent, RT_EVENT_WITH_FLAG);
+        // qualified call: capture event creation stays inside the ApiImpl layer, the extend-id
+        // hint is an ApiImpl-level argument and never goes through the public Api interface.
+        error = ApiImpl::EventCreateWithExtendId(&newEvent, RT_EVENT_WITH_FLAG, isExtendId);
     } else {
-        error = EventCreateEx(&newEvent, RT_EVENT_WITH_FLAG);
+        error = ApiImpl::EventCreateExWithExtendId(&newEvent, RT_EVENT_WITH_FLAG, isExtendId);
     }
 
     COND_RETURN_ERROR_MSG_INNER(

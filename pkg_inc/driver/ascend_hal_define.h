@@ -1148,6 +1148,7 @@ struct drvMemSharingPara {
 #define TSDRV_RES_SPECIFIED_ID (0x1 << 1)        /* res allc active */
 #define TSDRV_RES_REMOTE_ID TSDRV_FLAG_REMOTE_ID /* (0x1 << 5) */
 #define TSDRV_RES_RANGE_ID TSDRV_FLAG_RANGE_ID   /* (0x1 << 13), specified range flag for alloc id */
+#define TSDRV_RES_EXTEND_ID (0x1 << 2)           /* alloc extend id from sw pool, only for 310P driver */
 
 struct trs_ext_info_header {
     uint32_t type;

@@ -1415,6 +1415,9 @@ rtError_t NpuDriver::EventIdAlloc(
     resAllocInput.tsId = tsId;
     resAllocInput.res[1U] =
         (eventFlag == static_cast<uint32_t>(RT_EVENT_MC2)) ? static_cast<uint32_t>(TSDRV_FLAG_REMOTE_ID) : 0U;
+    if ((eventFlag & RT_EVENT_FLAG_EXTEND_ID_INTERNAL) != 0U) {
+        resAllocInput.res[1U] |= static_cast<uint32_t>(TSDRV_RES_EXTEND_ID);
+    }
     resAllocOutput.resourceId = 0U;
 
     drvError_t drvRet = DRV_ERROR_NONE;

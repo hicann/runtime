@@ -82,7 +82,7 @@ Event::Event()
     eventFlag_ = Runtime::Instance()->GetDisableThread() ? UINT64_MAX : RT_EVENT_DEFAULT;
 }
 
-Event::Event(Device* device, uint64_t eventFlag, Context* ctx, bool isSync, bool isNewMode)
+Event::Event(Device* device, uint64_t eventFlag, Context* ctx, bool isSync, bool isNewMode, bool isExtendId)
     : NoCopy(),
       device_(device),
       isNeedDestroy_(false),
@@ -100,7 +100,8 @@ Event::Event(Device* device, uint64_t eventFlag, Context* ctx, bool isSync, bool
       isSync_(isSync),
       hasRecord_(false),
       hasReset_(false),
-      isDestroySync_(false)
+      isDestroySync_(false),
+      isExtendId_(isExtendId)
 {
     latestRecord_.streamId = -1;
     latestRecord_.taskId = UINT32_MAX;
@@ -142,7 +143,7 @@ void Event::TryFreeLastEventId()
     }
     if (!IsHardwareMode()) {
         device_->FreeExpandingPoolEvent(freeEventId_);
-    } else if (device_->IsSupportEventPool()) {
+    } else if (device_->IsSupportEventPool() && !isExtendId_) {
         device_->PushNextPoolFreeEventId(freeEventId_);
         device_->WakeUpRecycleThread();
         RT_LOG(RT_LOG_INFO, "pool push recycle event_id=%d.", freeEventId_);
@@ -239,7 +240,7 @@ bool Event::TryFreeEventIdAndCheckCanBeDelete(const int32_t id, bool isNeedDestr
         if ((!IsHardwareMode()) && eventId_ != id) {
             device_->FreeExpandingPoolEvent(id);
         } else if (isIdAllocFromDrv_ && (isNewMode_ || eventId_ != id)) {
-            if (device_->IsSupportEventPool()) {
+            if (device_->IsSupportEventPool() && !isExtendId_) {
                 device_->PushNextPoolFreeEventId(id);
                 RT_LOG(RT_LOG_INFO, "pool push recycle event_id=%d.", id);
             } else {
@@ -432,10 +433,14 @@ rtError_t Event::AllocEventIdResource(Stream* const stm, int32_t& newEventId)
     uint32_t taskId = 0U;
     uint16_t tryCount = 0U;
     const bool isDisableThreadFlag = Runtime::Instance()->GetDisableThread();
+    // isExtendId_ capture events bypass the event pool: pool ids are shared and reused by
+    // all events, an extend id (SW pool) allocated into it would poison the pool.
     do {
-        error = device_->IsSupportEventPool() ?
+        error = (device_->IsSupportEventPool() && !isExtendId_) ?
                     device_->AllocPoolEvent(&newEventId) :
-                    device_->Driver_()->EventIdAlloc(&newEventId, device_->Id_(), device_->DevGetTsId());
+                    device_->Driver_()->EventIdAlloc(
+                        &newEventId, device_->Id_(), device_->DevGetTsId(),
+                        (isExtendId_ ? RT_EVENT_FLAG_EXTEND_ID_INTERNAL : 0U), false);
         if (unlikely(error == RT_ERROR_DRV_NO_EVENT_RESOURCES)) {
             tryCount++;
             (void)device_->TaskReclaimAllForNoRes(false, taskId);
@@ -494,10 +499,13 @@ rtError_t Event::GenEventId()
     }
     devDrv = rt->driverFactory_.GetDriver(NPU_DRIVER);
     NULL_PTR_RETURN(devDrv, RT_ERROR_DRV_NULL);
-    const uint32_t eventFlag = ((eventFlag_ == RT_EVENT_MC2) &&
-                                (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DRIVER_EVENT_MC2))) ?
-                                   static_cast<uint32_t>(eventFlag_) :
-                                   0U;
+    uint32_t eventFlag = ((eventFlag_ == RT_EVENT_MC2) &&
+                          (device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DRIVER_EVENT_MC2))) ?
+                             static_cast<uint32_t>(eventFlag_) :
+                             0U;
+    if (isExtendId_) {
+        eventFlag |= RT_EVENT_FLAG_EXTEND_ID_INTERNAL;
+    }
     error = devDrv->EventIdAlloc(&eventId_, deviceId, tsId, eventFlag, true);
     ERROR_RETURN(error, "Failed to allocate event id, device_id=%u, tsId=%u, retCode=%#x.", deviceId, tsId, error);
 

@@ -176,6 +176,11 @@ public:
     // event API
     rtError_t EventCreate(Event** const evt, const uint64_t flag) override;
     rtError_t EventCreateEx(Event** const evt, const uint64_t flag) override;
+    // ApiImpl-level entry for ACLGraph capture events on chips supporting TSDRV_RES_EXTEND_ID
+    // (SW pool): identical to EventCreate/EventCreateEx but requests the event id from the SW
+    // pool. Distinct name to avoid any overload ambiguity for derived classes and mocks.
+    rtError_t EventCreateWithExtendId(Event** const evt, const uint64_t flag, const bool isExtendId);
+    rtError_t EventCreateExWithExtendId(Event** const evt, const uint64_t flag, const bool isExtendId);
     rtError_t EventDestroy(Event* evt) override;
     rtError_t EventDestroySync(Event* evt) override;
     rtError_t EventRecord(Event* const evt, Stream* const stm, const uint32_t flag = RT_EVENT_RECORD_DEFAULT) override;

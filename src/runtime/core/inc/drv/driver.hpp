@@ -671,6 +671,11 @@ enum driverType_t {
     XPU_DRIVER,
     MAX_DRIVER_NUM,
 };
+
+// Runtime internal flag bit for Driver::EventIdAlloc/EventIdFree, only used to carry
+// TSDRV_RES_EXTEND_ID semantics, never combined into Event::eventFlag_ or any public RT_EVENT_* flag.
+constexpr uint32_t RT_EVENT_FLAG_EXTEND_ID_INTERNAL = 0x40000000U; // bit30, runtime internal only
+
 class DriverFactory {
 public:
     DriverFactory();

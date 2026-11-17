@@ -59,7 +59,9 @@ struct RecordTaskInfo {
 class Event : public NoCopy {
 public:
     Event();
-    Event(Device* device, uint64_t eventFlag, Context* ctx, bool isSync = false, bool isNewMode = false);
+    Event(
+        Device* device, uint64_t eventFlag, Context* ctx, bool isSync = false, bool isNewMode = false,
+        bool isExtendId = false);
     ~Event() noexcept override;
     rtInnerObject* GetInnerHandle() { return &handle_; }
     const rtInnerObject* GetInnerHandle() const { return &handle_; }
@@ -240,6 +242,7 @@ private:
     Atomic<bool> hasRecord_;
     Atomic<bool> hasReset_;
     bool isDestroySync_;
+    bool isExtendId_{false};              // alloc id with TSDRV_RES_EXTEND_ID, only for capture event
     Event* captureEvent_{nullptr};        // only for single-operator event
     Stream* captureStream_{nullptr};      // only for capture event
     std::set<Stream*> waitTskStreamList_; // only for capture event

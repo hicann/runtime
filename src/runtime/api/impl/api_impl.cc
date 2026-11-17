@@ -2129,6 +2129,11 @@ rtError_t ApiImpl::StreamGetMode(const Stream* const stm, uint64_t* const stmMod
 
 rtError_t ApiImpl::EventCreate(Event** const evt, const uint64_t flag)
 {
+    return ApiImpl::EventCreateWithExtendId(evt, flag, false);
+}
+
+rtError_t ApiImpl::EventCreateWithExtendId(Event** const evt, const uint64_t flag, const bool isExtendId)
+{
     RT_LOG(RT_LOG_DEBUG, "flag=%" PRIu64 ".", flag);
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
@@ -2143,7 +2148,7 @@ rtError_t ApiImpl::EventCreate(Event** const evt, const uint64_t flag)
             return RT_ERROR_FEATURE_NOT_SUPPORT;
         }
     }
-    *evt = new (std::nothrow) Event(dev, flag, curCtx);
+    *evt = new (std::nothrow) Event(dev, flag, curCtx, false, false, isExtendId);
     COND_RETURN_AND_MSG_OUTER((*evt == nullptr), RT_ERROR_EVENT_NEW, ErrorCode::EE1013, sizeof(Event), "new");
 
     if (flag != RT_EVENT_DEFAULT) {
@@ -2159,6 +2164,11 @@ rtError_t ApiImpl::EventCreate(Event** const evt, const uint64_t flag)
 
 rtError_t ApiImpl::EventCreateEx(Event** const evt, const uint64_t flag)
 {
+    return ApiImpl::EventCreateExWithExtendId(evt, flag, false);
+}
+
+rtError_t ApiImpl::EventCreateExWithExtendId(Event** const evt, const uint64_t flag, const bool isExtendId)
+{
     RT_LOG(RT_LOG_DEBUG, "flag=%" PRIu64 ".", flag);
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
@@ -2170,7 +2180,7 @@ rtError_t ApiImpl::EventCreateEx(Event** const evt, const uint64_t flag)
         const rtError_t error = (*evt)->Setup();
         COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, DELETE_O(*evt);, "setup failed, retCode=%#x", error);
     } else {
-        *evt = new (std::nothrow) Event(dev, flag, curCtx, false, true);
+        *evt = new (std::nothrow) Event(dev, flag, curCtx, false, true, isExtendId);
         COND_RETURN_AND_MSG_OUTER((*evt == nullptr), RT_ERROR_EVENT_NEW, ErrorCode::EE1013, sizeof(Event), "new");
     }
     InitEmbeddedInnerHandle<Event>(*evt);
