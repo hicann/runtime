@@ -434,6 +434,10 @@ RUNTIME_API(snapshot, rtError_t, rtSnapShotProcessGetState,
     (rtProcessState* state),
     (state), FEATURE_NOT_SUPPORT, EXPORT)
 
+RUNTIME_API(snapshot, rtError_t, rtSnapShotProcessGetRestoreThreadId,
+    (int32_t* tid),
+    (tid), FEATURE_NOT_SUPPORT, EXPORT)
+
 RUNTIME_API(snapshot, rtError_t, rtSnapShotProcessBackup,
     (),
     (), FEATURE_NOT_SUPPORT, EXPORT)

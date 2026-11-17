@@ -117,6 +117,7 @@ set(common_src_files
     ${RUNTIME_CORE_DIR}/src/common/context_data_manage.cc
     ${RUNTIME_CORE_DIR}/src/common/profiling_agent.cc
     ${RUNTIME_CORE_DIR}/src/common/errcode_manage.cc
+    ${RUNTIME_FEATURE_DIR}/snapshot/snapshot_socket.cc
     ${RUNTIME_CORE_DIR}/src/common/error_message_manage.cc
     ${RUNTIME_CORE_DIR}/src/common/task_fail_callback_data_manager.cc
     ${RUNTIME_FEATURE_DIR}/xpu/xpu_task_fail_callback_data_manager.cc
@@ -183,7 +184,7 @@ set(libruntime_callback_files
 set(libruntime_src_files_optional
     ${RUNTIME_API_DIR}/impl/api_error_standard_soc.cc
     ${RUNTIME_API_DIR}/impl/api_impl_standard_soc.cc
-    ${RUNTIME_API_DIR}/impl/api_impl_snapshot.cc
+    ${RUNTIME_FEATURE_DIR}/snapshot/api_impl_snapshot.cc
     ${RUNTIME_API_DIR}/impl/api_impl_rt_config.cc
     ${RUNTIME_API_DIR}/impl/api_impl_device_topology.cc
     ${RUNTIME_API_DIR}/impl/api_impl_ipc_memory.cc

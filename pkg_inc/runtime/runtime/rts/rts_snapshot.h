@@ -22,6 +22,7 @@ typedef enum {
     RT_PROCESS_STATE_RUNNING = 0,
     RT_PROCESS_STATE_LOCKED,
     RT_PROCESS_STATE_BACKED_UP,
+    RT_PROCESS_STATE_FAILED,
     RT_PROCESS_STATE_MAX
 } rtProcessState;
 
@@ -66,6 +67,8 @@ RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtSnapSho
  * @param [out] state, return the process state of a NPU process, the possible values for state are as follows:
  *   RT_PROCESS_STATE_RUNNING : Default process state,
  *   RT_PROCESS_STATE_LOCKED : RTS API locks are taken so further RTS API calls will block
+ *   RT_PROCESS_STATE_BACKED_UP : Process resources have been backed up
+ *   RT_PROCESS_STATE_FAILED : A resource operation failed and the process cannot be unlocked
  * @return ACL_RT_SUCCESS for ok, others failed
  */
 RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t rtSnapShotProcessGetState(rtProcessState* state);

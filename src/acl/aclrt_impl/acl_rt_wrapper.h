@@ -518,6 +518,8 @@
     _(aclError, aclrtSnapShotProcessUnlock, (int pid, void* reserve), (pid, reserve))                                  \
     _(aclError, aclrtSnapShotProcessBackup, (int pid, aclrtSnapShotBackupArgs* args), (pid, args))                     \
     _(aclError, aclrtSnapShotProcessRestore, (int pid, aclrtSnapShotRestoreArgs* args), (pid, args))                   \
+    _(aclError, aclrtSnapshotProcessGetState, (int pid, aclrtProcessState* state), (pid, state))                       \
+    _(aclError, aclrtSnapshotProcessGetRestoreThreadId, (int pid, int* tid), (pid, tid))                               \
     _(aclError, aclrtSnapShotCallbackRegister, (aclrtSnapShotStage stage, aclrtSnapShotCallBack callback, void* args), \
       (stage, callback, args))                                                                                         \
     _(aclError, aclrtSnapShotCallbackUnregister, (aclrtSnapShotStage stage, aclrtSnapShotCallBack callback),           \

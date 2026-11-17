@@ -8,6 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include <cstdarg>
+#include <cstdio>
 #include <cstring>
 #include <vector>
 #include <string>
@@ -59,6 +61,13 @@ int32_t aclStub::ReportPredefinedErrMsg(const char* errorCode, const ErrorMsgArg
     return 0;
 }
 
+int32_t aclStub::ReportInnerErrMsg(const char* errorCode, const char* message)
+{
+    (void)errorCode;
+    (void)message;
+    return 0;
+}
+
 int error_message::ErrMgrInit(error_message::ErrorMessageMode error_mode)
 {
     (void)error_mode;
@@ -81,7 +90,15 @@ int32_t error_message::ReportPredefinedErrMsg(
 int32_t error_message::ReportInnerErrMsg(
     const char* file_name, const char* func, uint32_t line, const char* error_code, const char* format, ...)
 {
-    return 0;
+    char message[4096] = {};
+    va_list args;
+    va_start(args, format);
+    const int result = vsnprintf(message, sizeof(message), format, args);
+    va_end(args);
+    if ((result < 0) || (static_cast<size_t>(result) >= sizeof(message))) {
+        return -1;
+    }
+    return MockFunctionTest::aclStubInstance().ReportInnerErrMsg(error_code, message);
 }
 
 namespace fe {
@@ -209,6 +226,9 @@ void MockFunctionTest::ResetToDefaultMock()
         .WillByDefault([this](const char* errorCode, const ErrorMsgArgs& keys, const ErrorMsgArgs& values) {
             return aclStub::ReportPredefinedErrMsg(errorCode, keys, values);
         });
+    ON_CALL(*this, ReportInnerErrMsg).WillByDefault([this](const char* errorCode, const char* message) {
+        return aclStub::ReportInnerErrMsg(errorCode, message);
+    });
     ON_CALL(*this, rtHostMemMapCapabilities)
         .WillByDefault([this](uint32_t deviceId, rtHacType hacType, rtHostMemMapCapability* capabilities) {
             return aclStub::rtHostMemMapCapabilities(deviceId, hacType, capabilities);

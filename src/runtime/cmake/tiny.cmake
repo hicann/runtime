@@ -150,6 +150,7 @@ set(common_src_files
     ${RUNTIME_CORE_DIR}/src/common/context_data_manage.cc
     ${RUNTIME_CORE_DIR}/src/common/profiling_agent.cc
     ${RUNTIME_CORE_DIR}/src/common/errcode_manage.cc
+    ${RUNTIME_API_DIR}/impl/stub/api_impl_snapshot_stub.cc
     ${RUNTIME_CORE_DIR}/src/common/error_message_manage.cc
     ${RUNTIME_CORE_DIR}/src/common/task_fail_callback_data_manager.cc
     ${RUNTIME_FEATURE_DIR}/xpu/xpu_task_fail_callback_data_manager_stub.cc
@@ -213,7 +214,6 @@ set(libruntime_callback_files
 set(libruntime_src_files_include_for_tiny
     ${RUNTIME_API_DIR}/impl/stub/api_error_stub.cc
     ${RUNTIME_API_DIR}/impl/stub/api_impl_stub.cc
-    ${RUNTIME_API_DIR}/impl/stub/api_impl_snapshot_stub.cc
     ${RUNTIME_API_DIR}/impl/stub/api_impl_rt_config_stub.cc
     ${RUNTIME_API_DIR}/impl/stub/api_impl_device_topology_stub.cc
     ${RUNTIME_API_DIR}/impl/stub/api_impl_ipc_memory_stub.cc

@@ -12,6 +12,7 @@
 #include <fstream>
 #include "driver/ascend_hal.h"
 #include "api_impl.hpp"
+#include "api_snapshot.hpp"
 #include "api_impl_soma.hpp"
 #include "api_event.hpp"
 #include "context.hpp"
@@ -54,6 +55,9 @@ namespace runtime {
 
 Runtime::~Runtime()
 {
+    if (apiImplSnapshot_ != nullptr) {
+        apiImplSnapshot_->StopSnapshotService();
+    }
     RT_LOG(RT_LOG_EVENT, "runtime destructor.");
     // ConstructRuntimeImpl can create a Runtime that has not run Init(); it must not flip process-wide exit state.
     const bool hasRuntimeExitHostState = HasRuntimeExitHostState();

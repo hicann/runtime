@@ -17,6 +17,7 @@
 #include "mmpa/mmpa_api.h"
 #include "driver/ascend_hal.h"
 #include "api_impl.hpp"
+#include "api_snapshot.hpp"
 #include "api_impl_event.hpp"
 #include "context.hpp"
 #include "engine_stream_observer.hpp"
@@ -1738,6 +1739,9 @@ rtError_t Runtime::Init()
     error = InitCcFeature();
     COND_GOTO_ERROR_MSG_AND_ASSIGN_CALL(
         ERR_MODULE_SYSTEM, error != RT_ERROR_NONE, INIT_FAIL, error, error, "Failed to initialize CC feature.");
+    if (apiImplSnapshot_ != nullptr) {
+        apiImplSnapshot_->StartSnapshotService(GetChipType());
+    }
     return error;
 
 INIT_FAIL:
@@ -2916,6 +2920,9 @@ bool Runtime::HasRuntimeExitHostState() const
 
 void Runtime::PrepareProcessExitNoThrow()
 {
+    if (apiImplSnapshot_ != nullptr) {
+        apiImplSnapshot_->StopSnapshotService();
+    }
     SetRuntimeExiting(true);
     isExiting_ = true;
     ResetPersistingL2CacheSizes();

@@ -138,7 +138,6 @@ set(libruntime_api_impl_src_files
     ${RUNTIME_API_DIR}/impl/api_impl_creator.cc
     ${RUNTIME_API_DIR}/impl/stub/api_impl_mbuf_stub.cc
     ${RUNTIME_API_DIR}/impl/stub/api_impl_esched_stub.cc
-    ${RUNTIME_API_DIR}/impl/stub/api_impl_snapshot_stub.cc
     ${RUNTIME_API_DIR}/impl/stub/api_impl_rt_config_stub.cc
     ${RUNTIME_API_DIR}/impl/stub/api_impl_device_topology_stub.cc
     ${RUNTIME_API_DIR}/impl/stub/api_impl_ipc_memory_stub.cc
@@ -158,6 +157,7 @@ set(common_src_files
     ${RUNTIME_CORE_DIR}/src/common/context_data_manage.cc
     ${RUNTIME_CORE_DIR}/src/common/dev_info_manage.cc
     ${RUNTIME_CORE_DIR}/src/common/errcode_manage.cc
+    ${RUNTIME_API_DIR}/impl/stub/api_impl_snapshot_stub.cc
     ${RUNTIME_CORE_DIR}/src/common/error_code.cc
     ${RUNTIME_CORE_DIR}/src/common/error_message_manage.cc
     ${RUNTIME_CORE_DIR}/src/common/global_state_manager.cc

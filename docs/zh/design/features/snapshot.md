@@ -85,6 +85,8 @@ ACL 层在 `args` 非 `NULL` 时会校验参数：`backupFlags` / `restoreFlags`
 
 ### 整体设计思路
 
+原有 `ApiImplSnapshot` 实现整体位于 feature/snapshot，直接持有服务线程与回调表，本地调用和跨进程分发共用其业务流程。Runtime 通过已有 Snapshot API 对象，在初始化末尾启动服务，退出时停止并 join 服务线程。
+
 Snapshot 特性采用分层架构设计：
 - **ACL 接口层**：提供 C 语言接口（aclrtSnapShot* 系列）
 - **Runtime API 层**：ACL 参数为空时调用旧无参 `rtSnapShotProcessBackup` / `rtSnapShotProcessRestore` 保持旧流程兼容语义；ACL 参数非空时通过 `rtSnapShotProcessBackupWithArgs` / `rtSnapShotProcessRestoreWithArgs` 承接并贯通 `backupFlags` / `restoreFlags`
@@ -108,7 +110,7 @@ graph TB
     
     subgraph Core["核心协调层"]
         GSM["GlobalStateManager<br/>进程状态管理"]
-        SCM["SnapshotCallbackManager<br/>回调管理单例"]
+        SCM["SnapshotCallbackManager<br/>Snapshot功能对象持有的回调表"]
     end
     
     subgraph Process["备份恢复协调层"]

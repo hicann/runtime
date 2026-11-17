@@ -262,6 +262,7 @@ set(runtimeut_src_common_list
     ${TOP_DIR}/src/runtime/core/src/common/rt_log.cc
     ${TOP_DIR}/src/runtime/core/src/common/dev_info_manage.cc
     ${TOP_DIR}/src/runtime/core/src/common/global_state_manager.cc
+    ${TOP_DIR}/src/runtime/feature/snapshot/snapshot_socket.cc
     ${TOP_DIR}/src/runtime/core/src/common/runtime_handle_guard.cc
     ${TOP_DIR}/src/runtime/core/src/common/register_memory.cc
 )
@@ -401,6 +402,7 @@ set(runtimeut_src_callback_list
 )
 
 set(runtimeut_src_tiny_exclude_list
+    ${TOP_DIR}/src/runtime/feature/snapshot/snapshot_socket.cc
     ${TOP_DIR}/src/runtime/api/api_c_device_topology.cc
     ${TOP_DIR}/src/runtime/api/api_c_dqs.cc
     ${TOP_DIR}/src/runtime/api/api_c_standard_soc.cc
@@ -414,7 +416,7 @@ set(runtimeut_src_tiny_exclude_list
     ${TOP_DIR}/src/runtime/api/impl/api_error_standard_soc.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_xpu_creator.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_standard_soc.cc
-    ${TOP_DIR}/src/runtime/api/impl/api_impl_snapshot.cc
+    ${TOP_DIR}/src/runtime/feature/snapshot/api_impl_snapshot.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_ipc_memory.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_soma.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event.cc
@@ -502,13 +504,13 @@ set(runtimeut_src_tiny_exclude_list
 )
 
 set(runtimeut_src_tiny_include_list
+    ${TOP_DIR}/src/runtime/api/impl/stub/api_impl_snapshot_stub.cc
     ${RUNTIME_UT_TINY_GENERATED_API_STUB_SOURCE}
     ${TOP_DIR}/src/runtime/api/api_c_tiny.cc
     ${TOP_DIR}/src/runtime/api/impl/stub/api_error_stub.cc
     ${TOP_DIR}/src/runtime/api/impl/stub/api_impl_stub.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_tiny.cc
     ${TOP_DIR}/src/runtime/api/impl/stub/api_impl_event_stub.cc
-    ${TOP_DIR}/src/runtime/api/impl/stub/api_impl_snapshot_stub.cc
     ${TOP_DIR}/src/runtime/api/impl/stub/api_impl_kernel_func_stub.cc
     ${TOP_DIR}/src/runtime/api/impl/stub/api_impl_ipc_memory_stub.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_esched.cc
@@ -632,7 +634,7 @@ set(runtimeut_src_list
     ${TOP_DIR}/src/runtime/api/impl/api_impl_vmm.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_mbuf.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_standard_soc.cc
-    ${TOP_DIR}/src/runtime/api/impl/api_impl_snapshot.cc
+    ${TOP_DIR}/src/runtime/feature/snapshot/api_impl_snapshot.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_ipc_memory.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_soma.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event.cc
@@ -794,7 +796,7 @@ set(runtimeut_david_src_list
     ${TOP_DIR}/src/runtime/api/impl/api_impl_creator.cc
     ${TOP_DIR}/src/runtime/api/impl/v200/api_impl_creator_c.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_standard_soc.cc
-    ${TOP_DIR}/src/runtime/api/impl/api_impl_snapshot.cc
+    ${TOP_DIR}/src/runtime/feature/snapshot/api_impl_snapshot.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_soma.cc
     ${TOP_DIR}/src/runtime/config/950/dev_info_proc_func.cc
     ${TOP_DIR}/src/runtime/api/impl/api_error.cc
@@ -1761,7 +1763,7 @@ set(runtimeut_v201_src_list
     ${TOP_DIR}/src/runtime/api/impl/v201/api_impl_v200_adapt.cc
     ${TOP_DIR}/src/runtime/api/impl/v201/api_impl_creator_c.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_standard_soc.cc
-    ${TOP_DIR}/src/runtime/api/impl/api_impl_snapshot.cc
+    ${TOP_DIR}/src/runtime/feature/snapshot/api_impl_snapshot.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_soma.cc
     ${TOP_DIR}/src/runtime/api/impl/api_error.cc
     ${TOP_DIR}/src/runtime/api/impl/api_error_standard_soc.cc

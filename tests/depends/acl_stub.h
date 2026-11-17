@@ -60,6 +60,7 @@ public:
     virtual std::unique_ptr<const char_t[]> GetErrMgrErrorMessage();
     virtual int Init();
     virtual int32_t ReportPredefinedErrMsg(const char* errorCode, const ErrorMsgArgs& keys, const ErrorMsgArgs& values);
+    virtual int32_t ReportInnerErrMsg(const char* errorCode, const char* message);
 
     // fe function
     virtual uint32_t InitializePlatformInfo();
@@ -623,6 +624,8 @@ public:
     virtual rtError_t rtsGetErrorVerbose(uint32_t deviceId, rtErrorInfo* errorInfo);
     virtual rtError_t rtsRepairError(uint32_t deviceId, const rtErrorInfo* errorInfo);
     virtual rtError_t rtSnapShotProcessLock();
+    virtual rtError_t rtSnapShotProcessGetState(rtProcessState* state);
+    virtual rtError_t rtSnapShotProcessGetRestoreThreadId(int32_t* tid);
     virtual rtError_t rtSnapShotProcessUnlock();
     virtual rtError_t rtSnapShotProcessBackup();
     virtual rtError_t rtSnapShotProcessBackupWithArgs(const rtSnapShotBackupArgs* const args);
@@ -668,6 +671,7 @@ public:
     MOCK_METHOD0(Init, int());
     MOCK_METHOD3(
         ReportPredefinedErrMsg, int32_t(const char* errorCode, const ErrorMsgArgs& keys, const ErrorMsgArgs& values));
+    MOCK_METHOD2(ReportInnerErrMsg, int32_t(const char* errorCode, const char* message));
 
     // fe function
     MOCK_METHOD0(InitializePlatformInfo, uint32_t());
@@ -1303,6 +1307,8 @@ public:
     MOCK_METHOD2(rtsGetErrorVerbose, rtError_t(uint32_t deviceId, rtErrorInfo* errorInfo));
     MOCK_METHOD2(rtsRepairError, rtError_t(uint32_t deviceId, const rtErrorInfo* errorInfo));
     MOCK_METHOD0(rtSnapShotProcessLock, rtError_t());
+    MOCK_METHOD1(rtSnapShotProcessGetState, rtError_t(rtProcessState* state));
+    MOCK_METHOD1(rtSnapShotProcessGetRestoreThreadId, rtError_t(int32_t* tid));
     MOCK_METHOD0(rtSnapShotProcessUnlock, rtError_t());
     MOCK_METHOD0(rtSnapShotProcessBackup, rtError_t());
     MOCK_METHOD1(rtSnapShotProcessBackupWithArgs, rtError_t(const rtSnapShotBackupArgs* const args));

@@ -11,6 +11,8 @@
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 #include "securec.h"
+#include <thread>
+#include "memcpy_c.hpp"
 #define private public
 #define protected public
 #include "context.hpp"
@@ -65,6 +67,8 @@ protected:
 
     virtual void TearDown()
     {
+        // Resource-failure tests leave FAILED; wake background threads before releasing the device.
+        GlobalStateManager::GetInstance().ForceUnlocked();
         DELETE_O(deviceSnapshot_);
         DELETE_O(eventPool_);
         rtDeviceReset(0);
@@ -96,6 +100,104 @@ rtError_t EventPoolPcieHostRegisterStub(Driver*, void*, uint64_t, uint32_t, void
     return RT_ERROR_NONE;
 }
 } // namespace
+
+class SnapshotRestoreStreamTest : public SnapshotTest, public WithParamInterface<bool> {};
+
+TEST_P(SnapshotRestoreStreamTest, RestoresAllRangesOnDeviceStreamWithoutBusinessContext)
+{
+    uint8_t first[3] = {};
+    uint8_t second[5] = {};
+    std::unique_ptr<uint8_t[]> backup(new uint8_t[sizeof(first) + sizeof(second)]{});
+    const uint8_t* const host = backup.get();
+    deviceSnapshot_->AddOpVirtualAddr(first, sizeof(first));
+    deviceSnapshot_->AddOpVirtualAddr(second, sizeof(second));
+    deviceSnapshot_->SetOpBackUpAddr(backup);
+    Stream controlStream(device_, 0);
+    Stream* const primary = device_->PrimaryStream_();
+    ASSERT_NE(primary, nullptr);
+    Stream* const selected = GetParam() ? primary : &controlStream;
+    MOCKER_CPP_VIRTUAL(device_, &Device::GetCtrlSQStream).expects(once()).with(eq(primary)).will(returnValue(selected));
+    MOCKER(MemcopyAsync)
+        .expects(once())
+        .with(
+            eq(static_cast<void*>(first)), eq(static_cast<uint64_t>(sizeof(first))), eq(static_cast<const void*>(host)),
+            eq(static_cast<uint64_t>(sizeof(first))), eq(RT_MEMCPY_HOST_TO_DEVICE), eq(selected))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER(MemcopyAsync)
+        .expects(once())
+        .with(
+            eq(static_cast<void*>(second)), eq(static_cast<uint64_t>(sizeof(second))),
+            eq(static_cast<const void*>(host + sizeof(first))), eq(static_cast<uint64_t>(sizeof(second))),
+            eq(RT_MEMCPY_HOST_TO_DEVICE), eq(selected))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(selected, &Stream::Synchronize).expects(once()).will(returnValue(RT_ERROR_NONE));
+
+    rtError_t result = RT_ERROR_INVALID_VALUE;
+    std::thread worker([&] {
+        EXPECT_EQ(Runtime::Instance()->CurrentContext(), nullptr);
+        result = deviceSnapshot_->OpMemoryRestore();
+    });
+    worker.join();
+    EXPECT_EQ(result, RT_ERROR_NONE);
+    EXPECT_EQ(deviceSnapshot_->GetOpBackUpAddr().get(), host);
+    GlobalMockObject::verify();
+}
+
+INSTANTIATE_TEST_SUITE_P(ControlAndPrimary, SnapshotRestoreStreamTest, Values(false, true));
+
+TEST_F(SnapshotTest, OpMemoryRestoreEmptySkipsStreamAndCopy)
+{
+    MOCKER_CPP_VIRTUAL(device_, &Device::GetCtrlSQStream).expects(never());
+    MOCKER(MemcopyAsync).expects(never());
+    EXPECT_EQ(deviceSnapshot_->OpMemoryRestore(), RT_ERROR_NONE);
+    GlobalMockObject::verify();
+}
+
+TEST_F(SnapshotTest, OpMemoryRestoreMissingBackupRejectsBeforeSelectingStream)
+{
+    uint8_t destination = 0U;
+    deviceSnapshot_->AddOpVirtualAddr(&destination, sizeof(destination));
+    MOCKER_CPP_VIRTUAL(device_, &Device::GetCtrlSQStream).expects(never());
+    MOCKER(MemcopyAsync).expects(never());
+    EXPECT_EQ(deviceSnapshot_->OpMemoryRestore(), RT_ERROR_INVALID_VALUE);
+    GlobalMockObject::verify();
+}
+
+class SnapshotRestoreFailureTest : public SnapshotTest, public WithParamInterface<int32_t> {};
+
+TEST_P(SnapshotRestoreFailureTest, StreamCopyOrSynchronizeErrorIsPropagated)
+{
+    uint8_t destination = 0U;
+    std::unique_ptr<uint8_t[]> backup(new uint8_t[sizeof(destination)]{});
+    deviceSnapshot_->AddOpVirtualAddr(&destination, sizeof(destination));
+    deviceSnapshot_->SetOpBackUpAddr(backup);
+    Stream* const primary = device_->PrimaryStream_();
+    ASSERT_NE(primary, nullptr);
+    const int32_t failure = GetParam(); // 0: missing stream; 1: copy; 2: synchronization.
+    MOCKER_CPP_VIRTUAL(device_, &Device::GetCtrlSQStream)
+        .expects(once())
+        .with(eq(primary))
+        .will(returnValue(failure == 0 ? static_cast<Stream*>(nullptr) : primary));
+    if (failure == 0) {
+        MOCKER(MemcopyAsync).expects(never());
+    } else {
+        MOCKER(MemcopyAsync).expects(once()).will(returnValue(failure == 1 ? RT_ERROR_DRV_ERR : RT_ERROR_NONE));
+    }
+    if (failure == 2) {
+        MOCKER_CPP_VIRTUAL(primary, &Stream::Synchronize)
+            .expects(once())
+            .will(returnValue(RT_ERROR_STREAM_SYNC_TIMEOUT));
+    } else {
+        MOCKER_CPP_VIRTUAL(primary, &Stream::Synchronize).expects(never());
+    }
+    const rtError_t expected =
+        failure == 0 ? RT_ERROR_STREAM_NULL : (failure == 1 ? RT_ERROR_DRV_ERR : RT_ERROR_STREAM_SYNC_TIMEOUT);
+    EXPECT_EQ(deviceSnapshot_->OpMemoryRestore(), expected);
+    EXPECT_EQ(destination, 0U);
+    GlobalMockObject::verify();
+}
+
+INSTANTIATE_TEST_SUITE_P(Dependencies, SnapshotRestoreFailureTest, Values(0, 1, 2));
 
 TEST_F(SnapshotTest, EventPoolPcieBarSupportedUsesP2pMemory)
 {

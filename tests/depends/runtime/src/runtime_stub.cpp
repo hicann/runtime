@@ -2358,6 +2358,24 @@ rtError_t aclStub::rtMemGetAccess(void* virPtr, rtMemLocation* location, uint64_
 
 rtError_t aclStub::rtSnapShotProcessLock() { return RT_ERROR_NONE; }
 
+rtError_t aclStub::rtSnapShotProcessGetState(rtProcessState* state)
+{
+    if (state == nullptr) {
+        return ACL_ERROR_RT_PARAM_INVALID;
+    }
+    *state = RT_PROCESS_STATE_RUNNING;
+    return RT_ERROR_NONE;
+}
+
+rtError_t aclStub::rtSnapShotProcessGetRestoreThreadId(int32_t* tid)
+{
+    if (tid == nullptr) {
+        return ACL_ERROR_RT_PARAM_INVALID;
+    }
+    *tid = 1234;
+    return RT_ERROR_NONE;
+}
+
 rtError_t aclStub::rtSnapShotProcessUnlock() { return RT_ERROR_NONE; }
 
 rtError_t aclStub::rtSnapShotProcessBackup() { return RT_ERROR_NONE; }
@@ -2541,6 +2559,16 @@ rtError_t rtsRepairError(uint32_t deviceId, const rtErrorInfo* errorInfo)
 }
 
 rtError_t rtSnapShotProcessLock() { return MockFunctionTest::aclStubInstance().rtSnapShotProcessLock(); }
+
+rtError_t rtSnapShotProcessGetState(rtProcessState* state)
+{
+    return MockFunctionTest::aclStubInstance().rtSnapShotProcessGetState(state);
+}
+
+extern "C" rtError_t rtSnapShotProcessGetRestoreThreadId(int32_t* tid)
+{
+    return MockFunctionTest::aclStubInstance().rtSnapShotProcessGetRestoreThreadId(tid);
+}
 
 rtError_t rtSnapShotProcessUnlock() { return MockFunctionTest::aclStubInstance().rtSnapShotProcessUnlock(); }
 
@@ -4605,3 +4633,15 @@ rtError_t aclStub::rtGetDeviceFlags(uint32_t* flags)
 rtError_t rtSetDeviceFlags(uint32_t flags) { return MockFunctionTest::aclStubInstance().rtSetDeviceFlags(flags); }
 
 rtError_t rtGetDeviceFlags(uint32_t* flags) { return MockFunctionTest::aclStubInstance().rtGetDeviceFlags(flags); }
+namespace cce {
+namespace runtime {
+enum class rtSnapshotOp : uint32_t;
+struct SnapshotMemoryArgs;
+rtError_t g_snapshotSocketResult = RT_ERROR_OS_HANDLE;
+// ACL tests isolate Runtime here; Runtime UT exercises the real socket implementation.
+rtError_t SnapshotSocketCall(int32_t, rtSnapshotOp, const SnapshotMemoryArgs*, uint32_t&)
+{
+    return g_snapshotSocketResult;
+}
+} // namespace runtime
+} // namespace cce

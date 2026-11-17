@@ -160,9 +160,9 @@ rtError_t DeviceSnapshot::OpMemoryRestore(void)
 
     auto vaAddrInfos = GetOpVirtualAddrs();
     size_t offset = 0U;
-    Context* curCtx = Runtime::Instance()->CurrentContext();
-    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    Stream* stm = curCtx->GetCtrlSQStream();
+    // A remote snapshot runs on the service thread, which has no business-thread Context TLS.
+    Stream* const stm = device_->GetCtrlSQStream(device_->PrimaryStream_());
+    NULL_PTR_RETURN_MSG(stm, RT_ERROR_STREAM_NULL);
     for (auto it = vaAddrInfos.begin(); it != vaAddrInfos.end(); ++it) {
         void* addr = it->first;
         const size_t size = it->second;

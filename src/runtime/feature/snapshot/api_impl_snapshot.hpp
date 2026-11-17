@@ -11,18 +11,28 @@
 #define CCE_RUNTIME_API_IMPL_SNAPSHOT_HPP
 
 #include "api_snapshot.hpp"
+#include "snapshot_callback_manager.hpp"
+#include "snapshot_socket.hpp"
 
 namespace cce {
 namespace runtime {
 
 class ApiImplSnapshot : public ApiSnapshot {
 public:
+    void StartSnapshotService(rtChipType_t chipType) override;
+    void StopSnapshotService() override;
+    rtError_t SnapShotProcessGetState(rtProcessState* state) override;
+    rtError_t SnapShotProcessGetRestoreThreadId(int32_t* tid) override;
     rtError_t SnapShotProcessLock() override;
     rtError_t SnapShotProcessUnlock() override;
     rtError_t SnapShotProcessBackup(const rtSnapShotBackupArgs* const args) override;
     rtError_t SnapShotProcessRestore(const rtSnapShotRestoreArgs* const args) override;
     rtError_t SnapShotCallbackRegister(rtSnapShotStage stage, rtSnapShotCallBack callback, void* args) override;
     rtError_t SnapShotCallbackUnregister(rtSnapShotStage stage, rtSnapShotCallBack callback) override;
+
+private:
+    SnapshotCallbackManager callbacks_;
+    SnapshotService service_;
 };
 
 } // namespace runtime

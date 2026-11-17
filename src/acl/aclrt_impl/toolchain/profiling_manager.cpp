@@ -278,6 +278,8 @@ const std::map<AclProfType, std::string> PROF_TYPE_TO_NAMES = {
     {AclProfType::AclrtSnapShotProcessUnlock, "aclrtSnapShotProcessUnlock"},
     {AclProfType::AclrtSnapShotProcessBackup, "aclrtSnapShotProcessBackup"},
     {AclProfType::AclrtSnapShotProcessRestore, "aclrtSnapShotProcessRestore"},
+    {AclProfType::AclrtSnapshotProcessGetState, "aclrtSnapshotProcessGetState"},
+    {AclProfType::AclrtSnapshotProcessGetRestoreThreadId, "aclrtSnapshotProcessGetRestoreThreadId"},
     {AclProfType::AclrtFreeWithDevSync, "aclrtFreeWithDevSync"},
     {AclProfType::AclrtFreeHostWithDevSync, "aclrtFreeHostWithDevSync"},
     {AclProfType::AclrtCacheLastTaskOpInfo, "aclrtCacheLastTaskOpInfo"},

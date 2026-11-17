@@ -15,6 +15,7 @@
 #include "api_error.hpp"
 #include "aicpu_dfx.hpp"
 #include "model.hpp"
+#include "snapshot_socket.hpp"
 
 using namespace cce::runtime;
 
@@ -24,6 +25,22 @@ TEST(Arch5162ApiTest, SnapshotApiImplStub_NotSupport)
     ApiSnapshot* apiImplSnapshot = CreateImplSnapshotAndGet();
     EXPECT_EQ(apiImplSnapshot, nullptr);
     DestroyImplSnapshot(apiImplSnapshot);
+}
+
+TEST(Arch5162ApiTest, SnapshotSocketStubDoesNotStartServiceOrChangeQueryOutput)
+{
+    SnapshotService service;
+    EXPECT_EQ(service.StartSnapshotService(nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(service.GetSnapshotThreadId(), 0);
+    service.StopSnapshotService();
+    uint32_t value = 123U;
+    const rtSnapshotOp operations[] = {rtSnapshotOp::LOCK,      rtSnapshotOp::BACKUP,
+                                       rtSnapshotOp::RESTORE,   rtSnapshotOp::UNLOCK,
+                                       rtSnapshotOp::GET_STATE, rtSnapshotOp::GET_RESTORE_THREAD_ID};
+    for (const auto op : operations) {
+        EXPECT_EQ(SnapshotSocketCall(mmGetPid(), op, nullptr, value), RT_ERROR_FEATURE_NOT_SUPPORT);
+        EXPECT_EQ(value, 123U);
+    }
 }
 
 TEST(Arch5162ApiTest, KernelArgsImplLifecycleNotSupport)

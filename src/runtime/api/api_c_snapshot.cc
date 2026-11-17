@@ -9,9 +9,9 @@
  */
 #include "api_snapshot.hpp"
 #include "api_c.h"
-#include "global_state_manager.hpp"
 #include "rts/rts.h"
 #include "runtime.hpp"
+#include "osal.hpp"
 
 using namespace cce::runtime;
 
@@ -71,12 +71,20 @@ rtError_t rtSnapShotProcessGetState(rtProcessState* state)
         return error;
     }
     PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(state, RT_ERROR_INVALID_VALUE);
-    *state = GlobalStateManager::GetInstance().GetCurrentState();
+    ApiSnapshot* const apiSnapshotInstance = ApiSnapshot::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiSnapshotInstance);
+    const rtError_t queryError = apiSnapshotInstance->SnapShotProcessGetState(state);
+    ERROR_RETURN_WITH_EXT_ERRCODE(queryError);
     return ACL_RT_SUCCESS;
 }
 
 static rtError_t ProcessBackup(const rtSnapShotBackupArgs* const args)
 {
+    if ((args != nullptr) && (args->backupFlags > 1U)) {
+        RT_LOG_OUTER_MSG_INVALID_PARAM_WITH_DESC(
+            "rtSnapShotProcessBackupWithArgs", args->backupFlags, "required memory only or include optional memory");
+        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
+    }
     rtError_t error = CheckSnapShotFeatureSupport();
     if (error != RT_ERROR_NONE) {
         return error;
@@ -98,6 +106,11 @@ rtError_t rtSnapShotProcessBackupWithArgs(const rtSnapShotBackupArgs* const args
 
 static rtError_t ProcessRestore(const rtSnapShotRestoreArgs* const args)
 {
+    if ((args != nullptr) && (args->restoreFlags > 1U)) {
+        RT_LOG_OUTER_MSG_INVALID_PARAM_WITH_DESC(
+            "rtSnapShotProcessRestoreWithArgs", args->restoreFlags, "required memory only or include optional memory");
+        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
+    }
     rtError_t error = CheckSnapShotFeatureSupport();
     if (error != RT_ERROR_NONE) {
         return error;
@@ -144,6 +157,21 @@ RTS_API rtError_t rtSnapShotCallbackUnregister(rtSnapShotStage stage, rtSnapShot
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiSnapshotInstance);
     error = apiSnapshotInstance->SnapShotCallbackUnregister(stage, callback);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtSnapShotProcessGetRestoreThreadId(int32_t* tid)
+{
+    const rtError_t error = CheckSnapShotFeatureSupport();
+    if (error != RT_ERROR_NONE) {
+        return error;
+    }
+    PARAM_NULL_RETURN_ERROR_WITH_EXT_ERRCODE(tid, RT_ERROR_INVALID_VALUE);
+    ApiSnapshot* const apiSnapshotInstance = ApiSnapshot::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiSnapshotInstance);
+    const rtError_t queryError = apiSnapshotInstance->SnapShotProcessGetRestoreThreadId(tid);
+    ERROR_RETURN_WITH_EXT_ERRCODE(queryError);
     return ACL_RT_SUCCESS;
 }
 

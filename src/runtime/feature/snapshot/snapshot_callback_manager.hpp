@@ -26,7 +26,8 @@ struct SnapShotCallBackInfo {
 
 class SnapshotCallbackManager {
 public:
-    static SnapshotCallbackManager& GetInstance();
+    SnapshotCallbackManager() = default;
+    ~SnapshotCallbackManager() = default;
 
     SnapshotCallbackManager(const SnapshotCallbackManager&) = delete;
     SnapshotCallbackManager& operator=(const SnapshotCallbackManager&) = delete;
@@ -36,9 +37,6 @@ public:
     rtError_t InvokeCallbacks(rtSnapShotStage stage);
 
 private:
-    SnapshotCallbackManager() = default;
-    ~SnapshotCallbackManager() = default;
-
     static const char_t* GetStageString(rtSnapShotStage stage);
 
     std::mutex mutex_;

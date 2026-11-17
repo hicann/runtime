@@ -21,6 +21,8 @@
 #include "mmpa/mmpa_api.h"
 
 #include "acl/acl.h"
+#include "snapshot_socket.hpp"
+#include "errcode_manage.hpp"
 #include "acl/error_codes/rt_error_codes.h"
 #include "common/log_inner.h"
 #include "acl/acl_rt.h"
@@ -4974,9 +4976,14 @@ TEST_F(UTEST_ACL_Runtime, SnapShotProcessBackup_invalid_flags)
     EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtSnapShotProcessBackupWithArgs(_)).Times(0);
 
     aclrtSnapShotBackupArgs args = {};
-    args.backupFlags = 2U;
-    aclError ret = aclrtSnapShotProcessBackup(static_cast<int>(mmGetPid()), &args);
-    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+    for (const uint32_t flags : {2U, UINT32_MAX}) {
+        SCOPED_TRACE(flags);
+        args.backupFlags = flags;
+        for (const int32_t pid : {static_cast<int32_t>(mmGetPid()), INT32_MAX}) {
+            SCOPED_TRACE(pid);
+            EXPECT_EQ(aclrtSnapShotProcessBackup(pid, &args), ACL_ERROR_INVALID_PARAM);
+        }
+    }
 }
 
 TEST_F(UTEST_ACL_Runtime, SnapShotProcessRestore_success)
@@ -5002,9 +5009,14 @@ TEST_F(UTEST_ACL_Runtime, SnapShotProcessRestore_invalid_flags)
     EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtSnapShotProcessRestoreWithArgs(_)).Times(0);
 
     aclrtSnapShotRestoreArgs args = {};
-    args.restoreFlags = 2U;
-    aclError ret = aclrtSnapShotProcessRestore(static_cast<int>(mmGetPid()), &args);
-    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+    for (const uint32_t flags : {2U, UINT32_MAX}) {
+        SCOPED_TRACE(flags);
+        args.restoreFlags = flags;
+        for (const int32_t pid : {static_cast<int32_t>(mmGetPid()), INT32_MAX}) {
+            SCOPED_TRACE(pid);
+            EXPECT_EQ(aclrtSnapShotProcessRestore(pid, &args), ACL_ERROR_INVALID_PARAM);
+        }
+    }
 }
 
 TEST_F(UTEST_ACL_Runtime, SnapShotCallbackRegister_failed)
@@ -5021,8 +5033,121 @@ TEST_F(UTEST_ACL_Runtime, SnapShotCallbackUnregister_failed)
 
 TEST_F(UTEST_ACL_Runtime, SnapShotProcessLock_invalid_pid)
 {
-    aclError ret = aclrtSnapShotProcessLock(9999, nullptr);
+    aclError ret = aclrtSnapShotProcessLock(0, nullptr);
     EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(UTEST_ACL_Runtime, SnapshotInvalidPidRejectsAllOperationsWithoutChangingOutputs)
+{
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtSnapShotProcessLock()).Times(0);
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtSnapShotProcessUnlock()).Times(0);
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtSnapShotProcessBackup()).Times(0);
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtSnapShotProcessRestore()).Times(0);
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtSnapShotProcessBackupWithArgs(_)).Times(0);
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtSnapShotProcessRestoreWithArgs(_)).Times(0);
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtSnapShotProcessGetState(_)).Times(0);
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtSnapShotProcessGetRestoreThreadId(_)).Times(0);
+    for (const int32_t pid : {-1, 0}) {
+        SCOPED_TRACE(pid);
+        aclrtProcessState state = ACL_RT_PROCESS_STATE_BACKED_UP;
+        int32_t tid = 77;
+        EXPECT_EQ(aclrtSnapShotProcessLock(pid, nullptr), ACL_ERROR_INVALID_PARAM);
+        EXPECT_EQ(aclrtSnapShotProcessUnlock(pid, nullptr), ACL_ERROR_INVALID_PARAM);
+        EXPECT_EQ(aclrtSnapShotProcessBackup(pid, nullptr), ACL_ERROR_INVALID_PARAM);
+        EXPECT_EQ(aclrtSnapShotProcessRestore(pid, nullptr), ACL_ERROR_INVALID_PARAM);
+        EXPECT_EQ(aclrtSnapshotProcessGetState(pid, &state), ACL_ERROR_INVALID_PARAM);
+        EXPECT_EQ(aclrtSnapshotProcessGetRestoreThreadId(pid, &tid), ACL_ERROR_INVALID_PARAM);
+        EXPECT_EQ(state, ACL_RT_PROCESS_STATE_BACKED_UP);
+        EXPECT_EQ(tid, 77);
+    }
+}
+
+TEST_F(UTEST_ACL_Runtime, SnapshotUnlockRejectsNonNullReservedArgumentBeforeRuntime)
+{
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtSnapShotProcessUnlock()).Times(0);
+    int32_t reserve = 0;
+    EXPECT_EQ(aclrtSnapShotProcessUnlock(static_cast<int32_t>(mmGetPid()), &reserve), ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(UTEST_ACL_Runtime, SnapshotQueriesLocalAndInvalidArguments)
+{
+    const int32_t pid = static_cast<int32_t>(mmGetPid());
+    aclrtProcessState state = ACL_RT_PROCESS_STATE_FAILED;
+    int32_t tid = 0;
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtSnapShotProcessGetState(_))
+        .WillOnce(Invoke([](rtProcessState* output) {
+            *output = RT_PROCESS_STATE_RUNNING;
+            return RT_ERROR_NONE;
+        }));
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtSnapShotProcessGetRestoreThreadId(_))
+        .WillOnce(Invoke([](int32_t* output) {
+            *output = 1234;
+            return RT_ERROR_NONE;
+        }));
+    EXPECT_EQ(aclrtSnapshotProcessGetState(pid, &state), ACL_SUCCESS);
+    EXPECT_EQ(state, ACL_RT_PROCESS_STATE_RUNNING);
+    EXPECT_EQ(aclrtSnapshotProcessGetRestoreThreadId(pid, &tid), ACL_SUCCESS);
+    EXPECT_EQ(tid, 1234);
+    EXPECT_EQ(aclrtSnapshotProcessGetState(pid, nullptr), ACL_ERROR_INVALID_PARAM);
+    EXPECT_EQ(aclrtSnapshotProcessGetRestoreThreadId(pid, nullptr), ACL_ERROR_INVALID_PARAM);
+    EXPECT_EQ(aclrtSnapshotProcessGetState(-1, &state), ACL_ERROR_INVALID_PARAM);
+    EXPECT_EQ(aclrtSnapshotProcessGetRestoreThreadId(0, &tid), ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(UTEST_ACL_Runtime, SnapshotInvalidStateReportsReturnedValue)
+{
+    const int32_t pid = static_cast<int32_t>(mmGetPid());
+    aclrtProcessState state = ACL_RT_PROCESS_STATE_LOCKED;
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtSnapShotProcessGetState(_))
+        .WillOnce(Invoke([](rtProcessState* output) {
+            *output = static_cast<rtProcessState>(99);
+            return RT_ERROR_NONE;
+        }));
+    EXPECT_CALL(
+        MockFunctionTest::aclStubInstance(),
+        ReportInnerErrMsg(
+            StrEq("EH9999"),
+            AllOf(HasSubstr("pid=" + std::to_string(pid)), HasSubstr("state=99"), HasSubstr("[0, 3]"))))
+        .WillOnce(Return(0));
+    EXPECT_EQ(aclrtSnapshotProcessGetState(pid, &state), ACL_ERROR_RT_INTERNAL_ERROR);
+    EXPECT_EQ(state, ACL_RT_PROCESS_STATE_LOCKED);
+}
+
+TEST_F(UTEST_ACL_Runtime, SnapshotInvalidThreadIdReportsReturnedValue)
+{
+    const int32_t pid = static_cast<int32_t>(mmGetPid());
+    for (const int32_t invalidTid : {0, -1}) {
+        int32_t tid = 1234;
+        EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtSnapShotProcessGetRestoreThreadId(_))
+            .WillOnce(Invoke([invalidTid](int32_t* output) {
+                *output = invalidTid;
+                return RT_ERROR_NONE;
+            }));
+        EXPECT_CALL(
+            MockFunctionTest::aclStubInstance(),
+            ReportInnerErrMsg(
+                StrEq("EH9999"), AllOf(
+                                     HasSubstr("pid=" + std::to_string(pid)),
+                                     HasSubstr("tid=" + std::to_string(static_cast<uint32_t>(invalidTid))),
+                                     HasSubstr("[1, " + std::to_string(INT32_MAX) + "]"))))
+            .WillOnce(Return(0));
+        EXPECT_EQ(aclrtSnapshotProcessGetRestoreThreadId(pid, &tid), ACL_ERROR_RT_INTERNAL_ERROR);
+        EXPECT_EQ(tid, 1234);
+    }
+}
+
+TEST_F(UTEST_ACL_Runtime, SnapshotRemoteDoesNotCallLocalRuntime)
+{
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtSnapShotProcessLock()).Times(0);
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtSnapShotProcessBackupWithArgs(_)).Times(0);
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtSnapShotProcessGetState(_)).Times(0);
+    EXPECT_EQ(aclrtSnapShotProcessLock(0x7FFFFFFF, nullptr), ACL_ERROR_RT_INTERNAL_ERROR);
+    aclrtProcessState state = ACL_RT_PROCESS_STATE_FAILED;
+    EXPECT_EQ(aclrtSnapshotProcessGetState(0x7FFFFFFF, &state), ACL_ERROR_RT_INTERNAL_ERROR);
+    EXPECT_EQ(state, ACL_RT_PROCESS_STATE_FAILED);
+    aclrtSnapShotBackupArgs args = {};
+    args.backupFlags = 2U;
+    EXPECT_EQ(aclrtSnapShotProcessBackup(0x7FFFFFFF, &args), ACL_ERROR_INVALID_PARAM);
 }
 
 TEST_F(UTEST_ACL_Runtime, SnapShotProcessLock_invalid_reserve)
@@ -11287,6 +11412,49 @@ TEST_F(UTEST_ACL_Runtime, aclrtMemMapSetLink_other_error)
 
     aclError ret = aclrtMemMapSetLink(handle, ACL_RT_MEM_ACCESS_LINK_SIO);
     EXPECT_EQ(ret, ACL_ERROR_RT_DRV_INTERNAL_ERROR);
+}
+
+TEST_F(UTEST_ACL_Runtime, SnapshotMemoryArgumentsKeepWireLayout)
+{
+    EXPECT_EQ(sizeof(aclrtSnapShotBackupArgs), sizeof(cce::runtime::SnapshotMemoryArgs));
+    EXPECT_EQ(sizeof(aclrtSnapShotRestoreArgs), sizeof(cce::runtime::SnapshotMemoryArgs));
+    EXPECT_EQ(offsetof(aclrtSnapShotBackupArgs, reserved), offsetof(cce::runtime::SnapshotMemoryArgs, reserved));
+    EXPECT_EQ(offsetof(aclrtSnapShotRestoreArgs, reserved), offsetof(cce::runtime::SnapshotMemoryArgs, reserved));
+}
+
+namespace cce {
+namespace runtime {
+extern rtError_t g_snapshotSocketResult;
+}
+} // namespace cce
+
+TEST_F(UTEST_ACL_Runtime, SnapshotRemoteMapsInternalErrorsAtApiBoundary)
+{
+    using namespace cce::runtime;
+    const rtError_t previous = g_snapshotSocketResult;
+    const std::unique_ptr<rtError_t, std::function<void(rtError_t*)>> restore(
+        &g_snapshotSocketResult, [previous](rtError_t* value) { *value = previous; });
+    const std::pair<rtError_t, aclError> cases[] = {
+        {RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT},
+        {RT_ERROR_OS_HANDLE, ACL_ERROR_RT_INTERNAL_ERROR},
+        {RT_ERROR_INVALID_VALUE, ACL_ERROR_RT_PARAM_INVALID},
+        {RT_ERROR_SNAPSHOT_LOCK_FAILED, ACL_ERROR_SNAPSHOT_LOCK_FAILED},
+    };
+    const int32_t remotePid = mmGetPid() == 1 ? 2 : 1;
+    for (const auto& item : cases) {
+        g_snapshotSocketResult = item.first;
+        SCOPED_TRACE(item.first);
+        int32_t tid = 123;
+        aclrtProcessState state = ACL_RT_PROCESS_STATE_LOCKED;
+        EXPECT_EQ(aclrtSnapShotProcessLock(remotePid, nullptr), item.second);
+        EXPECT_EQ(aclrtSnapShotProcessUnlock(remotePid, nullptr), item.second);
+        EXPECT_EQ(aclrtSnapShotProcessBackup(remotePid, nullptr), item.second);
+        EXPECT_EQ(aclrtSnapShotProcessRestore(remotePid, nullptr), item.second);
+        EXPECT_EQ(aclrtSnapshotProcessGetState(remotePid, &state), item.second);
+        EXPECT_EQ(aclrtSnapshotProcessGetRestoreThreadId(remotePid, &tid), item.second);
+        EXPECT_EQ(state, ACL_RT_PROCESS_STATE_LOCKED);
+        EXPECT_EQ(tid, 123);
+    }
 }
 
 TEST_F(UTEST_ACL_Runtime, aclrtSetDeviceFlags_forwards_all_modes)

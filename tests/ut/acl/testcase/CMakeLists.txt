@@ -15,10 +15,16 @@ include_directories(${BASE_DIR})
 include_directories(${BASE_DIR}/include)
 include_directories(${BASE_DIR}/include/external)
 include_directories(${BASE_DIR}/include/external/acl)
+include_directories(${BASE_DIR}/src/runtime/core/inc)
+include_directories(${BASE_DIR}/src/runtime/core/inc/common)
+include_directories(${BASE_DIR}/src/runtime/core/inc/soc)
+include_directories(${BASE_DIR}/src/runtime/feature/snapshot)
+include_directories(${BASE_DIR}/src/runtime/api/impl/inc)
 
 include_directories(${BASE_DIR}/src/acl/common)
 include_directories(${TOP_DIR}/pkg_inc/runtime)
 include_directories(${TOP_DIR}/pkg_inc/runtime/runtime)
+include_directories(${TOP_DIR}/pkg_inc/runtime/runtime/rts)
 include_directories(${CMAKE_BINARY_DIR})
 include_directories(${CMAKE_BINARY_DIR}/include_acl)
 include_directories(${CMAKE_BINARY_DIR}/include_acl/tdt)
@@ -28,7 +34,10 @@ include_directories(${BASE_DIR}/include/dfx/base)
 include_directories(${BASE_DIR}/pkg_inc/profiling)
 include_directories(${BASE_DIR}/pkg_inc/dump)
 include_directories(${BASE_DIR}/pkg_inc/watchdog)
+include_directories(${BASE_DIR}/pkg_inc/trace)
 include_directories(${TOP_DIR}/src/dfx/log/inc)
+include_directories(${TOP_DIR}/src/dfx/error_manager)
+include_directories(${TOP_DIR}/src/dfx/trace/inc/toolchain)
 include_directories(${TOP_DIR}/src/inc)
 include_directories(${BASE_DIR}/src/acl)
 include_directories(${BASE_DIR}/src/acl/aclrt)
@@ -36,6 +45,8 @@ include_directories(${BASE_DIR}/src/acl/aclrt_impl)
 include_directories(${BASE_DIR}/tests/depends/)
 include_directories(${BASE_DIR}/include/dfx)
 include_directories(${BASE_DIR}/src/runtime/inc/kernel)
+include_directories(${BASE_DIR}/src/runtime/core/inc/utils)
+include_directories(${BASE_DIR}/pkg_inc/mmpa/sub_inc)
 include_directories(${BASE_DIR}/include/dfx)
 
 set(UT_FILES
@@ -60,6 +71,7 @@ set(UT_FILES
 )
 
 set(SRC_FILES
+    ${BASE_DIR}/src/runtime/core/src/common/errcode_manage.cc
 ######### aclrt_impl #########
     ${BASE_DIR}/src/acl/common/log_inner.cpp
     ${BASE_DIR}/src/acl/common/prof_reporter.cpp
@@ -111,6 +123,11 @@ set(SRC_FILES
 )
 
 ############ libut_ascendcl_src.a ############
+# Exercise snapshot diagnostics with production logging and error-reporting macros.
+set_source_files_properties(${BASE_DIR}/src/acl/aclrt_impl/snapshot.cpp
+    PROPERTIES COMPILE_OPTIONS "-URUN_TEST;-UENABLE_DVPP_INTERFACE"
+)
+
 add_library(ut_ascendcl_src STATIC
     ${SRC_FILES}
 )
@@ -118,6 +135,7 @@ add_library(ut_ascendcl_src STATIC
 add_dependencies(ut_ascendcl_src copy_acl_headers_and_libs)
 
 target_include_directories(ut_ascendcl_src PRIVATE
+    ${BASE_DIR}/src/runtime/api/inc
     ${CMAKE_BINARY_DIR}/include_acl
     ${CMAKE_BINARY_DIR}/include_acl/tdt
 )
@@ -140,7 +158,9 @@ target_compile_options(ut_ascendcl_src PRIVATE
 target_link_libraries(ut_ascendcl_src PRIVATE
     $<BUILD_INTERFACE:intf_pub>
     $<BUILD_INTERFACE:c_sec_headers>
+    $<BUILD_INTERFACE:mmpa_headers>
     c_sec
+    mmpa
     json
 )
 

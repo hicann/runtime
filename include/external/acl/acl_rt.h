@@ -6018,11 +6018,40 @@ ACL_FUNC_VISIBILITY aclError aclrtMemGetAccess(void* virPtr, aclrtMemLocation* l
 typedef enum aclrtProcessState {
     ACL_RT_PROCESS_STATE_RUNNING = 0,
     ACL_RT_PROCESS_STATE_LOCKED,
+    ACL_RT_PROCESS_STATE_BACKED_UP,
+    ACL_RT_PROCESS_STATE_FAILED,
 } aclrtProcessState;
 
 /**
  * @ingroup AscendCL
+ * @brief Query the snapshot state
+ *
+ * @param [in] pid Target process ID.
+ * @param [out] state Snapshot state. The output is unchanged on failure.
+ *
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclrtSnapshotProcessGetState(int pid, aclrtProcessState* state);
+
+/**
+ * @ingroup AscendCL
+ * @brief Query the snapshot service thread ID
+ *
+ * @param [in] pid Target process ID.
+ * @param [out] tid Linux thread ID. The output is unchanged on failure.
+ *
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclrtSnapshotProcessGetRestoreThreadId(int pid, int* tid);
+
+/**
+ * @ingroup AscendCL
  * @brief lock the NPU process which will block further aclrt api calls
+ *
+ * @param [in] pid Target process ID.
+ * @param [in] reserve Reserved parameter. Must be NULL.
  *
  * @retval ACL_SUCCESS The function is successfully executed.
  * @retval OtherValues Failure
@@ -6033,6 +6062,9 @@ ACL_FUNC_VISIBILITY aclError aclrtSnapShotProcessLock(int pid, void* reserve);
  * @ingroup AscendCL
  * @brief unlock the NPU process and allow it to continue making aclrt api calls
  *
+ * @param [in] pid Target process ID.
+ * @param [in] reserve Reserved parameter. Must be NULL.
+ *
  * @retval ACL_SUCCESS The function is successfully executed.
  * @retval OtherValues Failure
  */
@@ -6041,6 +6073,8 @@ ACL_FUNC_VISIBILITY aclError aclrtSnapShotProcessUnlock(int pid, void* reserve);
 /**
  * @ingroup AscendCL
  * @brief backup the NPU process
+ *
+ * @param [in] pid Target process ID.
  * @param [in] args snapshot backup args. If args is NULL, the legacy Runtime backup flow is used.
  *
  * @retval ACL_SUCCESS The function is successfully executed.
@@ -6051,6 +6085,8 @@ ACL_FUNC_VISIBILITY aclError aclrtSnapShotProcessBackup(int pid, aclrtSnapShotBa
 /**
  * @ingroup AscendCL
  * @brief restore the NPU process from the last backup point
+ *
+ * @param [in] pid Target process ID.
  * @param [in] args snapshot restore args. If args is NULL, the legacy Runtime restore flow is used.
  *
  * @retval ACL_SUCCESS The function is successfully executed.

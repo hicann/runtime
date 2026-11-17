@@ -233,6 +233,7 @@ set(runtimeut_src_common_list
     ${TOP_DIR}/src/runtime/core/src/common/rt_log.cc
     ${TOP_DIR}/src/runtime/core/src/common/dev_info_manage.cc
     ${TOP_DIR}/src/runtime/core/src/common/global_state_manager.cc
+    ${TOP_DIR}/src/runtime/feature/snapshot/snapshot_socket.cc
     ${TOP_DIR}/src/runtime/core/src/common/runtime_handle_guard.cc
     ${TOP_DIR}/src/runtime/core/src/common/register_memory.cc
 )
@@ -279,7 +280,7 @@ set(runtimeut_910b_src_list
     ${TOP_DIR}/src/runtime/api/impl/api_impl_vmm.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_mbuf.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_standard_soc.cc
-    ${TOP_DIR}/src/runtime/api/impl/api_impl_snapshot.cc
+    ${TOP_DIR}/src/runtime/feature/snapshot/api_impl_snapshot.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_ipc_memory.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_soma.cc
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event.cc

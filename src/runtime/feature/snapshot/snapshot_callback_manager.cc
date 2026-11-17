@@ -20,12 +20,6 @@ static const char_t* g_snapShotStageStr[] = {"RT_SNAPSHOT_LOCK_PRE",     "RT_SNA
                                              "RT_SNAPSHOT_RESTORE_POST", "RT_SNAPSHOT_UNLOCK_POST"};
 }
 
-SnapshotCallbackManager& SnapshotCallbackManager::GetInstance()
-{
-    static SnapshotCallbackManager instance;
-    return instance;
-}
-
 const char_t* SnapshotCallbackManager::GetStageString(rtSnapShotStage stage)
 {
     if (stage >= RT_SNAPSHOT_LOCK_PRE && stage <= RT_SNAPSHOT_UNLOCK_POST) {

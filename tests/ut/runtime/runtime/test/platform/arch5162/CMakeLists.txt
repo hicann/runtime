@@ -124,7 +124,6 @@ set(runtimeut_src_api_impl_list
     ${TOP_DIR}/src/runtime/api/impl/api_impl_event.cc
     ${TOP_DIR}/src/runtime/api/impl/stub/api_impl_mbuf_stub.cc
     ${TOP_DIR}/src/runtime/api/impl/stub/api_impl_esched_stub.cc
-    ${TOP_DIR}/src/runtime/api/impl/stub/api_impl_snapshot_stub.cc
     ${TOP_DIR}/src/runtime/api/impl/stub/api_impl_rt_config_stub.cc
     ${TOP_DIR}/src/runtime/api/impl/stub/api_impl_device_topology_stub.cc
     ${TOP_DIR}/src/runtime/api/impl/stub/api_impl_ipc_memory_stub.cc
@@ -148,6 +147,7 @@ set(runtimeut_src_common_list
     ${TOP_DIR}/src/runtime/core/src/common/error_code.cc
     ${TOP_DIR}/src/runtime/core/src/common/error_message_manage.cc
     ${TOP_DIR}/src/runtime/core/src/common/global_state_manager.cc
+    ${TOP_DIR}/src/runtime/api/impl/stub/api_impl_snapshot_stub.cc
     ${TOP_DIR}/src/runtime/core/src/common/heterogenous.cc
     ${TOP_DIR}/src/runtime/core/src/common/inner_thread_local.cpp
     ${TOP_DIR}/src/runtime/core/src/common/performance_record.cc

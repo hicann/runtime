@@ -12,11 +12,15 @@
 
 #include "base.hpp"
 #include "rts_snapshot.h"
+#include "snapshot_socket.hpp"
+
+// Private Runtime bridge, not part of the deprecated installed RT headers.
+extern "C" rtError_t rtSnapShotProcessGetRestoreThreadId(int32_t* tid);
 
 namespace cce {
 namespace runtime {
 
-class ApiSnapshot {
+class ApiSnapshot : public SnapshotRequestHandler {
 public:
     ApiSnapshot() = default;
     virtual ~ApiSnapshot() = default;
@@ -28,6 +32,11 @@ public:
 
     static ApiSnapshot* Instance();
 
+    virtual void StartSnapshotService(rtChipType_t) {}
+    virtual void StopSnapshotService() {}
+
+    virtual rtError_t SnapShotProcessGetState(rtProcessState* state) = 0;
+    virtual rtError_t SnapShotProcessGetRestoreThreadId(int32_t* tid) = 0;
     virtual rtError_t SnapShotProcessLock() = 0;
     virtual rtError_t SnapShotProcessUnlock() = 0;
     virtual rtError_t SnapShotProcessBackup(const rtSnapShotBackupArgs* const args) = 0;

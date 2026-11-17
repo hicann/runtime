@@ -9,15 +9,10 @@
  */
 #include "snapshot_callback_manager.hpp"
 #include "base.hpp"
+#include "runtime.hpp"
 
 namespace cce {
 namespace runtime {
-
-SnapshotCallbackManager& SnapshotCallbackManager::GetInstance()
-{
-    static SnapshotCallbackManager instance;
-    return instance;
-}
 
 const char_t* SnapshotCallbackManager::GetStageString(rtSnapShotStage stage)
 {

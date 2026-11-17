@@ -2365,10 +2365,11 @@ typedef enum aclrtRunMode {
 ## aclrtProcessState
 
 ```c
-// 预留枚举
 typedef enum aclrtProcessState {
     ACL_RT_PROCESS_STATE_RUNNING = 0,
     ACL_RT_PROCESS_STATE_LOCKED,
+    ACL_RT_PROCESS_STATE_BACKED_UP,
+    ACL_RT_PROCESS_STATE_FAILED,
 } aclrtProcessState;
 ```
 
@@ -2378,6 +2379,8 @@ typedef enum aclrtProcessState {
 | --- | --- |
 | ACL_RT_PROCESS_STATE_RUNNING | 进程处于正常运行状态。 |
 | ACL_RT_PROCESS_STATE_LOCKED | 进程处于锁定状态，运行时接口调用会被阻塞，直至进程解除锁定。 |
+| ACL_RT_PROCESS_STATE_BACKED_UP | 进程资源已备份，尚未完成恢复。 |
+| ACL_RT_PROCESS_STATE_FAILED | 备份、恢复或相关回调失败，进程不可再解锁，应结束目标进程。 |
 
 <br>
 

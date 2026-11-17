@@ -37,6 +37,9 @@ const char* GlobalStateManager::StateToString(const rtProcessState state)
         case RT_PROCESS_STATE_BACKED_UP:
             result = "BACKED_UP";
             break;
+        case RT_PROCESS_STATE_FAILED:
+            result = "FAILED";
+            break;
         default:
             break;
     }

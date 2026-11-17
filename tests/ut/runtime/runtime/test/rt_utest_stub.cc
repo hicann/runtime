@@ -64,6 +64,7 @@
 #include "device_snapshot.hpp"
 #include "snapshot_process_helper.hpp"
 #include "snapshot_callback_manager.hpp"
+#include "snapshot_socket.hpp"
 #include "notify.hpp"
 #include "event.hpp"
 #include "xpu_task_fail_callback_data_manager.h"
@@ -805,6 +806,23 @@ TEST_F(TinyStubTest, npu_snapshot_stub)
     EXPECT_EQ(apiImplSnapshot, nullptr);
     DestroyImplSnapshot(apiImplSnapshot);
 
+    SnapshotService service;
+    EXPECT_EQ(service.StartSnapshotService(nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(service.GetSnapshotThreadId(), 0);
+    service.StopSnapshotService();
+    EXPECT_FALSE(service.started_);
+    EXPECT_EQ(service.listenFd_, EN_ERROR);
+    EXPECT_EQ(service.stopFd_, EN_ERROR);
+    EXPECT_EQ(service.directoryFd_, EN_ERROR);
+    uint32_t value = 123U;
+    const rtSnapshotOp operations[] = {rtSnapshotOp::LOCK,      rtSnapshotOp::BACKUP,
+                                       rtSnapshotOp::RESTORE,   rtSnapshotOp::UNLOCK,
+                                       rtSnapshotOp::GET_STATE, rtSnapshotOp::GET_RESTORE_THREAD_ID};
+    for (const auto op : operations) {
+        EXPECT_EQ(SnapshotSocketCall(mmGetPid(), op, nullptr, value), RT_ERROR_FEATURE_NOT_SUPPORT);
+        EXPECT_EQ(value, 123U);
+    }
+
     auto ret = rtSnapShotProcessLock();
     EXPECT_EQ(ret, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ret = rtSnapShotProcessUnlock();
@@ -1205,7 +1223,7 @@ TEST_F(TinyStubTest, device_snapshot_stub)
 
 TEST_F(TinyStubTest, snapshot_callback_manager_stub)
 {
-    SnapshotCallbackManager& manager = SnapshotCallbackManager::GetInstance();
+    SnapshotCallbackManager manager;
     EXPECT_NE(&manager, nullptr);
 
     rtError_t ret = manager.RegisterCallback(RT_SNAPSHOT_LOCK_PRE, nullptr, nullptr);
