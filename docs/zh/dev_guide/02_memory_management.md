@@ -121,7 +121,7 @@ aclrtMemMallocPolicy的设计理念是把“页大小”“兜底策略”和“
     - 数据搬运过程无需CPU参与，可以实现数据的异步传输；
     - 数据的异步传输，使传输过程和计算过程可以相互掩盖，减少传输+计算的整体时长。
 
-锁页内存可直接通过aclrtMallocHost接口申请，示例代码如下。如果需要在申请时指定内存的其他配置，例如自定义模块ID、配置VA（virtual address）一致性等，也可以使用aclrtMallocHostWithCfg接口申请。
+锁页内存可直接通过aclrtMallocHost接口申请，示例代码如下。如果需要在申请时指定内存的其他配置，例如自定义模块ID、配置VA（virtual address）一致性、指定内存页大小等，也可以使用aclrtMallocHostWithCfg接口申请。
 
 ```c
 // 资源初始化

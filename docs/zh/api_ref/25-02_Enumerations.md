@@ -58,6 +58,7 @@ enum 类型数据。
 - [aclrtLastErrLevel](#aclrtLastErrLevel)
 - [aclrtLaunchKernelAttrId](#aclrtLaunchKernelAttrId)
 - [aclrtMallocAttrType](#aclrtMallocAttrType)
+- [aclrtHostMemMallocPolicy](#aclrtHostMemMallocPolicy)
 - [aclrtMemAccessFlags](#aclrtMemAccessFlags)
 - [aclrtMemAllocationType](#aclrtMemAllocationType)
 - [aclrtMemAttr](#aclrtMemAttr)
@@ -1680,6 +1681,22 @@ typedef enum aclrtLaunchKernelAttrId {
 
 <br>
 
+<a id="aclrtHostMemMallocPolicy"></a>
+
+## aclrtHostMemMallocPolicy
+
+使用[aclrtMallocHostWithCfg](11-02_host_memory_management.md#aclrtMallocHostWithCfg)接口申请Host内存时，通过该枚举指定内存页大小。
+
+```c
+typedef enum {
+    ACL_HOST_MEM_MALLOC_NORMAL = 0,       // 4KB小页
+    ACL_HOST_MEM_MALLOC_HUGE_2M_ONLY = 1, // 2MB大页
+    ACL_HOST_MEM_MALLOC_HUGE_1G_ONLY = 3, // 1GB大页
+} aclrtHostMemMallocPolicy;
+```
+
+<br>
+
 <a id="aclrtMallocAttrType"></a>
 
 ## aclrtMallocAttrType
@@ -1690,6 +1707,7 @@ typedef enum {
     ACL_RT_MEM_ATTR_MODULE_ID,  // 表示模块ID
     ACL_RT_MEM_ATTR_DEVICE_ID,  // 表示Device ID
     ACL_RT_MEM_ATTR_VA_FLAG,    // 使用aclrtMallocHostWithCfg接口申请Host内存时，是否使用VA（virtual address）一致性功能
+    ACL_RT_MEM_ATTR_HOST_MEM_MALLOC_POLICY, // 表示内存页大小策略，在使用aclrtMallocHostWithCfg接口申请Host内存时可指定
 } aclrtMallocAttrType;
 ```
 

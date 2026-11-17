@@ -996,3 +996,18 @@ TEST_F(UTEST_ACL_compatibility_cast_check, aclmdlRICondTaskParams)
 
     EXPECT_EQ(sizeof(aclmdlRICondTaskParams), sizeof(rtCondTaskParams));
 }
+
+TEST_F(UTEST_ACL_compatibility_cast_check, aclrtHostMemMallocPolicy)
+{
+    EXPECT_EQ(
+        static_cast<int>(ACL_RT_MEM_ATTR_HOST_MEM_MALLOC_POLICY),
+        static_cast<int>(RT_MEM_MALLOC_ATTR_HOST_MEM_MALLOC_POLICY));
+    EXPECT_EQ(static_cast<int>(ACL_HOST_MEM_MALLOC_NORMAL), 0);
+    EXPECT_EQ(static_cast<int>(ACL_HOST_MEM_MALLOC_HUGE_2M_ONLY), 1);
+    EXPECT_EQ(static_cast<int>(ACL_HOST_MEM_MALLOC_HUGE_1G_ONLY), 3);
+    EXPECT_EQ(static_cast<int>(ACL_HOST_MEM_MALLOC_NORMAL), static_cast<int>(RT_HOST_MEM_MALLOC_NORMAL));
+    EXPECT_EQ(static_cast<int>(ACL_HOST_MEM_MALLOC_HUGE_2M_ONLY), static_cast<int>(RT_HOST_MEM_MALLOC_HUGE_2M_ONLY));
+    EXPECT_EQ(static_cast<int>(ACL_HOST_MEM_MALLOC_HUGE_1G_ONLY), static_cast<int>(RT_HOST_MEM_MALLOC_HUGE_1G_ONLY));
+    EXPECT_EQ(sizeof(aclrtHostMemMallocPolicy), sizeof(rtHostMemMallocPolicy));
+    EXPECT_EQ(sizeof(aclrtMallocAttrValue), 8U);
+}

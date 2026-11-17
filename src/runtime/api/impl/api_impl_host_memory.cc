@@ -29,7 +29,8 @@
 #include "utils.h"
 
 namespace {
-constexpr char_t MALLOC_ATTR_MODULE_ID_EXPECT_DESC[] = "MEM_MALLOC_ATTR_MODULE_ID(1)";
+constexpr char_t MALLOC_ATTR_MODULE_ID_EXPECT_DESC[] =
+    "MEM_MALLOC_ATTR_MODULE_ID(1), MEM_MALLOC_ATTR_VA_FLAG(3), MEM_MALLOC_ATTR_HOST_MEM_MALLOC_POLICY(4)";
 } // namespace
 
 namespace cce {
@@ -143,7 +144,7 @@ void ApiImplHostMemory::CheckMallocHostCfg(uint16_t* moduleId) const
 }
 
 rtError_t ApiImplHostMemory::GetMallocHostConfigAttr(
-    rtMallocAttribute_t* attr, uint16_t* moduleId, uint32_t* vaFlag) const
+    rtMallocAttribute_t* attr, uint16_t* moduleId, uint32_t* vaFlag, uint32_t* hostMemMallocPolicy) const
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         attr, RT_ERROR_INVALID_VALUE, "Obtaining the configuration attributes of the memory allocated on the host");
@@ -158,6 +159,18 @@ rtError_t ApiImplHostMemory::GetMallocHostConfigAttr(
         return RT_ERROR_NONE;
     }
 
+    if (attr->attr == RT_MEM_MALLOC_ATTR_HOST_MEM_MALLOC_POLICY) {
+        const auto policy = attr->value.hostMemMallocPolicy;
+        COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
+            policy != RT_HOST_MEM_MALLOC_NORMAL && policy != RT_HOST_MEM_MALLOC_HUGE_2M_ONLY &&
+                policy != RT_HOST_MEM_MALLOC_HUGE_1G_ONLY,
+            RT_ERROR_INVALID_VALUE, "Obtaining the configuration attributes of the memory allocated on the host",
+            HostMemMallocPolicyToString(policy).c_str(), "hostMemMallocPolicy",
+            "HOST_MEM_MALLOC_NORMAL(0), HOST_MEM_MALLOC_HUGE_2M_ONLY(1), HOST_MEM_MALLOC_HUGE_1G_ONLY(3)");
+        *hostMemMallocPolicy = static_cast<uint32_t>(policy);
+        return RT_ERROR_NONE;
+    }
+
     // 申请内存的接口不支持传入其他类型cfg
     RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
         ErrorCode::EE1003, "Obtaining the configuration attributes of the memory allocated on the host",
@@ -166,16 +179,25 @@ rtError_t ApiImplHostMemory::GetMallocHostConfigAttr(
 }
 
 rtError_t ApiImplHostMemory::GetMallocHostConfigInfo(
-    const rtMallocConfig_t* cfg, uint16_t* moduleId, uint32_t* vaFlag) const
+    const rtMallocConfig_t* cfg, uint16_t* moduleId, uint32_t* vaFlag, uint32_t* hostMemMallocPolicy) const
 {
     rtError_t error = RT_ERROR_NONE;
     for (uint32_t i = 0U; i < cfg->numAttrs; i++) {
         rtMallocAttribute_t* attr = &(cfg->attrs[i]);
-        error = GetMallocHostConfigAttr(attr, moduleId, vaFlag);
+        error = GetMallocHostConfigAttr(attr, moduleId, vaFlag, hostMemMallocPolicy);
         if (error != RT_ERROR_NONE) {
             return error;
         }
     }
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
+        *vaFlag == 1U && *hostMemMallocPolicy == RT_HOST_MEM_MALLOC_NORMAL, RT_ERROR_INVALID_VALUE,
+        "Obtaining the configuration attributes of the memory allocated on the host",
+        RtFmtMsg(
+            "vaFlag=%u, hostMemMallocPolicy=%s", *vaFlag,
+            HostMemMallocPolicyToString(static_cast<rtHostMemMallocPolicy>(*hostMemMallocPolicy)).c_str()),
+        "vaFlag, hostMemMallocPolicy",
+        "When vaFlag=1, hostMemMallocPolicy must be HOST_MEM_MALLOC_HUGE_2M_ONLY(1) or "
+        "HOST_MEM_MALLOC_HUGE_1G_ONLY(3)");
     CheckMallocHostCfg(moduleId);
     return RT_ERROR_NONE;
 }
@@ -185,6 +207,7 @@ rtError_t ApiImplHostMemory::HostMallocWithCfg(void** const hostPtr, const uint6
     Runtime* const runtime = Runtime::Instance();
     uint16_t moduleId = static_cast<uint16_t>(MODULEID_RUNTIME);
     uint32_t vaFlag = 0U;
+    uint32_t hostMemMallocPolicy = UINT32_MAX; // Preserve driver defaults when no policy is configured.
     if (runtime != nullptr) {
         runtime->CallApiBegin(RT_PROF_API_HOST_MALLOC);
     }
@@ -196,7 +219,7 @@ rtError_t ApiImplHostMemory::HostMallocWithCfg(void** const hostPtr, const uint6
         if (cfg != nullptr) {
             NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
                 cfg->attrs, RT_ERROR_INVALID_VALUE, "Allocating host memory based on the configuration attributes");
-            ret = GetMallocHostConfigInfo(cfg, &moduleId, &vaFlag);
+            ret = GetMallocHostConfigInfo(cfg, &moduleId, &vaFlag, &hostMemMallocPolicy);
             ERROR_RETURN(ret, "Host memory malloc failed, size=%" PRIu64 "(bytes)", size);
         }
 
@@ -209,7 +232,8 @@ rtError_t ApiImplHostMemory::HostMallocWithCfg(void** const hostPtr, const uint6
         // 32 byte align
         const uint64_t curSize = (((size + 0x1FU) >> 5U) << 5U);
 
-        ret = curCtx->Device_()->Driver_()->HostMemAlloc(hostPtr, curSize, curCtx->Device_()->Id_(), moduleId, vaFlag);
+        ret = curCtx->Device_()->Driver_()->HostMemAlloc(
+            hostPtr, curSize, curCtx->Device_()->Id_(), moduleId, vaFlag, hostMemMallocPolicy);
         if ((ret == RT_ERROR_NONE) && (runtime != nullptr)) {
             const uint64_t addr = (hostPtr == nullptr) ? 0U : RtPtrToValue(*hostPtr);
             runtime->FillRuntimeMemMngExtInfo(addr, size, RT_PROF_MEM_MNG_TYPE_MALLOC, MSPROF_MEMORY_TYPE_HOST);

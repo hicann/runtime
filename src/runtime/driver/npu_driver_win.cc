@@ -1544,13 +1544,15 @@ rtError_t NpuDriver::GetSqRegVirtualAddrBySqid(
 }
 
 rtError_t NpuDriver::HostMemAlloc(
-    void** const dptr, const uint64_t size, const uint32_t deviceId, const uint16_t moduleId, const uint32_t vaFlag)
+    void** const dptr, const uint64_t size, const uint32_t deviceId, const uint16_t moduleId, const uint32_t vaFlag,
+    const uint32_t hostMemMallocPolicy)
 {
     UNUSED(dptr);
     UNUSED(size);
     UNUSED(deviceId);
     UNUSED(moduleId);
     UNUSED(vaFlag);
+    UNUSED(hostMemMallocPolicy);
     return RT_ERROR_NONE;
 }
 

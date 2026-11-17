@@ -898,7 +898,8 @@ rtError_t NpuDriver::MemManagedAdvise(
  * ======================================================== */
 
 rtError_t NpuDriver::HostMemAlloc(
-    void** const dptr, const uint64_t size, const uint32_t deviceId, const uint16_t moduleId, const uint32_t vaFlag)
+    void** const dptr, const uint64_t size, const uint32_t deviceId, const uint16_t moduleId, const uint32_t vaFlag,
+    const uint32_t hostMemMallocPolicy)
 {
     uint64_t drvFlag = static_cast<uint64_t>(MEM_SET_ALIGN_SIZE(9ULL)) | static_cast<uint64_t>(MEM_HOST);
     if (vaFlag == 1U) {
@@ -909,6 +910,16 @@ rtError_t NpuDriver::HostMemAlloc(
         drvFlag = static_cast<uint64_t>(MEM_SET_ALIGN_SIZE(9ULL)) | static_cast<uint64_t>(MEM_HOST_UVA);
     }
 
+    if (hostMemMallocPolicy != UINT32_MAX) {
+        drvFlag &= ~(static_cast<uint64_t>(MEM_PAGE_HUGE) | static_cast<uint64_t>(MEM_PAGE_GIANT));
+        if (hostMemMallocPolicy == RT_HOST_MEM_MALLOC_HUGE_2M_ONLY) {
+            drvFlag |= static_cast<uint64_t>(MEM_PAGE_HUGE);
+        } else if (hostMemMallocPolicy == RT_HOST_MEM_MALLOC_HUGE_1G_ONLY) {
+            drvFlag |= static_cast<uint64_t>(MEM_PAGE_GIANT);
+        } else if (hostMemMallocPolicy != RT_HOST_MEM_MALLOC_NORMAL) {
+            return RT_ERROR_INVALID_VALUE;
+        }
+    }
     drvFlag = FlagAddModuleId(drvFlag, moduleId);
     const drvError_t drvRet = halMemAlloc(dptr, static_cast<UINT64>(size), static_cast<UINT64>(drvFlag));
     if (drvRet != DRV_ERROR_NONE) {

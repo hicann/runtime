@@ -329,6 +329,7 @@ const char_t* DrvMemTypeToName(const drv_mem_type memType);
 const char_t* MemSharedHandleTypeToString(const rtMemSharedHandleType type);
 std::string ManagedMemLocationTypeToString(const rtMemManagedLocationType type);
 const char_t* MallocAttrToString(const rtMallocAttr attr);
+std::string HostMemMallocPolicyToString(const rtHostMemMallocPolicy policy);
 const char_t* FloatOverflowModeToString(const rtFloatOverflowMode_t mode);
 std::string MemLocationTypeToString(const rtMemLocationType type);
 std::string CmoOpCodeToString(const rtCmoOpCode_t opCode);

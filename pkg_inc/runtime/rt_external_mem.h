@@ -845,18 +845,26 @@ typedef enum {
 } rtMallocAdvise;
 
 typedef enum {
+    RT_HOST_MEM_MALLOC_NORMAL = 0,       // 4K小页
+    RT_HOST_MEM_MALLOC_HUGE_2M_ONLY = 1, // 2M大页
+    RT_HOST_MEM_MALLOC_HUGE_1G_ONLY = 3, // 1G大页
+} rtHostMemMallocPolicy;
+
+typedef enum {
     RT_MEM_MALLOC_ATTR_RSV = 0,
-    RT_MEM_MALLOC_ATTR_MODULE_ID, // 申请内存的模块id
-    RT_MEM_MALLOC_ATTR_DEVICE_ID, // 指定deviceId申请内存
-    RT_MEM_MALLOC_ATTR_VA_FLAG,   // 设置VA相关特性
+    RT_MEM_MALLOC_ATTR_MODULE_ID,              // 申请内存的模块id
+    RT_MEM_MALLOC_ATTR_DEVICE_ID,              // 指定deviceId申请内存
+    RT_MEM_MALLOC_ATTR_VA_FLAG,                // 设置VA相关特性
+    RT_MEM_MALLOC_ATTR_HOST_MEM_MALLOC_POLICY, // 指定Host内存页大小
     RT_MEM_MALLOC_ATTR_MAX
 } rtMallocAttr;
 
 typedef union {
-    uint16_t moduleId; // 默认不配置时，为RUNTIME_ID
-    uint32_t deviceId; // 默认不配置时，为ctx的deviceId
-    uint32_t vaFlag;   // 默认不配置时，不使能此VA相关特性
-    uint8_t rsv[8];    // 预留8字节
+    uint16_t moduleId;                         // 默认不配置时，为RUNTIME_ID
+    uint32_t deviceId;                         // 默认不配置时，为ctx的deviceId
+    uint32_t vaFlag;                           // 默认不配置时，不使能此VA相关特性
+    rtHostMemMallocPolicy hostMemMallocPolicy; // 默认不配置时，保留驱动默认页大小
+    uint8_t rsv[8];                            // 预留8字节
 } rtMallocAttrValue;
 
 typedef struct {

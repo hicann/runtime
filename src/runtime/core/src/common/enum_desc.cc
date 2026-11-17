@@ -254,6 +254,20 @@ const char_t* MemSharedHandleTypeToString(const rtMemSharedHandleType type)
     return enumBuf;
 }
 
+std::string HostMemMallocPolicyToString(const rtHostMemMallocPolicy policy)
+{
+    switch (policy) {
+        case RT_HOST_MEM_MALLOC_NORMAL:
+            return "HOST_MEM_MALLOC_NORMAL(0)";
+        case RT_HOST_MEM_MALLOC_HUGE_2M_ONLY:
+            return "HOST_MEM_MALLOC_HUGE_2M_ONLY(1)";
+        case RT_HOST_MEM_MALLOC_HUGE_1G_ONLY:
+            return "HOST_MEM_MALLOC_HUGE_1G_ONLY(3)";
+        default:
+            return "UNKNOWN(" + std::to_string(static_cast<int32_t>(policy)) + ")";
+    }
+}
+
 const char_t* MallocAttrToString(const rtMallocAttr attr)
 {
     switch (attr) {
@@ -265,8 +279,10 @@ const char_t* MallocAttrToString(const rtMallocAttr attr)
             return "MEM_MALLOC_ATTR_DEVICE_ID(2)";
         case RT_MEM_MALLOC_ATTR_VA_FLAG:
             return "MEM_MALLOC_ATTR_VA_FLAG(3)";
+        case RT_MEM_MALLOC_ATTR_HOST_MEM_MALLOC_POLICY:
+            return "MEM_MALLOC_ATTR_HOST_MEM_MALLOC_POLICY(4)";
         case RT_MEM_MALLOC_ATTR_MAX:
-            return "MEM_MALLOC_ATTR_MAX(4)";
+            return "MEM_MALLOC_ATTR_MAX(5)";
         default:
             break;
     }

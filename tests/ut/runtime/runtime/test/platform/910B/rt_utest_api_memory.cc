@@ -1250,3 +1250,51 @@ TEST_F(RtMemRegisterApiTest, host_register_forall_olddrv)
 
     GlobalMockObject::verify();
 }
+
+TEST_F(RtMemoryApiTest, HostMallocWithCfgInvalidPagePolicy)
+{
+    ApiHostMemory* api = ApiHostMemory::Instance();
+    ASSERT_NE(api, nullptr);
+    void* ptr = nullptr;
+    rtMallocAttribute_t attr = {};
+    attr.attr = RT_MEM_MALLOC_ATTR_HOST_MEM_MALLOC_POLICY;
+    rtMallocConfig_t cfg = {&attr, 1U};
+    // Keep this list in sync with rtHostMemMallocPolicy when adding policies.
+    // The value between HUGE_2M_ONLY and HUGE_1G_ONLY is currently reserved.
+    const int32_t invalidPolicies[] = {
+        static_cast<int32_t>(RT_HOST_MEM_MALLOC_NORMAL) - 1, static_cast<int32_t>(RT_HOST_MEM_MALLOC_HUGE_2M_ONLY) + 1,
+        static_cast<int32_t>(RT_HOST_MEM_MALLOC_HUGE_1G_ONLY) + 1};
+    for (const auto policy : invalidPolicies) {
+        attr.value.hostMemMallocPolicy = static_cast<rtHostMemMallocPolicy>(policy);
+        EXPECT_EQ(api->HostMallocWithCfg(&ptr, 4096U, &cfg), RT_ERROR_INVALID_VALUE);
+    }
+}
+
+TEST_F(RtMemoryApiTest, HostMallocWithCfgPagePolicies)
+{
+    ApiHostMemory* api = ApiHostMemory::Instance();
+    ASSERT_NE(api, nullptr);
+    rtMallocAttribute_t attrs[2] = {};
+    attrs[0].attr = RT_MEM_MALLOC_ATTR_VA_FLAG;
+    attrs[1].attr = RT_MEM_MALLOC_ATTR_HOST_MEM_MALLOC_POLICY;
+    rtMallocConfig_t cfg = {attrs, 2U};
+    const rtHostMemMallocPolicy policies[] = {
+        RT_HOST_MEM_MALLOC_NORMAL, RT_HOST_MEM_MALLOC_HUGE_2M_ONLY, RT_HOST_MEM_MALLOC_HUGE_1G_ONLY};
+    for (uint32_t vaFlag = 0U; vaFlag <= 1U; ++vaFlag) {
+        attrs[0].value.vaFlag = vaFlag;
+        for (const auto policy : policies) {
+            attrs[1].value.hostMemMallocPolicy = policy;
+            void* ptr = nullptr;
+            if (vaFlag == 1U && policy == RT_HOST_MEM_MALLOC_NORMAL) {
+                EXPECT_EQ(api->HostMallocWithCfg(&ptr, 4096U, &cfg), RT_ERROR_INVALID_VALUE);
+                // Attribute order must not affect validation.
+                rtMallocAttribute_t reversedAttrs[] = {attrs[1], attrs[0]};
+                rtMallocConfig_t reversedCfg = {reversedAttrs, 2U};
+                EXPECT_EQ(api->HostMallocWithCfg(&ptr, 4096U, &reversedCfg), RT_ERROR_INVALID_VALUE);
+                continue;
+            }
+            ASSERT_EQ(api->HostMallocWithCfg(&ptr, 4096U, &cfg), RT_ERROR_NONE);
+            EXPECT_EQ(api->HostFree(ptr), RT_ERROR_NONE);
+        }
+    }
+}

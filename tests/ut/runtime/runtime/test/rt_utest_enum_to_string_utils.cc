@@ -470,7 +470,9 @@ TEST(EnumToStringUtilsTest, CommonDataAndMemoryEnumsAllKnownValues)
     EXPECT_STREQ(MallocAttrToString(RT_MEM_MALLOC_ATTR_MODULE_ID), "MEM_MALLOC_ATTR_MODULE_ID(1)");
     EXPECT_STREQ(MallocAttrToString(RT_MEM_MALLOC_ATTR_DEVICE_ID), "MEM_MALLOC_ATTR_DEVICE_ID(2)");
     EXPECT_STREQ(MallocAttrToString(RT_MEM_MALLOC_ATTR_VA_FLAG), "MEM_MALLOC_ATTR_VA_FLAG(3)");
-    EXPECT_STREQ(MallocAttrToString(RT_MEM_MALLOC_ATTR_MAX), "MEM_MALLOC_ATTR_MAX(4)");
+    EXPECT_STREQ(
+        MallocAttrToString(RT_MEM_MALLOC_ATTR_HOST_MEM_MALLOC_POLICY), "MEM_MALLOC_ATTR_HOST_MEM_MALLOC_POLICY(4)");
+    EXPECT_STREQ(MallocAttrToString(RT_MEM_MALLOC_ATTR_MAX), "MEM_MALLOC_ATTR_MAX(5)");
     EXPECT_STREQ(FloatOverflowModeToString(RT_OVERFLOW_MODE_SATURATION), "OVERFLOW_MODE_SATURATION(0)");
     EXPECT_STREQ(FloatOverflowModeToString(RT_OVERFLOW_MODE_INFNAN), "OVERFLOW_MODE_INFNAN(1)");
     EXPECT_STREQ(FloatOverflowModeToString(RT_OVERFLOW_MODE_UNDEF), "OVERFLOW_MODE_UNDEF(2)");
@@ -672,4 +674,12 @@ TEST(EnumToStringUtilsTest, KernelMixTypeToStringAllKnownValues)
 TEST(EnumToStringUtilsTest, KernelMixTypeToStringUnknownValue)
 {
     EXPECT_EQ(KernelMixTypeToString(static_cast<uint8_t>(100U)), "UNKNOWN(100)");
+}
+
+TEST(EnumToStringUtilsTest, HostMemMallocPolicyToString)
+{
+    EXPECT_EQ(HostMemMallocPolicyToString(RT_HOST_MEM_MALLOC_NORMAL), "HOST_MEM_MALLOC_NORMAL(0)");
+    EXPECT_EQ(HostMemMallocPolicyToString(RT_HOST_MEM_MALLOC_HUGE_2M_ONLY), "HOST_MEM_MALLOC_HUGE_2M_ONLY(1)");
+    EXPECT_EQ(HostMemMallocPolicyToString(RT_HOST_MEM_MALLOC_HUGE_1G_ONLY), "HOST_MEM_MALLOC_HUGE_1G_ONLY(3)");
+    EXPECT_EQ(HostMemMallocPolicyToString(static_cast<rtHostMemMallocPolicy>(2)), "UNKNOWN(2)");
 }

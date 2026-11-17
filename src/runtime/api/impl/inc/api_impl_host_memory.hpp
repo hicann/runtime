@@ -37,8 +37,10 @@ public:
 
 private:
     void CheckMallocHostCfg(uint16_t* moduleId) const;
-    rtError_t GetMallocHostConfigAttr(rtMallocAttribute_t* attr, uint16_t* moduleId, uint32_t* vaFlag) const;
-    rtError_t GetMallocHostConfigInfo(const rtMallocConfig_t* cfg, uint16_t* moduleId, uint32_t* vaFlag) const;
+    rtError_t GetMallocHostConfigAttr(
+        rtMallocAttribute_t* attr, uint16_t* moduleId, uint32_t* vaFlag, uint32_t* hostMemMallocPolicy) const;
+    rtError_t GetMallocHostConfigInfo(
+        const rtMallocConfig_t* cfg, uint16_t* moduleId, uint32_t* vaFlag, uint32_t* hostMemMallocPolicy) const;
 };
 
 } // namespace runtime

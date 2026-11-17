@@ -163,3 +163,57 @@ TEST_F(DriverTest, register_driver_fail)
     EXPECT_EQ(ret, false);
     delete rawDrv;
 }
+
+TEST_F(DriverTest, HostMemAllocPagePolicies)
+{
+    NpuDriver driver;
+    void* ptr = nullptr;
+    const uint32_t policies[] = {
+        RT_HOST_MEM_MALLOC_NORMAL, RT_HOST_MEM_MALLOC_HUGE_2M_ONLY, RT_HOST_MEM_MALLOC_HUGE_1G_ONLY};
+    const uint64_t pageFlags[] = {MEM_PAGE_NORMAL, MEM_PAGE_HUGE, MEM_PAGE_GIANT};
+    for (uint32_t vaFlag = 0U; vaFlag <= 1U; ++vaFlag) {
+        for (size_t i = 0U; i < sizeof(policies) / sizeof(policies[0]); ++i) {
+            MOCKER(NpuDriver::CheckIsSupportFeature).stubs().will(returnValue(true));
+            const uint64_t flags = static_cast<uint64_t>(MEM_SET_ALIGN_SIZE(9ULL)) |
+                                   static_cast<uint64_t>(vaFlag == 1U ? MEM_HOST_UVA : MEM_HOST) | pageFlags[i];
+            MOCKER(halMemAlloc)
+                .expects(once())
+                .with(mockcpp::any(), eq(static_cast<UINT64>(4096U)), eq(static_cast<UINT64>(flags)))
+                .will(returnValue(DRV_ERROR_NONE));
+            EXPECT_EQ(driver.HostMemAlloc(&ptr, 4096U, 0U, 0U, vaFlag, policies[i]), RT_ERROR_NONE);
+            GlobalMockObject::verify();
+        }
+        GlobalMockObject::verify();
+    }
+}
+
+TEST_F(DriverTest, HostMemAllocInvalidPagePolicy)
+{
+    NpuDriver driver;
+    void* ptr = nullptr;
+    const uint32_t invalidPolicy = static_cast<uint32_t>(RT_HOST_MEM_MALLOC_HUGE_1G_ONLY) + 1U;
+    for (uint32_t vaFlag = 0U; vaFlag <= 1U; ++vaFlag) {
+        MOCKER(NpuDriver::CheckIsSupportFeature).stubs().will(returnValue(true));
+        MOCKER(halMemAlloc).expects(never());
+        EXPECT_EQ(driver.HostMemAlloc(&ptr, 4096U, 0U, 0U, vaFlag, invalidPolicy), RT_ERROR_INVALID_VALUE);
+        GlobalMockObject::verify();
+    }
+}
+
+TEST_F(DriverTest, HostMemAllocWithoutPagePolicyPreservesDriverDefaults)
+{
+    NpuDriver driver;
+    void* ptr = nullptr;
+    // Omitting the policy uses the internal UINT32_MAX sentinel, not a public policy.
+    for (uint32_t vaFlag = 0U; vaFlag <= 1U; ++vaFlag) {
+        MOCKER(NpuDriver::CheckIsSupportFeature).stubs().will(returnValue(true));
+        const uint64_t flags = static_cast<uint64_t>(MEM_SET_ALIGN_SIZE(9ULL)) |
+                               static_cast<uint64_t>(vaFlag == 1U ? MEM_HOST_UVA : MEM_HOST);
+        MOCKER(halMemAlloc)
+            .expects(once())
+            .with(mockcpp::any(), eq(static_cast<UINT64>(4096U)), eq(static_cast<UINT64>(flags)))
+            .will(returnValue(DRV_ERROR_NONE));
+        EXPECT_EQ(driver.HostMemAlloc(&ptr, 4096U, 0U, 0U, vaFlag), RT_ERROR_NONE);
+        GlobalMockObject::verify();
+    }
+}

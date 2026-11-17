@@ -210,16 +210,24 @@ typedef enum {
 } aclrtHostRegisterType;
 
 typedef enum {
+    ACL_HOST_MEM_MALLOC_NORMAL = 0,       // 4K小页
+    ACL_HOST_MEM_MALLOC_HUGE_2M_ONLY = 1, // 2M大页
+    ACL_HOST_MEM_MALLOC_HUGE_1G_ONLY = 3, // 1G大页
+} aclrtHostMemMallocPolicy;
+
+typedef enum {
     ACL_RT_MEM_ATTR_RSV = 0,
     ACL_RT_MEM_ATTR_MODULE_ID,
     ACL_RT_MEM_ATTR_DEVICE_ID,
     ACL_RT_MEM_ATTR_VA_FLAG,
+    ACL_RT_MEM_ATTR_HOST_MEM_MALLOC_POLICY,
 } aclrtMallocAttrType;
 
 typedef union {
     uint16_t moduleId;
     uint32_t deviceId;
     uint32_t vaFlag;
+    aclrtHostMemMallocPolicy hostMemMallocPolicy;
     uint8_t rsv[8];
 } aclrtMallocAttrValue;
 
