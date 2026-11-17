@@ -39,7 +39,7 @@ const std::map<std::string, std::vector<tsd::ChipType_t>> PKG_CHIP_SUPPORT_MAP =
     {"mc2_server.tar.gz", {tsd::CHIP_ASCEND_950, tsd::CHIP_CLOUD_V5, tsd::CHIP_ASCEND_350}},
     {"aicpu_hcomm.tar.gz",
      {tsd::CHIP_DC, tsd::CHIP_ASCEND_910B, tsd::CHIP_ASCEND_950, tsd::CHIP_ASCEND_350, tsd::CHIP_CLOUD_V5}},
-    {"asccomm_aicpu.tar.gz", {tsd::CHIP_ASCEND_950, tsd::CHIP_ASCEND_350}},
+    {"asccomm_aicpu.tar.gz", {tsd::CHIP_ASCEND_950, tsd::CHIP_CLOUD_V5, tsd::CHIP_ASCEND_350}},
     {"cann-hcomm-compat.tar.gz",
      {tsd::CHIP_ASCEND_910B, tsd::CHIP_ASCEND_950, tsd::CHIP_ASCEND_350, tsd::CHIP_CLOUD_V5}},
     {HCCD_PKG_NAME, {tsd::CHIP_ASCEND_910B}},

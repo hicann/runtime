@@ -57,6 +57,7 @@ protected:
     virtual void SetUp()
     {
         ResetErrLog();
+        system("mkdir -p " PATH_ROOT);
         system("rm -rf " PATH_ROOT "/*");
         system("echo [DBG][TEST][`date +%Y-%m-%d-%H-%M-%S`] Start test case");
     }
