@@ -77,6 +77,8 @@ static const char* DevInfoTypeName(const int32_t type)
             return "INFO_TYPE_L2BUFF_RESUME_CNT";
         case INFO_TYPE_L2BUFF_INVALID_CACHE:
             return "INFO_TYPE_L2BUFF_INVALID_CACHE";
+        case INFO_TYPE_L2_PERSIST_CAP:
+            return "INFO_TYPE_L2_PERSIST_CAP";
         default:
             return "UNKNOWN";
     }

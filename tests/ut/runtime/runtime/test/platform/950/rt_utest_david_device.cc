@@ -11,6 +11,7 @@
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 #include "securec.h"
+#include <cstdlib>
 #include <stdalign.h>
 #include <thread>
 #include <vector>
@@ -49,6 +50,8 @@
 #include "device_debug_c.hpp"
 #include "inner_kernel.h"
 #include "errcode_manage.hpp"
+#include "platform/platform_info.h"
+#include "platform_manager_v2.h"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -815,4 +818,206 @@ TEST_F(DavidDeviceLimitTest, SetLimit_SimtFifo_MaxValue_Success)
 {
     rtError_t ret = rtDeviceSetLimit(0, RT_LIMIT_TYPE_SIMT_PRINTF_FIFO_SIZE, 64U * 1024U * 1024U);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+}
+
+class PersistingL2CacheTest : public DavidDeviceLimitTest {
+protected:
+    void SetUp() override
+    {
+        DavidDeviceLimitTest::SetUp();
+        for (uint32_t deviceId = 0U; deviceId < 2U; ++deviceId) {
+            oldPersistingL2CacheSet_[deviceId] = Runtime::Instance()->persistingL2CacheSet_[deviceId].load();
+            Runtime::Instance()->persistingL2CacheSet_[deviceId].store(false);
+            driverInfo_[deviceId] = {};
+        }
+        capacity_ = "1024";
+        MOCKER_CPP(
+            &fe::PlatFormInfos::GetPlatformResWithLock,
+            bool(fe::PlatFormInfos::*)(const std::string&, const std::string&, std::string&))
+            .stubs()
+            .will(invoke(GetL2CapacityStub));
+    }
+
+    void TearDown() override
+    {
+        for (uint32_t deviceId = 0U; deviceId < 2U; ++deviceId) {
+            Runtime::Instance()->persistingL2CacheSet_[deviceId].store(oldPersistingL2CacheSet_[deviceId]);
+        }
+        capacity_ = "1024";
+        DavidDeviceLimitTest::TearDown();
+    }
+
+    static bool GetL2CapacityStub(
+        fe::PlatFormInfos*, const std::string& label, const std::string& key, std::string& value)
+    {
+        EXPECT_EQ(label, "SoCInfo");
+        EXPECT_EQ(key, "l2_size");
+        value = capacity_;
+        return !value.empty();
+    }
+
+    static drvError_t SetPersistingL2CacheStub(
+        uint32_t deviceId, int32_t moduleType, int32_t infoType, void* buf, int32_t size)
+    {
+        EXPECT_LT(deviceId, 2U);
+        if (deviceId >= 2U) {
+            return DRV_ERROR_INVALID_VALUE;
+        }
+        EXPECT_EQ(moduleType, MODULE_TYPE_QOS);
+        EXPECT_EQ(infoType, INFO_TYPE_L2_PERSIST_CAP);
+        EXPECT_EQ(size, static_cast<int32_t>(sizeof(L2CachePersistConfig)));
+        const auto* info = static_cast<const L2CachePersistConfig*>(buf);
+        // An all-zero config resets persistence; ordinary sets carry the total capacity.
+        if (info->total_capacity == 0U) {
+            EXPECT_EQ(info->persist_capacity, 0U);
+        } else {
+            EXPECT_EQ(info->total_capacity, 1024U);
+        }
+        EXPECT_LE(info->persist_capacity, info->total_capacity);
+        for (const int32_t reserved : info->reserved) {
+            EXPECT_EQ(reserved, 0);
+        }
+        driverInfo_[deviceId] = *info;
+        return DRV_ERROR_NONE;
+    }
+
+    static drvError_t GetPersistingL2CacheStub(
+        uint32_t deviceId, int32_t moduleType, int32_t infoType, void* buf, int32_t* size)
+    {
+        EXPECT_LT(deviceId, 2U);
+        if (deviceId >= 2U) {
+            return DRV_ERROR_INVALID_VALUE;
+        }
+        EXPECT_EQ(moduleType, MODULE_TYPE_QOS);
+        EXPECT_EQ(infoType, INFO_TYPE_L2_PERSIST_CAP);
+        EXPECT_EQ(*size, static_cast<int32_t>(sizeof(L2CachePersistConfig)));
+        *static_cast<L2CachePersistConfig*>(buf) = driverInfo_[deviceId];
+        *size = static_cast<int32_t>(sizeof(L2CachePersistConfig));
+        return DRV_ERROR_NONE;
+    }
+
+    static L2CachePersistConfig driverInfo_[2];
+    static std::string capacity_;
+    bool oldPersistingL2CacheSet_[2]{};
+};
+
+L2CachePersistConfig PersistingL2CacheTest::driverInfo_[2]{};
+std::string PersistingL2CacheTest::capacity_{"1024"};
+
+TEST_F(PersistingL2CacheTest, SetThenGetReturnsConfiguredValue)
+{
+    static_assert(sizeof(L2CachePersistConfig) == 40U, "Invalid L2 cache persistence driver ABI size");
+    MOCKER(halSetDeviceInfoByBuff).expects(exactly(3)).will(invoke(SetPersistingL2CacheStub));
+    MOCKER(halGetDeviceInfoByBuff).expects(exactly(3)).will(invoke(GetPersistingL2CacheStub));
+    // The current context is bound to device 0; the fixed API devId must not select the driver device.
+    for (const uint32_t configuredValue : {0U, 512U, 1024U}) {
+        SCOPED_TRACE(configuredValue);
+        EXPECT_EQ(rtDeviceSetLimit(1, RT_LIMIT_TYPE_PERSISTING_L2CACHE_SIZE, configuredValue), RT_ERROR_NONE);
+        EXPECT_EQ(driverInfo_[0].persist_capacity, configuredValue);
+        EXPECT_TRUE(Runtime::Instance()->persistingL2CacheSet_[0].load());
+        uint32_t value = UINT32_MAX;
+        EXPECT_EQ(rtDeviceGetLimit(RT_LIMIT_TYPE_PERSISTING_L2CACHE_SIZE, &value), RT_ERROR_NONE);
+        EXPECT_EQ(value, configuredValue);
+    }
+}
+
+TEST_F(PersistingL2CacheTest, SetInvalidValueDoesNotCallHal)
+{
+    MOCKER(halSetDeviceInfoByBuff).expects(never());
+    const bool wasSet = Runtime::Instance()->persistingL2CacheSet_[0].load();
+    for (const uint32_t value : {1025U, static_cast<uint32_t>(-1)}) {
+        SCOPED_TRACE(value);
+        EXPECT_EQ(rtDeviceSetLimit(0, RT_LIMIT_TYPE_PERSISTING_L2CACHE_SIZE, value), ACL_ERROR_RT_PARAM_INVALID);
+        EXPECT_EQ(Runtime::Instance()->persistingL2CacheSet_[0].load(), wasSet);
+    }
+}
+
+TEST_F(PersistingL2CacheTest, SetHalFailurePreservesSuccessFlag)
+{
+    MOCKER(halSetDeviceInfoByBuff).expects(once()).will(returnValue(DRV_ERROR_NOT_SUPPORT));
+    const bool wasSet = Runtime::Instance()->persistingL2CacheSet_[0].load();
+    EXPECT_EQ(rtDeviceSetLimit(0, RT_LIMIT_TYPE_PERSISTING_L2CACHE_SIZE, 512U), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(Runtime::Instance()->persistingL2CacheSet_[0].load(), wasSet);
+    EXPECT_EQ(rtDeviceReset(0), RT_ERROR_NONE);
+}
+
+TEST_F(PersistingL2CacheTest, GetHalFailurePreservesOutput)
+{
+    MOCKER(halGetDeviceInfoByBuff).expects(once()).will(returnValue(DRV_ERROR_NOT_SUPPORT));
+    uint32_t value = 123U;
+    EXPECT_EQ(rtDeviceGetLimit(RT_LIMIT_TYPE_PERSISTING_L2CACHE_SIZE, &value), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(value, 123U);
+}
+
+TEST_F(PersistingL2CacheTest, GetInvalidBufferSizePreservesOutput)
+{
+    int32_t size = static_cast<int32_t>(sizeof(L2CachePersistConfig)) - 1;
+    MOCKER(halGetDeviceInfoByBuff)
+        .expects(once())
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&size, sizeof(size)))
+        .will(returnValue(DRV_ERROR_NONE));
+    uint32_t value = 123U;
+    EXPECT_NE(rtDeviceGetLimit(RT_LIMIT_TYPE_PERSISTING_L2CACHE_SIZE, &value), RT_ERROR_NONE);
+    EXPECT_EQ(value, 123U);
+}
+
+TEST_F(PersistingL2CacheTest, GetNullOutputDoesNotCallHal)
+{
+    MOCKER(halGetDeviceInfoByBuff).expects(never());
+    EXPECT_EQ(rtDeviceGetLimit(RT_LIMIT_TYPE_PERSISTING_L2CACHE_SIZE, nullptr), ACL_ERROR_RT_PARAM_INVALID);
+}
+
+TEST_F(PersistingL2CacheTest, SetInvalidCapacityDoesNotCallHal)
+{
+    MOCKER(halSetDeviceInfoByBuff).expects(never());
+    for (const char* capacity : {"", "-1", "4294967296"}) {
+        SCOPED_TRACE(capacity);
+        capacity_ = capacity;
+        EXPECT_EQ(rtDeviceSetLimit(0, RT_LIMIT_TYPE_PERSISTING_L2CACHE_SIZE, 0U), ACL_ERROR_RT_PARAM_INVALID);
+        EXPECT_FALSE(Runtime::Instance()->persistingL2CacheSet_[0].load());
+    }
+}
+
+TEST_F(PersistingL2CacheTest, DifferentDevicesKeepIndependentValues)
+{
+    MOCKER(halSetDeviceInfoByBuff).expects(exactly(3)).will(invoke(SetPersistingL2CacheStub));
+    MOCKER(halGetDeviceInfoByBuff).expects(exactly(2)).will(invoke(GetPersistingL2CacheStub));
+    EXPECT_EQ(rtDeviceSetLimit(0, RT_LIMIT_TYPE_PERSISTING_L2CACHE_SIZE, 256U), RT_ERROR_NONE);
+    EXPECT_TRUE(Runtime::Instance()->persistingL2CacheSet_[0].load());
+    EXPECT_FALSE(Runtime::Instance()->persistingL2CacheSet_[1].load());
+    rtContext_t originalContext = nullptr;
+    EXPECT_EQ(rtCtxGetCurrent(&originalContext), RT_ERROR_NONE);
+    EXPECT_EQ(rtSetDevice(1), RT_ERROR_NONE);
+    EXPECT_EQ(rtDeviceSetLimit(0, RT_LIMIT_TYPE_PERSISTING_L2CACHE_SIZE, 768U), RT_ERROR_NONE);
+    EXPECT_TRUE(Runtime::Instance()->persistingL2CacheSet_[1].load());
+    uint32_t value = 0U;
+    EXPECT_EQ(rtDeviceGetLimit(RT_LIMIT_TYPE_PERSISTING_L2CACHE_SIZE, &value), RT_ERROR_NONE);
+    EXPECT_EQ(value, 768U);
+    EXPECT_EQ(rtDeviceReset(1), RT_ERROR_NONE);
+    EXPECT_EQ(driverInfo_[1].persist_capacity, 0U);
+    EXPECT_FALSE(Runtime::Instance()->persistingL2CacheSet_[1].load());
+    EXPECT_TRUE(Runtime::Instance()->persistingL2CacheSet_[0].load());
+    EXPECT_EQ(rtCtxSetCurrent(originalContext), RT_ERROR_NONE);
+    EXPECT_EQ(rtDeviceGetLimit(RT_LIMIT_TYPE_PERSISTING_L2CACHE_SIZE, &value), RT_ERROR_NONE);
+    EXPECT_EQ(value, 256U);
+}
+
+TEST_F(PersistingL2CacheTest, ProcessExitResetsOnlyConfiguredDeviceWithoutPlatformInfo)
+{
+    const std::string originalStyle = ::testing::GTEST_FLAG(death_test_style);
+    ::testing::GTEST_FLAG(death_test_style) = "threadsafe";
+    EXPECT_EXIT(
+        {
+            MOCKER(halSetDeviceInfoByBuff).expects(exactly(2)).will(invoke(SetPersistingL2CacheStub));
+            EXPECT_EQ(rtDeviceSetLimit(0, RT_LIMIT_TYPE_PERSISTING_L2CACHE_SIZE, 512U), RT_ERROR_NONE);
+            capacity_.clear(); // Any platform query during exit would now fail.
+            Runtime::Instance()->PrepareProcessExitNoThrow();
+            EXPECT_EQ(driverInfo_[0].persist_capacity, 0U);
+            EXPECT_FALSE(Runtime::Instance()->persistingL2CacheSet_[0].load());
+            EXPECT_FALSE(Runtime::Instance()->persistingL2CacheSet_[1].load());
+            GlobalMockObject::verify();
+            std::_Exit(::testing::Test::HasFailure() ? 1 : 0);
+        },
+        ::testing::ExitedWithCode(0), "");
+    ::testing::GTEST_FLAG(death_test_style) = originalStyle;
 }

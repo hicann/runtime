@@ -123,6 +123,10 @@ Runtime::~Runtime()
     DeleteModuleBackupPoint();
 }
 
+void Runtime::ResetPersistingL2CacheSizes() {}
+
+void Runtime::ResetPersistingL2CacheSizes(const uint32_t deviceId) { UNUSED(deviceId); }
+
 rtError_t Runtime::InitCcFeature() const { return RT_ERROR_NONE; }
 
 rtError_t Runtime::PrimaryXpuContextRelease(const uint32_t devId)

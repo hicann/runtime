@@ -112,6 +112,33 @@ rtError_t Runtime::CheckVisibleDevicesCcStatus() const
     return RT_ERROR_NONE;
 }
 
+void Runtime::ResetPersistingL2CacheSizes()
+{
+    for (uint32_t deviceId = 0U; deviceId < RT_MAX_DEV_NUM; ++deviceId) {
+        ResetPersistingL2CacheSizes(deviceId);
+    }
+}
+
+void Runtime::ResetPersistingL2CacheSizes(const uint32_t deviceId)
+{
+    if (!persistingL2CacheSet_[deviceId].load()) {
+        return;
+    }
+
+    // The driver treats an all-zero config as a reset; no capacity query is needed.
+    L2CachePersistConfig bufContext{};
+    const rtError_t error = NpuDriver::SetDeviceInfoByBuff(
+        deviceId, MODULE_TYPE_QOS, INFO_TYPE_L2_PERSIST_CAP, &bufContext, sizeof(bufContext));
+    if (error == RT_ERROR_NONE) {
+        persistingL2CacheSet_[deviceId].store(false);
+    } else {
+        RT_LOG(
+            RT_LOG_WARNING, "Reset persisting L2 cache size failed, device_id=%u, retCode=%#x.", deviceId,
+            static_cast<uint32_t>(error));
+    }
+    RT_LOG(RT_LOG_DEBUG, "Reset persisting L2 cache size done, device_id=%u.", deviceId);
+}
+
 rtError_t Runtime::InitCcFeature() const
 {
     // CC 特性按芯片函数表注册入口开启：未注册 CC 特性的芯片直接返回，

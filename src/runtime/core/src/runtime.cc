@@ -2918,6 +2918,7 @@ void Runtime::PrepareProcessExitNoThrow()
 {
     SetRuntimeExiting(true);
     isExiting_ = true;
+    ResetPersistingL2CacheSizes();
     GlobalStateManager::GetInstance().ForceUnlocked();
     DestroyReportRasThread();
     (void)WaitMonitorExit();
@@ -3438,6 +3439,8 @@ void Runtime::FinalizeDeviceRelease(RefObject<Device*>& refObj, Device* dev, con
     if (tsId == RT_TSC_ID) {
         suspendConfigs_[devId] = {};
     }
+    // Reset while the driver is still open, before detaching the device slot.
+    ResetPersistingL2CacheSizes(devId);
     refObj.ResetVal();
     if (!isExiting_) {
         NotifyProcWhenReleaseDevice(devId);

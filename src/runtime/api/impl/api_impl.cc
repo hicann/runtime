@@ -3062,9 +3062,9 @@ rtError_t ApiImpl::DeviceSetLimit(const int32_t devId, const rtLimitType_t type,
     RT_LOG(RT_LOG_DEBUG, "Set Limit, drv devId=%d, type=%s, value=%u.", devId, LimitTypeToString(type).c_str(), val);
     (void)devId;
     if (type == RT_LIMIT_TYPE_SIMT_PRINTF_FIFO_SIZE || type == RT_LIMIT_TYPE_SIMT_STACK_SIZE ||
-        type == RT_LIMIT_TYPE_SIMT_DVG_WARP_STACK_SIZE) {
+        type == RT_LIMIT_TYPE_SIMT_DVG_WARP_STACK_SIZE || type == RT_LIMIT_TYPE_PERSISTING_L2CACHE_SIZE) {
         RT_LOG(
-            RT_LOG_WARNING, "SIMT limit type is not supported on this platform, type=%s",
+            RT_LOG_WARNING, "The limit type is not supported on this platform, type=%s",
             LimitTypeToString(type).c_str());
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
@@ -3093,9 +3093,9 @@ rtError_t ApiImpl::DeviceGetLimit(const rtLimitType_t type, uint32_t* val)
         *val = rt->GetDeviceCustomerStackSize();
     } else if (
         type == RT_LIMIT_TYPE_SIMT_PRINTF_FIFO_SIZE || type == RT_LIMIT_TYPE_SIMT_STACK_SIZE ||
-        type == RT_LIMIT_TYPE_SIMT_DVG_WARP_STACK_SIZE) {
+        type == RT_LIMIT_TYPE_SIMT_DVG_WARP_STACK_SIZE || type == RT_LIMIT_TYPE_PERSISTING_L2CACHE_SIZE) {
         RT_LOG(
-            RT_LOG_WARNING, "SIMT limit type is not supported on this platform, type=%s",
+            RT_LOG_WARNING, "The limit type is not supported on this platform, type=%s",
             LimitTypeToString(type).c_str());
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     } else if (type == RT_LIMIT_TYPE_SIMD_PRINTF_FIFO_SIZE_PER_CORE) {
