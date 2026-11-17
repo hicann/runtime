@@ -32,7 +32,7 @@ void XpuTaskFailCallBackManager::XpuNotify(rtExceptionInfo_t* const exceptionInf
         const std::unique_lock<std::mutex> cbMapLock(mapMutex_);
         notifyMap.insert(callbackMap_.begin(), callbackMap_.end());
     }
-    RT_LOG(RT_LOG_INFO, "XpuNotify notifyMap map size: [%u].", notifyMap.size());
+    RT_LOG(RT_LOG_INFO, "XpuNotify notifyMap map size: [%zu].", notifyMap.size());
     for (const auto& info : notifyMap) {
         auto callback = info.second;
         callback(exceptionInfo);

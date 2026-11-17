@@ -266,7 +266,7 @@ static rtError_t XpuProcReport(
         uint32_t pos = static_cast<uint32_t>(report.sqHead);
         RT_LOG(
             RT_LOG_INFO,
-            "Get logic report: cnt=%u, idx=%u, stream_id=%hu, report_pos=%u,"
+            "Get logic report: cnt=%u, idx=%u, stream_id=%u, report_pos=%u,"
             " sqe_type=%u, sq_head=%u, task_sn=%u, retCode=%#x, errType=%#x.",
             cnt, idx, streamId, pos, static_cast<uint32_t>(report.sqeType), report.sqHead, report.taskSn,
             report.errorCode, report.errorType);
@@ -279,7 +279,7 @@ static rtError_t XpuProcReport(
         /* 这里能判断pos和stream id的合法性，因此后续不需要再判断 */
         if (unlikely(reportTask == nullptr)) {
             RT_LOG(
-                RT_LOG_WARNING, "GetTask error, device_id=%u, stream_id=%hu, pos=%hu.", dev->Id_(), streamId,
+                RT_LOG_WARNING, "GetTask error, device_id=%u, stream_id=%u, pos=%hu.", dev->Id_(), streamId,
                 report.sqHead);
             XpuProcCqReportException(dev, report, nullptr, streamId);
             continue;
@@ -320,7 +320,7 @@ static void XpuProcLogicCqUntilEmpty(const Stream* const stm)
     rtError_t error =
         devDrv->LogicCqReportV2(waitInfo, RtPtrToPtr<uint8_t*, TprtLogicCqReport_t*>(reportInfo), allocCnt, cnt);
     if (unlikely(((error != RT_ERROR_NONE)) || (cnt == 0U))) {
-        RT_LOG(RT_LOG_INFO, "Task Wait: stream_id=%d, retCode=%#x.", streamId, static_cast<uint32_t>(error));
+        RT_LOG(RT_LOG_INFO, "Task Wait: stream_id=%u, retCode=%#x.", streamId, static_cast<uint32_t>(error));
         return;
     }
     (void)XpuProcReport(dev, streamId, cnt, reportInfo);

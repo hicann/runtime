@@ -140,7 +140,7 @@ rtError_t XpuCheckTaskCanSend(Stream* const stm)
     }
 
     rtError_t status = stm->CheckContextStatus();
-    ERROR_RETURN(status, "context is abort, stream_id=%u, status=%#x.", stm->Id_(), static_cast<uint32_t>(status));
+    ERROR_RETURN(status, "context is abort, stream_id=%d, status=%#x.", stm->Id_(), static_cast<uint32_t>(status));
     return RT_ERROR_NONE;
 }
 

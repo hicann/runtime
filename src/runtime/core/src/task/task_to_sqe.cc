@@ -183,7 +183,7 @@ rtError_t PreLoadDynamicSqe::ConstructSqe(
     dynamicSqe->taskPcOffset = hwtsDynamicTaskDesc.taskPcOffset;
 
     *taskLen = static_cast<uint32_t>(sizeof(rtDynamicSqe_t));
-    RT_LOG(RT_LOG_INFO, "Construct Dynamic Sqe success. taskLen=%zu.", *taskLen);
+    RT_LOG(RT_LOG_INFO, "Construct Dynamic Sqe success. taskLen=%u.", *taskLen);
     return RT_ERROR_NONE;
 }
 

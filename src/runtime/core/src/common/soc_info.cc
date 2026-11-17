@@ -63,7 +63,7 @@ rtError_t GetNpuArchByName(const char_t* const socName, int32_t* hardwareNpuArch
     const int32_t ret = PlatformManagerV2::Instance().GetSocSpec(
         std::string(socName), platform_config::kVersionSection, platform_config::kNpuArchField, result);
     COND_PROC_RETURN_ERROR(
-        ret != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE, , "Get soc spec failed, ret = %u, please check.", ret);
+        ret != RT_ERROR_NONE, RT_ERROR_INVALID_VALUE, , "Get soc spec failed, ret = %d, please check.", ret);
     try {
         *hardwareNpuArch = std::stoi(result);
     } catch (...) {

@@ -281,8 +281,9 @@ rtError_t ApiErrorDecorator::CntNotifyRecord(
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(inCntNotify, RT_ERROR_INVALID_VALUE, "CntNotify recording");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(info, RT_ERROR_INVALID_VALUE, "CntNotify recording");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
-        ((info->mode >= RECORD_MODE_MAX) || (info->mode == RECORD_INVALID_MODE)), RT_ERROR_INVALID_VALUE,
-        "CntNotify recording", RecordModeToString(info->mode), "info->mode",
+        ((static_cast<uint32_t>(info->mode) >= static_cast<uint32_t>(RECORD_MODE_MAX)) ||
+         (info->mode == RECORD_INVALID_MODE)),
+        RT_ERROR_INVALID_VALUE, "CntNotify recording", RecordModeToString(info->mode), "info->mode",
         "RECORD_STORE_MODE(0), RECORD_ADD_MODE(1), RECORD_WRITE_BIT_MODE(2) or RECORD_CLEAR_BIT_MODE(4)");
     const rtError_t error = impl_->CntNotifyRecord(inCntNotify, stm, info);
     ERROR_RETURN(error, "count notify record failed.");
@@ -295,8 +296,9 @@ rtError_t ApiErrorDecorator::CntNotifyWaitWithTimeout(
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(inCntNotify, RT_ERROR_INVALID_VALUE, "Waiting for CntNotify");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(info, RT_ERROR_INVALID_VALUE, "Waiting for CntNotify");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
-        (info->mode >= WAIT_MODE_MAX), RT_ERROR_INVALID_VALUE, "Waiting for CntNotify", WaitModeToString(info->mode),
-        "info->mode", "[0, " + std::to_string(WAIT_MODE_MAX) + ")");
+        (static_cast<uint32_t>(info->mode) >= static_cast<uint32_t>(WAIT_MODE_MAX)), RT_ERROR_INVALID_VALUE,
+        "Waiting for CntNotify", WaitModeToString(info->mode), "info->mode",
+        "[0, " + std::to_string(WAIT_MODE_MAX) + ")");
     const rtError_t error = impl_->CntNotifyWaitWithTimeout(inCntNotify, stm, info);
     ERROR_RETURN(error, "count notify wait failed.");
     return error;
@@ -537,14 +539,15 @@ rtError_t ApiErrorDecorator::FusionLaunch(void* const fusionInfo, Stream* const 
     for (uint32_t idx = 0U; idx < subTaskNum; idx++) {
         const rtFusionType_t subKernelType = fusionTask->subTask[idx].type;
         COND_RETURN_AND_MSG_OUTER(
-            (subKernelType >= RT_FUSION_END), RT_ERROR_INVALID_VALUE, ErrorCode::EE1012, "Fused operator task delivery",
+            static_cast<uint32_t>(subKernelType) >= static_cast<uint32_t>(RT_FUSION_END), RT_ERROR_INVALID_VALUE,
+            ErrorCode::EE1012, "Fused operator task delivery",
             RtFmtMsg(
                 "%s(%d)", (subKernelType == RT_FUSION_END) ? "FUSION_END" : "UNKNOWN",
                 static_cast<int32_t>(subKernelType)),
             "fusion subtask type",
             RtFmtMsg(
-                "The value range of attribute type of parameter subtask whose index is %u should be (0, %u)", idx,
-                RT_FUSION_END));
+                "The value range of attribute type of parameter subtask whose index is %u should be [0, %u)", idx,
+                static_cast<uint32_t>(RT_FUSION_END)));
         fusionList += g_fusionSubTypeStr[subKernelType];
     }
 

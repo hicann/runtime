@@ -13594,3 +13594,26 @@ TEST_F(ApiDavidTest, HcclCaptureModelRegistrationAndQueries)
     EXPECT_EQ(rtModelDestroy(model), ACL_RT_SUCCESS);
     EXPECT_EQ(rtStreamDestroy(hcclStream), ACL_RT_SUCCESS);
 }
+
+TEST_F(ApiDavidTest, CntNotifyRejectsNegativeModes)
+{
+    ApiImpl impl;
+    ApiErrorDecorator api(&impl);
+    CountNotify cntNotify(0U, 0U);
+    rtCntNtyRecordInfo_t recordInfo = {static_cast<rtCntNotifyRecordMode_t>(-1), 0U};
+    rtCntNtyWaitInfo_t waitInfo = {static_cast<rtCntNotifyWaitMode_t>(-1), 0U, 0U, false};
+
+    EXPECT_EQ(api.CntNotifyRecord(&cntNotify, nullptr, &recordInfo), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(api.CntNotifyWaitWithTimeout(&cntNotify, nullptr, &waitInfo), RT_ERROR_INVALID_VALUE);
+}
+
+TEST_F(ApiDavidTest, FusionLaunchRejectsNegativeSubTaskType)
+{
+    ApiImpl impl;
+    ApiErrorDecorator api(&impl);
+    rtFunsionTaskInfo_t fusionInfo = {};
+    fusionInfo.subTaskNum = 1U;
+    fusionInfo.subTask[0].type = static_cast<rtFusionType_t>(-1);
+
+    EXPECT_EQ(api.FusionLaunch(&fusionInfo, nullptr, nullptr), RT_ERROR_INVALID_VALUE);
+}
