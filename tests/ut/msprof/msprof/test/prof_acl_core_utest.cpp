@@ -2381,6 +2381,23 @@ TEST_F(MSPROF_ACL_CORE_UTEST, CheckAclJsonFreqIntegerConfigsValid)
     EXPECT_EQ(MSPROF_ERROR_NONE, ProfAclMgr::instance()->CheckAclJsonConfigInvalid(acljsonCfg));
 }
 
+TEST_F(MSPROF_ACL_CORE_UTEST, CheckAclJsonInstrProfilingConfigsWarnDeprecated)
+{
+    using namespace Msprofiler::Api;
+    NanoJson::Json acljsonCfg("{\"switch\":\"on\",\"instr_profiling\":\"on\",\"instr_profiling_freq\":10000}");
+    MOCKER_CPP(&Platform::CheckIfSupport, bool(Platform::*)(const PlatformFeature) const)
+        .stubs()
+        .will(returnValue(true));
+    MOCKER_CPP(&Platform::CheckIfSupport, bool(Platform::*)(const std::string) const).stubs().will(returnValue(true));
+
+    testing::internal::CaptureStdout();
+    testing::internal::CaptureStderr();
+    EXPECT_EQ(MSPROF_ERROR_NONE, ProfAclMgr::instance()->CheckAclJsonConfigInvalid(acljsonCfg));
+    const std::string output = testing::internal::GetCapturedStdout() + testing::internal::GetCapturedStderr();
+    EXPECT_NE(std::string::npos, output.find("[Note] [instr_profiling] This option will be discarded"));
+    EXPECT_NE(std::string::npos, output.find("[Note] [instr_profiling_freq] This option will be discarded"));
+}
+
 TEST_F(MSPROF_ACL_CORE_UTEST, MsprofInitGeOptionsInvalidInputsReportInputError)
 {
     using namespace Msprofiler::Api;
@@ -2510,6 +2527,23 @@ TEST_F(MSPROF_ACL_CORE_UTEST, CheckGeOptionFreqIntegerConfigsValid)
     MOCKER_CPP(&Platform::CheckIfSupport, bool(Platform::*)(const std::string) const).stubs().will(returnValue(true));
 
     EXPECT_EQ(MSPROF_ERROR_NONE, ProfAclMgr::instance()->CheckGeOptionConfigInvalid(geoptionCfg));
+}
+
+TEST_F(MSPROF_ACL_CORE_UTEST, CheckGeOptionInstrProfilingConfigsWarnDeprecated)
+{
+    using namespace Msprofiler::Api;
+    NanoJson::Json geoptionCfg("{\"instr_profiling\":\"on\",\"instr_profiling_freq\":10000}");
+    MOCKER_CPP(&Platform::CheckIfSupport, bool(Platform::*)(const PlatformFeature) const)
+        .stubs()
+        .will(returnValue(true));
+    MOCKER_CPP(&Platform::CheckIfSupport, bool(Platform::*)(const std::string) const).stubs().will(returnValue(true));
+
+    testing::internal::CaptureStdout();
+    testing::internal::CaptureStderr();
+    EXPECT_EQ(MSPROF_ERROR_NONE, ProfAclMgr::instance()->CheckGeOptionConfigInvalid(geoptionCfg));
+    const std::string output = testing::internal::GetCapturedStdout() + testing::internal::GetCapturedStderr();
+    EXPECT_NE(std::string::npos, output.find("[Note] [instr_profiling] This option will be discarded"));
+    EXPECT_NE(std::string::npos, output.find("[Note] [instr_profiling_freq] This option will be discarded"));
 }
 
 TEST_F(MSPROF_ACL_CORE_UTEST, CheckAclApiAicoreMetricsInvalidReportsInputError)
@@ -6498,6 +6532,55 @@ TEST_F(MSPROF_ACL_CORE_UTEST, ProfDataTypeConfigHandle_OpTypeMask)
     EXPECT_TRUE((dataTypeConfig & PROF_OP_MASK) == 0);
 
     GlobalMockObject::verify();
+}
+
+static uint64_t g_opTypeCallbackSwitch = 0;
+
+static int32_t OpTypeCommandHandleProfStopStub(const uint32_t*, uint32_t, uint64_t profSwitch, uint64_t)
+{
+    g_opTypeCallbackSwitch = profSwitch;
+    return ACL_SUCCESS;
+}
+
+TEST_F(MSPROF_ACL_CORE_UTEST, StopCommonCallback_WillEnableOpMaskWhenOpTypeConfigured)
+{
+    using namespace Msprofiler::Api;
+    GlobalMockObject::verify();
+    g_opTypeCallbackSwitch = 0;
+    auto params = std::make_shared<analysis::dvvp::message::ProfileParams>();
+    params->opType = "MatMul,Index";
+    ProfAclMgr::instance()->params_ = params;
+    ProfAclMgr::instance()->dataTypeConfig_ = PROF_TASK_TIME;
+
+    MOCKER(Analysis::Dvvp::ProfilerCommon::CommandHandleProfStop).stubs().will(invoke(OpTypeCommandHandleProfStopStub));
+
+    EXPECT_EQ(PROFILING_SUCCESS, ProfAclMgr::instance()->StopCommonCallback({0}, PROF_TASK_TIME));
+    EXPECT_NE(0U, g_opTypeCallbackSwitch & PROF_OP_MASK);
+    EXPECT_EQ(0U, ProfAclMgr::instance()->GetCmdModeDataTypeConfig() & PROF_OP_MASK);
+
+    GlobalMockObject::verify();
+    ProfAclMgr::instance()->params_ = nullptr;
+    ProfAclMgr::instance()->dataTypeConfig_ = 0;
+    ProfAclMgr::instance()->mode_ = WORK_MODE_OFF;
+    g_opTypeCallbackSwitch = 0;
+}
+
+TEST_F(MSPROF_ACL_CORE_UTEST, PrepareStartAclApiParam_KeepsUserSwitchWithoutOpMask)
+{
+    using namespace Msprofiler::Api;
+    auto params = std::make_shared<analysis::dvvp::message::ProfileParams>();
+    params->opType = "MatMul,Index";
+    ProfAclMgr::instance()->params_ = params;
+
+    MsprofConfig config{};
+    config.devNums = 1;
+    config.devIdList[0] = 0;
+    config.profSwitch = PROF_TASK_TIME;
+
+    EXPECT_EQ(ACL_SUCCESS, ProfAclMgr::instance()->PrepareStartAclApiParam(&config));
+    EXPECT_EQ(0U, ProfAclMgr::instance()->GetCmdModeDataTypeConfig() & PROF_OP_MASK);
+
+    ProfAclMgr::instance()->params_ = nullptr;
 }
 
 namespace {

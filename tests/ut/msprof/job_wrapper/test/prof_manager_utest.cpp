@@ -66,3 +66,12 @@ TEST_F(JOB_WRAPPER_PROF_MANAGER_UTEST, ProcessHandleFailed)
         "{\"result_dir\":\"/tmp/\", \"devices\":\"1\", \"job_id\":\"cloud\", \"profiling_mode\":\"def_mode\"}");
     EXPECT_EQ(PROFILING_SUCCESS, entry->ProcessHandleFailed(params));
 }
+
+TEST_F(JOB_WRAPPER_PROF_MANAGER_UTEST, GetParamJsonStrContainsOpType)
+{
+    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams());
+    params->opType = "MatMul,Index";
+
+    const std::string sampleJson = ProfManager::instance()->GetParamJsonStr(params);
+    EXPECT_NE(std::string::npos, sampleJson.find("\"opType\":\"MatMul,Index\""));
+}

@@ -907,6 +907,7 @@ void InputParser::ParamsSwitchValid3(const struct MsprofCmdInfo& cmdInfo, int32_
 {
     switch (opt) {
         case ARGS_INSTR_PROFILING:
+            CmdLog::CmdWarningLog("[Note] [instr-profiling] This option will be discarded in later versions.");
             params_->instrProfiling = cmdInfo.args[opt];
             break;
         case ARGS_HARDWARE_MEM:
@@ -1171,11 +1172,16 @@ void ArgsManager::AddInstrArgs()
         !Platform::instance()->CheckIfSupport(PLATFORM_TASK_INSTR_PROFILING)) {
         return;
     }
-    Args instrProfiling = {"instr-profiling", "Show instr profiling data, the default value is off.", OFF};
+    Args instrProfiling = {
+        "instr-profiling",
+        "Show instr profiling data, the default value is off. "
+        "[Note] [instr-profiling] This option will be discarded in later versions.",
+        OFF};
     Args instrProfilingFreq = {
         "instr-profiling-freq",
         "The instr profiling sampling period in clock-cycle, "
-        "the default value is 1000 cycle, the range is 300 to 30000 cycle.",
+        "the default value is 1000 cycle, the range is 300 to 30000 cycle. "
+        "[Note] [instr-profiling-freq] This option will be discarded in later versions.",
         "1000"};
     argsList_.push_back(instrProfiling);
     argsList_.push_back(instrProfilingFreq);

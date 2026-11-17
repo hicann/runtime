@@ -122,7 +122,6 @@ std::string ProfManager::GetParamJsonStr(SHARED_PTR_ALIA<analysis::dvvp::message
     }
     NanoJson::Json object;
     params->ToObject(object);
-    object.RemoveByKey("opType");
     return object.ToString();
 }
 

@@ -229,6 +229,7 @@ public:
     void ChangeLevelConf(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params) const;
     void AddModelLoadConf(uint64_t& dataTypeConfig) const;
     void AddOpDetailConf(uint64_t& dataTypeConfig) const;
+    void AddOpTypeConf(uint64_t& dataTypeConfig) const;
     void AddSubscribeConf(uint64_t& dataTypeConfig) const;
     void AddLowPowerConf(NanoJson::Json& jsonCfg);
     SHARED_PTR_ALIA<analysis::dvvp::ProfileFileChunk> PackDataTrunk() const;

@@ -1172,6 +1172,13 @@ void ProfAclMgr::AddLowPowerConf(NanoJson::Json& jsonCfg)
 
 void ProfAclMgr::AddOpDetailConf(uint64_t& dataTypeConfig) const { dataTypeConfig |= PROF_OP_DETAIL_MASK; }
 
+void ProfAclMgr::AddOpTypeConf(uint64_t& dataTypeConfig) const
+{
+    if (params_ != nullptr && !params_->opType.empty()) {
+        dataTypeConfig |= PROF_OP_MASK;
+    }
+}
+
 int32_t ProfAclMgr::CheckSubscribeConfig(const MsprofConfig* config) const
 {
     if (reinterpret_cast<void*>(config->fd) == nullptr) {
@@ -2160,7 +2167,13 @@ int32_t ProfAclMgr::CheckAclJsonConfigInvalid(const NanoJson::Json& acljsonCfg) 
             return MSPROF_ERROR_CONFIG_INVALID;
         }
         if (iter->first == "hccl") {
-            MSPROF_LOGW("[Note] [hccl] This option will be discarded in later versions.");
+            MSPROF_EVENT("[Note] [hccl] This option will be discarded in later versions.");
+        }
+        if (iter->first == "instr_profiling") {
+            MSPROF_EVENT("[Note] [instr_profiling] This option will be discarded in later versions.");
+        }
+        if (iter->first == "instr_profiling_freq") {
+            MSPROF_EVENT("[Note] [instr_profiling_freq] This option will be discarded in later versions.");
         }
         if (iter->first == "switch" && iter->second.GetValue<std::string>() == "on") {
             aclJsonSwitch = true;
@@ -2406,10 +2419,16 @@ int32_t ProfAclMgr::CheckGeOptionConfigInvalid(const NanoJson::Json& geoptionCfg
             return MSPROF_ERROR_CONFIG_INVALID;
         }
         if (iter->first == "hccl") {
-            MSPROF_LOGW("[Note] [hccl] This option will be discarded in later versions.");
+            MSPROF_EVENT("[Note] [hccl] This option will be discarded in later versions.");
+        }
+        if (iter->first == "instr_profiling") {
+            MSPROF_EVENT("[Note] [instr_profiling] This option will be discarded in later versions.");
+        }
+        if (iter->first == "instr_profiling_freq") {
+            MSPROF_EVENT("[Note] [instr_profiling_freq] This option will be discarded in later versions.");
         }
         if (iter->first == "task_trace") {
-            MSPROF_LOGW("[Note] [task_trace] This option will be discarded in later versions.Use task_time instead");
+            MSPROF_EVENT("[Note] [task_trace] This option will be discarded in later versions.Use task_time instead");
         }
         if (CheckGeOptionItemConfigInvalid(iter->first, iter->second) != MSPROF_ERROR_NONE) {
             return MSPROF_ERROR_CONFIG_INVALID;
@@ -3050,6 +3069,7 @@ int32_t ProfAclMgr::ProfStartCallback(uint32_t devId)
     uint32_t startDevIdList[1] = {devId};
     uint64_t profSwitch = GetCmdModeDataTypeConfig();
     const uint64_t profSwitchHi = GetProfSwitchHi(profSwitch);
+    AddOpTypeConf(profSwitch);
     AddModelLoadConf(profSwitch);
     AddOpDetailConf(profSwitch);
     AddRuntimeTraceConf(profSwitch);
@@ -3065,6 +3085,7 @@ int32_t ProfAclMgr::ProfStartCallback(uint32_t devId)
 int32_t ProfAclMgr::StopCommonCallback(const std::vector<uint32_t>& devIds, uint64_t profSwitch)
 {
     const uint64_t profSwitchHi = GetProfSwitchHi(profSwitch);
+    AddOpTypeConf(profSwitch);
     AddModelLoadConf(profSwitch);
     AddRuntimeTraceConf(profSwitch);
     AddOpDetailConf(profSwitch);
