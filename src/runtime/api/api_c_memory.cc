@@ -269,7 +269,7 @@ rtError_t rtsMemcpyAsyncWithDesc(rtMemcpyDesc_t desc, rtMemcpyKind kind, rtMemcp
     RT_VALIDATE_AND_UNWRAP_OBJECT(stream, Stream, exeStream);
     TIMESTAMP_BEGIN(rtsMemcpyAsyncWithDesc);
     const rtError_t error = api->MemcpyAsyncWithDesc(desc, exeStream, kind, config);
-    TIMESTAMP_BEGIN(rtsMemcpyAsyncWithDesc);
+    TIMESTAMP_END(rtsMemcpyAsyncWithDesc);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;
