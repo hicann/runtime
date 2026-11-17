@@ -47,6 +47,7 @@ size_t aclDataTypeSizeImpl(aclDataType dataType)
         case ACL_INT32:
         case ACL_UINT32:
         case ACL_COMPLEX32:
+        case ACL_HIFLOAT4_SCALE:
             return sizeof(int32_t);
         case ACL_COMPLEX128:
             return 2U * sizeof(int64_t);

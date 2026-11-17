@@ -3066,6 +3066,8 @@ TEST_F(UTEST_ACL_Common, GetFuncNameWithoutImplSuffix_multiple_calls)
 
 TEST_F(UTEST_ACL_Common, AclDataTypeSizeSupportsHiFloat4) { EXPECT_EQ(aclDataTypeSize(ACL_HIFLOAT4), 1U); }
 
+TEST_F(UTEST_ACL_Common, AclDataTypeSizeSupportsHiFloat4Scale) { EXPECT_EQ(aclDataTypeSize(ACL_HIFLOAT4_SCALE), 4U); }
+
 TEST_F(UTEST_ACL_Common, EnumDescUsesNameWithoutAclPrefixAndNumericValue)
 {
     EXPECT_STREQ(GetCaptureModeDesc(ACL_MODEL_RI_CAPTURE_MODE_GLOBAL), "MODEL_RI_CAPTURE_MODE_GLOBAL(0)");
