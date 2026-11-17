@@ -537,7 +537,7 @@ TEST_F(ParseSimtPrintfV2Test, WhenNoData_ExpectCallbackNotCalled)
     EXPECT_FALSE(g_capture.called);
 }
 
-TEST_F(ParseSimtPrintfV2Test, WhenRingBufferOverflow_ExpectReadIdxResetToWriteIdx)
+TEST_F(ParseSimtPrintfV2Test, WhenRingBufferOverflow_ExpectReadIdxAdvancedByConsumedLen)
 {
     rtError_t error = rtSetDevice(0);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -561,12 +561,14 @@ TEST_F(ParseSimtPrintfV2Test, WhenRingBufferOverflow_ExpectReadIdxResetToWriteId
     error = ParseSimtPrintfV2(hostData.data(), blockSize, dev->driver_, 0U);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
+    // SIMT 写端预留协议下满环 pending 表示写端排队而非溢出丢数，
+    // readIdx 必须按实际消费推进，排队写端的数据由后续轮次逐轮消费
     EXPECT_TRUE(g_capture.called);
     BlockReadInfo* readInfo = RtPtrToPtr<BlockReadInfo*>(hostData.data() + sizeof(BlockInfo));
-    EXPECT_EQ(readInfo->readIdx, testWriteIdx);
+    EXPECT_EQ(readInfo->readIdx, testReadIdx + testConsumedLen);
 }
 
-TEST_F(ParseSimtPrintfV2Test, WhenRingBufferOverflowAndNoConsumption_ExpectReadIdxResetToWriteIdx)
+TEST_F(ParseSimtPrintfV2Test, WhenRingBufferOverflowAndNoConsumption_ExpectDataRetained)
 {
     rtError_t error = rtSetDevice(0);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -587,12 +589,13 @@ TEST_F(ParseSimtPrintfV2Test, WhenRingBufferOverflowAndNoConsumption_ExpectReadI
     error = ParseSimtPrintfV2(hostData.data(), blockSize, dev->driver_, 0U);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
+    // 零消费：队头 TLV 尚未提交（写端正在写/仍在排队），必须保留现场等待下一轮
     EXPECT_TRUE(g_capture.called);
     BlockReadInfo* readInfo = RtPtrToPtr<BlockReadInfo*>(hostData.data() + sizeof(BlockInfo));
-    EXPECT_EQ(readInfo->readIdx, testWriteIdx);
+    EXPECT_EQ(readInfo->readIdx, testReadIdx);
 }
 
-TEST_F(ParseSimtPrintfV2Test, WhenRingBufferExactlyFullAndNoConsumption_ExpectReadIdxResetToWriteIdx)
+TEST_F(ParseSimtPrintfV2Test, WhenRingBufferExactlyFullAndNoConsumption_ExpectDataRetained)
 {
     rtError_t error = rtSetDevice(0);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -614,9 +617,10 @@ TEST_F(ParseSimtPrintfV2Test, WhenRingBufferExactlyFullAndNoConsumption_ExpectRe
     error = ParseSimtPrintfV2(hostData.data(), blockSize, dev->driver_, 0U);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
+    // 恰好满环时数据完整未被覆盖，零消费同样保留待下一轮解析
     EXPECT_TRUE(g_capture.called);
     BlockReadInfo* readInfo = RtPtrToPtr<BlockReadInfo*>(hostData.data() + sizeof(BlockInfo));
-    EXPECT_EQ(readInfo->readIdx, testWriteIdx);
+    EXPECT_EQ(readInfo->readIdx, testReadIdx);
 }
 
 TEST_F(ParseSimtPrintfV2Test, WhenRingBufferExactlyFullAndPartialConsumption_ExpectReadIdxAdvancedByConsumedLen)
@@ -646,7 +650,7 @@ TEST_F(ParseSimtPrintfV2Test, WhenRingBufferExactlyFullAndPartialConsumption_Exp
     EXPECT_EQ(readInfo->readIdx, testReadIdx + 24U);
 }
 
-TEST_F(ParseSimtPrintfV2Test, WhenRingBufferOverflowAndPartialConsumption_ExpectReadIdxResetToWriteIdx)
+TEST_F(ParseSimtPrintfV2Test, WhenRingBufferOverflowAndPartialConsumption_ExpectReadIdxAdvancedByConsumedLen)
 {
     rtError_t error = rtSetDevice(0);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -667,9 +671,10 @@ TEST_F(ParseSimtPrintfV2Test, WhenRingBufferOverflowAndPartialConsumption_Expect
     error = ParseSimtPrintfV2(hostData.data(), blockSize, dev->driver_, 0U);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
+    // 溢出态部分消费：按消费量推进，未消费的排队数据留存待下一轮
     EXPECT_TRUE(g_capture.called);
     BlockReadInfo* readInfo = RtPtrToPtr<BlockReadInfo*>(hostData.data() + sizeof(BlockInfo));
-    EXPECT_EQ(readInfo->readIdx, testWriteIdx);
+    EXPECT_EQ(readInfo->readIdx, testReadIdx + 24U);
 }
 
 TEST_F(ParseSimtPrintfV2Test, WhenRemainLenZero_ExpectInvalidValue)

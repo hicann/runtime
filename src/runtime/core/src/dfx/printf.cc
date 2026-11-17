@@ -1507,29 +1507,23 @@ rtError_t ParseSimtPrintfV2(void* addr, const size_t blockSize, Driver* curDrv, 
         // runtime根据consumedLen清零已读区并推进readIdx，未消费的数据（半包）留存待下一轮
         cb(&param, &consumedLen);
         if (consumedLen == 0U) {
-            if (writeInfo->writeIdx - readIdx >= blockInfo->remainLen) {
-                readInfo->readIdx = writeInfo->writeIdx;
-                void* const deviceReadAddr = RtValueToPtr<void*>(RtPtrToValue(addr) + sizeof(BlockInfo));
-                ret = curDrv->MemCopySync(
-                    deviceReadAddr, sizeof(BlockReadInfo), readInfo, sizeof(BlockReadInfo), RT_MEMCPY_HOST_TO_DEVICE,
-                    false);
-                COND_RETURN_WARN(
-                    (ret != RT_ERROR_NONE), ret, "MemCopySync h2d failed, ret=%u, deviceId=%u", ret, userDeviceId);
-            }
+            // 无完整TLV可消费（写端尚未完成），保留现场等待下一轮；readIdx 不推进，
+            // 避免跳变到 writeIdx 释放全部阻塞写端导致排队数据被跳过
             RT_LOG(
                 RT_LOG_DEBUG,
                 "consumedLen=0, readIdx=%" PRIu64 ", writeIdx=%" PRIu64 ", data retained for next round, deviceId=%u",
                 readIdx, writeInfo->writeIdx, userDeviceId);
             return RT_ERROR_NONE;
         }
-        // SIMT: writeIdx 单调递增，用绝对值差判断溢出，取模判断回绕
+        // SIMT: writeIdx 为写端预留计数（atomicAdd 先行，写满后写端自旋等待 readIdx 释放），
+        // writeIdx - readIdx >= remainLen 表示写端在排队等待，并非环溢出；ring 内实际未读数据至多一个环容量
         const uint64_t readIdxMod = readIdx % blockInfo->remainLen;
         uint64_t availableData;
         if (writeInfo->writeIdx - readIdx >= blockInfo->remainLen) {
             availableData = blockInfo->remainLen;
             RT_LOG(
                 RT_LOG_WARNING,
-                "ring buffer overflow, data may be lost. readIdx=%" PRIu64 ", writeIdx=%" PRIu64
+                "simt printf writers queued, readIdx=%" PRIu64 ", writeIdx=%" PRIu64
                 ", remainLen=%u, availableData=%" PRIu64 ", deviceId=%u",
                 readIdx, writeInfo->writeIdx, blockInfo->remainLen, availableData, userDeviceId);
         } else {
@@ -1576,11 +1570,9 @@ rtError_t ParseSimtPrintfV2(void* addr, const size_t blockSize, Driver* curDrv, 
             ", coreType=%u, coreId=%u, deviceId=%u",
             consumedLen, readIdx, writeInfo->writeIdx, RT_KERNEL_DFX_INFO_CORE_TYPE_SIMT, 0U, userDeviceId);
 
-        if (writeInfo->writeIdx - readIdx > blockInfo->remainLen) {
-            readInfo->readIdx = writeInfo->writeIdx;
-        } else {
-            readInfo->readIdx = readIdx + consumedLen;
-        }
+        // 预留协议下写端永不覆盖未消费数据（满环时自旋等待 readIdx 释放），
+        // readIdx 始终按实际消费推进，排队写端数据逐轮释放，不会丢失
+        readInfo->readIdx = readIdx + consumedLen;
     } else {
         RT_LOG(
             RT_LOG_WARNING,

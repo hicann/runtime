@@ -497,7 +497,7 @@ TEST_F(ParseSimtPrintfV2Test, WhenNoData_ExpectCallbackNotCalled)
     EXPECT_FALSE(g_capture.called);
 }
 
-TEST_F(ParseSimtPrintfV2Test, WhenRingBufferOverflow_ExpectReadIdxResetToWriteIdx)
+TEST_F(ParseSimtPrintfV2Test, WhenRingBufferOverflow_ExpectReadIdxAdvancedByConsumedLen)
 {
     rtError_t error = rtSetDevice(0);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -521,9 +521,11 @@ TEST_F(ParseSimtPrintfV2Test, WhenRingBufferOverflow_ExpectReadIdxResetToWriteId
     error = ParseSimtPrintfV2(hostData.data(), blockSize, dev->driver_, 0U);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
+    // SIMT 写端预留协议下满环 pending 表示写端排队而非溢出丢数，
+    // readIdx 必须按实际消费推进，排队写端的数据由后续轮次逐轮消费
     EXPECT_TRUE(g_capture.called);
     BlockReadInfo* readInfo = RtPtrToPtr<BlockReadInfo*>(hostData.data() + sizeof(BlockInfo));
-    EXPECT_EQ(readInfo->readIdx, testWriteIdx);
+    EXPECT_EQ(readInfo->readIdx, testReadIdx + testConsumedLen);
 }
 
 TEST_F(ParseSimtPrintfV2Test, WhenRemainLenZero_ExpectInvalidValue)
