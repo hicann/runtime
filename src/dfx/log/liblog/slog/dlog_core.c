@@ -493,9 +493,25 @@ int32_t DlogWriteInner(LogMsgArg* msgArg, const char* fmt, va_list v)
     int32_t result = DlogSetMessage(&logMsg, msgArg, fmt, v);
     ONE_ACT_ERR_LOG(result != SYS_OK, return LOG_FAILURE, "construct log content failed.");
 
-    if ((msgArg->typeMask == STDOUT_LOG_MASK) || DlogCheckEnvStdout()) {
+    if (msgArg->typeMask == STDOUT_LOG_MASK) {
+        // 显式打屏日志保持原行为：只打屏，不落盘
         DlogWriteToConsole(&logMsg);
         return LOG_SUCCESS;
+    }
+    // issue #1307：新变量 env 打屏按阈值过滤（=1 无阈值；=2 warning 及以上；=3 error），
+    // 且打屏后不再提前返回，继续走 plog/socket 同步落盘一份；
+    // 落盘级别仍由级别门控制，实际打屏级别 = max(级别门, 打屏阈值)。
+    // 旧变量 "1" 不适配此特性：走兼容档，保持 #1307 前旧行为（只打屏、不落盘）。
+    // 事件日志（DLOG_EVENT）为独立级别（仅受 ASCEND_GLOBAL_EVENT_ENABLE 门控、落盘走独立映射），
+    // 不参与级别阈值过滤；仅在无阈值档（=1）随打屏输出，与旧变量=1 屏幕行为对齐
+    int32_t stdoutLevel = DlogGetEnvStdoutLevel();
+    if (stdoutLevel == STDOUT_LEVEL_LEGACY) {
+        DlogWriteToConsole(&logMsg);
+        return LOG_SUCCESS;
+    }
+    if ((stdoutLevel >= 0) && ((msgArg->level != DLOG_EVENT) || (stdoutLevel == DLOG_DEBUG)) &&
+        (msgArg->level >= stdoutLevel)) {
+        DlogWriteToConsole(&logMsg);
     }
 
     // lock, To prevent the leaked of file handle.(socket)
@@ -531,7 +547,11 @@ int32_t DlogWriteInner(LogMsgArg* msgArg, const char* fmt, va_list v)
 
 WRITE_CONSOLE:
 #ifdef CONSOLE_WRITE
-    DlogWriteToConsole(&logMsg);
+    // 仅在 env 打屏未开启时兜底打屏：stdoutLevel >= 0 时上方已打屏，此处再写会重复输出。
+    // 当前全仓构建未定义 CONSOLE_WRITE，本分支不生效，仅保留构建开关语义。
+    if (DlogGetEnvStdoutLevel() < 0) {
+        DlogWriteToConsole(&logMsg);
+    }
 #endif
     SlogUnlock();
     return LOG_SUCCESS;

@@ -42,6 +42,20 @@
   export ASCEND_GLOBAL_EVENT_ENABLE=0
   ```
 
+## 设置日志打屏级别
+
+通过ASCEND\_LOG\_PRINT\_TO\_STDOUT开启Host侧应用类日志打屏并指定打屏级别，打屏开启时日志仍会同步落盘一份：
+
+```sh
+export ASCEND_LOG_PRINT_TO_STDOUT=2
+```
+
+实际打屏的日志级别由该环境变量与ASCEND\_GLOBAL\_LOG\_LEVEL共同决定，取两者中较高的级别。例如ASCEND\_GLOBAL\_LOG\_LEVEL=2、ASCEND\_LOG\_PRINT\_TO\_STDOUT=3时，打屏日志级别为ERROR，debug类日志落盘级别为WARNING。
+
+废弃变量ASCEND\_SLOG\_PRINT\_TO\_STDOUT不支持该能力：仅保持原有0/1开关语义（=1时只打屏不落盘）。
+
+Event日志为独立级别，不受打屏级别阈值过滤：ASCEND\_LOG\_PRINT\_TO\_STDOUT=1时事件日志随打屏输出，=2/3时不上屏；Event日志的落盘由ASCEND\_GLOBAL\_EVENT\_ENABLE控制。
+
 ## 设置系统类日志级别
 
 Ascend EP形态，通过msnpureport工具设置，具体方法请参见《[msnpureport 工具使用指南](https://support.huawei.com/enterprise/zh/ascend-computing/ascend-hdk-pid-252764743?category=reference-guides&subcategory=command-reference)》。

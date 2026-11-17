@@ -18,7 +18,11 @@
 extern "C" {
 #endif // __cplusplus
 
+// 旧变量 ASCEND_SLOG_PRINT_TO_STDOUT=1 的兼容档位：只打屏、不落盘（#1307 前旧行为）
+#define STDOUT_LEVEL_LEGACY (-3)
+
 bool DlogCheckEnvStdout(void);
+int32_t DlogGetEnvStdoutLevel(void);
 void DlogWriteToConsole(LogMsg* logMsg);
 
 #ifdef __cplusplus

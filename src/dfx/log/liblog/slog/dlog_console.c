@@ -23,76 +23,107 @@ extern "C" {
  * @brief       : check env_stdout is enable or not, execute getenv only once
  * @return      : true   enable; false   disable
  */
-// stdout 开关取值缓冲区长度：合法值为 "0"/"1"，预留冗余以识别非法长值。
+// stdout 打屏阈值取值缓冲区长度：合法值为 "0"/"1"/"2"/"3"，预留冗余以识别非法长值。
 // 取值长度 < 本值时告警可回显具体取值；>= 本值时告警不回显取值。
 #define STDOUT_ENV_VALUE_LEN 16U
 
-// stdout 开关环境变量名。集中定义，使读取与废弃告警共用同一来源，避免拼写不一致。
+// 打屏档位语义（issue #1307，仅新变量生效）：STDOUT_LEVEL_OFF 关闭；DLOG_DEBUG 无阈值
+// （新变量 "1"，通过级别门的日志全部打屏）；DLOG_WARN（"2"，warning 及以上）；DLOG_ERROR（"3"）。
+// 旧变量不适配新特性："1" 走 STDOUT_LEVEL_LEGACY 兼容档（定义见 dlog_console.h）。
+#define STDOUT_LEVEL_OFF (-1)
+#define STDOUT_LEVEL_UNINIT (-2)
+
+// stdout 打屏环境变量名。集中定义，使读取与废弃告警共用同一来源，避免拼写不一致。
 #define STDOUT_ENV_NAME "ASCEND_LOG_PRINT_TO_STDOUT"
 #define STDOUT_ENV_NAME_DEPRECATED "ASCEND_SLOG_PRINT_TO_STDOUT"
 
-// 读取单个环境变量并判定 stdout 开关，输出维测日志。
+// 读取单个环境变量并判定 stdout 打屏档位，输出维测日志。
 // replacementName 非 NULL 时，表示 envName 已废弃、应改用 replacementName，
 // 在确认变量存在后先打印一次废弃告警；为 NULL 表示 envName 未废弃，不打印该告警。
-// 注意：本参数用于旧变量兼容期，计划随旧变量在 13.0.0 版本一并移除，详见 DlogCheckEnvStdout 中的说明。
-// 返回 true 表示该变量已配置，*enabled 为判定结果(1 开启/0 关闭)；返回 false 表示未配置。
-STATIC bool DlogGetStdoutEnv(const char* envName, const char* replacementName, int32_t* enabled)
+// 注意：本参数用于旧变量兼容期，计划随旧变量在 13.0.0 版本一并移除，详见 DlogGetEnvStdoutLevel 中的说明。
+// 旧变量不承载 #1307 特性：合法值仅 "0"/"1"，"1" 走兼容档（只打屏不落盘）；
+// 新变量合法值 "0"/"1"/"2"/"3"，输出阈值级别，非法值告警的合法值域文案随变量区分。
+// 返回 true 表示该变量已配置，*stdoutLevel 为档位判定结果；返回 false 表示未配置。
+STATIC bool DlogGetStdoutEnv(const char* envName, const char* replacementName, int32_t* stdoutLevel)
 {
     const char* envValue = getenv(envName);
     if (envValue == NULL) {
         return false; // 未配置
     }
-    if (replacementName != NULL) {
-        // 变量名由参数传入，函数内不硬编码具体变量名。
-        // 告警不写死移除版本：移除版本由资料承载，避免版本调整需同步改代码。
+    // 变量名由参数传入，函数内不硬编码具体变量名。
+    // 告警不写死移除版本：移除版本由资料承载，避免版本调整需同步改代码。
+    const bool isLegacyVar = (replacementName != NULL);
+    const char* expectedValues = isLegacyVar ? "'0' or '1'" : "'0', '1', '2' or '3'";
+    if (isLegacyVar) {
         SELF_LOG_WARN("Environment variable '%s' is deprecated; use '%s' instead.", envName, replacementName);
     }
     if (strlen(envValue) >= STDOUT_ENV_VALUE_LEN) {
         // 已配置但取值过长 → 非法值（不回显）
         SELF_LOG_WARN(
-            "Invalid value for environment variable '%s'; expected '0' or '1'. "
+            "Invalid value for environment variable '%s'; expected %s. "
             "Log-to-stdout disabled.",
-            envName);
-        *enabled = 0;
+            envName, expectedValues);
+        *stdoutLevel = STDOUT_LEVEL_OFF;
         return true;
     }
     if (strcmp(envValue, "1") == 0) {
-        SELF_LOG_INFO("Log-to-stdout enabled by environment variable '%s'.", envName);
-        *enabled = 1;
+        SELF_LOG_INFO("Log-to-stdout enabled by environment variable '%s' (value: %s).", envName, envValue);
+        // 旧变量 "1" 走兼容档（#1307 前旧行为：只打屏不落盘）；新变量 "1" 无阈值
+        *stdoutLevel = isLegacyVar ? STDOUT_LEVEL_LEGACY : DLOG_DEBUG;
+    } else if (!isLegacyVar && (strcmp(envValue, "2") == 0)) {
+        SELF_LOG_INFO("Log-to-stdout enabled by environment variable '%s' (value: %s).", envName, envValue);
+        *stdoutLevel = DLOG_WARN;
+    } else if (!isLegacyVar && (strcmp(envValue, "3") == 0)) {
+        SELF_LOG_INFO("Log-to-stdout enabled by environment variable '%s' (value: %s).", envName, envValue);
+        *stdoutLevel = DLOG_ERROR;
     } else if (strcmp(envValue, "0") == 0) {
-        *enabled = 0; // 显式关闭即默认行为，保持静默
+        *stdoutLevel = STDOUT_LEVEL_OFF; // 显式关闭即默认行为，保持静默
     } else {
         SELF_LOG_WARN(
-            "Invalid value '%s' for environment variable '%s'; expected '0' or '1'. "
+            "Invalid value '%s' for environment variable '%s'; expected %s. "
             "Log-to-stdout disabled.",
-            envValue, envName);
-        *enabled = 0;
+            envValue, envName, expectedValues);
+        *stdoutLevel = STDOUT_LEVEL_OFF;
     }
     return true;
 }
 
-bool DlogCheckEnvStdout(void)
+/**
+ * @brief       : get stdout print threshold level, execute getenv only once
+ * @return      : STDOUT_LEVEL_OFF(-1)   disable;
+ *                DLOG_DEBUG              no threshold (new env "1");
+ *                DLOG_WARN               warning and above (new env "2");
+ *                DLOG_ERROR              error only (new env "3");
+ *                STDOUT_LEVEL_LEGACY     print-only legacy mode (deprecated env "1")
+ */
+int32_t DlogGetEnvStdoutLevel(void)
 {
-    static int32_t stdoutFlag = -1;
-    if (stdoutFlag == -1) {
-        int32_t enabled = 0;
+    static int32_t stdoutLevel = STDOUT_LEVEL_UNINIT;
+    if (stdoutLevel == STDOUT_LEVEL_UNINIT) {
+        int32_t level = STDOUT_LEVEL_OFF;
         // 新变量优先：ASCEND_LOG_PRINT_TO_STDOUT（未废弃，故 replacementName 传 NULL）
-        if (DlogGetStdoutEnv(STDOUT_ENV_NAME, NULL, &enabled)) {
-            stdoutFlag = enabled;
-        } else if (DlogGetStdoutEnv(STDOUT_ENV_NAME_DEPRECATED, STDOUT_ENV_NAME, &enabled)) {
+        if (DlogGetStdoutEnv(STDOUT_ENV_NAME, NULL, &level)) {
+            stdoutLevel = level;
+        } else if (DlogGetStdoutEnv(STDOUT_ENV_NAME_DEPRECATED, STDOUT_ENV_NAME, &level)) {
             // 新变量未配置时回退旧变量（兼容期保留），并提示废弃。
             //
             // 旧变量 ASCEND_SLOG_PRINT_TO_STDOUT 在 CANN 9.2.0 标记废弃，计划在 13.0.0 版本
             // 随资料一并删除。届时应移除本回退分支、STDOUT_ENV_NAME_DEPRECATED 宏及其废弃
             // 告警，并同步清理相关 UT（TC-768-003/007/009 等依赖旧变量的用例）。
             // 注意：删除后旧变量将不再生效，属预期的不兼容变更，需在版本说明中明确告知。
-            stdoutFlag = enabled;
+            stdoutLevel = level;
         } else {
             // 两者均未配置：默认关闭，保持静默
-            stdoutFlag = 0;
+            stdoutLevel = STDOUT_LEVEL_OFF;
         }
     }
-    return (stdoutFlag == 1) ? true : false;
+    return stdoutLevel;
+}
+
+bool DlogCheckEnvStdout(void)
+{
+    // 兼容档(STDOUT_LEVEL_LEGACY)与阈值档(>=0)均视为打屏开启
+    return (DlogGetEnvStdoutLevel() != STDOUT_LEVEL_OFF) ? true : false;
 }
 
 /**
