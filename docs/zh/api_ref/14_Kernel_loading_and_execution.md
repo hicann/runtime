@@ -2579,7 +2579,7 @@ aclError aclrtBinaryEnumerateFunctions(const aclrtBinHandle binHandle, aclrtFunc
 | --- | :---: | --- |
 | binHandle | 输入 | 算子二进制句柄。类型定义请参见[aclrtBinHandle](25-05_Typedefs.md#aclrtBinHandle)。<br>调用[aclrtBinaryLoadFromFile](#aclrtBinaryLoadFromFile)接口或[aclrtBinaryLoadFromData](#aclrtBinaryLoadFromData)接口获取算子二进制句柄，再将其作为入参传入本接口。 |
 | funcHandles | 输出 | 核函数句柄数组。类型定义请参见[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)。 |
-| numFunctions | 输入 | 需要获取的核函数句柄数量，可先调用[aclrtBinaryGetFunctionCount](#aclrtBinaryGetFunctionCount)获取。<br>当numFunctions==0，表示不需要获取核函数句柄。<br>当numFunctions≤len(funcHandles),返回numFunctions个核函数句柄。<br>当numFunctions>len(funcHandles),返回len(funcHandles)个核函数句柄。
+| numFunctions | 输入 | `funcHandles`数组的容量，即最多写入的核函数句柄数量。接口实际写入数量为该容量与算子二进制中核函数总数两者中的较小值。可先调用[aclrtBinaryGetFunctionCount](#aclrtBinaryGetFunctionCount)获取核函数总数。<br>当numFunctions为0时，不需要获取核函数句柄，`funcHandles`可传NULL；当numFunctions大于0时，`funcHandles`不能为空，且应至少包含numFunctions个元素。 |
 |
 
 
