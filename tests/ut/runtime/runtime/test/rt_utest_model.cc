@@ -1389,8 +1389,8 @@ TEST_F(ModelTest, CaptureModelFinalizeHostStateOnExitClearsCaptureContainers)
     model.singleOperEvents_.insert(nullptr);
     model.captureEvents_.insert(nullptr);
     model.addStreamMap_[nullptr].push_back(nullptr);
-    model.addStreamNotifyList_.push_back(nullptr);
-    model.executeNotifyList_.push_back(nullptr);
+    Event syncEvent;
+    model.streamSyncEvent_ = &syncEvent;
     model.taskGroupStmIds_.insert(7U);
     model.rdmaPiValueModifyTaskInfoMap_[8U] = {};
     model.isNeedUpdateEndGraph_ = true;
@@ -1402,8 +1402,7 @@ TEST_F(ModelTest, CaptureModelFinalizeHostStateOnExitClearsCaptureContainers)
     EXPECT_TRUE(model.singleOperEvents_.empty());
     EXPECT_TRUE(model.captureEvents_.empty());
     EXPECT_TRUE(model.addStreamMap_.empty());
-    EXPECT_TRUE(model.addStreamNotifyList_.empty());
-    EXPECT_TRUE(model.executeNotifyList_.empty());
+    EXPECT_EQ(model.streamSyncEvent_, nullptr);
     EXPECT_TRUE(model.taskGroupStmIds_.empty());
     EXPECT_TRUE(model.rdmaPiValueModifyTaskInfoMap_.empty());
     EXPECT_FALSE(model.isNeedUpdateEndGraph_);

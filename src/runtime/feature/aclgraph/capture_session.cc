@@ -38,7 +38,6 @@
 namespace cce {
 namespace runtime {
 namespace {
-constexpr size_t NOTIFY_INDEX = 2U;
 
 const char* StreamTaskGroupStatusName(const StreamTaskGroupStatus status)
 {
@@ -859,47 +858,17 @@ rtError_t CaptureSession::CheckCaptureModelValidity(Model* const captureMdl) con
     return RT_ERROR_NONE;
 }
 
-rtError_t CaptureSession::AddNotifyToAddedCaptureStream(Stream* const oriSingleStm, CaptureModel* const captureMdl)
+rtError_t CaptureSession::AddEventToAddedCaptureStream(Stream* const oriSingleStm, CaptureModel* const captureMdl)
 {
     rtError_t error = RT_ERROR_NONE;
     auto& streams = captureMdl->GetAddStreamMap();
-    Api* const apiObj = Runtime::Instance()->ApiImpl_();
-    NULL_PTR_RETURN_MSG(apiObj, RT_ERROR_API_NULL);
     for (auto& streamObj : streams) {
-        Notify* notify = nullptr;
-        error = ctx_->CreateNotify(&notify, RT_NOTIFY_DEFAULT);
-        COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error); // notify在模型销毁时，统一进行释放
-        captureMdl->AddNotify(notify);
-        Stream* const lastStm = streamObj.second.back();
-        error = apiObj->NotifyRecord(notify, lastStm);
+        error = CaptureStreamRecordWait(ctx_, streamObj.first, oriSingleStm);
         ERROR_RETURN(
             error,
-            "Notify record failed, device_id=%u, original stream_id=%d, "
-            "capture model_id=%u, stream_id=%d, notify_id=%u, retCode=%#x",
-            ctx_->Device_()->Id_(), oriSingleStm->Id_(), captureMdl->Id_(), streamObj.second.back()->Id_(),
-            notify->GetNotifyId(), error);
-        error = apiObj->NotifyWait(notify, oriSingleStm, MAX_UINT32_NUM);
-        ERROR_RETURN(
-            error,
-            "Notify wait failed, device_id=%u, original stream_id=%d, "
-            "capture model_id=%u, stream_id=%d, notify_id=%u, retCode=%#x",
-            ctx_->Device_()->Id_(), oriSingleStm->Id_(), captureMdl->Id_(), streamObj.second.back()->Id_(),
-            notify->GetNotifyId(), error);
-    }
-    return error;
-}
-
-rtError_t CaptureSession::SetNotifyForExeModel(CaptureModel* const captureMdl)
-{
-    /* for exe stream and add stream alloc notify */
-    rtError_t error = RT_ERROR_NONE;
-    const std::map<Stream*, std::vector<Stream*>>& streams = captureMdl->GetAddStreamMap();
-    for (size_t i = 0U; i < (streams.size() * NOTIFY_INDEX); i++) {
-        Notify* notify = nullptr;
-        error = ctx_->CreateNotify(&notify, RT_NOTIFY_DEFAULT);
-        COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
-        captureMdl->AddExeNotify(notify);
-        RT_LOG(RT_LOG_DEBUG, "create notify_id=%u", notify->GetNotifyId());
+            "Join added capture stream failed, device_id=%u, original stream_id=%d, model_id=%u, "
+            "added stream_id=%d, retCode=%#x.",
+            ctx_->Device_()->Id_(), oriSingleStm->Id_(), captureMdl->Id_(), streamObj.first->Id_(), error);
     }
     return error;
 }
@@ -1006,22 +975,11 @@ rtError_t CaptureSession::StreamEndCapture(Stream* const stm, Model** const capt
 
     captureStream = stm->GetCaptureStream();
     NULL_PTR_PROC_RETURN_ERROR(captureStream, RT_ERROR_STREAM_NULL, ClearCaptureModel(stm, captureModel));
-    error = AddNotifyToAddedCaptureStream(stm, static_cast<CaptureModel*>(captureModelTmp));
+    error = AddEventToAddedCaptureStream(stm, static_cast<CaptureModel*>(captureModelTmp));
     if (error != RT_ERROR_NONE) {
         RT_LOG(
             RT_LOG_ERROR,
-            "set notify for add capture stream failed, device_id=%u, origin stream_id=%d, "
-            "capture model_id=%u, stream_id=%d, retCode=%#x.",
-            ctx_->Device_()->Id_(), stm->Id_(), captureModel->Id_(), captureStream->Id_(), error);
-        ClearCaptureModel(stm, captureModel);
-        return error;
-    }
-
-    error = SetNotifyForExeModel(captureModelTmp);
-    if (error != RT_ERROR_NONE) {
-        RT_LOG(
-            RT_LOG_ERROR,
-            "set notify for capture model failed, device_id=%u, origin stream_id=%d, "
+            "set event for add capture stream failed, device_id=%u, origin stream_id=%d, "
             "capture model_id=%u, stream_id=%d, retCode=%#x.",
             ctx_->Device_()->Id_(), stm->Id_(), captureModel->Id_(), captureStream->Id_(), error);
         ClearCaptureModel(stm, captureModel);

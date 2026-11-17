@@ -925,7 +925,7 @@ TEST_F(RtApiTest, capture_api_31)
     error = rtStreamAddToModel(addStream, model);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    MOCKER_CPP(&CaptureSession::AddNotifyToAddedCaptureStream).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER_CPP(&CaptureSession::AddEventToAddedCaptureStream).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
 
     error = rtStreamEndCapture(stream, &model);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
@@ -966,44 +966,6 @@ TEST_F(RtApiTest, capture_api_32)
 
     error = rtStreamEndCapture(stream, &model);
     EXPECT_EQ(error, ACL_ERROR_RT_STREAM_CAPTURE_INVALIDATED);
-
-    error = rtModelDestroy(model);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
-
-    error = rtStreamDestroy(addStream);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtStreamDestroy(stream);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-}
-
-TEST_F(RtApiTest, capture_api_33)
-{
-    rtError_t error;
-    rtStream_t stream;
-    rtModel_t model;
-    rtStreamCaptureStatus status;
-
-    error = rtStreamCreate(&stream, 0);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    rtStream_t addStream;
-    error = rtStreamCreate(&addStream, 0);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtStreamGetCaptureInfo(stream, &status, &model);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    error = rtStreamAddToModel(addStream, model);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-
-    MOCKER_CPP(&CaptureSession::SetNotifyForExeModel).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
-
-    error = rtStreamEndCapture(stream, &model);
-    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
 
     error = rtModelDestroy(model);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);

@@ -938,6 +938,9 @@ TEST_F(TinyStubTest, xpu_launch_kernel_stub)
 
 TEST_F(TinyStubTest, capture_adapt_stub)
 {
+    EXPECT_EQ(CreateCaptureSyncEvent(nullptr, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(CreateExecutionSyncEvent(nullptr, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(CaptureStreamRecordWait(nullptr, nullptr, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
     const char_t* const unsupportedFlag = GetUnsupportedCaptureStreamFlag(RT_STREAM_AICPU);
     EXPECT_EQ(unsupportedFlag, nullptr);
 
@@ -1048,8 +1051,10 @@ TEST_F(TinyStubTest, capture_model_execute_stub)
 TEST_F(TinyStubTest, capture_model_notify_stub)
 {
     CaptureModel captureModel(RT_MODEL_NORMAL);
-    EXPECT_EQ(captureModel.SetNotifyBeforeExecute(nullptr, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(captureModel.SetNotifyAfterExecute(nullptr, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(captureModel.SetEventBeforeExecute(nullptr, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(captureModel.SetEventAfterExecute(nullptr, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(RecordStreamSyncEvent(nullptr, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(WaitStreamSyncEvent(nullptr, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
     EXPECT_FALSE(captureModel.IsAddStream(nullptr));
     captureModel.EnterCaptureNotify(0, 0);
     captureModel.ExitCaptureNotify();

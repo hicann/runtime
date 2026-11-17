@@ -57,8 +57,7 @@ public:
 private:
     rtError_t CheckCaptureModelIsCaptured(Model* const mdl) const;
     rtError_t CheckCaptureModelValidity(Model* const captureMdl) const;
-    rtError_t AddNotifyToAddedCaptureStream(Stream* const oriSingleStm, CaptureModel* const captureMdl);
-    rtError_t SetNotifyForExeModel(CaptureModel* const captureMdl);
+    rtError_t AddEventToAddedCaptureStream(Stream* const oriSingleStm, CaptureModel* const captureMdl);
     rtError_t SubmitCaptureConditionTask(CondHandle* condHandle, Stream* const stm);
     bool CheckSubModelsIsEndCapture(const Stream* const captureStream) const;
     void ClearCaptureModel(Stream* const stm, Model* mdl = nullptr);

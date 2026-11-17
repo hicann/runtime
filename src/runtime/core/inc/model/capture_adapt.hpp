@@ -25,6 +25,11 @@ const char_t* GetUnsupportedCaptureStreamFlag(const uint32_t flags);
 rtError_t GetCaptureEventFromTask(
     const Device* const dev, uint32_t streamId, uint32_t pos, Event*& eventPtr, CaptureCntNotify& cntInfo);
 rtError_t ResetCaptureEventsProc(const CaptureModel* const captureModel, Stream* const stm);
+rtError_t CreateCaptureSyncEvent(Context* ctx, Event** event);
+rtError_t CreateExecutionSyncEvent(Context* ctx, Event** event);
+rtError_t RecordStreamSyncEvent(Event* event, Stream* stream);
+rtError_t WaitStreamSyncEvent(Event* event, Stream* stream);
+rtError_t CaptureStreamRecordWait(Context* ctx, Stream* recordStream, Stream* waitStream);
 TaskInfo* GetStreamTaskInfo(const Device* const dev, uint16_t streamId, uint16_t pos);
 rtError_t SendNopTask(const Context* const curCtx, Stream* const stm);
 bool TaskTypeIsSupportTaskGroup(const TaskInfo* const task);

@@ -13778,6 +13778,8 @@ TEST_F(ApiDavidTest, HcclNormalModelRegistrationAndQueries)
 
 TEST_F(ApiDavidTest, HcclCaptureModelRegistrationAndQueries)
 {
+    // Keep task-enumeration expectations independent of available hardware resources.
+    MOCKER(IsUseHardwareEvent).stubs().will(returnValue(true));
     // The driver stub does not complete control-SQ tasks; keep capture and query logic real.
     MOCKER_CPP_VIRTUAL(stream_, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
     rtStream_t hcclStream = nullptr;
@@ -13805,20 +13807,30 @@ TEST_F(ApiDavidTest, HcclCaptureModelRegistrationAndQueries)
     EXPECT_EQ(rtGetModelByStream(ExportEmbeddedHandle<rtStream_t>(sink), &bound), ACL_RT_SUCCESS);
     EXPECT_EQ(bound, model);
     MOCK_CAPTURE_MODEL_LOAD_COMPLETE(streamHandle_);
-    EXPECT_EQ(rtStreamEndCapture(streamHandle_, &model), ACL_RT_SUCCESS);
+    ASSERT_EQ(rtStreamEndCapture(streamHandle_, &model), ACL_RT_SUCCESS);
     // The driver stub cannot advance device SQ tails during capture-model teardown.
     MOCKER_CPP(&Model::UnBindSqPerStream).stubs().will(returnValue(RT_ERROR_NONE));
     for (Stream* captureStream : rt_ut::UnwrapOrNull<Model>(model)->StreamList_()) {
+        const uint32_t expectedCount = captureStream == sink ? 1U : 2U;
         uint32_t visibleTasks = 0U;
         ASSERT_EQ(captureStream->StreamGetTasks(nullptr, &visibleTasks), RT_ERROR_NONE);
-        ASSERT_EQ(visibleTasks, 1U);
-        rtTask_t task = nullptr;
-        ASSERT_EQ(captureStream->StreamGetTasks(&task, &visibleTasks), RT_ERROR_NONE);
-        ASSERT_NE(task, nullptr);
-        // HCCL 加流的收尾 Record/Wait 保留可见，主捕获流的图尾 Record 被过滤。
+        ASSERT_EQ(visibleTasks, expectedCount);
+        rtTask_t tasks[3] = {};
+        visibleTasks = 3U;
+        ASSERT_EQ(captureStream->StreamGetTasks(tasks, &visibleTasks), RT_ERROR_NONE);
+        ASSERT_EQ(visibleTasks, expectedCount);
+        ASSERT_NE(tasks[0], nullptr);
+        // David Event Record/Wait/Reset remain visible; the EndGraph Notify is hidden.
         EXPECT_EQ(
-            static_cast<TaskInfo*>(task)->type,
-            captureStream == sink ? TS_TASK_TYPE_NOTIFY_RECORD : TS_TASK_TYPE_NOTIFY_WAIT);
+            static_cast<TaskInfo*>(tasks[0])->type,
+            captureStream == sink ? TS_TASK_TYPE_DAVID_EVENT_RECORD : TS_TASK_TYPE_DAVID_EVENT_WAIT);
+        if (captureStream != sink) {
+            ASSERT_NE(tasks[1], nullptr);
+            EXPECT_EQ(static_cast<TaskInfo*>(tasks[1])->type, TS_TASK_TYPE_DAVID_EVENT_RESET);
+        }
+        for (uint32_t i = visibleTasks; i < 3U; ++i) {
+            EXPECT_EQ(tasks[i], nullptr);
+        }
     }
     EXPECT_EQ(rtModelDestroy(model), ACL_RT_SUCCESS);
     EXPECT_EQ(rtStreamDestroy(hcclStream), ACL_RT_SUCCESS);

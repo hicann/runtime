@@ -100,8 +100,8 @@ public:
     rtError_t TearDown() override;
     rtError_t InitExecutionOrderEvent();
     rtError_t AddStreamToCaptureModel(Stream* const stm);
-    rtError_t SetNotifyBeforeExecute(Stream* const exeStm, CaptureModel* const captureMdl);
-    rtError_t SetNotifyAfterExecute(Stream* const exeStm, CaptureModel* const captureMdl);
+    rtError_t SetEventBeforeExecute(Stream* const exeStm, CaptureModel* const captureMdl);
+    rtError_t SetEventAfterExecute(Stream* const exeStm, CaptureModel* const captureMdl);
     bool IsAddStream(const Stream* stm) const;
 
     void EnterCaptureNotify(const int32_t singleOperStmId, const int32_t captureStmId);
@@ -163,10 +163,6 @@ public:
     rtError_t AddExternalRecordEvent(Event* event, uint32_t captureStreamId, uint32_t taskId);
     // 注册capture阶段生成的external wait占位任务，replay阶段再绑定真实producer资源。
     rtError_t AddExternalWaitEvent(Event* event, uint32_t captureStreamId, uint32_t taskId);
-
-    void AddNotify(Notify* notify) { addStreamNotifyList_.push_back(notify); }
-
-    void AddExeNotify(Notify* notify) { executeNotifyList_.push_back(notify); }
 
     rtError_t CollectHcclStreams(std::vector<Stream*>& streams) const override;
 
@@ -354,7 +350,6 @@ private:
     void RollbackSqCqArray(void);
     void RollbackAllSqCq(void);
     void ClearStreamActiveTask(void);
-    void ReleaseNotifyListOnDestroy(std::vector<Notify*>& notifyList);
     void ReleaseArgsDeviceBufferBackups(bool releaseDeviceMemory);
     std::list<void*> argsDeviceBufferBackups_;
     void FinalizeHostStateOnExit() noexcept;
@@ -415,9 +410,7 @@ private:
     std::vector<EventResource>* curReplayExternalEventsRes_{nullptr};
     GraphUpdateInfo updateInfo_{};
     std::map<Stream*, std::vector<Stream*>> addStreamMap_; // key为add进来的stream，value为隐式创建的stream
-    std::vector<Notify*> addStreamNotifyList_;
-    std::vector<Notify*> executeNotifyList_;
-    std::mutex notifyMutex_;
+    Event* streamSyncEvent_{nullptr};
     std::mutex executionOrderMutex_;
     Event* executionOrderEvent_{nullptr};
     std::mutex taskGroupListMutex_;

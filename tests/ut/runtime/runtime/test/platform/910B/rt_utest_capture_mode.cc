@@ -57,6 +57,7 @@
 #undef private
 #undef protected
 #include "api.hpp"
+#include "capture_adapt.hpp"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -1246,6 +1247,269 @@ TEST_F(CloudV2CaptureModelTest, capture_model_execute_with_null_stream)
     EXPECT_EQ(rtModelDestroy(model), RT_ERROR_NONE);
     EXPECT_EQ(rtStreamDestroy(captureStream), RT_ERROR_NONE);
     EXPECT_EQ(rtFree(devPtr), RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2CaptureModelTest, AddedStreamReplayEventDirectionsAndReuse)
+{
+    rtStream_t stream = nullptr;
+    rtStream_t addedStream = nullptr;
+    rtStream_t executeStream = nullptr;
+    rtModel_t model = nullptr;
+    rtStreamCaptureStatus status;
+    ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamCreate(&addedStream, 0), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamCreate(&executeStream, 0), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamGetCaptureInfo(stream, &status, &model), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamAddToModel(addedStream, model), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamEndCapture(stream, &model), RT_ERROR_NONE);
+    auto* captureModel = static_cast<CaptureModel*>(rt_ut::UnwrapOrNull<Model>(model));
+    auto* added = rt_ut::UnwrapOrNull<Stream>(addedStream);
+    auto* execute = rt_ut::UnwrapOrNull<Stream>(executeStream);
+    EXPECT_EQ(captureModel->streamSyncEvent_, nullptr);
+    MOCKER(EvtRecord).expects(exactly(2)).with(mockcpp::any(), eq(added)).will(returnValue(RT_ERROR_NONE));
+    MOCKER(EvtWait)
+        .expects(exactly(2))
+        .with(mockcpp::any(), eq(execute), eq(MAX_UINT32_NUM))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER(EvtRecord).expects(exactly(2)).with(mockcpp::any(), eq(execute)).will(returnValue(RT_ERROR_NONE));
+    MOCKER(EvtWait)
+        .expects(exactly(2))
+        .with(mockcpp::any(), eq(added), eq(MAX_UINT32_NUM))
+        .will(returnValue(RT_ERROR_NONE));
+    ASSERT_EQ(captureModel->SetEventBeforeExecute(execute, captureModel), RT_ERROR_NONE);
+    Event* const event = captureModel->streamSyncEvent_;
+    ASSERT_NE(event, nullptr);
+    EXPECT_TRUE(event->IsNewMode());
+    EXPECT_NE(event, captureModel->executionOrderEvent_);
+    EXPECT_EQ(captureModel->SetEventAfterExecute(execute, captureModel), RT_ERROR_NONE);
+    EXPECT_EQ(captureModel->SetEventBeforeExecute(execute, captureModel), RT_ERROR_NONE);
+    EXPECT_EQ(captureModel->SetEventAfterExecute(execute, captureModel), RT_ERROR_NONE);
+    EXPECT_EQ(captureModel->streamSyncEvent_, event);
+    EXPECT_EQ(rtModelDestroy(model), RT_ERROR_NONE);
+    EXPECT_EQ(rtStreamDestroy(executeStream), RT_ERROR_NONE);
+    EXPECT_EQ(rtStreamDestroy(addedStream), RT_ERROR_NONE);
+    EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
+}
+
+class AddedStreamCaptureFailureTest : public CloudV2CaptureModelTest, public testing::WithParamInterface<bool> {};
+
+TEST_P(AddedStreamCaptureFailureTest, RecordOrWaitFailureClearsModel)
+{
+    rtStream_t stream = nullptr;
+    rtStream_t addedStream = nullptr;
+    rtModel_t model = nullptr;
+    rtStreamCaptureStatus status;
+    ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamCreate(&addedStream, 0), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamGetCaptureInfo(stream, &status, &model), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamAddToModel(addedStream, model), RT_ERROR_NONE);
+    if (GetParam()) {
+        MOCKER_CPP(&Event::Record).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    } else {
+        MOCKER_CPP(&Event::Wait).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    }
+    EXPECT_EQ(rtStreamEndCapture(stream, &model), ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(model, nullptr);
+    EXPECT_EQ(rtStreamDestroy(addedStream), RT_ERROR_NONE);
+    EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
+}
+
+INSTANTIATE_TEST_SUITE_P(AddedStreamEvents, AddedStreamCaptureFailureTest, testing::Values(true, false));
+
+class AddedStreamEventModeTest : public CloudV2CaptureModelTest, public testing::WithParamInterface<bool> {};
+
+TEST_P(AddedStreamEventModeTest, MultipleAddedStreamsJoinWithEvents)
+{
+    MOCKER(IsUseHardwareEvent).stubs().will(returnValue(GetParam()));
+    if (GetParam()) {
+        MOCKER(halSupportFeature).stubs().will(returnValue(false));
+    }
+    rtStream_t stream = nullptr;
+    rtStream_t addedStreams[2] = {nullptr, nullptr};
+    rtModel_t model = nullptr;
+    rtStreamCaptureStatus status;
+    ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamGetCaptureInfo(stream, &status, &model), RT_ERROR_NONE);
+    for (auto& added : addedStreams) {
+        ASSERT_EQ(rtStreamCreate(&added, 0), RT_ERROR_NONE);
+        ASSERT_EQ(rtStreamAddToModel(added, model), RT_ERROR_NONE);
+    }
+    MOCKER_CPP(&Context::CreateNotify).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    ASSERT_EQ(rtStreamEndCapture(stream, &model), RT_ERROR_NONE);
+    auto* captureModel = static_cast<CaptureModel*>(rt_ut::UnwrapOrNull<Model>(model));
+    EXPECT_EQ(captureModel->GetCaptureEvent().size(), 2U);
+    for (Event* event : captureModel->GetCaptureEvent()) {
+        EXPECT_EQ(event->IsHardwareMode(), GetParam());
+        EXPECT_TRUE(event->IsCaptureStreamWaited());
+    }
+    Stream* const execute = rt_ut::UnwrapOrNull<Stream>(stream);
+    ASSERT_EQ(captureModel->SetEventBeforeExecute(execute, captureModel), RT_ERROR_NONE);
+    Event* const syncEvent = captureModel->streamSyncEvent_;
+    ASSERT_NE(syncEvent, nullptr);
+    EXPECT_EQ(syncEvent->IsHardwareMode(), GetParam());
+    EXPECT_TRUE(syncEvent->IsNewMode());
+    EXPECT_EQ(syncEvent->GetEventFlag(), RT_EVENT_DEFAULT);
+    EXPECT_EQ(syncEvent->GetCaptureStream(), nullptr);
+    EXPECT_EQ(captureModel->SetEventAfterExecute(execute, captureModel), RT_ERROR_NONE);
+    EXPECT_EQ(captureModel->SetEventBeforeExecute(execute, captureModel), RT_ERROR_NONE);
+    EXPECT_EQ(captureModel->SetEventAfterExecute(execute, captureModel), RT_ERROR_NONE);
+    EXPECT_EQ(captureModel->streamSyncEvent_, syncEvent);
+    EXPECT_EQ(rtModelDestroy(model), RT_ERROR_NONE);
+    for (auto added : addedStreams) {
+        EXPECT_EQ(rtStreamDestroy(added), RT_ERROR_NONE);
+    }
+    EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
+}
+
+INSTANTIATE_TEST_SUITE_P(AddedStreamEvents, AddedStreamEventModeTest, testing::Values(true, false));
+
+TEST_F(CloudV2CaptureModelTest, NoAddedStreamNeedsNoSyncEvent)
+{
+    rtStream_t stream = nullptr;
+    rtModel_t model = nullptr;
+    ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamEndCapture(stream, &model), RT_ERROR_NONE);
+    auto* captureModel = static_cast<CaptureModel*>(rt_ut::UnwrapOrNull<Model>(model));
+    EXPECT_EQ(captureModel->SetEventBeforeExecute(nullptr, captureModel), RT_ERROR_NONE);
+    EXPECT_EQ(captureModel->SetEventAfterExecute(nullptr, captureModel), RT_ERROR_NONE);
+    EXPECT_EQ(captureModel->streamSyncEvent_, nullptr);
+    EXPECT_EQ(rtModelDestroy(model), RT_ERROR_NONE);
+    EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2CaptureModelTest, AddedStreamJoinHandlesCascadeExpansion)
+{
+    rtStream_t stream = nullptr;
+    rtStream_t addedStream = nullptr;
+    rtModel_t model = nullptr;
+    rtStreamCaptureStatus status;
+    ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamCreate(&addedStream, 0), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamGetCaptureInfo(stream, &status, &model), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamAddToModel(addedStream, model), RT_ERROR_NONE);
+    // Force the next captured record to extend the added stream, as on a full capture SQ.
+    MOCKER(NeedCascadeExpandStream).stubs().will(returnValue(true)).then(returnValue(false));
+    ASSERT_EQ(rtStreamEndCapture(stream, &model), RT_ERROR_NONE);
+    auto* captureModel = static_cast<CaptureModel*>(rt_ut::UnwrapOrNull<Model>(model));
+    auto* added = rt_ut::UnwrapOrNull<Stream>(addedStream);
+    const auto& streams = captureModel->GetAddStreamMap();
+    ASSERT_NE(streams.find(added), streams.end());
+    EXPECT_EQ(streams.at(added).size(), 2U);
+    EXPECT_EQ(captureModel->GetCaptureEvent().size(), 1U);
+    for (Event* event : captureModel->GetCaptureEvent()) {
+        EXPECT_TRUE(event->IsCaptureStreamWaited());
+    }
+    EXPECT_EQ(rtModelDestroy(model), RT_ERROR_NONE);
+    EXPECT_EQ(rtStreamDestroy(addedStream), RT_ERROR_NONE);
+    EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2CaptureModelTest, ExecuteRejectsForeignContextBeforePreprocessing)
+{
+    Context* const context = Runtime::Instance()->CurrentContext();
+    rtContext_t originalContext = nullptr;
+    rtContext_t foreignContext = nullptr;
+    ASSERT_EQ(rtCtxGetCurrent(&originalContext), RT_ERROR_NONE);
+    ASSERT_EQ(rtCtxCreate(&foreignContext, 0, 0), RT_ERROR_NONE);
+    Context* const foreign = Runtime::Instance()->CurrentContext();
+    ASSERT_EQ(rtCtxSetCurrent(originalContext), RT_ERROR_NONE);
+    Stream foreignStream(context->Device_(), 0);
+    foreignStream.SetContext(foreign);
+    CaptureModel model(RT_MODEL_CAPTURE_MODEL);
+    model.context_ = context;
+    MOCKER_CPP(&CaptureModel::CheckExecuteReady).stubs().will(returnValue(RT_ERROR_NONE));
+    // A failing stub keeps the unfixed path from submitting real tasks.
+    MOCKER_CPP(&CaptureModel::PreModelExecute).expects(never()).will(returnValue(RT_ERROR_INVALID_VALUE));
+    EXPECT_EQ(model.Execute(&foreignStream, -1), RT_ERROR_STREAM_CONTEXT);
+    EXPECT_EQ(model.ExecuteAsync(&foreignStream), RT_ERROR_STREAM_CONTEXT);
+    EXPECT_EQ(model.streamSyncEvent_, nullptr);
+    EXPECT_EQ(model.GetExeStream(), nullptr);
+    GlobalMockObject::verify();
+    foreignStream.SetContext(nullptr);
+    EXPECT_EQ(rtCtxDestroy(foreignContext), RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2CaptureModelTest, CaptureJoinRejectsMissingOrWrongModelBeforeAllocation)
+{
+    Context* const context = Runtime::Instance()->CurrentContext();
+    Stream original(context->Device_(), 0);
+    Stream capture(context->Device_(), 0);
+    Model normalModel;
+    original.UpdateCaptureStream(&capture);
+    MOCKER(CreateCaptureSyncEvent).expects(never()).will(returnValue(RT_ERROR_INVALID_VALUE));
+    EXPECT_EQ(CaptureStreamRecordWait(context, &original, &original), RT_ERROR_MODEL_NULL);
+    capture.SetModel(&normalModel);
+    EXPECT_EQ(CaptureStreamRecordWait(context, &original, &original), RT_ERROR_MODEL_NULL);
+    capture.SetModel(nullptr);
+    original.UpdateCaptureStream(nullptr);
+    GlobalMockObject::verify();
+}
+
+TEST_F(CloudV2CaptureModelTest, AddedStreamReplayEventFailures)
+{
+    rtStream_t stream = nullptr;
+    rtStream_t addedStream = nullptr;
+    rtModel_t model = nullptr;
+    rtStreamCaptureStatus status;
+    ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamCreate(&addedStream, 0), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamGetCaptureInfo(stream, &status, &model), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamAddToModel(addedStream, model), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamEndCapture(stream, &model), RT_ERROR_NONE);
+    auto* captureModel = static_cast<CaptureModel*>(rt_ut::UnwrapOrNull<Model>(model));
+    auto* execute = rt_ut::UnwrapOrNull<Stream>(stream);
+    MOCKER(EvtRecord).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    EXPECT_EQ(captureModel->SetEventBeforeExecute(execute, captureModel), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(captureModel->SetEventAfterExecute(execute, captureModel), RT_ERROR_INVALID_VALUE);
+    GlobalMockObject::verify();
+    MOCKER(EvtRecord).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(EvtWait).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    EXPECT_EQ(captureModel->SetEventBeforeExecute(execute, captureModel), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(captureModel->SetEventAfterExecute(execute, captureModel), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(rtModelDestroy(model), RT_ERROR_NONE);
+    EXPECT_EQ(rtStreamDestroy(addedStream), RT_ERROR_NONE);
+    EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2CaptureModelTest, AddedStreamReplayEventCreationFailure)
+{
+    rtStream_t stream = nullptr;
+    rtStream_t addedStream = nullptr;
+    rtModel_t model = nullptr;
+    rtStreamCaptureStatus status;
+    ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamCreate(&addedStream, 0), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamGetCaptureInfo(stream, &status, &model), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamAddToModel(addedStream, model), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamEndCapture(stream, &model), RT_ERROR_NONE);
+    auto* captureModel = static_cast<CaptureModel*>(rt_ut::UnwrapOrNull<Model>(model));
+    auto* execute = rt_ut::UnwrapOrNull<Stream>(stream);
+    MOCKER(CreateExecutionSyncEvent).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    EXPECT_EQ(captureModel->SetEventBeforeExecute(execute, captureModel), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(captureModel->streamSyncEvent_, nullptr);
+    EXPECT_EQ(captureModel->SetEventAfterExecute(execute, captureModel), RT_ERROR_EVENT_NULL);
+    EXPECT_EQ(rtModelDestroy(model), RT_ERROR_NONE);
+    EXPECT_EQ(rtStreamDestroy(addedStream), RT_ERROR_NONE);
+    EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2CaptureModelTest, AddedStreamHardwareEventAllocationFailure)
+{
+    Context* const context = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(context, nullptr);
+    Event* event = nullptr;
+    Event prototype(context->Device_(), RT_EVENT_DEFAULT, context);
+    MOCKER(IsUseHardwareEvent).stubs().will(returnValue(true));
+    MOCKER_CPP_VIRTUAL(&prototype, &Event::GenEventId).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    EXPECT_EQ(CreateCaptureSyncEvent(context, &event), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(event, nullptr);
 }
 
 TEST_F(CloudV2CaptureModelTest, capture_mode_api_normal)
@@ -2570,6 +2834,8 @@ TEST_F(CloudV2CaptureModelTest, stream_get_tasks_abnormal)
 
 TEST_F(CloudV2CaptureModelTest, stream_get_tasks_normal)
 {
+    // Select hardware events without changing the fixture's software-SQ capabilities.
+    MOCKER(IsUseHardwareEvent).stubs().will(returnValue(true));
     rtError_t error;
     rtModel_t model;
     rtStream_t stream;
@@ -2579,45 +2845,60 @@ TEST_F(CloudV2CaptureModelTest, stream_get_tasks_normal)
 
     rtStream_t* inputStreams = createModelAndGetStreams(&model, &stream);
 
-    // AddStream 的收尾 Record/Wait 保留可见，只有图尾 Record 被过滤。
-    rtTaskType types[2] = {};
+    // Hardware Event Record remains visible; internal Wait/Reset and EndGraph Notify are hidden.
+    rtStream_t recordStream = nullptr;
+    uint32_t visibleTotal = 0U;
     for (uint32_t i = 0U; i < 2U; ++i) {
         uint32_t count = 0U;
         ASSERT_EQ(rtStreamGetTasks(inputStreams[i], nullptr, &count), RT_ERROR_NONE);
+        visibleTotal += count;
+        if (count == 0U) {
+            rtTask_t hiddenTasks[2] = {};
+            uint32_t capacity = 2U;
+            ASSERT_EQ(rtStreamGetTasks(inputStreams[i], hiddenTasks, &capacity), RT_ERROR_NONE);
+            EXPECT_EQ(capacity, 0U);
+            EXPECT_EQ(hiddenTasks[0], nullptr);
+            EXPECT_EQ(hiddenTasks[1], nullptr);
+            continue;
+        }
         ASSERT_EQ(count, 1U);
         rtTask_t task = nullptr;
         ASSERT_EQ(rtStreamGetTasks(inputStreams[i], &task, &count), RT_ERROR_NONE);
-        ASSERT_EQ(rtTaskGetType(task, &types[i]), RT_ERROR_NONE);
+        rtTaskType type = RT_TASK_DEFAULT;
+        ASSERT_EQ(rtTaskGetType(task, &type), RT_ERROR_NONE);
+        EXPECT_EQ(type, RT_TASK_EVENT_RECORD);
+        recordStream = inputStreams[i];
     }
-    EXPECT_TRUE(
-        (types[0] == RT_TASK_NOTIFY_RECORD && types[1] == RT_TASK_NOTIFY_WAIT) ||
-        (types[1] == RT_TASK_NOTIFY_RECORD && types[0] == RT_TASK_NOTIFY_WAIT));
+    ASSERT_EQ(visibleTotal, 1U);
+    ASSERT_NE(recordStream, nullptr);
 
     uint32_t numTasks = 0;
-    error = rtStreamGetTasks(inputStreams[1], nullptr, &numTasks);
+    error = rtStreamGetTasks(recordStream, nullptr, &numTasks);
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_EQ(numTasks, 1);
 
     // input numTasks = actual task num
     rtTask_t* tasks = (rtTask_t*)malloc(sizeof(rtTask_t) * numTasks);
-    error = rtStreamGetTasks(inputStreams[1], tasks, &numTasks);
+    error = rtStreamGetTasks(recordStream, tasks, &numTasks);
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_EQ(numTasks, 1);
 
     // input numTasks < actual task num
     uint32_t numTasksLess = 0;
     rtTask_t* inputTasksLess = (rtTask_t*)malloc(sizeof(rtTask_t) * numTasksLess);
-    error = rtStreamGetTasks(inputStreams[1], inputTasksLess, &numTasksLess);
+    error = rtStreamGetTasks(recordStream, inputTasksLess, &numTasksLess);
     EXPECT_EQ(error, ACL_ERROR_RT_INSUFFICIENT_INPUT_ARRAY);
     EXPECT_EQ(numTasksLess, 0);
 
     // input numTasks > actual task num
     uint32_t numTasksLarger = 5;
     rtTask_t* inputTasksLarger = (rtTask_t*)malloc(sizeof(rtTask_t) * numTasksLarger);
-    error = rtStreamGetTasks(inputStreams[1], inputTasksLarger, &numTasksLarger);
+    error = rtStreamGetTasks(recordStream, inputTasksLarger, &numTasksLarger);
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_EQ(numTasksLarger, 1);
-    EXPECT_EQ(inputTasksLarger[1], nullptr);
+    for (uint32_t i = numTasksLarger; i < 5U; ++i) {
+        EXPECT_EQ(inputTasksLarger[i], nullptr);
+    }
 
     error = rtModelDestroy(model);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -2825,12 +3106,13 @@ TEST_F(CloudV2CaptureModelTest, RecordSoftwareEvent_Success)
                    &Stream::AllocTask))
         .stubs()
         .will(returnValue(&taskInfo));
-    MOCKER_CPP_VIRTUAL(stm->Device_(), &Device::AllocExpandingPoolEvent).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(stm->Device_(), &Device::SubmitTask).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
 
     error = evt->RecordSoftwareEvent(stm);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_NE(evt->GetEventAddr(), nullptr);
+    TaskUnInitProc(&taskInfo);
 
     GlobalMockObject::verify();
     error = rtEventDestroy(event);
@@ -2912,12 +3194,12 @@ TEST_F(CloudV2CaptureModelTest, RecordSoftwareEvent_SubmitTaskFail)
                    &Stream::AllocTask))
         .stubs()
         .will(returnValue(&taskInfo));
-    MOCKER_CPP_VIRTUAL(stm->Device_(), &Device::AllocExpandingPoolEvent).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(stm->Device_(), &Device::SubmitTask).stubs().will(returnValue(RT_ERROR_STREAM_FULL));
     MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(RT_ERROR_NONE));
 
     error = evt->RecordSoftwareEvent(stm);
-    EXPECT_NE(error, RT_ERROR_NONE);
+    EXPECT_EQ(error, RT_ERROR_STREAM_FULL);
+    TaskUnInitProc(&taskInfo);
 
     GlobalMockObject::verify();
     error = rtEventDestroy(event);

@@ -135,6 +135,9 @@ CaptureModel::~CaptureModel() noexcept
     if (executionOrderEvent_ != nullptr) {
         TryToFreeEventIdAndDestroyEvent(&executionOrderEvent_, executionOrderEvent_->EventId_(), true);
     }
+    if (streamSyncEvent_ != nullptr) {
+        TryToFreeEventIdAndDestroyEvent(&streamSyncEvent_, streamSyncEvent_->EventId_(), true);
+    }
 
     // 清空capturestream和单算子流关系
     singleOperStmIdAndCaptureStmIdMap_.clear();
@@ -170,8 +173,6 @@ CaptureModel::~CaptureModel() noexcept
     }
     (void)Context_()->Device_()->ClearEndGraphNotifyInfoByModel(this);
 
-    ReleaseNotifyListOnDestroy(addStreamNotifyList_);
-    ReleaseNotifyListOnDestroy(executeNotifyList_);
     ReleaseArgsDeviceBufferBackups(true);
     for (auto condHandle : condHandles_) {
         DELETE_O(condHandle);
@@ -290,72 +291,39 @@ rtError_t CaptureModel::LoadComplete()
     return LoadCompleteByStream();
 }
 
-rtError_t CaptureModel::SetNotifyBeforeExecute(Stream* const exeStm, CaptureModel* const captureMdl)
+rtError_t CaptureModel::SetEventBeforeExecute(Stream* const exeStm, CaptureModel* const captureMdl)
 {
     rtError_t error = RT_ERROR_NONE;
     auto& addStreams = captureMdl->GetAddStreamMap();
-    RT_LOG(
-        RT_LOG_DEBUG, "streamsSize=%lu, executeNotifyList_.size()=%lu.", addStreams.size(), executeNotifyList_.size());
-    Api* const apiObj = Runtime::Instance()->ApiImpl_();
-    NULL_PTR_RETURN_MSG(apiObj, RT_ERROR_API_NULL);
-    {
-        const std::unique_lock<std::mutex> lk(notifyMutex_);
-        COND_RETURN_ERROR(
-            ((addStreams.size() + addStreams.size()) > executeNotifyList_.size()), RT_ERROR_INVALID_VALUE,
-            "executeEventList size[%u] is less than addStreams size[%u].", executeNotifyList_.size(),
-            addStreams.size());
-
-        size_t i = 0U;
-        for (auto& streamObj : addStreams) {
-            Notify* notify = executeNotifyList_[i];
-            COND_RETURN_ERROR_MSG_INNER((notify == nullptr), RT_ERROR_NOTIFY_NULL, "Get notify failed.");
-            error = apiObj->NotifyRecord(notify, streamObj.first);
-            COND_RETURN_ERROR(
-                (error != RT_ERROR_NONE), error,
-                "Notify record failed, exe stream_id=%d, notify id=%d, add stream_id=%d, retCode=%#x.", exeStm->Id_(),
-                notify->GetNotifyId(), streamObj.first->Id_(), error);
-
-            error = apiObj->NotifyWait(notify, exeStm, MAX_UINT32_NUM);
-            COND_RETURN_ERROR(
-                (error != RT_ERROR_NONE), error,
-                "Notify wait failed, exe stream_id=%d, notify id=%d, add stream_id=%d, retCode=%#x.", exeStm->Id_(),
-                notify->GetNotifyId(), streamObj.first->Id_(), error);
-            i++;
-        }
+    if (addStreams.empty()) {
+        return RT_ERROR_NONE;
+    }
+    if (streamSyncEvent_ == nullptr) {
+        error = CreateExecutionSyncEvent(Context_(), &streamSyncEvent_);
+        ERROR_RETURN(error, "Create added stream synchronization event failed, model_id=%u.", Id_());
+    }
+    for (const auto& streamObj : addStreams) {
+        error = RecordStreamSyncEvent(streamSyncEvent_, streamObj.first);
+        ERROR_RETURN(error, "Record added stream event failed, stream_id=%d.", streamObj.first->Id_());
+        error = WaitStreamSyncEvent(streamSyncEvent_, exeStm);
+        ERROR_RETURN(error, "Wait added stream event failed, stream_id=%d.", exeStm->Id_());
     }
     return error;
 }
-rtError_t CaptureModel::SetNotifyAfterExecute(Stream* const exeStm, CaptureModel* const captureMdl)
+
+rtError_t CaptureModel::SetEventAfterExecute(Stream* const exeStm, CaptureModel* const captureMdl)
 {
     rtError_t error = RT_ERROR_NONE;
     auto& addStreams = captureMdl->GetAddStreamMap();
-    size_t exeNotifySize = addStreams.size();
-    RT_LOG(RT_LOG_DEBUG, "streamsSize=%lu, executeNotifyList size=%lu.", addStreams.size(), executeNotifyList_.size());
-    Api* const apiObj = Runtime::Instance()->ApiImpl_();
-    NULL_PTR_RETURN_MSG(apiObj, RT_ERROR_API_NULL);
-    {
-        const std::unique_lock<std::mutex> lk(notifyMutex_);
-        COND_RETURN_ERROR(
-            ((addStreams.size() + exeNotifySize) > executeNotifyList_.size()), RT_ERROR_INVALID_VALUE,
-            "executeNotifyList size[%u] is less than addStreams size[%u].", executeNotifyList_.size(),
-            addStreams.size());
-
-        size_t i = 0U;
-        for (auto& streamObj : addStreams) {
-            Notify* notify = executeNotifyList_[exeNotifySize + i];
-            COND_RETURN_ERROR_MSG_INNER((notify == nullptr), RT_ERROR_NOTIFY_NULL, "Get notify failed.");
-            error = apiObj->NotifyRecord(notify, exeStm);
-            COND_RETURN_ERROR(
-                (error != RT_ERROR_NONE), error,
-                "Notify record failed, exe stream_id=%d, notify_id=%d, add stream_id=%d, retCode=%#x.", exeStm->Id_(),
-                notify->GetNotifyId(), streamObj.first->Id_(), error);
-            error = NtyWait(notify, streamObj.first, MAX_UINT32_NUM);
-            COND_RETURN_ERROR(
-                (error != RT_ERROR_NONE), error,
-                "Notify wait failed, exe stream_id=%d, notify_id=%d, add stream_id=%d, retCode=%#x.", exeStm->Id_(),
-                notify->GetNotifyId(), streamObj.first->Id_(), error);
-            i++;
-        }
+    if (addStreams.empty()) {
+        return RT_ERROR_NONE;
+    }
+    NULL_PTR_RETURN_MSG(streamSyncEvent_, RT_ERROR_EVENT_NULL);
+    for (const auto& streamObj : addStreams) {
+        error = RecordStreamSyncEvent(streamSyncEvent_, exeStm);
+        ERROR_RETURN(error, "Record execution stream event failed, stream_id=%d.", exeStm->Id_());
+        error = WaitStreamSyncEvent(streamSyncEvent_, streamObj.first);
+        ERROR_RETURN(error, "Wait execution stream event failed, stream_id=%d.", streamObj.first->Id_());
     }
     return error;
 }
@@ -536,11 +504,10 @@ rtError_t CaptureModel::PreModelExecute(
         "Failed to wait for previous model execution, stream_id=%d, model_id=%u, retCode=%#x.", stm->Id_(), Id_(),
         static_cast<uint32_t>(error));
 
-    error = SetNotifyBeforeExecute(stm, this);
+    error = SetEventBeforeExecute(stm, this);
     COND_RETURN_ERROR_MSG_INNER(
-        error != RT_ERROR_NONE, error,
-        "Set notify before model execute failed, stream_id=%d, model_id=%u, retCode=%#x.", stm->Id_(), Id_(),
-        static_cast<uint32_t>(error));
+        error != RT_ERROR_NONE, error, "Set event before model execute failed, stream_id=%d, model_id=%u, retCode=%#x.",
+        stm->Id_(), Id_(), static_cast<uint32_t>(error));
     error = BuildSqCq(stm);
     COND_RETURN_ERROR_MSG_INNER(
         error != RT_ERROR_NONE, error, "Build SQ/CQ failed, stream_id=%d, model_id=%u, retCode=%#x.", stm->Id_(), Id_(),
@@ -598,9 +565,9 @@ rtError_t CaptureModel::ExecuteModel(
 rtError_t CaptureModel::PostModelExecute(Stream* const stm, ExternalEventRefreshInfo* refreshInfo)
 {
     UNUSED(refreshInfo);
-    rtError_t error = SetNotifyAfterExecute(stm, this);
+    rtError_t error = SetEventAfterExecute(stm, this);
     COND_RETURN_ERROR(
-        error != RT_ERROR_NONE, error, "Set notify after model execute failed, stream_id=%d, model_id=%u, retCode=%#x.",
+        error != RT_ERROR_NONE, error, "Set event after model execute failed, stream_id=%d, model_id=%u, retCode=%#x.",
         stm->Id_(), Id_(), static_cast<uint32_t>(error));
 
     error = EvtRecord(executionOrderEvent_, stm);
@@ -613,6 +580,8 @@ rtError_t CaptureModel::PostModelExecute(Stream* const stm, ExternalEventRefresh
 
 rtError_t CaptureModel::ExecuteCommon(Stream* const stm, int32_t timeout, const uint8_t executeMode)
 {
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        stm, Context_(), RT_ERROR_STREAM_CONTEXT, "Executing the capture model running instance");
     RT_LOG(RT_LOG_INFO, "capture model execute, model_id=%u!", Id_());
     const std::lock_guard<std::mutex> executeLock(executionOrderMutex_);
     rtError_t error = CheckExecuteReady();
@@ -681,14 +650,6 @@ rtError_t CaptureModel::ExecuteAsync(Stream* const stm)
     return ExecuteCommon(executeStream, -1, RT_MODEL_CAPTURE_EXECUTE_ASYNC);
 }
 
-void CaptureModel::ReleaseNotifyListOnDestroy(std::vector<Notify*>& notifyList)
-{
-    for (Notify* notify : notifyList) {
-        DELETE_O(notify);
-    }
-    notifyList.clear();
-}
-
 rtError_t CaptureModel::TearDown()
 {
     Runtime* const rt = Runtime::Instance();
@@ -712,8 +673,7 @@ void CaptureModel::FinalizeHostStateOnExit() noexcept
     singleOperEvents_.clear();
     captureEvents_.clear();
     addStreamMap_.clear();
-    addStreamNotifyList_.clear();
-    executeNotifyList_.clear();
+    streamSyncEvent_ = nullptr;
     externalRecordEventItems_.clear();
     externalWaitEventItems_.clear();
     externalEventRefreshHostTemplate_.reset();

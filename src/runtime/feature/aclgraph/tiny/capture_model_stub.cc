@@ -146,14 +146,14 @@ rtError_t CaptureModel::AddStreamToCaptureModel(Stream* const stm)
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t CaptureModel::SetNotifyBeforeExecute(Stream* const exeStm, CaptureModel* const captureMdl)
+rtError_t CaptureModel::SetEventBeforeExecute(Stream* const exeStm, CaptureModel* const captureMdl)
 {
     UNUSED(exeStm);
     UNUSED(captureMdl);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t CaptureModel::SetNotifyAfterExecute(Stream* const exeStm, CaptureModel* const captureMdl)
+rtError_t CaptureModel::SetEventAfterExecute(Stream* const exeStm, CaptureModel* const captureMdl)
 {
     UNUSED(exeStm);
     UNUSED(captureMdl);

@@ -9,6 +9,8 @@
  */
 
 #include "capture_adapt.hpp"
+#include "capture_model_utils.hpp"
+#include "event_c.hpp"
 #include "task_info.hpp"
 #include "task.hpp"
 #include "capture_model.hpp"
@@ -132,6 +134,65 @@ TaskInfo* AllocNonCaptureTask(
         pTask->stream = stm;
         return pTask;
     }
+}
+
+rtError_t CreateCaptureSyncEvent(Context* ctx, Event** event)
+{
+    Device* const dev = ctx->Device_();
+    const bool hardware = IsUseHardwareEvent(dev);
+    Event* created = new (std::nothrow) Event(dev, RT_EVENT_WITH_FLAG, ctx, false, !hardware);
+    COND_RETURN_AND_MSG_OUTER(created == nullptr, RT_ERROR_EVENT_NEW, ErrorCode::EE1013, sizeof(Event), "new");
+    if (hardware) {
+        const rtError_t error = created->GenEventId();
+        COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, DELETE_O(created);, "Allocate capture event failed.");
+    } else {
+        created->SoftwareModeEnable();
+    }
+    created->SetEventOwner(EventOwner::EVENT_INNER);
+    dev->PushEvent(created);
+    *event = created;
+    return RT_ERROR_NONE;
+}
+
+rtError_t CreateExecutionSyncEvent(Context* ctx, Event** event)
+{
+    Device* const dev = ctx->Device_();
+    Event* created = new (std::nothrow) Event(dev, RT_EVENT_DEFAULT, ctx, false, true);
+    COND_RETURN_AND_MSG_OUTER(created == nullptr, RT_ERROR_EVENT_NEW, ErrorCode::EE1013, sizeof(Event), "new");
+    if (!IsUseHardwareEvent(dev)) {
+        created->SoftwareModeEnable();
+    }
+    created->SetEventOwner(EventOwner::EVENT_INNER);
+    dev->PushEvent(created);
+    *event = created;
+    return RT_ERROR_NONE;
+}
+
+rtError_t RecordStreamSyncEvent(Event* event, Stream* stream)
+{
+    // The v100 entry dispatches to Event::Record, which handles both modes.
+    return EvtRecord(event, stream);
+}
+
+rtError_t WaitStreamSyncEvent(Event* event, Stream* stream) { return EvtWait(event, stream, MAX_UINT32_NUM); }
+
+rtError_t CaptureStreamRecordWait(Context* ctx, Stream* recordStream, Stream* waitStream)
+{
+    Stream* const captureStream = recordStream->GetCaptureStream();
+    NULL_PTR_RETURN_MSG(captureStream, RT_ERROR_STREAM_NULL);
+    auto* const model = dynamic_cast<CaptureModel*>(captureStream->Model_());
+    NULL_PTR_RETURN_MSG(model, RT_ERROR_MODEL_NULL);
+    Event* event = nullptr;
+    rtError_t error = CreateCaptureSyncEvent(ctx, &event);
+    ERROR_RETURN(error, "Create added capture stream event failed.");
+    event->SetCaptureStream(captureStream);
+    model->InsertCaptureEvent(event);
+    error = event->Record(recordStream, true);
+    ERROR_RETURN(error, "Record added capture stream event failed.");
+    error = waitStream->WaitEvent(event, MAX_UINT32_NUM);
+    ERROR_RETURN(error, "Wait added capture stream event failed.");
+    event->InsertWaitTaskStream(waitStream->GetCaptureStream());
+    return RT_ERROR_NONE;
 }
 
 rtError_t CaptureModel::InitExecutionOrderEvent()

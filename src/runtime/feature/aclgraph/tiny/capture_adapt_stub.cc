@@ -15,6 +15,39 @@
 namespace cce {
 namespace runtime {
 
+rtError_t RecordStreamSyncEvent(Event* event, Stream* stream)
+{
+    UNUSED(event);
+    UNUSED(stream);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t WaitStreamSyncEvent(Event* event, Stream* stream)
+{
+    UNUSED(event);
+    UNUSED(stream);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+rtError_t CreateCaptureSyncEvent(Context* ctx, Event** event)
+{
+    UNUSED(ctx);
+    UNUSED(event);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+rtError_t CreateExecutionSyncEvent(Context* ctx, Event** event)
+{
+    UNUSED(ctx);
+    UNUSED(event);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+rtError_t CaptureStreamRecordWait(Context* ctx, Stream* recordStream, Stream* waitStream)
+{
+    UNUSED(ctx);
+    UNUSED(recordStream);
+    UNUSED(waitStream);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 const char_t* GetUnsupportedCaptureStreamFlag(const uint32_t flags)
 {
     UNUSED(flags);

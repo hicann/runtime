@@ -27,6 +27,8 @@
 #include "task_info.hpp"
 #include "task_base.hpp"
 #include "task.hpp"
+#include "task_david.hpp"
+#include "task_recycle.hpp"
 #include "drv/driver_types.hpp"
 #include "thread_local_container.hpp"
 #include "memory_task.h"
@@ -39,11 +41,14 @@
 #include "capture_model.hpp"
 #include "runtime/feature/aclgraph/capture_session.hpp"
 #include "capture_model_utils.hpp"
+#include "capture_adapt.hpp"
 #include "memcpy_c.hpp"
 #include "stream.hpp"
 #include "context.hpp"
 #include "notify.hpp"
 #include "model_c.hpp"
+#include "event_c.hpp"
+#include "event_david.hpp"
 #include "notify_task.h"
 #undef private
 #undef protected
@@ -874,6 +879,268 @@ protected:
     CaptureModel* captureModel_ = nullptr;
     Stream* stream_ = nullptr;
 };
+
+TEST_F(CaptureModelJettyTest, ExecuteRejectsForeignContextBeforePreprocessing)
+{
+    rtContext_t originalContext = nullptr;
+    rtContext_t foreignContext = nullptr;
+    ASSERT_EQ(rtCtxGetCurrent(&originalContext), RT_ERROR_NONE);
+    ASSERT_EQ(rtCtxCreate(&foreignContext, 0, 0), RT_ERROR_NONE);
+    Context* const foreign = Runtime::Instance()->CurrentContext();
+    ASSERT_EQ(rtCtxSetCurrent(originalContext), RT_ERROR_NONE);
+    Stream foreignStream(device_, 0);
+    foreignStream.SetContext(foreign);
+    MOCKER_CPP(&CaptureModel::CheckExecuteReady).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&CaptureModel::PreModelExecute).expects(never()).will(returnValue(RT_ERROR_INVALID_VALUE));
+    EXPECT_EQ(captureModel_->Execute(&foreignStream, -1), RT_ERROR_STREAM_CONTEXT);
+    EXPECT_EQ(captureModel_->ExecuteAsync(&foreignStream), RT_ERROR_STREAM_CONTEXT);
+    EXPECT_EQ(captureModel_->streamSyncEvent_, nullptr);
+    EXPECT_EQ(captureModel_->GetExeStream(), nullptr);
+    GlobalMockObject::verify();
+    foreignStream.SetContext(nullptr);
+    EXPECT_EQ(rtCtxDestroy(foreignContext), RT_ERROR_NONE);
+}
+
+TEST_F(CaptureModelJettyTest, CaptureJoinRejectsMissingOrWrongModelBeforeAllocation)
+{
+    Context* const context = Runtime::Instance()->CurrentContext();
+    Stream original(device_, 0);
+    Stream capture(device_, 0);
+    Model normalModel;
+    original.UpdateCaptureStream(&capture);
+    MOCKER(CreateCaptureSyncEvent).expects(never()).will(returnValue(RT_ERROR_INVALID_VALUE));
+    EXPECT_EQ(CaptureStreamRecordWait(context, &original, &original), RT_ERROR_MODEL_NULL);
+    capture.SetModel(&normalModel);
+    EXPECT_EQ(CaptureStreamRecordWait(context, &original, &original), RT_ERROR_MODEL_NULL);
+    capture.SetModel(nullptr);
+    original.UpdateCaptureStream(nullptr);
+    GlobalMockObject::verify();
+}
+
+class DavidAddedStreamEventModeTest : public CaptureModelJettyTest, public testing::WithParamInterface<bool> {};
+
+TEST_P(DavidAddedStreamEventModeTest, AddedStreamCaptureUsesEvents)
+{
+    MOCKER(IsUseHardwareEvent).stubs().will(returnValue(GetParam()));
+    MOCKER_CPP_VIRTUAL(device_, &Device::CheckFeatureSupport)
+        .stubs()
+        .with(eq(TS_FEATURE_SOFTWARE_SQ_ENABLE))
+        .will(returnValue(true));
+    rtStream_t stream = nullptr;
+    rtStream_t addedStream = nullptr;
+    rtModel_t model = nullptr;
+    rtStreamCaptureStatus status;
+    ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamCreate(&addedStream, 0), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamGetCaptureInfo(stream, &status, &model), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamAddToModel(addedStream, model), RT_ERROR_NONE);
+    MOCKER_CPP(&Context::CreateNotify).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    ASSERT_EQ(rtStreamEndCapture(stream, &model), RT_ERROR_NONE);
+    auto* captureModel = static_cast<CaptureModel*>(rt_ut::UnwrapOrNull<Model>(model));
+    EXPECT_FALSE(captureModel->GetCaptureEvent().empty());
+    EXPECT_EQ(rtModelDestroy(model), RT_ERROR_NONE);
+    EXPECT_EQ(rtStreamDestroy(addedStream), RT_ERROR_NONE);
+    EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
+}
+
+INSTANTIATE_TEST_SUITE_P(AddedStreamEvents, DavidAddedStreamEventModeTest, testing::Values(true, false));
+
+class DavidAddedStreamFailureTest : public CaptureModelJettyTest, public testing::WithParamInterface<int> {};
+
+TEST_P(DavidAddedStreamFailureTest, CaptureRecordOrWaitFailure)
+{
+    const bool hardware = GetParam() < 2;
+    const bool failRecord = (GetParam() % 2) == 0;
+    MOCKER(IsUseHardwareEvent).stubs().will(returnValue(hardware));
+    MOCKER_CPP_VIRTUAL(device_, &Device::CheckFeatureSupport)
+        .stubs()
+        .with(eq(TS_FEATURE_SOFTWARE_SQ_ENABLE))
+        .will(returnValue(true));
+    rtStream_t stream = nullptr;
+    rtStream_t added = nullptr;
+    rtModel_t model = nullptr;
+    rtStreamCaptureStatus status;
+    ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamCreate(&added, 0), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamGetCaptureInfo(stream, &status, &model), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamAddToModel(added, model), RT_ERROR_NONE);
+    if (hardware && failRecord) {
+        MOCKER(EvtRecord).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    } else if (hardware) {
+        MOCKER(EvtWait).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    } else if (failRecord) {
+        MOCKER(EvtRecordSoftwareMode).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    } else {
+        MOCKER(EvtWaitSoftwareMode).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    }
+    EXPECT_EQ(rtStreamEndCapture(stream, &model), ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(model, nullptr);
+    EXPECT_EQ(rtStreamDestroy(added), RT_ERROR_NONE);
+    EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
+    GlobalMockObject::verify();
+}
+
+INSTANTIATE_TEST_SUITE_P(AddedStreamEvents, DavidAddedStreamFailureTest, testing::Values(0, 1, 2, 3));
+
+TEST_P(DavidAddedStreamEventModeTest, ReplayEventDirectionsAndReuse)
+{
+    MOCKER(IsUseHardwareEvent).expects(once()).will(returnValue(GetParam()));
+    rtStream_t addedHandle = nullptr;
+    rtStream_t executeHandle = nullptr;
+    ASSERT_EQ(rtStreamCreate(&addedHandle, 0), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamCreate(&executeHandle, 0), RT_ERROR_NONE);
+    Stream* const added = rt_ut::UnwrapOrNull<Stream>(addedHandle);
+    Stream* const execute = rt_ut::UnwrapOrNull<Stream>(executeHandle);
+    captureModel_->SetAddStreamMap(added, stream_);
+    if (GetParam()) {
+        MOCKER(EvtRecordSoftwareMode).expects(never());
+        MOCKER(EvtWaitSoftwareMode).expects(never());
+        MOCKER(EvtRecord).expects(exactly(2)).with(mockcpp::any(), eq(added)).will(returnValue(RT_ERROR_NONE));
+        MOCKER(EvtRecord).expects(exactly(2)).with(mockcpp::any(), eq(execute)).will(returnValue(RT_ERROR_NONE));
+        MOCKER(EvtWait)
+            .expects(exactly(2))
+            .with(mockcpp::any(), eq(execute), eq(MAX_UINT32_NUM))
+            .will(returnValue(RT_ERROR_NONE));
+        MOCKER(EvtWait)
+            .expects(exactly(2))
+            .with(mockcpp::any(), eq(added), eq(MAX_UINT32_NUM))
+            .will(returnValue(RT_ERROR_NONE));
+    } else {
+        MOCKER(EvtRecord).expects(never());
+        MOCKER(EvtWait).expects(never());
+        MOCKER(EvtRecordSoftwareMode)
+            .expects(exactly(2))
+            .with(mockcpp::any(), eq(added))
+            .will(returnValue(RT_ERROR_NONE));
+        MOCKER(EvtWaitSoftwareMode)
+            .expects(exactly(2))
+            .with(mockcpp::any(), eq(execute))
+            .will(returnValue(RT_ERROR_NONE));
+        MOCKER(EvtRecordSoftwareMode)
+            .expects(exactly(2))
+            .with(mockcpp::any(), eq(execute))
+            .will(returnValue(RT_ERROR_NONE));
+        MOCKER(EvtWaitSoftwareMode)
+            .expects(exactly(2))
+            .with(mockcpp::any(), eq(added))
+            .will(returnValue(RT_ERROR_NONE));
+    }
+    ASSERT_EQ(captureModel_->SetEventBeforeExecute(execute, captureModel_), RT_ERROR_NONE);
+    Event* const event = captureModel_->streamSyncEvent_;
+    ASSERT_NE(event, nullptr);
+    EXPECT_NE(dynamic_cast<DavidEvent*>(event), nullptr);
+    EXPECT_EQ(event->IsHardwareMode(), GetParam());
+    EXPECT_TRUE(event->IsNewMode());
+    EXPECT_EQ(event->GetEventFlag(), RT_EVENT_DEFAULT);
+    EXPECT_EQ(event->GetCaptureStream(), nullptr);
+    EXPECT_EQ(captureModel_->SetEventAfterExecute(execute, captureModel_), RT_ERROR_NONE);
+    EXPECT_EQ(captureModel_->SetEventBeforeExecute(execute, captureModel_), RT_ERROR_NONE);
+    EXPECT_EQ(captureModel_->SetEventAfterExecute(execute, captureModel_), RT_ERROR_NONE);
+    EXPECT_EQ(captureModel_->streamSyncEvent_, event);
+    GlobalMockObject::verify();
+    captureModel_->addStreamMap_.clear();
+    EXPECT_EQ(rtStreamDestroy(executeHandle), RT_ERROR_NONE);
+    EXPECT_EQ(rtStreamDestroy(addedHandle), RT_ERROR_NONE);
+}
+
+TEST_F(CaptureModelJettyTest, AddedStreamReplaySoftwareTasksRetainRecordResources)
+{
+    MOCKER(IsUseHardwareEvent).stubs().will(returnValue(false));
+    rtStream_t addedHandle = nullptr;
+    rtStream_t executeHandle = nullptr;
+    ASSERT_EQ(rtStreamCreate(&addedHandle, 0), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamCreate(&executeHandle, 0), RT_ERROR_NONE);
+    Stream* const added = rt_ut::UnwrapOrNull<Stream>(addedHandle);
+    Stream* const execute = rt_ut::UnwrapOrNull<Stream>(executeHandle);
+    captureModel_->SetAddStreamMap(added, stream_);
+    TaskInfo tasks[8] = {};
+    for (uint16_t i = 0U; i < 8U; ++i) {
+        tasks[i].id = i;
+        tasks[i].stream = ((i % 4U == 0U) || (i % 4U == 3U)) ? added : execute;
+    }
+    // Isolate transport/CQ completion: the Jetty stub repeats the same CQ report.
+    // Keep software record/wait initialization and resource ownership real.
+    MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
+                   &Stream::AllocTask))
+        .stubs()
+        .will(returnValue(&tasks[0]))
+        .then(returnValue(&tasks[1]))
+        .then(returnValue(&tasks[2]))
+        .then(returnValue(&tasks[3]))
+        .then(returnValue(&tasks[4]))
+        .then(returnValue(&tasks[5]))
+        .then(returnValue(&tasks[6]))
+        .then(returnValue(&tasks[7]));
+    MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(SubmitTaskPostProc).stubs().will(returnValue(RT_ERROR_NONE));
+    for (uint32_t i = 0U; i < 2U; ++i) {
+        ASSERT_EQ(captureModel_->SetEventBeforeExecute(execute, captureModel_), RT_ERROR_NONE);
+        ASSERT_EQ(captureModel_->SetEventAfterExecute(execute, captureModel_), RT_ERROR_NONE);
+    }
+    Event* const event = captureModel_->streamSyncEvent_;
+    ASSERT_NE(event, nullptr);
+    EXPECT_FALSE(event->IsHardwareMode());
+    EXPECT_EQ(event->idMap_.size(), 4U);
+    for (uint32_t i = 0U; i < 8U; i += 2U) {
+        const auto& record = tasks[i].u.memWriteValueTask;
+        const auto& wait = tasks[i + 1U].u.memWaitValueTask;
+        EXPECT_EQ(tasks[i].type, TS_TASK_TYPE_MEM_WRITE_VALUE);
+        EXPECT_EQ(tasks[i + 1U].type, TS_TASK_TYPE_MEM_WAIT_VALUE);
+        EXPECT_EQ(record.devAddr, wait.devAddr);
+        EXPECT_EQ(record.ownedEventId, wait.ownedEventId);
+        EXPECT_EQ(event->idMap_[record.ownedEventId], 2U);
+    }
+    // Reclaim record tasks first: each outstanding wait must still retain its slot.
+    for (uint32_t i = 0U; i < 8U; i += 2U) {
+        TaskUnInitProc(&tasks[i]);
+        EXPECT_EQ(event->idMap_[tasks[i + 1U].u.memWaitValueTask.ownedEventId], 1U);
+    }
+    for (uint32_t i = 1U; i < 8U; i += 2U) {
+        TaskUnInitProc(&tasks[i]);
+    }
+    EXPECT_TRUE(event->idMap_.empty());
+    GlobalMockObject::verify();
+    captureModel_->addStreamMap_.clear();
+    EXPECT_EQ(rtStreamDestroy(executeHandle), RT_ERROR_NONE);
+    EXPECT_EQ(rtStreamDestroy(addedHandle), RT_ERROR_NONE);
+}
+
+class DavidReplaySoftwareEventFailureTest : public CaptureModelJettyTest, public testing::WithParamInterface<bool> {};
+
+TEST_P(DavidReplaySoftwareEventFailureTest, RecordOrWaitFailureIsReturned)
+{
+    MOCKER(IsUseHardwareEvent).stubs().will(returnValue(false));
+    rtStream_t addedHandle = nullptr;
+    ASSERT_EQ(rtStreamCreate(&addedHandle, 0), RT_ERROR_NONE);
+    Stream* const added = rt_ut::UnwrapOrNull<Stream>(addedHandle);
+    captureModel_->SetAddStreamMap(added, stream_);
+    MOCKER(EvtRecordSoftwareMode).stubs().will(returnValue(GetParam() ? RT_ERROR_INVALID_VALUE : RT_ERROR_NONE));
+    if (GetParam()) {
+        MOCKER(EvtWaitSoftwareMode).expects(never());
+    } else {
+        MOCKER(EvtWaitSoftwareMode).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    }
+    EXPECT_EQ(captureModel_->SetEventBeforeExecute(stream_, captureModel_), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(captureModel_->SetEventAfterExecute(stream_, captureModel_), RT_ERROR_INVALID_VALUE);
+    captureModel_->addStreamMap_.clear();
+    EXPECT_EQ(rtStreamDestroy(addedHandle), RT_ERROR_NONE);
+}
+
+INSTANTIATE_TEST_SUITE_P(AddedStreamEvents, DavidReplaySoftwareEventFailureTest, testing::Values(true, false));
+
+TEST_F(CaptureModelJettyTest, AddedStreamHardwareEventAllocationFailure)
+{
+    Event* event = nullptr;
+    DavidEvent prototype(device_, RT_EVENT_DEFAULT, Runtime::Instance()->CurrentContext());
+    Event* const base = &prototype;
+    MOCKER(IsUseHardwareEvent).stubs().will(returnValue(true));
+    MOCKER_CPP_VIRTUAL(base, &Event::GenEventId).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    EXPECT_EQ(CreateCaptureSyncEvent(Runtime::Instance()->CurrentContext(), &event), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(event, nullptr);
+    GlobalMockObject::verify();
+}
 
 TEST_F(CaptureModelJettyTest, BindJettyForUbdma_NoStreams)
 {
