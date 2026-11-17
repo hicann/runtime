@@ -244,12 +244,12 @@ rtError_t ProcessDavidStarsFusionKernelErrorInfo(
 rtError_t ProcessDavidStarsWaitTimeoutErrorInfo(
     const StarsDeviceErrorInfo* const info, const uint64_t errorNumber, const Device* const dev,
     const DeviceErrorProc* const insPtr);
+std::string GetAiCoreSyncMismatchInfo(const DavidOneCoreErrorInfo& info, const Device* const dev);
 rtError_t ProcessDavidStarsCoreErrorInfo(
     const StarsDeviceErrorInfo* const info, const uint64_t errorNumber, const Device* const dev,
     const DeviceErrorProc* const insPtr);
 void ProcessDavidStarsCoreErrorMapInfo(
     const DavidOneCoreErrorInfo* const info, std::string& errorString, std::string& errorCode, rtChipType_t chipType);
-void GetSubErrString(const DavidOneCoreErrorInfo* const info, std::string& subErrString);
 rtError_t ProcessDavidStarsCcuErrorInfo(
     const StarsDeviceErrorInfo* const info, const uint64_t errorNumber, const Device* const dev,
     const DeviceErrorProc* const insPtr);

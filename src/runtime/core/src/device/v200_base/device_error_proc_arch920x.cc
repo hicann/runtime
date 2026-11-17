@@ -44,9 +44,10 @@ static bool g_registerArch920xErrorBitMask = RegisterArch920xErrorBitMask();
 
 static void PrintArch920xCoreErrInfo(
     const StarsDeviceErrorInfo* const info, const uint64_t errorNumber, const uint32_t coreIdx, const Device* const dev,
-    const std::string& errorCode, const std::string& errorString, const std::string& subErrString)
+    const std::string& errorCode, const std::string& errorString)
 {
     const DavidOneCoreErrorInfo& coreErrInfo = info->u.davidCoreErrorInfo.info[coreIdx];
+    const std::string syncMismatchInfo = GetAiCoreSyncMismatchInfo(coreErrInfo, dev);
     uint32_t firstStreamId = UINT32_MAX;
     (void)dev->GetStreamSqCqManage()->GetStreamIdBySqId(coreErrInfo.ostTaskOneCore[0].rtsqId, firstStreamId);
     std::ostringstream oss;
@@ -64,8 +65,12 @@ static void PrintArch920xCoreErrInfo(
         << ", aic cond: " << coreErrInfo.aicCond << ", first pc start: " << coreErrInfo.ostTaskOneCore[0].pcStart
         << std::dec << ", first taskid: " << coreErrInfo.ostTaskOneCore[0].taskId
         << ", first streamid: " << firstStreamId << ".\nThe extend info: errcode:(" << errorCode.c_str()
-        << ") errorStr: " << errorString.c_str() << " subErrType: " << std::hex << coreErrInfo.subErrType
-        << " subErrStr: " << subErrString.c_str();
+        << ") errorStr: " << errorString.c_str() << " subErrType: " << std::hex << coreErrInfo.subErrType;
+
+    if (!syncMismatchInfo.empty()) {
+        oss << ", " << syncMismatchInfo;
+    }
+
     if (coreErrInfo.ostTaskOneCore[1].pcStart != 0) {
         uint32_t secondStreamId = UINT32_MAX;
         (void)dev->GetStreamSqCqManage()->GetStreamIdBySqId(coreErrInfo.ostTaskOneCore[1].rtsqId, secondStreamId);
@@ -169,12 +174,10 @@ static rtError_t ProcessArch920xStarsCoreErrorInfo(
     for (uint32_t coreIdx = 0U; coreIdx < static_cast<uint32_t>(info->u.davidCoreErrorInfo.comm.coreNum); coreIdx++) {
         std::string errorString;
         std::string errorCode;
-        std::string subErrString;
         ProcessDavidStarsCoreErrorMapInfo(
             &(info->u.davidCoreErrorInfo.info[coreIdx]), errorString, errorCode, dev->GetChipType());
         AddExceptionRegInfo(info, coreIdx, type, errTaskPtr);
-        GetSubErrString(&(info->u.davidCoreErrorInfo.info[coreIdx]), subErrString);
-        PrintArch920xCoreErrInfo(info, errorNumber, coreIdx, dev, errorCode, errorString, subErrString);
+        PrintArch920xCoreErrInfo(info, errorNumber, coreIdx, dev, errorCode, errorString);
         DavidOstTaskErrorProc(dev, &(info->u.davidCoreErrorInfo.info[coreIdx]), &allSTaskId);
     }
     return RT_ERROR_NONE;

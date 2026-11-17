@@ -100,6 +100,21 @@ void* g_aicpuArgsAddr = nullptr;
 void* g_expectedAicpuSoNameAddr = nullptr;
 void* g_expectedAicpuFuncNameAddr = nullptr;
 
+class AiCoreTaskSyncCheckStateGuard {
+public:
+    AiCoreTaskSyncCheckStateGuard(Device* const device, const bool enabled)
+        : device_(device), originalEnabled_(device->IsAiCoreTaskSyncCheckEnabled())
+    {
+        device_->SetAiCoreTaskSyncCheckEnabled(enabled);
+    }
+
+    ~AiCoreTaskSyncCheckStateGuard() { device_->SetAiCoreTaskSyncCheckEnabled(originalEnabled_); }
+
+private:
+    Device* const device_;
+    const bool originalEnabled_;
+};
+
 rtError_t AllocAicpuTaskStub(
     TaskInfo** taskInfo, Stream* const stm, uint32_t& pos, Stream*& dstStm, uint32_t sqeNum, bool isKernelLaunch)
 {
@@ -3734,24 +3749,55 @@ TEST_F(DavidTaskTest, null_task_dev_error_proc_for_fusion)
     delete errorProc;
 }
 
-TEST_F(DavidTaskTest, AiCoreSyncMatchSubErrorsAreIncludedInDavidLog)
+TEST_F(DavidTaskTest, AiCoreSyncMismatchInfoIsEmptyWhenCheckDisabled)
 {
+    AiCoreTaskSyncCheckStateGuard syncCheckGuard(dev_, false);
+    DavidOneCoreErrorInfo coreErrorInfo = {};
+    coreErrorInfo.aicoreSyncSetWait = 1ULL;
+    coreErrorInfo.aicoreSyncCrossCore = 1U;
+
+    EXPECT_TRUE(GetAiCoreSyncMismatchInfo(coreErrorInfo, dev_).empty());
+}
+
+TEST_F(DavidTaskTest, AiCoreSyncMismatchInfoIsEmptyWithoutMismatch)
+{
+    AiCoreTaskSyncCheckStateGuard syncCheckGuard(dev_, true);
+    DavidOneCoreErrorInfo coreErrorInfo = {};
+
+    EXPECT_TRUE(GetAiCoreSyncMismatchInfo(coreErrorInfo, dev_).empty());
+}
+
+TEST_F(DavidTaskTest, AiCoreSyncMismatchInfoIncludesInvalidRegister)
+{
+    AiCoreTaskSyncCheckStateGuard syncCheckGuard(dev_, true);
+    DavidOneCoreErrorInfo coreErrorInfo = {};
+    coreErrorInfo.aicoreSyncSetWait = 0x12ULL;
+    coreErrorInfo.aicoreSyncSetWaitReg = 7U;
+
+    EXPECT_EQ(
+        GetAiCoreSyncMismatchInfo(coreErrorInfo, dev_),
+        "AI Core synchronization mismatch: invalid set/wait source register index, register_index=7, "
+        "set_wait_value=0x12");
+}
+
+TEST_F(DavidTaskTest, AiCoreSyncMismatchDetailsAreIncludedInDavidLog)
+{
+    AiCoreTaskSyncCheckStateGuard syncCheckGuard(dev_, true);
     StarsDeviceErrorInfo errorInfo = {};
     errorInfo.u.davidCoreErrorInfo.comm.type = AICORE_ERROR;
     errorInfo.u.davidCoreErrorInfo.comm.coreNum = 2U;
     errorInfo.u.davidCoreErrorInfo.comm.flag = static_cast<uint8_t>(AixErrClass::AIX_ERROR_NA);
     errorInfo.u.davidCoreErrorInfo.info[0U].subErrType = 4U;
+    errorInfo.u.davidCoreErrorInfo.info[0U].aicoreSyncSetWait = 1ULL << 16U;
+    errorInfo.u.davidCoreErrorInfo.info[0U].aicoreSyncSetWaitReg = 0U;
     errorInfo.u.davidCoreErrorInfo.info[1U].subErrType = 5U;
+    errorInfo.u.davidCoreErrorInfo.info[1U].aicoreSyncCrossCore = 0x5U;
 
     ClearLastDlogRecordLine();
     EXPECT_EQ(ProcessDavidStarsCoreErrorInfo(&errorInfo, 0U, dev_, nullptr), RT_ERROR_NONE);
-    EXPECT_TRUE(DlogRecordContains("subErrStr: The set and wait instructions do not match."));
-    EXPECT_TRUE(DlogRecordContains("subErrStr: A cross-core synchronization check error occurred."));
-
-    DavidOneCoreErrorInfo unknownErrorInfo = {};
-    std::string subErrString = "unexpected";
-    GetSubErrString(&unknownErrorInfo, subErrString);
-    EXPECT_EQ(subErrString, "N/A");
+    EXPECT_TRUE(DlogRecordContains("AI Core synchronization mismatch: set/wait residue from scalar pipe to mte4 pipe"));
+    EXPECT_TRUE(DlogRecordContains("AI Core cross-core synchronization mismatch: residue_bitmap=0x5"));
+    EXPECT_FALSE(DlogRecordContains("subErrStr:"));
 }
 
 TEST_F(DavidTaskTest, aicore_task_dev_error_proc)

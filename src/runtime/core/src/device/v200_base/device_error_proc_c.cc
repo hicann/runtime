@@ -9,6 +9,7 @@
  */
 
 #include <array>
+#include <sstream>
 #include <unordered_map>
 #include "device_error_proc_c.hpp"
 #include "error_message_manage.hpp"
@@ -31,17 +32,16 @@ namespace {
 constexpr uint32_t TS_SDMA_STATUS_DDRC_ERROR = 0x8U;
 constexpr uint32_t TS_SDMA_STATUS_LINK_ERROR = 0x9U;
 constexpr uint32_t TS_SDMA_STATUS_POISON_ERROR = 0xAU;
-} // namespace
 
 enum RtAixSubErrorType : std::uint8_t {
-    AIC_TRAP_RD_OVERFLOW = 0,         /* aicore trap read out of bounds */
-    AIC_TRAP_WR_OVERFLOW,             /* aicore trap write out of bounds */
-    AIV_TRAP_RD_OVERFLOW,             /* vector core trap read out of bounds */
-    AIV_TRAP_WR_OVERFLOW,             /* vector core trap write out of bounds */
-    AICORE_SYNC_SET_WAIT_UNMATCHED,   /*set/wait 不配对*/
-    AICORE_SYNC_CROSS_CORE_UNMATCHED, /*核间同步检查出错*/
-    SUB_ERROR_TYPE_RESERVE            /* NA */
+    AIC_TRAP_RD_OVERFLOW = 0, /* aicore trap read out of bounds */
+    AIC_TRAP_WR_OVERFLOW,     /* aicore trap write out of bounds */
+    AIV_TRAP_RD_OVERFLOW,     /* vector core trap read out of bounds */
+    AIV_TRAP_WR_OVERFLOW,     /* vector core trap write out of bounds */
+    SUB_ERROR_TYPE_RESERVE    /* NA */
 };
+
+} // namespace
 
 static const std::unordered_map<uint64_t, std::string> g_davidErrorMapInfo = {
     // RINGBUFFER_CUBE_ERROR_0_OFFSET
@@ -362,22 +362,6 @@ static void ProcessDavidStarsCoreErrorOneMapInfo(
     }
     (*cnt)++;
 
-    return;
-}
-
-void GetSubErrString(const DavidOneCoreErrorInfo* const info, std::string& subErrString)
-{
-    switch (info->subErrType) {
-        case AICORE_SYNC_SET_WAIT_UNMATCHED:
-            subErrString = "The set and wait instructions do not match";
-            break;
-        case AICORE_SYNC_CROSS_CORE_UNMATCHED:
-            subErrString = "A cross-core synchronization check error occurred";
-            break;
-        default:
-            subErrString = "N/A";
-            break;
-    }
     return;
 }
 
@@ -702,10 +686,11 @@ static std::string QueryAndFormatRasFaultDavid(
 static void PrintDavidCoreInfo(
     const StarsDeviceErrorInfo* const info, const uint32_t coreIdx, const uint64_t errorNumber,
     const std::string& errorString, const std::string& errorCode, const std::string& rasFaultDesc,
-    const std::string& subErrString)
+    const Device* const dev)
 {
     constexpr size_t AICORE_BUF_LEN = 4096U;
     std::array<char, AICORE_BUF_LEN> aicoreBuffer{};
+    const std::string syncMismatchInfo = GetAiCoreSyncMismatchInfo(info->u.davidCoreErrorInfo.info[coreIdx], dev);
     /* logs for aic tools, do not modify the item befor making a new agreement with tools */
     (void)snprintf_truncated_s(
         aicoreBuffer.data(), AICORE_BUF_LEN,
@@ -718,7 +703,7 @@ static void PrintDavidCoreInfo(
         "cube error info: %#" PRIx64 ", l1 error info: %#" PRIx64 ", "
         "aic error mask: %#" PRIx64 ", para base: %#" PRIx64 ", mte error: %#" PRIx64 ", "
         "aic cond: %#" PRIx64 ".\n"
-        "The extend info: errcode:(%s) errorStr: %s subErrType: %#x subErrStr: %s.",
+        "The extend info: errcode:(%s) errorStr: %s subErrType: %#x%s%s.",
         info->u.davidCoreErrorInfo.comm.chipId, info->u.davidCoreErrorInfo.comm.dieId, errorNumber,
         GetStarsRingBufferHeadMsg(info->u.davidCoreErrorInfo.comm.type).c_str(),
         info->u.davidCoreErrorInfo.info[coreIdx].coreId, errorCode.c_str(),
@@ -729,7 +714,8 @@ static void PrintDavidCoreInfo(
         info->u.davidCoreErrorInfo.info[coreIdx].l1ErrInfo, info->u.davidCoreErrorInfo.info[coreIdx].aicErrorMask,
         info->u.davidCoreErrorInfo.info[coreIdx].paraBase, info->u.davidCoreErrorInfo.info[coreIdx].mteError[0],
         info->u.davidCoreErrorInfo.info[coreIdx].aicCond, errorCode.c_str(), errorString.c_str(),
-        info->u.davidCoreErrorInfo.info[coreIdx].subErrType, subErrString.c_str());
+        info->u.davidCoreErrorInfo.info[coreIdx].subErrType, syncMismatchInfo.empty() ? "" : ", ",
+        syncMismatchInfo.c_str());
     if (!rasFaultDesc.empty()) {
         RT_LOG_OUTER_MSG_IMPL(ErrorCode::EZ2001, aicoreBuffer.data(), "RAS", rasFaultDesc);
     } else {
@@ -739,6 +725,64 @@ static void PrintDavidCoreInfo(
             "keyword \"AI Core Error\".",
             aicoreBuffer.data());
     }
+}
+
+std::string GetAiCoreSyncMismatchInfo(const DavidOneCoreErrorInfo& info, const Device* const dev)
+{
+    if (!dev->IsAiCoreTaskSyncCheckEnabled()) {
+        return "";
+    }
+
+    const uint64_t setWait = info.aicoreSyncSetWait;
+    const uint32_t setWaitReg = info.aicoreSyncSetWaitReg;
+    const uint32_t crossCore = info.aicoreSyncCrossCore;
+    if (setWait == 0ULL && crossCore == 0U) {
+        return "";
+    }
+
+    constexpr uint32_t AI_CORE_SYNC_RESIDUE_NUM = 8U;
+    constexpr uint32_t AI_CORE_SYNC_RESIDUE_BITS = 8U;
+    constexpr uint64_t AI_CORE_SYNC_RESIDUE_MASK = 0xFFU;
+    static const char* const kSrc[] = {"scalar", "vec", "cube", "mte1", "mte2", "mte3", "fixp"};
+    static const char* const kDst[] = {"fixp", "mte5", "mte4", "mte3", "mte2", "mte1", "vec", "cube", "scalar"};
+    static const uint8_t kDstIdx[][AI_CORE_SYNC_RESIDUE_NUM] = {
+        {0, 1, 2, 3, 4, 5, 6, 7}, // scalar
+        {0, 1, 2, 3, 4, 5, 7, 8}, // vec
+        {0, 1, 2, 3, 4, 5, 6, 8}, // cube
+        {0, 1, 2, 3, 4, 6, 7, 8}, // mte1
+        {0, 1, 2, 3, 5, 6, 7, 8}, // mte2
+        {0, 1, 2, 4, 5, 6, 7, 8}, // mte3
+        {1, 2, 3, 4, 5, 6, 7, 8}, // fixp
+    };
+    constexpr uint32_t AI_CORE_SYNC_SRC_PIPE_NUM = static_cast<uint32_t>(sizeof(kSrc) / sizeof(kSrc[0]));
+
+    std::ostringstream mismatchInfo;
+    const char* separator = "";
+    if (setWait != 0ULL) {
+        if (setWaitReg >= AI_CORE_SYNC_SRC_PIPE_NUM) {
+            mismatchInfo << "AI Core synchronization mismatch: invalid set/wait source register index, "
+                         << "register_index=" << setWaitReg << ", set_wait_value=" << std::showbase << std::hex
+                         << setWait;
+            separator = ", ";
+        } else {
+            for (uint32_t residueIdx = 0U; residueIdx < AI_CORE_SYNC_RESIDUE_NUM; residueIdx++) {
+                const uint32_t shift = AI_CORE_SYNC_RESIDUE_BITS * residueIdx;
+                const uint8_t residue = static_cast<uint8_t>((setWait >> shift) & AI_CORE_SYNC_RESIDUE_MASK);
+                if (residue == 0U) {
+                    continue;
+                }
+                mismatchInfo << separator << "AI Core synchronization mismatch: set/wait residue from "
+                             << kSrc[setWaitReg] << " pipe to " << kDst[kDstIdx[setWaitReg][residueIdx]] << " pipe";
+                separator = ", ";
+            }
+        }
+    }
+
+    if (crossCore != 0U) {
+        mismatchInfo << separator << "AI Core cross-core synchronization mismatch: residue_bitmap=" << std::showbase
+                     << std::hex << crossCore;
+    }
+    return mismatchInfo.str();
 }
 
 rtError_t ProcessDavidStarsCoreErrorInfo(
@@ -771,12 +815,10 @@ rtError_t ProcessDavidStarsCoreErrorInfo(
 
         std::string errorString;
         std::string errorCode;
-        std::string subErrString;
         ProcessDavidStarsCoreErrorMapInfo(
             &(info->u.davidCoreErrorInfo.info[coreIdx]), errorString, errorCode, dev->GetChipType());
         AddExceptionRegInfo(info, coreIdx, type, errTaskPtr);
-        GetSubErrString(&(info->u.davidCoreErrorInfo.info[coreIdx]), subErrString);
-        PrintDavidCoreInfo(info, coreIdx, errorNumber, errorString, errorCode, rasFaultDesc, subErrString);
+        PrintDavidCoreInfo(info, coreIdx, errorNumber, errorString, errorCode, rasFaultDesc, dev);
     }
     if ((errTaskPtr != nullptr) && (errTaskPtr->type == TS_TASK_TYPE_FUSION_KERNEL)) {
         TaskFailCallBackForFusionKernelTask(errTaskPtr, dev->Id_(), nullptr, RT_FUSION_AICORE_CCU);

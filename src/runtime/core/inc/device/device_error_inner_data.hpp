@@ -29,7 +29,7 @@ constexpr uint32_t MAX_TASK_NUM_ONE_CORE = 2U;
 constexpr uint32_t RT_STARS_V2_AICORE_NUM = 36U;
 constexpr uint32_t RT_STARS_V2_AIVECTOR_NUM = 72U;
 constexpr uint32_t STARS_CORE_ERROR_EXT_RSV_NUM = 28U;
-constexpr uint32_t STARS_V2_CORE_ERROR_EXT_RSV_NUM = 63U;
+constexpr uint32_t STARS_V2_CORE_ERROR_EXT_RSV_NUM = 61U;
 } // namespace
 
 namespace cce {
@@ -203,6 +203,9 @@ struct DavidOneCoreErrorInfoExt {
     uint32_t validSize;
     uint64_t aicCond;
     uint64_t vecErrInfoT06;
+    uint64_t aicoreSyncSetWait;    // set/wait 不配对残留的原始值
+    uint32_t aicoreSyncSetWaitReg; // set/wait 源寄存器索引
+    uint32_t aicoreSyncCrossCore;  // cross core 不配对残留位图
     uint64_t rsv[STARS_V2_CORE_ERROR_EXT_RSV_NUM];
 };
 
@@ -249,9 +252,12 @@ struct DavidOneCoreErrorInfo {
     uint32_t isConcurrentExe; // aic是否同时执行两个task的标记位
     starsOstTaskOneCoreInfo ostTaskOneCore[MAX_TASK_NUM_ONE_CORE];
     uint64_t aicCond;         // 汇聚aicCond
-    uint64_t vecErrInfoT06;
     // 从aicCond开始的payload布局必须与DavidOneCoreErrorInfoExt从aicCond开始的payload布局一致。
     // 后续新增Ext寄存器只能在尾部追加，并通过validSize控制实际拷贝长度。
+    uint64_t vecErrInfoT06;
+    uint64_t aicoreSyncSetWait;    // set/wait 不配对残留的原始值
+    uint32_t aicoreSyncSetWaitReg; // set/wait 源寄存器索引
+    uint32_t aicoreSyncCrossCore;  // cross core 不配对残留位图
     uint64_t rsvExt[STARS_V2_CORE_ERROR_EXT_RSV_NUM];
 };
 

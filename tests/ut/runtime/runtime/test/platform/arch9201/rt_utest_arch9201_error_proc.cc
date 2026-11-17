@@ -112,6 +112,21 @@ void TaskFailCallBackForFusionKernelTaskStub(
 {
     g_callCnt++;
 }
+
+class AiCoreTaskSyncCheckStateGuard {
+public:
+    AiCoreTaskSyncCheckStateGuard(Device* const device, const bool enabled)
+        : device_(device), originalEnabled_(device->IsAiCoreTaskSyncCheckEnabled())
+    {
+        device_->SetAiCoreTaskSyncCheckEnabled(enabled);
+    }
+
+    ~AiCoreTaskSyncCheckStateGuard() { device_->SetAiCoreTaskSyncCheckEnabled(originalEnabled_); }
+
+private:
+    Device* const device_;
+    const bool originalEnabled_;
+};
 } // namespace
 
 // ============================================================================
@@ -211,7 +226,7 @@ TEST_F(Arch9201ErrorProcTest, ErrorMapRegistrationAndBitLookup)
     EXPECT_EQ(errorString, "timeout or trap error.");
 }
 
-TEST_P(Arch920xAiCoreSyncMatchErrorProcTest, SubErrorsAreIncludedInCoreErrorLog)
+TEST_P(Arch920xAiCoreSyncMatchErrorProcTest, SyncMismatchDetailsAreIncludedInCoreErrorLog)
 {
     rtSetDevice(1);
     Device* const device = Runtime::Instance()->DeviceRetain(1, 0);
@@ -221,18 +236,39 @@ TEST_P(Arch920xAiCoreSyncMatchErrorProcTest, SubErrorsAreIncludedInCoreErrorLog)
     DevRingBufferCtlInfo* const ctlInfo = static_cast<DevRingBufferCtlInfo*>(malloc(DEVICE_ERROR_EXT_RINGBUFFER_SIZE));
     ASSERT_NE(ctlInfo, nullptr);
 
-    RingBufferElementInfo* const info = InitRingBuffer(ctlInfo, 1U);
+    RingBufferElementInfo* const info = InitRingBuffer(ctlInfo, 2U);
     StarsDeviceErrorInfoRingBuffer* const errorInfo = reinterpret_cast<StarsDeviceErrorInfoRingBuffer*>(info + 1);
     info->errorType = AICORE_ERROR;
     errorInfo->u.davidCoreErrorInfo.comm.type = AICORE_ERROR;
     errorInfo->u.davidCoreErrorInfo.comm.coreNum = 2U;
+    errorInfo->u.davidCoreErrorInfo.info[0U].coreId = 0U;
     errorInfo->u.davidCoreErrorInfo.info[0U].subErrType = 4U;
+    errorInfo->u.davidCoreErrorInfo.info[1U].coreId = 1U;
     errorInfo->u.davidCoreErrorInfo.info[1U].subErrType = 5U;
 
-    ClearLastDlogRecordLine();
-    EXPECT_EQ(errorProc->ProcessStarv2OneElementInRingBuffer(ctlInfo, 0U, 1U), RT_ERROR_NONE);
-    EXPECT_TRUE(DlogRecordContains("subErrStr: The set and wait instructions do not match."));
-    EXPECT_TRUE(DlogRecordContains("subErrStr: A cross-core synchronization check error occurred."));
+    RingBufferElementInfo* const extInfo = reinterpret_cast<RingBufferElementInfo*>(
+        reinterpret_cast<uintptr_t>(info) + RINGBUFFER_EXT_ONE_ELEMENT_LENGTH_ON_DAVID);
+    DavidCoreErrorInfoExt* const extData = reinterpret_cast<DavidCoreErrorInfoExt*>(extInfo + 1);
+    extInfo->errorType = AICORE_EXT_ERROR;
+    extData->comm.coreNum = 2U;
+    const uint32_t syncPayloadSize =
+        static_cast<uint32_t>(offsetof(DavidOneCoreErrorInfoExt, rsv) - offsetof(DavidOneCoreErrorInfoExt, aicCond));
+    extData->info[0U].coreId = 0U;
+    extData->info[0U].validSize = syncPayloadSize;
+    extData->info[0U].aicoreSyncSetWait = 1ULL << 16U;
+    extData->info[0U].aicoreSyncSetWaitReg = 0U;
+    extData->info[1U].coreId = 1U;
+    extData->info[1U].validSize = syncPayloadSize;
+    extData->info[1U].aicoreSyncCrossCore = 0x5U;
+
+    {
+        AiCoreTaskSyncCheckStateGuard syncCheckGuard(device, true);
+        ClearLastDlogRecordLine();
+        EXPECT_EQ(errorProc->ProcessStarv2OneElementInRingBuffer(ctlInfo, 0U, 2U), RT_ERROR_NONE);
+    }
+    EXPECT_TRUE(DlogRecordContains("AI Core synchronization mismatch: set/wait residue from scalar pipe to mte4 pipe"));
+    EXPECT_TRUE(DlogRecordContains("AI Core cross-core synchronization mismatch: residue_bitmap=0x5"));
+    EXPECT_FALSE(DlogRecordContains("subErrStr:"));
 
     free(ctlInfo);
     CleanupErrorProc(errorProc, device);

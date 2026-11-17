@@ -126,9 +126,9 @@ static void FillStarv2CoreExt(
     info->errorType = errorType;
     extData->comm.coreNum = coreIndex + 1U;
     extData->info[coreIndex].coreId = coreId;
-    extData->info[coreIndex].validSize = sizeof(extData->info[coreIndex].aicCond) +
-                                         sizeof(extData->info[coreIndex].vecErrInfoT06) +
-                                         sizeof(extData->info[coreIndex].rsv[0]);
+    extData->info[coreIndex].validSize = static_cast<uint32_t>(
+        offsetof(DavidOneCoreErrorInfoExt, rsv) + sizeof(extData->info[coreIndex].rsv[0]) -
+        offsetof(DavidOneCoreErrorInfoExt, aicCond));
     extData->info[coreIndex].aicCond = aicCond;
     extData->info[coreIndex].vecErrInfoT06 = vecErrInfoT06;
     extData->info[coreIndex].rsv[0] = 0x13579BDFU;
