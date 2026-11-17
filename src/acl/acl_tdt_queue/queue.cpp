@@ -385,7 +385,9 @@ aclError acltdtSetQueueAttr(acltdtQueueAttr* attr, acltdtQueueAttrType type, siz
     switch (type) {
         case ACL_TDT_QUEUE_NAME_PTR: {
             char_t* tmp = nullptr;
-            ACL_REQUIRES_OK(CopyParam(param, len, static_cast<void*>(&tmp), sizeof(size_t)));
+            ACL_CHECK_INVALID_PARAM_WITH_REASON_AND_FUNC_DESC(
+                len != sizeof(tmp), len, "len must equal pointer size", "acltdtSetQueueAttr");
+            ACL_REQUIRES_OK(CopyParam(param, len, static_cast<void*>(&tmp), sizeof(tmp)));
             ACL_REQUIRES_NOT_NULL(tmp);
             const size_t tmpLen = strnlen(tmp, static_cast<size_t>(RT_MQ_MAX_NAME_LEN));
             if ((tmpLen + 1U) > static_cast<size_t>(RT_MQ_MAX_NAME_LEN)) {

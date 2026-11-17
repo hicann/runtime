@@ -108,6 +108,10 @@ TEST_F(UTEST_QUEUE, acltdtSetQueueAttr)
     ret = acltdtSetQueueAttr(&attr, ACL_TDT_QUEUE_NAME_PTR, len, nullptr);
     EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
 
+    const size_t invalidLen = (sizeof(name) == sizeof(uint32_t)) ? sizeof(uint64_t) : sizeof(uint32_t);
+    ret = acltdtSetQueueAttr(&attr, ACL_TDT_QUEUE_NAME_PTR, invalidLen, &name);
+    EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
+
     ret = acltdtSetQueueAttr(&attr, ACL_TDT_QUEUE_NAME_PTR, len, &name);
     std::string oriName(name);
     std::string tmpName(attr.name);
