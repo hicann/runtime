@@ -9,7 +9,7 @@
 - [`aclError aclrtRecordEvent(aclrtEvent event, aclrtStream stream)`](#aclrtRecordEvent)：在指定Stream中记录一个Event。异步接口。
 - [`aclError aclrtRecordEventWithFlag(aclrtEvent event, aclrtStream stream, uint32_t flag)`](#aclrtRecordEventWithFlag)：在指定的Stream中记录一个Event。异步接口。该接口是在[aclrtRecordEvent](#aclrtRecordEvent)接口基础上进行了增强，支持配置flag，不同的flag用于不同的使用场景。
 - [`aclError aclrtResetEvent(aclrtEvent event, aclrtStream stream)`](#aclrtResetEvent)：复位Event，恢复Event初始状态，便于Event对象重复使用。异步接口。
-- [`aclError aclrtQueryEvent(aclrtEvent event, aclrtEventStatus *status)`](#aclrtQueryEvent_deprecated)：查询与本接口在同一线程中的[aclrtRecordEvent](#aclrtRecordEvent)接口所记录的Event是否执行完成。
+- [`aclError aclrtQueryEvent(aclrtEvent event, aclrtEventStatus *status)`](#aclrtQueryEvent)：查询与本接口在同一线程中的[aclrtRecordEvent](#aclrtRecordEvent)接口所记录的Event是否执行完成。
 - [`aclError aclrtQueryEventStatus(aclrtEvent event, aclrtEventRecordedStatus *status)`](#aclrtQueryEventStatus)：查询该Event捕获的所有任务的执行状态。具体见[aclrtRecordEvent](#aclrtRecordEvent)接口参考Event捕获的细节。
 - [`aclError aclrtQueryEventWaitStatus(aclrtEvent event, aclrtEventWaitStatus *status)`](#aclrtQueryEventWaitStatus)：调用[aclrtStreamWaitEvent](#aclrtStreamWaitEvent)接口后查询该Event对应的等待任务是否都执行完成。
 - [`aclError aclrtSynchronizeEvent(aclrtEvent event)`](#aclrtSynchronizeEvent)：阻塞当前线程运行直到Event捕获的所有任务都执行完成。
@@ -25,7 +25,7 @@
 - [`aclError aclrtIpcGetEventHandle(aclrtEvent event, aclrtIpcEventHandle *handle)`](#aclrtIpcGetEventHandle)：将本进程中的指定Event设置为IPC（Inter-Process Communication） Event，并返回其handle（即Event句柄），用于在跨进程场景下实现任务同步，支持同一个Device内的多个进程以及跨Device的多个进程。
 - [`aclError aclrtIpcOpenEventHandle(aclrtIpcEventHandle handle, aclrtEvent *event)`](#aclrtIpcOpenEventHandle)：在本进程中获取handle的信息，并返回本进程可以使用的Event指针。
 
-<a id="aclrtCreateEvent"></a>
+<a class="method_anchor" id="aclrtCreateEvent"></a>
 
 ## aclrtCreateEvent
 
@@ -117,7 +117,7 @@ aclError aclrtCreateEvent(aclrtEvent *event)
 <br>
 <br>
 
-<a id="aclrtCreateEventWithFlag"></a>
+<a class="method_anchor" id="aclrtCreateEventWithFlag"></a>
 
 ## aclrtCreateEventWithFlag
 
@@ -228,7 +228,7 @@ aclError aclrtCreateEventWithFlag(aclrtEvent *event, uint32_t flag)
 <br>
 <br>
 
-<a id="aclrtCreateEventExWithFlag"></a>
+<a class="method_anchor" id="aclrtCreateEventExWithFlag"></a>
 
 ## aclrtCreateEventExWithFlag
 
@@ -273,7 +273,7 @@ aclError aclrtCreateEventExWithFlag(aclrtEvent *event, uint32_t flag)
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
 | event | 输出 | Event的指针。类型定义请参见[aclrtEvent](25-05_Typedefs.md#aclrtEvent)。 |
-| flag | 输入 | Event指针的flag。<br>flag为bitmap，支持将flag设置为单个宏、或者对多个宏进行或操作。<br>当前支持将flag设置为如下宏：<br><br>  - ACL_EVENT_TIME_LINE：使能该bit表示创建的Event需要记录时间戳信息。注意：使能时间戳功能会影响Event相关接口的性能。<br>  - ACL_EVENT_SYNC：使能该bit表示创建的Event支持多Stream间的同步。<br>  - ACL_EVENT_CAPTURE_STREAM_PROGRESS：使能该bit表示创建的Event用于跟踪stream的任务执行进度。<br>  - ACL_EVENT_IPC：使能该bit表示创建的Event用于进程间通信，详细说明请参见[aclrtIpcGetEventHandle](#aclrtIpcGetEventHandle)。注意：该flag不支持与其他flag进行位或操作。Ascend 950DT系列产品不支持使用本flag创建Event。本flag创建出来的Event不支持在以下接口或场景中使用：[aclrtResetEvent](#aclrtResetEvent)、[aclrtQueryEvent](#aclrtQueryEvent_deprecated)、[aclrtQueryEventWaitStatus](#aclrtQueryEventWaitStatus)、[aclrtEventElapsedTime](#aclrtEventElapsedTime)、[aclrtEventGetTimestamp](#aclrtEventGetTimestamp)、[aclrtGetEventId](#aclrtGetEventId)、模型捕获场景（参见[aclmdlRICaptureBegin](15_model_running_instance_management.md#aclmdlRICaptureBegin)中的说明），否则返回报错。<br><br><br>宏的定义如下：<br>#define ACL_EVENT_TIME_LINE 0x00000008U<br>#define ACL_EVENT_SYNC 0x00000001U<br>#define ACL_EVENT_CAPTURE_STREAM_PROGRESS 0x00000002U<br>#define ACL_EVENT_IPC 0x00000040U |
+| flag | 输入 | Event指针的flag。<br>flag为bitmap，支持将flag设置为单个宏、或者对多个宏进行或操作。<br>当前支持将flag设置为如下宏：<br><br>  - ACL_EVENT_TIME_LINE：使能该bit表示创建的Event需要记录时间戳信息。注意：使能时间戳功能会影响Event相关接口的性能。<br>  - ACL_EVENT_SYNC：使能该bit表示创建的Event支持多Stream间的同步。<br>  - ACL_EVENT_CAPTURE_STREAM_PROGRESS：使能该bit表示创建的Event用于跟踪stream的任务执行进度。<br>  - ACL_EVENT_IPC：使能该bit表示创建的Event用于进程间通信，详细说明请参见[aclrtIpcGetEventHandle](#aclrtIpcGetEventHandle)。注意：该flag不支持与其他flag进行位或操作。Ascend 950DT系列产品不支持使用本flag创建Event。本flag创建出来的Event不支持在以下接口或场景中使用：[aclrtResetEvent](#aclrtResetEvent)、[aclrtQueryEvent](#aclrtQueryEvent)、[aclrtQueryEventWaitStatus](#aclrtQueryEventWaitStatus)、[aclrtEventElapsedTime](#aclrtEventElapsedTime)、[aclrtEventGetTimestamp](#aclrtEventGetTimestamp)、[aclrtGetEventId](#aclrtGetEventId)、模型捕获场景（参见[aclmdlRICaptureBegin](15_model_running_instance_management.md#aclmdlRICaptureBegin)中的说明），否则返回报错。<br><br><br>宏的定义如下：<br>#define ACL_EVENT_TIME_LINE 0x00000008U<br>#define ACL_EVENT_SYNC 0x00000001U<br>#define ACL_EVENT_CAPTURE_STREAM_PROGRESS 0x00000002U<br>#define ACL_EVENT_IPC 0x00000040U |
 
 ### 返回值说明
 
@@ -281,7 +281,7 @@ aclError aclrtCreateEventExWithFlag(aclrtEvent *event, uint32_t flag)
 
 ### 约束说明
 
-- 采用本API创建的Event，不支持在以下接口中使用：[aclrtResetEvent](#aclrtResetEvent)、[aclrtQueryEvent](#aclrtQueryEvent_deprecated)、[aclrtQueryEventWaitStatus](#aclrtQueryEventWaitStatus)，否则返回报错。
+- 采用本API创建的Event，不支持在以下接口中使用：[aclrtResetEvent](#aclrtResetEvent)、[aclrtQueryEvent](#aclrtQueryEvent)、[aclrtQueryEventWaitStatus](#aclrtQueryEventWaitStatus)，否则返回报错。
 
 <!-- npu="5162A" id46 -->
 - 对于Hisilicon5162A，flag不支持ACL\_EVENT\_IPC。
@@ -325,7 +325,7 @@ aclError aclrtCreateEventExWithFlag(aclrtEvent *event, uint32_t flag)
 <br>
 <br>
 
-<a id="aclrtDestroyEvent"></a>
+<a class="method_anchor" id="aclrtDestroyEvent"></a>
 
 ## aclrtDestroyEvent
 
@@ -383,7 +383,7 @@ aclError aclrtDestroyEvent(aclrtEvent event)
 <br>
 <br>
 
-<a id="aclrtRecordEvent"></a>
+<a class="method_anchor" id="aclrtRecordEvent"></a>
 
 ## aclrtRecordEvent
 
@@ -447,7 +447,7 @@ aclrtRecordEvent接口与aclrtStreamWaitEvent接口配合使用时，主要用�
 <br>
 <br>
 
-<a id="aclrtRecordEventWithFlag"></a>
+<a class="method_anchor" id="aclrtRecordEventWithFlag"></a>
 
 ## aclrtRecordEventWithFlag
 
@@ -512,7 +512,7 @@ aclError aclrtRecordEventWithFlag(aclrtEvent event, aclrtStream stream, uint32_t
 <br>
 <br>
 
-<a id="aclrtResetEvent"></a>
+<a class="method_anchor" id="aclrtResetEvent"></a>
 
 ## aclrtResetEvent
 
@@ -577,7 +577,7 @@ aclError aclrtResetEvent(aclrtEvent event, aclrtStream stream)
 <br>
 <br>
 
-<a id="aclrtQueryEvent_deprecated"></a>
+<a class="method_anchor" id="aclrtQueryEvent"></a>
 
 ## aclrtQueryEvent（废弃）
 
@@ -634,7 +634,7 @@ aclError aclrtQueryEvent(aclrtEvent event, aclrtEventStatus *status)
 <br>
 <br>
 
-<a id="aclrtQueryEventStatus"></a>
+<a class="method_anchor" id="aclrtQueryEventStatus"></a>
 
 ## aclrtQueryEventStatus
 
@@ -693,7 +693,7 @@ aclError aclrtQueryEventStatus(aclrtEvent event, aclrtEventRecordedStatus *statu
 <br>
 <br>
 
-<a id="aclrtQueryEventWaitStatus"></a>
+<a class="method_anchor" id="aclrtQueryEventWaitStatus"></a>
 
 ## aclrtQueryEventWaitStatus
 
@@ -752,7 +752,7 @@ aclError aclrtQueryEventWaitStatus(aclrtEvent event, aclrtEventWaitStatus *statu
 <br>
 <br>
 
-<a id="aclrtSynchronizeEvent"></a>
+<a class="method_anchor" id="aclrtSynchronizeEvent"></a>
 
 ## aclrtSynchronizeEvent
 
@@ -806,7 +806,7 @@ aclError aclrtSynchronizeEvent(aclrtEvent event)
 <br>
 <br>
 
-<a id="aclrtSynchronizeEventWithTimeout"></a>
+<a class="method_anchor" id="aclrtSynchronizeEventWithTimeout"></a>
 
 ## aclrtSynchronizeEventWithTimeout
 
@@ -863,7 +863,7 @@ aclError aclrtSynchronizeEventWithTimeout(aclrtEvent event, int32_t timeout)
 <br>
 <br>
 
-<a id="aclrtEventElapsedTime"></a>
+<a class="method_anchor" id="aclrtEventElapsedTime"></a>
 
 ## aclrtEventElapsedTime
 
@@ -921,7 +921,7 @@ aclError aclrtEventElapsedTime(float *ms, aclrtEvent startEvent, aclrtEvent endE
 <br>
 <br>
 
-<a id="aclrtStreamWaitEvent"></a>
+<a class="method_anchor" id="aclrtStreamWaitEvent"></a>
 
 ## aclrtStreamWaitEvent
 
@@ -982,7 +982,7 @@ aclError aclrtStreamWaitEvent(aclrtStream stream, aclrtEvent event)
 <br>
 <br>
 
-<a id="aclrtStreamWaitEventWithFlag"></a>
+<a class="method_anchor" id="aclrtStreamWaitEventWithFlag"></a>
 
 ## aclrtStreamWaitEventWithFlag
 
@@ -1048,7 +1048,7 @@ aclError aclrtStreamWaitEventWithFlag(aclrtStream stream, aclrtEvent event, uint
 <br>
 <br>
 
-<a id="aclrtStreamWaitEventWithTimeout"></a>
+<a class="method_anchor" id="aclrtStreamWaitEventWithTimeout"></a>
 
 ## aclrtStreamWaitEventWithTimeout
 
@@ -1110,7 +1110,7 @@ aclError aclrtStreamWaitEventWithTimeout(aclrtStream stream, aclrtEvent event, i
 <br>
 <br>
 
-<a id="aclrtSetOpWaitTimeout"></a>
+<a class="method_anchor" id="aclrtSetOpWaitTimeout"></a>
 
 ## aclrtSetOpWaitTimeout
 
@@ -1170,7 +1170,7 @@ aclError aclrtSetOpWaitTimeout(uint32_t timeout)
 <br>
 <br>
 
-<a id="aclrtEventGetTimestamp"></a>
+<a class="method_anchor" id="aclrtEventGetTimestamp"></a>
 
 ## aclrtEventGetTimestamp
 
@@ -1227,7 +1227,7 @@ aclError aclrtEventGetTimestamp(aclrtEvent event, uint64_t *timestamp)
 <br>
 <br>
 
-<a id="aclrtGetEventId"></a>
+<a class="method_anchor" id="aclrtGetEventId"></a>
 
 ## aclrtGetEventId
 
@@ -1282,7 +1282,7 @@ aclError aclrtGetEventId(aclrtEvent event, uint32_t *eventId)
 <br>
 <br>
 
-<a id="aclrtGetEventAvailNum"></a>
+<a class="method_anchor" id="aclrtGetEventAvailNum"></a>
 
 ## aclrtGetEventAvailNum
 
@@ -1336,7 +1336,7 @@ aclError aclrtGetEventAvailNum(uint32_t *eventCount)
 <br>
 <br>
 
-<a id="aclrtIpcGetEventHandle"></a>
+<a class="method_anchor" id="aclrtIpcGetEventHandle"></a>
 
 ## aclrtIpcGetEventHandle
 
@@ -1379,12 +1379,10 @@ aclError aclrtIpcGetEventHandle(aclrtEvent event, aclrtIpcEventHandle *handle)
 
 **本接口需与以下其它关键接口配合使用**，此处以A进程、B进程为例：
 
-<a id="li288673614297"></a>
-
 1. A进程中：
     1. 调用[aclrtCreateEventExWithFlag](#aclrtCreateEventExWithFlag)接口创建flag为ACL\_EVENT\_IPC的Event。
     2. 调用aclrtIpcGetEventHandle接口获取用于进程间通信的Event句柄。
-    3. 调用[aclrtRecordEvent](#aclrtRecordEvent)接口在Stream中插入[1.a](#li288673614297)中创建的Event。
+    3. 调用[aclrtRecordEvent](#aclrtRecordEvent)接口在Stream中插入ACL\_EVENT\_IPC的Event。
 
 2. B进程中：
     1. 调用[aclrtIpcOpenEventHandle](#aclrtIpcOpenEventHandle)接口获取A进程中的Event句柄信息，并返回本进程可以使用的Event指针。
@@ -1406,7 +1404,7 @@ aclError aclrtIpcGetEventHandle(aclrtEvent event, aclrtIpcEventHandle *handle)
 <br>
 <br>
 
-<a id="aclrtIpcOpenEventHandle"></a>
+<a class="method_anchor" id="aclrtIpcOpenEventHandle"></a>
 
 ## aclrtIpcOpenEventHandle
 

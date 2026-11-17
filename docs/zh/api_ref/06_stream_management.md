@@ -27,7 +27,7 @@
 - [`aclError aclrtStreamGetPriority(aclrtStream stream, uint32_t *priority)`](#aclrtStreamGetPriority)：查询指定Stream的优先级。
 - [`aclError aclrtStreamGetFlags(aclrtStream stream, uint32_t *flags)`](#aclrtStreamGetFlags)：查询创建Stream时设置的flag标志。
 
-<a id="aclrtCreateStream"></a>
+<a class="method_anchor" id="aclrtCreateStream"></a>
 
 ## aclrtCreateStream
 
@@ -109,7 +109,7 @@ aclError aclrtCreateStream(aclrtStream *stream)
 <br>
 <br>
 
-<a id="aclrtCreateStreamWithConfig"></a>
+<a class="method_anchor" id="aclrtCreateStreamWithConfig"></a>
 
 ## aclrtCreateStreamWithConfig
 
@@ -227,7 +227,7 @@ aclError aclrtCreateStreamWithConfig(aclrtStream *stream, uint32_t priority, uin
 <br>
 <br>
 
-<a id="aclrtDestroyStream"></a>
+<a class="method_anchor" id="aclrtDestroyStream"></a>
 
 ## aclrtDestroyStream
 
@@ -287,7 +287,7 @@ aclError aclrtDestroyStream(aclrtStream stream)
 <br>
 <br>
 
-<a id="aclrtDestroyStreamForce"></a>
+<a class="method_anchor" id="aclrtDestroyStreamForce"></a>
 
 ## aclrtDestroyStreamForce
 
@@ -345,7 +345,7 @@ aclError aclrtDestroyStreamForce(aclrtStream stream)
 <br>
 <br>
 
-<a id="aclrtSetStreamOverflowSwitch"></a>
+<a class="method_anchor" id="aclrtSetStreamOverflowSwitch"></a>
 
 ## aclrtSetStreamOverflowSwitch
 
@@ -404,7 +404,7 @@ aclError aclrtSetStreamOverflowSwitch(aclrtStream stream, uint32_t flag)
 <br>
 <br>
 
-<a id="aclrtGetStreamOverflowSwitch"></a>
+<a class="method_anchor" id="aclrtGetStreamOverflowSwitch"></a>
 
 ## aclrtGetStreamOverflowSwitch
 
@@ -459,7 +459,7 @@ aclError aclrtGetStreamOverflowSwitch(aclrtStream stream, uint32_t *flag)
 <br>
 <br>
 
-<a id="aclrtSetStreamFailureMode"></a>
+<a class="method_anchor" id="aclrtSetStreamFailureMode"></a>
 
 ## aclrtSetStreamFailureMode
 
@@ -528,7 +528,7 @@ aclError aclrtSetStreamFailureMode(aclrtStream stream, uint64_t mode)
 <br>
 <br>
 
-<a id="aclrtStreamQuery"></a>
+<a class="method_anchor" id="aclrtStreamQuery"></a>
 
 ## aclrtStreamQuery
 
@@ -587,7 +587,7 @@ aclError aclrtStreamQuery(aclrtStream stream, aclrtStreamStatus *status)
 <br>
 <br>
 
-<a id="aclrtSynchronizeStream"></a>
+<a class="method_anchor" id="aclrtSynchronizeStream"></a>
 
 ## aclrtSynchronizeStream
 
@@ -645,7 +645,7 @@ aclError aclrtSynchronizeStream(aclrtStream stream)
 <br>
 <br>
 
-<a id="aclrtSynchronizeStreamWithTimeout"></a>
+<a class="method_anchor" id="aclrtSynchronizeStreamWithTimeout"></a>
 
 ## aclrtSynchronizeStreamWithTimeout
 
@@ -704,7 +704,7 @@ aclError aclrtSynchronizeStreamWithTimeout(aclrtStream stream, int32_t timeout)
 <br>
 <br>
 
-<a id="aclrtNonBlockingLaunchBegin"></a>
+<a class="method_anchor" id="aclrtNonBlockingLaunchBegin"></a>
 
 ## aclrtNonBlockingLaunchBegin
 
@@ -786,7 +786,7 @@ aclError aclrtNonBlockingLaunchBegin(aclrtStream stream, uint64_t flag)
 <br>
 <br>
 
-<a id="aclrtNonBlockingLaunchEnd"></a>
+<a class="method_anchor" id="aclrtNonBlockingLaunchEnd"></a>
 
 ## aclrtNonBlockingLaunchEnd
 
@@ -862,7 +862,7 @@ aclError aclrtNonBlockingLaunchEnd(aclrtStream stream, uint64_t flag)
 <br>
 <br>
 
-<a id="aclrtStreamAbort"></a>
+<a class="method_anchor" id="aclrtStreamAbort"></a>
 
 ## aclrtStreamAbort
 
@@ -926,7 +926,7 @@ aclError aclrtStreamAbort(aclrtStream stream)
 <br>
 <br>
 
-<a id="aclrtStreamGetId"></a>
+<a class="method_anchor" id="aclrtStreamGetId"></a>
 
 ## aclrtStreamGetId
 
@@ -981,7 +981,7 @@ aclError aclrtStreamGetId(aclrtStream stream, int32_t *streamId)
 <br>
 <br>
 
-<a id="aclrtGetStreamAvailableNum"></a>
+<a class="method_anchor" id="aclrtGetStreamAvailableNum"></a>
 
 ## aclrtGetStreamAvailableNum
 
@@ -1035,7 +1035,7 @@ aclError aclrtGetStreamAvailableNum(uint32_t *streamCount)
 <br>
 <br>
 
-<a id="aclrtSetStreamAttribute"></a>
+<a class="method_anchor" id="aclrtSetStreamAttribute"></a>
 
 ## aclrtSetStreamAttribute
 
@@ -1087,28 +1087,23 @@ aclError aclrtSetStreamAttribute(aclrtStream stream, aclrtStreamAttr stmAttrType
 
 返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
+<!-- npu="950,A3,910b,910,310p,310b" id15 -->
 ### 约束说明
 
-- 溢出检测属性：调用该接口打开或关闭溢出检测开关后，仅对后续新下发的任务生效，已下发的任务仍维持原样。
-<!-- npu="950,A3,910b" id3618 -->
-- `ACL_STREAM_LAUNCH_BLOCKING_MODE`属性：仅Ascend 950PR&950DT系列产品、Atlas A3系列产品、Atlas A2系列产品支持设置该属性。不支持对使用[aclmdlRIBindStream](15_model_running_instance_management.md#aclmdlRIBindStream)接口绑定模型运行实例的Stream设置该属性。不支持对调用[aclrtCreateStreamWithConfig](#aclrtCreateStreamWithConfig)接口，将flag设置为ACL_STREAM_PERSISTENT、ACL_STREAM_CPU_SCHEDULE或ACL_STREAM_DEVICE_USE_ONLY创建的Stream设置该属性。设置该属性时，stream参数指定的Stream必须是不在捕获状态的Stream。
-<!-- end id3618 -->
-<!-- npu="950,A3,910b,910,310p,310b" id15 -->
-- 当Stream上设置了遇错即停模式，该Stream所在的Context下的其它Stream也是遇错即停。
-<!-- end id15 -->
 <!-- npu="950,A3,910b" id16 -->
 - 对于Ascend 950PR&950DT系列产品、Atlas A3系列产品、Atlas A2系列产品，支持指定默认Stream（即stream参数传入NULL）。不支持对默认Stream设置Failure Mode。
 <!-- end id16 -->
 <!-- npu="910,310p,310b" id17 -->
 - 对于Atlas 200I/500 A2推理产品、Atlas推理系列产品、Atlas训练系列产品，不支持指定默认Stream（即stream参数传入NULL）。
 <!-- end id17 -->
+<!-- end id15 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/06_stream_management_res.md#id27 -->
 
 <br>
 <br>
 <br>
 
-<a id="aclrtGetStreamAttribute"></a>
+<a class="method_anchor" id="aclrtGetStreamAttribute"></a>
 
 ## aclrtGetStreamAttribute
 
@@ -1170,9 +1165,6 @@ aclError aclrtGetStreamAttribute(aclrtStream stream, aclrtStreamAttr stmAttrType
 <!-- npu="910,310p,310b" id20 -->
 对于Atlas 200I/500 A2推理产品、Atlas推理系列产品、Atlas训练系列产品，不支持指定默认Stream（即stream参数传入NULL）。
 <!-- end id20 -->
-<!-- npu="950,A3,910b" id3619 -->
-- `ACL_STREAM_LAUNCH_BLOCKING_MODE`属性：仅Ascend 950PR&950DT系列产品、Atlas A3系列产品、Atlas A2系列产品支持获取该属性。不支持对使用[aclmdlRIBindStream](15_model_running_instance_management.md#aclmdlRIBindStream)接口绑定模型运行实例的Stream获取该属性。不支持对调用[aclrtCreateStreamWithConfig](#aclrtCreateStreamWithConfig)接口，将flag设置为ACL_STREAM_PERSISTENT、ACL_STREAM_CPU_SCHEDULE或ACL_STREAM_DEVICE_USE_ONLY创建的Stream获取该属性。获取该属性时，stream参数指定的Stream必须是不在捕获状态的Stream。
-<!-- end id3619 -->
 <!-- end id18 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/06_stream_management_res.md#id28 -->
 
@@ -1180,7 +1172,7 @@ aclError aclrtGetStreamAttribute(aclrtStream stream, aclrtStreamAttr stmAttrType
 <br>
 <br>
 
-<a id="aclrtActiveStream"></a>
+<a class="method_anchor" id="aclrtActiveStream"></a>
 
 ## aclrtActiveStream
 
@@ -1237,7 +1229,7 @@ aclError aclrtActiveStream(aclrtStream activeStream, aclrtStream stream)
 <br>
 <br>
 
-<a id="aclrtSwitchStream"></a>
+<a class="method_anchor" id="aclrtSwitchStream"></a>
 
 ## aclrtSwitchStream
 
@@ -1299,7 +1291,7 @@ aclError aclrtSwitchStream(void *leftValue, aclrtCondition cond, void *rightValu
 <br>
 <br>
 
-<a id="aclrtRegStreamStateCallback"></a>
+<a class="method_anchor" id="aclrtRegStreamStateCallback"></a>
 
 ## aclrtRegStreamStateCallback
 
@@ -1367,7 +1359,7 @@ typedef void (*aclrtStreamStateCallback)(aclrtStream stm, aclrtStreamState state
 <br>
 <br>
 
-<a id="aclrtStreamStop"></a>
+<a class="method_anchor" id="aclrtStreamStop"></a>
 
 ## aclrtStreamStop
 
@@ -1426,7 +1418,7 @@ aclError aclrtStreamStop(aclrtStream stream)
 <br>
 <br>
 
-<a id="aclrtPersistentTaskClean"></a>
+<a class="method_anchor" id="aclrtPersistentTaskClean"></a>
 
 ## aclrtPersistentTaskClean
 
@@ -1484,7 +1476,7 @@ ACL\_STREAM\_PERSISTENT类型的Stream需调用[aclrtCreateStreamWithConfig](#ac
 <br>
 <br>
 
-<a id="aclrtStreamGetPriority"></a>
+<a class="method_anchor" id="aclrtStreamGetPriority"></a>
 
 ## aclrtStreamGetPriority
 
@@ -1539,7 +1531,7 @@ aclError aclrtStreamGetPriority(aclrtStream stream, uint32_t *priority)
 <br>
 <br>
 
-<a id="aclrtStreamGetFlags"></a>
+<a class="method_anchor" id="aclrtStreamGetFlags"></a>
 
 ## aclrtStreamGetFlags
 

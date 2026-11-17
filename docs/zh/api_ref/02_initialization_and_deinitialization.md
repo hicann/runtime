@@ -10,7 +10,7 @@
 - [`aclError aclFinalizeCallbackRegister(aclRegisterCallbackType type, aclFinalizeCallbackFunc cbFunc, void *userData)`](#aclFinalizeCallbackRegister)：注册去初始化回调函数。
 - [`aclError aclFinalizeCallbackUnRegister(aclRegisterCallbackType type, aclFinalizeCallbackFunc cbFunc)`](#aclFinalizeCallbackUnRegister)：若不需要触发回调函数的调用，可调用本接口取消注册回调函数。
 
-<a id="aclInit"></a>
+<a class="method_anchor" id="aclInit"></a>
 
 ## aclInit
 
@@ -560,7 +560,7 @@ simd\_printf\_fifo\_size\_per\_core配置默认值32KB，最小值是1KB，最�
 <br>
 <br>
 
-<a id="aclFinalize"></a>
+<a class="method_anchor" id="aclFinalize"></a>
 
 ## aclFinalize
 
@@ -622,7 +622,7 @@ aclError aclFinalize()
 <br>
 <br>
 
-<a id="aclFinalizeReference"></a>
+<a class="method_anchor" id="aclFinalizeReference"></a>
 
 ## aclFinalizeReference
 
@@ -684,7 +684,7 @@ aclFinalizeReference接口内部涉及引用计数的实现，aclInit接口每�
 <br>
 <br>
 
-<a id="aclInitCallbackRegister"></a>
+<a class="method_anchor" id="aclInitCallbackRegister"></a>
 
 ## aclInitCallbackRegister
 
@@ -742,7 +742,7 @@ aclError aclInitCallbackRegister(aclRegisterCallbackType type, aclInitCallbackFu
 <br>
 <br>
 
-<a id="aclInitCallbackUnRegister"></a>
+<a class="method_anchor" id="aclInitCallbackUnRegister"></a>
 
 ## aclInitCallbackUnRegister
 
@@ -797,7 +797,7 @@ aclError aclInitCallbackUnRegister(aclRegisterCallbackType type, aclInitCallback
 <br>
 <br>
 
-<a id="aclFinalizeCallbackRegister"></a>
+<a class="method_anchor" id="aclFinalizeCallbackRegister"></a>
 
 ## aclFinalizeCallbackRegister
 
@@ -855,7 +855,7 @@ aclError aclFinalizeCallbackRegister(aclRegisterCallbackType type, aclFinalizeCa
 <br>
 <br>
 
-<a id="aclFinalizeCallbackUnRegister"></a>
+<a class="method_anchor" id="aclFinalizeCallbackUnRegister"></a>
 
 ## aclFinalizeCallbackUnRegister
 

@@ -12,7 +12,7 @@
 - [`aclError aclrtGetPrimaryCtxState(int32_t deviceId, uint32_t *flags, int32_t *active)`](#aclrtGetPrimaryCtxState)：获取默认Context的状态。
 - [`aclError aclrtCtxGetFloatOverflowAddr(void **overflowAddr)`](#aclrtCtxGetFloatOverflowAddr)：饱和模式下，获取保存溢出标记的Device内存地址，该内存地址后续需作为Workspace参数传递给AI Core算子。
 
-<a id="aclrtCreateContext"></a>
+<a class="method_anchor" id="aclrtCreateContext"></a>
 
 ## aclrtCreateContext
 
@@ -88,7 +88,7 @@ aclError aclrtCreateContext(aclrtContext *context, int32_t deviceId)
 <br>
 <br>
 
-<a id="aclrtDestroyContext"></a>
+<a class="method_anchor" id="aclrtDestroyContext"></a>
 
 ## aclrtDestroyContext
 
@@ -142,7 +142,7 @@ aclError aclrtDestroyContext(aclrtContext context)
 <br>
 <br>
 
-<a id="aclrtSetCurrentContext"></a>
+<a class="method_anchor" id="aclrtSetCurrentContext"></a>
 
 ## aclrtSetCurrentContext
 
@@ -207,7 +207,7 @@ aclError aclrtSetCurrentContext(aclrtContext context)
 <br>
 <br>
 
-<a id="aclrtGetCurrentContext"></a>
+<a class="method_anchor" id="aclrtGetCurrentContext"></a>
 
 ## aclrtGetCurrentContext
 
@@ -263,7 +263,7 @@ aclError aclrtGetCurrentContext(aclrtContext *context)
 <br>
 <br>
 
-<a id="aclrtCtxSetSysParamOpt"></a>
+<a class="method_anchor" id="aclrtCtxSetSysParamOpt"></a>
 
 ## aclrtCtxSetSysParamOpt
 
@@ -320,7 +320,7 @@ aclError aclrtCtxSetSysParamOpt(aclSysParamOpt opt, int64_t value)
 <br>
 <br>
 
-<a id="aclrtCtxGetSysParamOpt"></a>
+<a class="method_anchor" id="aclrtCtxGetSysParamOpt"></a>
 
 ## aclrtCtxGetSysParamOpt
 
@@ -377,7 +377,7 @@ aclError aclrtCtxGetSysParamOpt(aclSysParamOpt opt, int64_t *value)
 <br>
 <br>
 
-<a id="aclrtCtxGetCurrentDefaultStream"></a>
+<a class="method_anchor" id="aclrtCtxGetCurrentDefaultStream"></a>
 
 ## aclrtCtxGetCurrentDefaultStream
 
@@ -431,7 +431,7 @@ aclError aclrtCtxGetCurrentDefaultStream(aclrtStream *stream)
 <br>
 <br>
 
-<a id="aclrtGetPrimaryCtxState"></a>
+<a class="method_anchor" id="aclrtGetPrimaryCtxState"></a>
 
 ## aclrtGetPrimaryCtxState
 
@@ -487,7 +487,7 @@ aclError aclrtGetPrimaryCtxState(int32_t deviceId, uint32_t *flags, int32_t *act
 <br>
 <br>
 
-<a id="aclrtCtxGetFloatOverflowAddr"></a>
+<a class="method_anchor" id="aclrtCtxGetFloatOverflowAddr"></a>
 
 ## aclrtCtxGetFloatOverflowAddr
 

@@ -13,7 +13,7 @@
 - [`aclError acldumpGetExceptionInfoPath(char *path, size_t maxLen)`](#acldumpGetExceptionInfoPath)：获取异常算子Dump数据的存储路径，以便用户将自定义维测数据保存到该路径下，导出的数据用于分析AI Core Error问题。
 - [`aclError acldumpSaveExceptionInfo(const char *fileName, const char *userTag, const acldumpTensorInfo *tensors, size_t tensorCount)`](#acldumpSaveExceptionInfo)：调用本接口将自定义异常算子Tensor数据保存到异常算子Dump数据的存储路径下，导出的数据用于分析AI Core Error问题。
 
-<a id="aclmdlInitDump"></a>
+<a class="method_anchor" id="aclmdlInitDump"></a>
 
 ## aclmdlInitDump
 
@@ -95,7 +95,7 @@ Dump初始化。
 <br>
 <br>
 
-<a id="aclmdlSetDump"></a>
+<a class="method_anchor" id="aclmdlSetDump"></a>
 
 ## aclmdlSetDump
 
@@ -210,7 +210,7 @@ aclError aclmdlSetDump(const char *dumpCfgPath)
 }
 ```
 
-<a id="exception_dump_config"></a>
+<a class="method_anchor" id="exception_dump_config"></a>
 
 ### 异常算子Dump配置
 
@@ -401,7 +401,7 @@ aclError aclmdlSetDump(const char *dumpCfgPath)
 <br>
 <br>
 
-<a id="acldumpRegCallback"></a>
+<a class="method_anchor" id="acldumpRegCallback"></a>
 
 ## acldumpRegCallback
 
@@ -492,7 +492,7 @@ Dump数据回调函数注册接口。
 <br>
 <br>
 
-<a id="acldumpUnregCallback"></a>
+<a class="method_anchor" id="acldumpUnregCallback"></a>
 
 ## acldumpUnregCallback
 
@@ -554,7 +554,7 @@ Dump数据回调函数取消注册接口。[acldumpUnregCallback](#acldumpUnregC
 <br>
 <br>
 
-<a id="acldumpGetPath"></a>
+<a class="method_anchor" id="acldumpGetPath"></a>
 
 ## acldumpGetPath
 
@@ -610,7 +610,7 @@ const char* acldumpGetPath(acldumpType dumpType)
 <br>
 <br>
 
-<a id="aclmdlFinalizeDump"></a>
+<a class="method_anchor" id="aclmdlFinalizeDump"></a>
 
 ## aclmdlFinalizeDump
 
@@ -687,7 +687,7 @@ Dump去初始化。
 <br>
 <br>
 
-<a id="aclopStartDumpArgs"></a>
+<a class="method_anchor" id="aclopStartDumpArgs"></a>
 
 ## aclopStartDumpArgs
 
@@ -750,7 +750,7 @@ aclError aclopStartDumpArgs(uint32_t dumpType, const char *path)
 <br>
 <br>
 
-<a id="aclopStopDumpArgs"></a>
+<a class="method_anchor" id="aclopStopDumpArgs"></a>
 
 ## aclopStopDumpArgs
 
@@ -812,7 +812,7 @@ aclError aclopStopDumpArgs(uint32_t dumpType)
 <br>
 <br>
 
-<a id="acldumpGetExceptionInfoPath"></a>
+<a class="method_anchor" id="acldumpGetExceptionInfoPath"></a>
 
 ## acldumpGetExceptionInfoPath
 
@@ -874,7 +874,7 @@ aclError acldumpGetExceptionInfoPath(char *path, size_t maxLen)
 <br>
 <br>
 
-<a id="acldumpSaveExceptionInfo"></a>
+<a class="method_anchor" id="acldumpSaveExceptionInfo"></a>
 
 ## acldumpSaveExceptionInfo
 

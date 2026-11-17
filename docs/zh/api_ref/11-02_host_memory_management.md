@@ -13,7 +13,7 @@
 - [`aclError aclrtHostMemMapCapabilities(uint32_t deviceId, aclrtHacType hacType, aclrtHostMemMapCapability *capabilities)`](#aclrtHostMemMapCapabilities)：查询指定的硬件驱动加速器是否支持访问通过[aclrtHostRegister](#aclrtHostRegister)接口注册的内存。
 - [`aclError aclrtHostUnregister(void *ptr)`](#aclrtHostUnregister)：取消注册Host内存。
 
-<a id="aclrtMallocHost"></a>
+<a class="method_anchor" id="aclrtMallocHost"></a>
 
 ## aclrtMallocHost
 
@@ -85,7 +85,7 @@ aclError aclrtMallocHost(void **hostPtr, size_t size)
 <br>
 <br>
 
-<a id="aclrtMallocHostWithCfg"></a>
+<a class="method_anchor" id="aclrtMallocHostWithCfg"></a>
 
 ## aclrtMallocHostWithCfg
 
@@ -147,7 +147,7 @@ aclError aclrtMallocHostWithCfg(void **ptr, uint64_t size, aclrtMallocConfig *cf
 <br>
 <br>
 
-<a id="aclrtFreeHost"></a>
+<a class="method_anchor" id="aclrtFreeHost"></a>
 
 ## aclrtFreeHost
 
@@ -203,7 +203,7 @@ aclError aclrtFreeHost(void *hostPtr)
 <br>
 <br>
 
-<a id="aclrtFreeHostWithDevSync"></a>
+<a class="method_anchor" id="aclrtFreeHostWithDevSync"></a>
 
 ## aclrtFreeHostWithDevSync
 
@@ -259,7 +259,7 @@ aclError aclrtFreeHostWithDevSync(void *hostPtr)
 <br>
 <br>
 
-<a id="aclrtHostRegister"></a>
+<a class="method_anchor" id="aclrtHostRegister"></a>
 
 ## aclrtHostRegister
 
@@ -318,7 +318,7 @@ aclError aclrtHostRegister(void *ptr, uint64_t size, aclrtHostRegisterType type,
 <br>
 <br>
 
-<a id="aclrtHostRegisterV2"></a>
+<a class="method_anchor" id="aclrtHostRegisterV2"></a>
 
 ## aclrtHostRegisterV2
 
@@ -376,7 +376,7 @@ aclError aclrtHostRegisterV2(void *ptr, uint64_t size, uint32_t flag)
 <br>
 <br>
 
-<a id="aclrtHostGetDevicePointer"></a>
+<a class="method_anchor" id="aclrtHostGetDevicePointer"></a>
 
 ## aclrtHostGetDevicePointer
 
@@ -432,7 +432,7 @@ aclError aclrtHostGetDevicePointer(void *pHost, void **pDevice, uint32_t flag)
 <br>
 <br>
 
-<a id="aclrtHostMemMapCapabilities"></a>
+<a class="method_anchor" id="aclrtHostMemMapCapabilities"></a>
 
 ## aclrtHostMemMapCapabilities
 
@@ -488,7 +488,7 @@ aclError aclrtHostMemMapCapabilities(uint32_t deviceId, aclrtHacType hacType, ac
 <br>
 <br>
 
-<a id="aclrtHostUnregister"></a>
+<a class="method_anchor" id="aclrtHostUnregister"></a>
 
 ## aclrtHostUnregister
 
@@ -544,7 +544,7 @@ aclError aclrtHostUnregister(void *ptr)
 <br>
 <br>
 
-<a id="aclrtHostGetDevicePointerAddrRange"></a>
+<a class="method_anchor" id="aclrtHostGetDevicePointerAddrRange"></a>
 
 ## aclrtHostGetDevicePointerAddrRange
 

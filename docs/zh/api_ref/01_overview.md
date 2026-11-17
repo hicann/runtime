@@ -81,23 +81,23 @@ Runtime API中的废弃项（例如接口、返回码等），自指定版本在
 
 ### 接口
 
-- [aclGetDataBufferSize](25-03_Operation_APIs.md#aclGetDataBufferSize_deprecated)接口
+- [aclGetDataBufferSize](25-03_Operation_APIs.md#aclGetDataBufferSize)接口
 
     aclGetDataBufferSize接口在CANN 8.5.0版本标记为废弃，将在2026年12月30日之后的版本删除，请替换为：[aclGetDataBufferSizeV2](25-03_Operation_APIs.md#aclGetDataBufferSizeV2)接口。
 
-- [aclrtQueryEvent](07_event_management.md#aclrtQueryEvent_deprecated)接口
+- [aclrtQueryEvent](07_event_management.md#aclrtQueryEvent)接口
 
     aclrtQueryEvent接口在CANN 8.5.0版本标记为废弃，将在2026年12月30日之后的版本删除，请替换为：[aclrtQueryEventStatus](07_event_management.md#aclrtQueryEventStatus)接口。
 
-- [aclrtGetVersion](24_other_APIs.md#aclrtGetVersion_deprecated)接口
+- [aclrtGetVersion](24_other_APIs.md#aclrtGetVersion)接口
 
     aclrtGetVersion接口在CANN 9.2.0版本标记为废弃，将在2027年9月30日之后的版本删除，请替换为：[aclsysGetVersionNum](24_other_APIs.md#aclsysGetVersionNum)接口或[aclsysGetVersionStr](24_other_APIs.md#aclsysGetVersionStr)接口。
 
-- [aclrtMemcpyAsyncWithCondition](11-03_memory_copy_and_set.md#aclrtMemcpyAsyncWithCondition_deprecated)接口
+- [aclrtMemcpyAsyncWithCondition](11-03_memory_copy_and_set.md#aclrtMemcpyAsyncWithCondition)接口
 
     aclrtMemcpyAsyncWithCondition接口在CANN 9.2.0版本标记为废弃，将在2027年9月30日之后的版本删除，请替换为：[aclrtMemcpyAsync](11-03_memory_copy_and_set.md#aclrtMemcpyAsync)接口。
 
-- [aclrtSetExceptionInfoCallback](13_exception_handling.md#aclrtSetExceptionInfoCallback_deprecated)接口
+- [aclrtSetExceptionInfoCallback](13_exception_handling.md#aclrtSetExceptionInfoCallback)接口
 
     aclrtSetExceptionInfoCallback接口在CANN 9.2.0版本标记为废弃，将在2027年9月30日之后的版本删除，请替换为：[aclrtExceptionInfoCallbackRegister](13_exception_handling.md#aclrtExceptionInfoCallbackRegister)接口和[aclrtExceptionInfoCallbackUnregister](13_exception_handling.md#aclrtExceptionInfoCallbackUnregister)接口。
 
@@ -105,7 +105,7 @@ Runtime API中的废弃项（例如接口、返回码等），自指定版本在
 
     aclsysGetCANNVersion接口在CANN 8.5.0版本标记为废弃，将在2026年12月30日之后的版本删除，请替换为：[aclsysGetVersionStr](24_other_APIs.md#aclsysGetVersionStr)接口或[aclsysGetVersionNum](24_other_APIs.md#aclsysGetVersionNum)接口。
 
-- [aclmdlRIDebugPrint](15_model_running_instance_management.md#aclmdlRIDebugPrint_deprecated)接口
+- [aclmdlRIDebugPrint](15_model_running_instance_management.md#aclmdlRIDebugPrint)接口
 
     aclmdlRIDebugPrint接口在CANN 8.5.0版本标记为废弃，将在2026年12月30日之后的版本删除，请替换为：[aclmdlRIDebugJsonPrint](15_model_running_instance_management.md#aclmdlRIDebugJsonPrint)接口。
 

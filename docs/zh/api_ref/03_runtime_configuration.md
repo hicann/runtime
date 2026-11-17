@@ -14,7 +14,7 @@
 - [`aclError aclrtUnuseStreamResInCurrentThread(aclrtStream stream)`](#aclrtUnuseStreamResInCurrentThread)：在当前线程中取消使用指定Stream上的Device资源限制。
 - [`aclError aclrtGetResInCurrentThread(aclrtDevResLimitType type, uint32_t *value)`](#aclrtGetResInCurrentThread)：获取当前线程可使用的Device资源。
 
-<a id="aclrtSetSysParamOpt"></a>
+<a class="method_anchor" id="aclrtSetSysParamOpt"></a>
 
 ## aclrtSetSysParamOpt
 
@@ -71,7 +71,7 @@ aclError aclrtSetSysParamOpt(aclSysParamOpt opt, int64_t value)
 <br>
 <br>
 
-<a id="aclrtGetSysParamOpt"></a>
+<a class="method_anchor" id="aclrtGetSysParamOpt"></a>
 
 ## aclrtGetSysParamOpt
 
@@ -128,7 +128,7 @@ aclError aclrtGetSysParamOpt(aclSysParamOpt opt, int64_t *value)
 <br>
 <br>
 
-<a id="aclrtGetDeviceResLimit"></a>
+<a class="method_anchor" id="aclrtGetDeviceResLimit"></a>
 
 ## aclrtGetDeviceResLimit
 
@@ -186,7 +186,7 @@ aclError aclrtGetDeviceResLimit(int32_t deviceId, aclrtDevResLimitType type, uin
 <br>
 <br>
 
-<a id="aclrtSetDeviceResLimit"></a>
+<a class="method_anchor" id="aclrtSetDeviceResLimit"></a>
 
 ## aclrtSetDeviceResLimit
 
@@ -252,7 +252,7 @@ Device资源限制的优先级为：Stream级别的Device资源限制 \> 进程�
 <br>
 <br>
 
-<a id="aclrtResetDeviceResLimit"></a>
+<a class="method_anchor" id="aclrtResetDeviceResLimit"></a>
 
 ## aclrtResetDeviceResLimit
 
@@ -306,7 +306,7 @@ aclError aclrtResetDeviceResLimit(int32_t deviceId)
 <br>
 <br>
 
-<a id="aclrtGetStreamResLimit"></a>
+<a class="method_anchor" id="aclrtGetStreamResLimit"></a>
 
 ## aclrtGetStreamResLimit
 
@@ -364,7 +364,7 @@ aclError aclrtGetStreamResLimit(aclrtStream stream, aclrtDevResLimitType type, u
 <br>
 <br>
 
-<a id="aclrtSetStreamResLimit"></a>
+<a class="method_anchor" id="aclrtSetStreamResLimit"></a>
 
 ## aclrtSetStreamResLimit
 
@@ -424,7 +424,7 @@ aclError aclrtSetStreamResLimit(aclrtStream stream, aclrtDevResLimitType type, u
 <br>
 <br>
 
-<a id="aclrtResetStreamResLimit"></a>
+<a class="method_anchor" id="aclrtResetStreamResLimit"></a>
 
 ## aclrtResetStreamResLimit
 
@@ -478,7 +478,7 @@ aclError aclrtResetStreamResLimit(aclrtStream stream)
 <br>
 <br>
 
-<a id="aclrtUseStreamResInCurrentThread"></a>
+<a class="method_anchor" id="aclrtUseStreamResInCurrentThread"></a>
 
 ## aclrtUseStreamResInCurrentThread
 
@@ -532,7 +532,7 @@ aclError aclrtUseStreamResInCurrentThread(aclrtStream stream)
 <br>
 <br>
 
-<a id="aclrtUnuseStreamResInCurrentThread"></a>
+<a class="method_anchor" id="aclrtUnuseStreamResInCurrentThread"></a>
 
 ## aclrtUnuseStreamResInCurrentThread
 
@@ -586,7 +586,7 @@ aclError aclrtUnuseStreamResInCurrentThread(aclrtStream stream)
 <br>
 <br>
 
-<a id="aclrtGetResInCurrentThread"></a>
+<a class="method_anchor" id="aclrtGetResInCurrentThread"></a>
 
 ## aclrtGetResInCurrentThread
 

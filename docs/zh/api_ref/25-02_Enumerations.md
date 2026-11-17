@@ -980,7 +980,7 @@ typedef enum {
     ACL_DEV_ATTR_MAX_BLOCK_DIM_Z = 212,
 
     ACL_DEV_ATTR_TOTAL_GLOBAL_MEM_SIZE = 301,
-    ACL_DEV_ATTR_L2_CACHE_SIZE,
+    ACL_DEV_ATTR_L2_CACHE_SIZE = 302,
     ACL_DEV_ATTR_SMP_ID = 401U,
     ACL_DEV_ATTR_PHY_CHIP_ID = 402U,
     ACL_DEV_ATTR_SUPER_POD_DEVICE_ID = 403U,
@@ -1131,6 +1131,10 @@ typedef enum {
 - ACL\_DEV\_ATTR\_TOTAL\_GLOBAL\_MEM\_SIZE
 
     Device上的可用总内存，单位Byte。
+
+- ACL\_DEV\_ATTR\_L2\_CACHE\_SIZE
+
+    L2 Cache（二级缓存）大小，单位Byte。
 
 - ACL\_DEV\_ATTR\_SMP\_ID
 
@@ -2391,30 +2395,69 @@ typedef enum {
 } aclrtStreamAttr;
 ```
 
-| 枚举项 | 说明 |
-| --- | --- |
-| ACL_STREAM_ATTR_FAILURE_MODE | 当Stream上的任务执行出错时，可通过该属性设置Stream的任务调度模式，以便控制某个任务失败后是否继续执行下一个任务<br>默认Stream不支持设置任务调度模式。<br>通过该属性设置任务调度模式，与[aclrtSetStreamFailureMode](06_stream_management.md#aclrtSetStreamFailureMode)接口的功能一致。 |
-| ACL_STREAM_ATTR_FLOAT_OVERFLOW_CHECK | 当与上层训练框架（例如PyTorch）对接时，针对指定Stream，可通过该属性打开或关闭溢出检测开关。关闭后，将无法通过溢出检测算子获取任务是否溢出。<br>打开或关闭溢出检测开关后，仅对后续新下发的任务生效，已下发的任务仍维持原样。<br>通过该属性设置溢出检测开关，与[aclrtSetStreamOverflowSwitch](06_stream_management.md#aclrtSetStreamOverflowSwitch)接口的功能一致。 |
-| ACL_STREAM_ATTR_USER_CUSTOM_TAG | 设置Stream上的溢出检测分组标签，以确定溢出发生时检测的粒度。如果不设置分组标签，默认为进程粒度。如果设置了分组标签，则仅检测与发生溢出的Stream具有相同分组标签的Stream。 |
-| ACL_STREAM_ATTR_CACHE_OP_INFO | 基于捕获方式构建模型运行实例场景下，通过该属性设置Stream的算子信息缓存开关，以便于控制后续采集性能数据时是否附带算子信息。<br>该属性需与其它接口配合使用，请参见[aclrtCacheLastTaskOpInfo](24_other_APIs.md#aclrtCacheLastTaskOpInfo)中的接口调用流程。<br>跨Stream的任务捕获时，与主流关联的其他Stream，其算子信息缓存开关状态与主流一致。 |
-| ACL_STREAM_ATTR_PRIORITY | 基于该属性值动态设置/查询stream优先级。 |
-| ACL_STREAM_LAUNCH_BLOCKING_MODE | 用于控制以下接口在指定Stream上的执行模式为同步模式或异步模式：<br><br>  - aclrtLaunchKernel<br>  - aclrtLaunchKernelV2<br>  - aclrtLaunchKernelWithConfig<br>  - aclrtLaunchKernelWithHostArgs<br>  - aclrtLaunchKernelWithArgsArray<br>  - aclrtLaunchSIMTKernelWithArgsArray<br>  - aclrtLaunchSIMTKernelWithHostArgs<br>  - aclmdlRIExecuteAsync<br><br>通过[aclrtSetStreamAttribute](06_stream_management.md#aclrtSetStreamAttribute)接口设置，通过[aclrtGetStreamAttribute](06_stream_management.md#aclrtGetStreamAttribute)接口获取。属性值说明请参见[aclrtStreamAttrValue](25-04_Structs.md#aclrtStreamAttrValue)中的launchBlockingMode。 |
+枚举项说明如下：
 
-<!-- npu="950,A3,910b" id84 -->
-对于Ascend 950PR&950DT系列产品、Atlas A3系列产品、Atlas A2系列产品，支持设置Stream优先级。
-对于Ascend 950PR&950DT系列产品、Atlas A3系列产品、Atlas A2系列产品，支持设置或获取`ACL_STREAM_LAUNCH_BLOCKING_MODE`属性。
-<!-- end id84 -->
+- **ACL_STREAM_ATTR_FAILURE_MODE**
+  
+  当Stream上的任务执行出错时，可通过该属性设置Stream的任务调度模式，以便控制某个任务失败后是否继续执行下一个任务。
+  
+  默认Stream不支持设置任务调度模式。
 
-<!-- npu="910,310p,310b" id82 -->
-对于Atlas 200I/500 A2推理产品、Atlas推理系列产品、Atlas训练系列产品，不支持设置Stream优先级。
-对于Atlas 200I/500 A2推理产品、Atlas推理系列产品、Atlas训练系列产品，不支持设置或获取`ACL_STREAM_LAUNCH_BLOCKING_MODE`属性。
-<!-- end id82 -->
+  <!-- npu="950,A3,910b,910,310p,310b" id58 -->
+  当Stream上设置了遇错即停模式，该Stream所在的Context下的其他Stream也是遇错即停。
+  <!-- end id58 -->
+  
+  通过该属性设置任务调度模式，与[aclrtSetStreamFailureMode](06_stream_management.md#aclrtSetStreamFailureMode)接口的功能一致。
 
-<!-- npu="IPV350" id83 -->
-当前不支持设置Stream优先级。
-当前不支持设置或获取`ACL_STREAM_LAUNCH_BLOCKING_MODE`属性。
-<!-- end id83 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/25-02_Enumerations_res.md#id15 -->
+- **ACL_STREAM_ATTR_FLOAT_OVERFLOW_CHECK**
+
+  当与上层训练框架（例如PyTorch）对接时，针对指定Stream，可通过该属性打开或关闭溢出检测开关。关闭后，将无法通过溢出检测算子获取任务是否溢出。
+  
+  打开或关闭溢出检测开关后，仅对后续新下发的任务生效，已下发的任务仍维持原样。
+  
+  通过该属性设置溢出检测开关，与[aclrtSetStreamOverflowSwitch](06_stream_management.md#aclrtSetStreamOverflowSwitch)接口的功能一致。
+
+- **ACL_STREAM_ATTR_USER_CUSTOM_TAG**
+
+  设置Stream上的溢出检测分组标签，以确定溢出发生时检测的粒度。如果不设置分组标签，默认为进程粒度。如果设置了分组标签，则仅检测与发生溢出的Stream具有相同分组标签的Stream。
+
+  <!-- @ref: runtime/res/docs/zh/api_ref/25-02_Enumerations_res.md#id18 -->
+
+- **ACL_STREAM_ATTR_CACHE_OP_INFO**
+
+  基于捕获方式构建模型运行实例场景下，通过该属性设置Stream的算子信息缓存开关，以便于控制后续采集性能数据时是否附带算子信息。
+  
+  该属性需与其它接口配合使用，请参见[aclrtCacheLastTaskOpInfo](24_other_APIs.md#aclrtCacheLastTaskOpInfo)中的接口调用流程。
+  
+  跨Stream的任务捕获时，与主流关联的其他Stream，其算子信息缓存开关状态与主流一致。
+
+- **ACL_STREAM_ATTR_PRIORITY**
+
+  基于该属性值动态设置/查询stream优先级。
+
+- **ACL_STREAM_LAUNCH_BLOCKING_MODE**
+
+  用于控制以下接口在指定Stream上的执行模式为同步模式或异步模式：
+  - aclrtLaunchKernel
+  - aclrtLaunchKernelV2
+  - aclrtLaunchKernelWithConfig
+  - aclrtLaunchKernelWithHostArgs
+  - aclrtLaunchKernelWithArgsArray
+  - aclrtLaunchSIMTKernelWithArgsArray
+  - aclrtLaunchSIMTKernelWithHostArgs
+  - aclmdlRIExecuteAsync
+  
+  通过[aclrtSetStreamAttribute](06_stream_management.md#aclrtSetStreamAttribute)接口设置，通过[aclrtGetStreamAttribute](06_stream_management.md#aclrtGetStreamAttribute)接口获取。属性值说明请参见[aclrtStreamAttrValue](25-04_Structs.md#aclrtStreamAttrValue)中的launchBlockingMode。 
+
+  <!-- npu="950,A3,910b" id84 -->
+  对于Ascend 950PR&950DT系列产品、Atlas A3系列产品、Atlas A2系列产品，支持设置或获取`ACL_STREAM_LAUNCH_BLOCKING_MODE`属性。不支持对使用[aclmdlRIBindStream](15_model_running_instance_management.md#aclmdlRIBindStream)接口绑定模型运行实例的Stream设置该属性。不支持对调用[aclrtCreateStreamWithConfig](06_stream_management.md#aclrtCreateStreamWithConfig)接口，将flag设置为ACL_STREAM_PERSISTENT、ACL_STREAM_CPU_SCHEDULE或ACL_STREAM_DEVICE_USE_ONLY创建的Stream设置该属性。设置该属性时，stream参数指定的Stream必须是不在捕获状态的Stream。
+  <!-- end id84 -->
+
+  <!-- npu="910,310p,310b" id82 -->
+  对于Atlas 200I/500 A2推理产品、Atlas推理系列产品、Atlas训练系列产品，不支持设置或获取`ACL_STREAM_LAUNCH_BLOCKING_MODE`属性。
+  <!-- end id82 -->
+
+  <!-- @ref: runtime/res/docs/zh/api_ref/25-02_Enumerations_res.md#id15 -->
 
 <br>
 
@@ -2603,6 +2646,8 @@ typedef enum aclrtDeviceLimit {
 <!-- npu="A3,910b" id107 -->
 对于Atlas A3系列产品、Atlas A2系列产品，仅支持SIMD相关选项（例如`ACL_RT_DEV_LIMIT_SIMD_STACK_SIZE`），不支持SIMT相关选项（例如`ACL_RT_DEV_LIMIT_SIMT_STACK_SIZE`），不支持`ACL_RT_DEV_LIMIT_PERSISTING_L2CACHE_SIZE`。
 <!-- end id107 -->
+
+<!-- @ref: runtime/res/docs/zh/api_ref/25-02_Enumerations_res.md#id19 -->
 
 各枚举项的说明如下：
 

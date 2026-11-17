@@ -4,7 +4,7 @@
 
 - [`aclError aclprofGetStepTimestamp(aclprofStepInfo* stepInfo, aclprofStepTag tag, aclrtStream stream)`](#aclprofGetStepTimestamp)：利用单算子模型执行接口实现训练的场景下，使用本接口用于标记迭代开始与结束时间，为后续Profiling解析提供迭代标识，以便以迭代为粒度展示性能数据。
 
-<a id="aclprofGetStepTimestamp"></a>
+<a class="method_anchor" id="aclprofGetStepTimestamp"></a>
 
 ## aclprofGetStepTimestamp
 

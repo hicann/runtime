@@ -11,7 +11,7 @@
 - [`aclError aclmdlRICaptureTaskUpdateBegin(aclrtStream stream, aclrtTaskGrp handle)`](#aclmdlRICaptureTaskUpdateBegin)：标记待更新任务的开始。
 - [`aclError aclmdlRICaptureTaskUpdateEnd(aclrtStream stream)`](#aclmdlRICaptureTaskUpdateEnd)：标记待更新任务的结束。
 - [`aclError aclmdlRIDebugJsonPrint(aclmdlRI modelRI, const char *path, uint32_t flags)`](#aclmdlRIDebugJsonPrint)：维测场景下，使用本接口将模型运行实例信息以JSON格式导出到文件中，包括Model ID、Stream ID、Task ID、Task Type等信息。
-- [`aclError aclmdlRIDebugPrint(aclmdlRI modelRI)`](#aclmdlRIDebugPrint_deprecated)：维测场景下使用本接口打印内部模型信息，包括Device ID、Stream ID、Task ID等信息。
+- [`aclError aclmdlRIDebugPrint(aclmdlRI modelRI)`](#aclmdlRIDebugPrint)：维测场景下使用本接口打印内部模型信息，包括Device ID、Stream ID、Task ID等信息。
 - [`aclError aclmdlRIBuildBegin(aclmdlRI *modelRI, uint32_t flag)`](#aclmdlRIBuildBegin)：开始构建一个模型运行实例。
 - [`aclError aclmdlRIBindStream(aclmdlRI modelRI, aclrtStream stream, uint32_t flag)`](#aclmdlRIBindStream)：将模型运行实例与Stream绑定。
 - [`aclError aclmdlRIEndTask(aclmdlRI modelRI, aclrtStream stream)`](#aclmdlRIEndTask)：在Stream上标记下发任务结束。
@@ -44,7 +44,7 @@
 - [`aclError aclmdlRIAddCondTask(aclmdlRICondTaskParams params, aclrtStream stream, uint32_t flags)`](#aclmdlRIAddCondTask)：在Stream上下发条件任务。
 - [`aclError aclmdlRICaptureToModelRIBegin(aclrtStream stream, aclmdlRI modelRI, aclmdlRICaptureMode mode)`](#aclmdlRICaptureToModelRIBegin)：开始捕获Stream上下发的任务到指定的模型运行实例中。
 
-<a id="aclmdlRICaptureBegin"></a>
+<a class="method_anchor" id="aclmdlRICaptureBegin"></a>
 
 ## aclmdlRICaptureBegin
 
@@ -86,7 +86,7 @@ aclError aclmdlRICaptureBegin(aclrtStream stream, aclmdlRICaptureMode mode)
 
 在aclmdlRICaptureBegin和[aclmdlRICaptureEnd](#aclmdlRICaptureEnd)接口之间，所有在指定Stream上下发的任务不会立即执行，而是被暂存在系统内部模型运行实例中，只有在调用[aclmdlRIExecuteAsync](#aclmdlRIExecuteAsync)接口执行模型时，这些任务才会被真正执行，以此减少Host侧的任务下发开销。所有任务执行完毕后，若无需再使用内部模型，可调用[aclmdlRIDestroy](#aclmdlRIDestroy)接口及时销毁该资源。
 
-aclmdlRICaptureBegin和[aclmdlRICaptureEnd](#aclmdlRICaptureEnd)接口要成对使用，且两个接口中的Stream应相同。在这两个接口之间，可以调用[aclmdlRICaptureGetInfo](#aclmdlRICaptureGetInfo)接口获取捕获信息，调用[aclmdlRICaptureThreadExchangeMode](#aclmdlRICaptureThreadExchangeMode)接口切换当前线程的捕获模式。此外，在调用[aclmdlRICaptureEnd](#aclmdlRICaptureEnd)接口之后，还可以调用[aclmdlRIDebugPrint](#aclmdlRIDebugPrint_deprecated)接口打印模型信息，这在维护和测试场景下有助于问题定位。
+aclmdlRICaptureBegin和[aclmdlRICaptureEnd](#aclmdlRICaptureEnd)接口要成对使用，且两个接口中的Stream应相同。在这两个接口之间，可以调用[aclmdlRICaptureGetInfo](#aclmdlRICaptureGetInfo)接口获取捕获信息，调用[aclmdlRICaptureThreadExchangeMode](#aclmdlRICaptureThreadExchangeMode)接口切换当前线程的捕获模式。此外，在调用[aclmdlRICaptureEnd](#aclmdlRICaptureEnd)接口之后，还可以调用[aclmdlRIDebugPrint](#aclmdlRIDebugPrint)接口打印模型信息，这在维护和测试场景下有助于问题定位。
 
 在aclmdlRICaptureBegin和[aclmdlRICaptureEnd](#aclmdlRICaptureEnd)接口之间捕获的任务，若要更新任务（包含任务本身以及任务的参数信息），则需在[aclmdlRICaptureTaskGrpBegin](#aclmdlRICaptureTaskGrpBegin)、[aclmdlRICaptureTaskGrpEnd](#aclmdlRICaptureTaskGrpEnd)接口之间下发后续可能更新的任务，给任务打上任务组的标记，然后在[aclmdlRICaptureTaskUpdateBegin](#aclmdlRICaptureTaskUpdateBegin)、[aclmdlRICaptureTaskUpdateEnd](#aclmdlRICaptureTaskUpdateEnd)接口之间更新任务的输入信息。
 
@@ -107,7 +107,7 @@ aclmdlRICaptureBegin和[aclmdlRICaptureEnd](#aclmdlRICaptureEnd)接口要成对�
 <br>
 <br>
 
-<a id="aclmdlRICaptureGetInfo"></a>
+<a class="method_anchor" id="aclmdlRICaptureGetInfo"></a>
 
 ## aclmdlRICaptureGetInfo
 
@@ -163,7 +163,7 @@ aclError aclmdlRICaptureGetInfo(aclrtStream stream, aclmdlRICaptureStatus *statu
 <br>
 <br>
 
-<a id="aclmdlRICaptureThreadExchangeMode"></a>
+<a class="method_anchor" id="aclmdlRICaptureThreadExchangeMode"></a>
 
 ## aclmdlRICaptureThreadExchangeMode
 
@@ -225,7 +225,7 @@ aclError aclmdlRICaptureThreadExchangeMode(aclmdlRICaptureMode *mode)
 <br>
 <br>
 
-<a id="aclmdlRICaptureEnd"></a>
+<a class="method_anchor" id="aclmdlRICaptureEnd"></a>
 
 ## aclmdlRICaptureEnd
 
@@ -284,7 +284,7 @@ aclError aclmdlRICaptureEnd(aclrtStream stream, aclmdlRI *modelRI)
 <br>
 <br>
 
-<a id="aclmdlRICaptureTaskGrpBegin"></a>
+<a class="method_anchor" id="aclmdlRICaptureTaskGrpBegin"></a>
 
 ## aclmdlRICaptureTaskGrpBegin
 
@@ -342,7 +342,7 @@ aclError aclmdlRICaptureTaskGrpBegin(aclrtStream stream)
 <br>
 <br>
 
-<a id="aclmdlRICaptureTaskGrpEnd"></a>
+<a class="method_anchor" id="aclmdlRICaptureTaskGrpEnd"></a>
 
 ## aclmdlRICaptureTaskGrpEnd
 
@@ -399,7 +399,7 @@ aclError aclmdlRICaptureTaskGrpEnd(aclrtStream stream, aclrtTaskGrp *handle)
 <br>
 <br>
 
-<a id="aclmdlRICaptureTaskUpdateBegin"></a>
+<a class="method_anchor" id="aclmdlRICaptureTaskUpdateBegin"></a>
 
 ## aclmdlRICaptureTaskUpdateBegin
 
@@ -473,7 +473,7 @@ aclmdlRICaptureTaskUpdateBegin、[aclmdlRICaptureTaskUpdateEnd](#aclmdlRICapture
 <br>
 <br>
 
-<a id="aclmdlRICaptureTaskUpdateEnd"></a>
+<a class="method_anchor" id="aclmdlRICaptureTaskUpdateEnd"></a>
 
 ## aclmdlRICaptureTaskUpdateEnd
 
@@ -535,7 +535,7 @@ aclError aclmdlRICaptureTaskUpdateEnd(aclrtStream stream)
 <br>
 <br>
 
-<a id="aclmdlRIDebugJsonPrint"></a>
+<a class="method_anchor" id="aclmdlRIDebugJsonPrint"></a>
 
 ## aclmdlRIDebugJsonPrint
 
@@ -591,7 +591,7 @@ aclError aclmdlRIDebugJsonPrint(aclmdlRI modelRI, const char *path, uint32_t fla
 <br>
 <br>
 
-<a id="aclmdlRIDebugPrint_deprecated"></a>
+<a class="method_anchor" id="aclmdlRIDebugPrint"></a>
 
 ## aclmdlRIDebugPrint（废弃）
 
@@ -647,7 +647,7 @@ aclError aclmdlRIDebugPrint(aclmdlRI modelRI)
 <br>
 <br>
 
-<a id="aclmdlRIBuildBegin"></a>
+<a class="method_anchor" id="aclmdlRIBuildBegin"></a>
 
 ## aclmdlRIBuildBegin
 
@@ -706,7 +706,7 @@ aclError aclmdlRIBuildBegin(aclmdlRI *modelRI, uint32_t flag)
 <br>
 <br>
 
-<a id="aclmdlRIBindStream"></a>
+<a class="method_anchor" id="aclmdlRIBindStream"></a>
 
 ## aclmdlRIBindStream
 
@@ -762,7 +762,7 @@ aclError aclmdlRIBindStream(aclmdlRI modelRI, aclrtStream stream, uint32_t flag)
 <br>
 <br>
 
-<a id="aclmdlRIEndTask"></a>
+<a class="method_anchor" id="aclmdlRIEndTask"></a>
 
 ## aclmdlRIEndTask
 
@@ -817,7 +817,7 @@ aclError aclmdlRIEndTask(aclmdlRI modelRI, aclrtStream stream)
 <br>
 <br>
 
-<a id="aclmdlRIBuildEnd"></a>
+<a class="method_anchor" id="aclmdlRIBuildEnd"></a>
 
 ## aclmdlRIBuildEnd
 
@@ -876,7 +876,7 @@ aclError aclmdlRIBuildEnd(aclmdlRI modelRI, void *reserve)
 <br>
 <br>
 
-<a id="aclmdlRIUnbindStream"></a>
+<a class="method_anchor" id="aclmdlRIUnbindStream"></a>
 
 ## aclmdlRIUnbindStream
 
@@ -931,7 +931,7 @@ aclError aclmdlRIUnbindStream(aclmdlRI modelRI, aclrtStream stream)
 <br>
 <br>
 
-<a id="aclmdlRIExecute"></a>
+<a class="method_anchor" id="aclmdlRIExecute"></a>
 
 ## aclmdlRIExecute
 
@@ -990,7 +990,7 @@ aclError aclmdlRIExecute(aclmdlRI modelRI, int32_t timeout)
 <br>
 <br>
 
-<a id="aclmdlRIExecuteAsync"></a>
+<a class="method_anchor" id="aclmdlRIExecuteAsync"></a>
 
 ## aclmdlRIExecuteAsync
 
@@ -1050,7 +1050,7 @@ aclError aclmdlRIExecuteAsync(aclmdlRI modelRI, aclrtStream stream)
 <br>
 <br>
 
-<a id="aclmdlRIDestroy"></a>
+<a class="method_anchor" id="aclmdlRIDestroy"></a>
 
 ## aclmdlRIDestroy
 
@@ -1104,7 +1104,7 @@ aclError aclmdlRIDestroy(aclmdlRI modelRI)
 <br>
 <br>
 
-<a id="aclmdlRISetName"></a>
+<a class="method_anchor" id="aclmdlRISetName"></a>
 
 ## aclmdlRISetName
 
@@ -1159,7 +1159,7 @@ aclError aclmdlRISetName(aclmdlRI modelRI, const char *name)
 <br>
 <br>
 
-<a id="aclmdlRIGetName"></a>
+<a class="method_anchor" id="aclmdlRIGetName"></a>
 
 ## aclmdlRIGetName
 
@@ -1215,7 +1215,7 @@ aclError aclmdlRIGetName(aclmdlRI modelRI, uint32_t maxLen, char *name)
 <br>
 <br>
 
-<a id="aclmdlRIGetId"></a>
+<a class="method_anchor" id="aclmdlRIGetId"></a>
 
 ## aclmdlRIGetId
 
@@ -1272,7 +1272,7 @@ aclError aclmdlRIGetId(aclmdlRI modelRI, uint32_t *modelRIId)
 <br>
 <br>
 
-<a id="aclmdlRISetAttribute"></a>
+<a class="method_anchor" id="aclmdlRISetAttribute"></a>
 
 ## aclmdlRISetAttribute
 
@@ -1332,7 +1332,7 @@ aclError aclmdlRISetAttribute(aclmdlRI modelRI, aclrtModelAttr mdlAttrType, void
 <br>
 <br>
 
-<a id="aclrtCheckArchCompatibility"></a>
+<a class="method_anchor" id="aclrtCheckArchCompatibility"></a>
 
 ## aclrtCheckArchCompatibility
 
@@ -1387,7 +1387,7 @@ aclError aclrtCheckArchCompatibility(const char *socVersion, int32_t *canCompati
 <br>
 <br>
 
-<a id="aclmdlRIAbort"></a>
+<a class="method_anchor" id="aclmdlRIAbort"></a>
 
 ## aclmdlRIAbort
 
@@ -1449,7 +1449,7 @@ aclError aclmdlRIAbort(aclmdlRI modelRI)
 <br>
 <br>
 
-<a id="aclmdlRIGetStreams"></a>
+<a class="method_anchor" id="aclmdlRIGetStreams"></a>
 
 ## aclmdlRIGetStreams
 
@@ -1512,7 +1512,7 @@ aclError aclmdlRIGetStreams(aclmdlRI modelRI, aclrtStream *streams, uint32_t *nu
 <br>
 <br>
 
-<a id="aclmdlRIGetTasksByStream"></a>
+<a class="method_anchor" id="aclmdlRIGetTasksByStream"></a>
 
 ## aclmdlRIGetTasksByStream
 
@@ -1581,7 +1581,7 @@ aclError aclmdlRIGetTasksByStream(aclrtStream stream, aclmdlRITask *tasks, uint3
 
 
 
-<a id="aclmdlRIGetTasks"></a>
+<a class="method_anchor" id="aclmdlRIGetTasks"></a>
 
 ## aclmdlRIGetTasks
 
@@ -1647,7 +1647,7 @@ aclError aclmdlRIGetTasks(aclmdlRI modelRI, aclmdlRITask *tasks, uint32_t *numTa
 
 
 
-<a id="aclmdlRITaskGetSeqId"></a>
+<a class="method_anchor" id="aclmdlRITaskGetSeqId"></a>
 
 ## aclmdlRITaskGetSeqId
 
@@ -1710,7 +1710,7 @@ aclError aclmdlRITaskGetSeqId(aclmdlRITask task, uint32_t *id)
 <br>
 <br>
 
-<a id="aclmdlRITaskGetParams"></a>
+<a class="method_anchor" id="aclmdlRITaskGetParams"></a>
 
 ## aclmdlRITaskGetParams
 
@@ -1775,7 +1775,7 @@ aclError aclmdlRITaskGetParams(aclmdlRITask task, aclmdlRITaskParams* params)
 <br>
 <br>
 
-<a id="aclmdlRITaskSetParams"></a>
+<a class="method_anchor" id="aclmdlRITaskSetParams"></a>
 
 ## aclmdlRITaskSetParams
 
@@ -1840,7 +1840,7 @@ aclError aclmdlRITaskSetParams(aclmdlRITask task, aclmdlRITaskParams* params)
 <br>
 <br>
 
-<a id="aclmdlRIKernelTaskGetAttribute"></a>
+<a class="method_anchor" id="aclmdlRIKernelTaskGetAttribute"></a>
 
 ## aclmdlRIKernelTaskGetAttribute
 
@@ -1904,7 +1904,7 @@ aclError aclmdlRIKernelTaskGetAttribute(aclmdlRITask task, aclrtLaunchKernelAttr
 <br>
 <br>
 
-<a id="aclmdlRITaskDisable"></a>
+<a class="method_anchor" id="aclmdlRITaskDisable"></a>
 
 ## aclmdlRITaskDisable
 
@@ -1967,7 +1967,7 @@ aclError aclmdlRITaskDisable(aclmdlRITask task)
 <br>
 <br>
 
-<a id="aclmdlRIUpdate"></a>
+<a class="method_anchor" id="aclmdlRIUpdate"></a>
 
 ## aclmdlRIUpdate
 
@@ -2028,7 +2028,7 @@ aclError aclmdlRIUpdate(aclmdlRI modelRI)
 <br>
 <br>
 
-<a id="aclmdlRITaskGetType"></a>
+<a class="method_anchor" id="aclmdlRITaskGetType"></a>
 
 ## aclmdlRITaskGetType
 
@@ -2087,7 +2087,7 @@ aclError aclmdlRITaskGetType(aclmdlRITask task, aclmdlRITaskType *type)
 <br>
 <br>
 
-<a id="aclmdlRIDestroyRegisterCallback"></a>
+<a class="method_anchor" id="aclmdlRIDestroyRegisterCallback"></a>
 
 ## aclmdlRIDestroyRegisterCallback
 
@@ -2145,7 +2145,7 @@ aclError aclmdlRIDestroyRegisterCallback(aclmdlRI modelRI, aclrtCallback func, v
 <br>
 <br>
 
-<a id="aclmdlRIDestroyUnregisterCallback"></a>
+<a class="method_anchor" id="aclmdlRIDestroyUnregisterCallback"></a>
 
 ## aclmdlRIDestroyUnregisterCallback
 
@@ -2202,7 +2202,7 @@ aclError aclmdlRIDestroyUnregisterCallback(aclmdlRI modelRI, aclrtCallback func)
 <br>
 <br>
 
-<a id="aclmdlRICondHandleCreate"></a>
+<a class="method_anchor" id="aclmdlRICondHandleCreate"></a>
 
 ## aclmdlRICondHandleCreate
 
@@ -2263,7 +2263,7 @@ aclError aclmdlRICondHandleCreate(aclmdlRI modelRI, uint32_t defaultLaunchValue,
 <br>
 <br>
 
-<a id="aclmdlRICondHandleGetCondPtr"></a>
+<a class="method_anchor" id="aclmdlRICondHandleGetCondPtr"></a>
 
 ## aclmdlRICondHandleGetCondPtr
 
@@ -2322,7 +2322,7 @@ aclError aclmdlRICondHandleGetCondPtr(aclmdlRICondHandle handle, uint64_t **ptr)
 <br>
 <br>
 
-<a id="aclmdlRIAddCondTask"></a>
+<a class="method_anchor" id="aclmdlRIAddCondTask"></a>
 
 ## aclmdlRIAddCondTask
 
@@ -2378,7 +2378,7 @@ aclError aclmdlRIAddCondTask(aclmdlRICondTaskParams params, aclrtStream stream, 
 
 返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
-<a id="conditional_submodel_constraints"></a>
+<a class="method_anchor" id="conditional_submodel_constraints"></a>
 
 ### 约束说明
 
@@ -2396,7 +2396,7 @@ aclError aclmdlRIAddCondTask(aclmdlRICondTaskParams params, aclrtStream stream, 
 <br>
 <br>
 
-<a id="aclmdlRICaptureToModelRIBegin"></a>
+<a class="method_anchor" id="aclmdlRICaptureToModelRIBegin"></a>
 
 ## aclmdlRICaptureToModelRIBegin
 
@@ -2440,7 +2440,7 @@ aclError aclmdlRICaptureToModelRIBegin(aclrtStream stream, aclmdlRI modelRI, acl
 
 在aclmdlRICaptureToModelRIBegin和[aclmdlRICaptureEnd](#aclmdlRICaptureEnd)接口之间，所有在指定Stream上下发的任务不会立即执行，而是被暂存在系统内部模型运行实例中，只有在根模型调用[aclmdlRIExecuteAsync](#aclmdlRIExecuteAsync)接口执行模型时，这些任务才会被真正执行，以此减少Host侧的任务下发开销。该模型运行实例不支持aclmdlRIDestroy。
 
-aclmdlRICaptureToModelRIBegin和[aclmdlRICaptureEnd](#aclmdlRICaptureEnd)接口要成对使用，且两个接口中的Stream应相同。在这两个接口之间，可以调用[aclmdlRICaptureGetInfo](#aclmdlRICaptureGetInfo)接口获取捕获信息，调用[aclmdlRICaptureThreadExchangeMode](#aclmdlRICaptureThreadExchangeMode)接口切换当前线程的捕获模式。此外，在调用[aclmdlRICaptureEnd](#aclmdlRICaptureEnd)接口之后，还可以调用[aclmdlRIDebugPrint](#aclmdlRIDebugPrint_deprecated)接口打印模型信息，这在维护和测试场景下有助于问题定位。
+aclmdlRICaptureToModelRIBegin和[aclmdlRICaptureEnd](#aclmdlRICaptureEnd)接口要成对使用，且两个接口中的Stream应相同。在这两个接口之间，可以调用[aclmdlRICaptureGetInfo](#aclmdlRICaptureGetInfo)接口获取捕获信息，调用[aclmdlRICaptureThreadExchangeMode](#aclmdlRICaptureThreadExchangeMode)接口切换当前线程的捕获模式。此外，在调用[aclmdlRICaptureEnd](#aclmdlRICaptureEnd)接口之后，还可以调用[aclmdlRIDebugPrint](#aclmdlRIDebugPrint)接口打印模型信息，这在维护和测试场景下有助于问题定位。
 
 在aclmdlRICaptureToModelRIBegin和[aclmdlRICaptureEnd](#aclmdlRICaptureEnd)接口之间捕获的任务，若要更新任务（包含任务本身以及任务的参数信息），则需在[aclmdlRICaptureTaskGrpBegin](#aclmdlRICaptureTaskGrpBegin)、[aclmdlRICaptureTaskGrpEnd](#aclmdlRICaptureTaskGrpEnd)接口之间下发后续可能更新的任务，给任务打上任务组的标记，然后在[aclmdlRICaptureTaskUpdateBegin](#aclmdlRICaptureTaskUpdateBegin)、[aclmdlRICaptureTaskUpdateEnd](#aclmdlRICaptureTaskUpdateEnd)接口之间更新任务的输入信息。
 

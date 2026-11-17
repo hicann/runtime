@@ -9,7 +9,7 @@
 - [`aclError aclrtCntNotifyGetId(aclrtCntNotify cntNotify, uint32_t *notifyId)`](#aclrtCntNotifyGetId)：获取CntNotify的ID。
 - [`aclError aclrtCntNotifyDestroy(aclrtCntNotify cntNotify)`](#aclrtCntNotifyDestroy)：销毁CntNotify。
 
-<a id="aclrtCntNotifyCreate"></a>
+<a class="method_anchor" id="aclrtCntNotifyCreate"></a>
 
 ## aclrtCntNotifyCreate
 
@@ -66,7 +66,7 @@ CntNotify通常也用于Device与Device之间的状态/动作通信通知。但C
 <br>
 <br>
 
-<a id="aclrtCntNotifyRecord"></a>
+<a class="method_anchor" id="aclrtCntNotifyRecord"></a>
 
 ## aclrtCntNotifyRecord
 
@@ -124,7 +124,7 @@ aclrtCntNotifyRecord接口与aclrtCntNotifyWaitWithTimeout接口配合使用时�
 <br>
 <br>
 
-<a id="aclrtCntNotifyWaitWithTimeout"></a>
+<a class="method_anchor" id="aclrtCntNotifyWaitWithTimeout"></a>
 
 ## aclrtCntNotifyWaitWithTimeout
 
@@ -180,7 +180,7 @@ aclError aclrtCntNotifyWaitWithTimeout(aclrtCntNotify cntNotify, aclrtStream str
 <br>
 <br>
 
-<a id="aclrtCntNotifyReset"></a>
+<a class="method_anchor" id="aclrtCntNotifyReset"></a>
 
 ## aclrtCntNotifyReset
 
@@ -235,7 +235,7 @@ aclError aclrtCntNotifyReset(aclrtCntNotify cntNotify, aclrtStream stream)
 <br>
 <br>
 
-<a id="aclrtCntNotifyGetId"></a>
+<a class="method_anchor" id="aclrtCntNotifyGetId"></a>
 
 ## aclrtCntNotifyGetId
 
@@ -290,7 +290,7 @@ aclError aclrtCntNotifyGetId(aclrtCntNotify cntNotify, uint32_t *notifyId)
 <br>
 <br>
 
-<a id="aclrtCntNotifyDestroy"></a>
+<a class="method_anchor" id="aclrtCntNotifyDestroy"></a>
 
 ## aclrtCntNotifyDestroy
 

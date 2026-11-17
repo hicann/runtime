@@ -181,4 +181,6 @@ LaunchKernel接口族的选择建议如下：
 | aclrtLaunchKernelWithHostArgs | Host内存中的完整参数区 | 参数在Host侧连续组织，Launch时由Runtime处理。 |
 | aclrtLaunchKernelWithArgsArray | Host侧参数数组 | 每个数组元素指向一个参数数据，便于按参数数组形式组织调用。 |
 
+<!-- npu="950,A3,910b,910,310p,310b" id1 -->
 完整样例可参考[0_launch_kernel](../../../example/2_advanced_features/kernel/0_launch_kernel/README.md)，该样例展示了Binary加载、Function获取、aclrtArgsHandle参数组装、placeholder参数和aclrtLaunchKernelWithConfig下发流程。
+<!-- end id1 -->

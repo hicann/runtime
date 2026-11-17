@@ -9,7 +9,7 @@
 - [`aclError aclrtMemcpyToSymbol(const void *symbol, const void *src, size_t count, size_t offset, aclrtMemcpyKind kind)`](#aclrtMemcpyToSymbol)：实现Host数据到Device变量的同步内存复制。
 - [`aclError aclrtMemcpyToSymbolAsync(const void *symbol, const void *src, size_t count, size_t offset, aclrtMemcpyKind kind, aclrtStream stream)`](#aclrtMemcpyToSymbolAsync)：实现Host数据到Device变量的异步内存复制。
 
-<a id="aclrtGetSymbolAddress"></a>
+<a class="method_anchor" id="aclrtGetSymbolAddress"></a>
 
 ## aclrtGetSymbolAddress
 
@@ -73,7 +73,7 @@ aclError aclrtGetSymbolAddress(const void *symbol, void **devPtr)
 <br>
 <br>
 
-<a id="aclrtGetSymbolSize"></a>
+<a class="method_anchor" id="aclrtGetSymbolSize"></a>
 
 ## aclrtGetSymbolSize
 
@@ -132,7 +132,7 @@ aclError aclrtGetSymbolSize(const void *symbol, size_t *size)
 <br>
 <br>
 
-<a id="aclrtMemcpyFromSymbol"></a>
+<a class="method_anchor" id="aclrtMemcpyFromSymbol"></a>
 
 ## aclrtMemcpyFromSymbol
 
@@ -196,7 +196,7 @@ aclError aclrtMemcpyFromSymbol(void *dst, size_t dstMax, const void *symbol,
 <br>
 <br>
 
-<a id="aclrtMemcpyFromSymbolAsync"></a>
+<a class="method_anchor" id="aclrtMemcpyFromSymbolAsync"></a>
 
 ## aclrtMemcpyFromSymbolAsync
 
@@ -265,7 +265,7 @@ aclError aclrtMemcpyFromSymbolAsync(void *dst, size_t dstMax, const void *symbol
 <br>
 <br>
 
-<a id="aclrtMemcpyToSymbol"></a>
+<a class="method_anchor" id="aclrtMemcpyToSymbol"></a>
 
 ## aclrtMemcpyToSymbol
 
@@ -328,7 +328,7 @@ aclError aclrtMemcpyToSymbol(const void *symbol, const void *src,
 <br>
 <br>
 
-<a id="aclrtMemcpyToSymbolAsync"></a>
+<a class="method_anchor" id="aclrtMemcpyToSymbolAsync"></a>
 
 ## aclrtMemcpyToSymbolAsync
 

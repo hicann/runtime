@@ -9,7 +9,7 @@
 - [`aclError aclrtDestroyLabelList(aclrtLabelList labelList)`](#aclrtDestroyLabelList)：销毁标签列表。
 - [`aclError aclrtSwitchLabelByIndex(void *ptr, uint32_t maxValue, aclrtLabelList labelList, aclrtStream stream)`](#aclrtSwitchLabelByIndex)：根据标签索引跳转到相应的标签位置，执行该标签所在Stream上的任务，同时当前Stream上的任务停止执行。异步接口。
 
-<a id="aclrtCreateLabel"></a>
+<a class="method_anchor" id="aclrtCreateLabel"></a>
 
 ## aclrtCreateLabel
 
@@ -65,7 +65,7 @@ aclError aclrtCreateLabel(aclrtLabel *label)
 <br>
 <br>
 
-<a id="aclrtSetLabel"></a>
+<a class="method_anchor" id="aclrtSetLabel"></a>
 
 ## aclrtSetLabel
 
@@ -120,7 +120,7 @@ aclError aclrtSetLabel(aclrtLabel label, aclrtStream stream)
 <br>
 <br>
 
-<a id="aclrtDestroyLabel"></a>
+<a class="method_anchor" id="aclrtDestroyLabel"></a>
 
 ## aclrtDestroyLabel
 
@@ -174,7 +174,7 @@ aclError aclrtDestroyLabel(aclrtLabel label)
 <br>
 <br>
 
-<a id="aclrtCreateLabelList"></a>
+<a class="method_anchor" id="aclrtCreateLabelList"></a>
 
 ## aclrtCreateLabelList
 
@@ -230,7 +230,7 @@ aclError aclrtCreateLabelList(aclrtLabel *labels, size_t num, aclrtLabelList *la
 <br>
 <br>
 
-<a id="aclrtDestroyLabelList"></a>
+<a class="method_anchor" id="aclrtDestroyLabelList"></a>
 
 ## aclrtDestroyLabelList
 
@@ -284,7 +284,7 @@ aclError aclrtDestroyLabelList(aclrtLabelList labelList)
 <br>
 <br>
 
-<a id="aclrtSwitchLabelByIndex"></a>
+<a class="method_anchor" id="aclrtSwitchLabelByIndex"></a>
 
 ## aclrtSwitchLabelByIndex
 

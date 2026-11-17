@@ -25,7 +25,7 @@
 - [`aclError aclrtMemMapSelectedLink(void *virPtrDst, size_t size, void *virPtrSrc, uint32_t linkIdx)`](#aclrtMemMapSelectedLink)：将虚拟地址 virPtrSrc 映射到虚拟地址 virPtrDst 对应的物理地址，可以通过 linkIdx 选择 HCCS 链路或者 SIO 链路。
 - [`aclError aclrtMemMapSetLink(aclrtDrvMemHandle handle, aclrtMemLinkType adviceLink)`](#aclrtMemMapSetLink)：设置物理内存handle在映射时使用的访问链路类型。
 
-<a id="aclrtMallocPhysical"></a>
+<a class="method_anchor" id="aclrtMallocPhysical"></a>
 
 ## aclrtMallocPhysical
 
@@ -162,7 +162,7 @@ aclError aclrtMallocPhysical(aclrtDrvMemHandle *handle, size_t size, const aclrt
 <br>
 <br>
 
-<a id="aclrtFreePhysical"></a>
+<a class="method_anchor" id="aclrtFreePhysical"></a>
 
 ## aclrtFreePhysical
 
@@ -224,7 +224,7 @@ Atlas 200I/500 A2推理产品上，Ascend RC形态不支持调用本接口。
 <br>
 <br>
 
-<a id="aclrtReserveMemAddress"></a>
+<a class="method_anchor" id="aclrtReserveMemAddress"></a>
 
 ## aclrtReserveMemAddress
 
@@ -304,7 +304,7 @@ aclError aclrtReserveMemAddress(void **virPtr, size_t size, size_t alignment, vo
 <br>
 <br>
 
-<a id="aclrtReserveMemAddressNoUCMemory"></a>
+<a class="method_anchor" id="aclrtReserveMemAddressNoUCMemory"></a>
 
 ## aclrtReserveMemAddressNoUCMemory
 
@@ -368,7 +368,7 @@ aclError aclrtReserveMemAddressNoUCMemory(void **virPtr, size_t size, size_t ali
 <br>
 <br>
 
-<a id="aclrtReleaseMemAddress"></a>
+<a class="method_anchor" id="aclrtReleaseMemAddress"></a>
 
 ## aclrtReleaseMemAddress
 
@@ -440,7 +440,7 @@ aclError aclrtReleaseMemAddress(void *virPtr)
 <br>
 <br>
 
-<a id="aclrtMapMem"></a>
+<a class="method_anchor" id="aclrtMapMem"></a>
 
 ## aclrtMapMem
 
@@ -514,7 +514,7 @@ aclError aclrtMapMem(void *virPtr, size_t size, size_t offset, aclrtDrvMemHandle
 <br>
 <br>
 
-<a id="aclrtMemMapNoAccess"></a>
+<a class="method_anchor" id="aclrtMemMapNoAccess"></a>
 
 ## aclrtMemMapNoAccess
 
@@ -596,7 +596,7 @@ aclError aclrtMemMapNoAccess(void *virPtr, size_t size, size_t offset, aclrtDrvM
 <br>
 <br>
 
-<a id="aclrtUnmapMem"></a>
+<a class="method_anchor" id="aclrtUnmapMem"></a>
 
 ## aclrtUnmapMem
 
@@ -656,7 +656,7 @@ aclError aclrtUnmapMem(void *virPtr)
 <br>
 <br>
 
-<a id="aclrtMemExportToShareableHandle"></a>
+<a class="method_anchor" id="aclrtMemExportToShareableHandle"></a>
 
 ## aclrtMemExportToShareableHandle
 
@@ -758,7 +758,7 @@ aclError aclrtMemExportToShareableHandle(aclrtDrvMemHandle handle, aclrtMemHandl
 <br>
 <br>
 
-<a id="aclrtMemSetPidToShareableHandle"></a>
+<a class="method_anchor" id="aclrtMemSetPidToShareableHandle"></a>
 
 ## aclrtMemSetPidToShareableHandle
 
@@ -816,7 +816,7 @@ aclError aclrtMemSetPidToShareableHandle(uint64_t shareableHandle, int32_t *pid,
 <br>
 <br>
 
-<a id="aclrtMemImportFromShareableHandle"></a>
+<a class="method_anchor" id="aclrtMemImportFromShareableHandle"></a>
 
 ## aclrtMemImportFromShareableHandle
 
@@ -881,7 +881,7 @@ aclError aclrtMemImportFromShareableHandle(uint64_t shareableHandle, int32_t dev
 <br>
 <br>
 
-<a id="aclrtMemExportToShareableHandleV2"></a>
+<a class="method_anchor" id="aclrtMemExportToShareableHandleV2"></a>
 
 ## aclrtMemExportToShareableHandleV2
 
@@ -958,7 +958,7 @@ aclError aclrtMemExportToShareableHandleV2(aclrtDrvMemHandle handle, uint64_t fl
 <br>
 <br>
 
-<a id="aclrtMemSetPidToShareableHandleV2"></a>
+<a class="method_anchor" id="aclrtMemSetPidToShareableHandleV2"></a>
 
 ## aclrtMemSetPidToShareableHandleV2
 
@@ -1019,7 +1019,7 @@ aclError aclrtMemSetPidToShareableHandleV2(void *shareableHandle, aclrtMemShared
 <br>
 <br>
 
-<a id="aclrtMemImportFromShareableHandleV2"></a>
+<a class="method_anchor" id="aclrtMemImportFromShareableHandleV2"></a>
 
 ## aclrtMemImportFromShareableHandleV2
 
@@ -1086,7 +1086,7 @@ aclError aclrtMemImportFromShareableHandleV2(void *shareableHandle, aclrtMemShar
 <br>
 <br>
 
-<a id="aclrtMemGetAllocationGranularity"></a>
+<a class="method_anchor" id="aclrtMemGetAllocationGranularity"></a>
 
 ## aclrtMemGetAllocationGranularity
 
@@ -1150,7 +1150,7 @@ Atlas 200I/500 A2推理产品上，Ascend RC形态不支持调用本接口。
 <br>
 <br>
 
-<a id="aclrtMemSetAccess"></a>
+<a class="method_anchor" id="aclrtMemSetAccess"></a>
 
 ## aclrtMemSetAccess
 
@@ -1207,7 +1207,7 @@ aclError aclrtMemSetAccess(void* virPtr, size_t size, aclrtMemAccessDesc* desc, 
 <br>
 <br>
 
-<a id="aclrtMemGetAccess"></a>
+<a class="method_anchor" id="aclrtMemGetAccess"></a>
 
 ## aclrtMemGetAccess
 
@@ -1263,7 +1263,7 @@ aclError aclrtMemGetAccess(void *virPtr, aclrtMemLocation *location, uint64_t *f
 <br>
 <br>
 
-<a id="aclrtMemRetainAllocationHandle"></a>
+<a class="method_anchor" id="aclrtMemRetainAllocationHandle"></a>
 
 ## aclrtMemRetainAllocationHandle
 
@@ -1328,7 +1328,7 @@ Atlas 200I/500 A2推理产品上，Ascend RC形态不支持调用本接口。
 <br>
 <br>
 
-<a id="aclrtMemGetAllocationPropertiesFromHandle"></a>
+<a class="method_anchor" id="aclrtMemGetAllocationPropertiesFromHandle"></a>
 
 ## aclrtMemGetAllocationPropertiesFromHandle
 
@@ -1389,7 +1389,7 @@ Atlas 200I/500 A2推理产品上，Ascend RC形态不支持调用本接口。
 <br>
 <br>
 
-<a id="aclrtMemGetAddressRange"></a>
+<a class="method_anchor" id="aclrtMemGetAddressRange"></a>
 
 ## aclrtMemGetAddressRange
 
@@ -1453,7 +1453,7 @@ aclError aclrtMemGetAddressRange(void *ptr, void **pbase, size_t *psize)
 <br>
 <br>
 
-<a id="aclrtMemMapSelectedLink"></a>
+<a class="method_anchor" id="aclrtMemMapSelectedLink"></a>
 
 ## aclrtMemMapSelectedLink
 
@@ -1514,7 +1514,7 @@ aclError aclrtMemMapSelectedLink(void *virPtrDst, size_t size, void *virPtrSrc, 
 <br>
 <br>
 
-<a id="aclrtMemMapSetLink"></a>
+<a class="method_anchor" id="aclrtMemMapSetLink"></a>
 
 ## aclrtMemMapSetLink
 

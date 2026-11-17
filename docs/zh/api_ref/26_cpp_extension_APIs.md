@@ -37,7 +37,7 @@
 <br>
 <br>
 
-<a id="aclrtSynchronizeDevice"></a>
+<a class="method_anchor" id="aclrtSynchronizeDevice"></a>
 
 ## aclrtSynchronizeDevice
 
@@ -93,7 +93,7 @@ aclError aclrtSynchronizeDevice(int32_t timeout)
 <br>
 <br>
 
-<a id="aclrtSynchronizeStream"></a>
+<a class="method_anchor" id="aclrtSynchronizeStream"></a>
 
 ## aclrtSynchronizeStream
 
@@ -147,7 +147,7 @@ aclError aclrtSynchronizeStream(aclrtStream stream, int32_t timeout)
 <br>
 <br>
 
-<a id="aclrtSynchronizeEvent"></a>
+<a class="method_anchor" id="aclrtSynchronizeEvent"></a>
 
 ## aclrtSynchronizeEvent
 
@@ -206,7 +206,7 @@ aclError aclrtSynchronizeEvent(aclrtEvent event, int32_t timeout)
 <br>
 <br>
 
-<a id="aclrtStreamWaitEvent"></a>
+<a class="method_anchor" id="aclrtStreamWaitEvent"></a>
 
 ## aclrtStreamWaitEvent
 
@@ -264,7 +264,7 @@ aclError aclrtStreamWaitEvent(aclrtStream stream, aclrtEvent event, int32_t time
 <br>
 <br>
 
-<a id="aclrtCreateStream"></a>
+<a class="method_anchor" id="aclrtCreateStream"></a>
 
 ## aclrtCreateStream
 
@@ -322,7 +322,7 @@ aclError aclrtCreateStream(aclrtStream *stream, uint32_t priority, uint32_t flag
 <br>
 <br>
 
-<a id="aclrtSetOpExecuteTimeOut"></a>
+<a class="method_anchor" id="aclrtSetOpExecuteTimeOut"></a>
 
 ## aclrtSetOpExecuteTimeOut
 
@@ -383,7 +383,7 @@ aclError aclrtSetOpExecuteTimeOut(uint64_t timeout, uint64_t *actualTimeout)
 <br>
 <br>
 
-<a id="aclrtCreateEvent"></a>
+<a class="method_anchor" id="aclrtCreateEvent"></a>
 
 ## aclrtCreateEvent
 
@@ -430,7 +430,7 @@ aclError aclrtCreateEvent(aclrtEvent *event, uint32_t flag)
 | 参数名 | 输入/输出 | 说明 |
 | --- | --- | --- |
 | event | 输出 | Event的指针。类型定义请参见[aclrtEvent](25-05_Typedefs.md#aclrtEvent)。 |
-| flag | 输入 | Event指针的flag。<br>flag为bitmap，支持将flag设置为单个宏、或者对多个宏进行或操作。<br>当前支持将flag设置为如下宏：<br>  - ACL_EVENT_TIME_LINE：使用该bit表示创建的Event需要记录时间戳信息。注意：使用时间戳功能会影响Event相关接口的性能。<br>  - ACL_EVENT_SYNC：使用该bit表示创建的Event支持多Stream间的同步。<br>  - ACL_EVENT_CAPTURE_STREAM_PROGRESS：使用该bit表示创建的Event用于跟踪stream的任务执行进度。<br>  - ACL_EVENT_IPC：使用该bit表示创建的Event用于进程间通信，详细说明请参见[aclrtIpcGetEventHandle](07_event_management.md#aclrtIpcGetEventHandle)。注意：Ascend 950DT系列产品上不支持使用本flag创建Event；本flag不支持与其他flag进行位或操作；本flag创建出来的Event不支持在以下接口或场景中使用：[aclrtResetEvent](07_event_management.md#aclrtResetEvent)、[aclrtQueryEvent](07_event_management.md#aclrtQueryEvent_deprecated)、[aclrtQueryEventWaitStatus](07_event_management.md#aclrtQueryEventWaitStatus)、[aclrtEventElapsedTime](07_event_management.md#aclrtEventElapsedTime)、[aclrtEventGetTimestamp](07_event_management.md#aclrtEventGetTimestamp)、[aclrtGetEventId](07_event_management.md#aclrtGetEventId)、模型捕获场景（参见[aclmdlRICaptureBegin](15_model_running_instance_management.md#aclmdlRICaptureBegin)中的说明），否则返回报错。<br><br><br>宏的定义如下：<br>#define ACL_EVENT_TIME_LINE 0x00000008U<br>#define ACL_EVENT_SYNC 0x00000001U<br>#define ACL_EVENT_CAPTURE_STREAM_PROGRESS 0x00000002U<br>#define ACL_EVENT_IPC 0x00000040U |
+| flag | 输入 | Event指针的flag。<br>flag为bitmap，支持将flag设置为单个宏、或者对多个宏进行或操作。<br>当前支持将flag设置为如下宏：<br>  - ACL_EVENT_TIME_LINE：使用该bit表示创建的Event需要记录时间戳信息。注意：使用时间戳功能会影响Event相关接口的性能。<br>  - ACL_EVENT_SYNC：使用该bit表示创建的Event支持多Stream间的同步。<br>  - ACL_EVENT_CAPTURE_STREAM_PROGRESS：使用该bit表示创建的Event用于跟踪stream的任务执行进度。<br>  - ACL_EVENT_IPC：使用该bit表示创建的Event用于进程间通信，详细说明请参见[aclrtIpcGetEventHandle](07_event_management.md#aclrtIpcGetEventHandle)。注意：Ascend 950DT系列产品上不支持使用本flag创建Event；本flag不支持与其他flag进行位或操作；本flag创建出来的Event不支持在以下接口或场景中使用：[aclrtResetEvent](07_event_management.md#aclrtResetEvent)、[aclrtQueryEvent](07_event_management.md#aclrtQueryEvent)、[aclrtQueryEventWaitStatus](07_event_management.md#aclrtQueryEventWaitStatus)、[aclrtEventElapsedTime](07_event_management.md#aclrtEventElapsedTime)、[aclrtEventGetTimestamp](07_event_management.md#aclrtEventGetTimestamp)、[aclrtGetEventId](07_event_management.md#aclrtGetEventId)、模型捕获场景（参见[aclmdlRICaptureBegin](15_model_running_instance_management.md#aclmdlRICaptureBegin)中的说明），否则返回报错。<br><br><br>宏的定义如下：<br>#define ACL_EVENT_TIME_LINE 0x00000008U<br>#define ACL_EVENT_SYNC 0x00000001U<br>#define ACL_EVENT_CAPTURE_STREAM_PROGRESS 0x00000002U<br>#define ACL_EVENT_IPC 0x00000040U |
 
 ### 返回值说明
 
@@ -444,7 +444,7 @@ aclError aclrtCreateEvent(aclrtEvent *event, uint32_t flag)
 <br>
 <br>
 
-<a id="aclrtMemcpyBatch"></a>
+<a class="method_anchor" id="aclrtMemcpyBatch"></a>
 
 ## aclrtMemcpyBatch
 
@@ -518,7 +518,7 @@ aclError aclrtMemcpyBatch(T **dsts, size_t *destMaxs, U **srcs, size_t *sizes, s
 <br>
 <br>
 
-<a id="aclrtMemcpyBatchAsync"></a>
+<a class="method_anchor" id="aclrtMemcpyBatchAsync"></a>
 
 ## aclrtMemcpyBatchAsync
 
@@ -600,7 +600,7 @@ aclError aclrtMemcpyBatchAsync(T **dsts, size_t *destMaxs, U **srcs, size_t *siz
 <br>
 <br>
 
-<a id="aclrtPointerGetAttributes"></a>
+<a class="method_anchor" id="aclrtPointerGetAttributes"></a>
 
 ## aclrtPointerGetAttributes
 
@@ -658,7 +658,7 @@ aclError aclrtPointerGetAttributes(const T *ptr, aclrtPtrAttributes *attributes)
 <br>
 <br>
 
-<a id="aclrtHostRegister"></a>
+<a class="method_anchor" id="aclrtHostRegister"></a>
 
 ## aclrtHostRegister
 
@@ -722,7 +722,7 @@ aclError aclrtHostRegister(T *ptr, uint64_t size, uint32_t flag)
 <br>
 <br>
 
-<a id="aclrtHostGetDevicePointer"></a>
+<a class="method_anchor" id="aclrtHostGetDevicePointer"></a>
 
 ## aclrtHostGetDevicePointer
 
@@ -781,7 +781,7 @@ aclError aclrtHostGetDevicePointer(T *pHost, T **pDevice, uint32_t flag)
 <br>
 <br>
 
-<a id="aclrtHostUnregister"></a>
+<a class="method_anchor" id="aclrtHostUnregister"></a>
 
 ## aclrtHostUnregister
 
@@ -840,7 +840,7 @@ aclError aclrtHostUnregister(T *ptr)
 <br>
 <br>
 
-<a id="aclrtMemAllocManaged"></a>
+<a class="method_anchor" id="aclrtMemAllocManaged"></a>
 
 ## aclrtMemAllocManaged
 
@@ -903,7 +903,7 @@ aclError aclrtMemAllocManaged(T **devPtr, size_t size, uint32_t flags = ACL_RT_M
 <br>
 <br>
 
-<a id="aclrtMemManagedPrefetchAsync"></a>
+<a class="method_anchor" id="aclrtMemManagedPrefetchAsync"></a>
 
 ## aclrtMemManagedPrefetchAsync
 
@@ -966,7 +966,7 @@ aclError aclrtMemManagedPrefetchAsync(const T *ptr, size_t size, aclrtMemManaged
 <br>
 <br>
 
-<a id="aclrtMemManagedPrefetchBatchAsync"></a>
+<a class="method_anchor" id="aclrtMemManagedPrefetchBatchAsync"></a>
 
 ## aclrtMemManagedPrefetchBatchAsync
 
@@ -1040,7 +1040,7 @@ aclError aclrtMemManagedPrefetchBatchAsync(const T **ptrs, size_t *sizes, size_t
 <br>
 <br>
 
-<a id="aclrtMalloc"></a>
+<a class="method_anchor" id="aclrtMalloc"></a>
 
 ## aclrtMalloc
 
@@ -1105,7 +1105,7 @@ aclError aclrtMalloc(T **devPtr, size_t size, aclrtMemMallocPolicy policy, aclrt
 <br>
 <br>
 
-<a id="aclrtMallocHost"></a>
+<a class="method_anchor" id="aclrtMallocHost"></a>
 
 ## aclrtMallocHost
 
@@ -1166,7 +1166,7 @@ aclError aclrtMallocHost(T **hostPtr, size_t size, aclrtMallocConfig *cfg = null
 <br>
 <br>
 
-<a id="aclrtMemcpy"></a>
+<a class="method_anchor" id="aclrtMemcpy"></a>
 
 ## aclrtMemcpy
 
@@ -1231,7 +1231,7 @@ aclError aclrtMemcpy(T *dst, size_t destMax, const U *src, size_t count, aclrtMe
 <br>
 <br>
 
-<a id="aclrtMemcpyAsync"></a>
+<a class="method_anchor" id="aclrtMemcpyAsync"></a>
 
 ## aclrtMemcpyAsync
 
@@ -1299,7 +1299,7 @@ aclError aclrtMemcpyAsync(T *dst, size_t destMax, const U *src, size_t count, ac
 <br>
 <br>
 
-<a id="aclrtMemcpy2d"></a>
+<a class="method_anchor" id="aclrtMemcpy2d"></a>
 
 ## aclrtMemcpy2d
 
@@ -1366,7 +1366,7 @@ aclError aclrtMemcpy2d(T *dst, size_t dpitch, const U *src, size_t spitch, size_
 <br>
 <br>
 
-<a id="aclrtMemcpy2dAsync"></a>
+<a class="method_anchor" id="aclrtMemcpy2dAsync"></a>
 
 ## aclrtMemcpy2dAsync
 
@@ -1436,7 +1436,7 @@ aclError aclrtMemcpy2dAsync(T *dst, size_t dpitch, const U *src, size_t spitch, 
 <br>
 <br>
 
-<a id="aclrtGetSymbolAddress"></a>
+<a class="method_anchor" id="aclrtGetSymbolAddress"></a>
 
 ## aclrtGetSymbolAddress
 
@@ -1504,7 +1504,7 @@ aclError aclrtGetSymbolAddress(const T &symbol, void **devPtr)
 <br>
 <br>
 
-<a id="aclrtGetSymbolSize"></a>
+<a class="method_anchor" id="aclrtGetSymbolSize"></a>
 
 ## aclrtGetSymbolSize
 
@@ -1566,7 +1566,7 @@ aclError aclrtGetSymbolSize(const T &symbol, size_t *size)
 <br>
 <br>
 
-<a id="aclrtMemcpyFromSymbol"></a>
+<a class="method_anchor" id="aclrtMemcpyFromSymbol"></a>
 
 ## aclrtMemcpyFromSymbol
 
@@ -1633,7 +1633,7 @@ aclError aclrtMemcpyFromSymbol(void *dst, size_t dstMax, const T &symbol, size_t
 <br>
 <br>
 
-<a id="aclrtMemcpyFromSymbolAsync"></a>
+<a class="method_anchor" id="aclrtMemcpyFromSymbolAsync"></a>
 
 ## aclrtMemcpyFromSymbolAsync
 
@@ -1704,7 +1704,7 @@ aclError aclrtMemcpyFromSymbolAsync(void *dst, size_t dstMax, const T &symbol, s
 <br>
 <br>
 
-<a id="aclrtMemcpyToSymbol"></a>
+<a class="method_anchor" id="aclrtMemcpyToSymbol"></a>
 
 ## aclrtMemcpyToSymbol
 
@@ -1769,7 +1769,7 @@ aclError aclrtMemcpyToSymbol(const T &symbol, const void *src, size_t count, siz
 <br>
 <br>
 
-<a id="aclrtMemcpyToSymbolAsync"></a>
+<a class="method_anchor" id="aclrtMemcpyToSymbolAsync"></a>
 
 ## aclrtMemcpyToSymbolAsync
 

@@ -15,7 +15,7 @@
 - [`aclError aclrtGetMemUsageInfo(int32_t deviceId, aclrtMemUsageInfo *memUsageInfo, size_t inputNum, size_t *outputNum)`](#aclrtGetMemUsageInfo)：查询组件的内存使用信息，包括组件名称、当前内存大小和峰值内存大小等信息。
 - [`aclError aclrtCheckMemType(void** addrList, uint32_t size, uint32_t memType, uint32_t *checkResult, uint32_t reserve)`](#aclrtCheckMemType)：检查Device内存类型。
 
-<a id="aclrtMalloc"></a>
+<a class="method_anchor" id="aclrtMalloc"></a>
 
 ## aclrtMalloc
 
@@ -155,7 +155,7 @@ aclError aclrtMalloc(void **devPtr, size_t size, aclrtMemMallocPolicy policy)
 <br>
 <br>
 
-<a id="aclrtMallocAlign32"></a>
+<a class="method_anchor" id="aclrtMallocAlign32"></a>
 
 ## aclrtMallocAlign32
 
@@ -289,7 +289,7 @@ aclError aclrtMallocAlign32(void **devPtr, size_t size, aclrtMemMallocPolicy pol
 <br>
 <br>
 
-<a id="aclrtMallocCached"></a>
+<a class="method_anchor" id="aclrtMallocCached"></a>
 
 ## aclrtMallocCached
 
@@ -351,7 +351,7 @@ policy处仅支持配置单个枚举项，不支持配置多个枚举项位或�
 <br>
 <br>
 
-<a id="aclrtMemFlush"></a>
+<a class="method_anchor" id="aclrtMemFlush"></a>
 
 ## aclrtMemFlush
 
@@ -408,7 +408,7 @@ aclError aclrtMemFlush(void *devPtr, size_t size)
 <br>
 <br>
 
-<a id="aclrtMemInvalidate"></a>
+<a class="method_anchor" id="aclrtMemInvalidate"></a>
 
 ## aclrtMemInvalidate
 
@@ -465,7 +465,7 @@ aclError aclrtMemInvalidate(void *devPtr, size_t size)
 <br>
 <br>
 
-<a id="aclrtMallocWithCfg"></a>
+<a class="method_anchor" id="aclrtMallocWithCfg"></a>
 
 ## aclrtMallocWithCfg
 
@@ -535,7 +535,7 @@ policy处支持配置单个枚举项，也支持配置多个枚举项位或。�
 <br>
 <br>
 
-<a id="aclrtMallocForTaskScheduler"></a>
+<a class="method_anchor" id="aclrtMallocForTaskScheduler"></a>
 
 ## aclrtMallocForTaskScheduler
 
@@ -594,7 +594,7 @@ aclError aclrtMallocForTaskScheduler(void **devPtr, size_t size, aclrtMemMallocP
 <br>
 <br>
 
-<a id="aclrtFree"></a>
+<a class="method_anchor" id="aclrtFree"></a>
 
 ## aclrtFree
 
@@ -654,7 +654,7 @@ aclError aclrtFree(void *devPtr)
 <br>
 <br>
 
-<a id="aclrtFreeWithDevSync"></a>
+<a class="method_anchor" id="aclrtFreeWithDevSync"></a>
 
 ## aclrtFreeWithDevSync
 
@@ -710,7 +710,7 @@ aclError aclrtFreeWithDevSync(void *devPtr)
 <br>
 <br>
 
-<a id="aclrtGetMemInfo"></a>
+<a class="method_anchor" id="aclrtGetMemInfo"></a>
 
 ## aclrtGetMemInfo
 
@@ -771,7 +771,7 @@ aclError aclrtGetMemInfo(aclrtMemAttr attr, size_t *free, size_t *total)
 <br>
 <br>
 
-<a id="aclrtGetMemUsageInfo"></a>
+<a class="method_anchor" id="aclrtGetMemUsageInfo"></a>
 
 ## aclrtGetMemUsageInfo
 
@@ -828,7 +828,7 @@ aclError aclrtGetMemUsageInfo(int32_t deviceId, aclrtMemUsageInfo *memUsageInfo,
 <br>
 <br>
 
-<a id="aclrtCheckMemType"></a>
+<a class="method_anchor" id="aclrtCheckMemType"></a>
 
 ## aclrtCheckMemType
 

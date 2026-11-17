@@ -13,7 +13,7 @@
 - [`aclError aclrtNotifySetImportPidInterServer(aclrtNotify notify, aclrtServerPid *serverPids, size_t num)`](#aclrtNotifySetImportPidInterServer)：设置共享Notify的进程白名单。
 - [`aclError aclrtNotifyImportByKey(aclrtNotify *notify, const char *key, uint64_t flags)`](#aclrtNotifyImportByKey)：在本进程中获取key的信息，并返回本进程可以使用的Notify指针。
 
-<a id="aclrtCreateNotify"></a>
+<a class="method_anchor" id="aclrtCreateNotify"></a>
 
 ## aclrtCreateNotify
 
@@ -89,7 +89,7 @@ aclError aclrtCreateNotify(aclrtNotify *notify, uint64_t flag)
 <br>
 <br>
 
-<a id="aclrtDestroyNotify"></a>
+<a class="method_anchor" id="aclrtDestroyNotify"></a>
 
 ## aclrtDestroyNotify
 
@@ -143,7 +143,7 @@ aclError aclrtDestroyNotify(aclrtNotify notify)
 <br>
 <br>
 
-<a id="aclrtRecordNotify"></a>
+<a class="method_anchor" id="aclrtRecordNotify"></a>
 
 ## aclrtRecordNotify
 
@@ -200,7 +200,7 @@ aclrtRecordNotify接口与aclrtWaitAndResetNotify接口配合使用时，主要�
 <br>
 <br>
 
-<a id="aclrtWaitAndResetNotify"></a>
+<a class="method_anchor" id="aclrtWaitAndResetNotify"></a>
 
 ## aclrtWaitAndResetNotify
 
@@ -256,7 +256,7 @@ aclError aclrtWaitAndResetNotify(aclrtNotify notify, aclrtStream stream, uint32_
 <br>
 <br>
 
-<a id="aclrtGetNotifyId"></a>
+<a class="method_anchor" id="aclrtGetNotifyId"></a>
 
 ## aclrtGetNotifyId
 
@@ -311,7 +311,7 @@ aclError aclrtGetNotifyId(aclrtNotify notify, uint32_t *notifyId)
 <br>
 <br>
 
-<a id="aclrtNotifyBatchReset"></a>
+<a class="method_anchor" id="aclrtNotifyBatchReset"></a>
 
 ## aclrtNotifyBatchReset
 
@@ -370,7 +370,7 @@ aclError aclrtNotifyBatchReset(aclrtNotify *notifies, size_t num)
 <br>
 <br>
 
-<a id="aclrtNotifyGetExportKey"></a>
+<a class="method_anchor" id="aclrtNotifyGetExportKey"></a>
 
 ## aclrtNotifyGetExportKey
 
@@ -457,7 +457,7 @@ aclError aclrtNotifyGetExportKey(aclrtNotify notify, char *key, size_t len, uint
 <br>
 <br>
 
-<a id="aclrtNotifySetImportPid"></a>
+<a class="method_anchor" id="aclrtNotifySetImportPid"></a>
 
 ## aclrtNotifySetImportPid
 
@@ -522,7 +522,7 @@ aclError aclrtNotifySetImportPid(aclrtNotify notify, int32_t *pid, size_t num)
 <br>
 <br>
 
-<a id="aclrtNotifySetImportPidInterServer"></a>
+<a class="method_anchor" id="aclrtNotifySetImportPidInterServer"></a>
 
 ## aclrtNotifySetImportPidInterServer
 
@@ -582,7 +582,7 @@ aclError aclrtNotifySetImportPidInterServer(aclrtNotify notify, aclrtServerPid *
 <br>
 <br>
 
-<a id="aclrtNotifyImportByKey"></a>
+<a class="method_anchor" id="aclrtNotifyImportByKey"></a>
 
 ## aclrtNotifyImportByKey
 

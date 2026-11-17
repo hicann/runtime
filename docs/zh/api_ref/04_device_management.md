@@ -52,7 +52,7 @@
 - [`aclError aclrtDeviceSuspendExecution(int32_t deviceId, uint32_t flag)`](#aclrtDeviceSuspendExecution)：暂停当前进程中指定Device的任务执行。
 - [`aclError aclrtDeviceResumeExecution(int32_t deviceId, uint32_t flag)`](#aclrtDeviceResumeExecution)：恢复当前进程中指定Device的任务执行。
 
-<a id="aclrtSetDevice"></a>
+<a class="method_anchor" id="aclrtSetDevice"></a>
 
 ## aclrtSetDevice
 
@@ -128,7 +128,7 @@ IPV350上不支持默认Context和默认Stream。
 <br>
 <br>
 
-<a id="aclrtResetDevice"></a>
+<a class="method_anchor" id="aclrtResetDevice"></a>
 
 ## aclrtResetDevice
 
@@ -196,7 +196,7 @@ IPV350上不支持默认Context和默认Stream。
 <br>
 <br>
 
-<a id="aclrtResetDeviceForce"></a>
+<a class="method_anchor" id="aclrtResetDeviceForce"></a>
 
 ## aclrtResetDeviceForce
 
@@ -298,7 +298,7 @@ aclrtSetDevice(1) -> aclrtSetDevice(1) -> aclrtResetDeviceForce(1)
 <br>
 <br>
 
-<a id="aclrtGetDevice"></a>
+<a class="method_anchor" id="aclrtGetDevice"></a>
 
 ## aclrtGetDevice
 
@@ -356,7 +356,7 @@ aclError aclrtGetDevice(int32_t *deviceId)
 <br>
 <br>
 
-<a id="aclrtGetRunMode"></a>
+<a class="method_anchor" id="aclrtGetRunMode"></a>
 
 ## aclrtGetRunMode
 
@@ -410,7 +410,7 @@ aclError aclrtGetRunMode(aclrtRunMode *runMode)
 <br>
 <br>
 
-<a id="aclrtSetTsDevice"></a>
+<a class="method_anchor" id="aclrtSetTsDevice"></a>
 
 ## aclrtSetTsDevice
 
@@ -474,7 +474,7 @@ typedef enum aclrtTsId {
 <br>
 <br>
 
-<a id="aclrtGetDeviceCount"></a>
+<a class="method_anchor" id="aclrtGetDeviceCount"></a>
 
 ## aclrtGetDeviceCount
 
@@ -528,7 +528,7 @@ aclError aclrtGetDeviceCount(uint32_t *count)
 <br>
 <br>
 
-<a id="aclrtGetDeviceUtilizationRate"></a>
+<a class="method_anchor" id="aclrtGetDeviceUtilizationRate"></a>
 
 ## aclrtGetDeviceUtilizationRate
 
@@ -593,7 +593,7 @@ aclError aclrtGetDeviceUtilizationRate(int32_t deviceId, aclrtUtilizationInfo *u
 <br>
 <br>
 
-<a id="aclrtQueryDeviceStatus"></a>
+<a class="method_anchor" id="aclrtQueryDeviceStatus"></a>
 
 ## aclrtQueryDeviceStatus
 
@@ -648,7 +648,7 @@ aclError aclrtQueryDeviceStatus(int32_t deviceId, aclrtDeviceStatus *deviceStatu
 <br>
 <br>
 
-<a id="aclrtGetSocName"></a>
+<a class="method_anchor" id="aclrtGetSocName"></a>
 
 ## aclrtGetSocName
 
@@ -702,7 +702,7 @@ const char *aclrtGetSocName()
 <br>
 <br>
 
-<a id="aclrtGetSocSeries"></a>
+<a class="method_anchor" id="aclrtGetSocSeries"></a>
 
 ## aclrtGetSocSeries
 
@@ -758,7 +758,7 @@ const char *aclrtGetSocSeries()
 <br>
 <br>
 
-<a id="aclrtSetDeviceSatMode"></a>
+<a class="method_anchor" id="aclrtSetDeviceSatMode"></a>
 
 ## aclrtSetDeviceSatMode
 
@@ -814,7 +814,7 @@ aclError aclrtSetDeviceSatMode(aclrtFloatOverflowMode mode)
 <br>
 <br>
 
-<a id="aclrtGetDeviceSatMode"></a>
+<a class="method_anchor" id="aclrtGetDeviceSatMode"></a>
 
 ## aclrtGetDeviceSatMode
 
@@ -868,7 +868,7 @@ aclError aclrtGetDeviceSatMode(aclrtFloatOverflowMode *mode)
 <br>
 <br>
 
-<a id="aclrtDeviceCanAccessPeer"></a>
+<a class="method_anchor" id="aclrtDeviceCanAccessPeer"></a>
 
 ## aclrtDeviceCanAccessPeer
 
@@ -934,7 +934,7 @@ aclError aclrtDeviceCanAccessPeer(int32_t *canAccessPeer, int32_t deviceId, int3
 <br>
 <br>
 
-<a id="aclrtDeviceEnablePeerAccess"></a>
+<a class="method_anchor" id="aclrtDeviceEnablePeerAccess"></a>
 
 ## aclrtDeviceEnablePeerAccess
 
@@ -999,7 +999,7 @@ Atlas推理系列产品，Control CPU开放形态下，应用程序运行在Devi
 <br>
 <br>
 
-<a id="aclrtDeviceDisablePeerAccess"></a>
+<a class="method_anchor" id="aclrtDeviceDisablePeerAccess"></a>
 
 ## aclrtDeviceDisablePeerAccess
 
@@ -1061,7 +1061,7 @@ Atlas推理系列产品，Control CPU开放形态下，应用程序运行在Devi
 <br>
 <br>
 
-<a id="aclrtDevicePeerAccessStatus"></a>
+<a class="method_anchor" id="aclrtDevicePeerAccessStatus"></a>
 
 ## aclrtDevicePeerAccessStatus
 
@@ -1121,7 +1121,7 @@ aclError aclrtDevicePeerAccessStatus(int32_t deviceId, int32_t peerDeviceId, int
 <br>
 <br>
 
-<a id="aclrtGetOverflowStatus"></a>
+<a class="method_anchor" id="aclrtGetOverflowStatus"></a>
 
 ## aclrtGetOverflowStatus
 
@@ -1183,7 +1183,7 @@ aclError aclrtGetOverflowStatus(void *outputAddr, size_t outputSize, aclrtStream
 <br>
 <br>
 
-<a id="aclrtResetOverflowStatus"></a>
+<a class="method_anchor" id="aclrtResetOverflowStatus"></a>
 
 ## aclrtResetOverflowStatus
 
@@ -1243,7 +1243,7 @@ aclError aclrtResetOverflowStatus(aclrtStream stream)
 <br>
 <br>
 
-<a id="aclrtGetFloatOverflowStatus"></a>
+<a class="method_anchor" id="aclrtGetFloatOverflowStatus"></a>
 
 ## aclrtGetFloatOverflowStatus
 
@@ -1307,7 +1307,7 @@ aclError aclrtGetFloatOverflowStatus(void *outputAddr, uint64_t outputSize, aclr
 <br>
 <br>
 
-<a id="aclrtResetFloatOverflowStatus"></a>
+<a class="method_anchor" id="aclrtResetFloatOverflowStatus"></a>
 
 ## aclrtResetFloatOverflowStatus
 
@@ -1368,7 +1368,7 @@ aclError aclrtResetFloatOverflowStatus(aclrtStream stream)
 <br>
 <br>
 
-<a id="aclrtNpuGetFloatOverFlowStatus"></a>
+<a class="method_anchor" id="aclrtNpuGetFloatOverFlowStatus"></a>
 
 ## aclrtNpuGetFloatOverFlowStatus
 
@@ -1435,7 +1435,7 @@ aclError aclrtNpuGetFloatOverFlowStatus(
 <br>
 <br>
 
-<a id="aclrtNpuClearFloatOverFlowStatus"></a>
+<a class="method_anchor" id="aclrtNpuClearFloatOverFlowStatus"></a>
 
 ## aclrtNpuClearFloatOverFlowStatus
 
@@ -1496,7 +1496,7 @@ aclError aclrtNpuClearFloatOverFlowStatus(uint32_t checkMode, aclrtStream stream
 <br>
 <br>
 
-<a id="aclrtSynchronizeDevice"></a>
+<a class="method_anchor" id="aclrtSynchronizeDevice"></a>
 
 ## aclrtSynchronizeDevice
 
@@ -1548,7 +1548,7 @@ aclError aclrtSynchronizeDevice(void)
 <br>
 <br>
 
-<a id="aclrtSynchronizeDeviceWithTimeout"></a>
+<a class="method_anchor" id="aclrtSynchronizeDeviceWithTimeout"></a>
 
 ## aclrtSynchronizeDeviceWithTimeout
 
@@ -1604,7 +1604,7 @@ aclError aclrtSynchronizeDeviceWithTimeout(int32_t timeout)
 <br>
 <br>
 
-<a id="aclrtGetDeviceInfo"></a>
+<a class="method_anchor" id="aclrtGetDeviceInfo"></a>
 
 ## aclrtGetDeviceInfo
 
@@ -1660,7 +1660,7 @@ aclError aclrtGetDeviceInfo(uint32_t deviceId, aclrtDevAttr attr, int64_t *value
 <br>
 <br>
 
-<a id="aclrtDeviceGetStreamPriorityRange"></a>
+<a class="method_anchor" id="aclrtDeviceGetStreamPriorityRange"></a>
 
 ## aclrtDeviceGetStreamPriorityRange
 
@@ -1715,7 +1715,7 @@ aclError aclrtDeviceGetStreamPriorityRange(int32_t *leastPriority, int32_t *grea
 <br>
 <br>
 
-<a id="aclrtGetDeviceCapability"></a>
+<a class="method_anchor" id="aclrtGetDeviceCapability"></a>
 
 ## aclrtGetDeviceCapability
 
@@ -1771,7 +1771,7 @@ aclError aclrtGetDeviceCapability(int32_t deviceId, aclrtDevFeatureType devFeatu
 <br>
 <br>
 
-<a id="aclrtGetDevicesTopo"></a>
+<a class="method_anchor" id="aclrtGetDevicesTopo"></a>
 
 ## aclrtGetDevicesTopo
 
@@ -1831,7 +1831,7 @@ aclError aclrtGetDevicesTopo(uint32_t deviceId, uint32_t otherDeviceId, uint64_t
 <br>
 <br>
 
-<a id="aclrtRegDeviceStateCallback"></a>
+<a class="method_anchor" id="aclrtRegDeviceStateCallback"></a>
 
 ## aclrtRegDeviceStateCallback
 
@@ -1889,7 +1889,7 @@ aclError aclrtRegDeviceStateCallback(const char *regName, aclrtDeviceStateCallba
 <br>
 <br>
 
-<a id="aclrtGetLogicDevIdByUserDevId"></a>
+<a class="method_anchor" id="aclrtGetLogicDevIdByUserDevId"></a>
 
 ## aclrtGetLogicDevIdByUserDevId
 
@@ -1954,7 +1954,7 @@ aclError aclrtGetLogicDevIdByUserDevId(const int32_t userDevid, int32_t *const l
 <br>
 <br>
 
-<a id="aclrtGetUserDevIdByLogicDevId"></a>
+<a class="method_anchor" id="aclrtGetUserDevIdByLogicDevId"></a>
 
 ## aclrtGetUserDevIdByLogicDevId
 
@@ -2019,7 +2019,7 @@ aclError aclrtGetUserDevIdByLogicDevId(const int32_t logicDevId, int32_t *const 
 <br>
 <br>
 
-<a id="aclrtGetLogicDevIdByPhyDevId"></a>
+<a class="method_anchor" id="aclrtGetLogicDevIdByPhyDevId"></a>
 
 ## aclrtGetLogicDevIdByPhyDevId
 
@@ -2086,7 +2086,7 @@ aclError aclrtGetLogicDevIdByPhyDevId(const int32_t phyDevId, int32_t *const log
 <br>
 <br>
 
-<a id="aclrtGetPhyDevIdByLogicDevId"></a>
+<a class="method_anchor" id="aclrtGetPhyDevIdByLogicDevId"></a>
 
 ## aclrtGetPhyDevIdByLogicDevId
 
@@ -2153,7 +2153,7 @@ aclError aclrtGetPhyDevIdByLogicDevId(const int32_t logicDevId, int32_t *const p
 <br>
 <br>
 
-<a id="aclrtGetUserDevIdByPhyDevId"></a>
+<a class="method_anchor" id="aclrtGetUserDevIdByPhyDevId"></a>
 
 ## aclrtGetUserDevIdByPhyDevId
 
@@ -2218,7 +2218,7 @@ aclError aclrtGetUserDevIdByPhyDevId(const int32_t phyDevId, int32_t *const user
 <br>
 <br>
 
-<a id="aclrtGetPhyDevIdByUserDevId"></a>
+<a class="method_anchor" id="aclrtGetPhyDevIdByUserDevId"></a>
 
 ## aclrtGetPhyDevIdByUserDevId
 
@@ -2283,7 +2283,7 @@ aclError aclrtGetPhyDevIdByUserDevId(const int32_t userDevId, int32_t *const phy
 <br>
 <br>
 
-<a id="aclrtDeviceGetUuid"></a>
+<a class="method_anchor" id="aclrtDeviceGetUuid"></a>
 
 ## aclrtDeviceGetUuid
 
@@ -2338,7 +2338,7 @@ aclError aclrtDeviceGetUuid(int32_t deviceId, aclrtUuid *uuid)
 <br>
 <br>
 
-<a id="aclrtDeviceGetPCIBusId"></a>
+<a class="method_anchor" id="aclrtDeviceGetPCIBusId"></a>
 
 ## aclrtDeviceGetPCIBusId
 
@@ -2399,7 +2399,7 @@ aclError aclrtDeviceGetPCIBusId(int32_t deviceId, char *pciBusId, int32_t len)
 <br>
 <br>
 
-<a id="aclrtDeviceGetByPCIBusId"></a>
+<a class="method_anchor" id="aclrtDeviceGetByPCIBusId"></a>
 
 ## aclrtDeviceGetByPCIBusId
 
@@ -2458,7 +2458,7 @@ aclError aclrtDeviceGetByPCIBusId(const char *pciBusId, int32_t *deviceId)
 <br>
 <br>
 
-<a id="aclrtDeviceGetBareTgid"></a>
+<a class="method_anchor" id="aclrtDeviceGetBareTgid"></a>
 
 ## aclrtDeviceGetBareTgid
 
@@ -2514,7 +2514,7 @@ aclError aclrtDeviceGetBareTgid(int32_t *pid)
 <br>
 <br>
 
-<a id="aclrtDeviceGetHostAtomicCapabilities"></a>
+<a class="method_anchor" id="aclrtDeviceGetHostAtomicCapabilities"></a>
 
 ## aclrtDeviceGetHostAtomicCapabilities
 
@@ -2571,7 +2571,7 @@ aclError aclrtDeviceGetHostAtomicCapabilities(uint32_t* capabilities, const aclr
 <br>
 <br>
 
-<a id="aclrtDeviceGetP2PAtomicCapabilities"></a>
+<a class="method_anchor" id="aclrtDeviceGetP2PAtomicCapabilities"></a>
 
 ## aclrtDeviceGetP2PAtomicCapabilities
 
@@ -2625,7 +2625,7 @@ aclError aclrtDeviceGetP2PAtomicCapabilities(uint32_t* capabilities, const aclrt
 
 返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
-<a id="aclrtDeviceSetLimit"></a>
+<a class="method_anchor" id="aclrtDeviceSetLimit"></a>
 
 ## aclrtDeviceSetLimit
 
@@ -2698,7 +2698,7 @@ aclError aclrtDeviceSetLimit(aclrtDeviceLimit limit, size_t value)
 <br>
 <br>
 
-<a id="aclrtDeviceGetLimit"></a>
+<a class="method_anchor" id="aclrtDeviceGetLimit"></a>
 
 ## aclrtDeviceGetLimit
 
@@ -2772,7 +2772,7 @@ aclError aclrtDeviceGetLimit(aclrtDeviceLimit limit, size_t *value)
 <br>
 <br>
 
-<a id="aclrtDeviceL2CacheFlush"></a>
+<a class="method_anchor" id="aclrtDeviceL2CacheFlush"></a>
 
 ## aclrtDeviceL2CacheFlush
 
@@ -2834,7 +2834,7 @@ aclError aclrtDeviceL2CacheFlush(void* rsv)
 <br>
 <br>
 
-<a id="aclrtDeviceSetSuspendConfig"></a>
+<a class="method_anchor" id="aclrtDeviceSetSuspendConfig"></a>
 
 ## aclrtDeviceSetSuspendConfig
 
@@ -2906,7 +2906,7 @@ aclError aclrtDeviceSetSuspendConfig(int32_t deviceId, const aclrtDeviceSuspendC
 <br>
 <br>
 
-<a id="aclrtDeviceGetSuspendConfig"></a>
+<a class="method_anchor" id="aclrtDeviceGetSuspendConfig"></a>
 
 ## aclrtDeviceGetSuspendConfig
 
@@ -2972,7 +2972,7 @@ aclError aclrtDeviceGetSuspendConfig(int32_t deviceId, aclrtDeviceSuspendConfig 
 <br>
 <br>
 
-<a id="aclrtDeviceSuspendExecution"></a>
+<a class="method_anchor" id="aclrtDeviceSuspendExecution"></a>
 
 ## aclrtDeviceSuspendExecution
 
@@ -3041,7 +3041,7 @@ aclError aclrtDeviceSuspendExecution(int32_t deviceId, uint32_t flag)
 <br>
 <br>
 
-<a id="aclrtDeviceResumeExecution"></a>
+<a class="method_anchor" id="aclrtDeviceResumeExecution"></a>
 
 ## aclrtDeviceResumeExecution
 

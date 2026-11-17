@@ -9,7 +9,7 @@
 - [`aclError aclrtIpcMemSetAttr(const char *key, aclrtIpcMemAttrType type, uint64_t attr)`](#aclrtIpcMemSetAttr)：设置IPC共享内存的属性信息。
 - [`aclError aclrtIpcMemClose(const char *key)`](#aclrtIpcMemClose)：关闭IPC共享内存，调用[aclrtIpcMemImportByKey](#aclrtIpcMemImportByKey)接口的进程中、调用[aclrtIpcMemGetExportKey](#aclrtIpcMemGetExportKey)接口的进程中都需要调用此接口。
 
-<a id="aclrtIpcMemGetExportKey"></a>
+<a class="method_anchor" id="aclrtIpcMemGetExportKey"></a>
 
 ## aclrtIpcMemGetExportKey
 
@@ -108,7 +108,7 @@ aclError aclrtIpcMemGetExportKey(void *devPtr, size_t size, char *key, size_t le
 <br>
 <br>
 
-<a id="aclrtIpcMemSetImportPid"></a>
+<a class="method_anchor" id="aclrtIpcMemSetImportPid"></a>
 
 ## aclrtIpcMemSetImportPid
 
@@ -166,7 +166,7 @@ aclError aclrtIpcMemSetImportPid(const char *key, int32_t *pid, size_t num)
 <br>
 <br>
 
-<a id="aclrtIpcMemImportPidInterServer"></a>
+<a class="method_anchor" id="aclrtIpcMemImportPidInterServer"></a>
 
 ## aclrtIpcMemImportPidInterServer
 
@@ -226,7 +226,7 @@ aclError aclrtIpcMemImportPidInterServer(const char *key, aclrtServerPid *server
 <br>
 <br>
 
-<a id="aclrtIpcMemImportByKey"></a>
+<a class="method_anchor" id="aclrtIpcMemImportByKey"></a>
 
 ## aclrtIpcMemImportByKey
 
@@ -284,7 +284,7 @@ aclError aclrtIpcMemImportByKey(void **devPtr, const char *key, uint64_t flags)
 <br>
 <br>
 
-<a id="aclrtIpcMemSetAttr"></a>
+<a class="method_anchor" id="aclrtIpcMemSetAttr"></a>
 
 ## aclrtIpcMemSetAttr
 
@@ -369,7 +369,7 @@ aclError aclrtIpcMemSetAttr(const char *key, aclrtIpcMemAttrType type, uint64_t 
 <br>
 <br>
 
-<a id="aclrtIpcMemClose"></a>
+<a class="method_anchor" id="aclrtIpcMemClose"></a>
 
 ## aclrtIpcMemClose
 

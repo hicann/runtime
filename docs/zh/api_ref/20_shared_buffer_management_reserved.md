@@ -14,7 +14,7 @@
 - [`aclError aclrtGetBufFromChain(aclrtMbuf headBuf, uint32_t index, aclrtMbuf *buf)`](#aclrtGetBufFromChain)：从Mbuf链表中获取第index个共享Buffer。
 - [`aclError aclrtGetBufChainNum(aclrtMbuf headBuf, uint32_t *num)`](#aclrtGetBufChainNum)：从Mbuf链表中获取共享Buffer的个数。
 
-<a id="aclrtAllocBuf"></a>
+<a class="method_anchor" id="aclrtAllocBuf"></a>
 
 ## aclrtAllocBuf
 
@@ -41,7 +41,7 @@ aclError aclrtAllocBuf(aclrtMbuf *buf, size_t size)
 <br>
 <br>
 
-<a id="aclrtFreeBuf"></a>
+<a class="method_anchor" id="aclrtFreeBuf"></a>
 
 ## aclrtFreeBuf
 
@@ -67,7 +67,7 @@ aclError aclrtFreeBuf(aclrtMbuf buf)
 <br>
 <br>
 
-<a id="aclrtGetBufData"></a>
+<a class="method_anchor" id="aclrtGetBufData"></a>
 
 ## aclrtGetBufData
 
@@ -97,7 +97,7 @@ aclError aclrtGetBufData(const aclrtMbuf buf, void **dataPtr, size_t *size)
 <br>
 <br>
 
-<a id="aclrtSetBufUserData"></a>
+<a class="method_anchor" id="aclrtSetBufUserData"></a>
 
 ## aclrtSetBufUserData
 
@@ -126,7 +126,7 @@ aclError aclrtSetBufUserData(aclrtMbuf buf, const void *dataPtr, size_t size, si
 <br>
 <br>
 
-<a id="aclrtGetBufUserData"></a>
+<a class="method_anchor" id="aclrtGetBufUserData"></a>
 
 ## aclrtGetBufUserData
 
@@ -155,7 +155,7 @@ aclError aclrtGetBufUserData(const aclrtMbuf buf, void *dataPtr, size_t size, si
 <br>
 <br>
 
-<a id="aclrtGetBufDataLen"></a>
+<a class="method_anchor" id="aclrtGetBufDataLen"></a>
 
 ## aclrtGetBufDataLen
 
@@ -184,7 +184,7 @@ aclError aclrtGetBufDataLen(aclrtMbuf buf, size_t *len)
 <br>
 <br>
 
-<a id="aclrtSetBufDataLen"></a>
+<a class="method_anchor" id="aclrtSetBufDataLen"></a>
 
 ## aclrtSetBufDataLen
 
@@ -213,7 +213,7 @@ aclError aclrtSetBufDataLen(aclrtMbuf buf, size_t len)
 <br>
 <br>
 
-<a id="aclrtCopyBufRef"></a>
+<a class="method_anchor" id="aclrtCopyBufRef"></a>
 
 ## aclrtCopyBufRef
 
@@ -240,7 +240,7 @@ aclError aclrtCopyBufRef(const aclrtMbuf buf, aclrtMbuf *newBuf)
 <br>
 <br>
 
-<a id="aclrtAppendBufChain"></a>
+<a class="method_anchor" id="aclrtAppendBufChain"></a>
 
 ## aclrtAppendBufChain
 
@@ -267,7 +267,7 @@ aclError aclrtAppendBufChain(aclrtMbuf headBuf, aclrtMbuf buf)
 <br>
 <br>
 
-<a id="aclrtGetBufFromChain"></a>
+<a class="method_anchor" id="aclrtGetBufFromChain"></a>
 
 ## aclrtGetBufFromChain
 
@@ -295,7 +295,7 @@ aclError aclrtGetBufFromChain(aclrtMbuf headBuf, uint32_t index, aclrtMbuf *buf)
 <br>
 <br>
 
-<a id="aclrtGetBufChainNum"></a>
+<a class="method_anchor" id="aclrtGetBufChainNum"></a>
 
 ## aclrtGetBufChainNum
 

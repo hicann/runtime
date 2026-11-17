@@ -216,7 +216,7 @@ int main() {
 
 ---
 
-<a id="aclrtMemPoolCreate"></a>
+<a class="method_anchor" id="aclrtMemPoolCreate"></a>
 
 ## aclrtMemPoolCreate
 
@@ -273,7 +273,7 @@ aclError aclrtMemPoolCreate(aclrtMemPool *memPool, const aclrtMemPoolProps *pool
 <br>
 <br>
 
-<a id="aclrtMemPoolDestroy"></a>
+<a class="method_anchor" id="aclrtMemPoolDestroy"></a>
 
 ## aclrtMemPoolDestroy
 
@@ -329,7 +329,7 @@ aclError aclrtMemPoolDestroy(const aclrtMemPool memPool)
 <br>
 <br>
 
-<a id="aclrtMemPoolSetAttr"></a>
+<a class="method_anchor" id="aclrtMemPoolSetAttr"></a>
 
 ## aclrtMemPoolSetAttr
 
@@ -389,7 +389,7 @@ aclError aclrtMemPoolSetAttr(aclrtMemPool memPool, aclrtMemPoolAttr attr, void *
 <br>
 <br>
 
-<a id="aclrtMemPoolGetAttr"></a>
+<a class="method_anchor" id="aclrtMemPoolGetAttr"></a>
 
 ## aclrtMemPoolGetAttr
 
@@ -449,7 +449,7 @@ aclError aclrtMemPoolGetAttr(aclrtMemPool memPool, aclrtMemPoolAttr attr, void *
 <br>
 <br>
 
-<a id="aclrtMemPoolMallocAsync"></a>
+<a class="method_anchor" id="aclrtMemPoolMallocAsync"></a>
 
 ## aclrtMemPoolMallocAsync
 
@@ -508,7 +508,7 @@ aclError aclrtMemPoolMallocAsync(void **ptr, size_t size, aclrtMemPool memPool, 
 <br>
 <br>
 
-<a id="aclrtMemPoolFreeAsync"></a>
+<a class="method_anchor" id="aclrtMemPoolFreeAsync"></a>
 
 ## aclrtMemPoolFreeAsync
 
@@ -565,7 +565,7 @@ aclError aclrtMemPoolFreeAsync(void *ptr, aclrtStream stream)
 <br>
 <br>
 
-<a id="aclrtMemPoolTrimTo"></a>
+<a class="method_anchor" id="aclrtMemPoolTrimTo"></a>
 
 ## aclrtMemPoolTrimTo
 
