@@ -15,12 +15,54 @@ export ASCEND_GLOBAL_LOG_LEVEL=2
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PARAM_FILE="${SCRIPT_DIR}/../pre-smoking-testcase"
-RTS_PACKAGE_URL="https://ascend-ci.obs.cn-north-4.myhuaweicloud.com/package/master/latest/aarch64/910b-testcase-9.1.0-aarch64.tar.gz"
+RTS_PACKAGE_URL_910B="https://ascend-ci.obs.cn-north-4.myhuaweicloud.com/package/master/latest/aarch64/910b-testcase-9.3.0-aarch64.tar.gz"
+RTS_PACKAGE_URL_950="https://ascend-ci.obs.cn-north-4.myhuaweicloud.com/package/master/20261116010020/aarch64/A5-testcase-9.3.0-aarch64.tar.gz"
+RTS_PACKAGE_URL=""
 EXTRACT_DIR=""
 RTS_LIB_ROOT=""
 
 cleanup() {
   :
+}
+
+resolve_rts_package_url() {
+  local npu_info=""
+  local chip_name=""
+
+  if ! command -v npu-smi >/dev/null 2>&1; then
+    echo "npu-smi is required to detect the NPU chip type" >&2
+    return 1
+  fi
+  if ! npu_info="$(npu-smi info)"; then
+    echo "Failed to query NPU chip type with npu-smi info" >&2
+    return 1
+  fi
+
+  # Older output combines NPU ID and Name; newer output separates them with '|'.
+  chip_name="$(awk -F '|' '
+    $2 ~ /^[[:space:]]*[0-9]+[[:space:]]/ {
+      name = $2
+      sub(/^[[:space:]]*[0-9]+[[:space:]]*/, "", name)
+      if (name == "") name = $3
+      gsub(/[[:space:]]/, "", name)
+      print name
+      exit
+    }
+  ' <<< "${npu_info}")"
+
+  case "${chip_name}" in
+    910B*|Ascend910B*)
+      RTS_PACKAGE_URL="${RTS_PACKAGE_URL_910B}"
+      ;;
+    950*|Ascend950*)
+      RTS_PACKAGE_URL="${RTS_PACKAGE_URL_950}"
+      ;;
+    *)
+      echo "Unsupported or undetected NPU chip type: ${chip_name:-unknown}" >&2
+      return 1
+      ;;
+  esac
+  echo "Detected NPU chip type: ${chip_name}" >&2
 }
 
 download_file() {
@@ -99,6 +141,7 @@ main() {
   local param_file="${PARAM_FILE}"
   local rts_bin_path=""
 
+  resolve_rts_package_url || exit 1
   rts_bin_path="$(resolve_rts_bin)" || exit 1
 
   if [[ ! -x "${rts_bin_path}" ]]; then
