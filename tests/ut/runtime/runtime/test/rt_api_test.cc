@@ -203,11 +203,12 @@ TEST_F(ApiAbnormalTest, rtsGetMemcpyDescSize_DavidChip_Success)
     rtError_t error;
     size_t size;
     char oriSocVersion[128] = {0};
+    Runtime* rtInstance = (Runtime*)Runtime::Instance();
+    const bool oriIsUserSetSocVersion = rtInstance->GetIsUserSetSocVersion();
 
     rtGetSocVersion(oriSocVersion, 128);
     GlobalContainer::SetHardwareSocVersion("");
     (void)rtSetSocVersion("ASCEND950PR_958A");
-    Runtime* rtInstance = (Runtime*)Runtime::Instance();
     rtChipType_t oriChipType = rtInstance->GetChipType();
     rtInstance->SetChipType(CHIP_DAVID);
     GlobalContainer::SetRtChipType(CHIP_DAVID);
@@ -220,6 +221,7 @@ TEST_F(ApiAbnormalTest, rtsGetMemcpyDescSize_DavidChip_Success)
     GlobalContainer::SetRtChipType(oriChipType);
     GlobalContainer::SetHardwareSocVersion("");
     rtSetSocVersion(oriSocVersion);
+    rtInstance->SetIsUserSetSocVersion(oriIsUserSetSocVersion);
 }
 
 TEST_F(ApiAbnormalTest, rtsSetMemcpyDescTest)

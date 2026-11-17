@@ -33,8 +33,9 @@ constexpr uint32_t TEST_DEVICE_ID = 3U;
 int32_t g_synchronizeCount = 0;
 rtError_t g_synchronizeResult = RT_ERROR_NONE;
 
-rtError_t SynchronizeStub(Stream* stm, const bool isNeedWaitSyncCq, int32_t timeout)
+rtError_t SynchronizeStub(Stream* stm, const bool isNeedWaitSyncCq, int32_t timeout, uint32_t mode)
 {
+    UNUSED(mode);
     UNUSED(stm);
     UNUSED(isNeedWaitSyncCq);
     UNUSED(timeout);

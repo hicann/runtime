@@ -15,6 +15,9 @@
 #include <cinttypes>
 #include <sstream>
 #include <type_traits>
+#if defined(__x86_64__) || defined(_M_X64) || defined(_M_IX86)
+#include <immintrin.h>
+#endif
 #include "soc_define.hpp"
 #include "osal.hpp"
 #include "error_codes/rt_error_codes.h"
@@ -40,6 +43,17 @@ void __attribute((weak)) AtraceReportStop(int32_t devId);
 
 namespace cce {
 namespace runtime {
+static inline void PauseInstruction()
+{
+#if defined(__x86_64__) || defined(_M_X64) || defined(_M_IX86)
+    _mm_pause();
+#elif defined(__aarch64__) || defined(__ARM_ARCH)
+    __asm__ __volatile__("yield" ::: "memory");
+#else
+    __asm__ __volatile__("" ::: "memory");
+#endif
+}
+
 #ifdef BUILD_VERSION_ENG
 #define RT_LOG_LEVEL RT_LOG_WARNING
 #elif defined(BUILD_VERSION_USER)

@@ -330,3 +330,11 @@ TEST_F(UTEST_ACL_compatibility_const_check, ipc_flag)
 }
 
 TEST_F(UTEST_ACL_compatibility_const_check, mem_uce_info_max_num) { EXPECT_EQ(ACL_RT_MEM_UCE_INFO_MAX_NUM, 20); }
+
+TEST_F(UTEST_ACL_compatibility_const_check, stream_sync_device_schedule_flags)
+{
+    EXPECT_EQ(ACL_DEVICE_SCHEDULE_AUTO, 0x00U);
+    EXPECT_EQ(ACL_DEVICE_SCHEDULE_SPIN, 0x01U);
+    EXPECT_EQ(ACL_DEVICE_SCHEDULE_YIELD, 0x02U);
+    EXPECT_EQ(ACL_DEVICE_SCHEDULE_BLOCKING_SYNC, 0x04U);
+}

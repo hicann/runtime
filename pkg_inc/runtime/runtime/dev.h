@@ -28,6 +28,11 @@ RT_RUNTIME_DEPRECATED_DECLS_BEGIN
 
 #define RT_NPU_UUID_LENGTH (16)
 
+#define RT_DEVICE_SCHEDULE_AUTO 0x00U
+#define RT_DEVICE_SCHEDULE_SPIN 0x01U
+#define RT_DEVICE_SCHEDULE_YIELD 0x02U
+#define RT_DEVICE_SCHEDULE_BLOCKING_SYNC 0x04U
+
 typedef struct tagRTDeviceInfo {
     uint8_t env_type; // 0: FPGA  1: EMU 2: ESL
     uint32_t ctrl_cpu_ip;

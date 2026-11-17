@@ -346,6 +346,8 @@ enum AclProfType {
     AclrtDeviceGetSuspendConfig,
     AclrtDeviceSuspendExecution,
     AclrtDeviceResumeExecution,
+    AclrtSetDeviceFlags,
+    AclrtGetDeviceFlags,
     // this is the end, can not add after AclRtProfTypeEnd
     AclRtProfTypeEnd
 };

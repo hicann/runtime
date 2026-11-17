@@ -112,6 +112,8 @@ public:
 
     // Wait event recorded to complete.
     rtError_t Synchronize(int32_t timeout);
+    void SetDeviceFlags(uint32_t flags) { deviceFlags_.Set(flags); }
+    uint32_t GetDeviceFlags() const { return deviceFlags_.Value(); }
 
     virtual rtError_t StreamCreate(
         const uint32_t prio, const uint32_t flag, Stream** const result, DvppGrp* grp = nullptr,
@@ -305,7 +307,9 @@ public:
 
     const std::list<Stream*> StreamList_() const { return streams_; }
 
-    rtError_t SyncStreamsWithTimeout(const std::list<Stream*>& streams, int32_t timeout, const mmTimespec start) const;
+    rtError_t SyncStreamsWithTimeout(
+        const std::list<Stream*>& streams, int32_t timeout, const mmTimespec start,
+        uint32_t mode = RT_DEVICE_SCHEDULE_AUTO) const;
     bool IsStreamInContext(Stream* const stm);
     rtError_t ResourceReset(void);
 
@@ -427,6 +431,7 @@ private:
     mutable std::mutex extensionLock_;
     mutable std::unique_ptr<ContextExtension> extension_;
     bool isForceReset_ = false;
+    Atomic<uint32_t> deviceFlags_{RT_DEVICE_SCHEDULE_AUTO};
     Atomic<bool> callBackThreadExist_;
     ContextCallBack threadCallBack_;
     std::unique_ptr<Thread> hostFuncCallBackThread_;

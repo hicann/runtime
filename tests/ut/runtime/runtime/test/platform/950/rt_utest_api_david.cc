@@ -9,6 +9,9 @@
  */
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
+#include <algorithm>
+#include "osal.hpp"
+#include "notify_c.hpp"
 #include "driver/ascend_hal.h"
 #include "securec.h"
 #include "runtime/rt.h"
@@ -6692,6 +6695,232 @@ TEST_F(ApiDavidTest, test_process_report_task_success)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
+namespace {
+constexpr uint64_t DAVID_CALLBACK_TEST_THREAD_ID = 0x95012345U;
+
+class DavidCallbackThreadForTest : public Thread {
+public:
+    int32_t Start() override { return EN_OK; }
+    void Join() override {}
+    bool IsAlive() override { return true; }
+    uint64_t GetThreadId() override { return DAVID_CALLBACK_TEST_THREAD_ID; }
+};
+
+Thread* CreateDavidCallbackThread(const char_t* name, ThreadRunnable*, void*)
+{
+    EXPECT_STREQ(name, "THREAD_CALLBACK");
+    return new DavidCallbackThreadForTest();
+}
+
+struct DavidHostFuncSubmission {
+    bool isBlock;
+    rtCallback_t callback;
+    void* data;
+    Stream* stream;
+};
+
+struct DavidCallbackTestState {
+    std::vector<DavidHostFuncSubmission> submissions;
+    std::vector<rtHostFuncCqReport_t> releasedReports;
+    Notify* waitedNotify = nullptr;
+    uint32_t notifyWaits = 0U;
+    uint32_t firstCallbacks = 0U;
+    uint32_t secondCallbacks = 0U;
+};
+
+DavidCallbackTestState* davidCallbackTestState = nullptr;
+
+void CountDavidHostFunc(void* data) { ++*static_cast<uint32_t*>(data); }
+
+rtError_t RecordDavidHostFuncTask(TaskInfo* task, Stream* stream)
+{
+    EXPECT_EQ(task->type, TS_TASK_TYPE_HOSTFUNC_CALLBACK);
+    const auto& callbackTask = task->u.callbackLaunchTask;
+    davidCallbackTestState->submissions.push_back(
+        {callbackTask.isBlock, callbackTask.callBackFunc, callbackTask.fnData, stream});
+    return RT_ERROR_NONE;
+}
+
+rtError_t RecordDavidHostFuncNotifyWait(Notify* notify, Stream*, uint32_t timeout)
+{
+    EXPECT_EQ(timeout, 0U);
+    davidCallbackTestState->waitedNotify = notify;
+    ++davidCallbackTestState->notifyWaits;
+    return RT_ERROR_NONE;
+}
+
+void CheckDavidHostFuncSubscriptionReuse(Stream* stream, bool blockingFirst)
+{
+    Runtime* const runtime = Runtime::Instance();
+    Context* const context = stream->Context_();
+    Driver* const driver = stream->Device_()->Driver_();
+    DavidCallbackTestState state;
+    davidCallbackTestState = &state;
+    const ScopeGuard cleanup([&]() {
+        context->DestroyContextCallBackThread();
+        if (stream->GetSubscribeFlag() == StreamSubscribeFlag::SUBSCRIBE_RUNTIME) {
+            EXPECT_EQ(runtime->UnSubscribeReport(stream), RT_ERROR_NONE);
+        }
+        GlobalMockObject::verify();
+        davidCallbackTestState = nullptr;
+    });
+    ASSERT_FALSE(context->GetCallBackThreadExistFlag());
+    MOCKER(OsalFactory::CreateThread).expects(once()).will(invoke(CreateDavidCallbackThread));
+    uint32_t sqId = 17U;
+    uint32_t cqId = 19U;
+    MOCKER_CPP_VIRTUAL(driver, &Driver::SqCqAllocate)
+        .expects(once())
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&sqId), outBoundP(&cqId))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::SqCqFree).expects(once()).will(returnValue(RT_ERROR_NONE));
+    MOCKER(DavidSendTask).expects(exactly(2)).will(invoke(RecordDavidHostFuncTask));
+    MOCKER(NtyWait).expects(once()).will(invoke(RecordDavidHostFuncNotifyWait));
+
+    ApiImplDavid api;
+    uint32_t callbackCount = 0U;
+    const auto launch = [&](bool blocking) {
+        return blocking ? api.LaunchHostFunc(stream, CountDavidHostFunc, &callbackCount) :
+                          api.LaunchHostFunc(stream, CountDavidHostFunc, &callbackCount, false);
+    };
+    ASSERT_EQ(launch(blockingFirst), RT_ERROR_NONE);
+    ASSERT_EQ(stream->GetSubscribeFlag(), StreamSubscribeFlag::SUBSCRIBE_RUNTIME);
+    uint32_t deviceId = stream->Device_()->Id_();
+    Notify* originalNotify = nullptr;
+    uint64_t originalThreadId = 0U;
+    uint32_t originalSqId = 0U;
+    uint32_t originalCqId = 0U;
+    ASSERT_EQ(runtime->GetNotifyByStreamId(deviceId, stream->Id_(), &originalNotify), RT_ERROR_NONE);
+    ASSERT_NE(originalNotify, nullptr);
+    ASSERT_EQ(runtime->GetThreadIdByStreamId(deviceId, stream->Id_(), &originalThreadId), RT_ERROR_NONE);
+    ASSERT_EQ(runtime->GetSqIdByStreamId(deviceId, stream->Id_(), &originalSqId), RT_ERROR_NONE);
+    ASSERT_EQ(runtime->GetCqIdByStreamId(deviceId, stream->Id_(), &originalCqId), RT_ERROR_NONE);
+    EXPECT_EQ(originalThreadId, DAVID_CALLBACK_TEST_THREAD_ID);
+    EXPECT_EQ(originalSqId, sqId);
+    EXPECT_EQ(originalCqId, cqId);
+
+    ASSERT_EQ(launch(!blockingFirst), RT_ERROR_NONE);
+    Notify* reusedNotify = nullptr;
+    uint64_t reusedThreadId = 0U;
+    uint32_t reusedSqId = 0U;
+    uint32_t reusedCqId = 0U;
+    EXPECT_EQ(runtime->GetNotifyByStreamId(deviceId, stream->Id_(), &reusedNotify), RT_ERROR_NONE);
+    EXPECT_EQ(runtime->GetThreadIdByStreamId(deviceId, stream->Id_(), &reusedThreadId), RT_ERROR_NONE);
+    EXPECT_EQ(runtime->GetSqIdByStreamId(deviceId, stream->Id_(), &reusedSqId), RT_ERROR_NONE);
+    EXPECT_EQ(runtime->GetCqIdByStreamId(deviceId, stream->Id_(), &reusedCqId), RT_ERROR_NONE);
+    EXPECT_EQ(reusedNotify, originalNotify);
+    EXPECT_EQ(reusedThreadId, originalThreadId);
+    EXPECT_EQ(reusedSqId, originalSqId);
+    EXPECT_EQ(reusedCqId, originalCqId);
+    ASSERT_EQ(state.submissions.size(), 2U);
+    EXPECT_EQ(state.submissions[0].isBlock, blockingFirst);
+    EXPECT_EQ(state.submissions[1].isBlock, !blockingFirst);
+    for (const auto& submission : state.submissions) {
+        EXPECT_EQ(submission.callback, CountDavidHostFunc);
+        EXPECT_EQ(submission.data, &callbackCount);
+        EXPECT_EQ(submission.stream, stream);
+    }
+    EXPECT_EQ(state.notifyWaits, 1U);
+    EXPECT_EQ(state.waitedNotify, originalNotify);
+    EXPECT_EQ(callbackCount, 0U);
+}
+
+void CountFirstDavidReport(void* data)
+{
+    auto* state = static_cast<DavidCallbackTestState*>(data);
+    ++state->firstCallbacks;
+}
+
+void CountSecondDavidReport(void* data) { ++static_cast<DavidCallbackTestState*>(data)->secondCallbacks; }
+
+rtError_t RecordDavidReleasedReport(Driver*, rtHostFuncCqReport_t* report, uint32_t, uint32_t, uint32_t, bool)
+{
+    davidCallbackTestState->releasedReports.push_back(*report);
+    return RT_ERROR_NONE;
+}
+} // namespace
+
+TEST_F(ApiDavidTest, NonBlockingHostFuncThenDefaultHostFuncReusesRuntimeSubscription)
+{
+    CheckDavidHostFuncSubscriptionReuse(stream_, false);
+}
+
+TEST_F(ApiDavidTest, DefaultHostFuncThenNonBlockingHostFuncReusesRuntimeSubscription)
+{
+    CheckDavidHostFuncSubscriptionReuse(stream_, true);
+}
+
+TEST_F(ApiDavidTest, HostFuncSubscriptionFailureDoesNotSubmitEitherCallbackMode)
+{
+    Context* const context = stream_->Context_();
+    const ScopeGuard cleanup([&]() {
+        context->DestroyContextCallBackThread();
+        GlobalMockObject::verify();
+    });
+    ASSERT_FALSE(context->GetCallBackThreadExistFlag());
+    MOCKER(OsalFactory::CreateThread).expects(once()).will(invoke(CreateDavidCallbackThread));
+    MOCKER_CPP(&Runtime::SubscribeCallback).expects(exactly(2)).will(returnValue(RT_ERROR_DRV_ERR));
+    MOCKER(DavidSendTask).expects(never());
+    MOCKER(NtyWait).expects(never());
+    ApiImplDavid api;
+    uint32_t callbackCount = 0U;
+    EXPECT_EQ(api.LaunchHostFunc(stream_, CountDavidHostFunc, &callbackCount, false), RT_ERROR_DRV_ERR);
+    EXPECT_EQ(api.LaunchHostFunc(stream_, CountDavidHostFunc, &callbackCount), RT_ERROR_DRV_ERR);
+    EXPECT_EQ(stream_->GetSubscribeFlag(), StreamSubscribeFlag::SUBSCRIBE_NONE);
+    EXPECT_EQ(callbackCount, 0U);
+}
+
+TEST_F(ApiDavidTest, NonBlockingReportProcessesEntireBatch)
+{
+    Driver* const driver = stream_->Device_()->Driver_();
+    DavidCallbackTestState state;
+    davidCallbackTestState = &state;
+    const ScopeGuard cleanup([&]() {
+        GlobalMockObject::verify();
+        davidCallbackTestState = nullptr;
+    });
+    rtHostFuncCqReport_t reports[2]{};
+    reports[0].hostFuncCbPtr = RtPtrToValue<rtCallback_t>(CountFirstDavidReport);
+    reports[1].hostFuncCbPtr = RtPtrToValue<rtCallback_t>(CountSecondDavidReport);
+    for (uint32_t index = 0U; index < 2U; ++index) {
+        reports[index].fnDataPtr = RtPtrToValue(&state);
+        reports[index].streamId = static_cast<uint16_t>(stream_->Id_());
+        reports[index].taskId = static_cast<uint16_t>(11U + index);
+        reports[index].isBlock = 0U;
+    }
+    uint32_t deviceId = stream_->Device_()->Id_();
+    uint32_t tsId = stream_->Device_()->DevGetTsId();
+    uint32_t groupId = 0U;
+    MOCKER_CPP(&Runtime::GetGroupIdByThreadId)
+        .stubs()
+        .with(mockcpp::any(), outBoundP(&deviceId), outBoundP(&tsId), outBoundP(&groupId), mockcpp::any())
+        .will(returnValue(RT_ERROR_NONE));
+    uint64_t cqBitmap = 1ULL;
+    MOCKER_CPP_VIRTUAL(driver, &Driver::CqReportIrqWait)
+        .expects(once())
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&cqBitmap), mockcpp::any())
+        .will(returnValue(RT_ERROR_NONE));
+    rtHostFuncCqReport_t* reportPointer = reports;
+    uint32_t reportCount = 2U;
+    MOCKER_CPP_VIRTUAL(driver, &Driver::CqReportGet)
+        .expects(once())
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&reportPointer), outBoundP(&reportCount))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::CqReportRelease).expects(exactly(2)).will(invoke(RecordDavidReleasedReport));
+    ApiImplDavid api;
+    EXPECT_EQ(api.ProcessReport(0, true), RT_ERROR_NONE);
+    EXPECT_EQ(state.firstCallbacks, 1U);
+    EXPECT_EQ(state.secondCallbacks, 1U);
+    EXPECT_EQ(reports[0].hostFuncCbPtr, RtPtrToValue<rtCallback_t>(CountFirstDavidReport));
+    EXPECT_EQ(reports[1].hostFuncCbPtr, RtPtrToValue<rtCallback_t>(CountSecondDavidReport));
+    ASSERT_EQ(state.releasedReports.size(), 2U);
+    for (uint32_t index = 0U; index < 2U; ++index) {
+        EXPECT_EQ(state.releasedReports[index].taskId, 11U + index);
+        EXPECT_EQ(state.releasedReports[index].streamId, stream_->Id_());
+        EXPECT_EQ(state.releasedReports[index].fnDataPtr, RtPtrToValue(&state));
+        EXPECT_EQ(state.releasedReports[index].isBlock, 0U);
+    }
+}
+
 void GetErrorMessage(const char* msg, uint32_t len)
 {
     if (msg != nullptr && len != 0) {
@@ -7119,12 +7348,32 @@ TEST_F(ApiDavidTest, DavidrtDeviceTaskAbort_01)
     g_abortPostCalled = false;
     g_resumeSqSendCalled = false;
     error = rtSetTaskAbortCallBack("test", testrtSetTaskAbortCallBack, NULL);
+    Device* const device = Runtime::Instance()->CurrentContext()->Device_();
+    const size_t failedBefore = device->syncArgs_.size();
+    SyncFuncArgs* completedArgs = nullptr;
+    error = CreateSyncFuncArgs(completedArgs);
+    ASSERT_NE(completedArgs, nullptr);
+    SyncFuncArgs* pendingArgs = nullptr;
+    error = CreateSyncFuncArgs(pendingArgs);
+    ASSERT_NE(pendingArgs, nullptr);
+    completedArgs->currentCnt = 1U;
+    std::list<SyncFuncArgs*> failedArgs{completedArgs, pendingArgs};
+    device->AppendSyncArgs(failedArgs);
+    MOCKER(DestroySyncFuncArgs).expects(once()).with(eq(completedArgs));
+
     error = rtDeviceTaskAbort(0, 0);
 
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_TRUE(g_abortPostCalled);
     EXPECT_TRUE(g_resumeSqSendCalled);
     EXPECT_EQ(g_clearPageFaultInfoCount, 1U);
+    EXPECT_EQ(device->syncArgs_.size(), failedBefore + 1U);
+    EXPECT_EQ(device->syncArgs_.back(), pendingArgs);
+    EXPECT_EQ(pendingArgs->currentCnt, 0U);
+    GlobalMockObject::verify();
+    DestroySyncFuncArgs(completedArgs);
+    // No report was published for these test-owned arguments.
+    device->DestroySyncArgs();
     rtCtxDestroy(ctx);
 }
 

@@ -86,9 +86,9 @@ class GenerateAclApiStubsTest(unittest.TestCase):
             REPO_ROOT / "src/acl/aclrt_impl/acl_rt_wrapper.h"
         )
 
-        self.assertEqual(len(entries), 411)
+        self.assertEqual(len(entries), 413)
         self.assertEqual(
-            sum(entry.return_type == "aclError" for entry in entries.values()), 393
+            sum(entry.return_type == "aclError" for entry in entries.values()), 395
         )
         self.assertEqual(
             sum(entry.return_type != "aclError" for entry in entries.values()), 18
@@ -145,6 +145,15 @@ ACL_API_STUB(aclZero, ZERO)
             },
         )
 
+    def test_arch5162_device_flags_are_unsupported(self):
+        product = REPO_ROOT / "src/runtime/cmake/arch5162_unsupported_acl_api.def"
+        _, _, product_entries = GENERATOR.parse_product_def(product)
+        policies = dict(product_entries)
+        for name in ("aclrtSetDeviceFlags", "aclrtGetDeviceFlags"):
+            with self.subTest(api=name):
+                self.assertIn(name, policies)
+                self.assertEqual(policies[name], "RT_FEATURE_NOT_SUPPORT")
+
     def test_arch5162_product_matches_confirmed_acl_support(self):
         product = REPO_ROOT / "src/runtime/cmake/arch5162_unsupported_acl_api.def"
         wrapper = GENERATOR.parse_wrapper(
@@ -155,9 +164,9 @@ ACL_API_STUB(aclZero, ZERO)
 
         self.assertEqual(version, 1)
         self.assertEqual(real_provider_count, 94)
-        self.assertEqual(len(entries), 317)
+        self.assertEqual(len(entries), 319)
         self.assertEqual(
-            sum(entry.policy == "RT_FEATURE_NOT_SUPPORT" for entry in entries), 302
+            sum(entry.policy == "RT_FEATURE_NOT_SUPPORT" for entry in entries), 304
         )
         self.assertEqual(sum(entry.policy == "NULLPTR" for entry in entries), 5)
         self.assertEqual(sum(entry.policy == "INVALID_EXCEPTION_INFO" for entry in entries), 5)

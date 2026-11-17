@@ -161,9 +161,11 @@ rtError_t GetNotifyPhyInfoStub(cce::runtime::ApiImpl* api, Notify* const inNotif
 rtError_t GetNotifyPhyInfoStub(cce::runtime::ApiImpl* api, Notify* const inNotify, rtNotifyPhyInfo* notifyInfo);
 
 rtError_t LaunchHostFuncNormalStub(
-    cce::runtime::ApiImpl* impl, Stream* const stm, const rtCallback_t callBackFunc, void* const fnData);
+    cce::runtime::ApiImpl* impl, Stream* const stm, const rtCallback_t callBackFunc, void* const fnData,
+    const bool isBlock);
 rtError_t LaunchHostFuncFailStub(
-    cce::runtime::ApiImpl* impl, Stream* const stm, const rtCallback_t callBackFunc, void* const fnData);
+    cce::runtime::ApiImpl* impl, Stream* const stm, const rtCallback_t callBackFunc, void* const fnData,
+    const bool isBlock);
 
 DVresult halMemManagedPrefetchFailed(
     DVdeviceptr devPtr, size_t size, struct drv_uvm_location location, unsigned int flags);
@@ -179,9 +181,11 @@ void initUpdateDsaSqe(uint32_t* hostAddr, rtStarsDsaSqe_t* dsaSqe);
 void drvStubInit(const std::string& socVersion);
 void StubClearHalSqSendAndRecvCnt(uint32_t devId);
 rtError_t LaunchHostFuncNormalStub(
-    cce::runtime::ApiImpl* impl, Stream* const stm, const rtCallback_t callBackFunc, void* const fnData);
+    cce::runtime::ApiImpl* impl, Stream* const stm, const rtCallback_t callBackFunc, void* const fnData,
+    const bool isBlock);
 rtError_t LaunchHostFuncFailStub(
-    cce::runtime::ApiImpl* impl, Stream* const stm, const rtCallback_t callBackFunc, void* const fnData);
+    cce::runtime::ApiImpl* impl, Stream* const stm, const rtCallback_t callBackFunc, void* const fnData,
+    const bool isBlock);
 
 class ApiTest : public testing::Test {
 public:

@@ -30,6 +30,7 @@
 #include "event.hpp"
 #include "stream_david.hpp"
 #include "notify.hpp"
+#include "notify_c.hpp"
 #include "profiler.hpp"
 #include "subscribe.hpp"
 #include <fstream>
@@ -1580,12 +1581,29 @@ TEST_F(ApiTestUb1, callbackLaunch_noblock)
     uint64_t oldSqAddr = stream_->GetSqBaseAddr();
     uint64_t newSqAddr = reinterpret_cast<uint64_t>(sqe);
     stream_->SetSqBaseAddr(newSqAddr);
+    TaskResManageDavid* taskResMang = ((TaskResManageDavid*)(static_cast<Stream*>(stream_)->taskResMang_));
+    ScopeGuard restoreStream([&]() {
+        stream_->SetSqBaseAddr(oldSqAddr);
+        free(sqe);
+        taskResMang->ResetTaskRes();
+    });
+    const uint16_t taskPos = taskResMang->GetResTail();
+    ASSERT_LT(taskPos, 2U);
+    MOCKER(NtyWait).expects(never());
     error = rtCallbackLaunch(stub_func, nullptr, streamHandle_, false);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    TaskInfo* const task = taskResMang->GetTaskInfo(taskPos);
+    ASSERT_NE(task, nullptr);
+    EXPECT_EQ(task->type, TS_TASK_TYPE_HOSTFUNC_CALLBACK);
+    EXPECT_FALSE(task->u.callbackLaunchTask.isBlock);
+    EXPECT_EQ(task->u.callbackLaunchTask.eventId, INVALID_EVENT_ID);
+    EXPECT_EQ(sqe[taskPos].phSqe.taskType, TS_TASK_TYPE_HOSTFUNC_CALLBACK);
+    EXPECT_EQ(sqe[taskPos].phSqe.u.callBackInfo.isBlock, 0U);
+    EXPECT_EQ(sqe[taskPos].phSqe.u.callBackInfo.notifyId, MAX_UINT32_NUM);
     stream_->SetSqBaseAddr(oldSqAddr);
     free(sqe);
-    TaskResManageDavid* taskResMang = ((TaskResManageDavid*)(static_cast<Stream*>(stream_)->taskResMang_));
     taskResMang->ResetTaskRes();
+    restoreStream.ReleaseGuard();
     error = rtUnSubscribeReport(123, streamHandle_);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
@@ -1602,15 +1620,14 @@ TEST_F(ApiTestUb1, api_rts_rtsCallbackLaunch_david2)
     rtError_t error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    MOCKER_CPP(&Runtime::SubscribeCallback).stubs().will(returnValue(1));
-
-    MOCKER(cce::runtime::CallbackLaunchForDavidWithBlock).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&Runtime::SubscribeCallback).stubs().will(returnValue(RT_ERROR_DRV_ERR));
+    MOCKER(cce::runtime::CallbackLaunchForDavidWithBlock).expects(never());
 
     error = rtsLaunchHostFunc(stream, ApiTest_Stream_Cb, NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(error, ACL_ERROR_RT_DRV_INTERNAL_ERROR);
 
     error = rtsLaunchHostFunc(NULL, ApiTest_Stream_Cb, NULL);
-    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(error, ACL_ERROR_RT_DRV_INTERNAL_ERROR);
 
     error = rtStreamSynchronize(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);

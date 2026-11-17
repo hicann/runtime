@@ -1179,6 +1179,8 @@ rtError_t Model::SynchronizeExecute(Stream* const stm, int32_t timeout)
     COND_RETURN_ERROR_MSG_INNER(
         stm->Context_() != context_, RT_ERROR_STREAM_CONTEXT,
         "Stream does not belong to the current context, stream_id=%u.", stm->Id_());
+    // Capture the mode before submission so this model execution keeps the same policy.
+    const uint32_t mode = stm->Context_()->GetDeviceFlags();
     rtError_t error = RT_ERROR_NONE;
     const uint32_t executeType = ModelExecuteType();
     RT_LOG(
@@ -1218,7 +1220,7 @@ rtError_t Model::SynchronizeExecute(Stream* const stm, int32_t timeout)
         executeGroupGuard.ReleaseGuard();
         ModelExecuteGroupUnLock(stm);
 
-        error = stm->Synchronize(false, timeout);
+        error = stm->Synchronize(false, timeout, mode);
         ERROR_RETURN_MSG_INNER(
             error, "Fail to synchronize forbidden stream, retCode=%#x.", static_cast<uint32_t>(error));
         RT_LOG(RT_LOG_INFO, "model synchronize execute success.");
@@ -1235,13 +1237,13 @@ rtError_t Model::SynchronizeExecute(Stream* const stm, int32_t timeout)
 
     if (Runtime::Instance()->GetDisableThread()) {
         stm->isModelExcel = true;
-        error = stm->Synchronize(false, timeout);
+        error = stm->Synchronize(false, timeout, mode);
     } else if (executeType == EXECUTOR_TS) {
         (void)notifier_->Wait();
         (void)notifier_->Reset();
         error = stm->GetError();
     } else {
-        error = stm->Synchronize(false, timeout);
+        error = stm->Synchronize(false, timeout, mode);
     }
     ERROR_RETURN(
         error, "Fail to synchronize forbidden stream_id=%d, retCode=%#x!", stm->Id_(), static_cast<uint32_t>(error));

@@ -176,8 +176,9 @@ public:
     rtError_t DebugReadAICore(rtDebugMemoryParam_t* const param) override;
     rtError_t StarsLaunchSubscribeProc(
         Stream* const stm, const rtCallback_t callBackFunc, void* const fnData, const bool needSubscribe,
-        const uint64_t threadId) override;
-    rtError_t LaunchHostFunc(Stream* const stm, const rtCallback_t callBackFunc, void* const fnData) override;
+        const uint64_t threadId, bool isBlock = true) override;
+    rtError_t LaunchHostFunc(
+        Stream* const stm, const rtCallback_t callBackFunc, void* const fnData, bool isBlock = true) override;
     rtError_t CpuKernelLaunchExAll(
         const Kernel* const kernel, const uint32_t coreDim, rtCpuKernelArgs_t* argsInfo, Stream* const stm,
         const TaskCfg* const taskCfg);

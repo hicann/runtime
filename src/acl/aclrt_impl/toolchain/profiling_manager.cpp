@@ -341,6 +341,8 @@ const std::map<AclProfType, std::string> PROF_TYPE_TO_NAMES = {
     {AclProfType::AclrtExceptionInfoCallbackUnregister, "aclrtExceptionInfoCallbackUnregister"},
     {AclProfType::AclrtHostGetDevicePointerAddrRange, "aclrtHostGetDevicePointerAddrRange"},
     {AclProfType::AclrtBinaryEnumerateFunctions, "aclrtBinaryEnumerateFunctions"},
+    {AclProfType::AclrtSetDeviceFlags, "aclrtSetDeviceFlags"},
+    {AclProfType::AclrtGetDeviceFlags, "aclrtGetDeviceFlags"},
 };
 
 aclError RegisterType(const uint32_t index)

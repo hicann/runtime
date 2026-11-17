@@ -61,6 +61,12 @@ extern "C" {
 #define ACL_NOTIFY_DEFAULT 0x00000000U
 #define ACL_NOTIFY_DEVICE_USE_ONLY 0x00000001U
 
+// for device synchronization
+#define ACL_DEVICE_SCHEDULE_AUTO 0x00U          /**< Device flag - Automatic scheduling */
+#define ACL_DEVICE_SCHEDULE_SPIN 0x01U          /**< Device flag - Spin scheduling */
+#define ACL_DEVICE_SCHEDULE_YIELD 0x02U         /**< Device flag - Yield scheduling */
+#define ACL_DEVICE_SCHEDULE_BLOCKING_SYNC 0x04U /**< Device flag - Use blocking synchronization */
+
 // for device get capability
 #define ACL_DEV_FEATURE_SUPPORT 0x00000001
 #define ACL_DEV_FEATURE_NOT_SUPPORT 0x00000000
@@ -1698,6 +1704,28 @@ ACL_FUNC_VISIBILITY aclError aclrtSetSysParamOpt(aclSysParamOpt opt, int64_t val
  * @see aclrtResetDevice |aclrtCreateContext
  */
 ACL_FUNC_VISIBILITY aclError aclrtSetDevice(int32_t deviceId);
+
+/**
+ * @ingroup AscendCL
+ * @brief Set the synchronization waiting mode of the current context.
+ *
+ * @param flags [IN] synchronization waiting mode, one of the ACL_DEVICE_SCHEDULE_* values
+ *
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclrtSetDeviceFlags(uint32_t flags);
+
+/**
+ * @ingroup AscendCL
+ * @brief Get the synchronization waiting mode of the current context.
+ *
+ * @param flags [OUT] synchronization waiting mode
+ *
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclrtGetDeviceFlags(uint32_t* flags);
 
 /**
  * @ingroup AscendCL

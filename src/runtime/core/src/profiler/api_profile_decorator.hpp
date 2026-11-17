@@ -231,7 +231,8 @@ public:
     rtError_t ProcessReport(const int32_t timeout, const bool noLog = false) override;
     rtError_t UnSubscribeReport(const uint64_t threadId, Stream* const stm) override;
     rtError_t GetRunMode(rtRunMode* const runMode) override;
-    rtError_t LaunchHostFunc(Stream* const stm, const rtCallback_t callBackFunc, void* const fnData) override;
+    rtError_t LaunchHostFunc(
+        Stream* const stm, const rtCallback_t callBackFunc, void* const fnData, bool isBlock = true) override;
     // stream label func
     rtError_t LabelSwitchByIndex(
         void* const ptr, const uint32_t maxVal, void* const labelInfoPtr, Stream* const stm) override;

@@ -3113,7 +3113,9 @@ TEST_F(TaskTest, Subscribe)
     cbSubscribeInfo subscribeInfo = {threadId, stm, sqId, cqId, groupId, evt};
     cbSubscribe->subscribeMapByStreamId_[key] = subscribeInfo;
     cbSubscribe->DeleteAll();
+    ASSERT_EQ(cbSubscribe->subscribeMapByStreamId_.size(), 1U);
     cbSubscribe->DeleteAll();
+    EXPECT_TRUE(cbSubscribe->subscribeMapByStreamId_.empty());
 
     Event* evt1 = event_;
     cbSubscribeInfo subscribeInfo1 = {threadId, stm, sqId, cqId, groupId, evt1};
@@ -3184,6 +3186,7 @@ TEST_F(TaskTest, DeleteAllSharedSqCq)
     cbSubscribe->subscribeMapByStreamId_[RT_CB_SUBSCRIBE_MK_STREAM_DEV_KEY(devId, streamId + 1)] = subscribeInfo2;
 
     cbSubscribe->DeleteAll();
+    EXPECT_TRUE(cbSubscribe->subscribeMapByStreamId_.empty());
 
     delete cbSubscribe;
     delete stm;

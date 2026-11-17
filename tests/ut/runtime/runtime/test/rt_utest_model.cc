@@ -84,6 +84,31 @@ private:
     std::array<bool, FEATURE_MAX_VALUE> featureSet_{};
 };
 
+uint32_t legacyModelSyncCalls = 0U;
+thread_local timespec modelSyncTestTime{};
+
+rtError_t RecordLegacyModelSync(Stream* stream, bool waitSyncCq, int32_t timeout, uint32_t mode)
+{
+    ++legacyModelSyncCalls;
+    EXPECT_FALSE(waitSyncCq);
+    EXPECT_EQ(timeout, 10);
+    EXPECT_EQ(mode, stream->Context_()->GetDeviceFlags());
+    return RT_ERROR_DRV_ERR;
+}
+
+rtError_t SubmitModelAfterSyncTimeout(Model*, Stream*)
+{
+    const timespec delay{0, 20000000};
+    (void)nanosleep(&delay, nullptr);
+    return RT_ERROR_NONE;
+}
+
+rtError_t ChangeModeAfterModelSubmit(Model*, Stream* const stream)
+{
+    stream->Context_()->SetDeviceFlags(RT_DEVICE_SCHEDULE_YIELD);
+    return RT_ERROR_NONE;
+}
+
 void EnableLaunchBlockingFeature(Stream* const stream)
 {
     RawDevice* const device = static_cast<RawDevice*>(stream->Device_());
@@ -257,7 +282,7 @@ TEST_F(ModelTest, ModelExecuteUsesAsyncPathInsideNonBlockingSection)
         StreamLaunchBlocking::SetLaunchBlockingMode(stream, RT_STREAM_LAUNCH_BLOCKING_MODE_BLOCKING), RT_ERROR_NONE);
     MOCKER_CPP_VIRTUAL(stream, &Stream::Synchronize)
         .expects(once())
-        .with(eq(false), eq(-1))
+        .with(eq(false), eq(-1), eq(static_cast<uint32_t>(RT_DEVICE_SCHEDULE_AUTO)))
         .will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(model, &Model::Execute)
         .expects(once())
@@ -316,7 +341,7 @@ TEST_F(ModelTest, ExecuteWithBlockingWaitsAfterSubmittingModelTask)
     MOCKER_CPP(&Model::SubmitExecuteTask).expects(once()).will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(stream, &Stream::Synchronize)
         .expects(once())
-        .with(eq(false), eq(-1))
+        .with(eq(false), eq(-1), eq(static_cast<uint32_t>(RT_DEVICE_SCHEDULE_AUTO)))
         .will(returnValue(RT_ERROR_DRV_ERR));
 
     EXPECT_EQ(model->Execute(stream, -1), RT_ERROR_DRV_ERR);
@@ -324,6 +349,219 @@ TEST_F(ModelTest, ExecuteWithBlockingWaitsAfterSubmittingModelTask)
 
     EXPECT_EQ(rtStreamDestroy(rtStream), RT_ERROR_NONE);
     EXPECT_EQ(rtModelDestroy(rtModel), RT_ERROR_NONE);
+}
+
+TEST_F(ModelTest, SynchronizeExecuteNonSeparatedModesKeepOriginalTimeoutAfterPreparation)
+{
+    rtModel_t modelHandle = nullptr;
+    rtStream_t streamHandle = nullptr;
+    ASSERT_EQ(rtModelCreate(&modelHandle, 0), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamCreate(&streamHandle, 0), RT_ERROR_NONE);
+    Model* const model = rt_ut::UnwrapOrNull<Model>(modelHandle);
+    Stream* const stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
+    Device* const device = stream->Device_();
+    const bool previousRecycleThread = device->GetIsChipSupportRecycleThread();
+    device->SetIsChipSupportRecycleThread(false);
+    ASSERT_FALSE(stream->IsSeparateSendAndRecycle());
+    model->SetModelExecutorType(EXECUTOR_AICPU);
+    MOCKER_CPP(&Model::SubmitExecuteTask).expects(exactly(3)).will(invoke(SubmitModelAfterSyncTimeout));
+    legacyModelSyncCalls = 0U;
+    MOCKER_CPP_VIRTUAL(stream, &Stream::Synchronize).stubs().will(invoke(RecordLegacyModelSync));
+    for (uint32_t mode : {RT_DEVICE_SCHEDULE_SPIN, RT_DEVICE_SCHEDULE_YIELD, RT_DEVICE_SCHEDULE_BLOCKING_SYNC}) {
+        SCOPED_TRACE(testing::Message() << "mode=" << mode);
+        stream->Context_()->SetDeviceFlags(mode);
+        EXPECT_EQ(model->SynchronizeExecute(stream, 10), RT_ERROR_DRV_ERR);
+        EXPECT_EQ(stream->Context_()->GetDeviceFlags(), mode);
+    }
+    EXPECT_EQ(legacyModelSyncCalls, 3U);
+    stream->Context_()->SetDeviceFlags(RT_DEVICE_SCHEDULE_AUTO);
+    device->SetIsChipSupportRecycleThread(previousRecycleThread);
+    GlobalMockObject::verify();
+    EXPECT_EQ(rtStreamDestroy(streamHandle), RT_ERROR_NONE);
+    EXPECT_EQ(rtModelDestroy(modelHandle), RT_ERROR_NONE);
+}
+
+TEST_F(ModelTest, SynchronizeExecuteBoundSeparatedStreamKeepsOriginalTimeout)
+{
+    rtModel_t modelHandle = nullptr;
+    rtStream_t streamHandle = nullptr;
+    ASSERT_EQ(rtModelCreate(&modelHandle, 0), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamCreate(&streamHandle, 0), RT_ERROR_NONE);
+    Model* const model = rt_ut::UnwrapOrNull<Model>(modelHandle);
+    Stream* const stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
+    RawDevice* const device = static_cast<RawDevice*>(stream->Device_());
+    Context* const context = stream->Context_();
+    const bool previousRecycleThread = device->GetIsChipSupportRecycleThread();
+    const bool previousIsStars = device->properties_.isStars;
+    const uint32_t previousMode = context->GetDeviceFlags();
+    device->SetIsChipSupportRecycleThread(true);
+    device->properties_.isStars = true;
+    context->SetDeviceFlags(RT_DEVICE_SCHEDULE_BLOCKING_SYNC);
+    stream->SetBindFlag(true);
+    ScopeGuard restoreState([=]() {
+        stream->SetBindFlag(false);
+        context->SetDeviceFlags(previousMode);
+        device->SetIsChipSupportRecycleThread(previousRecycleThread);
+        device->properties_.isStars = previousIsStars;
+    });
+    ASSERT_TRUE(stream->IsSeparateSendAndRecycle());
+    model->SetModelExecutorType(EXECUTOR_AICPU);
+    MOCKER_CPP(&Model::SubmitExecuteTask).expects(once()).will(invoke(SubmitModelAfterSyncTimeout));
+    legacyModelSyncCalls = 0U;
+    MOCKER_CPP_VIRTUAL(stream, &Stream::Synchronize).expects(once()).will(invoke(RecordLegacyModelSync));
+
+    EXPECT_EQ(model->SynchronizeExecute(stream, 10), RT_ERROR_DRV_ERR);
+    EXPECT_EQ(legacyModelSyncCalls, 1U);
+    GlobalMockObject::verify();
+
+    stream->SetBindFlag(false);
+    context->SetDeviceFlags(previousMode);
+    device->SetIsChipSupportRecycleThread(previousRecycleThread);
+    device->properties_.isStars = previousIsStars;
+    restoreState.ReleaseGuard();
+    EXPECT_EQ(rtStreamDestroy(streamHandle), RT_ERROR_NONE);
+    EXPECT_EQ(rtModelDestroy(modelHandle), RT_ERROR_NONE);
+}
+
+TEST_F(ModelTest, SynchronizeExecuteNonStarsKeepsOriginalTimeout)
+{
+    rtModel_t modelHandle = nullptr;
+    rtStream_t streamHandle = nullptr;
+    ASSERT_EQ(rtModelCreate(&modelHandle, 0), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamCreate(&streamHandle, 0), RT_ERROR_NONE);
+    Model* const model = rt_ut::UnwrapOrNull<Model>(modelHandle);
+    Stream* const stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
+    RawDevice* const device = static_cast<RawDevice*>(stream->Device_());
+    Context* const context = stream->Context_();
+    const bool previousRecycleThread = device->GetIsChipSupportRecycleThread();
+    const bool previousIsStars = device->properties_.isStars;
+    const uint32_t previousMode = context->GetDeviceFlags();
+    device->SetIsChipSupportRecycleThread(true);
+    device->properties_.isStars = false;
+    context->SetDeviceFlags(RT_DEVICE_SCHEDULE_BLOCKING_SYNC);
+    ScopeGuard restoreState([=]() {
+        context->SetDeviceFlags(previousMode);
+        device->SetIsChipSupportRecycleThread(previousRecycleThread);
+        device->properties_.isStars = previousIsStars;
+    });
+    ASSERT_FALSE(stream->IsSeparateSendAndRecycle());
+    model->SetModelExecutorType(EXECUTOR_AICPU);
+    MOCKER_CPP(&Model::SubmitExecuteTask).expects(once()).will(invoke(SubmitModelAfterSyncTimeout));
+    legacyModelSyncCalls = 0U;
+    MOCKER_CPP_VIRTUAL(stream, &Stream::Synchronize).expects(once()).will(invoke(RecordLegacyModelSync));
+
+    EXPECT_EQ(model->SynchronizeExecute(stream, 10), RT_ERROR_DRV_ERR);
+    EXPECT_EQ(legacyModelSyncCalls, 1U);
+    GlobalMockObject::verify();
+
+    context->SetDeviceFlags(previousMode);
+    device->SetIsChipSupportRecycleThread(previousRecycleThread);
+    device->properties_.isStars = previousIsStars;
+    restoreState.ReleaseGuard();
+    EXPECT_EQ(rtStreamDestroy(streamHandle), RT_ERROR_NONE);
+    EXPECT_EQ(rtModelDestroy(modelHandle), RT_ERROR_NONE);
+}
+
+TEST_F(ModelTest, SynchronizeExecuteSeparatedStreamKeepsModeSnapshot)
+{
+    rtModel_t modelHandle = nullptr;
+    rtStream_t streamHandle = nullptr;
+    ASSERT_EQ(rtModelCreate(&modelHandle, 0), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamCreate(&streamHandle, 0), RT_ERROR_NONE);
+    Model* const model = rt_ut::UnwrapOrNull<Model>(modelHandle);
+    Stream* const stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
+    RawDevice* const device = static_cast<RawDevice*>(stream->Device_());
+    Context* const context = stream->Context_();
+    const bool previousRecycleThread = device->GetIsChipSupportRecycleThread();
+    const bool previousIsStars = device->properties_.isStars;
+    const uint32_t previousMode = context->GetDeviceFlags();
+    device->SetIsChipSupportRecycleThread(true);
+    device->properties_.isStars = true;
+    context->SetDeviceFlags(RT_DEVICE_SCHEDULE_BLOCKING_SYNC);
+    ScopeGuard restoreState([=]() {
+        context->SetDeviceFlags(previousMode);
+        device->SetIsChipSupportRecycleThread(previousRecycleThread);
+        device->properties_.isStars = previousIsStars;
+    });
+    EXPECT_TRUE(stream->IsSeparateSendAndRecycle());
+    model->SetModelExecutorType(EXECUTOR_AICPU);
+    MOCKER_CPP(&Model::SubmitExecuteTask).expects(once()).will(invoke(ChangeModeAfterModelSubmit));
+    MOCKER_CPP_VIRTUAL(stream, &Stream::Synchronize)
+        .expects(once())
+        .with(eq(false), eq(-1), eq(static_cast<uint32_t>(RT_DEVICE_SCHEDULE_BLOCKING_SYNC)))
+        .will(returnValue(RT_ERROR_DRV_ERR));
+
+    EXPECT_EQ(model->SynchronizeExecute(stream, -1), RT_ERROR_DRV_ERR);
+    EXPECT_EQ(context->GetDeviceFlags(), RT_DEVICE_SCHEDULE_YIELD);
+    GlobalMockObject::verify();
+
+    context->SetDeviceFlags(previousMode);
+    device->SetIsChipSupportRecycleThread(previousRecycleThread);
+    device->properties_.isStars = previousIsStars;
+    restoreState.ReleaseGuard();
+    EXPECT_EQ(rtStreamDestroy(streamHandle), RT_ERROR_NONE);
+    EXPECT_EQ(rtModelDestroy(modelHandle), RT_ERROR_NONE);
+}
+
+TEST_F(ModelTest, SynchronizeExecutePreservesOriginalTimeoutAndModeSnapshot)
+{
+    rtModel_t modelHandle = nullptr;
+    rtStream_t streamHandle = nullptr;
+    ASSERT_EQ(rtModelCreate(&modelHandle, 0), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamCreate(&streamHandle, 0), RT_ERROR_NONE);
+    Model* const model = rt_ut::UnwrapOrNull<Model>(modelHandle);
+    Stream* const stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
+    RawDevice* const device = static_cast<RawDevice*>(stream->Device_());
+    Context* const context = stream->Context_();
+    const bool previousRecycleThread = device->GetIsChipSupportRecycleThread();
+    const bool previousIsStars = device->properties_.isStars;
+    const uint32_t previousMode = context->GetDeviceFlags();
+    device->SetIsChipSupportRecycleThread(true);
+    device->properties_.isStars = true;
+    context->SetDeviceFlags(RT_DEVICE_SCHEDULE_BLOCKING_SYNC);
+    ScopeGuard restoreState([=]() {
+        context->SetDeviceFlags(previousMode);
+        device->SetIsChipSupportRecycleThread(previousRecycleThread);
+        device->properties_.isStars = previousIsStars;
+        modelSyncTestTime = {};
+    });
+    EXPECT_TRUE(stream->IsSeparateSendAndRecycle());
+    model->SetModelExecutorType(EXECUTOR_AICPU);
+    modelSyncTestTime = {1, 0};
+    MOCKER(clock_gettime).stubs().will(invoke(+[](clockid_t, timespec* current) -> int {
+        *current = modelSyncTestTime;
+        return 0;
+    }));
+    MOCKER_CPP(&Model::SubmitExecuteTask)
+        .expects(exactly(2))
+        .will(invoke(+[](Model* currentModel, Stream* current) -> rtError_t {
+            modelSyncTestTime.tv_nsec += 7000000;
+            return ChangeModeAfterModelSubmit(currentModel, current);
+        }));
+    MOCKER_CPP_VIRTUAL(stream, &Stream::Synchronize)
+        .expects(once())
+        .with(eq(false), eq(100), eq(static_cast<uint32_t>(RT_DEVICE_SCHEDULE_BLOCKING_SYNC)))
+        .will(returnValue(RT_ERROR_DRV_ERR));
+
+    MOCKER_CPP_VIRTUAL(stream, &Stream::Synchronize)
+        .expects(once())
+        .with(eq(false), eq(7), eq(static_cast<uint32_t>(RT_DEVICE_SCHEDULE_BLOCKING_SYNC)))
+        .will(returnValue(RT_ERROR_DRV_ERR));
+
+    EXPECT_EQ(model->SynchronizeExecute(stream, 100), RT_ERROR_DRV_ERR);
+    EXPECT_EQ(context->GetDeviceFlags(), RT_DEVICE_SCHEDULE_YIELD);
+    context->SetDeviceFlags(RT_DEVICE_SCHEDULE_BLOCKING_SYNC);
+    EXPECT_EQ(model->SynchronizeExecute(stream, 7), RT_ERROR_DRV_ERR);
+    EXPECT_EQ(context->GetDeviceFlags(), RT_DEVICE_SCHEDULE_YIELD);
+    GlobalMockObject::verify();
+
+    context->SetDeviceFlags(previousMode);
+    device->SetIsChipSupportRecycleThread(previousRecycleThread);
+    device->properties_.isStars = previousIsStars;
+    modelSyncTestTime = {};
+    restoreState.ReleaseGuard();
+    EXPECT_EQ(rtStreamDestroy(streamHandle), RT_ERROR_NONE);
+    EXPECT_EQ(rtModelDestroy(modelHandle), RT_ERROR_NONE);
 }
 
 TEST_F(ModelTest, CaptureModelExecuteWithoutBlockingDoesNotSynchronize)
@@ -366,7 +604,7 @@ TEST_F(ModelTest, CaptureModelExecuteWithBlockingSynchronizesAfterReplay)
         .will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(stream, &Stream::Synchronize)
         .expects(once())
-        .with(eq(false), eq(25))
+        .with(eq(false), eq(25), eq(static_cast<uint32_t>(RT_DEVICE_SCHEDULE_AUTO)))
         .will(returnValue(RT_ERROR_STREAM_SYNC_TIMEOUT));
 
     EXPECT_EQ(model.Execute(stream, 25), RT_ERROR_STREAM_SYNC_TIMEOUT);
@@ -414,7 +652,7 @@ TEST_F(ModelTest, CaptureModelExecuteWithNullStreamSynchronizesDefaultStream)
         .will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(defaultStream, &Stream::Synchronize)
         .expects(once())
-        .with(eq(false), eq(25))
+        .with(eq(false), eq(25), eq(static_cast<uint32_t>(RT_DEVICE_SCHEDULE_AUTO)))
         .will(returnValue(RT_ERROR_NONE));
 
     EXPECT_EQ(model.Execute(nullptr, 25), RT_ERROR_NONE);
@@ -479,6 +717,8 @@ TEST_F(ModelTest, TestGetCmoIdWithMapMiss)
 
     error = rtModelDestroy(rtModel);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    GlobalMockObject::verify();
+    GlobalMockObject::reset();
     rtInstance->DeviceRelease(device);
 }
 

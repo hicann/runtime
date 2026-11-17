@@ -273,6 +273,8 @@ public:
     virtual rtError_t rtGetFaultEvent(
         const int32_t deviceId, rtDmsEventFilter* filter, rtDmsFaultEvent* dmsEvent, uint32_t len,
         uint32_t* eventCount);
+    virtual rtError_t rtSetDeviceFlags(uint32_t flags);
+    virtual rtError_t rtGetDeviceFlags(uint32_t* flags);
     virtual rtError_t rtSetDeviceSatMode(rtFloatOverflowMode_t floatOverflowMode);
     virtual rtError_t rtGetDeviceSatMode(rtFloatOverflowMode_t* floatOverflowMode);
     virtual rtError_t rtSetStreamOverflowSwitch(rtStream_t stm, uint32_t flags);
@@ -887,6 +889,8 @@ public:
         rtGetFaultEvent, rtError_t(
                              const int32_t deviceId, rtDmsEventFilter* filter, rtDmsFaultEvent* dmsEvent, uint32_t len,
                              uint32_t* eventCount));
+    MOCK_METHOD1(rtSetDeviceFlags, rtError_t(uint32_t flags));
+    MOCK_METHOD1(rtGetDeviceFlags, rtError_t(uint32_t* flags));
     MOCK_METHOD1(rtSetDeviceSatMode, rtError_t(rtFloatOverflowMode_t floatOverflowMode));
     MOCK_METHOD1(rtGetDeviceSatMode, rtError_t(rtFloatOverflowMode_t* floatOverflowMode));
     MOCK_METHOD2(rtSetStreamOverflowSwitch, rtError_t(rtStream_t stm, uint32_t flags));

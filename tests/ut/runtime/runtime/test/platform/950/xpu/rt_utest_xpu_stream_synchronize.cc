@@ -124,3 +124,30 @@ TEST_F(XpuStreamSynchronizeTest, Stream_synchronize_with_stream_null)
     error = rtResetXpuDevice(RT_DEV_TYPE_DPU, 0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
 }
+
+TEST_F(XpuStreamSynchronizeTest, Stream_synchronize_keeps_auto_wait_for_all_modes)
+{
+    MOCKER(drvGetPlatformInfo).stubs().will(invoke(drvGetPlatformInfo_online));
+    MOCKER_CPP(&XpuDevice::ParseXpuConfigInfo).stubs().will(invoke(ParseXpuConfigInfo_mock));
+    ASSERT_EQ(rtSetXpuDevice(RT_DEV_TYPE_DPU, 0), ACL_RT_SUCCESS);
+
+    Runtime* const runtime = Runtime::Instance();
+    XpuContext* const context = static_cast<XpuContext*>(runtime->GetXpuCtxt());
+    Stream* stream = nullptr;
+    ASSERT_EQ(context->StreamCreate(RT_STREAM_PRIORITY_DEFAULT, 0U, &stream), RT_ERROR_NONE);
+    auto* const xpuStream = static_cast<XpuStream*>(stream);
+    MOCKER_CPP_VIRTUAL(xpuStream, &XpuStream::GetPendingNum).expects(exactly(4)).will(returnValue(1U));
+    MOCKER_CPP_VIRTUAL(xpuStream, &XpuStream::SynchronizeExecutedTask)
+        .expects(exactly(4))
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), eq(RT_DEVICE_SCHEDULE_AUTO))
+        .will(returnValue(RT_ERROR_DRV_ERR));
+
+    EXPECT_EQ(xpuStream->Synchronize(true, 1, RT_DEVICE_SCHEDULE_AUTO), RT_ERROR_DRV_ERR);
+    EXPECT_EQ(xpuStream->Synchronize(true, 1, RT_DEVICE_SCHEDULE_SPIN), RT_ERROR_DRV_ERR);
+    EXPECT_EQ(xpuStream->Synchronize(true, 1, RT_DEVICE_SCHEDULE_YIELD), RT_ERROR_DRV_ERR);
+    EXPECT_EQ(xpuStream->Synchronize(true, 1, RT_DEVICE_SCHEDULE_BLOCKING_SYNC), RT_ERROR_DRV_ERR);
+
+    GlobalMockObject::verify();
+    GlobalMockObject::reset();
+    EXPECT_EQ(rtResetXpuDevice(RT_DEV_TYPE_DPU, 0), ACL_RT_SUCCESS);
+}

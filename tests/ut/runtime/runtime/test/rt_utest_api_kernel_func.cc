@@ -20,7 +20,9 @@
 #include "base_david.hpp"
 #include "common/rt_utest_context_reset_helper.hpp"
 #include "elf.hpp"
+#include "engine.hpp"
 #include "kernel.hpp"
+#include "raw_device.hpp"
 #include "runtime/rt.h"
 
 using namespace cce::runtime;
@@ -34,7 +36,8 @@ protected:
     {
         GlobalMockObject::verify();
         GlobalMockObject::reset();
-        ut::ForceResetPrimaryDeviceIfActive();
+        // Fake-device task completion is outside these query tests.
+        ut::ResetPrimaryDeviceIfActiveWithDeviceDown();
     }
 };
 
@@ -129,6 +132,21 @@ TEST_F(ApiKernelFuncTest, QueryAvailableDynamicUbuf)
     EXPECT_EQ(apiKernelFunc.FunctionGetAvailDynUbufPerBlock(&kernel, 0U, &dynamicUbufSize), RT_ERROR_NONE);
     EXPECT_EQ(dynamicUbufSize, static_cast<size_t>(RT_SIMT_REMAIN_UB_SIZE - 2048U));
     EXPECT_EQ(apiKernelFunc.FunctionGetAvailDynUbufPerBlock(&kernel, 1U, &dynamicUbufSize), RT_ERROR_INVALID_VALUE);
+}
+
+TEST_F(ApiKernelFuncTest, TearDownReleasesDeviceWithUnreportedMockTask)
+{
+    Context* const context = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(context, nullptr);
+    RawDevice* const device = dynamic_cast<RawDevice*>(context->Device_());
+    ASSERT_NE(device, nullptr);
+    Engine* const engine = device->Engine_();
+    ASSERT_NE(engine, nullptr);
+
+    engine->AddPendingNum();
+    TearDown();
+
+    EXPECT_FALSE(ut::IsPrimaryDeviceActive());
 }
 
 TEST_F(ApiKernelFuncTest, GetFunctionBySymbolValidatesAndReportsMissingSymbol)

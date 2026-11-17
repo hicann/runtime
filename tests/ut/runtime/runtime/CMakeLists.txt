@@ -16,6 +16,7 @@ generate_runtime_api_stubs_at_configure(
 )
 configure_runtime_api_weak_real_sources(
     tiny
+    ${TOP_DIR}/src/runtime/api/api_c_device.cc
     ${TOP_DIR}/src/runtime/api/api_c_host_memory.cc
     ${TOP_DIR}/src/runtime/api/api_c_rt_config.cc
 )
@@ -331,6 +332,7 @@ set(runtimeut_common_src_stream_list
     ${TOP_DIR}/src/runtime/core/src/stream/stream_sqcq_manage.cc
     ${TOP_DIR}/src/runtime/core/src/stream/engine_stream_observer.cc
     ${TOP_DIR}/src/runtime/core/src/stream/stream.cc
+    ${TOP_DIR}/src/runtime/core/src/stream/stream_sync_blocking.cc
     ${TOP_DIR}/src/runtime/feature/launch_blocking/stream_launch_blocking.cc
     ${TOP_DIR}/src/runtime/core/src/stream/ctrl_stream.cc
     ${TOP_DIR}/src/runtime/core/src/stream/coprocessor_stream.cc

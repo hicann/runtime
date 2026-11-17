@@ -151,6 +151,10 @@ MockFunctionTest& MockFunctionTest::aclStubInstance()
 void MockFunctionTest::ResetToDefaultMock()
 {
     // delegates the default actions of the RTS methods to aclStub
+    ON_CALL(*this, rtSetDeviceFlags).WillByDefault([this](uint32_t flags) { return aclStub::rtSetDeviceFlags(flags); });
+    ON_CALL(*this, rtGetDeviceFlags).WillByDefault([this](uint32_t* flags) {
+        return aclStub::rtGetDeviceFlags(flags);
+    });
     ON_CALL(*this, rtDvppMallocWithFlag)
         .WillByDefault([this](void** devPtr, uint64_t size, uint32_t flag, uint16_t moduleId) {
             return aclStub::rtDvppMallocWithFlag(devPtr, size, flag, moduleId);

@@ -1829,9 +1829,10 @@ rtError_t ApiDecorator::LaunchDqsTask(Stream* const stm, const rtDqsTaskCfg_t* c
     return impl_->LaunchDqsTask(stm, taskCfg);
 }
 
-rtError_t ApiDecorator::LaunchHostFunc(Stream* const stm, const rtCallback_t callBackFunc, void* const fnData)
+rtError_t ApiDecorator::LaunchHostFunc(
+    Stream* const stm, const rtCallback_t callBackFunc, void* const fnData, const bool isBlock)
 {
-    return impl_->LaunchHostFunc(stm, callBackFunc, fnData);
+    return impl_->LaunchHostFunc(stm, callBackFunc, fnData, isBlock);
 }
 
 rtError_t ApiDecorator::LaunchHostFuncV2(Stream* const stm, const rtHostCpuFunc callBackFunc, void* const fnData)
@@ -1929,5 +1930,8 @@ rtError_t ApiDecorator::TaskGetType(rtTask_t task, rtTaskType* type) { return im
 rtError_t ApiDecorator::TaskGetSeqId(rtTask_t task, uint32_t* id) { return impl_->TaskGetSeqId(task, id); }
 
 rtError_t ApiDecorator::ModelTaskDisable(rtTask_t task) { return impl_->ModelTaskDisable(task); }
+rtError_t ApiDecorator::SetDeviceFlags(const uint32_t flags) { return impl_->SetDeviceFlags(flags); }
+
+rtError_t ApiDecorator::GetDeviceFlags(uint32_t* const flags) { return impl_->GetDeviceFlags(flags); }
 } // namespace runtime
 } // namespace cce

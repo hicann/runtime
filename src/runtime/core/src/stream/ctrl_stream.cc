@@ -138,8 +138,9 @@ rtError_t CtrlStream::SynchronizeInternal(const bool isNeedWaitSyncCq, int32_t t
     return RT_ERROR_NONE;
 }
 
-rtError_t CtrlStream::Synchronize(const bool isNeedWaitSyncCq, int32_t timeout)
+rtError_t CtrlStream::Synchronize(const bool isNeedWaitSyncCq, int32_t timeout, uint32_t mode)
 {
+    UNUSED(mode);
     return SynchronizeInternal(isNeedWaitSyncCq, timeout);
 }
 

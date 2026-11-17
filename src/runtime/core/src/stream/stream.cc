@@ -2067,22 +2067,31 @@ bool Stream::SynchronizeDelayTime(const uint16_t finishedId, const uint16_t task
     return false;
 }
 
-rtError_t Stream::SynchronizeExecutedTask(const uint32_t taskId, const mmTimespec& beginTime, int32_t timeout)
+rtError_t Stream::SyncWaitPolling(const uint32_t taskId, const mmTimespec& beginTime, int32_t timeout, uint32_t mode)
 {
     uint16_t sqHead = static_cast<uint16_t>(MAX_UINT16_NUM);
     rtError_t error = RT_ERROR_NONE;
-    const int32_t REPORT_TIME_UINT = 180 * 1000; // report timeout every 3 min.
-    int32_t reportTime = REPORT_TIME_UINT;
+    constexpr uint64_t STREAM_SYNC_REPORT_INTERVAL_MS = 180ULL * 1000ULL;
+    uint64_t reportTime = STREAM_SYNC_REPORT_INTERVAL_MS;
     constexpr int32_t FAST_SYNC_TIMES = 170;
     int32_t syncTimes = 0;
     const uint32_t posTail = GetTaskPosTail();
+    RT_LOG(
+        RT_LOG_DEBUG, "Begin sync polling, device_id=%u, stream_id=%d, task_id=%u, mode=%u, timeout=%dms.",
+        device_->Id_(), streamId_, taskId, mode, timeout);
     while (true) {
+        if (mode == RT_DEVICE_SCHEDULE_YIELD) {
+            (void)sched_yield();
+        }
+        if (mode != RT_DEVICE_SCHEDULE_AUTO) {
+            PauseInstruction();
+        }
         COND_PROC_RETURN_ERROR_MSG_INNER(
             (IsProcessTimeout(beginTime, timeout)), RT_ERROR_STREAM_SYNC_TIMEOUT, this->SetNeedSyncFlag(true);
             , "Stream synchronize timeout, device_id=%u, stream_id=%d, timeout=%dms.", device_->Id_(), streamId_,
             timeout);
-        if (IsProcessTimeout(beginTime, reportTime)) {
-            reportTime += REPORT_TIME_UINT;
+        if (GetTimeInterval(beginTime) >= reportTime) {
+            reportTime += STREAM_SYNC_REPORT_INTERVAL_MS;
             RT_LOG(
                 RT_LOG_EVENT,
                 "report three minutes timeout! stream_id=%d, sq_id=%u, task_id=%u, sqHead=%u, flip_num=%u, "
@@ -2112,14 +2121,26 @@ rtError_t Stream::SynchronizeExecutedTask(const uint32_t taskId, const mmTimespe
         error = GetFinishedTaskIdBySqHead(sqHead, finishedId);
         COND_PROC((error != RT_ERROR_NONE), return error);
         COND_PROC((sqHead == posTail), return RT_ERROR_NONE);
-        if ((syncTimes > FAST_SYNC_TIMES) && SynchronizeDelayTime(finishedId, taskId)) {
-            return RT_ERROR_NONE;
+        if (mode == RT_DEVICE_SCHEDULE_AUTO) {
+            if ((syncTimes > FAST_SYNC_TIMES) && SynchronizeDelayTime(finishedId, taskId)) {
+                return RT_ERROR_NONE;
+            }
+            syncTimes = syncTimes > FAST_SYNC_TIMES ? syncTimes : syncTimes + 1;
         }
-        syncTimes = syncTimes > FAST_SYNC_TIMES ? syncTimes : syncTimes + 1;
         COND_PROC((finishedId == MAX_UINT16_NUM), continue);
         if (IsTaskExcuted(finishedId, taskId)) {
             return RT_ERROR_NONE;
         }
+    }
+}
+
+rtError_t Stream::SynchronizeExecutedTask(
+    const uint32_t taskId, const mmTimespec& beginTime, int32_t timeout, uint32_t mode)
+{
+    if (mode == RT_DEVICE_SCHEDULE_BLOCKING_SYNC) {
+        return SynchronizeBlocking(timeout);
+    } else {
+        return SyncWaitPolling(taskId, beginTime, timeout, mode);
     }
 }
 
@@ -2149,25 +2170,30 @@ rtError_t Stream::WaitConcernedTaskRecycled(const uint16_t taskId, const mmTimes
         if (tryCount % perSchedYield == 0) {
             std::this_thread::yield();
         }
+        PauseInstruction();
     }
 }
 
-rtError_t Stream::SynchronizeImpl(const uint32_t syncTaskId, const uint16_t concernedTaskId, int32_t timeout)
+rtError_t Stream::SynchronizeImpl(
+    const uint32_t syncTaskId, const uint16_t concernedTaskId, int32_t timeout, uint32_t mode)
 {
-    rtError_t error = RT_ERROR_NONE;
     const mmTimespec beginTime = mmGetTickCount();
-    error = SynchronizeExecutedTask(syncTaskId, beginTime, timeout);
-    COND_RETURN_ERROR((error != RT_ERROR_NONE), error, "failed, stream_id=%d, error=0x%x", Id_(), error);
+    mode = ResolveSyncScheduleMode(mode);
+    rtError_t error = SynchronizeExecutedTask(syncTaskId, beginTime, timeout, mode);
+    COND_RETURN_ERROR(
+        error != RT_ERROR_NONE, error, "Synchronize executed task failed, stream_id=%d, retCode=%#x.", Id_(), error);
     StreamSyncFinishReport();
     if (concernedTaskId == MAX_UINT16_NUM) {
         device_->WakeUpRecycleThread();
         RT_LOG(
             RT_LOG_INFO, "device_id=%d, stream_id=%d, task_id=%u has been completed, no concerned cqe.", device_->Id_(),
             streamId_, syncTaskId);
-        return error;
+        return RT_ERROR_NONE;
     }
     error = WaitConcernedTaskRecycled(concernedTaskId, beginTime, timeout);
-    COND_RETURN_ERROR((error != RT_ERROR_NONE), error, "failed, stream_id=%d, error=0x%x", Id_(), error);
+    COND_RETURN_ERROR(
+        error != RT_ERROR_NONE, error, "Wait for concerned task recycling failed, stream_id=%d, retCode=%#x.", Id_(),
+        error);
     RT_LOG(
         RT_LOG_INFO,
         "device_id=%d, stream_id=%d, task_id=%u has been completed, concerned task_id=%u has been recycled.",
@@ -2175,7 +2201,21 @@ rtError_t Stream::SynchronizeImpl(const uint32_t syncTaskId, const uint16_t conc
     return error;
 }
 
-rtError_t Stream::Synchronize(const bool isNeedWaitSyncCq, int32_t timeout)
+uint32_t Stream::ResolveSyncScheduleMode(const uint32_t mode) const
+{
+    if ((mode == RT_DEVICE_SCHEDULE_AUTO) || (context_ == nullptr) || GetBindFlag() || !IsSeparateSendAndRecycle()) {
+        RT_LOG(RT_LOG_INFO, "Stream synchronization uses AUTO mode, stream_id=%d, requested_mode=%u.", Id_(), mode);
+        return RT_DEVICE_SCHEDULE_AUTO;
+    }
+    if ((mode == RT_DEVICE_SCHEDULE_BLOCKING_SYNC) && (GetSubscribeFlag() == StreamSubscribeFlag::SUBSCRIBE_USER)) {
+        RT_LOG(
+            RT_LOG_INFO, "Stream with user subscription uses AUTO mode, stream_id=%d, requested_mode=%u.", Id_(), mode);
+        return RT_DEVICE_SCHEDULE_AUTO;
+    }
+    return mode;
+}
+
+rtError_t Stream::Synchronize(const bool isNeedWaitSyncCq, int32_t timeout, uint32_t mode)
 {
     rtError_t error = RT_ERROR_NONE;
     if (device_->IsStarsPlatform()) {
@@ -2183,7 +2223,7 @@ rtError_t Stream::Synchronize(const bool isNeedWaitSyncCq, int32_t timeout)
             error = StarsWaitForTask(lastTaskId_, isNeedWaitSyncCq, timeout);
         } else {
             if (!IsSyncFinished()) {
-                error = SynchronizeImpl(lastTaskId_, latestConcernedTaskId.Value(), timeout);
+                error = SynchronizeImpl(lastTaskId_, latestConcernedTaskId.Value(), timeout, mode);
             }
         }
         if (context_ != nullptr) {

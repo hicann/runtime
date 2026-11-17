@@ -3692,7 +3692,7 @@ TEST_F(StreamTest, rtsLaunchHostFunc00)
     ASSERT_NE(api, nullptr);
     MOCKER_CPP_VIRTUAL(api, &Api::LaunchHostFunc)
         .stubs()
-        .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), eq(true))
         .will(returnValue(RT_ERROR_NONE));
 
     error = rtsLaunchHostFunc(stream, ApiTest_Stream_Cb, NULL);

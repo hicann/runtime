@@ -187,7 +187,6 @@ TEST_F(RtOthersApiTest, capture_api_37)
     rtModel_t captureMdl;
     rtCallback_t stub_func = (rtCallback_t)0x12345;
 
-    MOCKER_CPP(&Context::CreateContextCallBackThread).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP(&CbSubscribe::GetThreadIdByStreamId).stubs().will(invoke(GetThreadIdByStreamIdStub));
     MOCKER_CPP(&DevInfoManage::IsSupportChipFeature).stubs().will(returnValue(true));
 

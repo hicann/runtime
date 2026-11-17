@@ -11,6 +11,7 @@
 #define CCE_RUNTIME_DEVICE_HPP
 
 #include <mutex>
+#include <list>
 #include <map>
 #include <vector>
 #include <memory>
@@ -37,6 +38,7 @@
 namespace cce {
 namespace runtime {
 
+struct SyncFuncArgs;
 class JettyPool;
 class JettyManager;
 class LogicSqManage;
@@ -162,6 +164,9 @@ class CtrlSQ;
 class Device : public NoCopy { // Interface
 public:
     ~Device() noexcept override { RT_LOG(RT_LOG_INFO, "device destructor."); }
+
+    void AppendSyncArgs(std::list<SyncFuncArgs*>& args);
+    void DestroySyncArgs(bool force = true);
 
     virtual rtError_t Init() = 0;
 
@@ -531,6 +536,8 @@ public:
     }
 
 private:
+    std::list<SyncFuncArgs*> syncArgs_;
+    std::mutex syncArgsMutex_;
     bool isPageFault_{false};
     bool isDeviceRelease_{false};
     bool isDoingRecycling_{false};

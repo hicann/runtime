@@ -3050,7 +3050,7 @@ TEST_F(CloudV2CaptureModelTest, CreateNotifySetupNoResource)
     Context* ctx = rtInstance->CurrentContext();
     ASSERT_NE(ctx, nullptr);
     Notify* notify = nullptr;
-    MOCKER_CPP(&Notify::Setup).stubs().will(returnValue(RT_ERROR_DRV_NO_RESOURCES));
+    MOCKER_CPP(&Notify::Setup).expects(once()).will(returnValue(RT_ERROR_DRV_NO_RESOURCES));
 
     EXPECT_EQ(ctx->CreateNotify(&notify, RT_NOTIFY_DEFAULT), RT_ERROR_DRV_NO_RESOURCES);
     EXPECT_EQ(notify, nullptr);

@@ -336,6 +336,7 @@ rtError_t ContextManage::DeviceClean(const int32_t devId)
     if (dev != nullptr) {
         error = dev->ProcCleanRingbuffer();
         ERROR_RETURN(error, "Failed to clean device ring buffer, retCode=%#x.", error);
+        dev->DestroySyncArgs(false);
         dev->ProcClearFastRingBuffer();
         dev->SetDeviceStatus(RT_ERROR_NONE);
         dev->SetHasTaskError(false);

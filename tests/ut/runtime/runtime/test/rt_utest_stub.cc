@@ -92,6 +92,17 @@ protected:
     virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
+TEST_F(TinyStubTest, device_flags_are_unsupported)
+{
+    for (const uint32_t mode : {0U, 1U, 2U, 4U, 3U, UINT32_MAX}) {
+        EXPECT_EQ(rtSetDeviceFlags(mode), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    }
+    uint32_t flags = UINT32_MAX;
+    EXPECT_EQ(rtGetDeviceFlags(&flags), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(flags, UINT32_MAX);
+    EXPECT_EQ(rtGetDeviceFlags(nullptr), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+}
+
 TEST_F(TinyStubTest, hccl_model_stream_public_apis_preserve_outputs_on_invalid_arguments)
 {
     uint32_t count = 17U;

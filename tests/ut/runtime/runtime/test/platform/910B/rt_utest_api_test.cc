@@ -2459,8 +2459,28 @@ TEST_F(NewCloudV2ApiTest, rtDeviceTaskAbort_05)
     MOCKER_CPP(&StreamSqCqManage::UpdateStreamSqCq).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(ContextManage::IsSupportDeviceAbort).stubs().will(returnValue(true));
 
+    Device* const device = Runtime::Instance()->CurrentContext()->Device_();
+    const size_t failedBefore = device->syncArgs_.size();
+    SyncFuncArgs* completedArgs = nullptr;
+    error = CreateSyncFuncArgs(completedArgs);
+    ASSERT_NE(completedArgs, nullptr);
+    SyncFuncArgs* pendingArgs = nullptr;
+    error = CreateSyncFuncArgs(pendingArgs);
+    ASSERT_NE(pendingArgs, nullptr);
+    completedArgs->currentCnt = 1U;
+    std::list<SyncFuncArgs*> failedArgs{completedArgs, pendingArgs};
+    device->AppendSyncArgs(failedArgs);
+    MOCKER(DestroySyncFuncArgs).expects(once()).with(eq(completedArgs));
+
     error = rtDeviceTaskAbort(devId, 1000);
     EXPECT_EQ(error, DRV_ERROR_NONE);
+    EXPECT_EQ(device->syncArgs_.size(), failedBefore + 1U);
+    EXPECT_EQ(device->syncArgs_.back(), pendingArgs);
+    EXPECT_EQ(pendingArgs->currentCnt, 0U);
+    GlobalMockObject::verify();
+    DestroySyncFuncArgs(completedArgs);
+    // No report was published for these test-owned arguments.
+    device->DestroySyncArgs();
 }
 
 TEST_F(NewCloudV2ApiTest, RT_SetOpExecuteWithMs_8)

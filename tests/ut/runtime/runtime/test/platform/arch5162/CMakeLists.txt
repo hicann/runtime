@@ -174,6 +174,7 @@ set(runtimeut_common_src_stream_list
     ${TOP_DIR}/src/runtime/core/src/stream/dvpp_grp.cc
     ${TOP_DIR}/src/runtime/core/src/stream/engine_stream_observer.cc
     ${TOP_DIR}/src/runtime/core/src/stream/stream.cc
+    ${TOP_DIR}/src/runtime/core/src/stream/arch5162/stream_sync_blocking.cc
     ${TOP_DIR}/src/runtime/feature/launch_blocking/stream_launch_blocking.cc
     ${TOP_DIR}/src/runtime/core/src/stream/stream_factory.cc
     ${TOP_DIR}/src/runtime/core/src/stream/stream_sqcq_manage.cc

@@ -11,6 +11,7 @@
 #define __CCE_RUNTIME_STREAM_HPP__
 
 #include <atomic>
+#include <pthread.h>
 #include <list>
 #include <vector>
 #include <mutex>
@@ -19,6 +20,7 @@
 #include <fstream>
 #include <memory>
 #include <sstream>
+#include "runtime/dev.h"
 #include "base.hpp"
 #include "osal.hpp"
 #include "driver/ascend_hal.h"
@@ -36,6 +38,16 @@
 
 namespace cce {
 namespace runtime {
+// Sync callback parameters: ownership remains with the waiter, or Device after failure.
+struct SyncFuncArgs {
+    pthread_cond_t cond;
+    pthread_mutex_t mutex;
+    uint32_t currentCnt;
+};
+
+rtError_t CreateSyncFuncArgs(SyncFuncArgs*& args);
+void DestroySyncFuncArgs(SyncFuncArgs* args);
+
 constexpr uint64_t ABORT_STREAM_TIMEOUT = (60UL * 1000 * 1000); // us
 constexpr uint32_t DEBUG_JSON_PRINT_VERBOSE = 0x1U;
 constexpr uint32_t NOP_TASK_E2E_DURATION = 1U;
@@ -293,7 +305,10 @@ public:
 
     void StreamSyncFinishReport() const;
     // Block current host thread until all task ahead finish.
-    virtual rtError_t Synchronize(const bool isNeedWaitSyncCq = false, int32_t timeout = -1);
+    virtual rtError_t Synchronize(
+        const bool isNeedWaitSyncCq = false, int32_t timeout = -1, uint32_t mode = RT_DEVICE_SCHEDULE_AUTO);
+    rtError_t SynchronizeBlocking(int32_t timeout);
+    rtError_t CheckSyncStatus() const;
 
     // Query state of event
     rtError_t Query(void) const;
@@ -705,8 +720,13 @@ public:
     rtError_t StarsWaitForTask(const uint32_t taskId, const bool isNeedWaitSyncCq, int32_t timeout);
     virtual bool IsTaskExcuted(const uint32_t executeEndTaskid, const uint32_t taskId);
     virtual bool SynchronizeDelayTime(const uint16_t finishedId, const uint16_t taskId);
-    rtError_t SynchronizeImpl(const uint32_t syncTaskId, const uint16_t concernedTaskId, int32_t timeout = -1);
-    virtual rtError_t SynchronizeExecutedTask(const uint32_t taskId, const mmTimespec& beginTime, int32_t timeout);
+    rtError_t SyncWaitPolling(const uint32_t taskId, const mmTimespec& beginTime, int32_t timeout, uint32_t mode);
+    rtError_t SynchronizeImpl(
+        const uint32_t syncTaskId, const uint16_t concernedTaskId, int32_t timeout = -1,
+        uint32_t mode = RT_DEVICE_SCHEDULE_AUTO);
+    uint32_t ResolveSyncScheduleMode(uint32_t mode) const;
+    virtual rtError_t SynchronizeExecutedTask(
+        const uint32_t taskId, const mmTimespec& beginTime, int32_t timeout, uint32_t mode = RT_DEVICE_SCHEDULE_AUTO);
     rtError_t WaitConcernedTaskRecycled(const uint16_t taskId, const mmTimespec& beginTime, int32_t timeout);
     virtual rtError_t GetFinishedTaskIdBySqHead(uint16_t& sqHead, uint32_t& finishedId);
     void* GetDvppRRTaskAddr(void);

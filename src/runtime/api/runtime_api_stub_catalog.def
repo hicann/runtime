@@ -2075,6 +2075,14 @@ RUNTIME_API(device, rtError_t, rtSetDevice,
     (int32_t devId),
     (devId), FEATURE_NOT_SUPPORT, EXPORT)
 
+RUNTIME_API(device, rtError_t, rtSetDeviceFlags,
+    (uint32_t flags),
+    (flags), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(device, rtError_t, rtGetDeviceFlags,
+    (uint32_t* flags),
+    (flags), FEATURE_NOT_SUPPORT, EXPORT)
+
 RUNTIME_API(device, rtError_t, rtSetDeviceWithFlags,
     (int32_t deviceId, uint64_t flags),
     (deviceId, flags), FEATURE_NOT_SUPPORT, EXPORT)

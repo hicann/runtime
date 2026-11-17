@@ -141,8 +141,9 @@ rtError_t LaunchCpuKernelStub(
     return RT_ERROR_NONE;
 }
 
-rtError_t StreamSynchronizeStub(Stream* stm, const bool isNeedWaitSyncCq, int32_t timeout)
+rtError_t StreamSynchronizeStub(Stream* stm, const bool isNeedWaitSyncCq, int32_t timeout, uint32_t mode)
 {
+    UNUSED(mode);
     UNUSED(stm);
     g_syncNeedWaitSyncCq = isNeedWaitSyncCq;
     g_syncTimeout = timeout;

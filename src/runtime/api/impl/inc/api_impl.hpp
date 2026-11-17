@@ -147,6 +147,8 @@ public:
     rtError_t StreamWaitEvent(
         Stream* const stm, Event* const evt, const uint32_t timeout,
         const uint32_t flag = RT_EVENT_WAIT_DEFAULT) override;
+    rtError_t SetDeviceFlags(const uint32_t flags) override;
+    rtError_t GetDeviceFlags(uint32_t* const flags) override;
     rtError_t StreamSynchronize(Stream* const stm, const int32_t timeout) override;
     rtError_t NonBlockingLaunchBegin(Stream* const stream, const uint64_t flag) override;
     rtError_t NonBlockingLaunchEnd(Stream* const stream, const uint64_t flag) override;
@@ -534,7 +536,8 @@ public:
     rtError_t ProcessReport(const int32_t timeout, const bool noLog = false) override;
     rtError_t UnSubscribeReport(const uint64_t threadId, Stream* const stm) override;
     rtError_t GetRunMode(rtRunMode* const runMode) override;
-    rtError_t LaunchHostFunc(Stream* const stm, const rtCallback_t callBackFunc, void* const fnData) override;
+    rtError_t LaunchHostFunc(
+        Stream* const stm, const rtCallback_t callBackFunc, void* const fnData, bool isBlock = true) override;
     rtError_t LaunchHostFuncV2(Stream* const stm, const rtHostCpuFunc callBackFunc, void* const fnData) override;
     // stream label func
     rtError_t LabelSwitchByIndex(
@@ -690,7 +693,7 @@ public:
     rtError_t LaunchDqsTask(Stream* const stm, const rtDqsTaskCfg_t* const taskCfg) override;
     virtual rtError_t StarsLaunchSubscribeProc(
         Stream* const stm, const rtCallback_t callBackFunc, void* const fnData, const bool needSubscribe,
-        const uint64_t threadId);
+        const uint64_t threadId, bool isBlock = true);
     rtError_t StarsLaunchEventProc(
         Stream* const stm, const rtCallback_t callBackFunc, void* const fnData, const uint64_t threadId);
 

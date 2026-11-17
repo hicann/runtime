@@ -1040,14 +1040,14 @@ rtError_t Context::TearDownStream(Stream* stm, bool flag) const
 }
 
 rtError_t Context::SyncStreamsWithTimeout(
-    const std::list<Stream*>& streams, int32_t timeout, const mmTimespec start) const
+    const std::list<Stream*>& streams, int32_t timeout, const mmTimespec start, uint32_t mode) const
 {
     rtError_t error;
     rtError_t firstError = RT_ERROR_NONE;
     int32_t remainTime = timeout;
     for (const auto& syncStream : streams) {
         COND_PROC(syncStream->IsSyncFinished() && (GetCtxMode() == ABORT_ON_FAILURE), continue;);
-        error = syncStream->Synchronize(false, remainTime);
+        error = syncStream->Synchronize(false, remainTime, mode);
         if (IsProcessTimeout(start, timeout, &remainTime)) {
             uint16_t taskId = MAX_UINT16_NUM;
             const char_t* taskTypeName = "UNKNOWN";
@@ -1071,7 +1071,7 @@ rtError_t Context::SyncStreamsWithTimeout(
         }
     }
     if (!defaultStream_->IsSyncFinished()) {
-        error = defaultStream_->Synchronize(false, remainTime);
+        error = defaultStream_->Synchronize(false, remainTime, mode);
         if (unlikely((error != RT_ERROR_NONE) && (firstError == RT_ERROR_NONE))) {
             firstError = error;
             if (error == RT_ERROR_STREAM_SYNC_TIMEOUT) {
@@ -1192,6 +1192,8 @@ rtError_t Context::SyncAllStreamToGetError()
 rtError_t Context::Synchronize(int32_t timeout)
 {
     const mmTimespec startTime = mmGetTickCount();
+    // Keep one scheduling mode for all streams in this device synchronization.
+    const uint32_t mode = GetDeviceFlags();
     const Stream* defaultStream = defaultStream_;
     NULL_PTR_RETURN_MSG(defaultStream, RT_ERROR_CONTEXT_DEFAULT_STREAM_NULL);
 
@@ -1216,7 +1218,7 @@ rtError_t Context::Synchronize(int32_t timeout)
     const rtError_t error = CheckStatus();
     COND_PROC_RETURN_ERROR(error != RT_ERROR_NONE, error, PopContextErrMsg();
                            , "context is aborted, status=%#x.", static_cast<uint32_t>(error));
-    return SyncStreamsWithTimeout(syncStreams, timeout, startTime);
+    return SyncStreamsWithTimeout(syncStreams, timeout, startTime, mode);
 }
 
 rtError_t Context::StreamCreate(

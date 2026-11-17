@@ -1270,6 +1270,68 @@ TEST_F(DavidStreamTest, SynchronizeDelayTime_WrapAround_IsTaskExcutedFalse)
     taskResMng->taskResATail_.Set(origTail);
 }
 
+namespace {
+uint16_t davidSyncHead = 0U;
+uint32_t davidSyncQueries = 0U;
+TaskResManageDavid* davidSyncTaskRes = nullptr;
+
+rtError_t CompleteDavidSyncQuery(Stream*, uint16_t& sqHead, uint32_t& finishedId)
+{
+    if ((davidSyncQueries++ % 2U) == 0U) {
+        sqHead = davidSyncHead;
+        finishedId = MAX_UINT16_NUM;
+    } else {
+        davidSyncTaskRes->taskResAHead_.Set(1U);
+        sqHead = 1U;
+        finishedId = 0U;
+    }
+    return RT_ERROR_NONE;
+}
+
+} // namespace
+
+TEST_F(DavidStreamTest, SynchronizeExecutedTaskPollingModesContinueAcrossResourceWrap)
+{
+    DavidStream* const stream = static_cast<DavidStream*>(stream_);
+    Stream* const baseStream = stream;
+    TaskResManageDavid* const taskRes = static_cast<TaskResManageDavid*>(stream->taskResMang_);
+    ASSERT_NE(taskRes, nullptr);
+    const uint16_t previousPoolNum = taskRes->taskPoolNum_;
+    uint16_t previousHead = 0U;
+    uint16_t previousTail = 0U;
+    taskRes->GetHeadTail(previousHead, previousTail);
+    const uint16_t previousExecuteEnd = stream->GetExecuteEndTaskId();
+    ScopeGuard restoreState([=]() {
+        davidSyncTaskRes = nullptr;
+        taskRes->taskPoolNum_ = previousPoolNum;
+        taskRes->taskResAHead_.Set(previousHead);
+        taskRes->taskResATail_.Set(previousTail);
+        stream->SetExecuteEndTaskId(previousExecuteEnd);
+    });
+    taskRes->taskPoolNum_ = 2049U;
+    taskRes->taskResATail_.Set(5U);
+    davidSyncHead = 2048U;
+    davidSyncQueries = 0U;
+    davidSyncTaskRes = taskRes;
+    stream->SetExecuteEndTaskId(MAX_UINT16_NUM);
+    MOCKER_CPP_VIRTUAL(baseStream, &Stream::GetFinishedTaskIdBySqHead)
+        .expects(exactly(6))
+        .will(invoke(CompleteDavidSyncQuery));
+
+    for (uint32_t mode : {RT_DEVICE_SCHEDULE_AUTO, RT_DEVICE_SCHEDULE_SPIN, RT_DEVICE_SCHEDULE_YIELD}) {
+        taskRes->taskResAHead_.Set(davidSyncHead);
+        EXPECT_EQ(stream->SynchronizeExecutedTask(0U, mmGetTickCount(), 100, mode), RT_ERROR_NONE);
+        EXPECT_EQ(davidSyncQueries % 2U, 0U);
+    }
+    GlobalMockObject::verify();
+    davidSyncTaskRes = nullptr;
+    taskRes->taskPoolNum_ = previousPoolNum;
+    taskRes->taskResAHead_.Set(previousHead);
+    taskRes->taskResATail_.Set(previousTail);
+    stream->SetExecuteEndTaskId(previousExecuteEnd);
+    restoreState.ReleaseGuard();
+}
+
 TEST_F(DavidStreamTest, ExpandStreamRecycleModelBindStreamAllTask)
 {
     DavidStream* stream = (DavidStream*)stream_;

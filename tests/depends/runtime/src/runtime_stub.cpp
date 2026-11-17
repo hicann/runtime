@@ -4590,3 +4590,18 @@ rtError_t rtMemMapSetLink(rtDrvMemHandle handle, rtMemLinkType adviceLink)
 {
     return MockFunctionTest::aclStubInstance().rtMemMapSetLink(handle, adviceLink);
 }
+
+rtError_t aclStub::rtSetDeviceFlags(uint32_t flags) { return RT_ERROR_NONE; }
+
+rtError_t aclStub::rtGetDeviceFlags(uint32_t* flags)
+{
+    if (flags == nullptr) {
+        return ACL_ERROR_RT_PARAM_INVALID;
+    }
+    *flags = RT_DEVICE_SCHEDULE_AUTO;
+    return RT_ERROR_NONE;
+}
+
+rtError_t rtSetDeviceFlags(uint32_t flags) { return MockFunctionTest::aclStubInstance().rtSetDeviceFlags(flags); }
+
+rtError_t rtGetDeviceFlags(uint32_t* flags) { return MockFunctionTest::aclStubInstance().rtGetDeviceFlags(flags); }

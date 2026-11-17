@@ -2393,7 +2393,7 @@ rtError_t ApiImplDavid::DebugReadAICore(rtDebugMemoryParam_t* const param)
 
 rtError_t ApiImplDavid::StarsLaunchSubscribeProc(
     Stream* const stm, const rtCallback_t callBackFunc, void* const fnData, const bool needSubscribe,
-    const uint64_t threadId)
+    const uint64_t threadId, const bool isBlock)
 {
     rtError_t ret = RT_ERROR_NONE;
     Runtime* const rtInstance = Runtime::Instance();
@@ -2404,13 +2404,18 @@ rtError_t ApiImplDavid::StarsLaunchSubscribeProc(
         ret = rtInstance->SubscribeCallback(threadId, stm, static_cast<void*>(curNotify));
         if (ret != RT_ERROR_NONE) {
             (void)NotifyDestroy(curNotify);
+            return ret;
         }
     }
 
+    if (!isBlock) {
+        return CallbackLaunchForDavidNoBlock(callBackFunc, fnData, stm, threadId);
+    }
     return CallbackLaunchForDavidWithBlock(callBackFunc, fnData, stm, threadId);
 }
 
-rtError_t ApiImplDavid::LaunchHostFunc(Stream* const stm, const rtCallback_t callBackFunc, void* const fnData)
+rtError_t ApiImplDavid::LaunchHostFunc(
+    Stream* const stm, const rtCallback_t callBackFunc, void* const fnData, const bool isBlock)
 {
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
@@ -2436,7 +2441,8 @@ rtError_t ApiImplDavid::LaunchHostFunc(Stream* const stm, const rtCallback_t cal
     // if new stream should subscribe in map first; else launchcallback Directly
     const bool isNeedSubscribe = rtInstance->JudgeNeedSubscribe(curCtx->GetCallBackThreadId(), curStm, dev->Id_());
 
-    return StarsLaunchSubscribeProc(curStm, callBackFunc, fnData, isNeedSubscribe, curCtx->GetCallBackThreadId());
+    return StarsLaunchSubscribeProc(
+        curStm, callBackFunc, fnData, isNeedSubscribe, curCtx->GetCallBackThreadId(), isBlock);
 }
 
 rtError_t ApiImplDavid::MemWriteValue(

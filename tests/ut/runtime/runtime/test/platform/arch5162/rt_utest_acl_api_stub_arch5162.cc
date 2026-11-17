@@ -8,11 +8,14 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include <cstdint>
+#include <initializer_list>
 #include <type_traits>
 
 #include "aclrt/set_device_vxx.h"
 #include "acl_rt_impl.h"
 #include "gtest/gtest.h"
+#include "rt_inner_device.h"
 
 namespace {
 template <aclError expectedValue>
@@ -95,6 +98,22 @@ void VerifyStub(VoidNoopPolicy, void (*impl)(Args...), void (*api)(Args...))
     TEST(Arch5162AclEntryStubTest, name) { VerifyStub(ACL_STUB_POLICY(policy){}, &name##Impl, &name); }
 
 #include <arch5162_unsupported_acl_api.def>
+
+TEST(Arch5162AclEntryStubTest, DeviceFlagsPreserveOutput)
+{
+    for (const uint32_t mode : {0U, 1U, 2U, 4U, 3U, UINT32_MAX}) {
+        EXPECT_EQ(aclrtSetDeviceFlags(mode), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+        EXPECT_EQ(aclrtSetDeviceFlagsImpl(mode), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    }
+    uint32_t flags = UINT32_MAX;
+    EXPECT_EQ(aclrtGetDeviceFlags(&flags), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(flags, UINT32_MAX);
+    EXPECT_EQ(aclrtGetDeviceFlagsImpl(&flags), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(flags, UINT32_MAX);
+    EXPECT_EQ(aclrtGetDeviceFlags(nullptr), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(rtGetDeviceFlags(&flags), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(flags, UINT32_MAX);
+}
 
 #undef ACL_API_STUB
 #undef ACL_API_REAL_PROVIDER_COUNT

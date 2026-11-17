@@ -69,6 +69,8 @@
     _(aclError, aclrtGetSysParamOpt, (aclSysParamOpt opt, int64_t * value), (opt, value))                              \
     _(aclError, aclrtSetSysParamOpt, (aclSysParamOpt opt, int64_t value), (opt, value))                                \
     _(aclError, aclrtSetDevice, (int32_t deviceId), (deviceId))                                                        \
+    _(aclError, aclrtSetDeviceFlags, (uint32_t flags), (flags))                                                        \
+    _(aclError, aclrtGetDeviceFlags, (uint32_t * flags), (flags))                                                      \
     _(aclError, aclrtResetDevice, (int32_t deviceId), (deviceId))                                                      \
     _(aclError, aclrtResetDeviceForce, (int32_t deviceId), (deviceId))                                                 \
     _(aclError, aclrtGetDevice, (int32_t * deviceId), (deviceId))                                                      \

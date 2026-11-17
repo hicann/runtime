@@ -1266,10 +1266,11 @@ rtError_t ApiProfileDecorator::MemcpyBatchAsync(
     return error;
 }
 
-rtError_t ApiProfileDecorator::LaunchHostFunc(Stream* const stm, const rtCallback_t callBackFunc, void* const fnData)
+rtError_t ApiProfileDecorator::LaunchHostFunc(
+    Stream* const stm, const rtCallback_t callBackFunc, void* const fnData, const bool isBlock)
 {
     CallApiBegin(RT_PROF_API_LAUNCH_HOST_CALLBACK);
-    const rtError_t error = impl_->LaunchHostFunc(stm, callBackFunc, fnData);
+    const rtError_t error = impl_->LaunchHostFunc(stm, callBackFunc, fnData, isBlock);
     CallApiEnd(error);
     return error;
 }

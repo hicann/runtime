@@ -61,6 +61,28 @@ VISIBILITY_DEFAULT
 rtError_t rtsSetDevice(int32_t devId) { return rtSetDevice(devId); }
 
 VISIBILITY_DEFAULT
+rtError_t rtSetDeviceFlags(uint32_t flags)
+{
+    Api* const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    const rtError_t error = apiInstance->SetDeviceFlags(flags);
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtGetDeviceFlags(uint32_t* flags)
+{
+    Api* const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    const rtError_t error = apiInstance->GetDeviceFlags(flags);
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
 rtError_t rtSetDevice(int32_t devId)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();

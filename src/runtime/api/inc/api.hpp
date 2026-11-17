@@ -232,6 +232,9 @@ public:
     virtual rtError_t FreeKernelBin(char_t* const buffer) = 0;
     virtual rtError_t FusionLaunch(void* const fusionInfo, Stream* const stm, rtFusionArgsEx_t* argsInfo) = 0;
 
+    virtual rtError_t SetDeviceFlags(const uint32_t flags) = 0;
+    virtual rtError_t GetDeviceFlags(uint32_t* const flags) = 0;
+
     // stream API
     virtual rtError_t StreamCreate(Stream** const stm, const int32_t priority, const uint32_t flags, DvppGrp* grp) = 0;
     virtual rtError_t StreamDestroy(Stream* const stm, bool flag = true) = 0;
@@ -778,7 +781,8 @@ public:
 
     virtual rtError_t CacheLastTaskExtendInfo(const char* const extendInfoPtr, const size_t infoSize) = 0;
 
-    virtual rtError_t LaunchHostFunc(Stream* const stm, rtCallback_t const callBackFunc, void* const fnData) = 0;
+    virtual rtError_t LaunchHostFunc(
+        Stream* const stm, rtCallback_t const callBackFunc, void* const fnData, bool isBlock = true) = 0;
     virtual rtError_t LaunchHostFuncV2(Stream* const stm, rtHostCpuFunc const callBackFunc, void* const fnData) = 0;
 
     // event mode

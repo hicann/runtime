@@ -15,7 +15,8 @@
 #include "aicpu_timeout_control.h"
 
 rtError_t LaunchHostFuncNormalStub(
-    cce::runtime::ApiImpl* impl, Stream* const stm, const rtCallback_t callBackFunc, void* const fnData)
+    cce::runtime::ApiImpl* impl, Stream* const stm, const rtCallback_t callBackFunc, void* const fnData,
+    const bool isBlock)
 {
     if (callBackFunc == nullptr) {
         return RT_ERROR_FEATURE_NOT_SUPPORT;
@@ -25,7 +26,8 @@ rtError_t LaunchHostFuncNormalStub(
 }
 
 rtError_t LaunchHostFuncFailStub(
-    cce::runtime::ApiImpl* impl, Stream* const stm, const rtCallback_t callBackFunc, void* const fnData)
+    cce::runtime::ApiImpl* impl, Stream* const stm, const rtCallback_t callBackFunc, void* const fnData,
+    const bool isBlock)
 {
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }

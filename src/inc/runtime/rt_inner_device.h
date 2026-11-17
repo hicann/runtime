@@ -178,6 +178,25 @@ RTS_API rtError_t rtDeviceL2CacheFlush(void* rsv);
 
 /**
  * @ingroup dvrt_dev
+ * @brief Set the synchronization waiting mode of the current context
+ * @param [in] flags  synchronization waiting mode, must be RT_DEVICE_SCHEDULE_AUTO, RT_DEVICE_SCHEDULE_SPIN,
+ *                   RT_DEVICE_SCHEDULE_YIELD or RT_DEVICE_SCHEDULE_BLOCKING_SYNC.
+ * @return RT_ERROR_NONE for success
+ * @return Other values for failure
+ */
+RTS_API rtError_t rtSetDeviceFlags(uint32_t flags);
+
+/**
+ * @ingroup dvrt_dev
+ * @brief Get the synchronization waiting mode of the current context
+ * @param [out] flags  synchronization waiting mode, cannot be NULL
+ * @return RT_ERROR_NONE for success
+ * @return Other values for failure
+ */
+RTS_API rtError_t rtGetDeviceFlags(uint32_t* flags);
+
+/**
+ * @ingroup dvrt_dev
  * @brief get device confidential computing mode
  * @param [in] deviceId   device id
  * @param [out] mode   cc mode (0=off, 1=on, 2=devtools)

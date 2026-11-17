@@ -1624,7 +1624,8 @@ rtError_t ApiImpl::StreamSynchronize(Stream* const stm, const int32_t timeout)
     RT_LOG(RT_LOG_INFO, "stream_id=%d.", curStm->Id_());
     rtError_t errCode = curStm->CheckContextStatus();
     ERROR_RETURN(errCode, "context is aborted, status=%#x.", static_cast<uint32_t>(errCode));
-    errCode = curStm->Synchronize(false, timeout);
+    const uint32_t mode = curStm->Context_()->GetDeviceFlags();
+    errCode = curStm->Synchronize(false, timeout, mode);
     if (errCode == RT_ERROR_STREAM_SYNC_TIMEOUT) {
         (void)GetStreamTimeoutSnapshotMsg();
         uint16_t taskId = std::numeric_limits<uint16_t>::max();
@@ -6579,7 +6580,7 @@ rtError_t ApiImpl::StarsLaunchEventProc(
 
 rtError_t ApiImpl::StarsLaunchSubscribeProc(
     Stream* const stm, const rtCallback_t callBackFunc, void* const fnData, const bool needSubscribe,
-    const uint64_t threadId)
+    const uint64_t threadId, const bool isBlock)
 {
     rtError_t ret = RT_ERROR_NONE;
     Runtime* const rtInstance = Runtime::Instance();
@@ -6590,12 +6591,17 @@ rtError_t ApiImpl::StarsLaunchSubscribeProc(
         ret = rtInstance->SubscribeCallback(threadId, stm, static_cast<void*>(curEvent));
         if (ret != RT_ERROR_NONE) {
             (void)EventDestroy(curEvent);
+            return ret;
         }
+    }
+    if (!isBlock) {
+        return CallbackLaunchWithoutEvent(callBackFunc, fnData, stm, false);
     }
     return StarsLaunchEventProc(stm, callBackFunc, fnData, threadId);
 }
 
-rtError_t ApiImpl::LaunchHostFunc(Stream* const stm, const rtCallback_t callBackFunc, void* const fnData)
+rtError_t ApiImpl::LaunchHostFunc(
+    Stream* const stm, const rtCallback_t callBackFunc, void* const fnData, const bool isBlock)
 {
     rtError_t ret = RT_ERROR_NONE;
     Context* const curCtx = CurrentContext();
@@ -6622,13 +6628,14 @@ rtError_t ApiImpl::LaunchHostFunc(Stream* const stm, const rtCallback_t callBack
     // if new stream should subscribe in map first; else launchcallback Directly
     const bool isNeedSubscribe = rtInstance->JudgeNeedSubscribe(curCtx->GetCallBackThreadId(), curStm, dev->Id_());
     if (rtInstance->ChipIsHaveStars()) {
-        return StarsLaunchSubscribeProc(curStm, callBackFunc, fnData, isNeedSubscribe, curCtx->GetCallBackThreadId());
+        return StarsLaunchSubscribeProc(
+            curStm, callBackFunc, fnData, isNeedSubscribe, curCtx->GetCallBackThreadId(), isBlock);
     } else {
         if (isNeedSubscribe) {
             ret = rtInstance->SubscribeCallback(curCtx->GetCallBackThreadId(), curStm, nullptr);
             ERROR_RETURN(ret, "Call SubscribeCallback failed for callback, ret=%#x.", ret);
         }
-        return CallbackLaunchWithoutEvent(callBackFunc, fnData, curStm, true);
+        return CallbackLaunchWithoutEvent(callBackFunc, fnData, curStm, isBlock);
     }
 }
 
@@ -7209,6 +7216,28 @@ rtError_t ApiImpl::GetDeviceInfoByAttr(uint32_t deviceId, rtDevAttr attr, int64_
     }
 
     return GetDeviceInfoByAttrMisc(deviceId, attr, val);
+}
+
+rtError_t ApiImpl::SetDeviceFlags(const uint32_t flags)
+{
+    Context* const curCtx = CurrentContext(true);
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    Device* const dev = curCtx->Device_();
+    NULL_PTR_RETURN_MSG(dev, RT_ERROR_DEVICE_NULL);
+    COND_RETURN_WITH_NOLOG(!dev->IsStarsPlatform(), RT_ERROR_FEATURE_NOT_SUPPORT);
+    curCtx->SetDeviceFlags(flags);
+    return RT_ERROR_NONE;
+}
+
+rtError_t ApiImpl::GetDeviceFlags(uint32_t* const flags)
+{
+    Context* const curCtx = CurrentContext(true);
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    Device* const dev = curCtx->Device_();
+    NULL_PTR_RETURN_MSG(dev, RT_ERROR_DEVICE_NULL);
+    COND_RETURN_WITH_NOLOG(!dev->IsStarsPlatform(), RT_ERROR_FEATURE_NOT_SUPPORT);
+    *flags = curCtx->GetDeviceFlags();
+    return RT_ERROR_NONE;
 }
 } // namespace runtime
 } // namespace cce

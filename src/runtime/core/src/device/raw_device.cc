@@ -160,6 +160,7 @@ RawDevice::~RawDevice() noexcept
     }
 
     ReleaseOwnedObjectsOnDestroy();
+    DestroySyncArgs();
     ReleaseDriverResourcesOnDestroy();
     dCacheLockFlag_ = false;
     exceptionRegMap_.clear();

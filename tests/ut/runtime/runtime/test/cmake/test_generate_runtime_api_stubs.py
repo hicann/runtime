@@ -146,6 +146,21 @@ RUNTIME_API_STUB(rtNoop)
             self.assertIn("size_t* size", source)
             self.assertIn("return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;", source)
 
+    def test_device_flags_have_exported_unsupported_stubs(self):
+        _, catalog = GENERATOR.parse_catalog(
+            REPO_ROOT / "src/runtime/api/runtime_api_stub_catalog.def"
+        )
+        for product in ("tiny", "arch5162"):
+            _, names = GENERATOR.parse_product_def(
+                REPO_ROOT / f"src/runtime/cmake/{product}_unsupported_runtime_api.def"
+            )
+            for name in ("rtSetDeviceFlags", "rtGetDeviceFlags"):
+                with self.subTest(product=product, api=name):
+                    self.assertIn(name, names)
+                    self.assertIn(name, catalog)
+                    self.assertEqual(catalog[name].policy, "FEATURE_NOT_SUPPORT")
+                    self.assertEqual(catalog[name].visibility, "EXPORT")
+
     def test_product_stubs_do_not_report_errmsg(self):
         catalog_path = REPO_ROOT / "src/runtime/api/runtime_api_stub_catalog.def"
         _, catalog = GENERATOR.parse_catalog(catalog_path)
@@ -172,12 +187,12 @@ RUNTIME_API_STUB(rtNoop)
         self.assertEqual(catalog_version, product_version)
         self.assertFalse(set(names) - set(catalog))
         self.assertEqual(names, sorted(names))
-        self.assertEqual(len(catalog), 799)
-        self.assertEqual(len(names), 667)
+        self.assertEqual(len(catalog), 801)
+        self.assertEqual(len(names), 669)
         self.assertEqual(len(set(catalog) - set(names)), 132)
         self.assertEqual(
             sum(catalog[name].policy == "FEATURE_NOT_SUPPORT" for name in names),
-            663,
+            665,
         )
         self.assertEqual(
             sum(catalog[name].policy == "SUCCESS_NOOP" for name in names), 3

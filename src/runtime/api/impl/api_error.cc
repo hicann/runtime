@@ -6514,7 +6514,8 @@ rtError_t ApiErrorDecorator::GetMemUsageInfo(
     return impl_->GetMemUsageInfo(realDeviceId, memUsageInfo, inputNum, outputNum);
 }
 
-rtError_t ApiErrorDecorator::LaunchHostFunc(Stream* const stm, const rtCallback_t callBackFunc, void* const fnData)
+rtError_t ApiErrorDecorator::LaunchHostFunc(
+    Stream* const stm, const rtCallback_t callBackFunc, void* const fnData, const bool isBlock)
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         callBackFunc, RT_ERROR_INVALID_VALUE, "Adding a host callback function to the stream task queue");
@@ -6523,7 +6524,7 @@ rtError_t ApiErrorDecorator::LaunchHostFunc(Stream* const stm, const rtCallback_
         ErrorCode::EE1016, "Adding a host callback function to the stream task queue",
         RtFmtMsg(
             "The stream (stream_id=%d) is in the host callback process and cannot call rtsLaunchHostFunc", stm->Id_()));
-    return impl_->LaunchHostFunc(stm, callBackFunc, fnData);
+    return impl_->LaunchHostFunc(stm, callBackFunc, fnData, isBlock);
 }
 
 rtError_t ApiErrorDecorator::LaunchHostFuncV2(Stream* const stm, const rtHostCpuFunc callBackFunc, void* const fnData)
@@ -6821,5 +6822,17 @@ rtError_t ApiErrorDecorator::GetDeviceInfoByAttr(uint32_t deviceId, rtDevAttr at
     return impl_->GetDeviceInfoByAttr(realDeviceId, attr, val);
 }
 
+rtError_t ApiErrorDecorator::SetDeviceFlags(const uint32_t flags)
+{
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        (flags != RT_DEVICE_SCHEDULE_AUTO) && (flags != RT_DEVICE_SCHEDULE_SPIN) &&
+            (flags != RT_DEVICE_SCHEDULE_YIELD) && (flags != RT_DEVICE_SCHEDULE_BLOCKING_SYNC),
+        RT_ERROR_INVALID_VALUE, "Setting the synchronization waiting mode", flags,
+        "DEVICE_SCHEDULE_AUTO(0), DEVICE_SCHEDULE_SPIN(1), DEVICE_SCHEDULE_YIELD(2) or "
+        "DEVICE_SCHEDULE_BLOCKING_SYNC(4)");
+    return impl_->SetDeviceFlags(flags);
+}
+
+rtError_t ApiErrorDecorator::GetDeviceFlags(uint32_t* const flags) { return impl_->GetDeviceFlags(flags); }
 } // namespace runtime
 } // namespace cce

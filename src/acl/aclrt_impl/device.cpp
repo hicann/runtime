@@ -765,3 +765,19 @@ aclError aclrtDeviceL2CacheFlushImpl(void* rsv)
 #ifdef __cplusplus
 }
 #endif
+
+aclError aclrtSetDeviceFlagsImpl(uint32_t flags)
+{
+    ACL_PROFILING_REG(acl::AclProfType::AclrtSetDeviceFlags);
+    ACL_LOG_INFO("set current context synchronization flags, flags=%u", flags);
+    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtSetDeviceFlags(flags), rtSetDeviceFlags);
+    return ACL_SUCCESS;
+}
+
+aclError aclrtGetDeviceFlagsImpl(uint32_t* flags)
+{
+    ACL_PROFILING_REG(acl::AclProfType::AclrtGetDeviceFlags);
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(flags);
+    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtGetDeviceFlags(flags), rtGetDeviceFlags);
+    return ACL_SUCCESS;
+}

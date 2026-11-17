@@ -153,6 +153,7 @@ set(runtimeut_common_src_stream_list
     ${TOP_DIR}/src/runtime/core/src/stream/stream_sqcq_manage.cc
     ${TOP_DIR}/src/runtime/core/src/stream/engine_stream_observer.cc
     ${TOP_DIR}/src/runtime/core/src/stream/stream.cc
+    ${TOP_DIR}/src/runtime/core/src/stream/stream_sync_blocking.cc
     ${TOP_DIR}/src/runtime/core/src/stream/ctrl_stream.cc
     ${TOP_DIR}/src/runtime/core/src/stream/coprocessor_stream.cc
     ${TOP_DIR}/src/runtime/core/src/stream/stream_factory.cc
@@ -750,6 +751,7 @@ add_executable(runtime_utest_api_910B
     rt_utest_event_cloud_v2.cc
     rt_utest_FftsPlustTaskLaunch.cc
     rt_utest_stream.cc
+    rt_utest_stream_sync_callback.cc
     rt_utest_elf.cc
     rt_utest_npu_driver.cc
     rt_utest_device.cc

@@ -13,8 +13,10 @@
 #define private public
 #include "runtime/rt.h"
 #include "runtime/event.h"
+#include "runtime/rt_inner_device.h"
 #include "securec.h"
 #include "context.hpp"
+#include "context_data_manage.h"
 #include "notify.hpp"
 #include "memcpy_c.hpp"
 #include "common/rt_utest_memory_transfer_driver.hpp"
@@ -280,7 +282,8 @@ class HostFuncApiImplForTest : public ApiImpl {
 public:
     using ApiImpl::ProcessHostFunc;
 
-    rtError_t LaunchHostFunc(Stream* const stm, const rtCallback_t callBackFunc, void* const fnData) override
+    rtError_t LaunchHostFunc(
+        Stream* const stm, const rtCallback_t callBackFunc, void* const fnData, bool isBlock = true) override
     {
         submittedStream = stm;
         submittedCallback = callBackFunc;
@@ -1023,6 +1026,7 @@ TEST_F(ApiImplTest, StreamSynchronizeAicpuTimeoutWithoutRecentOom)
     Context* const context = Runtime::Instance()->CurrentContext();
     ASSERT_NE(context, nullptr);
     Stream stream(context->Device_(), 0);
+    stream.SetContext(context);
 
     MOCKER_CPP_VIRTUAL(&stream, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_TSFW_AICPU_TIMEOUT));
     MOCKER_CPP_VIRTUAL(context->Device_(), &Device::HasRecentOom).stubs().will(returnValue(false));
@@ -1038,6 +1042,7 @@ TEST_F(ApiImplTest, StreamSynchronizeAicpuTimeoutWithRecentOom)
     Context* const context = Runtime::Instance()->CurrentContext();
     ASSERT_NE(context, nullptr);
     Stream stream(context->Device_(), 0);
+    stream.SetContext(context);
 
     MOCKER_CPP_VIRTUAL(&stream, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_TSFW_AICPU_TIMEOUT));
     MOCKER_CPP_VIRTUAL(context->Device_(), &Device::HasRecentOom).stubs().will(returnValue(true));
@@ -2224,6 +2229,7 @@ TEST_F(ApiImplTest, rtSetSocVersionFeGetPlatformInfoSuccess)
     EXPECT_EQ(error, RT_ERROR_NONE);
     rtInstance->SetChipType(chipType);
     GlobalContainer::SetRtChipType(chipType);
+    rtInstance->SetIsUserSetSocVersion(false);
 }
 
 TEST_F(ApiImplTest, rtSetSocVersionFeGetPlatInfoInvalidChip)
@@ -2495,6 +2501,7 @@ TEST_F(ApiImplTest, SubcribeReport_01)
     ApiDecorator* apiDecorator_ = new ApiDecorator(oldApi_);
     error = apiDecorator_->SubscribeReport(123, nullptr);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(apiDecorator_->UnSubscribeReport(123, nullptr), RT_ERROR_NONE);
     delete apiDecorator_;
 }
 
@@ -2504,8 +2511,11 @@ TEST_F(ApiImplTest, CallbackLaunch_01)
     rtCallback_t stub_func = (rtCallback_t)0x12345;
     Api* oldApi_ = const_cast<Api*>(Runtime::runtime_->api_);
     ApiDecorator* apiDecorator_ = new ApiDecorator(oldApi_);
+    error = apiDecorator_->SubscribeReport(123, nullptr);
+    ASSERT_EQ(error, RT_ERROR_NONE);
     error = apiDecorator_->CallbackLaunch(stub_func, nullptr, nullptr, true);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(apiDecorator_->UnSubscribeReport(123, nullptr), RT_ERROR_NONE);
     delete apiDecorator_;
 }
 
@@ -3746,4 +3756,120 @@ TEST_F(ApiImplTest, MemcpyAsync_usermalloc_with_hostregister_not_degrade)
 
     device->isDrvSupportUserMem_ = oldSupportUserMem;
     GlobalMockObject::verify();
+}
+
+TEST_F(ApiImplTest, device_flags_accept_four_modes)
+{
+    ApiImpl impl;
+    ApiDecorator decorator(&impl);
+    ApiErrorDecorator api(&decorator);
+    Device* const dev = Runtime::Instance()->CurrentContext()->Device_();
+    const DevProperties previousProperties = dev->GetDevProperties();
+    DevProperties properties = previousProperties;
+    properties.isStars = true;
+    dev->RefreshDevProperties(properties);
+    const ScopeGuard restoreProperties([=]() { dev->RefreshDevProperties(previousProperties); });
+    uint32_t flags = UINT32_MAX;
+    ASSERT_EQ(api.GetDeviceFlags(&flags), RT_ERROR_NONE);
+    EXPECT_EQ(flags, RT_DEVICE_SCHEDULE_AUTO);
+    const uint32_t modes[] = {
+        RT_DEVICE_SCHEDULE_SPIN, RT_DEVICE_SCHEDULE_YIELD, RT_DEVICE_SCHEDULE_BLOCKING_SYNC, RT_DEVICE_SCHEDULE_AUTO};
+    for (const uint32_t mode : modes) {
+        ASSERT_EQ(api.SetDeviceFlags(mode), RT_ERROR_NONE);
+        ASSERT_EQ(api.GetDeviceFlags(&flags), RT_ERROR_NONE);
+        EXPECT_EQ(flags, mode);
+    }
+}
+
+TEST_F(ApiImplTest, device_flags_reject_invalid_inputs_without_changing_mode)
+{
+    ApiImpl impl;
+    ApiErrorDecorator api(&impl);
+    Device* const dev = Runtime::Instance()->CurrentContext()->Device_();
+    const DevProperties previousProperties = dev->GetDevProperties();
+    DevProperties properties = previousProperties;
+    properties.isStars = true;
+    dev->RefreshDevProperties(properties);
+    const ScopeGuard restoreProperties([=]() { dev->RefreshDevProperties(previousProperties); });
+    ASSERT_EQ(api.SetDeviceFlags(RT_DEVICE_SCHEDULE_YIELD), RT_ERROR_NONE);
+    const uint32_t invalidModes[] = {3U, 5U, 6U, 7U, 8U, UINT32_MAX};
+    for (const uint32_t mode : invalidModes) {
+        EXPECT_EQ(api.SetDeviceFlags(mode), RT_ERROR_INVALID_VALUE);
+        uint32_t flags = UINT32_MAX;
+        ASSERT_EQ(api.GetDeviceFlags(&flags), RT_ERROR_NONE);
+        EXPECT_EQ(flags, RT_DEVICE_SCHEDULE_YIELD);
+    }
+    ASSERT_EQ(api.SetDeviceFlags(RT_DEVICE_SCHEDULE_AUTO), RT_ERROR_NONE);
+}
+
+TEST_F(ApiImplTest, device_flags_require_current_context)
+{
+    ApiImpl impl;
+    MOCKER_CPP(&ApiImpl::CurrentContext)
+        .stubs()
+        .with(eq(true), eq(DEFAULT_DEVICE_ID))
+        .will(returnValue(static_cast<Context*>(nullptr)));
+    uint32_t flags = UINT32_MAX;
+    EXPECT_EQ(impl.SetDeviceFlags(RT_DEVICE_SCHEDULE_AUTO), RT_ERROR_CONTEXT_NULL);
+    EXPECT_EQ(impl.GetDeviceFlags(&flags), RT_ERROR_CONTEXT_NULL);
+    EXPECT_EQ(flags, UINT32_MAX);
+}
+
+TEST_F(ApiImplTest, device_flags_unsupported_product_rejects_set_and_get)
+{
+    ApiImpl impl;
+    Device* const dev = Runtime::Instance()->CurrentContext()->Device_();
+    const DevProperties previousProperties = dev->GetDevProperties();
+    DevProperties properties = previousProperties;
+    properties.isStars = false;
+    dev->RefreshDevProperties(properties);
+    const ScopeGuard restoreProperties([=]() { dev->RefreshDevProperties(previousProperties); });
+    EXPECT_EQ(impl.SetDeviceFlags(RT_DEVICE_SCHEDULE_SPIN), RT_ERROR_FEATURE_NOT_SUPPORT);
+    uint32_t flags = UINT32_MAX;
+    EXPECT_EQ(impl.GetDeviceFlags(&flags), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(flags, UINT32_MAX);
+    EXPECT_EQ(Runtime::Instance()->CurrentContext()->GetDeviceFlags(), RT_DEVICE_SCHEDULE_AUTO);
+}
+
+TEST_F(ApiImplTest, device_flags_rt_maps_unsupported_product)
+{
+    Device* const dev = Runtime::Instance()->CurrentContext()->Device_();
+    const DevProperties previousProperties = dev->GetDevProperties();
+    DevProperties properties = previousProperties;
+    properties.isStars = false;
+    dev->RefreshDevProperties(properties);
+    const ScopeGuard restoreProperties([=]() { dev->RefreshDevProperties(previousProperties); });
+    EXPECT_EQ(rtSetDeviceFlags(RT_DEVICE_SCHEDULE_AUTO), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    uint32_t flags = UINT32_MAX;
+    EXPECT_EQ(rtGetDeviceFlags(&flags), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(flags, UINT32_MAX);
+}
+
+TEST_F(ApiImplTest, device_flags_rt_maps_parameter_and_context_errors)
+{
+    Device* const dev = Runtime::Instance()->CurrentContext()->Device_();
+    const DevProperties previousProperties = dev->GetDevProperties();
+    DevProperties properties = previousProperties;
+    properties.isStars = true;
+    dev->RefreshDevProperties(properties);
+    const ScopeGuard restoreProperties([=]() { dev->RefreshDevProperties(previousProperties); });
+    ASSERT_EQ(rtSetDeviceFlags(RT_DEVICE_SCHEDULE_YIELD), ACL_RT_SUCCESS);
+    uint32_t currentFlags = UINT32_MAX;
+    ASSERT_EQ(rtGetDeviceFlags(&currentFlags), ACL_RT_SUCCESS);
+    EXPECT_EQ(currentFlags, RT_DEVICE_SCHEDULE_YIELD);
+    ASSERT_EQ(rtSetDeviceFlags(RT_DEVICE_SCHEDULE_AUTO), ACL_RT_SUCCESS);
+    EXPECT_EQ(rtSetDeviceFlags(3U), ACL_ERROR_RT_PARAM_INVALID);
+    MOCKER_CPP(&ApiImpl::CurrentContext).stubs().will(returnValue(static_cast<Context*>(nullptr)));
+    uint32_t flags = UINT32_MAX;
+    EXPECT_EQ(rtSetDeviceFlags(RT_DEVICE_SCHEDULE_AUTO), ACL_ERROR_RT_CONTEXT_NULL);
+    EXPECT_EQ(rtGetDeviceFlags(&flags), ACL_ERROR_RT_CONTEXT_NULL);
+    EXPECT_EQ(flags, UINT32_MAX);
+}
+
+TEST_F(ApiImplTest, device_flags_survive_resource_field_reset)
+{
+    Context context(nullptr, false);
+    context.SetDeviceFlags(RT_DEVICE_SCHEDULE_YIELD);
+    context.ResetResourceFieldsAfterTearDown();
+    EXPECT_EQ(context.GetDeviceFlags(), RT_DEVICE_SCHEDULE_YIELD);
 }

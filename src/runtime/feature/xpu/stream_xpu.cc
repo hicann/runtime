@@ -395,8 +395,10 @@ rtError_t XpuStream::GetSynchronizeError(rtError_t error)
     return Context_()->GetFailureError();
 }
 
-rtError_t XpuStream::SynchronizeExecutedTask(const uint32_t taskId, const mmTimespec& beginTime, int32_t timeout)
+rtError_t XpuStream::SynchronizeExecutedTask(
+    const uint32_t taskId, const mmTimespec& beginTime, int32_t timeout, uint32_t mode)
 {
+    UNUSED(mode);
     uint16_t sqHead = MAX_UINT16_NUM;
     uint32_t tryCount = 0U;
     rtError_t error = RT_ERROR_NONE;
@@ -441,8 +443,9 @@ rtError_t XpuStream::SynchronizeExecutedTask(const uint32_t taskId, const mmTime
     }
 }
 
-rtError_t XpuStream::Synchronize(const bool isNeedWaitSyncCq, int32_t timeout)
+rtError_t XpuStream::Synchronize(const bool isNeedWaitSyncCq, int32_t timeout, uint32_t mode)
 {
+    UNUSED(mode);
     (void)isNeedWaitSyncCq;
     if (GetPendingNum() == 0U) {
         return GetSynchronizeError(RT_ERROR_NONE);

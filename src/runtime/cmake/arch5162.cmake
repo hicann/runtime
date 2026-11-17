@@ -187,6 +187,7 @@ set(libruntime_stream_common_src_files
     ${RUNTIME_CORE_DIR}/src/stream/dvpp_grp.cc
     ${RUNTIME_CORE_DIR}/src/stream/engine_stream_observer.cc
     ${RUNTIME_CORE_DIR}/src/stream/stream.cc
+    ${RUNTIME_CORE_DIR}/src/stream/arch5162/stream_sync_blocking.cc
     ${RUNTIME_FEATURE_DIR}/launch_blocking/stream_launch_blocking.cc
     ${RUNTIME_CORE_DIR}/src/stream/stream_factory.cc
     ${RUNTIME_CORE_DIR}/src/stream/stream_sqcq_manage.cc
@@ -507,6 +508,7 @@ macro(add_runtime_library target_name)
     target_compile_options(${target_name} PRIVATE
         -Os
         -ffunction-sections
+        -fdata-sections
         -fvisibility=hidden
         -fno-common
         -fno-strict-aliasing

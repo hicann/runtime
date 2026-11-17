@@ -21,6 +21,7 @@
 #include "event.hpp"
 #include "task_info.hpp"
 #include "task.hpp"
+#include "stream.hpp"
 #include "davinci_kernel_task.h"
 #include "device/device_error_proc.hpp"
 #include "program.hpp"
@@ -53,6 +54,17 @@ static uint64_t g_expectCoreId1 = 0U;
 static uint64_t g_expectAicCond = 0U;
 static uint64_t g_expectRsvExt0 = 0U;
 static uint32_t g_expectAicCondIndex = 1U;
+static RawDevice* g_deferredSyncArgsDevice = nullptr;
+static SyncFuncArgs* g_deferredSyncArgs = nullptr;
+
+static void ObserveDeferredSyncArgsDestroy(SyncFuncArgs* const args)
+{
+    EXPECT_EQ(args, g_deferredSyncArgs);
+    EXPECT_NE(g_deferredSyncArgsDevice, nullptr);
+    if (g_deferredSyncArgsDevice != nullptr) {
+        EXPECT_EQ(g_deferredSyncArgsDevice->taskFactory_, nullptr);
+    }
+}
 
 namespace {
 constexpr char_t AICORE_SYNC_MATCH_CHECK_ENV_NAME[] = "ASCEND_AICORE_SYNC_MATCH_CHECK";
@@ -2318,6 +2330,43 @@ TEST_F(DeviceTest, RawDeviceStopOnExitAllowsNullEngine)
     EXPECT_EQ(ret, RT_ERROR_NONE);
     EXPECT_EQ(dev.primaryStream_, nullptr);
     EXPECT_EQ(dev.ctrlStream_, nullptr);
+}
+
+TEST_F(DeviceTest, RawDeviceDestructorDestroysDeferredSyncArgsAfterOwnedObjects)
+{
+    RawDevice* device = new RawDevice(0U);
+    SyncFuncArgs* args = nullptr;
+    bool argsOwnedByDevice = false;
+    const ScopeGuard cleanup([&]() {
+        GlobalMockObject::reset();
+        g_deferredSyncArgsDevice = nullptr;
+        g_deferredSyncArgs = nullptr;
+        if (device != nullptr) {
+            delete device;
+            device = nullptr;
+            if (argsOwnedByDevice) {
+                args = nullptr;
+            }
+        }
+        DestroySyncFuncArgs(args);
+    });
+    device->taskFactory_ = new TaskFactory(device);
+    rtError_t error = RT_ERROR_NONE;
+    error = CreateSyncFuncArgs(args);
+    ASSERT_EQ(error, RT_ERROR_NONE);
+    ASSERT_NE(args, nullptr);
+    std::list<SyncFuncArgs*> failedArgs{args};
+    device->AppendSyncArgs(failedArgs);
+    argsOwnedByDevice = true;
+    g_deferredSyncArgsDevice = device;
+    g_deferredSyncArgs = args;
+    MOCKER(DestroySyncFuncArgs).expects(once()).will(invoke(ObserveDeferredSyncArgsDestroy));
+
+    delete device;
+    device = nullptr;
+    argsOwnedByDevice = false;
+
+    GlobalMockObject::verify();
 }
 
 TEST_F(DeviceTest, WriteDevString)

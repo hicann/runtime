@@ -197,16 +197,6 @@ TEST_F(RtOthersApiTest, capture_api_36)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
-rtError_t GetThreadIdByStreamIdStub(
-    CbSubscribe* cbSubscribe, const uint32_t devId, const int32_t streamId, uint64_t* const threadId)
-{
-    UNUSED(cbSubscribe);
-    UNUSED(devId);
-    UNUSED(streamId);
-    *threadId = 1LLU;
-    return RT_ERROR_NONE;
-}
-
 TEST_F(RtOthersApiTest, capture_api_37)
 {
     rtError_t error;
@@ -218,9 +208,6 @@ TEST_F(RtOthersApiTest, capture_api_37)
     const rtChipType_t chipType = rtInstance->GetChipType();
     rtInstance->SetChipType(CHIP_DC);
     GlobalContainer::SetRtChipType(CHIP_DC);
-
-    MOCKER_CPP(&Context::CreateContextCallBackThread).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP(&CbSubscribe::GetThreadIdByStreamId).stubs().will(invoke(GetThreadIdByStreamIdStub));
 
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);

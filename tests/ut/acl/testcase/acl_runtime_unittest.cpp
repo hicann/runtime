@@ -11283,3 +11283,43 @@ TEST_F(UTEST_ACL_Runtime, aclrtMemMapSetLink_other_error)
     aclError ret = aclrtMemMapSetLink(handle, ACL_RT_MEM_ACCESS_LINK_SIO);
     EXPECT_EQ(ret, ACL_ERROR_RT_DRV_INTERNAL_ERROR);
 }
+
+TEST_F(UTEST_ACL_Runtime, aclrtSetDeviceFlags_forwards_all_modes)
+{
+    const uint32_t modes[] = {
+        ACL_DEVICE_SCHEDULE_AUTO, ACL_DEVICE_SCHEDULE_SPIN, ACL_DEVICE_SCHEDULE_YIELD,
+        ACL_DEVICE_SCHEDULE_BLOCKING_SYNC};
+    for (const uint32_t flags : modes) {
+        EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtSetDeviceFlags(flags)).WillOnce(Return(RT_ERROR_NONE));
+        EXPECT_EQ(aclrtSetDeviceFlags(flags), ACL_SUCCESS);
+    }
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtSetDeviceFlags(3U)).WillOnce(Return(ACL_ERROR_RT_PARAM_INVALID));
+    EXPECT_EQ(aclrtSetDeviceFlags(3U), ACL_ERROR_RT_PARAM_INVALID);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtGetDeviceFlags_returns_runtime_configuration)
+{
+    uint32_t flags = UINT32_MAX;
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtGetDeviceFlags(&flags))
+        .WillOnce(DoAll(SetArgPointee<0>(ACL_DEVICE_SCHEDULE_BLOCKING_SYNC), Return(RT_ERROR_NONE)));
+    EXPECT_EQ(aclrtGetDeviceFlags(&flags), ACL_SUCCESS);
+    EXPECT_EQ(flags, ACL_DEVICE_SCHEDULE_BLOCKING_SYNC);
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtGetDeviceFlags(nullptr)).Times(0);
+    EXPECT_EQ(aclrtGetDeviceFlags(nullptr), ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtDeviceFlags_propagates_context_and_support_errors)
+{
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtSetDeviceFlags(ACL_DEVICE_SCHEDULE_SPIN))
+        .WillOnce(Return(ACL_ERROR_RT_CONTEXT_NULL))
+        .WillOnce(Return(ACL_ERROR_RT_FEATURE_NOT_SUPPORT));
+    EXPECT_EQ(aclrtSetDeviceFlags(ACL_DEVICE_SCHEDULE_SPIN), ACL_ERROR_RT_CONTEXT_NULL);
+    EXPECT_EQ(aclrtSetDeviceFlags(ACL_DEVICE_SCHEDULE_SPIN), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    uint32_t flags = UINT32_MAX;
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtGetDeviceFlags(&flags))
+        .WillOnce(Return(ACL_ERROR_RT_CONTEXT_NULL))
+        .WillOnce(Return(ACL_ERROR_RT_FEATURE_NOT_SUPPORT));
+    EXPECT_EQ(aclrtGetDeviceFlags(&flags), ACL_ERROR_RT_CONTEXT_NULL);
+    EXPECT_EQ(aclrtGetDeviceFlags(&flags), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(flags, UINT32_MAX);
+}
