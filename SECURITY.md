@@ -26,8 +26,8 @@
 | :------------: |:------------------------------------------------------------------------------------------:|:----------------------------------------------------------| :---------------------------------------------------------- |:-----------------------------------------|
 | 依赖 | 不涉及 | download_3rd_party.sh | https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/abseil-cpp/abseil-cpp-20230802.1.tar.gz | 从Huawei Cloud下载Abseil源码，用作编译依赖 |
 | 依赖 | 不涉及 | download_3rd_party.sh | https://gitcode.com/cann-src-third-party/abseil-cpp/releases/download/20230802.1-h0/backport-CVE-2025-0838.patch | 从GitCode下载Abseil补丁，用作编译依赖 |
-| 依赖 | 不涉及 | download_3rd_party.sh | https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/cann/acl-compat/acl-compat_9.2.0_linux-x86_64.tar.gz | 从Huawei Cloud下载ACL兼容库（x86_64）二进制依赖，用作编译依赖 |
-| 依赖 | 不涉及 | download_3rd_party.sh | https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/cann/acl-compat/acl-compat_9.2.0_linux-aarch64.tar.gz | 从Huawei Cloud下载ACL兼容库（aarch64）二进制依赖，用作编译依赖 |
+| 依赖 | 不涉及 | download_3rd_party.sh | https://ascend-cann.obs.cn-north-4.myhuaweicloud.com/CANN/20261112_newest/acl-compat_9.3.0_linux-x86_64.tar.gz | 从Huawei Cloud下载ACL兼容库（x86_64）二进制依赖，用作编译依赖 |
+| 依赖 | 不涉及 | download_3rd_party.sh | https://ascend-cann.obs.cn-north-4.myhuaweicloud.com/CANN/20261112_newest/acl-compat_9.3.0_linux-aarch64.tar.gz | 从Huawei Cloud下载ACL兼容库（aarch64）二进制依赖，用作编译依赖 |
 | 依赖 | 不涉及 | download_3rd_party.sh | https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/boost/boost_1_87_0.tar.gz | 从Huawei Cloud下载Boost源码，用作编译依赖 |
 | 依赖 | 不涉及 | download_3rd_party.sh | https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/eigen/eigen-5.0.0.tar.gz | 从Huawei Cloud下载Eigen源码，用作编译依赖 |
 | 依赖 | 不涉及 | download_3rd_party.sh | https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/googletest/googletest-1.14.0.tar.gz | 从Huawei Cloud下载GoogleTest源码，用作编译依赖 |
@@ -39,9 +39,9 @@
 | 依赖 | 不涉及 | download_3rd_party.sh | https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/protobuf/protobuf-25.1.tar.gz | 从Huawei Cloud下载Protobuf源码，用作编译依赖 |
 | 依赖 | 不涉及 | download_3rd_party.sh | https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/makeself/makeself-release-2.5.0.tar.gz | 从Huawei Cloud下载makeself源码，用作编译依赖 |
 | 依赖 | 不涉及 | download_3rd_party.sh | https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/makeself/fix/makeself-2.5.0.patch | 从Huawei Cloud下载makeself补丁，用作编译依赖 |
-| 依赖 | 不涉及 | download_3rd_party.sh | https://raw.gitcode.com/cann/cmake/archive/refs/heads/master-059.tar.gz | 从GitCode下载cann/cmake master-059构建配置，用作编译依赖 |
-| 依赖 | 不涉及 | cmake/third_party/acl_compat.cmake | https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/cann/acl-compat/acl-compat_9.2.0_linux-${TARGET_ARCH}.tar.gz | 从Huawei Cloud下载目标架构的ACL兼容二进制依赖 |
-| 依赖 | 不涉及 | cmake/fetch_cann_cmake.cmake | https://gitcode.com/cann/cmake.git | 在线获取cann/cmake master-059构建配置 |
+| 依赖 | 不涉及 | download_3rd_party.sh | https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/cmake/cmake-master-064.tar.gz | 从Huawei Cloud下载cann/cmake master-064构建配置，用作编译依赖 |
+| 依赖 | 不涉及 | cmake/third_party/acl_compat.cmake | https://ascend-cann.obs.cn-north-4.myhuaweicloud.com/CANN/20261112_newest/acl-compat_9.3.0_linux-${TARGET_ARCH}.tar.gz | 从Huawei Cloud下载目标架构的ACL兼容二进制依赖 |
+| 依赖 | 不涉及 | cmake/fetch_cann_cmake.cmake | https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/cmake/cmake-master-064.tar.gz | 在线获取cann/cmake master-064构建配置 |
 | 依赖 | 不涉及 | install_deps.sh | https://apt.kitware.com/keys/kitware-archive-latest.asc | 下载Kitware APT仓库签名密钥 |
 | 依赖 | 不涉及 | install_deps.sh | https://apt.kitware.com/ubuntu/ | 从Kitware APT仓库安装CMake编译依赖 |
 

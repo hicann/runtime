@@ -223,8 +223,8 @@ runtime在编译时，依赖的第三方开源软件列表如下：
 |---|---|---|
 | abseil-cpp | 20230802.1 | [abseil-cpp-20230802.1.tar.gz](https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/abseil-cpp/abseil-cpp-20230802.1.tar.gz) |
 | abseil-cpp_patch | 20230802.1-h0 | [patch/backport-CVE-2025-0838.patch](https://gitcode.com/cann-src-third-party/abseil-cpp/releases/download/20230802.1-h0/backport-CVE-2025-0838.patch) |
-| acl-compat (x86_64) | 9.2.0 | [acl-compat_9.2.0_linux-x86_64.tar.gz](https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/cann/acl-compat/acl-compat_9.2.0_linux-x86_64.tar.gz) |
-| acl-compat (aarch64) | 9.2.0 | [acl-compat_9.2.0_linux-aarch64.tar.gz](https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/cann/acl-compat/acl-compat_9.2.0_linux-aarch64.tar.gz) |
+| acl-compat (x86_64) | 9.3.0 | [acl-compat_9.3.0_linux-x86_64.tar.gz](https://ascend-cann.obs.cn-north-4.myhuaweicloud.com/CANN/20261112_newest/acl-compat_9.3.0_linux-x86_64.tar.gz) |
+| acl-compat (aarch64) | 9.3.0 | [acl-compat_9.3.0_linux-aarch64.tar.gz](https://ascend-cann.obs.cn-north-4.myhuaweicloud.com/CANN/20261112_newest/acl-compat_9.3.0_linux-aarch64.tar.gz) |
 | boost | 1.87.0 | [boost_1_87_0.tar.gz](https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/boost/boost_1_87_0.tar.gz) |
 | eigen | 5.0.0 | [eigen-5.0.0.tar.gz](https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/eigen/eigen-5.0.0.tar.gz) |
 | googletest | 1.14.0 | [googletest-1.14.0.tar.gz](https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/googletest/googletest-1.14.0.tar.gz) |
@@ -237,10 +237,10 @@ runtime在编译时，依赖的第三方开源软件列表如下：
 | makeself | 2.5.0 | [makeself-release-2.5.0.tar.gz](https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/makeself/makeself-release-2.5.0.tar.gz) |
 | makeself_patch | 2.5.0 | [patch/makeself-2.5.0.patch](https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/makeself/fix/makeself-2.5.0.patch) |
 | asc-comm | cacb3ec39b70552231f534727adf5519eafd732b | [asc-comm](https://gitcode.com/cann/asc-comm) |
-| cann-cmake | master-059 | [cmake-master-059.tar.gz](https://raw.gitcode.com/cann/cmake/archive/refs/heads/master-059.tar.gz) |
+| cann-cmake | master-064 | [cmake-master-064.tar.gz](https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/cmake/cmake-master-064.tar.gz) |
 
 > [!NOTE]注意
-> 下载列表和补丁布局适配 [cann/cmake master-059](https://gitcode.com/cann/cmake/tree/master-059/third_party)，下载地址和 SHA256 固定在本地 `download_3rd_party.sh` 中。
+> 下载列表和补丁布局适配 [cann/cmake master-064](https://gitcode.com/cann/cmake/tree/master-064/third_party)，下载地址和 SHA256 固定在本地 `download_3rd_party.sh` 中。
 > 如果您从其他地址下载，请确保版本号和 SHA256 一致。
 > Abseil 补丁保存在 `patch` 目录，并复制一份到 `patch/device`，分别供 Host 和 Device 离线构建使用。
 

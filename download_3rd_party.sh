@@ -43,15 +43,15 @@ while [[ $# -gt 0 ]]; do
 done
 
 OBS_URL="https://cann-3rd.obs.cn-north-4.myhuaweicloud.com"
-# Source: https://gitcode.com/cann/cmake/tree/master-059/third_party
-# Tag commit: 3c4a9da4a0e81faa47dcc1c8e11db63ec7ff6231
+# Source: https://gitcode.com/cann/cmake/tree/master-064/third_party
+# Tag commit: ff7675482512206e56d523a4d578e5f7e479ae1d
 # Format: "URL SHA256 Path relative to third_party"
 DOWNLOAD_LIST=(
     "${OBS_URL}/abseil-cpp/abseil-cpp-20230802.1.tar.gz 987ce98f02eefbaf930d6e38ab16aa05737234d7afbab2d5c4ea7adbe50c28ed abseil-cpp-20230802.1.tar.gz"
     "https://gitcode.com/cann-src-third-party/abseil-cpp/releases/download/20230802.1-h0/backport-CVE-2025-0838.patch a4e4ef6fc4f4c1ed871a3472c5e650068aaadaad2adfef2c8ccb00918bb36d8c patch/backport-CVE-2025-0838.patch"
     # ACL digests were computed from the HTTPS archives; acl_compat.cmake has no hash.
-    "${OBS_URL}/cann/acl-compat/acl-compat_9.2.0_linux-x86_64.tar.gz 7802c66742349bec5801898788dae10889a7d20712cac943f9e650ded10473cd acl-compat_9.2.0_linux-x86_64.tar.gz"
-    "${OBS_URL}/cann/acl-compat/acl-compat_9.2.0_linux-aarch64.tar.gz 5ac43f06c205a8bca534dcf9b96875d6d27fdb213d1066fab40efa46040945b1 acl-compat_9.2.0_linux-aarch64.tar.gz"
+    "https://ascend-cann.obs.cn-north-4.myhuaweicloud.com/CANN/20261112_newest/acl-compat_9.3.0_linux-x86_64.tar.gz 6430383075b32d0163842d84f57d547547ad2cc32062d3d6b5c02dea050c7882 acl-compat_9.3.0_linux-x86_64.tar.gz"
+    "https://ascend-cann.obs.cn-north-4.myhuaweicloud.com/CANN/20261112_newest/acl-compat_9.3.0_linux-aarch64.tar.gz c101a40b55e3412899920fbd3bb464e5e0308619bb013119916a379d1cf0028a acl-compat_9.3.0_linux-aarch64.tar.gz"
     "${OBS_URL}/boost/boost_1_87_0.tar.gz f55c340aa49763b1925ccf02b2e83f35fdcf634c9d5164a2acb87540173c741d boost_1_87_0.tar.gz"
     "${OBS_URL}/eigen/eigen-5.0.0.tar.gz 93f7f0462988b934e632a9fba58af55192ffceae38e8f46233f4f62cb1e79370 eigen-5.0.0.tar.gz"
     "${OBS_URL}/googletest/googletest-1.14.0.tar.gz 8ad598c73ad796e0d8280b082cebd82a630d73e73cd3c70057938a6501bba5d7 googletest-1.14.0.tar.gz"
@@ -64,7 +64,7 @@ DOWNLOAD_LIST=(
     "${OBS_URL}/makeself/makeself-release-2.5.0.tar.gz 705d0376db9109a8ef1d4f3876c9997ee6bed454a23619e1dbc03d25033e46ea makeself-release-2.5.0.tar.gz"
     "${OBS_URL}/makeself/fix/makeself-2.5.0.patch 0ecac3fe200221353322626900d5257a59d98347f83653b98456e08475994486 patch/makeself-2.5.0.patch"
     # Version and SHA256 match cmake/fetch_cann_cmake.cmake.
-    "https://raw.gitcode.com/cann/cmake/archive/refs/heads/master-059.tar.gz 9cb9def78f6baaf0146d06565cd2e14d00399f00e4def1e98c90cfd552a48bf2 cmake-master-059.tar.gz"
+    "https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/cmake/cmake-master-064.tar.gz bf5702aa46824fb1e701533e127e8eda144f3bb0c150ee9315c11aacf9572522 cmake-master-064.tar.gz"
 )
 
 TEMP_FILE=""
@@ -128,7 +128,7 @@ for ITEM in "${DOWNLOAD_LIST[@]}"; do
     echo "Downloaded and verified: ${FILE_NAME}"
 done
 
-# master-059 reads the Abseil patch from separate Host and Device directories.
+# master-064 reads the Abseil patch from separate Host and Device directories.
 mkdir -p -- "${WORK_DIR}/patch/device"
 cp -f -- "${WORK_DIR}/patch/backport-CVE-2025-0838.patch" "${WORK_DIR}/patch/device/backport-CVE-2025-0838.patch"
 

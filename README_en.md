@@ -225,8 +225,8 @@ The third-party open-source software dependencies for runtime compilation are as
 |---|---|---|
 | abseil-cpp | 20230802.1 | [abseil-cpp-20230802.1.tar.gz](https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/abseil-cpp/abseil-cpp-20230802.1.tar.gz) |
 | abseil-cpp_patch | 20230802.1-h0 | [patch/backport-CVE-2025-0838.patch](https://gitcode.com/cann-src-third-party/abseil-cpp/releases/download/20230802.1-h0/backport-CVE-2025-0838.patch) |
-| acl-compat (x86_64) | 9.2.0 | [acl-compat_9.2.0_linux-x86_64.tar.gz](https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/cann/acl-compat/acl-compat_9.2.0_linux-x86_64.tar.gz) |
-| acl-compat (aarch64) | 9.2.0 | [acl-compat_9.2.0_linux-aarch64.tar.gz](https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/cann/acl-compat/acl-compat_9.2.0_linux-aarch64.tar.gz) |
+| acl-compat (x86_64) | 9.3.0 | [acl-compat_9.3.0_linux-x86_64.tar.gz](https://ascend-cann.obs.cn-north-4.myhuaweicloud.com/CANN/20261112_newest/acl-compat_9.3.0_linux-x86_64.tar.gz) |
+| acl-compat (aarch64) | 9.3.0 | [acl-compat_9.3.0_linux-aarch64.tar.gz](https://ascend-cann.obs.cn-north-4.myhuaweicloud.com/CANN/20261112_newest/acl-compat_9.3.0_linux-aarch64.tar.gz) |
 | boost | 1.87.0 | [boost_1_87_0.tar.gz](https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/boost/boost_1_87_0.tar.gz) |
 | eigen | 5.0.0 | [eigen-5.0.0.tar.gz](https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/eigen/eigen-5.0.0.tar.gz) |
 | googletest | 1.14.0 | [googletest-1.14.0.tar.gz](https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/googletest/googletest-1.14.0.tar.gz) |
@@ -239,10 +239,10 @@ The third-party open-source software dependencies for runtime compilation are as
 | makeself | 2.5.0 | [makeself-release-2.5.0.tar.gz](https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/makeself/makeself-release-2.5.0.tar.gz) |
 | makeself_patch | 2.5.0 | [patch/makeself-2.5.0.patch](https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/makeself/fix/makeself-2.5.0.patch) |
 | asc-comm | cacb3ec39b70552231f534727adf5519eafd732b | [asc-comm](https://gitcode.com/cann/asc-comm) |
-| cann-cmake | master-059 | [cmake-master-059.tar.gz](https://raw.gitcode.com/cann/cmake/archive/refs/heads/master-059.tar.gz) |
+| cann-cmake | master-064 | [cmake-master-064.tar.gz](https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/cmake/cmake-master-064.tar.gz) |
 
 > [!NOTE]
-> The download list and patch layout match [cann/cmake master-059](https://gitcode.com/cann/cmake/tree/master-059/third_party). The local `download_3rd_party.sh` file defines download URLs and SHA256 (256-bit Secure Hash Algorithm) checksums.
+> The download list and patch layout match [cann/cmake master-064](https://gitcode.com/cann/cmake/tree/master-064/third_party). The local `download_3rd_party.sh` file defines download URLs and SHA256 (256-bit Secure Hash Algorithm) checksums.
 > If you download from other addresses, ensure that both versions and SHA256 checksums match.
 > The script saves the Abseil patch in `patch` for offline host builds. It copies the patch to `patch/device` for offline device builds.
 

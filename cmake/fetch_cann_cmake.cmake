@@ -9,7 +9,8 @@
 # -----------------------------------------------------------------------------------------------------------
 
 if(NOT PROJECT_SOURCE_DIR)
-    set(CANN_CMAKE_TAG "master-059")
+    set(CANN_CMAKE_TAG "master-064")
+    set(CANN_CMAKE_SHA256 "bf5702aa46824fb1e701533e127e8eda144f3bb0c150ee9315c11aacf9572522")
     if(CANN_3RD_LIB_PATH AND IS_DIRECTORY "${CANN_3RD_LIB_PATH}/cann-cmake")
         include("${CANN_3RD_LIB_PATH}/cann-cmake/function/prepare.cmake")
     else()
@@ -18,14 +19,13 @@ if(NOT PROJECT_SOURCE_DIR)
             FetchContent_Declare(
                 cann-cmake
                 URL "${CANN_3RD_LIB_PATH}/cmake-${CANN_CMAKE_TAG}.tar.gz"
-                URL_HASH SHA256=9e59939b5c97c9498293969df22ab2dd40e450700c51f84f117d065880f40d25
+                URL_HASH SHA256=${CANN_CMAKE_SHA256}
             )
         else()
             FetchContent_Declare(
                 cann-cmake
-                GIT_REPOSITORY https://gitcode.com/cann/cmake.git
-                GIT_TAG        ${CANN_CMAKE_TAG}
-                GIT_SHALLOW    TRUE
+                URL "https://cann-3rd.obs.cn-north-4.myhuaweicloud.com/cmake/cmake-${CANN_CMAKE_TAG}.tar.gz"
+                URL_HASH SHA256=${CANN_CMAKE_SHA256}
             )
         endif()
         FetchContent_GetProperties(cann-cmake)
