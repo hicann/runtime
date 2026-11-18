@@ -9,6 +9,7 @@
  */
 
 #include "stream_david.hpp"
+#include "cnt_notify_res.hpp"
 #include "runtime_task_manager.h"
 #include "stream_sqcq_manage.hpp"
 #include "runtime.hpp"
@@ -119,13 +120,11 @@ bool DavidStream::ReleaseDriverResourcesOnDestroy()
     (void)FreeExecutedTimesSvm();
     ReleaseSqCqResourcesOnDestroy();
 
-    if (cntNotifyId_ != MAX_UINT32_NUM) {
-        const rtError_t error = device_->Driver_()->NotifyIdFree(
-            static_cast<int32_t>(device_->Id_()), cntNotifyId_, device_->DevGetTsId(), 0U, true);
-        if (error != RT_ERROR_NONE) {
-            RT_LOG_INNER_MSG(
-                RT_LOG_ERROR, "NotifyIdFree failed, device_id=%u, stream_id=%d, notify_id=%u, retCode=%#x.",
-                device_->Id_(), streamId_, cntNotifyId_, static_cast<uint32_t>(error));
+    {
+        const std::lock_guard<std::mutex> notifyLock(cntNotifyInfoLock_);
+        if (cntNotifyRes_ != nullptr) {
+            cntNotifyRes_->ReleaseOwner(); // owner 引用；归零则 NotifyIdFree + delete
+            cntNotifyRes_ = nullptr;
         }
     }
 
@@ -151,7 +150,7 @@ void DavidStream::ResetHostStateOnDestroy()
     device_ = nullptr;
     model_ = nullptr;
     dvppGrp_ = nullptr;
-    cntNotifyId_ = MAX_UINT32_NUM;
+    cntNotifyRes_ = nullptr;
 }
 
 void DavidStream::FinalizeDavidHostStateOnExit()
@@ -160,7 +159,7 @@ void DavidStream::FinalizeDavidHostStateOnExit()
         taskResMang_->ReleaseHostStateOnExit();
         DELETE_O(taskResMang_);
     }
-    cntNotifyId_ = MAX_UINT32_NUM;
+    cntNotifyRes_ = nullptr;
 }
 
 rtError_t DavidStream::SkipTearDownOnExit(Device* const dev, int32_t stmId)
@@ -822,7 +821,7 @@ rtError_t DavidStream::StarsAddTaskToStream(TaskInfo* const tsk, const uint32_t 
 bool DavidStream::IsCntNotifyReachThreshold(void)
 {
     const std::lock_guard<std::mutex> notifyLock(cntNotifyInfoLock_);
-    if ((cntNotifyId_ != MAX_UINT32_NUM) && (recordVersion_.Value() >= COUNT_NOTIFY_STATIC_THRESHOLD)) {
+    if ((cntNotifyRes_ != nullptr) && (recordVersion_.Value() >= COUNT_NOTIFY_STATIC_THRESHOLD)) {
         return true;
     }
     return false;
@@ -830,7 +829,7 @@ bool DavidStream::IsCntNotifyReachThreshold(void)
 
 rtError_t DavidStream::ApplyCntValue(uint32_t& cntValue)
 {
-    if (cntNotifyId_ == MAX_UINT32_NUM) {
+    if (cntNotifyRes_ == nullptr) {
         return RT_ERROR_INVALID_VALUE;
     }
     recordVersion_.Add(1U);
@@ -840,12 +839,13 @@ rtError_t DavidStream::ApplyCntValue(uint32_t& cntValue)
 
 rtError_t DavidStream::ApplyCntNotifyId(int32_t& newEventId)
 {
-    const auto deviceId = device_->Id_();
-    const auto tsId = device_->DevGetTsId();
-    auto driver = device_->Driver_();
     const std::lock_guard<std::mutex> notifyLock(cntNotifyInfoLock_);
-    if (unlikely(cntNotifyId_ == MAX_UINT32_NUM)) {
-        const rtError_t error = driver->NotifyIdAlloc(static_cast<int32_t>(deviceId), &cntNotifyId_, tsId, 0U, true);
+    if (unlikely(cntNotifyRes_ == nullptr)) {
+        const auto deviceId = device_->Id_();
+        const auto tsId = device_->DevGetTsId();
+        auto driver = device_->Driver_();
+        uint32_t cntNotifyId = MAX_UINT32_NUM;
+        const rtError_t error = driver->NotifyIdAlloc(static_cast<int32_t>(deviceId), &cntNotifyId, tsId, 0U, true);
         if (error != RT_ERROR_NONE) {
             if ((error == RT_ERROR_DRV_NO_NOTIFY_RESOURCES) || (error == RT_ERROR_DRV_NO_RESOURCES)) {
                 RT_LOG_OUTER_MSG_IMPL(
@@ -858,20 +858,21 @@ rtError_t DavidStream::ApplyCntNotifyId(int32_t& newEventId)
             return error;
         }
 
+        CntNotifyRes* const res = new (std::nothrow) CntNotifyRes(device_, tsId, cntNotifyId);
+        if (unlikely(res == nullptr)) {
+            (void)driver->NotifyIdFree(static_cast<int32_t>(deviceId), cntNotifyId, tsId, 0U, true);
+            RT_LOG(RT_LOG_ERROR, "new CntNotifyRes failed, device_id=%u, notify_id=%u.", deviceId, cntNotifyId);
+            return RT_ERROR_MEMORY_ALLOCATION;
+        }
+        res->Acquire(); // 先持 owner 引用再发布，避免并发看到 refs_ 为 0 的对象
+        cntNotifyRes_ = res;
         recordVersion_.Set(0);
     }
-    newEventId = static_cast<int32_t>(cntNotifyId_);
+    newEventId = static_cast<int32_t>(cntNotifyRes_->GetNotifyId());
     return RT_ERROR_NONE;
 }
 
-void DavidStream::GetCntNotifyId(int32_t& newEventId)
-{
-    if (unlikely(cntNotifyId_ == MAX_UINT32_NUM)) {
-        newEventId = MAX_INT32_NUM;
-    } else {
-        newEventId = static_cast<int32_t>(cntNotifyId_);
-    }
-}
+CntNotifyRes* DavidStream::GetCntNotifyRes() { return cntNotifyRes_; }
 
 uint32_t DavidStream::GetCurSqPos() const
 {
@@ -1619,12 +1620,13 @@ rtError_t DavidStream::Restore()
 
     {
         const std::lock_guard<std::mutex> notifyLock(cntNotifyInfoLock_);
-        if (cntNotifyId_ != MAX_UINT32_NUM) {
+        if (cntNotifyRes_ != nullptr) {
             const uint32_t deviceId = device_->Id_();
             const uint32_t tsId = device_->DevGetTsId();
-            error = device_->Driver_()->ReAllocResourceId(deviceId, tsId, 0U, cntNotifyId_, DRV_CNT_NOTIFY_ID);
+            const uint32_t cntNotifyId = cntNotifyRes_->GetNotifyId();
+            error = device_->Driver_()->ReAllocResourceId(deviceId, tsId, 0U, cntNotifyId, DRV_CNT_NOTIFY_ID);
             ERROR_RETURN(
-                error, "Realloc cnt_notify_id failed, cnt_notify_id=%u, device_id=%u, ret=%#x.", cntNotifyId_, deviceId,
+                error, "Realloc cnt_notify_id failed, cnt_notify_id=%u, device_id=%u, ret=%#x.", cntNotifyId, deviceId,
                 static_cast<uint32_t>(error));
         }
         recordVersion_.Set(0);

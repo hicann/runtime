@@ -28,6 +28,7 @@
 #include "event.hpp"
 #include "event_pool.hpp"
 #include "event_david.hpp"
+#include "cnt_notify_res.hpp"
 #include "raw_device.hpp"
 #include "task_info.hpp"
 #include "runtime_task_manager.h"
@@ -224,6 +225,7 @@ TEST_F(EventTestDavid, TestAllocEventIdResource)
     evt->eventFlag_ = RT_EVENT_DEFAULT;
     error = evt->AllocEventIdResource(stm, eventId);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_NE(evt->GetCntNotifyRes(), nullptr); // 事件绑定流级计数通知资源
 
     MOCKER_CPP_VIRTUAL(stm, &Stream::IsCntNotifyReachThreshold).stubs().will(returnValue(true));
     error = evt->AllocEventIdResource(stm, eventId);
@@ -252,14 +254,15 @@ TEST_F(EventTestDavid, AllocEventIdResourceReturnsApplyCntNotifyIdError)
 {
     DavidEvent event(device_, RT_EVENT_DEFAULT, stream_->Context_(), false);
     DavidStream* const stream = static_cast<DavidStream*>(stream_);
-    stream->cntNotifyId_ = MAX_UINT32_NUM;
+    stream->cntNotifyRes_ = nullptr;
     int32_t eventId = INVALID_EVENT_ID;
     MOCKER_CPP_VIRTUAL(stream_, &Stream::ApplyCntNotifyId)
         .expects(once())
         .will(returnValue(RT_ERROR_DRV_NO_EVENT_RESOURCES));
 
     EXPECT_EQ(event.AllocEventIdResource(stream_, eventId), RT_ERROR_DRV_NO_EVENT_RESOURCES);
-    EXPECT_EQ(eventId, MAX_INT32_NUM);
+    EXPECT_EQ(eventId, INVALID_EVENT_ID);        // 失败时出参保持未分配标记
+    EXPECT_EQ(event.GetCntNotifyRes(), nullptr); // 失败时不绑定流级资源
 }
 
 TEST_F(EventTestDavid, EvtRecordReturnsAllocEventIdResourceError)
@@ -467,6 +470,115 @@ TEST_F(EventTestDavid, TestToConstructDavidEventRecordTask)
     EXPECT_EQ(task.type, TS_TASK_TYPE_DAVID_EVENT_RECORD);
     TaskSqeInfo sqeInfo = {0ULL, 0ULL};
     ToConstructSqe(&task, static_cast<void*>(&sqe), sqeInfo);
+    delete evt;
+}
+
+// 事件持有一份计数通知资源引用：record 所在流(owner)销毁后资源仍存活，
+// 事件析构时触发一次 NotifyIdFree 并自回收
+TEST_F(EventTestDavid, EventOwnedRefKeepsCntNotifyResAliveAfterOwnerReleased)
+{
+    rtStream_t streamHandle = nullptr;
+    ASSERT_EQ(rtStreamCreate(&streamHandle, 0), RT_ERROR_NONE);
+    DavidStream* const recStm = static_cast<DavidStream*>(rt_ut::UnwrapOrNull<Stream>(streamHandle));
+    ASSERT_NE(recStm, nullptr);
+    CntNotifyRes* const cntRes = new (std::nothrow) CntNotifyRes(device_, device_->DevGetTsId(), 7U);
+    ASSERT_NE(cntRes, nullptr);
+    cntRes->Acquire(); // 流(owner)引用
+    recStm->cntNotifyRes_ = cntRes;
+
+    DavidEvent* const evt = new (std::nothrow) DavidEvent(device_, RT_EVENT_DEFAULT, stream_->Context_(), false);
+    ASSERT_NE(evt, nullptr);
+    int32_t eventId = INVALID_EVENT_ID;
+    ASSERT_EQ(evt->AllocEventIdResource(recStm, eventId), RT_ERROR_NONE);
+    EXPECT_EQ(eventId, 7);
+    ASSERT_EQ(evt->GetCntNotifyRes(), cntRes);
+    EXPECT_EQ(cntRes->refs_.load(), 2U); // owner(recStm) + event 各一份
+
+    // 销毁 record 所在流：owner 释放引用，事件引用使资源保持存活（本次修复点）
+    ASSERT_EQ(rtStreamDestroy(streamHandle), RT_ERROR_NONE);
+    EXPECT_EQ(cntRes->refs_.load(), 1U);  // 仅剩事件引用
+    EXPECT_EQ(cntRes->GetNotifyId(), 7U); // 资源未被释放，notify id 仍有效
+
+    // 事件析构归还末位引用：NotifyIdFree 恰一次 + 资源自回收
+    MOCKER_CPP_VIRTUAL((NpuDriver*)device_->Driver_(), &NpuDriver::NotifyIdFree)
+        .expects(once())
+        .will(returnValue(RT_ERROR_NONE));
+    delete evt;
+}
+
+// 事件换流 record：旧资源仍被在途 wait 任务持有，旧 id 在 wait 收尾前不得释放
+TEST_F(EventTestDavid, EventRebindKeepsOldResAliveWhileWaitPending)
+{
+    rtStream_t handleA = nullptr;
+    rtStream_t handleB = nullptr;
+    ASSERT_EQ(rtStreamCreate(&handleA, 0), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamCreate(&handleB, 0), RT_ERROR_NONE);
+    DavidStream* const stmA = static_cast<DavidStream*>(rt_ut::UnwrapOrNull<Stream>(handleA));
+    DavidStream* const stmB = static_cast<DavidStream*>(rt_ut::UnwrapOrNull<Stream>(handleB));
+    ASSERT_NE(stmA, nullptr);
+    ASSERT_NE(stmB, nullptr);
+
+    CntNotifyRes* const resA = new (std::nothrow) CntNotifyRes(device_, device_->DevGetTsId(), 10U);
+    ASSERT_NE(resA, nullptr);
+    resA->Acquire(); // owner(stmA) 引用
+    stmA->cntNotifyRes_ = resA;
+    CntNotifyRes* const resB = new (std::nothrow) CntNotifyRes(device_, device_->DevGetTsId(), 11U);
+    ASSERT_NE(resB, nullptr);
+    resB->Acquire(); // owner(stmB) 引用
+    stmB->cntNotifyRes_ = resB;
+
+    DavidEvent* const evt = new (std::nothrow) DavidEvent(device_, RT_EVENT_DEFAULT, stream_->Context_(), false);
+    ASSERT_NE(evt, nullptr);
+    int32_t eventId = INVALID_EVENT_ID;
+    ASSERT_EQ(evt->AllocEventIdResource(stmA, eventId), RT_ERROR_NONE);
+    EXPECT_EQ(resA->refs_.load(), 2U); // owner(stmA) + event
+
+    // 旧绑定上已下发 wait 任务，任务持有一份 resA 引用
+    TaskInfo waitTask = {};
+    InitByStream(&waitTask, stream_);
+    DavidEventWaitTaskInit(&waitTask, evt, eventId, 0U);
+    EXPECT_EQ(resA->refs_.load(), 3U); // owner(stmA) + event + wait
+
+    // 换绑到 B：事件归还 resA 引用，但 wait 任务仍持有，resA 不得释放
+    ASSERT_EQ(evt->AllocEventIdResource(stmB, eventId), RT_ERROR_NONE);
+    EXPECT_EQ(evt->GetCntNotifyRes(), resB);
+    EXPECT_EQ(resA->refs_.load(), 2U);   // owner(stmA) + wait
+    EXPECT_EQ(resA->GetNotifyId(), 10U); // 旧 id 仍有效
+
+    // 旧流销毁：仍由 wait 任务兜住
+    MOCKER_CPP_VIRTUAL((NpuDriver*)device_->Driver_(), &NpuDriver::NotifyIdFree)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+    ASSERT_EQ(rtStreamDestroy(handleA), RT_ERROR_NONE);
+    EXPECT_EQ(resA->refs_.load(), 1U);   // 仅剩 wait 任务
+    EXPECT_EQ(resA->GetNotifyId(), 10U); // 旧 id 仍有效
+
+    // wait 收尾：末位释放旧 id
+    DavidEventWaitTaskUnInit(&waitTask);
+
+    // 新流销毁 + 事件析构：resB 的引用依次归还
+    delete evt;
+    ASSERT_EQ(rtStreamDestroy(handleB), RT_ERROR_NONE);
+}
+
+// reset 任务与 wait 任务一致：初始化持有一份资源引用，收尾归还
+TEST_F(EventTestDavid, TestResetTaskHoldsAndReleasesCntNotifyRef)
+{
+    TaskInfo task = {};
+    InitByStream(&task, stream_);
+    DavidEvent* evt = new (std::nothrow) DavidEvent(device_, RT_EVENT_DEFAULT, stream_->Context_(), false);
+    ASSERT_NE(evt, nullptr);
+    int32_t eventId = INVALID_EVENT_ID;
+    ASSERT_EQ(evt->AllocEventIdResource(stream_, eventId), RT_ERROR_NONE);
+    CntNotifyRes* const cntRes = evt->GetCntNotifyRes();
+    ASSERT_NE(cntRes, nullptr);
+    const uint32_t refsBefore = cntRes->refs_.load();
+
+    DavidEventResetTaskInit(&task, evt, eventId);
+    EXPECT_EQ(cntRes->refs_.load(), refsBefore + 1U); // reset 任务持有一份引用
+    DavidEventResetTaskUnInit(&task);
+    EXPECT_EQ(cntRes->refs_.load(), refsBefore);      // 任务收尾归还引用
+
     delete evt;
 }
 

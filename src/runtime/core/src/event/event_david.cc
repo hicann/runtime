@@ -9,6 +9,7 @@
  */
 #include "event_david.hpp"
 #include "stream_david.hpp"
+#include "cnt_notify_res.hpp"
 #include "device.hpp"
 #include "osal.hpp"
 #include "runtime.hpp"
@@ -43,6 +44,15 @@ DavidEvent::~DavidEvent() noexcept
         RT_LOG(RT_LOG_DEBUG, "DavidEvent FreeEventIdFromDrv");
         (void)device_->FreeEventIdFromDrv(eventId_, static_cast<uint32_t>(eventFlag_));
         eventId_ = INVALID_EVENT_ID;
+    }
+    // 事件析构时所有任务已结束（任务 map 空保证），归还当前绑定资源的引用。
+    CntNotifyRes* res = nullptr;
+    {
+        const std::unique_lock<std::shared_mutex> bindLock(cntResMutex_);
+        res = cntRes_.exchange(nullptr, std::memory_order_acq_rel);
+    }
+    if (res != nullptr) {
+        res->Release(); // 归还事件引用；末位则 NotifyIdFree + delete
     }
     RT_LOG(
         RT_LOG_INFO, "event destructor, device_id=%u, recordSize=%llu, waitSize=%llu", device_->Id_(),
@@ -114,6 +124,16 @@ rtError_t DavidEvent::GenEventId()
     return error;
 }
 
+CntNotifyRes* DavidEvent::AcquireTaskRef()
+{
+    const std::shared_lock<std::shared_mutex> bindLock(cntResMutex_); // wait/reset 共享读，互不互斥
+    CntNotifyRes* const res = cntRes_.load(std::memory_order_acquire);
+    if (res != nullptr) {
+        res->Acquire();
+    }
+    return res;
+}
+
 rtError_t DavidEvent::AllocEventIdResource(Stream* const stm, int32_t& newEventId)
 {
     rtError_t error = RT_ERROR_NONE;
@@ -122,12 +142,31 @@ rtError_t DavidEvent::AllocEventIdResource(Stream* const stm, int32_t& newEventI
         return error;
     }
 
-    stm->GetCntNotifyId(newEventId);
-    if (newEventId == MAX_INT32_NUM) {
-        error = stm->ApplyCntNotifyId(newEventId);
-        if (unlikely(error != RT_ERROR_NONE)) {
+    DavidStream* const davidStm = static_cast<DavidStream*>(stm);
+    CntNotifyRes* newRes = davidStm->GetCntNotifyRes();
+    if (newRes == nullptr) {
+        // ApplyCntNotifyId 成功后 cntNotifyRes_ 必非空，下面对 newRes 的解引用依赖该不变量
+        error = davidStm->ApplyCntNotifyId(newEventId);
+        if (error != RT_ERROR_NONE) {
             return error;
         }
+        newRes = davidStm->GetCntNotifyRes();
+    }
+    newEventId = static_cast<int32_t>(newRes->GetNotifyId());
+    // 事件持有当前绑定资源的一份引用；换绑时先 Acquire 新资源再发布，旧资源引用在发布后、锁外归还。
+    // 在途 wait/reset 任务各自持有一份引用，因此换绑/流销毁都不会提前释放旧 id。
+    CntNotifyRes* oldRes = nullptr;
+    if (cntRes_.load(std::memory_order_acquire) != newRes) {
+        const std::unique_lock<std::shared_mutex> bindLock(cntResMutex_);
+        CntNotifyRes* const cur = cntRes_.load(std::memory_order_relaxed);
+        if (cur != newRes) {
+            newRes->Acquire();
+            cntRes_.store(newRes, std::memory_order_release);
+            oldRes = cur; // 首次绑定时 cur 为 nullptr
+        }
+    }
+    if (oldRes != nullptr) {
+        oldRes->Release(); // 锁外归还，避免锁内驱动调用阻塞 wait/reset 读者
     }
 
     if (unlikely(stm->IsCntNotifyReachThreshold() == true)) {

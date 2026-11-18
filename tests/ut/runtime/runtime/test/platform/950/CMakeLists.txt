@@ -58,6 +58,7 @@ add_executable(runtime_utest_task_david
     rt_utest_model_task_copy_args.cc
     rt_utest_david_event.cc
     rt_utest_david_stream.cc
+    rt_utest_cnt_notify_res.cc
     rt_utest_david_elf.cc
     rt_utest_david_device.cc
     rt_utest_david_context.cc

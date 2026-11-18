@@ -28,6 +28,7 @@
 #include "event_david.hpp"
 #include "h2d_copy_mgr.hpp"
 #include "stream_david.hpp"
+#include "cnt_notify_res.hpp"
 #include "stream_task.h"
 #include "npu_driver.hpp"
 #include "count_notify.hpp"
@@ -791,7 +792,9 @@ TEST_F(DavidSnapshotTest, Restore_WithCntNotifyId_Success)
     DavidStream* stream = new (std::nothrow) DavidStream(dev_, 0, 0, nullptr);
     ASSERT_NE(stream, nullptr);
 
-    stream->cntNotifyId_ = 1;
+    stream->cntNotifyRes_ = new (std::nothrow) CntNotifyRes(dev_, 0U, 1U);
+    ASSERT_NE(stream->cntNotifyRes_, nullptr);
+    stream->cntNotifyRes_->Acquire(); // owner 引用，模拟已申请计数通知资源
 
     MOCKER_CPP_VIRTUAL(dev_->Driver_(), &Driver::ReAllocResourceId).stubs().will(returnValue(RT_ERROR_NONE));
 
@@ -808,7 +811,9 @@ TEST_F(DavidSnapshotTest, Restore_CntNotifyIdReAllocFailed)
     DavidStream* stream = new (std::nothrow) DavidStream(dev_, 0, 0, nullptr);
     ASSERT_NE(stream, nullptr);
 
-    stream->cntNotifyId_ = 1;
+    stream->cntNotifyRes_ = new (std::nothrow) CntNotifyRes(dev_, 0U, 1U);
+    ASSERT_NE(stream->cntNotifyRes_, nullptr);
+    stream->cntNotifyRes_->Acquire(); // owner 引用，模拟已申请计数通知资源
 
     MOCKER_CPP_VIRTUAL(dev_->Driver_(), &Driver::ReAllocResourceId)
         .stubs()

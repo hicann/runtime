@@ -30,6 +30,7 @@ namespace runtime {
 
 class Notify;
 class CountNotify;
+class CntNotifyRes;
 class Event;
 struct EventResource;
 class IpcEvent;
@@ -197,6 +198,7 @@ struct DavidEventResetTaskInfo {
     Event* event;
     int32_t eventId;
     uint32_t isCountNotify;
+    CntNotifyRes* cntRes; // 任务持有的计数通知资源引用，任务收尾时归还
 };
 
 struct DavidEventWaitTaskInfo {
@@ -205,6 +207,7 @@ struct DavidEventWaitTaskInfo {
     uint32_t timeout;
     uint32_t isCountNotify;
     uint32_t countValue;
+    CntNotifyRes* cntRes; // 任务持有的计数通知资源引用，任务收尾时归还
 };
 
 struct MaintenanceTaskInfo {

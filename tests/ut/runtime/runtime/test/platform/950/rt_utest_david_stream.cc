@@ -38,6 +38,7 @@
 #include "davinci_kernel_task.h"
 #include "context.hpp"
 #include "stream_david.hpp"
+#include "cnt_notify_res.hpp"
 #include "kernel_utils.hpp"
 #include "task_david.hpp"
 #include "task_res_da.hpp"
@@ -314,33 +315,39 @@ TEST(DavidStreamFailureModeTest, ResetDavidStreamConstructRestoresFailureModeAft
 
 TEST_F(DavidStreamTest, Apply_CntValue)
 {
-    MOCKER_CPP_VIRTUAL((NpuDriver*)device_->Driver_(), &NpuDriver::NotifyIdAlloc)
-        .stubs()
-        .will(returnValue(RT_ERROR_NONE));
     DavidStream* stream = (DavidStream*)stream_;
-    stream->cntNotifyId_ = MAX_UINT32_NUM;
-    int32_t cntNotifyId;
-    rtError_t res = stream->ApplyCntNotifyId(cntNotifyId);
-    EXPECT_EQ(res, RT_ERROR_NONE);
-    uint32_t cntValue;
-    res = stream->ApplyCntValue(cntValue);
+    uint32_t cntValue = 0U;
+    // 未申请计数通知资源：ApplyCntValue 返回非法值
+    rtError_t res = stream->ApplyCntValue(cntValue);
     EXPECT_EQ(res, RT_ERROR_INVALID_VALUE);
-    stream->recordVersion_.Set(COUNT_NOTIFY_STATIC_THRESHOLD);
-    stream->cntNotifyId_ = 0;
+    // 申请后返回驱动分配的 notify id，并绑定流级计数通知资源
+    int32_t cntNotifyId = INVALID_EVENT_ID;
+    res = stream->ApplyCntNotifyId(cntNotifyId);
+    EXPECT_EQ(res, RT_ERROR_NONE);
+    EXPECT_NE(cntNotifyId, INVALID_EVENT_ID); // 驱动分配成功，出参为有效 notify id
+    ASSERT_NE(stream->cntNotifyRes_, nullptr);
+    EXPECT_EQ(cntNotifyId, static_cast<int32_t>(stream->cntNotifyRes_->GetNotifyId()));
+    // 版本号未达阈值：ApplyCntValue 正常累加版本号
+    EXPECT_EQ(stream->IsCntNotifyReachThreshold(), false);
     res = stream->ApplyCntValue(cntValue);
     EXPECT_EQ(res, RT_ERROR_NONE);
-    bool ret = stream->IsCntNotifyReachThreshold();
-    EXPECT_EQ(ret, true);
+    // 版本号达到阈值：计数继续累加并达到阈值
+    stream->recordVersion_.Set(COUNT_NOTIFY_STATIC_THRESHOLD);
+    res = stream->ApplyCntValue(cntValue);
+    EXPECT_EQ(res, RT_ERROR_NONE);
+    EXPECT_EQ(cntValue, COUNT_NOTIFY_STATIC_THRESHOLD + 1U);
+    EXPECT_EQ(stream->IsCntNotifyReachThreshold(), true);
 }
 
 TEST_F(DavidStreamTest, ApplyCntNotifyId_abnormal)
 {
     MOCKER_CPP_VIRTUAL((NpuDriver*)device_->Driver_(), &NpuDriver::NotifyIdAlloc).stubs().will(returnValue(1));
     DavidStream* stream = (DavidStream*)stream_;
-    stream->cntNotifyId_ = MAX_UINT32_NUM;
+    stream->cntNotifyRes_ = nullptr;
     int32_t cntNotifyId;
     rtError_t res = stream->ApplyCntNotifyId(cntNotifyId);
     EXPECT_NE(res, RT_ERROR_NONE);
+    EXPECT_EQ(stream->cntNotifyRes_, nullptr);
 }
 
 TEST_F(DavidStreamTest, ApplyCntNotifyId_no_notify_resource)
@@ -349,10 +356,11 @@ TEST_F(DavidStreamTest, ApplyCntNotifyId_no_notify_resource)
         .stubs()
         .will(returnValue(RT_ERROR_DRV_NO_NOTIFY_RESOURCES));
     DavidStream* stream = (DavidStream*)stream_;
-    stream->cntNotifyId_ = MAX_UINT32_NUM;
+    stream->cntNotifyRes_ = nullptr;
     int32_t cntNotifyId;
     const rtError_t res = stream->ApplyCntNotifyId(cntNotifyId);
     EXPECT_EQ(res, RT_ERROR_DRV_NO_NOTIFY_RESOURCES);
+    EXPECT_EQ(stream->cntNotifyRes_, nullptr);
 }
 
 TEST_F(DavidStreamTest, StarsShowDfx)
@@ -648,7 +656,7 @@ TEST_F(DavidStreamTest, setup_cnt_free_fail)
     rtError_t res = rtStreamCreateWithFlags(&stream, 0, 0);
     EXPECT_EQ(res, RT_ERROR_NONE);
     DavidStream* davidStream = (DavidStream*)(rt_ut::UnwrapOrNull<Stream>(stream));
-    davidStream->cntNotifyId_ = MAX_UINT32_NUM;
+    davidStream->cntNotifyRes_ = nullptr;
     int32_t cntNotifyId;
     res = davidStream->ApplyCntNotifyId(cntNotifyId);
     EXPECT_EQ(res, RT_ERROR_NONE);
@@ -728,7 +736,9 @@ TEST_F(DavidStreamTest, ResClear_01)
         .then(returnValue((uint32_t)DEV_RUNNING_DOWN));
 
     stream->pendingNum_.Set(1);
-    stream->cntNotifyId_ = 1U;
+    stream->cntNotifyRes_ = new (std::nothrow) CntNotifyRes(device_, 0U, 1U);
+    ASSERT_NE(stream->cntNotifyRes_, nullptr);
+    stream->cntNotifyRes_->Acquire(); // owner 引用，模拟已申请计数通知资源
 
     rtError_t error = stream->ResClear();
     EXPECT_EQ(error, RT_ERROR_NONE);

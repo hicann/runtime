@@ -11,10 +11,14 @@
 #define CCE_RUNTIME_EVENT_DAVID_HPP
 
 #include <string>
+#include <atomic>
+#include <shared_mutex>
 #include "event.hpp"
 
 namespace cce {
 namespace runtime {
+
+class CntNotifyRes;
 
 enum class DavidEventState_t : uint8_t {
     EVT_NOT_RECORDED,
@@ -67,6 +71,11 @@ public:
     bool IsCntNotify() const { return isCntNotify_; }
     uint32_t CntValue() const { return cntValue_; }
     void SetCntValue(uint32_t val) { cntValue_ = val; }
+    // 仅只读/UT 使用
+    CntNotifyRes* GetCntNotifyRes() const { return cntRes_.load(std::memory_order_acquire); }
+    // 锁内读取当前绑定资源并持有一份任务引用，供 wait/reset 任务 SQE 构造使用；
+    // 事件之后换绑/销毁都不影响该任务对旧资源的引用
+    CntNotifyRes* AcquireTaskRef();
     void SetRecordStatus(DavidEventState_t status) { status_ = status; }
     DavidEventState_t GetRecordStatus() const { return status_; }
     void SetLatestRecordInfo(uint32_t taskId, int32_t stmId, uint64_t expectCqeNo = 0ULL)
@@ -82,6 +91,8 @@ private:
     uint32_t cntValue_{0U};
     DavidEventState_t status_;
     DavidRecordTaskInfo latestRecordTask_{0, 0U, 0ULL};
+    std::atomic<CntNotifyRes*> cntRes_{nullptr}; // 当前绑定的计数通知资源（count-notify 模式）
+    std::shared_mutex cntResMutex_;              // 换绑/析构独占写；wait/reset 任务取引用共享读
 };
 } // namespace runtime
 } // namespace cce

@@ -860,7 +860,6 @@ public:
         (void)newEventId;
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
-    virtual void GetCntNotifyId(int32_t& newEventId) { (void)newEventId; }
     virtual rtError_t ApplyCntValue(uint32_t& cntValue)
     {
         (void)cntValue;

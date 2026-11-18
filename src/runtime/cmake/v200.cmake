@@ -188,6 +188,7 @@ set(libruntime_v200_stream_src_files
     ${RUNTIME_CORE_DIR}/src/stream/stream_c.cc
     ${RUNTIME_FEATURE_DIR}/ccu/ccu_stream.cc
     ${RUNTIME_CORE_DIR}/src/stream/stream_david.cc
+    ${RUNTIME_CORE_DIR}/src/stream/cnt_notify_res.cc
     ${RUNTIME_CORE_DIR}/src/stream/v200/stream_creator_c.cc
 )
 
@@ -208,6 +209,7 @@ set(libruntime_v201_stream_src_files
     ${RUNTIME_CORE_DIR}/src/stream/stream_c.cc
     ${RUNTIME_FEATURE_DIR}/ccu/ccu_stream.cc
     ${RUNTIME_CORE_DIR}/src/stream/stream_david.cc
+    ${RUNTIME_CORE_DIR}/src/stream/cnt_notify_res.cc
     ${RUNTIME_FEATURE_DIR}/dqs/stream_with_dqs.cc
     ${RUNTIME_CORE_DIR}/src/stream/v201/stream_creator_c.cc
 )

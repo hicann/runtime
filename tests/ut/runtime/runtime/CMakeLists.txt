@@ -351,6 +351,7 @@ set(runtimeut_david_src_stream_list
     ${runtimeut_common_src_stream_list}
 
     ${TOP_DIR}/src/runtime/core/src/stream/stream_david.cc
+    ${TOP_DIR}/src/runtime/core/src/stream/cnt_notify_res.cc
     ${TOP_DIR}/src/runtime/core/src/stream/v200/stream_creator_c.cc
 )
 
@@ -1704,6 +1705,7 @@ set(runtimeut_v201_src_stream_list
     ${runtimeut_common_src_stream_list}
 
     ${TOP_DIR}/src/runtime/core/src/stream/stream_david.cc
+    ${TOP_DIR}/src/runtime/core/src/stream/cnt_notify_res.cc
     ${TOP_DIR}/src/runtime/feature/dqs/stream_with_dqs.cc
     ${TOP_DIR}/src/runtime/core/src/stream/v201/stream_creator_c.cc
 )

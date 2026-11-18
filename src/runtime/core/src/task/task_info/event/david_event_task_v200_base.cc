@@ -20,10 +20,19 @@
 #include "device.hpp"
 #include "error_code.h"
 #include "capture_func.hpp"
+#include "cnt_notify_res.hpp"
 
 namespace cce {
 namespace runtime {
 uint16_t GetSqeEventId(const rtStarsSqe_t* sqe) { return sqe->eventSqe.eventId; }
+
+static void ReleaseCntNotifyRes(CntNotifyRes*& cntRes)
+{
+    if (cntRes != nullptr) {
+        cntRes->Release();
+        cntRes = nullptr;
+    }
+}
 
 #if F_DESC("DavidEventRecordTask")
 rtError_t DavidEventRecordTaskInit(TaskInfo* const taskInfo, Event* const eventPtr, const int32_t newEventId)
@@ -63,7 +72,6 @@ void DavidEventRecordTaskUnInit(TaskInfo* const taskInfo)
     }
     DavidUpdateAndTryToDestroyEvent(
         taskInfo, &(eventRecordTaskInfo->event), DavidTaskMapType::TASK_MAP_TYPE_RECORD_RESET_MAP);
-
     eventRecordTaskInfo->eventId = INVALID_EVENT_ID;
     eventRecordTaskInfo->event = nullptr;
 }
@@ -177,6 +185,14 @@ void DavidEventWaitTaskInit(
     eventWaitTaskInfo->timeout = timeout;
     eventWaitTaskInfo->isCountNotify = evt->IsCntNotify();
     eventWaitTaskInfo->countValue = evt->CntValue();
+    eventWaitTaskInfo->cntRes = nullptr;
+    if (eventWaitTaskInfo->isCountNotify == 1U) {
+        CntNotifyRes* const res = evt->AcquireTaskRef(); // 任务持有旧资源引用，收尾时归还
+        if (res != nullptr) {
+            eventWaitTaskInfo->cntRes = res;
+            eventWaitTaskInfo->eventId = static_cast<int32_t>(res->GetNotifyId());
+        }
+    }
 }
 
 void DavidEventWaitTaskUnInit(TaskInfo* const taskInfo)
@@ -189,6 +205,7 @@ void DavidEventWaitTaskUnInit(TaskInfo* const taskInfo)
         stream->Device_()->Id_(), stream->Id_(), taskInfo->id, eventWaitTaskInfo->eventId, stream->GetSqId());
 
     DavidUpdateAndTryToDestroyEvent(taskInfo, &(eventWaitTaskInfo->event), DavidTaskMapType::TASK_MAP_TYPE_WAIT_MAP);
+    ReleaseCntNotifyRes(eventWaitTaskInfo->cntRes); // 任务收尾归还引用；末位则 NotifyIdFree + delete
     eventWaitTaskInfo->eventId = INVALID_EVENT_ID;
     eventWaitTaskInfo->event = nullptr;
 }
@@ -287,6 +304,14 @@ void DavidEventResetTaskInit(TaskInfo* const taskInfo, Event* const eventPtr, co
     eventResetTaskInfo->eventId = eventIndex;
     eventResetTaskInfo->event = evt;
     eventResetTaskInfo->isCountNotify = evt->IsCntNotify();
+    eventResetTaskInfo->cntRes = nullptr;
+    if (eventResetTaskInfo->isCountNotify == 1U) {
+        CntNotifyRes* const res = evt->AcquireTaskRef(); // 任务持有旧资源引用，收尾时归还
+        if (res != nullptr) {
+            eventResetTaskInfo->cntRes = res;
+            eventResetTaskInfo->eventId = static_cast<int32_t>(res->GetNotifyId());
+        }
+    }
     return;
 }
 
@@ -300,6 +325,7 @@ void DavidEventResetTaskUnInit(TaskInfo* const taskInfo)
         stream->Device_()->Id_(), stream->Id_(), taskInfo->id, eventResetTaskInfo->eventId, stream->GetSqId());
     DavidUpdateAndTryToDestroyEvent(
         taskInfo, &(eventResetTaskInfo->event), DavidTaskMapType::TASK_MAP_TYPE_RECORD_RESET_MAP);
+    ReleaseCntNotifyRes(eventResetTaskInfo->cntRes); // 任务收尾归还引用；末位则 NotifyIdFree + delete
     eventResetTaskInfo->eventId = INVALID_EVENT_ID;
     eventResetTaskInfo->event = nullptr;
     return;
@@ -333,10 +359,10 @@ static void ConstructDavidSqeForEventResetTask(TaskInfo* taskInfo, void* const s
     notifySqe->waitModeBit = 0U;
     notifySqe->recordModeBit = 0U;
     notifySqe->cntFlag = eventResetTaskInfo->isCountNotify;
-    const rtDavidNotifySubType subType = (eventResetTaskInfo->isCountNotify == 1U) ?
-                                             NOTIFY_SUB_TYPE_EVENT_RESET_USE_COUNT_NOTIFY :
-                                             NOTIFY_SUB_TYPE_EVENT_RESET_USE_SINGLE_NOTIFY;
-    notifySqe->subType = static_cast<uint16_t>(subType);
+    notifySqe->subType = NOTIFY_SUB_TYPE_EVENT_RESET_USE_SINGLE_NOTIFY;
+    if (eventResetTaskInfo->isCountNotify == 1U) {
+        notifySqe->subType = NOTIFY_SUB_TYPE_EVENT_RESET_USE_COUNT_NOTIFY;
+    }
 
     evt->InsertRecordResetToMap(taskInfo);
     PrintDavidSqe(davidSqe, "EventResetTask");

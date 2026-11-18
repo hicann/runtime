@@ -16,6 +16,7 @@ namespace cce {
 namespace runtime {
 
 class Kernel;
+class CntNotifyRes;
 constexpr uint32_t COUNT_NOTIFY_STATIC_THRESHOLD = 0xFFFFFFFDU;
 class DavidStream : public Stream {
 public:
@@ -40,7 +41,7 @@ public:
         TaskInfo* workTask, const bool isTaskBind, const uint16_t tailTaskId, uint16_t* const delTaskId) override;
     bool IsCntNotifyReachThreshold(void) override;
     rtError_t ApplyCntNotifyId(int32_t& newEventId) override;
-    void GetCntNotifyId(int32_t& newEventId) override;
+    CntNotifyRes* GetCntNotifyRes();
     rtError_t ApplyCntValue(uint32_t& cntValue) override;
     rtError_t ResClear(uint64_t timeout = 0) override;
     uint32_t StarsGetMaxTryCount() const override;
@@ -132,7 +133,7 @@ private:
     void WaitRecycleThreadProcDone();
 
     std::mutex cntNotifyInfoLock_;
-    uint32_t cntNotifyId_{MAX_UINT32_NUM};
+    CntNotifyRes* cntNotifyRes_{nullptr};
     Atomic<uint32_t> recordVersion_{0U};
     uint32_t publicQueueHead_{0U};
     uint32_t publicQueueTail_{0U};
