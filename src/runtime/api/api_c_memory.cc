@@ -20,6 +20,7 @@ using namespace cce::runtime;
 namespace cce {
 namespace runtime {
 TIMESTAMP_EXTERN(rtMalloc);
+TIMESTAMP_EXTERN(rtMemRegisterUbSegment);
 TIMESTAMP_EXTERN(rtFlushCache);
 TIMESTAMP_EXTERN(rtInvalidCache);
 TIMESTAMP_EXTERN(rtsMemFlushCache);
@@ -560,6 +561,20 @@ rtError_t rtGetMemUsageInfo(uint32_t deviceId, rtMemUsageInfo_t* memUsageInfo, s
     Api* const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
     const rtError_t error = apiInstance->GetMemUsageInfo(deviceId, memUsageInfo, inputNum, outputNum);
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtMemRegisterUbSegment(void* const addr, const size_t size)
+{
+    GLOBAL_STATE_WAIT_IF_LOCKED();
+    Api* const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    TIMESTAMP_BEGIN(rtMemRegisterUbSegment);
+    const rtError_t error = apiInstance->MemRegisterUbSegment(addr, size);
+    TIMESTAMP_END(rtMemRegisterUbSegment);
     COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(error);
     return ACL_RT_SUCCESS;

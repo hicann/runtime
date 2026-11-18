@@ -81,6 +81,45 @@ private:
     rtChipType_t originType_;
 };
 
+TEST_F(RtMemoryApiTest, register_ub_segment_uses_current_device_and_preserves_parameters)
+{
+    Context* const ctx = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(ctx, nullptr);
+    const uint32_t deviceId = ctx->Device_()->Id_();
+    MOCKER(halMemRegUbSegment)
+        .expects(once())
+        .with(eq(deviceId), eq(static_cast<uint64_t>(UINTPTR_MAX)), eq(static_cast<uint64_t>(SIZE_MAX)))
+        .will(returnValue(DRV_ERROR_NONE));
+    EXPECT_EQ(rtMemRegisterUbSegment(reinterpret_cast<void*>(UINTPTR_MAX), SIZE_MAX), ACL_RT_SUCCESS);
+}
+
+TEST_F(RtMemoryApiTest, register_ub_segment_invalid_arguments_do_not_call_driver)
+{
+    MOCKER(halMemRegUbSegment).expects(never());
+    EXPECT_EQ(rtMemRegisterUbSegment(nullptr, 0U), ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(rtMemRegisterUbSegment(nullptr, 4096U), ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(rtMemRegisterUbSegment(reinterpret_cast<void*>(uintptr_t{1U}), 0U), ACL_ERROR_RT_PARAM_INVALID);
+}
+
+TEST_F(RtMemoryApiTest, register_ub_segment_driver_invalid_value)
+{
+    MOCKER(halMemRegUbSegment).expects(once()).will(returnValue(DRV_ERROR_INVALID_VALUE));
+    EXPECT_EQ(rtMemRegisterUbSegment(reinterpret_cast<void*>(uintptr_t{1U}), 4096U), ACL_ERROR_RT_PARAM_INVALID);
+}
+
+TEST_F(RtMemoryApiTest, register_ub_segment_driver_not_supported)
+{
+    MOCKER(halMemRegUbSegment).expects(once()).will(returnValue(DRV_ERROR_NOT_SUPPORT));
+    EXPECT_EQ(rtMemRegisterUbSegment(reinterpret_cast<void*>(uintptr_t{1U}), 2U), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+}
+
+TEST_F(RtMemoryApiTest, register_ub_segment_already_registered)
+{
+    MOCKER(halMemRegUbSegment).expects(once()).will(returnValue(DRV_ERROR_IOCRL_FAIL));
+    EXPECT_EQ(
+        rtMemRegisterUbSegment(reinterpret_cast<void*>(uintptr_t{1U}), 4096U), ACL_ERROR_UB_MEMORY_ALREADY_REGISTERED);
+}
+
 TEST_F(RtMemoryApiTest, rtReserveMemAddress)
 {
     void* devPtr = nullptr;

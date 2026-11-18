@@ -324,6 +324,7 @@ public:
     virtual rtError_t MemGetInfoByDeviceId(
         uint32_t deviceId, bool isHugeOnly, size_t* const freeSize, size_t* const totalSize) = 0;
     virtual rtError_t MemGetInfo(size_t* const freeSize, size_t* const totalSize) = 0;
+    virtual rtError_t MemRegisterUbSegment(void* addr, size_t size) = 0;
     virtual rtError_t MemGetInfoByType(const int32_t devId, const rtMemType_t type, rtMemInfo_t* const info) = 0;
     virtual rtError_t CheckMemType(
         void** addrs, uint32_t size, uint32_t memType, uint32_t* checkResult, uint32_t reserve) = 0;

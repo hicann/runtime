@@ -6316,6 +6316,17 @@ ACL_FUNC_VISIBILITY aclError aclrtMemGetAddressRange(void* ptr, void** pbase, si
 
 /**
  * @ingroup AscendCL
+ * @brief Register a memory range as a UB segment on the current device.
+ * @param addr [IN] Start virtual address of the memory range.
+ * @param size [IN] Size of the memory range in bytes.
+ *
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclrtMemRegisterUbSegment(void* addr, size_t size);
+
+/**
+ * @ingroup AscendCL
  * @brief Used for memory mapping between devices within the same process
  * @param devPtr [IN]   Device memory address
  * @param size [IN]  Size of the memory

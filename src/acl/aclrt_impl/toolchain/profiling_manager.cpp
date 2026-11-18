@@ -295,6 +295,7 @@ const std::map<AclProfType, std::string> PROF_TYPE_TO_NAMES = {
     {AclProfType::AclrtGetMemUsageInfo, "aclrtGetMemUsageInfo"},
     {AclProfType::AclrtReserveMemAddressNoUCMemory, "aclrtReserveMemAddressNoUCMemory"},
     {AclProfType::AclrtMemGetAddressRange, "aclrtMemGetAddressRange"},
+    {AclProfType::AclrtMemRegisterUbSegment, "aclrtMemRegisterUbSegment"},
     {AclProfType::aclrtMemP2PMap, "aclrtMemP2PMap"},
     {AclProfType::AclrtMemAllocManaged, "aclrtMemAllocManaged"},
     {AclProfType::AclrtMemPoolCreate, "aclrtMemPoolCreate"},

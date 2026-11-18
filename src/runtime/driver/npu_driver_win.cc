@@ -139,6 +139,14 @@ rtError_t NpuDriver::MemMapNoAccess(void* virPtr, size_t size, size_t offset, rt
     return RT_ERROR_NONE;
 }
 
+rtError_t NpuDriver::MemRegisterUbSegment(const uint32_t deviceId, void* const addr, const size_t size)
+{
+    UNUSED(deviceId);
+    UNUSED(addr);
+    UNUSED(size);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 rtError_t NpuDriver::MemSetAccess(void* virPtr, size_t size, rtMemAccessDesc* desc, size_t count)
 {
     UNUSED(virPtr);

@@ -214,6 +214,7 @@ TIMESTAMP_EXTERN(rtKernelLaunchWithHandle_SubMit);
 TIMESTAMP_EXTERN(rtLaunchKernel_ArgLoadAll_LITE);
 TIMESTAMP_EXTERN(rtLaunchKernel_SubMit);
 TIMESTAMP_EXTERN(rtMalloc);
+TIMESTAMP_EXTERN(rtMemRegisterUbSegment);
 TIMESTAMP_EXTERN(rtMallocCached);
 TIMESTAMP_EXTERN(rtMallocHost);
 TIMESTAMP_EXTERN(rtsMallocHost);
@@ -2968,6 +2969,7 @@ void ApiImpl::DumpTimeStampPart1() const
     TIMESTAMP_DUMP(rtReduceAsync_part1);
     TIMESTAMP_DUMP(rtReduceAsync_part2);
     TIMESTAMP_DUMP(rtMalloc);
+    TIMESTAMP_DUMP(rtMemRegisterUbSegment);
     TIMESTAMP_DUMP(rtMemAllocManaged);
     TIMESTAMP_DUMP(rtMemFreeManaged);
     TIMESTAMP_DUMP(rtMemcpy);

@@ -164,6 +164,19 @@ RTS_API rtError_t rtMemGetAddressRange(void* ptr, void** pbase, size_t* psize);
 
 /**
  * @ingroup dvrt_mem
+ * @brief Register a memory range as a UB segment on the current device.
+ * @param [IN] addr Start virtual address of the memory range. Must not be null.
+ * @param [IN] size Size of the memory range in bytes. Must be greater than zero.
+ * @return RT_ERROR_NONE for ok
+ * @return RT_ERROR_INVALID_VALUE for error input
+ * @return RT_ERROR_FEATURE_NOT_SUPPORT if the feature is not supported
+ * @return RT_ERROR_UB_MEMORY_ALREADY_REGISTERED for duplicate registration
+ * @return RT_ERROR_DRV_ERR for driver error
+ */
+RTS_API rtError_t rtMemRegisterUbSegment(void* addr, size_t size);
+
+/**
+ * @ingroup dvrt_mem
  * @brief Prefetch memory to device
  * @param devPtr [IN]   Device memory address
  * @param len [IN]  Size of the memory

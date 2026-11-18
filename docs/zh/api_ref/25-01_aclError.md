@@ -249,6 +249,7 @@ typedef int aclError;
 | #define  ACL_ERROR_RT_L3_PORT_ERROR  507914 | L3端口错误。 | 您可以获取日志后提交ISSUE。 |
 | #define  ACL_ERROR_RT_CCU_TIMEOUT  507915 | CCU执行超时。 | 您可以获取日志后提交ISSUE。 |
 | #define  ACL_ERROR_RT_CCU_EXCEPTION  507916 | CCU执行异常。 | 您可以获取日志后提交ISSUE。 |
+| #define  ACL_ERROR_UB_MEMORY_ALREADY_REGISTERED  507917 | UB（Unified Bus）内存已经被注册。 | 您可以获取日志后提交ISSUE。 |
 
 <a id="table153902340461"></a>
 **表 3**  透传GE的返回码列表

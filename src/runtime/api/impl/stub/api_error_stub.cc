@@ -12,6 +12,13 @@
 namespace cce {
 namespace runtime {
 
+rtError_t ApiErrorDecorator::MemRegisterUbSegment(void* const addr, const size_t size)
+{
+    UNUSED(addr);
+    UNUSED(size);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 rtError_t ApiErrorDecorator::DeviceSetSuspendConfig(const int32_t deviceId, const rtDeviceSuspendConfig* const config)
 {
     UNUSED(deviceId);

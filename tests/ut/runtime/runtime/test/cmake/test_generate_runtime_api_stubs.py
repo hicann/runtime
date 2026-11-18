@@ -187,12 +187,12 @@ RUNTIME_API_STUB(rtNoop)
         self.assertEqual(catalog_version, product_version)
         self.assertFalse(set(names) - set(catalog))
         self.assertEqual(names, sorted(names))
-        self.assertEqual(len(catalog), 803)
-        self.assertEqual(len(names), 671)
+        self.assertEqual(len(catalog), 804)
+        self.assertEqual(len(names), 672)
         self.assertEqual(len(set(catalog) - set(names)), 132)
         self.assertEqual(
             sum(catalog[name].policy == "FEATURE_NOT_SUPPORT" for name in names),
-            667,
+            668,
         )
         self.assertEqual(
             sum(catalog[name].policy == "SUCCESS_NOOP" for name in names), 3
@@ -300,7 +300,7 @@ RUNTIME_API_STUB(rtNoop)
                 mappings.append((fields[0], fields[1]))
 
         acl_names = [acl_name for acl_name, _ in mappings]
-        self.assertEqual(len(acl_names), 268)
+        self.assertEqual(len(acl_names), 269)
         self.assertFalse(any(name.startswith("acltdt") for name in acl_names))
         self.assertEqual(len(acl_names), len(set(acl_names)))
         self.assertFalse(

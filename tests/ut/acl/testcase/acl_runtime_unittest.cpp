@@ -10060,6 +10060,47 @@ TEST_F(UTEST_ACL_Runtime, aclrtReserveMemAddressNoUCMemory)
     EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
 }
 
+TEST_F(UTEST_ACL_Runtime, aclrtMemRegisterUbSegment_passthrough)
+{
+    void* const addr = reinterpret_cast<void*>(UINTPTR_MAX);
+    const size_t size = SIZE_MAX;
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtMemRegisterUbSegment(addr, size))
+        .WillOnce(Return(RT_ERROR_NONE));
+    EXPECT_EQ(aclrtMemRegisterUbSegment(addr, size), ACL_SUCCESS);
+
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtMemRegisterUbSegment(addr, 4096U))
+        .WillOnce(Return(ACL_ERROR_RT_PARAM_INVALID));
+    EXPECT_EQ(aclrtMemRegisterUbSegment(addr, 4096U), ACL_ERROR_RT_PARAM_INVALID);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtMemRegisterUbSegment_null_ptr)
+{
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtMemRegisterUbSegment(_, _)).Times(0);
+    EXPECT_EQ(aclrtMemRegisterUbSegment(nullptr, 4096U), ACL_ERROR_INVALID_PARAM);
+    EXPECT_EQ(aclrtMemRegisterUbSegment(nullptr, 0U), ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtMemRegisterUbSegment_zero_size)
+{
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtMemRegisterUbSegment(_, _)).Times(0);
+    EXPECT_EQ(aclrtMemRegisterUbSegment(reinterpret_cast<void*>(uintptr_t{1U}), 0U), ACL_ERROR_INVALID_PARAM);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtMemRegisterUbSegment_not_supported)
+{
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtMemRegisterUbSegment(reinterpret_cast<void*>(uintptr_t{1U}), 2U))
+        .WillOnce(Return(ACL_ERROR_RT_FEATURE_NOT_SUPPORT));
+    EXPECT_EQ(aclrtMemRegisterUbSegment(reinterpret_cast<void*>(uintptr_t{1U}), 2U), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+}
+
+TEST_F(UTEST_ACL_Runtime, aclrtMemRegisterUbSegment_already_registered)
+{
+    void* const addr = reinterpret_cast<void*>(uintptr_t{1U});
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtMemRegisterUbSegment(addr, 4096U))
+        .WillOnce(Return(ACL_ERROR_UB_MEMORY_ALREADY_REGISTERED));
+    EXPECT_EQ(aclrtMemRegisterUbSegment(addr, 4096U), ACL_ERROR_UB_MEMORY_ALREADY_REGISTERED);
+}
+
 TEST_F(UTEST_ACL_Runtime, aclrtMemGetAddressRange)
 {
     void* ptr = nullptr;

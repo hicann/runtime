@@ -12,6 +12,13 @@
 namespace cce {
 namespace runtime {
 
+rtError_t ApiImpl::MemRegisterUbSegment(void* const addr, const size_t size)
+{
+    UNUSED(addr);
+    UNUSED(size);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 rtError_t ApiImpl::MemCopySyncEx(
     void* const dst, const uint64_t destMax, const void* const src, const uint64_t cnt, const rtMemcpyKind_t kind)
 {

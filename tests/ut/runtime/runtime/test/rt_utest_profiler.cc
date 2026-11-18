@@ -19,6 +19,7 @@
 #include "profiler.hpp"
 #include "api_profile_decorator.hpp"
 #include "api_profile_log_decorator.hpp"
+#include "profile_log_record.hpp"
 #include "profiler_struct.hpp"
 #include "context.hpp"
 #include "context_manage.hpp"
@@ -285,6 +286,90 @@ private:
     rtError_t getDeviceRet_;
     int32_t deviceId_;
 };
+
+class UbSegmentDecoratorApiImpl : public RuntimeProfTestApiImpl {
+public:
+    rtError_t MemRegisterUbSegment(void* const addr, const size_t size) override
+    {
+        ++calls;
+        lastAddr = addr;
+        lastSize = size;
+        return result;
+    }
+
+    rtError_t result = RT_ERROR_NONE;
+    void* lastAddr = nullptr;
+    size_t lastSize = 0U;
+    uint32_t calls = 0U;
+};
+
+class UbSegmentDecoratorTest : public TestWithParam<rtError_t> {
+protected:
+    void SetUp() override
+    {
+        oldThreadId_ = Profiler::threadId_;
+        oldSeq_ = Profiler::seq_;
+    }
+
+    void TearDown() override
+    {
+        GlobalMockObject::verify();
+        Profiler::threadId_ = oldThreadId_;
+        Profiler::seq_ = oldSeq_;
+    }
+
+private:
+    uint32_t oldThreadId_ = 0U;
+    uint32_t oldSeq_ = 0U;
+};
+
+TEST_P(UbSegmentDecoratorTest, BaseDecoratorPreservesArgumentsAndResult)
+{
+    UbSegmentDecoratorApiImpl impl;
+    impl.result = GetParam();
+    ApiDecorator decorator(&impl);
+    uint8_t buffer[64] = {};
+
+    EXPECT_EQ(decorator.MemRegisterUbSegment(buffer, sizeof(buffer)), GetParam());
+    EXPECT_EQ(impl.lastAddr, buffer);
+    EXPECT_EQ(impl.lastSize, sizeof(buffer));
+    EXPECT_EQ(impl.calls, 1U);
+}
+
+TEST_P(UbSegmentDecoratorTest, ProfileDecoratorForwardsWithoutReporting)
+{
+    UbSegmentDecoratorApiImpl impl;
+    impl.result = GetParam();
+    Profiler localProfiler(&impl);
+    localProfiler.SetApiProfEnable(true);
+    ApiProfileDecorator decorator(&impl, &localProfiler);
+    uint8_t buffer[64] = {};
+    MOCKER(MsprofReportApi).expects(never());
+
+    EXPECT_EQ(decorator.MemRegisterUbSegment(buffer, sizeof(buffer)), GetParam());
+    EXPECT_EQ(impl.lastAddr, buffer);
+    EXPECT_EQ(impl.lastSize, sizeof(buffer));
+    EXPECT_EQ(impl.calls, 1U);
+    EXPECT_EQ(localProfiler.GetTopProfApiContext(), nullptr);
+}
+
+TEST_P(UbSegmentDecoratorTest, ProfileLogDecoratorForwardsWithoutRecording)
+{
+    UbSegmentDecoratorApiImpl impl;
+    impl.result = GetParam();
+    Profiler localProfiler(&impl);
+    ApiProfileLogDecorator decorator(&impl, &localProfiler);
+    uint8_t buffer[64] = {};
+    MOCKER_CPP(&ProfileLogRecord::PrintRecord).expects(never());
+
+    EXPECT_EQ(decorator.MemRegisterUbSegment(buffer, sizeof(buffer)), GetParam());
+    EXPECT_EQ(impl.lastAddr, buffer);
+    EXPECT_EQ(impl.lastSize, sizeof(buffer));
+    EXPECT_EQ(impl.calls, 1U);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    UbSegmentRegistration, UbSegmentDecoratorTest, Values(RT_ERROR_NONE, RT_ERROR_DRV_NOT_SUPPORT));
 
 class RuntimeProfSuccessApiImpl : public RuntimeProfTestApiImpl {
 public:

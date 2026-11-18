@@ -159,6 +159,15 @@ rtError_t ApiImpl::GetMemUsageInfo(
     return curCtx->Device_()->Driver_()->GetMemUsageInfo(deviceId, memUsageInfo, inputNum, outputNum);
 }
 
+rtError_t ApiImpl::MemRegisterUbSegment(void* const addr, const size_t size)
+{
+    Context* const curCtx = Runtime::Instance()->CurrentContext(true, DEFAULT_DEVICE_ID);
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    const Device* const dev = curCtx->Device_();
+    NULL_PTR_RETURN_MSG(dev, RT_ERROR_DEVICE_NULL);
+    return NpuDriver::MemRegisterUbSegment(dev->Id_(), addr, size);
+}
+
 rtError_t ApiImpl::MemGetInfoEx(const rtMemInfoType_t memInfoType, size_t* const freeSize, size_t* const totalSize)
 {
     RT_LOG(

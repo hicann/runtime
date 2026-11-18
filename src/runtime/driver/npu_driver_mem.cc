@@ -199,6 +199,28 @@ rtError_t NpuDriver::FreeHostSharedMemory(rtFreeHostSharedMemoryIn* const in, co
     return RT_ERROR_NONE;
 }
 
+rtError_t NpuDriver::MemRegisterUbSegment(const uint32_t deviceId, void* const addr, const size_t size)
+{
+    COND_PROC_RETURN_AND_MSG_OUTER(
+        &halMemRegUbSegment == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1015,
+        RT_LOG(RT_LOG_WARNING, "[drv api] halMemRegUbSegment does not exist"), "Registering a UB memory segment",
+        "The driver interface halMemRegUbSegment does not exist.");
+    const uint64_t va = RtPtrToValue(addr);
+    const drvError_t drvRet = halMemRegUbSegment(deviceId, va, static_cast<uint64_t>(size));
+    COND_PROC_RETURN_AND_MSG_OUTER(
+        drvRet == DRV_ERROR_IOCRL_FAIL, RT_ERROR_UB_MEMORY_ALREADY_REGISTERED, ErrorCode::EE1018,
+        RT_LOG(
+            RT_LOG_ERROR, "UB memory range is already registered, deviceId=%u, addr=%p, size=%zu.", deviceId, addr,
+            size),
+        "UB memory address registration", "The memory range has already been registered");
+    if (drvRet != DRV_ERROR_NONE) {
+        DRV_ERROR_PROCESS(
+            drvRet, "Call driver api halMemRegUbSegment failed, drvRetCode=%d, drvDevId=%u, va=%" PRIu64 ", size=%zu.",
+            static_cast<int32_t>(drvRet), deviceId, va, size);
+    }
+    return RT_GET_DRV_ERRCODE(drvRet);
+}
+
 rtError_t NpuDriver::HostRegister(void* ptr, uint64_t size, uint32_t type, void** devPtr, const uint32_t deviceId)
 {
     if (!IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MEM_HOST_REGISTER)) {

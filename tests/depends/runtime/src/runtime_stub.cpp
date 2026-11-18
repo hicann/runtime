@@ -751,6 +751,7 @@ rtError_t aclStub::rtMemGetAllocationPropertiesFromHandle(rtDrvMemHandle handle,
 }
 
 rtError_t aclStub::rtMemGetAddressRange(void* ptr, void** pbase, size_t* psize) { return RT_ERROR_NONE; }
+rtError_t aclStub::rtMemRegisterUbSegment(void* const addr, const size_t size) { return RT_ERROR_NONE; }
 
 rtError_t aclStub::rtHostGetDevicePointerAddrRange(rtAddrRange* addrRange, uint32_t* count) { return RT_ERROR_NONE; }
 
@@ -3410,6 +3411,11 @@ rtError_t rtMemGetAllocationPropertiesFromHandle(rtDrvMemHandle handle, rtDrvMem
 rtError_t rtMemGetAddressRange(void* ptr, void** pbase, size_t* psize)
 {
     return MockFunctionTest::aclStubInstance().rtMemGetAddressRange(ptr, pbase, psize);
+}
+
+rtError_t rtMemRegisterUbSegment(void* const addr, const size_t size)
+{
+    return MockFunctionTest::aclStubInstance().rtMemRegisterUbSegment(addr, size);
 }
 
 rtError_t rtHostGetDevicePointerAddrRange(rtAddrRange* addrRange, uint32_t* count)

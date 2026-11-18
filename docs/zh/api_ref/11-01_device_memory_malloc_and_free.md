@@ -1,6 +1,6 @@
 # 11-01 设备内存分配与释放
 
-本章节描述设备（Device）内存的分配与释放接口。
+本章节描述设备（Device）内存的分配、释放与注册接口。
 
 - [`aclError aclrtMalloc(void **devPtr, size_t size, aclrtMemMallocPolicy policy)`](#aclrtMalloc)：在Device上分配size大小的线性内存，并通过\*devPtr返回已分配内存的指针，且内存首地址64字节对齐。
 - [`aclError aclrtMallocAlign32(void **devPtr, size_t size, aclrtMemMallocPolicy policy)`](#aclrtMallocAlign32)：在Device上分配size大小的线性内存，并通过\*devPtr返回已分配内存的指针。
@@ -14,6 +14,7 @@
 - [`aclError aclrtGetMemInfo(aclrtMemAttr attr, size_t *free, size_t *total)`](#aclrtGetMemInfo)：根据指定属性，获取Device上可用内存的空闲大小和总大小，不包括系统预留内存大小。
 - [`aclError aclrtGetMemUsageInfo(int32_t deviceId, aclrtMemUsageInfo *memUsageInfo, size_t inputNum, size_t *outputNum)`](#aclrtGetMemUsageInfo)：查询组件的内存使用信息，包括组件名称、当前内存大小和峰值内存大小等信息。
 - [`aclError aclrtCheckMemType(void** addrList, uint32_t size, uint32_t memType, uint32_t *checkResult, uint32_t reserve)`](#aclrtCheckMemType)：检查Device内存类型。
+- [`aclError aclrtMemRegisterUbSegment(void *addr, size_t size)`](#aclrtMemRegisterUbSegment)：将当前Device上的一段已有内存注册为UB（Unified Bus）内存段。
 
 <a class="method_anchor" id="aclrtMalloc"></a>
 
@@ -886,3 +887,63 @@ Ascend 950PR&950DT系列产品中不再有单独的DVPP Device内存类型（即
 ### 返回值说明
 
 返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+<br>
+<br>
+<br>
+
+<a class="method_anchor" id="aclrtMemRegisterUbSegment"></a>
+
+## aclrtMemRegisterUbSegment
+
+```c
+aclError aclrtMemRegisterUbSegment(void *addr, size_t size)
+```
+
+### 产品支持情况
+
+<!-- npu="950" id1201 -->
+- Ascend 950PR&950DT系列产品：支持
+<!-- end id1201 -->
+<!-- npu="A3" id1202 -->
+- Atlas A3系列产品：不支持
+<!-- end id1202 -->
+<!-- npu="910b" id1203 -->
+- Atlas A2系列产品：不支持
+<!-- end id1203 -->
+<!-- npu="310b" id1204 -->
+- Atlas 200I/500 A2推理产品：不支持
+<!-- end id1204 -->
+<!-- npu="310p" id1205 -->
+- Atlas推理系列产品：不支持
+<!-- end id1205 -->
+<!-- npu="910" id1206 -->
+- Atlas训练系列产品：不支持
+<!-- end id1206 -->
+<!-- npu="IPV350" id1207 -->
+- IPV350：不支持
+<!-- end id1207 -->
+<!-- npu="5162A" id1208 -->
+- Hisilicon5162A：不支持
+<!-- end id1208 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/11-01_device_memory_malloc_and_free_res.md#id11 -->
+
+### 功能说明
+
+将当前Device上从addr开始、长度为size字节的一段已有内存注册为UB（Unified Bus）内存段。
+
+### 参数说明
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | :---: | --- |
+| addr | 输入 | 待注册内存区间的起始虚拟地址指针，不能为NULL。<br>调用前需先获取有效的Device内存地址，例如使用[aclrtMalloc](#aclrtMalloc)申请的地址，或使用[aclrtMapMem](11-04_virtual_memory_management.md#aclrtMapMem)在本地完成映射后的地址。地址必须属于当前Device，不能传入物理地址。预留、尚未映射的虚拟地址不满足要求。 |
+| size | 输入 | 待注册内存区间的大小，单位Byte，不能为0。 |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+### 约束说明
+
+- 调用本接口前需先指定用于运算的Device（例如调用[aclrtSetDevice](04_device_management.md#aclrtSetDevice)接口），确保当前Device与addr所属的Device一致。
+- 不支持重复注册同一地址。

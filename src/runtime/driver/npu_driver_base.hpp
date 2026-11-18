@@ -102,6 +102,7 @@ drvError_t __attribute__((weak)) halMemRetainAllocationHandle(drv_mem_handle_t**
 drvError_t __attribute__((weak))
 halMemGetAllocationPropertiesFromHandle(struct drv_mem_prop* prop, drv_mem_handle_t* handle);
 drvError_t __attribute__((weak)) halMemGetAddressRange(DVdeviceptr ptr, DVdeviceptr* pbase, size_t* psize);
+drvError_t __attribute__((weak)) halMemRegUbSegment(uint32_t devid, uint64_t va, uint64_t size);
 drvError_t __attribute__((weak)) halHostGetDevicePointerAddrCount(uint32_t dev_id, uint32_t* count);
 drvError_t __attribute__((weak))
 halHostGetDevicePointerAddrRange(uint32_t dev_id, struct drv_addr_range* addr_range, uint32_t* count);

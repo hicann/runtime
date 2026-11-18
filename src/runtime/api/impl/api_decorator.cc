@@ -602,6 +602,11 @@ rtError_t ApiDecorator::MemGetInfoByDeviceId(
     return impl_->MemGetInfoByDeviceId(deviceId, isHugeOnly, freeSize, totalSize);
 }
 
+rtError_t ApiDecorator::MemRegisterUbSegment(void* const addr, const size_t size)
+{
+    return impl_->MemRegisterUbSegment(addr, size);
+}
+
 rtError_t ApiDecorator::MemGetInfo(size_t* const freeSize, size_t* const totalSize)
 {
     return impl_->MemGetInfo(freeSize, totalSize);

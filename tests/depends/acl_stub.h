@@ -293,6 +293,7 @@ public:
     virtual rtError_t rtMemGetAllocationPropertiesFromHandle(rtDrvMemHandle handle, rtDrvMemProp_t* prop);
     virtual rtError_t rtReserveMemAddress(void** devPtr, size_t size, size_t alignment, void* devAddr, uint64_t flags);
     virtual rtError_t rtMemGetAddressRange(void* ptr, void** pbase, size_t* psize);
+    virtual rtError_t rtMemRegisterUbSegment(void* addr, size_t size);
     virtual rtError_t rtHostGetDevicePointerAddrRange(rtAddrRange* addrRange, uint32_t* count);
     virtual rtError_t rtMemPrefetchToDevice(void* devPtr, uint64_t len, int32_t devId);
     virtual rtError_t rtMemPoolCreate(rtMemPool_t* memPool, const rtMemPoolProps* poolProps);
@@ -917,6 +918,7 @@ public:
     MOCK_METHOD5(
         rtReserveMemAddress, rtError_t(void** devPtr, size_t size, size_t alignment, void* devAddr, uint64_t flags));
     MOCK_METHOD3(rtMemGetAddressRange, rtError_t(void* ptr, void** pbase, size_t* psize));
+    MOCK_METHOD2(rtMemRegisterUbSegment, rtError_t(void* addr, size_t size));
     MOCK_METHOD2(rtHostGetDevicePointerAddrRange, rtError_t(rtAddrRange* addrRange, uint32_t* count));
     MOCK_METHOD3(rtMemPrefetchToDevice, rtError_t(void* devPtr, uint64_t len, int32_t devId));
     MOCK_METHOD2(rtMemPoolTrimTo, rtError_t(rtMemPool_t memPool, uint64_t minBytesToKeep));

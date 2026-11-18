@@ -164,6 +164,7 @@ extern "C" {
 #define ACL_ERROR_RT_L3_PORT_ERROR 507914                   // l3 port error
 #define ACL_ERROR_RT_CCU_TIMEOUT 507915                     // ccu timeout
 #define ACL_ERROR_RT_CCU_EXCEPTION 507916                   // ccu exception
+#define ACL_ERROR_UB_MEMORY_ALREADY_REGISTERED 507917       // UB memory range already registered
 
 #ifdef __cplusplus
 }

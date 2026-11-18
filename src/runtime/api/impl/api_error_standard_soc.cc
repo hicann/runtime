@@ -28,6 +28,15 @@
 namespace cce {
 namespace runtime {
 
+rtError_t ApiErrorDecorator::MemRegisterUbSegment(void* const addr, const size_t size)
+{
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(addr, RT_ERROR_INVALID_VALUE, "Registering a UB memory segment");
+    ZERO_RETURN_AND_MSG_OUTER_WITH_FUNC_DESC(size, "Registering a UB memory segment");
+    const rtError_t error = impl_->MemRegisterUbSegment(addr, size);
+    ERROR_RETURN(error, "Register UB memory segment failed, addr=%p, size=%zu.", addr, size);
+    return error;
+}
+
 rtError_t ApiErrorDecorator::DeviceSetSuspendConfig(const int32_t deviceId, const rtDeviceSuspendConfig* const config)
 {
     Runtime* rt = Runtime::Instance();

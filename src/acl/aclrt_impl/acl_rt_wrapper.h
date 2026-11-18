@@ -545,6 +545,7 @@
       (void** virPtr, size_t size, size_t alignment, void* expectPtr, uint64_t flags),                                 \
       (virPtr, size, alignment, expectPtr, flags))                                                                     \
     _(aclError, aclrtMemGetAddressRange, (void* ptr, void** pbase, size_t* psize), (ptr, pbase, psize))                \
+    _(aclError, aclrtMemRegisterUbSegment, (void* addr, size_t size), (addr, size))                                    \
     _(const char*, aclrtGetSocName, (), ())                                                                            \
     _(const char*, aclrtGetSocSeries, (void), ())                                                                      \
     _(aclError, aclrtGetVersion, (int32_t * majorVersion, int32_t * minorVersion, int32_t * patchVersion),             \

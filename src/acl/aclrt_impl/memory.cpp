@@ -2204,6 +2204,16 @@ aclError aclrtReserveMemAddressNoUCMemoryImpl(
     return ACL_SUCCESS;
 }
 
+aclError aclrtMemRegisterUbSegmentImpl(void* const addr, const size_t size)
+{
+    ACL_PROFILING_REG(acl::AclProfType::AclrtMemRegisterUbSegment);
+    ACL_LOG_DEBUG("start to execute aclrtMemRegisterUbSegment");
+    ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(addr);
+    ACL_REQUIRES_POSITIVE_REPORT(size);
+    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(rtMemRegisterUbSegment(addr, size), rtMemRegisterUbSegment);
+    return ACL_SUCCESS;
+}
+
 aclError aclrtMemGetAddressRangeImpl(void* ptr, void** pbase, size_t* psize)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtMemGetAddressRange);

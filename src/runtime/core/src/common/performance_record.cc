@@ -22,6 +22,7 @@ TIMESTAMP_DEFINE(rtBinaryLoad_MemCopySync);
 TIMESTAMP_DEFINE(rtBinaryUnLoad_DevMemRelease);
 TIMESTAMP_DEFINE(PopTask);
 TIMESTAMP_DEFINE(rtMalloc);
+TIMESTAMP_DEFINE(rtMemRegisterUbSegment);
 TIMESTAMP_DEFINE(rtMallocHost);
 TIMESTAMP_DEFINE(rtsMallocHost);
 TIMESTAMP_DEFINE(rtFreeHost);
