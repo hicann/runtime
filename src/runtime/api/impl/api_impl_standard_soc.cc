@@ -1442,32 +1442,5 @@ rtError_t ApiImpl::TaskSetParams(rtTask_t task, rtTaskParams* const params, Kern
     return RT_ERROR_NONE;
 }
 
-rtError_t ApiImpl::HcclStreamAddToModel(Stream* const stream, Model* const mdl)
-{
-    return ApiImpl::StreamAddToModel(stream, mdl);
-}
-
-rtError_t ApiImpl::HcclStreamAddToNormalModel(Stream* const stream, Model* const mdl)
-{
-    Context* const curCtx = CurrentContext();
-    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
-        stream, curCtx, RT_ERROR_STREAM_CONTEXT, "Binding a model running instance to a stream");
-    COND_RETURN_AND_MSG_INVALID_CONTEXT_MODEL_WITH_FUNC_DESC(
-        mdl, curCtx, RT_ERROR_MODEL_CONTEXT, "Binding a model running instance to a stream");
-    return mdl->RegisterHcclStream(stream);
-}
-
-rtError_t ApiImpl::ModelGetHcclStream(const Model* const mdl, std::vector<Stream*>& streams)
-{
-    return mdl->CollectHcclStreams(streams);
-}
-
-rtError_t ApiImpl::GetModelByStream(Stream* const stream, Model** const mdl)
-{
-    *mdl = stream->Model_();
-    return RT_ERROR_NONE;
-}
-
 } // namespace runtime
 } // namespace cce

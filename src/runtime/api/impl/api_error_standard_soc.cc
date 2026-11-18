@@ -22,8 +22,6 @@
 #include "runtime/kernel.h"
 #include "runtime/rts/rts_stream.h"
 #include "error_message_manage.hpp"
-#include "capture_adapt.hpp"
-#include "capture_model.hpp"
 #include "capture_model_utils.hpp"
 #include "npu_driver.hpp"
 
@@ -845,60 +843,6 @@ rtError_t ApiErrorDecorator::ModelTaskUpdate(
     ERROR_RETURN(
         error, "ModelTaskUpdate failed, desStm=%d.desTaskId=%u,sinkStm=%d", desStm->Id_(), desTaskId, sinkStm->Id_());
     return error;
-}
-
-rtError_t ApiErrorDecorator::HcclStreamAddToModel(Stream* const stream, Model* const mdl)
-{
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stream, RT_ERROR_INVALID_VALUE, "Registering an HCCL stream with a model");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(mdl, RT_ERROR_INVALID_VALUE, "Registering an HCCL stream with a model");
-    const ModelType modelType = mdl->GetModelType();
-    if (modelType == RT_MODEL_CAPTURE_MODEL) {
-        const rtChipType_t chipType = Runtime::Instance()->GetChipType();
-        COND_RETURN_WARN(
-            !IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_MODEL_ACL_GRAPH),
-            RT_ERROR_FEATURE_NOT_SUPPORT, "chip type(%d) does not support ACL Graph", static_cast<int32_t>(chipType));
-        const char_t* const unsupportedFlag = GetUnsupportedCaptureStreamFlag(stream->Flags());
-        COND_RETURN_AND_MSG_OUTER(
-            unsupportedFlag != nullptr, RT_ERROR_STREAM_INVALID, ErrorCode::EE1006, "rtModelAddHcclStream",
-            RtFmtMsg("Stream flag value %#x", stream->Flags()),
-            RtFmtMsg(
-                "Stream (stream_id=%d) with the flag %s cannot be used for ACL Graph", stream->Id_(), unsupportedFlag));
-        const CaptureModel* const captureModel = static_cast<const CaptureModel*>(mdl);
-        COND_RETURN_WARN(
-            captureModel->IsSubCaptureModel(), RT_ERROR_FEATURE_NOT_SUPPORT,
-            "sub ACL Graph does not support adding streams");
-    }
-    rtError_t ret = RT_ERROR_NONE;
-    switch (modelType) {
-        case RT_MODEL_CAPTURE_MODEL:
-            ret = impl_->HcclStreamAddToModel(stream, mdl);
-            break;
-        case RT_MODEL_NORMAL:
-            ret = impl_->HcclStreamAddToNormalModel(stream, mdl);
-            break;
-        default:
-            RT_LOG(RT_LOG_WARNING, "Unsupported model type %s", ModelTypeToString(modelType).c_str());
-            ret = RT_ERROR_FEATURE_NOT_SUPPORT;
-            break;
-    }
-    return ret;
-}
-
-rtError_t ApiErrorDecorator::ModelGetHcclStream(const Model* const mdl, std::vector<Stream*>& streams)
-{
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        mdl, RT_ERROR_INVALID_VALUE, "Obtaining HCCL streams registered with a model");
-    COND_RETURN_WARN(
-        (mdl->GetModelType() != RT_MODEL_NORMAL) && (mdl->GetModelType() != RT_MODEL_CAPTURE_MODEL),
-        RT_ERROR_FEATURE_NOT_SUPPORT, "Unsupported model type %s", ModelTypeToString(mdl->GetModelType()).c_str());
-    return impl_->ModelGetHcclStream(mdl, streams);
-}
-
-rtError_t ApiErrorDecorator::GetModelByStream(Stream* const stream, Model** const mdl)
-{
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(stream, RT_ERROR_INVALID_VALUE, "Obtaining the model bound to a stream");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(mdl, RT_ERROR_INVALID_VALUE, "Obtaining the model bound to a stream");
-    return impl_->GetModelByStream(stream, mdl);
 }
 
 } // namespace runtime

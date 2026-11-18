@@ -9,12 +9,9 @@
  */
 #include "gtest/gtest.h"
 #include "runtime/rt.h"
-#include "rt_external_model.h"
 #include "api_impl_creator.hpp"
-#include "api_impl.hpp"
 #include "api_error.hpp"
 #include "aicpu_dfx.hpp"
-#include "model.hpp"
 #include "snapshot_socket.hpp"
 
 using namespace cce::runtime;
@@ -74,42 +71,4 @@ TEST(Arch5162ApiTest, ModelTaskUpdateApiErrorStub_NotSupport)
     rtMdlTaskUpdateInfo_t updateInfo = {};
     EXPECT_EQ(api.ModelTaskUpdate(nullptr, 0U, nullptr, &updateInfo), RT_ERROR_FEATURE_NOT_SUPPORT);
     EXPECT_EQ(rtModelTaskUpdate(nullptr, 0U, nullptr, nullptr), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
-}
-
-TEST(Arch5162ApiTest, HcclModelStreamPublicApisNotSupportAndPreserveOutputs)
-{
-    uint32_t count = 17U;
-    rtStream_t stream = static_cast<void*>(&count);
-    rtModel_t model = static_cast<void*>(&count);
-    EXPECT_EQ(rtModelAddHcclStream(nullptr, nullptr), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(rtModelAddHcclStream(stream, model), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(rtModelGetHcclStream(nullptr, nullptr, nullptr), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(rtModelGetHcclStream(model, &stream, &count), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(count, 17U);
-    EXPECT_EQ(stream, static_cast<void*>(&count));
-    EXPECT_EQ(rtGetModelByStream(nullptr, nullptr), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(rtGetModelByStream(stream, &model), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(model, static_cast<void*>(&count));
-}
-
-TEST(Arch5162ApiTest, HcclModelStreamInternalProvidersNotSupportAndPreserveOutputs)
-{
-    ApiImpl impl;
-    EXPECT_EQ(impl.HcclStreamAddToModel(nullptr, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(impl.HcclStreamAddToNormalModel(nullptr, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
-    Model model;
-    Model* bound = &model;
-    std::vector<Stream*> streams{nullptr};
-    EXPECT_EQ(impl.ModelGetHcclStream(&model, streams), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(impl.GetModelByStream(nullptr, &bound), RT_ERROR_FEATURE_NOT_SUPPORT);
-
-    ApiErrorDecorator error(nullptr);
-    EXPECT_EQ(error.HcclStreamAddToModel(nullptr, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(error.ModelGetHcclStream(&model, streams), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(error.GetModelByStream(nullptr, &bound), RT_ERROR_FEATURE_NOT_SUPPORT);
-
-    EXPECT_EQ(model.RegisterHcclStream(nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(model.CollectHcclStreams(streams), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(bound, &model);
-    EXPECT_EQ(streams, (std::vector<Stream*>{nullptr}));
 }

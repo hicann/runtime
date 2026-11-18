@@ -476,27 +476,6 @@ rtError_t ApiErrorDecorator::ModelTaskUpdate(
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t ApiErrorDecorator::HcclStreamAddToModel(Stream* const stream, Model* const mdl)
-{
-    UNUSED(stream);
-    UNUSED(mdl);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiErrorDecorator::ModelGetHcclStream(const Model* const mdl, std::vector<Stream*>& streams)
-{
-    UNUSED(mdl);
-    UNUSED(streams);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiErrorDecorator::GetModelByStream(Stream* const stream, Model** const mdl)
-{
-    UNUSED(stream);
-    UNUSED(mdl);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
 rtError_t ApiErrorDecorator::ModelTaskGetEnabled(rtTask_t task, uint32_t* isEnabled)
 {
     UNUSED(task);
