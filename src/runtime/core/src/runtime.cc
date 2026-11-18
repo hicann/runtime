@@ -3250,9 +3250,9 @@ rtError_t Runtime::SetSuspendConfig(const uint32_t deviceId, const rtDeviceSuspe
             gate->DisableInsertion();
         }
     }
+    const uint32_t taskInterval = (config.taskInterval == 0U) ? 8U : config.taskInterval;
     suspendConfigs_[deviceId].mode = config.mode;
-    suspendConfigs_[deviceId].taskInterval =
-        (config.mode == RT_DEVICE_SUSPEND_MODE_DISABLE) ? 0U : (config.taskInterval == 0U ? 8U : config.taskInterval);
+    suspendConfigs_[deviceId].taskInterval = (config.mode == RT_DEVICE_SUSPEND_MODE_DISABLE) ? 0U : taskInterval;
     return RT_ERROR_NONE;
 }
 
@@ -3286,13 +3286,14 @@ rtError_t Runtime::ControlSchedGate(const uint32_t deviceId, const bool resume)
     const ScopeGuard unlock([&refObj]() { refObj.ChangeValStatus(refObj.STATUS_IDLE); });
     Device* device = refObj.GetVal(false);
     const char_t* const funcDesc = resume ? "Resuming device execution" : "Suspending device execution";
+    const char_t* const actionDesc = resume ? "resuming" : "suspending";
     COND_PROC_RETURN_AND_MSG_OUTER(
         device == nullptr, RT_ERROR_DEVICE_NULL, ErrorCode::EE1018,
         RT_LOG(RT_LOG_ERROR, "%s failed: device (device_id=%u) is not open.", funcDesc, deviceId), funcDesc,
         RtFmtMsg(
             "Device (device_id=%u) is not open. Configure device execution suspension and resumption before "
             "opening the device, then open it before %s execution",
-            deviceId, resume ? "resuming" : "suspending"));
+            deviceId, actionDesc));
     DeviceSchedGate* gate = device->GetSchedGate();
     COND_RETURN_AND_MSG_OUTER(
         (gate == nullptr) || (suspendConfigs_[deviceId].mode == RT_DEVICE_SUSPEND_MODE_DISABLE), RT_ERROR_INVALID_VALUE,

@@ -180,62 +180,70 @@ const char_t* DrvMemHandleTypeToString(const rtDrvMemHandleType type)
     return enumBuf;
 }
 
-const char_t* DrvMemSideToName(const drv_mem_side side)
+std::string DrvMemSideToName(const drv_mem_side side)
 {
+    std::string desc;
     switch (side) {
         case MEM_HOST_SIDE:
-            return "MEM_HOST_SIDE(0)";
+            desc = "MEM_HOST_SIDE(0)";
+            break;
         case MEM_DEV_SIDE:
-            return "MEM_DEV_SIDE(1)";
+            desc = "MEM_DEV_SIDE(1)";
+            break;
         case MEM_HOST_NUMA_SIDE:
-            return "MEM_HOST_NUMA_SIDE(2)";
+            desc = "MEM_HOST_NUMA_SIDE(2)";
+            break;
         default:
+            desc = RtFmtMsg("UNKNOWN(%u)", static_cast<uint32_t>(side));
             break;
     }
-    static thread_local char enumBuf[32];
-    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%u)", static_cast<uint32_t>(side));
-    enumBuf[sizeof(enumBuf) - 1U] = '\0';
-    return enumBuf;
+    return desc;
 }
 
-const char_t* DrvMemPageTypeToName(const drv_mem_pg_type pageType)
+std::string DrvMemPageTypeToName(const drv_mem_pg_type pageType)
 {
+    std::string desc;
     switch (pageType) {
         case MEM_NORMAL_PAGE_TYPE:
-            return "MEM_NORMAL_PAGE_TYPE(0)";
+            desc = "MEM_NORMAL_PAGE_TYPE(0)";
+            break;
         case MEM_HUGE_PAGE_TYPE:
-            return "MEM_HUGE_PAGE_TYPE(1)";
+            desc = "MEM_HUGE_PAGE_TYPE(1)";
+            break;
         case MEM_GIANT_PAGE_TYPE:
-            return "MEM_GIANT_PAGE_TYPE(2)";
+            desc = "MEM_GIANT_PAGE_TYPE(2)";
+            break;
         default:
+            desc = RtFmtMsg("UNKNOWN(%u)", static_cast<uint32_t>(pageType));
             break;
     }
-    static thread_local char enumBuf[32];
-    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%u)", static_cast<uint32_t>(pageType));
-    enumBuf[sizeof(enumBuf) - 1U] = '\0';
-    return enumBuf;
+    return desc;
 }
 
-const char_t* DrvMemTypeToName(const drv_mem_type memType)
+std::string DrvMemTypeToName(const drv_mem_type memType)
 {
+    std::string desc;
     switch (memType) {
         case MEM_HBM_TYPE:
-            return "MEM_HBM_TYPE(0)";
+            desc = "MEM_HBM_TYPE(0)";
+            break;
         case MEM_DDR_TYPE:
-            return "MEM_DDR_TYPE(1)";
+            desc = "MEM_DDR_TYPE(1)";
+            break;
         case MEM_P2P_HBM_TYPE:
-            return "MEM_P2P_HBM_TYPE(2)";
+            desc = "MEM_P2P_HBM_TYPE(2)";
+            break;
         case MEM_P2P_DDR_TYPE:
-            return "MEM_P2P_DDR_TYPE(3)";
+            desc = "MEM_P2P_DDR_TYPE(3)";
+            break;
         case MEM_TS_DDR_TYPE:
-            return "MEM_TS_DDR_TYPE(4)";
+            desc = "MEM_TS_DDR_TYPE(4)";
+            break;
         default:
+            desc = RtFmtMsg("UNKNOWN(%u)", static_cast<uint32_t>(memType));
             break;
     }
-    static thread_local char enumBuf[32];
-    (void)snprintf_s(enumBuf, sizeof(enumBuf), sizeof(enumBuf) - 1, "UNKNOWN(%u)", static_cast<uint32_t>(memType));
-    enumBuf[sizeof(enumBuf) - 1U] = '\0';
-    return enumBuf;
+    return desc;
 }
 
 const char_t* MemSharedHandleTypeToString(const rtMemSharedHandleType type)

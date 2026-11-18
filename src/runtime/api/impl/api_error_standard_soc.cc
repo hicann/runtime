@@ -38,8 +38,8 @@ rtError_t ApiErrorDecorator::DeviceSetSuspendConfig(const int32_t deviceId, cons
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         config, RT_ERROR_INVALID_VALUE, "Configuring device execution suspension and resumption");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
-        static_cast<uint32_t>(config->mode) >= RT_DEVICE_SUSPEND_MODE_MAX, RT_ERROR_INVALID_VALUE,
-        "Configuring device execution suspension and resumption",
+        (config->mode != RT_DEVICE_SUSPEND_MODE_DISABLE) && (config->mode != RT_DEVICE_SUSPEND_MODE_DEVICE),
+        RT_ERROR_INVALID_VALUE, "Configuring device execution suspension and resumption",
         RtFmtMsg("UNKNOWN(%d)", static_cast<int32_t>(config->mode)), "config->mode",
         "RT_DEVICE_SUSPEND_MODE_DISABLE(0) or RT_DEVICE_SUSPEND_MODE_DEVICE(1)");
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(

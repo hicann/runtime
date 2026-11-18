@@ -14,14 +14,37 @@ namespace cce {
 namespace runtime {
 DeviceSchedGate::DeviceSchedGate(Device* const device, const uint32_t interval) : device_(device), interval_(interval)
 {}
-DeviceSchedGate::~DeviceSchedGate() = default;
+
+DeviceSchedGate::~DeviceSchedGate() noexcept = default;
+
 rtError_t DeviceSchedGate::Setup() { return RT_ERROR_FEATURE_NOT_SUPPORT; }
-rtError_t DeviceSchedGate::Suspend() { return RT_ERROR_FEATURE_NOT_SUPPORT; }
-rtError_t DeviceSchedGate::Resume() { return RT_ERROR_FEATURE_NOT_SUPPORT; }
-bool DeviceSchedGate::NeedWait(const Stream*, tsTaskType_t) const { return false; }
-rtError_t DeviceSchedGate::TryInsertGateWait(Stream*, tsTaskType_t) { return RT_ERROR_FEATURE_NOT_SUPPORT; }
-void DeviceSchedGate::CountSubmittedOperator(Stream*) {}
+
+rtError_t DeviceSchedGate::Suspend() const { return RT_ERROR_FEATURE_NOT_SUPPORT; }
+
+rtError_t DeviceSchedGate::Resume() const { return RT_ERROR_FEATURE_NOT_SUPPORT; }
+
+bool DeviceSchedGate::NeedWait(const Stream* const stream, const tsTaskType_t taskType) const
+{
+    UNUSED(stream);
+    UNUSED(taskType);
+    return false;
+}
+
+rtError_t DeviceSchedGate::TryInsertGateWait(Stream* const stream, const tsTaskType_t taskType) const
+{
+    UNUSED(stream);
+    UNUSED(taskType);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+void DeviceSchedGate::CountSubmittedOperator(Stream* const stream) const { UNUSED(stream); }
+
 void DeviceSchedGate::Release() {}
-bool DeviceSchedGate::Eligible(const Stream*) { return false; }
+
+bool DeviceSchedGate::Eligible(const Stream* const stream)
+{
+    UNUSED(stream);
+    return false;
+}
 } // namespace runtime
 } // namespace cce

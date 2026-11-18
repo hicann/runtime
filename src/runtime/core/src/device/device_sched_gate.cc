@@ -22,7 +22,7 @@ namespace runtime {
 DeviceSchedGate::DeviceSchedGate(Device* const device, const uint32_t interval) : device_(device), interval_(interval)
 {}
 
-DeviceSchedGate::~DeviceSchedGate()
+DeviceSchedGate::~DeviceSchedGate() noexcept
 {
     if (event_ == nullptr) {
         return;
@@ -64,7 +64,7 @@ rtError_t DeviceSchedGate::Setup()
     event_.reset(new (std::nothrow) DavidEvent(device_, RT_EVENT_DDSYNC_NS, nullptr, false));
     COND_PROC_RETURN_AND_MSG_ALLOC_FAILED(event_ == nullptr, RT_ERROR_EVENT_NEW, (void)0, sizeof(DavidEvent), "new");
     event_->SetEventOwner(EventOwner::EVENT_INNER);
-    rtError_t error = event_->GenEventId();
+    const rtError_t error = event_->GenEventId();
     if (error != RT_ERROR_NONE) {
         event_.reset();
         return error;
@@ -73,7 +73,7 @@ rtError_t DeviceSchedGate::Setup()
     return Control(true);
 }
 
-rtError_t DeviceSchedGate::Control(const bool open)
+rtError_t DeviceSchedGate::Control(const bool open) const
 {
     if (event_ == nullptr) {
         return RT_ERROR_EVENT_NULL;
@@ -89,9 +89,9 @@ rtError_t DeviceSchedGate::Control(const bool open)
     return ctrl->Synchronize(false);
 }
 
-rtError_t DeviceSchedGate::Suspend() { return Control(false); }
+rtError_t DeviceSchedGate::Suspend() const { return Control(false); }
 
-rtError_t DeviceSchedGate::Resume() { return Control(true); }
+rtError_t DeviceSchedGate::Resume() const { return Control(true); }
 
 bool DeviceSchedGate::NeedWait(const Stream* const stream, const tsTaskType_t taskType) const
 {
@@ -99,7 +99,7 @@ bool DeviceSchedGate::NeedWait(const Stream* const stream, const tsTaskType_t ta
            (stream->GetSchedOperatorCount() >= interval_);
 }
 
-rtError_t DeviceSchedGate::TryInsertGateWait(Stream* const stream, const tsTaskType_t taskType)
+rtError_t DeviceSchedGate::TryInsertGateWait(Stream* const stream, const tsTaskType_t taskType) const
 {
     if (!IsInsertionEnabled() || !Eligible(stream) || stream->IsTaskGroupUpdate() || stream->IsTaskGrouping()) {
         return RT_ERROR_NONE;
@@ -127,12 +127,14 @@ rtError_t DeviceSchedGate::TryInsertGateWait(Stream* const stream, const tsTaskT
         }
     } else if (stream->GetCaptureStream() != nullptr) {
         target = stream->GetCaptureStream();
+    } else {
+        // Keep the originating stream as the target.
     }
     // EvtWait owns the submission lock and resolves the final stream through AllocTask.
     return NeedWait(target, taskType) ? EvtWait(event_.get(), stream, UINT32_MAX) : RT_ERROR_NONE;
 }
 
-void DeviceSchedGate::CountSubmittedOperator(Stream* const stream)
+void DeviceSchedGate::CountSubmittedOperator(Stream* const stream) const
 {
     if (IsInsertionEnabled() && Eligible(stream) && !stream->IsTaskGroupUpdate()) {
         stream->CountSchedOperator(interval_);

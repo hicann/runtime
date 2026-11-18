@@ -283,7 +283,7 @@ aclError aclrtQueryDeviceStatusImpl(int32_t deviceId, aclrtDeviceStatus* deviceS
     return ACL_SUCCESS;
 }
 
-aclError aclrtDeviceSetSuspendConfigImpl(const int32_t deviceId, const aclrtDeviceSuspendConfig* const config)
+aclError aclrtDeviceSetSuspendConfigImpl(int32_t deviceId, const aclrtDeviceSuspendConfig* config)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtDeviceSetSuspendConfig);
     ACL_LOG_INFO("start to execute aclrtDeviceSetSuspendConfig, deviceId = %d.", deviceId);
@@ -292,7 +292,7 @@ aclError aclrtDeviceSetSuspendConfigImpl(const int32_t deviceId, const aclrtDevi
         (config->mode == ACL_RT_DEVICE_SUSPEND_MODE_DISABLE) || (config->mode == ACL_RT_DEVICE_SUSPEND_MODE_DEVICE),
         acl::AclErrorLogManager::FormatStr("UNKNOWN(%d)", static_cast<int32_t>(config->mode)).c_str(), "config->mode",
         "ACL_RT_DEVICE_SUSPEND_MODE_DISABLE(0) or ACL_RT_DEVICE_SUSPEND_MODE_DEVICE(1)", ACL_ERROR_INVALID_PARAM);
-    const uint32_t taskIntervalMax = MAX_DEVICE_SUSPEND_TASK_INTERVAL;
+    constexpr uint32_t taskIntervalMax = MAX_DEVICE_SUSPEND_TASK_INTERVAL;
     ACL_CHECK_INVALID_VALUE_WITH_EXPECT_RET(
         (config->mode != ACL_RT_DEVICE_SUSPEND_MODE_DEVICE) || (config->taskInterval <= taskIntervalMax),
         config->taskInterval, acl::AclErrorLogManager::FormatStr("[0, %u]", taskIntervalMax).c_str(),
@@ -312,7 +312,7 @@ aclError aclrtDeviceSetSuspendConfigImpl(const int32_t deviceId, const aclrtDevi
     return ACL_SUCCESS;
 }
 
-aclError aclrtDeviceGetSuspendConfigImpl(const int32_t deviceId, aclrtDeviceSuspendConfig* const config)
+aclError aclrtDeviceGetSuspendConfigImpl(int32_t deviceId, aclrtDeviceSuspendConfig* config)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtDeviceGetSuspendConfig);
     ACL_LOG_INFO("start to execute aclrtDeviceGetSuspendConfig, deviceId = %d.", deviceId);
@@ -327,7 +327,7 @@ aclError aclrtDeviceGetSuspendConfigImpl(const int32_t deviceId, aclrtDeviceSusp
     return ACL_SUCCESS;
 }
 
-aclError aclrtDeviceSuspendExecutionImpl(const int32_t deviceId, const uint32_t flag)
+aclError aclrtDeviceSuspendExecutionImpl(int32_t deviceId, uint32_t flag)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtDeviceSuspendExecution);
     ACL_LOG_INFO("start to execute aclrtDeviceSuspendExecution, deviceId = %d, flag = %u.", deviceId, flag);
@@ -337,7 +337,7 @@ aclError aclrtDeviceSuspendExecutionImpl(const int32_t deviceId, const uint32_t 
     return ACL_SUCCESS;
 }
 
-aclError aclrtDeviceResumeExecutionImpl(const int32_t deviceId, const uint32_t flag)
+aclError aclrtDeviceResumeExecutionImpl(int32_t deviceId, uint32_t flag)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtDeviceResumeExecution);
     ACL_LOG_INFO("start to execute aclrtDeviceResumeExecution, deviceId = %d, flag = %u.", deviceId, flag);

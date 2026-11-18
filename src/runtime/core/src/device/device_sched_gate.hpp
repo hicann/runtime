@@ -24,18 +24,18 @@ class DeviceSchedGate {
 public:
     DeviceSchedGate(Device* const device, const uint32_t interval);
     // Device must stop task processing and destroy queues before releasing/destroying the gate.
-    ~DeviceSchedGate();
+    ~DeviceSchedGate() noexcept;
     rtError_t Setup();
     // Caller holds the Runtime device-slot protection through control completion.
-    rtError_t Suspend();
-    rtError_t Resume();
+    rtError_t Suspend() const;
+    rtError_t Resume() const;
     // Stop adding waits; Runtime resumes the gate before committing DISABLE configuration.
     void DisableInsertion() { insertionEnabled_.store(false, std::memory_order_release); }
     bool IsInsertionEnabled() const { return insertionEnabled_.load(std::memory_order_acquire); }
     bool NeedWait(const Stream* const stream, const tsTaskType_t taskType) const;
     // Called by operator launches on the originating stream, without holding the submission lock.
-    rtError_t TryInsertGateWait(Stream* const stream, const tsTaskType_t taskType);
-    void CountSubmittedOperator(Stream* const stream);
+    rtError_t TryInsertGateWait(Stream* const stream, const tsTaskType_t taskType) const;
+    void CountSubmittedOperator(Stream* const stream) const;
     void Release(); // queues have been destroyed; driver still alive
     static bool IsOperatorTask(const tsTaskType_t taskType)
     {
@@ -49,7 +49,7 @@ public:
     Event* GateEvent() const { return event_.get(); }
 
 private:
-    rtError_t Control(const bool open);
+    rtError_t Control(const bool open) const;
     Device* device_;
     std::unique_ptr<Event> event_;
     const uint32_t interval_;

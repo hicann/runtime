@@ -24,6 +24,38 @@
 
 using namespace cce::runtime;
 
+TEST(EnumToStringUtilsTest, DrvMemSideToName)
+{
+    EXPECT_EQ(DrvMemSideToName(MEM_HOST_SIDE), "MEM_HOST_SIDE(0)");
+    EXPECT_EQ(DrvMemSideToName(MEM_DEV_SIDE), "MEM_DEV_SIDE(1)");
+    EXPECT_EQ(DrvMemSideToName(MEM_HOST_NUMA_SIDE), "MEM_HOST_NUMA_SIDE(2)");
+    const auto unknown = DrvMemSideToName(static_cast<drv_mem_side>(100));
+    EXPECT_EQ(DrvMemSideToName(static_cast<drv_mem_side>(101)), "UNKNOWN(101)");
+    EXPECT_EQ(unknown, "UNKNOWN(100)");
+}
+
+TEST(EnumToStringUtilsTest, DrvMemPageTypeToName)
+{
+    EXPECT_EQ(DrvMemPageTypeToName(MEM_NORMAL_PAGE_TYPE), "MEM_NORMAL_PAGE_TYPE(0)");
+    EXPECT_EQ(DrvMemPageTypeToName(MEM_HUGE_PAGE_TYPE), "MEM_HUGE_PAGE_TYPE(1)");
+    EXPECT_EQ(DrvMemPageTypeToName(MEM_GIANT_PAGE_TYPE), "MEM_GIANT_PAGE_TYPE(2)");
+    const auto unknown = DrvMemPageTypeToName(static_cast<drv_mem_pg_type>(100));
+    EXPECT_EQ(DrvMemPageTypeToName(static_cast<drv_mem_pg_type>(101)), "UNKNOWN(101)");
+    EXPECT_EQ(unknown, "UNKNOWN(100)");
+}
+
+TEST(EnumToStringUtilsTest, DrvMemTypeToName)
+{
+    EXPECT_EQ(DrvMemTypeToName(MEM_HBM_TYPE), "MEM_HBM_TYPE(0)");
+    EXPECT_EQ(DrvMemTypeToName(MEM_DDR_TYPE), "MEM_DDR_TYPE(1)");
+    EXPECT_EQ(DrvMemTypeToName(MEM_P2P_HBM_TYPE), "MEM_P2P_HBM_TYPE(2)");
+    EXPECT_EQ(DrvMemTypeToName(MEM_P2P_DDR_TYPE), "MEM_P2P_DDR_TYPE(3)");
+    EXPECT_EQ(DrvMemTypeToName(MEM_TS_DDR_TYPE), "MEM_TS_DDR_TYPE(4)");
+    const auto unknown = DrvMemTypeToName(static_cast<drv_mem_type>(100));
+    EXPECT_EQ(DrvMemTypeToName(static_cast<drv_mem_type>(101)), "UNKNOWN(101)");
+    EXPECT_EQ(unknown, "UNKNOWN(100)");
+}
+
 TEST(EnumToStringUtilsTest, ReduceKindToStringKnownValue)
 {
     EXPECT_EQ(ReduceKindToString(RT_MEMCPY_SDMA_AUTOMATIC_ADD), "MEMCPY_SDMA_AUTOMATIC_ADD(10)");

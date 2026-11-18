@@ -323,9 +323,9 @@ static inline std::string StreamTypeToString(const uint32_t streamType)
 std::string MemInfoTypeToString(const rtMemInfoType_t memInfoType);
 
 const char_t* DrvMemHandleTypeToString(const rtDrvMemHandleType type);
-const char_t* DrvMemSideToName(const drv_mem_side side);
-const char_t* DrvMemPageTypeToName(const drv_mem_pg_type pageType);
-const char_t* DrvMemTypeToName(const drv_mem_type memType);
+std::string DrvMemSideToName(const drv_mem_side side);
+std::string DrvMemPageTypeToName(const drv_mem_pg_type pageType);
+std::string DrvMemTypeToName(const drv_mem_type memType);
 const char_t* MemSharedHandleTypeToString(const rtMemSharedHandleType type);
 std::string ManagedMemLocationTypeToString(const rtMemManagedLocationType type);
 const char_t* MallocAttrToString(const rtMallocAttr attr);

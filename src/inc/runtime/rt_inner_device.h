@@ -19,11 +19,10 @@ constexpr uint32_t MAX_DEVICE_SUSPEND_TASK_INTERVAL = 1024U;
 extern "C" {
 #endif
 
-typedef enum rtDeviceSuspendMode {
+enum rtDeviceSuspendMode {
     RT_DEVICE_SUSPEND_MODE_DISABLE = 0,
     RT_DEVICE_SUSPEND_MODE_DEVICE = 1,
-    RT_DEVICE_SUSPEND_MODE_MAX,
-} rtDeviceSuspendMode;
+};
 
 typedef struct rtDeviceSuspendConfig {
     rtDeviceSuspendMode mode;
@@ -31,7 +30,7 @@ typedef struct rtDeviceSuspendConfig {
     uint32_t reserved[6];
 } rtDeviceSuspendConfig;
 
-typedef enum rtAtomicOperationCapability {
+enum rtAtomicOperationCapability {
     RT_ATOMIC_CAPABILITY_SIGNED = 1U << 0U,
     RT_ATOMIC_CAPABILITY_UNSIGNED = 1U << 1U,
     RT_ATOMIC_CAPABILITY_REDUCATION = 1U << 2U, // DEPRECATED: Use RT_ATOMIC_CAPABILITY_REDUCTION
@@ -42,9 +41,9 @@ typedef enum rtAtomicOperationCapability {
     RT_ATOMIC_CAPABILITY_SCALAR64 = 1U << 6U,
     RT_ATOMIC_CAPABILITY_SCALAR128 = 1U << 7U,
     RT_ATOMIC_CAPABILITY_VECTOR32X4 = 1U << 8U,
-} rtAtomicOperationCapability;
+};
 
-typedef enum rtAtomicOperation {
+enum rtAtomicOperation {
     RT_ATOMIC_OPERATION_INTEGER_ADD = 0,
     RT_ATOMIC_OPERATION_INTEGER_MIN = 1,
     RT_ATOMIC_OPERATION_INTEGER_MAX = 2,
@@ -68,7 +67,7 @@ typedef enum rtAtomicOperation {
     RT_ATOMIC_OPERATION_SIMD_SCALAR_MAX = 42,
     RT_ATOMIC_OPERATION_SIMD_SCALAR_CAS = 43,
     RT_ATOMIC_OPERATION_SIMD_SCALAR_EXCH = 44,
-} rtAtomicOperation;
+};
 
 #ifndef RT_DEVICE_ATTR_DEFINED
 #define RT_DEVICE_ATTR_DEFINED
@@ -215,7 +214,7 @@ RTS_API rtError_t rtDeviceGetCcMode(int32_t deviceId, int32_t* mode);
  * @return RT_ERROR_NONE for success
  * @return Other values for failure
  */
-RTS_API rtError_t rtDeviceSetSuspendConfig(int32_t deviceId, const rtDeviceSuspendConfig* config);
+RTS_API rtError_t rtDeviceSetSuspendConfig(const int32_t deviceId, const rtDeviceSuspendConfig* const config);
 
 /**
  * @ingroup dvrt_dev
@@ -225,7 +224,7 @@ RTS_API rtError_t rtDeviceSetSuspendConfig(int32_t deviceId, const rtDeviceSuspe
  * @return RT_ERROR_NONE for success
  * @return Other values for failure
  */
-RTS_API rtError_t rtDeviceGetSuspendConfig(int32_t deviceId, rtDeviceSuspendConfig* config);
+RTS_API rtError_t rtDeviceGetSuspendConfig(const int32_t deviceId, rtDeviceSuspendConfig* const config);
 
 /**
  * @ingroup dvrt_dev
@@ -235,7 +234,7 @@ RTS_API rtError_t rtDeviceGetSuspendConfig(int32_t deviceId, rtDeviceSuspendConf
  * @return RT_ERROR_NONE when the gate Reset operation has completed
  * @return Other values for failure
  */
-RTS_API rtError_t rtDeviceSuspendExecution(int32_t deviceId, uint32_t flag);
+RTS_API rtError_t rtDeviceSuspendExecution(const int32_t deviceId, const uint32_t flag);
 
 /**
  * @ingroup dvrt_dev
@@ -245,7 +244,7 @@ RTS_API rtError_t rtDeviceSuspendExecution(int32_t deviceId, uint32_t flag);
  * @return RT_ERROR_NONE when the gate Record operation has completed
  * @return Other values for failure
  */
-RTS_API rtError_t rtDeviceResumeExecution(int32_t deviceId, uint32_t flag);
+RTS_API rtError_t rtDeviceResumeExecution(const int32_t deviceId, const uint32_t flag);
 
 #if defined(__cplusplus)
 }

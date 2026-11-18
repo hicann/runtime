@@ -436,14 +436,14 @@ rtError_t NpuDriver::MallocPhysical(rtDrvMemHandle* handle, size_t size, rtDrvMe
     if (drvRet != DRV_ERROR_NONE) {
         const rtError_t rtErrorCode = RT_GET_DRV_ERRCODE(drvRet);
         const std::string errorStr = RT_GET_ERRDESC(rtErrorCode);
+        const char_t* const idType = (prop->side == MEM_HOST_NUMA_SIDE) ? "NUMA_ID" : "DEVICE_ID";
         DRV_ERROR_PROCESS(
             drvRet,
             "Call driver api halMemCreate failed, drvRetCode=%d, size=%zu(bytes), flags=%#" PRIx64
             ", side=%s, devid=%s(%u), pg_type=%s, mem_type=%s, %s.",
-            static_cast<int32_t>(drvRet), size, flags, DrvMemSideToName(static_cast<drv_mem_side>(prop->side)),
-            (prop->side == MEM_HOST_NUMA_SIDE) ? "NUMA_ID" : "DEVICE_ID", prop->devid,
-            DrvMemPageTypeToName(static_cast<drv_mem_pg_type>(prop->pg_type)),
-            DrvMemTypeToName(static_cast<drv_mem_type>(prop->mem_type)), errorStr.c_str());
+            static_cast<int32_t>(drvRet), size, flags, DrvMemSideToName(static_cast<drv_mem_side>(prop->side)).c_str(),
+            idType, prop->devid, DrvMemPageTypeToName(static_cast<drv_mem_pg_type>(prop->pg_type)).c_str(),
+            DrvMemTypeToName(static_cast<drv_mem_type>(prop->mem_type)).c_str(), errorStr.c_str());
         return rtErrorCode;
     }
 
