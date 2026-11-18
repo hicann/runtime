@@ -348,7 +348,7 @@ set(libruntime_common_src_files
     ${RUNTIME_CORE_DIR}/src/device/device_error_core_proc.cc
     ${RUNTIME_CORE_DIR}/src/device/device_error_proc.cc
     ${RUNTIME_CORE_DIR}/src/device/v100/device_error_proc.cc
-    ${RUNTIME_CORE_DIR}/src/device/tiny/device_sq_cq_pool_tiny.cc
+    ${RUNTIME_CORE_DIR}/src/device/stub/device_sq_cq_pool_stub.cc
     ${RUNTIME_CORE_DIR}/src/device/sq_addr_memory_pool.cc
     ${RUNTIME_CORE_DIR}/src/utils/aicpu_scheduler_agent.cc
     ${RUNTIME_CORE_DIR}/src/device/device_msg_handler.cc
@@ -518,7 +518,7 @@ set(libruntime_v100_src_files
     ${RUNTIME_CORE_DIR}/src/device/device_error_core_proc.cc
     ${RUNTIME_CORE_DIR}/src/device/device_error_proc.cc
     ${RUNTIME_CORE_DIR}/src/device/v100/device_error_proc.cc
-    ${RUNTIME_CORE_DIR}/src/device/tiny/device_sq_cq_pool_tiny.cc
+    ${RUNTIME_CORE_DIR}/src/device/stub/device_sq_cq_pool_stub.cc
     ${RUNTIME_CORE_DIR}/src/device/sq_addr_memory_pool.cc
     ${RUNTIME_CORE_DIR}/src/utils/aicpu_scheduler_agent.cc
     ${RUNTIME_CORE_DIR}/src/device/device_msg_handler.cc

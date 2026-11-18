@@ -521,7 +521,7 @@ set(runtimeut_src_tiny_include_list
     ${TOP_DIR}/src/runtime/api/impl/api_impl_xpu_creator.cc
     ${TOP_DIR}/src/runtime/feature/xpu/api_impl_xpu_stub.cc
     ${TOP_DIR}/src/runtime/core/src/context/context_stub.cc
-    ${TOP_DIR}/src/runtime/core/src/device/tiny/device_sq_cq_pool_tiny.cc
+    ${TOP_DIR}/src/runtime/core/src/device/stub/device_sq_cq_pool_stub.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/capture_adapt_stub.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/capture_model_stub.cc
     ${TOP_DIR}/src/runtime/feature/aclgraph/tiny/capture_model_utils_stub.cc
