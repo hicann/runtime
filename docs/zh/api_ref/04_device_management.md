@@ -51,6 +51,8 @@
 - [`aclError aclrtDeviceGetSuspendConfig(int32_t deviceId, aclrtDeviceSuspendConfig *config)`](#aclrtDeviceGetSuspendConfig)：获取当前进程中指定Device的任务执行暂停、恢复配置。
 - [`aclError aclrtDeviceSuspendExecution(int32_t deviceId, uint32_t flag)`](#aclrtDeviceSuspendExecution)：暂停当前进程中指定Device的任务执行。
 - [`aclError aclrtDeviceResumeExecution(int32_t deviceId, uint32_t flag)`](#aclrtDeviceResumeExecution)：恢复当前进程中指定Device的任务执行。
+- [`aclError aclrtSetDeviceFlags(uint32_t flags)`](#aclrtSetDeviceFlags)：设置当前Context的同步等待方式。
+- [`aclError aclrtGetDeviceFlags(uint32_t *flags)`](#aclrtGetDeviceFlags)：获取当前Context中配置的同步等待方式。
 
 <a class="method_anchor" id="aclrtSetDevice"></a>
 
@@ -3096,3 +3098,132 @@ aclError aclrtDeviceResumeExecution(int32_t deviceId, uint32_t flag)
 ### 约束说明
 
 接口约束与[aclrtDeviceSetSuspendConfig](#aclrtDeviceSetSuspendConfig)保持一致。
+
+<br>
+<br>
+<br>
+
+<a class="method_anchor" id="aclrtSetDeviceFlags"></a>
+
+## aclrtSetDeviceFlags
+
+```c
+aclError aclrtSetDeviceFlags(uint32_t flags)
+```
+
+### 产品支持情况
+
+<!-- npu="950" id5077 -->
+- Ascend 950PR&950DT系列产品：支持
+<!-- end id5077 -->
+<!-- npu="A3" id5078 -->
+- Atlas A3系列产品：支持
+<!-- end id5078 -->
+<!-- npu="910b" id5079 -->
+- Atlas A2系列产品：支持
+<!-- end id5079 -->
+<!-- npu="310b" id5080 -->
+- Atlas 200I/500 A2推理产品：支持
+<!-- end id5080 -->
+<!-- npu="310p" id5081 -->
+- Atlas推理系列产品：不支持
+<!-- end id5081 -->
+<!-- npu="910" id5082 -->
+- Atlas训练系列产品：不支持
+<!-- end id5082 -->
+<!-- npu="IPV350" id5083 -->
+- IPV350：不支持
+<!-- end id5083 -->
+<!-- npu="5162A" id5084 -->
+- Hisilicon5162A：不支持
+<!-- end id5084 -->
+
+<!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id55 -->
+
+### 功能说明
+
+设置当前Context中Stream同步时Host线程的等待方式。
+
+调用本接口设置等待方式后，若需获取配置值，需调用[aclrtGetDeviceFlags](#aclrtGetDeviceFlags)接口。未调用本接口时，默认使用ACL_DEVICE_SCHEDULE_AUTO模式。
+
+配置作用于当前Context，对该Context中已创建及后续创建的Stream均有效。同一Device上不同Context的配置相互独立。
+
+配置用于[aclrtSynchronizeStream](06_stream_management.md#aclrtSynchronizeStream)、[aclrtSynchronizeStreamWithTimeout](06_stream_management.md#aclrtSynchronizeStreamWithTimeout)、[aclrtSynchronizeDevice](#aclrtSynchronizeDevice)、[aclrtSynchronizeDeviceWithTimeout](#aclrtSynchronizeDeviceWithTimeout)及[aclmdlRIExecute](15_model_running_instance_management.md#aclmdlRIExecute)接口中的Stream同步等待过程，具体生效条件请参见“约束说明”。
+
+### 参数说明
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | :---: | --- |
+| flags | 输入 | 同步等待方式。仅支持配置单个宏，不支持多个宏位或；配置其他值时返回ACL_ERROR_RT_PARAM_INVALID。<br>取值说明如下：<br><br>  - ACL_DEVICE_SCHEDULE_AUTO（0x00U）：默认模式，系统根据任务完成进度采用自适应等待方式；<br>  - ACL_DEVICE_SCHEDULE_SPIN（0x01U）：自旋等待，Host线程持续查询任务的执行状态，不主动让出CPU调度机会，直到任务执行完成。该模式可能增加Host CPU占用；<br>  - ACL_DEVICE_SCHEDULE_YIELD（0x02U）：Host线程循环查询任务的执行状态，每轮查询时主动让出CPU调度机会，直到任务执行完成；<br>  - ACL_DEVICE_SCHEDULE_BLOCKING_SYNC（0x04U）：阻塞Host同步线程，等待系统内部回调通知任务完成。回调处理线程由系统创建，无需用户创建。 |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+### 约束说明
+
+- 需在指定当前线程的Context后、同步等待前调用本接口。指定Context的方法请参见[aclrtSetCurrentContext](05_context_management.md#aclrtSetCurrentContext)接口。
+- 配置适用于未绑定模型且使用回收线程回收任务的Stream；不满足条件的Stream使用原有同步等待方式。
+- 设置为ACL_DEVICE_SCHEDULE_BLOCKING_SYNC时，如需通过[aclrtLaunchCallback](12_execution_control.md#aclrtLaunchCallback)接口下发回调任务，应在同步等待前调用[aclrtSubscribeReport](12_execution_control.md#aclrtSubscribeReport)接口注册处理该Stream上回调函数的线程。已通过该接口注册线程的Stream使用ACL_DEVICE_SCHEDULE_AUTO模式，Context中的配置值不变。
+- Stream上已注册系统内部创建的线程时，调用aclrtSubscribeReport接口会返回ACL_ERROR_RT_STREAM_SUBSCRIBE。切换等待模式不会取消该线程的注册。
+
+<br>
+<br>
+<br>
+
+<a class="method_anchor" id="aclrtGetDeviceFlags"></a>
+
+## aclrtGetDeviceFlags
+
+```c
+aclError aclrtGetDeviceFlags(uint32_t *flags)
+```
+
+### 产品支持情况
+
+<!-- npu="950" id5085 -->
+- Ascend 950PR&950DT系列产品：支持
+<!-- end id5085 -->
+<!-- npu="A3" id5086 -->
+- Atlas A3系列产品：支持
+<!-- end id5086 -->
+<!-- npu="910b" id5087 -->
+- Atlas A2系列产品：支持
+<!-- end id5087 -->
+<!-- npu="310b" id5088 -->
+- Atlas 200I/500 A2推理产品：支持
+<!-- end id5088 -->
+<!-- npu="310p" id5089 -->
+- Atlas推理系列产品：不支持
+<!-- end id5089 -->
+<!-- npu="910" id5090 -->
+- Atlas训练系列产品：不支持
+<!-- end id5090 -->
+<!-- npu="IPV350" id5091 -->
+- IPV350：不支持
+<!-- end id5091 -->
+<!-- npu="5162A" id5092 -->
+- Hisilicon5162A：不支持
+<!-- end id5092 -->
+
+<!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id56 -->
+
+### 功能说明
+
+获取当前Context中配置的同步等待方式。实际同步等待方式可能与配置值不同，具体生效规则请参见[aclrtSetDeviceFlags](#aclrtSetDeviceFlags)接口的“约束说明”。
+
+如果不调用[aclrtSetDeviceFlags](#aclrtSetDeviceFlags)接口设置等待方式，直接调用本接口可获取默认值ACL_DEVICE_SCHEDULE_AUTO；调用aclrtSetDeviceFlags接口设置等待方式后，调用本接口可获取设置的配置值。
+
+### 参数说明
+
+| 参数名 | 输入/输出 | 说明 |
+| --- | :---: | --- |
+| flags | 输出 | 同步等待方式。不能为nullptr。取值及含义请参见[aclrtSetDeviceFlags](#aclrtSetDeviceFlags)接口中的flags参数说明。 |
+
+### 返回值说明
+
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+### 约束说明
+
+- 调用本接口前，需先指定当前线程的Context。关于指定当前线程的Context，请参见[aclrtSetCurrentContext](05_context_management.md#aclrtSetCurrentContext)接口中的描述。
