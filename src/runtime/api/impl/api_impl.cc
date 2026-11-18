@@ -3061,8 +3061,14 @@ rtError_t ApiImpl::DeviceSetLimit(const int32_t devId, const rtLimitType_t type,
 {
     RT_LOG(RT_LOG_DEBUG, "Set Limit, drv devId=%d, type=%s, value=%u.", devId, LimitTypeToString(type).c_str(), val);
     (void)devId;
+
+    COND_RETURN_AND_MSG_OUTER(
+        type == RT_LIMIT_TYPE_PERSISTING_L2CACHE_SIZE, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1006,
+        "Setting the device limit", "ACL_RT_DEV_LIMIT_PERSISTING_L2CACHE_SIZE(5)",
+        "The current platform does not support setting the persisting L2 cache size");
+
     if (type == RT_LIMIT_TYPE_SIMT_PRINTF_FIFO_SIZE || type == RT_LIMIT_TYPE_SIMT_STACK_SIZE ||
-        type == RT_LIMIT_TYPE_SIMT_DVG_WARP_STACK_SIZE || type == RT_LIMIT_TYPE_PERSISTING_L2CACHE_SIZE) {
+        type == RT_LIMIT_TYPE_SIMT_DVG_WARP_STACK_SIZE) {
         RT_LOG(
             RT_LOG_WARNING, "The limit type is not supported on this platform, type=%s",
             LimitTypeToString(type).c_str());
@@ -3088,12 +3094,18 @@ rtError_t ApiImpl::DeviceSetLimit(const int32_t devId, const rtLimitType_t type,
 rtError_t ApiImpl::DeviceGetLimit(const rtLimitType_t type, uint32_t* val)
 {
     RT_LOG(RT_LOG_DEBUG, "Get Limit, type=%s.", LimitTypeToString(type).c_str());
+
+    COND_RETURN_AND_MSG_OUTER(
+        type == RT_LIMIT_TYPE_PERSISTING_L2CACHE_SIZE, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1006,
+        "Getting the device limit", "ACL_RT_DEV_LIMIT_PERSISTING_L2CACHE_SIZE(5)",
+        "The current platform does not support querying the persisting L2 cache size");
+
     if (type == RT_LIMIT_TYPE_STACK_SIZE) {
         Runtime* rt = Runtime::Instance();
         *val = rt->GetDeviceCustomerStackSize();
     } else if (
         type == RT_LIMIT_TYPE_SIMT_PRINTF_FIFO_SIZE || type == RT_LIMIT_TYPE_SIMT_STACK_SIZE ||
-        type == RT_LIMIT_TYPE_SIMT_DVG_WARP_STACK_SIZE || type == RT_LIMIT_TYPE_PERSISTING_L2CACHE_SIZE) {
+        type == RT_LIMIT_TYPE_SIMT_DVG_WARP_STACK_SIZE) {
         RT_LOG(
             RT_LOG_WARNING, "The limit type is not supported on this platform, type=%s",
             LimitTypeToString(type).c_str());

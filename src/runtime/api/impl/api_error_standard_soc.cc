@@ -836,6 +836,13 @@ rtError_t ApiErrorDecorator::ModelTaskUpdate(
 
     if ((desStm->GetBindFlag() != true) || (sinkStm->GetBindFlag() != true)) {
         RT_LOG(RT_LOG_ERROR, "model update task does not support non-model scenario.");
+        RT_LOG_OUTER_MSG_IMPL(
+            ErrorCode::EE1017, "Updating PC and other information of the target SQE in the target stream",
+            "taskStream or execStream",
+            RtFmtMsg(
+                "This operation requires both taskStream (stream_id=%d) and execStream (stream_id=%d) "
+                "to be bound to models",
+                desStm->Id_(), sinkStm->Id_()));
         return RT_ERROR_STREAM_MODEL;
     }
 
