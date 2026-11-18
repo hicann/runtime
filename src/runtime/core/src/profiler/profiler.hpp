@@ -10,8 +10,9 @@
 #ifndef CCE_RUNTIME_PROFILER_HPP
 #define CCE_RUNTIME_PROFILER_HPP
 
-#include <string>
+#include <atomic>
 #include <mutex>
+#include <string>
 #include <unordered_set>
 #include "engine.hpp"
 #include "profiler_struct.hpp"
@@ -77,13 +78,13 @@ public:
         if (trackProfEnable) {
             TrackDataInit();
         }
-        trackProfEnable_ = trackProfEnable;
+        trackProfEnable_.store(trackProfEnable, std::memory_order_release);
         if (trackProfEnable) {
             (void)ReportCacheTrack(cacheFlag);
         }
     }
 
-    bool GetTrackProfEnable() const { return trackProfEnable_; }
+    bool GetTrackProfEnable() const { return trackProfEnable_.load(std::memory_order_acquire); }
 
     void SetApiProfEnable(bool apiProfEnable) { apiProfEnable_ = apiProfEnable; }
 
@@ -119,7 +120,7 @@ private:
     ApiProfileLogDecorator* apiProfileLogDecorator_;
     rtProfCfg_t profCfg_;
 
-    bool trackProfEnable_;
+    std::atomic<bool> trackProfEnable_;
     bool apiProfEnable_;
     bool apiProfLogEnable_;
 
