@@ -356,7 +356,8 @@ rtError_t NpuDriver::QueryUbInfo(const uint32_t deviceId, rtUbDevQueryCmd cmd, v
 }
 
 rtError_t NpuDriver::GetDevResAddress(
-    const uint32_t deviceId, const rtDevResInfo* const resInfo, uint64_t* resAddr, uint32_t* resLen)
+    const uint32_t deviceId, const rtDevResInfo* const resInfo, uint64_t* resAddr, uint32_t* resLen,
+    const uint32_t remoteDevId)
 {
     struct res_addr_info devResInfo;
     (void)memset_s(&devResInfo, sizeof(devResInfo), 0U, sizeof(devResInfo));
@@ -365,6 +366,7 @@ rtError_t NpuDriver::GetDevResAddress(
     devResInfo.res_type = res_addr_type(static_cast<int32_t>(resInfo->resType));
     devResInfo.res_id = resInfo->resId;
     devResInfo.flag = resInfo->flag;
+    devResInfo.rudevid = remoteDevId;
 
     COND_RETURN_WARN(&halResAddrMap == nullptr, RT_ERROR_DRV_NOT_SUPPORT, "[drv api] halResAddrMap does not exist");
     const drvError_t drvRet = halResAddrMap(deviceId, &devResInfo, resAddr, resLen);

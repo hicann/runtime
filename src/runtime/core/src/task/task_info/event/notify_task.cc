@@ -300,11 +300,69 @@ static rtError_t GetIpcSqeWriteAddrByTsId(const TaskInfo* const taskInfo, uint64
     return RT_ERROR_NONE;
 }
 
+rtError_t GetIpcNotifyVirtualAddrForNotifyRecordTask(TaskInfo* taskInfo, uint64_t& addr)
+{
+    Stream* const stream = taskInfo->stream;
+    const NotifyRecordTaskInfo* const notifyRecord = &taskInfo->u.notifyrecordTask;
+    const Notify* const notify = notifyRecord->uPtr.notify;
+
+    rtDevResInfo resInfo = {
+        .dieId = notify->GetTsId(),
+        .procType = RT_PROCESS_CP1,
+        .resType = RT_RES_TYPE_STARS_NOTIFY_RECORD,
+        .resId = notifyRecord->notifyId,
+        .flag = TSDRV_FLAG_SHR_ID_SHADOW,
+    };
+
+    const uint32_t devId = stream->Device_()->Id_();
+    uint64_t mappedAddr = 0ULL;
+    uint32_t len = 0U;
+    const rtError_t error = NpuDriver::GetDevResAddress(devId, &resInfo, &mappedAddr, &len, notifyRecord->phyId);
+    if (error != RT_ERROR_NONE) {
+        return error;
+    }
+    COND_RETURN_ERROR_MSG_INNER(
+        mappedAddr == 0ULL, RT_ERROR_DRV_ERR, "halResAddrMap returned a null Notify address, device_id=%u.", devId);
+    addr = mappedAddr;
+    RT_LOG(
+        RT_LOG_INFO,
+        "Get IPC Notify VA: device_id=%u, ts_id=%u, notify_id=%u, "
+        "remote_device_id=%#x, addr=0x%llx, len=%u.",
+        devId, resInfo.dieId, resInfo.resId, notifyRecord->phyId, addr, len);
+    return RT_ERROR_NONE;
+}
+
 rtError_t GetIpcSqeWriteAddrForNotifyRecordTask(TaskInfo* taskInfo, uint64_t& addr)
 {
     if (IS_SUPPORT_CHIP_FEATURE(
             Runtime::Instance()->GetChipType(), RtOptionalFeatureType::RT_FEATURE_TASK_IPC_NOTIFY_ADDR_DOT_BY_TSID)) {
         return GetIpcSqeWriteAddrByTsId(taskInfo, addr);
+    }
+    NotifyRecordTaskInfo* const notifyRecord = &taskInfo->u.notifyrecordTask;
+    SingleBitNotifyRecordInfo& notifyInfo = notifyRecord->uInfo.singleBitNtfyInfo;
+    notifyInfo.isSdma = false;
+    const Notify* const notify = notifyRecord->uPtr.notify;
+    if ((notify != nullptr) && (notify->GetServiceId() <= RT_NOTIFY_MAX_SRV_ID)) {
+        Stream* const stream = taskInfo->stream;
+        const uint32_t localDevId = stream->Device_()->Id_();
+        int64_t localServerId = RT_NOTIFY_INVALID_SRV_ID;
+        const rtError_t queryError = stream->Device_()->Driver_()->GetDevInfo(
+            localDevId, MODULE_TYPE_SYSTEM, INFO_TYPE_SERVER_ID, &localServerId);
+        const bool isCrossServer = (queryError == RT_ERROR_NONE) && (localServerId >= 0) &&
+                                   (localServerId <= RT_NOTIFY_MAX_SRV_ID) &&
+                                   (static_cast<uint32_t>(localServerId) != notify->GetServiceId());
+        if (isCrossServer) {
+            const rtError_t error = GetIpcNotifyVirtualAddrForNotifyRecordTask(taskInfo, addr);
+            if (error == RT_ERROR_NONE) {
+                notifyInfo.isSdma = true;
+                notifyInfo.isPcie = false;
+                return RT_ERROR_NONE;
+            }
+            COND_RETURN_ERROR(
+                error != RT_ERROR_DRV_NOT_SUPPORT, error,
+                "Failed to get IPC Notify VA, retCode=%#x, device_id=%u, remote_server_id=%u, local_server_id=%u.",
+                static_cast<uint32_t>(error), localDevId, notify->GetServiceId(), localServerId);
+        }
     }
     const uint64_t notifyId = static_cast<uint64_t>(taskInfo->u.notifyrecordTask.notifyId);
     const uint64_t notifyTableId =

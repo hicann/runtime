@@ -1516,7 +1516,7 @@ TEST_F(TaskTest, stars_notify_record_sqe_notify_null)
     rtStarsSqe_t sqe;
     InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
 
-    SingleBitNotifyRecordInfo single_bit_notify_info = {false, false, false, false, 0, 0, false};
+    SingleBitNotifyRecordInfo single_bit_notify_info = {false, false, false, false, false, false, 0, 0, false};
     NotifyRecordTaskInit(&task, 0, 0, 0, &single_bit_notify_info, nullptr, nullptr, false);
 
     ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
@@ -3985,7 +3985,7 @@ TEST_F(TaskTest, stars_ipc_notify_record_sqe)
 
     rtStarsSqe_t sqe;
     InitByStream(&task, rt_ut::UnwrapOrNull<Stream>(stream));
-    SingleBitNotifyRecordInfo single_bit_notify_info = {false, false, false, false, 0, 0, false};
+    SingleBitNotifyRecordInfo single_bit_notify_info = {false, false, false, false, false, false, 0, 0, false};
     NotifyRecordTaskInit(&task, 0, 0, 0, &single_bit_notify_info, nullptr, nullptr, false);
     ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
 

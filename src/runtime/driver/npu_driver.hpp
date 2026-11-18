@@ -721,7 +721,8 @@ public:
         uint32_t devId, uint64_t hostAddr, uint64_t cpySize, struct addr_range* outRange, uint32_t* outRangeCnt);
     static rtError_t QueryUbInfo(const uint32_t deviceId, rtUbDevQueryCmd cmd, void* const devInfo);
     static rtError_t GetDevResAddress(
-        const uint32_t deviceId, const rtDevResInfo* const resInfo, uint64_t* resAddr, uint32_t* resLen);
+        const uint32_t deviceId, const rtDevResInfo* const resInfo, uint64_t* resAddr, uint32_t* resLen,
+        const uint32_t remoteDevId = 0U);
     static rtError_t ReleaseDevResAddress(const uint32_t deviceId, const rtDevResInfo* const resInfo);
     static rtError_t MemcpyBatch(uint64_t dsts[], uint64_t srcs[], size_t sizes[], size_t count);
     static rtError_t QueryDeviceCcStatus(const uint32_t deviceId, bool& ccOn);

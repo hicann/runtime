@@ -98,7 +98,8 @@ rtError_t NtyRecord(Notify* const inNotify, Stream* const streamIn)
         isIpc = true;
         baseAddr = inNotify->GetNotifyVaAddr();
     }
-    SingleBitNotifyRecordInfo singleInfo = {isIpc, false, false, inNotify->IsPod(), MAX_UINT32_NUM, baseAddr, false};
+    SingleBitNotifyRecordInfo singleInfo = {isIpc,          false,    false, false, false, inNotify->IsPod(),
+                                            MAX_UINT32_NUM, baseAddr, false};
     rtError_t error = CheckTaskCanSend(streamIn);
     ERROR_RETURN_MSG_INNER(
         error, "Failed to check stream, stream_id=%d, retCode=%#x.", streamIn->Id_(), static_cast<uint32_t>(error));
@@ -152,13 +153,16 @@ rtError_t NtyReset(Notify* const inNotify, Stream* const streamIn)
                 inNotify->GetNotifyId()));
         return RT_ERROR_TASK_NOT_SUPPORT;
     }
-    SingleBitNotifyRecordInfo singleInfo = {false,
-                                            false,
-                                            inNotify->GetLastIsPcie(),
-                                            inNotify->IsPod(),
-                                            inNotify->GetLastLocalId(),
-                                            inNotify->GetLastBaseAddr(),
-                                            true};
+    SingleBitNotifyRecordInfo singleInfo = {
+        false,
+        false,
+        false,
+        inNotify->GetLastIsPcie(),
+        inNotify->GetLastIsSdma(),
+        inNotify->IsPod(),
+        inNotify->GetLastLocalId(),
+        inNotify->GetLastBaseAddr(),
+        true};
 
     if (streamIn->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
         return streamIn->Device_()->GetCtrlSQ().SendNotifyResetV200Msg(

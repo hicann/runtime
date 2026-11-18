@@ -44,6 +44,7 @@ Notify::Notify(const uint32_t devId, const uint32_t taskSchId)
       lastLocalId_(MAX_UINT32_NUM),
       lastBaseAddr_(0UL),
       lastIsPcie_(false),
+      lastIsSdma_(false),
       notifyFlag_(0U),
       localDevId_(UINT32_MAX),
       srvId_(RT_NOTIFY_INVALID_SRV_ID),
@@ -201,12 +202,14 @@ rtError_t Notify::Record(Stream* const streamIn)
         lastBaseAddr_ = 0UL;
         lastLocalId_ = MAX_UINT32_NUM;
         lastIsPcie_ = false;
+        lastIsSdma_ = false;
     }
 
     RT_LOG(
         RT_LOG_INFO, "isIpc=%d, notify_id=%d, lastLocalId=%u, lastBaseAddr_=%#x, device_id=%u", isIpc, notifyid_,
         lastLocalId_, lastBaseAddr_, streamIn->Device_()->Id_());
-    SingleBitNotifyRecordInfo singleInfo = {isIpc, false, lastIsPcie_, isPod_, lastLocalId_, lastBaseAddr_, false};
+    SingleBitNotifyRecordInfo singleInfo = {isIpc,  false,        false,         lastIsPcie_, lastIsSdma_,
+                                            isPod_, lastLocalId_, lastBaseAddr_, false};
     rtError_t error = NotifyRecordTaskInit(
         notifyTask, notifyid_, static_cast<int32_t>(deviceId_), phyId_, &singleInfo, nullptr, static_cast<void*>(this));
     if (error != RT_ERROR_NONE) {
@@ -219,8 +222,9 @@ rtError_t Notify::Record(Stream* const streamIn)
     }
 
     RT_LOG(
-        RT_LOG_INFO, "refresh, lastLocalId=%u, lastBaseAddr_=0x%llx, lastIsPcie=%s, device_id=%u", lastLocalId_,
-        lastBaseAddr_, lastIsPcie_ ? "True" : "False", streamIn->Device_()->Id_());
+        RT_LOG_INFO, "refresh, lastLocalId=%u, lastBaseAddr_=0x%llx, lastIsPcie=%s, lastIsSdma=%s, device_id=%u",
+        lastLocalId_, lastBaseAddr_, lastIsPcie_ ? "True" : "False", lastIsSdma_ ? "True" : "False",
+        streamIn->Device_()->Id_());
 
     GET_THREAD_TASKID_AND_STREAMID(notifyTask, streamIn->Id_());
 
@@ -288,7 +292,7 @@ rtError_t Notify::GetNotifyAddress(Stream* const streamIn, uint64_t& addr)
     }
     COND_RETURN_WITH_NOLOG((!isIpc), RT_ERROR_NOTIFY_TYPE);
 
-    SingleBitNotifyRecordInfo singleInfo = {isIpc, false, false, isPod_, MAX_UINT32_NUM, 0UL, false};
+    SingleBitNotifyRecordInfo singleInfo = {isIpc, false, false, false, false, isPod_, MAX_UINT32_NUM, 0UL, false};
     error = NotifyRecordTaskInit(
         &notifyTask, notifyid_, static_cast<int32_t>(deviceId_), phyId_, &singleInfo, nullptr,
         static_cast<void*>(this));

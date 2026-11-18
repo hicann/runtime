@@ -15,6 +15,7 @@
 #include "notify.hpp"
 #include "notify_task.h"
 #include "runtime_task_manager.h"
+#include "task_execute_time.h"
 
 namespace cce {
 namespace runtime {
@@ -41,10 +42,10 @@ static void ConstructNotifySqeForNotifyRecordTask(TaskInfo* taskInfo, rtStarsSqe
     PrintSqe(command, "NotifyRecordTask");
 }
 
-static void ConstructIpcSqeForNotifyRecordTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+static void ConstructWriteValueSqeForIpcNotifyRecord(TaskInfo* taskInfo, rtStarsSqe_t* const command, uint64_t& addr)
 {
-    NotifyRecordTaskInfo* notifyRecord = &taskInfo->u.notifyrecordTask;
     Stream* const stream = taskInfo->stream;
+    NotifyRecordTaskInfo* notifyRecord = &taskInfo->u.notifyrecordTask;
     RtStarsWriteValueSqe* const sqe = &(command->writeValueSqe);
     sqe->header.type = RT_STARS_SQE_TYPE_WRITE_VALUE;
     sqe->header.ie = RT_STARS_SQE_INT_DIR_NO;
@@ -76,29 +77,6 @@ static void ConstructIpcSqeForNotifyRecordTask(TaskInfo* taskInfo, rtStarsSqe_t*
     sqe->write_value_part6 = 0U;
     sqe->write_value_part7 = 0U;
 
-    uint64_t addr = 0UL;
-    const uint32_t devId = stream->Device_()->Id_();
-    if (notifyRecord->uInfo.singleBitNtfyInfo.lastLocalId == devId) {
-        addr = notifyRecord->uInfo.singleBitNtfyInfo.lastBaseAddr;
-        notifyRecord->uInfo.singleBitNtfyInfo.isPcie = notifyRecord->uInfo.singleBitNtfyInfo.lastIsPcie;
-    } else {
-        const rtError_t error = GetIpcSqeWriteAddrForNotifyRecordTask(taskInfo, addr);
-        if (error != RT_ERROR_NONE) {
-            sqe->header.type = RT_STARS_SQE_TYPE_INVALID;
-            RT_LOG(RT_LOG_ERROR, "Failed to get address, retCode=%#x!", error);
-            return;
-        }
-        notifyRecord->uInfo.singleBitNtfyInfo.lastBaseAddr = addr;
-        notifyRecord->uInfo.singleBitNtfyInfo.lastLocalId = devId;
-        notifyRecord->uInfo.singleBitNtfyInfo.lastIsPcie = notifyRecord->uInfo.singleBitNtfyInfo.isPcie;
-        if (notifyRecord->uPtr.notify != nullptr) {
-            notifyRecord->uPtr.notify->SetNotifylastBaseAddr(addr);
-            notifyRecord->uPtr.notify->SetNotifylastLocalId(devId);
-            notifyRecord->uPtr.notify->SetNotifylastIsPcie(notifyRecord->uInfo.singleBitNtfyInfo.isPcie);
-        }
-        RT_LOG(RT_LOG_INFO, "lastLocalId=%u lastBaseAddr=0x%llx", devId, addr);
-    }
-
     if (notifyRecord->uInfo.singleBitNtfyInfo.isPcie) {
         sqe->sub_type = RT_STARS_WRITE_VALUE_SUB_TYPE_NOTIFY_RECORD_IPC_PCIE;
     } else {
@@ -109,6 +87,76 @@ static void ConstructIpcSqeForNotifyRecordTask(TaskInfo* taskInfo, rtStarsSqe_t*
     sqe->write_addr_high = static_cast<uint32_t>((addr >> UINT32_BIT_NUM) & MASK_17_BIT);
 
     PrintSqe(command, "NotifyRecordTask_Ipc");
+}
+
+static void ConstructSDMASqeForIpcNotifyRecord(TaskInfo* taskInfo, rtStarsSqe_t* const command, const uint64_t addr)
+{
+    Stream* const stream = taskInfo->stream;
+    RtStarsMemcpyAsyncSqe* const sqe = &(command->memcpyAsyncSqe);
+    (void)memset_s(sqe, sizeof(*sqe), 0, sizeof(*sqe));
+    sqe->header.type = RT_STARS_SQE_TYPE_SDMA;
+    sqe->header.ie = RT_STARS_SQE_INT_DIR_NO;
+    sqe->header.pre_p = RT_STARS_SQE_INT_DIR_NO;
+    sqe->header.post_p = RT_STARS_SQE_INT_DIR_NO;
+    sqe->header.wr_cqe = stream->GetStarsWrCqeFlag();
+    sqe->header.rt_stream_id = static_cast<uint16_t>(stream->Id_());
+    sqe->header.task_id = taskInfo->id;
+    sqe->kernelCredit = GetSdmaKernelCredit();
+    sqe->ptrMode = 0U;
+    sqe->opcode = RT_STARS_MEMCPY_ASYNC_OP_KIND_MEMSET;
+
+    // MEMSET encodes the target address in src_addr and the fill value in dst_addr.
+    sqe->length = static_cast<uint32_t>(sizeof(uint32_t));
+    sqe->src_addr_low = static_cast<uint32_t>(addr & MASK_32_BIT);
+    sqe->src_addr_high = static_cast<uint32_t>(addr >> UINT32_BIT_NUM);
+    sqe->dst_addr_low = 1U;
+    sqe->dst_addr_high = 0U;
+
+    sqe->sssv = 1U;
+    sqe->dssv = 1U;
+    sqe->sns = 1U;
+    sqe->dns = 1U;
+
+    PrintSqe(command, "NotifyRecordTask_Ipc_Sdma");
+}
+
+static void ConstructIpcSqeForNotifyRecordTask(TaskInfo* taskInfo, rtStarsSqe_t* const command)
+{
+    NotifyRecordTaskInfo* notifyRecord = &taskInfo->u.notifyrecordTask;
+    Stream* const stream = taskInfo->stream;
+    uint64_t addr = 0ULL;
+    const uint32_t devId = stream->Device_()->Id_();
+    if (notifyRecord->uInfo.singleBitNtfyInfo.lastLocalId == devId) {
+        addr = notifyRecord->uInfo.singleBitNtfyInfo.lastBaseAddr;
+        notifyRecord->uInfo.singleBitNtfyInfo.isPcie = notifyRecord->uInfo.singleBitNtfyInfo.lastIsPcie;
+        notifyRecord->uInfo.singleBitNtfyInfo.isSdma = notifyRecord->uInfo.singleBitNtfyInfo.lastIsSdma;
+    } else {
+        rtError_t error = GetIpcSqeWriteAddrForNotifyRecordTask(taskInfo, addr);
+        if (error != RT_ERROR_NONE) {
+            command->writeValueSqe.header.type = RT_STARS_SQE_TYPE_INVALID;
+            RT_LOG(RT_LOG_ERROR, "Failed to get address, retCode=%#x!", error);
+            return;
+        }
+        notifyRecord->uInfo.singleBitNtfyInfo.lastBaseAddr = addr;
+        notifyRecord->uInfo.singleBitNtfyInfo.lastLocalId = devId;
+        notifyRecord->uInfo.singleBitNtfyInfo.lastIsPcie = notifyRecord->uInfo.singleBitNtfyInfo.isPcie;
+        notifyRecord->uInfo.singleBitNtfyInfo.lastIsSdma = notifyRecord->uInfo.singleBitNtfyInfo.isSdma;
+        if (notifyRecord->uPtr.notify != nullptr) {
+            notifyRecord->uPtr.notify->SetNotifylastBaseAddr(addr);
+            notifyRecord->uPtr.notify->SetNotifylastLocalId(devId);
+            notifyRecord->uPtr.notify->SetNotifylastIsPcie(notifyRecord->uInfo.singleBitNtfyInfo.isPcie);
+            notifyRecord->uPtr.notify->SetNotifylastIsSdma(notifyRecord->uInfo.singleBitNtfyInfo.isSdma);
+        }
+        RT_LOG(RT_LOG_INFO, "lastLocalId=%u lastBaseAddr=0x%llx", devId, addr);
+    }
+
+    if (notifyRecord->uInfo.singleBitNtfyInfo.isSdma) {
+        RT_LOG(RT_LOG_INFO, "Construct SDMA Sqe for IPC Notify Record Task.");
+        ConstructSDMASqeForIpcNotifyRecord(taskInfo, command, addr);
+    } else {
+        RT_LOG(RT_LOG_INFO, "Construct Write Value Sqe for IPC Notify Record Task.");
+        ConstructWriteValueSqeForIpcNotifyRecord(taskInfo, command, addr);
+    }
 }
 
 void ConstructSqeForNotifyRecordTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)

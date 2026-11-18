@@ -1216,7 +1216,7 @@ TEST_F(StarsTaskTest, NotifyIpcTaskHccsTest)
 {
     TaskInfo ntyRecordTask = {};
     InitByStream(&ntyRecordTask, stream_);
-    SingleBitNotifyRecordInfo single_bit_notify_info = {true, false, false, false, 1, 0, false};
+    SingleBitNotifyRecordInfo single_bit_notify_info = {true, false, false, false, false, false, 1, 0, false};
     Notify* single_notify = new (std::nothrow) Notify(0, 0);
     rtError_t ret =
         NotifyRecordTaskInit(&ntyRecordTask, 0, 1, 1, &single_bit_notify_info, nullptr, single_notify, false);
@@ -1242,7 +1242,7 @@ TEST_F(StarsTaskTest, NotifyIpcTaskPixTest)
 {
     TaskInfo ntyRecordTask = {};
     InitByStream(&ntyRecordTask, stream_);
-    SingleBitNotifyRecordInfo single_bit_notify_info = {true, false, false, false, 1, 0, false};
+    SingleBitNotifyRecordInfo single_bit_notify_info = {true, false, false, false, false, false, 1, 0, false};
     Notify* single_notify = new (std::nothrow) Notify(0, 0);
     rtError_t ret =
         NotifyRecordTaskInit(&ntyRecordTask, 0, 1, 1, &single_bit_notify_info, nullptr, single_notify, false);
@@ -1268,7 +1268,7 @@ TEST_F(StarsTaskTest, NotifyIpcTaskErrTest)
 {
     TaskInfo ntyRecordTask = {};
     InitByStream(&ntyRecordTask, stream_);
-    SingleBitNotifyRecordInfo single_bit_notify_info = {true, false, false, false, 1, 0, false};
+    SingleBitNotifyRecordInfo single_bit_notify_info = {true, false, false, false, false, false, 1, 0, false};
     Notify* single_notify = new (std::nothrow) Notify(0, 0);
     rtError_t ret =
         NotifyRecordTaskInit(&ntyRecordTask, 0, 1, 1, &single_bit_notify_info, nullptr, single_notify, false);
@@ -1294,7 +1294,7 @@ TEST_F(StarsTaskTest, NotifyIpcTaskErrTestDevid64)
 {
     TaskInfo ntyRecordTask = {};
     InitByStream(&ntyRecordTask, stream_);
-    SingleBitNotifyRecordInfo single_bit_notify_info = {true, false, false, false, 64, 0, false};
+    SingleBitNotifyRecordInfo single_bit_notify_info = {true, false, false, false, false, false, 64, 0, false};
     Notify* single_notify = new (std::nothrow) Notify(0, 0);
     rtError_t ret =
         NotifyRecordTaskInit(&ntyRecordTask, 0, 1, 1, &single_bit_notify_info, nullptr, single_notify, false);

@@ -29,6 +29,7 @@ rtError_t NotifyResetTaskInit(
 void ToCommandBodyForNotifyRecordTask(TaskInfo* taskInfo, rtCommand_t* const command);
 void DoCompleteSuccessForNotifyRecordTask(TaskInfo* taskInfo, const uint32_t devId);
 rtError_t GetIpcSqeWriteAddrForNotifyRecordTask(TaskInfo* taskInfo, uint64_t& addr);
+rtError_t GetIpcNotifyVirtualAddrForNotifyRecordTask(TaskInfo* taskInfo, uint64_t& addr);
 
 rtError_t NotifyWaitTaskInit(
     TaskInfo* taskInfo, const uint32_t notifyIndex, const uint32_t timeOutNum,

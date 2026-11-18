@@ -63,19 +63,26 @@ public:
     uint32_t GetServiceId() const { return srvId_; }
 
     uint32_t GetChipId() const { return chipId_; }
+
     uint32_t GetDeviceId() const { return deviceId_; }
 
     bool IsPod() const { return isPod_; }
+
     uint32_t GetLastLocalId() const { return lastLocalId_; }
 
     bool GetLastIsPcie() const { return lastIsPcie_; }
 
+    bool GetLastIsSdma() const { return lastIsSdma_; }
+
     uint64_t GetLastBaseAddr() const { return lastBaseAddr_; }
+
     void SetNotifylastBaseAddr(uint64_t lastBaseAddr) { lastBaseAddr_ = lastBaseAddr; }
 
     void SetNotifylastLocalId(uint32_t lastLocalId) { lastLocalId_ = lastLocalId; }
 
     void SetNotifylastIsPcie(bool lastIsPcie) { lastIsPcie_ = lastIsPcie; }
+
+    void SetNotifylastIsSdma(bool lastIsSdma) { lastIsSdma_ = lastIsSdma; }
 
     const std::string& GetIpcName() const { return ipcName_; }
 
@@ -106,6 +113,7 @@ private:
     uint32_t lastLocalId_;
     uint64_t lastBaseAddr_;
     bool lastIsPcie_;
+    bool lastIsSdma_;
     uint32_t notifyFlag_;
     uint32_t localDevId_;
     uint32_t srvId_;

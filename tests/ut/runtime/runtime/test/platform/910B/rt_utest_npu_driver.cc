@@ -277,10 +277,11 @@ TEST_F(CloudV2NpuDriverTest, Test_GetIpcSqeWriteAddrForNotifyRecordTask)
     TaskInfo* tmpTask = &task1;
     uint64_t addr = 0ULL;
     MOCKER(halGetDeviceInfo).stubs().will(invoke(halGetDeviceInfoStub_Cube));
+    MOCKER(halResAddrMap).expects(once()).will(returnValue(DRV_ERROR_NOT_SUPPORT));
     rtError_t error = GetIpcSqeWriteAddrForNotifyRecordTask(tmpTask, addr);
     EXPECT_EQ(error, RT_ERROR_NONE);
     ret = rtStreamDestroy(stream);
-    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
     delete notify;
 }
 

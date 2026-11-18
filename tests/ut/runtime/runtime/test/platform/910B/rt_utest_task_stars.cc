@@ -1150,7 +1150,7 @@ TEST_F(StarsTaskTest, NotifyIpcTaskHccsTest)
 {
     TaskInfo ntyRecordTask = {};
     InitByStream(&ntyRecordTask, stream_);
-    SingleBitNotifyRecordInfo single_bit_notify_info = {true, false, false, false, 1, 0, false};
+    SingleBitNotifyRecordInfo single_bit_notify_info = {true, false, false, false, false, false, 1, 0, false};
     Notify* single_notify = new (std::nothrow) Notify(0, 0);
     rtError_t ret =
         NotifyRecordTaskInit(&ntyRecordTask, 0, 1, 1, &single_bit_notify_info, nullptr, single_notify, false);
@@ -1176,7 +1176,7 @@ TEST_F(StarsTaskTest, NotifyIpcTaskPixTest)
 {
     TaskInfo ntyRecordTask = {};
     InitByStream(&ntyRecordTask, stream_);
-    SingleBitNotifyRecordInfo single_bit_notify_info = {true, false, false, false, 1, 0, false};
+    SingleBitNotifyRecordInfo single_bit_notify_info = {true, false, false, false, false, false, 1, 0, false};
     Notify* single_notify = new (std::nothrow) Notify(0, 0);
     rtError_t ret =
         NotifyRecordTaskInit(&ntyRecordTask, 0, 1, 1, &single_bit_notify_info, nullptr, single_notify, false);
@@ -1202,7 +1202,7 @@ TEST_F(StarsTaskTest, NotifyIpcTaskErrTest)
 {
     TaskInfo ntyRecordTask = {};
     InitByStream(&ntyRecordTask, stream_);
-    SingleBitNotifyRecordInfo single_bit_notify_info = {true, false, false, false, 1, 0, false};
+    SingleBitNotifyRecordInfo single_bit_notify_info = {true, false, false, false, false, false, 1, 0, false};
     Notify* single_notify = new (std::nothrow) Notify(0, 0);
     rtError_t ret =
         NotifyRecordTaskInit(&ntyRecordTask, 0, 1, 1, &single_bit_notify_info, nullptr, single_notify, false);
@@ -1228,7 +1228,7 @@ TEST_F(StarsTaskTest, NotifyIpcTaskErrTestDevid64)
 {
     TaskInfo ntyRecordTask = {};
     InitByStream(&ntyRecordTask, stream_);
-    SingleBitNotifyRecordInfo single_bit_notify_info = {true, false, false, false, 64, 0, false};
+    SingleBitNotifyRecordInfo single_bit_notify_info = {true, false, false, false, false, false, 1, 0, false};
     Notify* single_notify = new (std::nothrow) Notify(0, 0);
     rtError_t ret =
         NotifyRecordTaskInit(&ntyRecordTask, 0, 1, 1, &single_bit_notify_info, nullptr, single_notify, false);
@@ -1238,6 +1238,161 @@ TEST_F(StarsTaskTest, NotifyIpcTaskErrTestDevid64)
     ToConstructSqe(&ntyRecordTask, &sqe, TaskSqeInfo{0ULL, 0ULL});
     delete single_notify;
 }
+
+namespace {
+constexpr uint32_t IPC_NOTIFY_ID = 17U;
+constexpr uint32_t IPC_REMOTE_LOGICAL_ID = 1U;
+constexpr uint32_t IPC_REMOTE_PHY_ID = 7U;
+constexpr uint64_t IPC_NOTIFY_VA = 0x123456788000ULL;
+
+rtError_t InitIpcSdmaTask(TaskInfo& task, Stream* stream, Notify& notify)
+{
+    notify.srvId_ = 1U;
+    notify.isPod_ = true;
+    notify.chipId_ = 0U;
+    notify.dieId_ = 0U;
+
+    InitByStream(&task, stream);
+
+    SingleBitNotifyRecordInfo info = {};
+    info.isIpc = true;
+    info.isPod = true;
+    info.lastLocalId = notify.GetLastLocalId();
+    info.lastBaseAddr = notify.GetLastBaseAddr();
+    info.lastIsPcie = notify.GetLastIsPcie();
+    info.lastIsSdma = notify.GetLastIsSdma();
+
+    return NotifyRecordTaskInit(
+        &task, IPC_NOTIFY_ID, IPC_REMOTE_LOGICAL_ID, IPC_REMOTE_PHY_ID, &info, nullptr, &notify, false);
+}
+} // namespace
+
+TEST_F(StarsTaskTest, NotifyIpcSdmaRecordAndCache)
+{
+    Notify notify(IPC_REMOTE_LOGICAL_ID, 0U);
+    TaskInfo task = {};
+    ASSERT_EQ(InitIpcSdmaTask(task, stream_, notify), RT_ERROR_NONE);
+
+    NpuDriver driver;
+    int64_t localServerId = 0;
+    MOCKER_CPP_VIRTUAL(driver, &NpuDriver::GetDevInfo)
+        .expects(once())
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&localServerId, sizeof(localServerId)))
+        .will(returnValue(RT_ERROR_NONE));
+
+    MOCKER(halResAddrMap)
+        .expects(once())
+        .will(invoke(
+            +[](unsigned int devId, struct res_addr_info* info, unsigned long* va, unsigned int* len) -> drvError_t {
+                EXPECT_EQ(devId, 0U);
+                EXPECT_EQ(info->res_id, IPC_NOTIFY_ID);
+                EXPECT_EQ(info->flag, TSDRV_FLAG_SHR_ID_SHADOW);
+                EXPECT_EQ(info->rudevid, IPC_REMOTE_PHY_ID);
+                *va = IPC_NOTIFY_VA;
+                *len = sizeof(uint32_t);
+                return DRV_ERROR_NONE;
+            }));
+
+    rtStarsSqe_t sqe = {};
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
+
+    // 校验任务类型、目标地址和写入值。
+    EXPECT_EQ(sqe.memcpyAsyncSqe.header.type, RT_STARS_SQE_TYPE_SDMA);
+    EXPECT_EQ(sqe.memcpyAsyncSqe.opcode, RT_STARS_MEMCPY_ASYNC_OP_KIND_MEMSET);
+    EXPECT_EQ(
+        (static_cast<uint64_t>(sqe.memcpyAsyncSqe.src_addr_high) << 32U) | sqe.memcpyAsyncSqe.src_addr_low,
+        IPC_NOTIFY_VA);
+    EXPECT_EQ(sqe.memcpyAsyncSqe.dst_addr_low, 1U);
+    EXPECT_EQ(sqe.memcpyAsyncSqe.length, sizeof(uint32_t));
+
+    EXPECT_EQ(notify.GetLastBaseAddr(), IPC_NOTIFY_VA);
+    EXPECT_EQ(notify.GetLastLocalId(), dev_->Id_());
+    EXPECT_TRUE(notify.GetLastIsSdma());
+
+    // 再次 Record：上面的 once() 同时验证没有重复查询驱动。
+    TaskInfo cachedTask = {};
+    ASSERT_EQ(InitIpcSdmaTask(cachedTask, stream_, notify), RT_ERROR_NONE);
+    sqe = {};
+    ToConstructSqe(&cachedTask, &sqe, TaskSqeInfo{0ULL, 0ULL});
+
+    EXPECT_EQ(sqe.memcpyAsyncSqe.header.type, RT_STARS_SQE_TYPE_SDMA);
+    EXPECT_EQ(
+        (static_cast<uint64_t>(sqe.memcpyAsyncSqe.src_addr_high) << 32U) | sqe.memcpyAsyncSqe.src_addr_low,
+        IPC_NOTIFY_VA);
+}
+
+TEST_F(StarsTaskTest, NotifyIpcMapNotSupportedFallsBackToWriteValue)
+{
+    Notify notify(IPC_REMOTE_LOGICAL_ID, 0U);
+    TaskInfo task = {};
+    ASSERT_EQ(InitIpcSdmaTask(task, stream_, notify), RT_ERROR_NONE);
+
+    NpuDriver driver;
+    int64_t localServerId = 0;
+    MOCKER_CPP_VIRTUAL(driver, &NpuDriver::GetDevInfo)
+        .expects(exactly(2))
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&localServerId, sizeof(localServerId)))
+        .will(returnValue(RT_ERROR_NONE));
+
+    MOCKER(halResAddrMap).expects(once()).will(returnValue(DRV_ERROR_NOT_SUPPORT));
+
+    rtStarsSqe_t sqe = {};
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
+
+    // 远端 server=1、chip=0、die=0 对应的旧地址。
+    const uint64_t expectedAddr = RT_CROSS_NODE_BASE_ADDR_48T + RT_SERVER_ADDR_OFFSET_1T +
+                                  RT_NOTIFY_ADDR_OFFSET_PER_DIE_1100000 +
+                                  static_cast<uint64_t>(IPC_NOTIFY_ID) * STARS_NOTIFY_OFFSET;
+
+    EXPECT_EQ(sqe.writeValueSqe.header.type, RT_STARS_SQE_TYPE_WRITE_VALUE);
+    EXPECT_EQ(
+        (static_cast<uint64_t>(sqe.writeValueSqe.write_addr_high) << 32U) | sqe.writeValueSqe.write_addr_low,
+        expectedAddr);
+    EXPECT_FALSE(notify.GetLastIsSdma());
+    EXPECT_EQ(notify.GetLastBaseAddr(), expectedAddr);
+}
+
+struct IpcNotifyMapFailure {
+    drvError_t result;
+    uint64_t address;
+};
+
+class NotifyIpcMapFailureTest : public StarsTaskTest, public testing::WithParamInterface<IpcNotifyMapFailure> {};
+
+TEST_P(NotifyIpcMapFailureTest, InvalidatesSqeWithoutCaching)
+{
+    const auto param = GetParam();
+    Notify notify(IPC_REMOTE_LOGICAL_ID, 0U);
+    TaskInfo task = {};
+    ASSERT_EQ(InitIpcSdmaTask(task, stream_, notify), RT_ERROR_NONE);
+
+    NpuDriver driver;
+    int64_t localServerId = 0;
+    MOCKER_CPP_VIRTUAL(driver, &NpuDriver::GetDevInfo)
+        .expects(once())
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&localServerId, sizeof(localServerId)))
+        .will(returnValue(RT_ERROR_NONE));
+
+    unsigned long mappedAddr = static_cast<unsigned long>(param.address);
+    unsigned int len = sizeof(uint32_t);
+    MOCKER(halResAddrMap)
+        .expects(once())
+        .with(mockcpp::any(), mockcpp::any(), outBoundP(&mappedAddr, sizeof(mappedAddr)), outBoundP(&len, sizeof(len)))
+        .will(returnValue(param.result));
+
+    rtStarsSqe_t sqe = {};
+    ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
+
+    EXPECT_EQ(sqe.writeValueSqe.header.type, RT_STARS_SQE_TYPE_INVALID);
+    EXPECT_EQ(notify.GetLastLocalId(), MAX_UINT32_NUM);
+    EXPECT_EQ(notify.GetLastBaseAddr(), 0ULL);
+    EXPECT_FALSE(notify.GetLastIsSdma());
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    DriverResults, NotifyIpcMapFailureTest,
+    testing::Values(
+        IpcNotifyMapFailure{DRV_ERROR_INVALID_VALUE, IPC_NOTIFY_VA}, IpcNotifyMapFailure{DRV_ERROR_NONE, 0ULL}));
 
 TEST_F(StarsTaskTest, EventResetTask_DoCompleteSuccess)
 {

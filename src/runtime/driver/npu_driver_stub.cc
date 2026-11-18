@@ -102,12 +102,14 @@ rtError_t NpuDriver::QueryUbInfo(const uint32_t deviceId, rtUbDevQueryCmd cmd, v
 }
 
 rtError_t NpuDriver::GetDevResAddress(
-    const uint32_t deviceId, const rtDevResInfo* const resInfo, uint64_t* resAddr, uint32_t* resLen)
+    const uint32_t deviceId, const rtDevResInfo* const resInfo, uint64_t* resAddr, uint32_t* resLen,
+    const uint32_t remoteDevId)
 {
     UNUSED(deviceId);
     UNUSED(resInfo);
     UNUSED(resAddr);
     UNUSED(resLen);
+    UNUSED(remoteDevId);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 

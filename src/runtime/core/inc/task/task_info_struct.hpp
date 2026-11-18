@@ -412,7 +412,9 @@ struct SetStreamModeTaskInfo {
 struct SingleBitNotifyRecordInfo {
     bool isIpc;
     bool isPcie;
+    bool isSdma;
     bool lastIsPcie;
+    bool lastIsSdma;
     bool isPod;
     uint32_t lastLocalId;
     uint64_t lastBaseAddr;
