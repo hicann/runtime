@@ -945,7 +945,11 @@ rtError_t GetReadLenAndAddr(
         (blockInfo->remainLen == 0U), RT_ERROR_INVALID_VALUE, "remainLen is 0, invalid block configuration.");
     const uint64_t readIdx = readInfo->readIdx % blockInfo->remainLen;
 
-    if (writeInfo->writeIdx - readInfo->readIdx > blockInfo->remainLen) {
+    // SIMD 索引是物理偏移，回绕时写索引可小于读索引，先判断顺序以避免无符号下溢。
+    // 索引有序且差值至少为环容量时读取整环，包含恰好满环的情况。
+    // 其余情况按有效区间读取：回绕时拼接环尾和环首，未回绕时直接读取线性区间。
+    if ((writeInfo->writeIdx >= readInfo->readIdx) &&
+        (writeInfo->writeIdx - readInfo->readIdx >= blockInfo->remainLen)) {
         totalReadBufLen = blockInfo->remainLen;
         dumpInfoVec.resize(totalReadBufLen, 0);
         (void)memcpy_s(

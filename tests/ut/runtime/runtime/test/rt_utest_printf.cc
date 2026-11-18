@@ -43,6 +43,20 @@ const uint32_t PARAM_VALUE_LEN = 8;
 const uint32_t SIMD_PRINT_RSV_LEN = 8;
 const uint32_t SIMT_PRINT_RSV_LEN = 40;
 
+std::vector<uint8_t> g_printfCapturedData;
+
+rtError_t CapturePrintfData(
+    KernelDfxInfo* info, rtKernelDfxInfoType type, uint32_t coreType, uint32_t coreId, const uint8_t* buffer,
+    uint64_t length)
+{
+    UNUSED(info);
+    UNUSED(type);
+    UNUSED(coreType);
+    UNUSED(coreId);
+    g_printfCapturedData.assign(buffer, buffer + length);
+    return RT_ERROR_NONE;
+}
+
 void EmptyParseDfxInfoCallback(const rtDfxParseParam* param, uint64_t* consumedLen)
 {
     UNUSED(param);
@@ -131,6 +145,82 @@ int32_t MsprofReportAdditionalInfoStub(uint32_t nonPersistantFlag, const VOID_PT
 }
 
 extern int32_t cmodelDrvMemcpy_flag;
+
+static void CheckPrintfCommittedRanges(
+    const uint64_t initialRead, const std::vector<uint64_t>& writes, const std::vector<uint64_t>& expectedLengths)
+{
+    ASSERT_EQ(writes.size(), expectedLengths.size());
+    ASSERT_EQ(rtSetDevice(0), RT_ERROR_NONE);
+    RawDevice* dev = (RawDevice*)Runtime::Instance()->GetDevice(0U, 0U);
+    ASSERT_NE(dev, nullptr);
+
+    constexpr uint32_t ringLen = 920U;
+    constexpr size_t blockSize = sizeof(BlockInfo) + sizeof(BlockReadInfo) + ringLen + sizeof(BlockWriteInfo);
+    const auto props = dev->GetDevProperties();
+    const uint64_t totalCoreNum = static_cast<uint64_t>(props.aicNum + props.aivNum);
+    ASSERT_GT(totalCoreNum, 0U);
+    std::vector<uint64_t> storage(blockSize * totalCoreNum / sizeof(uint64_t), 0U);
+    uint8_t* blockAddr = RtPtrToPtr<uint8_t*>(storage.data());
+    BlockInfo* blockInfo = RtPtrToPtr<BlockInfo*>(blockAddr);
+    blockInfo->length = blockSize;
+    blockInfo->remainLen = ringLen;
+    BlockReadInfo* readInfo = RtPtrToPtr<BlockReadInfo*>(blockAddr + sizeof(BlockInfo));
+    readInfo->readIdx = initialRead;
+    BlockWriteInfo* writeInfo = RtPtrToPtr<BlockWriteInfo*>(blockAddr + blockSize - sizeof(BlockWriteInfo));
+    uint8_t* payload = blockAddr + sizeof(BlockInfo) + sizeof(BlockReadInfo);
+    for (uint32_t i = 0U; i < ringLen; ++i) {
+        payload[i] = static_cast<uint8_t>(i * 37U + i / 251U);
+    }
+    DumpInfoHead* tail = RtPtrToPtr<DumpInfoHead*>(payload + initialRead);
+    tail->type = DumpType::DUMP_SKIP;
+    tail->infoLen = ringLen - initialRead - sizeof(DumpInfoHead);
+
+    // Observe the bytes delivered by the real ParsePrintf path, excluding block metadata.
+    MOCKER_CPP(&KernelDfxInfo::GetValidBlockInfoType).stubs().will(returnValue(RT_KERNEL_DFX_INFO_INVALID));
+    MOCKER_CPP(&KernelDfxInfo::isSupportAllKernelDfxInfo).stubs().will(returnValue(true));
+    MOCKER_CPP(&KernelDfxInfo::ExecuteKernelDfxInfoFunc)
+        .expects(exactly(writes.size()))
+        .will(invoke(CapturePrintfData));
+    cmodelDrvMemcpy_flag = 1;
+    for (size_t round = 0U; round < writes.size(); ++round) {
+        SCOPED_TRACE(round);
+        writeInfo->writeIdx = writes[round];
+        if (writes[round] != 0U) {
+            // Publish new head bytes only in the round where W advances.
+            for (uint64_t i = 0U; i < writes[round]; ++i) {
+                payload[i] = static_cast<uint8_t>(i * 13U + round * 17U);
+            }
+            DumpInfoHead* head = RtPtrToPtr<DumpInfoHead*>(payload);
+            head->type = DumpType::DUMP_SKIP;
+            head->infoLen = writes[round] - sizeof(DumpInfoHead);
+        }
+        std::vector<uint8_t> expected;
+        for (uint64_t i = 0U; i < expectedLengths[round]; ++i) {
+            expected.push_back(payload[(readInfo->readIdx + i) % ringLen]);
+        }
+        g_printfCapturedData.clear();
+        EXPECT_EQ(ParsePrintf(blockAddr, blockSize, dev->driver_), RT_ERROR_NONE);
+        EXPECT_EQ(g_printfCapturedData.size(), expectedLengths[round]);
+        EXPECT_EQ(g_printfCapturedData, expected);
+        EXPECT_EQ(readInfo->readIdx, writes[round]);
+    }
+    cmodelDrvMemcpy_flag = 0;
+    GlobalMockObject::verify();
+    g_printfCapturedData.clear();
+    ut::ForceResetPrimaryDeviceIfActive();
+}
+
+TEST_F(PrintfTest, ParsePrintfWrapOnlyReadsCommittedTail) { CheckPrintfCommittedRanges(896U, {0U}, {24U}); }
+
+TEST_F(PrintfTest, ParsePrintfWrapReadsCommittedHead) { CheckPrintfCommittedRanges(896U, {264U}, {288U}); }
+
+TEST_F(PrintfTest, ParsePrintfWrapReadsDelayedHeadNextRound)
+{
+    CheckPrintfCommittedRanges(896U, {0U, 264U}, {24U, 264U});
+}
+
+TEST_F(PrintfTest, ParsePrintfExactFullRingIsNotEmpty) { CheckPrintfCommittedRanges(0U, {920U}, {920U}); }
+
 TEST_F(PrintfTest, TestParsePrintInfo)
 {
     rtError_t error = rtSetDevice(0);
