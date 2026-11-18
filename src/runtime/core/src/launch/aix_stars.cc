@@ -680,6 +680,7 @@ rtError_t StreamLaunchKernelV2(
     aicTask->mixOpt = mixOpt;
     aicTask->funcAddr = kernelPc1;
     aicTask->kernel = kernel;
+    aicTask->tilingKey = kernel->TilingKey();
     aicTask->progHandle = prog;
     aicTask->funcAddr1 = kernelPc2;
     kernel->SetPrefetchCnt1_(prefetchCnt1);

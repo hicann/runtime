@@ -694,6 +694,7 @@ rtError_t StreamLaunchKernelV2(
         static_cast<uint32_t>(error));
     AicTaskInfo* aicTask = &(kernelTask->u.aicTaskInfo);
     aicTask->kernel = const_cast<Kernel*>(kernel);
+    aicTask->tilingKey = kernel->TilingKey();
     aicTask->progHandle = prog;
     aicTask->funcAddr = kernelPc1;
     aicTask->funcAddr1 = kernelPc2;
