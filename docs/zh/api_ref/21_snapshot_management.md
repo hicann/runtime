@@ -1,22 +1,23 @@
 # 21. 快照管理
 
-本章节描述 CANN Runtime 的快照管理接口，用于目标进程状态的锁定、备份、恢复、查询及回调注册。
+本章节描述 CANN Runtime 的快照管理接口，用于目标进程状态的锁定、备份、恢复和查询，以及本进程的回调注册与注销。
 
 跨进程调用链、线程生命周期和 Socket 协议等内部设计参见[跨进程 Snapshot 设计](../design/modules/snapshot/cross_process_snapshot.md)。
 
-- [`aclError aclrtSnapShotProcessLock(int pid, void* reserve)`](#aclrtSnapShotProcessLock)：锁定当前进程，以阻止后续的运行时接口调用，包括Device设置/释放、内存的申请/释放/拷贝、Context/Stream/Event/Notify等资源的创建与销毁、以及部分任务下发接口。
-- [`aclError aclrtSnapShotProcessBackup(int pid, aclrtSnapShotBackupArgs *args)`](#aclrtSnapShotProcessBackup)：备份快照进程中的Device资源，并将Device资源保存在Host侧，以便后续恢复。针对当前进程，支持多次备份，以最后一次生效。
-- [`aclError aclrtSnapShotProcessRestore(int pid, aclrtSnapShotRestoreArgs *args)`](#aclrtSnapShotProcessRestore)：恢复快照进程中的Device资源。根据备份好的Device资源进行恢复，从最后一次备份点进行恢复。
-- [`aclError aclrtSnapShotProcessUnlock(int pid, void* reserve)`](#aclrtSnapShotProcessUnlock)：解锁Device上的当前进程，同时解除运行时接口的阻塞调用。
+- [`aclError aclrtSnapShotProcessLock(int pid, void* reserve)`](#aclrtSnapShotProcessLock)：锁定目标进程，以阻止目标进程后续的运行时接口调用，包括Device设置/释放、内存的申请/释放/拷贝、Context/Stream/Event/Notify等资源的创建与销毁、以及部分任务下发接口。
+- [`aclError aclrtSnapShotProcessBackup(int pid, aclrtSnapShotBackupArgs *args)`](#aclrtSnapShotProcessBackup)：备份目标进程中的Device资源，并将Device资源保存在Host侧，以便后续恢复。针对目标进程，支持多次备份，以最后一次生效。
+- [`aclError aclrtSnapShotProcessRestore(int pid, aclrtSnapShotRestoreArgs *args)`](#aclrtSnapShotProcessRestore)：恢复目标进程中的Device资源。根据备份好的Device资源进行恢复，从最后一次备份点进行恢复。
+- [`aclError aclrtSnapShotProcessUnlock(int pid, void* reserve)`](#aclrtSnapShotProcessUnlock)：解锁Device上的目标进程，同时解除目标进程中运行时接口的阻塞调用。
+- [`aclError aclrtSnapShotCallbackRegister(aclrtSnapShotStage stage, aclrtSnapShotCallBack callback, void *args)`](#aclrtSnapShotCallbackRegister)：在本进程注册一个回调函数，该回调函数将在本进程快照操作的不同阶段被调用。不支持重复注册。
+- [`aclError aclrtSnapShotCallbackUnregister(aclrtSnapShotStage stage, aclrtSnapShotCallBack callback)`](#aclrtSnapShotCallbackUnregister)：取消注册本进程的回调函数。取消注册之后，本进程对应快照阶段将不再调用该回调函数。
 - [`aclError aclrtSnapshotProcessGetState(int pid, aclrtProcessState* state)`](#aclrtSnapshotProcessGetState)：查询目标进程的 Snapshot 状态。
 - [`aclError aclrtSnapshotProcessGetRestoreThreadId(int pid, int* tid)`](#aclrtSnapshotProcessGetRestoreThreadId)：查询目标进程执行跨进程 Snapshot 操作的 Linux 线程ID。
-- [`aclError aclrtSnapShotCallbackRegister(aclrtSnapShotStage stage, aclrtSnapShotCallBack callback, void *args)`](#aclrtSnapShotCallbackRegister)：注册一个回调函数，该回调函数将在快照操作的不同阶段被调用。不支持重复注册。
-- [`aclError aclrtSnapShotCallbackUnregister(aclrtSnapShotStage stage, aclrtSnapShotCallBack callback)`](#aclrtSnapShotCallbackUnregister)：取消注册回调函数。取消注册之后，对应快照阶段将不再调用该回调函数。
 
 ## 跨进程调用约束
 
-Lock、Backup、Restore、Unlock 以及本章两个查询接口均支持目标 PID。本进程调用直接执行；跨进程调用由目标进程中名为 `RT_SNAPSHOT` 的 Snapshot 服务线程执行，回调也在目标进程执行。
+Lock、Backup、Restore、Unlock 以及本章两个查询接口均支持目标 PID。本进程调用直接执行；跨进程调用由目标进程中名为 `RT_SNAPSHOT` 的 Snapshot 服务线程执行，并在该服务线程中调用目标进程内预先注册的回调。
 
+- 回调注册、注销仅作用于调用方本进程，不支持跨进程注册、注销。
 - 目标进程必须已初始化 Runtime、运行在支持 Snapshot 的产品上，并成功启动服务。接口不负责启动或初始化目标进程。
 - 调用方与目标进程须位于同一台 Linux 主机，并处于可见的 PID 和文件系统环境中。调用方有效用户须与目标进程相同，或为 root；目录和 Socket 的访问权限、对端身份校验均须通过。
 - 服务使用目标有效用户家目录下的 `.cann_snapshot/<pid>.sock`。目录所属用户应为目标用户、权限为 `0700`，Socket 权限为 `0600`。同名端点冲突时启动失败，请排查残留端点，不要删除运行中进程的端点。
@@ -65,9 +66,9 @@ aclError aclrtSnapShotProcessLock(int pid, void* reserve)
 
 ### 功能说明
 
-锁定当前进程，以阻止后续的运行时接口调用，包括Device设置/释放、内存的申请/释放/拷贝、Context/Stream/Event/Notify等资源的创建与销毁、以及部分任务下发接口。
+锁定目标进程，以阻止目标进程后续的运行时接口调用，包括Device设置/释放、内存的申请/释放/拷贝、Context/Stream/Event/Notify等资源的创建与销毁、以及部分任务下发接口。
 
-在调用此接口之前，必须确保当前进程处于RUNNING状态，当前进程默认是RUNNING状态；调用该接口后，当前进程将变为LOCKED状态。
+目标进程的快照状态初始为RUNNING。调用此接口之前，必须确保目标进程处于RUNNING状态；调用成功后，目标进程将变为LOCKED状态。
 
 ### 参数说明
 
@@ -125,9 +126,9 @@ aclError aclrtSnapShotProcessBackup(int pid, aclrtSnapShotBackupArgs *args)
 
 ### 功能说明
 
-备份快照进程中的Device资源，并将Device资源保存在Host侧，以便后续恢复。针对当前进程，支持多次备份，以最后一次生效。
+备份目标进程中的Device资源，并将Device资源保存在Host侧，以便后续恢复。针对目标进程，支持多次备份，以最后一次生效。
 
-在调用此接口之前，必须确保当前进程处于LOCKED状态；调用该接口后，当前进程将变为BACKED\_UP状态。
+在调用此接口之前，必须确保目标进程处于LOCKED状态；调用成功后，目标进程将变为BACKED\_UP状态。
 
 ### 参数说明
 
@@ -185,9 +186,9 @@ aclError aclrtSnapShotProcessRestore(int pid, aclrtSnapShotRestoreArgs *args)
 
 ### 功能说明
 
-恢复快照进程中的Device资源。根据备份好的Device资源进行恢复，从最后一次备份点进行恢复。
+恢复目标进程中的Device资源。根据备份好的Device资源进行恢复，从最后一次备份点进行恢复。
 
-在调用该接口之前，必须确保当前进程处于BACKED\_UP状态；调用该接口后，当前进程将变为LOCKED状态。
+在调用该接口之前，必须确保目标进程处于BACKED\_UP状态；调用成功后，目标进程将变为LOCKED状态。
 
 ### 参数说明
 
@@ -249,9 +250,9 @@ aclError aclrtSnapShotProcessUnlock(int pid, void* reserve)
 
 ### 功能说明
 
-解锁Device上的当前进程，同时解除运行时接口的阻塞调用。
+解锁Device上的目标进程，同时解除目标进程中运行时接口的阻塞调用。
 
-在调用此接口之前，必须确保当前进程处于LOCKED或BACKED\_UP状态；调用此接口后，当前进程将变为RUNNING状态。
+在调用此接口之前，必须确保目标进程处于LOCKED或BACKED\_UP状态；调用成功后，目标进程将变为RUNNING状态。
 
 ### 参数说明
 
@@ -309,7 +310,7 @@ aclError aclrtSnapShotCallbackRegister(aclrtSnapShotStage stage, aclrtSnapShotCa
 
 ### 功能说明
 
-注册一个回调函数，该回调函数将在快照操作的不同阶段被调用。不支持重复注册。
+在本进程注册一个回调函数，该回调函数将在本进程快照操作的不同阶段被调用。不支持重复注册。不支持为其他进程注册回调；其他进程对本进程发起跨进程快照操作时，触发的是本进程内预先注册的回调。
 
 ### 参数说明
 
@@ -373,7 +374,7 @@ aclError aclrtSnapShotCallbackUnregister(aclrtSnapShotStage stage, aclrtSnapShot
 
 ### 功能说明
 
-取消注册回调函数。取消注册之后，对应快照阶段将不再调用该回调函数。
+取消注册本进程的回调函数。取消注册之后，本进程对应快照阶段将不再调用该回调函数。不支持注销其他进程的回调。
 
 ### 参数说明
 
@@ -385,6 +386,10 @@ aclError aclrtSnapShotCallbackUnregister(aclrtSnapShotStage stage, aclrtSnapShot
 ### 返回值说明
 
 返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+<br>
+<br>
+<br>
 
 <a class="method_anchor" id="aclrtSnapshotProcessGetState"></a>
 
@@ -447,6 +452,10 @@ if (ret == ACL_SUCCESS && state == ACL_RT_PROCESS_STATE_BACKED_UP) {
     /* 已观测到备份完成状态；按进程快照方案执行后续步骤。 */
 }
 ```
+
+<br>
+<br>
+<br>
 
 <a class="method_anchor" id="aclrtSnapshotProcessGetRestoreThreadId"></a>
 
