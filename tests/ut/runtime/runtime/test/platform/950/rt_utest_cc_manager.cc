@@ -15,6 +15,7 @@
 #include <string>
 #include <cstring>
 #include <vector>
+#include <unistd.h>
 
 #include "securec.h"
 #include "driver/ascend_hal.h"
@@ -202,6 +203,12 @@ int32_t CheckHostCcPathStub(const char_t* const path, const int32_t mode)
     EXPECT_STREQ(path, "/dev/sev-guest");
     EXPECT_EQ(mode, M_F_OK);
     return EN_OK;
+}
+
+int32_t CheckCcSysfsExistsStub(const char_t* const path, const int32_t mode)
+{
+    (void)mode;
+    return (strcmp(path, "/sys/kernel/security/cvm_guest/mem_encrypt_enable") == 0) ? EN_OK : EN_ERROR;
 }
 
 void ReleaseCcResourceStub(const uint32_t deviceId)
@@ -2589,6 +2596,59 @@ TEST_F(CCManagerTest, RawDeviceDestructor_ReleasesCcResource)
     }
 
     EXPECT_EQ(gCcResourceReleaseCount, 1U);
+}
+
+TEST_F(CCManagerTest, InitCcFeature_HostCcOffWhenNoCcSignal)
+{
+    Runtime* const runtime = Runtime::Instance();
+    ASSERT_NE(runtime, nullptr);
+    const rtChipType_t chipType = GetCurrentChipType();
+    DevDynInfoProcFunc originalProcFunc{};
+    ASSERT_EQ(GET_DEV_INFO_PROC_FUNC(chipType, originalProcFunc), RT_ERROR_NONE);
+    DevDynInfoProcFunc procFunc = originalProcFunc;
+    procFunc.regCCFeatureProcFunc = &RegCCManagerProcFunc;
+    ASSERT_TRUE(DevInfoManage::Instance().RegDevInfoProcFunc(chipType, procFunc));
+    const ScopeGuard restoreProcFunc([chipType, originalProcFunc]() {
+        (void)DevInfoManage::Instance().RegDevInfoProcFunc(chipType, originalProcFunc);
+    });
+
+    // 无 /dev/sev-guest 且 sysfs 节点不存在：Host 判定为非 CC，InitCcFeature 返回成功且不注册 CC 资源。
+    MOCKER(mmAccess2).stubs().will(returnValue(EN_ERROR));
+    ASSERT_EQ(runtime->InitCcFeature(), RT_ERROR_NONE);
+
+    DevDynInfoProcFunc curProcFunc{};
+    ASSERT_EQ(GET_DEV_INFO_PROC_FUNC(chipType, curProcFunc), RT_ERROR_NONE);
+    EXPECT_EQ(curProcFunc.ccProcFunc.devResourceInit, originalProcFunc.ccProcFunc.devResourceInit);
+    GlobalMockObject::reset();
+}
+
+TEST_F(CCManagerTest, InitCcFeature_HostCcSysfsUnreadableIsNotCc)
+{
+    constexpr const char_t* ccSysfsPath = "/sys/kernel/security/cvm_guest/mem_encrypt_enable";
+    if (access(ccSysfsPath, F_OK) == 0) {
+        GTEST_SKIP() << "CC sysfs node exists on this host, skip unreadable scenario.";
+    }
+
+    Runtime* const runtime = Runtime::Instance();
+    ASSERT_NE(runtime, nullptr);
+    const rtChipType_t chipType = GetCurrentChipType();
+    DevDynInfoProcFunc originalProcFunc{};
+    ASSERT_EQ(GET_DEV_INFO_PROC_FUNC(chipType, originalProcFunc), RT_ERROR_NONE);
+    DevDynInfoProcFunc procFunc = originalProcFunc;
+    procFunc.regCCFeatureProcFunc = &RegCCManagerProcFunc;
+    ASSERT_TRUE(DevInfoManage::Instance().RegDevInfoProcFunc(chipType, procFunc));
+    const ScopeGuard restoreProcFunc([chipType, originalProcFunc]() {
+        (void)DevInfoManage::Instance().RegDevInfoProcFunc(chipType, originalProcFunc);
+    });
+
+    // sev-guest 不存在，sysfs 节点被判为存在但实际读取失败：按非 CC 处理，不注册 CC 资源。
+    MOCKER(mmAccess2).stubs().will(invoke(CheckCcSysfsExistsStub));
+    ASSERT_EQ(runtime->InitCcFeature(), RT_ERROR_NONE);
+
+    DevDynInfoProcFunc curProcFunc{};
+    ASSERT_EQ(GET_DEV_INFO_PROC_FUNC(chipType, curProcFunc), RT_ERROR_NONE);
+    EXPECT_EQ(curProcFunc.ccProcFunc.devResourceInit, originalProcFunc.ccProcFunc.devResourceInit);
+    GlobalMockObject::reset();
 }
 
 TEST_F(CCManagerTest, QueryDeviceCcStatus_MapsDriverModes)

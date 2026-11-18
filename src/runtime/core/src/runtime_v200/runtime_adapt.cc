@@ -57,8 +57,26 @@ namespace runtime {
 
 static bool IsHostCcMode()
 {
+    // A+X / x86 机密虚机：SEV guest 设备
     constexpr const char_t* hostCcDevicePath = "/dev/sev-guest";
-    return mmAccess2(hostCcDevicePath, M_F_OK) == EN_OK;
+    if (mmAccess2(hostCcDevicePath, M_F_OK) == EN_OK) {
+        return true;
+    }
+
+    // A+K / Kunpeng 机密虚机：cvm_guest 内核节点，1 表示开启内存加密
+    constexpr const char_t* ccSysfsPath = "/sys/kernel/security/cvm_guest/mem_encrypt_enable";
+    if (mmAccess2(ccSysfsPath, M_F_OK) != EN_OK) {
+        return false;
+    }
+    std::ifstream ccSysfs(ccSysfsPath);
+    uint32_t encryptEnable = 0U;
+    if (!(ccSysfs >> encryptEnable)) {
+        RT_LOG(
+            RT_LOG_WARNING, "Host CC sysfs node exists but failed to read, treat as non-CC environment, path=%s.",
+            ccSysfsPath);
+        return false;
+    }
+    return encryptEnable == 1U;
 }
 
 static rtError_t CheckDeviceCcStatus(const uint32_t deviceId)
@@ -151,7 +169,7 @@ rtError_t Runtime::InitCcFeature() const
 
     // CC 特性初始化：环境检测（fail closed）+ 通过芯片函数表触发特性注册。
     COND_RETURN_INFO(!IsHostCcMode(), RT_ERROR_NONE, "CC mode is disabled because host CC is off.");
-    RT_LOG(RT_LOG_INFO, "Host CC mode is enabled, /dev/sev-guest detected.");
+    RT_LOG(RT_LOG_INFO, "Host CC mode is enabled.");
 
     // Host CC 开启后，所有可见设备都必须查询成功且处于 CC ON 状态。
     rtError_t error = CheckVisibleDevicesCcStatus();
