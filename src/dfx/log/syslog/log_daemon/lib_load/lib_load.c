@@ -18,7 +18,6 @@
 
 #define LIB_LOAD_REPLY_INVALID_INPUT "check input validity failed"
 #define LIB_LOAD_REPLY_SYSTEM_FUNCTION "system function failed"
-#define LIB_LOAD_REPLY_DEVICE_LIBRARY "the library does not exist"
 #define LIB_LOAD_REPLY_SUCCESS "load library successfully"
 
 #define LIB_LOAD_DEFAULT_LIBRARY_PATH "/usr/lib64/"
@@ -33,6 +32,14 @@
 
 typedef int32_t (*DfxDetectInit)(void*);
 typedef void (*DfxDetectExit)(void);
+
+// classification of one lib load request: the enum decides BOTH the reply payload
+// (LibLoadSendReply) and the function return code (SUCCESS vs FAILURE)
+typedef enum {
+    LIB_LOAD_RESULT_SUCCESS = 0,
+    LIB_LOAD_RESULT_INVALID_INPUT,
+    LIB_LOAD_RESULT_SYSTEM_FUNCTION,
+} LibLoadResult;
 
 typedef struct LibOpenInfo {
     const char* name;
@@ -50,6 +57,20 @@ STATIC LibOpenInfo g_libRecord[] = {
 };
 STATIC ToolMutex g_libLoadMutex = TOOL_MUTEX_INITIALIZER;
 
+/**
+ * @brief       : search the upgrade package in the device plugin paths only; the default
+ *                library loaded by LibLoadServerInit from /usr/lib64 is NOT an upgrade
+ *                source; LOG_INVALID_DATA means no upgrade package exists, the caller keeps
+ *                the default library and reports success with the warning logged inside this
+ *                function; the host sends this request only when the device driver is >= 9
+ *                and the library has not been updated in the current host process
+ * @param [in]  : devId       device id
+ * @param [in]  : libName     library name
+ * @param [out] : outPath     resolved library path
+ * @param [in]  : outPathLen  capacity of outPath
+ * @return      : LOG_SUCCESS: found; LOG_FAILURE: sprintf_s failed; LOG_INVALID_DATA: no
+ *                upgrade package exists
+ */
 STATIC int32_t LibLoadFindLibraryPath(int32_t devId, const char* libName, char* outPath, size_t outPathLen)
 {
     int32_t ret = -1;
@@ -170,11 +191,28 @@ STATIC void LibLoadReplyMsg(const CommHandle* handle, const char* msg, size_t le
 }
 
 /**
+ * @brief       : map the request result to the reply message and send the terminal
+ *                reply: exactly one payload message followed by one HDC_END_MSG
+ * @param [in]  : handle     handle for communicating with the peer end
+ * @param [in]  : result     classification of the finished request
+ */
+STATIC void LibLoadSendReply(const CommHandle* handle, LibLoadResult result)
+{
+    const char* msg = LIB_LOAD_REPLY_SYSTEM_FUNCTION;
+    if (result == LIB_LOAD_RESULT_SUCCESS) {
+        msg = LIB_LOAD_REPLY_SUCCESS;
+    } else if (result == LIB_LOAD_RESULT_INVALID_INPUT) {
+        msg = LIB_LOAD_REPLY_INVALID_INPUT;
+    }
+    LibLoadReplyMsg(handle, msg, strlen(msg));
+}
+
+/**
  * @brief       : check if the loadInfo got from host is valid by field comparison
  * @param [in]  : loadInfo    detect loadInfo to be checked
  * @return      : LOG_SUCCESS: valid; LOG_FAILURE: invalid
  */
-STATIC int32_t LibLoadCheckInfoValid(const LibLoadInfo* loadInfo)
+STATIC int32_t LibLoadValidateLoadInfo(const LibLoadInfo* loadInfo)
 {
     if (loadInfo->magic != LIB_LOAD_MAGIC_NUM) {
         SELF_LOG_ERROR("check field magic failed, configure: %u, current: %u", LIB_LOAD_MAGIC_NUM, loadInfo->magic);
@@ -184,19 +222,11 @@ STATIC int32_t LibLoadCheckInfoValid(const LibLoadInfo* loadInfo)
         SELF_LOG_ERROR("check field version failed, configure: %u, current: %u", LIB_LOAD_VERSION, loadInfo->version);
         return LOG_FAILURE;
     }
-    return LOG_SUCCESS;
-}
-
-STATIC int32_t LibLoadIsLibraryFileExist(const CommHandle* handle, const LibLoadInfo* loadInfo, int32_t devId)
-{
-    char path[LIB_LOAD_MAX_FILE_LEN] = {"0"};
-    int32_t ret = LibLoadFindLibraryPath(devId, loadInfo->name, path, LIB_LOAD_MAX_FILE_LEN);
-    if (ret == LOG_FAILURE) {
-        if (strlen(path) == 0) {
-            LibLoadReplyMsg(handle, LIB_LOAD_REPLY_SYSTEM_FUNCTION, strlen(LIB_LOAD_REPLY_SYSTEM_FUNCTION));
-        } else {
-            LibLoadReplyMsg(handle, LIB_LOAD_REPLY_DEVICE_LIBRARY, strlen(LIB_LOAD_REPLY_DEVICE_LIBRARY));
-        }
+    // length is validated first: strcmp and %s in the later paths rely on name[length]
+    // being the in-bounds NUL terminator; the name is not logged here on purpose,
+    // it may not be NUL-terminated yet
+    if ((loadInfo->length >= LIB_MAX_LENGTH_OF_NAME) || (loadInfo->name[loadInfo->length] != '\0')) {
+        SELF_LOG_ERROR("check field name failed, length: %u", loadInfo->length);
         return LOG_FAILURE;
     }
     return LOG_SUCCESS;
@@ -260,23 +290,24 @@ STATIC int32_t LibLoadUpgradeLibrary(LibOpenInfo* openInfo, char* path, char* ve
     return LOG_SUCCESS;
 }
 
-STATIC int32_t LibLoadCheckInfo(const CommHandle* handle, LibOpenInfo* openInfo, int32_t devId)
+STATIC LibLoadResult LibLoadCheckAndUpgradeLibrary(LibOpenInfo* openInfo, int32_t devId)
 {
     char path[LIB_LOAD_MAX_FILE_LEN] = {0};
+    // no upgrade package on the device paths: the host's upgrade intent cannot be
+    // fulfilled, so keep the default library loaded and report success; the warning
+    // is already logged inside LibLoadFindLibraryPath
     int32_t ret = LibLoadFindLibraryPath(devId, openInfo->name, path, LIB_LOAD_MAX_FILE_LEN);
     if (ret == LOG_INVALID_DATA) {
-        LibLoadReplyMsg(handle, LIB_LOAD_REPLY_SUCCESS, strlen(LIB_LOAD_REPLY_SUCCESS));
-        return LOG_SUCCESS;
-    } else if (ret == LOG_FAILURE) {
-        LibLoadReplyMsg(handle, LIB_LOAD_REPLY_SYSTEM_FUNCTION, strlen(LIB_LOAD_REPLY_SYSTEM_FUNCTION));
-        return LOG_FAILURE;
+        return LIB_LOAD_RESULT_SUCCESS;
+    }
+    if (ret == LOG_FAILURE) {
+        return LIB_LOAD_RESULT_SYSTEM_FUNCTION;
     }
 
     ToolStat statBuff = {0};
     if (ToolStatGet(path, &statBuff) != SYS_OK) {
         SELF_LOG_ERROR("stat new library %s failed", openInfo->name);
-        LibLoadReplyMsg(handle, LIB_LOAD_REPLY_SYSTEM_FUNCTION, strlen(LIB_LOAD_REPLY_SYSTEM_FUNCTION));
-        return LOG_FAILURE;
+        return LIB_LOAD_RESULT_SYSTEM_FUNCTION;
     }
 
     int32_t size = LIB_LOAD_MAX_VERSION_LEN;
@@ -285,21 +316,22 @@ STATIC int32_t LibLoadCheckInfo(const CommHandle* handle, LibOpenInfo* openInfo,
         halGetDeviceInfoByBuff((uint32_t)devId, MODULE_TYPE_SYSTEM, INFO_TYPE_SDK_EX_VERSION, buffer, &size);
     if (err != DRV_ERROR_NONE) {
         SELF_LOG_ERROR("get library %s info failed, result: %d", openInfo->name, (int32_t)err);
-        LibLoadReplyMsg(handle, LIB_LOAD_REPLY_SYSTEM_FUNCTION, strlen(LIB_LOAD_REPLY_SYSTEM_FUNCTION));
-        return LOG_FAILURE;
+        return LIB_LOAD_RESULT_SYSTEM_FUNCTION;
     }
     SELF_LOG_INFO("get current package version: %s", buffer);
     uint32_t libSize = (uint32_t)statBuff.st_size;
     if ((strcmp(openInfo->version, buffer) == 0) && (libSize == openInfo->size)) {
         SELF_LOG_INFO("library %s needn't upgrade", openInfo->name);
-        LibLoadReplyMsg(handle, LIB_LOAD_REPLY_SUCCESS, strlen(LIB_LOAD_REPLY_SUCCESS));
-        return LOG_SUCCESS;
+        return LIB_LOAD_RESULT_SUCCESS;
     }
 
-    return LibLoadUpgradeLibrary(openInfo, path, buffer, libSize);
+    if (LibLoadUpgradeLibrary(openInfo, path, buffer, libSize) != LOG_SUCCESS) {
+        return LIB_LOAD_RESULT_SYSTEM_FUNCTION;
+    }
+    return LIB_LOAD_RESULT_SUCCESS;
 }
 
-STATIC int32_t LibLoadUpgradeProcess(const CommHandle* handle, const LibLoadInfo* loadInfo, int32_t devId)
+STATIC LibLoadResult LibLoadUpgradeProcess(const LibLoadInfo* loadInfo, int32_t devId)
 {
     LibOpenInfo* currOpenInfo = NULL;
     for (uint32_t i = 0U; i < sizeof(g_libRecord) / sizeof(LibOpenInfo); ++i) {
@@ -310,62 +342,55 @@ STATIC int32_t LibLoadUpgradeProcess(const CommHandle* handle, const LibLoadInfo
     }
     if (currOpenInfo == NULL) {
         SELF_LOG_ERROR("invalid input, library name is %s", loadInfo->name);
-        LibLoadReplyMsg(handle, LIB_LOAD_REPLY_INVALID_INPUT, strlen(LIB_LOAD_REPLY_INVALID_INPUT));
-        return LOG_FAILURE;
+        return LIB_LOAD_RESULT_INVALID_INPUT;
     }
 
-    if (LibLoadIsLibraryFileExist(handle, loadInfo, devId) != LOG_SUCCESS) {
-        return LOG_FAILURE;
-    }
-
+    LibLoadResult result = LIB_LOAD_RESULT_SYSTEM_FUNCTION;
     (void)ToolMutexLock(&g_libLoadMutex);
-    if (LibLoadCheckInfo(handle, currOpenInfo, devId) != LOG_SUCCESS) {
-        (void)ToolMutexUnLock(&g_libLoadMutex);
-        return LOG_FAILURE;
-    }
+    result = LibLoadCheckAndUpgradeLibrary(currOpenInfo, devId);
     (void)ToolMutexUnLock(&g_libLoadMutex);
-
-    return LOG_SUCCESS;
+    return result;
 }
 
 int32_t LibLoadServerProcess(const CommHandle* handle, const void* value, uint32_t len)
 {
     SELF_LOG_INFO("the lib_load process start");
     if (handle == NULL) {
+        // no communication handle: the host cannot be reached at all
         SELF_LOG_ERROR("invalid input, handle is null");
         return LOG_FAILURE;
     }
-    if (value == NULL) {
-        SELF_LOG_ERROR("invalid input, value is null");
-        LibLoadReplyMsg(handle, LIB_LOAD_REPLY_INVALID_INPUT, strlen(LIB_LOAD_REPLY_INVALID_INPUT));
-        return LOG_FAILURE;
-    }
-    if (len < sizeof(LibLoadInfo)) {
-        SELF_LOG_ERROR("invalid input, length of value is %u", len);
-        LibLoadReplyMsg(handle, LIB_LOAD_REPLY_INVALID_INPUT, strlen(LIB_LOAD_REPLY_INVALID_INPUT));
-        return LOG_FAILURE;
-    }
 
-    const LogDataMsg* msg = (const LogDataMsg*)value;
-    const LibLoadInfo* loadInfo = (const LibLoadInfo*)msg->data;
-    if (LibLoadCheckInfoValid(loadInfo) != LOG_SUCCESS) {
-        LibLoadReplyMsg(handle, LIB_LOAD_REPLY_INVALID_INPUT, strlen(LIB_LOAD_REPLY_INVALID_INPUT));
-        return LOG_FAILURE;
-    }
+    LibLoadResult result = LIB_LOAD_RESULT_INVALID_INPUT;
+    do {
+        if (value == NULL) {
+            SELF_LOG_ERROR("invalid input, value is null");
+            break;
+        }
+        if (len < sizeof(LogDataMsg) + sizeof(LibLoadInfo)) {
+            SELF_LOG_ERROR("invalid input, length of value is %u", len);
+            break;
+        }
+        const LogDataMsg* msg = (const LogDataMsg*)value;
+        const LibLoadInfo* loadInfo = (const LibLoadInfo*)msg->data;
+        if (LibLoadValidateLoadInfo(loadInfo) != LOG_SUCCESS) {
+            break;
+        }
 
-    int32_t devId = -1;
-    if (AdxGetAttrByCommHandle(handle, HDC_SESSION_ATTR_DEV_ID, &devId) != IDE_DAEMON_OK) {
-        SELF_LOG_ERROR("get device id failed");
-        LibLoadReplyMsg(handle, LIB_LOAD_REPLY_SYSTEM_FUNCTION, strlen(LIB_LOAD_REPLY_SYSTEM_FUNCTION));
-        return LOG_FAILURE;
-    }
-    SELF_LOG_INFO("the lib_load process devId: %d", devId);
+        int32_t devId = -1;
+        if (AdxGetAttrByCommHandle(handle, HDC_SESSION_ATTR_DEV_ID, &devId) != IDE_DAEMON_OK) {
+            SELF_LOG_ERROR("get device id failed");
+            result = LIB_LOAD_RESULT_SYSTEM_FUNCTION;
+            break;
+        }
+        SELF_LOG_INFO("the lib_load process devId: %d", devId);
 
-    if (LibLoadUpgradeProcess(handle, loadInfo, devId) != LOG_SUCCESS) {
-        return LOG_FAILURE;
-    }
+        result = LibLoadUpgradeProcess(loadInfo, devId);
+    } while (0);
 
-    LibLoadReplyMsg(handle, LIB_LOAD_REPLY_SUCCESS, strlen(LIB_LOAD_REPLY_SUCCESS));
-    SELF_LOG_INFO("the lib_load process finished");
-    return LOG_SUCCESS;
+    // single reply point: the host tears down the session on the first HDC_END_MSG,
+    // so every request must send exactly one payload message + one HDC_END_MSG here
+    LibLoadSendReply(handle, result);
+    SELF_LOG_INFO("the lib_load process finished, result: %d", (int32_t)result);
+    return (result == LIB_LOAD_RESULT_SUCCESS) ? LOG_SUCCESS : LOG_FAILURE;
 }
