@@ -2907,7 +2907,7 @@ ACL_FUNC_VISIBILITY aclrtStreamConfigHandle* aclrtCreateStreamConfigHandle(void)
 
 /**
  * @ingroup AscendCL
- * @brief Destroy config handle of model execute
+ * @brief Destroy config handle of stream
  *
  * @param  handle [IN]  Pointer to aclrtStreamConfigHandle to be destroyed
  *
