@@ -86,8 +86,6 @@ private:
     static __THREAD_LOCAL__ bool curRefInternalAccess_;
     static __THREAD_LOCAL__ rtChipType_t curChipType_;
 };
-
-uint32_t GetThreadLocalTaskId(const uint32_t streamId, const uint32_t taskId);
 } // namespace runtime
 } // namespace cce
 
@@ -99,11 +97,9 @@ uint32_t GetThreadLocalTaskId(const uint32_t streamId, const uint32_t taskId);
         InnerThreadLocalContainer::SetLastStreamId(static_cast<uint32_t>(streamId));                           \
     } while (false)
 // set last taskId and streamId for current thread
-#define SET_THREAD_TASKID_AND_STREAMID(streamId, taskId)                                                              \
-    do {                                                                                                              \
-        const uint32_t threadStreamId = static_cast<uint32_t>(streamId);                                              \
-        const uint32_t threadTaskId = static_cast<uint32_t>(taskId);                                                  \
-        InnerThreadLocalContainer::SetLastStreamId(threadStreamId);                                                   \
-        InnerThreadLocalContainer::SetLastTaskId(::cce::runtime::GetThreadLocalTaskId(threadStreamId, threadTaskId)); \
+#define SET_THREAD_TASKID_AND_STREAMID(streamId, taskId)                             \
+    do {                                                                             \
+        InnerThreadLocalContainer::SetLastStreamId(static_cast<uint32_t>(streamId)); \
+        InnerThreadLocalContainer::SetLastTaskId(taskId);                            \
     } while (false)
 #endif // RUNTIME_INNER_THREAD_LOCAL_CONTAINER_HPP

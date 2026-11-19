@@ -66,8 +66,6 @@
 #include "para_convertor.hpp"
 #include "api_decorator.hpp"
 #include "api_impl_v201.hpp"
-#include "model.hpp"
-#include "inner_thread_local.hpp"
 #include "capture_adapt.hpp"
 #include "task_fail_callback_manager.hpp"
 #include "notify_task.h"
@@ -2649,92 +2647,4 @@ TEST_F(TaskTestV201, Test_ModelSerialSchedAttrToSqe)
     delete notify;
     ret = rtModelDestroy(model);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-}
-
-namespace {
-// Preserve the platform hook when exercising constructor registration and fallback paths.
-class ScopedV201TaskSnHook {
-public:
-    // runtime_utest_task_v201 enables -fno-access-control for test-only state access.
-    ScopedV201TaskSnHook() : runtime_(Runtime::Instance()), oldHook_(runtime_->allocTaskSnHook_) {}
-    ~ScopedV201TaskSnHook() { runtime_->SetAllocTaskSnHook(oldHook_); }
-
-private:
-    Runtime* runtime_;
-    Runtime::AllocTaskSnHook oldHook_;
-};
-} // namespace
-
-TEST_F(TaskTestV201, AllocTaskSn_EncodesStreamAndTaskId)
-{
-    ScopedV201TaskSnHook restoreHook;
-    ApiImplV201 impl;
-    TaskInfo task = {};
-    task.stream = stream_;
-    for (const uint16_t taskId : {0U, 1U, 4088U}) {
-        task.id = taskId;
-        uint32_t taskSn = 0U;
-        Runtime::Instance()->AllocTaskSn(&task, taskSn);
-        EXPECT_EQ(taskSn & 0xFFFFU, static_cast<uint32_t>(stream_->Id_()) & 0xFFFFU);
-        EXPECT_EQ(taskSn >> 16U, taskId);
-        EXPECT_EQ(GetThreadLocalTaskId(static_cast<uint32_t>(stream_->Id_()), taskSn), taskId);
-    }
-}
-
-TEST_F(TaskTestV201, AllocTaskSn_InvalidTaskFallsBackToSequence)
-{
-    ScopedV201TaskSnHook restoreHook;
-    ApiImplV201 impl;
-    TaskInfo task = {};
-    uint32_t first = 0U;
-    uint32_t second = 0U;
-    Runtime::Instance()->AllocTaskSn(nullptr, first);
-    Runtime::Instance()->AllocTaskSn(&task, second);
-    EXPECT_EQ(second, (first + 1U) & 0x7FFFFFFFU);
-}
-
-TEST_F(TaskTestV201, ThreadLocalTaskId_MismatchedStreamKeepsOriginalValue)
-{
-    ScopedV201TaskSnHook restoreHook;
-    ApiImplV201 impl;
-    EXPECT_EQ(GetThreadLocalTaskId(2U, 0x12340001U), 0x12340001U);
-}
-
-TEST_F(TaskTestV201, SetThreadTaskId_DecodesTaskSnAndPreservesStream)
-{
-    ScopedV201TaskSnHook restoreHook;
-    ApiImplV201 impl;
-    const uint32_t oldTaskId = InnerThreadLocalContainer::GetLastTaskId();
-    const uint32_t oldStreamId = InnerThreadLocalContainer::GetLastStreamId();
-    SET_THREAD_TASKID_AND_STREAMID(7U, 0x00110007U);
-    EXPECT_EQ(InnerThreadLocalContainer::GetLastTaskId(), 17U);
-    EXPECT_EQ(InnerThreadLocalContainer::GetLastStreamId(), 7U);
-    InnerThreadLocalContainer::SetLastTaskId(oldTaskId);
-    InnerThreadLocalContainer::SetLastStreamId(oldStreamId);
-}
-
-TEST_F(TaskTestV201, AutoSplitSq_IsNotSupportedByV201)
-{
-    EXPECT_FALSE(device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MODEL_PERSISTENT_STREAM_UNLIMITED_DEPTH));
-}
-
-TEST_F(TaskTestV201, GetModelTaskId_PreservesPlatformSemantics)
-{
-    ScopedV201TaskSnHook restoreHook;
-    ApiImplV201 impl;
-    TaskInfo task = {};
-    task.stream = stream_;
-    task.id = 17U;
-    Runtime::Instance()->AllocTaskSn(&task, task.taskSn);
-    const uint32_t encodedTaskSn = task.taskSn;
-    EXPECT_GT(encodedTaskSn, 65535U);
-    EXPECT_EQ(Runtime::Instance()->GetModelTaskId(task), 17U);
-    EXPECT_EQ(task.taskSn, encodedTaskSn);
-    Model model;
-    model.SetKernelTaskId(Runtime::Instance()->GetModelTaskId(task), stream_->GetExposedStreamId());
-    uint32_t taskId = 0U;
-    uint32_t streamId = 0U;
-    EXPECT_EQ(impl.ModelGetTaskId(&model, &taskId, &streamId), RT_ERROR_NONE);
-    EXPECT_EQ(taskId, 17U);
-    EXPECT_EQ(streamId, static_cast<uint32_t>(stream_->GetExposedStreamId()));
 }

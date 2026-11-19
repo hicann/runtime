@@ -341,8 +341,7 @@ rtError_t StreamCapture::AllocTask(Stream* stm, tsTaskType_t taskType, uint32_t 
             return errCode;
         }
         curCaptureStream->AddCaptureSqeNum(sqeNum);
-        (*task)->stream = curCaptureStream;
-        Runtime::Instance()->AllocTaskSn(*task, (*task)->taskSn);
+        Runtime::Instance()->AllocTaskSn((*task)->taskSn);
         SaveTaskCommonInfo(*task, curCaptureStream, sqeNum);
         RT_LOG(
             RT_LOG_INFO,

@@ -441,8 +441,6 @@ void Profiler::ModifyTrackData(TaskInfo* const taskInfo, const uint32_t devId, R
     trackData->compactInfo.data.runtimeTrack.deviceId = static_cast<uint16_t>(devId);
     trackData->compactInfo.data.runtimeTrack.streamId =
         (stm == nullptr) ? RT_MAX_STREAM_ID : static_cast<uint16_t>(stm->GetExposedStreamId());
-    trackData->compactInfo.data.runtimeTrack.tsId =
-        (stm == nullptr) ? 0U : static_cast<uint8_t>(stm->Device_()->DevGetTsId());
 
     if (taskInfo->type == TS_TASK_TYPE_FLIP) {
         trackData->compactInfo.data.runtimeTrack.taskId =
@@ -472,9 +470,8 @@ void Profiler::ModifyTrackData(TaskInfo* const taskInfo, const uint32_t devId, R
     taskInfo->taskTrackTimeStamp = trackData->compactInfo.timeStamp;
 
     RT_LOG(
-        RT_LOG_INFO, "ReportTaskTrack, runtimeTrack->taskId=%u, taskInfo->id=%u, taskInfo->flipNum=%u, tsId=%u",
-        trackData->compactInfo.data.runtimeTrack.taskId, taskInfo->id, taskInfo->flipNum,
-        trackData->compactInfo.data.runtimeTrack.tsId);
+        RT_LOG_INFO, "ReportTaskTrack, runtimeTrack->taskId=%u, taskInfo->id=%u, taskInfo->flipNum=%u",
+        trackData->compactInfo.data.runtimeTrack.taskId, taskInfo->id, taskInfo->flipNum);
 }
 
 static int32_t ReportCompactInfo(RuntimeProfTrackData* const trackData)
@@ -564,7 +561,6 @@ void Profiler::ReportDestroyFlipTask(const Stream* const stm, const uint32_t dev
         (stm == nullptr) ? RT_MAX_STREAM_ID : static_cast<uint16_t>(stm->GetExposedStreamId());
     compactInfo.data.runtimeTrack.taskId = 0xFFFFFFFFU;
     compactInfo.data.runtimeTrack.taskType = TS_TASK_TYPE_FLIP;
-    compactInfo.data.runtimeTrack.tsId = (stm == nullptr) ? 0U : static_cast<uint8_t>(stm->Device_()->DevGetTsId());
 
     RT_LOG(
         RT_LOG_INFO, "threadId=%u, timeStamp=%llu, devId=%u, stream_id=%u", compactInfo.threadId, compactInfo.timeStamp,
@@ -709,7 +705,6 @@ void Profiler::ReportTrackData(const Stream* const s, const uint16_t taskId) con
     const bool hasRecordWaitExtInfo = FillRecordWaitTrackInfo(*task, trackData.compactInfo.data.runtimeTrack);
     FillKernelLaunchExtInfo(trackData.compactInfo.data.runtimeTrack, task);
     trackData.compactInfo.data.runtimeTrack.kernelName = GetKernelNameId(*task);
-    trackData.compactInfo.data.runtimeTrack.tsId = static_cast<uint8_t>(s->Device_()->DevGetTsId());
     (void)ReportCompactInfo(&trackData);
     ReportTrackDataV2(s, task, devId, trackData, hasRecordWaitExtInfo);
     return;

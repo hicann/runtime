@@ -104,8 +104,7 @@ int32_t UnInit()
 int32_t ReportRuntimeTrackData()
 {
     return DataMgr().ReadFile("host_runtime_track_data.txt", [](ifstream& ifs) {
-        MsprofCompactInfo data{};
-        uint16_t deviceId = 0U;
+        MsprofCompactInfo data;
         bool ageFlag;
         data.magicNumber = MSPROF_REPORT_DATA_MAGIC_NUM;
         data.dataLen = 0;
@@ -115,8 +114,7 @@ int32_t ReportRuntimeTrackData()
         ifs >> data.level;
         ifs >> data.threadId;
         ifs >> data.timeStamp;
-        ifs >> deviceId;
-        data.data.runtimeTrack.deviceId = deviceId;
+        ifs >> data.data.runtimeTrack.deviceId;
         ifs >> data.data.runtimeTrack.streamId;
         ifs >> data.data.runtimeTrack.taskId;
         MsprofRegTypeInfo(MSPROF_REPORT_RUNTIME_LEVEL, data.type, "task_track");

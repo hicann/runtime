@@ -170,7 +170,6 @@ class Driver;
 class Config;
 class Bitmap;
 class CbSubscribe;
-typedef struct tagTaskInfoStru TaskInfo;
 
 typedef TDT_StatusType (*FUNC_TDT_OPEN)(uint32_t, uint32_t);
 typedef TDT_StatusType (*FUNC_TDT_OPEN_EX)(uint32_t, uint32_t, uint32_t);
@@ -685,17 +684,12 @@ public:
     rtError_t SubscribeCallback(const uint64_t threadId, Stream* stm, void* evtNotify);
     CbSubscribe* GetCbSubscribe() const { return cbSubscribe_; }
     bool JudgeNeedSubscribe(const uint64_t threadId, Stream* stm, const uint32_t deviceId);
-    enum class TaskSnHookOp : uint8_t {
-        ALLOC_TASK_SN,
-        THREAD_LOCAL_TASK_ID,
-        MODEL_TASK_ID,
-    };
-    using AllocTaskSnHook = bool (*)(
-        const TaskSnHookOp op, const TaskInfo* const task, const uint32_t streamId, const uint32_t taskId,
-        uint32_t& taskSn);
-    void AllocTaskSn(TaskInfo* const task, uint32_t& taskSn);
-    void SetAllocTaskSnHook(AllocTaskSnHook hook);
-    uint32_t GetModelTaskId(const TaskInfo& task) const;
+    void AllocTaskSn(uint32_t& taskSn)
+    {
+        taskSn = taskSn_.FetchAndAdd(1U);
+        taskSn = taskSn & 0x7FFFFFFFU;
+        return;
+    }
     rtError_t startAicpuExecutor(const uint32_t devId, const uint32_t tsId);
     rtError_t StopAicpuExecutor(const uint32_t devId, const uint32_t tsId, const bool isQuickClose = false) const;
     rtError_t InitOpExecTimeout(const Device* dev);
@@ -720,7 +714,6 @@ public:
         const Stream* const stm = nullptr) const;
 
 private:
-    friend uint32_t GetThreadLocalTaskId(const uint32_t streamId, const uint32_t taskId);
     void UpdateDevPropertiesFromIniAttrs(const rtChipType_t chipTypeValue, const RtIniAttributes& iniAttrs);
     void SocTypeInit(const int64_t aicoreNumLevel, const int64_t aicoreFreqLevel);
     void TsdClientInit();
@@ -983,7 +976,6 @@ private:
 
     /* david dfx task id in current process */
     Atomic<uint32_t> taskSn_{0U};
-    AllocTaskSnHook allocTaskSnHook_{nullptr};
 
     std::unordered_map<rtChipType_t, DevProperties> propertiesMap_;
     DevProperties curChipProperties_;

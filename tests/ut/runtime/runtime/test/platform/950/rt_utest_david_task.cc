@@ -4442,29 +4442,3 @@ TEST_F(TaskTestDavid, AllocCaptureTaskByTaskResAllocFail)
     stm->UpdateCaptureStream(nullptr);
     rtStreamDestroy(stream);
 }
-
-TEST_F(TaskTestDavid, AllocTaskSn_DefaultHookUsesProcessSequence)
-{
-    Runtime* const runtime = Runtime::Instance();
-    // This target uses the David runtime, whose task SN hook must remain unset.
-    EXPECT_EQ(runtime->allocTaskSnHook_, nullptr);
-    TaskInfo task = {};
-    task.stream = stream_;
-    task.id = 17U;
-    uint32_t first = 0U;
-    uint32_t second = 0U;
-    runtime->AllocTaskSn(&task, first);
-    runtime->AllocTaskSn(&task, second);
-    EXPECT_EQ(second, (first + 1U) & 0x7FFFFFFFU);
-}
-
-TEST_F(TaskTestDavid, GetModelTaskId_PreservesPlatformSemantics)
-{
-    Runtime* const runtime = Runtime::Instance();
-    EXPECT_EQ(runtime->allocTaskSnHook_, nullptr);
-    TaskInfo task = {};
-    task.id = 17U;
-    task.taskSn = 0x00110007U;
-    EXPECT_EQ(runtime->GetModelTaskId(task), 0x00110007U);
-    EXPECT_EQ(task.taskSn, 0x00110007U);
-}
