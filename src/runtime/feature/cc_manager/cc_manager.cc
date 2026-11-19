@@ -10,6 +10,7 @@
 
 #include <cinttypes>
 #include <cstddef>
+#include <new>
 #include "cc_manager.h"
 #include "crypto/cc_crypto_plugin.h"
 #include "common/cc_defs.h"
@@ -25,6 +26,7 @@
 #include "npu_driver.hpp"
 #include "runtime.hpp"
 #include "stream.hpp"
+#include "stream_sqcq_manage.hpp"
 #include "utils.h"
 #include "memcpy_c.hpp"
 #include "memory_task.h"
@@ -39,6 +41,135 @@
 namespace cce {
 namespace runtime {
 namespace {
+
+constexpr const char_t* AICC_SMALL_CRYPTO_KERNEL_NAME = "AiccCryptoSmall";
+
+rtError_t InitSmallCryptoParam(
+    CCResManage* resource, CC_CRYPTO_DIRECTION mode, uint64_t count, std::unique_ptr<uint8_t[]>& paramStorage)
+{
+    const bool h2d = (mode == CC_CRYPTO_DIRECTION::DECRYPT);
+    CCCryptoKernelParam key{};
+    const rtError_t ret = resource->BuildDeviceCryptoParam(mode, &key);
+    COND_RETURN_ERROR(
+        ret != RT_ERROR_NONE, RT_ERROR_CC_CRYPTO_FAILED, "Build device crypto param failed, ret=%#x.", ret);
+    const size_t expectedCiphertextLen = sizeof(AiccCiphertextHeader) + count;
+    const size_t argsSize = offsetof(CCSmallCryptoKernelParam, ciphertext) + (h2d ? expectedCiphertextLen : 0U);
+    // Cover the complete header object, including any tail padding.
+    const size_t storageSize =
+        (argsSize < sizeof(CCSmallCryptoKernelParam)) ? sizeof(CCSmallCryptoKernelParam) : argsSize;
+    paramStorage.reset(new (std::nothrow) uint8_t[storageSize]);
+    COND_RETURN_ERROR(
+        paramStorage == nullptr, RT_ERROR_MEMORY_ALLOCATION, "Failed to allocate CC small crypto arguments, size=%zu.",
+        storageSize);
+    // Zero metadata padding because the entire metadata object is used as AAD.
+    (void)memset_s(paramStorage.get(), storageSize, 0, storageSize);
+    auto& param = *new (paramStorage.get()) CCSmallCryptoKernelParam;
+    param.keyAddr = key.keyAddr;
+    param.keyLen = key.keyLen;
+    param.algType = key.algType;
+    param.mode = static_cast<uint32_t>(mode);
+    param.metadata.plaintextLen = static_cast<uint16_t>(count);
+    return RT_ERROR_NONE;
+}
+
+rtError_t PrepareSmallH2DParam(
+    CCResManage* resource, uint32_t deviceId, const void* src, void* dst, uint64_t count,
+    CCSmallCryptoKernelParam& param)
+{
+    auto& metadata = param.metadata;
+    const size_t expectedCiphertextLen = sizeof(AiccCiphertextHeader) + count;
+    metadata.dstAddr = RtPtrToValue(dst);
+    size_t ciphertextLen = 0U;
+    const rtError_t ret = resource->Crypto().Encrypt(
+        deviceId, CC_CRYPTO_CIPHER::AES_128, static_cast<const uint8_t*>(src), count,
+        reinterpret_cast<const uint8_t*>(&metadata), sizeof(metadata), param.ciphertext, &ciphertextLen);
+    COND_RETURN_WITH_NOLOG(ret != RT_ERROR_NONE, ret);
+    COND_RETURN_ERROR(
+        ciphertextLen != expectedCiphertextLen, RT_ERROR_CC_CRYPTO_FAILED, "Unexpected CC small ciphertext length.");
+    return RT_ERROR_NONE;
+}
+
+rtError_t PrepareSmallD2HParam(
+    Device* device, Stream* stm, CCStreamResManage* streamResource, const void* src, CCSmallCryptoMetadata& metadata,
+    std::unique_lock<std::mutex>& bufferLock)
+{
+    auto* buffers = &streamResource->SmallD2HResources();
+    rtError_t ret = RT_ERROR_NONE;
+    bufferLock = std::unique_lock<std::mutex>(buffers->mutex, std::try_to_lock);
+    if (!bufferLock.owns_lock()) {
+        RT_LOG(RT_LOG_DEBUG, "CC small D2H buffer busy; use legacy path, stream_id=%d.", stm->Id_());
+        return RT_ERROR_CONTINUE_EXECUTE;
+    }
+    // Preserve unsafe allocations, but do not attribute an old readback error to a new request.
+    if (buffers->copyError != RT_ERROR_NONE) {
+        RT_LOG(
+            RT_LOG_WARNING,
+            "CC small D2H buffer quarantined, previous copyError=%#x; "
+            "use legacy path, stream_id=%d.",
+            buffers->copyError, stm->Id_());
+        return RT_ERROR_CONTINUE_EXECUTE;
+    }
+    if (buffers->pending) {
+        // A previous timeout or ambiguous submission failure must be resolved before reuse.
+        ret = stm->Synchronize();
+        COND_RETURN_WITH_NOLOG(ret != RT_ERROR_NONE, ret);
+        buffers->pending = false;
+    }
+    ret = streamResource->PrepareSmallD2HBuffers(device);
+    COND_RETURN_WITH_NOLOG(ret != RT_ERROR_NONE, ret);
+    metadata.srcAddr = RtPtrToValue(src);
+    metadata.dstAddr = RtPtrToValue(buffers->deviceBuffer);
+    return RT_ERROR_NONE;
+}
+
+rtError_t CompleteSmallD2HCopy(
+    Device* device, CCResManage* resource, CCSmallD2HResources* buffers, const CCSmallCryptoMetadata& metadata,
+    void* dst, uint64_t destMax)
+{
+    const uint32_t deviceId = device->Id_();
+    const uint64_t count = metadata.plaintextLen;
+    const size_t expectedCiphertextLen = sizeof(AiccCiphertextHeader) + count;
+    rtError_t ret = device->Driver_()->MemCopySync(
+        buffers->hostBuffer, CC_SMALL_CIPHER_CAPACITY, buffers->deviceBuffer, expectedCiphertextLen,
+        RT_MEMCPY_DEVICE_TO_HOST);
+    buffers->copyError = ret;
+    COND_RETURN_ERROR(ret != RT_ERROR_NONE, RT_ERROR_CC_WORKER_FAILED, "CC small DMA D2H failed, ret=%#x.", ret);
+    const auto* header = static_cast<const AiccCiphertextHeader*>(buffers->hostBuffer);
+    COND_RETURN_ERROR(
+        (header->totalLen != expectedCiphertextLen) || (header->ciphertextLen != count), RT_ERROR_INVALID_VALUE,
+        "Invalid CC small ciphertext length.");
+    COND_RETURN_ERROR(
+        (header->version != 1U) || (header->ivLen != 12U) || (header->tagLen != 16U), RT_ERROR_CC_CRYPTO_FAILED,
+        "Invalid CC small ciphertext header.");
+    // Authenticate into private storage: GCM may write plaintext before checking its tag.
+    uint8_t plaintext[CC_SMALL_PLAINTEXT_CAPACITY]{};
+    const ScopeGuard plaintextGuard(
+        [&plaintext]() { (void)memset_s(plaintext, sizeof(plaintext), 0, sizeof(plaintext)); });
+    size_t plaintextLen = 0U;
+    ret = resource->Crypto().Decrypt(
+        deviceId, CC_CRYPTO_CIPHER::AES_128, static_cast<const uint8_t*>(buffers->hostBuffer), expectedCiphertextLen,
+        reinterpret_cast<const uint8_t*>(&metadata), sizeof(metadata), plaintext, &plaintextLen);
+    COND_RETURN_WITH_NOLOG(ret != RT_ERROR_NONE, ret);
+    COND_RETURN_ERROR(plaintextLen != count, RT_ERROR_CC_CRYPTO_FAILED, "Unexpected CC small plaintext length.");
+    const int32_t copyRet = memcpy_s(dst, destMax, plaintext, plaintextLen);
+    return (copyRet == EOK) ? RT_ERROR_NONE : RT_ERROR_INVALID_VALUE;
+}
+
+rtError_t LaunchSmallCrypto(Stream* stm, CCSmallCryptoKernelParam& param)
+{
+    rtKernelLaunchNames_t names{};
+    names.kernelName = AICC_SMALL_CRYPTO_KERNEL_NAME;
+    names.opName = AICC_SMALL_CRYPTO_KERNEL_NAME;
+    rtArgsEx_t args{};
+    args.args = &param;
+    args.argsSize = static_cast<uint32_t>(offsetof(CCSmallCryptoKernelParam, ciphertext));
+    if (param.mode == static_cast<uint32_t>(CC_CRYPTO_DIRECTION::DECRYPT)) {
+        args.argsSize += static_cast<uint32_t>(sizeof(AiccCiphertextHeader) + param.metadata.plaintextLen);
+    }
+    args.isNoNeedH2DCopy = 0U;
+    return StreamLaunchCpuKernel(&names, 1U, &args, stm, RT_KERNEL_DEFAULT);
+}
+
 struct CCHostCallbackParam {
     uint32_t deviceId;
     CCMemcpyTask task;
@@ -417,11 +548,94 @@ rtError_t CCManager::SubmitCcMemcpyTask(
     return RT_ERROR_NONE;
 }
 
+bool CCManager::CanUseSmallCcMemcpy(uint64_t count, rtMemcpyKind_t kind, Stream* stm, bool isSync)
+{
+    if (count > CC_SMALL_PLAINTEXT_CAPACITY) {
+        return false;
+    }
+    if (stm->IsCapturing() || (stm->Model_() != nullptr) || ((stm->Flags() & RT_STREAM_AICPU) != 0U)) {
+        return false;
+    }
+    if ((kind != RT_MEMCPY_HOST_TO_DEVICE) && (!isSync || (kind != RT_MEMCPY_DEVICE_TO_HOST))) {
+        return false;
+    }
+    Device* const device = stm->Device_();
+    if ((device == nullptr) || (device->Id_() >= RT_MAX_DEV_NUM)) {
+        return false;
+    }
+    const CCResManage* const resource = Instance().resources_[device->Id_()].get();
+    return (resource != nullptr) && resource->SupportsSmallCrypto();
+}
+
+rtError_t CCManager::SubmitSmallCcMemcpyTask(
+    void* dst, uint64_t destMax, const void* src, uint64_t count, rtMemcpyKind_t kind, Stream* stm, bool isSync)
+{
+    const bool h2d = (kind == RT_MEMCPY_HOST_TO_DEVICE);
+    Device* const device = stm->Device_();
+    COND_RETURN_ERROR(device == nullptr, RT_ERROR_DEVICE_NULL, "CC small data copy stream device is null.");
+    const uint32_t deviceId = device->Id_();
+    COND_RETURN_ERROR(deviceId >= RT_MAX_DEV_NUM, RT_ERROR_DEVICE_ID, "Invalid device id %u.", deviceId);
+    CCResManage* const resource = Instance().resources_[deviceId].get();
+    COND_RETURN_ERROR(resource == nullptr, RT_ERROR_CC_INIT_FAILED, "CC resource is null.");
+    COND_RETURN_ERROR(
+        (src == nullptr) || (dst == nullptr) || (destMax < count), RT_ERROR_INVALID_VALUE,
+        "Invalid CC small transfer buffers or capacity.");
+
+    const CC_CRYPTO_DIRECTION mode = h2d ? CC_CRYPTO_DIRECTION::DECRYPT : CC_CRYPTO_DIRECTION::ENCRYPT;
+    std::unique_ptr<uint8_t[]> paramStorage;
+    rtError_t ret = InitSmallCryptoParam(resource, mode, count, paramStorage);
+    COND_RETURN_WITH_NOLOG(ret != RT_ERROR_NONE, ret);
+    auto& param = *reinterpret_cast<CCSmallCryptoKernelParam*>(paramStorage.get());
+    auto& metadata = param.metadata;
+
+    // Keep the stream and its CC resources alive throughout Host post-processing.
+    std::shared_ptr<Stream> streamGuard;
+    ret = device->GetStreamSqCqManage()->GetStreamSharedPtrById(static_cast<uint32_t>(stm->Id_()), streamGuard);
+    COND_RETURN_WITH_NOLOG(ret != RT_ERROR_NONE, ret);
+    COND_RETURN_WITH_NOLOG(streamGuard.get() != stm, RT_ERROR_STREAM_NULL);
+    CCStreamResManage* streamResource = nullptr;
+    ret = resource->GetOrCreateStreamResource(stm, streamResource);
+    COND_RETURN_WITH_NOLOG(ret != RT_ERROR_NONE, ret);
+    CCSmallD2HResources* buffers = nullptr;
+    std::unique_lock<std::mutex> bufferLock;
+    if (h2d) {
+        ret = PrepareSmallH2DParam(resource, deviceId, src, dst, count, param);
+    } else {
+        buffers = &streamResource->SmallD2HResources();
+        // Keep the lock in this scope through synchronization and Host post-processing.
+        ret = PrepareSmallD2HParam(device, stm, streamResource, src, metadata, bufferLock);
+    }
+    COND_RETURN_WITH_NOLOG(ret != RT_ERROR_NONE, ret);
+
+    ret = Runtime::Instance()->StartAicpuSd(device);
+    COND_RETURN_WITH_NOLOG(ret != RT_ERROR_NONE, ret);
+    {
+        // Share the legacy submission lock so this task cannot split its three-task sequence.
+        std::lock_guard<std::mutex> lock(streamResource->MemSubmitMutex());
+        if (buffers != nullptr) {
+            buffers->pending = true;
+        }
+        ret = LaunchSmallCrypto(stm, param);
+    }
+    COND_RETURN_WITH_NOLOG(ret != RT_ERROR_NONE, ret);
+    if (!isSync) {
+        return RT_ERROR_NONE;
+    }
+    // Only the dedicated D2H buffer lock is held while waiting; the submit lock is released.
+    ret = stm->Synchronize();
+    COND_RETURN_WITH_NOLOG(ret != RT_ERROR_NONE, ret);
+    if (h2d) {
+        return RT_ERROR_NONE;
+    }
+    // Stream synchronization completed the kernel. The buffer lock still protects readback.
+    buffers->pending = false;
+    return CompleteSmallD2HCopy(device, resource, buffers, metadata, dst, destMax);
+}
+
 rtError_t CCManager::CCMemCopySync(
     void* const dst, const uint64_t destMax, const void* const src, const uint64_t cnt, const rtMemcpyKind_t kind)
 {
     RT_LOG(RT_LOG_INFO, "CCMemCopySync in, kind=%s.", MemcpyKindToStr(kind));
-    (void)destMax;
     (void)kind; // CC 同步拷贝按地址属性推导方向，非CC模式驱动会校准，CC需要在Runtime校准
 
     rtMemcpyKind_t cpyKind = RT_MEMCPY_RESERVED;
@@ -445,6 +659,12 @@ rtError_t CCManager::CCMemCopySync(
         "The current context has entered the failure state, and synchronous memory copy is not supported in "
         "confidential computing mode in this state");
 
+    if (CanUseSmallCcMemcpy(cnt, cpyKind, curStm, true)) {
+        ret = SubmitSmallCcMemcpyTask(dst, destMax, src, cnt, cpyKind, curStm, true);
+        if ((cpyKind != RT_MEMCPY_DEVICE_TO_HOST) || (ret != RT_ERROR_CONTINUE_EXECUTE)) {
+            return ret;
+        }
+    }
     ret = SubmitCcMemcpyTask(dst, src, cnt, cpyKind, curStm);
     COND_RETURN_ERROR(ret != RT_ERROR_NONE, ret, "Submit CC memcpy sync task failed, ret=%#x.", ret);
 
@@ -461,7 +681,6 @@ rtError_t CCManager::CCMemcpyAsync(
     RT_LOG(RT_LOG_INFO, "CCMemcpyAsync in, kind=%s.", MemcpyKindToStr(kind));
     (void)addrCfg;
     (void)memcpyConfig;
-    (void)destMax;
     (void)cfgInfo;
     Context* const curCtx = Runtime::Instance()->CurrentContext(true, DEFAULT_DEVICE_ID);
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
@@ -480,6 +699,10 @@ rtError_t CCManager::CCMemcpyAsync(
 
     rtError_t ret = RT_ERROR_NONE;
     if (kind == RT_MEMCPY_HOST_TO_DEVICE_EX) {
+        // Inline encryption captures the source before returning, so no plaintext staging is needed.
+        if (CanUseSmallCcMemcpy(cnt, RT_MEMCPY_HOST_TO_DEVICE, curStm, false)) {
+            return SubmitSmallCcMemcpyTask(dst, destMax, src, cnt, RT_MEMCPY_HOST_TO_DEVICE, curStm, false);
+        }
         // H->Buffer->D 单独处理
         ret = PrepareCcAsyncH2dEx(curStm, submitSrc, cnt, cpyKind, guardMem);
         COND_RETURN_ERROR(ret != RT_ERROR_NONE, ret, "Prepare CC H2D EX failed, ret=%#x.", ret);
@@ -495,12 +718,15 @@ rtError_t CCManager::CCMemcpyAsync(
             return RT_ERROR_CONTINUE_EXECUTE;
         }
     }
+    if (CanUseSmallCcMemcpy(cnt, cpyKind, curStm, false)) {
+        return SubmitSmallCcMemcpyTask(dst, destMax, submitSrc, cnt, cpyKind, curStm, false);
+    }
     return SubmitCcMemcpyTask(dst, submitSrc, cnt, cpyKind, curStm, std::move(guardMem));
 }
 
 rtError_t CCManager::SubmitCcMemcpy2DTasks(
     void* const dst, const uint64_t dstPitch, const void* const src, const uint64_t srcPitch, const uint64_t width,
-    const uint64_t height, Stream* const stm, const rtMemcpyKind_t kind)
+    const uint64_t height, Stream* const stm, const rtMemcpyKind_t kind, bool isSync)
 {
     RT_LOG(RT_LOG_INFO, "SubmitCcMemcpy2DTasks in, kind=%s.", MemcpyKindToStr(kind));
     const void* const devAddr = (kind == RT_MEMCPY_HOST_TO_DEVICE) ? dst : src;
@@ -514,7 +740,15 @@ rtError_t CCManager::SubmitCcMemcpy2DTasks(
     for (uint64_t row = 0U; row < height; ++row) {
         void* const rowDst = dstBase + row * dstPitch;
         const void* const rowSrc = srcBase + row * srcPitch;
-        const rtError_t ret = SubmitCcMemcpyTask(rowDst, rowSrc, width, kind, stm);
+        rtError_t ret = RT_ERROR_CONTINUE_EXECUTE;
+        if (CanUseSmallCcMemcpy(width, kind, stm, isSync)) {
+            // H2D owns its inline payload; the outer synchronous API waits after all rows.
+            const bool syncSmallTask = isSync && (kind == RT_MEMCPY_DEVICE_TO_HOST);
+            ret = SubmitSmallCcMemcpyTask(rowDst, width, rowSrc, width, kind, stm, syncSmallTask);
+        }
+        if (ret == RT_ERROR_CONTINUE_EXECUTE) {
+            ret = SubmitCcMemcpyTask(rowDst, rowSrc, width, kind, stm);
+        }
         if (ret != RT_ERROR_NONE) {
             RT_LOG(RT_LOG_ERROR, "Submit CC memcpy2d row failed, row=%" PRIu64 ", ret=%#x.", row, ret);
             return ret;
@@ -564,7 +798,7 @@ rtError_t CCManager::CCMemCopy2DSync(
     NULL_PTR_RETURN_MSG(curStm, RT_ERROR_STREAM_NULL);
     CHECK_CAPTURE_MODE_SUPPORT_AND_RETURN_WITH_FUNC_DESC(curCtx, "Synchronous CC 2D memory copy");
 
-    rtError_t ret = SubmitCcMemcpy2DTasks(dst, dstPitch, src, srcPitch, width, height, curStm, kind);
+    rtError_t ret = SubmitCcMemcpy2DTasks(dst, dstPitch, src, srcPitch, width, height, curStm, kind, true);
     COND_RETURN_ERROR(ret != RT_ERROR_NONE, ret, "Submit CC memcpy 2d tasks failed, ret=%#x.", ret);
 
     // 流同步保持同步拷贝语义
@@ -576,7 +810,7 @@ rtError_t CCManager::CCMemCopy2DSync(
 rtError_t CCManager::SubmitCcMemcpyBatchTasks(
     void** const dsts, const size_t* const destMaxs, void** const srcs, const size_t* const sizes, const size_t count,
     const rtMemcpyBatchAttr* const attrs, const size_t* const attrsIdxs, const size_t numAttrs, size_t* const failIdx,
-    Stream* const stm)
+    Stream* const stm, bool isSync)
 {
     RT_LOG(RT_LOG_INFO, "SubmitCcMemcpyBatchTasks in");
     size_t attrIdx = 0U;
@@ -616,7 +850,15 @@ rtError_t CCManager::SubmitCcMemcpyBatchTasks(
 
         const rtMemcpyKind_t kind =
             (realDstLoc == RT_MEMORY_LOC_DEVICE) ? RT_MEMCPY_HOST_TO_DEVICE : RT_MEMCPY_DEVICE_TO_HOST;
-        error = SubmitCcMemcpyTask(dsts[i], srcs[i], sizes[i], kind, stm);
+        error = RT_ERROR_CONTINUE_EXECUTE;
+        if (CanUseSmallCcMemcpy(sizes[i], kind, stm, isSync)) {
+            // D2H must finish Host post-processing before its shared buffer can be reused.
+            const bool syncSmallTask = isSync && (kind == RT_MEMCPY_DEVICE_TO_HOST);
+            error = SubmitSmallCcMemcpyTask(dsts[i], destMax, srcs[i], sizes[i], kind, stm, syncSmallTask);
+        }
+        if (error == RT_ERROR_CONTINUE_EXECUTE) {
+            error = SubmitCcMemcpyTask(dsts[i], srcs[i], sizes[i], kind, stm);
+        }
         ERROR_PROC_RETURN_MSG_INNER(
             error, SetFailIndex(failIdx, i), "Failed to submit %zuth CC memory copy task. retCode=%#x.", i,
             static_cast<uint32_t>(error));
@@ -654,7 +896,7 @@ rtError_t CCManager::CCMemcpyBatch(
     COND_RETURN_ERROR(curStm == nullptr, RT_ERROR_STREAM_NULL, "CC default stream is null.");
 
     rtError_t ret =
-        SubmitCcMemcpyBatchTasks(dsts, nullptr, srcs, sizes, count, attrs, attrsIdxs, numAttrs, failIdx, curStm);
+        SubmitCcMemcpyBatchTasks(dsts, nullptr, srcs, sizes, count, attrs, attrsIdxs, numAttrs, failIdx, curStm, true);
     COND_RETURN_ERROR(ret != RT_ERROR_NONE, ret, "Submit CC memcpy batch tasks failed, ret=%#x.", ret);
 
     // 流同步保持同步拷贝语义

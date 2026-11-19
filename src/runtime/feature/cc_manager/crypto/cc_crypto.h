@@ -69,6 +69,36 @@ struct AiccCiphertextHeader {
     uint32_t ciphertextLen;
 };
 
+struct CCCryptoKernelParam {
+    uint64_t keyAddr;
+    uint32_t keyLen;
+    uint32_t mode;
+    uint32_t algType;
+    uint64_t taskQueueAddr;
+};
+
+// Maximum plaintext bytes accepted by the small-transfer path (inclusive).
+constexpr uint32_t CC_SMALL_PLAINTEXT_CAPACITY = 64U;
+constexpr uint32_t CC_SMALL_CIPHER_CAPACITY = sizeof(AiccCiphertextHeader) + CC_SMALL_PLAINTEXT_CAPACITY;
+
+// Wire ABI shared with AiccCryptoSmall. The entire metadata, including zeroed padding, is AAD.
+// Little endian, 8-byte alignment. H2D uses dstAddr; D2H uses srcAddr and dstAddr (cipher output).
+struct CCSmallCryptoMetadata {
+    uint64_t srcAddr;
+    uint64_t dstAddr;
+    uint16_t plaintextLen;
+};
+
+struct CCSmallCryptoKernelParam {
+    CCSmallCryptoMetadata metadata;
+    uint32_t keyLen;
+    uint64_t keyAddr;
+    uint32_t mode;
+    uint32_t algType;
+    uint32_t rsv;
+    uint8_t ciphertext[];
+};
+
 struct CCLoadKeyKernelParam {
     uint16_t h2dSlotId;
     uint16_t d2hSlotId;

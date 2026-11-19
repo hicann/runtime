@@ -22,11 +22,14 @@
 #include "runtime.hpp"
 #include "stream.hpp"
 #include "logger.hpp"
+#include "aicpu_timeout_control.h"
 
 namespace cce {
 namespace runtime {
 
 namespace {
+constexpr const char_t* AICC_SMALL_CRYPTO_KERNEL_NAME = "tsKernel:AiccCryptoSmall";
+
 rtError_t LaunchAiccLoadKeyKernel(Stream* const stm, CCLoadKeyKernelParam& param)
 {
     COND_RETURN_ERROR(stm == nullptr, RT_ERROR_STREAM_NULL, "CC load key stream is null.");
@@ -89,9 +92,25 @@ rtError_t CCResManage::InitCcResource()
         return RT_ERROR_CC_INIT_FAILED;
     }
 
-    RT_LOG(
-        RT_LOG_INFO, "CCResManage initialized for device %u, alg=%u", deviceId_,
-        static_cast<uint32_t>(plugin_->AlgType()));
+    // A missing optional kernel must not disable the existing CC path.
+    bool supported = false;
+    const rtError_t queryRet =
+        AicpuTimeoutControl::CheckKernelSupported(device_, AICC_SMALL_CRYPTO_KERNEL_NAME, supported);
+    smallCryptoSupported_ = (queryRet == RT_ERROR_NONE) && supported &&
+                            (GetActiveCryptoAlg() == CC_CRYPTO_ALG_TYPE::GCM) &&
+                            (GetActiveCryptoCipher() == CC_CRYPTO_CIPHER::AES_128);
+    RT_LOG(RT_LOG_INFO, "CCResManage initialized for device %u, smallCrypto=%d", deviceId_, smallCryptoSupported_);
+    return RT_ERROR_NONE;
+}
+
+rtError_t CCResManage::BuildDeviceCryptoParam(CC_CRYPTO_DIRECTION mode, CCCryptoKernelParam* param)
+{
+    COND_RETURN_ERROR(param == nullptr, RT_ERROR_INVALID_VALUE, "CC crypto parameter is null.");
+    const rtError_t ret = crypto_.GetDeviceKeyAddr(mode, &param->keyAddr);
+    COND_RETURN_WITH_NOLOG(ret != RT_ERROR_NONE, ret);
+    param->keyLen = AICC_KEY_SIZE;
+    param->mode = static_cast<uint32_t>(mode);
+    param->algType = AICC_ALG_AES128_GCM;
     return RT_ERROR_NONE;
 }
 
@@ -129,8 +148,13 @@ rtError_t CCResManage::LoadKeyToAicpu()
 
 void CCResManage::DestroyCcResource()
 {
+    smallCryptoSupported_ = false;
     DestroyWorkerPool();
     plugin_.reset();
+    {
+        const std::lock_guard<std::mutex> lock(streamResourceMutex_);
+        streamResources_.clear();
+    }
     crypto_.ReleaseKey(deviceId_);
 }
 
@@ -149,7 +173,8 @@ rtError_t CCResManage::GetOrCreateStreamResource(Stream* stm, CCStreamResManage*
     if (ret != RT_ERROR_NONE) {
         return ret;
     }
-    resource = newResource.release();
+    resource = newResource.get();
+    streamResources_[stm] = std::move(newResource);
     stm->SetCCStreamResource(resource);
     return RT_ERROR_NONE;
 }
@@ -168,6 +193,11 @@ void CCResManage::DestroyStreamResource(Stream* stm)
     {
         std::lock_guard<std::mutex> lock(streamResourceMutex_);
         resource = stm->TakeCCStreamResource();
+        const auto it = streamResources_.find(stm);
+        if (it != streamResources_.end()) {
+            streamResources_.erase(it);
+            return;
+        }
     }
     delete resource;
 }

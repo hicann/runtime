@@ -74,13 +74,16 @@ private:
         void* const dst, const void* const src, const uint64_t count, const rtMemcpyKind_t kind, Stream* const stm,
         std::shared_ptr<void> guardMem = nullptr);
     static void SubmitCcTaskCallback(void* userData);
+    static bool CanUseSmallCcMemcpy(uint64_t count, rtMemcpyKind_t kind, Stream* stm, bool isSync);
+    static rtError_t SubmitSmallCcMemcpyTask(
+        void* dst, uint64_t destMax, const void* src, uint64_t count, rtMemcpyKind_t kind, Stream* stm, bool isSync);
     static rtError_t SubmitCcMemcpy2DTasks(
         void* const dst, const uint64_t dstPitch, const void* const src, const uint64_t srcPitch, const uint64_t width,
-        const uint64_t height, Stream* const stm, const rtMemcpyKind_t kind);
+        const uint64_t height, Stream* const stm, const rtMemcpyKind_t kind, bool isSync = false);
     static rtError_t SubmitCcMemcpyBatchTasks(
         void** const dsts, const size_t* const destMaxs, void** const srcs, const size_t* const sizes,
         const size_t count, const rtMemcpyBatchAttr* const attrs, const size_t* const attrsIdxs, const size_t numAttrs,
-        size_t* const failIdx, Stream* const stm);
+        size_t* const failIdx, Stream* const stm, bool isSync = false);
     static rtError_t CCDevMemSet(
         Stream* const stm, void* const dst, const uint64_t totalCnt, const uint32_t value, bool isByteFill);
 };

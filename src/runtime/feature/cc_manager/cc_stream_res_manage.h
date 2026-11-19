@@ -21,6 +21,15 @@ namespace runtime {
 
 class Device;
 
+struct CCSmallD2HResources {
+    void* deviceBuffer{nullptr};
+    void* hostBuffer{nullptr};
+    bool hostDmaMapped{false};
+    bool pending{false};
+    rtError_t copyError{RT_ERROR_NONE};
+    std::mutex mutex;
+};
+
 class CCStreamResManage {
 public:
     CCStreamResManage() = default;
@@ -39,13 +48,19 @@ public:
     std::mutex& ProcessMutex();
 
     std::mutex& MemSubmitMutex();
+    CCSmallD2HResources& SmallD2HResources() { return smallD2H_; }
+    // Caller holds smallD2H_.mutex until synchronization and Host post-processing finish.
+    // Allocation/DMA mapping failure rolls back and returns RT_ERROR_CONTINUE_EXECUTE for legacy fallback.
+    rtError_t PrepareSmallD2HBuffers(Device* device);
 
 private:
+    void ReleaseSmallD2HBuffers();
     Device* device_{nullptr};
     BarTaskQueue* barQueue_{nullptr}; // Init 创建，Destroy 释放
     uint64_t queueDevAddr_{0U};       // 环设备侧地址（Init 时缓存，AICPU 参数用）
     std::mutex processMutex_;         // 同流任务处理大锁
     std::mutex memSubmitMutex_; // 在替换的3个Task外加一把大锁，防止三段提交被多线程交叉插入
+    CCSmallD2HResources smallD2H_;
 };
 
 } // namespace runtime

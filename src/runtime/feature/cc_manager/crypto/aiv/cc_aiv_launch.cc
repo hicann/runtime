@@ -15,6 +15,7 @@
 
 #include "common/cc_defs.h"
 #include "crypto/device/cc_kernel_abi.h"
+#include "api.hpp"
 #include "logger.hpp"
 #include "runtime.hpp"
 

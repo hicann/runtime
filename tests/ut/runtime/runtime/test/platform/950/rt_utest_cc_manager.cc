@@ -28,6 +28,8 @@
 #include "api_impl.hpp"
 #include "api_impl_david.hpp"
 #include "aicpu_c.hpp"
+#include "memcpy_c.hpp"
+#include "aicpu_timeout_control.h"
 #include "dev_info_manage.h"
 #include "npu_driver.hpp"
 #include "osal.hpp"
@@ -116,6 +118,70 @@ uint32_t gExpectedD2HHead = 0U;
 uint32_t gExpectedD2HTail = 0U;
 std::atomic<bool> gExpectedD2HSlicePublishedAtDma{false};
 std::atomic<bool> gAllowD2HNextConsume{false};
+struct SmallLaunchRecord {
+    CCSmallCryptoMetadata metadata;
+    uint8_t ciphertext[CC_SMALL_CIPHER_CAPACITY];
+};
+std::vector<SmallLaunchRecord> gSmallLaunches;
+bool gSmallAuthFail = false;
+rtError_t gSmallCopyError = RT_ERROR_NONE;
+
+rtError_t SmallBatchH2DAttrStub(
+    const void*, const void*, const rtMemcpyBatchAttr&, rtPtrAttributes_t& dstAttr, rtPtrAttributes_t& srcAttr)
+{
+    dstAttr.location.type = RT_MEMORY_LOC_DEVICE;
+    srcAttr.location.type = RT_MEMORY_LOC_HOST;
+    return RT_ERROR_NONE;
+}
+
+rtError_t SmallLaunchStub(
+    const rtKernelLaunchNames_t* names, uint32_t, const rtArgsEx_t* args, Stream* stm, uint32_t, uint64_t)
+{
+    EXPECT_STREQ(names->kernelName, "AiccCryptoSmall");
+    EXPECT_EQ(args->isNoNeedH2DCopy, 0U);
+    const size_t headerSize = offsetof(CCSmallCryptoKernelParam, ciphertext);
+    if ((args->argsSize < headerSize) || (args->argsSize > headerSize + CC_SMALL_CIPHER_CAPACITY)) {
+        ADD_FAILURE() << "Invalid small crypto argument size";
+        return RT_ERROR_INVALID_VALUE;
+    }
+    const auto& param = *static_cast<const CCSmallCryptoKernelParam*>(args->args);
+    const size_t payloadSize = args->argsSize - headerSize;
+    EXPECT_EQ(param.keyLen, AICC_KEY_SIZE);
+    EXPECT_EQ(param.algType, AICC_ALG_AES128_GCM);
+    SmallLaunchRecord record{};
+    record.metadata = param.metadata;
+    if (payloadSize != 0U) {
+        EXPECT_EQ(memcpy_s(record.ciphertext, sizeof(record.ciphertext), param.ciphertext, payloadSize), EOK);
+    }
+    gSmallLaunches.push_back(record);
+    if (param.mode == static_cast<uint32_t>(CC_CRYPTO_DIRECTION::ENCRYPT)) {
+        auto* ciphertext = RtValueToPtr<uint8_t*>(param.metadata.dstAddr);
+        size_t ciphertextLen = 0U;
+        auto& crypto = CCManager::Instance().resources_[stm->Device_()->Id_()]->Crypto();
+        const rtError_t ret = crypto.Encrypt(
+            stm->Device_()->Id_(), CC_CRYPTO_CIPHER::AES_128, RtValueToPtr<const uint8_t*>(param.metadata.srcAddr),
+            param.metadata.plaintextLen, reinterpret_cast<const uint8_t*>(&param.metadata), sizeof(param.metadata),
+            ciphertext, &ciphertextLen);
+        EXPECT_EQ(ret, RT_ERROR_NONE);
+        if (ret != RT_ERROR_NONE) {
+            return ret;
+        }
+        EXPECT_EQ(ciphertextLen, sizeof(AiccCiphertextHeader) + param.metadata.plaintextLen);
+        if (gSmallAuthFail) {
+            reinterpret_cast<AiccCiphertextHeader*>(ciphertext)->tag[0] ^= 1U;
+        }
+    }
+    return RT_ERROR_NONE;
+}
+
+rtError_t SmallCopyStub(
+    Driver*, void* dst, uint64_t capacity, const void* src, uint64_t length, rtMemcpyKind_t, bool, uint32_t)
+{
+    if (gSmallCopyError != RT_ERROR_NONE) {
+        return gSmallCopyError;
+    }
+    return (memcpy_s(dst, capacity, src, length) == EOK) ? RT_ERROR_NONE : RT_ERROR_INVALID_VALUE;
+}
 
 drvError_t DrvMemcpyStub(DVdeviceptr dst, size_t destMax, DVdeviceptr src, size_t count)
 {
@@ -578,6 +644,10 @@ protected:
         gExpectedD2HTail = 0U;
         gExpectedD2HSlicePublishedAtDma.store(false);
         gAllowD2HNextConsume.store(false);
+        gSmallLaunches.clear();
+        gSmallAuthFail = false;
+        gSmallCopyError = RT_ERROR_NONE;
+        MOCKER(AicpuTimeoutControl::CheckKernelSupported).stubs().will(returnValue(RT_ERROR_NONE));
         MOCKER(drvMemcpy).stubs().will(invoke(DrvMemcpyStub));
         // 本套件按真实 CVM 口径跑：密钥由驱动桩 halGetSlotKey 提供。
         // CC 初始化会下发 LoadKey，用例里把 StreamLaunchCpuKernel
@@ -588,6 +658,10 @@ protected:
 
     virtual void TearDown()
     {
+        if (smallResourceStream_ != nullptr) {
+            delete smallResourceStream_->TakeCCStreamResource();
+            smallResourceStream_ = nullptr;
+        }
         CCManager::ReleaseDeviceResource(0U);
         rtDeviceReset(0);
         Runtime* rtInstance = (Runtime*)Runtime::Instance();
@@ -599,8 +673,50 @@ protected:
 
     static rtChipType_t GetCurrentChipType() { return Runtime::Instance()->GetChipType(); }
 
+    Stream* PrepareSmallTransfer()
+    {
+        Stream* stm = Runtime::Instance()->CurrentContext(true, DEFAULT_DEVICE_ID)->DefaultStream_();
+        Device* dev = stm->Device_();
+        auto resource = std::make_unique<CCResManage>(dev);
+        // Reuse cc_crypto_stub.cc for Host crypto instead of mocking const member callbacks.
+        Driver* const driver = dev->Driver_();
+        static uint8_t deviceKey[2U * AICC_KEY_SIZE]{};
+        void* deviceKeyPtr = deviceKey;
+        MOCKER(GetKeyFromKernel).stubs().will(returnValue(0));
+        MOCKER_CPP_VIRTUAL(driver, &Driver::DevMemAllocWithFlag)
+            .stubs()
+            .with(outBoundP(&deviceKeyPtr, sizeof(deviceKeyPtr)))
+            .will(returnValue(RT_ERROR_NONE));
+        MOCKER_CPP_VIRTUAL(driver, &Driver::DevMemFree).stubs().will(invoke(DevMemFreeStub));
+        SetOpenSSLLoaderReady(true);
+        EXPECT_EQ(resource->Crypto().InitKey(dev->Id_()), RT_ERROR_NONE);
+        resource->smallCryptoSupported_ = true;
+        CCManager::Instance().resources_[dev->Id_()] = std::move(resource);
+        if (stm->GetCCStreamResource() == nullptr) {
+            stm->SetCCStreamResource(new CCStreamResManage());
+            smallResourceStream_ = stm;
+        }
+        MOCKER_CPP(&Runtime::StartAicpuSd).stubs().will(returnValue(RT_ERROR_NONE));
+        MOCKER(StreamLaunchCpuKernel).stubs().will(invoke(SmallLaunchStub));
+        return stm;
+    }
+
+    Stream* PrepareSmallD2H()
+    {
+        Stream* stm = PrepareSmallTransfer();
+        Driver* driver = stm->Device_()->Driver_();
+        MOCKER_CPP_VIRTUAL(driver, &Driver::DevMemAllocWithBackupFlag).stubs().will(invoke(DevMemAllocEntryStub));
+        MOCKER_CPP_VIRTUAL(driver, &Driver::HostMemAlloc).stubs().will(invoke(HostMemAllocStub));
+        MOCKER_CPP_VIRTUAL(driver, &Driver::HostDmaMap).stubs().will(invoke(HostDmaMapStub));
+        MOCKER_CPP_VIRTUAL(driver, &Driver::HostDmaUnmap).stubs().will(invoke(HostDmaUnmapStub));
+        MOCKER_CPP_VIRTUAL(driver, &Driver::HostMemFree).stubs().will(invoke(HostMemFreeStub));
+        MOCKER_CPP_VIRTUAL(driver, &Driver::MemCopySync).stubs().will(invoke(SmallCopyStub));
+        return stm;
+    }
+
 private:
     rtChipType_t oldChipType;
+    Stream* smallResourceStream_{nullptr};
 };
 
 // ============================================================================
@@ -2765,7 +2881,7 @@ TEST_F(CCManagerTest, CCResManage_GetOrCreateStreamResource_Basics)
     EXPECT_EQ(cachedRes, streamRes);
     EXPECT_EQ(gDevMemAllocCount, 1U);
 
-    delete stm->TakeCCStreamResource();
+    resource.DestroyStreamResource(stm);
     rtStreamDestroy(stmHandle);
     ((Runtime*)Runtime::Instance())->DeviceRelease(dev);
 }
@@ -2857,6 +2973,295 @@ TEST_F(CCManagerTest, CCResManage_SubmitTask_Basics)
 // ============================================================================
 // CCManager Tests
 // ============================================================================
+
+TEST_F(CCManagerTest, SmallTransfer_EligibilityAndLegacyFallback)
+{
+    Stream* stm = PrepareSmallTransfer();
+    EXPECT_TRUE(CCManager::CanUseSmallCcMemcpy(CC_SMALL_PLAINTEXT_CAPACITY, RT_MEMCPY_HOST_TO_DEVICE, stm, false));
+    EXPECT_TRUE(CCManager::CanUseSmallCcMemcpy(CC_SMALL_PLAINTEXT_CAPACITY, RT_MEMCPY_DEVICE_TO_HOST, stm, true));
+    for (uint64_t count : {uint64_t{CC_SMALL_PLAINTEXT_CAPACITY} + 1U, uint64_t{CC_SMALL_PLAINTEXT_CAPACITY} + 2U}) {
+        EXPECT_FALSE(CCManager::CanUseSmallCcMemcpy(count, RT_MEMCPY_HOST_TO_DEVICE, stm, false));
+        EXPECT_FALSE(CCManager::CanUseSmallCcMemcpy(count, RT_MEMCPY_DEVICE_TO_HOST, stm, true));
+    }
+    EXPECT_FALSE(CCManager::CanUseSmallCcMemcpy(1U, RT_MEMCPY_DEVICE_TO_HOST, stm, false));
+    CCManager::Instance().resources_[stm->Device_()->Id_()]->smallCryptoSupported_ = false;
+    EXPECT_FALSE(CCManager::CanUseSmallCcMemcpy(1U, RT_MEMCPY_HOST_TO_DEVICE, stm, false));
+    EXPECT_TRUE(gSmallLaunches.empty());
+}
+
+TEST_F(CCManagerTest, SmallTransfer_2DAsyncH2DUsesFastPathPerRow)
+{
+    Stream* stm = PrepareSmallTransfer();
+    uint8_t source[8]{};
+    uint8_t destination[8]{};
+    MOCKER(CCManager::SubmitSmallCcMemcpyTask).expects(exactly(2)).will(returnValue(RT_ERROR_NONE));
+    MOCKER(CCManager::SubmitCcMemcpyTask).expects(never());
+    EXPECT_EQ(
+        CCManager::SubmitCcMemcpy2DTasks(destination, 4U, source, 4U, 4U, 2U, stm, RT_MEMCPY_HOST_TO_DEVICE, false),
+        RT_ERROR_NONE);
+}
+
+TEST_F(CCManagerTest, SmallTransfer_2DSyncH2DWaitsOnceAfterAllRows)
+{
+    Stream* stm = PrepareSmallTransfer();
+    uint8_t source[8]{};
+    uint8_t destination[8]{};
+    MOCKER_CPP_VIRTUAL(stm, &Stream::Synchronize).expects(once()).will(returnValue(RT_ERROR_STREAM_SYNC_TIMEOUT));
+    EXPECT_EQ(
+        CCManager::CCMemCopy2DSync(destination, 4U, source, 4U, 4U, 2U, RT_MEMCPY_HOST_TO_DEVICE),
+        RT_ERROR_STREAM_SYNC_TIMEOUT);
+    ASSERT_EQ(gSmallLaunches.size(), 2U);
+    EXPECT_EQ(gSmallLaunches[0].metadata.dstAddr, RtPtrToValue(destination));
+    EXPECT_EQ(gSmallLaunches[1].metadata.dstAddr, RtPtrToValue(destination + 4U));
+}
+
+TEST_F(CCManagerTest, SmallTransfer_BatchSyncH2DWaitsOnceAfterAllItems)
+{
+    Stream* stm = PrepareSmallTransfer();
+    uint8_t source[8]{};
+    uint8_t destination[8]{};
+    void* srcs[] = {source, source + 4U};
+    void* dsts[] = {destination, destination + 4U};
+    size_t sizes[] = {4U, 4U};
+    rtMemcpyBatchAttr attrs[1]{};
+    size_t attrsIdxs[] = {0U};
+    size_t failIdx = 0U;
+    MOCKER(CheckMemCpyAttr).stubs().will(invoke(SmallBatchH2DAttrStub));
+    MOCKER_CPP_VIRTUAL(stm, &Stream::Synchronize).expects(once()).will(returnValue(RT_ERROR_STREAM_SYNC_TIMEOUT));
+    EXPECT_EQ(
+        CCManager::CCMemcpyBatch(dsts, srcs, sizes, 2U, attrs, attrsIdxs, 1U, &failIdx), RT_ERROR_STREAM_SYNC_TIMEOUT);
+    ASSERT_EQ(gSmallLaunches.size(), 2U);
+    EXPECT_EQ(gSmallLaunches[0].metadata.dstAddr, RtPtrToValue(destination));
+    EXPECT_EQ(gSmallLaunches[1].metadata.dstAddr, RtPtrToValue(destination + 4U));
+}
+
+TEST_F(CCManagerTest, SmallTransfer_2DAsyncD2HKeepsLegacyPath)
+{
+    Stream* stm = PrepareSmallTransfer();
+    uint8_t source[8]{};
+    uint8_t destination[8]{};
+    MOCKER(CCManager::SubmitSmallCcMemcpyTask).expects(never());
+    MOCKER(CCManager::SubmitCcMemcpyTask).expects(exactly(2)).will(returnValue(RT_ERROR_NONE));
+    EXPECT_EQ(
+        CCManager::SubmitCcMemcpy2DTasks(destination, 4U, source, 4U, 4U, 2U, stm, RT_MEMCPY_DEVICE_TO_HOST, false),
+        RT_ERROR_NONE);
+}
+
+TEST_F(CCManagerTest, SmallTransfer_2DSyncD2HFallsBackPerRow)
+{
+    Stream* stm = PrepareSmallTransfer();
+    uint8_t source[8]{};
+    uint8_t destination[8]{};
+    MOCKER(CCManager::SubmitSmallCcMemcpyTask).expects(exactly(2)).will(returnValue(RT_ERROR_CONTINUE_EXECUTE));
+    MOCKER(CCManager::SubmitCcMemcpyTask).expects(exactly(2)).will(returnValue(RT_ERROR_NONE));
+    EXPECT_EQ(
+        CCManager::SubmitCcMemcpy2DTasks(destination, 4U, source, 4U, 4U, 2U, stm, RT_MEMCPY_DEVICE_TO_HOST, true),
+        RT_ERROR_NONE);
+}
+
+TEST_F(CCManagerTest, SmallTransfer_H2DInlinePayloadIsIndependent)
+{
+    Stream* stm = PrepareSmallTransfer();
+    uint8_t source[CC_SMALL_PLAINTEXT_CAPACITY];
+    (void)memset_s(source, sizeof(source), 0x37, sizeof(source));
+    uint8_t destination[CC_SMALL_PLAINTEXT_CAPACITY]{};
+    MOCKER_CPP_VIRTUAL(stm, &Stream::Synchronize).expects(never());
+    ASSERT_EQ(
+        CCManager::CCMemcpyAsync(
+            destination, sizeof(destination), source, sizeof(source), RT_MEMCPY_HOST_TO_DEVICE_EX, stm, nullptr,
+            nullptr, true, nullptr),
+        RT_ERROR_NONE);
+    (void)memset_s(source, sizeof(source), 0x91, sizeof(source));
+    ASSERT_EQ(
+        CCManager::SubmitSmallCcMemcpyTask(
+            destination, sizeof(destination), source, sizeof(source), RT_MEMCPY_HOST_TO_DEVICE, stm, false),
+        RT_ERROR_NONE);
+    ASSERT_EQ(gSmallLaunches.size(), 2U);
+    EXPECT_EQ(gSmallLaunches[0].ciphertext[sizeof(AiccCiphertextHeader)], 0x37U);
+    EXPECT_EQ(gSmallLaunches[1].ciphertext[sizeof(AiccCiphertextHeader)], 0x91U);
+    EXPECT_EQ(gSmallLaunches[0].metadata.dstAddr, RtPtrToValue(destination));
+}
+
+TEST_F(CCManagerTest, SmallTransfer_H2DSyncPropagatesExecutionError)
+{
+    Stream* stm = PrepareSmallTransfer();
+    uint8_t value = 1U;
+    MOCKER_CPP_VIRTUAL(stm, &Stream::Synchronize).expects(once()).will(returnValue(RT_ERROR_STREAM_SYNC_TIMEOUT));
+    EXPECT_EQ(
+        CCManager::SubmitSmallCcMemcpyTask(
+            &value, sizeof(value), &value, sizeof(value), RT_MEMCPY_HOST_TO_DEVICE, stm, true),
+        RT_ERROR_STREAM_SYNC_TIMEOUT);
+}
+
+TEST_F(CCManagerTest, SmallTransfer_D2HReadbackReusesStreamBuffers)
+{
+    Stream* stm = PrepareSmallD2H();
+    MOCKER_CPP_VIRTUAL(stm, &Stream::Synchronize).expects(exactly(2)).will(returnValue(RT_ERROR_NONE));
+    uint8_t source[CC_SMALL_PLAINTEXT_CAPACITY];
+    (void)memset_s(source, sizeof(source), 7, sizeof(source));
+    uint8_t destination[sizeof(source)]{};
+    ASSERT_EQ(
+        CCManager::SubmitSmallCcMemcpyTask(
+            destination, sizeof(destination), source, sizeof(source), RT_MEMCPY_DEVICE_TO_HOST, stm, true),
+        RT_ERROR_NONE);
+    EXPECT_EQ(memcmp(source, destination, sizeof(source)), 0);
+    source[0] = 17U;
+    ASSERT_EQ(
+        CCManager::SubmitSmallCcMemcpyTask(
+            destination, sizeof(destination), source, sizeof(source), RT_MEMCPY_DEVICE_TO_HOST, stm, true),
+        RT_ERROR_NONE);
+    EXPECT_EQ(memcmp(source, destination, sizeof(source)), 0);
+    EXPECT_EQ(gDevMemAllocCount, 1U);
+    EXPECT_EQ(gHostAllocCount, 1U);
+    EXPECT_EQ(gDevMemFreeCount, 0U);
+    EXPECT_EQ(gSmallLaunches[0].metadata.dstAddr, gSmallLaunches[1].metadata.dstAddr);
+    CCManager::DestroyStreamResource(stm); // Simulates the callback after stream termination.
+    EXPECT_EQ(gDevMemFreeCount, 1U);
+    EXPECT_EQ(gHostMemFreeCount, 1U);
+    EXPECT_EQ(gHostDmaUnmapCount, 1U);
+}
+
+TEST_F(CCManagerTest, SmallTransfer_D2HTimeoutPreventsReuseUntilSynchronized)
+{
+    Stream* stm = PrepareSmallD2H();
+    MOCKER_CPP_VIRTUAL(stm, &Stream::Synchronize).expects(exactly(2)).will(returnValue(RT_ERROR_STREAM_SYNC_TIMEOUT));
+    uint8_t source = 7U;
+    uint8_t destination = 0xA5U;
+    for (uint32_t i = 0U; i < 2U; ++i) {
+        EXPECT_EQ(
+            CCManager::SubmitSmallCcMemcpyTask(
+                &destination, sizeof(destination), &source, sizeof(source), RT_MEMCPY_DEVICE_TO_HOST, stm, true),
+            RT_ERROR_STREAM_SYNC_TIMEOUT);
+    }
+    EXPECT_EQ(destination, 0xA5U);
+    EXPECT_TRUE(stm->GetCCStreamResource()->SmallD2HResources().pending);
+    EXPECT_EQ(gSmallLaunches.size(), 1U);
+    EXPECT_EQ(gDevMemAllocCount, 1U);
+    EXPECT_EQ(gDevMemFreeCount, 0U);
+    EXPECT_EQ(gHostMemFreeCount, 0U);
+    // Simulate the destruction callback after device task termination.
+    CCManager::DestroyStreamResource(stm);
+    EXPECT_EQ(gDevMemFreeCount, 1U);
+    EXPECT_EQ(gHostMemFreeCount, 1U);
+    EXPECT_EQ(gHostDmaUnmapCount, 1U);
+}
+
+TEST_F(CCManagerTest, SmallTransfer_D2HAuthFailureDoesNotPublishPlaintext)
+{
+    Stream* stm = PrepareSmallD2H();
+    MOCKER_CPP_VIRTUAL(stm, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+    gSmallAuthFail = true;
+    uint8_t source = 7U;
+    uint8_t destination = 0xA5U;
+    EXPECT_EQ(
+        CCManager::SubmitSmallCcMemcpyTask(
+            &destination, sizeof(destination), &source, sizeof(source), RT_MEMCPY_DEVICE_TO_HOST, stm, true),
+        RT_ERROR_CC_TAG_VERIFY_FAILED);
+    EXPECT_EQ(destination, 0xA5U);
+}
+
+TEST_F(CCManagerTest, SmallTransfer_D2HTimeoutRecoveryReusesBuffer)
+{
+    Stream* stm = PrepareSmallD2H();
+    MOCKER_CPP_VIRTUAL(stm, &Stream::Synchronize)
+        .expects(exactly(3))
+        .will(returnValue(RT_ERROR_STREAM_SYNC_TIMEOUT))
+        .then(returnValue(RT_ERROR_NONE));
+    uint8_t source = 7U;
+    uint8_t destination = 0xA5U;
+    EXPECT_EQ(
+        CCManager::SubmitSmallCcMemcpyTask(
+            &destination, sizeof(destination), &source, sizeof(source), RT_MEMCPY_DEVICE_TO_HOST, stm, true),
+        RT_ERROR_STREAM_SYNC_TIMEOUT);
+    source = 19U;
+    EXPECT_EQ(
+        CCManager::SubmitSmallCcMemcpyTask(
+            &destination, sizeof(destination), &source, sizeof(source), RT_MEMCPY_DEVICE_TO_HOST, stm, true),
+        RT_ERROR_NONE);
+    EXPECT_EQ(destination, source);
+    EXPECT_FALSE(stm->GetCCStreamResource()->SmallD2HResources().pending);
+    EXPECT_EQ(gSmallLaunches.size(), 2U);
+    EXPECT_EQ(gDevMemAllocCount, 1U);
+}
+
+TEST_F(CCManagerTest, SmallTransfer_D2HReadbackFailureQuarantinesBuffer)
+{
+    Stream* stm = PrepareSmallD2H();
+    MOCKER_CPP_VIRTUAL(stm, &Stream::Synchronize).expects(once()).will(returnValue(RT_ERROR_NONE));
+    gSmallCopyError = RT_ERROR_CC_WORKER_FAILED;
+    uint8_t source = 7U;
+    uint8_t destination = 0xA5U;
+    EXPECT_EQ(
+        CCManager::SubmitSmallCcMemcpyTask(
+            &destination, sizeof(destination), &source, sizeof(source), RT_MEMCPY_DEVICE_TO_HOST, stm, true),
+        RT_ERROR_CC_WORKER_FAILED);
+    EXPECT_EQ(
+        CCManager::SubmitSmallCcMemcpyTask(
+            &destination, sizeof(destination), &source, sizeof(source), RT_MEMCPY_DEVICE_TO_HOST, stm, true),
+        RT_ERROR_CONTINUE_EXECUTE);
+    EXPECT_EQ(destination, 0xA5U);
+    EXPECT_EQ(gSmallLaunches.size(), 1U);
+    EXPECT_EQ(gDevMemFreeCount, 0U);
+    EXPECT_EQ(gHostMemFreeCount, 0U);
+    CCManager::DestroyStreamResource(stm);
+    EXPECT_EQ(gDevMemFreeCount, 1U);
+    EXPECT_EQ(gHostMemFreeCount, 1U);
+    EXPECT_EQ(gHostDmaUnmapCount, 1U);
+}
+
+TEST_F(CCManagerTest, SmallTransfer_D2HDeviceAllocationFailureFallsBack)
+{
+    Stream* stm = PrepareSmallD2H();
+    gDevMemAllocReturnFail = true;
+    uint8_t value = 7U;
+    EXPECT_EQ(
+        CCManager::SubmitSmallCcMemcpyTask(
+            &value, sizeof(value), &value, sizeof(value), RT_MEMCPY_DEVICE_TO_HOST, stm, true),
+        RT_ERROR_CONTINUE_EXECUTE);
+    EXPECT_TRUE(gSmallLaunches.empty());
+    EXPECT_EQ(gDevMemFreeCount, 0U);
+    EXPECT_EQ(gHostMemFreeCount, 0U);
+    EXPECT_FALSE(stm->GetCCStreamResource()->SmallD2HResources().pending);
+}
+
+TEST_F(CCManagerTest, SmallTransfer_D2HHostAllocationFailureFallsBackAfterRollback)
+{
+    Stream* stm = PrepareSmallD2H();
+    gHostAllocFailAt = gHostAllocCount + 1U;
+    uint8_t value = 7U;
+    EXPECT_EQ(
+        CCManager::SubmitSmallCcMemcpyTask(
+            &value, sizeof(value), &value, sizeof(value), RT_MEMCPY_DEVICE_TO_HOST, stm, true),
+        RT_ERROR_CONTINUE_EXECUTE);
+    EXPECT_TRUE(gSmallLaunches.empty());
+    EXPECT_EQ(gDevMemFreeCount, 1U);
+    EXPECT_EQ(gHostMemFreeCount, 0U);
+    EXPECT_EQ(stm->GetCCStreamResource()->SmallD2HResources().deviceBuffer, nullptr);
+    EXPECT_FALSE(stm->GetCCStreamResource()->SmallD2HResources().pending);
+}
+
+TEST_F(CCManagerTest, SmallTransfer_D2HDmaMappingFailureFallsBackAfterRollback)
+{
+    Stream* stm = PrepareSmallD2H();
+    gHostDmaMapFail = true;
+    uint8_t value = 7U;
+    EXPECT_EQ(
+        CCManager::SubmitSmallCcMemcpyTask(
+            &value, sizeof(value), &value, sizeof(value), RT_MEMCPY_DEVICE_TO_HOST, stm, true),
+        RT_ERROR_CONTINUE_EXECUTE);
+    EXPECT_TRUE(gSmallLaunches.empty());
+    EXPECT_EQ(gDevMemFreeCount, 1U);
+    EXPECT_EQ(gHostMemFreeCount, 1U);
+    EXPECT_EQ(stm->GetCCStreamResource()->SmallD2HResources().deviceBuffer, nullptr);
+    EXPECT_EQ(stm->GetCCStreamResource()->SmallD2HResources().hostBuffer, nullptr);
+}
+
+TEST_F(CCManagerTest, Manager_InitDeviceResource_NullDevice)
+{
+    CCManager manager;
+    rtError_t ret = manager.InitDeviceResource(nullptr);
+    EXPECT_EQ(ret, RT_ERROR_DEVICE_NULL);
+}
 
 TEST_F(CCManagerTest, Manager_InitDeviceResource_RepeatedInit)
 {

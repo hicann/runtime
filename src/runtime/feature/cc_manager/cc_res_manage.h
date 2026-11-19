@@ -14,6 +14,7 @@
 #include <memory>
 #include <mutex>
 #include <vector>
+#include <unordered_map>
 #include "base.hpp"
 #include "utils/thread_pool.h"
 #include "crypto/cc_crypto.h"
@@ -40,6 +41,10 @@ public:
     void DestroyStreamResource(Stream* stm);
     rtError_t SubmitTask(const CCMemcpyTask& task);
     CCCryptoPlugin* Plugin() const { return plugin_.get(); }
+    // 在ccManager中拿不到CCrypto对象，这里做一个跳板
+    rtError_t BuildDeviceCryptoParam(CC_CRYPTO_DIRECTION mode, CCCryptoKernelParam* param);
+    bool SupportsSmallCrypto() const { return smallCryptoSupported_; }
+    CCrypto& Crypto() { return crypto_; }
 
 private:
     rtError_t LoadKeyToAicpu();
@@ -52,6 +57,7 @@ private:
     Device* device_{nullptr};
     CCrypto crypto_;                         // 公共密钥/加解密原语/密钥流接口（各加密模式共用）
     std::unique_ptr<CCCryptoPlugin> plugin_; // per-device 算法插件（路由元数据 + 分片回调钩子）
+    bool smallCryptoSupported_{false};
     std::vector<std::unique_ptr<CCWorker>> workers_; // 按需创建，最多 6 个 worker
     std::unique_ptr<CCMemcpyTaskQueue> taskQueue_;   // 1 个共享队列
     ThreadPool threadPool_;                          // 统一持有 worker 线程，执行 CCWorker::Run routine
@@ -59,6 +65,8 @@ private:
     uint32_t workerSliceSize_{0U};
     std::mutex workerPoolMutex_;
     std::mutex streamResourceMutex_;
+    // Also retains resources if a stream teardown path skips the CC callback.
+    std::unordered_map<Stream*, std::unique_ptr<CCStreamResManage>> streamResources_;
 };
 } // namespace runtime
 } // namespace cce
