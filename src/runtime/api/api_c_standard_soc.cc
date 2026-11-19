@@ -1941,9 +1941,8 @@ rtError_t rtLaunchSIMTKernelWithHostArgs(
     if (ret != RT_ERROR_NONE) {
         return ret;
     }
-    ret = apiInstance->LaunchKernelV2(
-        kernel, simtArgsHost.gridDim.x * simtArgsHost.gridDim.y * simtArgsHost.gridDim.z, &argsWithType, exeStream,
-        cfg);
+    ret =
+        apiInstance->LaunchKernelV2(kernel, GetSimtLaunchBlockDim(simtArgsHost.gridDim), &argsWithType, exeStream, cfg);
     COND_RETURN_WITH_NOLOG(ret == RT_ERROR_KERNEL_INVALID, ACL_ERROR_RT_INVALID_HANDLE);
     COND_RETURN_WITH_NOLOG(ret == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);
@@ -2085,8 +2084,7 @@ rtError_t rtLaunchSIMTKernelWithArgsArray(
     }
     RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
     ret = apiInstance->LaunchKernelV2(
-        kernel, simtArgsArray.gridDim.x * simtArgsArray.gridDim.y * simtArgsArray.gridDim.z, &argsWithType, exeStream,
-        cfg);
+        kernel, GetSimtLaunchBlockDim(simtArgsArray.gridDim), &argsWithType, exeStream, cfg);
     COND_RETURN_WITH_NOLOG(ret == RT_ERROR_KERNEL_INVALID, ACL_ERROR_RT_INVALID_HANDLE);
     COND_RETURN_WITH_NOLOG(ret == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
     ERROR_RETURN_WITH_EXT_ERRCODE(ret);

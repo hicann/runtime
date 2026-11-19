@@ -19,7 +19,8 @@ namespace runtime {
 constexpr uint32_t PTHREAD_STACK_SIZE = 128U * 1024U;
 
 constexpr uint32_t RT_SIMT_MAX_GRID_DIM_DEFAULT = 65535U;
-constexpr uint32_t RT_SIMT_MAX_BLOCK_PER_GRID_DEFAULT = 65535U;
+constexpr uint32_t RT_SIMT_MAX_GRID_DIM_X_DEFAULT = static_cast<uint32_t>(INT32_MAX);
+constexpr uint64_t RT_SIMT_MAX_BLOCK_PER_GRID_DEFAULT = static_cast<uint64_t>(INT32_MAX) * 65535U * 65535U;
 constexpr uint32_t RT_SIMT_MAX_THREADS_PER_BLOCK_DEFAULT = 2048U;
 constexpr uint32_t RT_SIMT_MAX_BLOCK_DIM_DEFAULT = 2048U;
 constexpr uint32_t TS_4G_CONTIGUOUS_PHY = 0x1U;
@@ -302,7 +303,7 @@ struct DevProperties final {
     uint32_t simtMaxGridDimX;
     uint32_t simtMaxGridDimY;
     uint32_t simtMaxGridDimZ;
-    uint32_t simtMaxBlockPerGrid;
+    uint64_t simtMaxBlockPerGrid;
     uint32_t simtMaxThreadsPerBlock;
     uint32_t simtMaxBlockDimX;
     uint32_t simtMaxBlockDimY;

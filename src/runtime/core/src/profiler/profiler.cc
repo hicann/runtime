@@ -189,7 +189,8 @@ void FillKernelLaunchExtInfo(struct MsprofRuntimeTrack& runtimeTrack, const Task
     if (IsPureSimtTask(aicTaskInfo)) {
         const rtDim3& gridDim = aicTaskInfo.gridDim;
         const rtDim3& blockDim = aicTaskInfo.blockDim;
-        runtimeTrack.extInfo.simtKernelInfo.gridDim.x = static_cast<uint16_t>(gridDim.x);
+        runtimeTrack.extInfo.simtKernelInfo.gridDim.x =
+            static_cast<uint16_t>((gridDim.x > UINT16_MAX) ? UINT16_MAX : gridDim.x);
         runtimeTrack.extInfo.simtKernelInfo.gridDim.y = static_cast<uint16_t>(gridDim.y);
         runtimeTrack.extInfo.simtKernelInfo.gridDim.z = static_cast<uint16_t>(gridDim.z);
         runtimeTrack.extInfo.simtKernelInfo.blockDim.x = static_cast<uint16_t>(blockDim.x);

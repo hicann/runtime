@@ -570,8 +570,8 @@ rtError_t CacheSimtKernelTaskParams(TaskInfo* const taskInfo, const rtTaskParams
     SimtKernelTaskUpdateInfo kernelUpdateInfo = {};
     kernelUpdateInfo.kernel = kernel;
     kernelUpdateInfo.taskCfg = taskCfg;
-    kernelUpdateInfo.numBlocks = simtTaskParams->gridDimX * simtTaskParams->gridDimY * simtTaskParams->gridDimZ;
     kernelUpdateInfo.gridDim = {simtTaskParams->gridDimX, simtTaskParams->gridDimY, simtTaskParams->gridDimZ};
+    kernelUpdateInfo.numBlocks = GetSimtLaunchBlockDim(kernelUpdateInfo.gridDim);
     kernelUpdateInfo.blockDim = {simtTaskParams->blockDimX, simtTaskParams->blockDimY, simtTaskParams->blockDimZ};
     kernelUpdateInfo.dynUbufSize = simtTaskParams->dynUbufSize;
     kernelUpdateInfo.launchFunc = simtTaskParams->func;
@@ -1089,7 +1089,7 @@ static rtError_t SetSimtKernelLaunchParams(
     if (extendArgs->simtArgsHost != nullptr) {
         const SimtArgsHost* const simtArgsHost = extendArgs->simtArgsHost;
         kernelUpdateInfo.launchFunc = simtArgsHost->launchFunc;
-        kernelUpdateInfo.numBlocks = simtArgsHost->gridDim.x * simtArgsHost->gridDim.y * simtArgsHost->gridDim.z;
+        kernelUpdateInfo.numBlocks = GetSimtLaunchBlockDim(simtArgsHost->gridDim);
         kernelUpdateInfo.gridDim = simtArgsHost->gridDim;
         kernelUpdateInfo.blockDim = simtArgsHost->blockDim;
         kernelUpdateInfo.dynUbufSize = simtArgsHost->dynUbufSize;
@@ -1113,7 +1113,7 @@ static rtError_t SetSimtKernelLaunchParams(
     } else { // simtArgsArray: params block, argsArray[i] wired to the user-region base + offset
         const SimtArgsArray* const simtArgsArray = extendArgs->simtArgsArray;
         kernelUpdateInfo.launchFunc = simtArgsArray->launchFunc;
-        kernelUpdateInfo.numBlocks = simtArgsArray->gridDim.x * simtArgsArray->gridDim.y * simtArgsArray->gridDim.z;
+        kernelUpdateInfo.numBlocks = GetSimtLaunchBlockDim(simtArgsArray->gridDim);
         kernelUpdateInfo.gridDim = simtArgsArray->gridDim;
         kernelUpdateInfo.blockDim = simtArgsArray->blockDim;
         kernelUpdateInfo.dynUbufSize = simtArgsArray->dynUbufSize;

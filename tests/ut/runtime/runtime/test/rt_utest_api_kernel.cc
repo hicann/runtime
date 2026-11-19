@@ -2510,3 +2510,125 @@ TEST_F(ApiKernelTest, TestRtTaskSetParams_SimtArrayValid)
     rt_ut::ResetEmbeddedHandle(kernel);
     delete kernel;
 }
+
+namespace {
+struct SimtDimensionCase {
+    rtDim3 grid;
+    rtDim3 block;
+    rtError_t expected;
+};
+
+const SimtDimensionCase SIMT_DIMENSION_CASES[] = {
+    {{1U, 1U, 1U}, {1U, 1U, 1U}, RT_ERROR_NONE},
+    {{INT32_MAX, UINT16_MAX, UINT16_MAX}, {2048U, 1U, 1U}, RT_ERROR_NONE},
+    {{65536U, 2U, 32768U}, {1U, 2048U, 1U}, RT_ERROR_NONE},
+    {{65537U, 2U, 32768U}, {1U, 1U, 2048U}, RT_ERROR_NONE},
+    {{1U, 1U, 1U}, {8U, 8U, 32U}, RT_ERROR_NONE},
+    {{0x80000000U, 1U, 1U}, {1U, 1U, 1U}, RT_ERROR_INVALID_VALUE},
+    {{1U, 65536U, 1U}, {1U, 1U, 1U}, RT_ERROR_INVALID_VALUE},
+    {{1U, 1U, 65536U}, {1U, 1U, 1U}, RT_ERROR_INVALID_VALUE},
+    {{1U, 1U, 1U}, {2049U, 1U, 1U}, RT_ERROR_INVALID_VALUE},
+    {{1U, 1U, 1U}, {1U, 2049U, 1U}, RT_ERROR_INVALID_VALUE},
+    {{1U, 1U, 1U}, {1U, 1U, 2049U}, RT_ERROR_INVALID_VALUE},
+    {{1U, 1U, 1U}, {3U, 683U, 1U}, RT_ERROR_INVALID_VALUE},
+    {{1U, 1U, 1U}, {2048U, 2048U, 2048U}, RT_ERROR_INVALID_VALUE},
+};
+
+class SimtDimensionTest : public ApiKernelTest, public WithParamInterface<SimtDimensionCase> {};
+} // namespace
+
+TEST_P(SimtDimensionTest, LaunchArgumentFormsEnforceDimensions)
+{
+    const auto& value = GetParam();
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    Kernel kernel("simt", 0ULL, &program, RT_KERNEL_ATTR_TYPE_AICORE, 0);
+    kernel.SetKernelVfType_(static_cast<uint32_t>(AivTypeFlag::AIV_TYPE_SIMT_VF_ONLY));
+    kernel.SetHasParamSummary(true);
+    kernel.SetParamCount(0U);
+    uint64_t hostArgs = 0U;
+    SimtArgsArray array = {};
+    array.gridDim = value.grid;
+    array.blockDim = value.block;
+    SimtArgsHost host = {};
+    host.gridDim = value.grid;
+    host.blockDim = value.block;
+    host.hostArgs = &hostArgs;
+    host.argsSize = sizeof(hostArgs);
+    RtArgsWithType args = {};
+    args.type = RT_SIMT_ARGS_ARRAY;
+    args.args.simtArgsArray = &array;
+    EXPECT_EQ(apiError.CheckArgsWithType(&kernel, &args), value.expected);
+    args.type = RT_SIMT_ARGS_HOST;
+    args.args.simtArgsHost = &host;
+    EXPECT_EQ(apiError.CheckArgsWithType(&kernel, &args), value.expected);
+}
+
+TEST_P(SimtDimensionTest, SetArgumentFormsEnforceDimensions)
+{
+    const auto& value = GetParam();
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+    if (value.expected == RT_ERROR_NONE) {
+        MOCKER_CPP_VIRTUAL(&impl, &ApiImpl::TaskSetParams).expects(exactly(2)).will(returnValue(RT_ERROR_NONE));
+    } else {
+        MOCKER_CPP_VIRTUAL(&impl, &ApiImpl::TaskSetParams).expects(never());
+    }
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    Kernel kernel("simt", 0ULL, &program, RT_KERNEL_ATTR_TYPE_AICORE, 0);
+    kernel.SetKernelVfType_(static_cast<uint32_t>(AivTypeFlag::AIV_TYPE_SIMT_VF_ONLY));
+    kernel.SetHasParamSummary(true);
+    kernel.SetParamCount(0U);
+    rtTaskParams params = {};
+    params.type = RT_TASK_SIMT_KERNEL;
+    auto& simt = params.simtKernelTaskParams;
+    simt.gridDimX = value.grid.x;
+    simt.gridDimY = value.grid.y;
+    simt.gridDimZ = value.grid.z;
+    simt.blockDimX = value.block.x;
+    simt.blockDimY = value.block.y;
+    simt.blockDimZ = value.block.z;
+    uint64_t taskStorage = 0U;
+    simt.argsType = RT_KERNEL_ARGS_ARRAY;
+    EXPECT_EQ(apiError.TaskSetParams(reinterpret_cast<rtTask_t>(&taskStorage), &params, &kernel), value.expected);
+    uint64_t hostArgs = 0U;
+    simt.argsType = RT_KERNEL_ARGS_HOST_BUFFER;
+    simt.hostBuffer.hostArgs = &hostArgs;
+    simt.hostBuffer.hostArgsSize = sizeof(hostArgs);
+    EXPECT_EQ(apiError.TaskSetParams(reinterpret_cast<rtTask_t>(&taskStorage), &params, &kernel), value.expected);
+}
+
+INSTANTIATE_TEST_SUITE_P(SimtLimits, SimtDimensionTest, ValuesIn(SIMT_DIMENSION_CASES));
+
+TEST_F(ApiKernelTest, SimtLaunchApisCapSchedulingCountAndPreserveGrid)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+    MOCKER(Api::Instance).stubs().will(returnValue(static_cast<Api*>(&apiError)));
+    const auto checkLogicalDimensions = [](const RtArgsWithType* args) mutable {
+        const bool arrayForm = args->type == RT_SIMT_ARGS_ARRAY;
+        const rtDim3& grid = arrayForm ? args->args.simtArgsArray->gridDim : args->args.simtArgsHost->gridDim;
+        const rtDim3& block = arrayForm ? args->args.simtArgsArray->blockDim : args->args.simtArgsHost->blockDim;
+        return grid.x == 65536U && grid.y == 2U && grid.z == 32768U && block.x == 1U && block.y == 1U && block.z == 1U;
+    };
+    MOCKER_CPP_VIRTUAL(&impl, &ApiImpl::LaunchKernelV2)
+        .expects(exactly(2))
+        .with(mockcpp::any(), eq(65535U), checkWith(checkLogicalDimensions), mockcpp::any(), mockcpp::any())
+        .will(returnValue(RT_ERROR_NONE));
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    Kernel kernel("simt", 0ULL, &program, RT_KERNEL_ATTR_TYPE_AICORE, 0);
+    kernel.SetKernelVfType_(static_cast<uint32_t>(AivTypeFlag::AIV_TYPE_SIMT_VF_ONLY));
+    kernel.SetHasParamSummary(true);
+    kernel.SetParamCount(0U);
+    const rtDim3 grid = {65536U, 2U, 32768U}; // the old uint32_t product becomes 0
+    const rtDim3 block = {1U, 1U, 1U};
+    rtFuncHandle handle = rt_ut::InitAndExportHandle<rtFuncHandle>(&kernel);
+    EXPECT_EQ(rtLaunchSIMTKernelWithArgsArray(handle, grid, block, 0U, nullptr, nullptr, nullptr), ACL_RT_SUCCESS);
+    uint64_t hostArgs = 0U;
+    EXPECT_EQ(
+        rtLaunchSIMTKernelWithHostArgs(
+            handle, grid, block, 0U, nullptr, nullptr, &hostArgs, sizeof(hostArgs), nullptr, 0U),
+        ACL_RT_SUCCESS);
+    rt_ut::ResetEmbeddedHandle(&kernel);
+}

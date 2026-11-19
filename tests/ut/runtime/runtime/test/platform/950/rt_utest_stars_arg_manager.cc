@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include <memory>
+#include <cstring>
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 #include "securec.h"
@@ -48,7 +49,16 @@ static Driver* SetupPcieBarCopySupportMock()
     return drv;
 }
 
-static void SetupDriverMockForPcie()
+static errno_t CopySimtArgsForTest(void* dest, size_t destMax, const void* src, size_t count)
+{
+    if ((dest == nullptr) || (src == nullptr) || (count > destMax)) {
+        return EINVAL;
+    }
+    std::memcpy(dest, src, count);
+    return EOK;
+}
+
+static void SetupDriverMockForPcie(bool copyArgs = false)
 {
     Driver* drv = SetupPcieBarCopySupportMock();
     // 使用真实可用的静态内存，避免 H2DArgCopy 向假地址写入导致 coredump
@@ -58,7 +68,11 @@ static void SetupDriverMockForPcie()
         .stubs()
         .with(outBoundP(&memBase, sizeof(memBase)), mockcpp::any(), mockcpp::any(), mockcpp::any())
         .will(returnValue(RT_ERROR_NONE));
-    MOCKER(memcpy_s).stubs().will(returnValue(NULL));
+    if (copyArgs) {
+        MOCKER(memcpy_s).stubs().will(invoke(CopySimtArgsForTest));
+    } else {
+        MOCKER(memcpy_s).stubs().will(returnValue(NULL));
+    }
 }
 
 static void SetupDriverMockForPcieWithAllocFailure()
@@ -1484,18 +1498,18 @@ static void TestLoadSimtArgsFromArraySuccessCommon(DavidStream* stm, bool needPc
     GlobalMockObject::reset();
 
     if (needPcieMock) {
-        SetupDriverMockForPcie();
+        SetupDriverMockForPcie(true);
     }
 
     rtError_t ret = stm->CreateStreamArgRes();
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
     PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
-    Kernel* kernelMock = CreateMockKernelWithParams(&stubProg);
+    std::unique_ptr<Kernel> kernelMock(CreateMockKernelWithParams(&stubProg));
 
     SimtArgsArray simtArgs = {};
-    simtArgs.gridDim = {1, 1, 1};
-    simtArgs.blockDim = {1, 1, 1};
+    simtArgs.gridDim = {INT32_MAX, UINT16_MAX, UINT16_MAX};
+    simtArgs.blockDim = {8U, 8U, 32U};
     // 使用真实内存地址，避免 coredump
     char realArgs1[64] = {0};
     char realArgs2[64] = {0};
@@ -1506,11 +1520,16 @@ static void TestLoadSimtArgsFromArraySuccessCommon(DavidStream* stm, bool needPc
 
     // 不需要 mock CopyKernelParamsToBuffer，使用真实内存
 
-    ret = stm->ArgManagePtr()->LoadSimtArgsFromArray(false, kernelMock, &simtArgs, &result);
+    ret = stm->ArgManagePtr()->LoadSimtArgsFromArray(false, kernelMock.get(), &simtArgs, &result);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+    const void* buffer =
+        needPcieMock ? ThreadLocalContainer::GetOrCreateArgsBuffer(SIMT_IMPLICIT_PARAM_SIZE) : result.hostAddr;
+    ASSERT_NE(buffer, nullptr);
+    const uint32_t expectedDims[] = {32U, 8U, 8U, UINT16_MAX, UINT16_MAX, INT32_MAX};
+    const void* dimensions = static_cast<const uint8_t*>(buffer) + SIMT_SYNC_COUNTER_SIZE;
+    EXPECT_EQ(std::memcmp(dimensions, expectedDims, sizeof(expectedDims)), 0);
 
     stm->ReleaseStreamArgRes();
-    delete kernelMock;
 }
 
 TEST_F(ArgManagePcieTest, PcieArgManage_LoadSimtArgsFromArray_Success)
@@ -1680,15 +1699,15 @@ static void TestLoadSimtHostArgsSuccessNoPlaceHolderCommon(DavidStream* stm, boo
 {
     GlobalMockObject::reset();
     if (needPcieMock) {
-        SetupDriverMockForPcie();
+        SetupDriverMockForPcie(true);
     }
 
     rtError_t ret = stm->CreateStreamArgRes();
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
     SimtArgsHost simtArgs = {};
-    simtArgs.gridDim = {1, 1, 1};
-    simtArgs.blockDim = {1, 1, 1};
+    simtArgs.gridDim = {INT32_MAX, UINT16_MAX, UINT16_MAX};
+    simtArgs.blockDim = {8U, 8U, 32U};
     char hostArgs[128] = {0};
     simtArgs.hostArgs = hostArgs;
     simtArgs.argsSize = 128;
@@ -1699,6 +1718,12 @@ static void TestLoadSimtHostArgsSuccessNoPlaceHolderCommon(DavidStream* stm, boo
 
     ret = stm->ArgManagePtr()->LoadSimtHostArgs(false, &simtArgs, &result);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+    const void* buffer =
+        needPcieMock ? ThreadLocalContainer::GetOrCreateArgsBuffer(SIMT_IMPLICIT_PARAM_SIZE) : result.hostAddr;
+    ASSERT_NE(buffer, nullptr);
+    const uint32_t expectedDims[] = {32U, 8U, 8U, UINT16_MAX, UINT16_MAX, INT32_MAX};
+    const void* dimensions = static_cast<const uint8_t*>(buffer) + SIMT_SYNC_COUNTER_SIZE;
+    EXPECT_EQ(std::memcmp(dimensions, expectedDims, sizeof(expectedDims)), 0);
 
     stm->ReleaseStreamArgRes();
 }

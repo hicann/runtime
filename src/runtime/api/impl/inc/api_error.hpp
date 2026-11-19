@@ -17,6 +17,9 @@
 namespace cce {
 namespace runtime {
 
+// Standard SoC validates SIMT dimensions; unsupported platforms provide a stub.
+rtError_t CheckSimtDims(const rtDim3& gridDim, const rtDim3& blockDim, const bool isDim3Form);
+
 // Keep launch-blocking validation in the standard/tiny source split so tiny retains its unsupported stub.
 rtError_t ValidateStreamLaunchBlockingSet(const Stream* const stream, const uint32_t launchBlockingMode);
 rtError_t ValidateStreamLaunchBlockingGet(const Stream* const stream);

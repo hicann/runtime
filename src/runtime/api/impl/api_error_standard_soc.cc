@@ -9,6 +9,7 @@
  */
 #include "api_error.hpp"
 #include <cstring>
+#include "device_properties.h"
 #include <string>
 #include <unordered_set>
 #include "notify_enum_desc.hpp"
@@ -139,6 +140,52 @@ constexpr uint32_t LAUNCH_BLOCKING_UNSUPPORTED_STREAM_FLAGS =
     RT_STREAM_PERSISTENT | RT_STREAM_AICPU | RT_STREAM_CP_PROCESS_USE;
 static std::string g_fusionSubTypeStr[RT_FUSION_END] = {"HCOM", "AICPU", "AIC", "CCU"};
 static std::unordered_set<std::string> g_fusionAllowedList{"HCOMAIC", "AICPUAIC", "CCUAIC", "CCU"};
+
+// isDim3Form selects the field-name form printed in messages: gridDim.x (launch) vs gridDimX (Set)
+rtError_t CheckSimtDims(const rtDim3& gridDim, const rtDim3& blockDim, const bool isDim3Form)
+{
+    COND_RETURN_AND_MSG_OUTER(
+        (gridDim.x == 0U) || (gridDim.x > RT_SIMT_MAX_GRID_DIM_X_DEFAULT), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
+        "Checking SIMT parameters", (isDim3Form ? "gridDim.x" : "gridDimX"),
+        RtFmtMsg("Value must be in [1, %u], actual value=%u", RT_SIMT_MAX_GRID_DIM_X_DEFAULT, gridDim.x));
+
+    COND_RETURN_AND_MSG_OUTER(
+        (gridDim.y == 0U) || (gridDim.y > RT_SIMT_MAX_GRID_DIM_DEFAULT), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
+        "Checking SIMT parameters", (isDim3Form ? "gridDim.y" : "gridDimY"),
+        RtFmtMsg("Value must be in [1, %u], actual value=%u", RT_SIMT_MAX_GRID_DIM_DEFAULT, gridDim.y));
+
+    COND_RETURN_AND_MSG_OUTER(
+        (gridDim.z == 0U) || (gridDim.z > RT_SIMT_MAX_GRID_DIM_DEFAULT), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
+        "Checking SIMT parameters", (isDim3Form ? "gridDim.z" : "gridDimZ"),
+        RtFmtMsg("Value must be in [1, %u], actual value=%u", RT_SIMT_MAX_GRID_DIM_DEFAULT, gridDim.z));
+
+    COND_RETURN_AND_MSG_OUTER(
+        (blockDim.x == 0U) || (blockDim.x > RT_SIMT_MAX_BLOCK_DIM_DEFAULT), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
+        "Checking SIMT parameters", (isDim3Form ? "blockDim.x" : "blockDimX"),
+        RtFmtMsg("Value must be in [1, %u], actual value=%u", RT_SIMT_MAX_BLOCK_DIM_DEFAULT, blockDim.x));
+
+    COND_RETURN_AND_MSG_OUTER(
+        (blockDim.y == 0U) || (blockDim.y > RT_SIMT_MAX_BLOCK_DIM_DEFAULT), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
+        "Checking SIMT parameters", (isDim3Form ? "blockDim.y" : "blockDimY"),
+        RtFmtMsg("Value must be in [1, %u], actual value=%u", RT_SIMT_MAX_BLOCK_DIM_DEFAULT, blockDim.y));
+
+    COND_RETURN_AND_MSG_OUTER(
+        (blockDim.z == 0U) || (blockDim.z > RT_SIMT_MAX_BLOCK_DIM_DEFAULT), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
+        "Checking SIMT parameters", (isDim3Form ? "blockDim.z" : "blockDimZ"),
+        RtFmtMsg("Value must be in [1, %u], actual value=%u", RT_SIMT_MAX_BLOCK_DIM_DEFAULT, blockDim.z));
+
+    const uint64_t threadsPerBlock =
+        static_cast<uint64_t>(blockDim.x) * static_cast<uint64_t>(blockDim.y) * static_cast<uint64_t>(blockDim.z);
+    COND_RETURN_AND_MSG_OUTER(
+        threadsPerBlock > RT_SIMT_MAX_THREADS_PER_BLOCK_DEFAULT, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
+        "Checking SIMT parameters",
+        (isDim3Form ? "blockDim.x * blockDim.y * blockDim.z" : "blockDimX * blockDimY * blockDimZ"),
+        RtFmtMsg(
+            "Product must not exceed %u, actual product=%" PRIu64 ", blockDim=[%u,%u,%u]",
+            RT_SIMT_MAX_THREADS_PER_BLOCK_DEFAULT, threadsPerBlock, blockDim.x, blockDim.y, blockDim.z));
+
+    return RT_ERROR_NONE;
+}
 
 rtError_t ValidateStreamLaunchBlockingSet(const Stream* const stream, const uint32_t launchBlockingMode)
 {

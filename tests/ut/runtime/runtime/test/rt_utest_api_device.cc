@@ -46,6 +46,54 @@ protected:
     virtual void TearDown() { ut::ResetPrimaryDeviceIfActiveWithDeviceDown(); }
 };
 
+namespace {
+class SimtDeviceInfoTest : public ApiDeviceTest, public WithParamInterface<rtChipType_t> {};
+
+class SimtChipScope {
+public:
+    explicit SimtChipScope(rtChipType_t chip) : runtime_(Runtime::Instance()), original_(runtime_->GetChipType())
+    {
+        runtime_->SetChipType(chip);
+        GlobalContainer::SetRtChipType(chip);
+    }
+    ~SimtChipScope()
+    {
+        runtime_->SetChipType(original_);
+        GlobalContainer::SetRtChipType(original_);
+    }
+
+private:
+    Runtime* runtime_;
+    rtChipType_t original_;
+};
+} // namespace
+
+TEST_P(SimtDeviceInfoTest, ReturnsDimensionLimits)
+{
+    // Query every registered SIMT platform without creating a device for that platform.
+    SimtChipScope chipScope(GetParam());
+    const std::pair<rtDevAttr, int64_t> values[] = {
+        {RT_DEV_ATTR_MAX_GRID_DIM_X, INT32_MAX},
+        {RT_DEV_ATTR_MAX_GRID_DIM_Y, UINT16_MAX},
+        {RT_DEV_ATTR_MAX_GRID_DIM_Z, UINT16_MAX},
+        {RT_DEV_ATTR_MAX_BLOCK_PER_GRID, static_cast<int64_t>(INT32_MAX) * UINT16_MAX * UINT16_MAX},
+        {RT_DEV_ATTR_MAX_THREADS_PER_BLOCK, 2048},
+        {RT_DEV_ATTR_MAX_BLOCK_DIM_X, 2048},
+        {RT_DEV_ATTR_MAX_BLOCK_DIM_Y, 2048},
+        {RT_DEV_ATTR_MAX_BLOCK_DIM_Z, 2048},
+    };
+    for (const auto& value : values) {
+        SCOPED_TRACE(static_cast<int32_t>(value.first));
+        int64_t result = -1;
+        EXPECT_EQ(rtsDeviceGetInfo(0U, value.first, &result), RT_ERROR_NONE);
+        EXPECT_EQ(result, value.second);
+    }
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    SimtLimits, SimtDeviceInfoTest,
+    Values(CHIP_DAVID, CHIP_ASCEND_350, CHIP_CLOUD_V5, CHIP_CLOUD_V6, CHIP_MC32DM11A, CHIP_MC62CM12A));
+
 drvError_t drvGetPlatformInfo_rts1(uint32_t* info)
 {
     *info = RT_RUN_MODE_ONLINE;

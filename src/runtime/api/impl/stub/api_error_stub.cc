@@ -47,6 +47,14 @@ rtError_t ApiErrorDecorator::DeviceResumeExecution(const int32_t deviceId, const
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
+rtError_t CheckSimtDims(const rtDim3& gridDim, const rtDim3& blockDim, const bool isDim3Form)
+{
+    UNUSED(gridDim);
+    UNUSED(blockDim);
+    UNUSED(isDim3Form);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 rtError_t ValidateStreamLaunchBlockingSet(const Stream* const stream, const uint32_t launchBlockingMode)
 {
     UNUSED(stream);

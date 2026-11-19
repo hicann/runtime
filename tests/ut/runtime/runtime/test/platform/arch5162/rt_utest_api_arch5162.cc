@@ -135,3 +135,13 @@ TEST(Arch5162ApiTest, HcclModelStreamInternalProvidersBehaviors)
     EXPECT_EQ(bound, &model);
     EXPECT_EQ(streams, (std::vector<Stream*>{nullptr}));
 }
+
+TEST(Arch5162ApiTest, SimtDimensionValidation_NotSupport)
+{
+    const rtDim3 validDim = {1U, 1U, 1U};
+    const rtDim3 invalidDim = {0U, 0U, 0U};
+    for (const bool isDim3Form : {false, true}) {
+        EXPECT_EQ(CheckSimtDims(validDim, validDim, isDim3Form), RT_ERROR_FEATURE_NOT_SUPPORT);
+        EXPECT_EQ(CheckSimtDims(invalidDim, invalidDim, isDim3Form), RT_ERROR_FEATURE_NOT_SUPPORT);
+    }
+}

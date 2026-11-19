@@ -721,12 +721,13 @@ typedef struct aclmdlRIKernelTaskParams {
 
 typedef struct aclmdlRISimtKernelTaskParams {
     void* func;
-    uint32_t gridDimX;
-    uint32_t gridDimY;
-    uint32_t gridDimZ;
-    uint32_t blockDimX;
-    uint32_t blockDimY;
-    uint32_t blockDimZ;
+    uint32_t gridDimX;  // [1, INT32_MAX]; Set uses the same limits as SIMT Launch
+    uint32_t gridDimY;  // [1, 65535]
+    uint32_t gridDimZ;  // [1, 65535]
+    uint32_t blockDimX; // [1, 2048]; blockDimX * blockDimY * blockDimZ must not exceed 2048
+    uint32_t blockDimY; // [1, 2048]; blockDimX * blockDimY * blockDimZ must not exceed 2048
+    uint32_t blockDimZ; // [1, 2048]; blockDimX * blockDimY * blockDimZ must not exceed 2048
+
     size_t dynUbufSize;
     aclrtLaunchKernelCfg* cfg;    // returns nullptr on Get, used on Set only
     aclrtKernelArgsType argsType; // ARRAY or HOST_BUFFER (see aclrtKernelArgsType)
@@ -5659,8 +5660,8 @@ ACL_FUNC_VISIBILITY aclError aclrtLaunchKernelWithArgsArray(
  * @brief launch SIMT kernel with args array
  *
  * @param [in] func  kernel handle
- * @param [in] gridDim  grid dimensions
- * @param [in] blockDim  block dimensions
+ * @param [in] gridDim  grid dimensions: x in [1, INT32_MAX], y/z in [1, 65535]
+ * @param [in] blockDim  block dimensions: each axis in [1, 2048], product no greater than 2048
  * @param [in] dynUbufSize  dynamic ubuf size
  * @param [in] stream  associated stream
  * @param [in] cfg  configuration information
@@ -5677,8 +5678,8 @@ ACL_FUNC_VISIBILITY aclError aclrtLaunchSIMTKernelWithArgsArray(
  * @brief launch SIMT kernel with host args
  *
  * @param [in] func  kernel handle
- * @param [in] gridDim  grid dimensions
- * @param [in] blockDim  block dimensions
+ * @param [in] gridDim  grid dimensions: x in [1, INT32_MAX], y/z in [1, 65535]
+ * @param [in] blockDim  block dimensions: each axis in [1, 2048], product no greater than 2048
  * @param [in] dynUbufSize  dynamic ubuf size
  * @param [in] stream  associated stream
  * @param [in] cfg  configuration information

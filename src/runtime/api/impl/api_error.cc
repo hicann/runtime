@@ -342,26 +342,6 @@ static rtError_t CheckSimtKernelCapability(const Kernel* kernel)
     return RT_ERROR_NONE;
 }
 
-// isDim3Form selects the field-name form printed in messages: gridDim.x (launch) vs gridDimX (Set)
-static rtError_t CheckSimtDims(const rtDim3& gridDim, const rtDim3& blockDim, const bool isDim3Form)
-{
-    COND_RETURN_AND_MSG_OUTER(
-        (gridDim.x == 0U) || (gridDim.y == 0U) || (gridDim.z == 0U), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
-        "Checking SIMT parameters", "gridDim",
-        RtFmtMsg(
-            "%s must all be greater than 0, actual gridDim=[%u,%u,%u]",
-            (isDim3Form ? "gridDim.x, gridDim.y, gridDim.z" : "gridDimX, gridDimY, gridDimZ"), gridDim.x, gridDim.y,
-            gridDim.z));
-    COND_RETURN_AND_MSG_OUTER(
-        (blockDim.x == 0U) || (blockDim.y == 0U) || (blockDim.z == 0U), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
-        "Checking SIMT parameters", "blockDim",
-        RtFmtMsg(
-            "%s must all be greater than 0, actual blockDim=[%u,%u,%u]",
-            (isDim3Form ? "blockDim.x, blockDim.y, blockDim.z" : "blockDimX, blockDimY, blockDimZ"), blockDim.x,
-            blockDim.y, blockDim.z));
-    return RT_ERROR_NONE;
-}
-
 // isDim3Form selects the size-field name printed in messages: argsSize (launch) vs hostArgsSize (Set)
 static rtError_t CheckSimtPlaceHolder(
     const rtPlaceHolderInfo_t* const placeHolderArray, const uint32_t placeHolderNum, const uint32_t argsSize,
@@ -1062,19 +1042,6 @@ rtError_t ApiErrorDecorator::LaunchKernelV2(
         kernel, RT_ERROR_INVALID_VALUE, "Starting the compute task of the corresponding operator");
     rtError_t error = CheckArgsWithType(kernel, argsWithType);
     ERROR_RETURN(error, "check args with type failed, retCode=%#x.", error);
-    const bool isSimtArgsArray = argsWithType->type == RT_SIMT_ARGS_ARRAY;
-    const bool isSimtArgsHost = argsWithType->type == RT_SIMT_ARGS_HOST;
-    rtDim3 gridDim = {};
-    if (isSimtArgsArray) {
-        gridDim = argsWithType->args.simtArgsArray->gridDim;
-    } else if (isSimtArgsHost) {
-        gridDim = argsWithType->args.simtArgsHost->gridDim;
-    }
-    COND_RETURN_AND_MSG_OUTER(
-        (blockDim == 0U) && (isSimtArgsArray || isSimtArgsHost), RT_ERROR_INVALID_VALUE, ErrorCode::EE1011,
-        "Starting the compute task of the corresponding operator",
-        RtFmtMsg("[%u,%u,%u]", gridDim.x, gridDim.y, gridDim.z), "gridDim",
-        "The product of gridDim.x, gridDim.y and gridDim.z overflows uint32_t and becomes 0");
     ZERO_RETURN_AND_MSG_OUTER_WITH_FUNC_DESC(blockDim, "Starting the compute task of the corresponding operator");
     error = CheckKernelLaunchCfg(cfg, kernel);
     ERROR_RETURN(error, "check cfgInfo failed, retCode=%#x.", error);

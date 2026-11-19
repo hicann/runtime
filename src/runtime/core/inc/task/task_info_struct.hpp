@@ -80,7 +80,7 @@ struct SimtKernelTaskUpdateInfo {
             size_t placeHolderNum;
         } hostBuffer;
     };
-    uint32_t numBlocks; // gridDim.x * gridDim.y * gridDim.z
+    uint32_t numBlocks; // scheduling count capped at UINT16_MAX; gridDim retains the logical dimensions
     rtDim3 gridDim;
     rtDim3 blockDim;
     size_t dynUbufSize;

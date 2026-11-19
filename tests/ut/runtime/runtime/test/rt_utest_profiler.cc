@@ -4260,8 +4260,8 @@ TEST_F(ProfilerTest, FillKernelLaunchExtInfo_ArgsSizeTruncate)
     EXPECT_EQ(runtimeTrack.extInfo.kernelInfo.argsSize, UINT16_MAX);
 }
 
-// 测试 FillKernelLaunchExtInfo 函数 - gridDim 截断
-TEST_F(ProfilerTest, FillKernelLaunchExtInfo_GridDimTruncate)
+// Profiling retains its uint16_t ABI and saturates grid x without changing task dimensions.
+TEST_F(ProfilerTest, FillKernelLaunchExtInfo_GridDimSaturate)
 {
     TaskInfo taskInfo = {};
     taskInfo.type = TS_TASK_TYPE_KERNEL_AICORE;
@@ -4280,8 +4280,14 @@ TEST_F(ProfilerTest, FillKernelLaunchExtInfo_GridDimTruncate)
     MsprofRuntimeTrack runtimeTrack = {};
     FillKernelLaunchExtInfo(runtimeTrack, &taskInfo);
 
-    // gridDim.x 截断为低16位
-    EXPECT_EQ(runtimeTrack.extInfo.simtKernelInfo.gridDim.x, static_cast<uint16_t>(70000U));
+    for (const uint32_t x : {65534U, 65535U, 65536U, 70000U, static_cast<uint32_t>(INT32_MAX)}) {
+        taskInfo.u.aicTaskInfo.gridDim.x = x;
+        FillKernelLaunchExtInfo(runtimeTrack, &taskInfo);
+        EXPECT_EQ(runtimeTrack.extInfo.simtKernelInfo.gridDim.x, x > UINT16_MAX ? UINT16_MAX : x);
+        EXPECT_EQ(taskInfo.u.aicTaskInfo.gridDim.x, x);
+        EXPECT_EQ(runtimeTrack.extInfo.simtKernelInfo.gridDim.y, 8U);
+        EXPECT_EQ(runtimeTrack.extInfo.simtKernelInfo.blockDim.x, 256U);
+    }
 }
 
 // 测试 FillKernelLaunchExtInfo 函数 - MIX_AIC 伪混合不采集 ratio

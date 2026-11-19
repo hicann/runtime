@@ -9029,7 +9029,7 @@ TEST_F(ApiDavidTest, TestRtsDeviceGetInfoSimt)
 
     error = rtsDeviceGetInfo(devid, RT_DEV_ATTR_MAX_GRID_DIM_X, &val);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    EXPECT_EQ(65535, val);
+    EXPECT_EQ(INT32_MAX, val);
 
     error = rtsDeviceGetInfo(devid, RT_DEV_ATTR_MAX_GRID_DIM_Y, &val);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -9041,7 +9041,7 @@ TEST_F(ApiDavidTest, TestRtsDeviceGetInfoSimt)
 
     error = rtsDeviceGetInfo(devid, RT_DEV_ATTR_MAX_BLOCK_PER_GRID, &val);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    EXPECT_EQ(65535, val);
+    EXPECT_EQ(static_cast<int64_t>(INT32_MAX) * UINT16_MAX * UINT16_MAX, val);
 
     error = rtsDeviceGetInfo(devid, RT_DEV_ATTR_MAX_THREADS_PER_BLOCK, &val);
     EXPECT_EQ(error, RT_ERROR_NONE);

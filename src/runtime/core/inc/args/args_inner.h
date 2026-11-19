@@ -139,6 +139,16 @@ constexpr uint32_t SIMT_SYNC_COUNTER_SIZE = static_cast<uint32_t>(sizeof(uint64_
 constexpr uint32_t SIMT_DIM_PARAM_SIZE = SIMT_IMPLICIT_PARAM_COUNT * static_cast<uint32_t>(sizeof(uint32_t));
 constexpr uint32_t SIMT_IMPLICIT_PARAM_SIZE = SIMT_SYNC_COUNTER_SIZE + SIMT_DIM_PARAM_SIZE;
 
+inline uint32_t GetSimtLaunchBlockDim(const rtDim3& gridDim)
+{
+    // The compiler traverses the full logical grid; only the SQE scheduling count is capped.
+    // Cap each multiplication so even unvalidated uint32_t dimensions cannot overflow.
+    const uint64_t xy = static_cast<uint64_t>(gridDim.x) * static_cast<uint64_t>(gridDim.y);
+    const uint64_t cappedXy = (xy > UINT16_MAX) ? UINT16_MAX : xy;
+    const uint64_t total = cappedXy * static_cast<uint64_t>(gridDim.z);
+    return static_cast<uint32_t>((total > UINT16_MAX) ? UINT16_MAX : total);
+}
+
 } // namespace runtime
 } // namespace cce
 #endif

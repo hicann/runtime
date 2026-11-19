@@ -93,6 +93,7 @@
 #include "aic_aiv_sqe_common.hpp"
 #include "david_sqe_adapter.hpp"
 #include "davinci_multiple_task.h"
+#include "kernel_utils.hpp"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -4297,6 +4298,120 @@ TEST_F(TaskTestDavid, StreamLaunchSimtArgsHostDispatchToLoadSimtHostArgs)
     TaskResManageDavid* taskResMang = ((TaskResManageDavid*)(stream_->taskResMang_));
     taskResMang->ResetTaskRes();
     delete kernel;
+}
+
+TEST_F(TaskTestDavid, SimtSchedulingCountCapsSqeAndPreservesLogicalDimensions)
+{
+    struct GridCase {
+        rtDim3 grid;
+        uint32_t expected;
+    };
+    const GridCase cases[] = {
+        {{1U, 1U, 1U}, 1U},         {{65534U, 1U, 1U}, 65534U},     {{257U, 255U, 1U}, 65535U},
+        {{65536U, 1U, 1U}, 65535U}, {{65536U, 2U, 32768U}, 65535U}, {{INT32_MAX, UINT16_MAX, UINT16_MAX}, 65535U},
+    };
+    PlainProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    Kernel kernel("simt", 0ULL, &program, RT_KERNEL_ATTR_TYPE_AICORE, 0);
+    kernel.SetKernelVfType_(static_cast<uint32_t>(AivTypeFlag::AIV_TYPE_SIMT_VF_ONLY));
+    for (const auto& value : cases) {
+        SCOPED_TRACE(value.grid.x);
+        TaskInfo task = {};
+        InitByStream(&task, stream_);
+        const uint32_t count = GetSimtLaunchBlockDim(value.grid);
+        EXPECT_EQ(count, value.expected);
+        AicTaskInit(&task, &kernel, kernel.GetKernelAttrType(), static_cast<uint16_t>(count), nullptr, false);
+        task.u.aicTaskInfo.kernel = &kernel;
+        task.u.aicTaskInfo.gridDim = value.grid;
+        task.u.aicTaskInfo.blockDim = {1U, 1U, 1U};
+        task.u.aicTaskInfo.simtParamOffset = SIMT_IMPLICIT_PARAM_SIZE;
+        rtDavidSqe_t sqe = {};
+        TaskSqeInfo sqeInfo = {};
+        ToConstructSqe(&task, &sqe, sqeInfo);
+        EXPECT_EQ(sqe.aicAivSqe.header.blockDim, value.expected);
+        EXPECT_EQ(sqe.aicAivSqe.groupDim, value.expected == 1U ? 1U : 2U);
+        EXPECT_EQ(sqe.aicAivSqe.groupBlockdim, (value.expected + 1U) / 2U);
+        EXPECT_EQ(task.u.aicTaskInfo.gridDim.x, value.grid.x);
+        EXPECT_EQ(task.u.aicTaskInfo.gridDim.y, value.grid.y);
+        EXPECT_EQ(task.u.aicTaskInfo.gridDim.z, value.grid.z);
+    }
+    // The helper runs before API validation and must also be safe for invalid inputs.
+    EXPECT_EQ(GetSimtLaunchBlockDim({UINT32_MAX, UINT32_MAX, UINT32_MAX}), UINT16_MAX);
+    EXPECT_EQ(GetSimtLaunchBlockDim({0U, 1U, 1U}), 0U);
+    EXPECT_EQ(GetSimtLaunchBlockDim({1U, 0U, 1U}), 0U);
+    EXPECT_EQ(GetSimtLaunchBlockDim({UINT32_MAX, UINT32_MAX, 0U}), 0U);
+}
+
+TEST_F(TaskTestDavid, SimtLaunchAndSetCachesRetainLargeGrid)
+{
+    PlainProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    Kernel kernel("simt", 0ULL, &program, RT_KERNEL_ATTR_TYPE_AICORE, 0);
+    kernel.SetParamCount(0U);
+    kernel.SetParamTotalSize(0U);
+    const rtDim3 grid = {65536U, 2U, 32768U};
+    const rtDim3 block = {8U, 8U, 32U};
+    uint64_t hostArgs = 0x12345678ULL;
+    SimtArgsArray array = {};
+    array.gridDim = grid;
+    array.blockDim = block;
+    SimtArgsHost host = {};
+    host.gridDim = grid;
+    host.blockDim = block;
+    host.hostArgs = &hostArgs;
+    host.argsSize = sizeof(hostArgs);
+    TaskUpdateInfo update = {};
+    TaskInfo task = {};
+    InitByStream(&task, stream_);
+    AicTaskInit(&task, &kernel, kernel.GetKernelAttrType(), UINT16_MAX, nullptr, false);
+    task.u.aicTaskInfo.kernel = &kernel;
+    task.u.aicTaskInfo.simtParamOffset = SIMT_IMPLICIT_PARAM_SIZE;
+    task.updateInfo = &update;
+    CaptureModel model;
+    model.context_ = stream_->Context_();
+    Model* previousModel = stream_->Model_();
+    const auto previousStatus = stream_->GetCaptureStatus();
+    stream_->SetModel(&model);
+    stream_->SetCaptureStatus(RT_STREAM_CAPTURE_STATUS_ACTIVE);
+    for (const bool hostForm : {false, true}) {
+        rtStreamLaunchKernelV2ExtendArgs_t extend = {};
+        extend.simtArgsArray = hostForm ? nullptr : &array;
+        extend.simtArgsHost = hostForm ? &host : nullptr;
+        EXPECT_EQ(SetKernelLaunchParams(stream_, nullptr, task, &extend), RT_ERROR_NONE);
+        EXPECT_EQ(update.latestParams.u.simtKernelUpdateParams.numBlocks, UINT16_MAX);
+        EXPECT_EQ(update.latestParams.u.simtKernelUpdateParams.gridDim.x, grid.x);
+        FreeKernelUpdateInfoBuffers(update.latestParams.u.simtKernelUpdateParams);
+        update.latestParams = {};
+
+        rtTaskParams params = {};
+        params.type = RT_TASK_SIMT_KERNEL;
+        auto& simt = params.simtKernelTaskParams;
+        simt.gridDimX = grid.x;
+        simt.gridDimY = grid.y;
+        simt.gridDimZ = grid.z;
+        simt.blockDimX = block.x;
+        simt.blockDimY = block.y;
+        simt.blockDimZ = block.z;
+        simt.argsType = hostForm ? RT_KERNEL_ARGS_HOST_BUFFER : RT_KERNEL_ARGS_ARRAY;
+        if (hostForm) {
+            simt.hostBuffer.hostArgs = &hostArgs;
+            simt.hostBuffer.hostArgsSize = sizeof(hostArgs);
+        }
+        EXPECT_EQ(CacheSimtKernelTaskParams(&task, &params, &kernel), RT_ERROR_NONE);
+        EXPECT_EQ(update.latestParams.u.simtKernelUpdateParams.numBlocks, UINT16_MAX);
+        update.latestParams.isValid = 1U;
+        rtTaskParams result = {};
+        EXPECT_EQ(GetSimtKernelTaskParams(&task, &result), RT_ERROR_NONE);
+        EXPECT_EQ(result.simtKernelTaskParams.gridDimX, grid.x);
+        EXPECT_EQ(result.simtKernelTaskParams.gridDimY, grid.y);
+        EXPECT_EQ(result.simtKernelTaskParams.gridDimZ, grid.z);
+        EXPECT_EQ(result.simtKernelTaskParams.blockDimX, block.x);
+        EXPECT_EQ(result.simtKernelTaskParams.blockDimY, block.y);
+        EXPECT_EQ(result.simtKernelTaskParams.blockDimZ, block.z);
+        FreeKernelUpdateInfoBuffers(update.latestParams.u.simtKernelUpdateParams);
+        update.latestParams = {};
+    }
+    task.updateInfo = nullptr;
+    stream_->SetCaptureStatus(previousStatus);
+    stream_->SetModel(previousModel);
 }
 
 TEST_F(TaskTestDavid, HandleTaskGroupUpdateUnsupportedFlag)
