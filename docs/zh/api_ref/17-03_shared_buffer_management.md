@@ -12,7 +12,7 @@
 - [`aclError acltdtCopyBufRef(const acltdtBuf buf, acltdtBuf *newBuf)`](#acltdtCopyBufRef)：对共享Buffer数据区的引用拷贝，创建并返回一个新的Buffer管理结构指向相同的数据区。
 - [`aclError acltdtAppendBufChain(acltdtBuf headBuf, acltdtBuf buf)`](#acltdtAppendBufChain)：将某个共享Buffer内存添加到共享Buffer链表中。
 - [`aclError acltdtGetBufChainNum(acltdtBuf headBuf, uint32_t *num)`](#acltdtGetBufChainNum)：获取共享Buffer链中的共享Buffer数量。
-- [`aclError acltdtGetBufFromChain(acltdtBuf headBuf, uint32_t index, acltdtBuf *buf)`](#acltdtGetBufFromChain)：获取Mbuf链中第index个Mbuf。
+- [`aclError acltdtGetBufFromChain(acltdtBuf headBuf, uint32_t index, acltdtBuf *buf)`](#acltdtGetBufFromChain)：获取共享Buffer链中第index个共享Buffer。
 
 <a class="method_anchor" id="acltdtAllocBuf"></a>
 
@@ -118,13 +118,13 @@ aclError acltdtFreeBuf(acltdtBuf buf)
 
 ### 功能说明
 
-释放通过[acltdtAllocBuf](#acltdtAllocBuf)接口申请的mbuf。
+释放通过[acltdtAllocBuf](#acltdtAllocBuf)接口申请的共享Buffer。
 
 ### 参数说明
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| buf | 输入 | 指定要释放的mbuf。类型定义请参见[acltdtBuf](25-05_Typedefs.md#acltdtBuf)。 |
+| buf | 输入 | 指定要释放的共享Buffer。类型定义请参见[acltdtBuf](25-05_Typedefs.md#acltdtBuf)。 |
 
 ### 返回值说明
 
@@ -629,7 +629,7 @@ aclError acltdtGetBufFromChain(acltdtBuf headBuf, uint32_t index, acltdtBuf *buf
 
 ### 功能说明
 
-获取Mbuf链中第index个Mbuf。
+获取共享Buffer链中第index个共享Buffer。
 
 ### 参数说明
 

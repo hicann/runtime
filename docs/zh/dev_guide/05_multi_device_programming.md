@@ -49,7 +49,7 @@ aclrtCreateStream(&s0);
 // 执行任务1
 ......
 
-// 指定Device 1作为计算设备，并将Device1的默认Context作为当前线程的默认Context
+// 指定Device 1作为计算设备，并将Device 1的默认Context作为当前线程的默认Context
 aclrtSetDevice(1);
 aclrtStream s1;
 aclrtCreateStream(&s1);
@@ -111,11 +111,11 @@ aclrtDeviceCanAccessPeer(&canAccessPeer, 0, 1);      // 查询Device 0和Device 
 if (canAccessPeer == 1) {
     aclrtSetDevice(0);                           // Device 0下的操作
     uint32_t reserveFlag = 0U;
-    aclrtDeviceEnablePeerAccess(1, reserveFlag); // 开启当前Device(Device 0)到指定Device(Device 1）的数据交互
+    aclrtDeviceEnablePeerAccess(1, reserveFlag); // 开启当前Device（Device 0）到指定Device（Device 1）的数据交互
     void *dev0Mem = nullptr;
     aclrtMalloc(&dev0Mem, 10, ACL_MEM_MALLOC_HUGE_FIRST_P2P);
     aclrtSetDevice(1);                           // Device 1下的操作
-    aclrtDeviceEnablePeerAccess(0, reserveFlag); // 开启当前Device(Device 1)到指定Device(Device 0）的数据交互
+    aclrtDeviceEnablePeerAccess(0, reserveFlag); // 开启当前Device（Device 1）到指定Device（Device 0）的数据交互
     void *dev1Mem = nullptr;
     aclrtMalloc(&dev1Mem, 10, ACL_MEM_MALLOC_HUGE_FIRST_P2P);
     aclrtMemcpy(dev1Mem, 10, dev0Mem, 10, ACL_MEMCPY_DEVICE_TO_DEVICE); // 将Device 0上的内存数据复制到Device 1上

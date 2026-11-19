@@ -1326,6 +1326,7 @@ aclError aclmdlRISetAttribute(aclmdlRI modelRI, aclrtModelAttr mdlAttrType, void
 返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 ### 约束说明
+
 - 需在模型执行前（例如调用[aclmdlRIExecute](#aclmdlRIExecute)或[aclmdlRIExecuteAsync](#aclmdlRIExecuteAsync)接口前）完成属性设置。
 <!-- @ref: runtime/res/docs/zh/api_ref/15_model_running_instance_management_res.md#id41 -->
 
@@ -1580,8 +1581,6 @@ aclError aclmdlRIGetTasksByStream(aclrtStream stream, aclmdlRITask *tasks, uint3
 <br>
 <br>
 
-
-
 <a class="method_anchor" id="aclmdlRIGetTasks"></a>
 
 ## aclmdlRIGetTasks
@@ -1641,12 +1640,9 @@ aclError aclmdlRIGetTasks(aclmdlRI modelRI, aclmdlRITask *tasks, uint32_t *numTa
 
 当tasks数组空间不足（数组容量小于实际需要存放的任务总数）时，返回ACL_ERROR_RT_INSUFFICIENT_INPUT_ARRAY；同时会向tasks数组写入当前可容纳的部分任务，并通过numTasks返回实际写入的任务数量。
 
-
 <br>
 <br>
 <br>
-
-
 
 <a class="method_anchor" id="aclmdlRITaskGetSeqId"></a>
 

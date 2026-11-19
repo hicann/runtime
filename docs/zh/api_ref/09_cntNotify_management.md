@@ -49,7 +49,7 @@ aclError aclrtCntNotifyCreate(aclrtCntNotify *cntNotify, uint64_t flag)
 
 创建CntNotify。
 
-CntNotify通常也用于Device与Device之间的状态/动作通信通知。但CntNotify是利用计数值实现任务间的同步，跟Notify的区别是，Notify的计数值仅支持1，CntNotify的计数值支持\[1\~uint32\_t最大值\]。
+CntNotify通常也用于Device与Device之间的状态/动作通知。但CntNotify是利用计数值实现任务间的同步，跟Notify的区别是，Notify的计数值仅支持1，CntNotify的计数值支持\[1\~uint32\_t最大值\]。
 
 ### 参数说明
 

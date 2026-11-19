@@ -1,6 +1,6 @@
 # 20. 共享Buffer管理（预留，暂不支持）
 
-本章节描述预留的共享 Buffer 管理接口（当前版本暂不支持）。
+本章节描述预留的共享Buffer管理接口（当前版本暂不支持）。
 
 - [`aclError aclrtAllocBuf(aclrtMbuf *buf, size_t size)`](#aclrtAllocBuf)：申请指定大小的共享Buffer。
 - [`aclError aclrtFreeBuf(aclrtMbuf buf)`](#aclrtFreeBuf)：释放通过[aclrtAllocBuf](#aclrtAllocBuf)接口申请的共享Buffer。
@@ -196,7 +196,7 @@ aclError aclrtSetBufDataLen(aclrtMbuf buf, size_t len)
 
 设置共享Buffer中有效数据的长度。
 
-接口调用顺序：调用[aclrtAllocBuf](#aclrtAllocBuf)或[aclrtCopyBufRef](#aclrtCopyBufRef)接口申请到共享Buffer后，因此需由用户调用[aclrtGetBufData](#aclrtGetBufData)接口获取共享Buffer的内存指针及长度后，再自行向内存中填充有效数据，然后再调用[aclrtSetBufDataLen](#aclrtSetBufDataLen)接口设置共享Buffer中有效数据的长度，且长度必须小于[aclrtGetBufData](#aclrtGetBufData)获取到的size大小。
+接口调用顺序：调用[aclrtAllocBuf](#aclrtAllocBuf)或[aclrtCopyBufRef](#aclrtCopyBufRef)接口申请到共享Buffer后，需由用户调用[aclrtGetBufData](#aclrtGetBufData)接口获取共享Buffer的内存指针及长度后，再自行向内存中填充有效数据，然后再调用[aclrtSetBufDataLen](#aclrtSetBufDataLen)接口设置共享Buffer中有效数据的长度，且长度必须小于[aclrtGetBufData](#aclrtGetBufData)获取到的size大小。
 
 ### 参数说明
 

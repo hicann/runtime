@@ -593,7 +593,7 @@ aclError aclrtMemcpy2d(void *dst, size_t dpitch, const void *src, size_t spitch,
 | src | 输入 | 源内存地址指针。 |
 | spitch | 输入 | 源内存中相邻两行数据的地址距离。 |
 | width | 输入 | 待复制的数据宽度。<br>取值不能超过5000000，且必须小于或等于dpitch和spitch。 |
-| height | 输入 | 待复制的数据高度。<br>取值不能超过5242880（即5 * 1024 * 1024）。 |
+| height | 输入 | 待复制的数据高度。<br>取值不能超过5242880（即5\*1024\*1024）。 |
 | kind | 输入 | 内存复制的类型。类型定义请参见[aclrtMemcpyKind](25-02_Enumerations.md#aclrtMemcpyKind)。 |
 
 ### 返回值说明
@@ -604,7 +604,7 @@ aclError aclrtMemcpy2d(void *dst, size_t dpitch, const void *src, size_t spitch,
 
 - 当前仅支持ACL\_MEMCPY\_HOST\_TO\_DEVICE类型和ACL\_MEMCPY\_DEVICE\_TO\_HOST类型的内存复制。
 <!-- npu="310p" id12 -->
-- 对于Atlas推理系列产品，Control CPU开放形态下，不支持调用本接口。另外，Atlas 推理系列加速模块产品也不支持本接口。
+- 对于Atlas推理系列产品，Control CPU开放形态下，不支持调用本接口。另外，Atlas推理系列加速模块产品也不支持本接口。
 <!-- end id12 -->
 <!-- npu="310b" id13 -->
 - 对于Atlas 200I/500 A2推理产品，Ascend RC形态下，不支持调用本接口。
@@ -671,7 +671,7 @@ aclError aclrtMemcpy2dAsync(void *dst, size_t dpitch, const void *src, size_t sp
 | src | 输入 | 源内存地址指针。 |
 | spitch | 输入 | 源内存中相邻两行数据的地址距离。 |
 | width | 输入 | 待复制的数据宽度。<br>取值不能超过5000000，且必须小于或等于dpitch和spitch。 |
-| height | 输入 | 待复制的数据高度。<br>取值不能超过5242880（即5 * 1024 * 1024）。 |
+| height | 输入 | 待复制的数据高度。<br>取值不能超过5242880（即5\*1024\*1024）。 |
 | kind | 输入 | 内存复制的类型。类型定义请参见[aclrtMemcpyKind](25-02_Enumerations.md#aclrtMemcpyKind)。 |
 | stream | 输入 | 指定执行内存复制任务的Stream。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。 |
 
@@ -688,7 +688,7 @@ aclError aclrtMemcpy2dAsync(void *dst, size_t dpitch, const void *src, size_t sp
   <!-- end id14 -->
 
 <!-- npu="310p" id15 -->
-- 对于Atlas推理系列产品，Control CPU开放形态下，不支持调用本接口。另外，Atlas 推理系列加速模块产品也不支持本接口。
+- 对于Atlas推理系列产品，Control CPU开放形态下，不支持调用本接口。另外，Atlas推理系列加速模块产品也不支持本接口。
 <!-- end id15 -->
 <!-- npu="310b" id16 -->
 - 对于Atlas 200I/500 A2推理产品，Ascend RC形态下，不支持调用本接口。

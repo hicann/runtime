@@ -346,7 +346,7 @@ aclError aclrtReserveMemAddressNoUCMemory(void **virPtr, size_t size, size_t ali
 
 预留虚拟内存。
 
-本接口与aclrtReserveMemAddress接口的使用方法相同，区别在于：根据环境变量AUTO\_USE\_UC\_MEMORY决定是否允许数据搬移不经过L2 Cache的算子，本接口预留的虚拟内存不能用作此类算子的输入或输出内存，否则可能会导致算子精度问题或异常。AUTO\_USE\_UC\_MEMORY环境变量的详细说明请参见[《环境变量参考》](../env_vars/AUTO_USE_UC_MEMORY.md)。
+本接口与aclrtReserveMemAddress接口的使用方法相同，区别在于：根据环境变量AUTO\_USE\_UC\_MEMORY决定是否允许数据搬移不经过L2 Cache的算子，本接口预留的虚拟内存不能用作此类算子的输入或输出内存，否则可能会导致算子精度问题或异常。AUTO\_USE\_UC\_MEMORY环境变量的详细说明请参见《[环境变量参考](../env_vars/AUTO_USE_UC_MEMORY.md)》。
 
 另外，本接口中的虚拟内存起始地址不支持由系统自动分配，只能由用户指定，且地址建议在40T-224T范围内。
 
@@ -724,7 +724,7 @@ aclError aclrtMemExportToShareableHandle(aclrtDrvMemHandle handle, aclrtMemHandl
 
         在调用[aclrtMemImportFromShareableHandle](#aclrtMemImportFromShareableHandle)接口前，需确保待共享的物理内存存在，不能提前释放。
 
-        若需申请地址连续的虚拟内存、最大化利用物理内存地址，此处可配合[aclrtReserveMemAddress](#aclrtReserveMemAddress)、[aclrtMapMem](#aclrtMapMem)、[aclrtMemSetAccess](#aclrtMemSetAccess)等接口申请虚拟内存、建立虚拟内存与物理内存之间的映射、设置虚拟内存的访问权限，请参见对应接口的说明。
+        若需申请地址连续的虚拟内存、最大化利用物理内存，此处可配合[aclrtReserveMemAddress](#aclrtReserveMemAddress)、[aclrtMapMem](#aclrtMapMem)、[aclrtMemSetAccess](#aclrtMemSetAccess)等接口申请虚拟内存、建立虚拟内存与物理内存之间的映射、设置虚拟内存的访问权限，请参见对应接口的说明。
 
     3. 调用[aclrtFreePhysical](#aclrtFreePhysical)接口，释放物理内存。
 
@@ -1497,7 +1497,7 @@ aclError aclrtMemMapSelectedLink(void *virPtrDst, size_t size, void *virPtrSrc, 
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| virPtrDst | 输入 | 待映射的虚拟内存地址。<br> 需要通过aclrtReserveMemAddress接口提前预留虚拟地址内存，然后将虚拟内存的首地址作为入参传入本接口。不支持将虚拟内存首地址进行偏移后再传入本接口。|
+| virPtrDst | 输入 | 待映射的虚拟内存地址。<br> 需要通过aclrtReserveMemAddress接口提前预留虚拟内存，然后将虚拟内存的首地址作为入参传入本接口。不支持将虚拟内存首地址进行偏移后再传入本接口。|
 | size | 输入 | 虚拟内存大小，单位Byte。<br> virPtrDst与virPtrSrc处的虚拟内存大小需保持一致，且与size相等。 |
 | virPtrSrc | 输入 | 已与物理内存建立映射关系的虚拟内存地址。<br> 需提前通过aclrtMapMem接口完成虚拟内存与物理内存的映射，然后将虚拟内存的首地址作为入参传入本接口。不支持对虚拟内存首地址进行偏移后再传入本接口。|
 | linkIdx | 输入 | 链路标识。<br> -  ACL_RT_MEM_LINK_IDX_0：SIO（Small Input Output），表示片内连接方式，两个DIE之间通过该方式连接。<br> -  ACL_RT_MEM_LINK_IDX_1：HCCS（Huawei Cache Coherence System），HCCS是华为缓存一致性系统，用于CPU/NPU之间的高速互联。 <br> <br> 宏定义如下：<br> ``` #define ACL_RT_MEM_LINK_IDX_0 0U    // SIO ``` <br> ```#define ACL_RT_MEM_LINK_IDX_1 1U    // HCCS``` |

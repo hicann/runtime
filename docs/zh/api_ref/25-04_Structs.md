@@ -1269,7 +1269,7 @@ typedef struct {
 
 | 成员名称 | 说明 |
 | --- | --- |
-| sdid | 针对Atlas A3系列产品中的超节点产品，sdid（SuperPOD Device ID）表示超节点产品中的Device唯一标识，可提前调用[aclGetDeviceInfo](04_device_management.md#aclrtGetDeviceInfo)接口获取。 |
+| sdid | 针对Atlas A3系列产品中的超节点产品，sdid（SuperPOD Device ID）表示超节点产品中的Device唯一标识，可提前调用[aclrtGetDeviceInfo](04_device_management.md#aclrtGetDeviceInfo)接口获取。 |
 | pid | Host侧进程ID白名单数组。 |
 | num | pid数组长度。 |
 
@@ -1425,7 +1425,6 @@ typedef union {
 | --- | --- |
 | randomTaskAttr | 随机数生成任务。类型定义请参见[aclrtRandomTaskUpdateAttr](25-04_Structs.md#aclrtRandomTaskUpdateAttr)。<br>不同型号对该任务支持的情况不同：<br>Atlas A3系列产品支持随机数生成任务<br>Atlas A2系列产品支持随机数生成任务 |
 | aicAivTaskAttr | 在Cube\Vector计算单元上执行的计算任务。类型定义请参见[aclrtAicAivTaskUpdateAttr](25-04_Structs.md#aclrtAicAivTaskUpdateAttr)。 |
-
 
 <br>
 

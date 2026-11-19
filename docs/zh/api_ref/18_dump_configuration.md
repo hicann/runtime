@@ -259,7 +259,7 @@ aclError aclmdlSetDump(const char *dumpCfgPath)
     环境变量的详细描述请参见《[环境变量参考](https://gitcode.com/cann/docs/blob/master/docs/zh/env-vars/README.md)》。
 
 <!-- npu="950,A3,910b,910,310p,310b" id2 -->
-- 若需查看导出的dump文件内容，请参见《[故障处理](https://hiascend.com/document/redirect/CannCommunitytrouble)》中的“故障定位工具 \> msaicerr工具使用指导 \> 解析Dump文件”章节。
+- 若需查看导出的dump文件内容，请参见《[故障处理](https://gitcode.com/cann/docs/blob/master/docs/zh/troubleshooting/00_troubleshooting.md)》中的“故障定位工具 \> msaicerr工具使用指导 \> 解析Dump文件”章节。
 
     <!-- npu="A3,910b" id3 -->
     若将dump\_scene参数设置为aic\_err\_detail\_dump时，需使用msDebug工具查看导出的dump文件内容，详细方法请参见《[算子开发工具用户指南](https://hiascend.com/document/redirect/CannCommunityopdev)》。
@@ -390,7 +390,7 @@ aclError aclmdlSetDump(const char *dumpCfgPath)
 
     Dump文件存储路径的优先级如下：ASCEND\_DUMP\_PATH环境变量 \> ASCEND\_WORK\_PATH环境变量 \> 配置文件中的dump\_path，环境变量的详细描述请参见《[环境变量参考](https://gitcode.com/cann/docs/blob/master/docs/zh/env-vars/README.md)》。
 
-    导出的Dump文件无法通过文本工具直接查看其内容，若需查看，需使用show\_kernel\_debug\_data工具将调测信息解析为可读格式，工具使用指导请参见《[Ascend C算子开发指南](https://hiascend.com/document/redirect/CannCommunityOpdevAscendC)》。
+    导出的Dump文件无法通过文本工具直接查看其内容，若需查看，需使用show\_kernel\_debug\_data工具将调测信息解析为可读格式，工具使用指导请参见《[Ascend C算子开发指南](https://gitcode.com/cann/asc-devkit/blob/master/docs/zh/guide/index.md)》。
 <!-- end id4 -->
 
 ### 参考资源

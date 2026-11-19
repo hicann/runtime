@@ -56,7 +56,7 @@
 
     aclrtSetDevice(1);  // 进程B使用Device 1
 
-    // A，B进程使用不同的Device，导入共享内存访问要开启两个Device之间的数据交互
+    // A，B进程使用不同的Device，需开启两个Device之间的数据交互
     aclrtIpcMemImportByKey(&ptrB, key, ACL_RT_IPC_MEM_IMPORT_FLAG_ENABLE_PEER_ACCESS);
 
     // 对ptrB内存读写操作
@@ -69,7 +69,7 @@
 
 ## 进程间共享Event
 
-进程之间通过共享Event，可以实现进程间的事件同步。此处以A进程创建Event，共享给B进程为例，说明两个进程间任务同步的示例代码，不可以直接拷贝编译运行，仅供参考。完整样例代码请参见[Link](../../../example/2_advanced_features/ipcevent/0_ipcevent)。
+进程之间通过共享Event，可以实现进程间的事件同步。此处以A进程创建Event，共享给B进程为例，说明两个进程间任务同步的示例代码，不可以直接拷贝编译运行，仅供参考。完整样例代码请参见[Link](../../../example/2_advanced_features/ipcevent/0_ipcevent/README.md)。
 
 1. 在A进程中创建Event，生成共享handle：
 
@@ -200,7 +200,6 @@
 <!-- npu="950,A3,910b,910,310p,310b" id3 -->
 完整样例代码请参见[Link](https://gitcode.com/cann/runtime/tree/master/example/1_basic_features/memory/8_physical_memory_sharing_withoutpid)。
 <!-- end id3 -->
-
 
 1. 在A进程中：
 

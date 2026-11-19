@@ -272,7 +272,7 @@ aclrtSetDevice(1) -> aclrtSetDevice(1) -> aclrtResetDeviceForce(1)
     线程2：aclrtSetDevice(1)                                   aclrtResetDeviceForce(1)
     ```
 
-    多线程场景下，正确方式是应在线程执行的最后，调用一次aclrtResetDeviceForce释放Device资源，如下所示：
+    多线程场景下，正确方式是在线程执行的最后，调用一次aclrtResetDeviceForce释放Device资源，如下所示：
 
     ```text
     时间线 ----------------------------------------------------------------------------->
@@ -736,7 +736,7 @@ const char *aclrtGetSocSeries()
 - IPV350：不支持
 <!-- end id4135 -->
 <!-- npu="5162A" id4136 -->
-- Ascend5162A：不支持
+- Hisilicon5162A：不支持
 <!-- end id4136 -->
 <!-- @ref: runtime/res/docs/zh/api_ref/04_device_management_res.md#id50 -->
 
@@ -1950,7 +1950,7 @@ aclError aclrtGetLogicDevIdByUserDevId(const int32_t userDevid, int32_t *const l
 
 ![](figures/UserDevId_LogicDevId_PhyDevId.png)
 
-关于ASCEND\_RT\_VISIBLE\_DEVICES环境的详细介绍请参见[《环境变量参考》](../env_vars/ASCEND_RT_VISIBLE_DEVICES.md)。
+关于ASCEND\_RT\_VISIBLE\_DEVICES环境的详细介绍请参见《[环境变量参考](../env_vars/ASCEND_RT_VISIBLE_DEVICES.md)》。
 
 <br>
 <br>
@@ -2015,7 +2015,7 @@ aclError aclrtGetUserDevIdByLogicDevId(const int32_t logicDevId, int32_t *const 
 
 ![](figures/UserDevId_LogicDevId_PhyDevId.png)
 
-关于ASCEND\_RT\_VISIBLE\_DEVICES环境的详细介绍请参见[《环境变量参考》](../env_vars/ASCEND_RT_VISIBLE_DEVICES.md)。
+关于ASCEND\_RT\_VISIBLE\_DEVICES环境的详细介绍请参见《[环境变量参考](../env_vars/ASCEND_RT_VISIBLE_DEVICES.md)》。
 
 <br>
 <br>
@@ -2082,7 +2082,7 @@ aclError aclrtGetLogicDevIdByPhyDevId(const int32_t phyDevId, int32_t *const log
 
 ![](figures/UserDevId_LogicDevId_PhyDevId.png)
 
-关于ASCEND\_RT\_VISIBLE\_DEVICES环境的详细介绍请参见[《环境变量参考》](../env_vars/ASCEND_RT_VISIBLE_DEVICES.md)。
+关于ASCEND\_RT\_VISIBLE\_DEVICES环境的详细介绍请参见《[环境变量参考](../env_vars/ASCEND_RT_VISIBLE_DEVICES.md)》。
 
 <br>
 <br>
@@ -2149,7 +2149,7 @@ aclError aclrtGetPhyDevIdByLogicDevId(const int32_t logicDevId, int32_t *const p
 
 ![](figures/UserDevId_LogicDevId_PhyDevId.png)
 
-关于ASCEND\_RT\_VISIBLE\_DEVICES环境的详细介绍请参见[《环境变量参考》](../env_vars/ASCEND_RT_VISIBLE_DEVICES.md)。
+关于ASCEND\_RT\_VISIBLE\_DEVICES环境的详细介绍请参见《[环境变量参考](../env_vars/ASCEND_RT_VISIBLE_DEVICES.md)》。
 
 <br>
 <br>
@@ -2214,7 +2214,7 @@ aclError aclrtGetUserDevIdByPhyDevId(const int32_t phyDevId, int32_t *const user
 
 ![](figures/UserDevId_LogicDevId_PhyDevId.png)
 
-关于ASCEND\_RT\_VISIBLE\_DEVICES环境的详细介绍请参见[《环境变量参考》](../env_vars/ASCEND_RT_VISIBLE_DEVICES.md)。
+关于ASCEND\_RT\_VISIBLE\_DEVICES环境的详细介绍请参见《[环境变量参考](../env_vars/ASCEND_RT_VISIBLE_DEVICES.md)》。
 
 <br>
 <br>
@@ -2279,7 +2279,7 @@ aclError aclrtGetPhyDevIdByUserDevId(const int32_t userDevId, int32_t *const phy
 
 ![](figures/UserDevId_LogicDevId_PhyDevId.png)
 
-关于ASCEND\_RT\_VISIBLE\_DEVICES环境的详细介绍请参见[《环境变量参考》](../env_vars/ASCEND_RT_VISIBLE_DEVICES.md)。
+关于ASCEND\_RT\_VISIBLE\_DEVICES环境的详细介绍请参见《[环境变量参考](../env_vars/ASCEND_RT_VISIBLE_DEVICES.md)》。
 
 <br>
 <br>

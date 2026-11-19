@@ -266,7 +266,7 @@ aclError aclrtExceptionInfoCallbackRegister(aclrtExceptionInfoCallback callback)
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| callback | 输入 | 指定要注册的回调函数，不能为NULL。<br>回调函数的函数原型为：<br>typedef void (*aclrtExceptionInfoCallback)(aclrtExceptionInfo *exceptionInfo); |
+| callback | 输入 | 指定要注册的回调函数，不能为NULL。<br>回调函数的函数原型为：<br>typedef void (\*aclrtExceptionInfoCallback)(aclrtExceptionInfo \*exceptionInfo); |
 
 ### 返回值说明
 

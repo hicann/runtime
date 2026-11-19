@@ -1,0 +1,27 @@
+# Runtime Programming Guide
+
+<!-- md-trans-meta sourceCommit=c984fae7c73f88f7e9e16b034bea72bc18e7517c translatedAt=2026-10-16T10:24:45.225Z pushedAt=2026-10-21T08:45:33.275Z -->
+
+- [1. Initialization](01_initialization.md)
+- [2. Memory Management](02_memory_management.md)
+  - [2.1 Data Copy](02-01_data_copy.md)
+- [3. Asynchronous Task Execution](03_asynchronous_task_execution.md)
+  - [3.1 Asynchronous Task Overview](03-01_asynchronous_task_overview.md)
+  - [3.2 Stream Management](03-02_stream_management.md)
+  - [3.3 Kernel Loading and Execution](03-03_kernel_loading_and_execution.md)
+  - [3.4 System Task](03-04_system_tasks.md)
+  - [3.5 Event Management](03-05_event_management.md)
+  - [3.6 Notify Management](03-06_notify_management.md)
+  - [3.7 Memory Semantic Synchronization](03-07_memory_semantic_synchronization.md)
+- [4. ACL Graph](04_ACL-Graph.md)
+  - [4.1 Single-Stream Capture](04-01_single_stream_capture.md)
+  - [4.2 Cross-Stream Capture](04-02_cross_stream_capture.md)
+  - [4.3 Task Update](04-03_task_update.md)
+- [5. Multi-Device Programming](05_multi_device_programming.md)
+- [6. Context Management](06_context_management.md)
+- [7. Inter-Process Communication](07_inter_process_communication.md)
+- [8. Runtime Core Resource Control](08_runtime_core_resource_control.md)
+- [9. AI Core Stack Size Configuration](09_aicore_stack_size_configuration.md)
+- [10. Exception Handling](10_runtime_troubleshooting.md)
+- [11. Compatibility Handling](11_compatibility_handling.md)
+- [12. Recommended APIs and Typical Scenarios](12_recommended_apis_and_typical_scenarios.md)

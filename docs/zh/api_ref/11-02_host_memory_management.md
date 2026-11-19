@@ -68,7 +68,7 @@ aclError aclrtMallocHost(void **hostPtr, size_t size)
 
 ### 约束说明
 
-- 本接口分配的内存不会对内容进行初始化，建议在使用内存前先调用[aclrtMemset](11-03_memory_copy_and_set.md#aclrtMemset)接口先初始化内存，清除内存中的随机数。
+- 本接口分配的内存不会对内容进行初始化，建议在使用内存前先调用[aclrtMemset](11-03_memory_copy_and_set.md#aclrtMemset)接口初始化内存，清除内存中的随机数。
 - 本接口内部不会进行隐式的device同步或流同步。如果申请内存成功或申请内存失败会立刻返回结果。
 - 使用aclrtMallocHost接口分配过多的锁页内存，将导致操作系统用于分页的物理内存变少，从而降低系统整体的性能。
 - 频繁调用aclrtMallocHost接口申请内存、调用[aclrtFreeHost](#aclrtFreeHost)接口释放内存，会损耗性能，建议用户提前做内存预先分配或二次管理，避免频繁申请/释放内存。
@@ -470,7 +470,7 @@ aclError aclrtHostMemMapCapabilities(uint32_t deviceId, aclrtHacType hacType, ac
 
 ### 功能说明
 
-查询指定的硬件驱动加速器是否支持访问通过[aclrtHostRegister](#aclrtHostRegister)接口注册的内存。
+查询指定的硬件加速器是否支持访问通过[aclrtHostRegister](#aclrtHostRegister)接口注册的内存。
 
 ### 参数说明
 

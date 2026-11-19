@@ -951,14 +951,12 @@ aclError aclrtTaskUpdateAsync(aclrtStream taskStream, uint32_t taskId, aclrtTask
 <!-- npu="950" id31 -->
 ### 约束说明
 
-Ascend 950PR&950DT系列产品产品不支持更新ACL_RT_UPDATE_RANDOM_TASK(随机数生成任务)。
+Ascend 950PR&950DT系列产品不支持更新ACL_RT_UPDATE_RANDOM_TASK(随机数生成任务)。
 <!-- end id31 -->
 
-
 <br>
 <br>
 <br>
-
 
 <a class="method_anchor" id="aclrtGetThreadLastTaskIdAndStreamId"></a>
 

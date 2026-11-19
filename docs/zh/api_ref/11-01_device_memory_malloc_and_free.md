@@ -103,7 +103,7 @@ aclError aclrtMalloc(void **devPtr, size_t size, aclrtMemMallocPolicy policy)
 ### 约束说明
 
 <!-- @ref: runtime/res/docs/zh/api_ref/11-01_device_memory_malloc_and_free_res.md#id14 -->
-- 本接口不会初始化内存内容，建议在使用内存前先调用[aclrtMemset](11-03_memory_copy_and_set.md#aclrtMemset)接口先初始化内存，清除内存中的随机数。
+- 本接口不会初始化内存内容，建议在使用内存前先调用[aclrtMemset](11-03_memory_copy_and_set.md#aclrtMemset)接口初始化内存，清除内存中的随机数。
 - 本接口内部不会进行隐式的Device同步或流同步，如果申请内存成功或申请内存失败会立刻返回结果。
 - policy处仅支持配置单个枚举项，不支持配置多个枚举项位或。
 
@@ -926,7 +926,7 @@ aclError aclrtMemRegisterUbSegment(void *addr, size_t size)
 <!-- npu="5162A" id1208 -->
 - Hisilicon5162A：不支持
 <!-- end id1208 -->
-<!-- @ref: runtime/res/docs/zh/api_ref/11-01_device_memory_malloc_and_free_res.md#id11 -->
+<!-- @ref: runtime/res/docs/zh/api_ref/11-01_device_memory_malloc_and_free_res.md#id21 -->
 
 ### 功能说明
 

@@ -569,7 +569,7 @@ aclError aclrtResetEvent(aclrtEvent event, aclrtStream stream)
 
 仅支持复位由[aclrtCreateEventWithFlag](#aclrtCreateEventWithFlag)接口创建的、带有ACL\_EVENT\_SYNC标志的Event。
 
-**注意** ，在多个Stream中的任务需要等待同一个Event的情况下，不建议使用调用此接口来复位Event。如图所示，如果在stream2中的aclrtStreamWaitEvent接口之后调用aclrtResetEvent接口，Event将被复位，这会导致stream3中的aclrtStreamWaitEvent接口无法成功。
+**注意** ，在多个Stream中的任务需要等待同一个Event的情况下，不建议此接口来复位Event。如图所示，如果在stream2中的aclrtStreamWaitEvent接口之后调用aclrtResetEvent接口，Event将被复位，这会导致stream3中的aclrtStreamWaitEvent接口无法成功。
 
 ![](figures/event_wait_diagram.png)
 

@@ -265,7 +265,7 @@ aclFinalize();
     默认Stream作为接口入参时，直接传NULL。
 
 - **默认Context**不允许用户执行aclrtGetCurrentContext或aclrtSetCurrentContext操作，也不允许执行aclrtDestroyContext操作。
-- **默认Context、默认Stream**一般适用于简单应用，用户仅需要一个Device的计算场景下。多线程应用程序建议使用显式创建的Context和Stream。
+- **默认Context、默认Stream**一般适用于简单应用，用户仅需要一个Device的计算场景。多线程应用程序建议使用显式创建的Context和Stream。
 
 示例代码如下，仅供参考，不可以直接拷贝编译运行：
 

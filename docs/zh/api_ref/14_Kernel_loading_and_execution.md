@@ -52,14 +52,14 @@
 
 ### 相关概念
 
-本章中的接口涉及对算子的算子二进制、核函数、核函数参数列表以及参数的操作，为便于理解，您可以先通过下图了解它们之间的关系。
+本章中的接口涉及对算子的二进制、核函数、核函数参数列表以及参数的操作，为便于理解，您可以先通过下图了解它们之间的关系。
 
 ![](figures/operator_binary_and_kernel_function_relationship.png)
 
 - **算子二进制**：编译算子源码，可得到算子二进制文件\*.o。对于CANN内置算子，可从算子二进制包（包名为Ascend-cann-\*-ops-\*.run）中获取算子二进制文件。对于自定义算子，可在编译算子、发布二进制之后获取算子二进制文件。
 
   <!-- npu="950,A3,910b,910,310p,310b" id4 -->
-  自定义算子的开发、编译请参见《[Ascend C算子开发指南](https://hiascend.com/document/redirect/CannCommunityOpdevAscendC)》。
+  自定义算子的开发、编译请参见《[Ascend C算子开发指南](https://gitcode.com/cann/asc-devkit/blob/master/docs/zh/guide/index.md)》。
   <!-- end id4 -->
   <!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id43 -->
 - **核函数**：是算子设备侧实现的入口函数。当前允许使用C/C++函数的语法扩展来编写设备端的运行代码，用户在核函数中进行数据访问和计算操作，由此实现该算子的所有功能。
@@ -709,7 +709,6 @@ aclError aclrtGetFunctionSize(const void *func, size_t *aicSize, size_t *aivSize
 
 获取核函数代码段的大小。
 
-
 ### 参数说明
 
 | 参数名 | 输入/输出 | 说明 |
@@ -821,8 +820,6 @@ aclError aclrtGetFunctionAttribute(const void *func, aclrtFuncAttribute attrType
 ### 功能说明
 
 此接口仅支持查询算子二进制文件中的核函数属性信息。
-
-
 
 ### 参数说明
 
@@ -1514,7 +1511,7 @@ aclError aclrtLaunchKernel(aclrtFuncHandle funcHandle, uint32_t numBlocks, const
 | --- | :---: | --- |
 | funcHandle | 输入 | 核函数句柄。类型定义请参见[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)。<br>调用[aclrtBinaryGetFunction](#aclrtBinaryGetFunction)接口根据kernelName获取funcHandle。 |
 | numBlocks | 输入 | 指定核函数将会在几个核上执行。 |
-| argsData | 输入 | 存放核函数所有入参数据的Device内存地址指针。<br>内存申请接口请参见[内存管理](11_memory_management.md)。<br>注意，执行本接口下发任务的Device需与argsData中使用的Device内存要是同一个Device。 |
+| argsData | 输入 | 存放核函数所有入参数据的Device内存地址指针。<br>内存申请接口请参见[内存管理](11_memory_management.md)。<br>注意，执行本接口下发任务的Device需与argsData中使用的Device内存是同一个Device。 |
 | argsSize | 输入 | argsData参数值的大小，单位为Byte。 |
 | stream | 输入 | 指定执行任务的Stream。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。 |
 
@@ -2197,7 +2194,6 @@ aclError aclrtFunctionGetParamInfo(const void *func, size_t paramIndex, size_t *
 
 根据索引获取核函数参数信息（偏移和大小）。
 
-
 ### 参数说明
 
 | 参数名 | 输入/输出 | 说明 |
@@ -2376,7 +2372,6 @@ aclError aclrtLaunchSIMTKernelWithArgsArray(void *func, dim3 gridDim, dim3 block
 
 基于参数数组的方式传递SIMT（Single Instruction Multiple Thread）核函数入参，并启动对应算子的计算任务。异步接口。
 
-
 ### 参数说明
 
 | 参数名 | 输入/输出 | 说明 |
@@ -2444,7 +2439,6 @@ aclError aclrtLaunchSIMTKernelWithHostArgs(void *func, dim3 gridDim, dim3 blockD
 ### 功能说明
 
 基于Host内存参数的方式传递SIMT（Single Instruction Multiple Thread）核函数入参，并启动对应算子的计算任务。异步接口。
-
 
 ### 参数说明
 
@@ -2580,8 +2574,6 @@ aclError aclrtBinaryEnumerateFunctions(const aclrtBinHandle binHandle, aclrtFunc
 | binHandle | 输入 | 算子二进制句柄。类型定义请参见[aclrtBinHandle](25-05_Typedefs.md#aclrtBinHandle)。<br>调用[aclrtBinaryLoadFromFile](#aclrtBinaryLoadFromFile)接口或[aclrtBinaryLoadFromData](#aclrtBinaryLoadFromData)接口获取算子二进制句柄，再将其作为入参传入本接口。 |
 | funcHandles | 输出 | 核函数句柄数组。类型定义请参见[aclrtFuncHandle](25-05_Typedefs.md#aclrtFuncHandle)。 |
 | numFunctions | 输入 | `funcHandles`数组的容量，即最多写入的核函数句柄数量。接口实际写入数量为该容量与算子二进制中核函数总数两者中的较小值。可先调用[aclrtBinaryGetFunctionCount](#aclrtBinaryGetFunctionCount)获取核函数总数。<br>当numFunctions为0时，不需要获取核函数句柄，`funcHandles`可传NULL；当numFunctions大于0时，`funcHandles`不能为空，且应至少包含numFunctions个元素。 |
-|
-
 
 ### 返回值说明
 

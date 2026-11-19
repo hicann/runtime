@@ -152,7 +152,7 @@ aclrtEventElapsedTime(&useTime, startEvent, endEvent);
     aclrtRecordEvent(event, stream);
     ```
 
-2. 在B线程中调用查询接口，如果查询的Event已经完成，则代表Event Record前面的算子内存都可以被安全的复用。
+2. 在B线程中调用查询接口，如果查询的Event已经完成，则代表Event Record前面的算子内存都可以被安全地复用。
 
     ```c
     aclrtEventRecordedStatus status;
@@ -171,7 +171,7 @@ aclrtEventElapsedTime(&useTime, startEvent, endEvent);
 
 ## Event同步
 
-调用aclrtSynchronizeEvent接口阻塞当前主机线程直到指定的Event事件完成。以下为示例代码，不可以直接拷贝编译运行，仅供参考：
+调用aclrtSynchronizeEvent接口阻塞当前主机线程直到指定的Event完成。以下为示例代码，不可以直接拷贝编译运行，仅供参考：
 
 ```c
 // 创建Event

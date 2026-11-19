@@ -16,4 +16,4 @@ Value /usr/local/Ascend/cann/opp for environment variable PATH is invalid when e
 
 ## Solution
 
-Reset the environment variable by referring to the Environment Variable Reference.
+Reset the environment variable by referring to the [Environment Variable Reference](https://gitcode.com/cann/docs/blob/master/docs/en/env-vars/README.md).

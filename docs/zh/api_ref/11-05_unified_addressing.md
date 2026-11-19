@@ -25,7 +25,7 @@ aclError aclrtMemAllocManaged(void **ptr, uint64_t size, uint32_t flag)
 
 申请统一虚拟内存（Unified Virtual Memory, UVM），通过\*ptr返回已申请内存的指针，且申请的内存大小会根据用户指定的size向上按2MB对齐。使用本接口申请的内存，若需释放内存，需调用[aclrtFree](11-01_device_memory_malloc_and_free.md#aclrtFree)接口。
 
-通过本接口申请的内存仅在实际访问时才会建立虚拟内存到物理内存的页表映射关系。如果内存访问发生在Host上，则映射Host的物理内存；如果内存访问发生在Device上，则映射Device的物理内存。后续使用该内存时，每当访问内存的对象发生变更，例如，从Host变更为Device，从一个Device变更为另一个Device等，在新的访问对象上会触发缺页中断，需要将内存数据迁移到新的访问对象上，并重新建立虚拟内存到物理内存的页表映射关系，此时前一个访问对象上的页表映射关系将失效、物理内存也会释放。若频繁的更换访问对象，则会频繁触发缺页中断、频繁迁移内存数据和重新建立页表映射关系，影响性能。为了减少这种情况带来的性能开销，Runtime还提供了[aclrtMemManagedAdvise](#aclrtMemManagedAdvise)接口来设置内存管理策略。
+通过本接口申请的内存仅在实际访问时才会建立虚拟内存到物理内存的页表映射关系。如果内存访问发生在Host上，则映射Host的物理内存；如果内存访问发生在Device上，则映射Device的物理内存。后续使用该内存时，每当访问内存的对象发生变更，例如，从Host变更为Device，从一个Device变更为另一个Device等，在新的访问对象上会触发缺页中断，需要将内存数据迁移到新的访问对象上，并重新建立虚拟内存到物理内存的页表映射关系，此时前一个访问对象上的页表映射关系将失效、物理内存也会释放。若频繁地更换访问对象，则会频繁触发缺页中断、频繁迁移内存数据和重新建立页表映射关系，影响性能。为了减少这种情况带来的性能开销，Runtime还提供了[aclrtMemManagedAdvise](#aclrtMemManagedAdvise)接口来设置内存管理策略。
 
 ### 参数说明
 

@@ -77,7 +77,7 @@ typedef int aclError;
 | static const int ACL_ERROR_DUMP_ALREADY_RUN = 100044; | 已存在获取Dump数据的任务。 | 请检查在调用aclmdlInitDump接口、aclmdlSetDump接口、aclmdlFinalizeDump接口配置Dump信息前，是否已调用aclInit接口配置Dump信息，如是，请调整代码逻辑，保留一种方式配置Dump信息即可。 |
 | static const int ACL_ERROR_DUMP_NOT_RUN = 100045; | 未使用aclmdlInitDump接口先进行Dump初始化。 | 请检查获取Dump数据的接口调用顺序，参考aclmdlInitDump接口处的说明。 |
 | static const int ACL_ERROR_PROF_REPEAT_SUBSCRIBE = 148046; | 重复订阅同一个模型。 | 请检查接口调用顺序。 |
-| static const int ACL_ERROR_PROF_API_CONFLICT = 148047; | 采集性能数据的接口调用冲突。 | 两种方式的Profiling性能数据采集接口不能交叉调用，aclprofInit接口和aclprofFinalize接口之间不能调用aclprofModelSub接口、aclprofGet*接口、aclprofModelUnSubscribe接口，aclprofModelSubscribe接口和aclprofModelUnSubscribe接口之间不能调用aclprofInit接口、aclprofStart接口、aclprofStop接口、aclprofFinalize。 |
+| static const int ACL_ERROR_PROF_API_CONFLICT = 148047; | 采集性能数据的接口调用冲突。 | 两种方式的Profiling性能数据采集接口不能交叉调用，aclprofInit接口和aclprofFinalize接口之间不能调用aclprofModelSubscribe接口、aclprofGet*接口、aclprofModelUnSubscribe接口，aclprofModelSubscribe接口和aclprofModelUnSubscribe接口之间不能调用aclprofInit接口、aclprofStart接口、aclprofStop接口、aclprofFinalize。 |
 | static const int ACL_ERROR_INVALID_MAX_OPQUEUE_NUM_CONFIG = 148048; | 无效的算子缓存信息老化配置。 | 请检查算子缓存信息老化配置，参考aclInit处的配置说明及示例。 |
 | static const int ACL_ERROR_INVALID_OPP_PATH = 148049; | 没有设置ASCEND_OPP_PATH环境变量，或该环境变量的值设置错误。 | 请检查是否设置ASCEND_OPP_PATH环境变量，且该环境变量的值是否为opp软件包的安装路径。 |
 | static const int ACL_ERROR_OP_UNSUPPORTED_DYNAMIC = 148050; | 算子不支持动态Shape。 | - 请检查单算子模型文件中该算子的Shape是否为动态，如果是动态的，需要修改为固定Shape。<br>  - 请检查编译算子时，aclTensorDesc的Shape是否为动态，如果是动态的，需要按照固定Shape重新创建aclTensorDesc。 |
@@ -187,7 +187,7 @@ typedef int aclError;
 | #define  ACL_ERROR_RT_MODEL_EXECUTE  507011 | 模型执行失败。 | 您可以获取日志后提交ISSUE。 |
 | #define  ACL_ERROR_RT_REPORT_TIMEOUT  507012 | 获取task scheduler的消息失败。 | 排查接口的超时时间设置是否过短，适当增长超时时间。如果增长超时时间后，依然有超时报错，再排查日志。<br>您可以获取日志后提交ISSUE。 |
 | #define  ACL_ERROR_RT_SYS_DMA  507013 | system dma（Direct Memory Access）硬件执行错误。 | 您可以获取日志后提交ISSUE。 |
-| #define  ACL_ERROR_RT_AICORE_TIMEOUT  507014 | AI Core执行超时。 | 您可以获取日志后提交ISSUE。<br>日志的详细介绍，请参见《日志参考》。 |
+| #define  ACL_ERROR_RT_AICORE_TIMEOUT  507014 | AI Core执行超时。 | 您可以获取日志后提交ISSUE。 |
 | #define  ACL_ERROR_RT_AICORE_EXCEPTION  507015 | AI Core执行异常。 | 您可以获取日志后提交ISSUE。 |
 | #define  ACL_ERROR_RT_AICORE_TRAP_EXCEPTION  507016 | AI Core trap执行异常。 | 您可以获取日志后提交ISSUE。 |
 | #define  ACL_ERROR_RT_AICPU_TIMEOUT  507017 | AI CPU执行超时。 | 您可以获取日志后提交ISSUE。 |
@@ -220,13 +220,13 @@ typedef int aclError;
 | #define  ACL_ERROR_RT_VECTOR_CORE_TRAP_READ_OVERFLOW  507044 | Vector Core trap读越界异常。 | 您可以获取日志后提交ISSUE。 |
 | #define  ACL_ERROR_RT_VECTOR_CORE_TRAP_WRITE_OVERFLOW  507045 | Vector Core trap写越界异常。 | 您可以获取日志后提交ISSUE。 |
 | #define  ACL_ERROR_RT_STREAM_SYNC_TIMEOUT  507046 | 在指定的超时等待事件中，指定的stream中所有任务还没有执行完成。 | 您可以获取日志后提交ISSUE。 |
-| #define  ACL_ERROR_RT_EVENT_SYNC_TIMEOUT  507047 | 在指定的Event同步等待中，超过指定时间，该Event还有没有执行完。 | 您可以获取日志后提交ISSUE。 |
+| #define  ACL_ERROR_RT_EVENT_SYNC_TIMEOUT  507047 | 在指定的Event同步等待中，超过指定时间，该Event还没有执行完。 | 您可以获取日志后提交ISSUE。 |
 | #define  ACL_ERROR_RT_FFTS_PLUS_TIMEOUT  507048 | 内部任务执行超时。 | 您可以获取日志后提交ISSUE。 |
 | #define  ACL_ERROR_RT_FFTS_PLUS_EXCEPTION  507049 | 内部任务执行异常。 | 您可以获取日志后提交ISSUE。 |
 | #define  ACL_ERROR_RT_FFTS_PLUS_TRAP_EXCEPTION  507050 | 内部任务trap异常。 | 您可以获取日志后提交ISSUE。 |
 | #define  ACL_ERROR_RT_SEND_MSG  507051 | 数据入队过程中消息发送失败。 | 您可以获取日志后提交ISSUE。 |
 | #define  ACL_ERROR_RT_COPY_DATA  507052 | 数据入队过程中内存拷贝失败。 | 您可以获取日志后提交ISSUE。 |
-| #define  ACL_ERROR_RT_DEVICE_MEM_ERROR  507053 | 出现内存UCE（uncorrectable error，指系统硬件不能直接处理恢复内存错误）的错误虚拟地址。 | 请参见aclrtGetMemUceInfo接口中的说明获取并修复内存UCE的错误虚拟地址。 |
+| #define  ACL_ERROR_RT_DEVICE_MEM_ERROR  507053 | 出现内存UCE（uncorrectable error，指系统硬件不能直接处理并恢复内存错误）的错误虚拟地址。 | 请参见aclrtGetMemUceInfo接口中的说明获取并修复内存UCE的错误虚拟地址。 |
 | #define  ACL_ERROR_RT_HBM_MULTI_BIT_ECC_ERROR  507054 | HBM比特ECC故障。 | 您可以获取日志后提交ISSUE。 |
 | #define  ACL_ERROR_RT_SUSPECT_DEVICE_MEM_ERROR  507055 | 多进程、多Device场景下，可能出现内存UCE错误。 | 由于当前Device访问的对端Device内存发生故障，用户需排查对端Device进程的错误信息。 |
 | #define  ACL_ERROR_RT_LINK_ERROR  507056 | 多Device场景下，两个Device之间的通信断链。 | 建议重试，若依然报错，则需检查两个Device之间的通信链路。 |

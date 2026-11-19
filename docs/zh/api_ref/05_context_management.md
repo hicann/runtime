@@ -201,7 +201,7 @@ aclError aclrtSetCurrentContext(aclrtContext context)
 
 - 若给线程设置的Context所对应的Device已经被复位，则不能将该Context设置为线程的Context，否则会导致业务异常。
 - 推荐在某一线程中创建的Context，在该线程中使用。若在线程A中调用[aclrtCreateContext](#aclrtCreateContext)接口创建Context，在线程B中使用该Context，则需由用户自行保证两个线程中同一个Context下同一个Stream中任务执行的顺序。
-- 调用aclrtSetCurrentContext接口通过切换Context时，如果新Context与当前Context所属的Device不同时，Device也会随之切换。
+- 调用aclrtSetCurrentContext接口切换Context时，如果新Context与当前Context所属的Device不同时，Device也会随之切换。
 
 <br>
 <br>

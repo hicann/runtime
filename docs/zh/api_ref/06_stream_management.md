@@ -157,7 +157,7 @@ aclError aclrtCreateStreamWithConfig(aclrtStream *stream, uint32_t priority, uin
 | --- | :---: | --- |
 | stream | 输出 | Stream的指针。类型定义请参见[aclrtStream](25-05_Typedefs.md#aclrtStream)。 |
 | priority | 输入 | 优先级。 |
-| flag | 输入 | Stream指针的flag。<br>flag既支持配置单个宏，也支持配置多个宏位或。对于不支持位或的宏，本接口会返回报错。配置其他值创建出来的Stream等同于通过aclrtCreateStream接口创建出来的Stream。<br>flag参数值请参见“flag取值说明”。 |
+| flag | 输入 | Stream指针的flag。<br>flag既支持配置单个宏，也支持配置多个宏按位或。对于不支持位或的宏，本接口会返回报错。配置其他值创建出来的Stream等同于通过aclrtCreateStream接口创建出来的Stream。<br>flag参数值请参见“flag取值说明”。 |
 
 ### flag取值说明
 
