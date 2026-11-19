@@ -29,20 +29,27 @@ mkdir -p file
 file_path_proc_a=output_msg_proc_a.txt
 file_path_proc_b=output_msg_proc_b.txt
 
-./build/proc_a | tee "$file_path_proc_a" &
+(set -o pipefail; ./build/proc_a | tee "$file_path_proc_a") &
 pid_a=$!
-./build/proc_b | tee "$file_path_proc_b" &
+(set -o pipefail; ./build/proc_b | tee "$file_path_proc_b") &
 pid_b=$!
 
-wait $pid_a $pid_b
+status=0
+wait "$pid_a" || status=$?
+wait "$pid_b" || status=$?
+if [[ "$status" -ne 0 ]]; then
+    echo "[FAILURE] An IPC notify process failed." >&2
+    exit "$status"
+fi
 
 source_value=$(grep "Source data:" $file_path_proc_b | awk -F':' '{gsub(/^ +| +$/, "", $2); print $2}' | head -n 1)
 destination_value=$(grep "Destination data:" $file_path_proc_a | awk -F':' '{gsub(/^ +| +$/, "", $2); print $2}' | head -n 1)
 
-if [ "$source_value" = "$destination_value" ]; then
+if [[ -n "$source_value" && "$source_value" == "$destination_value" ]]; then
     echo "[SUCCESS] IPC notify for task synchronization is successful. Values at source and destination are equal: $source_value"
 else
     echo "[FAILURE] IPC notify for task synchronization failed. Value at source is $source_value, but value at destination is $destination_value"
+    exit 1
 fi
 
 exit 0
