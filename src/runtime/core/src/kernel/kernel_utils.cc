@@ -996,9 +996,8 @@ rtError_t GetOpExecuteMsTimeout(uint32_t* const timeout, uint64_t* customTimeout
             // period.​
             timeoutUs = kernelCreditScaleUS * maxKernelCredit;
         } else {
-            // Round up to get the hardware effective time.
-            const uint64_t kernelCreditTmp =
-                static_cast<uint64_t>((timeoutTmpUs + kernelCreditScaleUS - 1) / kernelCreditScaleUS);
+            // Round up to get the hardware effective time. Align with TransExeTimeoutCfgToKernelCredit (ceil).
+            const uint64_t kernelCreditTmp = static_cast<uint64_t>(ceil(timeoutTmpUs / kernelCreditScaleUS));
             timeoutUs = kernelCreditScaleUS * static_cast<float64_t>(kernelCreditTmp);
         }
     } else {

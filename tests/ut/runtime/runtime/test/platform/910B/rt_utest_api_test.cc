@@ -2557,6 +2557,32 @@ TEST_F(NewCloudV2ApiTest, rtSetOpExecuteTimeOutV2)
     ((Runtime*)Runtime::Instance())->DeviceRelease(device);
 }
 
+TEST_F(NewCloudV2ApiTest, rtSetOpExecuteTimeOutV2_credit_boundary)
+{
+    rtError_t error;
+    uint64_t actualTimeout = 0UL;
+    uint32_t timeout = 0;
+    Device* device = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0); // set device
+    MOCKER_CPP_VIRTUAL(device, &Device::CheckFeatureSupport).stubs().will(returnValue(false));
+    Runtime::Instance()->timeoutConfig_.isInit = false;
+    ((Runtime*)Runtime::Instance())->InitOpExecTimeout(device);
+
+    // timeout just crosses the first credit boundary
+    const uint64_t timeoutUs = static_cast<uint64_t>(RT_STARS_TASK_KERNEL_CREDIT_SCALE_US) + 1;
+    error = rtSetOpExecuteTimeOutV2(timeoutUs, &actualTimeout);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    uint64_t credit = ceil(static_cast<float64_t>(timeoutUs) / RT_STARS_TASK_KERNEL_CREDIT_SCALE_US);
+    EXPECT_EQ(actualTimeout, static_cast<uint64_t>(credit * RT_STARS_TASK_KERNEL_CREDIT_SCALE_US));
+
+    error = rtGetOpExecuteTimeoutV2(&timeout);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    // effective timeout in ms, round up
+    EXPECT_EQ(
+        timeout, static_cast<uint32_t>(ceil(credit * RT_STARS_TASK_KERNEL_CREDIT_SCALE_US / RT_TIMEOUT_MS_TO_US)));
+
+    ((Runtime*)Runtime::Instance())->DeviceRelease(device);
+}
+
 TEST_F(NewCloudV2ApiTest, create_args_test_02)
 {
     Runtime* rtInstance = (Runtime*)Runtime::Instance();
