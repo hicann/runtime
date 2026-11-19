@@ -1140,18 +1140,22 @@ typedef struct {
 ## aclrtPtrAttributes
 
 ```c
+#pragma pack(4)
 typedef struct aclrtPtrAttributes {
     aclrtMemLocation location;
     uint32_t pageSize;
-    uint32_t rsv[4];
+    void* hostPtr;
+    void* devicePtr;
 } aclrtPtrAttributes;
+#pragma pack()
 ```
 
 | 成员名称 | 说明 |
 | --- | --- |
 | location | 内存所在位置。类型定义请参见[aclrtMemLocation](#aclrtMemLocation)。<br>当type为ACL_MEM_LOCATION_TYPE_HOST时，id无效。 |
 | pageSize | 页表大小，单位Byte。 |
-| rsv | 预留参数。当前固定配置为0。 |
+| hostPtr | 内存位于Host侧的指针，内存不在Host侧时为nullptr。 |
+| devicePtr | 内存位于Device侧的指针，内存不在Device侧时为nullptr。 |
 
 <br>
 

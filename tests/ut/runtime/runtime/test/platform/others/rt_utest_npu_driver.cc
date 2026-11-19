@@ -37,6 +37,31 @@ using namespace cce::runtime;
 DVresult drvMemGetAttribute_9(DVdeviceptr vptr, struct DVattribute* attr);
 
 namespace {
+memcpy_info g_memcpyInfo = {};
+bool g_halMemcpyInfoIsNull = false;
+
+drvError_t CaptureHalMemcpyInfo(void* dst, size_t dstSize, void* src, size_t count, memcpy_info* info)
+{
+    EXPECT_NE(dst, nullptr);
+    EXPECT_NE(src, nullptr);
+    EXPECT_EQ(dstSize, count);
+    if (info == nullptr) {
+        return DRV_ERROR_INVALID_VALUE;
+    }
+    g_memcpyInfo = *info;
+    return DRV_ERROR_NOT_SUPPORT;
+}
+
+drvError_t CaptureHalMemcpyNullInfo(void* dst, size_t dstSize, void* src, size_t count, memcpy_info* info)
+{
+    (void)dst;
+    (void)dstSize;
+    (void)src;
+    (void)count;
+    g_halMemcpyInfoIsNull = (info == nullptr);
+    return DRV_ERROR_NONE;
+}
+
 constexpr auto BUFFER_ALLOCATOR_WAIT_TIMEOUT = std::chrono::seconds(1);
 constexpr auto BUFFER_ALLOCATOR_CALLBACK_TIMEOUT = std::chrono::seconds(2);
 constexpr auto BUFFER_ALLOCATOR_BLOCKED_CHECK_TIMEOUT = std::chrono::milliseconds(100);
@@ -422,6 +447,69 @@ TEST_F(NpuDriverTest, memcpy_all_type)
     error = rawDrv->MemCopyAsyncWaitFinish(copyFd);
     EXPECT_EQ(error, RT_ERROR_NONE);
     delete rawDrv;
+}
+
+TEST_F(NpuDriverTest, MemCopySyncAdapterSupportedFeatureUsesHalMemcpy)
+{
+    NpuDriver driver;
+    uint32_t src = 1U;
+    uint32_t dst = 0U;
+    constexpr uint32_t deviceId = 3U;
+    g_memcpyInfo = {};
+    MOCKER(halSupportFeature)
+        .expects(once())
+        .with(eq(deviceId), eq(FEATURE_SVM_MEMCPY_SUPPORT_REGISTER_ADDR))
+        .will(returnValue(true));
+    MOCKER(drvMemcpy).expects(never());
+    MOCKER(halMemcpy).expects(once()).will(invoke(CaptureHalMemcpyInfo));
+
+    EXPECT_EQ(
+        driver.MemCopySyncAdapter(&dst, sizeof(dst), &src, sizeof(src), RT_MEMCPY_HOST_TO_HOST, deviceId),
+        DRV_ERROR_NOT_SUPPORT);
+    EXPECT_EQ(g_memcpyInfo.devid, deviceId);
+    EXPECT_EQ(g_memcpyInfo.dir, DRV_MEMCPY_HOST_TO_HOST);
+    EXPECT_EQ(g_memcpyInfo.reserve[0], 0U);
+    EXPECT_EQ(g_memcpyInfo.reserve[1], 0U);
+}
+
+TEST_F(NpuDriverTest, MemCopySyncAdapterNonBasicKindPassesNullInfo)
+{
+    NpuDriver driver;
+    uint32_t src = 1U;
+    uint32_t dst = 0U;
+    constexpr uint32_t deviceId = 3U;
+    const rtMemcpyKind_t nonBasicKinds[] = {
+        RT_MEMCPY_HOST_TO_DEVICE_EX, RT_MEMCPY_DEVICE_TO_HOST_EX, RT_MEMCPY_DEFAULT};
+    MOCKER(halSupportFeature)
+        .stubs()
+        .with(eq(deviceId), eq(FEATURE_SVM_MEMCPY_SUPPORT_REGISTER_ADDR))
+        .will(returnValue(true));
+    MOCKER(drvMemcpy).expects(never());
+    MOCKER(halMemcpy).expects(exactly(3)).will(invoke(CaptureHalMemcpyNullInfo));
+
+    for (const auto kind : nonBasicKinds) {
+        g_halMemcpyInfoIsNull = false;
+        EXPECT_EQ(driver.MemCopySyncAdapter(&dst, sizeof(dst), &src, sizeof(src), kind, deviceId), DRV_ERROR_NONE);
+        EXPECT_TRUE(g_halMemcpyInfoIsNull);
+    }
+}
+
+TEST_F(NpuDriverTest, MemCopySyncAdapterUnsupportedFeatureFallsBackToDrvMemcpy)
+{
+    NpuDriver driver;
+    uint32_t src = 1U;
+    uint32_t dst = 0U;
+    constexpr uint32_t deviceId = 3U;
+    MOCKER(halSupportFeature)
+        .expects(once())
+        .with(eq(deviceId), eq(FEATURE_SVM_MEMCPY_SUPPORT_REGISTER_ADDR))
+        .will(returnValue(false));
+    MOCKER(halMemcpy).expects(never());
+    MOCKER(drvMemcpy).expects(once()).will(returnValue(DRV_ERROR_NONE));
+
+    EXPECT_EQ(
+        driver.MemCopySyncAdapter(&dst, sizeof(dst), &src, sizeof(src), RT_MEMCPY_HOST_TO_HOST, deviceId),
+        DRV_ERROR_NONE);
 }
 
 TEST_F(NpuDriverTest, drv_memcpy_not_support)

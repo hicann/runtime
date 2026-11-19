@@ -2183,13 +2183,51 @@ rtError_t NpuDriver::MemManagedGetAttrs(
     return RT_ERROR_NONE;
 }
 
+/** @brief Shared mapping from DV_MEM_* bit encoding to rtMemLocationType, used by all three query paths. */
+static rtError_t MemTypeToLocationType(
+    const uint32_t memType, const void* const ptr, rtMemLocationType& location, rtMemLocationType& realLocation)
+{
+    if ((memType & static_cast<uint32_t>(DV_MEM_LOCK_DEV)) != 0U) {
+        location = RT_MEMORY_LOC_DEVICE;
+        realLocation = RT_MEMORY_LOC_DEVICE;
+    } else if ((memType & static_cast<uint32_t>(DV_MEM_LOCK_HOST)) != 0U) {
+        location = RT_MEMORY_LOC_HOST;
+        realLocation = RT_MEMORY_LOC_HOST;
+    } else if ((memType & static_cast<uint32_t>(DV_MEM_LOCK_DEV_DVPP)) != 0U) {
+        location = RT_MEMORY_LOC_DEVICE;
+        realLocation = RT_MEMORY_LOC_DEVICE;
+    } else if ((memType & static_cast<uint32_t>(DV_MEM_SOMA)) != 0U) {
+        location = RT_MEMORY_LOC_DEVICE;
+        realLocation = RT_MEMORY_LOC_DEVICE;
+    } else if ((memType & static_cast<uint32_t>(DV_MEM_SVM_DEVICE)) != 0U) {
+        location = RT_MEMORY_LOC_DEVICE;
+        realLocation = RT_MEMORY_LOC_DEVICE;
+    } else if ((memType & static_cast<uint32_t>(DV_MEM_SVM_HOST)) != 0U) {
+        location = RT_MEMORY_LOC_HOST;
+        realLocation = RT_MEMORY_LOC_HOST;
+    } else if ((memType & static_cast<uint32_t>(DV_MEM_SVM)) != 0U) {
+        location = RT_MEMORY_LOC_DEVICE;
+        realLocation = RT_MEMORY_LOC_DEVICE; // to be check
+    } else if ((memType & static_cast<uint32_t>(DV_MEM_USER_REGISTER)) != 0U) {
+        location = RT_MEMORY_LOC_HOST;
+        realLocation = RT_MEMORY_LOC_HOST;
+    } else if ((memType & static_cast<uint32_t>(DV_MEM_USER_MALLOC)) != 0U) {
+        location = (IsRegisteredMemory(ptr)) ? RT_MEMORY_LOC_HOST : RT_MEMORY_LOC_UNREGISTERED;
+        realLocation = RT_MEMORY_LOC_HOST;
+    } else if ((memType & static_cast<uint32_t>(DV_MEM_UVM)) != 0U) {
+        location = RT_MEMORY_LOC_MANAGED;
+        realLocation = RT_MEMORY_LOC_MANAGED;
+    } else {
+        RT_LOG(RT_LOG_ERROR, "does not support this type, get memType=%" PRIu32, memType);
+        return RT_ERROR_INVALID_VALUE;
+    }
+
+    return RT_ERROR_NONE;
+}
+
 rtError_t NpuDriver::PtrGetAttributes(const void* const ptr, rtPtrAttributes_t* const attributes)
 {
-    struct DVattribute dvAttributes;
-    dvAttributes.devId = 0U;
-    dvAttributes.memType = 0U;
-    dvAttributes.pageSize = 0U;
-
+    struct DVattribute dvAttributes = {};
     const drvError_t drvRet = drvMemGetAttribute(RtPtrToPtr<DVdeviceptr>(ptr), &dvAttributes);
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(
@@ -2197,49 +2235,66 @@ rtError_t NpuDriver::PtrGetAttributes(const void* const ptr, rtPtrAttributes_t* 
         return RT_GET_DRV_ERRCODE(drvRet);
     }
 
-    attributes->pageSize = dvAttributes.pageSize;
-    attributes->location.type = RT_MEMORY_LOC_HOST;
+    rtMemLocationType location = RT_MEMORY_LOC_HOST;
+    rtMemLocationType realLocation = RT_MEMORY_LOC_HOST;
+    const rtError_t mapError = MemTypeToLocationType(dvAttributes.memType, ptr, location, realLocation);
+    COND_RETURN_WITH_NOLOG(mapError != RT_ERROR_NONE, mapError);
 
-    if ((dvAttributes.memType & static_cast<uint32_t>(DV_MEM_LOCK_DEV)) != 0U) {
-        attributes->location.type = RT_MEMORY_LOC_DEVICE;
-    } else if ((dvAttributes.memType & static_cast<uint32_t>(DV_MEM_LOCK_HOST)) != 0U) {
-        attributes->location.type = RT_MEMORY_LOC_HOST;
-    } else if ((dvAttributes.memType & static_cast<uint32_t>(DV_MEM_LOCK_DEV_DVPP)) != 0U) {
-        attributes->location.type = RT_MEMORY_LOC_DEVICE;
-    } else if ((dvAttributes.memType & static_cast<uint32_t>(DV_MEM_SOMA)) != 0U) {
-        attributes->location.type = RT_MEMORY_LOC_DEVICE;
-    } else if ((dvAttributes.memType & static_cast<uint32_t>(DV_MEM_SVM_DEVICE)) != 0U) {
-        attributes->location.type = RT_MEMORY_LOC_DEVICE;
-    } else if ((dvAttributes.memType & static_cast<uint32_t>(DV_MEM_SVM_HOST)) != 0U) {
-        attributes->location.type = RT_MEMORY_LOC_HOST;
-    } else if ((dvAttributes.memType & static_cast<uint32_t>(DV_MEM_SVM)) != 0U) {
-        attributes->location.type = RT_MEMORY_LOC_DEVICE;
-    } else if ((dvAttributes.memType & static_cast<uint32_t>(DV_MEM_USER_REGISTER)) != 0U) {
-        attributes->location.type = RT_MEMORY_LOC_HOST;
-    } else if ((dvAttributes.memType & static_cast<uint32_t>(DV_MEM_USER_MALLOC)) != 0U) {
-        attributes->location.type = (IsRegisteredMemory(ptr)) ? RT_MEMORY_LOC_HOST : RT_MEMORY_LOC_UNREGISTERED;
-    } else if ((dvAttributes.memType & DV_MEM_UVM) != 0U) {
-        attributes->location.type = RT_MEMORY_LOC_MANAGED;
-    } else {
-        RT_LOG(RT_LOG_ERROR, "does not support this type, drvMemGetAttribute get memType=%u", dvAttributes.memType);
-        return RT_ERROR_INVALID_VALUE;
-    }
+    attributes->pageSize = dvAttributes.pageSize;
+    attributes->location.type = location;
     // devId is valid only for the device side memory
-    attributes->location.id = (attributes->location.type == RT_MEMORY_LOC_HOST) ? 0U : dvAttributes.devId;
+    attributes->location.id = (location == RT_MEMORY_LOC_HOST) ? 0U : dvAttributes.devId;
+    // The old API does not report the host/device mapped addresses
+    attributes->hostPtr = nullptr;
+    attributes->devicePtr = nullptr;
 
     RT_LOG(RT_LOG_DEBUG, "drvMemGetAttribute memType=%u, devId=%u", dvAttributes.memType, dvAttributes.devId);
 
     return RT_ERROR_NONE;
 }
 
+rtError_t NpuDriver::PtrGetAttributesEnhanced(
+    const void* const ptr, rtPtrAttributes_t* const attributes, const uint32_t devId)
+{
+    // Slow path: halMemGetAddrAttr crosses the runtime/HAL boundary, so it is only queried when the caller really
+    // needs hostPtr/devicePtr (aclrtPointerGetAttributes). Falls back to the old API when the HAL lacks it, leaving
+    // both mapped pointers null.
+    if (&halMemGetAddrAttr != nullptr) {
+        struct drvGetAddrAttrIn addrAttrIn = {};
+        addrAttrIn.vptr = RtPtrToPtr<DVdeviceptr>(ptr);
+        addrAttrIn.devId = devId;
+        struct drvGetAddrAttrOut addrAttrOut = {};
+        const drvError_t drvRet = halMemGetAddrAttr(&addrAttrIn, &addrAttrOut);
+        if (drvRet != DRV_ERROR_NONE) {
+            DRV_ERROR_PROCESS(
+                drvRet, "Call driver api halMemGetAddrAttr failed, drvRetCode=%d.", static_cast<int32_t>(drvRet));
+            return RT_GET_DRV_ERRCODE(drvRet);
+        }
+
+        rtMemLocationType location = RT_MEMORY_LOC_HOST;
+        rtMemLocationType realLocation = RT_MEMORY_LOC_HOST;
+        const rtError_t mapError = MemTypeToLocationType(addrAttrOut.memType, ptr, location, realLocation);
+        COND_RETURN_WITH_NOLOG(mapError != RT_ERROR_NONE, mapError);
+
+        attributes->pageSize = addrAttrOut.pageSize;
+        attributes->location.type = location;
+        attributes->location.id = (location == RT_MEMORY_LOC_HOST) ? 0U : addrAttrOut.devId;
+        attributes->hostPtr = RtValueToPtr<void*>(addrAttrOut.hostPtr);
+        attributes->devicePtr = RtValueToPtr<void*>(addrAttrOut.devicePtr);
+
+        RT_LOG(
+            RT_LOG_DEBUG, "halMemGetAddrAttr memType=%" PRIu32 ", devId=%" PRIu32, addrAttrOut.memType,
+            addrAttrOut.devId);
+        return RT_ERROR_NONE;
+    }
+
+    return PtrGetAttributes(ptr, attributes);
+}
+
 rtError_t NpuDriver::PtrGetRealLocation(
     const void* const ptr, rtMemLocationType& location, rtMemLocationType& realLocation)
 {
-    struct DVattribute dvAttributes;
-    dvAttributes.devId = 0U;
-    dvAttributes.memType = 0U;
-    dvAttributes.pageSize = 0U;
-
+    struct DVattribute dvAttributes = {};
     const drvError_t drvRet = drvMemGetAttribute(RtPtrToPtr<DVdeviceptr>(ptr), &dvAttributes);
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(
@@ -2247,40 +2302,8 @@ rtError_t NpuDriver::PtrGetRealLocation(
         return RT_GET_DRV_ERRCODE(drvRet);
     }
 
-    if ((dvAttributes.memType & static_cast<uint32_t>(DV_MEM_LOCK_DEV)) != 0U) {
-        location = RT_MEMORY_LOC_DEVICE;
-        realLocation = RT_MEMORY_LOC_DEVICE;
-    } else if ((dvAttributes.memType & static_cast<uint32_t>(DV_MEM_LOCK_HOST)) != 0U) {
-        location = RT_MEMORY_LOC_HOST;
-        realLocation = RT_MEMORY_LOC_HOST;
-    } else if ((dvAttributes.memType & static_cast<uint32_t>(DV_MEM_LOCK_DEV_DVPP)) != 0U) {
-        location = RT_MEMORY_LOC_DEVICE;
-        realLocation = RT_MEMORY_LOC_DEVICE;
-    } else if ((dvAttributes.memType & static_cast<uint32_t>(DV_MEM_SOMA)) != 0U) {
-        location = RT_MEMORY_LOC_DEVICE;
-        realLocation = RT_MEMORY_LOC_DEVICE;
-    } else if ((dvAttributes.memType & static_cast<uint32_t>(DV_MEM_SVM_DEVICE)) != 0U) {
-        location = RT_MEMORY_LOC_DEVICE;
-        realLocation = RT_MEMORY_LOC_DEVICE;
-    } else if ((dvAttributes.memType & static_cast<uint32_t>(DV_MEM_SVM_HOST)) != 0U) {
-        location = RT_MEMORY_LOC_HOST;
-        realLocation = RT_MEMORY_LOC_HOST;
-    } else if ((dvAttributes.memType & static_cast<uint32_t>(DV_MEM_SVM)) != 0U) {
-        location = RT_MEMORY_LOC_DEVICE;
-        realLocation = RT_MEMORY_LOC_DEVICE; // to be check
-    } else if ((dvAttributes.memType & static_cast<uint32_t>(DV_MEM_USER_REGISTER)) != 0U) {
-        location = RT_MEMORY_LOC_HOST;
-        realLocation = RT_MEMORY_LOC_HOST;
-    } else if ((dvAttributes.memType & static_cast<uint32_t>(DV_MEM_USER_MALLOC)) != 0U) {
-        location = (IsRegisteredMemory(ptr)) ? RT_MEMORY_LOC_HOST : RT_MEMORY_LOC_UNREGISTERED;
-        realLocation = RT_MEMORY_LOC_HOST;
-    } else if ((dvAttributes.memType & static_cast<uint32_t>(DV_MEM_UVM)) != 0U) {
-        location = RT_MEMORY_LOC_MANAGED;
-        realLocation = RT_MEMORY_LOC_MANAGED;
-    } else {
-        RT_LOG(RT_LOG_ERROR, "does not support this type, drvMemGetAttribute get memType=%u", dvAttributes.memType);
-        return RT_ERROR_INVALID_VALUE;
-    }
+    const rtError_t mapError = MemTypeToLocationType(dvAttributes.memType, ptr, location, realLocation);
+    COND_RETURN_WITH_NOLOG(mapError != RT_ERROR_NONE, mapError);
 
     RT_LOG(
         RT_LOG_DEBUG, "PtrGetRealLocation memType=%u, devId=%u, realLoc=%s", dvAttributes.memType, dvAttributes.devId,
@@ -2307,19 +2330,38 @@ rtError_t NpuDriver::QueryDeviceCcStatus(const uint32_t deviceId, bool& ccOn)
     return RT_ERROR_NONE;
 }
 
+static memcpy_info* BuildDrvMemcpyInfo(const rtMemcpyKind_t kind, memcpy_info& drvInfo, const uint32_t devId)
+{
+    if ((kind < RT_MEMCPY_HOST_TO_HOST) || (kind > RT_MEMCPY_DEVICE_TO_DEVICE)) {
+        RT_LOG(
+            RT_LOG_DEBUG, "Memcpy kind %s has no driver copy direction, use default halMemcpy.", MemcpyKindToStr(kind));
+        return nullptr;
+    }
+    drvInfo = {static_cast<drvMemcpyKind_t>(kind), devId, {0, 0}};
+    return &drvInfo;
+}
+
 drvError_t NpuDriver::MemCopySyncAdapter(
     void* const dst, const uint64_t destMax, const void* const src, const uint64_t size, const rtMemcpyKind_t kind,
     const uint32_t devId)
 {
-    if (devId != INVALID_COPY_MODULEID) {
-        if (&halMemcpy == nullptr) {
-            RT_LOG(RT_LOG_WARNING, "[drv api] halMemcpy does not exist, [drv api] drvMemcpy is called.");
-        } else {
-            struct memcpy_info drvDir = {static_cast<drvMemcpyKind_t>(kind), devId, {0, 0}};
+    if ((devId != INVALID_COPY_MODULEID) && (&halMemcpy != nullptr)) {
+        // Buffer memory on mbuf chips can only be copied by halMemcpy, so keep those chips on it
+        // without querying the new driver feature.
+        const bool isMbufChip = IS_SUPPORT_CHIP_FEATURE(chipType_, RtOptionalFeatureType::RT_FEATURE_MEM_MBUF_COPY);
+        const bool supported = isMbufChip || ((&halSupportFeature != nullptr) &&
+                                              halSupportFeature(devId, FEATURE_SVM_MEMCPY_SUPPORT_REGISTER_ADDR));
+        RT_LOG(
+            RT_LOG_DEBUG, "Memcpy feature query: deviceId=%" PRIu32 ", mbufChip=%" PRId32 ", supported=%" PRId32 ".",
+            devId, isMbufChip, supported);
+        if (supported) {
+            memcpy_info drvInfo = {};
             return halMemcpy(
-                dst, static_cast<size_t>(destMax), const_cast<void*>(src), static_cast<size_t>(size), &drvDir);
+                dst, static_cast<size_t>(destMax), const_cast<void*>(src), static_cast<size_t>(size),
+                BuildDrvMemcpyInfo(kind, drvInfo, devId));
         }
     }
+    RT_LOG(RT_LOG_DEBUG, "Memcpy fallback to drvMemcpy: deviceId=%" PRIu32, devId);
     return drvMemcpy(RtPtrToPtr<UINT64>(dst), destMax, RtPtrToPtr<UINT64>(src), size);
 }
 

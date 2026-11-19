@@ -2570,13 +2570,8 @@ rtError_t ApiImpl::MemCopySync(
                                                                                         RT_MEMCPY_DEVICE_TO_DEVICE;
     }
 
-    const rtChipType_t chipType = Runtime::Instance()->GetChipType();
-    if (((checkKind == WITHOUT_CHECK_KIND) || (checkKind == NOT_CHECK_KIND_BUT_CHECK_PINNED)) &&
-        IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_MEM_MBUF_COPY)) {
-        /* on cloudv2, mbuff memcpy */
-        return driver->MemCopySync(dst, destMax, src, cnt, curKind, true, device->Id_());
-    }
-    return driver->MemCopySync(dst, destMax, src, cnt, curKind);
+    UNUSED(checkKind);
+    return driver->MemCopySync(dst, destMax, src, cnt, curKind, true, device->Id_());
 }
 
 static void ConvertMappedAddrToDevice(Device* const device, void*& src, rtMemcpyKind_t& kind)
@@ -2767,7 +2762,25 @@ rtError_t ApiImpl::PointerGetAttributes(rtPointerAttributes_t* const attributes,
 
 rtError_t ApiImpl::PtrGetAttributes(const void* const ptr, rtPtrAttributes_t* const attributes)
 {
-    return GetPtrAttributes(ptr, attributes);
+    Context* const curCtx = CurrentContext();
+    Driver* curDrv = nullptr;
+    uint32_t devId = 0U;
+    bool hasDevice = false;
+
+    if (!ContextManage::CheckContextIsValid(curCtx) || (curCtx->Device_() == nullptr)) {
+        curDrv = Runtime::Instance()->driverFactory_.GetDriver(NPU_DRIVER);
+    } else {
+        curDrv = curCtx->Device_()->Driver_();
+        devId = static_cast<uint32_t>(curCtx->Device_()->Id_());
+        hasDevice = true;
+    }
+    // Slow path (halMemGetAddrAttr): only aclrtPointerGetAttributes needs the hostPtr/devicePtr pair, other paths
+    // keep using drvMemGetAttribute. Without a valid device the driver-side id is unknown, so degrade and leave both
+    // mapped pointers null.
+    if (!hasDevice) {
+        return GetPtrAttributes(ptr, attributes);
+    }
+    return curDrv->PtrGetAttributesEnhanced(ptr, attributes, devId);
 }
 
 rtError_t ApiImpl::GetDeviceIDs(uint32_t* const devId, const uint32_t len)

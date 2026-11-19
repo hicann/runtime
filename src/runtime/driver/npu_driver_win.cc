@@ -1893,6 +1893,15 @@ rtError_t NpuDriver::PtrGetAttributes(const void* const ptr, rtPtrAttributes_t* 
     return RT_ERROR_NONE;
 }
 
+rtError_t NpuDriver::PtrGetAttributesEnhanced(
+    const void* const ptr, rtPtrAttributes_t* const attributes, const uint32_t devId)
+{
+    UNUSED(attributes);
+    UNUSED(ptr);
+    UNUSED(devId);
+    return RT_ERROR_NONE;
+}
+
 rtError_t NpuDriver::PtrGetRealLocation(
     const void* const ptr, rtMemLocationType& location, rtMemLocationType& realLocation)
 {

@@ -52,11 +52,14 @@ typedef struct {
     rtMemLocationType type;
 } rtMemLocation;
 
+#pragma pack(push, 4)
 typedef struct {
     rtMemLocation location;
     uint32_t pageSize;
-    uint32_t rsv[4]; // 预留字段，后续待驱动整改后返回内存类型
+    void* hostPtr;   /* null when the memory is not on host */
+    void* devicePtr; /* null when the memory is not on device */
 } rtPtrAttributes_t;
+#pragma pack(pop)
 
 typedef enum {
     RT_HAC_TYPE_STARS = 0,

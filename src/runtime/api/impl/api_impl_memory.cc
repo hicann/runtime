@@ -62,12 +62,7 @@ rtError_t ApiImpl::MemCopySyncEx(
                                                                                         RT_MEMCPY_DEVICE_TO_DEVICE;
     }
 
-    const rtChipType_t chipType = Runtime::Instance()->GetChipType();
-    if (IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_MEM_MBUF_COPY)) {
-        /* on cloudv2, mbuff memcpy */
-        return driver->MemCopySync(dst, destMax, src, cnt, curKind, true, device->Id_());
-    }
-    return driver->MemCopySync(dst, destMax, src, cnt, curKind);
+    return driver->MemCopySync(dst, destMax, src, cnt, curKind, true, device->Id_());
 }
 
 rtError_t ApiImpl::RtsMemcpyAsync(
@@ -273,7 +268,7 @@ rtError_t ApiImpl::MemcpyHostTask(
     CHECK_CAPTURE_MODE_SUPPORT_AND_RETURN_WITH_FUNC_DESC(curCtx, "Delivering a memory copy task on the host");
 
     if (Runtime::Instance()->ChipIsHaveStars()) {
-        return curCtx->Device_()->Driver_()->MemCopySync(dst, destMax, src, cnt, kind);
+        return curCtx->Device_()->Driver_()->MemCopySync(dst, destMax, src, cnt, kind, true, curCtx->Device_()->Id_());
     }
     Stream* curStm = stm;
     if (curStm == nullptr) {

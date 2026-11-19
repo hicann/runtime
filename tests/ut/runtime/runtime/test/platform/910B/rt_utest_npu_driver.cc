@@ -328,6 +328,51 @@ TEST_F(CloudV2NpuDriverTest, memCopy_sync_adapter)
     delete rawDrv;
 }
 
+TEST_F(CloudV2NpuDriverTest, MemCopySyncAdapterMbufChipSkipsFeatureQuery)
+{
+    NpuDriver driver;
+    uint32_t src = 1U;
+    uint32_t dst = 0U;
+    constexpr uint32_t deviceId = 3U;
+    MOCKER(halSupportFeature).expects(never());
+    MOCKER(drvMemcpy)
+        .expects(once())
+        .with(eq(RtPtrToPtr<DVdeviceptr>(&dst)), eq(sizeof(dst)), eq(RtPtrToPtr<DVdeviceptr>(&src)), eq(sizeof(src)))
+        .will(returnValue(DRV_ERROR_INVALID_VALUE));
+
+    EXPECT_EQ(
+        driver.MemCopySyncAdapter(&dst, sizeof(dst), &src, sizeof(src), RT_MEMCPY_HOST_TO_HOST, deviceId),
+        DRV_ERROR_INVALID_VALUE);
+}
+
+TEST_F(CloudV2NpuDriverTest, MemCopySyncAdapterMissingHalMemcpyFallsBackToDrvMemcpy)
+{
+    NpuDriver driver;
+    uint32_t src = 1U;
+    uint32_t dst = 0U;
+    constexpr uint32_t deviceId = 4U;
+    ASSERT_EQ(&halMemcpy, nullptr);
+    MOCKER(halSupportFeature).expects(never());
+    MOCKER(drvMemcpy).expects(once()).will(returnValue(DRV_ERROR_NONE));
+
+    EXPECT_EQ(
+        driver.MemCopySyncAdapter(&dst, sizeof(dst), &src, sizeof(src), RT_MEMCPY_HOST_TO_HOST, deviceId),
+        DRV_ERROR_NONE);
+}
+
+TEST_F(CloudV2NpuDriverTest, MemCopySyncAdapterInvalidDeviceSkipsFeatureQuery)
+{
+    NpuDriver driver;
+    uint32_t src = 1U;
+    uint32_t dst = 0U;
+    MOCKER(halSupportFeature).expects(never());
+    MOCKER(drvMemcpy).expects(once()).will(returnValue(DRV_ERROR_NONE));
+
+    EXPECT_EQ(
+        driver.MemCopySyncAdapter(&dst, sizeof(dst), &src, sizeof(src), RT_MEMCPY_HOST_TO_HOST, INVALID_COPY_MODULEID),
+        DRV_ERROR_NONE);
+}
+
 TEST_F(CloudV2NpuDriverTest, DevMemAlloc1GHugePage_3)
 {
     rtError_t error;
