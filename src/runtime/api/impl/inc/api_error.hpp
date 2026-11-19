@@ -524,7 +524,7 @@ public:
     rtError_t GetAiCoreCount(uint32_t* const aiCoreCnt) override;
     rtError_t GetAiCpuCount(uint32_t* const aiCpuCnt) override;
     rtError_t LaunchHostFunc(
-        Stream* const stm, const rtCallback_t callBackFunc, void* const fnData, bool isBlock = true) override;
+        Stream* const stm, rtCallback_t const callBackFunc, void* const fnData, const bool isBlock = true) override;
     rtError_t LaunchHostFuncV2(Stream* const stm, const rtHostCpuFunc callBackFunc, void* const fnData) override;
     // stream label func
     rtError_t LabelSwitchByIndex(

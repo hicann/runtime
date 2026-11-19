@@ -17,6 +17,8 @@ namespace runtime {
 
 rtError_t Event::CheckCaptureEvent(const char* const functionDescription, const char* const eventName) const
 {
+    UNUSED(functionDescription);
+    UNUSED(eventName);
     COND_RETURN_AND_MSG_OUTER(
         GetCaptureStream() != nullptr, RT_ERROR_INVALID_VALUE, ErrorCode::EE1016, functionDescription,
         RtFmtMsg("%s (event_id=%d) in the capture model is not supported", eventName, EventId_()));

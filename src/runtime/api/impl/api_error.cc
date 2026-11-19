@@ -6492,7 +6492,7 @@ rtError_t ApiErrorDecorator::GetMemUsageInfo(
 }
 
 rtError_t ApiErrorDecorator::LaunchHostFunc(
-    Stream* const stm, const rtCallback_t callBackFunc, void* const fnData, const bool isBlock)
+    Stream* const stm, rtCallback_t const callBackFunc, void* const fnData, const bool isBlock)
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         callBackFunc, RT_ERROR_INVALID_VALUE, "Adding a host callback function to the stream task queue");
