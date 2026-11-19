@@ -6585,6 +6585,19 @@ TEST_F(UTEST_ACL_Runtime, aclrtValueWait_success)
     EXPECT_EQ(ret, ACL_SUCCESS);
 }
 
+TEST_F(UTEST_ACL_Runtime, StreamBatchMemOpForwardsArrayAndErrors)
+{
+    aclrtStreamBatchMemOpParams params[2]{};
+    auto* rtParams = reinterpret_cast<const rtStreamBatchMemOpParams_t*>(params);
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtStreamBatchMemOp(rtParams, 2U, 0U, nullptr))
+        .WillOnce(Return(RT_ERROR_NONE))
+        .WillOnce(Return(ACL_ERROR_RT_PARAM_INVALID))
+        .WillOnce(Return(ACL_ERROR_RT_FEATURE_NOT_SUPPORT));
+    EXPECT_EQ(aclrtStreamBatchMemOp(params, 2U, 0U, nullptr), ACL_SUCCESS);
+    EXPECT_EQ(aclrtStreamBatchMemOp(params, 2U, 0U, nullptr), ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(aclrtStreamBatchMemOp(params, 2U, 0U, nullptr), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+}
+
 TEST_F(UTEST_ACL_Runtime, aclrtGetStreamAvailableNum_failed_with_invalid_args)
 {
     auto ret = aclrtGetStreamAvailableNum(nullptr);

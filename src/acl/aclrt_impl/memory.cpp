@@ -1580,6 +1580,18 @@ aclError aclrtValueWaitImpl(void* devAddr, uint64_t value, uint32_t flag, aclrtS
     return ACL_SUCCESS;
 }
 
+aclError aclrtStreamBatchMemOpImpl(
+    aclrtStreamBatchMemOpParams* paramArray, size_t count, uint32_t flags, aclrtStream stream)
+{
+    ACL_PROFILING_REG(acl::AclProfType::AclrtStreamBatchMemOp);
+    ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(
+        rtStreamBatchMemOp(
+            reinterpret_cast<const rtStreamBatchMemOpParams_t*>(paramArray), count, flags,
+            static_cast<rtStream_t>(stream)),
+        rtStreamBatchMemOp);
+    return ACL_SUCCESS;
+}
+
 aclError aclrtReduceAsyncImpl(
     void* dst, const void* src, uint64_t count, aclrtReduceKind kind, aclDataType type, aclrtStream stream,
     void* reserve)

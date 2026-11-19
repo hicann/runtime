@@ -472,6 +472,8 @@ public:
         const void* const devAddr, const uint64_t value, const uint32_t flag, rtStream_t stm);
     virtual rtError_t rtsValueWait(
         const void* const devAddr, const uint64_t value, const uint32_t flag, rtStream_t stm);
+    virtual rtError_t rtStreamBatchMemOp(
+        const rtStreamBatchMemOpParams_t* params, size_t count, uint32_t flags, rtStream_t stm);
 
     virtual rtError_t rtsStreamGetAvailableNum(uint32_t* streamCount);
     virtual rtError_t rtNonBlockingLaunchBegin(rtStream_t stream, uint64_t flag);
@@ -1127,6 +1129,9 @@ public:
         rtsValueWrite, rtError_t(const void* const devAddr, const uint64_t value, const uint32_t flag, rtStream_t stm));
     MOCK_METHOD4(
         rtsValueWait, rtError_t(const void* const devAddr, const uint64_t value, const uint32_t flag, rtStream_t stm));
+    MOCK_METHOD4(
+        rtStreamBatchMemOp,
+        rtError_t(const rtStreamBatchMemOpParams_t* params, size_t count, uint32_t flags, rtStream_t stm));
 
     MOCK_METHOD1(rtsStreamGetAvailableNum, rtError_t(uint32_t* streamCount));
     MOCK_METHOD2(rtNonBlockingLaunchBegin, rtError_t(rtStream_t stream, uint64_t flag));

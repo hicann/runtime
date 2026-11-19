@@ -352,6 +352,7 @@ enum AclProfType {
     AclrtSnapshotProcessGetRestoreThreadId,
     AclmdlRITaskGetEnabled,
     AclrtMemRegisterUbSegment,
+    AclrtStreamBatchMemOp,
     // this is the end, can not add after AclRtProfTypeEnd
     AclRtProfTypeEnd
 };

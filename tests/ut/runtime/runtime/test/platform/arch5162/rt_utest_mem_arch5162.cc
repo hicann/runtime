@@ -195,6 +195,7 @@ TEST_F(Arch5162MemTest, UnsupportedMemoryCopyApiImpls_ReturnNotSupport)
         apiImpl.MemcpyBatchAsync(nullptr, nullptr, nullptr, nullptr, 0U, nullptr, nullptr, 0U, nullptr, nullptr),
         RT_ERROR_FEATURE_NOT_SUPPORT);
     EXPECT_EQ(apiImpl.MemWaitValue(nullptr, 0U, 0U, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(apiImpl.StreamBatchMemOp(nullptr, 0U, 0U, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
 }
 
 TEST_F(Arch5162MemTest, DevMallocApiImpl_ReturnNotSupport)

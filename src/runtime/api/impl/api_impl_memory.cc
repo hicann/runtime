@@ -598,5 +598,33 @@ rtError_t ApiImpl::MemWaitValue(const void* const devAddr, const uint64_t value,
     return cce::runtime::MemWaitValue(devAddr, value, flag, curStm);
 }
 
+rtError_t ApiImpl::StreamBatchMemOp(const rtStreamBatchMemOpParams_t* params, size_t count, uint32_t flags, Stream* stm)
+{
+    UNUSED(flags);
+    Context* const curCtx = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    Stream* curStm = stm;
+    if (curStm == nullptr) {
+        curStm = curCtx->DefaultStream_();
+        NULL_STREAM_PTR_RETURN_MSG(curStm);
+    }
+    COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
+        curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Submitting batch memory operations");
+    // Native launches retain their own locks, task ownership and asynchronous recovery.
+    for (size_t i = 0U; i < count; ++i) {
+        const rtStreamMemOpParams_t& op = (params[i].valueWait.operation == RT_STREAM_MEM_OP_VALUE_WRITE) ?
+                                              params[i].valueWrite :
+                                              params[i].valueWait;
+        const rtError_t error = (op.operation == RT_STREAM_MEM_OP_VALUE_WRITE) ?
+                                    cce::runtime::MemWriteValue(op.devAddr, op.value, op.flag, curStm) :
+                                    cce::runtime::MemWaitValue(op.devAddr, op.value, op.flag, curStm);
+        if (error != RT_ERROR_NONE) {
+            RT_LOG(RT_LOG_ERROR, "Batch submission failed at index=%zu; a prefix may be published.", i);
+            return error;
+        }
+    }
+    return RT_ERROR_NONE;
+}
+
 } // namespace runtime
 } // namespace cce

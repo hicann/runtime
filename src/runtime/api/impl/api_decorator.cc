@@ -1778,6 +1778,12 @@ rtError_t ApiDecorator::MemWaitValue(
     return impl_->MemWaitValue(devAddr, value, flag, stm);
 }
 
+rtError_t ApiDecorator::StreamBatchMemOp(
+    const rtStreamBatchMemOpParams_t* params, size_t count, uint32_t flags, Stream* stm)
+{
+    return impl_->StreamBatchMemOp(params, count, flags, stm);
+}
+
 rtError_t ApiDecorator::MemcpyBatch(
     void** dsts, void** srcs, size_t* sizes, size_t count, rtMemcpyBatchAttr* attrs, size_t* attrsIdxs, size_t numAttrs,
     size_t* failIdx)

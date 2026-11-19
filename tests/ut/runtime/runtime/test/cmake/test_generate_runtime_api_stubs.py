@@ -187,12 +187,12 @@ RUNTIME_API_STUB(rtNoop)
         self.assertEqual(catalog_version, product_version)
         self.assertFalse(set(names) - set(catalog))
         self.assertEqual(names, sorted(names))
-        self.assertEqual(len(catalog), 804)
-        self.assertEqual(len(names), 632)
+        self.assertEqual(len(catalog), 805)
+        self.assertEqual(len(names), 633)
         self.assertEqual(len(set(catalog) - set(names)), 172)
         self.assertEqual(
             sum(catalog[name].policy == "FEATURE_NOT_SUPPORT" for name in names),
-            628,
+            629,
         )
         self.assertEqual(
             sum(catalog[name].policy == "SUCCESS_NOOP" for name in names), 3
@@ -274,6 +274,19 @@ RUNTIME_API_STUB(rtNoop)
         self.assertNotIn("rtGetDevice", names)
         self.assertEqual(catalog["rtDeinit"].policy, "VOID_NOOP")
 
+    def test_stream_batch_mem_op_is_unsupported_on_tiny_and_arch5162(self):
+        _, catalog = GENERATOR.parse_catalog(
+            REPO_ROOT / "src/runtime/api/runtime_api_stub_catalog.def"
+        )
+        entry = catalog["rtStreamBatchMemOp"]
+        self.assertEqual(entry.policy, "FEATURE_NOT_SUPPORT")
+        for product in ("tiny", "arch5162"):
+            with self.subTest(product=product):
+                _, names = GENERATOR.parse_product_def(
+                    REPO_ROOT / f"src/runtime/cmake/{product}_unsupported_runtime_api.def"
+                )
+                self.assertIn(entry.name, names)
+
     def test_arch5162_acl_tests_reference_product_stubs(self):
         product_path = REPO_ROOT / "src/runtime/cmake/arch5162_unsupported_runtime_api.def"
         _, runtime_stub_names = GENERATOR.parse_product_def(product_path)
@@ -298,7 +311,8 @@ RUNTIME_API_STUB(rtNoop)
                 mappings.append((fields[0], fields[1]))
 
         acl_names = [acl_name for acl_name, _ in mappings]
-        self.assertEqual(len(acl_names), 249)
+        self.assertEqual(len(acl_names), 250)
+        self.assertIn(("aclrtStreamBatchMemOp", "rtStreamBatchMemOp"), mappings)
         self.assertFalse(any(name.startswith("acltdt") for name in acl_names))
         self.assertEqual(len(acl_names), len(set(acl_names)))
         self.assertFalse(

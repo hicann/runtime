@@ -10,6 +10,7 @@
 #ifndef __CCE_RUNTIME_MEMORY_C_HPP__
 #define __CCE_RUNTIME_MEMORY_C_HPP__
 
+#include "runtime/mem.h"
 #include "stream.hpp"
 
 namespace cce {

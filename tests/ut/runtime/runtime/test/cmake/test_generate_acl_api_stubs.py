@@ -9,6 +9,7 @@
 
 import csv
 import importlib.util
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -87,9 +88,9 @@ class GenerateAclApiStubsTest(unittest.TestCase):
             REPO_ROOT / "src/acl/aclrt_impl/acl_rt_wrapper.h"
         )
 
-        self.assertEqual(len(entries), 417)
+        self.assertEqual(len(entries), 418)
         self.assertEqual(
-            sum(entry.return_type == "aclError" for entry in entries.values()), 399
+            sum(entry.return_type == "aclError" for entry in entries.values()), 400
         )
         self.assertEqual(
             sum(entry.return_type != "aclError" for entry in entries.values()), 18
@@ -172,9 +173,9 @@ ACL_API_STUB(aclZero, ZERO)
 
         self.assertEqual(version, 1)
         self.assertEqual(real_provider_count, 118)
-        self.assertEqual(len(entries), 299)
+        self.assertEqual(len(entries), 300)
         self.assertEqual(
-            sum(entry.policy == "RT_FEATURE_NOT_SUPPORT" for entry in entries), 285
+            sum(entry.policy == "RT_FEATURE_NOT_SUPPORT" for entry in entries), 286
         )
         self.assertEqual(sum(entry.policy == "NULLPTR" for entry in entries), 3)
         self.assertEqual(sum(entry.policy == "INVALID_EXCEPTION_INFO" for entry in entries), 5)
@@ -284,6 +285,47 @@ ACL_API_STUB(aclZero, ZERO)
             "aclrtValueWrite",
         ):
             self.assertNotIn(name, unsupported_names)
+
+    def test_stream_batch_mem_op_is_unsupported_on_arch5162(self):
+        wrapper = GENERATOR.parse_wrapper(
+            REPO_ROOT / "src/acl/aclrt_impl/acl_rt_wrapper.h"
+        )
+        _, _, product_entries = GENERATOR.parse_product_def(
+            REPO_ROOT / "src/runtime/cmake/arch5162_unsupported_acl_api.def"
+        )
+        entries = {
+            entry.public_name: entry
+            for entry in GENERATOR.select_entries(wrapper, product_entries)
+        }
+        entry = entries["aclrtStreamBatchMemOp"]
+        self.assertEqual(entry.policy, "RT_FEATURE_NOT_SUPPORT")
+
+    def test_stream_batch_mem_op_public_c_abi(self):
+        compiler = shutil.which("cc") or shutil.which("gcc") or shutil.which("clang")
+        self.assertIsNotNone(compiler, "C11 compiler required to validate the public C ABI")
+        source = """\
+#include <stddef.h>
+#include "acl/acl_rt.h"
+
+typedef aclError (*BatchMemOpFunction)(aclrtStreamBatchMemOpParams*, size_t, uint32_t, aclrtStream);
+_Static_assert(_Generic(&aclrtStreamBatchMemOp, BatchMemOpFunction: 1, default: 0), "C batch signature");
+_Static_assert(sizeof(aclrtStreamMemOpType) == 4, "C operation tag width");
+_Static_assert(sizeof(unsigned int) == 4, "C flag width");
+_Static_assert(sizeof(aclrtStreamBatchMemOpParams) == 48, "C batch ABI size");
+_Static_assert(_Alignof(aclrtStreamBatchMemOpParams) == 8, "C batch ABI alignment");
+_Static_assert(offsetof(aclrtStreamBatchMemOpParams, reserved) == 0, "C reserved union offset");
+_Static_assert(sizeof(((aclrtStreamBatchMemOpParams*)0)->reserved) == 6 * sizeof(uint64_t), "C reserved size");
+_Static_assert(offsetof(aclrtStreamBatchMemOpParams, valueWait.devAddr) == 8, "C wait address offset");
+_Static_assert(offsetof(aclrtStreamBatchMemOpParams, valueWrite.devAddr) == 8, "C write address offset");
+_Static_assert(offsetof(aclrtStreamBatchMemOpParams, valueWait.value) == 16, "C wait value offset");
+_Static_assert(offsetof(aclrtStreamBatchMemOpParams, valueWrite.flag) == 24, "C write flag offset");
+"""
+        result = subprocess.run(
+            [compiler, "-std=c11", "-fsyntax-only", "-x", "c",
+             "-I", str(REPO_ROOT / "include/external"), "-"],
+            input=source, capture_output=True, text=True, check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_rejects_unsorted_product_api(self):
         product = self.write_product("""\

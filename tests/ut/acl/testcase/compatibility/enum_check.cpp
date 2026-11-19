@@ -1351,3 +1351,9 @@ TEST_F(UTEST_ACL_compatibility_enum_check, aclrtMemLinkType)
     type = (aclrtMemLinkType)3;
     EXPECT_EQ(type, ACL_RT_MEM_ACCESS_UB_MULTI_PORT_PATH);
 }
+
+TEST_F(UTEST_ACL_compatibility_enum_check, StreamBatchMemOpTags)
+{
+    EXPECT_EQ(ACL_RT_STREAM_MEM_OP_VALUE_WAIT, 0);
+    EXPECT_EQ(ACL_RT_STREAM_MEM_OP_VALUE_WRITE, 1);
+}

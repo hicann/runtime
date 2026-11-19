@@ -1120,6 +1120,10 @@ RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t
 RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t
     rtsValueWait(const void* const devAddr, const uint64_t value, const uint32_t flag, rtStream_t stm);
 
+/** @brief Submit ordered 64-bit memory operations; submission errors do not roll back a prefix. */
+RTS_API rtError_t
+rtStreamBatchMemOp(const rtStreamBatchMemOpParams_t* params, size_t count, uint32_t flags, rtStream_t stm);
+
 /**
  * @ingroup dvrt_mem
  * @brief This command is used to return the result to the user via virtual address contrast with physical handle.

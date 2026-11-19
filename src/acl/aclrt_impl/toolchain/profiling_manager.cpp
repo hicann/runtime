@@ -150,6 +150,7 @@ const std::map<AclProfType, std::string> PROF_TYPE_TO_NAMES = {
     {AclProfType::AclrtHostUnregister, "aclrtHostUnregister"},
     {AclProfType::AclrtValueWrite, "aclrtValueWrite"},
     {AclProfType::AclrtValueWait, "aclrtValueWait"},
+    {AclProfType::AclrtStreamBatchMemOp, "aclrtStreamBatchMemOp"},
     {AclProfType::AclrtGetStreamAvailableNum, "aclrtGetStreamAvailableNum"},
     {AclProfType::AclrtSetStreamAttribute, "aclrtSetStreamAttribute"},
     {AclProfType::AclrtGetStreamAttribute, "aclrtGetStreamAttribute"},

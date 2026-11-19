@@ -319,6 +319,9 @@
       (devAddr, value, flag, stream))                                                                                  \
     _(aclError, aclrtValueWait, (void* devAddr, uint64_t value, uint32_t flag, aclrtStream stream),                    \
       (devAddr, value, flag, stream))                                                                                  \
+    _(aclError, aclrtStreamBatchMemOp,                                                                                 \
+      (aclrtStreamBatchMemOpParams * paramArray, size_t count, uint32_t flags, aclrtStream stream),                    \
+      (paramArray, count, flags, stream))                                                                              \
     _(aclError, aclrtGetStreamAvailableNum, (uint32_t * streamCount), (streamCount))                                   \
     _(aclError, aclrtSetStreamAttribute,                                                                               \
       (aclrtStream stream, aclrtStreamAttr stmAttrType, aclrtStreamAttrValue * value), (stream, stmAttrType, value))   \

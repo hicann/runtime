@@ -362,6 +362,24 @@ rtError_t rtsValueWait(const void* const devAddr, const uint64_t value, const ui
 }
 
 VISIBILITY_DEFAULT
+rtError_t rtStreamBatchMemOp(const rtStreamBatchMemOpParams_t* params, size_t count, uint32_t flags, rtStream_t stm)
+{
+    GLOBAL_STATE_WAIT_IF_LOCKED();
+    const Runtime* const rtInstance = Runtime::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(rtInstance);
+    if (!IS_SUPPORT_CHIP_FEATURE(rtInstance->GetChipType(), RtOptionalFeatureType::RT_FEATURE_TASK_VALUE_WAIT)) {
+        RT_LOG(RT_LOG_WARNING, "chip type(%d) does not support.", static_cast<int32_t>(rtInstance->GetChipType()));
+        return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_FEATURE_NOT_SUPPORT);
+    }
+    Api* const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(stm, Stream, exeStream);
+    const rtError_t error = apiInstance->StreamBatchMemOp(params, count, flags, exeStream);
+    ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
 rtError_t rtsCmoAsync(void* srcAddrPtr, size_t srcLen, rtCmoOpCode cmoType, rtStream_t stm)
 {
     return rtCmoAsync(srcAddrPtr, srcLen, cmoType, stm);

@@ -10,6 +10,8 @@
 #ifndef TASK_TEST_HELPER_H
 #define TASK_TEST_HELPER_H
 
+#include <vector>
+#include "runtime/mem.h"
 #include "kernel/kernel.hpp"
 
 namespace cce {
@@ -25,6 +27,67 @@ inline Kernel* CreateTestKernelWithMixType(rtKernelAttrType type, uint8_t mixTyp
     }
     return kernel;
 }
+
+class Stream;
+class ApiImpl;
+
+namespace ut {
+namespace stream_mem_op {
+struct LaunchRecord {
+    uint32_t operation;
+    const void* address;
+    uint64_t value;
+    uint32_t flag;
+    Stream* stream;
+};
+struct StateData {
+    std::vector<LaunchRecord> launches;
+    size_t failAt = SIZE_MAX;
+};
+
+inline StateData& State()
+{
+    static StateData state;
+    return state;
+}
+
+inline rtError_t Record(uint32_t operation, const void* address, uint64_t value, uint32_t flag, Stream* stream)
+{
+    auto& state = State();
+    state.launches.push_back({operation, address, value, flag, stream});
+    return (state.launches.size() - 1U == state.failAt) ? RT_ERROR_DRV_ERR : RT_ERROR_NONE;
+}
+
+inline rtError_t Write(const void* address, uint64_t value, uint32_t flag, Stream* stream)
+{
+    return Record(RT_STREAM_MEM_OP_VALUE_WRITE, address, value, flag, stream);
+}
+
+inline rtError_t Wait(const void* address, uint64_t value, uint32_t flag, Stream* stream)
+{
+    return Record(RT_STREAM_MEM_OP_VALUE_WAIT, address, value, flag, stream);
+}
+
+inline rtError_t DeviceAttributes(ApiImpl* impl, const void* address, rtPtrAttributes_t* attributes)
+{
+    (void)impl;
+    (void)address;
+    attributes->location.type = RT_MEMORY_LOC_DEVICE;
+    return RT_ERROR_NONE;
+}
+
+inline rtStreamBatchMemOpParams_t Param(bool write, uint64_t value = 17U, uint32_t flag = 0U)
+{
+    rtStreamBatchMemOpParams_t param{};
+    if (write) {
+        param.valueWrite = {RT_STREAM_MEM_OP_VALUE_WRITE, reinterpret_cast<void*>(0x20000000ULL), value, flag};
+    } else {
+        param.valueWait = {RT_STREAM_MEM_OP_VALUE_WAIT, reinterpret_cast<void*>(0x20000000ULL), value, flag};
+    }
+    return param;
+}
+} // namespace stream_mem_op
+} // namespace ut
 
 } // namespace runtime
 } // namespace cce

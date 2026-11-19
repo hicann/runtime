@@ -2330,6 +2330,10 @@ RUNTIME_API(memory, rtError_t, rtsValueWrite,
     (const void* const devAddr, const uint64_t value, const uint32_t flag, rtStream_t stm),
     (devAddr, value, flag, stm), FEATURE_NOT_SUPPORT, EXPORT)
 
+RUNTIME_API(memory, rtError_t, rtStreamBatchMemOp,
+    (const rtStreamBatchMemOpParams_t* params, size_t count, uint32_t flags, rtStream_t stm),
+    (params, count, flags, stm), FEATURE_NOT_SUPPORT, EXPORT)
+
 RUNTIME_API(standard_soc, rtError_t, rtGetAiCoreCount,
     (uint32_t* aiCoreCnt),
     (aiCoreCnt), FEATURE_NOT_SUPPORT, EXPORT)

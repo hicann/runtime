@@ -12,6 +12,11 @@
 #include "platform_manager_v2.h"
 #include "rt_unwrap.h"
 #include "../../data/elf.h"
+#include "../../task_test_helper.h"
+#include <cstring>
+#include <vector>
+#include "memory_c.hpp"
+#include "dev_info_manage.h"
 
 namespace {
 Notify* g_ipcOpenNotifyRet = nullptr;
@@ -980,6 +985,290 @@ TEST_F(CloudV2ApiTest, mem_wait_record_task_05)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     delete rawDrv;
+}
+
+namespace {
+namespace batch_test = cce::runtime::ut::stream_mem_op;
+
+void SetupBatchMocks(ApiImpl& impl)
+{
+    batch_test::State() = batch_test::StateData{};
+    MOCKER_CPP_VIRTUAL(&impl, &ApiImpl::PtrGetAttributes).stubs().will(invoke(batch_test::DeviceAttributes));
+    MOCKER(cce::runtime::MemWriteValue).stubs().will(invoke(batch_test::Write));
+    MOCKER(cce::runtime::MemWaitValue).stubs().will(invoke(batch_test::Wait));
+}
+} // namespace
+
+TEST_F(CloudV2ApiTest, StreamBatchMemOpOrderedSubmission)
+{
+    ApiImpl impl;
+    SetupBatchMocks(impl);
+    rtStreamBatchMemOpParams_t params[] = {
+        batch_test::Param(true, 11U), batch_test::Param(false, 22U, 3U), batch_test::Param(true, 33U)};
+    params[1].valueWait.devAddr = reinterpret_cast<void*>(0x20000008ULL);
+    params[2].valueWrite.devAddr = reinterpret_cast<void*>(0x20000010ULL);
+    EXPECT_EQ(rtStreamBatchMemOp(params, 3U, 0U, stream_), RT_ERROR_NONE);
+    const auto& calls = batch_test::State().launches;
+    ASSERT_EQ(calls.size(), 3U);
+    EXPECT_EQ(calls[0].operation, RT_STREAM_MEM_OP_VALUE_WRITE);
+    EXPECT_EQ(calls[1].operation, RT_STREAM_MEM_OP_VALUE_WAIT);
+    EXPECT_EQ(calls[2].operation, RT_STREAM_MEM_OP_VALUE_WRITE);
+    for (size_t i = 0U; i < calls.size(); ++i) {
+        EXPECT_EQ(calls[i].value, (i + 1U) * 11U);
+        EXPECT_EQ(calls[i].address, reinterpret_cast<void*>(0x20000000ULL + i * sizeof(uint64_t)));
+        EXPECT_EQ(calls[i].flag, i == 1U ? 3U : 0U);
+        EXPECT_EQ(calls[i].stream, rt_ut::UnwrapOrNull<Stream>(stream_));
+    }
+}
+
+TEST_F(CloudV2ApiTest, StreamBatchMemOpDecoratorsPreserveSubmissionAndErrors)
+{
+    ApiImpl impl;
+    SetupBatchMocks(impl);
+    Profiler profiler(nullptr);
+    ApiDecorator decorator(&impl);
+    ApiProfileDecorator profile(&impl, &profiler);
+    ApiProfileLogDecorator profileLog(&impl, &profiler);
+    MOCKER_CPP(&ApiProfileDecorator::CallApiBegin).expects(never());
+    MOCKER_CPP(&ApiProfileDecorator::CallApiEnd).expects(never());
+    Api* decorators[] = {&decorator, &profile, &profileLog};
+    Stream* stream = rt_ut::UnwrapOrNull<Stream>(stream_);
+    rtStreamBatchMemOpParams_t params[] = {batch_test::Param(true, 11U), batch_test::Param(false, 22U, 3U)};
+    params[1].valueWait.devAddr = reinterpret_cast<void*>(0x20000008ULL);
+    for (Api* api : decorators) {
+        for (size_t failAt : {SIZE_MAX, size_t{1U}}) {
+            batch_test::State() = batch_test::StateData{};
+            batch_test::State().failAt = failAt;
+            const rtError_t expected = failAt == SIZE_MAX ? RT_ERROR_NONE : RT_ERROR_DRV_ERR;
+            EXPECT_EQ(api->StreamBatchMemOp(params, 2U, 0U, stream), expected);
+            const auto& calls = batch_test::State().launches;
+            ASSERT_EQ(calls.size(), 2U);
+            EXPECT_EQ(calls[0].operation, RT_STREAM_MEM_OP_VALUE_WRITE);
+            EXPECT_EQ(calls[0].address, params[0].valueWrite.devAddr);
+            EXPECT_EQ(calls[0].value, 11U);
+            EXPECT_EQ(calls[0].flag, 0U);
+            EXPECT_EQ(calls[0].stream, stream);
+            EXPECT_EQ(calls[1].operation, RT_STREAM_MEM_OP_VALUE_WAIT);
+            EXPECT_EQ(calls[1].address, params[1].valueWait.devAddr);
+            EXPECT_EQ(calls[1].value, 22U);
+            EXPECT_EQ(calls[1].flag, 3U);
+            EXPECT_EQ(calls[1].stream, stream);
+        }
+    }
+}
+
+TEST_F(CloudV2ApiTest, StreamBatchMemOpCountAndTopLevelFlags)
+{
+    ApiImpl impl;
+    SetupBatchMocks(impl);
+    ApiErrorDecorator error(&impl);
+    auto param = batch_test::Param(true);
+    EXPECT_EQ(error.StreamBatchMemOp(&param, 0U, 0U, nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(error.StreamBatchMemOp(&param, 256U, 0U, nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(error.StreamBatchMemOp(nullptr, 1U, 0U, nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(error.StreamBatchMemOp(&param, 1U, 1U, nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_TRUE(batch_test::State().launches.empty());
+}
+
+TEST_F(CloudV2ApiTest, StreamBatchMemOpInvalidItemPublishesNothing)
+{
+    ApiImpl impl;
+    SetupBatchMocks(impl);
+    ApiErrorDecorator error(&impl);
+    rtStreamBatchMemOpParams_t invalidParams[] = {
+        batch_test::Param(true), batch_test::Param(true, 0U, 1U), batch_test::Param(false, 0U, 4U),
+        batch_test::Param(true), batch_test::Param(true)};
+    const uint32_t invalidTag = UINT32_MAX;
+    (void)std::memcpy(&invalidParams[0], &invalidTag, sizeof(invalidTag));
+    invalidParams[3].valueWrite.devAddr = nullptr;
+    invalidParams[4].valueWrite.devAddr = reinterpret_cast<void*>(0x20000001ULL);
+    for (const auto& invalid : invalidParams) {
+        rtStreamBatchMemOpParams_t params[] = {batch_test::Param(true), invalid};
+        EXPECT_EQ(error.StreamBatchMemOp(params, 2U, 0U, nullptr), RT_ERROR_INVALID_VALUE);
+        EXPECT_TRUE(batch_test::State().launches.empty());
+    }
+}
+
+TEST_F(CloudV2ApiTest, StreamBatchMemOpReservedTailPublishesNothing)
+{
+    ApiImpl impl;
+    SetupBatchMocks(impl);
+    ApiErrorDecorator error(&impl);
+    for (bool write : {true, false}) {
+        for (size_t offset = sizeof(rtValueWaitParams_t); offset < sizeof(rtStreamBatchMemOpParams_t); ++offset) {
+            rtStreamBatchMemOpParams_t params[] = {batch_test::Param(true), batch_test::Param(write)};
+            reinterpret_cast<uint8_t*>(&params[1])[offset] = 1U;
+            EXPECT_EQ(error.StreamBatchMemOp(params, 2U, 0U, nullptr), RT_ERROR_INVALID_VALUE);
+            EXPECT_TRUE(batch_test::State().launches.empty());
+        }
+    }
+}
+
+TEST_F(CloudV2ApiTest, StreamBatchMemOpIgnoresImplicitPadding)
+{
+    ApiImpl impl;
+    SetupBatchMocks(impl);
+    ApiErrorDecorator error(&impl);
+    rtStreamBatchMemOpParams_t params[] = {batch_test::Param(true, 11U), batch_test::Param(false, 22U, 3U)};
+    for (auto& param : params) {
+        auto* bytes = reinterpret_cast<uint8_t*>(&param);
+        const size_t tagEnd = sizeof(rtStreamMemOpType_t);
+        const size_t addressOffset = offsetof(rtValueWaitParams_t, devAddr);
+        (void)std::memset(bytes + tagEnd, 0xA5, addressOffset - tagEnd);
+        const size_t flagEnd = offsetof(rtValueWaitParams_t, flag) + sizeof(unsigned int);
+        (void)std::memset(bytes + flagEnd, 0xA5, sizeof(rtValueWaitParams_t) - flagEnd);
+    }
+    EXPECT_EQ(error.StreamBatchMemOp(params, 2U, 0U, nullptr), RT_ERROR_NONE);
+    const auto& calls = batch_test::State().launches;
+    ASSERT_EQ(calls.size(), 2U);
+    EXPECT_EQ(calls[0].operation, RT_STREAM_MEM_OP_VALUE_WRITE);
+    EXPECT_EQ(calls[0].value, 11U);
+    EXPECT_EQ(calls[1].operation, RT_STREAM_MEM_OP_VALUE_WAIT);
+    EXPECT_EQ(calls[1].value, 22U);
+    EXPECT_EQ(calls[1].flag, 3U);
+}
+
+TEST_F(CloudV2ApiTest, StreamBatchMemOpAttributeFailurePublishesNothing)
+{
+    ApiImpl impl;
+    SetupBatchMocks(impl);
+    MOCKER_CPP_VIRTUAL(&impl, &ApiImpl::PtrGetAttributes).reset();
+    MOCKER_CPP_VIRTUAL(&impl, &ApiImpl::PtrGetAttributes)
+        .stubs()
+        .will(invoke(+[](ApiImpl*, const void* address, rtPtrAttributes_t* attributes) -> rtError_t {
+            attributes->location.type = RT_MEMORY_LOC_DEVICE;
+            return address == reinterpret_cast<void*>(UINTPTR_MAX) ? RT_ERROR_DRV_ERR : RT_ERROR_NONE;
+        }));
+    ApiErrorDecorator error(&impl);
+    rtStreamBatchMemOpParams_t params[] = {batch_test::Param(true), batch_test::Param(false)};
+    params[1].valueWait.devAddr = reinterpret_cast<void*>(UINTPTR_MAX);
+    EXPECT_EQ(error.StreamBatchMemOp(params, 2U, 0U, nullptr), RT_ERROR_DRV_ERR);
+    EXPECT_TRUE(batch_test::State().launches.empty());
+}
+
+TEST_F(CloudV2ApiTest, StreamBatchMemOpHostMemoryPublishesNothing)
+{
+    ApiImpl impl;
+    SetupBatchMocks(impl);
+    MOCKER_CPP_VIRTUAL(&impl, &ApiImpl::PtrGetAttributes).reset();
+    MOCKER_CPP_VIRTUAL(&impl, &ApiImpl::PtrGetAttributes)
+        .stubs()
+        .will(invoke(+[](ApiImpl*, const void*, rtPtrAttributes_t* attributes) -> rtError_t {
+            attributes->location.type = RT_MEMORY_LOC_HOST;
+            return RT_ERROR_NONE;
+        }));
+    ApiErrorDecorator error(&impl);
+    auto param = batch_test::Param(true);
+    EXPECT_EQ(error.StreamBatchMemOp(&param, 1U, 0U, nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_TRUE(batch_test::State().launches.empty());
+}
+
+TEST_F(CloudV2ApiTest, StreamBatchMemOpLegalCountBoundaries)
+{
+    ApiImpl impl;
+    SetupBatchMocks(impl);
+    ApiErrorDecorator error(&impl);
+    for (size_t count : {size_t{1U}, size_t{255U}}) {
+        std::vector<rtStreamBatchMemOpParams_t> params;
+        for (size_t i = 0U; i < count; ++i) {
+            params.push_back(batch_test::Param(i % 2U == 0U, i));
+        }
+        batch_test::State().launches.clear();
+        EXPECT_EQ(error.StreamBatchMemOp(params.data(), count, 0U, nullptr), RT_ERROR_NONE);
+        const auto& calls = batch_test::State().launches;
+        ASSERT_EQ(calls.size(), count);
+        for (size_t i = 0U; i < count; ++i) {
+            EXPECT_EQ(calls[i].operation, i % 2U == 0U ? RT_STREAM_MEM_OP_VALUE_WRITE : RT_STREAM_MEM_OP_VALUE_WAIT);
+            EXPECT_EQ(calls[i].value, i);
+            EXPECT_EQ(calls[i].stream, Runtime::Instance()->CurrentContext()->DefaultStream_());
+        }
+    }
+}
+
+TEST_F(CloudV2ApiTest, StreamBatchMemOpSubmissionFailureStopsWithoutRetry)
+{
+    ApiImpl impl;
+    SetupBatchMocks(impl);
+    ApiErrorDecorator error(&impl);
+    rtStreamBatchMemOpParams_t params[] = {
+        batch_test::Param(true, 1U), batch_test::Param(false, 2U), batch_test::Param(true, 3U)};
+    // Fail both native operation types; the unsubmitted suffix must remain untouched.
+    for (size_t index : {size_t{0U}, size_t{1U}}) {
+        batch_test::State().launches.clear();
+        batch_test::State().failAt = index;
+        EXPECT_EQ(error.StreamBatchMemOp(params, 3U, 0U, nullptr), RT_ERROR_DRV_ERR);
+        ASSERT_EQ(batch_test::State().launches.size(), index + 1U);
+        EXPECT_EQ(batch_test::State().launches.front().value, 1U);
+        EXPECT_EQ(batch_test::State().launches.back().value, index + 1U);
+    }
+}
+
+TEST_F(CloudV2ApiTest, StreamBatchMemOpCaptureTasks)
+{
+    ApiImpl impl;
+    batch_test::State() = batch_test::StateData{};
+    MOCKER_CPP_VIRTUAL(&impl, &ApiImpl::PtrGetAttributes).stubs().will(invoke(batch_test::DeviceAttributes));
+    rtStream_t captureStream = nullptr;
+    rtModel_t model = nullptr;
+    void* devAddr = nullptr;
+    ASSERT_EQ(rtMalloc(&devAddr, 64U, RT_MEMORY_HBM, DEFAULT_MODULEID), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamCreate(&captureStream, 0), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamBeginCapture(captureStream, RT_STREAM_CAPTURE_MODE_GLOBAL), RT_ERROR_NONE);
+
+    rtStreamBatchMemOpParams_t params[] = {
+        batch_test::Param(true, 11U), batch_test::Param(false, 11U, 1U), batch_test::Param(true, 33U)};
+    params[0].valueWrite.devAddr = devAddr;
+    params[1].valueWait.devAddr = devAddr;
+    params[2].valueWrite.devAddr = devAddr;
+    // A rejected batch must not append its otherwise valid prefix to the graph.
+    params[2].valueWrite.flag = 1U;
+    EXPECT_EQ(rtStreamBatchMemOp(params, 3U, 0U, captureStream), ACL_ERROR_RT_PARAM_INVALID);
+    params[2].valueWrite.flag = 0U;
+    ASSERT_EQ(rtStreamBatchMemOp(params, 3U, 0U, captureStream), RT_ERROR_NONE);
+    (void)std::memset(params, 0, sizeof(params));
+    ASSERT_EQ(rtStreamEndCapture(captureStream, &model), RT_ERROR_NONE);
+
+    uint32_t count = 0U;
+    ASSERT_EQ(rtModelGetTasks(model, nullptr, &count), RT_ERROR_NONE);
+    std::vector<void*> tasks(count);
+    ASSERT_EQ(rtModelGetTasks(model, tasks.data(), &count), RT_ERROR_NONE);
+    size_t index = 0U;
+    const uint64_t values[] = {11U, 11U, 33U};
+    for (void* rawTask : tasks) {
+        const TaskInfo* task = static_cast<const TaskInfo*>(rawTask);
+        if ((task->type != TS_TASK_TYPE_MEM_WRITE_VALUE) && (task->type != TS_TASK_TYPE_MEM_WAIT_VALUE)) {
+            continue;
+        }
+        ASSERT_LT(index, 3U);
+        if (index == 1U) {
+            EXPECT_EQ(task->type, TS_TASK_TYPE_MEM_WAIT_VALUE);
+            EXPECT_EQ(task->u.memWaitValueTask.devAddr, reinterpret_cast<uintptr_t>(devAddr));
+            EXPECT_EQ(task->u.memWaitValueTask.value, values[index]);
+            EXPECT_EQ(task->u.memWaitValueTask.flag, 1U);
+        } else {
+            EXPECT_EQ(task->type, TS_TASK_TYPE_MEM_WRITE_VALUE);
+            EXPECT_EQ(task->u.memWriteValueTask.devAddr, reinterpret_cast<uintptr_t>(devAddr));
+            EXPECT_EQ(task->u.memWriteValueTask.value, values[index]);
+        }
+        ++index;
+    }
+    EXPECT_EQ(index, 3U);
+    EXPECT_EQ(rtModelDestroy(model), RT_ERROR_NONE);
+    EXPECT_EQ(rtStreamDestroy(captureStream), RT_ERROR_NONE);
+    EXPECT_EQ(rtFree(devAddr), RT_ERROR_NONE);
+}
+
+TEST_F(CloudV2ApiTest, StreamBatchMemOpFeatureDisabled)
+{
+    ApiImpl impl;
+    SetupBatchMocks(impl);
+    auto param = batch_test::Param(true);
+    MOCKER_CPP(&DevInfoManage::IsSupportChipFeature)
+        .expects(once())
+        .with(mockcpp::any(), eq(RtOptionalFeatureType::RT_FEATURE_TASK_VALUE_WAIT))
+        .will(returnValue(false));
+    EXPECT_EQ(rtStreamBatchMemOp(&param, 1U, 0U, stream_), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    EXPECT_TRUE(batch_test::State().launches.empty());
 }
 
 class CloudV2ApiTest2 : public testing::Test {

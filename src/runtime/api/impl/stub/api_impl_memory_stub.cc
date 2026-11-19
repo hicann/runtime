@@ -232,5 +232,14 @@ rtError_t ApiImpl::MemWaitValue(const void* const devAddr, const uint64_t value,
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
+rtError_t ApiImpl::StreamBatchMemOp(const rtStreamBatchMemOpParams_t* params, size_t count, uint32_t flags, Stream* stm)
+{
+    UNUSED(params);
+    UNUSED(count);
+    UNUSED(flags);
+    UNUSED(stm);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 } // namespace runtime
 } // namespace cce

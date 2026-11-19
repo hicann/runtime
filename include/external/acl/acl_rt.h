@@ -654,6 +654,28 @@ typedef enum aclrtKernelArgsType {
     ACL_RT_KERNEL_ARGS_DEVICE_BUFFER = 3,
 } aclrtKernelArgsType;
 
+typedef enum aclrtStreamMemOpType {
+    ACL_RT_STREAM_MEM_OP_VALUE_WAIT = 0,
+    ACL_RT_STREAM_MEM_OP_VALUE_WRITE = 1
+} aclrtStreamMemOpType;
+
+typedef union aclrtStreamBatchMemOpParams {
+    aclrtStreamMemOpType operation;
+    struct {
+        aclrtStreamMemOpType operation;
+        void* devAddr;
+        uint64_t value;
+        unsigned int flag; // ACL_STREAM_WAIT_VALUE_GEQ/EQ/AND/NOR
+    } valueWait;
+    struct {
+        aclrtStreamMemOpType operation;
+        void* devAddr;
+        uint64_t value;
+        unsigned int flag; // Reserved, must be 0.
+    } valueWrite;
+    uint64_t reserved[6];
+} aclrtStreamBatchMemOpParams;
+
 typedef enum aclmdlRITaskType {
     ACL_MODEL_RI_TASK_DEFAULT,
     ACL_MODEL_RI_TASK_KERNEL,
@@ -4173,6 +4195,18 @@ ACL_FUNC_VISIBILITY aclError aclrtValueWrite(void* devAddr, uint64_t value, uint
  * @retval OtherValues Failure
  */
 ACL_FUNC_VISIBILITY aclError aclrtValueWait(void* devAddr, uint64_t value, uint32_t flag, aclrtStream stream);
+
+/**
+ * @ingroup AscendCL
+ * @brief Enqueue 1..255 ordered 64-bit memory operations after whole-batch validation.
+ * @param [in] paramArray Host array, valid and unchanged during this call; reusable on return.
+ * @param [in] count Number of operations, in [1, 255].
+ * @param [in] flags Reserved, must be 0.
+ * @param [in] stream Stream, or NULL for the default stream. Capture follows aclrtValueWrite/aclrtValueWait.
+ * @return ACL_SUCCESS if accepted; submission failure may leave a published prefix, without rollback.
+ */
+ACL_FUNC_VISIBILITY aclError aclrtStreamBatchMemOp(
+    aclrtStreamBatchMemOpParams* paramArray, size_t count, uint32_t flags, aclrtStream stream);
 
 /**
  * @ingroup AscendCL

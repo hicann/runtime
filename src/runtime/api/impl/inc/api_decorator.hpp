@@ -275,6 +275,8 @@ public:
         const void* const devAddr, const uint64_t value, const uint32_t flag, Stream* const stm) override;
     rtError_t MemWaitValue(
         const void* const devAddr, const uint64_t value, const uint32_t flag, Stream* const stm) override;
+    rtError_t StreamBatchMemOp(
+        const rtStreamBatchMemOpParams_t* params, size_t count, uint32_t flags, Stream* stm) override;
     rtError_t MemcpyBatch(
         void** dsts, void** srcs, size_t* sizes, size_t count, rtMemcpyBatchAttr* attrs, size_t* attrsIdxs,
         size_t numAttrs, size_t* failIdx) override;

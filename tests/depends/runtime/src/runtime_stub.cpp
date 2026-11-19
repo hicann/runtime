@@ -1562,6 +1562,16 @@ rtError_t aclStub::rtsValueWait(const void* const devAddr, const uint64_t value,
     return RT_ERROR_NONE;
 }
 
+rtError_t aclStub::rtStreamBatchMemOp(
+    const rtStreamBatchMemOpParams_t* params, size_t count, uint32_t flags, rtStream_t stm)
+{
+    (void)params;
+    (void)count;
+    (void)flags;
+    (void)stm;
+    return RT_ERROR_NONE;
+}
+
 rtError_t aclStub::rtsStreamGetAvailableNum(uint32_t* streamCount)
 {
     (void)streamCount;
@@ -4029,6 +4039,11 @@ rtError_t rtsValueWrite(const void* const devAddr, const uint64_t value, const u
 rtError_t rtsValueWait(const void* const devAddr, const uint64_t value, const uint32_t flag, rtStream_t stm)
 {
     return MockFunctionTest::aclStubInstance().rtsValueWait(devAddr, value, flag, stm);
+}
+
+rtError_t rtStreamBatchMemOp(const rtStreamBatchMemOpParams_t* params, size_t count, uint32_t flags, rtStream_t stm)
+{
+    return MockFunctionTest::aclStubInstance().rtStreamBatchMemOp(params, count, flags, stm);
 }
 
 rtError_t rtsStreamGetAvailableNum(uint32_t* streamCount)

@@ -98,6 +98,7 @@
 #include "stream_david.hpp"
 #include "stream_factory.hpp"
 #include "../../data/elf.h"
+#include "../../task_test_helper.h"
 #include "davinci_multiple_task.h"
 #undef protected
 #undef private
@@ -12531,6 +12532,49 @@ TEST_F(ApiDavidTest, MemWriteValue_SubmitTaskPostProcFail)
 
     rtError_t error = apiImpl.MemWriteValue(nullptr, 0, 0, stream_);
     EXPECT_NE(error, RT_ERROR_NONE);
+}
+
+namespace {
+namespace batch_test = cce::runtime::ut::stream_mem_op;
+
+void SetupBatchMocks(ApiImpl& impl)
+{
+    batch_test::State() = batch_test::StateData{};
+    MOCKER_CPP_VIRTUAL(&impl, &ApiImpl::PtrGetAttributes).stubs().will(invoke(batch_test::DeviceAttributes));
+    MOCKER(cce::runtime::MemWriteValue).stubs().will(invoke(batch_test::Write));
+    MOCKER(cce::runtime::MemWaitValue).stubs().will(invoke(batch_test::Wait));
+}
+} // namespace
+
+TEST_F(ApiDavidTest, StreamBatchMemOpOrderedSubmission)
+{
+    ApiImplDavid impl;
+    SetupBatchMocks(impl);
+    rtStreamBatchMemOpParams_t params[] = {batch_test::Param(true, 11U), batch_test::Param(false, 22U, 3U)};
+    EXPECT_EQ(rtStreamBatchMemOp(params, 2U, 0U, streamHandle_), RT_ERROR_NONE);
+    const auto& calls = batch_test::State().launches;
+    ASSERT_EQ(calls.size(), 2U);
+    EXPECT_EQ(calls[0].operation, RT_STREAM_MEM_OP_VALUE_WRITE);
+    EXPECT_EQ(calls[1].operation, RT_STREAM_MEM_OP_VALUE_WAIT);
+    EXPECT_EQ(calls[0].value, 11U);
+    EXPECT_EQ(calls[1].value, 22U);
+    EXPECT_EQ(calls[1].flag, 3U);
+    EXPECT_EQ(calls[0].stream, stream_);
+    EXPECT_EQ(calls[1].stream, stream_);
+}
+
+TEST_F(ApiDavidTest, StreamBatchMemOpSubmissionFailureStopsWithoutRetry)
+{
+    ApiImplDavid impl;
+    SetupBatchMocks(impl);
+    rtStreamBatchMemOpParams_t params[] = {
+        batch_test::Param(true, 1U), batch_test::Param(false, 2U), batch_test::Param(true, 3U)};
+    batch_test::State().failAt = 1U;
+    EXPECT_EQ(rtStreamBatchMemOp(params, 3U, 0U, streamHandle_), ACL_ERROR_RT_DRV_INTERNAL_ERROR);
+    const auto& calls = batch_test::State().launches;
+    ASSERT_EQ(calls.size(), 2U);
+    EXPECT_EQ(calls[0].value, 1U);
+    EXPECT_EQ(calls[1].value, 2U);
 }
 
 TEST_F(ApiDavidTest, api_decorator_event_forwarding)

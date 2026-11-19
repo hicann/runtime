@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include <gtest/gtest.h>
+#include <type_traits>
 
 #ifndef private
 #define private public
@@ -1010,4 +1011,67 @@ TEST_F(UTEST_ACL_compatibility_cast_check, aclrtHostMemMallocPolicy)
     EXPECT_EQ(static_cast<int>(ACL_HOST_MEM_MALLOC_HUGE_1G_ONLY), static_cast<int>(RT_HOST_MEM_MALLOC_HUGE_1G_ONLY));
     EXPECT_EQ(sizeof(aclrtHostMemMallocPolicy), sizeof(rtHostMemMallocPolicy));
     EXPECT_EQ(sizeof(aclrtMallocAttrValue), 8U);
+}
+
+TEST_F(UTEST_ACL_compatibility_cast_check, StreamBatchMemOpAbi)
+{
+    static_assert(std::is_same<rtValueWaitParams_t, rtStreamMemOpParams_t>::value, "Shared Wait parameters");
+    static_assert(std::is_same<rtValueWriteParams_t, rtStreamMemOpParams_t>::value, "Shared Write parameters");
+    static_assert(std::is_standard_layout<rtStreamMemOpParams_t>::value, "Memory operation standard layout");
+    static_assert(std::is_trivially_copyable<rtStreamMemOpParams_t>::value, "Memory operation representation copy");
+    static_assert(sizeof(aclrtStreamBatchMemOpParams) == sizeof(rtStreamBatchMemOpParams_t), "Batch ABI size");
+    static_assert(alignof(aclrtStreamBatchMemOpParams) == alignof(rtStreamBatchMemOpParams_t), "Batch ABI alignment");
+    static_assert(
+        sizeof(decltype(aclrtStreamBatchMemOpParams::valueWait)) == sizeof(rtValueWaitParams_t), "Wait ABI size");
+    static_assert(
+        sizeof(decltype(aclrtStreamBatchMemOpParams::valueWrite)) == sizeof(rtValueWriteParams_t), "Write ABI size");
+    static_assert(
+        offsetof(aclrtStreamBatchMemOpParams, valueWait.operation) == offsetof(rtValueWaitParams_t, operation),
+        "operation ABI offset");
+    static_assert(
+        offsetof(aclrtStreamBatchMemOpParams, valueWait.devAddr) == offsetof(rtValueWaitParams_t, devAddr),
+        "devAddr ABI offset");
+    static_assert(
+        offsetof(aclrtStreamBatchMemOpParams, valueWait.value) == offsetof(rtValueWaitParams_t, value),
+        "value ABI offset");
+    static_assert(
+        offsetof(aclrtStreamBatchMemOpParams, valueWait.flag) == offsetof(rtValueWaitParams_t, flag),
+        "flag ABI offset");
+    static_assert(
+        offsetof(aclrtStreamBatchMemOpParams, valueWrite.operation) == offsetof(rtValueWriteParams_t, operation),
+        "operation ABI offset");
+    static_assert(
+        offsetof(aclrtStreamBatchMemOpParams, valueWrite.devAddr) == offsetof(rtValueWriteParams_t, devAddr),
+        "devAddr ABI offset");
+    static_assert(
+        offsetof(aclrtStreamBatchMemOpParams, valueWrite.value) == offsetof(rtValueWriteParams_t, value),
+        "value ABI offset");
+    static_assert(
+        offsetof(aclrtStreamBatchMemOpParams, valueWrite.flag) == offsetof(rtValueWriteParams_t, flag),
+        "flag ABI offset");
+    static_assert(ACL_RT_STREAM_MEM_OP_VALUE_WAIT == static_cast<int>(RT_STREAM_MEM_OP_VALUE_WAIT), "Wait tag");
+    static_assert(ACL_RT_STREAM_MEM_OP_VALUE_WRITE == static_cast<int>(RT_STREAM_MEM_OP_VALUE_WRITE), "Write tag");
+    using BatchFunction = aclError (*)(aclrtStreamBatchMemOpParams*, size_t, uint32_t, aclrtStream);
+    BatchFunction function = &aclrtStreamBatchMemOp;
+    EXPECT_NE(function, nullptr);
+    EXPECT_EQ(sizeof(aclrtStreamMemOpType), 4U);
+    EXPECT_EQ(sizeof(rtStreamMemOpType_t), 4U);
+    EXPECT_EQ(sizeof(unsigned int), 4U);
+    EXPECT_EQ(sizeof(aclrtStreamBatchMemOpParams), 48U);
+    EXPECT_EQ(alignof(aclrtStreamBatchMemOpParams), 8U);
+    EXPECT_EQ(offsetof(aclrtStreamBatchMemOpParams, reserved), 0U);
+    EXPECT_EQ(offsetof(rtStreamBatchMemOpParams_t, reserved), 0U);
+    EXPECT_EQ(sizeof(decltype(aclrtStreamBatchMemOpParams::reserved)), 6U * sizeof(uint64_t));
+    EXPECT_EQ(
+        sizeof(decltype(aclrtStreamBatchMemOpParams::reserved)),
+        sizeof(decltype(rtStreamBatchMemOpParams_t::reserved)));
+    EXPECT_EQ(sizeof(aclrtStreamBatchMemOpParams), sizeof(rtStreamBatchMemOpParams_t));
+    EXPECT_EQ(offsetof(aclrtStreamBatchMemOpParams, valueWait.operation), 0U);
+    EXPECT_EQ(offsetof(aclrtStreamBatchMemOpParams, valueWrite.operation), 0U);
+    EXPECT_EQ(offsetof(aclrtStreamBatchMemOpParams, valueWait.devAddr), 8U);
+    EXPECT_EQ(offsetof(aclrtStreamBatchMemOpParams, valueWrite.devAddr), 8U);
+    EXPECT_EQ(offsetof(aclrtStreamBatchMemOpParams, valueWait.value), 16U);
+    EXPECT_EQ(offsetof(aclrtStreamBatchMemOpParams, valueWrite.value), 16U);
+    EXPECT_EQ(offsetof(aclrtStreamBatchMemOpParams, valueWait.flag), 24U);
+    EXPECT_EQ(offsetof(aclrtStreamBatchMemOpParams, valueWrite.flag), 24U);
 }

@@ -289,6 +289,7 @@ ARCH5162_UNSUPPORTED_ACL_API_WITH_ARGS(aclrtSnapShotProcessRestore, rtSnapShotPr
 ARCH5162_UNSUPPORTED_ACL_API_WITH_ARGS(aclrtSnapShotProcessUnlock, rtSnapShotProcessUnlock,
                                       (static_cast<int>(getpid()), nullptr))
 ARCH5162_UNSUPPORTED_ACL_API(aclrtStreamAbort, rtStreamAbort)
+ARCH5162_UNSUPPORTED_ACL_API(aclrtStreamBatchMemOp, rtStreamBatchMemOp)
 ARCH5162_UNSUPPORTED_ACL_API(aclrtStreamGetFlags, rtStreamGetFlags)
 ARCH5162_UNSUPPORTED_ACL_API(aclrtStreamQuery, rtStreamQuery)
 ARCH5162_UNSUPPORTED_ACL_API(aclrtStreamStop, rtsStreamStop)

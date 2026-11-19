@@ -90,6 +90,28 @@ typedef struct {
     uint8_t rsv[16];
 } rtMemcpyBatchAttr;
 
+typedef enum rtStreamMemOpType_t {
+    RT_STREAM_MEM_OP_VALUE_WAIT = 0,
+    RT_STREAM_MEM_OP_VALUE_WRITE = 1
+} rtStreamMemOpType_t;
+
+typedef struct rtStreamMemOpParams_t {
+    rtStreamMemOpType_t operation;
+    void* devAddr;
+    uint64_t value;
+    unsigned int flag; // Wait: GEQ/EQ/AND/NOR; Write: reserved, must be 0.
+} rtStreamMemOpParams_t;
+
+typedef rtStreamMemOpParams_t rtValueWaitParams_t;
+typedef rtStreamMemOpParams_t rtValueWriteParams_t;
+
+typedef union rtStreamBatchMemOpParams_t {
+    rtStreamMemOpType_t operation;
+    rtValueWaitParams_t valueWait;
+    rtValueWriteParams_t valueWrite;
+    uint64_t reserved[6];
+} rtStreamBatchMemOpParams_t;
+
 typedef void* rtCmoDesc_t;
 
 typedef enum tagRtRecudeKind {
