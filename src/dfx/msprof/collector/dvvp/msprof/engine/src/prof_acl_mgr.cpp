@@ -602,7 +602,11 @@ int32_t ProfAclMgr::ProfSubscribePrecheck() const
 
 void ProfAclMgr::SetModeToCmd() { mode_ = WORK_MODE_CMD; }
 
+void ProfAclMgr::SetModeToCompute() { mode_ = WORK_MODE_COMPUTE; }
+
 void ProfAclMgr::SetModeToOff() { mode_ = WORK_MODE_OFF; }
+
+bool ProfAclMgr::IsComputeMode() const { return mode_ == WORK_MODE_COMPUTE; }
 
 bool ProfAclMgr::IsCmdMode() const
 {
@@ -648,6 +652,10 @@ bool ProfAclMgr::IsModeOff() const
     }
     return false;
 }
+
+WorkMode ProfAclMgr::GetWorkMode() const { return mode_; }
+
+bool ProfAclMgr::HasRunningDeviceTasks() const { return !devTasks_.empty(); }
 
 bool ProfAclMgr::IsPureCpuMode()
 {
@@ -1649,8 +1657,7 @@ int32_t ProfAclMgr::StartDeviceTask(
     const uint32_t devId, SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params)
 {
     std::string devIdStr = std::to_string(devId);
-    // init uploader
-    const int32_t ret = InitUploader(devIdStr);
+    const int32_t ret = IsComputeMode() ? EnsureComputeUploader(devIdStr) : InitUploader(devIdStr);
     if (ret != ACL_SUCCESS) {
         return ret;
     }
@@ -1680,6 +1687,17 @@ int32_t ProfAclMgr::StartDeviceTask(
     ProfAclTaskInfo taskInfo = {1, 0, paramsHandled};
     devTasks_[devId] = taskInfo;
 
+    return ACL_SUCCESS;
+}
+
+int32_t ProfAclMgr::EnsureComputeUploader(const std::string& devIdStr) const
+{
+    SHARED_PTR_ALIA<Uploader> uploader = nullptr;
+    UploaderMgr::instance()->GetUploader(devIdStr, uploader);
+    if (uploader == nullptr) {
+        MSPROF_LOGE("Compute uploader is not created, devId:%s.", devIdStr.c_str());
+        return ACL_ERROR_PROFILING_FAILURE;
+    }
     return ACL_SUCCESS;
 }
 
@@ -2711,8 +2729,8 @@ void ProfAclMgr::MsprofTxHandle(void)
 void ProfAclMgr::MsprofHostHandle(void)
 {
     std::lock_guard<std::mutex> lk(mtx_);
-    if (!IsCmdMode()) {
-        MSPROF_LOGI("MsprofHostHandle, not on cmd mode");
+    if (!IsCmdMode() && !IsComputeMode()) {
+        MSPROF_LOGI("MsprofHostHandle, not on cmd or compute mode");
         return;
     }
 
@@ -3056,6 +3074,62 @@ int32_t ProfAclMgr::ProfStartCommon(const uint32_t* devIdList, uint32_t devNums)
     return MSPROF_ERROR_NONE;
 }
 
+int32_t ProfAclMgr::ProfStartCommonDevice(uint32_t devId, bool ifInitHost)
+{
+    MSPROF_LOGI("Start profiling for common device task, devId:%u, initHost:%d.", devId, ifInitHost ? 1 : 0);
+    if (IsComputeMode()) {
+        MSPROF_EVENT("[NPU_COMPUTE] Start device task, devId:%u, initHost:%d.", devId, ifInitHost ? 1 : 0);
+    }
+    std::vector<uint32_t> notifyList;
+    if (!GetDevicesNotify(&devId, 1, notifyList) || notifyList.empty()) {
+        return MSPROF_ERROR_UNINITIALIZE;
+    }
+    std::string onlineInfo;
+    if (!ProfManager::instance()->CheckIfDevicesOnline(std::to_string(devId), onlineInfo)) {
+        MSPROF_LOGE("DevId:%u is not online, error info:%s", devId, onlineInfo.c_str());
+        return MSPROF_ERROR;
+    }
+    if (Msprof::Engine::MsprofReporter::reporters_.empty()) {
+        Msprof::Engine::MsprofReporter::InitReporters();
+    }
+    if (ifInitHost && StartUploaderDumper() != PROFILING_SUCCESS) {
+        MSPROF_LOGE("Failed to start uploader dumper.");
+        return MSPROF_ERROR;
+    }
+    if (ifInitHost) {
+        MsprofHostHandle();
+    }
+    if (MsprofDeviceHandle(devId) != PROFILING_SUCCESS) {
+        return MSPROF_ERROR;
+    }
+    return ProfStartCallback(devId);
+}
+
+int32_t ProfAclMgr::InitComputeProfileParams(
+    SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params, uint64_t profSwitch)
+{
+    std::lock_guard<std::mutex> lk(mtx_);
+    if (!isReady_) {
+        MSPROF_LOGE("Profiling manager is not ready.");
+        return PROFILING_FAILED;
+    }
+    if (params == nullptr) {
+        MSPROF_LOGE("Compute profile params is nullptr.");
+        return PROFILING_FAILED;
+    }
+    if (CheckGeneralServerOptionWhitelist(params) != MSPROF_ERROR_NONE) {
+        return PROFILING_FAILED;
+    }
+    params_ = params;
+    ProfDataTypeConfigHandle(params_);
+    dataTypeConfig_ = profSwitch;
+    SetModeToCompute();
+    MSPROF_EVENT(
+        "[NPU_COMPUTE] Init compute profile params success, profSwitch:0x%llx.",
+        static_cast<unsigned long long>(profSwitch));
+    return PROFILING_SUCCESS;
+}
+
 int32_t ProfAclMgr::ProfStartCallback(uint32_t devId)
 {
     // callback init handle
@@ -3146,6 +3220,35 @@ int32_t ProfAclMgr::ProfStopCommon(const MsprofConfig* config)
     MSPROF_EVENT("Received ProfAclStop request from acl");
     UploaderMgr::instance()->SetAllUploaderTransportStopped();
     return StopCommonDeviceTasks(devIds);
+}
+
+int32_t ProfAclMgr::ProfStopCommonDevice(uint32_t devId, uint64_t profSwitch)
+{
+    MSPROF_LOGI("Stop profiling for common device task, devId:%u.", devId);
+    if (IsComputeMode()) {
+        MSPROF_EVENT("[NPU_COMPUTE] Stop device task, devId:%u.", devId);
+    }
+    int32_t callbackRet = StopCommonCallback({devId}, profSwitch);
+    SHARED_PTR_ALIA<Uploader> uploader = nullptr;
+    UploaderMgr::instance()->GetUploader(std::to_string(devId), uploader);
+    if (uploader != nullptr) {
+        uploader->SetTransportStopped();
+    }
+    const int32_t taskRet = StopCommonDeviceTasks({devId});
+    return callbackRet != PROFILING_SUCCESS ? callbackRet : taskRet;
+}
+
+int32_t ProfAclMgr::ReleaseComputeHostContext()
+{
+    MSPROF_LOGI("Release profiling host context for compute task.");
+    MSPROF_EVENT("[NPU_COMPUTE] Release host context begin, jobId:%d.", DEFAULT_HOST_ID);
+    const int32_t ret = StopCommonDeviceTasks({DEFAULT_HOST_ID});
+    if (ret != ACL_SUCCESS) {
+        return ret;
+    }
+    (void)::Dvvp::Collect::Report::ProfReporterMgr::GetInstance().FlushHostReporters();
+    MSPROF_EVENT("[NPU_COMPUTE] Stop host task success, jobId:%d.", DEFAULT_HOST_ID);
+    return PROFILING_SUCCESS;
 }
 
 int32_t ProfAclMgr::ProfStopCallback(uint32_t devId, uint64_t dataTypeConfig) const

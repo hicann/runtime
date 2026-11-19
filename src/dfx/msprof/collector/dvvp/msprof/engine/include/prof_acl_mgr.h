@@ -147,6 +147,7 @@ private:
 enum WorkMode {
     WORK_MODE_OFF,       // profiling not at work
     WORK_MODE_CMD,       // profiling work on cmd mode
+    WORK_MODE_COMPUTE,   // profiling work on npu compute mode
     WORK_MODE_API_CTRL,  // profiling work on api ctrl mode (ProfInit)
     WORK_MODE_SUBSCRIBE, // profiling work on subscribe mode
 };
@@ -184,8 +185,10 @@ public:
     int32_t ProfStopPrecheck() const;
     int32_t ProfFinalizePrecheck() const;
     int32_t ProfSubscribePrecheck() const;
+    void SetModeToCompute();
     void SetModeToCmd();
     void SetModeToOff();
+    bool IsComputeMode() const;
     bool IsCmdMode() const;
     bool IsAclApiMode() const;
     bool IsAclApiReady() const;
@@ -193,6 +196,8 @@ public:
     bool IsSigintShutdownInProgress() const;
     bool IsSubscribeMode() const;
     bool IsModeOff() const;
+    WorkMode GetWorkMode() const;
+    bool HasRunningDeviceTasks() const;
     bool IsPureCpuMode();
     bool IsAclApiStatsMode();
     int32_t StopProfConfigCheck(uint64_t dataTypeConfigStop, uint64_t dataTypeConfigStart);
@@ -252,6 +257,12 @@ public:
     int32_t StartAdprofDumper() const;
     int32_t ProfStartCommon(const uint32_t* devIdList, uint32_t devNums);
     int32_t ProfStopCommon(const MsprofConfig* config);
+    int32_t ProfStartCommonDevice(uint32_t devId, bool ifInitHost);
+    int32_t ProfStopCommonDevice(uint32_t devId, uint64_t profSwitch);
+    int32_t EnsureComputeUploader(const std::string& devIdStr) const;
+    int32_t ReleaseComputeHostContext();
+    int32_t InitComputeProfileParams(
+        SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params, uint64_t profSwitch);
     int32_t ProfStartPureCpu(const MsprofConfig* config);
     int32_t ProfStopPureCpu();
     int32_t PrepareStartAclApi(const MsprofConfig* config);
@@ -296,6 +307,7 @@ private:
     const std::map<int32_t, std::string> workModeStr = {
         {WORK_MODE_OFF, "Profiling is not enabled"},
         {WORK_MODE_CMD, "Profiling is working on cmd(msprofbin/acl json/env/options/helper) mode"},
+        {WORK_MODE_COMPUTE, "Profiling is working on npu compute mode"},
         {WORK_MODE_API_CTRL, "Profiling is working on api(acl api/graph api) mode"},
         {WORK_MODE_SUBSCRIBE, "Profiling is working on subscribe mode"}};
 

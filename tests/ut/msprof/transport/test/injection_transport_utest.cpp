@@ -148,6 +148,68 @@ TEST_F(INJECTION_TRANSPORT_UTEST, ConvertRawDataTypeByFileName)
     EXPECT_EQ(PC_SAMPLING_DATA_TYPE, g_rawDataList[3].type);
 }
 
+TEST_F(INJECTION_TRANSPORT_UTEST, ConvertComputeRawDataTypeByFileName)
+{
+    InjectionTransport transport(SaveRawData);
+    EXPECT_EQ(PROFILING_SUCCESS, transport.SendBuffer(MakeFileChunk("data/aicpu.data", 1)));
+    EXPECT_EQ(PROFILING_SUCCESS, transport.SendBuffer(MakeFileChunk("data/ccu0.instr", 1)));
+    EXPECT_EQ(PROFILING_SUCCESS, transport.SendBuffer(MakeFileChunk("data/ccu1.stat", 1)));
+    EXPECT_EQ(PROFILING_SUCCESS, transport.SendBuffer(MakeFileChunk("aging.api_event.data", 1)));
+    EXPECT_EQ(PROFILING_SUCCESS, transport.SendBuffer(MakeFileChunk("unaging.compact.data", 1)));
+    EXPECT_EQ(PROFILING_SUCCESS, transport.SendBuffer(MakeFileChunk("aging.additional.data", 1)));
+    ASSERT_EQ(6U, g_rawDataList.size());
+    EXPECT_EQ(AICPU_DATA_TYPE, g_rawDataList[0].type);
+    EXPECT_EQ(CCU_INSTR_DATA_TYPE, g_rawDataList[1].type);
+    EXPECT_EQ(CCU_STAT_DATA_TYPE, g_rawDataList[2].type);
+    EXPECT_EQ(API_EVENT_DATA_TYPE, g_rawDataList[3].type);
+    EXPECT_EQ(COMPACT_DATA_TYPE, g_rawDataList[4].type);
+    EXPECT_EQ(ADDITIONAL_DATA_TYPE, g_rawDataList[5].type);
+}
+
+TEST_F(INJECTION_TRANSPORT_UTEST, ConvertFileNameRuleCoversAllSupportedTypes)
+{
+    InjectionTransport transport(SaveRawData);
+    const std::vector<std::string> fileNames = {
+        "data/aicpu.data",        "aging.api_event.data",  "unaging.api_event.data",  "aging.compact.data",
+        "unaging.compact.data",   "aging.additional.data", "unaging.additional.data", "data/stars_soc.data",
+        "data/ffts_profile.data", "data/biu_perf_0.data",  "data/pc_sampling_0.data"};
+    for (const auto& fileName : fileNames) {
+        EXPECT_EQ(PROFILING_SUCCESS, transport.SendBuffer(MakeFileChunk(fileName, 1)));
+    }
+
+    ASSERT_EQ(fileNames.size(), g_rawDataList.size());
+    EXPECT_EQ(AICPU_DATA_TYPE, g_rawDataList[0].type);
+    EXPECT_EQ(API_EVENT_DATA_TYPE, g_rawDataList[1].type);
+    EXPECT_EQ(API_EVENT_DATA_TYPE, g_rawDataList[2].type);
+    EXPECT_EQ(COMPACT_DATA_TYPE, g_rawDataList[3].type);
+    EXPECT_EQ(COMPACT_DATA_TYPE, g_rawDataList[4].type);
+    EXPECT_EQ(ADDITIONAL_DATA_TYPE, g_rawDataList[5].type);
+    EXPECT_EQ(ADDITIONAL_DATA_TYPE, g_rawDataList[6].type);
+    EXPECT_EQ(LOG_DATA_TYPE, g_rawDataList[7].type);
+    EXPECT_EQ(PMU_DATA_TYPE, g_rawDataList[8].type);
+    EXPECT_EQ(BIU_PERF_DATA_TYPE, g_rawDataList[9].type);
+    EXPECT_EQ(PC_SAMPLING_DATA_TYPE, g_rawDataList[10].type);
+}
+
+TEST_F(INJECTION_TRANSPORT_UTEST, ConvertCcuRawDataContainsDieId)
+{
+    InjectionTransport transport(SaveRawData);
+    EXPECT_EQ(PROFILING_SUCCESS, transport.SendBuffer(MakeFileChunk("data/ccu0.instr", 1)));
+    EXPECT_EQ(PROFILING_SUCCESS, transport.SendBuffer(MakeFileChunk("data/ccu1.instr", 1)));
+    EXPECT_EQ(PROFILING_SUCCESS, transport.SendBuffer(MakeFileChunk("data/ccu0.stat", 1)));
+    EXPECT_EQ(PROFILING_SUCCESS, transport.SendBuffer(MakeFileChunk("data/ccu1.stat", 1)));
+
+    ASSERT_EQ(4U, g_rawDataList.size());
+    EXPECT_EQ(CCU_INSTR_DATA_TYPE, g_rawDataList[0].type);
+    EXPECT_EQ(0, g_rawDataList[0].chunkModule);
+    EXPECT_EQ(CCU_INSTR_DATA_TYPE, g_rawDataList[1].type);
+    EXPECT_EQ(1, g_rawDataList[1].chunkModule);
+    EXPECT_EQ(CCU_STAT_DATA_TYPE, g_rawDataList[2].type);
+    EXPECT_EQ(0, g_rawDataList[2].chunkModule);
+    EXPECT_EQ(CCU_STAT_DATA_TYPE, g_rawDataList[3].type);
+    EXPECT_EQ(1, g_rawDataList[3].chunkModule);
+}
+
 TEST_F(INJECTION_TRANSPORT_UTEST, BiuPerfRawDataContainsGroupAndCoreType)
 {
     InjectionTransport transport(SaveRawData);

@@ -4337,6 +4337,27 @@ TEST_F(MSPROF_ACL_CORE_UTEST, api_stats_mode_stop_common_callback_failure_skip_s
     ProfAclMgr::instance()->mode_ = WORK_MODE_OFF;
 }
 
+TEST_F(MSPROF_ACL_CORE_UTEST, ReleaseComputeHostContextKeepsModeWhenStopFailed)
+{
+    GlobalMockObject::verify();
+    using namespace Msprofiler::Api;
+
+    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams());
+    ProfAclMgr::ProfAclTaskInfo taskInfo = {1, PROF_TASK_TIME_MASK, params};
+    ProfAclMgr::instance()->devTasks_[DEFAULT_HOST_ID] = taskInfo;
+    ProfAclMgr::instance()->mode_ = WORK_MODE_CMD;
+
+    MOCKER_CPP(&analysis::dvvp::host::ProfManager::IdeCloudProfileProcess).stubs().will(returnValue(PROFILING_FAILED));
+    MOCKER_CPP(&::Dvvp::Collect::Report::ProfReporterMgr::FlushHostReporters).expects(never());
+
+    EXPECT_EQ(ACL_ERROR_PROFILING_FAILURE, ProfAclMgr::instance()->ReleaseComputeHostContext());
+    EXPECT_EQ(WORK_MODE_CMD, ProfAclMgr::instance()->mode_);
+    EXPECT_EQ(1U, ProfAclMgr::instance()->devTasks_.size());
+
+    ProfAclMgr::instance()->devTasks_.clear();
+    ProfAclMgr::instance()->mode_ = WORK_MODE_OFF;
+}
+
 TEST_F(MSPROF_ACL_CORE_UTEST, api_stats_mode_finalize_stop_stats_callback)
 {
     GlobalMockObject::verify();
@@ -4786,6 +4807,22 @@ TEST_F(MSPROF_ACL_CORE_UTEST, ProfStop_NullConfig_WithoutRunningDevices)
         .will(returnValue(static_cast<PROF_CONFIG_CONST_PTR>(config)));
 
     EXPECT_EQ(ACL_SUCCESS, Msprofiler::AclApi::ProfStop(ACL_API_TYPE, nullptr));
+}
+
+TEST_F(MSPROF_ACL_CORE_UTEST, ProfStopCommonDevice_CallbackFailureStillStopsDeviceTask)
+{
+    GlobalMockObject::verify();
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::StopCommonCallback)
+        .stubs()
+        .will(returnValue(static_cast<int32_t>(ACL_ERROR_PROFILING_FAILURE)));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::StopCommonDeviceTasks)
+        .stubs()
+        .will(returnValue(static_cast<int32_t>(ACL_SUCCESS)));
+
+    EXPECT_EQ(
+        ACL_ERROR_PROFILING_FAILURE,
+        Msprofiler::Api::ProfAclMgr::instance()->ProfStopCommonDevice(0, ACL_PROF_TASK_TIME));
+    GlobalMockObject::verify();
 }
 
 TEST_F(MSPROF_ACL_CORE_UTEST, ProfSetDefaultConfig_ActiveDevicesFailed)

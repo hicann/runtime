@@ -29,10 +29,38 @@ constexpr size_t BIU_PERF_GROUP_PREFIX_LENGTH = sizeof(BIU_PERF_GROUP_PREFIX) - 
 constexpr char BIU_PERF_AIC_NAME[] = "aic";
 constexpr char BIU_PERF_AIV0_NAME[] = "aiv0";
 constexpr char BIU_PERF_AIV1_NAME[] = "aiv1";
+constexpr char CCU_DIE0_INSTR_NAME[] = "0.instr";
+constexpr char CCU_DIE0_STAT_NAME[] = "0.stat";
+constexpr char CCU_DIE1_INSTR_NAME[] = "1.instr";
+constexpr char CCU_DIE1_STAT_NAME[] = "1.stat";
 
 struct BiuPerfFileInfo {
     uint32_t groupId;
     RawDataType type;
+};
+
+struct CcuFileInfo {
+    uint32_t dieId;
+    bool isStatistic;
+};
+
+struct FileNameRule {
+    const char* keyword;
+    RawDataType type;
+};
+
+constexpr FileNameRule FILE_NAME_RULES[] = {
+    {"data/aicpu.data", AICPU_DATA_TYPE},
+    {"aging.api_event", API_EVENT_DATA_TYPE},
+    {"unaging.api_event", API_EVENT_DATA_TYPE},
+    {"aging.compact", COMPACT_DATA_TYPE},
+    {"unaging.compact", COMPACT_DATA_TYPE},
+    {"aging.additional", ADDITIONAL_DATA_TYPE},
+    {"unaging.additional", ADDITIONAL_DATA_TYPE},
+    {"stars_soc.data", LOG_DATA_TYPE},
+    {"ffts_profile", PMU_DATA_TYPE},
+    {"biu_perf", BIU_PERF_DATA_TYPE},
+    {"pc_sampling", PC_SAMPLING_DATA_TYPE},
 };
 
 bool ParseBiuPerfFileName(const std::string& fileName, BiuPerfFileInfo& fileInfo)
@@ -76,6 +104,42 @@ bool ParseBiuPerfFileName(const std::string& fileName, BiuPerfFileInfo& fileInfo
     return true;
 }
 
+bool ParseCcuFileName(const std::string& fileName, CcuFileInfo& fileInfo)
+{
+    if (fileName.find("data/ccu") == std::string::npos) {
+        return false;
+    }
+
+    if (fileName.find(CCU_DIE0_STAT_NAME) != std::string::npos) {
+        fileInfo = {0U, true};
+        return true;
+    }
+    if (fileName.find(CCU_DIE1_STAT_NAME) != std::string::npos) {
+        fileInfo = {1U, true};
+        return true;
+    }
+    if (fileName.find(CCU_DIE0_INSTR_NAME) != std::string::npos) {
+        fileInfo = {0U, false};
+        return true;
+    }
+    if (fileName.find(CCU_DIE1_INSTR_NAME) != std::string::npos) {
+        fileInfo = {1U, false};
+        return true;
+    }
+    return false;
+}
+
+bool MatchFileNameRule(const std::string& fileName, RawDataType& type)
+{
+    for (const FileNameRule& rule : FILE_NAME_RULES) {
+        if (fileName.find(rule.keyword) != std::string::npos) {
+            type = rule.type;
+            return true;
+        }
+    }
+    return false;
+}
+
 } // namespace
 
 InjectionTransport::InjectionTransport(MsprofRawDataCallback callback)
@@ -100,17 +164,15 @@ int32_t InjectionTransport::SendBuffer(CONST_VOID_PTR buffer, int32_t length)
 
 RawDataType InjectionTransport::ConvertRawDataType(const std::string& fileName) const
 {
-    if (fileName.find("stars_soc.data") != std::string::npos) {
-        return LOG_DATA_TYPE;
+    if (fileName.find("data/ccu") != std::string::npos && fileName.find(".stat") != std::string::npos) {
+        return CCU_STAT_DATA_TYPE;
     }
-    if (fileName.find("ffts_profile") != std::string::npos) {
-        return PMU_DATA_TYPE;
+    if (fileName.find("data/ccu") != std::string::npos) {
+        return CCU_INSTR_DATA_TYPE;
     }
-    if (fileName.find("biu_perf") != std::string::npos) {
-        return BIU_PERF_DATA_TYPE;
-    }
-    if (fileName.find("pc_sampling") != std::string::npos) {
-        return PC_SAMPLING_DATA_TYPE;
+    RawDataType type = DEFAULT_DATA_TYPE;
+    if (MatchFileNameRule(fileName, type)) {
+        return type;
     }
     return DEFAULT_DATA_TYPE;
 }
@@ -123,6 +185,12 @@ InjectionTransport::RawDataMetadata InjectionTransport::ConvertRawDataMetadata(
         return {fileInfo.type, static_cast<int32_t>(fileInfo.groupId)};
     }
 
+    CcuFileInfo ccuFileInfo = {};
+    if (ParseCcuFileName(fileName, ccuFileInfo)) {
+        const RawDataType type = ccuFileInfo.isStatistic ? CCU_STAT_DATA_TYPE : CCU_INSTR_DATA_TYPE;
+        return {type, static_cast<int32_t>(ccuFileInfo.dieId)};
+    }
+
     const RawDataType type = ConvertRawDataType(fileName);
     if (type == BIU_PERF_DATA_TYPE) {
         MSPROF_LOGW("Failed to parse BIU perf file metadata, file:%s.", fileName.c_str());
@@ -132,8 +200,11 @@ InjectionTransport::RawDataMetadata InjectionTransport::ConvertRawDataMetadata(
 
 bool InjectionTransport::IsSupportedChannelFile(const std::string& fileName) const
 {
-    return fileName.find("stars_soc.data") != std::string::npos || fileName.find("ffts_profile") != std::string::npos ||
-           fileName.find("biu_perf") != std::string::npos || fileName.find("pc_sampling") != std::string::npos;
+    if (fileName.find("data/ccu") != std::string::npos) {
+        return true;
+    }
+    RawDataType type = DEFAULT_DATA_TYPE;
+    return MatchFileNameRule(fileName, type);
 }
 
 bool InjectionTransport::ParseDeviceId(const std::string& extraInfo, uint32_t& deviceId) const

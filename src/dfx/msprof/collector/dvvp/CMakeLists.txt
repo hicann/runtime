@@ -121,6 +121,7 @@ set(profimplCpp
     msprof/devprof/src/devprof_drv_aicpu.cpp
     msprof/devprof/src/devprof_common.cpp
     profimpl/adapter/src/command_handle.cpp
+    profimpl/adapter/src/compute_config_adapter.cpp
     profimpl/adapter/src/compute_profiling_manager.cpp
     profimpl/adapter/src/msprofiler_impl.cpp
     profimpl/adapter/src/msprofiler_adaptor.cpp

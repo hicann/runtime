@@ -161,7 +161,7 @@ int32_t JobDeviceSoc::StartProf(SHARED_PTR_ALIA<analysis::dvvp::message::Profile
         MSVP_MAKE_SHARED0_NODO(collectionJobCommCfg_->jobCtx, analysis::dvvp::message::JobContext, break);
         collectionJobCommCfg_->jobCtx->dev_id = std::to_string(collectionJobCommCfg_->devIdFlush);
         collectionJobCommCfg_->jobCtx->job_id = params_->job_id;
-        collectionJobCommCfg_->tmpResultDir = params->result_dir;
+        collectionJobCommCfg_->tmpResultDir = IsComputeProfilingMode() ? MSVP_PROF_EMPTY_STRING : params->result_dir;
         ret = ParsePmuConfig(CreatePmuEventConfig(params, devIndexId_));
         if (ret != PROFILING_SUCCESS) {
             MSPROF_LOGE("[JobDeviceSoc::StartProf]Failed to ParsePmuConfig, devIndexId: %d", devIndexId_);

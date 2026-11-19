@@ -17,6 +17,7 @@
 #include "prof_api_common.h"
 #include "msprofiler_acl_api.h"
 #include "msprofiler_impl.h"
+#include "receive_data.h"
 #include "ascend_hal.h"
 #include "device_drv_prof_stub.h"
 #include "acl/acl_base.h"
@@ -35,6 +36,20 @@ rtError_t rtProfilerTraceExStub(uint64_t indexId, uint64_t modelId, uint16_t tag
 }
 
 int32_t g_handle;
+namespace {
+void* ComputeStVarAdditionalPop(size_t& popSize)
+{
+    popSize = 0;
+    return nullptr;
+}
+
+void ComputeStVarAdditionalIndexShift(void* popPtr, const size_t popSize)
+{
+    (void)popPtr;
+    (void)popSize;
+}
+} // namespace
+
 extern "C" int32_t MsprofInit(uint32_t dataType, VOID_PTR data, uint32_t dataLen);
 extern "C" int32_t MsprofStart(uint32_t dataType, const void* data, uint32_t length);
 extern "C" int32_t MsprofStop(uint32_t dataType, const void* data, uint32_t length);
@@ -56,6 +71,7 @@ extern "C" void ProfImplSetBatchAddBufPop(const ProfBatchAddBufPopCallback func)
 extern "C" void ProfImplSetBatchAddBufIndexShift(const ProfBatchAddBufIndexShiftCallBack func);
 extern "C" void ProfImplSetVarAddBlockBufBatchPop(const ProfVarAddBlockBufPopCallback func);
 extern "C" void ProfImplSetVarAddBlockBufIndexShift(const ProfVarAddBufIndexShiftCallBack func);
+extern "C" void ProfImplSetApiBatchBufPop(const ProfApiBatchBufPopCallback func);
 extern "C" void ProfImplSetMarkEx(const ProfMarkExCallback func);
 extern "C" int32_t MsprofSetDeviceIdByGeModelIdx(const uint32_t geModelIdx, const uint32_t deviceId);
 extern "C" int32_t MsprofNotifySetDevice(uint32_t chipId, uint32_t deviceId, bool isOpen);
@@ -168,6 +184,8 @@ const std::map<std::string, void*> g_map = {
     {"rtProfilerTraceEx", (void*)rtProfilerTraceExStub},
     {"MsprofStart", (void*)MsprofStart},
     {"MsprofStop", (void*)MsprofStop}};
+// no-op symbol used only to load the compute data callback API in the ST stub map.
+const void* g_profImplSetApiBatchBufPopApi = reinterpret_cast<const void*>(ProfImplSetApiBatchBufPop);
 
 void* mmDlsym(void* handle, const char* funcName)
 {

@@ -13,32 +13,17 @@
 
 #include <mutex>
 #include <string>
+#include <map>
 #include <vector>
 #include "common/singleton/singleton.h"
+#include "compute_config_adapter.h"
 #include "message/prof_params.h"
 #include "prof_common.h"
 #include "transport/injection_transport.h"
 
 namespace Analysis {
 namespace Dvvp {
-namespace JobWrapper {
-class JobAdapter;
-}
 namespace ProfilerCommon {
-
-struct ComputeProfileConfig {
-    uint32_t devId = 0;
-    uint64_t profSwitch = 0;
-    std::string dumpPath;
-    std::vector<uint32_t> aicoreMetrics;
-    bool enableLog = false;
-    bool enablePmu = false;
-    bool enableInstr = false;
-    bool enableBiuPerf = false;
-    bool enablePcSampling = false;
-    bool enableBlock = false;
-    uint32_t blockMode = 0;
-};
 
 class ComputeProfilingManager : public analysis::dvvp::common::singleton::Singleton<ComputeProfilingManager> {
 public:
@@ -51,37 +36,35 @@ public:
     int32_t Stop(const void* data, uint32_t length);
 
 private:
-    int32_t ParseConfig(const MsprofConfig& config, ComputeProfileConfig& outConfig) const;
-    int32_t ParseConfigAttrs(const MsprofConfigInfo& configInfo, ComputeProfileConfig& outConfig) const;
-    int32_t ParseInstrMode(uint32_t instrMode, ComputeProfileConfig& outConfig) const;
-    int32_t ParseBlockMode(uint32_t blockMode, ComputeProfileConfig& outConfig) const;
+    struct ComputeStatus {
+        SHARED_PTR_ALIA<analysis::dvvp::transport::InjectionTransport> transport;
+    };
+
     int32_t InitRuntime();
-    int32_t CreateComputeUploader(const std::string& devIdStr);
+    int32_t CreateComputeUploader(uint32_t devId, ComputeStatus& status);
+    int32_t CloneBaselineParams(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams>& params) const;
     void RegisterComputeUploaderMap(uint32_t devId, const std::string& jobId) const;
-    int32_t CreateComputeJobAdapter(uint32_t devId);
-    int32_t StartComputeJob(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params, uint32_t devId);
-    int32_t StopComputeJob();
-    int32_t StartComputeJobAndCallback(
-        SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params, const ComputeProfileConfig& config);
-    int32_t StartComponentCallback(uint32_t devId, uint64_t profSwitch) const;
-    int32_t StopComponentCallback() const;
-    void RollbackComputeUploader(const std::string& devIdStr);
-    SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> BuildProfileParams(
-        const ComputeProfileConfig& config, const std::string& devIdStr) const;
-    std::string BuildMetricEvents(const std::vector<uint32_t>& metrics) const;
-    void FlushComputeUploader(uint32_t timeoutSec) const;
-    void PrintCallbackFailedStatistics() const;
+    int32_t StartComputeJob(uint32_t devId, bool ifInitHost);
+    int32_t StopComputeJob(uint32_t devId);
+    void RollbackComputeStatus(uint32_t devId);
+    void RollbackComputeRuntime(uint32_t devId, bool rollbackHost);
+    void FlushComputeUploader(uint32_t devId, uint32_t timeoutSec) const;
+    void WaitStatusCallbackDone(uint32_t devId, uint32_t timeoutSec) const;
+    void PrintCallbackFailedStatistics(uint32_t devId) const;
+    int32_t ReleaseComputeHostContext();
     void ClearContext();
+    bool CheckConfigConsistency(const MsprofConfig& config);
+    bool IsSameComputeConfig(const MsprofConfig& config) const;
+    void SaveBaselineConfig(const MsprofConfig& config);
 
 private:
     std::mutex mutex_;
     MsprofRawDataCallback computeCallback_;
-    bool running_;
-    std::string runningDevId_;
-    uint64_t runningProfSwitch_;
-    SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> runningParams_;
-    SHARED_PTR_ALIA<Analysis::Dvvp::JobWrapper::JobAdapter> jobAdapter_;
-    SHARED_PTR_ALIA<analysis::dvvp::transport::InjectionTransport> injectionTransport_;
+    MsprofConfig baselineConfig_ = {};
+    std::vector<MsprofConfigAttr> baselineAttrs_;
+    SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> baselineParams_;
+    SHARED_PTR_ALIA<analysis::dvvp::transport::InjectionTransport> hostTransport_;
+    std::map<uint32_t, ComputeStatus> statuses_;
 };
 
 } // namespace ProfilerCommon

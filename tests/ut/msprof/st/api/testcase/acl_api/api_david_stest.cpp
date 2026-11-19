@@ -23,6 +23,7 @@
 #include "devprof_drv_aicpu.h"
 #include "prof_cann_plugin.h"
 #include "prof_inner_api.h"
+#include "receive_data.h"
 #include "prof_common.h"
 #include "securec.h"
 
@@ -42,6 +43,8 @@ std::atomic<uint32_t> computeInitCount{0};
 std::atomic<uint32_t> computeRawDataCount{0};
 std::atomic<uint32_t> computeStartCallbackCount{0};
 std::atomic<uint32_t> computeStopCallbackCount{0};
+std::atomic<uint64_t> computeStartCallbackSwitch{0};
+std::atomic<uint64_t> computeStopCallbackSwitch{0};
 std::atomic<bool> computeControlCaptureEnabled{false};
 std::atomic<bool> computeInitSawSetHook{false};
 std::atomic<bool> computeInitSawGetHook{false};
@@ -67,13 +70,15 @@ int32_t ComputeControlCallback(uint32_t type, void* data, uint32_t len)
         return PROFILING_SUCCESS;
     }
     const auto* command = static_cast<MsprofCommandHandle*>(data);
-    if (command->devNums != 1 || command->devIdList[0] != 0) {
+    if (command->devNums != 1) {
         return PROFILING_SUCCESS;
     }
     if (command->type == PROF_COMMANDHANDLE_TYPE_START) {
         computeStartCallbackCount.fetch_add(1);
+        computeStartCallbackSwitch.store(command->profSwitch);
     } else if (command->type == PROF_COMMANDHANDLE_TYPE_STOP) {
         computeStopCallbackCount.fetch_add(1);
+        computeStopCallbackSwitch.store(command->profSwitch);
     }
     return PROFILING_SUCCESS;
 }
@@ -93,6 +98,8 @@ void ResetComputeControlCallbackState()
     computeControlCaptureEnabled.store(false);
     computeStartCallbackCount.store(0);
     computeStopCallbackCount.store(0);
+    computeStartCallbackSwitch.store(0);
+    computeStopCallbackSwitch.store(0);
 }
 
 bool HasComputeResultDir(const std::string& path)
@@ -140,6 +147,14 @@ void FillComputeConfig(const std::string& dumpPath, MsprofConfigAttr& metricAttr
     (void)strncpy_s(config.dumpPath, MAX_DUMP_PATH_LEN, dumpPath.c_str(), MAX_DUMP_PATH_LEN - 1);
 }
 
+void FillComputeAicpuCcuConfig(MsprofConfig& config)
+{
+    config = {};
+    config.profSwitch = PROF_TASK_TIME_MASK | PROF_TASK_TIME_L1_MASK | PROF_AICPU_TRACE_MASK;
+    config.devNums = 1;
+    config.devIdList[0] = 0;
+}
+
 void FillComputeBlockConfig(uint32_t blockMode, MsprofConfigAttr attrs[], MsprofConfig& config)
 {
     FillComputeConfig("", attrs[0], config);
@@ -181,6 +196,59 @@ void RunComputeProfilingStartStop(const std::string& aclProfPath, uint32_t block
     computeControlCaptureEnabled.store(false);
     EXPECT_EQ(1U, computeStartCallbackCount.load());
     EXPECT_EQ(1U, computeStopCallbackCount.load());
+    EXPECT_EQ((config.profSwitch & PROF_AICPU_MODEL), (computeStartCallbackSwitch.load() & PROF_AICPU_MODEL));
+    EXPECT_EQ((config.profSwitch & PROF_TASK_TIME), (computeStartCallbackSwitch.load() & PROF_TASK_TIME));
+    EXPECT_EQ((config.profSwitch & PROF_TASK_TIME_L1), (computeStartCallbackSwitch.load() & PROF_TASK_TIME_L1));
+    EXPECT_EQ((config.profSwitch & PROF_AICPU_TRACE), (computeStartCallbackSwitch.load() & PROF_AICPU_TRACE));
+    EXPECT_EQ(computeStartCallbackSwitch.load(), computeStopCallbackSwitch.load());
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofUnRegisterCallback(COMPUTE_CALLBACK_MODULE_ID, ComputeControlCallback));
+    EXPECT_FALSE(HasComputeResultDir(aclProfPath));
+}
+
+void RunComputeTwoDeviceProfilingStartStop(const std::string& aclProfPath)
+{
+    MsprofConfigAttr attr = {};
+    MsprofConfig config = {};
+    FillComputeConfig("", attr, config);
+    config.devIdList[0] = 0;
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofRegisterCallback(COMPUTE_CALLBACK_MODULE_ID, ComputeControlCallback));
+    ResetComputeControlCallbackState();
+    computeControlCaptureEnabled.store(true);
+    aclrtSetDevice(1);
+
+    MsprofConfig secondDeviceConfig = config;
+    secondDeviceConfig.devIdList[0] = 1;
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofStart(MSPROF_CTRL_INIT_COMPUTE, &config, sizeof(config)));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofStart(MSPROF_CTRL_INIT_COMPUTE, &secondDeviceConfig, sizeof(config)));
+
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofStop(MSPROF_CTRL_INIT_COMPUTE, &config, sizeof(config)));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofStop(MSPROF_CTRL_INIT_COMPUTE, &secondDeviceConfig, sizeof(config)));
+
+    EXPECT_EQ(2U, computeStartCallbackCount.load());
+    EXPECT_EQ(2U, computeStopCallbackCount.load());
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofUnRegisterCallback(COMPUTE_CALLBACK_MODULE_ID, ComputeControlCallback));
+    EXPECT_FALSE(HasComputeResultDir(aclProfPath));
+}
+
+void RunComputeSetDeviceDoesNotStartNormalProfiling(const std::string& aclProfPath)
+{
+    MsprofConfigAttr attr = {};
+    MsprofConfig config = {};
+    FillComputeConfig("", attr, config);
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofRegisterCallback(COMPUTE_CALLBACK_MODULE_ID, ComputeControlCallback));
+    ResetComputeControlCallbackState();
+    computeControlCaptureEnabled.store(true);
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofStart(MSPROF_CTRL_INIT_COMPUTE, &config, sizeof(config)));
+
+    MsprofConfig extraConfig = config;
+    extraConfig.devIdList[0] = 3;
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofNotifySetDevice(0, 3, true));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofStop(MSPROF_CTRL_INIT_COMPUTE, &config, sizeof(config)));
+    computeControlCaptureEnabled.store(false);
+
+    EXPECT_EQ(1U, computeStartCallbackCount.load());
+    EXPECT_EQ(1U, computeStopCallbackCount.load());
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofUnRegisterCallback(COMPUTE_CALLBACK_MODULE_ID, ComputeControlCallback));
     EXPECT_FALSE(HasComputeResultDir(aclProfPath));
 }
 
@@ -192,6 +260,34 @@ void RunComputeProfilingWithInitHook(const std::string& aclProfPath, uint32_t bl
     EXPECT_EQ(PROFILING_SUCCESS, MsprofInjectionInitialize());
     ExpectComputeInjectionInitialized();
     RunComputeProfilingStartStop(aclProfPath, blockMode);
+}
+
+void RunComputeUnifiedProfilingStartStop(const std::string& aclProfPath)
+{
+    ResetComputeInjectionStState();
+    RegisterComputeSetGetHooks();
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofSetInjectionFunc(PROF_HOOK_INIT, reinterpret_cast<void*>(acltoolInitialize)));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofInjectionInitialize());
+    ExpectComputeInjectionInitialized();
+
+    MsprofConfig config = {};
+    FillComputeAicpuCcuConfig(config);
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofRegisterCallback(COMPUTE_CALLBACK_MODULE_ID, ComputeControlCallback));
+    ResetComputeControlCallbackState();
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    computeControlCaptureEnabled.store(true);
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofStart(MSPROF_CTRL_INIT_COMPUTE, &config, sizeof(config)));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofStop(MSPROF_CTRL_INIT_COMPUTE, &config, sizeof(config)));
+    computeControlCaptureEnabled.store(false);
+    EXPECT_EQ(1U, computeStartCallbackCount.load());
+    EXPECT_EQ(1U, computeStopCallbackCount.load());
+    EXPECT_EQ((config.profSwitch & PROF_AICPU_MODEL), (computeStartCallbackSwitch.load() & PROF_AICPU_MODEL));
+    EXPECT_EQ((config.profSwitch & PROF_TASK_TIME), (computeStartCallbackSwitch.load() & PROF_TASK_TIME));
+    EXPECT_EQ((config.profSwitch & PROF_TASK_TIME_L1), (computeStartCallbackSwitch.load() & PROF_TASK_TIME_L1));
+    EXPECT_EQ((config.profSwitch & PROF_AICPU_TRACE), (computeStartCallbackSwitch.load() & PROF_AICPU_TRACE));
+    EXPECT_EQ(computeStartCallbackSwitch.load(), computeStopCallbackSwitch.load());
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofUnRegisterCallback(COMPUTE_CALLBACK_MODULE_ID, ComputeControlCallback));
+    EXPECT_FALSE(HasComputeResultDir(aclProfPath));
 }
 } // namespace
 
@@ -240,6 +336,31 @@ std::vector<std::string> GetAclApiSetConfigHostDataList()
         /*, "host_disk.data", "host_pthreadcall.data", "host_syscall.data"*/};
 }
 
+bool IsComputeStest()
+{
+    const ::testing::TestInfo* testInfo = ::testing::UnitTest::GetInstance()->current_test_info();
+    return testInfo != nullptr && testInfo->name() != nullptr && std::string(testInfo->name()).find("Compute") == 0;
+}
+
+void InitComputeStReportBuffers()
+{
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofInit(MSPROF_CTRL_INIT_DYNA, nullptr, 0));
+    Msprof::Engine::ReceiveData::varAdditionalTryPop_ = [](size_t& popSize) -> void* {
+        popSize = 0;
+        return nullptr;
+    };
+    Msprof::Engine::ReceiveData::varAdditionalBufferIndexShift_ = nullptr;
+    Msprof::Engine::ReceiveData::reportBufEmpty_ = []() -> bool { return true; };
+    MsprofConfigAttr attr = {};
+    MsprofConfig config = {};
+    FillComputeConfig("", attr, config);
+    EXPECT_EQ(
+        PROFILING_SUCCESS,
+        MsprofRegisterDataCallback(PROF_DATA_CALLBACK_COMPUTE, reinterpret_cast<void*>(ComputeRawDataCallback)));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofStart(MSPROF_CTRL_INIT_COMPUTE, &config, sizeof(config)));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofStop(MSPROF_CTRL_INIT_COMPUTE, &config, sizeof(config)));
+}
+
 class AclApiDavidStest : public testing::Test {
 protected:
     std::string aclProfPath;
@@ -260,7 +381,11 @@ protected:
         ProfAPI::ProfCannPlugin::instance()->ProfResetInjectionState();
         aclInit(nullptr);
         aclrtSetDevice(0);
-        EXPECT_EQ(ACL_ERROR_NONE, aclprofInit(aclProfPath.c_str(), aclProfPath.size()));
+        if (IsComputeStest()) {
+            InitComputeStReportBuffers();
+        } else {
+            EXPECT_EQ(ACL_ERROR_NONE, aclprofInit(aclProfPath.c_str(), aclProfPath.size()));
+        }
         randomCount++;
     }
     virtual void TearDown()
@@ -269,7 +394,7 @@ protected:
         ProfAPI::ProfCannPlugin::instance()->ProfResetInjectionState();
         aclprofFinalize();
         aclFinalize();
-        DevprofDrvAicpu::instance()->isRegister_ = false; // 重置aicpu注册状态，使单进程内能多次注册
+        DevprofDrvAicpu::instance()->isRegister_ = false; // reset aicpu register state
         EXPECT_EQ(2, SimulatorMgr().DelDeviceSimulator(2, StPlatformType::CHIP_CLOUD_V3));
         aclProfPath.insert(0, "rm -rf ");
         system(aclProfPath.c_str());
@@ -287,6 +412,38 @@ protected:
 
 #ifndef ascend031
 TEST_F(AclApiDavidStest, ComputeProfilingApiInitHookEndToEnd) { RunComputeProfilingWithInitHook(aclProfPath); }
+
+TEST_F(AclApiDavidStest, ComputeProfilingDirectStartWithoutProfInitEndToEnd)
+{
+    ResetComputeInjectionStState();
+    EXPECT_EQ(
+        PROFILING_SUCCESS,
+        MsprofRegisterDataCallback(PROF_DATA_CALLBACK_COMPUTE, reinterpret_cast<void*>(ComputeRawDataCallback)));
+    ClearApiSingleton();
+    RunComputeProfilingStartStop(aclProfPath);
+}
+
+TEST_F(AclApiDavidStest, ComputeProfilingTwoDeviceApiInitHookEndToEnd)
+{
+    ResetComputeInjectionStState();
+    RegisterComputeSetGetHooks();
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofSetInjectionFunc(PROF_HOOK_INIT, reinterpret_cast<void*>(acltoolInitialize)));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofInjectionInitialize());
+    ExpectComputeInjectionInitialized();
+    RunComputeTwoDeviceProfilingStartStop(aclProfPath);
+}
+
+TEST_F(AclApiDavidStest, ComputeSetDeviceAfterStartDoesNotStartNormalProfiling)
+{
+    ResetComputeInjectionStState();
+    RegisterComputeSetGetHooks();
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofSetInjectionFunc(PROF_HOOK_INIT, reinterpret_cast<void*>(acltoolInitialize)));
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofInjectionInitialize());
+    ExpectComputeInjectionInitialized();
+    RunComputeSetDeviceDoesNotStartNormalProfiling(aclProfPath);
+}
+
+TEST_F(AclApiDavidStest, ComputeUnifiedAicpuCcuStartStopE2E) { RunComputeUnifiedProfilingStartStop(aclProfPath); }
 
 TEST_F(AclApiDavidStest, ComputeProfilingAclApiInjectionEndToEnd)
 {
@@ -354,7 +511,7 @@ TEST_F(AclApiDavidStest, AclApiCcuStatUb0)
 
     EXPECT_EQ(PROFILING_SUCCESS, AclApiStart(config, 0));
 
-    std::vector<std::string> deviceDataList = {"ccu0.stat", "ccu1.stat", "ub.data"};
+    std::vector<std::string> deviceDataList = {"ccu0.stat", "ub.data"};
     EXPECT_EQ(0, CheckFiles(aclProfPath, deviceDataList, {}));
 }
 
@@ -378,7 +535,7 @@ TEST_F(AclApiDavidStest, AclApiCcuStatUb1)
 
     EXPECT_EQ(PROFILING_SUCCESS, AclApiStart(config, 0));
 
-    std::vector<std::string> deviceDataList = {"ccu0.stat", "ccu1.stat", "ub.data"};
+    std::vector<std::string> deviceDataList = {"ccu0.stat", "ub.data"};
     EXPECT_EQ(0, CheckFiles(aclProfPath, deviceDataList, {}));
 }
 

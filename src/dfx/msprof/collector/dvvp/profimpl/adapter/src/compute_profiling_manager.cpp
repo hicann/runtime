@@ -9,14 +9,12 @@
  */
 
 #include "compute_profiling_manager.h"
-#include <cstring>
-#include <sstream>
 #include "aprof_pub.h"
 #include "command_handle.h"
 #include "errno/error_code.h"
-#include "job_factory.h"
 #include "json_parser.h"
 #include "platform/platform.h"
+#include "prof_acl_mgr.h"
 #include "prof_manager.h"
 #include "securec.h"
 #include "uploader_mgr.h"
@@ -32,28 +30,17 @@ using namespace analysis::dvvp::host;
 using namespace analysis::dvvp::message;
 using namespace analysis::dvvp::transport;
 using namespace Analysis::Dvvp::Common::Platform;
-using namespace Analysis::Dvvp::JobWrapper;
 using namespace Msprofiler::Parser;
+using namespace Msprofiler::Api;
 
 namespace {
 constexpr uint32_t COMPUTE_DEV_NUM = 1;
 constexpr uint32_t CALLBACK_WAIT_TIMEOUT_SEC = 60;
 constexpr uint32_t COMPUTE_UPLOADER_QUEUE_SIZE = 4096U * 4U;
-const char CUSTOM_METRIC_PREFIX[] = "Custom:";
-const char METRIC_DELIMITER[] = ",";
-
-bool IsEnabled(uint64_t profSwitch, uint64_t mask) { return (profSwitch & mask) != 0; }
+constexpr int32_t COMPUTE_HOST_ID = DEFAULT_HOST_ID;
 } // namespace
 
-ComputeProfilingManager::ComputeProfilingManager()
-    : computeCallback_(nullptr),
-      running_(false),
-      runningDevId_(""),
-      runningProfSwitch_(0),
-      runningParams_(nullptr),
-      jobAdapter_(nullptr),
-      injectionTransport_(nullptr)
-{}
+ComputeProfilingManager::ComputeProfilingManager() : computeCallback_(nullptr) {}
 
 ComputeProfilingManager::~ComputeProfilingManager()
 {
@@ -73,8 +60,11 @@ int32_t ComputeProfilingManager::RegisterDataCallback(uint32_t type, void* callb
     }
     std::lock_guard<std::mutex> lock(mutex_);
     computeCallback_ = reinterpret_cast<MsprofRawDataCallback>(callback);
-    if (injectionTransport_ != nullptr) {
-        injectionTransport_->RegisterRawDataCallback(computeCallback_);
+    if (hostTransport_ != nullptr) {
+        hostTransport_->RegisterRawDataCallback(computeCallback_);
+    }
+    for (auto& status : statuses_) {
+        status.second.transport->RegisterRawDataCallback(computeCallback_);
     }
     MSPROF_LOGI("Register compute data callback success.");
     return PROFILING_SUCCESS;
@@ -86,179 +76,47 @@ MsprofRawDataCallback ComputeProfilingManager::GetComputeRawDataCallback()
     return computeCallback_;
 }
 
-int32_t ComputeProfilingManager::ParseInstrMode(uint32_t instrMode, ComputeProfileConfig& outConfig) const
-{
-    outConfig.enableBiuPerf = (instrMode & PROF_COMPUTE_BIU_PERF) != 0;
-    outConfig.enablePcSampling = (instrMode & PROF_COMPUTE_PC_SAMPLING) != 0;
-    return PROFILING_SUCCESS;
-}
-
-int32_t ComputeProfilingManager::ParseBlockMode(uint32_t blockMode, ComputeProfileConfig& outConfig) const
-{
-    if (blockMode != PROF_COMPUTE_ALL_BLOCK && blockMode != PROF_COMPUTE_BLOCK_SHRINK) {
-        MSPROF_LOGE("Invalid compute task block mode:%u.", blockMode);
-        return PROFILING_FAILED;
-    }
-    outConfig.enableBlock = true;
-    outConfig.blockMode = blockMode;
-    return PROFILING_SUCCESS;
-}
-
-int32_t ComputeProfilingManager::ParseConfigAttrs(
-    const MsprofConfigInfo& configInfo, ComputeProfileConfig& outConfig) const
-{
-    if (configInfo.numAttrs == 0) {
-        return PROFILING_SUCCESS;
-    }
-    if (configInfo.attrs == nullptr || configInfo.numAttrs > MSPROF_CONFIG_ATTR_MAX_NUM) {
-        MSPROF_LOGE("Invalid compute config attrs, numAttrs:%zu.", configInfo.numAttrs);
-        return PROFILING_FAILED;
-    }
-    for (size_t i = 0; i < configInfo.numAttrs; ++i) {
-        const MsprofConfigAttr& attr = configInfo.attrs[i];
-        switch (attr.id) {
-            case PROF_CONFIG_ATTR_AICORE_METRICS:
-                for (size_t index = 0; index < COMPUTE_AICORE_METRICS_NUM; ++index) {
-                    const uint32_t metric = attr.value.aicoreMetrics[index];
-                    if (metric != MSPROF_INVALID_AICORE_METRIC) {
-                        outConfig.aicoreMetrics.emplace_back(metric);
-                    }
-                }
-                break;
-            case PROF_CONFIG_ATTR_INSTR:
-                (void)ParseInstrMode(attr.value.instrMode, outConfig);
-                break;
-            case PROF_CONFIG_ATTR_TASK_BLOCK:
-                if (ParseBlockMode(attr.value.taskBlockMode, outConfig) != PROFILING_SUCCESS) {
-                    return PROFILING_FAILED;
-                }
-                break;
-            default:
-                MSPROF_LOGW("Ignore unknown compute config attr id:%u.", attr.id);
-                break;
-        }
-    }
-    return PROFILING_SUCCESS;
-}
-
-int32_t ComputeProfilingManager::ParseConfig(const MsprofConfig& config, ComputeProfileConfig& outConfig) const
-{
-    if (config.devNums != COMPUTE_DEV_NUM) {
-        MSPROF_LOGE("Compute profiling only supports one device, devNums:%u.", config.devNums);
-        return PROFILING_FAILED;
-    }
-    outConfig.devId = config.devIdList[0];
-    outConfig.profSwitch = config.profSwitch;
-    outConfig.dumpPath = config.dumpPath;
-    outConfig.enableLog = IsEnabled(config.profSwitch, PROF_TASK_TIME_MASK);
-    outConfig.enablePmu = IsEnabled(config.profSwitch, PROF_AICORE_METRICS_MASK);
-    outConfig.enableInstr = IsEnabled(config.profSwitch, PROF_INSTR_MASK);
-    if (ParseConfigAttrs(config.configInfo, outConfig) != PROFILING_SUCCESS) {
-        return PROFILING_FAILED;
-    }
-    if (outConfig.enablePmu && outConfig.aicoreMetrics.empty()) {
-        MSPROF_LOGE("Aicore metrics is required when PROF_AICORE_METRICS_MASK is enabled.");
-        return PROFILING_FAILED;
-    }
-    if (outConfig.enableInstr && !outConfig.enableBiuPerf && !outConfig.enablePcSampling) {
-        MSPROF_LOGE("Instr mode is required when PROF_INSTR_MASK is enabled.");
-        return PROFILING_FAILED;
-    }
-    if (!outConfig.enableLog && !outConfig.enablePmu && !outConfig.enableInstr && !outConfig.enableBlock) {
-        MSPROF_LOGE("No compute profiling item is enabled.");
-        return PROFILING_FAILED;
-    }
-    return PROFILING_SUCCESS;
-}
-
 int32_t ComputeProfilingManager::InitRuntime()
 {
+    MSPROF_EVENT("[NPU_COMPUTE] Init runtime begin.");
     JsonParser::instance()->Init(PROF_JSON_PATH);
     if (Platform::instance()->Init() != PROFILING_SUCCESS) {
         MSPROF_LOGE("Failed to init platform for compute profiling.");
         return PROFILING_FAILED;
     }
-    if (ProfManager::instance()->AclInit() != PROFILING_SUCCESS) {
-        MSPROF_LOGE("Failed to init prof manager for compute profiling.");
+    if (ProfAclMgr::instance()->Init() != PROFILING_SUCCESS) {
+        MSPROF_LOGE("Failed to init prof acl manager for compute profiling.");
         return PROFILING_FAILED;
     }
+    MSPROF_EVENT("[NPU_COMPUTE] Init runtime success.");
     return PROFILING_SUCCESS;
 }
 
-std::string ComputeProfilingManager::BuildMetricEvents(const std::vector<uint32_t>& metrics) const
+int32_t ComputeProfilingManager::CloneBaselineParams(SHARED_PTR_ALIA<ProfileParams>& params) const
 {
-    std::stringstream ss;
-    ss << CUSTOM_METRIC_PREFIX;
-    for (size_t i = 0; i < metrics.size(); ++i) {
-        if (i != 0) {
-            ss << METRIC_DELIMITER;
-        }
-        ss << "0x" << std::hex << std::nouppercase << metrics[i];
-    }
-    return ss.str();
-}
-
-SHARED_PTR_ALIA<ProfileParams> ComputeProfilingManager::BuildProfileParams(
-    const ComputeProfileConfig& config, const std::string& devIdStr) const
-{
-    SHARED_PTR_ALIA<ProfileParams> params = nullptr;
-    MSVP_MAKE_SHARED0(params, ProfileParams, return nullptr);
-    params->job_id = devIdStr;
-    params->devices = devIdStr;
-    params->result_dir = MSVP_PROF_EMPTY_STRING;
-    params->resultPath = MSVP_PROF_EMPTY_STRING;
-    params->profMode = MSVP_PROF_COMPUTE_MODE;
-    params->profiling_mode = PROFILING_MODE_DEF;
-    params->hostProfiling = false;
-    params->acl = MSVP_PROF_OFF;
-    params->runtimeApi = MSVP_PROF_OFF;
-    params->geApi = MSVP_PROF_OFF;
-    params->aicpuTrace = MSVP_PROF_OFF;
-    params->runtimeTrace = MSVP_PROF_OFF;
-    params->taskTrace = MSVP_PROF_OFF;
-    params->taskTime = MSVP_PROF_OFF;
-    if (config.enableLog) {
-        params->stars_acsq_task = MSVP_PROF_ON;
-        params->ts_memcpy = MSVP_PROF_ON;
-    }
-    if (config.enablePmu) {
-        const std::string metricEvents = BuildMetricEvents(config.aicoreMetrics);
-        const std::string rawEvents = metricEvents.substr(strlen(CUSTOM_METRIC_PREFIX));
-        params->ai_core_profiling = MSVP_PROF_ON;
-        params->ai_core_profiling_mode = PROFILING_MODE_TASK_BASED;
-        params->ai_core_metrics = metricEvents;
-        params->ai_core_profiling_events = rawEvents;
-        params->aiv_profiling = MSVP_PROF_ON;
-        params->aiv_profiling_mode = PROFILING_MODE_TASK_BASED;
-        params->aiv_metrics = metricEvents;
-        params->aiv_profiling_events = rawEvents;
-    }
-    if (config.enableInstr) {
-        params->instrProfiling = config.enableBiuPerf ? MSVP_PROF_ON : MSVP_PROF_OFF;
-        params->pcSampling = config.enablePcSampling ? MSVP_PROF_ON : MSVP_PROF_OFF;
-    }
-    if (config.enableBlock) {
-        params->taskBlock = MSVP_PROF_ON;
-        params->taskBlockShink = config.blockMode == PROF_COMPUTE_BLOCK_SHRINK ? MSVP_PROF_ON : MSVP_PROF_OFF;
-    }
-    return params;
-}
-
-void ComputeProfilingManager::RollbackComputeUploader(const std::string& devIdStr)
-{
-    UploaderMgr::instance()->DelUploader(devIdStr);
-    injectionTransport_.reset();
-}
-
-int32_t ComputeProfilingManager::CreateComputeUploader(const std::string& devIdStr)
-{
-    MSVP_MAKE_SHARED1(injectionTransport_, InjectionTransport, computeCallback_, return PROFILING_FAILED);
-    if (UploaderMgr::instance()->CreateUploader(devIdStr, injectionTransport_, COMPUTE_UPLOADER_QUEUE_SIZE) !=
-        PROFILING_SUCCESS) {
-        MSPROF_LOGE("Failed to create compute uploader, devId:%s.", devIdStr.c_str());
-        injectionTransport_.reset();
+    if (baselineParams_ == nullptr) {
+        MSPROF_LOGE("Compute profile baseline params is nullptr.");
         return PROFILING_FAILED;
     }
+    MSVP_MAKE_SHARED0(params, ProfileParams, return PROFILING_FAILED);
+    *params = *baselineParams_;
+    return PROFILING_SUCCESS;
+}
+
+int32_t ComputeProfilingManager::CreateComputeUploader(uint32_t devId, ComputeStatus& status)
+{
+    const std::string devIdStr = std::to_string(devId);
+    MSPROF_EVENT("[NPU_COMPUTE] Create injection transport, devId:%s.", devIdStr.c_str());
+    MSVP_MAKE_SHARED1(status.transport, InjectionTransport, computeCallback_, return PROFILING_FAILED);
+    MSPROF_EVENT(
+        "[NPU_COMPUTE] Create uploader begin, devId:%s, queueSize:%u.", devIdStr.c_str(), COMPUTE_UPLOADER_QUEUE_SIZE);
+    if (UploaderMgr::instance()->CreateUploader(devIdStr, status.transport, COMPUTE_UPLOADER_QUEUE_SIZE) !=
+        PROFILING_SUCCESS) {
+        MSPROF_LOGE("Failed to create compute uploader, devId:%s.", devIdStr.c_str());
+        status.transport.reset();
+        return PROFILING_FAILED;
+    }
+    MSPROF_EVENT("[NPU_COMPUTE] Create uploader success, devId:%s.", devIdStr.c_str());
     return PROFILING_SUCCESS;
 }
 
@@ -267,83 +125,55 @@ void ComputeProfilingManager::RegisterComputeUploaderMap(uint32_t devId, const s
     UploaderMgr::instance()->AddMapByDevIdMode(static_cast<int32_t>(devId), PROFILING_MODE_DEF, jobId);
 }
 
-int32_t ComputeProfilingManager::CreateComputeJobAdapter(uint32_t devId)
+int32_t ComputeProfilingManager::StartComputeJob(uint32_t devId, bool ifInitHost)
 {
-    jobAdapter_ = JobSocFactory().CreateJobAdapter(static_cast<int32_t>(devId));
-    if (jobAdapter_ == nullptr) {
-        MSPROF_LOGE("Failed to create compute job adapter, devId:%u.", devId);
+    MSPROF_EVENT("[NPU_COMPUTE] Start job begin, devId:%u, initHost:%d.", devId, ifInitHost ? 1 : 0);
+    SHARED_PTR_ALIA<ProfileParams> params = nullptr;
+    if (CloneBaselineParams(params) != PROFILING_SUCCESS) {
         return PROFILING_FAILED;
     }
-    return PROFILING_SUCCESS;
+    if (ifInitHost && ProfAclMgr::instance()->InitComputeProfileParams(baselineParams_, baselineConfig_.profSwitch) !=
+                          PROFILING_SUCCESS) {
+        MSPROF_LOGE("Failed to init compute profile params, devId:%u.", devId);
+        return PROFILING_FAILED;
+    }
+    RegisterComputeUploaderMap(devId, std::to_string(devId));
+    return ProfAclMgr::instance()->ProfStartCommonDevice(devId, ifInitHost);
 }
 
-int32_t ComputeProfilingManager::StartComputeJob(SHARED_PTR_ALIA<ProfileParams> params, uint32_t devId)
+int32_t ComputeProfilingManager::StopComputeJob(uint32_t devId)
 {
-    if (params == nullptr) {
-        MSPROF_LOGE("Compute profile params is nullptr.");
-        return PROFILING_FAILED;
-    }
-    RegisterComputeUploaderMap(devId, params->job_id);
-    if (CreateComputeJobAdapter(devId) != PROFILING_SUCCESS) {
-        return PROFILING_FAILED;
-    }
-    if (jobAdapter_->StartProf(params) != PROFILING_SUCCESS) {
-        MSPROF_LOGE("Failed to start compute profiling job, devId:%u.", devId);
-        return PROFILING_FAILED;
-    }
-    return PROFILING_SUCCESS;
+    MSPROF_EVENT("[NPU_COMPUTE] Stop job begin, devId:%u.", devId);
+    return ProfAclMgr::instance()->ProfStopCommonDevice(devId, baselineConfig_.profSwitch);
 }
 
-int32_t ComputeProfilingManager::StopComputeJob()
+void ComputeProfilingManager::RollbackComputeStatus(uint32_t devId)
 {
-    if (jobAdapter_ == nullptr) {
-        MSPROF_LOGW("Compute profiling job adapter is nullptr.");
-        return PROFILING_SUCCESS;
-    }
-    if (jobAdapter_->StopProf() != PROFILING_SUCCESS) {
-        MSPROF_LOGE("Failed to stop compute profiling job, devId:%s.", runningDevId_.c_str());
-        return PROFILING_FAILED;
-    }
-    return PROFILING_SUCCESS;
+    UploaderMgr::instance()->DelUploader(std::to_string(devId));
+    statuses_.erase(devId);
 }
 
-int32_t ComputeProfilingManager::StartComponentCallback(uint32_t devId, uint64_t profSwitch) const
+void ComputeProfilingManager::RollbackComputeRuntime(uint32_t devId, bool rollbackHost)
 {
-    uint32_t devIdList[COMPUTE_DEV_NUM] = {devId};
-    if (CommandHandleProfStart(devIdList, COMPUTE_DEV_NUM, profSwitch, 0) != PROFILING_SUCCESS) {
-        MSPROF_LOGE("Failed to callback compute profiling start, devId:%u.", devId);
-        return PROFILING_FAILED;
+    if (devId != static_cast<uint32_t>(COMPUTE_HOST_ID)) {
+        (void)ProfAclMgr::instance()->ProfStopCommonDevice(devId, baselineConfig_.profSwitch);
     }
-    return PROFILING_SUCCESS;
+    if (rollbackHost) {
+        (void)ProfAclMgr::instance()->ReleaseComputeHostContext();
+    }
 }
 
-int32_t ComputeProfilingManager::StopComponentCallback() const
+void ComputeProfilingManager::SaveBaselineConfig(const MsprofConfig& config)
 {
-    if (!Utils::CheckStringIsNonNegativeIntNum(runningDevId_)) {
-        MSPROF_LOGE("Invalid running compute profiling device id:%s.", runningDevId_.c_str());
-        return PROFILING_FAILED;
+    baselineConfig_ = config;
+    baselineAttrs_.clear();
+    if (config.configInfo.numAttrs == 0 || config.configInfo.attrs == nullptr) {
+        baselineConfig_.configInfo.numAttrs = 0;
+        baselineConfig_.configInfo.attrs = nullptr;
+        return;
     }
-    uint32_t devId = static_cast<uint32_t>(std::stoul(runningDevId_));
-    uint32_t devIdList[COMPUTE_DEV_NUM] = {devId};
-    if (CommandHandleProfStop(devIdList, COMPUTE_DEV_NUM, runningProfSwitch_, 0) != PROFILING_SUCCESS) {
-        MSPROF_LOGE("Failed to callback compute profiling stop, devId:%u.", devId);
-        return PROFILING_FAILED;
-    }
-    return PROFILING_SUCCESS;
-}
-
-int32_t ComputeProfilingManager::StartComputeJobAndCallback(
-    SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params, const ComputeProfileConfig& config)
-{
-    if (StartComputeJob(params, config.devId) != PROFILING_SUCCESS) {
-        return PROFILING_FAILED;
-    }
-    runningProfSwitch_ = config.profSwitch;
-    if (StartComponentCallback(config.devId, config.profSwitch) != PROFILING_SUCCESS) {
-        (void)StopComputeJob();
-        return PROFILING_FAILED;
-    }
-    return PROFILING_SUCCESS;
+    baselineAttrs_.assign(config.configInfo.attrs, config.configInfo.attrs + config.configInfo.numAttrs);
+    baselineConfig_.configInfo.attrs = baselineAttrs_.data();
 }
 
 int32_t ComputeProfilingManager::Start(const void* data, uint32_t length)
@@ -353,49 +183,92 @@ int32_t ComputeProfilingManager::Start(const void* data, uint32_t length)
         return PROFILING_FAILED;
     }
     std::lock_guard<std::mutex> lock(mutex_);
-    if (running_) {
-        MSPROF_LOGE("Compute profiling is already started.");
-        return PROFILING_FAILED;
-    }
     if (computeCallback_ == nullptr) {
         MSPROF_LOGE("Compute data callback is not registered.");
         return PROFILING_FAILED;
     }
-    ComputeProfileConfig config;
-    if (ParseConfig(*static_cast<const MsprofConfig*>(data), config) != PROFILING_SUCCESS) {
+    const MsprofConfig& config = *static_cast<const MsprofConfig*>(data);
+    const uint32_t startDevId = config.devIdList[0];
+    MSPROF_EVENT(
+        "[NPU_COMPUTE] Start begin, devId:%u, profSwitch:0x%llx, firstDevice:%d.", startDevId,
+        static_cast<unsigned long long>(config.profSwitch), statuses_.empty() ? 1 : 0);
+    if (config.devNums != COMPUTE_DEV_NUM) {
+        MSPROF_LOGE("Compute profiling only supports one device, devNums:%u.", config.devNums);
         return PROFILING_FAILED;
     }
+    if (baselineParams_ == nullptr && !ProfAclMgr::instance()->IsModeOff()) {
+        MSPROF_LOGE(
+            "Compute profiling conflicts with the current profiling mode, mode:%d.",
+            ProfAclMgr::instance()->GetWorkMode());
+        return PROFILING_FAILED;
+    }
+    if (statuses_.find(config.devIdList[0]) != statuses_.end()) {
+        MSPROF_LOGE("Compute profiling is already started, devId:%u.", config.devIdList[0]);
+        return PROFILING_FAILED;
+    }
+    SHARED_PTR_ALIA<ProfileParams> params = nullptr;
+    if (ComputeConfigAdapter::ToProfileParams(config, params) != PROFILING_SUCCESS) {
+        return PROFILING_FAILED;
+    }
+    CheckConfigConsistency(config);
     if (InitRuntime() != PROFILING_SUCCESS) {
         return PROFILING_FAILED;
     }
-    const std::string devIdStr = std::to_string(config.devId);
-    if (CreateComputeUploader(devIdStr) != PROFILING_SUCCESS) {
-        ClearContext();
+
+    ComputeStatus status;
+    const uint32_t devId = config.devIdList[0];
+    const bool ifInitHost = statuses_.empty();
+    if (ifInitHost) {
+        baselineParams_ = params;
+    }
+    if (CreateComputeUploader(devId, status) != PROFILING_SUCCESS) {
+        if (ifInitHost) {
+            ClearContext();
+        }
         return PROFILING_FAILED;
     }
-    runningDevId_ = devIdStr;
-    SHARED_PTR_ALIA<ProfileParams> params = BuildProfileParams(config, devIdStr);
-    if (params == nullptr) {
-        ClearContext();
+    statuses_[devId] = status;
+
+    if (ifInitHost) {
+        MSPROF_EVENT("[NPU_COMPUTE] Create host injection transport, jobId:%d.", COMPUTE_HOST_ID);
+        MSVP_MAKE_SHARED1(hostTransport_, InjectionTransport, computeCallback_, ClearContext();
+                          return PROFILING_FAILED);
+        MSPROF_EVENT(
+            "[NPU_COMPUTE] Create host uploader begin, jobId:%d, queueSize:%u.", COMPUTE_HOST_ID,
+            COMPUTE_UPLOADER_QUEUE_SIZE);
+        int32_t ret = UploaderMgr::instance()->CreateUploader(
+            std::to_string(COMPUTE_HOST_ID), hostTransport_, COMPUTE_UPLOADER_QUEUE_SIZE);
+        if (ret != PROFILING_SUCCESS) {
+            MSPROF_LOGE("Failed to create compute host uploader.");
+            ClearContext();
+            return PROFILING_FAILED;
+        }
+        MSPROF_EVENT("[NPU_COMPUTE] Create host uploader success, jobId:%d.", COMPUTE_HOST_ID);
+    }
+
+    const int32_t startRet = StartComputeJob(devId, ifInitHost);
+    if (startRet != MSPROF_ERROR_NONE && startRet != ACL_SUCCESS) {
+        RollbackComputeRuntime(devId, ifInitHost);
+        if (ifInitHost) {
+            ClearContext();
+        } else {
+            RollbackComputeStatus(devId);
+        }
         return PROFILING_FAILED;
     }
-    if (StartComputeJobAndCallback(params, config) != PROFILING_SUCCESS) {
-        ClearContext();
-        return PROFILING_FAILED;
-    }
-    running_ = true;
-    runningParams_ = params;
-    MSPROF_LOGI("Start compute profiling success, devId:%s.", devIdStr.c_str());
+    MSPROF_LOGI("Start compute profiling success, devId:%u.", devId);
+    MSPROF_EVENT("[NPU_COMPUTE] Start success, devId:%u.", devId);
     return PROFILING_SUCCESS;
 }
 
-void ComputeProfilingManager::PrintCallbackFailedStatistics() const
+void ComputeProfilingManager::PrintCallbackFailedStatistics(uint32_t devId) const
 {
-    if (injectionTransport_ == nullptr) {
+    const auto iter = statuses_.find(devId);
+    if (iter == statuses_.end() || iter->second.transport == nullptr) {
         return;
     }
-    const uint64_t failedCount = injectionTransport_->GetCallbackFailedCount();
-    const uint64_t failedBytes = injectionTransport_->GetCallbackFailedBytes();
+    const uint64_t failedCount = iter->second.transport->GetCallbackFailedCount();
+    const uint64_t failedBytes = iter->second.transport->GetCallbackFailedBytes();
     if (failedCount != 0) {
         MSPROF_LOGE(
             "Compute profiling callback failed, count:%llu, bytes:%llu.", static_cast<unsigned long long>(failedCount),
@@ -403,10 +276,10 @@ void ComputeProfilingManager::PrintCallbackFailedStatistics() const
     }
 }
 
-void ComputeProfilingManager::FlushComputeUploader(uint32_t timeoutSec) const
+void ComputeProfilingManager::FlushComputeUploader(uint32_t devId, uint32_t timeoutSec) const
 {
     SHARED_PTR_ALIA<Uploader> uploader = nullptr;
-    UploaderMgr::instance()->GetUploader(runningDevId_, uploader);
+    UploaderMgr::instance()->GetUploader(std::to_string(devId), uploader);
     if (uploader == nullptr) {
         return;
     }
@@ -415,41 +288,138 @@ void ComputeProfilingManager::FlushComputeUploader(uint32_t timeoutSec) const
     }
 }
 
+void ComputeProfilingManager::WaitStatusCallbackDone(uint32_t devId, uint32_t timeoutSec) const
+{
+    const auto iter = statuses_.find(devId);
+    if (iter == statuses_.end() || iter->second.transport == nullptr) {
+        return;
+    }
+    if (iter->second.transport->WaitAllCallbackDone(timeoutSec) != PROFILING_SUCCESS) {
+        MSPROF_LOGE("Wait compute callbacks done failed, devId:%u.", devId);
+    }
+}
+
+int32_t ComputeProfilingManager::ReleaseComputeHostContext()
+{
+    MSPROF_EVENT("[NPU_COMPUTE] Flush host uploader begin, jobId:%d.", COMPUTE_HOST_ID);
+    int32_t ret = ProfAclMgr::instance()->ReleaseComputeHostContext();
+    if (ret != PROFILING_SUCCESS) {
+        return ret;
+    }
+    SHARED_PTR_ALIA<Uploader> uploader = nullptr;
+    UploaderMgr::instance()->GetUploader(std::to_string(COMPUTE_HOST_ID), uploader);
+    if (uploader != nullptr && uploader->Flush(CALLBACK_WAIT_TIMEOUT_SEC) != PROFILING_SUCCESS) {
+        MSPROF_LOGE("Wait host compute uploader empty timeout, timeoutSec:%u.", CALLBACK_WAIT_TIMEOUT_SEC);
+        ret = PROFILING_FAILED;
+    }
+    if (hostTransport_ != nullptr &&
+        hostTransport_->WaitAllCallbackDone(CALLBACK_WAIT_TIMEOUT_SEC) != PROFILING_SUCCESS) {
+        MSPROF_LOGE("Wait host compute callbacks done timeout, timeoutSec:%u.", CALLBACK_WAIT_TIMEOUT_SEC);
+        ret = PROFILING_FAILED;
+    }
+    MSPROF_EVENT("[NPU_COMPUTE] Wait host callbacks done, jobId:%d, ret:%d.", COMPUTE_HOST_ID, ret);
+    if (ret != PROFILING_SUCCESS) {
+        return ret;
+    }
+    UploaderMgr::instance()->DelUploader(std::to_string(COMPUTE_HOST_ID));
+    hostTransport_.reset();
+    baselineParams_.reset();
+    baselineConfig_ = {};
+    baselineAttrs_.clear();
+    if (ret == PROFILING_SUCCESS) {
+        ProfAclMgr::instance()->SetModeToOff();
+        MSPROF_EVENT("[NPU_COMPUTE] Compute mode cleared.");
+    }
+    MSPROF_EVENT("[NPU_COMPUTE] Release host context success, jobId:%d.", COMPUTE_HOST_ID);
+    return ret;
+}
+
+bool ComputeProfilingManager::IsSameComputeConfig(const MsprofConfig& config) const
+{
+    if (baselineConfig_.profSwitch != config.profSwitch ||
+        baselineConfig_.configInfo.numAttrs != config.configInfo.numAttrs) {
+        return false;
+    }
+    const MsprofConfigInfo& baselineInfo = baselineConfig_.configInfo;
+    const MsprofConfigInfo& currentInfo = config.configInfo;
+    if (baselineInfo.numAttrs == 0) {
+        return true;
+    }
+    if (baselineInfo.attrs == nullptr || currentInfo.attrs == nullptr) {
+        return false;
+    }
+    return memcmp(baselineInfo.attrs, currentInfo.attrs, baselineInfo.numAttrs * sizeof(MsprofConfigAttr)) == 0;
+}
+
+bool ComputeProfilingManager::CheckConfigConsistency(const MsprofConfig& config)
+{
+    if (statuses_.empty()) {
+        SaveBaselineConfig(config);
+        return true;
+    }
+    if (IsSameComputeConfig(config)) {
+        return true;
+    }
+    MSPROF_LOGW(
+        "Compute config differs from the first status, profSwitch:%llu, numAttrs:%llu.",
+        static_cast<unsigned long long>(config.profSwitch),
+        static_cast<unsigned long long>(config.configInfo.numAttrs));
+    return true;
+}
+
 int32_t ComputeProfilingManager::Stop(const void* data, uint32_t length)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (!running_) {
-        MSPROF_LOGI("Compute profiling has already stopped.");
-        return PROFILING_SUCCESS;
-    }
     if (data == nullptr || length != sizeof(MsprofConfig)) {
         MSPROF_LOGE("Invalid compute stop config, length:%u.", length);
         return PROFILING_FAILED;
     }
-    int32_t ret = StopComponentCallback();
-    if (StopComputeJob() != PROFILING_SUCCESS) {
-        ret = PROFILING_FAILED;
+    const MsprofConfig& config = *static_cast<const MsprofConfig*>(data);
+    if (config.devNums != COMPUTE_DEV_NUM) {
+        MSPROF_LOGE("Invalid compute stop device number, devNums:%u.", config.devNums);
+        return PROFILING_FAILED;
     }
-    FlushComputeUploader(CALLBACK_WAIT_TIMEOUT_SEC);
-    if (injectionTransport_ != nullptr) {
-        (void)injectionTransport_->WaitAllCallbackDone(CALLBACK_WAIT_TIMEOUT_SEC);
+    const uint32_t devId = config.devIdList[0];
+    MSPROF_EVENT("[NPU_COMPUTE] Stop begin, devId:%u.", devId);
+    const auto statusIter = statuses_.find(devId);
+    if (statusIter == statuses_.end()) {
+        MSPROF_LOGI("Compute profiling has already stopped, devId:%u.", devId);
+        return PROFILING_SUCCESS;
     }
-    PrintCallbackFailedStatistics();
-    ClearContext();
-    return ret;
+    CheckConfigConsistency(config);
+    int32_t ret = StopComputeJob(devId);
+    FlushComputeUploader(devId, CALLBACK_WAIT_TIMEOUT_SEC);
+    WaitStatusCallbackDone(devId, CALLBACK_WAIT_TIMEOUT_SEC);
+    PrintCallbackFailedStatistics(devId);
+    if (ret != PROFILING_SUCCESS) {
+        return ret;
+    }
+    if (statuses_.size() == COMPUTE_DEV_NUM) {
+        const int32_t hostRet = ReleaseComputeHostContext();
+        if (hostRet != PROFILING_SUCCESS) {
+            return hostRet;
+        }
+    }
+    RollbackComputeStatus(devId);
+    MSPROF_EVENT("[NPU_COMPUTE] Stop success, devId:%u, remainingDevices:%zu.", devId, statuses_.size());
+    return PROFILING_SUCCESS;
 }
 
 void ComputeProfilingManager::ClearContext()
 {
-    if (!runningDevId_.empty()) {
-        UploaderMgr::instance()->DelUploader(runningDevId_);
+    for (auto& status : statuses_) {
+        UploaderMgr::instance()->DelUploader(std::to_string(status.first));
+        if (status.second.transport != nullptr) {
+            (void)status.second.transport->WaitAllCallbackDone(CALLBACK_WAIT_TIMEOUT_SEC);
+        }
+        status.second.transport.reset();
     }
-    running_ = false;
-    runningDevId_.clear();
-    runningProfSwitch_ = 0;
-    runningParams_.reset();
-    jobAdapter_.reset();
-    injectionTransport_.reset();
+    statuses_.clear();
+    UploaderMgr::instance()->DelUploader(std::to_string(COMPUTE_HOST_ID));
+    hostTransport_.reset();
+    baselineParams_.reset();
+    baselineConfig_ = {};
+    baselineAttrs_.clear();
 }
 
 } // namespace ProfilerCommon

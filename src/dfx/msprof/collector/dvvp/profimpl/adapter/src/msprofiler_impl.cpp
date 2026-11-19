@@ -340,7 +340,7 @@ int32_t ProfNotifySetDeviceForDynProf(uint32_t chipId, uint32_t devId, bool isOp
 
 int32_t ProfInitIfCommandLine()
 {
-    if (ProfAclMgr::instance()->IsCmdMode()) {
+    if (ProfAclMgr::instance()->IsCmdMode() || ProfAclMgr::instance()->IsComputeMode()) {
         return PROFILING_SUCCESS;
     }
 

@@ -70,6 +70,38 @@ TEST_F(PROF_DEVICE_SOC_UTEST, StartProf)
     EXPECT_EQ(PROFILING_FAILED, jobDeviceSoc->StartProf(params));
 }
 
+TEST_F(PROF_DEVICE_SOC_UTEST, StartProfComputeModeKeepsTmpResultDirEmpty)
+{
+    GlobalMockObject::verify();
+
+    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
+    params->FromString(
+        "{\"result_dir\":\"/tmp/prof_compute_result\", \"devices\":\"1\", \"job_id\":\"1\", \"profMode\":\"compute\"}");
+    auto jobDeviceSoc = std::make_shared<Analysis::Dvvp::JobWrapper::JobDeviceSoc>(0);
+
+    MOCKER_CPP(&analysis::dvvp::common::validation::ParamValidation::CheckProfilingParams)
+        .stubs()
+        .will(returnValue(true));
+
+    // Prepare the state normally produced by StartProfHandle, then mock it as success.
+    jobDeviceSoc->params_ = params;
+    jobDeviceSoc->tmpResultDir_ = params->result_dir;
+    MSVP_MAKE_SHARED0(jobDeviceSoc->collectionJobCommCfg_, CollectionJobCommonParams, return);
+    MOCKER_CPP(&Analysis::Dvvp::JobWrapper::JobDeviceSoc::StartProfHandle).stubs().will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&Analysis::Dvvp::JobWrapper::ProfChannelManager::Init).stubs().will(returnValue(PROFILING_SUCCESS));
+    MOCKER(&analysis::dvvp::driver::DrvChannelsMgr::GetAllChannels).stubs().will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&Analysis::Dvvp::JobWrapper::JobDeviceSoc::ParsePmuConfig).stubs().will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&Analysis::Dvvp::JobWrapper::JobDeviceSoc::RegisterCollectionJobs)
+        .stubs()
+        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&Analysis::Dvvp::JobWrapper::JobDeviceSoc::IsComputeProfilingMode).stubs().will(returnValue(true));
+
+    EXPECT_EQ(PROFILING_SUCCESS, jobDeviceSoc->StartProf(params));
+    EXPECT_EQ("", jobDeviceSoc->collectionJobCommCfg_->tmpResultDir);
+
+    GlobalMockObject::verify();
+}
+
 TEST_F(PROF_DEVICE_SOC_UTEST, StartProf1)
 {
     GlobalMockObject::verify();

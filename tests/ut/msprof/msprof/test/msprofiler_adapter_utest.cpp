@@ -1,12 +1,12 @@
 /**
- * Copyright (c) 2025 Huawei Technologies Co., Ltd.
- * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
- * CANN Open Software License Agreement Version 2.0 (the "License").
- * Please refer to the License for details. You may not use this file except in compliance with the License.
- * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
- * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
- * See LICENSE in the root of the software repository for the full text of the License.
- */
+ * Copyright (c) 2026 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
 #include "mockcpp/mockcpp.hpp"
 #include "gtest/gtest.h"
 #include <cstdlib>
@@ -32,6 +32,7 @@
 #include "file_transport.h"
 #include "job_adapter.h"
 #include "transport/injection_transport.h"
+#include "prof_manager.h"
 #include "uploader_mgr.h"
 #include "command_handle.h"
 #define private public
@@ -50,79 +51,16 @@ extern int32_t ProfGetResultPath(char* path, uint32_t len);
 }
 
 using namespace analysis::dvvp::common::error;
+using Msprofiler::Api::ProfAclMgr;
 namespace {
 constexpr uint32_t COMPUTE_TEST_METRIC_BASE = 0x500;
 constexpr uint32_t COMPUTE_TEST_METRIC_ZERO = 0x0;
 constexpr uint32_t COMPUTE_TEST_METRIC_301 = 0x301;
 constexpr uint32_t COMPUTE_TEST_METRIC_501 = 0x501;
 constexpr uint32_t COMPUTE_ZERO_METRIC_CASE_NUM = 3;
-constexpr uint32_t COMPUTE_CALLBACK_TEST_DEV_ID = 5;
-constexpr uint64_t COMPUTE_CALLBACK_TEST_SWITCH = PROF_TASK_TIME_MASK | PROF_AICORE_METRICS_MASK;
-
 int32_t ComputeRawDataCallback(MsprofRawData* rawData)
 {
     (void)rawData;
-    return PROFILING_SUCCESS;
-}
-
-int32_t g_computeTestStartRet = PROFILING_SUCCESS;
-int32_t g_computeTestStopRet = PROFILING_SUCCESS;
-uint32_t g_computeTestStartCount = 0;
-uint32_t g_computeTestStopCount = 0;
-uint32_t g_computeComponentStartCount = 0;
-uint32_t g_computeComponentStopCount = 0;
-uint32_t g_computeComponentDevId = 0;
-uint64_t g_computeComponentProfSwitch = 0;
-
-class ComputeTestJobAdapter : public Analysis::Dvvp::JobWrapper::JobAdapter {
-public:
-    int32_t StartProf(SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params) override
-    {
-        (void)params;
-        ++g_computeTestStartCount;
-        return g_computeTestStartRet;
-    }
-
-    int32_t StopProf(void) override
-    {
-        ++g_computeTestStopCount;
-        return g_computeTestStopRet;
-    }
-};
-
-void ResetComputeTestJob(int32_t startRet, int32_t stopRet)
-{
-    g_computeTestStartRet = startRet;
-    g_computeTestStopRet = stopRet;
-    g_computeTestStartCount = 0;
-    g_computeTestStopCount = 0;
-}
-
-void ResetComputeComponentCommand()
-{
-    g_computeComponentStartCount = 0;
-    g_computeComponentStopCount = 0;
-    g_computeComponentDevId = 0;
-    g_computeComponentProfSwitch = 0;
-}
-
-int32_t CaptureComputeStartCommand(const uint32_t devIdList[], uint32_t devNums, uint64_t profSwitch, uint64_t)
-{
-    ++g_computeComponentStartCount;
-    if (devIdList != nullptr && devNums == 1) {
-        g_computeComponentDevId = devIdList[0];
-    }
-    g_computeComponentProfSwitch = profSwitch;
-    return PROFILING_SUCCESS;
-}
-
-int32_t CaptureComputeStopCommand(const uint32_t devIdList[], uint32_t devNums, uint64_t profSwitch, uint64_t)
-{
-    ++g_computeComponentStopCount;
-    if (devIdList != nullptr && devNums == 1) {
-        g_computeComponentDevId = devIdList[0];
-    }
-    g_computeComponentProfSwitch = profSwitch;
     return PROFILING_SUCCESS;
 }
 
@@ -173,25 +111,26 @@ void ExpectComputeBlockParams(uint32_t blockMode, const std::string& expectedBlo
 {
     MsprofConfigAttr attr = {};
     MsprofConfig config = MakeComputeBlockConfig(attr, blockMode);
-    Analysis::Dvvp::ProfilerCommon::ComputeProfileConfig computeConfig;
-    auto manager = Analysis::Dvvp::ProfilerCommon::ComputeProfilingManager::instance();
-    EXPECT_EQ(PROFILING_SUCCESS, manager->ParseConfig(config, computeConfig));
-    EXPECT_TRUE(computeConfig.enableBlock);
-    EXPECT_EQ(blockMode, computeConfig.blockMode);
-    auto params = manager->BuildProfileParams(computeConfig, "0");
+    SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params = nullptr;
+    EXPECT_EQ(PROFILING_SUCCESS, Analysis::Dvvp::ProfilerCommon::ComputeConfigAdapter::ToProfileParams(config, params));
     ASSERT_NE(nullptr, params);
     EXPECT_EQ(analysis::dvvp::common::config::MSVP_PROF_ON, params->taskBlock);
     EXPECT_EQ(expectedBlockShink, params->taskBlockShink);
 }
+
 } // namespace
 
-class MSPROFILER_ADAPTER_UTEST : public testing::Test {
+class MsprofilerAdapterUtest : public testing::Test {
 protected:
     virtual void SetUp() {}
-    virtual void TearDown() { GlobalMockObject::verify(); }
+    virtual void TearDown()
+    {
+        GlobalMockObject::verify();
+        GlobalMockObject::reset();
+    }
 };
 
-TEST_F(MSPROFILER_ADAPTER_UTEST, PROF_OP_SUBSCRIBE)
+TEST_F(MsprofilerAdapterUtest, PROF_OP_SUBSCRIBE)
 {
     MOCKER(&Msprofiler::Api::ProfAclMgr::ProfStartAclSubscribe).stubs().will(returnValue(ACL_SUCCESS));
 
@@ -202,7 +141,7 @@ TEST_F(MSPROFILER_ADAPTER_UTEST, PROF_OP_SUBSCRIBE)
     EXPECT_EQ(ACL_ERROR_NONE, ProfOpSubscribe(0, &config));
 }
 
-TEST_F(MSPROFILER_ADAPTER_UTEST, PROF_OP_UNSUBSCRIBE)
+TEST_F(MsprofilerAdapterUtest, PROF_OP_UNSUBSCRIBE)
 {
     MOCKER(&Msprofiler::Api::ProfAclMgr::IsModelSubscribed).stubs().will(returnValue(false)).then(returnValue(true));
 
@@ -210,13 +149,13 @@ TEST_F(MSPROFILER_ADAPTER_UTEST, PROF_OP_UNSUBSCRIBE)
     EXPECT_EQ(ACL_ERROR_NONE, ProfOpUnSubscribe(0));
 }
 
-TEST_F(MSPROFILER_ADAPTER_UTEST, PROF_ACL_SUBSCRIBE)
+TEST_F(MsprofilerAdapterUtest, PROF_ACL_SUBSCRIBE)
 {
     ProfRegisterTransport(ProfCreateParsertransport());
     EXPECT_EQ(ACL_ERROR_INVALID_MODEL_ID, ProfAclSubscribe(0, 0, nullptr));
 }
 
-TEST_F(MSPROFILER_ADAPTER_UTEST, PROF_CHECKOPSWITCH_TYPE_NOT_ZERO)
+TEST_F(MsprofilerAdapterUtest, PROF_CHECKOPSWITCH_TYPE_NOT_ZERO)
 {
     EXPECT_EQ(false, Analysis::Dvvp::ProfilerCommon::ProfCheckOpSwitch(1, nullptr, 0));
     EXPECT_EQ(false, Analysis::Dvvp::ProfilerCommon::ProfCheckOpSwitch(1, "MatMul", 6));
@@ -224,20 +163,20 @@ TEST_F(MSPROFILER_ADAPTER_UTEST, PROF_CHECKOPSWITCH_TYPE_NOT_ZERO)
     EXPECT_EQ(false, Analysis::Dvvp::ProfilerCommon::ProfCheckOpSwitch(UINT32_MAX, "Relu", 4));
 }
 
-TEST_F(MSPROFILER_ADAPTER_UTEST, PROF_CHECKOPSWITCH_NULLPTR_OP)
+TEST_F(MsprofilerAdapterUtest, PROF_CHECKOPSWITCH_NULLPTR_OP)
 {
     EXPECT_EQ(false, Analysis::Dvvp::ProfilerCommon::ProfCheckOpSwitch(0, nullptr, 0));
     EXPECT_EQ(false, Analysis::Dvvp::ProfilerCommon::ProfCheckOpSwitch(0, nullptr, 6));
 }
 
-TEST_F(MSPROFILER_ADAPTER_UTEST, PROF_CHECKOPSWITCH_ZERO_LEN)
+TEST_F(MsprofilerAdapterUtest, PROF_CHECKOPSWITCH_ZERO_LEN)
 {
     const char* op = "MatMul";
     EXPECT_EQ(false, Analysis::Dvvp::ProfilerCommon::ProfCheckOpSwitch(0, op, 0));
     EXPECT_EQ(false, Analysis::Dvvp::ProfilerCommon::ProfCheckOpSwitch(0, "Add", 0));
 }
 
-TEST_F(MSPROFILER_ADAPTER_UTEST, PROF_CHECKOPSWITCH_EMPTY_CONFIG)
+TEST_F(MsprofilerAdapterUtest, PROF_CHECKOPSWITCH_EMPTY_CONFIG)
 {
     MOCKER(&Msprofiler::Api::ProfAclMgr::GetOpTypeConfig).stubs().will(returnValue(std::string("")));
 
@@ -246,7 +185,7 @@ TEST_F(MSPROFILER_ADAPTER_UTEST, PROF_CHECKOPSWITCH_EMPTY_CONFIG)
     EXPECT_EQ(false, Analysis::Dvvp::ProfilerCommon::ProfCheckOpSwitch(0, "Add", 3));
 }
 
-TEST_F(MSPROFILER_ADAPTER_UTEST, PROF_CHECKOPSWITCH_OP_IN_CONFIG)
+TEST_F(MsprofilerAdapterUtest, PROF_CHECKOPSWITCH_OP_IN_CONFIG)
 {
     MOCKER(&Msprofiler::Api::ProfAclMgr::GetOpTypeConfig).stubs().will(returnValue(std::string("MatMul,Add,Relu")));
 
@@ -255,7 +194,7 @@ TEST_F(MSPROFILER_ADAPTER_UTEST, PROF_CHECKOPSWITCH_OP_IN_CONFIG)
     EXPECT_EQ(true, Analysis::Dvvp::ProfilerCommon::ProfCheckOpSwitch(0, "Relu", 4));
 }
 
-TEST_F(MSPROFILER_ADAPTER_UTEST, PROF_CHECKOPSWITCH_OP_NOT_IN_CONFIG)
+TEST_F(MsprofilerAdapterUtest, PROF_CHECKOPSWITCH_OP_NOT_IN_CONFIG)
 {
     MOCKER(&Msprofiler::Api::ProfAclMgr::GetOpTypeConfig).stubs().will(returnValue(std::string("MatMul,Add")));
 
@@ -264,7 +203,7 @@ TEST_F(MSPROFILER_ADAPTER_UTEST, PROF_CHECKOPSWITCH_OP_NOT_IN_CONFIG)
     EXPECT_EQ(false, Analysis::Dvvp::ProfilerCommon::ProfCheckOpSwitch(0, "Softmax", 7));
 }
 
-TEST_F(MSPROFILER_ADAPTER_UTEST, PROF_CHECKOPSWITCH_SINGLE_OP_CONFIG)
+TEST_F(MsprofilerAdapterUtest, PROF_CHECKOPSWITCH_SINGLE_OP_CONFIG)
 {
     MOCKER(&Msprofiler::Api::ProfAclMgr::GetOpTypeConfig).stubs().will(returnValue(std::string("MatMul")));
 
@@ -272,7 +211,7 @@ TEST_F(MSPROFILER_ADAPTER_UTEST, PROF_CHECKOPSWITCH_SINGLE_OP_CONFIG)
     EXPECT_EQ(false, Analysis::Dvvp::ProfilerCommon::ProfCheckOpSwitch(0, "Add", 3));
 }
 
-TEST_F(MSPROFILER_ADAPTER_UTEST, PROF_IS_INITED)
+TEST_F(MsprofilerAdapterUtest, PROF_IS_INITED)
 {
     // ProfIsInited passes through ProfAclMgr::IsInited().
     MOCKER(&Msprofiler::Api::ProfAclMgr::IsInited).stubs().will(returnValue(true)).then(returnValue(false));
@@ -281,7 +220,7 @@ TEST_F(MSPROFILER_ADAPTER_UTEST, PROF_IS_INITED)
     EXPECT_EQ(false, ProfIsInited());
 }
 
-TEST_F(MSPROFILER_ADAPTER_UTEST, PROF_GET_RESULT_PATH_NORMAL)
+TEST_F(MsprofilerAdapterUtest, PROF_GET_RESULT_PATH_NORMAL)
 {
     // Normal: result path fits into the buffer, copied out and returns success.
     MOCKER(&Msprofiler::Api::ProfAclMgr::GetResultPath).stubs().will(returnValue(std::string("/tmp/prof_result")));
@@ -291,7 +230,7 @@ TEST_F(MSPROFILER_ADAPTER_UTEST, PROF_GET_RESULT_PATH_NORMAL)
     EXPECT_STREQ("/tmp/prof_result", buf);
 }
 
-TEST_F(MSPROFILER_ADAPTER_UTEST, PROF_GET_RESULT_PATH_EMPTY)
+TEST_F(MsprofilerAdapterUtest, PROF_GET_RESULT_PATH_EMPTY)
 {
     // Empty result path: returns success with an empty C-string.
     MOCKER(&Msprofiler::Api::ProfAclMgr::GetResultPath).stubs().will(returnValue(std::string("")));
@@ -301,7 +240,7 @@ TEST_F(MSPROFILER_ADAPTER_UTEST, PROF_GET_RESULT_PATH_EMPTY)
     EXPECT_EQ('\0', buf[0]);
 }
 
-TEST_F(MSPROFILER_ADAPTER_UTEST, PROF_GET_RESULT_PATH_BUFFER_TOO_SMALL)
+TEST_F(MsprofilerAdapterUtest, PROF_GET_RESULT_PATH_BUFFER_TOO_SMALL)
 {
     // Buffer too small: path length >= len must fail without writing out of bounds.
     MOCKER(&Msprofiler::Api::ProfAclMgr::GetResultPath)
@@ -312,26 +251,25 @@ TEST_F(MSPROFILER_ADAPTER_UTEST, PROF_GET_RESULT_PATH_BUFFER_TOO_SMALL)
     EXPECT_EQ(PROFILING_FAILED, ProfGetResultPath(buf, sizeof(buf)));
 }
 
-TEST_F(MSPROFILER_ADAPTER_UTEST, COMPUTE_STOP_NOT_STARTED_SUCCESS)
+TEST_F(MsprofilerAdapterUtest, COMPUTE_STOP_NOT_STARTED_SUCCESS)
 {
-    EXPECT_EQ(PROFILING_SUCCESS, MsprofStop(MSPROF_CTRL_INIT_COMPUTE, nullptr, 0));
+    MsprofConfig config = MakeComputeConfig(PROF_TASK_TIME_MASK);
+    EXPECT_EQ(PROFILING_SUCCESS, MsprofStop(MSPROF_CTRL_INIT_COMPUTE, &config, sizeof(config)));
 }
 
-TEST_F(MSPROFILER_ADAPTER_UTEST, COMPUTE_STOP_INVALID_PARAM_DOES_NOT_CLEAR_RUNNING_CONTEXT)
+TEST_F(MsprofilerAdapterUtest, COMPUTE_STOP_INVALID_PARAM_DOES_NOT_CLEAR_RUNNING_CONTEXT)
 {
     auto manager = Analysis::Dvvp::ProfilerCommon::ComputeProfilingManager::instance();
     manager->ClearContext();
-    manager->running_ = true;
-    manager->runningDevId_ = "0";
+    manager->statuses_[0] = Analysis::Dvvp::ProfilerCommon::ComputeProfilingManager::ComputeStatus();
 
     EXPECT_EQ(PROFILING_FAILED, MsprofStop(MSPROF_CTRL_INIT_COMPUTE, nullptr, 0));
-    EXPECT_TRUE(manager->running_);
-    EXPECT_EQ("0", manager->runningDevId_);
+    EXPECT_EQ(1U, manager->statuses_.size());
 
     manager->ClearContext();
 }
 
-TEST_F(MSPROFILER_ADAPTER_UTEST, COMPUTE_START_CHECK_DEV_NUM)
+TEST_F(MsprofilerAdapterUtest, COMPUTE_START_CHECK_DEV_NUM)
 {
     EXPECT_EQ(
         PROFILING_SUCCESS, Analysis::Dvvp::ProfilerCommon::ProfRegisterDataCallback(
@@ -341,7 +279,7 @@ TEST_F(MSPROFILER_ADAPTER_UTEST, COMPUTE_START_CHECK_DEV_NUM)
     EXPECT_EQ(PROFILING_FAILED, MsprofStart(MSPROF_CTRL_INIT_COMPUTE, &config, sizeof(config)));
 }
 
-TEST_F(MSPROFILER_ADAPTER_UTEST, COMPUTE_START_CHECK_EMPTY_AICORE_METRICS)
+TEST_F(MsprofilerAdapterUtest, COMPUTE_START_CHECK_EMPTY_AICORE_METRICS)
 {
     EXPECT_EQ(
         PROFILING_SUCCESS, Analysis::Dvvp::ProfilerCommon::ProfRegisterDataCallback(
@@ -350,7 +288,7 @@ TEST_F(MSPROFILER_ADAPTER_UTEST, COMPUTE_START_CHECK_EMPTY_AICORE_METRICS)
     EXPECT_EQ(PROFILING_FAILED, MsprofStart(MSPROF_CTRL_INIT_COMPUTE, &config, sizeof(config)));
 }
 
-TEST_F(MSPROFILER_ADAPTER_UTEST, COMPUTE_START_CHECK_ALL_INVALID_AICORE_METRICS)
+TEST_F(MsprofilerAdapterUtest, COMPUTE_START_CHECK_ALL_INVALID_AICORE_METRICS)
 {
     EXPECT_EQ(
         PROFILING_SUCCESS, Analysis::Dvvp::ProfilerCommon::ProfRegisterDataCallback(
@@ -363,7 +301,7 @@ TEST_F(MSPROFILER_ADAPTER_UTEST, COMPUTE_START_CHECK_ALL_INVALID_AICORE_METRICS)
     EXPECT_EQ(PROFILING_FAILED, MsprofStart(MSPROF_CTRL_INIT_COMPUTE, &config, sizeof(config)));
 }
 
-TEST_F(MSPROFILER_ADAPTER_UTEST, COMPUTE_START_CHECK_EMPTY_INSTR_MODE)
+TEST_F(MsprofilerAdapterUtest, COMPUTE_START_CHECK_EMPTY_INSTR_MODE)
 {
     EXPECT_EQ(
         PROFILING_SUCCESS, Analysis::Dvvp::ProfilerCommon::ProfRegisterDataCallback(
@@ -372,18 +310,85 @@ TEST_F(MSPROFILER_ADAPTER_UTEST, COMPUTE_START_CHECK_EMPTY_INSTR_MODE)
     EXPECT_EQ(PROFILING_FAILED, MsprofStart(MSPROF_CTRL_INIT_COMPUTE, &config, sizeof(config)));
 }
 
-TEST_F(MSPROFILER_ADAPTER_UTEST, COMPUTE_PARSE_TEN_AICORE_METRICS)
+TEST_F(MsprofilerAdapterUtest, COMPUTE_START_CHECK_UNKNOWN_INSTR_MODE)
+{
+    MsprofConfigAttr attr = {};
+    attr.id = PROF_CONFIG_ATTR_INSTR;
+    attr.value.instrMode = 0x80U;
+    MsprofConfig config = MakeComputeConfig(PROF_INSTR_MASK);
+    config.configInfo.attrs = &attr;
+    config.configInfo.numAttrs = 1;
+    EXPECT_EQ(PROFILING_FAILED, MsprofStart(MSPROF_CTRL_INIT_COMPUTE, &config, sizeof(config)));
+}
+
+TEST_F(MsprofilerAdapterUtest, COMPUTE_START_CHECK_HOST_DEVICE)
+{
+    MsprofConfig config = MakeComputeConfig(PROF_TASK_TIME_MASK);
+    config.devIdList[0] = analysis::dvvp::common::utils::DEFAULT_HOST_ID;
+    SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params = nullptr;
+    EXPECT_EQ(PROFILING_FAILED, Analysis::Dvvp::ProfilerCommon::ComputeConfigAdapter::ToProfileParams(config, params));
+}
+
+TEST_F(MsprofilerAdapterUtest, COMPUTE_START_REJECTS_WHEN_OTHER_PROFILING_MODE_RUNNING)
+{
+    auto manager = Analysis::Dvvp::ProfilerCommon::ComputeProfilingManager::instance();
+    manager->ClearContext();
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::HasRunningDeviceTasks).stubs().will(returnValue(true));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::IsModeOff).stubs().will(returnValue(false));
+
+    MsprofConfig config = MakeComputeConfig(PROF_TASK_TIME_MASK);
+    EXPECT_EQ(PROFILING_FAILED, MsprofStart(MSPROF_CTRL_INIT_COMPUTE, &config, sizeof(config)));
+    EXPECT_TRUE(manager->statuses_.empty());
+    manager->ClearContext();
+}
+
+TEST_F(MsprofilerAdapterUtest, COMPUTE_START_REJECTS_WHEN_OTHER_WORK_MODE_RUNNING)
+{
+    auto manager = Analysis::Dvvp::ProfilerCommon::ComputeProfilingManager::instance();
+    manager->ClearContext();
+    auto aclManager = Msprofiler::Api::ProfAclMgr::instance();
+    aclManager->SetModeToCmd();
+
+    MsprofConfig config = MakeComputeConfig(PROF_TASK_TIME_MASK);
+    EXPECT_EQ(PROFILING_FAILED, MsprofStart(MSPROF_CTRL_INIT_COMPUTE, &config, sizeof(config)));
+    EXPECT_TRUE(manager->statuses_.empty());
+
+    aclManager->SetModeToOff();
+    manager->ClearContext();
+}
+
+TEST_F(MsprofilerAdapterUtest, COMPUTE_MODE_NOTIFY_SET_DEVICE_DOES_NOT_START_NORMAL_PROFILING)
+{
+    auto aclManager = Msprofiler::Api::ProfAclMgr::instance();
+    aclManager->SetModeToCompute();
+    MOCKER_CPP(&Analysis::Dvvp::ProfilerCommon::ProfConfigStart).expects(never());
+
+    EXPECT_EQ(PROFILING_SUCCESS, Analysis::Dvvp::ProfilerCommon::ProfNotifySetDevice(0, 3, true));
+    EXPECT_FALSE(aclManager->IsCmdMode());
+    EXPECT_TRUE(aclManager->IsComputeMode());
+
+    aclManager->SetModeToOff();
+}
+
+TEST_F(MsprofilerAdapterUtest, COMPUTE_MODE_ENSURE_UPLOADER_DOES_NOT_CREATE_FILE_TRANSPORT)
+{
+    auto aclManager = Msprofiler::Api::ProfAclMgr::instance();
+    aclManager->SetModeToCompute();
+    MOCKER_CPP(&analysis::dvvp::transport::FileTransportFactory::CreateFileTransport).expects(never());
+    EXPECT_EQ(ACL_ERROR_PROFILING_FAILURE, aclManager->EnsureComputeUploader("3"));
+
+    aclManager->SetModeToOff();
+}
+
+TEST_F(MsprofilerAdapterUtest, COMPUTE_PARSE_TEN_AICORE_METRICS)
 {
     MsprofConfigAttr attr = {};
     FillComputeMetrics(attr);
     MsprofConfig config = MakeComputeConfig(PROF_AICORE_METRICS_MASK);
     config.configInfo.attrs = &attr;
     config.configInfo.numAttrs = 1;
-    Analysis::Dvvp::ProfilerCommon::ComputeProfileConfig computeConfig;
-    auto manager = Analysis::Dvvp::ProfilerCommon::ComputeProfilingManager::instance();
-    EXPECT_EQ(PROFILING_SUCCESS, manager->ParseConfig(config, computeConfig));
-    EXPECT_EQ(COMPUTE_AICORE_METRICS_NUM, computeConfig.aicoreMetrics.size());
-    auto params = manager->BuildProfileParams(computeConfig, "0");
+    SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params = nullptr;
+    EXPECT_EQ(PROFILING_SUCCESS, Analysis::Dvvp::ProfilerCommon::ComputeConfigAdapter::ToProfileParams(config, params));
     ASSERT_NE(nullptr, params);
     EXPECT_EQ("0", params->job_id);
     EXPECT_TRUE(params->result_dir.empty());
@@ -397,7 +402,7 @@ TEST_F(MSPROFILER_ADAPTER_UTEST, COMPUTE_PARSE_TEN_AICORE_METRICS)
     EXPECT_EQ(params->ai_core_profiling_events, params->aiv_profiling_events);
 }
 
-TEST_F(MSPROFILER_ADAPTER_UTEST, COMPUTE_KEEP_ZERO_AICORE_METRIC)
+TEST_F(MsprofilerAdapterUtest, COMPUTE_KEEP_ZERO_AICORE_METRIC)
 {
     MsprofConfigAttr attr = {};
     FillInvalidComputeMetrics(attr);
@@ -407,11 +412,8 @@ TEST_F(MSPROFILER_ADAPTER_UTEST, COMPUTE_KEEP_ZERO_AICORE_METRIC)
     MsprofConfig config = MakeComputeConfig(PROF_AICORE_METRICS_MASK);
     config.configInfo.attrs = &attr;
     config.configInfo.numAttrs = 1;
-    Analysis::Dvvp::ProfilerCommon::ComputeProfileConfig computeConfig;
-    auto manager = Analysis::Dvvp::ProfilerCommon::ComputeProfilingManager::instance();
-    EXPECT_EQ(PROFILING_SUCCESS, manager->ParseConfig(config, computeConfig));
-    EXPECT_EQ(COMPUTE_ZERO_METRIC_CASE_NUM, computeConfig.aicoreMetrics.size());
-    auto params = manager->BuildProfileParams(computeConfig, "0");
+    SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params = nullptr;
+    EXPECT_EQ(PROFILING_SUCCESS, Analysis::Dvvp::ProfilerCommon::ComputeConfigAdapter::ToProfileParams(config, params));
     ASSERT_NE(nullptr, params);
     EXPECT_EQ("Custom:0x0,0x501,0x301", params->ai_core_metrics);
     EXPECT_EQ("0x0,0x501,0x301", params->ai_core_profiling_events);
@@ -419,27 +421,26 @@ TEST_F(MSPROFILER_ADAPTER_UTEST, COMPUTE_KEEP_ZERO_AICORE_METRIC)
     EXPECT_EQ(params->ai_core_profiling_events, params->aiv_profiling_events);
 }
 
-TEST_F(MSPROFILER_ADAPTER_UTEST, COMPUTE_PARSE_ALL_BLOCK_MODE)
+TEST_F(MsprofilerAdapterUtest, COMPUTE_PARSE_ALL_BLOCK_MODE)
 {
     ExpectComputeBlockParams(PROF_COMPUTE_ALL_BLOCK, analysis::dvvp::common::config::MSVP_PROF_OFF);
 }
 
-TEST_F(MSPROFILER_ADAPTER_UTEST, COMPUTE_PARSE_BLOCK_SHRINK_MODE)
+TEST_F(MsprofilerAdapterUtest, COMPUTE_PARSE_BLOCK_SHRINK_MODE)
 {
     ExpectComputeBlockParams(PROF_COMPUTE_BLOCK_SHRINK, analysis::dvvp::common::config::MSVP_PROF_ON);
 }
 
-TEST_F(MSPROFILER_ADAPTER_UTEST, COMPUTE_PARSE_INVALID_BLOCK_MODE)
+TEST_F(MsprofilerAdapterUtest, COMPUTE_PARSE_INVALID_BLOCK_MODE)
 {
     constexpr uint32_t invalidBlockMode = 0;
     MsprofConfigAttr attr = {};
     MsprofConfig config = MakeComputeBlockConfig(attr, invalidBlockMode);
-    Analysis::Dvvp::ProfilerCommon::ComputeProfileConfig computeConfig;
-    auto manager = Analysis::Dvvp::ProfilerCommon::ComputeProfilingManager::instance();
-    EXPECT_EQ(PROFILING_FAILED, manager->ParseConfig(config, computeConfig));
+    SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params = nullptr;
+    EXPECT_EQ(PROFILING_FAILED, Analysis::Dvvp::ProfilerCommon::ComputeConfigAdapter::ToProfileParams(config, params));
 }
 
-TEST_F(MSPROFILER_ADAPTER_UTEST, COMPUTE_PARSE_BLOCK_AND_INSTR_MODE)
+TEST_F(MsprofilerAdapterUtest, COMPUTE_PARSE_BLOCK_AND_INSTR_MODE)
 {
     MsprofConfigAttr attrs[2] = {};
     attrs[0].id = PROF_CONFIG_ATTR_INSTR;
@@ -448,22 +449,15 @@ TEST_F(MSPROFILER_ADAPTER_UTEST, COMPUTE_PARSE_BLOCK_AND_INSTR_MODE)
     attrs[1].value.taskBlockMode = PROF_COMPUTE_BLOCK_SHRINK;
     MsprofConfig config = MakeComputeBlockConfig(attrs, 2, PROF_INSTR_MASK);
 
-    Analysis::Dvvp::ProfilerCommon::ComputeProfileConfig computeConfig;
-    auto manager = Analysis::Dvvp::ProfilerCommon::ComputeProfilingManager::instance();
-    EXPECT_EQ(PROFILING_SUCCESS, manager->ParseConfig(config, computeConfig));
-    EXPECT_TRUE(computeConfig.enableInstr);
-    EXPECT_TRUE(computeConfig.enableBiuPerf);
-    EXPECT_TRUE(computeConfig.enableBlock);
-    EXPECT_EQ(PROF_COMPUTE_BLOCK_SHRINK, computeConfig.blockMode);
-
-    auto params = manager->BuildProfileParams(computeConfig, "0");
+    SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params = nullptr;
+    EXPECT_EQ(PROFILING_SUCCESS, Analysis::Dvvp::ProfilerCommon::ComputeConfigAdapter::ToProfileParams(config, params));
     ASSERT_NE(nullptr, params);
     EXPECT_EQ(analysis::dvvp::common::config::MSVP_PROF_ON, params->instrProfiling);
     EXPECT_EQ(analysis::dvvp::common::config::MSVP_PROF_ON, params->taskBlock);
     EXPECT_EQ(analysis::dvvp::common::config::MSVP_PROF_ON, params->taskBlockShink);
 }
 
-TEST_F(MSPROFILER_ADAPTER_UTEST, COMPUTE_PARSE_REPEAT_TASK_BLOCK_ATTR_LAST_WINS)
+TEST_F(MsprofilerAdapterUtest, COMPUTE_PARSE_REPEAT_TASK_BLOCK_ATTR_LAST_WINS)
 {
     MsprofConfigAttr attrs[2] = {};
     attrs[0].id = PROF_CONFIG_ATTR_TASK_BLOCK;
@@ -472,91 +466,199 @@ TEST_F(MSPROFILER_ADAPTER_UTEST, COMPUTE_PARSE_REPEAT_TASK_BLOCK_ATTR_LAST_WINS)
     attrs[1].value.taskBlockMode = PROF_COMPUTE_BLOCK_SHRINK;
     MsprofConfig config = MakeComputeBlockConfig(attrs, 2, 0);
 
-    Analysis::Dvvp::ProfilerCommon::ComputeProfileConfig computeConfig;
-    auto manager = Analysis::Dvvp::ProfilerCommon::ComputeProfilingManager::instance();
-    EXPECT_EQ(PROFILING_SUCCESS, manager->ParseConfig(config, computeConfig));
-    EXPECT_TRUE(computeConfig.enableBlock);
-    EXPECT_EQ(PROF_COMPUTE_BLOCK_SHRINK, computeConfig.blockMode);
+    SHARED_PTR_ALIA<analysis::dvvp::message::ProfileParams> params = nullptr;
+    EXPECT_EQ(PROFILING_SUCCESS, Analysis::Dvvp::ProfilerCommon::ComputeConfigAdapter::ToProfileParams(config, params));
+    ASSERT_NE(nullptr, params);
+    EXPECT_EQ(analysis::dvvp::common::config::MSVP_PROF_ON, params->taskBlock);
+    EXPECT_EQ(analysis::dvvp::common::config::MSVP_PROF_ON, params->taskBlockShink);
 }
 
-TEST_F(MSPROFILER_ADAPTER_UTEST, COMPUTE_START_JOB_REJECTS_NULL_PARAMS)
+TEST_F(MsprofilerAdapterUtest, COMPUTE_START_JOB_REJECTS_EMPTY_BASELINE_PARAMS)
 {
     auto manager = Analysis::Dvvp::ProfilerCommon::ComputeProfilingManager::instance();
     manager->ClearContext();
-    ResetComputeTestJob(PROFILING_SUCCESS, PROFILING_SUCCESS);
 
-    EXPECT_EQ(PROFILING_FAILED, manager->StartComputeJob(nullptr, 0));
-    EXPECT_EQ(0U, g_computeTestStartCount);
-    EXPECT_EQ(0U, g_computeTestStopCount);
+    EXPECT_EQ(PROFILING_FAILED, manager->CloneBaselineParams(manager->baselineParams_));
     manager->ClearContext();
 }
 
-TEST_F(MSPROFILER_ADAPTER_UTEST, COMPUTE_STOP_JOB_SYNCHRONOUSLY)
+TEST_F(MsprofilerAdapterUtest, COMPUTE_CONFIG_DIFFERENCE_ONLY_PRINTS_WARNING)
 {
     auto manager = Analysis::Dvvp::ProfilerCommon::ComputeProfilingManager::instance();
     manager->ClearContext();
-    ResetComputeTestJob(PROFILING_SUCCESS, PROFILING_SUCCESS);
-    manager->jobAdapter_ = std::make_shared<ComputeTestJobAdapter>();
-    manager->runningDevId_ = "0";
+    MsprofConfig firstConfig = MakeComputeConfig(PROF_TASK_TIME_MASK);
+    EXPECT_TRUE(manager->CheckConfigConsistency(firstConfig));
 
-    EXPECT_EQ(PROFILING_SUCCESS, manager->StopComputeJob());
-    EXPECT_EQ(0U, g_computeTestStartCount);
-    EXPECT_EQ(1U, g_computeTestStopCount);
+    MsprofConfig secondConfig = MakeComputeConfig(PROF_AICPU_TRACE_MASK);
+    EXPECT_TRUE(manager->CheckConfigConsistency(secondConfig));
+    EXPECT_NE(PROF_TASK_TIME_MASK, manager->baselineConfig_.profSwitch);
     manager->ClearContext();
 }
 
-TEST_F(MSPROFILER_ADAPTER_UTEST, COMPUTE_STOP_JOB_FAILED)
+TEST_F(MsprofilerAdapterUtest, COMPUTE_BASELINE_CONFIG_COPIES_ATTRS)
 {
     auto manager = Analysis::Dvvp::ProfilerCommon::ComputeProfilingManager::instance();
     manager->ClearContext();
-    ResetComputeTestJob(PROFILING_SUCCESS, PROFILING_FAILED);
-    manager->jobAdapter_ = std::make_shared<ComputeTestJobAdapter>();
-    manager->runningDevId_ = "0";
 
-    EXPECT_EQ(PROFILING_FAILED, manager->StopComputeJob());
-    EXPECT_EQ(0U, g_computeTestStartCount);
-    EXPECT_EQ(1U, g_computeTestStopCount);
+    MsprofConfigAttr attr = {};
+    attr.id = PROF_CONFIG_ATTR_TASK_BLOCK;
+    attr.value.taskBlockMode = PROF_COMPUTE_ALL_BLOCK;
+    MsprofConfig config = MakeComputeConfig(PROF_TASK_TIME_MASK);
+    config.configInfo.attrs = &attr;
+    config.configInfo.numAttrs = 1;
+    EXPECT_TRUE(manager->CheckConfigConsistency(config));
+
+    MsprofConfig sameConfig = MakeComputeConfig(PROF_TASK_TIME_MASK);
+    sameConfig.configInfo.attrs = &attr;
+    sameConfig.configInfo.numAttrs = 1;
+    EXPECT_TRUE(manager->IsSameComputeConfig(sameConfig));
+    EXPECT_EQ(1U, manager->baselineConfig_.configInfo.numAttrs);
+    EXPECT_NE(&attr, manager->baselineConfig_.configInfo.attrs);
+
+    MsprofConfigAttr changedAttr = {};
+    changedAttr.id = PROF_CONFIG_ATTR_TASK_BLOCK;
+    changedAttr.value.taskBlockMode = PROF_COMPUTE_BLOCK_SHRINK;
+    MsprofConfig changedConfig = MakeComputeConfig(PROF_TASK_TIME_MASK);
+    changedConfig.configInfo.attrs = &changedAttr;
+    changedConfig.configInfo.numAttrs = 1;
+    EXPECT_FALSE(manager->IsSameComputeConfig(changedConfig));
     manager->ClearContext();
 }
 
-TEST_F(MSPROFILER_ADAPTER_UTEST, COMPUTE_COMPONENT_CALLBACK_START_AND_STOP)
+TEST_F(MsprofilerAdapterUtest, COMPUTE_STATUS_STOP_RELEASES_HOST_WHEN_LAST_DEVICE_STOPPED)
 {
     auto manager = Analysis::Dvvp::ProfilerCommon::ComputeProfilingManager::instance();
     manager->ClearContext();
-    ResetComputeComponentCommand();
-    MOCKER_CPP(&Analysis::Dvvp::ProfilerCommon::CommandHandleProfStart)
+    manager->baselineConfig_.profSwitch = PROF_TASK_TIME_MASK;
+    manager->statuses_[0] = Analysis::Dvvp::ProfilerCommon::ComputeProfilingManager::ComputeStatus();
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::ProfStopCommonDevice).expects(once()).will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::ReleaseComputeHostContext)
         .expects(once())
-        .will(invoke(CaptureComputeStartCommand));
-    EXPECT_EQ(
-        PROFILING_SUCCESS, manager->StartComponentCallback(COMPUTE_CALLBACK_TEST_DEV_ID, COMPUTE_CALLBACK_TEST_SWITCH));
-    EXPECT_EQ(1U, g_computeComponentStartCount);
-    EXPECT_EQ(COMPUTE_CALLBACK_TEST_DEV_ID, g_computeComponentDevId);
-    EXPECT_EQ(COMPUTE_CALLBACK_TEST_SWITCH, g_computeComponentProfSwitch);
+        .will(returnValue(PROFILING_SUCCESS));
 
-    ResetComputeComponentCommand();
-    manager->runningDevId_ = std::to_string(COMPUTE_CALLBACK_TEST_DEV_ID);
-    manager->runningProfSwitch_ = COMPUTE_CALLBACK_TEST_SWITCH;
-    MOCKER_CPP(&Analysis::Dvvp::ProfilerCommon::CommandHandleProfStop)
-        .expects(once())
-        .will(invoke(CaptureComputeStopCommand));
-    EXPECT_EQ(PROFILING_SUCCESS, manager->StopComponentCallback());
-    EXPECT_EQ(1U, g_computeComponentStopCount);
-    EXPECT_EQ(COMPUTE_CALLBACK_TEST_DEV_ID, g_computeComponentDevId);
-    EXPECT_EQ(COMPUTE_CALLBACK_TEST_SWITCH, g_computeComponentProfSwitch);
+    MsprofConfig config = MakeComputeConfig(PROF_TASK_TIME_MASK);
+    EXPECT_EQ(PROFILING_SUCCESS, manager->Stop(&config, sizeof(config)));
+    EXPECT_TRUE(manager->statuses_.empty());
+    EXPECT_EQ(nullptr, manager->hostTransport_);
     manager->ClearContext();
 }
 
-TEST_F(MSPROFILER_ADAPTER_UTEST, COMPUTE_COMPONENT_CALLBACK_STOP_INVALID_DEVICE_ID)
+TEST_F(MsprofilerAdapterUtest, COMPUTE_STATUS_STOP_KEEP_HOST_WHEN_OTHER_DEVICE_RUNNING)
 {
     auto manager = Analysis::Dvvp::ProfilerCommon::ComputeProfilingManager::instance();
     manager->ClearContext();
-    manager->runningDevId_ = "invalid";
-    manager->runningProfSwitch_ = COMPUTE_CALLBACK_TEST_SWITCH;
-    EXPECT_EQ(PROFILING_FAILED, manager->StopComponentCallback());
+    manager->baselineConfig_.profSwitch = PROF_TASK_TIME_MASK;
+    manager->statuses_[0] = Analysis::Dvvp::ProfilerCommon::ComputeProfilingManager::ComputeStatus();
+    manager->statuses_[1] = Analysis::Dvvp::ProfilerCommon::ComputeProfilingManager::ComputeStatus();
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::ProfStopCommonDevice).expects(once()).will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::ReleaseComputeHostContext).expects(never());
+
+    MsprofConfig config = MakeComputeConfig(PROF_TASK_TIME_MASK);
+    config.devIdList[0] = 0;
+    EXPECT_EQ(PROFILING_SUCCESS, manager->Stop(&config, sizeof(config)));
+    EXPECT_EQ(1U, manager->statuses_.size());
+    EXPECT_NE(manager->statuses_.end(), manager->statuses_.find(1));
     manager->ClearContext();
 }
 
-TEST_F(MSPROFILER_ADAPTER_UTEST, COMPUTE_CREATE_UPLOADER_USES_INJECTION_TRANSPORT_ONLY)
+TEST_F(MsprofilerAdapterUtest, COMPUTE_STATUS_STOP_KEEP_STATUS_WHEN_HOST_RELEASE_FAILED)
+{
+    auto manager = Analysis::Dvvp::ProfilerCommon::ComputeProfilingManager::instance();
+    manager->ClearContext();
+    manager->baselineConfig_.profSwitch = PROF_TASK_TIME_MASK;
+    manager->statuses_[0] = Analysis::Dvvp::ProfilerCommon::ComputeProfilingManager::ComputeStatus();
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::ProfStopCommonDevice)
+        .expects(exactly(2))
+        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::ReleaseComputeHostContext)
+        .expects(exactly(2))
+        .will(returnValue(PROFILING_FAILED))
+        .then(returnValue(PROFILING_SUCCESS));
+
+    MsprofConfig config = MakeComputeConfig(PROF_TASK_TIME_MASK);
+    EXPECT_EQ(PROFILING_FAILED, manager->Stop(&config, sizeof(config)));
+    EXPECT_EQ(1U, manager->statuses_.size());
+    EXPECT_EQ(PROFILING_SUCCESS, manager->Stop(&config, sizeof(config)));
+    EXPECT_TRUE(manager->statuses_.empty());
+    manager->ClearContext();
+}
+
+TEST_F(MsprofilerAdapterUtest, COMPUTE_RELEASE_HOST_CONTEXT_STOPS_TASK_BEFORE_CLEANUP)
+{
+    auto manager = Analysis::Dvvp::ProfilerCommon::ComputeProfilingManager::instance();
+    manager->ClearContext();
+
+    SHARED_PTR_ALIA<analysis::dvvp::transport::InjectionTransport> injectionTransport = nullptr;
+    MSVP_MAKE_SHARED1(
+        injectionTransport, analysis::dvvp::transport::InjectionTransport, ComputeRawDataCallback, return);
+    manager->hostTransport_ = injectionTransport;
+    SHARED_PTR_ALIA<analysis::dvvp::transport::Uploader> uploader =
+        std::make_shared<analysis::dvvp::transport::Uploader>(injectionTransport);
+    ASSERT_EQ(PROFILING_SUCCESS, uploader->Init());
+    ASSERT_EQ(PROFILING_SUCCESS, uploader->Start());
+    analysis::dvvp::transport::UploaderMgr::instance()->AddUploader(
+        std::to_string(analysis::dvvp::common::utils::DEFAULT_HOST_ID), uploader);
+
+    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams());
+    ProfAclMgr::ProfAclTaskInfo taskInfo = {1, PROF_TASK_TIME_MASK, params};
+    ProfAclMgr::instance()->devTasks_[analysis::dvvp::common::utils::DEFAULT_HOST_ID] = taskInfo;
+    ProfAclMgr::instance()->mode_ = Msprofiler::Api::WORK_MODE_CMD;
+    // IdeCloudProfileProcess generates end_info and uploads it through the host uploader.
+    MOCKER_CPP(&analysis::dvvp::host::ProfManager::IdeCloudProfileProcess)
+        .expects(once())
+        .will(returnValue(PROFILING_SUCCESS));
+
+    EXPECT_EQ(PROFILING_SUCCESS, manager->ReleaseComputeHostContext());
+    EXPECT_EQ(nullptr, manager->hostTransport_);
+    uploader = nullptr;
+    analysis::dvvp::transport::UploaderMgr::instance()->GetUploader(
+        std::to_string(analysis::dvvp::common::utils::DEFAULT_HOST_ID), uploader);
+    EXPECT_EQ(nullptr, uploader);
+
+    manager->ClearContext();
+}
+
+TEST_F(MsprofilerAdapterUtest, COMPUTE_STOP_JOB_SYNCHRONOUSLY)
+{
+    auto manager = Analysis::Dvvp::ProfilerCommon::ComputeProfilingManager::instance();
+    manager->ClearContext();
+    manager->baselineConfig_.profSwitch = PROF_TASK_TIME_MASK;
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::ProfStopCommonDevice).expects(once()).will(returnValue(PROFILING_SUCCESS));
+
+    EXPECT_EQ(PROFILING_SUCCESS, manager->StopComputeJob(0));
+    manager->ClearContext();
+}
+
+TEST_F(MsprofilerAdapterUtest, COMPUTE_STOP_JOB_FAILED)
+{
+    auto manager = Analysis::Dvvp::ProfilerCommon::ComputeProfilingManager::instance();
+    manager->ClearContext();
+    manager->baselineConfig_.profSwitch = PROF_TASK_TIME_MASK;
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::ProfStopCommonDevice).expects(once()).will(returnValue(PROFILING_FAILED));
+
+    EXPECT_EQ(PROFILING_FAILED, manager->StopComputeJob(0));
+    manager->ClearContext();
+}
+
+TEST_F(MsprofilerAdapterUtest, COMPUTE_STOP_FAILURE_KEEPS_STATUS_FOR_RETRY)
+{
+    auto manager = Analysis::Dvvp::ProfilerCommon::ComputeProfilingManager::instance();
+    manager->ClearContext();
+    manager->baselineConfig_.profSwitch = PROF_TASK_TIME_MASK;
+    manager->statuses_[0] = Analysis::Dvvp::ProfilerCommon::ComputeProfilingManager::ComputeStatus();
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::ProfStopCommonDevice)
+        .expects(exactly(2))
+        .will(returnValue(PROFILING_FAILED));
+
+    MsprofConfig config = MakeComputeConfig(PROF_TASK_TIME_MASK);
+    EXPECT_EQ(PROFILING_FAILED, manager->Stop(&config, sizeof(config)));
+    EXPECT_EQ(1U, manager->statuses_.size());
+    EXPECT_EQ(PROFILING_FAILED, manager->Stop(&config, sizeof(config)));
+    EXPECT_EQ(1U, manager->statuses_.size());
+    manager->ClearContext();
+}
+
+TEST_F(MsprofilerAdapterUtest, COMPUTE_CREATE_UPLOADER_USES_INJECTION_TRANSPORT_ONLY)
 {
     MOCKER_CPP(&analysis::dvvp::transport::FileTransportFactory::CreateFileTransport).expects(never());
     MOCKER_CPP(&analysis::dvvp::transport::UploaderMgr::CreateUploader)
@@ -565,12 +667,14 @@ TEST_F(MSPROFILER_ADAPTER_UTEST, COMPUTE_CREATE_UPLOADER_USES_INJECTION_TRANSPOR
 
     auto manager = Analysis::Dvvp::ProfilerCommon::ComputeProfilingManager::instance();
     manager->ClearContext();
-    EXPECT_EQ(PROFILING_SUCCESS, manager->CreateComputeUploader("0"));
-    EXPECT_NE(nullptr, manager->injectionTransport_);
+    Analysis::Dvvp::ProfilerCommon::ComputeProfilingManager::ComputeStatus status;
+    EXPECT_EQ(PROFILING_SUCCESS, manager->CreateComputeUploader(0, status));
+    EXPECT_NE(nullptr, status.transport);
+    manager->RollbackComputeStatus(0);
     manager->ClearContext();
 }
 
-TEST_F(MSPROFILER_ADAPTER_UTEST, COMPUTE_CREATE_UPLOADER_ROLLBACK_WHEN_CREATE_UPLOADER_FAILED)
+TEST_F(MsprofilerAdapterUtest, COMPUTE_CREATE_UPLOADER_ROLLBACK_WHEN_CREATE_UPLOADER_FAILED)
 {
     MOCKER_CPP(&analysis::dvvp::transport::FileTransportFactory::CreateFileTransport).expects(never());
     MOCKER_CPP(&analysis::dvvp::transport::UploaderMgr::CreateUploader)
@@ -579,6 +683,8 @@ TEST_F(MSPROFILER_ADAPTER_UTEST, COMPUTE_CREATE_UPLOADER_ROLLBACK_WHEN_CREATE_UP
 
     auto manager = Analysis::Dvvp::ProfilerCommon::ComputeProfilingManager::instance();
     manager->ClearContext();
-    EXPECT_EQ(PROFILING_FAILED, manager->CreateComputeUploader("0"));
-    EXPECT_EQ(nullptr, manager->injectionTransport_);
+    Analysis::Dvvp::ProfilerCommon::ComputeProfilingManager::ComputeStatus status;
+    EXPECT_EQ(PROFILING_FAILED, manager->CreateComputeUploader(0, status));
+    EXPECT_EQ(nullptr, status.transport);
+    manager->ClearContext();
 }
