@@ -631,6 +631,8 @@ TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_TEST, CheckAiCoreEventsIsValidRcLiteEv
 
     std::vector<std::string> events = {"0x716"};
     EXPECT_EQ(false, ParamValidation::instance()->CheckAiCoreEventsIsValid(events));
+    events = {"0x100000001"};
+    EXPECT_EQ(false, ParamValidation::instance()->CheckAiCoreEventsIsValid(events));
     events = {"0x715"};
     EXPECT_EQ(true, ParamValidation::instance()->CheckAiCoreEventsIsValid(events));
 }

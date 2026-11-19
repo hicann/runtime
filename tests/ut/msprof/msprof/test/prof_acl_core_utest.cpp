@@ -167,6 +167,36 @@ void ExpectLastInputErrorParam(const std::string& param)
     ASSERT_EQ(1U, values.size());
     EXPECT_EQ(param, values[0]);
 }
+
+void SetPlatformTypeForTest(PlatformType platformType)
+{
+    ConfigManager::instance()->configMap_["type"] = std::to_string(static_cast<int32_t>(platformType));
+}
+
+void InitPlatformForTest(PlatformType platformType)
+{
+    Platform::instance()->Uninit();
+    SetPlatformTypeForTest(platformType);
+    Platform::instance()->Init();
+}
+
+class PlatformTypeGuard {
+public:
+    explicit PlatformTypeGuard(PlatformType platformType)
+    {
+        originalType_ = static_cast<PlatformType>(ConfigManager::instance()->GetPlatformType());
+        InitPlatformForTest(platformType);
+    }
+
+    ~PlatformTypeGuard()
+    {
+        ConfigManager::instance()->configMap_["type"] = std::to_string(static_cast<int32_t>(originalType_));
+        Platform::instance()->Uninit();
+    }
+
+private:
+    PlatformType originalType_{};
+};
 } // namespace
 struct aclprofConfig {
     ProfConfig config;
@@ -2313,6 +2343,16 @@ TEST_F(MSPROF_ACL_CORE_UTEST, MsprofInitAclJsonInvalidMetricsAndFreqReportInputE
     ExpectLastInputErrorParamAndReasonContains("aic_metrics", "Please input in the range of");
     ExpectLastInputErrorReasonContains("Custom:<event-list>");
 
+    std::string overLimitAicMetrics =
+        "{\"switch\":\"on\",\"aic_metrics\":\"Custom:0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9\"}";
+    MsprofUtestStub::ResetMsprofLastInputErrorCode();
+    EXPECT_EQ(
+        MSPROF_ERROR_CONFIG_INVALID,
+        ProfAclMgr::instance()->MsprofInitAclJson((void*)overLimitAicMetrics.c_str(), overLimitAicMetrics.size()));
+    EXPECT_EQ("EK0003", MsprofUtestStub::GetMsprofLastInputErrorCode());
+    ExpectLastInputErrorParamAndReasonContains("aic_metrics", "Custom:<event-list>");
+    ExpectLastInputErrorReasonContains("up to 8 events");
+
     std::string stringInstrFreq = "{\"switch\":\"on\",\"instr_profiling_freq\":\"10000\"}";
     MsprofUtestStub::ResetMsprofLastInputErrorCode();
     EXPECT_EQ(
@@ -2398,6 +2438,56 @@ TEST_F(MSPROF_ACL_CORE_UTEST, CheckAclJsonInstrProfilingConfigsWarnDeprecated)
     EXPECT_NE(std::string::npos, output.find("[Note] [instr_profiling_freq] This option will be discarded"));
 }
 
+TEST_F(MSPROF_ACL_CORE_UTEST, MsprofInitAclJsonAicMetricsCustomEventReasonByPlatform)
+{
+    using namespace Msprofiler::Api;
+    MOCKER_CPP(&ProfAclMgr::CallbackInitPrecheck).stubs().will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&Platform::CheckIfSupport, bool(Platform::*)(const PlatformFeature) const)
+        .stubs()
+        .will(returnValue(true));
+
+    // David平台声明PLATFORM_AICORE_EVENT_FROM_ZERO，Custom事件允许从0x0开始
+    {
+        PlatformTypeGuard platformGuard(PlatformType::CHIP_CLOUD_V3);
+        ProfAclMgr aclJsonMgr;
+        std::string zeroAicMetrics = "{\"switch\":\"on\",\"aic_metrics\":\"Custom:0x0\"}";
+        MsprofUtestStub::ResetMsprofLastInputErrorCode();
+        EXPECT_EQ(
+            MSPROF_ERROR_NONE, aclJsonMgr.MsprofInitAclJson((void*)zeroAicMetrics.c_str(), zeroAicMetrics.size()));
+        EXPECT_TRUE(MsprofUtestStub::GetMsprofLastInputErrorCode().empty());
+    }
+    GlobalMockObject::verify();
+
+    // 未声明PLATFORM_AICORE_EVENT_FROM_ZERO的扩展平台仍从0x1开始，
+    // 错误提示需要与校验范围保持一致
+    MOCKER_CPP(&ProfAclMgr::CallbackInitPrecheck).stubs().will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&Platform::GetMaxAiPmuEvent).stubs().will(returnValue(1813));
+    MOCKER_CPP(&Platform::CheckIfSupport, bool(Platform::*)(const PlatformFeature) const)
+        .stubs()
+        .will(returnValue(false))
+        .then(returnValue(true));
+    {
+        ProfAclMgr aclJsonMgr;
+        std::string zeroAicMetrics = "{\"switch\":\"on\",\"aic_metrics\":\"Custom:0x0\"}";
+        MsprofUtestStub::ResetMsprofLastInputErrorCode();
+        EXPECT_EQ(
+            MSPROF_ERROR_CONFIG_INVALID,
+            aclJsonMgr.MsprofInitAclJson((void*)zeroAicMetrics.c_str(), zeroAicMetrics.size()));
+        EXPECT_EQ("EK0003", MsprofUtestStub::GetMsprofLastInputErrorCode());
+        GlobalMockObject::verify();
+    }
+
+    // Modena同样声明PLATFORM_AICORE_EVENT_FROM_ZERO，Custom:0x0保持合法
+    {
+        PlatformTypeGuard modenaGuard(PlatformType::CHIP_5162A);
+        ProfAclMgr aclJsonMgr;
+        std::string zeroAicMetrics = "{\"switch\":\"on\",\"aic_metrics\":\"Custom:0x0\"}";
+        MsprofUtestStub::ResetMsprofLastInputErrorCode();
+        EXPECT_EQ(
+            MSPROF_ERROR_NONE, aclJsonMgr.MsprofInitAclJson((void*)zeroAicMetrics.c_str(), zeroAicMetrics.size()));
+    }
+}
+
 TEST_F(MSPROF_ACL_CORE_UTEST, MsprofInitGeOptionsInvalidInputsReportInputError)
 {
     using namespace Msprofiler::Api;
@@ -2465,6 +2555,14 @@ TEST_F(MSPROF_ACL_CORE_UTEST, MsprofInitGeOptionsInvalidConfigsReportInputError)
     EXPECT_EQ("EK0001", MsprofUtestStub::GetMsprofLastInputErrorCode());
     ExpectLastInputErrorParamAndReasonContains("aic_metrics", "Please input in the range of");
     ExpectLastInputErrorReasonContains("Custom:<event-list>");
+
+    (void)strcpy_s(
+        options.options, sizeof(options.options), "{\"aic_metrics\":\"Custom:0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9\"}");
+    MsprofUtestStub::ResetMsprofLastInputErrorCode();
+    EXPECT_EQ(MSPROF_ERROR_CONFIG_INVALID, ProfAclMgr::instance()->MsprofInitGeOptions(&options, sizeof(options)));
+    EXPECT_EQ("EK0001", MsprofUtestStub::GetMsprofLastInputErrorCode());
+    ExpectLastInputErrorParamAndReasonContains("aic_metrics", "Custom:<event-list>");
+    ExpectLastInputErrorReasonContains("up to 8 events");
 
     (void)strcpy_s(options.options, sizeof(options.options), "{\"aic_metrics\":123}");
     MsprofUtestStub::ResetMsprofLastInputErrorCode();

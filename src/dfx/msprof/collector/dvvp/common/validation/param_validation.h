@@ -31,6 +31,8 @@ enum class ProfSocPmuType {
     PMU_TYPE_UNKNOWN
 };
 
+void GetAiCoreEventRange(int32_t& minEvent, int32_t& maxEvent);
+
 class ParamValidation : public analysis::dvvp::common::singleton::Singleton<ParamValidation> {
 public:
     ParamValidation();

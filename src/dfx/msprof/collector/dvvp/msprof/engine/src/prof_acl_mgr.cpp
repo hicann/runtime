@@ -129,7 +129,15 @@ std::string GetAicMetricsConfigReason()
     if (metricsPrompt.empty() || metricsPrompt.front() != '[') {
         return metricsPrompt;
     }
-    return "Please input in the range of " + metricsPrompt + " or Custom:<event-list>";
+    int32_t minEvent = 0;
+    int32_t maxEvent = 0;
+    GetAiCoreEventRange(minEvent, maxEvent);
+    const std::string maxEventNum = std::to_string(Platform::instance()->GetMaxMonitorNumber());
+    std::stringstream eventRange;
+    eventRange << "range [0x" << std::hex << minEvent << ", 0x" << maxEvent << "]";
+    return "Please input in the range of " + metricsPrompt +
+           " or Custom:<event-list>. Custom event list supports hexadecimal or decimal events in the " +
+           eventRange.str() + ", separated by comma, up to " + maxEventNum + " events";
 }
 
 std::string GetTaskTraceConfigReason()

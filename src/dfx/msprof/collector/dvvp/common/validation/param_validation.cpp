@@ -31,7 +31,24 @@ constexpr int32_t MIN_INTERVAL = 1;
 constexpr int32_t MAX_INTERVAL = 15 * 24 * 3600 * 1000; // 15 * 24 * 3600 * 1000 = 15day's micro seconds
 constexpr int32_t MAX_PERIOD = 30 * 24 * 3600;          // 30 * 24 * 3600 = 30day's seconds
 constexpr int32_t MAX_CORE_ID_SIZE = 80;                // ai core or aiv core id size
-constexpr int32_t BASE_HEX = 16;                        // hex to int
+
+void GetAiCoreEventRange(int32_t& minEvent, int32_t& maxEvent)
+{
+    minEvent = 1;
+    maxEvent = MAX_PMU_EVENT;
+#ifndef BUILD_PROFILING_OPEN_PROJECT
+    if (Platform::instance()->CheckIfSupport(::Dvvp::Collect::Platform::PLATFORM_AICORE_EVENT_FROM_ZERO)) {
+        minEvent = 0;
+        maxEvent = ACC_MAX_PMU_EVENT;
+    }
+    // 部分扩展平台有更小的aicore pmu event上限
+    const int32_t maxAiPmuEvent = Platform::instance()->GetMaxAiPmuEvent();
+    if (maxAiPmuEvent > 0) {
+        maxEvent = maxAiPmuEvent;
+    }
+#endif                           // BUILD_PROFILING_OPEN_PROJECT
+}
+constexpr int32_t BASE_HEX = 16; // hex to int
 const std::string SOC_PMU_HA = "HA:";
 const std::string SOC_PMU_MATA = "MATA:";
 const std::string SOC_PMU_SMMU = "SMMU:";
@@ -189,6 +206,11 @@ bool ParamValidation::CheckAicoreMetricsIsValid(const std::string& aicoreMetrics
         std::transform(aicoreEvent.begin(), aicoreEvent.end(), aicoreEvent.begin(), ::tolower);
         int32_t sw = CustomHexCharConfig(aicoreEvent, ",");
         if (sw == PROFILING_FAILED) {
+            MSPROF_LOGE("The aic_metrics[%s] of input config is invalid", aicoreMetrics.c_str());
+            return false;
+        }
+        std::vector<std::string> eventsList = analysis::dvvp::common::utils::Utils::Split(aicoreEvent, false, "", ",");
+        if (!CheckAiCoreEventsIsValid(eventsList)) {
             MSPROF_LOGE("The aic_metrics[%s] of input config is invalid", aicoreMetrics.c_str());
             return false;
         }
@@ -1120,25 +1142,17 @@ bool ParamValidation::CheckAiCoreEventsIsValid(const std::vector<std::string>& e
             "ai core events size(%u) is bigger than %hu", events.size(), Platform::instance()->GetMaxMonitorNumber());
         return false;
     }
-    int32_t minEvent = 1;
-    int32_t maxEvent = MAX_PMU_EVENT;
-#ifndef BUILD_PROFILING_OPEN_PROJECT
-    if (Platform::instance()->CheckIfSupport(::Dvvp::Collect::Platform::PLATFORM_AICORE_EVENT_FROM_ZERO)) {
-        minEvent = 0;
-        maxEvent = ACC_MAX_PMU_EVENT;
-    }
-    // 部分扩展平台有更小的aicore pmu event上限
-    const int32_t maxAiPmuEvent = Platform::instance()->GetMaxAiPmuEvent();
-    if (maxAiPmuEvent > 0) {
-        maxEvent = maxAiPmuEvent;
-    }
-#endif // BUILD_PROFILING_OPEN_PROJECT
+    int32_t minEvent = 0;
+    int32_t maxEvent = 0;
+    GetAiCoreEventRange(minEvent, maxEvent);
     for (uint32_t i = 0; i < events.size(); ++i) {
-        const int32_t eventVal = strtol(events[i].c_str(), nullptr, BASE_HEX);
-        if (eventVal < minEvent || eventVal > maxEvent) {
+        const int64_t parsedEvent = strtoll(events[i].c_str(), nullptr, BASE_HEX);
+        if (parsedEvent < static_cast<int64_t>(minEvent) || parsedEvent > static_cast<int64_t>(maxEvent)) {
+            const int32_t eventVal = static_cast<int32_t>(parsedEvent);
             MSPROF_LOGE(
-                "ai core event[0x%x] out of range1-%d(0x1-0x%x). please check ai core pmu event.", eventVal, maxEvent,
-                maxEvent);
+                "ai core event[0x%x] is out of range. Please input Custom:<event-list> with hexadecimal or decimal "
+                "events in [0x%x, 0x%x], separated by comma, up to %hu events.",
+                eventVal, minEvent, maxEvent, Platform::instance()->GetMaxMonitorNumber());
             return false;
         }
     }
