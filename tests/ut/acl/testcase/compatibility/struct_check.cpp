@@ -224,13 +224,10 @@ TEST_F(UTEST_ACL_compatibility_struct_check, aclrtPtrAttributes)
     offset = OFFSET_OF_MEMBER(aclrtPtrAttributes, pageSize);
     EXPECT_EQ(offset, sizeof(aclrtMemLocation));
 
-    offset = OFFSET_OF_MEMBER(aclrtPtrAttributes, hostPtr);
+    offset = OFFSET_OF_MEMBER(aclrtPtrAttributes, rsv);
     EXPECT_EQ(offset, sizeof(aclrtMemLocation) + sizeof(uint32_t));
 
-    offset = OFFSET_OF_MEMBER(aclrtPtrAttributes, devicePtr);
-    EXPECT_EQ(offset, sizeof(aclrtMemLocation) + sizeof(uint32_t) + sizeof(void*));
-
-    EXPECT_EQ(sizeof(aclrtPtrAttributes), sizeof(aclrtMemLocation) + sizeof(uint32_t) + sizeof(void*) * 2);
+    EXPECT_EQ(sizeof(aclrtPtrAttributes), sizeof(aclrtMemLocation) + sizeof(uint32_t) + sizeof(uint32_t) * 4);
 }
 
 TEST_F(UTEST_ACL_compatibility_struct_check, aclrtStreamAttrValue) { EXPECT_EQ(sizeof(aclrtStreamAttrValue), 16); }

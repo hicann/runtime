@@ -353,14 +353,11 @@ typedef struct {
     uint8_t rsv[16];
 } aclrtMemcpyBatchAttr;
 
-#pragma pack(push, 4)
-typedef struct aclrtPtrAttributes { // packed: pointer fields are not guaranteed to be 8-byte aligned
+typedef struct aclrtPtrAttributes {
     aclrtMemLocation location;
     uint32_t pageSize;
-    void* hostPtr;   /* null when the memory is not on host */
-    void* devicePtr; /* null when the memory is not on device */
+    uint32_t rsv[4];
 } aclrtPtrAttributes;
-#pragma pack(pop)
 
 typedef struct aclrtMemUsageInfo {
     char name[32];
@@ -2528,13 +2525,6 @@ ACL_FUNC_VISIBILITY aclError aclrtMemset(void* devPtr, size_t maxCount, int32_t 
  * @par Restriction
  * @li For on-chip Device-to-Device memory copy,
  *     both the source and destination addresses must be 64-byte aligned
- * @li In online mode, for Host-to-Host memory copy, the specified stream is implicitly
- *     synchronized first, and then the copy is performed synchronously within this
- *     interface, regardless of whether the host memory is page-locked. The copy is
- *     completed when this interface returns, so there is no need to call
- *     aclrtSynchronizeStream for the Host-to-Host memory copy
- * @li In online mode, for Host-to-Host memory copy, this interface is not supported
- *     when the specified stream is capturing a graph
  *
  * @param dst [IN]     destination address pointer
  * @param destMax [IN] Max length of destination address memory

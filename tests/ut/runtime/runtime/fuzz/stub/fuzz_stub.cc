@@ -264,15 +264,6 @@ DVresult drvMemGetAttribute(DVdeviceptr vptr, struct DVattribute* addtr)
     return DRV_ERROR_NONE;
 }
 
-DVresult halMemGetAddrAttr(struct drvGetAddrAttrIn* in, struct drvGetAddrAttrOut* out)
-{
-    out->devId = 0;
-    out->memType = 0x0010; // DV_MEM_LOCK_DEV;
-    out->hostPtr = 0;
-    out->devicePtr = 0;
-    return DRV_ERROR_NONE;
-}
-
 void* create_collect_client(const char* address, const char* engine_name)
 {
     void* client_handle = NULL;

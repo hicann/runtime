@@ -189,17 +189,6 @@ public:
 
     virtual rtError_t PtrGetAttributes(const void* const ptr, rtPtrAttributes_t* const attributes) = 0;
 
-    /** @brief Query pointer attributes and return the host/device mapped addresses; only aclrtPointerGetAttributes
-     *  uses it, the hot paths keep using PtrGetAttributes(drvMemGetAttribute).
-     *  Slow: it calls halMemGetAddrAttr, which crosses the runtime/HAL boundary, so do NOT use it unless the
-     *  hostPtr/devicePtr pair is really needed. Falls back to PtrGetAttributes when the old HAL has no
-     *  halMemGetAddrAttr, in which case hostPtr/devicePtr are nullptr.
-     *  @param [in]  ptr        : pointer to query
-     *  @param [out] attributes : location type / page size, plus hostPtr/devicePtr (both nullptr on fallback)
-     *  @param [in]  devId      : driver-side device id, taken from the current context by the caller */
-    virtual rtError_t PtrGetAttributesEnhanced(
-        const void* const ptr, rtPtrAttributes_t* const attributes, const uint32_t devId) = 0;
-
     virtual rtError_t PtrGetRealLocation(
         const void* const ptr, rtMemLocationType& location, rtMemLocationType& realLocation) = 0;
 

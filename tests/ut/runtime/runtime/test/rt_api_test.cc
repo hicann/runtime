@@ -28,7 +28,6 @@
 #include "task_res.hpp"
 #include "stars.hpp"
 #include "npu_driver.hpp"
-#include "memcpy_c.hpp"
 #include "api_error.hpp"
 #include "event.hpp"
 #include "stream.hpp"
@@ -285,7 +284,7 @@ TEST_F(ApiAbnormalTest, RtsMemcpyAsyncCountZeroTest)
     uint32_t dstPtr[64];
     uint64_t count = 0;
 
-    MOCKER(GetPtrAttributes).expects(exactly(2)).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::PtrGetAttributes).expects(exactly(2)).will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(api, &ApiErrorDecorator::MemcpyAsync).expects(never());
 
     rtError_t error =
@@ -333,7 +332,7 @@ TEST_F(ApiAbnormalTest, RtsMemcpyCountZeroTest)
     uint32_t dstPtr[64];
     uint64_t count = 0;
 
-    MOCKER(GetPtrAttributes).expects(exactly(2)).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::PtrGetAttributes).expects(exactly(2)).will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(api, &ApiErrorDecorator::MemCopySync).expects(never());
 
     rtError_t error = api.RtsMemcpy(dstPtr, sizeof(dstPtr), srcPtr, count, RT_MEMCPY_KIND_DEVICE_TO_DEVICE, nullptr);

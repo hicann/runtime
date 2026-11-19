@@ -7407,18 +7407,6 @@ TEST_F(ApiTest, rts_callback_subscribe_interface)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
-DVresult halMemGetAddrAttr_ok(struct drvGetAddrAttrIn* in, struct drvGetAddrAttrOut* out)
-{
-    out->memType = DV_MEM_LOCK_HOST;
-    out->hostPtr = 0x1234;
-    return DRV_ERROR_NONE;
-}
-
-DVresult halMemGetAddrAttr_err(struct drvGetAddrAttrIn* in, struct drvGetAddrAttrOut* out)
-{
-    return DRV_ERROR_INVALID_VALUE;
-}
-
 TEST_F(ApiTest, rts_memory_attritue_1)
 {
     rtError_t error;
@@ -7428,15 +7416,42 @@ TEST_F(ApiTest, rts_memory_attritue_1)
     error = rtMallocHost(&hostPtr, 60, DEFAULT_MODULEID);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    MOCKER(halMemGetAddrAttr).stubs().will(invoke(halMemGetAddrAttr_ok));
+    MOCKER(drvMemGetAttribute).stubs().will(invoke(drvMemGetAttribute_1));
     error = rtsPointerGetAttributes(hostPtr, &attributes);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    EXPECT_EQ(attributes.location.type, RT_MEMORY_LOC_HOST);
-    EXPECT_EQ(attributes.hostPtr, reinterpret_cast<void*>(0x1234));
-    EXPECT_EQ(attributes.devicePtr, nullptr);
     GlobalMockObject::verify();
 
-    MOCKER(halMemGetAddrAttr).stubs().will(invoke(halMemGetAddrAttr_err));
+    MOCKER(drvMemGetAttribute).stubs().will(invoke(drvMemGetAttribute_2));
+    error = rtsPointerGetAttributes(hostPtr, &attributes);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    GlobalMockObject::verify();
+
+    MOCKER(drvMemGetAttribute).stubs().will(invoke(drvMemGetAttribute_3));
+    error = rtsPointerGetAttributes(hostPtr, &attributes);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    GlobalMockObject::verify();
+
+    MOCKER(drvMemGetAttribute).stubs().will(invoke(drvMemGetAttribute_4));
+    error = rtsPointerGetAttributes(hostPtr, &attributes);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    GlobalMockObject::verify();
+
+    MOCKER(drvMemGetAttribute).stubs().will(invoke(drvMemGetAttribute_5));
+    error = rtsPointerGetAttributes(hostPtr, &attributes);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    GlobalMockObject::verify();
+
+    MOCKER(drvMemGetAttribute).stubs().will(invoke(drvMemGetAttribute_6));
+    error = rtsPointerGetAttributes(hostPtr, &attributes);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    GlobalMockObject::verify();
+
+    MOCKER(drvMemGetAttribute).stubs().will(invoke(drvMemGetAttribute_7));
+    error = rtsPointerGetAttributes(hostPtr, &attributes);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    GlobalMockObject::verify();
+
+    MOCKER(drvMemGetAttribute).stubs().will(invoke(drvMemGetAttribute_8));
     error = rtsPointerGetAttributes(hostPtr, &attributes);
     EXPECT_NE(error, RT_ERROR_NONE);
     GlobalMockObject::verify();
@@ -7456,7 +7471,6 @@ TEST_F(ApiTest, rts_memory_attritue_2)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER(drvMemGetAttribute).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
-    MOCKER(halMemGetAddrAttr).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
 
     error = rtsPointerGetAttributes(hostPtr, &attributes);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
@@ -7481,7 +7495,6 @@ TEST_F(ApiTest, rts_memory_attritue_3)
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     MOCKER(drvMemGetAttribute).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
-    MOCKER(halMemGetAddrAttr).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
 
     error = rtsPointerGetAttributes(hostPtr, &attributes);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);

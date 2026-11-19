@@ -141,9 +141,6 @@ public:
 
     rtError_t PtrGetAttributes(const void* const ptr, rtPtrAttributes_t* const attributes) override;
 
-    rtError_t PtrGetAttributesEnhanced(
-        const void* const ptr, rtPtrAttributes_t* const attributes, const uint32_t devId) override;
-
     rtError_t PtrGetRealLocation(
         const void* const ptr, rtMemLocationType& location, rtMemLocationType& realLocation) override;
 

@@ -119,7 +119,6 @@ drvError_t __attribute__((weak)) drvQueryProcessHostPid(
     int pid, unsigned int* chip_id, unsigned int* vfid, unsigned int* host_pid, unsigned int* cp_type);
 drvError_t __attribute__((weak))
 halMemcpy(void* dst, size_t dst_size, void* src, size_t count, struct memcpy_info* info);
-drvError_t __attribute__((weak)) halMemGetAddrAttr(struct drvGetAddrAttrIn* in, struct drvGetAddrAttrOut* out);
 drvError_t __attribute__((weak)) halShrIdOpen(const char* name, struct drvShrIdInfo* info);
 drvError_t __attribute__((weak)) halShrIdCreate(struct drvShrIdInfo* info, char* name, uint32_t name_len);
 drvError_t __attribute__((weak)) halShrIdClose(const char* name);

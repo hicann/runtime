@@ -289,12 +289,8 @@ TEST_F(UTEST_ACL_compatibility_cast_check, aclrtPtrAttributes)
     rts_offset = OFFSET_OF_MEMBER(rtPtrAttributes_t, pageSize);
     EXPECT_EQ(acl_offset, rts_offset);
 
-    acl_offset = OFFSET_OF_MEMBER(aclrtPtrAttributes, hostPtr);
-    rts_offset = OFFSET_OF_MEMBER(rtPtrAttributes_t, hostPtr);
-    EXPECT_EQ(acl_offset, rts_offset);
-
-    acl_offset = OFFSET_OF_MEMBER(aclrtPtrAttributes, devicePtr);
-    rts_offset = OFFSET_OF_MEMBER(rtPtrAttributes_t, devicePtr);
+    acl_offset = OFFSET_OF_MEMBER(aclrtPtrAttributes, rsv);
+    rts_offset = OFFSET_OF_MEMBER(rtPtrAttributes_t, rsv);
     EXPECT_EQ(acl_offset, rts_offset);
 
     // check total size

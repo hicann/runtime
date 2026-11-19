@@ -720,21 +720,6 @@ DVresult drvMemGetAttribute(DVdeviceptr vptr, struct DVattribute* addtr)
     return DRV_ERROR_NONE;
 }
 
-DVresult halMemGetAddrAttr(struct drvGetAddrAttrIn* in, struct drvGetAddrAttrOut* out)
-{
-    // The stub reuses the old API's data so existing drvMemGetAttribute mocks keep working;
-    // it is called through a function pointer so inlining cannot defeat the mock
-    static DVresult (*volatile drvMemGetAttributeFunc)(DVdeviceptr, struct DVattribute*) = &drvMemGetAttribute;
-    struct DVattribute attr = {};
-    const DVresult ret = drvMemGetAttributeFunc(in->vptr, &attr);
-    out->devId = attr.devId;
-    out->memType = attr.memType;
-    out->pageSize = attr.pageSize;
-    out->hostPtr = 0;
-    out->devicePtr = 0;
-    return ret;
-}
-
 DVresult halShmemCreateHandle(DVdeviceptr vptr, uint64_t byteCount, char* name, uint32_t len) { return DRV_ERROR_NONE; }
 
 DVresult halShmemDestroyHandle(const char* name) { return DRV_ERROR_NONE; }

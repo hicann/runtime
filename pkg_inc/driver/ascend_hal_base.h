@@ -1953,29 +1953,6 @@ typedef UINT32 DVdevice;
 typedef UINT64 DVdeviceptr;
 typedef drvError_t DVresult;
 
-#ifndef DRV_GET_ADDR_ATTR_IN_RSV_CNT
-#define DRV_GET_ADDR_ATTR_IN_RSV_CNT 8U
-#endif
-struct drvGetAddrAttrIn {
-    DVdeviceptr vptr;
-    uint32_t devId;
-    uint32_t rsv[DRV_GET_ADDR_ATTR_IN_RSV_CNT];
-};
-
-#ifndef DRV_GET_ADDR_ATTR_OUT_RSV_CNT
-#define DRV_GET_ADDR_ATTR_OUT_RSV_CNT 16U
-#endif
-struct drvGetAddrAttrOut {
-    uint32_t memType; /* same bit encoding as DVattribute.memType */
-    uint32_t devId;
-    uint32_t pageSize;
-    uint64_t hostPtr;   /* 0 when not on host */
-    uint64_t devicePtr; /* 0 when not on device */
-    uint32_t rsv[DRV_GET_ADDR_ATTR_OUT_RSV_CNT];
-};
-
-DLLEXPORT DVresult halMemGetAddrAttr(struct drvGetAddrAttrIn* in, struct drvGetAddrAttrOut* out);
-
 struct drv_addr_range {
     void* start_addr;
     void* end_addr;

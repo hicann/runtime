@@ -131,9 +131,9 @@ public:
     ~SegmentManager();
     rtError_t SegmentAlloc(Segment*& ret, uint64_t size, int32_t streamId, ReuseFlag& flag);
     rtError_t SegmentFree(uint64_t ptr, bool forceFree = false);
-    static Segment* CreateSegment(uint64_t base, uint64_t size);
-    static Segment* CreateSegment(uint64_t base, uint64_t size, Segment* next, Segment* prev);
-    static void DeleteSegment(Segment*& segment);
+    static inline Segment* CreateSegment(uint64_t base, uint64_t size);
+    static inline Segment* CreateSegment(uint64_t base, uint64_t size, Segment* next, Segment* prev);
+    static inline void DeleteSegment(Segment*& segment);
     uint64_t MemPoolId() const { return RtPtrToValue(this); }
     uint64_t PoolSegAddr() const { return base_; }
     uint64_t PoolSize() const { return static_cast<uint64_t>(size_); }
