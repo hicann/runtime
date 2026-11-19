@@ -8,7 +8,7 @@
 # INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
-set -e
+set -eo pipefail
 
 _ASCEND_INSTALL_PATH=$ASCEND_INSTALL_PATH
 
@@ -67,10 +67,15 @@ for ((i=1; i<=$CONSUMER_NUM; i++)); do
 done
 
 # 等待所有进程结束
-wait $PROC_A_PID
-for ((i=1; i<=$CONSUMER_NUM; i++)); do
-    wait ${CONSUMER_PIDS[$i]}
+status=0
+wait "$PROC_A_PID" || status=$?
+for ((i=1; i<=CONSUMER_NUM; i++)); do
+    wait "${CONSUMER_PIDS[$i]}" || status=$?
 done
+if [[ "$status" -ne 0 ]]; then
+    echo "[FAILURE] An IPC event process failed." >&2
+    exit "$status"
+fi
 
 # 检查生产者日志是否成功
 if grep -q "finished successfully" producer.log; then

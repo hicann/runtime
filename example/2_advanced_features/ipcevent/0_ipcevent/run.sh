@@ -9,7 +9,7 @@
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
 _ASCEND_INSTALL_PATH=$ASCEND_INSTALL_PATH
-set -e
+set -eo pipefail
 
 
 source $_ASCEND_INSTALL_PATH/bin/setenv.bash
@@ -28,7 +28,13 @@ pid_a=$!
 ./build/proc_b 2>&1 | tee proc_b.log &
 pid_b=$!
 
-wait $pid_a $pid_b
+status=0
+wait "$pid_a" || status=$?
+wait "$pid_b" || status=$?
+if [[ "$status" -ne 0 ]]; then
+    echo "[FAILURE] An IPC event process failed." >&2
+    exit "$status"
+fi
 
 # 检查生产者日志中是否成功完成
 if grep -q "cleanup completed" proc_a.log; then
