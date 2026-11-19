@@ -9,6 +9,8 @@
  */
 #ifndef __CCE_RUNTIME_PROFILER_STRUCT_HPP__
 #define __CCE_RUNTIME_PROFILER_STRUCT_HPP__
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
 #include "base.hpp"
 #include "profiling/prof_api.h"
 
@@ -391,6 +393,7 @@ typedef enum tagProfileRecordType {
 
     PROFILE_RECORD_TYPE_END = 13
 } rtProfileRecordType_t;
+RT_ENUM_LOG_DECLARE(RtProfileRecordTypeToString, rtProfileRecordType_t)
 
 /**
  * @ingroup

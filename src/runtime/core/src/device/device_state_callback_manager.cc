@@ -8,6 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/api_enum_log.hpp"
+#include "runtime/base.h"
 #include "device_state_callback_manager.hpp"
 #include "device_enum_desc.hpp"
 #include "error_message_manage.hpp"
@@ -54,8 +56,11 @@ rtError_t DeviceStateCallbackManager::RegDeviceStateCallback(
 
     callbackMap_[regName].type = type;
     RT_LOG(
-        RT_LOG_DEBUG, "register device state callback finish, name:%s, notifyPos:%d, type:%u.", regName, notifyPos,
-        type);
+        RT_LOG_DEBUG,
+        "register device state callback finish, name:%s, notifyPos:" RT_ENUM_LOG_FORMAT(
+            "%d") ", type:" RT_ENUM_LOG_FORMAT("%u") ".",
+        regName, RT_ENUM_LOG_VALUE(static_cast<int32_t>(notifyPos), RtDevCallBackDirToString(notifyPos)),
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(type), DeviceStateCallbackLogToString(type)));
     return RT_ERROR_NONE;
 }
 
@@ -77,7 +82,9 @@ void DeviceStateCallbackManager::Notify(
     } else {
         isOpenStr = "false";
     }
-    RT_LOG(RT_LOG_DEBUG, "notify device:%u isOpen:%s, notifyPos=%d.", deviceId, isOpenStr.c_str(), notifyPos);
+    RT_LOG(
+        RT_LOG_DEBUG, "notify device:%u isOpen:%s, notifyPos=" RT_ENUM_LOG_FORMAT("%d") ".", deviceId,
+        isOpenStr.c_str(), RT_ENUM_LOG_VALUE(static_cast<int32_t>(notifyPos), RtDevCallBackDirToString(notifyPos)));
     if (notifyPos == DEV_CB_POS_BACK) {
         const auto profRet = MsprofNotifySetDevice(0, deviceId, isOpen);
         if (profRet != MSPROF_ERROR_NONE) {

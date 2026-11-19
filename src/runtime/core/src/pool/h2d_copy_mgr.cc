@@ -7,6 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "runtime/base.h"
 #include "h2d_copy_mgr.hpp"
 #include "npu_driver.hpp"
 
@@ -59,7 +60,9 @@ H2DCopyMgr::H2DCopyMgr(
     } else {
         // no op
     }
-    RT_LOG(RT_LOG_INFO, "alloc h2d copy buff success, policy %d", policy_);
+    RT_LOG(
+        RT_LOG_INFO, "alloc h2d copy buff success, policy " RT_ENUM_LOG_FORMAT("%d"),
+        RT_ENUM_LOG_VALUE(static_cast<int32_t>(policy_), H2DCopyPolicyToString(policy_)));
 }
 
 H2DCopyMgr::H2DCopyMgr(Device* const dev, H2DCopyPolicy policy)

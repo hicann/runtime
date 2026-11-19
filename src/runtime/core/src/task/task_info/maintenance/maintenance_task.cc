@@ -8,6 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/api_enum_log.hpp"
+#include "runtime/rt_external_device.h"
 #include "stream.hpp"
 #include "runtime.hpp"
 #include "context.hpp"
@@ -89,9 +91,10 @@ rtError_t GetDevMsgTaskInit(
     RT_LOG(
         RT_LOG_DEBUG,
         "Create GetDevMsgTask task,task_id=%hu,task_type=%d(%s),stream_id=%d, "
-        "msgBufferLen=%u,msgType=%d,offset=%" PRIu64,
+        "msgBufferLen=%u,msgType=" RT_ENUM_LOG_FORMAT("%d") ",offset=%" PRIu64,
         taskInfo->id, taskInfo->type, taskInfo->typeName, taskInfo->stream->Id_(), getDevMsgTask->msgBufferLen,
-        messageType, getDevMsgTask->offset);
+        RT_ENUM_LOG_VALUE(static_cast<int32_t>(messageType), RtGetDevMsgTypeToString(messageType)),
+        getDevMsgTask->offset);
     return RT_ERROR_NONE;
 }
 
@@ -103,8 +106,10 @@ void ToCommandBodyForGetDevMsgTask(TaskInfo* taskInfo, rtCommand_t* const comman
     command->u.getDevMsgTask.offset = getDevMsgTask->offset;
     command->u.getDevMsgTask.type = static_cast<uint16_t>(getDevMsgTask->msgType);
     RT_LOG(
-        RT_LOG_INFO, "Device message device offset=%#" PRIx64 ",msgType=%d", getDevMsgTask->offset,
-        getDevMsgTask->msgType);
+        RT_LOG_INFO, "Device message device offset=%#" PRIx64 ",msgType=" RT_ENUM_LOG_FORMAT("%d"),
+        getDevMsgTask->offset,
+        RT_ENUM_LOG_VALUE(
+            static_cast<int32_t>(getDevMsgTask->msgType), RtGetDevMsgTypeToString(getDevMsgTask->msgType)));
 }
 #endif
 

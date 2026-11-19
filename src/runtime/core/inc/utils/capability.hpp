@@ -10,6 +10,7 @@
 #ifndef __CCE_RUNTIME_CAPABILITY_HPP__
 #define __CCE_RUNTIME_CAPABILITY_HPP__
 
+#include "common/enum_log.hpp"
 #include "base.hpp"
 #include "osal.hpp"
 #include "elf.hpp"
@@ -139,6 +140,7 @@ typedef enum {
     RT_FEATURE_TASK_ABORT = 14,
     RT_FEATURE_MAX = 15
 } rtFeature;
+RT_ENUM_LOG_DECLARE(RtFeatureToString, rtFeature)
 
 constexpr uint32_t RUNTIME_CAPABILITY_LEN = 2048U;                  // runtime能力集长度2k
 constexpr uint32_t TSCH_CAPABILITY_LEN = 10240U;                    // TSCH能力集长度10k

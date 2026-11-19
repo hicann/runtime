@@ -10,6 +10,9 @@
 #ifndef CCE_RUNTIME_KERNEL_TABLE_HPP
 #define CCE_RUNTIME_KERNEL_TABLE_HPP
 
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
+
 #include <map>
 #include <string>
 #include <vector>
@@ -36,6 +39,7 @@ enum KernelRegisterType : int32_t {
     RT_KERNEL_REG_TYPE_CPU = 0,
     RT_KERNEL_REG_TYPE_NON_CPU,
 };
+RT_ENUM_LOG_DECLARE(KernelRegisterTypeToString, KernelRegisterType)
 
 class Program;
 

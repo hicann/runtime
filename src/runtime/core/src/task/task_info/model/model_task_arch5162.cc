@@ -8,6 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
 #include "stream.hpp"
 #include "runtime.hpp"
 #include "context.hpp"
@@ -141,20 +143,25 @@ static void ConstructSqeForModelMaintainceTask(
             sqe->u.modelMaintainceInfo.streamExecTimesAddr = modelMaintainceTaskInfo->execTimesSvmOffset;
             PrintSqe(command, "ModelBindTask");
             RT_LOG(
-                RT_LOG_INFO, "model maintenance type=%u, bind stream_id=%hu to model_id=%hu", type,
-                sqe->u.modelMaintainceInfo.streamId, sqe->u.modelMaintainceInfo.modelId);
+                RT_LOG_INFO, "model maintenance type=" RT_ENUM_LOG_FORMAT("%u") ", bind stream_id=%hu to model_id=%hu",
+                RT_ENUM_LOG_VALUE(static_cast<uint32_t>(type), "MMT_STREAM_ADD"), sqe->u.modelMaintainceInfo.streamId,
+                sqe->u.modelMaintainceInfo.modelId);
             break;
         case MMT_STREAM_DEL:
             sqe->header.preP = RT_STARS_SQE_INT_DIR_TO_TSCPU;
             PrintSqe(command, "ModelUnbindTask");
             RT_LOG(
-                RT_LOG_INFO, "model maintenance type=%u, unbind stream_id=%hu from model_id=%hu", type,
-                sqe->u.modelMaintainceInfo.streamId, sqe->u.modelMaintainceInfo.modelId);
+                RT_LOG_INFO,
+                "model maintenance type=" RT_ENUM_LOG_FORMAT("%u") ", unbind stream_id=%hu from model_id=%hu",
+                RT_ENUM_LOG_VALUE(static_cast<uint32_t>(type), "MMT_STREAM_DEL"), sqe->u.modelMaintainceInfo.streamId,
+                sqe->u.modelMaintainceInfo.modelId);
             break;
         case MMT_MODEL_LOAD_COMPLETE:
             PrintSqe(command, "ModelLoadCompleteTask");
             RT_LOG(
-                RT_LOG_INFO, "model maintenance type=%u, load complete stream_id=%hu of model_id=%hu", type,
+                RT_LOG_INFO,
+                "model maintenance type=" RT_ENUM_LOG_FORMAT("%u") ", load complete stream_id=%hu of model_id=%hu",
+                RT_ENUM_LOG_VALUE(static_cast<uint32_t>(type), "MMT_MODEL_LOAD_COMPLETE"),
                 sqe->u.modelMaintainceInfo.streamId, sqe->u.modelMaintainceInfo.modelId);
             break;
         case MMT_MODEL_PRE_PROC:
@@ -169,22 +176,26 @@ static void ConstructSqeForModelMaintainceTask(
             PrintSqe(command, "ModelPreProcTask");
             RT_LOG(
                 RT_LOG_INFO,
-                "model maintenance type=%u, pre proc stream_id=%hu of model_id=%hu, endgraphNotifyId"
-                "=%hu",
-                type, sqe->u.modelMaintainceInfo.streamId, sqe->u.modelMaintainceInfo.modelId,
+                "model maintenance type=" RT_ENUM_LOG_FORMAT(
+                    "%u") ", pre proc stream_id=%hu of model_id=%hu, endgraphNotifyId"
+                          "=%hu",
+                RT_ENUM_LOG_VALUE(static_cast<uint32_t>(type), "MMT_MODEL_PRE_PROC"),
+                sqe->u.modelMaintainceInfo.streamId, sqe->u.modelMaintainceInfo.modelId,
                 sqe->u.modelMaintainceInfo.endgraphNotifyId);
             break;
         case MMT_MODEL_ABORT:
             sqe->header.preP = RT_STARS_SQE_INT_DIR_TO_TSCPU;
             PrintSqe(command, "ModelAbortTask");
             RT_LOG(
-                RT_LOG_INFO, "model maintenance type=%u, abort stream_id=%hu of model_id=%hu", type,
-                sqe->u.modelMaintainceInfo.streamId, sqe->u.modelMaintainceInfo.modelId);
+                RT_LOG_INFO, "model maintenance type=" RT_ENUM_LOG_FORMAT("%u") ", abort stream_id=%hu of model_id=%hu",
+                RT_ENUM_LOG_VALUE(static_cast<uint32_t>(type), "MMT_MODEL_ABORT"), sqe->u.modelMaintainceInfo.streamId,
+                sqe->u.modelMaintainceInfo.modelId);
             break;
         default:
             PrintSqe(command, "ModelMaintainceTask");
             RT_LOG(
-                RT_LOG_INFO, "model maintenance type=%u, stream_id=%hu, model_id=%hu", type,
+                RT_LOG_INFO, "model maintenance type=" RT_ENUM_LOG_FORMAT("%d") ", stream_id=%hu, model_id=%hu",
+                RT_ENUM_LOG_VALUE(static_cast<int32_t>(type), MmtTypeToString(modelMaintainceTaskInfo->type)),
                 sqe->u.modelMaintainceInfo.streamId, sqe->u.modelMaintainceInfo.modelId);
             break;
     }

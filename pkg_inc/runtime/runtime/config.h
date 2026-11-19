@@ -43,6 +43,7 @@ typedef enum tagRtDeviceCapabilityType {
     RT_DEV_CAP_SUPPORT,           // Capability Support
     RT_DEV_CAP_NOT_SUPPORT,       // Capability not support
 } rtDeviceCapabilityType;
+RT_ENUM_LOG_DECLARE_IN_NAMESPACE(RtDeviceCapabilityTypeToString, rtDeviceCapabilityType)
 
 typedef enum tagRtCubeFracMKNFp16 {
     RT_CUBE_MKN_FP16_2_16_16 = 0,
@@ -106,6 +107,7 @@ typedef enum tagRTTaskTimeoutType {
     RT_TIMEOUT_TYPE_OP_WAIT = 0,
     RT_TIMEOUT_TYPE_OP_EXECUTE,
 } rtTaskTimeoutType_t;
+RT_ENUM_LOG_DECLARE_IN_NAMESPACE(RtTaskTimeoutTypeToString, rtTaskTimeoutType_t)
 
 typedef enum tagRTLastErrLevel {
     RT_THREAD_LEVEL = 0,

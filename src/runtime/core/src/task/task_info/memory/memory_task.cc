@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/enum_log.hpp"
 #include "enum_desc.hpp"
 #include "memory_task.h"
 #include "stream.hpp"
@@ -1041,9 +1042,10 @@ rtError_t UpdateWriteValueTaskParams(TaskInfo* const taskInfo, const TaskUpdateP
     RT_LOG(
         RT_LOG_INFO,
         "update or convert to ValueWriteTask succ: device_id=%u, stream_id=%d, task_id=%hu, "
-        "typeName=%s, taskType=%d, devAddr=%#llx, value=%llu",
-        dev->Id_(), stm->Id_(), taskInfo->id, taskInfo->typeName, taskInfo->type, taskInfo->u.memWriteValueTask.devAddr,
-        taskInfo->u.memWriteValueTask.value);
+        "taskType=" RT_ENUM_LOG_FORMAT("%d") ", devAddr=%#llx, value=%llu",
+        dev->Id_(), stm->Id_(), taskInfo->id,
+        RT_ENUM_LOG_VALUE(static_cast<int32_t>(taskInfo->type), RT_ENUM_LOG_NAME(taskInfo->typeName)),
+        taskInfo->u.memWriteValueTask.devAddr, taskInfo->u.memWriteValueTask.value);
     return RT_ERROR_NONE;
 }
 
@@ -1065,9 +1067,10 @@ rtError_t UpdateWaitValueTaskParams(TaskInfo* const taskInfo, const TaskUpdatePa
     RT_LOG(
         RT_LOG_INFO,
         "update or convert to ValueWaitTask succ: device_id=%u, stream_id=%d, task_id=%hu, "
-        "typeName=%s, taskType=%d, devAddr=%#llx, value=%llu, flag=%u",
-        dev->Id_(), stm->Id_(), taskInfo->id, taskInfo->typeName, taskInfo->type, taskInfo->u.memWaitValueTask.devAddr,
-        taskInfo->u.memWaitValueTask.value, taskInfo->u.memWaitValueTask.flag);
+        "taskType=" RT_ENUM_LOG_FORMAT("%d") ", devAddr=%#llx, value=%llu, flag=%u",
+        dev->Id_(), stm->Id_(), taskInfo->id,
+        RT_ENUM_LOG_VALUE(static_cast<int32_t>(taskInfo->type), RT_ENUM_LOG_NAME(taskInfo->typeName)),
+        taskInfo->u.memWaitValueTask.devAddr, taskInfo->u.memWaitValueTask.value, taskInfo->u.memWaitValueTask.flag);
     return RT_ERROR_NONE;
 }
 #endif

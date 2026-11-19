@@ -8,6 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 #define private public
@@ -26,6 +28,9 @@
 #include "model/capture_model_utils.hpp"
 #include <string>
 #undef private
+
+void ClearLastDlogRecordLine();
+bool DlogRecordContains(const std::string& keyword);
 
 using namespace testing;
 using namespace cce::runtime;
@@ -314,4 +319,40 @@ TEST_F(CloudV2ApiImpltaskOwnerTest, ModelTaskDisable_CaptureExternalRecordSetsMo
     EXPECT_EQ(captureModel->GetCaptureModelStatus(), RtCaptureModelStatus::FAULT);
     stream_->SetModel(nullptr);
     EXPECT_EQ(context_->ModelDestroy(model), RT_ERROR_NONE);
+}
+
+class ConvertTaskTypeLogTest : public testing::Test {
+protected:
+    void TearDown() override { GlobalMockObject::verify(); }
+};
+
+TEST_F(ConvertTaskTypeLogTest, ConvertTaskTypeLog_PairsBorrowedNameAndNullFallback)
+{
+    MOCKER(CheckLogLevel).stubs().will(returnValue(1));
+    Stream stream(static_cast<Device*>(nullptr), 0U);
+    const TaskOwner owners[] = {TaskOwner::RT_TASK_INNER, TaskOwner::RT_TASK_USER};
+    const char* names[] = {"BORROWED_TASK", nullptr};
+    for (const TaskOwner owner : owners) {
+        for (const char* name : names) {
+            TaskInfo task = {};
+            task.stream = &stream;
+            task.id = 29U;
+            task.type = static_cast<tsTaskType_t>(65535);
+            task.typeName = name;
+            task.taskOwner = static_cast<uint8_t>(owner);
+            rtTaskType converted = RT_TASK_KERNEL;
+            ClearLastDlogRecordLine();
+            EXPECT_EQ(ConvertTaskType(&task, &converted), RT_ERROR_NONE);
+            EXPECT_EQ(converted, RT_TASK_DEFAULT);
+            EXPECT_TRUE(DlogRecordContains("streamId=" + std::to_string(stream.Id_()) + ", taskId=29,"));
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+            EXPECT_TRUE(DlogRecordContains(
+                std::string("alloc taskType=") + ((name == nullptr) ? "UNKNOWN" : name) + "(65535)"));
+            EXPECT_FALSE(DlogRecordContains("taskName="));
+#else
+            EXPECT_TRUE(DlogRecordContains("alloc taskType=65535,"));
+            EXPECT_FALSE(DlogRecordContains("taskName="));
+#endif
+        }
+    }
 }

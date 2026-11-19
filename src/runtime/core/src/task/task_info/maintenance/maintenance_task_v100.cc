@@ -8,6 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
 #include "stream.hpp"
 #include "runtime.hpp"
 #include "context.hpp"
@@ -131,9 +133,12 @@ static void ConstructSqeForStarsVersionTask(TaskInfo* const taskInfo, void* cons
     PrintSqe(command, "GetStarsVersionTask");
     RT_LOG(
         RT_LOG_INFO,
-        "Send GetStarsVersionTask success, sqe_type=%u,pre_p=%u,sqe->rt_streamID=%u, stream_id=%d,"
-        "task_id=%u,task_type=%u.",
-        sqe->type, sqe->pre_p, sqe->rt_streamID, stm->Id_(), sqe->task_id, sqe->task_type);
+        "Send GetStarsVersionTask success, sqe_type=" RT_ENUM_LOG_FORMAT(
+            "%u") ",pre_p=%u,sqe->rt_streamID=%u, "
+                  "stream_id=%d,task_id=%u,task_type=" RT_ENUM_LOG_FORMAT("%u") ".",
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(sqe->type), "STARS_SQE_TYPE_PLACE_HOLDER"), sqe->pre_p,
+        sqe->rt_streamID, stm->Id_(), sqe->task_id,
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(sqe->task_type), "TS_TASK_TYPE_GET_STARS_VERSION"));
 }
 
 void SetStarsResultForStarsVersionTask(TaskInfo* taskInfo, const rtCqReport_t& logicCq)

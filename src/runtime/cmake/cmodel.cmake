@@ -407,6 +407,10 @@ set(xpu_tprt_api_file
 )
 
 set(libruntime_cmodel_src_files
+    ${RUNTIME_CORE_DIR}/src/common/api_enum_log.cc
+    ${RUNTIME_CORE_DIR}/src/common/internal_enum_log.cc
+    ${RUNTIME_CORE_DIR}/src/common/callback_enum_log.cc
+    ${RUNTIME_CORE_DIR}/src/common/runtime_enum_log.cc
     ${RUNTIME_CORE_DIR}/src/common/enum_desc.cc
     ${RUNTIME_CORE_DIR}/src/common/api_enum_desc.cc
     ${RUNTIME_CORE_DIR}/src/common/optional_enum_desc.cc
@@ -555,6 +559,10 @@ set(libruntime_cmodel_src_files
 )
 
 set(libruntime_cmodel_v200_src_files
+    ${RUNTIME_CORE_DIR}/src/common/api_enum_log.cc
+    ${RUNTIME_CORE_DIR}/src/common/internal_enum_log.cc
+    ${RUNTIME_CORE_DIR}/src/common/callback_enum_log.cc
+    ${RUNTIME_CORE_DIR}/src/common/runtime_enum_log.cc
     ${RUNTIME_CORE_DIR}/src/common/enum_desc.cc
     ${RUNTIME_CORE_DIR}/src/common/api_enum_desc.cc
     ${RUNTIME_CORE_DIR}/src/common/optional_enum_desc.cc
@@ -839,6 +847,10 @@ add_library(runtime_model OBJECT EXCLUDE_FROM_ALL
     ${RUNTIME_DIR}/src/dfx/msprof/collector/dvvp/profapi/stub/profapi_stub.cpp
 )
 
+target_compile_definitions(runtime_model PRIVATE
+    RUNTIME_ENABLE_ENUM_LOG_NAMES=$<BOOL:${RUNTIME_ENABLE_ENUM_LOG_NAMES}>
+)
+
 target_include_directories(runtime_model PRIVATE
     ${RUNTIME_CMODEL_INC_DIR}
     ${RUNTIME_DIR}/src/cmodel_driver
@@ -904,6 +916,10 @@ add_library(runtime_model_v200 OBJECT EXCLUDE_FROM_ALL
     ${RUNTIME_DIR}/src/runtime/driver/npu_driver_dcache_lock_common.cpp
     ${RUNTIME_DIR}/src/runtime/driver/npu_driver_dcache_lock_david.cpp
     ${RUNTIME_DIR}/src/dfx/msprof/collector/dvvp/profapi/stub/profapi_stub.cpp
+)
+
+target_compile_definitions(runtime_model_v200 PRIVATE
+    RUNTIME_ENABLE_ENUM_LOG_NAMES=$<BOOL:${RUNTIME_ENABLE_ENUM_LOG_NAMES}>
 )
 
 target_include_directories(runtime_model_v200 PRIVATE

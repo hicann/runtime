@@ -8,6 +8,9 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/enum_log.hpp"
+#include "task/task_base.hpp"
+#include "runtime/base.h"
 #include "memory_task.h"
 #include "error_message_manage.hpp"
 #include "task_info_v100.h"
@@ -102,8 +105,9 @@ rtError_t MemcpyAsyncTaskInitV3(
     memcpyAsyncTaskInfo->copyKind = RT_MEMCPY_DEVICE_TO_DEVICE;
     memcpyAsyncTaskInfo->copyType = RT_MEMCPY_DIR_D2D_SDMA;
     RT_LOG(
-        RT_LOG_INFO, "Set memcpy type, kind=%u, direct=%u.", memcpyAsyncTaskInfo->copyKind,
-        memcpyAsyncTaskInfo->copyType);
+        RT_LOG_INFO, "Set memcpy type, kind=" RT_ENUM_LOG_FORMAT("%u") ", direct=" RT_ENUM_LOG_FORMAT("%u") ".",
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(memcpyAsyncTaskInfo->copyKind), "MEMCPY_DEVICE_TO_DEVICE"),
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(memcpyAsyncTaskInfo->copyType), "MEMCPY_DIR_D2D_SDMA"));
     memcpyAsyncTaskInfo->size = cpySize;
     if (cfgInfo != nullptr) {
         memcpyAsyncTaskInfo->qos = cfgInfo->qos;
@@ -130,7 +134,13 @@ rtError_t MemcpyAsyncTaskInitV3(
     memcpyAsyncTaskInfo->destPtr = desAddr;
 
     memcpyAsyncTaskInfo->dmaKernelConvertFlag = true;
-    RT_LOG(RT_LOG_INFO, "CopyType=%u: use virtual address directly.", memcpyAsyncTaskInfo->copyType);
+    RT_LOG(
+        RT_LOG_INFO, "CopyType=" RT_ENUM_LOG_FORMAT("%u") ": use virtual address directly.",
+        RT_ENUM_LOG_VALUE(
+            static_cast<uint32_t>(memcpyAsyncTaskInfo->copyType),
+            (memcpyAsyncTaskInfo->copyType <= RT_MEMCPY_DIR_SDMA_AUTOMATIC_EQUAL ?
+                 RtMemCopyAsyncDirectToString(static_cast<rtMemCopyAsyncDirect>(memcpyAsyncTaskInfo->copyType)) :
+                 "UNKNOWN")));
     return RT_ERROR_NONE;
 }
 

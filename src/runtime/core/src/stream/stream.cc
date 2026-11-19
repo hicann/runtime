@@ -7,6 +7,9 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "common/api_enum_log.hpp"
+#include "runtime/event.h"
+#include "runtime/base.h"
 #include <cinttypes>
 #include <iomanip>
 #include "stream.hpp"
@@ -4545,8 +4548,9 @@ rtError_t Stream::JudgeHeadTailPos(rtEventStatus_t* const status, uint16_t event
         *status = RT_EVENT_RECORDED;
     }
     RT_LOG(
-        RT_LOG_INFO, "device_id=%u, status=%d, stream_id=%u, head=%u, tail=%u, pos=%u", device_->Id_(), *status,
-        streamId_, sqHead, sqTail, eventPos);
+        RT_LOG_INFO, "device_id=%u, status=" RT_ENUM_LOG_FORMAT("%d") ", stream_id=%u, head=%u, tail=%u, pos=%u",
+        device_->Id_(), RT_ENUM_LOG_VALUE(static_cast<int32_t>(*status), RtEventStatusToString(*status)), streamId_,
+        sqHead, sqTail, eventPos);
     return RT_ERROR_NONE;
 }
 

@@ -7,6 +7,8 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
 #include "npu_driver.hpp"
 #include "driver/ascend_hal.h"
 #include "driver/ascend_inpackage_hal.h"
@@ -121,8 +123,8 @@ rtError_t NpuDriver::EschedDettachDevice(const uint32_t devId)
 rtError_t NpuDriver::EschedCreateGrp(const int32_t devId, const uint32_t grpId, const rtGroupType_t type)
 {
     RT_LOG(
-        RT_LOG_INFO, "Esched create group, drv devId=%d, grpId=%u, type=%u.", devId, grpId,
-        static_cast<uint32_t>(type));
+        RT_LOG_INFO, "Esched create group, drv devId=%d, grpId=%u, type=" RT_ENUM_LOG_FORMAT("%u") ".", devId, grpId,
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(type), GroupTypeName(type)));
 
     COND_RETURN_WARN(
         &halEschedCreateGrp == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT, "[drv api] halEschedCreateGrp does not exist.");
@@ -224,9 +226,9 @@ rtError_t NpuDriver::EschedAckEvent(
 {
     RT_LOG(
         RT_LOG_INFO,
-        "Esched ack event, drv devId=%d, event_id=%u, "
-        "subevent_id=%u, len=%u.",
-        devId, static_cast<uint32_t>(evtId), subEvtId, len);
+        "Esched ack event, drv devId=%d, event_id=" RT_ENUM_LOG_FORMAT("%u") ", "
+                                                                             "subevent_id=%u, len=%u.",
+        devId, RT_ENUM_LOG_VALUE(static_cast<uint32_t>(evtId), EventIdTypeName(evtId)), subEvtId, len);
 
     COND_RETURN_WARN(
         &halEschedAckEvent == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT, "[drv api] halEschedAckEvent does not exist.");
@@ -247,7 +249,9 @@ rtError_t NpuDriver::EschedAckEvent(
 rtError_t NpuDriver::EschedQueryInfo(
     const uint32_t devId, const rtEschedQueryType type, rtEschedInputInfo* inPut, rtEschedOutputInfo* outPut)
 {
-    RT_LOG(RT_LOG_INFO, "EschedQueryInfo, drv devId=%u, type=%d,", devId, type);
+    RT_LOG(
+        RT_LOG_INFO, "EschedQueryInfo, drv devId=%u, type=" RT_ENUM_LOG_FORMAT("%d") ",", devId,
+        RT_ENUM_LOG_VALUE(static_cast<int32_t>(type), EschedQueryTypeName(type)));
     COND_RETURN_WARN(
         &halEschedQueryInfo == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT, "[drv api] halEschedQueryInfo does not exist.");
 

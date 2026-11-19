@@ -8,6 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
 #include "stream.hpp"
 #include "runtime.hpp"
 #include "task_info_v100.h"
@@ -70,8 +72,11 @@ static void ConstructSqeForModelToAicpuTask(TaskInfo* taskInfo, void* const sqeB
     sqe->dest_pid = 0U;
     PrintSqe(command, "ModelToAicpuTask");
     RT_LOG(
-        RT_LOG_INFO, "ModelToAicpuTask::ConstructSqe finish,topic_type=%u sqe addr=%p cmdType_=%u",
-        static_cast<uint32_t>(sqe->topic_type), command, taskInfo->u.modelToAicpuTask.cmdType);
+        RT_LOG_INFO,
+        "ModelToAicpuTask::ConstructSqe finish,topic_type=" RT_ENUM_LOG_FORMAT("%u") " sqe addr=%p cmdType_=%u",
+        RT_ENUM_LOG_VALUE(
+            static_cast<uint32_t>(static_cast<uint32_t>(sqe->topic_type)), "TOPIC_TYPE_DEVICE_AICPU_ONLY"),
+        command, taskInfo->u.modelToAicpuTask.cmdType);
 }
 
 #endif

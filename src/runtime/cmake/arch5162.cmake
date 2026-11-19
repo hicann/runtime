@@ -304,6 +304,7 @@ set(libruntime_other_files
     ${libruntime_profile_src_files}
 )
 
+# arch5162 omits enum name mappings; disabled helpers return empty text.
 set(libruntime_src_files
     ${RUNTIME_CORE_DIR}/src/common/enum_desc.cc
     ${RUNTIME_CORE_DIR}/src/common/api_enum_desc.cc
@@ -476,6 +477,11 @@ macro(add_runtime_library target_name)
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver_dcache_lock_common.cpp
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver_dcache_lock_opb.cpp
         $<TARGET_OBJECTS:runtime_platform_arch5162>
+    )
+
+    # Keep enum names disabled in the 5162 library.
+    target_compile_definitions(${target_name} PRIVATE
+        RUNTIME_ENABLE_ENUM_LOG_NAMES=0
     )
 
     target_compile_definitions(${target_name} PRIVATE

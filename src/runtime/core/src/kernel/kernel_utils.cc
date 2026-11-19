@@ -7,6 +7,8 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
 #include "kernel_utils.hpp"
 #include <securec.h>
 #include <new>
@@ -109,10 +111,11 @@ rtError_t ConvertTaskType(const TaskInfo* const task, rtTaskType* type)
         *type = taskType;
         RT_LOG(
             RT_LOG_INFO,
-            "end to get task type, streamId=%d, taskId=%u, alloc taskType=%d, taskName=%s, taskOwner=%d, convert to "
-            "rtTaskType=%s.",
-            task->stream->Id_(), task->id, task->type, task->typeName, static_cast<int32_t>(task->taskOwner),
-            TaskTypeToString(*type).c_str());
+            "end to get task type, streamId=%d, taskId=%u, alloc taskType=" RT_ENUM_LOG_FORMAT(
+                "%d") ", taskOwner=%d, convert to rtTaskType=%s.",
+            task->stream->Id_(), task->id,
+            RT_ENUM_LOG_VALUE(static_cast<int32_t>(task->type), RT_ENUM_LOG_NAME(task->typeName)),
+            static_cast<int32_t>(task->taskOwner), TaskTypeToString(*type).c_str());
         return RT_ERROR_NONE;
     }
 
@@ -171,8 +174,11 @@ rtError_t ConvertTaskType(const TaskInfo* const task, rtTaskType* type)
     *type = taskType;
     RT_LOG(
         RT_LOG_INFO,
-        "end to get task type, streamId=%d, taskId=%u, alloc taskType=%d, taskName=%s, convert to rtTaskType=%s.",
-        task->stream->Id_(), task->id, task->type, task->typeName, TaskTypeToString(taskType).c_str());
+        "end to get task type, streamId=%d, taskId=%u, alloc taskType=" RT_ENUM_LOG_FORMAT(
+            "%d") ", convert to rtTaskType=%s.",
+        task->stream->Id_(), task->id,
+        RT_ENUM_LOG_VALUE(static_cast<int32_t>(task->type), RT_ENUM_LOG_NAME(task->typeName)),
+        TaskTypeToString(taskType).c_str());
     return RT_ERROR_NONE;
 }
 
@@ -846,12 +852,15 @@ rtError_t UpdateKernelParams(TaskInfo* const taskInfo, KernelTaskUpdateInfo* con
         RT_LOG_INFO,
         "device_id=%u, stream_id=%d, task_id=%hu, kernelAttrType=%s, kernel_name=%s, argsType=%s, arg_size=%u, "
         "blockDim=%u, taskRation=%u, funcType=%u, addr1=0x%llx, addr2=0x%llx, "
-        "mixType=%u, kernelFlag=0x%x, qos=%u, partId=%u, schemMode=%u, infoAddr=%p, atomicIndex=%u, "
-        "shareMemSize=%u, kernelVfType=%u, dynamicShareMemSize=%u, simtDcuSmSize=%u.",
+        "mixType=" RT_ENUM_LOG_FORMAT(
+            "%u") ", kernelFlag=0x%x, qos=%u, partId=%u, "
+                  "schemMode=%u, infoAddr=%p, atomicIndex=%u, "
+                  "shareMemSize=%u, kernelVfType=%u, dynamicShareMemSize=%u, simtDcuSmSize=%u.",
         dev->Id_(), stm->Id_(), taskInfo->id, KernelAttrTypeToString(kernelAttrType).c_str(), kernel->Name_().c_str(),
         KernelArgsTypeToString(kernelUpdateInfo->argsType).c_str(), argsInfo.argsSize, kernelUpdateInfo->numBlocks,
-        kernel->GetTaskRation(), kernel->GetFuncType(), kernelPc1, kernelPc2, mixType, aicTask->comm.kernelFlag,
-        aicTask->qos, aicTask->partId, aicTask->schemMode, aicTask->inputArgsSize.infoAddr,
+        kernel->GetTaskRation(), kernel->GetFuncType(), kernelPc1, kernelPc2,
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(mixType), RtMixTypeToString(static_cast<RtMixType>(mixType))),
+        aicTask->comm.kernelFlag, aicTask->qos, aicTask->partId, aicTask->schemMode, aicTask->inputArgsSize.infoAddr,
         aicTask->inputArgsSize.atomicIndex, kernel->ShareMemSize_(), kernel->KernelVfType_(),
         aicTask->dynamicShareMemSize, aicTask->simtDcuSmSize);
     return RT_ERROR_NONE;

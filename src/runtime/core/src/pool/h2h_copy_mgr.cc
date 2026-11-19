@@ -7,6 +7,8 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include <cinttypes>
+#include "runtime/base.h"
 #include "h2h_copy_mgr.hpp"
 #include "runtime.hpp"
 #include "error_message_manage.hpp"
@@ -24,7 +26,9 @@ H2HCopyMgr::H2HCopyMgr(
         argAllocator_ =
             new (std::nothrow) BufferAllocator(size, initCnt, maxCnt, stg, &MallocBuffer, &FreeBuffer, nullptr);
     }
-    RT_LOG(RT_LOG_INFO, "alloc h2h copy buff success, policy %d", policy_);
+    RT_LOG(
+        RT_LOG_INFO, "alloc h2h copy buff success, policy " RT_ENUM_LOG_FORMAT("%" PRIu64),
+        RT_ENUM_LOG_VALUE(static_cast<uint64_t>(policy_), H2HCopyPolicyToString(policy_)));
 }
 
 H2HCopyMgr::H2HCopyMgr(H2HCopyPolicy policy) : NoCopy(), policy_(policy) {}

@@ -7,8 +7,10 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "common/api_enum_log.hpp"
 #include "enum_desc.hpp"
 #include "npu_driver.hpp"
+#include "runtime/dev.h"
 #include "driver/ascend_hal.h"
 #include "driver/ascend_inpackage_hal.h"
 #include "runtime.hpp"
@@ -94,7 +96,12 @@ NpuDriver::NpuDriver() : Driver()
         }
     }
 
-    RT_LOG(RT_LOG_INFO, "Run mode=%u [0:offline, 1:online], env type=%" PRId64, info, envType_);
+    RT_LOG(
+        RT_LOG_INFO, "Run mode=" RT_ENUM_LOG_FORMAT("%u") ", env type=%" PRId64,
+        RT_ENUM_LOG_VALUE(
+            static_cast<uint32_t>(info),
+            (info <= RT_RUN_MODE_RESERVED ? RtRunModeToString(static_cast<rtRunMode>(info)) : "UNKNOWN")),
+        envType_);
 }
 
 uint32_t NpuDriver::GetRunMode() { return runMode_; }
@@ -1450,7 +1457,9 @@ rtError_t NpuDriver::GetAllUtilizations(const int32_t devId, const rtTypeUtil_t 
         return RT_GET_DRV_ERRCODE(drvRet);
     }
     *util = static_cast<uint8_t>(value);
-    RT_LOG(RT_LOG_INFO, "success: drv devId=%d, utilType=%d, util=%u", devId, kind, *util);
+    RT_LOG(
+        RT_LOG_INFO, "success: drv devId=%d, utilType=" RT_ENUM_LOG_FORMAT("%d") ", util=%u", devId,
+        RT_ENUM_LOG_VALUE(static_cast<int32_t>(kind), RtTypeUtilToString(kind)), *util);
     return RT_ERROR_NONE;
 }
 
@@ -1458,9 +1467,13 @@ rtError_t NpuDriver::HdcServerCreate(const int32_t devId, const rtHdcServiceType
 {
     COND_RETURN_WARN(
         &drvHdcServerCreate == nullptr, RT_ERROR_DRV_NOT_SUPPORT, "[drv api] drvHdcServerCreate does not exist");
-    RT_LOG(RT_LOG_INFO, "drvHdcServerCreate enter, drv devId=%d, type=%d", devId, type);
+    RT_LOG(
+        RT_LOG_INFO, "drvHdcServerCreate enter, drv devId=%d, type=" RT_ENUM_LOG_FORMAT("%d"), devId,
+        RT_ENUM_LOG_VALUE(static_cast<int32_t>(type), RtHdcServiceTypeToString(type)));
     const drvError_t drvRet = drvHdcServerCreate(devId, static_cast<int32_t>(type), RtPtrToPtr<HDC_SERVER*>(server));
-    RT_LOG(RT_LOG_INFO, "drvHdcServerCreate return, drv devId=%d, type=%d, drvRet=%d", devId, type, drvRet);
+    RT_LOG(
+        RT_LOG_INFO, "drvHdcServerCreate return, drv devId=%d, type=" RT_ENUM_LOG_FORMAT("%d") ", drvRet=%d", devId,
+        RT_ENUM_LOG_VALUE(static_cast<int32_t>(type), RtHdcServiceTypeToString(type)), drvRet);
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(
             drvRet, "drvHdcServerCreate call failed, drvRetCode=%d, drvDevId=%u.", static_cast<int32_t>(drvRet), devId);

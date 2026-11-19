@@ -7,6 +7,9 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
+#include "qos.hpp"
 #include "raw_device.hpp"
 #include "device_enum_desc.hpp"
 
@@ -1086,8 +1089,10 @@ static rtError_t GetOneAicoreQosCfg(const uint32_t deviceId, QosMasterConfigType
     int32_t bufSize = static_cast<int32_t>(sizeof(QosMasterConfigType));
     RT_LOG(
         RT_LOG_INFO,
-        "Begin get QOS info from halGetDeviceInfoByBuff, deviceId=%u, type=%u, moduleType=%d, infoType=%d.", deviceId,
-        aicoreQosCfg.type, MODULE_TYPE_QOS, INFO_TYPE_QOS_MASTER_CONFIG);
+        "Begin get QOS info from halGetDeviceInfoByBuff, deviceId=%u, type=" RT_ENUM_LOG_FORMAT(
+            "%u") ", moduleType=%d, infoType=%d.",
+        deviceId, RT_ENUM_LOG_VALUE(static_cast<uint32_t>(aicoreQosCfg.type), QosMasterTypeToString(aicoreQosCfg.type)),
+        MODULE_TYPE_QOS, INFO_TYPE_QOS_MASTER_CONFIG);
     const rtError_t error = NpuDriver::GetDeviceInfoByBuff(
         deviceId, MODULE_TYPE_QOS, INFO_TYPE_QOS_MASTER_CONFIG, static_cast<void*>(&aicoreQosCfg), &bufSize);
     COND_RETURN_WARN(
@@ -1101,8 +1106,11 @@ static rtError_t GetOneAicoreQosCfg(const uint32_t deviceId, QosMasterConfigType
         return RT_ERROR_DRV_ERR;
     }
     RT_LOG(
-        RT_LOG_INFO, "The QOS info from halGetDeviceInfoByBuff is: type=%u, mpamId=%u, qos=%u, pmg=%u, mode=%u.",
-        aicoreQosCfg.type, aicoreQosCfg.mpamId, aicoreQosCfg.qos, aicoreQosCfg.pmg, aicoreQosCfg.mode);
+        RT_LOG_INFO,
+        "The QOS info from halGetDeviceInfoByBuff is: type=" RT_ENUM_LOG_FORMAT(
+            "%u") ", mpamId=%u, qos=%u, pmg=%u, mode=%u.",
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(aicoreQosCfg.type), QosMasterTypeToString(aicoreQosCfg.type)),
+        aicoreQosCfg.mpamId, aicoreQosCfg.qos, aicoreQosCfg.pmg, aicoreQosCfg.mode);
     return RT_ERROR_NONE;
 }
 

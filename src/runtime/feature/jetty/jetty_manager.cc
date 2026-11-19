@@ -7,6 +7,8 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "jetty_pool.h"
+#include "runtime/base.h"
 #include "jetty_manager.h"
 #include "npu_driver.hpp"
 #include "common/internal_error_define.hpp"
@@ -93,8 +95,8 @@ rtError_t JettyManager::BindJettyForStream(int32_t streamId, const CaptureModel*
 
     jettyCtx->jettyHandle = jettyInfo.handle;
     RT_LOG(
-        RT_LOG_INFO, "Bind jetty for stream success, stream_id=%d, type=%d, jetty_id=%u.", streamId,
-        static_cast<int32_t>(type), jettyInfo.jettyId);
+        RT_LOG_INFO, "Bind jetty for stream success, stream_id=%d, type=" RT_ENUM_LOG_FORMAT("%d") ", jetty_id=%u.",
+        streamId, RT_ENUM_LOG_VALUE(static_cast<int32_t>(type), JettyTypeToString(type)), jettyInfo.jettyId);
     return RT_ERROR_NONE;
 }
 
@@ -117,7 +119,8 @@ rtError_t JettyManager::UnbindJettyForStream(int32_t streamId, JettyType type)
 
     jettyCtx->jettyHandle = 0ULL;
     RT_LOG(
-        RT_LOG_INFO, "Unbind jetty for stream success, stream_id=%d, type=%d.", streamId, static_cast<int32_t>(type));
+        RT_LOG_INFO, "Unbind jetty for stream success, stream_id=%d, type=" RT_ENUM_LOG_FORMAT("%d") ".", streamId,
+        RT_ENUM_LOG_VALUE(static_cast<int32_t>(type), JettyTypeToString(type)));
     return RT_ERROR_NONE;
 }
 
@@ -132,8 +135,8 @@ rtError_t JettyManager::FreeJettyByHandle(uint64_t handle, JettyAllocMode allocM
         error, "Release jetty by handle failed, handle=%" PRIu64 ", type=%s(%d), retCode=%#x.", handle,
         JettyTypeName(type), static_cast<int32_t>(type), error);
     RT_LOG(
-        RT_LOG_INFO, "Release jetty by handle success, handle=%" PRIu64 ", type=%d.", handle,
-        static_cast<int32_t>(type));
+        RT_LOG_INFO, "Release jetty by handle success, handle=%" PRIu64 ", type=" RT_ENUM_LOG_FORMAT("%d") ".", handle,
+        RT_ENUM_LOG_VALUE(static_cast<int32_t>(type), JettyTypeToString(type)));
     return RT_ERROR_NONE;
 }
 

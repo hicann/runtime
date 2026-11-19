@@ -8,6 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
 #include "runtime_task_manager.h"
 #include "model_execute_task.h"
 #include "profiling_task.h"
@@ -600,7 +602,9 @@ void GetExceptionArgs(TaskInfo* taskInfo, rtExceptionArgsInfo_t* argsInfo)
         return;
     }
 
-    RT_LOG(RT_LOG_INFO, "GetExceptionArgs taskInfo->type=%u", taskInfo->type);
+    RT_LOG(
+        RT_LOG_INFO, "GetExceptionArgs taskInfo->type=" RT_ENUM_LOG_FORMAT("%u"),
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(taskInfo->type), RT_ENUM_LOG_NAME(taskInfo->typeName)));
     if ((taskInfo->type != TS_TASK_TYPE_KERNEL_AICORE) && (taskInfo->type != TS_TASK_TYPE_KERNEL_AIVEC)) {
         return;
     }
@@ -711,8 +715,9 @@ void GetAicpuExceptionDetailInfo(TaskInfo* taskInfo, rtAicpuExDetailInfo_t* deta
     RT_LOG(
         RT_LOG_INFO,
         "Get AICPU exception detail info, device_id=%u, stream_id=%d, task_id=%hu, "
-        "task_type=%u.",
-        stream->Device_()->Id_(), stream->Id_(), taskInfo->id, taskInfo->type);
+        "task_type=" RT_ENUM_LOG_FORMAT("%u") ".",
+        stream->Device_()->Id_(), stream->Id_(), taskInfo->id,
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(taskInfo->type), RT_ENUM_LOG_NAME(taskInfo->typeName)));
 
     AicpuTaskInfo* const aicpuTaskInfo = &(taskInfo->u.aicpuTaskInfo);
     detailInfo->argAddr = aicpuTaskInfo->comm.args;

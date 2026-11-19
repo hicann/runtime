@@ -8,6 +8,9 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/api_enum_log.hpp"
+#include "runtime/mem_base.h"
+#include "task/task_base.hpp"
 #include "stars_david.hpp"
 #include "david_sqe_adapter.hpp"
 #include "memory_task.h"
@@ -50,21 +53,33 @@ void ConstructDavidSqeForMemcpyAsyncTask(TaskInfo* const taskInfo, void* const s
     }
 
     RT_LOG(
-        RT_LOG_INFO, "copyKind=%u, Opcode=0x%x.", static_cast<uint32_t>(copyKind),
+        RT_LOG_INFO, "copyKind=" RT_ENUM_LOG_FORMAT("%u") ", Opcode=0x%x.",
+        RT_ENUM_LOG_VALUE(
+            static_cast<uint32_t>(static_cast<uint32_t>(copyKind)),
+            MemcpyOrReduceKindToString(static_cast<uint32_t>(copyKind))),
         static_cast<uint32_t>(memcpyAsyncSqe->opcode));
 
     PrintDavidSqe(davidSqe, "sdmaTask");
     RT_LOG(
         RT_LOG_INFO,
-        "ConstructMemcpySqe, size=%u, qos=%u, partid=%u, copyType=%u, deviceId=%u, streamId=%d,"
-        "taskId=%hu",
+        "ConstructMemcpySqe, size=%u, qos=%u, partid=%u, copyType=" RT_ENUM_LOG_FORMAT(
+            "%u") ", deviceId=%u, streamId=%d,taskId=%hu",
         static_cast<uint32_t>(memcpyAsyncTaskInfo->size), memcpyAsyncSqe->qos, memcpyAsyncSqe->mapamPartId,
-        memcpyAsyncTaskInfo->copyType, taskInfo->stream->Device_()->Id_(), stream->Id_(), taskInfo->id);
+        RT_ENUM_LOG_VALUE(
+            static_cast<uint32_t>(memcpyAsyncTaskInfo->copyType),
+            (memcpyAsyncTaskInfo->copyType <= RT_MEMCPY_DIR_SDMA_AUTOMATIC_EQUAL ?
+                 RtMemCopyAsyncDirectToString(static_cast<rtMemCopyAsyncDirect>(memcpyAsyncTaskInfo->copyType)) :
+                 "UNKNOWN")),
+        taskInfo->stream->Device_()->Id_(), stream->Id_(), taskInfo->id);
 
     RT_LOG(
-        RT_LOG_INFO, "MemcpyAsyncTask, deviceId=%u, streamId=%d, taskId=%u, copyType=%u",
+        RT_LOG_INFO, "MemcpyAsyncTask, deviceId=%u, streamId=%d, taskId=%u, copyType=" RT_ENUM_LOG_FORMAT("%u"),
         taskInfo->stream->Device_()->Id_(), static_cast<int32_t>(stream->Id_()), static_cast<uint32_t>(taskInfo->id),
-        memcpyAsyncTaskInfo->copyType);
+        RT_ENUM_LOG_VALUE(
+            static_cast<uint32_t>(memcpyAsyncTaskInfo->copyType),
+            (memcpyAsyncTaskInfo->copyType <= RT_MEMCPY_DIR_SDMA_AUTOMATIC_EQUAL ?
+                 RtMemCopyAsyncDirectToString(static_cast<rtMemCopyAsyncDirect>(memcpyAsyncTaskInfo->copyType)) :
+                 "UNKNOWN")));
     UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 

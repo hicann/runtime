@@ -11,16 +11,15 @@
 #ifndef CCE_RUNTIME_ARGS_INNER_H
 #define CCE_RUNTIME_ARGS_INNER_H
 
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
+
 #include <stddef.h>
 #include "base.h"
 #include "rts/rts.h"
 #include <cstdint>
 #include "runtime/rt_inner_task.h"
 #include "runtime_handle_guard.h"
-
-#if defined(__cplusplus)
-extern "C" {
-#endif
 
 typedef struct {
     rtEngineType engineType; // only use for CHIP_DC kernel launch [vector enable]
@@ -105,6 +104,7 @@ enum ArgsType : int32_t {
     RT_SIMT_ARGS_HOST,
     RT_ARGS_MAX
 };
+RT_ENUM_LOG_DECLARE_IN_NAMESPACE(ArgsTypeToString, ArgsType)
 
 struct RtArgsWithType {
     ArgsType type;
@@ -117,9 +117,6 @@ struct RtArgsWithType {
         SimtArgsHost* simtArgsHost;
     } args;
 };
-
-#if defined(__cplusplus)
-}
 
 namespace cce {
 namespace runtime {
@@ -151,6 +148,5 @@ inline uint32_t GetSimtLaunchBlockDim(const rtDim3& gridDim)
 
 } // namespace runtime
 } // namespace cce
-#endif
 
 #endif // CCE_RUNTIME_KERNEL_H

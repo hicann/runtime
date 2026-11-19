@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/enum_log.hpp"
 #include "enum_desc.hpp"
 #include "dqs_c.hpp"
 
@@ -124,7 +125,10 @@ static rtError_t SendAccSubscribeInfo(
         (error != RT_ERROR_NONE), error, "ioctl failed, cmd=%#x, retCode=%#x", STARS_IOCTL_CMD_ACC_SUBSCRIBE_QUEUE,
         static_cast<uint32_t>(error));
     streamWithDqs->SetAccSubInfo(param);
-    RT_LOG(RT_LOG_INFO, "ioctl success, cmd=%#x", STARS_IOCTL_CMD_ACC_SUBSCRIBE_QUEUE);
+    RT_LOG(
+        RT_LOG_INFO, "ioctl success, cmd=" RT_ENUM_LOG_FORMAT("%u"),
+        RT_ENUM_LOG_VALUE(
+            static_cast<uint32_t>(STARS_IOCTL_CMD_ACC_SUBSCRIBE_QUEUE), "STARS_IOCTL_CMD_ACC_SUBSCRIBE_QUEUE"));
 
     return RT_ERROR_NONE;
 }

@@ -7,6 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "common/enum_log.hpp"
 #include <iostream>
 #include <time.h>
 #include <unistd.h>
@@ -2267,4 +2268,48 @@ TEST_F(EventTestDavid, TestPrintErrorInfoForDavidEventWaitTaskWithAicpuTimeout)
     taskInfo.id = 1;
     taskInfo.flipNum = 0;
     PrintErrorInfoForDavidEventWaitTask(&taskInfo, 0);
+}
+
+void ClearLastDlogRecordLine();
+bool DlogRecordContains(const std::string& keyword);
+
+TEST_F(EventTestDavid, EventStateLog_PreservesQueryResultAndRecordedStatus)
+{
+    rtEvent_t handle = nullptr;
+    ASSERT_EQ(rtEventCreate(&handle), RT_ERROR_NONE);
+    DavidEvent* const event = static_cast<DavidEvent*>(rt_ut::UnwrapOrNull<Event>(handle));
+    ASSERT_NE(event, nullptr);
+    MOCKER(CheckLogLevel).stubs().will(returnValue(1));
+    event->SetRecord(true);
+    const DavidEventState_t states[] = {
+        DavidEventState_t::EVT_NOT_RECORDED, DavidEventState_t::EVT_RECORDED,
+        static_cast<DavidEventState_t>(UINT8_MAX)};
+    const char* const names[] = {"EVT_NOT_RECORDED", "EVT_RECORDED", "UNKNOWN"};
+    for (size_t i = 0U; i < sizeof(states) / sizeof(states[0]); ++i) {
+        event->SetRecordStatus(states[i]);
+        ClearLastDlogRecordLine();
+        const rtError_t expected =
+            (states[i] == DavidEventState_t::EVT_NOT_RECORDED) ? RT_ERROR_EVENT_NOT_COMPLETE : RT_ERROR_NONE;
+        EXPECT_EQ(event->Query(), expected);
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+        EXPECT_TRUE(DlogRecordContains(
+            std::string("lateststate=") + names[i] + "(" + std::to_string(static_cast<int32_t>(states[i])) + ")"));
+#else
+        EXPECT_TRUE(DlogRecordContains("lateststate=" + std::to_string(static_cast<int32_t>(states[i]))));
+#endif
+        EXPECT_TRUE(DlogRecordContains("result=" + std::to_string(expected)));
+    }
+    event->SetRecordStatus(DavidEventState_t::EVT_RECORDED);
+    rtEventStatus_t status = RT_EVENT_INIT;
+    ClearLastDlogRecordLine();
+    EXPECT_EQ(event->QueryEventStatus(&status), RT_ERROR_NONE);
+    EXPECT_EQ(status, RT_EVENT_RECORDED);
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+    EXPECT_TRUE(DlogRecordContains("lateststate=EVT_RECORDED(1), status=EVENT_RECORDED(1)"));
+#else
+    EXPECT_TRUE(DlogRecordContains("lateststate=1, status=1"));
+#endif
+    event->SetRecord(false);
+    event->SetRecordStatus(DavidEventState_t::EVT_NOT_RECORDED);
+    EXPECT_EQ(rtEventDestroy(handle), RT_ERROR_NONE);
 }

@@ -8,6 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
 #include "stream.hpp"
 #include "runtime.hpp"
 #include "context.hpp"
@@ -89,19 +91,22 @@ static void ConstructDavidSqeForModelMaintainceTask(
             phSqe->u.modelMaintainceInfo.streamExecTimesAddr = modelMaintainceTaskInfo->execTimesSvmOffset;
             PrintDavidSqe(davidSqe, "ModelBindTask");
             RT_LOG(
-                RT_LOG_INFO, "model maintenance type=%d, device_id=%u, bind stream_id=%hu to modelId=%hu, task_id=%hu",
-                type, taskInfo->stream->Device_()->Id_(), phSqe->u.modelMaintainceInfo.streamId,
-                phSqe->u.modelMaintainceInfo.modelId, taskInfo->id);
+                RT_LOG_INFO,
+                "model maintenance type=" RT_ENUM_LOG_FORMAT(
+                    "%d") ", device_id=%u, bind stream_id=%hu to modelId=%hu, task_id=%hu",
+                RT_ENUM_LOG_VALUE(static_cast<int32_t>(type), "MMT_STREAM_ADD"), taskInfo->stream->Device_()->Id_(),
+                phSqe->u.modelMaintainceInfo.streamId, phSqe->u.modelMaintainceInfo.modelId, taskInfo->id);
             break;
         case MMT_STREAM_DEL:
             phSqe->header.preP = 1U;
             PrintDavidSqe(davidSqe, "ModelUnbindTask");
             RT_LOG(
                 RT_LOG_INFO,
-                "model maintenance type=%d, device_id=%u, unbind stream_id=%hu from modelId=%hu,"
-                "task_id=%hu",
-                type, taskInfo->stream->Device_()->Id_(), phSqe->u.modelMaintainceInfo.streamId,
-                phSqe->u.modelMaintainceInfo.modelId, taskInfo->id);
+                "model maintenance type=" RT_ENUM_LOG_FORMAT(
+                    "%d") ", device_id=%u, unbind stream_id=%hu from modelId=%hu,"
+                          "task_id=%hu",
+                RT_ENUM_LOG_VALUE(static_cast<int32_t>(type), "MMT_STREAM_DEL"), taskInfo->stream->Device_()->Id_(),
+                phSqe->u.modelMaintainceInfo.streamId, phSqe->u.modelMaintainceInfo.modelId, taskInfo->id);
             break;
         case MMT_MODEL_PRE_PROC:
             phSqe->header.preP = 1U;
@@ -119,33 +124,45 @@ static void ConstructDavidSqeForModelMaintainceTask(
             PrintDavidSqe(davidSqe, "ModelPreProcTask");
             RT_LOG(
                 RT_LOG_INFO,
-                "model maintenance type=%d, device_id=%u, pre proc stream_id=%hu of modelId=%hu,"
-                "endgraphNotifyId=%hu, taskId=%hu, executorFlag=%u.",
-                type, taskInfo->stream->Device_()->Id_(), phSqe->u.modelMaintainceInfo.streamId,
-                phSqe->u.modelMaintainceInfo.modelId, phSqe->u.modelMaintainceInfo.endgraphNotifyId, taskInfo->id,
-                phSqe->u.modelMaintainceInfo.executorFlag);
+                "model maintenance type=" RT_ENUM_LOG_FORMAT(
+                    "%d") ", device_id=%u, pre proc stream_id=%hu of modelId=%hu,"
+                          "endgraphNotifyId=%hu, taskId=%hu, executorFlag=" RT_ENUM_LOG_FORMAT("%u") ".",
+                RT_ENUM_LOG_VALUE(static_cast<int32_t>(type), "MMT_MODEL_PRE_PROC"), taskInfo->stream->Device_()->Id_(),
+                phSqe->u.modelMaintainceInfo.streamId, phSqe->u.modelMaintainceInfo.modelId,
+                phSqe->u.modelMaintainceInfo.endgraphNotifyId, taskInfo->id,
+                RT_ENUM_LOG_VALUE(
+                    static_cast<uint32_t>(phSqe->u.modelMaintainceInfo.executorFlag),
+                    RtModelExecutorFlagToString(
+                        static_cast<RtModelExecutorFlag>(phSqe->u.modelMaintainceInfo.executorFlag))));
             break;
         case MMT_MODEL_LOAD_COMPLETE:
             PrintDavidSqe(davidSqe, "ModelLoadCompleteTask");
             RT_LOG(
                 RT_LOG_INFO,
-                "model maintenance type=%d, device_id=%u, load complete stream_id=%hu of modelId=%hu,"
-                "task_id=%hu",
-                type, taskInfo->stream->Device_()->Id_(), phSqe->u.modelMaintainceInfo.streamId,
+                "model maintenance type=" RT_ENUM_LOG_FORMAT(
+                    "%d") ", device_id=%u, load complete stream_id=%hu of modelId=%hu,"
+                          "task_id=%hu",
+                RT_ENUM_LOG_VALUE(static_cast<int32_t>(type), "MMT_MODEL_LOAD_COMPLETE"),
+                taskInfo->stream->Device_()->Id_(), phSqe->u.modelMaintainceInfo.streamId,
                 phSqe->u.modelMaintainceInfo.modelId, taskInfo->id);
             break;
         case MMT_MODEL_ABORT:
             phSqe->header.preP = 1U;
             PrintDavidSqe(davidSqe, "ModelAbortTask");
             RT_LOG(
-                RT_LOG_INFO, "model maintenance type=%d, device_id=%u, abort stream_id=%hu of modelId=%hu, task_id=%hu",
-                type, taskInfo->stream->Device_()->Id_(), phSqe->u.modelMaintainceInfo.streamId,
-                phSqe->u.modelMaintainceInfo.modelId, taskInfo->id);
+                RT_LOG_INFO,
+                "model maintenance type=" RT_ENUM_LOG_FORMAT(
+                    "%d") ", device_id=%u, abort stream_id=%hu of modelId=%hu, task_id=%hu",
+                RT_ENUM_LOG_VALUE(static_cast<int32_t>(type), "MMT_MODEL_ABORT"), taskInfo->stream->Device_()->Id_(),
+                phSqe->u.modelMaintainceInfo.streamId, phSqe->u.modelMaintainceInfo.modelId, taskInfo->id);
             break;
         default:
             PrintDavidSqe(davidSqe, "ModelMaintainceTask");
             RT_LOG(
-                RT_LOG_INFO, "model maintenance type=%d, device_id=%u, stream_id=%hu, modelId=%hu, task_id=%hu", type,
+                RT_LOG_INFO,
+                "model maintenance type=" RT_ENUM_LOG_FORMAT(
+                    "%d") ", device_id=%u, stream_id=%hu, modelId=%hu, task_id=%hu",
+                RT_ENUM_LOG_VALUE(static_cast<int32_t>(type), MmtTypeToString(modelMaintainceTaskInfo->type)),
                 taskInfo->stream->Device_()->Id_(), phSqe->u.modelMaintainceInfo.streamId,
                 phSqe->u.modelMaintainceInfo.modelId, taskInfo->id);
             break;

@@ -10,6 +10,8 @@
 #ifndef CCE_RUNTIME_EVENT_STATE_CALLBACK_MANAGER_HPP
 #define CCE_RUNTIME_EVENT_STATE_CALLBACK_MANAGER_HPP
 
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
 #include <unordered_map>
 #include "base.hpp"
 #include "runtime.hpp"
@@ -26,6 +28,7 @@ enum class EventStatePeriod : uint8_t {
     EVENT_STATE_PERIOD_DESTROY,
     EVENT_STATE_PERIOD_TYPE_MAX
 };
+RT_ENUM_LOG_DECLARE(EventStatePeriodToString, EventStatePeriod)
 
 typedef void (*rtEventStateCallback)(Stream* stream, Event* event, EventStatePeriod period, void* args);
 

@@ -7,6 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "common/api_enum_log.hpp"
 #include "api_error.hpp"
 #include "device_enum_desc.hpp"
 #include "driver_enum_desc.hpp"
@@ -3211,8 +3212,11 @@ rtError_t ApiErrorDecorator::PointerGetAttributes(rtPointerAttributes_t* const a
     rtError_t error = impl_->PointerGetAttributes(attributes, ptr);
     ERROR_RETURN(error, "Get pointer attributes failed");
     RT_LOG(
-        RT_LOG_DEBUG, "get memory attribute locationType=%d, memoryType=%d, [1:HOST,2:DEVICE,3:SVM,4:DVPP].",
-        static_cast<int32_t>(attributes->locationType), static_cast<int32_t>(attributes->memoryType));
+        RT_LOG_DEBUG,
+        "get memory attribute locationType=" RT_ENUM_LOG_FORMAT("%d") ", memoryType=" RT_ENUM_LOG_FORMAT("%d") ".",
+        RT_ENUM_LOG_VALUE(
+            static_cast<int32_t>(attributes->locationType), RtMemLocationTypeToString(attributes->locationType)),
+        RT_ENUM_LOG_VALUE(static_cast<int32_t>(attributes->memoryType), RtMemoryTypeToString(attributes->memoryType)));
     if (attributes->locationType == RT_MEMORY_LOC_DEVICE) {
         const uint32_t drvDeviceId = attributes->deviceID;
         error = Runtime::Instance()->GetUserDevIdByDeviceId(drvDeviceId, &attributes->deviceID);
@@ -4610,7 +4614,10 @@ rtError_t GetModTaskUpIsSupport(int32_t* const val)
         *val = RT_DEV_CAP_SUPPORT;
     }
 
-    RT_LOG(RT_LOG_INFO, "chipType = %u, *val=%d", static_cast<uint32_t>(chipType), *val);
+    RT_LOG(
+        RT_LOG_INFO, "chipType = %u, *val=" RT_ENUM_LOG_FORMAT("%d"), static_cast<uint32_t>(chipType),
+        RT_ENUM_LOG_VALUE(
+            static_cast<int32_t>(*val), RtDeviceCapabilityTypeToString(static_cast<rtDeviceCapabilityType>(*val))));
     return RT_ERROR_NONE;
 }
 

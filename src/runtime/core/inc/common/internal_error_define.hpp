@@ -10,6 +10,9 @@
 #ifndef __CCE_RUNTIME_INTERNAL_ERROR_DEFINE_HPP__
 #define __CCE_RUNTIME_INTERNAL_ERROR_DEFINE_HPP__
 
+#include "enum_log.hpp"
+#include "runtime/base.h"
+
 #include <stdint.h>
 
 namespace cce {
@@ -523,6 +526,7 @@ enum class DeviceFaultType : uint8_t {
     L3_PORT_ERROR,
     NO_ERROR
 };
+RT_ENUM_LOG_DECLARE(DeviceFaultTypeToString, DeviceFaultType)
 
 } // namespace runtime
 } // namespace cce

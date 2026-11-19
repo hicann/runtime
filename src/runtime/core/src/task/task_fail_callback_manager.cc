@@ -8,6 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/api_enum_log.hpp"
+#include "runtime/base.h"
 #include "task_fail_callback_manager.hpp"
 #include "kernel_utils.hpp"
 
@@ -86,9 +88,12 @@ static void ExecuteOpExceptionCallback(Program* const program, rtExceptionInfo_t
     if (program == nullptr) {
         RT_LOG(
             RT_LOG_DEBUG,
-            "Skip binary exception callback because program is nullptr, exception_type=%d, "
-            "stream_id=%u, task_id=%u.",
-            exceptionInfo->expandInfo.type, exceptionInfo->streamid, exceptionInfo->taskid);
+            "Skip binary exception callback because program is nullptr, exception_type=" RT_ENUM_LOG_FORMAT(
+                "%d") ", stream_id=%u, task_id=%u.",
+            RT_ENUM_LOG_VALUE(
+                static_cast<int32_t>(exceptionInfo->expandInfo.type),
+                RtExceptionExpandTypeToString(exceptionInfo->expandInfo.type)),
+            exceptionInfo->streamid, exceptionInfo->taskid);
         return;
     }
 

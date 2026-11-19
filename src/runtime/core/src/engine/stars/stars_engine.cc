@@ -7,6 +7,9 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "common/enum_log.hpp"
+#include "task_enum_desc.hpp"
+#include "runtime/base.h"
 #include "stars_engine.hpp"
 #include <algorithm>
 #include <memory>
@@ -53,6 +56,16 @@ std::vector<cce::runtime::StarsMonitorTask> g_starsMonitorTasks;
 
 namespace cce {
 namespace runtime {
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+static const char_t* ReportTaskTypeName(const TaskInfo* const taskInfo)
+{
+    if ((taskInfo == nullptr) || (taskInfo->typeName == nullptr)) {
+        return "UNKNOWN";
+    }
+    return taskInfo->typeName;
+}
+#endif
+
 rtError_t RegisterStarsMonitorTask(const StarsMonitorTask task)
 {
     COND_RETURN_ERROR(task == nullptr, RT_ERROR_INVALID_VALUE, "Stars monitor task is null.");
@@ -995,9 +1008,12 @@ void StarsEngine::ProcReport(
         RT_LOG(
             RT_LOG_INFO,
             "Get logic report: cnt=%u, idx=%u, stream_id=%hu, report task_id=%u, sync task_id=%u,"
-            " sqeType=%u, sqeHead=%u, retCode=%#x, errType=%#x, taskType=%d.",
+            " sqeType=%u, sqeHead=%u, retCode=%#x, errType=%#x, taskType=" RT_ENUM_LOG_FORMAT("%d") ".",
             cnt, idx, report.streamId, taskIdCur, taskId, static_cast<uint32_t>(sqeType), report.sqHead,
-            report.errorCode, report.errorType, (reportTask == nullptr) ? 0xFF : reportTask->type);
+            report.errorCode, report.errorType,
+            RT_ENUM_LOG_VALUE(
+                static_cast<int32_t>((reportTask == nullptr) ? 0xFF : reportTask->type),
+                ReportTaskTypeName(reportTask)));
         if (unlikely(reportTask == nullptr)) {
             RT_LOG(
                 RT_LOG_WARNING, "GetTask error, device_id=%u, stream_id=%hu, task_id=%hu", GetDevice()->Id_(),
@@ -1631,7 +1647,9 @@ rtError_t StarsEngine::ReportLogicCq(const rtCqReport_t& report, rtDvppGrpCallba
     }
 
     const tsTaskType_t taskType = reportTask->type;
-    RT_LOG(RT_LOG_DEBUG, "ReportLogicCq get taskType=%u", taskType);
+    RT_LOG(
+        RT_LOG_DEBUG, "ReportLogicCq get taskType=" RT_ENUM_LOG_FORMAT("%u"),
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(taskType), ReportTaskTypeName(reportTask)));
     if ((taskType == TS_TASK_TYPE_MULTIPLE_TASK) && (reportTask->sqeNum > 1U)) {
         return MultipleTaskReportLogicCq(reportTask, report, callBackFunc);
     }

@@ -10,6 +10,7 @@
 #ifndef STREAM_MEM_POOL_HPP
 #define STREAM_MEM_POOL_HPP
 
+#include "common/enum_log.hpp"
 #include <cstdint>
 #include <set>
 #include <vector>
@@ -118,6 +119,7 @@ enum class ReuseFlag : int32_t {
     REUSE_FLAG_NONE = 2,
     REUSE_FLAG_INVALID = 0XFFFF,
 };
+RT_ENUM_LOG_DECLARE(ReuseFlagToString, ReuseFlag)
 
 enum class SomaAsyncConfigType : int32_t {
     SOMA_ASYNC_CONFIG_MALLOC = 0,

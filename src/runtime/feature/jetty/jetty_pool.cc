@@ -7,6 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "runtime/base.h"
 #include "jetty_pool.h"
 #include "runtime.hpp"
 #include "npu_driver.hpp"
@@ -68,8 +69,11 @@ rtError_t JettyPool::CreateJetty(JettyType type, uint32_t depth, JettyInfo& jett
     jettyInfo.state = JettyState::FREE;
 
     RT_LOG(
-        RT_LOG_INFO, "Create jetty success, device_id=%u, type=%d, depth=%u, jetty_id=%u, die_id=%u, func_id=%u.",
-        deviceId_, static_cast<int32_t>(type), depth, jettyId, dieId, functionId);
+        RT_LOG_INFO,
+        "Create jetty success, device_id=%u, type=" RT_ENUM_LOG_FORMAT(
+            "%d") ", depth=%u, jetty_id=%u, die_id=%u, func_id=%u.",
+        deviceId_, RT_ENUM_LOG_VALUE(static_cast<int32_t>(type), JettyTypeToString(type)), depth, jettyId, dieId,
+        functionId);
     return RT_ERROR_NONE;
 }
 
@@ -105,12 +109,14 @@ rtError_t JettyPool::PreAllocJetty(JettyType type)
         newJetty.state = JettyState::FREE;
         poolPtr->push_back(newJetty);
         RT_LOG(
-            RT_LOG_INFO, "Create jetty (FREE), device_id=%u, type=%d, jetty_id=%u.", deviceId_,
-            static_cast<int32_t>(type), newJetty.jettyId);
+            RT_LOG_INFO, "Create jetty (FREE), device_id=%u, type=" RT_ENUM_LOG_FORMAT("%d") ", jetty_id=%u.",
+            deviceId_, RT_ENUM_LOG_VALUE(static_cast<int32_t>(type), JettyTypeToString(type)), newJetty.jettyId);
         return RT_ERROR_NONE;
     }
 
-    RT_LOG(RT_LOG_DEBUG, "Jetty pool exhausted, device_id=%u, type=%d.", deviceId_, static_cast<int32_t>(type));
+    RT_LOG(
+        RT_LOG_DEBUG, "Jetty pool exhausted, device_id=%u, type=" RT_ENUM_LOG_FORMAT("%d") ".", deviceId_,
+        RT_ENUM_LOG_VALUE(static_cast<int32_t>(type), JettyTypeToString(type)));
     return RT_ERROR_NONE;
 }
 
@@ -155,8 +161,8 @@ rtError_t JettyPool::AllocJetty(JettyType type, JettyInfo& jettyInfo)
         freeJetty->state = JettyState::BOUND;
         jettyInfo = *freeJetty;
         RT_LOG(
-            RT_LOG_INFO, "Acquire jetty (FREE->BOUND), device_id=%u, type=%d, jetty_id=%u.", deviceId_,
-            static_cast<int32_t>(type), freeJetty->jettyId);
+            RT_LOG_INFO, "Acquire jetty (FREE->BOUND), device_id=%u, type=" RT_ENUM_LOG_FORMAT("%d") ", jetty_id=%u.",
+            deviceId_, RT_ENUM_LOG_VALUE(static_cast<int32_t>(type), JettyTypeToString(type)), freeJetty->jettyId);
         return RT_ERROR_NONE;
     }
 
@@ -196,8 +202,9 @@ rtError_t JettyPool::AllocDirectJetty(JettyType type, uint32_t depth, JettyInfo&
     jettyInfo = newJetty;
 
     RT_LOG(
-        RT_LOG_INFO, "Create direct jetty success, device_id=%u, type=%d, depth=%u, jetty_id=%u.", deviceId_,
-        static_cast<int32_t>(type), depth, newJetty.jettyId);
+        RT_LOG_INFO,
+        "Create direct jetty success, device_id=%u, type=" RT_ENUM_LOG_FORMAT("%d") ", depth=%u, jetty_id=%u.",
+        deviceId_, RT_ENUM_LOG_VALUE(static_cast<int32_t>(type), JettyTypeToString(type)), depth, newJetty.jettyId);
     return RT_ERROR_NONE;
 }
 

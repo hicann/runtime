@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/enum_log.hpp"
 #include "enum_desc.hpp"
 #include "device_debug_c.hpp"
 #include "program.hpp"
@@ -211,10 +212,11 @@ rtError_t DebugReadAICore(const rtDebugMemoryParam_t* const param, const Device*
     COND_RETURN_WITH_NOLOG((ret != RT_ERROR_NONE), ret);
     RT_LOG(
         RT_LOG_DEBUG,
-        "coreType=%u, coreId=%u, debugMemType=%u, elementSize=%u, "
-        "memLen=%llu, srcAddr=0x%llx, dstAddr=0x%llx.",
-        param->coreType, param->coreId, param->debugMemType, param->elementSize, param->memLen, param->srcAddr,
-        param->dstAddr);
+        "coreType=%u, coreId=%u, debugMemType=" RT_ENUM_LOG_FORMAT("%u") ", elementSize=%u, "
+                                                                         "memLen=%llu, srcAddr=0x%llx, dstAddr=0x%llx.",
+        param->coreType, param->coreId,
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(param->debugMemType), DebugMemoryTypeName(param->debugMemType)),
+        param->elementSize, param->memLen, param->srcAddr, param->dstAddr);
 
     Driver* const devDrv = curDevice->Driver_();
     NULL_PTR_RETURN(devDrv, RT_ERROR_DRV_PTRNULL);

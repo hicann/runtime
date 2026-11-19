@@ -7,6 +7,9 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "common/enum_log.hpp"
+#include "task_enum_desc.hpp"
+#include "runtime/base.h"
 #include "stream_david.hpp"
 #include "stream_sqcq_manage.hpp"
 #include "runtime.hpp"
@@ -19,7 +22,6 @@
 #include "count_notify.hpp"
 #include "device/device_error_proc.hpp"
 #include "aicpu_sched/common/aicpu_task_struct.h"
-#include "context.hpp"
 #include "runtime_tsch_defines.h"
 #include "profiler.hpp"
 #include "stars.hpp"
@@ -98,7 +100,9 @@ static rtError_t ReportLogicCq(
     }
 
     const tsTaskType_t taskType = reportTask->type;
-    RT_LOG(RT_LOG_DEBUG, "ReportLogicCq get taskType=%u.", taskType);
+    RT_LOG(
+        RT_LOG_DEBUG, "ReportLogicCq get taskType=" RT_ENUM_LOG_FORMAT("%u") ".",
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(taskType), RT_ENUM_LOG_NAME(reportTask->typeName)));
     if ((taskType == TS_TASK_TYPE_MULTIPLE_TASK) && (reportTask->sqeNum > 1U)) {
         if (!CompleteProcMultipleTaskReport(reportTask, report)) {
             RT_LOG(

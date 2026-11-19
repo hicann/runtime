@@ -10,6 +10,8 @@
 #ifndef __CCE_RUNTIME_AIC_AIV_SQE_COMMON_HPP__
 #define __CCE_RUNTIME_AIC_AIV_SQE_COMMON_HPP__
 
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
 #include "runtime.hpp"
 #include "stars_david.hpp"
 #include "task_execute_time.h"
@@ -360,10 +362,12 @@ inline void ConstructMixSqeCommonForDavinciTask(TaskInfo* const taskInfo, SqeTyp
 
     RT_LOG(
         RT_LOG_INFO,
-        "set cfgInfo schemMode=%u, sqe_schem=%u, taskType=%u, ratio=%u, mix=%u, loose=%u, piMix=%u,"
-        "aivSimtDcuSmSize=%u, featureFlag=0x%x.",
-        aicTaskInfo->schemMode, sqe->schem, taskInfo->type, sqe->ratio, sqe->mix, sqe->loose, sqe->piMix,
-        sqe->aivSimtDcuSmSize, sqe->featureFlag);
+        "set cfgInfo schemMode=%u, sqe_schem=%u, taskType=" RT_ENUM_LOG_FORMAT(
+            "%u") ", ratio=%u, mix=%u, loose=%u, piMix=%u,"
+                  "aivSimtDcuSmSize=%u, featureFlag=0x%x.",
+        aicTaskInfo->schemMode, sqe->schem,
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(taskInfo->type), RT_ENUM_LOG_NAME(taskInfo->typeName)), sqe->ratio,
+        sqe->mix, sqe->loose, sqe->piMix, sqe->aivSimtDcuSmSize, sqe->featureFlag);
 }
 
 } // namespace runtime

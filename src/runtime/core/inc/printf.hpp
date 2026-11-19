@@ -10,6 +10,8 @@
 #ifndef CCE_RUNTIME_PRINTF_HPP
 #define CCE_RUNTIME_PRINTF_HPP
 
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
 #include "base.hpp"
 #include "driver.hpp"
 
@@ -51,6 +53,7 @@ enum class DumpType : uint32_t {
     DUMP_SIMT_PRINTF = 0xF0F00F0FU,
     DUMP_WAIT = 0xF0A55A0FU
 };
+RT_ENUM_LOG_DECLARE(DumpTypeToString, DumpType)
 
 #pragma pack(push, 1)
 struct DumpInfoHead {

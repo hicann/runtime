@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "runtime/rt_inner_device.h"
+#include "common/api_enum_log.hpp"
 #include <limits>
 #include <new>
 #include <set>
@@ -913,8 +914,11 @@ rtError_t ApiImpl::BinaryGetFunctionByName(
     const Program* const binHandle, const char_t* kernelName, Kernel** const funcHandle)
 {
     RT_LOG(
-        RT_LOG_DEBUG, "BinaryGetFunction prog=%p,kernel_name=%s,kernelRegType=%d", binHandle, kernelName,
-        binHandle->GetKernelRegType());
+        RT_LOG_DEBUG, "BinaryGetFunction prog=%p,kernel_name=%s,kernelRegType=" RT_ENUM_LOG_FORMAT("%d"), binHandle,
+        kernelName,
+        RT_ENUM_LOG_VALUE(
+            static_cast<int32_t>(binHandle->GetKernelRegType()),
+            KernelRegisterTypeToString(binHandle->GetKernelRegType())));
     Kernel* kerneltmp = nullptr;
     *funcHandle = nullptr;
     const rtError_t error = Runtime::Instance()->BinaryGetFunctionByName(binHandle, kernelName, &kerneltmp);
@@ -1193,8 +1197,9 @@ rtError_t ApiImpl::LaunchKernelV2(
     const rtKernelLaunchCfg_t* const cfg)
 {
     RT_LOG(
-        RT_LOG_DEBUG, "launch kernel V2, blockDim=%u, argsType=%u, cfgAttrNum=%zu.", blockDim,
-        static_cast<uint32_t>(argsWithType->type), ((cfg != nullptr) ? cfg->numAttrs : 0UL));
+        RT_LOG_DEBUG, "launch kernel V2, blockDim=%u, argsType=" RT_ENUM_LOG_FORMAT("%u") ", cfgAttrNum=%zu.", blockDim,
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(argsWithType->type), ArgsTypeToString(argsWithType->type)),
+        ((cfg != nullptr) ? cfg->numAttrs : 0UL));
     TaskCfg taskCfg = {};
     rtError_t error = ConvertLaunchCfgToTaskCfg(taskCfg, cfg);
     ERROR_RETURN(error, "convert task cfg failed, retCode=%#x.", error);
@@ -3795,7 +3800,9 @@ rtError_t ApiImpl::ModelExit(Model* const mdl, Stream* const stm)
 
 rtError_t ApiImpl::ModelBindQueue(Model* const mdl, const uint32_t queueId, const rtModelQueueFlag_t flag)
 {
-    RT_LOG(RT_LOG_DEBUG, "model bind queue. modelId=%u, queueId=%u, flag=%d", mdl->Id_(), queueId, flag);
+    RT_LOG(
+        RT_LOG_DEBUG, "model bind queue. modelId=%u, queueId=%u, flag=" RT_ENUM_LOG_FORMAT("%d"), mdl->Id_(), queueId,
+        RT_ENUM_LOG_VALUE(static_cast<int32_t>(flag), RtModelQueueFlagToString(flag)));
 
     const rtError_t error = AiCpuTaskSupportCheck();
     COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
@@ -4371,11 +4378,18 @@ rtError_t ApiImpl::CallbackLaunchWithEvent(
             (void)EventDestroy(curEvent);
             return ret;
         }
+        const StreamSubscribeFlag launchSubscribeFlag = launchStm->GetSubscribeFlag();
+        const StreamSubscribeFlag originalSubscribeFlag = stm->GetSubscribeFlag();
         RT_LOG(
             RT_LOG_INFO,
-            "Launched stream_id=%d, launchSubscribeFlag=%d, original stream_id=%d, originalSubscribeFlag=%d",
-            launchStm->Id_(), static_cast<int32_t>(launchStm->GetSubscribeFlag()), stm->Id_(),
-            static_cast<int32_t>(stm->GetSubscribeFlag()));
+            "Launched stream_id=%d, launchSubscribeFlag=" RT_ENUM_LOG_FORMAT(
+                "%d") ", original stream_id=%d, originalSubscribeFlag=" RT_ENUM_LOG_FORMAT("%d"),
+            launchStm->Id_(),
+            RT_ENUM_LOG_VALUE(
+                static_cast<int32_t>(launchSubscribeFlag), StreamSubscribeFlagToString(launchSubscribeFlag)),
+            stm->Id_(),
+            RT_ENUM_LOG_VALUE(
+                static_cast<int32_t>(originalSubscribeFlag), StreamSubscribeFlagToString(originalSubscribeFlag)));
     } else {
         ret = rtInstance->GetEventByStreamId(dev->Id_(), stm->AllocTaskStreamId(), &curEvent);
         ERROR_RETURN(
@@ -4440,11 +4454,20 @@ rtError_t ApiImpl::CallbackLaunchWithoutEvent(
         if (ret != RT_ERROR_NONE) {
             return ret;
         }
-        RT_LOG(
-            RT_LOG_INFO,
-            "Launched stream_id=%d, launchSubscribeFlag=%d, original stream_id=%d, originalSubscribeFlag=%d",
-            launchStm->Id_(), static_cast<int32_t>(launchStm->GetSubscribeFlag()), stm->Id_(),
-            static_cast<int32_t>(stm->GetSubscribeFlag()));
+        if (CheckLogLevel(static_cast<int32_t>(RUNTIME), DLOG_INFO) == 1) {
+            const StreamSubscribeFlag launchSubscribeFlag = launchStm->GetSubscribeFlag();
+            const StreamSubscribeFlag originalSubscribeFlag = stm->GetSubscribeFlag();
+            RT_LOG(
+                RT_LOG_INFO,
+                "Launched stream_id=%d, launchSubscribeFlag=" RT_ENUM_LOG_FORMAT(
+                    "%d") ", original stream_id=%d, originalSubscribeFlag=" RT_ENUM_LOG_FORMAT("%d"),
+                launchStm->Id_(),
+                RT_ENUM_LOG_VALUE(
+                    static_cast<int32_t>(launchSubscribeFlag), StreamSubscribeFlagToString(launchSubscribeFlag)),
+                stm->Id_(),
+                RT_ENUM_LOG_VALUE(
+                    static_cast<int32_t>(originalSubscribeFlag), StreamSubscribeFlagToString(originalSubscribeFlag)));
+        }
     }
 
     (void)CallbackLaunchTaskInit(rtCbLaunchTask, callBackFunc, fnData, isBlock, INVALID_EVENT_ID);
@@ -5292,8 +5315,8 @@ rtError_t ApiImpl::SetOpWaitTimeOut(const uint32_t timeout)
 rtError_t ApiImpl::SetOpExecuteTimeOut(const uint32_t timeout, const RtTaskTimeUnitType timeUnitType)
 {
     RT_LOG(
-        RT_LOG_DEBUG, "set op execute timeout, timeout=%us, timeUnitType=%d.", timeout,
-        static_cast<int32_t>(timeUnitType));
+        RT_LOG_DEBUG, "set op execute timeout, timeout=%us, timeUnitType=" RT_ENUM_LOG_FORMAT("%d") ".", timeout,
+        RT_ENUM_LOG_VALUE(static_cast<int32_t>(timeUnitType), RtTaskTimeUnitTypeToString(timeUnitType)));
     rtError_t ret = RT_ERROR_NONE;
     Runtime* const rtInstance = Runtime::Instance();
     NULL_PTR_RETURN_MSG(rtInstance, RT_ERROR_INSTANCE_NULL);
@@ -5418,7 +5441,11 @@ rtError_t ApiImpl::GetModelTaskUpdateIsSupport(const int32_t deviceId, int32_t* 
         *val = RT_DEV_CAP_SUPPORT;
     }
 
-    RT_LOG(RT_LOG_INFO, "chipType = %u,TsVersion=%u,*val=%d", static_cast<uint32_t>(chipType), tschVersion, *val);
+    RT_LOG(
+        RT_LOG_INFO, "chipType = %u,TsVersion=%u,*val=" RT_ENUM_LOG_FORMAT("%d"), static_cast<uint32_t>(chipType),
+        tschVersion,
+        RT_ENUM_LOG_VALUE(
+            static_cast<int32_t>(*val), RtDeviceCapabilityTypeToString(static_cast<rtDeviceCapabilityType>(*val))));
     return RT_ERROR_NONE;
 }
 
@@ -5637,7 +5664,9 @@ rtError_t ApiImpl::MemQueueQuery(
     const int32_t devId, const rtMemQueueQueryCmd_t cmd, const void* const inBuff, const uint32_t inLen,
     void* const outBuff, uint32_t* const outLen)
 {
-    RT_LOG(RT_LOG_DEBUG, "Start to query queue on drv devId %d, cmd is %d.", devId, cmd);
+    RT_LOG(
+        RT_LOG_DEBUG, "Start to query queue on drv devId %d, cmd is " RT_ENUM_LOG_FORMAT("%d") ".", devId,
+        RT_ENUM_LOG_VALUE(static_cast<int32_t>(cmd), RtMemQueueQueryCmdToString(cmd)));
     COND_RETURN_ERROR(
         CheckCurCtxValid(devId) != RT_ERROR_NONE, RT_ERROR_CONTEXT_NULL, "Current Context is null, drv devId[%d].",
         devId);
@@ -5726,7 +5755,9 @@ rtError_t ApiImpl::BuffGetInfo(
     const rtBuffGetCmdType type, const void* const inBuff, const uint32_t inLen, void* const outBuff,
     uint32_t* const outLen)
 {
-    RT_LOG(RT_LOG_DEBUG, "Start to buff get info, type is %d.", static_cast<int32_t>(type));
+    RT_LOG(
+        RT_LOG_DEBUG, "Start to buff get info, type is " RT_ENUM_LOG_FORMAT("%d") ".",
+        RT_ENUM_LOG_VALUE(static_cast<int32_t>(type), RtBuffGetCmdTypeToString(type)));
 
     return NpuDriver::BuffGetInfo(type, inBuff, inLen, outBuff, outLen);
 }
@@ -5981,7 +6012,9 @@ rtError_t ApiImpl::CleanDeviceSatStatus(Stream* const stm)
 
 rtError_t ApiImpl::GetAllUtilizations(const int32_t devId, const rtTypeUtil_t kind, uint8_t* const util)
 {
-    RT_LOG(RT_LOG_DEBUG, "drv devId=%d, util type=%d.", devId, kind);
+    RT_LOG(
+        RT_LOG_DEBUG, "drv devId=%d, util type=" RT_ENUM_LOG_FORMAT("%d") ".", devId,
+        RT_ENUM_LOG_VALUE(static_cast<int32_t>(kind), RtTypeUtilToString(kind)));
     COND_RETURN_ERROR(
         CheckCurCtxValid(devId) != RT_ERROR_NONE, RT_ERROR_CONTEXT_NULL, "Current Context is null, drv devId[%d].",
         devId);
@@ -6011,15 +6044,20 @@ rtError_t ApiImpl::GetTaskBufferLen(const rtTaskBuffType_t type, uint32_t* const
                 "[0, " + std::to_string(MAX_TASK) + ")");
             return RT_ERROR_INVALID_VALUE;
     }
-    RT_LOG(RT_LOG_INFO, "Get Task Buffer Len success. bufferLen=%zu, task type=%d.", *bufferLen, type);
+    RT_LOG(
+        RT_LOG_INFO, "Get Task Buffer Len success. bufferLen=%zu, task type=" RT_ENUM_LOG_FORMAT("%d") ".",
+        static_cast<size_t>(*bufferLen), RT_ENUM_LOG_VALUE(static_cast<int32_t>(type), RtTaskBuffTypeToString(type)));
     return RT_ERROR_NONE;
 }
 
 rtError_t ApiImpl::TaskSqeBuild(const rtTaskInput_t* const taskInput, uint32_t* const taskLen)
 {
     RT_LOG(
-        RT_LOG_DEBUG, "Start to build task sqe, stream_id=%hu, taskType=%u.", taskInput->compilerInfo.streamId,
-        taskInput->compilerInfo.taskType);
+        RT_LOG_DEBUG, "Start to build task sqe, stream_id=%hu, taskType=" RT_ENUM_LOG_FORMAT("%u") ".",
+        taskInput->compilerInfo.streamId,
+        RT_ENUM_LOG_VALUE(
+            static_cast<uint32_t>(taskInput->compilerInfo.taskType),
+            RtTaskTypeToString(taskInput->compilerInfo.taskType)));
     return ConstructSqeByTaskInput(taskInput, taskLen);
 }
 
@@ -6378,7 +6416,9 @@ rtError_t ApiImpl::GetDeviceStatus(const int32_t devId, rtDevStatus_t* const sta
 
 rtError_t ApiImpl::HdcServerCreate(const int32_t devId, const rtHdcServiceType_t type, rtHdcServer_t* const server)
 {
-    RT_LOG(RT_LOG_DEBUG, "HdcServerCreate, drv devId=%d, type = %d.", devId, type);
+    RT_LOG(
+        RT_LOG_DEBUG, "HdcServerCreate, drv devId=%d, type = " RT_ENUM_LOG_FORMAT("%d") ".", devId,
+        RT_ENUM_LOG_VALUE(static_cast<int32_t>(type), RtHdcServiceTypeToString(type)));
     return NpuDriver::HdcServerCreate(devId, type, server);
 }
 
@@ -6543,7 +6583,9 @@ rtError_t ApiImpl::GetErrorVerbose(const uint32_t deviceId, rtErrorInfo* const e
     NULL_PTR_RETURN(dev, RT_ERROR_DEVICE_NULL);
 
     const DeviceFaultType faultType = dev->GetDeviceFaultType();
-    RT_LOG(RT_LOG_DEBUG, "start GetErrorVerbose, device_id=%u, type=%u", deviceId, faultType);
+    RT_LOG(
+        RT_LOG_DEBUG, "start GetErrorVerbose, device_id=%u, type=" RT_ENUM_LOG_FORMAT("%u"), deviceId,
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(faultType), DeviceFaultTypeToString(faultType)));
     errorInfo->hasDetail = 0U;
     errorInfo->tryRepair = 0U;
     switch (faultType) {
@@ -7104,8 +7146,9 @@ rtError_t ApiImpl::ModelTaskDisable(rtTask_t task)
     captureModel->ClearTaskExtendInfo(taskInfo->stream->Id_(), GetTaskId(taskInfo));
     taskInfo->updateFlag = static_cast<uint8_t>(TaskUpdateFlag::RT_TASK_DISABLE);
     RT_LOG(
-        RT_LOG_INFO, "stream_id=%d, task_id=%hu, typeName=%s, task type=%d", taskInfo->stream->Id_(),
-        GetTaskId(taskInfo), taskInfo->typeName, taskInfo->type);
+        RT_LOG_INFO, "stream_id=%d, task_id=%hu, task type=" RT_ENUM_LOG_FORMAT("%d"), taskInfo->stream->Id_(),
+        GetTaskId(taskInfo),
+        RT_ENUM_LOG_VALUE(static_cast<int32_t>(taskInfo->type), RT_ENUM_LOG_NAME(taskInfo->typeName)));
     return RT_ERROR_NONE;
 }
 

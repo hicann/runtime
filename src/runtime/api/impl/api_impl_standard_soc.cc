@@ -7,6 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "common/api_enum_log.hpp"
 #include <map>
 #include <string>
 #include "api_impl.hpp"
@@ -869,7 +870,9 @@ rtError_t ApiImpl::ProcError(rtError_t error)
 
 rtError_t ApiImpl::GetDevMsg(const rtGetDevMsgType_t getMsgType, rtGetMsgCallback const callback)
 {
-    RT_LOG(RT_LOG_DEBUG, "GetDeviceMsg, getMsgType=%d", static_cast<int32_t>(getMsgType));
+    RT_LOG(
+        RT_LOG_DEBUG, "GetDeviceMsg, getMsgType=" RT_ENUM_LOG_FORMAT("%d"),
+        RT_ENUM_LOG_VALUE(static_cast<int32_t>(getMsgType), RtGetDevMsgTypeToString(getMsgType)));
     const auto chipType = Runtime::Instance()->GetChipType();
     COND_PROC_RETURN_AND_MSG_OUTER(
         !IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_DFX_TS_GET_DEVICE_MSG),
@@ -1436,8 +1439,10 @@ rtError_t ApiImpl::TaskSetParams(rtTask_t task, rtTaskParams* const params, Kern
     taskInfo->updateFlag = static_cast<uint8_t>(TaskUpdateFlag::RT_TASK_UPDATE);
 
     RT_LOG(
-        RT_LOG_INFO, "cache task params success, stream_id=%d, task_id=%hu, typeName=%s, task type=%d, target type=%s",
-        taskInfo->stream->Id_(), taskInfo->id, taskInfo->typeName, taskInfo->type,
+        RT_LOG_INFO,
+        "cache task params success, stream_id=%d, task_id=%hu, task type=" RT_ENUM_LOG_FORMAT("%d") ", target type=%s",
+        taskInfo->stream->Id_(), taskInfo->id,
+        RT_ENUM_LOG_VALUE(static_cast<int32_t>(taskInfo->type), RT_ENUM_LOG_NAME(taskInfo->typeName)),
         TaskTypeToString(params->type).c_str());
     return RT_ERROR_NONE;
 }

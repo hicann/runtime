@@ -8,6 +8,9 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/enum_log.hpp"
+#include "kernel.hpp"
+#include "runtime/base.h"
 #include "stars_david.hpp"
 #include "david_sqe_adapter.hpp"
 #include "runtime_task_manager.h"
@@ -142,8 +145,12 @@ void GetDcachePrefetchCnt(const TaskInfo* taskInfo, RtArch920xStarsAicAivKernelS
     }
 
     RT_LOG(
-        RT_LOG_DEBUG, "get dcache prefetch cnt success, dcachePrefetchCnt=%u, taskType=%u, mixType=%hhu, isAic=%u",
-        dcachePrefetchCnt, taskInfo->type, mixType, isAic);
+        RT_LOG_DEBUG,
+        "get dcache prefetch cnt success, dcachePrefetchCnt=%u, taskType=" RT_ENUM_LOG_FORMAT(
+            "%u") ", mixType=" RT_ENUM_LOG_FORMAT("%u") ", isAic=%u",
+        dcachePrefetchCnt,
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(taskInfo->type), RT_ENUM_LOG_NAME(taskInfo->typeName)),
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(mixType), RtMixTypeToString(static_cast<RtMixType>(mixType))), isAic);
     return;
 }
 

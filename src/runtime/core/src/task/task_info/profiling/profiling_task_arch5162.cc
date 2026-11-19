@@ -8,6 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
 #include <cinttypes>
 #include "stream.hpp"
 #include "debug_task.h"
@@ -36,10 +38,14 @@ void ConstructSqeForProfilingEnableTask(TaskInfo* const taskInfo, void* const sq
     PrintSqe(command, "ProfilingEnableTask");
     RT_LOG(
         RT_LOG_INFO,
-        "Launch ProfilingEnableTask succ, "
-        "sqeType=%u, wrCqe=%d, preP=%u, rtStreamId=%u, taskId=%u, sqeSubType=%u, pid=%" PRIu64 ".",
-        sqe->header.type, sqe->header.wrCqe, sqe->header.preP, sqe->header.rtStreamId, sqe->header.taskId,
-        sqe->header.u.sqeSubType, profilingEnableTaskInfo->pid);
+        "Launch ProfilingEnableTask succ, sqeType=" RT_ENUM_LOG_FORMAT("%u") ", wrCqe=%d, preP=" RT_ENUM_LOG_FORMAT(
+            "%u") ", rtStreamId=%u, taskId=%u, sqeSubType=" RT_ENUM_LOG_FORMAT("%u") ", "
+                                                                                     "pid=%" PRIu64 ".",
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(sqe->header.type), "STARS_SQE_TYPE_PLACE_HOLDER"), sqe->header.wrCqe,
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(sqe->header.preP), "STARS_SQE_INT_DIR_TO_TSCPU"),
+        sqe->header.rtStreamId, sqe->header.taskId,
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(sqe->header.u.sqeSubType), "SQE_SUBTYPE_PROFILER_DYNAMIC_ENABLE"),
+        profilingEnableTaskInfo->pid);
 }
 #endif
 
@@ -62,10 +68,14 @@ void ConstructSqeForProfilingDisableTask(TaskInfo* const taskInfo, void* const s
     PrintSqe(command, "ProfilingDisableTask");
     RT_LOG(
         RT_LOG_INFO,
-        "Launch ProfilingDisableTask succ, "
-        "sqeType=%u, wrCqe=%d, preP=%u, rtStreamId=%u, taskId=%u, sqeSubType=%u, pid=%" PRIu64 ".",
-        sqe->header.type, sqe->header.wrCqe, sqe->header.preP, sqe->header.rtStreamId, sqe->header.taskId,
-        sqe->header.u.sqeSubType, profilingDisableTaskInfo->pid);
+        "Launch ProfilingDisableTask succ, sqeType=" RT_ENUM_LOG_FORMAT("%u") ", wrCqe=%d, preP=" RT_ENUM_LOG_FORMAT(
+            "%u") ", rtStreamId=%u, taskId=%u, sqeSubType=" RT_ENUM_LOG_FORMAT("%u") ", "
+                                                                                     "pid=%" PRIu64 ".",
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(sqe->header.type), "STARS_SQE_TYPE_PLACE_HOLDER"), sqe->header.wrCqe,
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(sqe->header.preP), "STARS_SQE_INT_DIR_TO_TSCPU"),
+        sqe->header.rtStreamId, sqe->header.taskId,
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(sqe->header.u.sqeSubType), "SQE_SUBTYPE_PROFILER_DYNAMIC_DISABLE"),
+        profilingDisableTaskInfo->pid);
 }
 #endif
 

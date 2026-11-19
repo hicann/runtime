@@ -7,6 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "common/enum_log.hpp"
 #include "npu_driver.hpp"
 #include "device_enum_desc.hpp"
 #include "driver/ascend_hal.h"
@@ -1037,8 +1038,8 @@ rtError_t NpuDriver::ManagedMemAllocInner(
     }
 
     RT_LOG(
-        RT_LOG_INFO, "Manager mem alloc, device_id=%u, size=%" PRIu64 ", flag=%d, huge=%u.", deviceId, size,
-        static_cast<int32_t>(flag), hugePage);
+        RT_LOG_INFO, "Manager mem alloc, device_id=%u, size=%" PRIu64 ", flag=" RT_ENUM_LOG_FORMAT("%d") ", huge=%u.",
+        deviceId, size, RT_ENUM_LOG_VALUE(static_cast<int32_t>(flag), Driver::ManagedMemFlagToString(flag)), hugePage);
     return RT_ERROR_NONE;
 }
 

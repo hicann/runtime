@@ -7,6 +7,8 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "common/api_enum_log.hpp"
+#include "runtime/base.h"
 #include "npu_driver.hpp"
 #include "driver/ascend_hal.h"
 #include "driver/ascend_inpackage_hal.h"
@@ -81,7 +83,9 @@ rtError_t NpuDriver::BuffGetInfo(
     const rtBuffGetCmdType type, const void* const inBuff, const uint32_t inLen, void* const outBuff,
     uint32_t* const outLen)
 {
-    RT_LOG(RT_LOG_INFO, "buff get info, type=%d.", static_cast<int32_t>(type));
+    RT_LOG(
+        RT_LOG_INFO, "buff get info, type=" RT_ENUM_LOG_FORMAT("%d") ".",
+        RT_ENUM_LOG_VALUE(static_cast<int32_t>(type), RtBuffGetCmdTypeToString(type)));
 
     COND_RETURN_WARN(
         &halBuffGetInfo == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT, "[drv api] halBuffGetInfo does not exist.");
@@ -610,7 +614,9 @@ rtError_t NpuDriver::MemQueueSet(
     QueueSetInputPara para;
     para.inBuff = input->inBuff;
     para.inLen = input->inLen;
-    RT_LOG(RT_LOG_INFO, "drv devId=%d, type=%d.", devId, static_cast<int32_t>(cmd));
+    RT_LOG(
+        RT_LOG_INFO, "drv devId=%d, type=" RT_ENUM_LOG_FORMAT("%d") ".", devId,
+        RT_ENUM_LOG_VALUE(static_cast<int32_t>(cmd), MemQueueSetCmdTypeName(cmd)));
 
     const drvError_t drvRet = halQueueSet(static_cast<uint32_t>(devId), type, &para);
     if (drvRet != DRV_ERROR_NONE) {
@@ -799,7 +805,9 @@ rtError_t NpuDriver::MemQueueQuery(
     const int32_t devId, const rtMemQueueQueryCmd_t cmd, const void* const inBuff, const uint32_t inLen,
     void* const outBuff, const uint32_t* const outLen)
 {
-    RT_LOG(RT_LOG_INFO, "query mem queue, drv devId=%d, cmd=%d.", devId, static_cast<int32_t>(cmd));
+    RT_LOG(
+        RT_LOG_INFO, "query mem queue, drv devId=%d, cmd=" RT_ENUM_LOG_FORMAT("%d") ".", devId,
+        RT_ENUM_LOG_VALUE(static_cast<int32_t>(cmd), RtMemQueueQueryCmdToString(cmd)));
 
     COND_RETURN_WARN(
         &halQueueQuery == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT, "[drv api] halQueueQuery does not exist.");

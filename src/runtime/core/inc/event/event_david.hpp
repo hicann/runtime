@@ -10,6 +10,8 @@
 #ifndef CCE_RUNTIME_EVENT_DAVID_HPP
 #define CCE_RUNTIME_EVENT_DAVID_HPP
 
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
 #include <string>
 #include <atomic>
 #include <shared_mutex>
@@ -24,6 +26,7 @@ enum class DavidEventState_t : uint8_t {
     EVT_NOT_RECORDED,
     EVT_RECORDED,
 };
+RT_ENUM_LOG_DECLARE(DavidEventStateToString, DavidEventState_t)
 
 struct DavidRecordTaskInfo {
     int32_t streamId;

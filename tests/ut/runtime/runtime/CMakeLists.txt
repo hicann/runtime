@@ -8,6 +8,8 @@
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
 set(RUNTIME_API_DIR ${TOP_DIR}/src/runtime/api)
+set(RUNTIME_CORE_DIR ${TOP_DIR}/src/runtime/core)
+option(RUNTIME_ENABLE_ENUM_LOG_NAMES "Include enum names in Runtime logs" ON)
 include(${TOP_DIR}/src/runtime/cmake/runtime_api_stubs.cmake)
 generate_runtime_api_stubs_at_configure(
     tiny
@@ -23,6 +25,28 @@ configure_runtime_api_weak_real_sources(
 )
 
 add_subdirectory(test)
+
+# Platform archives own api_impl.cc; their executable consumers also compile the driver.
+target_compile_definitions(runtime_ut_910b_static_lib PRIVATE
+    RUNTIME_ENABLE_ENUM_LOG_NAMES=$<BOOL:${RUNTIME_ENABLE_ENUM_LOG_NAMES}>
+)
+target_compile_definitions(runtime_ut_910b_intf_pub INTERFACE
+    RUNTIME_ENABLE_ENUM_LOG_NAMES=$<BOOL:${RUNTIME_ENABLE_ENUM_LOG_NAMES}>
+)
+# Match the disabled-name 5162 product library in its archives, stubs, and tests.
+target_compile_definitions(runtime_utest_intf_pub_arch5162 INTERFACE
+    RUNTIME_ENABLE_ENUM_LOG_NAMES=0
+)
+
+foreach(enum_log_platform_target runtime_ut_910b_static_lib runtimeut_src_static_lib_5162a)
+    target_sources(${enum_log_platform_target} PRIVATE
+        ${RUNTIME_CORE_DIR}/src/common/api_enum_log.cc
+        ${RUNTIME_CORE_DIR}/src/common/internal_enum_log.cc
+        ${RUNTIME_CORE_DIR}/src/common/callback_enum_log.cc
+        ${RUNTIME_CORE_DIR}/src/common/runtime_enum_log.cc
+    )
+endforeach()
+
 set(BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CANN_3RD_LIB_PATH}/boost-1.87.0)
 
@@ -244,6 +268,10 @@ set(runtimeut_src_v201_c_list
 )
 
 set(runtimeut_src_common_list
+    ${TOP_DIR}/src/runtime/core/src/common/api_enum_log.cc
+    ${TOP_DIR}/src/runtime/core/src/common/internal_enum_log.cc
+    ${TOP_DIR}/src/runtime/core/src/common/callback_enum_log.cc
+    ${TOP_DIR}/src/runtime/core/src/common/runtime_enum_log.cc
     ${TOP_DIR}/src/runtime/core/src/common/enum_desc.cc
     ${TOP_DIR}/src/runtime/core/src/common/api_enum_desc.cc
     ${TOP_DIR}/src/runtime/core/src/common/optional_enum_desc.cc
@@ -939,6 +967,9 @@ list(REMOVE_ITEM runtimeut_david_src_list
     ${TOP_DIR}/src/runtime/feature/jetty/stream_ub_db_stub.cc
 )
 add_library(runtime_ut_david_static_lib STATIC ${runtimeut_david_src_list})
+target_compile_definitions(runtime_ut_david_static_lib PRIVATE
+    RUNTIME_ENABLE_ENUM_LOG_NAMES=$<BOOL:${RUNTIME_ENABLE_ENUM_LOG_NAMES}>
+)
 
 target_include_directories(
     runtime_ut_david_static_lib PUBLIC
@@ -962,6 +993,9 @@ target_link_libraries(runtime_ut_david_static_lib PRIVATE $<BUILD_INTERFACE:runt
 add_library(runtimeut_src_static_lib STATIC
     ${runtimeut_src_list}
     ${TOP_DIR}/src/runtime/core/src/task/v200/task_david_stub.cc
+)
+target_compile_definitions(runtimeut_src_static_lib PRIVATE
+    RUNTIME_ENABLE_ENUM_LOG_NAMES=$<BOOL:${RUNTIME_ENABLE_ENUM_LOG_NAMES}>
 )
 
 target_include_directories(
@@ -1001,6 +1035,9 @@ add_library(runtimeut_camodel_src_static_lib STATIC
     ${runtimeut_camodel_src_list}
     ${TOP_DIR}/src/runtime/core/src/device/raw_device_res_camodel.cc
 )
+target_compile_definitions(runtimeut_camodel_src_static_lib PRIVATE
+    RUNTIME_ENABLE_ENUM_LOG_NAMES=$<BOOL:${RUNTIME_ENABLE_ENUM_LOG_NAMES}>
+)
 
 target_compile_definitions(runtimeut_camodel_src_static_lib PUBLIC
     TEMP_PERFORMANCE
@@ -1018,6 +1055,9 @@ list(REMOVE_ITEM runtimeut_camodel_src_list_v200
 add_library(runtimeut_camodel_src_v200_static_lib STATIC
     ${runtimeut_camodel_src_list_v200}
     ${TOP_DIR}/src/runtime/core/src/device/raw_device_res_camodel.cc
+)
+target_compile_definitions(runtimeut_camodel_src_v200_static_lib PRIVATE
+    RUNTIME_ENABLE_ENUM_LOG_NAMES=$<BOOL:${RUNTIME_ENABLE_ENUM_LOG_NAMES}>
 )
 
 target_compile_definitions(runtimeut_camodel_src_v200_static_lib PUBLIC
@@ -1494,6 +1534,11 @@ add_executable(runtime_utest_tiny_stub
     test/rt_utest_stub.cc
 )
 set_property(TARGET runtime_utest_tiny_stub PROPERTY RUNTIME_API_WEAK_PROVIDER TRUE)
+# This API-stub UT compiles its Runtime sources directly and consumes no source archive.
+set_property(TARGET runtime_utest_tiny_stub PROPERTY RUNTIME_ENUM_LOG_NAMES_DISABLED TRUE)
+target_compile_definitions(runtime_utest_tiny_stub PRIVATE
+    RUNTIME_ENABLE_ENUM_LOG_NAMES=$<BOOL:OFF>
+)
 
 target_compile_definitions(runtime_utest_tiny_stub PUBLIC
     TEMP_PERFORMANCE
@@ -1510,6 +1555,7 @@ target_link_libraries(runtime_utest_tiny_stub PRIVATE
 add_library(runtime_utest_intf_pub INTERFACE)
 
 target_compile_definitions(runtime_utest_intf_pub INTERFACE
+    RUNTIME_ENABLE_ENUM_LOG_NAMES=$<AND:$<BOOL:${RUNTIME_ENABLE_ENUM_LOG_NAMES}>,$<NOT:$<BOOL:$<TARGET_PROPERTY:RUNTIME_ENUM_LOG_NAMES_DISABLED>>>>
     __RUNTIME_PRODUCT_DRV_MINI__
     _GLIBCXX_USE_CXX11_ABI=0
     RT_UT_TEST
@@ -1908,6 +1954,9 @@ add_executable(runtime_utest_task_v201
     test/platform/others/rt_utest_v201_task.cc
     test/platform/others/rt_utest_v201L_task.cc
 )
+target_compile_definitions(runtime_utest_task_v201 PRIVATE
+    RUNTIME_ENABLE_ENUM_LOG_NAMES=$<BOOL:${RUNTIME_ENABLE_ENUM_LOG_NAMES}>
+)
 
 target_include_directories(
     runtime_utest_task_v201 PUBLIC
@@ -1938,6 +1987,7 @@ target_link_libraries(runtime_utest_task_v201 PRIVATE
 add_library(runtime_utest_v201_intf_pub INTERFACE)
 
 target_compile_definitions(runtime_utest_v201_intf_pub INTERFACE
+    RUNTIME_ENABLE_ENUM_LOG_NAMES=$<BOOL:${RUNTIME_ENABLE_ENUM_LOG_NAMES}>
     __RUNTIME_PRODUCT_DRV_MINI__
     RT_UT_TEST
     FEATURE_NOTIFY
@@ -2115,6 +2165,8 @@ set(RUNTIME_TARGET_910B
 )
 
 set(RUNTIME_TARGET
+    runtime_utest_enum_log_full
+    runtime_utest_enum_log_stub
     runtime_utest_dfx
     runtime_utest_model
     runtime_utest_engine
@@ -2143,6 +2195,10 @@ set(RUNTIME_TARGET
     runtime_utest_arch9201
     runtime_utest_arch9202
 )
+
+foreach(runtime_test_target IN LISTS RUNTIME_TARGET)
+    add_dependencies(${runtime_test_target} runtime_enum_log_metadata_sync_ut)
+endforeach()
 
 set(RUNTIME_TARGET_COMMON ${RUNTIME_TARGET})
 list(REMOVE_ITEM RUNTIME_TARGET_COMMON

@@ -223,9 +223,11 @@ static void ConstructMixSubSqe(
     }
     RT_LOG(
         RT_LOG_INFO,
-        "sqeIndex=%u, mixType=%u, cfgInfo schemMode=%u, sqe_schem=%hu, ratio=%hhu, loose=%u, piMix=%u, "
-        "aivSimtDcuSmSize=%u.",
-        idx, mixType, aicPart->schemMode, sqe->schem, sqe->ratio, sqe->loose, sqe->piMix, sqe->aivSimtDcuSmSize);
+        "sqeIndex=%u, mixType=" RT_ENUM_LOG_FORMAT(
+            "%u") ", cfgInfo schemMode=%u, sqe_schem=%hu, ratio=%hhu, loose=%u, piMix=%u, "
+                  "aivSimtDcuSmSize=%u.",
+        idx, RT_ENUM_LOG_VALUE(static_cast<uint32_t>(mixType), RtMixTypeToString(static_cast<RtMixType>(mixType))),
+        aicPart->schemMode, sqe->schem, sqe->ratio, sqe->loose, sqe->piMix, sqe->aivSimtDcuSmSize);
 
     PrintDavidSqe(sqeAddr, "FusionKernelTask-Mix");
 }
@@ -264,7 +266,8 @@ static void ConstructAicAivSubSqe(
         }
     }
     RT_LOG(
-        RT_LOG_INFO, "sqeIndex=%u, mixType=%hhu, aicAivType=%hhu.", sqeIndex, mixType,
+        RT_LOG_INFO, "sqeIndex=%u, mixType=" RT_ENUM_LOG_FORMAT("%u") ", aicAivType=%hhu.", sqeIndex,
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(mixType), RtMixTypeToString(static_cast<RtMixType>(mixType))),
         taskInfo->u.fusionKernelTask.aicAivType);
 
     UpdateHeaderForFusionKernel(taskInfo, davidSqe, sqeIndex, sqBaseAddr);

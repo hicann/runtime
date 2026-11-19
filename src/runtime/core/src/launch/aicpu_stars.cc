@@ -7,6 +7,8 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "common/api_enum_log.hpp"
+#include "runtime/base.h"
 #include "aicpu_c.hpp"
 
 #include "davinci_kernel_task.h"
@@ -82,10 +84,15 @@ rtError_t InternalLaunchWithKernelAndArgs(
     RT_LOG(
         RT_LOG_INFO,
         "device_id=%u, stream_id=%d, task_id=%u, isModelStream=%d, NonSupportModelCompile=%u, "
-        "isNoNeedH2DCopy=%u, cpuParamHeadOffset=%zu, kernel_type=%u, flag=0x%x, timeout=%" PRIu64 "us, blkdim=%u.",
+        "isNoNeedH2DCopy=%u, cpuParamHeadOffset=%zu, kernel_type=" RT_ENUM_LOG_FORMAT(
+            "%u") ", flag=0x%x, timeout=%" PRIu64 "us, blkdim=%u.",
         curCtx->Device_()->Id_(), stm->Id_(), kernelTask->id, stm->IsModelStream(), stm->NonSupportModelCompile(),
-        argsInfo->isNoNeedH2DCopy, cpuParamHeadOffset, kernelType, flag, kernelTask->u.aicpuTaskInfo.timeout,
-        kernelTask->u.aicpuTaskInfo.comm.dim);
+        argsInfo->isNoNeedH2DCopy, cpuParamHeadOffset,
+        RT_ENUM_LOG_VALUE(
+            static_cast<uint32_t>(kernelType),
+            (kernelType <= KERNEL_TYPE_RESERVED ? RtKernelTypeToString(static_cast<rtKernelType_t>(kernelType)) :
+                                                  "UNKNOWN")),
+        flag, kernelTask->u.aicpuTaskInfo.timeout, kernelTask->u.aicpuTaskInfo.comm.dim);
     error = curCtx->Device_()->SubmitTask(kernelTask);
 
     ERROR_GOTO_MSG_INNER(error, ERROR_FREE, "Failed to submit kernel task, retCode=%#x", error);

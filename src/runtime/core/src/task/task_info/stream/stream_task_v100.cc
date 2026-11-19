@@ -8,6 +8,9 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/enum_log.hpp"
+#include "stars/stars_base.hpp"
+#include "runtime/base.h"
 #include "stars_cond_isa_helper.hpp"
 #include "runtime_task_manager.h"
 #include "stream_sqcq_manage.hpp"
@@ -72,9 +75,11 @@ void ConstructSqeForSetSqLockUnlockTask(TaskInfo* taskInfo, void* const sqeBuffe
     PrintSqe(command, "SetSqLockUnlock");
     RT_LOG(
         RT_LOG_INFO,
-        "send SetSqLockUnlock succ,"
-        "sqe_type=%u,pre_p=%u,stream_id=%u,task_id=%u,task_type=%u.",
-        sqe->type, sqe->pre_p, sqe->rt_streamID, sqe->task_id, sqe->task_type);
+        "send SetSqLockUnlock succ,sqe_type=" RT_ENUM_LOG_FORMAT(
+            "%u") ",pre_p=%u,stream_id=%u,task_id=%u,task_type=" RT_ENUM_LOG_FORMAT("%u") ".",
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(sqe->type), "STARS_SQE_TYPE_PLACE_HOLDER"), sqe->pre_p,
+        sqe->rt_streamID, sqe->task_id,
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(sqe->task_type), "TS_TASK_TYPE_SET_SQ_LOCK_UNLOCK"));
 
     return;
 }
@@ -234,8 +239,12 @@ void ConstructSqeForCallbackLaunchTask(TaskInfo* taskInfo, void* const sqeBuffer
 
     PrintSqe(command, "CallbackLaunch");
     RT_LOG(
-        RT_LOG_INFO, "CallbackLaunch, topic_type=%hu, stream_id=%hu, task_id=%hu, event_id=%hu, isBlock=%hu, pid=%u",
-        sqe->topic_type, sqe->stream_id, taskInfo->id, sqe->event_id, sqe->isBlock, sqe->dest_pid);
+        RT_LOG_INFO,
+        "CallbackLaunch, topic_type=" RT_ENUM_LOG_FORMAT(
+            "%u") ", stream_id=%hu, task_id=%hu, event_id=%hu, isBlock=%hu, pid=%u",
+        RT_ENUM_LOG_VALUE(
+            static_cast<uint32_t>(sqe->topic_type), RtTopicTypeToString(static_cast<RtTopicType>(sqe->topic_type))),
+        sqe->stream_id, taskInfo->id, sqe->event_id, sqe->isBlock, sqe->dest_pid);
 }
 #endif
 
@@ -290,9 +299,11 @@ void ConstructSqeForFlipTask(TaskInfo* taskInfo, void* const sqeBuffer, const Ta
     sqe->u.flip_task_info.subType = flipTaskInfo->subType;
     PrintSqe(command, "FlipTask");
     RT_LOG(
-        RT_LOG_INFO, "launch FlipTask succ, sqe_type=%u, pre_p=%u, stream_id=%u, task_id=%u, flip_num=%u, sub_type=%u.",
-        sqe->type, sqe->pre_p, sqe->rt_streamID, sqe->task_id, flipTaskInfo->flipNumReport,
-        sqe->u.flip_task_info.subType);
+        RT_LOG_INFO,
+        "launch FlipTask succ, sqe_type=" RT_ENUM_LOG_FORMAT(
+            "%u") ", pre_p=%u, stream_id=%u, task_id=%u, flip_num=%u, sub_type=%u.",
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(sqe->type), "STARS_SQE_TYPE_PLACE_HOLDER"), sqe->pre_p,
+        sqe->rt_streamID, sqe->task_id, flipTaskInfo->flipNumReport, sqe->u.flip_task_info.subType);
 }
 #endif
 

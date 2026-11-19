@@ -8,6 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
 #include "stream.hpp"
 #include "runtime.hpp"
 #include "context.hpp"
@@ -36,9 +38,13 @@ static void ConstructSqeForMaintenanceTask(TaskInfo* const taskInfo, void* const
 
     PrintSqe(command, "MaintenanceTask");
     RT_LOG(
-        RT_LOG_INFO, "MaintenanceTask, sqeType=%u, wrCqe=%u, preP=%u, rtStreamId=%u, taskId=%u, sqeSubType=%u.",
-        sqe->header.type, sqe->header.wrCqe, sqe->header.preP, sqe->header.rtStreamId, sqe->header.taskId,
-        sqe->header.u.sqeSubType);
+        RT_LOG_INFO,
+        "MaintenanceTask, sqeType=" RT_ENUM_LOG_FORMAT("%u") ", wrCqe=%u, preP=" RT_ENUM_LOG_FORMAT(
+            "%u") ", rtStreamId=%u, taskId=%u, sqeSubType=" RT_ENUM_LOG_FORMAT("%u") ".",
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(sqe->header.type), "STARS_SQE_TYPE_PLACE_HOLDER"), sqe->header.wrCqe,
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(sqe->header.preP), "STARS_SQE_INT_DIR_TO_TSCPU"),
+        sqe->header.rtStreamId, sqe->header.taskId,
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(sqe->header.u.sqeSubType), "SQE_SUBTYPE_MAINTENANCE"));
 }
 #endif
 

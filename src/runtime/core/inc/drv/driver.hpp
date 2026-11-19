@@ -10,6 +10,8 @@
 #ifndef __CCE_RUNTIME_DRIVER_HPP__
 #define __CCE_RUNTIME_DRIVER_HPP__
 
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
 #include <unordered_map>
 #include <mutex>
 #include <atomic>
@@ -74,6 +76,7 @@ public:
         MANAGED_MEM_EX = 1,
         MANAGED_MEM_UVM = 2,
     };
+    RT_ENUM_LOG_DECLARE_STATIC(ManagedMemFlagToString, ManagedMemFlag)
 
     Driver();
     ~Driver() override;
@@ -664,6 +667,7 @@ public:
 };
 
 typedef Driver* (*DriverGetInsFunc_t)();
+
 enum driverType_t {
     NPU_DRIVER,
     STUB_DRIVER,

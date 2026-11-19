@@ -7,6 +7,8 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 #include "securec.h"
@@ -7185,4 +7187,45 @@ TEST_F(DavidTaskTest, UpdateUbdmaSqeWithJettyInfo_SqBaseAddrUsed)
     stream_->sqeBuffer_ = nullptr;
     stream_->sqeBufferSize_ = 0U;
     stream_->isSoftwareSqEnable_ = oldSoftwareSqEnable;
+}
+
+TEST_F(DavidTaskTest, LaunchKernelArgsLog_UnhandledValuesKeepUnsignedWidth)
+{
+    MOCKER(CheckLogLevel).stubs().will(returnValue(1));
+    ApiImplDavid impl;
+    Stream stream(Runtime::Instance()->CurrentContext()->Device_(), 0);
+    RtArgsWithType args = {};
+    args.type = static_cast<ArgsType>(-1);
+    TaskCfg cfg = {};
+    ClearLastDlogRecordLine();
+    // Unsupported argument types are rejected after their original unsigned value is logged.
+    EXPECT_EQ(impl.LaunchKernelByArgsWithType(nullptr, 32U, &stream, &args, cfg), RT_ERROR_INVALID_VALUE);
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+    EXPECT_TRUE(DlogRecordContains("blockDim=32, argsType=UNKNOWN(4294967295)."));
+#else
+    EXPECT_TRUE(DlogRecordContains("blockDim=32, argsType=4294967295."));
+#endif
+    EXPECT_EQ(args.type, static_cast<ArgsType>(-1));
+}
+
+TEST_F(DavidTaskTest, DeviceFaultLog_UsesDefaultAndUnknownNames)
+{
+    MOCKER(CheckLogLevel).stubs().will(returnValue(1));
+    Device* const device = Runtime::Instance()->CurrentContext()->Device_();
+    const DeviceFaultType previous = device->GetDeviceFaultType();
+    ApiImplDavid david;
+    for (const DeviceFaultType type : {DeviceFaultType::NO_ERROR, static_cast<DeviceFaultType>(UINT8_MAX)}) {
+        device->SetDeviceFaultType(type);
+        rtErrorInfo info = {};
+        ClearLastDlogRecordLine();
+        EXPECT_EQ(david.GetErrorVerbose(device->Id_(), &info), RT_ERROR_NONE);
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+        EXPECT_TRUE(DlogRecordContains(
+            type == DeviceFaultType::NO_ERROR ? "device_id=0, type=NO_ERROR(7)" : "device_id=0, type=UNKNOWN(255)"));
+#else
+        EXPECT_TRUE(
+            DlogRecordContains(type == DeviceFaultType::NO_ERROR ? "device_id=0, type=7" : "device_id=0, type=255"));
+#endif
+    }
+    device->SetDeviceFaultType(previous);
 }

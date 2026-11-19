@@ -7,6 +7,9 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "common/api_enum_log.hpp"
+#include "runtime/event.h"
+#include "runtime/base.h"
 #include "event_david.hpp"
 #include "stream_david.hpp"
 #include "cnt_notify_res.hpp"
@@ -334,8 +337,9 @@ rtError_t DavidEvent::QueryEventTask(rtEventStatus_t* const status)
         }
     }
     RT_LOG(
-        RT_LOG_INFO, "device_id=%u, event_id=%d, status=%d, stream_id=%u, record task_id=%hu", device_->Id_(), eventId_,
-        *status, streamId, taskId);
+        RT_LOG_INFO, "device_id=%u, event_id=%d, status=" RT_ENUM_LOG_FORMAT("%d") ", stream_id=%u, record task_id=%hu",
+        device_->Id_(), eventId_, RT_ENUM_LOG_VALUE(static_cast<int32_t>(*status), RtEventStatusToString(*status)),
+        streamId, taskId);
     return RT_ERROR_NONE;
 }
 
@@ -390,8 +394,8 @@ rtError_t DavidEvent::Query(void) // not support query after reset
     const rtError_t queryResult =
         ((status_ == DavidEventState_t::EVT_NOT_RECORDED) && HasRecord()) ? RT_ERROR_EVENT_NOT_COMPLETE : RT_ERROR_NONE;
     RT_LOG(
-        RT_LOG_INFO, "device_id=%u, event_id=%d, lateststate=%d, result=%d", device_->Id_(), eventId_, status_,
-        queryResult);
+        RT_LOG_INFO, "device_id=%u, event_id=%d, lateststate=" RT_ENUM_LOG_FORMAT("%d") ", result=%d", device_->Id_(),
+        eventId_, RT_ENUM_LOG_VALUE(static_cast<int32_t>(status_), DavidEventStateToString(status_)), queryResult);
     return queryResult;
 }
 
@@ -413,8 +417,10 @@ rtError_t DavidEvent::QueryEventStatus(rtEventStatus_t* const status)
         *status = RT_EVENT_RECORDED;
     }
     RT_LOG(
-        RT_LOG_INFO, "device_id=%u, event_id=%d, lateststate=%d, status=%d", device_->Id_(), eventId_, status_,
-        *status);
+        RT_LOG_INFO,
+        "device_id=%u, event_id=%d, lateststate=" RT_ENUM_LOG_FORMAT("%d") ", status=" RT_ENUM_LOG_FORMAT("%d"),
+        device_->Id_(), eventId_, RT_ENUM_LOG_VALUE(static_cast<int32_t>(status_), DavidEventStateToString(status_)),
+        RT_ENUM_LOG_VALUE(static_cast<int32_t>(*status), RtEventStatusToString(*status)));
     return error;
 }
 

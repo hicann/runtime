@@ -143,6 +143,7 @@ typedef enum rtKernelType {
     KERNEL_TYPE_HWTS = 10,
     KERNEL_TYPE_RESERVED = 99,
 } rtKernelType_t;
+RT_ENUM_LOG_DECLARE(RtKernelTypeToString, rtKernelType_t)
 
 typedef enum {
     RT_FUNCTION_ATTR_KERNEL_TYPE = 1,

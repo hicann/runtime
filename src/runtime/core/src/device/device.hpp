@@ -10,6 +10,8 @@
 #ifndef CCE_RUNTIME_DEVICE_HPP
 #define CCE_RUNTIME_DEVICE_HPP
 
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
 #include <mutex>
 #include <list>
 #include <map>
@@ -122,6 +124,7 @@ enum class DeviceStateCallback : uint8_t {
     RTS_DEVICE_STATE_CALLBACK,
     DEVICE_CALLBACK_TYPE_MAX
 };
+RT_ENUM_LOG_DECLARE(DeviceStateCallbackLogToString, const DeviceStateCallback)
 
 enum class TaskFailCallbackType : uint8_t {
     RT_SET_TASK_FAIL_CALLBACK = 0,
@@ -129,6 +132,7 @@ enum class TaskFailCallbackType : uint8_t {
     RTS_SET_TASK_FAIL_CALLBACK,
     TASK_FAIL_CALLBACK_TYPE_MAX
 };
+RT_ENUM_LOG_DECLARE(TaskFailCallbackTypeToString, TaskFailCallbackType)
 
 enum class TaskAbortCallbackType : uint8_t {
     RT_SET_TASK_ABORT_CALLBACK = 0,

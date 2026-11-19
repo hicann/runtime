@@ -8,6 +8,9 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/api_enum_log.hpp"
+#include "runtime/event.h"
+#include "runtime/base.h"
 #include "stream_david.hpp"
 #include "cnt_notify_res.hpp"
 #include "runtime_task_manager.h"
@@ -1140,7 +1143,9 @@ rtError_t DavidStream::JudgeHeadTailPos(rtEventStatus_t* const status, uint16_t 
         *status = RT_EVENT_INIT;
     }
 
-    RT_LOG(RT_LOG_INFO, "device_id=%u, status=%d, stream_id=%d, pos=%u", device_->Id_(), *status, streamId_, eventPos);
+    RT_LOG(
+        RT_LOG_INFO, "device_id=%u, status=" RT_ENUM_LOG_FORMAT("%d") ", stream_id=%d, pos=%u", device_->Id_(),
+        RT_ENUM_LOG_VALUE(static_cast<int32_t>(*status), RtEventStatusToString(*status)), streamId_, eventPos);
     return RT_ERROR_NONE;
 }
 
@@ -1669,7 +1674,9 @@ rtError_t DavidStream::UpdateSnapShotSqe()
         i = IsSoftwareSqEnable() || IsAutoSplitSq() ? (static_cast<uint32_t>(nextTask->id) + 1U) :
                                                       (static_cast<uint32_t>(nextTask->id) + nextTask->sqeNum);
 
-        RT_LOG(RT_LOG_DEBUG, "Stream_id=%d, pos=%u, type=%d.", Id_(), i, nextTask->type);
+        RT_LOG(
+            RT_LOG_DEBUG, "Stream_id=%d, pos=%u, type=" RT_ENUM_LOG_FORMAT("%d") ".", Id_(), i,
+            RT_ENUM_LOG_VALUE(static_cast<int32_t>(nextTask->type), RT_ENUM_LOG_NAME(nextTask->typeName)));
         if (nextTask->type == TS_TASK_TYPE_MEMCPY && NeedUpdateMemcpyTaskInfoForSnapshot(nextTask)) {
             const rtError_t error = UpdateMemcpyTaskAndSqe(nextTask, ctrlStream);
             ERROR_RETURN(error, "Failed to update task, stream_id=%d, pos=%u, retCode=%d.", Id_(), i, error);

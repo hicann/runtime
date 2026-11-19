@@ -152,6 +152,7 @@ typedef enum tagBuffGetCmdType {
     RT_BUFF_GET_MBUF_BUILD_INFO = 3,
     RT_BUFF_GET_MAX
 } rtBuffGetCmdType;
+RT_ENUM_LOG_DECLARE_IN_NAMESPACE(RtBuffGetCmdTypeToString, rtBuffGetCmdType)
 
 typedef struct tagBuffBuildInfo {
     uint32_t status; /* 0: buff unbuild   1: buff build */
@@ -843,6 +844,7 @@ typedef enum {
     RT_MEM_ADVISE_TS,
     RT_MEM_ADVISE_CACHED,
 } rtMallocAdvise;
+RT_ENUM_LOG_DECLARE_IN_NAMESPACE(RtMallocAdviseToString, rtMallocAdvise)
 
 typedef enum {
     RT_HOST_MEM_MALLOC_NORMAL = 0,       // 4K小页
@@ -1063,6 +1065,7 @@ typedef enum tagMemQueueQueryCmd {
     RT_MQ_QUERY_QUES_ATTR_ENTITY_TYPE = 2,
     RT_MQ_QUERY_CMD_MAX = 3
 } rtMemQueueQueryCmd_t;
+RT_ENUM_LOG_DECLARE_IN_NAMESPACE(RtMemQueueQueryCmdToString, rtMemQueueQueryCmd_t)
 
 /**
  * @ingroup rt_mem_queue
@@ -1135,6 +1138,7 @@ typedef enum tagRtMemcpyKind {
     RT_MEMCPY_DEFAULT,           // auto infer copy dir
     RT_MEMCPY_RESERVED,
 } rtMemcpyKind_t;
+RT_ENUM_LOG_DECLARE_IN_NAMESPACE(RtMemcpyKindToString, rtMemcpyKind_t)
 
 RTS_API rtError_t rtMemcpyAsyncPtr(
     void* memcpyAddrInfo, uint64_t destMax, uint64_t count, rtMemcpyKind_t kind, rtStream_t stream, uint32_t qosCfg);

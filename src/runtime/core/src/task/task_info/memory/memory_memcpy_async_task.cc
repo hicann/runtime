@@ -8,6 +8,10 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/api_enum_log.hpp"
+#include "runtime/mem_base.h"
+#include "task/task_base.hpp"
+#include "runtime/base.h"
 #include "memory_task.h"
 #include "stream.hpp"
 #include "runtime.hpp"
@@ -386,14 +390,20 @@ rtError_t ConvertCpyType(
     memcpyAsyncTaskInfo->copyKind = cpyType;
     uint32_t copyTypeTmp;
 
-    RT_LOG(RT_LOG_DEBUG, "MemcpyAsyncTask::ConvertCpyType, cpyType=%u.", cpyType);
+    RT_LOG(
+        RT_LOG_DEBUG, "MemcpyAsyncTask::ConvertCpyType, cpyType=" RT_ENUM_LOG_FORMAT("%u") ".",
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(cpyType), MemcpyOrReduceKindToString(cpyType)));
 
     if (cpyType == RT_MEMCPY_HOST_TO_DEVICE) {
         copyTypeTmp = RT_MEMCPY_DIR_H2D;
-        RT_LOG(RT_LOG_INFO, "MemcpyAsyncTask::ConvertCpyType MEMCPY_HOST_TO_DEVICE, direct=%u.", copyTypeTmp);
+        RT_LOG(
+            RT_LOG_INFO, "MemcpyAsyncTask::ConvertCpyType MEMCPY_HOST_TO_DEVICE, direct=" RT_ENUM_LOG_FORMAT("%u") ".",
+            RT_ENUM_LOG_VALUE(static_cast<uint32_t>(copyTypeTmp), "MEMCPY_DIR_H2D"));
     } else if (cpyType == RT_MEMCPY_DEVICE_TO_HOST) {
         copyTypeTmp = RT_MEMCPY_DIR_D2H;
-        RT_LOG(RT_LOG_INFO, "MemcpyAsyncTask::ConvertCpyType MEMCPY_DEVICE_TO_HOST, direct=%u.", copyTypeTmp);
+        RT_LOG(
+            RT_LOG_INFO, "MemcpyAsyncTask::ConvertCpyType MEMCPY_DEVICE_TO_HOST, direct=" RT_ENUM_LOG_FORMAT("%u") ".",
+            RT_ENUM_LOG_VALUE(static_cast<uint32_t>(copyTypeTmp), "MEMCPY_DIR_D2H"));
     } else if (cpyType == RT_MEMCPY_DEVICE_TO_DEVICE) {
         const rtError_t error =
             ConvertD2DCpyType(taskInfo->stream, copyTypeTmp, srcAddr, desAddr, &(memcpyAsyncTaskInfo->isD2dCross8P));
@@ -401,16 +411,28 @@ rtError_t ConvertCpyType(
             error, "Failed to convert the D2D asynchronous copy type, retCode=%#x.", static_cast<uint32_t>(error));
     } else if (cpyType == RT_MEMCPY_SDMA_AUTOMATIC_ADD) {
         copyTypeTmp = RT_MEMCPY_DIR_SDMA_AUTOMATIC_ADD;
-        RT_LOG(RT_LOG_INFO, "MemcpyAsyncTask::ConvertCpyType MEMCPY_DIR_SDMA_AUTOMATIC_ADD, direct= %u", copyTypeTmp);
+        RT_LOG(
+            RT_LOG_INFO,
+            "MemcpyAsyncTask::ConvertCpyType MEMCPY_DIR_SDMA_AUTOMATIC_ADD, direct= " RT_ENUM_LOG_FORMAT("%u"),
+            RT_ENUM_LOG_VALUE(static_cast<uint32_t>(copyTypeTmp), "MEMCPY_DIR_SDMA_AUTOMATIC_ADD"));
     } else if (cpyType == RT_MEMCPY_SDMA_AUTOMATIC_MAX) {
         copyTypeTmp = RT_MEMCPY_DIR_SDMA_AUTOMATIC_MAX;
-        RT_LOG(RT_LOG_INFO, "MemcpyAsyncTask::ConvertCpyType MEMCPY_DIR_SDMA_AUTOMATIC_MAX, direct= %u", copyTypeTmp);
+        RT_LOG(
+            RT_LOG_INFO,
+            "MemcpyAsyncTask::ConvertCpyType MEMCPY_DIR_SDMA_AUTOMATIC_MAX, direct= " RT_ENUM_LOG_FORMAT("%u"),
+            RT_ENUM_LOG_VALUE(static_cast<uint32_t>(copyTypeTmp), "MEMCPY_DIR_SDMA_AUTOMATIC_MAX"));
     } else if (cpyType == RT_MEMCPY_SDMA_AUTOMATIC_MIN) {
         copyTypeTmp = RT_MEMCPY_DIR_SDMA_AUTOMATIC_MIN;
-        RT_LOG(RT_LOG_INFO, "MemcpyAsyncTask::ConvertCpyType MEMCPY_DIR_SDMA_AUTOMATIC_MIN, direct= %u", copyTypeTmp);
+        RT_LOG(
+            RT_LOG_INFO,
+            "MemcpyAsyncTask::ConvertCpyType MEMCPY_DIR_SDMA_AUTOMATIC_MIN, direct= " RT_ENUM_LOG_FORMAT("%u"),
+            RT_ENUM_LOG_VALUE(static_cast<uint32_t>(copyTypeTmp), "MEMCPY_DIR_SDMA_AUTOMATIC_MIN"));
     } else if (cpyType == RT_MEMCPY_SDMA_AUTOMATIC_EQUAL) {
         copyTypeTmp = RT_MEMCPY_DIR_SDMA_AUTOMATIC_EQUAL;
-        RT_LOG(RT_LOG_INFO, "MemcpyAsyncTask::ConvertCpyType MEMCPY_DIR_SDMA_AUTOMATIC_EQUAL, direct= %u", copyTypeTmp);
+        RT_LOG(
+            RT_LOG_INFO,
+            "MemcpyAsyncTask::ConvertCpyType MEMCPY_DIR_SDMA_AUTOMATIC_EQUAL, direct= " RT_ENUM_LOG_FORMAT("%u"),
+            RT_ENUM_LOG_VALUE(static_cast<uint32_t>(copyTypeTmp), "MEMCPY_DIR_SDMA_AUTOMATIC_EQUAL"));
     } else if (cpyType == RT_MEMCPY_ADDR_DEVICE_TO_DEVICE) {
         copyTypeTmp = RT_MEMCPY_ADDR_D2D_SDMA;
     } else {
@@ -439,11 +461,15 @@ rtError_t ConvertD2DCpyType(
     switch (transType) {
         case RT_MEMCPY_CHANNEL_TYPE_PCIe:
             cpyType = RT_MEMCPY_DIR_D2D_PCIe;
-            RT_LOG(RT_LOG_INFO, "MemcpyAsyncTask::ConvertCpyType MEMCPY_DIR_D2D_PCIe, direct= %u", cpyType);
+            RT_LOG(
+                RT_LOG_INFO, "MemcpyAsyncTask::ConvertCpyType MEMCPY_DIR_D2D_PCIe, direct= " RT_ENUM_LOG_FORMAT("%u"),
+                RT_ENUM_LOG_VALUE(static_cast<uint32_t>(cpyType), "MEMCPY_DIR_D2D_PCIe"));
             break;
         case RT_MEMCPY_CHANNEL_TYPE_HCCs:
             cpyType = RT_MEMCPY_DIR_D2D_HCCs;
-            RT_LOG(RT_LOG_INFO, "MemcpyAsyncTask::ConvertCpyType MEMCPY_DIR_D2D_HCCs, direct= %u", cpyType);
+            RT_LOG(
+                RT_LOG_INFO, "MemcpyAsyncTask::ConvertCpyType MEMCPY_DIR_D2D_HCCs, direct= " RT_ENUM_LOG_FORMAT("%u"),
+                RT_ENUM_LOG_VALUE(static_cast<uint32_t>(cpyType), "MEMCPY_DIR_D2D_HCCs"));
             break;
         case RT_MEMCPY_CHANNEL_TYPE_UB:
             cpyType = RT_MEMCPY_DIR_D2D_UB;
@@ -453,11 +479,15 @@ rtError_t ConvertD2DCpyType(
                 ERROR_RETURN_MSG_INNER(
                     error, "Get device board location type failed, retCode=%#x.", static_cast<uint32_t>(error));
             }
-            RT_LOG(RT_LOG_INFO, "MemcpyAsyncTask::ConvertCpyType RT_MEMCPY_DIR_D2D_UB, direct= %u", cpyType);
+            RT_LOG(
+                RT_LOG_INFO, "MemcpyAsyncTask::ConvertCpyType RT_MEMCPY_DIR_D2D_UB, direct= " RT_ENUM_LOG_FORMAT("%u"),
+                RT_ENUM_LOG_VALUE(static_cast<uint32_t>(cpyType), "MEMCPY_DIR_D2D_UB"));
             break;
         default:
             cpyType = RT_MEMCPY_DIR_D2D_SDMA;
-            RT_LOG(RT_LOG_INFO, "MemcpyAsyncTask::ConvertCpyType MEMCPY_DIR_D2D_SDMA, direct= %u", cpyType);
+            RT_LOG(
+                RT_LOG_INFO, "MemcpyAsyncTask::ConvertCpyType MEMCPY_DIR_D2D_SDMA, direct= " RT_ENUM_LOG_FORMAT("%u"),
+                RT_ENUM_LOG_VALUE(static_cast<uint32_t>(cpyType), "MEMCPY_DIR_D2D_SDMA"));
             break;
     }
     return RT_ERROR_NONE;
@@ -523,8 +553,13 @@ rtError_t MemcpyAsyncTaskInitV2(
         RT_LOG(
             RT_LOG_DEBUG,
             "MemcpyAsync2dTask Init, dstPitch=%" PRIu64 ", srcPitch=%" PRIu64 ", width=%" PRIu64 ", height=%" PRIu64
-            ", fixedSize:%" PRIu64 ", copyType=%u.",
-            dstPitch, srcPitch, width, height, fixedSize, memcpyAsyncTaskInfo->copyType);
+            ", fixedSize:%" PRIu64 ", copyType=" RT_ENUM_LOG_FORMAT("%u") ".",
+            dstPitch, srcPitch, width, height, fixedSize,
+            RT_ENUM_LOG_VALUE(
+                static_cast<uint32_t>(memcpyAsyncTaskInfo->copyType),
+                (memcpyAsyncTaskInfo->copyType <= RT_MEMCPY_DIR_SDMA_AUTOMATIC_EQUAL ?
+                     RtMemCopyAsyncDirectToString(static_cast<rtMemCopyAsyncDirect>(memcpyAsyncTaskInfo->copyType)) :
+                     "UNKNOWN")));
         // copy one line data once time
         memcpyAsyncTaskInfo->size = width;
         return RT_ERROR_NONE;
@@ -549,8 +584,14 @@ rtError_t MemcpyAsyncTaskInitV2(
             RT_LOG(
                 RT_LOG_DEBUG,
                 "MemcpyAsync2dTask Init, dstPitch=%" PRIu64 ", srcPitch=%" PRIu64 ", width=%" PRIu64 ", height=%" PRIu64
-                ", fixedSize:%" PRIu64 ", copyType=%u, dmaKernelConvertFlag=%u.",
-                dstPitch, srcPitch, width, height, fixedSize, memcpyAsyncTaskInfo->copyType,
+                ", fixedSize:%" PRIu64 ", copyType=" RT_ENUM_LOG_FORMAT("%u") ", dmaKernelConvertFlag=%u.",
+                dstPitch, srcPitch, width, height, fixedSize,
+                RT_ENUM_LOG_VALUE(
+                    static_cast<uint32_t>(memcpyAsyncTaskInfo->copyType),
+                    (memcpyAsyncTaskInfo->copyType <= RT_MEMCPY_DIR_SDMA_AUTOMATIC_EQUAL ?
+                         RtMemCopyAsyncDirectToString(
+                             static_cast<rtMemCopyAsyncDirect>(memcpyAsyncTaskInfo->copyType)) :
+                         "UNKNOWN")),
                 memcpyAsyncTaskInfo->dmaKernelConvertFlag);
         }
         return RT_ERROR_NONE;
@@ -632,7 +673,13 @@ rtError_t MemcpyAsyncTaskInitV3(
 
     if (stream->Device_()->IsStarsPlatform()) {
         memcpyAsyncTaskInfo->dmaKernelConvertFlag = true;
-        RT_LOG(RT_LOG_INFO, "CopyType=%u: use virtual address directly.", copyType);
+        RT_LOG(
+            RT_LOG_INFO, "CopyType=" RT_ENUM_LOG_FORMAT("%u") ": use virtual address directly.",
+            RT_ENUM_LOG_VALUE(
+                static_cast<uint32_t>(copyType),
+                (copyType <= RT_MEMCPY_DIR_SDMA_AUTOMATIC_EQUAL ?
+                     RtMemCopyAsyncDirectToString(static_cast<rtMemCopyAsyncDirect>(copyType)) :
+                     "UNKNOWN")));
         if (!stream->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_TASK_PCIE_DMA_ASYNC_WITH_USER_VA)) {
             return RT_ERROR_NONE;
         }
@@ -774,8 +821,12 @@ void ToCommandBodyForMemcpyAsyncTask(TaskInfo* const taskInfo, rtCommand_t* cons
     command->u.memcpyTask.dir = static_cast<uint8_t>(copyType);
     command->u.memcpyTask.d2dOffsetFlag = 0U;
     RT_LOG(
-        RT_LOG_INFO, "MemcpyAsyncTask::ToCommandBody, command->u.memcpyTask.dir=%u.",
-        static_cast<uint32_t>(command->u.memcpyTask.dir));
+        RT_LOG_INFO, "MemcpyAsyncTask::ToCommandBody, command->u.memcpyTask.dir=" RT_ENUM_LOG_FORMAT("%u") ".",
+        RT_ENUM_LOG_VALUE(
+            static_cast<uint32_t>(static_cast<uint32_t>(command->u.memcpyTask.dir)),
+            (command->u.memcpyTask.dir <= RT_MEMCPY_DIR_SDMA_AUTOMATIC_EQUAL ?
+                 RtMemCopyAsyncDirectToString(static_cast<rtMemCopyAsyncDirect>(command->u.memcpyTask.dir)) :
+                 "UNKNOWN")));
 
     if ((driver->GetRunMode() == RT_RUN_MODE_ONLINE) && (copyType != RT_MEMCPY_DIR_D2D_SDMA) &&
         (copyType != RT_MEMCPY_DIR_SDMA_AUTOMATIC_ADD) && (copyType != RT_MEMCPY_ADDR_D2D_SDMA)) {

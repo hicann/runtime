@@ -8,6 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/api_enum_log.hpp"
+#include "runtime/config.h"
 #include "stream.hpp"
 #include "runtime.hpp"
 #include "context.hpp"
@@ -57,9 +59,12 @@ void TimeoutSetTaskUpdate(TaskInfo* taskInfo, const rtTaskTimeoutType_t type, co
             break;
     }
     RT_LOG(
-        RT_LOG_DEBUG, "Create TaskTimeout task, task_id=%u, task_type=%d(%s), stream_id=%d, timeout=%us, type=%d",
+        RT_LOG_DEBUG,
+        "Create TaskTimeout task, task_id=%u, task_type=%d(%s), stream_id=%d, timeout=%us, type=" RT_ENUM_LOG_FORMAT(
+            "%d"),
         static_cast<uint32_t>(taskInfo->id), static_cast<int32_t>(taskInfo->type), taskInfo->typeName,
-        taskInfo->stream->Id_(), timeout, type);
+        taskInfo->stream->Id_(), timeout,
+        RT_ENUM_LOG_VALUE(static_cast<int32_t>(type), RtTaskTimeoutTypeToString(type)));
 }
 
 void ToCommandBodyForTimeoutSetTask(TaskInfo* taskInfo, rtCommand_t* const command)

@@ -10,6 +10,9 @@
 #ifndef __CCE_RUNTIME_STREAM_HPP__
 #define __CCE_RUNTIME_STREAM_HPP__
 
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
+
 #include <atomic>
 #include <pthread.h>
 #include <list>
@@ -30,7 +33,6 @@
 #include "task_info.hpp"
 #include "device_sq_cq_pool.hpp"
 #include "sq_addr_memory_pool.hpp"
-#include "task_info.hpp"
 #include "event.h"
 #include "runtime_handle_guard.h"
 #include "stars_arg_manager.hpp"
@@ -110,6 +112,7 @@ enum class StreamStateCallback : uint8_t {
     RTS_STREAM_STATE_CALLBACK,
     STREAM_CALLBACK_TYPE_MAX
 };
+RT_ENUM_LOG_DECLARE(StreamStateCallbackToString, StreamStateCallback)
 
 struct RtTaskCqeStatus {
     TaskInfo* taskPtr;
@@ -174,6 +177,7 @@ enum class StreamSubscribeFlag : uint8_t {
     SUBSCRIBE_USER,
     SUBSCRIBE_RUNTIME,
 };
+RT_ENUM_LOG_DECLARE(StreamSubscribeFlagToString, StreamSubscribeFlag)
 
 enum class UpdateTaskFlag : int32_t {
     SUPPORT = 0,

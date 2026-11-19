@@ -8,6 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
 #include "davinci_kernel_task.h"
 #include "stream.hpp"
 #include "runtime.hpp"
@@ -331,10 +333,12 @@ void ToCommandBodyForAicAivTask(TaskInfo* taskInfo, rtCommand_t* const command)
 
     RT_LOG(
         RT_LOG_DEBUG,
-        "funcAddr=%#" PRIx64 ", args=%#" PRIx64 ", isConvertAddr=%u, kernelFlag=%u, schemMode=%u, taskType=%u.",
+        "funcAddr=%#" PRIx64 ", args=%#" PRIx64
+        ", isConvertAddr=%u, kernelFlag=%u, schemMode=%u, taskType=" RT_ENUM_LOG_FORMAT("%u") ".",
         command->u.kernelTask.funcPtr, command->u.kernelTask.funcDesc,
         static_cast<uint32_t>(command->u.kernelTask.isConvertAddr), static_cast<uint32_t>(aicTaskInfo->comm.kernelFlag),
-        command->u.kernelTask.schemMode, taskInfo->type);
+        command->u.kernelTask.schemMode,
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(taskInfo->type), RT_ENUM_LOG_NAME(taskInfo->typeName)));
 }
 
 void ToCommandBodyForAicpuTask(TaskInfo* taskInfo, rtCommand_t* const command)
@@ -361,10 +365,13 @@ void ToCommandBodyForAicpuTask(TaskInfo* taskInfo, rtCommand_t* const command)
 
     RT_LOG(
         RT_LOG_DEBUG,
-        "Set aicpu: kernel type[%u], so name[%" PRIu64 "], kernel name[%" PRIu64 "], "
-        "args=%#" PRIx64 ", isConvertAddr=%u, kernelFlag=%u.",
-        aicpuTaskInfo->aicpuKernelType, command->u.kernelTask.literalSrcAddr, command->u.kernelTask.funcPtr,
-        command->u.kernelTask.funcDesc, static_cast<uint32_t>(command->u.kernelTask.isConvertAddr),
+        "Set aicpu: kernel type[" RT_ENUM_LOG_FORMAT("%u") "], so name[%" PRIu64 "], kernel name[%" PRIu64 "], "
+                                                           "args=%#" PRIx64 ", isConvertAddr=%u, kernelFlag=%u.",
+        RT_ENUM_LOG_VALUE(
+            static_cast<uint32_t>(aicpuTaskInfo->aicpuKernelType),
+            TsAicpuKernelTypeToString(static_cast<tsAicpuKernelType>(aicpuTaskInfo->aicpuKernelType))),
+        command->u.kernelTask.literalSrcAddr, command->u.kernelTask.funcPtr, command->u.kernelTask.funcDesc,
+        static_cast<uint32_t>(command->u.kernelTask.isConvertAddr),
         static_cast<uint32_t>(aicpuTaskInfo->comm.kernelFlag));
 }
 
@@ -1040,8 +1047,11 @@ void PreCheckTaskErr(TaskInfo* taskInfo, const uint32_t devId)
             // no operation
         }
         RT_LOG(
-            RT_LOG_INFO, "report module_type=%d, mte_error=%u, errcode=0x%x", moduleType, taskInfo->mte_error,
-            taskInfo->stream->GetErrCode());
+            RT_LOG_INFO, "report module_type=" RT_ENUM_LOG_FORMAT("%d") ", mte_error=%u, errcode=0x%x",
+            RT_ENUM_LOG_VALUE(
+                static_cast<int32_t>(moduleType),
+                (moduleType == ERR_MODULE_AICPU) ? "ERR_MODULE_AICPU" : "ERR_MODULE_TBE"),
+            taskInfo->mte_error, taskInfo->stream->GetErrCode());
         if (IsAiCoreMemErrorCode(taskInfo->mte_error)) {
             taskInfo->stream->SetErrCode(taskInfo->mte_error);
             taskInfo->errorCode = static_cast<int32_t>(taskInfo->mte_error);

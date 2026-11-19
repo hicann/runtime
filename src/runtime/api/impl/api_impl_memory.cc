@@ -7,6 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "common/api_enum_log.hpp"
 #include <cinttypes>
 #include <mutex>
 #include <new>
@@ -392,7 +393,9 @@ rtError_t ApiImpl::DevMalloc(
     }
 
     cfgVal.moduleId = cfgVal.moduleId > DEFAULT_MODULEID ? static_cast<uint16_t>(APP) : cfgVal.moduleId;
-    RT_LOG(RT_LOG_INFO, "size=%" PRIu64 ", advise=%u,type=%#x,moduleId=%hu.", size, advise, type, cfgVal.moduleId);
+    RT_LOG(
+        RT_LOG_INFO, "size=%" PRIu64 ", advise=" RT_ENUM_LOG_FORMAT("%u") ",type=%#x,moduleId=%hu.", size,
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(advise), RtMallocAdviseToString(advise)), type, cfgVal.moduleId);
     const uint64_t tmpSize = (((size + 0x1FU) >> 5U) << 5U); // 32 byte align
     if (advise == RT_MEM_ADVISE_TS) {
         type |= RT_MEMORY_TS;                                // 申请TS内存 4G内;

@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "runtime/base.h"
 #include "kernel.hpp"
 #include "program.hpp"
 #include "runtime.hpp"
@@ -73,8 +74,11 @@ rtError_t GetPrefetchCnt(Kernel* const kernel)
     kernel->SetPrefetchCnt1_(icachePrefetchCnt1);
     kernel->SetPrefetchCnt2_(icachePrefetchCnt2);
     RT_LOG(
-        RT_LOG_DEBUG, "get prefetch cnt success, kernel_name=%s, prefetchCnt1=%u, prefetchCnt2=%u, mixtype=%hu.",
-        kernel->Name_().c_str(), kernel->PrefetchCnt1_(), kernel->PrefetchCnt2_(), mixtype);
+        RT_LOG_DEBUG,
+        "get prefetch cnt success, kernel_name=%s, prefetchCnt1=%u, prefetchCnt2=%u, mixtype=" RT_ENUM_LOG_FORMAT(
+            "%u") ".",
+        kernel->Name_().c_str(), kernel->PrefetchCnt1_(), kernel->PrefetchCnt2_(),
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(mixtype), RtMixTypeToString(static_cast<RtMixType>(mixtype))));
     return RT_ERROR_NONE;
 }
 

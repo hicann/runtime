@@ -7,6 +7,8 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "kernel.hpp"
+#include "runtime/base.h"
 #include "aix_c.hpp"
 
 #include <cinttypes>
@@ -690,13 +692,15 @@ rtError_t StreamLaunchKernelV2(
         RT_LOG_INFO,
         "kernel info : device_id=%u, stream_id=%d, task_id=%hu, kernelAttrType=%s, kernel_name=%s, "
         "arg_size=%u, coreDim=%u, taskRation=%u, funcType=%u, addr1=0x%llx, addr2=0x%llx, "
-        "mixType=%u, kernelFlag=0x%x, qos=%u, partId=%u, schemMode=%u, infoAddr=%p, atomicIndex=%lu, "
-        "prefetchCnt1=%u, prefetchCnt2=%u, isNoNeedH2DCopy=%u.",
+        "mixType=" RT_ENUM_LOG_FORMAT(
+            "%u") ", kernelFlag=0x%x, qos=%u, partId=%u, schemMode=%u, infoAddr=%p, atomicIndex=%lu, "
+                  "prefetchCnt1=%u, prefetchCnt2=%u, isNoNeedH2DCopy=%u.",
         device->Id_(), stm->Id_(), kernTask->id, KernelAttrTypeToString(kernelAttrType).c_str(),
         kernel->Name_().c_str(), argsInfo->argsSize, coreDim, kernel->GetTaskRation(), kernel->GetFuncType(), kernelPc1,
-        kernelPc2, mixType, aicTask->comm.kernelFlag, aicTask->qos, aicTask->partId, aicTask->schemMode,
-        aicTask->inputArgsSize.infoAddr, aicTask->inputArgsSize.atomicIndex, prefetchCnt1, prefetchCnt2,
-        argsInfo->isNoNeedH2DCopy);
+        kernelPc2,
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(mixType), RtMixTypeToString(static_cast<RtMixType>(mixType))),
+        aicTask->comm.kernelFlag, aicTask->qos, aicTask->partId, aicTask->schemMode, aicTask->inputArgsSize.infoAddr,
+        aicTask->inputArgsSize.atomicIndex, prefetchCnt1, prefetchCnt2, argsInfo->isNoNeedH2DCopy);
 
     TIMESTAMP_BEGIN(rtLaunchKernel_SubMit);
     error = InternalLaunchKernelSubmit(ctx, kernTask, stm, argsInfo, result, extendAgrs, nullptr);
@@ -839,14 +843,18 @@ rtError_t StreamLaunchKernelV1(
     RT_LOG(
         RT_LOG_INFO,
         "device_id=%lu, stream_id=%d, task_id=%hu, kernelAttrType=%s, kernel_name=%s, arg_size=%u, "
-        "taskRation=%u, funcType=%u, coreDim=%u, mixType=%hhu, addr1=0x%llx, addr2=0x%llx, stubFunc=%p, "
-        "kernelFlag=0x%x, qos=%u, partId=%u, schemMode=%u, infoAddr=%p, atomicIndex=%lu, isNoNeedH2DCopy=%u, "
-        "isUpdateSinkSqe=%u.",
+        "taskRation=%u, funcType=%u, coreDim=%u, mixType=" RT_ENUM_LOG_FORMAT(
+            "%u") ", addr1=0x%llx, addr2=0x%llx, stubFunc=%p, "
+                  "kernelFlag=0x%x, qos=%u, partId=%u, schemMode=%u, infoAddr=%p, atomicIndex=%lu, "
+                  "isNoNeedH2DCopy=%u, "
+                  "isUpdateSinkSqe=%u.",
         device->Id_(), stm->Id_(), kernTask->id, KernelAttrTypeToString(kernelAttrType).c_str(),
         registeredKernel->Name_().c_str(), argsInfo->argsSize, registeredKernel->GetTaskRation(),
-        registeredKernel->GetFuncType(), coreDim, mixType, addr1, addr2, stubFunc, aicTask->comm.kernelFlag,
-        aicTask->qos, aicTask->partId, aicTask->schemMode, aicTask->inputArgsSize.infoAddr,
-        aicTask->inputArgsSize.atomicIndex, argsInfo->isNoNeedH2DCopy, kernTask->isUpdateSinkSqe);
+        registeredKernel->GetFuncType(), coreDim,
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(mixType), RtMixTypeToString(static_cast<RtMixType>(mixType))), addr1,
+        addr2, stubFunc, aicTask->comm.kernelFlag, aicTask->qos, aicTask->partId, aicTask->schemMode,
+        aicTask->inputArgsSize.infoAddr, aicTask->inputArgsSize.atomicIndex, argsInfo->isNoNeedH2DCopy,
+        kernTask->isUpdateSinkSqe);
 
     error = InternalLaunchKernelSubmit(ctx, kernTask, stm, argsInfo, result, nullptr, prog);
     ERROR_GOTO_MSG_INNER(error, ERROR_RECYCLE, "kernel launch submit failed.");
@@ -1000,14 +1008,16 @@ rtError_t StreamLaunchKernelWithHandle(
     RT_LOG(
         RT_LOG_INFO,
         "kernel info : device_id=%lu, stream_id=%d, task_id=%hu, kernelAttrType=%s, kernel_name=%s, "
-        "arg_size=%u, coreDim=%u, mixType=%u, taskRation=%u, funcType=%u, addr1=0x%llx, addr2=0x%llx, "
-        "kernelFlag=0x%x, qos=%u, partId=%u, schemMode=%u, infoAddr=%p, atomicIndex=%u, "
-        "isNoNeedH2DCopy=%u, isUpdateSinkSqe=%u.",
+        "arg_size=%u, coreDim=%u, mixType=" RT_ENUM_LOG_FORMAT(
+            "%u") ", taskRation=%u, funcType=%u, addr1=0x%llx, addr2=0x%llx, "
+                  "kernelFlag=0x%x, qos=%u, partId=%u, schemMode=%u, infoAddr=%p, atomicIndex=%u, "
+                  "isNoNeedH2DCopy=%u, isUpdateSinkSqe=%u.",
         device->Id_(), stm->Id_(), kernTask->id, KernelAttrTypeToString(kernelAttrType).c_str(),
         (tilingKey == DEFAULT_TILING_KEY) ? "" : registeredKernel->Name_().c_str(), argsInfo->argsSize, coreDim,
-        mixType, taskRation, funcType, addr1, addr2, aicTask->comm.kernelFlag, aicTask->qos, aicTask->partId,
-        aicTask->schemMode, aicTask->inputArgsSize.infoAddr, aicTask->inputArgsSize.atomicIndex,
-        argsInfo->isNoNeedH2DCopy, kernTask->isUpdateSinkSqe);
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(mixType), RtMixTypeToString(static_cast<RtMixType>(mixType))),
+        taskRation, funcType, addr1, addr2, aicTask->comm.kernelFlag, aicTask->qos, aicTask->partId, aicTask->schemMode,
+        aicTask->inputArgsSize.infoAddr, aicTask->inputArgsSize.atomicIndex, argsInfo->isNoNeedH2DCopy,
+        kernTask->isUpdateSinkSqe);
 
     TIMESTAMP_BEGIN(rtKernelLaunchWithHandle_SubMit);
     error = InternalLaunchKernelSubmit(ctx, kernTask, stm, argsInfo, result, nullptr, prog);

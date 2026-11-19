@@ -10,6 +10,9 @@
 #ifndef __CCE_RUNTIME_RUNTIME_HPP__
 #define __CCE_RUNTIME_RUNTIME_HPP__
 
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
+
 #include "base.hpp"
 #include "osal.hpp"
 #include "reference.hpp"
@@ -105,12 +108,14 @@ enum RtMixType : std::uint8_t {
     MIX_AIC_AIV_MAIN_AIC = 3,
     MIX_AIC_AIV_MAIN_AIV = 4
 };
+RT_ENUM_LOG_DECLARE(RtMixTypeToString, RtMixType)
 
 enum RtTaskTimeUnitType : std::uint16_t {
     RT_TIME_UNIT_TYPE_S = 0,  // second
     RT_TIME_UNIT_TYPE_MS = 1, // millisecond
     RT_TIME_UNIT_TYPE_US = 2, // us
 };
+RT_ENUM_LOG_DECLARE(RtTaskTimeUnitTypeToString, RtTaskTimeUnitType)
 
 enum HbmRasProcStatus : std::uint16_t {
     HBM_RAS_WORKING = 0U,

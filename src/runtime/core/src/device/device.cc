@@ -7,6 +7,9 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "common/api_enum_log.hpp"
+#include "common/driver_enum_desc.hpp"
+#include "runtime/base.h"
 #include "device.hpp"
 #include <chrono>
 #include "raw_device.hpp"
@@ -131,7 +134,11 @@ rtError_t GroupDevice::QueryGroupInfo()
 {
     uint32_t info = static_cast<uint32_t>(RT_RUN_MODE_RESERVED);
     (void)drvGetPlatformInfo(&info);
-    RT_LOG(RT_LOG_DEBUG, "[drv api]drvGetPlatformInfo info=%u.", info);
+    RT_LOG(
+        RT_LOG_DEBUG, "[drv api]drvGetPlatformInfo info=" RT_ENUM_LOG_FORMAT("%u") ".",
+        RT_ENUM_LOG_VALUE(
+            static_cast<uint32_t>(info),
+            (info <= RT_RUN_MODE_RESERVED ? RtRunModeToString(static_cast<rtRunMode>(info)) : "UNKNOWN")));
     isFirstQryGrpInfoMux_.lock();
     if ((info == RT_RUN_MODE_OFFLINE) && isFirstQryGrpInfo_) {
         const rtError_t error = GroupInfoSetup();

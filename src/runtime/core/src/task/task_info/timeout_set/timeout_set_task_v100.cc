@@ -8,6 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
 #include "runtime.hpp"
 #include "context.hpp"
 #include "runtime_task_manager.h"
@@ -69,8 +71,10 @@ static void ConstructSqeForTimeoutSetTask(TaskInfo* taskInfo, void* const sqeBuf
     sqe->dest_pid = 0U;
     PrintSqe(command, "TaskTimeoutSetTask");
     RT_LOG(
-        RT_LOG_INFO, "TaskTimeoutSetTask ConstructSqe finish, topic_type=%u, cmd_type=%u",
-        static_cast<uint32_t>(sqe->topic_type), sqe->usr_data.cmd_type);
+        RT_LOG_INFO, "TaskTimeoutSetTask ConstructSqe finish, topic_type=" RT_ENUM_LOG_FORMAT("%u") ", cmd_type=%u",
+        RT_ENUM_LOG_VALUE(
+            static_cast<uint32_t>(static_cast<uint32_t>(sqe->topic_type)), "TOPIC_TYPE_DEVICE_AICPU_ONLY"),
+        sqe->usr_data.cmd_type);
 }
 #endif
 

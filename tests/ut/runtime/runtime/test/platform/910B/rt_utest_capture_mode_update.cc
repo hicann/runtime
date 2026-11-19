@@ -8,13 +8,17 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/enum_log.hpp"
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 #include "securec.h"
+#include <string>
+#include "runtime/base.h"
 #define private public
 #define protected public
 #include "runtime.hpp"
 #include "model.hpp"
+#include "capture_model.hpp"
 #include "raw_device.hpp"
 #include "module.hpp"
 #include "notify.hpp"
@@ -37,6 +41,9 @@
 #include "../../data/elf.h"
 #undef private
 #undef protected
+
+void ClearLastDlogRecordLine();
+bool DlogRecordContains(const std::string& keyword);
 
 using namespace testing;
 using namespace cce::runtime;
@@ -1445,8 +1452,34 @@ TEST_F(CloudV2CaptureModelUpdateTest, rtModelTaskDisable_Success)
     EXPECT_EQ(ret, RT_ERROR_NONE);
     EXPECT_EQ(params.type, RT_TASK_KERNEL);
 
-    ret = rtModelTaskDisable(inputTasks[0]);
-    EXPECT_EQ(ret, RT_ERROR_NONE);
+    const auto disableAndCheckLog = [&]() {
+        TaskInfo* const taskInfo = static_cast<TaskInfo*>(inputTasks[0]);
+        ASSERT_NE(taskInfo, nullptr);
+        ASSERT_NE(taskInfo->stream, nullptr);
+        ASSERT_NE(taskInfo->typeName, nullptr);
+        CaptureModel* const captureModel = dynamic_cast<CaptureModel*>(taskInfo->stream->Model_());
+        ASSERT_NE(captureModel, nullptr);
+        const tsTaskType_t originalType = taskInfo->type;
+        const char* const originalName = taskInfo->typeName;
+        const std::string logPrefix = "stream_id=" + std::to_string(taskInfo->stream->Id_()) +
+                                      ", task_id=" + std::to_string(GetTaskId(taskInfo)) + ", task type=";
+        MOCKER(CheckLogLevel).stubs().will(returnValue(1));
+        ClearLastDlogRecordLine();
+        ret = rtModelTaskDisable(inputTasks[0]);
+        EXPECT_EQ(ret, RT_ERROR_NONE);
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+        EXPECT_TRUE(DlogRecordContains(logPrefix + originalName + "(" + std::to_string(originalType) + ")"));
+#else
+        EXPECT_TRUE(DlogRecordContains(logPrefix + std::to_string(originalType)));
+#endif
+        EXPECT_EQ(taskInfo->type, originalType);
+        EXPECT_EQ(taskInfo->typeName, originalName);
+        EXPECT_EQ(taskInfo->updateFlag, static_cast<uint8_t>(TaskUpdateFlag::RT_TASK_DISABLE));
+        EXPECT_EQ(captureModel->GetCaptureModelStatus(), RtCaptureModelStatus::UPDATING);
+        EXPECT_EQ(captureModel->GetGraphUpdateInfo().updateTask.count(taskInfo), 1U);
+        ClearLastDlogRecordLine();
+    };
+    disableAndCheckLog();
 
     ret = rtModelUpdate(model);
     EXPECT_EQ(ret, RT_ERROR_NONE);

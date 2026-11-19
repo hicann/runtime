@@ -7,6 +7,9 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
+#include <string>
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 #define private public
@@ -29,6 +32,9 @@ namespace runtime {
 rtError_t XpuProfilingHandle(uint32_t type, void* data, uint32_t len);
 }
 } // namespace cce
+
+void ClearLastDlogRecordLine();
+bool DlogRecordContains(const std::string& keyword);
 
 using namespace cce::runtime;
 
@@ -82,12 +88,19 @@ TEST_F(XpuApiImplTest, SetXpuDevice_Failed_InvalidDevId)
 
 TEST_F(XpuApiImplTest, SetXpuDevice_Success)
 {
+    MOCKER(CheckLogLevel).stubs().will(returnValue(1));
+    ClearLastDlogRecordLine();
     MOCKER(drvGetPlatformInfo).stubs().will(invoke(drvGetPlatformInfo_online));
     MOCKER_CPP(&XpuDevice::ParseXpuConfigInfo).stubs().will(invoke(ParseXpuConfigInfo_mock));
 
     rtError_t error = ApiImplXpu().SetXpuDevice(RT_DEV_TYPE_DPU, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+    EXPECT_TRUE(DlogRecordContains("drv devId=0, devType=DEV_TYPE_DPU(0)."));
+#else
+    EXPECT_TRUE(DlogRecordContains("drv devId=0, devType=0."));
+#endif
     // Cleanup
     (void)ApiImplXpu().ResetXpuDevice(RT_DEV_TYPE_DPU, 0);
 }

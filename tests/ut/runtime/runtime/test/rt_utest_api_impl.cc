@@ -7,6 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "common/enum_log.hpp"
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 #include "driver/ascend_hal.h"
@@ -46,6 +47,8 @@
 #include "device_error_proc.hpp"
 #undef private
 #include <mutex>
+#include <cstdio>
+#include <cstring>
 #include <string>
 #include "driver/ascend_hal.h"
 #include "device_msg_handler.hpp"
@@ -66,6 +69,7 @@
 #include "thread_local_container.hpp"
 #include "dev_info_manage.h"
 #include "maintenance_task.h"
+#include "stream_task.h"
 #include "stream_c.hpp"
 #include "fast_recover.hpp"
 #include "rts.h"
@@ -76,6 +80,11 @@
 #include "errcode_manage.hpp"
 #include "heterogenous.h"
 #include "common/rt_utest_context_reset_helper.hpp"
+#include "runtime/base.h"
+#include "task_to_sqe.hpp"
+#include "api_impl_kernel_func.hpp"
+#include "kernel_utils.hpp"
+#include "capture_model_utils.hpp"
 
 void ClearLastDlogRecordLine();
 bool DlogRecordContains(const std::string& keyword);
@@ -206,7 +215,465 @@ private:
     bool isErrorNone_ = true;
 };
 
+TEST_F(ApiImplTest, KernelRegistrationLog_PreservesSignedUnknownAndProgramType)
+{
+    MOCKER(CheckLogLevel).stubs().will(returnValue(1));
+    MOCKER_CPP(&Runtime::BinaryGetFunctionByName).stubs().will(returnValue(RT_ERROR_NONE));
+    ApiImpl impl;
+    PlainProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    const KernelRegisterType types[] = {
+        RT_KERNEL_REG_TYPE_CPU, RT_KERNEL_REG_TYPE_NON_CPU, static_cast<KernelRegisterType>(-1)};
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+    const char* const descriptions[] = {"KERNEL_REG_TYPE_CPU(0)", "KERNEL_REG_TYPE_NON_CPU(1)", "UNKNOWN(-1)"};
+#else
+    const char* const descriptions[] = {"0", "1", "-1"};
+#endif
+    for (size_t i = 0U; i < sizeof(types) / sizeof(types[0]); ++i) {
+        program.SetKernelRegType(types[i]);
+        Kernel* function = nullptr;
+        ClearLastDlogRecordLine();
+        EXPECT_EQ(impl.BinaryGetFunctionByName(&program, "semantic_log", &function), RT_ERROR_NONE);
+        EXPECT_TRUE(DlogRecordContains(std::string("kernel_name=semantic_log,kernelRegType=") + descriptions[i]));
+        EXPECT_EQ(program.GetKernelRegType(), types[i]);
+    }
+    ClearLastDlogRecordLine();
+}
+
+TEST_F(ApiImplTest, LaunchKernelArgsLog_PreservesUnsignedUnknownAndFollowingSize)
+{
+    MOCKER(CheckLogLevel).stubs().will(returnValue(1));
+    MOCKER_CPP(&ApiImpl::CurrentContext).stubs().will(returnValue(static_cast<Context*>(nullptr)));
+    ApiImpl impl;
+    const ArgsType types[] = {RT_ARGS_NON_CPU_EX, RT_ARGS_CPU_EX,    RT_ARGS_HANDLE, RT_ARGS_ARRAY,
+                              RT_SIMT_ARGS_ARRAY, RT_SIMT_ARGS_HOST, RT_ARGS_MAX,    static_cast<ArgsType>(-1)};
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+    const char* const descriptions[] = {"ARGS_NON_CPU_EX(1)", "ARGS_CPU_EX(2)",     "ARGS_HANDLE(3)",
+                                        "ARGS_ARRAY(4)",      "SIMT_ARGS_ARRAY(5)", "SIMT_ARGS_HOST(6)",
+                                        "UNKNOWN(7)",         "UNKNOWN(4294967295)"};
+#else
+    const char* const descriptions[] = {"1", "2", "3", "4", "5", "6", "7", "4294967295"};
+#endif
+    rtLaunchKernelAttr_t attr = {};
+    attr.id = RT_LAUNCH_KERNEL_ATTR_SCHEM_MODE;
+    rtKernelLaunchCfg_t cfg = {&attr, 1U};
+    for (size_t i = 0U; i < sizeof(types) / sizeof(types[0]); ++i) {
+        RtArgsWithType args = {};
+        args.type = types[i];
+        ClearLastDlogRecordLine();
+        EXPECT_EQ(impl.LaunchKernelV2(nullptr, 32U, &args, nullptr, &cfg), RT_ERROR_CONTEXT_NULL);
+        EXPECT_TRUE(DlogRecordContains(std::string("blockDim=32, argsType=") + descriptions[i] + ", cfgAttrNum=1."));
+        EXPECT_EQ(args.type, types[i]);
+    }
+    ClearLastDlogRecordLine();
+}
+
+TEST_F(ApiImplTest, TimeoutUnitLog_PreservesUnitAndOriginalTimeout)
+{
+    MOCKER(CheckLogLevel).stubs().will(returnValue(1));
+    MOCKER_CPP(&Runtime::SetTimeoutConfig).stubs().will(returnValue(RT_ERROR_NONE));
+    ApiImpl impl;
+    const RtTaskTimeUnitType units[] = {
+        RT_TIME_UNIT_TYPE_S, RT_TIME_UNIT_TYPE_MS, RT_TIME_UNIT_TYPE_US, static_cast<RtTaskTimeUnitType>(UINT16_MAX)};
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+    const char* const descriptions[] = {
+        "TIME_UNIT_TYPE_S(0)", "TIME_UNIT_TYPE_MS(1)", "TIME_UNIT_TYPE_US(2)", "UNKNOWN(65535)"};
+#else
+    const char* const descriptions[] = {"0", "1", "2", "65535"};
+#endif
+    for (size_t i = 0U; i < sizeof(units) / sizeof(units[0]); ++i) {
+        ClearLastDlogRecordLine();
+        EXPECT_EQ(impl.SetOpExecuteTimeOut(3U, units[i]), RT_ERROR_NONE);
+        EXPECT_TRUE(DlogRecordContains(std::string("timeout=3s, timeUnitType=") + descriptions[i] + "."));
+    }
+    ClearLastDlogRecordLine();
+}
+
+TEST_F(ApiImplTest, FunctionRatioLog_UsesRelocatedApiAndKeepsBothRatios)
+{
+    MOCKER(CheckLogLevel).stubs().will(returnValue(1));
+    MOCKER_CPP(&DevInfoManage::IsSupportChipFeature).stubs().will(returnValue(true));
+    ApiImplKernelFunc impl;
+    PlainProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    Kernel kernel("semantic_log", 0U, &program, RT_KERNEL_ATTR_TYPE_AICORE, 0U);
+    kernel.SetKernelRegisterType(RT_KERNEL_REG_TYPE_NON_CPU);
+    kernel.SetTaskRation(2U);
+    const uint8_t types[] = {NO_MIX, MIX_AIC, MIX_AIV, MIX_AIC_AIV_MAIN_AIC, MIX_AIC_AIV_MAIN_AIV, UINT8_MAX};
+    const uint16_t expectedAic[] = {0U, 1U, 0U, 1U, 2U, 0U};
+    const uint16_t expectedAiv[] = {0U, 0U, 1U, 2U, 1U, 0U};
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+    const char* const descriptions[] = {
+        "NO_MIX(0)", "MIX_AIC(1)", "MIX_AIV(2)", "MIX_AIC_AIV_MAIN_AIC(3)", "MIX_AIC_AIV_MAIN_AIV(4)", "UNKNOWN(255)"};
+#else
+    const char* const descriptions[] = {"0", "1", "2", "3", "4", "255"};
+#endif
+    for (size_t i = 0U; i < sizeof(types) / sizeof(types[0]); ++i) {
+        kernel.SetMixType(types[i]);
+        int64_t result = 0;
+        ClearLastDlogRecordLine();
+        EXPECT_EQ(impl.FunctionGetAttribute(&kernel, RT_FUNCTION_ATTR_KERNEL_RATIO, &result), RT_ERROR_NONE);
+        EXPECT_TRUE(DlogRecordContains(
+            std::string("mixType=") + descriptions[i] + ", ratio[0]=" + std::to_string(expectedAic[i]) +
+            ", ratio[1]=" + std::to_string(expectedAiv[i]) + "."));
+        uint16_t ratios[2] = {};
+        std::memcpy(ratios, &result, sizeof(ratios));
+        EXPECT_EQ(ratios[1], expectedAic[i]);
+        EXPECT_EQ(ratios[0], expectedAiv[i]);
+        EXPECT_EQ(kernel.GetMixType(), types[i]);
+    }
+    ClearLastDlogRecordLine();
+}
+
+TEST_F(ApiImplTest, CaptureTaskLog_PairsBorrowedNameAndNullFallback)
+{
+    MOCKER(CheckLogLevel).stubs().will(returnValue(1));
+    MOCKER(CheckCaptureModelForUpdate).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(CacheKernelTaskParams).stubs().will(returnValue(RT_ERROR_NONE));
+    Context* const context = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(context, nullptr);
+    Device* const device = context->Device_();
+    ASSERT_NE(device, nullptr);
+    CaptureModel model;
+    ASSERT_EQ(model.Setup(context), RT_ERROR_NONE);
+    model.SetCaptureModelStatus(RtCaptureModelStatus::READY);
+    Stream stream(device, 0U);
+    stream.SetModel(&model);
+    TaskUpdateInfo updateInfo = {};
+    TaskInfo task = {};
+    task.stream = &stream;
+    task.id = 17U;
+    task.type = TS_TASK_TYPE_KERNEL_AICORE;
+    task.updateInfo = &updateInfo;
+    rtTaskParams params = {};
+    params.type = RT_TASK_KERNEL;
+    const char* const names[] = {"KERNEL_AICORE", nullptr};
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+    const char* const descriptions[] = {"KERNEL_AICORE(0)", "UNKNOWN(0)"};
+#else
+    const char* const descriptions[] = {"0", "0"};
+#endif
+    ApiImpl impl;
+    for (size_t i = 0U; i < sizeof(names) / sizeof(names[0]); ++i) {
+        task.typeName = names[i];
+        ClearLastDlogRecordLine();
+        EXPECT_EQ(impl.TaskSetParams(&task, &params, nullptr), RT_ERROR_NONE);
+        EXPECT_TRUE(DlogRecordContains(
+            std::string("task_id=17, task type=") + descriptions[i] + ", target type=TASK_KERNEL(1)"));
+        EXPECT_FALSE(DlogRecordContains("typeName="));
+        EXPECT_EQ(task.typeName, names[i]);
+        EXPECT_EQ(task.type, TS_TASK_TYPE_KERNEL_AICORE);
+        EXPECT_EQ(task.updateFlag, static_cast<uint8_t>(TaskUpdateFlag::RT_TASK_UPDATE));
+    }
+    model.ClearGraphUpdateTask();
+    stream.SetModel(nullptr);
+    EXPECT_EQ(model.TearDown(), RT_ERROR_NONE);
+    task.updateInfo = nullptr;
+    ClearLastDlogRecordLine();
+}
+
+namespace {
+class CallbackEventApiImplForPr3 : public ApiImpl {
+public:
+    explicit CallbackEventApiImplForPr3(Event* event) : event_(event) {}
+    rtError_t EventCreate(Event** const event, const uint64_t flag) override
+    {
+        UNUSED(flag);
+        *event = event_;
+        return RT_ERROR_NONE;
+    }
+
+private:
+    Event* event_;
+};
+} // namespace
+
+TEST_F(ApiImplTest, CallbackSubscribeLog_PreservesBothStreamFlagsAndFailurePath)
+{
+    MOCKER(CheckLogLevel).stubs().will(returnValue(1));
+    Device* const device = Runtime::Instance()->CurrentContext()->Device_();
+    Stream original(device, 0U);
+    Stream launch(device, 0U);
+    original.SetCaptureStatus(RT_STREAM_CAPTURE_STATUS_ACTIVE);
+    launch.SetSubscribeFlag(StreamSubscribeFlag::SUBSCRIBE_NONE);
+    TaskInfo task = {};
+    task.stream = &launch;
+    MOCKER_CPP(&Stream::AllocTask).stubs().will(returnValue(&task));
+    MOCKER_CPP(&TaskFactory::Recycle).stubs().will(returnValue(0));
+    MOCKER_CPP(&Runtime::GetThreadIdByStreamId).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&Runtime::SubscribeCallback).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(Runtime::Instance(), &Runtime::SubscribeReport).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(CallbackLaunchTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(device, &Device::SubmitTask).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    const StreamSubscribeFlag flags[] = {
+        StreamSubscribeFlag::SUBSCRIBE_USER, StreamSubscribeFlag::SUBSCRIBE_RUNTIME,
+        static_cast<StreamSubscribeFlag>(UINT8_MAX)};
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+    const char* const descriptions[] = {"SUBSCRIBE_USER(1)", "SUBSCRIBE_RUNTIME(2)", "UNKNOWN(255)"};
+    const char* const launchDescription = "SUBSCRIBE_NONE(0)";
+#else
+    const char* const descriptions[] = {"1", "2", "255"};
+    const char* const launchDescription = "0";
+#endif
+    ApiImpl impl;
+    Event callbackEvent(device, RT_EVENT_DDSYNC_NS, nullptr);
+    MOCKER_CPP_VIRTUAL(&callbackEvent, &Event::GetEventID).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    CallbackEventApiImplForPr3 withEvent(&callbackEvent);
+    for (size_t i = 0U; i < sizeof(flags) / sizeof(flags[0]); ++i) {
+        original.SetSubscribeFlag(flags[i]);
+        const std::string expected =
+            "Launched stream_id=" + std::to_string(launch.Id_()) + ", launchSubscribeFlag=" + launchDescription +
+            ", original stream_id=" + std::to_string(original.Id_()) + ", originalSubscribeFlag=" + descriptions[i];
+        ClearLastDlogRecordLine();
+        EXPECT_EQ(impl.CallbackLaunchWithoutEvent(nullptr, nullptr, &original, false), RT_ERROR_INVALID_VALUE);
+        EXPECT_TRUE(DlogRecordContains(expected));
+        EXPECT_EQ(original.GetSubscribeFlag(), flags[i]);
+        EXPECT_EQ(launch.GetSubscribeFlag(), StreamSubscribeFlag::SUBSCRIBE_NONE);
+        Event* returnedEvent = nullptr;
+        ClearLastDlogRecordLine();
+        EXPECT_EQ(
+            withEvent.CallbackLaunchWithEvent(nullptr, nullptr, &original, true, &returnedEvent, 5U),
+            RT_ERROR_INVALID_VALUE);
+        EXPECT_TRUE(DlogRecordContains(expected));
+        EXPECT_EQ(original.GetSubscribeFlag(), flags[i]);
+        EXPECT_EQ(launch.GetSubscribeFlag(), StreamSubscribeFlag::SUBSCRIBE_NONE);
+    }
+    original.SetCaptureStatus(RT_STREAM_CAPTURE_STATUS_NONE);
+    ClearLastDlogRecordLine();
+}
+
+TEST_F(ApiImplTest, PointerAttributesLog_PreservesFieldsAndDropsNumericLegend)
+{
+    MOCKER(CheckLogLevel).stubs().will(returnValue(1));
+    ApiImpl impl;
+    ApiErrorDecorator api(&impl);
+    MOCKER_CPP_VIRTUAL(&impl, &ApiImpl::PointerGetAttributes).stubs().will(returnValue(RT_ERROR_NONE));
+    rtPointerAttributes_t attributes = {};
+    attributes.locationType = RT_MEMORY_LOC_HOST;
+    attributes.memoryType = RT_MEMORY_TYPE_USER;
+    int address = 0;
+    ClearLastDlogRecordLine();
+    EXPECT_EQ(api.PointerGetAttributes(&attributes, &address), RT_ERROR_NONE);
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+    EXPECT_TRUE(DlogRecordContains("locationType=MEMORY_LOC_HOST(0), memoryType=MEMORY_TYPE_USER(5)."));
+#else
+    EXPECT_TRUE(DlogRecordContains("locationType=0, memoryType=5."));
+#endif
+    EXPECT_EQ(attributes.locationType, RT_MEMORY_LOC_HOST);
+    EXPECT_EQ(attributes.memoryType, RT_MEMORY_TYPE_USER);
+    EXPECT_FALSE(DlogRecordContains("[1:HOST,2:DEVICE,3:SVM,4:DVPP]"));
+    ClearLastDlogRecordLine();
+}
+
+TEST_F(ApiImplTest, CapabilityLogs_PreserveSupportValuesAndContext)
+{
+    MOCKER(CheckLogLevel).stubs().will(returnValue(1));
+    MOCKER_CPP(&DevInfoManage::IsSupportChipFeature).stubs().will(returnValue(true));
+    MOCKER(CheckSupportTilingKeyWhenCompile).stubs().will(returnValue(false)).then(returnValue(true));
+    Device* const device = Runtime::Instance()->CurrentContext()->Device_();
+    MOCKER_CPP_VIRTUAL(device, &Device::CheckFeatureSupport).stubs().will(returnValue(false)).then(returnValue(true));
+    ApiImpl impl;
+    ApiErrorDecorator decorator(&impl);
+    const int32_t expected[] = {RT_DEV_CAP_NOT_SUPPORT, RT_DEV_CAP_SUPPORT};
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+    const char* const descriptions[] = {"DEV_CAP_NOT_SUPPORT(9)", "DEV_CAP_SUPPORT(8)"};
+#else
+    const char* const descriptions[] = {"9", "8"};
+#endif
+    for (size_t i = 0U; i < 2U; ++i) {
+        int32_t value = -1;
+        ClearLastDlogRecordLine();
+        EXPECT_EQ(
+            decorator.GetDeviceCapability(STUB_DEVICE_ID, RT_MODULE_TYPE_TSCPU, FEATURE_TYPE_MODEL_TASK_UPDATE, &value),
+            RT_ERROR_NONE);
+        EXPECT_EQ(value, expected[i]);
+        EXPECT_TRUE(DlogRecordContains(
+            "chipType = " + std::to_string(Runtime::Instance()->GetChipType()) + ", *val=" + descriptions[i]));
+        ClearLastDlogRecordLine();
+        EXPECT_EQ(impl.GetModelTaskUpdateIsSupport(0, &value), RT_ERROR_NONE);
+        EXPECT_EQ(value, expected[i]);
+        EXPECT_TRUE(DlogRecordContains(
+            "chipType = " + std::to_string(device->GetChipType()) +
+            ",TsVersion=" + std::to_string(device->GetTschVersion()) + ",*val=" + descriptions[i]));
+    }
+    ClearLastDlogRecordLine();
+}
+
+TEST_F(ApiImplTest, QueueBufferAndUtilizationLogs_PreserveCommandsAndEarlyReturn)
+{
+    MOCKER(CheckLogLevel).stubs().will(returnValue(1));
+    MOCKER_CPP(&ApiImpl::CheckCurCtxValid).stubs().will(returnValue(RT_ERROR_CONTEXT_NULL));
+    MOCKER(NpuDriver::BuffGetInfo).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    ApiImpl impl;
+    uint32_t outLen = 17U;
+    uint8_t utilization = 23U;
+    ClearLastDlogRecordLine();
+    EXPECT_EQ(
+        impl.MemQueueQuery(7, RT_MQ_QUERY_QUES_ATTR_ENTITY_TYPE, nullptr, 0U, nullptr, &outLen), RT_ERROR_CONTEXT_NULL);
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+    EXPECT_TRUE(DlogRecordContains("drv devId 7, cmd is MQ_QUERY_QUES_ATTR_ENTITY_TYPE(2)."));
+#else
+    EXPECT_TRUE(DlogRecordContains("drv devId 7, cmd is 2."));
+#endif
+    ClearLastDlogRecordLine();
+    EXPECT_EQ(impl.BuffGetInfo(RT_BUFF_GET_MBUF_BUILD_INFO, nullptr, 0U, nullptr, &outLen), RT_ERROR_INVALID_VALUE);
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+    EXPECT_TRUE(DlogRecordContains("type is BUFF_GET_MBUF_BUILD_INFO(3)."));
+#else
+    EXPECT_TRUE(DlogRecordContains("type is 3."));
+#endif
+    ClearLastDlogRecordLine();
+    EXPECT_EQ(impl.GetAllUtilizations(7, RT_UTIL_TYPE_AICPU, &utilization), RT_ERROR_CONTEXT_NULL);
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+    EXPECT_TRUE(DlogRecordContains("drv devId=7, util type=UTIL_TYPE_AICPU(2)."));
+#else
+    EXPECT_TRUE(DlogRecordContains("drv devId=7, util type=2."));
+#endif
+    EXPECT_EQ(outLen, 17U);
+    EXPECT_EQ(utilization, 23U);
+    ClearLastDlogRecordLine();
+}
+
+TEST_F(ApiImplTest, TaskBufferLog_PreservesBufferLengthAndEnumDomain)
+{
+    MOCKER(CheckLogLevel).stubs().will(returnValue(1));
+    ApiImpl impl;
+    uint32_t length = 0U;
+    ClearLastDlogRecordLine();
+    EXPECT_EQ(impl.GetTaskBufferLen(HWTS_DYNAMIC_TASK_DESC, &length), RT_ERROR_NONE);
+    EXPECT_EQ(length, 20U);
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+    EXPECT_TRUE(DlogRecordContains("bufferLen=20, task type=HWTS_DYNAMIC_TASK_DESC(1)."));
+#else
+    EXPECT_TRUE(DlogRecordContains("bufferLen=20, task type=1."));
+#endif
+    ClearLastDlogRecordLine();
+}
+
+TEST_F(ApiImplTest, DeviceFaultLog_PreservesFaultAndReportedError)
+{
+    MOCKER(CheckLogLevel).stubs().will(returnValue(1));
+    ApiImpl impl;
+    Device* const device = Runtime::Instance()->CurrentContext()->Device_();
+    const DeviceFaultType previous = device->GetDeviceFaultType();
+    device->SetDeviceFaultType(DeviceFaultType::LINK_ERROR);
+    rtErrorInfo info = {};
+    ClearLastDlogRecordLine();
+    EXPECT_EQ(impl.GetErrorVerbose(device->Id_(), &info), RT_ERROR_NONE);
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+    const std::string description = "LINK_ERROR(5)";
+#else
+    const std::string description = "5";
+#endif
+    EXPECT_TRUE(DlogRecordContains(
+        "start GetErrorVerbose, device_id=" + std::to_string(device->Id_()) + ", type=" + description));
+    EXPECT_EQ(info.errorType, RT_ERROR_OTHERS);
+    EXPECT_EQ(info.hasDetail, 0U);
+    EXPECT_EQ(info.tryRepair, 0U);
+    EXPECT_EQ(device->GetDeviceFaultType(), DeviceFaultType::LINK_ERROR);
+    device->SetDeviceFaultType(previous);
+    ClearLastDlogRecordLine();
+}
+
+TEST_F(ApiImplTest, AllocationAdviceLog_PreservesSizeTypeModuleAndFailure)
+{
+    MOCKER(CheckLogLevel).stubs().will(returnValue(1));
+    DevDynInfoProcFunc procFunc{};
+    procFunc.memProcFunc.devMallocWithCfg = [](void**, const uint64_t, const rtMemType_t, const uint32_t,
+                                               const uint16_t) -> rtError_t { return RT_ERROR_INVALID_VALUE; };
+    MOCKER_CPP(&DevInfoManage::GetDevInfoProcFunc)
+        .stubs()
+        .with(mockcpp::any(), outBound(procFunc))
+        .will(returnValue(RT_ERROR_NONE));
+    ApiImpl impl;
+    void* pointer = nullptr;
+    ClearLastDlogRecordLine();
+    EXPECT_EQ(
+        impl.DevMalloc(&pointer, 64U, RT_MEM_MALLOC_NORMAL_ONLY, RT_MEM_ADVISE_CACHED, nullptr),
+        RT_ERROR_INVALID_VALUE);
+    char numericTail[80] = {};
+    std::snprintf(
+        numericTail, sizeof(numericTail), ",type=%#x,moduleId=%hu.", RT_MEMORY_POLICY_DEFAULT_PAGE_ONLY,
+        static_cast<uint16_t>(APP));
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+    EXPECT_TRUE(DlogRecordContains(std::string("size=64, advise=MEM_ADVISE_CACHED(3)") + numericTail));
+#else
+    EXPECT_TRUE(DlogRecordContains(std::string("size=64, advise=3") + numericTail));
+#endif
+    EXPECT_EQ(pointer, nullptr);
+    ClearLastDlogRecordLine();
+}
+
+TEST_F(ApiImplTest, DeviceMessageLog_PreservesTypeAndFeatureGuard)
+{
+    MOCKER(CheckLogLevel).stubs().will(returnValue(1));
+    MOCKER_CPP(&DevInfoManage::IsSupportChipFeature).stubs().will(returnValue(false));
+    ApiImpl impl;
+    ClearLastDlogRecordLine();
+    EXPECT_EQ(impl.GetDevMsg(RT_GET_DEV_PID_SNAPSHOT_MSG, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+    EXPECT_TRUE(DlogRecordContains("getMsgType=GET_DEV_PID_SNAPSHOT_MSG(2)"));
+#else
+    EXPECT_TRUE(DlogRecordContains("getMsgType=2"));
+#endif
+    ClearLastDlogRecordLine();
+}
+
 static void ApiImplTest_Stream_Cb(void* arg) {}
+
+TEST_F(ApiImplTest, ModelBindQueueLog_PreservesFlagAndEarlyReturn)
+{
+    MOCKER(CheckLogLevel).stubs().will(returnValue(1));
+    MOCKER_CPP(&ApiImpl::AiCpuTaskSupportCheck).stubs().will(returnValue(RT_ERROR_FEATURE_NOT_SUPPORT));
+    ApiImpl impl;
+    Model model;
+    ClearLastDlogRecordLine();
+    EXPECT_EQ(impl.ModelBindQueue(&model, 23U, RT_MODEL_OUTPUT_QUEUE), RT_ERROR_FEATURE_NOT_SUPPORT);
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+    const std::string description = "MODEL_OUTPUT_QUEUE(1)";
+#else
+    const std::string description = "1";
+#endif
+    EXPECT_TRUE(DlogRecordContains(
+        "model bind queue. modelId=" + std::to_string(model.Id_()) + ", queueId=23, flag=" + description));
+    ClearLastDlogRecordLine();
+}
+
+TEST_F(ApiImplTest, TaskSqeBuildLog_PreservesUnsignedTypeAndReturn)
+{
+    MOCKER(CheckLogLevel).stubs().will(returnValue(1));
+    MOCKER(ConstructSqeByTaskInput).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    ApiImpl impl;
+    rtTaskInput_t task = {};
+    task.compilerInfo.streamId = 17U;
+    uint32_t length = 99U;
+    const rtTaskType_t types[] = {RT_TASK_TYPE_KERNEL_NANO_AICPU_HOSTFUNC, RT_TASK_TYPE_MAX};
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+    const char* const descriptions[] = {"TASK_TYPE_KERNEL_NANO_AICPU_HOSTFUNC(3)", "UNKNOWN(4)"};
+#else
+    const char* const descriptions[] = {"3", "4"};
+#endif
+    for (size_t i = 0U; i < sizeof(types) / sizeof(types[0]); ++i) {
+        task.compilerInfo.taskType = types[i];
+        ClearLastDlogRecordLine();
+        EXPECT_EQ(impl.TaskSqeBuild(&task, &length), RT_ERROR_INVALID_VALUE);
+        EXPECT_TRUE(DlogRecordContains(std::string("stream_id=17, taskType=") + descriptions[i] + "."));
+        EXPECT_EQ(task.compilerInfo.taskType, types[i]);
+        EXPECT_EQ(length, 99U);
+    }
+    ClearLastDlogRecordLine();
+}
+
+TEST_F(ApiImplTest, TaskSqeBuildLog_DisabledDebugSkipsInputRead)
+{
+    MOCKER(CheckLogLevel).stubs().will(returnValue(0));
+    MOCKER(ConstructSqeByTaskInput).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
+    ApiImpl impl;
+    uint32_t length = 99U;
+    ClearLastDlogRecordLine();
+    EXPECT_EQ(impl.TaskSqeBuild(nullptr, &length), RT_ERROR_INVALID_VALUE);
+    EXPECT_FALSE(DlogRecordContains("Start to build task sqe"));
+    EXPECT_EQ(length, 99U);
+    ClearLastDlogRecordLine();
+}
 
 namespace {
 class AiCoreTaskSyncCheckStateGuard {
@@ -2618,6 +3085,51 @@ TEST_F(ApiImplTest, hdc_server_create)
     error = apiDecorator_->HdcServerCreate(0, RT_HDC_SERVICE_TYPE_TEST, &server);
     EXPECT_EQ(error, RT_ERROR_NONE);
     delete apiDecorator_;
+}
+
+TEST_F(ApiImplTest, HdcServerCreateLog_PreservesTypeWhenDriverSucceeds)
+{
+    MOCKER(CheckLogLevel).stubs().will(returnValue(1));
+    MOCKER(drvHdcServerCreate).stubs().will(returnValue(DRV_ERROR_NONE));
+    Api* oldApi = const_cast<Api*>(Runtime::runtime_->api_);
+    ApiDecorator apiDecorator(oldApi);
+    EXPECT_EQ(apiDecorator.HdcServerCreate(0, RT_HDC_SERVICE_TYPE_TEST, nullptr), RT_ERROR_INVALID_VALUE);
+
+    rtHdcServer_t server = nullptr;
+    ClearLastDlogRecordLine();
+    EXPECT_EQ(apiDecorator.HdcServerCreate(0, RT_HDC_SERVICE_TYPE_TEST, &server), RT_ERROR_NONE);
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+    const std::string description = "HDC_SERVICE_TYPE_TEST(19)";
+#else
+    const std::string description = "19";
+#endif
+    EXPECT_TRUE(DlogRecordContains("HdcServerCreate, drv devId=0, type = " + description + "."));
+    EXPECT_TRUE(DlogRecordContains("drvHdcServerCreate enter, drv devId=0, type=" + description));
+    EXPECT_TRUE(DlogRecordContains("drvHdcServerCreate return, drv devId=0, type=" + description + ", drvRet=0"));
+    EXPECT_EQ(server, nullptr);
+    ClearLastDlogRecordLine();
+}
+
+TEST_F(ApiImplTest, HdcServerCreateLog_PreservesTypeWhenDriverFails)
+{
+    MOCKER(CheckLogLevel).stubs().will(returnValue(1));
+    MOCKER(drvHdcServerCreate).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
+    ApiImpl impl;
+    rtHdcServer_t server = nullptr;
+    ClearLastDlogRecordLine();
+    EXPECT_EQ(
+        impl.HdcServerCreate(7, RT_HDC_SERVICE_TYPE_USER_END, &server), RT_GET_DRV_ERRCODE(DRV_ERROR_INVALID_VALUE));
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+    const std::string description = "HDC_SERVICE_TYPE_USER_END(127)";
+#else
+    const std::string description = "127";
+#endif
+    EXPECT_TRUE(DlogRecordContains("HdcServerCreate, drv devId=7, type = " + description + "."));
+    EXPECT_TRUE(DlogRecordContains("drvHdcServerCreate enter, drv devId=7, type=" + description));
+    const std::string returned = "drvHdcServerCreate return, drv devId=7, type=" + description + ", drvRet=";
+    EXPECT_TRUE(DlogRecordContains(returned + std::to_string(static_cast<int32_t>(DRV_ERROR_INVALID_VALUE))));
+    EXPECT_EQ(server, nullptr);
+    ClearLastDlogRecordLine();
 }
 
 TEST_F(ApiImplTest, hdc_server_destroy)

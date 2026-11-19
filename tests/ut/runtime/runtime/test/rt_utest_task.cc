@@ -7,6 +7,12 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "common/api_enum_log.hpp"
+#include "runtime/base.h"
+#include "stars/stars_base.hpp"
+#include "task/task_base.hpp"
+#include "runtime/mem_base.h"
+#include "runtime/kernel.h"
 #include "runtime/rt.h"
 #include "event.hpp"
 #include "scheduler.hpp"
@@ -81,6 +87,55 @@
 
 using namespace testing;
 using namespace cce::runtime;
+
+void ClearLastDlogRecordLine();
+bool DlogRecordContains(const std::string& keyword);
+
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+TEST(TaskEnumLogTest, DirectionNamesKeepAliasesAndRepresentableHoles)
+{
+    EXPECT_EQ(std::string(RtMemCopyAsyncDirectToString(RT_MEMCPY_DIR_H2H)), "MEMCPY_DIR_H2D");
+    EXPECT_EQ(std::string(RtMemCopyAsyncDirectToString(RT_MEMCPY_DIR_H2D)), "MEMCPY_DIR_H2D");
+    EXPECT_EQ(
+        std::string(RtMemCopyAsyncDirectToString(RT_MEMCPY_DIR_SDMA_AUTOMATIC_EQUAL)),
+        "MEMCPY_DIR_SDMA_AUTOMATIC_EQUAL");
+    EXPECT_EQ(std::string(RtMemCopyAsyncDirectToString(static_cast<rtMemCopyAsyncDirect>(7))), "UNKNOWN");
+    EXPECT_EQ(std::string(RtMemCopyAsyncDirectToString(static_cast<rtMemCopyAsyncDirect>(8))), "UNKNOWN");
+    EXPECT_EQ(std::string(RtMemCopyAsyncDirectToString(static_cast<rtMemCopyAsyncDirect>(15))), "UNKNOWN");
+}
+
+TEST(TaskEnumLogTest, CopyAndReduceKindsKeepSeparateSentinels)
+{
+    EXPECT_EQ(std::string(MemcpyOrReduceKindToString(RT_MEMCPY_HOST_TO_HOST)), "MEMCPY_HOST_TO_HOST");
+    EXPECT_EQ(std::string(MemcpyOrReduceKindToString(RT_MEMCPY_HOST_TO_DEVICE)), "MEMCPY_HOST_TO_DEVICE");
+    EXPECT_EQ(std::string(MemcpyOrReduceKindToString(RT_MEMCPY_DEFAULT)), "MEMCPY_DEFAULT");
+    EXPECT_EQ(std::string(MemcpyOrReduceKindToString(RT_MEMCPY_RESERVED)), "UNKNOWN");
+    EXPECT_EQ(std::string(MemcpyOrReduceKindToString(RT_MEMCPY_SDMA_AUTOMATIC_ADD)), "MEMCPY_SDMA_AUTOMATIC_ADD");
+    EXPECT_EQ(std::string(MemcpyOrReduceKindToString(RT_RECUDE_KIND_END)), "UNKNOWN");
+    EXPECT_EQ(std::string(MemcpyOrReduceKindToString(UINT32_MAX)), "UNKNOWN");
+}
+
+TEST(TaskEnumLogTest, KernelDomainsKeepNonExecutableSentinelsUnknown)
+{
+    EXPECT_EQ(std::string(TsAicpuKernelTypeToString(TS_AICPU_KERNEL_NON)), "TS_AICPU_KERNEL_NON");
+    EXPECT_EQ(std::string(TsAicpuKernelTypeToString(TS_AICPU_KERNEL_RESERVED)), "UNKNOWN");
+    EXPECT_EQ(std::string(TsAicpuKernelTypeToString(static_cast<tsAicpuKernelType>(255))), "UNKNOWN");
+    EXPECT_EQ(std::string(ExecutableKernelTypeToString(KERNEL_TYPE_HWTS)), "KERNEL_TYPE_HWTS");
+    EXPECT_EQ(std::string(ExecutableKernelTypeToString(KERNEL_TYPE_RESERVED)), "UNKNOWN");
+    EXPECT_EQ(std::string(ExecutableKernelTypeToString(static_cast<rtKernelType_t>(127))), "UNKNOWN");
+}
+
+TEST(TaskEnumLogTest, TopicAndInterruptNamesKeepSentinelAndUnnamedValue)
+{
+    EXPECT_EQ(std::string(RtTopicTypeToString(TOPIC_TYPE_DEVICE_CTRL_CPU)), "TOPIC_TYPE_DEVICE_CTRL_CPU");
+    EXPECT_EQ(std::string(RtTopicTypeToString(TOPIC_TYPE_HOST_CTRL_CPU)), "TOPIC_TYPE_HOST_CTRL_CPU");
+    EXPECT_EQ(std::string(RtTopicTypeToString(TOPIC_TYPE_DEVICE_AICPU_SRC_PID)), "TOPIC_TYPE_DEVICE_AICPU_SRC_PID");
+    EXPECT_EQ(std::string(RtTopicTypeToString(static_cast<RtTopicType>(15))), "UNKNOWN");
+    EXPECT_EQ(std::string(RtStarsSqeIntDirTypeToString(RT_STARS_SQE_INT_DIR_NO)), "STARS_SQE_INT_DIR_NO");
+    EXPECT_EQ(std::string(RtStarsSqeIntDirTypeToString(RT_STARS_SQE_INT_DIR_TO_HOST)), "STARS_SQE_INT_DIR_TO_HOST");
+    EXPECT_EQ(std::string(RtStarsSqeIntDirTypeToString(RT_STARS_SQE_INT_DIR_END)), "UNKNOWN");
+}
+#endif
 
 namespace {
 void* g_expectedAicpuArgAddr = nullptr;
@@ -1344,6 +1399,74 @@ TEST_F(TaskTest, stars_eventwait_sqe)
     EXPECT_EQ(evSqe->header.type, RT_STARS_SQE_TYPE_EVENT_WAIT);
     evt.EventIdCountAdd((task.u.eventWaitTaskInfo).eventId);
     Complete(&task, 0);
+}
+
+TEST_F(TaskTest, ConvertCopyTypeLogPreservesCopyAndReduceDomains)
+{
+    MOCKER(CheckLogLevel).stubs().will(returnValue(1));
+    struct CopyCase {
+        uint32_t kind;
+        uint32_t direction;
+        const char* kindName;
+        const char* directionName;
+    };
+    const CopyCase cases[] = {
+        {RT_MEMCPY_HOST_TO_DEVICE, RT_MEMCPY_DIR_H2D, "MEMCPY_HOST_TO_DEVICE(1)", "MEMCPY_DIR_H2D(0)"},
+        {RT_MEMCPY_DEVICE_TO_HOST, RT_MEMCPY_DIR_D2H, "MEMCPY_DEVICE_TO_HOST(2)", "MEMCPY_DIR_D2H(1)"},
+        {RT_MEMCPY_SDMA_AUTOMATIC_ADD, RT_MEMCPY_DIR_SDMA_AUTOMATIC_ADD, "MEMCPY_SDMA_AUTOMATIC_ADD(10)",
+         "MEMCPY_DIR_SDMA_AUTOMATIC_ADD(10)"},
+        {RT_MEMCPY_SDMA_AUTOMATIC_MAX, RT_MEMCPY_DIR_SDMA_AUTOMATIC_MAX, "MEMCPY_SDMA_AUTOMATIC_MAX(11)",
+         "MEMCPY_DIR_SDMA_AUTOMATIC_MAX(11)"},
+        {RT_MEMCPY_SDMA_AUTOMATIC_MIN, RT_MEMCPY_DIR_SDMA_AUTOMATIC_MIN, "MEMCPY_SDMA_AUTOMATIC_MIN(12)",
+         "MEMCPY_DIR_SDMA_AUTOMATIC_MIN(12)"},
+        {RT_MEMCPY_SDMA_AUTOMATIC_EQUAL, RT_MEMCPY_DIR_SDMA_AUTOMATIC_EQUAL, "MEMCPY_SDMA_AUTOMATIC_EQUAL(13)",
+         "MEMCPY_DIR_SDMA_AUTOMATIC_EQUAL(13)"},
+    };
+    for (const auto& item : cases) {
+        SCOPED_TRACE(item.kind);
+        TaskInfo task = {};
+        ClearLastDlogRecordLine();
+        EXPECT_EQ(ConvertCpyType(&task, item.kind, nullptr, nullptr), RT_ERROR_NONE);
+        EXPECT_EQ(task.u.memcpyAsyncTaskInfo.copyKind, item.kind);
+        EXPECT_EQ(task.u.memcpyAsyncTaskInfo.copyType, item.direction);
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+        EXPECT_TRUE(DlogRecordContains(std::string("cpyType=") + item.kindName + "."));
+        EXPECT_TRUE(DlogRecordContains(item.directionName));
+#else
+        EXPECT_TRUE(DlogRecordContains(std::string("cpyType=") + std::to_string(item.kind) + "."));
+#endif
+    }
+    ClearLastDlogRecordLine();
+}
+
+TEST_F(TaskTest, ConvertCopyTypeLogPreservesUnknownUnsignedCarrier)
+{
+    MOCKER(CheckLogLevel).stubs().will(returnValue(1));
+    const uint32_t kinds[] = {RT_MEMCPY_RESERVED, RT_RECUDE_KIND_END, 256U, UINT32_MAX};
+    for (const auto kind : kinds) {
+        TaskInfo task = {};
+        ClearLastDlogRecordLine();
+        EXPECT_EQ(ConvertCpyType(&task, kind, nullptr, nullptr), RT_ERROR_NONE);
+        EXPECT_EQ(task.u.memcpyAsyncTaskInfo.copyKind, kind);
+        EXPECT_EQ(task.u.memcpyAsyncTaskInfo.copyType, kind);
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+        EXPECT_TRUE(DlogRecordContains(std::string("cpyType=UNKNOWN(") + std::to_string(kind) + ")."));
+#else
+        EXPECT_TRUE(DlogRecordContains(std::string("cpyType=") + std::to_string(kind) + "."));
+#endif
+    }
+    ClearLastDlogRecordLine();
+}
+
+TEST_F(TaskTest, ConvertCopyTypeLogRespectsDisabledLogLevel)
+{
+    MOCKER(CheckLogLevel).stubs().will(returnValue(0));
+    TaskInfo task = {};
+    ClearLastDlogRecordLine();
+    EXPECT_EQ(ConvertCpyType(&task, RT_MEMCPY_HOST_TO_DEVICE, nullptr, nullptr), RT_ERROR_NONE);
+    EXPECT_EQ(task.u.memcpyAsyncTaskInfo.copyType, RT_MEMCPY_DIR_H2D);
+    EXPECT_FALSE(DlogRecordContains("ConvertCpyType"));
+    ClearLastDlogRecordLine();
 }
 
 // Memcpy Async D2D and H2D

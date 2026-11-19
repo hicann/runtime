@@ -7,6 +7,8 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "common/enum_log.hpp"
+#include <string>
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 #include "securec.h"
@@ -51,6 +53,9 @@
 #include "model_update_task.h"
 
 using namespace cce::runtime;
+
+void ClearLastDlogRecordLine();
+bool DlogRecordContains(const std::string& keyword);
 
 namespace {
 constexpr uint32_t DUMP_ARGS_SIZE = 256U;
@@ -873,6 +878,42 @@ TEST_F(Arch5162TaskTest, ToCommandBodyForStreamSwitchNTask)
     rtCommand_t command = {};
     ToCommandBodyForStreamSwitchNTask(&task, &command);
     EXPECT_EQ(command.u.streamSwitchNTask.dataType, static_cast<uint8_t>(RT_SWITCH_INT32));
+}
+
+TEST_F(Arch5162TaskTest, ToCommandBodyForStreamSwitchNTaskLog_PreservesDataTypeAndCommandFields)
+{
+    MOCKER(CheckLogLevel).stubs().will(returnValue(1));
+    const rtSwitchDataType_t dataTypes[] = {RT_SWITCH_INT32, RT_SWITCH_INT64};
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+    const char* const descriptions[] = {"SWITCH_INT32(0)", "SWITCH_INT64(1)"};
+#else
+    const char* const descriptions[] = {"0", "1"};
+#endif
+    for (size_t i = 0U; i < sizeof(dataTypes) / sizeof(dataTypes[0]); ++i) {
+        SCOPED_TRACE(static_cast<uint32_t>(dataTypes[i]));
+        TaskInfo task = {};
+        task.u.streamSwitchNTask.dataType = dataTypes[i];
+        task.u.streamSwitchNTask.elementSize = (dataTypes[i] == RT_SWITCH_INT32) ? 4U : 8U;
+        task.u.streamSwitchNTask.phyPtr = 0x1000ULL;
+        task.u.streamSwitchNTask.phyTrueStreamPtr = 0x2000ULL;
+        task.u.streamSwitchNTask.phyValuePtr = 0x3000ULL;
+        task.u.streamSwitchNTask.size = 16U;
+        task.u.streamSwitchNTask.isTransAddr = true;
+        rtCommand_t command = {};
+        command.streamID = 29U;
+        ClearLastDlogRecordLine();
+        ToCommandBodyForStreamSwitchNTask(&task, &command);
+        EXPECT_EQ(command.u.streamSwitchNTask.dataType, static_cast<uint8_t>(dataTypes[i]));
+        EXPECT_EQ(command.u.streamSwitchNTask.elementSize, task.u.streamSwitchNTask.elementSize);
+        EXPECT_EQ(command.u.streamSwitchNTask.pptr, 0x1000ULL);
+        EXPECT_EQ(command.u.streamSwitchNTask.pTrueStreamIdPtr, 0x2000ULL);
+        EXPECT_EQ(command.u.streamSwitchNTask.pValuePtr, 0x3000ULL);
+        EXPECT_EQ(command.u.streamSwitchNTask.size, 16U);
+        EXPECT_EQ(command.u.streamSwitchNTask.isTransAddr, 1U);
+        EXPECT_EQ(command.streamID, 29U);
+        EXPECT_TRUE(DlogRecordContains(std::string("data_type=") + descriptions[i] + ",stream_id=29."));
+    }
+    ClearLastDlogRecordLine();
 }
 
 TEST_F(Arch5162TaskTest, StreamLabelSwitchByIndexTaskInit)

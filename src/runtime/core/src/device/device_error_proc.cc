@@ -7,6 +7,9 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "common/enum_log.hpp"
+#include "qos.hpp"
+#include "runtime/base.h"
 #include "device/device_error_proc.hpp"
 #include <memory>
 #include <string>
@@ -222,9 +225,12 @@ rtError_t DeviceErrorProc::GetQosInfoFromRingbuffer()
             index = static_cast<uint32_t>(tsQosCfgArray[i].type) - static_cast<uint32_t>(QosMasterType::MASTER_AIC_DAT);
             RT_LOG(
                 RT_LOG_INFO,
-                "The QOS info from ringbuffer is: type=%u, mpamId=%u, qos=%u, pmg=%u, replaceEn=%u, index=%u.",
-                static_cast<QosMasterType>(tsQosCfgArray[i].type), tsQosCfgArray[i].mpamId, tsQosCfgArray[i].qos,
-                tsQosCfgArray[i].pmg, tsQosCfgArray[i].replaceEn, index);
+                "The QOS info from ringbuffer is: type=" RT_ENUM_LOG_FORMAT(
+                    "%u") ", mpamId=%u, qos=%u, pmg=%u, replaceEn=%u, index=%u.",
+                RT_ENUM_LOG_VALUE(
+                    static_cast<uint32_t>(static_cast<QosMasterType>(tsQosCfgArray[i].type)),
+                    QosMasterTypeToString(static_cast<QosMasterType>(tsQosCfgArray[i].type))),
+                tsQosCfgArray[i].mpamId, tsQosCfgArray[i].qos, tsQosCfgArray[i].pmg, tsQosCfgArray[i].replaceEn, index);
             (void)device_->SetQosCfg(aicoreQosCfg, index);
             aicoreQosCfg.mode = MAX_UINT32_NUM;
         }
@@ -1925,7 +1931,9 @@ std::string GetTaskKernelName(const TaskInfo* task)
         RT_LOG(RT_LOG_DEBUG, "Task is null");
         return "none";
     }
-    RT_LOG(RT_LOG_DEBUG, "Task type is [%d]", task->type);
+    RT_LOG(
+        RT_LOG_DEBUG, "Task type is [" RT_ENUM_LOG_FORMAT("%d") "]",
+        RT_ENUM_LOG_VALUE(static_cast<int32_t>(task->type), RT_ENUM_LOG_NAME(task->typeName)));
     std::string kernelNameStr = "";
     if (task->type == TS_TASK_TYPE_KERNEL_AICORE || task->type == TS_TASK_TYPE_KERNEL_AIVEC) {
         const AicTaskInfo* aicTaskInfo = &(task->u.aicTaskInfo);

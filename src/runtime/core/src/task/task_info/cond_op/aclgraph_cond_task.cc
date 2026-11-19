@@ -624,8 +624,12 @@ rtError_t ReConstructCaptureConditionTaskFc(TaskInfo* taskInfo, CondHandle* cond
     COND_RETURN_ERROR(ret != RT_ERROR_NONE, ret, "H2D funcCall failed, retCode=%#x.", ret);
 
     RT_LOG(
-        RT_LOG_INFO, "ReConstructCaptureConditionTaskFc success, type=%d, modelCount=%" PRIu64 ".",
-        condTaskInfo->condHandle->GetCondType(), modelCount);
+        RT_LOG_INFO,
+        "ReConstructCaptureConditionTaskFc success, type=" RT_ENUM_LOG_FORMAT("%d") ", modelCount=%" PRIu64 ".",
+        RT_ENUM_LOG_VALUE(
+            static_cast<int32_t>(condTaskInfo->condHandle->GetCondType()),
+            RtCondTaskTypeToString(condTaskInfo->condHandle->GetCondType())),
+        modelCount);
     return RT_ERROR_NONE;
 }
 

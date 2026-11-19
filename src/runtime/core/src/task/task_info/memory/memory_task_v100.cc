@@ -8,6 +8,9 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/enum_log.hpp"
+#include "task/task_base.hpp"
+#include "runtime/base.h"
 #include "task_info_v100.h"
 #include "memory_task.h"
 #include "stream.hpp"
@@ -195,8 +198,18 @@ void ConstructPcieDmaSqe(TaskInfo* const taskInfo, rtStarsSqe_t* const command)
         PrintSqe(command, "pcieDmaTask");
         RT_LOG(
             RT_LOG_INFO,
-            "stream_id=%d, task_id=%hu, copyType=%u, src=%#" PRIx64 ", dst=%#" PRIx64 ", len=%#" PRIx64 " bytes",
-            stream->Id_(), taskInfo->id, memcpyAsyncTaskInfo->copyType, sqe->src, sqe->dst, sqe->length);
+            // Keep adjacent string macros readable under clang-format 16.
+            // clang-format off
+            "stream_id=%d, task_id=%hu, copyType=" RT_ENUM_LOG_FORMAT("%u")
+            ", src=%#" PRIx64 ", dst=%#" PRIx64 ", len=%#" PRIx64 " bytes",
+            // clang-format on
+            stream->Id_(), taskInfo->id,
+            RT_ENUM_LOG_VALUE(
+                static_cast<uint32_t>(memcpyAsyncTaskInfo->copyType),
+                (memcpyAsyncTaskInfo->copyType <= RT_MEMCPY_DIR_SDMA_AUTOMATIC_EQUAL ?
+                     RtMemCopyAsyncDirectToString(static_cast<rtMemCopyAsyncDirect>(memcpyAsyncTaskInfo->copyType)) :
+                     "UNKNOWN")),
+            sqe->src, sqe->dst, sqe->length);
         return;
     }
 
@@ -212,10 +225,20 @@ void ConstructPcieDmaSqe(TaskInfo* const taskInfo, rtStarsSqe_t* const command)
         PrintSqe(command, "sqe update task");
         RT_LOG(
             RT_LOG_INFO,
-            "stream_id=%d, type=%u, task_id=%hu, sqId=%u, pos=%u, "
-            "copyType=%u, src=%#" PRIx64 ", dst=%#" PRIx64 ", len=%#" PRIx64 " bytes",
-            stream->Id_(), sqe->header.type, taskInfo->id, memcpyAsyncTaskInfo->sqId, memcpyAsyncTaskInfo->taskPos,
-            memcpyAsyncTaskInfo->copyType, sqe->src, sqe->dst, sqe->length);
+            // Keep adjacent string macros readable under clang-format 16.
+            // clang-format off
+            "stream_id=%d, type=" RT_ENUM_LOG_FORMAT("%u")
+            ", task_id=%hu, sqId=%u, pos=%u, copyType=" RT_ENUM_LOG_FORMAT("%u")
+            ", src=%#" PRIx64 ", dst=%#" PRIx64 ", len=%#" PRIx64 " bytes",
+            // clang-format on
+            stream->Id_(), RT_ENUM_LOG_VALUE(static_cast<uint32_t>(sqe->header.type), "STARS_SQE_TYPE_PCIE_DMA"),
+            taskInfo->id, memcpyAsyncTaskInfo->sqId, memcpyAsyncTaskInfo->taskPos,
+            RT_ENUM_LOG_VALUE(
+                static_cast<uint32_t>(memcpyAsyncTaskInfo->copyType),
+                (memcpyAsyncTaskInfo->copyType <= RT_MEMCPY_DIR_SDMA_AUTOMATIC_EQUAL ?
+                     RtMemCopyAsyncDirectToString(static_cast<rtMemCopyAsyncDirect>(memcpyAsyncTaskInfo->copyType)) :
+                     "UNKNOWN")),
+            sqe->src, sqe->dst, sqe->length);
         return;
     }
 
@@ -229,8 +252,15 @@ void ConstructPcieDmaSqe(TaskInfo* const taskInfo, rtStarsSqe_t* const command)
     sqe->sq_tail_ptr = static_cast<uint16_t>(memcpyAsyncTaskInfo->dmaAddr.phyAddr.len);
     PrintSqe(command, "2D pcieDmaTask");
     RT_LOG(
-        RT_LOG_INFO, "stream_id=%d, task_id=%hu, copyType=%u, sq_addr_low=%p sq_tail_ptr=%hu.", stream->Id_(),
-        taskInfo->id, memcpyAsyncTaskInfo->copyType, memcpyAsyncTaskInfo->dmaAddr.phyAddr.src, sqe->sq_tail_ptr);
+        RT_LOG_INFO,
+        "stream_id=%d, task_id=%hu, copyType=" RT_ENUM_LOG_FORMAT("%u") ", sq_addr_low=%p sq_tail_ptr=%hu.",
+        stream->Id_(), taskInfo->id,
+        RT_ENUM_LOG_VALUE(
+            static_cast<uint32_t>(memcpyAsyncTaskInfo->copyType),
+            (memcpyAsyncTaskInfo->copyType <= RT_MEMCPY_DIR_SDMA_AUTOMATIC_EQUAL ?
+                 RtMemCopyAsyncDirectToString(static_cast<rtMemCopyAsyncDirect>(memcpyAsyncTaskInfo->copyType)) :
+                 "UNKNOWN")),
+        memcpyAsyncTaskInfo->dmaAddr.phyAddr.src, sqe->sq_tail_ptr);
 }
 
 static void ConstructMemcpySqe(TaskInfo* const taskInfo, rtStarsSqe_t* const command)
@@ -317,11 +347,18 @@ static void ConstructMemcpySqe(TaskInfo* const taskInfo, rtStarsSqe_t* const com
     }
     RT_LOG(
         RT_LOG_INFO,
-        "ConstructSqe size=%llu bytes, qos=%u, partid=%u, copyType=%u, kernelCredit=%u, dstSubStreamId=%u, "
-        "copyKind=%u, Opcode=0x%x, taskType=%d.",
-        memcpyAsyncTaskInfo->size, sqe->qos, sqe->partid, copyType, sqe->kernelCredit,
-        static_cast<uint32_t>(sqe->dstSubStreamId), static_cast<uint32_t>(copyKind), static_cast<uint32_t>(sqe->opcode),
-        taskInfo->type);
+        "ConstructSqe size=%llu bytes, qos=%u, partid=%u, copyType=" RT_ENUM_LOG_FORMAT(
+            "%u") ", kernelCredit=%u, dstSubStreamId=%u, "
+                  "copyKind=%u, Opcode=0x%x, taskType=" RT_ENUM_LOG_FORMAT("%d") ".",
+        memcpyAsyncTaskInfo->size, sqe->qos, sqe->partid,
+        RT_ENUM_LOG_VALUE(
+            static_cast<uint32_t>(copyType),
+            (copyType <= RT_MEMCPY_DIR_SDMA_AUTOMATIC_EQUAL ?
+                 RtMemCopyAsyncDirectToString(static_cast<rtMemCopyAsyncDirect>(copyType)) :
+                 "UNKNOWN")),
+        sqe->kernelCredit, static_cast<uint32_t>(sqe->dstSubStreamId), static_cast<uint32_t>(copyKind),
+        static_cast<uint32_t>(sqe->opcode),
+        RT_ENUM_LOG_VALUE(static_cast<int32_t>(taskInfo->type), RT_ENUM_LOG_NAME(taskInfo->typeName)));
     PrintSqe(command, "sdmaTask");
 }
 
@@ -350,8 +387,13 @@ void ConstructSqeForMemcpyAsyncTask(TaskInfo* const taskInfo, void* const sqeBuf
     }
 
     RT_LOG(
-        RT_LOG_INFO, "MemcpyAsyncTask, stream_id=%d, task_id=%u, copyType=%u", static_cast<int32_t>(stream->Id_()),
-        static_cast<uint32_t>(taskInfo->id), memcpyAsyncTaskInfo->copyType);
+        RT_LOG_INFO, "MemcpyAsyncTask, stream_id=%d, task_id=%u, copyType=" RT_ENUM_LOG_FORMAT("%u"),
+        static_cast<int32_t>(stream->Id_()), static_cast<uint32_t>(taskInfo->id),
+        RT_ENUM_LOG_VALUE(
+            static_cast<uint32_t>(memcpyAsyncTaskInfo->copyType),
+            (memcpyAsyncTaskInfo->copyType <= RT_MEMCPY_DIR_SDMA_AUTOMATIC_EQUAL ?
+                 RtMemCopyAsyncDirectToString(static_cast<rtMemCopyAsyncDirect>(memcpyAsyncTaskInfo->copyType)) :
+                 "UNKNOWN")));
 }
 
 void MemcpyAsyncTaskUnInit(TaskInfo* const taskInfo)

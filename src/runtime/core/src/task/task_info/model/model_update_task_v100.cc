@@ -8,6 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
 #include "stream.hpp"
 #include "runtime.hpp"
 #include "task_info_v100.h"
@@ -53,9 +55,11 @@ static void ConstructSqeForModelUpdateTask(TaskInfo* const taskInfo, void* const
     PrintSqe(command, "ModelUpdateTask");
     RT_LOG(
         RT_LOG_INFO,
-        "Send TS_TASK_TYPE_MODEL_TASK_UPDATE succ,"
-        "sqe_type=%u, pre_p=%u, stream_id=%u, task_id=%u, task_type=%u",
-        sqe->type, sqe->pre_p, sqe->rt_streamID, sqe->task_id, sqe->task_type);
+        "Send TS_TASK_TYPE_MODEL_TASK_UPDATE succ,sqe_type=" RT_ENUM_LOG_FORMAT(
+            "%u") ", pre_p=%u, stream_id=%u, task_id=%u, task_type=" RT_ENUM_LOG_FORMAT("%u"),
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(sqe->type), "STARS_SQE_TYPE_PLACE_HOLDER"), sqe->pre_p,
+        sqe->rt_streamID, sqe->task_id,
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(sqe->task_type), "TS_TASK_TYPE_MODEL_TASK_UPDATE"));
 
     return;
 }

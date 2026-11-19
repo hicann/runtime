@@ -10,6 +10,8 @@
 #ifndef __CCE_RUNTIME_TASK_BASE_HPP__
 #define __CCE_RUNTIME_TASK_BASE_HPP__
 
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
 #include "base.hpp"
 #include "osal.hpp"
 #include "driver/ascend_hal.h"
@@ -68,6 +70,9 @@ enum rtMemCopyAsyncDirect {
     RT_MEMCPY_DIR_SDMA_AUTOMATIC_MIN = 12,
     RT_MEMCPY_DIR_SDMA_AUTOMATIC_EQUAL = 13
 };
+RT_ENUM_LOG_DECLARE(RtMemCopyAsyncDirectToString, rtMemCopyAsyncDirect)
+
+// H2H is an alias of H2D; host copies finish before device task submission.
 
 enum rtReportPackageType {
     RT_PACKAGE_TYPE_TASK_REPORT = 0,
@@ -79,6 +84,7 @@ enum rtReportPackageType {
     RT_PACKAGE_TYPE_RECYCLE_CQ_FINISHED = 7,     /* recycle cq report(used by ts and drv) */
     RT_PACKAGE_TYPE_BUTT = 8
 };
+RT_ENUM_LOG_DECLARE(RtReportPackageTypeToString, rtReportPackageType)
 
 enum WriteValueSize {
     WRITE_VALUE_SIZE_1_BYTE,
@@ -222,6 +228,7 @@ typedef enum tagTsTaskType {
     TS_TASK_TYPE_ENDGRAPH_NOTIFY_WAIT = 139,           /* model end graph notify wait */
     TS_TASK_TYPE_RESERVED = 140,
 } tsTaskType_t;
+RT_ENUM_LOG_DECLARE(TsTaskTypeToString, const tsTaskType_t)
 
 enum class ProfTaskType : uint16_t {
     PROF_TASK_TYPE_BEGIN = 600,
@@ -247,6 +254,7 @@ typedef enum tagMmtType {
     MMT_MODEL_ABORT = 6,
     MMT_RESERVED = 7
 } MmtType;
+RT_ENUM_LOG_DECLARE(MmtTypeToString, MmtType)
 
 typedef enum tagMtType { MT_STREAM_DESTROY = 0, MT_EVENT_DESTROY, MT_STREAM_RECYCLE_TASK } MtType;
 
@@ -280,6 +288,7 @@ typedef enum tagTsAicpuKernelType {
     TS_AICPU_KERNEL_NON = 127, /* for callback launch topic */
     TS_AICPU_KERNEL_RESERVED = 128
 } tsAicpuKernelType;
+RT_ENUM_LOG_DECLARE(TsAicpuKernelTypeToString, tsAicpuKernelType)
 
 /**
  * @ingroup

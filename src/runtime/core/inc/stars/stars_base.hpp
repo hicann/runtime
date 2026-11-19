@@ -11,6 +11,7 @@
 #ifndef __CCE_RUNTIME_STARS_BASE_HPP__
 #define __CCE_RUNTIME_STARS_BASE_HPP__
 
+#include "common/enum_log.hpp"
 #include <cstdint>
 #include "base.h"
 
@@ -58,6 +59,7 @@ enum RtStarsSqeIntDirType {
     RT_STARS_SQE_INT_DIR_TO_HOST = 3,    // to host
     RT_STARS_SQE_INT_DIR_END = 4
 };
+RT_ENUM_LOG_DECLARE(RtStarsSqeIntDirTypeToString, RtStarsSqeIntDirType)
 
 enum RtStarsWriteValueSizeType {
     RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT = 0,
@@ -142,6 +144,7 @@ enum RtTopicType {
     TOPIC_TYPE_DEVICE_HOST_CTRL_CPU = 9,
     TOPIC_TYPE_DEVICE_AICPU_SRC_PID = 10,
 };
+RT_ENUM_LOG_DECLARE(RtTopicTypeToString, RtTopicType)
 
 enum RtModelExecutorFlag {
     MODEL_EXECUTOR_TS = 1,
@@ -149,6 +152,7 @@ enum RtModelExecutorFlag {
     MODEL_EXECUTOR_RESERVED = 3,
     MODEL_EXECUTOR_CAPTURE = 5,
 };
+RT_ENUM_LOG_DECLARE(RtModelExecutorFlagToString, RtModelExecutorFlag)
 
 } // namespace runtime
 } // namespace cce

@@ -11,6 +11,8 @@
 #ifndef __CCE_RUNTIME_H2H_COPY_MGR_HPP__
 #define __CCE_RUNTIME_H2H_COPY_MGR_HPP__
 
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
 #include <unordered_map>
 #include "base.hpp"
 #include "buffer_allocator.hpp"
@@ -19,6 +21,8 @@ namespace cce {
 namespace runtime {
 
 enum class H2HCopyPolicy : uint64_t { H2H_POLICY_DEFAULT, H2H_COPY_POLICY_SYNC };
+RT_ENUM_LOG_DECLARE(H2HCopyPolicyToString, H2HCopyPolicy)
+
 constexpr uint32_t DEFAULT_INIT_ITEM_SIZE = 4096U;
 class H2HCopyMgr : public NoCopy {
 public:

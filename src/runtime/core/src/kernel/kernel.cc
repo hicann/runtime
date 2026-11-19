@@ -7,6 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "runtime/base.h"
 #include "kernel.hpp"
 #include <list>
 #include <string_view>
@@ -418,8 +419,10 @@ rtError_t GetPrefetchCntAndMixTypeWithKernel(
     icachePrefetchCnt1 = (restSizeCnt1 > prefetchMaxSizeCnt1) ? prefetchMaxSizeCnt1 : restSizeCnt1;
 
     RT_LOG(
-        RT_LOG_DEBUG, "get prefetch cnt success, prefetchCnt1=%u, prefetchCnt2=%u, mixType=%hu.", icachePrefetchCnt1,
-        icachePrefetchCnt2, mixType);
+        RT_LOG_DEBUG,
+        "get prefetch cnt success, prefetchCnt1=%u, prefetchCnt2=%u, mixType=" RT_ENUM_LOG_FORMAT("%u") ".",
+        icachePrefetchCnt1, icachePrefetchCnt2,
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(mixType), RtMixTypeToString(static_cast<RtMixType>(mixType))));
 
     return RT_ERROR_NONE;
 }

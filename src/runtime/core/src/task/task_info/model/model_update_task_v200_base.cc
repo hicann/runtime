@@ -8,6 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
 #include "stream.hpp"
 #include "runtime.hpp"
 #include "stars_david.hpp"
@@ -48,9 +50,12 @@ static void ConstructDavidSqeForModelUpdateTask(TaskInfo* const taskInfo, void* 
     PrintDavidSqe(davidSqe, "ModelUpdateTask");
     RT_LOG(
         RT_LOG_INFO,
-        "Send TS_TASK_TYPE_MODEL_TASK_UPDATE succ,"
-        "sqe_type=%u, pre_p=%u, stream_id=%u, task_id=%u, task_sn=%u, task_type=%u",
-        phSqe->header.type, phSqe->header.preP, stm->Id_(), taskInfo->id, taskInfo->taskSn, phSqe->taskType);
+        "Send TS_TASK_TYPE_MODEL_TASK_UPDATE succ,sqe_type=" RT_ENUM_LOG_FORMAT(
+            "%u") ", pre_p=%u, stream_id=%u, task_id=%u, task_sn=%u, "
+                  "task_type=" RT_ENUM_LOG_FORMAT("%u"),
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(phSqe->header.type), "DAVID_SQE_TYPE_PLACE_HOLDER"), phSqe->header.preP,
+        stm->Id_(), taskInfo->id, taskInfo->taskSn,
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(phSqe->taskType), "TS_TASK_TYPE_MODEL_TASK_UPDATE"));
     UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 

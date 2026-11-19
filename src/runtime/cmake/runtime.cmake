@@ -109,6 +109,7 @@ set(libruntime_api_src_files
 )
 
 set(common_src_files
+    ${RUNTIME_CORE_DIR}/src/common/callback_enum_log.cc
     ${RUNTIME_CORE_DIR}/src/common/error_code.cc
     ${RUNTIME_CORE_DIR}/src/common/thread_local_container.cc
     ${RUNTIME_CORE_DIR}/src/common/args_buffer_guard.cc
@@ -308,6 +309,10 @@ set(xpu_tprt_src_file
 )
 
 set(libruntime_v100_src_files
+    ${RUNTIME_CORE_DIR}/src/common/api_enum_log.cc
+    ${RUNTIME_CORE_DIR}/src/common/internal_enum_log.cc
+    ${RUNTIME_CORE_DIR}/src/common/callback_enum_log.cc
+    ${RUNTIME_CORE_DIR}/src/common/runtime_enum_log.cc
     ${RUNTIME_CORE_DIR}/src/common/enum_desc.cc
     ${RUNTIME_CORE_DIR}/src/common/api_enum_desc.cc
     ${RUNTIME_CORE_DIR}/src/common/optional_enum_desc.cc
@@ -560,6 +565,10 @@ macro(add_runtime_common_library target_name)
     )
 
     target_compile_definitions(${target_name} PRIVATE
+        RUNTIME_ENABLE_ENUM_LOG_NAMES=$<BOOL:${RUNTIME_ENABLE_ENUM_LOG_NAMES}>
+    )
+
+    target_compile_definitions(${target_name} PRIVATE
         -DSTATIC_RT_LIB=0
         -DRUNTIME_API=0
     )
@@ -763,6 +772,10 @@ macro(add_runtime_v100_library target_name)
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver_addr_seg_stub.cc
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver_dcache_lock_common.cpp
         ${RUNTIME_DIR}/src/runtime/driver/npu_driver_dcache_lock_opb.cpp
+    )
+
+    target_compile_definitions(${target_name} PRIVATE
+        RUNTIME_ENABLE_ENUM_LOG_NAMES=$<BOOL:${RUNTIME_ENABLE_ENUM_LOG_NAMES}>
     )
 
     target_compile_definitions(${target_name} PRIVATE

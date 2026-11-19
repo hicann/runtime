@@ -997,12 +997,19 @@ static void ParseKernelMetaData(
             RT_LOG_INFO,
             "kernel_name=%s, ration[0]=%u, ration[1]=%u, "
             "dfxAddr=0x%llx, dfxSize=%u, "
-            "funcType=%u, crossCoreSync=%u, kernelVfType=%u, shareMemSize=%u, minStackSize=%u, earlyStartEnable=%d, "
-            "isSupportFuncEntry=%d, functionEntryFlag=%u, functionEntry=%" PRIu64 ".",
+            "funcType=" RT_ENUM_LOG_FORMAT(
+                "%u") ", crossCoreSync=%u, kernelVfType=%u, shareMemSize=%u, minStackSize=%u, earlyStartEnable=%d, "
+                      "isSupportFuncEntry=%d, functionEntryFlag=%u, functionEntry=%" PRIu64 ".",
             kernelName.c_str(), kernelInfo->taskRation[0], kernelInfo->taskRation[1], RtPtrToValue(kernelInfo->dfxAddr),
-            kernelInfo->dfxSize, kernelInfo->funcType, kernelInfo->crossCoreSync, kernelInfo->kernelVfType,
-            kernelInfo->shareMemSize, kernelInfo->minStackSize, kernelInfo->earlyStartEnable,
-            kernelInfo->isSupportFuncEntry, kernelInfo->functionEntryFlag, kernelInfo->functionEntry);
+            kernelInfo->dfxSize,
+            RT_ENUM_LOG_VALUE(
+                static_cast<uint32_t>(kernelInfo->funcType),
+                (kernelInfo->funcType < KERNEL_FUNCTION_TYPE_MAX ?
+                     KernelFunctionTypeToString(static_cast<KernelFunctionType>(kernelInfo->funcType)) :
+                     "UNKNOWN")),
+            kernelInfo->crossCoreSync, kernelInfo->kernelVfType, kernelInfo->shareMemSize, kernelInfo->minStackSize,
+            kernelInfo->earlyStartEnable, kernelInfo->isSupportFuncEntry, kernelInfo->functionEntryFlag,
+            kernelInfo->functionEntry);
     } else if (stringTab.find(ELF_SECTION_ASCEND_STACK_SIZE_RECORD) != std::string::npos) {
         ParseElfStackInfoFromSection(
             elfData, (RtPtrToPtr<uint8_t*>(elfData->obj_ptr_origin) + section->sh_offset),
@@ -1058,7 +1065,14 @@ rtError_t ConvertTaskRation(ElfKernelInfo* elfKernelInfo, uint32_t& taskRation)
     std::vector<uint32_t> targetFuncTypeList;
     rtError_t result = RT_ERROR_NONE;
     uint32_t ratioEnum = GetRatioEnum(elfKernelInfo);
-    RT_LOG(RT_LOG_DEBUG, "functionType=%u, ratioValue=%u", elfKernelInfo->funcType, ratioEnum);
+    RT_LOG(
+        RT_LOG_DEBUG, "functionType=" RT_ENUM_LOG_FORMAT("%u") ", ratioValue=" RT_ENUM_LOG_FORMAT("%u"),
+        RT_ENUM_LOG_VALUE(
+            static_cast<uint32_t>(elfKernelInfo->funcType),
+            (elfKernelInfo->funcType < KERNEL_FUNCTION_TYPE_MAX ?
+                 KernelFunctionTypeToString(static_cast<KernelFunctionType>(elfKernelInfo->funcType)) :
+                 "UNKNOWN")),
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(ratioEnum), RatioToString(static_cast<Ratio>(ratioEnum))));
     switch (ratioEnum) {
         case RATION_TYPE_ONE_RATIO_TWO:
             taskRation = 2U;
@@ -1243,14 +1257,18 @@ rtError_t UpdateKernelsInfo(
             RT_LOG_INFO,
             "update meta info, kernel_name=%s, dfxAddr=0x%llx, dfxSize=%u, funcType=%u, "
             "elfDataFlag=%d, userArgsNum=%hu, crossCoreSync=%u, kernelVfType=%u, shareMemSize=%u, "
-            "minStackSize=%u, funcEntryType=%u, functionEntry=%lu, schedMode=%u, "
-            "taskRation_0=%hu, taskRation_1=%hu, hasParamSummary=%d, paramCount=%u, paramTotalSize=%llu, "
-            "earlyStartEnable=%d.",
+            "minStackSize=%u, funcEntryType=" RT_ENUM_LOG_FORMAT(
+                "%u") ", functionEntry=%lu, schedMode=%u, "
+                      "taskRation_0=%hu, taskRation_1=%hu, hasParamSummary=%d, paramCount=%u, paramTotalSize=%llu, "
+                      "earlyStartEnable=%d.",
             kernels[index].name, metaInfo->dfxAddr, metaInfo->dfxSize, metaInfo->funcType, metaInfo->elfDataFlag,
             metaInfo->userArgsNum, metaInfo->crossCoreSync, metaInfo->kernelVfType, metaInfo->shareMemSize,
-            metaInfo->minStackSize, metaInfo->funcEntryType, metaInfo->functionEntry, metaInfo->schedMode,
-            iter->second->taskRation[0], iter->second->taskRation[1], metaInfo->hasParamSummary, metaInfo->paramCount,
-            metaInfo->paramTotalSize, metaInfo->earlyStartEnable);
+            metaInfo->minStackSize,
+            RT_ENUM_LOG_VALUE(
+                static_cast<uint32_t>(metaInfo->funcEntryType),
+                KernelFunctionEntryTypeToString(metaInfo->funcEntryType)),
+            metaInfo->functionEntry, metaInfo->schedMode, iter->second->taskRation[0], iter->second->taskRation[1],
+            metaInfo->hasParamSummary, metaInfo->paramCount, metaInfo->paramTotalSize, metaInfo->earlyStartEnable);
 
         // section no taskRation && not support mix ratio
         if (((iter->second->taskRation[0] == 0U) && (iter->second->taskRation[1] == 0U)) ||

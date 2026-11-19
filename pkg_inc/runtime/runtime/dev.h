@@ -56,6 +56,7 @@ typedef enum tagRtRunMode {
     RT_RUN_MODE_AICPU_SCHED,
     RT_RUN_MODE_RESERVED
 } rtRunMode;
+RT_ENUM_LOG_DECLARE(RtRunModeToString, rtRunMode)
 
 typedef enum tagRtAicpuDeployType {
     AICPU_DEPLOY_CROSS_OS = 0x0,
@@ -108,6 +109,7 @@ typedef enum {
     RT_HDC_SERVICE_TYPE_USER_END = 127,
     RT_HDC_SERVICE_TYPE_MAX
 } rtHdcServiceType_t;
+RT_ENUM_LOG_DECLARE_IN_NAMESPACE(RtHdcServiceTypeToString, rtHdcServiceType_t)
 
 typedef enum tagRtDumpMode { RT_DEBUG_DUMP_ON_EXCEPTION = 1, RT_DEBUG_DUMP_MAX } rtDumpMode_t;
 

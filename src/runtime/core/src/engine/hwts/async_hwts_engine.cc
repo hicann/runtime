@@ -7,6 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "runtime/base.h"
 #include "async_hwts_engine.hpp"
 #include "context.hpp"
 #include "task_fail_callback_manager.hpp"
@@ -296,7 +297,11 @@ void AsyncHwtsEngine::ReceivingRun(void)
         for (int32_t idx = 0; idx < cnt; idx++) {
             GetTsReportByIdx(reportAddr, idx, tsReport);
             const rtReportPackageType packageType = static_cast<rtReportPackageType>(GetPackageType(tsReport));
-            RT_LOG(RT_LOG_DEBUG, "report[%d] packageType=%u.", idx, static_cast<uint32_t>(packageType));
+            RT_LOG(
+                RT_LOG_DEBUG, "report[%d] packageType=" RT_ENUM_LOG_FORMAT("%u") ".", idx,
+                RT_ENUM_LOG_VALUE(
+                    static_cast<uint32_t>(static_cast<uint32_t>(packageType)),
+                    RtReportPackageTypeToString(packageType)));
             switch (packageType) {
                 case RT_PACKAGE_TYPE_TASK_REPORT:
                     ProcessTaskReport(tsReport);

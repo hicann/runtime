@@ -8,6 +8,9 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/enum_log.hpp"
+#include "common/driver_enum_desc.hpp"
+#include "runtime/base.h"
 #include "printf.hpp"
 #include "prof_ctrl_callback_manager.hpp"
 #include "kernel_dfx_info.hpp"
@@ -872,8 +875,10 @@ static void DumpBlockInfo(
         if (type != RT_KERNEL_DFX_INFO_INVALID) {
             RT_LOG(
                 RT_LOG_INFO,
-                "Dump BlockInfo, rtKernelDfxInfoType=%d, coreType=%u, coreId=%u, blockAddr=%p, blockInfoSize=%zu", type,
-                coreType, coreId, blockAddr, sizeof(BlockInfo));
+                "Dump BlockInfo, rtKernelDfxInfoType=" RT_ENUM_LOG_FORMAT(
+                    "%d") ", coreType=%u, coreId=%u, blockAddr=%p, blockInfoSize=%zu",
+                RT_ENUM_LOG_VALUE(static_cast<int32_t>(type), KernelDfxInfoTypeName(type)), coreType, coreId, blockAddr,
+                sizeof(BlockInfo));
             (void)kernelDfxInfoInstance->ExecuteKernelDfxInfoFunc(type, coreType, coreId, blockAddr, sizeof(BlockInfo));
         }
     };
@@ -906,8 +911,11 @@ rtError_t ExecuteKernelDfxInfoFunc(
     if (kernelDfxInfoInstance->isSupportAllKernelDfxInfo()) {
         type = RT_KERNEL_DFX_INFO_DEFAULT;
         RT_LOG(
-            RT_LOG_INFO, "rtKernelDfxInfoType=%d, coreType=%u, coreId=%u, dumpReadStartAddr=%p, totalReadBufLen=%llu",
-            type, coreType, coreId, dumpReadStartAddr, totalReadBufLen);
+            RT_LOG_INFO,
+            "rtKernelDfxInfoType=" RT_ENUM_LOG_FORMAT(
+                "%d") ", coreType=%u, coreId=%u, dumpReadStartAddr=%p, totalReadBufLen=%llu",
+            RT_ENUM_LOG_VALUE(static_cast<int32_t>(type), KernelDfxInfoTypeName(type)), coreType, coreId,
+            dumpReadStartAddr, totalReadBufLen);
         (void)kernelDfxInfoInstance->ExecuteKernelDfxInfoFunc(
             type, coreType, coreId, dumpReadStartAddr, totalReadBufLen);
         return RT_ERROR_NONE;
@@ -922,8 +930,10 @@ rtError_t ExecuteKernelDfxInfoFunc(
         if (type != RT_KERNEL_DFX_INFO_INVALID) {
             RT_LOG(
                 RT_LOG_INFO,
-                "rtKernelDfxInfoType=%d, coreType=%u, coreId=%u, dumpReadStartAddr=%p, totalReadBufLen=%llu", type,
-                coreType, coreId, dumpReadStartAddr, totalReadBufLen);
+                "rtKernelDfxInfoType=" RT_ENUM_LOG_FORMAT(
+                    "%d") ", coreType=%u, coreId=%u, dumpReadStartAddr=%p, totalReadBufLen=%llu",
+                RT_ENUM_LOG_VALUE(static_cast<int32_t>(type), KernelDfxInfoTypeName(type)), coreType, coreId,
+                dumpReadStartAddr, totalReadBufLen);
             (void)kernelDfxInfoInstance->ExecuteKernelDfxInfoFunc(
                 type, coreType, coreId, RtPtrToPtr<const uint8_t*>(dumpHead), dumpInfoLen);
         }
@@ -999,8 +1009,11 @@ uint64_t CollectCommittedAicpuDumpInfo(
         const DumpInfoHead* const dumpHead = RtPtrToPtr<const DumpInfoHead*>(dumpReadStartAddr + processedLen);
         if (dumpHead->type != DumpType::DUMP_AICPU) {
             RT_LOG(
-                RT_LOG_DEBUG, "aicpu collect dump info break, packIdx=%" PRIu64 ", tlvCnt=%" PRIu64 ", type=%u",
-                packIdx, currentTlvCnt, static_cast<uint32_t>(dumpHead->type));
+                RT_LOG_DEBUG,
+                "aicpu collect dump info break, packIdx=%" PRIu64 ", tlvCnt=%" PRIu64
+                ", type=" RT_ENUM_LOG_FORMAT("%u"),
+                packIdx, currentTlvCnt,
+                RT_ENUM_LOG_VALUE(static_cast<uint32_t>(dumpHead->type), DumpTypeToString(dumpHead->type)));
             break;
         }
         if (static_cast<uint64_t>(dumpHead->infoLen) > remainingLen - sizeof(DumpInfoHead)) {
@@ -1309,8 +1322,9 @@ static rtError_t CollectDumpInfoFromBuffer(
         if ((packIdx == device->GetSimtPrintTlvCnt()) ||
             (dumpHead->type != DumpType::DUMP_SIMT_ASSERT && dumpHead->type != DumpType::DUMP_SIMT_PRINTF)) {
             RT_LOG(
-                RT_LOG_DEBUG, "collect dump info break, packIdx=%llu, tlvCnt=%llu, type %u", packIdx,
-                device->GetSimtPrintTlvCnt(), dumpHead->type);
+                RT_LOG_DEBUG, "collect dump info break, packIdx=%llu, tlvCnt=%llu, type " RT_ENUM_LOG_FORMAT("%u"),
+                packIdx, device->GetSimtPrintTlvCnt(),
+                RT_ENUM_LOG_VALUE(static_cast<uint32_t>(dumpHead->type), DumpTypeToString(dumpHead->type)));
             break;
         }
 

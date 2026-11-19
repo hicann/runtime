@@ -8,6 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
 #include "stars_david.hpp"
 #include "david_sqe_adapter.hpp"
 #include "base_david.hpp"
@@ -52,7 +54,8 @@ void ConstructDavidAICpuSqeForDavinciTask(TaskInfo* const taskInfo, void* const 
 
     PrintDavidSqe(davidSqe, "AICpuTask");
     RT_LOG(
-        RT_LOG_INFO, "type=%hu, topic_type=%hu, kernel_type=%u, dump_en=%u", aicpuKernelSqe->header.type,
+        RT_LOG_INFO, "type=" RT_ENUM_LOG_FORMAT("%u") ", topic_type=%hu, kernel_type=%u, dump_en=%u",
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(aicpuKernelSqe->header.type), "DAVID_SQE_TYPE_AICPU_D"),
         aicpuKernelSqe->topicType, aicpuKernelSqe->kernelType, aicpuKernelSqe->usrData.debugDumpEn);
     UpdateDavidSqeHeadUpdate(taskInfo, sqe);
     return;

@@ -8,6 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
 #include "task_submit.hpp"
 #include "task.hpp"
 #include "stream_sqcq_manage.hpp"
@@ -361,25 +363,33 @@ rtError_t SubmitTaskDc(TaskInfo* submitTask, Stream* stm, uint32_t* const flipTa
         stm->StreamSyncUnLock();
 
         COND_RETURN_INFO(
-            error != RT_ERROR_NONE, error, "SyncTask stream_id=%u, task_id=%u, taskType=%u, result=%u", stm->Id_(),
-            submitTask->id, submitTask->type, error);
+            error != RT_ERROR_NONE, error,
+            "SyncTask stream_id=%u, task_id=%u, taskType=" RT_ENUM_LOG_FORMAT("%u") ", result=%u", stm->Id_(),
+            submitTask->id,
+            RT_ENUM_LOG_VALUE(static_cast<uint32_t>(submitTask->type), RT_ENUM_LOG_NAME(submitTask->typeName)), error);
         error = AllocAndSendFlipTask(taskId, stm);
         COND_RETURN_INFO(
             error != RT_ERROR_NONE, error,
-            "AllocAndSendFlipTask stream sync stream_id=%u, task_id=%u, taskType=%u, result=%u", stm->Id_(),
-            submitTask->id, submitTask->type, error);
+            "AllocAndSendFlipTask stream sync stream_id=%u, task_id=%u, taskType=" RT_ENUM_LOG_FORMAT(
+                "%u") ", result=%u",
+            stm->Id_(), submitTask->id,
+            RT_ENUM_LOG_VALUE(static_cast<uint32_t>(submitTask->type), RT_ENUM_LOG_NAME(submitTask->typeName)), error);
 
         return error;
     }
 
     error = AllocAndSendFlipTask(taskId, stm);
     COND_RETURN_INFO(
-        error != RT_ERROR_NONE, error, "AllocAndSendFlipTask stream_id=%u, task_id=%u, taskType=%u, result=%u",
-        stm->Id_(), submitTask->id, submitTask->type, error);
+        error != RT_ERROR_NONE, error,
+        "AllocAndSendFlipTask stream_id=%u, task_id=%u, taskType=" RT_ENUM_LOG_FORMAT("%u") ", result=%u", stm->Id_(),
+        submitTask->id,
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(submitTask->type), RT_ENUM_LOG_NAME(submitTask->typeName)), error);
 
     COND_RETURN_INFO(
-        stm->IsTaskSink(), RT_ERROR_NONE, "AllocAndSendFlipTask stream_id=%u, task_id=%u, taskType=%u, result=%u",
-        stm->Id_(), submitTask->id, submitTask->type, error);
+        stm->IsTaskSink(), RT_ERROR_NONE,
+        "AllocAndSendFlipTask stream_id=%u, task_id=%u, taskType=" RT_ENUM_LOG_FORMAT("%u") ", result=%u", stm->Id_(),
+        submitTask->id,
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(submitTask->type), RT_ENUM_LOG_NAME(submitTask->typeName)), error);
     const uint16_t postTaskId = submitTask->id + 1U;  // 保持原有逻辑，翻转就保留低16位
     if ((postTaskId % RT_HALF_SEND_TASK_NUM) != 0U) { // Half Event.
         return RT_ERROR_NONE;
@@ -732,21 +742,27 @@ rtError_t StarsSubmitTask(TaskInfo* submitTask, Stream* stm, uint32_t* const fli
         stm->StreamSyncUnLock();
 
         COND_RETURN_INFO(
-            error != RT_ERROR_NONE, error, "SyncTask stream_id=%u, task_id=%u, taskType=%u, result=%u", stm->Id_(),
-            submitTask->id, submitTask->type, error);
+            error != RT_ERROR_NONE, error,
+            "SyncTask stream_id=%u, task_id=%u, taskType=" RT_ENUM_LOG_FORMAT("%u") ", result=%u", stm->Id_(),
+            submitTask->id,
+            RT_ENUM_LOG_VALUE(static_cast<uint32_t>(submitTask->type), RT_ENUM_LOG_NAME(submitTask->typeName)), error);
         error = AllocAndSendFlipTask(taskId, stm);
         COND_RETURN_INFO(
             error != RT_ERROR_NONE, error,
-            "AllocAndSendFlipTask stream sync stream_id=%u, task_id=%u, taskType=%u, result=%u", stm->Id_(),
-            submitTask->id, submitTask->type, error);
+            "AllocAndSendFlipTask stream sync stream_id=%u, task_id=%u, taskType=" RT_ENUM_LOG_FORMAT(
+                "%u") ", result=%u",
+            stm->Id_(), submitTask->id,
+            RT_ENUM_LOG_VALUE(static_cast<uint32_t>(submitTask->type), RT_ENUM_LOG_NAME(submitTask->typeName)), error);
 
         return error;
     }
 
     error = AllocAndSendFlipTask(taskId, stm);
     COND_RETURN_INFO(
-        error != RT_ERROR_NONE, error, "AllocAndSendFlipTask stream_id=%u, task_id=%u, taskType=%u, result=%u",
-        stm->Id_(), submitTask->id, submitTask->type, error);
+        error != RT_ERROR_NONE, error,
+        "AllocAndSendFlipTask stream_id=%u, task_id=%u, taskType=" RT_ENUM_LOG_FORMAT("%u") ", result=%u", stm->Id_(),
+        submitTask->id,
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(submitTask->type), RT_ENUM_LOG_NAME(submitTask->typeName)), error);
 
     return RT_ERROR_NONE;
 }

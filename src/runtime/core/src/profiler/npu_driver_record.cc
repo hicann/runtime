@@ -7,6 +7,8 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "common/profiler_struct.hpp"
+#include "runtime/base.h"
 #include "npu_driver_record.hpp"
 #include "profiler.hpp"
 #include "runtime.hpp"
@@ -36,10 +38,15 @@ void NpuDriverRecord::PrintRecord(const rtProfileRecordSyncDrv_t& recordSyncDrv)
 {
     RT_LOG(
         RT_LOG_INFO,
-        "DrvApiCall: RecordType=%hu OperationType=%hu"
-        " pid=%u tid=%u seq=%u start=%" PRIu64 " end=%" PRIu64 "",
-        recordSyncDrv.type, recordSyncDrv.drvOpType, recordSyncDrv.pid, recordSyncDrv.tid, recordSyncDrv.seqId,
-        recordSyncDrv.startStamp, recordSyncDrv.endStamp);
+        "DrvApiCall: RecordType=" RT_ENUM_LOG_FORMAT("%u") " OperationType=%hu"
+                                                           " pid=%u tid=%u seq=%u start=%" PRIu64 " end=%" PRIu64 "",
+        RT_ENUM_LOG_VALUE(
+            static_cast<uint32_t>(recordSyncDrv.type),
+            (recordSyncDrv.type <= PROFILE_RECORD_TYPE_END ?
+                 RtProfileRecordTypeToString(static_cast<rtProfileRecordType_t>(recordSyncDrv.type)) :
+                 "UNKNOWN")),
+        recordSyncDrv.drvOpType, recordSyncDrv.pid, recordSyncDrv.tid, recordSyncDrv.seqId, recordSyncDrv.startStamp,
+        recordSyncDrv.endStamp);
     return;
 }
 

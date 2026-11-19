@@ -8,6 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
 #include "stars.hpp"
 #include "stars_david.hpp"
 #include "david_sqe_adapter.hpp"
@@ -56,10 +58,10 @@ void ConstructSqeForIpcNotifyRecordTask(TaskInfo* taskInfo, rtDavidSqe_t* const 
     PrintDavidSqe(command, "IpcNotifyRecordTask");
     RT_LOG(
         RT_LOG_INFO,
-        "ipc_notify_record: device_id=%u, stream_id=%d, task_id=%hu, task_sn=%u, sq_id=%u, "
-        "writeAddrLow=0x%x, writeAddrHigh=0x%x, subType=%u.",
+        "ipc_notify_record: device_id=%u, stream_id=%d, task_id=%hu, task_sn=%u, sq_id=%u, writeAddrLow=0x%x, "
+        "writeAddrHigh=0x%x, subType=" RT_ENUM_LOG_FORMAT("%u") ".",
         devId, stream->Id_(), taskInfo->id, taskInfo->taskSn, stream->GetSqId(), sqe->writeAddrLow, sqe->writeAddrHigh,
-        sqe->subType);
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(sqe->subType), "STARS_WRITE_VALUE_SUB_TYPE_NOTIFY_RECORD_IPC_NO_PCIE"));
 }
 
 void ReleaseResourceForEndGraphNotifyWaitTaskOnlModel(const TaskInfo* taskInfo) { UNUSED(taskInfo); }

@@ -7,6 +7,10 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
+#include "h2h_copy_mgr.hpp"
+#include <string>
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 #include "runtime/rt.h"
@@ -31,6 +35,9 @@
 #include "task_xpu_recycle.hpp"
 #include "rt_inner_xpu.h"
 #include "../../../common/rt_utest_xpu_helper.hpp"
+
+void ClearLastDlogRecordLine();
+bool DlogRecordContains(const std::string& keyword);
 
 using namespace testing;
 using namespace cce::runtime;
@@ -121,6 +128,8 @@ TEST_F(XpuRecycleTest, xpu_recycle_test_03)
 
 TEST_F(XpuRecycleTest, XpuDriver_LogicCqReportV2_error)
 {
+    MOCKER(CheckLogLevel).stubs().will(returnValue(1));
+    ClearLastDlogRecordLine();
     XpuDriver* driver = new XpuDriver();
     constexpr uint32_t allocCnt = RT_MILAN_MAX_QUERY_CQE_NUM;
     const uint32_t streamId = 0U;
@@ -140,5 +149,38 @@ TEST_F(XpuRecycleTest, XpuDriver_LogicCqReportV2_error)
     rtError_t error =
         driver->LogicCqReportV2(waitInfo, RtPtrToPtr<uint8_t*, TprtLogicCqReport_t*>(reportInfo), allocCnt, cnt);
     EXPECT_EQ(error, RT_ERROR_DRV_INVALID_HANDLE);
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+    EXPECT_TRUE(DlogRecordContains(
+        "ts_id=1, type=TPRT_QUERY_CQ_INFO(" + std::to_string(TPRT_QUERY_CQ_INFO) + "), logicCq=1, stream_id=0"));
+#else
+    EXPECT_TRUE(DlogRecordContains("ts_id=1, type=" + std::to_string(TPRT_QUERY_CQ_INFO) + ", logicCq=1, stream_id=0"));
+#endif
     DELETE_O(driver)
+}
+
+TEST_F(XpuRecycleTest, HostCopyPolicyLog_Preserves64BitUnknownWithoutChangingAllocation)
+{
+    MOCKER(CheckLogLevel).stubs().will(returnValue(1));
+    const H2HCopyPolicy values[] = {
+        H2HCopyPolicy::H2H_POLICY_DEFAULT, H2HCopyPolicy::H2H_COPY_POLICY_SYNC,
+        static_cast<H2HCopyPolicy>(4294967297ULL)};
+    const char* const names[] = {"H2H_POLICY_DEFAULT", "H2H_COPY_POLICY_SYNC", "UNKNOWN"};
+    for (size_t i = 0U; i < sizeof(values) / sizeof(values[0]); ++i) {
+        ClearLastDlogRecordLine();
+        H2HCopyMgr manager(128U, 1U, 2U, BufferAllocator::LINEAR, values[i]);
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+        EXPECT_TRUE(DlogRecordContains(
+            std::string("policy ") + names[i] + "(" + std::to_string(static_cast<uint64_t>(values[i])) + ")"));
+#else
+        EXPECT_TRUE(DlogRecordContains(
+            "alloc h2h copy buff success, policy " + std::to_string(static_cast<uint64_t>(values[i]))));
+#endif
+        void* const item = manager.AllocHostMem(false);
+        if (values[i] == H2HCopyPolicy::H2H_COPY_POLICY_SYNC) {
+            EXPECT_NE(item, nullptr);
+            manager.FreeHostMem(item);
+        } else {
+            EXPECT_EQ(item, nullptr);
+        }
+    }
 }

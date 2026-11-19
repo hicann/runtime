@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "task_enum_desc.hpp"
 #include "stream_xpu.hpp"
 #include "stream_sqcq_manage.hpp"
 #include "context.hpp"
@@ -286,7 +287,9 @@ static rtError_t XpuProcReport(
         }
 
         const tsTaskType_t taskType = reportTask->type;
-        RT_LOG(RT_LOG_INFO, "taskType=%u.", taskType);
+        RT_LOG(
+            RT_LOG_INFO, "taskType=" RT_ENUM_LOG_FORMAT("%u") ".",
+            RT_ENUM_LOG_VALUE(static_cast<uint32_t>(taskType), TsTaskTypeToString(taskType)));
         XpuProcLogicCqReport(dev, report, reportTask);
         reclaimCqReport = report;
         reclaimTask = reportTask;

@@ -7,6 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "common/enum_log.hpp"
 #include <thread>
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
@@ -43,6 +44,8 @@
 #include "profiling_agent.hpp"
 #include "onlineprof.hpp"
 #include "data/elf.h"
+#include "profile_log_record.hpp"
+#include "npu_driver_record.hpp"
 #undef protected
 #undef private
 
@@ -4922,4 +4925,82 @@ TEST_F(ProfilerTest, ModifyTrackData_UsesStreamTsId)
     EXPECT_EQ(static_cast<uint32_t>(trackData.compactInfo.data.runtimeTrack.deviceId), 0U);
     // Release the resources using the TS ID under which Init() allocated them.
     EXPECT_EQ(device.DevSetTsId(originalTsId), RT_ERROR_NONE);
+}
+
+void ClearLastDlogRecordLine();
+bool DlogRecordContains(const std::string& keyword);
+
+TEST_F(ProfilerTest, RecordTypeLog_PreservesUnknownTypeAndFollowingFields)
+{
+    MOCKER(CheckLogLevel).stubs().will(returnValue(1));
+    const Profiler* const profiler = Runtime::Instance()->Profiler_();
+    ASSERT_NE(profiler, nullptr);
+    ProfileLogRecord record(17U, profiler);
+    rtProfileRecordSyncRt_t info = {};
+    info.type = UINT16_MAX;
+    info.rtOpType = 17U;
+    info.pid = 23U;
+    info.startStamp = 4294967301ULL;
+    ClearLastDlogRecordLine();
+    record.PrintRecord(info);
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+    EXPECT_TRUE(DlogRecordContains("RecordType=UNKNOWN(65535) OperationType=17 pid=23"));
+#else
+    EXPECT_TRUE(DlogRecordContains("RecordType=65535 OperationType=17 pid=23"));
+#endif
+    EXPECT_TRUE(DlogRecordContains("start=4294967301"));
+    EXPECT_EQ(info.type, UINT16_MAX);
+    info.type = PROFILE_RECORD_TYPE_RT_ASYNC_INFO;
+    ClearLastDlogRecordLine();
+    record.PrintRecord(info);
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+    EXPECT_TRUE(DlogRecordContains("RecordType=PROFILE_RECORD_TYPE_RT_ASYNC_INFO(3)"));
+#else
+    EXPECT_TRUE(DlogRecordContains("RecordType=3 OperationType=17"));
+#endif
+}
+
+TEST_F(ProfilerTest, DriverRecordTypeLog_PreservesOriginalRecordDomain)
+{
+    MOCKER(CheckLogLevel).stubs().will(returnValue(1));
+    NpuDriverRecord record(19U);
+    rtProfileRecordSyncDrv_t info = {};
+    info.type = PROFILE_RECORD_TYPE_RT_CALL_DRV;
+    info.drvOpType = 19U;
+    info.seqId = 29U;
+    info.endStamp = 4294967307ULL;
+    ClearLastDlogRecordLine();
+    record.PrintRecord(info);
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+    EXPECT_TRUE(DlogRecordContains("RecordType=PROFILE_RECORD_TYPE_RT_CALL_DRV(2) OperationType=19"));
+#else
+    EXPECT_TRUE(DlogRecordContains("RecordType=2 OperationType=19"));
+#endif
+    EXPECT_TRUE(DlogRecordContains("seq=29 start=0 end=4294967307"));
+}
+
+TEST_F(ProfilerTest, TaskTrackLog_Preserves64BitUnknownAndSimtDomain)
+{
+    MOCKER(CheckLogLevel).stubs().will(returnValue(1));
+    TaskInfo task = {};
+    MsprofRuntimeTrack track = {};
+    track.taskType = 4294967297ULL;
+    ClearLastDlogRecordLine();
+    ChangeTrackDataTaskType(track, &task);
+    EXPECT_EQ(track.taskType, 4294967297ULL);
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+    EXPECT_TRUE(DlogRecordContains("runtimeTrack.taskType=UNKNOWN(4294967297)"));
+#else
+    EXPECT_TRUE(DlogRecordContains("runtimeTrack.taskType=4294967297, mixType=0"));
+#endif
+    task.u.aicTaskInfo.simtParamOffset = 100U;
+    ClearLastDlogRecordLine();
+    ChangeTrackDataTaskType(track, &task);
+    EXPECT_EQ(track.taskType, static_cast<uint64_t>(ProfTaskType::PROF_TASK_TYPE_KERNEL_SIMT));
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+    EXPECT_TRUE(DlogRecordContains("runtimeTrack.taskType=PROF_TASK_TYPE_KERNEL_SIMT(600)"));
+#else
+    EXPECT_TRUE(DlogRecordContains("runtimeTrack.taskType=600, mixType=0"));
+#endif
+    EXPECT_TRUE(DlogRecordContains("isPureSimtTask=1"));
 }

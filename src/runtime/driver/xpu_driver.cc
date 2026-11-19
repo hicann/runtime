@@ -7,7 +7,9 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "common/enum_log.hpp"
 #include "xpu_driver.hpp"
+#include "runtime/base.h"
 #include "base.hpp"
 #include "errcode_manage.hpp"
 #include "error_message_manage.hpp"
@@ -157,8 +159,10 @@ rtError_t XpuDriver::LogicCqReportV2(
     repRecvInfo.cqeNum = reportCnt;
     repRecvInfo.reportCqeNum = reportCnt;
     RT_LOG(
-        RT_LOG_DEBUG, "device_id=%u, ts_id=%u, type=%u, logicCq=%u, stream_id=%u, reportCqeNum=%u.", waitInfo.devId,
-        waitInfo.tsId, static_cast<uint32_t>(repRecvInfo.type), waitInfo.cqId, waitInfo.streamId, reportCnt);
+        RT_LOG_DEBUG,
+        "device_id=%u, ts_id=%u, type=" RT_ENUM_LOG_FORMAT("%u") ", logicCq=%u, stream_id=%u, reportCqeNum=%u.",
+        waitInfo.devId, waitInfo.tsId, RT_ENUM_LOG_VALUE(static_cast<uint32_t>(repRecvInfo.type), "TPRT_QUERY_CQ_INFO"),
+        waitInfo.cqId, waitInfo.streamId, reportCnt);
     uint32_t reportGetRet = TprtCqReportRecv(waitInfo.devId, &repRecvInfo);
     RT_LOG(RT_LOG_DEBUG, "reportCqeNum=%u, drvReportGetRet=%d.", repRecvInfo.reportCqeNum, reportGetRet);
     if (reportGetRet != TPRT_SUCCESS) {

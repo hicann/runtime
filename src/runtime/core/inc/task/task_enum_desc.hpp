@@ -11,10 +11,13 @@
 #ifndef CCE_RUNTIME_TASK_ENUM_DESC_HPP
 #define CCE_RUNTIME_TASK_ENUM_DESC_HPP
 
+#include "common/enum_log.hpp"
 #include <cstdint>
+#include <cstring>
 #include <string>
 #include "runtime/rt_external_preload.h"
 #include "runtime/rt_external_stars.h"
+#include "runtime/rts/rts_kernel.h"
 #include "runtime/rt_inner_task.h"
 #include "rt_log.h"
 

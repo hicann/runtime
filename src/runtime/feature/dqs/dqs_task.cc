@@ -8,6 +8,9 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/api_enum_log.hpp"
+#include "runtime/rt_external_dqs.h"
+#include "runtime/base.h"
 #include "base.hpp"
 #include "stream_with_dqs.hpp"
 #include "memory_task.h"
@@ -501,10 +504,14 @@ static rtError_t InitFuncCallParaForDqsZeroCopyTask(
     fcPara.isCpyAddrLow32First = (cfg->zeroCopyCfg->cpyAddrOrder == RT_DQS_ZERO_COPY_ADDR_ORDER_LOW32_FIRST);
     RT_LOG(
         RT_LOG_INFO,
-        "Init DqsZeroCopy with offset function call params, copyType=%u, isCpyAddrLow32First=%u, "
-        "mbufHandleAddr=%#llx, mbufBaseAddr=%#llx, blockSizeAddr=%#llx, count=%" PRIu64 ", queueId=%u",
-        static_cast<uint32_t>(cfg->zeroCopyCfg->copyType), static_cast<uint32_t>(fcPara.isCpyAddrLow32First),
-        fcPara.mbufHandleAddr, fcPara.mbufBaseAddr, fcPara.blockSizeAddr, fcPara.count, queueId);
+        "Init DqsZeroCopy with offset function call params, copyType=" RT_ENUM_LOG_FORMAT(
+            "%u") ", isCpyAddrLow32First=%u, mbufHandleAddr=%#llx, "
+                  "mbufBaseAddr=%#llx, blockSizeAddr=%#llx, count=%" PRIu64 ", queueId=%u",
+        RT_ENUM_LOG_VALUE(
+            static_cast<uint32_t>(static_cast<uint32_t>(cfg->zeroCopyCfg->copyType)),
+            RtDqsZeroCopyTypeToString(cfg->zeroCopyCfg->copyType)),
+        static_cast<uint32_t>(fcPara.isCpyAddrLow32First), fcPara.mbufHandleAddr, fcPara.mbufBaseAddr,
+        fcPara.blockSizeAddr, fcPara.count, queueId);
     return RT_ERROR_NONE;
 }
 
@@ -783,8 +790,11 @@ static rtError_t PrepareSqeInfoForDqsInterChipMemcpyTask(
         RtPtrToValue(interChipSpaceBasePtr) + static_cast<uint64_t>(groupIdx * sizeof(stars_dqs_inter_chip_space_t));
     memcpyAddrInfo = RtValueToPtr<void*>(interChipSpaceAddr + fieldOffset);
     RT_LOG(
-        RT_LOG_DEBUG, "Prepare dqs inter-chip memcopy task info, memcpyAddrInfo=%p, streamId=%d, groupIdx=%u, type=%d",
-        memcpyAddrInfo, stm->Id_(), groupIdx, static_cast<int32_t>(type));
+        RT_LOG_DEBUG,
+        "Prepare dqs inter-chip memcopy task info, memcpyAddrInfo=%p, streamId=%d, groupIdx=%u, "
+        "type=" RT_ENUM_LOG_FORMAT("%d"),
+        memcpyAddrInfo, stm->Id_(), groupIdx,
+        RT_ENUM_LOG_VALUE(static_cast<int32_t>(static_cast<int32_t>(type)), DqsInterChipTaskTypeName(type)));
 
     return RT_ERROR_NONE;
 }

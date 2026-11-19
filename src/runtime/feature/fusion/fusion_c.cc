@@ -7,6 +7,9 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "common/api_enum_log.hpp"
+#include "runtime/rt_external_kernel.h"
+#include "runtime/base.h"
 #include "fusion_c.hpp"
 #include "stream_c.hpp"
 #include "context.hpp"
@@ -78,9 +81,13 @@ void AixKernelTaskInitForFusion(
     const uint32_t taskRation = (aicPart->kernel != nullptr) ? aicPart->kernel->GetTaskRation() : 0U;
     RT_LOG(
         RT_LOG_INFO,
-        "aicAivType=%hhu, taskRation=%u, kernelFlag=0x%x, qos=%u,"
-        " partId=%u, schemMode=%u.",
-        fusionTaskInfo->aicAivType, taskRation, aicPart->kernelFlag, aicPart->qos, aicPart->partId, aicPart->schemMode);
+        "aicAivType=%hhu, taskRation=%u, kernelFlag=0x%x, qos=%u, partId=%u, schemMode=" RT_ENUM_LOG_FORMAT("%u") ".",
+        fusionTaskInfo->aicAivType, taskRation, aicPart->kernelFlag, aicPart->qos, aicPart->partId,
+        RT_ENUM_LOG_VALUE(
+            static_cast<uint32_t>(aicPart->schemMode),
+            (aicPart->schemMode <= RT_SCHEM_MODE_END ?
+                 RtSchemModeTypeToString(static_cast<rtschemModeType_t>(aicPart->schemMode)) :
+                 "UNKNOWN")));
 }
 
 void FusionKernelTaskInit(TaskInfo* taskInfo)
@@ -182,9 +189,10 @@ static rtError_t PreProcAicAivTaskForFusion(
     aicAivInfo->program = (prog != nullptr) ? prog : realProgram;
     RT_LOG(
         RT_LOG_INFO,
-        "kernel info: stream_id=%d, kernelAttrType=%s, kernel_name=%s,"
-        "mixType=%u, taskRation=%u, tilingKey=%llu.",
-        stm->Id_(), KernelAttrTypeToString(kernelAttrType).c_str(), registeredKernel->Name_().c_str(), mixType,
+        "kernel info: stream_id=%d, kernelAttrType=%s, kernel_name=%s,mixType=" RT_ENUM_LOG_FORMAT(
+            "%u") ", taskRation=%u, tilingKey=%llu.",
+        stm->Id_(), KernelAttrTypeToString(kernelAttrType).c_str(), registeredKernel->Name_().c_str(),
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(mixType), RtMixTypeToString(static_cast<RtMixType>(mixType))),
         registeredKernel->GetTaskRation(), tilingKey);
     return RT_ERROR_NONE;
 }
@@ -318,7 +326,11 @@ static void FusionKernelTaskProc(
                 taskInfo->u.fusionKernelTask.ccuArgSize = ccuArgSize;
                 break;
             default:
-                RT_LOG(RT_LOG_INFO, "sub task [%u]'s type=%u.", idx, static_cast<uint32_t>(subKernelType));
+                RT_LOG(
+                    RT_LOG_INFO, "sub task [%u]'s type=" RT_ENUM_LOG_FORMAT("%u") ".", idx,
+                    RT_ENUM_LOG_VALUE(
+                        static_cast<uint32_t>(static_cast<uint32_t>(subKernelType)),
+                        RtFusionTypeToString(subKernelType)));
                 break;
         }
     }

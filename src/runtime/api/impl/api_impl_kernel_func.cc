@@ -168,7 +168,10 @@ rtError_t ApiImplKernelFunc::FunctionGetAttribute(rtFuncHandle funcHandle, rtFun
             uint16_t* ratioArr = RtPtrToPtr<uint16_t*>(attrValue);
             ratioArr[1] = ratio[0]; // aicratio
             ratioArr[0] = ratio[1]; // aivratio
-            RT_LOG(RT_LOG_DEBUG, "mixType=%u, ratio[0]=%u, ratio[1]=%u.", mixType, ratio[0], ratio[1]);
+            RT_LOG(
+                RT_LOG_DEBUG, "mixType=" RT_ENUM_LOG_FORMAT("%u") ", ratio[0]=%u, ratio[1]=%u.",
+                RT_ENUM_LOG_VALUE(static_cast<uint32_t>(mixType), RtMixTypeToString(static_cast<RtMixType>(mixType))),
+                ratio[0], ratio[1]);
             break;
         }
         case RT_FUNCTION_ATTR_KERNEL_SCHED_MODE: {

@@ -7,6 +7,8 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "event_state_callback_manager.hpp"
+#include "runtime/base.h"
 #include "common/internal_error_define.hpp"
 #include "stream_mem_pool.hpp"
 #include "npu_driver.hpp"
@@ -287,13 +289,15 @@ Segment* SegmentManager::SingleStreamReuse(size_t size, const int32_t streamId, 
     if (curStmSeg != nullptr) {
         flag = ReuseFlag::REUSE_FLAG_STANDARD;
         RT_LOG(
-            RT_LOG_DEBUG, "Single stream reuse successfully, flag=%d, segPtr=%#" PRIx64 ".", static_cast<int32_t>(flag),
-            curStmSeg->basePtr);
+            RT_LOG_DEBUG, "Single stream reuse successfully, flag=" RT_ENUM_LOG_FORMAT("%d") ", segPtr=%#" PRIx64 ".",
+            RT_ENUM_LOG_VALUE(static_cast<int32_t>(flag), ReuseFlagToString(flag)), curStmSeg->basePtr);
         return curStmSeg;
     }
 
     flag = ReuseFlag::REUSE_FLAG_NONE;
-    RT_LOG(RT_LOG_DEBUG, "Single stream does not reuse any segment, flag=%d.", static_cast<int32_t>(flag));
+    RT_LOG(
+        RT_LOG_DEBUG, "Single stream does not reuse any segment, flag=" RT_ENUM_LOG_FORMAT("%d") ".",
+        RT_ENUM_LOG_VALUE(static_cast<int32_t>(flag), ReuseFlagToString(flag)));
     return curStmSeg;
 }
 
@@ -321,13 +325,15 @@ Segment* SegmentManager::StreamEventReuse(size_t size, const int32_t streamId, R
     if (eventStmSeg != nullptr) {
         flag = ReuseFlag::REUSE_FLAG_STANDARD;
         RT_LOG(
-            RT_LOG_DEBUG, "Stream event reuse successfully, flag=%d, segPtr=%#" PRIx64 ".", static_cast<int32_t>(flag),
-            eventStmSeg->basePtr);
+            RT_LOG_DEBUG, "Stream event reuse successfully, flag=" RT_ENUM_LOG_FORMAT("%d") ", segPtr=%#" PRIx64 ".",
+            RT_ENUM_LOG_VALUE(static_cast<int32_t>(flag), ReuseFlagToString(flag)), eventStmSeg->basePtr);
         return eventStmSeg;
     }
 
     flag = ReuseFlag::REUSE_FLAG_NONE;
-    RT_LOG(RT_LOG_DEBUG, "Stream event does not reuse any segment, flag=%d.", static_cast<int32_t>(flag));
+    RT_LOG(
+        RT_LOG_DEBUG, "Stream event does not reuse any segment, flag=" RT_ENUM_LOG_FORMAT("%d") ".",
+        RT_ENUM_LOG_VALUE(static_cast<int32_t>(flag), ReuseFlagToString(flag)));
     return eventStmSeg;
 }
 
@@ -347,13 +353,15 @@ Segment* SegmentManager::StreamInternalReuse(size_t size, const int32_t streamId
     if (otherStmSeg != nullptr) {
         flag = reuseType ? ReuseFlag::REUSE_FLAG_STANDARD : ReuseFlag::REUSE_FLAG_INTERNAL;
         RT_LOG(
-            RT_LOG_DEBUG, "Stream internal reuse successfully, flag=%d, segPtr=%#" PRIx64 ".",
-            static_cast<int32_t>(flag), otherStmSeg->basePtr);
+            RT_LOG_DEBUG, "Stream internal reuse successfully, flag=" RT_ENUM_LOG_FORMAT("%d") ", segPtr=%#" PRIx64 ".",
+            RT_ENUM_LOG_VALUE(static_cast<int32_t>(flag), ReuseFlagToString(flag)), otherStmSeg->basePtr);
         return otherStmSeg;
     }
 
     flag = ReuseFlag::REUSE_FLAG_NONE;
-    RT_LOG(RT_LOG_DEBUG, "Stream does not reuse any segment internally, flag=%d.", static_cast<int32_t>(flag));
+    RT_LOG(
+        RT_LOG_DEBUG, "Stream does not reuse any segment internally, flag=" RT_ENUM_LOG_FORMAT("%d") ".",
+        RT_ENUM_LOG_VALUE(static_cast<int32_t>(flag), ReuseFlagToString(flag)));
     return otherStmSeg;
 }
 
@@ -784,7 +792,9 @@ void PoolRegistry::StreamStateCallback(rtStream_t stm, rtStreamState type, void*
 
 void PoolRegistry::EventStateCallbackWrapper(Stream* stream, Event* event, EventStatePeriod period, void* args)
 {
-    RT_LOG(RT_LOG_DEBUG, "PoolRegistry event callback start, period %u.", static_cast<uint32_t>(period));
+    RT_LOG(
+        RT_LOG_DEBUG, "PoolRegistry event callback start, period " RT_ENUM_LOG_FORMAT("%u") ".",
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(period), EventStatePeriodToString(period)));
     UNUSED(args);
 
     COND_RETURN_VOID(event == nullptr, "PoolRegistry event callback event nullptr.");

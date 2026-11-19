@@ -46,6 +46,7 @@ typedef enum {
     RT_MEMORY_LOC_HOST_NUMA,
     RT_MEMORY_LOC_MAX
 } rtMemLocationType;
+RT_ENUM_LOG_DECLARE_IN_NAMESPACE(RtMemLocationTypeToString, rtMemLocationType)
 
 typedef struct {
     uint32_t id;
@@ -121,6 +122,7 @@ typedef enum tagRtRecudeKind {
     RT_MEMCPY_SDMA_AUTOMATIC_EQUAL = 13,
     RT_RECUDE_KIND_END = 14,
 } rtRecudeKind_t;
+RT_ENUM_LOG_DECLARE_IN_NAMESPACE(RtRecudeKindToString, rtRecudeKind_t)
 
 typedef enum tagRtDataType {
     RT_DATA_TYPE_FP32 = 0,    // fp32

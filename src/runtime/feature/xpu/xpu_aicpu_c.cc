@@ -7,6 +7,8 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "common/api_enum_log.hpp"
+#include "runtime/kernel.h"
 #include "xpu_aicpu_c.hpp"
 #include "davinci_kernel_task.h"
 #include "task_xpu.hpp"
@@ -80,9 +82,14 @@ rtError_t XpuLaunchKernel(
     aicpuTask->aicpuKernelType = static_cast<uint8_t>(kernel->GetAicpuKernelType_());
     aicpuTask->timeout = ConvertAicpuTimeout(stm->Device_(), argsInfo, taskCfg, flag);
     RT_LOG(
-        RT_LOG_INFO, "kernel type=%u, flag=0x%x, timeout=%hus, kernelFlag=0x%x, blkdim=%u, argsSize=%u.",
-        kernel->GetAicpuKernelType_(), flag, aicpuTask->timeout, aicpuTask->comm.kernelFlag, aicpuTask->comm.dim,
-        argsInfo->argsSize);
+        RT_LOG_INFO,
+        "kernel type=" RT_ENUM_LOG_FORMAT("%u") ", flag=0x%x, timeout=%hus, kernelFlag=0x%x, blkdim=%u, argsSize=%u.",
+        RT_ENUM_LOG_VALUE(
+            static_cast<uint32_t>(kernel->GetAicpuKernelType_()),
+            (kernel->GetAicpuKernelType_() < KERNEL_TYPE_RESERVED ?
+                 ExecutableKernelTypeToString(static_cast<rtKernelType_t>(kernel->GetAicpuKernelType_())) :
+                 "UNKNOWN")),
+        flag, aicpuTask->timeout, aicpuTask->comm.kernelFlag, aicpuTask->comm.dim, argsInfo->argsSize);
     error = XpuSendTask(kernelTask, stm);
     ERROR_RETURN_MSG_INNER(
         error, "stream_id=%d submit task failed, retCode=%#x.", streamId, static_cast<uint32_t>(error));

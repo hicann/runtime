@@ -8,6 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
 #include "runtime.hpp"
 #include "context.hpp"
 #include "common_task.h"
@@ -164,9 +166,13 @@ static void ConstructSqeForStreamClearTask(TaskInfo* const taskInfo, rtStarsSqe_
     PrintSqe(command, "StreamClearTask");
     RT_LOG(
         RT_LOG_INFO,
-        "Send stream clear task succ,"
-        "sqe_type=%u, pre_p=%u, stream_id=%u, task_id=%u, task_type=%u, clear target stream_id=%u.",
-        sqe->type, sqe->pre_p, sqe->rt_streamID, sqe->task_id, sqe->task_type, commonCmdTaskInfo->streamId);
+        "Send stream clear task succ,sqe_type=" RT_ENUM_LOG_FORMAT(
+            "%u") ", pre_p=%u, stream_id=%u, task_id=%u, task_type=" RT_ENUM_LOG_FORMAT("%u") ", clear target "
+                                                                                              "stream_id=%u.",
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(sqe->type), "STARS_SQE_TYPE_PLACE_HOLDER"), sqe->pre_p,
+        sqe->rt_streamID, sqe->task_id,
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(sqe->task_type), "TS_TASK_TYPE_COMMON_CMD"),
+        commonCmdTaskInfo->streamId);
 }
 
 static void ConstructSqeForNotifyResetTask(TaskInfo* const taskInfo, rtStarsSqe_t* const command)
@@ -190,9 +196,13 @@ static void ConstructSqeForNotifyResetTask(TaskInfo* const taskInfo, rtStarsSqe_
     PrintSqe(command, "NotifyResetTask");
     RT_LOG(
         RT_LOG_INFO,
-        "Send NotifyReset task succ,"
-        "sqe_type=%u, pre_p=%u, stream_id=%u, task_id=%u, task_type=%u, reset target notify_id=%u.",
-        sqe->type, sqe->pre_p, sqe->rt_streamID, sqe->task_id, sqe->task_type, commonCmdTaskInfo->notifyId);
+        "Send NotifyReset task succ,sqe_type=" RT_ENUM_LOG_FORMAT(
+            "%u") ", pre_p=%u, stream_id=%u, task_id=%u, task_type=" RT_ENUM_LOG_FORMAT("%u") ", reset target "
+                                                                                              "notify_id=%u.",
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(sqe->type), "STARS_SQE_TYPE_PLACE_HOLDER"), sqe->pre_p,
+        sqe->rt_streamID, sqe->task_id,
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(sqe->task_type), "TS_TASK_TYPE_COMMON_CMD"),
+        commonCmdTaskInfo->notifyId);
 }
 
 void ConstructSqeForCommonCmdTask(TaskInfo* const taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)

@@ -7,6 +7,11 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include <cinttypes>
+#include "common/enum_log.hpp"
+#include "kernel.hpp"
+#include "runtime/base.h"
+#include "task_enum_desc.hpp"
 #include "profiler.hpp"
 #include <set>
 #include "toolchain/prof_acl_api.h"
@@ -34,6 +39,19 @@ const std::set<tsTaskType_t> KERNEL_TASK_TYPE = {
     TS_TASK_TYPE_KERNEL_AICORE, TS_TASK_TYPE_KERNEL_AIVEC, TS_TASK_TYPE_KERNEL_AICPU};
 
 static inline bool IsKernelTask(const TaskInfo& taskInfo) { return KERNEL_TASK_TYPE.count(taskInfo.type) > 0U; }
+
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+const char_t* ProfilerTaskTypeToString(const uint64_t value) noexcept
+{
+    if (value == static_cast<uint64_t>(ProfTaskType::PROF_TASK_TYPE_KERNEL_SIMT)) {
+        return "PROF_TASK_TYPE_KERNEL_SIMT";
+    }
+    if (value > UINT8_MAX) {
+        return "UNKNOWN";
+    }
+    return TsTaskTypeToString(static_cast<tsTaskType_t>(value));
+}
+#endif
 
 inline uint64_t GetKernelNameId(TaskInfo& taskInfo)
 {
@@ -172,8 +190,13 @@ void ChangeTrackDataTaskType(struct MsprofRuntimeTrack& runtimeTrack, const Task
         // no op
     }
     RT_LOG(
-        RT_LOG_DEBUG, "ReportTaskTrack, runtimeTrack.taskType=%llu, mixType=%u, isPureSimtTask=%d",
-        runtimeTrack.taskType, mixType, isPureSimtTask);
+        RT_LOG_DEBUG,
+        "ReportTaskTrack, runtimeTrack.taskType=" RT_ENUM_LOG_FORMAT("%" PRIu64) ", mixType=" RT_ENUM_LOG_FORMAT(
+            "%u") ", isPureSimtTask=%d",
+        RT_ENUM_LOG_VALUE(
+            static_cast<uint64_t>(runtimeTrack.taskType), ProfilerTaskTypeToString(runtimeTrack.taskType)),
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(mixType), RtMixTypeToString(static_cast<RtMixType>(mixType))),
+        isPureSimtTask);
 }
 
 void FillKernelLaunchExtInfo(struct MsprofRuntimeTrack& runtimeTrack, const TaskInfo* const taskInfo)
@@ -612,7 +635,8 @@ void Profiler::ReportSend(const uint16_t taskId, const uint16_t stmId) const
     recordAsyncSend.sendStamp = GetTickCount();
 
     RT_LOG(
-        RT_LOG_INFO, "Send: RecordType=%hu pid=%u taskId=%u streamId=%u time=%" PRIu64 "ns", recordAsyncSend.type,
+        RT_LOG_INFO, "Send: RecordType=" RT_ENUM_LOG_FORMAT("%u") " pid=%u taskId=%u streamId=%u time=%" PRIu64 "ns",
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(recordAsyncSend.type), "PROFILE_RECORD_TYPE_RT_ASYNC_SEND"),
         recordAsyncSend.pid, recordAsyncSend.taskId, recordAsyncSend.streamId, recordAsyncSend.sendStamp);
 }
 
@@ -632,7 +656,8 @@ void Profiler::ReportRecv(const TaskInfo* const taskInfo) const
     recordAsyncRecv.recvStamp = GetTickCount();
 
     RT_LOG(
-        RT_LOG_DEBUG, "Recv: RecordType=%hu pid=%u taskId=%u streamId=%u time=%" PRIu64 "ns", recordAsyncRecv.type,
+        RT_LOG_DEBUG, "Recv: RecordType=" RT_ENUM_LOG_FORMAT("%u") " pid=%u taskId=%u streamId=%u time=%" PRIu64 "ns",
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(recordAsyncRecv.type), "PROFILE_RECORD_TYPE_RT_ASYNC_RECV"),
         recordAsyncRecv.pid, recordAsyncRecv.taskId, recordAsyncRecv.streamId, recordAsyncRecv.recvStamp);
 }
 

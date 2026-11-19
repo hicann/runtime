@@ -7,6 +7,8 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "kernel.hpp"
+#include "runtime/base.h"
 #include "aix_c.hpp"
 #include "davinci_kernel_task.h"
 #include "stream_c.hpp"
@@ -419,10 +421,12 @@ rtError_t StreamLaunchKernelV1(
     RT_LOG(
         RT_LOG_INFO,
         "stream_id=%d, kernel_name=%s, kernelAttrType=%s, funcType=%u, arg_size=%u, taskRation=%u, "
-        "mixType=%hhu, kernelVfType=%u, dynamicSmSize=%u, addr1=0x%llx, addr2=0x%llx, "
-        "kernelFlag=0x%x, qos=%u, partId=%u, schemMode=%u, infoAddr=%p, atomicIndex=%u.",
+        "mixType=" RT_ENUM_LOG_FORMAT(
+            "%u") ", kernelVfType=%u, dynamicSmSize=%u, addr1=0x%llx, addr2=0x%llx, "
+                  "kernelFlag=0x%x, qos=%u, partId=%u, schemMode=%u, infoAddr=%p, atomicIndex=%u.",
         stm->Id_(), registeredKernel->Name_().c_str(), KernelAttrTypeToString(kernelAttrType).c_str(),
-        registeredKernel->GetFuncType(), argsInfo->argsSize, registeredKernel->GetTaskRation(), mixType,
+        registeredKernel->GetFuncType(), argsInfo->argsSize, registeredKernel->GetTaskRation(),
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(mixType), RtMixTypeToString(static_cast<RtMixType>(mixType))),
         registeredKernel->KernelVfType_(), aicTask->dynamicShareMemSize, addr1, addr2, aicTask->comm.kernelFlag,
         aicTask->qos, aicTask->partId, aicTask->schemMode, aicTask->inputArgsSize.infoAddr,
         aicTask->inputArgsSize.atomicIndex);
@@ -558,9 +562,11 @@ rtError_t StreamLaunchKernelWithHandle(
     RT_LOG(
         RT_LOG_INFO,
         "stream_id=%d, kernel_name=%s, kernelAttrType=%s, funcType=%u, "
-        "arg_size=%u, mixType=%hhu, taskRation=%u, kernelVfType=%u, dynamicSmSize=%u, addr1=0x%llx, addr2=0x%llx, "
-        "kernelFlag=0x%x, qos=%u, partId=%u, schemMode=%u, infoAddr=%p, atomicIndex=%u.",
-        stm->Id_(), name.c_str(), KernelAttrTypeToString(kernelAttrType).c_str(), funcType, argsInfo->argsSize, mixType,
+        "arg_size=%u, mixType=" RT_ENUM_LOG_FORMAT(
+            "%u") ", taskRation=%u, kernelVfType=%u, dynamicSmSize=%u, addr1=0x%llx, addr2=0x%llx, "
+                  "kernelFlag=0x%x, qos=%u, partId=%u, schemMode=%u, infoAddr=%p, atomicIndex=%u.",
+        stm->Id_(), name.c_str(), KernelAttrTypeToString(kernelAttrType).c_str(), funcType, argsInfo->argsSize,
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(mixType), RtMixTypeToString(static_cast<RtMixType>(mixType))),
         taskRation, kernelVfType, aicTask->dynamicShareMemSize, addr1, addr2, aicTask->comm.kernelFlag, aicTask->qos,
         aicTask->partId, aicTask->schemMode, aicTask->inputArgsSize.infoAddr, aicTask->inputArgsSize.atomicIndex);
     if (kernelTask->isUpdateSinkSqe == 1U) {
@@ -705,15 +711,17 @@ rtError_t StreamLaunchKernelV2(
     SetSimtTaskParams(aicTask, extendAgrs);
     RT_LOG(
         RT_LOG_INFO,
-        "stream_id=%d, kernel_name=%s, kernelAttrType=%s, funcType=%u, arg_size=%u, mixType=%hhu, "
-        "coreDim=%u, taskRation=%u, kernelVfType=%u, dynamicSmSize=%u, addr1=0x%llx, addr2=0x%llx, "
-        "kernelFlag=0x%x, qos=%u, partId=%u, schemMode=%u, infoAddr=%p, atomicIndex=%u, "
-        "groupDim=%u, groupBlockDim=%u.",
+        "stream_id=%d, kernel_name=%s, kernelAttrType=%s, funcType=%u, arg_size=%u, mixType=" RT_ENUM_LOG_FORMAT(
+            "%u") ", "
+                  "coreDim=%u, taskRation=%u, kernelVfType=%u, dynamicSmSize=%u, addr1=0x%llx, addr2=0x%llx, "
+                  "kernelFlag=0x%x, qos=%u, partId=%u, schemMode=%u, infoAddr=%p, atomicIndex=%u, "
+                  "groupDim=%u, groupBlockDim=%u.",
         stm->Id_(), kernel->Name_().c_str(), KernelAttrTypeToString(kernelAttrType).c_str(), kernel->GetFuncType(),
-        argsInfo->argsSize, mixType, coreDim, kernel->GetTaskRation(), kernel->KernelVfType_(),
-        aicTask->dynamicShareMemSize, kernelPc1, kernelPc2, aicTask->comm.kernelFlag, aicTask->qos, aicTask->partId,
-        aicTask->schemMode, aicTask->inputArgsSize.infoAddr, aicTask->inputArgsSize.atomicIndex, aicTask->groupDim,
-        aicTask->groupBlockDim);
+        argsInfo->argsSize,
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(mixType), RtMixTypeToString(static_cast<RtMixType>(mixType))), coreDim,
+        kernel->GetTaskRation(), kernel->KernelVfType_(), aicTask->dynamicShareMemSize, kernelPc1, kernelPc2,
+        aicTask->comm.kernelFlag, aicTask->qos, aicTask->partId, aicTask->schemMode, aicTask->inputArgsSize.infoAddr,
+        aicTask->inputArgsSize.atomicIndex, aicTask->groupDim, aicTask->groupBlockDim);
 
     if (kernelTask->isUpdateSinkSqe == 1U) {
         error = UpdateDavidKernelTaskSubmit(kernelTask, stm);

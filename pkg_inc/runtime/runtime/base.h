@@ -11,6 +11,33 @@
 #ifndef CCE_RUNTIME_BASE_H
 #define CCE_RUNTIME_BASE_H
 
+#ifndef CCE_RUNTIME_ENUM_LOG_DECLARE_H
+#define CCE_RUNTIME_ENUM_LOG_DECLARE_H
+
+// Shared enum headers expose declarations only; implementations remain private to Runtime.
+#if defined(__cplusplus) && !defined(TINY_COMPILE) && \
+    (!defined(RUNTIME_ENABLE_ENUM_LOG_NAMES) || RUNTIME_ENABLE_ENUM_LOG_NAMES)
+#define RT_ENUM_LOG_DECLARE(funcName, valueType)    \
+    extern "C++" {                                  \
+    const char* funcName(valueType value) noexcept; \
+    }
+#define RT_ENUM_LOG_DECLARE_IN_NAMESPACE(funcName, valueType) \
+    extern "C++" {                                            \
+    namespace cce {                                           \
+    namespace runtime {                                       \
+    const char* funcName(valueType value) noexcept;           \
+    }                                                         \
+    }                                                         \
+    }
+#define RT_ENUM_LOG_DECLARE_STATIC(funcName, valueType) static const char* funcName(valueType value) noexcept;
+#else
+#define RT_ENUM_LOG_DECLARE(funcName, valueType)
+#define RT_ENUM_LOG_DECLARE_IN_NAMESPACE(funcName, valueType)
+#define RT_ENUM_LOG_DECLARE_STATIC(funcName, valueType)
+#endif
+
+#endif // CCE_RUNTIME_ENUM_LOG_DECLARE_H
+
 #include <stdbool.h>
 #include <stdint.h>
 #include "profiling/prof_api.h"
@@ -149,6 +176,7 @@ typedef enum schemModeType {
     RT_SCHEM_MODE_BATCH,
     RT_SCHEM_MODE_END
 } rtschemModeType_t;
+RT_ENUM_LOG_DECLARE_IN_NAMESPACE(RtSchemModeTypeToString, rtschemModeType_t)
 
 typedef enum tagSysParamOpt {
     SYS_OPT_DETERMINISTIC = 0,       // value: 0:disable, 1:deterministic, 2:strong consistency, 3:batch consistency
@@ -199,6 +227,7 @@ typedef enum tagRtSwitchDataType {
     RT_SWITCH_INT32 = 0,
     RT_SWITCH_INT64 = 1,
 } rtSwitchDataType_t;
+RT_ENUM_LOG_DECLARE_IN_NAMESPACE(RtSwitchDataTypeToString, rtSwitchDataType_t)
 
 typedef enum tagRtStreamFlagType {
     RT_HEAD_STREAM = 0, // first stream
@@ -236,6 +265,7 @@ typedef enum tagRtExceptionExpandType {
     RT_EXCEPTION_FUSION,
     RT_EXCEPTION_AICPU
 } rtExceptionExpandType_t;
+RT_ENUM_LOG_DECLARE_IN_NAMESPACE(RtExceptionExpandTypeToString, rtExceptionExpandType_t)
 
 typedef struct rtArgsSizeInfo {
     void* infoAddr; /* info : atomicIndex|input num input offset|size|size */
@@ -611,7 +641,7 @@ RTS_API rtError_t rtGetSocSpec(const char* label, const char* key, char* val, co
 // clang-format on
 enum { rt_base_common_end_line_guard_ = __LINE__ }; // CCE_RUNTIME_BASE_COMMON_DATA END
 RT_STATIC_ASSERT(
-    ((rt_base_common_end_line_guard_ - rt_base_common_begin_line_guard_) == 539),
+    ((rt_base_common_end_line_guard_ - rt_base_common_begin_line_guard_) == 542),
     "Inside CCE_RUNTIME_BASE_COMMON_DATA is the data shared between base.h and external_base.h. "
     "Adding data structures is not allowed; please add them outside the macro definition.");
 
@@ -664,6 +694,7 @@ typedef void (*rtCallback_t)(void* fnData);
 typedef int32_t (*rtHostCpuFunc)(void* args);
 
 typedef enum { RT_UTIL_TYPE_AICORE = 0, RT_UTIL_TYPE_AIVECTOR, RT_UTIL_TYPE_AICPU, RT_UTIL_TYPE_MAX } rtTypeUtil_t;
+RT_ENUM_LOG_DECLARE_IN_NAMESPACE(RtTypeUtilToString, rtTypeUtil_t)
 
 typedef enum {
     RT_DEVICE_ABORT = 0,
@@ -793,6 +824,7 @@ RTS_API RT_DEPRECATED_MESSAGE(RT_RUNTIME_DEPRECATED_MESSAGE) rtError_t
     rtSetTaskFailCallback(rtTaskFailCallback callback);
 
 typedef enum DevCallBackDir { DEV_CB_POS_FRONT = 1, DEV_CB_POS_BACK = 2, DEV_CB_POS_END } rtDevCallBackDir_t;
+RT_ENUM_LOG_DECLARE(RtDevCallBackDirToString, rtDevCallBackDir_t)
 
 /**
  * @ingroup dvrt_base

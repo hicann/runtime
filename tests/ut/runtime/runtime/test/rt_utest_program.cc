@@ -7,10 +7,14 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "common/enum_log.hpp"
+#include "task_enum_desc.hpp"
 #include <array>
 #include <memory>
+#include <string>
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
+#include "runtime/base.h"
 #include "driver/ascend_hal.h"
 #include "runtime/rt.h"
 #include "runtime.hpp"
@@ -19,6 +23,9 @@
 #include "module.hpp"
 #include "context.hpp"
 #include "raw_device.hpp"
+
+void ClearLastDlogRecordLine();
+bool DlogRecordContains(const std::string& keyword);
 
 using namespace testing;
 using namespace cce::runtime;
@@ -1103,3 +1110,137 @@ TEST_F(ProgramTest, AllocAndCopyHbmBuf_MemCopySyncFailed)
     EXPECT_EQ(devBuf, nullptr);
     EXPECT_EQ(allocMem.size(), 0U);
 }
+
+TEST_F(ProgramTest, KernelRegistrationLog_PreservesSignedUnknownAndTilingKey)
+{
+    MOCKER(CheckLogLevel).stubs().will(returnValue(1));
+    PlainProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    const KernelRegisterType originalType = program.GetKernelRegType();
+    const KernelRegisterType types[] = {
+        RT_KERNEL_REG_TYPE_CPU, RT_KERNEL_REG_TYPE_NON_CPU, static_cast<KernelRegisterType>(-7)};
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+    const char* names[] = {"KERNEL_REG_TYPE_CPU", "KERNEL_REG_TYPE_NON_CPU", "UNKNOWN"};
+#endif
+    const uint64_t tilingKey = UINT64_C(4294967301);
+    for (size_t i = 0; i < sizeof(types) / sizeof(types[0]); ++i) {
+        program.SetKernelRegType(types[i]);
+        ClearLastDlogRecordLine();
+        EXPECT_EQ(program.GetKernelByTillingKey(tilingKey), nullptr);
+        EXPECT_TRUE(DlogRecordContains("AllKernelLookup end, tilingKey=4294967301, programId="));
+        const std::string number = std::to_string(static_cast<int32_t>(types[i]));
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+        EXPECT_TRUE(DlogRecordContains(std::string("kernelRegType=") + names[i] + "(" + number + ")"));
+#else
+        EXPECT_TRUE(DlogRecordContains("kernelRegType=" + number));
+#endif
+    }
+    program.SetKernelRegType(originalType);
+}
+
+TEST_F(ProgramTest, KernelMixLog_PreservesMetadataNameAndDefaultReturnPaths)
+{
+    MOCKER(CheckLogLevel).stubs().will(returnValue(1));
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    char metaName[] = "log_meta";
+    char mixName[] = "log_name_mix_aiv";
+    char defaultName[] = "log_default";
+    char* names[] = {metaName, mixName, defaultName};
+    const uint8_t expectedMix[] = {MIX_AIC, MIX_AIV, NO_MIX};
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+    const char* expectedNames[] = {"MIX_AIC", "MIX_AIV", "NO_MIX"};
+#endif
+    for (size_t i = 0; i < sizeof(names) / sizeof(names[0]); ++i) {
+        RtKernel kernel = {};
+        kernel.name = names[i];
+        kernel.metaInfo.funcType = (i == 0U) ? KERNEL_FUNCTION_TYPE_AIC : KERNEL_FUNCTION_TYPE_INVALID;
+        kernel.metaInfo.crossCoreSync = FUNC_USE_SYNC;
+        rtKernelAttrType attrType = RT_KERNEL_ATTR_TYPE_AICORE;
+        uint8_t mixType = UINT8_MAX;
+        ClearLastDlogRecordLine();
+        EXPECT_EQ(program.GetKernelTypeAndMixType(&kernel, attrType, mixType), RT_ERROR_NONE);
+        EXPECT_EQ(mixType, expectedMix[i]);
+        EXPECT_TRUE(DlogRecordContains(std::string("Get kernel type success, kernelName=") + names[i] + ","));
+        const std::string number = std::to_string(static_cast<uint32_t>(expectedMix[i]));
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+        EXPECT_TRUE(DlogRecordContains(std::string("mixType=") + expectedNames[i] + "(" + number + ")"));
+#else
+        EXPECT_TRUE(DlogRecordContains("mixType=" + number));
+#endif
+    }
+}
+
+TEST_F(ProgramTest, MergeKernelLog_PreservesAllThreeMixTypes)
+{
+    MOCKER(CheckLogLevel).stubs().will(returnValue(1));
+    MOCKER(GetPrefetchCnt).stubs().will(returnValue(RT_ERROR_NONE));
+    ElfProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    Kernel kernel("merge_mix_aic", 0ULL, &program, RT_KERNEL_ATTR_TYPE_CUBE, 16U, 0U, MIX_AIC);
+    kernel.SetFuncType(KERNEL_FUNCTION_TYPE_MIX_AIC_MAIN);
+    RtKernel incoming = {};
+    char_t incomingName[] = "merge_mix_aiv";
+    incoming.name = incomingName;
+    incoming.offset = 32U;
+    incoming.length = 64U;
+    incoming.metaInfo.funcType = KERNEL_FUNCTION_TYPE_MIX_AIC_MAIN;
+    ClearLastDlogRecordLine();
+    EXPECT_EQ(program.MergeKernel(&incoming, &kernel), RT_ERROR_NONE);
+    EXPECT_EQ(kernel.GetMixType(), MIX_AIC_AIV_MAIN_AIC);
+    EXPECT_EQ(kernel.Offset_(), 16U);
+    EXPECT_EQ(kernel.Offset2_(), 32U);
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+    EXPECT_TRUE(DlogRecordContains("mixType1=MIX_AIC(1), mixType2=MIX_AIV(2), final mixType=MIX_AIC_AIV_MAIN_AIC(3)"));
+#else
+    EXPECT_TRUE(DlogRecordContains("mixType1=1, mixType2=2, final mixType=3"));
+#endif
+}
+
+TEST_F(ProgramTest, AdviseMemoryLog_PreservesWideSizeAndEarlyReturn)
+{
+    Context* const ctx = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(ctx, nullptr);
+    Device* const device = ctx->Device_();
+    ASSERT_NE(device, nullptr);
+    MOCKER(CheckLogLevel).stubs().will(returnValue(1));
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::MemAdvise).stubs().will(returnValue(RT_ERROR_NONE));
+    const uint64_t size = 4294967301ULL;
+    void* const memory = reinterpret_cast<void*>(0x1234UL);
+    const rtAdviseMemType values[] = {RT_ADVISE_ACCESS_READONLY, RT_ADVISE_ACCESS_READWRITE, RT_ADVISE_TYPE_MAX};
+    const char* const names[] = {"ADVISE_ACCESS_READONLY", "ADVISE_ACCESS_READWRITE", "UNKNOWN"};
+    for (size_t i = 0U; i < sizeof(values) / sizeof(values[0]); ++i) {
+        ClearLastDlogRecordLine();
+        EXPECT_EQ(BinaryMemAdvise(memory, size, values[i], device, true), RT_ERROR_NONE);
+        EXPECT_TRUE(DlogRecordContains("dev_size=4294967301"));
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+        EXPECT_TRUE(DlogRecordContains(
+            std::string("advise_type=") + names[i] + "(" + std::to_string(static_cast<int32_t>(values[i])) + ")"));
+#else
+        EXPECT_TRUE(DlogRecordContains("advise_type=" + std::to_string(static_cast<int32_t>(values[i]))));
+#endif
+    }
+    ClearLastDlogRecordLine();
+    EXPECT_EQ(BinaryMemAdvise(memory, size, RT_ADVISE_ACCESS_READONLY, nullptr, false), RT_ERROR_NONE);
+    EXPECT_FALSE(DlogRecordContains("advise memory"));
+}
+
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+TEST_F(ProgramTest, TaskTypeNamesBorrowAndNormalizeProviderResults)
+{
+    // Typed inputs fit 0..255; unknown provider results still normalize to UNKNOWN.
+    MOCKER(GetTaskDescByType)
+        .expects(once())
+        .with(eq(static_cast<uint8_t>(103U)))
+        .will(returnValue(static_cast<const char_t*>("BORROWED_TASK")));
+    MOCKER(GetTaskDescByType)
+        .expects(once())
+        .with(eq(static_cast<uint8_t>(10U)))
+        .will(returnValue(static_cast<const char_t*>("unknown")));
+    MOCKER(GetTaskDescByType)
+        .expects(once())
+        .with(eq(static_cast<uint8_t>(UINT8_MAX)))
+        .will(returnValue(static_cast<const char_t*>(nullptr)));
+    EXPECT_STREQ(TsTaskTypeToString(TS_TASK_TYPE_NOP), "BORROWED_TASK");
+    EXPECT_STREQ(TsTaskTypeToString(static_cast<tsTaskType_t>(10)), "UNKNOWN");
+    EXPECT_STREQ(TsTaskTypeToString(static_cast<tsTaskType_t>(UINT8_MAX)), "UNKNOWN");
+    GlobalMockObject::verify();
+}
+#endif

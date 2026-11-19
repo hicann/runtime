@@ -7,6 +7,9 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "common/api_enum_log.hpp"
+#include "kernel.hpp"
+#include "runtime/base.h"
 #include "program_common.hpp"
 #include "npu_driver.hpp"
 #include <thread>
@@ -459,8 +462,9 @@ const Kernel* Program::GetKernelByTillingKey(const uint64_t tilingKey)
     retKernel = halfSearchResult.matchFlag ? KernelTable_[halfSearchResult.matchIndex].kernel : nullptr;
     kernelMapLock_.Unlock();
     RT_LOG(
-        RT_LOG_DEBUG, "AllKernelLookup end, tilingKey=%lu, programId=%u. kernelRegType=%d", tilingKey, Id_(),
-        GetKernelRegType());
+        RT_LOG_DEBUG, "AllKernelLookup end, tilingKey=%lu, programId=%u. kernelRegType=" RT_ENUM_LOG_FORMAT("%d"),
+        tilingKey, Id_(),
+        RT_ENUM_LOG_VALUE(static_cast<int32_t>(GetKernelRegType()), KernelRegisterTypeToString(GetKernelRegType())));
 
     return retKernel;
 }
@@ -538,9 +542,15 @@ rtError_t Program::BuildTilingTbl(TilingTabl** tilingTab, uint32_t* kernelLen)
         tilingTabInfo[i].mixType = KernelTable_[i].kernel->GetMixType();
         tilingTabInfo[i].rsv = {0U};
         RT_LOG(
-            RT_LOG_INFO, "tilingKey=0x%llx,function1=0x%llx,function2=0x%llx,taskRation=%u,mixType=%u,i=%u.",
+            RT_LOG_INFO,
+            "tilingKey=0x%llx,function1=0x%llx,function2=0x%llx,taskRation=%u,mixType=" RT_ENUM_LOG_FORMAT(
+                "%u") ",i=%u.",
             tilingTabInfo[i].tilingKey, tilingTabInfo[i].pcInfo[0], tilingTabInfo[i].pcInfo[1],
-            tilingTabInfo[i].taskRation, tilingTabInfo[i].mixType, i);
+            tilingTabInfo[i].taskRation,
+            RT_ENUM_LOG_VALUE(
+                static_cast<uint32_t>(tilingTabInfo[i].mixType),
+                RtMixTypeToString(static_cast<RtMixType>(tilingTabInfo[i].mixType))),
+            i);
     }
 
     *tilingTab = tilingTabInfo;
@@ -596,9 +606,14 @@ rtError_t Program::DavidBuildTilingTblForNewFlow(TilingTablForDavid** tilingTab,
         tilingTabInfo[i].u.tilingInfoExt.shareMemSize = KernelTable_[i].kernel->ShareMemSize_();
         RT_LOG(
             RT_LOG_INFO,
-            "tilingKey=%" PRIu64 ",function1=%#" PRIu64 ",function2=%#" PRIu64 ",taskRation=%u,mixType=%u,i=%u.",
+            "tilingKey=%" PRIu64 ",function1=%#" PRIu64 ",function2=%#" PRIu64
+            ",taskRation=%u,mixType=" RT_ENUM_LOG_FORMAT("%u") ",i=%u.",
             tilingTabInfo[i].tilingKey, tilingTabInfo[i].pcInfo[0], tilingTabInfo[i].pcInfo[1],
-            tilingTabInfo[i].taskRation, tilingTabInfo[i].mixType, i);
+            tilingTabInfo[i].taskRation,
+            RT_ENUM_LOG_VALUE(
+                static_cast<uint32_t>(tilingTabInfo[i].mixType),
+                RtMixTypeToString(static_cast<RtMixType>(tilingTabInfo[i].mixType))),
+            i);
     }
 
     *tilingTab = tilingTabInfo;
@@ -654,9 +669,14 @@ rtError_t Program::BuildTilingTblForDavid(const Module* mdl, TilingTablForDavid*
         tilingTabInfo[i].u.tilingInfoExt.shareMemSize = KernelTable_[i].kernel->ShareMemSize_();
         RT_LOG(
             RT_LOG_INFO,
-            "tilingKey=%" PRIu64 ",function1=%#" PRIu64 ",function2=%#" PRIu64 ",taskRation=%u,mixType=%u,i=%u.",
+            "tilingKey=%" PRIu64 ",function1=%#" PRIu64 ",function2=%#" PRIu64
+            ",taskRation=%u,mixType=" RT_ENUM_LOG_FORMAT("%u") ",i=%u.",
             tilingTabInfo[i].tilingKey, tilingTabInfo[i].pcInfo[0], tilingTabInfo[i].pcInfo[1],
-            tilingTabInfo[i].taskRation, tilingTabInfo[i].mixType, i);
+            tilingTabInfo[i].taskRation,
+            RT_ENUM_LOG_VALUE(
+                static_cast<uint32_t>(tilingTabInfo[i].mixType),
+                RtMixTypeToString(static_cast<RtMixType>(tilingTabInfo[i].mixType))),
+            i);
     }
 
     *tilingTab = tilingTabInfo;
@@ -1603,8 +1623,10 @@ rtError_t BinaryMemAdvise(
     }
 
     RT_LOG(
-        RT_LOG_INFO, "advise memory, dev_mem=%p, dev_size=%" PRIu64 ", advise_type=%d, device_id=%u.", devMem, devSize,
-        adviseType, devId);
+        RT_LOG_INFO,
+        "advise memory, dev_mem=%p, dev_size=%" PRIu64 ", advise_type=" RT_ENUM_LOG_FORMAT("%d") ", device_id=%u.",
+        devMem, devSize, RT_ENUM_LOG_VALUE(static_cast<int32_t>(adviseType), RtAdviseMemTypeToString(adviseType)),
+        devId);
     return RT_ERROR_NONE;
 }
 
@@ -1829,20 +1851,24 @@ rtError_t ElfProgram::GetKernelTypeAndMixType(
 
     COND_RETURN_INFO(
         (kernelAttrType != static_cast<rtKernelAttrType>(RT_KERNEL_ATTR_TYPE_INVALID)), RT_ERROR_NONE,
-        "Get kernel type success, kernelName=%s, funcType=%u, kernelAttrType=%s, mixType=%hhu", elfkernelInfo->name,
-        metaInfo->funcType, KernelAttrTypeToString(kernelAttrType).c_str(), mixType);
+        "Get kernel type success, kernelName=%s, funcType=%u, kernelAttrType=%s, mixType=" RT_ENUM_LOG_FORMAT("%hhu"),
+        elfkernelInfo->name, metaInfo->funcType, KernelAttrTypeToString(kernelAttrType).c_str(),
+        RT_ENUM_LOG_VALUE(mixType, RtMixTypeToString(static_cast<RtMixType>(mixType))));
 
     GetKernelTypeAndMixTypeByName(elfkernelInfo->name, kernelAttrType, mixType);
     COND_RETURN_INFO(
         (kernelAttrType != static_cast<rtKernelAttrType>(RT_KERNEL_ATTR_TYPE_INVALID)), RT_ERROR_NONE,
-        "Get kernel type success, kernelName=%s, funcType=%u, kernelAttrType=%s, mixType=%hhu", elfkernelInfo->name,
-        metaInfo->funcType, KernelAttrTypeToString(kernelAttrType).c_str(), mixType);
+        "Get kernel type success, kernelName=%s, funcType=%u, kernelAttrType=%s, mixType=" RT_ENUM_LOG_FORMAT("%hhu"),
+        elfkernelInfo->name, metaInfo->funcType, KernelAttrTypeToString(kernelAttrType).c_str(),
+        RT_ENUM_LOG_VALUE(mixType, RtMixTypeToString(static_cast<RtMixType>(mixType))));
 
     kernelAttrType = GetDefaultKernelAttrType();
 
     RT_LOG(
-        RT_LOG_INFO, "Get kernel type success, kernelName=%s, funcType=%u, kernelAttrType=%s, mixType=%hhu",
-        elfkernelInfo->name, metaInfo->funcType, KernelAttrTypeToString(kernelAttrType).c_str(), mixType);
+        RT_LOG_INFO,
+        "Get kernel type success, kernelName=%s, funcType=%u, kernelAttrType=%s, mixType=" RT_ENUM_LOG_FORMAT("%hhu"),
+        elfkernelInfo->name, metaInfo->funcType, KernelAttrTypeToString(kernelAttrType).c_str(),
+        RT_ENUM_LOG_VALUE(mixType, RtMixTypeToString(static_cast<RtMixType>(mixType))));
 
     return RT_ERROR_NONE;
 }
@@ -1880,10 +1906,12 @@ rtError_t ElfProgram::BuildNewKernel(
     RT_LOG(
         RT_LOG_INFO,
         "new kernel success, size=%zu, programId=%u, original kernel_name=%s, register kernel_name=%s, "
-        "tilingKey=%llu, functionEntry=%llu, funcType=%u, kernelAttrType=%s, mixType=%hu, taskRation=%u, "
-        "offset=%u, dfxAddr=%#" PRIu64 ", dfxSize=%u, earlyStartEnable=%d",
+        "tilingKey=%llu, functionEntry=%llu, funcType=%u, kernelAttrType=%s, mixType=" RT_ENUM_LOG_FORMAT(
+            "%hu") ", taskRation=%u, "
+                   "offset=%u, dfxAddr=%#" PRIu64 ", dfxSize=%u, earlyStartEnable=%d",
         sizeof(Kernel), Id_(), elfkernelInfo->name, tripKernelName.c_str(), tilingKey, metaInfo->functionEntry,
-        metaInfo->funcType, KernelAttrTypeToString(kernelAttrType).c_str(), mixType, metaInfo->taskRation,
+        metaInfo->funcType, KernelAttrTypeToString(kernelAttrType).c_str(),
+        RT_ENUM_LOG_VALUE(mixType, RtMixTypeToString(static_cast<RtMixType>(mixType))), metaInfo->taskRation,
         static_cast<uint32_t>(elfkernelInfo->offset), static_cast<uint64_t>(RtPtrToPtr<uintptr_t>(metaInfo->dfxAddr)),
         metaInfo->dfxSize, metaInfo->earlyStartEnable);
     kernel = kernelObj;
@@ -1969,10 +1997,15 @@ rtError_t ElfProgram::MergeKernel(const RtKernel* const elfkernelInfo, Kernel* o
     RT_LOG(
         RT_LOG_INFO,
         "merge kernel success, programId=%u, kernel name=[%s], offset1=%u, offset2=%u, "
-        "mixType1=%hu, mixType2=%hu, final mixType=%hu, final kernelAttrType=%s, kernelVfType=%u, shareMemSize=%u",
-        Id_(), oldKernel->Name_().c_str(), oldKernel->Offset_(), oldKernel->Offset2_(), kernelTmpMixType, mixType,
-        oldKernel->GetMixType(), KernelAttrTypeToString(oldKernel->GetKernelAttrType()).c_str(),
-        oldKernel->KernelVfType_(), oldKernel->ShareMemSize_());
+        "mixType1=" RT_ENUM_LOG_FORMAT("%hu") ", mixType2=" RT_ENUM_LOG_FORMAT(
+            "%hu") ", final mixType=" RT_ENUM_LOG_FORMAT("%hu") ", final kernelAttrType=%s, kernelVfType=%u, "
+                                                                "shareMemSize=%u",
+        Id_(), oldKernel->Name_().c_str(), oldKernel->Offset_(), oldKernel->Offset2_(),
+        RT_ENUM_LOG_VALUE(kernelTmpMixType, RtMixTypeToString(static_cast<RtMixType>(kernelTmpMixType))),
+        RT_ENUM_LOG_VALUE(mixType, RtMixTypeToString(static_cast<RtMixType>(mixType))),
+        RT_ENUM_LOG_VALUE(oldKernel->GetMixType(), RtMixTypeToString(static_cast<RtMixType>(oldKernel->GetMixType()))),
+        KernelAttrTypeToString(oldKernel->GetKernelAttrType()).c_str(), oldKernel->KernelVfType_(),
+        oldKernel->ShareMemSize_());
     return RT_ERROR_NONE;
 }
 

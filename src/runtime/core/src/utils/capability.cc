@@ -7,6 +7,8 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "utils/capability.hpp"
+#include "runtime/base.h"
 #include "capability.hpp"
 #include "runtime.hpp"
 
@@ -146,7 +148,8 @@ bool CheckFeatureIsSupportOld(const uint32_t tschVersion, rtFeature feature)
     }
     if (actualTsVersion >= expectVersion) {
         RT_LOG(
-            RT_LOG_DEBUG, "support feature=%d, tschVersion=%u, expectVersion=%u", feature, tschVersion, expectVersion);
+            RT_LOG_DEBUG, "support feature=" RT_ENUM_LOG_FORMAT("%d") ", tschVersion=%u, expectVersion=%u",
+            RT_ENUM_LOG_VALUE(static_cast<int32_t>(feature), RtFeatureToString(feature)), tschVersion, expectVersion);
         return true;
     }
     return false;

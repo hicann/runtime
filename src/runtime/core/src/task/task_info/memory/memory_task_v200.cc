@@ -8,6 +8,9 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/api_enum_log.hpp"
+#include "runtime/mem_base.h"
+#include "task/task_base.hpp"
 #include "stars_david.hpp"
 #include "david_sqe_adapter.hpp"
 #include "memory_task.h"
@@ -113,8 +116,15 @@ static void ConstructDavidPcieDmaSqe(TaskInfo* const taskInfo, rtDavidSqe_t* con
     sqe->pcieDmaSqTailPtr = static_cast<uint16_t>(memcpyAsyncTaskInfo->dmaAddr.phyAddr.len);
     PrintDavidSqe(davidSqe, "david pcieDmaTask");
     RT_LOG(
-        RT_LOG_INFO, "PcieDma, deviceId=%u, streamId=%d, taskId=%hu, copyType=%u, sqAddrLow=%p sqTailPtr = %hu.",
-        taskInfo->stream->Device_()->Id_(), stream->Id_(), taskInfo->id, memcpyAsyncTaskInfo->copyType,
+        RT_LOG_INFO,
+        "PcieDma, deviceId=%u, streamId=%d, taskId=%hu, copyType=" RT_ENUM_LOG_FORMAT(
+            "%u") ", sqAddrLow=%p sqTailPtr = %hu.",
+        taskInfo->stream->Device_()->Id_(), stream->Id_(), taskInfo->id,
+        RT_ENUM_LOG_VALUE(
+            static_cast<uint32_t>(memcpyAsyncTaskInfo->copyType),
+            (memcpyAsyncTaskInfo->copyType <= RT_MEMCPY_DIR_SDMA_AUTOMATIC_EQUAL ?
+                 RtMemCopyAsyncDirectToString(static_cast<rtMemCopyAsyncDirect>(memcpyAsyncTaskInfo->copyType)) :
+                 "UNKNOWN")),
         memcpyAsyncTaskInfo->dmaAddr.phyAddr.src, sqe->pcieDmaSqTailPtr);
 }
 
@@ -148,8 +158,15 @@ static void ConstructDavidAsyncDmaSqe(TaskInfo* const taskInfo, rtDavidSqe_t* co
     PrintDavidSqe(sqeAddr, "AsyncDmaTaskPart2");
 
     RT_LOG(
-        RT_LOG_INFO, "stream_id=%d, task_id=%hu, copyType=%u, src=%#" PRIx64 ", dst=%#" PRIx64, stream->Id_(),
-        taskInfo->id, memcpyAsyncTaskInfo->copyType, memcpyAsyncTaskInfo->src, memcpyAsyncTaskInfo->destPtr);
+        RT_LOG_INFO,
+        "stream_id=%d, task_id=%hu, copyType=" RT_ENUM_LOG_FORMAT("%u") ", src=%#" PRIx64 ", dst=%#" PRIx64,
+        stream->Id_(), taskInfo->id,
+        RT_ENUM_LOG_VALUE(
+            static_cast<uint32_t>(memcpyAsyncTaskInfo->copyType),
+            (memcpyAsyncTaskInfo->copyType <= RT_MEMCPY_DIR_SDMA_AUTOMATIC_EQUAL ?
+                 RtMemCopyAsyncDirectToString(static_cast<rtMemCopyAsyncDirect>(memcpyAsyncTaskInfo->copyType)) :
+                 "UNKNOWN")),
+        memcpyAsyncTaskInfo->src, memcpyAsyncTaskInfo->destPtr);
     return;
 }
 
@@ -175,9 +192,15 @@ void ConstructDavidAsyncUbDbSqe(TaskInfo* const taskInfo, rtDavidSqe_t* const co
     PrintDavidSqe(command, "ModelByUb UbDbSend");
 
     RT_LOG(
-        RT_LOG_INFO, "AsyncUbDb, stream_id=%d, task_id=%hu, copyType=%u, src=%#" PRIx64 ", dst=%#" PRIx64,
-        stream->Id_(), taskInfo->id, memcpyAsyncTaskInfo->copyType, memcpyAsyncTaskInfo->src,
-        memcpyAsyncTaskInfo->destPtr);
+        RT_LOG_INFO,
+        "AsyncUbDb, stream_id=%d, task_id=%hu, copyType=" RT_ENUM_LOG_FORMAT("%u") ", src=%#" PRIx64 ", dst=%#" PRIx64,
+        stream->Id_(), taskInfo->id,
+        RT_ENUM_LOG_VALUE(
+            static_cast<uint32_t>(memcpyAsyncTaskInfo->copyType),
+            (memcpyAsyncTaskInfo->copyType <= RT_MEMCPY_DIR_SDMA_AUTOMATIC_EQUAL ?
+                 RtMemCopyAsyncDirectToString(static_cast<rtMemCopyAsyncDirect>(memcpyAsyncTaskInfo->copyType)) :
+                 "UNKNOWN")),
+        memcpyAsyncTaskInfo->src, memcpyAsyncTaskInfo->destPtr);
     return;
 }
 
@@ -198,14 +221,23 @@ static void ConstructDavidMemcpySqeForOpCode(
     RtDavidStarsMemcpySqe* const sqe = &(davidSqe->memcpyAsyncSqe);
     sqe->opcode = isReduce ? GetOpcodeForReduce(taskInfo) : 0U;
     RT_LOG(
-        RT_LOG_INFO, "copyKind=%u Opcode=0x%x.", static_cast<uint32_t>(copyKind), static_cast<uint32_t>(sqe->opcode));
+        RT_LOG_INFO, "copyKind=" RT_ENUM_LOG_FORMAT("%u") " Opcode=0x%x.",
+        RT_ENUM_LOG_VALUE(
+            static_cast<uint32_t>(static_cast<uint32_t>(copyKind)),
+            MemcpyOrReduceKindToString(static_cast<uint32_t>(copyKind))),
+        static_cast<uint32_t>(sqe->opcode));
 
     PrintDavidSqe(davidSqe, "sdmaTask");
     RT_LOG(
         RT_LOG_INFO,
-        "ConstructMemcpySqe, size=%u, qos=%u, partid=%u, copyType=%u, deviceId=%u, streamId=%d,"
-        "taskId=%hu",
-        static_cast<uint32_t>(memcpyAsyncTaskInfo->size), sqe->qos, sqe->mapamPartId, memcpyAsyncTaskInfo->copyType,
+        "ConstructMemcpySqe, size=%u, qos=%u, partid=%u, copyType=" RT_ENUM_LOG_FORMAT(
+            "%u") ", deviceId=%u, streamId=%d,taskId=%hu",
+        static_cast<uint32_t>(memcpyAsyncTaskInfo->size), sqe->qos, sqe->mapamPartId,
+        RT_ENUM_LOG_VALUE(
+            static_cast<uint32_t>(memcpyAsyncTaskInfo->copyType),
+            (memcpyAsyncTaskInfo->copyType <= RT_MEMCPY_DIR_SDMA_AUTOMATIC_EQUAL ?
+                 RtMemCopyAsyncDirectToString(static_cast<rtMemCopyAsyncDirect>(memcpyAsyncTaskInfo->copyType)) :
+                 "UNKNOWN")),
         taskInfo->stream->Device_()->Id_(), stream->Id_(), taskInfo->id);
     return;
 }
@@ -244,9 +276,13 @@ void ConstructDavidSqeForMemcpyAsyncTask(TaskInfo* const taskInfo, void* const s
     }
 
     RT_LOG(
-        RT_LOG_INFO, "MemcpyAsyncTask, device_id=%u, stream_id=%d, task_id=%hu, copyType=%u",
+        RT_LOG_INFO, "MemcpyAsyncTask, device_id=%u, stream_id=%d, task_id=%hu, copyType=" RT_ENUM_LOG_FORMAT("%u"),
         taskInfo->stream->Device_()->Id_(), static_cast<int32_t>(stream->Id_()), static_cast<uint32_t>(taskInfo->id),
-        memcpyAsyncTaskInfo->copyType);
+        RT_ENUM_LOG_VALUE(
+            static_cast<uint32_t>(memcpyAsyncTaskInfo->copyType),
+            (memcpyAsyncTaskInfo->copyType <= RT_MEMCPY_DIR_SDMA_AUTOMATIC_EQUAL ?
+                 RtMemCopyAsyncDirectToString(static_cast<rtMemCopyAsyncDirect>(memcpyAsyncTaskInfo->copyType)) :
+                 "UNKNOWN")));
     UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 

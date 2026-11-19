@@ -286,6 +286,10 @@ set(libruntime_v200_src_files_exclude_for_tiny
 
 # v201 v200 common files, so please check carefully
 set(libruntime_v200_v201_common_src_files
+    ${RUNTIME_CORE_DIR}/src/common/api_enum_log.cc
+    ${RUNTIME_CORE_DIR}/src/common/internal_enum_log.cc
+    ${RUNTIME_CORE_DIR}/src/common/callback_enum_log.cc
+    ${RUNTIME_CORE_DIR}/src/common/runtime_enum_log.cc
     ${RUNTIME_CORE_DIR}/src/common/enum_desc.cc
     ${RUNTIME_CORE_DIR}/src/common/api_enum_desc.cc
     ${RUNTIME_CORE_DIR}/src/common/optional_enum_desc.cc
@@ -642,6 +646,10 @@ macro(add_runtime_v200_library target_name)
     endif()
 
     target_compile_definitions(${target_name} PRIVATE
+        RUNTIME_ENABLE_ENUM_LOG_NAMES=$<BOOL:${RUNTIME_ENABLE_ENUM_LOG_NAMES}>
+    )
+
+    target_compile_definitions(${target_name} PRIVATE
         -DSTATIC_RT_LIB=0
         -DRUNTIME_API=0
     )
@@ -753,6 +761,10 @@ macro(add_runtime_v201_library target_name)
             ${RUNTIME_DIR}/src/runtime/driver/npu_driver_dcache_lock_david.cpp
         )
     endif()
+
+    target_compile_definitions(${target_name} PRIVATE
+        RUNTIME_ENABLE_ENUM_LOG_NAMES=$<BOOL:${RUNTIME_ENABLE_ENUM_LOG_NAMES}>
+    )
 
     target_compile_definitions(${target_name} PRIVATE
         -DSTATIC_RT_LIB=0

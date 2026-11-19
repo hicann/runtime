@@ -7,6 +7,8 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "common/profiler_struct.hpp"
+#include "runtime/base.h"
 #include "profile_log_record.hpp"
 #include "profiler.hpp"
 
@@ -32,10 +34,15 @@ void ProfileLogRecord::PrintRecord(const rtProfileRecordSyncRt_t& recordSyncRt) 
 {
     RT_LOG(
         RT_LOG_INFO,
-        "RtApiCall: RecordType=%hu OperationType=%hu"
-        " pid=%u tid=%u seq=%u start=%" PRIu64 " end=%" PRIu64 "",
-        recordSyncRt.type, recordSyncRt.rtOpType, recordSyncRt.pid, recordSyncRt.tid, recordSyncRt.seqId,
-        recordSyncRt.startStamp, recordSyncRt.endStamp);
+        "RtApiCall: RecordType=" RT_ENUM_LOG_FORMAT("%u") " OperationType=%hu"
+                                                          " pid=%u tid=%u seq=%u start=%" PRIu64 " end=%" PRIu64 "",
+        RT_ENUM_LOG_VALUE(
+            static_cast<uint32_t>(recordSyncRt.type),
+            (recordSyncRt.type <= PROFILE_RECORD_TYPE_END ?
+                 RtProfileRecordTypeToString(static_cast<rtProfileRecordType_t>(recordSyncRt.type)) :
+                 "UNKNOWN")),
+        recordSyncRt.rtOpType, recordSyncRt.pid, recordSyncRt.tid, recordSyncRt.seqId, recordSyncRt.startStamp,
+        recordSyncRt.endStamp);
 }
 
 void ProfileLogRecord::SaveRecord()

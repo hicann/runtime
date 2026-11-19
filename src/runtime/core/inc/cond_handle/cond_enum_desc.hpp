@@ -11,6 +11,8 @@
 #ifndef CCE_RUNTIME_COND_ENUM_DESC_HPP
 #define CCE_RUNTIME_COND_ENUM_DESC_HPP
 
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
 #include <cstdint>
 #include <string>
 #include "rt_inner_model.h"

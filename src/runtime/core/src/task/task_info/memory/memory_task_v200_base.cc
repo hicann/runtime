@@ -8,6 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
 #include "stars_david.hpp"
 #include "david_sqe_adapter.hpp"
 #include "stars_base.hpp"
@@ -67,7 +69,9 @@ void ConstructDavidMemcpySqe(TaskInfo* const taskInfo, rtDavidSqe_t* const david
         return;
     }
 
-    RT_LOG(RT_LOG_INFO, "ConstructDavidMemcpySqe, type=%d.", taskInfo->type);
+    RT_LOG(
+        RT_LOG_INFO, "ConstructDavidMemcpySqe, type=" RT_ENUM_LOG_FORMAT("%d") ".",
+        RT_ENUM_LOG_VALUE(static_cast<int32_t>(taskInfo->type), RT_ENUM_LOG_NAME(taskInfo->typeName)));
     ConstructDavidSqeForHeadCommon(taskInfo, davidSqe);
     RtDavidStarsMemcpySqe* const sqe = &(davidSqe->memcpyAsyncSqe);
     sqe->header.type = RT_DAVID_SQE_TYPE_SDMA;

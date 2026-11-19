@@ -10,6 +10,8 @@
 #ifndef __ELF_HPP__
 #define __ELF_HPP__
 
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
 #include <cstdint>
 #include <vector>
 #include <memory>
@@ -90,7 +92,7 @@ constexpr uint32_t PRINT_AICPU = 3U;
 namespace cce {
 namespace runtime {
 
-enum {
+enum KernelFunctionType {
     KERNEL_FUNCTION_TYPE_INVALID = 0U,
     KERNEL_FUNCTION_TYPE_AICORE = 1U,       // c100/m200/m300
     KERNEL_FUNCTION_TYPE_AIC = 2U,          // v220-cube，组合硬同步类型，函数名<function_name>
@@ -106,6 +108,9 @@ enum {
 
     KERNEL_FUNCTION_TYPE_MAX = 8U,
 };
+RT_ENUM_LOG_DECLARE(KernelFunctionTypeToString, const KernelFunctionType)
+
+std::string KernelFuncTypeToString(const uint32_t funcType);
 
 enum class AivTypeFlag : uint32_t {
     AIV_TYPE_NO_VF = 1,            // SU
@@ -122,12 +127,14 @@ enum Ratio {
     RATION_TYPE_ZERO_RATIO_ONE = 4,
     RATION_TYPE_MAX = 5,
 };
+RT_ENUM_LOG_DECLARE(RatioToString, Ratio)
 
 enum class KernelFunctionEntryType {
     KERNEL_TYPE_TILING_KEY = 0,                 // legacy tiling key flow
     KERNEL_TYPE_FUNCTION_ENTRY = 1,             // replace tiling key with function entry
     KERNEL_TYPE_NOT_SUPPORT_FUNCTION_ENTRY = 2, // neither function-entry nor tiling-key supported
 };
+RT_ENUM_LOG_DECLARE(KernelFunctionEntryTypeToString, KernelFunctionEntryType)
 
 constexpr uint16_t USER_ARGS_MAX_NUM = 128U;
 typedef struct {

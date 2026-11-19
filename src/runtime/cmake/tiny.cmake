@@ -265,6 +265,7 @@ set(libruntime_api_src_files_include_for_tiny
 )
 
 set(libruntime_common_src_files
+    ${RUNTIME_CORE_DIR}/src/common/api_enum_log.cc
     ${RUNTIME_CORE_DIR}/src/common/enum_desc.cc
     ${RUNTIME_CORE_DIR}/src/common/api_enum_desc.cc
     ${RUNTIME_CORE_DIR}/src/common/inner_thread_local.cpp
@@ -428,6 +429,7 @@ set_source_files_properties(${libruntime_aclrt_impl_src_files}
 
 #------------------------- runtime v100 -------------------------
 set(libruntime_v100_src_files
+    ${RUNTIME_CORE_DIR}/src/common/api_enum_log.cc
     ${RUNTIME_CORE_DIR}/src/common/enum_desc.cc
     ${RUNTIME_CORE_DIR}/src/common/api_enum_desc.cc
     ${RUNTIME_CORE_DIR}/src/common/optional_enum_desc.cc
@@ -653,6 +655,10 @@ macro(add_runtime_common_library target_name)
     )
 
     target_compile_definitions(${target_name} PRIVATE
+        RUNTIME_ENABLE_ENUM_LOG_NAMES=0
+    )
+
+    target_compile_definitions(${target_name} PRIVATE
         -DSTATIC_RT_LIB=0
         -DRUNTIME_API=0
     )
@@ -858,6 +864,10 @@ macro(add_runtime_v100_library target_name)
     )
 
     target_compile_definitions(${target_name} PRIVATE
+        RUNTIME_ENABLE_ENUM_LOG_NAMES=$<BOOL:OFF>
+    )
+
+    target_compile_definitions(${target_name} PRIVATE
         -DSTATIC_RT_LIB=0
         -DRUNTIME_API=0
     )
@@ -968,6 +978,10 @@ else()
         $<TARGET_OBJECTS:runtime_platform_tiny>
     )
 endif()
+
+target_compile_definitions(static_runtime PRIVATE
+    RUNTIME_ENABLE_ENUM_LOG_NAMES=$<BOOL:OFF>
+)
 
 target_compile_definitions(static_runtime PRIVATE
     -DSTATIC_RT_LIB=1

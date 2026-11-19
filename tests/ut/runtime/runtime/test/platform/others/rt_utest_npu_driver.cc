@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/enum_log.hpp"
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
@@ -16,6 +17,7 @@
 #include <memory>
 #include <mutex>
 #include <thread>
+#include <sys/mman.h>
 
 #include "driver/ascend_hal.h"
 #include "event.hpp"
@@ -29,12 +31,15 @@
 #include "cmodel_driver.h"
 #include "raw_device.hpp"
 #include "thread_local_container.hpp"
+#include "runtime/base.h"
 #undef private
 
 using namespace testing;
 using namespace cce::runtime;
 
 DVresult drvMemGetAttribute_9(DVdeviceptr vptr, struct DVattribute* attr);
+void ClearLastDlogRecordLine();
+bool DlogRecordContains(const std::string& keyword);
 
 namespace {
 constexpr auto BUFFER_ALLOCATOR_WAIT_TIMEOUT = std::chrono::seconds(1);
@@ -593,6 +598,52 @@ TEST_F(NpuDriverTest, event_id_alloc)
     ASSERT_EQ(error, RT_ERROR_DRV_NO_EVENT_RESOURCES);
 
     delete rawDrv;
+}
+
+TEST_F(NpuDriverTest, UtilizationLogNames)
+{
+    MOCKER(CheckLogLevel).stubs().will(returnValue(1));
+    int64_t value = 23;
+    MOCKER(halGetDeviceInfo)
+        .stubs()
+        .with(any(), any(), any(), outBoundP(&value, sizeof(value)))
+        .will(returnValue(DRV_ERROR_NONE));
+    uint8_t utilization = 0;
+    ClearLastDlogRecordLine();
+    EXPECT_EQ(NpuDriver::GetAllUtilizations(0, RT_UTIL_TYPE_AICPU, &utilization), RT_ERROR_NONE);
+    EXPECT_EQ(utilization, 23);
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+    EXPECT_TRUE(DlogRecordContains("drv devId=0, utilType=UTIL_TYPE_AICPU(2), util=23"));
+#else
+    EXPECT_TRUE(DlogRecordContains("drv devId=0, utilType=2, util=23"));
+#endif
+    ClearLastDlogRecordLine();
+}
+
+TEST_F(NpuDriverTest, DisabledDebugLogDoesNotEvaluateEnumArguments)
+{
+    MOCKER(CheckLogLevel).stubs().will(returnValue(0));
+    int32_t nameCalls = 0;
+    int32_t valueReads = 0;
+    const auto name = [&nameCalls](const rtTypeUtil_t) {
+        ++nameCalls;
+        return "UNEXPECTED_ENUM_NAME";
+    };
+    const auto value = [&valueReads]() {
+        ++valueReads;
+        return RT_UTIL_TYPE_AICPU;
+    };
+    // Only the guarded DEBUG path promises no evaluation when the level is disabled.
+    ClearLastDlogRecordLine();
+    RT_LOG(
+        RT_LOG_DEBUG, "disabled-enum-log=" RT_ENUM_LOG_FORMAT("%d"),
+        RT_ENUM_LOG_VALUE(static_cast<int32_t>(value()), name(RT_UTIL_TYPE_AICPU)));
+    EXPECT_EQ(nameCalls, 0);
+    EXPECT_EQ(valueReads, 0);
+    EXPECT_FALSE(DlogRecordContains("disabled-enum-log="));
+    ClearLastDlogRecordLine();
+    (void)name;
+    (void)value;
 }
 
 TEST_F(NpuDriverTest, ReAllocResourceIdTypeName)
@@ -4637,4 +4688,120 @@ TEST_F(NpuDriverTest, DestroyAsyncDmaWqeBatch_Fail)
     EXPECT_EQ(error, RT_GET_DRV_ERRCODE(DRV_ERROR_INVALID_VALUE));
 
     delete rawDrv;
+}
+
+TEST_F(NpuDriverTest, RunModeLogPreservesUnsignedWidth)
+{
+    MOCKER(CheckLogLevel).stubs().will(returnValue(1));
+    MOCKER(halGetDeviceInfo).stubs().will(returnValue(DRV_ERROR_NONE));
+    MOCKER(drvGetDevNum).stubs().will(returnValue(DRV_ERROR_NONE));
+    uint32_t mode = UINT32_MAX;
+    MOCKER(drvGetPlatformInfo).stubs().with(outBoundP(&mode, sizeof(mode))).will(returnValue(DRV_ERROR_NONE));
+    ClearLastDlogRecordLine();
+    NpuDriver driver;
+    EXPECT_EQ(driver.GetRunMode(), UINT32_MAX);
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+    EXPECT_TRUE(DlogRecordContains("Run mode=UNKNOWN(4294967295), env type="));
+#else
+    EXPECT_TRUE(DlogRecordContains("Run mode=4294967295, env type="));
+#endif
+    EXPECT_FALSE(DlogRecordContains("[0:offline, 1:online]"));
+}
+
+TEST_F(NpuDriverTest, BufferCommandLogUsesRuntimeType)
+{
+    MOCKER(CheckLogLevel).stubs().will(returnValue(1));
+    MOCKER(halBuffGetInfo).stubs().will(returnValue(static_cast<int>(DRV_ERROR_NONE)));
+    uint32_t output = 0;
+    uint32_t outputLen = sizeof(output);
+    ClearLastDlogRecordLine();
+    EXPECT_EQ(NpuDriver::BuffGetInfo(RT_BUFF_GET_MBUF_BUILD_INFO, nullptr, 0, &output, &outputLen), RT_ERROR_NONE);
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+    EXPECT_TRUE(DlogRecordContains("buff get info, type=BUFF_GET_MBUF_BUILD_INFO(3)."));
+#else
+    EXPECT_TRUE(DlogRecordContains("buff get info, type=3."));
+#endif
+    EXPECT_FALSE(DlogRecordContains("BUFF_GET_BUFF_TYPE_INFO(3)"));
+    ClearLastDlogRecordLine();
+    EXPECT_EQ(NpuDriver::BuffGetInfo(static_cast<rtBuffGetCmdType>(7), nullptr, 0, &output, &outputLen), RT_ERROR_NONE);
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+    EXPECT_TRUE(DlogRecordContains("buff get info, type=UNKNOWN(7)."));
+#else
+    EXPECT_TRUE(DlogRecordContains("buff get info, type=7."));
+#endif
+}
+
+TEST_F(NpuDriverTest, QueueCommandLogNames)
+{
+    MOCKER(CheckLogLevel).stubs().will(returnValue(1));
+    MOCKER(halQueueSet).stubs().will(returnValue(DRV_ERROR_NONE));
+    rtMemQueueSetInputPara input = {};
+    ClearLastDlogRecordLine();
+    EXPECT_EQ(NpuDriver::MemQueueSet(0, RT_MQ_QUEUE_ENABLE_LOCAL_QUEUE, &input), RT_ERROR_NONE);
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+    EXPECT_TRUE(DlogRecordContains("drv devId=0, type=MQ_QUEUE_ENABLE_LOCAL_QUEUE(1)."));
+#else
+    EXPECT_TRUE(DlogRecordContains("drv devId=0, type=1."));
+#endif
+    uint32_t outputLen = 0;
+    ClearLastDlogRecordLine();
+    EXPECT_EQ(
+        NpuDriver::MemQueueQuery(0, RT_MQ_QUERY_QUES_ATTR_ENTITY_TYPE, nullptr, 0, nullptr, &outputLen),
+        RT_ERROR_INVALID_VALUE);
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+    EXPECT_TRUE(DlogRecordContains("query mem queue, drv devId=0, cmd=MQ_QUERY_QUES_ATTR_ENTITY_TYPE(2)."));
+#else
+    EXPECT_TRUE(DlogRecordContains("query mem queue, drv devId=0, cmd=2."));
+#endif
+}
+
+TEST_F(NpuDriverTest, EschedTypeLogNames)
+{
+    MOCKER(CheckLogLevel).stubs().will(returnValue(1));
+    MOCKER(halEschedCreateGrp).stubs().will(returnValue(DRV_ERROR_NONE));
+    MOCKER(halEschedAckEvent).stubs().will(returnValue(DRV_ERROR_NONE));
+    MOCKER(halEschedQueryInfo).stubs().will(returnValue(DRV_ERROR_NONE));
+    ClearLastDlogRecordLine();
+    EXPECT_EQ(NpuDriver::EschedCreateGrp(0, 7, RT_GRP_TYPE_BIND_CP_CPU), RT_ERROR_NONE);
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+    EXPECT_TRUE(DlogRecordContains("grpId=7, type=GRP_TYPE_BIND_CP_CPU(2)."));
+#else
+    EXPECT_TRUE(DlogRecordContains("grpId=7, type=2."));
+#endif
+    ClearLastDlogRecordLine();
+    EXPECT_EQ(NpuDriver::EschedAckEvent(0, RT_EVENT_ACPU_MSG_TYPE1, 9, nullptr, 0), RT_ERROR_NONE);
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+    EXPECT_TRUE(DlogRecordContains("event_id=EVENT_ACPU_MSG_TYPE1(17), subevent_id=9, len=0."));
+#else
+    EXPECT_TRUE(DlogRecordContains("event_id=17, subevent_id=9, len=0."));
+#endif
+    rtEschedInputInfo input = {};
+    rtEschedOutputInfo output = {};
+    ClearLastDlogRecordLine();
+    EXPECT_EQ(NpuDriver::EschedQueryInfo(0, RT_QUERY_TYPE_REMOTE_GRP_ID, &input, &output), RT_ERROR_NONE);
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+    EXPECT_TRUE(DlogRecordContains("drv devId=0, type=QUERY_TYPE_REMOTE_GRP_ID(1),"));
+#else
+    EXPECT_TRUE(DlogRecordContains("drv devId=0, type=1,"));
+#endif
+}
+
+TEST_F(NpuDriverTest, ManagedMemoryFlagLogNames)
+{
+    MOCKER(CheckLogLevel).stubs().will(returnValue(1));
+    void* allocated = reinterpret_cast<void*>(0x1234);
+    MOCKER(halMemAlloc)
+        .stubs()
+        .with(outBoundP(&allocated, sizeof(allocated)), any(), any())
+        .will(returnValue(DRV_ERROR_NONE));
+    NpuDriver driver;
+    void* memory = nullptr;
+    ClearLastDlogRecordLine();
+    EXPECT_EQ(driver.ManagedMemAlloc(&memory, 32, Driver::MANAGED_MEM_UVM, 0), RT_ERROR_NONE);
+    EXPECT_EQ(memory, allocated);
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+    EXPECT_TRUE(DlogRecordContains("device_id=0, size=32, flag=MANAGED_MEM_UVM(2), huge=0."));
+#else
+    EXPECT_TRUE(DlogRecordContains("device_id=0, size=32, flag=2, huge=0."));
+#endif
 }

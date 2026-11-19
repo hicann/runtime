@@ -7,6 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "runtime/base.h"
 #include "device.hpp"
 #include "npu_driver.hpp"
 #include "kernel.hpp"
@@ -390,9 +391,12 @@ rtError_t Module::GetPrefetchCnt(
 
     RT_LOG(
         RT_LOG_DEBUG,
-        "get prefetch cnt success, kernel=%s, prefetchCnt1=%u, prefetchCnt2=%u, mixtype=%hu, "
-        "restSize1=%u, restSize2=%u.",
-        kernelIn->KernelInfoExt_(), icachePrefetchCnt1, icachePrefetchCnt2, mixtype, restSize1, restSize2);
+        "get prefetch cnt success, kernel=%s, prefetchCnt1=%u, prefetchCnt2=%u, mixtype=" RT_ENUM_LOG_FORMAT(
+            "%u") ", "
+                  "restSize1=%u, restSize2=%u.",
+        kernelIn->KernelInfoExt_(), icachePrefetchCnt1, icachePrefetchCnt2,
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(mixtype), RtMixTypeToString(static_cast<RtMixType>(mixtype))),
+        restSize1, restSize2);
 
     return RT_ERROR_NONE;
 }

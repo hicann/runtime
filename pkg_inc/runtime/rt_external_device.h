@@ -203,6 +203,7 @@ typedef enum tagGetDevMsgType {
     RT_GET_DEV_PID_SNAPSHOT_MSG,
     RT_GET_DEV_MSG_RESERVE
 } rtGetDevMsgType_t;
+RT_ENUM_LOG_DECLARE_IN_NAMESPACE(RtGetDevMsgTypeToString, rtGetDevMsgType_t)
 
 /**
  * @ingroup dvrt_dev

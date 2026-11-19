@@ -249,6 +249,7 @@ typedef enum {
     RT_FUSION_CCU = 3,
     RT_FUSION_END
 } rtFusionType_t;
+RT_ENUM_LOG_DECLARE_IN_NAMESPACE(RtFusionTypeToString, rtFusionType_t)
 
 typedef struct tagRtFusionSubTaskInfo {
     rtFusionType_t type;
@@ -599,6 +600,7 @@ typedef enum tagRtBinBufferType {
     RT_BIN_DEVICE_ADDR = 2,
     RT_BIN_TYPE_MAX,
 } rtBinBufferType_t;
+RT_ENUM_LOG_DECLARE(RtBinBufferTypeToString, rtBinBufferType_t)
 
 /**
  * @ingroup rt_kernel

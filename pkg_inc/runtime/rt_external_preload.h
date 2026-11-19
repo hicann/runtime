@@ -24,6 +24,7 @@ typedef enum tagRtTaskBuffType {
     PARAM_TASK_INFO_DESC = 2,   /**< task param */
     MAX_TASK,
 } rtTaskBuffType_t;
+RT_ENUM_LOG_DECLARE_IN_NAMESPACE(RtTaskBuffTypeToString, rtTaskBuffType_t)
 
 typedef enum tagRtTaskType {
     RT_TASK_TYPE_KERNEL_AICORE = 0,
@@ -32,6 +33,7 @@ typedef enum tagRtTaskType {
     RT_TASK_TYPE_KERNEL_NANO_AICPU_HOSTFUNC = 3,
     RT_TASK_TYPE_MAX,
 } rtTaskType_t;
+RT_ENUM_LOG_DECLARE_IN_NAMESPACE(RtTaskTypeToString, rtTaskType_t)
 
 typedef struct {
     uint64_t kernelBinOffset;

@@ -62,6 +62,7 @@ typedef enum {
     WAIT_BITMAP_MODE = 0x4U,
     WAIT_MODE_MAX
 } rtCntNotifyWaitMode_t;
+RT_ENUM_LOG_DECLARE_IN_NAMESPACE(RtCntNotifyWaitModeToString, const rtCntNotifyWaitMode_t)
 
 typedef struct {
     rtCntNotifyWaitMode_t mode;

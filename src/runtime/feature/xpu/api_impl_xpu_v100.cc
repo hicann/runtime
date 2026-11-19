@@ -7,6 +7,8 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
 #include "api_impl_xpu.hpp"
 #include "api_impl_xpu_common.hpp"
 #include "base.hpp"
@@ -72,7 +74,9 @@ rtError_t ApiImplXpu::SetXpuDevice(const rtXpuDevType devType, const uint32_t de
         return paramRet;
     }
 
-    RT_LOG(RT_LOG_INFO, "Set xpu device drv devId=%u, devType=%d.", devId, devType);
+    RT_LOG(
+        RT_LOG_INFO, "Set xpu device drv devId=%u, devType=" RT_ENUM_LOG_FORMAT("%d") ".", devId,
+        RT_ENUM_LOG_VALUE(static_cast<int32_t>(devType), "DEV_TYPE_DPU"));
     Runtime* const rtInstance = Runtime::Instance();
     Context* context = nullptr;
     {

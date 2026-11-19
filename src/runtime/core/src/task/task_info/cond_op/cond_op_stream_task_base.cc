@@ -8,6 +8,9 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "../../../common/enum_log_impl.hpp"
+#include "runtime/base.h"
+#include "enum_desc.hpp"
 #include "stream.hpp"
 #include "runtime.hpp"
 #include "context.hpp"
@@ -19,6 +22,14 @@ namespace cce {
 namespace runtime {
 
 #if F_DESC("StreamSwitchNTask")
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+#define RT_STREAM_SWITCH_DATA_TYPE_META(X) \
+    X(RT_SWITCH_INT32, "SWITCH_INT32")     \
+    X(RT_SWITCH_INT64, "SWITCH_INT64")
+
+RT_ENUM_STRING_TO_STRING_U32(RtSwitchDataTypeToString, rtSwitchDataType_t, RT_STREAM_SWITCH_DATA_TYPE_META)
+#endif
+
 rtError_t StreamSwitchNTaskInit(
     TaskInfo* taskInfo, const void* const ptrAddr, const uint32_t ptrSize, const void* const valPtr,
     const void* const trueStream, const uint32_t eleSize, const rtSwitchDataType_t taskDataType)
@@ -92,8 +103,14 @@ void ToCommandBodyForStreamSwitchNTask(TaskInfo* taskInfo, rtCommand_t* const co
     RT_LOG(
         RT_LOG_DEBUG,
         "StreamSwitchNTask::ToCommandBody:pptr=%#" PRIx64 ",size=%u,p_value_ptr=%#" PRIx64
-        ",p_true_stream_id_ptr=%#" PRIx64 ",element_size=%u,data_type=%u,stream_id=%u.",
-        pptr, ptrSize, physicValuePtr, pTrueStreamIdPtr, elemSize, tensorDataType, static_cast<uint32_t>(streamId));
+        ",p_true_stream_id_ptr=%#" PRIx64 ",element_size=%u,data_type=" RT_ENUM_LOG_FORMAT("%u") ",stream_id=%u.",
+        pptr, ptrSize, physicValuePtr, pTrueStreamIdPtr, elemSize,
+        RT_ENUM_LOG_VALUE(
+            static_cast<uint32_t>(tensorDataType),
+            (tensorDataType <= RT_SWITCH_INT64 ?
+                 RtSwitchDataTypeToString(static_cast<rtSwitchDataType_t>(tensorDataType)) :
+                 "UNKNOWN")),
+        static_cast<uint32_t>(streamId));
 }
 
 #endif

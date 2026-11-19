@@ -8,6 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
 #include "stream.hpp"
 #include "runtime.hpp"
 #include "context.hpp"
@@ -69,7 +71,8 @@ rtError_t SetMixDescBufOffset(
             static_cast<int32_t>(dev->Id_()), RtPtrToValue(destTask->u.aicTaskInfo.descAlignBuf), descBufOffset);
     } else {
         RT_LOG(
-            RT_LOG_INFO, "no mix scenario. taskType=%u, desStreamId=%u, destaskId=%u", destTask->type, desStreamId,
+            RT_LOG_INFO, "no mix scenario. taskType=" RT_ENUM_LOG_FORMAT("%u") ", desStreamId=%u, destaskId=%u",
+            RT_ENUM_LOG_VALUE(static_cast<uint32_t>(destTask->type), RT_ENUM_LOG_NAME(destTask->typeName)), desStreamId,
             destaskId);
     }
 

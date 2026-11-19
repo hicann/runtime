@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "notify_enum_desc.hpp"
 #include "vector"
 #include "david_sqe_adapter.hpp"
 #include "stream.hpp"
@@ -77,11 +78,16 @@ void ConstructDavidSqeForNotifyWaitTask(TaskInfo* taskInfo, void* const sqe, con
     PrintDavidSqe(davidSqe, isEndGraphNotifyWait ? "EndGraphNotifyWaitTask" : "NotifyWaitTask");
     RT_LOG(
         RT_LOG_INFO,
-        "notify_wait: device_id=%u, stream_id=%u, task_id=%u, task_sn=%u, sq_id=%u, notify_id=%u, "
-        "cntFlag=%u, clrFlag=%u, waitModeBit=%u, recordModeBit=%u, bitmap=%u, cntValue=%u, subType=%s, timeout=%us.",
+        "notify_wait: device_id=%u, stream_id=%u, task_id=%u, task_sn=%u, sq_id=%u, notify_id=%u, cntFlag=%u, "
+        "clrFlag=%u, waitModeBit=" RT_ENUM_LOG_FORMAT(
+            "%u") ", recordModeBit=%u, bitmap=%u, cntValue=%u, subType=%s, timeout=%us.",
         stream->Device_()->Id_(), stream->Id_(), taskInfo->id, taskInfo->taskSn, stream->GetSqId(), notifySqe->notifyId,
-        notifySqe->cntFlag, notifySqe->clrFlag, notifySqe->waitModeBit, notifySqe->recordModeBit, notifySqe->bitmap,
-        notifySqe->cntValue, GetNotifySubType(notifySqe->subType), notifySqe->timeout);
+        notifySqe->cntFlag, notifySqe->clrFlag,
+        RT_ENUM_LOG_VALUE(
+            static_cast<uint32_t>(notifySqe->waitModeBit),
+            RtCntNotifyWaitModeToString(static_cast<rtCntNotifyWaitMode_t>(notifySqe->waitModeBit))),
+        notifySqe->recordModeBit, notifySqe->bitmap, notifySqe->cntValue, GetNotifySubType(notifySqe->subType),
+        notifySqe->timeout);
     UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 

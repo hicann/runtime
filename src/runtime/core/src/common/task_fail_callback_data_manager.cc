@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "runtime/base.h"
 #include "task_fail_callback_data_manager.h"
 #include "error_message_manage.hpp"
 
@@ -82,7 +83,9 @@ rtError_t TaskFailCallBackManager::RegTaskFailCallback(
     }
 
     callbackMap_[regName].type = type;
-    RT_LOG(RT_LOG_DEBUG, "Register task fail callback finish, name:%s, type:%u.", regName, type);
+    RT_LOG(
+        RT_LOG_DEBUG, "Register task fail callback finish, name:%s, type:" RT_ENUM_LOG_FORMAT("%u") ".", regName,
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(type), TaskFailCallbackTypeToString(type)));
     return RT_ERROR_NONE;
 }
 

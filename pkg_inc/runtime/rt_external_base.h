@@ -11,6 +11,8 @@
 #ifndef CCE_RUNTIME_RT_EXTERNAL_BASE_H
 #define CCE_RUNTIME_RT_EXTERNAL_BASE_H
 
+#include "runtime/base.h"
+
 #include <stdbool.h>
 #include <stdint.h>
 #include "profiling/aprof_pub.h"
@@ -125,6 +127,7 @@ typedef enum schemModeType {
     RT_SCHEM_MODE_BATCH,
     RT_SCHEM_MODE_END
 } rtschemModeType_t;
+RT_ENUM_LOG_DECLARE_IN_NAMESPACE(RtSchemModeTypeToString, rtschemModeType_t)
 
 typedef enum tagSysParamOpt {
     SYS_OPT_DETERMINISTIC = 0,       // value: 0:disable, 1:deterministic, 2:strong consistency, 3:batch consistency
@@ -175,6 +178,7 @@ typedef enum tagRtSwitchDataType {
     RT_SWITCH_INT32 = 0,
     RT_SWITCH_INT64 = 1,
 } rtSwitchDataType_t;
+RT_ENUM_LOG_DECLARE_IN_NAMESPACE(RtSwitchDataTypeToString, rtSwitchDataType_t)
 
 typedef enum tagRtStreamFlagType {
     RT_HEAD_STREAM = 0, // first stream
@@ -212,6 +216,7 @@ typedef enum tagRtExceptionExpandType {
     RT_EXCEPTION_FUSION,
     RT_EXCEPTION_AICPU
 } rtExceptionExpandType_t;
+RT_ENUM_LOG_DECLARE_IN_NAMESPACE(RtExceptionExpandTypeToString, rtExceptionExpandType_t)
 
 typedef struct rtArgsSizeInfo {
     void* infoAddr; /* info : atomicIndex|input num input offset|size|size */
@@ -595,7 +600,7 @@ RTS_API rtError_t rtGetSocSpec(const char* label, const char* key, char* val, co
 // clang-format on
 enum { rt_ext_base_common_end_line_guard_ = __LINE__ }; // CCE_RUNTIME_BASE_COMMON_DATA END
 RT_STATIC_ASSERT(
-    ((rt_ext_base_common_end_line_guard_ - rt_ext_base_common_begin_line_guard_) == 558),
+    ((rt_ext_base_common_end_line_guard_ - rt_ext_base_common_begin_line_guard_) == 561),
     "Inside CCE_RUNTIME_BASE_COMMON_DATA is the data shared between rt_external_base.h and base.h. "
     "Adding data structures is not allowed; please add them outside the macro definition.");
 

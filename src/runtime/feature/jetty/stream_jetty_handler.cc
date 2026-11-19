@@ -7,6 +7,8 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "jetty_pool.h"
+#include "runtime/base.h"
 #include "stream_jetty_handler.h"
 #include "stream.hpp"
 #include "stream_c.hpp"
@@ -156,8 +158,8 @@ rtError_t StreamJettyHandler::HandleUbDmaTask(
         return RT_ERROR_INVALID_VALUE;
     }
     RT_LOG(
-        RT_LOG_DEBUG, "Handle UbDma task start, stream_id=%d, jettyType=%d.", stream->Id_(),
-        static_cast<int32_t>(jettyType));
+        RT_LOG_DEBUG, "Handle UbDma task start, stream_id=%d, jettyType=" RT_ENUM_LOG_FORMAT("%d") ".", stream->Id_(),
+        RT_ENUM_LOG_VALUE(static_cast<int32_t>(jettyType), JettyTypeToString(jettyType)));
 
     StreamJettyContext* jettyCtx = nullptr;
     // when jettyContext create, reserve jetty
@@ -167,8 +169,11 @@ rtError_t StreamJettyHandler::HandleUbDmaTask(
     COND_RETURN_ERROR(
         error != RT_ERROR_NONE, error, "Append wqe failed, stream_id=%d, retCode=%#x.", stream->Id_(), error);
     RT_LOG(
-        RT_LOG_DEBUG, "Handle UbDma task success, stream_id=%d, jettyType=%d, filledWqeCount=%u, capacity=%u.",
-        stream->Id_(), static_cast<int32_t>(jettyType), jettyCtx->filledWqeCount, jettyCtx->capacity);
+        RT_LOG_DEBUG,
+        "Handle UbDma task success, stream_id=%d, jettyType=" RT_ENUM_LOG_FORMAT(
+            "%d") ", filledWqeCount=%u, capacity=%u.",
+        stream->Id_(), RT_ENUM_LOG_VALUE(static_cast<int32_t>(jettyType), JettyTypeToString(jettyType)),
+        jettyCtx->filledWqeCount, jettyCtx->capacity);
     return RT_ERROR_NONE;
 }
 
@@ -390,14 +395,16 @@ rtError_t StreamJettyHandler::BindJetty(Stream* stream, JettyType type, const Ca
     const int32_t streamId = stream->Id_();
     StreamJettyContext* jettyCtx = jettyMgr->GetStreamJettyContext(streamId, type);
     if (jettyCtx == nullptr || jettyCtx->filledWqeCount == 0U) {
-        RT_LOG(RT_LOG_DEBUG, "No ub dma task, stream_id=%d, jetty_type=%d.", streamId, static_cast<int32_t>(type));
+        RT_LOG(
+            RT_LOG_DEBUG, "No ub dma task, stream_id=%d, jetty_type=" RT_ENUM_LOG_FORMAT("%d") ".", streamId,
+            RT_ENUM_LOG_VALUE(static_cast<int32_t>(type), JettyTypeToString(type)));
         return RT_ERROR_NONE;
     }
 
     if (jettyCtx->jettyHandle != 0ULL) {
         RT_LOG(
-            RT_LOG_DEBUG, "Jetty already bound, skip sync, stream_id=%d, jetty_type=%d.", streamId,
-            static_cast<int32_t>(type));
+            RT_LOG_DEBUG, "Jetty already bound, skip sync, stream_id=%d, jetty_type=" RT_ENUM_LOG_FORMAT("%d") ".",
+            streamId, RT_ENUM_LOG_VALUE(static_cast<int32_t>(type), JettyTypeToString(type)));
         return RT_ERROR_NONE;
     }
 
@@ -565,8 +572,10 @@ rtError_t StreamJettyHandler::RefreshModelJettyInfoList(Model* const mdl)
             mdl->SetJettyInfo(info);
             RT_LOG(
                 RT_LOG_DEBUG,
-                "Refresh jetty info, stream_id=%d, type=%d, jetty_id=%u, die_id=%u, func_id=%u, pi_value=%u.", streamId,
-                static_cast<int32_t>(type), info.jettyId, info.dieId, info.functionId, info.piValue);
+                "Refresh jetty info, stream_id=%d, type=" RT_ENUM_LOG_FORMAT(
+                    "%d") ", jetty_id=%u, die_id=%u, func_id=%u, pi_value=%u.",
+                streamId, RT_ENUM_LOG_VALUE(static_cast<int32_t>(type), JettyTypeToString(type)), info.jettyId,
+                info.dieId, info.functionId, info.piValue);
         }
     }
 

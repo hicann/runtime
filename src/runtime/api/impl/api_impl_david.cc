@@ -8,7 +8,10 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "args/args_inner.h"
+#include "internal_error_define.hpp"
 #include "api_impl_david.hpp"
+#include "runtime/base.h"
 #include "memory_task.h"
 #include "event_task.h"
 #include "ccu_stream.hpp"
@@ -606,8 +609,10 @@ rtError_t ApiImplDavid::LaunchKernelByArgsWithType(
 {
     rtError_t error = RT_ERROR_NONE;
     RT_LOG(
-        RT_LOG_DEBUG, "LaunchKernelByArgsWithType, device_id=%u, stream_id=%d, blockDim=%u, argsType=%u.",
-        stm->Device_()->Id_(), stm->Id_(), coreDim, static_cast<uint32_t>(argsWithType->type));
+        RT_LOG_DEBUG,
+        "LaunchKernelByArgsWithType, device_id=%u, stream_id=%d, blockDim=%u, argsType=" RT_ENUM_LOG_FORMAT("%u") ".",
+        stm->Device_()->Id_(), stm->Id_(), coreDim,
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(argsWithType->type), ArgsTypeToString(argsWithType->type)));
     switch (argsWithType->type) {
         case RT_ARGS_NON_CPU_EX: {
             rtStreamLaunchKernelV2ExtendArgs_t launchKernelExtendArgs = {};
@@ -2330,7 +2335,9 @@ rtError_t ApiImplDavid::GetErrorVerbose(const uint32_t deviceId, rtErrorInfo* co
 
     rtError_t error = RT_ERROR_NONE;
     const DeviceFaultType faultType = dev->GetDeviceFaultType();
-    RT_LOG(RT_LOG_DEBUG, "start GetErrorVerbose, device_id=%u, type=%u", deviceId, faultType);
+    RT_LOG(
+        RT_LOG_DEBUG, "start GetErrorVerbose, device_id=%u, type=" RT_ENUM_LOG_FORMAT("%u"), deviceId,
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(faultType), DeviceFaultTypeToString(faultType)));
     switch (faultType) {
         case DeviceFaultType::L2_BUFFER_ERROR:
             error = L2BufferErrProc(deviceId, errorInfo);

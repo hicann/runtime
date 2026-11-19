@@ -34,6 +34,7 @@ typedef enum rtEventStatus {
     RT_EVENT_INIT = 0,
     RT_EVENT_RECORDED = 1,
 } rtEventStatus_t;
+RT_ENUM_LOG_DECLARE(RtEventStatusToString, rtEventStatus_t)
 
 typedef struct rtIpcEventHandle {
     char reserved[RT_IPC_HANDLE_SIZE];

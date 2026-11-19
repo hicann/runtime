@@ -45,6 +45,7 @@ typedef enum {
     RT_DQS_ZERO_COPY_INPUT,  // 输入数据零拷贝
     RT_DQS_ZERO_COPY_OUTPUT, // 输出数据零拷贝
 } rtDqsZeroCopyType;
+RT_ENUM_LOG_DECLARE_IN_NAMESPACE(RtDqsZeroCopyTypeToString, rtDqsZeroCopyType)
 
 typedef enum { // 零拷贝时，64bit的地址拆分为两个32bit地址，分为高32和低32
     RT_DQS_ZERO_COPY_ADDR_ORDER_LOW32_FIRST = 0,  // 拷贝到目标二进指针地址时，低32bit在前

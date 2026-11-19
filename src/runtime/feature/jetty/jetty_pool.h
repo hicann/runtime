@@ -10,6 +10,8 @@
 #ifndef __CCE_RUNTIME_JETTY_POOL_H__
 #define __CCE_RUNTIME_JETTY_POOL_H__
 
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
 #include <cstdint>
 #include <memory>
 #include <vector>
@@ -30,6 +32,7 @@ enum class JettyType : uint8_t {
     JETTY_TYPE_D2D_CROSS_BOARD = 2,
     JETTY_TYPE_MAX
 };
+RT_ENUM_LOG_DECLARE(JettyTypeToString, const JettyType)
 
 static inline const char* JettyTypeName(const JettyType type)
 {

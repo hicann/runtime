@@ -10,6 +10,8 @@
 #ifndef CCE_RUNTIME_H2D_COPY_MGR_HPP
 #define CCE_RUNTIME_H2D_COPY_MGR_HPP
 
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
 #include <unordered_map>
 #include "base.hpp"
 #include "osal.hpp"
@@ -31,6 +33,7 @@ enum H2DCopyPolicy {
     COPY_POLICY_UB,
     COPY_POLICY_MAX
 };
+RT_ENUM_LOG_DECLARE(H2DCopyPolicyToString, H2DCopyPolicy)
 
 struct CpyAddrMgr {
     uint64_t devBaseAddr;

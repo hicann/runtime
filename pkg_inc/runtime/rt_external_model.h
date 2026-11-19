@@ -45,6 +45,7 @@ RTS_API rtError_t rtSetStreamSqUnlock(rtStream_t stm);
 RTS_API rtError_t rtNanoModelDestroy(uint32_t phyMdlId);
 
 typedef enum tagModelQueueFlag { RT_MODEL_INPUT_QUEUE = 0, RT_MODEL_OUTPUT_QUEUE = 1 } rtModelQueueFlag_t;
+RT_ENUM_LOG_DECLARE_IN_NAMESPACE(RtModelQueueFlagToString, rtModelQueueFlag_t)
 
 /**
  * @ingroup rt_model

@@ -8,6 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
 #include "stream_sqcq_manage.hpp"
 #include "stream_task.h"
 #include "task_info_v100.h"
@@ -45,9 +47,14 @@ void ConstructSqeForStreamActiveTask(TaskInfo* taskInfo, void* const sqeBuffer, 
     PrintSqe(command, "StreamActiveTask");
     RT_LOG(
         RT_LOG_INFO,
-        "StreamActiveTask streamId=%d, taskId=%hu, activeStreamId=%u, type=%u, sqeSubType=%" PRIu16 ", preP=%u.",
-        stm->Id_(), taskInfo->id, streamActiveTask->activeStreamId, static_cast<unsigned int>(sqe->header.type),
-        sqe->header.u.sqeSubType, static_cast<unsigned int>(sqe->header.preP));
+        "StreamActiveTask streamId=%d, taskId=%hu, activeStreamId=%u, type=" RT_ENUM_LOG_FORMAT(
+            "%u") ", sqeSubType=" RT_ENUM_LOG_FORMAT("%u") ", preP=" RT_ENUM_LOG_FORMAT("%u") ".",
+        stm->Id_(), taskInfo->id, streamActiveTask->activeStreamId,
+        RT_ENUM_LOG_VALUE(
+            static_cast<uint32_t>(static_cast<unsigned int>(sqe->header.type)), "STARS_SQE_TYPE_PLACE_HOLDER"),
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(sqe->header.u.sqeSubType), "SQE_SUBTYPE_CONDS_STREAM_ACTIVE"),
+        RT_ENUM_LOG_VALUE(
+            static_cast<uint32_t>(static_cast<unsigned int>(sqe->header.preP)), "STARS_SQE_INT_DIR_TO_TSCPU"));
     return;
 }
 
@@ -114,15 +121,19 @@ void ConstructSqeForCallbackLaunchTask(TaskInfo* taskInfo, void* const sqeBuffer
     PrintSqe(command, "CallbackLaunch");
     RT_LOG(
         RT_LOG_INFO,
-        "type=%d, wrCqe=%d, rtStreamId=%hu, taskId=%hu, sqeSubType=%hu, preP=%d, postP=%d, "
-        "cbCqId=%hu, cbGroupId=%hu, devId=%hu, streamId=%hu, eventId=%hu, isBlock=%hu, cbTaskId=%hu, "
-        "hostfuncAddrLow=%u, hostfuncAddrHigh=%u, fndataLow=%u, fndataHigh=%u, groupId=%u, destPid=%u",
-        sqe->header.type, sqe->header.wrCqe, sqe->header.rtStreamId, sqe->header.taskId, sqe->header.u.sqeSubType,
-        sqe->header.preP, sqe->header.postP, sqe->u.callBackInfo.cbCqId, sqe->u.callBackInfo.cbGroupId,
-        sqe->u.callBackInfo.devId, sqe->u.callBackInfo.streamId, sqe->u.callBackInfo.eventId,
-        sqe->u.callBackInfo.isBlock, sqe->u.callBackInfo.taskId, sqe->u.callBackInfo.hostfuncAddrLow,
-        sqe->u.callBackInfo.hostfuncAddrHigh, sqe->u.callBackInfo.fndataLow, sqe->u.callBackInfo.fndataHigh,
-        sqe->u.callBackInfo.groupId, sqe->u.callBackInfo.destPid);
+        "type=" RT_ENUM_LOG_FORMAT("%d") ", wrCqe=%d, rtStreamId=%hu, taskId=%hu, sqeSubType=" RT_ENUM_LOG_FORMAT(
+            "%u") ", preP=%d, postP=%d, cbCqId=%hu, cbGroupId=%hu, "
+                  "devId=%hu, streamId=%hu, eventId=%hu, isBlock=%hu, cbTaskId=%hu, hostfuncAddrLow=%u, "
+                  "hostfuncAddrHigh=%u, "
+                  "fndataLow=%u, fndataHigh=%u, groupId=%u, destPid=%u",
+        RT_ENUM_LOG_VALUE(static_cast<int32_t>(sqe->header.type), "STARS_SQE_TYPE_PLACE_HOLDER"), sqe->header.wrCqe,
+        sqe->header.rtStreamId, sqe->header.taskId,
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(sqe->header.u.sqeSubType), "SQE_SUBTYPE_CALLBACK"), sqe->header.preP,
+        sqe->header.postP, sqe->u.callBackInfo.cbCqId, sqe->u.callBackInfo.cbGroupId, sqe->u.callBackInfo.devId,
+        sqe->u.callBackInfo.streamId, sqe->u.callBackInfo.eventId, sqe->u.callBackInfo.isBlock,
+        sqe->u.callBackInfo.taskId, sqe->u.callBackInfo.hostfuncAddrLow, sqe->u.callBackInfo.hostfuncAddrHigh,
+        sqe->u.callBackInfo.fndataLow, sqe->u.callBackInfo.fndataHigh, sqe->u.callBackInfo.groupId,
+        sqe->u.callBackInfo.destPid);
 }
 #endif
 

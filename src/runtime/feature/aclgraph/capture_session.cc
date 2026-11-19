@@ -515,11 +515,14 @@ rtError_t CaptureSession::CreateSubCaptureModels(CondHandle* condHandle, rtCondT
 
         RT_LOG(
             RT_LOG_DEBUG,
-            "Sub capture model create success, device_id=%u, parent model_id=%u, sub model_id=%u"
-            " original stream_id=%d, capture stream_id=%d, isSubmodel=%d, condition type=%u, condition size=%u.",
+            "Sub capture model create success, device_id=%u, parent model_id=%u, sub model_id=%u original "
+            "stream_id=%d, capture stream_id=%d, isSubmodel=%d, condition type=" RT_ENUM_LOG_FORMAT(
+                "%d") ", condition size=%u.",
             ctx_->Device_()->Id_(), condHandle->GetParentModel()->Id_(), subModel->Id_(), stm->Id_(),
             stm->GetCaptureStream()->Id_(),
-            (dynamic_cast<CaptureModel*>(condHandle->GetParentModel()))->IsSubCaptureModel(), condHandle->GetCondType(),
+            (dynamic_cast<CaptureModel*>(condHandle->GetParentModel()))->IsSubCaptureModel(),
+            RT_ENUM_LOG_VALUE(
+                static_cast<int32_t>(condHandle->GetCondType()), RtCondTaskTypeToString(condHandle->GetCondType())),
             condHandle->GetCondSize());
     }
 

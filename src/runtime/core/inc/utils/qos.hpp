@@ -10,6 +10,8 @@
 #ifndef __CCE_RUNTIME_QOS_HPP__
 #define __CCE_RUNTIME_QOS_HPP__
 
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
 #include "base.hpp"
 
 namespace cce {
@@ -39,6 +41,7 @@ enum class QosMasterType : uint32_t {
     MASTER_STARS = 14,
     MASTER_INVALID,
 };
+RT_ENUM_LOG_DECLARE(QosMasterTypeToString, QosMasterType)
 
 // 这个结构体需要和QOS drv中定义的结构体保持一致
 typedef struct QosMasterConfigType {

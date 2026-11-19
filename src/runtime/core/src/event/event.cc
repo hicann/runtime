@@ -7,6 +7,9 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "common/api_enum_log.hpp"
+#include "runtime/event.h"
+#include "runtime/base.h"
 #include "event.hpp"
 #include "runtime_handle_guard.h"
 #include "device.hpp"
@@ -971,8 +974,10 @@ rtError_t Event::QueryEventTask(rtEventStatus_t* const status)
             }
         }
         RT_LOG(
-            RT_LOG_INFO, "device_id=%u, event_id=%d, status=%d, stream_id=%u, record task_id=%hu", device_->Id_(),
-            eventId_, *status, streamId, taskId);
+            RT_LOG_INFO,
+            "device_id=%u, event_id=%d, status=" RT_ENUM_LOG_FORMAT("%d") ", stream_id=%u, record task_id=%hu",
+            device_->Id_(), eventId_, RT_ENUM_LOG_VALUE(static_cast<int32_t>(*status), RtEventStatusToString(*status)),
+            streamId, taskId);
     } else {
         uint32_t lastTaskId = 0U;
         error = stm->GetLastTaskIdFromCqShm(lastTaskId);
@@ -984,9 +989,10 @@ rtError_t Event::QueryEventTask(rtEventStatus_t* const status)
         }
         RT_LOG(
             RT_LOG_INFO,
-            "device_id=%u, event_id=%d, status=%d, stream_id=%u, record task_id=%hu, "
-            "last task_id=%hu",
-            device_->Id_(), eventId_, *status, streamId, taskId, lastTaskId);
+            "device_id=%u, event_id=%d, status=" RT_ENUM_LOG_FORMAT("%d") ", stream_id=%u, record task_id=%hu, "
+                                                                          "last task_id=%hu",
+            device_->Id_(), eventId_, RT_ENUM_LOG_VALUE(static_cast<int32_t>(*status), RtEventStatusToString(*status)),
+            streamId, taskId, lastTaskId);
     }
     return RT_ERROR_NONE;
 }
@@ -1274,8 +1280,9 @@ rtError_t Event::QueryEventStatus(rtEventStatus_t* const status)
         *status = (latestRecord.state == RECORDING) ? RT_EVENT_INIT : RT_EVENT_RECORDED;
     }
     RT_LOG(
-        RT_LOG_INFO, "device_id=%u, event_id=%d, latest state=%s(%u), status=%d", device_->Id_(), eventId_,
-        EventStateName(latestRecord.state), static_cast<uint32_t>(latestRecord.state), *status);
+        RT_LOG_INFO, "device_id=%u, event_id=%d, latest state=%s(%u), status=" RT_ENUM_LOG_FORMAT("%d"), device_->Id_(),
+        eventId_, EventStateName(latestRecord.state), static_cast<uint32_t>(latestRecord.state),
+        RT_ENUM_LOG_VALUE(static_cast<int32_t>(*status), RtEventStatusToString(*status)));
     return error;
 }
 

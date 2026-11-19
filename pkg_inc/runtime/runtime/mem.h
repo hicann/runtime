@@ -120,6 +120,7 @@ typedef enum tagRtMemoryType {
     RT_MEMORY_TYPE_DVPP = 4,
     RT_MEMORY_TYPE_USER = 5 // by user malloc, unknown memory
 } rtMemoryType_t;
+RT_ENUM_LOG_DECLARE_IN_NAMESPACE(RtMemoryTypeToString, rtMemoryType_t)
 
 /**
  * @ingroup dvrt_mem
@@ -846,6 +847,7 @@ typedef enum tagAdviseMemType {
     RT_ADVISE_ACCESS_READWRITE = 3,
     RT_ADVISE_TYPE_MAX
 } rtAdviseMemType;
+RT_ENUM_LOG_DECLARE(RtAdviseMemTypeToString, rtAdviseMemType)
 /**
  * @ingroup dvrt_mem
  * @brief This command is used to reserve a virtual address range

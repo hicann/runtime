@@ -7,6 +7,8 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
 #include "device_snapshot.hpp"
 #include "stream.hpp"
 #include "stream_david.hpp"
@@ -51,7 +53,9 @@ void DeviceSnapshot::RecordOpAddrAndSize(const Stream* const stm)
             i++;
             continue;
         }
-        RT_LOG(RT_LOG_DEBUG, "stream_id=%d, task_id=%u, type=%d.", stm->Id_(), nextTask->id, nextTask->type);
+        RT_LOG(
+            RT_LOG_DEBUG, "stream_id=%d, task_id=%u, type=" RT_ENUM_LOG_FORMAT("%d") ".", stm->Id_(), nextTask->id,
+            RT_ENUM_LOG_VALUE(static_cast<int32_t>(nextTask->type), RT_ENUM_LOG_NAME(nextTask->typeName)));
         RecordArgsAddrAndSize(nextTask);
         RecordFuncCallAddrAndSize(nextTask);
         const uint32_t taskId = static_cast<uint32_t>(nextTask->id);

@@ -8,6 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
 #include "stream_david.hpp"
 #include "runtime.hpp"
 #include "thread_local_container.hpp"
@@ -19,7 +21,6 @@
 #include "count_notify.hpp"
 #include "device/device_error_proc.hpp"
 #include "aicpu_sched/common/aicpu_task_struct.h"
-#include "context.hpp"
 #include "runtime_tsch_defines.h"
 #include "profiler.hpp"
 #include "stars.hpp"
@@ -380,7 +381,9 @@ rtError_t ProcReport(
             continue;
         }
 
-        RT_LOG(RT_LOG_INFO, "taskType=%u.", reportTask->type);
+        RT_LOG(
+            RT_LOG_INFO, "taskType=" RT_ENUM_LOG_FORMAT("%u") ".",
+            RT_ENUM_LOG_VALUE(static_cast<uint32_t>(reportTask->type), RT_ENUM_LOG_NAME(reportTask->typeName)));
         CaptureModel* const captureModel = dynamic_cast<CaptureModel*>(reportTask->stream->Model_());
         if (captureModel != nullptr) {
             RT_LOG(

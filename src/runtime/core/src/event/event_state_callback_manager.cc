@@ -8,6 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
 #include "event_state_callback_manager.hpp"
 #include "error_message_manage.hpp"
 
@@ -37,13 +39,17 @@ rtError_t EventStateCallbackManager::RegEventStateCallback(
     callbackMap_[regName].callback = RtPtrToPtr<rtEventStateCallback>(callback);
     callbackMap_[regName].args = args;
     callbackMap_[regName].type = cbType;
-    RT_LOG(RT_LOG_DEBUG, "Register event state callback finish, name:%s, cbType:%u.", regName, cbType);
+    RT_LOG(
+        RT_LOG_DEBUG, "Register event state callback finish, name:%s, cbType:" RT_ENUM_LOG_FORMAT("%u") ".", regName,
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(cbType), "EVENT_STATE_CALLBACK"));
     return RT_ERROR_NONE;
 }
 
 void EventStateCallbackManager::Notify(Stream* stream, Event* event, EventStatePeriod period)
 {
-    RT_LOG(RT_LOG_DEBUG, "Notify event:%u.", period);
+    RT_LOG(
+        RT_LOG_DEBUG, "Notify event:" RT_ENUM_LOG_FORMAT("%u") ".",
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(period), EventStatePeriodToString(period)));
 
     // Avoid callback function use long time lock,so copy to tmp map to call callback function.
     std::unordered_map<std::string, EventStateCallbackInfo> notifyMap;

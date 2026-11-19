@@ -8,6 +8,9 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/api_enum_log.hpp"
+#include "runtime/base.h"
+#include "common/driver_enum_desc.hpp"
 #include "runtime.hpp"
 #include "device_enum_desc.hpp"
 #include <array>
@@ -64,7 +67,6 @@
 #include "api_impl_soma.hpp"
 #include "aicpu_timeout_manager.h"
 #include "enum_desc.hpp"
-#include "device_error_proc.hpp"
 #include "task.hpp"
 #include "heterogenous.h"
 
@@ -1406,7 +1408,10 @@ rtError_t Runtime::InitProgramAllocator()
         }
         const DevProperties& logProps = GetCurChipProperties();
         RT_LOG(
-            RT_LOG_DEBUG, "run mode = %u [0:offline, 1:online], max program num %u, rtsqDepth=%u.", runMode,
+            RT_LOG_DEBUG, "run mode = " RT_ENUM_LOG_FORMAT("%u") ", max program num %u, rtsqDepth=%u.",
+            RT_ENUM_LOG_VALUE(
+                static_cast<uint32_t>(runMode),
+                (runMode <= RT_RUN_MODE_RESERVED ? RtRunModeToString(static_cast<rtRunMode>(runMode)) : "UNKNOWN")),
             maxProgramNum_, logProps.rtsqDepth);
     }
 #endif
@@ -5590,8 +5595,8 @@ rtError_t Runtime::GetBinBuffer(
 {
     Program* const programHdl = static_cast<Program*>(binHandle);
     RT_LOG(
-        RT_LOG_INFO, "Start to get bin buffer, bin handle %p, program id=%u, buffer type %d", binHandle,
-        programHdl->Id_(), type);
+        RT_LOG_INFO, "Start to get bin buffer, bin handle %p, program id=%u, buffer type " RT_ENUM_LOG_FORMAT("%d"),
+        binHandle, programHdl->Id_(), RT_ENUM_LOG_VALUE(static_cast<int32_t>(type), RtBinBufferTypeToString(type)));
     *binSize = programHdl->GetBinarySize();
     if (type == RT_BIN_HOST_ADDR) {
         *bin = programHdl->GetBinary();

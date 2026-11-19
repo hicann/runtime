@@ -8,6 +8,10 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/enum_log.hpp"
+#include "stars/stars_base.hpp"
+#include "runtime/base.h"
+#include "qos.hpp"
 #include "davinci_kernel_task.h"
 #include "npu_driver.hpp"
 #include "task_info_v100.h"
@@ -258,10 +262,13 @@ void ConstructAICpuSqeForDavinciTask(TaskInfo* taskInfo, void* const sqeBuffer, 
     PrintSqe(command, "AICpuTask");
     RT_LOG(
         RT_LOG_INFO,
-        "taskType=%hu, topic_type=%hu, kernel_type=%hu, debug_dump_en=%u, curVersion=%u, "
-        "isNeedNoTimeout=%u, timeout=%hus, kernel_credit=%hu",
-        taskInfo->type, sqe->topic_type, sqe->kernel_type, sqe->debug_dump_en, curVersion, isNeedNoTimeout,
-        aicpuTaskInfo->timeout, sqe->kernel_credit);
+        "taskType=" RT_ENUM_LOG_FORMAT("%u") ", topic_type=" RT_ENUM_LOG_FORMAT(
+            "%u") ", kernel_type=%hu, debug_dump_en=%u, curVersion=%u, isNeedNoTimeout=%u, "
+                  "timeout=%hus, kernel_credit=%hu",
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(taskInfo->type), RT_ENUM_LOG_NAME(taskInfo->typeName)),
+        RT_ENUM_LOG_VALUE(
+            static_cast<uint32_t>(sqe->topic_type), RtTopicTypeToString(static_cast<RtTopicType>(sqe->topic_type))),
+        sqe->kernel_type, sqe->debug_dump_en, curVersion, isNeedNoTimeout, aicpuTaskInfo->timeout, sqe->kernel_credit);
 
     return;
 }
@@ -390,10 +397,14 @@ void FillFftsMixSqeForDavinciTask(
 
     RT_LOG(
         RT_LOG_INFO,
-        "kernelFlag=%d, l2CacheProfFlag=%d, bindFlag=%d, biuperfProfFlag=%d, postP=%u, subType=0x%x, "
-        "kernelCredit=%u",
+        "kernelFlag=%d, l2CacheProfFlag=%d, bindFlag=%d, biuperfProfFlag=%d, postP=" RT_ENUM_LOG_FORMAT(
+            "%u") ", subType=0x%x, kernelCredit=%u",
         aicTaskInfo->comm.kernelFlag, Runtime::Instance()->GetL2CacheProfFlag(), stm->GetBindFlag(),
-        Runtime::Instance()->GetBiuperfProfFlag(), sqeHeader->postP, sqe->subType, sqe->kernelCredit);
+        Runtime::Instance()->GetBiuperfProfFlag(),
+        RT_ENUM_LOG_VALUE(
+            static_cast<uint32_t>(sqeHeader->postP),
+            RtStarsSqeIntDirTypeToString(static_cast<RtStarsSqeIntDirType>(sqeHeader->postP))),
+        sqe->subType, sqe->kernelCredit);
 
     PrintSqe(command, "MixTask");
     return;
@@ -416,10 +427,14 @@ void ConstructFftsMixSqeForDavinciTask(TaskInfo* taskInfo, rtStarsSqe_t* const c
 
     RT_LOG(
         RT_LOG_INFO,
-        "device_id=%u, stream_id=%d, task_id=%u, taskType=%u, mixOpt:%hhu, handle:%p, "
-        "descBuf=%" PRIu64 ", descAlignBuf=%" PRIu64 ".",
-        dev->Id_(), taskInfo->stream->Id_(), taskInfo->id, taskInfo->type, aicTaskInfo->mixOpt,
-        aicTaskInfo->comm.argHandle, aicTaskInfo->descBuf, aicTaskInfo->descAlignBuf);
+        // Keep adjacent string macros readable under clang-format 16.
+        // clang-format off
+        "device_id=%u, stream_id=%d, task_id=%u, taskType=" RT_ENUM_LOG_FORMAT("%u")
+        ", mixOpt:%hhu, handle:%p, descBuf=%" PRIu64 ", descAlignBuf=%" PRIu64 ".",
+        // clang-format on
+        dev->Id_(), taskInfo->stream->Id_(), taskInfo->id,
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(taskInfo->type), RT_ENUM_LOG_NAME(taskInfo->typeName)),
+        aicTaskInfo->mixOpt, aicTaskInfo->comm.argHandle, aicTaskInfo->descBuf, aicTaskInfo->descAlignBuf);
 
     COND_LOG_ERROR(
         ret != RT_ERROR_NONE, "stream_id=%d, task_id=%u, mix h2d failed, retCode=%#x.", taskInfo->stream->Id_(),
@@ -632,7 +647,9 @@ static void UpdateQosCfgInFftsCtx(rtFftsPlusMixAicAivCtx_t* fftsCtx, const TaskI
         return;
     }
     const QosMasterType masterType = GetQosMasterTypeForCtx(fftsCtx);
-    RT_LOG(RT_LOG_INFO, "Begin to update fftsCtx qos info, masterType is %u.", static_cast<uint32_t>(masterType));
+    RT_LOG(
+        RT_LOG_INFO, "Begin to update fftsCtx qos info, masterType is " RT_ENUM_LOG_FORMAT("%u") ".",
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(masterType), QosMasterTypeToString(masterType)));
     if (masterType >= QosMasterType::MASTER_AIC_DAT && masterType <= QosMasterType::MASTER_AIV_INS) {
         const std::array<QosMasterConfigType, MAX_ACC_QOS_CFG_NUM>& aicoreQosCfg = dev->GetQosCfg().aicoreQosCfg;
         const uint32_t index = static_cast<uint32_t>(masterType) - static_cast<uint32_t>(QosMasterType::MASTER_AIC_DAT);
@@ -740,7 +757,9 @@ void FillFftsAicAivCtxForDavinciTask(
     if (IS_SUPPORT_CHIP_FEATURE(Runtime::Instance()->GetChipType(), RtOptionalFeatureType::RT_FEATURE_TASK_FFTS_PLUS)) {
         CheckBlockDim(taskInfo, nullptr, fftsCtx);
         fftsCtx->schem = aicTaskInfo->schemMode;
-        RT_LOG(RT_LOG_INFO, "set schemMode=%u, taskType=%u", fftsCtx->schem, taskInfo->type);
+        RT_LOG(
+            RT_LOG_INFO, "set schemMode=%u, taskType=" RT_ENUM_LOG_FORMAT("%u"), fftsCtx->schem,
+            RT_ENUM_LOG_VALUE(static_cast<uint32_t>(taskInfo->type), RT_ENUM_LOG_NAME(taskInfo->typeName)));
     }
     fftsCtx->atm = 0U;
     fftsCtx->prefetchEnableBitmap = 0U;
@@ -799,7 +818,9 @@ static void UpdateQosCfgInAicoreSqe(RtFftsPlusKernelSqe* sqe, const TaskInfo* co
         return;
     }
     QosMasterType masterType = GetQosMasterTypeForSqe(sqe);
-    RT_LOG(RT_LOG_INFO, "Begin to update sqe qos info, masterType is %u.", static_cast<uint32_t>(masterType));
+    RT_LOG(
+        RT_LOG_INFO, "Begin to update sqe qos info, masterType is " RT_ENUM_LOG_FORMAT("%u") ".",
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(masterType), QosMasterTypeToString(masterType)));
     if (masterType >= QosMasterType::MASTER_AIC_DAT && masterType <= QosMasterType::MASTER_AIV_INS) {
         const std::array<QosMasterConfigType, MAX_ACC_QOS_CFG_NUM>& aicoreQosCfg = dev->GetQosCfg().aicoreQosCfg;
         const auto index = static_cast<uint32_t>(masterType) - static_cast<uint32_t>(QosMasterType::MASTER_AIC_DAT);
@@ -894,17 +915,21 @@ void ConstructAICoreSqeForDavinciTask(TaskInfo* const taskInfo, void* const sqeB
     RT_LOG(
         RT_LOG_INFO,
         "bindFlag=%d, biuperfProfFlag=%d, fftsType=%u, funcType=%u, prefetchCnt1=%u, chipType=%u, "
-        "cfgInfo schemMode=%u, taskType=%u, kernelFlag=%u, l2CacheProfFlag=%u, kernelCredit=%u, kernelAttrType=%s, "
-        "minStackSize=%u(bytes), stackSize=%u(bytes), stackPhyBase=%#llx.",
+        "cfgInfo schemMode=%u, taskType=" RT_ENUM_LOG_FORMAT(
+            "%u") ", kernelFlag=%u, l2CacheProfFlag=%u, kernelCredit=%u, kernelAttrType=%s, "
+                  "minStackSize=%u(bytes), stackSize=%u(bytes), stackPhyBase=%#llx.",
         stm->GetBindFlag(), Runtime::Instance()->GetBiuperfProfFlag(), sqe->fftsType, funcType, prefetchCnt1,
-        Runtime::Instance()->GetChipType(), aicTaskInfo->schemMode, taskInfo->type, aicTaskInfo->comm.kernelFlag,
-        Runtime::Instance()->GetL2CacheProfFlag(), sqe->kernel_credit, KernelAttrTypeToString(kernelAttrType).c_str(),
-        minStackSize, stackSize, stackPhyBase);
+        Runtime::Instance()->GetChipType(), aicTaskInfo->schemMode,
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(taskInfo->type), RT_ENUM_LOG_NAME(taskInfo->typeName)),
+        aicTaskInfo->comm.kernelFlag, Runtime::Instance()->GetL2CacheProfFlag(), sqe->kernel_credit,
+        KernelAttrTypeToString(kernelAttrType).c_str(), minStackSize, stackSize, stackPhyBase);
     if (IS_SUPPORT_CHIP_FEATURE(Runtime::Instance()->GetChipType(), RtOptionalFeatureType::RT_FEATURE_TASK_FFTS_PLUS)) {
         if ((taskInfo->type == TS_TASK_TYPE_KERNEL_AICORE) || (taskInfo->type == TS_TASK_TYPE_KERNEL_AIVEC)) {
             CheckBlockDim(taskInfo, sqe, nullptr);
             sqe->schem = aicTaskInfo->schemMode;
-            RT_LOG(RT_LOG_INFO, "set schemMode=%u, taskType=%u", sqe->schem, taskInfo->type);
+            RT_LOG(
+                RT_LOG_INFO, "set schemMode=%u, taskType=" RT_ENUM_LOG_FORMAT("%u"), sqe->schem,
+                RT_ENUM_LOG_VALUE(static_cast<uint32_t>(taskInfo->type), RT_ENUM_LOG_NAME(taskInfo->typeName)));
         }
     }
     sqe->res3 = 0U;

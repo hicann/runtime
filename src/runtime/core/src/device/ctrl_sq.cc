@@ -7,6 +7,9 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
+#include "task_enum_desc.hpp"
 #include "ctrl_sq.hpp"
 #include "ctrl_msg.hpp"
 #include "task_info.hpp"
@@ -97,7 +100,10 @@ rtError_t CtrlSQ::CreateCtrlMsg(RtCtrlMsgType msgType, const RtCtrlMsgParam& par
     rtError_t error;
     TaskInfo* taskInfo = stream_->AllocTask(&submitTask, param.taskType, error);
     NULL_PTR_RETURN_MSG(taskInfo, error);
-    RT_LOG(RT_LOG_INFO, "taskInfo type, type=%u, taskType=%u.", taskInfo->type, param.taskType);
+    RT_LOG(
+        RT_LOG_INFO, "taskInfo type, type=" RT_ENUM_LOG_FORMAT("%u") ", taskType=" RT_ENUM_LOG_FORMAT("%u") ".",
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(taskInfo->type), RT_ENUM_LOG_NAME(taskInfo->typeName)),
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(param.taskType), TsTaskTypeToString(param.taskType)));
 
     error = ctrlMsgHandlerArr[idx](taskInfo, param);
     COND_PROC_RETURN_ERROR(
@@ -111,7 +117,9 @@ rtError_t CtrlSQ::CreateCtrlMsg(RtCtrlMsgType msgType, const RtCtrlMsgParam& par
         "Failed to submit task, msg_type=%s(%u), error=%#x.", CtrlMsgTypeName(msgType), idx,
         static_cast<uint32_t>(error));
 
-    RT_LOG(RT_LOG_INFO, "Ctrl msg send success, msgType=%u.", idx);
+    RT_LOG(
+        RT_LOG_INFO, "Ctrl msg send success, msgType=" RT_ENUM_LOG_FORMAT("%u") ".",
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(idx), CtrlMsgTypeName(msgType)));
     return error;
 }
 
@@ -132,7 +140,10 @@ rtError_t CtrlSQ::CreateDavidCtrlMsg(RtCtrlMsgType msgType, const RtCtrlMsgParam
                                      static_cast<uint32_t>(error));
     pos = taskInfo->id;
     dstStm = taskInfo->stream;
-    RT_LOG(RT_LOG_INFO, "taskInfo type, type=%u, taskType=%u.", taskInfo->type, param.taskType);
+    RT_LOG(
+        RT_LOG_INFO, "taskInfo type, type=" RT_ENUM_LOG_FORMAT("%u") ", taskType=" RT_ENUM_LOG_FORMAT("%u") ".",
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(taskInfo->type), RT_ENUM_LOG_NAME(taskInfo->typeName)),
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(param.taskType), TsTaskTypeToString(param.taskType)));
 
     // 根据type找到对应的setupFunc
     error = ctrlMsgHandlerArr[idx](taskInfo, param);
@@ -149,7 +160,9 @@ rtError_t CtrlSQ::CreateDavidCtrlMsg(RtCtrlMsgType msgType, const RtCtrlMsgParam
         *msgId = taskInfo->taskSn;
     }
 
-    RT_LOG(RT_LOG_INFO, "Ctrl msg send success, msgType=%u.", idx);
+    RT_LOG(
+        RT_LOG_INFO, "Ctrl msg send success, msgType=" RT_ENUM_LOG_FORMAT("%u") ".",
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(idx), CtrlMsgTypeName(msgType)));
     return error;
 }
 

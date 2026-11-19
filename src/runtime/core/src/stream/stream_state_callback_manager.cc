@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "runtime/base.h"
 #include "stream_state_callback_manager.hpp"
 #include "error_message_manage.hpp"
 
@@ -47,7 +48,9 @@ rtError_t StreamStateCallbackManager::RegStreamStateCallback(
     }
 
     callbackMap_[regName].type = type;
-    RT_LOG(RT_LOG_DEBUG, "register stream state callback finish, name:%s, type:%u.", regName, type);
+    RT_LOG(
+        RT_LOG_DEBUG, "register stream state callback finish, name:%s, type:" RT_ENUM_LOG_FORMAT("%u") ".", regName,
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(type), StreamStateCallbackToString(type)));
 
     return RT_ERROR_NONE;
 }

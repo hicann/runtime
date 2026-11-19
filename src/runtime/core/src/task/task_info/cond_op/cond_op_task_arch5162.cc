@@ -8,6 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/enum_log.hpp"
+#include "runtime/base.h"
 #include "task_info_v100.h"
 #include "task_info.hpp"
 #include "stars_sqe.hpp"
@@ -113,10 +115,20 @@ void ConstructSqeForStreamSwitchTask(TaskInfo* taskInfo, void* const sqeBuffer, 
     PrintSqe(command, "StreamSwitchTask");
     RT_LOG(
         RT_LOG_INFO,
-        "StreamSwitchTask current streamId=%d, taskId=%hu, trueStreamId=%u, type=%u, sqeSubType=%" PRIu16
-        ", preP=%u, condition=%s, dataType=%s, leftPtr=%" PRIu64 ", rightPtr=%" PRIu64 ".",
-        stm->Id_(), taskInfo->id, streamSwitchTask->trueStreamId, static_cast<unsigned int>(sqe->header.type),
-        sqe->header.u.sqeSubType, static_cast<unsigned int>(sqe->header.preP),
+        // Keep adjacent string macros readable under clang-format 16.
+        // clang-format off
+        "StreamSwitchTask current streamId=%d, taskId=%hu, trueStreamId=%u, "
+        "type=" RT_ENUM_LOG_FORMAT("%u")
+        ", sqeSubType=" RT_ENUM_LOG_FORMAT("%u")
+        ", preP=" RT_ENUM_LOG_FORMAT("%u")
+        ", condition=%s, dataType=%s, leftPtr=%" PRIu64 ", rightPtr=%" PRIu64 ".",
+        // clang-format on
+        stm->Id_(), taskInfo->id, streamSwitchTask->trueStreamId,
+        RT_ENUM_LOG_VALUE(
+            static_cast<uint32_t>(static_cast<unsigned int>(sqe->header.type)), "STARS_SQE_TYPE_PLACE_HOLDER"),
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(sqe->header.u.sqeSubType), "SQE_SUBTYPE_CONDS_STREAM_SWITCH_EX"),
+        RT_ENUM_LOG_VALUE(
+            static_cast<uint32_t>(static_cast<unsigned int>(sqe->header.preP)), "STARS_SQE_INT_DIR_TO_TSCPU"),
         ConditionToString(streamSwitchTask->condition).c_str(),
         SwitchDataTypeToString(streamSwitchTask->dataType).c_str(), sqe->u.streamSwitchExInfo.varPtr,
         sqe->u.streamSwitchExInfo.valPtr);
