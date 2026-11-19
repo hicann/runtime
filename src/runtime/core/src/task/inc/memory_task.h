@@ -90,6 +90,12 @@ rtError_t UpdateTaskH2DSubmit(TaskInfo* const updateTask, Stream* const stm, voi
 
 rtError_t MemWriteValueTaskInit(TaskInfo* taskInfo, const void* const devAddr, const uint64_t value);
 void MemWriteTaskUnInit(TaskInfo* taskInfo);
+bool IsSoftwareEventRecordTask(const TaskInfo* taskInfo);
+bool IsTimeLineSoftwareEventRecordTask(const TaskInfo* taskInfo);
+bool IsTimestampRequired(const Event* event, const Stream* stream);
+void SetStarsResultForMemWriteValueTask(TaskInfo* taskInfo, const rtCqReport_t& logicCq);
+void SetStarsResultForDavidMemWriteValueTask(TaskInfo* taskInfo, const rtCqReport_t& logicCq);
+void DoCompleteSuccessForMemWriteValueTask(TaskInfo* taskInfo, uint32_t devId);
 rtError_t GetWriteValueTaskParams(const TaskInfo* const taskInfo, rtTaskParams* const params);
 rtError_t UpdateWriteValueTaskParams(TaskInfo* const taskInfo, const TaskUpdateParams* const params);
 

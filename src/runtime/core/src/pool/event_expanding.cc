@@ -151,10 +151,23 @@ rtError_t EventExpandingPool::AllocAndInsertEvent(void** const eventAddr, int32_
 void EventExpandingPool::FreeEventId(int32_t eventId)
 {
     const std::unique_lock<std::mutex> taskLock(EventMapLock_);
-    uint16_t poolIndex = (eventId - EVENT_INIT_VALUE) / PER_POOL_CNT;
-    int32_t id = (eventId - EVENT_INIT_VALUE) % PER_POOL_CNT;
+    COND_RETURN_VOID(eventId < EVENT_INIT_VALUE, "Free event id failed, event_id=%d.", eventId);
+    const uint16_t poolIndex = (eventId - EVENT_INIT_VALUE) / PER_POOL_CNT;
+    const int32_t id = (eventId - EVENT_INIT_VALUE) % PER_POOL_CNT;
     COND_RETURN_VOID(poolIndex >= MAX_POOL_CNT, "Free event id failed, event_id=%d, poolIndex=%u.", eventId, poolIndex);
-    eventAllocator_[poolIndex]->FreeById(id);
+    BufferAllocator* const allocator = eventAllocator_[poolIndex];
+    COND_RETURN_VOID(allocator == nullptr, "Free event id failed, event_id=%d, allocator is null.", eventId);
+    void* const eventAddr = allocator->GetItemById(id, false);
+    COND_RETURN_VOID(eventAddr == nullptr, "Free event id failed, event_id=%d, event address is null.", eventId);
+    if (barSupported_) {
+        *RtPtrToPtr<volatile uint8_t*>(eventAddr) = 0U;
+    } else {
+        const rtError_t error = device_->Driver_()->MemSetSync(eventAddr, sizeof(uint8_t), 0U, sizeof(uint8_t));
+        COND_RETURN_VOID(
+            error != RT_ERROR_NONE, "Failed to clear event value, event_id=%d, retCode=%#x.", eventId,
+            static_cast<uint32_t>(error));
+    }
+    allocator->FreeById(id);
     eventIdCount_--;
 }
 

@@ -1153,7 +1153,7 @@ rtError_t Event::Synchronize(int32_t timeout)
 
     if (Runtime::Instance()->GetDisableThread()) {
         if (IsExternalRecordOrWait()) {
-            return SynchronizeExternalEventStatus(timeout, GetLatestRecord().state == RECORDED);
+            return SynchronizeExternalEventStatus(timeout);
         }
         error = WaitTask(timeout);
         if (error == RT_ERROR_STREAM_SYNC_TIMEOUT) {
@@ -1284,6 +1284,8 @@ bool Event::IsExternalRecordOrWait() const
     return ((GetRecordFlag() == RT_EVENT_RECORD_EXTERNAL) || (GetWaitFlag() == RT_EVENT_WAIT_EXTERNAL));
 }
 
+bool Event::IsRecordCompleted() const { return GetLatestRecord().state == RECORDED; }
+
 rtError_t Event::QueryExternalEventStatus(rtEventStatus_t* const status)
 {
     COND_RETURN_ERROR(
@@ -1310,18 +1312,17 @@ rtError_t Event::QueryExternalEventStatus(rtEventStatus_t* const status)
     return RT_ERROR_NONE;
 }
 
-rtError_t Event::SynchronizeExternalEventStatus(int32_t timeout, bool recordCompleted)
+rtError_t Event::SynchronizeExternalEventStatus(int32_t timeout)
 {
     SetEventSyncTimeoutFlag(false);
-    if (recordCompleted) {
-        return RT_ERROR_NONE;
-    }
-
     uint16_t queryTimes = 0U;
     uint16_t yieldTimes = 0U;
     const mmTimespec beginTimeSpec = mmGetTickCount();
     rtError_t error = RT_ERROR_NONE;
     while (true) {
+        if (IsRecordCompleted()) {
+            return RT_ERROR_NONE;
+        }
         rtEventStatus_t status = RT_EVENT_INIT;
         if (Context_() != nullptr) {
             error = Context_()->CheckStatus();

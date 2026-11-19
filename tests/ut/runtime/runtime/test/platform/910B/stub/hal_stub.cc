@@ -579,32 +579,25 @@ drvError_t StubHalSqTaskSendNormalType(uint32_t devId, struct halTaskSendInfo* i
     uint32_t head = g_sqCqInfo[devId][sqId].sqHead + sqe_num;
     g_sqCqInfo[devId][sqId].sqHead = (head % MAX_SQCQ_NUM);
     rtStarsSqe_t* sqe = (rtStarsSqe_t*)(info->sqe_addr);
-    cce::runtime::rtStarsSqeHeader_t* sqeHead = &(sqe->commonSqe.sqeHeader);
-    uint32_t needCq = sqeHead->wr_cqe;
-    if (needCq == 0) {
-        RT_LOG(
-            RT_LOG_INFO, "devId=%d, sqId=%d, head=%d, tail=%d, no cqe.", devId, sqId, g_sqCqInfo[devId][sqId].sqHead,
-            g_sqCqInfo[devId][sqId].sqTail);
-        return DRV_ERROR_NONE;
-    }
-    // 3: Simulate stars, Write cqe now
-    uint32_t cqId = g_sqCqInfo[devId][sqId].cqId;
-
-    uint32_t streamId = sqeHead->rt_stream_id;
-    streamId &= 0x7FFFU;
-    uint32_t taskId = sqeHead->task_id;
-    uint8_t sqeType = sqe->commonSqe.sqeHeader.type;
-    g_sqCqInfo[devId][sqId].streamId = streamId;
-    g_sqCqInfo[devId][sqId].taskId = taskId;
+    const uint32_t cqId = g_sqCqInfo[devId][sqId].cqId;
     std::lock_guard<std::mutex> lock1(g_logicCqReportMutex);
-    rtCqReport_t reportInfo;
-    reportInfo.streamId = streamId;
-    reportInfo.taskId = taskId;
-    reportInfo.sqId = sqId;
-    reportInfo.sqHead = g_sqCqInfo[devId][sqId].sqHead;
-    reportInfo.errorCode = 0;
-    reportInfo.errorType = 0;
-    g_logicCqReport[devId][cqId].push(reportInfo);
+    // A multi-SQE task can request its completion report on a trailing SQE.
+    for (uint32_t i = 0U; i < sqe_num; ++i) {
+        const auto& sqeHead = sqe[i].commonSqe.sqeHeader;
+        if (sqeHead.wr_cqe == 0U) {
+            continue;
+        }
+        const uint32_t streamId = sqeHead.rt_stream_id & 0x7FFFU;
+        const uint32_t taskId = sqeHead.task_id;
+        g_sqCqInfo[devId][sqId].streamId = streamId;
+        g_sqCqInfo[devId][sqId].taskId = taskId;
+        rtCqReport_t reportInfo = {};
+        reportInfo.streamId = streamId;
+        reportInfo.taskId = taskId;
+        reportInfo.sqId = sqId;
+        reportInfo.sqHead = (head - sqe_num + i + 1U) % MAX_SQCQ_NUM;
+        g_logicCqReport[devId][cqId].push(reportInfo);
+    }
 
     return DRV_ERROR_NONE;
 }

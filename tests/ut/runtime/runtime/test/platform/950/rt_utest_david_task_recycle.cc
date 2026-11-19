@@ -834,6 +834,37 @@ TEST_F(DavidTaskRecycleTest, FinishedTaskReclaim)
     ((Runtime*)Runtime::Instance())->DeviceRelease(device);
 }
 
+TEST_F(DavidTaskRecycleTest, AdjustRecycleTaskIdWaitsForTimestampPlaceholder)
+{
+    rtStream_t streamHandle = nullptr;
+    ASSERT_EQ(rtStreamCreate(&streamHandle, 0), RT_ERROR_NONE);
+    Stream* const stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
+    ASSERT_NE(stream, nullptr);
+    TaskResManageDavid* const taskRes = static_cast<TaskResManageDavid*>(stream->taskResMang_);
+    ASSERT_NE(taskRes, nullptr);
+    taskRes->ResetTaskRes();
+
+    uint32_t pos = UINT32_MAX;
+    TaskInfo* task = nullptr;
+    ASSERT_EQ(taskRes->AllocTaskInfoAndPos(2U, pos, &task), RT_ERROR_NONE);
+    ASSERT_NE(task, nullptr);
+    task->stream = stream;
+    task->type = TS_TASK_TYPE_MEM_WRITE_VALUE;
+    task->sqeNum = 2U;
+    task->u.memWriteValueTask.event = nullptr;
+    task->u.memWriteValueTask.ownedEventId = INVALID_EVENT_ID;
+    task->u.memWriteValueTask.hasTimestamp = 1U;
+
+    EXPECT_EQ(AdjustRecycleTaskID(stream, task->id, static_cast<uint16_t>(pos)), RT_ERROR_INVALID_VALUE);
+    task->u.memWriteValueTask.hasTimestamp = 0U;
+    EXPECT_EQ(AdjustRecycleTaskID(stream, task->id, static_cast<uint16_t>(pos)), RT_ERROR_NONE);
+    task->u.memWriteValueTask.hasTimestamp = 1U;
+    EXPECT_EQ(
+        AdjustRecycleTaskID(stream, task->id, static_cast<uint16_t>((pos + 1U) % stream->GetSqDepth())), RT_ERROR_NONE);
+    taskRes->ResetTaskRes();
+    EXPECT_EQ(rtStreamDestroy(streamHandle), RT_ERROR_NONE);
+}
+
 TEST_F(DavidTaskRecycleTest, ProcReport)
 {
     Device* device = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);

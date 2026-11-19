@@ -82,12 +82,14 @@ rtError_t EvtRecordSoftwareMode(Event* const evt, Stream* const stm)
     Device* const dev = stm->Device_();
     error = dev->AllocExpandingPoolEvent(&eventAddr, &newEventId);
     ERROR_RETURN(
-        error, "Failed to capture address, deviceId=%u, tsId=%u, retCode=%#x", dev->Id_(), dev->DevGetTsId(),
+        error, "Failed to alloc address, deviceId=%u, tsId=%u, retCode=%#x", dev->Id_(), dev->DevGetTsId(),
         static_cast<uint32_t>(error));
     uint32_t pos = 0xFFFFU;
     Stream* dstStm = stm;
     stm->StreamLock();
-    tsk = stm->AllocTask(nullptr, TS_TASK_TYPE_DAVID_EVENT_RECORD, error);
+    const bool hasTimestamp = IsTimestampRequired(davidEvt, stm);
+    const uint32_t sqeNum = hasTimestamp ? 2U : 1U;
+    tsk = stm->AllocTask(nullptr, TS_TASK_TYPE_DAVID_EVENT_RECORD, error, sqeNum);
     COND_PROC_RETURN_ERROR_MSG_INNER(tsk == nullptr, error, dev->FreeExpandingPoolEvent(newEventId);
                                      stm->StreamUnLock();, "Failed to allocate task, stream_id=%d, retCode=%#x.",
                                                          stm->Id_(), static_cast<uint32_t>(error));
@@ -105,6 +107,8 @@ rtError_t EvtRecordSoftwareMode(Event* const evt, Stream* const stm)
         tsk->needPostProc = true; // starsv2使用此属性判断任务结束后是否需要走uninit流程
         davidEvt->EventIdCountAdd(newEventId);
         memWriteValueTask->ownedEventId = newEventId;
+        memWriteValueTask->hasTimestamp = hasTimestamp ? 1U : 0U;
+        tsk->isCqeNeedConcern = hasTimestamp ? 1U : 0U;
     }
 
     tsk->stmArgPos = (static_cast<DavidStream*>(dstStm))->GetArgPos();
@@ -118,7 +122,7 @@ rtError_t EvtRecordSoftwareMode(Event* const evt, Stream* const stm)
     davidEvt->SetRecord(true);
     RT_LOG(
         RT_LOG_INFO,
-        "capture event task submit success, device_id=%u, src_stream_id=%d->dst_stream_id=%d, task_id=%hu, "
+        "software-mode event task submit success, device_id=%u, src_stream_id=%d->dst_stream_id=%d, task_id=%hu, "
         "event_id=%d, task_pos=%u",
         dev->Id_(), stm->Id_(), dstStm->Id_(), tsk->id, newEventId, pos);
     return error;

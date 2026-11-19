@@ -282,6 +282,29 @@ rtError_t UpdateD2HTaskInit(
     return RT_ERROR_NONE;
 }
 
+bool IsSoftwareEventRecordTask(const TaskInfo* taskInfo)
+{
+    if (taskInfo->type != TS_TASK_TYPE_MEM_WRITE_VALUE) {
+        return false;
+    }
+
+    const MemWriteValueTaskInfo& task = taskInfo->u.memWriteValueTask;
+    return (task.event != nullptr) && (task.ownedEventId != INVALID_EVENT_ID);
+}
+
+bool IsTimeLineSoftwareEventRecordTask(const TaskInfo* taskInfo)
+{
+    return IsSoftwareEventRecordTask(taskInfo) && (taskInfo->u.memWriteValueTask.hasTimestamp != 0U);
+}
+
+bool IsTimestampRequired(const Event* event, const Stream* stream)
+{
+    if ((stream->GetCaptureStream() != nullptr) || stream->GetBindFlag()) {
+        return false;
+    }
+    return (event->GetEventFlag() & RT_EVENT_TIME_LINE) != 0U;
+}
+
 #if F_DESC("MemWriteValueTask")
 rtError_t MemWriteValueTaskInit(TaskInfo* taskInfo, const void* const devAddr, const uint64_t value)
 {
@@ -291,6 +314,8 @@ rtError_t MemWriteValueTaskInit(TaskInfo* taskInfo, const void* const devAddr, c
     memWriteValueTask->ownedEventId = INVALID_EVENT_ID;
     memWriteValueTask->devAddr = RtPtrToValue(devAddr);
     memWriteValueTask->value = value;
+    memWriteValueTask->timestamp = UINT64_MAX;
+    memWriteValueTask->hasTimestamp = 0U;
 
     return RT_ERROR_NONE;
 }
@@ -305,6 +330,25 @@ void MemWriteTaskUnInit(TaskInfo* taskInfo)
     }
 }
 
+void DoCompleteSuccessForMemWriteValueTask(TaskInfo* taskInfo, const uint32_t devId)
+{
+    DoCompleteSuccess(taskInfo, devId);
+    const MemWriteValueTaskInfo& task = taskInfo->u.memWriteValueTask;
+    if ((taskInfo->errorCode == static_cast<uint32_t>(RT_ERROR_NONE)) && (task.event != nullptr) &&
+        (task.ownedEventId != INVALID_EVENT_ID)) {
+        RT_LOG(
+            RT_LOG_INFO, "device_id=%u, stream_id=%d, task_id=%hu, event_id=%d, timestamp=%#" PRIx64, devId,
+            taskInfo->stream->Id_(), taskInfo->id, task.ownedEventId, task.timestamp);
+        task.event->RecordComplete(taskInfo, task.timestamp, UINT64_MAX);
+    }
+
+    MemWriteValueTaskInfo* const memWriteValueTask = &taskInfo->u.memWriteValueTask;
+    const int32_t eventId = memWriteValueTask->ownedEventId;
+    memWriteValueTask->ownedEventId = INVALID_EVENT_ID;
+    if ((memWriteValueTask->event != nullptr) && (eventId != INVALID_EVENT_ID)) {
+        TryToFreeEventIdAndDestroyEvent(&memWriteValueTask->event, eventId, false);
+    }
+}
 #endif
 
 #if F_DESC("MemWaitValueTask")

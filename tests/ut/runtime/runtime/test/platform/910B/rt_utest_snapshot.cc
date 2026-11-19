@@ -85,6 +85,7 @@ namespace {
 void* g_eventPoolAllocAddr = nullptr;
 void* g_eventPoolHostAddr = nullptr;
 rtMemType_t g_eventPoolExpectedMemType = RT_MEMORY_DEFAULT;
+uint32_t g_eventPoolTargetFreeCount = 0U;
 
 rtError_t EventPoolDevMemAllocStub(
     Driver*, void** dptr, uint64_t, rtMemType_t type, uint32_t, DevMemBackupType, const DevMemAllocConfig*)
@@ -97,6 +98,23 @@ rtError_t EventPoolDevMemAllocStub(
 rtError_t EventPoolPcieHostRegisterStub(Driver*, void*, uint64_t, uint32_t, void*& outAddr)
 {
     outAddr = g_eventPoolHostAddr;
+    return RT_ERROR_NONE;
+}
+
+rtError_t EventPoolDevMemFreeStub(Driver*, void* dptr, uint32_t)
+{
+    if (dptr == g_eventPoolAllocAddr) {
+        g_eventPoolTargetFreeCount++;
+    }
+    return RT_ERROR_NONE;
+}
+
+rtError_t EventPoolMemSetSyncStub(Driver*, const void* devPtr, uint64_t, uint32_t value, uint64_t count)
+{
+    EXPECT_EQ(value, 0U);
+    if (count == sizeof(uint8_t)) {
+        *const_cast<uint8_t*>(static_cast<const uint8_t*>(devPtr)) = 0U;
+    }
     return RT_ERROR_NONE;
 }
 } // namespace
@@ -252,6 +270,67 @@ TEST_F(SnapshotTest, EventPoolPcieBarUnsupportedKeepsDdrMemory)
     EXPECT_EQ(addr, buffer);
     EventExpandingPool::FreeBufferForEvent(addr, &pool);
     GlobalMockObject::verify();
+}
+
+TEST_F(SnapshotTest, FreeEventIdClearsValueBeforeReturningId)
+{
+    enum class Case { Bar, Device, ClearFailure, InvalidId };
+    for (const Case test : {Case::Bar, Case::Device, Case::ClearFailure, Case::InvalidId}) {
+        SCOPED_TRACE(static_cast<int>(test));
+        uint8_t buffer[16] = {};
+        const bool bar = test == Case::Bar || test == Case::InvalidId;
+        const bool retained = test == Case::ClearFailure || test == Case::InvalidId;
+        uint32_t capability = bar ? RT_CAPABILITY_SUPPORT : RT_CAPABILITY_NOT_SUPPORT;
+        g_eventPoolAllocAddr = buffer;
+        g_eventPoolHostAddr = buffer;
+        g_eventPoolExpectedMemType = bar ? RT_MEMORY_P2P_HBM : RT_MEMORY_DDR;
+        g_eventPoolTargetFreeCount = 0U;
+        MOCKER_CPP_VIRTUAL(device_->Driver_(), &Driver::CheckSupportPcieBarCopy)
+            .expects(once())
+            .with(mockcpp::any(), outBound(capability), eq(false))
+            .will(returnValue(RT_ERROR_NONE));
+        {
+            EventExpandingPool pool(device_);
+            MOCKER_CPP_VIRTUAL(device_->Driver_(), &Driver::DevMemAllocWithBackupFlag)
+                .stubs()
+                .will(invoke(EventPoolDevMemAllocStub));
+            MOCKER_CPP_VIRTUAL(device_->Driver_(), &Driver::DevMemFree).stubs().will(invoke(EventPoolDevMemFreeStub));
+            if (bar) {
+                MOCKER_CPP_VIRTUAL(device_->Driver_(), &Driver::PcieHostRegister)
+                    .expects(once())
+                    .will(invoke(EventPoolPcieHostRegisterStub));
+                MOCKER_CPP_VIRTUAL(device_->Driver_(), &Driver::PcieHostUnRegister)
+                    .expects(once())
+                    .will(returnValue(RT_ERROR_NONE));
+                MOCKER_CPP_VIRTUAL(device_->Driver_(), &Driver::MemSetSync)
+                    .expects(once())
+                    .will(returnValue(RT_ERROR_NONE));
+            } else {
+                MOCKER_CPP_VIRTUAL(device_->Driver_(), &Driver::PcieHostRegister).expects(never());
+                MOCKER_CPP_VIRTUAL(device_->Driver_(), &Driver::PcieHostUnRegister).expects(never());
+                if (test == Case::ClearFailure) {
+                    MOCKER_CPP_VIRTUAL(device_->Driver_(), &Driver::MemSetSync)
+                        .expects(exactly(2))
+                        .will(returnValue(RT_ERROR_NONE))
+                        .then(returnValue(RT_ERROR_DRV_ERR));
+                } else {
+                    MOCKER_CPP_VIRTUAL(device_->Driver_(), &Driver::MemSetSync)
+                        .expects(exactly(2))
+                        .will(invoke(EventPoolMemSetSyncStub));
+                }
+            }
+            void* addr = nullptr;
+            int32_t id = INVALID_EVENT_ID;
+            ASSERT_EQ(pool.AllocAndInsertEvent(&addr, &id), RT_ERROR_NONE);
+            *static_cast<uint8_t*>(addr) = 1U;
+            pool.FreeEventId(test == Case::InvalidId ? INT32_MIN : id);
+            EXPECT_EQ(*static_cast<uint8_t*>(addr), retained ? 1U : 0U);
+            EXPECT_EQ(pool.eventAllocator_[0]->GetItemById(0, false), retained ? addr : nullptr);
+            EXPECT_EQ(pool.eventIdCount_, EVENT_INIT_VALUE + (retained ? 1 : 0));
+            EXPECT_EQ(g_eventPoolTargetFreeCount, 0U);
+        }
+        GlobalMockObject::verify();
+    }
 }
 
 TEST_F(SnapshotTest, EventPoolRejectsDifferentPcieHostAddress)

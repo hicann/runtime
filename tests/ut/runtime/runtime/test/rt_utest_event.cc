@@ -33,6 +33,8 @@
 using namespace testing;
 using namespace cce::runtime;
 
+static Event* g_externalSyncEvent = nullptr;
+
 static rtError_t CopyExternalEventValue(
     void* dst, uint64_t destMax, const void* src, uint64_t size, rtMemcpyKind_t kind, bool errShow, uint32_t devId)
 {
@@ -42,6 +44,11 @@ static rtError_t CopyExternalEventValue(
     UNUSED(devId);
     *static_cast<uint8_t*>(dst) = *static_cast<const uint8_t*>(src);
     EXPECT_EQ(size, sizeof(uint8_t));
+    if (g_externalSyncEvent != nullptr) {
+        RecordTaskInfo record = g_externalSyncEvent->GetLatestRecord();
+        record.state = RECORDED;
+        g_externalSyncEvent->UpdateLatestRecord(record);
+    }
     return RT_ERROR_NONE;
 }
 
@@ -274,6 +281,32 @@ TEST_F(EventTest, SynchronizeExternalStatusReturnsTimeoutWhenDeviceValueStaysZer
     EXPECT_EQ(eventObj->Synchronize(1), RT_ERROR_EVENT_SYNC_TIMEOUT);
     EXPECT_TRUE(eventObj->isEventSyncTimeout_);
 
+    eventObj->SetEventAddr(nullptr);
+    EXPECT_EQ(rtEventDestroy(event), RT_ERROR_NONE);
+}
+
+TEST_F(EventTest, SynchronizeExternalStatusReturnsWhenRecordCompletes)
+{
+    rtEvent_t event = nullptr;
+    ASSERT_EQ(rtEventCreate(&event), RT_ERROR_NONE);
+    Event* eventObj = rt_ut::UnwrapOrNull<Event>(event);
+    ASSERT_NE(eventObj, nullptr);
+
+    uint8_t recordValue = 0U;
+    ((Runtime*)Runtime::Instance())->SetDisableThread(true);
+    eventObj->SetRecord(true);
+    eventObj->latestRecord_.state = RECORDING;
+    eventObj->SetRecordFlag(RT_EVENT_RECORD_EXTERNAL);
+    eventObj->SetEventAddr(&recordValue);
+    g_externalSyncEvent = eventObj;
+
+    MOCKER_CPP_VIRTUAL(eventObj->Device_()->Driver_(), &Driver::MemCopySync)
+        .expects(once())
+        .will(invoke(CopyExternalEventValue));
+
+    EXPECT_EQ(eventObj->Synchronize(-1), RT_ERROR_NONE);
+
+    g_externalSyncEvent = nullptr;
     eventObj->SetEventAddr(nullptr);
     EXPECT_EQ(rtEventDestroy(event), RT_ERROR_NONE);
 }

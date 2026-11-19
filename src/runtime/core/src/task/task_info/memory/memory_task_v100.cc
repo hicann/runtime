@@ -521,6 +521,32 @@ void ConstructSqeForMemWriteValueTask(TaskInfo* taskInfo, void* const sqeBuffer,
         RT_LOG_INFO, "MemWriteValueTask stream_id=%d, task_id=%hu, devAddr=%#" PRIx64 ", value:%#" PRIx64,
         stream->Id_(), taskInfo->id, devAddr, value);
 }
+
+static void ConstructSqeForMemWriteValueTaskWithTimestamp(
+    TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
+{
+    ConstructSqeForMemWriteValueTask(taskInfo, sqeBuffer, sqeInfo);
+    Stream* const stream = taskInfo->stream;
+    const MemWriteValueTaskInfo& task = taskInfo->u.memWriteValueTask;
+    if (IsSoftwareEventRecordTask(taskInfo)) {
+        task.event->PublishSoftwareRecordResource(
+            RtPtrToPtr<void*>(task.devAddr), task.ownedEventId, stream->Id_(), taskInfo->id, 0U);
+        if (task.hasTimestamp != 0U) {
+            rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+            command[0].writeValueSqe.header.wr_cqe = 0U;
+            ConstructSqeForNopTask(taskInfo, &command[1], sqeInfo);
+            command[1].phSqe.wr_cqe = 1U;
+        }
+    }
+}
+
+void SetStarsResultForMemWriteValueTask(TaskInfo* taskInfo, const rtCqReport_t& logicCq)
+{
+    SetStarsResultCommon(taskInfo, logicCq);
+    if (((logicCq.errorType & RT_STARS_EXIST_ERROR) == 0U) && IsTimeLineSoftwareEventRecordTask(taskInfo)) {
+        taskInfo->u.memWriteValueTask.timestamp = logicCq.u1.timeStamp;
+    }
+}
 #endif
 
 #if F_DESC("MemWaitValueTask")
@@ -987,13 +1013,13 @@ static bool MemoryTaskRegister()
     };
     TaskFuncSingle memWriteValueFuncs = {
         .toCommandFunc = nullptr,
-        .toSqeFunc = &ConstructSqeForMemWriteValueTask,
-        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .toSqeFunc = &ConstructSqeForMemWriteValueTaskWithTimestamp,
+        .doCompleteSuccFunc = &DoCompleteSuccessForMemWriteValueTask,
         .taskUnInitFunc = &MemWriteTaskUnInit,
         .waitAsyncCpCompleteFunc = nullptr,
         .printErrorInfoFunc = &PrintErrorInfoCommon,
         .setResultFunc = &SetResultCommon,
-        .setStarsResultFunc = &SetStarsResultCommon,
+        .setStarsResultFunc = &SetStarsResultForMemWriteValueTask,
     };
     TaskFuncSingle memWaitValueFuncs = {
         .toCommandFunc = nullptr,

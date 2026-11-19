@@ -591,6 +591,8 @@ struct MemWriteValueTaskInfo {
     uint16_t awSize;
     // 当前任务持有的Software Event ID
     int32_t ownedEventId;
+    uint64_t timestamp;
+    uint8_t hasTimestamp;
 };
 
 struct SqeUpdateTaskInfo {

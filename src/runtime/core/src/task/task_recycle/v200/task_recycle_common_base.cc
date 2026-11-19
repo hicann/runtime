@@ -219,7 +219,12 @@ rtError_t AdjustRecycleTaskID(const Stream* const stm, const uint32_t endTaskId,
     uint16_t nextTaskId = 0;
     if (stm->taskResMang_->GetResTail() != nextPos) {
         TaskInfo* curentTaskInfo = stm->taskResMang_->GetTaskInfo(recyclePos);
-        if ((curentTaskInfo != nullptr) && (curentTaskInfo->type == TS_TASK_TYPE_MEM_WAIT_VALUE)) {
+        const bool isMemWaitValue =
+            (curentTaskInfo != nullptr) && (curentTaskInfo->type == TS_TASK_TYPE_MEM_WAIT_VALUE);
+        const bool isTimestampMemWrite = (curentTaskInfo != nullptr) &&
+                                         (curentTaskInfo->type == TS_TASK_TYPE_MEM_WRITE_VALUE) &&
+                                         (curentTaskInfo->u.memWriteValueTask.hasTimestamp != 0U);
+        if (isMemWaitValue || isTimestampMemWrite) {
             TaskInfo* nextTaskInfo = stm->taskResMang_->GetTaskInfo(nextPos);
             if ((nextTaskInfo != nullptr)) {
                 nextTaskId = nextTaskInfo->id;

@@ -50,6 +50,7 @@ public:
     void PublishSoftwareRecordResource(
         void* const eventAddr, int32_t eventId, int32_t streamId, uint32_t taskId, uint64_t cqeNo) override;
     bool WaitSendCheck(const Stream* const stm, int32_t& eventId) override;
+    bool IsRecordCompleted() const override;
     bool TryFreeEventIdAndCheckCanBeDelete(const int32_t id, bool isNeedDestroy) override;
     bool DavidUpdateRecordMapAndDestroyEvent(TaskInfo* taskInfo);
     bool DavidUpdateWaitMapAndDestroyEvent(TaskInfo* taskInfo);

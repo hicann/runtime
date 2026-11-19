@@ -411,31 +411,103 @@ TEST_F(ExternalEventTaskTest910B, ExternalWaitLaunchRetainsRecordedProducerOnly)
     EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
 }
 
-TEST_F(ExternalEventTaskTest910B, NormalRecordSoftwareEventUsesMemWriteValueTask)
+TEST_F(ExternalEventTaskTest910B, SoftwareRecordAllocatesExpectedSqesAndOwnsEventId)
 {
     rtStream_t stream = nullptr;
-    rtEvent_t event = nullptr;
     ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
-    ASSERT_EQ(rtEventCreateExWithFlag(&event, RT_EVENT_DEFAULT), RT_ERROR_NONE);
+    Stream* const stm = rt_ut::UnwrapOrNull<Stream>(stream);
+    ASSERT_NE(stm, nullptr);
+    const struct {
+        uint32_t flags;
+        uint32_t sqes;
+        uint8_t hasTimestamp;
+    } cases[] = {{RT_EVENT_WITH_FLAG, 1U, 0U}, {RT_EVENT_TIME_LINE, 2U, 1U}, {RT_EVENT_DEFAULT, 2U, 1U}};
+    for (const auto& test : cases) {
+        SCOPED_TRACE(test.flags);
+        rtEvent_t handle = nullptr;
+        ASSERT_EQ(rtEventCreateExWithFlag(&handle, test.flags), RT_ERROR_NONE);
+        Event* const event = rt_ut::UnwrapOrNull<Event>(handle);
+        ASSERT_NE(event, nullptr);
+        ASSERT_EQ(event->TrySwitchToSoftwareMode(), RT_ERROR_NONE);
+        TaskInfo task = {};
+        InitByStream(&task, stm);
+        task.sqeNum = static_cast<uint8_t>(test.sqes);
+        // Intercept submission so task inspection cannot race asynchronous recycling.
+        MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
+                       &Stream::AllocTask))
+            .expects(once())
+            .with(mockcpp::any(), eq(TS_TASK_TYPE_EVENT_RECORD), mockcpp::any(), eq(test.sqes), mockcpp::any())
+            .will(returnValue(&task));
+        MOCKER_CPP_VIRTUAL(stm->Device_(), &Device::SubmitTask)
+            .expects(once())
+            .with(eq(&task), mockcpp::any(), mockcpp::any())
+            .will(returnValue(RT_ERROR_NONE));
+        ASSERT_EQ(rtEventRecord(handle, stream), RT_ERROR_NONE);
+        EXPECT_EQ(task.type, TS_TASK_TYPE_MEM_WRITE_VALUE);
+        EXPECT_EQ(task.sqeNum, test.sqes);
+        EXPECT_EQ(task.u.memWriteValueTask.hasTimestamp, test.hasTimestamp);
+        // Submission is mocked; emulate final task ID assignment and SQE construction.
+        task.id = 1U;
+        rtStarsSqe_t sqes[2] = {};
+        ToConstructSqe(&task, sqes, TaskSqeInfo{0ULL, 0ULL});
+        EXPECT_EQ(event->GetLatestRecord().taskId, task.id);
+        ASSERT_NE(event->GetEventAddr(), nullptr);
+        EXPECT_EQ(task.u.memWriteValueTask.devAddr, RtPtrToValue(event->GetEventAddr()));
+        EXPECT_EQ(task.u.memWriteValueTask.value, 1U);
+        EXPECT_EQ(task.u.memWriteValueTask.awSize, RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT);
+        EXPECT_EQ(task.u.memWriteValueTask.ownedEventId, event->EventId_());
+        ASSERT_EQ(event->idMap_.count(event->EventId_()), 1U);
+        EXPECT_EQ(event->idMap_.at(event->EventId_()), 1U);
+        GlobalMockObject::verify();
+        DoCompleteSuccessForMemWriteValueTask(&task, stm->Device_()->Id_());
+        EXPECT_EQ(event->GetLatestRecord().state, RECORDED);
+        EXPECT_EQ(task.u.memWriteValueTask.ownedEventId, INVALID_EVENT_ID);
+        EXPECT_TRUE(event->idMap_.empty());
+        MemWriteTaskUnInit(&task);
+        EXPECT_EQ(rtEventDestroy(handle), RT_ERROR_NONE);
+    }
+    EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
+}
 
-    Stream* streamObj = rt_ut::UnwrapOrNull<Stream>(stream);
-    Event* eventObj = rt_ut::UnwrapOrNull<Event>(event);
+TEST_F(ExternalEventTaskTest910B, TimelineMemWriteValueBuildsWriteValueAndCqePlaceholder)
+{
+    rtStream_t stream = nullptr;
+    ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
+    Stream* const streamObj = rt_ut::UnwrapOrNull<Stream>(stream);
     ASSERT_NE(streamObj, nullptr);
-    ASSERT_NE(eventObj, nullptr);
-    ASSERT_EQ(eventObj->TrySwitchToSoftwareMode(), RT_ERROR_NONE);
 
-    ASSERT_EQ(rtEventRecord(event, stream), RT_ERROR_NONE);
-    TaskInfo* recordTask = streamObj->Device_()->GetTaskFactory()->GetTask(
-        streamObj->Id_(), static_cast<uint16_t>(streamObj->GetLastTaskId()));
-    ASSERT_NE(recordTask, nullptr);
-    EXPECT_EQ(recordTask->type, TS_TASK_TYPE_MEM_WRITE_VALUE);
-    ASSERT_NE(eventObj->GetEventAddr(), nullptr);
-    EXPECT_EQ(recordTask->u.memWriteValueTask.value, 1U);
-    EXPECT_EQ(recordTask->u.memWriteValueTask.awSize, RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT);
-    EXPECT_EQ(recordTask->u.memWriteValueTask.ownedEventId, eventObj->EventId_());
-    EXPECT_EQ(eventObj->idMap_[eventObj->EventId_()], 1U);
+    Event timelineEvent(streamObj->Device_(), RT_EVENT_TIME_LINE, nullptr);
+    TaskInfo taskInfo = {};
+    InitByStream(&taskInfo, streamObj);
+    taskInfo.type = TS_TASK_TYPE_MEM_WRITE_VALUE;
+    taskInfo.u.memWriteValueTask.devAddr = 0x1000ULL;
+    taskInfo.u.memWriteValueTask.awSize = RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT;
+    taskInfo.u.memWriteValueTask.event = &timelineEvent;
+    taskInfo.u.memWriteValueTask.ownedEventId = 17;
+    taskInfo.u.memWriteValueTask.hasTimestamp = 1U;
+    rtStarsSqe_t sqes[2] = {};
 
-    EXPECT_EQ(rtEventDestroy(event), RT_ERROR_NONE);
+    for (const uint64_t addr : {0ULL, 0x1000ULL}) {
+        SCOPED_TRACE(addr);
+        taskInfo.u.memWriteValueTask.devAddr = addr;
+        EXPECT_EQ(GetSendSqeNum(&taskInfo), 2U);
+        ToConstructSqe(&taskInfo, sqes, TaskSqeInfo{0ULL, 0ULL});
+        EXPECT_EQ(
+            sqes[0].writeValueSqe.header.type,
+            addr == 0ULL ? RT_STARS_SQE_TYPE_INVALID : RT_STARS_SQE_TYPE_WRITE_VALUE);
+        EXPECT_EQ(sqes[0].writeValueSqe.header.wr_cqe, 0U);
+        EXPECT_EQ(sqes[1].phSqe.type, RT_STARS_SQE_TYPE_PLACE_HOLDER);
+        EXPECT_EQ(sqes[1].phSqe.wr_cqe, 1U);
+    }
+
+    taskInfo.u.memWriteValueTask.ownedEventId = INVALID_EVENT_ID;
+    EXPECT_EQ(GetSendSqeNum(&taskInfo), 1U);
+    taskInfo.u.memWriteValueTask.ownedEventId = 17;
+    taskInfo.u.memWriteValueTask.hasTimestamp = 0U;
+    EXPECT_EQ(GetSendSqeNum(&taskInfo), 1U);
+    taskInfo.u.memWriteValueTask.event = nullptr;
+    EXPECT_EQ(GetSendSqeNum(&taskInfo), 1U);
+
     EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
 }
 
@@ -453,75 +525,182 @@ TEST_F(ExternalEventTaskTest910B, NormalWaitSoftwareEventUsesMemWaitValueTask)
     ASSERT_NE(eventObj, nullptr);
     EnableSoftwareRecord(eventObj, &recordValue, 7);
 
+    // This test checks task construction, not asynchronous HAL execution/recycling.
+    TaskInfo taskInfo = {};
+    InitByStream(&taskInfo, streamObj);
+    constexpr uint32_t sqeNum = MEM_WAIT_SQE_NUM;
+    taskInfo.sqeNum = static_cast<uint8_t>(sqeNum);
+    MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
+                   &Stream::AllocTask))
+        .expects(once())
+        .with(mockcpp::any(), eq(TS_TASK_TYPE_MEM_WAIT_VALUE), mockcpp::any(), eq(sqeNum), mockcpp::any())
+        .will(returnValue(&taskInfo));
+    MOCKER_CPP_VIRTUAL(streamObj->Device_(), &Device::SubmitTask)
+        .expects(once())
+        .with(eq(&taskInfo), mockcpp::any(), mockcpp::any())
+        .will(returnValue(RT_ERROR_NONE));
+
     ASSERT_EQ(rtStreamWaitEvent(stream, event), RT_ERROR_NONE);
-    TaskInfo* waitTask = streamObj->Device_()->GetTaskFactory()->GetTask(
-        streamObj->Id_(), static_cast<uint16_t>(streamObj->GetLastTaskId()));
-    ASSERT_NE(waitTask, nullptr);
+    TaskInfo* const waitTask = &taskInfo;
     EXPECT_EQ(waitTask->type, TS_TASK_TYPE_MEM_WAIT_VALUE);
     EXPECT_EQ(waitTask->u.memWaitValueTask.devAddr, RtPtrToValue(eventObj->GetEventAddr()));
     EXPECT_EQ(waitTask->u.memWaitValueTask.value, 1U);
     EXPECT_EQ(waitTask->u.memWaitValueTask.awSize, RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT);
     EXPECT_EQ(waitTask->u.memWaitValueTask.ownedEventId, 7);
-    EXPECT_EQ(eventObj->idMap_[7], 1U);
+    ASSERT_EQ(eventObj->idMap_.count(7), 1U);
+    EXPECT_EQ(eventObj->idMap_.at(7), 1U);
+
+    GlobalMockObject::verify();
+    DoCompleteSuccessForMemWaitValueTask(waitTask, streamObj->Device_()->Id_());
+    EXPECT_EQ(waitTask->u.memWaitValueTask.ownedEventId, 7);
+    MemWaitTaskUnInit(waitTask);
+    EXPECT_EQ(waitTask->u.memWaitValueTask.ownedEventId, INVALID_EVENT_ID);
+    EXPECT_TRUE(eventObj->idMap_.empty());
+    MemWaitTaskUnInit(waitTask);
+    EXPECT_TRUE(eventObj->idMap_.empty());
+    // The event value is a stack buffer, not an allocation from the expanding pool.
+    eventObj->SetEventAddr(nullptr);
+    eventObj->SetEventId(INVALID_EVENT_ID);
 
     EXPECT_EQ(rtEventDestroy(event), RT_ERROR_NONE);
     EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
 }
 
-TEST_F(ExternalEventTaskTest910B, ExternalWaitUninitReleasesOwnedEventId)
+TEST_F(ExternalEventTaskTest910B, WaitUnInitReleasesCurrentAndSharedEventReferences)
 {
-    TaskInfo taskInfo = {};
-    rtStream_t stream = nullptr;
-    Event event(nullptr, 0, nullptr);
-    constexpr int32_t ownedEventId = 65537;
-    ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
-    Stream* streamObj = rt_ut::UnwrapOrNull<Stream>(stream);
-    ASSERT_NE(streamObj, nullptr);
-
-    event.device_ = streamObj->Device_();
-    event.EventIdCountAdd(ownedEventId);
-    event.PublishSoftwareRecordResource(nullptr, ownedEventId, streamObj->Id_(), 0U, 0U);
-    InitByStream(&taskInfo, streamObj);
-    taskInfo.type = TS_TASK_TYPE_MEM_WAIT_VALUE;
-    taskInfo.u.memWaitValueTask.event = &event;
-    taskInfo.u.memWaitValueTask.ownedEventId = ownedEventId;
-    DoCompleteSuccessForMemWaitValueTask(&taskInfo, streamObj->Device_()->Id_());
-
-    EXPECT_EQ(taskInfo.u.memWaitValueTask.ownedEventId, ownedEventId);
-    EXPECT_EQ(event.idMap_[ownedEventId], 1U);
-    MemWaitTaskUnInit(&taskInfo);
-    EXPECT_EQ(taskInfo.u.memWaitValueTask.ownedEventId, INVALID_EVENT_ID);
-    EXPECT_TRUE(event.idMap_.empty());
-    event.device_ = nullptr;
-    EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
+    rtStream_t handle = nullptr;
+    ASSERT_EQ(rtStreamCreate(&handle, 0), RT_ERROR_NONE);
+    Stream* const stream = rt_ut::UnwrapOrNull<Stream>(handle);
+    ASSERT_NE(stream, nullptr);
+    for (const bool current : {true, false}) {
+        SCOPED_TRACE(current);
+        Event event(stream->Device_(), RT_EVENT_DEFAULT, nullptr);
+        event.SoftwareModeEnable();
+        constexpr int32_t id = 65537;
+        const uint32_t references = current ? 1U : 2U;
+        TaskInfo tasks[2] = {};
+        for (uint32_t i = 0; i < references; ++i) {
+            InitByStream(&tasks[i], stream);
+            tasks[i].type = TS_TASK_TYPE_MEM_WAIT_VALUE;
+            tasks[i].u.memWaitValueTask.event = &event;
+            tasks[i].u.memWaitValueTask.ownedEventId = id;
+            event.EventIdCountAdd(id);
+        }
+        if (current) {
+            event.PublishSoftwareRecordResource(nullptr, id, stream->Id_(), 0U, 0U);
+        }
+        ASSERT_EQ(event.EventId_(), current ? id : INVALID_EVENT_ID);
+        MOCKER_CPP_VIRTUAL(stream->Device_(), &Device::FreeExpandingPoolEvent).expects(never());
+        for (uint32_t i = 0; i < references; ++i) {
+            if (i == 1U) {
+                GlobalMockObject::verify();
+                MOCKER_CPP_VIRTUAL(stream->Device_(), &Device::FreeExpandingPoolEvent).expects(once()).with(eq(id));
+            }
+            DoCompleteSuccessForMemWaitValueTask(&tasks[i], stream->Device_()->Id_());
+            EXPECT_EQ(tasks[i].u.memWaitValueTask.ownedEventId, id);
+            MemWaitTaskUnInit(&tasks[i]);
+            EXPECT_EQ(tasks[i].u.memWaitValueTask.ownedEventId, INVALID_EVENT_ID);
+            if (i + 1U < references) {
+                ASSERT_EQ(event.idMap_.count(id), 1U);
+                EXPECT_EQ(event.idMap_.at(id), references - i - 1U);
+            } else {
+                EXPECT_TRUE(event.idMap_.empty());
+            }
+            MemWaitTaskUnInit(&tasks[i]);
+        }
+        GlobalMockObject::verify();
+    }
+    EXPECT_EQ(rtStreamDestroy(handle), RT_ERROR_NONE);
 }
 
-TEST_F(ExternalEventTaskTest910B, MemWriteRegistrationReleasesPendingDestroyOnUninit)
+TEST_F(ExternalEventTaskTest910B, MemWriteCqeCompletionAndReferenceLifetime)
 {
+    rtStream_t handle = nullptr;
+    ASSERT_EQ(rtStreamCreate(&handle, 0), RT_ERROR_NONE);
+    Stream* const stream = rt_ut::UnwrapOrNull<Stream>(handle);
+    ASSERT_NE(stream, nullptr);
+    for (const uint32_t flags : {RT_EVENT_WITH_FLAG, RT_EVENT_TIME_LINE}) {
+        SCOPED_TRACE(flags);
+        for (const bool error : {false, true}) {
+            SCOPED_TRACE(error);
+            const uint32_t originalError = stream->GetErrCode();
+            const ScopeGuard restoreError([&]() { stream->SetErrCode(originalError); });
+            Event event(stream->Device_(), flags, nullptr);
+            event.SoftwareModeEnable();
+            TaskInfo task = {};
+            InitByStream(&task, stream);
+            ASSERT_EQ(MemWriteValueTaskInit(&task, nullptr, 1U), RT_ERROR_NONE);
+            task.type = TS_TASK_TYPE_MEM_WRITE_VALUE;
+            task.u.memWriteValueTask.event = &event;
+            task.u.memWriteValueTask.ownedEventId = 17;
+            task.u.memWriteValueTask.hasTimestamp = (flags == RT_EVENT_TIME_LINE) ? 1U : 0U;
+            event.EventIdCountAdd(17);
+            event.PublishSoftwareRecordResource(nullptr, 17, stream->Id_(), task.id, 0U);
+            rtCqReport_t report = {};
+            report.u1.timeStamp = 123U;
+            report.errorType = error ? RT_STARS_EXIST_ERROR : 0U;
+            report.errorCode = error ? TS_ERROR_END_OF_SEQUENCE : 0U;
+            auto setResult = g_taskFuncArrays[CHIP_910_B_93].setStarsResultFunc[task.type];
+            auto complete = g_taskFuncArrays[CHIP_910_B_93].doCompleteSuccFunc[task.type];
+            ASSERT_EQ(setResult, &SetStarsResultForMemWriteValueTask);
+            ASSERT_EQ(complete, &DoCompleteSuccessForMemWriteValueTask);
+            setResult(&task, report);
+            const uint64_t expected = !error && flags == RT_EVENT_TIME_LINE ? 123U : UINT64_MAX;
+            EXPECT_EQ(task.u.memWriteValueTask.timestamp, expected);
+            EXPECT_EQ(task.errorCode, error ? TS_ERROR_END_OF_SEQUENCE : 0U);
+            complete(&task, stream->Device_()->Id_());
+            EXPECT_EQ(event.TimeStamp(), expected);
+            if (!error) {
+                EXPECT_EQ(event.GetLatestRecord().state, RECORDED);
+            }
+            EXPECT_EQ(task.u.memWriteValueTask.ownedEventId, INVALID_EVENT_ID);
+            EXPECT_TRUE(event.idMap_.empty());
+            event.SetTimeStamp(UINT64_MAX);
+            complete(&task, stream->Device_()->Id_());
+            EXPECT_EQ(event.TimeStamp(), UINT64_MAX);
+            MemWriteTaskUnInit(&task);
+            EXPECT_TRUE(event.idMap_.empty());
+            task.u.memWriteValueTask.event = nullptr;
+            EXPECT_NO_THROW(complete(&task, stream->Device_()->Id_()));
+        }
+    }
+    EXPECT_EQ(rtStreamDestroy(handle), RT_ERROR_NONE);
+}
+
+TEST_F(ExternalEventTaskTest910B, MemWriteCompleteReleasesPendingDestroy)
+{
+    rtStream_t stream = nullptr;
+    ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
+    Stream* const streamObj = rt_ut::UnwrapOrNull<Stream>(stream);
+    ASSERT_NE(streamObj, nullptr);
     rtEvent_t eventHandle = nullptr;
     ASSERT_EQ(rtEventCreate(&eventHandle), RT_ERROR_NONE);
     Event* event = rt_ut::UnwrapOrNull<Event>(eventHandle);
     ASSERT_NE(event, nullptr);
     ASSERT_EQ(event->TrySwitchToSoftwareMode(), RT_ERROR_NONE);
     constexpr int32_t eventId = 41;
-    event->PublishSoftwareRecordResource(nullptr, eventId, 0, 0U, 0U);
+    event->PublishSoftwareRecordResource(nullptr, eventId, streamObj->Id_(), 0U, 0U);
     event->EventIdCountAdd(eventId);
     Event* owner = event;
     TryToFreeEventIdAndDestroyEvent(&owner, eventId, true);
     ASSERT_EQ(owner, event);
     TaskInfo task = {};
+    InitByStream(&task, streamObj);
+    ASSERT_EQ(MemWriteValueTaskInit(&task, nullptr, 1U), RT_ERROR_NONE);
     task.type = TS_TASK_TYPE_MEM_WRITE_VALUE;
     task.u.memWriteValueTask.event = event;
     task.u.memWriteValueTask.ownedEventId = eventId;
     auto uninit = g_taskFuncArrays[CHIP_910_B_93].taskUnInitFunc[task.type];
     ASSERT_EQ(uninit, &MemWriteTaskUnInit);
     RawDevice* device = static_cast<RawDevice*>(event->Device_());
-    DoCompleteSuccess(&task, 0U);
-    EXPECT_EQ(event->idMap_[eventId], 1U);
-    uninit(&task);
+    DoCompleteSuccessForMemWriteValueTask(&task, device->Id_());
     EXPECT_EQ(task.u.memWriteValueTask.event, nullptr);
     EXPECT_EQ(task.u.memWriteValueTask.ownedEventId, INVALID_EVENT_ID);
     EXPECT_EQ(device->events_.find(event), device->events_.end());
+    uninit(&task);
+    EXPECT_EQ(task.u.memWriteValueTask.event, nullptr);
+    EXPECT_EQ(task.u.memWriteValueTask.ownedEventId, INVALID_EVENT_ID);
+    EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
 }
 
 TEST_F(ExternalEventTaskTest910B, NormalResetSoftwareEventUsesMemWriteValueTask)

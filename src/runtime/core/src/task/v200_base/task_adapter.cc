@@ -43,6 +43,8 @@ uint32_t GetSendDavidSqeNum(const TaskInfo* const taskInfo)
         return TASK_SQE_NUM_TWO;
     } else if (type == TS_TASK_TYPE_CAPTURE_RECORD_EXTERNAL) {
         return TASK_SQE_NUM_TWO;
+    } else if ((type == TS_TASK_TYPE_MEM_WRITE_VALUE) && IsTimeLineSoftwareEventRecordTask(taskInfo)) {
+        return TASK_SQE_NUM_TWO;
     } else if (type == TS_TASK_TYPE_FUSION_KERNEL) {
         return GetSendSqeNumForFusionKernelTask(taskInfo);
     } else if (

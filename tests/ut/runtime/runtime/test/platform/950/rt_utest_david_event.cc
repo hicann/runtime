@@ -58,6 +58,7 @@ static rtChipType_t g_chipType;
 static uint8_t* g_externalEventStatus = nullptr;
 static uint32_t g_externalEventQueryTimes = 0U;
 static uint32_t g_externalEventClockTimes = 0U;
+static DavidEvent* g_externalSyncDavidEvent = nullptr;
 constexpr uint32_t EXTERNAL_EVENT_COMPLETE_QUERY_TIMES = 10001U;
 
 static int ExternalEventTimeoutClockStub(clockid_t clockId, struct timespec* timeSpec)
@@ -77,6 +78,13 @@ static bool CompleteExternalEventAfterRepeatedQueries()
     if (g_externalEventQueryTimes == EXTERNAL_EVENT_COMPLETE_QUERY_TIMES) {
         *g_externalEventStatus = 1U;
     }
+    return true;
+}
+
+static bool CompleteDavidRecordAfterQuery()
+{
+    const DavidRecordTaskInfo latestRecord = g_externalSyncDavidEvent->GetLatestRecordInfo();
+    g_externalSyncDavidEvent->UpdateLatestRecord(latestRecord, DavidEventState_t::EVT_RECORDED, UINT64_MAX);
     return true;
 }
 
@@ -1018,6 +1026,31 @@ TEST_F(EventTestDavid, SynchronizeExternalStatusChecksTimeoutDuringRepeatedPolli
     EXPECT_EQ(rtEventDestroy(event), RT_ERROR_NONE);
 }
 
+TEST_F(EventTestDavid, SynchronizeExternalStatusReturnsWhenRecordCompletes)
+{
+    rtEvent_t event = nullptr;
+    ASSERT_EQ(rtEventCreateExWithFlag(&event, RT_EVENT_DDSYNC_NS), RT_ERROR_NONE);
+    DavidEvent* evt = static_cast<DavidEvent*>(rt_ut::UnwrapOrNull<Event>(event));
+    ASSERT_NE(evt, nullptr);
+
+    uint8_t recordValue = 0U;
+    evt->SetRecord(true);
+    evt->SetRecordStatus(DavidEventState_t::EVT_NOT_RECORDED);
+    evt->SetRecordFlag(RT_EVENT_RECORD_EXTERNAL);
+    evt->SetEventAddr(&recordValue);
+    g_externalSyncDavidEvent = evt;
+
+    MOCKER_CPP_VIRTUAL(evt->Device_(), &Device::IsEventExpandingPoolSupportBar)
+        .expects(once())
+        .will(invoke(CompleteDavidRecordAfterQuery));
+
+    EXPECT_EQ(evt->Synchronize(-1), RT_ERROR_NONE);
+
+    g_externalSyncDavidEvent = nullptr;
+    evt->SetEventAddr(nullptr);
+    EXPECT_EQ(rtEventDestroy(event), RT_ERROR_NONE);
+}
+
 TEST_F(EventTestDavid, TestQueryEventStatus)
 {
     rtError_t error;
@@ -1592,42 +1625,92 @@ TEST_F(EventTestDavid, EvtRecordSoftwareMode2)
     rtEventDestroy(event);
 }
 
-TEST_F(EventTestDavid, EvtWaitSoftwareMode1)
+struct SoftwareRecordCase {
+    uint32_t flags;
+    bool capture;
+    bool bound;
+    bool error;
+    uint32_t sqes;
+};
+class SoftwareRecordTestDavid : public EventTestDavid, public testing::WithParamInterface<SoftwareRecordCase> {};
+
+TEST_P(SoftwareRecordTestDavid, SqesCqeAndCapturePolicy)
 {
-    rtEvent_t event;
-    rtStream_t stream;
-    rtError_t error;
-
-    rtEventCreate(&event);
-    DavidEvent* evt = static_cast<DavidEvent*>(rt_ut::UnwrapOrNull<Event>(event));
-    evt->SoftwareModeEnable();
-    rtStreamCreate(&stream, 0);
-    Stream* stm = rt_ut::UnwrapOrNull<Stream>(stream);
-
-    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
-    void* eventAddr = malloc(RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT);
-    evt->PublishSoftwareRecordResource(eventAddr, 7, stm->Id_(), 0U, 0U);
-
-    TaskInfo task1 = {};
-    task1.stream = stm;
-    TaskInfo* tmpTask = &task1;
-    MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
-                   &Stream::AllocTask))
-        .stubs()
-        .will(returnValue(tmpTask));
-    MOCKER(MemWaitValueTaskInit).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER(SubmitTaskPostProc).stubs().will(returnValue(RT_ERROR_NONE));
-
-    error = EvtWaitSoftwareMode(evt, stm);
-    EXPECT_EQ(error, RT_ERROR_NONE);
-    TaskUnInitProc(&task1);
-    EXPECT_TRUE(evt->idMap_.empty());
-
-    free(eventAddr);
-    rtEventDestroy(event);
-    rtStreamDestroy(stream);
+    rtStream_t captureHandle = nullptr;
+    ASSERT_EQ(rtStreamCreate(&captureHandle, 0), RT_ERROR_NONE);
+    Stream* const capture = rt_ut::UnwrapOrNull<Stream>(captureHandle);
+    ASSERT_NE(capture, nullptr);
+    Model model;
+    const auto& test = GetParam();
+    const uint32_t originalError = stream_->GetErrCode();
+    {
+        const ScopeGuard restore([&]() {
+            stream_->SetErrCode(originalError);
+            stream_->SetBindFlag(false);
+            stream_->SetModel(nullptr);
+            stream_->UpdateCaptureStream(nullptr);
+            stream_->SetCaptureStatus(RT_STREAM_CAPTURE_STATUS_NONE);
+            capture->SetBindFlag(false);
+        });
+        SCOPED_TRACE(test.flags);
+        SCOPED_TRACE(test.capture);
+        SCOPED_TRACE(test.bound);
+        SCOPED_TRACE(test.error);
+        DavidEvent event(device_, test.flags, nullptr, false);
+        event.SoftwareModeEnable();
+        stream_->SetBindFlag(test.bound);
+        stream_->SetModel(test.bound ? &model : nullptr);
+        stream_->UpdateCaptureStream(test.capture ? capture : nullptr);
+        stream_->SetCaptureStatus(test.capture ? RT_STREAM_CAPTURE_STATUS_ACTIVE : RT_STREAM_CAPTURE_STATUS_NONE);
+        capture->SetBindFlag(test.capture);
+        TaskInfo task = {};
+        InitByStream(&task, test.capture ? capture : stream_);
+        task.sqeNum = static_cast<uint8_t>(test.sqes);
+        MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+        MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
+                       &Stream::AllocTask))
+            .expects(once())
+            .with(
+                eq(static_cast<TaskInfo*>(nullptr)), eq(TS_TASK_TYPE_DAVID_EVENT_RECORD), mockcpp::any(), eq(test.sqes),
+                mockcpp::any())
+            .will(returnValue(&task));
+        MOCKER(DavidSendTask).expects(once()).will(returnValue(RT_ERROR_NONE));
+        MOCKER(SubmitTaskPostProc).stubs().will(returnValue(RT_ERROR_NONE));
+        ASSERT_EQ(EvtRecordSoftwareMode(&event, stream_), RT_ERROR_NONE);
+        EXPECT_EQ(task.u.memWriteValueTask.hasTimestamp, test.sqes == 2U ? 1U : 0U);
+        EXPECT_EQ(task.stream, test.capture ? capture : stream_);
+        EXPECT_EQ(GetSendSqeNum(&task), test.sqes);
+        if (!test.capture && !test.bound) {
+            ASSERT_EQ(event.idMap_.count(task.u.memWriteValueTask.ownedEventId), 1U);
+            rtCqReport_t report = {};
+            report.u1.timeStamp = 123U;
+            report.errorType = test.error ? RT_STARS_EXIST_ERROR : 0U;
+            report.errorCode = test.error ? TS_ERROR_END_OF_SEQUENCE : 0U;
+            SetStarsResultForDavidMemWriteValueTask(&task, report);
+            EXPECT_EQ(task.errorCode, test.error ? TS_ERROR_END_OF_SEQUENCE : 0U);
+            const uint64_t expected = !test.error && test.sqes == 2U ? 123U : UINT64_MAX;
+            EXPECT_EQ(task.u.memWriteValueTask.timestamp, expected);
+            DoCompleteSuccessForMemWriteValueTask(&task, device_->Id_());
+            EXPECT_EQ(event.TimeStamp(), expected);
+            if (!test.error) {
+                EXPECT_EQ(event.GetRecordStatus(), DavidEventState_t::EVT_RECORDED);
+            }
+            EXPECT_EQ(task.u.memWriteValueTask.ownedEventId, INVALID_EVENT_ID);
+            EXPECT_TRUE(event.idMap_.empty());
+        }
+        TaskUnInitProc(&task);
+    }
+    EXPECT_EQ(rtStreamDestroy(captureHandle), RT_ERROR_NONE);
 }
+
+INSTANTIATE_TEST_SUITE_P(
+    SoftwareEvents, SoftwareRecordTestDavid,
+    testing::Values(
+        SoftwareRecordCase{RT_EVENT_TIME_LINE, false, false, false, 2U},
+        SoftwareRecordCase{RT_EVENT_TIME_LINE, false, false, true, 2U},
+        SoftwareRecordCase{RT_EVENT_WITH_FLAG, false, false, false, 1U},
+        SoftwareRecordCase{RT_EVENT_TIME_LINE, true, false, false, 1U},
+        SoftwareRecordCase{RT_EVENT_TIME_LINE, false, true, false, 1U}));
 
 TEST_F(EventTestDavid, EvtWaitSoftwareMode2)
 {

@@ -11,6 +11,7 @@
 #include "stars_david.hpp"
 #include "david_sqe_adapter.hpp"
 #include "memory_task.h"
+#include "event_task.h"
 #include "stream.hpp"
 #include "runtime.hpp"
 #include "event_david.hpp"
@@ -22,6 +23,34 @@
 
 namespace cce {
 namespace runtime {
+
+static void ConstructDavidSqeForMemWriteValueTaskWithTimestamp(
+    TaskInfo* const taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
+{
+    rtDavidSqe_t* const davidSqe = static_cast<rtDavidSqe_t*>(sqe);
+    ConstructDavidSqeForMemWriteValueTask(taskInfo, &(davidSqe[0]), sqeInfo);
+    if (IsTimeLineSoftwareEventRecordTask(taskInfo)) {
+        davidSqe[0].commonSqe.sqeHeader.wrCqe = 0U;
+        rtDavidSqe_t* placeHolderSqe = davidSqe + 1U;
+        if (sqeInfo.sqBaseAddr != 0ULL) {
+            placeHolderSqe = GetSqPosAddr(sqeInfo.sqBaseAddr, static_cast<uint32_t>(taskInfo->id) + 1U);
+        }
+        ConstructDavidPlaceHolderSqe(taskInfo, placeHolderSqe, sqeInfo);
+        placeHolderSqe->commonSqe.sqeHeader.wrCqe = 1U;
+        if (Runtime::Instance()->GetConnectUbFlag()) {
+            davidSqe[0].commonSqe.sqeHeader.headUpdate = 0U;
+            placeHolderSqe->commonSqe.sqeHeader.headUpdate = 1U;
+        }
+    }
+}
+
+void SetStarsResultForDavidMemWriteValueTask(TaskInfo* const taskInfo, const rtCqReport_t& logicCq)
+{
+    SetStarsResultCommonForDavid(taskInfo, logicCq);
+    if (((logicCq.errorType & RT_STARS_EXIST_ERROR) == 0U) && IsTimeLineSoftwareEventRecordTask(taskInfo)) {
+        taskInfo->u.memWriteValueTask.timestamp = logicCq.u1.timeStamp;
+    }
+}
 
 static void ConstructDavidSqeForCaptureExternalRecordTask(
     TaskInfo* const taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
@@ -295,13 +324,13 @@ static bool MemoryTaskRegister()
     };
     TaskFuncSingle memWriteValueFuncs = {
         .toCommandFunc = nullptr,
-        .toSqeFunc = &ConstructDavidSqeForMemWriteValueTask,
-        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .toSqeFunc = &ConstructDavidSqeForMemWriteValueTaskWithTimestamp,
+        .doCompleteSuccFunc = &DoCompleteSuccessForMemWriteValueTask,
         .taskUnInitFunc = &MemWriteTaskUnInit,
         .waitAsyncCpCompleteFunc = nullptr,
         .printErrorInfoFunc = &PrintErrorInfoCommon,
         .setResultFunc = nullptr,
-        .setStarsResultFunc = &SetStarsResultCommonForDavid,
+        .setStarsResultFunc = &SetStarsResultForDavidMemWriteValueTask,
     };
     TaskFuncSingle memWaitValueFuncs = {
         .toCommandFunc = nullptr,

@@ -105,6 +105,7 @@ public:
         RecordTaskInfo& latestRecord, const int32_t newEventId = INVALID_EVENT_ID, const uint64_t timeLine = UINT64_MAX,
         const uint64_t timeStamp = UINT64_MAX, void* const newEventAddr = nullptr);
     virtual bool WaitSendCheck(const Stream* const stm, int32_t& eventId);
+    virtual bool IsRecordCompleted() const;
     virtual rtError_t AllocEventIdResource(Stream* const stm, int32_t& newEventId);
     void InitEventAllocFlag(int32_t streamId = -1);
     rtError_t RecordSoftwareEvent(Stream* const stm);
@@ -209,7 +210,7 @@ public:
 protected:
     bool AreTaskMapsEmptyLocked();
     rtError_t QueryExternalEventStatus(rtEventStatus_t* const status);
-    rtError_t SynchronizeExternalEventStatus(int32_t timeout, bool recordCompleted);
+    rtError_t SynchronizeExternalEventStatus(int32_t timeout);
     Device* device_; // 创建Event时，所在的设备
     RecordTaskInfo latestRecord_;
     Atomic<bool> isNeedDestroy_;

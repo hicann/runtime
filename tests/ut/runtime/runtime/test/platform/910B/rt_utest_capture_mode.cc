@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Copyright (c) 2025 Huawei Technologies Co., Ltd.
  * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
  * CANN Open Software License Agreement Version 2.0 (the "License").
@@ -3111,7 +3111,13 @@ TEST_F(CloudV2CaptureModelTest, RecordSoftwareEvent_Success)
 
     error = evt->RecordSoftwareEvent(stm);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    // Submission is mocked; emulate final task ID assignment and SQE construction.
+    taskInfo.id = 1U;
+    rtStarsSqe_t sqes[2] = {};
+    ToConstructSqe(&taskInfo, sqes, TaskSqeInfo{0ULL, 0ULL});
     EXPECT_NE(evt->GetEventAddr(), nullptr);
+    EXPECT_EQ(taskInfo.u.memWriteValueTask.devAddr, RtPtrToValue(evt->GetEventAddr()));
+    EXPECT_EQ(evt->GetLatestRecord().taskId, taskInfo.id);
     TaskUnInitProc(&taskInfo);
 
     GlobalMockObject::verify();

@@ -28,6 +28,8 @@ uint32_t GetSendSqeNum(TaskInfo* const taskInfo)
         return GetSendSqeNumForFftsPlusTask(taskInfo);
     } else if (type == TS_TASK_TYPE_CAPTURE_RECORD_EXTERNAL) {
         return 2U;
+    } else if ((type == TS_TASK_TYPE_MEM_WRITE_VALUE) && IsTimeLineSoftwareEventRecordTask(taskInfo)) {
+        return 2U;
     } else if (
         (type == TS_TASK_TYPE_MEM_WAIT_VALUE) || (type == TS_TASK_TYPE_CAPTURE_WAIT) ||
         (type == TS_TASK_TYPE_CAPTURE_WAIT_EXTERNAL) || (type == TS_TASK_TYPE_IPC_WAIT)) {

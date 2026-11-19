@@ -221,6 +221,8 @@ bool DavidEvent::WaitSendCheck(const Stream* const stm, int32_t& eventId)
     return false;
 }
 
+bool DavidEvent::IsRecordCompleted() const { return status_ == DavidEventState_t::EVT_RECORDED; }
+
 void DavidEvent::UpdateLatestRecord(
     const DavidRecordTaskInfo& recordInfo, const DavidEventState_t latestStatus, const uint64_t timeStamp,
     const int32_t newEventId, void* const newEventAddr)
@@ -366,7 +368,7 @@ rtError_t DavidEvent::Synchronize(int32_t timeout)
     }
 
     if (IsExternalRecordOrWait()) {
-        return SynchronizeExternalEventStatus(timeout, status_ == DavidEventState_t::EVT_RECORDED);
+        return SynchronizeExternalEventStatus(timeout);
     }
 
     rtError_t error = WaitTask(timeout);

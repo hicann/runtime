@@ -835,6 +835,115 @@ TEST_F(DavidTaskTest, DirectMemWriteCallbackUpdatesHeadOnInvalidAddress)
     EXPECT_EQ(sqe.commonSqe.sqeHeader.headUpdate, 1U);
 }
 
+TEST_F(DavidTaskTest, SoftwareEventRecordHeadUpdateUsesFinalSqeForTimeline)
+{
+    Runtime* const runtime = Runtime::Instance();
+    const bool originalConnectUbFlag = runtime->GetConnectUbFlag();
+    TaskResManage* const originalManager = stream_->taskResMang_;
+    const ScopeGuard restore([&]() {
+        runtime->SetConnectUbFlag(originalConnectUbFlag);
+        stream_->taskResMang_ = originalManager;
+    });
+    stream_->taskResMang_ = nullptr;
+    DavidEvent event(dev_, RT_EVENT_TIME_LINE, nullptr, false);
+    TaskInfo task = {};
+    InitByStream(&task, stream_);
+    task.type = TS_TASK_TYPE_MEM_WRITE_VALUE;
+    task.u.memWriteValueTask.event = &event;
+    task.u.memWriteValueTask.devAddr = 0x1000ULL;
+    RefreshTaskFuncPointer(CHIP_DAVID);
+    for (const bool connectUb : {false, true}) {
+        SCOPED_TRACE(connectUb);
+        runtime->SetConnectUbFlag(connectUb);
+        for (const uint16_t id : {1U, 64U}) {
+            SCOPED_TRACE(id);
+            task.id = id;
+            for (const bool timestamp : {false, true}) {
+                SCOPED_TRACE(timestamp);
+                task.sqeNum = timestamp ? 2U : 1U;
+                task.u.memWriteValueTask.hasTimestamp = timestamp ? 1U : 0U;
+                task.u.memWriteValueTask.ownedEventId = 7;
+                rtDavidSqe_t sqes[2] = {};
+                sqes[1].commonSqe.sqeHeader.type = RT_DAVID_SQE_TYPE_INVALID;
+                EXPECT_EQ(GetSendDavidSqeNum(&task), task.sqeNum);
+                ToConstructSqe(&task, sqes, TaskSqeInfo{0ULL, 0ULL});
+                EXPECT_EQ(sqes[0].commonSqe.sqeHeader.type, RT_DAVID_SQE_TYPE_WRITE_VALUE);
+                if (timestamp) {
+                    EXPECT_EQ(sqes[0].commonSqe.sqeHeader.wrCqe, 0U);
+                    EXPECT_EQ(sqes[1].commonSqe.sqeHeader.type, RT_DAVID_SQE_TYPE_PLACE_HOLDER);
+                    EXPECT_EQ(sqes[1].commonSqe.sqeHeader.wrCqe, 1U);
+                } else {
+                    EXPECT_EQ(sqes[1].commonSqe.sqeHeader.type, RT_DAVID_SQE_TYPE_INVALID);
+                }
+                // Timeline records update the head on the placeholder; other records use the periodic policy.
+                const uint8_t expectedWriteHeadUpdate = (connectUb && !timestamp && id == 64U) ? 1U : 0U;
+                const uint8_t expectedPlaceholderHeadUpdate = (connectUb && timestamp) ? 1U : 0U;
+                EXPECT_EQ(sqes[0].commonSqe.sqeHeader.headUpdate, expectedWriteHeadUpdate);
+                EXPECT_EQ(sqes[1].commonSqe.sqeHeader.headUpdate, expectedPlaceholderHeadUpdate);
+
+                // Ordinary MemWrite/reset retains the periodic update policy.
+                task.u.memWriteValueTask.ownedEventId = INVALID_EVENT_ID;
+                task.u.memWriteValueTask.hasTimestamp = 0U;
+                task.sqeNum = 1U;
+                ToConstructSqe(&task, sqes, TaskSqeInfo{0ULL, 0ULL});
+                EXPECT_EQ(sqes[0].commonSqe.sqeHeader.headUpdate, (connectUb && id == 64U) ? 1U : 0U);
+            }
+        }
+    }
+}
+
+TEST_F(DavidTaskTest, TimelineSoftwareEventRecordTaskResourceWrapsWithTwoSqes)
+{
+    const uint32_t rtsqDepth = Runtime::Instance()->GetCurChipProperties().rtsqDepth;
+    ASSERT_GT(rtsqDepth, 1U);
+    TaskResManageDavid* const taskRes = static_cast<TaskResManageDavid*>(stream_->taskResMang_);
+    ASSERT_NE(taskRes, nullptr);
+    ASSERT_EQ(taskRes->GetTaskPoolNum(), rtsqDepth);
+    const ScopeGuard resetTaskRes([&]() { taskRes->ResetTaskRes(); });
+    taskRes->ResetTaskRes();
+    taskRes->taskResAHead_.Set(2U);
+    taskRes->taskResATail_.Set(static_cast<uint16_t>(rtsqDepth - 1U));
+
+    uint32_t pos = UINT32_MAX;
+    TaskInfo* task = nullptr;
+    ASSERT_EQ(taskRes->AllocTaskInfoAndPos(2U, pos, &task), RT_ERROR_NONE);
+    ASSERT_NE(task, nullptr);
+    EXPECT_EQ(pos, rtsqDepth - 1U);
+    EXPECT_EQ(task->id, rtsqDepth - 1U);
+    EXPECT_EQ(taskRes->GetTaskInfo(0U), task);
+    EXPECT_EQ(taskRes->GetResTail(), 1U);
+
+    DavidEvent event(dev_, RT_EVENT_TIME_LINE, nullptr, false);
+    InitByStream(task, stream_);
+    task->type = TS_TASK_TYPE_MEM_WRITE_VALUE;
+    task->sqeNum = 2U;
+    task->u.memWriteValueTask.event = &event;
+    task->u.memWriteValueTask.ownedEventId = 7;
+    task->u.memWriteValueTask.devAddr = 0x1000ULL;
+    task->u.memWriteValueTask.hasTimestamp = 1U;
+    std::vector<rtDavidSqe_t> sqes(rtsqDepth + 1U);
+    rtDavidSqe_t& guard = sqes[rtsqDepth];
+    (void)memset_s(&guard, sizeof(guard), 0x5A, sizeof(guard));
+    const uint64_t sqBaseAddr = reinterpret_cast<uint64_t>(sqes.data());
+
+    RefreshTaskFuncPointer(CHIP_DAVID);
+    ToConstructSqe(task, &sqes[rtsqDepth - 1U], TaskSqeInfo{sqBaseAddr, 0ULL});
+
+    EXPECT_EQ(sqes[rtsqDepth - 1U].commonSqe.sqeHeader.type, RT_DAVID_SQE_TYPE_WRITE_VALUE);
+    EXPECT_EQ(sqes[rtsqDepth - 1U].commonSqe.sqeHeader.wrCqe, 0U);
+    EXPECT_EQ(sqes[0].commonSqe.sqeHeader.type, RT_DAVID_SQE_TYPE_PLACE_HOLDER);
+    EXPECT_EQ(sqes[0].commonSqe.sqeHeader.wrCqe, 1U);
+    EXPECT_EQ(sqes[0].commonSqe.sqeHeader.headUpdate, 0U);
+    const auto* const bytes = reinterpret_cast<const uint8_t*>(&guard);
+    for (size_t i = 0U; i < sizeof(guard); ++i) {
+        EXPECT_EQ(bytes[i], 0x5AU);
+    }
+    EXPECT_TRUE(taskRes->RecycleTaskInfo(pos, 2U));
+    EXPECT_EQ(taskRes->GetResHead(), 1U);
+    EXPECT_TRUE(taskRes->IsEmpty());
+    EXPECT_EQ(taskRes->GetTaskInfo(static_cast<uint32_t>(rtsqDepth - 1U)), nullptr);
+}
+
 TEST_F(DavidTaskTest, ExternalWaitPlaceholderUpdatesOnlyFirstSqeHead)
 {
     Runtime* const runtime = Runtime::Instance();
