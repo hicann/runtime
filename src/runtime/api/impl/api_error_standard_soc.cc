@@ -8,12 +8,14 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "api_error.hpp"
+#include <cstring>
 #include <string>
 #include <unordered_set>
 #include "notify_enum_desc.hpp"
 #include "cond_enum_desc.hpp"
 #include "device_enum_desc.hpp"
 #include "capture_model_enum_desc.hpp"
+#include "enum_desc.hpp"
 #include "osal.hpp"
 #include "program.hpp"
 #include "stream.hpp"
@@ -859,6 +861,60 @@ rtError_t ApiErrorDecorator::ModelTaskUpdate(
     ERROR_RETURN(
         error, "ModelTaskUpdate failed, desStm=%d.desTaskId=%u,sinkStm=%d", desStm->Id_(), desTaskId, sinkStm->Id_());
     return error;
+}
+
+rtError_t ApiErrorDecorator::StreamBatchMemOp(
+    const rtStreamBatchMemOpParams_t* params, size_t count, uint32_t flags, Stream* stm)
+{
+    constexpr size_t MAX_STREAM_MEM_OP_COUNT = 255U;
+    constexpr const char_t* FUNC_DESC = "Submitting batch memory operations";
+    const uint8_t reserved[sizeof(rtStreamBatchMemOpParams_t) - sizeof(rtStreamMemOpParams_t)]{};
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(params, RT_ERROR_INVALID_VALUE, FUNC_DESC);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        (count == 0U) || (count > MAX_STREAM_MEM_OP_COUNT), RT_ERROR_INVALID_VALUE, FUNC_DESC, count, "[1, 255]");
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(flags != 0U, RT_ERROR_INVALID_VALUE, FUNC_DESC, flags, "0");
+    for (size_t i = 0U; i < count; ++i) {
+        uint32_t operation = 0U;
+        (void)std::memcpy(&operation, &params[i], sizeof(operation));
+        COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
+            (operation != RT_STREAM_MEM_OP_VALUE_WAIT) && (operation != RT_STREAM_MEM_OP_VALUE_WRITE),
+            RT_ERROR_INVALID_VALUE, FUNC_DESC,
+            EnumValueDescription(
+                operation, {{RT_STREAM_MEM_OP_VALUE_WAIT, "RT_STREAM_MEM_OP_VALUE_WAIT"},
+                            {RT_STREAM_MEM_OP_VALUE_WRITE, "RT_STREAM_MEM_OP_VALUE_WRITE"}}),
+            RtFmtMsg("params[%zu].operation", i), "RT_STREAM_MEM_OP_VALUE_WAIT(0) RT_STREAM_MEM_OP_VALUE_WRITE(1)");
+        const rtStreamMemOpParams_t& op =
+            (operation == RT_STREAM_MEM_OP_VALUE_WRITE) ? params[i].valueWrite : params[i].valueWait;
+        const char_t* const memberName = op.operation == RT_STREAM_MEM_OP_VALUE_WRITE ? "valueWrite" : "valueWait";
+        COND_RETURN_AND_MSG_OUTER(
+            op.devAddr == nullptr, RT_ERROR_INVALID_VALUE, ErrorCode::EE1004, FUNC_DESC,
+            RtFmtMsg("params[%zu].%s.devAddr", i, memberName));
+        COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
+            ((op.operation == RT_STREAM_MEM_OP_VALUE_WRITE) && (op.flag != 0U)) ||
+                ((op.operation == RT_STREAM_MEM_OP_VALUE_WAIT) &&
+                 (op.flag >= static_cast<uint32_t>(MEM_WAIT_VALUE_TYPE_MAX))),
+            RT_ERROR_INVALID_VALUE, FUNC_DESC, op.flag, RtFmtMsg("params[%zu].%s.flag", i, memberName),
+            "Write: 0; Wait: [0, 3]");
+        const uintptr_t address = reinterpret_cast<uintptr_t>(op.devAddr);
+        COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
+            (op.operation == RT_STREAM_MEM_OP_VALUE_WRITE) && ((address % sizeof(uint64_t)) != 0U),
+            RT_ERROR_INVALID_VALUE, FUNC_DESC, address, RtFmtMsg("params[%zu].%s.devAddr", i, memberName),
+            "Write address aligned to 8 bytes");
+        // reserved overlaps the active fields; only its unused tail must be 0.
+        const auto* const tail = reinterpret_cast<const uint8_t*>(&params[i]) + sizeof(rtStreamMemOpParams_t);
+        COND_RETURN_AND_MSG_OUTER(
+            std::memcmp(tail, reserved, sizeof(reserved)) != 0, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, FUNC_DESC,
+            RtFmtMsg("params[%zu].reserved (unused tail)", i),
+            "Bytes after the active valueWait/valueWrite member must be 0");
+        rtPtrAttributes_t attributes{};
+        const rtError_t error = impl_->PtrGetAttributes(op.devAddr, &attributes);
+        ERROR_RETURN(error, "Batch address attribute query failed at index=%zu.", i);
+        COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
+            attributes.location.type != RT_MEMORY_LOC_DEVICE, RT_ERROR_INVALID_VALUE, FUNC_DESC,
+            MemLocationTypeToString(attributes.location.type), RtFmtMsg("params[%zu].%s.devAddr", i, memberName),
+            MemLocationTypeToString(RT_MEMORY_LOC_DEVICE));
+    }
+    return impl_->StreamBatchMemOp(params, count, flags, stm);
 }
 
 } // namespace runtime
