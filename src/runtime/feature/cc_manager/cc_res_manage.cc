@@ -11,41 +11,34 @@
 #include "cc_res_manage.h"
 #include "cc_stream_res_manage.h"
 #include "cc_worker.h"
+#include "crypto/aiv/cc_aiv_launch.h"
+#include "crypto/cc_crypto_plugin.h"
+#include "common/cc_defs.h"
 
 #include "aicpu_c.hpp"
 #include "base.hpp"
+#include "context.hpp"
 #include "device.hpp"
 #include "runtime.hpp"
 #include "stream.hpp"
-#include "stream_sqcq_manage.hpp"
 #include "logger.hpp"
 
 namespace cce {
 namespace runtime {
 
 namespace {
-constexpr const char_t* AICC_LOAD_KEY_KERNEL_NAME = "AiccLoadKey";
-
 rtError_t LaunchAiccLoadKeyKernel(Stream* const stm, CCLoadKeyKernelParam& param)
 {
     COND_RETURN_ERROR(stm == nullptr, RT_ERROR_STREAM_NULL, "CC load key stream is null.");
 
-    rtKernelLaunchNames_t launchNames{};
-    launchNames.soName = nullptr;
-    launchNames.kernelName = AICC_LOAD_KEY_KERNEL_NAME;
-    launchNames.opName = AICC_LOAD_KEY_KERNEL_NAME;
-
-    rtArgsEx_t argsInfo{};
-    argsInfo.args = &param;
-    argsInfo.argsSize = static_cast<uint32_t>(sizeof(param));
-    argsInfo.isNoNeedH2DCopy = 0U;
-
-    return StreamLaunchCpuKernel(&launchNames, 1U, &argsInfo, stm, RT_KERNEL_DEFAULT);
+    return CCCryptoPlugin::LaunchDeviceKernel(stm, CC_KERNEL_AICC_LOAD_KEY, &param, sizeof(param));
 }
 } // namespace
 
 static constexpr uint32_t CC_WORKER_COUNT = 6;
-CCResManage::CCResManage(Device* device) : deviceId_((device == nullptr) ? 0U : device->Id_()), device_(device) {}
+CCResManage::CCResManage(Device* device)
+    : deviceId_((device == nullptr) ? 0U : device->Id_()), device_(device), crypto_(GetActiveCryptoAlg())
+{}
 
 CCResManage::~CCResManage() { DestroyCcResource(); }
 
@@ -54,25 +47,51 @@ rtError_t CCResManage::InitCcResource()
     COND_RETURN_ERROR(device_ == nullptr, RT_ERROR_DEVICE_NULL, "CCResManage device is null.");
     rtError_t ret = crypto_.InitKey(deviceId_);
     if (ret != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_ERROR, "CC init key failed, device_id=%u, ret=%#x", deviceId_, ret);
+        RT_LOG(RT_LOG_ERROR, "CC init key failed, deviceId=%u, ret=%#x", deviceId_, ret);
         return RT_ERROR_CC_INIT_FAILED;
     }
+    const auto rollback = [this]() {
+        plugin_.reset();
+        (void)crypto_.ReleaseKey(deviceId_);
+    };
+
+    CCCryptoPlugin* plugin = nullptr;
+    ret = CreateCryptoPlugin(GetActiveCryptoAlg(), &crypto_, &plugin);
+    if (ret != RT_ERROR_NONE) {
+        rollback();
+        RT_LOG(
+            RT_LOG_ERROR, "CC create crypto plugin failed, alg=%u, deviceId=%u, ret=%#x",
+            static_cast<uint32_t>(GetActiveCryptoAlg()), deviceId_, ret);
+        return RT_ERROR_CC_INIT_FAILED;
+    }
+    plugin_.reset(plugin);
 
     ret = LoadKeyToAicpu();
     if (ret != RT_ERROR_NONE) {
-        crypto_.ReleaseKey(deviceId_);
-        RT_LOG(RT_LOG_ERROR, "CC load key initialization failed, device_id=%u, ret=%#x", deviceId_, ret);
+        rollback();
+        RT_LOG(RT_LOG_ERROR, "CC load key initialization failed, deviceId=%u, ret=%#x", deviceId_, ret);
         return RT_ERROR_CC_INIT_FAILED;
+    }
+
+    if (GetActiveCryptoAlg() == CC_CRYPTO_ALG_TYPE::CTR) {
+        ret = CcInitAivKsKernel();
+        if (ret != RT_ERROR_NONE) {
+            rollback();
+            RT_LOG(RT_LOG_ERROR, "CC AIV kernel init failed, deviceId=%u, ret=%#x", deviceId_, ret);
+            return RT_ERROR_CC_INIT_FAILED;
+        }
     }
 
     ret = InitWorkerPool(CC_WORKER_COUNT, CC_SLICE_SIZE);
     if (ret != RT_ERROR_NONE) {
-        crypto_.ReleaseKey(deviceId_);
-        RT_LOG(RT_LOG_ERROR, "CC worker pool init failed, device_id=%u, ret=%#x", deviceId_, ret);
+        rollback();
+        RT_LOG(RT_LOG_ERROR, "CC worker pool init failed, deviceId=%u, ret=%#x", deviceId_, ret);
         return RT_ERROR_CC_INIT_FAILED;
     }
 
-    RT_LOG(RT_LOG_INFO, "CCResManage initialized for device %u", deviceId_);
+    RT_LOG(
+        RT_LOG_INFO, "CCResManage initialized for device %u, alg=%u", deviceId_,
+        static_cast<uint32_t>(plugin_->AlgType()));
     return RT_ERROR_NONE;
 }
 
@@ -80,29 +99,29 @@ rtError_t CCResManage::LoadKeyToAicpu()
 {
     Stream* const curStm = device_->GetCtrlSQStream(nullptr);
     COND_RETURN_ERROR(
-        curStm == nullptr, RT_ERROR_STREAM_NULL, "CC load key CtrlSQ stream is null, device_id=%u.", deviceId_);
+        curStm == nullptr, RT_ERROR_STREAM_NULL, "CC load key CtrlSQ stream is null, deviceId=%u.", deviceId_);
 
     CCLoadKeyKernelParam param{};
     rtError_t ret = crypto_.BuildLoadKeyParam(&param);
     COND_RETURN_ERROR(
-        ret != RT_ERROR_NONE, ret, "Failed to build CC load-key kernel parameters, device_id=%u, retCode=%#x.",
+        ret != RT_ERROR_NONE, ret, "Failed to build CC load-key kernel parameters, deviceId=%u, retCode=%#x.",
         deviceId_, static_cast<uint32_t>(ret));
 
     ret = Runtime::Instance()->StartAicpuSd(device_);
     COND_RETURN_ERROR(
         ret != RT_ERROR_NONE, ret,
-        "Failed to start AICPU SD before launching the CC load-key kernel, device_id=%u, retCode=%#x.", deviceId_,
+        "Failed to start AICPU SD before launching the CC load-key kernel, deviceId=%u, retCode=%#x.", deviceId_,
         static_cast<uint32_t>(ret));
 
     ret = LaunchAiccLoadKeyKernel(curStm, param);
     COND_RETURN_ERROR(
-        ret != RT_ERROR_NONE, ret, "Failed to launch the CC load-key kernel, device_id=%u, retCode=%#x.", deviceId_,
+        ret != RT_ERROR_NONE, ret, "Failed to launch the CC load-key kernel, deviceId=%u, retCode=%#x.", deviceId_,
         static_cast<uint32_t>(ret));
 
     ret = curStm->Synchronize();
     COND_RETURN_ERROR(
         ret != RT_ERROR_NONE, ret,
-        "Failed to synchronize the CC load-key stream, device_id=%u, stream_id=%d, retCode=%#x.", deviceId_,
+        "Failed to synchronize the CC load-key stream, deviceId=%u, stream_id=%d, retCode=%#x.", deviceId_,
         curStm->Id_(), static_cast<uint32_t>(ret));
 
     return RT_ERROR_NONE;
@@ -111,6 +130,7 @@ rtError_t CCResManage::LoadKeyToAicpu()
 void CCResManage::DestroyCcResource()
 {
     DestroyWorkerPool();
+    plugin_.reset();
     crypto_.ReleaseKey(deviceId_);
 }
 
@@ -124,7 +144,8 @@ rtError_t CCResManage::GetOrCreateStreamResource(Stream* stm, CCStreamResManage*
     }
 
     std::unique_ptr<CCStreamResManage> newResource = std::make_unique<CCStreamResManage>();
-    rtError_t ret = newResource->Init(stm->Device_());
+    const uint32_t descSize = (plugin_ != nullptr) ? plugin_->SliceDescSize() : sizeof(AiccSliceDescBase);
+    rtError_t ret = newResource->Init(stm->Device_(), descSize);
     if (ret != RT_ERROR_NONE) {
         return ret;
     }
@@ -158,6 +179,13 @@ rtError_t CCResManage::InitWorkerPool(uint32_t workerCount, uint32_t sliceSize)
     maxWorkerCount_ = workerCount;
     workerSliceSize_ = sliceSize;
     workers_.reserve(workerCount);
+    const rtError_t poolRet = threadPool_.Init("CC_WORKER", 1U, workerCount);
+    if (poolRet != RT_ERROR_NONE) {
+        RT_LOG(RT_LOG_ERROR, "CC thread pool init failed, devId=%u, ret=%#x", device_->Id_(), poolRet);
+        DestroyWorkerPoolLocked();
+        return poolRet;
+    }
+
     const rtError_t ret = CreateWorker();
     if (ret != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR, "CC initial worker init failed, devId=%u", device_->Id_());
@@ -180,19 +208,31 @@ rtError_t CCResManage::CreateWorker()
     const uint32_t workerIndex = static_cast<uint32_t>(workers_.size());
     auto worker = std::make_unique<CCWorker>();
     const rtError_t ret = worker->Init(
-        device_->Id_() * maxWorkerCount_ + workerIndex, workerSliceSize_, taskQueue_.get(), device_, &crypto_);
+        device_->Id_() * maxWorkerCount_ + workerIndex, workerSliceSize_, taskQueue_.get(), device_, plugin_.get());
     if (ret != RT_ERROR_NONE) {
         return ret;
     }
     workers_.push_back(std::move(worker));
+
+    CCWorker* const rawWorker = workers_.back().get();
+    const std::future<void> routineFuture = threadPool_.Submit([rawWorker]() { rawWorker->Run(); });
+    if (!routineFuture.valid()) {
+        RT_LOG(
+            RT_LOG_WARNING, "CC worker %u failed to submit routine to thread pool, devId=%u", workerIndex,
+            device_->Id_());
+        workers_.pop_back();
+        return RT_ERROR_CC_WORKER_FAILED;
+    }
     return RT_ERROR_NONE;
 }
 
 void CCResManage::DestroyWorkerPoolLocked()
 {
+    // 先关闭队列让 routine 返回，再 Join，最后释放 worker 缓冲。
     if (taskQueue_ != nullptr) {
         taskQueue_->Shutdown();
     }
+    threadPool_.Shutdown();
 
     for (auto& worker : workers_) {
         worker->Destroy();
@@ -227,11 +267,6 @@ rtError_t CCResManage::SubmitTask(const CCMemcpyTask& task)
             workers_.size(), maxWorkerCount_, static_cast<uint32_t>(ret));
     }
     return RT_ERROR_NONE;
-}
-
-uint32_t CCResManage::BuildDeviceCryptoParam(CC_CRYPTO_MODE mode, CCCryptoKernelParam* param)
-{
-    return crypto_.BuildDeviceCryptoParam(deviceId_, mode, param);
 }
 
 } // namespace runtime

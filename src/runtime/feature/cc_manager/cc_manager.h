@@ -67,7 +67,9 @@ private:
     ~CCManager() override;
 
     std::unique_ptr<CCResManage> resources_[RT_MAX_DEV_NUM]{};
+    // 资源创建会同线程回调 CCManager，期间不得持 resourceMutex_。
     std::mutex resourceMutex_; // 解决同一进程 多线程SetDevice同一Device场景
+    std::mutex resourceInitMutex_;
     static rtError_t SubmitCcMemcpyTask(
         void* const dst, const void* const src, const uint64_t count, const rtMemcpyKind_t kind, Stream* const stm,
         std::shared_ptr<void> guardMem = nullptr);

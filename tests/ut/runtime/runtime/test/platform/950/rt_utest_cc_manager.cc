@@ -11,6 +11,8 @@
 #include <stdlib.h>
 #include <thread>
 #include <chrono>
+#include <atomic>
+#include <future>
 #include <cstdlib>
 #include <string>
 #include <cstring>
@@ -37,9 +39,20 @@
 #include "cc_manager.h"
 #include "cc_res_manage.h"
 #include "cc_worker.h"
+#include "utils/thread_pool.h"
+#include "common/cc_utils.h"
 #include "crypto/cc_crypto.h"
+#include "common/cc_defs.h"
+#include "crypto/device/cc_kernel_abi.h"
+#include "crypto/keystream/keystream_manager.h"
+#include "crypto/openssl_loader.h"
 #include "cc_stream_res_manage.h"
+#include "task_queue/host_task_queue.h"
 #include "cc_task_queue.h"
+#include "crypto/cc_crypto_plugin.h"
+#include "crypto/aiv/cc_aiv_launch.h"
+#include "crypto/ctr/cc_ctr_plugin.h"
+#include "crypto/gcm/cc_gcm_plugin.h"
 #include "cond_c.hpp"
 #include "context.hpp"
 #include "device.hpp"
@@ -57,6 +70,11 @@
 using namespace testing;
 using namespace cce::runtime;
 
+// 设备租借样板：44 个用例都是「DeviceRetain(0,0) + 非空断言」，用宏保留 ASSERT 语义（就地展开）。
+#define RETAIN_DEVICE(dev)                                             \
+    Device* dev = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0); \
+    ASSERT_NE(dev, (Device*)nullptr)
+
 namespace {
 hal_cc_mode_type gCcMode = HAL_CC_MODE_NORMAL;
 drvError_t gCcQueryResult = DRV_ERROR_NONE;
@@ -66,6 +84,8 @@ bool gReturnNullDriver = false;
 bool gPcieRegFail = false;
 bool gPcieMappedNull = false;
 uint32_t gDevMemFreeCount = 0U;
+uint64_t gLastDevMemAllocSize = 0U;         // 最近一次 DevMemAllocWithFlag 的入参 size（对齐回归用）
+uint32_t gLastDevMemFreeDevId = UINT32_MAX; // 最近一次 DevMemFree 的 devId（析构释放口径回归用）
 bool gDevMemAllocReturnFail = false;
 bool gHostDmaMapFail = false;
 uint32_t gHostDmaUnmapCount = 0U;
@@ -90,10 +110,10 @@ struct MemRangeStubState {
 };
 MemRangeStubState gMemRangeStub;
 std::atomic<DVdeviceptr> gObservedD2HDst{0U};
-CCSliceQueue* gObservedD2HQueue = nullptr;
+BarTaskQueue* gObservedD2HQueue = nullptr;
 uint32_t gExpectedD2HSlice = UINT32_MAX;
-uint8_t gExpectedD2HHead = 0U;
-uint8_t gExpectedD2HTail = 0U;
+uint32_t gExpectedD2HHead = 0U;
+uint32_t gExpectedD2HTail = 0U;
 std::atomic<bool> gExpectedD2HSlicePublishedAtDma{false};
 std::atomic<bool> gAllowD2HNextConsume{false};
 
@@ -106,7 +126,10 @@ drvError_t DrvMemcpyStub(DVdeviceptr dst, size_t destMax, DVdeviceptr src, size_
     if (dst == gObservedD2HDst.load()) {
         const bool isPublished = (gObservedD2HQueue != nullptr) && (gObservedD2HQueue->head == gExpectedD2HHead) &&
                                  (gObservedD2HQueue->tail == gExpectedD2HTail) &&
-                                 (gObservedD2HQueue->sliceDesc[gExpectedD2HTail].sliceIdx == gExpectedD2HSlice);
+                                 (reinterpret_cast<const AiccCryptoSliceDesc*>(
+                                      gObservedD2HQueue->taskDescList +
+                                      static_cast<size_t>(gExpectedD2HTail) * gObservedD2HQueue->taskDescSize)
+                                      ->sliceIdx == gExpectedD2HSlice);
         gExpectedD2HSlicePublishedAtDma.store(isPublished);
         gAllowD2HNextConsume.store(true);
     }
@@ -193,7 +216,7 @@ rtError_t DevMemFreeStub(Driver* drv, void* dptr, uint32_t deviceId)
 {
     (void)drv;
     (void)dptr;
-    (void)deviceId;
+    gLastDevMemFreeDevId = deviceId;
     ++gDevMemFreeCount;
     return RT_ERROR_NONE;
 }
@@ -237,7 +260,7 @@ rtError_t DevMemAllocStub(
     const DevMemAllocConfig* const config, const uint64_t curFlag)
 {
     (void)driver;
-    (void)size;
+    gLastDevMemAllocSize = size;
     (void)type;
     (void)deviceId;
     (void)config;
@@ -313,31 +336,30 @@ bool CreatePersistentStream(rtStream_t& handle)
     return ok;
 }
 
-// 辅助线程模拟 AICPU 侧行为：从 sliceDesc[tail] 消费 Host 发布的任务并推进 tail。
+// 辅助线程模拟 AICPU 侧行为：按 BarTaskQueue 协议消费任务描述（推 tail 后推进 complete）。
+// 该消费循环即当前 BarTaskQueue 协议的参考实现，AICPU 侧实现应与此保持一致。
 class AicpuSimulator {
 public:
     static void RunH2DConsumer(
-        CCSliceQueue* queue, uint32_t totalSlices, const std::atomic<bool>& stop, std::atomic<uint32_t>& consumedCount)
+        BarTaskQueue* queue, uint32_t totalSlices, const std::atomic<bool>& stop, std::atomic<uint32_t>& consumedCount)
     {
         while (!stop.load() && (consumedCount.load() < totalSlices)) {
-            const uint8_t head = queue->head;
-            const uint8_t tail = queue->tail;
+            const uint32_t head = queue->head;
+            const uint32_t tail = queue->tail;
             if (head != tail) {
-                queue->tail = static_cast<uint8_t>((tail + 1U) % CC_SLICE_DESC_SLOT_NUM);
-                consumedCount.fetch_add(1U, std::memory_order_relaxed);
+                queue->tail = (tail + 1U) % queue->depth;
+                const uint32_t newCount = consumedCount.fetch_add(1U, std::memory_order_relaxed) + 1U;
+                queue->complete = newCount;
             }
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
     }
 
     static void RunD2HConsumer(
-        CCSliceQueue* queue, const uint8_t* plaintextBase, const uint8_t* bufA, const uint8_t* bufB,
+        BarTaskQueue* queue, const uint8_t* plaintextBase, const uint8_t* bufA, const uint8_t* bufB,
         const std::vector<uint32_t>& sliceLens, const std::atomic<bool>& stop, std::atomic<uint32_t>& consumedCount,
         std::atomic<bool>& descriptorValid)
     {
-        while (!stop.load() && (queue->totalSlices == 0U)) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        }
         size_t offset = 0U;
         for (uint32_t sliceIdx = 0U; (sliceIdx < sliceLens.size()) && !stop.load(); ++sliceIdx) {
             while (!stop.load() && (queue->head == queue->tail)) {
@@ -347,8 +369,9 @@ public:
                 return;
             }
 
-            const uint8_t tail = queue->tail;
-            const CCSliceDesc& info = queue->sliceDesc[tail];
+            const uint32_t tail = queue->tail;
+            const AiccCryptoSliceDesc& info = *reinterpret_cast<const AiccCryptoSliceDesc*>(
+                queue->taskDescList + static_cast<size_t>(tail) * queue->taskDescSize);
             const uint8_t* expectedBuf = (sliceIdx % 2U) == 0U ? bufA : bufB;
             const uint32_t sliceLen = sliceLens[sliceIdx];
             if ((info.sliceIdx != sliceIdx) || (info.ciphertextAddr != PtrToValue(expectedBuf)) ||
@@ -357,8 +380,9 @@ public:
                 descriptorValid.store(false);
             }
             offset += sliceLen;
-            queue->tail = static_cast<uint8_t>((tail + 1U) % CC_SLICE_DESC_SLOT_NUM);
-            consumedCount.fetch_add(1U, std::memory_order_relaxed);
+            queue->tail = (tail + 1U) % queue->depth;
+            const uint32_t newCount = consumedCount.fetch_add(1U, std::memory_order_relaxed) + 1U;
+            queue->complete = newCount;
         }
     }
 };
@@ -383,6 +407,61 @@ rtError_t HostMemAllocStub(
     return RT_ERROR_NONE;
 }
 
+// 设备算子下发捕获 stub：两条下发通道各记一份，供下发用例断言。
+//   - StreamLaunchCpuKernel：内建 AICPU 算子（AiccLoadKey / AiccCrypto / KeystreamFillParallel）
+//   - CcLaunchAivKsXor：自研 AIV KeystreamXor
+const char_t* gLaunchKernelName = nullptr;
+uint8_t gLaunchArgs[128] = {0};
+uint32_t gLaunchArgsSize = 0U;
+AiccKeystreamXorParam gLaunchAiccKeystreamXorParam = {};
+
+void ResetLaunchCapture()
+{
+    gLaunchKernelName = nullptr;
+    gLaunchArgsSize = 0U;
+    (void)memset_s(gLaunchArgs, sizeof(gLaunchArgs), 0, sizeof(gLaunchArgs));
+    gLaunchAiccKeystreamXorParam = AiccKeystreamXorParam{};
+}
+
+rtError_t StreamLaunchCpuKernelCapture(
+    const rtKernelLaunchNames_t* const launchNames, const uint32_t coreDim, const rtArgsEx_t* const argsInfo,
+    Stream* const stm, const uint32_t flag, const uint64_t timeout)
+{
+    (void)coreDim;
+    (void)stm;
+    (void)flag;
+    (void)timeout;
+    gLaunchKernelName = (launchNames == nullptr) ? nullptr : launchNames->kernelName;
+    if ((argsInfo != nullptr) && (argsInfo->args != nullptr)) {
+        gLaunchArgsSize = argsInfo->argsSize;
+        if (gLaunchArgsSize <= sizeof(gLaunchArgs)) {
+            (void)memcpy_s(gLaunchArgs, sizeof(gLaunchArgs), argsInfo->args, gLaunchArgsSize);
+        }
+    }
+    return RT_ERROR_NONE;
+}
+
+rtError_t CcLaunchAivKsXorCapture(Stream* const stm, const AiccKeystreamXorParam& param)
+{
+    (void)stm;
+    gLaunchKernelName = "AiccKeystreamXor";
+    gLaunchAiccKeystreamXorParam = param;
+    return RT_ERROR_NONE;
+}
+
+// 下发路径重入探针：在 CcLaunchAivKsXor 被调用时（即 CC 设备核下发内部）执行一次拷贝入口调用。
+// 旧实现的 thread_local 防递归旁路会让它直接返回 RT_ERROR_CONTINUE_EXECUTE；旁路删除后
+// 必须按正常裁决执行（空指针入参 → RT_ERROR_INVALID_VALUE）。
+rtError_t gNestedMemcpyRet = RT_ERROR_NONE;
+
+rtError_t CcLaunchAivKsXorReentryProbe(Stream* const stm, const AiccKeystreamXorParam& param)
+{
+    (void)stm;
+    (void)param;
+    gNestedMemcpyRet = CCManager::CCMemCopySync(nullptr, 0U, nullptr, 0U, RT_MEMCPY_DEVICE_TO_DEVICE);
+    return RT_ERROR_NONE;
+}
+
 } // namespace
 // 由 stub/cc_crypto_stub.cc 提供，控制 OpenSSLLoader 是否就绪
 namespace cce {
@@ -393,6 +472,53 @@ void SetOpenSSLLoaderReady(bool ready);
 
 class CCManagerTest : public testing::Test {
 protected:
+    // ---------------------------------------------------------------- 共用驱动桩样板
+    // 各用例只关心「这些驱动调用是否成功」，失败注入走各自的全局开关（gPcieRegFail 等）；
+    // 计数版用 invoke 桩，供需要核对回滚次数（gDevMemFreeCount/gHostUnmapCount）的用例使用。
+    void StubPcieAndFree(Driver* const driver)
+    {
+        MOCKER_CPP_VIRTUAL(driver, &Driver::PcieHostRegister).stubs().will(returnValue(RT_ERROR_NONE));
+        MOCKER_CPP_VIRTUAL(driver, &Driver::PcieHostUnRegister).stubs().will(returnValue(RT_ERROR_NONE));
+        MOCKER_CPP_VIRTUAL(driver, &Driver::DevMemFree).stubs().will(returnValue(RT_ERROR_NONE));
+    }
+
+    void StubPcieAndFreeCounted(Driver* const driver)
+    {
+        MOCKER_CPP_VIRTUAL(driver, &Driver::PcieHostRegister).stubs().will(invoke(PcieHostRegisterStub));
+        MOCKER_CPP_VIRTUAL(driver, &Driver::PcieHostUnRegister).stubs().will(returnValue(RT_ERROR_NONE));
+        MOCKER_CPP_VIRTUAL(driver, &Driver::DevMemFree).stubs().will(invoke(DevMemFreeStub));
+    }
+
+    // 流级资源（设备内存 + PCIe BAR）的完整桩；countFrees=true 时 DevMemFree 走计数桩
+    void StubStreamResDriver(Driver* const driver, const bool countFrees)
+    {
+        MOCKER_CPP_VIRTUAL(driver, &Driver::DevMemAllocWithBackupFlag).stubs().will(invoke(DevMemAllocEntryStub));
+        MOCKER_CPP_VIRTUAL(driver, &Driver::PcieHostRegister).stubs().will(invoke(PcieHostRegisterStub));
+        MOCKER_CPP_VIRTUAL(driver, &Driver::PcieHostUnRegister).stubs().will(returnValue(RT_ERROR_NONE));
+        if (countFrees) {
+            MOCKER_CPP_VIRTUAL(driver, &Driver::DevMemFree).stubs().will(invoke(DevMemFreeStub));
+        } else {
+            MOCKER_CPP_VIRTUAL(driver, &Driver::DevMemFree).stubs().will(returnValue(RT_ERROR_NONE));
+        }
+    }
+
+    // worker host 缓冲（HostMemAlloc + DMA map/unmap + free）；Simple 版不统计 map/unmap/free
+    void StubWorkerHostDriver(Driver* const driver)
+    {
+        MOCKER_CPP_VIRTUAL(driver, &Driver::HostMemAlloc).stubs().will(invoke(HostMemAllocStub));
+        MOCKER_CPP_VIRTUAL(driver, &Driver::HostDmaMap).stubs().will(invoke(HostDmaMapStub));
+        MOCKER_CPP_VIRTUAL(driver, &Driver::HostDmaUnmap).stubs().will(invoke(HostDmaUnmapStub));
+        MOCKER_CPP_VIRTUAL(driver, &Driver::HostMemFree).stubs().will(invoke(HostMemFreeStub));
+    }
+
+    void StubWorkerHostDriverSimple(Driver* const driver)
+    {
+        MOCKER_CPP_VIRTUAL(driver, &Driver::HostMemAlloc).stubs().will(invoke(HostMemAllocStub));
+        MOCKER_CPP_VIRTUAL(driver, &Driver::HostDmaMap).stubs().will(returnValue(RT_ERROR_NONE));
+        MOCKER_CPP_VIRTUAL(driver, &Driver::HostDmaUnmap).stubs().will(returnValue(RT_ERROR_NONE));
+        MOCKER_CPP_VIRTUAL(driver, &Driver::HostMemFree).stubs().will(returnValue(RT_ERROR_NONE));
+    }
+
     static void SetUpTestCase()
     {
         // 类级初始化使用普通 Host 环境创建 Runtime，CC 环境由各用例按需配置。
@@ -433,6 +559,8 @@ protected:
         gPcieRegFail = false;
         gPcieMappedNull = false;
         gDevMemFreeCount = 0U;
+        gLastDevMemAllocSize = 0U;
+        gLastDevMemFreeDevId = UINT32_MAX;
         gDevMemAllocReturnFail = false;
         gHostDmaMapFail = false;
         gHostDmaUnmapCount = 0U;
@@ -451,6 +579,10 @@ protected:
         gExpectedD2HSlicePublishedAtDma.store(false);
         gAllowD2HNextConsume.store(false);
         MOCKER(drvMemcpy).stubs().will(invoke(DrvMemcpyStub));
+        // 本套件按真实 CVM 口径跑：密钥由驱动桩 halGetSlotKey 提供。
+        // CC 初始化会下发 LoadKey，用例里把 StreamLaunchCpuKernel
+        // 打桩，既保证不把任务提交进 mock 驱动碰不到的真实回收通道（否则 SubmitMaintenanceTask→SyncTask
+        // 会无限等 CQ 上报而挂死），也便于断言下发算子名与参数。
         std::cout << "ut test start." << std::endl;
     }
 
@@ -536,20 +668,57 @@ TEST_F(CCManagerTest, TaskQueue_CancelTasksByStream_Basic)
 
 TEST_F(CCManagerTest, TaskQueue_FullEmpty)
 {
-    CCSliceQueue queue{};
-    queue.depth = 3;
-    queue.head = 0;
-    queue.tail = 0;
+    alignas(alignof(BarTaskQueue)) uint8_t queueBuf[sizeof(BarTaskQueue)] = {};
+    BarTaskQueue* const queue = reinterpret_cast<BarTaskQueue*>(queueBuf);
+    queue->depth = 3U;
+    queue->head = 0U;
+    queue->tail = 0U;
 
-    EXPECT_TRUE(queue.IsEmpty());
-    EXPECT_FALSE(queue.IsFull());
+    bool isFull = true;
+    bool isEmpty = false;
+    ASSERT_EQ(IsBarTaskQueueFull(queue, &isFull), RT_ERROR_NONE);
+    EXPECT_FALSE(isFull);
+    ASSERT_EQ(IsBarTaskQueueEmpty(queue, &isEmpty), RT_ERROR_NONE);
+    EXPECT_TRUE(isEmpty);
 
-    queue.head = 1;
-    EXPECT_FALSE(queue.IsEmpty());
-    EXPECT_FALSE(queue.IsFull());
+    queue->head = 1U;
+    ASSERT_EQ(IsBarTaskQueueFull(queue, &isFull), RT_ERROR_NONE);
+    EXPECT_FALSE(isFull);
+    ASSERT_EQ(IsBarTaskQueueEmpty(queue, &isEmpty), RT_ERROR_NONE);
+    EXPECT_FALSE(isEmpty);
 
-    queue.head = 2;
-    EXPECT_TRUE(queue.IsFull());
+    queue->head = 2U;
+    ASSERT_EQ(IsBarTaskQueueFull(queue, &isFull), RT_ERROR_NONE);
+    EXPECT_TRUE(isFull);
+}
+
+// ============================================================================
+// XorBytesOptimized Tests（SIMD 主体 + 64bit/字节尾段 + 原地异或）
+// ============================================================================
+
+TEST_F(CCManagerTest, XorBytesOptimized_CoversLengthsAndAliasing)
+{
+    const size_t lengths[] = {0U, 1U, 7U, 8U, 9U, 15U, 16U, 17U, 31U, 32U, 33U, 1000U, 4096U};
+    for (const size_t len : lengths) {
+        std::vector<uint8_t> a(len);
+        std::vector<uint8_t> b(len);
+        for (size_t i = 0U; i < len; ++i) {
+            a[i] = static_cast<uint8_t>((i * 7U) + 1U);
+            b[i] = static_cast<uint8_t>((i * 13U) + 5U);
+        }
+        std::vector<uint8_t> out(len, 0xAAU);
+        XorBytesOptimized(a.data(), b.data(), out.data(), len);
+        for (size_t i = 0U; i < len; ++i) {
+            ASSERT_EQ(out[i], static_cast<uint8_t>(a[i] ^ b[i])) << "len=" << len << " i=" << i;
+        }
+        // 输出与输入别名（原地异或）结果一致
+        XorBytesOptimized(a.data(), b.data(), a.data(), len);
+        for (size_t i = 0U; i < len; ++i) {
+            ASSERT_EQ(a[i], out[i]) << "len=" << len << " i=" << i;
+        }
+    }
+    // 空指针/零长度安全返回
+    XorBytesOptimized(nullptr, nullptr, nullptr, 0U);
 }
 
 // ============================================================================
@@ -580,18 +749,6 @@ TEST_F(CCManagerTest, Crypto_InitKey_Fails)
     SetOpenSSLLoaderReady(true);
 }
 
-TEST_F(CCManagerTest, Crypto_ReleaseKey_Basic)
-{
-    CCrypto crypto;
-    uint32_t deviceId = 0;
-
-    MOCKER(GetKeyFromKernel).stubs().will(returnValue(0));
-    crypto.InitKey(deviceId);
-
-    rtError_t ret = crypto.ReleaseKey(deviceId);
-    EXPECT_EQ(ret, RT_ERROR_NONE);
-}
-
 TEST_F(CCManagerTest, Crypto_Encrypt_NullParams)
 {
     CCrypto crypto;
@@ -600,13 +757,13 @@ TEST_F(CCManagerTest, Crypto_Encrypt_NullParams)
     uint8_t ciphertext[64] = {0};
     size_t ctLen = sizeof(ciphertext);
 
-    rtError_t ret = crypto.Encrypt(deviceId, nullptr, 16, nullptr, 0, ciphertext, &ctLen);
+    rtError_t ret = crypto.Encrypt(deviceId, CC_CRYPTO_CIPHER::AES_128, nullptr, 16, nullptr, 0, ciphertext, &ctLen);
     EXPECT_NE(ret, RT_ERROR_NONE);
 
-    ret = crypto.Encrypt(deviceId, plaintext, 16, nullptr, 0, nullptr, &ctLen);
+    ret = crypto.Encrypt(deviceId, CC_CRYPTO_CIPHER::AES_128, plaintext, 16, nullptr, 0, nullptr, &ctLen);
     EXPECT_NE(ret, RT_ERROR_NONE);
 
-    ret = crypto.Encrypt(deviceId, plaintext, 16, nullptr, 0, ciphertext, nullptr);
+    ret = crypto.Encrypt(deviceId, CC_CRYPTO_CIPHER::AES_128, plaintext, 16, nullptr, 0, ciphertext, nullptr);
     EXPECT_NE(ret, RT_ERROR_NONE);
 }
 
@@ -624,32 +781,68 @@ TEST_F(CCManagerTest, Crypto_EncryptDecrypt_RoundTrip)
     uint8_t ciphertext[256] = {0};
     size_t ctLen = sizeof(ciphertext);
 
-    rtError_t ret = crypto.Encrypt(deviceId, plaintext, sizeof(plaintext), nullptr, 0, ciphertext, &ctLen);
+    rtError_t ret = crypto.Encrypt(
+        deviceId, CC_CRYPTO_CIPHER::AES_128, plaintext, sizeof(plaintext), nullptr, 0, ciphertext, &ctLen);
     EXPECT_EQ(ret, RT_ERROR_NONE);
-    // 真实实现输出 84B CCCipherTxtHeader + 密文（密文长度 == 明文长度）
-    EXPECT_EQ(ctLen, sizeof(CCCipherTxtHeader) + sizeof(plaintext));
+    // 真实实现输出 84B AiccCiphertextHeader + 密文（密文长度 == 明文长度）
+    EXPECT_EQ(ctLen, sizeof(AiccCiphertextHeader) + sizeof(plaintext));
 
     uint8_t decrypted[32] = {0};
     size_t ptLen = sizeof(decrypted);
-    ret = crypto.Decrypt(deviceId, ciphertext, ctLen, nullptr, 0, decrypted, &ptLen);
+    ret = crypto.Decrypt(deviceId, CC_CRYPTO_CIPHER::AES_128, ciphertext, ctLen, nullptr, 0, decrypted, &ptLen);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     EXPECT_EQ(ptLen, sizeof(plaintext));
     EXPECT_EQ(memcmp(plaintext, decrypted, sizeof(plaintext)), 0);
 }
 
-TEST_F(CCManagerTest, Crypto_BuildDeviceCryptoParam_Basic)
+TEST_F(CCManagerTest, Crypto_GetDeviceKeyAddr_Basic)
 {
     CCrypto crypto;
-    uint32_t deviceId = 0;
+    uint64_t encryptAddr = 0U;
+    uint64_t decryptAddr = 0U;
 
+    // ① 出参为空/密钥未初始化：拒绝
+    EXPECT_EQ(crypto.GetDeviceKeyAddr(CC_CRYPTO_DIRECTION::ENCRYPT, nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(crypto.GetDeviceKeyAddr(CC_CRYPTO_DIRECTION::ENCRYPT, &encryptAddr), RT_ERROR_CC_KEY_NOT_INITIALIZED);
+
+    // ② 初始化后：ENCRYPT/DECRYPT 各指向设备密钥区的一段，两者相差一个 keyLen
     MOCKER(GetKeyFromKernel).stubs().will(returnValue(0));
-    crypto.InitKey(deviceId);
+    ASSERT_EQ(crypto.InitKey(0), RT_ERROR_NONE);
+    ASSERT_EQ(crypto.GetDeviceKeyAddr(CC_CRYPTO_DIRECTION::ENCRYPT, &encryptAddr), RT_ERROR_NONE);
+    ASSERT_EQ(crypto.GetDeviceKeyAddr(CC_CRYPTO_DIRECTION::DECRYPT, &decryptAddr), RT_ERROR_NONE);
+    EXPECT_NE(encryptAddr, 0U);
+    EXPECT_EQ(encryptAddr, decryptAddr + AICC_KEY_SIZE);
+}
 
-    CCCryptoKernelParam param{};
-    rtError_t ret = crypto.BuildDeviceCryptoParam(deviceId, CC_CRYPTO_MODE::ENCRYPT_MODE, &param);
-    EXPECT_EQ(ret, RT_ERROR_NONE);
-    EXPECT_EQ(param.mode, static_cast<uint32_t>(CC_CRYPTO_MODE::ENCRYPT_MODE));
-    EXPECT_EQ(param.algType, static_cast<uint32_t>(CC_CRYPTO_ALG_TYPE::AES_128_GCM));
+TEST_F(CCManagerTest, Crypto_Destructor_FreesKeyRegionWithBoundDevId)
+{
+    // 析构路径（未显式 ReleaseKey）：设备密钥区必须按 InitKey 绑定的 deviceId 释放，不能用 0 兜底
+    MOCKER(GetKeyFromKernel).stubs().will(returnValue(0));
+    Driver* const realDriver = ((Runtime*)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
+    ASSERT_NE(realDriver, (Driver*)nullptr);
+    MOCKER_CPP_VIRTUAL(realDriver, &Driver::DevMemFree).stubs().will(invoke(DevMemFreeStub));
+
+    const uint32_t bindDevId = 3U; // 刻意非 0：用 0 兜底的实现会在这里暴露
+    {
+        CCrypto crypto;
+        ASSERT_EQ(crypto.InitKey(bindDevId), RT_ERROR_NONE);
+    } // 不调 ReleaseKey，直接析构
+    EXPECT_EQ(gLastDevMemFreeDevId, bindDevId);
+}
+
+TEST_F(CCManagerTest, CCDevMallocWithCfg_AlignsSizeTo32B)
+{
+    // devMallocWithCfg 回调：分配尺寸按 32B 对齐后下发驱动（与 CCDevMalloc 同口径）
+    Driver* const realDriver = ((Runtime*)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
+    ASSERT_NE(realDriver, (Driver*)nullptr);
+    MOCKER_CPP_VIRTUAL(realDriver, &Driver::DevMemAllocWithFlag).stubs().will(invoke(DevMemAllocStub));
+    void* ptr = nullptr;
+    gLastDevMemAllocSize = 0U;
+    ASSERT_EQ(CCManager::CCDevMallocWithCfg(&ptr, 100U, RT_MEMORY_HBM, 0U, 0U), RT_ERROR_NONE);
+    EXPECT_EQ(gLastDevMemAllocSize, 128U);
+
+    ASSERT_EQ(CCManager::CCDevMallocWithCfg(&ptr, 32U, RT_MEMORY_HBM, 0U, 0U), RT_ERROR_NONE);
+    EXPECT_EQ(gLastDevMemAllocSize, 32U);
 }
 
 TEST_F(CCManagerTest, Crypto_BuildLoadKeyParam_NullParam)
@@ -665,112 +858,615 @@ TEST_F(CCManagerTest, Crypto_BuildLoadKeyParam_UninitializedKey)
     EXPECT_EQ(crypto.BuildLoadKeyParam(&param), RT_ERROR_CC_KEY_NOT_INITIALIZED);
 }
 
+TEST_F(CCManagerTest, Crypto_BuildLoadKeyParam_SlotLayout)
+{
+    // 槽位口径：CTR 两方向都用 1 号槽（单密钥，部署只灌 1 号槽）；GCM 双向 1/2 号槽。
+    // 与 master 的差异是有意为之：master 对 CTR 也填 2 号槽，真机读槽会失败。
+    MOCKER(GetKeyFromKernel).stubs().will(returnValue(0));
+    MOCKER(GetKeyFromSlot).stubs().will(returnValue(0));
+
+    CCrypto cryptoGcm(CC_CRYPTO_ALG_TYPE::GCM);
+    ASSERT_EQ(cryptoGcm.InitKey(0), RT_ERROR_NONE);
+    CCLoadKeyKernelParam gcmParam{};
+    ASSERT_EQ(cryptoGcm.BuildLoadKeyParam(&gcmParam), RT_ERROR_NONE);
+    EXPECT_EQ(gcmParam.h2dSlotId, 1U);
+    EXPECT_EQ(gcmParam.d2hSlotId, 2U);
+    EXPECT_EQ(gcmParam.keyLen, AICC_KEY_SIZE);
+    EXPECT_NE(gcmParam.keyAddr, 0U);
+
+    CCrypto cryptoCtr(CC_CRYPTO_ALG_TYPE::CTR);
+    ASSERT_EQ(cryptoCtr.InitKey(0), RT_ERROR_NONE);
+    CCLoadKeyKernelParam ctrParam{};
+    ASSERT_EQ(cryptoCtr.BuildLoadKeyParam(&ctrParam), RT_ERROR_NONE);
+    EXPECT_EQ(ctrParam.h2dSlotId, 1U);
+    EXPECT_EQ(ctrParam.d2hSlotId, 1U);
+}
+
+// ============================================================================
+// CCCryptoPlugin Factory / Switch Tests
+// ============================================================================
+
+TEST_F(CCManagerTest, Plugin_Factory_Basics)
+{
+    CCrypto crypto;
+    MOCKER(GetKeyFromKernel).stubs().will(returnValue(0));
+
+    // ① 已登记模式可创建，路由元数据（algType/cipher/kernelName/descSize/轨分派）正确
+    CCCryptoPlugin* gcm = nullptr;
+    ASSERT_EQ(CreateCryptoPlugin(CC_CRYPTO_ALG_TYPE::GCM, &crypto, &gcm), RT_ERROR_NONE);
+    ASSERT_NE(gcm, nullptr);
+    EXPECT_EQ(gcm->AlgType(), CC_CRYPTO_ALG_TYPE::GCM);
+    EXPECT_STREQ(gcm->KernelName(), "AiccCrypto");
+    EXPECT_EQ(gcm->Cipher(), CC_CRYPTO_CIPHER::AES_128);
+    EXPECT_EQ(gcm->SliceDescSize(), sizeof(AiccCryptoSliceDesc));
+    EXPECT_EQ(gcm->SliceDescSize(), 32U);
+    delete gcm;
+
+    CCCryptoPlugin* ctr = nullptr;
+    ASSERT_EQ(CreateCryptoPlugin(CC_CRYPTO_ALG_TYPE::CTR, &crypto, &ctr), RT_ERROR_NONE);
+    ASSERT_NE(ctr, nullptr);
+    EXPECT_EQ(ctr->AlgType(), CC_CRYPTO_ALG_TYPE::CTR);
+    EXPECT_STREQ(ctr->KernelName(), "AiccKeystreamXor");
+    EXPECT_EQ(ctr->Cipher(), CC_CRYPTO_CIPHER::AES_128);
+    EXPECT_EQ(ctr->SliceDescSize(), sizeof(AiccKeystreamXorSliceDesc));
+    EXPECT_EQ(ctr->SliceDescSize(), 40U);
+    delete ctr;
+
+    // ② 非法 algType / 空出参
+    CCCryptoPlugin* invalid = reinterpret_cast<CCCryptoPlugin*>(static_cast<uintptr_t>(1U));
+    EXPECT_EQ(CreateCryptoPlugin(static_cast<CC_CRYPTO_ALG_TYPE>(99U), &crypto, &invalid), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(invalid, nullptr);
+    EXPECT_EQ(CreateCryptoPlugin(CC_CRYPTO_ALG_TYPE::GCM, &crypto, nullptr), RT_ERROR_INVALID_VALUE);
+}
+
+TEST_F(CCManagerTest, Plugin_Gcm_LaunchTransfer_UsesAiccCryptoParam)
+{
+    RETAIN_DEVICE(dev);
+    rtStream_t stmHandle = 0U;
+    ASSERT_TRUE(CreatePersistentStream(stmHandle));
+    Stream* stm = rt_ut::UnwrapOrNull<Stream>(stmHandle);
+    ASSERT_NE(stm, (Stream*)nullptr);
+
+    MOCKER(GetKeyFromKernel).stubs().will(returnValue(0));
+    CCrypto crypto;
+    ASSERT_EQ(crypto.InitKey(dev->Id_()), RT_ERROR_NONE);
+    CCGcmPlugin plugin(&crypto);
+
+    ResetLaunchCapture();
+    MOCKER(StreamLaunchCpuKernel).expects(once()).will(invoke(StreamLaunchCpuKernelCapture));
+
+    CCMemcpyTask task{};
+    task.kind = RT_MEMCPY_DEVICE_TO_HOST;
+    task.totalSize = static_cast<size_t>(3U) * CC_PLAINTEXT_SLICE_SIZE;
+    EXPECT_EQ(plugin.LaunchTransfer(stm, 0x1234ULL, task), RT_ERROR_NONE);
+    EXPECT_STREQ(gLaunchKernelName, "AiccCrypto");
+    ASSERT_EQ(gLaunchArgsSize, sizeof(AiccCryptoParam));
+    const auto* const param = reinterpret_cast<const AiccCryptoParam*>(gLaunchArgs);
+    EXPECT_EQ(param->taskQueueAddr, 0x1234ULL);
+    EXPECT_EQ(param->mode, static_cast<uint32_t>(CC_CRYPTO_DIRECTION::ENCRYPT));
+    EXPECT_EQ(param->algType, static_cast<uint32_t>(AICC_ALG_AES128_GCM));
+    // totalSlices 位于 algType 后的 4B 对齐填充（偏移 20），参数整体仍为 32B；3 个明文分片 → 3
+    EXPECT_EQ(param->totalSlices, 3U);
+    EXPECT_EQ(param->keyLen, AICC_KEY_SIZE);
+
+    (void)stm->TakeCCStreamResource();
+    rtStreamDestroy(stmHandle);
+    ((Runtime*)Runtime::Instance())->DeviceRelease(dev);
+}
+
+TEST_F(CCManagerTest, Plugin_Ctr_LaunchTransfer_UsesAiccKeystreamXorParam)
+{
+    // CTR 路径直接构造 CCCtrPlugin，不依赖进程级生效模式（模式由内核节点决定、不可切换）
+    RETAIN_DEVICE(dev);
+    rtStream_t stmHandle = 0U;
+    ASSERT_TRUE(CreatePersistentStream(stmHandle));
+    Stream* stm = rt_ut::UnwrapOrNull<Stream>(stmHandle);
+    ASSERT_NE(stm, (Stream*)nullptr);
+
+    CCrypto crypto;
+    CCCtrPlugin plugin(&crypto);
+
+    ResetLaunchCapture();
+    MOCKER(CcLaunchAivKsXor).expects(once()).will(invoke(CcLaunchAivKsXorCapture));
+
+    CCMemcpyTask task{};
+    task.kind = RT_MEMCPY_HOST_TO_DEVICE;
+    task.totalSize = 64U;
+    EXPECT_EQ(plugin.LaunchTransfer(stm, 0x5678ULL, task), RT_ERROR_NONE);
+    // CTR keystream 只下发纯 XOR 算子，参数为 AiccKeystreamXorParam（逐片密钥流地址随 desc 下发，入参不带池基址）
+    EXPECT_STREQ(gLaunchKernelName, "AiccKeystreamXor");
+    EXPECT_EQ(gLaunchAiccKeystreamXorParam.taskQueueAddr, 0x5678ULL);
+    EXPECT_EQ(gLaunchAiccKeystreamXorParam.mode, static_cast<uint32_t>(CC_CRYPTO_DIRECTION::DECRYPT));
+    // 总分片数与 CCWorker::SetupTask 同口径：64B 单分片
+    EXPECT_EQ(gLaunchAiccKeystreamXorParam.totalSlices, 1U);
+    EXPECT_EQ(gLaunchAiccKeystreamXorParam.reserved, 64U);
+
+    (void)stm->TakeCCStreamResource();
+    rtStreamDestroy(stmHandle);
+    ((Runtime*)Runtime::Instance())->DeviceRelease(dev);
+}
+
+TEST_F(CCManagerTest, Plugin_LaunchDeviceKernel_LoadKey_UsesBuiltinAicpuKernel)
+{
+    // AiccLoadKey 走 AICPU 调度器侧内建算子（StreamLaunchCpuKernel），不经自研 AIV 通道；
+    // 参数 16B 与 master ABI 同构
+    RETAIN_DEVICE(dev);
+    Stream* const stm = dev->GetCtrlSQStream(nullptr);
+    ASSERT_NE(stm, (Stream*)nullptr);
+
+    CCLoadKeyKernelParam param{};
+    param.h2dSlotId = 1U;
+    param.d2hSlotId = 2U;
+    param.keyLen = AICC_KEY_SIZE;
+    param.keyAddr = 0x1000ULL;
+
+    ResetLaunchCapture();
+    MOCKER(StreamLaunchCpuKernel).expects(once()).will(invoke(StreamLaunchCpuKernelCapture));
+    MOCKER(CcLaunchAivKsXor).expects(never());
+    EXPECT_EQ(CCCryptoPlugin::LaunchDeviceKernel(stm, "AiccLoadKey", &param, sizeof(param)), RT_ERROR_NONE);
+    EXPECT_STREQ(gLaunchKernelName, "AiccLoadKey");
+    ASSERT_EQ(gLaunchArgsSize, sizeof(CCLoadKeyKernelParam));
+    const auto* const launched = reinterpret_cast<const CCLoadKeyKernelParam*>(gLaunchArgs);
+    EXPECT_EQ(launched->keyAddr, 0x1000ULL);
+    EXPECT_EQ(launched->keyLen, AICC_KEY_SIZE);
+
+    ((Runtime*)Runtime::Instance())->DeviceRelease(dev);
+}
+
+TEST_F(CCManagerTest, Plugin_LaunchDeviceKernel_KsXor_BadArgsSize)
+{
+    RETAIN_DEVICE(dev);
+    Stream* const stm = dev->GetCtrlSQStream(nullptr);
+    ASSERT_NE(stm, (Stream*)nullptr);
+
+    AiccKeystreamXorParam param{};
+    MOCKER(CcLaunchAivKsXor).expects(never());
+    MOCKER(StreamLaunchCpuKernel).expects(never());
+    EXPECT_EQ(
+        CCCryptoPlugin::LaunchDeviceKernel(stm, "AiccKeystreamXor", &param, static_cast<uint32_t>(sizeof(param) - 1U)),
+        RT_ERROR_INVALID_VALUE);
+
+    ((Runtime*)Runtime::Instance())->DeviceRelease(dev);
+}
+
+TEST_F(CCManagerTest, Plugin_LaunchDeviceKernel_KsXor_NoThreadLocalBypass)
+{
+    // KsXor 直调分支：CC 设备核下发内部的拷贝不再由 thread_local 防递归旁路兜底。
+    // 下发期间调用 CC 拷贝入口必须按正常裁决执行（空指针 → RT_ERROR_INVALID_VALUE），
+    // 而不是被旁路拦成 RT_ERROR_CONTINUE_EXECUTE；若有人重新引入旁路，本用例会失败。
+    RETAIN_DEVICE(dev);
+    Stream* const stm = dev->GetCtrlSQStream(nullptr);
+    ASSERT_NE(stm, (Stream*)nullptr);
+
+    AiccKeystreamXorParam param{};
+    param.taskQueueAddr = 0x2000ULL;
+    param.mode = static_cast<uint32_t>(CC_CRYPTO_DIRECTION::ENCRYPT);
+    param.totalSlices = 2U;
+
+    ResetLaunchCapture();
+    gNestedMemcpyRet = RT_ERROR_CONTINUE_EXECUTE;
+    MOCKER(StreamLaunchCpuKernel).expects(never());
+    MOCKER(CcLaunchAivKsXor).expects(once()).will(invoke(CcLaunchAivKsXorReentryProbe));
+    EXPECT_EQ(CCCryptoPlugin::LaunchDeviceKernel(stm, "AiccKeystreamXor", &param, sizeof(param)), RT_ERROR_NONE);
+    EXPECT_NE(gNestedMemcpyRet, RT_ERROR_CONTINUE_EXECUTE);
+    EXPECT_EQ(gNestedMemcpyRet, RT_ERROR_INVALID_VALUE);
+
+    ((Runtime*)Runtime::Instance())->DeviceRelease(dev);
+}
+
+TEST_F(CCManagerTest, Plugin_ActiveAlg)
+{
+    // ① 生效模式由内核节点 mem_encrypt_alg 决定（进程内首次读取后缓存）
+    const CC_CRYPTO_ALG_TYPE activeAlg = GetActiveCryptoAlg();
+    EXPECT_EQ(GetActiveCryptoAlg(), activeAlg);
+
+    // ② 插件工厂按生效模式创建
+    CCrypto crypto;
+    CCCryptoPlugin* plugin = nullptr;
+    ASSERT_EQ(CreateCryptoPlugin(activeAlg, &crypto, &plugin), RT_ERROR_NONE);
+    ASSERT_NE(plugin, nullptr);
+    EXPECT_EQ(plugin->AlgType(), activeAlg);
+    delete plugin;
+}
+
+TEST_F(CCManagerTest, CcSelectAivBlockDim_Cases)
+{
+    // 每核 256KiB → 取 2 的幂 → 钳到 [1, maxDim]；边界与 AIV 下发实现一致。
+    constexpr uint32_t kUnit = CC_AIV_DIM_UNIT_BYTES;
+    EXPECT_EQ(CcSelectAivBlockDim(0U, AICC_MAX_BLOCK_DIM), AICC_MAX_BLOCK_DIM); // 旧 host 未填 → 上限
+    EXPECT_EQ(CcSelectAivBlockDim(8U, AICC_MAX_BLOCK_DIM), 1U);
+    EXPECT_EQ(CcSelectAivBlockDim(kUnit, AICC_MAX_BLOCK_DIM), 1U);
+    EXPECT_EQ(CcSelectAivBlockDim(kUnit + 1U, AICC_MAX_BLOCK_DIM), 2U);
+    EXPECT_EQ(CcSelectAivBlockDim(kUnit * 3U, AICC_MAX_BLOCK_DIM), 4U);                 // 768KiB
+    EXPECT_EQ(CcSelectAivBlockDim(kUnit * 4U, AICC_MAX_BLOCK_DIM), 4U);                 // 1MiB
+    EXPECT_EQ(CcSelectAivBlockDim(kUnit * 4U + 1U, AICC_MAX_BLOCK_DIM), AICC_MAX_BLOCK_DIM);
+    EXPECT_EQ(CcSelectAivBlockDim(kUnit * 8U, AICC_MAX_BLOCK_DIM), AICC_MAX_BLOCK_DIM); // 2MiB
+    EXPECT_EQ(CcSelectAivBlockDim(kUnit * 8U, 4U), 4U);                                 // 钳到 maxDim
+    EXPECT_EQ(CcSelectAivBlockDim(8U, 0U), 1U);                                         // maxDim=0 至少一核
+    EXPECT_LE(AICC_MAX_BLOCK_DIM, 8U); // FFTS flag14 同步粒度为一组 8 个 AIV
+
+    // 性质扫描：结果恒为 2 的幂、落在 [1, 上限]
+    for (uint32_t size = 1U; size <= 4U * 1024U * 1024U; size *= 2U) {
+        const uint32_t dim = CcSelectAivBlockDim(size, AICC_MAX_BLOCK_DIM);
+        EXPECT_GE(dim, 1U);
+        EXPECT_LE(dim, AICC_MAX_BLOCK_DIM);
+        EXPECT_EQ((dim & (dim - 1U)), 0U);
+    }
+}
+
+TEST_F(CCManagerTest, CcSysfs_UnreadableNodeFallsBackToGcm)
+{
+    // 选「原生路径」时脚本不设 RT_CC_SYSFS_CVM_ROOT，runtime 读系统默认挂载点；读不到就必须按 AES_GCM 兜底。
+    // 这里锁定输入侧口径：节点不可读时 ReadCcEncryptMode 返回 false（GetActiveCryptoAlg 据此落 GCM）。
+    const ScopeGuard restore([]() { (void)unsetenv("RT_CC_SYSFS_CVM_ROOT"); });
+    ASSERT_EQ(setenv("RT_CC_SYSFS_CVM_ROOT", "/nonexistent/cc-sysfs-ut", 1), 0);
+    std::string mode = "AES_CTR"; // 预置非空，排除“本来就没写”造成的假象
+    EXPECT_FALSE(ReadCcEncryptMode(mode));
+    EXPECT_EQ(mode, "AES_CTR");   // 读失败不改写输出参数
+
+    // 默认挂载点在 UT 环境里同样不可读 → 仍 false；两种入口都走 GCM 兜底
+    (void)unsetenv("RT_CC_SYSFS_CVM_ROOT");
+    EXPECT_FALSE(ReadCcEncryptMode(mode));
+}
+
+TEST_F(CCManagerTest, Plugin_ActiveCipher_Switch)
+{
+    const ScopeGuard restoreCipher([]() { (void)SetActiveCryptoCipher(CC_CRYPTO_CIPHER::AES_128); });
+    ASSERT_EQ(SetActiveCryptoCipher(CC_CRYPTO_CIPHER::AES_128), RT_ERROR_NONE);
+
+    // ① 缺省 AES：插件按缺省算法创建
+    CCrypto crypto;
+    CCCryptoPlugin* plugin = nullptr;
+    ASSERT_EQ(CreateCryptoPlugin(CC_CRYPTO_ALG_TYPE::GCM, &crypto, &plugin), RT_ERROR_NONE);
+    ASSERT_NE(plugin, nullptr);
+    EXPECT_EQ(plugin->Cipher(), CC_CRYPTO_CIPHER::AES_128);
+
+    // ② 切到未实现的 SM4：切换本身允许（插件持原子引用立即生效），加解密取原语时才拒绝
+    EXPECT_EQ(SetActiveCryptoCipher(CC_CRYPTO_CIPHER::SM4), RT_ERROR_NONE);
+    EXPECT_EQ(GetActiveCryptoCipher(), CC_CRYPTO_CIPHER::SM4);
+    EXPECT_EQ(plugin->Cipher(), CC_CRYPTO_CIPHER::SM4);
+
+    // ③ 插件持原子引用：生效值变化后无须重建插件即读到新值
+    ASSERT_EQ(SetActiveCryptoCipher(CC_CRYPTO_CIPHER::AES_128), RT_ERROR_NONE);
+    EXPECT_EQ(plugin->Cipher(), CC_CRYPTO_CIPHER::AES_128);
+    delete plugin;
+
+    // ④ 非法值拒绝
+    EXPECT_EQ(SetActiveCryptoCipher(static_cast<CC_CRYPTO_CIPHER>(99U)), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(GetActiveCryptoCipher(), CC_CRYPTO_CIPHER::AES_128);
+}
+TEST_F(CCManagerTest, Worker_HookFlow_H2D_And_D2H_RoundTrip)
+{
+    RETAIN_DEVICE(dev);
+    Driver* realDriver = dev->Driver_();
+
+    rtStream_t stmHandle = 0U;
+    ASSERT_TRUE(CreatePersistentStream(stmHandle));
+    Stream* stm = rt_ut::UnwrapOrNull<Stream>(stmHandle);
+    ASSERT_NE(stm, (Stream*)nullptr);
+    const uint32_t streamId = static_cast<uint32_t>(stm->Id_());
+
+    CCrypto crypto(CC_CRYPTO_ALG_TYPE::CTR);
+    MOCKER(GetKeyFromSlot).stubs().will(returnValue(0)); // CTR 复用 H2D 的 1 号槽
+    ASSERT_EQ(crypto.InitKey(0), RT_ERROR_NONE);
+
+    // 注入伪造的密钥流池：不依赖真实设备，密钥流固定为全 1，
+    // 段大小覆盖本用例的 100 字节分片。
+    KeystreamOps ksOps;
+    ksOps.allocSegment = [](KeystreamSegment& segment) {
+        segment.hostAddr = static_cast<uint8_t*>(malloc(static_cast<size_t>(segment.segmentSize)));
+        segment.deviceAddr = reinterpret_cast<uint8_t*>(static_cast<uintptr_t>(0x3FF0000ULL));
+        return segment.hostAddr != nullptr;
+    };
+    ksOps.freeSegment = [](KeystreamSegment& segment) {
+        free(segment.hostAddr);
+        segment.hostAddr = nullptr;
+        segment.deviceAddr = nullptr;
+    };
+    ksOps.initContext = [](KeystreamContext& context) {
+        for (auto& fillStream : context.fillStreams) {
+            fillStream = reinterpret_cast<Stream*>(static_cast<uintptr_t>(0x1000U));
+        }
+        return true;
+    };
+    ksOps.releaseContext = [](KeystreamContext&) {};
+    ksOps.fillSegment = [](KeystreamSegment& segment, Stream*, const uint8_t*) {
+        (void)memset_s(
+            segment.hostAddr, static_cast<size_t>(segment.segmentSize), 0xFF, static_cast<size_t>(segment.segmentSize));
+        return RT_ERROR_NONE;
+    };
+    crypto.keystreamPool_ = std::make_shared<KeystreamManager>(0, &ksOps);
+    KeystreamKey ksKey{};
+    ksKey.keyAddr = 0x3FF0000ULL;
+    ksKey.keyLen = AICC_KEY_SIZE;
+    ASSERT_EQ(crypto.keystreamPool_->Init({{256, 1024, 1}}, ksKey), RT_ERROR_NONE);
+    crypto.deviceId_ = 0U;
+    const ScopeGuard resetKsPool([&crypto]() { crypto.keystreamPool_.reset(); });
+
+    StubPcieAndFreeCounted(realDriver);
+
+    // 回调轨分片环按 CTR desc（40B）创建
+    CCStreamResManage streamRes;
+    ASSERT_EQ(streamRes.Init(dev, sizeof(AiccKeystreamXorSliceDesc)), RT_ERROR_NONE);
+    stm->SetCCStreamResource(&streamRes);
+
+    CCCtrPlugin ctrPlugin(&crypto);
+
+    uint8_t deviceBufA[1024] = {0};
+    uint8_t deviceBufB[1024] = {0};
+    uint8_t hostBuf[1024] = {0};
+    uint8_t src[100] = {0};
+    uint8_t dst[100] = {0};
+    for (uint32_t i = 0U; i < sizeof(src); ++i) {
+        src[i] = static_cast<uint8_t>(i);
+    }
+
+    CCWorker worker;
+    worker.device_ = dev;
+    worker.plugin_ = &ctrPlugin;
+    worker.maxSliceSize_ = 1024U;
+    worker.workerId_ = 0U;
+    worker.deadlineMs_ = ~0ULL;
+    worker.deviceBuffers_[0] = deviceBufA;
+    worker.deviceBuffers_[1] = deviceBufB;
+    worker.hostCryptoBuf_ = hostBuf;
+
+    CCMemcpyTask task = {};
+    task.src = src;
+    task.dst = dst;
+    task.totalSize = sizeof(src);
+    task.streamId = streamId;
+
+    // ① H2D 回调轨：mock 全 1 密钥流 → 设备 buffer 中为明文按位取反
+    task.kind = RT_MEMCPY_HOST_TO_DEVICE;
+    std::atomic<bool> stop{false};
+    std::atomic<uint32_t> consumedCount{0U};
+    std::thread consumer(
+        &AicpuSimulator::RunH2DConsumer, streamRes.BarQueue(), 1U, std::cref(stop), std::ref(consumedCount));
+    const ScopeGuard stopConsumer([&stop, &consumer]() {
+        stop.store(true);
+        if (consumer.joinable()) {
+            consumer.join();
+        }
+    });
+    EXPECT_EQ(worker.ProcessTask(task), RT_ERROR_NONE);
+    EXPECT_EQ(consumedCount.load(), 1U);
+    for (uint32_t i = 0U; i < sizeof(src); ++i) {
+        EXPECT_EQ(deviceBufA[i], static_cast<uint8_t>(~src[i]));
+    }
+    // desc 按 CTR 40B 发布：ciphertextLen = 明文长度（无密文头），keystreamAddr 为 mock 桩地址（0x3ff0000 起）
+    const AiccKeystreamXorSliceDesc* const desc0 =
+        reinterpret_cast<const AiccKeystreamXorSliceDesc*>(streamRes.BarQueue()->taskDescList);
+    EXPECT_EQ(desc0->ciphertextLen, sizeof(src));
+    EXPECT_EQ(desc0->plaintextLen, sizeof(src));
+    EXPECT_NE(desc0->keystreamAddr, 0U);
+    EXPECT_GE(desc0->keystreamAddr, 0x3FF0000ULL);
+    // 任务收尾：门铃状态回到 WAITING（MEM_WAIT 不再放行）
+    EXPECT_EQ(streamRes.BarQueue()->hostStatus, TASK_QUEUE_STATUS_WAITING);
+
+    // ② D2H 回调轨：模拟设备按同段密钥流 XOR 加密（mock 全 1 → 写入按位取反的明文）
+    streamRes.Reset();
+    task.kind = RT_MEMCPY_DEVICE_TO_HOST;
+    for (uint32_t i = 0U; i < sizeof(src); ++i) {
+        src[i] = static_cast<uint8_t>(0xA5U ^ i);
+    }
+    (void)memset_s(dst, sizeof(dst), 0, sizeof(dst));
+    std::thread d2hConsumer([&]() {
+        while (!stop.load() && (streamRes.BarQueue()->head == streamRes.BarQueue()->tail)) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        }
+        if (stop.load()) {
+            return;
+        }
+        for (uint32_t i = 0U; i < sizeof(src); ++i) {
+            deviceBufA[i] = static_cast<uint8_t>(~src[i]);
+        }
+        streamRes.BarQueue()->tail = (streamRes.BarQueue()->tail + 1U) % streamRes.BarQueue()->depth;
+        streamRes.BarQueue()->complete = 1U;
+    });
+    const ScopeGuard stopD2h([&stop, &d2hConsumer]() {
+        stop.store(true);
+        if (d2hConsumer.joinable()) {
+            d2hConsumer.join();
+        }
+    });
+    EXPECT_EQ(worker.ProcessTask(task), RT_ERROR_NONE);
+    if (d2hConsumer.joinable()) {
+        d2hConsumer.join();
+    }
+    // host XOR 解密还原
+    for (uint32_t i = 0U; i < sizeof(src); ++i) {
+        EXPECT_EQ(dst[i], src[i]);
+    }
+    EXPECT_EQ(streamRes.BarQueue()->hostStatus, TASK_QUEUE_STATUS_WAITING);
+
+    worker.device_ = nullptr;
+    (void)stm->TakeCCStreamResource();
+    rtStreamDestroy(stmHandle);
+    ((Runtime*)Runtime::Instance())->DeviceRelease(dev);
+}
+
+static const void* GcmCipherFnForUt() { return OpenSSLLoader::Instance().Api.Aes128Gcm(); }
+
+TEST_F(CCManagerTest, Crypto_Cipher_Routing)
+{
+    MOCKER(GetKeyFromKernel).stubs().will(returnValue(0));
+
+    // ① AES（已注册）：round-trip 正常
+    CCrypto crypto;
+    ASSERT_EQ(crypto.InitKey(0), RT_ERROR_NONE);
+    uint8_t pt[16] = {1};
+    uint8_t ct[128] = {0};
+    size_t ctLen = sizeof(ct);
+    ASSERT_EQ(crypto.Encrypt(0, CC_CRYPTO_CIPHER::AES_128, pt, sizeof(pt), nullptr, 0, ct, &ctLen), RT_ERROR_NONE);
+
+    // ② SM4（注册表槽位留空）：初始化密钥正常，加解密返回 FEATURE_NOT_SUPPORT
+    EXPECT_EQ(
+        crypto.Encrypt(0, CC_CRYPTO_CIPHER::SM4, pt, sizeof(pt), nullptr, 0, ct, &ctLen), RT_ERROR_FEATURE_NOT_SUPPORT);
+    uint8_t out[16] = {0};
+    size_t outLen = sizeof(out);
+    EXPECT_EQ(
+        crypto.Decrypt(0, CC_CRYPTO_CIPHER::SM4, ct, ctLen, nullptr, 0, out, &outLen), RT_ERROR_FEATURE_NOT_SUPPORT);
+
+    // ③ 注册表接口：非法参数拒绝（非法下标/空回调/ivSize<=4/tagSize=0）
+    EXPECT_EQ(
+        RegisterCryptoAlg(static_cast<CC_CRYPTO_CIPHER>(99U), &GcmCipherFnForUt, 12U, 16U), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(RegisterCryptoAlg(CC_CRYPTO_CIPHER::AES_128, nullptr, 12U, 16U), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(RegisterCryptoAlg(CC_CRYPTO_CIPHER::AES_128, &GcmCipherFnForUt, 4U, 16U), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(RegisterCryptoAlg(CC_CRYPTO_CIPHER::AES_128, &GcmCipherFnForUt, 12U, 0U), RT_ERROR_INVALID_VALUE);
+}
+
 // ============================================================================
 // CCStreamResManage Tests
 // ============================================================================
 
-TEST_F(CCManagerTest, StreamResManage_Init_NullDevice)
-{
-    CCStreamResManage resource;
-    rtError_t ret = resource.Init(nullptr);
-    EXPECT_EQ(ret, RT_ERROR_DEVICE_NULL);
-}
-
 TEST_F(CCManagerTest, StreamResManage_Init_Destroy)
 {
-    Device* dev = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
-    EXPECT_NE(dev, (Device*)nullptr);
+    RETAIN_DEVICE(dev);
 
     CCStreamResManage resource;
+    StubStreamResDriver(dev->Driver_(), true);
 
-    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::DevMemAllocWithBackupFlag).stubs().will(invoke(DevMemAllocEntryStub));
-    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::PcieHostRegister).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::PcieHostUnRegister).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::DevMemFree).stubs().will(returnValue(RT_ERROR_NONE));
-
-    rtError_t ret = resource.Init(dev);
+    rtError_t ret = resource.Init(dev, sizeof(AiccCryptoSliceDesc));
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
-    // Init 应完成队列深度设置和任务槽清零。
-    CCSliceQueue* queue = resource.Queue();
+    // Init 应创建 BarTaskQueue 分片环：depth/taskDescSize 就绪、状态 WORKING、任务槽清零。
+    BarTaskQueue* queue = resource.BarQueue();
     EXPECT_NE(queue, nullptr);
-    EXPECT_EQ(queue->depth, static_cast<uint8_t>(CC_SLICE_DESC_SLOT_NUM));
-    EXPECT_EQ(resource.DeviceQueueAddr(), PtrToValue(resource.barDeviceAddr_));
-    CCSliceDesc* sliceDesc = resource.SliceDesc();
-    EXPECT_NE(sliceDesc, nullptr);
+    EXPECT_EQ(queue->depth, CC_SLICE_DESC_SLOT_NUM);
+    EXPECT_EQ(queue->taskDescSize, sizeof(AiccCryptoSliceDesc));
+    EXPECT_EQ(queue->hostStatus, TASK_QUEUE_STATUS_WAITING);
+    EXPECT_EQ(queue->deviceStatus, TASK_QUEUE_STATUS_WAITING);
+    const AiccCryptoSliceDesc* const sliceDesc = reinterpret_cast<const AiccCryptoSliceDesc*>(queue->taskDescList);
     for (uint32_t i = 0U; i < CC_SLICE_DESC_SLOT_NUM; ++i) {
         EXPECT_EQ(sliceDesc[i].ciphertextAddr, 0U);
     }
+    // 设备侧地址查询成功（stub 下 host 映射地址即设备地址）
+    EXPECT_NE(resource.DeviceQueueAddr(), 0U);
+    EXPECT_EQ(resource.DeviceQueueAddr(), PtrToValue(resource.BarQueue()));
 
+    // Destroy 幂等：两次调用设备内存只释放一次，随后查询返回空
+    gDevMemFreeCount = 0U;
     resource.Destroy();
+    resource.Destroy();
+    EXPECT_EQ(gDevMemFreeCount, 1U);
+    EXPECT_EQ(resource.BarQueue(), nullptr);
+    EXPECT_EQ(resource.DeviceQueueAddr(), 0U);
 
     ((Runtime*)Runtime::Instance())->DeviceRelease(dev);
 }
 
 TEST_F(CCManagerTest, StreamResManage_Reset)
 {
-    Device* dev = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
-    EXPECT_NE(dev, (Device*)nullptr);
+    RETAIN_DEVICE(dev);
 
     CCStreamResManage resource;
 
     MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::DevMemAllocWithBackupFlag).stubs().will(invoke(DevMemAllocEntryStub));
-    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::PcieHostRegister).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::PcieHostUnRegister).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::DevMemFree).stubs().will(returnValue(RT_ERROR_NONE));
+    StubPcieAndFree(dev->Driver_());
 
-    ASSERT_EQ(resource.Init(dev), RT_ERROR_NONE);
+    ASSERT_EQ(resource.Init(dev, sizeof(AiccCryptoSliceDesc)), RT_ERROR_NONE);
 
-    CCSliceQueue* queue = resource.Queue();
+    BarTaskQueue* queue = resource.BarQueue();
     ASSERT_NE(queue, nullptr);
-    queue->head = 2;
-    queue->tail = 1;
-    queue->totalSlices = 3;
+    queue->head = 2U;
+    queue->tail = 1U;
+    queue->complete = 5U;
+    queue->hostStatus = TASK_QUEUE_STATUS_TERMINATED;
 
     resource.Reset();
 
     EXPECT_EQ(queue->head, 0U);
     EXPECT_EQ(queue->tail, 0U);
-    EXPECT_EQ(queue->totalSlices, 0U);
-    EXPECT_EQ(queue->depth, static_cast<uint8_t>(CC_SLICE_DESC_SLOT_NUM));
+    EXPECT_EQ(queue->complete, 0U);
+    EXPECT_EQ(queue->depth, CC_SLICE_DESC_SLOT_NUM);
+    // 当前 ABI 语义：Reset 无条件把双侧状态复位为 WAITING，调用方必须在此之前处理完
+    // Host/Device 两侧的正常/异常 TERMINATED 信号（见 task_queue_abi.h 状态机说明）。
+    EXPECT_EQ(queue->hostStatus, TASK_QUEUE_STATUS_WAITING);
+    EXPECT_EQ(queue->deviceStatus, TASK_QUEUE_STATUS_WAITING);
+    EXPECT_EQ(queue->deviceErrCode, 0U);
 
     ((Runtime*)Runtime::Instance())->DeviceRelease(dev);
 }
 
-TEST_F(CCManagerTest, StreamResManage_Init_AllocFails)
+// BeginBarTaskRound 是 Host 侧的「回合准入」：按 task_queue_abi.h 的状态机收口上一轮并复位控制头。
+// 覆盖三个分支：参数校验、外部中断（不掩盖终止标记）、上一轮正常终态（Reset 收回 WAITING），
+// 以及公开的 IsBarTaskQueueTerminated 判据。
+TEST_F(CCManagerTest, TaskQueue_BeginRound_StateMachine)
 {
-    Device* dev = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
-    EXPECT_NE(dev, (Device*)nullptr);
+    RETAIN_DEVICE(dev);
 
     CCStreamResManage resource;
 
-    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::DevMemAllocWithBackupFlag)
-        .stubs()
-        .will(returnValue(RT_ERROR_MEMORY_ALLOCATION));
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::DevMemAllocWithBackupFlag).stubs().will(invoke(DevMemAllocEntryStub));
+    StubPcieAndFree(dev->Driver_());
 
-    rtError_t ret = resource.Init(dev);
-    EXPECT_NE(ret, RT_ERROR_NONE);
+    ASSERT_EQ(resource.Init(dev, sizeof(AiccCryptoSliceDesc)), RT_ERROR_NONE);
+    BarTaskQueue* const queue = resource.BarQueue();
+    ASSERT_NE(queue, nullptr);
+
+    // ① 参数校验
+    bool proceed = true;
+    EXPECT_EQ(BeginBarTaskRound(nullptr, &proceed), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(BeginBarTaskRound(queue, nullptr), RT_ERROR_INVALID_VALUE);
+
+    // ② Host 侧已被外部中断置 TERMINATED：不掩盖终止信号，本轮不下发，控制头保持原样
+    queue->head = 2U;
+    queue->tail = 1U;
+    queue->complete = 5U;
+    queue->hostStatus = TASK_QUEUE_STATUS_TERMINATED;
+    queue->deviceStatus = TASK_QUEUE_STATUS_WAITING;
+    proceed = true;
+    EXPECT_EQ(BeginBarTaskRound(queue, &proceed), RT_ERROR_NONE);
+    EXPECT_FALSE(proceed);
+    EXPECT_EQ(queue->hostStatus, TASK_QUEUE_STATUS_TERMINATED);
+    EXPECT_EQ(queue->complete, 5U);
+
+    // ③ 上一轮设备正常终态（deviceStatus=TERMINATED）：Reset 收口，允许开新一轮
+    queue->hostStatus = TASK_QUEUE_STATUS_WAITING;
+    queue->deviceStatus = TASK_QUEUE_STATUS_TERMINATED;
+    queue->head = 1U;
+    queue->tail = 2U;
+    queue->complete = 3U;
+    queue->deviceErrCode = 7U;
+    proceed = false;
+    EXPECT_EQ(BeginBarTaskRound(queue, &proceed), RT_ERROR_NONE);
+    EXPECT_TRUE(proceed);
+    EXPECT_EQ(queue->hostStatus, TASK_QUEUE_STATUS_WAITING);
+    EXPECT_EQ(queue->deviceStatus, TASK_QUEUE_STATUS_WAITING);
+    EXPECT_EQ(queue->head, 0U);
+    EXPECT_EQ(queue->tail, 0U);
+    EXPECT_EQ(queue->complete, 0U);
+    EXPECT_EQ(queue->deviceErrCode, 0U);
+
+    // ④ IsBarTaskQueueTerminated：任一侧 TERMINATED 即终止，空指针视为不可用
+    EXPECT_FALSE(IsBarTaskQueueTerminated(queue));
+    queue->deviceStatus = TASK_QUEUE_STATUS_TERMINATED;
+    EXPECT_TRUE(IsBarTaskQueueTerminated(queue));
+    EXPECT_TRUE(IsBarTaskQueueTerminated(nullptr));
 
     ((Runtime*)Runtime::Instance())->DeviceRelease(dev);
 }
 
 TEST_F(CCManagerTest, StreamResManage_Init_ErrorPaths)
 {
-    Device* dev = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
-    ASSERT_NE(dev, (Device*)nullptr);
+    RETAIN_DEVICE(dev);
     Driver* realDriver = dev->Driver_();
 
     MOCKER_CPP_VIRTUAL(dev, &Device::Driver_).stubs().will(invoke(FakeDeviceDriverStub));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::DevMemAllocWithBackupFlag).stubs().will(invoke(DevMemAllocEntryStub));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::PcieHostRegister).stubs().will(invoke(PcieHostRegisterStub));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::PcieHostUnRegister).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::DevMemFree).stubs().will(invoke(DevMemFreeStub));
+    StubStreamResDriver(realDriver, true);
+
+    // ⓪ 空 / 申请失败入参
+    {
+        CCStreamResManage nullRes;
+        EXPECT_EQ(nullRes.Init(nullptr, sizeof(AiccCryptoSliceDesc)), RT_ERROR_DEVICE_NULL);
+    }
 
     // ① device->Driver_() 为空
     gReturnNullDriver = true;
     {
         CCStreamResManage resource;
-        EXPECT_EQ(resource.Init(dev), RT_ERROR_DRV_NULL);
+        EXPECT_EQ(resource.Init(dev, sizeof(AiccCryptoSliceDesc)), RT_ERROR_DRV_NULL);
     }
 
     // ② PCIe BAR 寄存器映射失败：初始化失败且已申请的设备内存被回滚释放
@@ -779,48 +1475,29 @@ TEST_F(CCManagerTest, StreamResManage_Init_ErrorPaths)
     gDevMemFreeCount = 0U;
     {
         CCStreamResManage resource;
-        EXPECT_NE(resource.Init(dev), RT_ERROR_NONE);
+        EXPECT_NE(resource.Init(dev, sizeof(AiccCryptoSliceDesc)), RT_ERROR_NONE);
         EXPECT_EQ(gDevMemFreeCount, 1U);
     }
 
-    // ③ 映射地址为空：回退使用设备地址，Init 成功
+    // ③ 设备内存申请失败（走 DevMemAllocStub 的失败开关；mockcpp 先注册先匹配，重注册桩不生效）
+    gPcieRegFail = false;
+    gDevMemAllocReturnFail = true;
+    {
+        CCStreamResManage resource;
+        EXPECT_NE(resource.Init(dev, sizeof(AiccCryptoSliceDesc)), RT_ERROR_NONE);
+    }
+    gDevMemAllocReturnFail = false;
+
+    // ④ 映射地址为空：回退使用设备地址，Init 成功
     gPcieRegFail = false;
     gPcieMappedNull = true;
     {
         CCStreamResManage resource;
-        EXPECT_EQ(resource.Init(dev), RT_ERROR_NONE);
-        EXPECT_EQ(resource.barHostAddr_, resource.barDeviceAddr_);
-        EXPECT_NE(resource.Queue(), nullptr);
+        EXPECT_EQ(resource.Init(dev, sizeof(AiccCryptoSliceDesc)), RT_ERROR_NONE);
+        EXPECT_NE(resource.DeviceQueueAddr(), 0U);
+        EXPECT_NE(resource.BarQueue(), nullptr);
         resource.Destroy();
     }
-
-    ((Runtime*)Runtime::Instance())->DeviceRelease(dev);
-}
-
-TEST_F(CCManagerTest, StreamResManage_BasicLifeCycle)
-{
-    Device* dev = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
-    ASSERT_NE(dev, (Device*)nullptr);
-    Driver* realDriver = dev->Driver_();
-
-    CCStreamResManage resource;
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::DevMemAllocWithBackupFlag).stubs().will(invoke(DevMemAllocEntryStub));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::PcieHostRegister).stubs().will(invoke(PcieHostRegisterStub));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::PcieHostUnRegister).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::DevMemFree).stubs().will(invoke(DevMemFreeStub));
-
-    ASSERT_EQ(resource.Init(dev), RT_ERROR_NONE);
-    EXPECT_EQ(resource.DeviceQueueAddr(), PtrToValue(resource.barDeviceAddr_));
-    EXPECT_NE(resource.Queue(), nullptr);
-    EXPECT_NE(resource.SliceDesc(), nullptr);
-
-    // ① Destroy 幂等：两次调用设备内存只释放一次，随后查询返回空
-    gDevMemFreeCount = 0U;
-    resource.Destroy();
-    resource.Destroy();
-    EXPECT_EQ(gDevMemFreeCount, 1U);
-    EXPECT_EQ(resource.Queue(), nullptr);
-    EXPECT_EQ(resource.SliceDesc(), nullptr);
 
     ((Runtime*)Runtime::Instance())->DeviceRelease(dev);
 }
@@ -835,25 +1512,23 @@ TEST_F(CCManagerTest, Worker_Init_NullDevice)
     CCMemcpyTaskQueue queue;
     CCrypto crypto;
 
-    rtError_t ret = worker.Init(0, 1024, &queue, nullptr, &crypto);
+    CCGcmPlugin plugin(&crypto);
+    rtError_t ret = worker.Init(0, 1024, &queue, nullptr, &plugin);
     EXPECT_EQ(ret, RT_ERROR_DEVICE_NULL);
 }
 
 TEST_F(CCManagerTest, Worker_Init_Destroy)
 {
-    Device* dev = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
-    EXPECT_NE(dev, (Device*)nullptr);
+    RETAIN_DEVICE(dev);
 
     CCWorker worker;
     CCMemcpyTaskQueue queue;
     CCrypto crypto;
 
-    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostMemAlloc).stubs().will(invoke(HostMemAllocStub));
-    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostDmaMap).stubs().will(invoke(HostDmaMapStub));
-    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostDmaUnmap).stubs().will(invoke(HostDmaUnmapStub));
-    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostMemFree).stubs().will(invoke(HostMemFreeStub));
+    StubWorkerHostDriver(dev->Driver_());
 
-    rtError_t ret = worker.Init(0, 1024, &queue, dev, &crypto);
+    CCGcmPlugin plugin(&crypto);
+    rtError_t ret = worker.Init(0, 1024, &queue, dev, &plugin);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     EXPECT_NE(worker.GetHostCryptoBuf(), nullptr);
 
@@ -866,27 +1541,32 @@ TEST_F(CCManagerTest, Worker_Init_Destroy)
     ((Runtime*)Runtime::Instance())->DeviceRelease(dev);
 }
 
-TEST_F(CCManagerTest, Worker_Init_HostMemAllocFails)
+TEST_F(CCManagerTest, Worker_HostDmaUnavailable_FallbackToHostRegister)
 {
-    Device* dev = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
-    EXPECT_NE(dev, (Device*)nullptr);
+    RETAIN_DEVICE(dev);
+    Driver* const driver = dev->Driver_();
+    // 老驱动没有 DMA map/unmap：Init 回退到 HostRegister，Destroy 在 unmap 不可用后转 HostUnregister。
+    MOCKER_CPP_VIRTUAL(driver, &Driver::HostMemAlloc).stubs().will(invoke(HostMemAllocStub));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::HostDmaMap).stubs().will(returnValue(RT_ERROR_FEATURE_NOT_SUPPORT));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::HostDmaUnmap).expects(once()).will(returnValue(RT_ERROR_FEATURE_NOT_SUPPORT));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::HostRegister).expects(once()).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::HostUnregister).expects(once()).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::HostMemFree).stubs().will(returnValue(RT_ERROR_NONE));
 
     CCWorker worker;
     CCMemcpyTaskQueue queue;
     CCrypto crypto;
-
-    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostMemAlloc).stubs().will(returnValue(RT_ERROR_MEMORY_ALLOCATION));
-
-    rtError_t ret = worker.Init(0, 1024, &queue, dev, &crypto);
-    EXPECT_NE(ret, RT_ERROR_NONE);
-
+    CCGcmPlugin plugin(&crypto);
+    EXPECT_EQ(worker.Init(0, 1024, &queue, dev, &plugin), RT_ERROR_NONE);
+    queue.Shutdown();
+    worker.Destroy();
     ((Runtime*)Runtime::Instance())->DeviceRelease(dev);
 }
 
 TEST_F(CCManagerTest, Worker_Init_ErrorPaths)
 {
-    Device* dev = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
-    ASSERT_NE(dev, (Device*)nullptr);
+    // ② 验证 HostDmaMap 失败必须报错回滚（正式行为；mock 开关只影响非 CVM 联调）
+    RETAIN_DEVICE(dev);
     Driver* realDriver = dev->Driver_();
 
     // ① crypto 为空
@@ -896,10 +1576,7 @@ TEST_F(CCManagerTest, Worker_Init_ErrorPaths)
         EXPECT_EQ(worker.Init(0, 1024, &queue, dev, nullptr), RT_ERROR_INVALID_VALUE);
     }
 
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostMemAlloc).stubs().will(invoke(HostMemAllocStub));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostDmaMap).stubs().will(invoke(HostDmaMapStub));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostDmaUnmap).stubs().will(invoke(HostDmaUnmapStub));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostMemFree).stubs().will(invoke(HostMemFreeStub));
+    StubWorkerHostDriver(realDriver);
     MOCKER_CPP_VIRTUAL(realDriver, &Driver::DevMemAllocWithBackupFlag).stubs().will(invoke(DevMemAllocEntryStub));
 
     // ② HostDmaMap 失败：hostCryptoBuf 已申请，需 HostMemFree 回滚
@@ -907,9 +1584,10 @@ TEST_F(CCManagerTest, Worker_Init_ErrorPaths)
         CCWorker worker;
         CCMemcpyTaskQueue queue;
         CCrypto crypto;
+        CCGcmPlugin plugin(&crypto);
         gHostDmaMapFail = true;
         gHostMemFreeCount = 0U;
-        EXPECT_NE(worker.Init(0, 1024, &queue, dev, &crypto), RT_ERROR_NONE);
+        EXPECT_NE(worker.Init(0, 1024, &queue, dev, &plugin), RT_ERROR_NONE);
         EXPECT_EQ(gHostDmaUnmapCount, 0U);
         EXPECT_EQ(gHostMemFreeCount, 1U);
     }
@@ -919,14 +1597,31 @@ TEST_F(CCManagerTest, Worker_Init_ErrorPaths)
         CCWorker worker;
         CCMemcpyTaskQueue queue;
         CCrypto crypto;
+        CCGcmPlugin plugin(&crypto);
         gHostDmaMapFail = false;
         gDevMemAllocReturnFail = true;
         gHostDmaUnmapCount = 0U;
         gHostMemFreeCount = 0U;
-        EXPECT_NE(worker.Init(0, 1024, &queue, dev, &crypto), RT_ERROR_NONE);
+        EXPECT_NE(worker.Init(0, 1024, &queue, dev, &plugin), RT_ERROR_NONE);
         EXPECT_EQ(gHostDmaUnmapCount, 1U);
         EXPECT_EQ(gHostMemFreeCount, 1U);
         gDevMemAllocReturnFail = false;
+    }
+
+    // ④ HostMemAlloc 失败：最早一步就失败，无资源需要回滚（gHostAllocFailAt 让第 1 次申请失败）
+    {
+        gHostAllocCount = 0U;
+        gHostAllocFailAt = 1U;
+        CCWorker worker;
+        CCMemcpyTaskQueue queue;
+        CCrypto crypto;
+        CCGcmPlugin plugin(&crypto);
+        gHostDmaUnmapCount = 0U;
+        gHostMemFreeCount = 0U;
+        EXPECT_NE(worker.Init(0, 1024, &queue, dev, &plugin), RT_ERROR_NONE);
+        EXPECT_EQ(gHostDmaUnmapCount, 0U);
+        EXPECT_EQ(gHostMemFreeCount, 0U);
+        gHostAllocFailAt = 0U;
     }
 
     ((Runtime*)Runtime::Instance())->DeviceRelease(dev);
@@ -934,8 +1629,7 @@ TEST_F(CCManagerTest, Worker_Init_ErrorPaths)
 
 TEST_F(CCManagerTest, Worker_ShouldWorkerExit_Branches)
 {
-    Device* dev = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
-    ASSERT_NE(dev, (Device*)nullptr);
+    RETAIN_DEVICE(dev);
 
     rtStream_t stmHandle = 0U;
     ASSERT_TRUE(CreatePersistentStream(stmHandle));
@@ -974,8 +1668,7 @@ TEST_F(CCManagerTest, Worker_ShouldWorkerExit_Branches)
 
 TEST_F(CCManagerTest, Worker_SetupTask_Basics)
 {
-    Device* dev = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
-    ASSERT_NE(dev, (Device*)nullptr);
+    RETAIN_DEVICE(dev);
     Driver* realDriver = dev->Driver_();
 
     rtStream_t stmHandle = 0U;
@@ -988,13 +1681,12 @@ TEST_F(CCManagerTest, Worker_SetupTask_Basics)
     MOCKER(GetKeyFromKernel).stubs().will(returnValue(0));
     crypto.InitKey(0);
 
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::PcieHostRegister).stubs().will(invoke(PcieHostRegisterStub));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::PcieHostUnRegister).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::DevMemFree).stubs().will(invoke(DevMemFreeStub));
+    StubPcieAndFreeCounted(realDriver);
 
     CCWorker worker;
     worker.device_ = dev;
-    worker.crypto_ = &crypto;
+    CCGcmPlugin gcmPlugin(&crypto);
+    worker.plugin_ = &gcmPlugin;
     worker.maxSliceSize_ = 1024U;
     worker.workerId_ = 0U;
 
@@ -1013,9 +1705,9 @@ TEST_F(CCManagerTest, Worker_SetupTask_Basics)
     task.streamId = streamId;
     EXPECT_EQ(worker.SetupTask(task, stream, resource, sliceNum), RT_ERROR_CC_WORKER_FAILED);
 
-    // ③ 挂 CC 资源成功路径：totalSlices/sliceNum/memWaitVal/deadline
+    // ③ 挂 CC 资源成功路径：sliceNum/deadline（环状态写入已移交 PushBarTask/Reset 协议）
     CCStreamResManage streamRes;
-    ASSERT_EQ(streamRes.Init(dev), RT_ERROR_NONE);
+    ASSERT_EQ(streamRes.Init(dev, sizeof(AiccCryptoSliceDesc)), RT_ERROR_NONE);
     stm->SetCCStreamResource(&streamRes);
 
     task.totalSize = CC_PLAINTEXT_SLICE_SIZE * 2U + 1U;
@@ -1023,8 +1715,7 @@ TEST_F(CCManagerTest, Worker_SetupTask_Basics)
     EXPECT_EQ(worker.SetupTask(task, stream, resource, sliceNum), RT_ERROR_NONE);
     EXPECT_EQ(resource, &streamRes);
     EXPECT_EQ(sliceNum, 3U);
-    EXPECT_EQ(resource->Queue()->totalSlices, 3U);
-    EXPECT_EQ(resource->Queue()->memWaitVal, 1U);
+    EXPECT_NE(resource->BarQueue(), nullptr);
     EXPECT_NE(worker.deadlineMs_, 0U);
 
     // 清理：先取回 CC 资源防止 Stream 析构产生泄漏
@@ -1035,8 +1726,7 @@ TEST_F(CCManagerTest, Worker_SetupTask_Basics)
 
 TEST_F(CCManagerTest, Worker_ProcessH2DSlice_Success)
 {
-    Device* dev = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
-    ASSERT_NE(dev, (Device*)nullptr);
+    RETAIN_DEVICE(dev);
     Driver* realDriver = dev->Driver_();
 
     rtStream_t stmHandle = 0U;
@@ -1049,12 +1739,10 @@ TEST_F(CCManagerTest, Worker_ProcessH2DSlice_Success)
     MOCKER(GetKeyFromKernel).stubs().will(returnValue(0));
     crypto.InitKey(0);
 
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::PcieHostRegister).stubs().will(invoke(PcieHostRegisterStub));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::PcieHostUnRegister).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::DevMemFree).stubs().will(invoke(DevMemFreeStub));
+    StubPcieAndFreeCounted(realDriver);
 
     CCStreamResManage streamRes;
-    ASSERT_EQ(streamRes.Init(dev), RT_ERROR_NONE);
+    ASSERT_EQ(streamRes.Init(dev, sizeof(AiccCryptoSliceDesc)), RT_ERROR_NONE);
     stm->SetCCStreamResource(&streamRes);
 
     uint8_t deviceBufA[1024] = {};
@@ -1068,7 +1756,8 @@ TEST_F(CCManagerTest, Worker_ProcessH2DSlice_Success)
 
     CCWorker worker;
     worker.device_ = dev;
-    worker.crypto_ = &crypto;
+    CCGcmPlugin gcmPlugin(&crypto);
+    worker.plugin_ = &gcmPlugin;
     worker.maxSliceSize_ = 1024U;
     worker.workerId_ = 0U;
     worker.deviceBuffers_[0] = deviceBufA;
@@ -1084,9 +1773,9 @@ TEST_F(CCManagerTest, Worker_ProcessH2DSlice_Success)
 
     EXPECT_EQ(worker.ProcessH2DSlice(task, &streamRes, 0U, 0U, sizeof(src)), RT_ERROR_NONE);
 
-    CCSliceQueue* taskQueue = streamRes.Queue();
+    BarTaskQueue* taskQueue = streamRes.BarQueue();
     EXPECT_EQ(taskQueue->head, 1U);
-    CCSliceDesc* const sliceDesc = streamRes.SliceDesc();
+    const AiccCryptoSliceDesc* const sliceDesc = reinterpret_cast<const AiccCryptoSliceDesc*>(taskQueue->taskDescList);
     EXPECT_EQ(sliceDesc[0].ciphertextAddr, PtrToValue(deviceBufA));
     EXPECT_EQ(sliceDesc[0].plaintextAddr, PtrToValue(dst));
     EXPECT_EQ(sliceDesc[0].ciphertextLen, CC_CIPHER_HEADER_SIZE + sizeof(src));
@@ -1094,13 +1783,13 @@ TEST_F(CCManagerTest, Worker_ProcessH2DSlice_Success)
     EXPECT_EQ(sliceDesc[0].sliceIdx, 0U);
 
     // 密文 wire format：84B 头 + 密文体（EVP stub 为直拷贝）
-    const CCCipherTxtHeader* header = reinterpret_cast<const CCCipherTxtHeader*>(deviceBufA);
+    const AiccCiphertextHeader* header = reinterpret_cast<const AiccCiphertextHeader*>(deviceBufA);
     EXPECT_EQ(header->version, 1U);
     EXPECT_EQ(header->totalLen, CC_CIPHER_HEADER_SIZE + sizeof(src));
     EXPECT_EQ(header->ivLen, 12U);
     EXPECT_EQ(header->tagLen, 16U);
     EXPECT_EQ(header->ciphertextLen, static_cast<uint32_t>(sizeof(src)));
-    EXPECT_EQ(memcmp(deviceBufA + sizeof(CCCipherTxtHeader), src, sizeof(src)), 0);
+    EXPECT_EQ(memcmp(deviceBufA + sizeof(AiccCiphertextHeader), src, sizeof(src)), 0);
 
     worker.device_ = nullptr;
     (void)stm->TakeCCStreamResource();
@@ -1110,8 +1799,7 @@ TEST_F(CCManagerTest, Worker_ProcessH2DSlice_Success)
 
 TEST_F(CCManagerTest, Worker_ProcessH2DSlice_ErrorPaths)
 {
-    Device* dev = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
-    ASSERT_NE(dev, (Device*)nullptr);
+    RETAIN_DEVICE(dev);
     Driver* realDriver = dev->Driver_();
 
     rtStream_t stmHandle = 0U;
@@ -1124,12 +1812,10 @@ TEST_F(CCManagerTest, Worker_ProcessH2DSlice_ErrorPaths)
     MOCKER(GetKeyFromKernel).stubs().will(returnValue(0));
     crypto.InitKey(0);
 
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::PcieHostRegister).stubs().will(invoke(PcieHostRegisterStub));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::PcieHostUnRegister).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::DevMemFree).stubs().will(invoke(DevMemFreeStub));
+    StubPcieAndFreeCounted(realDriver);
 
     CCStreamResManage streamRes;
-    ASSERT_EQ(streamRes.Init(dev), RT_ERROR_NONE);
+    ASSERT_EQ(streamRes.Init(dev, sizeof(AiccCryptoSliceDesc)), RT_ERROR_NONE);
     stm->SetCCStreamResource(&streamRes);
 
     uint8_t deviceBufA[1024] = {};
@@ -1140,7 +1826,8 @@ TEST_F(CCManagerTest, Worker_ProcessH2DSlice_ErrorPaths)
 
     CCWorker worker;
     worker.device_ = dev;
-    worker.crypto_ = &crypto;
+    CCGcmPlugin gcmPlugin(&crypto);
+    worker.plugin_ = &gcmPlugin;
     worker.maxSliceSize_ = 1024U;
     worker.workerId_ = 0U;
     worker.deviceBuffers_[0] = deviceBufA;
@@ -1154,19 +1841,20 @@ TEST_F(CCManagerTest, Worker_ProcessH2DSlice_ErrorPaths)
     task.kind = RT_MEMCPY_HOST_TO_DEVICE;
     task.streamId = streamId;
 
-    // ① 密钥未初始化：加密失败（worker 映射为 KEY_NOT_INITIALIZED）
+    // ① 密钥未初始化：插件经未初始化 CCrypto 加密，返回 KEY_NOT_INITIALIZED
     CCrypto uninitCrypto;
-    worker.crypto_ = &uninitCrypto;
+    CCGcmPlugin uninitPlugin(&uninitCrypto);
+    worker.plugin_ = &uninitPlugin;
     EXPECT_EQ(worker.ProcessH2DSlice(task, &streamRes, 0U, 0U, sizeof(src)), RT_ERROR_CC_KEY_NOT_INITIALIZED);
 
     // ② DMA 拷贝失败：目的 Device Buffer 为空使真实 halMemcpy stub 返回错误
-    worker.crypto_ = &crypto;
+    worker.plugin_ = &gcmPlugin;
     worker.deviceBuffers_[0] = nullptr;
     EXPECT_EQ(worker.ProcessH2DSlice(task, &streamRes, 0U, 0U, sizeof(src)), RT_ERROR_CC_WORKER_FAILED);
     worker.deviceBuffers_[0] = deviceBufA;
 
     // ③ 环形队列满且已取消：等待期间退出并超时
-    CCSliceQueue* taskQueue = streamRes.Queue();
+    BarTaskQueue* taskQueue = streamRes.BarQueue();
     taskQueue->head = 2U;
     taskQueue->tail = 0U;
     worker.cancelled_.store(true);
@@ -1181,8 +1869,7 @@ TEST_F(CCManagerTest, Worker_ProcessH2DSlice_ErrorPaths)
 
 TEST_F(CCManagerTest, Worker_ProcessD2HSlice_Success)
 {
-    Device* dev = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
-    ASSERT_NE(dev, (Device*)nullptr);
+    RETAIN_DEVICE(dev);
     Driver* realDriver = dev->Driver_();
 
     rtStream_t stmHandle = 0U;
@@ -1195,12 +1882,10 @@ TEST_F(CCManagerTest, Worker_ProcessD2HSlice_Success)
     MOCKER(GetKeyFromKernel).stubs().will(returnValue(0));
     crypto.InitKey(0);
 
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::PcieHostRegister).stubs().will(invoke(PcieHostRegisterStub));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::PcieHostUnRegister).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::DevMemFree).stubs().will(invoke(DevMemFreeStub));
+    StubPcieAndFreeCounted(realDriver);
 
     CCStreamResManage streamRes;
-    ASSERT_EQ(streamRes.Init(dev), RT_ERROR_NONE);
+    ASSERT_EQ(streamRes.Init(dev, sizeof(AiccCryptoSliceDesc)), RT_ERROR_NONE);
     stm->SetCCStreamResource(&streamRes);
 
     uint8_t deviceBufA[1024] = {};
@@ -1213,15 +1898,17 @@ TEST_F(CCManagerTest, Worker_ProcessD2HSlice_Success)
     }
 
     // Host 侧构造模拟 AICPU 已写入的密文
-    uint8_t cipherIn[sizeof(CCCipherTxtHeader) + sizeof(src) + 32] = {};
+    uint8_t cipherIn[sizeof(AiccCiphertextHeader) + sizeof(src) + 32] = {};
     size_t ctLen = sizeof(cipherIn);
-    ASSERT_EQ(crypto.Encrypt(0, src, sizeof(src), nullptr, 0, cipherIn, &ctLen), RT_ERROR_NONE);
-    ASSERT_EQ(ctLen, sizeof(CCCipherTxtHeader) + sizeof(src));
+    ASSERT_EQ(
+        crypto.Encrypt(0, CC_CRYPTO_CIPHER::AES_128, src, sizeof(src), nullptr, 0, cipherIn, &ctLen), RT_ERROR_NONE);
+    ASSERT_EQ(ctLen, sizeof(AiccCiphertextHeader) + sizeof(src));
     (void)memcpy_s(deviceBufA, sizeof(deviceBufA), cipherIn, ctLen);
 
     CCWorker worker;
     worker.device_ = dev;
-    worker.crypto_ = &crypto;
+    CCGcmPlugin gcmPlugin(&crypto);
+    worker.plugin_ = &gcmPlugin;
     worker.maxSliceSize_ = 1024U;
     worker.workerId_ = 0U;
     worker.deadlineMs_ = ~0ULL;
@@ -1236,8 +1923,7 @@ TEST_F(CCManagerTest, Worker_ProcessD2HSlice_Success)
     task.kind = RT_MEMCPY_DEVICE_TO_HOST;
     task.streamId = streamId;
 
-    CCSliceQueue* taskQueue = streamRes.Queue();
-    taskQueue->totalSlices = 1U;
+    BarTaskQueue* taskQueue = streamRes.BarQueue();
     const std::vector<uint32_t> sliceLens{static_cast<uint32_t>(sizeof(src))};
     std::atomic<bool> stop{false};
     std::atomic<uint32_t> consumedCount{0U};
@@ -1252,11 +1938,12 @@ TEST_F(CCManagerTest, Worker_ProcessD2HSlice_Success)
         }
     });
 
-    EXPECT_EQ(worker.ProcessD2HSlice(task, &streamRes, 0U, 0U, sizeof(src)), RT_ERROR_NONE);
+    EXPECT_EQ(worker.ProcessD2HSlice(task, &streamRes, 0U, 0U, sizeof(src), 1U), RT_ERROR_NONE);
     EXPECT_TRUE(descriptorValid.load());
     EXPECT_EQ(consumedCount.load(), 1U);
     EXPECT_EQ(taskQueue->head, 1U);
     EXPECT_EQ(taskQueue->tail, 1U);
+    EXPECT_EQ(taskQueue->complete, 1U);
     EXPECT_EQ(memcmp(dst, src, sizeof(src)), 0);
 
     worker.device_ = nullptr;
@@ -1267,8 +1954,7 @@ TEST_F(CCManagerTest, Worker_ProcessD2HSlice_Success)
 
 TEST_F(CCManagerTest, Worker_ProcessD2HSlice_ErrorPaths)
 {
-    Device* dev = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
-    ASSERT_NE(dev, (Device*)nullptr);
+    RETAIN_DEVICE(dev);
     Driver* realDriver = dev->Driver_();
 
     rtStream_t stmHandle = 0U;
@@ -1281,12 +1967,10 @@ TEST_F(CCManagerTest, Worker_ProcessD2HSlice_ErrorPaths)
     MOCKER(GetKeyFromKernel).stubs().will(returnValue(0));
     crypto.InitKey(0);
 
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::PcieHostRegister).stubs().will(invoke(PcieHostRegisterStub));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::PcieHostUnRegister).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::DevMemFree).stubs().will(invoke(DevMemFreeStub));
+    StubPcieAndFreeCounted(realDriver);
 
     CCStreamResManage streamRes;
-    ASSERT_EQ(streamRes.Init(dev), RT_ERROR_NONE);
+    ASSERT_EQ(streamRes.Init(dev, sizeof(AiccCryptoSliceDesc)), RT_ERROR_NONE);
     stm->SetCCStreamResource(&streamRes);
 
     uint8_t deviceBufA[1024] = {};
@@ -1297,7 +1981,8 @@ TEST_F(CCManagerTest, Worker_ProcessD2HSlice_ErrorPaths)
 
     CCWorker worker;
     worker.device_ = dev;
-    worker.crypto_ = &crypto;
+    CCGcmPlugin gcmPlugin(&crypto);
+    worker.plugin_ = &gcmPlugin;
     worker.maxSliceSize_ = 1024U;
     worker.workerId_ = 0U;
     worker.deadlineMs_ = ~0ULL;
@@ -1312,12 +1997,12 @@ TEST_F(CCManagerTest, Worker_ProcessD2HSlice_ErrorPaths)
     task.kind = RT_MEMCPY_DEVICE_TO_HOST;
     task.streamId = streamId;
 
-    CCSliceQueue* taskQueue = streamRes.Queue();
-    taskQueue->totalSlices = 1U;
+    BarTaskQueue* taskQueue = streamRes.BarQueue();
 
     // ① 密钥未初始化：AICPU 消费 Host 发布的描述符后，Host 解密失败
     CCrypto uninitCrypto;
-    worker.crypto_ = &uninitCrypto;
+    CCGcmPlugin uninitPlugin(&uninitCrypto);
+    worker.plugin_ = &uninitPlugin;
     const std::vector<uint32_t> sliceLens{static_cast<uint32_t>(sizeof(src))};
     std::atomic<bool> stop{false};
     std::atomic<uint32_t> consumedCount{0U};
@@ -1325,15 +2010,14 @@ TEST_F(CCManagerTest, Worker_ProcessD2HSlice_ErrorPaths)
     std::thread consumer(
         &AicpuSimulator::RunD2HConsumer, taskQueue, src, deviceBufA, deviceBufB, std::cref(sliceLens), std::cref(stop),
         std::ref(consumedCount), std::ref(descriptorValid));
-    EXPECT_EQ(worker.ProcessD2HSlice(task, &streamRes, 0U, 0U, sizeof(src)), RT_ERROR_CC_KEY_NOT_INITIALIZED);
+    EXPECT_EQ(worker.ProcessD2HSlice(task, &streamRes, 0U, 0U, sizeof(src), 1U), RT_ERROR_CC_KEY_NOT_INITIALIZED);
     stop.store(true);
     consumer.join();
     EXPECT_TRUE(descriptorValid.load());
 
     // ② DMA 拷贝失败：已发布的下一片必须先由 AICPU 消费，防止提前复用 A/B Buffer
     streamRes.Reset();
-    taskQueue->totalSlices = 2U;
-    worker.crypto_ = &crypto;
+    worker.plugin_ = &gcmPlugin;
     gDrvMemcpyFail = true;
     stop.store(false);
     consumedCount.store(0U);
@@ -1345,14 +2029,15 @@ TEST_F(CCManagerTest, Worker_ProcessD2HSlice_ErrorPaths)
     task.totalSize = multiSrc.size();
     std::thread dmaConsumer([&]() {
         while (!stop.load() && (consumedCount.load() < 2U)) {
-            if (!taskQueue->IsEmpty()) {
-                taskQueue->tail = static_cast<uint8_t>((taskQueue->tail + 1U) % CC_SLICE_DESC_SLOT_NUM);
-                consumedCount.fetch_add(1U, std::memory_order_relaxed);
+            if (taskQueue->head != taskQueue->tail) {
+                taskQueue->tail = (taskQueue->tail + 1U) % taskQueue->depth;
+                const uint32_t newCount = consumedCount.fetch_add(1U, std::memory_order_relaxed) + 1U;
+                taskQueue->complete = newCount;
             }
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
     });
-    EXPECT_EQ(worker.ProcessD2HSlice(task, &streamRes, 0U, 0U, CC_PLAINTEXT_SLICE_SIZE), RT_ERROR_CC_WORKER_FAILED);
+    EXPECT_EQ(worker.ProcessD2HSlice(task, &streamRes, 0U, 0U, CC_PLAINTEXT_SLICE_SIZE, 2U), RT_ERROR_CC_WORKER_FAILED);
     stop.store(true);
     dmaConsumer.join();
     EXPECT_EQ(consumedCount.load(), 2U);
@@ -1366,7 +2051,7 @@ TEST_F(CCManagerTest, Worker_ProcessD2HSlice_ErrorPaths)
     taskQueue->head = 2U;
     taskQueue->tail = 0U;
     worker.cancelled_.store(true);
-    EXPECT_EQ(worker.ProcessD2HSlice(task, &streamRes, 0U, 0U, sizeof(src)), RT_ERROR_CC_WORKER_TIMEOUT);
+    EXPECT_EQ(worker.ProcessD2HSlice(task, &streamRes, 0U, 0U, sizeof(src), 1U), RT_ERROR_CC_WORKER_TIMEOUT);
     worker.cancelled_.store(false);
 
     worker.device_ = nullptr;
@@ -1377,8 +2062,7 @@ TEST_F(CCManagerTest, Worker_ProcessD2HSlice_ErrorPaths)
 
 TEST_F(CCManagerTest, Worker_ProcessSlices_InvalidKind)
 {
-    Device* dev = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
-    ASSERT_NE(dev, (Device*)nullptr);
+    RETAIN_DEVICE(dev);
     Driver* realDriver = dev->Driver_();
 
     rtStream_t stmHandle = 0U;
@@ -1391,17 +2075,16 @@ TEST_F(CCManagerTest, Worker_ProcessSlices_InvalidKind)
     MOCKER(GetKeyFromKernel).stubs().will(returnValue(0));
     crypto.InitKey(0);
 
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::PcieHostRegister).stubs().will(invoke(PcieHostRegisterStub));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::PcieHostUnRegister).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::DevMemFree).stubs().will(invoke(DevMemFreeStub));
+    StubPcieAndFreeCounted(realDriver);
 
     CCStreamResManage streamRes;
-    ASSERT_EQ(streamRes.Init(dev), RT_ERROR_NONE);
+    ASSERT_EQ(streamRes.Init(dev, sizeof(AiccCryptoSliceDesc)), RT_ERROR_NONE);
     stm->SetCCStreamResource(&streamRes);
 
     CCWorker worker;
     worker.device_ = dev;
-    worker.crypto_ = &crypto;
+    CCGcmPlugin gcmPlugin(&crypto);
+    worker.plugin_ = &gcmPlugin;
     worker.maxSliceSize_ = 1024U;
     worker.workerId_ = 0U;
 
@@ -1417,7 +2100,7 @@ TEST_F(CCManagerTest, Worker_ProcessSlices_InvalidKind)
     EXPECT_EQ(sliceNum, 1U);
 
     // kind 非法：返回 RT_ERROR_INVALID_VALUE（不设置流错误码，错误由 AICPU SQE 超时兜底上报）
-    EXPECT_EQ(worker.ProcessSlices(task, resource, sliceNum), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(worker.ProcessSlices(task, resource, sliceNum, nullptr), RT_ERROR_INVALID_VALUE);
 
     worker.device_ = nullptr;
     (void)stm->TakeCCStreamResource();
@@ -1427,8 +2110,7 @@ TEST_F(CCManagerTest, Worker_ProcessSlices_InvalidKind)
 
 TEST_F(CCManagerTest, Worker_ProcessTask_H2D_MultiSlice)
 {
-    Device* dev = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
-    ASSERT_NE(dev, (Device*)nullptr);
+    RETAIN_DEVICE(dev);
     Driver* realDriver = dev->Driver_();
 
     rtStream_t stmHandle = 0U;
@@ -1441,12 +2123,10 @@ TEST_F(CCManagerTest, Worker_ProcessTask_H2D_MultiSlice)
     MOCKER(GetKeyFromKernel).stubs().will(returnValue(0));
     crypto.InitKey(0);
 
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::PcieHostRegister).stubs().will(invoke(PcieHostRegisterStub));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::PcieHostUnRegister).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::DevMemFree).stubs().will(invoke(DevMemFreeStub));
+    StubPcieAndFreeCounted(realDriver);
 
     CCStreamResManage streamRes;
-    ASSERT_EQ(streamRes.Init(dev), RT_ERROR_NONE);
+    ASSERT_EQ(streamRes.Init(dev, sizeof(AiccCryptoSliceDesc)), RT_ERROR_NONE);
     stm->SetCCStreamResource(&streamRes);
 
     constexpr size_t TOTAL_SIZE = CC_PLAINTEXT_SLICE_SIZE * 2U + 100U; // 3 片
@@ -1465,7 +2145,8 @@ TEST_F(CCManagerTest, Worker_ProcessTask_H2D_MultiSlice)
 
     CCWorker worker;
     worker.device_ = dev;
-    worker.crypto_ = &crypto;
+    CCGcmPlugin gcmPlugin(&crypto);
+    worker.plugin_ = &gcmPlugin;
     worker.maxSliceSize_ = CC_SLICE_SIZE;
     worker.workerId_ = 0U;
     worker.deviceBuffers_[0] = deviceBufA.data();
@@ -1483,7 +2164,7 @@ TEST_F(CCManagerTest, Worker_ProcessTask_H2D_MultiSlice)
     std::atomic<bool> stop{false};
     std::atomic<uint32_t> consumedCount{0U};
     std::thread consumer(
-        &AicpuSimulator::RunH2DConsumer, streamRes.Queue(), 3U, std::cref(stop), std::ref(consumedCount));
+        &AicpuSimulator::RunH2DConsumer, streamRes.BarQueue(), 3U, std::cref(stop), std::ref(consumedCount));
     const ScopeGuard stopConsumer([&stop, &consumer]() {
         stop.store(true);
         if (consumer.joinable()) {
@@ -1496,9 +2177,11 @@ TEST_F(CCManagerTest, Worker_ProcessTask_H2D_MultiSlice)
     for (size_t i = CC_SLICE_SIZE; i < hostBuf.size(); ++i) {
         EXPECT_EQ(hostBuf[i], 0xABU);
     }
-    CCSliceQueue* taskQueue = streamRes.Queue();
-    EXPECT_EQ(taskQueue->totalSlices, 3U);
+    BarTaskQueue* taskQueue = streamRes.BarQueue();
+    EXPECT_EQ(taskQueue->complete, 3U);
     EXPECT_EQ(taskQueue->head, taskQueue->tail);
+    // 任务收尾门铃复位：hostStatus 回到 WAITING，下一任务的 MEM_WAIT 不会提前放行
+    EXPECT_EQ(taskQueue->hostStatus, TASK_QUEUE_STATUS_WAITING);
 
     worker.device_ = nullptr;
     (void)stm->TakeCCStreamResource();
@@ -1506,10 +2189,9 @@ TEST_F(CCManagerTest, Worker_ProcessTask_H2D_MultiSlice)
     ((Runtime*)Runtime::Instance())->DeviceRelease(dev);
 }
 
-TEST_F(CCManagerTest, Worker_ProcessTask_D2H_EndToEnd)
+TEST_F(CCManagerTest, Worker_ProcessTask_TerminatedQueueDropsTask)
 {
-    Device* dev = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
-    ASSERT_NE(dev, (Device*)nullptr);
+    RETAIN_DEVICE(dev);
     Driver* realDriver = dev->Driver_();
 
     rtStream_t stmHandle = 0U;
@@ -1522,76 +2204,98 @@ TEST_F(CCManagerTest, Worker_ProcessTask_D2H_EndToEnd)
     MOCKER(GetKeyFromKernel).stubs().will(returnValue(0));
     crypto.InitKey(0);
 
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::PcieHostRegister).stubs().will(invoke(PcieHostRegisterStub));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::PcieHostUnRegister).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::DevMemFree).stubs().will(invoke(DevMemFreeStub));
+    StubPcieAndFreeCounted(realDriver);
 
     CCStreamResManage streamRes;
-    ASSERT_EQ(streamRes.Init(dev), RT_ERROR_NONE);
+    ASSERT_EQ(streamRes.Init(dev, sizeof(AiccCryptoSliceDesc)), RT_ERROR_NONE);
     stm->SetCCStreamResource(&streamRes);
-
-    constexpr size_t SLICE0_LEN = CC_PLAINTEXT_SLICE_SIZE;
-    constexpr size_t SLICE1_LEN = 50U;
-    constexpr size_t TOTAL_SIZE = SLICE0_LEN + SLICE1_LEN; // 2 片
-    std::vector<uint8_t> src(TOTAL_SIZE);
-    for (size_t i = 0U; i < src.size(); ++i) {
-        src[i] = static_cast<uint8_t>(i & 0xFFU);
-    }
-    std::vector<uint8_t> dst(TOTAL_SIZE);
-    std::vector<uint8_t> deviceBufA(CC_SLICE_SIZE);
-    std::vector<uint8_t> deviceBufB(CC_SLICE_SIZE + 100U);
-    std::vector<uint8_t> hostBuf(CC_SLICE_SIZE);
-
-    // Host 侧模拟 AICPU 已写入两片密文到 Device Buffer A/B
-    std::vector<uint8_t> cipher0(sizeof(CCCipherTxtHeader) + SLICE0_LEN + 32U);
-    std::vector<uint8_t> cipher1(sizeof(CCCipherTxtHeader) + SLICE1_LEN + 32U);
-    size_t ctLen0 = cipher0.size();
-    size_t ctLen1 = cipher1.size();
-    ASSERT_EQ(crypto.Encrypt(0, src.data(), SLICE0_LEN, nullptr, 0, cipher0.data(), &ctLen0), RT_ERROR_NONE);
-    ASSERT_EQ(
-        crypto.Encrypt(0, src.data() + SLICE0_LEN, SLICE1_LEN, nullptr, 0, cipher1.data(), &ctLen1), RT_ERROR_NONE);
-    ASSERT_EQ(ctLen0, sizeof(CCCipherTxtHeader) + SLICE0_LEN);
-    ASSERT_EQ(ctLen1, sizeof(CCCipherTxtHeader) + SLICE1_LEN);
-    (void)memcpy_s(deviceBufA.data(), deviceBufA.size(), cipher0.data(), ctLen0);
-    (void)memcpy_s(deviceBufB.data(), deviceBufB.size(), cipher1.data(), ctLen1);
 
     CCWorker worker;
     worker.device_ = dev;
-    worker.crypto_ = &crypto;
+    CCGcmPlugin gcmPlugin(&crypto);
+    worker.plugin_ = &gcmPlugin;
     worker.maxSliceSize_ = CC_SLICE_SIZE;
     worker.workerId_ = 0U;
+    std::vector<uint8_t> deviceBufA(64U, 0U);
+    std::vector<uint8_t> deviceBufB(64U, 0U);
+    std::vector<uint8_t> hostBuf(CC_SLICE_SIZE, 0U);
     worker.deviceBuffers_[0] = deviceBufA.data();
     worker.deviceBuffers_[1] = deviceBufB.data();
     worker.hostCryptoBuf_ = hostBuf.data();
 
-    CCMemcpyTask task = {};
+    std::vector<uint8_t> src(64U, 0x5AU);
+    std::vector<uint8_t> dst(64U, 0U);
+    CCMemcpyTask task{};
     task.src = src.data();
     task.dst = dst.data();
-    task.totalSize = TOTAL_SIZE;
-    task.kind = RT_MEMCPY_DEVICE_TO_HOST;
+    task.totalSize = src.size();
+    task.kind = RT_MEMCPY_HOST_TO_DEVICE;
     task.streamId = streamId;
 
-    const std::vector<uint32_t> sliceLens{static_cast<uint32_t>(SLICE0_LEN), static_cast<uint32_t>(SLICE1_LEN)};
-    std::atomic<bool> stop{false};
-    std::atomic<uint32_t> consumedCount{0U};
-    std::atomic<bool> descriptorValid{true};
-    std::thread consumer(
-        &AicpuSimulator::RunD2HConsumer, streamRes.Queue(), src.data(), deviceBufA.data(), deviceBufB.data(),
-        std::cref(sliceLens), std::cref(stop), std::ref(consumedCount), std::ref(descriptorValid));
-    const ScopeGuard stopConsumer([&stop, &consumer]() {
-        stop.store(true);
-        if (consumer.joinable()) {
-            consumer.join();
-        }
-    });
+    BarTaskQueue* const queue = streamRes.BarQueue();
+    queue->hostStatus = TASK_QUEUE_STATUS_TERMINATED;
 
+    // 门铃 CAS 失败且显式判 terminated：外部中断场景静默丢弃任务，不发布分片，终止标记保留
     EXPECT_EQ(worker.ProcessTask(task), RT_ERROR_NONE);
-    CCSliceQueue* taskQueue = streamRes.Queue();
-    EXPECT_EQ(taskQueue->totalSlices, 2U);
-    EXPECT_TRUE(descriptorValid.load());
-    EXPECT_EQ(consumedCount.load(), 2U);
-    EXPECT_EQ(taskQueue->head, taskQueue->tail);
-    EXPECT_EQ(memcmp(dst.data(), src.data(), TOTAL_SIZE), 0);
+    EXPECT_EQ(queue->hostStatus, TASK_QUEUE_STATUS_TERMINATED);
+    EXPECT_EQ(queue->head, queue->tail);
+    EXPECT_EQ(queue->complete, 0U);
+    for (const uint8_t value : dst) {
+        EXPECT_EQ(value, 0U);
+    }
+
+    worker.device_ = nullptr;
+    (void)stm->TakeCCStreamResource();
+    rtStreamDestroy(stmHandle);
+    ((Runtime*)Runtime::Instance())->DeviceRelease(dev);
+}
+
+TEST_F(CCManagerTest, Worker_ProcessTask_HostFailureSetsTerminated)
+{
+    RETAIN_DEVICE(dev);
+    Driver* realDriver = dev->Driver_();
+
+    rtStream_t stmHandle = 0U;
+    ASSERT_TRUE(CreatePersistentStream(stmHandle));
+    Stream* stm = rt_ut::UnwrapOrNull<Stream>(stmHandle);
+    ASSERT_NE(stm, (Stream*)nullptr);
+    const uint32_t streamId = static_cast<uint32_t>(stm->Id_());
+
+    CCrypto crypto;
+    MOCKER(GetKeyFromKernel).stubs().will(returnValue(0));
+    crypto.InitKey(0);
+
+    StubPcieAndFreeCounted(realDriver);
+
+    CCStreamResManage streamRes;
+    ASSERT_EQ(streamRes.Init(dev, sizeof(AiccCryptoSliceDesc)), RT_ERROR_NONE);
+    stm->SetCCStreamResource(&streamRes);
+
+    CCWorker worker;
+    worker.device_ = dev;
+    CCGcmPlugin gcmPlugin(&crypto);
+    worker.plugin_ = &gcmPlugin;
+    worker.maxSliceSize_ = CC_SLICE_SIZE;
+    worker.workerId_ = 0U;
+    std::vector<uint8_t> deviceBufA(64U, 0U);
+    std::vector<uint8_t> deviceBufB(64U, 0U);
+    std::vector<uint8_t> hostBuf(CC_SLICE_SIZE, 0U);
+    worker.deviceBuffers_[0] = deviceBufA.data();
+    worker.deviceBuffers_[1] = deviceBufB.data();
+    worker.hostCryptoBuf_ = hostBuf.data();
+
+    std::vector<uint8_t> src(64U, 0x5AU);
+    std::vector<uint8_t> dst(64U, 0U);
+    CCMemcpyTask task{};
+    task.src = src.data();
+    task.dst = dst.data();
+    task.totalSize = src.size();
+    task.kind = RT_MEMCPY_DEVICE_TO_DEVICE; // 非法方向：host 侧处理失败
+    task.streamId = streamId;
+
+    // host 侧异常必须把 hostStatus 置 TERMINATED，让设备侧停止消费
+    EXPECT_NE(worker.ProcessTask(task), RT_ERROR_NONE);
+    EXPECT_EQ(streamRes.BarQueue()->hostStatus, TASK_QUEUE_STATUS_TERMINATED);
 
     worker.device_ = nullptr;
     (void)stm->TakeCCStreamResource();
@@ -1601,8 +2305,7 @@ TEST_F(CCManagerTest, Worker_ProcessTask_D2H_EndToEnd)
 
 TEST_F(CCManagerTest, Worker_ProcessTask_D2H_ThreeSlicesReusesBuffers)
 {
-    Device* dev = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
-    ASSERT_NE(dev, (Device*)nullptr);
+    RETAIN_DEVICE(dev);
     Driver* realDriver = dev->Driver_();
 
     rtStream_t stmHandle = 0U;
@@ -1615,12 +2318,10 @@ TEST_F(CCManagerTest, Worker_ProcessTask_D2H_ThreeSlicesReusesBuffers)
     MOCKER(GetKeyFromKernel).stubs().will(returnValue(0));
     ASSERT_EQ(crypto.InitKey(0), RT_ERROR_NONE);
 
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::PcieHostRegister).stubs().will(invoke(PcieHostRegisterStub));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::PcieHostUnRegister).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::DevMemFree).stubs().will(invoke(DevMemFreeStub));
+    StubPcieAndFreeCounted(realDriver);
 
     CCStreamResManage streamRes;
-    ASSERT_EQ(streamRes.Init(dev), RT_ERROR_NONE);
+    ASSERT_EQ(streamRes.Init(dev, sizeof(AiccCryptoSliceDesc)), RT_ERROR_NONE);
     stm->SetCCStreamResource(&streamRes);
 
     const std::vector<uint32_t> sliceLens{CC_PLAINTEXT_SLICE_SIZE, CC_PLAINTEXT_SLICE_SIZE, 64U};
@@ -1638,7 +2339,7 @@ TEST_F(CCManagerTest, Worker_ProcessTask_D2H_ThreeSlicesReusesBuffers)
     std::vector<size_t> cipherLens(sliceLens.size(), 0U);
     size_t offset = 0U;
     for (size_t i = 0U; i < sliceLens.size(); ++i) {
-        CCSliceDesc aad{};
+        AiccCryptoSliceDesc aad{};
         aad.ciphertextAddr = PtrToValue((i % 2U) == 0U ? deviceBufA.data() : deviceBufB.data());
         aad.plaintextAddr = PtrToValue(src.data() + offset);
         aad.ciphertextLen = CC_CIPHER_HEADER_SIZE + sliceLens[i];
@@ -1648,8 +2349,8 @@ TEST_F(CCManagerTest, Worker_ProcessTask_D2H_ThreeSlicesReusesBuffers)
         cipherLens[i] = ciphers[i].size();
         ASSERT_EQ(
             crypto.Encrypt(
-                0, src.data() + offset, sliceLens[i], reinterpret_cast<const uint8_t*>(&aad), sizeof(aad),
-                ciphers[i].data(), &cipherLens[i]),
+                0, CC_CRYPTO_CIPHER::AES_128, src.data() + offset, sliceLens[i], reinterpret_cast<const uint8_t*>(&aad),
+                sizeof(aad), ciphers[i].data(), &cipherLens[i]),
             RT_ERROR_NONE);
         ASSERT_EQ(cipherLens[i], CC_CIPHER_HEADER_SIZE + sliceLens[i]);
         offset += sliceLens[i];
@@ -1657,7 +2358,8 @@ TEST_F(CCManagerTest, Worker_ProcessTask_D2H_ThreeSlicesReusesBuffers)
 
     CCWorker worker;
     worker.device_ = dev;
-    worker.crypto_ = &crypto;
+    CCGcmPlugin gcmPlugin(&crypto);
+    worker.plugin_ = &gcmPlugin;
     worker.maxSliceSize_ = CC_SLICE_SIZE;
     worker.workerId_ = 0U;
     worker.deviceBuffers_[0] = deviceBufA.data();
@@ -1671,35 +2373,25 @@ TEST_F(CCManagerTest, Worker_ProcessTask_D2H_ThreeSlicesReusesBuffers)
     task.kind = RT_MEMCPY_DEVICE_TO_HOST;
     task.streamId = streamId;
 
-    std::shared_ptr<Stream> stream;
-    CCStreamResManage* resource = nullptr;
-    uint32_t sliceNum = 0U;
-    ASSERT_EQ(worker.SetupTask(task, stream, resource, sliceNum), RT_ERROR_NONE);
-    ASSERT_EQ(sliceNum, 3U);
-    CCSliceQueue* const taskQueue = streamRes.Queue();
-    EXPECT_EQ(taskQueue->memWaitVal, 1U);
+    const uint32_t sliceNum = 3U; // 三片：两片满片 + 一片 64B，覆盖 buffer A/B 复用
+    BarTaskQueue* const taskQueue = streamRes.BarQueue();
 
     std::atomic<bool> stop{false};
     std::atomic<uint32_t> consumedCount{0U};
     std::atomic<bool> descriptorValid{true};
     std::thread consumer([&]() {
-        while (!stop.load() && (taskQueue->memWaitVal != 1U)) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        }
-        if (stop.load()) {
-            return;
-        }
         size_t plaintextOffset = 0U;
         for (uint32_t sliceIdx = 0U; sliceIdx < sliceNum && !stop.load(); ++sliceIdx) {
-            while (!stop.load() && taskQueue->IsEmpty()) {
+            while (!stop.load() && (taskQueue->head == taskQueue->tail)) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(1));
             }
             if (stop.load()) {
                 return;
             }
 
-            const uint8_t tail = taskQueue->tail;
-            const CCSliceDesc& desc = taskQueue->sliceDesc[tail];
+            const uint32_t tail = taskQueue->tail;
+            const AiccCryptoSliceDesc& desc = *reinterpret_cast<const AiccCryptoSliceDesc*>(
+                taskQueue->taskDescList + static_cast<size_t>(tail) * taskQueue->taskDescSize);
             uint8_t* const expectedBuffer = (sliceIdx % 2U) == 0U ? deviceBufA.data() : deviceBufB.data();
             if ((desc.sliceIdx != sliceIdx) || (desc.ciphertextAddr != PtrToValue(expectedBuffer)) ||
                 (desc.plaintextAddr != PtrToValue(src.data() + plaintextOffset)) ||
@@ -1712,8 +2404,9 @@ TEST_F(CCManagerTest, Worker_ProcessTask_D2H_ThreeSlicesReusesBuffers)
                 descriptorValid.store(false);
             }
             plaintextOffset += sliceLens[sliceIdx];
-            taskQueue->tail = static_cast<uint8_t>((tail + 1U) % CC_SLICE_DESC_SLOT_NUM);
-            consumedCount.fetch_add(1U, std::memory_order_relaxed);
+            taskQueue->tail = (tail + 1U) % taskQueue->depth;
+            const uint32_t newCount = consumedCount.fetch_add(1U, std::memory_order_relaxed) + 1U;
+            taskQueue->complete = newCount;
         }
     });
     const ScopeGuard stopConsumer([&stop, &consumer]() {
@@ -1723,14 +2416,15 @@ TEST_F(CCManagerTest, Worker_ProcessTask_D2H_ThreeSlicesReusesBuffers)
         }
     });
 
-    EXPECT_EQ(worker.ProcessSlices(task, resource, sliceNum), RT_ERROR_NONE);
+    // 走 ProcessTask（内部 SetupTask + ProcessSlices），与原来单独覆盖 D2H 入口的用例等价
+    EXPECT_EQ(worker.ProcessTask(task), RT_ERROR_NONE);
     if (consumer.joinable()) {
         consumer.join();
     }
     EXPECT_TRUE(descriptorValid.load());
     EXPECT_EQ(consumedCount.load(), sliceNum);
     EXPECT_EQ(taskQueue->head, taskQueue->tail);
-    EXPECT_EQ(taskQueue->memWaitVal, 0U);
+    EXPECT_EQ(taskQueue->complete, sliceNum);
     EXPECT_EQ(memcmp(dst.data(), src.data(), totalSize), 0);
 
     worker.device_ = nullptr;
@@ -1741,8 +2435,7 @@ TEST_F(CCManagerTest, Worker_ProcessTask_D2H_ThreeSlicesReusesBuffers)
 
 TEST_F(CCManagerTest, Worker_ProcessD2HSlice_PublishesNextBeforeDmaAndDecrypt)
 {
-    Device* dev = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
-    ASSERT_NE(dev, (Device*)nullptr);
+    RETAIN_DEVICE(dev);
     Driver* realDriver = dev->Driver_();
 
     rtStream_t stmHandle = 0U;
@@ -1755,12 +2448,10 @@ TEST_F(CCManagerTest, Worker_ProcessD2HSlice_PublishesNextBeforeDmaAndDecrypt)
     MOCKER(GetKeyFromKernel).stubs().will(returnValue(0));
     ASSERT_EQ(encryptCrypto.InitKey(0), RT_ERROR_NONE);
 
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::PcieHostRegister).stubs().will(invoke(PcieHostRegisterStub));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::PcieHostUnRegister).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::DevMemFree).stubs().will(invoke(DevMemFreeStub));
+    StubPcieAndFreeCounted(realDriver);
 
     CCStreamResManage streamRes;
-    ASSERT_EQ(streamRes.Init(dev), RT_ERROR_NONE);
+    ASSERT_EQ(streamRes.Init(dev, sizeof(AiccCryptoSliceDesc)), RT_ERROR_NONE);
     stm->SetCCStreamResource(&streamRes);
 
     constexpr uint32_t LAST_SLICE_LEN = 64U;
@@ -1774,7 +2465,7 @@ TEST_F(CCManagerTest, Worker_ProcessD2HSlice_PublishesNextBeforeDmaAndDecrypt)
         src[i] = static_cast<uint8_t>(i & 0xFFU);
     }
 
-    CCSliceDesc firstAad{};
+    AiccCryptoSliceDesc firstAad{};
     firstAad.ciphertextAddr = PtrToValue(deviceBufA.data());
     firstAad.plaintextAddr = PtrToValue(src.data());
     firstAad.ciphertextLen = CC_CIPHER_HEADER_SIZE + CC_PLAINTEXT_SLICE_SIZE;
@@ -1784,14 +2475,15 @@ TEST_F(CCManagerTest, Worker_ProcessD2HSlice_PublishesNextBeforeDmaAndDecrypt)
     size_t firstCipherLen = firstCipher.size();
     ASSERT_EQ(
         encryptCrypto.Encrypt(
-            0, src.data(), CC_PLAINTEXT_SLICE_SIZE, reinterpret_cast<const uint8_t*>(&firstAad), sizeof(firstAad),
-            firstCipher.data(), &firstCipherLen),
+            0, CC_CRYPTO_CIPHER::AES_128, src.data(), CC_PLAINTEXT_SLICE_SIZE,
+            reinterpret_cast<const uint8_t*>(&firstAad), sizeof(firstAad), firstCipher.data(), &firstCipherLen),
         RT_ERROR_NONE);
 
     CCrypto uninitCrypto;
     CCWorker worker;
     worker.device_ = dev;
-    worker.crypto_ = &uninitCrypto;
+    CCGcmPlugin gcmPlugin(&uninitCrypto);
+    worker.plugin_ = &gcmPlugin;
     worker.maxSliceSize_ = CC_SLICE_SIZE;
     worker.workerId_ = 0U;
     worker.deviceBuffers_[0] = deviceBufA.data();
@@ -1810,7 +2502,7 @@ TEST_F(CCManagerTest, Worker_ProcessD2HSlice_PublishesNextBeforeDmaAndDecrypt)
     uint32_t sliceNum = 0U;
     ASSERT_EQ(worker.SetupTask(task, stream, resource, sliceNum), RT_ERROR_NONE);
     ASSERT_EQ(sliceNum, 2U);
-    CCSliceQueue* const taskQueue = streamRes.Queue();
+    BarTaskQueue* const taskQueue = streamRes.BarQueue();
 
     gObservedD2HDst.store(PtrToValue(hostBuf.data()));
     gObservedD2HQueue = taskQueue;
@@ -1819,25 +2511,24 @@ TEST_F(CCManagerTest, Worker_ProcessD2HSlice_PublishesNextBeforeDmaAndDecrypt)
     gExpectedD2HTail = 1U;
     std::atomic<bool> stop{false};
     std::thread consumer([&]() {
-        while (!stop.load() && (taskQueue->memWaitVal != 1U)) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        }
-        while (!stop.load() && taskQueue->IsEmpty()) {
+        while (!stop.load() && (taskQueue->head == taskQueue->tail)) {
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
         if (stop.load()) {
             return;
         }
-        const uint8_t firstTail = taskQueue->tail;
+        const uint32_t firstTail = taskQueue->tail;
         (void)memcpy_s(deviceBufA.data(), deviceBufA.size(), firstCipher.data(), firstCipherLen);
-        taskQueue->tail = static_cast<uint8_t>((firstTail + 1U) % CC_SLICE_DESC_SLOT_NUM);
+        taskQueue->tail = (firstTail + 1U) % taskQueue->depth;
+        taskQueue->complete = 1U;
 
         while (!stop.load() && !gAllowD2HNextConsume.load()) {
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
         if (!stop.load()) {
-            const uint8_t nextTail = taskQueue->tail;
-            taskQueue->tail = static_cast<uint8_t>((nextTail + 1U) % CC_SLICE_DESC_SLOT_NUM);
+            const uint32_t nextTail = taskQueue->tail;
+            taskQueue->tail = (nextTail + 1U) % taskQueue->depth;
+            taskQueue->complete = 2U;
         }
     });
     const ScopeGuard stopConsumer([&stop, &consumer]() {
@@ -1847,7 +2538,9 @@ TEST_F(CCManagerTest, Worker_ProcessD2HSlice_PublishesNextBeforeDmaAndDecrypt)
         }
     });
 
-    EXPECT_EQ(worker.ProcessD2HSlice(task, resource, 0U, 0U, CC_PLAINTEXT_SLICE_SIZE), RT_ERROR_CC_KEY_NOT_INITIALIZED);
+    EXPECT_EQ(
+        worker.ProcessD2HSlice(task, resource, 0U, 0U, CC_PLAINTEXT_SLICE_SIZE, sliceNum),
+        RT_ERROR_CC_KEY_NOT_INITIALIZED);
     EXPECT_TRUE(gExpectedD2HSlicePublishedAtDma.load());
 
     gObservedD2HDst.store(0U);
@@ -1864,10 +2557,13 @@ TEST_F(CCManagerTest, Worker_ProcessD2HSlice_PublishesNextBeforeDmaAndDecrypt)
 // CCResManage Tests
 // ============================================================================
 
-TEST_F(CCManagerTest, CCResManage_Init_CreatesOneWorker)
+TEST_F(CCManagerTest, CCResManage_Init_CreatesPluginForActiveAlg)
 {
-    Device* dev = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
-    EXPECT_NE(dev, (Device*)nullptr);
+    // 整链路按"当前生效模式"起插件（模式由内核节点 mem_encrypt_alg 决定、不可切换）：
+    // 校验 CCResManage 建的插件与生效模式一致，算子名随插件（GCM → AiccCrypto，CTR → KeystreamXor）
+    const CC_CRYPTO_ALG_TYPE activeAlg = GetActiveCryptoAlg();
+
+    RETAIN_DEVICE(dev);
 
     MOCKER(GetKeyFromKernel).stubs().will(returnValue(0));
     Api* const apiImpl = Runtime::Instance()->ApiImpl_();
@@ -1879,26 +2575,30 @@ TEST_F(CCManagerTest, CCResManage_Init_CreatesOneWorker)
     ASSERT_NE(ctrlStm, nullptr);
     MOCKER_CPP_VIRTUAL(ctrlStm, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostMemAlloc).stubs().will(invoke(HostMemAllocStub));
-    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostDmaMap).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostDmaUnmap).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostRegister).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostUnregister).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostMemFree).stubs().will(returnValue(RT_ERROR_NONE));
 
     CCResManage resource(dev);
     ASSERT_EQ(resource.InitCcResource(), RT_ERROR_NONE);
+
+    CCCryptoPlugin* const plugin = resource.Plugin();
+    ASSERT_NE(plugin, nullptr);
+    EXPECT_EQ(plugin->AlgType(), activeAlg);
+    EXPECT_STREQ(plugin->KernelName(), (activeAlg == CC_CRYPTO_ALG_TYPE::GCM) ? "AiccCrypto" : "AiccKeystreamXor");
+    // 初始 worker 池：只起 1 条，按需再扩容
     EXPECT_EQ(resource.workers_.size(), 1U);
     for (const auto& worker : resource.workers_) {
         EXPECT_NE(worker, nullptr);
     }
 
     resource.DestroyCcResource();
-
     ((Runtime*)Runtime::Instance())->DeviceRelease(dev);
 }
 
-TEST_F(CCManagerTest, CCResManage_SubmitTask_GrowsOneWorkerPerSubmitUpToSix)
+TEST_F(CCManagerTest, CCResManage_SubmitTask_GrowsOneWorkerPerSubmitUpToFour)
 {
-    Device* dev = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
-    ASSERT_NE(dev, nullptr);
+    RETAIN_DEVICE(dev);
 
     MOCKER(GetKeyFromKernel).stubs().will(returnValue(0));
     MOCKER_CPP(&Runtime::StartAicpuSd).stubs().will(returnValue(RT_ERROR_NONE));
@@ -1906,10 +2606,7 @@ TEST_F(CCManagerTest, CCResManage_SubmitTask_GrowsOneWorkerPerSubmitUpToSix)
     Stream* const ctrlStm = dev->GetCtrlSQStream(nullptr);
     ASSERT_NE(ctrlStm, nullptr);
     MOCKER_CPP_VIRTUAL(ctrlStm, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostMemAlloc).stubs().will(invoke(HostMemAllocStub));
-    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostDmaMap).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostDmaUnmap).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostMemFree).stubs().will(returnValue(RT_ERROR_NONE));
+    StubWorkerHostDriverSimple(dev->Driver_());
     MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::DevMemAllocWithBackupFlag).stubs().will(invoke(DevMemAllocEntryStub));
     MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::DevMemAllocWithFlag).stubs().will(invoke(DevMemAllocStub));
     MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::DevMemFree).stubs().will(returnValue(RT_ERROR_NONE));
@@ -1924,7 +2621,6 @@ TEST_F(CCManagerTest, CCResManage_SubmitTask_GrowsOneWorkerPerSubmitUpToSix)
         EXPECT_EQ(resource.SubmitTask(task), RT_ERROR_NONE);
         EXPECT_EQ(resource.workers_.size(), expectedWorkerCount);
     }
-
     EXPECT_EQ(resource.SubmitTask(task), RT_ERROR_NONE);
     EXPECT_EQ(resource.workers_.size(), 6U);
 
@@ -1934,8 +2630,7 @@ TEST_F(CCManagerTest, CCResManage_SubmitTask_GrowsOneWorkerPerSubmitUpToSix)
 
 TEST_F(CCManagerTest, CCResManage_SubmitTask_ContinuesWithExistingWorkerWhenExpansionFails)
 {
-    Device* dev = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
-    ASSERT_NE(dev, nullptr);
+    RETAIN_DEVICE(dev);
 
     MOCKER(GetKeyFromKernel).stubs().will(returnValue(0));
     MOCKER_CPP(&Runtime::StartAicpuSd).stubs().will(returnValue(RT_ERROR_NONE));
@@ -1943,10 +2638,7 @@ TEST_F(CCManagerTest, CCResManage_SubmitTask_ContinuesWithExistingWorkerWhenExpa
     Stream* const ctrlStm = dev->GetCtrlSQStream(nullptr);
     ASSERT_NE(ctrlStm, nullptr);
     MOCKER_CPP_VIRTUAL(ctrlStm, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostMemAlloc).stubs().will(invoke(HostMemAllocStub));
-    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostDmaMap).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostDmaUnmap).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostMemFree).stubs().will(returnValue(RT_ERROR_NONE));
+    StubWorkerHostDriverSimple(dev->Driver_());
     MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::DevMemAllocWithBackupFlag).stubs().will(invoke(DevMemAllocEntryStub));
     MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::DevMemAllocWithFlag).stubs().will(invoke(DevMemAllocStub));
     MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::DevMemFree).stubs().will(returnValue(RT_ERROR_NONE));
@@ -1958,6 +2650,7 @@ TEST_F(CCManagerTest, CCResManage_SubmitTask_ContinuesWithExistingWorkerWhenExpa
 
     CCMemcpyTask task{};
     task.streamId = 0xDEADU;
+    // 第二个 worker 的 host buffer 申请被注入为失败，现有 worker 继续服务
     EXPECT_EQ(resource.SubmitTask(task), RT_ERROR_NONE);
     EXPECT_EQ(resource.workers_.size(), 1U);
     EXPECT_EQ(gHostAllocCount, 2U);
@@ -1966,26 +2659,35 @@ TEST_F(CCManagerTest, CCResManage_SubmitTask_ContinuesWithExistingWorkerWhenExpa
     ((Runtime*)Runtime::Instance())->DeviceRelease(dev);
 }
 
-TEST_F(CCManagerTest, CCResManage_Init_StartAicpuSdFailure)
+TEST_F(CCManagerTest, CCResManage_Init_Failures)
 {
-    Device* dev = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
-    ASSERT_NE(dev, nullptr);
+    RETAIN_DEVICE(dev);
 
-    MOCKER(GetKeyFromKernel).stubs().will(returnValue(0));
-    MOCKER_CPP(&Runtime::StartAicpuSd).stubs().will(returnValue(RT_ERROR_DRV_OPEN_AICPU));
     MOCKER(StreamLaunchCpuKernel).expects(never());
 
-    CCResManage resource(dev);
-    EXPECT_EQ(resource.InitCcResource(), RT_ERROR_CC_INIT_FAILED);
-    EXPECT_TRUE(resource.workers_.empty());
+    // ① 取密钥失败（最先发生）：Init 失败且不留 worker
+    MOCKER(GetKeyFromKernel).stubs().will(returnValue(-1));
+    {
+        CCResManage resource(dev);
+        EXPECT_EQ(resource.InitCcResource(), RT_ERROR_CC_INIT_FAILED);
+        EXPECT_TRUE(resource.workers_.empty());
+    }
+
+    // ② 密钥就绪但 AICPU 调度器起不来：同样失败且不留 worker
+    MOCKER(GetKeyFromKernel).stubs().will(returnValue(0));
+    MOCKER_CPP(&Runtime::StartAicpuSd).stubs().will(returnValue(RT_ERROR_DRV_OPEN_AICPU));
+    {
+        CCResManage resource(dev);
+        EXPECT_EQ(resource.InitCcResource(), RT_ERROR_CC_INIT_FAILED);
+        EXPECT_TRUE(resource.workers_.empty());
+    }
 
     ((Runtime*)Runtime::Instance())->DeviceRelease(dev);
 }
 
 TEST_F(CCManagerTest, CCResManage_LoadKeyToAicpu_StartAicpuSdFailure)
 {
-    Device* dev = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
-    ASSERT_NE(dev, nullptr);
+    RETAIN_DEVICE(dev);
 
     MOCKER(GetKeyFromKernel).stubs().will(returnValue(0));
     MOCKER_CPP(&Runtime::StartAicpuSd).expects(once()).will(returnValue(RT_ERROR_DRV_OPEN_AICPU));
@@ -1998,20 +2700,6 @@ TEST_F(CCManagerTest, CCResManage_LoadKeyToAicpu_StartAicpuSdFailure)
     ((Runtime*)Runtime::Instance())->DeviceRelease(dev);
 }
 
-TEST_F(CCManagerTest, CCResManage_Init_KeyFailure)
-{
-    Device* dev = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
-    EXPECT_NE(dev, (Device*)nullptr);
-
-    MOCKER(GetKeyFromKernel).stubs().will(returnValue(-1));
-
-    CCResManage resource(dev);
-    EXPECT_EQ(resource.InitCcResource(), RT_ERROR_CC_INIT_FAILED);
-    EXPECT_TRUE(resource.workers_.empty());
-
-    ((Runtime*)Runtime::Instance())->DeviceRelease(dev);
-}
-
 TEST_F(CCManagerTest, CCResManage_Init_ErrorPaths)
 {
     // ① 空设备构造 + Init 失败
@@ -2019,18 +2707,14 @@ TEST_F(CCManagerTest, CCResManage_Init_ErrorPaths)
     EXPECT_EQ(nullResource.InitCcResource(), RT_ERROR_DEVICE_NULL);
 
     // ② 初始 worker 初始化失败：Init 返回错误且 worker 池被清空
-    Device* dev = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
-    ASSERT_NE(dev, (Device*)nullptr);
+    RETAIN_DEVICE(dev);
     Driver* realDriver = dev->Driver_();
 
     MOCKER(GetKeyFromKernel).stubs().will(returnValue(0));
     Stream* const ctrlStm = dev->GetCtrlSQStream(nullptr);
     ASSERT_NE(ctrlStm, nullptr);
     MOCKER_CPP_VIRTUAL(ctrlStm, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostMemAlloc).stubs().will(invoke(HostMemAllocStub));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostDmaMap).stubs().will(invoke(HostDmaMapStub));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostDmaUnmap).stubs().will(invoke(HostDmaUnmapStub));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostMemFree).stubs().will(invoke(HostMemFreeStub));
+    StubWorkerHostDriver(realDriver);
     MOCKER_CPP_VIRTUAL(realDriver, &Driver::DevMemAllocWithBackupFlag).stubs().will(invoke(DevMemAllocEntryStub));
     MOCKER_CPP_VIRTUAL(realDriver, &Driver::DevMemAllocWithFlag).stubs().will(invoke(DevMemAllocStub));
 
@@ -2045,8 +2729,7 @@ TEST_F(CCManagerTest, CCResManage_Init_ErrorPaths)
 
 TEST_F(CCManagerTest, CCResManage_GetOrCreateStreamResource_Basics)
 {
-    Device* dev = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
-    ASSERT_NE(dev, (Device*)nullptr);
+    RETAIN_DEVICE(dev);
     Driver* realDriver = dev->Driver_();
 
     rtStream_t stmHandle = 0U;
@@ -2054,9 +2737,7 @@ TEST_F(CCManagerTest, CCResManage_GetOrCreateStreamResource_Basics)
     Stream* stm = rt_ut::UnwrapOrNull<Stream>(stmHandle);
     ASSERT_NE(stm, (Stream*)nullptr);
 
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::PcieHostRegister).stubs().will(invoke(PcieHostRegisterStub));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::PcieHostUnRegister).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::DevMemFree).stubs().will(invoke(DevMemFreeStub));
+    StubPcieAndFreeCounted(realDriver);
 
     CCResManage resource(dev);
     CCStreamResManage* streamRes = nullptr;
@@ -2091,8 +2772,7 @@ TEST_F(CCManagerTest, CCResManage_GetOrCreateStreamResource_Basics)
 
 TEST_F(CCManagerTest, CCResManage_DestroyStreamResource_Basics)
 {
-    Device* dev = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
-    ASSERT_NE(dev, (Device*)nullptr);
+    RETAIN_DEVICE(dev);
     Driver* realDriver = dev->Driver_();
 
     rtStream_t stmAHandle = 0U;
@@ -2104,9 +2784,7 @@ TEST_F(CCManagerTest, CCResManage_DestroyStreamResource_Basics)
     ASSERT_NE(stmA, (Stream*)nullptr);
     ASSERT_NE(stmB, (Stream*)nullptr);
 
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::PcieHostRegister).stubs().will(invoke(PcieHostRegisterStub));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::PcieHostUnRegister).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::DevMemFree).stubs().will(invoke(DevMemFreeStub));
+    StubPcieAndFreeCounted(realDriver);
 
     CCResManage resource(dev);
     // 手动注入任务队列（无 worker 消费，便于确定性验证取消逻辑）
@@ -2144,8 +2822,7 @@ TEST_F(CCManagerTest, CCResManage_DestroyStreamResource_Basics)
 
 TEST_F(CCManagerTest, CCResManage_SubmitTask_Basics)
 {
-    Device* dev = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
-    ASSERT_NE(dev, (Device*)nullptr);
+    RETAIN_DEVICE(dev);
     Driver* realDriver = dev->Driver_();
 
     CCResManage resource(dev);
@@ -2162,10 +2839,7 @@ TEST_F(CCManagerTest, CCResManage_SubmitTask_Basics)
     Stream* const ctrlStm = dev->GetCtrlSQStream(nullptr);
     ASSERT_NE(ctrlStm, nullptr);
     MOCKER_CPP_VIRTUAL(ctrlStm, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostMemAlloc).stubs().will(invoke(HostMemAllocStub));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostDmaMap).stubs().will(invoke(HostDmaMapStub));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostDmaUnmap).stubs().will(invoke(HostDmaUnmapStub));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostMemFree).stubs().will(invoke(HostMemFreeStub));
+    StubWorkerHostDriver(realDriver);
     MOCKER_CPP_VIRTUAL(realDriver, &Driver::DevMemAllocWithBackupFlag).stubs().will(invoke(DevMemAllocEntryStub));
     MOCKER_CPP_VIRTUAL(realDriver, &Driver::DevMemAllocWithFlag).stubs().will(invoke(DevMemAllocStub));
 
@@ -2184,17 +2858,9 @@ TEST_F(CCManagerTest, CCResManage_SubmitTask_Basics)
 // CCManager Tests
 // ============================================================================
 
-TEST_F(CCManagerTest, Manager_InitDeviceResource_NullDevice)
-{
-    CCManager manager;
-    rtError_t ret = manager.InitDeviceResource(nullptr);
-    EXPECT_EQ(ret, RT_ERROR_DEVICE_NULL);
-}
-
 TEST_F(CCManagerTest, Manager_InitDeviceResource_RepeatedInit)
 {
-    Device* dev = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
-    EXPECT_NE(dev, (Device*)nullptr);
+    RETAIN_DEVICE(dev);
 
     // InitKey 仅执行一次（GetKeyFromKernel 被 H2D/D2H 方向各调一次，共 exactly(2)），第二次初始化应幂等返回。
     MOCKER(GetKeyFromKernel).expects(exactly(2)).will(returnValue(0));
@@ -2203,10 +2869,7 @@ TEST_F(CCManagerTest, Manager_InitDeviceResource_RepeatedInit)
     Stream* const ctrlStm = dev->GetCtrlSQStream(nullptr);
     ASSERT_NE(ctrlStm, nullptr);
     MOCKER_CPP_VIRTUAL(ctrlStm, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostMemAlloc).stubs().will(invoke(HostMemAllocStub));
-    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostDmaMap).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostDmaUnmap).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostMemFree).stubs().will(returnValue(RT_ERROR_NONE));
+    StubWorkerHostDriverSimple(dev->Driver_());
 
     CCManager manager;
     EXPECT_EQ(manager.InitDeviceResource(dev), RT_ERROR_NONE);
@@ -2217,8 +2880,13 @@ TEST_F(CCManagerTest, Manager_InitDeviceResource_RepeatedInit)
 
 TEST_F(CCManagerTest, Manager_InitDeviceResource_ErrorPaths)
 {
-    Device* dev = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
-    ASSERT_NE(dev, (Device*)nullptr);
+    RETAIN_DEVICE(dev);
+
+    // ⓪ 空设备
+    {
+        CCManager manager;
+        EXPECT_EQ(manager.InitDeviceResource(nullptr), RT_ERROR_DEVICE_NULL);
+    }
 
     // ① deviceId 越界
     MOCKER_CPP_VIRTUAL(dev, &Device::Id_).stubs().will(invoke(FakeDeviceIdStub));
@@ -2250,8 +2918,7 @@ TEST_F(CCManagerTest, Manager_ReleaseDeviceResource_Basics)
     CCManager::ReleaseDeviceResource(RT_MAX_DEV_NUM);
 
     // ② 正常 Init 后释放资源为空
-    Device* dev = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
-    ASSERT_NE(dev, (Device*)nullptr);
+    RETAIN_DEVICE(dev);
     Driver* realDriver = dev->Driver_();
 
     MOCKER(GetKeyFromKernel).stubs().will(returnValue(0));
@@ -2260,10 +2927,7 @@ TEST_F(CCManagerTest, Manager_ReleaseDeviceResource_Basics)
     Stream* const ctrlStm = dev->GetCtrlSQStream(nullptr);
     ASSERT_NE(ctrlStm, nullptr);
     MOCKER_CPP_VIRTUAL(ctrlStm, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostMemAlloc).stubs().will(invoke(HostMemAllocStub));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostDmaMap).stubs().will(invoke(HostDmaMapStub));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostDmaUnmap).stubs().will(invoke(HostDmaUnmapStub));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostMemFree).stubs().will(invoke(HostMemFreeStub));
+    StubWorkerHostDriver(realDriver);
     MOCKER_CPP_VIRTUAL(realDriver, &Driver::DevMemAllocWithBackupFlag).stubs().will(invoke(DevMemAllocEntryStub));
     MOCKER_CPP_VIRTUAL(realDriver, &Driver::DevMemAllocWithFlag).stubs().will(invoke(DevMemAllocStub));
 
@@ -2321,8 +2985,9 @@ TEST_F(CCManagerTest, Manager_SyncCopyInCcModeReturnsFeatureNotSupportOnContextA
         RT_ERROR_FEATURE_NOT_SUPPORT);
 }
 
-TEST_F(CCManagerTest, CheckMemAddrRangeValid_AllocationBoundary)
+TEST_F(CCManagerTest, CheckMemAddrRangeValid_Cases)
 {
+    // ① 分配边界：恰好到尾部可以，超 1 字节拒绝，并核对查询的地址序列
     constexpr uint64_t allocBase = 0x1000U;
     constexpr size_t allocSize = 0x100U;
     constexpr uint64_t offset = 0x80U;
@@ -2335,6 +3000,17 @@ TEST_F(CCManagerTest, CheckMemAddrRangeValid_AllocationBoundary)
     EXPECT_EQ(gMemRangeStub.queriedAddrs[0], allocBase + offset);
     EXPECT_EQ(gMemRangeStub.queriedAddrs[1], allocBase + offset);
     EXPECT_EQ(gMemRangeStub.queriedAddrs[2], allocBase + allocSize);
+
+    // ② 落在分配区间外（基址前 / 尾部后）一律拒绝
+    MockMemGetAddressRange(0x2000U, 0x100U);
+    EXPECT_EQ(CheckMemAddrRangeValid(RtValueToPtr<const void*>(0x2000U - 1U), 1U), RT_ERROR_DRV_ERR);
+    EXPECT_EQ(CheckMemAddrRangeValid(RtValueToPtr<const void*>(0x2000U + 0x100U + 1U), 1U), RT_ERROR_DRV_ERR);
+    EXPECT_EQ(gMemRangeStub.callCount, 2U);
+
+    // ③ 驱动查询本身失败：错误码原样上抛
+    MockMemGetAddressRange(0U, 0U, DRV_ERROR_NOT_SUPPORT);
+    EXPECT_EQ(CheckMemAddrRangeValid(RtValueToPtr<const void*>(0x4000U), 1U), RT_ERROR_DRV_NOT_SUPPORT);
+    EXPECT_EQ(gMemRangeStub.callCount, 1U);
 }
 
 TEST_F(CCManagerTest, CheckMemAddrRangeValid_ContinuousVmmMappings)
@@ -2353,25 +3029,6 @@ TEST_F(CCManagerTest, CheckMemAddrRangeValid_ContinuousVmmMappings)
     EXPECT_EQ(gMemRangeStub.queriedAddrs[0], allocBase);
     EXPECT_EQ(gMemRangeStub.queriedAddrs[1], allocBase + segmentSize);
     EXPECT_EQ(gMemRangeStub.queriedAddrs[2], allocBase + (2U * segmentSize));
-}
-
-TEST_F(CCManagerTest, CheckMemAddrRangeValid_AddressOutsideAllocation)
-{
-    constexpr uint64_t allocBase = 0x2000U;
-    constexpr size_t allocSize = 0x100U;
-    MockMemGetAddressRange(allocBase, allocSize);
-
-    EXPECT_EQ(CheckMemAddrRangeValid(RtValueToPtr<const void*>(allocBase - 1U), 1U), RT_ERROR_DRV_ERR);
-    EXPECT_EQ(CheckMemAddrRangeValid(RtValueToPtr<const void*>(allocBase + allocSize + 1U), 1U), RT_ERROR_DRV_ERR);
-    EXPECT_EQ(gMemRangeStub.callCount, 2U);
-}
-
-TEST_F(CCManagerTest, CheckMemAddrRangeValid_HalFailure)
-{
-    MockMemGetAddressRange(0U, 0U, DRV_ERROR_NOT_SUPPORT);
-
-    EXPECT_EQ(CheckMemAddrRangeValid(RtValueToPtr<const void*>(0x4000U), 1U), RT_ERROR_DRV_NOT_SUPPORT);
-    EXPECT_EQ(gMemRangeStub.callCount, 1U);
 }
 
 TEST_F(CCManagerTest, CCMemCopy2DSync_ChecksDeviceAddressRange)
@@ -2413,10 +3070,8 @@ TEST_F(CCManagerTest, Manager_MemcpyEntryPoints_EmptyInputs)
         CCManager::SubmitCcMemcpyBatchTasks(
             nullptr, nullptr, nullptr, nullptr, 0U, attrs, nullptr, 0U, nullptr, nullptr),
         RT_ERROR_NONE);
-}
 
-TEST_F(CCManagerTest, Manager_MemSetEntryPoints_InvalidInputs)
-{
+    // MemSet 入参同样 fail-fast
     EXPECT_EQ(CCManager::CCDevMemSetAsync(nullptr, nullptr, 0U, 0U, 0U), RT_ERROR_STREAM_NULL);
     EXPECT_EQ(CCManager::CCDevMemSetD32(nullptr, 0U, 0U, 0U, nullptr, true), RT_ERROR_INVALID_VALUE);
 }
@@ -2429,8 +3084,7 @@ TEST_F(CCManagerTest, Manager_RegCCManagerProcFunc_Fail)
 
 TEST_F(CCManagerTest, Manager_GetOrCreateStreamResource_Integration)
 {
-    Device* dev = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
-    ASSERT_NE(dev, (Device*)nullptr);
+    RETAIN_DEVICE(dev);
     Driver* realDriver = dev->Driver_();
 
     const rtChipType_t chipType = GetCurrentChipType();
@@ -2453,15 +3107,10 @@ TEST_F(CCManagerTest, Manager_GetOrCreateStreamResource_Integration)
     Stream* const ctrlStm = dev->GetCtrlSQStream(nullptr);
     ASSERT_NE(ctrlStm, nullptr);
     MOCKER_CPP_VIRTUAL(ctrlStm, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostMemAlloc).stubs().will(invoke(HostMemAllocStub));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostDmaMap).stubs().will(invoke(HostDmaMapStub));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostDmaUnmap).stubs().will(invoke(HostDmaUnmapStub));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::HostMemFree).stubs().will(invoke(HostMemFreeStub));
+    StubWorkerHostDriver(realDriver);
     MOCKER_CPP_VIRTUAL(realDriver, &Driver::DevMemAllocWithBackupFlag).stubs().will(invoke(DevMemAllocEntryStub));
     MOCKER_CPP_VIRTUAL(realDriver, &Driver::DevMemAllocWithFlag).stubs().will(invoke(DevMemAllocStub));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::PcieHostRegister).stubs().will(invoke(PcieHostRegisterStub));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::PcieHostUnRegister).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(realDriver, &Driver::DevMemFree).stubs().will(invoke(DevMemFreeStub));
+    StubPcieAndFreeCounted(realDriver);
 
     ASSERT_EQ(registeredProcFunc.ccProcFunc.devResourceInit(dev), RT_ERROR_NONE);
     ASSERT_NE(CCManager::Instance().resources_[0], nullptr);
@@ -2527,7 +3176,7 @@ TEST_F(CCManagerTest, InitCcFeature_CcModeFlow)
     MOCKER(halGetDeviceInfoByBuff).expects(once()).will(invoke(QueryCcInfoStub));
     MOCKER(GetKeyFromKernel).stubs().will(returnValue(0));
     MOCKER_CPP(&Runtime::StartAicpuSd).stubs().will(returnValue(RT_ERROR_NONE));
-    // 测试点5/6 分别会触发 load-key 与 crypto kernel 启动，均走 StreamLaunchCpuKernel。
+    // 测试点5/6 分别会触发 load-key 与 crypto kernel 启动，均走 AICPU 内建算子通道。
     MOCKER(StreamLaunchCpuKernel).stubs().will(returnValue(RT_ERROR_NONE));
 
     // 测试点4：环境检测通过后，通过芯片函数表注册 CC 资源和内存分发回调。
@@ -2539,19 +3188,16 @@ TEST_F(CCManagerTest, InitCcFeature_CcModeFlow)
     ASSERT_NE(registeredProcFunc.memProcFunc.memcpyAsync, nullptr);
 
     // 测试点5：通过已注册的资源回调初始化当前 Device 的密钥和 6 Worker 线程池。
-    Device* dev = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
-    ASSERT_NE(dev, (Device*)nullptr);
+    RETAIN_DEVICE(dev);
     Stream* const ctrlStm = dev->GetCtrlSQStream(nullptr);
     ASSERT_NE(ctrlStm, nullptr);
     MOCKER_CPP_VIRTUAL(ctrlStm, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostMemAlloc).stubs().will(invoke(HostMemAllocStub));
-    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostDmaMap).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostDmaUnmap).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::HostMemFree).stubs().will(returnValue(RT_ERROR_NONE));
+    StubWorkerHostDriverSimple(dev->Driver_());
     ASSERT_EQ(registeredProcFunc.ccProcFunc.devResourceInit(dev), RT_ERROR_NONE);
 
     // 测试点6：H2D MemcpyAsync 命中 CC 回调并完整走通提交链路；
-    // Host 回调 / mem-wait / crypto kernel 三条流任务提交边界均打桩，不产生真实流任务，避免 TearDown 复位时挂起。
+    // Host 回调 / mem-wait（taskNum 门铃）/ crypto kernel 三条流任务提交边界均打桩，
+    // 不产生真实流任务，避免 TearDown 复位时挂起。
     Api* const apiImpl = Runtime::Instance()->ApiImpl_();
     ASSERT_NE(apiImpl, nullptr);
     MOCKER_CPP_VIRTUAL(apiImpl, &Api::LaunchHostFunc).stubs().will(returnValue(RT_ERROR_NONE));
@@ -2575,6 +3221,50 @@ TEST_F(CCManagerTest, InitCcFeature_CcModeFlow)
 
     // drvGetDevNum 的 expects(once()) 已被消费，TearDown 的 rtDeviceReset 还会再调，
     // 提前 reset 避免 mock 次数校验异常。
+    GlobalMockObject::reset();
+}
+
+TEST_F(CCManagerTest, InitCcFeature_SysfsEnablePath)
+{
+    // 无 /dev/sev-guest 的 guest 环境：cvm_guest/mem_encrypt_enable=1 同样视为 CC 模式，
+    // 且跳过设备 CC 状态查询。数据源经 RT_CC_SYSFS_CVM_ROOT 指向临时目录。
+    Runtime* const runtime = Runtime::Instance();
+    ASSERT_NE(runtime, nullptr);
+    const rtChipType_t chipType = GetCurrentChipType();
+    DevDynInfoProcFunc originalProcFunc{};
+    ASSERT_EQ(GET_DEV_INFO_PROC_FUNC(chipType, originalProcFunc), RT_ERROR_NONE);
+    originalProcFunc.regCCFeatureProcFunc = &RegCCManagerProcFunc;
+    ASSERT_TRUE(DevInfoManage::Instance().RegDevInfoProcFunc(chipType, originalProcFunc));
+    const ScopeGuard restoreProcFunc([chipType, originalProcFunc]() {
+        (void)DevInfoManage::Instance().RegDevInfoProcFunc(chipType, originalProcFunc);
+    });
+
+    char sysfsDir[] = "/tmp/cvm_guest_ut_XXXXXX";
+    ASSERT_NE(mkdtemp(sysfsDir), nullptr);
+    FILE* const enableFp = fopen((std::string(sysfsDir) + "/mem_encrypt_enable").c_str(), "w");
+    ASSERT_NE(enableFp, nullptr);
+    ASSERT_EQ(fwrite("1\n", 1U, 2U, enableFp), 2U);
+    (void)fclose(enableFp);
+    ASSERT_EQ(setenv("RT_CC_SYSFS_CVM_ROOT", sysfsDir, 1), 0);
+    const ScopeGuard restoreSysfs([sysfsDir]() {
+        (void)unsetenv("RT_CC_SYSFS_CVM_ROOT");
+        (void)remove((std::string(sysfsDir) + "/mem_encrypt_enable").c_str());
+        (void)rmdir(sysfsDir);
+    });
+
+    // enable=1 路径同样会做可见设备 CC ON 检查：模拟 1 个 CC ON 的可见设备
+    uint32_t deviceCount = 1U;
+    MOCKER(drvGetDevNum)
+        .expects(once())
+        .with(outBoundP(&deviceCount, sizeof(deviceCount)))
+        .will(returnValue(DRV_ERROR_NONE));
+    MOCKER(halGetDeviceInfoByBuff).expects(once()).will(invoke(QueryCcInfoStub));
+
+    // mem_encrypt_enable=1：注册成功
+    ASSERT_EQ(runtime->InitCcFeature(), RT_ERROR_NONE);
+    DevDynInfoProcFunc registeredProcFunc{};
+    ASSERT_EQ(GET_DEV_INFO_PROC_FUNC(chipType, registeredProcFunc), RT_ERROR_NONE);
+    ASSERT_NE(registeredProcFunc.memProcFunc.memcpyAsync, nullptr);
     GlobalMockObject::reset();
 }
 
@@ -2670,4 +3360,168 @@ TEST_F(CCManagerTest, QueryDeviceCcStatus_MapsDriverModes)
     gCcQueryResult = DRV_ERROR_INVALID_VALUE;
     EXPECT_NE(NpuDriver::QueryDeviceCcStatus(0U, ccOn), RT_ERROR_NONE);
     EXPECT_FALSE(ccOn);
+}
+
+TEST_F(CCManagerTest, ThreadPool_ElasticGrowAndIdleRetire)
+{
+    ThreadPool pool;
+    // 核心 1 条，上限 4 条，非核心线程空闲 1 s 后退出（缩短用例时长）
+    ASSERT_EQ(pool.Init("CC_POOL_UT", 1U, 4U, 1U), RT_ERROR_NONE);
+    EXPECT_EQ(pool.ThreadCount(), 1U);
+
+    // 4 个任务各占住一条线程，队列持续积压 → 扩到上限
+    const auto runBlockingBurst = [&pool]() {
+        std::mutex taskMutex;
+        std::condition_variable taskCv;
+        bool release = false;
+        std::vector<std::future<void>> futures;
+        for (uint32_t i = 0U; i < 4U; ++i) {
+            std::future<void> future = pool.Submit([&taskMutex, &taskCv, &release]() {
+                std::unique_lock<std::mutex> lock(taskMutex);
+                taskCv.wait(lock, [&release]() { return release; });
+            });
+            EXPECT_TRUE(future.valid());
+            futures.push_back(std::move(future));
+        }
+        for (uint32_t i = 0U; (i < 200U) && (pool.ThreadCount() < 4U); ++i) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+        EXPECT_EQ(pool.ThreadCount(), 4U);
+        {
+            std::lock_guard<std::mutex> lock(taskMutex);
+            release = true;
+        }
+        taskCv.notify_all();
+        for (auto& future : futures) {
+            future.get();
+        }
+    };
+
+    const auto waitForRetire = [&pool]() {
+        for (uint32_t i = 0U; (i < 200U) && (pool.ThreadCount() > 1U); ++i) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        }
+        EXPECT_EQ(pool.ThreadCount(), 1U);
+    };
+
+    runBlockingBurst();
+    waitForRetire();
+
+    // 再扩一轮：扩容前回收上一轮退休的 Thread/runner，池内对象数不随"扩了又退"的轮次增长
+    runBlockingBurst();
+    EXPECT_LE(pool.workers_.size(), 4U);
+    waitForRetire();
+    EXPECT_LE(pool.workers_.size(), 4U);
+    pool.Shutdown();
+}
+
+TEST_F(CCManagerTest, ThreadPool_ShutdownFromWorkerThread)
+{
+    // 池内 Shutdown 只请求停止，线程由下一次外部 Shutdown/Init 统一回收。
+    ThreadPool pool;
+    ASSERT_EQ(pool.Init("CC_POOL_UT", 1U, 4U, 1U), RT_ERROR_NONE);
+    EXPECT_EQ(pool.ThreadCount(), 1U);
+
+    std::future<void> future = pool.Submit([&pool]() { pool.Shutdown(); });
+    ASSERT_TRUE(future.valid());
+    future.get();
+
+    EXPECT_FALSE(pool.IsRunning());
+    EXPECT_EQ(pool.PendingCount(), 0U);
+    EXPECT_FALSE(pool.workers_.empty());
+
+    // 重新 Init：先回收上一次遗留的调用线程，池恢复可用
+    ASSERT_EQ(pool.Init("CC_POOL_UT", 1U, 4U, 1U), RT_ERROR_NONE);
+    EXPECT_TRUE(pool.IsRunning());
+    EXPECT_EQ(pool.ThreadCount(), 1U);
+
+    std::atomic<uint32_t> counter{0U};
+    std::future<void> again = pool.Submit([&counter]() { (void)counter.fetch_add(1U); });
+    ASSERT_TRUE(again.valid());
+    again.get();
+    EXPECT_EQ(counter.load(), 1U);
+    pool.Shutdown();
+    EXPECT_EQ(pool.idleThreads_, 0U);
+    EXPECT_EQ(pool.ThreadCount(), 0U);
+}
+
+TEST_F(CCManagerTest, ThreadPool_RejectZeroTimeoutAndWorkerInit)
+{
+    ThreadPool pool;
+    EXPECT_EQ(pool.Init("CC_POOL_UT", 1U, 2U, 0U), RT_ERROR_INVALID_VALUE);
+    EXPECT_FALSE(pool.IsRunning());
+    ASSERT_EQ(pool.Init("CC_POOL_UT", 1U), RT_ERROR_NONE);
+    auto future = pool.Submit([&pool]() {
+        EXPECT_EQ(pool.Init("CC_POOL_UT", 1U), RT_ERROR_INVALID_VALUE);
+        EXPECT_TRUE(pool.IsRunning());
+    });
+    future.get();
+}
+
+TEST_F(CCManagerTest, ThreadPool_GrowFailureKeepsQueuedTask)
+{
+    ThreadPool pool;
+    ASSERT_EQ(pool.Init("CC_POOL_UT", 1U, 4U), RT_ERROR_NONE);
+    MOCKER(OsalFactory::CreateThread).stubs().will(returnValue(static_cast<Thread*>(nullptr)));
+    std::promise<void> entered;
+    std::promise<void> release;
+    auto gate = release.get_future();
+    auto first = pool.Submit([&entered, &gate]() {
+        entered.set_value();
+        gate.wait();
+    });
+    entered.get_future().wait();
+    std::atomic<bool> completed{false};
+    auto queued = pool.Submit([&completed]() { completed.store(true); });
+    EXPECT_EQ(pool.ThreadCount(), 1U);
+    release.set_value();
+    first.get();
+    queued.get();
+    EXPECT_TRUE(completed.load());
+    pool.Shutdown();
+    EXPECT_EQ(pool.idleThreads_, 0U);
+    EXPECT_EQ(pool.ThreadCount(), 0U);
+}
+
+TEST_F(CCManagerTest, ThreadPool_ConcurrentWorkerShutdown)
+{
+    ThreadPool pool;
+    ASSERT_EQ(pool.Init("CC_POOL_UT", 2U), RT_ERROR_NONE);
+    std::promise<void> release;
+    auto gate = release.get_future().share();
+    std::atomic<uint32_t> entered{0U};
+    const auto stop = [&]() {
+        entered.fetch_add(1U);
+        gate.wait();
+        pool.Shutdown();
+    };
+    auto first = pool.Submit(stop);
+    auto second = pool.Submit(stop);
+    while (entered.load() != 2U) {
+        std::this_thread::yield();
+    }
+    release.set_value();
+    first.get();
+    second.get();
+    pool.Shutdown();
+    EXPECT_FALSE(pool.IsRunning());
+    EXPECT_EQ(pool.ThreadCount(), 0U);
+}
+
+TEST_F(CCManagerTest, ThreadPool_DestroyFromWorker)
+{
+    auto* pool = new ThreadPool;
+    ASSERT_EQ(pool->Init("CC_SELF_UT", 2U), RT_ERROR_NONE);
+    std::promise<mmThread> threadId;
+    auto done = pool->Submit([pool, &threadId]() {
+        threadId.set_value(pthread_self());
+        delete pool;
+    });
+    const mmThread id = threadId.get_future().get();
+    done.get();
+    auto* guard = Runtime::Instance()->GetThreadGuard();
+    for (uint32_t i = 0U; (i < 200U) && guard->FindThreadTid(id); ++i) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    }
+    EXPECT_FALSE(guard->FindThreadTid(id));
 }

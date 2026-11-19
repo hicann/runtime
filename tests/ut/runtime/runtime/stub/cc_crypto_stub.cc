@@ -48,6 +48,12 @@ const EVP_CIPHER* StubAes128Gcm()
     return PtrToPtr<int, const EVP_CIPHER>(&dummy);
 }
 
+const EVP_CIPHER* StubAes128Ctr()
+{
+    static int dummyCtr = 0;
+    return PtrToPtr<int, const EVP_CIPHER>(&dummyCtr);
+}
+
 int StubEncInit(
     EVP_CIPHER_CTX* ctx, const EVP_CIPHER* cipher, ENGINE* engine, const unsigned char* key, const unsigned char* iv)
 {
@@ -218,6 +224,7 @@ bool OpenSSLLoader::Init() noexcept
     Api.CipherCtxNew = &StubCtxNew;
     Api.CipherCtxFree = &StubCtxFree;
     Api.Aes128Gcm = &StubAes128Gcm;
+    Api.Aes128Ctr = &StubAes128Ctr;
     Api.EncInit = &StubEncInit;
     Api.DecInit = &StubDecInit;
     Api.CtxCtrl = &StubCtxCtrl;

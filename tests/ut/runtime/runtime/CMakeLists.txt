@@ -920,9 +920,16 @@ set(runtimeut_david_src_list
      ${TOP_DIR}/src/runtime/feature/cc_manager/cc_manager.cc
      ${TOP_DIR}/src/runtime/feature/cc_manager/cc_res_manage.cc
      ${TOP_DIR}/src/runtime/feature/cc_manager/crypto/cc_crypto.cc
-     ${TOP_DIR}/src/runtime/feature/cc_manager/crypto/aes_gcm.cc
+     ${TOP_DIR}/src/runtime/feature/cc_manager/crypto/cc_crypto_plugin.cc
+     ${TOP_DIR}/src/runtime/feature/cc_manager/crypto/aiv/cc_aiv_launch.cc
+     ${TOP_DIR}/src/runtime/feature/cc_manager/crypto/gcm/cc_gcm_plugin.cc
+     ${TOP_DIR}/src/runtime/feature/cc_manager/crypto/ctr/cc_ctr_plugin.cc
+     ${TOP_DIR}/src/runtime/feature/cc_manager/crypto/keystream/keystream_manager.cc
      ${TOP_DIR}/src/runtime/feature/cc_manager/cc_worker.cc
      ${TOP_DIR}/src/runtime/feature/cc_manager/cc_stream_res_manage.cc
+     ${TOP_DIR}/src/runtime/core/src/utils/thread_pool.cc
+     ${TOP_DIR}/src/runtime/feature/cc_manager/common/cc_utils.cc
+     ${TOP_DIR}/src/runtime/feature/cc_manager/task_queue/host_task_queue.cc
      ${CMAKE_CURRENT_SOURCE_DIR}/stub/cc_crypto_stub.cc
      ${runtimeut_src_common_list}
      ${runtimeut_platform_list}
@@ -1892,6 +1899,9 @@ add_executable(runtime_utest_task_v201
     ${TOP_DIR}/src/runtime/driver/npu_driver_standard_soc.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_soma.cc
     stub/hal_stub.cc
+    # v201 UT 不编 cc_manager.cc：runtime_adapt.cc 的 InitCcFeature 需要 RegCCManagerProcFunc 可链接，
+    # 用 stub 提供，避免引出整套 CC 实现依赖。
+    stub/cc_manager_stub.cc
     test/main.cc
     test/platform/others/rt_utest_v201_task_singlef.cc
     test/platform/others/rt_utest_suspend_v201.cc

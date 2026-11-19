@@ -453,6 +453,8 @@ target_compile_definitions(runtime_ut_910b_static_lib PUBLIC
 target_include_directories(runtime_ut_910b_static_lib PRIVATE
     ${TOP_DIR}/src/tprt/inc/external
     ${TOP_DIR}/src/tprt/feature/inc
+    # runtime_adapt.cc 引用 common/cc_utils.h（CC-mode 判定），与 950 的静态库保持一致
+    ${TOP_DIR}/src/runtime/feature/cc_manager
 )
 
 target_link_libraries(runtime_ut_910b_static_lib PRIVATE $<BUILD_INTERFACE:runtime_ut_910b_intf_pub>)

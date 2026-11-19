@@ -9,6 +9,7 @@
 # -----------------------------------------------------------------------------------------------------------
 include_guard(GLOBAL)
 include(${RUNTIME_DIR}/pkg_inc/runtime/runtime/runtime_headers.cmake)
+include(${RUNTIME_CMAKE_DIR}/cc_aiv_kernels.cmake)
 
 set(XPU_TPRT_INC_DIR
     ${RUNTIME_DIR}/src/tprt/inc/external
@@ -469,6 +470,7 @@ set(RUNTIME_INC_DIR_OPEN
     ${RUNTIME_CORE_DIR}/inc_c
     ${RUNTIME_FEATURE_DIR}/fusion
     ${RUNTIME_FEATURE_DIR}/ccu
+    ${RUNTIME_FEATURE_DIR}/cc_manager
     ${RUNTIME_DIR}/src/runtime/core/inc/args
     ${RUNTIME_DIR}/src/runtime/core/inc/arg_loader
     ${RUNTIME_DIR}/src/runtime/inc/common

@@ -32,6 +32,7 @@ constexpr int EVP_CTRL_GCM_SET_TAG = 0x11;
     X(CipherCtxNew, EVP_CIPHER_CTX_new_fn, "EVP_CIPHER_CTX_new")    \
     X(CipherCtxFree, EVP_CIPHER_CTX_free_fn, "EVP_CIPHER_CTX_free") \
     X(Aes128Gcm, EVP_aes_128_gcm_fn, "EVP_aes_128_gcm")             \
+    X(Aes128Ctr, EVP_aes_128_ctr_fn, "EVP_aes_128_ctr")             \
     X(EncInit, EVP_EncryptInit_ex_fn, "EVP_EncryptInit_ex")         \
     X(DecInit, EVP_DecryptInit_ex_fn, "EVP_DecryptInit_ex")         \
     X(CtxCtrl, EVP_CIPHER_CTX_ctrl_fn, "EVP_CIPHER_CTX_ctrl")       \
@@ -46,6 +47,7 @@ struct OpenSSLApi {
     using EVP_CIPHER_CTX_new_fn = EVP_CIPHER_CTX* (*)(void);
     using EVP_CIPHER_CTX_free_fn = void (*)(EVP_CIPHER_CTX*);
     using EVP_aes_128_gcm_fn = const EVP_CIPHER* (*)(void);
+    using EVP_aes_128_ctr_fn = const EVP_CIPHER* (*)(void);
     using EVP_EncryptInit_ex_fn =
         int (*)(EVP_CIPHER_CTX*, const EVP_CIPHER*, ENGINE*, const unsigned char*, const unsigned char*);
     using EVP_DecryptInit_ex_fn =

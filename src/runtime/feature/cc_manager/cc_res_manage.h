@@ -15,7 +15,9 @@
 #include <mutex>
 #include <vector>
 #include "base.hpp"
+#include "utils/thread_pool.h"
 #include "crypto/cc_crypto.h"
+#include "crypto/cc_crypto_plugin.h"
 #include "cc_task_queue.h"
 
 namespace cce {
@@ -37,8 +39,7 @@ public:
     rtError_t GetOrCreateStreamResource(Stream* stm, CCStreamResManage*& resource);
     void DestroyStreamResource(Stream* stm);
     rtError_t SubmitTask(const CCMemcpyTask& task);
-    // 在ccManager中拿不到CCrypto对象，这里做一个跳板
-    uint32_t BuildDeviceCryptoParam(CC_CRYPTO_MODE mode, CCCryptoKernelParam* param);
+    CCCryptoPlugin* Plugin() const { return plugin_.get(); }
 
 private:
     rtError_t LoadKeyToAicpu();
@@ -49,9 +50,11 @@ private:
 
     uint32_t deviceId_;
     Device* device_{nullptr};
-    CCrypto crypto_;                                 // per-device 密钥上下文
+    CCrypto crypto_;                         // 公共密钥/加解密原语/密钥流接口（各加密模式共用）
+    std::unique_ptr<CCCryptoPlugin> plugin_; // per-device 算法插件（路由元数据 + 分片回调钩子）
     std::vector<std::unique_ptr<CCWorker>> workers_; // 按需创建，最多 6 个 worker
     std::unique_ptr<CCMemcpyTaskQueue> taskQueue_;   // 1 个共享队列
+    ThreadPool threadPool_;                          // 统一持有 worker 线程，执行 CCWorker::Run routine
     uint32_t maxWorkerCount_{0U};
     uint32_t workerSliceSize_{0U};
     std::mutex workerPoolMutex_;

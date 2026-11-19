@@ -52,6 +52,10 @@
         <file value="dump_stat_op_ascend950.o" file_type="shared" optional="true"/>
         <file value="dump_stat_op_ascend960.o" file_type="shared" optional="true"/>
     </file_info>
+    <!-- CC AIV 设备核：标准 AscendC fatbin（crypto/device 子工程产物，当前只适配 A5），runtime 从 libruntime 同级的 ops/ 目录加载。主构建默认开启 CC_BUILD_AIV_KERNELS （UT 构建默认 OFF）；optional 兼容裁架构的构建。 -->
+    <file_info value="runtime_lib_ops" copy_type="delivery" src_path="" dst_path="$(TARGET_ENV)/lib64/ops" install_path="$(TARGET_ENV)/lib64/ops" install_mod="440">
+        <file value="cc_aiv_ks_xor.o" file_type="shared" optional="true"/>
+    </file_info>
     <file_info value="runtime_devlib_device" copy_type="delivery" src_path="" dst_path="$(TARGET_ENV)/devlib/device" install_path="$(TARGET_ENV)/devlib/device" install_mod="440">
         <file value="libc_sec.so" file_type="shared" install_softlink="$(TARGET_ENV)/lib64/device/lib64/libc_sec.so" optional="true"/>
         <file value="libascendalog.so" file_type="shared" install_softlink="$(TARGET_ENV)/lib64/device/lib64/libascendalog.so"  optional="true"/>

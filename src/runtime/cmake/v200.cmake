@@ -9,6 +9,7 @@
 # -----------------------------------------------------------------------------------------------------------
 include_guard(GLOBAL)
 include(${RUNTIME_DIR}/pkg_inc/runtime/runtime/runtime_headers.cmake)
+include(${RUNTIME_CMAKE_DIR}/cc_aiv_kernels.cmake)
 
 set(xpu_tprt_api_file_v200
     ${RUNTIME_API_DIR}/impl/api_impl_xpu_creator.cc
@@ -196,10 +197,17 @@ set(libruntime_v200_cc_manager_src_files
     ${RUNTIME_FEATURE_DIR}/cc_manager/cc_manager.cc
     ${RUNTIME_FEATURE_DIR}/cc_manager/cc_res_manage.cc
     ${RUNTIME_FEATURE_DIR}/cc_manager/crypto/cc_crypto.cc
-    ${RUNTIME_FEATURE_DIR}/cc_manager/crypto/aes_gcm.cc
+    ${RUNTIME_FEATURE_DIR}/cc_manager/crypto/cc_crypto_plugin.cc
+    ${RUNTIME_FEATURE_DIR}/cc_manager/crypto/aiv/cc_aiv_launch.cc
+    ${RUNTIME_FEATURE_DIR}/cc_manager/crypto/gcm/cc_gcm_plugin.cc
+    ${RUNTIME_FEATURE_DIR}/cc_manager/crypto/ctr/cc_ctr_plugin.cc
     ${RUNTIME_FEATURE_DIR}/cc_manager/crypto/openssl_loader.cc
+    ${RUNTIME_FEATURE_DIR}/cc_manager/crypto/keystream/keystream_manager.cc
     ${RUNTIME_FEATURE_DIR}/cc_manager/cc_worker.cc
     ${RUNTIME_FEATURE_DIR}/cc_manager/cc_stream_res_manage.cc
+    ${RUNTIME_CORE_DIR}/src/utils/thread_pool.cc
+    ${RUNTIME_FEATURE_DIR}/cc_manager/common/cc_utils.cc
+    ${RUNTIME_FEATURE_DIR}/cc_manager/task_queue/host_task_queue.cc
 )
 
 # v201
@@ -282,6 +290,7 @@ set(libruntime_v200_v201_common_src_files
     ${RUNTIME_CORE_DIR}/src/common/api_enum_desc.cc
     ${RUNTIME_CORE_DIR}/src/common/optional_enum_desc.cc
     ${RUNTIME_CORE_DIR}/src/common/inner_thread_local.cpp
+    ${RUNTIME_DIR}/src/runtime/api/api.cc
     ${RUNTIME_API_DIR}/impl/api_decorator.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/api_decorator_aclgraph.cc
     ${RUNTIME_API_DIR}/impl/api_error.cc

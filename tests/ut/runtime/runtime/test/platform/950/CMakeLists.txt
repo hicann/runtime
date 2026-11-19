@@ -26,6 +26,7 @@ add_executable(runtime_utest_api_david
     rt_utest_soma.cc
     rt_utest_david_snapshot.cc
     rt_utest_cc_manager.cc
+    keystream_manager_test.cc
 )
 
 target_compile_definitions(runtime_utest_api_david PUBLIC
@@ -69,6 +70,7 @@ add_executable(runtime_utest_task_david
     rt_utest_memory_corruption.cc
     rt_utest_aclgraph_ub.cc
     rt_utest_cc_manager.cc
+    keystream_manager_test.cc
     ${TOP_DIR}/tests/ut/runtime/runtime/test/rt_utest_task_sqe.cc
 )
 
@@ -165,5 +167,3 @@ target_link_libraries(runtime_utest_xpu PRIVATE
     runtime_ut_david_static_lib
     -Wl,--no-whole-archive
 )
-
-###################################################################################################

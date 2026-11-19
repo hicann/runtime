@@ -11,9 +11,10 @@
 #define CCE_RUNTIME_CC_STREAM_RES_MANAGE_H
 
 #include <cstdint>
+#include <mutex>
 
+#include "task_queue/host_task_queue.h"
 #include "base.hpp"
-#include "cc_task_queue.h"
 
 namespace cce {
 namespace runtime {
@@ -25,20 +26,25 @@ public:
     CCStreamResManage() = default;
     ~CCStreamResManage();
 
-    rtError_t Init(Device* device);
+    rtError_t Init(Device* device, uint32_t taskDescSize);
+
     void Destroy();
+
     void Reset() const;
 
-    CCSliceQueue* Queue() const;
-    CCSliceDesc* SliceDesc() const;
+    BarTaskQueue* BarQueue() const;
+
     uint64_t DeviceQueueAddr() const;
+
+    std::mutex& ProcessMutex();
+
     std::mutex& MemSubmitMutex();
 
 private:
     Device* device_{nullptr};
-    void* barDeviceAddr_{nullptr};
-    void* barHostAddr_{nullptr};
-    bool barRegistered_{false};
+    BarTaskQueue* barQueue_{nullptr}; // Init 创建，Destroy 释放
+    uint64_t queueDevAddr_{0U};       // 环设备侧地址（Init 时缓存，AICPU 参数用）
+    std::mutex processMutex_;         // 同流任务处理大锁
     std::mutex memSubmitMutex_; // 在替换的3个Task外加一把大锁，防止三段提交被多线程交叉插入
 };
 

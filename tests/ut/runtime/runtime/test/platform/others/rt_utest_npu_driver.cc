@@ -712,6 +712,21 @@ TEST_F(NpuDriverTest, huge_page_managed_memory_failed_02)
     EXPECT_EQ(mem, nullptr);
 }
 
+TEST_F(NpuDriverTest, dev_mem_alloc_con_phy_flag_contains_mem_dev)
+{
+    // 回归：ConPhy 的 halMemAlloc flag 必须带 virt-mem-type=MEM_DEV——缺省值 0 是 MEM_SVM_VAL，
+    // v3 SVM 的 svm_parse_alloc_devid 会直接返回 NOT_SUPPORT(0xFFFE)，与连续分配能力无关
+    NpuDriver driver;
+    void* mem = nullptr;
+    const uint64_t expectFlag = static_cast<uint64_t>(MEM_SET_ALIGN_SIZE(9ULL)) | static_cast<uint64_t>(MEM_DEV) |
+                                static_cast<uint64_t>(MEM_CONTIGUOUS_PHY) | static_cast<uint64_t>(NODE_TO_DEVICE(0U));
+    MOCKER(halMemAlloc)
+        .expects(once())
+        .with(mockcpp::any(), eq(static_cast<UINT64>(1024)), eq(static_cast<UINT64>(expectFlag)))
+        .will(returnValue(DRV_ERROR_NONE));
+    EXPECT_EQ(driver.DevMemAllocConPhy(&mem, 1024U, RT_MEMORY_HBM, 0U), RT_ERROR_NONE);
+}
+
 TEST_F(NpuDriverTest, memory_failed)
 {
     void* mem;

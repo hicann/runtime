@@ -270,10 +270,14 @@ rtError_t NpuDriver::HostRegister(void* ptr, uint64_t size, uint32_t type, void*
     return RT_ERROR_NONE;
 }
 
+// HostDmaMap/HostDmaUnmap 必须成对使用：任一 HAL 符号缺失时不走 DMA 路径，由上层回退到 HostRegister/HostUnregister。
+static bool IsHostDmaApiAvailable() { return (&halHostDmaMap != nullptr) && (&halHostDmaUnmap != nullptr); }
+
 rtError_t NpuDriver::HostDmaMap(void* ptr, uint64_t size, const uint32_t deviceId)
 {
     COND_RETURN_WARN(
-        &halHostDmaMap == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT, "[drv api] halHostDmaMap does not exist.");
+        !IsHostDmaApiAvailable(), RT_ERROR_FEATURE_NOT_SUPPORT,
+        "[drv api] halHostDmaMap or halHostDmaUnmap does not exist.");
 
     constexpr uint32_t flag = 0U;
     const drvError_t drvRet = halHostDmaMap(ptr, static_cast<UINT64>(size), flag, deviceId);
@@ -329,7 +333,8 @@ rtError_t NpuDriver::HostUnregister(void* ptr, const uint32_t deviceId, const bo
 rtError_t NpuDriver::HostDmaUnmap(void* ptr, const uint32_t deviceId)
 {
     COND_RETURN_WARN(
-        &halHostDmaUnmap == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT, "[drv api] halHostDmaUnmap does not exist.");
+        !IsHostDmaApiAvailable(), RT_ERROR_FEATURE_NOT_SUPPORT,
+        "[drv api] halHostDmaMap or halHostDmaUnmap does not exist.");
 
     const drvError_t drvRet = halHostDmaUnmap(ptr, deviceId);
     if (drvRet != DRV_ERROR_NONE) {
@@ -1437,10 +1442,13 @@ rtError_t NpuDriver::DevMemAllocNormalPage(
 rtError_t NpuDriver::DevMemAllocConPhy(
     void** const dptr, const uint64_t size, const rtMemType_t type, const uint32_t deviceId)
 {
+    // flag 必须带 virt-mem-type（MEM_DEV）；缺省 virt type=0 是 MEM_SVM_VAL，v3 SVM 的
+    // svm_parse_alloc_devid 会直接返回 NOT_SUPPORT(0xFFFE)。连续物理分配本身是支持的
+    // （a5 实测 MEM_DEV|MEM_CONTIGUOUS_PHY 可分配），此前失败完全由此位缺失导致。
     const DVresult drvRet = halMemAlloc(
         dptr, static_cast<UINT64>(size),
-        static_cast<UINT64>(MEM_SET_ALIGN_SIZE(9ULL)) | static_cast<UINT64>(MEM_CONTIGUOUS_PHY) |
-            static_cast<UINT64>(NODE_TO_DEVICE(deviceId)));
+        static_cast<UINT64>(MEM_SET_ALIGN_SIZE(9ULL)) | static_cast<UINT64>(MEM_DEV) |
+            static_cast<UINT64>(MEM_CONTIGUOUS_PHY) | static_cast<UINT64>(NODE_TO_DEVICE(deviceId)));
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(
             drvRet,

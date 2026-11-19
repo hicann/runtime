@@ -9,13 +9,15 @@
  */
 #include "cc_worker.h"
 #include <algorithm>
+#include <chrono>
 #include <cstdio>
 #include <cstring>
 #include <thread>
 #include "ascend_hal_base.h"
 #include "cc_manager.h"
-#include "crypto/cc_crypto.h"
+#include "crypto/cc_crypto_plugin.h"
 #include "cc_stream_res_manage.h"
+#include "common/cc_utils.h"
 #include "context.hpp"
 #include "device.hpp"
 #include "driver.hpp"
@@ -26,18 +28,38 @@ namespace cce {
 namespace runtime {
 static constexpr uint64_t CC_TIMEOUT_MS = 18ULL * 60ULL * 1000ULL;
 
+void DebugDumpRingState(
+    const char_t* const where, const uint32_t workerId, const BarTaskQueue* const barQueue, const uint32_t expectSlices)
+{
+    if (barQueue == nullptr) {
+        return;
+    }
+    static thread_local std::chrono::steady_clock::time_point lastDump{};
+    const auto now = std::chrono::steady_clock::now();
+    if ((now - lastDump) < std::chrono::seconds(1)) {
+        return;
+    }
+    lastDump = now;
+    RT_LOG(
+        RT_LOG_DEBUG,
+        "CC ring dump [%s] worker=%u hostStatus=%d deviceStatus=%d complete=%u head=%u tail=%u depth=%u "
+        "descSize=%u expect=%u",
+        where, workerId, static_cast<int32_t>(barQueue->hostStatus), static_cast<int32_t>(barQueue->deviceStatus),
+        barQueue->complete, barQueue->head, barQueue->tail, barQueue->depth, barQueue->taskDescSize, expectSlices);
+}
+
 CCWorker::~CCWorker() { Destroy(); }
 
 rtError_t CCWorker::Init(
-    uint32_t workerId, uint32_t sliceSize, CCMemcpyTaskQueue* taskQueue, Device* device, CCrypto* crypto)
+    uint32_t workerId, uint32_t sliceSize, CCMemcpyTaskQueue* taskQueue, Device* device, CCCryptoPlugin* plugin)
 {
     COND_RETURN_ERROR(device == nullptr, RT_ERROR_DEVICE_NULL, "CC worker device is null.");
-    COND_RETURN_ERROR(crypto == nullptr, RT_ERROR_INVALID_VALUE, "CC worker crypto is null.");
+    COND_RETURN_ERROR(plugin == nullptr, RT_ERROR_INVALID_VALUE, "CC worker crypto plugin is null.");
     workerId_ = workerId;
     maxSliceSize_ = sliceSize;
     taskQueue_ = taskQueue;
     device_ = device;
-    crypto_ = crypto;
+    plugin_ = plugin;
     cancelled_.store(false);
 
     void* rawBuf = nullptr;
@@ -52,12 +74,18 @@ rtError_t CCWorker::Init(
     hostCryptoBuf_ = rawBuf;
 
     ret = device_->Driver_()->HostDmaMap(hostCryptoBuf_, maxSliceSize_, device_->Id_());
+    if ((ret == RT_ERROR_FEATURE_NOT_SUPPORT) || (ret == RT_ERROR_DRV_NOT_SUPPORT)) {
+        RT_LOG(RT_LOG_INFO, "CC worker %u: host DMA map unavailable, fallback to HostRegister.", workerId_);
+        void* devPtr = nullptr;
+        ret = device_->Driver_()->HostRegister(
+            hostCryptoBuf_, maxSliceSize_, RT_MEM_HOST_REGISTER_PINNED, &devPtr, device_->Id_());
+    }
     if (ret != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_ERROR, "CC worker %u failed to DMA map hostCryptoBuf, ret=%#x", workerId_, ret);
+        RT_LOG(RT_LOG_ERROR, "CC worker %u failed to map/register hostCryptoBuf, ret=%#x", workerId_, ret);
         Destroy();
         return ret;
     }
-    hostCryptoDmaMapped_ = true;
+    hostCryptoRegistered_ = true;
 
     for (uint32_t i = 0U; i < CC_BUFFER_SLOT_NUM; ++i) {
         ret = device_->Driver_()->DevMemAllocWithBackupFlag(
@@ -73,40 +101,25 @@ rtError_t CCWorker::Init(
         }
     }
 
-    thread_ = OsalFactory::CreateThread("CC_WORKER", this, nullptr);
-    if (thread_ == nullptr) {
-        RT_LOG(RT_LOG_ERROR, "CC worker %u failed to create thread", workerId_);
-        Destroy();
-        return RT_ERROR_MEMORY_ALLOCATION;
-    }
-
-    int32_t err = thread_->Start();
-    if (err != EN_OK) {
-        RT_LOG(RT_LOG_ERROR, "CC worker %u failed to start thread, err=%d", workerId_, err);
-        Destroy();
-        return RT_ERROR_MEMORY_ALLOCATION;
-    }
-
     RT_LOG(
-        RT_LOG_INFO, "CC worker %u initialized, sliceSize=%u, device_id=%u", workerId_, maxSliceSize_, device_->Id_());
+        RT_LOG_INFO, "CC worker %u initialized, sliceSize=%u, deviceId=%u", workerId_, maxSliceSize_, device_->Id_());
     return RT_ERROR_NONE;
 }
 
 void CCWorker::Destroy()
 {
+    // 线程已由所属线程池 Join，此处只释放搬运缓冲。
     cancelled_.store(true);
 
-    if (thread_ != nullptr) {
-        thread_->Join();
-        DELETE_O(thread_);
-    }
-
-    if (hostCryptoDmaMapped_ && (device_ != nullptr) && (device_->Driver_() != nullptr)) {
+    if (hostCryptoRegistered_ && (device_ != nullptr) && (device_->Driver_() != nullptr)) {
         rtError_t ret = device_->Driver_()->HostDmaUnmap(hostCryptoBuf_, device_->Id_());
-        if (ret != RT_ERROR_NONE) {
-            RT_LOG(RT_LOG_ERROR, "CC worker %u: HostDmaUnmap failed, ret=%#x", workerId_, ret);
+        if (ret == RT_ERROR_FEATURE_NOT_SUPPORT) {
+            ret = device_->Driver_()->HostUnregister(hostCryptoBuf_, device_->Id_());
         }
-        hostCryptoDmaMapped_ = false;
+        if (ret != RT_ERROR_NONE) {
+            RT_LOG(RT_LOG_ERROR, "CC worker %u: HostDmaUnmap/HostUnregister failed, ret=%#x", workerId_, ret);
+        }
+        hostCryptoRegistered_ = false;
     }
 
     if (hostCryptoBuf_ != nullptr) {
@@ -136,17 +149,11 @@ void CCWorker::Destroy()
 void* CCWorker::DeviceBuffer(const uint32_t sliceIdx) const
 {
     // 分片序号交替映射到 Device Buffer A/B，保证双缓冲不冲突
-    const uint32_t slot = CCSliceQueue::PhysicalBufferIndex(sliceIdx);
+    const uint32_t slot = AiccSliceDescBase::PhysicalBufferIndex(sliceIdx);
     return (slot < CC_BUFFER_SLOT_NUM) ? deviceBuffers_[slot] : nullptr;
 }
 
-void CCWorker::Run(const void* param)
-{
-    (void)param;
-    WorkerLoop();
-}
-
-void CCWorker::WorkerLoop()
+void CCWorker::Run()
 {
     while (true) {
         CCMemcpyTask task{};
@@ -212,52 +219,201 @@ rtError_t CCWorker::SetupTask(
         return RT_ERROR_CC_WORKER_FAILED;
     }
 
-    resource->Reset();
-
-    CCSliceQueue* const taskQueue = resource->Queue();
-    if (taskQueue == nullptr) {
-        RT_LOG(RT_LOG_ERROR, "CC worker %u: task queue is null", workerId_);
+    BarTaskQueue* const barQueue = resource->BarQueue();
+    if (barQueue == nullptr) {
+        RT_LOG(RT_LOG_ERROR, "CC worker %u: task bar queue is null", workerId_);
         return RT_ERROR_CC_WORKER_FAILED;
     }
 
     size_t totalSize = task.totalSize;
     const uint64_t sliceNum64 = (totalSize + CC_PLAINTEXT_SLICE_SIZE - 1U) / CC_PLAINTEXT_SLICE_SIZE;
     sliceNum = static_cast<uint32_t>(sliceNum64);
-    taskQueue->totalSlices = sliceNum;
-    taskQueue->memWaitVal = 1U;
 
     // 外部中断预检：遇错即停/快恢等场景下静默丢弃任务
     if (ShouldWorkerExit(task.streamId)) {
+        resource->BarQueue()->hostStatus = TASK_QUEUE_STATUS_TERMINATED;
         RT_LOG(RT_LOG_WARNING, "CC worker %u: task dropped, stream_id=%u", workerId_, task.streamId);
         return RT_ERROR_NONE;
     }
     return RT_ERROR_NONE;
 }
 
-rtError_t CCWorker::ProcessSlices(CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t sliceNum)
+rtError_t CCWorker::ProcessTask(CCMemcpyTask& task)
+{
+    const rtError_t ret = ProcessTaskImpl(task);
+    if (ret != RT_ERROR_NONE) {
+        FailTask(task, ret);
+    }
+    return ret;
+}
+
+void CCWorker::FailTask(const CCMemcpyTask& task, const rtError_t ret)
+{
+    std::shared_ptr<Stream> stream;
+    if ((device_ == nullptr) || (device_->GetStreamSqCqManage() == nullptr) ||
+        (device_->GetStreamSqCqManage()->GetStreamSharedPtrById(task.streamId, stream) != RT_ERROR_NONE) ||
+        (stream == nullptr)) {
+        RT_LOG(
+            RT_LOG_ERROR, "CC worker %u: task failed but stream gone, stream=%u ret=%#x", workerId_, task.streamId,
+            static_cast<uint32_t>(ret));
+        return;
+    }
+    CCStreamResManage* const resource = stream->GetCCStreamResource();
+    if (resource == nullptr) {
+        return;
+    }
+    BarTaskQueue* const barQueue = resource->BarQueue();
+    if (barQueue != nullptr) {
+        barQueue->hostStatus = TASK_QUEUE_STATUS_TERMINATED; // 通知设备核退出消费与 MEM_WAIT
+    }
+    stream->SetErrCode(static_cast<uint32_t>(RT_ERROR_HOST_FUNC_EXE_FAILED));
+    stream->SetAbortStatus(RT_ERROR_STREAM_ABORT);
+    if (taskQueue_ != nullptr) {
+        (void)taskQueue_->CancelTasksByStream(task.streamId);
+    }
+    RT_LOG(
+        RT_LOG_ERROR, "CC worker %u: task failed, stream=%u ret=%#x head=%u tail=%u complete=%u devErr=%u", workerId_,
+        task.streamId, static_cast<uint32_t>(ret), (barQueue == nullptr) ? 0U : barQueue->head,
+        (barQueue == nullptr) ? 0U : barQueue->tail, (barQueue == nullptr) ? 0U : barQueue->complete,
+        (barQueue == nullptr) ? 0U : barQueue->deviceErrCode);
+}
+
+rtError_t CCWorker::ProcessTaskImpl(CCMemcpyTask& task)
+{
+    RT_LOG(RT_LOG_DEBUG, "CC worker %u: ProcessTask enter, stream_id=%u.", workerId_, task.streamId);
+    std::shared_ptr<Stream> stream;
+    CCStreamResManage* resource = nullptr;
+    uint32_t sliceNum = 0U;
+
+    rtError_t ret = SetupTask(task, stream, resource, sliceNum);
+    if (ret != RT_ERROR_NONE || stream == nullptr || resource == nullptr) {
+        // resource 为 nullptr 表示任务在 SetupTask 中被静默丢弃（流销毁/外部中断），无需设置错误码。
+        return ret;
+    }
+
+    COND_RETURN_ERROR(plugin_ == nullptr, RT_ERROR_CC_INIT_FAILED, "CC worker crypto plugin is null.");
+    const std::lock_guard<std::mutex> processLock(resource->ProcessMutex());
+    // 同流锁覆盖重置、发布和消费确认，防止多个 worker 相互重置环状态。
+    bool proceed = false;
+    ret = BeginBarTaskRound(resource->BarQueue(), &proceed);
+    COND_RETURN_ERROR(ret != RT_ERROR_NONE, ret, "CC worker %u: begin bar task round failed, ret=%#x.", workerId_, ret);
+    if (!proceed) {
+        resource->BarQueue()->hostStatus = TASK_QUEUE_STATUS_TERMINATED;
+        RT_LOG(
+            RT_LOG_WARNING, "CC worker %u: queue terminated before round, task dropped, stream_id=%u", workerId_,
+            task.streamId);
+        return RT_ERROR_NONE;
+    }
+    void* pluginTaskCtx = nullptr;
+    ret = plugin_->OnTaskBegin(task, device_->Id_(), sliceNum, &pluginTaskCtx);
+    if (ret != RT_ERROR_NONE) {
+        resource->BarQueue()->hostStatus = TASK_QUEUE_STATUS_TERMINATED;
+        return ret;
+    }
+    BarTaskQueue* const barQueue = resource->BarQueue();
+    if (!__sync_bool_compare_and_swap(&barQueue->hostStatus, TASK_QUEUE_STATUS_WAITING, TASK_QUEUE_STATUS_WORKING)) {
+        switch (barQueue->hostStatus) {
+            case TASK_QUEUE_STATUS_WORKING:
+                break;
+            case TASK_QUEUE_STATUS_TERMINATED:
+                plugin_->OnTaskEnd(task, device_->Id_(), sliceNum, pluginTaskCtx);
+                RT_LOG(
+                    RT_LOG_WARNING, "CC worker %u: queue terminated, task dropped, stream_id=%u", workerId_,
+                    task.streamId);
+                return RT_ERROR_NONE;
+            default:
+                barQueue->hostStatus = TASK_QUEUE_STATUS_TERMINATED;
+                plugin_->OnTaskEnd(task, device_->Id_(), sliceNum, pluginTaskCtx);
+                RT_LOG(
+                    RT_LOG_ERROR, "CC worker %u: unexpected host status %d when arming doorbell, stream_id=%u",
+                    workerId_, static_cast<int32_t>(barQueue->hostStatus), task.streamId);
+                return RT_ERROR_CC_WORKER_FAILED;
+        }
+    }
+    ret = ProcessSlices(task, resource, sliceNum, pluginTaskCtx);
+    if (task.kind == RT_MEMCPY_HOST_TO_DEVICE) {
+        if (ret == RT_ERROR_NONE) {
+            ret = WaitH2DConsumed(task.streamId, resource->BarQueue(), sliceNum);
+        }
+        uint32_t doneIdx = 0U;
+        // 失败时不能等待未发布的分片；残留资源由 OnTaskEnd 归还。
+        (void)RetireDoneH2DSlices(task, resource, sliceNum, pluginTaskCtx, doneIdx, ret == RT_ERROR_NONE);
+    }
+    plugin_->OnTaskEnd(task, device_->Id_(), sliceNum, pluginTaskCtx);
+    if (ret != RT_ERROR_NONE) {
+        barQueue->hostStatus = TASK_QUEUE_STATUS_TERMINATED;
+    } else {
+        (void)__sync_bool_compare_and_swap(&barQueue->hostStatus, TASK_QUEUE_STATUS_WORKING, TASK_QUEUE_STATUS_WAITING);
+    }
+
+    return ret;
+}
+
+rtError_t CCWorker::WaitD2HSliceDone(const uint32_t streamId, BarTaskQueue* const barQueue, const uint32_t sliceIdx)
+{
+    COND_RETURN_ERROR(barQueue == nullptr, RT_ERROR_CC_WORKER_FAILED, "CC worker bar task queue is null.");
+    const auto waitStart = std::chrono::steady_clock::now();
+    for (;;) {
+        uint32_t completed = 0U;
+        const rtError_t ret = GetCompletedBarTaskNum(barQueue, &completed);
+        COND_RETURN_ERROR(
+            ret != RT_ERROR_NONE, ret, "CC worker %u: get completed num failed, slice=%u, ret=%#x.", workerId_,
+            sliceIdx, ret);
+        if (completed > sliceIdx) {
+            break;
+        }
+        if (ShouldWorkerExit(streamId)) {
+            return RT_ERROR_CC_WORKER_TIMEOUT;
+        }
+        DebugDumpRingState("WaitD2HSliceDone", workerId_, barQueue, sliceIdx + 1U);
+        CCSpinWait(waitStart);
+    }
+    __sync_synchronize();
+    return RT_ERROR_NONE;
+}
+
+constexpr uint32_t CC_SLICE_DESC_MAX_SIZE = 64U;
+constexpr uint32_t CC_SLICE_DESC_ALIGN_BYTES = 8U;
+
+static void FillSliceDescCommon(AiccSliceDescBase* desc, const void* remoteAddr, size_t sliceSize, uint32_t sliceIdx)
+{
+    desc->ciphertextAddr = PtrToValue(nullptr);
+    desc->plaintextAddr = PtrToValue(remoteAddr);
+    desc->ciphertextLen = 0U; // 由插件钩子按算法密文格式填充
+    desc->plaintextLen = static_cast<uint32_t>(sliceSize);
+    desc->sliceIdx = sliceIdx;
+}
+
+rtError_t CCWorker::ProcessSlices(
+    CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t sliceNum, void* pluginTaskCtx)
 {
     size_t totalSize = task.totalSize;
     rtError_t ret = RT_ERROR_NONE;
+    uint32_t doneIdx = 0U; // H2D 已回调（分片完成通知）的分片水位
 
-    for (uint32_t i = 0; i < sliceNum; ++i) {
+    for (uint32_t i = 0U; i < sliceNum; ++i) {
         if (ShouldWorkerExit(task.streamId)) {
-            // 外部中断/超时均静默退出：错误由 engine 或 AICPU SQE 超时上报，worker 不重复设置错误码。
-            RT_LOG(RT_LOG_ERROR, "CC worker %u: task interrupted, slice=%u/%u", workerId_, i, sliceNum);
+            RT_LOG(RT_LOG_ERROR, "CC worker %u: hook task interrupted, slice=%u/%u", workerId_, i, sliceNum);
             break;
+        }
+        if (task.kind == RT_MEMCPY_HOST_TO_DEVICE) {
+            ret = RetireDoneH2DSlices(task, resource, sliceNum, pluginTaskCtx, doneIdx, false);
+            if (ret != RT_ERROR_NONE) {
+                break;
+            }
         }
 
         size_t offset = static_cast<size_t>(i) * CC_PLAINTEXT_SLICE_SIZE;
         size_t sliceSize = std::min(static_cast<size_t>(CC_PLAINTEXT_SLICE_SIZE), totalSize - offset);
 
         if (task.kind == RT_MEMCPY_HOST_TO_DEVICE) {
-            ret = ProcessH2DSlice(task, resource, i, offset, sliceSize);
+            ret = ProcessH2DSlice(task, resource, i, offset, sliceSize, pluginTaskCtx);
         } else if (task.kind == RT_MEMCPY_DEVICE_TO_HOST) {
-            ret = ProcessD2HSlice(task, resource, i, offset, sliceSize);
+            ret = ProcessD2HSlice(task, resource, i, offset, sliceSize, sliceNum, pluginTaskCtx);
         } else {
             RT_LOG(RT_LOG_ERROR, "CC worker %u: unsupported memcpy kind %d", workerId_, task.kind);
             ret = RT_ERROR_INVALID_VALUE;
         }
-
         if (ret != RT_ERROR_NONE) {
             break;
         }
@@ -266,196 +422,220 @@ rtError_t CCWorker::ProcessSlices(CCMemcpyTask& task, CCStreamResManage* const r
     return ret;
 }
 
-rtError_t CCWorker::ProcessTask(CCMemcpyTask& task)
+rtError_t CCWorker::RetireDoneH2DSlices(
+    CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t totalSlices, void* pluginTaskCtx, uint32_t& doneIdx,
+    bool waitAll)
 {
-    std::shared_ptr<Stream> stream;
-    CCStreamResManage* resource = nullptr;
-    uint32_t sliceNum = 0;
-
-    rtError_t ret = SetupTask(task, stream, resource, sliceNum);
-    if (ret != RT_ERROR_NONE || stream == nullptr || resource == nullptr) {
-        // resource 为 nullptr 表示任务在 SetupTask 中被静默丢弃（流销毁/外部中断），无需设置错误码。
-        return ret;
+    BarTaskQueue* const barQueue = resource->BarQueue();
+    rtError_t ret = RT_ERROR_NONE;
+    const auto waitStart = std::chrono::steady_clock::now();
+    while (doneIdx < totalSlices) {
+        uint32_t completed = 0U;
+        ret = GetCompletedBarTaskNum(barQueue, &completed);
+        if (ret != RT_ERROR_NONE) {
+            return ret;
+        }
+        if (completed <= doneIdx) {
+            if (!waitAll) {
+                return RT_ERROR_NONE; // 非阻塞收割：暂无新完成分片
+            }
+            if (ShouldWorkerExit(task.streamId)) {
+                return RT_ERROR_NONE; // 外部中断：剩余分片由 OnTaskEnd 兜底释放
+            }
+            DebugDumpRingState("RetireH2D wait", workerId_, barQueue, doneIdx + 1U);
+            CCSpinWait(waitStart);
+            continue;
+        }
+        CCCryptoSliceCtx ctx{nullptr, nullptr, nullptr, nullptr, 0U, doneIdx, device_->Id_(), pluginTaskCtx};
+        ret = plugin_->OnH2DSliceDone(ctx);
+        if (ret != RT_ERROR_NONE) {
+            RT_LOG(
+                RT_LOG_ERROR, "CC worker %u: slice done callback failed, slice=%u, ret=%#x", workerId_, doneIdx, ret);
+            return ret;
+        }
+        ++doneIdx;
     }
-
-    ret = ProcessSlices(task, resource, sliceNum);
-    // H2D 场景下需要确认 AICPU 已消费完 Device Buffer A/B（head == tail）才能返回处理下一个任务
-    if ((ret == RT_ERROR_NONE) && (task.kind == RT_MEMCPY_HOST_TO_DEVICE)) {
-        CCSliceQueue* const taskQueue = resource->Queue();
-        ret = WaitH2DConsumed(task.streamId, taskQueue);
-    }
-
-    return ret;
+    return RT_ERROR_NONE;
 }
 
 rtError_t CCWorker::ProcessH2DSlice(
-    CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t sliceIdx, size_t offset, size_t sliceSize)
+    CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t sliceIdx, size_t offset, size_t sliceSize,
+    void* pluginTaskCtx)
 {
-    CCSliceQueue* const taskQueue = resource->Queue();
-    // 有效槽位只有 2 个,host 加密+DMA 远快于 AICPU 解密，若不等满就直接写，会覆盖 AICPU 尚未消费的描述符和密文 buffer
-    while (taskQueue->IsFull()) {
+    BarTaskQueue* const barQueue = resource->BarQueue();
+    const auto waitStart = std::chrono::steady_clock::now();
+    while (true) {
+        bool isFull = false;
+        (void)IsBarTaskQueueFull(barQueue, &isFull);
+        if (!isFull) {
+            break;
+        }
         if (ShouldWorkerExit(task.streamId)) {
             return RT_ERROR_CC_WORKER_TIMEOUT;
         }
-        std::this_thread::sleep_for(std::chrono::microseconds(100U));
+        DebugDumpRingState("H2D wait slot", workerId_, barQueue, sliceIdx + 1U);
+        CCSpinWait(waitStart);
     }
-    RT_LOG(RT_LOG_INFO, "ProcessH2DSlice get slot");
-    auto* src = static_cast<const uint8_t*>(task.src) + offset;
-    const uint8_t head = taskQueue->head;
+
+    alignas(CC_SLICE_DESC_ALIGN_BYTES) uint8_t descBuf[CC_SLICE_DESC_MAX_SIZE] = {0};
+    auto* desc = reinterpret_cast<AiccSliceDescBase*>(descBuf);
     void* const deviceBuffer = DeviceBuffer(sliceIdx);
+    FillSliceDescCommon(desc, static_cast<uint8_t*>(task.dst) + offset, sliceSize, sliceIdx);
+    desc->ciphertextAddr = PtrToValue(deviceBuffer);
 
-    CCSliceDesc* const sliceDesc = resource->SliceDesc();
-    sliceDesc[head] = CCSliceDesc{};
-    sliceDesc[head].ciphertextAddr = PtrToValue(deviceBuffer);
-    sliceDesc[head].plaintextAddr = PtrToValue(static_cast<uint8_t*>(task.dst) + offset);
-    sliceDesc[head].ciphertextLen = static_cast<uint32_t>(CC_CIPHER_HEADER_SIZE + sliceSize);
-    sliceDesc[head].plaintextLen = static_cast<uint32_t>(sliceSize);
-    sliceDesc[head].sliceIdx = sliceIdx;
+    CCCryptoSliceCtx ctx{
+        desc,
+        hostCryptoBuf_,
+        static_cast<const uint8_t*>(task.src) + offset,
+        static_cast<uint8_t*>(task.dst) + offset,
+        sliceSize,
+        sliceIdx,
+        device_->Id_(),
+        pluginTaskCtx};
 
-    size_t ctlen = 0;
-    rtError_t cryptoRet = crypto_->Encrypt(
-        device_->Id_(), const_cast<uint8_t*>(src), sliceSize, PtrToPtr<CCSliceDesc, uint8_t>(&sliceDesc[head]),
-        sizeof(CCSliceDesc), static_cast<uint8_t*>(hostCryptoBuf_), &ctlen);
-    if (cryptoRet != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_ERROR, "CC worker %u: encrypt failed, slice=%u, ret=%#x", workerId_, sliceIdx, cryptoRet);
-        return cryptoRet;
+    size_t dmaLen = 0U;
+    rtError_t ret = plugin_->PrepareH2DSlice(ctx, dmaLen);
+    if (ret != RT_ERROR_NONE) {
+        RT_LOG(RT_LOG_ERROR, "CC worker %u: prepare H2D callback failed, slice=%u, ret=%#x", workerId_, sliceIdx, ret);
+        return ret;
     }
 
     drvError_t drvRet =
-        drvMemcpy(RtPtrToPtr<UINT64>(deviceBuffer), maxSliceSize_, RtPtrToPtr<UINT64>(hostCryptoBuf_), ctlen);
+        drvMemcpy(RtPtrToPtr<UINT64>(deviceBuffer), maxSliceSize_, RtPtrToPtr<UINT64>(hostCryptoBuf_), dmaLen);
     if (drvRet != 0) {
         RT_LOG(RT_LOG_ERROR, "CC worker %u: DMA H2D failed, slice=%u, ret=%d", workerId_, sliceIdx, drvRet);
         return RT_ERROR_CC_WORKER_FAILED;
     }
-    /*
-     * 保证以下操作先于 head 发布：
-     * 1. sliceDesc[head] 各字段写入
-     * 2. drvMemcpy 已同步完成
-     */
-    __sync_synchronize();
-    taskQueue->head = (head + 1U) % CC_SLICE_DESC_SLOT_NUM;
-    __sync_synchronize();
-    RT_LOG(RT_LOG_INFO, "ProcessH2DSlice end, taskQueue->head=%u, sliceIdx=%u", taskQueue->head, sliceIdx);
+
+    const rtError_t pushRet = PushBarTask(barQueue, descBuf, plugin_->SliceDescSize());
+    COND_RETURN_ERROR(
+        pushRet != RT_ERROR_NONE, pushRet, "CC worker %u: push H2D hook slice failed, slice=%u, ret=%#x.", workerId_,
+        sliceIdx, pushRet);
     return RT_ERROR_NONE;
 }
 
 rtError_t CCWorker::PublishD2HSlice(
-    CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t sliceIdx, size_t offset, size_t sliceSize)
+    CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t sliceIdx, size_t offset, size_t sliceSize,
+    void* pluginTaskCtx)
 {
-    CCSliceQueue* const taskQueue = resource->Queue();
-    while (taskQueue->IsFull()) {
+    BarTaskQueue* const barQueue = resource->BarQueue();
+    const auto waitStart = std::chrono::steady_clock::now();
+    while (true) {
+        bool isFull = false;
+        (void)IsBarTaskQueueFull(barQueue, &isFull);
+        if (!isFull) {
+            break;
+        }
         if (ShouldWorkerExit(task.streamId)) {
             return RT_ERROR_CC_WORKER_TIMEOUT;
         }
-        std::this_thread::sleep_for(std::chrono::microseconds(100U));
+        DebugDumpRingState("D2H wait slot", workerId_, barQueue, sliceIdx + 1U);
+        CCSpinWait(waitStart);
     }
-    RT_LOG(RT_LOG_INFO, "ProcessD2HSlice get slot");
-    const uint8_t head = taskQueue->head;
+
+    alignas(CC_SLICE_DESC_ALIGN_BYTES) uint8_t descBuf[CC_SLICE_DESC_MAX_SIZE] = {0};
+    auto* desc = reinterpret_cast<AiccSliceDescBase*>(descBuf);
     void* const deviceBuffer = DeviceBuffer(sliceIdx);
-    CCSliceDesc* const sliceDesc = resource->SliceDesc();
-    sliceDesc[head] = CCSliceDesc{};
-    sliceDesc[head].ciphertextAddr = PtrToValue(deviceBuffer);
-    sliceDesc[head].plaintextAddr = PtrToValue(static_cast<const uint8_t*>(task.src) + offset);
-    sliceDesc[head].ciphertextLen = static_cast<uint32_t>(CC_CIPHER_HEADER_SIZE + sliceSize);
-    sliceDesc[head].plaintextLen = static_cast<uint32_t>(sliceSize);
-    sliceDesc[head].sliceIdx = sliceIdx;
+    FillSliceDescCommon(desc, static_cast<const uint8_t*>(task.src) + offset, sliceSize, sliceIdx);
+    desc->ciphertextAddr = PtrToValue(deviceBuffer);
 
-    const uint8_t nextHead = static_cast<uint8_t>((head + 1U) % CC_SLICE_DESC_SLOT_NUM);
-    __sync_synchronize();
-    taskQueue->head = nextHead;
-    __sync_synchronize();
-    return RT_ERROR_NONE;
-}
+    CCCryptoSliceCtx ctx{
+        desc,
+        hostCryptoBuf_,
+        static_cast<const uint8_t*>(task.src) + offset,
+        static_cast<uint8_t*>(task.dst) + offset,
+        sliceSize,
+        sliceIdx,
+        device_->Id_(),
+        pluginTaskCtx};
 
-rtError_t CCWorker::WaitD2HSliceCompleted(
-    const uint32_t streamId, const CCSliceQueue* const sliceQueue, const uint8_t expectedTail)
-{
-    while (sliceQueue->tail != expectedTail) {
-        if (ShouldWorkerExit(streamId)) {
-            return RT_ERROR_CC_WORKER_TIMEOUT;
-        }
-        std::this_thread::sleep_for(std::chrono::microseconds(100U));
-    }
-    __sync_synchronize();
+    const rtError_t ret = plugin_->PrepareD2HSlice(ctx);
+    COND_RETURN_ERROR(
+        ret != RT_ERROR_NONE, ret, "CC worker %u: prepare D2H callback failed, slice=%u, ret=%#x.", workerId_, sliceIdx,
+        ret);
+
+    const rtError_t pushRet = PushBarTask(barQueue, descBuf, plugin_->SliceDescSize());
+    COND_RETURN_ERROR(
+        pushRet != RT_ERROR_NONE, pushRet, "CC worker %u: push D2H hook slice failed, slice=%u, ret=%#x.", workerId_,
+        sliceIdx, pushRet);
     return RT_ERROR_NONE;
 }
 
 rtError_t CCWorker::ProcessD2HSlice(
-    CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t sliceIdx, size_t offset, size_t sliceSize)
+    CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t sliceIdx, size_t offset, size_t sliceSize,
+    uint32_t totalSlices, void* pluginTaskCtx)
 {
-    CCSliceQueue* const taskQueue = resource->Queue();
+    BarTaskQueue* const barQueue = resource->BarQueue();
     if (sliceIdx == 0U) {
-        const rtError_t publishRet = PublishD2HSlice(task, resource, sliceIdx, offset, sliceSize);
+        const rtError_t publishRet = PublishD2HSlice(task, resource, sliceIdx, offset, sliceSize, pluginTaskCtx);
         COND_RETURN_WITH_NOLOG(publishRet != RT_ERROR_NONE, publishRet);
     }
 
-    const uint8_t descSlot = static_cast<uint8_t>(sliceIdx % CC_SLICE_DESC_SLOT_NUM);
-    const uint8_t expectedTail = static_cast<uint8_t>((descSlot + 1U) % CC_SLICE_DESC_SLOT_NUM);
-    rtError_t ret = WaitD2HSliceCompleted(task.streamId, taskQueue, expectedTail);
+    rtError_t ret = WaitD2HSliceDone(task.streamId, barQueue, sliceIdx);
     COND_RETURN_WITH_NOLOG(ret != RT_ERROR_NONE, ret);
 
-    // 当前片已由 AICPU 加密完成。先发布下一片，使 AICPU 加密与 Host 搬运解密并行。
     bool nextPublished = false;
-    uint8_t nextExpectedTail = expectedTail;
-    if ((taskQueue->totalSlices > 0U) && (sliceIdx < taskQueue->totalSlices - 1U)) {
-        const uint32_t nextSliceIdx = sliceIdx + 1U;
+    uint32_t nextSliceIdx = sliceIdx + 1U;
+    if (nextSliceIdx < totalSlices) {
         const size_t nextOffset = static_cast<size_t>(nextSliceIdx) * CC_PLAINTEXT_SLICE_SIZE;
         const size_t nextSliceSize =
             std::min(static_cast<size_t>(CC_PLAINTEXT_SLICE_SIZE), task.totalSize - nextOffset);
-        const rtError_t publishRet = PublishD2HSlice(task, resource, nextSliceIdx, nextOffset, nextSliceSize);
+        const rtError_t publishRet =
+            PublishD2HSlice(task, resource, nextSliceIdx, nextOffset, nextSliceSize, pluginTaskCtx);
         COND_RETURN_WITH_NOLOG(publishRet != RT_ERROR_NONE, publishRet);
         nextPublished = true;
-        nextExpectedTail = static_cast<uint8_t>((expectedTail + 1U) % CC_SLICE_DESC_SLOT_NUM);
     }
 
-    CCSliceDesc* const sliceDesc = resource->SliceDesc();
-    const uint32_t ctlen = sliceDesc[descSlot].ciphertextLen;
-    RT_LOG(RT_LOG_INFO, "ProcessD2HSlice sliceIdx=%u, ctlen=%u", sliceIdx, ctlen);
-
     void* const deviceBuffer = DeviceBuffer(sliceIdx);
+    auto* const sliceDesc = reinterpret_cast<AiccSliceDescBase*>(
+        barQueue->taskDescList + (static_cast<size_t>(sliceIdx % barQueue->depth) * barQueue->taskDescSize));
+    const uint32_t ciphertextLen = sliceDesc->ciphertextLen;
     drvError_t drvRet =
-        drvMemcpy(RtPtrToPtr<UINT64>(hostCryptoBuf_), maxSliceSize_, RtPtrToPtr<UINT64>(deviceBuffer), ctlen);
+        drvMemcpy(RtPtrToPtr<UINT64>(hostCryptoBuf_), maxSliceSize_, RtPtrToPtr<UINT64>(deviceBuffer), ciphertextLen);
     if (drvRet != 0) {
         if (nextPublished) {
-            (void)WaitD2HSliceCompleted(task.streamId, taskQueue, nextExpectedTail);
+            (void)WaitD2HSliceDone(task.streamId, barQueue, nextSliceIdx);
         }
         RT_LOG(RT_LOG_ERROR, "CC worker %u: DMA D2H failed, slice=%u, ret=%d", workerId_, sliceIdx, drvRet);
         return RT_ERROR_CC_WORKER_FAILED;
     }
 
-    auto* dst = static_cast<uint8_t*>(task.dst) + offset;
-    size_t ptlen = 0;
-    rtError_t cryptoRet = crypto_->Decrypt(
-        device_->Id_(), static_cast<uint8_t*>(hostCryptoBuf_), ctlen,
-        PtrToPtr<CCSliceDesc, uint8_t>(&sliceDesc[descSlot]), sizeof(CCSliceDesc), dst, &ptlen);
-    if (cryptoRet != RT_ERROR_NONE) {
-        if (nextPublished) {
-            (void)WaitD2HSliceCompleted(task.streamId, taskQueue, nextExpectedTail);
-        }
-        RT_LOG(RT_LOG_ERROR, "CC worker %u: decrypt failed, slice=%u, ret=%#x", workerId_, sliceIdx, cryptoRet);
-        return cryptoRet;
-    }
+    CCCryptoSliceCtx ctx{sliceDesc, hostCryptoBuf_, nullptr,        static_cast<uint8_t*>(task.dst) + offset,
+                         sliceSize, sliceIdx,       device_->Id_(), pluginTaskCtx};
 
-    if (sliceIdx == taskQueue->totalSlices - 1U) {
-        taskQueue->memWaitVal = 0U;
-        RT_LOG(RT_LOG_INFO, "D2H task end, sliceIdx=%u, taskQueue->memWaitVal=%u", sliceIdx, taskQueue->memWaitVal);
+    ret = plugin_->FinishD2HSlice(ctx);
+    if (ret != RT_ERROR_NONE) {
+        if (nextPublished) {
+            (void)WaitD2HSliceDone(task.streamId, barQueue, nextSliceIdx);
+        }
+        RT_LOG(RT_LOG_ERROR, "CC worker %u: finish D2H callback failed, slice=%u, ret=%#x", workerId_, sliceIdx, ret);
+        return ret;
     }
-    RT_LOG(RT_LOG_INFO, "ProcessD2HSlice end, sliceIdx=%u, taskQueue->tail=%u", sliceIdx, taskQueue->tail);
     return RT_ERROR_NONE;
 }
 
-rtError_t CCWorker::WaitH2DConsumed(const uint32_t streamId, CCSliceQueue* const sliceQueue)
+rtError_t CCWorker::WaitH2DConsumed(const uint32_t streamId, BarTaskQueue* const barQueue, const uint32_t totalSlices)
 {
-    COND_RETURN_ERROR(sliceQueue == nullptr, RT_ERROR_CC_WORKER_FAILED, "CC worker slice queue is null.");
-    while (!sliceQueue->IsEmpty()) {
+    COND_RETURN_ERROR(barQueue == nullptr, RT_ERROR_CC_WORKER_FAILED, "CC worker bar task queue is null.");
+    if (totalSlices == 0U) {
+        return RT_ERROR_NONE;
+    }
+    const auto waitStart = std::chrono::steady_clock::now();
+    for (;;) {
+        uint32_t completed = 0U;
+        const rtError_t ret = GetCompletedBarTaskNum(barQueue, &completed);
+        COND_RETURN_ERROR(
+            ret != RT_ERROR_NONE, ret, "CC worker %u: get completed num failed, totalSlices=%u, ret=%#x.", workerId_,
+            totalSlices, ret);
+        if (completed >= totalSlices) {
+            break;
+        }
         if (ShouldWorkerExit(streamId)) {
-            // 外部中断（快恢/遇错即停/流销毁/关闭）或超时：AICPU 已停发，等待只会超时，静默退出。
             return RT_ERROR_NONE;
         }
-        std::this_thread::sleep_for(std::chrono::microseconds(100U));
+        DebugDumpRingState("WaitH2DConsumed", workerId_, barQueue, totalSlices);
+        CCSpinWait(waitStart);
     }
-    __sync_synchronize();
-    sliceQueue->memWaitVal = 0U;
     __sync_synchronize();
     return RT_ERROR_NONE;
 }

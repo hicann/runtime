@@ -13,9 +13,9 @@
 #include <atomic>
 #include <cstdint>
 #include <memory>
+#include "task_queue/host_task_queue.h"
 #include "base.hpp"
 #include "cc_task_queue.h"
-#include "osal.hpp"
 
 namespace cce {
 namespace runtime {
@@ -23,36 +23,45 @@ namespace runtime {
 class Device;
 class Stream;
 class CCStreamResManage;
-class CCrypto;
+class CCCryptoPlugin;
 
-class CCWorker : public ThreadRunnable {
+class CCWorker {
 public:
     CCWorker() = default;
-    ~CCWorker() override;
+    ~CCWorker();
 
     rtError_t Init(
-        uint32_t workerId, uint32_t sliceSize, CCMemcpyTaskQueue* taskQueue, Device* device, CCrypto* crypto);
+        uint32_t workerId, uint32_t sliceSize, CCMemcpyTaskQueue* taskQueue, Device* device, CCCryptoPlugin* plugin);
+    // 调用方须先保证所属线程池中的 Run 已退出。
     void Destroy();
 
     void* GetHostCryptoBuf() const { return hostCryptoBuf_; }
     void* DeviceBuffer(const uint32_t sliceIdx) const;
 
-    void Run(const void* param) override;
+    void Run();
 
 private:
-    void WorkerLoop();
     rtError_t SetupTask(
         CCMemcpyTask& task, std::shared_ptr<Stream>& stream, CCStreamResManage*& resource, uint32_t& sliceNum);
-    rtError_t ProcessSlices(CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t sliceNum);
+    rtError_t ProcessSlices(
+        CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t sliceNum, void* pluginTaskCtx);
+    rtError_t RetireDoneH2DSlices(
+        CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t totalSlices, void* pluginTaskCtx,
+        uint32_t& doneIdx, bool waitAll);
     rtError_t ProcessTask(CCMemcpyTask& task);
+    rtError_t ProcessTaskImpl(CCMemcpyTask& task);
+    void FailTask(const CCMemcpyTask& task, rtError_t ret);
     rtError_t ProcessH2DSlice(
-        CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t sliceIdx, size_t offset, size_t sliceSize);
+        CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t sliceIdx, size_t offset, size_t sliceSize,
+        void* pluginTaskCtx = nullptr);
     rtError_t PublishD2HSlice(
-        CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t sliceIdx, size_t offset, size_t sliceSize);
-    rtError_t WaitD2HSliceCompleted(const uint32_t streamId, const CCSliceQueue* sliceQueue, uint8_t expectedTail);
+        CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t sliceIdx, size_t offset, size_t sliceSize,
+        void* pluginTaskCtx = nullptr);
+    rtError_t WaitD2HSliceDone(const uint32_t streamId, BarTaskQueue* barQueue, const uint32_t sliceIdx);
     rtError_t ProcessD2HSlice(
-        CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t sliceIdx, size_t offset, size_t sliceSize);
-    rtError_t WaitH2DConsumed(const uint32_t streamId, CCSliceQueue* sliceQueue);
+        CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t sliceIdx, size_t offset, size_t sliceSize,
+        uint32_t totalSlices, void* pluginTaskCtx = nullptr);
+    rtError_t WaitH2DConsumed(const uint32_t streamId, BarTaskQueue* barQueue, uint32_t totalSlices);
     bool ShouldWorkerExit(const uint32_t streamId);
 
     uint32_t workerId_{0};
@@ -60,10 +69,9 @@ private:
     uint64_t deadlineMs_{0};
     std::atomic<bool> cancelled_{false};
     Device* device_{nullptr};
-    Thread* thread_{nullptr};
-    CCrypto* crypto_{nullptr};
-    void* hostCryptoBuf_{nullptr}; // Host buffer (for HostDmaMap and encrypt/decrypt)
-    bool hostCryptoDmaMapped_{false};
+    CCCryptoPlugin* plugin_{nullptr}; // per-device 算法插件（Init 时绑定，不持有；加解密原语由插件持有）
+    void* hostCryptoBuf_{nullptr};     // Host buffer (for HostDmaMap/HostRegister and encrypt/decrypt)
+    bool hostCryptoRegistered_{false}; // hostCryptoBuf 已登记（HostDmaMap 或 HostRegister 回退）
     void* deviceBuffers_[CC_BUFFER_SLOT_NUM]{nullptr, nullptr};
 
     CCMemcpyTaskQueue* taskQueue_{nullptr};

@@ -52,6 +52,7 @@
 #include "dev_info_manage.h"
 #include "global_state_manager.hpp"
 #include "kernel.hpp"
+#include "common/cc_utils.h"
 namespace cce {
 namespace runtime {
 
@@ -62,21 +63,9 @@ static bool IsHostCcMode()
     if (mmAccess2(hostCcDevicePath, M_F_OK) == EN_OK) {
         return true;
     }
-
-    // A+K / Kunpeng 机密虚机：cvm_guest 内核节点，1 表示开启内存加密
-    constexpr const char_t* ccSysfsPath = "/sys/kernel/security/cvm_guest/mem_encrypt_enable";
-    if (mmAccess2(ccSysfsPath, M_F_OK) != EN_OK) {
-        return false;
-    }
-    std::ifstream ccSysfs(ccSysfsPath);
+    // sev-guest 不存在时，读到 <cvm_guest>/mem_encrypt_enable=1 同样视为 CC 模式
     uint32_t encryptEnable = 0U;
-    if (!(ccSysfs >> encryptEnable)) {
-        RT_LOG(
-            RT_LOG_WARNING, "Host CC sysfs node exists but failed to read, treat as non-CC environment, path=%s.",
-            ccSysfsPath);
-        return false;
-    }
-    return encryptEnable == 1U;
+    return ReadCcSysfsU32("mem_encrypt_enable", encryptEnable) && (encryptEnable == 1U);
 }
 
 static rtError_t CheckDeviceCcStatus(const uint32_t deviceId)
@@ -160,14 +149,14 @@ void Runtime::ResetPersistingL2CacheSizes(const uint32_t deviceId)
 
 rtError_t Runtime::InitCcFeature() const
 {
-    // CC 特性按芯片函数表注册入口开启：未注册 CC 特性的芯片直接返回，
-    // 不做 /dev/sev-guest 探测与可见设备查询，避免无 CC 芯片被误检测。
+    // 先按芯片函数表判定是否注册了 CC 入口：芯片未注册（如 910B）直接返回，
+    // 不做任何 CC 环境探测，避免无 CC 芯片被误检测。
     DevDynInfoProcFunc func{};
-    if ((GET_DEV_INFO_PROC_FUNC(chipType_, func) != RT_ERROR_NONE) || (func.regCCFeatureProcFunc == nullptr)) {
-        return RT_ERROR_NONE;
-    }
+    COND_RETURN_INFO(
+        (GET_DEV_INFO_PROC_FUNC(chipType_, func) != RT_ERROR_NONE) || (func.regCCFeatureProcFunc == nullptr),
+        RT_ERROR_NONE, "CC feature is not registered for chip_type=%d.", static_cast<int32_t>(chipType_));
 
-    // CC 特性初始化：环境检测（fail closed）+ 通过芯片函数表触发特性注册。
+    // 再判定 Host 侧是否处于 CC 模式（/dev/sev-guest 存在，或 <cvm_guest>/mem_encrypt_enable=1）
     COND_RETURN_INFO(!IsHostCcMode(), RT_ERROR_NONE, "CC mode is disabled because host CC is off.");
     RT_LOG(RT_LOG_INFO, "Host CC mode is enabled.");
 

@@ -11,6 +11,8 @@
 #include <cinttypes>
 #include <cstddef>
 #include "cc_manager.h"
+#include "crypto/cc_crypto_plugin.h"
+#include "common/cc_defs.h"
 #include "cc_res_manage.h"
 #include "cc_stream_res_manage.h"
 #include "aicpu_c.hpp"
@@ -37,23 +39,6 @@
 namespace cce {
 namespace runtime {
 namespace {
-constexpr const char_t* AICC_CRYPTO_KERNEL_NAME = "AiccCrypto";
-rtError_t LaunchAiccCryptoKernel(Stream* const stm, CCCryptoKernelParam& param)
-{
-    COND_RETURN_ERROR(stm == nullptr, RT_ERROR_STREAM_NULL, "CC stream is null.");
-
-    rtKernelLaunchNames_t launchNames{};
-    launchNames.soName = nullptr;
-    launchNames.kernelName = AICC_CRYPTO_KERNEL_NAME;
-    launchNames.opName = AICC_CRYPTO_KERNEL_NAME;
-
-    rtArgsEx_t argsInfo{};
-    argsInfo.args = &param;
-    argsInfo.argsSize = static_cast<uint32_t>(sizeof(param));
-    argsInfo.isNoNeedH2DCopy = 0U; // param 是 host 栈变量，让 Runtime 拷到 device
-
-    return StreamLaunchCpuKernel(&launchNames, 1U, &argsInfo, stm, RT_KERNEL_DEFAULT);
-}
 struct CCHostCallbackParam {
     uint32_t deviceId;
     CCMemcpyTask task;
@@ -257,30 +242,33 @@ rtError_t CCManager::InitDeviceResource(Device* device)
     const uint32_t deviceId = device->Id_();
 
     COND_RETURN_ERROR(
-        deviceId >= RT_MAX_DEV_NUM, RT_ERROR_DEVICE_ID, "Invalid CC resource device id, device_id=%u.", deviceId);
+        deviceId >= RT_MAX_DEV_NUM, RT_ERROR_DEVICE_ID, "Invalid CC resource device id, deviceId=%u.", deviceId);
 
     CCManager& manager = CCManager::Instance();
-    const std::lock_guard<std::mutex> lock(manager.resourceMutex_);
-    if (manager.resources_[deviceId] != nullptr) {
-        return RT_ERROR_NONE;
+    const std::lock_guard<std::mutex> initLock(manager.resourceInitMutex_);
+    {
+        const std::lock_guard<std::mutex> lock(manager.resourceMutex_);
+        if (manager.resources_[deviceId] != nullptr) {
+            return RT_ERROR_NONE;
+        }
     }
 
     std::unique_ptr<CCResManage> resource(new (std::nothrow) CCResManage(device));
     COND_RETURN_ERROR(
-        resource == nullptr, RT_ERROR_CC_INIT_FAILED, "Failed to allocate CC manager resource, device_id=%u.",
-        deviceId);
+        resource == nullptr, RT_ERROR_CC_INIT_FAILED, "Failed to allocate CC manager resource, deviceId=%u.", deviceId);
     const rtError_t error = resource->InitCcResource();
     COND_RETURN_ERROR(
         error != RT_ERROR_NONE, RT_ERROR_CC_INIT_FAILED,
-        "Failed to initialize CC device resource, device_id=%u, retCode=%#x.", deviceId, static_cast<uint32_t>(error));
+        "Failed to initialize CC device resource, deviceId=%u, retCode=%#x.", deviceId, static_cast<uint32_t>(error));
 
+    const std::lock_guard<std::mutex> lock(manager.resourceMutex_);
     manager.resources_[deviceId] = std::move(resource);
     return RT_ERROR_NONE;
 }
 
 void CCManager::ReleaseDeviceResource(const uint32_t deviceId)
 {
-    COND_RETURN_VOID(deviceId >= RT_MAX_DEV_NUM, "Invalid CC resource device id, device_id=%u.", deviceId);
+    COND_RETURN_VOID(deviceId >= RT_MAX_DEV_NUM, "Invalid CC resource device id, deviceId=%u.", deviceId);
 
     CCManager& manager = CCManager::Instance();
     const std::lock_guard<std::mutex> lock(manager.resourceMutex_);
@@ -312,7 +300,7 @@ rtError_t CCManager::CCDevMalloc(
     auto driver = curCtx->Device_()->Driver_();
     uint32_t devId = curCtx->Device_()->Id_();
 
-    const uint64_t alignSize = (((size + 0x1FU) >> 5U) << 5U);
+    const uint64_t alignSize = CcAlignUp(size);
     DevMemAllocConfig allocConfig = {};
     allocConfig.moduleId = moduleId;
     allocConfig.privateFlag = true;
@@ -327,11 +315,12 @@ rtError_t CCManager::CCDevMallocWithCfg(
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     auto driver = curCtx->Device_()->Driver_();
 
+    const uint64_t alignSize = CcAlignUp(size);
     DevMemAllocConfig allocConfig = {};
     allocConfig.moduleId = moduleId;
     allocConfig.privateFlag = true;
     const uint64_t drvFlag = NpuDriver::BuildDevMemAllocFlag(devId, &allocConfig);
-    return driver->DevMemAllocWithFlag(devPtr, size, type, devId, &allocConfig, drvFlag);
+    return driver->DevMemAllocWithFlag(devPtr, alignSize, type, devId, &allocConfig, drvFlag);
 }
 
 void CCManager::SubmitCcTaskCallback(void* userData)
@@ -339,19 +328,18 @@ void CCManager::SubmitCcTaskCallback(void* userData)
     NULL_PTR_RETURN_DIRECTLY(userData);
 
     CCHostCallbackParam* const rawParam = static_cast<CCHostCallbackParam*>(userData);
-    // 单算子流: 通过智能指针管理userData的生命周期，submit传入worker线程后task也可以也可以保住生命周期
     std::unique_ptr<CCHostCallbackParam> paramGuard(rawParam->releaseInCallback ? rawParam : nullptr);
 
     CCManager& manager = CCManager::Instance();
     std::lock_guard<std::mutex> lock(manager.resourceMutex_);
     if ((rawParam->deviceId >= RT_MAX_DEV_NUM) || (manager.resources_[rawParam->deviceId] == nullptr)) {
-        RT_LOG(RT_LOG_ERROR, "CC resource is null, device_id=%u.", rawParam->deviceId);
+        RT_LOG(RT_LOG_ERROR, "CC resource is null, deviceId=%u.", rawParam->deviceId);
         return;
     }
 
     const rtError_t ret = manager.resources_[rawParam->deviceId]->SubmitTask(rawParam->task);
     COND_LOG_ERROR(
-        ret != RT_ERROR_NONE, "Submit CC task failed, device_id=%u, stream_id=%u, ret=%#x.", rawParam->deviceId,
+        ret != RT_ERROR_NONE, "Submit CC task failed, deviceId=%u, stream_id=%u, ret=%#x.", rawParam->deviceId,
         rawParam->task.streamId, static_cast<uint32_t>(ret));
 }
 
@@ -370,25 +358,21 @@ rtError_t CCManager::SubmitCcMemcpyTask(
     COND_RETURN_ERROR(deviceId >= RT_MAX_DEV_NUM, RT_ERROR_DEVICE_ID, "Invalid device id %u.", deviceId);
     CCManager& manager = CCManager::Instance();
     COND_RETURN_ERROR(manager.resources_[deviceId] == nullptr, RT_ERROR_CC_INIT_FAILED, "CC resource is null.");
-    const CC_CRYPTO_MODE mode =
-        (kind == RT_MEMCPY_DEVICE_TO_HOST) ? CC_CRYPTO_MODE::ENCRYPT_MODE : CC_CRYPTO_MODE::DECRYPT_MODE;
+
+    CCCryptoPlugin* const plugin = manager.resources_[deviceId]->Plugin();
+    COND_RETURN_ERROR(plugin == nullptr, RT_ERROR_CC_INIT_FAILED, "CC crypto plugin is null, deviceId=%u.", deviceId);
 
     ret = Runtime::Instance()->StartAicpuSd(device);
     COND_RETURN_ERROR(
         ret != RT_ERROR_NONE, ret,
-        "Failed to start AICPU SD before launching the CC crypto kernel, device_id=%u, retCode=%#x.", deviceId,
+        "Failed to start AICPU SD before launching the CC crypto kernel, deviceId=%u, retCode=%#x.", deviceId,
         static_cast<uint32_t>(ret));
     // 组装AICPU算子所需的参数
-    CCCryptoKernelParam param{};
-    const uint32_t cryptoRet = manager.resources_[deviceId]->BuildDeviceCryptoParam(mode, &param);
-    COND_RETURN_ERROR(
-        cryptoRet != 0U, RT_ERROR_CC_CRYPTO_FAILED, "Build device crypto param failed, ret=%u.", cryptoRet);
-    // 参数所需的bar空间地址(taskQueueAddr)从StreamResource中获取
     CCStreamResManage* streamResource = nullptr;
     ret = manager.resources_[deviceId]->GetOrCreateStreamResource(resourceStm, streamResource);
     COND_RETURN_ERROR(ret != RT_ERROR_NONE, ret, "Get or create CC stream resource failed, ret=%#x.", ret);
     COND_RETURN_ERROR(streamResource == nullptr, RT_ERROR_CC_INIT_FAILED, "CC stream resource is null.");
-    param.taskQueueAddr = streamResource->DeviceQueueAddr();
+    const uint64_t taskQueueAddr = streamResource->DeviceQueueAddr();
 
     // 组装回调参数
     const CCMemcpyTask task{
@@ -409,16 +393,26 @@ rtError_t CCManager::SubmitCcMemcpyTask(
         return ret;
     }
 
-    const uint64_t memWaitAddr = param.taskQueueAddr + static_cast<uint64_t>(offsetof(CCSliceQueue, memWaitVal));
-    COND_RETURN_ERROR(memWaitAddr == 0ULL, RT_ERROR_CC_INIT_FAILED, "memWaitAddr is 0.");
-
+    const uint64_t memWaitAddr = taskQueueAddr + static_cast<uint64_t>(offsetof(BarTaskQueue, hostStatus));
     ret = CondMemWaitValue(
-        RtValueToPtr<void*>(memWaitAddr), 1ULL, static_cast<uint32_t>(MEM_WAIT_VALUE_TYPE_GEQ), stm,
-        RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT);
+        RtValueToPtr<void*>(memWaitAddr), static_cast<uint64_t>(TASK_QUEUE_STATUS_WORKING),
+        static_cast<uint32_t>(MEM_WAIT_VALUE_TYPE_EQ), stm, RT_STARS_WRITE_VALUE_SIZE_TYPE_32BIT);
     COND_RETURN_ERROR(ret != RT_ERROR_NONE, ret, "Failed to submit memory wait value task in CC mode, ret=%#x.", ret);
 
-    ret = LaunchAiccCryptoKernel(stm, param);
-    COND_RETURN_ERROR(ret != RT_ERROR_NONE, ret, "Failed to launch aiccCrypto task in CC mode, ret=%#x.", ret);
+    ret = plugin->LaunchTransfer(stm, taskQueueAddr, task);
+    COND_RETURN_ERROR(
+        ret != RT_ERROR_NONE, ret, "Failed to launch CC crypto transfer, deviceId=%u, ret=%#x.", deviceId,
+        static_cast<uint32_t>(ret));
+
+    // D2H 在设备核完成后仍需由 worker 搬运、解密到用户缓冲，流完成必须等待 worker 收尾。
+    ret = Runtime::Instance()->ApiImpl_()->LaunchHostFunc(
+        stm,
+        [](void* data) {
+            auto* resource = static_cast<CCStreamResManage*>(data);
+            const std::lock_guard<std::mutex> lock(resource->ProcessMutex());
+        },
+        streamResource);
+    COND_RETURN_ERROR(ret != RT_ERROR_NONE, ret, "CC host completion callback failed, ret=%#x.", ret);
 
     return RT_ERROR_NONE;
 }
@@ -736,7 +730,7 @@ rtError_t CCManager::CCDevMemSetD32(
     if (count == 0U) {
         return RT_ERROR_NONE;
     }
-    const uint64_t unitSize = 4UL;
+    const uint64_t unitSize = sizeof(uint32_t);
     COND_RETURN_ERROR(count > (UINT64_MAX / sizeof(uint32_t)), RT_ERROR_INVALID_VALUE, "memset size overflow.");
     const uint64_t totalCnt = count * unitSize;
     COND_RETURN_ERROR(totalCnt > destMax, RT_ERROR_INVALID_VALUE, "memset size exceeds destMax.");

@@ -76,6 +76,7 @@
         <path value="share/info/runtime/script" install_mod="550"/>
         <path value="$(TARGET_ENV)/lib64/device" install_mod="550"/>
         <path value="$(TARGET_ENV)/lib64/device/lib64" install_mod="550"/>
+        <path value="$(TARGET_ENV)/lib64/ops" install_mod="550"/>
         <path value="$(TARGET_ENV)/devlib/device"/>
     </dir_info>
 </config>
