@@ -576,10 +576,10 @@ ACL_FUNC_VISIBILITY aclError acltdtDestroyQueueRouteQueryInfo(const acltdtQueueR
  * @ingroup AscendCL
  * @brief Set parameter for queue route info
  *
- * @param attr [IN|OUT] pointer to the queue route info
+ * @param param [IN|OUT] pointer to the queue route info
  * @param type [IN]    parameter type
  * @param len [IN]       parameter length
- * @param param [IN]        pointer to parameter value
+ * @param value [IN]        pointer to parameter value
  *
  * @retval ACL_SUCCESS for success, other for failure
  *
