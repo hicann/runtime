@@ -173,7 +173,7 @@ set(common_src_files
     ${RUNTIME_CORE_DIR}/src/common/task_fail_callback_data_manager.cc
     ${RUNTIME_CORE_DIR}/src/common/thread_local_container.cc
     ${RUNTIME_CORE_DIR}/src/common/utils.cc
-    ${RUNTIME_FEATURE_DIR}/xpu/xpu_task_fail_callback_data_manager.cc
+    ${RUNTIME_FEATURE_DIR}/xpu/xpu_task_fail_callback_data_manager_stub.cc
 )
 
 set(libruntime_context_src_files
@@ -188,7 +188,7 @@ set(libruntime_stream_common_src_files
     ${RUNTIME_CORE_DIR}/src/stream/engine_stream_observer.cc
     ${RUNTIME_CORE_DIR}/src/stream/stream.cc
     ${RUNTIME_CORE_DIR}/src/stream/arch5162/stream_sync_blocking.cc
-    ${RUNTIME_FEATURE_DIR}/launch_blocking/stream_launch_blocking.cc
+    ${RUNTIME_FEATURE_DIR}/launch_blocking/tiny/stream_launch_blocking_tiny_stub.cc
     ${RUNTIME_CORE_DIR}/src/stream/stream_factory.cc
     ${RUNTIME_CORE_DIR}/src/stream/stream_sqcq_manage.cc
 )
@@ -267,7 +267,7 @@ set(libruntime_src_files_include_for_arch5162
 set(runtime_src_device_list
     ${RUNTIME_CORE_DIR}/src/device/device_debug_common.cc
     ${RUNTIME_CORE_DIR}/src/device/device_debug_stars.cc
-    ${RUNTIME_CORE_DIR}/src/device/device_sq_cq_pool.cc
+    ${RUNTIME_CORE_DIR}/src/device/stub/device_sq_cq_pool_stub.cc
     ${RUNTIME_CORE_DIR}/src/device/ini_parse_utils.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device_res.cc
@@ -284,7 +284,7 @@ set(runtime_src_kernel_list
     ${RUNTIME_CORE_DIR}/src/kernel/args/para_convertor.cc
     ${RUNTIME_CORE_DIR}/src/kernel/binary_loader.cc
     ${RUNTIME_CORE_DIR}/src/kernel/elf.cc
-    ${RUNTIME_CORE_DIR}/src/kernel/funcsymbol_table.cc
+    ${RUNTIME_CORE_DIR}/src/kernel/funcsymbol_table_stub.cc
     ${RUNTIME_CORE_DIR}/src/kernel/json_parse.cc
     ${RUNTIME_CORE_DIR}/src/kernel/kernel.cc
     ${RUNTIME_CORE_DIR}/src/kernel/kernel_utils.cc

@@ -18,6 +18,8 @@
 #include "api_host_memory.hpp"
 #include "base_info.hpp"
 #include "rt_error_codes.h"
+#include "context.hpp"
+#include "raw_device.hpp"
 
 using namespace cce::runtime;
 
@@ -29,7 +31,11 @@ protected:
 
     virtual void SetUp() {}
 
-    virtual void TearDown() { GlobalMockObject::verify(); }
+    virtual void TearDown()
+    {
+        GlobalMockObject::verify();
+        GlobalMockObject::reset();
+    }
 };
 
 TEST_F(Arch5162MemTest, DevMemAllocCached_Success)
@@ -216,15 +222,106 @@ TEST_F(Arch5162MemTest, UnsupportedMemoryQueryApiImpls_ReturnNotSupport)
 
     EXPECT_EQ(apiImpl.CheckMemType(nullptr, 0U, 0U, nullptr, 0U), RT_ERROR_FEATURE_NOT_SUPPORT);
     EXPECT_EQ(apiImpl.GetMemUsageInfo(0U, nullptr, 0U, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
-    EXPECT_EQ(apiImpl.MemGetInfoEx(static_cast<rtMemInfoType_t>(0), nullptr, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
     EXPECT_EQ(apiImpl.MemPrefetchToDevice(nullptr, 0U, 0), RT_ERROR_FEATURE_NOT_SUPPORT);
+}
+
+TEST_F(Arch5162MemTest, MemGetInfoEx_Success)
+{
+    NpuDriver drv;
+    size_t freeSize = 0U;
+    size_t totalSize = 0U;
+    struct MemInfo halInfo = {};
+    MOCKER(halMemGetInfo)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), outBoundP(&halInfo, sizeof(halInfo)))
+        .will(returnValue(DRV_ERROR_NONE));
+    const rtError_t error = drv.MemGetInfoEx(0U, RT_MEMORYINFO_DDR, &freeSize, &totalSize);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(freeSize, 0U);
+    EXPECT_EQ(totalSize, 0U);
+}
+
+TEST_F(Arch5162MemTest, MemGetInfoEx_InvalidType_ReturnInvalidMemoryType)
+{
+    NpuDriver drv;
+    const DevProperties props = {};
+    drv.RefreshDevProperties(props);
+    size_t freeSize = 0U;
+    size_t totalSize = 0U;
+    const rtError_t error = drv.MemGetInfoEx(0U, static_cast<rtMemInfoType_t>(-1), &freeSize, &totalSize);
+    EXPECT_EQ(error, RT_ERROR_INVALID_MEMORY_TYPE);
+}
+
+TEST_F(Arch5162MemTest, ApiImplMemGetInfoEx_MissingContext_ReturnContextNull)
+{
+    ApiImpl api;
+    size_t freeSize = 17U;
+    size_t totalSize = 29U;
+    MOCKER_CPP(&ApiImpl::CurrentContext)
+        .expects(once())
+        .with(eq(true), eq(DEFAULT_DEVICE_ID))
+        .will(returnValue(static_cast<Context*>(nullptr)));
+
+    EXPECT_EQ(api.MemGetInfoEx(RT_MEMORYINFO_DDR, &freeSize, &totalSize), RT_ERROR_CONTEXT_NULL);
+    EXPECT_EQ(freeSize, 17U);
+    EXPECT_EQ(totalSize, 29U);
+}
+
+TEST_F(Arch5162MemTest, ApiImplMemGetInfoEx_ForwardsDeviceTypeAndOutputs)
+{
+    ApiImpl api;
+    NpuDriver driver;
+    RawDevice device(3U);
+    Context context(&device, false);
+    size_t freeSize = 0U;
+    size_t totalSize = 0U;
+    // outBoundP must infer size_t* to match the driver's output parameters.
+    size_t fSize = 4096U;
+    size_t tSize = 8192U;
+    MOCKER_CPP(&ApiImpl::CurrentContext).expects(once()).will(returnValue(&context));
+    // Isolate API delegation from context registration and device initialization.
+    MOCKER(ContextManage::CheckContextIsValid).stubs().will(returnValue(true));
+    MOCKER_CPP_VIRTUAL(&device, &RawDevice::Driver_).stubs().will(returnValue(static_cast<Driver*>(&driver)));
+    MOCKER_CPP_VIRTUAL(&driver, &NpuDriver::MemGetInfoEx)
+        .expects(once())
+        .with(eq(3U), eq(RT_MEMORYINFO_DDR), outBoundP(&fSize, sizeof(fSize)), outBoundP(&tSize, sizeof(tSize)))
+        .will(returnValue(RT_ERROR_NONE));
+
+    EXPECT_EQ(api.MemGetInfoEx(RT_MEMORYINFO_DDR, &freeSize, &totalSize), RT_ERROR_NONE);
+    EXPECT_EQ(freeSize, fSize);
+    EXPECT_EQ(totalSize, tSize);
+}
+
+TEST_F(Arch5162MemTest, ApiImplMemGetInfoEx_PropagatesDriverFailure)
+{
+    ApiImpl api;
+    NpuDriver driver;
+    RawDevice device(3U);
+    Context context(&device, false);
+    size_t freeSize = 17U;
+    size_t totalSize = 29U;
+    MOCKER_CPP(&ApiImpl::CurrentContext).expects(once()).will(returnValue(&context));
+    MOCKER(ContextManage::CheckContextIsValid).stubs().will(returnValue(true));
+    MOCKER_CPP_VIRTUAL(&device, &RawDevice::Driver_).stubs().will(returnValue(static_cast<Driver*>(&driver)));
+    MOCKER_CPP_VIRTUAL(&driver, &NpuDriver::MemGetInfoEx)
+        .expects(once())
+        .with(eq(3U), eq(RT_MEMORYINFO_DDR), eq(&freeSize), eq(&totalSize))
+        .will(returnValue(RT_ERROR_DRV_ERR));
+
+    EXPECT_EQ(api.MemGetInfoEx(RT_MEMORYINFO_DDR, &freeSize, &totalSize), RT_ERROR_DRV_ERR);
+    EXPECT_EQ(freeSize, 17U);
+    EXPECT_EQ(totalSize, 29U);
 }
 
 class Arch5162RtMemTest : public testing::Test {
 protected:
     virtual void SetUp() {}
 
-    virtual void TearDown() { GlobalMockObject::verify(); }
+    virtual void TearDown()
+    {
+        GlobalMockObject::verify();
+        GlobalMockObject::reset();
+    }
 };
 
 TEST_F(Arch5162RtMemTest, rtMallocCached_NullPtr_InvalidValue)

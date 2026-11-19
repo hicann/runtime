@@ -69,6 +69,28 @@ void ConstructSqeForProfilingDisableTask(TaskInfo* const taskInfo, void* const s
 }
 #endif
 
+#if F_DESC("ProfilerTraceExTask")
+void ConstructSqeForProfilerTraceExTask(TaskInfo* taskInfo, void* const sqeBuffer, const TaskSqeInfo& sqeInfo)
+{
+    UNUSED(sqeInfo);
+    rtStarsSqe_t* const command = static_cast<rtStarsSqe_t*>(sqeBuffer);
+    Stream* const stm = taskInfo->stream;
+    (void)memset_s(command, sizeof(rtStarsSqe_t), 0, sizeof(rtStarsSqe_t));
+    RtStarsPhSqe* sqe = &(command->phSqe);
+    sqe->header.type = RT_STARS_SQE_TYPE_PLACE_HOLDER;
+    sqe->header.preP = 1U;
+    sqe->header.u.sqeSubType = RT_SQE_SUBTYPE_PROFILER_TRACE_EX;
+    sqe->u.profileTraceInfo.profilerTraceId = taskInfo->u.profilerTraceExTask.profilerTraceId;
+    sqe->u.profileTraceInfo.modelId = taskInfo->u.profilerTraceExTask.modelId;
+    sqe->u.profileTraceInfo.tagId = taskInfo->u.profilerTraceExTask.tagId;
+
+    PrintSqe(command, "ProfilerTraceExTask");
+    RT_LOG(
+        RT_LOG_INFO, "ProfilerTraceExTask, device_id=%u, stream_id=%d, task_id=%hu, task_sn=%u.", stm->Device_()->Id_(),
+        stm->Id_(), taskInfo->id, taskInfo->taskSn);
+}
+#endif
+
 #if F_DESC("ProfilingTaskRegister")
 static bool ProfilingTaskRegister()
 {
@@ -94,8 +116,21 @@ static bool ProfilingTaskRegister()
         .setStarsResultFunc = &SetStarsResultCommon,
     };
 
+    // TS_TASK_TYPE_PROFILER_TRACE_EX
+    TaskFuncSingle profilerTraceExFuncs = {
+        .toCommandFunc = nullptr,
+        .toSqeFunc = &ConstructSqeForProfilerTraceExTask,
+        .doCompleteSuccFunc = &DoCompleteSuccess,
+        .taskUnInitFunc = nullptr,
+        .waitAsyncCpCompleteFunc = nullptr,
+        .printErrorInfoFunc = &PrintErrorInfoCommon,
+        .setResultFunc = nullptr,
+        .setStarsResultFunc = &SetStarsResultCommon,
+    };
+
     RegTaskFunc(CHIP_5162A, TS_TASK_TYPE_PROFILING_ENABLE, profilingEnableFuncs);
     RegTaskFunc(CHIP_5162A, TS_TASK_TYPE_PROFILING_DISABLE, profilingDisableFuncs);
+    RegTaskFunc(CHIP_5162A, TS_TASK_TYPE_PROFILER_TRACE_EX, profilerTraceExFuncs);
 
     return true;
 }

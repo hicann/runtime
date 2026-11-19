@@ -27,13 +27,20 @@ REAL_PROVIDER_COUNT_MACRO = "ACL_API_REAL_PROVIDER_COUNT"
 PRODUCT_STUB_MACRO = "ACL_API_STUB"
 SUPPORTED_POLICIES = {
     "ACL_FEATURE_UNSUPPORTED",
+    "COUNT_ONE",
+    "DELEGATE_ACLRT_MALLOC",
     "INVALID_EXCEPTION_INFO",
     "NULLPTR",
     "RT_FEATURE_NOT_SUPPORT",
+    "RUN_MODE_DEVICE",
     "VOID_NOOP",
     "ZERO",
 }
 NULLABLE_HANDLE_TYPES = {"aclrtAllocatorDesc", "aclrtBinary"}
+COUNT_ONE_POINTER_TYPES = ("int32_t", "uint32_t")
+DELEGATE_ACLRT_MALLOC_TARGET = "aclrtMalloc"
+DELEGATE_ACLRT_MALLOC_TARGET_IMPL = "aclrtMallocImpl"
+DELEGATE_ACLRT_MALLOC_CFG_TYPE = "aclrtMallocConfig*"
 
 
 @dataclass(frozen=True)
@@ -147,6 +154,13 @@ def is_nullable_type(return_type: str) -> bool:
     return "*" in return_type or return_type in NULLABLE_HANDLE_TYPES
 
 
+def is_count_out_param(entry: AclApiEntry) -> bool:
+    match = re.match(r"^\(\s*(\w+)\s*\*", entry.signature)
+    if match is None or match.group(1) not in COUNT_ONE_POINTER_TYPES:
+        return False
+    return len(argument_names(entry.arguments)) >= 1
+
+
 def validate_policy(entry: AclApiEntry) -> None:
     if entry.policy in {"RT_FEATURE_NOT_SUPPORT", "ACL_FEATURE_UNSUPPORTED"}:
         if entry.return_type != "aclError":
@@ -160,6 +174,20 @@ def validate_policy(entry: AclApiEntry) -> None:
     elif entry.policy == "ZERO":
         if entry.return_type in {"aclError", "void"} or is_nullable_type(entry.return_type):
             raise ValueError(f"{entry.public_name}: ZERO requires a non-pointer value return type")
+    elif entry.policy == "COUNT_ONE":
+        if entry.return_type != "aclError":
+            raise ValueError(f"{entry.public_name}: COUNT_ONE requires aclError return type")
+        if not is_count_out_param(entry):
+            raise ValueError(
+                f"{entry.public_name}: COUNT_ONE requires an int32_t/uint32_t count out-parameter"
+            )
+    elif entry.policy == "RUN_MODE_DEVICE":
+        if entry.return_type != "aclError":
+            raise ValueError(f"{entry.public_name}: RUN_MODE_DEVICE requires aclError return type")
+        if [value.replace(" ", "") for value in parameter_types(entry.signature)] != ["aclrtRunMode*"]:
+            raise ValueError(f"{entry.public_name}: RUN_MODE_DEVICE requires one aclrtRunMode out-parameter")
+    elif entry.policy == "DELEGATE_ACLRT_MALLOC" and entry.return_type != "aclError":
+        raise ValueError(f"{entry.public_name}: DELEGATE_ACLRT_MALLOC requires aclError return type")
     elif entry.policy == "VOID_NOOP" and entry.return_type != "void":
         raise ValueError(f"{entry.public_name}: VOID_NOOP requires void return type")
 
@@ -185,6 +213,10 @@ def select_entries(
         )
         validate_policy(entry)
         selected.append(entry)
+    stubbed_names = [entry.public_name for entry in selected]
+    for entry in selected:
+        if entry.policy == "DELEGATE_ACLRT_MALLOC":
+            validate_delegation(entry, wrapper_entries, stubbed_names)
     return selected
 
 
@@ -212,6 +244,46 @@ def argument_names(arguments: str) -> Sequence[str]:
     return names
 
 
+def parameter_types(signature: str) -> List[str]:
+    if not signature.startswith("(") or not signature.endswith(")"):
+        raise ValueError(f"signature must be enclosed in parentheses: {signature}")
+    types: List[str] = []
+    for param in split_top_level_commas(signature[1:-1]):
+        normalized = normalize_field(param)
+        if normalized == "void":
+            continue
+        match = re.match(r"^(.*)\s+\w+$", normalized)
+        types.append(normalize_field(match.group(1)) if match else normalized)
+    return types
+
+
+def validate_delegation(
+    entry: AclApiEntry, wrapper_entries: Dict[str, AclApiEntry], stubbed_names: Sequence[str]
+) -> None:
+    target = wrapper_entries.get(DELEGATE_ACLRT_MALLOC_TARGET)
+    if target is None:
+        raise ValueError(
+            f"{entry.public_name}: DELEGATE_ACLRT_MALLOC target {DELEGATE_ACLRT_MALLOC_TARGET} is missing"
+            " from the wrapper"
+        )
+    types = parameter_types(entry.signature)
+    target_types = parameter_types(target.signature)
+    if (
+        (len(types) != len(target_types) + 1)
+        or (types[:-1] != target_types)
+        or (types[-1] != DELEGATE_ACLRT_MALLOC_CFG_TYPE)
+    ):
+        raise ValueError(
+            f"{entry.public_name}: DELEGATE_ACLRT_MALLOC requires the {DELEGATE_ACLRT_MALLOC_TARGET} signature"
+            f" plus one trailing {DELEGATE_ACLRT_MALLOC_CFG_TYPE} parameter"
+        )
+    if DELEGATE_ACLRT_MALLOC_TARGET in stubbed_names:
+        raise ValueError(
+            f"{entry.public_name}: DELEGATE_ACLRT_MALLOC requires {DELEGATE_ACLRT_MALLOC_TARGET}"
+            " to stay a weak real provider"
+        )
+
+
 def render_return(policy: str) -> str:
     if policy == "RT_FEATURE_NOT_SUPPORT":
         return "    return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;"
@@ -228,10 +300,23 @@ def render_return(policy: str) -> str:
 
 def render_stub(entry: AclApiEntry) -> str:
     lines = ["ACL_FUNC_VISIBILITY", f"{entry.return_type} {entry.impl_name}{entry.signature}", "{"]
-    lines.extend(f"    (void){argument};" for argument in argument_names(entry.arguments))
-    return_statement = render_return(entry.policy)
-    if return_statement:
-        lines.append(return_statement)
+    arguments = argument_names(entry.arguments)
+    if entry.policy in {"COUNT_ONE", "RUN_MODE_DEVICE"}:
+        lines.extend(f"    (void){argument};" for argument in arguments[1:])
+        lines.append(f"    if ({arguments[0]} == nullptr) {{")
+        lines.append("        return ACL_ERROR_INVALID_PARAM;")
+        lines.append("    }")
+        value = "1U" if entry.policy == "COUNT_ONE" else "ACL_DEVICE"
+        lines.append(f"    *{arguments[0]} = {value};")
+        lines.append("    return ACL_SUCCESS;")
+    elif entry.policy == "DELEGATE_ACLRT_MALLOC":
+        lines.append(f"    (void){arguments[-1]};")
+        lines.append(f"    return {DELEGATE_ACLRT_MALLOC_TARGET_IMPL}({', '.join(arguments[:-1])});")
+    else:
+        lines.extend(f"    (void){argument};" for argument in arguments)
+        return_statement = render_return(entry.policy)
+        if return_statement:
+            lines.append(return_statement)
     lines.append("}")
     return "\n".join(lines)
 

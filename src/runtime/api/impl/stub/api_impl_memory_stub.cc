@@ -8,6 +8,11 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "api_impl.hpp"
+#include "base.hpp"
+#include "context.hpp"
+#include "device.hpp"
+#include "enum_desc.hpp"
+#include "npu_driver.hpp"
 
 namespace cce {
 namespace runtime {
@@ -115,10 +120,10 @@ rtError_t ApiImpl::GetMemUsageInfo(
 
 rtError_t ApiImpl::MemGetInfoEx(const rtMemInfoType_t memInfoType, size_t* const freeSize, size_t* const totalSize)
 {
-    UNUSED(memInfoType);
-    UNUSED(freeSize);
-    UNUSED(totalSize);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
+    Context* const curCtx = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+
+    return curCtx->Device_()->Driver_()->MemGetInfoEx(curCtx->Device_()->Id_(), memInfoType, freeSize, totalSize);
 }
 
 rtError_t ApiImpl::MemPrefetchToDevice(const void* const devPtr, const uint64_t len, const int32_t devId)

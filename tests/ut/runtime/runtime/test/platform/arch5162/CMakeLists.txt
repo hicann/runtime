@@ -96,6 +96,7 @@ set(RUNTIME_UT_ARCH5162_API_WEAK_REAL_SRC_FILES
     ${TOP_DIR}/src/runtime/api/api_c_kernel.cc
     ${TOP_DIR}/src/runtime/api/api_c_memory.cc
     ${TOP_DIR}/src/runtime/api/api_c_model.cc
+    ${TOP_DIR}/src/runtime/api/api_c_standard_soc.cc
     ${TOP_DIR}/src/runtime/api/api_c_soc.cc
     ${TOP_DIR}/src/runtime/api/api_c_stream.cc
     ${TOP_DIR}/src/runtime/api/api_c_rt_config.cc

@@ -34,6 +34,7 @@ SPEC.loader.exec_module(GENERATOR)
 
 WRAPPER = """\
 #define ACL_FUNC_MAP(_) \\
+    _(aclError, aclCountOne, (uint32_t* count), (count)) \\
     _(aclError, aclUnsupported, (int32_t value), (value)) \\
     _(uint32_t, aclInvalidExceptionInfo, (), ()) \\
     _(const char*, aclNull, (), ()) \\
@@ -113,6 +114,7 @@ class GenerateAclApiStubsTest(unittest.TestCase):
         product = self.write_product("""\
 ACL_API_CATALOG_VERSION(1)
 ACL_API_REAL_PROVIDER_COUNT(0)
+ACL_API_STUB(aclCountOne, COUNT_ONE)
 ACL_API_STUB(aclInvalidExceptionInfo, INVALID_EXCEPTION_INFO)
 ACL_API_STUB(aclNull, NULLPTR)
 ACL_API_STUB(aclUnsupported, RT_FEATURE_NOT_SUPPORT)
@@ -122,6 +124,11 @@ ACL_API_STUB(aclZero, ZERO)
 
         self.assertEqual(result.returncode, 0, result.stderr)
         source = (self.root / "generated.cc").read_text(encoding="utf-8")
+        self.assertIn("aclError aclCountOneImpl(uint32_t* count)", source)
+        self.assertIn("if (count == nullptr) {", source)
+        self.assertIn("return ACL_ERROR_INVALID_PARAM;", source)
+        self.assertIn("*count = 1U;", source)
+        self.assertIn("return ACL_SUCCESS;", source)
         self.assertIn("uint32_t aclInvalidExceptionInfoImpl()", source)
         self.assertIn(
             "return static_cast<uint32_t>(ACL_ERROR_INVALID_EXCEPTION_INFO);",
@@ -134,10 +141,11 @@ ACL_API_STUB(aclZero, ZERO)
 
         with (self.root / "provider.csv").open(encoding="utf-8", newline="") as report:
             rows = list(csv.DictReader(report))
-        self.assertEqual(len(rows), 4)
+        self.assertEqual(len(rows), 5)
         self.assertEqual(
             {row["acl_api"]: row["provider"] for row in rows},
             {
+                "aclCountOne": "strong_stub",
                 "aclInvalidExceptionInfo": "strong_stub",
                 "aclNull": "strong_stub",
                 "aclUnsupported": "strong_stub",
@@ -163,24 +171,69 @@ ACL_API_STUB(aclZero, ZERO)
         entries = GENERATOR.select_entries(wrapper, product_entries)
 
         self.assertEqual(version, 1)
-        self.assertEqual(real_provider_count, 94)
-        self.assertEqual(len(entries), 323)
+        self.assertEqual(real_provider_count, 118)
+        self.assertEqual(len(entries), 299)
         self.assertEqual(
-            sum(entry.policy == "RT_FEATURE_NOT_SUPPORT" for entry in entries), 308
+            sum(entry.policy == "RT_FEATURE_NOT_SUPPORT" for entry in entries), 285
         )
-        self.assertEqual(sum(entry.policy == "NULLPTR" for entry in entries), 5)
+        self.assertEqual(sum(entry.policy == "NULLPTR" for entry in entries), 3)
         self.assertEqual(sum(entry.policy == "INVALID_EXCEPTION_INFO" for entry in entries), 5)
-        self.assertEqual(sum(entry.policy == "ZERO" for entry in entries), 5)
+        self.assertEqual(sum(entry.policy == "ZERO" for entry in entries), 3)
+        self.assertEqual(sum(entry.policy == "COUNT_ONE" for entry in entries), 1)
+        self.assertEqual(sum(entry.policy == "RUN_MODE_DEVICE" for entry in entries), 1)
+        self.assertEqual(sum(entry.policy == "DELEGATE_ACLRT_MALLOC" for entry in entries), 1)
         GENERATOR.validate_real_provider_count(wrapper, entries, real_provider_count)
         policies = dict(product_entries)
+        self.assertEqual(policies["aclrtGetDeviceCount"], "COUNT_ONE")
+        self.assertEqual(policies["aclrtGetRunMode"], "RUN_MODE_DEVICE")
+        self.assertEqual(policies["aclrtMallocWithCfg"], "DELEGATE_ACLRT_MALLOC")
         self.assertEqual(policies["aclmdlRIGetTasks"], "RT_FEATURE_NOT_SUPPORT")
-        self.assertEqual(policies["aclrtValueWrite"], "RT_FEATURE_NOT_SUPPORT")
-        self.assertEqual(policies["aclrtBinaryGetFunctionByEntry"], "RT_FEATURE_NOT_SUPPORT")
         self.assertEqual(policies["aclrtGetSocSeries"], "NULLPTR")
         series_entry = next(entry for entry in entries if entry.public_name == "aclrtGetSocSeries")
         self.assertEqual(
             GENERATOR.render_stub(series_entry),
             "ACL_FUNC_VISIBILITY\nconst char* aclrtGetSocSeriesImpl(void)\n{\n    return nullptr;\n}",
+        )
+        device_count_entry = next(
+            entry for entry in entries if entry.public_name == "aclrtGetDeviceCount"
+        )
+        self.assertEqual(
+            GENERATOR.render_stub(device_count_entry),
+            "ACL_FUNC_VISIBILITY\n"
+            "aclError aclrtGetDeviceCountImpl(uint32_t * count)\n"
+            "{\n"
+            "    if (count == nullptr) {\n"
+            "        return ACL_ERROR_INVALID_PARAM;\n"
+            "    }\n"
+            "    *count = 1U;\n"
+            "    return ACL_SUCCESS;\n"
+            "}",
+        )
+        run_mode_entry = next(entry for entry in entries if entry.public_name == "aclrtGetRunMode")
+        self.assertEqual(
+            GENERATOR.render_stub(run_mode_entry),
+            "ACL_FUNC_VISIBILITY\n"
+            "aclError aclrtGetRunModeImpl(aclrtRunMode * runMode)\n"
+            "{\n"
+            "    if (runMode == nullptr) {\n"
+            "        return ACL_ERROR_INVALID_PARAM;\n"
+            "    }\n"
+            "    *runMode = ACL_DEVICE;\n"
+            "    return ACL_SUCCESS;\n"
+            "}",
+        )
+        malloc_with_cfg_entry = next(
+            entry for entry in entries if entry.public_name == "aclrtMallocWithCfg"
+        )
+        self.assertEqual(
+            GENERATOR.render_stub(malloc_with_cfg_entry),
+            "ACL_FUNC_VISIBILITY\n"
+            "aclError aclrtMallocWithCfgImpl"
+            "(void** devPtr, size_t size, aclrtMemMallocPolicy policy, aclrtMallocConfig* cfg)\n"
+            "{\n"
+            "    (void)cfg;\n"
+            "    return aclrtMallocImpl(devPtr, size, policy);\n"
+            "}",
         )
         report_path = self.root / "arch5162_provider.csv"
         GENERATOR.write_report(report_path, "arch5162", wrapper, entries)
@@ -188,6 +241,8 @@ ACL_API_STUB(aclZero, ZERO)
             providers = {row["acl_api"]: row for row in csv.DictReader(report)}
         self.assertEqual(providers["aclrtGetSocSeries"]["provider"], "strong_stub")
         self.assertEqual(providers["aclrtGetSocSeries"]["policy"], "NULLPTR")
+        self.assertEqual(providers["aclrtGetRunMode"]["provider"], "strong_stub")
+        self.assertEqual(providers["aclrtGetRunMode"]["policy"], "RUN_MODE_DEVICE")
         for name in (
             "aclrtGetDeviceIdFromExceptionInfo",
             "aclrtGetErrorCodeFromExceptionInfo",
@@ -200,16 +255,17 @@ ACL_API_STUB(aclZero, ZERO)
         for name in (
             "aclFloat16ToFloat",
             "aclmdlRIGetTasks",
-            "aclrtBinaryGetFunctionByEntry",
-            "aclrtGetRunMode",
+            "aclmdlRITaskGetEnabled",
             "aclrtGetSocSeries",
             "aclrtMallocAlign32",
+            "aclrtMallocWithCfg",
             "aclrtNonBlockingLaunchBegin",
             "aclrtNonBlockingLaunchEnd",
             "aclrtRecordEventWithFlag",
             "aclrtSetExceptionInfoCallback",
+            "aclrtSnapshotProcessGetRestoreThreadId",
+            "aclrtSnapshotProcessGetState",
             "aclrtTaskUpdateAsync",
-            "aclrtValueWrite",
         ):
             self.assertIn(name, unsupported_names)
         for name in (
@@ -217,6 +273,7 @@ ACL_API_STUB(aclZero, ZERO)
             "aclGetRecentErrMsg",
             "aclInit",
             "aclmdlInitDump",
+            "aclrtBinaryGetFunctionByEntry",
             "aclrtCreateBinary",
             "aclrtDestroyBinary",
             "aclrtGetDevice",
@@ -224,6 +281,7 @@ ACL_API_STUB(aclZero, ZERO)
             "aclrtGetOpTimeOutInterval",
             "aclrtGetSocName",
             "aclrtRecordEvent",
+            "aclrtValueWrite",
         ):
             self.assertNotIn(name, unsupported_names)
 
@@ -279,6 +337,141 @@ ACL_API_STUB(aclNull, INVALID_EXCEPTION_INFO)
 
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("requires uint32_t return type", result.stderr)
+
+    def test_rejects_count_one_for_non_count_signature(self):
+        product = self.write_product("""\
+ACL_API_CATALOG_VERSION(1)
+ACL_API_REAL_PROVIDER_COUNT(4)
+ACL_API_STUB(aclUnsupported, COUNT_ONE)
+""")
+        result = self.run_generator(product)
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("requires an int32_t/uint32_t count out-parameter", result.stderr)
+
+    def test_rejects_count_one_for_non_acl_error_return_type(self):
+        product = self.write_product("""\
+ACL_API_CATALOG_VERSION(1)
+ACL_API_REAL_PROVIDER_COUNT(4)
+ACL_API_STUB(aclZero, COUNT_ONE)
+""")
+        result = self.run_generator(product)
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("COUNT_ONE requires aclError return type", result.stderr)
+
+    def test_rejects_run_mode_device_for_non_run_mode_signature(self):
+        product = self.write_product("""\
+ACL_API_CATALOG_VERSION(1)
+ACL_API_REAL_PROVIDER_COUNT(4)
+ACL_API_STUB(aclCountOne, RUN_MODE_DEVICE)
+""")
+        result = self.run_generator(product)
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("RUN_MODE_DEVICE requires one aclrtRunMode out-parameter", result.stderr)
+
+    def test_rejects_run_mode_device_for_non_acl_error_return_type(self):
+        product = self.write_product("""\
+ACL_API_CATALOG_VERSION(1)
+ACL_API_REAL_PROVIDER_COUNT(4)
+ACL_API_STUB(aclZero, RUN_MODE_DEVICE)
+""")
+        result = self.run_generator(product)
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("RUN_MODE_DEVICE requires aclError return type", result.stderr)
+
+    def test_delegates_malloc_with_cfg_to_malloc_flow(self):
+        self.wrapper_path.write_text(
+            """\
+#define ACL_FUNC_MAP(_) \\
+    _(aclError, aclrtMalloc, (void** devPtr, size_t size, aclrtMemMallocPolicy policy), (devPtr, size, policy)) \\
+    _(aclError, aclrtMallocWithCfg, \\
+      (void** devPtr, size_t size, aclrtMemMallocPolicy policy, aclrtMallocConfig* cfg), \\
+      (devPtr, size, policy, cfg))
+#define ACL_RT_FUNC_MAP(_)
+#define ACL_RT_ALLOCATOR_FUNC_MAP(_)
+#define ACL_MDLRI_FUNC_MAP(_)
+#define ACL_MDL_FUNC_MAP(_)
+""",
+            encoding="utf-8",
+        )
+        product = self.write_product("""\
+ACL_API_CATALOG_VERSION(1)
+ACL_API_REAL_PROVIDER_COUNT(1)
+ACL_API_STUB(aclrtMallocWithCfg, DELEGATE_ACLRT_MALLOC)
+""")
+        result = self.run_generator(product)
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        source = (self.root / "generated.cc").read_text(encoding="utf-8")
+        self.assertIn(
+            "aclError aclrtMallocWithCfgImpl"
+            "(void** devPtr, size_t size, aclrtMemMallocPolicy policy, aclrtMallocConfig* cfg)",
+            source,
+        )
+        self.assertIn("(void)cfg;", source)
+        self.assertIn("return aclrtMallocImpl(devPtr, size, policy);", source)
+        with (self.root / "provider.csv").open(encoding="utf-8", newline="") as report:
+            providers = {row["acl_api"]: row["provider"] for row in csv.DictReader(report)}
+        self.assertEqual(providers["aclrtMallocWithCfg"], "strong_stub")
+        self.assertEqual(providers["aclrtMalloc"], "weak_real")
+
+    def test_rejects_delegation_when_target_is_stubbed(self):
+        self.wrapper_path.write_text(
+            """\
+#define ACL_FUNC_MAP(_) \\
+    _(aclError, aclrtMalloc, (void** devPtr, size_t size, aclrtMemMallocPolicy policy), (devPtr, size, policy)) \\
+    _(aclError, aclrtMallocWithCfg, \\
+      (void** devPtr, size_t size, aclrtMemMallocPolicy policy, aclrtMallocConfig* cfg), \\
+      (devPtr, size, policy, cfg))
+#define ACL_RT_FUNC_MAP(_)
+#define ACL_RT_ALLOCATOR_FUNC_MAP(_)
+#define ACL_MDLRI_FUNC_MAP(_)
+#define ACL_MDL_FUNC_MAP(_)
+""",
+            encoding="utf-8",
+        )
+        product = self.write_product("""\
+ACL_API_CATALOG_VERSION(1)
+ACL_API_REAL_PROVIDER_COUNT(0)
+ACL_API_STUB(aclrtMalloc, RT_FEATURE_NOT_SUPPORT)
+ACL_API_STUB(aclrtMallocWithCfg, DELEGATE_ACLRT_MALLOC)
+""")
+        result = self.run_generator(product)
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("DELEGATE_ACLRT_MALLOC requires aclrtMalloc to stay a weak real provider", result.stderr)
+
+    def test_rejects_delegation_signature_mismatch(self):
+        self.wrapper_path.write_text(
+            """\
+#define ACL_FUNC_MAP(_) \\
+    _(aclError, aclrtMalloc, (void** devPtr, size_t size, aclrtMemMallocPolicy policy), (devPtr, size, policy)) \\
+    _(aclError, aclrtMallocWithCfg, \\
+      (void** devPtr, size_t size, aclrtMemMallocPolicy policy, aclrtMallocPolicy extra), \\
+      (devPtr, size, policy, extra))
+#define ACL_RT_FUNC_MAP(_)
+#define ACL_RT_ALLOCATOR_FUNC_MAP(_)
+#define ACL_MDLRI_FUNC_MAP(_)
+#define ACL_MDL_FUNC_MAP(_)
+""",
+            encoding="utf-8",
+        )
+        product = self.write_product("""\
+ACL_API_CATALOG_VERSION(1)
+ACL_API_REAL_PROVIDER_COUNT(1)
+ACL_API_STUB(aclrtMallocWithCfg, DELEGATE_ACLRT_MALLOC)
+""")
+        result = self.run_generator(product)
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn(
+            "DELEGATE_ACLRT_MALLOC requires the aclrtMalloc signature plus one trailing"
+            " aclrtMallocConfig* parameter",
+            result.stderr,
+        )
 
     def test_rejects_unknown_policy(self):
         product = self.write_product("""\

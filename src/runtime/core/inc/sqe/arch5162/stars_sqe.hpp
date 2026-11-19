@@ -73,6 +73,7 @@ enum rtStarsSqeSubType {
     /* PROFILING_SUBTYPE BEGIN */
     RT_SQE_SUBTYPE_PROFILER_DYNAMIC_ENABLE = 50,
     RT_SQE_SUBTYPE_PROFILER_DYNAMIC_DISABLE = 51,
+    RT_SQE_SUBTYPE_PROFILER_TRACE_EX = 52,
     /* PROFILING_SUBTYPE END */
 
     RT_SQE_SUBTYPE_RESERVED = 255
@@ -303,6 +304,13 @@ struct RtUpdateAddress {
     uint32_t reserved[8];
 };
 
+struct RtProfilerTraceEx_t {
+    uint64_t profilerTraceId;
+    uint64_t modelId;
+    uint16_t tagId;
+    uint8_t reserved[30];
+};
+
 struct RtStarsPhSqe {
     /* word0-1 */
     rtStarsSqeHeader header;
@@ -324,6 +332,7 @@ struct RtStarsPhSqe {
         RtStreamActiveSqe streamActiveInfo;
         RtStreamSwitchExSqe streamSwitchExInfo;
         RtUpdateAddress updateAddressInfo;
+        RtProfilerTraceEx_t profileTraceInfo;
         uint32_t res[12];
     } u;
 };

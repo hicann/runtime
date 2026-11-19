@@ -188,11 +188,11 @@ RUNTIME_API_STUB(rtNoop)
         self.assertFalse(set(names) - set(catalog))
         self.assertEqual(names, sorted(names))
         self.assertEqual(len(catalog), 804)
-        self.assertEqual(len(names), 672)
-        self.assertEqual(len(set(catalog) - set(names)), 132)
+        self.assertEqual(len(names), 632)
+        self.assertEqual(len(set(catalog) - set(names)), 172)
         self.assertEqual(
             sum(catalog[name].policy == "FEATURE_NOT_SUPPORT" for name in names),
-            668,
+            628,
         )
         self.assertEqual(
             sum(catalog[name].policy == "SUCCESS_NOOP" for name in names), 3
@@ -255,20 +255,18 @@ RUNTIME_API_STUB(rtNoop)
             "rtDeviceGetLimit",
             "rtDeviceGetP2PAtomicCapabilities",
             "rtEventRecordWithFlag",
-            "rtGetDevMsg",
             "rtGetModelByStream",
+            "rtMemAlloc",
             "rtMemGetAddressRange",
             "rtMemMapSelectedLink",
             "rtModelAddHcclStream",
-            "rtModelGetHcclStream",
-            "rtModelGetId",
             "rtModelGetTasks",
-            "rtRegTaskFailCallbackByModule",
+            "rtModelTaskGetEnabled",
             "rtStreamWaitEventWithFlag",
+            "rtSnapShotProcessGetRestoreThreadId",
             "rtsMalloc",
             "rtsLaunchUpdateTask",
             "rtsModelAbort",
-            "rtsValueWrite",
         ):
             self.assertIn(api, names)
         self.assertEqual(catalog["rtsValueWrite"].policy, "FEATURE_NOT_SUPPORT")
@@ -300,7 +298,7 @@ RUNTIME_API_STUB(rtNoop)
                 mappings.append((fields[0], fields[1]))
 
         acl_names = [acl_name for acl_name, _ in mappings]
-        self.assertEqual(len(acl_names), 269)
+        self.assertEqual(len(acl_names), 249)
         self.assertFalse(any(name.startswith("acltdt") for name in acl_names))
         self.assertEqual(len(acl_names), len(set(acl_names)))
         self.assertFalse(

@@ -69,6 +69,13 @@ public:
     }
 };
 
+class ProfilerTraceExTestDevice final : public RawDevice {
+public:
+    explicit ProfilerTraceExTestDevice(uint32_t deviceId) : RawDevice(deviceId) {}
+
+    uint32_t GetDevRunningState() override { return static_cast<uint32_t>(DEV_RUNNING_DOWN); }
+};
+
 rtError_t DumpAicpuArgsMemCopyStub(
     Driver* drv, void* dst, uint64_t destMax, const void* src, uint64_t size, rtMemcpyKind_t kind)
 {
@@ -1218,7 +1225,57 @@ TEST_F(Arch5162TaskTest, ProfilingTaskRegister)
     EXPECT_NE(g_taskFuncArrays[CHIP_5162A].printErrorInfoFunc[TS_TASK_TYPE_PROFILING_DISABLE], nullptr);
     EXPECT_NE(g_taskFuncArrays[CHIP_5162A].setResultFunc[TS_TASK_TYPE_PROFILING_DISABLE], nullptr);
     EXPECT_NE(g_taskFuncArrays[CHIP_5162A].setStarsResultFunc[TS_TASK_TYPE_PROFILING_DISABLE], nullptr);
+
+    EXPECT_EQ(g_taskFuncArrays[CHIP_5162A].toCommandFunc[TS_TASK_TYPE_PROFILER_TRACE_EX], nullptr);
+    EXPECT_EQ(
+        g_taskFuncArrays[CHIP_5162A].toSqeFunc[TS_TASK_TYPE_PROFILER_TRACE_EX], &ConstructSqeForProfilerTraceExTask);
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].doCompleteSuccFunc[TS_TASK_TYPE_PROFILER_TRACE_EX], nullptr);
+    EXPECT_EQ(g_taskFuncArrays[CHIP_5162A].taskUnInitFunc[TS_TASK_TYPE_PROFILER_TRACE_EX], nullptr);
+    EXPECT_EQ(g_taskFuncArrays[CHIP_5162A].waitAsyncCpCompleteFunc[TS_TASK_TYPE_PROFILER_TRACE_EX], nullptr);
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].printErrorInfoFunc[TS_TASK_TYPE_PROFILER_TRACE_EX], nullptr);
+    EXPECT_EQ(g_taskFuncArrays[CHIP_5162A].setResultFunc[TS_TASK_TYPE_PROFILER_TRACE_EX], nullptr);
+    EXPECT_NE(g_taskFuncArrays[CHIP_5162A].setStarsResultFunc[TS_TASK_TYPE_PROFILER_TRACE_EX], nullptr);
 }
+
+class Arch5162ProfilerTraceExTest : public Arch5162TaskTest,
+                                    public testing::WithParamInterface<ProfilerTraceExTaskInfo> {};
+
+TEST_P(Arch5162ProfilerTraceExTest, RegisteredConstructorBuildsSqeAndClearsReservedBytes)
+{
+    // No device resources are allocated; keep stream teardown on the host-only path.
+    MOCKER_CPP_VIRTUAL(Runtime::Instance(), &Runtime::GetDisableThread).stubs().will(returnValue(false));
+    ProfilerTraceExTestDevice device(3U);
+    Stream stream(&device, 0U);
+    TaskInfo taskInfo = {};
+    taskInfo.stream = &stream;
+    taskInfo.type = TS_TASK_TYPE_PROFILER_TRACE_EX;
+    taskInfo.id = 52U;
+    taskInfo.taskSn = 9U;
+    taskInfo.u.profilerTraceExTask = GetParam();
+    rtStarsSqe_t sqe = {};
+    ASSERT_EQ(memset_s(&sqe, sizeof(sqe), 0xA5, sizeof(sqe)), EOK);
+
+    const auto constructor = g_taskFuncArrays[CHIP_5162A].toSqeFunc[TS_TASK_TYPE_PROFILER_TRACE_EX];
+    ASSERT_NE(constructor, nullptr);
+    constructor(&taskInfo, &sqe, TaskSqeInfo{0ULL, 0ULL});
+
+    EXPECT_EQ(sqe.phSqe.header.type, RT_STARS_SQE_TYPE_PLACE_HOLDER);
+    EXPECT_EQ(sqe.phSqe.header.preP, RT_STARS_SQE_INT_DIR_TO_TSCPU);
+    EXPECT_EQ(sqe.phSqe.header.u.sqeSubType, RT_SQE_SUBTYPE_PROFILER_TRACE_EX);
+    EXPECT_EQ(sqe.phSqe.u.profileTraceInfo.profilerTraceId, GetParam().profilerTraceId);
+    EXPECT_EQ(sqe.phSqe.u.profileTraceInfo.modelId, GetParam().modelId);
+    EXPECT_EQ(sqe.phSqe.u.profileTraceInfo.tagId, GetParam().tagId);
+    for (const uint8_t reserved : sqe.phSqe.u.profileTraceInfo.reserved) {
+        EXPECT_EQ(reserved, 0U);
+    }
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    TracePayloads, Arch5162ProfilerTraceExTest,
+    testing::Values(
+        ProfilerTraceExTaskInfo{0ULL, 0ULL, 0U},
+        ProfilerTraceExTaskInfo{0x123456789ABCDEF0ULL, 0xFEDCBA9876543210ULL, 0x1234U},
+        ProfilerTraceExTaskInfo{UINT64_MAX, UINT64_MAX, UINT16_MAX}));
 
 TEST_F(Arch5162TaskTest, ConstructSqeForProfilingEnableTask)
 {

@@ -30,6 +30,9 @@ struct AclErrorPolicy {
 using RtFeatureNotSupportPolicy = AclErrorPolicy<ACL_ERROR_RT_FEATURE_NOT_SUPPORT>;
 using AclFeatureUnsupportedPolicy = AclErrorPolicy<ACL_ERROR_FEATURE_UNSUPPORTED>;
 using InvalidExceptionInfoPolicy = AclErrorPolicy<ACL_ERROR_INVALID_EXCEPTION_INFO>;
+using CountOneNullGuardPolicy = AclErrorPolicy<ACL_ERROR_INVALID_PARAM>;
+using RunModeDeviceNullGuardPolicy = AclErrorPolicy<ACL_ERROR_INVALID_PARAM>;
+using DelegatedMallocFlowPolicy = AclErrorPolicy<ACL_ERROR_INVALID_PARAM>;
 
 struct NullptrPolicy {
     template <typename ReturnType>
@@ -90,6 +93,9 @@ void VerifyStub(VoidNoopPolicy, void (*impl)(Args...), void (*api)(Args...))
 #define ACL_STUB_POLICY_NULLPTR NullptrPolicy
 #define ACL_STUB_POLICY_ZERO ZeroPolicy
 #define ACL_STUB_POLICY_VOID_NOOP VoidNoopPolicy
+#define ACL_STUB_POLICY_COUNT_ONE CountOneNullGuardPolicy
+#define ACL_STUB_POLICY_RUN_MODE_DEVICE RunModeDeviceNullGuardPolicy
+#define ACL_STUB_POLICY_DELEGATE_ACLRT_MALLOC DelegatedMallocFlowPolicy
 #define ACL_STUB_POLICY_INNER(policy) ACL_STUB_POLICY_##policy
 #define ACL_STUB_POLICY(policy) ACL_STUB_POLICY_INNER(policy)
 #define ACL_API_CATALOG_VERSION(version)
@@ -115,11 +121,49 @@ TEST(Arch5162AclEntryStubTest, DeviceFlagsPreserveOutput)
     EXPECT_EQ(flags, UINT32_MAX);
 }
 
+TEST(Arch5162AclEntryStubTest, GetDeviceCountReportsSingleDevice)
+{
+    uint32_t count = 0U;
+    EXPECT_EQ(aclrtGetDeviceCount(&count), ACL_SUCCESS);
+    EXPECT_EQ(count, 1U);
+    EXPECT_EQ(aclrtGetDeviceCountImpl(&count), ACL_SUCCESS);
+    EXPECT_EQ(count, 1U);
+    EXPECT_EQ(aclrtGetDeviceCount(nullptr), ACL_ERROR_INVALID_PARAM);
+}
+
+TEST(Arch5162AclEntryStubTest, GetRunModeReportsDevice)
+{
+    aclrtRunMode runMode = ACL_HOST;
+    EXPECT_EQ(aclrtGetRunMode(&runMode), ACL_SUCCESS);
+    EXPECT_EQ(runMode, ACL_DEVICE);
+    runMode = ACL_HOST;
+    EXPECT_EQ(aclrtGetRunModeImpl(&runMode), ACL_SUCCESS);
+    EXPECT_EQ(runMode, ACL_DEVICE);
+    EXPECT_EQ(aclrtGetRunMode(nullptr), ACL_ERROR_INVALID_PARAM);
+    EXPECT_EQ(aclrtGetRunModeImpl(nullptr), ACL_ERROR_INVALID_PARAM);
+}
+
+TEST(Arch5162AclEntryStubTest, MallocWithCfgFollowsMallocFlow)
+{
+    for (const aclrtMemMallocPolicy policy : {ACL_MEM_MALLOC_HUGE_FIRST, ACL_MEM_MALLOC_NORMAL_ONLY}) {
+        void* withCfgPtr = nullptr;
+        void* mallocPtr = nullptr;
+        const aclError withCfgError = aclrtMallocWithCfg(&withCfgPtr, 1U, policy, nullptr);
+        const aclError mallocError = aclrtMalloc(&mallocPtr, 1U, policy);
+        EXPECT_EQ(withCfgError, mallocError);
+        EXPECT_EQ(aclrtMallocWithCfg(nullptr, 1U, policy, nullptr), ACL_ERROR_INVALID_PARAM);
+        EXPECT_EQ(aclrtMallocWithCfgImpl(nullptr, 1U, policy, nullptr), ACL_ERROR_INVALID_PARAM);
+    }
+}
+
 #undef ACL_API_STUB
 #undef ACL_API_REAL_PROVIDER_COUNT
 #undef ACL_API_CATALOG_VERSION
 #undef ACL_STUB_POLICY
 #undef ACL_STUB_POLICY_INNER
+#undef ACL_STUB_POLICY_DELEGATE_ACLRT_MALLOC
+#undef ACL_STUB_POLICY_COUNT_ONE
+#undef ACL_STUB_POLICY_RUN_MODE_DEVICE
 #undef ACL_STUB_POLICY_VOID_NOOP
 #undef ACL_STUB_POLICY_ZERO
 #undef ACL_STUB_POLICY_NULLPTR

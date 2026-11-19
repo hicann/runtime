@@ -10,11 +10,37 @@
 #include "gtest/gtest.h"
 #include "runtime/rt.h"
 #include "api_impl_creator.hpp"
+#include "api_impl.hpp"
 #include "api_error.hpp"
 #include "aicpu_dfx.hpp"
+#include "model.hpp"
 #include "snapshot_socket.hpp"
 
 using namespace cce::runtime;
+
+TEST(Arch5162ApiTest, GetDevMsg_NullCallback_ReturnsSuccess)
+{
+    ApiImpl api;
+
+    const rtGetDevMsgType_t messageTypes[] = {
+        RT_GET_DEV_ERROR_MSG, RT_GET_DEV_RUNNING_STREAM_SNAPSHOT_MSG, RT_GET_DEV_PID_SNAPSHOT_MSG};
+    for (const auto messageType : messageTypes) {
+        EXPECT_EQ(api.GetDevMsg(messageType, nullptr), RT_ERROR_NONE);
+    }
+}
+
+TEST(Arch5162ApiTest, GetDevMsg_ReturnsSuccessWithoutInvokingCallback)
+{
+    ApiImpl api;
+    const rtGetMsgCallback callback = [](const char_t*, uint32_t) {
+        ADD_FAILURE() << "GetDevMsg must not invoke the callback when device messages are disabled.";
+    };
+    const rtGetDevMsgType_t messageTypes[] = {
+        RT_GET_DEV_ERROR_MSG, RT_GET_DEV_RUNNING_STREAM_SNAPSHOT_MSG, RT_GET_DEV_PID_SNAPSHOT_MSG};
+    for (const auto messageType : messageTypes) {
+        EXPECT_EQ(api.GetDevMsg(messageType, callback), RT_ERROR_NONE);
+    }
+}
 
 TEST(Arch5162ApiTest, SnapshotApiImplStub_NotSupport)
 {
@@ -71,4 +97,41 @@ TEST(Arch5162ApiTest, ModelTaskUpdateApiErrorStub_NotSupport)
     rtMdlTaskUpdateInfo_t updateInfo = {};
     EXPECT_EQ(api.ModelTaskUpdate(nullptr, 0U, nullptr, &updateInfo), RT_ERROR_FEATURE_NOT_SUPPORT);
     EXPECT_EQ(rtModelTaskUpdate(nullptr, 0U, nullptr, nullptr), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+}
+
+TEST(Arch5162ApiTest, HcclModelStreamPublicApisBehaviors)
+{
+    uint32_t count = 17U;
+    rtStream_t stream = static_cast<void*>(&count);
+    rtModel_t model = static_cast<void*>(&count);
+    EXPECT_EQ(rtModelAddHcclStream(nullptr, nullptr), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(rtModelAddHcclStream(stream, model), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(rtModelGetHcclStream(nullptr, nullptr, nullptr), ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(rtModelGetHcclStream(model, &stream, &count), ACL_ERROR_RT_INVALID_HANDLE);
+    EXPECT_EQ(count, 17U);
+    EXPECT_EQ(stream, static_cast<void*>(&count));
+    EXPECT_EQ(rtGetModelByStream(nullptr, nullptr), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(rtGetModelByStream(stream, &model), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(model, static_cast<void*>(&count));
+}
+
+TEST(Arch5162ApiTest, HcclModelStreamInternalProvidersBehaviors)
+{
+    ApiImpl impl;
+    EXPECT_EQ(impl.HcclStreamAddToModel(nullptr, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
+    Model model;
+    Model* bound = &model;
+    std::vector<Stream*> streams{nullptr};
+    EXPECT_EQ(impl.ModelGetHcclStream(&model, streams), RT_ERROR_NONE);
+    EXPECT_EQ(streams, (std::vector<Stream*>{}));
+
+    ApiErrorDecorator error(&impl);
+    EXPECT_EQ(error.HcclStreamAddToModel(nullptr, nullptr), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(error.ModelGetHcclStream(&model, streams), RT_ERROR_NONE);
+    EXPECT_EQ(error.GetModelByStream(nullptr, &bound), RT_ERROR_INVALID_VALUE);
+
+    EXPECT_EQ(model.RegisterHcclStream(nullptr), RT_ERROR_NONE);
+    EXPECT_EQ(model.CollectHcclStreams(streams), RT_ERROR_NONE);
+    EXPECT_EQ(bound, &model);
+    EXPECT_EQ(streams, (std::vector<Stream*>{nullptr}));
 }

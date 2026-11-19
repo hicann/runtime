@@ -688,7 +688,7 @@ rtError_t ApiImpl::GetDevMsg(const rtGetDevMsgType_t getMsgType, const rtGetMsgC
 {
     UNUSED(getMsgType);
     UNUSED(callback);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
+    return RT_ERROR_NONE;
 }
 
 rtError_t ApiImpl::GetDevRunningStreamSnapshotMsg(const rtGetMsgCallback callback)
