@@ -14,9 +14,62 @@
 #include "context.hpp"
 #include "dqs_c.hpp"
 #include "error_message_manage.hpp"
+#include "runtime.hpp"
+#include "stream.hpp"
+#include "task_info.hpp"
 
 namespace cce {
 namespace runtime {
+
+namespace {
+constexpr uint32_t V201_TASK_SN_STREAM_ID_MASK = 0xFFFFU;
+constexpr uint32_t V201_TASK_SN_TASK_ID_SHIFT = 16U;
+
+uint32_t GetTaskIdFromTaskSnV201(const uint32_t streamId, const uint32_t taskSn)
+{
+    if ((taskSn & V201_TASK_SN_STREAM_ID_MASK) != (streamId & V201_TASK_SN_STREAM_ID_MASK)) {
+        return taskSn;
+    }
+    return taskSn >> V201_TASK_SN_TASK_ID_SHIFT;
+}
+
+bool AllocTaskSnV201(
+    const Runtime::TaskSnHookOp op, const TaskInfo* const task, const uint32_t streamId, const uint32_t taskId,
+    uint32_t& taskSn)
+{
+    if (op == Runtime::TaskSnHookOp::ALLOC_TASK_SN) {
+        if ((task == nullptr) || (task->stream == nullptr)) {
+            return false;
+        }
+        taskSn = ((static_cast<uint32_t>(task->id) << V201_TASK_SN_TASK_ID_SHIFT) |
+                  (static_cast<uint32_t>(task->stream->Id_()) & V201_TASK_SN_STREAM_ID_MASK)) &
+                 0x7FFFFFFFU;
+        return true;
+    }
+
+    if (op == Runtime::TaskSnHookOp::MODEL_TASK_ID) {
+        if (task == nullptr) {
+            return false;
+        }
+        taskSn = static_cast<uint32_t>(task->id);
+        return true;
+    }
+
+    if (op == Runtime::TaskSnHookOp::THREAD_LOCAL_TASK_ID) {
+        taskSn = GetTaskIdFromTaskSnV201(streamId, taskId);
+        return true;
+    }
+    return false;
+}
+} // namespace
+
+ApiImplV201::ApiImplV201()
+{
+    Runtime* const runtime = Runtime::runtime_;
+    if (runtime != nullptr) {
+        runtime->SetAllocTaskSnHook(&AllocTaskSnV201);
+    }
+}
 
 // dqs
 rtError_t ApiImplV201::LaunchDqsTask(Stream* const stm, const rtDqsTaskCfg_t* const taskCfg)

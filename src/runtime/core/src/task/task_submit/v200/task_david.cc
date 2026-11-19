@@ -240,7 +240,8 @@ rtError_t AllocTaskInfoOnAutoSplitStream(Stream* curStream, uint32_t sqeNum, Tas
             curStream->GetExposedStreamId(), curStream->Id_(), error);
         return error;
     }
-    Runtime::Instance()->AllocTaskSn((*taskInfo)->taskSn);
+    (*taskInfo)->stream = curStream;
+    Runtime::Instance()->AllocTaskSn(*taskInfo, (*taskInfo)->taskSn);
     pos = (*taskInfo)->id;
     SaveTaskCommonInfo(*taskInfo, curStream, sqeNum);
 
@@ -309,7 +310,8 @@ rtError_t AllocCaptureTaskByTaskRes(Stream* captureStm, uint32_t sqeNum, TaskInf
         RT_LOG(RT_LOG_ERROR, "AllocTaskInfoAndPos failed, retCode=%#x.", static_cast<uint32_t>(error));
         return error;
     }
-    Runtime::Instance()->AllocTaskSn((*task)->taskSn);
+    (*task)->stream = captureStm;
+    Runtime::Instance()->AllocTaskSn(*task, (*task)->taskSn);
     SaveTaskCommonInfo(*task, captureStm, sqeNum);
     return RT_ERROR_NONE;
 }
@@ -321,7 +323,8 @@ TaskInfo* AllocNonCaptureTask(
     if (stm->taskResMang_ == nullptr) {
         TaskInfo* task = stm->Device_()->GetTaskFactory()->Alloc(stm, taskType, errorReason);
         NULL_PTR_RETURN_MSG(task, nullptr);
-        Runtime::Instance()->AllocTaskSn(task->taskSn);
+        task->stream = stm;
+        Runtime::Instance()->AllocTaskSn(task, task->taskSn);
         SaveTaskCommonInfo(task, stm, sqeNum);
         return task;
     }
@@ -391,7 +394,8 @@ static rtError_t AllocTaskInfo(TaskInfo** taskInfo, Stream* const stm, uint32_t&
     }
     /* alloc dfx task id for current process, if send failed, no need to roll back */
     if (error == RT_ERROR_NONE) {
-        Runtime::Instance()->AllocTaskSn((*taskInfo)->taskSn);
+        (*taskInfo)->stream = stm;
+        Runtime::Instance()->AllocTaskSn(*taskInfo, (*taskInfo)->taskSn);
         SaveTaskCommonInfo(*taskInfo, stm, sqeNum);
     }
 

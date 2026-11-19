@@ -384,7 +384,8 @@ struct MSprofNotifyInfo {
 };
 
 struct MsprofRuntimeTrack { // for MsprofReportCompactInfo buffer data
-    uint16_t deviceId;
+    uint16_t deviceId : 14;
+    uint16_t tsId : 2;
     uint16_t streamId;
     uint32_t taskId;
     uint64_t taskType;   // task message hash id

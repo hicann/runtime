@@ -415,6 +415,37 @@ Runtime::Runtime() : RuntimeIntf()
 
 Runtime* Runtime::runtime_ = nullptr;
 
+void Runtime::AllocTaskSn(TaskInfo* const task, uint32_t& taskSn)
+{
+    if ((allocTaskSnHook_ != nullptr) && allocTaskSnHook_(TaskSnHookOp::ALLOC_TASK_SN, task, 0U, 0U, taskSn)) {
+        return;
+    }
+    taskSn = taskSn_.FetchAndAdd(1U);
+    taskSn = taskSn & 0x7FFFFFFFU;
+}
+
+void Runtime::SetAllocTaskSnHook(AllocTaskSnHook hook) { allocTaskSnHook_ = hook; }
+
+uint32_t Runtime::GetModelTaskId(const TaskInfo& task) const
+{
+    uint32_t taskId = task.taskSn;
+    if ((allocTaskSnHook_ != nullptr) && allocTaskSnHook_(TaskSnHookOp::MODEL_TASK_ID, &task, 0U, 0U, taskId)) {
+        return taskId;
+    }
+    return task.taskSn;
+}
+
+uint32_t GetThreadLocalTaskId(const uint32_t streamId, const uint32_t taskId)
+{
+    const Runtime* const runtime = Runtime::runtime_;
+    uint32_t taskSn = taskId;
+    if ((runtime != nullptr) && (runtime->allocTaskSnHook_ != nullptr) &&
+        runtime->allocTaskSnHook_(Runtime::TaskSnHookOp::THREAD_LOCAL_TASK_ID, nullptr, streamId, taskId, taskSn)) {
+        return taskSn;
+    }
+    return taskId;
+}
+
 /*
  *   aicore level  1:32    2:30
  *   Ascend910  freq(MHz)
