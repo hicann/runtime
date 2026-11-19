@@ -12,8 +12,8 @@ include(${RUNTIME_DIR}/pkg_inc/runtime/runtime/runtime_headers.cmake)
 include(${RUNTIME_CMAKE_DIR}/runtime_api_stubs.cmake)
 include(${RUNTIME_CMAKE_DIR}/acl_api_stubs.cmake)
 
-# Keep the arch5162 source boundary explicit. The first group was already
-# compiled as real providers before this migration.
+# Keep the arch5162 source boundary explicit. These sources provide real APIs;
+# generated strong stubs override the unsupported APIs in each source.
 set(RUNTIME_API_WEAK_REAL_SRC_FILES
     ${RUNTIME_API_DIR}/api_c.cc
     ${RUNTIME_API_DIR}/api_c_context.cc
@@ -25,22 +25,23 @@ set(RUNTIME_API_WEAK_REAL_SRC_FILES
     ${RUNTIME_API_DIR}/api_c_soc.cc
     ${RUNTIME_API_DIR}/api_c_stream.cc
 
-    # These real providers are newly compiled only because their APIs replace
-    # definitions from the legacy api_c_stub/api_c_mbuf_stub files. Do not add
-    # another source unless its APIs have corresponding generated stubs.
-    ${RUNTIME_API_DIR}/api_c_dqs.cc          # 1 stub
-    ${RUNTIME_API_DIR}/api_c_esched.cc       # 9 stubs
-    ${RUNTIME_API_DIR}/api_c_mbuf.cc         # 17 stubs
-    ${RUNTIME_API_DIR}/api_c_rt_config.cc     # 13 stubs
-    ${RUNTIME_API_DIR}/api_c_device_topology.cc # 26 stubs
-    ${RUNTIME_API_DIR}/api_c_snapshot.cc     # 7 stubs
-    ${RUNTIME_API_DIR}/api_c_soma.cc         # 7 stubs
-    ${RUNTIME_API_DIR}/api_c_standard_soc.cc # 104 stubs; rtMallocCached keeps the arch5162 strong provider
-    ${RUNTIME_API_DIR}/api_c_task.cc         # 6 stubs
-    ${RUNTIME_API_DIR}/api_c_uvm.cc          # 5 stubs
-    ${RUNTIME_API_DIR}/api_c_xpu.cc          # 4 stubs
-    ${RUNTIME_API_DIR}/api_david.cc          # 20 stubs
-    ${RUNTIME_API_DIR}/api_preload_task.cc   # 5 stubs
+    # Counts below are unsupported API definitions in each source, matched against
+    # arch5162_unsupported_runtime_api.def. The provider report groups APIs by
+    # catalog module instead, which need not match their current source file.
+    # Keep the catalog, unsupported API list, and source providers in sync.
+    ${RUNTIME_API_DIR}/api_c_dqs.cc                        # 1 stub
+    ${RUNTIME_API_DIR}/api_c_esched.cc                     # 9 stubs
+    ${RUNTIME_API_DIR}/api_c_mbuf.cc                       # 17 stubs
+    ${RUNTIME_API_DIR}/api_c_rt_config.cc                  # 13 stubs
+    ${RUNTIME_API_DIR}/api_c_device_topology.cc            # 26 stubs
+    ${RUNTIME_API_DIR}/api_c_snapshot.cc                   # 10 stubs
+    ${RUNTIME_API_DIR}/api_c_soma.cc                       # 7 stubs
+    ${RUNTIME_API_DIR}/api_c_standard_soc.cc               # 97 stubs; rtMallocCached uses the strong arch5162 provider
+    ${RUNTIME_API_DIR}/api_c_task.cc                       # 8 stubs
+    ${RUNTIME_API_DIR}/api_c_uvm.cc                        # 7 stubs
+    ${RUNTIME_API_DIR}/api_c_xpu.cc                        # 4 stubs
+    ${RUNTIME_API_DIR}/api_david.cc                        # 20 stubs
+    ${RUNTIME_API_DIR}/api_preload_task.cc                 # 5 stubs
 )
 configure_runtime_api_weak_real_sources(arch5162 ${RUNTIME_API_WEAK_REAL_SRC_FILES})
 
@@ -360,16 +361,9 @@ set(libruntime_src_files
     ${RUNTIME_FEATURE_DIR}/soma/stream_mem_pool.cc
 )
 
-set(XPU_TPRT_INC_DIR
-    ${RUNTIME_DIR}/src/tprt/inc/external
-    ${RUNTIME_DIR}/src/tprt/feature/inc
-)
-
 set(RUNTIME_INC_DIR_ARCH5162
     ${RUNTIME_DIR}/src/runtime/core/inc
     ${RUNTIME_CORE_DIR}/inc_c
-    ${RUNTIME_FEATURE_DIR}/fusion
-    ${RUNTIME_FEATURE_DIR}/ccu
     ${RUNTIME_DIR}/src/runtime/core/inc/args
     ${RUNTIME_DIR}/src/runtime/core/inc/arg_loader
     ${RUNTIME_DIR}/src/runtime/inc/common
@@ -380,7 +374,6 @@ set(RUNTIME_INC_DIR_ARCH5162
     ${RUNTIME_DIR}/src/runtime/core/inc/dfx
     ${RUNTIME_DIR}/src/runtime/core/inc/drv
     ${RUNTIME_DIR}/src/runtime/core/inc/engine
-    ${RUNTIME_DIR}/src/runtime/core/inc/engine/hwts
     ${RUNTIME_DIR}/src/runtime/core/inc/event
     ${RUNTIME_DIR}/src/runtime/core/inc/kernel
     ${RUNTIME_DIR}/src/runtime/core/inc/launch
@@ -392,7 +385,6 @@ set(RUNTIME_INC_DIR_ARCH5162
     ${RUNTIME_DIR}/src/runtime/core/inc/spec
     ${RUNTIME_DIR}/src/runtime/core/inc/sqe
     ${RUNTIME_DIR}/src/runtime/inc/device
-    ${RUNTIME_DIR}/src/runtime/inc/sqe
     ${RUNTIME_DIR}/src/runtime/core/inc/sqe/arch5162
     ${RUNTIME_DIR}/src/runtime/core/inc/stars
     ${RUNTIME_DIR}/src/runtime/core/inc/stream
@@ -402,7 +394,6 @@ set(RUNTIME_INC_DIR_ARCH5162
     ${RUNTIME_API_DIR}/impl
     ${RUNTIME_API_DIR}/impl/inc
     ${RUNTIME_CORE_DIR}/src/engine
-    ${RUNTIME_CORE_DIR}/src/engine/hwts
     ${RUNTIME_CORE_DIR}/src/engine/stars
     ${RUNTIME_CORE_DIR}/src/stream
     ${RUNTIME_CORE_DIR}/src/task/inc
@@ -423,8 +414,6 @@ set(RUNTIME_INC_DIR_ARCH5162
     ${RUNTIME_FEATURE_DIR}/cntnotify
     ${RUNTIME_FEATURE_DIR}/snapshot
     ${RUNTIME_FEATURE_DIR}/launch_blocking
-    ${RUNTIME_FEATURE_DIR}/ccu
-    ${RUNTIME_FEATURE_DIR}/ffts
     ${RUNTIME_FEATURE_DIR}/xpu
     ${RUNTIME_FEATURE_DIR}/runtime_thread_aicpu
     ${RUNTIME_CORE_DIR}/src/uvm
@@ -437,18 +426,12 @@ set(RUNTIME_INC_DIR_ARCH5162
     ${RUNTIME_DIR}/pkg_inc/tsd/
     ${RUNTIME_DIR}/pkg_inc/aicpu_sched/
     ${RUNTIME_DIR}/pkg_inc/aicpu_sched/common
-    ${RUNTIME_DIR}/src/queue_schedule/dgwclient/inc/
     ${RUNTIME_DIR}/src/dfx/error_manager
-    ${RUNTIME_DIR}/src/runtime/dfx/include/trace/awatchdog/
     ${RUNTIME_DIR}/pkg_inc/driver
-    ${RUNTIME_DIR}/include/trace/utrace
     ${RUNTIME_DIR}/pkg_inc
     ${RUNTIME_DIR}/include/external/acl
-    ${RUNTIME_DIR}/include/trace/awatchdog
     ${RUNTIME_DIR}/include
-    ${RUNTIME_DIR}/src/dfx/adump/inc/metadef
     ${RUNTIME_DIR}/src/platform
-    ${XPU_TPRT_INC_DIR}
 )
 
 set(libruntime_aclrt_impl_src_files
@@ -500,11 +483,6 @@ macro(add_runtime_library target_name)
         -DRUNTIME_API=0  # set 1 when split so and in libruntime.so
     )
 
-    set_target_properties(${target_name}
-        PROPERTIES
-        OUTPUT_NAME ${target_name}
-    )
-
     target_compile_options(${target_name} PRIVATE
         -Os
         -ffunction-sections
@@ -522,23 +500,17 @@ macro(add_runtime_library target_name)
 
     target_link_options(${target_name} PRIVATE
         -Wl,--no-undefined
-        -Wl,--gc-sections
+        -Wl,-Bsymbolic
     )
 
     target_include_directories(${target_name} PRIVATE
         ${RUNTIME_INC_DIR_ARCH5162}
-        ${RUNTIME_DIR}/include
         ${RUNTIME_DIR}/src/acl/aclrt_impl
         ${RUNTIME_DIR}/src/acl/common
         ${RUNTIME_DIR}/src/acl/utils
         ${RUNTIME_DIR}/src/acl
         ${RUNTIME_DIR}/include/external
-        ${RUNTIME_DIR}/pkg_inc
-        ${RUNTIME_DIR}/pkg_inc/runtime
-        ${RUNTIME_DIR}/pkg_inc/runtime/runtime
         ${RUNTIME_DIR}/pkg_inc/dump
-        ${RUNTIME_DIR}/src/dfx/error_manager
-        ${RUNTIME_DIR}/src/dfx/adump/inc/metadef/external
         ${RUNTIME_DIR}/include/dfx
     )
 
@@ -551,7 +523,6 @@ macro(add_runtime_library target_name)
             $<BUILD_INTERFACE:msprof_headers>
             $<BUILD_INTERFACE:slog_headers>
             $<BUILD_INTERFACE:awatchdog_headers>
-            $<BUILD_INTERFACE:npu_runtime_headers>
             $<BUILD_INTERFACE:npu_runtime_inner_headers>
             $<BUILD_INTERFACE:atrace_headers>
             dl
@@ -567,7 +538,6 @@ macro(add_runtime_library target_name)
             json
             platform
             -Wl,--as-needed
-            -Wl,-Bsymbolic
         PUBLIC
             npu_runtime_headers
     )
