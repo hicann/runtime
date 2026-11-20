@@ -12,17 +12,15 @@ import csv
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Mapping, Optional, Sequence, Tuple
+from typing import Dict, List, Sequence, Tuple
 
 
 CATALOG_VERSION_MACRO = "RUNTIME_API_CATALOG_VERSION"
 CATALOG_ENTRY_MACRO = "RUNTIME_API"
 PRODUCT_VERSION_MACRO = "RUNTIME_API_CATALOG_VERSION"
 PRODUCT_STUB_MACRO = "RUNTIME_API_STUB"
-PRODUCT_STUB_VISIBILITY_MACRO = "RUNTIME_API_STUB_VISIBILITY"
 SUPPORTED_POLICIES = {"FEATURE_NOT_SUPPORT", "MEMORY_RESERVED", "SUCCESS_NOOP", "VOID_NOOP"}
 SUPPORTED_VISIBILITIES = {"EXPORT", "HIDDEN"}
-SUPPORTED_PRODUCT_STUB_VISIBILITIES = {"CATALOG", "HIDDEN"}
 
 
 @dataclass(frozen=True)
@@ -125,36 +123,14 @@ def parse_catalog(path: Path) -> Tuple[int, Dict[str, ApiEntry]]:
     return version, entries
 
 
-def parse_product_def(path: Path) -> Tuple[int, List[str], str, Dict[str, str]]:
+def parse_product_def(path: Path) -> Tuple[int, List[str]]:
     content = strip_comments(path.read_text(encoding="utf-8"))
     version = parse_single_version(content, path)
-    names = []
-    visibility_overrides = {}
-    for invocation in extract_invocations(content, PRODUCT_STUB_MACRO):
-        fields = split_top_level(invocation)
-        if len(fields) not in {1, 2}:
-            raise ValueError(
-                f"{path}: {PRODUCT_STUB_MACRO} expects 1 or 2 fields, got {len(fields)}"
-            )
-        name = fields[0]
-        if not name.isidentifier():
-            raise ValueError(f"{path}: invalid API name {name}")
-        names.append(name)
-        if len(fields) == 2:
-            visibility = fields[1]
-            if visibility not in SUPPORTED_VISIBILITIES:
-                raise ValueError(f"{path}: unsupported stub visibility {visibility} for {name}")
-            visibility_overrides[name] = visibility
+    names = [name.strip() for name in extract_invocations(content, PRODUCT_STUB_MACRO)]
     duplicates = sorted({name for name in names if names.count(name) > 1})
     if duplicates:
         raise ValueError(f"{path}: duplicate stub APIs: {', '.join(duplicates)}")
-    visibility_values = extract_invocations(content, PRODUCT_STUB_VISIBILITY_MACRO)
-    if len(visibility_values) > 1:
-        raise ValueError(f"{path}: at most one {PRODUCT_STUB_VISIBILITY_MACRO} is allowed")
-    stub_visibility = visibility_values[0].strip() if visibility_values else "CATALOG"
-    if stub_visibility not in SUPPORTED_PRODUCT_STUB_VISIBILITIES:
-        raise ValueError(f"{path}: unsupported product stub visibility {stub_visibility}")
-    return version, names, stub_visibility, visibility_overrides
+    return version, names
 
 
 def argument_names(arguments: str) -> Sequence[str]:
@@ -163,27 +139,9 @@ def argument_names(arguments: str) -> Sequence[str]:
     return split_top_level(arguments)
 
 
-def resolve_stub_visibility(
-    entry: ApiEntry,
-    product_stub_visibility: str = "CATALOG",
-    visibility_override: Optional[str] = None,
-) -> str:
-    if entry.visibility == "HIDDEN" and visibility_override == "EXPORT":
-        raise ValueError(f"cannot export catalog-hidden API {entry.name}")
-    if visibility_override is not None:
-        return visibility_override
-    if product_stub_visibility == "HIDDEN":
-        return "HIDDEN"
-    return entry.visibility
-
-
-def render_stub(
-    entry: ApiEntry,
-    product_stub_visibility: str = "CATALOG",
-    visibility_override: Optional[str] = None,
-) -> str:
+def render_stub(entry: ApiEntry) -> str:
     lines = []
-    if resolve_stub_visibility(entry, product_stub_visibility, visibility_override) == "EXPORT":
+    if entry.visibility == "EXPORT":
         lines.append("VISIBILITY_DEFAULT")
     lines.extend([f"{entry.return_type} {entry.name}({entry.signature})", "{"])
     for argument in argument_names(entry.arguments):
@@ -198,16 +156,8 @@ def render_stub(
     return "\n".join(lines)
 
 
-def render_source(
-    product: str,
-    entries: Sequence[ApiEntry],
-    product_stub_visibility: str = "CATALOG",
-    visibility_overrides: Optional[Mapping[str, str]] = None,
-) -> str:
-    overrides = visibility_overrides or {}
-    body = "\n\n".join(
-        render_stub(entry, product_stub_visibility, overrides.get(entry.name)) for entry in entries
-    )
+def render_source(product: str, entries: Sequence[ApiEntry]) -> str:
+    body = "\n\n".join(render_stub(entry) for entry in entries)
     if body:
         body += "\n"
     return f'''/**
@@ -311,23 +261,10 @@ def write_if_changed(path: Path, content: str) -> None:
     path.write_text(content, encoding="utf-8")
 
 
-def write_report(
-    path: Path,
-    product: str,
-    catalog: Dict[str, ApiEntry],
-    stub_names: Sequence[str],
-    product_stub_visibility: str = "CATALOG",
-    visibility_overrides: Optional[Mapping[str, str]] = None,
-) -> None:
+def write_report(path: Path, product: str, catalog: Dict[str, ApiEntry], stub_names: Sequence[str]) -> None:
     stub_set = set(stub_names)
-    overrides = visibility_overrides or {}
-    rows = []
-    for name, entry in sorted(catalog.items()):
-        provider = "strong_stub" if name in stub_set else "weak_real"
-        visibility = ""
-        if provider == "strong_stub":
-            visibility = resolve_stub_visibility(entry, product_stub_visibility, overrides.get(name))
-        rows.append((name, entry.module, visibility, provider))
+    rows = [(name, entry.module, entry.visibility, "strong_stub" if name in stub_set else "weak_real")
+            for name, entry in sorted(catalog.items())]
     with path.open("w", encoding="utf-8", newline="") as report:
         writer = csv.writer(report)
         writer.writerow(["product", "api", "module", "stub_visibility", "provider"])
@@ -346,7 +283,7 @@ def main() -> None:
     args = parser.parse_args()
 
     catalog_version, catalog = parse_catalog(args.catalog)
-    product_version, stub_names, product_stub_visibility, visibility_overrides = parse_product_def(args.product_def)
+    product_version, stub_names = parse_product_def(args.product_def)
     if product_version != catalog_version:
         raise ValueError(
             f"catalog version mismatch: catalog={catalog_version}, product={product_version}")
@@ -357,21 +294,11 @@ def main() -> None:
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.report.parent.mkdir(parents=True, exist_ok=True)
     selected_entries = [catalog[name] for name in stub_names]
-    write_if_changed(
-        args.output,
-        render_source(args.product, selected_entries, product_stub_visibility, visibility_overrides),
-    )
+    write_if_changed(args.output, render_source(args.product, selected_entries))
     if args.test_output is not None:
         args.test_output.parent.mkdir(parents=True, exist_ok=True)
         write_if_changed(args.test_output, render_test_source(args.product, selected_entries))
-    write_report(
-        args.report,
-        args.product,
-        catalog,
-        stub_names,
-        product_stub_visibility,
-        visibility_overrides,
-    )
+    write_report(args.report, args.product, catalog, stub_names)
 
 
 if __name__ == "__main__":

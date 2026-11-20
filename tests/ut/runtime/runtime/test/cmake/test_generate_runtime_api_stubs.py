@@ -83,11 +83,9 @@ RUNTIME_API_STUB(rtUnsupported)
 RUNTIME_API_STUB(rtNoop)
 """)
         version, catalog = GENERATOR.parse_catalog(self.catalog_path)
-        product_version, names, stub_visibility, visibility_overrides = GENERATOR.parse_product_def(product_path)
+        product_version, names = GENERATOR.parse_product_def(product_path)
 
         self.assertEqual(version, product_version)
-        self.assertEqual(stub_visibility, "CATALOG")
-        self.assertFalse(visibility_overrides)
         source = GENERATOR.render_source("test", [catalog[name] for name in names])
         self.assertIn("return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;", source)
         self.assertNotIn("RT_LOG_OUTER_MSG", source)
@@ -139,7 +137,7 @@ RUNTIME_API_STUB(rtNoop)
         name = "rtModelTaskCopyArgsDeviceBuffer"
         self.assertTrue(name in catalog, "missing kernel args Copy API")
         for product in ("tiny", "arch5162"):
-            _, names, _, _ = GENERATOR.parse_product_def(
+            _, names = GENERATOR.parse_product_def(
                 REPO_ROOT / f"src/runtime/cmake/{product}_unsupported_runtime_api.def"
             )
             self.assertIn(name, names)
@@ -148,34 +146,20 @@ RUNTIME_API_STUB(rtNoop)
             self.assertIn("size_t* size", source)
             self.assertIn("return ACL_ERROR_RT_FEATURE_NOT_SUPPORT;", source)
 
-    def test_device_flags_stub_registration_matches_product_visibility(self):
+    def test_device_flags_have_exported_unsupported_stubs(self):
         _, catalog = GENERATOR.parse_catalog(
             REPO_ROOT / "src/runtime/api/runtime_api_stub_catalog.def"
         )
-        # New APIs must be registered as FEATURE_NOT_SUPPORT stubs in both product
-        # defs. Effective visibility follows each product default: tiny keeps the
-        # catalog EXPORT, arch5162 hides the stub via its product-level HIDDEN.
-        product_defaults = {"tiny": "CATALOG", "arch5162": "HIDDEN"}
-        for product, stub_visibility in product_defaults.items():
-            _, names, parsed_visibility, visibility_overrides = GENERATOR.parse_product_def(
+        for product in ("tiny", "arch5162"):
+            _, names = GENERATOR.parse_product_def(
                 REPO_ROOT / f"src/runtime/cmake/{product}_unsupported_runtime_api.def"
             )
-            self.assertEqual(parsed_visibility, stub_visibility)
             for name in ("rtSetDeviceFlags", "rtGetDeviceFlags"):
                 with self.subTest(product=product, api=name):
                     self.assertIn(name, names)
                     self.assertIn(name, catalog)
                     self.assertEqual(catalog[name].policy, "FEATURE_NOT_SUPPORT")
                     self.assertEqual(catalog[name].visibility, "EXPORT")
-                    self.assertNotIn(name, visibility_overrides)
-                    self.assertEqual(
-                        GENERATOR.resolve_stub_visibility(
-                            catalog[name],
-                            parsed_visibility,
-                            visibility_overrides.get(name),
-                        ),
-                        "HIDDEN" if product == "arch5162" else "EXPORT",
-                    )
 
     def test_product_stubs_do_not_report_errmsg(self):
         catalog_path = REPO_ROOT / "src/runtime/api/runtime_api_stub_catalog.def"
@@ -185,15 +169,8 @@ RUNTIME_API_STUB(rtNoop)
                 REPO_ROOT
                 / f"src/runtime/cmake/{product}_unsupported_runtime_api.def"
             )
-            _, stub_names, stub_visibility, visibility_overrides = (
-                GENERATOR.parse_product_def(product_path)
-            )
-            source = GENERATOR.render_source(
-                product,
-                [catalog[name] for name in stub_names],
-                stub_visibility,
-                visibility_overrides,
-            )
+            _, stub_names = GENERATOR.parse_product_def(product_path)
+            source = GENERATOR.render_source(product, [catalog[name] for name in stub_names])
             self.assertNotIn("RT_LOG_OUTER_MSG", source)
             self.assertNotIn("ErrorCode::", source)
             self.assertEqual(
@@ -205,47 +182,9 @@ RUNTIME_API_STUB(rtNoop)
         catalog_path = REPO_ROOT / "src/runtime/api/runtime_api_stub_catalog.def"
         product_path = REPO_ROOT / "src/runtime/cmake/arch5162_unsupported_runtime_api.def"
         catalog_version, catalog = GENERATOR.parse_catalog(catalog_path)
-        product_version, names, stub_visibility, visibility_overrides = GENERATOR.parse_product_def(product_path)
+        product_version, names = GENERATOR.parse_product_def(product_path)
 
         self.assertEqual(catalog_version, product_version)
-        self.assertEqual(stub_visibility, "HIDDEN")
-        self.assertEqual(
-            visibility_overrides,
-            {
-                "rtCpuKernelLaunchWithFlag": "EXPORT",
-                "rtEschedSubmitEventSync": "EXPORT",
-                "rtFreeHost": "EXPORT",
-                "rtGetDeviceCount": "EXPORT",
-                "rtGetDeviceIDs": "EXPORT",
-                "rtGetDeviceStatus": "EXPORT",
-                "rtGetRunMode": "EXPORT",
-                "rtMallocHost": "EXPORT",
-                "rtMbufAlloc": "EXPORT",
-                "rtMbufAllocEx": "EXPORT",
-                "rtMbufFree": "EXPORT",
-                "rtMbufGetBuffAddr": "EXPORT",
-                "rtMbufInit": "EXPORT",
-                "rtMemGetInfoByType": "EXPORT",
-                "rtMemGrpAddProc": "EXPORT",
-                "rtMemGrpAttach": "EXPORT",
-                "rtMemGrpCreate": "EXPORT",
-                "rtMemGrpQuery": "EXPORT",
-                "rtMemQueueAttach": "EXPORT",
-                "rtMemQueueCreate": "EXPORT",
-                "rtMemQueueDeQueue": "EXPORT",
-                "rtMemQueueDeQueueBuff": "EXPORT",
-                "rtMemQueueDestroy": "EXPORT",
-                "rtMemQueueEnQueue": "EXPORT",
-                "rtMemQueueEnQueueBuff": "EXPORT",
-                "rtMemQueueGrant": "EXPORT",
-                "rtMemQueueInit": "EXPORT",
-                "rtMemQueueInitQS": "EXPORT",
-                "rtMemQueuePeek": "EXPORT",
-                "rtMemQueueQueryInfo": "EXPORT",
-                "rtMemQueueReset": "EXPORT",
-                "rtQueryDevPid": "EXPORT",
-            },
-        )
         self.assertFalse(set(names) - set(catalog))
         self.assertEqual(names, sorted(names))
         self.assertEqual(len(catalog), 805)
@@ -344,14 +283,14 @@ RUNTIME_API_STUB(rtNoop)
         self.assertEqual(entry.policy, "FEATURE_NOT_SUPPORT")
         for product in ("tiny", "arch5162"):
             with self.subTest(product=product):
-                _, names, _, _ = GENERATOR.parse_product_def(
+                _, names = GENERATOR.parse_product_def(
                     REPO_ROOT / f"src/runtime/cmake/{product}_unsupported_runtime_api.def"
                 )
                 self.assertIn(entry.name, names)
 
     def test_arch5162_acl_tests_reference_product_stubs(self):
         product_path = REPO_ROOT / "src/runtime/cmake/arch5162_unsupported_runtime_api.def"
-        _, runtime_stub_names, _, _ = GENERATOR.parse_product_def(product_path)
+        _, runtime_stub_names = GENERATOR.parse_product_def(product_path)
         runtime_stub_set = set(runtime_stub_names)
 
         acl_def_path = (
@@ -388,81 +327,6 @@ RUNTIME_API_STUB(rtUnsupported)
 RUNTIME_API_STUB(rtUnsupported)
 """)
         with self.assertRaisesRegex(ValueError, "duplicate stub APIs"):
-            GENERATOR.parse_product_def(product_path)
-
-    def test_hides_product_stubs_and_reports_effective_visibility(self):
-        product_path = self.write_product("""\
-RUNTIME_API_CATALOG_VERSION(1)
-RUNTIME_API_STUB_VISIBILITY(HIDDEN)
-RUNTIME_API_STUB(rtUnsupported, EXPORT)
-RUNTIME_API_STUB(rtNoop)
-""")
-        _, catalog = GENERATOR.parse_catalog(self.catalog_path)
-        _, names, stub_visibility, visibility_overrides = GENERATOR.parse_product_def(product_path)
-
-        self.assertEqual(stub_visibility, "HIDDEN")
-        source = GENERATOR.render_source(
-            "test", [catalog[name] for name in names], stub_visibility, visibility_overrides
-        )
-        self.assertEqual(source.count("VISIBILITY_DEFAULT"), 1)
-        self.assertIn("VISIBILITY_DEFAULT\nrtError_t rtUnsupported", source)
-        self.assertNotIn("VISIBILITY_DEFAULT\nrtError_t rtNoop", source)
-
-        report_path = self.root / "provider.csv"
-        GENERATOR.write_report(
-            report_path, "test", catalog, names, stub_visibility, visibility_overrides
-        )
-        with report_path.open(encoding="utf-8", newline="") as report:
-            rows = {row["api"]: row for row in csv.DictReader(report)}
-        self.assertEqual(rows["rtUnsupported"]["stub_visibility"], "EXPORT")
-        self.assertEqual(rows["rtNoop"]["stub_visibility"], "HIDDEN")
-        self.assertEqual(rows["rtMemoryReserved"]["stub_visibility"], "")
-        self.assertEqual(rows["rtVoidNoop"]["stub_visibility"], "")
-
-    def test_rejects_export_override_for_catalog_hidden_api(self):
-        product_path = self.write_product("""\
-RUNTIME_API_CATALOG_VERSION(1)
-RUNTIME_API_STUB_VISIBILITY(HIDDEN)
-RUNTIME_API_STUB(rtVoidNoop, EXPORT)
-""")
-        result = self.run_generator(product_path)
-
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn("cannot export catalog-hidden API rtVoidNoop", result.stderr)
-
-    def test_rejects_unknown_api_visibility_override(self):
-        product_path = self.write_product("""\
-RUNTIME_API_CATALOG_VERSION(1)
-RUNTIME_API_STUB(rtUnsupported, UNKNOWN)
-""")
-        with self.assertRaisesRegex(ValueError, "unsupported stub visibility"):
-            GENERATOR.parse_product_def(product_path)
-
-    def test_rejects_product_stub_with_too_many_fields(self):
-        product_path = self.write_product("""\
-RUNTIME_API_CATALOG_VERSION(1)
-RUNTIME_API_STUB(rtUnsupported, EXPORT, HIDDEN)
-""")
-        with self.assertRaisesRegex(ValueError, "expects 1 or 2 fields"):
-            GENERATOR.parse_product_def(product_path)
-
-    def test_rejects_duplicate_product_stub_visibility(self):
-        product_path = self.write_product("""\
-RUNTIME_API_CATALOG_VERSION(1)
-RUNTIME_API_STUB_VISIBILITY(HIDDEN)
-RUNTIME_API_STUB_VISIBILITY(CATALOG)
-RUNTIME_API_STUB(rtUnsupported)
-""")
-        with self.assertRaisesRegex(ValueError, "at most one RUNTIME_API_STUB_VISIBILITY"):
-            GENERATOR.parse_product_def(product_path)
-
-    def test_rejects_unknown_product_stub_visibility(self):
-        product_path = self.write_product("""\
-RUNTIME_API_CATALOG_VERSION(1)
-RUNTIME_API_STUB_VISIBILITY(UNKNOWN)
-RUNTIME_API_STUB(rtUnsupported)
-""")
-        with self.assertRaisesRegex(ValueError, "unsupported product stub visibility"):
             GENERATOR.parse_product_def(product_path)
 
     def test_rejects_unknown_policy(self):
