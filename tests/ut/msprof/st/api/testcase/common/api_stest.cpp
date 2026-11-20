@@ -62,7 +62,7 @@ TEST_F(ApiTest, AclApiTest)
 
     auto ret = RunInferWithApi(aclProfPath, devId, aicoreMetrics, aicoreEvents, dataTypeConfig);
 
-    EXPECT_EQ(ret, ACL_ERROR_NONE);
+    EXPECT_EQ(ret, ACL_SUCCESS);
     // todo: check file under aclProfPath
 }
 

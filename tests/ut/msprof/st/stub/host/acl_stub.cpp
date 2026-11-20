@@ -235,7 +235,7 @@ static aclError InitMsprofByConfig(const char* configPath)
             (void)MsprofFinalize();
             return ACL_ERROR_INVALID_PARAM;
         }
-        return ACL_ERROR_NONE;
+        return ACL_SUCCESS;
     }
 
     std::ifstream in(configPath);
@@ -262,7 +262,7 @@ static aclError InitMsprofByConfig(const char* configPath)
             return static_cast<aclError>(-1);
         }
     }
-    return ACL_ERROR_NONE;
+    return ACL_SUCCESS;
 }
 
 static void RegisterAllCallbacks()
@@ -288,7 +288,7 @@ static void RegisterAllCallbacks()
 aclError aclInit(const char* configPath)
 {
     aclError ret = InitMsprofByConfig(configPath);
-    if (ret != ACL_ERROR_NONE) {
+    if (ret != ACL_SUCCESS) {
         return ret;
     }
 
@@ -303,7 +303,7 @@ aclError aclInit(const char* configPath)
         MSPROF_EVENT("Success to CreateStamp for msproftx");
     }
 #endif
-    return ACL_ERROR_NONE;
+    return ACL_SUCCESS;
 }
 
 aclError aclrtSetDevice(int32_t deviceId)
@@ -312,7 +312,7 @@ aclError aclrtSetDevice(int32_t deviceId)
         (void)MsprofFinalize();
         return ACL_ERROR_INVALID_PARAM;
     }
-    return ACL_ERROR_NONE;
+    return ACL_SUCCESS;
 }
 
 aclError aclrtResetDevice(int32_t deviceId)
@@ -321,7 +321,7 @@ aclError aclrtResetDevice(int32_t deviceId)
         (void)MsprofFinalize();
         return ACL_ERROR_INVALID_PARAM;
     }
-    return ACL_ERROR_NONE;
+    return ACL_SUCCESS;
 }
 
 aclError aclmdlLoadFromFile(const char* /* modelPath */, uint32_t* modelId)
@@ -331,7 +331,7 @@ aclError aclmdlLoadFromFile(const char* /* modelPath */, uint32_t* modelId)
     if (ret != 0) {
         return ACL_ERROR_INVALID_PARAM;
     }
-    return ACL_ERROR_NONE;
+    return ACL_SUCCESS;
 }
 
 aclError aclmdlUnload(uint32_t modelId)
@@ -340,7 +340,7 @@ aclError aclmdlUnload(uint32_t modelId)
     if (ret != 0) {
         return ACL_ERROR_INVALID_PARAM;
     }
-    return ACL_ERROR_NONE;
+    return ACL_SUCCESS;
 }
 
 aclError aclmdlExecute(uint32_t modelId, const aclmdlDataset* /* input */, aclmdlDataset* /* output */)
@@ -366,5 +366,5 @@ aclError aclFinalize()
         }
     }
 #endif
-    return ACL_ERROR_NONE;
+    return ACL_SUCCESS;
 }

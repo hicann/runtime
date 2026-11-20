@@ -332,7 +332,7 @@ bool MsprofStart::GetLowPowerEnabledForTest() const { return lowPowerEnabledForT
 int32_t MsprofStart::RunModelLifecycle()
 {
     uint32_t modelId = 0;
-    if (aclmdlLoadFromFile(nullptr, &modelId) != ACL_ERROR_NONE) {
+    if (aclmdlLoadFromFile(nullptr, &modelId) != ACL_SUCCESS) {
         MSPROF_LOGE("aclmdlLoadFromFile failed");
         return ACL_ERROR_INVALID_PARAM;
     }

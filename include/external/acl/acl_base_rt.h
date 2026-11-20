@@ -107,33 +107,45 @@ static const int ACL_ERROR_REPEAT_SUBSCRIBE = 100033;
  * @deprecated ACL_ERROR_STREAM_NOT_SUBSCRIBE is deprecated since 8.5.0, Will be removed after 2026/12/30, use
  *             ACL_ERROR_RT_STREAM_NO_CB_REG instead.
  */
+ACL_DEPRECATED_MESSAGE("ACL_ERROR_STREAM_NOT_SUBSCRIBE is deprecated since 8.5.0, Will be removed after 2026/12/30,"
+                       " use ACL_ERROR_RT_STREAM_NO_CB_REG instead.")
 static const int ACL_ERROR_STREAM_NOT_SUBSCRIBE = 100034;
 /**
  * @deprecated ACL_ERROR_THREAD_NOT_SUBSCRIBE is deprecated since 8.5.0, Will be removed after 2026/12/30, use
  *             ACL_ERROR_RT_THREAD_SUBSCRIBE instead.
  */
+ACL_DEPRECATED_MESSAGE("ACL_ERROR_THREAD_NOT_SUBSCRIBE is deprecated since 8.5.0, Will be removed after 2026/12/30,"
+                       " use ACL_ERROR_RT_THREAD_SUBSCRIBE instead.")
 static const int ACL_ERROR_THREAD_NOT_SUBSCRIBE = 100035;
 /**
  * @deprecated ACL_ERROR_WAIT_CALLBACK_TIMEOUT is deprecated since 8.5.0, Will be removed after 2026/12/30, use
  *             ACL_ERROR_RT_REPORT_TIMEOUT instead.
  */
+ACL_DEPRECATED_MESSAGE("ACL_ERROR_WAIT_CALLBACK_TIMEOUT is deprecated since 8.5.0, Will be removed after 2026/12/30,"
+                       " use ACL_ERROR_RT_REPORT_TIMEOUT instead.")
 static const int ACL_ERROR_WAIT_CALLBACK_TIMEOUT = 100036;
 static const int ACL_ERROR_REPEAT_FINALIZE = 100037;
 /**
  * @deprecated ACL_ERROR_NOT_STATIC_AIPP is deprecated since 8.5.0, Will be removed after 2026/12/30, use
  *             ACL_ERROR_GE_AIPP_NOT_EXIST instead.
  */
+ACL_DEPRECATED_MESSAGE("ACL_ERROR_NOT_STATIC_AIPP is deprecated since 8.5.0, Will be removed after 2026/12/30,"
+                       " use ACL_ERROR_GE_AIPP_NOT_EXIST instead.")
 static const int ACL_ERROR_NOT_STATIC_AIPP = 100038;
 static const int ACL_ERROR_COMPILING_STUB_MODE = 100039;
 /**
  * @deprecated ACL_ERROR_GROUP_NOT_SET is deprecated since 8.5.0, Will be removed after 2026/12/30, use
  *             ACL_ERROR_RT_GROUP_NOT_SET instead.
  */
+ACL_DEPRECATED_MESSAGE("ACL_ERROR_GROUP_NOT_SET is deprecated since 8.5.0, Will be removed after 2026/12/30,"
+                       " use ACL_ERROR_RT_GROUP_NOT_SET instead.")
 static const int ACL_ERROR_GROUP_NOT_SET = 100040;
 /**
  * @deprecated ACL_ERROR_GROUP_NOT_CREATE is deprecated since 8.5.0, Will be removed after 2026/12/30, use
  *             ACL_ERROR_RT_GROUP_NOT_CREATE instead.
  */
+ACL_DEPRECATED_MESSAGE("ACL_ERROR_GROUP_NOT_CREATE is deprecated since 8.5.0, Will be removed after 2026/12/30,"
+                       " use ACL_ERROR_RT_GROUP_NOT_CREATE instead.")
 static const int ACL_ERROR_GROUP_NOT_CREATE = 100041;
 static const int ACL_ERROR_PROF_ALREADY_RUN = 100042;
 static const int ACL_ERROR_PROF_NOT_RUN = 100043;
@@ -154,6 +166,8 @@ static const int ACL_ERROR_API_NOT_SUPPORT = 200001;
  * @deprecated ACL_ERROR_INVALID_DEVICE is deprecated since 8.5.0, Will be removed after 2026/12/30, use
  *             ACL_ERROR_RT_INVALID_DEVICEID instead.
  */
+ACL_DEPRECATED_MESSAGE("ACL_ERROR_INVALID_DEVICE is deprecated since 8.5.0, Will be removed after 2026/12/30,"
+                       " use ACL_ERROR_RT_INVALID_DEVICEID instead.")
 static const int ACL_ERROR_INVALID_DEVICE = 200002;
 static const int ACL_ERROR_MEMORY_ADDRESS_UNALIGNED = 200003;
 static const int ACL_ERROR_RESOURCE_NOT_MATCH = 200004;
@@ -239,7 +253,8 @@ typedef enum {
     ACL_OPT_DETERMINISTIC = 0, // value: 0:disable, 1:deterministic, 2:strong consistency, 3:batch consistency
     ACL_OPT_ENABLE_DEBUG_KERNEL = 1,
     ACL_OPT_STRONG_CONSISTENCY ACL_DEPRECATED_MESSAGE(
-        "ACL_OPT_STRONG_CONSISTENCY is deprecated, use ACL_OPT_DETERMINISTIC with value 2 instead") = 2,
+        "ACL_OPT_STRONG_CONSISTENCY is deprecated since 9.2.0, Will be removed after 2027/9/30,"
+        " use ACL_OPT_DETERMINISTIC with value 2 instead.") = 2,
     ACL_OPT_ENABLE_KERNEL_EARLY_START = 3
 } aclSysParamOpt;
 
@@ -363,7 +378,8 @@ ACL_FUNC_VISIBILITY void* aclGetDataBufferAddr(const aclDataBuffer* dataBuffer);
  * @deprecated aclGetDataBufferSize is deprecated since 8.5.0, Will be removed after 2026/12/30, use
  *             aclGetDataBufferSizeV2 instead.
  */
-ACL_DEPRECATED_MESSAGE("aclGetDataBufferSize is deprecated, use aclGetDataBufferSizeV2 instead")
+ACL_DEPRECATED_MESSAGE("aclGetDataBufferSize is deprecated since 8.5.0, Will be removed after 2026/12/30,"
+                       " use aclGetDataBufferSizeV2 instead.")
 ACL_FUNC_VISIBILITY uint32_t aclGetDataBufferSize(const aclDataBuffer* dataBuffer);
 
 /**

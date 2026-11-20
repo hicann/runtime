@@ -49,7 +49,7 @@ protected:
         aclInit(nullptr);
         aclrtSetDevice(0);
         MOCKER_CPP(&AicpuReportHdc::Init).stubs().will(returnValue(-1));
-        EXPECT_EQ(ACL_ERROR_NONE, aclprofInit(profDir_.c_str(), profDir_.size()));
+        EXPECT_EQ(ACL_SUCCESS, aclprofInit(profDir_.c_str(), profDir_.size()));
     }
 
     void TearDown() override

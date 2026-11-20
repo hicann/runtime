@@ -147,7 +147,6 @@ TEST_F(UTEST_ACL_compatibility_const_check, acl)
 
 TEST_F(UTEST_ACL_compatibility_const_check, acl_base)
 {
-    EXPECT_EQ(ACL_ERROR_NONE, 0);
     EXPECT_EQ(ACL_SUCCESS, 0);
 
     EXPECT_EQ(ACL_ERROR_INVALID_PARAM, 100000);

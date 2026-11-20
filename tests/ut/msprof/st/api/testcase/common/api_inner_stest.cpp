@@ -74,7 +74,7 @@ TEST_F(ApiTest, SubscribeModelNotLoaded)
     auto ret = aclprofModelSubscribe(modelId, config);
     EXPECT_EQ(ret, ACL_ERROR_INVALID_MODEL_ID);
 
-    EXPECT_EQ(aclprofDestroySubscribeConfig(config), ACL_ERROR_NONE);
+    EXPECT_EQ(aclprofDestroySubscribeConfig(config), ACL_SUCCESS);
     aclFinalize();
 }
 
@@ -92,7 +92,7 @@ TEST_F(ApiTest, UnsubscribeModelNotSubscribed)
     EXPECT_EQ(aclInit(nullptr), 0);
     uint32_t modelId = 1;
     auto err = aclmdlLoadFromFile(nullptr, &modelId);
-    if (err != ACL_ERROR_NONE) {
+    if (err != ACL_SUCCESS) {
         MSPROF_LOGE("aclmdlLoadFromFile failed");
     }
     auto ret = aclprofModelUnSubscribe(modelId);
@@ -108,19 +108,19 @@ TEST_F(ApiTest, TestAclUnmatchedDataConfig)
     uint32_t devId = 0;
     aclrtSetDevice(devId);
     std::string aclProfPath = "api_test_output";
-    EXPECT_EQ(aclprofInit(aclProfPath.c_str(), aclProfPath.size()), ACL_ERROR_NONE);
+    EXPECT_EQ(aclprofInit(aclProfPath.c_str(), aclProfPath.size()), ACL_SUCCESS);
     uint32_t deviceIdList[1] = {devId};
     uint64_t dataTypeConfig = ACL_PROF_ACL_API;
     auto config1 = aclprofCreateConfig(deviceIdList, 1, aicoreMetrics, aicoreEvents, dataTypeConfig);
     EXPECT_NE(config1, nullptr);
-    EXPECT_EQ(aclprofStart(config1), ACL_ERROR_NONE);
+    EXPECT_EQ(aclprofStart(config1), ACL_SUCCESS);
     dataTypeConfig = 0;
     auto config2 = aclprofCreateConfig(deviceIdList, 1, aicoreMetrics, aicoreEvents, dataTypeConfig);
     EXPECT_NE(config2, nullptr);
     EXPECT_EQ(aclprofStop(config2), ACL_ERROR_INVALID_PROFILING_CONFIG);
-    EXPECT_EQ(aclprofDestroyConfig(config1), ACL_ERROR_NONE);
-    EXPECT_EQ(aclprofDestroyConfig(config2), ACL_ERROR_NONE);
-    EXPECT_EQ(aclprofFinalize(), ACL_ERROR_NONE);
+    EXPECT_EQ(aclprofDestroyConfig(config1), ACL_SUCCESS);
+    EXPECT_EQ(aclprofDestroyConfig(config2), ACL_SUCCESS);
+    EXPECT_EQ(aclprofFinalize(), ACL_SUCCESS);
     aclFinalize();
 }
 
@@ -132,22 +132,22 @@ TEST_F(ApiTest, TestAclGraphUnmatchedDataConfig)
     uint32_t devId = 0;
     aclrtSetDevice(devId);
     std::string aclProfPath = "api_test_output";
-    EXPECT_EQ(aclprofInit(aclProfPath.c_str(), aclProfPath.size()), ACL_ERROR_NONE);
+    EXPECT_EQ(aclprofInit(aclProfPath.c_str(), aclProfPath.size()), ACL_SUCCESS);
     uint32_t deviceIdList[1] = {devId};
     uint64_t dataTypeConfig = ACL_PROF_ACL_API;
     auto config1 =
         aclgrphProfCreateConfig(deviceIdList, 1, (ge::ProfilingAicoreMetrics)aicoreMetrics, nullptr, dataTypeConfig);
     EXPECT_NE(config1, nullptr);
     uint32_t graphId = 0;
-    EXPECT_EQ(aclgrphProfStart(config1), ACL_ERROR_NONE);
+    EXPECT_EQ(aclgrphProfStart(config1), ACL_SUCCESS);
     dataTypeConfig = 0;
     auto config2 =
         aclgrphProfCreateConfig(deviceIdList, 1, (ge::ProfilingAicoreMetrics)aicoreMetrics, nullptr, dataTypeConfig);
     EXPECT_NE(config2, nullptr);
     EXPECT_EQ(aclgrphProfStop(config2), GE_PROF_FAILED);
-    EXPECT_EQ(aclgrphProfDestroyConfig(config1), ACL_ERROR_NONE);
-    EXPECT_EQ(aclgrphProfDestroyConfig(config2), ACL_ERROR_NONE);
-    EXPECT_EQ(aclprofFinalize(), ACL_ERROR_NONE);
+    EXPECT_EQ(aclgrphProfDestroyConfig(config1), ACL_SUCCESS);
+    EXPECT_EQ(aclgrphProfDestroyConfig(config2), ACL_SUCCESS);
+    EXPECT_EQ(aclprofFinalize(), ACL_SUCCESS);
     aclFinalize();
 }
 
@@ -164,11 +164,11 @@ TEST_F(ApiTest, TestUnmatchedDataConfig)
     uint32_t modelId1 = 0;
     DataMgr().SetModelId(0);
     auto err = aclmdlLoadFromFile(nullptr, &modelId1);
-    EXPECT_EQ(err, ACL_ERROR_NONE);
+    EXPECT_EQ(err, ACL_SUCCESS);
     err = aclprofModelSubscribe(modelId1, profSubscribeConfig);
-    EXPECT_EQ(err, ACL_ERROR_NONE);
+    EXPECT_EQ(err, ACL_SUCCESS);
     err = aclprofDestroySubscribeConfig(profSubscribeConfig);
-    EXPECT_EQ(err, ACL_ERROR_NONE);
+    EXPECT_EQ(err, ACL_SUCCESS);
 
     aicoreMetrics = ACL_AICORE_PIPE_UTILIZATION;
     profSubscribeConfig = aclprofCreateSubscribeConfig(opTimeSwitch, aicoreMetrics, reinterpret_cast<void*>(&fd[1]));
@@ -176,16 +176,16 @@ TEST_F(ApiTest, TestUnmatchedDataConfig)
     uint32_t modelId2 = 1;
     DataMgr().SetModelId(1);
     err = aclmdlLoadFromFile(nullptr, &modelId2);
-    EXPECT_EQ(err, ACL_ERROR_NONE);
+    EXPECT_EQ(err, ACL_SUCCESS);
     err = aclprofModelSubscribe(modelId2, profSubscribeConfig);
     EXPECT_EQ(err, ACL_ERROR_INVALID_PROFILING_CONFIG);
     err = aclprofDestroySubscribeConfig(profSubscribeConfig);
-    EXPECT_EQ(err, ACL_ERROR_NONE);
+    EXPECT_EQ(err, ACL_SUCCESS);
 
     err = aclprofModelUnSubscribe(modelId1);
-    EXPECT_EQ(err, ACL_ERROR_NONE);
+    EXPECT_EQ(err, ACL_SUCCESS);
     err = aclmdlUnload(modelId1);
-    EXPECT_EQ(err, ACL_ERROR_NONE);
+    EXPECT_EQ(err, ACL_SUCCESS);
     err = aclmdlUnload(modelId2);
-    EXPECT_EQ(err, ACL_ERROR_NONE);
+    EXPECT_EQ(err, ACL_SUCCESS);
 }

@@ -577,7 +577,8 @@ typedef struct dim3 {
 typedef enum aclrtLaunchKernelAttrId {
     ACL_RT_LAUNCH_KERNEL_ATTR_SCHEM_MODE = 1,
     ACL_RT_LAUNCH_KERNEL_ATTR_LOCAL_MEMORY_SIZE ACL_DEPRECATED_MESSAGE(
-        "Use ACL_RT_LAUNCH_KERNEL_ATTR_DYN_UBUF_SIZE instead") =
+        "ACL_RT_LAUNCH_KERNEL_ATTR_LOCAL_MEMORY_SIZE is deprecated since 9.0.0, Will be removed after 2027/3/30,"
+        " use ACL_RT_LAUNCH_KERNEL_ATTR_DYN_UBUF_SIZE instead.") =
         2, // DEPRECATED: Use ACL_RT_LAUNCH_KERNEL_ATTR_DYN_UBUF_SIZE
     ACL_RT_LAUNCH_KERNEL_ATTR_DYN_UBUF_SIZE = 2,
     ACL_RT_LAUNCH_KERNEL_ATTR_ENGINE_TYPE = 3,
@@ -601,7 +602,9 @@ typedef struct {
 
 typedef union aclrtLaunchKernelAttrValue {
     uint8_t schemMode;
-    ACL_DEPRECATED_MESSAGE("Use dynUbufSize instead")
+    ACL_DEPRECATED_MESSAGE(
+        "aclrtLaunchKernelAttrValue.localMemorySize is deprecated since 9.0.0, Will be removed after 2027/3/30,"
+        " use aclrtLaunchKernelAttrValue.dynUBufSize instead.")
     uint32_t localMemorySize; // DEPRECATED: Use dynUBufSize
     uint32_t dynUBufSize;
     aclrtEngineType engineType;
@@ -858,7 +861,9 @@ typedef enum {
     ACL_DEV_ATTR_VECTOR_CORE_NUM = 201,            // number of Vector Cores
     ACL_DEV_ATTR_WARP_SIZE = 202,                  // number of threads in a Warp
     ACL_DEV_ATTR_MAX_THREAD_PER_VECTOR_CORE = 203, // maximum number of concurrent threads per Vector Core
-    ACL_DEV_ATTR_LOCAL_MEM_PER_VECTOR_CORE ACL_DEPRECATED_MESSAGE("Use ACL_DEV_ATTR_UBUF_PER_VECTOR_CORE instead") =
+    ACL_DEV_ATTR_LOCAL_MEM_PER_VECTOR_CORE ACL_DEPRECATED_MESSAGE(
+        "ACL_DEV_ATTR_LOCAL_MEM_PER_VECTOR_CORE is deprecated since 9.0.0, Will be removed after 2027/3/30,"
+        " use ACL_DEV_ATTR_UBUF_PER_VECTOR_CORE instead.") =
         204,                                       // DEPRECATED: Use ACL_DEV_ATTR_UBUF_PER_VECTOR_CORE
     ACL_DEV_ATTR_UBUF_PER_VECTOR_CORE = 204,       // maximum available local memory per Vector Core, in Bytes
     ACL_DEV_ATTR_MAX_GRID_DIM_X = 205,
@@ -1213,7 +1218,9 @@ struct MemAttrMapping {
 typedef enum aclrtAtomicOperationCapability {
     ACL_RT_ATOMIC_CAPABILITY_SIGNED = 1U << 0,
     ACL_RT_ATOMIC_CAPABILITY_UNSIGNED = 1U << 1,
-    ACL_RT_ATOMIC_CAPABILITY_REDUCATION = 1U << 2,  // DEPRECATED: Use ACL_RT_ATOMIC_CAPABILITY_REDUCTION
+    ACL_RT_ATOMIC_CAPABILITY_REDUCATION ACL_DEPRECATED_MESSAGE(
+        "ACL_RT_ATOMIC_CAPABILITY_REDUCATION is deprecated since 9.2.0, Will be removed after 2027/9/30,"
+        " use ACL_RT_ATOMIC_CAPABILITY_REDUCTION instead.") = 1U << 2,
     ACL_RT_ATOMIC_CAPABILITY_REDUCTION = 1U << 2,
     ACL_RT_ATOMIC_CAPABILITY_SCALAR8 = 1U << 3,
     ACL_RT_ATOMIC_CAPABILITY_SCALAR16 = 1U << 4,
@@ -1321,7 +1328,8 @@ ACL_FUNC_VISIBILITY const char* aclGetRecentErrMsg();
  * @deprecated aclsysGetCANNVersion is deprecated since 8.5.0, Will be removed after 2026/12/30, use
  *             aclsysGetVersionStr or aclsysGetVersionNum instead.
  */
-ACL_DEPRECATED_MESSAGE("aclsysGetCANNVersion is deprecated, use aclsysGetVersionStr and aclsysGetVersionNum instead")
+ACL_DEPRECATED_MESSAGE("aclsysGetCANNVersion is deprecated since 8.5.0, Will be removed after 2026/12/30,"
+                       " use aclsysGetVersionStr or aclsysGetVersionNum instead.")
 ACL_FUNC_VISIBILITY aclError aclsysGetCANNVersion(aclCANNPackageName name, aclCANNPackageVersion* version);
 
 /**
@@ -1377,7 +1385,9 @@ ACL_FUNC_VISIBILITY aclError aclrtGetLastError(aclrtLastErrLevel level);
  * @deprecated aclrtSetExceptionInfoCallback is deprecated since 9.2.0, Will be removed after 2027/9/30, use
  *             aclrtExceptionInfoCallbackRegister and aclrtExceptionInfoCallbackUnregister instead.
  */
-ACL_DEPRECATED_MESSAGE("aclrtSetExceptionInfoCallback is deprecated, use aclrtExceptionInfoCallbackRegister and aclrtExceptionInfoCallbackUnregister instead")
+ACL_DEPRECATED_MESSAGE(
+    "aclrtSetExceptionInfoCallback is deprecated since 9.2.0, Will be removed after 2027/9/30,"
+    " use aclrtExceptionInfoCallbackRegister and aclrtExceptionInfoCallbackUnregister instead.")
 ACL_FUNC_VISIBILITY aclError aclrtSetExceptionInfoCallback(aclrtExceptionInfoCallback callback);
 
 /**
@@ -2013,7 +2023,8 @@ ACL_FUNC_VISIBILITY aclError aclrtResetEvent(aclrtEvent event, aclrtStream strea
  * @deprecated aclrtQueryEvent is deprecated since 8.5.0, Will be removed after 2026/12/30, use
  *             aclrtQueryEventStatus instead.
  */
-ACL_DEPRECATED_MESSAGE("aclrtQueryEvent is deprecated, use aclrtQueryEventStatus instead")
+ACL_DEPRECATED_MESSAGE("aclrtQueryEvent is deprecated since 8.5.0, Will be removed after 2026/12/30,"
+                       " use aclrtQueryEventStatus instead.")
 ACL_FUNC_VISIBILITY aclError aclrtQueryEvent(aclrtEvent event, aclrtEventStatus* status);
 
 /**
@@ -2622,7 +2633,8 @@ ACL_FUNC_VISIBILITY aclError aclrtMemsetD32Async(
  * @deprecated aclrtMemcpyAsyncWithCondition is deprecated since 9.2.0, Will be removed after 2027/9/30, use
  *             aclrtMemcpyAsync instead.
  */
-ACL_DEPRECATED_MESSAGE("aclrtMemcpyAsyncWithCondition is deprecated, use aclrtMemcpyAsync instead")
+ACL_DEPRECATED_MESSAGE("aclrtMemcpyAsyncWithCondition is deprecated since 9.2.0, Will be removed after 2027/9/30,"
+                       " use aclrtMemcpyAsync instead.")
 ACL_FUNC_VISIBILITY aclError aclrtMemcpyAsyncWithCondition(
     void* dst, size_t destMax, const void* src, size_t count, aclrtMemcpyKind kind, aclrtStream stream);
 
@@ -5141,8 +5153,8 @@ ACL_FUNC_VISIBILITY aclError aclmdlRICaptureEnd(aclrtStream stream, aclmdlRI* mo
  * @deprecated aclmdlRIDebugPrint is deprecated since 8.5.0, Will be removed after 2026/12/30, use
  *             aclmdlRIDebugJsonPrint instead.
  */
-ACL_DEPRECATED_MESSAGE("aclmdlRIDebugPrint is deprecated since 8.5.0, Will be removed after 2026/12/30, use "
-                       "aclmdlRIDebugJsonPrint instead")
+ACL_DEPRECATED_MESSAGE("aclmdlRIDebugPrint is deprecated since 8.5.0, Will be removed after 2026/12/30,"
+                       " use aclmdlRIDebugJsonPrint instead.")
 ACL_FUNC_VISIBILITY aclError aclmdlRIDebugPrint(aclmdlRI modelRI);
 
 /**
@@ -5449,8 +5461,8 @@ ACL_FUNC_VISIBILITY aclError aclmdlRITaskGetSeqId(aclmdlRITask task, uint32_t* i
  * @deprecated aclrtGetVersion is deprecated since 9.2.0, Will be removed after 2027/9/30, use
  *             aclsysGetVersionNum or aclsysGetVersionStr instead.
  */
-ACL_DEPRECATED_MESSAGE("aclrtGetVersion is deprecated since 9.2.0, Will be removed after 2027/9/30, use"
-                       "aclsysGetVersionNum or aclsysGetVersionStr instead")
+ACL_DEPRECATED_MESSAGE("aclrtGetVersion is deprecated since 9.2.0, Will be removed after 2027/9/30,"
+                       " use aclsysGetVersionNum or aclsysGetVersionStr instead.")
 ACL_FUNC_VISIBILITY aclError aclrtGetVersion(int32_t* majorVersion, int32_t* minorVersion, int32_t* patchVersion);
 
 /**

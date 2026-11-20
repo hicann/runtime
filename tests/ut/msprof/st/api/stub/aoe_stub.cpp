@@ -77,14 +77,14 @@ bool GetModelOpInfo(const void* data, const uint32_t len, std::set<RunnerOpInfo>
     char opNameBuffer[OP_NAME_LENGTH] = {0};
     char opTypeBuffer[OP_TYPE_LENGTH] = {0};
     auto err = aclprofGetOpNum(data, len, &opNumber);
-    if (err != ACL_ERROR_NONE) {
+    if (err != ACL_SUCCESS) {
         MSPROF_LOGE("Get op number failed, err : %d", err);
         return false;
     }
     MSPROF_LOGD("Get op num : %u", opNumber);
     for (uint32_t i = 0; i < opNumber; i++) {
         err = aclprofGetOpName(data, len, i, opNameBuffer, OP_NAME_LENGTH);
-        if (err != ACL_ERROR_NONE) {
+        if (err != ACL_SUCCESS) {
             MSPROF_LOGE("Profiling data of op name parser exception, err %d", err);
             return false;
         }
@@ -95,7 +95,7 @@ bool GetModelOpInfo(const void* data, const uint32_t len, std::set<RunnerOpInfo>
             MSPROF_LOGE("Call memset_s failed, ret : %d", ret);
         }
         err = aclprofGetOpType(data, len, i, opTypeBuffer, OP_TYPE_LENGTH);
-        if (err != ACL_ERROR_NONE) {
+        if (err != ACL_SUCCESS) {
             MSPROF_LOGE("Profiling data of op type parser exception, err %d", err);
             return false;
         }
@@ -132,7 +132,7 @@ bool ReadProfilingData(
     int32_t ret;
     int64_t dataLen;
     uint64_t bufferSize = 0;
-    if (aclprofGetOpDescSize(&bufferSize) != ACL_ERROR_NONE) {
+    if (aclprofGetOpDescSize(&bufferSize) != ACL_SUCCESS) {
         MSPROF_LOGE("Get op desc size failed, errno : %d.", errno);
         return false;
     }
@@ -227,37 +227,37 @@ bool RunModel(int32_t fd)
     uint32_t modelId = 0;
     // load model
     auto err = aclmdlLoadFromFile(nullptr, &modelId);
-    if (err != ACL_ERROR_NONE) {
+    if (err != ACL_SUCCESS) {
         MSPROF_LOGE("aclmdlLoadFromFile failed");
     }
     // subscribe model
     EnsureProfCannPluginInited();
     Msprofiler::AclApi::ProfRegisterTransport(Msprofiler::AclApi::CreateParserTransport);
     aclprofModelSubscribe(modelId, profSubscribeConfig);
-    if (err != ACL_ERROR_NONE) {
+    if (err != ACL_SUCCESS) {
         MSPROF_LOGE("Subscribe model failed");
         return false;
     }
     // run model
     err = aclmdlExecute(modelId, nullptr, nullptr);
-    if (err != ACL_ERROR_NONE) {
+    if (err != ACL_SUCCESS) {
         MSPROF_LOGE("Execute model failed");
         return false;
     }
 
     // unsubscribe model
     err = aclprofModelUnSubscribe(modelId);
-    if (err != ACL_ERROR_NONE) {
+    if (err != ACL_SUCCESS) {
         MSPROF_LOGE("UnSubscribe model failed");
         return false;
     }
     err = aclprofDestroySubscribeConfig(profSubscribeConfig);
-    if (err != ACL_ERROR_NONE) {
+    if (err != ACL_SUCCESS) {
         MSPROF_LOGE("Destroy Subscribe config failed");
         return false;
     }
     err = aclmdlUnload(modelId);
-    if (err != ACL_ERROR_NONE) {
+    if (err != ACL_SUCCESS) {
         MSPROF_LOGE("aclmdlLoadFromFile failed");
         return false;
     }
@@ -281,25 +281,25 @@ bool RunOp(int32_t fd)
     EnsureProfCannPluginInited();
     Msprofiler::AclApi::ProfRegisterTransport(Msprofiler::AclApi::CreateParserTransport);
     auto err = ProfOpSubscribe(devId, profSubscribeConfig);
-    if (err != ACL_ERROR_NONE) {
+    if (err != ACL_SUCCESS) {
         MSPROF_LOGE("Subscribe stream failed");
         return false;
     }
     // run op
     err = aclnnGlu();
-    if (err != ACL_ERROR_NONE) {
+    if (err != ACL_SUCCESS) {
         MSPROF_LOGE("Execute model failed");
         return false;
     }
 
     // unsubscribe op
     err = ProfOpUnSubscribe(devId);
-    if (err != ACL_ERROR_NONE) {
+    if (err != ACL_SUCCESS) {
         MSPROF_LOGE("UnSubscribe stream failed");
         return false;
     }
     err = aclprofDestroySubscribeConfig(profSubscribeConfig);
-    if (err != ACL_ERROR_NONE) {
+    if (err != ACL_SUCCESS) {
         MSPROF_LOGE("Destroy Subscribe config failed");
         return false;
     }
@@ -339,7 +339,7 @@ aclError RunInferWithApi(
     aclInit(nullptr);
     aclrtSetDevice(devId);
     auto ret = aclprofInit(aclProfPath.c_str(), aclProfPath.size());
-    if (ret != ACL_ERROR_NONE) {
+    if (ret != ACL_SUCCESS) {
         MSPROF_LOGE("aclprofInit failed");
         return ret;
     }
@@ -350,31 +350,31 @@ aclError RunInferWithApi(
         return ACL_ERROR_INVALID_PARAM;
     }
     ret = aclprofStart(config);
-    if (ret != ACL_ERROR_NONE) {
+    if (ret != ACL_SUCCESS) {
         MSPROF_LOGE("aclprofStart failed");
         return ret;
     }
     uint32_t modelId = 0;
     ret = aclmdlExecute(modelId, nullptr, nullptr);
-    if (ret != ACL_ERROR_NONE) {
+    if (ret != ACL_SUCCESS) {
         MSPROF_LOGE("aclmdlExecute failed");
         return ret;
     }
     ret = aclprofStop(config);
-    if (ret != ACL_ERROR_NONE) {
+    if (ret != ACL_SUCCESS) {
         MSPROF_LOGE("aclprofStop failed");
         return ret;
     }
     ret = aclprofDestroyConfig(config);
-    if (ret != ACL_ERROR_NONE) {
+    if (ret != ACL_SUCCESS) {
         MSPROF_LOGE("aclprofDestroyConfig failed");
         return ret;
     }
     ret = aclprofFinalize();
-    if (ret != ACL_ERROR_NONE) {
+    if (ret != ACL_SUCCESS) {
         MSPROF_LOGE("aclprofFinalize failed");
         return ret;
     }
     aclFinalize();
-    return ACL_ERROR_NONE;
+    return ACL_SUCCESS;
 }

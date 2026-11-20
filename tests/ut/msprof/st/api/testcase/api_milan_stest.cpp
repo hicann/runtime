@@ -84,7 +84,7 @@ TEST_F(ApiMilanTest, SubscribeOpGetThreadIdFailed)
     auto ret = ProfOpSubscribe(devId, config);
     EXPECT_EQ(ret, ACL_ERROR_PROFILING_FAILURE);
 
-    EXPECT_EQ(aclprofDestroySubscribeConfig(config), ACL_ERROR_NONE);
+    EXPECT_EQ(aclprofDestroySubscribeConfig(config), ACL_SUCCESS);
     aclFinalize();
 }
 

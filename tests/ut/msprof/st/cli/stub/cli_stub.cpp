@@ -220,7 +220,7 @@ int32_t Application(int32_t argc, char* argv[], int32_t envc, char* envp[])
 
     uint32_t modelId = 0;
     // load model and report host data
-    if (aclmdlLoadFromFile(nullptr, &modelId) != ACL_ERROR_NONE) {
+    if (aclmdlLoadFromFile(nullptr, &modelId) != ACL_SUCCESS) {
         MSPROF_LOGE("aclmdlLoadFromFile failed");
         return ACL_ERROR_INVALID_PARAM;
     }
@@ -351,19 +351,19 @@ bool executeStub()
     uint32_t modelId = 0;
     // load model
     auto err = aclmdlLoadFromFile(nullptr, &modelId);
-    if (err != ACL_ERROR_NONE) {
+    if (err != ACL_SUCCESS) {
         MSPROF_LOGE("aclmdlLoadFromFile failed");
     }
 
     // run model
     err = aclmdlExecute(modelId, nullptr, nullptr);
-    if (err != ACL_ERROR_NONE) {
+    if (err != ACL_SUCCESS) {
         MSPROF_LOGE("Execute model failed");
         return false;
     }
 
     err = aclmdlUnload(modelId);
-    if (err != ACL_ERROR_NONE) {
+    if (err != ACL_SUCCESS) {
         MSPROF_LOGE("aclmdlLoadFromFile failed");
         return false;
     }

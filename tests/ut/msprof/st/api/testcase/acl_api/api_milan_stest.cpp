@@ -40,7 +40,7 @@ protected:
         ClearApiSingleton();
         aclInit(nullptr);
         aclrtSetDevice(0);
-        EXPECT_EQ(ACL_ERROR_NONE, aclprofInit(aclProfPath.c_str(), aclProfPath.size()));
+        EXPECT_EQ(ACL_SUCCESS, aclprofInit(aclProfPath.c_str(), aclProfPath.size()));
         randomCount++;
     }
     virtual void TearDown()

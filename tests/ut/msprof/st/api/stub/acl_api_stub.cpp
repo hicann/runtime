@@ -27,7 +27,7 @@ using namespace analysis::dvvp::common::utils;
 int32_t AclApiStart(aclprofConfig* config, uint64_t dataTypeConfig)
 {
     auto ret = aclprofStart(config);
-    if (ret != ACL_ERROR_NONE) {
+    if (ret != ACL_SUCCESS) {
         MSPROF_LOGE("aclprofStart failed");
         return ret;
     }
@@ -40,7 +40,7 @@ int32_t AclApiStart(aclprofConfig* config, uint64_t dataTypeConfig)
     }
 
     ret = aclmdlExecute(modelId, nullptr, nullptr);
-    if (ret != ACL_ERROR_NONE) {
+    if (ret != ACL_SUCCESS) {
         MSPROF_LOGE("aclmdlExecute failed");
         return ret;
     }
@@ -48,7 +48,7 @@ int32_t AclApiStart(aclprofConfig* config, uint64_t dataTypeConfig)
         usleep(100 * 1000); // sleep 100ms for aicpu
     }
     ret = aclprofStop(config);
-    if (ret != ACL_ERROR_NONE) {
+    if (ret != ACL_SUCCESS) {
         MSPROF_LOGE("aclprofStop failed");
         return ret;
     }
@@ -62,7 +62,7 @@ int32_t AclApiRepeatStart(aclprofConfig* config, uint64_t dataTypeConfig)
 {
     // first time
     auto ret = aclprofStart(config);
-    if (ret != ACL_ERROR_NONE) {
+    if (ret != ACL_SUCCESS) {
         MSPROF_LOGE("aclprofStart failed");
         return ret;
     }
@@ -75,7 +75,7 @@ int32_t AclApiRepeatStart(aclprofConfig* config, uint64_t dataTypeConfig)
     }
 
     ret = aclmdlExecute(modelId, nullptr, nullptr);
-    if (ret != ACL_ERROR_NONE) {
+    if (ret != ACL_SUCCESS) {
         MSPROF_LOGE("aclmdlExecute failed");
         return ret;
     }
@@ -83,18 +83,18 @@ int32_t AclApiRepeatStart(aclprofConfig* config, uint64_t dataTypeConfig)
         usleep(100 * 1000); // sleep 100ms for aicpu
     }
     ret = aclprofStop(config);
-    if (ret != ACL_ERROR_NONE) {
+    if (ret != ACL_SUCCESS) {
         MSPROF_LOGE("aclprofStop failed");
         return ret;
     }
     // second time
     ret = aclprofStart(config);
-    if (ret != ACL_ERROR_NONE) {
+    if (ret != ACL_SUCCESS) {
         MSPROF_LOGE("aclprofStart failed");
         return ret;
     }
     ret = aclmdlExecute(modelId, nullptr, nullptr);
-    if (ret != ACL_ERROR_NONE) {
+    if (ret != ACL_SUCCESS) {
         MSPROF_LOGE("aclmdlExecute failed");
         return ret;
     }
@@ -102,7 +102,7 @@ int32_t AclApiRepeatStart(aclprofConfig* config, uint64_t dataTypeConfig)
         usleep(100 * 1000); // sleep 100ms for aicpu
     }
     ret = aclprofStop(config);
-    if (ret != ACL_ERROR_NONE) {
+    if (ret != ACL_SUCCESS) {
         MSPROF_LOGE("aclprofStop failed");
         return ret;
     }
@@ -116,7 +116,7 @@ int32_t AclApiRepeatStart(aclprofConfig* config, uint64_t dataTypeConfig)
 int32_t AclApiStartWithSetDeviceBehind(aclprofConfig* config, uint64_t dataTypeConfig)
 {
     auto ret = aclprofStart(config);
-    if (ret != ACL_ERROR_NONE) {
+    if (ret != ACL_SUCCESS) {
         MSPROF_LOGE("aclprofStart failed");
         return ret;
     }
@@ -131,7 +131,7 @@ int32_t AclApiStartWithSetDeviceBehind(aclprofConfig* config, uint64_t dataTypeC
     }
 
     ret = aclmdlExecute(modelId, nullptr, nullptr);
-    if (ret != ACL_ERROR_NONE) {
+    if (ret != ACL_SUCCESS) {
         MSPROF_LOGE("aclmdlExecute failed");
         return ret;
     }
@@ -140,7 +140,7 @@ int32_t AclApiStartWithSetDeviceBehind(aclprofConfig* config, uint64_t dataTypeC
     }
     aclrtResetDevice(0);
     ret = aclprofStop(config);
-    if (ret != ACL_ERROR_NONE) {
+    if (ret != ACL_SUCCESS) {
         MSPROF_LOGE("aclprofStop failed");
         return ret;
     }

@@ -138,7 +138,7 @@ TEST_F(MsprofilerAdapterUtest, PROF_OP_SUBSCRIBE)
     aclprofSubscribeConfig config;
     config.config.timeInfo = true;
     config.config.aicoreMetrics = PROF_AICORE_ARITHMETIC_UTILIZATION;
-    EXPECT_EQ(ACL_ERROR_NONE, ProfOpSubscribe(0, &config));
+    EXPECT_EQ(ACL_SUCCESS, ProfOpSubscribe(0, &config));
 }
 
 TEST_F(MsprofilerAdapterUtest, PROF_OP_UNSUBSCRIBE)
@@ -146,7 +146,7 @@ TEST_F(MsprofilerAdapterUtest, PROF_OP_UNSUBSCRIBE)
     MOCKER(&Msprofiler::Api::ProfAclMgr::IsModelSubscribed).stubs().will(returnValue(false)).then(returnValue(true));
 
     EXPECT_EQ(ACL_ERROR_PROFILING_FAILURE, ProfOpUnSubscribe(0));
-    EXPECT_EQ(ACL_ERROR_NONE, ProfOpUnSubscribe(0));
+    EXPECT_EQ(ACL_SUCCESS, ProfOpUnSubscribe(0));
 }
 
 TEST_F(MsprofilerAdapterUtest, PROF_ACL_SUBSCRIBE)
