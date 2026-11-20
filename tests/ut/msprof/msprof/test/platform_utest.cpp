@@ -649,7 +649,7 @@ TEST_F(PLATFORM_UTEST, ModenaPlatformMetrics)
     std::string aicEvent;
 
     EXPECT_EQ(PROFILING_SUCCESS, platform.GetAiPmuMetrics("PipeUtilization", aicEvent));
-    EXPECT_EQ("0x501,0x301,0x1,0x202,0x203,0x34,0x35", aicEvent);
+    EXPECT_EQ("0x501,0x301,0x1,0x701,0x202,0x203,0x710,0x35", aicEvent);
 
     EXPECT_EQ(PROFILING_SUCCESS, platform.GetAiPmuMetrics("Memory", aicEvent));
     EXPECT_EQ("0x400,0x401,0x56f,0x570", aicEvent);
@@ -700,7 +700,7 @@ TEST_F(PLATFORM_UTEST, ModenaPlatformReflection)
 
     std::string aicEvent;
     EXPECT_EQ(PROFILING_SUCCESS, platform->GetAiPmuMetrics("PipeUtilization", aicEvent));
-    EXPECT_EQ("0x501,0x301,0x1,0x202,0x203,0x34,0x35", aicEvent);
+    EXPECT_EQ("0x501,0x301,0x1,0x701,0x202,0x203,0x710,0x35", aicEvent);
     EXPECT_EQ(PROFILING_FAILED, platform->GetAiPmuMetrics("L2Cache", aicEvent));
 }
 

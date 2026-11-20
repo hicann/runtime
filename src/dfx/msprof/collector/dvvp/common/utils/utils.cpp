@@ -83,7 +83,10 @@ unsigned long long Utils::GetCPUCycleCounter()
     cycles = 0;
 #endif
 #else
-    cycles = 0;
+    static constexpr uint64_t changeFromSecToNs = 1000000000;
+    struct timespec now = {0, 0};
+    (void)clock_gettime(CLOCK_MONOTONIC_RAW, &now);
+    return (static_cast<uint64_t>(now.tv_sec) * changeFromSecToNs) + static_cast<uint64_t>(now.tv_nsec);
 #endif
     return cycles;
 }
