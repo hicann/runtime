@@ -192,6 +192,10 @@ public:
 
     virtual rtError_t PtrGetAttributes(const void* const ptr, rtPtrAttributes_t* const attributes) = 0;
 
+    // Query pointer attributes with mapped host/device addresses for aclrtPointerGetAttributes.
+    virtual rtError_t PtrGetAttributesEnhanced(
+        const void* const ptr, rtPtrAttributes_t* const attributes, const uint32_t devId) = 0;
+
     virtual rtError_t PtrGetRealLocation(
         const void* const ptr, rtMemLocationType& location, rtMemLocationType& realLocation) = 0;
 

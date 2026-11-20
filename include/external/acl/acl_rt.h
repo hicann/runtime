@@ -353,11 +353,14 @@ typedef struct {
     uint8_t rsv[16];
 } aclrtMemcpyBatchAttr;
 
+#pragma pack(push, 4)
 typedef struct aclrtPtrAttributes {
     aclrtMemLocation location;
     uint32_t pageSize;
-    uint32_t rsv[4];
+    void* hostPtr;
+    void* devicePtr;
 } aclrtPtrAttributes;
+#pragma pack(pop)
 
 typedef struct aclrtMemUsageInfo {
     char name[32];

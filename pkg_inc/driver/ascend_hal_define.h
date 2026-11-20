@@ -1563,6 +1563,7 @@ typedef enum tagDrvFeature {
     FEATURE_DMS_GET_BOARD_LOCATION = 14,
     FEATURE_SVM_PROCESS_DEVICE_MEM_SNAPSHOT = 15,
     FEATURE_SVM_GET_ADDR_SEG = 16,
+    FEATURE_SVM_MEMCPY_SUPPORT_REGISTER_ADDR = 18,
     FEATURE_MAX
 } drvFeature_t;
 /*=============================== query feature END ===============================*/

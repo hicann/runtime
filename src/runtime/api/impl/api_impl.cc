@@ -2575,13 +2575,8 @@ rtError_t ApiImpl::MemCopySync(
                                                                                         RT_MEMCPY_DEVICE_TO_DEVICE;
     }
 
-    const rtChipType_t chipType = Runtime::Instance()->GetChipType();
-    if (((checkKind == WITHOUT_CHECK_KIND) || (checkKind == NOT_CHECK_KIND_BUT_CHECK_PINNED)) &&
-        IS_SUPPORT_CHIP_FEATURE(chipType, RtOptionalFeatureType::RT_FEATURE_MEM_MBUF_COPY)) {
-        /* on cloudv2, mbuff memcpy */
-        return driver->MemCopySync(dst, destMax, src, cnt, curKind, true, device->Id_());
-    }
-    return driver->MemCopySync(dst, destMax, src, cnt, curKind);
+    UNUSED(checkKind);
+    return driver->MemCopySync(dst, destMax, src, cnt, curKind, true, device->Id_());
 }
 
 static void ConvertMappedAddrToDevice(Device* const device, void*& src, rtMemcpyKind_t& kind)
@@ -2772,7 +2767,18 @@ rtError_t ApiImpl::PointerGetAttributes(rtPointerAttributes_t* const attributes,
 
 rtError_t ApiImpl::PtrGetAttributes(const void* const ptr, rtPtrAttributes_t* const attributes)
 {
-    return GetPtrAttributes(ptr, attributes);
+    Context* const curCtx = CurrentContext(false);
+    if (!ContextManage::CheckContextIsValid(curCtx) || (curCtx->Device_() == nullptr)) {
+        return GetPtrAttributes(ptr, attributes);
+    }
+    Device* const device = curCtx->Device_();
+    const rtError_t error =
+        device->Driver_()->PtrGetAttributesEnhanced(ptr, attributes, static_cast<uint32_t>(device->Id_()));
+    COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
+    if ((attributes->location.type == RT_MEMORY_LOC_DEVICE) || (attributes->location.type == RT_MEMORY_LOC_MANAGED)) {
+        return Runtime::Instance()->GetUserDevIdByDeviceId(attributes->location.id, &attributes->location.id);
+    }
+    return RT_ERROR_NONE;
 }
 
 rtError_t ApiImpl::GetDeviceIDs(uint32_t* const devId, const uint32_t len)

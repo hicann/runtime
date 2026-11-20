@@ -1192,6 +1192,8 @@ bool NpuDriver::CheckIsSupportFeature(uint32_t devId, int32_t featureType)
         "FEATURE_DMS_GET_BOARD_LOCATION",
         "FEATURE_SVM_PROCESS_DEVICE_MEM_SNAPSHOT",
         "FEATURE_SVM_GET_ADDR_SEG",
+        nullptr, // Feature id 17 is reserved for another driver capability.
+        "FEATURE_SVM_MEMCPY_SUPPORT_REGISTER_ADDR",
     };
 
     static_assert(

@@ -21,6 +21,7 @@
 #include "elf.hpp"
 #include "runtime/kernel.h"
 #include "error_message_manage.hpp"
+#include "memcpy_c.hpp"
 #include "api_handle_guard.h"
 #include "runtime/mem.h"
 #include "npu_driver.hpp"
@@ -2267,9 +2268,9 @@ rtError_t ApiErrorDecorator::MemcpyAsync(
             checkKind, MemcpyKindToStr(copyKind));
     }
 
-    COND_RETURN_WARN(
-        ((copyKind == RT_MEMCPY_HOST_TO_HOST) && (runMode == RT_RUN_MODE_ONLINE)), RT_ERROR_FEATURE_NOT_SUPPORT,
-        "H2H is not supported");
+    // In online mode the H2H copy runs synchronously after the implicit stream sync instead of being submitted
+    // as an asynchronous copy task
+    const bool isH2HCopy = ((copyKind == RT_MEMCPY_HOST_TO_HOST) && (runMode == RT_RUN_MODE_ONLINE));
     COND_RETURN_WARN(
         ((addrCfg == nullptr) && (dst == src)), /* 在check kind/loc之后校验（校验顺序会影响return值） */
         RT_ERROR_NONE, "The src and dst are the same, no need to copy, return.");
@@ -2277,11 +2278,15 @@ rtError_t ApiErrorDecorator::MemcpyAsync(
     COND_RETURN_WARN(
         IsUbDmaWithSubModel(stm, kind, src, dst), RT_ERROR_FEATURE_NOT_SUPPORT,
         "stream belongs to sub ACL Graph, does not support asynchronous memory copy.");
-    if (isD2HorH2DInvolvePageableMemory) {
+    if (isD2HorH2DInvolvePageableMemory || isH2HCopy) {
+        const char* captureRejectDesc = isH2HCopy ? "The H2H memory copy task does not support graph capture" :
+                                                    "The pageable memory copy task does not support graph capture";
         COND_RETURN_AND_MSG_OUTER(
             ((stm != nullptr) && (stm->IsCapturing())), RT_ERROR_INVALID_VALUE, ErrorCode::EE1016,
-            "Asynchronous copy task", "The pageable memory copy task does not support graph capture");
+            "Asynchronous copy task", captureRejectDesc);
         /* 把异步拷贝转化为隐式流同步 + 同步拷贝，以避免异步访问pageable内存引起的PA异常 */
+        /* In online mode the H2H copy runs synchronously after the implicit stream sync instead of being submitted
+         * as an asynchronous copy task */
         error = StreamSynchronize(stm, -1);
         COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "StreamSynchronize failed, stream_id=%d.", streamId);
 
@@ -2297,8 +2302,8 @@ rtError_t ApiErrorDecorator::MemcpyAsync(
 
     COND_RETURN_ERROR(
         (error != RT_ERROR_NONE) && (error != RT_ERROR_FEATURE_NOT_SUPPORT), error,
-        "Memcpy async failed, count=%" PRIu64 "B, kind=%s, pageableMemory=%d", cnt, MemcpyKindToStr(copyKind),
-        isD2HorH2DInvolvePageableMemory);
+        "Memcpy async failed, count=%" PRIu64 "B, kind=%s, pageableMemory=%d, h2hCopy=%d", cnt,
+        MemcpyKindToStr(copyKind), isD2HorH2DInvolvePageableMemory, isH2HCopy);
     return error;
 }
 
@@ -2366,7 +2371,7 @@ rtError_t ApiErrorDecorator::MemcpyAsyncPtr(
         CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
         if ((curCtx->Device_()->Driver_()->GetRunMode() == RT_RUN_MODE_ONLINE)) {
             rtPtrAttributes_t attributes;
-            error = impl_->PtrGetAttributes(memcpyAddrInfo, &attributes);
+            error = GetPtrAttributes(memcpyAddrInfo, &attributes);
             COND_RETURN_ERROR_MSG_CALL(
                 ERR_MODULE_GE, error != RT_ERROR_NONE, error,
                 "Memory async ptr failed, get pointer attributes failed, retCode=%#x", static_cast<uint32_t>(error));
@@ -2388,12 +2393,12 @@ rtError_t ApiErrorDecorator::CheckMemcpyAttribute(
 {
     rtPtrAttributes_t srcAttributes = {};
     rtPtrAttributes_t destAttributes = {};
-    rtError_t error = impl_->PtrGetAttributes(dst, &destAttributes);
+    rtError_t error = GetPtrAttributes(dst, &destAttributes);
     COND_RETURN_AND_MSG_OUTER(
         error != RT_ERROR_NONE, error, ErrorCode::EE1017, "Memory copy attribute check", "desc",
         "Failed to get dst pointer memory attributes");
 
-    error = impl_->PtrGetAttributes(src, &srcAttributes);
+    error = GetPtrAttributes(src, &srcAttributes);
     COND_RETURN_AND_MSG_OUTER(
         error != RT_ERROR_NONE, error, ErrorCode::EE1017, "Memory copy attribute check", "desc",
         "Failed to get src pointer memory attributes");
@@ -2514,17 +2519,17 @@ rtError_t ApiErrorDecorator::SetMemcpyDesc(
     rtPtrAttributes_t srcAttributes;
     rtPtrAttributes_t destAttributes;
     rtPtrAttributes_t descAttributes;
-    rtError_t error = impl_->PtrGetAttributes(desc, &descAttributes);
+    rtError_t error = GetPtrAttributes(desc, &descAttributes);
     COND_RETURN_AND_MSG_OUTER(
         error != RT_ERROR_NONE, error, ErrorCode::EE1017, "Setting the memory copy descriptor", "desc",
         "Failed to get desc pointer memory attributes");
 
-    error = impl_->PtrGetAttributes(dstAddr, &destAttributes);
+    error = GetPtrAttributes(dstAddr, &destAttributes);
     COND_RETURN_AND_MSG_OUTER(
         error != RT_ERROR_NONE, error, ErrorCode::EE1017, "Setting the memory copy descriptor", "dstAddr",
         "Failed to get dstAddr pointer memory attributes");
 
-    error = impl_->PtrGetAttributes(srcAddr, &srcAttributes);
+    error = GetPtrAttributes(srcAddr, &srcAttributes);
     COND_RETURN_AND_MSG_OUTER(
         error != RT_ERROR_NONE, error, ErrorCode::EE1017, "Setting the memory copy descriptor", "srcAddr",
         "Failed to get srcAddr pointer memory attributes");
@@ -2564,7 +2569,7 @@ rtError_t ApiErrorDecorator::MemcpyAsyncWithDesc(
         "Performing asynchronous memory copy using the memory copy descriptor");
 
     rtPtrAttributes_t descAttributes;
-    const rtError_t error = impl_->PtrGetAttributes(desc, &descAttributes);
+    const rtError_t error = GetPtrAttributes(desc, &descAttributes);
     COND_RETURN_AND_MSG_OUTER(
         error == RT_ERROR_INVALID_VALUE, error, ErrorCode::EE1017,
         "Performing asynchronous memory copy using the memory copy descriptor", "desc",
@@ -6246,7 +6251,7 @@ rtError_t ApiErrorDecorator::MemWriteValue(
 
     rtError_t error = RT_ERROR_NONE;
     rtPtrAttributes_t attributes;
-    error = impl_->PtrGetAttributes(devAddr, &attributes);
+    error = GetPtrAttributes(devAddr, &attributes);
     COND_RETURN_ERROR_MSG_CALL(
         ERR_MODULE_GE, error != RT_ERROR_NONE, error,
         "mem write value failed, get devAddr attributes failed, retCode=%#x", static_cast<uint32_t>(error));
@@ -6273,7 +6278,7 @@ rtError_t ApiErrorDecorator::MemWaitValue(
 
     rtError_t error = RT_ERROR_NONE;
     rtPtrAttributes_t attributes;
-    error = impl_->PtrGetAttributes(devAddr, &attributes);
+    error = GetPtrAttributes(devAddr, &attributes);
     COND_RETURN_ERROR_MSG_CALL(
         ERR_MODULE_GE, error != RT_ERROR_NONE, error,
         "mem wait value failed, get devAddr attributes failed, retCode=%#x", static_cast<uint32_t>(error));

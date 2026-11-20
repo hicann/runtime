@@ -4270,6 +4270,341 @@ TEST_F(ApiImplTest, MemcpyAsync_usermalloc_with_hostregister_not_degrade)
     GlobalMockObject::verify();
 }
 
+TEST_F(ApiImplTest, PtrGetAttributes_converts_device_and_managed_ids)
+{
+    ApiImpl impl;
+    Driver* const driver = Runtime::Instance()->CurrentContext()->Device_()->Driver_();
+    const uint32_t devId = Runtime::Instance()->CurrentContext()->Device_()->Id_();
+    int ptr = 0;
+    for (const rtMemLocationType type : {RT_MEMORY_LOC_DEVICE, RT_MEMORY_LOC_MANAGED}) {
+        rtPtrAttributes_t queried = {};
+        queried.location.type = type;
+        queried.location.id = 3U;
+        queried.pageSize = 4096U;
+        queried.devicePtr = &ptr;
+        uint32_t userId = 0U;
+        MOCKER_CPP_VIRTUAL(driver, &Driver::PtrGetAttributesEnhanced)
+            .expects(once())
+            .with(eq(static_cast<const void*>(&ptr)), outBoundP(&queried), eq(devId))
+            .will(returnValue(RT_ERROR_NONE));
+        MOCKER_CPP(&Runtime::GetUserDevIdByDeviceId)
+            .expects(once())
+            .with(eq(3U), outBoundP(&userId), eq(false), eq(false), eq(false))
+            .will(returnValue(RT_ERROR_NONE));
+        rtPtrAttributes_t attributes = {};
+        EXPECT_EQ(impl.PtrGetAttributes(&ptr, &attributes), RT_ERROR_NONE);
+        EXPECT_EQ(attributes.location.id, userId);
+        EXPECT_EQ(attributes.location.type, type);
+        EXPECT_EQ(attributes.pageSize, queried.pageSize);
+        EXPECT_EQ(attributes.devicePtr, &ptr);
+        GlobalMockObject::verify();
+    }
+}
+
+TEST_F(ApiImplTest, PtrGetAttributes_host_skips_device_id_conversion)
+{
+    ApiImpl impl;
+    Driver* const driver = Runtime::Instance()->CurrentContext()->Device_()->Driver_();
+    int ptr = 0;
+    rtPtrAttributes_t queried = {};
+    queried.location.type = RT_MEMORY_LOC_HOST;
+    queried.hostPtr = &ptr;
+    MOCKER_CPP_VIRTUAL(driver, &Driver::PtrGetAttributesEnhanced)
+        .expects(once())
+        .with(mockcpp::any(), outBoundP(&queried))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&Runtime::GetUserDevIdByDeviceId).expects(never());
+    rtPtrAttributes_t attributes = {};
+    EXPECT_EQ(impl.PtrGetAttributes(&ptr, &attributes), RT_ERROR_NONE);
+    EXPECT_EQ(attributes.location.type, RT_MEMORY_LOC_HOST);
+    EXPECT_EQ(attributes.hostPtr, &ptr);
+}
+
+TEST_F(ApiImplTest, PtrGetAttributes_mapping_failure_propagates)
+{
+    ApiImpl impl;
+    Driver* const driver = Runtime::Instance()->CurrentContext()->Device_()->Driver_();
+    int ptr = 0;
+    rtPtrAttributes_t queried = {};
+    queried.location.type = RT_MEMORY_LOC_DEVICE;
+    queried.location.id = 3U;
+    MOCKER_CPP_VIRTUAL(driver, &Driver::PtrGetAttributesEnhanced)
+        .expects(once())
+        .with(mockcpp::any(), outBoundP(&queried))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&Runtime::GetUserDevIdByDeviceId).expects(once()).with(eq(3U)).will(returnValue(RT_ERROR_DEVICE_ID));
+    rtPtrAttributes_t attributes = {};
+    EXPECT_EQ(impl.PtrGetAttributes(&ptr, &attributes), RT_ERROR_DEVICE_ID);
+}
+
+TEST_F(ApiImplTest, PtrGetAttributes_query_failure_skips_conversion)
+{
+    ApiImpl impl;
+    Driver* const driver = Runtime::Instance()->CurrentContext()->Device_()->Driver_();
+    MOCKER_CPP_VIRTUAL(driver, &Driver::PtrGetAttributesEnhanced)
+        .expects(once())
+        .will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER_CPP(&Runtime::GetUserDevIdByDeviceId).expects(never());
+    int ptr = 0;
+    rtPtrAttributes_t attributes = {};
+    EXPECT_EQ(impl.PtrGetAttributes(&ptr, &attributes), RT_ERROR_INVALID_VALUE);
+}
+
+TEST_F(ApiImplTest, PtrGetAttributes_no_context_uses_read_only_fallback)
+{
+    ApiImpl impl;
+    int ptr = 0;
+    rtPtrAttributes_t queried = {};
+    queried.location.type = RT_MEMORY_LOC_HOST;
+    MOCKER_CPP(&ApiImpl::CurrentContext)
+        .expects(once())
+        .with(eq(false), eq(DEFAULT_DEVICE_ID))
+        .will(returnValue(static_cast<Context*>(nullptr)));
+    MOCKER(GetPtrAttributes)
+        .expects(once())
+        .with(eq(static_cast<const void*>(&ptr)), outBoundP(&queried))
+        .will(returnValue(RT_ERROR_NONE));
+    rtPtrAttributes_t attributes = {};
+    EXPECT_EQ(impl.PtrGetAttributes(&ptr, &attributes), RT_ERROR_NONE);
+    EXPECT_EQ(attributes.location.type, RT_MEMORY_LOC_HOST);
+}
+
+TEST_F(ApiImplTest, MemcpyAsync_h2h_explicit_kind_uses_sync_copy)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+    Context* curCtx = Runtime::Instance()->CurrentContext();
+    RawDevice* device = (RawDevice*)(curCtx->Device_());
+    bool oldSupportUserMem = device->isDrvSupportUserMem_;
+    device->isDrvSupportUserMem_ = true;
+
+    SetMemcpyExLocationStub(RT_MEMORY_LOC_HOST, RT_MEMORY_LOC_HOST, RT_MEMORY_LOC_HOST, RT_MEMORY_LOC_HOST);
+    Driver* driver = curCtx->Device_()->Driver_();
+    MOCKER_CPP_VIRTUAL(driver, &Driver::PtrGetRealLocation).stubs().will(invoke(PtrGetRealLocationStub));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::GetRunMode)
+        .stubs()
+        .will(returnValue(static_cast<uint32_t>(RT_RUN_MODE_ONLINE)));
+    MOCKER_CPP_VIRTUAL(&impl, &ApiImpl::MemcpyAsync).expects(never());
+    MOCKER_CPP_VIRTUAL(&impl, &ApiImpl::MemCopySync).expects(once()).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(&impl, &ApiImpl::StreamSynchronize).expects(once()).will(returnValue(RT_ERROR_NONE));
+
+    int src = 0;
+    int dst = 1;
+    rtError_t error = apiError.MemcpyAsync(
+        &dst, sizeof(int), &src, sizeof(int), RT_MEMCPY_HOST_TO_HOST, nullptr, nullptr, nullptr, true, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    device->isDrvSupportUserMem_ = oldSupportUserMem;
+    GlobalMockObject::verify();
+}
+
+TEST_F(ApiImplTest, MemcpyAsync_h2h_offline_mode_uses_async_copy)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+    Context* curCtx = Runtime::Instance()->CurrentContext();
+    RawDevice* device = (RawDevice*)(curCtx->Device_());
+    bool oldSupportUserMem = device->isDrvSupportUserMem_;
+    device->isDrvSupportUserMem_ = true;
+
+    SetMemcpyExLocationStub(RT_MEMORY_LOC_HOST, RT_MEMORY_LOC_HOST, RT_MEMORY_LOC_HOST, RT_MEMORY_LOC_HOST);
+    Driver* driver = curCtx->Device_()->Driver_();
+    MOCKER_CPP_VIRTUAL(driver, &Driver::PtrGetRealLocation).stubs().will(invoke(PtrGetRealLocationStub));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::GetRunMode)
+        .stubs()
+        .will(returnValue(static_cast<uint32_t>(RT_RUN_MODE_OFFLINE)));
+    MOCKER_CPP_VIRTUAL(&impl, &ApiImpl::MemcpyAsync).expects(once()).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(&impl, &ApiImpl::MemCopySync).expects(never());
+    MOCKER_CPP_VIRTUAL(&impl, &ApiImpl::StreamSynchronize).expects(never());
+
+    int src = 0;
+    int dst = 1;
+    rtError_t error = apiError.MemcpyAsync(
+        &dst, sizeof(int), &src, sizeof(int), RT_MEMCPY_HOST_TO_HOST, nullptr, nullptr, nullptr, true, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    device->isDrvSupportUserMem_ = oldSupportUserMem;
+    GlobalMockObject::verify();
+}
+
+TEST_F(ApiImplTest, MemcpyAsync_default_kind_autocorrect_to_h2h_sync_copy)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+    Context* curCtx = Runtime::Instance()->CurrentContext();
+    RawDevice* device = (RawDevice*)(curCtx->Device_());
+    bool oldSupportUserMem = device->isDrvSupportUserMem_;
+    device->isDrvSupportUserMem_ = true;
+
+    SetMemcpyExLocationStub(
+        RT_MEMORY_LOC_UNREGISTERED, RT_MEMORY_LOC_UNREGISTERED, RT_MEMORY_LOC_UNREGISTERED, RT_MEMORY_LOC_UNREGISTERED);
+    Driver* driver = curCtx->Device_()->Driver_();
+    MOCKER_CPP_VIRTUAL(driver, &Driver::PtrGetRealLocation).stubs().will(invoke(PtrGetRealLocationStub));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::GetRunMode)
+        .stubs()
+        .will(returnValue(static_cast<uint32_t>(RT_RUN_MODE_ONLINE)));
+    MOCKER_CPP_VIRTUAL(&impl, &ApiImpl::MemcpyAsync).expects(never());
+    MOCKER_CPP_VIRTUAL(&impl, &ApiImpl::MemCopySync).expects(once()).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(&impl, &ApiImpl::StreamSynchronize).expects(once()).will(returnValue(RT_ERROR_NONE));
+
+    int src = 0;
+    int dst = 1;
+    rtError_t error = apiError.MemcpyAsync(
+        &dst, sizeof(int), &src, sizeof(int), RT_MEMCPY_DEFAULT, nullptr, nullptr, nullptr, true, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    device->isDrvSupportUserMem_ = oldSupportUserMem;
+    GlobalMockObject::verify();
+}
+
+TEST_F(ApiImplTest, MemcpyAsync_h2h_ignores_checkkind_uses_sync_copy)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+    Context* curCtx = Runtime::Instance()->CurrentContext();
+    RawDevice* device = (RawDevice*)(curCtx->Device_());
+    bool oldSupportUserMem = device->isDrvSupportUserMem_;
+    device->isDrvSupportUserMem_ = true;
+
+    SetMemcpyExLocationStub(RT_MEMORY_LOC_HOST, RT_MEMORY_LOC_HOST, RT_MEMORY_LOC_HOST, RT_MEMORY_LOC_HOST);
+    Driver* driver = curCtx->Device_()->Driver_();
+    MOCKER_CPP_VIRTUAL(driver, &Driver::PtrGetRealLocation).stubs().will(invoke(PtrGetRealLocationStub));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::GetRunMode)
+        .stubs()
+        .will(returnValue(static_cast<uint32_t>(RT_RUN_MODE_ONLINE)));
+    MOCKER_CPP_VIRTUAL(&impl, &ApiImpl::MemcpyAsync).expects(never());
+    MOCKER_CPP_VIRTUAL(&impl, &ApiImpl::MemCopySync).expects(once()).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(&impl, &ApiImpl::StreamSynchronize).expects(once()).will(returnValue(RT_ERROR_NONE));
+
+    int src = 0;
+    int dst = 1;
+    rtError_t error = apiError.MemcpyAsync(
+        &dst, sizeof(int), &src, sizeof(int), RT_MEMCPY_HOST_TO_HOST, nullptr, nullptr, nullptr, false, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    device->isDrvSupportUserMem_ = oldSupportUserMem;
+    GlobalMockObject::verify();
+}
+
+TEST_F(ApiImplTest, MemcpyAsync_h2h_reject_when_stream_capturing)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+    Context* curCtx = Runtime::Instance()->CurrentContext();
+    RawDevice* device = (RawDevice*)(curCtx->Device_());
+    bool oldSupportUserMem = device->isDrvSupportUserMem_;
+    device->isDrvSupportUserMem_ = true;
+
+    Stream* stm = new Stream(device, 1);
+    stm->SetCaptureStatus(RT_STREAM_CAPTURE_STATUS_ACTIVE);
+    SetMemcpyExLocationStub(RT_MEMORY_LOC_HOST, RT_MEMORY_LOC_HOST, RT_MEMORY_LOC_HOST, RT_MEMORY_LOC_HOST);
+    Driver* driver = curCtx->Device_()->Driver_();
+    MOCKER_CPP_VIRTUAL(driver, &Driver::PtrGetRealLocation).stubs().will(invoke(PtrGetRealLocationStub));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::GetRunMode)
+        .stubs()
+        .will(returnValue(static_cast<uint32_t>(RT_RUN_MODE_ONLINE)));
+    MOCKER_CPP_VIRTUAL(&impl, &ApiImpl::MemcpyAsync).expects(never());
+    MOCKER_CPP_VIRTUAL(&impl, &ApiImpl::MemCopySync).expects(never());
+    MOCKER_CPP_VIRTUAL(&impl, &ApiImpl::StreamSynchronize).expects(never());
+
+    int src = 0;
+    int dst = 1;
+    rtError_t error = apiError.MemcpyAsync(
+        &dst, sizeof(int), &src, sizeof(int), RT_MEMCPY_HOST_TO_HOST, stm, nullptr, nullptr, true, nullptr);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    delete stm;
+    device->isDrvSupportUserMem_ = oldSupportUserMem;
+    GlobalMockObject::verify();
+}
+
+TEST_F(ApiImplTest, MemcpyAsync_h2h_memcopysync_failed_propagates)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+    Context* curCtx = Runtime::Instance()->CurrentContext();
+    RawDevice* device = (RawDevice*)(curCtx->Device_());
+    bool oldSupportUserMem = device->isDrvSupportUserMem_;
+    device->isDrvSupportUserMem_ = true;
+
+    SetMemcpyExLocationStub(RT_MEMORY_LOC_HOST, RT_MEMORY_LOC_HOST, RT_MEMORY_LOC_HOST, RT_MEMORY_LOC_HOST);
+    Driver* driver = curCtx->Device_()->Driver_();
+    MOCKER_CPP_VIRTUAL(driver, &Driver::PtrGetRealLocation).stubs().will(invoke(PtrGetRealLocationStub));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::GetRunMode)
+        .stubs()
+        .will(returnValue(static_cast<uint32_t>(RT_RUN_MODE_ONLINE)));
+    MOCKER_CPP_VIRTUAL(&impl, &ApiImpl::MemcpyAsync).expects(never());
+    MOCKER_CPP_VIRTUAL(&impl, &ApiImpl::MemCopySync).expects(once()).will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER_CPP_VIRTUAL(&impl, &ApiImpl::StreamSynchronize).expects(once()).will(returnValue(RT_ERROR_NONE));
+
+    int src = 0;
+    int dst = 1;
+    rtError_t error = apiError.MemcpyAsync(
+        &dst, sizeof(int), &src, sizeof(int), RT_MEMCPY_HOST_TO_HOST, nullptr, nullptr, nullptr, true, nullptr);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    device->isDrvSupportUserMem_ = oldSupportUserMem;
+    GlobalMockObject::verify();
+}
+
+TEST_F(ApiImplTest, MemcpyAsync_h2h_streamsynchronize_failed_propagates)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+    Context* curCtx = Runtime::Instance()->CurrentContext();
+    RawDevice* device = (RawDevice*)(curCtx->Device_());
+    bool oldSupportUserMem = device->isDrvSupportUserMem_;
+    device->isDrvSupportUserMem_ = true;
+
+    SetMemcpyExLocationStub(RT_MEMORY_LOC_HOST, RT_MEMORY_LOC_HOST, RT_MEMORY_LOC_HOST, RT_MEMORY_LOC_HOST);
+    Driver* driver = curCtx->Device_()->Driver_();
+    MOCKER_CPP_VIRTUAL(driver, &Driver::PtrGetRealLocation).stubs().will(invoke(PtrGetRealLocationStub));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::GetRunMode)
+        .stubs()
+        .will(returnValue(static_cast<uint32_t>(RT_RUN_MODE_ONLINE)));
+    MOCKER_CPP_VIRTUAL(&impl, &ApiImpl::MemcpyAsync).expects(never());
+    MOCKER_CPP_VIRTUAL(&impl, &ApiImpl::MemCopySync).expects(never());
+    MOCKER_CPP_VIRTUAL(&impl, &ApiImpl::StreamSynchronize).expects(once()).will(returnValue(RT_ERROR_INVALID_VALUE));
+
+    int src = 0;
+    int dst = 1;
+    rtError_t error = apiError.MemcpyAsync(
+        &dst, sizeof(int), &src, sizeof(int), RT_MEMCPY_HOST_TO_HOST, nullptr, nullptr, nullptr, true, nullptr);
+    EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+
+    device->isDrvSupportUserMem_ = oldSupportUserMem;
+    GlobalMockObject::verify();
+}
+
+TEST_F(ApiImplTest, MemcpyAsync_d2d_async_path_unaffected)
+{
+    ApiImpl impl;
+    ApiErrorDecorator apiError(&impl);
+    Context* curCtx = Runtime::Instance()->CurrentContext();
+    RawDevice* device = (RawDevice*)(curCtx->Device_());
+    bool oldSupportUserMem = device->isDrvSupportUserMem_;
+    device->isDrvSupportUserMem_ = true;
+
+    SetMemcpyExLocationStub(RT_MEMORY_LOC_DEVICE, RT_MEMORY_LOC_DEVICE, RT_MEMORY_LOC_DEVICE, RT_MEMORY_LOC_DEVICE);
+    Driver* driver = curCtx->Device_()->Driver_();
+    MOCKER_CPP_VIRTUAL(driver, &Driver::PtrGetRealLocation).stubs().will(invoke(PtrGetRealLocationStub));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::GetRunMode)
+        .stubs()
+        .will(returnValue(static_cast<uint32_t>(RT_RUN_MODE_ONLINE)));
+    MOCKER_CPP_VIRTUAL(&impl, &ApiImpl::MemcpyAsync).expects(once()).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(&impl, &ApiImpl::MemCopySync).expects(never());
+    MOCKER_CPP_VIRTUAL(&impl, &ApiImpl::StreamSynchronize).expects(never());
+
+    int src = 0;
+    int dst = 1;
+    rtError_t error = apiError.MemcpyAsync(
+        &dst, sizeof(int), &src, sizeof(int), RT_MEMCPY_DEVICE_TO_DEVICE, nullptr, nullptr, nullptr, true, nullptr);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+
+    device->isDrvSupportUserMem_ = oldSupportUserMem;
+    GlobalMockObject::verify();
+}
+
 TEST_F(ApiImplTest, device_flags_accept_four_modes)
 {
     ApiImpl impl;
