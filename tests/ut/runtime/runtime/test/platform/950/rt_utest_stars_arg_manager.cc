@@ -1492,6 +1492,56 @@ TEST_F(ArgManageUbTest, UbArgManage_LoadArgsFromArray_AllocCopyPtrFail)
     TestLoadArgsFromArrayAllocCopyPtrFailCommon(stm, false);
     delete stm;
 }
+
+static void TestLoadArgsFromArrayH2DCopyFailCommon(DavidStream* stm, bool needPcieMock)
+{
+    GlobalMockObject::reset();
+    if (needPcieMock) {
+        SetupDriverMockForPcie();
+    }
+
+    rtError_t ret = stm->CreateStreamArgRes();
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
+    Kernel* kernelMock = CreateMockKernelWithParams(&stubProg);
+
+    char realArgs1[64] = {0};
+    char realArgs2[64] = {0};
+    void* argsArray[2] = {realArgs1, realArgs2};
+    StarsArgLoaderResult result = {nullptr, nullptr, nullptr, UINT32_MAX};
+
+    if (needPcieMock) {
+        PcieArgManage* argManage = static_cast<PcieArgManage*>(stm->ArgManagePtr());
+        MOCKER_CPP_VIRTUAL(argManage, &PcieArgManage::H2DArgCopy).stubs().will(returnValue(RT_ERROR_DRV_MEMORY));
+    } else {
+        Driver* drv = stm->Device_()->Driver_();
+        MOCKER_CPP_VIRTUAL(drv, &Driver::MemCopySync).stubs().will(returnValue(RT_ERROR_DRV_ERR));
+        MOCKER_CPP_VIRTUAL(drv, &Driver::SqArgsCopyWithUb).stubs().will(returnValue(RT_ERROR_DRV_ERR));
+    }
+
+    ret = stm->ArgManagePtr()->LoadArgsFromArray(false, kernelMock, argsArray, &result);
+    EXPECT_EQ(ret, needPcieMock ? RT_ERROR_DRV_MEMORY : RT_ERROR_DRV_ERR);
+    EXPECT_EQ(result.handle, nullptr);
+
+    stm->ReleaseStreamArgRes();
+    delete kernelMock;
+}
+
+TEST_F(ArgManagePcieTest, PcieArgManage_LoadArgsFromArray_H2DCopyFail)
+{
+    DavidStream* stm = new (std::nothrow) DavidStream(device_, 0, RT_STREAM_DEFAULT, nullptr);
+    TestLoadArgsFromArrayH2DCopyFailCommon(stm, true);
+    delete stm;
+}
+
+TEST_F(ArgManageUbTest, UbArgManage_LoadArgsFromArray_H2DCopyFail)
+{
+    DavidStream* stm = new (std::nothrow) DavidStream(device_, 0, RT_STREAM_DEFAULT, nullptr);
+    TestLoadArgsFromArrayH2DCopyFailCommon(stm, false);
+    delete stm;
+}
+
 static void TestLoadSimtArgsFromArraySuccessCommon(DavidStream* stm, bool needPcieMock)
 {
     // 清理之前测试遗留的 mock 状态
@@ -1690,6 +1740,60 @@ TEST_F(ArgManageUbTest, UbArgManage_LoadSimtArgsFromArray_CopyKernelParamsFail)
 {
     DavidStream* stm = new (std::nothrow) DavidStream(device_, 0, RT_STREAM_DEFAULT, nullptr);
     TestLoadSimtArgsFromArrayCopyKernelParamsFailCommon(stm, false);
+    delete stm;
+}
+
+static void TestLoadSimtArgsFromArrayH2DCopyFailCommon(DavidStream* stm, bool needPcieMock)
+{
+    GlobalMockObject::reset();
+    if (needPcieMock) {
+        SetupDriverMockForPcie();
+    }
+
+    rtError_t ret = stm->CreateStreamArgRes();
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    PlainProgram stubProg(RT_KERNEL_ATTR_TYPE_AICPU);
+    Kernel* kernelMock = CreateMockKernelWithParams(&stubProg);
+
+    SimtArgsArray simtArgs = {};
+    simtArgs.gridDim = {1, 1, 1};
+    simtArgs.blockDim = {1, 1, 1};
+    char realArgs1[64] = {0};
+    char realArgs2[64] = {0};
+    void* argsArray[2] = {realArgs1, realArgs2};
+    simtArgs.argsArray = argsArray;
+
+    StarsArgLoaderResult result = {nullptr, nullptr, nullptr, UINT32_MAX};
+
+    if (needPcieMock) {
+        PcieArgManage* argManage = static_cast<PcieArgManage*>(stm->ArgManagePtr());
+        MOCKER_CPP_VIRTUAL(argManage, &PcieArgManage::H2DArgCopy).stubs().will(returnValue(RT_ERROR_DRV_MEMORY));
+    } else {
+        Driver* drv = stm->Device_()->Driver_();
+        MOCKER_CPP_VIRTUAL(drv, &Driver::MemCopySync).stubs().will(returnValue(RT_ERROR_DRV_ERR));
+        MOCKER_CPP_VIRTUAL(drv, &Driver::SqArgsCopyWithUb).stubs().will(returnValue(RT_ERROR_DRV_ERR));
+    }
+
+    ret = stm->ArgManagePtr()->LoadSimtArgsFromArray(false, kernelMock, &simtArgs, &result);
+    EXPECT_EQ(ret, needPcieMock ? RT_ERROR_DRV_MEMORY : RT_ERROR_DRV_ERR);
+    EXPECT_EQ(result.handle, nullptr);
+
+    stm->ReleaseStreamArgRes();
+    delete kernelMock;
+}
+
+TEST_F(ArgManagePcieTest, PcieArgManage_LoadSimtArgsFromArray_H2DCopyFail)
+{
+    DavidStream* stm = new (std::nothrow) DavidStream(device_, 0, RT_STREAM_DEFAULT, nullptr);
+    TestLoadSimtArgsFromArrayH2DCopyFailCommon(stm, true);
+    delete stm;
+}
+
+TEST_F(ArgManageUbTest, UbArgManage_LoadSimtArgsFromArray_H2DCopyFail)
+{
+    DavidStream* stm = new (std::nothrow) DavidStream(device_, 0, RT_STREAM_DEFAULT, nullptr);
+    TestLoadSimtArgsFromArrayH2DCopyFailCommon(stm, false);
     delete stm;
 }
 
@@ -1934,5 +2038,56 @@ TEST_F(ArgManageUbTest, UbArgManage_LoadSimtHostArgs_MemcpyHostArgsFail)
 {
     DavidStream* stm = new (std::nothrow) DavidStream(device_, 0, RT_STREAM_DEFAULT, nullptr);
     TestLoadSimtHostArgsMemcpyHostArgsFailCommon(stm, false);
+    delete stm;
+}
+
+static void TestLoadSimtHostArgsH2DCopyFailCommon(DavidStream* stm, bool needPcieMock)
+{
+    GlobalMockObject::reset();
+    if (needPcieMock) {
+        SetupDriverMockForPcie();
+    }
+
+    rtError_t ret = stm->CreateStreamArgRes();
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    SimtArgsHost simtArgs = {};
+    simtArgs.gridDim = {1, 1, 1};
+    simtArgs.blockDim = {1, 1, 1};
+    char hostArgs[128] = {0};
+    simtArgs.hostArgs = hostArgs;
+    simtArgs.argsSize = 128;
+    simtArgs.placeHolderArray = nullptr;
+    simtArgs.placeHolderNum = 0;
+
+    StarsArgLoaderResult result = {nullptr, nullptr, nullptr, UINT32_MAX};
+
+    if (needPcieMock) {
+        PcieArgManage* argManage = static_cast<PcieArgManage*>(stm->ArgManagePtr());
+        MOCKER_CPP_VIRTUAL(argManage, &PcieArgManage::H2DArgCopy).stubs().will(returnValue(RT_ERROR_DRV_MEMORY));
+    } else {
+        Driver* drv = stm->Device_()->Driver_();
+        MOCKER_CPP_VIRTUAL(drv, &Driver::MemCopySync).stubs().will(returnValue(RT_ERROR_DRV_ERR));
+        MOCKER_CPP_VIRTUAL(drv, &Driver::SqArgsCopyWithUb).stubs().will(returnValue(RT_ERROR_DRV_ERR));
+    }
+
+    ret = stm->ArgManagePtr()->LoadSimtHostArgs(false, &simtArgs, &result);
+    EXPECT_EQ(ret, needPcieMock ? RT_ERROR_DRV_MEMORY : RT_ERROR_DRV_ERR);
+    EXPECT_EQ(result.handle, nullptr);
+
+    stm->ReleaseStreamArgRes();
+}
+
+TEST_F(ArgManagePcieTest, PcieArgManage_LoadSimtHostArgs_H2DCopyFail)
+{
+    DavidStream* stm = new (std::nothrow) DavidStream(device_, 0, RT_STREAM_DEFAULT, nullptr);
+    TestLoadSimtHostArgsH2DCopyFailCommon(stm, true);
+    delete stm;
+}
+
+TEST_F(ArgManageUbTest, UbArgManage_LoadSimtHostArgs_H2DCopyFail)
+{
+    DavidStream* stm = new (std::nothrow) DavidStream(device_, 0, RT_STREAM_DEFAULT, nullptr);
+    TestLoadSimtHostArgsH2DCopyFailCommon(stm, false);
     delete stm;
 }

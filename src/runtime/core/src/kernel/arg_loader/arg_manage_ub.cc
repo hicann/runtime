@@ -162,7 +162,11 @@ rtError_t UbArgManage::LoadArgsFromArray(
         return error;
     }
 
-    return ParseArgsCpyWqe(result, argsSize);
+    error = ParseArgsCpyWqe(result, argsSize);
+    if (error != RT_ERROR_NONE) {
+        FreeFail(result);
+    }
+    return error;
 }
 
 rtError_t UbArgManage::LoadSimtArgsFromArray(
@@ -207,7 +211,11 @@ rtError_t UbArgManage::LoadSimtArgsFromArray(
         return error;
     }
 
-    return ParseArgsCpyWqe(result, totalArgsSize);
+    error = ParseArgsCpyWqe(result, totalArgsSize);
+    if (error != RT_ERROR_NONE) {
+        FreeFail(result);
+    }
+    return error;
 }
 
 rtError_t UbArgManage::LoadSimtHostArgs(const bool useArgPool, SimtArgsHost* simtArgsHost, StarsArgLoaderResult* result)
@@ -258,7 +266,11 @@ rtError_t UbArgManage::LoadSimtHostArgs(const bool useArgPool, SimtArgsHost* sim
             RtPtrToPtr<rtHostInputInfo_t*>(simtArgsHost->placeHolderArray));
     }
 
-    return ParseArgsCpyWqe(result, totalArgsSize);
+    error = ParseArgsCpyWqe(result, totalArgsSize);
+    if (error != RT_ERROR_NONE) {
+        FreeFail(result);
+    }
+    return error;
 }
 
 rtError_t UbArgManage::RestoreArgRes()

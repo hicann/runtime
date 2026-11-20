@@ -158,7 +158,11 @@ rtError_t PcieArgManage::LoadArgsFromArray(
         return error;
     }
 
-    return H2DArgCopy(result, argsBuffer, argsSize);
+    error = H2DArgCopy(result, argsBuffer, argsSize);
+    if (error != RT_ERROR_NONE) {
+        FreeFail(result);
+    }
+    return error;
 }
 
 rtError_t PcieArgManage::PrepareSimtArgsBuffer(
@@ -219,7 +223,11 @@ rtError_t PcieArgManage::LoadSimtArgsFromArray(
         return error;
     }
 
-    return H2DArgCopy(result, argsBuffer, totalArgsSize);
+    error = H2DArgCopy(result, argsBuffer, totalArgsSize);
+    if (error != RT_ERROR_NONE) {
+        FreeFail(result);
+    }
+    return error;
 }
 
 rtError_t PcieArgManage::LoadSimtHostArgs(
@@ -247,7 +255,11 @@ rtError_t PcieArgManage::LoadSimtHostArgs(
             RtPtrToPtr<rtHostInputInfo_t*>(simtArgsHost->placeHolderArray));
     }
 
-    return H2DArgCopy(result, argsBuffer, totalArgsSize);
+    error = H2DArgCopy(result, argsBuffer, totalArgsSize);
+    if (error != RT_ERROR_NONE) {
+        FreeFail(result);
+    }
+    return error;
 }
 
 } // namespace runtime
