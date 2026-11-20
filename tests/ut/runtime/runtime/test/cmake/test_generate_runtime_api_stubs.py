@@ -249,11 +249,11 @@ RUNTIME_API_STUB(rtNoop)
         self.assertFalse(set(names) - set(catalog))
         self.assertEqual(names, sorted(names))
         self.assertEqual(len(catalog), 805)
-        self.assertEqual(len(names), 633)
-        self.assertEqual(len(set(catalog) - set(names)), 172)
+        self.assertEqual(len(names), 632)
+        self.assertEqual(len(set(catalog) - set(names)), 173)
         self.assertEqual(
             sum(catalog[name].policy == "FEATURE_NOT_SUPPORT" for name in names),
-            629,
+            628,
         )
         self.assertEqual(
             sum(catalog[name].policy == "SUCCESS_NOOP" for name in names), 3
@@ -298,6 +298,7 @@ RUNTIME_API_STUB(rtNoop)
             "rtNotifyWaitWithTimeOut",
             "rtNpuClearFloatDebugStatus",
             "rtNpuGetFloatDebugStatus",
+            "rtProfilingCommandHandle",
             "rtSetDevice",
             "rtSetModelName",
             "rtStarsTaskLaunch",
