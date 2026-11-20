@@ -11,10 +11,10 @@
 #include <cstring>
 #include "ascend_hal.h"
 #include "mmpa_api.h"
+#include <string>
 
 extern std::map<std::string, void*> g_map_drv;
 extern "C" {
-
 void* mmDlsym(void* handle, const char* funcName)
 {
     auto it = g_map_drv.find(funcName);

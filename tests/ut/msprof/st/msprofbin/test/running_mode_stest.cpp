@@ -13,6 +13,7 @@
 #include <iostream>
 #include "errno/error_code.h"
 #include "running_mode.h"
+#include "profimpl/collect/sys_runner/include/runtime_system_mode_runner.h"
 #include "utils/utils.h"
 #include "config/config.h"
 #include "config/config_manager.h"
@@ -587,6 +588,7 @@ TEST_F(RUNNING_MODE_STEST, AppModeStartAppTaskError)
 TEST_F(RUNNING_MODE_STEST, AppModeStartAppTaskForDynProf)
 {
     GlobalMockObject::verify();
+    MOCKER(Utils::UsleepInterupt).stubs().will(returnValue(0));
     std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
     Collector::Dvvp::Msprofbin::AppMode rMode("app", params);
 
@@ -898,6 +900,7 @@ TEST_F(RUNNING_MODE_STEST, SystemModeStopTask)
 TEST_F(RUNNING_MODE_STEST, SystemWaitSysTask)
 {
     GlobalMockObject::verify();
+    MOCKER(Utils::UsleepInterupt).stubs().will(returnValue(0));
     std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
     Collector::Dvvp::Msprofbin::SystemMode rMode("system", params);
     params->profiling_period = 2;
@@ -1050,38 +1053,38 @@ TEST_F(RUNNING_MODE_STEST, StartSysTask)
     std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
     Collector::Dvvp::Msprofbin::SystemMode rMode("system", params);
     params->devices = "0";
-    MOCKER_CPP(&SystemMode::StartHostTask)
+    MOCKER_CPP(&SystemMode::StartHostJobs)
+        .stubs()
+        .will(returnValue(PROFILING_FAILED))
+        .then(returnValue(PROFILING_SUCCESS));
+    EXPECT_EQ(PROFILING_SUCCESS, rMode.StartSysTask());
+    MOCKER_CPP(&SystemMode::StartDeviceJobs)
         .stubs()
         .will(returnValue(PROFILING_FAILED))
         .then(returnValue(PROFILING_SUCCESS));
     EXPECT_EQ(PROFILING_FAILED, rMode.StartSysTask());
-    MOCKER_CPP(&SystemMode::CreateJobDir)
+    MOCKER_CPP(&SystemMode::StartHostJobs)
         .stubs()
         .will(returnValue(PROFILING_FAILED))
         .then(returnValue(PROFILING_SUCCESS));
-    EXPECT_EQ(PROFILING_FAILED, rMode.StartSysTask());
-    MOCKER_CPP(&SystemMode::StartHostTask)
-        .stubs()
-        .will(returnValue(PROFILING_FAILED))
-        .then(returnValue(PROFILING_SUCCESS));
-    EXPECT_EQ(PROFILING_FAILED, rMode.StartSysTask());
+    EXPECT_EQ(PROFILING_SUCCESS, rMode.StartSysTask());
     MOCKER_CPP(&SystemMode::IsDeviceJob).stubs().will(returnValue(true)).then(returnValue(false));
     MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsSocSide).stubs().will(returnValue(false));
-    MOCKER_CPP(&SystemMode::StartDeviceTask).stubs().will(returnValue(PROFILING_FAILED));
+    MOCKER_CPP(&SystemMode::StartDeviceJobs).stubs().will(returnValue(PROFILING_FAILED));
     MOCKER_CPP(&analysis::dvvp::driver::DrvChannelsMgr::ChannelIsValid).stubs().will(returnValue(false));
-    EXPECT_EQ(PROFILING_FAILED, rMode.StartSysTask());
+    EXPECT_EQ(PROFILING_SUCCESS, rMode.StartSysTask());
     GlobalMockObject::verify();
     params->devices = "";
     MOCKER_CPP(&analysis::dvvp::message::ProfileParams::IsHostProfiling)
         .stubs()
         .will(repeat(true, 2))
         .then(returnValue(false));
-    MOCKER_CPP(&SystemMode::CreateJobDir)
+    MOCKER_CPP(&SystemMode::StartDeviceJobs)
         .stubs()
         .will(returnValue(PROFILING_FAILED))
         .then(returnValue(PROFILING_SUCCESS));
-    EXPECT_EQ(PROFILING_FAILED, rMode.StartSysTask());
-    MOCKER_CPP(&SystemMode::StartHostTask)
+    EXPECT_EQ(PROFILING_SUCCESS, rMode.StartSysTask());
+    MOCKER_CPP(&SystemMode::StartHostJobs)
         .stubs()
         .will(returnValue(PROFILING_FAILED))
         .then(returnValue(PROFILING_SUCCESS));
@@ -1295,4 +1298,12 @@ TEST_F(RUNNING_MODE_STEST, AnalyzeModeModeParamsCheck)
     EXPECT_EQ(PROFILING_SUCCESS, rMode.ModeParamsCheck());
     params->usedParams = {ARGS_OUTPUT, ARGS_ANALYZE, ARGS_PYTHON_PATH, ARGS_RULE};
     EXPECT_EQ(PROFILING_SUCCESS, rMode.ModeParamsCheck());
+}
+
+TEST_F(RUNNING_MODE_STEST, RuntimeSystemModeRunnerInvalidInput)
+{
+    EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::runner::RuntimeSystemModeRunner::Run(nullptr, "st"));
+    EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::runner::RuntimeSystemModeRunner::Run(nullptr, ""));
+    auto params = std::make_shared<analysis::dvvp::message::ProfileParams>();
+    EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::runner::RuntimeSystemModeRunner::Run(params, ""));
 }

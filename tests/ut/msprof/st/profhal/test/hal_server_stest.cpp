@@ -94,7 +94,7 @@ TEST_F(HAL_SERVER_STEST, Simulate_ServerManager)
     const uint32_t devIdList[2] = {64, 0};
     moduleConfigP->devIdList = const_cast<uint32_t*>(devIdList);
     moduleConfigP->devIdListNums = 2;
-    ProfHalModuleInitialize(PROF_HAL_AICPU, moduleConfigP, sizeof(moduleConfigP));
+    ProfHalModuleInitialize(PROF_HAL_HELPER, moduleConfigP, sizeof(moduleConfigP));
     EXPECT_EQ(1, ServerManager::instance()->hdcDevMap_.size());
 
     sleep(1);
@@ -109,7 +109,7 @@ TEST_F(HAL_SERVER_STEST, Simulate_ServerManager)
     EXPECT_EQ(0, ServerManager::instance()->hdcDevMap_.size());
 
     MOCKER_CPP(&Dvvp::Hal::Server::ProfHdcServer::Init).stubs().will(returnValue(PROFILING_FAILED));
-    EXPECT_EQ(PROFILING_FAILED, ProfHalModuleInitialize(PROF_HAL_AICPU, moduleConfigP, sizeof(moduleConfigP)));
+    EXPECT_EQ(PROFILING_FAILED, ProfHalModuleInitialize(PROF_HAL_HELPER, moduleConfigP, sizeof(moduleConfigP)));
     free(moduleConfigP);
 }
 

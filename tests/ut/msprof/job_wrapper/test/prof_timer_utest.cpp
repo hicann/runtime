@@ -16,6 +16,7 @@
 #include "thread/thread.h"
 #include "prof_timer.h"
 #include "transport/transport.h"
+#include "transport/uploader_mgr.h"
 #include "transport/hdc/hdc_transport.h"
 #include "utils/utils.h"
 
@@ -1005,4 +1006,45 @@ TEST_F(PROF_NET_DEV_STATS_TEST, Init_DoubleInit_Fails)
     EXPECT_EQ(PROFILING_SUCCESS, h.Init());
     // Re-init after isInited_ is true -> FAILED
     EXPECT_EQ(PROFILING_FAILED, h.Init());
+}
+
+static int g_dcmi_dev_num_one_stub(int, int* deviceNum)
+{
+    if (deviceNum != nullptr) {
+        *deviceNum = 1;
+    }
+    return 0;
+}
+
+static int g_dcmi_card_list_one_stub(int* cardNum, int* cardList, int listLen)
+{
+    (void)cardList;
+    (void)listLen;
+    if (cardNum != nullptr) {
+        *cardNum = 1;
+    }
+    return 0;
+}
+
+TEST_F(PROF_NET_DEV_STATS_TEST, RegisterExecuteAndRemoveDevTask)
+{
+    MOCKER(OsalDlopen).stubs().will(returnValue((void*)0x12345678));
+    MOCKER(OsalDlsym)
+        .stubs()
+        .will(returnValue((void*)nullptr))
+        .then(returnValue(reinterpret_cast<void*>(&g_dcmi_init_ok_stub)))
+        .then(returnValue(reinterpret_cast<void*>(&g_dcmi_card_list_one_stub)))
+        .then(returnValue(reinterpret_cast<void*>(&g_dcmi_dev_num_one_stub)))
+        .then(returnValue(reinterpret_cast<void*>(&g_dcmi_pkt_stub)));
+    MOCKER(&analysis::dvvp::transport::UploaderMgr::GetUploader).stubs();
+
+    NetDevStatsHandler h(64, 1000, "0", jobCtx);
+    EXPECT_EQ(PROFILING_SUCCESS, h.Init());
+    EXPECT_EQ(PROFILING_SUCCESS, h.RegisterDevTask(0));
+    EXPECT_EQ(PROFILING_SUCCESS, h.RegisterDevTask(0));
+    EXPECT_EQ(static_cast<size_t>(1), h.GetCurDevTaskCount());
+    EXPECT_EQ(PROFILING_SUCCESS, h.Execute());
+    EXPECT_EQ(PROFILING_SUCCESS, h.RemoveDevTask(0));
+    EXPECT_EQ(static_cast<size_t>(0), h.GetCurDevTaskCount());
+    EXPECT_EQ(PROFILING_SUCCESS, h.Uinit());
 }

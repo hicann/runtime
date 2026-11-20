@@ -11,6 +11,8 @@
 #include <set>
 #include <unordered_map>
 #include "msprof_start.h"
+#include "mockcpp/mockcpp.hpp"
+#include "utils/utils.h"
 #include "device_drv_prof_stub.h"
 #include "acl/acl.h"
 #include "acl/acl_prof.h"
@@ -280,6 +282,17 @@ int32_t MsprofStart::MsprofStartBySysMode(int subArgvCount, const char** subArgv
     const char* envp[1] = {nullptr};
     const char* BaseArgv[] = {"msprof", "--output=./clistest_workspace/output", "--sys-period=1", "--sys-devices=0"};
     int BaseArgvLenth = sizeof(BaseArgv) / sizeof(char*);
+
+    bool needRealSampling = false;
+    for (int i = 0; i < subArgvCount; ++i) {
+        if (std::string(subArgv[i]) == "--sys-profiling=on" || std::string(subArgv[i]) == "--sys-pid-profiling=on") {
+            needRealSampling = true;
+            break;
+        }
+    }
+    if (!needRealSampling) {
+        MOCKER(analysis::dvvp::common::utils::Utils::UsleepInterupt).stubs().will(returnValue(0));
+    }
 
     ClearSingleton();
 

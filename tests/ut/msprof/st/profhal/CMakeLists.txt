@@ -94,6 +94,17 @@ set(src_file
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/src/msprof_tx_reporter.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/src/prof_stamp_pool.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profhal/halimpl/prof_server_manager.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/job_device_rpc.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/src/msprof_task.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/devprof/src/devprof_common.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/devprof/src/devprof_drv_aicpu.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/transport/hdc/device_transport.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/transport/hdc/data_handle.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/transport/pipe_transport.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/transport/ctrl_files_dumper.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/mstx/src/mstx_domain_mgr.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/mstx/src/mstx_inject.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/mstx/src/mstx_data_handler.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profhal/halimpl/prof_hal_api.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/adapter/src/command_handle.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/task_handle/src/device.cpp
@@ -204,6 +215,16 @@ target_include_directories(prof_hal_stest PRIVATE
     ${CMAKE_BINARY_DIR}/proto/profiler/
     ${MSPROF_SOURCE_DIR}/dvvp/depend/include/stub
     ${MSPROF_SOURCE_DIR}/dvvp/profapi/inc
+    ${TOP_DIR}/pkg_inc/driver
+    ${TOP_DIR}/pkg_inc/runtime
+    ${TOP_DIR}/pkg_inc/base
+    ${TOP_DIR}/include/external/acl
+    ${TOP_DIR}/include/external
+    ${TOP_DIR}/src/inc
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/mstx/inc
+    ${TOP_DIR}/pkg_inc/aicpu_sched
+    ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/include
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/devprof/include
 )
 
 

@@ -16,6 +16,7 @@
 #include "msprof_dlog.h"
 #include "config/config_manager.h"
 #include "validation/param_validation.h"
+#include "msprof_drv_api.h"
 
 using namespace Analysis::Dvvp::Driver;
 using namespace analysis::dvvp::common::error;
@@ -37,7 +38,10 @@ TEST_F(DRV_DSMI_API_STEST, DrvGetAicoreInfo)
     EXPECT_EQ(PROFILING_FAILED, DrvGetAicoreInfo(deviceId, freq));
     deviceId = 0;
     freq = 1;
-    MOCKER(halGetDeviceInfo).stubs().will(returnValue(deviceId)).then(returnValue(freq));
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::halGetDeviceInfo)
+        .stubs()
+        .will(returnValue(deviceId))
+        .then(returnValue(freq));
     EXPECT_EQ(deviceId, DrvGetAicoreInfo(deviceId, freq));
     EXPECT_EQ(freq, DrvGetAicoreInfo(deviceId, freq));
 }

@@ -31,7 +31,8 @@ TEST_F(PROF_AICPU_PLUGIN_STTEST, PROF_AICPU_INIT_FINAL)
     const uint32_t devIdList[2] = {64, 0};
     moduleConfigP->devIdList = const_cast<uint32_t*>(devIdList);
     moduleConfigP->devIdListNums = 2;
-    EXPECT_EQ(0, ProfAPI::ProfHalPlugin::instance()->ProfHalInit(PROF_HAL_AICPU, moduleConfigP, sizeof(moduleConfigP)));
+    EXPECT_EQ(
+        0, ProfAPI::ProfHalPlugin::instance()->ProfHalInit(PROF_HAL_HELPER, moduleConfigP, sizeof(moduleConfigP)));
     ProfAPI::ProfHalPlugin::instance()->ProfHalFlushModuleRegister(Msprof::Engine::FlushModule);
     ProfAPI::ProfHalPlugin::instance()->ProfHalSendDataRegister(Msprof::Engine::SendAiCpuData);
     sleep(1);
@@ -55,5 +56,5 @@ TEST_F(PROF_AICPU_PLUGIN_STTEST, PROF_AICPU_INIT_NULLPTR)
 {
     ProfHalModuleConfig* moduleConfigP = nullptr;
     EXPECT_EQ(
-        -1, ProfAPI::ProfHalPlugin::instance()->ProfHalInit(PROF_HAL_AICPU, moduleConfigP, sizeof(moduleConfigP)));
+        -1, ProfAPI::ProfHalPlugin::instance()->ProfHalInit(PROF_HAL_HELPER, moduleConfigP, sizeof(moduleConfigP)));
 }

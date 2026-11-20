@@ -68,7 +68,7 @@ TEST_F(AclApiModenaStest, AclProfStartStopTaskTime)
     uint32_t deviceIdList[1] = {devId};
     aclprofAicoreMetrics aicoreMetrics = ACL_AICORE_NONE;
     aclprofAicoreEvents* aicoreEvents = nullptr;
-    uint64_t dataTypeConfig = ACL_PROF_TASK_TIME;
+    uint64_t dataTypeConfig = ACL_PROF_AICORE_METRICS;
     auto config = aclprofCreateConfig(deviceIdList, 1, aicoreMetrics, aicoreEvents, dataTypeConfig);
     EXPECT_NE(nullptr, config);
 
@@ -80,7 +80,7 @@ TEST_F(AclApiModenaStest, AclProfStartStopAicoreMetrics)
     uint32_t deviceIdList[1] = {devId};
     aclprofAicoreMetrics aicoreMetrics = ACL_AICORE_PIPE_UTILIZATION;
     aclprofAicoreEvents* aicoreEvents = nullptr;
-    uint64_t dataTypeConfig = ACL_PROF_TASK_TIME | ACL_PROF_AICORE_METRICS;
+    uint64_t dataTypeConfig = ACL_PROF_AICORE_METRICS;
     auto config = aclprofCreateConfig(deviceIdList, 1, aicoreMetrics, aicoreEvents, dataTypeConfig);
     EXPECT_NE(nullptr, config);
 

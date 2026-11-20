@@ -17,7 +17,8 @@
 #include "data_struct.h"
 #include "config_manager.h"
 #include "platform/platform.h"
-#include "ascend_hal.h"
+#include <msprof_drv_api.h>
+#include <hdc_api.h>
 
 using namespace analysis::dvvp::transport;
 using namespace analysis::dvvp::common::error;

@@ -42,3 +42,11 @@ TEST_F(TypeInfoUtest, RegisterTypeInfo)
     // report not inited
     EXPECT_EQ(PROFILING_FAILED, MsprofRegTypeInfo(level, typeId, hashData));
 }
+
+TEST_F(TypeInfoUtest, ReportBufferLifecycle)
+{
+    ReportAttribute attr{};
+    EXPECT_EQ(PROFILING_FAILED, ReportManagerInitialize(&attr));
+    EXPECT_EQ(PROFILING_FAILED, ReportManagerInitialize(&attr));
+    MsprofFinalize();
+}

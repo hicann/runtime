@@ -584,6 +584,7 @@ TEST_F(RUNNING_MODE_UTEST, AppModeStartAppTaskForDynProf)
         .stubs()
         .will(returnValue(PROFILING_FAILED))
         .then(returnValue(PROFILING_SUCCESS));
+    MOCKER(Utils::UsleepInterupt).stubs().will(returnValue(0));
     EXPECT_EQ(PROFILING_FAILED, rMode.StartAppTaskForDynProf());
     EXPECT_EQ(PROFILING_FAILED, rMode.StartAppTaskForDynProf());
     EXPECT_EQ(PROFILING_FAILED, rMode.StartAppTaskForDynProf());
@@ -875,7 +876,8 @@ TEST_F(RUNNING_MODE_UTEST, SystemWaitSysTask)
     GlobalMockObject::verify();
     std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
     Collector::Dvvp::Msprofbin::SystemMode rMode("system", params);
-    params->profiling_period = 2;
+    params->profiling_period = 1;
+    MOCKER(Utils::UsleepInterupt).stubs().will(returnValue(0));
     EXPECT_EQ(PROFILING_SUCCESS, rMode.WaitSysTask());
 }
 

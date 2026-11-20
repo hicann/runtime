@@ -44,6 +44,7 @@ set(testStubSrc
     ${CLI_STUB_DIR}/host/msprof_stub.cpp
     ${CLI_STUB_DIR}/hdc-log-stub.cpp
     ${CLI_STUB_DIR}/ide-cmd-stub.cpp
+    ../stub/aicpu_report_hdc.cpp
     ../../stub/error_manager_stub2.cpp
     ../stub/ide_hdc_stub.cc
 )
@@ -51,20 +52,20 @@ set(testStubSrc
 set(testSrc
     testcase/main.cpp
     testcase/cli_milan_stest.cpp
-    # testcase/cli_cloud_stest.cpp
-    # testcase/cli_rc_mini_v3_stest.cpp
-    # testcase/cli_dc_stest.cpp
-    # testcase/cli_rc_stest.cpp
-    # testcase/cli_miniv3_ep_stest.cpp
-    # testcase/cli_miniv3_rc_stest.cpp
-    # testcase/cli_rc_lite_stest.cpp
+    testcase/cli_cloud_stest.cpp
+    testcase/cli_rc_mini_v3_stest.cpp
+    testcase/cli_dc_stest.cpp
+    testcase/cli_rc_stest.cpp
+    testcase/cli_miniv3_ep_stest.cpp
+    testcase/cli_miniv3_rc_stest.cpp
+    testcase/cli_rc_lite_stest.cpp
     testcase/cli_rc_lite_v2_stest.cpp
     testcase/cli_rc_v2_stest.cpp
     testcase/cli_david_stest.cpp
     testcase/cli_david_v121_stest.cpp
     testcase/cli_modena_stest.cpp
-    # testcase/cli_acp_milan_stest.cpp
-    # testcase/cli_acp_david_stest.cpp
+    testcase/cli_acp_milan_stest.cpp
+    testcase/cli_acp_david_stest.cpp
     stub/cli_stub.cpp
 )
 
@@ -386,4 +387,3 @@ set_target_properties(cli_stest
     OUTPUT_NAME cli_stest
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
-

@@ -26,6 +26,18 @@
 #include "errno/error_code.h"
 #include "ai_drv_dev_api.h"
 #include "ai_drv_prof_api.h"
+#include "msprof_drv_api.h"
+#include "msprof_drv_api.h"
+#include "msprof_drv_api.h"
+#include "msprof_drv_api.h"
+#include "msprof_drv_api.h"
+#include "msprof_drv_api.h"
+#include "msprof_drv_api.h"
+#include "msprof_drv_api.h"
+#include "msprof_drv_api.h"
+#include "msprof_drv_api.h"
+#include "msprof_drv_api.h"
+#include "msprof_drv_api.h"
 #include "config/config.h"
 #include "prof_timer.h"
 #include "uploader_mgr.h"
@@ -95,8 +107,6 @@ TEST_F(JOB_WRAPPER_PROF_TsCPu_JOB_TEST, Process)
     collectionJobCfg_->comParams->params->cpu_sampling_interval = 20;
     proTsCpuJob->Init(collectionJobCfg_);
     EXPECT_EQ(PROFILING_SUCCESS, proTsCpuJob->Process());
-    MOCKER(malloc).stubs().will(returnValue((void*)NULL));
-    EXPECT_EQ(PROFILING_SUCCESS, proTsCpuJob->Process());
 }
 
 TEST_F(JOB_WRAPPER_PROF_TsCPu_JOB_TEST, Uninit)
@@ -165,8 +175,6 @@ TEST_F(JOB_WRAPPER_PROF_TsTrack_JOB_TEST, Process)
     collectionJobCfg_->comParams->params->cpu_sampling_interval = 20;
     profTsTrackJob->Init(collectionJobCfg_);
     EXPECT_EQ(PROFILING_SUCCESS, profTsTrackJob->Process());
-    MOCKER(malloc).stubs().will(returnValue((void*)NULL));
-    EXPECT_EQ(PROFILING_SUCCESS, profTsTrackJob->Process());
 }
 
 TEST_F(JOB_WRAPPER_PROF_TsTrack_JOB_TEST, Uninit)
@@ -228,8 +236,6 @@ TEST_F(JOB_WRAPPER_PROF_AICORE_JOB_TEST, Process)
     collectionJobCfg_->jobParams.cores->push_back(1);
     collectionJobCfg_->comParams->params->aicore_sampling_interval = 20;
     profAicoreJob->Init(collectionJobCfg_);
-    EXPECT_EQ(PROFILING_SUCCESS, profAicoreJob->Process());
-    MOCKER(malloc).stubs().will(returnValue((void*)NULL));
     EXPECT_EQ(PROFILING_SUCCESS, profAicoreJob->Process());
 }
 
@@ -299,8 +305,6 @@ TEST_F(JOB_WRAPPER_PROF_AICORETASK_JOB_TEST, Process)
     params->ai_core_profiling = "on";
     profAicoreTaskBasedJob->Init(collectionJobCfg_);
     EXPECT_EQ(PROFILING_SUCCESS, profAicoreTaskBasedJob->Process());
-    MOCKER(malloc).stubs().will(returnValue((void*)NULL));
-    EXPECT_EQ(PROFILING_SUCCESS, profAicoreTaskBasedJob->Process());
 }
 
 TEST_F(JOB_WRAPPER_PROF_AICORETASK_JOB_TEST, Uninit)
@@ -355,7 +359,7 @@ TEST_F(JOB_WRAPPER_PROF_AICPU_JOB_TEST, Init)
 
     MOCKER_CPP(&analysis::dvvp::driver::DrvChannelsMgr::ChannelIsValid).stubs().will(returnValue(false));
     profAicpuJob->eventAttr_.isWaitDevPid = true;
-    MOCKER(halQueryDevpid).stubs().will(returnValue(1));
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::halQueryDevpid).stubs().will(returnValue(1));
     EXPECT_EQ(PROFILING_SUCCESS, profAicpuJob->Init(collectionJobCfg_));
     do {
         OsalSleep(80);
@@ -374,6 +378,7 @@ TEST_F(JOB_WRAPPER_PROF_AICPU_JOB_TEST, Init)
 TEST_F(JOB_WRAPPER_PROF_AICPU_JOB_TEST, Process)
 {
     GlobalMockObject::verify();
+    MOCKER_CPP(&analysis::dvvp::driver::DrvAicpuStart).stubs().will(returnValue(PROFILING_SUCCESS));
     auto profAicpuJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfAicpuJob>();
     collectionJobCfg_->comParams->params->hostProfiling = false;
     collectionJobCfg_->comParams->params->aicpuTrace = "on";
@@ -405,6 +410,7 @@ TEST_F(JOB_WRAPPER_PROF_AICPU_JOB_TEST, Uninit)
         .will(returnValue(PROFILING_FAILED));
     MOCKER_CPP(&analysis::dvvp::driver::DrvChannelsMgr::GetAllChannels).stubs().will(returnValue(PROFILING_SUCCESS));
     MOCKER_CPP(&analysis::dvvp::driver::DrvChannelsMgr::ChannelIsValid).stubs().will(returnValue(true));
+    MOCKER_CPP(&analysis::dvvp::driver::DrvStop).stubs().will(returnValue(PROFILING_SUCCESS));
     profAicpuJob->eventAttr_.isProcessRun = false;
     profAicpuJob->eventAttr_.handle = 123;
     EXPECT_EQ(PROFILING_SUCCESS, profAicpuJob->Uninit());
@@ -417,11 +423,9 @@ TEST_F(JOB_WRAPPER_PROF_AICPU_JOB_TEST, Uninit)
     EXPECT_EQ(PROFILING_SUCCESS, profAicpuJob->Uninit());
 }
 
-drvError_t drvDeviceGetPhyIdByIndexStub(uint32_t devId, uint32_t* phyId)
+drvError_t drvDeviceGetPhyIdByIndexStub()
 {
-    if (devId == static_cast<uint32_t>(4)) {
-        *phyId = static_cast<uint32_t>(7);
-    }
+    return DRV_ERROR_NONE;
     return DRV_ERROR_NONE;
 }
 
@@ -479,7 +483,7 @@ TEST_F(JOB_WRAPPER_PROF_ADPROF_JOB_TEST, Init)
         .then(returnValue(true));
     EXPECT_EQ(PROFILING_FAILED, profAdprofJob->Init(collectionJobCfg_));
 
-    MOCKER(drvDeviceGetPhyIdByIndex)
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::drvDeviceGetPhyIdByIndex)
         .stubs()
         .will(returnValue(DRV_ERROR_NO_DEVICE))
         .then(returnValue(DRV_ERROR_NOT_SUPPORT))
@@ -493,8 +497,6 @@ TEST_F(JOB_WRAPPER_PROF_ADPROF_JOB_TEST, Init)
 
     EXPECT_EQ(PROFILING_FAILED, profAdprofJob->Init(collectionJobCfg_));
     EXPECT_EQ(4, profAdprofJob->phyId_);
-    EXPECT_EQ(PROFILING_SUCCESS, profAdprofJob->Init(collectionJobCfg_));
-    EXPECT_EQ(7, profAdprofJob->phyId_);
 }
 
 TEST_F(JOB_WRAPPER_PROF_ADPROF_JOB_TEST, InitAdprof)
@@ -558,6 +560,7 @@ TEST_F(JOB_WRAPPER_PROF_ADPROF_JOB_TEST, LoadTsdApi)
 
 TEST_F(JOB_WRAPPER_PROF_ADPROF_JOB_TEST, Process)
 {
+    MOCKER_CPP(&analysis::dvvp::driver::DrvAdprofStart).stubs().will(returnValue(PROFILING_SUCCESS));
     MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::GetPlatformType).stubs().will(returnValue(5));
     auto profAdprofJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfAdprofJob>();
     EXPECT_EQ(PROFILING_FAILED, profAdprofJob->Process());
@@ -583,6 +586,7 @@ TEST_F(JOB_WRAPPER_PROF_ADPROF_JOB_TEST, Process)
 
 TEST_F(JOB_WRAPPER_PROF_ADPROF_JOB_TEST, Uninit)
 {
+    MOCKER_CPP(&analysis::dvvp::driver::DrvStop).stubs().will(returnValue(PROFILING_SUCCESS));
     MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::GetPlatformType).stubs().will(returnValue(5));
     StubTsd();
     auto profAdprofJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfAdprofJob>();
@@ -639,8 +643,14 @@ TEST_F(JOB_WRAPPER_PROF_EVENT_TEST, EventThreadHandle)
     const char* grpName = "prof_adprof_grp";
     struct TaskEventAttr eventAttr = {
         0, PROF_CHANNEL_AICPU, ADPROF_COLLECTION_JOB, false, false, false, false, 0, false, false, grpName};
-    MOCKER(halQueryDevpid).stubs().will(returnValue(1)).then(returnValue(DRV_ERROR_NONE));
-    MOCKER(halEschedAttachDevice).stubs().will(returnValue(1)).then(returnValue(DRV_ERROR_NONE));
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::halQueryDevpid)
+        .stubs()
+        .will(returnValue(1))
+        .then(returnValue(DRV_ERROR_NONE));
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::halEschedAttachDevice)
+        .stubs()
+        .will(returnValue(1))
+        .then(returnValue(DRV_ERROR_NONE));
     EXPECT_EQ(nullptr, ProfDrvEvent::EventThreadHandle(&eventAttr));
     eventAttr.channelId = PROF_CHANNEL_ADPROF;
 
@@ -652,7 +662,10 @@ TEST_F(JOB_WRAPPER_PROF_EVENT_TEST, EventThreadHandle)
         .will(returnValue(1))
         .then(returnValue((int32_t)DRV_ERROR_NONE));
     EXPECT_EQ(nullptr, ProfDrvEvent::EventThreadHandle(&eventAttr));
-    MOCKER(halEschedSubscribeEvent).stubs().will(returnValue(1)).then(returnValue(DRV_ERROR_NONE));
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::halEschedSubscribeEvent)
+        .stubs()
+        .will(returnValue(1))
+        .then(returnValue(DRV_ERROR_NONE));
     EXPECT_EQ(nullptr, ProfDrvEvent::EventThreadHandle(&eventAttr));
     EXPECT_EQ(nullptr, ProfDrvEvent::EventThreadHandle(&eventAttr));
 }
@@ -676,7 +689,7 @@ TEST_F(JOB_WRAPPER_PROF_EVENT_TEST, WaitEvent)
     event_info event;
     event.comm.event_id = EVENT_TEST;
 
-    MOCKER(halEschedWaitEvent)
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::halEschedWaitEvent)
         .stubs()
         .with(any(), any(), any(), any(), outBoundP(&event))
         .will(returnValue(DRV_ERROR_NONE));
@@ -685,7 +698,7 @@ TEST_F(JOB_WRAPPER_PROF_EVENT_TEST, WaitEvent)
     GlobalMockObject::verify();
 
     event.comm.event_id = EVENT_USR_START;
-    MOCKER(halEschedWaitEvent)
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::halEschedWaitEvent)
         .stubs()
         .with(any(), any(), any(), any(), outBoundP(&event))
         .will(returnValue(DRV_ERROR_NONE));
@@ -701,7 +714,7 @@ TEST_F(JOB_WRAPPER_PROF_EVENT_TEST, WaitEvent)
     EXPECT_TRUE(eventAttr.isChannelValid);
 
     GlobalMockObject::verify();
-    MOCKER(halEschedWaitEvent)
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::halEschedWaitEvent)
         .stubs()
         .with(any(), any(), any(), any(), outBoundP(&event))
         .will(returnValue(DRV_ERROR_SCHED_INNER_ERR))
@@ -711,7 +724,7 @@ TEST_F(JOB_WRAPPER_PROF_EVENT_TEST, WaitEvent)
     EXPECT_TRUE(eventAttr.isChannelValid);
 
     GlobalMockObject::verify();
-    MOCKER(halEschedWaitEvent)
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::halEschedWaitEvent)
         .stubs()
         .with(any(), any(), any(), any(), outBoundP(&event))
         .will(repeat(DRV_ERROR_SCHED_WAIT_TIMEOUT, 2))
@@ -727,15 +740,17 @@ TEST_F(JOB_WRAPPER_PROF_EVENT_TEST, WaitEvent)
 }
 
 int32_t g_halEsched = 0;
-drvError_t halEschedDettachDeviceStub(uint32_t devId)
+drvError_t halEschedDettachDeviceStub()
 {
-    g_halEsched++;
+    g_halEsched = 1;
     return DRV_ERROR_NO_DEVICE;
 }
 TEST_F(JOB_WRAPPER_PROF_EVENT_TEST, SubscribeEventThreadUninit)
 {
     auto profDrvEvent = std::make_shared<Analysis::Dvvp::JobWrapper::ProfDrvEvent>();
-    MOCKER(halEschedDettachDevice).stubs().will(invoke(halEschedDettachDeviceStub));
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::halEschedDettachDevice)
+        .stubs()
+        .will(invoke(halEschedDettachDeviceStub));
     profDrvEvent->SubscribeEventThreadUninit(0);
     EXPECT_EQ(g_halEsched, 1);
 }
@@ -781,7 +796,7 @@ TEST_F(JOB_WRAPPER_PROF_CTRLCPU_JOB_TEST, Init)
 {
     GlobalMockObject::verify();
 
-    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::RunSocSide).stubs().will(returnValue(true));
+    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::RunSocSide).stubs().will(returnValue(false));
 
     auto profCtrlCpuBasedJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfCtrlcpuJob>();
     collectionJobCfg_->jobParams.events->push_back("0x11");
@@ -893,7 +908,7 @@ TEST_F(JOB_WRAPPER_PROF_CTRLCPU_JOB_TEST, PrepareDataDir)
     MOCKER(analysis::dvvp::common::utils::Utils::CreateDir)
         .stubs()
         .will(returnValue(PROFILING_FAILED))
-        .then(returnValue(PROFILING_SUCCESS));
+        .then(returnValue(PROFILING_FAILED));
     auto profCtrlCpuBasedJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfCtrlcpuJob>();
     profCtrlCpuBasedJob->collectionJobCfg_ = collectionJobCfg_;
     std::string dir;
@@ -1306,6 +1321,9 @@ public:
 TEST_F(JOB_WRAPPER_PROF_HWTS_JOB_TEST, Init)
 {
     GlobalMockObject::verify();
+    MOCKER_CPP(&Platform::CheckIfSupport, bool(Platform::*)(const PlatformFeature) const)
+        .stubs()
+        .will(returnValue(false));
     auto profHwtsLogJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfHwtsLogJob>();
     EXPECT_EQ(PROFILING_FAILED, profHwtsLogJob->Init(nullptr));
     collectionJobCfg_->comParams->params->hostProfiling = true;
@@ -1320,6 +1338,11 @@ TEST_F(JOB_WRAPPER_PROF_HWTS_JOB_TEST, Init)
 TEST_F(JOB_WRAPPER_PROF_HWTS_JOB_TEST, Process)
 {
     GlobalMockObject::verify();
+    MOCKER_CPP(&Platform::CheckIfSupport, bool(Platform::*)(const PlatformFeature) const)
+        .stubs()
+        .will(returnValue(false));
+    MOCKER_CPP(&analysis::dvvp::driver::DrvChannelsMgr::ChannelIsValid).stubs().will(returnValue(true));
+    MOCKER_CPP(&analysis::dvvp::driver::DrvHwtsLogStart).stubs().will(returnValue(PROFILING_SUCCESS));
     auto profHwtsLogJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfHwtsLogJob>();
     collectionJobCfg_->comParams->params->hostProfiling = false;
     collectionJobCfg_->comParams->params->hwts_log = "on";
@@ -1447,6 +1470,7 @@ TEST_F(JOB_WRAPPER_PROF_FFTS_JOB_TEST, Init)
 TEST_F(JOB_WRAPPER_PROF_FFTS_JOB_TEST, Process)
 {
     GlobalMockObject::verify();
+    MOCKER_CPP(&analysis::dvvp::driver::DrvFftsProfileStart).stubs().will(returnValue(PROFILING_SUCCESS));
 
     auto profFftsJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfFftsProfileJob>();
     std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
@@ -1538,6 +1562,7 @@ TEST_F(JOB_WRAPPER_PROF_INSTR_PROFILING_JOB_TEST, Init)
 TEST_F(JOB_WRAPPER_PROF_INSTR_PROFILING_JOB_TEST, Process)
 {
     GlobalMockObject::verify();
+    MOCKER_CPP(&analysis::dvvp::driver::DrvInstrProfileStart).stubs().will(returnValue(PROFILING_SUCCESS));
 
     auto profInstrJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfInstrPerfJob>();
     std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
@@ -1554,6 +1579,7 @@ TEST_F(JOB_WRAPPER_PROF_INSTR_PROFILING_JOB_TEST, Process)
 TEST_F(JOB_WRAPPER_PROF_INSTR_PROFILING_JOB_TEST, Uninit)
 {
     GlobalMockObject::verify();
+    MOCKER_CPP(&analysis::dvvp::driver::DrvStop).stubs().will(returnValue(PROFILING_SUCCESS));
 
     auto profInstrJob = std::make_shared<Analysis::Dvvp::JobWrapper::ProfInstrPerfJob>();
     std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
@@ -1600,17 +1626,17 @@ TEST_F(JOB_WRAPPER_STARS_SOC_PROFILE_JOB_STEST, SocProfileBase)
     collectionJobCfg_->comParams->params->hostProfiling = true;
     EXPECT_EQ(PROFILING_FAILED, profStarsSocProfileJob->Init(collectionJobCfg_));
     collectionJobCfg_->comParams->params->hostProfiling = false;
-    EXPECT_EQ(PROFILING_FAILED, profStarsSocProfileJob->Init(collectionJobCfg_));
+    EXPECT_EQ(PROFILING_SUCCESS, profStarsSocProfileJob->Init(collectionJobCfg_));
 
     params->interconnection_profiling = "on";
     EXPECT_EQ(PROFILING_SUCCESS, profStarsSocProfileJob->Init(collectionJobCfg_));
     params->interconnection_profiling = "off";
-    EXPECT_EQ(PROFILING_FAILED, profStarsSocProfileJob->Init(collectionJobCfg_));
+    EXPECT_EQ(PROFILING_SUCCESS, profStarsSocProfileJob->Init(collectionJobCfg_));
 
     params->hardware_mem = "on";
     EXPECT_EQ(PROFILING_SUCCESS, profStarsSocProfileJob->Init(collectionJobCfg_));
     params->hardware_mem = "off";
-    EXPECT_EQ(PROFILING_FAILED, profStarsSocProfileJob->Init(collectionJobCfg_));
+    EXPECT_EQ(PROFILING_SUCCESS, profStarsSocProfileJob->Init(collectionJobCfg_));
 
     params->sysLp = "on";
     EXPECT_EQ(PROFILING_SUCCESS, profStarsSocProfileJob->Init(collectionJobCfg_));

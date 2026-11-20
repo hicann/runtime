@@ -30,6 +30,7 @@ set(src_file
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/platform_interface.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/base_analyzer.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform/nano_platform.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/profapi/src/prof_mstx_plugin.cpp
 )
 
 if(DEFINED PRODUCT AND PRODUCT STREQUAL "ascend031")
@@ -41,6 +42,7 @@ add_executable(prof_api_stest
     test/prof_api_stest.cpp
     test/prof_api_plugin_stest.cpp
     test/prof_inner_api_stest.cpp
+    test/prof_mstx_plugin_stest.cpp
     stub/mmpa_stub.cpp
     ../stub/mmpa_stub.cpp
     ../stub/hdc-log-stub.cpp
@@ -75,6 +77,16 @@ target_include_directories(prof_api_stest PRIVATE
     ${MSPROF_SOURCE_DIR}/dvvp/depend/include/wrapper
     ${TOP_DIR}/ace/npuruntime/acl/third_party/inc/driver
     stub/
+    ${TOP_DIR}/pkg_inc/driver
+    ${TOP_DIR}/pkg_inc/runtime
+    ${TOP_DIR}/pkg_inc/base
+    ${TOP_DIR}/include/external/acl
+    ${TOP_DIR}/include/external
+    ${TOP_DIR}/src/inc
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/mstx/inc
+    ${MSPROF_SOURCE_DIR}/dvvp/profhal/adx/inc
+    ${MSPROF_SOURCE_DIR}/dvvp/profhal/halinc
+    ${TOP_DIR}/pkg_inc/runtime/runtime
 )
 
 
@@ -144,6 +156,15 @@ target_include_directories(prof_api_c_stest PRIVATE
     ${MSPROF_SOURCE_DIR}/basic/osal
     ${MSPROF_SOURCE_DIR}/../inc/toolchain
     stub/
+    ${TOP_DIR}/pkg_inc/driver
+    ${TOP_DIR}/pkg_inc/runtime
+    ${TOP_DIR}/pkg_inc/base
+    ${TOP_DIR}/include/external/acl
+    ${TOP_DIR}/include/external
+    ${TOP_DIR}/src/inc
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/mstx/inc
+    ${MSPROF_SOURCE_DIR}/dvvp/profhal/adx/inc
+    ${MSPROF_SOURCE_DIR}/dvvp/profhal/halinc
 )
 
 

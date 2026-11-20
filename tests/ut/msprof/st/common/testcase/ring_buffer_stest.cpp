@@ -35,28 +35,30 @@ TEST_F(COMMON_QUEUE_RING_BUFFER_STEST, ReportBuffer_GetUsedSize)
     bq->Init(4, name);
     EXPECT_EQ(4, bq->capacity_);
 
-    bq->BatchPush(1, &data1, sizeof(data1));
+    EXPECT_EQ(MSPROF_ERROR_NONE, bq->TryPush(1, data1));
     EXPECT_EQ(1, bq->GetUsedSize());
-    bq->BatchPush(1, &data2, sizeof(data2));
+    EXPECT_EQ(MSPROF_ERROR_NONE, bq->TryPush(1, data2));
     EXPECT_EQ(2, bq->GetUsedSize());
-    bq->BatchPush(1, &data3, sizeof(data3));
+    EXPECT_EQ(MSPROF_ERROR_NONE, bq->TryPush(1, data3));
     EXPECT_EQ(3, bq->GetUsedSize());
-    bq->BatchPush(1, &data4, sizeof(data4));
-    EXPECT_EQ(4, bq->GetUsedSize());
+    EXPECT_EQ(MSPROF_ERROR_NONE, bq->TryPush(1, data4));
+    // The counter uses modulo capacity and cannot distinguish an empty queue from a full one.
+    EXPECT_EQ(0U, bq->GetUsedSize());
 
     EXPECT_EQ(0, bq->readIndex_.load());
     EXPECT_EQ(4, bq->writeIndex_.load());
 
-    bq->BatchPush(1, &data5, sizeof(data5));
-    EXPECT_EQ(1, bq->GetUsedSize());
+    uint32_t aging = 0;
+    int popData = 0;
+    EXPECT_FALSE(bq->TryPop(aging, popData));
 
-    size_t popSize = sizeof(int);
-    void* popPtr = bq->BatchPop(1, popSize, true);
-    EXPECT_NE(nullptr, popPtr);
-    EXPECT_EQ(5, *static_cast<int*>(popPtr));
-    EXPECT_EQ(0, bq->GetUsedSize());
+    EXPECT_EQ(MSPROF_ERROR_NONE, bq->TryPush(1, data5));
+    EXPECT_EQ(1U, bq->GetUsedSize());
 
-    popSize = sizeof(int);
-    EXPECT_EQ(nullptr, bq->BatchPop(1, popSize, true));
+    EXPECT_TRUE(bq->TryPop(aging, popData));
+    EXPECT_EQ(5, popData);
+    EXPECT_EQ(0U, bq->GetUsedSize());
+
+    EXPECT_FALSE(bq->TryPop(aging, popData));
     bq->UnInit();
 }

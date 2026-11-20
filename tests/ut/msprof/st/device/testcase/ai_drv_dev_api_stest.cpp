@@ -14,6 +14,7 @@
 #include "errno/error_code.h"
 #include "msprof_dlog.h"
 #include "ascend_hal.h"
+#include "msprof_drv_api.h"
 #include "config/config_manager.h"
 #include "validation/param_validation.h"
 #include "utils.h"
@@ -32,7 +33,7 @@ protected:
 TEST_F(DRV_DEV_API_STEST, DrvGetPlatformInfo)
 {
     GlobalMockObject::verify();
-    MOCKER(drvGetPlatformInfo)
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::drvGetPlatformInfo)
         .stubs()
         .will(returnValue(DRV_ERROR_NONE))
         .then(returnValue(MSPROF_HELPER_HOST))
@@ -46,7 +47,10 @@ TEST_F(DRV_DEV_API_STEST, DrvGetPlatformInfo)
 TEST_F(DRV_DEV_API_STEST, DrvCheckIfHelperHost)
 {
     GlobalMockObject::verify();
-    MOCKER(drvGetDevNum).stubs().will(returnValue(DRV_ERROR_NONE)).then(returnValue(MSPROF_HELPER_HOST));
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::drvGetDevNum)
+        .stubs()
+        .will(returnValue(DRV_ERROR_NONE))
+        .then(returnValue(MSPROF_HELPER_HOST));
     EXPECT_EQ(false, analysis::dvvp::driver::DrvCheckIfHelperHost());
     EXPECT_EQ(true, analysis::dvvp::driver::DrvCheckIfHelperHost());
 }
@@ -57,7 +61,10 @@ TEST_F(DRV_DEV_API_STEST, DrvGetAivNum)
     uint32_t deviceId = 0;
     int64_t aivNum = 0;
     ConfigManager::instance()->configMap_["type"] = std::to_string(static_cast<uint64_t>(PlatformType::CHIP_V4_1_0));
-    MOCKER(halGetDeviceInfo).stubs().will(returnValue(DRV_ERROR_NONE)).then(returnValue(DRV_ERROR_NO_DEVICE));
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::halGetDeviceInfo)
+        .stubs()
+        .will(returnValue(DRV_ERROR_NONE))
+        .then(returnValue(DRV_ERROR_NO_DEVICE));
     EXPECT_EQ(PROFILING_SUCCESS, analysis::dvvp::driver::DrvGetAivNum(deviceId, aivNum));
     EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::driver::DrvGetAivNum(deviceId, aivNum));
     ConfigManager::instance()->configMap_["type"] = std::to_string(static_cast<uint64_t>(PlatformType::DC_TYPE));
@@ -71,11 +78,11 @@ TEST_F(DRV_DEV_API_STEST, DrvGetEnvType)
     uint32_t deviceId = 0;
     int64_t envType = 0;
 
-    MOCKER(halGetDeviceInfo)
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::halGetDeviceInfo)
         .stubs()
         .will(returnValue(DRV_ERROR_NO_DEVICE))
         .then(returnValue(DRV_ERROR_NONE))
-        .then(returnValue(DRV_ERROR_NOT_SUPPORT));
+        .then(returnValue(static_cast<int>(DRV_ERROR_NOT_SUPPORT)));
 
     EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::driver::DrvGetEnvType(deviceId, envType));
     EXPECT_EQ(PROFILING_SUCCESS, analysis::dvvp::driver::DrvGetEnvType(deviceId, envType));
@@ -89,11 +96,11 @@ TEST_F(DRV_DEV_API_STEST, DrvGetCtrlCpuId)
     uint32_t deviceId = 0;
     int64_t ctrlCpuId = 0;
 
-    MOCKER(halGetDeviceInfo)
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::halGetDeviceInfo)
         .stubs()
         .will(returnValue(DRV_ERROR_NO_DEVICE))
         .then(returnValue(DRV_ERROR_NONE))
-        .then(returnValue(DRV_ERROR_NOT_SUPPORT));
+        .then(returnValue(static_cast<int>(DRV_ERROR_NOT_SUPPORT)));
 
     EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::driver::DrvGetCtrlCpuId(deviceId, ctrlCpuId));
     EXPECT_EQ(PROFILING_SUCCESS, analysis::dvvp::driver::DrvGetCtrlCpuId(deviceId, ctrlCpuId));
@@ -107,11 +114,11 @@ TEST_F(DRV_DEV_API_STEST, DrvGetCtrlCpuCoreNum)
     uint32_t deviceId = 0;
     int64_t ctrlCpuCoreNum = 0;
 
-    MOCKER(halGetDeviceInfo)
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::halGetDeviceInfo)
         .stubs()
         .will(returnValue(DRV_ERROR_NO_DEVICE))
         .then(returnValue(DRV_ERROR_NONE))
-        .then(returnValue(DRV_ERROR_NOT_SUPPORT));
+        .then(returnValue(static_cast<int>(DRV_ERROR_NOT_SUPPORT)));
 
     EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::driver::DrvGetCtrlCpuCoreNum(deviceId, ctrlCpuCoreNum));
     EXPECT_EQ(PROFILING_SUCCESS, analysis::dvvp::driver::DrvGetCtrlCpuCoreNum(deviceId, ctrlCpuCoreNum));
@@ -125,11 +132,11 @@ TEST_F(DRV_DEV_API_STEST, DrvGetCtrlCpuEndianLittle)
     uint32_t deviceId = 0;
     int64_t ctrlCpuEndianLittle = 0;
 
-    MOCKER(halGetDeviceInfo)
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::halGetDeviceInfo)
         .stubs()
         .will(returnValue(DRV_ERROR_NO_DEVICE))
         .then(returnValue(DRV_ERROR_NONE))
-        .then(returnValue(DRV_ERROR_NOT_SUPPORT));
+        .then(returnValue(static_cast<int>(DRV_ERROR_NOT_SUPPORT)));
 
     EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::driver::DrvGetCtrlCpuEndianLittle(deviceId, ctrlCpuEndianLittle));
     EXPECT_EQ(PROFILING_SUCCESS, analysis::dvvp::driver::DrvGetCtrlCpuEndianLittle(deviceId, ctrlCpuEndianLittle));
@@ -143,11 +150,11 @@ TEST_F(DRV_DEV_API_STEST, DrvGetAiCpuCoreNum)
     uint32_t deviceId = 0;
     int64_t aiCpuCoreNum = 0;
 
-    MOCKER(halGetDeviceInfo)
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::halGetDeviceInfo)
         .stubs()
         .will(returnValue(DRV_ERROR_NO_DEVICE))
         .then(returnValue(DRV_ERROR_NONE))
-        .then(returnValue(DRV_ERROR_NOT_SUPPORT));
+        .then(returnValue(static_cast<int>(DRV_ERROR_NOT_SUPPORT)));
 
     EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::driver::DrvGetAiCpuCoreNum(deviceId, aiCpuCoreNum));
     EXPECT_EQ(PROFILING_SUCCESS, analysis::dvvp::driver::DrvGetAiCpuCoreNum(deviceId, aiCpuCoreNum));
@@ -161,11 +168,11 @@ TEST_F(DRV_DEV_API_STEST, DrvGetAiCpuCoreId)
     uint32_t deviceId = 0;
     int64_t aiCpuCoreId = 0;
 
-    MOCKER(halGetDeviceInfo)
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::halGetDeviceInfo)
         .stubs()
         .will(returnValue(DRV_ERROR_NO_DEVICE))
         .then(returnValue(DRV_ERROR_NONE))
-        .then(returnValue(DRV_ERROR_NOT_SUPPORT));
+        .then(returnValue(static_cast<int>(DRV_ERROR_NOT_SUPPORT)));
 
     EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::driver::DrvGetAiCpuCoreId(deviceId, aiCpuCoreId));
     EXPECT_EQ(PROFILING_SUCCESS, analysis::dvvp::driver::DrvGetAiCpuCoreId(deviceId, aiCpuCoreId));
@@ -179,11 +186,11 @@ TEST_F(DRV_DEV_API_STEST, DrvGetAiCpuOccupyBitmap)
     uint32_t deviceId = 0;
     int64_t aiCpuOccupyBitmap = 0;
 
-    MOCKER(halGetDeviceInfo)
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::halGetDeviceInfo)
         .stubs()
         .will(returnValue(DRV_ERROR_NO_DEVICE))
         .then(returnValue(DRV_ERROR_NONE))
-        .then(returnValue(DRV_ERROR_NOT_SUPPORT));
+        .then(returnValue(static_cast<int>(DRV_ERROR_NOT_SUPPORT)));
 
     EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::driver::DrvGetAiCpuOccupyBitmap(deviceId, aiCpuOccupyBitmap));
     EXPECT_EQ(PROFILING_SUCCESS, analysis::dvvp::driver::DrvGetAiCpuOccupyBitmap(deviceId, aiCpuOccupyBitmap));
@@ -197,11 +204,11 @@ TEST_F(DRV_DEV_API_STEST, DrvGetTsCpuCoreNum)
     uint32_t deviceId = 0;
     int64_t tsCpuCoreNum = 0;
 
-    MOCKER(halGetDeviceInfo)
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::halGetDeviceInfo)
         .stubs()
         .will(returnValue(DRV_ERROR_NO_DEVICE))
         .then(returnValue(DRV_ERROR_NONE))
-        .then(returnValue(DRV_ERROR_NOT_SUPPORT));
+        .then(returnValue(static_cast<int>(DRV_ERROR_NOT_SUPPORT)));
 
     EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::driver::DrvGetTsCpuCoreNum(deviceId, tsCpuCoreNum));
     EXPECT_EQ(PROFILING_SUCCESS, analysis::dvvp::driver::DrvGetTsCpuCoreNum(deviceId, tsCpuCoreNum));
@@ -215,11 +222,11 @@ TEST_F(DRV_DEV_API_STEST, DrvGetAiCoreId)
     uint32_t deviceId = 0;
     int64_t aiCoreId = 0;
 
-    MOCKER(halGetDeviceInfo)
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::halGetDeviceInfo)
         .stubs()
         .will(returnValue(DRV_ERROR_NO_DEVICE))
         .then(returnValue(DRV_ERROR_NONE))
-        .then(returnValue(DRV_ERROR_NOT_SUPPORT));
+        .then(returnValue(static_cast<int>(DRV_ERROR_NOT_SUPPORT)));
 
     EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::driver::DrvGetAiCoreId(deviceId, aiCoreId));
     EXPECT_EQ(PROFILING_SUCCESS, analysis::dvvp::driver::DrvGetAiCoreId(deviceId, aiCoreId));
@@ -233,11 +240,11 @@ TEST_F(DRV_DEV_API_STEST, DrvGetAiCoreNum)
     uint32_t deviceId = 0;
     int64_t aiCoreNum = 0;
 
-    MOCKER(halGetDeviceInfo)
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::halGetDeviceInfo)
         .stubs()
         .will(returnValue(DRV_ERROR_NO_DEVICE))
         .then(returnValue(DRV_ERROR_NONE))
-        .then(returnValue(DRV_ERROR_NOT_SUPPORT));
+        .then(returnValue(static_cast<int>(DRV_ERROR_NOT_SUPPORT)));
 
     EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::driver::DrvGetAiCoreNum(deviceId, aiCoreNum));
     EXPECT_EQ(PROFILING_SUCCESS, analysis::dvvp::driver::DrvGetAiCoreNum(deviceId, aiCoreNum));
@@ -252,7 +259,7 @@ TEST_F(DRV_DEV_API_STEST, DrvGetDeviceTime)
     uint64_t startMono = 0;
     uint64_t cntvct = 0;
 
-    MOCKER(halGetDeviceInfo)
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::halGetDeviceInfo)
         .stubs()
         .will(returnValue(DRV_ERROR_NO_DEVICE))
         .then(returnValue(DRV_ERROR_NONE))
@@ -260,7 +267,7 @@ TEST_F(DRV_DEV_API_STEST, DrvGetDeviceTime)
         .then(returnValue(DRV_ERROR_NONE))
         .then(returnValue(DRV_ERROR_NO_DEVICE))
         .then(returnValue(DRV_ERROR_NOT_SUPPORT))
-        .then(returnValue(DRV_ERROR_NOT_SUPPORT));
+        .then(returnValue(static_cast<int>(DRV_ERROR_NOT_SUPPORT)));
 
     EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::driver::DrvGetDeviceTime(deviceId, startMono, cntvct));
     EXPECT_EQ(PROFILING_SUCCESS, analysis::dvvp::driver::DrvGetDeviceTime(deviceId, startMono, cntvct));
@@ -277,7 +284,7 @@ TEST_F(DRV_DEV_API_STEST, DrvChannelRead)
     unsigned char out_buf[4096];
     uint32_t buf_size = 4096;
 
-    MOCKER(prof_channel_read)
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::ProfChannelRead)
         .stubs()
         .will(returnValue(PROF_ERROR))
         .then(returnValue(64))
@@ -299,7 +306,10 @@ TEST_F(DRV_DEV_API_STEST, DrvChannelPoll)
 
     struct prof_poll_info out_buf[2];
 
-    MOCKER(prof_channel_poll).stubs().will(returnValue(PROF_ERROR)).then(returnValue(PROF_OK));
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::ProfChannelPoll)
+        .stubs()
+        .will(returnValue(PROF_ERROR))
+        .then(returnValue(PROF_OK));
 
     EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::driver::DrvChannelPoll(nullptr, 0, 1));
 
@@ -312,11 +322,11 @@ TEST_F(DRV_DEV_API_STEST, DrvProfFlush)
 {
     GlobalMockObject::verify();
 
-    MOCKER(halProfDataFlush)
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::halProfDataFlush)
         .stubs()
-        .will(returnValue(DRV_ERROR_NONE))
-        .then(returnValue(DRV_ERROR_NO_DEVICE))
-        .then(returnValue(DRV_ERROR_NOT_SUPPORT));
+        .will(returnValue(0))
+        .then(returnValue(-1))
+        .then(returnValue(static_cast<int>(DRV_ERROR_NOT_SUPPORT)));
     unsigned int bufSize = 0;
     EXPECT_EQ(PROFILING_SUCCESS, analysis::dvvp::driver::DrvProfFlush(0, 0, bufSize));
 

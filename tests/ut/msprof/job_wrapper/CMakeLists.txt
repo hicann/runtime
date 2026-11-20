@@ -180,7 +180,7 @@ set(localSrcFiles
     test/prof_biu_perf_utest.cpp
     test/adx_prof_api_utest.cpp
     test/command_handle_utest.cpp
-    #test/prof_device_rpc_utest.cpp
+    test/prof_device_rpc_utest.cpp
 )
 
 

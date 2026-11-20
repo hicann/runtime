@@ -32,6 +32,7 @@ const std::string PROF_DELAY_SWITCH = "delayTime";
 const std::string PROF_DURATION_SWITCH = "durationTime";
 
 const uint32_t PROF_WAIT_START = 2;
+const uint32_t PROF_TEST_WAIT_SEC = 1;
 INT32 mmCreateProcessStub(const CHAR* fileName, const mmArgvEnv* env, const CHAR* stdoutRedirectFile, mmProcess* id)
 {
     if (id == NULL) {
@@ -207,7 +208,7 @@ int32_t Application(int32_t argc, char* argv[], int32_t envc, char* envp[])
         if (aclrtResetDevice(1) != ACL_SUCCESS) { // check dynamic map if deduplicate
             return -1;
         }
-        sleep(delayTime + PROF_WAIT_START); // sleep add 2s to make sure profiling is start
+        sleep(PROF_TEST_WAIT_SEC); // keep startup order while reducing the fixed test wait
     }
 
     if (DataReportMgr().SimulateReport() != 0) {

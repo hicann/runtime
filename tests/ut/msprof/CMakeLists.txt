@@ -70,6 +70,11 @@ generate_cann_protobuf(profiler
     ${MSPROF_SOURCE_DIR}/dvvp/proto/profiler.proto
 )
 
+if(NOT COMMAND run_llt_test)
+    macro(run_llt_test)
+    endmacro()
+endif()
+
 add_subdirectory(acp)
 add_subdirectory(app)
 add_subdirectory(avp)
@@ -89,8 +94,17 @@ add_subdirectory(transport)
 add_subdirectory(st/adda)
 add_subdirectory(st/cli)
 add_subdirectory(st/geoption)
+add_subdirectory(st/acp)
 add_subdirectory(st/acljson)
 add_subdirectory(st/api)
+add_subdirectory(st/common)
+add_subdirectory(st/device)
+add_subdirectory(st/msprofbin)
+add_subdirectory(st/transport)
+add_subdirectory(st/msprof)
+add_subdirectory(st/profhal)
+add_subdirectory(st/profapi)
+add_subdirectory(st/job_wrapper)
 
 ###################################################################################################
 
@@ -124,6 +138,11 @@ set(MSPROF_TARGET_PART1
 
 set(MSPROF_TARGET_PART2
     cli_stest
+    common_stest
+    device_stest
+    msprof_bin_stest
+    transport_stest
+    acp_manager_stest
     acl_api_stest
     geoption_stest
     acljson_stest

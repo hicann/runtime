@@ -57,7 +57,12 @@ TEST_F(MSPROF_MANAGER_STEST, Init)
     params->profiling_period = 100;
     params->usedParams = {ARGS_PYTHON_PATH, ARGS_SYS_DEVICES,  ARGS_OUTPUT,
                           ARGS_HOST_SYS,    ARGS_HOST_SYS_PID, ARGS_SYS_PERIOD};
+    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsHelperHostSide).stubs().will(returnValue(false));
     EXPECT_EQ(PROFILING_SUCCESS, MsprofManager::instance()->Init(params));
+    EXPECT_EQ("system", MsprofManager::instance()->rMode_->modeName_);
+    GlobalMockObject::verify();
+    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsHelperHostSide).stubs().will(returnValue(true));
+    EXPECT_EQ(PROFILING_FAILED, MsprofManager::instance()->Init(params));
     EXPECT_EQ("system", MsprofManager::instance()->rMode_->modeName_);
 
     params->devices = "";
@@ -141,6 +146,7 @@ TEST_F(MSPROF_MANAGER_STEST, NotifyStop)
 TEST_F(MSPROF_MANAGER_STEST, MsProcessCmd)
 {
     GlobalMockObject::verify();
+    MOCKER(Utils::UsleepInterupt).stubs().will(returnValue(0));
     std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams);
     std::shared_ptr<Collector::Dvvp::Msprofbin::AppMode> appMode(
         new Collector::Dvvp::Msprofbin::AppMode("app", params));

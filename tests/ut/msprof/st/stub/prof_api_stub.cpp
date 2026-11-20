@@ -10,3 +10,17 @@
 #include "prof_api.h"
 
 int32_t profSetStepInfo(const uint64_t indexId, const uint16_t tagId, void* const stream) { return 0; }
+extern "C" uint64_t ProfStr2Id(const char* hashInfo, size_t length)
+{
+    (void)hashInfo;
+    (void)length;
+    return 0;
+}
+
+extern "C" int32_t ProfAclRangePushEx(void* attr)
+{
+    (void)attr;
+    return 0;
+}
+
+extern "C" int32_t ProfAclRangePop() { return 0; }

@@ -24,6 +24,7 @@
 #include "errno/error_code.h"
 #include "msprof_tx_manager.h"
 #include "msproftx_adaptor.h"
+#include "prof_acl_api.h"
 #include "osal.h"
 
 namespace {
@@ -366,3 +367,52 @@ TEST_F(ACL_PROF_MARK_EX_UTEST, ReturnsSilentlyAfterUninitializationWithoutCallin
     EXPECT_TRUE(capture_.reports.empty());
 }
 } // namespace
+
+TEST_F(ACL_PROF_OP_API_UTEST, OpMetadataApiRejectsInvalidInputs)
+{
+    size_t size = 0;
+    EXPECT_EQ(ACL_ERROR_INVALID_PARAM, aclprofGetOpDescSize(nullptr));
+    EXPECT_EQ(ACL_SUCCESS, aclprofGetOpDescSize(&size));
+    EXPECT_NE(0U, size);
+
+    uint32_t number = 0;
+    EXPECT_EQ(ACL_ERROR_INVALID_PARAM, aclprofGetOpNum(nullptr, sizeof(ProfOpDesc), &number));
+    size_t typeLen = 0;
+    char type[16] = {0};
+    EXPECT_EQ(ACL_ERROR_INVALID_PARAM, aclprofGetOpTypeLen(nullptr, sizeof(ProfOpDesc), 0, &typeLen));
+    EXPECT_EQ(ACL_ERROR_INVALID_PARAM, aclprofGetOpType(nullptr, sizeof(ProfOpDesc), 0, type, sizeof(type)));
+    size_t nameLen = 0;
+    char name[16] = {0};
+    EXPECT_EQ(ACL_ERROR_INVALID_PARAM, aclprofGetOpNameLen(nullptr, sizeof(ProfOpDesc), 0, &nameLen));
+    EXPECT_EQ(ACL_ERROR_INVALID_PARAM, aclprofGetOpName(nullptr, sizeof(ProfOpDesc), 0, name, sizeof(name)));
+
+    EXPECT_EQ(ACL_SUBSCRIBE_NONE, aclprofGetOpFlag(nullptr, 0, 0));
+    EXPECT_EQ(nullptr, aclprofGetOpAttriValue(nullptr, 0, 0, ACL_SUBSCRIBE_ATTRI_NONE));
+}
+
+TEST_F(ACL_PROF_OP_API_UTEST, CompatibleFeaturesAndDeviceCallback)
+{
+    size_t featuresSize = 0;
+    void* featuresData = nullptr;
+    EXPECT_EQ(ACL_SUCCESS, aclprofGetSupportedFeatures(&featuresSize, &featuresData));
+    EXPECT_NE(nullptr, featuresData);
+    EXPECT_NE(0U, featuresSize);
+
+    featuresSize = 0;
+    featuresData = nullptr;
+    EXPECT_EQ(ACL_SUCCESS, aclprofGetSupportedFeaturesV2(&featuresSize, &featuresData));
+    EXPECT_NE(nullptr, featuresData);
+
+    EXPECT_EQ(ACL_SUCCESS, MsprofSetDeviceIdByGeModelIdx(0, 0));
+}
+
+TEST_F(ACL_PROF_OP_API_UTEST, ProfSetConfigRejectsInvalidInputs)
+{
+    const std::string config = "valid-config";
+    EXPECT_EQ(ACL_ERROR_INVALID_PARAM, aclprofSetConfig(ACL_PROF_ARGS_MIN, config.c_str(), config.size()));
+    EXPECT_EQ(ACL_ERROR_INVALID_PARAM, aclprofSetConfig(ACL_PROF_ARGS_MAX, config.c_str(), config.size()));
+    EXPECT_EQ(ACL_ERROR_INVALID_PARAM, aclprofSetConfig(ACL_PROF_NTS_METRICS, nullptr, config.size()));
+    EXPECT_EQ(ACL_ERROR_INVALID_PARAM, aclprofSetConfig(ACL_PROF_NTS_METRICS, config.c_str(), config.size() + 1));
+    std::string tooLong(257, 'a');
+    EXPECT_EQ(ACL_ERROR_INVALID_PARAM, aclprofSetConfig(ACL_PROF_NTS_METRICS, tooLong.c_str(), tooLong.size()));
+}

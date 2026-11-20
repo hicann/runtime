@@ -20,6 +20,7 @@
 #include "config/config_manager.h"
 #include "validation/param_validation.h"
 #include "utils.h"
+#include "msprof_drv_api.h"
 
 using namespace analysis::dvvp::common::error;
 using namespace analysis::dvvp::common::validation;
@@ -41,7 +42,7 @@ TEST_F(DRIVER_AI_DRV_API_TEST, DrvGetDeviceStatusTest)
 
     drvStatus_t deviceStatus = DRV_STATUS_COMMUNICATION_LOST;
 
-    MOCKER(drvDeviceStatus)
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::drvDeviceStatus)
         .stubs()
         .with(any(), outBoundP(&deviceStatus))
         .will(returnValue(DRV_ERROR_NOT_SUPPORT))
@@ -59,7 +60,7 @@ TEST_F(DRIVER_AI_DRV_API_TEST, DrvGetDevNumTest)
 
     uint32_t num_dev = 0;
 
-    MOCKER(drvGetDevNum)
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::drvGetDevNum)
         .stubs()
         .with(outBoundP(&num_dev))
         .will(returnValue(DRV_ERROR_NOT_SUPPORT))
@@ -104,7 +105,10 @@ TEST_F(DRIVER_AI_DRV_API_TEST, DrvFftsProfileStart)
     configP->aicScale = 1;
     drvPeripheralProfileCfg.configP = configP;
 
-    MOCKER(prof_drv_start).stubs().will(returnValue(PROF_ERROR)).then(returnValue(PROF_OK));
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::ProfDrvStart)
+        .stubs()
+        .will(returnValue(PROF_ERROR))
+        .then(returnValue(PROF_OK));
 
     EXPECT_EQ(
         PROFILING_FAILED, analysis::dvvp::driver::DrvFftsProfileStart(
@@ -138,7 +142,10 @@ TEST_F(DRIVER_AI_DRV_API_TEST, DrvTsFwStart)
     profileParams->ai_core_status = "on";
     profileParams->ai_vector_status = "on";
     profileParams->taskTsfw = "on";
-    MOCKER(prof_drv_start).stubs().will(returnValue(PROF_ERROR)).then(returnValue(PROF_OK));
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::ProfDrvStart)
+        .stubs()
+        .will(returnValue(PROF_ERROR))
+        .then(returnValue(PROF_OK));
 
     EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::driver::DrvTsFwStart(peripheralCfg, profileParams));
 

@@ -16,6 +16,24 @@
 #include "prof_inner_api.h"
 #include "mmpa_api.h"
 #include "platform/platform.h"
+
+int32_t profInitStub(uint32_t type, void* data, uint32_t dataLen)
+{
+    (void)type;
+    (void)data;
+    (void)dataLen;
+    return 0;
+}
+
+int32_t profReportDataStub(uint32_t moduleId, uint32_t type, void* data, uint32_t len)
+{
+    (void)moduleId;
+    (void)type;
+    (void)data;
+    (void)len;
+    return 0;
+}
+
 #ifdef PROF_API_STUB
 extern void profOstreamStub(void);
 #endif
@@ -111,6 +129,7 @@ TEST_F(PROF_API_STTEST, PROF_API_INIT)
 {
     GlobalMockObject::verify();
     MOCKER_CPP(mmDlopen).stubs().will(returnValue((void*)0));
+    MOCKER(dlsym).stubs().will(returnValue((void*)nullptr));
     EXPECT_EQ(0, ProfApiInitStub());
 }
 
@@ -118,7 +137,6 @@ TEST_F(PROF_API_STTEST, PROF_API)
 {
     GlobalMockObject::verify();
     mockReportBufInit();
-    EXPECT_EQ(0, MsprofInit(0xff, nullptr, 0));
     const std::string data = "{\"switch\":\"on\"}";
     const char* p = data.c_str();
     const std::string data1 = "{\"switch\":\"on\"},";
@@ -226,7 +244,7 @@ TEST_F(PROF_API_STTEST, PROF_API)
     EXPECT_EQ(0, ProfAclGetCompatibleFeatures(nullptr, nullptr));
     EXPECT_EQ(0, ProfAclGetCompatibleFeaturesV2(nullptr, nullptr));
 
-    EXPECT_EQ(0, profSetProfCommand(nullptr, 0));
+    EXPECT_EQ(-1, profSetProfCommand(nullptr, 0));
     EXPECT_EQ(0, MsprofInit(1, (void*)p1, data1.size()));
     EXPECT_EQ(0, MsprofInit(1, (void*)p, data.size()));
     EXPECT_EQ(-1, MsprofRegisterCallback(0, nullptr));

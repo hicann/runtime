@@ -113,8 +113,33 @@ set(src_file
     ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/src/msprof_params_adapter.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/src/input_parser.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/src/input_parser_host_sys.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/sys_runner/src/runtime_system_mode_runner.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/engine/src/prof_acl_mgr.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/common/src/receive_data.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/adapter/src/msproftx_adaptor.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/mstx/src/mstx_inject.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/analyze/src/op_desc_parser.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/analyze/src/stats_analyzer_api.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/engine/src/uploader_dumper.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/analyze/src/stats_analyzer.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/src/msprof_tx_reporter.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/src/prof_stamp_pool.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/task_handle/src/device.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/common/src/msprof_reporter.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/src/msprof_tx_manager.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/mstx/src/mstx_domain_mgr.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/transport/stats_transport.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/transport/pipe_transport.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/transport/ctrl_files_dumper.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/task_handle/src/prof_task.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/adapter/src/command_handle.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/report/prof_reporter_mgr.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/mstx/src/mstx_data_handler.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/task_handle/src/prof_manager.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/task_handle/src/prof_params_adapter.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/src/msprof_task.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/src/running_mode.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/src/msopprof_manager.cpp
 )
 
 add_executable(msprof_bin_stest
@@ -147,6 +172,12 @@ target_include_directories(msprof_bin_stest PRIVATE
     ${MSPROF_SOURCE_DIR}/dvvp/
     ${TOP_DIR}/abl/libc_sec/include
     ${TOP_DIR}/inc/driver
+    ${TOP_DIR}/pkg_inc/aicpu_sched
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/mstx/inc
+    ${TOP_DIR}/pkg_inc/driver
+    ${TOP_DIR}/pkg_inc/runtime
+    ${TOP_DIR}/include/external/acl
+    ${MSPROF_SOURCE_DIR}/../inc/toolchain
     ${TOP_DIR}/inc/aicpu
     ${TOP_DIR}/inc/external
     ${TOP_DIR}/ace/npuruntime/inc
@@ -166,6 +197,16 @@ target_include_directories(msprof_bin_stest PRIVATE
     ${MSPROF_SOURCE_DIR}/basic/osal
     ${MSPROF_SOURCE_DIR}/dvvp/common/utils
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/include
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/sys_runner/include
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/engine/include
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/platform/include
+    ${MSPROF_SOURCE_DIR}/dvvp/message
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/report
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/aicpu
+    ${MSPROF_SOURCE_DIR}/dvvp/profapi/inc
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/include
+    ${MSPROF_SOURCE_DIR}/dvvp/analyze/inc
+    ${MSPROF_SOURCE_DIR}/dvvp/msprofiler
     ${MSPROF_SOURCE_DIR}/dvvp/profhal/adx/inc
     ${MSPROF_SOURCE_DIR}/dvvp/profhal/halinc
     ${MSPROF_SOURCE_DIR}/dvvp/driver/inc

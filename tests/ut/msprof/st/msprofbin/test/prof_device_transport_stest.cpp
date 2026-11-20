@@ -459,3 +459,39 @@ TEST_F(HOST_PROF_DEVICE_TRANSPORT_UTEST, HandleShakeCtrlCreateConnFailed)
     EXPECT_EQ(PROFILING_FAILED, dev_tran->HandleShake(message, true));
     GlobalMockObject::verify();
 }
+
+TEST_F(HOST_PROF_DEVICE_TRANSPORT_UTEST, HandlePacketRejectsInvalidResponses)
+{
+    GlobalMockObject::verify();
+    auto tran = std::make_shared<HDCTransport>(client);
+    dev_tran = std::make_shared<DeviceTransport>(client, dev_id, "123", "def_mode");
+    dev_tran->ctrlTran_ = tran;
+
+    EXPECT_EQ(PROFILING_FAILED, dev_tran->HandlePacket(nullptr, *(new analysis::dvvp::message::StatusInfo())));
+    struct tlv_req packet = {};
+    packet.len = strlen("not-a-response");
+    analysis::dvvp::message::StatusInfo status;
+    EXPECT_EQ(PROFILING_FAILED, dev_tran->HandlePacket(&packet, status));
+
+    auto response = std::make_shared<analysis::dvvp::proto::Response>();
+    const std::string invalidStatus = "{invalid-status";
+    response->set_message(invalidStatus);
+    auto packetWithResponse = [&](const std::string& message) {
+        response->set_message(message);
+        const std::string encodedStr = analysis::dvvp::message::EncodeMessage(response);
+        std::vector<int8_t> packetBuffer(sizeof(struct tlv_req) + encodedStr.size() + 1, 0);
+        std::copy(encodedStr.begin(), encodedStr.end(), packetBuffer.begin() + sizeof(struct tlv_req));
+        auto* packetResponse = reinterpret_cast<struct tlv_req*>(packetBuffer.data());
+        packetResponse->len = static_cast<int32_t>(encodedStr.size());
+        EXPECT_EQ(PROFILING_FAILED, dev_tran->HandlePacket(packetResponse, status));
+    };
+    packetWithResponse(invalidStatus);
+    packetWithResponse("{\"dev_id\":\"0\",\"status\":-1,\"info\":\"failed\"}");
+    response->set_message("{\"dev_id\":\"0\",\"status\":0,\"info\":\"ok\"}");
+    const std::string encodedStr = analysis::dvvp::message::EncodeMessage(response);
+    std::vector<int8_t> packetBuffer(sizeof(struct tlv_req) + encodedStr.size() + 1, 0);
+    std::copy(encodedStr.begin(), encodedStr.end(), packetBuffer.begin() + sizeof(struct tlv_req));
+    auto* packetResponse = reinterpret_cast<struct tlv_req*>(packetBuffer.data());
+    packetResponse->len = static_cast<int32_t>(encodedStr.size());
+    EXPECT_EQ(PROFILING_SUCCESS, dev_tran->HandlePacket(packetResponse, status));
+}

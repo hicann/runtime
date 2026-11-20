@@ -80,6 +80,7 @@ TEST_F(PROF_DEVICE_RPC_UTEST, StartProf1)
 
     jobDeviceRpc->params_ = params;
     EXPECT_EQ(PROFILING_FAILED, jobDeviceRpc->StartProf(params));
+    jobDeviceRpc->isStarted_ = false;
     MOCKER_CPP(&Analysis ::Dvvp::JobWrapper::JobDeviceRpc::SendMsgAndHandleResponse)
         .stubs()
         .will(returnValue(PROFILING_SUCCESS));

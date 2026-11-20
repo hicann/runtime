@@ -348,7 +348,7 @@ set(INCLUDE_DIR
 set(TEST_SRC
     stub/acl_api_stub.cpp
     testcase/common/main.cpp
-    # testcase/common/api_stest.cpp
+    testcase/common/api_stest.cpp
     # testcase/common/api_inner_stest.cpp
 )
 
@@ -365,6 +365,7 @@ add_executable(api_dc_stest
     ${CppPath}
     stub/aoe_stub.cpp
     testcase/api_dc_stest.cpp
+    testcase/prof_acl_mgr_state_stest.cpp
 )
 
 target_compile_options(api_dc_stest PRIVATE
@@ -704,6 +705,7 @@ add_executable(acl_api_stest
     testcase/acl_api/api_rc_mini_v3_stest.cpp
     testcase/acl_api/api_dc_stest.cpp
     testcase/acl_api/api_mini_v3_stest.cpp
+    testcase/acl_api/api_milan_stest.cpp
 )
 
 target_include_directories(acl_api_stest PRIVATE

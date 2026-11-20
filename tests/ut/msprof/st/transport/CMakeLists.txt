@@ -95,6 +95,12 @@ add_executable(transport_stest
 target_include_directories(transport_stest PRIVATE
     ${TOP_DIR}/abl/libc_sec/include
     ${TOP_DIR}/inc/driver
+    ${TOP_DIR}/pkg_inc/aicpu_sched
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/mstx/inc
+    ${TOP_DIR}/pkg_inc/driver
+    ${TOP_DIR}/pkg_inc/runtime
+    ${TOP_DIR}/include/external/acl
+    ${MSPROF_SOURCE_DIR}/../inc/toolchain
     ${TOP_DIR}/inc/external
     ../stub/
     ${TOP_DIR}/llt/abl/msprof/st/stub

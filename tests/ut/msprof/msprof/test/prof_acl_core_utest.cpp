@@ -8241,3 +8241,43 @@ TEST_F(MSPROF_ACL_CORE_UTEST, AnalyzerGe_AllParse_NullAndDropped)
     agingCompact->chunkSize = 0;
     ge->GeCompactParse(agingCompact);
 }
+
+TEST_F(MSPROF_ACL_CORE_UTEST, ProfAclMgr_HelperConstructAndFinalizePaths)
+{
+    Msprofiler::Api::ProfAclMgr mgr;
+    EXPECT_EQ(5, mgr.MsprofInitAclEnv("ut"));
+    EXPECT_EQ(MSPROF_ERROR_NONE, mgr.MsprofFinalizeHandle());
+    EXPECT_FALSE(mgr.MsprofResultDirAdapter("/tmp").empty());
+
+    NanoJson::Json inputCfg("{\"l2\":\"off\"}");
+    EXPECT_EQ(MSPROF_ERROR_CONFIG_INVALID, mgr.MsprofGeOptionsParamConstruct("ut", inputCfg));
+    EXPECT_EQ(MSPROF_ERROR_NONE, mgr.MsprofAclJsonParamConstruct(inputCfg));
+}
+
+TEST_F(MSPROF_ACL_CORE_UTEST, AclApiCurrentConfigAndCompatibleFeatures)
+{
+    size_t featureSize = 0;
+    void* featureData = nullptr;
+    EXPECT_NE(nullptr, Msprofiler::AclApi::ProfGetCurrentConfig());
+    EXPECT_EQ(0, Msprofiler::AclApi::ProfAclGetCompatibleFeatures(&featureSize, &featureData));
+    EXPECT_EQ(0, Msprofiler::AclApi::ProfAclGetCompatibleFeaturesV2(&featureSize, &featureData));
+}
+
+TEST_F(MSPROF_ACL_CORE_UTEST, ProfAclMgrSubscribeInfoHelpers)
+{
+    Msprofiler::Api::ProfAclMgr mgr;
+    MsprofConfig config{};
+    config.devNums = 1;
+    config.devIdList[0] = 0;
+    config.modelId = 0;
+    config.metrics = PROF_AICORE_ARITHMETIC_UTILIZATION;
+    config.profSwitch = 0x7d7f001f;
+
+    int32_t fd = 0;
+    Msprofiler::Api::ProfSubscribeInfo subscribeInfo{false, 0, &fd};
+    mgr.subscribeInfos_["0-0"] = subscribeInfo;
+    auto key = std::make_shared<Msprofiler::Api::ProfSubscribeKey>(0, 0);
+    mgr.CloseSubscribeFd(0, key);
+    mgr.UpdateSubscribeInfo("", 0, &config);
+    mgr.subscribeInfos_.clear();
+}

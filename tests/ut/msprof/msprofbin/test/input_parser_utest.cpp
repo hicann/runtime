@@ -108,6 +108,8 @@ TEST_F(INPUT_PARSER_UTEST, MsprofHostCheckValid)
 {
     GlobalMockObject::verify();
     MOCKER(analysis::dvvp::common::utils::Utils::ExecCmd).stubs().will(returnValue(PROFILING_SUCCESS));
+    MOCKER(Utils::IsFileExist).stubs().will(returnValue(true));
+    MOCKER(Utils::GetFileSize).stubs().will(returnValue(static_cast<int64_t>(1)));
     InputParser parser = InputParser();
     struct MsprofCmdInfo cmdInfo = {{nullptr}};
     // invalid options
@@ -149,6 +151,8 @@ TEST_F(INPUT_PARSER_UTEST, CheckHostSysCmdOutIsExist)
 {
     GlobalMockObject::verify();
     MOCKER(analysis::dvvp::common::utils::Utils::ExecCmd).stubs().will(returnValue(PROFILING_SUCCESS));
+    MOCKER(Utils::IsFileExist).stubs().will(returnValue(true));
+    MOCKER(Utils::GetFileSize).stubs().will(returnValue(static_cast<int64_t>(1)));
     InputParser parser = InputParser();
     std::string tempFile = "./CheckHostSysCmdOutIsExist";
     std::ofstream file(tempFile);
@@ -1165,9 +1169,205 @@ TEST_F(INPUT_PARSER_UTEST, CheckCmdScaleIsValidComprehensive)
     EXPECT_EQ(PROFILING_FAILED, parser.CheckCmdScaleIsValid(cmdInfo));
 
     parser.params_->opType.clear();
-    cmdInfo.args[ARGS_OPTYPE] = "MatMul,MatMul";
+    cmdInfo.args[ARGS_OPTYPE] = const_cast<char*>("MatMul,MatMul");
     EXPECT_EQ(PROFILING_SUCCESS, parser.CheckCmdScaleIsValid(cmdInfo));
     EXPECT_EQ("MatMul", parser.params_->opType);
 
     GlobalMockObject::verify();
+}
+
+TEST_F(INPUT_PARSER_UTEST, CheckExportTypeAndReports)
+{
+    InputParser parser = InputParser();
+    struct MsprofCmdInfo cmdInfo = {{nullptr}};
+
+    EXPECT_EQ(MSPROF_DAEMON_ERROR, parser.CheckExportType(cmdInfo));
+    cmdInfo.args[ARGS_EXPORT_TYPE] = const_cast<char*>("invalid");
+    EXPECT_EQ(MSPROF_DAEMON_ERROR, parser.CheckExportType(cmdInfo));
+    cmdInfo.args[ARGS_EXPORT_TYPE] = const_cast<char*>("text");
+    EXPECT_EQ(MSPROF_DAEMON_OK, parser.CheckExportType(cmdInfo));
+    EXPECT_EQ("text", parser.params_->exportType);
+    cmdInfo.args[ARGS_EXPORT_TYPE] = const_cast<char*>("db");
+    EXPECT_EQ(MSPROF_DAEMON_OK, parser.CheckExportType(cmdInfo));
+    EXPECT_EQ("db", parser.params_->exportType);
+
+    EXPECT_EQ(MSPROF_DAEMON_ERROR, parser.CheckReports(cmdInfo));
+    cmdInfo.args[ARGS_REPORTS] = const_cast<char*>("/tmp/reports");
+    EXPECT_EQ(MSPROF_DAEMON_OK, parser.CheckReports(cmdInfo));
+    EXPECT_EQ("/tmp/reports", parser.params_->reportsPath);
+}
+
+TEST_F(INPUT_PARSER_UTEST, SetTaskBlockParamAndSwitches)
+{
+    InputParser parser = InputParser();
+
+    parser.SetTaskBlockParam("all");
+    EXPECT_EQ("on", parser.params_->taskBlock);
+    EXPECT_EQ("off", parser.params_->taskBlockShink);
+
+    parser.SetTaskBlockParam("on");
+    EXPECT_EQ("on", parser.params_->taskBlock);
+    EXPECT_EQ("off", parser.params_->taskBlockShink);
+
+    parser.SetTaskBlockParam("off");
+    EXPECT_EQ("off", parser.params_->taskBlock);
+    EXPECT_EQ("on", parser.params_->taskBlockShink);
+
+    struct MsprofCmdInfo cmdInfo = {{nullptr}};
+    cmdInfo.args[ARGS_IO_PROFILING] = const_cast<char*>("on");
+    cmdInfo.args[ARGS_INTERCONNECTION_PROFILING] = const_cast<char*>("off");
+    cmdInfo.args[ARGS_DVPP_PROFILING] = const_cast<char*>("on");
+    cmdInfo.args[ARGS_SYS_LOW_POWER] = const_cast<char*>("off");
+    cmdInfo.args[ARGS_L2_PROFILING] = const_cast<char*>("on");
+    cmdInfo.args[ARGS_AICPU] = const_cast<char*>("off");
+    cmdInfo.args[ARGS_ANALYZE] = const_cast<char*>("on");
+    cmdInfo.args[ARGS_PARSE] = const_cast<char*>("off");
+    cmdInfo.args[ARGS_QUERY] = const_cast<char*>("on");
+    cmdInfo.args[ARGS_EXPORT] = const_cast<char*>("off");
+    cmdInfo.args[ARGS_CLEAR] = const_cast<char*>("on");
+    cmdInfo.args[ARGS_MSPROFTX] = const_cast<char*>("off");
+    cmdInfo.args[ARGS_MSTX_DOMAIN_INCLUDE] = const_cast<char*>("include");
+    cmdInfo.args[ARGS_MSTX_DOMAIN_EXCLUDE] = const_cast<char*>("exclude");
+
+    parser.SetSwitchParam(ARGS_IO_PROFILING, cmdInfo.args[ARGS_IO_PROFILING]);
+    parser.SetSwitchParam(ARGS_INTERCONNECTION_PROFILING, cmdInfo.args[ARGS_INTERCONNECTION_PROFILING]);
+    parser.SetSwitchParam(ARGS_DVPP_PROFILING, cmdInfo.args[ARGS_DVPP_PROFILING]);
+    parser.SetSwitchParam(ARGS_SYS_LOW_POWER, cmdInfo.args[ARGS_SYS_LOW_POWER]);
+    parser.SetSwitchParam(ARGS_L2_PROFILING, cmdInfo.args[ARGS_L2_PROFILING]);
+    parser.SetSwitchParam(ARGS_AICPU, cmdInfo.args[ARGS_AICPU]);
+    parser.SetSwitchParam(ARGS_ANALYZE, cmdInfo.args[ARGS_ANALYZE]);
+    parser.SetSwitchParam(ARGS_PARSE, cmdInfo.args[ARGS_PARSE]);
+    parser.SetSwitchParam(ARGS_QUERY, cmdInfo.args[ARGS_QUERY]);
+    parser.SetSwitchParam(ARGS_EXPORT, cmdInfo.args[ARGS_EXPORT]);
+    parser.SetSwitchParam(ARGS_CLEAR, cmdInfo.args[ARGS_CLEAR]);
+    parser.SetSwitchParam(ARGS_MSPROFTX, cmdInfo.args[ARGS_MSPROFTX]);
+    parser.SetSwitchParam(ARGS_MSTX_DOMAIN_INCLUDE, cmdInfo.args[ARGS_MSTX_DOMAIN_INCLUDE]);
+    parser.SetSwitchParam(ARGS_MSTX_DOMAIN_EXCLUDE, cmdInfo.args[ARGS_MSTX_DOMAIN_EXCLUDE]);
+
+    EXPECT_EQ("on", parser.params_->io_profiling);
+    EXPECT_EQ("off", parser.params_->interconnection_profiling);
+    EXPECT_EQ("on", parser.params_->dvpp_profiling);
+    EXPECT_EQ("on", parser.params_->analyzeSwitch);
+    EXPECT_EQ("off", parser.params_->parseSwitch);
+    EXPECT_EQ("on", parser.params_->querySwitch);
+    EXPECT_EQ("off", parser.params_->exportSwitch);
+    EXPECT_EQ("on", parser.params_->clearSwitch);
+    EXPECT_EQ("off", parser.params_->msproftx);
+    EXPECT_EQ("include", parser.params_->mstxDomainInclude);
+    EXPECT_EQ("exclude", parser.params_->mstxDomainExclude);
+}
+
+TEST_F(INPUT_PARSER_UTEST, InputParserBatchGapCoverage)
+{
+    InputParser parser = InputParser();
+    struct MsprofCmdInfo cmdInfo = {{nullptr}};
+
+    cmdInfo.args[ARGS_EXPORT_ITERATION_ID] = const_cast<char*>("123");
+    cmdInfo.args[ARGS_EXPORT_MODEL_ID] = const_cast<char*>("123");
+    EXPECT_EQ(MSPROF_DAEMON_OK, parser.MsprofCmdCheckValid2(cmdInfo, ARGS_EXPORT_ITERATION_ID));
+    EXPECT_EQ(MSPROF_DAEMON_OK, parser.MsprofCmdCheckValid2(cmdInfo, ARGS_EXPORT_MODEL_ID));
+
+    cmdInfo.args[ARGS_SYS_LOW_POWER_FREQ] = const_cast<char*>("50");
+    EXPECT_EQ(MSPROF_DAEMON_OK, parser.MsprofCmdCheckValid2(cmdInfo, ARGS_SYS_LOW_POWER_FREQ));
+
+    cmdInfo.args[ARGS_MSPROFTX] = const_cast<char*>("on");
+    parser.ParamsSwitchValid2(cmdInfo, ARGS_MSPROFTX);
+    EXPECT_EQ("on", parser.params_->msproftx);
+    cmdInfo.args[ARGS_MSTX_DOMAIN_INCLUDE] = const_cast<char*>("include2");
+    cmdInfo.args[ARGS_MSTX_DOMAIN_EXCLUDE] = const_cast<char*>("exclude2");
+    parser.ParamsSwitchValid2(cmdInfo, ARGS_MSTX_DOMAIN_INCLUDE);
+    parser.ParamsSwitchValid2(cmdInfo, ARGS_MSTX_DOMAIN_EXCLUDE);
+    EXPECT_EQ("include2", parser.params_->mstxDomainInclude);
+    EXPECT_EQ("exclude2", parser.params_->mstxDomainExclude);
+
+    cmdInfo.args[ARGS_LLC_PROFILING] = const_cast<char*>("invalid");
+    EXPECT_EQ(MSPROF_DAEMON_ERROR, parser.MsprofCmdCheckValid2(cmdInfo, ARGS_LLC_PROFILING));
+    cmdInfo.args[ARGS_LLC_PROFILING] = const_cast<char*>("read");
+    EXPECT_EQ(MSPROF_DAEMON_OK, parser.MsprofCmdCheckValid2(cmdInfo, ARGS_LLC_PROFILING));
+}
+
+TEST_F(INPUT_PARSER_UTEST, CheckAiCoreMetricsAndLlcProfiles)
+{
+    InputParser parser;
+    struct MsprofCmdInfo cmdInfo = {{nullptr}};
+
+    EXPECT_EQ(MSPROF_DAEMON_ERROR, parser.CheckAiCoreMetricsValid(cmdInfo, ARGS_AIC_METRICS));
+    cmdInfo.args[ARGS_AIC_METRICS] = const_cast<char*>("");
+    EXPECT_EQ(MSPROF_DAEMON_ERROR, parser.CheckAiCoreMetricsValid(cmdInfo, ARGS_AIC_METRICS));
+    cmdInfo.args[ARGS_AIC_METRICS] = const_cast<char*>("ArithmeticUtilization");
+    EXPECT_EQ(MSPROF_DAEMON_OK, parser.CheckAiCoreMetricsValid(cmdInfo, ARGS_AIC_METRICS));
+    EXPECT_EQ("ArithmeticUtilization", parser.params_->ai_core_metrics);
+
+    EXPECT_EQ(MSPROF_DAEMON_ERROR, parser.CheckLlcProfilingIsValid(""));
+    EXPECT_EQ(MSPROF_DAEMON_ERROR, parser.CheckLlcProfilingIsValid("invalid"));
+    EXPECT_EQ(MSPROF_DAEMON_OK, parser.CheckLlcProfilingIsValid("read"));
+    EXPECT_EQ(MSPROF_DAEMON_OK, parser.CheckLlcProfilingIsValid("write"));
+}
+
+TEST_F(INPUT_PARSER_UTEST, CheckArgOnOffAndSwitchProfiles)
+{
+    InputParser parser;
+    struct MsprofCmdInfo cmdInfo = {{nullptr}};
+
+    EXPECT_EQ(MSPROF_DAEMON_ERROR, parser.CheckArgOnOff(cmdInfo, ARGS_AICPU));
+    cmdInfo.args[ARGS_MSTX_DOMAIN_INCLUDE] = const_cast<char*>("default");
+    EXPECT_EQ(MSPROF_DAEMON_OK, parser.CheckArgOnOff(cmdInfo, ARGS_MSTX_DOMAIN_INCLUDE));
+
+    cmdInfo.args[ARGS_GE_API] = const_cast<char*>("invalid");
+    EXPECT_EQ(MSPROF_DAEMON_ERROR, parser.CheckArgOnOff(cmdInfo, ARGS_GE_API));
+    cmdInfo.args[ARGS_GE_API] = const_cast<char*>("l0");
+    EXPECT_EQ(MSPROF_DAEMON_OK, parser.CheckArgOnOff(cmdInfo, ARGS_GE_API));
+
+    cmdInfo.args[ARGS_TASK_BLOCK] = const_cast<char*>("invalid");
+    EXPECT_EQ(MSPROF_DAEMON_ERROR, parser.CheckArgOnOff(cmdInfo, ARGS_TASK_BLOCK));
+    cmdInfo.args[ARGS_TASK_BLOCK] = const_cast<char*>("all");
+    EXPECT_EQ(MSPROF_DAEMON_ERROR, parser.CheckArgOnOff(cmdInfo, ARGS_TASK_BLOCK));
+
+    cmdInfo.args[ARGS_TASK_TIME] = const_cast<char*>("invalid");
+    EXPECT_EQ(MSPROF_DAEMON_ERROR, parser.CheckArgOnOff(cmdInfo, ARGS_TASK_TIME));
+    cmdInfo.args[ARGS_TASK_TIME] = const_cast<char*>("l3");
+    EXPECT_EQ(MSPROF_DAEMON_ERROR, parser.CheckArgOnOff(cmdInfo, ARGS_TASK_TIME));
+
+    cmdInfo.args[ARGS_AICPU] = const_cast<char*>("invalid");
+    EXPECT_EQ(MSPROF_DAEMON_ERROR, parser.CheckArgOnOff(cmdInfo, ARGS_AICPU));
+    cmdInfo.args[ARGS_AICPU] = const_cast<char*>("on");
+    EXPECT_EQ(MSPROF_DAEMON_OK, parser.CheckArgOnOff(cmdInfo, ARGS_AICPU));
+}
+
+TEST_F(INPUT_PARSER_UTEST, InputParserDeepSwitchTransferProfiles)
+{
+    InputParser parser;
+    struct MsprofCmdInfo cmdInfo = {{nullptr}};
+
+    cmdInfo.args[ARGS_TASK_BLOCK] = const_cast<char*>("all");
+    parser.ParamsSwitchValid(cmdInfo, ARGS_TASK_BLOCK);
+    EXPECT_EQ("on", parser.params_->taskBlock);
+    EXPECT_EQ("off", parser.params_->taskBlockShink);
+
+    cmdInfo.args[ARGS_TASK_BLOCK] = const_cast<char*>("off");
+    parser.ParamsSwitchValid(cmdInfo, ARGS_TASK_BLOCK);
+    EXPECT_EQ("off", parser.params_->taskBlock);
+    EXPECT_EQ("on", parser.params_->taskBlockShink);
+
+    cmdInfo.args[ARGS_IO_PROFILING] = const_cast<char*>("on");
+    parser.ParamsSwitchValid(cmdInfo, ARGS_IO_PROFILING);
+    EXPECT_EQ("on", parser.params_->io_profiling);
+
+    cmdInfo.args[ARGS_EXPORT_ITERATION_ID] = const_cast<char*>("123");
+    EXPECT_EQ(MSPROF_DAEMON_OK, parser.MsprofCmdCheckValid2(cmdInfo, ARGS_EXPORT_ITERATION_ID));
+    cmdInfo.args[ARGS_SYS_LOW_POWER_FREQ] = const_cast<char*>("50");
+    EXPECT_EQ(MSPROF_DAEMON_OK, parser.MsprofCmdCheckValid2(cmdInfo, ARGS_SYS_LOW_POWER_FREQ));
+
+    cmdInfo.args[ARGS_AIC_FREQ] = const_cast<char*>("10");
+    parser.MsprofFreqTransferParams(cmdInfo, ARGS_AIC_FREQ);
+    EXPECT_EQ(100, parser.params_->aicore_sampling_interval);
+    cmdInfo.args[ARGS_AIV_FREQ] = const_cast<char*>("10");
+    parser.MsprofFreqTransferParams(cmdInfo, ARGS_AIV_FREQ);
+    EXPECT_EQ(100, parser.params_->aiv_sampling_interval);
+    cmdInfo.args[ARGS_SYS_SAMPLING_FREQ] = const_cast<char*>("10");
+    parser.MsprofFreqTransferParams(cmdInfo, ARGS_SYS_SAMPLING_FREQ);
+    EXPECT_EQ(100, parser.params_->sys_sampling_interval);
+    cmdInfo.args[ARGS_PID_SAMPLING_FREQ] = const_cast<char*>("10");
+    parser.MsprofFreqTransferParams(cmdInfo, ARGS_PID_SAMPLING_FREQ);
+    EXPECT_EQ(100, parser.params_->pid_sampling_interval);
 }

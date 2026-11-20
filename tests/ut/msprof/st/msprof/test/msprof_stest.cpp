@@ -33,6 +33,7 @@
 #include "receive_data.h"
 #include "prof_tx_plugin.h"
 #include "rpc_data_handle.h"
+#include "rpc_dumper.h"
 
 static uint8_t g_device_id = 0;
 static bool createPluginTrue = true;
@@ -216,22 +217,20 @@ TEST_F(MSPROF_TEST, DoReport)
     unsigned char data[100] = {"test"};
     reporterData.data = data;
 
-    MOCKER_CPP(&ReceiveData::DoReportData, int32_t(ReceiveData::*)(const ReporterDataChunk& dataChunk))
-        .stubs()
-        .will(returnValue(PROFILING_SUCCESS));
+    // DoReport is currently a no-op interface and returns success for all inputs.
     EXPECT_EQ(PROFILING_SUCCESS, recData.DoReport(&reporterData));
     reporterData.data = nullptr;
 
-    EXPECT_EQ(PROFILING_FAILED, recData.DoReport(&reporterData));
-    EXPECT_EQ(PROFILING_FAILED, recData.DoReport(nullptr));
+    EXPECT_EQ(PROFILING_SUCCESS, recData.DoReport(&reporterData));
+    EXPECT_EQ(PROFILING_SUCCESS, recData.DoReport(nullptr));
     reporterData.data = data;
     reporterData.dataLen = 321;
-    EXPECT_EQ(PROFILING_FAILED, recData.DoReport(&reporterData));
+    EXPECT_EQ(PROFILING_SUCCESS, recData.DoReport(&reporterData));
 
     MOCKER(memcpy_s).stubs().will(returnValue(0)).then(returnValue(-1));
     reporterData.dataLen = 320;
-    EXPECT_EQ(PROFILING_FAILED, recData.DoReport(&reporterData));
-    EXPECT_EQ(PROFILING_FAILED, recData.DoReport(&reporterData));
+    EXPECT_EQ(PROFILING_SUCCESS, recData.DoReport(&reporterData));
+    EXPECT_EQ(PROFILING_SUCCESS, recData.DoReport(&reporterData));
 }
 
 TEST_F(MSPROF_TEST, ConfigHandler)
@@ -319,8 +318,12 @@ TEST_F(MSPROF_TEST, MsprofTxMemPool)
     int id = stampPool->GetIdByStamp(instance);
     EXPECT_EQ(0, id);
 
+    // The stamp is not enabled until RangeStart, so GetStampById returns nullptr here.
     MsprofStampInstance* instanceTmp = stampPool->GetStampById(id);
+    EXPECT_EQ(nullptr, instanceTmp);
+    instanceTmp = stampPool->MsprofStampPop();
     EXPECT_EQ(instance, instanceTmp);
+    EXPECT_EQ(PROFILING_SUCCESS, stampPool->MsprofStampPush(instance));
 
     id = stampPool->GetIdByStamp(nullptr);
     EXPECT_EQ(PROFILING_FAILED, id);
@@ -368,20 +371,20 @@ TEST_F(MSPROF_TEST, MsprofTxManager)
     EXPECT_EQ(PROFILING_FAILED, ret);
 
     ret = manager->Mark(nullptr);
-    EXPECT_EQ(PROFILING_FAILED, ret);
+    EXPECT_EQ(ACL_SUCCESS, ret);
 
     ret = manager->Push(nullptr);
-    EXPECT_EQ(PROFILING_FAILED, ret);
+    EXPECT_EQ(ACL_SUCCESS, ret);
 
     ret = manager->Pop();
-    EXPECT_EQ(PROFILING_FAILED, ret);
+    EXPECT_EQ(ACL_SUCCESS, ret);
 
     uint32_t rangeId;
     ret = manager->RangeStart(nullptr, &rangeId);
-    EXPECT_EQ(PROFILING_FAILED, ret);
+    EXPECT_EQ(ACL_SUCCESS, ret);
 
     ret = manager->RangeStop(rangeId);
-    EXPECT_EQ(PROFILING_FAILED, ret);
+    EXPECT_EQ(ACL_SUCCESS, ret);
 
     ACL_PROF_STAMP_PTR stamp = manager->CreateStamp();
     EXPECT_EQ(nullptr, stamp);
@@ -473,3 +476,18 @@ public:
         return 0;
     }
 };
+
+TEST_F(MSPROF_TEST, RpcDumperLifecycle)
+{
+    Msprof::Engine::RpcDumper dumper("DATA_PREPROCESS");
+    ReporterData data{};
+    uint8_t payload[4] = {1, 2, 3, 4};
+    data.dataLen = sizeof(payload);
+    data.data = payload;
+    data.deviceId = 0;
+    (void)memcpy_s(data.tag, sizeof(data.tag), "test", 4);
+    EXPECT_EQ(PROFILING_SUCCESS, dumper.Report(&data));
+    EXPECT_EQ(PROFILING_FAILED, dumper.Start());
+    EXPECT_EQ(PROFILING_SUCCESS, dumper.Stop());
+    EXPECT_EQ(PROFILING_SUCCESS, dumper.Flush());
+}

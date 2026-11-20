@@ -258,8 +258,10 @@ TEST_F(ACP_MANAGER_UTEST, AcpRtSetDeviceTest)
     void* args = nullptr;
     uint32_t argsSize = 10;
     rtSmDesc_t* smDesc = nullptr;
-    rtArgsEx_t* argsInfo = {0};
-    rtTaskCfgInfo_t* cfgInfo = {0};
+    rtArgsEx_t argsInfoValue = {};
+    rtArgsEx_t* argsInfo = &argsInfoValue;
+    rtTaskCfgInfo_t cfgInfoValue = {};
+    rtTaskCfgInfo_t* cfgInfo = &cfgInfoValue;
     rtStream_t stm = nullptr;
     uint8_t data = 7;
     rtDevBinary_t bin;

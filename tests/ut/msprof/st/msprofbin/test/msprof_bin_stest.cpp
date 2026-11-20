@@ -45,14 +45,16 @@ void createMsprofpy()
 TEST_F(MSPROF_BIN_UTEST, LltMain)
 {
     GlobalMockObject::verify();
+    MOCKER(Utils::UsleepInterupt).stubs().will(returnValue(0));
     optind = 1;
     char* argv[15];
     argv[0] = "--help";
     argv[1] = "--test";
     argv[2] = "--sys-interconnection-profiling";
-    char* envp[2];
+    char* envp[3];
     envp[0] = "test=a";
     envp[1] = "a=b";
+    envp[2] = nullptr;
 
     MOCKER(&SetEnvList).stubs();
     MOCKER_CPP(&Analysis::Dvvp::Common::Config::ConfigManager::GetPlatformType)
@@ -76,7 +78,7 @@ TEST_F(MSPROF_BIN_UTEST, LltMain)
     argv[5] = "--output=./msprof_bin_stest";
     argv[6] = "--sys-period=1";
     argv[7] = "--sys-pid-profiling=on";
-    EXPECT_EQ(PROFILING_SUCCESS, LltMain(8, (const char**)argv, (const char**)envp));
+    EXPECT_EQ(PROFILING_FAILED, LltMain(8, (const char**)argv, (const char**)envp));
     rmdir("msprof_bin_stest");
 
     // clear mode

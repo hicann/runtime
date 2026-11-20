@@ -20,6 +20,7 @@
 #include "hdc/device_transport.h"
 #include "param_validation.h"
 #include "prof_channel_manager.h"
+#include "msprof_drv_api.h"
 
 using namespace analysis::dvvp::common::error;
 using namespace analysis::dvvp::message;
@@ -42,8 +43,15 @@ TEST_F(PROF_DEVICE_ACP_STEST, StartProf)
     params->FromString("{\"result_dir\":\"/tmp/\", \"devices\":\"1\", \"job_id\":\"1\"}");
     auto acpComputeDeviceJob = std::make_shared<AcpComputeDeviceJob>(0);
 
-    MOCKER(analysis::dvvp::driver::DrvGetDevNum).stubs().will(returnValue(2)).then(returnValue(2));
-    MOCKER(analysis::dvvp::driver::DrvGetDevIds)
+    channel_list_t testChannels{};
+    testChannels.channel_num = 1;
+    testChannels.channel[0].channel_id = 1;
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::ProfDrvGetChannels)
+        .stubs()
+        .with(any(), outBoundP(&testChannels))
+        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::drvGetDevNum).stubs().will(returnValue(2)).then(returnValue(2));
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::drvGetDevIDs)
         .stubs()
         .will(returnValue(PROFILING_SUCCESS))
         .then(returnValue(PROFILING_FAILED));
@@ -117,6 +125,13 @@ TEST_F(PROF_DEVICE_ACP_STEST, StartProf1)
     MSVP_MAKE_SHARED0(acpComputeDeviceJob->collectionJobCommCfg_, CollectionJobCommonParams, return);
     acpComputeDeviceJob->collectionJobCommCfg_->params = params;
     acpComputeDeviceJob->params_ = params;
+    channel_list_t startProfChannels{};
+    startProfChannels.channel_num = 1;
+    startProfChannels.channel[0].channel_id = 1;
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::ProfDrvGetChannels)
+        .stubs()
+        .with(any(), outBoundP(&startProfChannels))
+        .will(returnValue(PROFILING_SUCCESS));
     acpComputeDeviceJob->StartProf(params);
 
     acpComputeDeviceJob->collectionJobCommCfg_->params->nicProfiling = "on";
@@ -130,7 +145,10 @@ TEST_F(PROF_DEVICE_ACP_STEST, StartProf1)
 
     MOCKER_CPP(&AcpComputeDeviceJob::RegisterCollectionJobs).stubs().will(returnValue(0));
     MOCKER_CPP(&AcpComputeDeviceJob::ParsePmuConfig).stubs().will(returnValue(-1)).then(returnValue(0));
-    MOCKER(analysis::dvvp::driver::DrvGetDevNum).stubs().will(returnValue(PROFILING_FAILED)).then(returnValue(1));
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::drvGetDevNum)
+        .stubs()
+        .will(returnValue(PROFILING_FAILED))
+        .then(returnValue(1));
     acpComputeDeviceJob->isStarted_ = false;
     EXPECT_EQ(PROFILING_FAILED, acpComputeDeviceJob->StartProf(params));
     EXPECT_EQ(PROFILING_SUCCESS, acpComputeDeviceJob->StartProf(params));

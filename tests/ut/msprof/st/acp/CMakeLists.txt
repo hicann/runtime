@@ -96,6 +96,20 @@ target_include_directories(acp_stest PRIVATE
     ${MSPROF_SOURCE_DIR}/dvvp/transport
     ${MSPROF_SOURCE_DIR}/dvvp/task_handle/include
     ${MSPROF_SOURCE_DIR}/basic/osal
+    ${TOP_DIR}/pkg_inc/driver
+    ${TOP_DIR}/pkg_inc/runtime
+    ${TOP_DIR}/pkg_inc/runtime/runtime
+    ${TOP_DIR}/pkg_inc/base
+    ${TOP_DIR}/pkg_inc/aicpu_sched
+    ${TOP_DIR}/include/external/acl
+    ${TOP_DIR}/include/external
+    ${TOP_DIR}/src/inc
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/mstx/inc
+    ${MSPROF_SOURCE_DIR}/dvvp/msprofbin/include
+    ${MSPROF_SOURCE_DIR}/dvvp/common/utils
+    ${MSPROF_SOURCE_DIR}/dvvp/analyze/inc
+    ${TOP_DIR}/pkg_inc/profiling
+    ${TOP_DIR}/src/dfx/msprof/inc/toolchain
 )
 
 target_compile_options(acp_stest PRIVATE
@@ -134,5 +148,115 @@ set_target_properties(acp_stest
 
 run_llt_test(
     TARGET acp_stest
+    TASK_NUM 1
+)
+
+add_executable(acp_manager_stest
+    testcase/main.cpp
+    testcase/acp_compute_device_job_stest.cpp
+    testcase/dlclose_stub.cpp
+    ../../acp/testcase/acp_manager_utest.cpp
+    ${src_file}
+    ${MSPROF_SOURCE_DIR}/dvvp/acp/src/acp_manager.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/driver/devmgmt/ai_drv_dsmi_api.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_biu_perf_job.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_collect_info.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/acp/src/acp_api_plugin.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/acp/src/acp_runtime_api.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/acp/src/acp_compute_device_job.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/acp/src/op_analyzer_base.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/acp/src/op_analyzer_pmu.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/acp/src/op_analyzer_biu.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/acp/src/op_analyzer_pc_sampling.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/acp/src/op_analyzer.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/acp/src/op_data_manager.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/acp/src/op_transport.cpp
+)
+
+target_include_directories(acp_manager_stest PRIVATE
+    ${TOP_DIR}/output/third_party/lib_cache/gtest_shared/googletest/include
+    ${TOP_DIR}/output/third_party/lib_cache/mockcpp/include
+    ${TOP_DIR}/output/third_party/boost
+    ${TOP_DIR}/output/third_party/lib_cache/csec/include
+    ${TOP_DIR}/src/dfx/log/inc/toolchain
+    ${MSPROF_SOURCE_DIR}/basic/osal
+    ${TOP_DIR}/output/third_party/gtest_shared/include
+    ${TOP_DIR}/output/third_party/lib_cache/mockcpp/include
+    ${TOP_DIR}/src/inc
+    ${TOP_DIR}/include
+    ${TOP_DIR}/include/dfx
+    ${TOP_DIR}/pkg_inc
+    ${TOP_DIR}/pkg_inc/mmpa
+    ${TOP_DIR}/pkg_inc/base
+    ${TOP_DIR}/pkg_inc/runtime
+    ${TOP_DIR}/pkg_inc/aicpu_sched
+    ${TOP_DIR}/pkg_inc/driver
+    ${TOP_DIR}/pkg_inc/profiling
+    ${TOP_DIR}/include/external/acl
+    ${TOP_DIR}/include/external
+    ${TOP_DIR}/src/dfx/msprof/inc/toolchain
+    ${MSPROF_SOURCE_DIR}/dvvp/app
+    ${TOP_DIR}/include/external/acl
+    ${MSPROF_SOURCE_DIR}/dvvp
+    ${MSPROF_SOURCE_DIR}/dvvp/acp/include
+    ${MSPROF_SOURCE_DIR}/dvvp/common
+    ${MSPROF_SOURCE_DIR}/dvvp/common/argparse
+    ${MSPROF_SOURCE_DIR}/dvvp/common/config
+    ${MSPROF_SOURCE_DIR}/dvvp/common/errno
+    ${MSPROF_SOURCE_DIR}/dvvp/common/logger
+    ${MSPROF_SOURCE_DIR}/dvvp/common/validation
+    ${MSPROF_SOURCE_DIR}/dvvp/common/platform
+    ${MSPROF_SOURCE_DIR}/dvvp/common/utils
+    ${MSPROF_SOURCE_DIR}/dvvp/common/json
+    ${MSPROF_SOURCE_DIR}/dvvp/message
+    ${MSPROF_SOURCE_DIR}/dvvp/analyze/inc
+    ${MSPROF_SOURCE_DIR}/dvvp/transport
+    ${MSPROF_SOURCE_DIR}/dvvp/task_handle/include
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/adapter/inc
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/platform
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/include
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/engine/include
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/dynamic_profiling/include
+    ${MSPROF_SOURCE_DIR}/dvvp/msprof/msproftx/mstx/inc
+    ${MSPROF_SOURCE_DIR}/dvvp/driver/inc
+    ${MSPROF_SOURCE_DIR}/dvvp/profapi/inc
+    ../acp/stub
+    ../stub
+    ${MSPROF_SOURCE_DIR}/dvvp/depend/include/stub
+    ../../acp/stub
+)
+
+target_compile_options(acp_manager_stest PRIVATE
+    -g
+    -Wall
+    -std=c++14
+)
+
+target_compile_definitions(acp_manager_stest PRIVATE
+    __PROF_LLT
+    C_SEC
+    google=ascend_private
+    BUILD_PROFILING_OPEN_PROJECT
+)
+
+target_link_options(acp_manager_stest PRIVATE
+    -ldl
+    -lpthread
+)
+
+target_link_libraries(acp_manager_stest PRIVATE
+    $<BUILD_INTERFACE:msprof_utestonetrack_pub>
+    c_sec
+    ascend_protobuf_static
+)
+
+set_target_properties(acp_manager_stest
+    PROPERTIES
+    OUTPUT_NAME acp_manager_stest
+    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+run_llt_test(
+    TARGET acp_manager_stest
     TASK_NUM 1
 )

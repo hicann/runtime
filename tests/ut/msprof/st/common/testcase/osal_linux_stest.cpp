@@ -361,3 +361,91 @@ TEST_F(OSAL_LINUX_TEST, LinuxGetOptLong)
     OsalStructOption options[0] = {};
     EXPECT_EQ(0, LinuxGetOptLong(0, argv, opts, options, &longIndex));
 }
+
+TEST_F(OSAL_LINUX_TEST, LinuxStatGetDupWriteAndOptHelpers)
+{
+    char buffer[128] = {0};
+    EXPECT_EQ(0, LinuxGetCwd(buffer, sizeof(buffer)));
+    int fd = LinuxOpen("/tmp/st_osal_linux_utest", O_CREAT | O_WRONLY, 0600);
+    EXPECT_GE(fd, 0);
+    if (fd >= 0) {
+        EXPECT_EQ(4, LinuxWrite(fd, const_cast<char*>("data"), 4));
+        EXPECT_EQ(0, LinuxClose(fd));
+    }
+    int dupFd = LinuxDup(STDOUT_FILENO, -1);
+    EXPECT_EQ(-1, dupFd);
+    struct stat st = {};
+    // The current LinuxStatGet stub always returns failure, even for an existing directory.
+    EXPECT_EQ(-1, LinuxStatGet("/tmp", &st));
+    EXPECT_FALSE(S_ISDIR(st.st_mode));
+    (void)LinuxGetOptInd();
+    (void)LinuxGetOptArg();
+    (void)remove("/tmp/st_osal_linux_utest");
+}
+
+TEST_F(OSAL_LINUX_TEST, OsalBatchGapCoverage)
+{
+    EXPECT_GT(LinuxGetPid(), 0);
+    EXPECT_GE(LinuxGetOptInd(), 0);
+    EXPECT_EQ(nullptr, LinuxGetOptArg());
+
+    char buffer[16] = {0};
+    EXPECT_EQ(OSAL_EN_INVALID_PARAM, LinuxWrite(-1, buffer, sizeof(buffer)));
+
+    struct stat st = {};
+    EXPECT_EQ(-1, LinuxStatGet("/not-exist", &st));
+    EXPECT_EQ(-1, LinuxAccess("/not-exist"));
+}
+TEST_F(OSAL_LINUX_TEST, OsalFileAndDirectoryHelpers)
+{
+    char path[] = "/tmp/st_osal_dirname";
+    EXPECT_EQ(nullptr, LinuxDirName(nullptr));
+    EXPECT_EQ(nullptr, LinuxBaseName(nullptr));
+    EXPECT_NE(nullptr, LinuxDirName(path));
+    EXPECT_NE(nullptr, LinuxBaseName(path));
+
+    EXPECT_EQ(OSAL_EN_INVALID_PARAM, LinuxAccess2(nullptr, F_OK));
+    EXPECT_EQ(OSAL_EN_INVALID_PARAM, LinuxScandir(nullptr, nullptr, nullptr, nullptr));
+    uint64_t fileSize = 0;
+    EXPECT_EQ(OSAL_EN_INVALID_PARAM, LinuxGetFileSize(nullptr, &fileSize));
+    EXPECT_EQ(OSAL_EN_ERROR, LinuxGetFileSize("/not-exist", &fileSize));
+    OsalDiskSize diskSize = {};
+    EXPECT_EQ(OSAL_EN_INVALID_PARAM, LinuxGetDiskFreeSpace(nullptr, &diskSize));
+    EXPECT_EQ(OSAL_EN_ERROR, LinuxGetDiskFreeSpace("/not-exist", &diskSize));
+    EXPECT_EQ(OSAL_EN_OK, LinuxGetDiskFreeSpace("/tmp", &diskSize));
+    EXPECT_EQ(OSAL_EN_INVALID_PARAM, LinuxMkdir(nullptr, 0600));
+    EXPECT_EQ(OSAL_EN_INVALID_PARAM, LinuxChmod(nullptr, 0600));
+    EXPECT_EQ(OSAL_EN_INVALID_PARAM, LinuxUnlink(nullptr));
+    EXPECT_EQ(OSAL_EN_ERROR, LinuxUnlink("/not-exist"));
+    EXPECT_EQ(OSAL_EN_INVALID_PARAM, LinuxGetFileSize(nullptr, nullptr));
+    EXPECT_EQ(OSAL_EN_INVALID_PARAM, LinuxGetDiskFreeSpace(nullptr, nullptr));
+    EXPECT_EQ(OSAL_EN_INVALID_PARAM, LinuxGetCwd(nullptr, 0));
+    EXPECT_EQ(OSAL_EN_INVALID_PARAM, LinuxJoinTask(nullptr));
+    EXPECT_EQ(OSAL_EN_ERROR, LinuxWaitPid(0, nullptr, 0));
+
+    OsalTimespec tick = LinuxGetTickCount();
+    EXPECT_GE(tick.tv_sec, 0);
+}
+
+TEST_F(OSAL_LINUX_TEST, OsalDynamicLibraryAndSystemInfoHelpers)
+{
+    EXPECT_EQ(nullptr, LinuxDlopen(nullptr, RTLD_LAZY));
+    EXPECT_EQ(nullptr, LinuxDlsym(nullptr, nullptr));
+    EXPECT_EQ(OSAL_EN_INVALID_PARAM, LinuxDlclose(nullptr));
+
+    char name[64] = {0};
+    EXPECT_EQ(OSAL_EN_INVALID_PARAM, LinuxGetOsName(nullptr, 0));
+    EXPECT_EQ(OSAL_EN_INVALID_PARAM, LinuxGetOsVersion(nullptr, 0));
+    EXPECT_EQ(OSAL_EN_OK, LinuxGetOsName(name, sizeof(name)));
+    char version[128] = {0};
+    EXPECT_EQ(OSAL_EN_INVALID_PARAM, LinuxGetOsVersion(nullptr, 0));
+    EXPECT_EQ(OSAL_EN_OK, LinuxGetOsVersion(version, sizeof(version)));
+
+    EXPECT_EQ(OSAL_EN_INVALID_PARAM, LinuxGetLocalTime(nullptr));
+    OsalSystemTime localTime = {};
+    EXPECT_EQ(OSAL_EN_OK, LinuxGetLocalTime(&localTime));
+    EXPECT_GT(localTime.wYear, 0);
+    EXPECT_EQ(OSAL_EN_INVALID_PARAM, LinuxGetTimeOfDay(nullptr, nullptr));
+    OsalTimeval timeVal = {};
+    EXPECT_EQ(OSAL_EN_OK, LinuxGetTimeOfDay(&timeVal, nullptr));
+}

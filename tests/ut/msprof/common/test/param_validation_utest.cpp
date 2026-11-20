@@ -801,3 +801,69 @@ TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_TEST, CheckOpTypeIsValid)
 
     GlobalMockObject::verify();
 }
+
+TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_TEST, ParamValidationDirectGapHelpers)
+{
+    GlobalMockObject::verify();
+    auto entry = ParamValidation::instance();
+
+    std::string emptyEvent;
+    EXPECT_EQ(false, entry->CheckHexOrDec(emptyEvent, analysis::dvvp::common::config::HEX_MODE));
+    std::string decEvent = "12";
+    EXPECT_EQ(true, entry->CheckHexOrDec(decEvent, analysis::dvvp::common::config::DEC_MODE));
+    EXPECT_EQ("0xc", decEvent);
+    std::string invalidDecEvent = "abc";
+    EXPECT_EQ(false, entry->CheckHexOrDec(invalidDecEvent, analysis::dvvp::common::config::DEC_MODE));
+    std::string invalidHexEvent = "xyz";
+    EXPECT_EQ(false, entry->CheckHexOrDec(invalidHexEvent, analysis::dvvp::common::config::HEX_MODE));
+
+    std::string customEvent;
+    EXPECT_EQ(PROFILING_FAILED, entry->CustomHexCharConfig(customEvent, ","));
+    customEvent = "0x1,2,xyz";
+    EXPECT_EQ(PROFILING_FAILED, entry->CustomHexCharConfig(customEvent, ","));
+    customEvent = "0x1,2";
+    EXPECT_EQ(PROFILING_SUCCESS, entry->CustomHexCharConfig(customEvent, ","));
+
+    EXPECT_EQ(true, entry->CheckAicoreMetricsIsValid(""));
+    std::string tooLongMetrics(1025, 'a');
+    EXPECT_EQ(false, entry->CheckAicoreMetricsIsValid(tooLongMetrics));
+    EXPECT_EQ(false, entry->CheckAicoreMetricsIsValid("custom:xyz"));
+
+    EXPECT_EQ(false, entry->CheckDataTagIsValid(""));
+    EXPECT_EQ(false, entry->CheckDataTagIsValid("tag!"));
+    EXPECT_EQ(true, entry->CheckDataTagIsValid("Tag_01"));
+
+    EXPECT_EQ(false, entry->CheckParamsJobIdRegexMatch(""));
+    EXPECT_EQ(false, entry->CheckParamsJobIdRegexMatch(std::string(513, 'a')));
+    EXPECT_EQ(true, entry->CheckParamsJobIdRegexMatch("Job-01"));
+    EXPECT_EQ(false, entry->CheckParamsJobIdRegexMatch("Job_01"));
+
+    EXPECT_EQ(true, entry->CheckParamsModeRegexMatch(""));
+    EXPECT_EQ(true, entry->CheckParamsModeRegexMatch("def_mode"));
+    EXPECT_EQ(false, entry->CheckParamsModeRegexMatch("system_wide"));
+    EXPECT_EQ(false, entry->CheckParamsModeRegexMatch("invalid"));
+}
+
+TEST_F(COMMON_VALIDATION_PARAM_VALIDATION_TEST, ParamValidationDeviceAndSwitchGaps)
+{
+    GlobalMockObject::verify();
+    auto entry = ParamValidation::instance();
+
+    EXPECT_EQ(false, entry->CheckParamsDevices("", "", ""));
+    EXPECT_EQ(true, entry->CheckParamsDevices("", "", "cpu"));
+    EXPECT_EQ(true, entry->CheckParamsDevices("", "all", ""));
+    EXPECT_EQ(false, entry->CheckParamsDevices("", "0,xyz", ""));
+
+    std::string tag;
+    EXPECT_EQ(true, entry->CheckParamL0L1Invalid("ge_api", ""));
+    EXPECT_EQ(true, entry->CheckParamL0L1Invalid("ge_api", "l0"));
+    EXPECT_EQ(true, entry->CheckParamL0L1Invalid("task_time", "l2"));
+    EXPECT_EQ(false, entry->CheckParamL0L1Invalid("ge_api", "l2"));
+    EXPECT_EQ(true, entry->CheckParamEmptyInvalid("ge_api", ""));
+    EXPECT_EQ(false, entry->CheckParamEmptyInvalid("ge_api", "invalid"));
+
+    EXPECT_EQ(true, entry->IsValidSwitch(""));
+    EXPECT_EQ(true, entry->IsValidSwitch("on"));
+    EXPECT_EQ(true, entry->IsValidSwitch("off"));
+    EXPECT_EQ(false, entry->IsValidSwitch("invalid"));
+}

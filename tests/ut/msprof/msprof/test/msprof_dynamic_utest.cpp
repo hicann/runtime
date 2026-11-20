@@ -34,6 +34,11 @@ using namespace analysis::dvvp::common::thread;
 using namespace analysis::dvvp::common::utils;
 using namespace Analysis::Dvvp::MsprofErrMgr;
 
+namespace {
+constexpr uint32_t STOP_BEFORE_WAIT_TIME_MS = 1U;
+constexpr auto NATURAL_WAIT_TIME = std::chrono::seconds(2);
+} // namespace
+
 class MSPROF_DYNAMIC_CLIENT_UTEST : public testing::Test {
 protected:
     virtual void SetUp() {}
@@ -801,11 +806,8 @@ TEST_F(DYNAMIC_THREAD_UTEST, DynProfThread_StopAfterDelay)
     SHARED_PTR_ALIA<DynProfThread> dynProfThread_ = std::make_shared<DynProfThread>();
     std::string Params = "{\"delayTime\":\"1\"}";
     MOCKER_CPP(&Utils::HandleEnvString).stubs().will(returnValue(Params));
-    dynProfThread_->Start(); // thread sleep 1s, then return
-
-    // sleep 2s
-    std::chrono::seconds sleepTime(2); // 2 sleep 2s as real task time
-    std::this_thread::sleep_for(sleepTime);
+    dynProfThread_->Start();
+    std::this_thread::sleep_for(NATURAL_WAIT_TIME);
     EXPECT_EQ(PROFILING_SUCCESS, dynProfThread_->Stop());
 }
 
@@ -814,11 +816,8 @@ TEST_F(DYNAMIC_THREAD_UTEST, DynProfThread_StopBeforeDelay)
     SHARED_PTR_ALIA<DynProfThread> dynProfThread_ = std::make_shared<DynProfThread>();
     std::string Params = "{\"delayTime\":\"10\"}";
     MOCKER_CPP(&Utils::HandleEnvString).stubs().will(returnValue(Params));
-    dynProfThread_->Start(); // thread sleep 1s, then return
-
-    // sleep 2s
-    std::chrono::seconds sleepTime(2); // 2 sleep 2s as real task time
-    std::this_thread::sleep_for(sleepTime);
+    dynProfThread_->Start();
+    std::this_thread::sleep_for(STOP_BEFORE_WAIT_TIME_MS * std::chrono::milliseconds(1U));
     EXPECT_EQ(PROFILING_SUCCESS, dynProfThread_->Stop());
 }
 
@@ -827,11 +826,8 @@ TEST_F(DYNAMIC_THREAD_UTEST, DynProfThread_StopBeforeDuration)
     SHARED_PTR_ALIA<DynProfThread> dynProfThread_ = std::make_shared<DynProfThread>();
     std::string Params = "{\"durationTime\":\"10\"}";
     MOCKER_CPP(&Utils::HandleEnvString).stubs().will(returnValue(Params));
-    dynProfThread_->Start(); // thread sleep 1s, then return
-
-    // sleep 2s
-    std::chrono::seconds sleepTime(2); // 2 sleep 2s as real task time
-    std::this_thread::sleep_for(sleepTime);
+    dynProfThread_->Start();
+    std::this_thread::sleep_for(STOP_BEFORE_WAIT_TIME_MS * std::chrono::milliseconds(1U));
     EXPECT_EQ(PROFILING_SUCCESS, dynProfThread_->Stop());
 }
 
@@ -840,11 +836,8 @@ TEST_F(DYNAMIC_THREAD_UTEST, DynProfThread_StopAfterDuration)
     SHARED_PTR_ALIA<DynProfThread> dynProfThread_ = std::make_shared<DynProfThread>();
     std::string Params = "{\"durationTime\":\"1\"}";
     MOCKER_CPP(&Utils::HandleEnvString).stubs().will(returnValue(Params));
-    dynProfThread_->Start(); // thread sleep 1s, then return
-
-    // sleep 2s
-    std::chrono::seconds sleepTime(2); // 2 sleep 2s as real task time
-    std::this_thread::sleep_for(sleepTime);
+    dynProfThread_->Start();
+    std::this_thread::sleep_for(NATURAL_WAIT_TIME);
     EXPECT_EQ(PROFILING_SUCCESS, dynProfThread_->Stop());
 }
 
@@ -853,11 +846,8 @@ TEST_F(DYNAMIC_THREAD_UTEST, DynProfThread_StopBetweenDelayAndDuration)
     SHARED_PTR_ALIA<DynProfThread> dynProfThread_ = std::make_shared<DynProfThread>();
     std::string Params = "{\"delayTime\":\"1\", \"durationTime\":\"10\"}";
     MOCKER_CPP(&Utils::HandleEnvString).stubs().will(returnValue(Params));
-    dynProfThread_->Start(); // thread sleep 1s, then return
-
-    // sleep 2s
-    std::chrono::seconds sleepTime(2); // 2 sleep 2s as real task time
-    std::this_thread::sleep_for(sleepTime);
+    dynProfThread_->Start();
+    std::this_thread::sleep_for(STOP_BEFORE_WAIT_TIME_MS * std::chrono::milliseconds(1U));
     EXPECT_EQ(PROFILING_SUCCESS, dynProfThread_->Stop());
 }
 

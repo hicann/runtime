@@ -36,6 +36,7 @@ TEST_F(INPUT_PARSER_STEST, MsprofHostCheckValid)
 {
     GlobalMockObject::verify();
     MOCKER(analysis::dvvp::common::utils::Utils::ExecCmd).stubs().will(returnValue(PROFILING_SUCCESS));
+    MOCKER(OsalSleep).stubs().will(returnValue(0));
     InputParser parser = InputParser();
     struct MsprofCmdInfo cmdInfo = {{nullptr}};
     // invalid options
@@ -68,6 +69,7 @@ TEST_F(INPUT_PARSER_STEST, CheckHostSysCmdOutIsExist)
     GlobalMockObject::verify();
 
     MOCKER(analysis::dvvp::common::utils::Utils::ExecCmd).stubs().will(returnValue(PROFILING_SUCCESS));
+    MOCKER(OsalSleep).stubs().will(returnValue(0));
     InputParser parser = InputParser();
     std::string tempFile = "./CheckHostSysCmdOutIsExist";
     std::ofstream file(tempFile);

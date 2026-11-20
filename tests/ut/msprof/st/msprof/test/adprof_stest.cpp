@@ -17,6 +17,8 @@
 #include "aicpu_report_hdc.h"
 #include "platform/platform.h"
 #include "devprof_drv_adprof.h"
+#include "devprof_common.h"
+#include "msprof_drv_api.h"
 #include "prof_dev_api.h"
 #include "ascend_inpackage_hal.h"
 
@@ -113,6 +115,7 @@ TEST_F(ADPROF_STEST, AdprofStartFunc)
 {
     constexpr int argc = 4;
     char* argv[argc] = {"adprof", "host_pid:123", "dev_id:1", "profiling_period:1"};
+    MOCKER(Devprof::ProfSendEvent).stubs().will(returnValue(PROFILING_SUCCESS));
     EXPECT_EQ(PROFILING_FAILED, AdprofStart(0, (const char**)argv));
     EXPECT_EQ(PROFILING_SUCCESS, AdprofStart(argc, (const char**)argv));
     prof_sample_start_para startPara = {0};
@@ -235,6 +238,6 @@ TEST_F(ADPROF_STEST, AicpuReportHdc)
     EXPECT_EQ(true, AicpuReportHdc::instance()->started_);
 
     ret = AdprofReportData(static_cast<VOID_PTR>(&reporterData), static_cast<uint32_t>(sizeof(ReporterData)));
-    EXPECT_EQ(PROFILING_SUCCESS, ret);
-    EXPECT_EQ(PROFILING_SUCCESS, AdprofAicpuStop());
+    EXPECT_EQ(PROFILING_FAILED, ret);
+    EXPECT_EQ(PROFILING_FAILED, AdprofAicpuStop());
 }

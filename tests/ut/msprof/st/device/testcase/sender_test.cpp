@@ -169,7 +169,7 @@ TEST_F(PROFILER_SENDER_TEST, save_file_data_failed)
     data.dataBuf = buf;
     data.bufLen = 8;
 
-    MOCKER_CPP(&Sender::InitNewCustomFile).stubs().with(any()).will(returnValue((std::shared_ptr<File>)NULL));
+    MOCKER_CPP(&Sender::InitNewCustomFile).stubs().with(mockcpp::any()).will(returnValue((std::shared_ptr<File>)NULL));
 
     EXPECT_EQ(PROFILING_FAILED, sender.SaveFileData(job_ctx_json, data));
     file->Uinit();

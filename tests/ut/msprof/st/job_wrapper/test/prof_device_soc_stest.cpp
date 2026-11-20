@@ -20,6 +20,7 @@
 #include "hdc/device_transport.h"
 #include "param_validation.h"
 #include "prof_channel_manager.h"
+#include "msprof_drv_api.h"
 
 using namespace analysis::dvvp::common::error;
 using namespace analysis::dvvp::message;
@@ -43,8 +44,15 @@ TEST_F(PROF_DEVICE_SOC_UTEST, StartProf)
     std::string fileName = "/tmp/test";
     MOCKER_CPP(&Analysis::Dvvp::JobWrapper::JobDeviceSoc::GenerateFileName).stubs().will(returnValue(fileName));
     MOCKER_CPP(&Analysis::Dvvp::JobWrapper::JobDeviceSoc::SendData).stubs().will(returnValue(0));
-    MOCKER(analysis::dvvp::driver::DrvGetDevNum).stubs().will(returnValue(2)).then(returnValue(2));
-    MOCKER(analysis::dvvp::driver::DrvGetDevIds)
+    channel_list_t testChannels{};
+    testChannels.channel_num = 1;
+    testChannels.channel[0].channel_id = 1;
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::ProfDrvGetChannels)
+        .stubs()
+        .with(any(), outBoundP(&testChannels))
+        .will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::drvGetDevNum).stubs().will(returnValue(2)).then(returnValue(2));
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::drvGetDevIDs)
         .stubs()
         .will(returnValue(PROFILING_SUCCESS))
         .then(returnValue(PROFILING_FAILED));
@@ -97,6 +105,13 @@ TEST_F(PROF_DEVICE_SOC_UTEST, StartProf1)
     MSVP_MAKE_SHARED0(jobDeviceSoc->collectionJobCommCfg_, CollectionJobCommonParams, return);
     jobDeviceSoc->collectionJobCommCfg_->params = params;
     jobDeviceSoc->params_ = params;
+    channel_list_t startProfChannels{};
+    startProfChannels.channel_num = 1;
+    startProfChannels.channel[0].channel_id = 1;
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::ProfDrvGetChannels)
+        .stubs()
+        .with(any(), outBoundP(&startProfChannels))
+        .will(returnValue(PROFILING_SUCCESS));
     jobDeviceSoc->StartProf(params);
 
     jobDeviceSoc->collectionJobCommCfg_->params->nicProfiling = "on";
@@ -113,7 +128,7 @@ TEST_F(PROF_DEVICE_SOC_UTEST, StartProf1)
         .stubs()
         .will(returnValue(-1))
         .then(returnValue(0));
-    MOCKER(analysis::dvvp::driver::DrvGetDevNum)
+    MOCKER_CPP(&analysis::dvvp::driver::MsprofDrvApi::drvGetDevNum)
         .stubs()
         .will(returnValue(PROFILING_FAILED))
         .then(returnValue(PROFILING_SUCCESS));

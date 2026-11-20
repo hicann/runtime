@@ -107,6 +107,10 @@ add_executable(
 target_include_directories(device_stest PRIVATE
     ${TOP_DIR}/abl/libc_sec/include
     ${TOP_DIR}/inc/driver
+    ${TOP_DIR}/pkg_inc/driver
+    ${TOP_DIR}/pkg_inc/runtime
+    ${TOP_DIR}/include/external/acl
+    ${MSPROF_SOURCE_DIR}/../inc/toolchain
     ${TOP_DIR}/inc/tsch
     ${TOP_DIR}/inc/external
     ${TOP_DIR}/runtime/src/dfx/adump
