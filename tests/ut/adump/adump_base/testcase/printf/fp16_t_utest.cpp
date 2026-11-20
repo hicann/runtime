@@ -513,3 +513,40 @@ TEST_F(Fp16UTest, AssignInt16_PositiveLarge)
     a = static_cast<int16_t>(32767); // near max int16 - triggers normalization
     EXPECT_GT(a.toFloat(), 0.0f);
 }
+
+TEST_F(Fp16UTest, AssignUint16_RoundingSaturates)
+{
+    const uint16_t inputs[] = {65504, 65519, 65520, 65535};
+    const uint16_t initialEncodings[] = {0, 0x7BFF, 0x7E00};
+    for (const auto input : inputs) {
+        for (const auto initialEncoding : initialEncodings) {
+            SCOPED_TRACE(input);
+            SCOPED_TRACE(initialEncoding);
+            fp16_t value(initialEncoding);
+            value = input;
+            EXPECT_EQ(value.val, 0x7BFFU);
+            EXPECT_EQ(value.toFloat(), 65504.0F);
+        }
+    }
+}
+
+TEST_F(Fp16UTest, AssignUint16_AllNumericValuesAgree)
+{
+    for (uint32_t input = 0; input <= UINT16_MAX; ++input) {
+        fp16_t actual(uint16_t{0x7E00});
+        actual = static_cast<uint16_t>(input);
+        fp16_t fromUint32(input);
+        fp16_t fromDouble(static_cast<double>(input));
+        ASSERT_EQ(actual.val, fromUint32.val) << input;
+        ASSERT_EQ(actual.val, fromDouble.val) << input;
+    }
+}
+
+TEST_F(Fp16UTest, Uint16ConstructorPreservesRawEncoding)
+{
+    const uint16_t encodings[] = {0, 1, 0x7BFF, 0x7C00, 0x7E00, 0xFFFF};
+    for (const auto encoding : encodings) {
+        fp16_t value(encoding);
+        EXPECT_EQ(value.val, encoding);
+    }
+}

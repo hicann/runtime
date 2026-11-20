@@ -336,9 +336,7 @@ fp16_t& fp16_t::operator=(const uint16_t& uiVal)
                 mRet = mRet >> 1;
                 eRet = eRet + 1;
             }
-            if (FP16_IS_INVALID(val)) {
-                val = FP16_MAX;
-            }
+            Fp16Normalize(eRet, mRet);
         } else {
             eRet = FP16_EXP_BIAS;
             mRet = mRet << (DIM_11 - len);
