@@ -274,6 +274,25 @@ TEST_F(EP_FILE_DUMP_FUNC_UTEST, FileDumpTableIncludesNetworkInfo)
     EXPECT_EQ(1U, foundCount);
 }
 
+TEST_F(EP_FILE_DUMP_FUNC_UTEST, FileDumpTableIncludesPageowner)
+{
+    size_t foundCount = 0;
+    for (const auto& info : MSNPUREPORT_FILE_DUMP_INFO) {
+        if (std::string(info.label) != "pageowner_info") {
+            continue;
+        }
+        ++foundCount;
+        EXPECT_STREQ("pageowner_info", info.hostFilePath);
+        EXPECT_STREQ("pageowner_info", info.deviceFilePath);
+        EXPECT_STREQ("/var/sys_pageowner_log.sh", info.deviceScriptPath);
+        EXPECT_EQ(nullptr, info.scriptArgs);
+        EXPECT_EQ(60000U, info.timeout);
+        EXPECT_EQ(TYPE_12, info.type);
+        EXPECT_TRUE(info.isRoot);
+    }
+    EXPECT_EQ(1U, foundCount);
+}
+
 TEST_F(EP_FILE_DUMP_FUNC_UTEST, FileUtilitiesCoverRealDirectoryTree)
 {
     const std::string root = std::string(PATH_ROOT) + "/file-utils";
@@ -660,6 +679,32 @@ TEST_F(EP_FILE_DUMP_FUNC_UTEST, LogGetFileProcessExportsNetworkInfoScript)
 
     EXPECT_EQ(SYS_OK, getFile.Process(handle, request));
     EXPECT_EQ("/var/network_info_collect.sh 42", g_capturedCmd);
+    EXPECT_EQ("game_over", g_capturedEndMsg);
+    EXPECT_EQ(0, GetErrLogNum());
+    ResetErrLog();
+}
+
+TEST_F(EP_FILE_DUMP_FUNC_UTEST, LogGetFileProcessExportsPageownerScript)
+{
+    LogGetFile getFile;
+    ASSERT_EQ(SYS_OK, getFile.Init());
+    CommHandle handle = {};
+    handle.type = COMM_HDC;
+    handle.session = 1U;
+
+    g_capturedCmd.clear();
+    g_capturedEndMsg.clear();
+    MOCKER(LogIdeGetRunEnvBySession).stubs().will(invoke(LogIdeNonContainerCoverageStub));
+    MOCKER(LogIdeGetPidBySession).stubs().will(invoke(LogIdePidCoverageStub));
+    MOCKER_CPP(&LogFileUtils::IsFileExist).stubs().will(returnValue(true));
+    MOCKER_CPP(&LogFileUtils::IsDirExist).stubs().will(returnValue(false));
+    MOCKER(AdxCreateProcess).stubs().will(invoke(AdxCreateProcessCaptureStub));
+    MOCKER(AdxSendMsgByHandle).stubs().will(invoke(AdxSendEndMsgCaptureStub));
+    auto request = MakeFileRequest(MsgType::MSG_DATA, "pageowner_info");
+    ASSERT_NE(nullptr, request);
+
+    EXPECT_EQ(SYS_OK, getFile.Process(handle, request));
+    EXPECT_EQ("sudo /var/sys_pageowner_log.sh 42", g_capturedCmd);
     EXPECT_EQ("game_over", g_capturedEndMsg);
     EXPECT_EQ(0, GetErrLogNum());
     ResetErrLog();
