@@ -14,8 +14,13 @@
 
 void ResetDlogRecordCount();
 int32_t GetDlogRecordCount();
+void ResetDlogEventCount();
+int32_t GetDlogEventCount();
 // capture the last DlogRecord message text so unit tests can assert log content
 const char* GetLastDlogRecordMsg();
 void ResetLastDlogRecordMsg();
+// capture the last run-log event so later warning logs do not hide it in assertions
+const char* GetLastDlogEventMsg();
+void ResetLastDlogEventMsg();
 
 #endif

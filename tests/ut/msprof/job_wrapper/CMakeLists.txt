@@ -191,6 +191,7 @@ add_executable(job_wrapper
 
 target_compile_definitions(job_wrapper PRIVATE
     C_SEC
+    MSPROF_SOURCE_PATH="${MSPROF_SOURCE_DIR}/dvvp"
 )
 
 set(libmsprofHeaderDir

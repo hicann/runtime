@@ -572,6 +572,16 @@ target_compile_options(msprof_utest PRIVATE
     -Werror
 )
 
+# mockcpp installs a 32-byte AArch64 trampoline at each hooked function entry.
+# Release optimization can otherwise place adjacent small stubs only 4 or 8 bytes
+# apart, so hooking one function overwrites the neighboring hook. Align function
+# entries in this test executable so each mock has enough private entry bytes.
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64" AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(msprof_utest PRIVATE
+        -falign-functions=32
+    )
+endif()
+
 target_compile_definitions(msprof_utest PRIVATE
     C_SEC
     __PROF_LLT

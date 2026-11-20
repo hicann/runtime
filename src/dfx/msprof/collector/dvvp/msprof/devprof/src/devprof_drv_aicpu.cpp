@@ -10,6 +10,8 @@
 
 #include "devprof_drv_aicpu.h"
 #include <string>
+#include <thread>
+#include <unistd.h>
 #include "error_code.h"
 #include "log_types.h"
 #include "config/config.h"
@@ -24,15 +26,13 @@ using namespace analysis::dvvp::common::config;
 using namespace analysis::dvvp::driver;
 using namespace Devprof;
 
-constexpr uint64_t START_SWITCH = 1U;                  // define by runtime
-constexpr uint32_t AICPU_SWITCH = 2U;                  // define by runtime
-constexpr uint32_t MAX_ADD_REPORT_SIZE = 131072;       // 512 * sizeof(MsprofAdditionalInfo)
-constexpr uint64_t HOST_MOVE_BUFFER_SIZE = 4 * 1024 * 1024;
-constexpr uint64_t NS_PER_SECOND = 1000 * 1000 * 1000; // nanoseconds per second
-constexpr uint64_t BYTES_PER_MB = 1024 * 1024;         // bytes per MB
+constexpr uint64_t START_SWITCH = 1U;            // define by runtime
+constexpr uint32_t AICPU_SWITCH = 2U;            // define by runtime
+constexpr uint32_t MAX_ADD_REPORT_SIZE = 131072; // 512 * sizeof(MsprofAdditionalInfo)
 const char* const AICPU_EVENT_GRP_NAME = "prof_aicpu_grp";
 const char* const AI_CUSTOM_CPU_EVENT_GRP_NAME = "prof_cus_grp";
 const char* const AICPU_PROFILING_REPORT_THREAD_NAME = "Prof_Reporter";
+constexpr useconds_t HOST_MOVE_PUSH_WAIT_TIME = 1;
 
 size_t DevprofDrvAicpu::GetBatchReportMaxSize(uint32_t type) const
 {
@@ -53,6 +53,11 @@ int32_t DevprofDrvAicpu::ReportAdditionalInfo(uint32_t agingFlag, ConstVoidPtr d
     if (length % sizeof(MsprofAdditionalInfo) != 0 || length > MAX_ADD_REPORT_SIZE) {
         MSPROF_LOGE("Report additional info length [%u bytes] is invalid.", length);
         return PROFILING_FAILED;
+    }
+
+    if (isSupportHostMove_) {
+        const uint32_t recordCount = length / static_cast<uint32_t>(sizeof(MsprofAdditionalInfo));
+        return WriteDirectlyToHostMoveBuffer(static_cast<const MsprofAdditionalInfo*>(data), recordCount);
     }
 
     int32_t ret = aicpuAdditionalBuffer_.BatchPush(static_cast<const MsprofAdditionalInfo*>(data), length);
@@ -100,6 +105,9 @@ STATIC int32_t ProfStartAicpu(ProfSampleStartPara* para)
         }
     } else {
         instance->SetSupportHostMove(false);
+        if (!instance->InitAdditionalBuffer()) {
+            return PROFILING_FAILED;
+        }
     }
     instance->DeviceReportStart();
     return instance->Start();
@@ -110,6 +118,8 @@ STATIC int32_t ProfSampleAicpu(ProfSamplePara* para)
     UNUSED(para);
     return PROFILING_SUCCESS;
 }
+
+bool DevprofDrvAicpu::InitAdditionalBuffer() { return aicpuAdditionalBuffer_.Init("AicpuBuffer"); }
 
 STATIC int32_t ProfStopDevicePause(ProfSampleStopPara* para)
 {
@@ -216,7 +226,11 @@ int32_t DevprofDrvAicpu::Init(const struct AicpuStartPara* para)
 int32_t DevprofDrvAicpu::Start()
 {
     stopped_ = false;
-    ringFullLogged_ = false;
+    ringFullLogged_.store(false, std::memory_order_relaxed);
+    if (isSupportHostMove_) {
+        hostMoveAcceptingWrites_.store(true, std::memory_order_release);
+        return PROFILING_SUCCESS;
+    }
     if (Thread::Start() != PROFILING_SUCCESS) {
         MSPROF_LOGE("Failed to start reporter %s thread", AICPU_PROFILING_REPORT_THREAD_NAME);
         return PROFILING_FAILED;
@@ -229,7 +243,15 @@ int32_t DevprofDrvAicpu::Stop()
     stopped_ = true;
     profConfig_ = 0;
 
-    if (Thread::Stop() != PROFILING_SUCCESS) {
+    if (isSupportHostMove_) {
+        hostMoveAcceptingWrites_.store(false, std::memory_order_release);
+        while (hostMoveActiveWriters_.load(std::memory_order_acquire) != 0U) {
+            std::this_thread::yield();
+        }
+        return ReportStr2IdInfoToHostMove(true);
+    }
+
+    if (!isSupportHostMove_ && Thread::Stop() != PROFILING_SUCCESS) {
         MSPROF_LOGE("Failed to stop report %s thread", AICPU_PROFILING_REPORT_THREAD_NAME);
     }
 
@@ -239,17 +261,267 @@ int32_t DevprofDrvAicpu::Stop()
 
 void DevprofDrvAicpu::Release()
 {
+    if (isSupportHostMove_) {
+        hostMoveAcceptingWrites_.store(false, std::memory_order_release);
+        while (hostMoveActiveWriters_.load(std::memory_order_acquire) != 0U) {
+            std::this_thread::yield();
+        }
+    }
     UninitHostMoveBuffer();
     SetSupportHostMove(false);
 }
 
 void DevprofDrvAicpu::UninitHostMoveBuffer()
 {
+    const uint32_t discardCount = hostMoveOverflowDiscardSize_.load(std::memory_order_acquire);
+    if (discardCount != 0U) {
+        const size_t discardLength = static_cast<size_t>(discardCount) * sizeof(MsprofAdditionalInfo);
+        MSPROF_LOGE("Host move buffer overflow, channel id: %u, discard length: %zu bytes", channelId_, discardLength);
+    }
+
+    delete[] hostMoveCommitCounts_;
+    hostMoveCommitCounts_ = nullptr;
+    hostMoveCommitCountSize_ = 0;
     hostMoveBuffer_ = nullptr;
     hostMoveWptr_ = nullptr;
     hostMoveRptr_ = nullptr;
     hostMoveBufferSize_ = 0;
+    hostMoveReadIndex_.store(0);
     hostMoveWriteIndex_.store(0);
+    hostMoveIdleWriteIndex_.store(0);
+    hostMoveFailedWriteIndex_.store(0);
+    hostMoveOverflowDiscardSize_.store(0);
+    hostMoveMaxCycles_ = HOST_MOVE_BUFFER_MAX_CYCLES;
+    hostMoveAcceptingWrites_.store(false);
+}
+
+bool DevprofDrvAicpu::EnsureHostMoveCommitState(uint32_t maxIdx)
+{
+    if (hostMoveCommitCounts_ != nullptr && hostMoveCommitCountSize_ == maxIdx) {
+        return true;
+    }
+
+    auto* commitCounts = new (std::nothrow) std::atomic<uint32_t>[maxIdx];
+    if (commitCounts == nullptr) {
+        MSPROF_LOGE("Alloc host move commit counts failed, count=%u", maxIdx);
+        return false;
+    }
+    for (uint32_t i = 0; i < maxIdx; ++i) {
+        commitCounts[i].store(0, std::memory_order_relaxed);
+    }
+
+    delete[] hostMoveCommitCounts_;
+    hostMoveCommitCounts_ = commitCounts;
+    hostMoveCommitCountSize_ = maxIdx;
+    return true;
+}
+
+int32_t DevprofDrvAicpu::WriteDirectlyToHostMoveBuffer(
+    const MsprofAdditionalInfo* data, uint32_t recordCount, bool flushWrite)
+{
+    if (hostMoveBuffer_ == nullptr || hostMoveWptr_ == nullptr || hostMoveRptr_ == nullptr || data == nullptr ||
+        recordCount == 0) {
+        MSPROF_LOGE("Write directly to host move buffer input invalid");
+        return PROFILING_FAILED;
+    }
+
+    constexpr uint32_t recordSize = sizeof(MsprofAdditionalInfo);
+    const uint32_t maxIdx = static_cast<uint32_t>(hostMoveBufferSize_ / recordSize);
+    if (maxIdx == 0 || recordCount >= maxIdx) {
+        MSPROF_LOGE("Host move direct write failed, recordCount=%u, maxIdx=%u", recordCount, maxIdx);
+        return PROFILING_FAILED;
+    }
+    if (hostMoveCommitCounts_ == nullptr || hostMoveCommitCountSize_ != maxIdx) {
+        MSPROF_LOGE("Host move commit state is invalid, count=%zu maxIdx=%u", hostMoveCommitCountSize_, maxIdx);
+        return PROFILING_FAILED;
+    }
+
+    bool writerRegistered = false;
+    while (!writerRegistered) {
+        if (!flushWrite && !hostMoveAcceptingWrites_.load(std::memory_order_acquire)) {
+            return PROFILING_FAILED;
+        }
+        (void)hostMoveActiveWriters_.fetch_add(1, std::memory_order_acq_rel);
+        writerRegistered = flushWrite || hostMoveAcceptingWrites_.load(std::memory_order_acquire);
+        if (!writerRegistered) {
+            (void)hostMoveActiveWriters_.fetch_sub(1, std::memory_order_acq_rel);
+        }
+    }
+    struct HostMoveWriterGuard {
+        std::atomic<uint32_t>& activeWriters;
+        ~HostMoveWriterGuard() { activeWriters.fetch_sub(1, std::memory_order_acq_rel); }
+    } writerGuard{hostMoveActiveWriters_};
+
+    uint64_t writeCursor = 0;
+    size_t cycles = 0;
+    while (true) {
+        const uint32_t readIndex = *hostMoveRptr_;
+        const uint32_t writeSlot = *hostMoveWptr_;
+        if (readIndex >= maxIdx || writeSlot >= maxIdx) {
+            MSPROF_LOGE("Host move pointers invalid, wptr=%u rptr=%u max=%u", writeSlot, readIndex, maxIdx);
+            return PROFILING_FAILED;
+        }
+        if (!flushWrite && !hostMoveAcceptingWrites_.load(std::memory_order_acquire)) {
+            return PROFILING_FAILED;
+        }
+        if (hostMoveFailedWriteIndex_.load(std::memory_order_acquire) != 0U) {
+            return PROFILING_FAILED;
+        }
+
+        uint64_t expected = hostMoveIdleWriteIndex_.load(std::memory_order_acquire);
+        if (!TryUpdateHostMoveReadIndex(maxIdx)) {
+            return PROFILING_FAILED;
+        }
+        const uint64_t usedRecords = expected - hostMoveReadIndex_.load(std::memory_order_acquire);
+        const uint64_t freeRecords = static_cast<uint64_t>(maxIdx) - 1ULL - usedRecords;
+        if (freeRecords < recordCount) {
+            cycles++;
+            if (cycles >= hostMoveMaxCycles_) {
+                (void)hostMoveOverflowDiscardSize_.fetch_add(recordCount, std::memory_order_acq_rel);
+                MSPROF_LOGW(
+                    "Host move cycle overflow, drop data, recordCount=%u free=%llu maxIdx=%u", recordCount,
+                    static_cast<unsigned long long>(freeRecords), maxIdx);
+                return PROFILING_SUCCESS;
+            }
+            if (!ringFullLogged_.load(std::memory_order_relaxed)) {
+                ringFullLogged_.store(true, std::memory_order_relaxed);
+                MSPROF_EVENT(
+                    "Host move ring buffer full, channel id: %u, idle=%llu", channelId_,
+                    static_cast<unsigned long long>(expected));
+            }
+            (void)usleep(HOST_MOVE_PUSH_WAIT_TIME);
+            continue;
+        }
+
+        const uint64_t nextCursor = expected + static_cast<uint64_t>(recordCount);
+        const bool reserved = hostMoveIdleWriteIndex_.compare_exchange_weak(
+            expected, nextCursor, std::memory_order_acq_rel, std::memory_order_acquire);
+        if (reserved) {
+            writeCursor = expected;
+            break;
+        }
+    }
+
+    const uint32_t startSlot = writeCursor % maxIdx;
+    const uint32_t firstCount = std::min(recordCount, maxIdx - startSlot);
+    const uint32_t writeOffset = startSlot * recordSize;
+    const uint32_t bufferLimit = static_cast<uint32_t>(hostMoveBufferSize_);
+    errno_t ret = memcpy_s(
+        hostMoveBuffer_ + writeOffset, bufferLimit - writeOffset, data, static_cast<size_t>(firstCount) * recordSize);
+    if (ret != EOK) {
+        FailReservedRange(writeCursor, recordCount);
+        hostMoveAcceptingWrites_.store(false, std::memory_order_release);
+        MSPROF_LOGE("Memcpy host move first segment failed, ret=%d firstCount=%u", ret, firstCount);
+        return PROFILING_FAILED;
+    }
+
+    const uint32_t secondCount = recordCount - firstCount;
+    if (secondCount != 0) {
+        ret = memcpy_s(hostMoveBuffer_, bufferLimit, data + firstCount, static_cast<size_t>(secondCount) * recordSize);
+        if (ret != EOK) {
+            FailReservedRange(writeCursor, recordCount);
+            hostMoveAcceptingWrites_.store(false, std::memory_order_release);
+            MSPROF_LOGE("Memcpy host move wrapped segment failed, ret=%d secondCount=%u", ret, secondCount);
+            return PROFILING_FAILED;
+        }
+    }
+
+    std::atomic_thread_fence(std::memory_order_release);
+    hostMoveCommitCounts_[writeCursor % maxIdx].store(recordCount, std::memory_order_release);
+    if (hostMoveFailedWriteIndex_.load(std::memory_order_acquire) != 0U) {
+        MSPROF_LOGE("A previous host move writer failed, cursor=%llu", static_cast<unsigned long long>(writeCursor));
+        return PROFILING_FAILED;
+    }
+    if (!TryPublishHostMoveRange(maxIdx)) {
+        MSPROF_LOGE(
+            "Publish host move range failed, cursor=%llu count=%u", static_cast<unsigned long long>(writeCursor),
+            recordCount);
+        return PROFILING_FAILED;
+    }
+    return PROFILING_SUCCESS;
+}
+
+bool DevprofDrvAicpu::TryPublishHostMoveRange(uint32_t maxIdx)
+{
+    while (true) {
+        const uint64_t idleCursor = hostMoveIdleWriteIndex_.load(std::memory_order_acquire);
+        const uint64_t cursor = hostMoveWriteIndex_.load(std::memory_order_acquire);
+        if (cursor >= idleCursor) {
+            return true;
+        }
+
+        const uint32_t slot = cursor % maxIdx;
+        uint32_t count = hostMoveCommitCounts_[slot].load(std::memory_order_acquire);
+        if (count == 0) {
+            return true;
+        }
+        const uint64_t nextCursor = cursor + static_cast<uint64_t>(count);
+        if (count >= maxIdx || nextCursor > idleCursor) {
+            MSPROF_LOGE(
+                "Host move commit state invalid, cursor=%llu count=%u idle=%llu",
+                static_cast<unsigned long long>(cursor), count, static_cast<unsigned long long>(idleCursor));
+            return false;
+        }
+        const bool commitCountCleared = hostMoveCommitCounts_[slot].compare_exchange_strong(
+            count, 0, std::memory_order_acq_rel, std::memory_order_acquire);
+        if (!commitCountCleared) {
+            continue;
+        }
+
+        std::atomic_thread_fence(std::memory_order_release);
+        *hostMoveWptr_ = nextCursor % maxIdx;
+        hostMoveWriteIndex_.store(nextCursor, std::memory_order_release);
+    }
+}
+
+bool DevprofDrvAicpu::TryUpdateHostMoveReadIndex(uint32_t maxIdx)
+{
+    if (maxIdx == 0) {
+        return false;
+    }
+
+    uint64_t readCursor = hostMoveReadIndex_.load(std::memory_order_acquire);
+    while (true) {
+        const uint32_t readSlot = *hostMoveRptr_;
+        if (readSlot >= maxIdx) {
+            MSPROF_LOGE("Host move read pointer invalid, rptr=%u max=%u", readSlot, maxIdx);
+            return false;
+        }
+        if (readCursor % maxIdx == readSlot) {
+            return true;
+        }
+
+        const uint32_t consumedCount = static_cast<uint32_t>((readSlot + maxIdx - (readCursor % maxIdx)) % maxIdx);
+        const uint64_t nextCursor = readCursor + consumedCount;
+        if (nextCursor > hostMoveIdleWriteIndex_.load(std::memory_order_acquire)) {
+            MSPROF_LOGE(
+                "Host move read pointer jumped ahead, rptr=%u readCursor=%llu max=%u", readSlot,
+                static_cast<unsigned long long>(readCursor), maxIdx);
+            return false;
+        }
+        const bool readCursorUpdated = hostMoveReadIndex_.compare_exchange_weak(
+            readCursor, nextCursor, std::memory_order_acq_rel, std::memory_order_acquire);
+        if (readCursorUpdated) {
+            const uint32_t publishedSlot = *hostMoveRptr_;
+            if (publishedSlot == readSlot) {
+                return true;
+            }
+            readCursor = nextCursor;
+        }
+    }
+}
+
+void DevprofDrvAicpu::FailReservedRange(uint64_t cursor, uint32_t count)
+{
+    const uint64_t failedCursor = cursor + static_cast<uint64_t>(count);
+    uint64_t expected = hostMoveFailedWriteIndex_.load(std::memory_order_acquire);
+    while (expected < failedCursor) {
+        const bool failedCursorUpdated = hostMoveFailedWriteIndex_.compare_exchange_weak(
+            expected, failedCursor, std::memory_order_acq_rel, std::memory_order_acquire);
+        if (failedCursorUpdated) {
+            return;
+        }
+    }
 }
 
 int32_t DevprofDrvAicpu::SendAddtionalInfo()
@@ -294,7 +566,7 @@ int32_t DevprofDrvAicpu::SendAddtionalInfo()
     return PROFILING_SUCCESS;
 }
 
-void DevprofDrvAicpu::AddStr2IdIntoBuffer(std::string& str)
+bool DevprofDrvAicpu::AddStr2IdIntoBuffer(std::string& str, bool flushWrite)
 {
     MsprofAdditionalInfo additionInfo;
     additionInfo.magicNumber = MSPROF_REPORT_DATA_MAGIC_NUM;
@@ -307,23 +579,30 @@ void DevprofDrvAicpu::AddStr2IdIntoBuffer(std::string& str)
     errno_t ret = memcpy_s(additionInfo.data, MSPROF_ADDTIONAL_INFO_DATA_LENGTH, str.c_str(), additionInfo.dataLen);
     if (ret != EOK) {
         MSPROF_LOGE("Memcpy data into additionInfo failed, size:%uB", additionInfo.dataLen);
-        return;
+        return false;
     }
-    int32_t pushRet = ReportAdditionalInfo(0, static_cast<void*>(&additionInfo), sizeof(MsprofAdditionalInfo));
+    int32_t pushRet = 0;
+    if (flushWrite) {
+        pushRet = WriteDirectlyToHostMoveBuffer(&additionInfo, 1U, true);
+    } else {
+        pushRet = ReportAdditionalInfo(0, static_cast<void*>(&additionInfo), sizeof(MsprofAdditionalInfo));
+    }
     if (pushRet != PROFILING_SUCCESS) {
         MSPROF_LOGE("Push str2id into additional buffer failed, size:%uB", additionInfo.dataLen);
-        return;
+        return false;
     }
     MSPROF_LOGI("Add str2id into additional buffer, size:%uB", additionInfo.dataLen);
+    return true;
 }
 
-void DevprofDrvAicpu::FillStr2IdIntoBuffer(std::string& dataStr)
+bool DevprofDrvAicpu::FillStr2IdIntoBuffer(std::string& dataStr, bool flushWrite)
 {
     dataStr.insert(0, STR2ID_MARK);
     std::stringstream ss(dataStr);
     std::string item;
     std::string sendStr;
     uint32_t currentSize = 0;
+    bool fillSuccess = true;
     while (std::getline(ss, item, STR2ID_DELIMITER[0])) {
         uint32_t itemSize = item.length();
         if (itemSize > MSPROF_ADDTIONAL_INFO_DATA_LENGTH) {
@@ -333,7 +612,7 @@ void DevprofDrvAicpu::FillStr2IdIntoBuffer(std::string& dataStr)
         uint32_t addSize = currentSize > 0 ? itemSize + 1 : itemSize;
         if (currentSize + addSize > MSPROF_ADDTIONAL_INFO_DATA_LENGTH) {
             MSPROF_LOGD("AddStr2IdIntoBuffer str length:%uB str:%s", sendStr.length(), sendStr.c_str());
-            AddStr2IdIntoBuffer(sendStr);
+            fillSuccess = AddStr2IdIntoBuffer(sendStr, flushWrite) && fillSuccess;
             sendStr = "";
             currentSize = 0;
         }
@@ -347,8 +626,9 @@ void DevprofDrvAicpu::FillStr2IdIntoBuffer(std::string& dataStr)
     }
     if (currentSize > 0) {
         MSPROF_LOGD("AddStr2IdIntoBuffer str length:%uB str:%s", sendStr.length(), sendStr.c_str());
-        AddStr2IdIntoBuffer(sendStr);
+        fillSuccess = AddStr2IdIntoBuffer(sendStr, flushWrite) && fillSuccess;
     }
+    return fillSuccess;
 }
 
 int32_t DevprofDrvAicpu::ReportStr2IdInfoToHost(std::string& dataStr)
@@ -363,140 +643,31 @@ int32_t DevprofDrvAicpu::ReportStr2IdInfoToHost(std::string& dataStr)
     return ret;
 }
 
-// Validate the host-move ring pointers and compute the number of free slots available for writing.
-// Returns FATAL on a corrupted ring (caller should stop), RETRY when the ring is full and the
-// caller should sleep, or OK with freeSlots set when there is room to write.
-DevprofDrvAicpu::HostMoveStep DevprofDrvAicpu::AcquireHostMoveFreeSlots(uint32_t& freeSlots)
-{
-    // recordSize is sizeof(...) so it is a compile-time non-zero constant; the division is safe.
-    const uint32_t recordSize = static_cast<uint32_t>(sizeof(MsprofAdditionalInfo));
-    uint32_t writeIdx = hostMoveWriteIndex_.load(std::memory_order_relaxed);
-    uint32_t rptr = *hostMoveRptr_;
-    uint32_t maxIdx = static_cast<uint32_t>(hostMoveBufferSize_ / recordSize);
-    if (writeIdx >= maxIdx || rptr >= maxIdx) {
-        MSPROF_LOGE("Invalid wptr/rptr, wptr=%u rptr=%u max=%u", writeIdx, rptr, maxIdx);
-        stopped_ = true;
-        MSPROF_LOGE("Discarded pending data size=%zu in host move buffer", aicpuAdditionalBuffer_.GetUsedSize());
-        return HostMoveStep::FATAL;
-    }
-
-    // Free slots in the ring, keeping a one-slot gap so wptr never catches up to rptr (which
-    // would look empty to the consumer). Full when usedSlots reaches maxIdx - 1.
-    uint32_t usedSlots = (writeIdx >= rptr) ? (writeIdx - rptr) : (maxIdx - rptr + writeIdx);
-    freeSlots = (maxIdx - 1 > usedSlots) ? (maxIdx - 1 - usedSlots) : 0;
-    if (freeSlots == 0) {
-        // Log only once per profiling session to avoid flooding when the ring stays full across retries.
-        if (!ringFullLogged_) {
-            MSPROF_EVENT("Host move ring buffer full, wptr=%u rptr=%u", writeIdx, rptr);
-            ringFullLogged_ = true;
-        }
-        if (stopped_) {
-            MSPROF_LOGE(
-                "Discarded pending data size=%zu, ring buffer full on stop", aicpuAdditionalBuffer_.GetUsedSize());
-            return HostMoveStep::FATAL;
-        }
-        return HostMoveStep::RETRY;
-    }
-    return HostMoveStep::OK;
-}
-
-// Pop one batch from the source buffer and write it into the host-move ring, accumulating stats.
-// Returns RETRY when nothing could be popped (caller should sleep), otherwise OK.
-DevprofDrvAicpu::HostMoveStep DevprofDrvAicpu::MoveOneBatchToHostMove(
-    size_t maxBatchRecords, uint32_t freeSlots, uint64_t& totalWriteLen)
-{
-    // recordSize is sizeof(...) so it is a compile-time non-zero constant; the division is safe.
-    const size_t recordSize = sizeof(MsprofAdditionalInfo);
-    // Pop as much as is available, capped by the per-batch limit and the free ring slots.
-    size_t wantRecords = std::min(aicpuAdditionalBuffer_.GetUsedSize(), maxBatchRecords);
-    wantRecords = std::min(wantRecords, static_cast<size_t>(freeSlots));
-    size_t popSize = wantRecords * recordSize;
-    // BatchPop may shrink popSize to the contiguous span before the source ring wraps; the
-    // wrapped remainder is handled by the next loop iteration.
-    void* outPtr = aicpuAdditionalBuffer_.BatchPop(popSize, stopped_);
-    if (outPtr == nullptr) {
-        return HostMoveStep::RETRY;
-    }
-
-    uint32_t recordCount = static_cast<uint32_t>(popSize / recordSize);
-    uint64_t batchStartTime = analysis::dvvp::common::utils::Utils::GetClockMonotonicRaw();
-    int32_t ret = WriteBatchToHostMoveBuffer(static_cast<const MsprofAdditionalInfo*>(outPtr), recordCount);
-    uint64_t batchEndTime = analysis::dvvp::common::utils::Utils::GetClockMonotonicRaw();
-    if (ret != PROFILING_SUCCESS) {
-        MSPROF_LOGE("Write batch to host move buffer failed, recordCount=%u", recordCount);
-    } else {
-        totalWriteLen += popSize;
-        uint64_t costNs = batchEndTime - batchStartTime;
-        uint64_t rateMBps = (costNs > 0) ? (static_cast<uint64_t>(popSize) * NS_PER_SECOND / costNs / BYTES_PER_MB) : 0;
-        MSPROF_LOGI(
-            "Host move batch: records=%u, size=%zuB, cost=%lluns, rate=%lluMB/s", recordCount, popSize, costNs,
-            rateMBps);
-    }
-    aicpuAdditionalBuffer_.BatchPopBufferIndexShift(outPtr, popSize);
-    return HostMoveStep::OK;
-}
-
-int32_t DevprofDrvAicpu::DrainBufferToHostMove()
-{
-    // Move up to 512K-256B per batch (aligned down to a whole number of records), mirroring the
-    // driver report cap in RunNormalMode, instead of one record at a time. The divisor is a
-    // compile-time non-zero sizeof, so the division cannot divide by zero.
-    const size_t maxBatchRecords = analysis::dvvp::common::queue::MAX_DRV_REPORT_SIZE / sizeof(MsprofAdditionalInfo);
-    uint64_t totalWriteLen = 0;
-
-    while (!stopped_ || (aicpuAdditionalBuffer_.GetUsedSize() != 0)) {
-        if (aicpuAdditionalBuffer_.GetUsedSize() == 0) {
-            (void)OsalSleep(WAIT_DATA_TIME);
-            continue;
-        }
-
-        uint32_t freeSlots = 0;
-        HostMoveStep slotStep = AcquireHostMoveFreeSlots(freeSlots);
-        if (slotStep == HostMoveStep::FATAL) {
-            return PROFILING_FAILED;
-        }
-        if (slotStep == HostMoveStep::RETRY) {
-            (void)OsalSleep(WAIT_DATA_TIME);
-            continue;
-        }
-
-        if (MoveOneBatchToHostMove(maxBatchRecords, freeSlots, totalWriteLen) == HostMoveStep::RETRY) {
-            (void)OsalSleep(WAIT_DRV_TIME);
-            continue;
-        }
-    }
-    MSPROF_LOGI("Host move: flushed total=%lluB", totalWriteLen);
-    return PROFILING_SUCCESS;
-}
-
-void DevprofDrvAicpu::RunHostMoveMode()
+int32_t DevprofDrvAicpu::ReportStr2IdInfoToHostMove(bool flushWrite)
 {
     if (hostMoveBuffer_ == nullptr || hostMoveWptr_ == nullptr || hostMoveRptr_ == nullptr) {
-        MSPROF_LOGE("Host move buffer pointers are null while isSupportHostMove_ is true");
-        return;
-    }
-    if (hostMoveBufferSize_ == 0 || hostMoveBufferSize_ < sizeof(MsprofAdditionalInfo)) {
-        MSPROF_LOGE("Host move buffer size is invalid, hostMoveBufferSize_=%zu", hostMoveBufferSize_);
-        return;
+        MSPROF_LOGE("Report str2id info to host move buffer failed, buffer is invalid");
+        return PROFILING_FAILED;
     }
 
-    int32_t drainRet = DrainBufferToHostMove();
-
-    // send str2id keys to host via the ring buffer (mirrors RunNormalMode tail, but ring not driver).
-    // Skip when the main drain already broke/filled the ring, otherwise we'd fill then discard str2id.
-    if (drainRet == PROFILING_SUCCESS) {
-        std::string str2Id;
-        int32_t ret = analysis::dvvp::transport::HashData::instance()->GetHashKeys(str2Id);
-        MSPROF_LOGD("dev get hash keys ret:%u and str length:%u", ret, str2Id.length());
-        if (ret == PROFILING_SUCCESS && str2Id.length() > 0) {
-            MSPROF_LOGI("report str2id info length:%u via host move ring buffer", str2Id.length());
-            FillStr2IdIntoBuffer(str2Id);
-            (void)DrainBufferToHostMove();
-        }
+    std::string str2Id;
+    int32_t ret = analysis::dvvp::transport::HashData::instance()->GetHashKeys(str2Id);
+    if (ret != PROFILING_SUCCESS) {
+        MSPROF_LOGE("Get str2id info failed, ret:%d", ret);
+        return ret;
+    }
+    if (str2Id.empty()) {
+        MSPROF_LOGD("No str2id info to report");
+        return PROFILING_SUCCESS;
     }
 
-    MSPROF_LOGI("Host move: all pending data flushed to ring buffer, Run() exiting");
-    (void)OsalSleep(WAIT_DRV_TIME);
+    MSPROF_LOGI("Report str2id info length:%zu via host move buffer", str2Id.length());
+    bool fillSuccess = FillStr2IdIntoBuffer(str2Id, flushWrite);
+    if (!fillSuccess) {
+        MSPROF_LOGE("Report str2id info to host move buffer failed");
+        return PROFILING_FAILED;
+    }
+    return PROFILING_SUCCESS;
 }
 
 void DevprofDrvAicpu::RunNormalMode()
@@ -552,16 +723,7 @@ void DevprofDrvAicpu::RunNormalMode()
 void DevprofDrvAicpu::Run(const error_message::ErrorManagerContext& errorContext)
 {
     (void)errorContext;
-
-    MSPROF_LOGI(
-        "Run() enter, isSupportHostMove_=%d, hostMoveBuffer_=%p, hostMoveWptr_=%p, hostMoveRptr_=%p",
-        isSupportHostMove_, hostMoveBuffer_, hostMoveWptr_, hostMoveRptr_);
-
-    if (isSupportHostMove_) {
-        RunHostMoveMode();
-    } else {
-        RunNormalMode();
-    }
+    RunNormalMode();
 }
 
 int32_t DevprofDrvAicpu::RecordHostMoveBufferAddresses(const Devprof::AicpuUserProfileBufferInfo* info)
@@ -570,7 +732,7 @@ int32_t DevprofDrvAicpu::RecordHostMoveBufferAddresses(const Devprof::AicpuUserP
         MSPROF_LOGE("RecordHostMoveBufferAddresses info is nullptr");
         return PROFILING_FAILED;
     }
-    if (info->buffer_size == 0 || info->buffer_base_user_va == 0) {
+    if (info->buffer_size < sizeof(MsprofAdditionalInfo) || info->buffer_base_user_va == 0) {
         MSPROF_LOGE(
             "RecordHostMoveBufferAddresses buffer_size=%u or buffer_base_user_va=0x%llx is invalid", info->buffer_size,
             info->buffer_base_user_va);
@@ -586,9 +748,20 @@ int32_t DevprofDrvAicpu::RecordHostMoveBufferAddresses(const Devprof::AicpuUserP
     hostMoveBuffer_ = reinterpret_cast<uint8_t*>(static_cast<uintptr_t>(info->buffer_base_user_va));
     hostMoveRptr_ = reinterpret_cast<volatile uint32_t*>(static_cast<uintptr_t>(info->buffer_read_ptr_user_va));
     hostMoveWptr_ = reinterpret_cast<volatile uint32_t*>(static_cast<uintptr_t>(info->buffer_write_ptr_user_va));
+    const uint32_t maxIdx = static_cast<uint32_t>(hostMoveBufferSize_ / sizeof(MsprofAdditionalInfo));
+    if (!EnsureHostMoveCommitState(maxIdx)) {
+        UninitHostMoveBuffer();
+        return PROFILING_FAILED;
+    }
+    hostMoveReadIndex_.store(0);
     hostMoveWriteIndex_.store(0);
+    hostMoveIdleWriteIndex_.store(0);
+    hostMoveFailedWriteIndex_.store(0);
+    hostMoveOverflowDiscardSize_.store(0);
+    hostMoveMaxCycles_ = HOST_MOVE_BUFFER_MAX_CYCLES;
+    hostMoveAcceptingWrites_.store(true, std::memory_order_release);
     // The shared write/read pointers live in device memory allocated by the host (halMemAlloc does
-    // not guarantee zeroed memory). Until WriteToHostMoveBuffer writes the first record, *hostMoveWptr_
+    // not guarantee zeroed memory). Until WriteDirectlyToHostMoveBuffer writes the first record, *hostMoveWptr_
     // would otherwise hold stale bytes, and the host consumer (prof_sample_aicpu_channel.c) computes
     // write_index = wptr * AICPU_BUF_UNIT and copies [read_index, write_index) -- a garbage wptr makes
     // it read far more than was ever written. Explicitly zero both pointers so producer and consumer
@@ -599,94 +772,6 @@ int32_t DevprofDrvAicpu::RecordHostMoveBufferAddresses(const Devprof::AicpuUserP
     MSPROF_LOGI(
         "RecordHostMoveBufferAddresses: base=0x%llx, size=%zu, wptr=0x%llx, rptr=0x%llx", info->buffer_base_user_va,
         hostMoveBufferSize_, info->buffer_write_ptr_user_va, info->buffer_read_ptr_user_va);
-    return PROFILING_SUCCESS;
-}
-
-int32_t DevprofDrvAicpu::WriteToHostMoveBuffer(const MsprofAdditionalInfo* data, size_t dataSize)
-{
-    if (hostMoveBuffer_ == nullptr || hostMoveWptr_ == nullptr || data == nullptr || dataSize == 0) {
-        MSPROF_LOGE("Write to host move buffer input invalid");
-        return PROFILING_FAILED;
-    }
-
-    uint32_t writeIdx = hostMoveWriteIndex_.load(std::memory_order_relaxed);
-    uint32_t writeOffset = writeIdx * sizeof(MsprofAdditionalInfo);
-    uint32_t bufferLimit = static_cast<uint32_t>(hostMoveBufferSize_);
-
-    if (dataSize > sizeof(MsprofAdditionalInfo) || writeOffset + sizeof(MsprofAdditionalInfo) > bufferLimit) {
-        MSPROF_LOGE(
-            "Host move buffer write failed, writeIdx=%u, dataSize=%zu, bufferSize=%zu", writeIdx, dataSize,
-            hostMoveBufferSize_);
-        return PROFILING_FAILED;
-    }
-
-    MSPROF_LOGD(
-        "WriteToHostMoveBuffer: writeIdx=%u, writeOffset=%u, hostMoveBuffer_=%p, hostMoveWptr_=%p (*wptr=%u)", writeIdx,
-        writeOffset, hostMoveBuffer_, hostMoveWptr_, (hostMoveWptr_ != nullptr) ? *hostMoveWptr_ : 0xFFFF);
-
-    errno_t ret = memcpy_s(hostMoveBuffer_ + writeOffset, bufferLimit - writeOffset, data, dataSize);
-    if (ret != EOK) {
-        MSPROF_LOGE("Memcpy to host move buffer failed, ret: %d", ret);
-        return PROFILING_FAILED;
-    }
-
-    uint32_t newWriteIdx = (writeIdx + 1) % (bufferLimit / sizeof(MsprofAdditionalInfo));
-    hostMoveWriteIndex_.store(newWriteIdx, std::memory_order_release);
-    std::atomic_thread_fence(std::memory_order_release);
-    *hostMoveWptr_ = newWriteIdx;
-
-    MSPROF_LOGD("Write to host move buffer success, writeIdx=%u -> %u", writeIdx, newWriteIdx);
-    return PROFILING_SUCCESS;
-}
-
-// Write a contiguous batch of records into the host-move ring buffer in as few memcpy_s calls as
-// possible (one, or two when the batch wraps the ring end). The caller guarantees recordCount does
-// not exceed the free slots, so this never overruns unconsumed data.
-int32_t DevprofDrvAicpu::WriteBatchToHostMoveBuffer(const MsprofAdditionalInfo* data, uint32_t recordCount)
-{
-    if (hostMoveBuffer_ == nullptr || hostMoveWptr_ == nullptr || data == nullptr || recordCount == 0) {
-        MSPROF_LOGE("Write batch to host move buffer input invalid");
-        return PROFILING_FAILED;
-    }
-
-    const uint32_t recordSize = static_cast<uint32_t>(sizeof(MsprofAdditionalInfo));
-    const uint32_t maxIdx = static_cast<uint32_t>(hostMoveBufferSize_ / recordSize);
-    // recordCount must stay strictly below maxIdx: a full ring (recordCount == maxIdx) would make
-    // newWriteIdx wrap back to writeIdx, which the consumer reads as wptr == rptr (empty) and
-    // silently drops the whole batch. The one-slot gap is enforced here as the last line of defense.
-    if (maxIdx == 0 || recordCount >= maxIdx) {
-        MSPROF_LOGE("Write batch to host move buffer failed, recordCount=%u, maxIdx=%u", recordCount, maxIdx);
-        return PROFILING_FAILED;
-    }
-
-    uint32_t writeIdx = hostMoveWriteIndex_.load(std::memory_order_relaxed);
-    const uint32_t bufferLimit = static_cast<uint32_t>(hostMoveBufferSize_);
-
-    // Split the batch at the ring end: [writeIdx, maxIdx) first, then wrap to [0, ...) if needed.
-    const uint32_t firstCount = std::min(recordCount, maxIdx - writeIdx);
-    const uint32_t writeOffset = writeIdx * recordSize;
-    errno_t ret = memcpy_s(
-        hostMoveBuffer_ + writeOffset, bufferLimit - writeOffset, data, static_cast<size_t>(firstCount) * recordSize);
-    if (ret != EOK) {
-        MSPROF_LOGE("Memcpy batch to host move buffer failed, ret: %d, firstCount: %u", ret, firstCount);
-        return PROFILING_FAILED;
-    }
-    const uint32_t secondCount = recordCount - firstCount;
-    if (secondCount > 0) {
-        ret = memcpy_s(hostMoveBuffer_, bufferLimit, data + firstCount, static_cast<size_t>(secondCount) * recordSize);
-        if (ret != EOK) {
-            MSPROF_LOGE("Memcpy wrapped batch to host move buffer failed, ret: %d, secondCount: %u", ret, secondCount);
-            return PROFILING_FAILED;
-        }
-    }
-
-    const uint32_t newWriteIdx = (writeIdx + recordCount) % maxIdx;
-    hostMoveWriteIndex_.store(newWriteIdx, std::memory_order_release);
-    std::atomic_thread_fence(std::memory_order_release);
-    *hostMoveWptr_ = newWriteIdx;
-
-    MSPROF_LOGD(
-        "Write batch to host move buffer success, count=%u, writeIdx=%u -> %u", recordCount, writeIdx, newWriteIdx);
     return PROFILING_SUCCESS;
 }
 
@@ -727,7 +812,8 @@ void DevprofDrvAicpu::Reset(void)
 {
     isRegister_ = false;
     stopped_ = false;
-    ringFullLogged_ = false;
+    ringFullLogged_.store(false, std::memory_order_relaxed);
+    hostMoveAcceptingWrites_.store(false);
     SetSupportHostMove(false);
     UninitHostMoveBuffer();
     command_.type = static_cast<uint32_t>(PROF_COMMANDHANDLE_TYPE_MAX);
@@ -749,10 +835,6 @@ bool DevprofDrvAicpu::CheckProfilingIsOn(uint64_t profConfig)
     if ((profConfig & (AICPU_SWITCH | AICPU_CHANNEL_SWITCH_MASK)) == 0) {
         return false;
     }
-
-    if (!aicpuAdditionalBuffer_.Init("AicpuBuffer")) {
-        return false;
-    };
 
     return true;
 }

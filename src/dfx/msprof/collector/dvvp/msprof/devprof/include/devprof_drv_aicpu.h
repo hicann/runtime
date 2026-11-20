@@ -27,6 +27,8 @@ struct AicpuUserProfileBufferInfo;
 
 class DevprofDrvAicpu : public analysis::dvvp::common::singleton::Singleton<DevprofDrvAicpu>,
                         public analysis::dvvp::common::thread::Thread {
+    static constexpr size_t HOST_MOVE_BUFFER_MAX_CYCLES = 2048;
+
 public:
     DevprofDrvAicpu();
     ~DevprofDrvAicpu() override;
@@ -47,10 +49,11 @@ public:
     void DeviceReportStart();
     void DeviceReportStop();
     int32_t SendAddtionalInfo();
-    void AddStr2IdIntoBuffer(std::string& str);
+    bool AddStr2IdIntoBuffer(std::string& str, bool flushWrite = false);
     int32_t ReportStr2IdInfoToHost(std::string& dataStr);
     bool IsSupportHostMove() const { return isSupportHostMove_; }
     void SetSupportHostMove(bool support) { isSupportHostMove_ = support; }
+    bool InitAdditionalBuffer();
     int32_t RecordHostMoveBufferAddresses(const Devprof::AicpuUserProfileBufferInfo* info);
     void Release();
 #ifdef __PROF_LLT
@@ -63,9 +66,15 @@ protected:
 
 private:
     int32_t RegisterDrvChannel(uint32_t devId, uint32_t channelId);
-    void RunHostMoveMode();
+    int32_t WriteDirectlyToHostMoveBuffer(
+        const MsprofAdditionalInfo* data, uint32_t recordCount, bool flushWrite = false);
+    bool TryUpdateHostMoveReadIndex(uint32_t maxIdx);
+    bool TryPublishHostMoveRange(uint32_t maxIdx);
+    bool EnsureHostMoveCommitState(uint32_t maxIdx);
+    void FailReservedRange(uint64_t cursor, uint32_t count);
     void RunNormalMode();
-    void FillStr2IdIntoBuffer(std::string& dataStr);
+    bool FillStr2IdIntoBuffer(std::string& dataStr, bool flushWrite = false);
+    int32_t ReportStr2IdInfoToHostMove(bool flushWrite = false);
 
 #ifdef __PROF_LLT
 public:
@@ -73,24 +82,10 @@ public:
 private:
 #endif
     void UninitHostMoveBuffer();
-    int32_t WriteToHostMoveBuffer(const MsprofAdditionalInfo* data, size_t dataSize);
-    int32_t WriteBatchToHostMoveBuffer(const MsprofAdditionalInfo* data, uint32_t recordCount);
-    int32_t DrainBufferToHostMove();
-
-    // One step of the host-move drain loop: keep draining, sleep-and-retry, or stop on a fatal error.
-    enum class HostMoveStep : int32_t {
-        OK = 0,
-        RETRY,
-        FATAL,
-    };
-    HostMoveStep AcquireHostMoveFreeSlots(uint32_t& freeSlots);
-    HostMoveStep MoveOneBatchToHostMove(size_t maxBatchRecords, uint32_t freeSlots, uint64_t& totalWriteLen);
-
-private:
     volatile bool stopped_;
     // Whether the "host move ring buffer full" event has been logged in the current profiling
-    // session, so the log is emitted only once instead of flooding on every retry.
-    bool ringFullLogged_ = false;
+    // session. The relaxed atomic flag prevents data races and unbounded repeated events.
+    std::atomic<bool> ringFullLogged_{false};
     uint32_t devId_;
     uint32_t channelId_;
     volatile uint64_t profConfig_;
@@ -100,7 +95,16 @@ private:
     size_t hostMoveBufferSize_;
     volatile uint32_t* hostMoveWptr_;
     volatile uint32_t* hostMoveRptr_;
-    std::atomic<uint32_t> hostMoveWriteIndex_;
+    std::atomic<uint64_t> hostMoveReadIndex_{0};
+    std::atomic<uint64_t> hostMoveWriteIndex_{0};
+    std::atomic<uint64_t> hostMoveIdleWriteIndex_{0};
+    std::atomic<uint64_t> hostMoveFailedWriteIndex_{0};
+    std::atomic<bool> hostMoveAcceptingWrites_{false};
+    std::atomic<uint32_t> hostMoveActiveWriters_{0};
+    std::atomic<uint32_t>* hostMoveCommitCounts_ = nullptr;
+    size_t hostMoveCommitCountSize_ = 0;
+    std::atomic<uint32_t> hostMoveOverflowDiscardSize_{0};
+    size_t hostMoveMaxCycles_{HOST_MOVE_BUFFER_MAX_CYCLES};
     analysis::dvvp::common::queue::BlockBuffer<MsprofAdditionalInfo> aicpuAdditionalBuffer_{};
     MsprofCommandHandle command_;
     std::map<uint32_t, std::set<ProfCommandHandle>> moduleCallbacks_;

@@ -50,12 +50,12 @@ int32_t PerfExtraTask::Init()
     }
 
     if (isInited_) {
-        MSPROF_LOGE("The PerfExtraTask is inited");
+        MSPROF_LOGE("The PerfExtraTask has already been initialized");
         return PROFILING_FAILED;
     }
 
     if (!buf_.Init()) {
-        MSPROF_LOGE("Buf init failed");
+        MSPROF_LOGE("Failed to initialize PerfExtraTask buffer, size: %zu bytes", buf_.GetBufferSize());
         return PROFILING_FAILED;
     }
 

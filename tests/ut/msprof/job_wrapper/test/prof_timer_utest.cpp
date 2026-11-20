@@ -9,6 +9,9 @@
  */
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
+#include <fstream>
+#include <iterator>
+#include <string>
 #include <mutex>
 #include "thread/thread.h"
 #include "prof_timer.h"
@@ -19,6 +22,15 @@
 using namespace analysis::dvvp::common::error;
 using namespace Analysis::Dvvp::JobWrapper;
 using namespace Analysis::Dvvp::MsprofErrMgr;
+
+namespace {
+std::string ReadSourceFile(const std::string& relativePath)
+{
+    std::ifstream sourceFile(MSPROF_SOURCE_PATH "/" + relativePath);
+    EXPECT_TRUE(sourceFile.is_open()) << "Cannot open " << relativePath;
+    return std::string((std::istreambuf_iterator<char>(sourceFile)), std::istreambuf_iterator<char>());
+}
+} // namespace
 
 class PROF_STAT_FILE_HANDLER_TEST : public testing::Test {
 protected:
@@ -65,6 +77,30 @@ TEST_F(PROF_STAT_FILE_HANDLER_TEST, Init)
     EXPECT_EQ(PROFILING_FAILED, statHandler.Init());
     // succ
     EXPECT_EQ(PROFILING_SUCCESS, statHandler.Init());
+}
+
+TEST(PROF_LOG_MESSAGE_TEST, Issue416MessagesAreSpecificAndStandard)
+{
+    const std::string perfJob = ReadSourceFile("profimpl/collect/job_wrapper/src/prof_perf_job.cpp");
+    const std::string timer = ReadSourceFile("profimpl/collect/job_wrapper/src/prof_timer.cpp");
+    const std::string deviceTransport = ReadSourceFile("transport/hdc/device_transport.cpp");
+
+    EXPECT_EQ(std::string::npos, perfJob.find("The PerfExtraTask is inited"));
+    EXPECT_NE(std::string::npos, perfJob.find("The PerfExtraTask has already been initialized"));
+    EXPECT_EQ(std::string::npos, perfJob.find("Buf init failed"));
+    EXPECT_NE(std::string::npos, perfJob.find("Failed to initialize PerfExtraTask buffer, size: %zu bytes"));
+
+    EXPECT_EQ(std::string::npos, timer.find("The Handler is inited"));
+    EXPECT_NE(std::string::npos, timer.find("The timer handler has already been initialized"));
+    EXPECT_EQ(std::string::npos, timer.find("Buf init failed"));
+    EXPECT_NE(std::string::npos, timer.find("Failed to initialize timer handler buffer, size: %zu bytes"));
+    EXPECT_EQ(std::string::npos, timer.find("Upload Data Failed"));
+    EXPECT_NE(std::string::npos, timer.find("Failed to upload file chunk %s, ret: %d"));
+
+    EXPECT_EQ(std::string::npos, deviceTransport.find("Device(%s) Not response Message"));
+    EXPECT_NE(std::string::npos, deviceTransport.find("Device(%s) did not respond"));
+    EXPECT_EQ(std::string::npos, deviceTransport.find("Device(%s) message from string failed"));
+    EXPECT_NE(std::string::npos, deviceTransport.find("Device(%s) failed to parse message from string"));
 }
 
 TEST_F(PROF_STAT_FILE_HANDLER_TEST, UInit)

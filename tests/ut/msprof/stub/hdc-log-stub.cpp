@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <stdlib.h>
 #include <syslog.h>
 #include <map>
 #include <string>
@@ -22,18 +23,27 @@ const std::map<int, std::string> LOG_LEVEL_INFO = {
 };
 
 static std::atomic<int32_t> g_dlogRecordCount{0};
+static std::atomic<int32_t> g_dlogEventCount{0};
+
+// 设置 UT_DLOG_SILENT=1 时关闭日志格式化与打印，降低外部压测工具复用本二进制时的日志噪声
+static bool DlogSilent() { return getenv("UT_DLOG_SILENT") != nullptr; }
 
 namespace {
 constexpr int LOG_MSG_MAX = 4096;
 char g_lastDlogRecordMsg[LOG_MSG_MAX] = {0};
+char g_lastDlogEventMsg[LOG_MSG_MAX] = {0};
 } // namespace
 
 void ResetDlogRecordCount() { g_dlogRecordCount.store(0); }
 int32_t GetDlogRecordCount() { return g_dlogRecordCount.load(); }
+void ResetDlogEventCount() { g_dlogEventCount.store(0); }
+int32_t GetDlogEventCount() { return g_dlogEventCount.load(); }
 
 void ResetLastDlogRecordMsg() { g_lastDlogRecordMsg[0] = '\0'; }
+void ResetLastDlogEventMsg() { g_lastDlogEventMsg[0] = '\0'; }
 
 const char* GetLastDlogRecordMsg() { return g_lastDlogRecordMsg; }
+const char* GetLastDlogEventMsg() { return g_lastDlogEventMsg; }
 
 void DlogErrorInner(int moduleId, const char* format, ...)
 {
@@ -97,6 +107,9 @@ void DlogDebugInner(int moduleId, const char* format, ...)
 
 void DlogRecord(int module_id, int level, const char* fmt, ...)
 {
+    if (DlogSilent()) {
+        return;
+    }
     g_dlogRecordCount.fetch_add(1, std::memory_order_relaxed);
     auto iter = LOG_LEVEL_INFO.find(level);
     std::string levelStr;
@@ -112,6 +125,11 @@ void DlogRecord(int module_id, int level, const char* fmt, ...)
         snprintf_s(g_lastDlogRecordMsg, sizeof(g_lastDlogRecordMsg), sizeof(g_lastDlogRecordMsg) - 1U, "%s", buffer);
     if (ret < 0) {
         g_lastDlogRecordMsg[0] = '\0';
+    }
+    // In the non-OSAL build, MSPROF_EVENT maps to dlog_info with RUN_LOG_MASK.
+    if (level == DLOG_INFO && (static_cast<uint32_t>(module_id) & RUN_LOG_MASK) != 0U) {
+        g_dlogEventCount.fetch_add(1, std::memory_order_relaxed);
+        (void)snprintf_s(g_lastDlogEventMsg, sizeof(g_lastDlogEventMsg), sizeof(g_lastDlogEventMsg) - 1U, "%s", buffer);
     }
     printf("[%s][pid:%d]%s", levelStr.c_str(), getpid(), buffer);
     va_end(args);
@@ -131,4 +149,4 @@ void ide_log(int priority, const char* format, ...)
     va_end(args);
 }
 
-int CheckLogLevel(int moduleId, int level) { return 1; }
+int CheckLogLevel(int moduleId, int level) { return DlogSilent() ? 0 : 1; }

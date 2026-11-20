@@ -72,13 +72,13 @@ int32_t DeviceTransport::HandlePacket(TLV_REQ_PTR packet, analysis::dvvp::messag
 
         auto responseMessage = std::dynamic_pointer_cast<analysis::dvvp::proto::Response>(message);
         if (responseMessage == nullptr) {
-            MSPROF_LOGE("Device(%s) Not response Message", devIndexIdStr_.c_str());
+            MSPROF_LOGE("Device(%s) did not respond", devIndexIdStr_.c_str());
             break;
         }
 
         std::string statusStr = responseMessage->message();
         if (!status.FromString(statusStr)) {
-            MSPROF_LOGE("Device(%s) message from string failed", devIndexIdStr_.c_str());
+            MSPROF_LOGE("Device(%s) failed to parse message from string", devIndexIdStr_.c_str());
             break;
         }
         FUNRET_CHECK_EXPR_ACTION_LOGW(

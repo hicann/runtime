@@ -97,12 +97,12 @@ int32_t ProcTimerHandler::Init()
     int32_t ret = PROFILING_FAILED;
     do {
         if (isInited_) {
-            MSPROF_LOGE("The Handler is inited");
+            MSPROF_LOGE("The timer handler has already been initialized");
             break;
         }
 
         if (!buf_.Init()) {
-            MSPROF_LOGE("Buf init failed");
+            MSPROF_LOGE("Failed to initialize timer handler buffer, size: %zu bytes", buf_.GetBufferSize());
             break;
         }
 
@@ -267,7 +267,9 @@ void ProcTimerHandler::SendData(CONST_UNSIGNED_CHAR_PTR buf, uint32_t size)
         }
         int32_t ret = upLoader_->UploadData(fileChunk);
         if (ret != PROFILING_SUCCESS) {
-            MSPROF_LOGE("[ProcTimerHandler::SendData] Upload Data Failed");
+            MSPROF_LOGE(
+                "[ProcTimerHandler::SendData] Failed to upload file chunk %s, ret: %d", fileChunk->fileName.c_str(),
+                ret);
         }
     }
 }
@@ -1089,8 +1091,10 @@ void NetDevStatsHandler::SendData(uint32_t devId, CONST_UNSIGNED_CHAR_PTR buf, s
     fileChunk->extraInfo = Utils::PackDotInfo(jobCtx_->job_id, jobCtx_->dev_id);
     fileChunk->chunkModule = analysis::dvvp::common::config::FileChunkDataModule::PROFILING_IS_FROM_DEVICE;
 
-    if (upLoader->UploadData(fileChunk) != PROFILING_SUCCESS) {
-        MSPROF_LOGE("NetDevStatsHandler::SendData Upload Data Failed");
+    int32_t ret = upLoader->UploadData(fileChunk);
+    if (ret != PROFILING_SUCCESS) {
+        MSPROF_LOGE(
+            "NetDevStatsHandler::SendData Failed to upload file chunk %s, ret: %d", fileChunk->fileName.c_str(), ret);
     }
 }
 
