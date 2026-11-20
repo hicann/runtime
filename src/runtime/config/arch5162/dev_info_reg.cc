@@ -40,8 +40,6 @@ static constexpr uint32_t SQE_DEPTH = 2048U;
 static constexpr uint32_t CQE_DEPTH = 2048U;
 static constexpr uint32_t TINY_ARG_MAX_ENTRY_INIT_NUM = 4U;
 static constexpr uint32_t TASK_RATION = 1U;
-constexpr uint64_t STARS_EVENT_NOTIFY_BASE_ADDR = 0xF000ULL;
-constexpr uint64_t STARS_SIMPLE_RTSQ_FSM_SEL_REG_ARCH5162 = 0x10088ULL;
 
 static constexpr DevProperties CHIP_5162A_PROPERTIES = {
     .isStars = true,
