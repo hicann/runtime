@@ -370,8 +370,8 @@ void DavidStream::DebugDotPrintForModelStm()
             i++;
             continue;
         }
-        i = IsSoftwareSqEnable() ? (static_cast<uint32_t>(nextTask->id) + 1U) :
-                                   (static_cast<uint32_t>(nextTask->id) + nextTask->sqeNum);
+        i = (IsSoftwareSqEnable() || IsAutoSplitSq()) ? (static_cast<uint32_t>(nextTask->id) + 1U) :
+                                                        (static_cast<uint32_t>(nextTask->id) + nextTask->sqeNum);
         int32_t eventId = INVALID_EVENT_ID;
         uint32_t notifyId = MAX_UINT32_NUM;
         uint32_t countValue = MAX_UINT32_NUM;
@@ -519,8 +519,8 @@ void DavidStream::DebugJsonPrintForModelStm(
             i++;
             continue;
         }
-        i = IsSoftwareSqEnable() ? (static_cast<uint32_t>(nextTask->id) + 1U) :
-                                   (static_cast<uint32_t>(nextTask->id) + nextTask->sqeNum);
+        i = (IsSoftwareSqEnable() || IsAutoSplitSq()) ? (static_cast<uint32_t>(nextTask->id) + 1U) :
+                                                        (static_cast<uint32_t>(nextTask->id) + nextTask->sqeNum);
 
         // 构建并添加TraceEvent记录
         TraceEvent record = {};

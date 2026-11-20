@@ -22,6 +22,8 @@
 #include "runtime.hpp"
 #include "stream.hpp"
 #include "logger.hpp"
+#include "inner_thread_local.hpp"
+#include "osal.hpp"
 #include "aicpu_timeout_control.h"
 
 namespace cce {
@@ -34,6 +36,12 @@ rtError_t LaunchAiccLoadKeyKernel(Stream* const stm, CCLoadKeyKernelParam& param
 {
     COND_RETURN_ERROR(stm == nullptr, RT_ERROR_STREAM_NULL, "CC load key stream is null.");
 
+    const uint32_t lastTaskId = InnerThreadLocalContainer::GetLastTaskId();
+    const uint32_t lastStreamId = InnerThreadLocalContainer::GetLastStreamId();
+    const ScopeGuard lastTaskInfoGuard([lastTaskId, lastStreamId]() {
+        InnerThreadLocalContainer::SetLastTaskId(lastTaskId);
+        InnerThreadLocalContainer::SetLastStreamId(lastStreamId);
+    });
     return CCCryptoPlugin::LaunchDeviceKernel(stm, CC_KERNEL_AICC_LOAD_KEY, &param, sizeof(param));
 }
 } // namespace
