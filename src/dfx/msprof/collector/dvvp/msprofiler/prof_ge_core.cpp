@@ -166,8 +166,9 @@ ACL_GRPH_PROF_CONFIG_PTR aclgrphProfCreateConfig(
     if ((dataTypeConfig & PROF_TASK_TIME_L1_MASK) != 0) { // 采集task time L1，同时配置task time L0
         config->config.dataTypeConfig |= PROF_TASK_TIME;
     }
-    // 采集task time L2 或 op attr，同时配置task time L0, L1
-    if ((dataTypeConfig & PROF_TASK_TIME_L2_MASK) != 0 || (dataTypeConfig & PROF_OP_ATTR_MASK) != 0) {
+    // 采集task time L2，同时配置task time L0, L1
+    // op attr 仅采集算子属性，不再联动提升 task time 等级，保持调用方配置的等级不变
+    if ((dataTypeConfig & PROF_TASK_TIME_L2_MASK) != 0) {
         config->config.dataTypeConfig |= PROF_TASK_TIME | PROF_TASK_TIME_L1;
     }
     if ((dataTypeConfig & PROF_TASK_TIME_L3_MASK) != 0) {

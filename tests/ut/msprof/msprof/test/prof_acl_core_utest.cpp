@@ -4834,6 +4834,43 @@ TEST_F(MSPROF_ACL_CORE_UTEST, IsValidProfConfig1)
     EXPECT_EQ(nullptr, aclprofCreateConfig(deviceIdList, deviceNums, aicoreMetrics, aicoreEvents, dataTypeConfig));
 }
 
+// opAttr must be kept, but it must not silently raise the task time level to L0/L1.
+TEST_F(MSPROF_ACL_CORE_UTEST, AclProfCreateConfig_OpAttrDoesNotRaiseTaskTime)
+{
+    GlobalMockObject::verify();
+    MOCKER(ProfAclDrvGetDevNum).stubs().will(returnValue(2));
+    MOCKER_CPP(&ProfRtAPI::ExtendPlugin::ProfGetVisibleDeviceIdByLogicDeviceId)
+        .stubs()
+        .will(returnValue(PROFILING_NOTSUPPORT));
+
+    uint32_t devIdList[1] = {0};
+    aclprofConfig* cfg = aclprofCreateConfig(devIdList, 1, ACL_AICORE_NONE, nullptr, ACL_PROF_OP_ATTR);
+    ASSERT_NE(nullptr, cfg);
+    EXPECT_NE(cfg->config.dataTypeConfig & PROF_OP_ATTR, 0ULL);
+    EXPECT_EQ(cfg->config.dataTypeConfig & PROF_TASK_TIME, 0ULL);
+    EXPECT_EQ(cfg->config.dataTypeConfig & PROF_TASK_TIME_L1, 0ULL);
+    EXPECT_EQ(ge::GE_PROF_SUCCESS, aclprofDestroyConfig(cfg));
+}
+
+// opAttr must not promote an explicitly configured task time L0 to L1.
+TEST_F(MSPROF_ACL_CORE_UTEST, AclProfCreateConfig_OpAttrKeepsTaskTimeL0)
+{
+    GlobalMockObject::verify();
+    MOCKER(ProfAclDrvGetDevNum).stubs().will(returnValue(2));
+    MOCKER_CPP(&ProfRtAPI::ExtendPlugin::ProfGetVisibleDeviceIdByLogicDeviceId)
+        .stubs()
+        .will(returnValue(PROFILING_NOTSUPPORT));
+
+    uint32_t devIdList[1] = {0};
+    aclprofConfig* cfg =
+        aclprofCreateConfig(devIdList, 1, ACL_AICORE_NONE, nullptr, ACL_PROF_OP_ATTR | ACL_PROF_TASK_TIME_L0);
+    ASSERT_NE(nullptr, cfg);
+    EXPECT_NE(cfg->config.dataTypeConfig & PROF_OP_ATTR, 0ULL);
+    EXPECT_NE(cfg->config.dataTypeConfig & PROF_TASK_TIME, 0ULL);
+    EXPECT_EQ(cfg->config.dataTypeConfig & PROF_TASK_TIME_L1, 0ULL);
+    EXPECT_EQ(ge::GE_PROF_SUCCESS, aclprofDestroyConfig(cfg));
+}
+
 TEST_F(MSPROF_ACL_CORE_UTEST, IsProfConfigValid)
 {
     GlobalMockObject::verify();

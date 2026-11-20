@@ -38,6 +38,28 @@ namespace prof_ge_core_stub {
 // mockcpp signature deduction does not always reconcile cleanly, so we drive
 // branches via returnValue() of the int32_t status only.
 static const int32_t kVisibleDevId = 0;
+
+// ge::aclgrphProfConfig is an opaque type outside prof_ge_core.cpp, so its
+// dataTypeConfig cannot be inspected directly from a test. Capture the
+// ProfConfig handed to ProfAclStart instead (aclgrphProfStart forwards
+// &profilerConfig->config) and assert on the captured copy.
+static uint64_t g_capturedDataTypeConfig = 0;
+static bool g_profConfigCaptured = false;
+
+static int32_t CaptureProfStartConfig(uint32_t type, const ProfConfig* cfg)
+{
+    if (cfg != nullptr) {
+        g_capturedDataTypeConfig = cfg->dataTypeConfig;
+        g_profConfigCaptured = true;
+    }
+    return ACL_ERROR_PROFILING_FAILURE; // fail fast: the config copy is all we need
+}
+
+static void ResetCapturedProfConfig()
+{
+    g_capturedDataTypeConfig = 0;
+    g_profConfigCaptured = false;
+}
 } // namespace prof_ge_core_stub
 
 class PROF_GE_CORE_UTEST : public testing::Test {
@@ -231,7 +253,40 @@ TEST_F(PROF_GE_CORE_UTEST, AclgrphProfCreateConfig_OpAttrPropagation)
     uint32_t devList[1] = {0};
     auto* cfg =
         ge::aclgrphProfCreateConfig(devList, 1, (ge::ProfilingAicoreMetrics)PROF_AICORE_NONE, nullptr, PROF_OP_ATTR);
-    EXPECT_NE(nullptr, cfg);
+    ASSERT_NE(nullptr, cfg);
+
+    // opAttr must be kept, but it must not silently raise the task time level to L0/L1.
+    prof_ge_core_stub::ResetCapturedProfConfig();
+    MOCKER(ProfAclStart).stubs().will(invoke(prof_ge_core_stub::CaptureProfStartConfig));
+    (void)ge::aclgrphProfStart(cfg);
+    ASSERT_TRUE(prof_ge_core_stub::g_profConfigCaptured);
+    EXPECT_NE(prof_ge_core_stub::g_capturedDataTypeConfig & PROF_OP_ATTR, 0ULL);
+    EXPECT_EQ(prof_ge_core_stub::g_capturedDataTypeConfig & PROF_TASK_TIME, 0ULL);
+    EXPECT_EQ(prof_ge_core_stub::g_capturedDataTypeConfig & PROF_TASK_TIME_L1, 0ULL);
+
+    EXPECT_EQ(ge::GE_PROF_SUCCESS, ge::aclgrphProfDestroyConfig(cfg));
+}
+
+// opAttr must not promote an explicitly configured task time L0 to L1.
+TEST_F(PROF_GE_CORE_UTEST, AclgrphProfCreateConfig_OpAttrKeepsTaskTimeL0)
+{
+    MOCKER_CPP(&ProfRtAPI::ExtendPlugin::ProfGetVisibleDeviceIdByLogicDeviceId)
+        .stubs()
+        .will(returnValue(static_cast<int32_t>(PROFILING_SUCCESS)));
+    MOCKER(ProfAclDrvGetDevNum).stubs().will(returnValue(8));
+    uint32_t devList[1] = {0};
+    auto* cfg = ge::aclgrphProfCreateConfig(
+        devList, 1, (ge::ProfilingAicoreMetrics)PROF_AICORE_NONE, nullptr, PROF_OP_ATTR | PROF_TASK_TIME);
+    ASSERT_NE(nullptr, cfg);
+
+    prof_ge_core_stub::ResetCapturedProfConfig();
+    MOCKER(ProfAclStart).stubs().will(invoke(prof_ge_core_stub::CaptureProfStartConfig));
+    (void)ge::aclgrphProfStart(cfg);
+    ASSERT_TRUE(prof_ge_core_stub::g_profConfigCaptured);
+    EXPECT_NE(prof_ge_core_stub::g_capturedDataTypeConfig & PROF_OP_ATTR, 0ULL);
+    EXPECT_NE(prof_ge_core_stub::g_capturedDataTypeConfig & PROF_TASK_TIME, 0ULL);
+    EXPECT_EQ(prof_ge_core_stub::g_capturedDataTypeConfig & PROF_TASK_TIME_L1, 0ULL);
+
     EXPECT_EQ(ge::GE_PROF_SUCCESS, ge::aclgrphProfDestroyConfig(cfg));
 }
 
