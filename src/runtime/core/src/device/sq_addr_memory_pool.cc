@@ -164,8 +164,11 @@ void SqAddrMemoryOrder::DrvFreeSqAddr(void* const addr, void* const para)
 rtError_t SqAddrMemoryOrder::AllocSqAddr(const uint32_t memOrderType, uint64_t** sqAddr)
 {
     RT_LOG(RT_LOG_DEBUG, "memOrderType=%d", memOrderType);
-    if ((sqAddr == nullptr) || (memOrderType >= SQ_ADDR_MEM_ORDER_TYPE_MAX)) {
+    if (sqAddr == nullptr) {
         return RT_ERROR_INVALID_VALUE;
+    }
+    if (memOrderType >= SQ_ADDR_MEM_ORDER_TYPE_MAX) {
+        return RT_ERROR_STREAM_FULL;
     }
 
     BufferAllocator* sqAddrAllocator = FindSqMemPoolByMemOrderType(memOrderType);
