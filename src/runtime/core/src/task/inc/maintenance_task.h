@@ -10,8 +10,11 @@
 #ifndef RUNTIME_MAINTENANCE_TASK_H
 #define RUNTIME_MAINTENANCE_TASK_H
 
+#include <cstdint>
 #include "driver.hpp"
-#include "stars.hpp"
+#include "runtime/rt_external_device.h"
+#include "task_base.hpp"
+#include "task_info.hpp"
 
 namespace cce {
 namespace runtime {

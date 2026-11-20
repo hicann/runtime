@@ -14,9 +14,10 @@
 #include "common/enum_log.hpp"
 #include <cstdint>
 #include <string>
-#include "runtime/config.h"
+#include "runtime/rt_external_device.h"
 #include "device.hpp"
 #include "rt_log.h"
+#include "spec/base_info.hpp"
 
 namespace cce {
 namespace runtime {

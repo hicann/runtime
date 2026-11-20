@@ -11,6 +11,9 @@
 #ifndef CCE_DEVICE_MSG_HANDLER_HPP
 #define CCE_DEVICE_MSG_HANDLER_HPP
 
+#include <cstdint>
+#include <string>
+#include "runtime/rt_external_device.h"
 #include "base.hpp"
 #include "device.hpp"
 

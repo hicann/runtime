@@ -10,7 +10,6 @@
 #include "api_profile_log_decorator.hpp"
 #include "profiler.hpp"
 #include "profile_log_record.hpp"
-#include "dev.h"
 
 namespace cce {
 namespace runtime {
