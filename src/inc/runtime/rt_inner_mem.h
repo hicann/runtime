@@ -173,7 +173,7 @@ RTS_API rtError_t rtMemGetAddressRange(void* ptr, void** pbase, size_t* psize);
  * @return RT_ERROR_UB_MEMORY_ALREADY_REGISTERED for duplicate registration
  * @return RT_ERROR_DRV_ERR for driver error
  */
-RTS_API rtError_t rtMemRegisterUbSegment(void* addr, size_t size);
+RTS_API rtError_t rtMemRegisterUbSegment(void* const addr, const size_t size);
 
 /**
  * @ingroup dvrt_mem

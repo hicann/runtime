@@ -2216,7 +2216,7 @@ aclError aclrtReserveMemAddressNoUCMemoryImpl(
     return ACL_SUCCESS;
 }
 
-aclError aclrtMemRegisterUbSegmentImpl(void* const addr, const size_t size)
+aclError aclrtMemRegisterUbSegmentImpl(void* addr, size_t size)
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtMemRegisterUbSegment);
     ACL_LOG_DEBUG("start to execute aclrtMemRegisterUbSegment");

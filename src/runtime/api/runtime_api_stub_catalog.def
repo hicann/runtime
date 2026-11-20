@@ -1237,9 +1237,9 @@ RUNTIME_API(memory, rtError_t, rtMemGetAddressRange,
     (void* ptr, void** pbase, size_t* psize),
     (ptr, pbase, psize), FEATURE_NOT_SUPPORT, EXPORT)
 
-RUNTIME_API(memory, rtError_t, rtMemRegisterUbSegment,
-    (void* addr, size_t size),
-    (addr, size), FEATURE_NOT_SUPPORT, EXPORT)
+RUNTIME_API(
+    memory, rtError_t, rtMemRegisterUbSegment, (void* const addr, const size_t size), (addr, size), FEATURE_NOT_SUPPORT,
+    EXPORT)
 
 RUNTIME_API(memory, rtError_t, rtMemGetAllocationGranularity,
     (rtDrvMemProp_t* prop, rtDrvMemGranularityOptions option, size_t* granularity),
