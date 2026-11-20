@@ -179,6 +179,7 @@ typedef struct aclmdlRIEventRecordTaskParams {
     uint32_t recordFlag;
 } aclmdlRIEventRecordTaskParams;
 ```
+当aclmdlRIEventRecordTaskParams作为查询接口的输出时，若recordFlag为ACL_EVENT_RECORD_DEFAULT，则此时event不支持进行同步或查询操作。
 
 | 成员名称 | 描述 |
 | --- | --- |
@@ -199,6 +200,7 @@ typedef struct aclmdlRIEventResetTaskParams {
     uint32_t resetFlag;
 } aclmdlRIEventResetTaskParams;
 ```
+当aclmdlRIEventResetTaskParams作为查询接口的输出时，event不支持进行同步或查询操作。
 
 | 成员名称 | 描述 |
 | --- | --- |
@@ -219,6 +221,7 @@ typedef struct aclmdlRIEventWaitTaskParams {
     uint32_t waitFlag;
 } aclmdlRIEventWaitTaskParams;
 ```
+当aclmdlRIEventWaitTaskParams作为查询接口的输出时，若waitFlag为ACL_EVENT_WAIT_DEFAULT，则此时event不支持进行同步或查询操作。
 
 | 成员名称 | 描述 |
 | --- | --- |
