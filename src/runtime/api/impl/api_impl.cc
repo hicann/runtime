@@ -4524,37 +4524,25 @@ rtError_t ApiImpl::CallbackLaunch(
 rtError_t ApiImpl::ProcessReport(const int32_t timeout, const bool noLog)
 {
     uint64_t cqidBit[HOST_CALLBACK_SQCQ_BIT / 64U] = {0UL};
-    uint32_t deviceId = 0U;
-    uint32_t tsId = 0U;
     uint32_t groupId = 0U;
     uint64_t bit = 0U;
 
     Runtime* const rt = Runtime::Instance();
 
     const uint64_t threadId = PidTidFetcher::GetCurrentUserTid();
-    rtError_t ret = rt->GetGroupIdByThreadId(threadId, &deviceId, &tsId, &groupId, noLog);
+    Device* dev = nullptr;
+    rtError_t ret = rt->GetDevAndGroupIdByThreadId(threadId, &dev, &groupId, noLog);
     COND_RETURN_WARN(
         (ret != RT_ERROR_NONE) && (!noLog), ret, "get groupId fail, threadIdentifier=%" PRIu64 ", retCode=%#x",
         threadId, ret);
     COND_RETURN_WITH_NOLOG((ret != RT_ERROR_NONE) && (noLog), ret);
+    const uint32_t deviceId = dev->Id_();
+    const uint32_t tsId = dev->DevGetTsId();
     rt->LockGroupId(groupId);
     std::function<void()> const func = [=]() { rt->UnlockGroupId(groupId); };
     const ScopeGuard groupIdGuarder(func);
 
-    Context* priCtx = rt->GetPriCtxByDeviceId(deviceId, tsId);
-    if (priCtx == nullptr) {
-        priCtx = CurrentContext();
-    }
-
-    if (noLog) {
-        CHECK_CONTEXT_VALID_WITH_PROC_RETURN(priCtx, RT_ERROR_CONTEXT_NULL, );
-    } else {
-        CHECK_CONTEXT_VALID_WITH_RETURN(priCtx, RT_ERROR_CONTEXT_NULL);
-    }
-
-    Device* const dev = priCtx->Device_();
     Driver* const curDrv = dev->Driver_();
-
     ret = curDrv->CqReportIrqWait(deviceId, tsId, groupId, timeout, &cqidBit[0], HOST_CALLBACK_SQCQ_BIT / 64U);
     COND_RETURN_WARN((ret != RT_ERROR_NONE) && (!noLog), ret, "CqReportIrqWait, retCode=%#x", ret);
     COND_RETURN_WITH_NOLOG((ret != RT_ERROR_NONE) && (noLog), ret);

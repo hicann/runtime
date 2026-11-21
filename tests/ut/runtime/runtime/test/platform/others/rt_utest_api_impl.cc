@@ -237,7 +237,7 @@ TEST_F(ApiImplTest, PROCESS_REPORT)
     // 打桩g_runtimeKeeper中的runtime_
     Event evt;
     MOCKER_CPP_VIRTUAL(evt, &Event::TryFreeEventIdAndCheckCanBeDelete).stubs().will(returnValue(true));
-    MOCKER_CPP(&Runtime::GetGroupIdByThreadId).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&Runtime::GetDevAndGroupIdByThreadId).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER_CPP_VIRTUAL(rtInstance, &Runtime::GetPriCtxByDeviceId).stubs().will(returnValue((Context*)NULL));
     rtUnSubscribeReport(123, stream);
     rtStreamDestroy(stream);

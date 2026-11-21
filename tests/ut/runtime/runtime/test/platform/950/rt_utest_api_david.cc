@@ -6654,43 +6654,20 @@ TEST_F(ApiDavidTest, test_process_report_task_fail1)
 {
     ApiImplDavid apiImpl;
     rtError_t error;
-    MOCKER_CPP(&Runtime::GetGroupIdByThreadId).stubs().will(returnValue(RT_ERROR_SUBSCRIBE_THREAD));
+    MOCKER_CPP(&Runtime::GetDevAndGroupIdByThreadId).stubs().will(returnValue(RT_ERROR_SUBSCRIBE_THREAD));
     error = apiImpl.ProcessReport(0, true);
     EXPECT_EQ(error, RT_ERROR_SUBSCRIBE_THREAD);
-}
-
-TEST_F(ApiDavidTest, test_process_report_task_fail2)
-{
-    ApiImplDavid apiImpl;
-    rtError_t error;
-    Runtime* rt = (Runtime*)Runtime::Instance();
-    MOCKER_CPP(&Runtime::GetGroupIdByThreadId).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(rt, &Runtime::GetPriCtxByDeviceId).stubs().will(returnValue((Context*)NULL));
-    MOCKER_CPP(&ApiImpl::CurrentContext).stubs().will(invoke(CurrentContextStub));
-
-    error = apiImpl.ProcessReport(0, true);
-    EXPECT_EQ(error, RT_ERROR_CONTEXT_NULL);
-}
-
-TEST_F(ApiDavidTest, test_process_report_task_fail3)
-{
-    ApiImplDavid apiImpl;
-    rtError_t error;
-    Runtime* rt = (Runtime*)Runtime::Instance();
-    MOCKER_CPP(&Runtime::GetGroupIdByThreadId).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER_CPP_VIRTUAL(rt, &Runtime::GetPriCtxByDeviceId).stubs().will(returnValue((Context*)NULL));
-    MOCKER_CPP(&ApiImpl::CurrentContext).stubs().will(invoke(CurrentContextStub));
-
-    error = apiImpl.ProcessReport(0);
-    EXPECT_EQ(error, RT_ERROR_CONTEXT_NULL);
 }
 
 TEST_F(ApiDavidTest, test_process_report_task_success)
 {
     ApiImplDavid apiImpl;
     rtError_t error;
-    Runtime* rt = (Runtime*)Runtime::Instance();
-    MOCKER_CPP(&Runtime::GetGroupIdByThreadId).stubs().will(returnValue(RT_ERROR_NONE));
+    Device* devPointer = stream_->Device_();
+    MOCKER_CPP(&Runtime::GetDevAndGroupIdByThreadId)
+        .stubs()
+        .with(mockcpp::any(), outBoundP(&devPointer), mockcpp::any(), mockcpp::any())
+        .will(returnValue(RT_ERROR_NONE));
 
     error = apiImpl.ProcessReport(0, true);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -6888,12 +6865,11 @@ TEST_F(ApiDavidTest, NonBlockingReportProcessesEntireBatch)
         reports[index].taskId = static_cast<uint16_t>(11U + index);
         reports[index].isBlock = 0U;
     }
-    uint32_t deviceId = stream_->Device_()->Id_();
-    uint32_t tsId = stream_->Device_()->DevGetTsId();
+    Device* devPointer = stream_->Device_();
     uint32_t groupId = 0U;
-    MOCKER_CPP(&Runtime::GetGroupIdByThreadId)
+    MOCKER_CPP(&Runtime::GetDevAndGroupIdByThreadId)
         .stubs()
-        .with(mockcpp::any(), outBoundP(&deviceId), outBoundP(&tsId), outBoundP(&groupId), mockcpp::any())
+        .with(mockcpp::any(), outBoundP(&devPointer), outBoundP(&groupId), mockcpp::any())
         .will(returnValue(RT_ERROR_NONE));
     uint64_t cqBitmap = 1ULL;
     MOCKER_CPP_VIRTUAL(driver, &Driver::CqReportIrqWait)

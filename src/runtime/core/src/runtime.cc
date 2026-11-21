@@ -177,14 +177,6 @@ rtError_t InitializePrimaryContext(PrimaryContextInitInfo& initInfo)
         err, "Primary context register dcache lock op failed, devId=%u, retCode=%#x.", initInfo.dev->Id_(),
         static_cast<uint32_t>(err));
 
-    DevDynInfoProcFunc devInfoProcFunc{};
-    if ((GET_DEV_INFO_PROC_FUNC(initInfo.dev->GetChipType(), devInfoProcFunc) == RT_ERROR_NONE) &&
-        (devInfoProcFunc.ccProcFunc.devResourceInit != nullptr)) {
-        err = devInfoProcFunc.ccProcFunc.devResourceInit(initInfo.dev);
-        ERROR_RETURN_MSG_INNER(
-            err, "Primary context CC resource initialization failed, devId=%u, retCode=%#x.", initInfo.dev->Id_(),
-            static_cast<uint32_t>(err));
-    }
     return RT_ERROR_NONE;
 }
 
@@ -3329,6 +3321,7 @@ Device* Runtime::DeviceRetain(const uint32_t devId, const uint32_t tsId)
             TraHandle curAtraceHandle = -1;
             rtError_t errorTrace = RT_ERROR_NONE;
             bool aicpuExecutorStarted = false;
+            DevDynInfoProcFunc devInfoProcFunc{};
             error = PrepareDeviceRetain(devId, tsId, errorTrace, aicpuExecutorStarted);
             ERROR_GOTO(error, DEV_ROLLBACK, "Start AI CPU executor failed, retCode=%#x, devId=%u.", error, devId);
 
@@ -3363,6 +3356,18 @@ Device* Runtime::DeviceRetain(const uint32_t devId, const uint32_t tsId)
 
             error = dev->Start();
             ERROR_GOTO(error, DEV_ROLLBACK, "Failed to start device.");
+
+            if ((GET_DEV_INFO_PROC_FUNC(dev->GetChipType(), devInfoProcFunc) == RT_ERROR_NONE) &&
+                (devInfoProcFunc.ccProcFunc.devResourceInit != nullptr)) {
+                error = devInfoProcFunc.ccProcFunc.devResourceInit(dev);
+                if (error != RT_ERROR_NONE) {
+                    dev->SetDeviceRelease();
+                    (void)dev->Stop();
+                    ERROR_GOTO(
+                        error, DEV_ROLLBACK, "Failed to initialize CC device resource, device_id=%u, retCode=%#x.",
+                        devId, static_cast<uint32_t>(error));
+                }
+            }
 
             if (!IS_SUPPORT_CHIP_FEATURE(chipType_, RtOptionalFeatureType::RT_FEATURE_DFX_ATRACE)) {
                 InitAtrace(dev, curAtraceHandle);
@@ -4689,11 +4694,11 @@ rtError_t Runtime::GetGroupIdByStreamId(const uint32_t devId, const int32_t stre
     return error;
 }
 
-rtError_t Runtime::GetGroupIdByThreadId(
-    const uint64_t threadId, uint32_t* const deviceId, uint32_t* const tsId, uint32_t* const groupId, const bool noLog)
+rtError_t Runtime::GetDevAndGroupIdByThreadId(
+    const uint64_t threadId, Device** const dev, uint32_t* const groupId, const bool noLog)
 {
     NULL_PTR_RETURN_MSG(cbSubscribe_, RT_ERROR_SUBSCRIBE_NULL);
-    const rtError_t error = cbSubscribe_->GetGroupIdByThreadId(threadId, deviceId, tsId, groupId, noLog);
+    const rtError_t error = cbSubscribe_->GetDevAndGroupIdByThreadId(threadId, dev, groupId, noLog);
     COND_RETURN_DEBUG(
         error != RT_ERROR_NONE, error, "get groupId fail, threadId=%" PRIu64 ", retCode=%#x", threadId, error);
     return error;

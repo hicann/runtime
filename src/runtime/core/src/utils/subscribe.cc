@@ -429,8 +429,8 @@ bool CbSubscribe::CheckExistInStreamMap(const Stream* const stm, StreamDevMap::c
     return false;
 }
 
-rtError_t CbSubscribe::GetGroupIdByThreadId(
-    const uint64_t threadId, uint32_t* const deviceId, uint32_t* const tsId, uint32_t* const groupId, const bool noLog)
+rtError_t CbSubscribe::GetDevAndGroupIdByThreadId(
+    const uint64_t threadId, Device** const dev, uint32_t* const groupId, const bool noLog)
 {
     subscribeLock_.lock();
     const auto it = subscribeMapByThreadId_.find(threadId);
@@ -442,9 +442,16 @@ rtError_t CbSubscribe::GetGroupIdByThreadId(
         return RT_ERROR_SUBSCRIBE_THREAD;
     }
     const auto it2 = it->second.begin()->second.begin();
+    Device* const subscribedDev = it2->second.stream->Device_();
+    if (subscribedDev == nullptr) {
+        subscribeLock_.unlock();
+        if (!noLog) {
+            RT_LOG(RT_LOG_WARNING, "Subscribed device is null, threadId=%" PRIu64, threadId);
+        }
+        return RT_ERROR_DEVICE_NULL;
+    }
     *groupId = static_cast<uint32_t>(it2->second.groupId);
-    *deviceId = RT_CB_SUBSCRIBE_GET_DEV_ID(it->second.begin()->first);
-    *tsId = RT_CB_SUBSCRIBE_GET_TS_ID(it->second.begin()->first);
+    *dev = subscribedDev;
     subscribeLock_.unlock();
     return RT_ERROR_NONE;
 }

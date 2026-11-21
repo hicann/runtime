@@ -3269,13 +3269,44 @@ TEST_F(TaskTest, Subscribe)
     exist = cbSubscribe->IsExistInStreamMap(stm);
     EXPECT_EQ(exist, false);
 
-    // CbSubscribe::GetGroupIdByThreadId
+    // CbSubscribe::GetDevAndGroupIdByThreadId
     uint32_t key1 = RT_CB_SUBSCRIBE_MK_INFO_KEY(tsId, devId);
     cbSubscribe->subscribeMapByThreadId_[threadId][key1][streamId] = subscribeInfo1;
-    ret = cbSubscribe->GetGroupIdByThreadId(threadId, &devId, &tsId, &groupId);
+    Device* devGet = nullptr;
+    ret = cbSubscribe->GetDevAndGroupIdByThreadId(threadId, &devGet, &groupId);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(devGet, stm->Device_());
 
     delete cbSubscribe;
+    delete stm;
+    delete dev;
+}
+
+TEST_F(TaskTest, GetDevAndGroupIdRejectsNullDevice)
+{
+    NpuDriver drv;
+    RawDevice* const dev = new RawDevice(1);
+    ASSERT_NE(dev, nullptr);
+    dev->Init();
+    dev->driver_ = &drv;
+    Stream* const stm = new (std::nothrow) Stream(dev, RT_STREAM_PRIORITY_DEFAULT, RT_STREAM_FAST_SYNC, nullptr);
+    ASSERT_NE(stm, nullptr);
+    CbSubscribe cbSubscribe(static_cast<uint32_t>(RT_THREAD_GROUP_ID_MAX));
+
+    constexpr uint64_t threadId = 1U;
+    constexpr uint32_t groupId = 2U;
+    const uint32_t key = RT_CB_SUBSCRIBE_MK_INFO_KEY(dev->DevGetTsId(), dev->Id_());
+    const cbSubscribeInfo subscribeInfo = {threadId, stm, 0U, 0U, groupId, nullptr};
+    cbSubscribe.subscribeMapByThreadId_[threadId][key][stm->Id_()] = subscribeInfo;
+    stm->device_ = nullptr;
+
+    Device* subscribedDev = nullptr;
+    uint32_t subscribedGroupId = 0U;
+    EXPECT_EQ(
+        cbSubscribe.GetDevAndGroupIdByThreadId(threadId, &subscribedDev, &subscribedGroupId), RT_ERROR_DEVICE_NULL);
+
+    cbSubscribe.subscribeMapByThreadId_.clear();
+    stm->device_ = dev;
     delete stm;
     delete dev;
 }

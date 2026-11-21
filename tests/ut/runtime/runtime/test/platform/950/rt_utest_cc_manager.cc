@@ -78,9 +78,11 @@ using namespace cce::runtime;
     ASSERT_NE(dev, (Device*)nullptr)
 
 namespace {
+constexpr uint32_t CC_TEST_DEVICE_ID = 1U;
 hal_cc_mode_type gCcMode = HAL_CC_MODE_NORMAL;
 drvError_t gCcQueryResult = DRV_ERROR_NONE;
 uint32_t gCcResourceReleaseCount = 0U;
+uint32_t gCcResourceInitCount = 0U;
 uint32_t gDevMemAllocCount = 0U;
 bool gReturnNullDriver = false;
 bool gPcieRegFail = false;
@@ -304,6 +306,28 @@ void ReleaseCcResourceStub(const uint32_t deviceId)
 {
     EXPECT_EQ(deviceId, 0U);
     ++gCcResourceReleaseCount;
+}
+
+rtError_t InitCcResourceStub(Device* const device)
+{
+    EXPECT_NE(device, nullptr);
+    if (device == nullptr) {
+        return RT_ERROR_DEVICE_NULL;
+    }
+    EXPECT_EQ(device->Id_(), CC_TEST_DEVICE_ID);
+    ++gCcResourceInitCount;
+    return RT_ERROR_NONE;
+}
+
+rtError_t InitCcResourceFailedStub(Device* const device)
+{
+    EXPECT_NE(device, nullptr);
+    if (device == nullptr) {
+        return RT_ERROR_DEVICE_NULL;
+    }
+    EXPECT_EQ(device->Id_(), CC_TEST_DEVICE_ID);
+    ++gCcResourceInitCount;
+    return RT_ERROR_CC_INIT_FAILED;
 }
 
 drvError_t QueryCcInfoStub(
@@ -620,6 +644,7 @@ protected:
         gCcMode = HAL_CC_MODE_NORMAL;
         gCcQueryResult = DRV_ERROR_NONE;
         gCcResourceReleaseCount = 0U;
+        gCcResourceInitCount = 0U;
         gDevMemAllocCount = 0U;
         gReturnNullDriver = false;
         gPcieRegFail = false;
@@ -3691,6 +3716,58 @@ TEST_F(CCManagerTest, RawDeviceDestructor_ReleasesCcResource)
     }
 
     EXPECT_EQ(gCcResourceReleaseCount, 1U);
+}
+
+TEST_F(CCManagerTest, ContextCreate_InitializesCcResource)
+{
+    ASSERT_EQ(Runtime::Instance()->GetDevice(CC_TEST_DEVICE_ID, RT_TSC_ID, false), nullptr);
+
+    const rtChipType_t chipType = GetCurrentChipType();
+    DevDynInfoProcFunc originalProcFunc{};
+    ASSERT_EQ(GET_DEV_INFO_PROC_FUNC(chipType, originalProcFunc), RT_ERROR_NONE);
+    const ScopeGuard restoreProcFunc([chipType, originalProcFunc]() {
+        (void)DevInfoManage::Instance().RegDevInfoProcFunc(chipType, originalProcFunc);
+    });
+
+    DevDynInfoProcFunc procFunc = originalProcFunc;
+    procFunc.ccProcFunc.devResourceInit = &InitCcResourceStub;
+    ASSERT_TRUE(DevInfoManage::Instance().RegDevInfoProcFunc(chipType, procFunc));
+
+    rtContext_t context = nullptr;
+    ASSERT_EQ(rtCtxCreate(&context, 0U, static_cast<int32_t>(CC_TEST_DEVICE_ID)), RT_ERROR_NONE);
+    ASSERT_NE(context, nullptr);
+    const ScopeGuard destroyContext([&context]() {
+        if (context != nullptr) {
+            (void)rtCtxDestroy(context);
+        }
+    });
+    EXPECT_EQ(gCcResourceInitCount, 1U);
+    EXPECT_EQ(rtCtxDestroy(context), RT_ERROR_NONE);
+    context = nullptr;
+}
+
+TEST_F(CCManagerTest, ContextCreate_FailsWhenCcResourceInitFails)
+{
+    ASSERT_EQ(Runtime::Instance()->GetDevice(CC_TEST_DEVICE_ID, RT_TSC_ID, false), nullptr);
+
+    const rtChipType_t chipType = GetCurrentChipType();
+    DevDynInfoProcFunc originalProcFunc{};
+    ASSERT_EQ(GET_DEV_INFO_PROC_FUNC(chipType, originalProcFunc), RT_ERROR_NONE);
+    const ScopeGuard restoreProcFunc([chipType, originalProcFunc]() {
+        (void)DevInfoManage::Instance().RegDevInfoProcFunc(chipType, originalProcFunc);
+    });
+
+    DevDynInfoProcFunc procFunc = originalProcFunc;
+    procFunc.ccProcFunc.devResourceInit = &InitCcResourceFailedStub;
+    ASSERT_TRUE(DevInfoManage::Instance().RegDevInfoProcFunc(chipType, procFunc));
+
+    rtContext_t context = nullptr;
+    EXPECT_NE(rtCtxCreate(&context, 0U, static_cast<int32_t>(CC_TEST_DEVICE_ID)), RT_ERROR_NONE);
+    EXPECT_EQ(context, nullptr);
+    EXPECT_EQ(gCcResourceInitCount, 1U);
+    if (context != nullptr) {
+        (void)rtCtxDestroy(context);
+    }
 }
 
 TEST_F(CCManagerTest, InitCcFeature_HostCcOffWhenNoCcSignal)
