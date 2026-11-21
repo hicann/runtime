@@ -38,6 +38,14 @@ add_custom_target(runtime_api_stub_generator_ut
     VERBATIM
 )
 
+add_custom_target(runtime_build_paths_ut
+    COMMAND ${CMAKE_COMMAND} -E env --unset=PYTHONHOME --unset=PYTHONPATH
+        ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_build_paths.py -v
+    WORKING_DIRECTORY ${TOP_DIR}
+    COMMENT "Checking build.sh path argument handling"
+    VERBATIM
+)
+
 add_subdirectory(platform)
 
 # Compile the private log implementation in both modes without Runtime/device fixtures.

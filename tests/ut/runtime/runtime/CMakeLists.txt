@@ -2242,3 +2242,7 @@ add_custom_target(runtime_ut_910b DEPENDS ${RUNTIME_TARGET_910B})
 add_custom_target(runtime_ut_common DEPENDS ${RUNTIME_TARGET_COMMON})
 add_custom_target(runtime_ut_all DEPENDS ${RUNTIME_TARGET})
 add_custom_target(runtime_ut DEPENDS ${RUNTIME_TARGET})
+
+add_dependencies(runtime_ut_common runtime_build_paths_ut)
+add_dependencies(runtime_ut_all runtime_build_paths_ut)
+add_dependencies(runtime_ut runtime_build_paths_ut)

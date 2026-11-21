@@ -10,7 +10,7 @@
 # -----------------------------------------------------------------------------------------------------------
 
 set -e
-BASEPATH=$(cd "$(dirname $0)"; pwd)
+BASEPATH=$(cd "$(dirname "$0")"; pwd)
 OUTPUT_PATH="${BASEPATH}/build_out"
 BUILD_PATH="${BASEPATH}/build"
 
@@ -125,15 +125,15 @@ checkopts() {
         shift 2
         ;;
       --ascend_install_path)
-        ASCEND_INSTALL_PATH="$(realpath $2)"
+        ASCEND_INSTALL_PATH="$(realpath "$2")"
         shift 2
         ;;
       --cann_3rd_lib_path)
-        ASCEND_3RD_LIB_PATH="$(realpath $2)"
+        ASCEND_3RD_LIB_PATH="$(realpath "$2")"
         shift 2
         ;;
       --ascend_3rd_lib_path)
-        ASCEND_3RD_LIB_PATH="$(realpath $2)"
+        ASCEND_3RD_LIB_PATH="$(realpath "$2")"
         shift 2
         ;;
       --module_extension)
@@ -262,26 +262,28 @@ build_rts() {
   mk_dir "${BUILD_PATH}"
   mk_dir "${OUTPUT_PATH}"
   cd "${BUILD_PATH}"
-  CMAKE_ARGS="-DENABLE_OPEN_SRC=True \
-              -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
-              -DVERSION=${VERSION} \
-              -DCMAKE_INSTALL_PREFIX=${OUTPUT_PATH} \
-              -DASCEND_INSTALL_PATH=${ASCEND_INSTALL_PATH} \
-              -DCANN_3RD_LIB_PATH=${ASCEND_3RD_LIB_PATH} \
-              -DENABLE_COV=${ENABLE_COV} \
-              -DENABLE_GCOV=${ENABLE_GCOV} \
-              -DENABLE_ASAN=${ENABLE_ASAN} \
-              -DENABLE_UT=${ENABLE_UT} \
-              -DENABLE_SIGN=${ENABLE_SIGN} \
-              -DENABLE_BUILD_DEVICE=${ENABLE_BUILD_DEVICE} \
-              -DCUSTOM_SIGN_SCRIPT=${CUSTOM_SIGN_SCRIPT} \
-              -DPACKAGE_TYPE=${PACKAGE_TYPE} \
-              -DMODULE_EXT=${MODULE_EXT}"
+  CMAKE_ARGS=(
+    "-DENABLE_OPEN_SRC=True"
+    "-DCMAKE_BUILD_TYPE=${BUILD_TYPE}"
+    "-DVERSION=${VERSION}"
+    "-DCMAKE_INSTALL_PREFIX=${OUTPUT_PATH}"
+    "-DASCEND_INSTALL_PATH=${ASCEND_INSTALL_PATH}"
+    "-DCANN_3RD_LIB_PATH=${ASCEND_3RD_LIB_PATH}"
+    "-DENABLE_COV=${ENABLE_COV}"
+    "-DENABLE_GCOV=${ENABLE_GCOV}"
+    "-DENABLE_ASAN=${ENABLE_ASAN}"
+    "-DENABLE_UT=${ENABLE_UT}"
+    "-DENABLE_SIGN=${ENABLE_SIGN}"
+    "-DENABLE_BUILD_DEVICE=${ENABLE_BUILD_DEVICE}"
+    "-DCUSTOM_SIGN_SCRIPT=${CUSTOM_SIGN_SCRIPT}"
+    "-DPACKAGE_TYPE=${PACKAGE_TYPE}"
+    "-DMODULE_EXT=${MODULE_EXT}"
+  )
 
-  echo "CMAKE_ARGS=${CMAKE_ARGS}"
-  cmake -S ../ -B . ${CMAKE_ARGS}
+  echo "CMAKE_ARGS=${CMAKE_ARGS[*]}"
+  cmake -S ../ -B . "${CMAKE_ARGS[@]}"
   if [ $? -ne 0 ]; then
-    echo "execute command: cmake ${CMAKE_ARGS} .. failed."
+    echo "execute command: cmake ${CMAKE_ARGS[*]} .. failed."
     return 1
   fi
 
