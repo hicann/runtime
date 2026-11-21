@@ -321,6 +321,42 @@ rtError_t ApiImplHostMemory::FreeHostSharedMemory(rtFreeHostSharedMemoryIn* cons
     return error;
 }
 
+rtError_t ApiImplHostMemory::HostRegisterByPciAtu(void* ptr, uint64_t size, uint32_t flag, void** devPtr)
+{
+    constexpr char_t funcDesc[] = "Registering host memory through PCIe ATU";
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(ptr, RT_ERROR_INVALID_VALUE, funcDesc);
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(devPtr, RT_ERROR_INVALID_VALUE, funcDesc);
+    ZERO_RETURN_AND_MSG_OUTER_WITH_FUNC_DESC(size, funcDesc);
+    COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+        size > (UINT64_MAX - RtPtrToValue(ptr)), RT_ERROR_INVALID_VALUE, funcDesc, size,
+        "a size that does not overflow the host address range");
+
+    Context* const curCtx = Runtime::Instance()->CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    Device* const dev = curCtx->Device_();
+    NULL_PTR_RETURN_MSG(dev, RT_ERROR_DEVICE_NULL);
+    Driver* const driver = dev->Driver_();
+    NULL_PTR_RETURN_MSG(driver, RT_ERROR_DRV_NULL);
+
+    void* mappedPtr = nullptr;
+    const rtError_t error = driver->HostRegisterByPciAtu(ptr, size, flag, dev->Id_(), &mappedPtr);
+    ERROR_RETURN(error, "Failed to register host memory through PCIe ATU, device_id=%u.", dev->Id_());
+    *devPtr = mappedPtr;
+    return RT_ERROR_NONE;
+}
+
+rtError_t ApiImplHostMemory::HostUnRegisterByPciAtu(void* ptr)
+{
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(ptr, RT_ERROR_INVALID_VALUE, "Unregistering host memory through PCIe ATU");
+    Context* const curCtx = Runtime::Instance()->CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    Device* const dev = curCtx->Device_();
+    NULL_PTR_RETURN_MSG(dev, RT_ERROR_DEVICE_NULL);
+    Driver* const driver = dev->Driver_();
+    NULL_PTR_RETURN_MSG(driver, RT_ERROR_DRV_NULL);
+    return driver->HostUnRegisterByPciAtu(ptr, dev->Id_());
+}
+
 rtError_t ApiImplHostMemory::HostRegister(void* ptr, uint64_t size, rtHostRegisterType type, void** devPtr)
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(

@@ -567,6 +567,7 @@ public:
         const int32_t deviceId, Notify** const notify, uint64_t flag = RT_NOTIFY_FLAG_DEFAULT) = 0;
     virtual rtError_t NotifyDestroy(Notify* const notify) = 0;
     virtual rtError_t NotifyRecord(Notify* const notify, Stream* const stm) = 0;
+    virtual rtError_t DirectNotifyRecord(Notify* const notify) = 0;
     virtual rtError_t NotifyReset(Notify* const notify) = 0;
     virtual rtError_t ResourceClean(int32_t devId, rtIdType_t type) = 0;
     virtual rtError_t NotifyWait(Notify* const notify, Stream* const stm, const uint32_t timeOut) = 0;

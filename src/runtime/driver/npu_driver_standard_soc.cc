@@ -22,6 +22,46 @@
 #include "device_enum_desc.hpp"
 namespace cce {
 namespace runtime {
+rtError_t NpuDriver::HostUnRegisterByPciAtu(void* ptr, const uint32_t deviceId)
+{
+    COND_RETURN_WARN(
+        &halHostUnregisterByPcieATU == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT,
+        "[drv api] halHostUnregisterByPcieATU does not exist");
+    const drvError_t drvRet = halHostUnregisterByPcieATU(ptr, deviceId);
+    COND_RETURN_WARN(
+        drvRet == DRV_ERROR_NOT_SUPPORT, RT_ERROR_FEATURE_NOT_SUPPORT,
+        "[drv api] halHostUnregisterByPcieATU is not supported.");
+    if (drvRet != DRV_ERROR_NONE) {
+        DRV_ERROR_PROCESS(
+            drvRet, "halHostUnregisterByPcieATU failed, device_id=%u, drvRetCode=%d.", deviceId,
+            static_cast<int32_t>(drvRet));
+        return RT_GET_DRV_ERRCODE(drvRet);
+    }
+    return RT_ERROR_NONE;
+}
+
+rtError_t NpuDriver::HostRegisterByPciAtu(
+    void* ptr, const uint64_t size, const uint32_t flag, const uint32_t deviceId, void** devPtr)
+{
+    COND_RETURN_WARN(
+        &halHostRegisterByPcieATU == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT,
+        "[drv api] halHostRegisterByPcieATU does not exist");
+    constexpr uint32_t driverFlag = 0U;
+    const drvError_t drvRet = halHostRegisterByPcieATU(ptr, size, driverFlag, deviceId, devPtr);
+    COND_RETURN_WARN(
+        drvRet == DRV_ERROR_NOT_SUPPORT, RT_ERROR_FEATURE_NOT_SUPPORT,
+        "[drv api] halHostRegisterByPcieATU is not supported.");
+    if (drvRet != DRV_ERROR_NONE) {
+        DRV_ERROR_PROCESS(
+            drvRet,
+            "halHostRegisterByPcieATU failed, device_id=%u, size=%" PRIu64
+            ", input_flag=%u, driver_flag=%u, drvRetCode=%d.",
+            deviceId, size, flag, driverFlag, static_cast<int32_t>(drvRet));
+        return RT_GET_DRV_ERRCODE(drvRet);
+    }
+    return RT_ERROR_NONE;
+}
+
 rtError_t NpuDriver::CreateAsyncDmaWqe(
     uint32_t devId, const AsyncDmaWqeInputInfo& input, AsyncDmaWqeOutputInfo* output, bool isUbMode, bool isSqeUpdate)
 {
@@ -318,10 +358,10 @@ rtError_t NpuDriver::WriteNotifyRecord(const uint32_t deviceId, const uint32_t t
     const drvError_t drvRet = halResourceConfig(deviceId, &in, &configInfo);
     COND_RETURN_WARN(
         drvRet == DRV_ERROR_NOT_SUPPORT, RT_ERROR_FEATURE_NOT_SUPPORT,
-        "[drv api] halResourceConfig not support for notify record.");
+        "[drv api] halResourceConfig does not support notify recording.");
     COND_RETURN_ERROR_MSG_CALL(
         ERR_MODULE_DRV, drvRet != DRV_ERROR_NONE, RT_GET_DRV_ERRCODE(drvRet),
-        "[drv api] halResourceConfig fail, device_id=%u, ts_id=%u, notifyId=%u, drvRetCode=%d.", deviceId, tsId,
+        "[drv api] halResourceConfig failed, device_id=%u, ts_id=%u, notifyId=%u, drvRetCode=%d.", deviceId, tsId,
         notifyId, static_cast<int32_t>(drvRet));
 
     RT_LOG(RT_LOG_INFO, "success: device_id=%u, ts_id=%u, notifyId=%u.", deviceId, tsId, notifyId);

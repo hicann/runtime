@@ -837,6 +837,14 @@ drvError_t drvCustomCall(uint32_t devid, uint32_t cmd, void* para)
     return DRV_ERROR_NONE;
 }
 
+// Test-only providers for optional APIs not yet available in the installed driver.
+drvError_t halHostRegisterByPcieATU(void* ptr, UINT64 size, UINT32 flag, UINT32 devid, void** devPtr)
+{
+    return DRV_ERROR_NOT_SUPPORT;
+}
+
+drvError_t halHostUnregisterByPcieATU(void* ptr, UINT32 devid) { return DRV_ERROR_NOT_SUPPORT; }
+
 drvError_t halHostRegister(void* hostPtr, UINT64 size, UINT32 flag, UINT32 devid, void** devPtr)
 {
     *devPtr = hostPtr;

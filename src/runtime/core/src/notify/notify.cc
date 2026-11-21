@@ -182,6 +182,14 @@ rtError_t Notify::ReAllocId() const
     return RT_ERROR_NONE;
 }
 
+rtError_t Notify::DirectRecord()
+{
+    NULL_PTR_RETURN_MSG(driver_, RT_ERROR_DRV_NULL);
+    COND_RETURN_ERROR(
+        notifyid_ == MAX_UINT32_NUM, RT_ERROR_INVALID_VALUE, "No resource ID is allocated to this notify.");
+    return driver_->WriteNotifyRecord(deviceId_, tsId_, notifyid_);
+}
+
 rtError_t Notify::Record(Stream* const streamIn)
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(streamIn, RT_ERROR_STREAM_NULL, "Notify recording");

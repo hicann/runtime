@@ -15,6 +15,8 @@
 #include "runtime/rt.h"
 #include "runtime/rts/rts.h"
 #include "runtime/event.h"
+#include "rt_external_mem.h"
+#include <thread>
 #define private public
 #define protected public
 #include "context.hpp"
@@ -1336,4 +1338,108 @@ TEST_F(RtMemoryApiTest, HostMallocWithCfgPagePolicies)
             EXPECT_EQ(api->HostFree(ptr), RT_ERROR_NONE);
         }
     }
+}
+
+namespace {
+void* g_atuHostPtr = nullptr;
+uint64_t g_atuSize = 0U;
+uint32_t g_atuFlag = 0U;
+uint32_t g_atuDeviceId = 0U;
+drvError_t g_atuRegisterResult = DRV_ERROR_NONE;
+
+void* AtuMappedAddress() { return reinterpret_cast<void*>(0x45678000ULL); }
+
+drvError_t CaptureAtuRegister(void* ptr, UINT64 size, UINT32 flag, UINT32 deviceId, void** devPtr)
+{
+    g_atuHostPtr = ptr;
+    g_atuSize = size;
+    g_atuFlag = flag;
+    g_atuDeviceId = deviceId;
+    *devPtr = AtuMappedAddress();
+    return g_atuRegisterResult;
+}
+
+drvError_t CaptureAtuUnregister(void* ptr, UINT32 deviceId)
+{
+    g_atuHostPtr = ptr;
+    g_atuDeviceId = deviceId;
+    return DRV_ERROR_NONE;
+}
+} // namespace
+
+TEST_F(RtMemoryApiTest, HostRegisterByPciAtu_ForwardsContextDeviceAndUsesZeroDriverFlag)
+{
+    void* const hostPtr = reinterpret_cast<void*>(0x12340000ULL);
+    void* devPtr = nullptr;
+    g_atuRegisterResult = DRV_ERROR_NONE;
+    MOCKER(halHostRegisterByPcieATU).expects(once()).will(invoke(CaptureAtuRegister));
+    const uint32_t expectedDeviceId = Runtime::Instance()->CurrentContext()->Device_()->Id_();
+    EXPECT_EQ(rtHostRegisterByPciAtu(hostPtr, 4096U, 0x2U, &devPtr), ACL_RT_SUCCESS);
+    EXPECT_EQ(devPtr, AtuMappedAddress());
+    EXPECT_EQ(g_atuHostPtr, hostPtr);
+    EXPECT_EQ(g_atuSize, 4096U);
+    EXPECT_EQ(g_atuFlag, 0U);
+    EXPECT_EQ(g_atuDeviceId, expectedDeviceId);
+
+    MOCKER(halHostUnregisterByPcieATU).expects(once()).will(invoke(CaptureAtuUnregister));
+    EXPECT_EQ(rtHostUnRegisterByPciAtu(hostPtr), ACL_RT_SUCCESS);
+    EXPECT_EQ(g_atuHostPtr, hostPtr);
+    EXPECT_EQ(g_atuDeviceId, expectedDeviceId);
+}
+
+TEST_F(RtMemoryApiTest, HostRegisterByPciAtu_FailurePreservesOutput)
+{
+    void* const hostPtr = reinterpret_cast<void*>(0x12340000ULL);
+    void* const original = reinterpret_cast<void*>(0x98760000ULL);
+    void* devPtr = original;
+    g_atuRegisterResult = DRV_ERROR_INVALID_VALUE;
+    MOCKER(halHostRegisterByPcieATU).expects(once()).will(invoke(CaptureAtuRegister));
+    EXPECT_EQ(rtHostRegisterByPciAtu(hostPtr, 4096U, 0x2U, &devPtr), ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(g_atuFlag, 0U);
+    EXPECT_EQ(devPtr, original);
+}
+
+TEST_F(RtMemoryApiTest, HostRegisterByPciAtu_UnsupportedDriver)
+{
+    void* const hostPtr = reinterpret_cast<void*>(0x12340000ULL);
+    void* devPtr = nullptr;
+    MOCKER(halHostRegisterByPcieATU).expects(once()).will(returnValue(DRV_ERROR_NOT_SUPPORT));
+    MOCKER(halHostUnregisterByPcieATU).expects(once()).will(returnValue(DRV_ERROR_NOT_SUPPORT));
+    EXPECT_EQ(rtHostRegisterByPciAtu(hostPtr, 4096U, 0U, &devPtr), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(devPtr, nullptr);
+    EXPECT_EQ(rtHostUnRegisterByPciAtu(hostPtr), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+}
+
+TEST_F(RtMemoryApiTest, HostRegisterByPciAtu_InvalidArgumentsDoNotCallDriver)
+{
+    void* const hostPtr = reinterpret_cast<void*>(0x12340000ULL);
+    void* devPtr = nullptr;
+    MOCKER(halHostRegisterByPcieATU).expects(never());
+    MOCKER(halHostUnregisterByPcieATU).expects(never());
+    EXPECT_EQ(rtHostRegisterByPciAtu(nullptr, 4096U, 0U, &devPtr), ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(rtHostRegisterByPciAtu(hostPtr, 4096U, 0U, nullptr), ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(rtHostRegisterByPciAtu(hostPtr, 0U, 0U, &devPtr), ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(
+        rtHostRegisterByPciAtu(reinterpret_cast<void*>(UINTPTR_MAX - 2048U), 4096U, 0U, &devPtr),
+        ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(rtHostUnRegisterByPciAtu(nullptr), ACL_ERROR_RT_PARAM_INVALID);
+}
+
+TEST_F(RtMemoryApiTest, HostRegisterByPciAtu_NoCurrentContext)
+{
+    void* const hostPtr = reinterpret_cast<void*>(0x12340000ULL);
+    void* devPtr = nullptr;
+    MOCKER(halHostRegisterByPcieATU).expects(never());
+    MOCKER(halHostUnregisterByPcieATU).expects(never());
+    rtError_t registerResult = ACL_RT_SUCCESS;
+    rtError_t unregisterResult = ACL_RT_SUCCESS;
+    std::thread worker([&]() {
+        EXPECT_EQ(Runtime::Instance()->CurrentContext(), nullptr);
+        registerResult = rtHostRegisterByPciAtu(hostPtr, 4096U, 0U, &devPtr);
+        unregisterResult = rtHostUnRegisterByPciAtu(hostPtr);
+        EXPECT_EQ(Runtime::Instance()->CurrentContext(), nullptr);
+    });
+    worker.join();
+    EXPECT_EQ(registerResult, ACL_ERROR_RT_CONTEXT_NULL);
+    EXPECT_EQ(unregisterResult, ACL_ERROR_RT_CONTEXT_NULL);
 }

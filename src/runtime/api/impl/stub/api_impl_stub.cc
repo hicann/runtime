@@ -13,6 +13,11 @@
 
 namespace cce {
 namespace runtime {
+rtError_t ApiImpl::DirectNotifyRecord(Notify* const notify)
+{
+    UNUSED(notify);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
 
 rtError_t ApiImpl::DeviceSetSuspendConfig(const int32_t deviceId, const rtDeviceSuspendConfig* const config)
 {

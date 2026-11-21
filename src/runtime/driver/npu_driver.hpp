@@ -78,6 +78,9 @@ public:
 
     // Map host memory for confidential computing DMA.
     rtError_t HostDmaMap(void* ptr, uint64_t size, const uint32_t deviceId) override;
+    rtError_t HostRegisterByPciAtu(
+        void* ptr, const uint64_t size, const uint32_t flag, const uint32_t deviceId, void** devPtr) override;
+    rtError_t HostUnRegisterByPciAtu(void* ptr, const uint32_t deviceId) override;
 
     // Unegister host memory.
     rtError_t HostUnregister(void* ptr, const uint32_t deviceId, const bool supportDrvPinReg = false) override;

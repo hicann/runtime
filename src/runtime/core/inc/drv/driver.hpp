@@ -130,6 +130,9 @@ public:
 
     // Map host memory for confidential computing DMA.
     virtual rtError_t HostDmaMap(void* ptr, uint64_t size, const uint32_t deviceId) = 0;
+    virtual rtError_t HostRegisterByPciAtu(
+        void* ptr, const uint64_t size, const uint32_t flag, const uint32_t deviceId, void** devPtr) = 0;
+    virtual rtError_t HostUnRegisterByPciAtu(void* ptr, const uint32_t deviceId) = 0;
 
     // Unegister host memory.
     virtual rtError_t HostUnregister(void* ptr, const uint32_t deviceId, const bool supportDrvPinReg = false) = 0;

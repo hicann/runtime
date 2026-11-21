@@ -33,6 +33,7 @@ public:
     const rtInnerObject* GetInnerHandle() const { return &handle_; }
     rtError_t GetNotifyAddress(Stream* const streamIn, uint64_t& addr);
     rtError_t Record(Stream* const streamIn);
+    rtError_t DirectRecord();
     rtError_t Setup();
     rtError_t SetupWithoutAllocNtyId();
     rtError_t ReAllocId() const;

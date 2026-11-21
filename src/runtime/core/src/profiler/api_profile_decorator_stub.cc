@@ -11,6 +11,12 @@
 #include "api_profile_decorator.hpp"
 namespace cce {
 namespace runtime {
+rtError_t ApiProfileDecorator::DirectNotifyRecord(Notify* const notify)
+{
+    UNUSED(notify);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 rtError_t ApiProfileDecorator::UbDbSend(rtUbDbInfo_t* const dbInfo, Stream* const stm)
 {
     UNUSED(dbInfo);

@@ -15,6 +15,7 @@
 #include "runtime.hpp"
 #include "mem_type.hpp"
 #include "context.hpp"
+#include "notify.hpp"
 
 namespace cce {
 namespace runtime {

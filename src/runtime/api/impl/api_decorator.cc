@@ -914,6 +914,8 @@ rtError_t ApiDecorator::NotifyCreate(const int32_t deviceId, Notify** const noti
 
 rtError_t ApiDecorator::NotifyDestroy(Notify* const notify) { return impl_->NotifyDestroy(notify); }
 
+rtError_t ApiDecorator::DirectNotifyRecord(Notify* const notify) { return impl_->DirectNotifyRecord(notify); }
+
 rtError_t ApiDecorator::NotifyRecord(Notify* const notify, Stream* const stm)
 {
     return impl_->NotifyRecord(notify, stm);

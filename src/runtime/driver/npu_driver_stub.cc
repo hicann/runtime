@@ -10,6 +10,24 @@
 #include "npu_driver.hpp"
 namespace cce {
 namespace runtime {
+rtError_t NpuDriver::HostUnRegisterByPciAtu(void* ptr, const uint32_t deviceId)
+{
+    UNUSED(ptr);
+    UNUSED(deviceId);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t NpuDriver::HostRegisterByPciAtu(
+    void* ptr, const uint64_t size, const uint32_t flag, const uint32_t deviceId, void** devPtr)
+{
+    UNUSED(ptr);
+    UNUSED(size);
+    UNUSED(flag);
+    UNUSED(deviceId);
+    UNUSED(devPtr);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 rtError_t NpuDriver::CreateAsyncDmaWqe(
     uint32_t devId, const AsyncDmaWqeInputInfo& input, AsyncDmaWqeOutputInfo* output, bool isUbMode, bool isSqeUpdate)
 {

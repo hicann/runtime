@@ -214,6 +214,16 @@ TEST_F(TinyStubTest, device_error_update_tiny_stub)
     EXPECT_EQ(funcMap.at(errorCode), TinyErrorInfoUpdate);
 }
 
+TEST_F(TinyStubTest, host_direct_interrepo_apis_not_support)
+{
+    void* const original = reinterpret_cast<void*>(0x12340000ULL);
+    void* devPtr = original;
+    EXPECT_EQ(rtHostRegisterByPciAtu(nullptr, 4096U, 0x2U, &devPtr), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(devPtr, original);
+    EXPECT_EQ(rtHostUnRegisterByPciAtu(nullptr), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(rtDirectNotifyRecord(nullptr), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+}
+
 TEST_F(TinyStubTest, api_c_stub)
 {
     rtError_t ret = RT_ERROR_NONE;

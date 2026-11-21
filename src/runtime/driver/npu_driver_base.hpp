@@ -170,6 +170,10 @@ drvError_t __attribute__((weak))
 halResMap(unsigned int devId, struct res_map_info* res_info, unsigned long* va, unsigned int* len);
 unsigned int __attribute__((weak)) halGetMaxResMapType(void);
 
+// Optional driver APIs; keep weak declarations until the matching driver headers are available.
+drvError_t __attribute__((weak))
+halHostRegisterByPcieATU(void* srcPtr, UINT64 size, UINT32 flag, UINT32 devid, void** dstPtr);
+drvError_t __attribute__((weak)) halHostUnregisterByPcieATU(void* ptr, UINT32 devid);
 drvError_t __attribute__((weak)) halHostUnregisterEx(void* srcPtr, UINT32 devid, UINT32 flag);
 drvError_t __attribute__((weak)) halHostRegisterCapabilities(UINT32 devid, UINT32 acc_module_type, UINT32* mem_map_cap);
 drvError_t __attribute__((weak)) halHostRegister(void* srcPtr, UINT64 size, UINT32 flag, UINT32 devid, void** dstPtr);

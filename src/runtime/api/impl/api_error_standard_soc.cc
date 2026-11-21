@@ -30,6 +30,12 @@
 
 namespace cce {
 namespace runtime {
+rtError_t ApiErrorDecorator::DirectNotifyRecord(Notify* const notify)
+{
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
+        notify, RT_ERROR_INVALID_VALUE, "Recording a notify directly from the host");
+    return impl_->DirectNotifyRecord(notify);
+}
 
 rtError_t ApiErrorDecorator::MemRegisterUbSegment(void* const addr, const size_t size)
 {

@@ -42,6 +42,8 @@ public:
     virtual rtError_t HostRegister(void* ptr, uint64_t size, rtHostRegisterType type, void** devPtr) = 0;
     virtual rtError_t HostRegisterV2(void* ptr, uint64_t size, uint32_t flag) = 0;
     virtual rtError_t HostUnregister(void* ptr) = 0;
+    virtual rtError_t HostRegisterByPciAtu(void* ptr, uint64_t size, uint32_t flag, void** devPtr) = 0;
+    virtual rtError_t HostUnRegisterByPciAtu(void* ptr) = 0;
     virtual rtError_t HostGetDevicePointer(void* pHost, void** pDevice, uint32_t flag) = 0;
     virtual rtError_t HostGetDevicePointerAddrRange(rtAddrRange* addrRange, uint32_t* count) = 0;
     virtual rtError_t HostMemMapCapabilities(

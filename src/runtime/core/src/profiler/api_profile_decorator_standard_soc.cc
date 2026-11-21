@@ -10,8 +10,19 @@
 #include "api_c.h"
 #include "profiler.hpp"
 #include "api_profile_decorator.hpp"
+#include "notify.hpp"
 namespace cce {
 namespace runtime {
+rtError_t ApiProfileDecorator::DirectNotifyRecord(Notify* const notify)
+{
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
+        notify, RT_ERROR_INVALID_VALUE, "Recording a notify directly from the host");
+    CallApiBegin(RT_PROF_API_DIRECT_NOTIFY_RECORD);
+    const rtError_t error = impl_->DirectNotifyRecord(notify);
+    CallApiEnd(error, notify->GetDeviceId());
+    return error;
+}
+
 rtError_t ApiProfileDecorator::UbDbSend(rtUbDbInfo_t* const dbInfo, Stream* const stm)
 {
     CallApiBegin(RT_PROF_API_UB_DB_SEND);

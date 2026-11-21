@@ -70,6 +70,12 @@
 #include "capture_model_enum_desc.hpp"
 namespace cce {
 namespace runtime {
+rtError_t ApiImpl::DirectNotifyRecord(Notify* const notify)
+{
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
+        notify, RT_ERROR_INVALID_VALUE, "Recording a notify directly from the host");
+    return notify->DirectRecord();
+}
 
 rtError_t ApiImpl::DeviceSetSuspendConfig(const int32_t deviceId, const rtDeviceSuspendConfig* const config)
 {

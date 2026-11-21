@@ -20,6 +20,23 @@ extern "C" {
 #endif
 
 /**
+ * @brief Map host DDR through PCIe ATU using the current context's device.
+ * @param [in] ptr Host memory base address. Must be aligned to 4KB.
+ * @param [in] size Mapping size in bytes. Must be aligned to 4KB.
+ * @param [in] flag Currently unused, must be 0x2U.
+ * @param [out] devPtr Device virtual address; updated only on success.
+ * @return ACL_RT_SUCCESS on success, a Runtime external error code otherwise.
+ */
+RTS_API rtError_t rtHostRegisterByPciAtu(void* ptr, uint64_t size, uint32_t flag, void** devPtr);
+
+/**
+ * @brief Unmap host DDR on the current context's device, matching the registration device.
+ * @param [in] ptr Original host memory base address. Stop using the mapping before this call.
+ * @return ACL_RT_SUCCESS on success, a Runtime external error code otherwise.
+ */
+RTS_API rtError_t rtHostUnRegisterByPciAtu(void* ptr);
+
+/**
  * @ingroup dvrt_mem
  * @brief memory type
  */

@@ -382,6 +382,8 @@ rtError_t ProfilingAgent::RegisterProfTypeInfo() const
          "NotifyCreate"},
         {static_cast<uint32_t>(RT_PROFILE_TYPE_API_BEGIN) + static_cast<uint32_t>(RT_PROF_API_NotifyDestroy),
          "NotifyDestroy"},
+        {static_cast<uint32_t>(RT_PROFILE_TYPE_API_BEGIN) + static_cast<uint32_t>(RT_PROF_API_DIRECT_NOTIFY_RECORD),
+         "rtDirectNotifyRecord"},
         {static_cast<uint32_t>(RT_PROFILE_TYPE_API_BEGIN) + static_cast<uint32_t>(RT_PROF_API_NotifyRecord),
          "NotifyRecord"},
         {static_cast<uint32_t>(RT_PROFILE_TYPE_API_BEGIN) + static_cast<uint32_t>(RT_PROF_API_NotifyWait),

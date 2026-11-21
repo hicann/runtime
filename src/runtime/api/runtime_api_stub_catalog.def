@@ -3468,3 +3468,15 @@ RUNTIME_API(kernel, rtError_t, rtBinaryGetFunctionCount,
 RUNTIME_API(standard_soc, rtError_t, rtHostGetDevicePointerAddrRange,
     (rtAddrRange* addrRange, uint32_t* count),
     (addrRange, count), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(memory, rtError_t, rtHostRegisterByPciAtu,
+    (void* ptr, uint64_t size, uint32_t flag, void** devPtr),
+    (ptr, size, flag, devPtr), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(memory, rtError_t, rtHostUnRegisterByPciAtu,
+    (void* ptr),
+    (ptr), FEATURE_NOT_SUPPORT, EXPORT)
+
+RUNTIME_API(event, rtError_t, rtDirectNotifyRecord,
+    (rtNotify_t notify),
+    (notify), FEATURE_NOT_SUPPORT, EXPORT)

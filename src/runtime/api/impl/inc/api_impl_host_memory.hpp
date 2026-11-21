@@ -30,6 +30,8 @@ public:
     rtError_t HostRegister(void* ptr, uint64_t size, rtHostRegisterType type, void** devPtr) override;
     rtError_t HostRegisterV2(void* ptr, uint64_t size, uint32_t flag) override;
     rtError_t HostUnregister(void* ptr) override;
+    rtError_t HostRegisterByPciAtu(void* ptr, uint64_t size, uint32_t flag, void** devPtr) override;
+    rtError_t HostUnRegisterByPciAtu(void* ptr) override;
     rtError_t HostGetDevicePointer(void* pHost, void** pDevice, uint32_t flag) override;
     rtError_t HostGetDevicePointerAddrRange(rtAddrRange* addrRange, uint32_t* count) override;
     rtError_t HostMemMapCapabilities(

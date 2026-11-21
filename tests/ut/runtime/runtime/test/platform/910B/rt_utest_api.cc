@@ -8,6 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "../../rt_utest_api.hpp"
+#include "rt_external_event.h"
+#include <thread>
 #include "model_c.hpp"
 #include "platform_manager_v2.h"
 #include "rt_unwrap.h"
@@ -3675,4 +3677,91 @@ TEST_F(CloudV2ApiTest, rtHostMemMapCapabilities_feature_not_support)
 
     error = api->HostMemMapCapabilities(deviceId, hacType, &capabilities);
     EXPECT_EQ(error, RT_ERROR_FEATURE_NOT_SUPPORT);
+}
+
+namespace {
+uint32_t g_syncRecordDevice = UINT32_MAX;
+halResourceIdInputInfo g_syncRecordInput = {};
+halResourceConfigInfo g_syncRecordConfig = {};
+
+drvError_t CaptureSyncNotifyRecord(uint32_t deviceId, halResourceIdInputInfo* input, halResourceConfigInfo* config)
+{
+    g_syncRecordDevice = deviceId;
+    g_syncRecordInput = *input;
+    g_syncRecordConfig = *config;
+    return DRV_ERROR_NONE;
+}
+} // namespace
+
+TEST_F(CloudV2ApiTest, DirectNotifyRecord_WithoutCurrentContext)
+{
+    rtNotify_t handle = nullptr;
+    ASSERT_EQ(rtNotifyCreate(0, &handle), ACL_RT_SUCCESS);
+    Notify* const notify = reinterpret_cast<Notify*>(static_cast<rtInnerObject*>(handle)->object);
+    const uint32_t deviceId = notify->GetDeviceId();
+    const uint32_t tsId = notify->GetTsId();
+    const uint32_t notifyId = notify->GetNotifyId();
+    MOCKER(halResourceConfig).expects(once()).will(invoke(CaptureSyncNotifyRecord));
+    MOCKER_CPP(&Notify::Record).expects(never());
+
+    rtError_t result = ACL_ERROR_RT_INTERNAL_ERROR;
+    std::thread worker([&]() {
+        EXPECT_EQ(Runtime::Instance()->CurrentContext(), nullptr);
+        result = rtDirectNotifyRecord(handle);
+        EXPECT_EQ(Runtime::Instance()->CurrentContext(), nullptr);
+    });
+    worker.join();
+    EXPECT_EQ(result, ACL_RT_SUCCESS);
+    EXPECT_EQ(g_syncRecordDevice, deviceId);
+    EXPECT_EQ(g_syncRecordInput.type, DRV_NOTIFY_ID);
+    EXPECT_EQ(g_syncRecordInput.tsId, tsId);
+    EXPECT_EQ(g_syncRecordInput.resourceId, notifyId);
+    EXPECT_EQ(g_syncRecordInput.res[1], 0U);
+    EXPECT_EQ(g_syncRecordConfig.prop, DRV_ID_RECORD);
+    EXPECT_EQ(g_syncRecordConfig.value[0], 1U);
+    EXPECT_EQ(rtNotifyDestroy(handle), ACL_RT_SUCCESS);
+}
+
+TEST_F(CloudV2ApiTest, DirectNotifyRecord_RejectsNullAndCounterNotify)
+{
+    MOCKER(halResourceConfig).expects(never());
+    EXPECT_EQ(rtDirectNotifyRecord(nullptr), ACL_ERROR_RT_PARAM_INVALID);
+    rtInnerObject counterHandle = {};
+    counterHandle.magic.store(RT_CNTNOTIFY_MAGIC, std::memory_order_release);
+    EXPECT_EQ(rtDirectNotifyRecord(static_cast<void*>(&counterHandle)), ACL_ERROR_RT_INVALID_HANDLE);
+}
+
+TEST_F(CloudV2ApiTest, DirectNotifyRecord_DriverErrors)
+{
+    rtNotify_t handle = nullptr;
+    ASSERT_EQ(rtNotifyCreate(0, &handle), ACL_RT_SUCCESS);
+    MOCKER(halResourceConfig)
+        .expects(exactly(2))
+        .will(returnValue(DRV_ERROR_NOT_SUPPORT))
+        .then(returnValue(DRV_ERROR_INVALID_VALUE));
+    EXPECT_EQ(rtDirectNotifyRecord(handle), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(rtDirectNotifyRecord(handle), ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(rtNotifyDestroy(handle), ACL_RT_SUCCESS);
+}
+
+TEST_F(CloudV2ApiTest, DirectNotifyRecord_ProfilingUsesNotifyDevice)
+{
+    rtNotify_t handle = nullptr;
+    ASSERT_EQ(rtNotifyCreate(0, &handle), ACL_RT_SUCCESS);
+    Notify* const notify = reinterpret_cast<Notify*>(static_cast<rtInnerObject*>(handle)->object);
+    ApiImpl impl;
+    Profiler profiler(&impl);
+    profiler.SetApiProfEnable(true);
+    ApiProfileDecorator api(&impl, &profiler);
+    MOCKER(halResourceConfig).expects(once()).will(invoke(CaptureSyncNotifyRecord));
+    MOCKER_CPP_VIRTUAL(&impl, &ApiImpl::ContextGetCurrent).expects(never());
+    rtError_t result = RT_ERROR_INVALID_VALUE;
+    std::thread worker([&]() {
+        EXPECT_EQ(Runtime::Instance()->CurrentContext(), nullptr);
+        result = api.DirectNotifyRecord(notify);
+    });
+    worker.join();
+    EXPECT_EQ(result, RT_ERROR_NONE);
+    EXPECT_EQ(g_syncRecordDevice, notify->GetDeviceId());
+    EXPECT_EQ(rtNotifyDestroy(handle), ACL_RT_SUCCESS);
 }

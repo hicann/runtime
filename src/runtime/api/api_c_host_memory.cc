@@ -104,6 +104,30 @@ rtError_t rtsHostRegister(void* ptr, uint64_t size, rtHostRegisterType type, voi
 }
 
 VISIBILITY_DEFAULT
+rtError_t rtHostRegisterByPciAtu(void* ptr, uint64_t size, uint32_t flag, void** devPtr)
+{
+    GLOBAL_STATE_WAIT_IF_LOCKED();
+    ApiHostMemory* const apiInstance = ApiHostMemory::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    const rtError_t error = apiInstance->HostRegisterByPciAtu(ptr, size, flag, devPtr);
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
+rtError_t rtHostUnRegisterByPciAtu(void* ptr)
+{
+    GLOBAL_STATE_WAIT_IF_LOCKED();
+    ApiHostMemory* const apiInstance = ApiHostMemory::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    const rtError_t error = apiInstance->HostUnRegisterByPciAtu(ptr);
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
 rtError_t rtHostMemMapCapabilities(uint32_t deviceId, rtHacType hacType, rtHostMemMapCapability* capabilities)
 {
     GLOBAL_STATE_WAIT_IF_LOCKED();

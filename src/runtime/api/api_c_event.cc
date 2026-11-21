@@ -147,6 +147,19 @@ VISIBILITY_DEFAULT
 rtError_t rtsNotifyDestroy(rtNotify_t notify) { return rtNotifyDestroy(notify); }
 
 VISIBILITY_DEFAULT
+rtError_t rtDirectNotifyRecord(rtNotify_t notify)
+{
+    GLOBAL_STATE_WAIT_IF_LOCKED();
+    Api* const apiInstance = Api::Instance();
+    NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
+    RT_VALIDATE_AND_UNWRAP_OBJECT(notify, Notify, notifyPtr);
+    const rtError_t error = apiInstance->DirectNotifyRecord(notifyPtr);
+    COND_RETURN_WITH_NOLOG(error == RT_ERROR_FEATURE_NOT_SUPPORT, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+    ERROR_RETURN_WITH_EXT_ERRCODE(error);
+    return ACL_RT_SUCCESS;
+}
+
+VISIBILITY_DEFAULT
 rtError_t rtsNotifyRecord(rtNotify_t notify, rtStream_t stm) { return rtNotifyRecord(notify, stm); }
 
 VISIBILITY_DEFAULT

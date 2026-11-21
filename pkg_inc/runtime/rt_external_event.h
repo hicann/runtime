@@ -20,6 +20,17 @@ extern "C" {
 
 /**
  * @ingroup dvrt_event
+ * @brief Record a single-bit notify directly from host through the driver.
+ * @param [in] notify Valid single-bit notify handle. Counter notifies are unsupported.
+ * @attention Does not require a current context or enqueue a stream task.
+ *            The notify and its device resources must remain valid during this call.
+ *            Success does not wait for subsequent device stream tasks to complete.
+ * @return ACL_RT_SUCCESS on success, a Runtime external error code otherwise.
+ */
+RTS_API rtError_t rtDirectNotifyRecord(rtNotify_t notify);
+
+/**
+ * @ingroup dvrt_event
  * @brief Get the physical address corresponding to notify
  * @param [in] notify notify to be queried
  * @param [in] devAddrOffset  device physical address offset

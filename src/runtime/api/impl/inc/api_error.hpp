@@ -454,6 +454,7 @@ public:
         const int32_t deviceId, Notify** const notify, uint64_t flag = RT_NOTIFY_FLAG_DEFAULT) override;
     rtError_t NotifyDestroy(Notify* const notify) override;
     rtError_t NotifyRecord(Notify* const notify, Stream* const stm) override;
+    rtError_t DirectNotifyRecord(Notify* const notify) override;
     rtError_t NotifyReset(Notify* const notify) override;
     rtError_t ResourceClean(int32_t devId, rtIdType_t type) override;
     rtError_t NotifyWait(Notify* const notify, Stream* const stm, const uint32_t timeOut) override;
