@@ -743,9 +743,9 @@ std::string GetAiCoreSyncMismatchInfo(const DavidOneCoreErrorInfo& info, const D
     constexpr uint32_t AI_CORE_SYNC_RESIDUE_NUM = 8U;
     constexpr uint32_t AI_CORE_SYNC_RESIDUE_BITS = 8U;
     constexpr uint64_t AI_CORE_SYNC_RESIDUE_MASK = 0xFFU;
-    static const char* const kSrc[] = {"scalar", "vec", "cube", "mte1", "mte2", "mte3", "fixp"};
-    static const char* const kDst[] = {"fixp", "mte5", "mte4", "mte3", "mte2", "mte1", "vec", "cube", "scalar"};
-    static const uint8_t kDstIdx[][AI_CORE_SYNC_RESIDUE_NUM] = {
+    static constexpr char* const kSrc[] = {"scalar", "vec", "cube", "mte1", "mte2", "mte3", "fixp"};
+    static constexpr char* const kDst[] = {"fixp", "mte5", "mte4", "mte3", "mte2", "mte1", "vec", "cube", "scalar"};
+    static constexpr uint8_t kDstIdx[][AI_CORE_SYNC_RESIDUE_NUM] = {
         {0, 1, 2, 3, 4, 5, 6, 7}, // scalar
         {0, 1, 2, 3, 4, 5, 7, 8}, // vec
         {0, 1, 2, 3, 4, 5, 6, 8}, // cube
