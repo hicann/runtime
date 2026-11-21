@@ -115,10 +115,14 @@ rtError_t NotifyRecordTaskInit(
 rtError_t GetNotifyRecordTaskParams(const TaskInfo* const taskInfo, rtTaskParams* const params)
 {
     const NotifyRecordTaskInfo* const notifyRecord = &(taskInfo->u.notifyrecordTask);
-    COND_RETURN_ERROR(
-        notifyRecord->isCountNotify || (taskInfo->typeName == nullptr) ||
-            (strcmp(taskInfo->typeName, "NOTIFY_RECORD") != 0),
-        RT_ERROR_INVALID_VALUE, "Only single-bit notify record tasks support getting parameters.");
+    COND_RETURN_ERROR(taskInfo->typeName == nullptr, RT_ERROR_INVALID_VALUE, "The notify record task name is null.");
+    COND_RETURN_AND_MSG_OUTER(
+        notifyRecord->isCountNotify || (strcmp(taskInfo->typeName, "NOTIFY_RECORD") != 0), RT_ERROR_INVALID_VALUE,
+        ErrorCode::EE1017, "Obtaining task parameter information", "task",
+        RtFmtMsg(
+            "The current task (%s) does not support getting parameters. Only single notify record tasks support "
+            "getting parameters",
+            notifyRecord->isCountNotify ? "count notify record" : taskInfo->typeName));
     Notify* const notify = notifyRecord->uPtr.notify;
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         notify, RT_ERROR_INVALID_VALUE, "Obtaining the Notify Record task parameters");
@@ -416,9 +420,11 @@ rtError_t NotifyWaitTaskInit(
 rtError_t GetNotifyWaitTaskParams(const TaskInfo* const taskInfo, rtTaskParams* const params)
 {
     const NotifyWaitTaskInfo* const notifyWait = &(taskInfo->u.notifywaitTask);
-    COND_RETURN_ERROR(
-        notifyWait->isCountNotify, RT_ERROR_INVALID_VALUE,
-        "Count notify wait tasks do not support getting single-bit notify parameters.");
+    COND_RETURN_AND_MSG_OUTER(
+        notifyWait->isCountNotify, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Obtaining task parameter information",
+        "task",
+        "The current task (count notify wait) does not support getting parameters. Only single notify wait tasks "
+        "support getting parameters");
     Notify* const notify = notifyWait->u.notify;
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
         notify, RT_ERROR_INVALID_VALUE, "Obtaining the Notify Wait task parameters");
