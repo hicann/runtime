@@ -411,11 +411,11 @@ static void ReportCaptureModeError(const CaptureSession* captureSession, const c
 
 bool CheckCaptureModeSupport(const Context* ctx, const char* funcName)
 {
-    if (!IsCaptureSessionExist(ctx)) {
+    if (ctx == nullptr) {
         return true;
     }
 
-    const CaptureSession* const captureSession = GetCaptureSession(ctx);
+    const CaptureSession* const captureSession = dynamic_cast<CaptureSession*>(ctx->GetExtension());
     if ((captureSession != nullptr) && (!captureSession->IsCaptureModeSupport())) {
         ReportCaptureModeError(captureSession, funcName);
         return false;

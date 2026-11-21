@@ -433,6 +433,7 @@ private:
     std::mutex captureLock_;
     mutable std::mutex extensionLock_;
     mutable std::unique_ptr<ContextExtension> extension_;
+    mutable std::atomic<bool> hasExtension_{false};
     bool isForceReset_ = false;
     Atomic<uint32_t> deviceFlags_{RT_DEVICE_SCHEDULE_AUTO};
     Atomic<bool> callBackThreadExist_;

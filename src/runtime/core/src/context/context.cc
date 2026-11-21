@@ -215,6 +215,10 @@ Context::~Context() { ReleaseResourcesAfterTearDown(); }
 
 ContextExtension* Context::GetExtension() const
 {
+    if (!hasExtension_.load(std::memory_order_acquire)) {
+        return nullptr;
+    }
+
     const std::lock_guard<std::mutex> lock(extensionLock_);
     return extension_.get();
 }
@@ -232,6 +236,7 @@ ContextExtension* Context::EnsureExtension() const
     }
 
     extension_.reset(captureFunc.createContextExtension(const_cast<Context*>(this)));
+    hasExtension_.store(extension_ != nullptr, std::memory_order_release);
     return extension_.get();
 }
 
@@ -309,6 +314,7 @@ void Context::ResetResourceFieldsAfterTearDown()
     lastErr_.Set(ACL_RT_SUCCESS);
     {
         const std::lock_guard<std::mutex> lock(extensionLock_);
+        hasExtension_.store(false, std::memory_order_release);
         extension_.reset();
     }
     isForceReset_ = false;
