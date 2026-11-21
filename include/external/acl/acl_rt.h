@@ -535,7 +535,9 @@ typedef enum aclrtLastErrLevel {
 typedef enum aclrtBinaryLoadOptionType {
     ACL_RT_BINARY_LOAD_OPT_LAZY_LOAD = 1,
     // DEPRECATED since 8.5.0. Will be removed after 2026/12/30. Use ACL_RT_BINARY_LOAD_OPT_MAGIC instead.
-    ACL_RT_BINARY_LOAD_OPT_LAZY_MAGIC = 2,
+    ACL_RT_BINARY_LOAD_OPT_LAZY_MAGIC ACL_DEPRECATED_MESSAGE(
+        "ACL_RT_BINARY_LOAD_OPT_LAZY_MAGIC is deprecated since 8.5.0, Will be removed after 2026/12/30,"
+        " use ACL_RT_BINARY_LOAD_OPT_MAGIC instead.") = 2,
     ACL_RT_BINARY_LOAD_OPT_MAGIC = 2,
     ACL_RT_BINARY_LOAD_OPT_CPU_KERNEL_MODE = 3,
 } aclrtBinaryLoadOptionType;
@@ -883,7 +885,9 @@ typedef enum {
 
     ACL_DEV_ATTR_SMP_ID = 401U,               // indicates whether devices are on the same OS
     ACL_DEV_ATTR_PHY_CHIP_ID = 402U,          // physical chip id
-    ACL_DEV_ATTR_SUPER_POD_DEVIDE_ID = 403U,  // DEPRECATED: Use ACL_DEV_ATTR_SUPER_POD_DEVICE_ID
+    ACL_DEV_ATTR_SUPER_POD_DEVIDE_ID ACL_DEPRECATED_MESSAGE(
+        "ACL_DEV_ATTR_SUPER_POD_DEVIDE_ID is deprecated since 9.0.0, Will be removed after 2027/3/30,"
+        " use ACL_DEV_ATTR_SUPER_POD_DEVICE_ID instead.") = 403U,
     ACL_DEV_ATTR_SUPER_POD_DEVICE_ID = 403U,  // super pod device id
     ACL_DEV_ATTR_SUPER_POD_SERVER_ID = 404U,  // super pod server id
     ACL_DEV_ATTR_SUPER_POD_ID = 405U,         // super pod id

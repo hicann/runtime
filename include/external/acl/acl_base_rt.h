@@ -65,6 +65,8 @@ typedef void* aclrtTaskGrp;
  * @deprecated ACL_ERROR_NONE is deprecated since 8.5.0, Will be removed after 2026/12/30, use ACL_SUCCESS
  *             instead.
  */
+ACL_DEPRECATED_MESSAGE("ACL_ERROR_NONE is deprecated since 8.5.0, Will be removed after 2026/12/30,"
+                       " use ACL_SUCCESS instead.")
 static const int ACL_ERROR_NONE = 0;
 static const int ACL_SUCCESS = 0;
 static const int ACL_ERROR_INVALID_EXCEPTION_INFO = -1;
