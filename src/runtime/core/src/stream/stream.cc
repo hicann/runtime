@@ -5242,47 +5242,47 @@ bool Stream::IsStreamFull(const uint32_t head, const uint32_t tail, const uint32
 
 void Stream::GetTaskEventIdOrNotifyId(TaskInfo* taskInfo, int32_t& eventId, uint32_t& notifyId, uint64_t& devAddr) const
 {
-    EventRecordTaskInfo* eventRecordTask = nullptr;
-    EventWaitTaskInfo* eventWaitTask = nullptr;
-    EventResetTaskInfo* eventResetTask = nullptr;
-    NotifyWaitTaskInfo* notifyWaitTask = nullptr;
-    NotifyRecordTaskInfo* notifyRecord = nullptr;
-    MemWriteValueTaskInfo* memWriteValueTask = nullptr;
-    MemWaitValueTaskInfo* memWaitValueTask = nullptr;
+    EventRecordTaskInfo* eventRecordTaskInfo = nullptr;
+    EventWaitTaskInfo* eventWaitTaskInfo = nullptr;
+    EventResetTaskInfo* eventResetTaskInfo = nullptr;
+    NotifyWaitTaskInfo* notifyWaitTaskInfo = nullptr;
+    NotifyRecordTaskInfo* notifyRecordInfo = nullptr;
+    MemWriteValueTaskInfo* memWriteValueTaskInfo = nullptr;
+    MemWaitValueTaskInfo* memWaitValueTaskInfo = nullptr;
 
     switch (taskInfo->type) {
         case TS_TASK_TYPE_EVENT_RECORD:
-            eventRecordTask = &(taskInfo->u.eventRecordTaskInfo);
-            eventId = eventRecordTask->eventid;
+            eventRecordTaskInfo = &(taskInfo->u.eventRecordTaskInfo);
+            eventId = eventRecordTaskInfo->eventid;
             break;
         case TS_TASK_TYPE_STREAM_WAIT_EVENT:
-            eventWaitTask = &(taskInfo->u.eventWaitTaskInfo);
-            eventId = eventWaitTask->eventId;
+            eventWaitTaskInfo = &(taskInfo->u.eventWaitTaskInfo);
+            eventId = eventWaitTaskInfo->eventId;
             break;
         case TS_TASK_TYPE_EVENT_RESET:
-            eventResetTask = &(taskInfo->u.eventResetTaskInfo);
-            eventId = eventResetTask->eventid;
+            eventResetTaskInfo = &(taskInfo->u.eventResetTaskInfo);
+            eventId = eventResetTaskInfo->eventid;
             break;
         case TS_TASK_TYPE_NOTIFY_WAIT:
-            notifyWaitTask = &(taskInfo->u.notifywaitTask);
-            notifyId = notifyWaitTask->notifyId;
+            notifyWaitTaskInfo = &(taskInfo->u.notifywaitTask);
+            notifyId = notifyWaitTaskInfo->notifyId;
             break;
         case TS_TASK_TYPE_ENDGRAPH_NOTIFY_WAIT:
             notifyId = taskInfo->u.endGraphNotifyWaitTask.notifyId;
             break;
         case TS_TASK_TYPE_NOTIFY_RECORD:
-            notifyRecord = &(taskInfo->u.notifyrecordTask);
-            notifyId = notifyRecord->notifyId;
+            notifyRecordInfo = &(taskInfo->u.notifyrecordTask);
+            notifyId = notifyRecordInfo->notifyId;
             break;
         case TS_TASK_TYPE_CAPTURE_RECORD:
         case TS_TASK_TYPE_MEM_WRITE_VALUE:
-            memWriteValueTask = &taskInfo->u.memWriteValueTask;
-            devAddr = memWriteValueTask->devAddr;
+            memWriteValueTaskInfo = &taskInfo->u.memWriteValueTask;
+            devAddr = memWriteValueTaskInfo->devAddr;
             break;
         case TS_TASK_TYPE_CAPTURE_WAIT:
         case TS_TASK_TYPE_MEM_WAIT_VALUE:
-            memWaitValueTask = &taskInfo->u.memWaitValueTask;
-            devAddr = memWaitValueTask->devAddr;
+            memWaitValueTaskInfo = &taskInfo->u.memWaitValueTask;
+            devAddr = memWaitValueTaskInfo->devAddr;
             break;
 
         default:

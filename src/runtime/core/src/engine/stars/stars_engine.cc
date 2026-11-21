@@ -1286,7 +1286,7 @@ rtError_t StarsEngine::StarsResumeRtsq(
                                    , "Failed to get SQ enable, device_id=%u, stream_id=%hu, retCode=%#x.", dev->Id_(),
                                    logicCq.streamId, static_cast<uint32_t>(error));
             if ((cnt % RT_QUERY_CNT_NUM) == 0U) {
-                RT_LOG(RT_LOG_EVENT, "dev_id=%u, ts_id=%u, stream_id=%d, enable=%u", devId, tsId, logicCq.sqId, enable);
+                RT_LOG(RT_LOG_EVENT, "dev_id=%u, ts_id=%u, sqId=%hu, enable=%u", devId, tsId, logicCq.sqId, enable);
             }
             if (!enable) {
                 RT_LOG(RT_LOG_WARNING, "sq already disable, stream_id=%hu, queryCnt=%u", logicCq.streamId, queryCnt);
