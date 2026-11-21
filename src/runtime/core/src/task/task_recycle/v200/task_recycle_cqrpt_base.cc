@@ -358,7 +358,8 @@ rtError_t ProcReport(
             }
         }
         const uint32_t pos = static_cast<uint32_t>(report.sqHead);
-        const uint32_t reportTaskSn = (report.taskId << UINT16_BIT_NUM) | report.streamId;
+        const uint32_t reportTaskSn =
+            (static_cast<uint32_t>(report.taskId) << UINT16_BIT_NUM) | static_cast<uint32_t>(report.streamId);
         RT_LOG(
             RT_LOG_INFO,
             "Get logic report: cnt=%u, idx=%u, stream_id=%hu, report_pos=%u, sync_pos=%u,"

@@ -64,11 +64,11 @@ struct rtLogicCqReport_t {
 
 /**
  * @ingroup engine or starsEngine
- * @brief the type definition of cq report for runtime(total 40 bytes).
+ * @brief the type definition of cq report for runtime(total 32 bytes).
  */
 struct rtCqReport_t {
-    volatile uint32_t streamId;
-    volatile uint32_t taskId;
+    volatile uint16_t streamId;
+    volatile uint16_t taskId;
     volatile uint32_t errorCode; // cqe acc_status/sq_sw_status
     volatile uint8_t errorType;  // bit0 ~ bit5 cqe stars_defined_err_code, bit 6 cqe warning bit
     volatile uint8_t sqeType;
