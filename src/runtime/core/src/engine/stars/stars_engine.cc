@@ -42,7 +42,9 @@
 #include "cond_handle/cond_handle.hpp"
 #include "capture_model.hpp"
 #include "model_c.hpp"
+#include "model_execute_task.h"
 #include "aicpu_timeout_manager.h"
+#include "cq_adapter.hpp"
 #include "task_info.hpp"
 
 namespace {
@@ -717,27 +719,32 @@ rtError_t StarsEngine::MonitorTaskReclaim(uint16_t errorStreamId)
 rtError_t StarsEngine::ProcLogicCqUntilEmpty(const Stream* const stm, uint32_t& taskId)
 {
     Device* const dev = GetDevice();
-    Driver* const devDrv = dev->Driver_();
     constexpr bool isFastCq = false;
     constexpr uint32_t allocCnt = RT_MILAN_MAX_QUERY_CQE_NUM; // want get cqe num
     const uint32_t logicCqId = stm->GetLogicalCqId();
     const uint32_t streamId = static_cast<uint32_t>(stm->Id_());
     uint32_t times = 0U;
 
-    LogicCqWaitInfo waitInfo = {};
+    CqWaitInfo waitInfo = {};
     waitInfo.devId = dev->Id_();
     waitInfo.tsId = dev->DevGetTsId();
-    waitInfo.cqId = logicCqId;
+    waitInfo.cqId = (logicCqId != MAX_UINT32_NUM) ? logicCqId : stm->GetCqId();
     waitInfo.isFastCq = isFastCq;
+    waitInfo.isLogicCq = (logicCqId != MAX_UINT32_NUM) ? true : false;
     waitInfo.timeout = RT_REPORT_WITHOUT_TIMEOUT; // get logic report without timeout
     waitInfo.streamId = streamId;                 // for v2
     waitInfo.taskId = MAX_UINT16_NUM;             // get any logic report without specifying the task
+
+    /* 支持stream和sq动态绑定 */
+    if (waitInfo.cqId == MAX_UINT32_NUM) {
+        return RT_ERROR_NONE;
+    }
 
     while (true) {
         uint32_t cnt = 0U;
         rtCqReport_t reportInfo[RT_MILAN_MAX_QUERY_CQE_NUM] = {};
 
-        const rtError_t error = devDrv->LogicCqReportV2(waitInfo, RtPtrToPtr<uint8_t*>(reportInfo), allocCnt, cnt);
+        const rtError_t error = RtCqRecv(waitInfo, reportInfo, allocCnt, cnt, dev);
         const rtError_t ret = ReportHeartBreakProcV2();
         COND_PROC_RETURN_ERROR_MSG_CALL(
             ERR_MODULE_DRV, ret == RT_ERROR_LOST_HEARTBEAT, RT_ERROR_LOST_HEARTBEAT,
@@ -760,8 +767,9 @@ rtError_t StarsEngine::ProcLogicCqUntilEmpty(const Stream* const stm, uint32_t& 
             rtCqReport_t& report = reportInfo[idx];
             taskId = report.taskId;
             const uint8_t sqeType = report.sqeType;
-            AtraceParams param = {GetDevice()->Id_(), static_cast<uint32_t>(report.streamId), report.taskId,
-                                  GetCurrentTid(),    GetDevice()->GetAtraceHandle(),         {}};
+            AtraceParams param = {
+                GetDevice()->Id_(), static_cast<uint32_t>(report.streamId), static_cast<uint16_t>(report.taskId),
+                GetCurrentTid(),    GetDevice()->GetAtraceHandle(),         {}};
             param.u.cqReportParams = {logicCqId, report.errorCode, report.sqeType};
             AtraceSubmitLog(TYPE_CQ_REPORT, param);
             RT_LOG(
@@ -999,8 +1007,9 @@ void StarsEngine::ProcReport(
         rtCqReport_t& report = logicReport[idx];
         const uint32_t taskIdCur = report.taskId;
         const uint8_t sqeType = report.sqeType;
-        AtraceParams param = {GetDevice()->Id_(), static_cast<uint32_t>(report.streamId), report.taskId,
-                              GetCurrentTid(),    GetDevice()->GetAtraceHandle(),         {}};
+        AtraceParams param = {
+            GetDevice()->Id_(), static_cast<uint32_t>(report.streamId), static_cast<uint16_t>(report.taskId),
+            GetCurrentTid(),    GetDevice()->GetAtraceHandle(),         {}};
         param.u.cqReportParams = {cqId, report.errorCode, report.sqeType};
         AtraceSubmitLog(TYPE_CQ_REPORT, param);
         TaskInfo* const reportTask =
@@ -1113,11 +1122,12 @@ rtError_t StarsEngine::SyncTask(
 
     Device* dev = GetDevice();
     Driver* const devDrv = dev->Driver_();
-    LogicCqWaitInfo cqWaitInfo = {};
+    CqWaitInfo cqWaitInfo = {};
     cqWaitInfo.isFastCq = false;
+    cqWaitInfo.isLogicCq = (logicCqId != MAX_UINT32_NUM) ? true : false;
     cqWaitInfo.devId = dev->Id_();
     cqWaitInfo.tsId = dev->DevGetTsId();
-    cqWaitInfo.cqId = logicCqId;
+    cqWaitInfo.cqId = (logicCqId != MAX_UINT32_NUM) ? logicCqId : stm->GetCqId();
     cqWaitInfo.streamId = streamId; // for v2
     cqWaitInfo.taskId = taskId;     // for v2
     cqWaitInfo.timeout = waitTimeout;
@@ -1177,7 +1187,7 @@ rtError_t StarsEngine::SyncTask(
         }
         cqWaitInfo.timeout = irqWait;
 
-        const rtError_t error = devDrv->LogicCqReportV2(cqWaitInfo, RtPtrToPtr<uint8_t*>(logicReport), allocCnt, cnt);
+        const rtError_t error = RtCqRecv(cqWaitInfo, logicReport, allocCnt, cnt, dev);
         ReportTimeoutProc(error, rptTimeoutCnt, streamId, taskId);
         if (timeout > 0) {
             mmTimespec endTimeSpec = mmGetTickCount();
@@ -1376,9 +1386,9 @@ bool StarsEngine::ProcReportIsException(const rtCqReport_t& logicCq, TaskInfo* r
     }
     /* when error is  NOTIFY_WAIT, need check model_exec result */
     if (logicCq.sqeType == static_cast<uint8_t>(RT_STARS_SQE_TYPE_NOTIFY_WAIT)) {
-        if ((swStatus.model_exec.result == static_cast<uint16_t>(TS_STARS_MODEL_END_OF_SEQ)) ||
-            (swStatus.model_exec.result == static_cast<uint16_t>(TS_STARS_MODEL_EXE_ABORT)) ||
-            (swStatus.model_exec.result == static_cast<uint16_t>(TS_STARS_MODEL_AICPU_TIMEOUT))) {
+        if ((swStatus.modelExec.result == static_cast<uint16_t>(TS_STARS_MODEL_END_OF_SEQ)) ||
+            (swStatus.modelExec.result == static_cast<uint16_t>(TS_STARS_MODEL_EXE_ABORT)) ||
+            (swStatus.modelExec.result == static_cast<uint16_t>(TS_STARS_MODEL_AICPU_TIMEOUT))) {
             return false;
         }
     }
@@ -1439,16 +1449,16 @@ void StarsEngine::ProcLogicCqReport(const rtCqReport_t& logicCq, const bool isSt
     const char_t* const errMsg = static_cast<size_t>(errBit) < StarsCqeErrorDesc_.size() ?
                                      StarsCqeErrorDesc_[static_cast<size_t>(errBit)].c_str() :
                                      "unknown";
-    bool isExceptionFlag = false;
     TaskInfo* faultTaskPtr = nullptr;
 
     if (reportTask == nullptr) {
         reportTask = GetDevice()->GetTaskFactory()->GetTask(static_cast<int32_t>(streamId), taskId);
     }
 
+    bool isExceptionFlag = ProcReportIsException(logicCq, reportTask);
     if (reportTask != nullptr) {
         CaptureModel* const captureModel = dynamic_cast<CaptureModel*>(reportTask->stream->Model_());
-        if (captureModel != nullptr) {
+        if ((captureModel != nullptr) && !isExceptionFlag) {
             RT_LOG(
                 RT_LOG_INFO,
                 "Receive capture model CQE, device_id=%u, model_id=%u, stream_id=%d, task_id=%hu, task_type=%u, "
@@ -1461,7 +1471,7 @@ void StarsEngine::ProcLogicCqReport(const rtCqReport_t& logicCq, const bool isSt
         }
     }
 
-    if (ProcReportIsException(logicCq, reportTask)) {
+    if (isExceptionFlag) {
         RT_LOG(
             RT_LOG_ERROR,
             "Task run failed, device_id=%u, stream_id=%hu, task_id=%hu, sqe_type=%u(%s), "
@@ -1469,7 +1479,6 @@ void StarsEngine::ProcLogicCqReport(const rtCqReport_t& logicCq, const bool isSt
             GetDevice()->Id_(), streamId, taskId, static_cast<uint32_t>(logicCq.sqeType),
             GetSqeDescByType(logicCq.sqeType), errType, errMsg, logicCq.errorCode);
         const uint32_t swStatus = logicCq.errorCode;
-        isExceptionFlag = true;
         (void)GetDevice()->PrintStreamTimeoutSnapshotInfo();
         if (reportTask != nullptr) {
             faultTaskPtr = GetRealReportFaultTask(reportTask, static_cast<const void*>(&swStatus));
@@ -1516,6 +1525,10 @@ void StarsEngine::ProcLogicCqReport(const rtCqReport_t& logicCq, const bool isSt
 
     // Record timeout before StarsCqeReceive overwrites the fault task error code.
     AicpuTimeoutManager::UpdateAicpuTimeoutStateOnCqeReport(GetDevice(), logicCq, reportTask, faultTaskPtr);
+
+    if (stm->GetBindFlag() && (stm->Model_() != nullptr) && (stm->Model_()->IsSupportDecoupling())) {
+        return ProcErrorInfoForModelTask(logicCq, isExceptionFlag, reportTask);
+    }
 
     StarsCqeReceive(logicCq, reportTask);
 
@@ -1661,20 +1674,20 @@ rtError_t StarsEngine::DvppWaitGroup(DvppGrp* grp, rtDvppGrpCallback callBackFun
 {
     Device* dev = GetDevice();
     rtCqReport_t report = {};
-    Driver* const devDrv = dev->Driver_();
     uint32_t cnt = 0U;
     const uint32_t logicCqid = grp->getLogicCqId();
 
-    LogicCqWaitInfo waitInfo = {};
+    CqWaitInfo waitInfo = {};
     waitInfo.devId = dev->Id_();
     waitInfo.tsId = dev->DevGetTsId();
     waitInfo.cqId = logicCqid;
     waitInfo.isFastCq = false;
+    waitInfo.isLogicCq = true;
     waitInfo.timeout = timeout;
     waitInfo.streamId = UINT32_MAX;
     waitInfo.taskId = UINT32_MAX;
 
-    const rtError_t error = devDrv->LogicCqReportV2(waitInfo, RtPtrToPtr<uint8_t*>(&report), 1U, cnt);
+    const rtError_t error = RtCqRecv(waitInfo, &report, 1U, cnt, dev);
     RT_LOG(RT_LOG_DEBUG, "Logic cq=%u, timeout=%dms, ret=%#x, cnt=%u.", logicCqid, timeout, error, cnt);
     COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
 
@@ -1682,8 +1695,9 @@ rtError_t StarsEngine::DvppWaitGroup(DvppGrp* grp, rtDvppGrpCallback callBackFun
         return RT_ERROR_STREAM_SYNC_TIMEOUT;
     }
 
-    AtraceParams param = {GetDevice()->Id_(), static_cast<uint32_t>(report.streamId), report.taskId,
-                          GetCurrentTid(),    GetDevice()->GetAtraceHandle(),         {}};
+    AtraceParams param = {
+        GetDevice()->Id_(), static_cast<uint32_t>(report.streamId), static_cast<uint16_t>(report.taskId),
+        GetCurrentTid(),    GetDevice()->GetAtraceHandle(),         {}};
     param.u.cqReportParams = {logicCqid, report.errorCode, report.sqeType};
     AtraceSubmitLog(TYPE_CQ_REPORT, param);
     RT_LOG(

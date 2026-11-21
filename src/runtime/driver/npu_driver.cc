@@ -1192,7 +1192,7 @@ bool NpuDriver::CheckIsSupportFeature(uint32_t devId, int32_t featureType)
         "FEATURE_DMS_GET_BOARD_LOCATION",
         "FEATURE_SVM_PROCESS_DEVICE_MEM_SNAPSHOT",
         "FEATURE_SVM_GET_ADDR_SEG",
-        nullptr, // Feature id 17 is reserved for another driver capability.
+        "FEATURE_TRSDRV_SUPPORT_UNLIMIT_STREAM",
         "FEATURE_SVM_MEMCPY_SUPPORT_REGISTER_ADDR",
     };
 
@@ -1842,6 +1842,22 @@ rtError_t NpuDriver::GetStreamPriorityValue(Stream* const stm, uint32_t* const s
         ERR_MODULE_DRV, drvRet != DRV_ERROR_NONE, RT_GET_DRV_ERRCODE(drvRet),
         "device_id=%u, ts_id=%u, sqId=%u, drvRetCode=%d.", deviceId, tsId, sqId, static_cast<int32_t>(drvRet));
     *streamPriority = streamPriorityAck.u.update_and_query_stream_priority.priority;
+
+    return RT_ERROR_NONE;
+}
+
+rtError_t NpuDriver::GetDeviceSplitMode(const uint32_t deviceId, uint32_t* const splitMode)
+{
+    COND_RETURN_WARN(
+        &halGetDeviceSplitMode == nullptr, RT_ERROR_DRV_NOT_SUPPORT, "[drv api] halGetDeviceSplitMode does not exist.");
+
+    uint32_t drvSplitMode = 0U;
+    const drvError_t drvRet = halGetDeviceSplitMode(deviceId, &drvSplitMode);
+    COND_RETURN_ERROR_MSG_CALL(
+        ERR_MODULE_DRV, drvRet != DRV_ERROR_NONE, RT_GET_DRV_ERRCODE(drvRet), "device_id=%u, drvRetCode=%d.", deviceId,
+        static_cast<int32_t>(drvRet));
+
+    *splitMode = drvSplitMode;
 
     return RT_ERROR_NONE;
 }

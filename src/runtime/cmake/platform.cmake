@@ -68,6 +68,7 @@ set(RUNTIME_INC_DIR_COMMON_PLATFORM
     ${RUNTIME_CORE_DIR}/src/uvm
     ${RUNTIME_CORE_DIR}/src/event
     ${RUNTIME_DIR}/src/runtime/core/inc/cond_isa/v100
+    ${RUNTIME_DIR}/src/runtime/core/inc/cqe
     ## not open
     ${RUNTIME_DIR}/src/runtime/core/inc/dqs
     ${RUNTIME_DIR}/src/runtime/core/inc/sqe/v200

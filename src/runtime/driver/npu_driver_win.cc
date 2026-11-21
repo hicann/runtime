@@ -944,6 +944,40 @@ rtError_t NpuDriver::ReAllocResourceId(
     return RT_ERROR_NONE;
 }
 
+rtError_t NpuDriver::QueryStreamIdRange(
+    const int32_t deviceId, const uint32_t tsId, uint32_t* const beginId, uint32_t* const endId)
+{
+    UNUSED(deviceId);
+    UNUSED(tsId);
+    UNUSED(beginId);
+    UNUSED(endId);
+    return RT_ERROR_NONE;
+}
+
+rtError_t NpuDriver::QueryModelIdRange(
+    const int32_t deviceId, const uint32_t tsId, uint32_t* const beginId, uint32_t* const endId)
+{
+    UNUSED(deviceId);
+    UNUSED(tsId);
+    UNUSED(beginId);
+    UNUSED(endId);
+    return RT_ERROR_NONE;
+}
+
+rtError_t NpuDriver::StreamIdAllocByRange(
+    int32_t* const id, const uint32_t deviceId, const uint32_t tsId, const uint32_t priority, const uint32_t beginId,
+    const uint32_t endId, uint32_t streamFlag)
+{
+    UNUSED(deviceId);
+    UNUSED(tsId);
+    UNUSED(priority);
+    UNUSED(id);
+    UNUSED(beginId);
+    UNUSED(endId);
+    UNUSED(streamFlag);
+    return RT_ERROR_NONE;
+}
+
 rtError_t NpuDriver::StreamIdAlloc(
     int32_t* const id, const uint32_t deviceId, const uint32_t tsId, const uint32_t priority, uint32_t streamFlag)
 {
@@ -999,6 +1033,17 @@ rtError_t NpuDriver::CmoIdFree(const int32_t id, const uint32_t deviceId, const 
     UNUSED(deviceId);
     UNUSED(tsId);
     UNUSED(id);
+    return RT_ERROR_NONE;
+}
+
+rtError_t NpuDriver::ModelIdAllocByRange(
+    int32_t* const id, const uint32_t deviceId, const uint32_t tsId, const uint32_t beginId, const uint32_t endId)
+{
+    UNUSED(deviceId);
+    UNUSED(tsId);
+    UNUSED(id);
+    UNUSED(beginId);
+    UNUSED(endId);
     return RT_ERROR_NONE;
 }
 
@@ -1266,8 +1311,7 @@ rtError_t NpuDriver::DebugSqTaskSend(
     return RT_ERROR_NONE;
 }
 
-rtError_t NpuDriver::LogicCqReportV2(
-    const LogicCqWaitInfo& waitInfo, uint8_t* report, uint32_t reportCnt, uint32_t& realCnt)
+rtError_t NpuDriver::LogicCqReportV2(const CqWaitInfo& waitInfo, uint8_t* report, uint32_t reportCnt, uint32_t& realCnt)
 {
     UNUSED(waitInfo);
     UNUSED(report);
@@ -1276,7 +1320,7 @@ rtError_t NpuDriver::LogicCqReportV2(
     return RT_ERROR_NONE;
 }
 
-rtError_t NpuDriver::LogicCqReport(const LogicCqWaitInfo& waitInfo, rtLogicReport_t*& report, uint32_t& cnt)
+rtError_t NpuDriver::LogicCqReport(const CqWaitInfo& waitInfo, rtLogicReport_t*& report, uint32_t& cnt)
 {
     UNUSED(waitInfo);
     UNUSED(report);
@@ -1340,6 +1384,15 @@ rtError_t NpuDriver::ReportWait(
     UNUSED(cqId);
     UNUSED(report);
     UNUSED(cnt);
+    return RT_ERROR_NONE;
+}
+
+rtError_t NpuDriver::CqReport(const CqWaitInfo& waitInfo, uint8_t* report, uint32_t reportCnt, uint32_t& realCnt)
+{
+    UNUSED(waitInfo);
+    UNUSED(report);
+    UNUSED(reportCnt);
+    UNUSED(realCnt);
     return RT_ERROR_NONE;
 }
 

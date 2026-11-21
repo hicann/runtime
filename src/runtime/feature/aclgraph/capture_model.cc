@@ -9,6 +9,7 @@
  */
 #include "capture_model.hpp"
 #include "model_c.hpp"
+#include "resource_id_allocator.hpp"
 #include "capture_model_enum_desc.hpp"
 #include "capture_model_utils.hpp"
 #include "cond_handle.hpp"
@@ -44,6 +45,7 @@
 #include "memcpy_c.hpp"
 #include "notify_c.hpp"
 #include "event_c.hpp"
+#include "raw_device.hpp"
 #include <securec.h>
 #include <new>
 #include <algorithm>
@@ -105,6 +107,108 @@ static rtError_t InitExternalRecordTask(TaskInfo* taskInfo, Event* event, const 
     return RT_ERROR_NONE;
 }
 
+rtError_t CaptureModel::ModelIdAlloc()
+{
+    Device* const dev = Context_()->Device_();
+    Driver* const deviceDrv = dev->Driver_();
+
+    /* 只有A5/A6支持id由runtime分配 */
+    if (!dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_SUPPORT_RUNTIME_ALLOC_STREAMID_AND_MODELID)) {
+        return deviceDrv->ModelIdAlloc(&id_, dev->Id_(), dev->DevGetTsId());
+    }
+
+    /* 场景：
+     * 支持解耦的场景: 新2包 + 物理机 + 支持pcie bar, runtime自己分配id
+     * 不支持解耦的场景: 虚拟机/老2包/新2包 + 物理机 + 不支持pcie bar，走老的GE流程，id需要全局唯一，由驱动分配
+     */
+
+    /* modelId的创建早于IsSupportDecoupling的更新 */
+    uint32_t val = RT_CAPABILITY_NOT_SUPPORT;
+    (void)deviceDrv->CheckSupportPcieBarCopy(dev->Id_(), val, false);
+    bool isPcieBarSupport = (val == RT_CAPABILITY_SUPPORT);
+    if ((dev->CheckFeatureSupport(TS_FEATURE_SUPPORT_ACLGRAPH_DECOUPLING)) &&
+        (dev->GetSplitMode() == RT_NO_SPLIT_MODE) && isPcieBarSupport) {
+        ResourceIdAllocator* const allocator = dev->GetResourceIdAllocator();
+        id_ = (allocator != nullptr) ? allocator->AllocModelId() : -1;
+    } else {
+        return deviceDrv->ModelIdAlloc(&id_, dev->Id_(), dev->DevGetTsId());
+    }
+
+    if (id_ < 0) {
+        RT_LOG(RT_LOG_ERROR, "Alloc capture model id failed, device_id=%u.", dev->Id_());
+        return RT_ERROR_MODEL_NO_RESOURCES;
+    }
+
+    SetIdAllocByRuntimeFlag(true);
+    RT_LOG(RT_LOG_DEBUG, "Alloc capture model id by runtime success, device_id=%u, model_id=%d.", dev->Id_(), id_);
+    return RT_ERROR_NONE;
+}
+
+void CaptureModel::ModelIdFree()
+{
+    if (id_ == MODEL_ID_INVALID) {
+        return;
+    }
+    Device* const dev = Context_()->Device_();
+    if (IsIdAllocByRuntime()) {
+        ResourceIdAllocator* const allocator = dev->GetResourceIdAllocator();
+        if (allocator != nullptr) {
+            allocator->FreeModelId(id_);
+            SetIdAllocByRuntimeFlag(false);
+            RT_LOG(RT_LOG_INFO, "Free runtime model_id=%d.", id_);
+        }
+        id_ = MODEL_ID_INVALID;
+        return;
+    }
+    Model::ModelIdFree();
+}
+
+bool CaptureModel::IsExecuteException() { return isExecuteException_; }
+
+void CaptureModel::SetExecuteExceptionFlagForAllModels(bool flag)
+{
+    /* 先清理所有的子模型 */
+    auto& allSubModels = GetAllSubCaptureModels();
+    for (CaptureModel* subModel : allSubModels) {
+        subModel->SetExecuteExceptionFlag(flag);
+    }
+
+    /* 清理父模型 */
+    SetExecuteExceptionFlag(flag);
+    return;
+}
+
+void CaptureModel::ClearExecuteExceptionFlagForAllModels()
+{
+    if (!isExecuteException_) {
+        return;
+    }
+
+    SetExecuteExceptionFlagForAllModels(false);
+    return;
+}
+
+CaptureModel* CaptureModel::GetRootModel()
+{
+    if (!isSubCaptureModel_) {
+        return this;
+    }
+
+    rtCondHandle_t curCondHandle = GetCondHandle();
+    CaptureModel* fartherModel = nullptr;
+
+    while (curCondHandle != nullptr) {
+        CondHandle* condHandle = nullptr;
+        const rtError_t ret = GetValidatedObject<CondHandle>(curCondHandle, condHandle);
+        COND_PROC((ret != RT_ERROR_NONE), return nullptr;);
+        fartherModel = dynamic_cast<CaptureModel*>(condHandle->GetParentModel());
+        COND_PROC((fartherModel == nullptr), break;);
+        curCondHandle = fartherModel->GetCondHandle();
+    }
+
+    return fartherModel;
+}
+
 CaptureModel::CaptureModel(ModelType type) : Model(type) { beginCaptureTimeStamp_ = MsprofSysCycleTime(); }
 
 void CaptureModel::InsertGraphUpdateTask(TaskInfo* const taskInfo) { (void)updateInfo_.updateTask.insert(taskInfo); }
@@ -162,7 +266,9 @@ CaptureModel::~CaptureModel() noexcept
     const std::list<Stream*> streamsCpy(StreamList_());
     // all stream need unbind first
     for (Stream* const streamObj : streamsCpy) {
-        (void)UnBindSqPerStream(streamObj);
+        if (!IsSupportDecoupling()) {
+            (void)UnBindSqPerStream(streamObj);
+        }
         (void)DelStream(streamObj);
         Context_()->InsertStreamList(streamObj);
     }
@@ -190,6 +296,7 @@ CaptureModel::~CaptureModel() noexcept
     updateInfo_.hostSqeUpdateBuffers.clear();
     updateInfo_.updateTask.clear();
     updateInfo_.curApplyUpdateTask.clear();
+    ModelIdFree();
 }
 
 rtError_t CaptureModel::LoadCompleteByStreamPrep(Stream*& stream)
@@ -1205,7 +1312,7 @@ void CaptureModel::ProcessExternalRecordNormalCqe(TaskInfo* const taskInfo, cons
                 isFindItem = true;
             }
             if (isFindItem && (updateEvent->ExpectCqeNo_() == curCqeNo)) {
-                updateEvent->RecordComplete(taskInfo, logicCq.u1.timeStamp, UINT64_MAX, curCqeNo);
+                updateEvent->RecordComplete(taskInfo, logicCq.u.timeStamp, UINT64_MAX, curCqeNo);
             }
 
             TaskUpdateItemPostProc(taskInfo, item);
@@ -1610,7 +1717,14 @@ rtError_t CaptureModel::BuildSqCq(Stream* const exeStream)
         return error;
     }
 
-    error = LoadCompleteAll(loadCompleteNotifyId_);
+    if (IsSupportDecoupling()) {
+        // alcGraph decouped with TFSW: load compltete is not needed for model
+        Stream* stream = nullptr;
+        error = LoadCompleteByStreamPrep(stream);
+    } else {
+        // traditionnal aclGraph: endGraph and load compltete is needed for model
+        error = LoadCompleteAll(loadCompleteNotifyId_);
+    }
     if (error != RT_ERROR_NONE) {
         ReleaseSqCqAndNotifyId(releaseSqNum, releaseNtyNum, false);
         RT_LOG(
@@ -1619,6 +1733,7 @@ rtError_t CaptureModel::BuildSqCq(Stream* const exeStream)
         return error;
     }
 
+    SetModelLoadCompleteFlag(true);
     UpdateIsNeedUpdateEndGraphFlagAll();
     error = UpdateStreamActiveTaskFuncCallMemAll();
     if (error != RT_ERROR_NONE) {
@@ -1727,9 +1842,11 @@ rtError_t CaptureModel::ReleaseSqCqAndNotifyId(uint32_t& releaseSqNum, uint32_t&
         static_cast<uint32_t>(error));
 
     if (isDeconstruct) {
-        error = Context_()->Device_()->GetDeviceSqCqManage()->FreeSqCq(sqCqArray_, sqCqNum_, FreePolicy::DEFAULT);
+        const FreePolicy policy = IsExecuteException() ? (FreePolicy::FAULT) : (FreePolicy::DEFAULT);
+        error = Context_()->Device_()->GetDeviceSqCqManage()->FreeSqCq(sqCqArray_, sqCqNum_, policy);
     } else {
-        error = Context_()->Device_()->GetDeviceSqCqManage()->FreeSqCq(sqCqArray_, sqCqNum_, FreePolicy::LAZY);
+        const FreePolicy policy = IsExecuteException() ? (FreePolicy::FAULT) : (FreePolicy::LAZY);
+        error = Context_()->Device_()->GetDeviceSqCqManage()->FreeSqCq(sqCqArray_, sqCqNum_, policy);
     }
     COND_RETURN_ERROR(
         (error != RT_ERROR_NONE), error, "free sq cq failed, model_id=%u, retCode=%#x.", Id_(),
@@ -1740,6 +1857,22 @@ rtError_t CaptureModel::ReleaseSqCqAndNotifyId(uint32_t& releaseSqNum, uint32_t&
     sqCqNum_ = 0U;
 
     (void)ReleaseNotifyId(releaseNtyNum);
+
+    return RT_ERROR_NONE;
+}
+
+rtError_t CaptureModel::UnBindStreamToModel(void)
+{
+    rtError_t error = RT_ERROR_NONE;
+    Device* const dev = Context_()->Device_();
+    /* unbind stream to model */
+    for (auto stm : StreamList_()) {
+        error = UnBindSqPerStream(stm);
+        COND_RETURN_ERROR(
+            (error != RT_ERROR_NONE), error,
+            "model unbind stream failed, device_id=%u, model_id=%u, stream_id=%d, retCode=%#x.", dev->Id_(), Id_(),
+            stm->Id_(), static_cast<uint32_t>(error));
+    }
 
     return RT_ERROR_NONE;
 }
@@ -1788,6 +1921,14 @@ rtError_t CaptureModel::BindSqCq(void)
             "Get stream by logic sq failed, device_id=%u, model_id=%u, stream_id=%u, logic_sq_id=%u, retCode=%#x.",
             dev->Id_(), Id_(), logicSq->GetStreamId(), logicSq->Id_(), static_cast<uint32_t>(error));
 
+        if (IsSupportDecoupling()) {
+            error = BindSqPrepare(sqCqArray_[index].sqId, dev);
+            COND_RETURN_ERROR(
+                (error != RT_ERROR_NONE), error,
+                "check sq status failed, device_id=%u, model_id=%u, sqId=%u, retCode=%#x.", dev->Id_(), Id_(),
+                sqCqArray_[index].sqId, static_cast<uint32_t>(error));
+        }
+
         /* update sq cq info */
         stm->UpdateSqCq(&(sqCqArray_[index]));
         logicSq->SetRtsqId(static_cast<uint16_t>(sqCqArray_[index].sqId));
@@ -1797,6 +1938,8 @@ rtError_t CaptureModel::BindSqCq(void)
         switchInfo_[index].stream_id = static_cast<uint32_t>(stm->Id_());
         switchInfo_[index].sq_id = logicSq->GetRtsqId();
         switchInfo_[index].sq_depth = logicSq->GetLogicSqDepth();
+        switchInfo_[index].ts_agent_flag = IsSupportDecoupling() ? true : false;
+        switchInfo_[index].by_pass_stream_id_flag = IsSupportDecoupling() ? true : false;
         // only for A5
         switchInfo_[index].stream_mem = logicSq->GetDeviceSqeAddr();
         // sqIdMemAddr_ 已转移给 LogicSq（endcap 时 BuildOneLogicSq 中转移）。
@@ -1867,26 +2010,27 @@ rtError_t CaptureModel::UnBindSqCq(void)
     COND_RETURN_WARN((switchInfo_ == nullptr), RT_ERROR_NONE, "switch info is null");
 
     /* unbind stream from model */
-    for (auto stm : StreamList_()) {
-        error = UnBindSqPerStream(stm);
+    if (!IsSupportDecoupling()) {
+        error = UnBindStreamToModel();
         COND_RETURN_ERROR(
-            (error != RT_ERROR_NONE), error,
-            "model unbind stream failed, device_id=%u, model_id=%u, stream_id=%d, retCode=%#x.", dev->Id_(), Id_(),
-            stm->Id_(), static_cast<uint32_t>(error));
-    }
+            (error != RT_ERROR_NONE), error, "model unbind stream failed, device_id=%u, model_id=%u, retCode=%#x.",
+            dev->Id_(), Id_(), static_cast<uint32_t>(error));
 
-    for (uint32_t index = 0U; index < sqCqNum_; index++) {
-        RT_LOG(
-            RT_LOG_INFO, "stream unbind sq, device_id=%u, model_id=%u, stream_id=%d, sqId=%u.", dev->Id_(), Id_(),
-            switchInfo_[index].stream_id, switchInfo_[index].sq_id);
-        switchInfo_[index].stream_id = UINT32_MAX;
-    }
+        for (uint32_t index = 0U; index < sqCqNum_; index++) {
+            RT_LOG(
+                RT_LOG_INFO, "stream unbind sq, device_id=%u, model_id=%u, stream_id=%d, sqId=%u.", dev->Id_(), Id_(),
+                switchInfo_[index].stream_id, switchInfo_[index].sq_id);
+            switchInfo_[index].stream_id = UINT32_MAX;
+            switchInfo_[index].ts_agent_flag = IsSupportDecoupling() ? true : false;
+            switchInfo_[index].by_pass_stream_id_flag = IsSupportDecoupling() ? true : false;
+        }
 
-    /* stream unbind sq */
-    error = dev->Driver_()->SqSwitchStreamBatch(dev->Id_(), switchInfo_, sqCqNum_);
-    COND_RETURN_ERROR(
-        (error != RT_ERROR_NONE), error, "stream unbind sq failed, device_id=%u, model_id=%u, retCode=%#x.", dev->Id_(),
-        Id_(), static_cast<uint32_t>(error));
+        /* stream unbind sq */
+        error = dev->Driver_()->SqSwitchStreamBatch(dev->Id_(), switchInfo_, sqCqNum_);
+        COND_RETURN_ERROR(
+            (error != RT_ERROR_NONE), error, "stream unbind sq failed, device_id=%u, model_id=%u, retCode=%#x.",
+            dev->Id_(), Id_(), static_cast<uint32_t>(error));
+    }
 
     RT_LOG(RT_LOG_INFO, "stream unbind sq success, device_id=%u, model_id=%u, num=%u.", dev->Id_(), Id_(), sqCqNum_);
 
@@ -2516,7 +2660,8 @@ rtError_t CaptureModel::ReleaseSqCqInternal(uint32_t& releaseNum)
         return error;
     }
 
-    error = Context_()->Device_()->GetDeviceSqCqManage()->FreeSqCq(sqCqArray_, sqCqNum_, FreePolicy::LAZY);
+    const FreePolicy policy = IsExecuteException() ? (FreePolicy::FAULT) : (FreePolicy::LAZY);
+    error = Context_()->Device_()->GetDeviceSqCqManage()->FreeSqCq(sqCqArray_, sqCqNum_, policy);
     if (error != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR, "free sq cq failed, model_id=%u, retCode=%#x.", Id_(), static_cast<uint32_t>(error));
         return error;

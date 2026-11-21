@@ -94,7 +94,7 @@ protected:
     virtual void TearDown()
     {
         GlobalMockObject::verify();
-        rtStreamDestroy(stream_);
+        EXPECT_EQ(rtStreamDestroy(streamHandle_), RT_ERROR_NONE);
         dev_->SetChipType(old);
         ((Runtime*)Runtime::Instance())->DeviceRelease(dev_);
         ((Runtime*)Runtime::Instance())->SetIsUserSetSocVersion(false);
@@ -329,6 +329,49 @@ TEST_F(StarsTaskTest, RdmaSink)
     ret = rtModelDestroy(model);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 }
+
+class RdmaSinkCounterTest : public StarsTaskTest, public testing::WithParamInterface<int> {};
+
+TEST_P(RdmaSinkCounterTest, SelectsModelCounterOnlyForCaptureModel)
+{
+    Model* model = nullptr;
+    if (GetParam() != 0) {
+        const ModelType type = GetParam() == 1 ? RT_MODEL_NORMAL : RT_MODEL_CAPTURE_MODEL;
+        ASSERT_EQ(ctx_->ModelCreate(&model, type), RT_ERROR_NONE);
+        ASSERT_NE(model, nullptr);
+    }
+    const ScopeGuard modelGuard([&]() {
+        stream_->SetModel(nullptr);
+        stream_->SetBindFlag(false);
+        if (model != nullptr) {
+            EXPECT_EQ(ctx_->ModelDestroy(model), RT_ERROR_NONE);
+        }
+    });
+    if (GetParam() == 3) {
+        model->FreeExecutedTimesSvm();
+    }
+    stream_->SetModel(model);
+    stream_->SetBindFlag(true);
+    const uint64_t expectedAddress =
+        GetParam() == 2 ? RtPtrToValue(model->GetExecutedTimesSvm()) : RtPtrToValue(stream_->GetExecutedTimesSvm());
+    ASSERT_NE(expectedAddress, 0ULL);
+    TaskInfo task = {};
+    InitByStream(&task, stream_);
+    rtRdmaDbIndex_t dbIndex = {};
+    dbIndex.dbIndexStars.sqDepthBitWidth = 6U;
+    dbIndex.dbIndexStars.dieId = static_cast<uint32_t>(dev_->GetPhyDieId());
+    rtRdmaDbInfo_t dbInfo = {};
+    dbInfo.cmd.sqProducerIdx = 5U;
+    ASSERT_EQ(RdmaDbSendTaskInit(&task, dbIndex.value, dbInfo.value, 1U), RT_ERROR_NONE);
+    rtStarsSqe_t command = {};
+    ToConstructSqe(&task, &command, TaskSqeInfo{0ULL, 0ULL});
+    const RtStarsRdmaSinkSqe1& sqe = command.rdmaSinkSqe1;
+    EXPECT_EQ(sqe.sqeHeader.type, RT_STARS_SQE_TYPE_COND);
+    EXPECT_EQ(sqe.lhu.immdAddrHigh, expectedAddress >> UINT32_BIT_NUM);
+    EXPECT_EQ(sqe.lhu.immdAddrLow, expectedAddress & MASK_32_BIT);
+}
+
+INSTANTIATE_TEST_SUITE_P(ModelTypes, RdmaSinkCounterTest, testing::Values(0, 1, 2, 3));
 
 TEST_F(StarsTaskTest, ModelExecute)
 {
@@ -712,8 +755,8 @@ TEST_F(StarsTaskTest, DoCompleteStarsError)
     EXPECT_EQ(errTask->type, TS_TASK_TYPE_KERNEL_AICORE);
 
     rtStarsCqeSwStatus_t sw_status;
-    sw_status.model_exec.stream_id = errTask->stream->Id_();
-    sw_status.model_exec.task_id = errTask->id;
+    sw_status.modelExec.streamId = errTask->stream->Id_();
+    sw_status.modelExec.taskId = errTask->id;
     GetRealReportFaultTask(&task, static_cast<const void*>(&sw_status));
     (void)dev_->GetTaskFactory()->Recycle(errTask);
     SetStarsResult(&task, wait_cqe);
@@ -1995,8 +2038,8 @@ TEST_F(StarsTaskTest, DoCompleteStarsError_1)
     EXPECT_EQ(errTask->type, TS_TASK_TYPE_KERNEL_AICORE);
 
     rtStarsCqeSwStatus_t sw_status;
-    sw_status.model_exec.stream_id = errTask->stream->Id_();
-    sw_status.model_exec.task_id = errTask->id;
+    sw_status.modelExec.streamId = errTask->stream->Id_();
+    sw_status.modelExec.taskId = errTask->id;
     GetRealReportFaultTask(&task, static_cast<const void*>(&sw_status));
     (void)dev_->GetTaskFactory()->Recycle(errTask);
     SetStarsResult(&task, wait_cqe);

@@ -2744,6 +2744,7 @@ rtError_t NpuDriver::GetC2cCtrlAddr(const int32_t deviceId, uint64_t* const addr
     return RT_ERROR_NONE;
 }
 
+/* 使用pcie bar内存，必须申请大页内存 */
 rtError_t NpuDriver::CheckSupportPcieBarCopy(const uint32_t deviceId, uint32_t& val, const bool need4KAsync)
 {
     val = RT_CAPABILITY_NOT_SUPPORT;

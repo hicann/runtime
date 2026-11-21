@@ -58,9 +58,15 @@ static void ConstructSqeForModelExecuteTask(TaskInfo* const taskInfo, void* cons
     sqe.sqeHeader.block_dim = 0U;
     sqe.sqeHeader.rt_stream_id = static_cast<uint16_t>(stream->Id_());
     sqe.sqeHeader.task_id = taskInfo->id;
-    sqe.sqeHeader.post_p = 1U;
     sqe.conds_sub_type = CONDS_SUB_TYPE_MODEL_EXEC;
-    sqe.reserved1 = static_cast<uint16_t>(modelExecuteTaskInfo->modelId);
+
+    if (modelExecuteTaskInfo->model->IsSupportDecoupling()) {
+        sqe.sqeHeader.post_p = 0U;
+        sqe.reserved1 = UINT16_MAX;
+    } else {
+        sqe.sqeHeader.post_p = 1U;
+        sqe.reserved1 = static_cast<uint16_t>(modelExecuteTaskInfo->modelId);
+    }
 
     const uint64_t funcAddr = modelExecuteTaskInfo->model->GetFuncCallSvmMem();
     const uint64_t funcCallSize = static_cast<uint64_t>(modelExecuteTaskInfo->model->GetFuncCallInstrSize());

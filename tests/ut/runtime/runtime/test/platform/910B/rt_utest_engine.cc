@@ -1185,11 +1185,11 @@ TEST_F(EngineTest, GetTsReportByIdx_GetRecycleWorkTask_null)
     RawDevice* device = new RawDevice(0);
     std::unique_ptr<AsyncHwtsEngine> engine = std::make_unique<AsyncHwtsEngine>(device);
     rtStarsCqe_t cqeReport;
-    cqeReport.streamID = 1;
+    cqeReport.streamId = 1;
     rtTsReport_t tsReport;
     tsReport.msgType = tsReportType_t::TS_REPORT_MSG_TYPE_STARS_CQE;
     engine->GetTsReportByIdx(reinterpret_cast<void*>(&cqeReport), 0, tsReport);
-    EXPECT_EQ(tsReport.msgBuf.starsCqe->streamID, cqeReport.streamID);
+    EXPECT_EQ(tsReport.msgBuf.starsCqe->streamId, cqeReport.streamId);
     delete device;
     GlobalMockObject::reset();
 }
@@ -1200,11 +1200,11 @@ TEST_F(EngineTest, GetReportCommonInfo_TS_REPORT_MSG_TYPE_STARS_CQE)
     std::unique_ptr<AsyncHwtsEngine> engine = std::make_unique<AsyncHwtsEngine>(device);
 
     rtStarsCqe_t cqeReport;
-    cqeReport.streamID = 1;
-    cqeReport.taskID = 1;
-    cqeReport.SQ_id = 1;
-    cqeReport.SQ_head = 1;
-    cqeReport.error_bit = 1;
+    cqeReport.streamId = 1;
+    cqeReport.taskId = 1;
+    cqeReport.sqId = 1;
+    cqeReport.sqHead = 1;
+    cqeReport.errorBit = 1;
     rtTsReport_t tsReport;
     tsReport.msgType = tsReportType_t::TS_REPORT_MSG_TYPE_STARS_CQE;
     tsReport.msgBuf.starsCqe = &cqeReport;
@@ -1215,11 +1215,11 @@ TEST_F(EngineTest, GetReportCommonInfo_TS_REPORT_MSG_TYPE_STARS_CQE)
     uint16_t sqHead = 0U;
     uint16_t errorBit = 0U;
     engine->GetReportCommonInfo(tsReport, streamId, taskId, sqId, sqHead, errorBit);
-    EXPECT_EQ(streamId, cqeReport.streamID);
-    EXPECT_EQ(taskId, cqeReport.taskID);
-    EXPECT_EQ(sqId, cqeReport.SQ_id);
-    EXPECT_EQ(sqHead, cqeReport.SQ_head);
-    EXPECT_EQ(errorBit, cqeReport.error_bit);
+    EXPECT_EQ(streamId, cqeReport.streamId);
+    EXPECT_EQ(taskId, cqeReport.taskId);
+    EXPECT_EQ(sqId, cqeReport.sqId);
+    EXPECT_EQ(sqHead, cqeReport.sqHead);
+    EXPECT_EQ(errorBit, cqeReport.errorBit);
     delete device;
 }
 
@@ -1454,7 +1454,7 @@ TEST_F(EngineTest, CheckReportSimuFlag_TS_REPORT_MSG_TYPE_STARS_CQE)
 
     rtStarsCqe_t cqeReport;
     cqeReport.evt = 1U;
-    cqeReport.place_hold = 1U;
+    cqeReport.placeHolder = 1U;
 
     rtTsReport_t taskReport;
     taskReport.msgType = tsReportType_t::TS_REPORT_MSG_TYPE_STARS_CQE;

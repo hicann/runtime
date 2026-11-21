@@ -29,14 +29,15 @@ struct ipcMemInfo_t {
     std::vector<uint64_t> vaList;
 };
 
-struct LogicCqWaitInfo {
+struct CqWaitInfo {
     uint32_t devId;
     uint32_t tsId;
     uint32_t cqId;
     bool isFastCq;
+    bool isLogicCq;
     int32_t timeout;
-    uint32_t streamId;
-    uint32_t taskId;
+    uint32_t streamId; // used for logic cq
+    uint32_t taskId;   // used for logic cq
 };
 
 struct AsyncSqeUpdateInfo {

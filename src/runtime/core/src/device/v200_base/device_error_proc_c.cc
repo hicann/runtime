@@ -1064,14 +1064,18 @@ rtError_t ProcessStarsV2CoreTimeoutDfxInfo(
     // only print the core info where subError!=0(current_pc0==current_pc1)
     for (uint16_t coreIdx = 0U; coreIdx < common.coreNum; coreIdx++) {
         StarsV2OneCoreTimeoutDfxInfo coreInfo = info->u.starsV2CoreTimeoutDfxInfo.coreInfo[coreIdx];
+        uint32_t streamId = coreInfo.streamId;
+        if ((coreInfo.sqId != UINT16_MAX) && (coreInfo.streamId == UINT16_MAX)) {
+            (void)dev->GetStreamSqCqManage()->GetStreamIdBySqId(coreInfo.sqId, streamId);
+        }
         if (coreInfo.subError != 0U) {
             RT_LOG(
                 RT_LOG_ERROR,
                 "aicore task timeout dfx, show core info where subError!=0(core is currently stuck), "
-                "device_id=%u, core_id=%hu, core_type=%hu(%s), stream_id=%hu, sq_head=%hu, task_sn=%u, "
+                "device_id=%u, core_id=%hu, core_type=%hu(%s), stream_id=%u, sq_id=%hu, sq_head=%hu, task_sn=%u, "
                 "sub_error=%hu, current_pc=%#" PRIx64 ".",
-                devId, coreInfo.coreId, coreInfo.coreType, ((coreInfo.coreType == 0) ? "AIC" : "AIV"),
-                coreInfo.streamId, coreInfo.sqHead, coreInfo.taskSn, coreInfo.subError, coreInfo.currentPc);
+                devId, coreInfo.coreId, coreInfo.coreType, ((coreInfo.coreType == 0) ? "AIC" : "AIV"), streamId,
+                coreInfo.sqId, coreInfo.sqHead, coreInfo.taskSn, coreInfo.subError, coreInfo.currentPc);
         }
     }
     return RT_ERROR_NONE;

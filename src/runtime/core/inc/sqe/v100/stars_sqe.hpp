@@ -154,7 +154,9 @@ struct rtProfilerTraceEx_t {
     uint64_t profilerTraceId;
     uint64_t modelId;
     uint16_t tagId;
-    uint8_t reserved[30];
+    uint16_t reserved2;
+    uint32_t streamId;
+    uint8_t reserved[24];
 };
 
 struct RtModelDebugRegister {
@@ -265,6 +267,12 @@ struct RtUpdateAddrTaskTag {
     uint8_t reserved[32];
 };
 
+struct RtStarsSqExecTimesAddr {
+    uint64_t addr;
+    uint8_t freeFlag; // allocated: 0 free: 1
+    uint8_t reserved[39];
+};
+
 struct RtStarsPhSqe {
     uint8_t type : 6;
     uint8_t l2_lock : 1;
@@ -303,6 +311,7 @@ struct RtStarsPhSqe {
         RtCommonCmd commonCmdInfo;
         RtStarsVersion starsVersionInfo;
         RtMemWaitTask memWaitTask;
+        RtStarsSqExecTimesAddr sqExecTimesAddrInfo;
         uint32_t resv[12];
     } u;
 };

@@ -4014,10 +4014,12 @@ rtError_t ApiErrorDecorator::ModelAbort(Model* const mdl)
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(mdl, RT_ERROR_INVALID_VALUE, "Aborting the model running instance");
     if (mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL) {
+        const bool isDecoupling = mdl->IsSupportDecoupling();
         CaptureModel* captureModel = dynamic_cast<CaptureModel*>(mdl);
-        COND_RETURN_WARN(
-            ((captureModel != nullptr) && captureModel->IsSubCaptureModel()), RT_ERROR_FEATURE_NOT_SUPPORT,
-            "sub ACL Graph does not support aborting model");
+        const bool isSubModel = (captureModel != nullptr) && captureModel->IsSubCaptureModel();
+        COND_RETURN_AND_MSG_OUTER(
+            (isDecoupling || isSubModel), RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1016, "Model abort",
+            isSubModel ? "Sub ACL Graph mode is not supported" : "ACL Graph mode is not supported");
     }
     const rtError_t error = impl_->ModelAbort(mdl);
     ERROR_RETURN(error, "Abort model failed.");
@@ -4028,12 +4030,9 @@ rtError_t ApiErrorDecorator::ModelExit(Model* const mdl, Stream* const stm)
 {
     Stream* curStm = Runtime::Instance()->GetCurStream(stm);
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(mdl, RT_ERROR_INVALID_VALUE, "Model exiting");
-    if (mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL) {
-        CaptureModel* captureModel = dynamic_cast<CaptureModel*>(mdl);
-        COND_RETURN_WARN(
-            ((captureModel != nullptr) && captureModel->IsSubCaptureModel()), RT_ERROR_FEATURE_NOT_SUPPORT,
-            "sub ACL Graph does not support exiting model");
-    }
+    COND_RETURN_AND_MSG_OUTER(
+        mdl->GetModelType() == RT_MODEL_CAPTURE_MODEL, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1016, "Model exit",
+        "ACL Graph mode is not supported");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(curStm, RT_ERROR_INVALID_VALUE, "Model exiting");
     const rtError_t error = impl_->ModelExit(mdl, curStm);
     if (error != RT_ERROR_MODEL_ABORT_NORMAL) {
@@ -4057,25 +4056,19 @@ rtError_t ApiErrorDecorator::MemcpyAsyncCheckExLocation(
         ERR_MODULE_DRV, error != RT_ERROR_NONE, error, "GetLocationType failed, retCode=%#x, src=%p, dst=%p",
         static_cast<uint32_t>(error), src, dst);
 
-    if (kind == RT_MEMCPY_HOST_TO_DEVICE_EX) {
-        COND_RETURN_AND_MSG_OUTER(
-            (srcRealLocation == RT_MEMORY_LOC_DEVICE) || (dstRealLocation != RT_MEMORY_LOC_DEVICE),
-            RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, "Checking the extended location for asynchronous memory copy",
-            RtFmtMsg(
-                "%s/%s", MemLocationTypeToString(srcRealLocation).c_str(),
-                MemLocationTypeToString(dstRealLocation).c_str()),
-            "src/dst address location",
-            "The src address must be a host address and the dst address must be a device address");
-    } else {
-        COND_RETURN_AND_MSG_OUTER(
-            (srcRealLocation != RT_MEMORY_LOC_DEVICE) || (dstRealLocation == RT_MEMORY_LOC_DEVICE),
-            RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, "Checking the extended location for asynchronous memory copy",
-            RtFmtMsg(
-                "%s/%s", MemLocationTypeToString(srcRealLocation).c_str(),
-                MemLocationTypeToString(dstRealLocation).c_str()),
-            "src/dst address location",
-            "The src address must be a device address and the dst address must be a host address");
-    }
+    const bool isHostToDeviceEx = (kind == RT_MEMCPY_HOST_TO_DEVICE_EX);
+    const bool locMismatch =
+        isHostToDeviceEx ? ((srcRealLocation == RT_MEMORY_LOC_DEVICE) || (dstRealLocation != RT_MEMORY_LOC_DEVICE)) :
+                           ((srcRealLocation != RT_MEMORY_LOC_DEVICE) || (dstRealLocation == RT_MEMORY_LOC_DEVICE));
+    COND_RETURN_AND_MSG_OUTER(
+        locMismatch, RT_ERROR_INVALID_VALUE, ErrorCode::EE1011,
+        "Checking the extended location for asynchronous memory copy",
+        RtFmtMsg(
+            "%s/%s", MemLocationTypeToString(srcRealLocation).c_str(),
+            MemLocationTypeToString(dstRealLocation).c_str()),
+        "src/dst address location",
+        isHostToDeviceEx ? "The src address must be a host address and the dst address must be a device address" :
+                           "The src address must be a device address and the dst address must be a host address");
 
     RT_LOG(
         RT_LOG_INFO,
@@ -6149,19 +6142,6 @@ rtError_t ApiErrorDecorator::GetStreamCacheOpInfoSwitch(const Stream* const stm,
     return impl_->GetStreamCacheOpInfoSwitch(curStm, cacheOpInfoSwitch);
 }
 
-rtError_t ApiErrorDecorator::ModelUpdate(Model* mdl)
-{
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(mdl, RT_ERROR_INVALID_VALUE, "Model update");
-    COND_RETURN_AND_MSG_OUTER(
-        mdl->GetModelType() != RT_MODEL_CAPTURE_MODEL, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1016, "Model update",
-        "Non ACL Graph mode is not supported");
-    CaptureModel* captureModel = dynamic_cast<CaptureModel*>(mdl);
-    COND_RETURN_WARN(
-        ((captureModel != nullptr) && captureModel->IsSubCaptureModel()), RT_ERROR_FEATURE_NOT_SUPPORT,
-        "sub ACL Graph does not support updating model");
-    return impl_->ModelUpdate(mdl);
-}
-
 rtError_t ApiErrorDecorator::ModelDestroyRegisterCallback(Model* const mdl, const rtCallback_t fn, void* ptr)
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
@@ -6742,22 +6722,6 @@ rtError_t ApiErrorDecorator::TaskGetType(rtTask_t task, rtTaskType* type)
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(task, RT_ERROR_INVALID_VALUE, "Obtaining the task type");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(type, RT_ERROR_INVALID_VALUE, "Obtaining the task type");
     return impl_->TaskGetType(task, type);
-}
-
-rtError_t ApiErrorDecorator::TaskGetSeqId(rtTask_t task, uint32_t* id)
-{
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        task, RT_ERROR_INVALID_VALUE, "Obtaining the Submission Queue Entry (SQE) ID of a task");
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        id, RT_ERROR_INVALID_VALUE, "Obtaining the Submission Queue Entry (SQE) ID of a task");
-    return impl_->TaskGetSeqId(task, id);
-}
-
-rtError_t ApiErrorDecorator::ModelTaskDisable(rtTask_t task)
-{
-    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
-        task, RT_ERROR_INVALID_VALUE, "Setting the status of a specified task to disabled");
-    return impl_->ModelTaskDisable(task);
 }
 
 rtError_t ApiErrorDecorator::DeviceGetCcMode(int32_t deviceId, int32_t* mode)

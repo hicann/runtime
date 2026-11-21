@@ -31,6 +31,7 @@ void ConstrucModelExeCheckSqDisableErrInstr(
 void ConstrucModelExeCheckSqHeadTailErrInstr(
     const rtStarsModelExeFuncCallPara_t& funcCallPara, RtStarsModelExeCheckSqErrInstr& errInstr);
 void ConstrucModelExeErrInstr(RtStarsModelExeExeErrInstr& errInstr);
+void ConstrucModelExeAddTimes(const rtStarsModelExeFuncCallPara_t& funcCallPara, RtStarsModelExeAddTimes& addTimes);
 void ConstrucModelExeEndInstrr(RtStarsModelExeExeEndInstr& endInstr);
 void ConstrucModelExeFuncCall(rtStarsModelExeFuncCallPara_t& funcCallPara, RtStarsModelExeFuncCall& funcCall);
 void ConstructStreamActiveFc(

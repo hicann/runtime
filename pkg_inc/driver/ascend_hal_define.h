@@ -1149,6 +1149,7 @@ struct drvMemSharingPara {
 #define TSDRV_RES_REMOTE_ID TSDRV_FLAG_REMOTE_ID /* (0x1 << 5) */
 #define TSDRV_RES_RANGE_ID TSDRV_FLAG_RANGE_ID   /* (0x1 << 13), specified range flag for alloc id */
 #define TSDRV_RES_EXTEND_ID (0x1 << 2)           /* alloc extend id from sw pool, only for 310P driver */
+#define TSDRV_RES_ALLOC_ID_RANGE (0x1U << 18)    /* specified range for allocating id */
 
 struct trs_ext_info_header {
     uint32_t type;
@@ -1172,7 +1173,9 @@ struct sq_switch_stream_info {
     uint32_t sq_id;
     uint32_t stream_id;
     uint32_t sq_depth;
-    uint32_t rsv;
+    uint32_t ts_agent_flag : 1;          // 0：send mailbox to TS; 1: send msg to ts agent
+    uint32_t by_pass_stream_id_flag : 1; // 0：check stream id; 1: do not check stream id
+    uint32_t rsv : 30;
     void* stream_mem;
 };
 
@@ -1202,6 +1205,7 @@ typedef enum tagDrvResQueryType {
     DRV_RES_INFO_QUERY,
     DRV_RES_NOTIFY_TYPE_TOTAL_SIZE,
     DRV_RES_NOTIFY_TYPE_NUM,
+    DRV_RES_QUERY_RANGE,
     DRV_RES_QUERY_MAX
 } drvResQueryType_t;
 
@@ -1563,6 +1567,7 @@ typedef enum tagDrvFeature {
     FEATURE_DMS_GET_BOARD_LOCATION = 14,
     FEATURE_SVM_PROCESS_DEVICE_MEM_SNAPSHOT = 15,
     FEATURE_SVM_GET_ADDR_SEG = 16,
+    FEATURE_TRSDRV_SUPPORT_UNLIMIT_STREAM = 17,
     FEATURE_SVM_MEMCPY_SUPPORT_REGISTER_ADDR = 18,
     FEATURE_MAX
 } drvFeature_t;

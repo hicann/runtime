@@ -35,6 +35,7 @@
 #include "engine.hpp"
 #include "task_res_da.hpp"
 #include "task.hpp"
+#include "cq_adapter.hpp"
 
 namespace cce {
 namespace runtime {
@@ -178,20 +179,20 @@ rtError_t DvppWaitGroup(
     const Device* const dev, const DvppGrp* grp, rtDvppGrpCallback callBackFunc, const int32_t timeout)
 {
     rtCqReport_t report = {};
-    Driver* const devDrv = dev->Driver_();
     uint32_t cnt = 0U;
     const uint32_t logicCqId = grp->getLogicCqId();
 
-    LogicCqWaitInfo waitInfo = {};
+    CqWaitInfo waitInfo = {};
     waitInfo.devId = dev->Id_();
     waitInfo.tsId = dev->DevGetTsId();
     waitInfo.cqId = logicCqId;
     waitInfo.isFastCq = false;
+    waitInfo.isLogicCq = true;
     waitInfo.timeout = timeout;
     waitInfo.streamId = UINT32_MAX;
     waitInfo.taskId = UINT32_MAX;
 
-    rtError_t error = devDrv->LogicCqReportV2(waitInfo, RtPtrToPtr<uint8_t*, rtCqReport_t*>(&report), 1U, cnt);
+    rtError_t error = RtCqRecv(waitInfo, &report, 1U, cnt, dev);
     RT_LOG(RT_LOG_DEBUG, "Logic cq=%u, timeout=%dms, ret=%#x, cnt=%u.", logicCqId, timeout, error, cnt);
 
     if (error != RT_ERROR_NONE) {

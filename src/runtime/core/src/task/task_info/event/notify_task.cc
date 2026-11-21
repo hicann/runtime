@@ -587,12 +587,12 @@ void ToCommandBodyForNotifyWaitTask(TaskInfo* taskInfo, rtCommand_t* const comma
     command->taskInfoFlag = taskInfo->stream->GetTaskRevFlag(taskInfo->bindFlag);
 }
 
-void DoCompleteSuccessForEndGraphNotifyWaitTask(TaskInfo* taskInfo, const uint32_t devId)
+void DoCompleteSuccessForEndGraphNotifyWaitTaskProc(TaskInfo* taskInfo, const uint32_t devId, const bool lockFlag)
 {
     EndGraphNotifyWaitTaskInfo* const endGraphWaitTask = &(taskInfo->u.endGraphNotifyWaitTask);
     if (unlikely(taskInfo->errorCode != static_cast<uint32_t>(RT_ERROR_NONE))) {
         if (endGraphWaitTask->endGraphModel != nullptr) {
-            ReportEndGraphWaitError(taskInfo, devId);
+            ReportEndGraphWaitError(taskInfo, devId, lockFlag);
             ReleaseResourceForEndGraphNotifyWaitTaskOnlModel(taskInfo);
         } else {
             Stream* const stream = taskInfo->stream;
@@ -636,6 +636,38 @@ void DoCompleteSuccessForEndGraphNotifyWaitTask(TaskInfo* taskInfo, const uint32
     }
 }
 
+void DoCompleteSuccessForEndGraphNotifyWaitTask(TaskInfo* taskInfo, const uint32_t devId)
+{
+    EndGraphNotifyWaitTaskInfo* const endGraphWaitTask = &(taskInfo->u.endGraphNotifyWaitTask);
+    /* 非aclGraph场景 */
+    if (!endGraphWaitTask->isSoftwareSqCaptureModel) {
+        return DoCompleteSuccessForEndGraphNotifyWaitTaskProc(taskInfo, devId, true);
+    }
+
+    /* aclGraph场景 */
+    SpinLock& modelLock = taskInfo->stream->Context_()->GetModelLock();
+    modelLock.Lock();
+    if (!(taskInfo->stream->Context_()->ModelIsExistInContextWithoutLock(endGraphWaitTask->endGraphModel))) {
+        /* model has been destroyed */
+        endGraphWaitTask->endGraphModel = nullptr;
+        RT_LOG(
+            RT_LOG_ERROR, "endgraph model has been destroyed, device_id=%u, notify_id=%u, stream_id=%d, task_id=%hu.",
+            devId, endGraphWaitTask->notifyId, taskInfo->stream->Id_(), taskInfo->id);
+        modelLock.Unlock();
+        return DoCompleteSuccessForEndGraphNotifyWaitTaskProc(taskInfo, devId, true);
+    }
+
+    CaptureModel* captureModel = dynamic_cast<CaptureModel*>(endGraphWaitTask->endGraphModel);
+    if ((captureModel != nullptr) && (captureModel->IsExecuteException())) {
+        DoCompleteSuccessForEndGraphNotifyWaitTaskProc(taskInfo, devId, false);
+        modelLock.Unlock();
+    } else {
+        modelLock.Unlock();
+        DoCompleteSuccessForEndGraphNotifyWaitTaskProc(taskInfo, devId, true);
+    }
+    return;
+}
+
 void PrintErrorInfoForEndGraphNotifyWaitTask(TaskInfo* const taskInfo, const uint32_t devId)
 {
     const int32_t streamId = taskInfo->stream->Id_();
@@ -659,18 +691,18 @@ TaskInfo* GetRealReportFaultTaskForEndGraphNotifyWaitTask(const TaskInfo* taskIn
     if (endGraphModel != nullptr) {
         rtStarsCqeSwStatus_t sw_status;
         sw_status.value = *(static_cast<const uint32_t*>(info));
-        uint16_t streamId = sw_status.model_exec.stream_id;
-        uint16_t taskId = sw_status.model_exec.task_id;
+        uint16_t streamId = sw_status.modelExec.streamId;
+        uint16_t taskId = sw_status.modelExec.taskId;
         Device* const dev = taskInfo->stream->Device_();
         if ((dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MODEL_ACL_GRAPH_SOFTWARE_ENABLE)) &&
             (dev->CheckFeatureSupport(TS_FEATURE_SOFTWARE_SQ_ENABLE))) {
-            streamId = endGraphModel->GetStreamIdBySqId(sw_status.model_exec_ex.sq_id);
+            streamId = endGraphModel->GetStreamIdBySqId(sw_status.modelExecEx.sqId);
             if ((streamId == UINT16_MAX) && (endGraphModel->GetModelType() == RT_MODEL_CAPTURE_MODEL)) {
                 CaptureModel* captureModel = dynamic_cast<CaptureModel*>(endGraphModel);
-                const uint32_t tmpStreamId = FindStreamIdInSubModels(captureModel, sw_status.model_exec_ex.sq_id);
+                const uint32_t tmpStreamId = FindStreamIdInSubModels(captureModel, sw_status.modelExecEx.sqId);
                 streamId = (tmpStreamId != UINT32_MAX) ? static_cast<uint16_t>(tmpStreamId) : UINT16_MAX;
             }
-            taskId = sw_status.model_exec_ex.task_id;
+            taskId = sw_status.modelExecEx.taskId;
         }
 
         TaskInfo* taskPtr = GetTaskInfo(dev, static_cast<uint32_t>(streamId), static_cast<uint32_t>(taskId), true);

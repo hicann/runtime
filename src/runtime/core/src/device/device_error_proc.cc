@@ -1153,15 +1153,18 @@ rtError_t DeviceErrorProc::PrintStreamTimeoutSnapshotInfo()
     RT_LOG(RT_LOG_DEBUG, "get stream wait timeout snapshot stream_num:%hu ok", streamTaskInfo->stream_num);
     for (uint32_t i = 0U; i < streamTaskInfo->stream_num; i++) {
         (void)memset_s(errStr, sizeof(errMsg), 0U, sizeof(errMsg));
-        const uint16_t streamId = streamTaskInfo->detailInfo[i].stream_id;
+        uint32_t streamId = streamTaskInfo->detailInfo[i].stream_id;
         const uint16_t taskId = streamTaskInfo->detailInfo[i].task_id;
-        TaskInfo* tsk = GetTaskInfo(device_, static_cast<uint32_t>(streamId), static_cast<uint32_t>(taskId), true);
+        if (streamId == UINT16_MAX) {
+            (void)device_->GetStreamSqCqManage()->GetStreamIdBySqId(streamTaskInfo->detailInfo[i].sq_id, streamId);
+        }
+        TaskInfo* tsk = GetTaskInfo(device_, streamId, static_cast<uint32_t>(taskId), true);
         if (tsk == nullptr) {
-            RT_LOG(RT_LOG_ERROR, "stream_id=%hu task_id=%hu cannot find", streamId, taskId);
+            RT_LOG(RT_LOG_ERROR, "stream_id=%u task_id=%hu cannot find", streamId, taskId);
             continue;
         }
         countNum = sprintf_s(
-            errStr, static_cast<size_t>(MSG_LENGTH), "stream_id=%hu, task_id=%hu, taskType=%d (%s)", streamId, taskId,
+            errStr, static_cast<size_t>(MSG_LENGTH), "stream_id=%u, task_id=%hu, taskType=%d (%s)", streamId, taskId,
             tsk->type, tsk->typeName);
         if ((countNum < 0) || (countNum > MSG_LENGTH)) {
             RT_LOG_INNER_MSG(RT_LOG_ERROR, "Failed to call sprintf_s, count=%d.", countNum);
@@ -1762,6 +1765,11 @@ void DeviceErrorProc::ProcessStarsRingBufferErrorInfo(
     const RingBufferElementInfo* const info, const bool isPrintTaskInfo,
     const StarsDeviceErrorInfo* const errorInfo) const
 {
+    if (device_->CheckFeatureSupport(TS_FEATURE_SUPPORT_ACLGRAPH_DECOUPLING) &&
+        !(device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_TSCH_PACAGE_COMPATABLE))) {
+        UpdateDeviceErrorInfo(info, const_cast<StarsDeviceErrorInfo*>(errorInfo));
+    }
+
     if (isPrintTaskInfo) {
         PrintTaskErrorInfo(info->errorType, errorInfo);
     }

@@ -637,7 +637,7 @@ TEST_F(ExternalEventTaskTest910B, MemWriteCqeCompletionAndReferenceLifetime)
             event.EventIdCountAdd(17);
             event.PublishSoftwareRecordResource(nullptr, 17, stream->Id_(), task.id, 0U);
             rtCqReport_t report = {};
-            report.u1.timeStamp = 123U;
+            report.u.timeStamp = 123U;
             report.errorType = error ? RT_STARS_EXIST_ERROR : 0U;
             report.errorCode = error ? TS_ERROR_END_OF_SEQUENCE : 0U;
             auto setResult = g_taskFuncArrays[CHIP_910_B_93].setStarsResultFunc[task.type];
@@ -1331,7 +1331,7 @@ TEST_F(ExternalEventTaskTest910B, ExternalRecordUpdateBuildsSqeRefreshAndConsume
     uint8_t eventValue = 0U;
     timelineEvent.PublishSoftwareRecordResource(&eventValue, 17, streamObj->Id_(), taskInfo.id, 1U);
     rtCqReport_t logicCq = {};
-    logicCq.u1.timeStamp = 123U;
+    logicCq.u.timeStamp = 123U;
     model.ProcessExternalRecordNormalCqe(&taskInfo, logicCq);
 
     EXPECT_EQ(taskInfo.u.writeValTask.recvCqeNo, 1U);

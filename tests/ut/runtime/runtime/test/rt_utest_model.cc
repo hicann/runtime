@@ -26,6 +26,7 @@
 #include "stream.hpp"
 #include "model.hpp"
 #include "capture_model.hpp"
+#include "resource_id_allocator.hpp"
 #include "profiler.hpp"
 #include "profiler_struct.hpp"
 #include "thread_local_container.hpp"
@@ -673,6 +674,111 @@ TEST_F(ModelTest, CaptureModelExecuteAsyncWithNullStreamUsesDefaultStream)
         .will(returnValue(RT_ERROR_NONE));
 
     EXPECT_EQ(model.ExecuteAsync(nullptr), RT_ERROR_NONE);
+}
+
+TEST_F(ModelTest, CaptureModelFreeReturnsRuntimeManagedId)
+{
+    Runtime* const runtime = static_cast<Runtime*>(Runtime::Instance());
+    Device* const device = runtime->DeviceRetain(0U, 0U);
+    ASSERT_NE(device, nullptr);
+    Context* const context = runtime->CurrentContext();
+    ASSERT_NE(context, nullptr);
+
+    std::unique_ptr<ResourceIdAllocator> allocator(CreateResourceIdAllocator());
+    ASSERT_NE(allocator, nullptr);
+    ASSERT_EQ(allocator->Init(4U, 4U), RT_ERROR_NONE);
+    const int32_t modelId = allocator->AllocModelId();
+    ASSERT_GE(modelId, 0);
+
+    MOCKER_CPP_VIRTUAL(device, &Device::IsSupportFeature)
+        .stubs()
+        .with(eq(RtOptionalFeatureType::RT_FEATURE_SUPPORT_RUNTIME_ALLOC_STREAMID_AND_MODELID))
+        .will(returnValue(true));
+    MOCKER_CPP_VIRTUAL(device, &Device::IsSupportFeature)
+        .stubs()
+        .with(eq(RtOptionalFeatureType::RT_FEATURE_MODEL_CMO_BARRIER))
+        .will(returnValue(false));
+    MOCKER_CPP_VIRTUAL(device, &Device::CheckFeatureSupport)
+        .stubs()
+        .with(eq(TS_FEATURE_SUPPORT_ACLGRAPH_DECOUPLING))
+        .will(returnValue(true));
+    MOCKER_CPP_VIRTUAL(device, &Device::GetResourceIdAllocator).stubs().will(returnValue(allocator.get()));
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::ModelIdFree).expects(never());
+
+    {
+        CaptureModel model;
+        model.context_ = context;
+        model.id_ = modelId;
+        model.SetSoftwareSqEnable();
+        model.SetIdAllocByRuntimeFlag(true);
+    }
+    EXPECT_EQ(allocator->AllocModelId(), modelId);
+    GlobalMockObject::verify();
+    GlobalMockObject::reset();
+    runtime->DeviceRelease(device);
+}
+
+TEST_F(ModelTest, ModelFreeReturnsDriverManagedId)
+{
+    Runtime* const runtime = static_cast<Runtime*>(Runtime::Instance());
+    Device* const device = runtime->DeviceRetain(0U, 0U);
+    ASSERT_NE(device, nullptr);
+    Context* const context = runtime->CurrentContext();
+    ASSERT_NE(context, nullptr);
+    constexpr int32_t modelId = 1;
+
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::ModelIdFree)
+        .expects(once())
+        .with(eq(modelId), eq(device->Id_()), eq(device->DevGetTsId()))
+        .will(returnValue(RT_ERROR_NONE));
+
+    Model model;
+    model.context_ = context;
+    model.id_ = modelId;
+    model.ModelIdFree();
+
+    EXPECT_EQ(model.id_, MODEL_ID_INVALID);
+    model.context_ = nullptr;
+    GlobalMockObject::verify();
+    GlobalMockObject::reset();
+    runtime->DeviceRelease(device);
+}
+
+TEST_F(ModelTest, CaptureModelFreeInvalidatesIdWithoutRuntimeAllocator)
+{
+    Runtime* const runtime = static_cast<Runtime*>(Runtime::Instance());
+    Device* const device = runtime->DeviceRetain(0U, 0U);
+    ASSERT_NE(device, nullptr);
+    Context* const context = runtime->CurrentContext();
+    ASSERT_NE(context, nullptr);
+
+    MOCKER_CPP_VIRTUAL(device, &Device::IsSupportFeature)
+        .stubs()
+        .with(eq(RtOptionalFeatureType::RT_FEATURE_SUPPORT_RUNTIME_ALLOC_STREAMID_AND_MODELID))
+        .will(returnValue(true));
+    MOCKER_CPP_VIRTUAL(device, &Device::IsSupportFeature)
+        .stubs()
+        .with(eq(RtOptionalFeatureType::RT_FEATURE_MODEL_CMO_BARRIER))
+        .will(returnValue(false));
+    MOCKER_CPP_VIRTUAL(device, &Device::CheckFeatureSupport)
+        .stubs()
+        .with(eq(TS_FEATURE_SUPPORT_ACLGRAPH_DECOUPLING))
+        .will(returnValue(true));
+    MOCKER_CPP_VIRTUAL(device, &Device::GetResourceIdAllocator)
+        .stubs()
+        .will(returnValue(static_cast<ResourceIdAllocator*>(nullptr)));
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::ModelIdFree).expects(never());
+
+    {
+        CaptureModel model;
+        model.context_ = context;
+        model.id_ = 1;
+        model.SetSoftwareSqEnable();
+        model.SetIdAllocByRuntimeFlag(true);
+    }
+    GlobalMockObject::verify();
+    GlobalMockObject::reset();
+    runtime->DeviceRelease(device);
 }
 
 TEST_F(ModelTest, TestModelSetupWithDevMemAllocFailed)
@@ -2627,12 +2733,26 @@ TEST_F(ModelTest, model_destroy_when_capturing)
     rtError_t error;
     Model* model = nullptr;
     Context* ctx = (Context*)((Runtime*)Runtime::Instance())->PrimaryContextRetain(0)->GetVal();
+    ASSERT_NE(ctx, nullptr);
+    Device* const device = ctx->Device_();
+    ASSERT_NE(device, nullptr);
+    MOCKER_CPP_VIRTUAL(device, &Device::CheckFeatureSupport).defaults().will(returnValue(false));
+    MOCKER_CPP_VIRTUAL(device, &Device::IsSupportFeature).defaults().will(returnValue(false));
+    MOCKER_CPP_VIRTUAL(device, &Device::CheckFeatureSupport)
+        .stubs()
+        .with(eq(TS_FEATURE_SUPPORT_ACLGRAPH_DECOUPLING))
+        .will(returnValue(true));
+    MOCKER_CPP_VIRTUAL(device, &Device::IsSupportFeature)
+        .stubs()
+        .with(eq(RtOptionalFeatureType::RT_FEATURE_DEVICE_TSCH_PACAGE_COMPATABLE))
+        .will(returnValue(false));
 
     error = ctx->ModelCreate(&model, RT_MODEL_CAPTURE_MODEL);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     CaptureModel* captureModel = dynamic_cast<CaptureModel*>(model);
     EXPECT_NE(captureModel, nullptr);
+    EXPECT_NE(captureModel->GetExecutedTimesSvm(), nullptr);
 
     captureModel->SetCaptureModelStatus(RtCaptureModelStatus::CAPTURE_ACTIVE);
 
@@ -2832,4 +2952,132 @@ TEST_F(ModelTest, mdl_abort_aicpu_success)
     delete newStm;
     delete dev;
     delete drv;
+}
+
+class ModelExecTimesSvmTest : public ModelTest {
+protected:
+    void SetUp() override
+    {
+        ModelTest::SetUp();
+        ctx_ = Runtime::Instance()->CurrentContext();
+        ASSERT_NE(ctx_, nullptr);
+        dev_ = ctx_->Device_();
+        MOCKER_CPP_VIRTUAL(dev_, &Device::CheckFeatureSupport).stubs().will(returnValue(false));
+        ASSERT_EQ(ctx_->ModelCreate(&model_, RT_MODEL_NORMAL), RT_ERROR_NONE);
+        ASSERT_NE(model_, nullptr);
+        ASSERT_NE(model_->GetExecutedTimesSvm(), nullptr);
+    }
+
+    void TearDown() override
+    {
+        if (model_ != nullptr) {
+            EXPECT_EQ(ctx_->ModelDestroy(model_), RT_ERROR_NONE);
+        }
+        ModelTest::TearDown();
+    }
+
+    Context* ctx_ = nullptr;
+    Device* dev_ = nullptr;
+    Model* model_ = nullptr;
+};
+
+TEST_F(ModelExecTimesSvmTest, AllocInitializesCounterAndRepeatedAllocKeepsAddress)
+{
+    model_->FreeExecutedTimesSvm();
+    ASSERT_EQ(model_->GetExecutedTimesSvm(), nullptr);
+    MOCKER_CPP_VIRTUAL(dev_->Driver_(), &Driver::MemSetSync)
+        .expects(once())
+        .with(mockcpp::any(), eq(sizeof(uint64_t)), eq(0xFFU), eq(sizeof(uint64_t)))
+        .will(returnValue(RT_ERROR_NONE));
+    EXPECT_EQ(model_->AllocExecutedTimesSvm(), RT_ERROR_NONE);
+    uint64_t* const address = model_->GetExecutedTimesSvm();
+    ASSERT_NE(address, nullptr);
+    MOCKER_CPP_VIRTUAL(dev_->Driver_(), &Driver::DevMemAllocWithBackupFlag).expects(never());
+    EXPECT_EQ(model_->AllocExecutedTimesSvm(), RT_ERROR_NONE);
+    EXPECT_EQ(model_->GetExecutedTimesSvm(), address);
+    GlobalMockObject::verify();
+}
+
+TEST_F(ModelExecTimesSvmTest, AllocFailureDoesNotInitializeCounter)
+{
+    model_->FreeExecutedTimesSvm();
+    ASSERT_EQ(model_->GetExecutedTimesSvm(), nullptr);
+    MOCKER_CPP_VIRTUAL(dev_->Driver_(), &Driver::DevMemAllocWithBackupFlag)
+        .expects(once())
+        .will(returnValue(RT_ERROR_DRV_MEMORY));
+    MOCKER_CPP_VIRTUAL(dev_->Driver_(), &Driver::MemSetSync).expects(never());
+    EXPECT_EQ(model_->AllocExecutedTimesSvm(), RT_ERROR_DRV_MEMORY);
+    EXPECT_EQ(model_->GetExecutedTimesSvm(), nullptr);
+    GlobalMockObject::verify();
+}
+
+TEST_F(ModelExecTimesSvmTest, InitializeFailureFreesCounterAndAllowsRetry)
+{
+    model_->FreeExecutedTimesSvm();
+    ASSERT_EQ(model_->GetExecutedTimesSvm(), nullptr);
+    uint64_t counter = 0ULL;
+    void* allocatedAddress = &counter;
+    MOCKER_CPP_VIRTUAL(dev_->Driver_(), &Driver::DevMemAllocWithBackupFlag)
+        .expects(once())
+        .with(
+            outBoundP(&allocatedAddress), eq(sizeof(counter)), mockcpp::any(), eq(dev_->Id_()),
+            eq(DevMemBackupType::SNAPSHOT_REQUIRED_BACKUP), mockcpp::any())
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev_->Driver_(), &Driver::MemSetSync)
+        .expects(once())
+        .with(mockcpp::any(), eq(sizeof(uint64_t)), eq(0xFFU), eq(sizeof(uint64_t)))
+        .will(returnValue(RT_ERROR_DRV_ERR));
+    MOCKER_CPP_VIRTUAL(dev_->Driver_(), &Driver::DevMemFree)
+        .expects(once())
+        .with(eq(static_cast<void*>(&counter)), eq(dev_->Id_()))
+        .will(returnValue(RT_ERROR_NONE));
+    EXPECT_EQ(model_->AllocExecutedTimesSvm(), RT_ERROR_DRV_ERR);
+    EXPECT_EQ(model_->GetExecutedTimesSvm(), nullptr);
+    GlobalMockObject::verify();
+    EXPECT_EQ(model_->AllocExecutedTimesSvm(), RT_ERROR_NONE);
+    EXPECT_NE(model_->GetExecutedTimesSvm(), nullptr);
+}
+
+TEST_F(ModelExecTimesSvmTest, FreeReleasesCounterOnceWithoutCopyingItToHost)
+{
+    ASSERT_EQ(model_->AllocExecutedTimesSvm(), RT_ERROR_NONE);
+    uint64_t* const address = model_->GetExecutedTimesSvm();
+    ASSERT_NE(address, nullptr);
+    MOCKER_CPP_VIRTUAL(dev_->Driver_(), &Driver::MemCopySync).expects(never());
+    MOCKER_CPP_VIRTUAL(dev_->Driver_(), &Driver::DevMemFree)
+        .expects(once())
+        .with(eq(static_cast<void*>(address)), eq(dev_->Id_()))
+        .will(returnValue(RT_ERROR_NONE));
+    model_->FreeExecutedTimesSvm();
+    EXPECT_EQ(model_->GetExecutedTimesSvm(), nullptr);
+    model_->FreeExecutedTimesSvm();
+    EXPECT_EQ(model_->GetExecutedTimesSvm(), nullptr);
+    GlobalMockObject::verify();
+}
+
+TEST_F(ModelExecTimesSvmTest, ClearMemoryFreesCounterWhenDecouplingIsDisabled)
+{
+    ASSERT_EQ(model_->AllocExecutedTimesSvm(), RT_ERROR_NONE);
+    ASSERT_NE(model_->GetExecutedTimesSvm(), nullptr);
+    void* const hostMemory = malloc(sizeof(RtStarsModelExeFuncCall));
+    ASSERT_NE(hostMemory, nullptr);
+    model_->SetFuncCallHostMem(hostMemory);
+    uint64_t funcCallMemory = 0ULL;
+    model_->SetBaseFuncCallSvmMem(&funcCallMemory);
+    model_->SetFuncCallSvmMem(RtPtrToValue(&funcCallMemory));
+    model_->SetDfxPtr(&funcCallMemory);
+    // Device memory is represented by a caller-owned buffer in this LLT.
+    MOCKER_CPP_VIRTUAL(dev_->Driver_(), &Driver::DevMemFree).defaults().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev_->Driver_(), &Driver::DevMemFree)
+        .expects(once())
+        .with(eq(static_cast<void*>(&funcCallMemory)), eq(dev_->Id_()))
+        .will(returnValue(RT_ERROR_NONE));
+
+    EXPECT_EQ(model_->ClearMemory(), RT_ERROR_NONE);
+    EXPECT_EQ(model_->GetExecutedTimesSvm(), nullptr);
+    EXPECT_EQ(model_->GetFuncCallHostMem(), nullptr);
+    EXPECT_EQ(model_->GetBaseFuncCallSvmMem(), nullptr);
+    EXPECT_EQ(model_->GetFuncCallSvmMem(), 0ULL);
+    EXPECT_EQ(model_->GetDfxPtr(), nullptr);
+    GlobalMockObject::verify();
 }

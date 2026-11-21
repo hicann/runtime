@@ -496,11 +496,11 @@ void AsyncHwtsEngine::GetReportCommonInfo(
     uint16_t& errorBit) const
 {
     if (tsReport.msgType == tsReportType_t::TS_REPORT_MSG_TYPE_STARS_CQE) {
-        streamId = tsReport.msgBuf.starsCqe->streamID;
-        taskId = tsReport.msgBuf.starsCqe->taskID;
-        sqId = tsReport.msgBuf.starsCqe->SQ_id;
-        sqHead = tsReport.msgBuf.starsCqe->SQ_head;
-        errorBit = tsReport.msgBuf.starsCqe->error_bit;
+        streamId = tsReport.msgBuf.starsCqe->streamId;
+        taskId = tsReport.msgBuf.starsCqe->taskId;
+        sqId = tsReport.msgBuf.starsCqe->sqId;
+        sqHead = tsReport.msgBuf.starsCqe->sqHead;
+        errorBit = tsReport.msgBuf.starsCqe->errorBit;
 
         RT_LOG(
             RT_LOG_INFO, "cqe stream_id=%u, taskId=%u, SQ_head=%u, sqId=%u, phase=%u, errorBit=%u, warn=%u, evt=%u",

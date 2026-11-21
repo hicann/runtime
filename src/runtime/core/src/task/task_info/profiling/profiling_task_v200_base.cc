@@ -89,6 +89,7 @@ void ConstructDavidSqeForProfilerTraceExTask(TaskInfo* taskInfo, void* const sqe
     phSqe->u.profileTraceInfo.profilerTraceId = taskInfo->u.profilerTraceExTask.profilerTraceId;
     phSqe->u.profileTraceInfo.modelId = taskInfo->u.profilerTraceExTask.modelId;
     phSqe->u.profileTraceInfo.tagId = taskInfo->u.profilerTraceExTask.tagId;
+    phSqe->u.profileTraceInfo.streamId = stm->Id_();
 
     PrintDavidSqe(davidSqe, "ProfilerTraceExTask");
     RT_LOG(

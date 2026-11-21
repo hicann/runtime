@@ -37,6 +37,7 @@
 #include "logic_sq_manage.hpp"
 #include "inner_thread_local.hpp"
 #include "task.hpp"
+#include "model_execute_task.h"
 #include "aicpu_timeout_manager.h"
 #include "capture_model.hpp"
 
@@ -248,9 +249,9 @@ static bool ProcReportIsException(const rtCqReport_t& logicCq)
 
     /* when error is  NOTIFY_WAIT, need check model_exec result */
     if (logicCq.sqeType == static_cast<uint8_t>(RT_DAVID_SQE_TYPE_NOTIFY_WAIT)) {
-        if ((swStatus.model_exec.result == static_cast<uint16_t>(TS_STARS_MODEL_END_OF_SEQ)) ||
-            (swStatus.model_exec.result == static_cast<uint16_t>(TS_STARS_MODEL_EXE_ABORT)) ||
-            (swStatus.model_exec.result == static_cast<uint16_t>(TS_STARS_MODEL_AICPU_TIMEOUT)) ||
+        if ((swStatus.modelExec.result == static_cast<uint16_t>(TS_STARS_MODEL_END_OF_SEQ)) ||
+            (swStatus.modelExec.result == static_cast<uint16_t>(TS_STARS_MODEL_EXE_ABORT)) ||
+            (swStatus.modelExec.result == static_cast<uint16_t>(TS_STARS_MODEL_AICPU_TIMEOUT)) ||
             (logicCq.errorCode == static_cast<uint32_t>(TS_ERROR_END_OF_SEQUENCE))) {
             return false;
         }
@@ -357,7 +358,7 @@ rtError_t ProcReport(
             }
         }
         const uint32_t pos = static_cast<uint32_t>(report.sqHead);
-        const uint32_t reportTaskSn = (static_cast<uint32_t>(report.taskId) << UINT16_BIT_NUM) | report.streamId;
+        const uint32_t reportTaskSn = (report.taskId << UINT16_BIT_NUM) | report.streamId;
         RT_LOG(
             RT_LOG_INFO,
             "Get logic report: cnt=%u, idx=%u, stream_id=%hu, report_pos=%u, sync_pos=%u,"
@@ -385,7 +386,7 @@ rtError_t ProcReport(
             RT_LOG_INFO, "taskType=" RT_ENUM_LOG_FORMAT("%u") ".",
             RT_ENUM_LOG_VALUE(static_cast<uint32_t>(reportTask->type), RT_ENUM_LOG_NAME(reportTask->typeName)));
         CaptureModel* const captureModel = dynamic_cast<CaptureModel*>(reportTask->stream->Model_());
-        if (captureModel != nullptr) {
+        if ((captureModel != nullptr) && (!ProcReportIsException(report))) {
             RT_LOG(
                 RT_LOG_INFO,
                 "Receive capture model CQE, device_id=%u, model_id=%u, stream_id=%d, task_id=%hu, task_type=%u, "
@@ -420,6 +421,12 @@ rtError_t ProcReport(
         }
     }
 
+    Stream* const stream = (reclaimTask != nullptr) ? reclaimTask->stream : nullptr;
+    if ((stream != nullptr) && stream->GetBindFlag() && (stream->Model_() != nullptr) &&
+        (stream->Model_()->IsSupportDecoupling())) {
+        return RT_ERROR_NONE;
+    }
+
     // must confirm that the cq reply is order-preserving. confirmed with ts-drv
     if ((reclaimTask != nullptr) && (isResumeRtsq)) {
         (void)StarsResumeRtsq(&reclaimCqReport, reclaimTask); // resume rtsq when error happens
@@ -451,7 +458,8 @@ void ProcLogicCqReport(Device* const dev, rtCqReport_t& logicCq, TaskInfo* repor
         RT_LOG(RT_LOG_WARNING, "task is null, sq_id=%hu, sq_head=%hu.", logicCq.sqId, logicCq.sqHead);
         return;
     }
-    const uint16_t streamId = reportTask->stream->Id_();
+    Stream* const stream = reportTask->stream;
+    const uint16_t streamId = stream->Id_();
     const uint16_t pos = logicCq.sqHead;
     const uint16_t sqId = logicCq.sqId;
 
@@ -466,6 +474,9 @@ void ProcLogicCqReport(Device* const dev, rtCqReport_t& logicCq, TaskInfo* repor
 
     // Record timeout before StarsCqeReceive overwrites the fault task error code.
     AicpuTimeoutManager::UpdateAicpuTimeoutStateOnCqeReport(dev, logicCq, reportTask, faultTaskPtr);
+    if (stream->GetBindFlag() && (stream->Model_() != nullptr) && (stream->Model_()->IsSupportDecoupling())) {
+        return ProcErrorInfoForModelTask(logicCq, ProcReportIsException(logicCq), reportTask);
+    }
 
     reportTask->error = 0U;
     StarsCqeReceive(dev, logicCq, reportTask);

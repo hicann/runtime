@@ -648,6 +648,11 @@ struct ModelSerialSchedTaskInfo {
     uint32_t modelSchedMode;
 };
 
+struct SqExecTimesAddrTaskInfo {
+    uint64_t execTimesAddr;
+    uint8_t freeFlag;
+};
+
 } // namespace runtime
 } // namespace cce
 #endif // CCE_RUNTIME_TASK_INFO_STRUCT_HPP

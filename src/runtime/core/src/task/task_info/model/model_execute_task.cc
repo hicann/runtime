@@ -39,6 +39,8 @@ static rtError_t FreeFuncCallMemForModelExecuteTask(const TaskInfo* const taskIn
     return RT_ERROR_NONE;
 }
 
+bool IsMemErrorCode(const int32_t error) { return (MEM_ERROR_CODE.find(error) != MEM_ERROR_CODE.end()); }
+
 void ModelExecuteTaskUnInit(TaskInfo* const taskInfo) { (void)FreeFuncCallMemForModelExecuteTask(taskInfo); }
 
 rtError_t ModelExecuteTaskInit(
@@ -245,55 +247,24 @@ void ModelExecuteTaskaProcError(TaskInfo* const taskInfo, const uint32_t errCode
     swStatus.value = errCode;
     ModelExecuteTaskInfo* modelExecuteTaskInfo = &(taskInfo->u.modelExecuteTaskInfo);
 
-    if (swStatus.model_exec.result == static_cast<uint16_t>(TS_STARS_MODEL_STREAM_EXE_FAILED)) {
+    if (swStatus.modelExec.result == static_cast<uint16_t>(TS_STARS_MODEL_STREAM_EXE_FAILED)) {
         taskInfo->errorCode = TS_MODEL_STREAM_EXE_FAILED;
-    } else if (swStatus.model_exec.result == static_cast<uint16_t>(TS_STARS_MODEL_END_OF_SEQ)) {
+    } else if (swStatus.modelExec.result == static_cast<uint16_t>(TS_STARS_MODEL_END_OF_SEQ)) {
         taskInfo->errorCode = TS_ERROR_END_OF_SEQUENCE;
-    } else if (swStatus.model_exec.result == static_cast<uint16_t>(TS_STARS_MODEL_EXE_ABORT)) {
+    } else if (swStatus.modelExec.result == static_cast<uint16_t>(TS_STARS_MODEL_EXE_ABORT)) {
         taskInfo->errorCode = TS_ERROR_MODEL_ABORTED;
-    } else if (swStatus.model_exec.result == static_cast<uint16_t>(TS_STARS_MODEL_AICPU_TIMEOUT)) {
+    } else if (swStatus.modelExec.result == static_cast<uint16_t>(TS_STARS_MODEL_AICPU_TIMEOUT)) {
         taskInfo->errorCode = TS_ERROR_AICPU_TIMEOUT;
     } else {
         // others model exe rsult does not support, default stream exe failed
         taskInfo->errorCode = TS_MODEL_STREAM_EXE_FAILED;
     }
 
-    modelExecuteTaskInfo->errorTaskId = swStatus.model_exec.task_id;
-    modelExecuteTaskInfo->errorStreamId = swStatus.model_exec.stream_id;
+    modelExecuteTaskInfo->errorTaskId = swStatus.modelExec.taskId;
+    modelExecuteTaskInfo->errorStreamId = swStatus.modelExec.streamId;
     RT_LOG(
         RT_LOG_WARNING, "errorCode=0x%x, errorTaskId=%u, errorStreamId=%u.", taskInfo->errorCode,
         modelExecuteTaskInfo->errorTaskId, modelExecuteTaskInfo->errorStreamId);
-}
-
-void ModelExecuteTaskProcErrorForSoftwareSq(TaskInfo* const taskInfo, const uint32_t errCode)
-{
-    rtStarsCqeSwStatus_t swStatus = {};
-    swStatus.value = errCode;
-    ModelExecuteTaskInfo* modelExecuteTaskInfo = &(taskInfo->u.modelExecuteTaskInfo);
-
-    if (swStatus.model_exec_ex.result == static_cast<uint16_t>(TS_STARS_MODEL_STREAM_EXE_FAILED)) {
-        taskInfo->errorCode = TS_MODEL_STREAM_EXE_FAILED;
-    } else if (swStatus.model_exec_ex.result == static_cast<uint16_t>(TS_STARS_MODEL_END_OF_SEQ)) {
-        taskInfo->errorCode = TS_ERROR_END_OF_SEQUENCE;
-    } else if (swStatus.model_exec_ex.result == static_cast<uint16_t>(TS_STARS_MODEL_EXE_ABORT)) {
-        taskInfo->errorCode = TS_ERROR_MODEL_ABORTED;
-    } else if (swStatus.model_exec_ex.result == static_cast<uint16_t>(TS_STARS_MODEL_AICPU_TIMEOUT)) {
-        taskInfo->errorCode = TS_ERROR_AICPU_TIMEOUT;
-    } else {
-        // others model exe rsult does not support, default stream exe failed
-        taskInfo->errorCode = TS_MODEL_STREAM_EXE_FAILED;
-    }
-
-    modelExecuteTaskInfo->errorTaskId = swStatus.model_exec_ex.task_id;
-    modelExecuteTaskInfo->errorStreamId = modelExecuteTaskInfo->model->GetStreamIdBySqId(swStatus.model_exec_ex.sq_id);
-    if ((modelExecuteTaskInfo->errorStreamId == UINT32_MAX) && (modelExecuteTaskInfo->model != nullptr) &&
-        (modelExecuteTaskInfo->model->GetModelType() == RT_MODEL_CAPTURE_MODEL)) {
-        CaptureModel* captureModel = dynamic_cast<CaptureModel*>(modelExecuteTaskInfo->model);
-        modelExecuteTaskInfo->errorStreamId = FindStreamIdInSubModels(captureModel, swStatus.model_exec_ex.sq_id);
-    }
-    RT_LOG(
-        RT_LOG_WARNING, "errorCode=0x%x, errorTaskId=%u, errorStreamId=%u, sqId=%hu.", taskInfo->errorCode,
-        modelExecuteTaskInfo->errorTaskId, modelExecuteTaskInfo->errorStreamId, swStatus.model_exec_ex.sq_id);
 }
 
 void DoCompleteStarsErrorForModelExecuteTask(TaskInfo* const taskInfo, const uint32_t devId, const uint32_t errCode)
@@ -328,7 +299,7 @@ bool ModelIsExistInContext(const Model* mdl, const Stream* stream)
     return false;
 }
 
-void ReportEndGraphWaitError(const TaskInfo* taskInfo, const uint32_t devId)
+void ReportEndGraphWaitError(const TaskInfo* taskInfo, const uint32_t devId, const bool lockFlag)
 {
     if (!Runtime::Instance()->ChipIsHaveStars()) {
         return;
@@ -336,7 +307,13 @@ void ReportEndGraphWaitError(const TaskInfo* taskInfo, const uint32_t devId)
 
     RT_LOG(RT_LOG_DEBUG, "Report model endGraph errcode=0x%x.", taskInfo->errorCode);
     Model* mdl = taskInfo->u.endGraphNotifyWaitTask.endGraphModel;
-    if (!ModelIsExistInContext(mdl, taskInfo->stream)) {
+    bool isMdlExist;
+    if (lockFlag) {
+        isMdlExist = taskInfo->stream->Context_()->ModelIsExistInContext(mdl);
+    } else {
+        isMdlExist = taskInfo->stream->Context_()->ModelIsExistInContextWithoutLock(mdl);
+    }
+    if (!isMdlExist) {
         RT_LOG(RT_LOG_ERROR, "this model is not in current context.");
         return;
     }

@@ -41,15 +41,15 @@
 using namespace testing;
 using namespace cce::runtime;
 
-static rtCqReport_t g_taskProfilingCqReport;
+static rtLogicCqReport_t g_taskProfilingCqReport;
 static rtError_t StubLogicCqReportV2(
-    NpuDriver* drv, const LogicCqWaitInfo& waitInfo, uint8_t* report, uint32_t reportCnt, uint32_t& realCnt)
+    NpuDriver* drv, const CqWaitInfo& waitInfo, uint8_t* report, uint32_t reportCnt, uint32_t& realCnt)
 {
     (void)drv;
     (void)waitInfo;
     (void)reportCnt;
     realCnt = 1U;
-    rtCqReport_t* reportPtr = reinterpret_cast<rtCqReport_t*>(report);
+    rtLogicCqReport_t* reportPtr = reinterpret_cast<rtLogicCqReport_t*>(report);
     g_taskProfilingCqReport.taskId = 1U;
     *reportPtr = g_taskProfilingCqReport;
     return RT_ERROR_NONE;

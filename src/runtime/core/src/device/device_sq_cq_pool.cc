@@ -14,6 +14,9 @@
 namespace cce {
 namespace runtime {
 
+constexpr uint8_t SQ_TYPE_ACL_GRAPH = 0U;
+constexpr uint8_t SQ_TYPE_AUTO_SPLIT = 1U;
+
 DeviceSqCqPool::DeviceSqCqPool(Device* const dev) : NoCopy(), device_(dev) {}
 DeviceSqCqPool::~DeviceSqCqPool()
 {
@@ -31,12 +34,14 @@ DeviceSqCqPool::~DeviceSqCqPool()
 
     deviceSqCqOccupyList_.clear();
     deviceSqCqFreeList_.clear();
+    deviceSqCqFaultList_.clear();
 }
 
 rtError_t DeviceSqCqPool::Init(void) const { return RT_ERROR_NONE; }
 
 rtError_t DeviceSqCqPool::AllocSqCqFromDrv(
-    rtDeviceSqCqInfo_t* const sqCqInfo, const uint32_t drvFlag, const int32_t retryCount, const uint32_t priority) const
+    rtDeviceSqCqInfo_t* const sqCqInfo, const uint32_t drvFlag, const uint8_t sqType, const int32_t retryCount,
+    const uint32_t priority) const
 {
     rtStreamAllocInfo_t info = {};
     constexpr uint32_t streamId = UINT32_MAX;
@@ -50,7 +55,8 @@ rtError_t DeviceSqCqPool::AllocSqCqFromDrv(
     info.threadDisableFlag = static_cast<uint32_t>(Runtime::Instance()->GetDisableThread());
     info.shareSqId = device_->GetShareSqId();
     info.tsSqType = static_cast<uint32_t>(RtSqAllocType::SQ_ALLOC_TYPE_RT_DEFAULT);
-    info.swsqFlag = true;
+    info.isFixTaskIdSame = true;
+    info.isAclGraphEx = (sqType == SQ_TYPE_ACL_GRAPH) ? true : false;
 
     if (device_->IsDavidPlatform()) {
         device_->GetStreamSqCqManage()->FillStreamAttrSimt(nullptr, infoEx);
@@ -116,15 +122,17 @@ rtError_t DeviceSqCqPool::AllocSqRegVirtualAddr(const uint32_t sqId, uint64_t& s
 rtError_t DeviceSqCqPool::BatchAllocSqCq(const uint32_t allcocNum, const int32_t retryCount)
 {
     COND_RETURN_INFO(
-        (deviceSqCqFreeList_.size() + deviceSqCqOccupyList_.size() + allcocNum) > RT_DEVICE_SQCQ_RES_MAX_NUM,
+        (deviceSqCqFreeList_.size() + deviceSqCqOccupyList_.size() + deviceSqCqFaultList_.size() + allcocNum) >
+            RT_DEVICE_SQCQ_RES_MAX_NUM,
         RT_ERROR_DEVICE_SQCQ_POOL_RESOURCE_FULL,
-        "The number of sq cq resources has reached the maximum free_size=%u, occupy_size=%u, need allocNum=%u.",
-        deviceSqCqFreeList_.size(), deviceSqCqOccupyList_.size(), allcocNum);
+        "The number of sq cq resources has reached the maximum free_size=%u, occupy_size=%u, fault_size=%u, need "
+        "allocNum=%u.",
+        deviceSqCqFreeList_.size(), deviceSqCqOccupyList_.size(), deviceSqCqFaultList_.size(), allcocNum);
 
     rtDeviceSqCqInfo_t sqCqInfo = {};
     for (uint32_t loop = 0U; loop < allcocNum; loop++) {
         (void)memset_s(&sqCqInfo, sizeof(sqCqInfo), 0x0, sizeof(sqCqInfo));
-        rtError_t error = AllocSqCqFromDrv(&sqCqInfo, TSDRV_FLAG_NO_SQ_MEM, retryCount);
+        rtError_t error = AllocSqCqFromDrv(&sqCqInfo, TSDRV_FLAG_NO_SQ_MEM, SQ_TYPE_ACL_GRAPH, retryCount);
         COND_RETURN_INFO(
             (error != RT_ERROR_NONE), error, "alloc sq cq, loop=%u, retCode=%#x.", loop, static_cast<uint32_t>(error));
 
@@ -194,7 +202,8 @@ rtError_t DeviceSqCqPool::AllocSqCqForAutoSplit(rtDeviceSqCqInfo_t* const sqCqIn
     COND_RETURN_INFO(
         (sqCqInfo == nullptr), RT_ERROR_INVALID_VALUE, "sqCqInfo is nullptr, deviceId=%u.", device_->Id_());
     const uint32_t drvFlag = static_cast<uint32_t>(TSDRV_FLAG_NO_SQ_MEM);
-    rtError_t error = AllocSqCqFromDrv(sqCqInfo, drvFlag, PRE_ALLOC_SQ_CQ_RETRY_MAX_COUNT, priority);
+    rtError_t error =
+        AllocSqCqFromDrv(sqCqInfo, drvFlag, SQ_TYPE_AUTO_SPLIT, PRE_ALLOC_SQ_CQ_RETRY_MAX_COUNT, priority);
     COND_RETURN_INFO((error != RT_ERROR_NONE), error, "alloc sq cq, retCode=%#x.", static_cast<uint32_t>(error));
     error = AllocSqRegVirtualAddr(sqCqInfo->sqId, sqCqInfo->sqRegVirtualAddr);
     /* Failure rollback: Free the SQ/CQ just allocated from driver */
@@ -250,6 +259,58 @@ rtError_t DeviceSqCqPool::FreeSqCqLazy(const rtDeviceSqCqInfo_t* const sqCqList,
     return RT_ERROR_NONE;
 }
 
+rtError_t DeviceSqCqPool::FreeSqCqFault(const rtDeviceSqCqInfo_t* const sqCqList, const uint32_t freeNum)
+{
+    RT_LOG(RT_LOG_DEBUG, "deviceId=%u, tsId=%u, freeNum=%u", device_->Id_(), device_->DevGetTsId(), freeNum);
+    if ((freeNum == 0U) || (sqCqList == nullptr)) {
+        return RT_ERROR_INVALID_VALUE;
+    }
+    const std::lock_guard<std::mutex> deviceSqCqLock(deviceSqCqLock_);
+    for (uint32_t listId = 0; listId < freeNum; listId++) {
+        uint32_t sqId = sqCqList[listId].sqId;
+        uint32_t cqId = sqCqList[listId].cqId;
+        auto it = std::find_if(
+            deviceSqCqOccupyList_.begin(), deviceSqCqOccupyList_.end(),
+            [sqId, cqId](const rtDeviceSqCqInfo_t& info) { return (info.sqId == sqId) && (info.cqId == cqId); });
+        if (it != deviceSqCqOccupyList_.end()) {
+            (void)deviceSqCqOccupyList_.erase(it);
+            deviceSqCqFaultList_.push_back(sqCqList[listId]);
+        }
+        RT_LOG(
+            RT_LOG_DEBUG,
+            "deviceId=%u, tsId=%u, sqId=%u, cqId=%u, occupyList_size=%u, faultList_size=%u, isMatchSqIdCqId=%u",
+            device_->Id_(), device_->DevGetTsId(), sqCqList[listId].sqId, sqCqList[listId].cqId,
+            deviceSqCqOccupyList_.size(), deviceSqCqFaultList_.size(), (it != deviceSqCqOccupyList_.end()));
+    }
+
+    return RT_ERROR_NONE;
+}
+
+rtError_t DeviceSqCqPool::RestoreFaultSqCq(void)
+{
+    const std::lock_guard<std::mutex> deviceSqCqLock(deviceSqCqLock_);
+
+    if (deviceSqCqFaultList_.size() == 0U) {
+        return RT_ERROR_NONE;
+    }
+
+    RT_LOG(
+        RT_LOG_DEBUG, "before deviceId=%u, tsId=%u, freeList_size=%u", device_->Id_(), device_->DevGetTsId(),
+        deviceSqCqFreeList_.size());
+    rtDeviceSqCqInfo_t sqCqInfo = {};
+    while (deviceSqCqFaultList_.size() != 0U) {
+        sqCqInfo = deviceSqCqFaultList_.front();
+        deviceSqCqFaultList_.pop_front();
+        deviceSqCqFreeList_.push_back(sqCqInfo);
+    }
+
+    RT_LOG(
+        RT_LOG_DEBUG, "after deviceId=%u, tsId=%u, freeList_size=%u", device_->Id_(), device_->DevGetTsId(),
+        deviceSqCqFreeList_.size());
+
+    return RT_ERROR_NONE;
+}
+
 rtError_t DeviceSqCqPool::FreeSqCqImmediately(const rtDeviceSqCqInfo_t* const sqCqList, const uint32_t freeNum)
 {
     RT_LOG(RT_LOG_DEBUG, "deviceId=%u, tsId=%u, freeNum=%u", device_->Id_(), device_->DevGetTsId(), freeNum);
@@ -291,7 +352,8 @@ void DeviceSqCqPool::TryTrimSqCqPool(const uint32_t freeNum)
     shrinkCount_ += freeNum;
     const uint32_t targetNum =
         preAllocCount_ > shrinkCount_ ? static_cast<uint32_t>(preAllocCount_ - shrinkCount_) : 0U;
-    const uint32_t totalResNum = static_cast<uint32_t>(deviceSqCqFreeList_.size() + deviceSqCqOccupyList_.size());
+    const uint32_t totalResNum =
+        static_cast<uint32_t>(deviceSqCqFreeList_.size() + deviceSqCqOccupyList_.size() + deviceSqCqFaultList_.size());
     const uint32_t needReleaseNum = totalResNum > targetNum ? (totalResNum - targetNum) : 0U;
 
     while ((!deviceSqCqFreeList_.empty()) && (releasedNum < needReleaseNum)) {
@@ -325,6 +387,8 @@ rtError_t DeviceSqCqPool::FreeSqCq(
         return FreeSqCqImmediately(sqCqInfo, freeNum);
     } else if (policy == FreePolicy::LAZY) {
         return FreeSqCqLazy(sqCqInfo, freeNum);
+    } else if (policy == FreePolicy::FAULT) {
+        return FreeSqCqFault(sqCqInfo, freeNum);
     } else {
         rtError_t error = RT_ERROR_NONE;
         if (sqCqInfo != nullptr) {
@@ -390,7 +454,7 @@ rtError_t DeviceSqCqPool::ReAllocSqCqForFreeList(void)
     constexpr uint32_t drvFlag = (TSDRV_FLAG_SPECIFIED_SQ_ID | TSDRV_FLAG_SPECIFIED_CQ_ID | TSDRV_FLAG_NO_SQ_MEM);
 
     for (auto it = deviceSqCqFreeList_.begin(); it != deviceSqCqFreeList_.end(); ++it) {
-        rtError_t error = AllocSqCqFromDrv(&(*it), drvFlag);
+        rtError_t error = AllocSqCqFromDrv(&(*it), drvFlag, SQ_TYPE_ACL_GRAPH);
         COND_PROC_RETURN_ERROR(
             error != RT_ERROR_NONE, error, FreeReallocatedSqCqToDrv(deviceSqCqFreeList_.begin(), it),
             "Fail to realloc sqcq from driver, deviceId=%u, sqId=%u.", device_->Id_(), it->sqId);

@@ -425,26 +425,26 @@ TEST_F(CloudV2ReportErrorInfoForModelExecuteTaskTest, model_exe_result_for_softw
     MOCKER_CPP(&Context::ModelIsExistInContext).stubs().will(returnValue(true));
 
     rtStarsCqeSwStatus_t swStatus = {};
-    swStatus.model_exec_ex.result = TS_STARS_MODEL_STREAM_EXE_FAILED;
+    swStatus.modelExecEx.result = TS_STARS_MODEL_STREAM_EXE_FAILED;
     taskInfo.errorCode = swStatus.value;
     DoCompleteSuccessForNotifyWaitTask(&taskInfo, 0);
 
-    swStatus.model_exec_ex.result = TS_STARS_MODEL_END_OF_SEQ;
+    swStatus.modelExecEx.result = TS_STARS_MODEL_END_OF_SEQ;
     taskInfo.errorCode = swStatus.value;
     DoCompleteSuccessForNotifyWaitTask(&taskInfo, 0);
 
-    swStatus.model_exec_ex.result = TS_STARS_MODEL_AICPU_TIMEOUT;
+    swStatus.modelExecEx.result = TS_STARS_MODEL_AICPU_TIMEOUT;
     taskInfo.errorCode = swStatus.value;
     DoCompleteSuccessForNotifyWaitTask(&taskInfo, 0);
 
-    swStatus.model_exec_ex.result = TS_STARS_MODEL_EXE_ABORT;
-    swStatus.model_exec_ex.sq_id = stream->GetSqId();
+    swStatus.modelExecEx.result = TS_STARS_MODEL_EXE_ABORT;
+    swStatus.modelExecEx.sqId = stream->GetSqId();
     taskInfo.errorCode = swStatus.value;
     model->ModelPushFrontStream(stream);
     DoCompleteSuccessForNotifyWaitTask(&taskInfo, 0);
     model->ModelRemoveStream(stream);
 
-    swStatus.model_exec_ex.result = RT_ERROR_WAIT_TIMEOUT;
+    swStatus.modelExecEx.result = RT_ERROR_WAIT_TIMEOUT;
     taskInfo.errorCode = swStatus.value;
     DoCompleteSuccessForNotifyWaitTask(&taskInfo, 0);
 

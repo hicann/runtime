@@ -18,6 +18,7 @@
 #include "thread_local_container.hpp"
 #include "inner_thread_local.hpp"
 #include "notify.hpp"
+#include "model.hpp"
 
 namespace cce {
 namespace runtime {
@@ -117,8 +118,14 @@ static void ConstructSqeSinkModeForRdmaDb1SendTask(TaskInfo* taskInfo, rtStarsSq
     dbInfo.value = rdmaDbSendTask->taskDbInfo.value;
     RtStarsRdmaSinkSqe1& sqe1 = command->rdmaSinkSqe1;
     const uint16_t currentStreamId = static_cast<uint16_t>(stream->Id_());
-    uint16_t* const execTimesSvm = stream->GetExecutedTimesSvm();
-    const uint64_t svmAddr = RtPtrToValue<uint16_t*>(execTimesSvm);
+    uint64_t svmAddr;
+    Model* const model = stream->Model_();
+    if ((model != nullptr) && (model->GetModelType() == RT_MODEL_CAPTURE_MODEL) &&
+        (model->GetExecutedTimesSvm() != nullptr)) {
+        svmAddr = RtPtrToValue(model->GetExecutedTimesSvm());
+    } else {
+        svmAddr = RtPtrToValue(stream->GetExecutedTimesSvm());
+    }
 
     (void)memset_s(&sqe1, sizeof(rtStarsSqe_t), 0, sizeof(rtStarsSqe_t));
     ConstructRdmaSink1Instr(static_cast<uint32_t>(dbInfo.cmd.sqProducerIdx), sqDepthBitWidth, svmAddr, sqe1);

@@ -21,6 +21,15 @@
 namespace {
 Notify* g_ipcOpenNotifyRet = nullptr;
 
+errno_t MemcpySSuccessStub(void* dest, size_t destMax, const void* src, size_t count)
+{
+    if ((dest == nullptr) || (src == nullptr) || (count > destMax)) {
+        return EINVAL;
+    }
+    std::memcpy(dest, src, count);
+    return EOK;
+}
+
 rtError_t IpcOpenNotifyStub(
     cce::runtime::ApiImpl* api, Notify** const retNotify, const char_t* const name, uint32_t flag)
 {
@@ -779,7 +788,7 @@ TEST_F(CloudV2ApiTest, mem_wait_record_task_01)
     rtStream_t stream;
     void* devPtr;
 
-    MOCKER(memcpy_s).stubs().will(returnValue(NULL));
+    MOCKER(memcpy_s).stubs().will(invoke(MemcpySSuccessStub));
 
     Runtime* rtInstance = (Runtime*)Runtime::Instance();
 
@@ -829,7 +838,7 @@ TEST_F(CloudV2ApiTest, mem_wait_record_task_03)
     rtContext_t ctx;
     Context* context = NULL;
 
-    MOCKER(memcpy_s).stubs().will(returnValue(NULL));
+    MOCKER(memcpy_s).stubs().will(invoke(MemcpySSuccessStub));
 
     Runtime* rtInstance = (Runtime*)Runtime::Instance();
 
@@ -887,7 +896,7 @@ TEST_F(CloudV2ApiTest, mem_wait_record_task_04)
     ApiProfileDecorator api_2(&impl, &profiler);
     ApiDecorator api_3(&impl);
 
-    MOCKER(memcpy_s).stubs().will(returnValue(NULL));
+    MOCKER(memcpy_s).stubs().will(invoke(MemcpySSuccessStub));
 
     Runtime* rtInstance = (Runtime*)Runtime::Instance();
 
@@ -952,7 +961,7 @@ TEST_F(CloudV2ApiTest, mem_wait_record_task_05)
     rtError_t error;
     void* devPtr;
 
-    MOCKER(memcpy_s).stubs().will(returnValue(NULL));
+    MOCKER(memcpy_s).stubs().will(invoke(MemcpySSuccessStub));
 
     Runtime* rtInstance = (Runtime*)Runtime::Instance();
 

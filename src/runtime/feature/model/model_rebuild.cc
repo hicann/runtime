@@ -61,6 +61,9 @@ void Model::ResetFuncCallMem(const Device* const dev)
         funcCallDfxBaseSvmMem_ = nullptr;
         dfxPtr_ = nullptr;
     }
+    if (executedTimesSvm_ != nullptr) {
+        (void)deviceDrv->MemSetSync(executedTimesSvm_, sizeof(uint64_t), 0xFFU, sizeof(uint64_t));
+    }
     funCallMemSize_ = 0ULL;
     funcCallSvmMem_ = 0ULL;
     funcCallInstrSize_ = 0U;
@@ -115,11 +118,13 @@ rtError_t Model::ReSetup(void)
     const uint32_t deviceId = dev->Id_();
     const uint32_t tsId = dev->DevGetTsId();
 
-    rtError_t err = dev->Driver_()->ReAllocResourceId(deviceId, tsId, 0U, Id_(), DRV_MODEL_ID);
-    ERROR_RETURN(
-        err, "Realloc modelId failed, devId=%u, tsId=%u, retCode=%#x!", deviceId, tsId, static_cast<uint32_t>(err));
+    if (!IsIdAllocByRuntime()) {
+        rtError_t err = dev->Driver_()->ReAllocResourceId(deviceId, tsId, 0U, Id_(), DRV_MODEL_ID);
+        ERROR_RETURN(
+            err, "Realloc modelId failed, devId=%u, tsId=%u, retCode=%#x!", deviceId, tsId, static_cast<uint32_t>(err));
+    }
 
-    err = dev->WriteDevValue(modeID_, sizeof(int32_t), &id_);
+    rtError_t err = dev->WriteDevValue(modeID_, sizeof(int32_t), &id_);
     ERROR_RETURN(
         err, "Write modelId failed, devId=%u, tsId=%u, retCode=%#x!", deviceId, tsId, static_cast<uint32_t>(err));
 

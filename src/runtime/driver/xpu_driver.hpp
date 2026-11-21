@@ -32,7 +32,7 @@ public:
     static Driver* Instance_() { return new (std::nothrow) XpuDriver(); }
     rtError_t GetSqState(const uint32_t deviceId, const uint32_t sqId, uint32_t& status);
     rtError_t LogicCqReportV2(
-        const LogicCqWaitInfo& waitInfo, uint8_t* report, uint32_t reportCnt, uint32_t& realCnt) override;
+        const CqWaitInfo& waitInfo, uint8_t* report, uint32_t reportCnt, uint32_t& realCnt) override;
     rtError_t GetCqeStatus(const uint32_t deviceId, const uint32_t tsId, const uint32_t sqId, bool& status) override;
     rtError_t GetSqHead(
         const uint32_t deviceId, const uint32_t tsId, const uint32_t sqId, uint16_t& head, bool needLog) override;

@@ -342,7 +342,7 @@ rtError_t StreamJettyHandler::UpdateUbdmaSqeWithJettyInfo(
         taskInfo->bindFlag = taskInfo->stream->GetBindFlag();
         taskInfo->isNoRingbuffer = 1U;
         ConstructDavidAsyncUbDbSqe(taskInfo, davidSqe);
-        davidSqe->phSqe.header.headUpdate = GetHeadUpdateFlag(taskId);
+        davidSqe->phSqe.header.headUpdate = 0U;
         uint8_t* hostSqeAddr = stream->GetHostSqeAddrByPos(taskInfo->pos);
         COND_RETURN_ERROR(
             hostSqeAddr == nullptr, RT_ERROR_INVALID_VALUE,

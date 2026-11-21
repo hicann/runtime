@@ -454,6 +454,25 @@ rtError_t ApiErrorDecorator::StreamEndTaskGrp(Stream* const stm, TaskGroup** con
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
+rtError_t ApiErrorDecorator::TaskGetSeqId(rtTask_t task, uint32_t* id)
+{
+    UNUSED(task);
+    UNUSED(id);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiErrorDecorator::ModelTaskDisable(rtTask_t task)
+{
+    UNUSED(task);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiErrorDecorator::ModelUpdate(Model* mdl)
+{
+    UNUSED(mdl);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 rtError_t ApiErrorDecorator::ModelCondHandleCreate(
     Model* const mdl, uint32_t defaultValue, rtCondHandleFlag_t flag, CondHandle** const handle)
 {

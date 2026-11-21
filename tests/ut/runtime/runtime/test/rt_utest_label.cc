@@ -189,11 +189,10 @@ TEST_F(LabelTest, label_task_submit)
     rtModel_t model;
     rtStream_t stream;
     rtLabel_t label;
-    rtContext_t ctx;
     Device* device = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
-    device->SetTschVersion(TS_VERSION_INIT);
-    error = rtCtxCreate(&ctx, RT_CTX_NORMAL_MODE, 0);
-    EXPECT_EQ(error, RT_ERROR_NONE);
+    RawDevice* const rawDevice = dynamic_cast<RawDevice*>(device);
+    ASSERT_NE(rawDevice, nullptr);
+    const uint32_t originalTschVersion = rawDevice->tschVersion_;
 
     error = rtModelCreate(&model, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -207,10 +206,15 @@ TEST_F(LabelTest, label_task_submit)
     error = rtLabelCreateV2(&label, model);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
+    rawDevice->tschVersion_ = TS_VERSION_INIT;
     error = rtLabelGoto(label, stream);
     EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
 
     error = rtLabelSet(label, stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    rawDevice->tschVersion_ = originalTschVersion;
+
+    error = rtStreamSynchronize(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
     error = rtModelUnbindStream(model, stream);
@@ -225,9 +229,9 @@ TEST_F(LabelTest, label_task_submit)
     error = rtStreamDestroy(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    error = rtCtxDestroy(ctx);
-    EXPECT_EQ(error, RT_ERROR_NONE);
     ((Runtime*)Runtime::Instance())->DeviceRelease(device);
+    EXPECT_EQ(rtDeviceReset(0), RT_ERROR_NONE);
+    EXPECT_EQ(rtSetDevice(0), RT_ERROR_NONE);
 }
 
 TEST_F(LabelTest, label_handle_invalid_after_destroy)

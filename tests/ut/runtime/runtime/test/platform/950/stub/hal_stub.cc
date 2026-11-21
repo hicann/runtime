@@ -15,6 +15,7 @@
 #include "driver/ascend_inpackage_hal.h"
 #include "hwts.hpp"
 #include "stars.hpp"
+#include "stars_david.hpp"
 #include "base.hpp"
 #include "pool.hpp"
 #include "runtime.hpp"
@@ -26,6 +27,7 @@
 #include "rt_utest_encap.h"
 #include "rt_utest_stub.h"
 #include "task_info.hpp"
+#include "cq_adapter.hpp"
 #include "stars_base.hpp"
 #include "stars_david.hpp"
 #include "../../../rt_utest_config_define.hpp"
@@ -301,9 +303,10 @@ rtHostFuncCqReport_t g_CqReportMsg[MAX_DEVICE_NUM];
 rtHostFuncSqCommand_t g_SqSendMsg[MAX_DEVICE_NUM];
 
 rtLogicReport_t logicReport;
-rtCqReport_t logicCqReport;
+rtLogicCqReport_t logicCqReport;
+rtStarsV2Cqe_t physicalCqReport;
 rtShmQuery_t vCqShmInfo[1024] = {0};
-std::map<uint32_t, uint32_t> logicCqStreamId;
+std::map<uint32_t, uint32_t> cqToStreamIdMap;
 std::mutex logicMutex;
 
 drvError_t halSqMemGet(uint32_t devId, struct halSqMemGetInput* sqMemGetInput, struct halSqMemGetOutput* sqMemGetOutput)
@@ -319,8 +322,17 @@ drvError_t halSqMsgSend(uint32_t devId, struct halSqMsgInfo* info)
     if (devId >= MAX_DEVICE_NUM) {
         return DRV_ERROR_NONE;
     }
-    while (__atomic_load_n(&sendCount[devId], __ATOMIC_ACQUIRE) != __atomic_load_n(&recvCount[devId], __ATOMIC_ACQUIRE))
-        ;
+    while (__atomic_load_n(&sendCount[devId], __ATOMIC_ACQUIRE) !=
+           __atomic_load_n(&recvCount[devId], __ATOMIC_ACQUIRE)) {
+        if (__atomic_load_n(&recvCount[devId], __ATOMIC_ACQUIRE) >
+            __atomic_load_n(&sendCount[devId], __ATOMIC_ACQUIRE)) {
+            // recvCount never passes sendCount in this protocol; the only source is
+            // StubClearHalSqSendAndRecvCnt racing this loop at a test boundary. Rebalance
+            // instead of waiting on a report nobody will ever consume.
+            __atomic_store_n(&recvCount[devId], __atomic_load_n(&sendCount[devId], __ATOMIC_ACQUIRE), __ATOMIC_RELEASE);
+            break;
+        }
+    }
     // std::cout<<"halSqMsgSend"<<""<<sendCount[devId]<<";"<<""<<recvCount[devId]<<std::endl;
 
     rtCommand_t* cmd = &g_command[devId];
@@ -432,11 +444,12 @@ void StubClearHalSqSendAndRecvCnt(uint32_t devId)
     __atomic_store_n(&sendCount[devId], 0, __ATOMIC_RELEASE);
     __atomic_store_n(&recvCount[devId], 0, __ATOMIC_RELEASE);
 }
+
 drvError_t halCqReportGet(uint32_t devId, struct halReportGetInput* in, struct halReportGetOutput* out)
 {
     if (in->type == DRV_LOGIC_TYPE) {
         std::lock_guard<std::mutex> lock(logicMutex);
-        uint32_t streamId = logicCqStreamId[in->cqId];
+        uint32_t streamId = cqToStreamIdMap[in->cqId];
         if (streamId == MAX_UINT32_NUM) {
             logicReport.logicCqType = LOGIC_RPT_TERMINAL;
         } else {
@@ -468,6 +481,17 @@ drvError_t halCqReportGet(uint32_t devId, struct halReportGetInput* in, struct h
         return DRV_ERROR_NONE;
     }
 
+    if ((in->type == DRV_NORMAL_TYPE) && (Runtime::Instance()->GetChipType() == CHIP_DAVID)) {
+        std::lock_guard<std::mutex> lock(logicMutex);
+        const uint32_t streamId = cqToStreamIdMap[in->cqId];
+        physicalCqReport.streamId = streamId;
+        physicalCqReport.taskId = vCqShmInfo[streamId].taskId;
+        physicalCqReport.cqeStatus.sysCnt.syscntHigh = 0U;
+        out->reportPtr = &physicalCqReport;
+        out->count = 1U;
+        return DRV_ERROR_NONE;
+    }
+
     while ((
         __atomic_load_n(&sendCount[devId], __ATOMIC_ACQUIRE) == __atomic_load_n(&recvCount[devId], __ATOMIC_ACQUIRE))) {
         if (IsReportWaitStopped(devId)) {
@@ -479,6 +503,15 @@ drvError_t halCqReportGet(uint32_t devId, struct halReportGetInput* in, struct h
     // RT_LOG(RT_LOG_INFO, "zyx drvReportGet reportPtr %u,%u,%u,%u",
     // sendCount[devId],recvCount[devId],cqSendCount[devId],sqSendCount[devId]);
     // std::cout<<"halCqReportGet"<<""<<sendCount[devId]<<";"<<""<<recvCount[devId]<<std::endl;
+
+    if (__atomic_load_n(&recvCount[devId], __ATOMIC_ACQUIRE) > __atomic_load_n(&sendCount[devId], __ATOMIC_ACQUIRE)) {
+        // Corrupted counters (see halSqMsgSend): drop the phantom reports so the
+        // protocol rebalances instead of consuming garbage forever.
+        __atomic_store_n(&recvCount[devId], __atomic_load_n(&sendCount[devId], __ATOMIC_ACQUIRE), __ATOMIC_RELEASE);
+        out->reportPtr = nullptr;
+        out->count = 0;
+        return DRV_ERROR_NONE;
+    }
 
     int32_t pingpong = __atomic_load_n(&recvCount[devId], __ATOMIC_RELAXED) % 2;
     out->reportPtr = &g_report[devId][pingpong];
@@ -519,16 +552,20 @@ drvError_t halSqCqAllocate(uint32_t devId, struct halSqCqInputInfo* in, struct h
             }
         }
         if (Runtime::Instance()->GetChipType() == CHIP_DAVID) {
-            memset(&logicCqReport, 0, sizeof(rtCqReport_t));
+            memset(&logicCqReport, 0, sizeof(rtLogicCqReport_t));
+            memset(&physicalCqReport, 0, sizeof(rtStarsV2Cqe_t));
         } else {
             memset(&logicReport, 0, sizeof(rtLogicReport_t));
         }
         memset((void*)vCqShmInfo, 0, sizeof(vCqShmInfo));
         out->queueVAddr = reinterpret_cast<uintptr_t>(vCqShmInfo);
-    } else if (in->type == DRV_LOGIC_TYPE) {
+    } else if (in->type == DRV_LOGIC_TYPE || in->type == DRV_NORMAL_TYPE) {
         std::lock_guard<std::mutex> lock(logicMutex);
         uint32_t streamId = in->info[0];
-        logicCqStreamId[sqCqId] = in->info[0];
+        cqToStreamIdMap[sqCqId] = in->info[0];
+        memset(&logicCqReport, 0, sizeof(rtLogicCqReport_t));
+        memset(&physicalCqReport, 0, sizeof(rtStarsV2Cqe_t));
+        memset((void*)vCqShmInfo, 0, sizeof(vCqShmInfo));
     }
     return DRV_ERROR_NONE;
 }
@@ -539,13 +576,17 @@ drvError_t halSqCqFree(uint32_t devId, struct halSqCqFreeInfo* in)
     g_sqcqIdBitmap.FreeId(resourceId);
     if (in->type == DRV_SHM_TYPE) {
         if (Runtime::Instance()->GetChipType() == CHIP_DAVID) {
-            memset(&logicCqReport, 0, sizeof(rtCqReport_t));
+            memset(&logicCqReport, 0, sizeof(rtLogicCqReport_t));
+            memset(&physicalCqReport, 0, sizeof(rtStarsV2Cqe_t));
         } else {
             memset(&logicReport, 0, sizeof(rtLogicReport_t));
         }
-    } else if (in->type == DRV_LOGIC_TYPE) {
+    } else if (in->type == DRV_LOGIC_TYPE || in->type == DRV_NORMAL_TYPE) {
         std::lock_guard<std::mutex> lock(logicMutex);
-        logicCqStreamId.erase(in->cqId);
+        uint32_t streamId = cqToStreamIdMap[in->cqId];
+        cqToStreamIdMap.erase(in->sqId);
+        memset(&logicCqReport, 0, sizeof(rtLogicCqReport_t));
+        memset(&physicalCqReport, 0, sizeof(rtStarsV2Cqe_t));
     }
     return DRV_ERROR_NONE;
 }
@@ -1190,7 +1231,7 @@ drvError_t halCqReportRecv(uint32_t devId, struct halReportRecvInfo* info)
 {
     struct halReportGetInput repGetInputInfo = {};
     struct halReportGetOutput repGetOutputInfo = {};
-    repGetInputInfo.type = DRV_LOGIC_TYPE;
+    repGetInputInfo.type = info->type;
     repGetInputInfo.tsId = info->tsId;
     repGetInputInfo.cqId = info->cqId;
     repGetOutputInfo.count = 0U;

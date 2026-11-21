@@ -43,13 +43,27 @@ namespace runtime {
 struct SyncFuncArgs;
 class JettyPool;
 class JettyManager;
+class ResourceIdAllocator;
 class LogicSqManage;
+
 constexpr uint32_t DMA_CPY_NUM_DEVICE_MAX = 5 * 1024U;
 constexpr uint32_t RT_DEFAULT_STACK_SIZE_32K = 32U * 1024U;
 constexpr uint32_t RT_DEFAULT_STACK_SIZE_16K = 16U * 1024U;
 constexpr uint32_t AICPU_OOM_RECENT_DEPTH = 10U;
 
 extern bool g_isAddrFlatDevice;
+
+enum SplitMode {
+    RT_NO_SPLIT_MODE = 0,
+    RT_SPLIT_MODE = 1,
+};
+
+enum VmngSplitMode : int32_t {
+    RT_VMNG_NORMAL_NONE_SPLIT_MODE = 0,
+    RT_VMNG_VIRTUAL_SPLIT_MODE,
+    RT_VMNG_CONTAINER_SPLIT_MODE,
+    RT_VMNG_INVALID_SPLIT_MODE,
+};
 
 enum rtTschVersion {
     TS_VERSION_INIT = 0,
@@ -229,6 +243,7 @@ public:
     virtual uint64_t GetTCR_() const = 0;
     virtual void* GetL2Buffer_() const = 0;
     virtual void* GetSqVirtualArrBaseAddr_() const = 0;
+    virtual void* GetSqExecTimesSvmBaseAddr_() const = 0;
     virtual rtError_t AllocSPM(void** dptr, uint64_t size) = 0;
     virtual rtError_t FreeSPM(const void* const dptr) = 0;
     virtual bool IsSPM(const void* dptr) = 0;
@@ -538,6 +553,8 @@ public:
         }
         return schedGate_->Setup();
     }
+    virtual uint32_t GetSplitMode() const { return 0U; }
+    virtual ResourceIdAllocator* GetResourceIdAllocator() const { return nullptr; }
 
 private:
     std::list<SyncFuncArgs*> syncArgs_;

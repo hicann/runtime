@@ -366,6 +366,18 @@ bool Context::ModelIsExistInContext(const Model* mdl)
     return flag;
 }
 
+bool Context::ModelIsExistInContextWithoutLock(const Model* mdl)
+{
+    bool flag = false;
+    for (auto it = models_.begin(); it != models_.end(); it++) {
+        if ((*it != nullptr) && (*it == mdl)) {
+            flag = true;
+            break;
+        }
+    }
+    return flag;
+}
+
 bool Context::CheckCanFreeModulePool(uint32_t poolIdx)
 {
     const uint32_t baseId = moduleAllocator_->AccumulatePoolCount(poolIdx);
@@ -1429,6 +1441,20 @@ rtError_t Context::StreamsTaskClean(void)
     return error;
 }
 
+rtError_t Context::CaptureModelClean(void)
+{
+    modelLock_.Lock();
+    for (Model* const model : models_) {
+        COND_PROC((model->GetModelType() != RT_MODEL_CAPTURE_MODEL), continue;);
+        CaptureModel* captureModel = dynamic_cast<CaptureModel*>(model);
+        COND_PROC((captureModel == nullptr), continue;);
+        captureModel->ClearExecuteExceptionFlagForAllModels();
+    }
+    modelLock_.Unlock();
+
+    return RT_ERROR_NONE;
+}
+
 rtError_t Context::StreamsUpdate(void)
 {
     rtError_t error = RT_ERROR_NONE;
@@ -1697,9 +1723,11 @@ rtError_t Context::ModelDestroy(Model* mdl)
         constexpr uint32_t totalCheckCount = 10000U;                 // 10s
         constexpr auto checkInterval = std::chrono::milliseconds(1); // 1ms 检查一次
         uint32_t count = 0U;
-        while (captureModel->IsCaptureModelRunning()) {
+        bool isExecuteException = captureModel->IsExecuteException();
+        while (captureModel->IsCaptureModelRunning() && (!isExecuteException)) {
             RawDevice* const rawDev = dynamic_cast<RawDevice*>(device_);
             rawDev->PollEndGraphNotifyInfo();
+            isExecuteException = captureModel->IsExecuteException();
 
             COND_RETURN_AND_MSG_OUTER(
                 (count >= totalCheckCount), RT_ERROR_MODEL_RUNNING, ErrorCode::EE1016,

@@ -101,6 +101,7 @@ set(libruntime_v100_task_src_files
     ${RUNTIME_CORE_DIR}/src/task/task_info/maintenance/maintenance_task_arch5162.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/memory/memory_task_arch5162.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_execute_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_aclgraph_exception_task_stub.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_graph_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_maintaince_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_task_arch5162.cc
@@ -272,9 +273,10 @@ set(runtime_src_device_list
     ${RUNTIME_CORE_DIR}/src/device/ini_parse_utils.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device_res.cc
+    ${RUNTIME_CORE_DIR}/src/device/stub/resource_id_allocator_stub.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device_adpt_comm.cc
     ${RUNTIME_CORE_DIR}/src/device/device_sched_gate_stub.cc
-    ${RUNTIME_CORE_DIR}/src/device/sq_addr_memory_pool.cc
+    ${RUNTIME_CORE_DIR}/src/device/stub/sq_addr_memory_pool_stub.cc
     ${RUNTIME_CORE_DIR}/src/device/ctrl_sq_stub.cc
     ${RUNTIME_CORE_DIR}/src/device/device_error_stub.cc
     ${RUNTIME_CORE_DIR}/src/device/device_msg_stub.cc
@@ -352,6 +354,8 @@ set(libruntime_src_files
     ${RUNTIME_CORE_DIR}/src/utils/capability.cc
     ${RUNTIME_CORE_DIR}/src/utils/osal.cc
     ${RUNTIME_CORE_DIR}/src/utils/subscribe.cc
+    ${RUNTIME_CORE_DIR}/src/cqe/cq_adapter.cc
+    ${RUNTIME_CORE_DIR}/src/cqe/tiny/stars_cq_adapter.cc
     ${RUNTIME_DIR}/src/runtime/driver/driver.cc
     ${RUNTIME_DIR}/src/runtime/driver/v100/npu_driver.cc
     ${RUNTIME_FEATURE_DIR}/model/model.cc
@@ -420,6 +424,7 @@ set(RUNTIME_INC_DIR_ARCH5162
     ${RUNTIME_CORE_DIR}/src/uvm
     ${RUNTIME_CORE_DIR}/src/event
     ${RUNTIME_DIR}/src/runtime/core/inc/cond_isa/v100
+    ${RUNTIME_DIR}/src/runtime/core/inc/cqe
     ${RUNTIME_DIR}/src/runtime/core/inc/dqs
     ${RUNTIME_DIR}/src/runtime/core/inc/sqe/v200
     ${RUNTIME_DIR}/src/runtime/core/inc/sqe/v200_base

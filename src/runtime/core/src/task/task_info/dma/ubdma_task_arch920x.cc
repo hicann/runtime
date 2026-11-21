@@ -95,12 +95,12 @@ static void ParseAndPrintUbDmaCqeDetail(TaskInfo* taskInfo, const rtCqReport_t& 
         {
             static_cast<uint8_t>(errorCode.bits.dieId0),
             static_cast<uint8_t>(errorCode.bits.functionId0),
-            &logicCq.u1.info[0U],
+            &logicCq.u.info[0U],
         },
         {
             static_cast<uint8_t>(errorCode.bits.dieId1),
             static_cast<uint8_t>(errorCode.bits.functionId1),
-            &logicCq.u1.info[1U],
+            &logicCq.u.info[1U],
         },
     };
 

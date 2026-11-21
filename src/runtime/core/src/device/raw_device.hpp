@@ -21,7 +21,9 @@
 #include "ctrl_sq.hpp"
 #include "program.hpp"
 #include "jetty_manager.h"
+#include "resource_id_allocator.hpp"
 #include "logic_sq_manage.hpp"
+
 namespace cce {
 namespace runtime {
 
@@ -308,6 +310,7 @@ public:
 
     void CtrlTaskReclaim(CtrlStream* const stm) override { return engine_->CtrlTaskReclaim(stm); }
     void* GetSqVirtualArrBaseAddr_() const override { return sqVirtualArrBaseAddr_; }
+    void* GetSqExecTimesSvmBaseAddr_() const override { return sqExecTimesSvmBaseAddr_; }
     rtError_t AllocMemForSqVirtualArr();
 
     rtError_t AddAddrKernelNameMapTable(rtAddrKernelName_t& mapInfo) override;
@@ -488,6 +491,10 @@ public:
      * @return uint32_t: current run mode
      */
     uint32_t GetRunMode() const override { return runMode_; }
+
+    uint32_t GetSplitMode() const override { return splitMode_; }
+
+    ResourceIdAllocator* GetResourceIdAllocator() const override { return resourceIdAllocator_.get(); }
     rtError_t WriteDevValue(void* const dest, const size_t size, const void* const data) override;
     rtError_t WriteDevString(void* const dest, const size_t max, const char_t* const str) override;
 
@@ -595,6 +602,8 @@ private:
     rtError_t RegisterDcacheLockOp(Program*& dcacheLockOpProgram);
     rtError_t AllocStackPhyAddrForDcache();
     rtError_t Alloc32kStackAddrForDcache();
+    rtError_t AllocSqExecTimesSvm();
+    rtError_t FreeSqExecTimesSvm();
     rtError_t GetStarsVersion();
     rtError_t SetSupportHcomcpuFlag();
     static void* MallocBufferForSqIdMem(const size_t size, void* const para);
@@ -611,6 +620,8 @@ private:
     rtError_t InitQosCfg();
     rtError_t InitSwapBufferInfo();
     rtError_t InitAiCoreTaskSyncCheck();
+    void InitSplitMode();
+    rtError_t InitResourceIdAllocator();
     rtError_t GetQosInfoByIpc();
     void ReleaseOwnedObjectsOnDestroy() noexcept;
     void ReleaseDriverResourcesOnDestroy() noexcept;
@@ -693,6 +704,7 @@ private:
     mmTimespec lastUsagePoolTimeStamp_ = mmGetTickCount();
     void* simtStackPhyBase_{nullptr};
     void* simtStackPhyBaseAlign_{nullptr};
+    void* sqExecTimesSvmBaseAddr_{nullptr};
     uint32_t simtWarpStkSize_{RT_KIS_SIMT_WARP_STK_SIZE};
     uint32_t simtDvgWarpStkSize_{RT_KIS_SIMT_DVG_WARP_STK_SIZE};
     uint8_t davidDieNum_{1};
@@ -724,6 +736,8 @@ private:
     uint64_t pageFaultBaseTime_ = 0U;
     uint64_t pageFaultEndTime_ = 0U;
     uint32_t runMode_;
+    uint32_t splitMode_{0U}; // RT_NO_SPLIT_MODE
+    std::unique_ptr<ResourceIdAllocator> resourceIdAllocator_;
     Atomic<DeviceFaultType> deviceFaultType_{DeviceFaultType::NO_ERROR};
     Atomic<uint32_t> aixErrRecoverCnt_{0};
     bool isDrvSupportUserMem_ = false;

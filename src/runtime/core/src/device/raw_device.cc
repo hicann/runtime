@@ -54,6 +54,7 @@
 #include "parse_kernel_dfx_info.hpp"
 #include "runtime_task_manager.h"
 #include "maintenance_task.h"
+#include "sq_exec_times_addr_task.h"
 #include "timeout_set_task.h"
 #include "aicpu_timeout_manager.h"
 
@@ -202,6 +203,7 @@ void RawDevice::ReleaseOwnedObjectsOnDestroy() noexcept
     DELETE_A(tschCapability_);
     DELETE_A(freeEvent_);
     DELETE_O(sqIdMemAddrPool_);
+    resourceIdAllocator_.reset();
     jettyManager_.reset();
 }
 
@@ -227,6 +229,7 @@ void RawDevice::ReleaseDriverResourcesOnDestroy() noexcept
             aicpuPrintfAddr_ = nullptr;
             aicpuPrintTlvCnt_.Set(0U);
         }
+        FreeSqExecTimesSvm();
         (void)driver_->DeviceClose(deviceId_, tsId_);
         driver_ = nullptr;
     }
@@ -675,6 +678,8 @@ rtError_t RawDevice::Init()
     // get runMode to runMode_
     const uint32_t runMode = driver_->GetRunMode();
     SetRunMode(runMode);
+
+    InitSplitMode();
     driver_->SetAllocNumaTsSupported();
     chipType_ = chipType;
     socVersion_ = Runtime::Instance()->GetSocVersion();
@@ -853,7 +858,6 @@ rtError_t RawDevice::Init()
     }
 
     return RT_ERROR_NONE;
-
 SQ_ADDR_MEMORY_FREE:
     DELETE_O(sqAddrMemoryOrder_);
 DEVICE_SQ_CQ_FREE:
@@ -893,6 +897,41 @@ L2_FREE:
     (void)driver_->DeviceClose(deviceId_, tsId_);
     driver_ = nullptr;
     return error;
+}
+
+rtError_t RawDevice::AllocSqExecTimesSvm()
+{
+    rtError_t error = RT_ERROR_NONE;
+    Runtime* const rtInstance = Runtime::Instance();
+
+    const rtMemType_t memType = rtInstance->GetTsMemType(MEM_REQUEST_FEATURE_DEFAULT, RT_SQ_EXEC_TIMES_SVM_4K);
+    error = driver_->DevMemAllocWithBackupFlag(
+        &sqExecTimesSvmBaseAddr_, RT_SQ_EXEC_TIMES_SVM_4K, memType, Id_(), DevMemBackupType::SNAPSHOT_REQUIRED_BACKUP);
+
+    COND_RETURN_AND_MSG_INNER(
+        (error != RT_ERROR_NONE) || (sqExecTimesSvmBaseAddr_ == nullptr), error,
+        "Failed to allocate sq execution times svm, retCode=%#x.", error);
+
+    error = driver_->MemSetSync(sqExecTimesSvmBaseAddr_, RT_SQ_EXEC_TIMES_SVM_4K, 0xFFU, RT_SQ_EXEC_TIMES_SVM_4K);
+    COND_RETURN_ERROR(
+        error != RT_ERROR_NONE, error, "Failed to execute MemSetSync, retCode=%#x.", static_cast<uint32_t>(error));
+    RT_LOG(RT_LOG_INFO, "Alloc sq execution times svm success.");
+    return error;
+}
+
+rtError_t RawDevice::FreeSqExecTimesSvm()
+{
+    if (sqExecTimesSvmBaseAddr_ == nullptr) {
+        return RT_ERROR_NONE;
+    }
+
+    const rtError_t error = driver_->DevMemFree(sqExecTimesSvmBaseAddr_, Id_());
+    COND_RETURN_ERROR(
+        error != RT_ERROR_NONE, error, "Failed to free sq execution times svm, retCode=%#x.",
+        static_cast<uint32_t>(error));
+
+    sqExecTimesSvmBaseAddr_ = nullptr;
+    return RT_ERROR_NONE;
 }
 
 rtError_t RawDevice::Alloc32kStackAddrForDcache()
@@ -1219,6 +1258,89 @@ rtError_t RawDevice::InitAiCoreTaskSyncCheck()
     return error;
 }
 
+void RawDevice::InitSplitMode()
+{
+    uint32_t drvSplitMode = 0U;
+    const rtError_t error = driver_->GetDeviceSplitMode(deviceId_, &drvSplitMode);
+    if (error != RT_ERROR_NONE) {
+        return;
+    }
+
+    if (drvSplitMode == RT_VMNG_NORMAL_NONE_SPLIT_MODE) {
+        splitMode_ = RT_NO_SPLIT_MODE;
+    } else if (drvSplitMode == RT_VMNG_VIRTUAL_SPLIT_MODE || drvSplitMode == RT_VMNG_CONTAINER_SPLIT_MODE) {
+        splitMode_ = RT_SPLIT_MODE;
+    } else {
+        ; // do nothing
+    }
+
+    RT_LOG(
+        RT_LOG_INFO, "Get device split mode, device_id=%u, drvSplitMode=%u, splitMode=%u.", deviceId_, drvSplitMode,
+        splitMode_);
+    return;
+}
+
+rtError_t RawDevice::InitResourceIdAllocator()
+{
+    constexpr uint32_t RT_STREAM_ID_ALLOC_MAX = 65535U; // 按照bitmap分配，最大支持64k
+    constexpr uint32_t RT_MODEL_ID_ALLOC_MAX = 65536U;  // 按照bitmap分配，最大支持64k
+
+    resourceIdAllocator_ = std::unique_ptr<ResourceIdAllocator>(CreateResourceIdAllocator());
+    if (resourceIdAllocator_ == nullptr) {
+        return RT_ERROR_MEMORY_ALLOCATION;
+    }
+
+    rtError_t error = resourceIdAllocator_->Init(RT_STREAM_ID_ALLOC_MAX, RT_MODEL_ID_ALLOC_MAX);
+    if (error != RT_ERROR_NONE) {
+        return error;
+    }
+
+    /*
+     * id分配策略：
+     * 1、优先从bitMap中分配，支持Alloc和Free
+     * 2、bitMap中分配不到，从hugeAllocId_中分配，只累加，不支持释放，支持无限规格
+     * 3、如果当前device不支持bitMap分配，分配的id为-1
+     * 4、重点，只有A5/A6形态支持
+     * 5、hugeAllocId_当前不支持，1年兼容性周期之后，才能分配64k之后的id
+     */
+
+    uint32_t occupyStreamIdBegin = 0U;
+    uint32_t occupyStreamIdEnd = 0U;
+    uint32_t occupyModelIdBegin = 0U;
+    uint32_t occupyModelIdEnd = 0U;
+    if (splitMode_ == RT_NO_SPLIT_MODE) {
+        occupyStreamIdEnd = 2047U; // 驱动物理机分配的范围, 2k: 0-2047
+        occupyModelIdEnd = 2047U;  // 驱动物理机分配的范围, 2k: 0-2047
+    } else {
+        // 从驱动查询虚拟机场景下驱动占用的范围
+        error = driver_->QueryStreamIdRange(deviceId_, tsId_, &occupyStreamIdBegin, &occupyStreamIdEnd);
+        if (error != RT_ERROR_NONE) {
+            return error;
+        }
+
+        error = driver_->QueryModelIdRange(deviceId_, tsId_, &occupyModelIdBegin, &occupyModelIdEnd);
+        if (error != RT_ERROR_NONE) {
+            return error;
+        }
+    }
+
+    for (uint32_t id = occupyStreamIdBegin; id <= occupyStreamIdEnd; id++) {
+        resourceIdAllocator_->OccupyStreamId(static_cast<int32_t>(id));
+    }
+
+    for (uint32_t id = occupyModelIdBegin; id <= occupyModelIdEnd; id++) {
+        resourceIdAllocator_->OccupyModelId(static_cast<int32_t>(id));
+    }
+
+    RT_LOG(
+        RT_LOG_INFO,
+        "occupyStreamIdBegin=%u, occupyStreamIdEnd=%u, "
+        "occupyModelIdBegin=%u, occupyModelIdEnd=%u.",
+        occupyStreamIdBegin, occupyStreamIdEnd, occupyModelIdBegin, occupyModelIdEnd);
+
+    return RT_ERROR_NONE;
+}
+
 rtError_t RawDevice::Start()
 {
     COND_RETURN_INFO(primaryStream_ != nullptr, RT_ERROR_NONE, "primaryStream exists");
@@ -1314,6 +1436,16 @@ rtError_t RawDevice::Start()
                 "new");
         }
     }
+
+    if (CheckFeatureSupport(TS_FEATURE_SUPPORT_ACLGRAPH_DECOUPLING) &&
+        !IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_TSCH_PACAGE_COMPATABLE)) {
+        error = AllocSqExecTimesSvm();
+        ERROR_GOTO(
+            error, ERROR_STOP, "Failed to allocate sq exec times svm, retCode=%#x.", static_cast<uint32_t>(error));
+        error = SendTaskToSetSqExecTimesAddr(this);
+        ERROR_GOTO(
+            error, ERROR_STOP, "Failed to send sq exec times addr task, retCode=%#x.", static_cast<uint32_t>(error));
+    }
 #else
     Runtime::Instance()->RtTimeoutConfigInit();
 #endif
@@ -1329,6 +1461,14 @@ rtError_t RawDevice::Start()
     ERROR_GOTO(
         error, ERROR_STOP, "Failed to initialize AI Core task synchronization check, retCode=%#x.",
         static_cast<uint32_t>(error));
+    if (CheckFeatureSupport(TS_FEATURE_SUPPORT_ACLGRAPH_DECOUPLING) &&
+        IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_SUPPORT_RUNTIME_ALLOC_STREAMID_AND_MODELID) &&
+        (GetSplitMode() == RT_NO_SPLIT_MODE)) {
+        error = InitResourceIdAllocator();
+        ERROR_GOTO(
+            error, ERROR_STOP, "Failed to initialize resource ID allocator, device_id=%u, retCode=%#x.", deviceId_,
+            static_cast<uint32_t>(error));
+    }
 
     error = AllocUserBufAddr();
     ERROR_GOTO(
@@ -1540,6 +1680,11 @@ rtError_t RawDevice::Stop()
 
     if (isThreadAlive) {
         rtError_t error = RT_ERROR_NONE;
+        if ((GetSqExecTimesSvmBaseAddr_() != nullptr) &&
+            (GetDevRunningState() == static_cast<uint32_t>(DEV_RUNNING_NORMAL))) {
+            (void)SendTaskToUnsetSqExecTimesAddr(this);
+        }
+
         if ((deviceErrorProc_ != nullptr) && (GetDevRunningState() == static_cast<uint32_t>(DEV_RUNNING_NORMAL))) {
             error = deviceErrorProc_->SendTaskToStopUseRingBuffer();
         }
@@ -1597,6 +1742,7 @@ rtError_t RawDevice::Stop()
     FreeProfSwitchAddr();
     FreeUserBufAddr();
     FreeFftsPlusArgHandleCache();
+    FreeSqExecTimesSvm();
     return engine_->Stop();
 }
 
@@ -2670,6 +2816,7 @@ rtError_t RawDevice::StoreEndGraphNotifyInfo(
 rtError_t RawDevice::DeleteEndGraphNotifyInfo(
     const uint32_t streamId, Model* captureModel, uint32_t endGraphNotifyPos, const uint32_t errCode)
 {
+    COND_PROC((captureModel == nullptr), return RT_ERROR_NONE);
     auto key = std::make_tuple(streamId, captureModel);
     uint32_t numOfPos = 0;
 

@@ -484,6 +484,95 @@ union rtDavidSqe_t {
 static_assert(sizeof(rtDavidSqe_t) == SQE_SIZE_UNIT, "rtDavidSqe_t must occupy 64 bytes");
 static_assert(SQE_NUM_PER_DAVID_TASK_MAX <= SQE_NUM_PER_TASK_MAX, "David task exceeds the common SQE capacity");
 
+struct rtStarsV2ModelExecuteError_t {
+    uint16_t taskId;
+    uint16_t streamId : 12; /* 0~4096 for stream_id */
+    uint16_t result : 1;
+    uint16_t rsv : 3;
+};
+
+union rtStarsV2CqeSwStatus_t {
+    rtStarsV2ModelExecuteError_t modelExec;
+    uint32_t value;
+};
+
+struct rtStarsV2CqeErrorInfo_t {
+    uint8_t errorCode;
+    uint8_t notifyAttached : 1;
+    uint8_t nextTaskVld : 1;
+    uint8_t sqeType : 6;
+    uint16_t sqeIndex;
+    rtStarsV2CqeSwStatus_t sqSwStatus;
+};
+
+struct rtStarsCqeDvppInfo_t {
+    uint8_t errorCode;
+    uint8_t rsv0 : 1;
+    uint8_t rsv1 : 1;
+    uint8_t sqeType : 6;
+    uint16_t rsv2;
+
+    uint16_t status;
+    uint16_t cmdlstId;
+    uint32_t intErr;
+};
+
+struct rtStarsUbdmaStatus_t {
+    /* word2 */
+    uint8_t errorCode;
+    uint8_t rsv0 : 2;
+    uint8_t sqeType : 6;
+    uint16_t rsv1;
+
+    /* word3 */
+    uint8_t status;
+    uint8_t dieId0 : 2;
+    uint8_t dieId1 : 2;
+    uint8_t rsv2 : 4;
+    uint8_t functionId0 : 7;
+    uint8_t rsv3 : 1;
+    uint8_t functionId1 : 7;
+    uint8_t rsv4 : 1;
+
+    /* word4 */
+    uint16_t jettyId0;
+    uint16_t jettyId1;
+
+    /* word5 */
+    uint16_t ciIdx0;
+    uint16_t ciIdx1;
+
+    /* word6 */
+    uint8_t status0;
+    uint8_t subStatus0;
+    uint8_t status1;
+    uint8_t subStatus1;
+};
+
+union rtStarsV2CqeStatus_t {
+    rtStarsCqeSysCnt_t sysCnt;
+    rtStarsV2CqeErrorInfo_t errorInfo;
+    rtStarsCqeDvppInfo_t dvppInfo;
+    rtStarsUbdmaStatus_t ubdmaInfo;
+};
+
+/* total 32 bytes */
+struct rtStarsV2Cqe_t {
+    uint16_t phase : 1;
+    uint16_t warn : 1;         /* process warning */
+    uint16_t notifyRecord : 1; /* notify record flag */
+    uint16_t placeHolder : 1;
+    uint16_t sqId : 11;
+    uint16_t errorBit : 1;
+    uint16_t sqHead;
+
+    uint16_t streamId;
+    uint16_t taskId;
+
+    rtStarsV2CqeStatus_t cqeStatus;
+    uint32_t rsv;
+};
+
 #pragma pack(pop)
 
 uint32_t GetSendDavidSqeNum(const TaskInfo* const taskInfo);

@@ -1684,7 +1684,7 @@ TEST_P(SoftwareRecordTestDavid, SqesCqeAndCapturePolicy)
         if (!test.capture && !test.bound) {
             ASSERT_EQ(event.idMap_.count(task.u.memWriteValueTask.ownedEventId), 1U);
             rtCqReport_t report = {};
-            report.u1.timeStamp = 123U;
+            report.u.timeStamp = 123U;
             report.errorType = test.error ? RT_STARS_EXIST_ERROR : 0U;
             report.errorCode = test.error ? TS_ERROR_END_OF_SEQUENCE : 0U;
             SetStarsResultForDavidMemWriteValueTask(&task, report);

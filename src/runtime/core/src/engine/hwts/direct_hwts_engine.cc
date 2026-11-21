@@ -376,11 +376,12 @@ rtError_t DirectHwtsEngine::SyncTask(
     Driver* const devDrv = device_->Driver_();
     rtLogicReport_t reportInfo = {};
     constexpr uint32_t allocCnt = 1U;
-    LogicCqWaitInfo waitInfo = {};
+    CqWaitInfo waitInfo = {};
     waitInfo.devId = device_->Id_();
     waitInfo.tsId = device_->DevGetTsId();
     waitInfo.cqId = cqId;
     waitInfo.isFastCq = isFastCq;
+    waitInfo.isLogicCq = true;
     waitInfo.timeout = waitTimeout_;
     waitInfo.streamId = streamId;
     waitInfo.taskId = taskId;
@@ -684,11 +685,12 @@ void DirectHwtsEngine::MonitoringRun()
     RT_LOG(RT_LOG_INFO, "Monitor thread enter: ts_id=%u, logicCqId=%u.", tsId, logicCqId_);
     Runtime::Instance()->MonitorNumAdd(1U);
     bool terminal = false;
-    LogicCqWaitInfo waitInfo = {};
+    CqWaitInfo waitInfo = {};
     waitInfo.devId = device_->Id_();
     waitInfo.tsId = tsId;
     waitInfo.cqId = logicCqId_;
     waitInfo.isFastCq = false;
+    waitInfo.isLogicCq = true;
     waitInfo.timeout = waitTimeout_;
 
     GlobalStateManager::GetInstance().IncBackgroundThreadCount(__func__);

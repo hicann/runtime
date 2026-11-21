@@ -182,7 +182,7 @@ TEST_F(Arch9201StreamInfoExTest, AclGraphSqCqPreAllocationPassesSimtInfoExWithou
     rtDeviceSqCqInfo_t sqCqInfo = {};
 
     ASSERT_EQ(
-        device_->GetDeviceSqCqManage()->AllocSqCqFromDrv(&sqCqInfo, static_cast<uint32_t>(TSDRV_FLAG_NO_SQ_MEM)),
+        device_->GetDeviceSqCqManage()->AllocSqCqFromDrv(&sqCqInfo, static_cast<uint32_t>(TSDRV_FLAG_NO_SQ_MEM), 0U),
         RT_ERROR_NONE);
     EXPECT_EQ(sqCqInfo.sqId, TEST_SQ_ID);
     EXPECT_EQ(sqCqInfo.cqId, TEST_CQ_ID);

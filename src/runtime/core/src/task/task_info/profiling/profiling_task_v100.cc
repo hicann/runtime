@@ -111,6 +111,7 @@ void ConstructSqeForProfilerTraceExTask(TaskInfo* const taskInfo, void* const sq
     sqe->u.profile_trace_info.profilerTraceId = taskInfo->u.profilerTraceExTask.profilerTraceId;
     sqe->u.profile_trace_info.modelId = taskInfo->u.profilerTraceExTask.modelId;
     sqe->u.profile_trace_info.tagId = taskInfo->u.profilerTraceExTask.tagId;
+    sqe->u.profile_trace_info.streamId = stm->Id_();
 
     PrintSqe(command, "ProfilerTraceExTask");
     RT_LOG(RT_LOG_INFO, "ProfilerTraceExTask stream_id:%d task_id:%u", stm->Id_(), static_cast<uint32_t>(taskInfo->id));

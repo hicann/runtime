@@ -86,6 +86,8 @@
 #include "model_maintaince_task.h"
 #include "model_to_aicpu_task.h"
 #include "capture_model.hpp"
+#include "sq_exec_times_addr_task.h"
+#include "model_execute_task.h"
 #include "cond_handle/cond_handle.hpp"
 #include "aclgraph_cond_task.h"
 #include "runtime/rt_inner_model.h"
@@ -1261,6 +1263,7 @@ TEST_F(TaskTestDavid, read_aicore_mem)
     Device* const dev = curCtx->Device_();
     EXPECT_EQ(dev != nullptr, true);
     MOCKER_CPP_VIRTUAL(dev, &Device::CheckFeatureSupport).stubs().will(returnValue(true));
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::DebugCqReport).stubs().will(returnValue(RT_ERROR_NONE));
     ApiImpl impl;
     ApiDecorator api(&impl);
     EXPECT_EQ(rtDebugSetDumpMode(RT_DEBUG_DUMP_ON_EXCEPTION), ACL_RT_SUCCESS);
@@ -1963,6 +1966,26 @@ TEST_F(TaskTestDavid, Test_CondIsaHelper)
     RtStarsModelExeFuncCall funcCall = {};
     ConstrucModelExeFuncCall(funcCallPara, funcCall);
 
+    EXPECT_EQ(funcCall.addModelExecTimes.u.nops.nop0.opCode, RT_STARS_COND_ISA_OP_CODE_NOP);
+    EXPECT_EQ(funcCall.addModelExecTimes.u.nops.nop1.opCode, RT_STARS_COND_ISA_OP_CODE_NOP);
+    EXPECT_EQ(funcCall.addModelExecTimes.u.nops.nop2.opCode, RT_STARS_COND_ISA_OP_CODE_NOP);
+    EXPECT_EQ(funcCall.addModelExecTimes.u.nops.nop3.opCode, RT_STARS_COND_ISA_OP_CODE_NOP);
+    EXPECT_EQ(funcCall.addModelExecTimes.u.nops.nop4.opCode, RT_STARS_COND_ISA_OP_CODE_NOP);
+    EXPECT_EQ(funcCall.addModelExecTimes.u.nops.nop5.opCode, RT_STARS_COND_ISA_OP_CODE_NOP);
+    EXPECT_EQ(funcCall.addModelExecTimes.u.nops.nop6.opCode, RT_STARS_COND_ISA_OP_CODE_NOP);
+
+    funcCallPara.modelExecTimesAddr = 0x12345678ULL;
+    ConstrucModelExeFuncCall(funcCallPara, funcCall);
+    const RtStarsModelExeAddTimes& addTimes = funcCall.addModelExecTimes;
+    EXPECT_EQ(addTimes.u.instrs.loadExecTimesAddr.opCode, RT_STARS_COND_ISA_OP_CODE_LOAD_IMM);
+    EXPECT_EQ(addTimes.u.instrs.loadExecTimesAddr.func3, RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD);
+    EXPECT_EQ(addTimes.u.instrs.loadExecTimesAddr.rd, RT_STARS_COND_ISA_REGISTER_R2);
+    EXPECT_EQ(addTimes.u.instrs.addi.opCode, RT_STARS_COND_ISA_OP_CODE_OP_IMM);
+    EXPECT_EQ(addTimes.u.instrs.addi.func3, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI);
+    EXPECT_EQ(addTimes.u.instrs.addi.immd, 1U);
+    EXPECT_EQ(addTimes.u.instrs.sd.opCode, RT_STARS_COND_ISA_OP_CODE_STORE);
+    EXPECT_EQ(addTimes.u.instrs.sd.func3, RT_STARS_COND_ISA_STORE_FUNC3_SD);
+
     RtStarsLabelSwitchByIdxCheck labelSwitchByIdx = {};
     ConstructLabelSwitchByIdxCheckFc(0, 0, 0, labelSwitchByIdx);
 
@@ -1988,35 +2011,73 @@ TEST_F(TaskTestDavid, Test_CondIsaHelper)
 
 TEST_F(TaskTestDavid, CaptureCondModelExecuteUsesEmbeddedJumpOffsets)
 {
+    const rtChipType_t originalChipType = InnerThreadLocalContainer::GetCurrentChipType();
     InnerThreadLocalContainer::SetCurrentChipType(CHIP_DAVID);
     rtStarsCaptureCondFcPara_t para = {};
 
     RtStarsCaptureIfCondFc ifFc = {};
     para.deltaOffset = offsetof(RtStarsCaptureIfCondFc, modelExe) / sizeof(uint32_t);
     ConstructCaptureIfCondFc(para, ifFc);
-    uint64_t expectedOffset =
-        para.deltaOffset +
-        (offsetof(RtStarsModelExeFuncCall, endInstr) + offsetof(RtStarsModelExeExeEndInstr, nop)) / sizeof(uint32_t);
+    uint64_t expectedOffset = para.deltaOffset + offsetof(RtStarsModelExeFuncCall, endInstr) / sizeof(uint32_t);
     EXPECT_EQ(ifFc.modelExe.scanSq.llwi3.immdLow, expectedOffset >> 4U);
     EXPECT_EQ(ifFc.modelExe.scanSq.bgeu.jumpInstrOffset, expectedOffset & 0xFU);
 
     RtStarsCaptureWhileCondFc whileFc = {};
     para.deltaOffset = offsetof(RtStarsCaptureWhileCondFc, modelExe) / sizeof(uint32_t);
     ConstructCaptureWhileCondFc(para, whileFc);
-    expectedOffset =
-        para.deltaOffset +
-        (offsetof(RtStarsModelExeFuncCall, endInstr) + offsetof(RtStarsModelExeExeEndInstr, nop)) / sizeof(uint32_t);
+    expectedOffset = para.deltaOffset + offsetof(RtStarsModelExeFuncCall, endInstr) / sizeof(uint32_t);
     EXPECT_EQ(whileFc.modelExe.scanSq.llwi3.immdLow, expectedOffset >> 4U);
     EXPECT_EQ(whileFc.modelExe.scanSq.bgeu.jumpInstrOffset, expectedOffset & 0xFU);
 
     RtStarsCaptureSwitchCondFc switchFc = {};
     para.deltaOffset = offsetof(RtStarsCaptureSwitchCondFc, modelExe) / sizeof(uint32_t);
     ConstructCaptureSwitchCondFc(para, switchFc);
-    expectedOffset =
-        para.deltaOffset +
-        (offsetof(RtStarsModelExeFuncCall, endInstr) + offsetof(RtStarsModelExeExeEndInstr, nop)) / sizeof(uint32_t);
+    expectedOffset = para.deltaOffset + offsetof(RtStarsModelExeFuncCall, endInstr) / sizeof(uint32_t);
     EXPECT_EQ(switchFc.modelExe.scanSq.llwi3.immdLow, expectedOffset >> 4U);
     EXPECT_EQ(switchFc.modelExe.scanSq.bgeu.jumpInstrOffset, expectedOffset & 0xFU);
+    for (const auto* modelExe : {&ifFc.modelExe, &whileFc.modelExe, &switchFc.modelExe}) {
+        EXPECT_EQ(modelExe->addModelExecTimes.u.nops.nop0.opCode, RT_STARS_COND_ISA_OP_CODE_NOP);
+        EXPECT_EQ(modelExe->addModelExecTimes.u.nops.nop1.opCode, RT_STARS_COND_ISA_OP_CODE_NOP);
+        EXPECT_EQ(modelExe->addModelExecTimes.u.nops.nop2.opCode, RT_STARS_COND_ISA_OP_CODE_NOP);
+        EXPECT_EQ(modelExe->addModelExecTimes.u.nops.nop3.opCode, RT_STARS_COND_ISA_OP_CODE_NOP);
+        EXPECT_EQ(modelExe->addModelExecTimes.u.nops.nop4.opCode, RT_STARS_COND_ISA_OP_CODE_NOP);
+        EXPECT_EQ(modelExe->addModelExecTimes.u.nops.nop5.opCode, RT_STARS_COND_ISA_OP_CODE_NOP);
+        EXPECT_EQ(modelExe->addModelExecTimes.u.nops.nop6.opCode, RT_STARS_COND_ISA_OP_CODE_NOP);
+        EXPECT_EQ(modelExe->endInstr.nop.opCode, RT_STARS_COND_ISA_OP_CODE_NOP);
+    }
+    InnerThreadLocalContainer::SetCurrentChipType(originalChipType);
+}
+
+TEST_F(TaskTestDavid, CondModelExecuteClearsReusedCounterAddress)
+{
+    rtStarsCaptureCondFcPara_t para = {};
+    rtStarsModelExeFuncCallPara_t modelPara = {};
+    modelPara.modelExecTimesAddr = 0x12345678ULL;
+
+    TransParaToModelExecuteFuncCallPara(para, modelPara);
+
+    EXPECT_TRUE(modelPara.isCondTaskModelExec);
+    EXPECT_EQ(modelPara.modelExecTimesAddr, 0ULL);
+    EXPECT_EQ(modelPara.endInstrDistance, offsetof(RtStarsModelExeFuncCall, endInstr));
+}
+
+TEST_F(TaskTestDavid, RootModelExecuteJumpsToCounterBeforeEndInstruction)
+{
+    Model model;
+    TaskInfo task = {};
+    InitByStream(&task, stream_);
+    task.u.modelExecuteTaskInfo.model = &model;
+    rtStarsModelExeFuncCallPara_t para = {};
+    MOCKER(AllocFuncCallMemForModelExecuteTask).expects(once()).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(device_, &Device::GetStarsRegBaseAddr)
+        .stubs()
+        .will(returnValue(static_cast<uint64_t>(0x100000000ULL)));
+
+    EXPECT_EQ(ConstructFuncCallParaForModelExecuteTask(&task, para), RT_ERROR_NONE);
+    EXPECT_FALSE(para.isCondTaskModelExec);
+    EXPECT_EQ(para.endInstrDistance, offsetof(RtStarsModelExeFuncCall, addModelExecTimes));
+    EXPECT_LT(para.endInstrDistance, offsetof(RtStarsModelExeFuncCall, endInstr));
+    GlobalMockObject::verify();
 }
 
 TEST_F(TaskTestDavid, CondIsaConstructFuncSwitchByCurrentChipType)
@@ -2729,6 +2790,9 @@ TEST_F(TaskTestDavid, CaptureModeExecute)
     EXPECT_EQ(dev != nullptr, true);
     MOCKER_CPP_VIRTUAL(dev, &Device::CheckFeatureSupport).stubs().will(returnValue(true));
 
+    RawDevice* rawDev = dynamic_cast<RawDevice*>(dev);
+    rawDev->InitResourceIdAllocator();
+
     error = rtStreamBeginCapture(stream1, RT_STREAM_CAPTURE_MODE_GLOBAL);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
@@ -2800,6 +2864,9 @@ TEST_F(TaskTestDavid, AllocCaptureTask)
     EXPECT_EQ(dev != nullptr, true);
     MOCKER_CPP_VIRTUAL(dev, &Device::CheckFeatureSupport).stubs().will(returnValue(true));
 
+    RawDevice* rawDev = dynamic_cast<RawDevice*>(dev);
+    rawDev->InitResourceIdAllocator();
+
     error = rtStreamBeginCapture(stream1, RT_STREAM_CAPTURE_MODE_GLOBAL);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
@@ -2855,6 +2922,9 @@ TEST_F(TaskTestDavid, AllocCaptureStreamNotify)
     Device* const dev = curCtx->Device_();
     EXPECT_EQ(dev != nullptr, true);
     MOCKER_CPP_VIRTUAL(dev, &Device::CheckFeatureSupport).stubs().will(returnValue(true));
+
+    RawDevice* rawDev = dynamic_cast<RawDevice*>(dev);
+    rawDev->InitResourceIdAllocator();
 
     error = rtStreamBeginCapture(stream1, RT_STREAM_CAPTURE_MODE_GLOBAL);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -3433,6 +3503,10 @@ protected:
             .stubs()
             .with(eq(TS_FEATURE_ACLGRAPH_COND_OP))
             .will(returnValue(true));
+        MOCKER_CPP_VIRTUAL(device_, &Device::CheckFeatureSupport)
+            .stubs()
+            .with(eq(TS_FEATURE_SUPPORT_ACLGRAPH_DECOUPLING))
+            .will(returnValue(true));
 
         MOCKER(CheckCaptureModelSupportSoftwareSq).stubs().will(returnValue(RT_ERROR_NONE));
     }
@@ -3453,6 +3527,13 @@ TEST_F(DavidCondHandleTest, CondHandleWhileE2E)
     rtContext_t ctx;
     rtError_t ret = rtCtxCreate(&ctx, 0, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    Context* const curCtx = Runtime::Instance()->CurrentContext();
+    EXPECT_EQ(curCtx != nullptr, true);
+    Device* const dev = curCtx->Device_();
+    EXPECT_EQ(dev != nullptr, true);
+    RawDevice* rawDev = dynamic_cast<RawDevice*>(dev);
+    rawDev->InitResourceIdAllocator();
 
     rtStream_t stream;
     ret = rtStreamCreate(&stream, 0);
@@ -3536,6 +3617,13 @@ TEST_F(DavidCondHandleTest, CondHandleWhileWithAssignDefault)
     rtError_t ret = rtCtxCreate(&ctx, 0, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
+    Context* const curCtx = Runtime::Instance()->CurrentContext();
+    EXPECT_EQ(curCtx != nullptr, true);
+    Device* const dev = curCtx->Device_();
+    EXPECT_EQ(dev != nullptr, true);
+    RawDevice* rawDev = dynamic_cast<RawDevice*>(dev);
+    rawDev->InitResourceIdAllocator();
+
     rtStream_t stream;
     ret = rtStreamCreate(&stream, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
@@ -3597,6 +3685,13 @@ TEST_F(DavidCondHandleTest, CondHandleIfE2E)
     rtContext_t ctx;
     rtError_t ret = rtCtxCreate(&ctx, 0, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    Context* const curCtx = Runtime::Instance()->CurrentContext();
+    EXPECT_EQ(curCtx != nullptr, true);
+    Device* const dev = curCtx->Device_();
+    EXPECT_EQ(dev != nullptr, true);
+    RawDevice* rawDev = dynamic_cast<RawDevice*>(dev);
+    rawDev->InitResourceIdAllocator();
 
     rtStream_t stream;
     ret = rtStreamCreate(&stream, 0);
@@ -3670,6 +3765,9 @@ TEST_F(DavidCondHandleTest, SubmitCaptureConditionTaskInitFailedWithOriginalCapt
 {
     rtContext_t ctx = nullptr;
     ASSERT_EQ(rtCtxCreate(&ctx, 0, 0), RT_ERROR_NONE);
+    RawDevice* const rawDevice = dynamic_cast<RawDevice*>(Runtime::Instance()->CurrentContext()->Device_());
+    ASSERT_NE(rawDevice, nullptr);
+    rawDevice->InitResourceIdAllocator();
 
     rtStream_t stream = nullptr;
     ASSERT_EQ(rtStreamCreate(&stream, 0), RT_ERROR_NONE);
@@ -3707,6 +3805,13 @@ TEST_F(DavidCondHandleTest, CondHandleIfSizeOneE2E)
     rtContext_t ctx;
     rtError_t ret = rtCtxCreate(&ctx, 0, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    Context* const curCtx = Runtime::Instance()->CurrentContext();
+    EXPECT_EQ(curCtx != nullptr, true);
+    Device* const dev = curCtx->Device_();
+    EXPECT_EQ(dev != nullptr, true);
+    RawDevice* rawDev = dynamic_cast<RawDevice*>(dev);
+    rawDev->InitResourceIdAllocator();
 
     rtStream_t stream;
     ret = rtStreamCreate(&stream, 0);
@@ -3768,6 +3873,13 @@ TEST_F(DavidCondHandleTest, CondHandleSwitchE2E)
     rtContext_t ctx;
     rtError_t ret = rtCtxCreate(&ctx, 0, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    Context* const curCtx = Runtime::Instance()->CurrentContext();
+    EXPECT_EQ(curCtx != nullptr, true);
+    Device* const dev = curCtx->Device_();
+    EXPECT_EQ(dev != nullptr, true);
+    RawDevice* rawDev = dynamic_cast<RawDevice*>(dev);
+    rawDev->InitResourceIdAllocator();
 
     rtStream_t stream;
     ret = rtStreamCreate(&stream, 0);
@@ -3836,6 +3948,13 @@ TEST_F(DavidCondHandleTest, CondHandleIfNestedIfE2E)
     rtContext_t ctx;
     rtError_t ret = rtCtxCreate(&ctx, 0, 0);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    Context* const curCtx = Runtime::Instance()->CurrentContext();
+    EXPECT_EQ(curCtx != nullptr, true);
+    Device* const dev = curCtx->Device_();
+    EXPECT_EQ(dev != nullptr, true);
+    RawDevice* rawDev = dynamic_cast<RawDevice*>(dev);
+    rawDev->InitResourceIdAllocator();
 
     rtStream_t parentStream;
     ret = rtStreamCreate(&parentStream, 0);
@@ -4441,4 +4560,140 @@ TEST_F(TaskTestDavid, AllocCaptureTaskByTaskResAllocFail)
     stm->SetCaptureStatus(RT_STREAM_CAPTURE_STATUS_NONE);
     stm->UpdateCaptureStream(nullptr);
     rtStreamDestroy(stream);
+}
+
+TEST_F(TaskTestDavid, SqExecTimesAddrTaskConstructsAllocateAndFreeSqe)
+{
+    for (const bool freeFlag : {false, true}) {
+        const uint64_t address = freeFlag ? 0ULL : 0x123456789ABCULL;
+        TaskInfo task = {};
+        InitByStream(&task, stream_);
+        task.id = 19U;
+        task.taskSn = 37U;
+        ASSERT_EQ(SqExecTimesAddrTaskInit(&task, address, freeFlag), RT_ERROR_NONE);
+        EXPECT_EQ(task.type, TS_TASK_TYPE_SQ_EXEC_TIMES_ADDR);
+        EXPECT_EQ(task.u.sqExecTimesAddrTask.execTimesAddr, address);
+        EXPECT_EQ(task.u.sqExecTimesAddrTask.freeFlag, freeFlag);
+
+        rtDavidSqe_t sqe = {};
+        ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
+        EXPECT_EQ(sqe.phSqe.header.type, RT_DAVID_SQE_TYPE_PLACE_HOLDER);
+        EXPECT_EQ(sqe.phSqe.header.preP, 1U);
+        EXPECT_EQ(sqe.phSqe.taskType, TS_TASK_TYPE_SQ_EXEC_TIMES_ADDR);
+        EXPECT_EQ(sqe.phSqe.header.taskId, task.taskSn);
+        EXPECT_EQ(sqe.phSqe.u.sqExecTimesAddrInfo.addr, address);
+        EXPECT_EQ(sqe.phSqe.u.sqExecTimesAddrInfo.freeFlag, freeFlag);
+    }
+}
+
+TEST_F(TaskTestDavid, SqExecTimesAddrRejectsNullDeviceAndMissingSvm)
+{
+    EXPECT_EQ(SendTaskToSetSqExecTimesAddr(nullptr), RT_ERROR_DEVICE_NULL);
+    EXPECT_EQ(SendTaskToUnsetSqExecTimesAddr(nullptr), RT_ERROR_DEVICE_NULL);
+    Device* const dev = device_;
+    MOCKER_CPP_VIRTUAL(dev, &Device::GetSqExecTimesSvmBaseAddr_).stubs().will(returnValue(static_cast<void*>(nullptr)));
+    MOCKER_CPP(&Stream::AllocTask).expects(never());
+    EXPECT_EQ(SendTaskToSetSqExecTimesAddr(dev), RT_ERROR_DRV_MEMORY);
+    GlobalMockObject::verify();
+}
+
+TEST_F(TaskTestDavid, SqExecTimesAddrRejectsMissingControlStream)
+{
+    Device* const dev = device_;
+    MOCKER_CPP_VIRTUAL(dev, &Device::GetCtrlSQStream).stubs().will(returnValue(static_cast<Stream*>(nullptr)));
+    EXPECT_EQ(SendTaskToUnsetSqExecTimesAddr(dev), RT_ERROR_STREAM_NULL);
+    GlobalMockObject::verify();
+}
+
+TEST_F(TaskTestDavid, SqExecTimesAddrAllocateUsesStreamTaskEntry)
+{
+    Device* const dev = device_;
+    TaskInfo task = {};
+    InitByStream(&task, stream_);
+    uint16_t svm = 0U;
+    MOCKER_CPP_VIRTUAL(dev, &Device::GetSqExecTimesSvmBaseAddr_).stubs().will(returnValue(static_cast<void*>(&svm)));
+    MOCKER_CPP_VIRTUAL(dev, &Device::GetCtrlSQStream).stubs().will(returnValue(stream_));
+    MOCKER_CPP(&Stream::AllocTask)
+        .expects(once())
+        .with(mockcpp::any(), eq(TS_TASK_TYPE_SQ_EXEC_TIMES_ADDR))
+        .will(returnValue(&task));
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(DavidSendTask).expects(once()).with(eq(&task), eq(stream_)).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(stream_, &Stream::Synchronize).expects(once()).will(returnValue(RT_ERROR_NONE));
+
+    EXPECT_EQ(SendTaskToSetSqExecTimesAddr(dev), RT_ERROR_NONE);
+    EXPECT_EQ(task.u.sqExecTimesAddrTask.execTimesAddr, RtPtrToValue(&svm));
+    EXPECT_EQ(task.u.sqExecTimesAddrTask.freeFlag, false);
+    GlobalMockObject::verify();
+}
+
+TEST_F(TaskTestDavid, SqExecTimesAddrFreeUsesStreamTaskEntry)
+{
+    Device* const dev = device_;
+    TaskInfo task = {};
+    InitByStream(&task, stream_);
+    MOCKER_CPP_VIRTUAL(dev, &Device::GetCtrlSQStream).stubs().will(returnValue(stream_));
+    MOCKER_CPP(&Stream::AllocTask)
+        .expects(once())
+        .with(mockcpp::any(), eq(TS_TASK_TYPE_SQ_EXEC_TIMES_ADDR))
+        .will(returnValue(&task));
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(DavidSendTask).expects(once()).with(eq(&task), eq(stream_)).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(stream_, &Stream::Synchronize).expects(once()).will(returnValue(RT_ERROR_NONE));
+
+    EXPECT_EQ(SendTaskToUnsetSqExecTimesAddr(dev), RT_ERROR_NONE);
+    EXPECT_EQ(task.u.sqExecTimesAddrTask.execTimesAddr, 0ULL);
+    EXPECT_EQ(task.u.sqExecTimesAddrTask.freeFlag, true);
+    GlobalMockObject::verify();
+}
+
+// Fail allocation, initialization, submission and synchronization independently.
+class SqExecTimesAddrFailureDavid : public TaskTestDavid, public testing::WithParamInterface<int> {};
+
+TEST_P(SqExecTimesAddrFailureDavid, PropagatesFailureAndRecyclesOnlyOwnedTask)
+{
+    const int stage = GetParam();
+    Device* const dev = device_;
+    TaskInfo task = {};
+    InitByStream(&task, stream_);
+    task.type = TS_TASK_TYPE_SQ_EXEC_TIMES_ADDR;
+    MOCKER_CPP_VIRTUAL(dev, &Device::GetCtrlSQStream).stubs().will(returnValue(stream_));
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    if (stage == 0) {
+        MOCKER_CPP(&Stream::AllocTask)
+            .expects(once())
+            .with(mockcpp::any(), mockcpp::any(), outBound(RT_ERROR_STREAM_FULL))
+            .will(returnValue(static_cast<TaskInfo*>(nullptr)));
+        MOCKER(DavidSendTask).expects(never());
+        MOCKER_CPP_VIRTUAL(stream_, &Stream::Synchronize).expects(never());
+        EXPECT_EQ(SendTaskToUnsetSqExecTimesAddr(dev), RT_ERROR_STREAM_FULL);
+        GlobalMockObject::verify();
+        return;
+    }
+    MOCKER_CPP(&Stream::AllocTask).expects(once()).will(returnValue(&task));
+    MOCKER(TaskRollBack).expects(exactly(stage == 3 ? 0 : 1)).with(eq(stream_), eq(static_cast<uint32_t>(task.id)));
+    if (stage == 1) {
+        MOCKER(SqExecTimesAddrTaskInit).expects(once()).will(returnValue(RT_ERROR_DRV_ERR));
+        MOCKER(DavidSendTask).expects(never());
+    } else {
+        MOCKER(DavidSendTask).expects(once()).will(returnValue(stage == 2 ? RT_ERROR_DRV_ERR : RT_ERROR_NONE));
+    }
+    if (stage == 3) {
+        MOCKER_CPP_VIRTUAL(stream_, &Stream::Synchronize).expects(once()).will(returnValue(RT_ERROR_DRV_ERR));
+    } else {
+        MOCKER_CPP_VIRTUAL(stream_, &Stream::Synchronize).expects(never());
+    }
+    EXPECT_EQ(SendTaskToUnsetSqExecTimesAddr(dev), RT_ERROR_DRV_ERR);
+    GlobalMockObject::verify();
+}
+
+INSTANTIATE_TEST_SUITE_P(SqExecTimesAddr, SqExecTimesAddrFailureDavid, testing::Values(0, 1, 2, 3));
+
+TEST_F(TaskTestDavid, SqExecTimesAddrRejectedStreamDoesNotAllocateTask)
+{
+    MOCKER_CPP_VIRTUAL(device_, &Device::GetCtrlSQStream).stubs().will(returnValue(stream_));
+    MOCKER(CheckTaskCanSend).expects(once()).with(eq(stream_)).will(returnValue(RT_ERROR_STREAM_ABORT));
+    MOCKER_CPP(&Stream::AllocTask).expects(never());
+    EXPECT_EQ(SendTaskToUnsetSqExecTimesAddr(device_), RT_ERROR_STREAM_ABORT);
+    GlobalMockObject::verify();
 }

@@ -79,6 +79,7 @@ public:
     using ExtProcessorFn = std::function<void(
         const DevRingBufferCtlInfo* ctlInfo, size_t elementSize, uint32_t& head, uint32_t tail, uint32_t errorType,
         const StarsDeviceErrorInfoRingBuffer* rbErrorInfo, StarsDeviceErrorInfo& mergedOut)>;
+    using ErrorInfoUpdateProc = void (*)(StarsDeviceErrorInfo* const errorInfo, const uint32_t streamId);
 
     // create a ringbuffer and send task to device.
     rtError_t CreateDeviceRingBufferAndSendTask();
@@ -228,6 +229,7 @@ private:
     void ProcessStarsRingBufferErrorInfo(
         const RingBufferElementInfo* const info, const bool isPrintTaskInfo,
         const StarsDeviceErrorInfo* const errorInfo) const;
+    void UpdateDeviceErrorInfo(const RingBufferElementInfo* const info, StarsDeviceErrorInfo* const errorInfo) const;
     static const std::map<uint64_t, ErrorInfoProc> funcMap_;
     static const std::map<uint64_t, std::string> errMsgCommMap_;
     static const std::map<uint64_t, std::string> cqeErrorMapInfo_;
@@ -257,6 +259,13 @@ uint32_t GetRingbufferElementNum();
 
 void RegErrorProcFunc(rtChipType_t chipType, uint64_t errorType, DeviceErrorProc::StarsErrorInfoProc func);
 const std::map<uint64_t, DeviceErrorProc::StarsErrorInfoProc>& GetErrorProcFuncMap(rtChipType_t chipType);
+void UpdateDeviceErrorProcFunc(std::map<uint64_t, DeviceErrorProc::StarsErrorInfoProc>& funcMap);
+void UpdateDeviceErrorInfoHookFunc(std::map<uint64_t, DeviceErrorProc::ErrorInfoUpdateProc>& funcMap);
+void UpdateDvppErrorInfoStreamId(StarsDeviceErrorInfo* const errorInfo, const uint32_t streamId);
+void UpdateSqeErrorInfoStreamId(StarsDeviceErrorInfo* const errorInfo, const uint32_t streamId);
+void UpdateWaitTimeoutErrorInfoStreamId(StarsDeviceErrorInfo* const errorInfo, const uint32_t streamId);
+void UpdateAicpuErrorInfoStreamId(StarsDeviceErrorInfo* const errorInfo, const uint32_t streamId);
+void UpdateCommErrorInfoStreamId(StarsDeviceErrorInfo* const errorInfo, const uint32_t streamId);
 uint16_t GetMteErrWaitCount();
 std::string FormatRasFaultDesc(const uint32_t eventId, const std::string& eventName);
 RasEventMatch QueryRasFaultEvents(const Device* const dev, uint64_t deviceTimeMs, uint64_t windowAfterMs);

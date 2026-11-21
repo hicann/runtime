@@ -21,6 +21,7 @@ set(runtimeut_common_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/task_manager.cc
     ${TOP_DIR}/src/runtime/feature/ffts/ffts_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_execute_task.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_aclgraph_exception_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_execute_task_func_call.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci/davinci_kernel_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/davinci/davinci_multiple_task.cc
@@ -63,6 +64,8 @@ set(runtimeut_common_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/maintenance/maintenance_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/maintenance/float_status_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/maintenance/float_status_task_v100.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/maintenance/sq_exec_times_addr_task.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/maintenance/sq_exec_times_addr_task_v100.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/kernel_fusion_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/cond_op/stars_cond_isa_construct_common.cc
 )
@@ -300,6 +303,7 @@ set(runtimeut_910b_src_list
     ${TOP_DIR}/src/runtime/core/src/device/device_debug_stars.cc
     ${TOP_DIR}/src/runtime/core/src/device/raw_device.cc
     ${TOP_DIR}/src/runtime/core/src/device/raw_device_res.cc
+    ${TOP_DIR}/src/runtime/core/src/device/resource_id_allocator.cc
     ${TOP_DIR}/src/runtime/feature/snapshot/device_snapshot.cc
     ${TOP_DIR}/src/runtime/feature/snapshot/snapshot_process_helper.cc
     ${TOP_DIR}/src/runtime/feature/snapshot/snapshot_callback_manager.cc
@@ -375,6 +379,10 @@ set(runtimeut_910b_src_list
     ${TOP_DIR}/src/runtime/core/src/profiler/onlineprof.cc
     ${TOP_DIR}/src/runtime/core/src/device/device_error_proc.cc
     ${TOP_DIR}/src/runtime/core/src/device/v100/device_error_proc.cc
+    ${TOP_DIR}/src/runtime/core/src/device/device_error_update.cc
+    ${TOP_DIR}/src/runtime/core/src/device/v100/device_error_update.cc
+    ${TOP_DIR}/src/runtime/core/src/cqe/cq_adapter.cc
+    ${TOP_DIR}/src/runtime/core/src/cqe/v100/stars_cq_adapter.cc
     ${TOP_DIR}/src/runtime/core/src/device/device_error_core_proc.cc
     ${TOP_DIR}/src/runtime/core/src/task/stars_cond_isa_helper.cc
     ${TOP_DIR}/src/runtime/core/src/task/stars_external_event_cond_isa_helper.cc
@@ -496,6 +504,7 @@ set(RUNTIME_TEST_INC_DIR_COMMON
     ${TOP_DIR}/inc/external
     ${TOP_DIR}/abl/libc_sec/include
     ${TOP_DIR}/src/runtime/core/inc
+    ${TOP_DIR}/src/runtime/core/inc/cqe
     ${TOP_DIR}/src/runtime/core/inc_c
     ${TOP_DIR}/src/runtime/core/inc/context
     ${TOP_DIR}/src/runtime/core/inc/spec

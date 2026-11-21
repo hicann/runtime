@@ -39,9 +39,11 @@ rtError_t CaptureModel::BindSqCqAndSendSqe(void)
     error = SendSqe();
     ERROR_RETURN(error, "Failed to send SQE, model_id=%u, retCode=%#x.", Id_(), static_cast<uint32_t>(error));
 
-    error = BindStreamToModel();
-    ERROR_RETURN(
-        error, "Failed to bind stream to model, model_id=%u, retCode=%#x.", Id_(), static_cast<uint32_t>(error));
+    if (!IsSupportDecoupling()) {
+        error = BindStreamToModel();
+        ERROR_RETURN(
+            error, "Failed to bind stream to model, model_id=%u, retCode=%#x.", Id_(), static_cast<uint32_t>(error));
+    }
 
     error = ConfigLogicSqTail();
     ERROR_RETURN(error, "Failed to configure SQ tail, model_id=%u, retCode=%#x.", Id_(), static_cast<uint32_t>(error));

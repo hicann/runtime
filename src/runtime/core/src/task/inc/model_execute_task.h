@@ -29,7 +29,7 @@ rtError_t AllocFuncCallMemForModelExecuteTask(TaskInfo* const taskInfo, rtStarsM
 rtError_t ConstructFuncCallParaForModelExecuteTask(TaskInfo* taskInfo, rtStarsModelExeFuncCallPara_t& funcCallPara);
 rtError_t PrepareSqeInfoForModelExecuteTask(TaskInfo* const taskInfo);
 rtError_t FreeFuncCallHostMemAndSvmMem(TaskInfo* const taskInfo);
-void ReportEndGraphWaitError(const TaskInfo* taskInfo, const uint32_t devId);
+void ReportEndGraphWaitError(const TaskInfo* taskInfo, const uint32_t devId, const bool lockFlag);
 void ReportErrorInfoForModelExecuteTask(
     TaskInfo* const taskInfo, const uint32_t devId, const bool skipAicCallback = false);
 rtError_t WaitExecFinishForModelExecuteTask(const TaskInfo* const taskInfo);
@@ -37,6 +37,9 @@ void ModelExecuteTaskaProcError(TaskInfo* const taskInfo, const uint32_t errCode
 void DoCompleteStarsErrorForModelExecuteTask(TaskInfo* const taskInfo, const uint32_t devId, const uint32_t errCode);
 bool ModelIsExistInContext(const Model* mdl, const Stream* stream);
 void ModelExecuteTaskProcErrorForSoftwareSq(TaskInfo* const taskInfo, const uint32_t errCode);
+void ReportErrorInfoForModelTask(TaskInfo* const faultTaskPtr);
+bool IsMemErrorCode(const int32_t error);
+void ProcErrorInfoForModelTask(const rtCqReport_t& logicCq, const bool isExceptionFlag, TaskInfo* reportTask);
 
 } // namespace runtime
 } // namespace cce

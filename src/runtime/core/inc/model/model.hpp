@@ -162,6 +162,7 @@ public:
     virtual rtError_t Execute(Stream* const stm, int32_t timeout = -1);
     virtual rtError_t ExecuteSync(int32_t timeout = -1);
     virtual rtError_t ExecuteAsync(Stream* const stm);
+    virtual rtError_t ModelIdAlloc();
     rtError_t AiCpuModelSyncExecute();
     rtError_t GetStreamToAsyncExecute(Stream* stm);
     rtError_t GetStreamToSyncExecute(int32_t timeout = -1);
@@ -291,6 +292,8 @@ public:
 
     void* GetDfxPtr() const { return dfxPtr_; }
 
+    uint64_t* GetExecutedTimesSvm() const { return executedTimesSvm_; }
+
     ModelType GetModelType() const { return modelType_; }
 
     virtual rtError_t TryRecycleResource(uint32_t& releaseSqNum, uint32_t& releaseNtyNum)
@@ -308,6 +311,7 @@ public:
     }
 
     bool IsModelLoadComplete() const { return isModelComplete_; }
+    void SetModelLoadCompleteFlag(const bool flag) { isModelComplete_ = flag; }
     rtError_t MemWaitDevAlloc(void** devMem, const Device* const dev);
     void MemWaitDevListFree(const Device* const dev)
     {
@@ -336,6 +340,13 @@ public:
 
     void SetIsSendSqe(bool isSendSqe) { isSqeSendFinish_ = isSendSqe; }
 
+    bool IsIdAllocByRuntime() const { return isIdAllocByRuntime_; }
+
+    void SetIdAllocByRuntimeFlag(bool flag) { isIdAllocByRuntime_ = flag; }
+
+    bool IsSupportDecoupling(void) const { return isSupportDecoupling_; }
+    void SetSupportDecouplingEnable() { isSupportDecoupling_ = true; }
+
     void SetAutoSplitSq(bool enable) { isAutoSplitSq_ = enable; }
     bool IsAutoSplitSq() const { return isAutoSplitSq_; }
 
@@ -344,6 +355,10 @@ public:
     void SetFuncCallInstrSize(uint16_t size) { funcCallInstrSize_ = size; }
 
     void ResetFuncCallMem(const Device* const dev);
+
+protected:
+    virtual void ModelIdFree();
+    int32_t id_ = MODEL_ID_INVALID;
 
 private:
     /*
@@ -367,9 +382,10 @@ private:
     rtError_t ModelDestroyCallback();
     void ResetBoundLabelsOnDestroy();
     void FinalizeHostStateOnExit() noexcept;
+    rtError_t AllocExecutedTimesSvm(void);
+    void FreeExecutedTimesSvm(void);
 
 private:
-    int32_t id_ = MODEL_ID_INVALID;
     std::string name_;
     uint32_t lastStreamId_;
     uint32_t kernelTaskId_;
@@ -399,6 +415,7 @@ private:
     Notifier* notifier_;
     LabelAllocator* labelAllocator_;
     Notify* endGraphNotify_ = nullptr;
+    bool isIdAllocByRuntime_{false};
 
     ModelExecuteApiType previousModelType_ = RT_MODEL_RESERVED;
     std::map<uint16_t, Label*> labelMap_;
@@ -426,6 +443,7 @@ private:
     bool isAutoSplitSq_{false}; // 是否为自动切分SQ模式
     struct sq_switch_stream_info* modelSwitchInfo_{nullptr};
     bool isSqeSendFinish_{false};
+    bool isSupportDecoupling_{false}; // 模型否支持与TSFW解耦
 
     std::mutex memWaitMutex_;
     void* currentAddr_ = nullptr;
@@ -439,6 +457,7 @@ private:
     std::mutex mdlDestroyCallbackMutex_;
     mutable std::mutex hcclStreamsMutex_;
     std::set<Stream*> hcclStreams_; // Non-owning original HCCL streams for normal models.
+    uint64_t* executedTimesSvm_;
 };
 } // namespace runtime
 } // namespace cce

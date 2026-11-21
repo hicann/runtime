@@ -26,6 +26,8 @@
 #undef protected
 #undef private
 
+void StubClearHalSqSendAndRecvCnt(uint32_t devId);
+
 using namespace testing;
 using namespace cce::runtime;
 
@@ -49,6 +51,7 @@ protected:
     {
         GlobalMockObject::verify();
         rtDeviceReset(0);
+        StubClearHalSqSendAndRecvCnt(0);
         (void)rtSetSocVersion("");
         ((Runtime*)Runtime::Instance())->SetIsUserSetSocVersion(false);
     }

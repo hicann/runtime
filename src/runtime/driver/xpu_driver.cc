@@ -149,8 +149,7 @@ rtError_t XpuDriver::GetCqeStatus(const uint32_t deviceId, const uint32_t tsId, 
     return RT_ERROR_NONE;
 }
 
-rtError_t XpuDriver::LogicCqReportV2(
-    const LogicCqWaitInfo& waitInfo, uint8_t* report, uint32_t reportCnt, uint32_t& realCnt)
+rtError_t XpuDriver::LogicCqReportV2(const CqWaitInfo& waitInfo, uint8_t* report, uint32_t reportCnt, uint32_t& realCnt)
 {
     TprtReportCqeInfo_t repRecvInfo = {};
     repRecvInfo.type = TPRT_QUERY_CQ_INFO;

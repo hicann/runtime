@@ -22,6 +22,12 @@
 #include "device/device_error_proc.hpp"
 #include "toolchain/slog.h"
 
+// hal stub SQ send/recv counters are global per device id. A teardown race can
+// leave one unconsumed report, which hangs the next rtSetDevice in
+// halSqMsgSend's balance wait. Reset the counters once the device is fully
+// stopped, mirroring the fixture-level StubClearHalSqSendAndRecvCnt(0) calls.
+void StubClearHalSqSendAndRecvCnt(uint32_t devId);
+
 namespace cce {
 namespace runtime {
 namespace ut {
@@ -37,6 +43,7 @@ inline void ResetPrimaryDevice()
     ClearCurrentDefaultStreamPending();
     error = rtDeviceResetForce(0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
+    StubClearHalSqSendAndRecvCnt(0);
 }
 
 inline bool IsCurrentContextReadyForReset()
@@ -143,6 +150,7 @@ inline void ResetPrimaryDeviceIfActiveWithDeviceDown()
 
     rtError_t error = rtDeviceResetForce(0);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
+    StubClearHalSqSendAndRecvCnt(0);
 
     GlobalMockObject::verify();
     GlobalMockObject::reset();

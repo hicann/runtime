@@ -331,6 +331,7 @@ rtError_t ContextManage::DeviceClean(const int32_t devId)
         ERROR_RETURN(error, "Failed to clean tasks, retCode=%#x.", error);
         error = ctx->StreamsUpdate();
         ERROR_RETURN(error, "Failed to update streams, retCode=%#x.", error);
+        ctx->CaptureModelClean();
     }
 
     if (dev != nullptr) {
@@ -345,6 +346,9 @@ rtError_t ContextManage::DeviceClean(const int32_t devId)
         dev->SetDevicePageFault(false);
         (void)Runtime::Instance()->SetWatchDogDevStatus(dev, RT_DEVICE_STATUS_NORMAL);
         (void)NpuDriver::ClearPageFaultInfo(static_cast<uint32_t>(devId), false);
+        if (dev->GetDeviceSqCqManage() != nullptr) {
+            dev->GetDeviceSqCqManage()->RestoreFaultSqCq();
+        }
     }
 
     for (Context* const ctx : ContextDataManage::Instance().GetSetObj()) {

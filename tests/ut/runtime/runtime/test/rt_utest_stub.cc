@@ -75,12 +75,26 @@
 #include "memory_task.h"
 #include "stream_c.hpp"
 #include "device_sq_cq_pool.hpp"
+#include "device_error_proc.hpp"
+#include "resource_id_allocator.hpp"
 #undef protected
 #undef private
 
 #include "rt_error_codes.h"
+#include "sq_exec_times_addr_task.h"
+#include "stars_cond_isa_helper.hpp"
+#include "stars_model_execute_cond_isa_define.hpp"
+#include "inner_thread_local.hpp"
 
 using namespace cce::runtime;
+
+namespace {
+void TinyErrorInfoUpdate(StarsDeviceErrorInfo* const errorInfo, const uint32_t streamId)
+{
+    UNUSED(errorInfo);
+    UNUSED(streamId);
+}
+} // namespace
 
 class TinyStubTest : public testing::Test {
 protected:
@@ -144,6 +158,37 @@ TEST_F(TinyStubTest, model_task_get_enabled_not_support)
     EXPECT_EQ(errorApi.ModelTaskGetEnabled(nullptr, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
 }
 
+TEST_F(TinyStubTest, SqExecTimesAddrTasksAreUnsupported)
+{
+    EXPECT_EQ(SendTaskToSetSqExecTimesAddr(nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(SendTaskToUnsetSqExecTimesAddr(nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
+}
+
+TEST_F(TinyStubTest, ConditionalModelExecuteKeepsNopCounterInstructions)
+{
+    const rtChipType_t originalChipType = InnerThreadLocalContainer::GetCurrentChipType();
+    // Tiny uses the common V100 instruction builders.
+    InnerThreadLocalContainer::SetCurrentChipType(CHIP_ADC);
+    rtStarsCaptureCondFcPara_t capturePara = {};
+    rtStarsModelExeFuncCallPara_t modelPara = {};
+    modelPara.modelExecTimesAddr = 0x12345678ULL;
+    TransParaToModelExecuteFuncCallPara(capturePara, modelPara);
+    RtStarsModelExeFuncCall funcCall = {};
+    ConstrucModelExeFuncCall(modelPara, funcCall);
+
+    EXPECT_EQ(modelPara.modelExecTimesAddr, 0ULL);
+    EXPECT_EQ(modelPara.endInstrDistance, offsetof(RtStarsModelExeFuncCall, endInstr));
+    EXPECT_EQ(funcCall.addModelExecTimes.u.nops.nop0.opCode, RT_STARS_COND_ISA_OP_CODE_NOP);
+    EXPECT_EQ(funcCall.addModelExecTimes.u.nops.nop1.opCode, RT_STARS_COND_ISA_OP_CODE_NOP);
+    EXPECT_EQ(funcCall.addModelExecTimes.u.nops.nop2.opCode, RT_STARS_COND_ISA_OP_CODE_NOP);
+    EXPECT_EQ(funcCall.addModelExecTimes.u.nops.nop3.opCode, RT_STARS_COND_ISA_OP_CODE_NOP);
+    EXPECT_EQ(funcCall.addModelExecTimes.u.nops.nop4.opCode, RT_STARS_COND_ISA_OP_CODE_NOP);
+    EXPECT_EQ(funcCall.addModelExecTimes.u.nops.nop5.opCode, RT_STARS_COND_ISA_OP_CODE_NOP);
+    EXPECT_EQ(funcCall.addModelExecTimes.u.nops.nop6.opCode, RT_STARS_COND_ISA_OP_CODE_NOP);
+    EXPECT_EQ(funcCall.endInstr.nop.opCode, RT_STARS_COND_ISA_OP_CODE_NOP);
+    InnerThreadLocalContainer::SetCurrentChipType(originalChipType);
+}
+
 TEST_F(TinyStubTest, ipc_memory_impl_lifecycle_not_support)
 {
     EXPECT_FALSE(IsImplIpcMemorySupported());
@@ -153,6 +198,20 @@ TEST_F(TinyStubTest, ipc_memory_impl_lifecycle_not_support)
     DestroyImplIpcMemory(apiImplIpcMemory);
 
     EXPECT_EQ(apiImplIpcMemory, nullptr);
+}
+
+TEST_F(TinyStubTest, resource_id_allocator_tiny_stub) { EXPECT_EQ(CreateResourceIdAllocator(), nullptr); }
+
+TEST_F(TinyStubTest, device_error_update_tiny_stub)
+{
+    constexpr uint64_t errorCode = 1U;
+    std::map<uint64_t, DeviceErrorProc::ErrorInfoUpdateProc> funcMap = {{errorCode, TinyErrorInfoUpdate}};
+
+    UpdateDeviceErrorInfoHookFunc(funcMap);
+
+    ASSERT_EQ(funcMap.size(), 1U);
+    ASSERT_NE(funcMap.find(errorCode), funcMap.end());
+    EXPECT_EQ(funcMap.at(errorCode), TinyErrorInfoUpdate);
 }
 
 TEST_F(TinyStubTest, api_c_stub)
@@ -1590,12 +1649,13 @@ TEST_F(TinyStubTest, stream_ub_db_stub)
 TEST_F(TinyStubTest, device_sq_cq_pool_tiny_stub)
 {
     DeviceSqCqPool pool(nullptr);
+    constexpr uint8_t aclGraphSqType = 0U;
     rtDeviceSqCqInfo_t sqCqInfo = {};
     std::list<rtDeviceSqCqInfo_t> sqCqList;
 
     EXPECT_EQ(pool.Init(), RT_ERROR_NONE);
     pool.PreAllocSqCq();
-    EXPECT_EQ(pool.AllocSqCqFromDrv(&sqCqInfo, 0U), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(pool.AllocSqCqFromDrv(&sqCqInfo, 0U, aclGraphSqType), RT_ERROR_FEATURE_NOT_SUPPORT);
     EXPECT_EQ(pool.SetSqRegVirtualAddrToDevice(0U, 0ULL), RT_ERROR_FEATURE_NOT_SUPPORT);
     EXPECT_EQ(pool.AllocSqRegVirtualAddr(0U, sqCqInfo.sqRegVirtualAddr), RT_ERROR_FEATURE_NOT_SUPPORT);
     EXPECT_EQ(pool.FreeSqCqToDrv(0U, 0U), RT_ERROR_FEATURE_NOT_SUPPORT);

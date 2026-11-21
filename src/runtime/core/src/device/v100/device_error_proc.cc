@@ -73,14 +73,20 @@ void DeviceErrorProc::ProcessReportFastRingBuffer()
         ctrlInfo->magic = 0U; // 释放fast ring buffer, 以下不要使用
     }
     ConvertErrorCodeForFastReport(&report);
-    TaskInfo* tsk = device_->GetTaskFactory()->GetTask(static_cast<int32_t>(report.streamId), report.taskId);
+    uint32_t streamId = report.streamId;
+    if (streamId == UINT16_MAX) {
+        (void)device_->GetStreamSqCqManage()->GetStreamIdBySqId(report.sqId, streamId);
+    }
+    TaskInfo* tsk = device_->GetTaskFactory()->GetTask(static_cast<int32_t>(streamId), report.taskId);
     if (tsk == nullptr) {
         RT_LOG_INNER_MSG(
             RT_LOG_ERROR,
             "The fast ring buffer reports an error,"
             " device_id=%u, stream_id=%u, task_id=%u, sqe_type=%u, error_code=%#x, kernel_name=none.",
-            device_->Id_(), report.streamId, report.taskId, report.sqeType, report.errorCode);
-        RT_LOG(RT_LOG_ERROR, "The task has been recycled, stream_id=%u, task_id=%u.", report.streamId, report.taskId);
+            device_->Id_(), streamId, report.taskId, report.sqeType, report.errorCode);
+        RT_LOG(
+            RT_LOG_ERROR, "The task has been recycled, stream_id=%u, sq_id=%u, task_id=%u.", streamId, report.sqId,
+            report.taskId);
         return;
     }
     const char* errMsg = "a kernel task";

@@ -212,6 +212,8 @@ void DavidStream::FreeStreamIdAndSqCq()
             streamSwitchInfo_[0].sq_id = sqId;
             streamSwitchInfo_[0].sq_depth = GetSqDepth();
             streamSwitchInfo_[0].stream_mem = RtValueToPtr<void*>(GetSqBaseAddr());
+            streamSwitchInfo_[0].ts_agent_flag = false;
+            streamSwitchInfo_[0].by_pass_stream_id_flag = false;
             /* stream unbind sq */
             (void)device_->Driver_()->SqSwitchStreamBatch(device_->Id_(), streamSwitchInfo_, 1U);
         }
@@ -597,6 +599,16 @@ rtError_t DavidStream::TearDown(const bool terminal, bool flag)
             RT_LOG(RT_LOG_WARNING, "stream is aborted, stream_id=%d, pendingNum=%d.", stmId, pendingNum_.Value());
             break;
         }
+
+        isForceRecycle = GetForceRecycleFlag(flag);
+        exeStream = dev->GetCtrlSQStream(dev->PrimaryStream_());
+        if (this == exeStream) {
+            isForceRecycle = false;
+        }
+
+        isForceRecycle_ = isForceRecycle;
+        (void)static_cast<DavidStream*>(exeStream)->SubmitMaintenanceTask(
+            MT_STREAM_RECYCLE_TASK, isForceRecycle, stmId);
         StreamSyncLock();
         taskResMang_->GetHeadTail(head, tail);
         RT_LOG(
@@ -658,8 +670,7 @@ rtError_t DavidStream::SetupByFlagAndCheck(void)
     if ((flags_ & RT_STREAM_OVERFLOW) != 0U) {
         SetOverflowSwitch(true);
     }
-    error = device_->Driver_()->StreamIdAlloc(&streamId_, device_->Id_(), device_->DevGetTsId(), priority_);
-    device_->GetStreamSqCqManage()->SetStreamIdToStream(static_cast<uint32_t>(streamId_), this);
+    error = AllocStreamId();
     ERROR_RETURN(error, "Failed to alloc stream id, retCode=%#x.", static_cast<uint32_t>(error));
     RT_LOG(RT_LOG_DEBUG, "Alloc stream, stream_id=%d", streamId_);
     this->taskResMang_->streamId_ = streamId_;
@@ -1583,16 +1594,19 @@ void DavidStream::GetTaskQueueHeadTail(uint16_t& head, uint16_t& tail) const
 
 rtError_t DavidStream::ReAllocStreamId()
 {
-    const uint32_t remoteFlag = ((flags_ & static_cast<uint32_t>(RT_STREAM_CP_PROCESS_USE)) != 0U) ?
-                                    static_cast<uint32_t>(TSDRV_FLAG_REMOTE_ID) :
-                                    0U;
-    rtError_t error = device_->Driver_()->ReAllocResourceId(
-        device_->Id_(), device_->DevGetTsId(), priority_, static_cast<uint32_t>(streamId_), DRV_STREAM_ID, remoteFlag);
-    ERROR_RETURN_MSG_INNER(
-        error, "Realloc stream_id failed, stream_id=%d, device_id=%u, ret=%d.", streamId_, device_->Id_(), error);
+    if (!IsIdAllocByRuntime()) {
+        const uint32_t remoteFlag = ((flags_ & static_cast<uint32_t>(RT_STREAM_CP_PROCESS_USE)) != 0U) ?
+                                        static_cast<uint32_t>(TSDRV_FLAG_REMOTE_ID) :
+                                        0U;
+        rtError_t error = device_->Driver_()->ReAllocResourceId(
+            device_->Id_(), device_->DevGetTsId(), priority_, static_cast<uint32_t>(streamId_), DRV_STREAM_ID,
+            remoteFlag);
+        ERROR_RETURN_MSG_INNER(
+            error, "Realloc stream_id failed, stream_id=%d, device_id=%u, ret=%d.", streamId_, device_->Id_(), error);
+    }
 
     StreamSqCqManage* stmSqCqManage = device_->GetStreamSqCqManage();
-    error = stmSqCqManage->ReAllocDavidSqCqId(this);
+    rtError_t error = stmSqCqManage->ReAllocDavidSqCqId(this);
     ERROR_RETURN_MSG_INNER(
         error, "Realloc sqcq_id failed, stream_id=%d, device_id=%u, sq_id=%u, ret=%d.", streamId_, device_->Id_(),
         sqId_, error);

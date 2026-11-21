@@ -91,7 +91,8 @@ rtError_t StreamSqCqManage::AllocStreamSqCq(
     infoPtr->threadDisableFlag = static_cast<uint32_t>(Runtime::Instance()->GetDisableThread());
     infoPtr->shareSqId = device_->GetShareSqId();
     infoPtr->tsSqType = static_cast<uint32_t>(newStm->GetTsSqAllocType());
-    infoPtr->swsqFlag = true;
+    infoPtr->isFixTaskIdSame = true;
+    infoPtr->isAclGraphEx = false;
 
     const std::lock_guard<std::mutex> stmLock(streamMapLock_);
     sqId = 0U;
@@ -144,7 +145,8 @@ rtError_t StreamSqCqManage::AllocDavidStreamSqCq(
     infoPtr->threadDisableFlag = static_cast<uint32_t>(Runtime::Instance()->GetDisableThread());
     infoPtr->shareSqId = device_->GetShareSqId();
     infoPtr->tsSqType = static_cast<uint32_t>(newStm->GetTsSqAllocType());
-    infoPtr->swsqFlag = false;
+    infoPtr->isFixTaskIdSame = false;
+    infoPtr->isAclGraphEx = false;
     infoPtr->ctrlSQFlag = newStm->IsCtrlSQStream();
     const std::lock_guard<std::mutex> stmLock(streamMapLock_);
     sqId = 0U;
@@ -190,7 +192,8 @@ rtError_t StreamSqCqManage::UpdateStreamSqCq(Stream* newStm)
     infoPtr->threadDisableFlag = static_cast<uint32_t>(Runtime::Instance()->GetDisableThread());
     infoPtr->shareSqId = device_->GetShareSqId();
     infoPtr->tsSqType = static_cast<uint32_t>(newStm->GetTsSqAllocType());
-    infoPtr->swsqFlag = true;
+    infoPtr->isFixTaskIdSame = true;
+    infoPtr->isAclGraphEx = false;
 
     const std::lock_guard<std::mutex> stmLock(streamMapLock_);
     const uint32_t remoteFlag = ((newStm->Flags() & RT_STREAM_CP_PROCESS_USE) != 0U) ? TSDRV_FLAG_REMOTE_ID : 0U;
@@ -248,7 +251,8 @@ rtError_t StreamSqCqManage::ReAllocSqCqId(const Stream* const newStm)
     infoPtr->threadDisableFlag = static_cast<uint32_t>(Runtime::Instance()->GetDisableThread());
     infoPtr->shareSqId = device_->GetShareSqId();
     infoPtr->tsSqType = static_cast<uint32_t>(newStm->GetTsSqAllocType());
-    infoPtr->swsqFlag = true;
+    infoPtr->isFixTaskIdSame = true;
+    infoPtr->isAclGraphEx = false;
 
     const std::lock_guard<std::mutex> stmLock(streamMapLock_);
     rtStreamInfoExMsg_t infoEx{};
@@ -307,7 +311,8 @@ rtError_t StreamSqCqManage::ReAllocDavidSqCqId(const Stream* const stream)
     infoPtr->threadDisableFlag = static_cast<uint32_t>(Runtime::Instance()->GetDisableThread());
     infoPtr->shareSqId = device_->GetShareSqId();
     infoPtr->tsSqType = static_cast<uint32_t>(stream->GetTsSqAllocType());
-    infoPtr->swsqFlag = false;
+    infoPtr->isFixTaskIdSame = false;
+    infoPtr->isAclGraphEx = false;
 
     const std::lock_guard<std::mutex> stmLock(streamMapLock_);
     FillStreamInfoEx(stream, infoEx);

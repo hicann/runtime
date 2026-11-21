@@ -15,20 +15,6 @@
 
 namespace cce {
 namespace runtime {
-
-// RT split mode
-enum class SplitMode : int32_t {
-    RT_NO_SPLIT_MODE = 0,
-    RT_SPLIT_MODE = 1,
-};
-
-// drv split mode
-enum VmngSplitMode : int32_t {
-    RT_VMNG_NORMAL_NONE_SPLIT_MODE = 0, // 物理机模式
-    RT_VMNG_VIRTUAL_SPLIT_MODE,         // 虚拟机算力分组
-    RT_VMNG_CONTAINER_SPLIT_MODE,       // 容器算力分组
-    RT_VMNG_INVALID_SPLIT_MODE,
-};
 // Runtime API implement
 class ApiImpl : public Api {
 public:

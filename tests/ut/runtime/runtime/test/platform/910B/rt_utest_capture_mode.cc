@@ -114,6 +114,10 @@ protected:
             .stubs()
             .with(eq(TS_FEATURE_SQ_DYNAMIC_ENABLE_CQE))
             .will(returnValue(true));
+        MOCKER_CPP_VIRTUAL(device, &Device::CheckFeatureSupport)
+            .stubs()
+            .with(eq(TS_FEATURE_SUPPORT_ACLGRAPH_DECOUPLING))
+            .will(returnValue(true));
     }
 
     virtual void TearDown()
@@ -1681,6 +1685,23 @@ protected:
         device_->tschCapaLen_ = static_cast<uint32_t>(capability_.size());
         device_->tschCapaDepth_ = depth;
         engine->CreateRecycleThread();
+        Device* device = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
+        MOCKER_CPP_VIRTUAL(device, &Device::CheckFeatureSupport)
+            .stubs()
+            .with(eq(TS_FEATURE_SOFTWARE_SQ_ENABLE))
+            .will(returnValue(true));
+        MOCKER_CPP_VIRTUAL(device, &Device::CheckFeatureSupport)
+            .stubs()
+            .with(eq(TS_FEATURE_ACLGRAPH_COND_OP))
+            .will(returnValue(true));
+        MOCKER_CPP_VIRTUAL(device, &Device::CheckFeatureSupport)
+            .stubs()
+            .with(eq(TS_FEATURE_SQ_DYNAMIC_ENABLE_CQE))
+            .will(returnValue(true));
+        MOCKER_CPP_VIRTUAL(device, &Device::CheckFeatureSupport)
+            .stubs()
+            .with(eq(TS_FEATURE_SUPPORT_ACLGRAPH_DECOUPLING))
+            .will(returnValue(true));
         MOCKER(CheckCaptureModelSupportSoftwareSq).stubs().will(returnValue(RT_ERROR_NONE));
     }
 

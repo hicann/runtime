@@ -23,6 +23,7 @@ set(libruntime_v100_task_src_files
     ${RUNTIME_CORE_DIR}/src/task/task_res_manage/task_res.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/task_manager.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_execute_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_aclgraph_exception_task_stub.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_execute_task_func_call.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_execute_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/davinci/davinci_kernel_task.cc
@@ -300,6 +301,7 @@ set(libruntime_common_src_files
     ${RUNTIME_CORE_DIR}/src/device/device_debug_stars.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device_res.cc
+    ${RUNTIME_CORE_DIR}/src/device/stub/resource_id_allocator_stub.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device_adpt_comm.cc
     ${RUNTIME_CORE_DIR}/src/device/device_sched_gate_stub.cc
     ${RUNTIME_CORE_DIR}/src/device/dev_simt_stack_checker.cc
@@ -350,6 +352,10 @@ set(libruntime_common_src_files
     ${RUNTIME_CORE_DIR}/src/device/device_error_proc.cc
     ${RUNTIME_CORE_DIR}/src/device/v100/device_error_proc.cc
     ${RUNTIME_CORE_DIR}/src/device/stub/device_sq_cq_pool_stub.cc
+    ${RUNTIME_CORE_DIR}/src/device/device_error_update.cc
+    ${RUNTIME_CORE_DIR}/src/device/stub/device_error_update_stub.cc
+    ${RUNTIME_CORE_DIR}/src/cqe/cq_adapter.cc
+    ${RUNTIME_CORE_DIR}/src/cqe/tiny/stars_cq_adapter.cc
     ${RUNTIME_CORE_DIR}/src/device/sq_addr_memory_pool.cc
     ${RUNTIME_CORE_DIR}/src/utils/aicpu_scheduler_agent.cc
     ${RUNTIME_CORE_DIR}/src/device/device_msg_handler.cc
@@ -457,6 +463,7 @@ set(libruntime_v100_src_files
     ${RUNTIME_CORE_DIR}/src/device/device_debug_stars.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device_res.cc
+    ${RUNTIME_CORE_DIR}/src/device/stub/resource_id_allocator_stub.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device_adpt_comm.cc
     ${RUNTIME_CORE_DIR}/src/device/device_sched_gate_stub.cc
     ${RUNTIME_CORE_DIR}/src/device/dev_simt_stack_checker.cc
@@ -521,6 +528,10 @@ set(libruntime_v100_src_files
     ${RUNTIME_CORE_DIR}/src/device/device_error_proc.cc
     ${RUNTIME_CORE_DIR}/src/device/v100/device_error_proc.cc
     ${RUNTIME_CORE_DIR}/src/device/stub/device_sq_cq_pool_stub.cc
+    ${RUNTIME_CORE_DIR}/src/device/device_error_update.cc
+    ${RUNTIME_CORE_DIR}/src/device/stub/device_error_update_stub.cc
+    ${RUNTIME_CORE_DIR}/src/cqe/cq_adapter.cc
+    ${RUNTIME_CORE_DIR}/src/cqe/tiny/stars_cq_adapter.cc
     ${RUNTIME_CORE_DIR}/src/device/sq_addr_memory_pool.cc
     ${RUNTIME_CORE_DIR}/src/utils/aicpu_scheduler_agent.cc
     ${RUNTIME_CORE_DIR}/src/device/device_msg_handler.cc
@@ -626,6 +637,7 @@ set(RUNTIME_INC_DIR_TINY
     ${RUNTIME_CORE_DIR}/src/uvm
     ${RUNTIME_CORE_DIR}/src/event
     ${RUNTIME_DIR}/src/runtime/core/inc/cond_isa/v100
+    ${RUNTIME_DIR}/src/runtime/core/inc/cqe
     ## not open
     ${RUNTIME_DIR}/src/runtime/core/inc/dqs
     ${RUNTIME_DIR}/src/runtime/core/inc/sqe/v200

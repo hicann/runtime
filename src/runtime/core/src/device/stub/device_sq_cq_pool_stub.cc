@@ -19,10 +19,12 @@ DeviceSqCqPool::~DeviceSqCqPool() = default;
 rtError_t DeviceSqCqPool::Init(void) const { return RT_ERROR_NONE; }
 
 rtError_t DeviceSqCqPool::AllocSqCqFromDrv(
-    rtDeviceSqCqInfo_t* const sqCqInfo, const uint32_t drvFlag, const int32_t retryCount, const uint32_t priority) const
+    rtDeviceSqCqInfo_t* const sqCqInfo, const uint32_t drvFlag, const uint8_t sqType, const int32_t retryCount,
+    const uint32_t priority) const
 {
     UNUSED(sqCqInfo);
     UNUSED(drvFlag);
+    UNUSED(sqType);
     UNUSED(retryCount);
     UNUSED(priority);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
@@ -79,6 +81,8 @@ void DeviceSqCqPool::FreeReallocatedSqCqToDrv(
 }
 
 rtError_t DeviceSqCqPool::ReAllocSqCqForFreeList(void) { return RT_ERROR_NONE; }
+
+rtError_t DeviceSqCqPool::RestoreFaultSqCq(void) { return RT_ERROR_NONE; }
 
 rtError_t DeviceSqCqPool::AllocSqCq(const uint32_t allcocNum, rtDeviceSqCqInfo_t* const sqCqList)
 {

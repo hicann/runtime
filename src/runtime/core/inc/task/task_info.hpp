@@ -163,6 +163,7 @@ typedef struct tagTaskInfoStru {
 
         CaptureConditionTaskInfo captureConditionTask;
         ModelSerialSchedTaskInfo modelSerialSchedTask;
+        SqExecTimesAddrTaskInfo sqExecTimesAddrTask;
     } u;
 
     rtPkgDesc pkgStat[RT_PACKAGE_TYPE_BUTT];
@@ -266,7 +267,7 @@ uint32_t GetTaskId(const TaskInfo* const taskInfo);
 int32_t GetTaskIdBitWidth();
 const char_t* TaskIdDesc();
 const char_t* TaskIdCamelbackNaming();
-void PrintStarsCqeInfo(const rtCqReport_t& cqe, const uint32_t devId, const uint32_t cqId);
+void PrintStarsCqeInfo(const rtLogicCqReport_t& cqe, const uint32_t devId, const uint32_t cqId);
 void GetBinAndKernelNameExceptionArgs(const Kernel* const kernel, rtExceptionArgsInfo_t* argsInfo);
 void GetKernelExceptionDfxInfo(
     const Kernel* const kernel, const rtArgsSizeInfo_t* const sizeInfo, void* const args, const uint32_t argsSize,

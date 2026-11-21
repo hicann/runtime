@@ -202,10 +202,13 @@ std::string DeviceStreamSnapshotHandler::GetActiveStreamSnapshot(
     outStream << "Device[" << realDeviceId << "] total running stream num=" << cnt << std::endl;
     for (uint32_t i = 0U; i < cnt; ++i) {
         auto& streamSnapshot = streamSnapshots[i];
-        TaskInfo* tsk = GetTaskInfo(
-            dev_, static_cast<uint32_t>(streamSnapshot.streamId), static_cast<uint32_t>(streamSnapshot.taskId), true);
+        uint32_t streamId = streamSnapshot.streamId;
+        if (streamId == UINT16_MAX) {
+            (void)dev_->GetStreamSqCqManage()->GetStreamIdBySqId(streamSnapshot.sqId, streamId);
+        }
+        TaskInfo* tsk = GetTaskInfo(dev_, streamId, static_cast<uint32_t>(streamSnapshot.taskId), true);
         outStream << "\t"
-                  << "[" << i << "] streamId=" << streamSnapshot.streamId << ", " << TaskIdCamelbackNaming() << "="
+                  << "[" << i << "] streamId=" << streamId << ", " << TaskIdCamelbackNaming() << "="
                   << streamSnapshot.taskId;
         if (tsk == nullptr) {
             outStream << ", no task info found in runtime." << std::endl;

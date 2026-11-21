@@ -309,11 +309,12 @@ static void XpuProcLogicCqUntilEmpty(const Stream* const stm)
     constexpr uint32_t allocCnt = RT_MILAN_MAX_QUERY_CQE_NUM; // want get cqe num
     const uint32_t streamId = static_cast<uint32_t>(stm->Id_());
 
-    LogicCqWaitInfo waitInfo = {};
+    CqWaitInfo waitInfo = {};
     waitInfo.devId = dev->Id_();
     waitInfo.tsId = dev->DevGetTsId();
     waitInfo.cqId = stm->GetCqId();
     waitInfo.isFastCq = false;
+    waitInfo.isLogicCq = true;
     waitInfo.timeout = RT_REPORT_WITHOUT_TIMEOUT; // get logic report without timeout
     waitInfo.streamId = streamId;
     waitInfo.taskId = MAX_UINT32_NUM;             // get any logic report without specifying the task

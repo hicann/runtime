@@ -133,6 +133,8 @@ public:
 
     rtError_t StreamsTaskClean(void);
 
+    rtError_t CaptureModelClean(void);
+
     rtError_t StreamsRestore(void);
 
     rtError_t StreamsUpdate(void);
@@ -325,6 +327,7 @@ public:
     void SetContextLastErr(rtError_t errcode) { lastErr_.Set(errcode); }
 
     bool ModelIsExistInContext(const Model* mdl);
+    bool ModelIsExistInContextWithoutLock(const Model* mdl);
     bool CheckCanFreeModulePool(uint32_t poolIdx);
     bool CheckCanFreePorgPool(uint32_t poolIdx) const;
     void TryToRecycleModulePool();

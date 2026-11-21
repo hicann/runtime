@@ -96,7 +96,7 @@ void SetStarsResultForEventRecordTask(TaskInfo* const taskInfo, const rtCqReport
     EventRecordTaskInfo* eventRecordTaskInfo = &(taskInfo->u.eventRecordTaskInfo);
 
     if ((logicCq.errorType & RT_STARS_EXIST_ERROR) == 0U) {
-        eventRecordTaskInfo->timestamp = logicCq.u1.timeStamp;
+        eventRecordTaskInfo->timestamp = logicCq.u.timeStamp;
     } else {
         taskInfo->errorCode = logicCq.errorCode;
     }

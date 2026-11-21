@@ -53,7 +53,9 @@ struct DavidProfilerTraceEx {
     uint64_t profilerTraceId;
     uint64_t modelId;
     uint16_t tagId;
-    uint8_t reserved[30];
+    uint16_t reserved2;
+    uint32_t streamId;
+    uint8_t reserved[24];
 };
 
 struct DavidModelDebugRegister {
@@ -194,6 +196,12 @@ struct DavidCallBackTask {
     uint32_t destPid;
 };
 
+struct DavidSqExecTimesAddr {
+    uint64_t addr;
+    uint8_t freeFlag; // allocated: 0 free: 1
+    uint8_t reserved[39];
+};
+
 struct RtDavidPlaceHolderSqe {
     rtDavidStarsSqeHeader_t header;
     /* word2-3 */
@@ -222,6 +230,7 @@ struct RtDavidPlaceHolderSqe {
         DavidMdlTaskUpdate mdlTaskUpdateInfo;
         DavidAicpuInfoLoad aiCpuLoadInfo;
         DavidCallBackTask callBackInfo;
+        DavidSqExecTimesAddr sqExecTimesAddrInfo;
         uint32_t resv[12];
     } u;
 };

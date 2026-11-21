@@ -596,6 +596,30 @@ void ConstrucModelExeActiveHeadSq(rtStarsModelExeFuncCallPara_t& funcCallPara, R
 
 void ConstrucModelExeErrInstr(RtStarsModelExeExeErrInstr& errInstr) { ConstructErrorInstr(errInstr.err); }
 
+void ConstrucModelExeAddTimes(const rtStarsModelExeFuncCallPara_t& funcCallPara, RtStarsModelExeAddTimes& addTimes)
+{
+    if (funcCallPara.modelExecTimesAddr == 0ULL) {
+        ConstructNop(addTimes.u.nops.nop0);
+        ConstructNop(addTimes.u.nops.nop1);
+        ConstructNop(addTimes.u.nops.nop2);
+        ConstructNop(addTimes.u.nops.nop3);
+        ConstructNop(addTimes.u.nops.nop4);
+        ConstructNop(addTimes.u.nops.nop5);
+        ConstructNop(addTimes.u.nops.nop6);
+        return;
+    }
+
+    constexpr rtStarsCondIsaRegister_t addrReg = RT_STARS_COND_ISA_REGISTER_R1;
+    constexpr rtStarsCondIsaRegister_t valReg = RT_STARS_COND_ISA_REGISTER_R2;
+    ConstructLoadImm(
+        valReg, funcCallPara.modelExecTimesAddr, RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD,
+        addTimes.u.instrs.loadExecTimesAddr);
+    ConstructOpImmAndi(valReg, valReg, 1U, RT_STARS_COND_ISA_OP_IMM_FUNC3_ADDI, addTimes.u.instrs.addi);
+    ConstructLHWI(addrReg, funcCallPara.modelExecTimesAddr, addTimes.u.instrs.lhwi);
+    ConstructLLWI(addrReg, funcCallPara.modelExecTimesAddr, addTimes.u.instrs.llwi);
+    ConstructStore(addrReg, valReg, 0U, RT_STARS_COND_ISA_STORE_FUNC3_SD, addTimes.u.instrs.sd);
+}
+
 void ConstrucModelExeCheckSqDisableErrInstr(
     const rtStarsModelExeFuncCallPara_t& funcCallPara, RtStarsModelExeCheckSqErrInstr& errInstr)
 {
@@ -637,6 +661,7 @@ void ConstrucModelExeFuncCall(rtStarsModelExeFuncCallPara_t& funcCallPara, RtSta
     ConstrucModelExeCheckSqDisableErrInstr(funcCallPara, funcCall.checkSqDisableErrInstr);
     ConstrucModelExeCheckSqHeadTailErrInstr(funcCallPara, funcCall.checkSqHeadTailErrInstr);
     ConstrucModelExeErrInstr(funcCall.errInstr);
+    ConstrucModelExeAddTimes(funcCallPara, funcCall.addModelExecTimes);
     ConstrucModelExeEndInstrr(funcCall.endInstr);
 }
 
@@ -2572,6 +2597,8 @@ void TransParaToModelExecuteFuncCallPara(rtStarsCaptureCondFcPara_t& para, rtSta
     modelPara.streamSvmArrAddr = para.streamSvmPtrArrAddr;
     modelPara.deltaOffset = para.deltaOffset;
     modelPara.isCondTaskModelExec = true;
+    // Conditional submodels do not update the model execution counter.
+    modelPara.modelExecTimesAddr = 0ULL;
     modelPara.funcCallInstrSize = sizeof(funcCall);
     modelPara.checkSqStateInstrSize = sizeof(funcCall.checkSqFsm);
     modelPara.checkSqFsmInstrDistance = RtPtrToValue(&(funcCall.checkSqFsm.lhwi0)) - RtPtrToValue(&funcCall);

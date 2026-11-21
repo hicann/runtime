@@ -429,6 +429,22 @@ rtError_t CaptureModel::BindSqCq(void) { return RT_ERROR_FEATURE_NOT_SUPPORT; }
 
 rtError_t CaptureModel::BindStreamToModel(void) { return RT_ERROR_FEATURE_NOT_SUPPORT; }
 
+rtError_t CaptureModel::UnBindStreamToModel(void) { return RT_ERROR_FEATURE_NOT_SUPPORT; }
+
+rtError_t CaptureModel::ModelIdAlloc() { return RT_ERROR_FEATURE_NOT_SUPPORT; }
+
+void CaptureModel::ModelIdFree() { return; }
+
+bool CaptureModel::IsExecuteException() { return false; }
+void CaptureModel::SetExecuteExceptionFlagForAllModels(bool flag)
+{
+    UNUSED(flag);
+    return;
+}
+
+void CaptureModel::ClearExecuteExceptionFlagForAllModels() { return; }
+CaptureModel* CaptureModel::GetRootModel() { return nullptr; }
+
 rtError_t CaptureModel::UnBindSqCq(void) { return RT_ERROR_FEATURE_NOT_SUPPORT; }
 
 rtError_t CaptureModel::AllocSqCqProc(const uint32_t logicSqNum) const

@@ -48,41 +48,32 @@ constexpr uint16_t RT_FLIP_TASK_STREAM_ID = 1U;
 constexpr uint8_t STARS_CALLBACK_EVENT_RECORD_CMDTYPE = 15U;
 constexpr uint32_t STARS_CDQM_CDQE_SIZE = 15;
 
-/**
- * @ingroup
- * @brief the struct define of cqe when task is completed
- */
-struct rtStarsCqeSysCnt_t {
-    uint32_t syscnt_low;
-    uint32_t syscnt_high;
-};
-
 struct rtStarsModelExecuteError_t {
-    uint16_t task_id;
-    uint16_t stream_id : 12; /* 0~4096 for stream_id */
+    uint16_t taskId;
+    uint16_t streamId : 12; /* 0~4096 for stream_id */
     uint16_t result : 4;
 };
 
 /* used for stream expand spec */
 struct rtStarsModelExecuteErrorEx_t {
-    uint16_t task_id;
-    uint16_t sq_id : 12; /* sq_id */
+    uint16_t taskId;
+    uint16_t sqId : 12; /* sq_id */
     uint16_t result : 4;
 };
 
 union rtStarsCqeSwStatus_t {
-    rtStarsModelExecuteError_t model_exec;
-    rtStarsModelExecuteErrorEx_t model_exec_ex;
+    rtStarsModelExecuteError_t modelExec;
+    rtStarsModelExecuteErrorEx_t modelExecEx;
     uint32_t value;
 };
 
 struct rtStarsCqeErrorInfo_t {
-    uint8_t error_code;
-    uint8_t drop_flag; /* software define, means drop hw cqe and no dispatch to logic cq */
+    uint8_t errorCode;
+    uint8_t dropFlag : 1; /* software define, means drop hw cqe and no dispatch to logic cq */
     uint8_t res0 : 1;
-    uint8_t sqe_type : 6;
-    uint16_t sqe_index;
-    rtStarsCqeSwStatus_t sq_sw_status;
+    uint8_t sqeType : 6;
+    uint16_t sqeIndex;
+    rtStarsCqeSwStatus_t sqSwStatus;
 };
 
 union rtStarsCqeStatus_t {
@@ -94,15 +85,15 @@ struct rtStarsCqe_t {
     uint16_t phase : 1;
     uint16_t warn : 1; /* process warning */
     uint16_t evt : 1;  /* event record flag */
-    uint16_t place_hold : 1;
-    uint16_t SQ_id : 11;
-    uint16_t error_bit : 1;
-    uint16_t SQ_head;
+    uint16_t placeHolder : 1;
+    uint16_t sqId : 11;
+    uint16_t errorBit : 1;
+    uint16_t sqHead;
 
-    uint16_t streamID;
-    uint16_t taskID;
+    uint16_t streamId;
+    uint16_t taskId;
 
-    rtStarsCqeStatus_t cqe_status;
+    rtStarsCqeStatus_t cqeStatus;
 };
 
 #pragma pack(pop)

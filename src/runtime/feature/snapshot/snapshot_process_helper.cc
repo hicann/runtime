@@ -205,9 +205,13 @@ static rtError_t RestoreSoftwareSqCaptureModel(
     }
 
     const uint32_t deviceId = dev->Id_();
-    rtError_t err = drv->ReAllocResourceId(deviceId, tsId, 0U, mdl->Id_(), DRV_MODEL_ID);
-    ERROR_RETURN(
-        err, "Realloc modelId failed, deviceId=%u, tsId=%u, retCode=%#x!", deviceId, tsId, static_cast<uint32_t>(err));
+    rtError_t err = RT_ERROR_NONE;
+    if (!mdl->IsIdAllocByRuntime()) {
+        err = drv->ReAllocResourceId(deviceId, tsId, 0U, mdl->Id_(), DRV_MODEL_ID);
+        ERROR_RETURN(
+            err, "Realloc modelId failed, deviceId=%u, tsId=%u, retCode=%#x!", deviceId, tsId,
+            static_cast<uint32_t>(err));
+    }
 
     err = capMdl->RestoreForSoftwareSq(dev);
     ERROR_RETURN(

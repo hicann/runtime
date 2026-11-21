@@ -95,6 +95,10 @@ rtError_t ApiDecorator::StreamEndTaskGrp(Stream* const stm, TaskGroup** const ha
     return impl_->StreamEndTaskGrp(stm, handle);
 }
 
+rtError_t ApiDecorator::TaskGetSeqId(rtTask_t task, uint32_t* id) { return impl_->TaskGetSeqId(task, id); }
+rtError_t ApiDecorator::ModelTaskDisable(rtTask_t task) { return impl_->ModelTaskDisable(task); }
+rtError_t ApiDecorator::ModelUpdate(Model* mdl) { return impl_->ModelUpdate(mdl); }
+
 rtError_t ApiDecorator::ModelCondHandleCreate(
     Model* const mdl, uint32_t defaultValue, rtCondHandleFlag_t flag, CondHandle** const handle)
 {

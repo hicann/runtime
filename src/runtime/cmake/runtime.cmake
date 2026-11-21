@@ -22,6 +22,7 @@ set(libruntime_v100_task_src_files
     ${RUNTIME_CORE_DIR}/src/task/task_res_manage/task_res.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/task_manager.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_execute_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_aclgraph_exception_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_execute_task_func_call.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_execute_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/davinci/davinci_kernel_task.cc
@@ -79,6 +80,8 @@ set(libruntime_v100_task_src_files
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/kernel_fusion_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/maintenance/float_status_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/maintenance/float_status_task_v100.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/maintenance/sq_exec_times_addr_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/maintenance/sq_exec_times_addr_task_v100.cc
 
     ${RUNTIME_CORE_DIR}/src/task/v100/task_checker.cc
     ${RUNTIME_CORE_DIR}/src/task/v100/task_adapter.cc
@@ -345,6 +348,7 @@ set(libruntime_v100_src_files
     ${RUNTIME_CORE_DIR}/src/device/device_debug_stars.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device_res.cc
+    ${RUNTIME_CORE_DIR}/src/device/resource_id_allocator.cc
     ${RUNTIME_FEATURE_DIR}/snapshot/device_snapshot.cc
     ${RUNTIME_FEATURE_DIR}/snapshot/snapshot_process_helper.cc
     ${RUNTIME_FEATURE_DIR}/snapshot/snapshot_callback_manager.cc
@@ -426,6 +430,10 @@ set(libruntime_v100_src_files
     ${RUNTIME_CORE_DIR}/src/device/device_error_core_proc.cc
     ${RUNTIME_CORE_DIR}/src/device/device_error_proc.cc
     ${RUNTIME_CORE_DIR}/src/device/v100/device_error_proc.cc
+    ${RUNTIME_CORE_DIR}/src/device/device_error_update.cc
+    ${RUNTIME_CORE_DIR}/src/device/v100/device_error_update.cc
+    ${RUNTIME_CORE_DIR}/src/cqe/cq_adapter.cc
+    ${RUNTIME_CORE_DIR}/src/cqe/v100/stars_cq_adapter.cc
     ${RUNTIME_CORE_DIR}/src/device/device_sq_cq_pool.cc
     ${RUNTIME_CORE_DIR}/src/device/sq_addr_memory_pool.cc
     ${RUNTIME_CORE_DIR}/src/utils/aicpu_scheduler_agent.cc
@@ -535,6 +543,7 @@ set(RUNTIME_INC_DIR_OPEN
     ${RUNTIME_CORE_DIR}/src/uvm
     ${RUNTIME_CORE_DIR}/src/event
     ${RUNTIME_DIR}/src/runtime/core/inc/cond_isa/v100
+    ${RUNTIME_DIR}/src/runtime/core/inc/cqe
     ## not open
     ${RUNTIME_DIR}/src/runtime/core/inc/dqs
     ${RUNTIME_DIR}/src/runtime/core/inc/sqe/v200

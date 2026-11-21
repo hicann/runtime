@@ -21,8 +21,7 @@ CoprocessorStream::CoprocessorStream(Device* const dev, const uint32_t prio, con
 
 rtError_t CoprocessorStream::Setup()
 {
-    rtError_t error =
-        device_->Driver_()->StreamIdAlloc(&streamId_, device_->Id_(), device_->DevGetTsId(), priority_, flags_);
+    rtError_t error = AllocStreamId();
     if (error != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR, "Failed to alloc coprocessor stream id, retCode=%#x.", static_cast<uint32_t>(error));
         if ((error == RT_ERROR_DRV_NO_RESOURCES) || (error == RT_ERROR_DRV_NO_STREAM_RESOURCES)) {

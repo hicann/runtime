@@ -598,6 +598,25 @@ rtError_t ApiImpl::StreamEndTaskGrp(Stream* const stm, TaskGroup** const handle)
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
+rtError_t ApiImpl::TaskGetSeqId(rtTask_t task, uint32_t* id)
+{
+    UNUSED(task);
+    UNUSED(id);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::ModelTaskDisable(rtTask_t task)
+{
+    UNUSED(task);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ApiImpl::ModelUpdate(Model* mdl)
+{
+    UNUSED(mdl);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 rtError_t ApiImpl::StreamBeginTaskUpdate(Stream* const stm, TaskGroup* handle)
 {
     UNUSED(stm);

@@ -260,7 +260,7 @@ static rtError_t ProcessStarv2TaskErrorBatch(
 
 rtLogicCqReport_t g_cqReport1;
 static rtError_t Sub_LogicCqReportV2(
-    NpuDriver* drv, const LogicCqWaitInfo& waitInfo, uint8_t* report, uint32_t reportCnt, uint32_t& realCnt)
+    NpuDriver* drv, const CqWaitInfo& waitInfo, uint8_t* report, uint32_t reportCnt, uint32_t& realCnt)
 {
     realCnt = 1;
     rtLogicCqReport_t* reportPtr = reinterpret_cast<rtLogicCqReport_t*>(report);
@@ -328,6 +328,8 @@ protected:
         ((Runtime*)Runtime::Instance())->SetIsUserSetSocVersion(false);
         dev_ = rtInstance->DeviceRetain(0, 0);
         dev_->SetChipType(CHIP_DAVID);
+        dev_->SetDeviceRas(false);
+        dev_->SetDeviceFaultType(DeviceFaultType::NO_ERROR);
         Driver* driver_ = ((Runtime*)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
         MOCKER_CPP_VIRTUAL((NpuDriver*)(driver_), &NpuDriver::GetRunMode)
             .stubs()
@@ -335,8 +337,9 @@ protected:
         MOCKER_CPP_VIRTUAL((NpuDriver*)(driver_), &NpuDriver::LogicCqReportV2)
             .stubs()
             .will(invoke(Sub_LogicCqReportV2));
-        rtStreamCreate(&streamHandle_, 0);
+        ASSERT_EQ(rtStreamCreate(&streamHandle_, 0), RT_ERROR_NONE);
         stream_ = rt_ut::UnwrapOrNull<Stream>(streamHandle_);
+        ASSERT_NE(stream_, nullptr);
         stream_->SetSqMemAttr(false);
         stream_->Context_()->DefaultStream_()->SetSqMemAttr(false);
         MOCKER(StreamNopTask).stubs().will(returnValue(RT_ERROR_NONE));
@@ -370,6 +373,8 @@ protected:
 
     virtual void TearDown()
     {
+        dev_->SetDeviceRas(false);
+        dev_->SetDeviceFaultType(DeviceFaultType::NO_ERROR);
         rtStreamDestroy(streamHandle_);
         stream_ = nullptr;
 
@@ -2622,7 +2627,6 @@ TEST_F(DavidTaskTest, construct_davidsqe_for_aicpu_msg_version)
 TEST_F(DavidTaskTest, construct_davidsqe_for_davinci)
 {
     TaskInfo task = {};
-    rtDavidSqe_t* sqe = (rtDavidSqe_t*)malloc(sizeof(rtDavidSqe_t));
     InitByStream(&task, stream_);
 
     const void* stubFunc = (void*)0x02;
@@ -2633,7 +2637,12 @@ TEST_F(DavidTaskTest, construct_davidsqe_for_davinci)
     program->kernelNames_ = {'a', 'b', 'c', 'd', '\0'};
     kernel = new (std::nothrow) Kernel("", 0UL, program, RT_KERNEL_ATTR_TYPE_AICORE, 0);
     kernel->SetStub_(stubFunc);
-    ((Runtime*)Runtime::Instance())->kernelTable_.Add(kernel);
+    const rtError_t addRet = ((Runtime*)Runtime::Instance())->kernelTable_.Add(kernel);
+    if (addRet != RT_ERROR_NONE) {
+        delete kernel;
+    }
+    ASSERT_EQ(addRet, RT_ERROR_NONE);
+    rtDavidSqe_t* sqe = (rtDavidSqe_t*)malloc(sizeof(rtDavidSqe_t));
     TaskSqeInfo sqeInfo = {0ULL, 0ULL};
     rtDavidSqe_t* sqeAddr = sqe;
     uint16_t pos = task.id;
@@ -2662,6 +2671,7 @@ TEST_F(DavidTaskTest, construct_davidsqe_for_davinci)
     delete aicKernel2;
     EXPECT_EQ(task.type, TS_TASK_TYPE_KERNEL_AICORE);
     TaskUnInitProc(&task);
+    EXPECT_EQ(((Runtime*)Runtime::Instance())->kernelTable_.RemoveAll(program), RT_ERROR_NONE);
     stream_->SetSqBaseAddr(oldSqAddr);
     free(sqe);
     sqe = nullptr;
@@ -2682,7 +2692,11 @@ TEST_F(DavidTaskTest, check_prefetch_cnt_on_construct_davidsqe_for_aic_mix_task)
     program->kernelNames_ = {'a', 'b', 'c', 'd', '\0'};
     kernel = new (std::nothrow) Kernel("", 0UL, program, RT_KERNEL_ATTR_TYPE_AICORE, 0);
     kernel->SetStub_(stubFunc);
-    ((Runtime*)Runtime::Instance())->kernelTable_.Add(kernel);
+    const rtError_t addRet = ((Runtime*)Runtime::Instance())->kernelTable_.Add(kernel);
+    if (addRet != RT_ERROR_NONE) {
+        delete kernel;
+    }
+    ASSERT_EQ(addRet, RT_ERROR_NONE);
 
     kernel->SetPrefetchCnt1_(0x2);
     kernel->SetPrefetchCnt2_(0x4);
@@ -2717,7 +2731,7 @@ TEST_F(DavidTaskTest, check_prefetch_cnt_on_construct_davidsqe_for_aic_mix_task)
     EXPECT_EQ(sqe.aicAivSqe.aicIcachePrefetchCnt, 0x2);
     EXPECT_EQ(sqe.aicAivSqe.aivIcachePrefetchCnt, 0x4);
     TaskUnInitProc(&task);
-    delete kernel;
+    EXPECT_EQ(((Runtime*)Runtime::Instance())->kernelTable_.RemoveAll(program), RT_ERROR_NONE);
 }
 
 TEST_F(DavidTaskTest, check_prefetch_cnt_on_construct_davidsqe_for_aicaiv_nomix_task)
@@ -2735,7 +2749,11 @@ TEST_F(DavidTaskTest, check_prefetch_cnt_on_construct_davidsqe_for_aicaiv_nomix_
     program->kernelNames_ = {'a', 'b', 'c', 'd', '\0'};
     kernel = new (std::nothrow) Kernel("", 0UL, program, RT_KERNEL_ATTR_TYPE_AICORE, 0);
     kernel->SetStub_(stubFunc);
-    ((Runtime*)Runtime::Instance())->kernelTable_.Add(kernel);
+    const rtError_t addRet = ((Runtime*)Runtime::Instance())->kernelTable_.Add(kernel);
+    if (addRet != RT_ERROR_NONE) {
+        delete kernel;
+    }
+    ASSERT_EQ(addRet, RT_ERROR_NONE);
 
     kernel->SetPrefetchCnt1_(0x2);
     kernel->SetPrefetchCnt2_(0x4);
@@ -2757,15 +2775,20 @@ TEST_F(DavidTaskTest, check_prefetch_cnt_on_construct_davidsqe_for_aicaiv_nomix_
     ToConstructSqe(&task, static_cast<void*>(&sqe), sqeInfo);
     EXPECT_EQ(sqe.aicAivSqe.header.type, RT_DAVID_SQE_TYPE_AIV);
     EXPECT_EQ(sqe.aicAivSqe.aivIcachePrefetchCnt, 0x2);
-    ((Runtime*)Runtime::Instance())->SetBiuperfProfFlag(true);
-    ((Runtime*)Runtime::Instance())->SetL2CacheProfFlag(true);
+    Runtime* runtime = (Runtime*)Runtime::Instance();
+    const bool biuperfProfFlag = runtime->GetBiuperfProfFlag();
+    const bool l2CacheProfFlag = runtime->GetL2CacheProfFlag();
+    runtime->SetBiuperfProfFlag(true);
+    runtime->SetL2CacheProfFlag(true);
     Kernel* vecKernel4 = CreateTestKernel(RT_KERNEL_ATTR_TYPE_VECTOR);
     AicTaskInit(&task, vecKernel4, vecKernel4->GetKernelAttrType(), 1, nullptr);
     delete vecKernel4;
     EXPECT_EQ(task.type, TS_TASK_TYPE_KERNEL_AIVEC);
     ToConstructSqe(&task, static_cast<void*>(&sqe), sqeInfo);
     TaskUnInitProc(&task);
-    delete kernel;
+    runtime->SetBiuperfProfFlag(biuperfProfFlag);
+    runtime->SetL2CacheProfFlag(l2CacheProfFlag);
+    EXPECT_EQ(((Runtime*)Runtime::Instance())->kernelTable_.RemoveAll(program), RT_ERROR_NONE);
 }
 
 TEST_F(DavidTaskTest, config_schem_mode_on_construct_davidsqe_for_aic_mix_task)
@@ -2784,7 +2807,11 @@ TEST_F(DavidTaskTest, config_schem_mode_on_construct_davidsqe_for_aic_mix_task)
     program->kernelNames_ = {'a', 'b', 'c', 'd', '\0'};
     kernel = new (std::nothrow) Kernel("", 0UL, program, RT_KERNEL_ATTR_TYPE_AICORE, 0);
     kernel->SetStub_(stubFunc);
-    ((Runtime*)Runtime::Instance())->kernelTable_.Add(kernel);
+    const rtError_t addRet = ((Runtime*)Runtime::Instance())->kernelTable_.Add(kernel);
+    if (addRet != RT_ERROR_NONE) {
+        delete kernel;
+    }
+    ASSERT_EQ(addRet, RT_ERROR_NONE);
 
     Kernel* aicKernel6 = CreateTestKernel(RT_KERNEL_ATTR_TYPE_AICORE);
     AicTaskInit(&task, aicKernel6, aicKernel6->GetKernelAttrType(), 1, nullptr);
@@ -2822,7 +2849,7 @@ TEST_F(DavidTaskTest, config_schem_mode_on_construct_davidsqe_for_aic_mix_task)
     ToConstructSqe(&task, static_cast<void*>(&sqe), sqeInfo);
     EXPECT_EQ(sqe.aicAivSqe.schem, RT_SCHEM_MODE_BATCH);
     TaskUnInitProc(&task);
-    delete kernel;
+    EXPECT_EQ(((Runtime*)Runtime::Instance())->kernelTable_.RemoveAll(program), RT_ERROR_NONE);
 }
 
 TEST_F(DavidTaskTest, construct_davidsqe_for_memcpy_async)
@@ -4359,7 +4386,7 @@ TEST_F(DavidTaskTest, aicore_timeout_task_dev_error_proc)
         errorInfo.u.starsV2CoreTimeoutDfxInfo.coreInfo[i].streamId = 8;
         errorInfo.u.starsV2CoreTimeoutDfxInfo.coreInfo[i].sqHead = 8;
         errorInfo.u.starsV2CoreTimeoutDfxInfo.coreInfo[i].taskSn = 300 + i;
-        errorInfo.u.starsV2CoreTimeoutDfxInfo.coreInfo[i].rsv = 0;
+        errorInfo.u.starsV2CoreTimeoutDfxInfo.coreInfo[i].sqId = 0;
     }
 
     const uint64_t errorNumber = 11ULL;
@@ -6411,14 +6438,17 @@ TEST_F(DavidTaskTest, test_enter_failure1)
 {
     rtStream_t stream;
     rtError_t res = rtStreamCreateWithFlags(&stream, 0, RT_STREAM_DEFAULT);
-    EXPECT_EQ(res, RT_ERROR_NONE);
+    ASSERT_EQ(res, RT_ERROR_NONE);
 
     Stream* streamObj = rt_ut::UnwrapOrNull<Stream>(stream);
+    ASSERT_NE(streamObj, nullptr);
     streamObj->Context_()->SetCtxMode(CONTINUE_ON_FAILURE);
+    Context* context = streamObj->Context_();
     streamObj->SetContext(nullptr);
     streamObj->EnterFailureAbort();
     EXPECT_EQ(streamObj->GetFailureMode(), 0);
-    rtStreamDestroy(stream);
+    streamObj->SetContext(context);
+    EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE);
 }
 
 TEST_F(DavidTaskTest, get_tseg_info_failed)

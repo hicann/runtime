@@ -329,6 +329,10 @@ public:
     bool GetJettyBindFlag() const { return jettyBindFlag_; }
     void SetJettyBindFlag(bool bound) { jettyBindFlag_ = bound; }
     rtError_t EndCaptureAdapterProc();
+    CaptureModel* GetRootModel();
+    bool IsExecuteException();
+    void SetExecuteExceptionFlagForAllModels(bool flag);
+    void ClearExecuteExceptionFlagForAllModels();
 
     GraphUpdateInfo& GetGraphUpdateInfo() { return updateInfo_; }
 
@@ -341,12 +345,17 @@ public:
     bool HasExternalEvent() { return !externalRecordEventItems_.empty(); }
     rtError_t CopyTaskArgsDeviceBuffer(const TaskInfo* taskInfo, void** devBufferAddr, size_t* size);
 
+protected:
+    rtError_t ModelIdAlloc() override;
+    void ModelIdFree() override;
+
 private:
     rtError_t AllocSqCqProc(const uint32_t logicSqNum) const;
     rtError_t BindSqCq(void);
     rtError_t UnBindSqCq(void);
     rtError_t ConfigLogicSqTail(void) const;
     rtError_t UpdateStreamActiveTaskFuncCallMem(void);
+    void SetExecuteExceptionFlag(bool flag) { isExecuteException_ = flag; }
     void RollbackSqCqArray(void);
     void RollbackAllSqCq(void);
     void ClearStreamActiveTask(void);
@@ -375,6 +384,7 @@ private:
     rtError_t PrepareExternalRecordsForReplay(ExternalEventRefreshInfo* refreshInfo);
     rtError_t PrepareExternalWaitsForReplay(ExternalEventRefreshInfo* refreshInfo);
     rtError_t BindStreamToModel(void);
+    rtError_t UnBindStreamToModel(void);
     void ReportCacheTrackData();
     rtError_t InitAllSubCaptureModelCondTaskByDefValue(Stream* const stm);
     rtError_t PrepareGraphUpdateProc(Stream* const exeStm);
@@ -448,6 +458,7 @@ private:
     uint16_t rootExeStreamId_{UINT16_MAX};
     uint32_t loadCompleteNotifyId_{0U};             // 用于子模型task error等异常场景
     std::list<LogicSq*> logicSqs_;                  // 归属本model；模型执行/释放随本model
+    bool isExecuteException_{false};                // 模型执行是否异常
 };
 } // namespace runtime
 } // namespace cce

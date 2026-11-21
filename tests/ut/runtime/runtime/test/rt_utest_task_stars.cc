@@ -867,8 +867,8 @@ TEST_F(StarsTaskTest, DoCompleteStarsError)
     EXPECT_EQ(errTask->type, TS_TASK_TYPE_KERNEL_AICORE);
 
     rtStarsCqeSwStatus_t sw_status;
-    sw_status.model_exec.stream_id = errTask->stream->Id_();
-    sw_status.model_exec.task_id = errTask->id;
+    sw_status.modelExec.streamId = errTask->stream->Id_();
+    sw_status.modelExec.taskId = errTask->id;
     GetRealReportFaultTask(&task, static_cast<const void*>(&sw_status));
     (void)dev_->GetTaskFactory()->Recycle(errTask);
     SetStarsResult(&task, wait_cqe);

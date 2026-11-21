@@ -23,6 +23,7 @@
 #include "rt_utest_encap.h"
 #include "rt_utest_stub.h"
 #include "task_info.hpp"
+#include "cq_adapter.hpp"
 #include "stars_base.hpp"
 #include "../../../rt_utest_config_define.hpp"
 #include "maintenance_task.h"
@@ -201,7 +202,7 @@ rtHostFuncCqReport_t g_CqReportMsg[MAX_DEVICE_NUM];
 rtHostFuncSqCommand_t g_SqSendMsg[MAX_DEVICE_NUM];
 
 rtLogicReport_t logicReport;
-rtCqReport_t logicCqReport;
+rtLogicCqReport_t logicCqReport;
 rtShmQuery_t vCqShmInfo[1024] = {0};
 std::map<uint32_t, uint32_t> logicCqStreamId;
 std::mutex logicMutex;
@@ -219,8 +220,17 @@ drvError_t halSqMsgSend(uint32_t devId, struct halSqMsgInfo* info)
     if (devId >= MAX_DEVICE_NUM) {
         return DRV_ERROR_NONE;
     }
-    while (__atomic_load_n(&sendCount[devId], __ATOMIC_ACQUIRE) != __atomic_load_n(&recvCount[devId], __ATOMIC_ACQUIRE))
-        ;
+    while (__atomic_load_n(&sendCount[devId], __ATOMIC_ACQUIRE) !=
+           __atomic_load_n(&recvCount[devId], __ATOMIC_ACQUIRE)) {
+        if (__atomic_load_n(&recvCount[devId], __ATOMIC_ACQUIRE) >
+            __atomic_load_n(&sendCount[devId], __ATOMIC_ACQUIRE)) {
+            // recvCount never passes sendCount in this protocol; the only source is
+            // StubClearHalSqSendAndRecvCnt racing this loop at a test boundary. Rebalance
+            // instead of waiting on a report nobody will ever consume.
+            __atomic_store_n(&recvCount[devId], __atomic_load_n(&sendCount[devId], __ATOMIC_ACQUIRE), __ATOMIC_RELEASE);
+            break;
+        }
+    }
     // std::cout<<"halSqMsgSend"<<""<<sendCount[devId]<<";"<<""<<recvCount[devId]<<std::endl;
 
     rtCommand_t* cmd = &g_command[devId];
@@ -355,6 +365,15 @@ drvError_t halCqReportGet(uint32_t devId, struct halReportGetInput* in, struct h
             return DRV_ERROR_NONE;
         }
     }
+    if (__atomic_load_n(&recvCount[devId], __ATOMIC_ACQUIRE) > __atomic_load_n(&sendCount[devId], __ATOMIC_ACQUIRE)) {
+        // Corrupted counters (see halSqMsgSend): drop the phantom reports so the
+        // protocol rebalances instead of consuming garbage forever.
+        __atomic_store_n(&recvCount[devId], __atomic_load_n(&sendCount[devId], __ATOMIC_ACQUIRE), __ATOMIC_RELEASE);
+        out->reportPtr = nullptr;
+        out->count = 0;
+        return DRV_ERROR_NONE;
+    }
+
     int32_t pingpong = __atomic_load_n(&recvCount[devId], __ATOMIC_RELAXED) % 2;
     out->reportPtr = &g_report[devId][pingpong];
     out->count = __atomic_load_n(&g_reportCount[devId][pingpong], __ATOMIC_ACQUIRE);

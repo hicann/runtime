@@ -210,6 +210,10 @@ public:
         int32_t* const id, const uint32_t deviceId, const uint32_t tsId, const uint32_t priority,
         uint32_t streamFlag = 0U) override;
 
+    rtError_t StreamIdAllocByRange(
+        int32_t* const id, const uint32_t deviceId, const uint32_t tsId, const uint32_t priority,
+        const uint32_t beginId, const uint32_t endId, uint32_t streamFlag = 0U) override;
+
     // Free stream ID.
     rtError_t StreamIdFree(
         const int32_t id, const uint32_t deviceId, const uint32_t tsId, const uint32_t streamFlag = 0) override;
@@ -253,6 +257,8 @@ public:
         void** const report, int32_t* const cnt, const uint32_t deviceId, const uint32_t tsId,
         const uint32_t cqId) override;
 
+    rtError_t CqReport(const CqWaitInfo& waitInfo, uint8_t* report, uint32_t reportCnt, uint32_t& realCnt) override;
+
     // Release report to driver.
     rtError_t ReportRelease(
         const uint32_t deviceId, const uint32_t tsId, const uint32_t cqId, const drvSqCqType_t type) override;
@@ -279,10 +285,10 @@ public:
         const uint32_t devId, const uint32_t tsId, const uint32_t cqId, const uint32_t drvFlag = 0U) override;
 
     // Wait report from logic Cq
-    rtError_t LogicCqReport(const LogicCqWaitInfo& waitInfo, rtLogicReport_t*& report, uint32_t& cnt) override;
+    rtError_t LogicCqReport(const CqWaitInfo& waitInfo, rtLogicReport_t*& report, uint32_t& cnt) override;
 
     rtError_t LogicCqReportV2(
-        const LogicCqWaitInfo& waitInfo, uint8_t* report, uint32_t reportCnt, uint32_t& realCnt) override;
+        const CqWaitInfo& waitInfo, uint8_t* report, uint32_t reportCnt, uint32_t& realCnt) override;
 
     rtError_t CreateAsyncDmaWqe(
         uint32_t devId, const AsyncDmaWqeInputInfo& input, AsyncDmaWqeOutputInfo* output, bool isUbMode,
@@ -409,6 +415,16 @@ public:
     // get addr notify
     rtError_t NotifyGetAddrOffset(
         const int32_t deviceId, const uint32_t notifyId, uint64_t* const devAddrOffset, const uint32_t tsId) override;
+
+    rtError_t QueryStreamIdRange(
+        const int32_t deviceId, const uint32_t tsId, uint32_t* const beginId, uint32_t* const endId) override;
+
+    rtError_t QueryModelIdRange(
+        const int32_t deviceId, const uint32_t tsId, uint32_t* const beginId, uint32_t* const endId) override;
+
+    rtError_t ModelIdAllocByRange(
+        int32_t* const id, const uint32_t deviceId, const uint32_t tsId, const uint32_t beginId,
+        const uint32_t endId) override;
 
     // Alloc model ID.
     rtError_t ModelIdAlloc(int32_t* const id, const uint32_t deviceId, const uint32_t tsId) override;
@@ -805,6 +821,7 @@ public:
     rtError_t SetStreamPriorityValue(Stream* const stm, const uint32_t streamPriority) override;
     rtError_t GetStreamPriorityValue(Stream* const stm, uint32_t* const streamPriority) override;
 
+    rtError_t GetDeviceSplitMode(const uint32_t deviceId, uint32_t* const splitMode) override;
     rtError_t GetSwapBufferInfo(
         const uint32_t deviceId, const uint32_t tsId, uint64_t* const swapBufferBaseAddr) override;
 

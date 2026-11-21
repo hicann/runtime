@@ -41,7 +41,7 @@ using namespace testing;
 using namespace cce::runtime;
 rtCqReport_t g_cqReport1;
 static rtError_t Sub_LogicCqReportV2(
-    NpuDriver* drv, const LogicCqWaitInfo& waitInfo, uint8_t* report, uint32_t reportCnt, uint32_t& realCnt)
+    NpuDriver* drv, const CqWaitInfo& waitInfo, uint8_t* report, uint32_t reportCnt, uint32_t& realCnt)
 {
     realCnt = 1;
     rtCqReport_t* reportPtr = reinterpret_cast<rtCqReport_t*>(report);

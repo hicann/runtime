@@ -74,7 +74,6 @@ static const std::unordered_set<RtOptionalFeatureType> CHIP_MC62CM12A_FEATURE{
     RtOptionalFeatureType::RT_FEATURE_TASK_MEMCPY_ASYNC_DOT_BY_PLACEHOLDER,
     RtOptionalFeatureType::RT_FEATURE_KERNEL_META_TYPE_SU_STACK_SIZE,
     RtOptionalFeatureType::RT_FEATURE_TASK_IPC_NOTIFY_ADDR_DOT_BY_TSID,
-    RtOptionalFeatureType::RT_FEATURE_KERNEL_LAUNCH_EX_BY_FUNC_HANDLE,
     RtOptionalFeatureType::RT_FEATURE_STREAM_ATTR_FAILURE_MODE,
     RtOptionalFeatureType::RT_FEATURE_KERNEL_ADDR_PREFETCH_CNT,
     RtOptionalFeatureType::RT_FEATURE_DEVICE_C2C_SYNC,

@@ -191,6 +191,35 @@ rtError_t ApiErrorDecorator::StreamEndTaskGrp(Stream* const stm, TaskGroup** con
     return impl_->StreamEndTaskGrp(stm, handle);
 }
 
+rtError_t ApiErrorDecorator::TaskGetSeqId(rtTask_t task, uint32_t* id)
+{
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
+        task, RT_ERROR_INVALID_VALUE, "Obtaining the Submission Queue Entry (SQE) ID of a task");
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
+        id, RT_ERROR_INVALID_VALUE, "Obtaining the Submission Queue Entry (SQE) ID of a task");
+    return impl_->TaskGetSeqId(task, id);
+}
+
+rtError_t ApiErrorDecorator::ModelTaskDisable(rtTask_t task)
+{
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
+        task, RT_ERROR_INVALID_VALUE, "Setting the status of a specified task to disabled");
+    return impl_->ModelTaskDisable(task);
+}
+
+rtError_t ApiErrorDecorator::ModelUpdate(Model* mdl)
+{
+    NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(mdl, RT_ERROR_INVALID_VALUE, "Model update");
+    COND_RETURN_AND_MSG_OUTER(
+        mdl->GetModelType() != RT_MODEL_CAPTURE_MODEL, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1016, "Model update",
+        "Non ACL Graph mode is not supported");
+    CaptureModel* captureModel = dynamic_cast<CaptureModel*>(mdl);
+    COND_RETURN_WARN(
+        ((captureModel != nullptr) && captureModel->IsSubCaptureModel()), RT_ERROR_FEATURE_NOT_SUPPORT,
+        "sub ACL Graph does not support updating model");
+    return impl_->ModelUpdate(mdl);
+}
+
 rtError_t ApiErrorDecorator::ModelCondHandleCreate(
     Model* const mdl, uint32_t defaultValue, rtCondHandleFlag_t flag, CondHandle** const handle)
 {

@@ -66,9 +66,9 @@ void CommitExternalEventRecords(ExternalEventRefreshInfo* refreshInfo);
 rtError_t SubmitExternalEventTaskCommon(
     Event* evt, Stream* stm, bool isRecord, ExternalPlaceholderSubmitter submitPlaceholder);
 rtError_t UpdateHostSqeBufferAndCopySqeByTask(TaskInfo* const task, void* hostUpdateSqeAddr);
+rtError_t BindSqPrepare(const uint32_t sqId, Device* const dev);
 rtError_t GetActiveStreamSqId(TaskInfo* const task, uint32_t& activeStreamSqId);
 rtError_t SetupEndGraphNotifyWithoutAllocNtyId(Notify* const notify);
-
 } // namespace runtime
 } // namespace cce
 

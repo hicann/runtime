@@ -113,6 +113,7 @@ struct RtStarsModelExeFuncCallArch920x {
     RtStarsModelExeCheckSqErrInstr checkSqDisableErrInstr;
     RtStarsModelExeCheckSqErrInstr checkSqHeadTailErrInstr;
     RtStarsModelExeExeErrInstr errInstr;
+    RtStarsModelExeAddTimes addModelExecTimes;
     RtStarsModelExeExeEndInstr endInstr;
 };
 
@@ -166,6 +167,7 @@ static void ConstrucModelExeFuncCallArch920x(
     ConstrucModelExeCheckSqDisableErrInstr(funcCallPara, funcCall.checkSqDisableErrInstr);
     ConstrucModelExeCheckSqHeadTailErrInstr(funcCallPara, funcCall.checkSqHeadTailErrInstr);
     ConstrucModelExeErrInstr(funcCall.errInstr);
+    ConstrucModelExeAddTimes(funcCallPara, funcCall.addModelExecTimes);
     ConstrucModelExeEndInstrr(funcCall.endInstr);
 }
 
@@ -476,7 +478,8 @@ static rtError_t PrepareModelExecuteFuncCall(TaskInfo* taskInfo)
     funcCallPara.funcCallInstrSize = sizeof(funcCall);
     funcCallPara.checkSqStateInstrSize = sizeof(funcCall.checkSqState);
     funcCallPara.checkSqFsmInstrDistance = RtPtrToValue(&(funcCall.checkSqState.slliSqId)) - RtPtrToValue(&funcCall);
-    funcCallPara.endInstrDistance = RtPtrToValue(&(funcCall.endInstr.nop)) - RtPtrToValue(&funcCall);
+    funcCallPara.endInstrDistance =
+        RtPtrToValue(&(funcCall.addModelExecTimes.u.instrs.loadExecTimesAddr)) - RtPtrToValue(&funcCall);
     funcCallPara.checkSqDisableErrInstrDistance =
         RtPtrToValue(&(funcCall.checkSqDisableErrInstr.lhwi0)) - RtPtrToValue(&funcCall);
     funcCallPara.checkSqHeadTailErrInstrDistance =

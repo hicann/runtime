@@ -16,6 +16,7 @@
 #include "stream_launch_blocking.hpp"
 #include "device_enum_desc.hpp"
 #include "dev_info_manage.h"
+#include "resource_id_allocator.hpp"
 #include "model_update_task.h"
 #include "runtime_handle_guard.h"
 #include "arg_loader.hpp"
@@ -360,7 +361,7 @@ Stream::~Stream()
     releaseHostBuffers();
 }
 
-void Stream::FreeStreamId() const
+void Stream::FreeStreamId()
 {
     if (streamId_ == -1) {
         RT_LOG(RT_LOG_INFO, "Free Stream_id is -1,no need free.");
@@ -373,6 +374,15 @@ void Stream::FreeStreamId() const
         Runtime::Instance()->FreeAiCpuStreamId(streamId_);
     } else {
         RT_LOG(RT_LOG_INFO, "Free stream_id=%d.", streamId_);
+        if (IsIdAllocByRuntime()) {
+            ResourceIdAllocator* const allocator = device_->GetResourceIdAllocator();
+            if (allocator != nullptr) {
+                allocator->FreeStreamId(streamId_);
+                SetIdAllocByRuntimeFlag(false);
+                RT_LOG(RT_LOG_INFO, "Free runtime stream_id=%d.", streamId_);
+            }
+            return;
+        }
         if (!IsSoftwareSqEnable() && !IsAutoSplitSq()) {
             TIMESTAMP_BEGIN(rtStreamDestroy_drvStreamIdFree);
             const uint32_t drvFlag =
@@ -693,7 +703,7 @@ rtError_t Stream::AllocStreamIdFromDriver()
 {
     TIMESTAMP_BEGIN(rtStreamCreate_drvStreamIdAlloc);
     const rtError_t error =
-        device_->Driver_()->StreamIdAlloc(&streamId_, device_->Id_(), device_->DevGetTsId(), priority_);
+        device_->Driver_()->StreamIdAlloc(&streamId_, device_->Id_(), device_->DevGetTsId(), priority_, flags_);
     device_->GetStreamSqCqManage()->SetStreamIdToStream(static_cast<uint32_t>(streamId_), this);
     TIMESTAMP_END(rtStreamCreate_drvStreamIdAlloc);
     if (error != RT_ERROR_NONE) {
@@ -703,6 +713,78 @@ rtError_t Stream::AllocStreamIdFromDriver()
         }
         return error;
     }
+    return RT_ERROR_NONE;
+}
+
+rtError_t Stream::AllocStreamId()
+{
+    int32_t id = -1;
+
+    /* 目前只有A5支持runtime自己分配streamId, 其他形态都不支持，后续A6也会支持 */
+    if (!device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_SUPPORT_RUNTIME_ALLOC_STREAMID_AND_MODELID)) {
+        return AllocStreamIdFromDriver();
+    }
+
+    /* aclGraph扩流场景 */
+    if (IsSoftwareSqEnable()) {
+        /* 扩流场景：
+         * 支持解耦的场景: 新2包 + 物理机 + 支持pcie bar, runtime自己分配id
+         * 不支持解耦的场景: 老2包/新2包 + 物理机 + 不支持pcie bar，走老的GE流程，id需要全局唯一，由驱动分配
+         */
+        uint32_t val = RT_CAPABILITY_NOT_SUPPORT;
+        (void)device_->Driver_()->CheckSupportPcieBarCopy(device_->Id_(), val, false);
+        bool isPcieBarSupport = (val == RT_CAPABILITY_SUPPORT);
+        if (device_->CheckFeatureSupport(TS_FEATURE_SUPPORT_ACLGRAPH_DECOUPLING) && isPcieBarSupport) {
+            ResourceIdAllocator* const allocator = device_->GetResourceIdAllocator();
+            id = (allocator != nullptr) ? allocator->AllocStreamId() : -1;
+        } else {
+            return AllocStreamIdFromDriver();
+        }
+    } else {
+        /* 非扩流场景：包括GE/单算子/普通aclGraph场景
+         * 虚拟机场景：驱动普通方式申请
+         * 物理机场景：
+         *           A5/A6 + 新2包：驱动指定范围0-2k申请
+         *           other：驱动普通方式申请
+         */
+        if (device_->GetSplitMode() == RT_SPLIT_MODE) {
+            return AllocStreamIdFromDriver();
+        } else {
+            /* 场景：
+             * 支持解耦的场景: 新2包 + 物理机 + 支持pcie bar
+             * 非aclGraph扩流的流通过驱动接口指定范围申请，避免和runtime申请的冲突
+             * 默认流的创建在获取能力集之前, 需要使用驱动能力集
+             */
+            uint32_t val = RT_CAPABILITY_NOT_SUPPORT;
+            (void)device_->Driver_()->CheckSupportPcieBarCopy(device_->Id_(), val, false);
+            bool isPcieBarSupport = (val == RT_CAPABILITY_SUPPORT);
+            if (NpuDriver::CheckIsSupportFeature(device_->Id_(), FEATURE_TRSDRV_SUPPORT_UNLIMIT_STREAM) &&
+                isPcieBarSupport) {
+                // 通过驱动接口指定范围申请，指定范围为0-2k
+                rtError_t error = device_->Driver_()->StreamIdAllocByRange(
+                    &streamId_, device_->Id_(), device_->DevGetTsId(), priority_, 0U, 2047U,
+                    flags_); // 指定范围为0-2k
+                COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
+                device_->GetStreamSqCqManage()->SetStreamIdToStream(static_cast<uint32_t>(streamId_), this);
+                RT_LOG(
+                    RT_LOG_DEBUG, "Alloc stream id by range success, device_id=%u, stream_id=%d.", device_->Id_(),
+                    streamId_);
+                return RT_ERROR_NONE;
+            } else {
+                return AllocStreamIdFromDriver();
+            }
+        }
+    }
+
+    if (id < 0) {
+        RT_LOG(RT_LOG_ERROR, "Failed to alloc stream id, device_id=%u.", device_->Id_());
+        return RT_ERROR_STREAM_NO_RESOURCES;
+    }
+
+    streamId_ = id;
+    SetIdAllocByRuntimeFlag(true);
+    device_->GetStreamSqCqManage()->SetStreamIdToStream(static_cast<uint32_t>(streamId_), this);
+    RT_LOG(RT_LOG_DEBUG, "Alloc stream id by runtime success, device_id=%u, stream_id=%d.", device_->Id_(), streamId_);
     return RT_ERROR_NONE;
 }
 
@@ -784,7 +866,7 @@ rtError_t Stream::Setup()
     if ((flags_ & RT_STREAM_OVERFLOW) != 0U) {
         SetOverflowSwitch(true);
     }
-    error = AllocStreamIdFromDriver();
+    error = AllocStreamId();
     COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
     RT_LOG(RT_LOG_DEBUG, "Alloc stream, stream_id=%d", streamId_);
 
@@ -917,6 +999,13 @@ void Stream::UpdateSqCq(const rtDeviceSqCqInfo_t* const sqCqInfo)
 
 void Stream::ResetSqCq(void)
 {
+    if (isPoolMemForExecutedTimesSvm_) {
+        uint16_t* const execTimesSvm = GetExecutedTimesSvm();
+        if (execTimesSvm != nullptr) {
+            (void)device_->Driver_()->MemSetSync(execTimesSvm, sizeof(uint16_t), 0xFFU, sizeof(uint16_t));
+        }
+    }
+
     StreamSqCqManage* stmSqCqManage = device_->GetStreamSqCqManage();
     (void)stmSqCqManage->UnBindSqToStream(static_cast<uint32_t>(streamId_), sqId_);
 
@@ -973,7 +1062,7 @@ rtError_t Stream::SetupWithoutBindSq()
 
     errno_t ret =
         memset_s(posToTaskIdMap_, posToTaskIdMapSize_ * sizeof(uint16_t), 0XFF, posToTaskIdMapSize_ * sizeof(uint16_t));
-    COND_RETURN_ERROR_MSG_INNER(
+    COND_RETURN_ERROR(
         ret != EOK, RT_ERROR_STREAM_NEW,
         "memset_s failed for posToTaskIdMap_, dest=%p, dest_max=%zu, c=0xFF, count=%zu, retCode=%d.", posToTaskIdMap_,
         posToTaskIdMapSize_ * sizeof(uint16_t), posToTaskIdMapSize_ * sizeof(uint16_t), ret);
@@ -981,7 +1070,7 @@ rtError_t Stream::SetupWithoutBindSq()
     error = CreateStreamArgRes(); // only for stars v2
     COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "New args res manage failed.");
 
-    error = AllocStreamIdFromDriver();
+    error = AllocStreamId();
     COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
     RT_LOG(RT_LOG_DEBUG, "Alloc stream, stream_id=%d", streamId_);
 
@@ -991,12 +1080,19 @@ rtError_t Stream::SetupWithoutBindSq()
     SetSatMode(device_->GetSatMode());
     const bool starsFlag = device_->IsStarsPlatform();
 
-    /**** alloc sq cq id *****/
-    const auto stmSqCqManage = RtPtrToUnConstPtr<StreamSqCqManage*>(device_->GetStreamSqCqManage());
-    TIMESTAMP_BEGIN(rtStreamCreate_AllocLogicCq);
-    error = AllocLogicCq(isDisableThread, starsFlag, stmSqCqManage);
-    TIMESTAMP_END(rtStreamCreate_AllocLogicCq);
-    COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "Alloc Sq fail ret=0x%llx", error);
+    /**** alloc logic sq cq id *****/
+    if (!(device_->CheckFeatureSupport(TS_FEATURE_SUPPORT_ACLGRAPH_DECOUPLING))) {
+        const auto stmSqCqManage = RtPtrToUnConstPtr<StreamSqCqManage*>(device_->GetStreamSqCqManage());
+        TIMESTAMP_BEGIN(rtStreamCreate_AllocLogicCq);
+        error = AllocLogicCq(isDisableThread, starsFlag, stmSqCqManage);
+        TIMESTAMP_END(rtStreamCreate_AllocLogicCq);
+        COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "Alloc Sq fail ret=0x%llx", error);
+    } else {
+        if (Context_()->GetCtxMode() == CONTINUE_ON_FAILURE) {
+            // 支持解耦的场景下，默认开启遇错即停
+            SetFailMode(STOP_ON_FAILURE);
+        }
+    }
 
     SetMaxTaskId(isDisableThread);
     isFlowCtrl = false;
@@ -1006,7 +1102,7 @@ rtError_t Stream::SetupWithoutBindSq()
     COND_RETURN_AND_MSG_OUTER(sqeBuffer_ == nullptr, RT_ERROR_STREAM_NEW, ErrorCode::EE1013, sqeBufferSize_, "new");
 
     ret = memset_s(sqeBuffer_, sqeBufferSize_, 0U, sqeBufferSize_);
-    COND_RETURN_ERROR_MSG_INNER(
+    COND_RETURN_ERROR(
         ret != EOK, RT_ERROR_STREAM_NEW,
         "memset_s failed for sqeBuffer_, dest=%p, dest_max=%u, c=0, count=%u, retCode=%d.", sqeBuffer_, sqeBufferSize_,
         sqeBufferSize_, ret);
@@ -1014,7 +1110,7 @@ rtError_t Stream::SetupWithoutBindSq()
     /* pre alloc sq and cq */
     device_->GetDeviceSqCqManage()->PreAllocSqCq();
     const uint64_t sqIdMemAddr = device_->AllocSqIdMemAddr();
-    COND_RETURN_ERROR_MSG_INNER(
+    COND_RETURN_ERROR(
         (sqIdMemAddr == 0UL), RT_ERROR_MEMORY_ALLOCATION,
         "Failed to allocate memory for sq id, device_id=%u, stream_id=%d.", device_->Id_(), Id_());
 
@@ -1050,7 +1146,7 @@ rtError_t Stream::AllocPosToTaskIdMap()
 
     const errno_t ret =
         memset_s(posToTaskIdMap_, posToTaskIdMapSize_ * sizeof(uint16_t), 0XFF, posToTaskIdMapSize_ * sizeof(uint16_t));
-    COND_RETURN_ERROR_MSG_INNER(
+    COND_RETURN_ERROR(
         ret != EOK, RT_ERROR_STREAM_NEW,
         "memset_s failed for posToTaskIdMap_, dest=%p, dest_max=%zu, c=0xFF, count=%zu, retCode=%d.", posToTaskIdMap_,
         posToTaskIdMapSize_ * sizeof(uint16_t), posToTaskIdMapSize_ * sizeof(uint16_t), ret);
@@ -1077,7 +1173,7 @@ rtError_t Stream::AllocSqeBufferForAutoSplit()
     COND_RETURN_AND_MSG_OUTER(sqeBuffer_ == nullptr, RT_ERROR_STREAM_NEW, ErrorCode::EE1013, sqeBufferSize_, "new");
 
     const errno_t ret = memset_s(sqeBuffer_, sqeBufferSize_, 0U, sqeBufferSize_);
-    COND_RETURN_ERROR_MSG_INNER(
+    COND_RETURN_ERROR(
         ret != EOK, RT_ERROR_STREAM_NEW,
         "memset_s failed for sqeBuffer_, dest=%p, dest_max=%u, c=0, count=%u, retCode=%d.", sqeBuffer_, sqeBufferSize_,
         sqeBufferSize_, ret);
@@ -1087,7 +1183,7 @@ rtError_t Stream::AllocSqeBufferForAutoSplit()
 
 rtError_t Stream::AllocStreamIdForAutoSplit()
 {
-    const rtError_t error = AllocStreamIdFromDriver();
+    const rtError_t error = AllocStreamId();
     COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
     RT_LOG(
         RT_LOG_DEBUG, "Alloc stream for auto split, master_stream_id=%d, cur_stream_id=%d", GetExposedStreamId(),
@@ -1404,16 +1500,19 @@ rtError_t Stream::SqCqUpdate()
 
 rtError_t Stream::ReAllocStreamId()
 {
-    const uint32_t remoteFlag = ((flags_ & static_cast<uint32_t>(RT_STREAM_CP_PROCESS_USE)) != 0U) ?
-                                    static_cast<uint32_t>(TSDRV_FLAG_REMOTE_ID) :
-                                    0U;
-    rtError_t error = device_->Driver_()->ReAllocResourceId(
-        device_->Id_(), device_->DevGetTsId(), priority_, static_cast<uint32_t>(streamId_), DRV_STREAM_ID, remoteFlag);
-    ERROR_RETURN_MSG_INNER(
-        error, "Realloc stream id failed, streamId=%d, deviceId=%u, ret=%d.", streamId_, device_->Id_(), error);
+    if (!IsIdAllocByRuntime()) {
+        const uint32_t remoteFlag = ((flags_ & static_cast<uint32_t>(RT_STREAM_CP_PROCESS_USE)) != 0U) ?
+                                        static_cast<uint32_t>(TSDRV_FLAG_REMOTE_ID) :
+                                        0U;
+        rtError_t error = device_->Driver_()->ReAllocResourceId(
+            device_->Id_(), device_->DevGetTsId(), priority_, static_cast<uint32_t>(streamId_), DRV_STREAM_ID,
+            remoteFlag);
+        ERROR_RETURN_MSG_INNER(
+            error, "Realloc stream id failed, streamId=%d, deviceId=%u, ret=%d.", streamId_, device_->Id_(), error);
+    }
 
     StreamSqCqManage* stmSqCqManage = device_->GetStreamSqCqManage();
-    error = stmSqCqManage->ReAllocSqCqId(this);
+    rtError_t error = stmSqCqManage->ReAllocSqCqId(this);
     ERROR_RETURN_MSG_INNER(
         error, "Realloc sqcq id failed, streamId=%d, deviceId=%u, sqId=%u, ret=%d.", streamId_, device_->Id_(), sqId_,
         error);
@@ -1433,6 +1532,10 @@ rtError_t Stream::ReAllocStreamId()
 
 rtError_t Stream::ReBuildDriverStreamResource()
 {
+    if (IsIdAllocByRuntime()) {
+        return RT_ERROR_NONE;
+    }
+
     Driver* const drv = device_->Driver_();
     const uint32_t deviceId = device_->Id_();
     const uint32_t tsId = device_->DevGetTsId();
@@ -1460,8 +1563,9 @@ rtError_t Stream::Restore()
     ERROR_RETURN(
         error, "Realloc stream id failed, streamId=%d, deviceId=%u, ret=%d.", streamId_, device_->Id_(), error);
 
-    if (executedTimesSvm_ != nullptr) {
-        error = device_->Driver_()->MemSetSync(executedTimesSvm_, sizeof(uint16_t), 0xFFU, sizeof(uint16_t));
+    uint16_t* const execTimesSvm = GetExecutedTimesSvm();
+    if (execTimesSvm != nullptr) {
+        error = device_->Driver_()->MemSetSync(execTimesSvm, sizeof(uint16_t), 0xFFU, sizeof(uint16_t));
         COND_RETURN_ERROR(
             error != RT_ERROR_NONE, error, "MemSetSync stream executed times SVM failed, retCode=%#x.",
             static_cast<uint32_t>(error));
@@ -1582,11 +1686,12 @@ rtError_t Stream::TearDown(const bool terminal, bool flag)
     if (unlikely(pendingNum_.Value() > 0U)) {
         (void)SubmitStreamRecycle(exeStream, isForceRecycle, static_cast<uint16_t>(logicCqId), tsk);
     }
-    // Stream may be destroyed without sync, so MT task can get abort_failure status
-    isForceRecycle = GetForceRecycleFlag(flag);
 
     while ((pendingNum_.Value() > 0U) && (device_->GetDevRunningState() == static_cast<uint32_t>(DEV_RUNNING_NORMAL))) {
-        if (isForceRecycle && (dev->CtrlStream_() != nullptr)) {
+        // Stream may be destroyed without sync, so MT task can get abort_failure status
+        isForceRecycle = GetForceRecycleFlag(flag);
+        isForceRecycle_ = isForceRecycle;
+        if (isForceRecycle && (dev->GetCtrlStream(nullptr) != nullptr)) {
             // ctrl sq is fast, normal task may be handled after ctrl task
             // so try to send more force recycle task.
             tskForceRecycleCnt = (tskForceRecycleCnt >= RECYCLE_CNT) ? RECYCLE_CNT : tskForceRecycleCnt;
@@ -1831,7 +1936,6 @@ rtError_t Stream::RecycleTaskWithCtrlsq(Device* const dev, const uint32_t logicC
     rtError_t error = RT_ERROR_NONE;
     TaskInfo* tsk = nullptr;
     NULL_PTR_RETURN(dev, RT_ERROR_DEVICE_NULL);
-    NULL_PTR_RETURN(dev->CtrlStream_(), RT_ERROR_STREAM_NULL);
 
     // avoid too fast recycle task to occupy tsch resource
     COND_PROC(recycleCnt >= RECYCLE_CNT, (void)mmSleep(RECYCLE_INTERVAL));
@@ -3206,7 +3310,7 @@ rtError_t Stream::WaitForTask(const uint32_t taskId, const bool isNeedWaitSyncCq
     bool isFastCq = false;
 
     StreamSqCqManage* const stmSqCqManage = const_cast<StreamSqCqManage*>(device_->GetStreamSqCqManage());
-    COND_RETURN_ERROR_MSG_INNER(stmSqCqManage == nullptr, RT_ERROR_INVALID_VALUE, "Failed to get SqCqManager.");
+    COND_RETURN_ERROR(stmSqCqManage == nullptr, RT_ERROR_INVALID_VALUE, "Failed to get SqCqManager.");
     error = stmSqCqManage->AllocLogicCq(static_cast<uint32_t>(streamId_), IsSteamNeedFastCq(), logicCqId, isFastCq);
     COND_RETURN_ERROR(error != RT_ERROR_NONE, error, "alloc logic cq failed.");
 
@@ -3253,6 +3357,11 @@ void Stream::ClearErrorMessage()
 rtError_t Stream::AllocExecutedTimesSvm()
 {
     rtError_t error = RT_ERROR_NONE;
+    if (IsSoftwareSqEnable() && device_->CheckFeatureSupport(TS_FEATURE_SUPPORT_ACLGRAPH_DECOUPLING)) {
+        isPoolMemForExecutedTimesSvm_ = true;
+        return error;
+    }
+
     if (Runtime::Instance()->ChipIsHaveStars()) {
         Runtime* const rtInstance = Runtime::Instance();
         const rtMemType_t memType = rtInstance->GetTsMemType(MEM_REQUEST_FEATURE_DEFAULT, sizeof(uint16_t));
@@ -3260,7 +3369,7 @@ rtError_t Stream::AllocExecutedTimesSvm()
         error = device_->Driver_()->DevMemAllocWithBackupFlag(
             RtPtrToPtr<void**>(&executedTimesSvm_), sizeof(uint16_t), memType, device_->Id_(),
             DevMemBackupType::SNAPSHOT_OPTIONAL_BACKUP);
-        COND_RETURN_ERROR_MSG_INNER(
+        COND_RETURN_ERROR(
             (error != RT_ERROR_NONE) || (executedTimesSvm_ == nullptr), error, "Failed to Allocate SVM, retCode=%#x.",
             error);
         RT_LOG(RT_LOG_INFO, "stream_id=%d.", streamId_);
@@ -3273,11 +3382,39 @@ rtError_t Stream::AllocExecutedTimesSvm()
     return error;
 }
 
+uint16_t* Stream::GetExecutedTimesSvm()
+{
+    if (!isPoolMemForExecutedTimesSvm_) {
+        return executedTimesSvm_;
+    }
+
+    void* const baseAddr = device_->GetSqExecTimesSvmBaseAddr_();
+    if (baseAddr == nullptr || sqId_ >= (RT_SQ_EXEC_TIMES_SVM_4K / sizeof(uint16_t))) {
+        return nullptr;
+    }
+
+    return RtPtrToPtr<uint16_t*>(baseAddr) + sqId_;
+}
+
 rtError_t Stream::FreeExecutedTimesSvm()
 {
+    if (isPoolMemForExecutedTimesSvm_) {
+        uint16_t* const execTimesSvm = GetExecutedTimesSvm();
+        if (execTimesSvm == nullptr) {
+            return RT_ERROR_NONE;
+        }
+
+        const rtError_t error = device_->Driver_()->MemSetSync(execTimesSvm, sizeof(uint16_t), 0xFFU, sizeof(uint16_t));
+        COND_RETURN_ERROR(
+            error != RT_ERROR_NONE, error, "MemSetSync stream executed times SVM failed, retCode=%#x.",
+            static_cast<uint32_t>(error));
+        return RT_ERROR_NONE;
+    }
+
     if (executedTimesSvm_ == nullptr) {
         return RT_ERROR_NONE;
     }
+
     if (!Runtime::Instance()->ChipIsHaveStars()) {
         return RT_ERROR_NONE;
     }
@@ -3697,7 +3834,7 @@ rtError_t Stream::HandleTaskUpdate(TaskInfo* workTask, Model* model, uint8_t* sq
     const auto ret = memcpy_s(
         static_cast<void*>(GetSqeAddr(sqeBufferBackup, workTask->pos)), sqeBytes,
         static_cast<void*>(cmdLocal.cmdBuf.sqe), sqeBytes);
-    COND_RETURN_ERROR_MSG_INNER(
+    COND_RETURN_ERROR(
         ret != EOK, RT_ERROR_INVALID_VALUE,
         "memcpy_s failed, dest=%p, dest_max=%zu, src=%p, count=%zu, retCode=%d, device_id=%u, stream_id=%d, "
         "task_id=%hu, task_type=%d(%s).",
@@ -3746,7 +3883,7 @@ rtError_t Stream::HandleTaskDefault(TaskInfo* workTask, Model* model, uint8_t* s
     const auto ret = memcpy_s(
         static_cast<void*>(GetSqeAddr(sqeBufferBackup, workTask->pos)), sqeBytes, static_cast<void*>(oldhostSqeAddr),
         sqeBytes);
-    COND_RETURN_ERROR_MSG_INNER(
+    COND_RETURN_ERROR(
         ret != EOK, RT_ERROR_INVALID_VALUE,
         "memcpy_s failed, dest=%p, dest_max=%zu, src=%p, count=%zu, retCode=%d, device_id=%u, stream_id=%d, "
         "task_id=%hu, task_type=%d(%s).",
@@ -3767,7 +3904,7 @@ rtError_t Stream::UpdateAllPersistentTask()
     taskPersistentTail_.Set(0U);
     errno_t ret =
         memset_s(posToTaskIdMap_, posToTaskIdMapSize_ * sizeof(uint16_t), 0XFF, posToTaskIdMapSize_ * sizeof(uint16_t));
-    COND_RETURN_ERROR_MSG_INNER(
+    COND_RETURN_ERROR(
         ret != EOK, RT_ERROR_STREAM_NEW,
         "memset_s failed for posToTaskIdMap_, dest=%p, dest_max=%zu, c=0xFF, count=%zu, retCode=%d.", posToTaskIdMap_,
         posToTaskIdMapSize_ * sizeof(uint16_t), posToTaskIdMapSize_ * sizeof(uint16_t), ret);
@@ -4756,10 +4893,12 @@ bool Stream::IsExistCqe(void) const
     bool status = false;
     const uint32_t sqId = GetSqId();
     const uint32_t tsId = device_->DevGetTsId();
+
     /* 支持sq和stream动态绑定 */
     if (sqId == UINT32_MAX) {
         return false;
     }
+
     const rtError_t error = device_->Driver_()->GetCqeStatus(device_->Id_(), tsId, sqId, status);
     if (error != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_DEBUG, "Get cqe status failed, retCode=%#x.", error);
@@ -4979,8 +5118,9 @@ rtError_t Stream::ResClear(uint64_t timeout)
         }
     }
     rtError_t error = RT_ERROR_NONE;
-    if (executedTimesSvm_ != nullptr) {
-        error = device_->Driver_()->MemSetSync(executedTimesSvm_, sizeof(uint16_t), 0xFFU, sizeof(uint16_t));
+    uint16_t* const execTimesSvm = GetExecutedTimesSvm();
+    if (execTimesSvm != nullptr) {
+        error = device_->Driver_()->MemSetSync(execTimesSvm, sizeof(uint16_t), 0xFFU, sizeof(uint16_t));
     }
     // reconstruct will modify resHead and resTail, lock by recycleMutex_.
     StreamRecycleLock();
@@ -5574,6 +5714,8 @@ rtError_t Stream::ReBuildStreamId()
         streamSwitchInfo_[0].sq_id = GetSqId();
         streamSwitchInfo_[0].sq_depth = GetSqDepth();
         streamSwitchInfo_[0].stream_mem = RtValueToPtr<void*>(GetSqBaseAddr());
+        streamSwitchInfo_[0].ts_agent_flag = false;
+        streamSwitchInfo_[0].by_pass_stream_id_flag = false;
         /* stream unbind sq */
         error = device_->Driver_()->SqSwitchStreamBatch(device_->Id_(), streamSwitchInfo_, 1U);
         if (error == RT_ERROR_DRV_NOT_SUPPORT) {
@@ -5765,24 +5907,29 @@ rtError_t Stream::RestoreForSoftwareSq()
     const int32_t deviceId = dev->Id_();
     const uint32_t tsId = dev->DevGetTsId();
     constexpr uint32_t drvFlag = TSDRV_FLAG_SPECIFIED_CQ_ID;
+    rtError_t error = RT_ERROR_NONE;
 
     // streamID 重申请
-    rtError_t error = drv->ReAllocResourceId(
-        static_cast<uint32_t>(deviceId), tsId, priority_, static_cast<uint32_t>(streamId_), DRV_STREAM_ID);
-    COND_RETURN_ERROR(
-        (error != RT_ERROR_NONE), error, "Realloc stream id from driver failed, streamId=%d, deviceId=%u, ret=%d.",
-        streamId_, deviceId, error);
+    if (!IsIdAllocByRuntime()) {
+        error = drv->ReAllocResourceId(
+            static_cast<uint32_t>(deviceId), tsId, priority_, static_cast<uint32_t>(streamId_), DRV_STREAM_ID);
+        COND_RETURN_ERROR(
+            (error != RT_ERROR_NONE), error, "Realloc stream id from driver failed, streamId=%d, deviceId=%u, ret=%d.",
+            streamId_, deviceId, error);
+    }
 
     // logicCqID 重申请
-    error = drv->LogicCqAllocateV2(deviceId, tsId, streamId_, logicalCqId_, IsBindDvppGrp(), drvFlag);
-    COND_RETURN_ERROR(
-        (error != RT_ERROR_NONE), error, "Alloc logicCq from driver failed, streamId=%u, logicCqId=%u, retCode=%d.",
-        streamId_, logicalCqId_, error);
-    error = drv->StreamBindLogicCq(deviceId, tsId, streamId_, logicalCqId_);
-    COND_RETURN_ERROR(
-        (error != RT_ERROR_NONE), error,
-        "Bind logicCq to stream failed, streamId=%d, deviceId=%u, logicCqId=%u, ret=%d.", streamId_, deviceId,
-        logicalCqId_, error);
+    if (logicalCqId_ != UINT32_MAX) {
+        error = drv->LogicCqAllocateV2(deviceId, tsId, streamId_, logicalCqId_, IsBindDvppGrp(), drvFlag);
+        COND_RETURN_ERROR(
+            (error != RT_ERROR_NONE), error, "Alloc logicCq from driver failed, streamId=%u, logicCqId=%u, retCode=%d.",
+            streamId_, logicalCqId_, error);
+        error = drv->StreamBindLogicCq(deviceId, tsId, streamId_, logicalCqId_);
+        COND_RETURN_ERROR(
+            (error != RT_ERROR_NONE), error,
+            "Bind logicCq to stream failed, streamId=%d, deviceId=%u, logicCqId=%u, ret=%d.", streamId_, deviceId,
+            logicalCqId_, error);
+    }
 
     // SqId_恢复默认值、cqId_恢复默认值、sqRegVirtualAddr恢复默认值
     ResetSqCq();

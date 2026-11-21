@@ -47,6 +47,7 @@ set(runtimeut_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/maintenance/maintenance_task_arch5162.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/memory/memory_task_arch5162.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_execute_task.cc
+    ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_aclgraph_exception_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_task_arch5162.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_graph_task.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_maintaince_task.cc
@@ -247,6 +248,7 @@ set(runtimeut_src_device_list
     ${TOP_DIR}/src/runtime/core/src/device/ctrl_sq_stub.cc
     ${TOP_DIR}/src/runtime/core/src/device/device_error_stub.cc
     ${TOP_DIR}/src/runtime/core/src/device/device_msg_stub.cc
+    ${TOP_DIR}/src/runtime/core/src/device/resource_id_allocator.cc
     ${TOP_DIR}/src/runtime/core/src/device/group_device_stub.cc
 )
 
@@ -324,6 +326,8 @@ set(runtimeut_src_list
     ${TOP_DIR}/src/runtime/core/src/utils/capability.cc
     ${TOP_DIR}/src/runtime/core/src/utils/osal.cc
     ${TOP_DIR}/src/runtime/core/src/utils/subscribe.cc
+    ${TOP_DIR}/src/runtime/core/src/cqe/cq_adapter.cc
+    ${TOP_DIR}/src/runtime/core/src/cqe/v100/stars_cq_adapter.cc
     ${TOP_DIR}/src/runtime/driver/driver.cc
     ${TOP_DIR}/src/runtime/driver/npu_driver_dcache_lock_common.cpp
     ${TOP_DIR}/src/runtime/driver/npu_driver_tiny.cpp
@@ -472,6 +476,7 @@ set(RUNTIME_TEST_INC_DIR_COMMON
     ${TOP_DIR}/inc/external
     ${TOP_DIR}/abl/libc_sec/include
     ${TOP_DIR}/src/runtime/core/inc
+    ${TOP_DIR}/src/runtime/core/inc/cqe
     ${TOP_DIR}/src/runtime/core/inc_c
     ${TOP_DIR}/src/runtime/core/inc/context
     ${TOP_DIR}/src/runtime/core/inc/spec

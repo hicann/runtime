@@ -169,6 +169,7 @@ void ErrorcodeManage::InitRtErrCodeMap()
         ACL_ERROR_RT_STREAM_CAPTURE_WRONG_THREAD, "end capture in the wrong thread"};
     rtErrMap_[RT_ERROR_STREAM_SUB_ACLGRAPH_IS_CAPTURING] = {
         ACL_ERROR_RT_SUB_ACLGRAPH_IS_CAPTURING, "the sub ACL Graph is capturing"};
+    rtErrMap_[RT_ERROR_STREAM_NO_RESOURCES] = {ACL_ERROR_RT_RESOURCE_ALLOC_FAIL, "stream id alloc fail"};
 
     // model error
     rtErrMap_[RT_ERROR_MODEL_BASE] = {ACL_ERROR_RT_INTERNAL_ERROR, "model base error"};
@@ -188,6 +189,7 @@ void ErrorcodeManage::InitRtErrCodeMap()
     rtErrMap_[RT_ERROR_MODEL_EXIT_ID] = {ACL_ERROR_RT_STREAM_MODEL, "stream is not belong to the model"};
     rtErrMap_[RT_ERROR_MODEL_ABORT_NORMAL] = {ACL_ERROR_RT_MODEL_ABORT_NORMAL, "model abort normal"};
     rtErrMap_[RT_ERROR_MODEL_NOT_END] = {ACL_ERROR_RT_MODEL_EXECUTE, "end graph must be called before execution"};
+    rtErrMap_[RT_ERROR_MODEL_NO_RESOURCES] = {ACL_ERROR_RT_RESOURCE_ALLOC_FAIL, "model id alloc fail"};
 
     // event error
     rtErrMap_[RT_ERROR_EVENT_BASE] = {ACL_ERROR_RT_INTERNAL_ERROR, "event base error"};

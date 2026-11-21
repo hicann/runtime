@@ -266,6 +266,11 @@ public:
         int32_t* const id, const uint32_t deviceId, const uint32_t tsId, const uint32_t priority,
         uint32_t streamFlag = 0U) = 0;
 
+    // Alloc stream ID.
+    virtual rtError_t StreamIdAllocByRange(
+        int32_t* const id, const uint32_t deviceId, const uint32_t tsId, const uint32_t priority,
+        const uint32_t beginId, const uint32_t endId, uint32_t streamFlag = 0U) = 0;
+
     // Free stream ID.
     virtual rtError_t StreamIdFree(
         const int32_t id, const uint32_t deviceId, const uint32_t tsId, const uint32_t streamFlag = 0) = 0;
@@ -334,10 +339,11 @@ public:
         const uint32_t devId, const uint32_t tsId, const uint32_t cqId, const uint32_t drvFlag = 0U) = 0;
 
     // Wait report from logic Cq.
-    virtual rtError_t LogicCqReport(const LogicCqWaitInfo& waitInfo, rtLogicReport_t*& report, uint32_t& cnt) = 0;
+    virtual rtError_t LogicCqReport(const CqWaitInfo& waitInfo, rtLogicReport_t*& report, uint32_t& cnt) = 0;
 
     virtual rtError_t LogicCqReportV2(
-        const LogicCqWaitInfo& waitInfo, uint8_t* report, uint32_t reportCnt, uint32_t& realCnt) = 0;
+        const CqWaitInfo& waitInfo, uint8_t* report, uint32_t reportCnt, uint32_t& realCnt) = 0;
+    virtual rtError_t CqReport(const CqWaitInfo& waitInfo, uint8_t* report, uint32_t reportCnt, uint32_t& realCnt) = 0;
     virtual rtError_t CreateAsyncDmaWqe(
         uint32_t devId, const AsyncDmaWqeInputInfo& input, AsyncDmaWqeOutputInfo* output, bool isUbMode,
         bool isSqeUpdate) = 0;
@@ -445,6 +451,16 @@ public:
 
     virtual rtError_t NotifyGetAddrOffset(
         const int32_t deviceId, const uint32_t notifyId, uint64_t* const devAddrOffset, const uint32_t tsId) = 0;
+
+    virtual rtError_t QueryStreamIdRange(
+        const int32_t deviceId, const uint32_t tsId, uint32_t* const beginId, uint32_t* const endId) = 0;
+
+    virtual rtError_t QueryModelIdRange(
+        const int32_t deviceId, const uint32_t tsId, uint32_t* const beginId, uint32_t* const endId) = 0;
+
+    // Alloc model ID.
+    virtual rtError_t ModelIdAllocByRange(
+        int32_t* id, const uint32_t deviceId, const uint32_t tsId, const uint32_t beginId, const uint32_t endId) = 0;
 
     // Alloc model ID.
     virtual rtError_t ModelIdAlloc(int32_t* id, const uint32_t deviceId, const uint32_t tsId) = 0;
@@ -646,6 +662,7 @@ public:
     virtual rtError_t SetStreamPriorityValue(Stream* const stm, const uint32_t streamPriority) = 0;
     virtual rtError_t GetStreamPriorityValue(Stream* const stm, uint32_t* const streamPriority) = 0;
 
+    virtual rtError_t GetDeviceSplitMode(const uint32_t deviceId, uint32_t* const splitMode) = 0;
     virtual rtError_t GetSwapBufferInfo(
         const uint32_t deviceId, const uint32_t tsId, uint64_t* const swapBufferBaseAddr) = 0;
 

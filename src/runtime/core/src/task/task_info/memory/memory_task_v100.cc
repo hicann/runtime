@@ -586,7 +586,7 @@ void SetStarsResultForMemWriteValueTask(TaskInfo* taskInfo, const rtCqReport_t& 
 {
     SetStarsResultCommon(taskInfo, logicCq);
     if (((logicCq.errorType & RT_STARS_EXIST_ERROR) == 0U) && IsTimeLineSoftwareEventRecordTask(taskInfo)) {
-        taskInfo->u.memWriteValueTask.timestamp = logicCq.u1.timeStamp;
+        taskInfo->u.memWriteValueTask.timestamp = logicCq.u.timeStamp;
     }
 }
 #endif

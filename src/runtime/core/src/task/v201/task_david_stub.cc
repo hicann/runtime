@@ -11,6 +11,7 @@
 #include "task_info.hpp"
 #include "stream.hpp"
 #include "stars_david.hpp"
+#include "sq_exec_times_addr_task.h"
 
 namespace cce {
 namespace runtime {
@@ -20,5 +21,18 @@ void ConstructDavidAsyncUbDbSqe(TaskInfo* const taskInfo, rtDavidSqe_t* const co
     UNUSED(taskInfo);
     UNUSED(command);
 }
+
+rtError_t SendTaskToSetSqExecTimesAddr(Device* const dev)
+{
+    UNUSED(dev);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t SendTaskToUnsetSqExecTimesAddr(Device* const dev)
+{
+    UNUSED(dev);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 } // namespace runtime
 } // namespace cce

@@ -931,6 +931,10 @@ TEST_P(DavidAddedStreamEventModeTest, AddedStreamCaptureUsesEvents)
         .stubs()
         .with(eq(TS_FEATURE_SOFTWARE_SQ_ENABLE))
         .will(returnValue(true));
+    MOCKER_CPP_VIRTUAL(device_, &Device::CheckFeatureSupport)
+        .stubs()
+        .with(eq(TS_FEATURE_SUPPORT_ACLGRAPH_DECOUPLING))
+        .will(returnValue(false));
     rtStream_t stream = nullptr;
     rtStream_t addedStream = nullptr;
     rtModel_t model = nullptr;
@@ -962,6 +966,10 @@ TEST_P(DavidAddedStreamFailureTest, CaptureRecordOrWaitFailure)
         .stubs()
         .with(eq(TS_FEATURE_SOFTWARE_SQ_ENABLE))
         .will(returnValue(true));
+    MOCKER_CPP_VIRTUAL(device_, &Device::CheckFeatureSupport)
+        .stubs()
+        .with(eq(TS_FEATURE_SUPPORT_ACLGRAPH_DECOUPLING))
+        .will(returnValue(false));
     rtStream_t stream = nullptr;
     rtStream_t added = nullptr;
     rtModel_t model = nullptr;

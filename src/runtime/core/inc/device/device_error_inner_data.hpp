@@ -360,7 +360,8 @@ struct StarsOneTimeoutSlotDfxInfo {
     uint16_t streamId;
     uint16_t taskId;
     uint16_t fftsType;
-    uint32_t threadId;
+    uint16_t sqId;
+    uint16_t threadId;
     uint32_t cxtId;
     uint64_t pcStart;
     uint64_t aicOwnBitmap;
@@ -382,7 +383,7 @@ struct StarsV2OneCoreTimeoutDfxInfo {
     uint16_t streamId;
     uint32_t taskSn;
     uint16_t sqHead;
-    uint16_t rsv;
+    uint16_t sqId;
 };
 
 struct StarsV2CoreTimeoutDfxInfo {

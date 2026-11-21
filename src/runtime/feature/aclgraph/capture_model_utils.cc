@@ -123,6 +123,26 @@ bool IsUseHardwareEvent(Device* const dev)
     return false;
 }
 
+rtError_t BindSqPrepare(const uint32_t sqId, Device* const dev)
+{
+    const uint32_t deviceId = dev->Id_();
+    const uint32_t tsId = dev->DevGetTsId();
+    Driver* const driver = dev->Driver_();
+    bool enable = false;
+    rtError_t error = driver->GetSqEnable(deviceId, tsId, sqId, enable);
+    ERROR_RETURN(
+        error, "Get sq enable failed, device_id=%u, sq_id=%u, retCode=%#x.", deviceId, sqId,
+        static_cast<uint32_t>(error));
+    if (enable) {
+        error = driver->DisableSq(deviceId, tsId, sqId);
+        ERROR_RETURN(
+            error, "Disable sq failed, device_id=%u, sq_id=%u, retCode=%#x.", deviceId, sqId,
+            static_cast<uint32_t>(error));
+    }
+
+    return RT_ERROR_NONE;
+}
+
 rtError_t CheckCaptureStreamThreadIsMatch(const Stream* const stm)
 {
     const StreamCapture* const capture = StreamCapture::Get(stm);

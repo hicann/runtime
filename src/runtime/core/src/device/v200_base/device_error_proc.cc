@@ -114,16 +114,20 @@ void DeviceErrorProc::ProcessReportFastRingBuffer()
             RtPtrToValue(fastRingBufferAddr_) + sizeof(DevRingBufferCtlInfo) + sizeof(RingBufferElementInfo) +
             head * sizeof(StarsOpExceptionInfo));
         ConvertErrorCodeForFastReport(report);
-        TaskInfo* tsk =
-            GetTaskInfo(device_, static_cast<uint32_t>(report->streamId), static_cast<uint32_t>(report->sqHead), true);
+        uint32_t streamId = report->streamId;
+        if (streamId == UINT16_MAX) {
+            (void)device_->GetStreamSqCqManage()->GetStreamIdBySqId(report->sqId, streamId);
+        }
+        TaskInfo* tsk = GetTaskInfo(device_, streamId, static_cast<uint32_t>(report->sqHead), true);
         if (tsk == nullptr) {
             RT_LOG_INNER_MSG(
                 RT_LOG_ERROR,
                 "The fast ring buffer reports an error,"
-                " device_id=%u, stream_id=%u, task_id=%u, sq_head=%u, sqe_type=%u, error_code=%#x, kernel_name=none.",
-                device_->Id_(), report->streamId, report->taskId, report->sqHead, report->sqeType, report->errorCode);
+                " device_id=%u, stream_id=%u, task_id=%u, sq_head=%u, sqe_type=%u, error_code=%#x, "
+                "kernel_name=none.",
+                device_->Id_(), streamId, report->taskId, report->sqHead, report->sqeType, report->errorCode);
             RT_LOG(
-                RT_LOG_ERROR, "The task has been recycled, stream_id=%u, task_id=%u.", report->streamId,
+                RT_LOG_ERROR, "The task has been recycled, stream_id=%u, sq_id=%u, task_id=%u.", streamId, report->sqId,
                 report->taskId);
             head = (head + 1U) % depth;
             ctrlInfo->head = head;

@@ -20,6 +20,7 @@
 #include "kernel.h"
 #include "runtime_handle_guard.h"
 #include "runtime/rt_inner_task.h"
+#include "cq_adapter.hpp"
 
 #define RTS_LITE_PCIE_BAR_COPY_SIZE (1024U)
 #define UB_DIRECT_WQE_MIN_LEN (64)
@@ -36,7 +37,6 @@
 
 namespace cce {
 namespace runtime {
-constexpr uint32_t UBDMA_CQE_JETTY_INFO_NUM = 2U;
 
 #pragma pack(push)
 #pragma pack(1)
@@ -339,80 +339,6 @@ struct RtLogicCqReportMsg {
     volatile uint8_t need_sorting; /* drv need sorting cqe data to user thread */
     volatile uint32_t error_code;
     volatile uint32_t pay_load;
-};
-
-struct TaskJettyStatus {
-    uint16_t jettyId;
-    uint8_t status;
-    uint8_t subStatus;
-};
-
-/**
- * @ingroup engine or starsEngine
- * @brief the type definition of logic cq for all chipType(total 32 bytes).
- */
-struct rtLogicCqReport_t {
-    volatile uint16_t streamId;
-    volatile uint16_t taskId;
-    volatile uint32_t errorCode; // cqe acc_status/sq_sw_status
-    volatile uint8_t errorType;  // bit0 ~ bit5 cqe stars_defined_err_code, bit 6 cqe warning bit
-    volatile uint8_t sqeType;
-    volatile uint16_t sqId;
-    volatile uint16_t sqHead;
-    volatile uint16_t matchFlag : 1;
-    volatile uint16_t dropFlag : 1;
-    volatile uint16_t errorBit : 1;
-    volatile uint16_t accError : 1;
-    volatile uint16_t nextTaskVld : 1;
-    volatile uint16_t notifyAttached : 1;
-    volatile uint16_t reserved0 : 10;
-    union {
-        volatile uint64_t timeStamp;
-        volatile uint16_t sqeIndex;
-        TaskJettyStatus info[UBDMA_CQE_JETTY_INFO_NUM];
-    } u1;
-    /* Union description:
-     *  Internal: enque_timestamp temporarily used as dfx
-     *  External: reserved1
-     */
-    union {
-        volatile uint64_t enqueTimeStamp;
-        volatile uint64_t reserved1;
-    } u2;
-};
-
-/**
- * @ingroup engine or starsEngine
- * @brief the type definition of cq report for runtime.
- */
-struct rtCqReport_t {
-    volatile uint16_t streamId;
-    volatile uint16_t taskId;
-    volatile uint32_t errorCode; // cqe acc_status/sq_sw_status
-    volatile uint8_t errorType;  // bit0 ~ bit5 cqe stars_defined_err_code, bit 6 cqe warning bit
-    volatile uint8_t sqeType;
-    volatile uint16_t sqId;
-    volatile uint16_t sqHead;
-    volatile uint16_t matchFlag : 1;
-    volatile uint16_t dropFlag : 1;
-    volatile uint16_t errorBit : 1;
-    volatile uint16_t accError : 1;
-    volatile uint16_t nextTaskVld : 1;
-    volatile uint16_t notifyAttached : 1;
-    volatile uint16_t reserved0 : 10;
-    union {
-        volatile uint64_t timeStamp;
-        volatile uint16_t sqeIndex;
-        TaskJettyStatus info[UBDMA_CQE_JETTY_INFO_NUM];
-    } u1;
-    /* Union description:
-     *  Internal: enque_timestamp temporarily used as dfx
-     *  External: reserved1
-     */
-    union {
-        volatile uint64_t enqueTimeStamp;
-        volatile uint64_t reserved1;
-    } u2;
 };
 
 // =============================

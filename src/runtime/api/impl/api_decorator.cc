@@ -1647,8 +1647,6 @@ rtError_t ApiDecorator::GetStreamCacheOpInfoSwitch(const Stream* const stm, uint
     return impl_->GetStreamCacheOpInfoSwitch(stm, cacheOpInfoSwitch);
 }
 
-rtError_t ApiDecorator::ModelUpdate(Model* mdl) { return impl_->ModelUpdate(mdl); }
-
 rtError_t ApiDecorator::ModelDestroyRegisterCallback(Model* const mdl, const rtCallback_t fn, void* ptr)
 {
     return impl_->ModelDestroyRegisterCallback(mdl, fn, ptr);
@@ -1938,9 +1936,6 @@ rtError_t ApiDecorator::ModelGetTasks(const Model* const mdl, void** tasks, uint
 
 rtError_t ApiDecorator::TaskGetType(rtTask_t task, rtTaskType* type) { return impl_->TaskGetType(task, type); }
 
-rtError_t ApiDecorator::TaskGetSeqId(rtTask_t task, uint32_t* id) { return impl_->TaskGetSeqId(task, id); }
-
-rtError_t ApiDecorator::ModelTaskDisable(rtTask_t task) { return impl_->ModelTaskDisable(task); }
 rtError_t ApiDecorator::SetDeviceFlags(const uint32_t flags) { return impl_->SetDeviceFlags(flags); }
 
 rtError_t ApiDecorator::GetDeviceFlags(uint32_t* const flags) { return impl_->GetDeviceFlags(flags); }

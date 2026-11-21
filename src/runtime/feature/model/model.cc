@@ -46,6 +46,7 @@
 #include "capture_model.hpp"
 #include "logic_sq.hpp"
 #include "stream_launch_blocking.hpp"
+#include "raw_device.hpp"
 
 namespace cce {
 namespace runtime {
@@ -89,7 +90,8 @@ Model::Model(ModelType type)
       funcCallDfxBaseSvmMem_(nullptr),
       dfxPtr_(nullptr),
       modelType_(type),
-      needRebindJetty_(false)
+      needRebindJetty_(false),
+      executedTimesSvm_(nullptr)
 {}
 
 Model::~Model() noexcept
@@ -124,13 +126,59 @@ Model::~Model() noexcept
     CmoIdFree();
 
     (void)ClearMemory();
-    if (id_ != MODEL_ID_INVALID) {
-        Device* const dev = context_->Device_();
-        Driver* const deviceDrv = dev->Driver_();
-        (void)deviceDrv->ModelIdFree(id_, dev->Id_(), dev->DevGetTsId());
-        id_ = MODEL_ID_INVALID;
-    }
+    ModelIdFree();
     jettyInfoList_.clear();
+}
+
+void Model::ModelIdFree()
+{
+    if (id_ == MODEL_ID_INVALID) {
+        return;
+    }
+    Device* const dev = context_->Device_();
+    (void)dev->Driver_()->ModelIdFree(id_, dev->Id_(), dev->DevGetTsId());
+    id_ = MODEL_ID_INVALID;
+}
+
+rtError_t Model::ModelIdAlloc()
+{
+    Device* const dev = context_->Device_();
+    Driver* const deviceDrv = dev->Driver_();
+
+    /* 只有A5/A6支持id由runtime分配 */
+    if (!dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_SUPPORT_RUNTIME_ALLOC_STREAMID_AND_MODELID)) {
+        return deviceDrv->ModelIdAlloc(&id_, dev->Id_(), dev->DevGetTsId());
+    }
+
+    int32_t allocId = -1;
+    rtError_t error = RT_ERROR_NONE;
+    /* 虚拟机场景，无论新老2包，都是驱动申请 */
+    if (dev->GetSplitMode() == RT_SPLIT_MODE) {
+        error = deviceDrv->ModelIdAlloc(&allocId, dev->Id_(), dev->DevGetTsId());
+    } else {
+        /* 物理机场景 + 新2包 + 支持pcieBar：指定范围0-2k申请, 因为capture model由runtime申请，避免冲突 */
+        uint32_t val = RT_CAPABILITY_NOT_SUPPORT;
+        (void)deviceDrv->CheckSupportPcieBarCopy(dev->Id_(), val, false);
+        bool isPcieBarSupport = (val == RT_CAPABILITY_SUPPORT);
+        if (dev->CheckFeatureSupport(TS_FEATURE_SUPPORT_ACLGRAPH_DECOUPLING) && isPcieBarSupport) {
+            // 通过驱动接口指定范围申请，指定范围为0-2k
+            error = deviceDrv->ModelIdAllocByRange(&allocId, dev->Id_(), dev->DevGetTsId(), 0U, 2047U); // 指定范围0-2k
+        } else {
+            error = deviceDrv->ModelIdAlloc(&allocId, dev->Id_(), dev->DevGetTsId());
+        }
+    }
+
+    if ((allocId < 0) || (error != RT_ERROR_NONE)) {
+        RT_LOG(
+            RT_LOG_ERROR, "Alloc model id failed, device_id=%u, retCode=%#x.", dev->Id_(),
+            static_cast<uint32_t>(error));
+        return RT_ERROR_DRV_NO_RESOURCES;
+    }
+
+    id_ = allocId;
+    RT_LOG(RT_LOG_DEBUG, "Alloc model id success, device_id=%u, model_id=%d.", dev->Id_(), id_);
+
+    return RT_ERROR_NONE;
 }
 
 rtError_t Model::Setup(Context* const contextIn)
@@ -141,7 +189,7 @@ rtError_t Model::Setup(Context* const contextIn)
     const uint32_t devId = dev->Id_();
     const uint32_t tsId = dev->DevGetTsId();
 
-    rtError_t error = deviceDrv->ModelIdAlloc(&id_, devId, tsId);
+    rtError_t error = ModelIdAlloc();
     if (error != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR, "Alloc model id failed, tsId=%u, retCode=%#x!", tsId, static_cast<uint32_t>(error));
         return error;
@@ -203,11 +251,52 @@ rtError_t Model::Setup(Context* const contextIn)
             return error;
         }
     }
+
+    error = AllocExecutedTimesSvm();
+    ERROR_RETURN(error, "Allocate model executed times SVM failed, retCode=%#x.", error);
+
     InitEmbeddedInnerHandle<Model>(this);
     if (modelType_ == RT_MODEL_CAPTURE_MODEL) {
         return static_cast<CaptureModel*>(this)->InitExecutionOrderEvent();
     }
     return error;
+}
+
+rtError_t Model::AllocExecutedTimesSvm(void)
+{
+    if (executedTimesSvm_ != nullptr) {
+        return RT_ERROR_NONE;
+    }
+
+    Device* const dev = context_->Device_();
+    Runtime* const runtime = Runtime::Instance();
+    const rtMemType_t memType = runtime->GetTsMemType(MEM_REQUEST_FEATURE_DEFAULT, sizeof(uint64_t));
+    rtError_t error = dev->Driver_()->DevMemAllocWithBackupFlag(
+        RtPtrToPtr<void**>(&executedTimesSvm_), sizeof(uint64_t), memType, dev->Id_(),
+        DevMemBackupType::SNAPSHOT_REQUIRED_BACKUP);
+    if (error != RT_ERROR_NONE) {
+        RT_LOG(RT_LOG_ERROR, "Allocate model executed times SVM failed, retCode=%#x.", error);
+        return error;
+    }
+
+    error = dev->Driver_()->MemSetSync(executedTimesSvm_, sizeof(uint64_t), 0xFFU, sizeof(uint64_t));
+    if (error != RT_ERROR_NONE) {
+        (void)dev->Driver_()->DevMemFree(executedTimesSvm_, dev->Id_());
+        executedTimesSvm_ = nullptr;
+        RT_LOG(RT_LOG_ERROR, "Initialize model executed times SVM failed, retCode=%#x.", error);
+        return error;
+    }
+    RT_LOG(RT_LOG_INFO, "Allocate model executed times SVM success.");
+    return RT_ERROR_NONE;
+}
+
+void Model::FreeExecutedTimesSvm(void)
+{
+    if (executedTimesSvm_ != nullptr) {
+        Device* const dev = context_->Device_();
+        (void)dev->Driver_()->DevMemFree(executedTimesSvm_, dev->Id_());
+        executedTimesSvm_ = nullptr;
+    }
 }
 
 rtError_t Model::AicpuModelDestroy()
@@ -304,6 +393,7 @@ void Model::FinalizeHostStateOnExit() noexcept
     streamInfoPtr_ = nullptr;
     aicpuTaskInfoPtr_ = nullptr;
     queueInfoPtr_ = nullptr;
+    executedTimesSvm_ = nullptr;
 }
 
 void Model::ReplaceArgHandle(const uint16_t streamId, const uint16_t taskId, void* argHandle)
@@ -402,6 +492,8 @@ rtError_t Model::ClearMemory()
         funcCallDfxBaseSvmMem_ = nullptr;
         dfxPtr_ = nullptr;
     }
+
+    FreeExecutedTimesSvm();
     (void)MemWaitDevListFree(dev);
 
     funCallMemSize_ = 0ULL;
@@ -791,9 +883,10 @@ rtError_t Model::SendSqe(void)
             continue;
         }
 
+        uint32_t streamId = IsSupportDecoupling() ? UINT32_MAX : logicSq->GetStreamId();
         const rtError_t ret = Context_()->Device_()->Driver_()->StreamTaskFill(
-            deviceId, logicSq->GetStreamId(), logicSq->GetDeviceSqeAddr(),
-            RtPtrToPtr<uint8_t*>(logicSq->GetHostSqeAddr()), logicSq->GetSqeNum());
+            deviceId, streamId, logicSq->GetDeviceSqeAddr(), RtPtrToPtr<uint8_t*>(logicSq->GetHostSqeAddr()),
+            logicSq->GetSqeNum());
         COND_RETURN_ERROR(
             (ret != RT_ERROR_NONE), ret,
             "fill stream task for logicSq failed. device_id=%u, logicSqId=%u, streamId=%u, sqe_num=%u, retCode=%#x.",
@@ -898,6 +991,8 @@ rtError_t Model::BuildSqCqForAutoSplit()
         modelSwitchInfo_[index].sq_id = stm->GetSqId();
         modelSwitchInfo_[index].sq_depth = stm->GetSqDepth();
         modelSwitchInfo_[index].stream_mem = RtValueToPtr<void*>(stm->GetSqBaseAddr());
+        modelSwitchInfo_[index].ts_agent_flag = false;
+        modelSwitchInfo_[index].by_pass_stream_id_flag = false;
         index++;
         RT_LOG(
             RT_LOG_INFO,

@@ -3640,7 +3640,7 @@ TEST_F(NpuDriverTest3, Hal_API_failed)
 
     rtLogicReport_t* report = nullptr;
     uint32_t count = 0;
-    LogicCqWaitInfo input = {};
+    CqWaitInfo input = {};
 
     EXPECT_EQ(rawDrv.LogicCqReport(input, report, count), RT_ERROR_DRV_INPUT);       // DRV_ERROR_BUS_DOWN
     EXPECT_EQ(rawDrv.LogicCqReport(input, report, count), RT_ERROR_DRV_NOT_SUPPORT); // DRV_ERROR_NOT_SUPPORT
@@ -3658,7 +3658,7 @@ TEST_F(NpuDriverTest3, driver_logic_cq_v2)
         .then(returnValue(DRV_ERROR_NONE));
 
     MOCKER(halCqReportRecv).stubs().will(returnValue(DRV_ERROR_WAIT_TIMEOUT));
-    LogicCqWaitInfo input = {};
+    CqWaitInfo input = {};
     rtCqReport_t logic = {};
     // drv error
     EXPECT_EQ(rawDrv.LogicCqReportV2(input, reinterpret_cast<uint8_t*>(&logic), 1, count), RT_ERROR_REPORT_TIMEOUT);

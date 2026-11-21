@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "gtest/gtest.h"
+#include <cstring>
 #include "mockcpp/mockcpp.hpp"
 #include "driver/ascend_hal.h"
 #include "securec.h"
@@ -45,6 +46,15 @@
 
 using namespace testing;
 using namespace cce::runtime;
+
+errno_t MemcpySSuccessStub(void* dest, size_t destMax, const void* src, size_t count)
+{
+    if ((dest == nullptr) || (src == nullptr) || (count > destMax)) {
+        return EINVAL;
+    }
+    std::memcpy(dest, src, count);
+    return EOK;
+}
 
 rtError_t CheckSupportPcieBarCopyStub(NpuDriver* This, const uint32_t deviceId, uint32_t& val)
 {
@@ -94,7 +104,7 @@ protected:
 
         rtError_t error4 = rtFunctionRegister(binHandle_, &function_, "foo", NULL, 0);
 
-        MOCKER(memcpy_s).stubs().will(returnValue(NULL));
+        MOCKER(memcpy_s).stubs().will(invoke(MemcpySSuccessStub));
 
         std::cout << "api test start:" << error1 << ", " << error2 << ", " << error3 << ", " << error4 << std::endl;
     }

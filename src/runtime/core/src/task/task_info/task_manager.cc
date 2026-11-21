@@ -170,6 +170,7 @@ static TaskTypeRegisterInfo g_taskDesc[] = {
     {TS_TASK_TYPE_MODEL_SERIAL_SCHED_NOTIFY_WAIT, "MODEL_SERIAL_SCHED_NOTIFY_WAIT"},
     {TS_TASK_TYPE_MODEL_SERIAL_SCHED_POSTPROC, "MODEL_SERIAL_SCHED_POST_PROC"},
     {TS_TASK_TYPE_ENDGRAPH_NOTIFY_WAIT, "ENDGRAPH_NOTIFY_WAIT"},
+    {TS_TASK_TYPE_SQ_EXEC_TIMES_ADDR, "SEND_SQ_EXECUTE_TIMES_ADDR"},
 };
 
 #if F_DESC("pkgStat")
@@ -250,10 +251,14 @@ void PrintErrorSqe(const rtStarsSqe_t* const sqe, const char_t* desc)
 Stream* GetReportStream(Stream* stream)
 {
     Stream* reportStream = stream;
-    const Model* const modelObj = reportStream->Model_();
+    Model* const modelObj = reportStream->Model_();
     if (modelObj != nullptr) {
-        const auto* const captureModel = dynamic_cast<const CaptureModel*>(modelObj);
+        CaptureModel* const captureModel = dynamic_cast<CaptureModel* const>(modelObj);
         if (captureModel != nullptr) {
+            /* 架构优化后，执行流不再报错 */
+            if ((captureModel->IsSupportDecoupling()) && (captureModel->IsExecuteException())) {
+                return reportStream;
+            }
             const uint16_t rootExeStreamId = captureModel->GetRootExeStreamId();
             if (rootExeStreamId != static_cast<uint16_t>(MAX_UINT16_NUM)) {
                 Stream* rootExeStream = nullptr;

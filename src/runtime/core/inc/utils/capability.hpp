@@ -111,6 +111,7 @@ typedef enum {
     TS_FEATURE_SIMT_STK_SHARE = 53,
     TS_FEATURE_CAPTURE_SUPPORT_EXTEND_EVENT = 54, // TS supports software-pool extend event id allocation
     TS_FEATURE_AICORE_SYNC_MATCH_CHECK = 55,
+    TS_FEATURE_SUPPORT_ACLGRAPH_DECOUPLING = 56,  // ACL Graph support decoupling
 } rtTschFeature;
 
 typedef enum {

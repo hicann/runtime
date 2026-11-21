@@ -389,14 +389,27 @@ TEST_F(DavidTaskRecycleTest, SyncTaskRecycleBySqHeadV2)
     rtStreamDestroy(stream);
     ((Runtime*)Runtime::Instance())->DeviceRelease(device);
 }
-rtCqReport_t g_cqReport;
+rtLogicCqReport_t g_cqReport;
 rtError_t Sub_LogicCqReportV2(
-    NpuDriver* drv, const LogicCqWaitInfo& waitInfo, uint8_t* report, uint32_t reportCnt, uint32_t& realCnt)
+    NpuDriver* drv, const CqWaitInfo& waitInfo, uint8_t* report, uint32_t reportCnt, uint32_t& realCnt)
 {
     realCnt = 1;
-    rtCqReport_t* reportPtr = reinterpret_cast<rtCqReport_t*>(report);
+    rtLogicCqReport_t* reportPtr = reinterpret_cast<rtLogicCqReport_t*>(report);
     *reportPtr = g_cqReport;
 
+    return RT_ERROR_NONE;
+}
+
+static uint32_t g_logicCqReportCallCount = 0U;
+static rtError_t SubLogicCqReportV2Once(
+    NpuDriver* drv, const CqWaitInfo& waitInfo, uint8_t* report, uint32_t reportCnt, uint32_t& realCnt)
+{
+    if (g_logicCqReportCallCount++ == 0U) {
+        realCnt = 1U;
+        *reinterpret_cast<rtLogicCqReport_t*>(report) = g_cqReport;
+    } else {
+        realCnt = 0U;
+    }
     return RT_ERROR_NONE;
 }
 void DvppGrpCallbackFunc(rtDvppGrpRptInfo_t* report) { UNUSED(report); }
@@ -509,7 +522,9 @@ TEST_F(DavidTaskRecycleTest, DvppWaitGroupCommonTaskReportLogicCqVPC)
 
     g_cqReport.streamId = rt_ut::UnwrapOrNull<Stream>(stream)->Id_();
     g_cqReport.taskId = pos;
-    g_cqReport.errorType = RT_STARS_CQE_ERR_TYPE_EXCEPTION;
+    g_cqReport.sqId = 0U;
+    g_cqReport.sqHead = static_cast<uint16_t>(pos);
+    g_cqReport.errorType = RT_STARS_CQE_ERR_TYPE_TASK_TIMEOUT;
     g_cqReport.sqeType = RT_STARS_SQE_TYPE_VPC;
     Driver* driver;
     driver = ((Runtime*)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
@@ -1820,11 +1835,11 @@ TEST_F(DavidTaskRecycleTest, ProcLogicCqWhenErr)
     task.stream = rt_ut::UnwrapOrNull<Stream>(stream);
     task.type = TS_TASK_TYPE_MULTIPLE_TASK;
     task.sqeNum = 2U;
+    task.stream = rt_ut::UnwrapOrNull<Stream>(stream);
     task.u.davinciMultiTaskInfo.sqeNum = 2U;
     task.u.davinciMultiTaskInfo.multipleTaskCqeNum = 2U;
     task.u.davinciMultiTaskInfo.hasUnderstudyTask = true;
     MOCKER(GetTaskInfo).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any()).will(returnValue(&task));
-    MOCKER_CPP(&Engine::ReportHeartBreakProcV2).stubs().will(returnValue(RT_ERROR_NONE));
 
     g_cqReport.streamId = rt_ut::UnwrapOrNull<Stream>(stream)->Id_();
     g_cqReport.taskId = 0U;
@@ -1833,7 +1848,8 @@ TEST_F(DavidTaskRecycleTest, ProcLogicCqWhenErr)
 
     Driver* driver;
     driver = ((Runtime*)Runtime::Instance())->driverFactory_.GetDriver(NPU_DRIVER);
-    MOCKER_CPP_VIRTUAL((NpuDriver*)(driver), &NpuDriver::LogicCqReportV2).stubs().will(invoke(Sub_LogicCqReportV2));
+    g_logicCqReportCallCount = 0U;
+    MOCKER_CPP_VIRTUAL((NpuDriver*)(driver), &NpuDriver::LogicCqReportV2).stubs().will(invoke(SubLogicCqReportV2Once));
 
     ProcLogicCqUntilEmpty(rt_ut::UnwrapOrNull<Stream>(stream));
 

@@ -35,6 +35,7 @@
 #include "device.hpp"
 #include "stream_david.hpp"
 #include "capture_model.hpp"
+#include "cq_adapter.hpp"
 
 namespace cce {
 namespace runtime {
@@ -44,20 +45,25 @@ constexpr uint16_t TASK_QUERY_INTERVAL_NUM = 64U; // Shared memory query interva
 void ProcLogicCqUntilEmpty(const Stream* const stm)
 {
     Device* const dev = stm->Device_();
-    Driver* const devDrv = dev->Driver_();
     constexpr uint32_t allocCnt = RT_MILAN_MAX_QUERY_CQE_NUM; // want get cqe num
     const uint32_t logicCqId = stm->GetLogicalCqId();
     const uint32_t streamId = static_cast<uint32_t>(stm->Id_());
     uint32_t times = 0U;
 
-    LogicCqWaitInfo waitInfo = {};
+    CqWaitInfo waitInfo = {};
     waitInfo.devId = dev->Id_();
     waitInfo.tsId = dev->DevGetTsId();
-    waitInfo.cqId = logicCqId;
+    waitInfo.cqId = (logicCqId != MAX_UINT32_NUM) ? logicCqId : stm->GetCqId();
     waitInfo.isFastCq = false;
+    waitInfo.isLogicCq = (logicCqId != MAX_UINT32_NUM) ? true : false;
     waitInfo.timeout = RT_REPORT_WITHOUT_TIMEOUT; // get logic report without timeout
     waitInfo.streamId = streamId;                 // for camodel
     waitInfo.taskId = MAX_UINT32_NUM;             // get any logic report without specifying the task
+
+    /* 支持stream和sq动态绑定 */
+    if (waitInfo.cqId == MAX_UINT32_NUM) {
+        return;
+    }
 
     while (true) {
         uint32_t cnt = 0U;
@@ -69,7 +75,7 @@ void ProcLogicCqUntilEmpty(const Stream* const stm)
             RT_LOG_INNER_DETAIL_MSG(RT_DRV_INNER_ERROR, {"device_id"}, {std::to_string(dev->Id_())});
             , "Device %u loses the heartbeat.", dev->Id_());
 
-        error = devDrv->LogicCqReportV2(waitInfo, RtPtrToPtr<uint8_t*, rtCqReport_t*>(reportInfo), allocCnt, cnt);
+        error = RtCqRecv(waitInfo, reportInfo, allocCnt, cnt, dev);
         if (unlikely(((error != RT_ERROR_NONE) && (error != RT_ERROR_SOCKET_CLOSE)) || (cnt == 0U))) {
             RT_LOG(
                 RT_LOG_INFO, "Task Wait: stream_id=%d, logicCqId=%u, retCode=%#x.", streamId, logicCqId,

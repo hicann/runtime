@@ -187,8 +187,17 @@ drvError_t halSqMsgSend(uint32_t devId, struct halSqMsgInfo* info)
     if (devId >= MAX_DEVICE_NUM) {
         return DRV_ERROR_NONE;
     }
-    while (__atomic_load_n(&sendCount[devId], __ATOMIC_ACQUIRE) != __atomic_load_n(&recvCount[devId], __ATOMIC_ACQUIRE))
-        ;
+    while (__atomic_load_n(&sendCount[devId], __ATOMIC_ACQUIRE) !=
+           __atomic_load_n(&recvCount[devId], __ATOMIC_ACQUIRE)) {
+        if (__atomic_load_n(&recvCount[devId], __ATOMIC_ACQUIRE) >
+            __atomic_load_n(&sendCount[devId], __ATOMIC_ACQUIRE)) {
+            // recvCount never passes sendCount in this protocol; the only source is
+            // StubClearHalSqSendAndRecvCnt racing this loop at a test boundary. Rebalance
+            // instead of waiting on a report nobody will ever consume.
+            __atomic_store_n(&recvCount[devId], __atomic_load_n(&sendCount[devId], __ATOMIC_ACQUIRE), __ATOMIC_RELEASE);
+            break;
+        }
+    }
 
     rtCommand_t* cmd = &g_command[devId];
     int32_t pingpong = __atomic_load_n(&sendCount[devId], __ATOMIC_RELAXED) % 2;
@@ -278,6 +287,12 @@ drvError_t halCqReportIrqWait(uint32_t devId, struct halReportInfoInput* in, str
     return DRV_ERROR_NONE;
 }
 
+void StubClearHalSqSendAndRecvCnt(uint32_t devId)
+{
+    __atomic_store_n(&sendCount[devId], 0, __ATOMIC_RELEASE);
+    __atomic_store_n(&recvCount[devId], 0, __ATOMIC_RELEASE);
+}
+
 drvError_t halCqReportGet(uint32_t devId, struct halReportGetInput* in, struct halReportGetOutput* out)
 {
     if (in->type == DRV_LOGIC_TYPE) {
@@ -310,6 +325,15 @@ drvError_t halCqReportGet(uint32_t devId, struct halReportGetInput* in, struct h
             out->count = 0;
             return DRV_ERROR_NONE;
         }
+    }
+
+    if (__atomic_load_n(&recvCount[devId], __ATOMIC_ACQUIRE) > __atomic_load_n(&sendCount[devId], __ATOMIC_ACQUIRE)) {
+        // Corrupted counters (see halSqMsgSend): drop the phantom reports so the
+        // protocol rebalances instead of consuming garbage forever.
+        __atomic_store_n(&recvCount[devId], __atomic_load_n(&sendCount[devId], __ATOMIC_ACQUIRE), __ATOMIC_RELEASE);
+        out->reportPtr = nullptr;
+        out->count = 0;
+        return DRV_ERROR_NONE;
     }
 
     int32_t pingpong = __atomic_load_n(&recvCount[devId], __ATOMIC_RELAXED) % 2;

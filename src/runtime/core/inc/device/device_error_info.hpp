@@ -216,7 +216,8 @@ struct RingBufferElementInfo {
     uint32_t errorType;
     uint64_t errorNumber;
     uint16_t vfId;
-    uint8_t reserved[6];
+    uint16_t sqId;
+    uint8_t reserved[4];
 };
 
 // it is control info in device ringbuffer.

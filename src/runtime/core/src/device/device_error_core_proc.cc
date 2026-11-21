@@ -1343,15 +1343,20 @@ rtError_t DeviceErrorProc::ProcessStarsCoreTimeoutDfxInfo(
             ProcessStarsTimeoutDfxSlotInfo(info, dev, slotIdx);
             continue;
         }
-        TaskInfo* taskInfo = dev->GetTaskFactory()->GetTask(static_cast<int32_t>(slotInfo.streamId), slotInfo.taskId);
+
+        uint32_t streamId = slotInfo.streamId;
+        if ((slotInfo.sqId != UINT16_MAX) && (slotInfo.streamId == UINT16_MAX)) {
+            (void)dev->GetStreamSqCqManage()->GetStreamIdBySqId(slotInfo.sqId, streamId);
+        }
+        TaskInfo* taskInfo = dev->GetTaskFactory()->GetTask(static_cast<int32_t>(streamId), slotInfo.taskId);
         if (taskInfo == nullptr) {
-            RT_LOG(RT_LOG_ERROR, "task info is null, stream_id=%hu, task_id=%hu", slotInfo.streamId, slotInfo.taskId);
+            RT_LOG(RT_LOG_ERROR, "task info is null, stream_id=%u, task_id=%hu", streamId, slotInfo.taskId);
             continue;
         }
 
         AicTaskInfo* aicTaskInfo = &(taskInfo->u.aicTaskInfo);
         if (aicTaskInfo->kernel == nullptr) {
-            RT_LOG(RT_LOG_ERROR, "task kernel is null, stream_id=%hu, task_id=%hu", slotInfo.streamId, slotInfo.taskId);
+            RT_LOG(RT_LOG_ERROR, "task kernel is null, stream_id=%u, task_id=%hu", streamId, slotInfo.taskId);
             continue;
         }
         const uint8_t mixType = aicTaskInfo->kernel->GetMixType();

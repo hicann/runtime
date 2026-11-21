@@ -836,6 +836,8 @@ TEST_F(SchedGateTest, SoftwareCaptureCountsSubmittedOperatorsOnPhysicalStream)
     MOCKER_CPP_VIRTUAL(device_, &Device::CheckFeatureSupport).stubs().will(returnValue(true));
     MOCKER(NpuDriver::CheckIsSupportFeature).stubs().will(returnValue(true));
     MOCKER_CPP(&Model::UnBindSqPerStream).stubs().will(returnValue(RT_ERROR_NONE));
+    RawDevice* rawDevice = dynamic_cast<RawDevice*>(device_);
+    rawDevice->InitResourceIdAllocator();
     ASSERT_EQ(rtStreamBeginCapture(streamHandle_, RT_STREAM_CAPTURE_MODE_GLOBAL), RT_ERROR_NONE);
     captureActive_ = true;
     Stream* target = stream_->GetCaptureStream();
@@ -883,6 +885,8 @@ TEST_F(SchedGateTest, CaptureExpansionPreservesCounterBeforeNextOperator)
     MOCKER(NpuDriver::CheckIsSupportFeature).stubs().will(returnValue(true));
     MOCKER_CPP(&Model::UnBindSqPerStream).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(CondStreamActive).stubs().will(returnValue(RT_ERROR_NONE));
+    RawDevice* rawDevice = dynamic_cast<RawDevice*>(device_);
+    rawDevice->InitResourceIdAllocator();
     ASSERT_EQ(rtStreamBeginCapture(streamHandle_, RT_STREAM_CAPTURE_MODE_GLOBAL), RT_ERROR_NONE);
     captureActive_ = true;
     Stream* original = stream_->GetCaptureStream();

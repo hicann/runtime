@@ -59,6 +59,8 @@
 #include "task.hpp"
 #include "para_convertor.hpp"
 #include "runtime_task_manager.h"
+#include "sq_exec_times_addr_task.h"
+#include "model_maintaince_task.h"
 #include "cmo_task.h"
 #include "task_info_v100.h"
 #include "event_task.h"
@@ -2081,4 +2083,196 @@ TEST_F(CloudV2TaskTest, GetV201Chips_valid)
     EXPECT_FALSE(chips.empty());
     EXPECT_TRUE(std::find(chips.begin(), chips.end(), CHIP_MC62CM12A) != chips.end());
     EXPECT_TRUE(std::find(chips.begin(), chips.end(), CHIP_MC32DM11A) != chips.end());
+}
+
+TEST_F(CloudV2TaskTest, SqExecTimesAddrTaskConstructsAllocateAndFreeSqe)
+{
+    for (const bool freeFlag : {false, true}) {
+        const uint64_t address = freeFlag ? 0ULL : 0x123456789ABCULL;
+        TaskInfo task = {};
+        InitByStream(&task, stream_);
+        task.id = 19U;
+        ASSERT_EQ(SqExecTimesAddrTaskInit(&task, address, freeFlag), RT_ERROR_NONE);
+        EXPECT_EQ(task.type, TS_TASK_TYPE_SQ_EXEC_TIMES_ADDR);
+        EXPECT_EQ(task.u.sqExecTimesAddrTask.execTimesAddr, address);
+        EXPECT_EQ(task.u.sqExecTimesAddrTask.freeFlag, freeFlag);
+
+        rtStarsSqe_t sqe = {};
+        ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
+        EXPECT_EQ(sqe.phSqe.type, RT_STARS_SQE_TYPE_PLACE_HOLDER);
+        EXPECT_EQ(sqe.phSqe.pre_p, RT_STARS_SQE_INT_DIR_TO_TSCPU);
+        EXPECT_EQ(sqe.phSqe.task_type, TS_TASK_TYPE_SQ_EXEC_TIMES_ADDR);
+        EXPECT_EQ(sqe.phSqe.rt_streamID, stream_->Id_());
+        EXPECT_EQ(sqe.phSqe.task_id, task.id);
+        EXPECT_EQ(sqe.phSqe.u.sqExecTimesAddrInfo.addr, address);
+        EXPECT_EQ(sqe.phSqe.u.sqExecTimesAddrInfo.freeFlag, freeFlag);
+    }
+}
+
+TEST_F(CloudV2TaskTest, SqExecTimesAddrRejectsNullDeviceAndMissingSvm)
+{
+    EXPECT_EQ(SendTaskToSetSqExecTimesAddr(nullptr), RT_ERROR_DEVICE_NULL);
+    EXPECT_EQ(SendTaskToUnsetSqExecTimesAddr(nullptr), RT_ERROR_DEVICE_NULL);
+    Device* const dev = stream_->Device_();
+    MOCKER_CPP_VIRTUAL(dev, &Device::GetSqExecTimesSvmBaseAddr_).stubs().will(returnValue(static_cast<void*>(nullptr)));
+    MOCKER_CPP(&Stream::AllocTask).expects(never());
+    EXPECT_EQ(SendTaskToSetSqExecTimesAddr(dev), RT_ERROR_DRV_MEMORY);
+    GlobalMockObject::verify();
+}
+
+TEST_F(CloudV2TaskTest, SqExecTimesAddrRejectsMissingControlStream)
+{
+    Device* const dev = stream_->Device_();
+    MOCKER_CPP_VIRTUAL(dev, &Device::GetCtrlStream).stubs().will(returnValue(static_cast<Stream*>(nullptr)));
+    EXPECT_EQ(SendTaskToUnsetSqExecTimesAddr(dev), RT_ERROR_STREAM_NULL);
+    GlobalMockObject::verify();
+}
+
+TEST_F(CloudV2TaskTest, SqExecTimesAddrAllocateUsesStreamTaskEntry)
+{
+    Device* const dev = stream_->Device_();
+    TaskInfo task = {};
+    InitByStream(&task, stream_);
+    uint16_t svm = 0U;
+    MOCKER_CPP_VIRTUAL(dev, &Device::GetSqExecTimesSvmBaseAddr_).stubs().will(returnValue(static_cast<void*>(&svm)));
+    uint64_t translatedAddress = 0xABCDEULL;
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::MemAddressTranslate)
+        .expects(once())
+        .with(mockcpp::any(), eq(RtPtrToValue(&svm)), outBoundP(&translatedAddress))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev, &Device::GetCtrlStream).stubs().will(returnValue(stream_));
+    MOCKER_CPP(&Stream::AllocTask)
+        .expects(once())
+        .with(mockcpp::any(), eq(TS_TASK_TYPE_SQ_EXEC_TIMES_ADDR))
+        .will(returnValue(&task));
+    MOCKER_CPP_VIRTUAL(dev, &Device::SubmitTask).expects(once()).with(eq(&task)).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(stream_, &Stream::Synchronize).expects(once()).will(returnValue(RT_ERROR_NONE));
+
+    EXPECT_EQ(SendTaskToSetSqExecTimesAddr(dev), RT_ERROR_NONE);
+    EXPECT_EQ(task.u.sqExecTimesAddrTask.execTimesAddr, 0xABCDEULL);
+    EXPECT_EQ(task.u.sqExecTimesAddrTask.freeFlag, false);
+    GlobalMockObject::verify();
+}
+
+TEST_F(CloudV2TaskTest, SqExecTimesAddrFreeUsesStreamTaskEntry)
+{
+    Device* const dev = stream_->Device_();
+    TaskInfo task = {};
+    InitByStream(&task, stream_);
+    MOCKER_CPP_VIRTUAL(dev, &Device::GetCtrlStream).stubs().will(returnValue(stream_));
+    MOCKER_CPP(&Stream::AllocTask)
+        .expects(once())
+        .with(mockcpp::any(), eq(TS_TASK_TYPE_SQ_EXEC_TIMES_ADDR))
+        .will(returnValue(&task));
+    MOCKER_CPP_VIRTUAL(dev, &Device::SubmitTask).expects(once()).with(eq(&task)).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(stream_, &Stream::Synchronize).expects(once()).will(returnValue(RT_ERROR_NONE));
+
+    EXPECT_EQ(SendTaskToUnsetSqExecTimesAddr(dev), RT_ERROR_NONE);
+    EXPECT_EQ(task.u.sqExecTimesAddrTask.execTimesAddr, 0ULL);
+    EXPECT_EQ(task.u.sqExecTimesAddrTask.freeFlag, true);
+    GlobalMockObject::verify();
+}
+
+TEST_F(CloudV2TaskTest, SqExecTimesAddrTranslationFailureDoesNotAllocateTask)
+{
+    Device* const dev = stream_->Device_();
+    uint16_t svm = 0U;
+    MOCKER_CPP_VIRTUAL(dev, &Device::GetSqExecTimesSvmBaseAddr_).stubs().will(returnValue(static_cast<void*>(&svm)));
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::MemAddressTranslate)
+        .expects(once())
+        .will(returnValue(RT_ERROR_DRV_ERR));
+    MOCKER_CPP(&Stream::AllocTask).expects(never());
+    EXPECT_EQ(SendTaskToSetSqExecTimesAddr(dev), RT_ERROR_DRV_MEMORY);
+    GlobalMockObject::verify();
+}
+
+// Fail allocation, initialization, submission and synchronization independently.
+class SqExecTimesAddrFailure910B : public CloudV2TaskTest, public testing::WithParamInterface<int> {};
+
+TEST_P(SqExecTimesAddrFailure910B, PropagatesFailureAndRecyclesOnlyOwnedTask)
+{
+    const int stage = GetParam();
+    Device* const dev = stream_->Device_();
+    TaskInfo task = {};
+    InitByStream(&task, stream_);
+    task.type = TS_TASK_TYPE_SQ_EXEC_TIMES_ADDR;
+    MOCKER_CPP_VIRTUAL(dev, &Device::GetCtrlStream).stubs().will(returnValue(stream_));
+    if (stage == 0) {
+        MOCKER_CPP(&Stream::AllocTask)
+            .expects(once())
+            .with(mockcpp::any(), mockcpp::any(), outBound(RT_ERROR_STREAM_FULL))
+            .will(returnValue(static_cast<TaskInfo*>(nullptr)));
+        MOCKER_CPP_VIRTUAL(dev, &Device::SubmitTask).expects(never());
+        MOCKER_CPP_VIRTUAL(stream_, &Stream::Synchronize).expects(never());
+        EXPECT_EQ(SendTaskToUnsetSqExecTimesAddr(dev), RT_ERROR_STREAM_FULL);
+        GlobalMockObject::verify();
+        return;
+    }
+    MOCKER_CPP(&Stream::AllocTask).expects(once()).will(returnValue(&task));
+    MOCKER_CPP(&TaskFactory::Recycle).expects(once()).with(eq(&task)).will(returnValue(RT_ERROR_NONE));
+    if (stage == 1) {
+        MOCKER(SqExecTimesAddrTaskInit).expects(once()).will(returnValue(RT_ERROR_DRV_ERR));
+        MOCKER_CPP_VIRTUAL(dev, &Device::SubmitTask).expects(never());
+    } else {
+        MOCKER_CPP_VIRTUAL(dev, &Device::SubmitTask)
+            .expects(once())
+            .will(returnValue(stage == 2 ? RT_ERROR_DRV_ERR : RT_ERROR_NONE));
+    }
+    if (stage == 3) {
+        MOCKER_CPP_VIRTUAL(stream_, &Stream::Synchronize).expects(once()).will(returnValue(RT_ERROR_DRV_ERR));
+    } else {
+        MOCKER_CPP_VIRTUAL(stream_, &Stream::Synchronize).expects(never());
+    }
+    EXPECT_EQ(SendTaskToUnsetSqExecTimesAddr(dev), RT_ERROR_DRV_ERR);
+    GlobalMockObject::verify();
+}
+
+INSTANTIATE_TEST_SUITE_P(SqExecTimesAddr, SqExecTimesAddrFailure910B, testing::Values(0, 1, 2, 3));
+
+TEST_F(CloudV2TaskTest, ModelMaintainceKeepsStreamCounterOffsetWithDecoupling)
+{
+    Device* const dev = stream_->Device_();
+    uint16_t counter = 0U;
+    uint64_t translatedAddress = 0x123456ULL;
+    TaskInfo task = {};
+    InitByStream(&task, stream_);
+    MOCKER_CPP_VIRTUAL(dev, &Device::CheckFeatureSupport)
+        .stubs()
+        .with(eq(TS_FEATURE_SUPPORT_ACLGRAPH_DECOUPLING))
+        .will(returnValue(true));
+    MOCKER_CPP_VIRTUAL(dev, &Device::IsSupportFeature)
+        .stubs()
+        .with(eq(RtOptionalFeatureType::RT_FEATURE_DEVICE_TSCH_PACAGE_COMPATABLE))
+        .will(returnValue(false));
+    MOCKER_CPP_VIRTUAL(dev, &Device::IsSupportFeature)
+        .stubs()
+        .with(eq(RtOptionalFeatureType::RT_FEATURE_TASK_MODEL_MAINTAINCE_WITH_VA))
+        .will(returnValue(false));
+    MOCKER_CPP_VIRTUAL(Runtime::Instance(), &Runtime::ChipIsHaveStars).stubs().will(returnValue(true));
+    MOCKER_CPP(&Stream::GetExecutedTimesSvm).stubs().will(returnValue(&counter));
+    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::MemAddressTranslate)
+        .expects(once())
+        .with(mockcpp::any(), eq(RtPtrToValue(&counter)), outBoundP(&translatedAddress))
+        .will(returnValue(RT_ERROR_NONE));
+
+    EXPECT_EQ(
+        ModelMaintainceTaskInit(&task, MMT_STREAM_ADD, nullptr, stream_, RT_MODEL_HEAD_STREAM, 0U), RT_ERROR_NONE);
+    EXPECT_EQ(task.u.modelMaintainceTaskInfo.execTimesSvmOffset, translatedAddress);
+    GlobalMockObject::verify();
+}
+
+TEST_F(CloudV2TaskTest, StreamExecutedTimesKeepsOwnSvmWithoutSoftwareSq)
+{
+    uint16_t counters[RT_SQ_EXEC_TIMES_SVM_4K / sizeof(uint16_t)] = {};
+    Device* const dev = stream_->Device_();
+    ASSERT_FALSE(stream_->IsSoftwareSqEnable());
+    uint16_t* const streamCounter = stream_->GetExecutedTimesSvm();
+    ASSERT_NE(streamCounter, nullptr);
+    ASSERT_LT(stream_->GetSqId(), sizeof(counters) / sizeof(counters[0]));
+    MOCKER_CPP_VIRTUAL(dev, &Device::GetSqExecTimesSvmBaseAddr_)
+        .stubs()
+        .will(returnValue(static_cast<void*>(counters)));
+    EXPECT_EQ(stream_->GetExecutedTimesSvm(), streamCounter);
+    EXPECT_NE(stream_->GetExecutedTimesSvm(), counters + stream_->GetSqId());
+    GlobalMockObject::verify();
 }

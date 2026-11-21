@@ -154,6 +154,20 @@ enum RtModelExecutorFlag {
 };
 RT_ENUM_LOG_DECLARE(RtModelExecutorFlagToString, RtModelExecutorFlag)
 
+#pragma pack(push)
+#pragma pack(1)
+
+/**
+ * @ingroup
+ * @brief the struct define of cqe when task is completed
+ */
+struct rtStarsCqeSysCnt_t {
+    uint32_t syscntLow;
+    uint32_t syscntHigh;
+};
+
+#pragma pack(pop)
+
 } // namespace runtime
 } // namespace cce
 #endif // __CCE_RUNTIME_STARS_BASE_HPP__

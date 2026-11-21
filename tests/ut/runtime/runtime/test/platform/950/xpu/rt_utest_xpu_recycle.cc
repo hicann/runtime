@@ -134,7 +134,7 @@ TEST_F(XpuRecycleTest, XpuDriver_LogicCqReportV2_error)
     constexpr uint32_t allocCnt = RT_MILAN_MAX_QUERY_CQE_NUM;
     const uint32_t streamId = 0U;
 
-    LogicCqWaitInfo waitInfo = {};
+    CqWaitInfo waitInfo = {};
     waitInfo.devId = 0U;
     waitInfo.tsId = 1U;
     waitInfo.cqId = 1U;

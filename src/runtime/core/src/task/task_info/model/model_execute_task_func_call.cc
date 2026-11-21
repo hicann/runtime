@@ -247,6 +247,7 @@ rtError_t AllocFuncCallMemForModelExecuteTask(TaskInfo* const taskInfo, rtStarsM
     funcCallPara.streamSvmArrAddr = funcCallPara.headSqArrAddr + (headSqArrMax * sizeof(uint64_t));
     funcCallPara.headSqArrMax = headSqArrMax;
     funcCallPara.streamSvmArrMax = streamSvmArrMax;
+    funcCallPara.modelExecTimesAddr = RtPtrToValue(model->GetExecutedTimesSvm());
 
     RT_LOG(
         RT_LOG_DEBUG,
@@ -269,7 +270,8 @@ rtError_t ConstructFuncCallParaForModelExecuteTask(
     funcCallPara.funcCallInstrSize = sizeof(funcCall);
     funcCallPara.checkSqStateInstrSize = sizeof(funcCall.checkSqFsm);
     funcCallPara.checkSqFsmInstrDistance = RtPtrToValue(&(funcCall.checkSqFsm.lhwi0)) - RtPtrToValue(&funcCall);
-    funcCallPara.endInstrDistance = RtPtrToValue(&(funcCall.endInstr.nop)) - RtPtrToValue(&funcCall);
+    funcCallPara.endInstrDistance =
+        RtPtrToValue(&(funcCall.addModelExecTimes.u.instrs.loadExecTimesAddr)) - RtPtrToValue(&funcCall);
     funcCallPara.checkSqDisableErrInstrDistance =
         RtPtrToValue(&(funcCall.checkSqDisableErrInstr.lhwi0)) - RtPtrToValue(&funcCall);
     funcCallPara.checkSqHeadTailErrInstrDistance =

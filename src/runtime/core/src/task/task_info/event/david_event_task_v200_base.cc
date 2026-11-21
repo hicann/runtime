@@ -81,7 +81,7 @@ void SetStarsResultForDavidEventRecordTask(TaskInfo* const taskInfo, const rtCqR
 {
     DavidEventRecordTaskInfo* eventRecordTaskInfo = &(taskInfo->u.davidEventRecordTaskInfo);
     if ((logicCq.errorType & RT_STARS_EXIST_ERROR) == 0U) {
-        eventRecordTaskInfo->timestamp = logicCq.u1.timeStamp;
+        eventRecordTaskInfo->timestamp = logicCq.u.timeStamp;
     } else {
         if (logicCq.errorCode != TS_SUCCESS) {
             taskInfo->errorCode = logicCq.errorCode;

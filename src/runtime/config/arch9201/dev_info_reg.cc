@@ -96,7 +96,6 @@ const std::unordered_set<RtOptionalFeatureType> CHIP_CLOUD_V5_FEATURE{
     RtOptionalFeatureType::RT_FEATURE_MODEL_EXE_DOT_NEED_LOAD_COMPLETE,
     RtOptionalFeatureType::RT_FEATURE_MODEL_UPDATE_SQE_TILING_KEY,
     RtOptionalFeatureType::RT_FEATURE_DFX_FAST_RECOVER_DOT_STREAM,
-    RtOptionalFeatureType::RT_FEATURE_KERNEL_LAUNCH_EX_BY_FUNC_HANDLE,
     RtOptionalFeatureType::RT_FEATURE_STREAM_ATTR_FAILURE_MODE,
     RtOptionalFeatureType::RT_FEATURE_STREAM_ATTR_OVERFLOW_CHECK,
     RtOptionalFeatureType::RT_FEATURE_STREAM_ATTR_USER_CUSTOM_TAG,

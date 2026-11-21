@@ -73,6 +73,15 @@ using namespace testing;
 using namespace cce::runtime;
 
 namespace {
+errno_t MemcpySSuccessStub(void* dest, size_t destMax, const void* src, size_t count)
+{
+    if ((dest == nullptr) || (src == nullptr) || (count > destMax)) {
+        return EINVAL;
+    }
+    std::memcpy(dest, src, count);
+    return EOK;
+}
+
 void ExpectDestroy(rtStream_t stream, rtEvent_t event)
 {
     EXPECT_EQ(rtEventDestroy(event), RT_ERROR_NONE);
@@ -502,7 +511,7 @@ TEST_F(RtApiTest, capture_api_08)
     void* args[] = {&error, NULL};
     void* stubFunc;
 
-    MOCKER(memcpy_s).stubs().will(returnValue(NULL));
+    MOCKER(memcpy_s).stubs().will(invoke(MemcpySSuccessStub));
 
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -532,7 +541,7 @@ TEST_F(RtApiTest, capture_api_09)
     void* args[] = {&error, NULL};
     void* stubFunc;
 
-    MOCKER(memcpy_s).stubs().will(returnValue(NULL));
+    MOCKER(memcpy_s).stubs().will(invoke(MemcpySSuccessStub));
     MOCKER_CPP(&CondStreamActive).stubs().will(returnValue(RT_ERROR_INVALID_VALUE));
 
     error = rtStreamCreate(&stream, 0);

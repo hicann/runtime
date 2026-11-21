@@ -16,6 +16,7 @@ set(libruntime_cmodel_v100_task_src_files
     ${RUNTIME_CORE_DIR}/src/task/task_res_manage/task_res.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/task_manager.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_execute_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_aclgraph_exception_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_execute_task_func_call.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_execute_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/davinci/davinci_kernel_task.cc
@@ -73,6 +74,8 @@ set(libruntime_cmodel_v100_task_src_files
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/kernel_fusion_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/maintenance/float_status_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/maintenance/float_status_task_v100.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/maintenance/sq_exec_times_addr_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/maintenance/sq_exec_times_addr_task_v100.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/dma/rdma_task_v100.cc
     ${RUNTIME_FEATURE_DIR}/ffts/rdma_task_v100.cc
     ${RUNTIME_FEATURE_DIR}/ffts/ffts_task_v100.cc
@@ -94,6 +97,7 @@ set(david_series_common_task_src_file_cmodel
     ${RUNTIME_CORE_DIR}/src/task/task_res_manage/task_res.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/task_manager.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_execute_task.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_aclgraph_exception_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_execute_task_func_call.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/model_execute_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/model/kernel_fusion_task.cc
@@ -155,6 +159,7 @@ set(david_series_common_task_src_file_cmodel
     ${RUNTIME_CORE_DIR}/src/task/task_info/maintenance/maintenance_task_v200_base.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/maintenance/float_status_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/maintenance/float_status_task_v200_base.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/maintenance/sq_exec_times_addr_task.cc
     ${RUNTIME_CORE_DIR}/src/task/task_recycle/v200/task_recycle_dvpp.cc
     ${RUNTIME_CORE_DIR}/src/task/task_submit/v200/task_david.cc
     ${RUNTIME_CORE_DIR}/src/task/task_recycle/v200/task_recycle_send_sync.cc
@@ -188,6 +193,7 @@ set(libruntime_cmodel_v200_task_src_files
     ${RUNTIME_CORE_DIR}/src/device/v200_base/device_error_proc_arch920x.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/memory/memory_task_v200.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/davinci/davinci_kernel_task_v200.cc
+    ${RUNTIME_CORE_DIR}/src/task/task_info/maintenance/sq_exec_times_addr_task_v200.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/davinci/davinci_kernel_task_arch920x.cc
     ${RUNTIME_CORE_DIR}/src/task/task_info/dma/ubdma_task_arch920x.cc
 )
@@ -446,6 +452,7 @@ set(libruntime_cmodel_src_files
     ${RUNTIME_CORE_DIR}/src/device/device_debug_stars.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device_res_camodel.cc
+    ${RUNTIME_CORE_DIR}/src/device/resource_id_allocator.cc
     ${RUNTIME_FEATURE_DIR}/snapshot/device_snapshot.cc
     ${RUNTIME_FEATURE_DIR}/snapshot/snapshot_process_helper.cc
     ${RUNTIME_FEATURE_DIR}/snapshot/snapshot_callback_manager.cc
@@ -518,6 +525,10 @@ set(libruntime_cmodel_src_files
     ${RUNTIME_CORE_DIR}/src/device/device_error_core_proc.cc
     ${RUNTIME_CORE_DIR}/src/device/device_error_proc.cc
     ${RUNTIME_CORE_DIR}/src/device/v100/device_error_proc.cc
+    ${RUNTIME_CORE_DIR}/src/device/device_error_update.cc
+    ${RUNTIME_CORE_DIR}/src/device/v100/device_error_update.cc
+    ${RUNTIME_CORE_DIR}/src/cqe/cq_adapter.cc
+    ${RUNTIME_CORE_DIR}/src/cqe/v100/stars_cq_adapter.cc
     ${RUNTIME_CORE_DIR}/src/device/device_sq_cq_pool.cc
     ${RUNTIME_CORE_DIR}/src/device/sq_addr_memory_pool.cc
     ${RUNTIME_CORE_DIR}/src/utils/aicpu_scheduler_agent.cc
@@ -599,6 +610,7 @@ set(libruntime_cmodel_v200_src_files
     ${RUNTIME_CORE_DIR}/src/device/device_debug_starsv2.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device.cc
     ${RUNTIME_CORE_DIR}/src/device/raw_device_res_camodel.cc
+    ${RUNTIME_CORE_DIR}/src/device/resource_id_allocator.cc
     ${RUNTIME_FEATURE_DIR}/snapshot/device_snapshot.cc
     ${RUNTIME_FEATURE_DIR}/snapshot/snapshot_process_helper.cc
     ${RUNTIME_FEATURE_DIR}/snapshot/snapshot_callback_manager.cc
@@ -677,6 +689,10 @@ set(libruntime_cmodel_v200_src_files
     ${RUNTIME_CORE_DIR}/src/device/device_error_core_proc.cc
     ${RUNTIME_CORE_DIR}/src/device/device_error_proc.cc
     ${RUNTIME_CORE_DIR}/src/device/v200_base/device_error_proc.cc
+    ${RUNTIME_CORE_DIR}/src/device/device_error_update.cc
+    ${RUNTIME_CORE_DIR}/src/device/v200_base/device_error_update.cc
+    ${RUNTIME_CORE_DIR}/src/cqe/cq_adapter.cc
+    ${RUNTIME_CORE_DIR}/src/cqe/v200/stars_cq_adapter.cc
     ${RUNTIME_CORE_DIR}/src/device/device_sq_cq_pool.cc
     ${RUNTIME_CORE_DIR}/src/device/sq_addr_memory_pool.cc
     ${RUNTIME_CORE_DIR}/src/task/stars_cond_isa_helper.cc
@@ -796,6 +812,7 @@ set(RUNTIME_CMODEL_INC_DIR_COMMON
     ${RUNTIME_FEATURE_DIR}/xpu
     ${RUNTIME_CORE_DIR}/src/uvm
     ${RUNTIME_CORE_DIR}/src/event
+    ${RUNTIME_DIR}/src/runtime/core/inc/cqe
     ${RUNTIME_DIR}/src/inc
     ${RUNTIME_DIR}/pkg_inc/tsd/
     ${RUNTIME_DIR}/pkg_inc/aicpu_sched/

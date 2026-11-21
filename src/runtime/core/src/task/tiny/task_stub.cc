@@ -10,6 +10,7 @@
 
 #include "base.hpp"
 #include "task_to_sqe.hpp"
+#include "sq_exec_times_addr_task.h"
 
 namespace cce {
 namespace runtime {
@@ -18,6 +19,18 @@ rtError_t ConstructSqeByTaskInput(const rtTaskInput_t* const taskInput, uint32_t
 {
     UNUSED(taskInput);
     UNUSED(taskLen);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t SendTaskToSetSqExecTimesAddr(Device* const dev)
+{
+    UNUSED(dev);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t SendTaskToUnsetSqExecTimesAddr(Device* const dev)
+{
+    UNUSED(dev);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 

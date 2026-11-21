@@ -754,6 +754,12 @@ rtError_t CaptureSession::StreamBeginCapture(Stream* const stm, const rtStreamCa
         RT_LOG(
             RT_LOG_DEBUG, "Capture model set software sq enable, device_id=%u, model_id=%u", ctx_->Device_()->Id_(),
             captureModel->Id_());
+        uint32_t val = RT_CAPABILITY_NOT_SUPPORT;
+        (void)stm->Device_()->Driver_()->CheckSupportPcieBarCopy(ctx_->Device_()->Id_(), val, false);
+        bool isPcieBarSupport = (val == RT_CAPABILITY_SUPPORT);
+        if (stm->Device_()->CheckFeatureSupport(TS_FEATURE_SUPPORT_ACLGRAPH_DECOUPLING) && isPcieBarSupport) {
+            captureModelTmp->SetSupportDecouplingEnable();
+        }
     }
 
     error = StreamAddToCaptureModelProc(stm, captureModel, true);

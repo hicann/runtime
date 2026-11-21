@@ -32,6 +32,7 @@ enum class FreePolicy : uint8_t {
     DEFAULT,   // 默认模式，适用于模型销毁场景，由资源池自行决策释放策略
     LAZY,      // 性能优先，释放到池子，适用于模型不销毁，暂时释放到资源池，做资源复用
     IMMEDIATE, // 资源优先，释放到驱动
+    FAULT,     // 故障模式，释放到faultList中
 };
 
 class DeviceSqCqPool : public NoCopy {
@@ -46,7 +47,7 @@ public:
     rtError_t FreeSqCq(const rtDeviceSqCqInfo_t* const sqCqInfo, const uint32_t freeNum, const FreePolicy policy);
 
     rtError_t AllocSqCqFromDrv(
-        rtDeviceSqCqInfo_t* const sqCqInfo, const uint32_t drvFlag,
+        rtDeviceSqCqInfo_t* const sqCqInfo, const uint32_t drvFlag, const uint8_t sqType,
         const int32_t retryCount = PRE_ALLOC_SQ_CQ_RETRY_MAX_COUNT, const uint32_t priority = 0U) const;
     rtError_t BatchAllocSqCq(const uint32_t allcocNum, const int32_t retryCount = PRE_ALLOC_SQ_CQ_RETRY_MAX_COUNT);
     rtError_t FreeSqCqToDrv(const uint32_t sqId, const uint32_t cqId) const;
@@ -57,6 +58,7 @@ public:
     rtError_t TryFreeSqCqToDrv(void);
     rtError_t ReAllocSqCqForFreeList(void);
     void FreeOccupyList(void);
+    rtError_t RestoreFaultSqCq(void);
     void FreeReallocatedSqCqToDrv(
         const std::list<rtDeviceSqCqInfo_t>::iterator begin, const std::list<rtDeviceSqCqInfo_t>::iterator end) const;
 
@@ -65,12 +67,14 @@ private:
     std::mutex deviceSqCqLock_;
     std::list<rtDeviceSqCqInfo_t> deviceSqCqFreeList_;
     std::list<rtDeviceSqCqInfo_t> deviceSqCqOccupyList_;
+    std::list<rtDeviceSqCqInfo_t> deviceSqCqFaultList_;
     uint64_t preAllocCount_{0U};
     uint64_t shrinkCount_{0U};
 
     // Release sqcqs in bulk, only releasing them to the pool;
     // actual resources are not released to the driver, making it convenient for future requests of sqcqs.
     rtError_t FreeSqCqLazy(const rtDeviceSqCqInfo_t* const sqCqList, const uint32_t freeNum);
+    rtError_t FreeSqCqFault(const rtDeviceSqCqInfo_t* const sqCqList, const uint32_t freeNum);
 
     // Release sqcq in batches, release them from the pool, and simultaneously call the driver interface to release
     // them.

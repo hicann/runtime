@@ -12,6 +12,7 @@
 #include <array>
 #include <chrono>
 #include <future>
+#include <memory>
 #include <unordered_set>
 
 #include "driver/ascend_hal.h"
@@ -37,6 +38,7 @@
 #include "scheduler.hpp"
 #include "runtime.hpp"
 #include "raw_device.hpp"
+#include "resource_id_allocator.hpp"
 #include "task_info.hpp"
 #include "davinci_kernel_task.h"
 #include "async_hwts_engine.hpp"
@@ -195,6 +197,181 @@ rtEvent_t StreamTest::event_ = NULL;
 void* StreamTest::binHandle_ = NULL;
 char StreamTest::function_ = 'a';
 uint32_t StreamTest::binary_[32] = {};
+
+class StreamExecTimesSvmTest : public StreamTest {
+protected:
+    void SetUp() override
+    {
+        StreamTest::SetUp();
+        Context* const ctx = Runtime::Instance()->CurrentContext();
+        ASSERT_NE(ctx, nullptr);
+        dev_ = ctx->Device_();
+        svmStream_.reset(new Stream(dev_, 0U, RT_STREAM_PERSISTENT));
+    }
+
+    void TearDown() override
+    {
+        GlobalMockObject::verify();
+        svmStream_.reset();
+        StreamTest::TearDown();
+    }
+
+    rtError_t AllocCounter(const bool softwareSq = true, const bool decoupling = true, const bool compatible = false)
+    {
+        if (softwareSq) {
+            svmStream_->SetSoftWareSqEnable();
+        }
+        MOCKER_CPP_VIRTUAL(Runtime::Instance(), &Runtime::ChipIsHaveStars).stubs().will(returnValue(true));
+        MOCKER_CPP_VIRTUAL(dev_, &Device::CheckFeatureSupport)
+            .stubs()
+            .with(eq(TS_FEATURE_SUPPORT_ACLGRAPH_DECOUPLING))
+            .will(returnValue(decoupling));
+        MOCKER_CPP_VIRTUAL(dev_, &Device::IsSupportFeature)
+            .stubs()
+            .with(eq(RtOptionalFeatureType::RT_FEATURE_DEVICE_TSCH_PACAGE_COMPATABLE))
+            .will(returnValue(compatible));
+        MOCKER_CPP_VIRTUAL(dev_, &Device::GetSqExecTimesSvmBaseAddr_).stubs().will(returnValue(poolBase_));
+        if (softwareSq && decoupling) {
+            MOCKER_CPP_VIRTUAL(dev_->Driver_(), &Driver::DevMemAllocWithBackupFlag).expects(never());
+            MOCKER_CPP_VIRTUAL(dev_->Driver_(), &Driver::DevMemFree).expects(never());
+        }
+        return svmStream_->AllocExecutedTimesSvm();
+    }
+
+    void ExpectPoolReset(const uint32_t sqId, const rtError_t result = RT_ERROR_NONE)
+    {
+        MOCKER_CPP_VIRTUAL(dev_->Driver_(), &Driver::MemSetSync)
+            .expects(once())
+            .with(
+                eq(static_cast<const void*>(counters_.data() + sqId)), eq(sizeof(uint16_t)), eq(0xFFU),
+                eq(sizeof(uint16_t)))
+            .will(returnValue(result));
+    }
+
+    void BindSq(const uint32_t sqId)
+    {
+        rtDeviceSqCqInfo_t sqCqInfo = {};
+        sqCqInfo.sqId = sqId;
+        svmStream_->UpdateSqCq(&sqCqInfo);
+    }
+
+    Device* dev_ = nullptr;
+    std::unique_ptr<Stream> svmStream_;
+    std::array<uint16_t, RT_SQ_EXEC_TIMES_SVM_4K / sizeof(uint16_t)> counters_{};
+    void* poolBase_ = counters_.data();
+};
+
+class StreamExecTimesSvmRoutingTest : public StreamExecTimesSvmTest,
+                                      public testing::WithParamInterface<std::array<bool, 3>> {};
+
+TEST_P(StreamExecTimesSvmRoutingTest, SelectsStorageFromSoftwareSqAndDeviceFeatures)
+{
+    const auto mode = GetParam();
+    const bool useDevicePool = mode[0] && mode[1];
+    ASSERT_EQ(AllocCounter(mode[0], mode[1], mode[2]), RT_ERROR_NONE);
+    if (useDevicePool) {
+        EXPECT_EQ(svmStream_->GetExecutedTimesSvm(), nullptr);
+    } else {
+        EXPECT_NE(svmStream_->GetExecutedTimesSvm(), nullptr);
+    }
+    BindSq(7U);
+    if (useDevicePool) {
+        EXPECT_EQ(svmStream_->GetExecutedTimesSvm(), counters_.data() + 7U);
+    } else {
+        uint16_t* const counter = svmStream_->GetExecutedTimesSvm();
+        EXPECT_NE(counter, counters_.data() + 7U);
+        MOCKER_CPP_VIRTUAL(dev_->Driver_(), &Driver::MemSetSync).expects(never());
+        svmStream_->ResetSqCq();
+        EXPECT_EQ(svmStream_->GetSqId(), UINT32_MAX);
+        EXPECT_EQ(svmStream_->GetExecutedTimesSvm(), counter);
+        EXPECT_EQ(svmStream_->FreeExecutedTimesSvm(), RT_ERROR_NONE);
+        EXPECT_EQ(svmStream_->GetExecutedTimesSvm(), nullptr);
+    }
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    StorageModes, StreamExecTimesSvmRoutingTest,
+    testing::Values(
+        std::array<bool, 3>{false, true, false}, std::array<bool, 3>{true, false, false},
+        std::array<bool, 3>{true, true, true}, std::array<bool, 3>{true, true, false}));
+
+TEST_F(StreamExecTimesSvmTest, PoolAddressTracksSqBindingAndReset)
+{
+    ASSERT_EQ(AllocCounter(), RT_ERROR_NONE);
+    BindSq(3U);
+    EXPECT_EQ(svmStream_->GetExecutedTimesSvm(), counters_.data() + 3U);
+    ExpectPoolReset(3U);
+    svmStream_->ResetSqCq();
+    EXPECT_EQ(svmStream_->GetSqId(), UINT32_MAX);
+    EXPECT_EQ(svmStream_->GetExecutedTimesSvm(), nullptr);
+    EXPECT_EQ(svmStream_->FreeExecutedTimesSvm(), RT_ERROR_NONE);
+    BindSq(9U);
+    EXPECT_EQ(svmStream_->GetExecutedTimesSvm(), counters_.data() + 9U);
+}
+
+TEST_F(StreamExecTimesSvmTest, PoolGetterRejectsMissingBase)
+{
+    poolBase_ = nullptr;
+    ASSERT_EQ(AllocCounter(), RT_ERROR_NONE);
+    BindSq(3U);
+    EXPECT_EQ(svmStream_->GetExecutedTimesSvm(), nullptr);
+    MOCKER_CPP_VIRTUAL(dev_->Driver_(), &Driver::MemSetSync).expects(never());
+    EXPECT_EQ(svmStream_->FreeExecutedTimesSvm(), RT_ERROR_NONE);
+    svmStream_->ResetSqCq();
+    EXPECT_EQ(svmStream_->GetSqId(), UINT32_MAX);
+}
+
+TEST_F(StreamExecTimesSvmTest, RestoreResetsPoolSlotBeforeUnbinding)
+{
+    ASSERT_EQ(AllocCounter(), RT_ERROR_NONE);
+    BindSq(5U);
+    ExpectPoolReset(5U);
+
+    EXPECT_EQ(svmStream_->RestoreForSoftwareSq(), RT_ERROR_NONE);
+    EXPECT_EQ(svmStream_->GetSqId(), UINT32_MAX);
+    EXPECT_EQ(svmStream_->GetExecutedTimesSvm(), nullptr);
+}
+
+TEST_F(StreamExecTimesSvmTest, PoolGetterChecksSqSlotCapacity)
+{
+    ASSERT_EQ(AllocCounter(), RT_ERROR_NONE);
+    BindSq(static_cast<uint32_t>(counters_.size() - 1U));
+    EXPECT_EQ(svmStream_->GetExecutedTimesSvm(), counters_.data() + counters_.size() - 1U);
+    BindSq(static_cast<uint32_t>(counters_.size()));
+    EXPECT_EQ(svmStream_->GetExecutedTimesSvm(), nullptr);
+    EXPECT_EQ(svmStream_->FreeExecutedTimesSvm(), RT_ERROR_NONE);
+}
+
+class StreamExecTimesSvmResultTest : public StreamExecTimesSvmTest, public testing::WithParamInterface<rtError_t> {};
+
+TEST_P(StreamExecTimesSvmResultTest, ResetsPoolSlotWithoutFreeingDeviceMemory)
+{
+    ASSERT_EQ(AllocCounter(), RT_ERROR_NONE);
+    BindSq(5U);
+    ExpectPoolReset(5U, GetParam());
+    EXPECT_EQ(svmStream_->FreeExecutedTimesSvm(), GetParam());
+    EXPECT_EQ(svmStream_->GetExecutedTimesSvm(), counters_.data() + 5U);
+}
+
+TEST_P(StreamExecTimesSvmResultTest, RestoresOwnCounterAndPropagatesInitializationFailure)
+{
+    ASSERT_EQ(AllocCounter(true, false, true), RT_ERROR_NONE);
+    uint16_t* const counter = svmStream_->GetExecutedTimesSvm();
+    ASSERT_NE(counter, nullptr);
+    BindSq(5U);
+    MOCKER_CPP_VIRTUAL(dev_->Driver_(), &Driver::MemSetSync)
+        .expects(once())
+        .with(eq(static_cast<const void*>(counter)), eq(sizeof(uint16_t)), eq(0xFFU), eq(sizeof(uint16_t)))
+        .will(returnValue(GetParam()));
+
+    EXPECT_EQ(svmStream_->RestoreForSoftwareSq(), GetParam());
+    if (GetParam() == RT_ERROR_NONE) {
+        EXPECT_EQ(svmStream_->GetSqId(), UINT32_MAX);
+    }
+    EXPECT_EQ(svmStream_->GetExecutedTimesSvm(), counter);
+}
+
+INSTANTIATE_TEST_SUITE_P(ResetResults, StreamExecTimesSvmResultTest, testing::Values(RT_ERROR_NONE, RT_ERROR_DRV_ERR));
 
 class SubmitFailSchedulerT : public FifoScheduler {
 public:
@@ -2672,6 +2849,8 @@ TEST_F(StreamTest, rtsStreamDestroy_default)
 
     error = rtsStreamDestroy(stream, 0x0);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(rtDeviceReset(0), RT_ERROR_NONE);
+    EXPECT_EQ(rtSetDevice(0), RT_ERROR_NONE);
 }
 
 TEST_F(StreamTest, stream_handle_invalid_after_destroy)
@@ -2685,6 +2864,8 @@ TEST_F(StreamTest, stream_handle_invalid_after_destroy)
 
     Stream* destroyedStream = nullptr;
     EXPECT_EQ(GetValidatedObject<Stream>(stream, destroyedStream), RT_ERROR_INVALID_HANDLE);
+    EXPECT_EQ(rtDeviceReset(0), RT_ERROR_NONE);
+    EXPECT_EQ(rtSetDevice(0), RT_ERROR_NONE);
 }
 
 TEST_F(StreamTest, stream_destroy_pre_callback_receives_valid_handle)
@@ -2708,6 +2889,8 @@ TEST_F(StreamTest, stream_destroy_pre_callback_receives_valid_handle)
     Stream* destroyedStream = nullptr;
     EXPECT_EQ(GetValidatedObject<Stream>(stream, destroyedStream), RT_ERROR_INVALID_HANDLE);
     EXPECT_EQ(rtsRegStreamStateCallback(regName, nullptr, nullptr), RT_ERROR_NONE);
+    EXPECT_EQ(rtDeviceReset(0), RT_ERROR_NONE);
+    EXPECT_EQ(rtSetDevice(0), RT_ERROR_NONE);
 }
 
 TEST_F(StreamTest, stream_destroy_bound_stream_keeps_handle_valid)
@@ -2735,12 +2918,16 @@ TEST_F(StreamTest, stream_destroy_bound_stream_keeps_handle_valid)
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = rtStreamDestroy(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);
+    EXPECT_EQ(rtDeviceReset(0), RT_ERROR_NONE);
+    EXPECT_EQ(rtSetDevice(0), RT_ERROR_NONE);
 }
 
 TEST_F(StreamTest, rtsStreamDestroy_force)
 {
     rtError_t error;
     rtStream_t stream;
+    ASSERT_EQ(rtDeviceReset(0), RT_ERROR_NONE);
+    ASSERT_EQ(rtSetDevice(0), RT_ERROR_NONE);
 
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
@@ -3902,6 +4089,106 @@ TEST_F(StreamTest, StreamSetupAllocSqCqNoResource)
 
     delete stream;
     delete device;
+}
+
+TEST_F(StreamTest, FreeStreamIdReturnsRuntimeManagedId)
+{
+    Runtime* const runtime = static_cast<Runtime*>(Runtime::Instance());
+    Device* const device = runtime->DeviceRetain(0U, 0U);
+    ASSERT_NE(device, nullptr);
+    std::unique_ptr<ResourceIdAllocator> allocator(CreateResourceIdAllocator());
+    ASSERT_NE(allocator, nullptr);
+    ASSERT_EQ(allocator->Init(4U, 4U), RT_ERROR_NONE);
+    const int32_t streamId = allocator->AllocStreamId();
+    ASSERT_GE(streamId, 0);
+
+    MOCKER_CPP_VIRTUAL(device, &Device::IsSupportFeature)
+        .stubs()
+        .with(eq(RtOptionalFeatureType::RT_FEATURE_SUPPORT_RUNTIME_ALLOC_STREAMID_AND_MODELID))
+        .will(returnValue(true));
+    MOCKER_CPP_VIRTUAL(device, &Device::CheckFeatureSupport)
+        .stubs()
+        .with(eq(TS_FEATURE_SUPPORT_ACLGRAPH_DECOUPLING))
+        .will(returnValue(true));
+    MOCKER_CPP_VIRTUAL(device, &Device::GetResourceIdAllocator).stubs().will(returnValue(allocator.get()));
+
+    Stream stream(device, 0U);
+    stream.streamId_ = streamId;
+    stream.SetSoftWareSqEnable();
+    stream.SetIdAllocByRuntimeFlag(true);
+    stream.FreeStreamId();
+
+    EXPECT_EQ(allocator->AllocStreamId(), streamId);
+    stream.streamId_ = -1;
+    stream.device_ = nullptr;
+    GlobalMockObject::verify();
+    GlobalMockObject::reset();
+    runtime->DeviceRelease(device);
+}
+
+TEST_F(StreamTest, FreeStreamIdPreservesDriverManagedRelease)
+{
+    Runtime* const runtime = static_cast<Runtime*>(Runtime::Instance());
+    Device* const device = runtime->DeviceRetain(0U, 0U);
+    ASSERT_NE(device, nullptr);
+    std::unique_ptr<ResourceIdAllocator> allocator(CreateResourceIdAllocator());
+    ASSERT_NE(allocator, nullptr);
+    ASSERT_EQ(allocator->Init(4U, 4U), RT_ERROR_NONE);
+    const int32_t streamId = allocator->AllocStreamId();
+    ASSERT_GE(streamId, 0);
+
+    MOCKER_CPP_VIRTUAL(device, &Device::IsSupportFeature)
+        .stubs()
+        .with(eq(RtOptionalFeatureType::RT_FEATURE_SUPPORT_RUNTIME_ALLOC_STREAMID_AND_MODELID))
+        .will(returnValue(false));
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::StreamIdFree)
+        .expects(once())
+        .with(eq(streamId), eq(device->Id_()), eq(device->DevGetTsId()), eq(0U))
+        .will(returnValue(RT_ERROR_NONE));
+
+    Stream stream(device, 0U);
+    stream.streamId_ = streamId;
+    stream.SetSoftWareSqEnable();
+    stream.FreeStreamId();
+
+    EXPECT_NE(allocator->AllocStreamId(), streamId);
+    stream.streamId_ = -1;
+    stream.device_ = nullptr;
+    GlobalMockObject::verify();
+    GlobalMockObject::reset();
+    runtime->DeviceRelease(device);
+}
+
+TEST_F(StreamTest, FreeStreamIdHandlesNullRuntimeAllocator)
+{
+    Runtime* const runtime = static_cast<Runtime*>(Runtime::Instance());
+    Device* const device = runtime->DeviceRetain(0U, 0U);
+    ASSERT_NE(device, nullptr);
+
+    MOCKER_CPP_VIRTUAL(device, &Device::IsSupportFeature)
+        .stubs()
+        .with(eq(RtOptionalFeatureType::RT_FEATURE_SUPPORT_RUNTIME_ALLOC_STREAMID_AND_MODELID))
+        .will(returnValue(true));
+    MOCKER_CPP_VIRTUAL(device, &Device::CheckFeatureSupport)
+        .stubs()
+        .with(eq(TS_FEATURE_SUPPORT_ACLGRAPH_DECOUPLING))
+        .will(returnValue(true));
+    MOCKER_CPP_VIRTUAL(device, &Device::GetResourceIdAllocator)
+        .stubs()
+        .will(returnValue(static_cast<ResourceIdAllocator*>(nullptr)));
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::StreamIdFree).expects(never());
+
+    Stream stream(device, 0U);
+    stream.streamId_ = 1;
+    stream.SetSoftWareSqEnable();
+    stream.SetIdAllocByRuntimeFlag(true);
+    stream.FreeStreamId();
+
+    stream.streamId_ = -1;
+    stream.device_ = nullptr;
+    GlobalMockObject::verify();
+    GlobalMockObject::reset();
+    runtime->DeviceRelease(device);
 }
 
 TEST_F(StreamTest, CoprocessorStreamSetupStreamIdNoResource)

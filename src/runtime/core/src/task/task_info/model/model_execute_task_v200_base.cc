@@ -35,12 +35,18 @@ static void ConstructDavidSqeForModelExecuteTask(TaskInfo* const taskInfo, void*
     RtDavidStarsFunctionCallSqe& fnCallSqe = davidSqe->fuctionCallSqe;
     fnCallSqe.header.type = RT_DAVID_SQE_TYPE_COND;
     fnCallSqe.kernelCredit = RT_STARS_DEFAULT_KERNEL_CREDIT_DAVID;
-    fnCallSqe.header.postP = RT_STARS_SQE_INT_DIR_TO_TSCPU;
     fnCallSqe.sqeLength = 0U;
     fnCallSqe.csc = 1U;
 
     fnCallSqe.condsSubType = CONDS_SUB_TYPE_MODEL_EXEC;
-    fnCallSqe.reserved0 = static_cast<uint16_t>(modelExecuteTaskInfo->modelId);
+
+    if (modelExecuteTaskInfo->model->IsSupportDecoupling()) {
+        fnCallSqe.header.postP = RT_STARS_SQE_INT_DIR_NO;
+        fnCallSqe.reserved0 = UINT16_MAX;
+    } else {
+        fnCallSqe.header.postP = RT_STARS_SQE_INT_DIR_TO_TSCPU;
+        fnCallSqe.reserved0 = static_cast<uint16_t>(modelExecuteTaskInfo->modelId);
+    }
 
     const uint64_t funcAddr = modelExecuteTaskInfo->model->GetFuncCallSvmMem();
     const uint64_t funcCallSize = static_cast<uint64_t>(modelExecuteTaskInfo->model->GetFuncCallInstrSize());

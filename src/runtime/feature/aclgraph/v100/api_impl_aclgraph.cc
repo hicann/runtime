@@ -19,6 +19,9 @@
 #include "../capture_session.hpp"
 #include "aclgraph_cond_task.h"
 #include "cond_enum_desc.hpp"
+#include "capture_model_enum_desc.hpp"
+#include "kernel_utils.hpp"
+#include "task_enum_desc.hpp"
 
 #define RT_DRV_FAULT_CNT 25U
 #define NULL_STREAM_PTR_RETURN_MSG(STREAM) NULL_PTR_RETURN_MSG((STREAM), RT_ERROR_STREAM_NULL)
@@ -211,6 +214,174 @@ rtError_t ApiImpl::StreamEndTaskGrp(Stream* const stm, TaskGroup** const handle)
     CaptureSession* const captureSession = GetCaptureSession(curCtx);
     NULL_PTR_RETURN_MSG(captureSession, RT_ERROR_CONTEXT_BASE);
     return captureSession->StreamEndTaskGrp(stm, handle);
+}
+
+rtError_t ApiImpl::TaskGetSeqId(rtTask_t task, uint32_t* id)
+{
+    const TaskInfo* const taskInfo = static_cast<const TaskInfo*>(task);
+    const Stream* stm = taskInfo->stream;
+    NULL_PTR_RETURN(stm, RT_ERROR_STREAM_NULL);
+    const Model* mdl = stm->Model_();
+    COND_RETURN_AND_MSG_OUTER(
+        mdl == nullptr, RT_ERROR_MODEL_NULL, ErrorCode::EE1017,
+        "Obtaining the Submission Queue Entry (SQE) ID of a task", "task",
+        RtFmtMsg("The stream (stream_id=%d) to which the task belongs is not bound to a model", stm->Id_()));
+    COND_RETURN_AND_MSG_OUTER(
+        mdl->GetModelType() != RT_MODEL_CAPTURE_MODEL, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1016,
+        "Obtaining the Submission Queue Entry (SQE) ID of a task", "Non ACL Graph mode is not supported");
+    *id = taskInfo->modelSeqId;
+    RT_LOG(RT_LOG_INFO, "Get task sequence id=%u, streamId=%d, taskId=%u.", *id, stm->Id_(), taskInfo->id);
+    return RT_ERROR_NONE;
+}
+
+rtError_t ApiImpl::ModelTaskDisable(rtTask_t task)
+{
+    TaskInfo* const taskInfo = static_cast<TaskInfo*>(task);
+    rtError_t error = CheckCaptureModelForUpdate(taskInfo->stream);
+    COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
+
+    CaptureModel* captureModel = dynamic_cast<CaptureModel*>(taskInfo->stream->Model_());
+    NULL_PTR_RETURN(captureModel, RT_ERROR_MODEL_NULL);
+
+    const std::lock_guard<std::mutex> graphUpdateLock(captureModel->GetGraphUpdateInfo().updateMutex);
+    if (!captureModel->CanUpdate()) {
+        RT_LOG_OUTER_MSG_IMPL(
+            ErrorCode::EE1017, "Checking whether the capture model is updatable", "modelRI",
+            RtFmtMsg(
+                "ModelRI (model_id=%u) is in capture state, status=%s", captureModel->Id_(),
+                CaptureModelStatusToString(captureModel->GetCaptureModelStatus()).c_str()));
+        return RT_ERROR_MODEL_UPDATE_FAILED;
+    }
+    captureModel->SetCaptureModelStatus(RtCaptureModelStatus::UPDATING);
+
+    rtTaskType taskType = RT_TASK_DEFAULT;
+    error = ConvertTaskType(taskInfo, &taskType);
+    ERROR_PROC_RETURN_MSG_INNER(error, captureModel->SetCaptureModelStatus(RtCaptureModelStatus::FAULT);
+                                , "get task type failed, retCode=%#x.", error);
+    const bool isSupportedTaskType = (taskType == RT_TASK_KERNEL) || (taskType == RT_TASK_SIMT_KERNEL) ||
+                                     (taskType == RT_TASK_EVENT_RECORD) || (taskType == RT_TASK_EVENT_WAIT) ||
+                                     (taskType == RT_TASK_EVENT_RESET) || (taskType == RT_TASK_VALUE_WRITE) ||
+                                     (taskType == RT_TASK_VALUE_WAIT);
+    const bool isExternalEventRecord = (taskInfo->type == TS_TASK_TYPE_CAPTURE_RECORD_EXTERNAL);
+    const bool cannotDisable = !isSupportedTaskType || isExternalEventRecord;
+    COND_PROC(cannotDisable, captureModel->SetCaptureModelStatus(RtCaptureModelStatus::FAULT));
+    COND_RETURN_AND_MSG_OUTER(
+        cannotDisable, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Setting the status of a specified task to disabled",
+        "taskType",
+        RtFmtMsg(
+            "Current task type is %s%s and cannot be disabled. Supported task types are "
+            "TASK_KERNEL(1), TASK_SIMT_KERNEL(15), TASK_EVENT_RECORD(2) (excluding external event record), "
+            "TASK_EVENT_WAIT(3), TASK_EVENT_RESET(4), TASK_VALUE_WRITE(5), and TASK_VALUE_WAIT(6)",
+            TaskTypeToString(taskType).c_str(), isExternalEventRecord ? " for external event record" : ""));
+
+    captureModel->InsertGraphUpdateTask(taskInfo);
+    captureModel->ClearShapeInfo(taskInfo->stream->Id_(), GetTaskId(taskInfo));
+    captureModel->ClearTaskExtendInfo(taskInfo->stream->Id_(), GetTaskId(taskInfo));
+    taskInfo->updateFlag = static_cast<uint8_t>(TaskUpdateFlag::RT_TASK_DISABLE);
+    RT_LOG(
+        RT_LOG_INFO, "stream_id=%d, task_id=%hu, task type=" RT_ENUM_LOG_FORMAT("%d"), taskInfo->stream->Id_(),
+        GetTaskId(taskInfo),
+        RT_ENUM_LOG_VALUE(static_cast<int32_t>(taskInfo->type), RT_ENUM_LOG_NAME(taskInfo->typeName)));
+    return RT_ERROR_NONE;
+}
+
+static rtError_t UpdateCachedParamsToTask(const std::set<TaskInfo*>& updateTasks)
+{
+    for (TaskInfo* const taskInfo : updateTasks) {
+        if (taskInfo->updateFlag == static_cast<uint8_t>(TaskUpdateFlag::RT_TASK_DISABLE)) {
+            continue;
+        }
+        TaskUpdateParams& latestParams = taskInfo->updateInfo->latestParams;
+        rtError_t error = RT_ERROR_NONE;
+        switch (latestParams.type) {
+            case RT_TASK_SIMT_KERNEL:
+                // SIMT task params are not applied by model update yet: skip the task so it keeps its loaded
+                // parameters (mirroring the RT_TASK_DISABLE skip); the SIMT header rebuild is not wired up yet
+                RT_LOG(
+                    RT_LOG_INFO,
+                    "skip updating the simt task, stream_id=%d, task_id=%hu, the task keeps its "
+                    "loaded parameters.",
+                    taskInfo->stream->Id_(), taskInfo->id);
+                continue;
+            case RT_TASK_KERNEL:
+                error = UpdateKernelParams(taskInfo, &(latestParams.u.kernelUpdateParams));
+                break;
+            case RT_TASK_VALUE_WRITE:
+                error = UpdateWriteValueTaskParams(taskInfo, &latestParams);
+                break;
+            case RT_TASK_VALUE_WAIT:
+                error = UpdateWaitValueTaskParams(taskInfo, &latestParams);
+                break;
+            default:
+                RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
+                    ErrorCode::EE1003, "Updating the capture model", TaskTypeToString(latestParams.type), "task type",
+                    "TASK_KERNEL(1), TASK_VALUE_WRITE(5), or TASK_VALUE_WAIT(6)");
+                RT_LOG(
+                    RT_LOG_ERROR, "unsupported cached task type, stream_id=%d, task_id=%hu, type=%d.",
+                    taskInfo->stream->Id_(), taskInfo->id, static_cast<int32_t>(latestParams.type));
+                error = RT_ERROR_MODEL_UPDATE_FAILED;
+                break;
+        }
+        ERROR_RETURN(
+            error, "apply cached task params failed, stream_id=%d, task_id=%hu, retCode=%#x.", taskInfo->stream->Id_(),
+            taskInfo->id, error);
+    }
+    return RT_ERROR_NONE;
+}
+
+rtError_t ApiImpl::ModelUpdate(Model* mdl)
+{
+    const Stream* const stm = mdl->StreamList_().back();
+    NULL_PTR_RETURN(stm, RT_ERROR_STREAM_NULL);
+    rtError_t error = CheckCaptureModelSupportSoftwareSq(stm->Device_());
+    COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
+
+    CaptureModel* const captureModel = dynamic_cast<CaptureModel*>(mdl);
+    GraphUpdateInfo& graphUpdateInfo = captureModel->GetGraphUpdateInfo();
+
+    const std::lock_guard<std::mutex> executeLock(captureModel->GetExecutionOrderMutex());
+    const std::lock_guard<std::mutex> graphUpdateLock(graphUpdateInfo.updateMutex);
+    if (captureModel->GetCaptureModelStatus() == RtCaptureModelStatus::READY) {
+        return RT_ERROR_NONE;
+    }
+
+    if (captureModel->GetCaptureModelStatus() != RtCaptureModelStatus::UPDATING) {
+        captureModel->ClearGraphUpdateTask();
+        captureModel->SetCaptureModelStatus(RtCaptureModelStatus::FAULT);
+        RT_LOG_OUTER_MSG_IMPL(
+            ErrorCode::EE1016, "Model update",
+            RtFmtMsg(
+                "The model (model_id=%u) is not in the updating state. "
+                "Ensure the model has successfully finished capturing and has tasks to update",
+                captureModel->Id_()));
+        return RT_ERROR_MODEL_UPDATE_FAILED;
+    }
+
+    // 只支持静态更新（模型未执行），模型正在执行报错。
+    const bool isRunning = captureModel->IsCaptureModelRunningAfterPoll();
+    if (isRunning) {
+        RT_LOG_OUTER_MSG_IMPL(
+            ErrorCode::EE1017, "Checking whether the capture model is updatable", "modelRI",
+            RtFmtMsg("ModelRI (model_id=%u) is in running", captureModel->Id_()));
+        captureModel->ClearGraphUpdateTask();
+        captureModel->SetCaptureModelStatus(RtCaptureModelStatus::FAULT);
+        return RT_ERROR_MODEL_UPDATE_FAILED;
+    }
+
+    error = UpdateCachedParamsToTask(graphUpdateInfo.updateTask);
+    captureModel->ClearGraphUpdateTask();
+    if (error != RT_ERROR_NONE) {
+        captureModel->SetCaptureModelStatus(RtCaptureModelStatus::FAULT);
+        return error;
+    }
+
+    error = captureModel->Update();
+    if (error != RT_ERROR_NONE) {
+        captureModel->SetCaptureModelStatus(RtCaptureModelStatus::FAULT);
+    } else {
+        captureModel->SetCaptureModelStatus(RtCaptureModelStatus::READY);
+    }
+    return error;
 }
 
 rtError_t ApiImpl::ModelCondHandleCreate(

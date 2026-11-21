@@ -40,6 +40,11 @@ constexpr uint8_t GetDavidHeadUpdateFlag(const uint64_t allocTimes)
 inline void UpdateDavidSqeHeadUpdate(const TaskInfo* const taskInfo, void* const sqe)
 {
     rtDavidSqe_t* const davidSqe = static_cast<rtDavidSqe_t*>(sqe);
+    if (taskInfo->stream->IsSoftwareSqEnable()) {
+        davidSqe->commonSqe.sqeHeader.headUpdate = 0U;
+        return;
+    }
+
     if (Runtime::Instance()->GetConnectUbFlag() && (davidSqe->commonSqe.sqeHeader.headUpdate == 0U)) {
         uint64_t allocTimes = taskInfo->id;
         if (taskInfo->stream->taskResMang_ != nullptr) {

@@ -29,6 +29,7 @@
 #include "task_recycle.hpp"
 #include "engine.hpp"
 #include "task_res_da.hpp"
+#include "cq_adapter.hpp"
 
 namespace cce {
 namespace runtime {
@@ -115,22 +116,22 @@ static rtError_t SyncTaskProcCqReport(
 {
     Device* dev = stm->Device_();
     const uint32_t streamId = static_cast<uint32_t>(stm->Id_());
-    Driver* const devDrv = dev->Driver_();
     uint32_t cnt = 0U;
     rtCqReport_t logicReport = {};
     int32_t irqWait = RT_REPORT_TIMEOUT_TIME; // default 5000ms
     if (unlikely(remainTime > 0)) {
         irqWait = remainTime >= RT_REPORT_TIMEOUT_TIME ? RT_REPORT_TIMEOUT_TIME : remainTime;
     }
-    LogicCqWaitInfo cqWaitInfo = {};
+    CqWaitInfo cqWaitInfo = {};
     cqWaitInfo.isFastCq = false;
+    cqWaitInfo.isLogicCq = (stm->GetLogicalCqId() != MAX_UINT32_NUM) ? true : false;
     cqWaitInfo.devId = dev->Id_();
     cqWaitInfo.tsId = dev->DevGetTsId();
-    cqWaitInfo.cqId = stm->GetLogicalCqId();
+    cqWaitInfo.cqId = (stm->GetLogicalCqId() != MAX_UINT32_NUM) ? stm->GetLogicalCqId() : stm->GetCqId();
     cqWaitInfo.streamId = streamId; // for camodel
     cqWaitInfo.taskId = MAX_UINT32_NUM;
     cqWaitInfo.timeout = irqWait;
-    const rtError_t error = devDrv->LogicCqReportV2(cqWaitInfo, RtPtrToPtr<uint8_t*>(&logicReport), 1U, cnt);
+    const rtError_t error = RtCqRecv(cqWaitInfo, &logicReport, 1U, cnt, dev);
     ReportTimeoutProc(error, rptTimeoutCnt, stm, taskResPos, isFinished);
     if (timeout > 0) {
         mmTimespec endTimeSpec = mmGetTickCount();

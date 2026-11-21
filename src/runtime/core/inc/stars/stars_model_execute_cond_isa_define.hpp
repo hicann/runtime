@@ -178,6 +178,27 @@ struct RtStarsModelExeExeEndInstr {
     RtStarsCondOpNop nop;
 };
 
+struct RtStarsModelExeAddTimes {
+    union {
+        struct {
+            RtStarsCondOpLoadImm loadExecTimesAddr;
+            RtStarsCondOpImm addi;
+            RtStarsCondOpLHWI lhwi;
+            RtStarsCondOpLLWI llwi;
+            RtStarsCondOpStore sd;
+        } instrs;
+        struct {
+            RtStarsCondOpNop nop0;
+            RtStarsCondOpNop nop1;
+            RtStarsCondOpNop nop2;
+            RtStarsCondOpNop nop3;
+            RtStarsCondOpNop nop4;
+            RtStarsCondOpNop nop5;
+            RtStarsCondOpNop nop6;
+        } nops;
+    } u;
+};
+
 // model execute func call
 struct RtStarsModelExeFuncCall {
     RtStarsModelExeScanSq scanSq;
@@ -189,6 +210,7 @@ struct RtStarsModelExeFuncCall {
     RtStarsModelExeCheckSqErrInstr checkSqDisableErrInstr;
     RtStarsModelExeCheckSqErrInstr checkSqHeadTailErrInstr;
     RtStarsModelExeExeErrInstr errInstr;
+    RtStarsModelExeAddTimes addModelExecTimes;
     RtStarsModelExeExeEndInstr endInstr;
 };
 
@@ -202,6 +224,7 @@ struct rtStarsModelExeFuncCallPara_t {
     uint64_t sqFsmSelBasAddr;
     uint64_t sqVirtualAddr;
     uint64_t dfxAddr;
+    uint64_t modelExecTimesAddr;
     uint16_t sqHeadOffset;
     uint16_t sqTailOffset;
     uint64_t deltaOffset;

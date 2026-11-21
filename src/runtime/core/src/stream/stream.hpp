@@ -246,6 +246,7 @@ public:
     virtual rtError_t SqCqUpdate();
 
     virtual rtError_t ReAllocStreamId();
+    virtual rtError_t AllocStreamId();
     rtError_t ReBuildDriverStreamResource();
 
     virtual rtError_t Restore();
@@ -574,7 +575,7 @@ public:
 
     rtError_t AllocExecutedTimesSvm();
     rtError_t FreeExecutedTimesSvm();
-    uint16_t* GetExecutedTimesSvm(void) const { return executedTimesSvm_; }
+    uint16_t* GetExecutedTimesSvm(void);
     uint64_t GetSqRegVirtualAddr(void) const { return sqRegVirtualAddr_; }
     rtError_t SetSqRegVirtualAddrToDevice(uint64_t sqRegVirtualAddr) const;
 
@@ -880,7 +881,7 @@ public:
     void PushbackTilingTblAddr(void* addr) { devTilingTblAddr.push_back(addr); }
     rtError_t ModelTaskUpdate(
         const Stream* desStm, uint32_t desTaskId, void* devCopyMem, uint32_t tilingTabLen, rtMdlTaskUpdateInfo_t* para);
-    void FreeStreamId() const;
+    void FreeStreamId();
     bool GetForceRecycleFlag(bool flag) const;
     rtError_t CheckGroup();
     virtual void StarsShowPublicQueueDfxInfo(void) {}
@@ -976,6 +977,10 @@ public:
     void* GetArgHandle() const { return argsHandle_; }
 
     void SetStreamStatus(StreamStatus status) { streamStatus_ = status; }
+
+    bool IsIdAllocByRuntime() const { return isIdAllocByRuntime_; }
+
+    void SetIdAllocByRuntimeFlag(bool flag) { isIdAllocByRuntime_ = flag; }
 
     StreamStatus GetStreamStatus() const { return streamStatus_; }
     rtError_t StreamGetTasks(void** tasks, uint32_t* numTasks);
@@ -1117,6 +1122,8 @@ private:
     std::mutex errorMsgLock_;
     uint32_t earlyRecycleTaskHead_;
     uint16_t* executedTimesSvm_; // Initialized to 0xFFFF, increased before every ActiveStream and ModelExecute
+    bool isPoolMemForExecutedTimesSvm_{false}; // Address is the device SQ execution counter base plus the sqId_ offset.
+    bool isIdAllocByRuntime_{false};
     std::map<uint32_t, std::list<HostTaskBase*>> hostTaskPendingList_;
     Atomic<uint16_t> taskIdFlipNum_;
     bool needFastcqFlag_;

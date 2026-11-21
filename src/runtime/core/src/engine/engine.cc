@@ -726,7 +726,7 @@ void Engine::SetReportSimuFlag(const rtTsReport_t& taskReport) const
      * so it's used as a flag of Simulate report
      */
     cqe->evt = 1U;
-    cqe->place_hold = 1U;
+    cqe->placeHolder = 1U;
 }
 
 bool Engine::CheckReportSimuFlag(const rtTsReport_t& taskReport) const
@@ -735,7 +735,7 @@ bool Engine::CheckReportSimuFlag(const rtTsReport_t& taskReport) const
         return false;
     }
     rtStarsCqe_t* const cqe = taskReport.msgBuf.starsCqe;
-    if ((cqe->evt == 1U) && (cqe->place_hold == 1U)) {
+    if ((cqe->evt == 1U) && (cqe->placeHolder == 1U)) {
         return true;
     }
     return false;
