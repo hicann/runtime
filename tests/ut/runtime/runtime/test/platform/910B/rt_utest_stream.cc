@@ -17,6 +17,7 @@
 
 #include "driver/ascend_hal.h"
 #include "runtime/rt.h"
+#include "runtime/rts/rts_stream.h"
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 #define private public
@@ -35,10 +36,10 @@
 #include "raw_device.hpp"
 #include "task_info.hpp"
 #include "async_hwts_engine.hpp"
+#include "context.hpp"
 #undef private
 #undef protected
 #include "ffts_task.h"
-#include "context.hpp"
 #include "securec.h"
 #include "api.hpp"
 #include "osal.hpp"
@@ -51,6 +52,7 @@
 #include "rt_unwrap.h"
 #include "thread_local_container.hpp"
 #include "capture_adapt.hpp"
+#include "ctrl_sq.hpp"
 #include "memory_task.h"
 #include "task.hpp"
 using namespace testing;
@@ -2455,4 +2457,210 @@ TEST_F(CloudV2StreamTest, ReBuildDriverStreamResource_UnassignedLogicCqSkipsRebi
     stream->device_ = nullptr;
     delete stream;
     rtInstance->DeviceRelease(device);
+}
+
+namespace {
+rtError_t ClearSyntheticTasks(Stream* stream, uint64_t timeout)
+{
+    (void)timeout;
+    stream->ResetStreamConstruct();
+    return RT_ERROR_NONE;
+}
+
+} // namespace
+
+class StreamStopTest : public testing::Test {
+protected:
+    void SetUp() override
+    {
+        hardwareSocVersion_ = GlobalContainer::GetHardwareSocVersion();
+        GlobalContainer::SetHardwareSocVersion("Ascend910B1");
+        ASSERT_EQ(rtSetDevice(0), ACL_RT_SUCCESS);
+        ASSERT_EQ(rtStreamCreate(&handle_, 0), ACL_RT_SUCCESS);
+        stream_ = rt_ut::UnwrapOrNull<Stream>(handle_);
+        ASSERT_NE(stream_, nullptr);
+        // Synthetic SQ progress must not race a real worker through mockcpp's driver hooks.
+        auto* engine = dynamic_cast<StarsEngine*>(static_cast<RawDevice*>(stream_->Device_())->Engine_());
+        ASSERT_NE(engine, nullptr);
+        engine->DestroyRecycleThread();
+        MOCKER_CPP_VIRTUAL(stream_->Device_(), &Device::WakeUpRecycleThread).stubs();
+    }
+
+    void TearDown() override
+    {
+        GlobalMockObject::verify();
+        if (stream_ != nullptr) {
+            // These tests use synthetic pending counts, without real device tasks.
+            stream_->pendingNum_.Set(0U);
+            stream_->SetAbortStatus(RT_ERROR_NONE);
+            stream_->SetBeingAbortedFlag(false);
+            stream_->SetStopped(false);
+            EXPECT_EQ(rtStreamDestroy(handle_), ACL_RT_SUCCESS);
+        }
+        EXPECT_EQ(rtDeviceReset(0), ACL_RT_SUCCESS);
+        GlobalContainer::SetHardwareSocVersion(hardwareSocVersion_);
+    }
+
+    void Stop()
+    {
+        MOCKER_CPP_VIRTUAL(stream_->Device_(), &Device::CheckFeatureSupport).stubs().will(returnValue(true));
+        ASSERT_TRUE(stream_->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ));
+        MOCKER_CPP(&CtrlSQ::SendStreamClearMsg).stubs().will(returnValue(RT_ERROR_NONE));
+        ASSERT_EQ(rtsStreamStop(handle_), ACL_RT_SUCCESS);
+        ASSERT_TRUE(stream_->IsStopped());
+    }
+
+    void PrepareIncompleteTask(uint16_t sqHead = 0U, rtError_t queryError = RT_ERROR_NONE)
+    {
+        stream_->pendingNum_.Set(1U);
+        stream_->taskPosHead_.Set(0U);
+        stream_->taskPosTail_.Set(1U);
+        stream_->SetExecuteEndTaskId(MAX_UINT16_NUM);
+        stream_->SetLastTaskId(1U);
+        stream_->posToTaskIdMap_[0] = 1U;
+        stream_->posToTaskIdMap_[1] = MAX_UINT16_NUM;
+        MOCKER_CPP_VIRTUAL(stream_->Device_()->Driver_(), &Driver::GetSqHead)
+            .stubs()
+            .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(sqHead))
+            .will(returnValue(queryError));
+    }
+
+    std::string hardwareSocVersion_;
+    rtStream_t handle_{nullptr};
+    Stream* stream_{nullptr};
+};
+
+TEST_F(StreamStopTest, LegacyClearUpdatesStopOnlyAfterSuccessfulControlCompletion)
+{
+    MOCKER_CPP_VIRTUAL(stream_->Device_(), &Device::CheckFeatureSupport).stubs().will(returnValue(true));
+    MOCKER_CPP(&CtrlSQ::SendStreamClearMsg)
+        .stubs()
+        .will(returnValue(RT_ERROR_DRV_ERR))
+        .then(returnValue(RT_ERROR_NONE))
+        .then(returnValue(RT_ERROR_DRV_ERR))
+        .then(returnValue(RT_ERROR_NONE));
+    EXPECT_NE(rtsStreamStop(handle_), ACL_RT_SUCCESS);
+    EXPECT_FALSE(stream_->IsStopped());
+    EXPECT_EQ(rtsStreamStop(handle_), ACL_RT_SUCCESS);
+    EXPECT_TRUE(stream_->IsStopped());
+    EXPECT_NE(rtStreamClear(handle_, RT_STREAM_CLEAR), ACL_RT_SUCCESS);
+    EXPECT_TRUE(stream_->IsStopped());
+    EXPECT_EQ(rtStreamClear(handle_, RT_STREAM_CLEAR), ACL_RT_SUCCESS);
+    EXPECT_FALSE(stream_->IsStopped());
+}
+
+TEST_F(StreamStopTest, CompleteAbortClearsStoppedStateAndAllowsNewWork)
+{
+    Stop();
+    PrepareIncompleteTask();
+    MOCKER_CPP(&Context::IsStreamAbortSupported).stubs().will(returnValue(true));
+    MOCKER_CPP_VIRTUAL(stream_, &Stream::CleanSq).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(stream_, &Stream::TaskKill).stubs().will(returnValue(RT_ERROR_NONE));
+    uint32_t status = APP_ABORT_TERMINATE_FINISH;
+    MOCKER_CPP_VIRTUAL(stream_, &Stream::QuerySq)
+        .stubs()
+        .with(mockcpp::any(), outBound(status))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(stream_, &Stream::ResClear).stubs().will(invoke(ClearSyntheticTasks));
+    MOCKER_CPP(&StreamSqCqManage::UpdateStreamSqCq).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(stream_->Device_()->Driver_(), &Driver::GetSqRegVirtualAddrBySqid)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&Stream::SetSqRegVirtualAddrToDevice).stubs().will(returnValue(RT_ERROR_NONE));
+    EXPECT_EQ(rtStreamAbort(handle_), ACL_RT_SUCCESS);
+    EXPECT_FALSE(stream_->IsStopped());
+    EXPECT_EQ(stream_->GetPendingNum(), 0U);
+    // New work is allowed to wait normally after the old stopped queue has been recovered.
+    stream_->pendingNum_.Set(1U);
+    MOCKER_CPP(&Stream::StarsWaitForTask).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&Stream::SynchronizeImpl).stubs().will(returnValue(RT_ERROR_NONE));
+    EXPECT_EQ(rtStreamSynchronize(handle_), ACL_RT_SUCCESS);
+    stream_->pendingNum_.Set(0U);
+}
+
+TEST_F(StreamStopTest, FailedQueueRecoveryKeepsAbortAfterConstructReset)
+{
+    Stop();
+    PrepareIncompleteTask();
+    MOCKER_CPP(&Context::IsStreamAbortSupported).stubs().will(returnValue(true));
+    MOCKER_CPP_VIRTUAL(stream_, &Stream::CleanSq).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(stream_, &Stream::TaskKill).stubs().will(returnValue(RT_ERROR_NONE));
+    uint32_t status = APP_ABORT_TERMINATE_FINISH;
+    MOCKER_CPP_VIRTUAL(stream_, &Stream::QuerySq)
+        .stubs()
+        .with(mockcpp::any(), outBound(status))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(stream_, &Stream::ResClear).stubs().will(invoke(ClearSyntheticTasks));
+    MOCKER_CPP_VIRTUAL(stream_, &Stream::SqCqUpdate).stubs().will(returnValue(RT_ERROR_DRV_ERR));
+    EXPECT_NE(rtStreamAbort(handle_), ACL_RT_SUCCESS);
+    EXPECT_FALSE(stream_->IsStopped());
+    EXPECT_EQ(stream_->GetPendingNum(), 0U);
+    EXPECT_EQ(stream_->GetAbortStatus(), RT_ERROR_STREAM_ABORT);
+}
+
+TEST_F(StreamStopTest, SeparateSyncChecksStopInPolling)
+{
+    Stop();
+    PrepareIncompleteTask();
+    Device* const device = stream_->Device_();
+    const bool previousRecycleThread = device->GetIsChipSupportRecycleThread();
+    device->SetIsChipSupportRecycleThread(true);
+    const ScopeGuard restoreRecycleMode(
+        [device, previousRecycleThread]() { device->SetIsChipSupportRecycleThread(previousRecycleThread); });
+    ASSERT_TRUE(stream_->IsSeparateSendAndRecycle());
+    EXPECT_EQ(rtStreamSynchronizeWithTimeout(handle_, 100), ACL_ERROR_RT_STREAM_STOPPED);
+    for (const uint32_t mode : {RT_DEVICE_SCHEDULE_AUTO, RT_DEVICE_SCHEDULE_SPIN, RT_DEVICE_SCHEDULE_YIELD}) {
+        EXPECT_EQ(stream_->Synchronize(false, 100, mode), RT_ERROR_STREAM_STOPPED);
+    }
+}
+
+TEST_F(StreamStopTest, PollingChecksStopBeforeFinishedTaskId)
+{
+    Stop();
+    PrepareIncompleteTask(1U);
+    stream_->taskPosTail_.Set(2U);
+    stream_->posToTaskIdMap_[1] = 2U;
+    EXPECT_EQ(stream_->SyncWaitPolling(1U, mmGetTickCount(), 100, RT_DEVICE_SCHEDULE_AUTO), RT_ERROR_STREAM_STOPPED);
+}
+
+TEST_F(StreamStopTest, PollingChecksStopRegardlessOfRecycleFlag)
+{
+    Stop();
+    PrepareIncompleteTask();
+    stream_->isForceRecycle_ = true;
+    EXPECT_EQ(stream_->SyncWaitPolling(1U, mmGetTickCount(), 100, RT_DEVICE_SCHEDULE_AUTO), RT_ERROR_STREAM_STOPPED);
+    stream_->isForceRecycle_ = false;
+}
+
+TEST_F(StreamStopTest, DestroyMapsInnermostStoppedErrorToPublicError)
+{
+    // Exercise error mapping from TearDown through the ordinary destroy API.
+    ASSERT_FALSE(stream_->IsStopped());
+    ASSERT_EQ(stream_->GetPendingNum(), 0U);
+    const bool willDelete = stream_->Context_()->WillStreamBeDeletedOnTearDown(stream_);
+    MOCKER_CPP_VIRTUAL(stream_, &Stream::TearDown)
+        .expects(once())
+        .with(eq(false), eq(false))
+        .will(returnValue(RT_ERROR_STREAM_STOPPED));
+
+    const rtError_t error = rtStreamDestroy(handle_);
+    if (willDelete) {
+        // Follow the existing platform teardown policy when cleaning up the fixture.
+        stream_ = nullptr;
+        handle_ = nullptr;
+    }
+    RecordProperty("destroy_return_code", error);
+    EXPECT_EQ(error, ACL_ERROR_RT_STREAM_STOPPED);
+    EXPECT_EQ(error, 107046);
+}
+
+TEST_F(StreamStopTest, TearDownLoopRejectsStoppedUnfinishedTasks)
+{
+    Stop();
+    PrepareIncompleteTask();
+    MOCKER_CPP(&Stream::SubmitStreamRecycle).expects(once()).will(returnValue(RT_ERROR_NONE));
+    EXPECT_EQ(stream_->TearDown(false, false), RT_ERROR_STREAM_STOPPED);
+    EXPECT_EQ(stream_->GetPendingNum(), 1U);
+    stream_->StreamSyncLock();
+    stream_->StreamSyncUnLock();
 }

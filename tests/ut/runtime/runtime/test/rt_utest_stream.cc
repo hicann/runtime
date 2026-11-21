@@ -2412,8 +2412,10 @@ TEST_F(StreamTest, ResetStreamConstructRestoresFailureModeAfterAbort)
         stream.SetMode(mode);
         stream.SetFailureMode(ABORT_ON_FAILURE);
         EXPECT_EQ(stream.GetFailureMode(), ABORT_ON_FAILURE);
+        stream.SetStopped(true);
         stream.ResetStreamConstruct();
         EXPECT_EQ(stream.GetFailureMode(), mode);
+        EXPECT_FALSE(stream.IsStopped());
     }
     stream.device_ = nullptr;
 }

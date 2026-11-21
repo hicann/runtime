@@ -1474,6 +1474,18 @@ TEST_F(UTEST_ACL_Common, context)
     EXPECT_NE(ret, ACL_SUCCESS);
 }
 
+TEST_F(UTEST_ACL_Common, DestroyStreamPreservesStoppedError)
+{
+    const aclrtStream stream = reinterpret_cast<aclrtStream>(0x01);
+    EXPECT_CALL(MockFunctionTest::aclStubInstance(), rtStreamDestroy(stream))
+        .WillOnce(Return(ACL_ERROR_RT_STREAM_STOPPED));
+
+    const aclError error = aclrtDestroyStream(stream);
+    RecordProperty("destroy_return_code", error);
+    EXPECT_EQ(error, ACL_ERROR_RT_STREAM_STOPPED);
+    EXPECT_EQ(error, 107046);
+}
+
 TEST_F(UTEST_ACL_Common, stream)
 {
     // test aclrtCreateStream

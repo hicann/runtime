@@ -232,6 +232,9 @@ public:
 
     virtual rtError_t GetAbortStatus() const;
 
+    void SetStopped(bool stopped) { isStopped_.store(stopped); }
+    bool IsStopped() const { return isStopped_.load(); }
+
     virtual void SetBeingAbortedFlag(bool abortFlag);
 
     virtual bool GetBeingAbortedFlag();
@@ -1008,6 +1011,8 @@ private:
 
     void ConstructTraceEventFromTask(TaskInfo* const task, const uint32_t flags, TraceEvent& record) const;
 
+    // Set after Stop succeeds; clear only after the queue has been recovered.
+    std::atomic<bool> isStopped_{false};
     rtInnerObject handle_{};
     // submit create stream task
     rtError_t SubmitCreateStreamTask();

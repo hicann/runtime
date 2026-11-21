@@ -1413,6 +1413,7 @@ aclError aclrtStreamStop(aclrtStream stream)
 
 - 不支持使用[aclmdlRIBindStream](15_model_running_instance_management.md#aclmdlRIBindStream)接口来绑定模型运行实例的Stream。
 - 不支持默认Stream（即stream参数传入NULL）。
+- 本接口成功返回后，若Stream仍有未完成或待清理的任务，请在同步或销毁前调用[aclrtStreamAbort](#aclrtStreamAbort)清理任务并恢复Stream。满足[aclrtDeviceTaskAbort](13_exception_handling.md#aclrtDeviceTaskAbort)接口使用约束时，也可调用该接口进行设备级清理恢复，该操作会影响指定Device上当前进程的任务。普通销毁在回收等待中检测到停止流仍有待清理任务时，返回`ACL_ERROR_RT_STREAM_STOPPED`（107046）。
 
 <br>
 <br>

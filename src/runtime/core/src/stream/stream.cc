@@ -1382,6 +1382,7 @@ rtError_t Stream::StreamStop()
     // send message to TS to abort sq
     ret = TaskAbortAndQueryStatus(OP_STOP_STREAM);
     COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "TaskStop retCode=%#x.", static_cast<uint32_t>(ret));
+    SetStopped(true);
     RT_LOG(RT_LOG_INFO, "Finish StreamStop, stream_id=%d, sq_id=%u, cq_id=%u", streamId_, sqId_, cqId_);
 
     return RT_ERROR_NONE;
@@ -1423,6 +1424,7 @@ rtError_t Stream::StreamAbort()
     RT_LOG(RT_LOG_INFO, "After sq cp update, stream_id=%d, sq_id=%u, cq_id=%u", streamId_, sqId_, cqId_);
 
     // 6.restore stream normal state
+    SetStopped(false);
     SetAbortStatus(RT_ERROR_NONE);
     RT_LOG(RT_LOG_INFO, "Finish StreamAbort, stream_id=%d, sq_id=%u, cq_id=%u", streamId_, sqId_, cqId_);
 
@@ -1691,6 +1693,12 @@ rtError_t Stream::TearDown(const bool terminal, bool flag)
         // Stream may be destroyed without sync, so MT task can get abort_failure status
         isForceRecycle = GetForceRecycleFlag(flag);
         isForceRecycle_ = isForceRecycle;
+        COND_RETURN_AND_MSG_OUTER(
+            IsStopped() && !isForceRecycle, RT_ERROR_STREAM_STOPPED, ErrorCode::EE1018, "Destroying a stream",
+            RtFmtMsg(
+                "Stream (stream_id=%d) is stopped and has unfinished tasks. Call aclrtStreamAbort to clean up tasks "
+                "and restore the stream before destroying it",
+                stmId));
         if (isForceRecycle && (dev->GetCtrlStream(nullptr) != nullptr)) {
             // ctrl sq is fast, normal task may be handled after ctrl task
             // so try to send more force recycle task.
@@ -2234,6 +2242,12 @@ rtError_t Stream::SyncWaitPolling(const uint32_t taskId, const mmTimespec& begin
             }
             syncTimes = syncTimes > FAST_SYNC_TIMES ? syncTimes : syncTimes + 1;
         }
+        COND_RETURN_AND_MSG_OUTER(
+            IsStopped(), RT_ERROR_STREAM_STOPPED, ErrorCode::EE1018, "Synchronizing a stream",
+            RtFmtMsg(
+                "Stream (stream_id=%d) is stopped and has unfinished tasks (task_id=%u, sqHead=%hu, sqTail=%u). "
+                "Call aclrtStreamAbort to clean up tasks and restore the stream before synchronizing it",
+                Id_(), taskId, sqHead, posTail));
         COND_PROC((finishedId == MAX_UINT16_NUM), continue);
         if (IsTaskExcuted(finishedId, taskId)) {
             return RT_ERROR_NONE;
@@ -5058,6 +5072,7 @@ void Stream::ResetStreamConstruct()
     ClearErrorMessage();
     taskIdToTaskTagMap_.clear();
     latestConcernedTaskId.Set(MAX_UINT16_NUM);
+    SetStopped(false);
     SetStreamStatus(StreamStatus::NORMAL);
     if (taskResMang_ != nullptr) {
         taskResMang_->ResetTaskRes();

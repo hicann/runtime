@@ -131,6 +131,7 @@ void ErrorcodeManage::InitRtErrCodeMap()
     rtErrMap_[RT_ERROR_STREAM_FULL] = {ACL_ERROR_RT_STREAM_TASK_FULL, "stream task buffer full"};
     rtErrMap_[RT_ERROR_STREAM_EMPTY] = {ACL_ERROR_RT_STREAM_TASK_EMPTY, "stream task buffer empty"};
     rtErrMap_[RT_ERROR_STREAM_NOT_COMPLETE] = {ACL_ERROR_RT_STREAM_NOT_COMPLETE, "stream not complete"};
+    rtErrMap_[RT_ERROR_STREAM_STOPPED] = {ACL_ERROR_RT_STREAM_STOPPED, "stream is stopped"};
     rtErrMap_[RT_ERROR_STREAM_SYNC] = {ACL_ERROR_RT_INTERNAL_ERROR, "stream sync error"};
     rtErrMap_[RT_ERROR_STREAM_NO_CB_REG] = {ACL_ERROR_RT_STREAM_NO_CB_REG, "stream not registered"};
     rtErrMap_[RT_ERROR_STREAM_DUPLICATE] = {ACL_ERROR_RT_INTERNAL_ERROR, "stream id map repeatedly"};

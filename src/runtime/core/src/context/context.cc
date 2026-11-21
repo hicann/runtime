@@ -1467,6 +1467,7 @@ rtError_t Context::StreamsUpdate(void)
         }
         error = stream->SqCqUpdate();
         ERROR_RETURN(error, "SQ/CQ update failed, stream_id=%d, retCode=%#x.", stream->Id_(), error);
+        stream->SetStopped(false);
     }
     if (isPrimary_ && device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DEVICE_CTRL_SQ)) {
         error = GetCtrlSQStream()->SqCqUpdate();
@@ -2185,6 +2186,7 @@ rtError_t Context::StreamAbort(Stream* const stm)
         RT_LOG_INFO, "After sq cp update, stream_id=%d, sq_id=%u, cq_id=%u", stm->Id_(), stm->GetSqId(),
         stm->GetCqId());
     // restore stream  normal state;
+    stm->SetStopped(false);
     stm->SetAbortStatus(RT_ERROR_NONE);
     RT_LOG(
         RT_LOG_INFO, "Finish StreamAbort, stream_id=%d, sq_id=%u, cq_id=%u", stm->Id_(), stm->GetSqId(),

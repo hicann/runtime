@@ -83,24 +83,29 @@ void ReportErrMsg(std::string errorCode, const std::vector<char>& valueString)
 #endif
 }
 
-#define RT_PARAMS_TO_VEC(...) \
-    {                         \
-        __VA_ARGS__           \
-    }
+namespace {
+template <typename... Args>
+std::vector<std::string> MakeParamNames(Args... args)
+{
+    std::vector<std::string> names;
+    names.reserve(sizeof...(Args));
+    (names.emplace_back(args), ...);
+    return names;
+}
+} // namespace
 
 std::vector<std::string> GetParamNames(ErrorCode code)
 {
 #undef RT_GET_PARAMS
 #define RT_GET_PARAMS(code, name, params, msg, level) \
     case ErrorCode::code:                             \
-        return RT_PARAMS_TO_VEC params;
+        return MakeParamNames params;
     switch (code) {
         RUNTIME_ERROR_CODE_TABLE(RT_GET_PARAMS)
         default:
             return {};
     }
 #undef RT_GET_PARAMS
-#undef RT_PARAMS_TO_VEC
 }
 
 namespace {

@@ -46,6 +46,7 @@ rtError_t CtxStreamTaskClean(Context* const ctx)
                 dev->Driver_()->ResetLogicCq(dev->Id_(), dev->DevGetTsId(), stream->GetLogicalCqId(), stream->Flags());
             ERROR_RETURN(error, "ResetLogicCq fail, logicCq_id=%u, retCode=%#x.", stream->GetLogicalCqId(), error);
         }
+        stream->SetStopped(false);
     }
     error = ctx->GetCtrlSQStream()->ResClear();
     COND_RETURN_ERROR((error != RT_ERROR_NONE), error, "ResClear Ctrl stream fail, retCode=%#x.", error);

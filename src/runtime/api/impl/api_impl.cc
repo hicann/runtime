@@ -6238,7 +6238,11 @@ rtError_t ApiImpl::StreamClear(Stream* const stm, rtClearStep_t step)
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         stm, curCtx, RT_ERROR_STREAM_CONTEXT, "Clearing tasks in a stream");
 
-    return curCtx->StreamClear(stm, step);
+    const rtError_t error = curCtx->StreamClear(stm, step);
+    if ((error == RT_ERROR_NONE) && ((step == RT_STREAM_STOP) || (step == RT_STREAM_CLEAR))) {
+        stm->SetStopped(step == RT_STREAM_STOP);
+    }
+    return error;
 }
 
 rtError_t ApiImpl::StreamStop(Stream* const stm) { return StreamClear(stm, RT_STREAM_STOP); }

@@ -611,6 +611,13 @@ rtError_t DavidStream::TearDown(const bool terminal, bool flag)
             MT_STREAM_RECYCLE_TASK, isForceRecycle, stmId);
         StreamSyncLock();
         taskResMang_->GetHeadTail(head, tail);
+        COND_PROC_RETURN_AND_MSG_OUTER(
+            IsStopped() && !isForceRecycle, RT_ERROR_STREAM_STOPPED, ErrorCode::EE1018, StreamSyncUnLock(),
+            "Destroying a stream",
+            RtFmtMsg(
+                "Stream (stream_id=%d) is stopped and has unfinished tasks. Call aclrtStreamAbort to clean up tasks "
+                "and restore the stream before destroying it",
+                stmId));
         RT_LOG(
             RT_LOG_DEBUG, "recycling stream_id=%d, head=%hu, tail=%hu, isForceRecycle=%u.", stmId, head, tail,
             isForceRecycle);
@@ -1183,6 +1190,7 @@ void DavidStream::ResetDavidStreamConstruct()
     ClearErrorMessage();
     latestConcernedTaskId.Set(MAX_UINT16_NUM);
     SetExecuteEndTaskId(static_cast<uint16_t>(MAX_UINT16_NUM));
+    SetStopped(false);
     SetStreamStatus(StreamStatus::NORMAL);
     if (taskResMang_ != nullptr) {
         taskResMang_->ResetTaskRes();

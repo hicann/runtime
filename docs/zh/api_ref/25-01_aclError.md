@@ -151,6 +151,7 @@ typedef int aclError;
 | #define  ACL_ERROR_RT_INVALID_SYMBOL  107043 | 无效的符号。 | 请检查变量名是否在Device代码中声明 |
 | #define  ACL_ERROR_RT_INVALID_DEVICE_FUNCTION  107044 | 无效的核函数符号。 | 请检查核函数是否在Device代码中声明。 |
 | #define  ACL_ERROR_RT_SUB_ACLGRAPH_IS_CAPTURING  107045 | 结束当前Stream捕获时，关联的子图仍处于捕获状态。 | 先调用aclmdlRICaptureEnd接口结束子图捕获，再执行对应的操作。 |
+| #define  ACL_ERROR_RT_STREAM_STOPPED  107046 | Stream处于停止状态。 | 请在同步或销毁前调用[aclrtStreamAbort](06_stream_management.md#aclrtStreamAbort)清理任务并恢复Stream；满足[aclrtDeviceTaskAbort](13_exception_handling.md#aclrtDeviceTaskAbort)接口使用约束时，也可进行设备级清理恢复。 |
 | #define  ACL_ERROR_RT_FEATURE_NOT_SUPPORT  207000 | 特性不支持。 | 您可以获取日志后提交ISSUE。 |
 | #define  ACL_ERROR_RT_MEMORY_ALLOCATION  207001 | 内存申请失败。 | 请检查硬件环境上的存储剩余情况。 |
 | #define  ACL_ERROR_RT_MEMORY_FREE  207002 | 内存释放失败。 | 您可以获取日志后提交ISSUE。 |
