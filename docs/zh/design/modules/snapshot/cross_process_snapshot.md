@@ -70,7 +70,7 @@ SendSocket/ReceiveSocket 循环收发完整报文，处理短读、短写和 EIN
 
 B 使用 `getpwuid_r(geteuid())` 查找系统账号配置的家目录，在 `<home>/.cann_snapshot/<pid>.sock` 监听。家目录和 `.cann_snapshot` 路径允许为符号链接，检查实际打开目录的属主和权限。私有目录权限为 0700，Socket 节点为 0600。A 根据 `/proc/<pid>/status` 的有效 UID 查找 B 的家目录；root 控制普通用户进程时同样使用 B 的家目录。
 
-建联后双方检查内核提供的 `SO_PEERCRED`。B 允许自身有效 UID 或 UID=0；A 校验服务端 UID 和目标 PID。报文不传递可伪造的身份字段。实际打开的目录必须为对应用户所有、类型和权限正确。已有端点冲突时启动失败，不删除已有文件；本进程成功绑定后，退出或后续初始化失败时按绑定路径清理 Socket 文件。fork 子进程不删除父进程的 Socket 文件。
+建联后双方检查内核提供的 `SO_PEERCRED`。B 允许自身有效 UID 或 UID=0；A 校验服务端 UID 和目标 PID。报文不传递可伪造的身份字段。实际打开的目录必须为对应用户所有、类型和权限正确。本进程成功绑定后，退出或后续初始化失败时按绑定路径清理 Socket 文件。fork 子进程不删除父进程的 Socket 文件。
 
 首版支持相同 PID、user、mount 路径视图下的本机调用，不处理跨 namespace 的编号映射，不提供 TCP。无有效/可写家目录、Socket 路径过长、已有不合规目录等情况明确报错。
 

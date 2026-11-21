@@ -1162,10 +1162,8 @@ void TestStopForkAndDisconnect()
     });
     g_service = &service;
     SOCKET_CHECK(service.StartSnapshotService(Runtime::Instance()->ApiSnapshot_()) == 0);
-    SnapshotService duplicate;
-    SOCKET_CHECK(
-        duplicate.StartSnapshotService(Runtime::Instance()->ApiSnapshot_()) !=
-        0); // Never remove the existing endpoint.
+    // Starting the same service twice must not remove its active endpoint.
+    SOCKET_CHECK(service.StartSnapshotService(Runtime::Instance()->ApiSnapshot_()) != 0);
     SOCKET_CHECK(access(Path(getpid()).c_str(), F_OK) == 0);
     std::cout.flush();
     const pid_t child = fork();
@@ -1491,6 +1489,119 @@ protected:
     ApiSnapshot* oldApi_ = nullptr;
     SocketApi api_;
 };
+
+std::string g_socketTestHome;
+
+class SnapshotSocketUnlinkTest : public SnapshotSocketTransportTest, public WithParamInterface<uint32_t> {
+protected:
+    void SetUp() override
+    {
+        SnapshotSocketTransportTest::SetUp();
+        char home[] = "/tmp/rt-snapshot-unlink-XXXXXX";
+        ASSERT_NE(mkdtemp(home), nullptr);
+        g_socketTestHome = home;
+        directory_ = g_socketTestHome + "/.cann_snapshot";
+        ASSERT_EQ(mkdir(directory_.c_str(), 0700U), 0);
+        path_ = directory_ + "/" + std::to_string(getpid()) + ".sock";
+        MOCKER(getpwuid_r)
+            .stubs()
+            .will(invoke(+[](uid_t uid, struct passwd* entry, char*, size_t, struct passwd** found) {
+                entry->pw_uid = uid;
+                entry->pw_dir = const_cast<char*>(g_socketTestHome.c_str());
+                *found = entry;
+                return 0;
+            }));
+    }
+
+    void TearDown() override
+    {
+        (void)unlink(path_.c_str());
+        EXPECT_EQ(rmdir(directory_.c_str()), 0);
+        EXPECT_EQ(rmdir(g_socketTestHome.c_str()), 0);
+        g_socketTestHome.clear();
+        SnapshotSocketTransportTest::TearDown();
+    }
+
+    std::string directory_;
+    std::string path_;
+};
+
+TEST_P(SnapshotSocketUnlinkTest, ReplacesOldNodeAndServesRequestsAtTheOriginalPath)
+{
+    if (GetParam() == 0U) {
+        const int32_t fd = socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0);
+        ASSERT_GE(fd, 0);
+        const ScopeGuard closeSocket([fd] { (void)close(fd); });
+        struct sockaddr_un address = {};
+        address.sun_family = AF_UNIX;
+        ASSERT_EQ(memcpy_s(address.sun_path, sizeof(address.sun_path), path_.c_str(), path_.size() + 1U), EOK);
+        ASSERT_EQ(bind(fd, reinterpret_cast<struct sockaddr*>(&address), sizeof(address)), 0);
+    } else if (GetParam() == 1U) {
+        const int32_t fd = open(path_.c_str(), O_CREAT | O_EXCL | O_WRONLY | O_CLOEXEC, 0600U);
+        ASSERT_GE(fd, 0);
+        ASSERT_EQ(close(fd), 0);
+    } else {
+        ASSERT_EQ(symlink("missing-snapshot-endpoint", path_.c_str()), 0);
+    }
+    const size_t descriptors = CountEntries("/proc/self/fd");
+    SnapshotService service;
+    ASSERT_EQ(service.StartSnapshotService(&api_), RT_ERROR_NONE);
+    struct stat node = {};
+    ASSERT_EQ(lstat(path_.c_str(), &node), 0);
+    EXPECT_TRUE(S_ISSOCK(node.st_mode));
+    EXPECT_EQ(node.st_uid, geteuid());
+    EXPECT_EQ(node.st_mode & 0777U, 0600U);
+    uint32_t value = 99U;
+    EXPECT_EQ(SnapshotSocketCall(getpid(), rtSnapshotOp::GET_STATE, nullptr, value), RT_ERROR_NONE);
+    EXPECT_EQ(value, 0U);
+    service.StopSnapshotService();
+    EXPECT_NE(access(path_.c_str(), F_OK), 0);
+    EXPECT_EQ(CountEntries("/proc/self/fd"), descriptors);
+}
+
+INSTANTIATE_TEST_SUITE_P(StaleSocketFileAndSymlink, SnapshotSocketUnlinkTest, Values(0U, 1U, 2U));
+
+TEST_F(SnapshotSocketUnlinkTest, UnlinkFailureStillAttemptsBindAndClosesResources)
+{
+    ASSERT_EQ(mkdir(path_.c_str(), 0700U), 0);
+    const ScopeGuard removeDirectory([this] { (void)rmdir(path_.c_str()); });
+    const size_t descriptors = CountEntries("/proc/self/fd");
+    MOCKER(mmBind).expects(once()).will(invoke(+[](mmSockHandle fd, mmSockAddr* address, mmSocklen_t length) {
+        return bind(fd, reinterpret_cast<struct sockaddr*>(address), length);
+    }));
+    SnapshotService service;
+    EXPECT_EQ(service.StartSnapshotService(&api_), RT_ERROR_OS_HANDLE);
+    struct stat node = {};
+    ASSERT_EQ(lstat(path_.c_str(), &node), 0);
+    EXPECT_TRUE(S_ISDIR(node.st_mode));
+    EXPECT_EQ(CountEntries("/proc/self/fd"), descriptors);
+}
+
+TEST_F(SnapshotSocketUnlinkTest, MissingPathSkipsUnlinkAndBindsSuccessfully)
+{
+    const size_t descriptors = CountEntries("/proc/self/fd");
+    MOCKER(unlinkat).expects(never());
+    SnapshotService service;
+    ASSERT_EQ(service.StartSnapshotService(&api_), RT_ERROR_NONE);
+    uint32_t value = 99U;
+    EXPECT_EQ(SnapshotSocketCall(getpid(), rtSnapshotOp::GET_STATE, nullptr, value), RT_ERROR_NONE);
+    EXPECT_EQ(value, 0U);
+    GlobalMockObject::verify();
+    service.StopSnapshotService();
+    EXPECT_NE(access(path_.c_str(), F_OK), 0);
+    EXPECT_EQ(CountEntries("/proc/self/fd"), descriptors);
+}
+
+TEST_F(SnapshotSocketUnlinkTest, ListenFailureRemovesTheRecreatedEndpointAndClosesResources)
+{
+    ASSERT_EQ(symlink("missing-snapshot-endpoint", path_.c_str()), 0);
+    const size_t descriptors = CountEntries("/proc/self/fd");
+    MOCKER(mmListen).expects(once()).will(returnValue(EN_ERROR));
+    SnapshotService service;
+    EXPECT_EQ(service.StartSnapshotService(&api_), RT_ERROR_OS_HANDLE);
+    EXPECT_NE(access(path_.c_str(), F_OK), 0);
+    EXPECT_EQ(CountEntries("/proc/self/fd"), descriptors);
+}
 
 #undef SOCKET_CHECK
 } // namespace

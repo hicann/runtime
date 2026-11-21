@@ -338,6 +338,15 @@ rtError_t SnapshotService::StartSnapshotService(SnapshotRequestHandler* handler)
         RT_LOG(RT_LOG_ERROR, "Create snapshot stop notification failed, errno=%d.", errno);
         return RT_ERROR_OS_HANDLE;
     }
+    // Remove the previous socket file before binding, as other local socket services do.
+    struct stat node = {};
+    if (fstatat(directoryFd_, socketName_.c_str(), &node, AT_SYMLINK_NOFOLLOW) == 0) {
+        RT_LOG(
+            RT_LOG_WARNING, "Snapshot socket path already exists, remove before binding, path=%s.", address.sun_path);
+        if ((unlinkat(directoryFd_, socketName_.c_str(), 0) != 0) && (errno != ENOENT)) {
+            RT_LOG(RT_LOG_WARNING, "Remove snapshot socket failed, path=%s, errno=%d.", address.sun_path, errno);
+        }
+    }
     if (mmBind(listenFd_, reinterpret_cast<mmSockAddr*>(&address), sizeof(address)) != EN_OK) {
         RT_LOG(RT_LOG_ERROR, "Bind snapshot socket failed, errno=%d.", errno);
         return RT_ERROR_OS_HANDLE;
