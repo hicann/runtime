@@ -70,7 +70,10 @@ rtError_t LogicSq::AllocDeviceSqeAddr(const uint32_t additionalSqeNum)
         return RT_ERROR_INVALID_VALUE;
     }
 
-    const uint32_t allocSqeNum = GetSqeNum() + additionalSqeNum;
+    uint32_t allocSqeNum = GetSqeNum() + additionalSqeNum;
+    // 级联或者流刚好下发满的场景。由于最后一个task可能是多sqe，或者stream
+    // active，所以加上32个预留task，总和可能大于32k。
+    allocSqeNum = allocSqeNum > STREAM_SQ_MAX_DEPTH ? STREAM_SQ_MAX_DEPTH : allocSqeNum;
     const uint32_t allocMemSize = allocSqeNum * static_cast<uint32_t>(sizeof(rtStarsSqe_t));
     const uint32_t memOrderType = sqAddrMemoryManage->GetMemOrderTypeByMemSize(allocMemSize);
     const uint32_t memOrderSize = sqAddrMemoryManage->GetMemOrderSizeByMemOrderType(memOrderType);
