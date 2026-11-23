@@ -11,6 +11,7 @@
 #define ADX_MSG_PROTO_H
 #include <cstdint>
 #include <string>
+#include "common_utils.h"
 #include "ide_tlv.h"
 #include "adump_device_pub.h"
 #include "adx_msg.h"
@@ -32,6 +33,13 @@ public:
     static MsgCode HandShake(const CommHandle& handle, CmdClassT type, uint16_t devId);
     static MsgCode SendResponse(const CommHandle& handle, uint16_t type, uint16_t devId, MsgStatus status);
     static MsgCode RecvResponse(const CommHandle& handle);
+    // CHECKSUPPORT 应答接收：命中 SUPPORT 形态（data 消息 + 8B 位图）读出 outBitmap 返回 NONE；
+    // 其余任何形态/超时返回错误码，调用方一律按"不支持"回退。timeout>0 为毫秒级限时，0 为无限等。
+    static MsgCode RecvSupportResponse(const CommHandle& handle, uint64_t& outBitmap);
+
+    // dump 数据块消息组装（SOC 直调与 HDC 发送两条路径共用）：分配消息并填充 DumpChunk
+    // （fileName 校验/拷贝 + 四字段 + 负载）。fileName 是否必填属调用方策略，不在本函数内收口。
+    static MsgCode BuildDumpChunkMsg(const IdeDumpChunk& chunk, SharedPtr<MsgProto>& outMsg);
 
 private:
     static MsgProto* CreateMsgByType(MsgType type, IdeSendBuffT data, uint32_t length);

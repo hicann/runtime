@@ -7,6 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#include <cstring>
 #include <gtest/gtest.h>
 #include "mockcpp/mockcpp.hpp"
 #define protected public
@@ -15,6 +16,7 @@
 #include "ide_daemon_stub.h"
 #include "mmpa_api.h"
 #include "adx_msg_proto.h"
+#include "adx_datadump_callback.h" // DumpChunk / MAX_FILE_PATH_LENGTH（组包布局断言）
 #include "adx_msg_proto_utest.h"
 #include "ide_hdc_stub.h"
 #include "mmpa_stub.h"
@@ -303,6 +305,66 @@ TEST_F(ADX_MSG_PROTO_UTEST, RecvFileShortWriteFail)
     // the two-slice stub keeps the second slice arriving forever after the write path fails early;
     // IDE_DAEMON_CHANNEL_ERROR(10) is acceptable: the short write never lands as a success
     EXPECT_EQ(IDE_DAEMON_CHANNEL_ERROR, AdxMsgProto::RecvFile(handle, 1));
+}
+
+// 数据块消息组装（SOC 直调与 HDC 发送共用）纯函数四向：nullptr 拒绝 / 空串成功（新 flag 语义）/
+// 过长与未终止拒绝 / 成功布局四字段。
+TEST_F(ADX_MSG_PROTO_UTEST, BuildDumpChunkMsg_NullFileName)
+{
+    IdeDumpChunk chunk = {};
+    chunk.fileName = nullptr;
+    chunk.dataBuf = reinterpret_cast<unsigned char*>(const_cast<char*>("x"));
+    chunk.bufLen = 1U;
+    SharedPtr<MsgProto> out;
+    EXPECT_EQ(IDE_DAEMON_INVALID_PATH_ERROR, AdxMsgProto::BuildDumpChunkMsg(chunk, out));
+}
+
+TEST_F(ADX_MSG_PROTO_UTEST, BuildDumpChunkMsg_EmptyFileNameOk)
+{
+    static char emptyName[] = "";
+    IdeDumpChunk chunk = {};
+    chunk.flag = IDE_DUMP_CHECKSUPPORT;
+    chunk.fileName = emptyName; // 新 flag 的合法形态：无文件路径，空串组包
+    chunk.dataBuf = reinterpret_cast<unsigned char*>(const_cast<char*>("x"));
+    chunk.bufLen = 1U;
+    chunk.isLastChunk = 1;
+    SharedPtr<MsgProto> out;
+    EXPECT_EQ(IDE_DAEMON_NONE_ERROR, AdxMsgProto::BuildDumpChunkMsg(chunk, out));
+}
+
+TEST_F(ADX_MSG_PROTO_UTEST, BuildDumpChunkMsg_NameTooLongOrUnterminated)
+{
+    static char longName[MAX_FILE_PATH_LENGTH]; // 恰好装满（无 NUL）与超长同判：strnlen 到界即拒
+    for (size_t i = 0; i < sizeof(longName); ++i) {
+        longName[i] = 'a';
+    }
+    IdeDumpChunk chunk = {};
+    chunk.fileName = longName;
+    chunk.dataBuf = reinterpret_cast<unsigned char*>(const_cast<char*>("x"));
+    chunk.bufLen = 1U;
+    SharedPtr<MsgProto> out;
+    EXPECT_EQ(IDE_DAEMON_INVALID_PATH_ERROR, AdxMsgProto::BuildDumpChunkMsg(chunk, out));
+}
+
+TEST_F(ADX_MSG_PROTO_UTEST, BuildDumpChunkMsg_FieldLayout)
+{
+    static char name[] = "/home/test.log";
+    unsigned char payload[4] = {1, 2, 3, 4};
+    IdeDumpChunk chunk = {};
+    chunk.fileName = name;
+    chunk.dataBuf = payload;
+    chunk.bufLen = sizeof(payload);
+    chunk.isLastChunk = 1;
+    chunk.offset = -1;
+    SharedPtr<MsgProto> out;
+    ASSERT_EQ(IDE_DAEMON_NONE_ERROR, AdxMsgProto::BuildDumpChunkMsg(chunk, out));
+    const DumpChunk* data = reinterpret_cast<const DumpChunk*>(out->data);
+    EXPECT_EQ(0, strcmp(data->fileName, name));
+    EXPECT_EQ(data->bufLen, chunk.bufLen);
+    EXPECT_EQ(data->flag, static_cast<int32_t>(chunk.flag));
+    EXPECT_EQ(data->isLastChunk, chunk.isLastChunk);
+    EXPECT_EQ(data->offset, chunk.offset);
+    EXPECT_EQ(0, memcmp(data->dataBuf, payload, sizeof(payload)));
 }
 
 TEST_F(ADX_MSG_PROTO_UTEST, SendFile)

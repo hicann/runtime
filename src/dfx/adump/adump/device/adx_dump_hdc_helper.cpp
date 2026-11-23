@@ -21,6 +21,11 @@
 #include "adx_dump_hdc_helper.h"
 
 namespace Adx {
+namespace {
+// CHECKSUPPORT 应答限时（无应答兜底：对端不回应答时 3s 判不支持回退，不挂死）。
+constexpr int32_t CHECKSUPPORT_RESP_TIMEOUT_MS = 3000;
+} // namespace
+
 AdxDumpHdcHelper::AdxDumpHdcHelper() : init_(false)
 {
     client_.type = NR_COMM;
@@ -105,55 +110,99 @@ IdeErrorT AdxDumpHdcHelper::HandShake(const std::string& info, IDE_SESSION& sess
     return IDE_DAEMON_NONE_ERROR;
 }
 
+// dump 数据上报（device → host）：组装 → 发送 → 收应答
 IdeErrorT AdxDumpHdcHelper::DataProcess(const IDE_SESSION& session, const IdeDumpChunk& dumpChunk)
 {
-    uint32_t dataLen = 0;
-    // malloc memory for save user data
-    IDE_RETURN_IF_CHECK_ASSIGN_32U_ADD(
-        sizeof(DumpChunk), dumpChunk.bufLen, dataLen, return IDE_DAEMON_INTERGER_REVERSED_ERROR);
-    MsgProto* msg = AdxMsgProto::CreateMsgPacket(IDE_DUMP_REQ, 0, nullptr, dataLen);
-    IDE_CTRL_VALUE_FAILED(msg != nullptr, return IDE_DAEMON_MALLOC_ERROR, "create message failed");
-    std::unique_ptr<MsgProto, decltype(&IdeXfree)> sendDataMsgPtr(msg, IdeXfree);
-    msg = nullptr;
-    DumpChunk* data = reinterpret_cast<DumpChunk*>(sendDataMsgPtr->data);
-    IDE_CTRL_VALUE_FAILED(dumpChunk.fileName != nullptr, return IDE_DAEMON_INVALID_PARAM_ERROR, "fileName is null");
+    SharedPtr<MsgProto> sendDataMsgPtr;
+    IdeErrorT code = AdxMsgProto::BuildDumpChunkMsg(dumpChunk, sendDataMsgPtr);
     IDE_CTRL_VALUE_FAILED(
-        strnlen(dumpChunk.fileName, MAX_FILE_PATH_LENGTH) < MAX_FILE_PATH_LENGTH, return IDE_DAEMON_INVALID_PATH_ERROR,
-        "fileName is too long, no longer than %u length", MAX_FILE_PATH_LENGTH);
-    int32_t err = strcpy_s(data->fileName, MAX_FILE_PATH_LENGTH, dumpChunk.fileName);
-    IDE_CTRL_VALUE_FAILED(
-        err == EOK, return IDE_DAEMON_INVALID_PATH_ERROR, "copy file name failed, err=%d, strerror=%s", err,
-        strerror(errno));
-    data->bufLen = dumpChunk.bufLen;
-    data->flag = dumpChunk.flag;
-    data->isLastChunk = dumpChunk.isLastChunk;
-    data->offset = dumpChunk.offset;
-    IDE_LOGI(
-        "dataLen: %u, bufLen: %u, flag: %d, isLastChunk: %u, offset: %ld, fileName: %s", dataLen, data->bufLen,
-        data->flag, data->isLastChunk, data->offset, data->fileName);
-    err = memcpy_s(data->dataBuf, data->bufLen, dumpChunk.dataBuf, dumpChunk.bufLen);
-    IDE_CTRL_VALUE_FAILED(err == EOK, return IDE_DAEMON_MEMCPY_ERROR, "memcpy_s data buffer failed, err=%d", err);
+        code == IDE_DAEMON_NONE_ERROR, return code, "assemble dump chunk failed, flag: %d",
+        static_cast<int32_t>(dumpChunk.flag));
     IDE_LOGI("the data to be sent has been assembled");
+
+    const CommHandle handle = MakeClientHandle(session);
+    code = SendPacket(handle, *sendDataMsgPtr);
+    IDE_CTRL_VALUE_FAILED(code == IDE_DAEMON_NONE_ERROR, return code, "send dump data failed");
+
+    // CHECKSUPPORT 需解析能力位图并折叠成"支持与否"，其余走常规应答
+    if (dumpChunk.flag == IDE_DUMP_CHECKSUPPORT) {
+        return RecvCheckSupportResult(handle, dumpChunk);
+    }
+    return RecvDataResponse(handle);
+}
+
+CommHandle AdxDumpHdcHelper::MakeClientHandle(const IDE_SESSION& session) const
+{
     CommHandle handle;
     handle.type = client_.type;
     handle.session = reinterpret_cast<OptHandle>(session);
+    return handle;
+}
+
+IdeErrorT AdxDumpHdcHelper::SendPacket(const CommHandle& handle, const MsgProto& msg) const
+{
     IdeErrorT code = SessionIsConnected(handle);
     IDE_CTRL_VALUE_WARN(
         code == IDE_DAEMON_NONE_ERROR, return code, "check session status failed, err=%d", static_cast<int32_t>(code));
-    uint32_t ret = AdxCommOptManager::Instance().Write(
-        handle, sendDataMsgPtr.get(), sendDataMsgPtr->sliceLen + sizeof(MsgProto), COMM_OPT_BLOCK);
+
+    const uint32_t ret =
+        AdxCommOptManager::Instance().Write(handle, &msg, msg.sliceLen + sizeof(MsgProto), COMM_OPT_BLOCK);
     IDE_CTRL_VALUE_WARN(
         ret != IDE_DAEMON_SOCK_CLOSE, return IDE_DAEMON_CHANNEL_ERROR,
         "write dump data error, session[%zu] has been closed, ret: %d", handle.session, ret);
     IDE_CTRL_VALUE_FAILED(
         ret == IDE_DAEMON_OK, return IDE_DAEMON_WRITE_ERROR, "write dump data error, session: %zu, ret: %d",
         handle.session, ret);
-    code = AdxMsgProto::RecvResponse(handle);
+    return IDE_DAEMON_NONE_ERROR;
+}
+
+IdeErrorT AdxDumpHdcHelper::RecvDataResponse(const CommHandle& handle) const
+{
+    IdeErrorT code = AdxMsgProto::RecvResponse(handle);
+    // 队列满不是致命错误：host 已入队失败但会话可用，按原语义原样返回给 aicpu
     IDE_CTRL_VALUE_FAILED(
         (code == IDE_DAEMON_NONE_ERROR) || (code == IDE_DAEMON_DUMP_QUEUE_FULL), return code,
-        "send file shake response failed, ret=%d", static_cast<int32_t>(code));
+        "recv dump data response failed, ret=%d", static_cast<int32_t>(code));
     IDE_LOGD("dump data process normal");
     return code;
+}
+
+// CHECKSUPPORT 应答收包与判定折叠（aicpu 只看 IdeDumpData 返回值，位图判定在此代做）。
+// 请求位从 dumpChunk.dataBuf 末 8B 读（与 host 侧 HandleCheckSupport 同口径）。
+IdeErrorT AdxDumpHdcHelper::RecvCheckSupportResult(const CommHandle& handle, const IdeDumpChunk& dumpChunk)
+{
+    // 请求位缺失即坏探测请求：不默认 0（会让 (bitmap & 0)==0 恒过、坏请求被判成支持）。
+    // 前置到收包之前：校验不依赖应答，坏请求立即折返，不空等一轮应答超时。
+    IDE_CTRL_VALUE_FAILED(
+        (dumpChunk.dataBuf != nullptr) && (dumpChunk.bufLen >= sizeof(uint64_t)), return IDE_DAEMON_INVALID_PARAM_ERROR,
+        "checksupport request carries no ability (dataBuf: %p, bufLen: %u).",
+        static_cast<const void*>(dumpChunk.dataBuf), dumpChunk.bufLen);
+    uint64_t reqAbility = 0;
+    const int32_t cpy = memcpy_s(
+        &reqAbility, sizeof(reqAbility), dumpChunk.dataBuf + (dumpChunk.bufLen - sizeof(reqAbility)),
+        sizeof(reqAbility));
+    IDE_CTRL_VALUE_FAILED(cpy == EOK, return IDE_DAEMON_UNKNOW_ERROR, "read requested ability failed, err=%d", cpy);
+
+    CommHandle respHandle = handle; // 本地拷贝设限时，不动调用方 handle
+    respHandle.timeout = CHECKSUPPORT_RESP_TIMEOUT_MS;
+    uint64_t respBitmap = 0;
+    IdeErrorT code = AdxMsgProto::RecvSupportResponse(respHandle, respBitmap);
+    if (code != IDE_DAEMON_NONE_ERROR) {
+        IDE_LOGW(
+            "checksupport probe failed (ret=%d), host treated as not-supporting new dump mode.",
+            static_cast<int32_t>(code));
+        return code;
+    }
+    if ((respBitmap & reqAbility) != reqAbility) {
+        IDE_LOGW(
+            "host support bitmap 0x%llx does not cover requested ability 0x%llx, treated as not-supporting.",
+            static_cast<unsigned long long>(respBitmap), static_cast<unsigned long long>(reqAbility));
+        return IDE_DAEMON_UNKNOW_ERROR;
+    }
+    IDE_LOGI(
+        "checksupport pass: host bitmap 0x%llx covers requested 0x%llx.", static_cast<unsigned long long>(respBitmap),
+        static_cast<unsigned long long>(reqAbility));
+    return IDE_DAEMON_NONE_ERROR;
 }
 
 IdeErrorT AdxDumpHdcHelper::SessionIsConnected(const CommHandle handle) const

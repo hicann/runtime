@@ -17,9 +17,9 @@
 #include "config.h"
 #include "adx_dump_hdc_helper.h"
 #include "adx_datadump_callback.h"
-#include "adx_dump_soc_helper.h" // SOC 分发下游的 DataProcess（never 期望需要完整类型）
 #include "adx_comm_opt.h"
 #include "ascend_hal.h"
+#include "mmpa_api.h" // mmSleep（超时步数推导用例的退避断言）
 
 class ADX_DUMP_HDC_HELPER_TEST : public testing::Test {
 protected:
@@ -111,7 +111,8 @@ TEST_F(ADX_DUMP_HDC_HELPER_TEST, DataProcess_FileNameRobustness)
     FillIdeDumpChunk(dumpChunk, &ch, nullptr);
     const IdeDumpChunk constDumpChunk = dumpChunk;
     int ret = IdeDumpData(session, &constDumpChunk);
-    EXPECT_EQ(IDE_DAEMON_INVALID_PARAM_ERROR, ret);
+    // 组包已收敛到 BuildDumpChunkMsg：fileName 空指针在组包层按路径错误拒绝（INVALID_PATH=4）
+    EXPECT_EQ(IDE_DAEMON_INVALID_PATH_ERROR, ret);
 
     std::vector<char> longName(Adx::MAX_FILE_PATH_LENGTH, 'a');
     FillIdeDumpChunk(dumpChunk, &ch, longName.data());
@@ -128,25 +129,104 @@ TEST_F(ADX_DUMP_HDC_HELPER_TEST, DataProcess_FileNameRobustness)
     EXPECT_EQ(IDE_DAEMON_CHANNEL_ERROR, ret);
 }
 
-// 文件分片外的 flag（能力探测等新回传值）本版本不支持：入口立即拒绝。
-// 归因锁定：无效 session 时下游会话校验同样回"通路"错误码，仅凭返回值无法证明
-// 错误来自入口白名单——故对两条下游分发设置 never 期望，断言新 flag 未进入下游。
-TEST_F(ADX_DUMP_HDC_HELPER_TEST, IdeDumpData_UnsupportedFlag)
+// 新回传 flag 的 device 侧真实处理（HDC 发送路径）。两条负向：
+// ① fileName=nullptr 在组包层被拒（新 flag 语义上 fileName 为空串而非空指针，
+//    空指针是组装函数必须自防的入参）；
+// ② 空串（合法语义形态）组包通过，推进到发送层被未连接会话拦截——
+//    UT 环境无 HDC 会话，整链折返"通路"错误码，不触碰组包以外的任何外部资源。
+TEST_F(ADX_DUMP_HDC_HELPER_TEST, IdeDumpData_NewFlagNullName)
 {
     IDE_SESSION session = (IDE_SESSION)0xFFFFF000;
     IdeDumpChunk dumpChunk = {};
     unsigned char ch = 'a';
-    dumpChunk.fileName = nullptr; // 新 flag 的合法形态：无文件名
+    dumpChunk.fileName = nullptr;
     dumpChunk.dataBuf = &ch;
     dumpChunk.bufLen = 1;
     dumpChunk.isLastChunk = 1;
     dumpChunk.offset = -1;
-    MOCKER_CPP(&Adx::AdxDumpSocHelper::DataProcess).expects(never());
-    MOCKER_CPP(&Adx::AdxDumpHdcHelper::DataProcess).expects(never());
     dumpChunk.flag = IDE_DUMP_CHECKSUPPORT;
+    EXPECT_EQ(IDE_DAEMON_INVALID_PATH_ERROR, IdeDumpData(session, &dumpChunk));
+}
+
+TEST_F(ADX_DUMP_HDC_HELPER_TEST, IdeDumpData_NewFlagNotConnected)
+{
+    static char emptyName[] = "";
+    IDE_SESSION session = (IDE_SESSION)0xFFFFF000;
+    IdeDumpChunk dumpChunk = {};
+    unsigned char ch = 'a';
+    dumpChunk.fileName = emptyName; // 新 flag 的契约形态：空文件路径
+    dumpChunk.dataBuf = &ch;
+    dumpChunk.bufLen = 1;
+    dumpChunk.isLastChunk = 1;
+    dumpChunk.offset = -1;
+    dumpChunk.flag = IDE_DUMP_CHECKSUPPORT;
+    // 会话层拦截：stub 对会话状态恒回"已连接"，mock 其失败锁定折返点，
+    // 验证新 flag 的探测请求走到发送层即按通路错误返回（不落文件、不崩）。
+    MOCKER(halHdcGetSessionAttr).stubs().will(returnValue(1));
     EXPECT_EQ(IDE_DAEMON_CHANNEL_ERROR, IdeDumpData(session, &dumpChunk));
     dumpChunk.flag = IDE_DUMP_REQ_WITH_ID;
     EXPECT_EQ(IDE_DAEMON_CHANNEL_ERROR, IdeDumpData(session, &dumpChunk));
-    dumpChunk.flag = IDE_DUMP_REQ_WITH_OPINFO;
-    EXPECT_EQ(IDE_DAEMON_CHANNEL_ERROR, IdeDumpData(session, &dumpChunk));
+}
+
+// CHECKSUPPORT 应答超时折叠：限时收包始终无应答 → 按不支持返回（aicpu 据此回退老链路）。
+// RecvCheckSupportResult 内部固定以 CHECKSUPPORT_RESP_TIMEOUT_MS(3000) 收应答（入口 timeout
+// 不透传），按 1+2+…+N≤T 推导为 76 步退避——mmSleep 断言 exactly(76) 兼作步数推导回归锚点。
+// timeout 推导本身（1ms→1 步）在 RecvSupportResponse 直测（见下 TimeoutStepsFollowTimeout）。
+TEST_F(ADX_DUMP_HDC_HELPER_TEST, RecvCheckSupportResult_TimeoutFallback)
+{
+    static char emptyName[] = "";
+    IdeDumpChunk dumpChunk = {};
+    uint64_t ability = 0x3ULL;
+    dumpChunk.fileName = emptyName;
+    dumpChunk.dataBuf = reinterpret_cast<unsigned char*>(&ability);
+    dumpChunk.bufLen = sizeof(ability);
+    dumpChunk.isLastChunk = 1;
+    dumpChunk.offset = -1;
+    dumpChunk.flag = IDE_DUMP_CHECKSUPPORT;
+
+    CommHandle handle = {};
+    MOCKER_CPP(&Adx::AdxCommOptManager::TryRead).stubs().will(returnValue(IDE_DAEMON_RECV_NODATA));
+    MOCKER(mmSleep).expects(exactly(76)).will(returnValue(0)); // 3000ms → 76 步（推导见 adx_msg_proto.cpp）
+    const IdeErrorT ret = Adx::AdxDumpHdcHelper::Instance().RecvCheckSupportResult(handle, dumpChunk);
+    EXPECT_EQ(IDE_DAEMON_HDC_TIMEOUT, ret);
+}
+
+// 超时步数推导直测：timeout=1ms 只退避一次即折返（不再固定 77 轮）。
+// 直接驱动 RecvSupportResponse（跳过 RecvCheckSupportResult 的固定 3000ms 覆盖），
+// TryRead 恒无数据，断言 mmSleep 恰一次 + 超时码。
+TEST_F(ADX_DUMP_HDC_HELPER_TEST, RecvSupportResponse_TimeoutStepsFollowTimeout)
+{
+    CommHandle handle = {};
+    handle.timeout = 1;
+    uint64_t bitmap = 0;
+    MOCKER_CPP(&Adx::AdxCommOptManager::TryRead).stubs().will(returnValue(IDE_DAEMON_RECV_NODATA));
+    MOCKER(mmSleep).expects(once()).will(returnValue(0));
+    const Adx::MsgCode ret = Adx::AdxMsgProto::RecvSupportResponse(handle, bitmap);
+    EXPECT_EQ(IDE_DAEMON_HDC_TIMEOUT, ret);
+}
+
+// CHECKSUPPORT 请求能力位缺失（dataBuf 空指针 / 不足 8B）：按参数错误折返而非默认
+// ability=0（默认 0 会让 (bitmap & 0)==0 恒过，坏探测请求被判成支持）。
+// 校验已前置到收包之前：收包侧置 never 期望，锁定"坏请求不空等应答即折返"。
+TEST_F(ADX_DUMP_HDC_HELPER_TEST, RecvCheckSupportResult_MissingAbility)
+{
+    static char emptyName[] = "";
+    IdeDumpChunk dumpChunk = {};
+    dumpChunk.fileName = emptyName;
+    dumpChunk.dataBuf = nullptr; // 坏探测请求：不带能力位
+    dumpChunk.bufLen = 0;
+    dumpChunk.isLastChunk = 1;
+    dumpChunk.offset = -1;
+    dumpChunk.flag = IDE_DUMP_CHECKSUPPORT;
+
+    CommHandle handle = {};
+    MOCKER_CPP(&Adx::AdxMsgProto::RecvSupportResponse).expects(never());
+    EXPECT_EQ(
+        IDE_DAEMON_INVALID_PARAM_ERROR, Adx::AdxDumpHdcHelper::Instance().RecvCheckSupportResult(handle, dumpChunk));
+
+    unsigned char partial[4] = {1, 2, 3, 4}; // 带了但不足 8B：同判
+    dumpChunk.dataBuf = partial;
+    dumpChunk.bufLen = sizeof(partial);
+    EXPECT_EQ(
+        IDE_DAEMON_INVALID_PARAM_ERROR, Adx::AdxDumpHdcHelper::Instance().RecvCheckSupportResult(handle, dumpChunk));
 }
