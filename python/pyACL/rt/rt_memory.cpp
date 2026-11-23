@@ -676,8 +676,9 @@ static PyObject* GetPyDictFromPtrAttributes(aclrtPtrAttributes& attributes)
     PyObject* pyDict = PyDict_New();
     CHECK_NULL(SetItemToDict(pyDict, "location", GetPyDictFromMemLocation(attributes.location)));
     CHECK_NULL(SetItemToDict(pyDict, "page_size", Py_BuildValue("I", attributes.pageSize)));
+    CHECK_NULL(SetItemToDict(pyDict, "host_ptr", Py_BuildValue("k", reinterpret_cast<uintptr_t>(attributes.hostPtr))));
     CHECK_NULL(
-        SetItemToDict(pyDict, "rsv", GetPyListFromArray(attributes.rsv, sizeof(attributes.rsv) / sizeof(uint32_t))));
+        SetItemToDict(pyDict, "device_ptr", Py_BuildValue("k", reinterpret_cast<uintptr_t>(attributes.devicePtr))));
 
     return pyDict;
 }
