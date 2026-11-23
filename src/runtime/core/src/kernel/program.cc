@@ -648,7 +648,7 @@ rtError_t Program::BuildTilingTblForDavid(const Module* mdl, TilingTablForDavid*
     for (uint32_t i = 0; i < size; i++) {
         uint64_t function1 = 0;
         uint64_t function2 = 0;
-        rtError_t error = mdl->GetFunction(KernelTable_[i].kernel, &function1, &function2);
+        const rtError_t error = mdl->GetFunction(KernelTable_[i].kernel, &function1, &function2);
         if (error != RT_ERROR_NONE) {
             RT_LOG(
                 RT_LOG_ERROR,

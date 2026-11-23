@@ -3906,7 +3906,7 @@ rtError_t ApiErrorDecorator::DebugRegisterForStream(
         "AI Core task synchronization check is enabled and cannot be used together with debug registration");
 
     const int32_t id = curStm->Id_();
-    RT_LOG(RT_LOG_INFO, "stream_id = %d, flag = %u", id, flag);
+    RT_LOG(RT_LOG_INFO, "stream_id=%d, flag=%u", id, flag);
 
     COND_RETURN_WARN(
         curStm->IsCapturing(), RT_ERROR_FEATURE_NOT_SUPPORT,
