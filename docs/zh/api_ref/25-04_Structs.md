@@ -56,6 +56,7 @@ struct 类型数据。
 - [aclrtSnapShotBackupArgs](#aclrtSnapShotBackupArgs)
 - [aclrtSnapShotRestoreArgs](#aclrtSnapShotRestoreArgs)
 - [aclrtStreamAttrValue](#aclrtStreamAttrValue)
+- [aclrtStreamBatchMemOpParams](#aclrtStreamBatchMemOpParams)
 - [aclrtTaskUpdateInfo](#aclrtTaskUpdateInfo)
 - [aclrtTimeoutUs](#aclrtTimeoutUs)
 - [aclrtUniformDisInfo](#aclrtUniformDisInfo)
@@ -1353,6 +1354,40 @@ typedef union {
 | streamPriority | 设置aclrtStreamAttr中的ACL_STREAM_ATTR_PRIORITY （表示stream优先级）属性时，属性值的取值范围：0~7 值越小优先级级别越高，默认值为0。|
 | launchBlockingMode | 设置aclrtStreamAttr中的ACL_STREAM_LAUNCH_BLOCKING_MODE属性时，用于控制以下接口在指定Stream上的执行模式为同步模式或异步模式：<br><br>  - aclrtLaunchKernel<br>  - aclrtLaunchKernelV2<br>  - aclrtLaunchKernelWithConfig<br>  - aclrtLaunchKernelWithHostArgs<br>  - aclrtLaunchKernelWithArgsArray<br>  - aclrtLaunchSIMTKernelWithArgsArray<br>  - aclrtLaunchSIMTKernelWithHostArgs<br>  - aclmdlRIExecuteAsync<br><br>属性值为如下宏：<br><br>  - ACL_STREAM_LAUNCH_BLOCKING_MODE_CTRL_BY_ENV：默认值。上述接口的执行模式由ASCEND_RT_LAUNCH_BLOCKING环境变量控制。环境变量配置为1时采用同步模式，其他情况采用异步模式。<br>  - ACL_STREAM_LAUNCH_BLOCKING_MODE_NON_BLOCKING：上述接口采用异步模式。<br>  - ACL_STREAM_LAUNCH_BLOCKING_MODE_BLOCKING：上述接口采用同步模式。<br><br>宏的定义如下：<br>#define ACL_STREAM_LAUNCH_BLOCKING_MODE_CTRL_BY_ENV 0x00000000U<br>#define ACL_STREAM_LAUNCH_BLOCKING_MODE_NON_BLOCKING 0x00000001U<br>#define ACL_STREAM_LAUNCH_BLOCKING_MODE_BLOCKING 0x00000002U<br><br>在[aclrtNonBlockingLaunchBegin](06_stream_management.md#aclrtNonBlockingLaunchBegin)和[aclrtNonBlockingLaunchEnd](06_stream_management.md#aclrtNonBlockingLaunchEnd)接口之间，指定Stream保持异步模式，不执行同步等待。 |
 | reserve | 预留值。 |
+
+<br>
+
+<a id="aclrtStreamBatchMemOpParams"></a>
+
+## aclrtStreamBatchMemOpParams
+
+[aclrtStreamBatchMemOp](11-09_stream_memory_operation.md#aclrtStreamBatchMemOp)中单项写入或等待操作的参数。调用前先将整个参数数组清零，再填写每项操作对应的成员。
+
+```c
+typedef union aclrtStreamBatchMemOpParams {
+    aclrtStreamMemOpType operation;
+    struct {
+        aclrtStreamMemOpType operation;
+        void* devAddr;
+        uint64_t value;
+        unsigned int flag;
+    } valueWait;
+    struct {
+        aclrtStreamMemOpType operation;
+        void* devAddr;
+        uint64_t value;
+        unsigned int flag;
+    } valueWrite;
+    uint64_t reserved[6];
+} aclrtStreamBatchMemOpParams;
+```
+
+| 成员名称 | 说明 |
+| --- | --- |
+| operation | 操作类型。取值请参见[aclrtStreamMemOpType](25-02_Enumerations.md#aclrtStreamMemOpType)。 |
+| valueWait | 等待操作的参数。将`operation`设为`ACL_RT_STREAM_MEM_OP_VALUE_WAIT`，`devAddr`设为要读取的Device内存地址，从该地址起至少8字节可读。将`value`设为比较值。`flag`的取值请参见[aclrtValueWait](11-09_stream_memory_operation.md#aclrtValueWait)。 |
+| valueWrite | 写入操作的参数。将`operation`设为`ACL_RT_STREAM_MEM_OP_VALUE_WRITE`，`devAddr`设为要写入的Device内存地址。地址须按8字节对齐，从该地址起至少8字节可写。将`value`设为待写入的值，`flag`固定为0。 |
+| reserved | 保留区，与其他成员共享存储。所选成员之后的未使用字节须保持为0。 |
 
 <br>
 

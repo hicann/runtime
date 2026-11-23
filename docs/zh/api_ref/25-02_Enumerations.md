@@ -81,6 +81,7 @@ enum 类型数据。
 - [aclrtSnapShotStage](#aclrtSnapShotStage)
 - [aclrtStreamAttr](#aclrtStreamAttr)
 - [aclrtStreamConfigAttr](#aclrtStreamConfigAttr)
+- [aclrtStreamMemOpType](#aclrtStreamMemOpType)
 - [aclrtStreamStatus](#aclrtStreamStatus)
 - [aclrtUpdateTaskAttrId](#aclrtUpdateTaskAttrId)
 - [aclSysParamOpt](#aclSysParamOpt)
@@ -2503,6 +2504,26 @@ typedef enum {
 | ACL_RT_STREAM_WORK_SIZE | 模型所需工作内存的大小，单位为Byte。 |
 | ACL_RT_STREAM_FLAG | 预留配置，默认值为0。 |
 | ACL_RT_STREAM_PRIORITY | Stream的优先级，数字越小优先级越高，取值[0,7]。默认值为0。 |
+
+<br>
+
+<a id="aclrtStreamMemOpType"></a>
+
+## aclrtStreamMemOpType
+
+指定[aclrtStreamBatchMemOp](11-09_stream_memory_operation.md#aclrtStreamBatchMemOp)中单项操作的类型。
+
+```c
+typedef enum aclrtStreamMemOpType {
+    ACL_RT_STREAM_MEM_OP_VALUE_WAIT = 0,
+    ACL_RT_STREAM_MEM_OP_VALUE_WRITE = 1
+} aclrtStreamMemOpType;
+```
+
+| 枚举项 | 说明 |
+| --- | --- |
+| ACL_RT_STREAM_MEM_OP_VALUE_WAIT | 等待指定Device内存中的值满足条件。 |
+| ACL_RT_STREAM_MEM_OP_VALUE_WRITE | 向指定Device内存写入一个值。 |
 
 <br>
 
