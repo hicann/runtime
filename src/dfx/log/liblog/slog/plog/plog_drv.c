@@ -15,6 +15,8 @@
 #include "log_system_api.h"
 #include "log_print.h"
 
+#include <stddef.h>
+
 #define FREE_HDC_MSG_BUF(ptr)                                 \
     do {                                                      \
         if ((ptr) != NULL) {                                  \
@@ -314,7 +316,18 @@ static hdcError_t DrvPackageRead(
             (drvErr != DRV_ERROR_NONE) || (pBuf == NULL), goto READ_ERROR, "get HDC msg buffer failed, drvErr=%d.",
             (int32_t)drvErr);
 
+        if (pBufLen < (int)sizeof(DataPacket)) {
+            SELF_LOG_ERROR("HDC packet header incomplete, recvLen=%d.", pBufLen);
+            drvErr = DRV_ERROR_INNER_ERR;
+            goto READ_ERROR;
+        }
+
         DataPacket* packet = (DataPacket*)pBuf;
+        if ((unsigned int)(pBufLen - (int)offsetof(DataPacket, data)) < packet->dataLen) {
+            SELF_LOG_ERROR("HDC packet data length invalid, recvLen=%d, dataLen=%u.", pBufLen, packet->dataLen);
+            drvErr = DRV_ERROR_INNER_ERR;
+            goto READ_ERROR;
+        }
         if (packet->isLast == DATA_LAST_PACKET) {
             isLast = DATA_LAST_PACKET;
         }

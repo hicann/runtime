@@ -1004,6 +1004,16 @@ static drvError_t GetMsgBufMulti(struct drvHdcMsg* msg, int idx, char** pBuf, in
     return DRV_ERROR_NONE;
 }
 
+static int g_covPktLen = 0; // controlled recv length for length-validation cases
+static drvError_t GetMsgBufCtrlLen(struct drvHdcMsg* msg, int idx, char** pBuf, int* pLen)
+{
+    (void)msg;
+    (void)idx;
+    *pBuf = (char*)&g_covPkt;
+    *pLen = g_covPktLen;
+    return DRV_ERROR_NONE;
+}
+
 static void PrepCovPkt(const char* data, unsigned int dataLen, char isLast)
 {
     (void)memset_s(&g_covPkt, sizeof(g_covPkt), 0, sizeof(g_covPkt));
@@ -1114,4 +1124,50 @@ TEST_F(PlogDrvCovUtest, DrvBufRead_ReuseFailed)
     char* buf = NULL;
     unsigned int len = 0;
     EXPECT_EQ(LOG_FAILURE, DrvBufRead(session, 0, &buf, &len, 100));
+}
+
+/* --- length validation of untrusted HDC DataPacket (issue #1484, CWE-125) --- */
+TEST_F(PlogDrvCovUtest, DrvBufRead_PktLenOverflow)
+{
+    // peer claims 256 bytes of data but only 28 bytes were actually received:
+    // dataLen must be validated against the driver-reported pBufLen
+    PrepCovPkt("test", 4, (char)DATA_LAST_PACKET);
+    g_covPkt.hdr.dataLen = 0x100;
+    g_covPktLen = (int)sizeof(g_covPkt);
+    MOCKER(halHdcRecv).stubs().will(returnValue((drvError_t)DRV_ERROR_NONE));
+    MOCKER(drvHdcGetMsgBuffer).stubs().will(invoke(GetMsgBufCtrlLen));
+    HDC_SESSION session = (HDC_SESSION)1;
+    char* buf = NULL;
+    unsigned int len = 0;
+    EXPECT_EQ(LOG_FAILURE, DrvBufRead(session, 0, &buf, &len, 100));
+    EXPECT_EQ(NULL, buf);
+}
+
+TEST_F(PlogDrvCovUtest, DrvBufRead_PktHdrTooShort)
+{
+    // recv length smaller than the fixed DataPacket header: no header field may be read
+    PrepCovPkt("test", 4, (char)DATA_LAST_PACKET);
+    g_covPktLen = 4; // < sizeof(DataPacket)
+    MOCKER(halHdcRecv).stubs().will(returnValue((drvError_t)DRV_ERROR_NONE));
+    MOCKER(drvHdcGetMsgBuffer).stubs().will(invoke(GetMsgBufCtrlLen));
+    HDC_SESSION session = (HDC_SESSION)1;
+    char* buf = NULL;
+    unsigned int len = 0;
+    EXPECT_EQ(LOG_FAILURE, DrvBufRead(session, 0, &buf, &len, 100));
+    EXPECT_EQ(NULL, buf);
+}
+
+TEST_F(PlogDrvCovUtest, DrvBufRead_PktLenExactBoundary)
+{
+    // tightly packed peer packet: pBufLen == offsetof(DataPacket, data) + dataLen
+    PrepCovPkt("test", 4, (char)DATA_LAST_PACKET);
+    g_covPktLen = 9 + 4; // offsetof(DataPacket, data) + dataLen
+    MOCKER(halHdcRecv).stubs().will(returnValue((drvError_t)DRV_ERROR_NONE));
+    MOCKER(drvHdcGetMsgBuffer).stubs().will(invoke(GetMsgBufCtrlLen));
+    HDC_SESSION session = (HDC_SESSION)1;
+    char* buf = NULL;
+    unsigned int len = 0;
+    EXPECT_EQ(LOG_SUCCESS, DrvBufRead(session, 0, &buf, &len, 100));
+    EXPECT_EQ(4U, len);
+    free(buf);
 }
