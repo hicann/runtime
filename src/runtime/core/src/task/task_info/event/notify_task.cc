@@ -657,7 +657,7 @@ void DoCompleteSuccessForEndGraphNotifyWaitTask(TaskInfo* taskInfo, const uint32
         /* model has been destroyed */
         endGraphWaitTask->endGraphModel = nullptr;
         RT_LOG(
-            RT_LOG_ERROR, "endgraph model has been destroyed, device_id=%u, notify_id=%u, stream_id=%d, task_id=%hu.",
+            RT_LOG_INFO, "endgraph model has been destroyed, device_id=%u, notify_id=%u, stream_id=%d, task_id=%hu.",
             devId, endGraphWaitTask->notifyId, taskInfo->stream->Id_(), taskInfo->id);
         modelLock.Unlock();
         return DoCompleteSuccessForEndGraphNotifyWaitTaskProc(taskInfo, devId, true);

@@ -88,7 +88,7 @@ void DeviceErrorProc::UpdateDeviceErrorInfo(
 
     // 这个是异常流程，这里记录sqId和streamId，用于和后续日志对账
     RT_LOG(
-        RT_LOG_ERROR, "Get streamId by sqId success, deviceId=%u, sqId=%u, streamId=%u.", device_->Id_(), info->sqId,
+        RT_LOG_DEBUG, "Get streamId by sqId success, deviceId=%u, sqId=%u, streamId=%u.", device_->Id_(), info->sqId,
         streamId);
 
     std::map<uint64_t, ErrorInfoUpdateProc> hookMap;
