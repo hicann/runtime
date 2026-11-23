@@ -16,6 +16,7 @@ The following describes application logs:
 
 - Application logs on the device side are automatically sent to the host side. If the sending fails, the logs are directly stored to the disk on the device side. If the sending succeeds, the logs are not stored to the disk on the device side.
 - Application logs support aging. If the number or size of log files exceeds the limit, the earliest log directory or file is automatically deleted. For the configuration of the number or size of log files, see the environment variable [ASCEND\_HOST\_LOG\_FILE\_NUM](../env_vars/ASCEND_HOST_LOG_FILE_NUM.md).
+- When application logs are written to disk, the owner of the log directories and log files is the process user, the directory permission is 750, the file permission is 640, and the owning group is the primary group of the process user by default. To specify another user group (for example, to allow other users in the same group to read the logs in multi-user sharing scenarios), see the environment variable [ASCEND\_LOG\_GID](../env_vars/ASCEND_LOG_GID.md).
 
 ```sh
 ├── debug

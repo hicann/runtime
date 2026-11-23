@@ -31,7 +31,7 @@ Solution: For details about the troubleshooting method, search for the keyword "
 
     不同类型的资源，涉及排查的接口不同，整体思路如下：
 
-    1. **检查相关资源的创建和销毁是否配对**。对不再使用的资源需及时调用对应的Destroy接口释放，例如如 aclrtDestroyStream、aclrtDestroyEvent、aclrtDestroyNotify、aclmdlRIDestroy。
+    1. **检查相关资源的创建和销毁是否配对**。对不再使用的资源需及时调用对应的Destroy接口释放，例如aclrtDestroyStream、aclrtDestroyEvent、aclrtDestroyNotify、aclmdlRIDestroy。
     2. **查看设备资源占用**。使用npu-smi info命令查看Device资源占用状态，确认是否有其他进程占用资源。
     3. **排查多进程**。若多进程共用同一Device，需减少并发进程数量。
 

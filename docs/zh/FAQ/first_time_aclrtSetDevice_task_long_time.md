@@ -35,7 +35,7 @@
 
 **解决方法**：
 
-- 理解拉起机制：aicpu_scheduler 是 Device 侧的 AICPU 任务调度进程，首次 aclrtSetDevice 时由 Runtime 自动为当前业务进程拉起，负责该进程的 AICPU 算子任务调度。进程创建、初始化和就绪确认均需要时间。
+- 理解拉起机制：aicpu_scheduler 是 Device 侧的 AI CPU 任务调度进程，首次 aclrtSetDevice 时由 Runtime 自动为当前业务进程拉起，负责该进程的 AI CPU 算子任务调度。进程创建、初始化和就绪确认均需要时间。
 - 各业务进程的 aicpu_scheduler 进程相互独立、不可共享：每个业务进程首次 aclrtSetDevice 时都会分别拉起自己的 aicpu_scheduler 进程，该开销无法通过其他进程预热来消除。
 - 如果对首次调用延迟敏感，可在业务初始化阶段提前调用 aclrtSetDevice 完成预热，将延迟前置到非关键路径。
 

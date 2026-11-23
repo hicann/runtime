@@ -32,4 +32,3 @@ export ASCEND_GLOBAL_LOG_LEVEL=1
 ## 支持的型号
 
 全量芯片支持
-

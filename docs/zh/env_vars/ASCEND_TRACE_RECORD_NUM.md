@@ -21,4 +21,3 @@ export ASCEND_TRACE_RECORD_NUM=15
 ## 支持的型号
 
 全量芯片支持
-
