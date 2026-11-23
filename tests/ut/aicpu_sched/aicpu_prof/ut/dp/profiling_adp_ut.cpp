@@ -323,6 +323,18 @@ TEST_F(ProfilingAdpUt, BuildProfMiAdditionalData_Test_InvalidFormat_DataLenZero)
     EXPECT_EQ(reportData.dataLen, 0U);
 }
 
+TEST_F(ProfilingAdpUt, BuildProfMiAdditionalData_Test_SegmentWithoutColonRejected)
+{
+    // segment count == TOTAL_LEN but one segment missing colon and pure digits:
+    // the malformed segment must be rejected instead of being taken as a sample value
+    const std::string sendData = "Node:GetNext_dequeue_wait, 123, Run start:1034567891, Run end:1034567999";
+    MsprofAdditionalInfo reportData = {};
+    reportData.dataLen = 100U; // preset non-zero to verify reset behavior
+    ProfilingAdp::GetInstance().reportCallback_ = nullptr;
+    ProfilingAdp::GetInstance().BuildProfMiAdditionalData(sendData, reportData);
+    EXPECT_EQ(reportData.dataLen, 0U);
+}
+
 TEST_F(ProfilingAdpUt, ReleaseProfilingWithAdditionalFlagFail)
 {
     ProfilingAdp::GetInstance().reportCallback_ = nullptr;

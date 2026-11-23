@@ -673,8 +673,13 @@ void ProfilingAdp::BuildProfMiAdditionalData(const std::string& sendData, Msprof
     while (posComma != tmpSendData.npos) {
         std::string temp = tmpSendData.substr(0, posComma);
         auto posColon = temp.find(":");
-        data.push_back(temp.substr(posColon + 1, temp.size() - posColon));
-        tmpSendData = tmpSendData.substr(posComma + 1, tmpSendData.size());
+        if (posColon == std::string::npos) {
+            AICPU_LOG_ERROR("Prof data segment[%s] has no colon, data format is not as expected.", temp.c_str());
+            reportData.dataLen = 0;
+            return;
+        }
+        data.push_back(temp.substr(posColon + 1));
+        tmpSendData = tmpSendData.substr(posComma + 1);
         posComma = tmpSendData.find(",");
     }
     if (data.size() != TOTAL_LEN) {

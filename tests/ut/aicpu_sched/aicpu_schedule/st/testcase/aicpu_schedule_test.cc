@@ -508,6 +508,7 @@ TEST_F(AICPUScheduleTEST, LOADTEST)
     ModelInfoptr->tsId = 0;
     StreamInfo* streamInfo = (StreamInfo*)malloc(sizeof(StreamInfo) * 10);
     if (streamInfo == nullptr) {
+        free(ModelInfoptr);
         return;
     }
     streamInfo[0].streamID = 0;
@@ -519,6 +520,8 @@ TEST_F(AICPUScheduleTEST, LOADTEST)
 
     AicpuTaskInfo* aicpuTaskinfo = (AicpuTaskInfo*)malloc(sizeof(AicpuTaskInfo) * 10);
     if (aicpuTaskinfo == nullptr) {
+        free(ModelInfoptr);
+        free(streamInfo);
         return;
     }
 
@@ -786,6 +789,7 @@ void LoadAndExecute(uint32_t* modelId)
     ModelInfoptr->queueSize = 0;
     StreamInfo* streamInfo = (StreamInfo*)malloc(sizeof(StreamInfo) * 10);
     if (streamInfo == nullptr) {
+        free(ModelInfoptr);
         return;
     }
     streamInfo[0].streamID = (*modelId - 1) * 10;
@@ -797,6 +801,8 @@ void LoadAndExecute(uint32_t* modelId)
 
     AicpuTaskInfo* aicpuTaskinfo = (AicpuTaskInfo*)malloc(sizeof(AicpuTaskInfo) * 10);
     if (aicpuTaskinfo == nullptr) {
+        free(ModelInfoptr);
+        free(streamInfo);
         return;
     }
 
@@ -5354,6 +5360,7 @@ TEST_F(AICPUScheduleTEST, EXECUTETESTREPORTSTATUS)
     ModelInfoptr->queueSize = 0;
     StreamInfo* streamInfo = (StreamInfo*)malloc(sizeof(StreamInfo));
     if (streamInfo == nullptr) {
+        free(ModelInfoptr);
         return;
     }
     streamInfo[0].streamID = aicpuStreamId;
@@ -5361,6 +5368,8 @@ TEST_F(AICPUScheduleTEST, EXECUTETESTREPORTSTATUS)
 
     AicpuTaskInfo* aicpuTaskinfo = (AicpuTaskInfo*)malloc(sizeof(AicpuTaskInfo));
     if (aicpuTaskinfo == nullptr) {
+        free(ModelInfoptr);
+        free(streamInfo);
         return;
     }
 
@@ -5368,6 +5377,13 @@ TEST_F(AICPUScheduleTEST, EXECUTETESTREPORTSTATUS)
     memcpy((char*)(uintptr_t)aicpuTaskinfo[0].kernelName, "modelReportStatus", strlen("modelReportStatus") + 1);
 
     uint32_t* paraMem = (uint32_t*)malloc(sizeof(ReportStatusInfo) + sizeof(QueueAttrs));
+    if (paraMem == nullptr) {
+        free(ModelInfoptr);
+        free(streamInfo);
+        free((char*)(uintptr_t)aicpuTaskinfo[0].kernelName);
+        free(aicpuTaskinfo);
+        return;
+    }
     ReportStatusInfo* reportStatusInfo = reinterpret_cast<ReportStatusInfo*>(paraMem);
     reportStatusInfo->inputNum = 1U;
     aicpuTaskinfo[0].paraBase = (uintptr_t)paraMem;
