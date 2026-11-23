@@ -5,7 +5,7 @@
 The following is error format. The placeholder %s indicates the error cause.
 
 ```text
-Failed to enable profiling.  %s
+Failed to enable profiling. %s
 ```
 
 Error example:
