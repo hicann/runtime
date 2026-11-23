@@ -819,6 +819,7 @@ rtError_t CCManager::SubmitCcMemcpyBatchTasks(
     rtPtrAttributes_t srcAttr{};
     rtMemLocationType realDstLoc = RT_MEMORY_LOC_MAX;
     rtMemLocationType realSrcLoc = RT_MEMORY_LOC_MAX;
+    std::vector<rtMemcpyKind_t> kinds(count, RT_MEMCPY_RESERVED);
     for (size_t i = 0U; i < count; ++i) {
         if (((attrIdx + 1U) < numAttrs) && (i >= attrsIdxs[attrIdx + 1U])) {
             ++attrIdx;
@@ -848,16 +849,19 @@ rtError_t CCManager::SubmitCcMemcpyBatchTasks(
                 " and the source location type is %s",
                 MemLocationTypeToString(realDstLoc).c_str(), MemLocationTypeToString(realSrcLoc).c_str()));
 
-        const rtMemcpyKind_t kind =
-            (realDstLoc == RT_MEMORY_LOC_DEVICE) ? RT_MEMCPY_HOST_TO_DEVICE : RT_MEMCPY_DEVICE_TO_HOST;
-        error = RT_ERROR_CONTINUE_EXECUTE;
-        if (CanUseSmallCcMemcpy(sizes[i], kind, stm, isSync)) {
+        kinds[i] = (realDstLoc == RT_MEMORY_LOC_DEVICE) ? RT_MEMCPY_HOST_TO_DEVICE : RT_MEMCPY_DEVICE_TO_HOST;
+    }
+
+    for (size_t i = 0U; i < count; ++i) {
+        const uint64_t destMax = (destMaxs == nullptr) ? static_cast<uint64_t>(sizes[i]) : destMaxs[i];
+        rtError_t error = RT_ERROR_CONTINUE_EXECUTE;
+        if (CanUseSmallCcMemcpy(sizes[i], kinds[i], stm, isSync)) {
             // D2H must finish Host post-processing before its shared buffer can be reused.
-            const bool syncSmallTask = isSync && (kind == RT_MEMCPY_DEVICE_TO_HOST);
-            error = SubmitSmallCcMemcpyTask(dsts[i], destMax, srcs[i], sizes[i], kind, stm, syncSmallTask);
+            const bool syncSmallTask = isSync && (kinds[i] == RT_MEMCPY_DEVICE_TO_HOST);
+            error = SubmitSmallCcMemcpyTask(dsts[i], destMax, srcs[i], sizes[i], kinds[i], stm, syncSmallTask);
         }
         if (error == RT_ERROR_CONTINUE_EXECUTE) {
-            error = SubmitCcMemcpyTask(dsts[i], srcs[i], sizes[i], kind, stm);
+            error = SubmitCcMemcpyTask(dsts[i], srcs[i], sizes[i], kinds[i], stm);
         }
         ERROR_PROC_RETURN_MSG_INNER(
             error, SetFailIndex(failIdx, i), "Failed to submit %zuth CC memory copy task. retCode=%#x.", i,

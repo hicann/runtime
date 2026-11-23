@@ -3060,6 +3060,28 @@ TEST_F(CCManagerTest, SmallTransfer_BatchSyncH2DWaitsOnceAfterAllItems)
     EXPECT_EQ(gSmallLaunches[1].metadata.dstAddr, RtPtrToValue(destination + 4U));
 }
 
+TEST_F(CCManagerTest, MemcpyBatch_ValidatesAllItemsBeforeSubmittingTasks)
+{
+    Stream* const stm = Runtime::Instance()->CurrentContext(true, DEFAULT_DEVICE_ID)->DefaultStream_();
+    ASSERT_NE(stm, nullptr);
+    uint8_t source[2]{};
+    uint8_t destination = 0U;
+    void* srcs[] = {&source[0], &source[1]};
+    void* dsts[] = {&destination, nullptr};
+    size_t sizes[] = {1U, 1U};
+    rtMemcpyBatchAttr attrs[1]{};
+    size_t attrsIdxs[] = {0U};
+    size_t failIdx = 0U;
+    MOCKER(CheckMemCpyAttr).expects(once()).will(invoke(SmallBatchH2DAttrStub));
+    MOCKER(CCManager::SubmitSmallCcMemcpyTask).expects(never());
+    MOCKER(CCManager::SubmitCcMemcpyTask).expects(never());
+
+    EXPECT_EQ(
+        CCManager::SubmitCcMemcpyBatchTasks(dsts, nullptr, srcs, sizes, 2U, attrs, attrsIdxs, 1U, &failIdx, stm, false),
+        RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(failIdx, 1U);
+}
+
 TEST_F(CCManagerTest, SmallTransfer_2DAsyncD2HKeepsLegacyPath)
 {
     Stream* stm = PrepareSmallTransfer();

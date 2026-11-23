@@ -146,6 +146,17 @@ bool g_rawAicpuExceptionCallbackCalled = false;
 uint32_t g_invalidRawAicpuExceptionCallbackCount = 0U;
 void* g_cachedRawAicpuSoNameAddr = nullptr;
 void* g_cachedRawAicpuFunctionNameAddr = nullptr;
+rtError_t g_rawAicpuMemCopyCallbackResult = RT_ERROR_NONE;
+
+rtError_t RawAicpuMemCopyCallback(
+    void* const dst, const uint64_t destMax, const void* const src, const uint64_t size, const rtMemcpyKind_t kind)
+{
+    (void)kind;
+    if (g_rawAicpuMemCopyCallbackResult == RT_ERROR_NONE) {
+        (void)memcpy_s(dst, destMax, src, size);
+    }
+    return g_rawAicpuMemCopyCallbackResult;
+}
 
 void GetCachedRawAicpuNameStub(ArgLoader* argLoader, std::string& name, const KernelInfoType type, void* addr)
 {
@@ -3791,8 +3802,14 @@ TEST_F(TaskTest, TestTaskFailCallBackWithRawAicpuExceptionInfo)
     g_rawAicpuExceptionCallbackCalled = false;
     MOCKER(GetTaskInfo).stubs().will(returnValue(&taskInfo));
     MOCKER_CPP(&TaskFactory::GetTask).stubs().will(returnValue(&taskInfo));
-    NpuDriver drv;
-    MOCKER_CPP_VIRTUAL(drv, &NpuDriver::MemCopySync).stubs().will(invoke(MemCopySync_stub));
+
+    DevDynInfoProcFunc procFunc{};
+    procFunc.memProcFunc.memCopySync = &RawAicpuMemCopyCallback;
+    MOCKER_CPP(&DevInfoManage::GetDevInfoProcFunc)
+        .stubs()
+        .with(mockcpp::any(), outBound(procFunc))
+        .will(returnValue(RT_ERROR_NONE));
+    g_rawAicpuMemCopyCallbackResult = RT_ERROR_NONE;
 
     TaskFailCallBack(
         static_cast<uint32_t>(stream_->Id_()), taskInfo.id, 0U, TS_ERROR_AICPU_EXCEPTION, stream_->Device_(), false);
@@ -3857,8 +3874,17 @@ TEST_F(TaskTest, TestTaskFailCallBackHandlesRawAicpuNameCopyFailure)
     g_invalidRawAicpuExceptionCallbackCount = 0U;
     MOCKER(GetTaskInfo).stubs().will(returnValue(&taskInfo));
     MOCKER_CPP(&TaskFactory::GetTask).stubs().will(returnValue(&taskInfo));
+
+    DevDynInfoProcFunc procFunc{};
+    procFunc.memProcFunc.memCopySync = &RawAicpuMemCopyCallback;
+    MOCKER_CPP(&DevInfoManage::GetDevInfoProcFunc)
+        .stubs()
+        .with(mockcpp::any(), outBound(procFunc))
+        .will(returnValue(RT_ERROR_NONE));
+    g_rawAicpuMemCopyCallbackResult = RT_ERROR_CONTINUE_EXECUTE;
+
     NpuDriver drv;
-    MOCKER_CPP_VIRTUAL(drv, &NpuDriver::MemCopySync).stubs().will(returnValue(RT_ERROR_DEVICE_NULL));
+    MOCKER_CPP_VIRTUAL(drv, &NpuDriver::MemCopySync).expects(exactly(2)).will(returnValue(RT_ERROR_DEVICE_NULL));
 
     TaskFailCallBack(
         static_cast<uint32_t>(stream_->Id_()), taskInfo.id, 0U, TS_ERROR_AICPU_EXCEPTION, stream_->Device_(), false);

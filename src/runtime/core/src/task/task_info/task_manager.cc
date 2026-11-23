@@ -667,7 +667,18 @@ static void CopyAicpuExceptionNameFromArgs(TaskInfo* const taskInfo, const void*
     if (driver == nullptr) {
         return;
     }
-    const rtError_t error = driver->MemCopySync(nameBuffer, copySize, nameAddr, copySize, RT_MEMCPY_DEVICE_TO_HOST);
+
+    rtError_t error = RT_ERROR_NONE;
+    DevDynInfoProcFunc func{};
+    if ((GET_DEV_INFO_PROC_FUNC(Runtime::Instance()->GetChipType(), func) == RT_ERROR_NONE) &&
+        (func.memProcFunc.memCopySync != nullptr)) {
+        error = func.memProcFunc.memCopySync(nameBuffer, copySize, nameAddr, copySize, RT_MEMCPY_DEVICE_TO_HOST);
+        if (error == RT_ERROR_CONTINUE_EXECUTE) {
+            error = driver->MemCopySync(nameBuffer, copySize, nameAddr, copySize, RT_MEMCPY_DEVICE_TO_HOST);
+        }
+    } else {
+        error = driver->MemCopySync(nameBuffer, copySize, nameAddr, copySize, RT_MEMCPY_DEVICE_TO_HOST);
+    }
     if (error != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_WARNING, "Copy AICPU exception name failed, nameAddr=%p, retCode=%#x.", nameAddr, error);
         return;
