@@ -778,13 +778,14 @@ TEST_P(SnapshotAcceptFailureTest, OnlyResourceExhaustionWaitsBeforeRetryAndAllCa
         g_interruptPoll.store(false);
         g_acceptError = EMFILE;
     });
-    SnapshotService service;
-    ASSERT_EQ(service.StartSnapshotService(Runtime::Instance()->ApiSnapshot_()), 0);
     g_acceptError = GetParam();
     g_interruptPoll.store(true);
     GlobalStateManager::GetInstance().SetCurrentState(RT_PROCESS_STATE_RUNNING);
+    // Install both mocks before the service thread can call poll or accept4.
     MOCKER(accept4).expects(exactly(3)).will(invoke(AcceptAfterResourceFailures));
     MOCKER(poll).stubs().will(invoke(PollRecordingBackoff));
+    SnapshotService service;
+    ASSERT_EQ(service.StartSnapshotService(Runtime::Instance()->ApiSnapshot_()), 0);
     uint32_t value = 99U;
     const auto start = std::chrono::steady_clock::now();
     EXPECT_EQ(SnapshotSocketCall(mmGetPid(), rtSnapshotOp::GET_STATE, nullptr, value), ACL_RT_SUCCESS);
@@ -811,10 +812,10 @@ TEST_F(ApiSnapshotRouteTest, SocketStopWakesResourceBackoff)
         g_backoffWaits.store(0U);
         g_acceptError = EMFILE;
     });
-    SnapshotService service;
-    ASSERT_EQ(service.StartSnapshotService(Runtime::Instance()->ApiSnapshot_()), 0);
     MOCKER(accept4).expects(atLeast(1)).will(invoke(AcceptAfterResourceFailures));
     MOCKER(poll).stubs().will(invoke(PollRecordingBackoff));
+    SnapshotService service;
+    ASSERT_EQ(service.StartSnapshotService(Runtime::Instance()->ApiSnapshot_()), 0);
     const int32_t client = mmSocket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0);
     ASSERT_GE(client, 0);
     const ScopeGuard closeClient([client] { (void)mmCloseSocket(client); });
