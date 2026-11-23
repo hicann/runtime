@@ -1515,6 +1515,9 @@ rtError_t Event::ClearRecordStatus()
 
 bool Event::IsEventInModel()
 {
+    if (device_ == nullptr) {
+        return false;
+    }
     const std::lock_guard<std::mutex> latestStateLock(recordStateMutex_);
     std::shared_ptr<Stream> stm = nullptr;
     rtError_t error = device_->GetStreamSqCqManage()->GetStreamSharedPtrById(latestRecord_.streamId, stm);

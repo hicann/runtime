@@ -168,6 +168,11 @@ rtError_t ApiImplEvent::EventElapsedTime(float32_t* const timeInterval, Event* c
         (startEvent->GetEventFlag() == static_cast<uint32_t>(RT_EVENT_IPC) ||
          endEvent->GetEventFlag() == static_cast<uint32_t>(RT_EVENT_IPC)),
         RT_ERROR_FEATURE_NOT_SUPPORT, "IPC events are not supported by the rtEventElapsedTime API");
+    COND_RETURN_WARN(
+        ((!startEvent->IsExternalRecordOrWait() && startEvent->IsEventInModel() && startEvent->IsEventWithTimeline()) ||
+         (!endEvent->IsExternalRecordOrWait() && endEvent->IsEventInModel() && endEvent->IsEventWithTimeline())),
+        RT_ERROR_FEATURE_NOT_SUPPORT,
+        "TIME_LINE and not external events on bind stream are not supported by the rtEventElapsedTime API");
     return endEvent->ElapsedTime(timeInterval, startEvent);
 }
 
