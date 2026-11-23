@@ -525,7 +525,7 @@ aclError aclrtCtxGetFloatOverflowAddr(void **overflowAddr)
 
 ### 功能说明
 
-饱和模式下，获取保存溢出标记的Device内存地址，该内存地址后续需作为Workspace参数传递给AI Core算子。
+获取保存溢出标记的Device内存地址，该内存地址后续需作为Workspace参数传递给AI Core算子。
 
 ### 参数说明
 
