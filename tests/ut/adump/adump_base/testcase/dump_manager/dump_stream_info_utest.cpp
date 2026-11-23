@@ -55,15 +55,13 @@ TEST_F(DumpResourceSafeMapUtest, Test_DumpStreamCreate_Success)
 {
     DumpStreamInfo* dumpPtr = nullptr;
     int32_t ret = DumpStreamCreate(&dumpPtr);
-    EXPECT_EQ(ret, ADUMP_SUCCESS);
-    EXPECT_NE(dumpPtr, nullptr);
+    ASSERT_EQ(ret, ADUMP_SUCCESS);
+    ASSERT_NE(dumpPtr, nullptr);
     EXPECT_NE(dumpPtr->stm, nullptr);
     EXPECT_NE(dumpPtr->mainStmEvt, nullptr);
     EXPECT_NE(dumpPtr->dumpStmEvt, nullptr);
 
-    if (dumpPtr != nullptr) {
-        DumpStreamFree(dumpPtr);
-    }
+    DumpStreamFree(dumpPtr);
 }
 
 TEST_F(DumpResourceSafeMapUtest, Test_DumpStreamCreate_Fail_NullPtr)
@@ -94,7 +92,7 @@ TEST_F(DumpResourceSafeMapUtest, Test_DumpResourceSafeMap_Insert_Get)
     DumpResourceSafeMap::Instance().insert("test_key_1", dumpInfo);
 
     auto result = DumpResourceSafeMap::Instance().get("test_key_1");
-    EXPECT_NE(result, nullptr);
+    ASSERT_NE(result, nullptr);
     EXPECT_EQ(result->mainStreamKey, "test_key_1");
 }
 
