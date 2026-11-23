@@ -8,12 +8,15 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include <gtest/gtest.h>
+#include <cstring>
+#include <vector>
 #include "mockcpp/mockcpp.hpp"
 #define protected public
 #define private public
 
 #include "config.h"
 #include "adx_dump_hdc_helper.h"
+#include "adx_datadump_callback.h"
 #include "adx_dump_soc_helper.h" // SOC 分发下游的 DataProcess（never 期望需要完整类型）
 #include "adx_comm_opt.h"
 #include "ascend_hal.h"
@@ -63,17 +66,22 @@ TEST_F(ADX_DUMP_HDC_HELPER_TEST, IdeDumpStart)
     EXPECT_EQ(0, session);
 }
 
+static void FillIdeDumpChunk(IdeDumpChunk& dumpChunk, unsigned char* buf, const char* fileName)
+{
+    dumpChunk.fileName = const_cast<char*>(fileName);
+    dumpChunk.dataBuf = buf;
+    dumpChunk.bufLen = 1;
+    dumpChunk.isLastChunk = 0;
+    dumpChunk.offset = 0;
+    dumpChunk.flag = IDE_DUMP_NONE_FLAG;
+}
+
 TEST_F(ADX_DUMP_HDC_HELPER_TEST, IdeDumpData_WriteError)
 {
     IDE_SESSION session = (IDE_SESSION)0xFFFFF000;
     IdeDumpChunk dumpChunk;
     unsigned char ch = 'a';
-    dumpChunk.fileName = "/home/test.log";
-    dumpChunk.dataBuf = &ch;
-    dumpChunk.bufLen = 1;
-    dumpChunk.isLastChunk = 0;
-    dumpChunk.offset = 0;
-    dumpChunk.flag = IDE_DUMP_NONE_FLAG;
+    FillIdeDumpChunk(dumpChunk, &ch, "/home/test.log");
     const IdeDumpChunk constDumpChunk = dumpChunk;
     EXPECT_EQ(IDE_DAEMON_INVALID_PARAM_ERROR, IdeDumpData(nullptr, nullptr));
     EXPECT_EQ(IDE_DAEMON_INVALID_PARAM_ERROR, IdeDumpData(session, nullptr));
@@ -87,16 +95,36 @@ TEST_F(ADX_DUMP_HDC_HELPER_TEST, IdeDumpData_SessionError)
     IDE_SESSION session = (IDE_SESSION)0xFFFFF000;
     IdeDumpChunk dumpChunk;
     unsigned char ch = 'a';
-    dumpChunk.fileName = "/home/test.log";
-    dumpChunk.dataBuf = &ch;
-    dumpChunk.bufLen = 1;
-    dumpChunk.isLastChunk = 0;
-    dumpChunk.offset = 0;
-    dumpChunk.flag = IDE_DUMP_NONE_FLAG;
+    FillIdeDumpChunk(dumpChunk, &ch, "/home/test.log");
     const IdeDumpChunk constDumpChunk = dumpChunk;
     EXPECT_EQ(IDE_DAEMON_INVALID_PARAM_ERROR, IdeDumpData(nullptr, nullptr));
     EXPECT_EQ(IDE_DAEMON_INVALID_PARAM_ERROR, IdeDumpData(session, nullptr));
     int ret = IdeDumpData(session, &constDumpChunk);
+    EXPECT_EQ(IDE_DAEMON_CHANNEL_ERROR, ret);
+}
+
+TEST_F(ADX_DUMP_HDC_HELPER_TEST, DataProcess_FileNameRobustness)
+{
+    IDE_SESSION session = (IDE_SESSION)0xFFFFF000;
+    IdeDumpChunk dumpChunk;
+    unsigned char ch = 'a';
+    FillIdeDumpChunk(dumpChunk, &ch, nullptr);
+    const IdeDumpChunk constDumpChunk = dumpChunk;
+    int ret = IdeDumpData(session, &constDumpChunk);
+    EXPECT_EQ(IDE_DAEMON_INVALID_PARAM_ERROR, ret);
+
+    std::vector<char> longName(Adx::MAX_FILE_PATH_LENGTH, 'a');
+    FillIdeDumpChunk(dumpChunk, &ch, longName.data());
+    const IdeDumpChunk longDumpChunk = dumpChunk;
+    ret = IdeDumpData(session, &longDumpChunk);
+    EXPECT_EQ(IDE_DAEMON_INVALID_PATH_ERROR, ret);
+
+    MOCKER(halHdcGetSessionAttr).stubs().will(returnValue(1));
+    std::vector<char> maxName(Adx::MAX_FILE_PATH_LENGTH, 'a');
+    maxName.back() = '\0';
+    FillIdeDumpChunk(dumpChunk, &ch, maxName.data());
+    const IdeDumpChunk maxDumpChunk = dumpChunk;
+    ret = IdeDumpData(session, &maxDumpChunk);
     EXPECT_EQ(IDE_DAEMON_CHANNEL_ERROR, ret);
 }
 

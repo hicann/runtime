@@ -32,7 +32,12 @@ using namespace Adx;
 
 class ADX_DUMP_RECEIVE_TEST : public testing::Test {
 protected:
-    virtual void SetUp() {}
+    virtual void SetUp()
+    {
+        AdxCommOptManager::Instance().commOptMap_.clear();
+        std::unique_ptr<AdxCommOpt> opt(new HdcCommOpt());
+        ASSERT_EQ(true, AdxCommOptManager::Instance().CommOptsRegister(opt));
+    }
     virtual void TearDown() { GlobalMockObject::verify(); }
 
     static SharedPtr<MsgProto> CreateMsgProto(
@@ -352,6 +357,67 @@ TEST_F(ADX_DUMP_RECEIVE_TEST, Receive_QueueFullAllResponse)
         .then(invoke(HdcReadValidDataStub))
         .then(invoke(HdcReadCtrlEndStub));
 
+    EXPECT_EQ(IDE_DAEMON_OK, adxDumpReceive.Process(handle, protoPtrs));
+}
+
+static int HdcReadFileNameTooLongStub(HDC_SESSION session, IdeRecvBuffT recvBuf, IdeI32Pt recvLen)
+{
+    uint32_t protoHeaderLen = sizeof(MsgProto);
+    uint32_t chunkHeaderLen = sizeof(DumpChunk);
+    uint32_t dataLen = 1;
+    uint32_t totalSize = protoHeaderLen + chunkHeaderLen + dataLen;
+    MsgProto* msg = (MsgProto*)IdeXmalloc(totalSize);
+    (void)memset_s(msg, totalSize, 0, totalSize);
+    msg->msgType = MsgType::MSG_DATA;
+    msg->sliceLen = chunkHeaderLen + dataLen;
+    DumpChunk* chunk = reinterpret_cast<DumpChunk*>(msg->data);
+    chunk->bufLen = dataLen;
+    memset(chunk->fileName, 'a', MAX_FILE_PATH_LENGTH);
+    *recvBuf = msg;
+    *recvLen = totalSize;
+    return IDE_DAEMON_OK;
+}
+
+static int HdcReadFileNameMaxLengthStub(HDC_SESSION session, IdeRecvBuffT recvBuf, IdeI32Pt recvLen)
+{
+    uint32_t protoHeaderLen = sizeof(MsgProto);
+    uint32_t chunkHeaderLen = sizeof(DumpChunk);
+    uint32_t dataLen = 1;
+    uint32_t totalSize = protoHeaderLen + chunkHeaderLen + dataLen;
+    MsgProto* msg = (MsgProto*)IdeXmalloc(totalSize);
+    (void)memset_s(msg, totalSize, 0, totalSize);
+    msg->msgType = MsgType::MSG_DATA;
+    msg->sliceLen = chunkHeaderLen + dataLen;
+    DumpChunk* chunk = reinterpret_cast<DumpChunk*>(msg->data);
+    chunk->bufLen = dataLen;
+    memset(chunk->fileName, 'a', MAX_FILE_PATH_LENGTH - 1);
+    chunk->fileName[MAX_FILE_PATH_LENGTH - 1] = '\0';
+    *recvBuf = msg;
+    *recvLen = totalSize;
+    return IDE_DAEMON_OK;
+}
+
+TEST_F(ADX_DUMP_RECEIVE_TEST, Receive_FileNameRobustness)
+{
+    AdxDumpReceive adxDumpReceive;
+    adxDumpReceive.init_ = true;
+    CommHandle handle = CreateHdcHandle();
+    SharedPtr<MsgProto> protoPtrs = CreateMsgProto(MsgType::MSG_CTRL, MsgStatus::MSG_STATUS_HAND_SHAKE);
+
+    MOCKER(AdxMsgProto::SendResponse).stubs().will(returnValue(IDE_DAEMON_NONE_ERROR));
+    MOCKER(&AdxDumpRecord::RecordDumpDataToQueue).stubs().will(returnValue(false));
+    // mockcpp 的 invoke() stub 恒报告 isCompleted，.then() 链的首个 will() 在第一次调用时会被跳过，
+    // 因此首个 stub 需重复注册一次（与 Receive_ValidData 的用法一致）
+    MOCKER(HdcRead)
+        .stubs()
+        .will(invoke(HdcReadFileNameTooLongStub))
+        .then(invoke(HdcReadFileNameTooLongStub))
+        .then(invoke(HdcReadFileNameMaxLengthStub))
+        .then(invoke(HdcReadCtrlEndStub));
+
+    // fileName 无 '\0' 结尾（4096 全 'a'），拒绝该 chunk
+    EXPECT_EQ(IDE_DAEMON_INVALID_PATH_ERROR, adxDumpReceive.Process(handle, protoPtrs));
+    // fileName 恰好 MAX_FILE_PATH_LENGTH-1 长度且带 '\0' 结尾，正常走完收包流程
     EXPECT_EQ(IDE_DAEMON_OK, adxDumpReceive.Process(handle, protoPtrs));
 }
 

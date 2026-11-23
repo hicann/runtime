@@ -116,10 +116,10 @@ IdeErrorT AdxDumpHdcHelper::DataProcess(const IDE_SESSION& session, const IdeDum
     std::unique_ptr<MsgProto, decltype(&IdeXfree)> sendDataMsgPtr(msg, IdeXfree);
     msg = nullptr;
     DumpChunk* data = reinterpret_cast<DumpChunk*>(sendDataMsgPtr->data);
-    // check file name length, not longer than IDE_MAX_FILE_PATH
+    IDE_CTRL_VALUE_FAILED(dumpChunk.fileName != nullptr, return IDE_DAEMON_INVALID_PARAM_ERROR, "fileName is null");
     IDE_CTRL_VALUE_FAILED(
-        strlen(dumpChunk.fileName) < IDE_MAX_FILE_PATH, return IDE_DAEMON_INVALID_PATH_ERROR,
-        "fileName is too long, not longer than %d length", IDE_MAX_FILE_PATH);
+        strnlen(dumpChunk.fileName, MAX_FILE_PATH_LENGTH) < MAX_FILE_PATH_LENGTH, return IDE_DAEMON_INVALID_PATH_ERROR,
+        "fileName is too long, no longer than %u length", MAX_FILE_PATH_LENGTH);
     int32_t err = strcpy_s(data->fileName, MAX_FILE_PATH_LENGTH, dumpChunk.fileName);
     IDE_CTRL_VALUE_FAILED(
         err == EOK, return IDE_DAEMON_INVALID_PATH_ERROR, "copy file name failed, err=%d, strerror=%s", err,

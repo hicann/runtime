@@ -137,3 +137,56 @@ TEST_F(ADX_HDC_COMMOPT_UTEST, TryReadDoesNotRetryWhenNoData)
 
     EXPECT_EQ(IDE_DAEMON_RECV_NODATA, opt->TryRead(session, &buffer, length));
 }
+
+static int g_getMsgBufferStubMode = 0;
+static char g_dummyHdcMsg[16] = {0};
+
+static hdcError_t GetMsgBufferStub(struct drvHdcMsg* msg, int index, char** pBuf, int* pLen)
+{
+    if (g_getMsgBufferStubMode == 0) {
+        // buffer smaller than the IdeHdcPacket head, must error out instead of being skipped silently
+        *pBuf = const_cast<char*>("ab");
+        *pLen = 2;
+    } else {
+        // null buffer, must error out as well
+        *pBuf = nullptr;
+        *pLen = 0;
+    }
+    return DRV_ERROR_NONE;
+}
+
+static hdcError_t AllocMsgOkStub(HDC_SESSION session, struct drvHdcMsg** ppMsg, int count)
+{
+    // must set *ppMsg, otherwise HdcSessionRead fails the alloc check before reaching the package branch
+    *ppMsg = reinterpret_cast<struct drvHdcMsg*>(g_dummyHdcMsg);
+    return DRV_ERROR_NONE;
+}
+
+static hdcError_t RecvOneBufStub(
+    HDC_SESSION session, struct drvHdcMsg* msg, int bufLen, unsigned long long flag, int* recvBufCount,
+    unsigned int timeout)
+{
+    // must set *recvBufCount, otherwise HdcReadPackage iterates zero buffers and the session loop never ends
+    *recvBufCount = 1;
+    return DRV_ERROR_NONE;
+}
+
+TEST_F(ADX_HDC_COMMOPT_UTEST, ReadShortPackageErrorsOut)
+{
+    const HDC_SESSION session = reinterpret_cast<HDC_SESSION>(0x12345678);
+    void* buffer = nullptr;
+    int32_t length = 0;
+
+    MOCKER(drvHdcAllocMsg).stubs().will(invoke(AllocMsgOkStub));
+    MOCKER(halHdcRecv).stubs().will(invoke(RecvOneBufStub));
+    MOCKER(drvHdcGetMsgBuffer).stubs().will(invoke(GetMsgBufferStub));
+    MOCKER(drvHdcFreeMsg).stubs().will(returnValue(DRV_ERROR_NONE));
+
+    // short package: pBufLen < sizeof(IdeHdcPacket)
+    g_getMsgBufferStubMode = 0;
+    EXPECT_EQ(IDE_DAEMON_ERROR, HdcRead(session, &buffer, &length));
+
+    // null package buffer
+    g_getMsgBufferStubMode = 1;
+    EXPECT_EQ(IDE_DAEMON_ERROR, HdcRead(session, &buffer, &length));
+}

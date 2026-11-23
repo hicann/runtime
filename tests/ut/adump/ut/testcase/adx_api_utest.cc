@@ -68,6 +68,7 @@ static int32_t HdcReadTimeoutDataStub(HDC_SESSION session, uint32_t timeout, Ide
     *recvLen = sizeof(MsgProto) + strlen(srcFile) + 1;
     msg->sliceLen = strlen(srcFile) + 1;
     msg->totalLen = strlen(srcFile) + 1;
+    msg->offset = 0;
     msg->msgType = MsgType::MSG_DATA;
     msg->status = MsgStatus::MSG_STATUS_DATA_END;
     *recvBuf = msg;
@@ -81,6 +82,7 @@ static int32_t HdcReadTimeoutDataErrorStub(
     MsgProto* msg = AdxMsgProto::CreateMsgPacket(IDE_FILE_GETD_REQ, 0, srcFile, strlen(srcFile) + 1);
     *recvLen = sizeof(MsgProto) + strlen(srcFile) + 1;
     msg->offset = 0;
+    // sliceLen is inconsistent with the actually received length, simulating an abnormal message from the peer
     msg->sliceLen = 1;
     msg->totalLen = strlen(srcFile) + 1;
     msg->msgType = MsgType::MSG_DATA;
@@ -98,6 +100,67 @@ static int32_t HdcReadTimeoutCtrlStub(HDC_SESSION session, uint32_t timeout, Ide
     msg->status = MsgStatus::MSG_STATUS_FILE_LOAD;
     *recvLen = sizeof(MsgProto);
     std::cout << "<-- adx_api_utest HdcReadTimeoutCtrlStub --> " << *recvLen << std::endl;
+    *recvBuf = msg;
+    return IDE_DAEMON_OK;
+}
+
+static int32_t HdcReadTimeoutShortFrameStub(
+    HDC_SESSION session, uint32_t timeout, IdeRecvBuffT recvBuf, IdeI32Pt recvLen)
+{
+    // the actually received length is less than the MsgProto header, the message is abnormal
+    MsgProto* msg = (MsgProto*)IdeXmalloc(sizeof(MsgProto));
+    msg->msgType = MsgType::MSG_DATA;
+    msg->sliceLen = 1;
+    msg->totalLen = 1;
+    msg->offset = 0;
+    *recvLen = static_cast<int32_t>(sizeof(MsgProto)) - 1;
+    *recvBuf = msg;
+    return IDE_DAEMON_OK;
+}
+
+static int32_t HdcReadTimeoutSecondSliceStub(
+    HDC_SESSION session, uint32_t timeout, IdeRecvBuffT recvBuf, IdeI32Pt recvLen)
+{
+    // the second slice of the same file, offset keeps pace with the received progress
+    const char* srcFile = "adx_server_manager";
+    MsgProto* msg = AdxMsgProto::CreateMsgPacket(IDE_FILE_GETD_REQ, 0, srcFile, strlen(srcFile) + 1);
+    *recvLen = sizeof(MsgProto) + strlen(srcFile) + 1;
+    uint32_t sliceLen = strlen(srcFile) + 1;
+    msg->offset = sliceLen;
+    msg->sliceLen = sliceLen;
+    msg->totalLen = 2 * sliceLen;
+    msg->msgType = MsgType::MSG_DATA;
+    msg->status = MsgStatus::MSG_STATUS_DATA_END;
+    *recvBuf = msg;
+    return IDE_DAEMON_OK;
+}
+
+static int32_t HdcReadTimeoutFirstSliceOfTwoStub(
+    HDC_SESSION session, uint32_t timeout, IdeRecvBuffT recvBuf, IdeI32Pt recvLen)
+{
+    // the first slice of a two-slice file, totalLen exceeds this slice so receiving continues
+    const char* srcFile = "adx_server_manager";
+    MsgProto* msg = AdxMsgProto::CreateMsgPacket(IDE_FILE_GETD_REQ, 0, srcFile, strlen(srcFile) + 1);
+    *recvLen = sizeof(MsgProto) + strlen(srcFile) + 1;
+    uint32_t sliceLen = strlen(srcFile) + 1;
+    msg->offset = 0;
+    msg->sliceLen = sliceLen;
+    msg->totalLen = 2 * sliceLen;
+    msg->msgType = MsgType::MSG_DATA;
+    msg->status = MsgStatus::MSG_STATUS_DATA_END;
+    *recvBuf = msg;
+    return IDE_DAEMON_OK;
+}
+
+static int32_t HdcReadTimeoutZeroSliceNotDoneStub(
+    HDC_SESSION session, uint32_t timeout, IdeRecvBuffT recvBuf, IdeI32Pt recvLen)
+{
+    MsgProto* msg = (MsgProto*)IdeXmalloc(sizeof(MsgProto));
+    msg->msgType = MsgType::MSG_DATA;
+    msg->sliceLen = 0;
+    msg->totalLen = 100;
+    msg->offset = 0;
+    *recvLen = sizeof(MsgProto);
     *recvBuf = msg;
     return IDE_DAEMON_OK;
 }
@@ -434,7 +497,7 @@ TEST_F(ADX_API_UTEST, AdxGetSpecifiedFileCtrlFail)
     EXPECT_EQ(IDE_DAEMON_ERROR, AdxGetSpecifiedFile(0x1, "PATH1", "PATH2", 1, 1));
 }
 
-TEST_F(ADX_API_UTEST, AdxGetSpecifiedFileWriteFail)
+TEST_F(ADX_API_UTEST, AdxGetSpecifiedFileSliceLenMismatch)
 {
     MOCKER(AdxGetLogIdByPhyId).stubs().will(returnValue(IDE_DAEMON_OK));
 
@@ -450,8 +513,115 @@ TEST_F(ADX_API_UTEST, AdxGetSpecifiedFileWriteFail)
 
     MOCKER(mmOpen2).stubs().will(returnValue(1));
 
-    MOCKER(mmWrite).stubs().will(returnValue((mmSsize_t)1)).then(returnValue((mmSsize_t)(-1)));
+    // mmWrite must not be reached when sliceLen is inconsistent with the actually received length
+    MOCKER(mmWrite).expects(never()).will(returnValue((mmSsize_t)1));
 
+    MOCKER(remove).stubs().will(returnValue(1));
+
+    g_GetStringMsgDataStub = 0;
+    EXPECT_EQ(IDE_DAEMON_ERROR, AdxGetSpecifiedFile(0x1, "PATH1", "PATH2", 1, 1));
+}
+
+TEST_F(ADX_API_UTEST, AdxGetSpecifiedFileShortFrame)
+{
+    MOCKER(AdxGetLogIdByPhyId).stubs().will(returnValue(IDE_DAEMON_OK));
+
+    MOCKER(AdxMsgProto::SendMsgData).stubs().will(returnValue(IDE_DAEMON_NONE_ERROR));
+
+    MOCKER(AdxMsgProto::GetStringMsgData).stubs().will(invoke(GetStringMsgDataStub));
+
+    MOCKER(HdcReadTimeout).stubs().will(invoke(HdcReadTimeoutShortFrameStub));
+
+    MOCKER(Adx::FileUtils::IsFileExist).stubs().will(returnValue(false));
+
+    MOCKER(Adx::FileUtils::CreateDir).stubs().will(returnValue(IDE_DAEMON_NONE_ERROR));
+
+    MOCKER(mmOpen2).stubs().will(returnValue(1));
+
+    // mmWrite must not be reached when the frame is shorter than the MsgProto header
+    MOCKER(mmWrite).expects(never()).will(returnValue((mmSsize_t)1));
+
+    MOCKER(remove).stubs().will(returnValue(1));
+
+    g_GetStringMsgDataStub = 0;
+    EXPECT_EQ(IDE_DAEMON_ERROR, AdxGetSpecifiedFile(0x1, "PATH1", "PATH2", 1, 1));
+}
+
+TEST_F(ADX_API_UTEST, AdxGetSpecifiedFileWriteFail)
+{
+    MOCKER(AdxGetLogIdByPhyId).stubs().will(returnValue(IDE_DAEMON_OK));
+    MOCKER(AdxMsgProto::SendMsgData).stubs().will(returnValue(IDE_DAEMON_NONE_ERROR));
+    MOCKER(AdxMsgProto::GetStringMsgData).stubs().will(invoke(GetStringMsgDataStub));
+    MOCKER(HdcReadTimeout)
+        .stubs()
+        .will(invoke(HdcReadTimeoutFirstSliceOfTwoStub))
+        .then(invoke(HdcReadTimeoutFirstSliceOfTwoStub))
+        .then(invoke(HdcReadTimeoutSecondSliceStub));
+    MOCKER(Adx::FileUtils::IsFileExist).stubs().will(returnValue(false));
+    MOCKER(Adx::FileUtils::CreateDir).stubs().will(returnValue(IDE_DAEMON_NONE_ERROR));
+    MOCKER(mmOpen2).stubs().will(returnValue(1));
+    // the first slice writes fully, the second slice hits a write failure
+    MOCKER(mmWrite)
+        .expects(exactly(2))
+        .will(returnValue((mmSsize_t)strlen("adx_server_manager") + 1))
+        .then(returnValue((mmSsize_t)(-1)));
+    MOCKER(remove).stubs().will(returnValue(1));
+
+    g_GetStringMsgDataStub = 0;
+    EXPECT_EQ(IDE_DAEMON_ERROR, AdxGetSpecifiedFile(0x1, "PATH1", "PATH2", 1, 1));
+}
+
+TEST_F(ADX_API_UTEST, AdxGetSpecifiedFileZeroSliceNotDone)
+{
+    MOCKER(AdxGetLogIdByPhyId).stubs().will(returnValue(IDE_DAEMON_OK));
+    MOCKER(AdxMsgProto::SendMsgData).stubs().will(returnValue(IDE_DAEMON_NONE_ERROR));
+    MOCKER(AdxMsgProto::GetStringMsgData).stubs().will(invoke(GetStringMsgDataStub));
+    MOCKER(HdcReadTimeout).stubs().will(invoke(HdcReadTimeoutZeroSliceNotDoneStub));
+    MOCKER(Adx::FileUtils::IsFileExist).stubs().will(returnValue(false));
+    MOCKER(Adx::FileUtils::CreateDir).stubs().will(returnValue(IDE_DAEMON_NONE_ERROR));
+    MOCKER(mmOpen2).stubs().will(returnValue(1));
+    // mmWrite must not be reached when the file is not complete and the slice carries no payload
+    MOCKER(mmWrite).expects(never()).will(returnValue((mmSsize_t)1));
+    MOCKER(remove).stubs().will(returnValue(1));
+
+    g_GetStringMsgDataStub = 0;
+    EXPECT_EQ(IDE_DAEMON_ERROR, AdxGetSpecifiedFile(0x1, "PATH1", "PATH2", 1, 1));
+}
+
+static int32_t HdcReadTimeoutSecondSliceTotalLenChangedStub(
+    HDC_SESSION session, uint32_t timeout, IdeRecvBuffT recvBuf, IdeI32Pt recvLen)
+{
+    // the second slice rewrites totalLen to shrink the declared file size, totalLen must stay fixed;
+    // the package itself is well-formed (offset keeps pace, no payload), only totalLen is tampered
+    const char* srcFile = "adx_server_manager";
+    uint32_t sliceLen = strlen(srcFile) + 1;
+    MsgProto* msg = (MsgProto*)IdeXmalloc(sizeof(MsgProto));
+    msg->offset = sliceLen;   // offset keeps pace with the local received progress
+    msg->sliceLen = 0;
+    msg->totalLen = sliceLen; // totalLen is rewritten to receivedLen to fake an early completion
+    msg->msgType = MsgType::MSG_DATA;
+    msg->status = MsgStatus::MSG_STATUS_DATA_END;
+    *recvLen = sizeof(MsgProto);
+    *recvBuf = msg;
+    return IDE_DAEMON_OK;
+}
+
+TEST_F(ADX_API_UTEST, AdxGetSpecifiedFileTotalLenChanged)
+{
+    MOCKER(AdxGetLogIdByPhyId).stubs().will(returnValue(IDE_DAEMON_OK));
+    MOCKER(AdxMsgProto::SendMsgData).stubs().will(returnValue(IDE_DAEMON_NONE_ERROR));
+    MOCKER(AdxMsgProto::GetStringMsgData).stubs().will(invoke(GetStringMsgDataStub));
+    // the first slice declares totalLen = 2 * sliceLen, the second slice rewrites totalLen = sliceLen
+    MOCKER(HdcReadTimeout)
+        .stubs()
+        .will(invoke(HdcReadTimeoutFirstSliceOfTwoStub))
+        .then(invoke(HdcReadTimeoutFirstSliceOfTwoStub))
+        .then(invoke(HdcReadTimeoutSecondSliceTotalLenChangedStub));
+    MOCKER(Adx::FileUtils::IsFileExist).stubs().will(returnValue(false));
+    MOCKER(Adx::FileUtils::CreateDir).stubs().will(returnValue(IDE_DAEMON_NONE_ERROR));
+    MOCKER(mmOpen2).stubs().will(returnValue(1));
+    // mmWrite writes the whole slice at once, only the first slice hits the disk
+    MOCKER(mmWrite).expects(exactly(1)).will(returnValue((mmSsize_t)strlen("adx_server_manager") + 1));
     MOCKER(remove).stubs().will(returnValue(1));
 
     g_GetStringMsgDataStub = 0;

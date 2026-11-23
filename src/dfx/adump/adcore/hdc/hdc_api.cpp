@@ -191,13 +191,14 @@ static int32_t IoVecListToMem(std::list<struct IoVec>& ioList, struct IoVec& bas
 {
     uint32_t offset = 0;
     for (const auto& eit : ioList) {
-        if (base.len >= eit.len && offset <= base.len - eit.len) {
-            const errno_t err = memcpy_s(
-                static_cast<IdeU8Pt>(base.base) + offset, static_cast<size_t>(base.len - offset), eit.base,
-                static_cast<size_t>(eit.len));
-            if (err != EOK) {
-                return IDE_DAEMON_ERROR;
-            }
+        if (base.len < eit.len || offset > base.len - eit.len) {
+            return IDE_DAEMON_ERROR;
+        }
+        const errno_t err = memcpy_s(
+            static_cast<IdeU8Pt>(base.base) + offset, static_cast<size_t>(base.len - offset), eit.base,
+            static_cast<size_t>(eit.len));
+        if (err != EOK) {
+            return IDE_DAEMON_ERROR;
         }
         offset += eit.len;
     }
@@ -273,18 +274,18 @@ static int32_t HdcReadPackage(struct drvHdcMsg& pmsg, IdeLastPacket& isLast, int
     for (; i < recvBufCount; i++) {
         const hdcError_t error = drvHdcGetMsgBuffer(&pmsg, i, &pBuf, &pBufLen);
         IDE_CTRL_VALUE_FAILED(error == DRV_ERROR_NONE, return IDE_DAEMON_ERROR, "Hdc Get Msg Buffer, error %d", error);
-        if (pBuf != nullptr && pBufLen > 0) {
-            struct IdeHdcPacket* packet = reinterpret_cast<struct IdeHdcPacket*>(pBuf);
-            IDE_CTRL_VALUE_FAILED(
-                static_cast<uint32_t>(pBufLen) >= sizeof(IdeHdcPacket) + packet->len, return IDE_DAEMON_ERROR,
-                "packet len is larger than pBufLen");
-            // store package by packet type
-            const int32_t err = HdcStorePackage(*packet, ioVec);
-            IDE_CTRL_VALUE_FAILED(err == IDE_DAEMON_OK, return IDE_DAEMON_ERROR, "Hdc store package, error");
-            // receive the last package is true
-            if (packet->isLast == IdeLastPacket::IDE_LAST_PACK) {
-                isLast = IdeLastPacket::IDE_LAST_PACK;
-            }
+        IDE_CTRL_VALUE_FAILED(
+            pBuf != nullptr && pBufLen >= static_cast<int32_t>(sizeof(IdeHdcPacket)), return IDE_DAEMON_ERROR,
+            "Hdc package buffer invalid, pBuf is %s, pBufLen is %d", (pBuf == nullptr) ? "null" : "not null", pBufLen);
+        struct IdeHdcPacket* packet = reinterpret_cast<struct IdeHdcPacket*>(pBuf);
+        IDE_CTRL_VALUE_FAILED(
+            packet->len <= static_cast<uint32_t>(pBufLen - static_cast<int32_t>(sizeof(IdeHdcPacket))),
+            return IDE_DAEMON_ERROR, "packet len(%u) is larger than pBufLen(%d) minus packet head", packet->len,
+            pBufLen);
+        const int32_t err = HdcStorePackage(*packet, ioVec);
+        IDE_CTRL_VALUE_FAILED(err == IDE_DAEMON_OK, return IDE_DAEMON_ERROR, "Hdc store package error");
+        if (packet->isLast == IdeLastPacket::IDE_LAST_PACK) {
+            isLast = IdeLastPacket::IDE_LAST_PACK;
         }
     }
 
@@ -371,7 +372,8 @@ static int32_t HdcSessionRead(
     constexpr int32_t count = 1;
     int32_t recvBufCount = 0;
     IdeLastPacket isLast = IdeLastPacket::IDE_NOT_LAST_PACK;
-    uint32_t bufLen = 0;
+    uint64_t totalLen = 0;  // sum of package payloads
+    uint64_t memBudget = 0; // totalLen plus per-package overhead, tracks the real memory usage
     std::list<struct IoVec> hdcIoList;
     struct IoVec ioBase = {nullptr, 0};
 
@@ -399,11 +401,21 @@ static int32_t HdcSessionRead(
         pkgCount++;
         // 3.trans read data to Iolist
         err = HdcReadPackage(*pmsg, isLast, recvBufCount, ioBase);
-        bufLen += ioBase.len;
+        totalLen += ioBase.len;
+        memBudget += static_cast<uint64_t>(ioBase.len) + PER_HDC_PKG_MEM_OVERHEAD;
         IoVecAddToList(ioBase, hdcIoList);
         if (err != IDE_DAEMON_OK) {
             HdcReadBuffFree(pmsg, hdcIoList);
             IDE_LOGE("read package by hdc failed, err=%d, package count=%u", err, pkgCount);
+            return IDE_DAEMON_ERROR;
+        }
+
+        if (memBudget > MAX_HDC_MSG_MEM_BUDGET) {
+            HdcReadBuffFree(pmsg, hdcIoList);
+            IDE_LOGE(
+                "hdc message exceeds memory budget, payload=%llu bytes, package count=%u, "
+                "please check peer end is alive",
+                static_cast<unsigned long long>(totalLen), pkgCount);
             return IDE_DAEMON_ERROR;
         }
         // if isLast is true the last package is received, not receive again;
@@ -430,7 +442,8 @@ static int32_t HdcSessionRead(
         return IDE_DAEMON_ERROR;
     }
 
-    return HdcReadIovecToMem(hdcIoList, bufLen, recvBuf, recvLen);
+    // totalLen is bounded by MAX_HDC_MSG_MEM_BUDGET above, it always fits in uint32
+    return HdcReadIovecToMem(hdcIoList, static_cast<uint32_t>(totalLen), recvBuf, recvLen);
 }
 
 /**

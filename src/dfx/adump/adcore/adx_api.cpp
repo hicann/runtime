@@ -173,29 +173,77 @@ static int32_t AdxRecvFile(const CommHandle& handle, int32_t fd)
     IDE_CTRL_VALUE_FAILED(fd >= 0, return IDE_DAEMON_ERROR, "file fd input failed");
     MsgProto* msg = nullptr;
     int32_t length = 0;
+    uint64_t receivedLen = 0;
+    bool firstDataPkg = true;
+    uint32_t expectedTotalLen = 0; // totalLen declared by the first data package, fixed during one transfer
     while (true) {
         int32_t ret =
             AdxCommOptManager::Instance().Read(handle, reinterpret_cast<IdeRecvBuffT>(&msg), length, DEFAULT_TIMEOUT);
         IDE_CTRL_VALUE_FAILED(
-            (ret == IDE_DAEMON_OK) && (msg != nullptr), return IDE_DAEMON_ERROR, "receive file failed, ret: %d", ret);
-        if (msg->msgType == MsgType::MSG_CTRL) { // check the message is ctrl or not
+            (ret == IDE_DAEMON_OK) && (msg != nullptr) && (length > 0), return IDE_DAEMON_ERROR,
+            "receive file failed, ret: %d, msg is %s, length: %d", ret, (msg == nullptr) ? "null" : "not null", length);
+        if (static_cast<uint32_t>(length) < sizeof(MsgProto)) {
+            IDE_LOGE(
+                "receive file package length(%d bytes) is invalid, expected >= sizeof(MsgProto)(%zu bytes)", length,
+                sizeof(MsgProto));
+            IDE_XFREE_AND_SET_NULL(msg);
+            return IDE_DAEMON_ERROR;
+        }
+        if (msg->msgType == MsgType::MSG_CTRL) {
             IDE_LOGW("receive control message from device, stop receiving");
             IDE_XFREE_AND_SET_NULL(msg);
             return IDE_DAEMON_ERROR;
         }
+        if (static_cast<uint64_t>(msg->sliceLen) + sizeof(MsgProto) != static_cast<uint64_t>(length)) {
+            IDE_LOGE(
+                "receive file package sliceLen(%u) plus sizeof(MsgProto)(%zu) != length(%d bytes)", msg->sliceLen,
+                sizeof(MsgProto), length);
+            IDE_XFREE_AND_SET_NULL(msg);
+            return IDE_DAEMON_ERROR;
+        }
+        if (msg->offset != receivedLen || receivedLen > msg->totalLen || msg->sliceLen > msg->totalLen - receivedLen ||
+            (msg->sliceLen == 0 && msg->totalLen != receivedLen)) {
+            IDE_LOGE(
+                "receive file invalid msg, offset(%u) or sliceLen(%u) invalid, expected offset(%llu), "
+                "totalLen(%u)",
+                msg->offset, msg->sliceLen, static_cast<unsigned long long>(receivedLen), msg->totalLen);
+            IDE_XFREE_AND_SET_NULL(msg);
+            return IDE_DAEMON_ERROR;
+        }
+        if (firstDataPkg) {
+            expectedTotalLen = msg->totalLen;
+            firstDataPkg = false;
+        } else if (msg->totalLen != expectedTotalLen) {
+            IDE_LOGE(
+                "receive file totalLen(%u) changed, expected %u, receivedLen(%llu)", msg->totalLen, expectedTotalLen,
+                static_cast<unsigned long long>(receivedLen));
+            IDE_XFREE_AND_SET_NULL(msg);
+            return IDE_DAEMON_ERROR;
+        }
         if (msg->sliceLen != 0) {
-            mmSsize_t len = mmWrite(fd, msg->data, msg->sliceLen);
-            if (len < 0) {
-                char errBuf[MAX_ERRSTR_LEN + 1] = {0};
-                IDE_LOGE(
-                    "write file failed, error info: [%s]",
-                    mmGetErrorFormatMessage(mmGetErrorCode(), errBuf, MAX_ERRSTR_LEN));
-                IDE_XFREE_AND_SET_NULL(msg);
-                return IDE_DAEMON_ERROR;
+            uint32_t writtenLen = 0;
+            while (writtenLen < msg->sliceLen) {
+                mmSsize_t len = mmWrite(fd, msg->data + writtenLen, msg->sliceLen - writtenLen);
+                if (len < 0) {
+                    char errBuf[MAX_ERRSTR_LEN + 1] = {0};
+                    IDE_LOGE(
+                        "write file failed, error info: [%s]",
+                        mmGetErrorFormatMessage(mmGetErrorCode(), errBuf, MAX_ERRSTR_LEN));
+                    IDE_XFREE_AND_SET_NULL(msg);
+                    return IDE_DAEMON_ERROR;
+                }
+                // ret == 0 means no progress can be made (e.g. disk full), retrying would loop forever
+                if (len == 0) {
+                    IDE_LOGE("write file made no progress, writtenLen(%u) of sliceLen(%u)", writtenLen, msg->sliceLen);
+                    IDE_XFREE_AND_SET_NULL(msg);
+                    return IDE_DAEMON_ERROR;
+                }
+                writtenLen += static_cast<uint32_t>(len);
             }
         }
 
-        if (msg->totalLen == msg->sliceLen + msg->offset) {
+        receivedLen += msg->sliceLen;
+        if (msg->totalLen == receivedLen) {
             break;
         }
 
@@ -297,7 +345,7 @@ int32_t AdxGetSpecifiedFile(uint16_t devId, IdeString desPath, IdeString logType
             IDE_LOGE("receive message failed, ret: %d", err);
             break;
         }
-        std::string value(ptr);
+        std::string value(ptr, len);
         IDE_XFREE_AND_SET_NULL(ptr);
         size_t msgSize = IdeDaemon::Common::Config::CONTAINER_NO_SUPPORT_MESSAGE.length();
         if (value.compare(0, msgSize, IdeDaemon::Common::Config::CONTAINER_NO_SUPPORT_MESSAGE) == 0) {

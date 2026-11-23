@@ -104,6 +104,10 @@ int32_t AdxDumpReceive::Receive(const CommHandle& handle, const SharedPtr<MsgPro
         IDE_CTRL_VALUE_WARN(
             dumpChunk->bufLen <= chunkDataLen, return IDE_DAEMON_ERROR,
             "chunk bufLen(%u) exceeds actual chunk data buffer size(%u)", dumpChunk->bufLen, chunkDataLen);
+        IDE_CTRL_VALUE_WARN(
+            strnlen(dumpChunk->fileName, MAX_FILE_PATH_LENGTH) < MAX_FILE_PATH_LENGTH,
+            return IDE_DAEMON_INVALID_PATH_ERROR, "fileName is too long, no longer than %u length",
+            MAX_FILE_PATH_LENGTH);
 
         MsgStatus status = MsgStatus::MSG_STATUS_NONE_ERROR;
         if (!IsCcDumpRestricted(static_cast<int32_t>(proto->devId))) {
