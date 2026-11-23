@@ -9,6 +9,7 @@
  */
 
 #include "adx_dump_soc_helper.h"
+#include "log/adx_log.h"
 
 /**
  * @brief dump start api,create a HDC session for dump
@@ -31,6 +32,15 @@ extern "C" IDE_SESSION IdeDumpStart(const char* connectInfo) { return Adx::SocDu
  */
 extern "C" IdeErrorT IdeDumpData(IDE_SESSION session, const IdeDumpChunk* dumpChunk)
 {
+    // 本版本只处理文件分片类回传（flag=0/1）。其余 flag（能力探测等新回传）由后续版本
+    // 实现：本版本统一按"不支持"立即返回，调用方据此回退文件分片老链路——避免新 flag
+    // 误入文件分片路径（fileName 语义不符，空指针会在长度校验处解引用崩溃）。
+    if ((dumpChunk != nullptr) && (dumpChunk->flag != IDE_DUMP_NONE_FLAG) && (dumpChunk->flag != IDE_DUMP_FILE_CHUNK)) {
+        IDE_LOGW(
+            "unsupported dump flag: %d, only file chunk flags are supported in this version.",
+            static_cast<int32_t>(dumpChunk->flag));
+        return IDE_DAEMON_CHANNEL_ERROR;
+    }
     return Adx::SocDumpData(session, dumpChunk);
 }
 

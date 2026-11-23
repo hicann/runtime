@@ -14,6 +14,7 @@
 
 #include "config.h"
 #include "adx_dump_hdc_helper.h"
+#include "adx_dump_soc_helper.h" // SOC 分发下游的 DataProcess（never 期望需要完整类型）
 #include "adx_comm_opt.h"
 #include "ascend_hal.h"
 
@@ -97,4 +98,27 @@ TEST_F(ADX_DUMP_HDC_HELPER_TEST, IdeDumpData_SessionError)
     EXPECT_EQ(IDE_DAEMON_INVALID_PARAM_ERROR, IdeDumpData(session, nullptr));
     int ret = IdeDumpData(session, &constDumpChunk);
     EXPECT_EQ(IDE_DAEMON_CHANNEL_ERROR, ret);
+}
+
+// 文件分片外的 flag（能力探测等新回传值）本版本不支持：入口立即拒绝。
+// 归因锁定：无效 session 时下游会话校验同样回"通路"错误码，仅凭返回值无法证明
+// 错误来自入口白名单——故对两条下游分发设置 never 期望，断言新 flag 未进入下游。
+TEST_F(ADX_DUMP_HDC_HELPER_TEST, IdeDumpData_UnsupportedFlag)
+{
+    IDE_SESSION session = (IDE_SESSION)0xFFFFF000;
+    IdeDumpChunk dumpChunk = {};
+    unsigned char ch = 'a';
+    dumpChunk.fileName = nullptr; // 新 flag 的合法形态：无文件名
+    dumpChunk.dataBuf = &ch;
+    dumpChunk.bufLen = 1;
+    dumpChunk.isLastChunk = 1;
+    dumpChunk.offset = -1;
+    MOCKER_CPP(&Adx::AdxDumpSocHelper::DataProcess).expects(never());
+    MOCKER_CPP(&Adx::AdxDumpHdcHelper::DataProcess).expects(never());
+    dumpChunk.flag = IDE_DUMP_CHECKSUPPORT;
+    EXPECT_EQ(IDE_DAEMON_CHANNEL_ERROR, IdeDumpData(session, &dumpChunk));
+    dumpChunk.flag = IDE_DUMP_REQ_WITH_ID;
+    EXPECT_EQ(IDE_DAEMON_CHANNEL_ERROR, IdeDumpData(session, &dumpChunk));
+    dumpChunk.flag = IDE_DUMP_REQ_WITH_OPINFO;
+    EXPECT_EQ(IDE_DAEMON_CHANNEL_ERROR, IdeDumpData(session, &dumpChunk));
 }

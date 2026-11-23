@@ -53,3 +53,26 @@ TEST_F(ADX_DUMP_SOC_HELPER_TEST, IdeDumpData)
     EXPECT_EQ(IDE_DAEMON_INVALID_PARAM_ERROR, IdeDumpData(session, nullptr));
     EXPECT_EQ(IDE_DAEMON_NONE_ERROR, IdeDumpEnd(session));
 }
+
+// 文件分片外的 flag（能力探测等新回传值）本版本不支持：入口立即拒绝。
+// 归因锁定：本用例 fileName 为 nullptr，若请求误入下游，SOC 的 DataProcess 首查
+// fileName 非空（回 INVALID_PARAM_ERROR 而非通路错误码）——EXPECT_EQ(CHANNEL_ERROR)
+// 即可唯一归因到入口白名单；never 期望为双保险，断言新 flag 根本未进入下游。
+TEST_F(ADX_DUMP_SOC_HELPER_TEST, IdeDumpData_UnsupportedFlag)
+{
+    IDE_SESSION session = (IDE_SESSION)0xFFFFF000;
+    IdeDumpChunk dumpChunk = {};
+    unsigned char ch = 'a';
+    dumpChunk.fileName = nullptr; // 新 flag 的合法形态：无文件名
+    dumpChunk.dataBuf = &ch;
+    dumpChunk.bufLen = 1;
+    dumpChunk.isLastChunk = 1;
+    dumpChunk.offset = -1;
+    MOCKER_CPP(&Adx::AdxDumpSocHelper::DataProcess).expects(never());
+    dumpChunk.flag = IDE_DUMP_CHECKSUPPORT;
+    EXPECT_EQ(IDE_DAEMON_CHANNEL_ERROR, IdeDumpData(session, &dumpChunk));
+    dumpChunk.flag = IDE_DUMP_REQ_WITH_ID;
+    EXPECT_EQ(IDE_DAEMON_CHANNEL_ERROR, IdeDumpData(session, &dumpChunk));
+    dumpChunk.flag = IDE_DUMP_REQ_WITH_OPINFO;
+    EXPECT_EQ(IDE_DAEMON_CHANNEL_ERROR, IdeDumpData(session, &dumpChunk));
+}
