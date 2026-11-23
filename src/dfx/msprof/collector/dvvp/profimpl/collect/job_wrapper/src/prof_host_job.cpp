@@ -48,7 +48,11 @@ static void StopHostProfTimer(TimerHandlerTag tag)
 int32_t ProfHostDataBase::CheckHostProfiling(const SHARED_PTR_ALIA<CollectionJobCfg> cfg) const
 {
     CHECK_JOB_CONTEXT_PARAM_RET(cfg, return PROFILING_FAILED);
-    if (!(cfg->comParams->params->hostProfiling)) {
+    // --host-sys and --cpu-core-events / --os-events are independent features that share this base
+    // class: either one is enough to make host-side work meaningful. Each job still checks its own
+    // switch in Init(), so allowing the base to pass cannot start a job the user did not ask for.
+    const bool hostPmuOn = (cfg->comParams->params->host_pmu_profiling.compare(MSVP_PROF_ON) == 0);
+    if (!(cfg->comParams->params->hostProfiling) && !hostPmuOn) {
         return PROFILING_NOTSUPPORT;
     }
     if (Platform::instance()->RunSocSide()) {

@@ -78,6 +78,8 @@ enum ProfCollectionJobE {
     HOST_CCA_MS_JOB,
     // host ftrace (standalone collector bin)
     HOST_FTRACE_COLLECTION_JOB,
+    // host PMU counting via perf_event_open (in-process)
+    HOST_PMU_COLLECTION_JOB,
     // diagnostic collection
     DIAGNOSTIC_COLLECTION_JOB,
     NTS_PMU_COLLECTION_JOB,

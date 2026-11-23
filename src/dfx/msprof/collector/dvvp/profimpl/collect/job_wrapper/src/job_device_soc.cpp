@@ -16,6 +16,7 @@
 #include "prof_channel_manager.h"
 #include "prof_host_job.h"
 #include "prof_host_ftrace_job.h"
+#include "prof_host_pmu_job.h"
 #include "task_relationship_mgr.h"
 #include "utils/utils.h"
 #include "platform/platform.h"
@@ -566,6 +567,7 @@ int32_t JobDeviceSoc::CreateSysCollectionJobArray()
         collectionJobV_[DIAGNOSTIC_COLLECTION_JOB].collectionJob, ProfDiagnostic, return PROFILING_FAILED);
     MSVP_MAKE_SHARED0(
         collectionJobV_[HOST_FTRACE_COLLECTION_JOB].collectionJob, ProfHostFtraceJob, return PROFILING_FAILED);
+    MSVP_MAKE_SHARED0(collectionJobV_[HOST_PMU_COLLECTION_JOB].collectionJob, ProfHostPmuJob, return PROFILING_FAILED);
 
     return PROFILING_SUCCESS;
 }

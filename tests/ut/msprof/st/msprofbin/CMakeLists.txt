@@ -65,6 +65,9 @@ set(common_file
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_channel_manager.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/job_device_soc.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_host_ftrace_job.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_host_pmu_job.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/pmu_counter_collector.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/pmu_event_resolver.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/adprof_collector_proxy.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/message/codec.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/transport/file_transport.cpp

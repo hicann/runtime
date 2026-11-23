@@ -50,6 +50,9 @@ set(profilerSrcFiles
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/collection_register.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/job_device_soc.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_host_ftrace_job.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_host_pmu_job.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/pmu_counter_collector.cpp
+    ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/pmu_event_resolver.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/job_factory.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_channel_manager.cpp
     ${MSPROF_SOURCE_DIR}/dvvp/profimpl/collect/job_wrapper/src/prof_comm_job.cpp
@@ -181,6 +184,9 @@ set(localSrcFiles
     test/adx_prof_api_utest.cpp
     test/command_handle_utest.cpp
     test/prof_device_rpc_utest.cpp
+    test/pmu_event_resolver_utest.cpp
+    test/pmu_counter_collector_utest.cpp
+    test/prof_host_pmu_job_utest.cpp
 )
 
 

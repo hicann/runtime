@@ -263,6 +263,15 @@ constexpr uint32_t FTRACE_POLL_INTERVAL_MS = 100;
 // keep in sync with FTRACE_LEASE_STALE_SEC in the oam-tools collector's ftrace_types.h
 constexpr int32_t FTRACE_LOCK_STALE_SEC = 15;
 
+// host PMU counting (perf_event_open)
+constexpr char PMU_OUTPUT_SUB_DIR[] = "data/pmu";
+constexpr char PMU_OUTPUT_FILE_PREFIX[] = "host_pmu_";
+constexpr char PMU_EVENT_SEPARATOR = ',';
+constexpr char PMU_INFO_SUB_DIR[] = "data/pmu";
+constexpr int32_t PMU_MAX_EVENTS = 32;
+constexpr int32_t PMU_DEFAULT_INTERVAL_MS = 100;
+constexpr int32_t PMU_MAX_INTERVAL_MS = 3600000;
+
 constexpr char OUTPUT_RECORD[] = "profiling_output_record";
 
 // keypoint op's name/type

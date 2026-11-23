@@ -246,6 +246,13 @@ set(profimplInc
 # PROFILING_NOTSUPPORT), so it is always compiled in.
 list(APPEND profimplCpp profimpl/collect/job_wrapper/src/prof_host_ftrace_job.cpp)
 
+# host PMU counting job: perf_event_open is Linux only, the file guards itself with _WIN32.
+list(APPEND profimplCpp
+    profimpl/collect/job_wrapper/src/prof_host_pmu_job.cpp
+    profimpl/collect/job_wrapper/src/pmu_event_resolver.cpp
+    profimpl/collect/job_wrapper/src/pmu_counter_collector.cpp
+)
+
 set(profimplFwcSrc
     ${profimplCpp}
     # 1911EP/310B adda compatibility sources; delete this group together

@@ -204,6 +204,13 @@ struct ProfileParams : public BaseInfo {
     int host_ftrace_period;            // seconds, 0 by default, means follow profiling lifetime
     int host_ftrace_bufsize;           // per-CPU ring buffer, KB
 
+    // host PMU counting via perf_event_open
+    std::string host_pmu_profiling; // "on"/"off"
+    std::string host_pmu_events;    // "cycles,instructions,l1d_cache"
+    std::string host_pmu_os_events; // software counters, e.g. "page-faults,context-switches"
+    std::string host_pmu_interval;  // sampling period in ms, kept as a string so an empty value
+                                    // means "use the default" instead of 0
+
     // for parse, query and export
     std::string pythonPath;
     std::string parseSwitch;
@@ -313,6 +320,10 @@ struct ProfileParams : public BaseInfo {
           host_ftrace_events(""),
           host_ftrace_period(0),
           host_ftrace_bufsize(4096),
+          host_pmu_profiling("off"),
+          host_pmu_events(""),
+          host_pmu_os_events(""),
+          host_pmu_interval(""),
           pythonPath(""),
           parseSwitch("off"),
           querySwitch("off"),
@@ -381,7 +392,11 @@ struct ProfileParams : public BaseInfo {
             hostAllPidMemProfiling.compare("on") == 0 || host_network_profiling.compare("on") == 0 ||
             host_disk_profiling.compare("on") == 0 || host_osrt_profiling.compare("on") == 0 ||
             host_numa_profiling.compare("on") == 0 || host_threads_sync_profiling.compare("on") == 0 ||
-            host_cache_profiling.compare("on") == 0 || msproftx.compare("on") == 0) {
+            host_cache_profiling.compare("on") == 0 || msproftx.compare("on") == 0 ||
+            host_pmu_profiling.compare("on") == 0) {
+            // host_pmu_profiling belongs here: PMU counting is host-side work, and without it a
+            // PMU-only command leaves IsHostProfiling() false, so StartSysTask() never calls
+            // StartHostJobs() and the counters are never collected.
             return true;
         }
         return false;
@@ -474,6 +489,10 @@ struct ProfileParams : public BaseInfo {
         SET_VALUE(object, host_ftrace_events);
         SET_VALUE(object, host_ftrace_period);
         SET_VALUE(object, host_ftrace_bufsize);
+        SET_VALUE(object, host_pmu_profiling);
+        SET_VALUE(object, host_pmu_events);
+        SET_VALUE(object, host_pmu_os_events);
+        SET_VALUE(object, host_pmu_interval);
         SET_VALUE(object, host_disk_profiling);
         SET_VALUE(object, host_osrt_profiling);
         SET_VALUE(object, host_numa_profiling);
@@ -550,6 +569,10 @@ struct ProfileParams : public BaseInfo {
         FROM_STRING_VALUE(object, host_ftrace_events);
         FROM_INT_VALUE(object, host_ftrace_period, 0);
         FROM_INT_VALUE(object, host_ftrace_bufsize, 4096);
+        FROM_STRING_VALUE(object, host_pmu_profiling);
+        FROM_STRING_VALUE(object, host_pmu_events);
+        FROM_STRING_VALUE(object, host_pmu_os_events);
+        FROM_STRING_VALUE(object, host_pmu_interval);
         FROM_STRING_VALUE(object, hostSysUsage);
         FROM_INT_VALUE(object, hostProfilingSamplingInterval, DEFAULT_PROFILING_INTERVAL_20MS);
         FROM_STRING_VALUE(object, host_disk_profiling);

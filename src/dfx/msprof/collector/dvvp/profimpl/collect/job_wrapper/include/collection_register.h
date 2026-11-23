@@ -53,6 +53,7 @@ static const std::array<std::string, NR_MAX_COLLECTION_JOB> COLLECTION_JOB_FILEN
     fileNames[FMK_COLLECTION_JOB] = "data/training_trace.data";
     fileNames[SOC_PMU_TASK_COLLECTION_JOB] = "data/socpmu.data";
     fileNames[L2_CACHE_TASK_COLLECTION_JOB] = "data/l2_cache.data";
+    fileNames[HOST_PMU_COLLECTION_JOB] = "data/pmu";
     fileNames[STARS_SOC_LOG_COLLECTION_JOB] = "data/stars_soc.data";
     fileNames[STARS_F_SOC_LOG_COLLECTION_JOB] = "data/stars_f_soc.data";
     fileNames[STARS_BLOCK_LOG_COLLECTION_JOB] = "data/stars_block.data";
