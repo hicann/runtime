@@ -9,6 +9,13 @@
 # -----------------------------------------------------------------------------------------------------------
 
 ##################################################################################################################
+file(GLOB_RECURSE ACL_STUB_HEADERS CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_LIST_DIR}/../include/external/acl/*.h"
+)
+# Track removals as well as content changes without regenerating on every build.
+file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/acl_stub_headers.txt"
+    CONTENT "${ACL_STUB_HEADERS}\n"
+)
 add_custom_target(
     runtime_stub_src ALL
     DEPENDS  ${CMAKE_CURRENT_BINARY_DIR}/acl_stub.cpp
@@ -29,7 +36,7 @@ add_custom_command(
             ${CMAKE_CURRENT_BINARY_DIR}/prof_stub.cpp
             && echo "Generating stub files end."
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    DEPENDS gen_stubapi.py ${CMAKE_CURRENT_LIST_DIR}/../include/external/acl
+    DEPENDS gen_stubapi.py ${ACL_STUB_HEADERS} ${CMAKE_CURRENT_BINARY_DIR}/acl_stub_headers.txt
 )
 #----------------------------------------------------------------------------------------------------------------#
 

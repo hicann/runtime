@@ -26,6 +26,8 @@ set(ACL_API_STUB_GENERATOR_TEST
 add_custom_target(runtime_api_stub_generator_ut
     COMMAND ${CMAKE_COMMAND} -E env --unset=PYTHONHOME --unset=PYTHONPATH ${Python3_EXECUTABLE} ${RUNTIME_API_STUB_GENERATOR_TEST}
     COMMAND ${CMAKE_COMMAND} -E env --unset=PYTHONHOME --unset=PYTHONPATH ${Python3_EXECUTABLE} ${ACL_API_STUB_GENERATOR_TEST}
+    COMMAND ${CMAKE_COMMAND} -E env --unset=PYTHONHOME --unset=PYTHONPATH
+        ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_stub_header_dependencies.py -v
     COMMAND ${CMAKE_COMMAND} -E env --unset=PYTHONHOME --unset=PYTHONPATH ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_gen_dynamic_stub_multiline.py
     COMMAND ${CMAKE_COMMAND} -E env --unset=PYTHONHOME --unset=PYTHONPATH ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_h2c_default_output.py
     COMMAND ${CMAKE_COMMAND} -E env --unset=PYTHONHOME --unset=PYTHONPATH ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/cmake/test_h2c_comment_termination.py
