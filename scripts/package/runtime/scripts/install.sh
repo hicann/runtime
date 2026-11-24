@@ -1245,6 +1245,7 @@ uninstall_none_multi_version "$pkg_install_path/runtime"
 check_install_for_all
 create_default_install_dir_for_common_user
 log_base_version
+hetero_arch_pkg_installed="$(is_hetero_arch_pkg_installed)"
 if [ "$upgrade" != "y" ] || [ "$hetero_arch_pkg_installed" != "installed-hetero-to-be-upgraded" ]; then
     is_valid_path
 fi
