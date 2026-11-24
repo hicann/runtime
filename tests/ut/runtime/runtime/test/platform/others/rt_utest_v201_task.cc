@@ -140,11 +140,11 @@ rtError_t IoctlByCmdMockRes(IoctlUtil* that, const stars_ioctl_cmd_t cmd, const 
         case STARS_IOCTL_CMD_GET_QUEUE_MBUF_POOL:
             mbufPoolRes = static_cast<stars_dqs_queue_mbuf_pool_result_t*>(args->output_ptr);
             mbufPoolInfoParam = static_cast<stars_get_queue_mbuf_pool_info_param_t*>(args->input_ptr);
-            mbufPoolRes->count = mbufPoolInfoParam->count;
             if ((mbufPoolRes == nullptr) || (mbufPoolInfoParam == nullptr) ||
                 (mbufPoolInfoParam->count > STARS_DQS_MAX_OUTPUT_QUEUE_NUM)) {
                 return RT_ERROR_INVALID_VALUE;
             }
+            mbufPoolRes->count = mbufPoolInfoParam->count;
             for (uint32_t i = 0; i < mbufPoolRes->count; i++) {
                 mbufPoolRes->queue_mbuf_pool_list[i].qid = mbufPoolInfoParam->queue_list[i];
             }

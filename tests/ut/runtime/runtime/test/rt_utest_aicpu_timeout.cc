@@ -127,10 +127,10 @@ rtError_t LaunchCpuKernelStub(
     }
     EXPECT_NE(launchNames, nullptr);
     EXPECT_NE(argsInfo, nullptr);
-    EXPECT_EQ(argsInfo->isNoNeedH2DCopy, 1U);
     if ((launchNames == nullptr) || (argsInfo == nullptr)) {
         return RT_ERROR_INVALID_VALUE;
     }
+    EXPECT_EQ(argsInfo->isNoNeedH2DCopy, 1U);
     if (std::strcmp(launchNames->kernelName, "CheckKernelSupported") == 0) {
         const auto* cfg = static_cast<const CheckKernelSupportedConfig*>(argsInfo->args);
         *reinterpret_cast<uint32_t*>(cfg->checkResultAddr) = g_checkResult;

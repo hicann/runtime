@@ -6903,7 +6903,7 @@ void GetErrorMessage(const char* msg, uint32_t len)
     if (msg != nullptr && len != 0) {
         RT_LOG(RT_LOG_ERROR, "rtGetDeviceErrorMessage get msg:%s, length=%u.", msg, len);
     } else {
-        RT_LOG(RT_LOG_ERROR, "rtGetDeviceErrorMessage get msg failed, length=%u.", msg, len);
+        RT_LOG(RT_LOG_ERROR, "rtGetDeviceErrorMessage get msg failed, length=%u.", len);
     }
 }
 TEST_F(ApiDavidTest, test_get_dev_err_msg)

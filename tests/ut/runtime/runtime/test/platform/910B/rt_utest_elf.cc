@@ -663,8 +663,7 @@ TEST_F(CloudV2ELFTest, ELF_GetStringTableCopy_memcpy_fail)
     char buf[20] = {0};
     MOCKER(memcpy_s).stubs().will(returnValue(3));
     std::unique_ptr<char_t[]> out = GetStringTableCopy(&buf[0], 20);
-    uint16_t ret = strcmp((char*)&out, "");
-    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(out, nullptr);
 }
 
 TEST_F(CloudV2ELFTest, ELF_Little_endian_case)
