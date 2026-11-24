@@ -1410,6 +1410,28 @@ TEST_F(RtMemoryApiTest, HostRegisterByPciAtu_UnsupportedDriver)
     EXPECT_EQ(rtHostUnRegisterByPciAtu(hostPtr), ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
 }
 
+TEST_F(RtMemoryApiTest, HostRegisterByPciAtu_DuplicateRegistrationPreservesFirstMapping)
+{
+    void* const hostPtr = reinterpret_cast<void*>(0x12340000ULL);
+    void* devPtr = nullptr;
+    void* driverOutput = AtuMappedAddress();
+    MOCKER(halHostRegisterByPcieATU)
+        .expects(exactly(2))
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&driverOutput))
+        .will(returnValue(DRV_ERROR_NONE))
+        .then(returnValue(DRV_ERROR_REPEATED_USERD));
+    MOCKER(halHostUnregisterByPcieATU).expects(once()).will(returnValue(DRV_ERROR_NONE));
+
+    EXPECT_EQ(rtHostRegisterByPciAtu(hostPtr, 4096U, 0x2U, &devPtr), ACL_RT_SUCCESS);
+    EXPECT_EQ(devPtr, AtuMappedAddress());
+    void* const original = reinterpret_cast<void*>(0x98760000ULL);
+    void* duplicateOutput = original;
+    EXPECT_EQ(rtHostRegisterByPciAtu(hostPtr, 4096U, 0x2U, &duplicateOutput), ACL_ERROR_HOST_MEMORY_ALREADY_REGISTERED);
+    EXPECT_EQ(duplicateOutput, original);
+    EXPECT_EQ(devPtr, AtuMappedAddress());
+    EXPECT_EQ(rtHostUnRegisterByPciAtu(hostPtr), ACL_RT_SUCCESS);
+}
+
 TEST_F(RtMemoryApiTest, HostRegisterByPciAtu_InvalidArgumentsDoNotCallDriver)
 {
     void* const hostPtr = reinterpret_cast<void*>(0x12340000ULL);

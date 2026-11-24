@@ -57,7 +57,8 @@ rtError_t NpuDriver::HostRegisterByPciAtu(
             "halHostRegisterByPcieATU failed, device_id=%u, size=%" PRIu64
             ", input_flag=%u, driver_flag=%u, drvRetCode=%d.",
             deviceId, size, flag, driverFlag, static_cast<int32_t>(drvRet));
-        return RT_GET_DRV_ERRCODE(drvRet);
+        return (drvRet == DRV_ERROR_REPEATED_USERD) ? RT_ERROR_HOST_MEMORY_ALREADY_REGISTERED :
+                                                      RT_GET_DRV_ERRCODE(drvRet);
     }
     return RT_ERROR_NONE;
 }

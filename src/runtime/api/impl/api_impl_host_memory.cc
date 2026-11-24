@@ -340,6 +340,9 @@ rtError_t ApiImplHostMemory::HostRegisterByPciAtu(void* ptr, uint64_t size, uint
 
     void* mappedPtr = nullptr;
     const rtError_t error = driver->HostRegisterByPciAtu(ptr, size, flag, dev->Id_(), &mappedPtr);
+    COND_RETURN_AND_MSG_OUTER(
+        error == RT_ERROR_HOST_MEMORY_ALREADY_REGISTERED, error, ErrorCode::EE1018, funcDesc,
+        "The memory range has already been registered");
     ERROR_RETURN(error, "Failed to register host memory through PCIe ATU, device_id=%u.", dev->Id_());
     *devPtr = mappedPtr;
     return RT_ERROR_NONE;
