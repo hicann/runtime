@@ -9,6 +9,7 @@
  */
 #include "api_error.hpp"
 #include <cstring>
+#include "securec.h"
 #include "device_properties.h"
 #include <string>
 #include <unordered_set>
@@ -928,7 +929,7 @@ rtError_t ApiErrorDecorator::StreamBatchMemOp(
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(flags != 0U, RT_ERROR_INVALID_VALUE, FUNC_DESC, flags, "0");
     for (size_t i = 0U; i < count; ++i) {
         uint32_t operation = 0U;
-        (void)std::memcpy(&operation, &params[i], sizeof(operation));
+        (void)memcpy_s(&operation, sizeof(operation), &params[i], sizeof(operation));
         COND_RETURN_AND_MSG_OUTER_WITH_PARAM_NAME_AND_FUNC_DESC(
             (operation != RT_STREAM_MEM_OP_VALUE_WAIT) && (operation != RT_STREAM_MEM_OP_VALUE_WRITE),
             RT_ERROR_INVALID_VALUE, FUNC_DESC,
