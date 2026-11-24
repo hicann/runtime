@@ -1108,7 +1108,7 @@ aclError aclrtDevicePeerAccessStatus(int32_t deviceId, int32_t peerDeviceId, int
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
 | deviceId | 输入 | 指定Device的ID。<br>用户调用[aclrtGetDeviceCount](#aclrtGetDeviceCount)接口获取可用的Device数量后，这个Device ID的取值范围：[0, (可用的Device数量-1)] |
-| peerDeviceId | 输入 | 指定Device的ID。<br>用户调用[aclrtGetDeviceCount](#aclrtGetDeviceCount)接口获取可用的Device数量后，这个Device ID的取值范围：[0, (可用的Device数量-1)] |
+| peerDeviceId | 输入 | 指定Device的ID，取值为有效的物理设备ID。<br>用户可调用[aclrtGetPhyDevIdByUserDevId](#aclrtGetPhyDevIdByUserDevId)接口将该Device的用户设备ID转换为物理设备ID后传入。用户设备ID的取值范围为[0, (可用的Device数量-1)]，其中可用的Device数量可通过[aclrtGetDeviceCount](#aclrtGetDeviceCount)接口获取。 |
 | status | 输出 | 设备状态。0表示未开启数据交互；1表示已开启数据交互。 |
 
 ### 返回值说明
@@ -1117,7 +1117,7 @@ aclError aclrtDevicePeerAccessStatus(int32_t deviceId, int32_t peerDeviceId, int
 
 ### 约束说明
 
-该接口仅可用于查询取值范围内两个Device ID对应设备的数据交互状态。若传入的Device ID超出[0, (可用的Device数量-1)]取值区间，接口查询结果为0或直接返回错误码ACL_ERROR_RT_PARAM_INVALID。
+该接口用于查询两个有效Device ID对应设备的数据交互状态。若传入的Device ID超出取值区间，接口查询结果为0或直接返回错误码。
 
 <br>
 <br>
