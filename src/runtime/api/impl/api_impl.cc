@@ -2653,7 +2653,12 @@ rtError_t ApiImpl::MemCopySync(
 {
     RT_LOG(RT_LOG_DEBUG, "memcpy sync, cnt=%" PRIu64 ", kind=%s.", cnt, MemcpyKindToStr(kind));
     Context* const curCtx = CurrentContext();
-    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    const ContextAccessMode accessMode =
+        InnerThreadLocalContainer::IsInternalContextAccess() ? ContextAccessMode::INTERNAL : ContextAccessMode::USER;
+    if (unlikely((curCtx == nullptr) || !curCtx->IsStateAccessible(accessMode))) {
+        ContextManage::ReportContextValidationError();
+        return RT_ERROR_CONTEXT_NULL;
+    }
     Device* device = curCtx->Device_();
     NULL_PTR_RETURN_MSG(device, RT_ERROR_INVALID_VALUE);
     const rtError_t error = device->GetDeviceStatus();
