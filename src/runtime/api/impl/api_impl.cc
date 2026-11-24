@@ -2547,19 +2547,23 @@ rtError_t ApiImpl::MemCopySync(
     const uint32_t checkKind)
 {
     RT_LOG(RT_LOG_DEBUG, "memcpy sync, cnt=%" PRIu64 ", kind=%s.", cnt, MemcpyKindToStr(kind));
+    Context* const curCtx = CurrentContext();
+    const ContextAccessMode accessMode =
+        InnerThreadLocalContainer::IsInternalContextAccess() ? ContextAccessMode::INTERNAL : ContextAccessMode::USER;
+    if (unlikely((curCtx == nullptr) || !curCtx->IsStateAccessible(accessMode))) {
+        ContextManage::ReportContextValidationError();
+        return RT_ERROR_CONTEXT_NULL;
+    }
+
     DevDynInfoProcFunc func{};
     if ((GET_DEV_INFO_PROC_FUNC(Runtime::Instance()->GetChipType(), func) == RT_ERROR_NONE) &&
         (func.memProcFunc.memCopySync != nullptr)) {
-        Context* const curCtx = CurrentContext();
-        CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
         CHECK_CAPTURE_MODE_SUPPORT_AND_RETURN_WITH_FUNC_DESC(curCtx, "Synchronous memory copy");
 
         const rtError_t callbackError = func.memProcFunc.memCopySync(dst, destMax, src, cnt, kind);
         COND_RETURN_WITH_NOLOG(callbackError != RT_ERROR_CONTINUE_EXECUTE, callbackError);
     }
 
-    Context* const curCtx = CurrentContext();
-    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     Device* device = curCtx->Device_();
     NULL_PTR_RETURN_MSG(device, RT_ERROR_INVALID_VALUE);
     const rtError_t error = device->GetDeviceStatus();
