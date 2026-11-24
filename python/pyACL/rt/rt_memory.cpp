@@ -322,12 +322,16 @@ static bool GetUnionValueFromPyDict(PyObject* pyDict, const char* keyName, aclrt
 
     if (PyDict_GetItemString(pyValue, "moduleId") != nullptr) {
         PyObject* pyModuleId = PyDict_GetItemString(pyValue, "moduleId");
-        value.moduleId = static_cast<uint16_t>(PyLong_AsUnsignedLong(pyModuleId));
+        unsigned long moduleIdVal = PyLong_AsUnsignedLong(pyModuleId);
         CHECK_BOOL(PyErr_Occurred() == nullptr, "PyLong_AsUnsignedLong failed", PyExc_ValueError);
+        CHECK_BOOL(moduleIdVal <= UINT16_MAX, "moduleId exceeds uint16 range", PyExc_ValueError);
+        value.moduleId = static_cast<uint16_t>(moduleIdVal);
     } else if (PyDict_GetItemString(pyValue, "deviceId") != nullptr) {
         PyObject* pyDeviceId = PyDict_GetItemString(pyValue, "deviceId");
-        value.deviceId = static_cast<uint32_t>(PyLong_AsUnsignedLong(pyDeviceId));
+        unsigned long deviceIdVal = PyLong_AsUnsignedLong(pyDeviceId);
         CHECK_BOOL(PyErr_Occurred() == nullptr, "PyLong_AsUnsignedLong failed", PyExc_ValueError);
+        CHECK_BOOL(deviceIdVal <= UINT32_MAX, "deviceId exceeds uint32 range", PyExc_ValueError);
+        value.deviceId = static_cast<uint32_t>(deviceIdVal);
     } else if (PyDict_GetItemString(pyValue, "rsv") != nullptr) {
         PyObject* pyRsv = PyDict_GetItemString(pyValue, "rsv");
         Py_ssize_t size = PyList_Size(pyRsv);
@@ -335,7 +339,6 @@ static bool GetUnionValueFromPyDict(PyObject* pyDict, const char* keyName, aclrt
         for (int i = 0; i < loopLimit; ++i) {
             PyObject* pyItem = PyList_GetItem(pyRsv, i);
             value.rsv[i] = static_cast<uint8_t>(PyLong_AsUnsignedLong(pyItem));
-            CHECK_BOOL(PyErr_Occurred() == nullptr, "PyLong_AsUnsignedLong failed", PyExc_ValueError);
         }
     } else {
         PyErr_SetString(PyExc_KeyError, "No valid key found in aclrtMallocAttrValue");
