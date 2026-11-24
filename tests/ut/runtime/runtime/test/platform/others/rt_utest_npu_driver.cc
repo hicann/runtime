@@ -4893,3 +4893,22 @@ TEST_F(NpuDriverTest, ManagedMemoryFlagLogNames)
     EXPECT_TRUE(DlogRecordContains("device_id=0, size=32, flag=2, huge=0."));
 #endif
 }
+
+TEST_F(NpuDriverTest, DebugSqCqAllocateSqIdFull)
+{
+    NpuDriver driver;
+    uint32_t sqId = 17U;
+    uint32_t cqId = 19U;
+    MOCKER(halSqCqAllocate).expects(once()).will(returnValue(DRV_ERROR_SQID_FULL));
+    EXPECT_EQ(driver.DebugSqCqAllocate(0U, 0U, sqId, cqId), RT_ERROR_SQID_FULL);
+    EXPECT_EQ(sqId, 17U);
+    EXPECT_EQ(cqId, 19U);
+}
+
+TEST_F(NpuDriverTest, DebugSqTaskSendDriverFailure)
+{
+    NpuDriver driver;
+    uint8_t sqe[64] = {};
+    MOCKER(halSqTaskSend).expects(once()).will(returnValue(DRV_ERROR_INVALID_VALUE));
+    EXPECT_EQ(driver.DebugSqTaskSend(1U, sqe, 0U, 0U), RT_GET_DRV_ERRCODE(DRV_ERROR_INVALID_VALUE));
+}

@@ -13940,3 +13940,25 @@ TEST_F(ApiDavidTest, FusionLaunchRejectsNegativeSubTaskType)
 
     EXPECT_EQ(api.FusionLaunch(&fusionInfo, nullptr, nullptr), RT_ERROR_INVALID_VALUE);
 }
+
+TEST_F(ApiDavidTest, CCUApiDriverNotSupport)
+{
+    rtMemUbTokenInfo token = {0};
+    rtDevResInfo resInfo = {0U, RT_PROCESS_CP1, RT_RES_TYPE_STARS_CNT_NOTIFY_RECORD, 0U, 0U};
+    uint64_t resAddr = 0U;
+    uint32_t len = 0U;
+    rtDevResAddrInfo addr = {&resAddr, &len};
+
+    MOCKER(halMemGetInfo).stubs().will(returnValue(DRV_ERROR_NOT_SUPPORT));
+    MOCKER(halResAddrMap).stubs().will(returnValue(DRV_ERROR_NOT_SUPPORT));
+    MOCKER(halResAddrUnmap).stubs().will(returnValue(DRV_ERROR_NOT_SUPPORT));
+
+    rtError_t error = rtUbDevQueryInfo(QUERY_PROCESS_TOKEN, reinterpret_cast<void*>(&token));
+    EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+
+    error = rtGetDevResAddress(&resInfo, &addr);
+    EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+
+    error = rtReleaseDevResAddress(&resInfo);
+    EXPECT_EQ(error, ACL_ERROR_RT_FEATURE_NOT_SUPPORT);
+}

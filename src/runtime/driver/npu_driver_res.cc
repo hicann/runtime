@@ -2238,9 +2238,9 @@ rtError_t NpuDriver::DebugSqCqAllocate(const uint32_t deviceId, const uint32_t t
 
     const drvError_t drvRet = halSqCqAllocate(deviceId, &debugSqCqAllocInputInfo, &debugSqCqAllocOutputInfo);
     if (drvRet == DRV_ERROR_SQID_FULL) {
-        RT_LOG(
-            RT_LOG_INFO, "halSqCqAllocate: device_id=%u, ts_id=%u, drvRetCode=%d.", deviceId, tsId,
-            static_cast<int32_t>(drvRet));
+        DRV_ERROR_PROCESS(
+            drvRet, "Call driver api halSqCqAllocate failed, drvRetCode=%d, drvDevId=%u, tsId=%u.",
+            static_cast<int32_t>(drvRet), deviceId, tsId);
         return RT_ERROR_SQID_FULL;
     }
     DRV_PROCESS_ERROR_RETURN(
@@ -2450,11 +2450,9 @@ rtError_t NpuDriver::DebugSqTaskSend(
 
     const drvError_t drvRet = halSqTaskSend(deviceId, &info);
     if (unlikely(drvRet != DRV_ERROR_NONE)) {
-        RT_LOG(
-            RT_LOG_WARNING,
-            "[drv api] halSqTaskSend failed: [sqId=%u], device_id=%u, ts_id=%u, "
-            "drvRetCode=%d.",
-            sqId, deviceId, tsId, static_cast<int32_t>(drvRet));
+        DRV_ERROR_PROCESS(
+            drvRet, "Call driver api halSqTaskSend failed, drvRetCode=%d, drvDevId=%u, tsId=%u, sqId=%u.",
+            static_cast<int32_t>(drvRet), deviceId, tsId, sqId);
         return RT_GET_DRV_ERRCODE(drvRet);
     }
 
