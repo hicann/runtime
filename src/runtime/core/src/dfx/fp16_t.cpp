@@ -415,7 +415,14 @@ fp16_t& fp16_t::operator=(const double& dVal)
     int16_t eRet;
     uint64_t eD;
     uint64_t mD;
-    uint64_t ui64V = *((uint64_t*)&dVal); // 1:11:52bit sign:exp:man
+    uint64_t ui64V = 0;
+    static_assert(sizeof(ui64V) == sizeof(dVal), "Expected a 64-bit double");
+    const auto ret = memcpy_s(&ui64V, sizeof(ui64V), &dVal, sizeof(dVal));
+    if (ret != EOK) {
+        RT_LOG(RT_LOG_ERROR, "Failed to copy double bits, retCode=%d.", ret);
+        val = 0;
+        return *this;
+    }
     uint32_t mLenDelta;
 
     sRet = static_cast<uint16_t>((ui64V & FP64_SIGN_MASK) >> FP64_SIGN_INDEX); // 4Byte
@@ -470,8 +477,9 @@ fp16_t& fp16_t::operator=(const double& dVal)
     return *this;
 }
 
-tagFp16& fp16_t::operator=(const int64_t& iVal) { return *this = (static_cast<int32_t>(iVal)); }
-tagFp16& fp16_t::operator=(const uint64_t& uiVal) { return *this = (static_cast<uint32_t>(uiVal)); }
+// Double represents every integer in the finite FP16 range exactly; larger values saturate.
+tagFp16& fp16_t::operator=(const int64_t& iVal) { return *this = static_cast<double>(iVal); }
+tagFp16& fp16_t::operator=(const uint64_t& uiVal) { return *this = static_cast<double>(uiVal); }
 
 float fp16_t::toFloat() const { return fp16ToFloat(val); }
 } // namespace runtime

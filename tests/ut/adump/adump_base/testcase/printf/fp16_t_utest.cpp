@@ -11,6 +11,8 @@
 #include <cstring>
 #include <cmath>
 #include "fp16_t.h"
+#include "mockcpp/mockcpp.hpp"
+#include "securec.h"
 
 using namespace Adx;
 
@@ -378,7 +380,7 @@ TEST_F(Fp16UTest, AssignDouble_ExactlyMinDenormal)
 }
 
 // ============================================================================
-// operator=(int64_t) and operator=(uint64_t) -- delegate to int32/uint32
+// operator=(int64_t) and operator=(uint64_t) -- small-value compatibility
 // ============================================================================
 TEST_F(Fp16UTest, AssignInt64_Delegates)
 {
@@ -396,6 +398,67 @@ TEST_F(Fp16UTest, AssignUint64_Delegates)
     fp16_t f32;
     f32 = (uint32_t)32;
     EXPECT_EQ(f64.val, f32.val);
+}
+
+TEST_F(Fp16UTest, ClearsPreviousValueOnDoubleCopyFailure)
+{
+    const double input = 1.0;
+    fp16_t value(static_cast<uint16_t>(0x3C00U));
+    MOCKER(memcpy_s)
+        .expects(once())
+        .with(mockcpp::any(), eq(sizeof(input)), eq(static_cast<const void*>(&input)), eq(sizeof(input)))
+        .will(returnValue(EINVAL));
+    auto& result = (value = input);
+    GlobalMockObject::verify();
+    EXPECT_EQ(&result, &value);
+    EXPECT_EQ(value.val, 0U);
+}
+
+// Wide integer inputs must saturate before losing their high bits.
+TEST(HostFp16Int64Test, SignedWideInputs)
+{
+    using Fp16 = Adx::fp16_t;
+    const int64_t inputs[] = {INT64_C(65520),       INT64_C(65536),       INT64_C(4294967296), INT64_C(4294967297),
+                              -INT64_C(4294967296), -INT64_C(4294967297), INT64_MAX,           INT64_MIN};
+    for (const auto input : inputs) {
+        SCOPED_TRACE(input);
+        const uint16_t expected = input < 0 ? 0xFBFFU : 0x7BFFU;
+        Fp16 assigned;
+        EXPECT_EQ(&(assigned = input), &assigned);
+        EXPECT_EQ(assigned.val, expected);
+        Fp16 constructed(input);
+        EXPECT_EQ(constructed.val, expected);
+    }
+}
+
+TEST(HostFp16Int64Test, UnsignedWideInputs)
+{
+    using Fp16 = Adx::fp16_t;
+    const uint64_t inputs[] = {UINT64_C(65520),      UINT64_C(65536),      UINT64_C(4294967295),
+                               UINT64_C(4294967296), UINT64_C(4294967297), UINT64_MAX};
+    for (const auto input : inputs) {
+        SCOPED_TRACE(input);
+        Fp16 assigned;
+        EXPECT_EQ(&(assigned = input), &assigned);
+        EXPECT_EQ(assigned.val, 0x7BFFU);
+        Fp16 constructed(input);
+        EXPECT_EQ(constructed.val, 0x7BFFU);
+    }
+}
+
+TEST(HostFp16Int64Test, PreservesInRangeIntegerRounding)
+{
+    using Fp16 = Adx::fp16_t;
+    constexpr int32_t MAX_FINITE_HALF_INTEGER = 65504;
+    for (int32_t input = -MAX_FINITE_HALF_INTEGER; input <= MAX_FINITE_HALF_INTEGER; ++input) {
+        Fp16 reference(input);
+        Fp16 actual(static_cast<int64_t>(input));
+        ASSERT_EQ(actual.val, reference.val) << input;
+        if (input >= 0) {
+            Fp16 unsignedActual(static_cast<uint64_t>(input));
+            ASSERT_EQ(unsignedActual.val, reference.val) << input;
+        }
+    }
 }
 
 // ============================================================================
