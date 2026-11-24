@@ -1,6 +1,6 @@
 # 1. 概述
 
-本章节介绍 CANN Runtime API 的基本概念、头文件与库文件说明、同步/异步接口说明及废弃接口列表。
+本章节介绍 CANN Runtime API 的基本概念、头文件与库文件说明、同步/异步接口说明及废弃项列表。
 
 ## 头文件和库文件说明
 
@@ -35,10 +35,10 @@ acl接口的头文件在“\${INSTALL_DIR}/include/”目录下，库文件在�
 
 | 定义接口的头文件 | 用途 | 对应的库文件 |
 | --- | --- | --- |
-| acl/acl_rt.h | 用于定义初始化/去初始化、Device管理、Context管理、Stream管理、同步等待、内存管理等接口。 | libacl_rt.so<br>说明：为了兼容旧版本，旧版本中支持使用libascendcl.so，但后续版本这种方式会废弃，建议使用libacl_rt.so，防止后续版本出现兼容性问题。 |
+| acl/acl_rt.h | 用于定义初始化/去初始化、Device管理、Context管理、Stream管理、同步等待、内存管理等接口。 | libacl_rt.so<br>说明：为了兼容旧版本，旧版本中支持使用libascendcl.so，但后续版本这种方式会废弃，建议使用libacl_rt.so，防止后续版本出现兼容性问题。迁移说明见[废弃库文件](#libascendcl-deprecated)。 |
 | acl/acl_rt_api.h | 用于定义 C++ 扩展接口，提供函数重载和模板封装（仅适用于 C++ 程序）。依赖 acl_rt.h。 | libacl_rt.so |
 | acl/acl_dump.h | 用于定义模型和算子Dump接口。 | libascend_dump.so |
-| acl/acl_prof.h | 用于定义Profiling数据采集接口。 | libmsprofiler.so<br>说明：为了兼容旧版本，旧版本中支持使用libascendcl.so，但后续版本这种方式会废弃，建议使用libmsprofiler.so，防止后续版本出现兼容性问题。 |
+| acl/acl_prof.h | 用于定义Profiling数据采集接口。 | libmsprofiler.so<br>说明：为了兼容旧版本，旧版本中支持使用libascendcl.so，但后续版本这种方式会废弃，建议使用libmsprofiler.so，防止后续版本出现兼容性问题。迁移说明见[废弃库文件](#libascendcl-deprecated)。 |
 | base/acl_log.h | 用于定义日志回调接口，支持用户自定义模块记录日志。 | libascendalog.so |
 | acl/acl_tdt.h | 用于定义Tensor数据传输接口。 | libacl_tdt_channel.so |
 | acl/acl_tdt_queue.h | 用于定义共享队列管理、共享Buffer管理接口。 | libacl_tdt_queue.so |
@@ -53,7 +53,7 @@ acl接口的头文件在“\${INSTALL_DIR}/include/”目录下，库文件在�
 
 - “预留”：表示接口或参数预留，当前暂未实现或功能不完善，不支持调用，后续版本可能开放。
 
-- “试验”：表示接口或参数处理试验阶段，接口定义、行为可能发生变更，不建议应用于生产环境中。
+- “试验”：表示接口或参数处于试验阶段，接口定义、行为可能发生变更，不建议应用于生产环境中。
 
 - “废弃”：后续版本待删除，建议使用文档中的替换接口或参数。
 
@@ -178,3 +178,11 @@ Runtime API中的废弃项（例如接口、返回码等），自指定版本在
 - [ACL\_EVENT\_EXTERNAL](07_event_management.md#aclrtCreateEventWithFlag)宏
 
     `ACL_EVENT_EXTERNAL`宏在CANN 9.3.0版本标记为废弃，将在2027年12月30日之后的版本删除，请调用[aclrtCreateEventExWithFlag](07_event_management.md#aclrtCreateEventExWithFlag)接口并设置`ACL_EVENT_SYNC`创建Event，再配合[aclrtRecordEventWithFlag](07_event_management.md#aclrtRecordEventWithFlag)、[aclrtStreamWaitEventWithFlag](07_event_management.md#aclrtStreamWaitEventWithFlag)等接口使用。
+
+<a id="libascendcl-deprecated"></a>
+
+### 库文件
+
+- libascendcl.so
+
+    libascendcl.so文件位于`${install_path}/ascend-toolkit/latest/lib64`路径下，在CANN 8.5.0版本标记为废弃，计划在2026年12月30日之后的版本删除。使用Runtime接口的应用请迁移至`libacl_rt.so`，使用Profiling接口的应用请迁移至`libmsprofiler.so`。

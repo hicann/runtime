@@ -137,20 +137,21 @@ CANN Runtime遵循以下兼容性原则：
 
 ### 3.2 废弃接口处理策略
 
-Runtime使用`ACL_DEPRECATED_MESSAGE`宏标记废弃接口，在废弃周期内保持可用，同时提示替换接口（如有）。
+Runtime使用`ACL_DEPRECATED_MESSAGE`宏标记废弃接口，在废弃周期内保持可用，并在提示中给出废弃版本、计划删除日期和替换接口（如有）。
 
 #### 废弃接口标记方式
 
 ```c
 // 废弃接口声明示例
-ACL_DEPRECATED_MESSAGE("aclrtQueryEvent is deprecated, use aclrtQueryEventStatus instead")
+ACL_DEPRECATED_MESSAGE("aclrtQueryEvent is deprecated since 8.5.0, Will be removed after 2026/12/30,"
+                       " use aclrtQueryEventStatus instead.")
 ACL_FUNC_VISIBILITY aclError aclrtQueryEvent(aclrtEvent event, aclrtEventStatus *status);
 ```
 
 编译时将产生警告信息：
 
 ```text
-warning: 'aclrtQueryEvent' is deprecated: aclrtQueryEvent is deprecated, use aclrtQueryEventStatus instead [-Wdeprecated-declarations]
+warning: 'aclrtQueryEvent' is deprecated: aclrtQueryEvent is deprecated since 8.5.0, Will be removed after 2026/12/30, use aclrtQueryEventStatus instead. [-Wdeprecated-declarations]
 ```
 
 #### 废弃接口生命周期
@@ -168,13 +169,17 @@ warning: 'aclrtQueryEvent' is deprecated: aclrtQueryEvent is deprecated, use acl
 ```c
 typedef enum aclrtLaunchKernelAttrId {
     ACL_RT_LAUNCH_KERNEL_ATTR_LOCAL_MEMORY_SIZE
-        ACL_DEPRECATED_MESSAGE("Use ACL_RT_LAUNCH_KERNEL_ATTR_DYN_UBUF_SIZE instead") = 2,
+        ACL_DEPRECATED_MESSAGE(
+            "ACL_RT_LAUNCH_KERNEL_ATTR_LOCAL_MEMORY_SIZE is deprecated since 9.0.0, Will be removed after 2027/3/30,"
+            " use ACL_RT_LAUNCH_KERNEL_ATTR_DYN_UBUF_SIZE instead.") = 2,
     ACL_RT_LAUNCH_KERNEL_ATTR_DYN_UBUF_SIZE = 2,  // 替代值，同编号
     ...
 } aclrtLaunchKernelAttrId;
 
 typedef union aclrtLaunchKernelAttrValue {
-    ACL_DEPRECATED_MESSAGE("Use dynUbufSize instead")
+    ACL_DEPRECATED_MESSAGE(
+        "aclrtLaunchKernelAttrValue.localMemorySize is deprecated since 9.0.0, Will be removed after 2027/3/30,"
+        " use aclrtLaunchKernelAttrValue.dynUBufSize instead.")
     uint32_t localMemorySize;  // 废弃成员
     uint32_t dynUBufSize;      // 替代成员
     ...
