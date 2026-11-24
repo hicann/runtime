@@ -28,6 +28,7 @@
 | [features/aclgraph.md](features/aclgraph.md) | ACL Graph 特性，流捕获和模型构建 |
 | [features/snapshot.md](features/snapshot.md) | Snapshot 特性，进程状态保存和恢复 |
 | [features/fusion.md](features/fusion.md) | Fusion 特性，算子融合执行 |
+| [features/cc_mode.md](features/cc_mode.md) | CC Mode 特性，机密计算场景下的数据加解密搬运 |
 
 ---
 

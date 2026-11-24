@@ -9,7 +9,7 @@
 ![](figures/rt_sw_arch.svg)
 
 * Runtime interface layer: provides C/C++ APIs externally, encapsulating the core implementation and feature functions. It is mainly divided into three categories: low-level runtime interfaces prefixed with rt (such as rtSetDevice and rtMalloc), ACL runtime function interfaces prefixed with aclrt (such as aclrtStreamCreate and aclrtLaunchKernel), and ACL Graph/Model feature interfaces prefixed with aclmdlRI. The interface layer uniformly handles parameter validation and error code conversion.
-* Runtime feature layer: builds pluggable feature functions based on core layer capabilities, including ACL Graph (stream capture and graph construction), Model (model loading and execution), Fusion (operator fusion), Snapshot (process snapshot and fault diagnosis), and so on.
+* Runtime feature layer: builds pluggable feature functions based on core layer capabilities, including ACL Graph (stream capture and graph construction), Model (model loading and execution), Fusion (operator fusion), Snapshot (process snapshot and fault diagnosis), Confidential Computing (CC Mode), and so on.
 * Runtime core layer: provides core functions such as device management (Device), context management (Context/primary context), stream management (Stream/SQ-CQ asynchronous mechanism), task scheduling (Engine/TaskFactory), memory management (MemoryPool), kernel execution (Kernel/Program), event synchronization (Event), and notification mechanism (Notify). It is the main body of the Runtime core implementation.
 * Driver adaptation layer: the adaptation layer provides abstraction and adaptation for different generations of chips for the Runtime **core layer** and **feature layer**, and shields hardware and driver interface differences. It supports multiple generations of chips through version directories such as driver/v100 and v200; manages chip feature configuration through the config/ directory (such as 910, 310P, and BS9SX1A); and unifies the driver call entry through the HAL driver interface (ascend_hal.h).
 
@@ -366,6 +366,16 @@ classDiagram
 
 - AI CPU + AI Core: fused scheduling and execution of AI CPU operators and AI Core operators, implementing parallel computing of AI CPU and AI Core or parallel computing and communication services.
 - CCU + AI Core: fused scheduling and execution of CCU tasks and AI Core operators, implementing parallel computing and communication services.
+
+### 2.4 Confidential Computing (CC Mode)
+
+**Feature description**: targets deployments where the Host runs in a confidential VM and the Device runs in an NPU TEE. Runtime takes over H2D/D2H data transfer transparently at the feature layer: service data is encrypted on the Host, transferred through a plaintext DMA channel, and then decrypted on the Device and written to private memory. This feature adds no public interfaces, and upper-layer `aclrtMemcpy*` interfaces require no modification. It supports two modes, GCM (with integrity authentication) and CTR (low-overhead keystream), and provides a simplified path for data of 64B or less on single-operator streams that avoids Host callbacks and Worker wake-ups.
+
+**Feature design intent**: Host memory in a confidential VM is protected by hardware encryption, but the PCIe DMA channel between the Host and the Device does not provide confidentiality, so transferring service data directly exposes it in plaintext. Control plane data (SQE, task args, and queue control headers) cannot be encrypted as a whole block and must be handled separately from the data plane. For small data that uses the full path, thread wake-up and scheduling overhead exceeds the encryption and decryption cost.
+
+**Key behavior**: the feature fails closed on environment exceptions. Initialization fails when the Host is in a confidential environment but the Device does not support CC, and no plaintext fallback occurs. In non-confidential environments, no callback is registered, and the normal path has zero overhead.
+
+**Architecture integration**: the feature registers the `MemProcFunc` and `CCProcFunc` function tables through `DevDynInfoProcFunc`, and ApiImpl performs a single null-check dispatch at the entry of existing memory interfaces. The Core layer does not include CC headers and interacts with the feature layer only through function pointers.
 
 ## 3 Design Principles
 

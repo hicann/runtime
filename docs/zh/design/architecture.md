@@ -9,7 +9,7 @@
 ![](figures/rt_sw_arch.svg)
 
 * Runtime 接口层：对外提供 C/C++ 语言 API，封装核心实现和特性功能。主要分为三类：以 rt 为前缀的底层运行时接口（如rtSetDevice、rtMalloc）、以 aclrt 为前缀的 ACL 运行时功能接口（如 aclrtStreamCreate、aclrtLaunchKernel）、以及以aclmdlRI 为前缀的 ACL Graph/Model 特性接口。接口层统一处理参数校验、错误码转换。
-* Runtime 特性层：基于核心层能力构筑可插拔的特性功能，包括：ACL Graph（流捕获与图构建）、Model（模型加载与执行）、Fusion（算子融合）、Snapshot（进程快照与故障诊断）等。
+* Runtime 特性层：基于核心层能力构筑可插拔的特性功能，包括：ACL Graph（流捕获与图构建）、Model（模型加载与执行）、Fusion（算子融合）、Snapshot（进程快照与故障诊断）、机密计算（CC Mode）等。
 * Runtime核心层：提供设备管理（Device）、上下文管理（Context/主上下文）、流管理（Stream/SQ-CQ异步机制）、任务调度（Engine/TaskFactory）、内存管理（MemoryPool）、内核执行（Kernel/Program）、事件同步（Event）、通知机制（Notify）等核心功能，是 Runtime 的核心实现主体。
 * 驱动适配层：适配层为 Runtime **核心层** 和**特性层**提供不同代际芯片的抽象和适配，屏蔽硬件和驱动接口差异。通过driver/v100、v200 等版本目录支持多代际芯片；通过 config/ 目录（如 910、310P、BS9SX1A 等）管理芯片特性配置；通过HAL 驱动接口（ascend_hal.h）统一驱动调用入口。
 
@@ -366,6 +366,16 @@ classDiagram
 
 - AI CPU + AI Core：AI CPU 算子和AI Core算子融合调度执行，实现AI CPU和AI Core的计算并行或通算并行业务。
 - CCU + AI Core：CCU 任务和AI Core 算子融合调度执行，实现通算并行业务。
+
+### 2.4 机密计算（CC Mode）
+
+**特性功能说明**：面向 Host 运行于机密虚机、Device 运行于 NPU TEE 的部署形态，Runtime 在特性层透明接管 H2D/D2H 数据搬运：业务数据在 Host 侧加密后经明文 DMA 通道传输，再由 Device 侧解密写入私有内存。该特性不新增公开接口，上层 `aclrtMemcpy*` 接口无需改造；支持 GCM（带完整性认证）与 CTR（低开销密钥流）两种模式，并为单算子流 64B 以内小数据提供免 Host 回调与 Worker 唤醒的简化通路。
+
+**特性设计初衷**：机密虚机中的 Host 内存由硬件加密保护，但 Host 与 Device 之间的 PCIe DMA 通道本身不提供机密性，业务数据直接搬运会被明文暴露；控制面数据（SQE、task args、队列控制头）不具备整块加密条件，需要与数据面分离处理；小数据走完整通路时，线程唤醒与调度开销会超过加解密本身。
+
+**关键行为**：环境异常时 fail closed，Host 处于机密环境但 Device 不支持 CC 时初始化失败，不降级明文；非机密环境下不注册任何回调，普通路径零开销。
+
+**架构接入方式**：通过 `DevDynInfoProcFunc` 注册 `MemProcFunc` 与 `CCProcFunc` 函数表，ApiImpl 在既有内存接口入口做一次判空分发；Core 层不 include CC 头文件，仅通过函数指针与特性层交互。
 
 ## 3 设计原则
 

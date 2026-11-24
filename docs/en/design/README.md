@@ -28,6 +28,7 @@ This document set introduces the CANN Runtime architecture design and **targets 
 | [features/aclgraph.md](features/aclgraph.md) | ACL Graph feature, stream capture, and model construction |
 | [features/snapshot.md](features/snapshot.md) | Snapshot feature, process status save and restore |
 | [features/fusion.md](features/fusion.md) | Fusion feature, operator fusion execution |
+| [features/cc_mode.md](features/cc_mode.md) | CC Mode feature, data encryption and decryption transfer in confidential computing scenarios |
 
 ---
 
