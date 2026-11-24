@@ -36,6 +36,7 @@ The key directory structure is as follows:
 |   ├── external                                   # Header files provided by this repository
 |   ......
 ├── pkg_inc                                        # Repository management-related header files
+├── python                                         # pyACL Python API for ACL
 ├── scripts                                        # Build auxiliary files
 ├── src                                            # Source code for all modules in the 3.1 package
 |   ├── acl                                        # acl external API directory
