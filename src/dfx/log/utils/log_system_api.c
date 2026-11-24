@@ -903,9 +903,8 @@ STATIC bool LocalIsGroupMember(UINT32 gid)
     return isMember;
 }
 
-/* issue #1112: parse ASCEND_LOG_GID (decimal, 0..UINT32_MAX, full
- * consumption — same reject set as LogStrToUint) and verify membership;
- * SYS_OK only when the env is set to a gid the chown below will accept */
+/* issue #1112: signed parse + [0, UINT_MAX] clamp; strtoul must not be used here
+ * because its unsigned modular arithmetic wraps huge negatives to small positives */
 STATIC INT32 LocalGetEnvLogGid(UINT32* gid)
 {
     const CHAR* env = getenv(LOG_ENV_ASCEND_LOG_GID);
@@ -915,12 +914,12 @@ STATIC INT32 LocalGetEnvLogGid(UINT32* gid)
 
     errno = 0;
     CHAR* endPtr = NULL;
-    UINT64 value = strtoul(env, &endPtr, 10);
+    LONG value = strtol(env, &endPtr, 10);
     if ((env == endPtr) || (*endPtr != '\0')) {
         SELF_LOG_WARN("invalid %s(%s), use process primary group.", LOG_ENV_ASCEND_LOG_GID, env);
         return SYS_ERROR;
     }
-    if ((((value == 0U) || (value == ULONG_MAX)) && (errno == ERANGE)) || (value > (UINT64)UINT_MAX)) {
+    if ((value < 0) || ((UINT64)value > (UINT64)UINT_MAX)) {
         SELF_LOG_WARN("invalid %s(%s), use process primary group.", LOG_ENV_ASCEND_LOG_GID, env);
         return SYS_ERROR;
     }

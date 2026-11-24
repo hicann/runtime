@@ -593,6 +593,48 @@ TEST_F(PlogFileMgrCovUtest, WriteHostLog_EnvGidInvalidFallback)
     DlogInitGlobalAttr();
 }
 
+/* TC: issue #1112 negative-number family — signed parse must reject negatives
+ * that strtoul would wrap to small positives; all fall back to the primary group. */
+TEST_F(PlogFileMgrCovUtest, WriteHostLog_EnvGidNegativeFamilyFallback)
+{
+    const char* negatives[] = {
+        "-1",
+        "-99999999999999",       /* int64-range negative */
+        "-18446744073709551611", /* wraps to 5 under strtoul */
+        "-18446744073709551615", /* wraps to 1 under strtoul */
+        "-9223372036854775809",  /* just below int64 min */
+    };
+    for (size_t i = 0; i < sizeof(negatives) / sizeof(negatives[0]); i++) {
+        /* fresh tree per value so the directory-creation path is exercised */
+        system("rm -rf " PATH_ROOT "/*");
+        setenv("ASCEND_LOG_GID", negatives[i], 1);
+        DlogInitGlobalAttr();
+        ASSERT_EQ(LOG_SUCCESS, PlogFileMgrInit());
+
+        char msg[64] = "issue1112 negative family log";
+        ASSERT_EQ(LOG_SUCCESS, PlogWriteHostLog(DEBUG_LOG, msg, (uint32_t)strlen(msg)));
+
+        struct stat st = {0};
+        char dir[300] = {0};
+        (void)snprintf_s(dir, sizeof(dir), sizeof(dir) - 1U, "%s/debug/plog", PATH_ROOT);
+        ASSERT_EQ(0, stat(dir, &st)) << "env=" << negatives[i];
+        EXPECT_EQ((gid_t)getgid(), st.st_gid) << "env=" << negatives[i];
+
+        PlogFileMgrInfo* fl = PlogGetFileMgrInfo();
+        ASSERT_NE(nullptr, fl);
+        PlogFileList* list = &fl->hostLogList[DEBUG_LOG];
+        char file[600] = {0};
+        (void)snprintf_s(
+            file, sizeof(file), sizeof(file) - 1U, "%s/%s", list->aucFilePath, list->aucFileName[list->currIndex]);
+        ASSERT_EQ(0, stat(file, &st)) << "env=" << negatives[i];
+        EXPECT_EQ((gid_t)getgid(), st.st_gid) << "env=" << negatives[i];
+
+        PlogFileMgrExit();
+    }
+    unsetenv("ASCEND_LOG_GID");
+    DlogInitGlobalAttr();
+}
+
 /* TC: ASCEND_WORK_PATH as a non-existent multi-level absolute path is created
  * and logs fall under the configured path. */
 TEST_F(PlogFileMgrCovUtest, FileMgrInit_WorkPathAbsoluteMultiLevel)

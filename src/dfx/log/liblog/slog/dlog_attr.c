@@ -144,13 +144,14 @@ STATIC void DlogInitUserGroupId(void)
     if (envGid == NULL) {
         return;
     }
-    uint32_t envVal = 0;
-    if ((LogStrToUint(envGid, &envVal) != LOG_SUCCESS) || (!DlogIsGroupMember(envVal))) {
+    int64_t envVal = -1;
+    if ((LogStrToInt(envGid, &envVal) != LOG_SUCCESS) || (envVal < 0) || (envVal > (int64_t)UINT_MAX) ||
+        (!DlogIsGroupMember((uint32_t)envVal))) {
         SELF_LOG_WARN("invalid %s(%s), use process primary group.", LOG_ENV_ASCEND_LOG_GID, envGid);
         return;
     }
-    g_dlogAttr.systemAttr.gid = envVal;
-    SELF_LOG_INFO("set log gid by env %s(%u).", LOG_ENV_ASCEND_LOG_GID, envVal);
+    g_dlogAttr.systemAttr.gid = (uint32_t)envVal;
+    SELF_LOG_INFO("set log gid by env %s(%u).", LOG_ENV_ASCEND_LOG_GID, (uint32_t)envVal);
 }
 
 uint32_t DlogGetUid(void) { return g_dlogAttr.systemAttr.uid; }
