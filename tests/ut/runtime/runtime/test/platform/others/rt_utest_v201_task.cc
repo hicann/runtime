@@ -2384,6 +2384,48 @@ TEST_F(TaskTestV201, Test_ModelSerialSchedPostProc_DisabledEarlyReturn)
     EXPECT_EQ(ret, RT_ERROR_NONE);
 }
 
+TEST_F(TaskTestV201, Test_ModelSerialSchedPreProc_Mc32NotSkipped)
+{
+    DevProperties origProps = stream_->Device_()->GetDevProperties();
+    DevProperties props = origProps;
+    props.modelScheduleSoftware = true;
+    props.aivNumPerDie = 4U;
+    stream_->Device_()->RefreshDevProperties(props);
+
+    rtModel_t model;
+    rtError_t ret = rtModelCreate(&model, 0);
+    ASSERT_EQ(ret, RT_ERROR_NONE);
+    Model* mdl = rt_ut::UnwrapOrNull<Model>(model);
+    ASSERT_NE(mdl, nullptr);
+
+    Notify* notify = new (std::nothrow) Notify(0, 0);
+    ASSERT_NE(notify, nullptr);
+
+    TaskInfo task = {};
+    task.stream = stream_;
+    TaskInfo* tmpTask = &task;
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
+                   &Stream::AllocTask))
+        .stubs()
+        .will(returnValue(tmpTask));
+    MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_NONE));
+
+    ret = ModelSerialSchedPreProc(stream_, notify, mdl);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+
+    stream_->Device_()->RefreshDevProperties(origProps);
+    delete notify;
+    ret = rtModelDestroy(model);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+}
+
+TEST_F(TaskTestV201, Test_ModelExecuteGroupLockUnlock)
+{
+    ModelExecuteGroupLock(stream_);
+    ModelExecuteGroupUnLock(stream_);
+}
+
 TEST_F(TaskTestV201, rtLaunchDqsTask_NullApiInstance)
 {
     MOCKER(Api::Instance).stubs().will(returnValue((Api*)NULL));

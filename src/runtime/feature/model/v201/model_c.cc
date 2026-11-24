@@ -13,30 +13,15 @@
 
 namespace cce {
 namespace runtime {
-constexpr uint32_t MC32_CORE_NUM_PER_DIE = 4U;
 
-void ModelExecuteGroupLock(Stream* const stm)
-{
-    if (stm->Device_()->GetDevProperties().aivNumPerDie != MC32_CORE_NUM_PER_DIE) {
-        stm->ModelExecuteGroupLock();
-    }
-}
+void ModelExecuteGroupLock(Stream* const stm) { stm->ModelExecuteGroupLock(); }
 
-void ModelExecuteGroupUnLock(Stream* const stm)
-{
-    if (stm->Device_()->GetDevProperties().aivNumPerDie != MC32_CORE_NUM_PER_DIE) {
-        stm->ModelExecuteGroupUnLock();
-    }
-}
+void ModelExecuteGroupUnLock(Stream* const stm) { stm->ModelExecuteGroupUnLock(); }
 
 rtError_t ModelSerialSchedPreProc(Stream* const stm, Notify* const notify, Model* const model)
 {
     NULL_PTR_RETURN(notify, RT_ERROR_INVALID_VALUE);
     if (!stm->Device_()->GetDevProperties().modelScheduleSoftware) {
-        return RT_ERROR_NONE;
-    }
-
-    if (stm->Device_()->GetDevProperties().aivNumPerDie == MC32_CORE_NUM_PER_DIE) {
         return RT_ERROR_NONE;
     }
 
@@ -59,10 +44,6 @@ rtError_t ModelSerialSchedPostProc(Stream* const stm, Notify* const notify, Mode
 {
     NULL_PTR_RETURN(notify, RT_ERROR_INVALID_VALUE);
     if (!stm->Device_()->GetDevProperties().modelScheduleSoftware) {
-        return RT_ERROR_NONE;
-    }
-
-    if (stm->Device_()->GetDevProperties().aivNumPerDie == MC32_CORE_NUM_PER_DIE) {
         return RT_ERROR_NONE;
     }
 
