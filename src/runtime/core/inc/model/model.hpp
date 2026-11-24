@@ -357,7 +357,7 @@ public:
     void ResetFuncCallMem(const Device* const dev);
 
 protected:
-    virtual void ModelIdFree();
+    void ModelIdFree();
     int32_t id_ = MODEL_ID_INVALID;
 
 private:

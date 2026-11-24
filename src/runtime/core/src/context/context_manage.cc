@@ -331,7 +331,7 @@ rtError_t ContextManage::DeviceClean(const int32_t devId)
         ERROR_RETURN(error, "Failed to clean tasks, retCode=%#x.", error);
         error = ctx->StreamsUpdate();
         ERROR_RETURN(error, "Failed to update streams, retCode=%#x.", error);
-        ctx->CaptureModelClean();
+        (void)ctx->CaptureModelClean();
     }
 
     if (dev != nullptr) {

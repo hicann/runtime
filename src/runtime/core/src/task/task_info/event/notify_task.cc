@@ -593,7 +593,8 @@ void ToCommandBodyForNotifyWaitTask(TaskInfo* taskInfo, rtCommand_t* const comma
     command->taskInfoFlag = taskInfo->stream->GetTaskRevFlag(taskInfo->bindFlag);
 }
 
-void DoCompleteSuccessForEndGraphNotifyWaitTaskProc(TaskInfo* taskInfo, const uint32_t devId, const bool lockFlag)
+static void DoCompleteSuccessForEndGraphNotifyWaitTaskProc(
+    TaskInfo* taskInfo, const uint32_t devId, const bool lockFlag)
 {
     EndGraphNotifyWaitTaskInfo* const endGraphWaitTask = &(taskInfo->u.endGraphNotifyWaitTask);
     if (unlikely(taskInfo->errorCode != static_cast<uint32_t>(RT_ERROR_NONE))) {
@@ -637,7 +638,7 @@ void DoCompleteSuccessForEndGraphNotifyWaitTaskProc(TaskInfo* taskInfo, const ui
     if (endGraphWaitTask->isSoftwareSqCaptureModel) {
         ReleaseExternalEventsRes(taskInfo);
         // 当前 stream均为单算子执行流的 pos，不需要转换为 logicSq hwPos。
-        taskInfo->stream->Device_()->DeleteEndGraphNotifyInfo(
+        (void)taskInfo->stream->Device_()->DeleteEndGraphNotifyInfo(
             taskInfo->stream->Id_(), endGraphWaitTask->endGraphModel, taskInfo->pos, taskInfo->errorCode);
     }
 }

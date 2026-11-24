@@ -229,7 +229,7 @@ void RawDevice::ReleaseDriverResourcesOnDestroy() noexcept
             aicpuPrintfAddr_ = nullptr;
             aicpuPrintTlvCnt_.Set(0U);
         }
-        FreeSqExecTimesSvm();
+        (void)FreeSqExecTimesSvm();
         (void)driver_->DeviceClose(deviceId_, tsId_);
         driver_ = nullptr;
     }
@@ -925,7 +925,7 @@ rtError_t RawDevice::FreeSqExecTimesSvm()
         return RT_ERROR_NONE;
     }
 
-    const rtError_t error = driver_->DevMemFree(sqExecTimesSvmBaseAddr_, Id_());
+    const rtError_t error = driver_->DevMemFree(sqExecTimesSvmBaseAddr_, deviceId_);
     COND_RETURN_ERROR(
         error != RT_ERROR_NONE, error, "Failed to free sq execution times svm, retCode=%#x.",
         static_cast<uint32_t>(error));

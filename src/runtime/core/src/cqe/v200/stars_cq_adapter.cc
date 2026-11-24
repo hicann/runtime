@@ -21,8 +21,8 @@ static inline uint64_t StarsCqGetTimestamp(const rtStarsV2Cqe_t* const starsCqe)
 {
     uint64_t timestamp;
 
-    timestamp = (uint64_t)(((uint64_t)starsCqe->cqeStatus.sysCnt.syscntHigh) << UINT32_BIT_NUM);
-    timestamp |= (uint64_t)starsCqe->cqeStatus.sysCnt.syscntLow;
+    timestamp = static_cast<uint64_t>((static_cast<uint64_t>(starsCqe->cqeStatus.sysCnt.syscntHigh)) << UINT32_BIT_NUM);
+    timestamp |= static_cast<uint64_t>(starsCqe->cqeStatus.sysCnt.syscntLow);
 
     return timestamp;
 }
@@ -46,12 +46,12 @@ static inline bool StarsCqIsAsyncDmaType(const rtStarsV2Cqe_t* const starsCqe)
 
 static inline uint8_t StarsCqGetWarnType(const rtStarsV2Cqe_t* const starsCqe)
 {
-    return (uint8_t)(starsCqe->warn << 6); /* starsCqe warn offset: 6 */
+    return static_cast<uint8_t>(starsCqe->warn << 6U); /* starsCqe warn offset: 6 */
 }
 
 static inline uint8_t StarsCqGetErrType(const rtStarsV2Cqe_t* const starsCqe)
 {
-    return (uint8_t)((starsCqe->cqeStatus.sysCnt.syscntLow & 0x3F) | StarsCqGetWarnType(starsCqe));
+    return static_cast<uint8_t>((starsCqe->cqeStatus.sysCnt.syscntLow & 0x3FU) | StarsCqGetWarnType(starsCqe));
 }
 
 static inline uint32_t StarsCqGetErrCode(const rtStarsV2Cqe_t* const starsCqe)

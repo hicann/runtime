@@ -125,7 +125,7 @@ rtError_t CaptureModel::ModelIdAlloc()
     /* modelId的创建早于IsSupportDecoupling的更新 */
     uint32_t val = RT_CAPABILITY_NOT_SUPPORT;
     (void)deviceDrv->CheckSupportPcieBarCopy(dev->Id_(), val, false);
-    bool isPcieBarSupport = (val == RT_CAPABILITY_SUPPORT);
+    const bool isPcieBarSupport = (val == RT_CAPABILITY_SUPPORT);
     if ((dev->CheckFeatureSupport(TS_FEATURE_SUPPORT_ACLGRAPH_DECOUPLING)) &&
         (dev->GetSplitMode() == RT_NO_SPLIT_MODE) && isPcieBarSupport) {
         ResourceIdAllocator* const allocator = dev->GetResourceIdAllocator();
@@ -142,25 +142,6 @@ rtError_t CaptureModel::ModelIdAlloc()
     SetIdAllocByRuntimeFlag(true);
     RT_LOG(RT_LOG_DEBUG, "Alloc capture model id by runtime success, device_id=%u, model_id=%d.", dev->Id_(), id_);
     return RT_ERROR_NONE;
-}
-
-void CaptureModel::ModelIdFree()
-{
-    if (id_ == MODEL_ID_INVALID) {
-        return;
-    }
-    Device* const dev = Context_()->Device_();
-    if (IsIdAllocByRuntime()) {
-        ResourceIdAllocator* const allocator = dev->GetResourceIdAllocator();
-        if (allocator != nullptr) {
-            allocator->FreeModelId(id_);
-            SetIdAllocByRuntimeFlag(false);
-            RT_LOG(RT_LOG_INFO, "Free runtime model_id=%d.", id_);
-        }
-        id_ = MODEL_ID_INVALID;
-        return;
-    }
-    Model::ModelIdFree();
 }
 
 bool CaptureModel::IsExecuteException() { return isExecuteException_; }
@@ -296,7 +277,6 @@ CaptureModel::~CaptureModel() noexcept
     updateInfo_.hostSqeUpdateBuffers.clear();
     updateInfo_.updateTask.clear();
     updateInfo_.curApplyUpdateTask.clear();
-    ModelIdFree();
 }
 
 rtError_t CaptureModel::LoadCompleteByStreamPrep(Stream*& stream)
@@ -1471,28 +1451,29 @@ bool CaptureModel::ReportSingleCaptureStreamInfo(
 {
     const uint16_t deviceId = static_cast<uint16_t>(Context_()->Device_()->Id_());
 
-    MsprofCompactInfo compactInfo{};
-    compactInfo.level = MSPROF_REPORT_RUNTIME_LEVEL;
-    compactInfo.type = RT_PROFILE_TYPE_CAPTURE_STREAM_INFO;
-    compactInfo.timeStamp = timeStamp;
-    compactInfo.threadId = GetCurrentTid();
-    compactInfo.dataLen = static_cast<uint32_t>(sizeof(MsprofCaptureStreamInfo));
-    compactInfo.data.captureStreamInfo.captureStatus = captureStatus;
-    compactInfo.data.captureStreamInfo.modelStreamId = static_cast<uint16_t>(captureStmId);
-    compactInfo.data.captureStreamInfo.originalStreamId = static_cast<uint16_t>(singleOperStmId);
-    compactInfo.data.captureStreamInfo.modelId = static_cast<uint16_t>(Id_());
-    compactInfo.data.captureStreamInfo.deviceId = deviceId;
+    MsprofCompactInfo compactInfoV1{};
+    compactInfoV1.level = MSPROF_REPORT_RUNTIME_LEVEL;
+    compactInfoV1.type = RT_PROFILE_TYPE_CAPTURE_STREAM_INFO;
+    compactInfoV1.timeStamp = timeStamp;
+    compactInfoV1.threadId = GetCurrentTid();
+    compactInfoV1.dataLen = static_cast<uint32_t>(sizeof(MsprofCaptureStreamInfo));
+    compactInfoV1.data.captureStreamInfo.captureStatus = captureStatus;
+    compactInfoV1.data.captureStreamInfo.modelStreamId = static_cast<uint16_t>(captureStmId);
+    compactInfoV1.data.captureStreamInfo.originalStreamId = static_cast<uint16_t>(singleOperStmId);
+    compactInfoV1.data.captureStreamInfo.modelId = static_cast<uint16_t>(Id_());
+    compactInfoV1.data.captureStreamInfo.deviceId = deviceId;
 
-    const int32_t v1Error = MsprofReportCompactInfo(0, &compactInfo, static_cast<uint32_t>(sizeof(MsprofCompactInfo)));
+    const int32_t v1Error =
+        MsprofReportCompactInfo(0, &compactInfoV1, static_cast<uint32_t>(sizeof(MsprofCompactInfo)));
     if (v1Error != MSPROF_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR, "Reported capture stream info for profiling failed, retCode=%#x.", v1Error);
     }
 
     MsprofCompactInfo compactInfoV2{};
-    compactInfoV2.level = compactInfo.level;
+    compactInfoV2.level = compactInfoV1.level;
     compactInfoV2.type = RT_PROFILE_TYPE_CAPTURE_STREAM_INFO_V2;
-    compactInfoV2.timeStamp = compactInfo.timeStamp;
-    compactInfoV2.threadId = compactInfo.threadId;
+    compactInfoV2.timeStamp = compactInfoV1.timeStamp;
+    compactInfoV2.threadId = compactInfoV1.threadId;
     compactInfoV2.dataLen = static_cast<uint32_t>(sizeof(MsprofCaptureStreamInfoV2));
     compactInfoV2.data.captureStreamInfoV2.captureStatus = static_cast<uint8_t>(captureStatus);
     compactInfoV2.data.captureStreamInfoV2.streamId = captureStmId;

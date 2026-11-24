@@ -132,7 +132,8 @@ rtError_t DeviceSqCqPool::BatchAllocSqCq(const uint32_t allcocNum, const int32_t
     rtDeviceSqCqInfo_t sqCqInfo = {};
     for (uint32_t loop = 0U; loop < allcocNum; loop++) {
         (void)memset_s(&sqCqInfo, sizeof(sqCqInfo), 0x0, sizeof(sqCqInfo));
-        rtError_t error = AllocSqCqFromDrv(&sqCqInfo, TSDRV_FLAG_NO_SQ_MEM, SQ_TYPE_ACL_GRAPH, retryCount);
+        rtError_t error =
+            AllocSqCqFromDrv(&sqCqInfo, static_cast<uint32_t>(TSDRV_FLAG_NO_SQ_MEM), SQ_TYPE_ACL_GRAPH, retryCount);
         COND_RETURN_INFO(
             (error != RT_ERROR_NONE), error, "alloc sq cq, loop=%u, retCode=%#x.", loop, static_cast<uint32_t>(error));
 
@@ -267,8 +268,8 @@ rtError_t DeviceSqCqPool::FreeSqCqFault(const rtDeviceSqCqInfo_t* const sqCqList
     }
     const std::lock_guard<std::mutex> deviceSqCqLock(deviceSqCqLock_);
     for (uint32_t listId = 0; listId < freeNum; listId++) {
-        uint32_t sqId = sqCqList[listId].sqId;
-        uint32_t cqId = sqCqList[listId].cqId;
+        const uint32_t sqId = sqCqList[listId].sqId;
+        const uint32_t cqId = sqCqList[listId].cqId;
         auto it = std::find_if(
             deviceSqCqOccupyList_.begin(), deviceSqCqOccupyList_.end(),
             [sqId, cqId](const rtDeviceSqCqInfo_t& info) { return (info.sqId == sqId) && (info.cqId == cqId); });

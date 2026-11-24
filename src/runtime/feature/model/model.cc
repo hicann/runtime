@@ -136,6 +136,16 @@ void Model::ModelIdFree()
         return;
     }
     Device* const dev = context_->Device_();
+    if (IsIdAllocByRuntime()) {
+        ResourceIdAllocator* const allocator = dev->GetResourceIdAllocator();
+        if (allocator != nullptr) {
+            allocator->FreeModelId(id_);
+            SetIdAllocByRuntimeFlag(false);
+            RT_LOG(RT_LOG_INFO, "Free runtime model_id=%d.", id_);
+        }
+        id_ = MODEL_ID_INVALID;
+        return;
+    }
     (void)dev->Driver_()->ModelIdFree(id_, dev->Id_(), dev->DevGetTsId());
     id_ = MODEL_ID_INVALID;
 }
@@ -159,7 +169,7 @@ rtError_t Model::ModelIdAlloc()
         /* 物理机场景 + 新2包 + 支持pcieBar：指定范围0-2k申请, 因为capture model由runtime申请，避免冲突 */
         uint32_t val = RT_CAPABILITY_NOT_SUPPORT;
         (void)deviceDrv->CheckSupportPcieBarCopy(dev->Id_(), val, false);
-        bool isPcieBarSupport = (val == RT_CAPABILITY_SUPPORT);
+        const bool isPcieBarSupport = (val == RT_CAPABILITY_SUPPORT);
         if (dev->CheckFeatureSupport(TS_FEATURE_SUPPORT_ACLGRAPH_DECOUPLING) && isPcieBarSupport) {
             // 通过驱动接口指定范围申请，指定范围为0-2k
             error = deviceDrv->ModelIdAllocByRange(&allocId, dev->Id_(), dev->DevGetTsId(), 0U, 2047U); // 指定范围0-2k

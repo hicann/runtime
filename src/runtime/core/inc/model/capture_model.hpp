@@ -347,7 +347,6 @@ public:
 
 protected:
     rtError_t ModelIdAlloc() override;
-    void ModelIdFree() override;
 
 private:
     rtError_t AllocSqCqProc(const uint32_t logicSqNum) const;

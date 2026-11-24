@@ -1606,7 +1606,7 @@ rtError_t DavidStream::ReAllocStreamId()
         const uint32_t remoteFlag = ((flags_ & static_cast<uint32_t>(RT_STREAM_CP_PROCESS_USE)) != 0U) ?
                                         static_cast<uint32_t>(TSDRV_FLAG_REMOTE_ID) :
                                         0U;
-        rtError_t error = device_->Driver_()->ReAllocResourceId(
+        const rtError_t error = device_->Driver_()->ReAllocResourceId(
             device_->Id_(), device_->DevGetTsId(), priority_, static_cast<uint32_t>(streamId_), DRV_STREAM_ID,
             remoteFlag);
         ERROR_RETURN_MSG_INNER(

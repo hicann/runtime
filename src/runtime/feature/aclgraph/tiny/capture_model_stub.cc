@@ -433,8 +433,6 @@ rtError_t CaptureModel::UnBindStreamToModel(void) { return RT_ERROR_FEATURE_NOT_
 
 rtError_t CaptureModel::ModelIdAlloc() { return RT_ERROR_FEATURE_NOT_SUPPORT; }
 
-void CaptureModel::ModelIdFree() { return; }
-
 bool CaptureModel::IsExecuteException() { return false; }
 void CaptureModel::SetExecuteExceptionFlagForAllModels(bool flag)
 {

@@ -1455,7 +1455,7 @@ void StarsEngine::ProcLogicCqReport(const rtCqReport_t& logicCq, const bool isSt
         reportTask = GetDevice()->GetTaskFactory()->GetTask(static_cast<int32_t>(streamId), taskId);
     }
 
-    bool isExceptionFlag = ProcReportIsException(logicCq, reportTask);
+    const bool isExceptionFlag = ProcReportIsException(logicCq, reportTask);
     if (reportTask != nullptr) {
         CaptureModel* const captureModel = dynamic_cast<CaptureModel*>(reportTask->stream->Model_());
         if ((captureModel != nullptr) && !isExceptionFlag) {
