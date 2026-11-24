@@ -59,7 +59,7 @@
 - **算子二进制**：编译算子源码，可得到算子二进制文件\*.o。对于CANN内置算子，可从算子二进制包（包名为Ascend-cann-\*-ops-\*.run）中获取算子二进制文件。对于自定义算子，可在编译算子、发布二进制之后获取算子二进制文件。
 
   <!-- npu="950,A3,910b,910,310p,310b" id4 -->
-  自定义算子的开发、编译请参见《[Ascend C算子开发指南](https://gitcode.com/cann/asc-devkit/blob/master/docs/zh/guide/index.md)》。
+  自定义算子的开发、编译请参见《[Ascend C算子开发](https://gitcode.com/cann/asc-devkit/blob/master/docs/zh/guide/index.md)》。
   <!-- end id4 -->
   <!-- @ref: runtime/res/docs/zh/api_ref/14_Kernel_loading_and_execution_res.md#id43 -->
 - **核函数**：是算子设备侧实现的入口函数。当前允许使用C/C++函数的语法扩展来编写设备端的运行代码，用户在核函数中进行数据访问和计算操作，由此实现该算子的所有功能。
@@ -1852,7 +1852,7 @@ aclrtBinary aclrtCreateBinary(const void *data, size_t dataLen)
 
 返回aclrtBinary类型的指针。
 
-## 约束说明
+### 约束说明
 
 <!-- npu="950,A3,910b,910,310p,310b" id1 -->
 Ascend EP标准形态下，data参数处需申请Host上的内存。
