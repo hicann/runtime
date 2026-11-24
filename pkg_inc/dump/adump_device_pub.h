@@ -90,7 +90,13 @@ typedef ideError_t IdeErrorT;
  * dump回传数据块标识信息
  */
 enum IdeDumpFlag {
-    IDE_DUMP_NONE_FLAG = 0, /**< 无标志位 */
+    IDE_DUMP_NONE_FLAG = 0,
+    // 文件分片：发送方以分片形式回传已读取的数据（统计模式数据也走本通道）。
+    // 新回传 flag（下列 2/3/4）不可用或探测不通过时，发送方回退本通道。
+    IDE_DUMP_FILE_CHUNK = 1,      /**< 文件分片 */
+    IDE_DUMP_CHECKSUPPORT = 2,    /**< 能力探测 */
+    IDE_DUMP_REQ_WITH_ID = 3,     /**< 数据回传：携带任务标识 */
+    IDE_DUMP_REQ_WITH_OPINFO = 4, /**< 数据回传：携带算子信息 */
 };
 
 /**
@@ -132,6 +138,8 @@ ADX_API extern IDE_SESSION IdeDumpStart(const char* connectInfo);
  * @retval     #IDE_DAEMON_NONE_ERROR 写数据成功
  * @retval     #IDE_DAEMON_INVALID_PARAM_ERROR 非法参数
  * @retval     #IDE_DAEMON_UNKNOW_ERROR 写数据失败
+ * @retval     #IDE_DAEMON_CHANNEL_ERROR flag非本版本支持范围（当前仅支持文件分片，即
+ *             IDE_DUMP_NONE_FLAG/IDE_DUMP_FILE_CHUNK）：调用方应改走文件分片方式回传
  * @li         ide_daemon_api.cpp：该接口所属的开发包。
  * @li         ide_daemon_api.h：该接口声明所在的头文件。
  * @see        无

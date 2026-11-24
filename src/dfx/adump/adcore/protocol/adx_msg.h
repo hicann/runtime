@@ -38,6 +38,8 @@ enum class MsgStatus : uint16_t {
     // link status
     MSG_STATUS_LONG_LINK,  // long link
     MSG_STATUS_SHORT_LINK, // short link
+    // dump 能力探测应答：CHECKSUPPORT 专用，data 段携带 8B 能力位图
+    MSG_STATUS_DUMP_SUPPORT,
     NR_MSG_STATUS
 };
 

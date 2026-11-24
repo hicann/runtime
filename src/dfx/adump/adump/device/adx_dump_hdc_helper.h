@@ -12,6 +12,7 @@
 #include "common/singleton.h"
 #include "adump_device_pub.h"
 #include "commopts/adx_comm_opt_manager.h"
+#include "adx_msg_proto.h"
 namespace Adx {
 class AdxDumpHdcHelper : public Adx::Common::Singleton::Singleton<AdxDumpHdcHelper> {
 public:
@@ -26,6 +27,11 @@ public:
 
 private:
     IdeErrorT SessionIsConnected(const CommHandle handle) const;
+    CommHandle MakeClientHandle(const IDE_SESSION& session) const;
+    IdeErrorT SendPacket(const CommHandle& handle, const MsgProto& msg) const;
+    IdeErrorT RecvDataResponse(const CommHandle& handle) const;
+    // CHECKSUPPORT 应答收包与判定折叠（aicpu 只看 IdeDumpData 返回值，位图判定在此代做）
+    IdeErrorT RecvCheckSupportResult(const CommHandle& handle, const IdeDumpChunk& dumpChunk);
     bool init_;
     CommHandle client_;
 };

@@ -8,12 +8,16 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "adx_msg_proto.h"
+#include <cstring>
 #include "securec.h"
 #include "mmpa_api.h"
 #include "ascend_hal.h"
 #include "memory_utils.h"
 #include "log/adx_log.h"
 #include "adx_comm_opt_manager.h"
+// DumpChunk（wire 侧数据块结构，含 fileName[MAX_FILE_PATH_LENGTH]）与 MAX_FILE_PATH_LENGTH：
+// BuildDumpChunkMsg 需要按定长数组边界校验并填充，故此处补 include（其余函数不直接依赖）。
+#include "adx_datadump_callback.h"
 namespace Adx {
 static const uint32_t MAX_PROTO_FILE_BUFFER_SIZE = 512000; // 500kb
 static const int32_t MAX_DEV_FILE_SIZE = 4096;             // 4k
@@ -307,5 +311,117 @@ MsgCode AdxMsgProto::RecvResponse(const CommHandle& handle)
 
     IDE_XFREE_AND_SET_NULL(recvBuf);
     return IDE_DAEMON_UNKNOW_ERROR;
+}
+
+// CHECKSUPPORT 应答接收：data 形态应答（status=MSG_STATUS_DUMP_SUPPORT + 8B 位图）。
+// 命中读位图返回 NONE；非 SUPPORT 形态或限时内无应答返回错误码——调用方一律按"不支持"回退。
+MsgCode AdxMsgProto::RecvSupportResponse(const CommHandle& handle, uint64_t& outBitmap)
+{
+    outBitmap = 0U;
+    MsgProto* recvBuf = nullptr;
+    int32_t length = 0;
+    // 限时收包用 TryRead（HdcReadNb）退避轮询而非 Read(flag=毫秒) 的 HdcReadTimeout：
+    // 后者 A5 真机实测在返回后解引用收包指针即异常（根因未定位），不引入探测链路。
+    // 超时语义：handle.timeout 毫秒 → 按 1+2+…+N ms 退避累计到该时长；0 = 无限等（沿用阻塞读）。
+    if (handle.timeout > 0) {
+        // 步数 = 1+2+…+N ≤ timeout 的最大 N（乘法走 int64 防 N^2 溢出）
+        int32_t retryStepMax = 1;
+        while (static_cast<int64_t>(retryStepMax + 1) * (retryStepMax + 2) / 2 <= handle.timeout) {
+            ++retryStepMax;
+        }
+        int32_t ret = IDE_DAEMON_RECV_NODATA;
+        for (int32_t retryTime = 1; retryTime <= retryStepMax; ++retryTime) {
+            ret = AdxCommOptManager::Instance().TryRead(handle, reinterpret_cast<IdeRecvBuffT>(&recvBuf), length);
+            if (ret != IDE_DAEMON_RECV_NODATA) {
+                break;
+            }
+            mmSleep(retryTime);
+        }
+        if (ret == IDE_DAEMON_RECV_NODATA) {
+            IDE_LOGE("checksupport response wait timeout after %d retries.", retryStepMax);
+            return IDE_DAEMON_HDC_TIMEOUT; // 限时内无应答：判不支持并由调用方即时回退
+        }
+        if (ret != IDE_DAEMON_OK) {
+            IDE_LOGE("checksupport response TryRead failed, ret: %d.", ret);
+            return IDE_DAEMON_CHANNEL_ERROR;
+        }
+    } else {
+        const int32_t ret = AdxCommOptManager::Instance().Read(
+            handle, reinterpret_cast<IdeRecvBuffT>(&recvBuf), length, COMM_OPT_BLOCK);
+        if (ret != IDE_DAEMON_OK) {
+            IDE_LOGE("checksupport response blocking read failed, ret: %d.", ret);
+            return IDE_DAEMON_CHANNEL_ERROR;
+        }
+    }
+    if (recvBuf == nullptr) {
+        IDE_LOGE("checksupport response buffer is null after read.");
+        return IDE_DAEMON_CHANNEL_ERROR;
+    }
+
+    // 截断防御：读包头字段前确认实际收包长度覆盖包头，位图拷贝前确认 sliceLen 与实际长度一致
+    IDE_CTRL_VALUE_FAILED(
+        length >= static_cast<int32_t>(sizeof(MsgProto)),
+        {
+            IDE_XFREE_AND_SET_NULL(recvBuf);
+            return IDE_DAEMON_UNKNOW_ERROR;
+        },
+        "checksupport response truncated: length(%d) < msg header(%u).", length,
+        static_cast<uint32_t>(sizeof(MsgProto)));
+
+    // data 形态应答判据：SUPPORT 状态 + data 段装得下 8B 位图 + 长度自洽（sliceLen 与实际收包一致）
+    const bool isSupport = (recvBuf->msgType == MsgType::MSG_DATA) &&
+                           (recvBuf->status == MsgStatus::MSG_STATUS_DUMP_SUPPORT) &&
+                           (recvBuf->sliceLen >= sizeof(uint64_t)) &&
+                           (recvBuf->sliceLen + sizeof(MsgProto) == static_cast<uint32_t>(length));
+    if (!isSupport) {
+        IDE_LOGW(
+            "checksupport response is not SUPPORT form (msgType: %d, status: %d, sliceLen: %u, length: %d), "
+            "treated as not-supported.",
+            static_cast<int32_t>(recvBuf->msgType), static_cast<int32_t>(recvBuf->status), recvBuf->sliceLen, length);
+        IDE_XFREE_AND_SET_NULL(recvBuf);
+        return IDE_DAEMON_UNKNOW_ERROR;
+    }
+
+    const int32_t cpy = memcpy_s(&outBitmap, sizeof(outBitmap), recvBuf->data, sizeof(outBitmap));
+    IDE_XFREE_AND_SET_NULL(recvBuf);
+    IDE_CTRL_VALUE_FAILED(cpy == EOK, return IDE_DAEMON_UNKNOW_ERROR, "copy support bitmap failed, err=%d", cpy);
+    return IDE_DAEMON_NONE_ERROR;
+}
+
+// dump 数据块消息组装（单一实现，SOC 直调与 HDC 发送两条路径共用，字节布局单一事实来源）。
+MsgCode AdxMsgProto::BuildDumpChunkMsg(const IdeDumpChunk& chunk, SharedPtr<MsgProto>& outMsg)
+{
+    // 数据段 = DumpChunk 头 + 柔性 dataBuf；bufLen 逼近 UINT32_MAX 时加法回绕，宏提前拒绝
+    uint32_t dataLen = 0;
+    IDE_RETURN_IF_CHECK_ASSIGN_32U_ADD(
+        sizeof(DumpChunk), chunk.bufLen, dataLen, return IDE_DAEMON_INTERGER_REVERSED_ERROR);
+
+    MsgProto* msg = CreateMsgPacket(IDE_DUMP_REQ, 0, nullptr, dataLen);
+    IDE_CTRL_VALUE_FAILED(msg != nullptr, return IDE_DAEMON_MALLOC_ERROR, "create message failed");
+    outMsg.reset(msg, IdeXfree);
+
+    DumpChunk* data = reinterpret_cast<DumpChunk*>(outMsg->data);
+    // fileName 为 nullptr 时 strnlen 会解引用空指针，统一在此拒绝（空串是新 flag 的合法形态）
+    IDE_CTRL_VALUE_FAILED(chunk.fileName != nullptr, return IDE_DAEMON_INVALID_PATH_ERROR, "fileName is nullptr");
+    // strnlen 而非 strlen：fileName 无 NUL 终止保证，strlen 会越界读；到界即停交给下方判定
+    IDE_CTRL_VALUE_FAILED(
+        strnlen(chunk.fileName, MAX_FILE_PATH_LENGTH) < MAX_FILE_PATH_LENGTH, return IDE_DAEMON_INVALID_PATH_ERROR,
+        "fileName length=%u or not null-terminated, max=%u",
+        static_cast<uint32_t>(strnlen(chunk.fileName, MAX_FILE_PATH_LENGTH)), MAX_FILE_PATH_LENGTH);
+    const int32_t cpyName = strcpy_s(data->fileName, MAX_FILE_PATH_LENGTH, chunk.fileName);
+    IDE_CTRL_VALUE_FAILED(
+        cpyName == EOK, return IDE_DAEMON_INVALID_PATH_ERROR, "copy file name failed, err=%d", cpyName);
+
+    data->bufLen = chunk.bufLen;
+    data->flag = static_cast<int32_t>(chunk.flag);
+    data->isLastChunk = chunk.isLastChunk;
+    data->offset = chunk.offset;
+    IDE_LOGI(
+        "assemble dump chunk, dataLen: %u, bufLen: %u, flag: %d, isLastChunk: %u, offset: %ld, fileName: %s", dataLen,
+        data->bufLen, data->flag, data->isLastChunk, data->offset, data->fileName);
+
+    const int32_t cpyData = memcpy_s(data->dataBuf, data->bufLen, chunk.dataBuf, chunk.bufLen);
+    IDE_CTRL_VALUE_FAILED(cpyData == EOK, return IDE_DAEMON_MEMCPY_ERROR, "copy data buffer failed, err=%d", cpyData);
+    return IDE_DAEMON_NONE_ERROR;
 }
 } // namespace Adx

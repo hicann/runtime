@@ -53,3 +53,27 @@ TEST_F(ADX_DUMP_SOC_HELPER_TEST, IdeDumpData)
     EXPECT_EQ(IDE_DAEMON_INVALID_PARAM_ERROR, IdeDumpData(session, nullptr));
     EXPECT_EQ(IDE_DAEMON_NONE_ERROR, IdeDumpEnd(session));
 }
+
+// 新回传 flag 的 device 侧真实处理（能力探测等）：SOC 直调解析 host 库——UT 环境无
+// host 库加载（弱符号未绑定、dlopen(RTLD_NOLOAD) 查不到），应同步回"不支持"错误码，
+// 不触碰 fileName、不进文件分片路径（老实现此处为 nullptr 解引用崩溃）。
+TEST_F(ADX_DUMP_SOC_HELPER_TEST, IdeDumpData_UnsupportedFlag)
+{
+    IDE_SESSION session = (IDE_SESSION)0xFFFFF000;
+    IdeDumpChunk dumpChunk = {};
+    unsigned char ch = 'a';
+    dumpChunk.fileName = nullptr; // 新 flag 的合法形态：无文件名
+    dumpChunk.dataBuf = &ch;
+    dumpChunk.bufLen = 1;
+    dumpChunk.isLastChunk = 1;
+    dumpChunk.offset = -1;
+    // 守卫已删（PR 主功能）：新 flag 现在真实进入 DataProcess → GetHostDumpEntry。
+    // UT 环境无 host 库（弱符号未绑定、dlopen(RTLD_NOLOAD) 查不到）→ 整链同步回
+    // CHANNEL_ERROR，不触碰 fileName、不进文件分片路径。
+    dumpChunk.flag = IDE_DUMP_CHECKSUPPORT;
+    EXPECT_EQ(IDE_DAEMON_CHANNEL_ERROR, IdeDumpData(session, &dumpChunk));
+    dumpChunk.flag = IDE_DUMP_REQ_WITH_ID;
+    EXPECT_EQ(IDE_DAEMON_CHANNEL_ERROR, IdeDumpData(session, &dumpChunk));
+    dumpChunk.flag = IDE_DUMP_REQ_WITH_OPINFO;
+    EXPECT_EQ(IDE_DAEMON_CHANNEL_ERROR, IdeDumpData(session, &dumpChunk));
+}
