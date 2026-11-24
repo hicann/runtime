@@ -433,6 +433,7 @@ void TaskUpdateInfoFree(TaskInfo* taskInfo)
     } else if (latestParams.type == RT_TASK_SIMT_KERNEL) {
         FreeKernelUpdateInfoBuffers(latestParams.u.simtKernelUpdateParams);
     }
+    delete[] taskInfo->updateInfo->loadedParams.placeHolderArray;
     {
         const std::lock_guard<std::mutex> taskUpdateLock(taskInfo->updateInfo->updateMutex);
         while (!taskInfo->updateInfo->updateQueue.empty()) {

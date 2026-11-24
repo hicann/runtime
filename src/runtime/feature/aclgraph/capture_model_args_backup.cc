@@ -10,9 +10,39 @@
 #include "capture_model.hpp"
 #include "context.hpp"
 #include "task_info.hpp"
+#include "arg_loader.hpp"
+#include <memory>
+#include <new>
 
 namespace cce {
 namespace runtime {
+namespace {
+rtError_t CopyLoadedArgs(const TaskInfo* taskInfo, Driver* driver, void* backup, const size_t argsSize)
+{
+    const TaskUpdateInfo* const updateInfo = taskInfo->updateInfo;
+    if ((updateInfo == nullptr) || (updateInfo->loadedParams.placeHolderNum == 0U)) {
+        return driver->MemCopySync(
+            backup, argsSize, taskInfo->u.aicTaskInfo.comm.args, argsSize, RT_MEMCPY_DEVICE_TO_DEVICE);
+    }
+    const auto& loaded = updateInfo->loadedParams;
+    COND_RETURN_ERROR(
+        (loaded.placeHolderArray == nullptr) || (loaded.placeHolderNum > UINT16_MAX), RT_ERROR_INVALID_VALUE,
+        "Invalid loaded args relocation table, stream_id=%d, task_id=%hu, size=%zu.", taskInfo->stream->Id_(),
+        taskInfo->id, argsSize);
+    std::unique_ptr<uint8_t[]> hostArgs(new (std::nothrow) uint8_t[argsSize]);
+    COND_RETURN_AND_MSG_OUTER(hostArgs == nullptr, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013, argsSize, "new");
+    rtError_t error = driver->MemCopySync(
+        hostArgs.get(), argsSize, taskInfo->u.aicTaskInfo.comm.args, argsSize, RT_MEMCPY_DEVICE_TO_HOST);
+    ERROR_RETURN(error, "Read loaded kernel args for relocation failed, retCode=%#x.", error);
+    UpdateAddrField(
+        backup, hostArgs.get(), static_cast<uint16_t>(loaded.placeHolderNum),
+        RtPtrToPtr<const rtHostInputInfo_t*>(loaded.placeHolderArray));
+    error = driver->MemCopySync(backup, argsSize, hostArgs.get(), argsSize, RT_MEMCPY_HOST_TO_DEVICE);
+    ERROR_RETURN(error, "Upload relocated kernel args failed, retCode=%#x.", error);
+    return RT_ERROR_NONE;
+}
+} // namespace
+
 rtError_t CaptureModel::CopyTaskArgsDeviceBuffer(const TaskInfo* taskInfo, void** devBufferAddr, size_t* size)
 {
     const std::lock_guard<std::mutex> lock(updateInfo_.updateMutex);
@@ -40,7 +70,7 @@ rtError_t CaptureModel::CopyTaskArgsDeviceBuffer(const TaskInfo* taskInfo, void*
         // A failed driver allocation may already have freed its output address.
         return error;
     }
-    error = driver->MemCopySync(backup, argsSize, comm.args, argsSize, RT_MEMCPY_DEVICE_TO_DEVICE);
+    error = CopyLoadedArgs(taskInfo, driver, backup, argsSize);
     if (error != RT_ERROR_NONE) {
         (void)driver->DevMemFree(backup, dev->Id_());
         return error;

@@ -25,7 +25,8 @@ uint32_t copyBackupFreeCount = 0U;
 rtError_t CopyDeviceArgsForReclaim(
     Driver*, void* dst, uint64_t, const void* src, uint64_t size, rtMemcpyKind_t kind, bool, uint32_t)
 {
-    if (kind == RT_MEMCPY_DEVICE_TO_DEVICE) {
+    if ((kind == RT_MEMCPY_DEVICE_TO_DEVICE) || (kind == RT_MEMCPY_DEVICE_TO_HOST) ||
+        (kind == RT_MEMCPY_HOST_TO_DEVICE)) {
         std::memcpy(dst, src, size);
     }
     return RT_ERROR_NONE;
@@ -334,6 +335,83 @@ protected:
     UmaArgLoader* loader_ = nullptr;
     std::array<uint64_t, 4> hostArgs_{{1, 2, 3, 4}};
 };
+
+TEST_F(ARGS_RECLAIM_TEST_CLASS, LaunchSnapshotRelocatesPlaceholderAndInlineTiling)
+{
+    Driver* const driver = task_->stream->Device_()->Driver_();
+    DestroyGraph();
+    MOCKER_CPP_VIRTUAL(driver, &Driver::MemCopySync).stubs().will(invoke(CopyDeviceArgsForReclaim));
+    rtHostInputInfo_t placeholder = {};
+    placeholder.addrOffset = 0U;
+    placeholder.dataOffset = 2U * sizeof(uint64_t);
+    rtArgsEx_t args = {};
+    args.args = hostArgs_.data();
+    args.argsSize = sizeof(hostArgs_);
+    args.hostInputInfoNum = 1U;
+    args.hostInputInfoPtr = &placeholder;
+    args.hasTiling = 1U;
+    args.tilingAddrOffset = sizeof(uint64_t);
+    args.tilingDataOffset = 3U * sizeof(uint64_t);
+    ASSERT_EQ(rtStreamBeginCapture(graphStream_, RT_STREAM_CAPTURE_MODE_GLOBAL), RT_ERROR_NONE);
+    ASSERT_EQ(rtKernelLaunchWithFlagV2(&graphFunction_, 1U, &args, nullptr, graphStream_, 0U, nullptr), RT_ERROR_NONE);
+    ASSERT_EQ(rtStreamEndCapture(graphStream_, &graph_), RT_ERROR_NONE);
+    uint32_t count = 1U;
+    rtStream_t stream = nullptr;
+    ASSERT_EQ(rtModelGetStreams(graph_, &stream, &count), RT_ERROR_NONE);
+    rtTask_t tasks[4] = {};
+    count = 4U;
+    ASSERT_EQ(rtStreamGetTasks(stream, tasks, &count), RT_ERROR_NONE);
+    ASSERT_GT(count, 0U);
+    task_ = static_cast<TaskInfo*>(tasks[0]);
+    auto& comm = task_->u.aicTaskInfo.comm;
+    auto loaded = hostArgs_;
+    loaded[0] = reinterpret_cast<uintptr_t>(comm.args) + placeholder.dataOffset;
+    loaded[1] = reinterpret_cast<uintptr_t>(comm.args) + args.tilingDataOffset;
+    std::memcpy(comm.args, loaded.data(), sizeof(loaded));
+    ASSERT_NE(task_->updateInfo, nullptr);
+    ASSERT_EQ(task_->updateInfo->loadedParams.placeHolderNum, 2U);
+    void* backup = nullptr;
+    size_t size = 0U;
+    ASSERT_EQ(rtModelTaskCopyArgsDeviceBuffer(task_, &backup, &size), RT_ERROR_NONE);
+    ASSERT_EQ(size, sizeof(loaded));
+    const auto* const copied = static_cast<const uint64_t*>(backup);
+    EXPECT_EQ(copied[0], reinterpret_cast<uintptr_t>(backup) + placeholder.dataOffset);
+    EXPECT_EQ(copied[1], reinterpret_cast<uintptr_t>(backup) + args.tilingDataOffset);
+    EXPECT_EQ(copied[2], loaded[2]);
+    EXPECT_EQ(copied[3], loaded[3]);
+}
+
+TEST_F(ARGS_RECLAIM_TEST_CLASS, CopyRelocatesLoadedPlaceholderBeforeOriginalArgsAreRetired)
+{
+    Driver* const driver = task_->stream->Device_()->Driver_();
+    MOCKER_CPP_VIRTUAL(driver, &Driver::MemCopySync).stubs().will(invoke(CopyDeviceArgsForReclaim));
+    rtTaskParams params = KernelParams();
+    rtPlaceHolderInfo_t placeholder = {};
+    placeholder.addrOffset = 0U;
+    placeholder.dataOffset = 2U * sizeof(uint64_t);
+    params.kernelTaskParams.hostBuffer.placeHolderArray = &placeholder;
+    params.kernelTaskParams.hostBuffer.placeHolderNum = 1U;
+    ASSERT_EQ(rtModelTaskSetParams(task_, &params), RT_ERROR_NONE);
+    ASSERT_EQ(rtModelUpdate(graph_), RT_ERROR_NONE);
+    auto& comm = task_->u.aicTaskInfo.comm;
+    auto loaded = hostArgs_;
+    loaded[0] = reinterpret_cast<uintptr_t>(comm.args) + placeholder.dataOffset;
+    // HAL fixtures do not execute every H2D transport; seed its expected loaded bytes.
+    std::memcpy(comm.args, loaded.data(), sizeof(loaded));
+    void* backup = nullptr;
+    size_t size = 0U;
+    ASSERT_EQ(rtModelTaskCopyArgsDeviceBuffer(task_, &backup, &size), RT_ERROR_NONE);
+    ASSERT_NE(backup, nullptr);
+    ASSERT_EQ(size, sizeof(loaded));
+    const auto* const copied = static_cast<const uint64_t*>(backup);
+    EXPECT_EQ(copied[0], reinterpret_cast<uintptr_t>(backup) + placeholder.dataOffset);
+    EXPECT_EQ(copied[2], loaded[2]);
+    EXPECT_EQ(static_cast<const uint64_t*>(comm.args)[0], loaded[0]);
+    ASSERT_EQ(rtModelTaskDisable(task_), RT_ERROR_NONE);
+    ASSERT_EQ(rtModelUpdate(graph_), RT_ERROR_NONE);
+    EXPECT_EQ(copied[0], reinterpret_cast<uintptr_t>(backup) + placeholder.dataOffset);
+    EXPECT_EQ(*reinterpret_cast<const uint64_t*>(copied[0]), loaded[2]);
+}
 
 TEST_F(ARGS_RECLAIM_TEST_CLASS, HostGetSetReclaimsOldArgsOnlyAfterUpdate)
 {

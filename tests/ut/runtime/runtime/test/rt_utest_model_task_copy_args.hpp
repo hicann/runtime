@@ -13,6 +13,7 @@
 #include <list>
 #include <map>
 #include <memory>
+#include <vector>
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 #include "runtime/rt.h"
@@ -21,6 +22,8 @@
 #define private public
 #define protected public
 #include "api_decorator.hpp"
+#include "api_impl.hpp"
+#include "aix_c.hpp"
 #include "capture_model.hpp"
 #include "capture_model_utils.hpp"
 #include "context.hpp"
@@ -30,6 +33,8 @@
 #include "stream.hpp"
 #include "task_info.hpp"
 #include "thread_local_container.hpp"
+#include "kernel_utils.hpp"
+#include "program.hpp"
 #include "h2d_copy_mgr.hpp"
 #include "rt_unwrap.h"
 #undef private
@@ -47,10 +52,14 @@ struct ArgsCopyDriverState {
     std::map<void*, std::unique_ptr<uint8_t[]>> allocations;
     uint32_t allocationCalls{0U};
     uint32_t copies{0U};
+    const void* snapshotHostArgs{nullptr};
+    uint32_t snapshotHostCopies{0U};
     uint32_t frees{0U};
     uint32_t failedFrees{0U};
     rtError_t allocError{RT_ERROR_NONE};
     rtError_t copyError{RT_ERROR_NONE};
+    rtMemcpyKind_t failedKind{RT_MEMCPY_DEVICE_TO_DEVICE};
+    std::vector<rtMemcpyKind_t> copyKinds;
     rtError_t capabilityError{RT_ERROR_NONE};
     void* failedAllocationOutput{nullptr};
     const void* source{nullptr};
@@ -58,6 +67,18 @@ struct ArgsCopyDriverState {
     uint32_t deviceId{0U};
 };
 ArgsCopyDriverState* argsCopyState = nullptr;
+
+errno_t ObserveLoadedArgsSnapshotCopy(void* dst, size_t dstSize, const void* src, size_t size)
+{
+    if (src == argsCopyState->snapshotHostArgs) {
+        ++argsCopyState->snapshotHostCopies;
+    }
+    if ((dst == nullptr) || (src == nullptr) || (size > dstSize)) {
+        return EINVAL;
+    }
+    std::memcpy(dst, src, size);
+    return EOK;
+}
 
 rtError_t CheckCopySupport(const Device*) { return argsCopyState->capabilityError; }
 
@@ -88,11 +109,13 @@ rtError_t CopyArgsBackup(
 {
     EXPECT_EQ(argsCopyState->backups->size() + 1U, argsCopyState->allocations.size());
     ++argsCopyState->copies;
-    EXPECT_EQ(kind, RT_MEMCPY_DEVICE_TO_DEVICE);
+    argsCopyState->copyKinds.push_back(kind);
     EXPECT_EQ(maxSize, size);
     EXPECT_EQ(deviceId, INVALID_COPY_MODULEID);
-    argsCopyState->source = src;
-    if (argsCopyState->copyError != RT_ERROR_NONE) {
+    if (kind != RT_MEMCPY_HOST_TO_DEVICE) {
+        argsCopyState->source = src;
+    }
+    if ((argsCopyState->copyError != RT_ERROR_NONE) && (kind == argsCopyState->failedKind)) {
         return argsCopyState->copyError;
     }
     std::memcpy(dst, src, size);
@@ -175,6 +198,11 @@ protected:
 
     void TearDown() override
     {
+        if (ownedUpdate_ != nullptr) {
+            task_.updateInfo = ownedUpdate_;
+            TaskUpdateInfoFree(&task_);
+            ownedUpdate_ = nullptr;
+        }
         DestroyModel();
         EXPECT_TRUE(state_.allocations.empty());
         GlobalMockObject::verify();
@@ -207,6 +235,39 @@ protected:
             delete model_;
             model_ = nullptr;
         }
+    }
+
+    void CacheHostArgs(const rtPlaceHolderInfo_t& entry)
+    {
+        if (ownedUpdate_ == nullptr) {
+            ownedUpdate_ = new TaskUpdateInfo{};
+        }
+        task_.updateInfo = ownedUpdate_;
+        auto& latest = ownedUpdate_->latestParams;
+        if (latest.type == RT_TASK_KERNEL) {
+            FreeKernelUpdateInfoBuffers(latest.u.kernelUpdateParams);
+        } else if (latest.type == RT_TASK_SIMT_KERNEL) {
+            FreeKernelUpdateInfoBuffers(latest.u.simtKernelUpdateParams);
+        }
+        latest.u.kernelUpdateParams = {};
+        latest.type = RT_TASK_KERNEL;
+        latest.isValid = 1U;
+        auto& info = latest.u.kernelUpdateParams;
+        info.argsType = RT_KERNEL_ARGS_HOST_BUFFER;
+        info.hostBuffer.hostArgs = new uint8_t[source_.size()];
+        std::memcpy(info.hostBuffer.hostArgs, source_.data(), source_.size());
+        info.hostBuffer.hostArgsSize = source_.size();
+        info.hostBuffer.placeHolderArray = new rtPlaceHolderInfo_t[1]{entry};
+        info.hostBuffer.placeHolderNum = 1U;
+    }
+
+    void ApplyCachedArgs() { ASSERT_EQ(UpdateKernelLoadedParams(task_.updateInfo), RT_ERROR_NONE); }
+
+    static uint64_t ReadAddress(const void* buffer)
+    {
+        uint64_t address = 0U;
+        std::memcpy(&address, buffer, sizeof(address));
+        return address;
     }
 
     void* Copy(Api* api = nullptr)
@@ -255,9 +316,344 @@ protected:
     Stream* stream_{nullptr};
     CaptureModel* model_{nullptr};
     TaskInfo task_{};
+    TaskUpdateInfo* ownedUpdate_{nullptr};
     std::array<uint8_t, 65> source_{};
     ArgsCopyDriverState state_;
 };
+
+TEST_F(ArgsCopyTest, CaptureLaunchCachesRelocationTableBeforeSubmission)
+{
+    PlainProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    Kernel kernel("copy-capture-layout", 0ULL, &program, RT_KERNEL_ATTR_TYPE_AICORE, 0U);
+    task_.u.aicTaskInfo.kernel = &kernel;
+    rtHostInputInfo_t entry = {};
+    entry.dataOffset = 32U;
+    rtArgsEx_t args = {};
+    args.args = source_.data();
+    args.argsSize = source_.size();
+    args.hostInputInfoPtr = &entry;
+    args.hostInputInfoNum = 1U;
+    stream_->SetCaptureStatus(RT_STREAM_CAPTURE_STATUS_ACTIVE);
+    const rtError_t error = SetKernelLaunchParams(stream_, &args, task_);
+    stream_->SetCaptureStatus(RT_STREAM_CAPTURE_STATUS_NONE);
+    ownedUpdate_ = task_.updateInfo;
+    ASSERT_EQ(error, RT_ERROR_NONE);
+    ASSERT_NE(ownedUpdate_, nullptr);
+    const auto& loaded = ownedUpdate_->loadedParams;
+    ASSERT_EQ(loaded.placeHolderNum, 1U);
+    EXPECT_EQ(loaded.placeHolderArray[0].dataOffset, 32U);
+    EXPECT_NE(loaded.placeHolderArray, ownedUpdate_->latestParams.u.kernelUpdateParams.hostBuffer.placeHolderArray);
+}
+
+TEST_F(ArgsCopyTest, NonCaptureTaskGroupLaunchLeavesParameterCacheUnchanged)
+{
+    PlainProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    Kernel kernel("copy-task-group-unchanged", 0ULL, &program, RT_KERNEL_ATTR_TYPE_AICORE, 0U);
+    task_.u.aicTaskInfo.kernel = &kernel;
+    task_.isUpdateSinkSqe = 1U;
+    rtPlaceHolderInfo_t oldEntry = {};
+    oldEntry.dataOffset = 32U;
+    CacheHostArgs(oldEntry);
+    ApplyCachedArgs();
+    const auto* const oldHost = ownedUpdate_->latestParams.u.kernelUpdateParams.hostBuffer.hostArgs;
+    const auto* const oldTable = ownedUpdate_->loadedParams.placeHolderArray;
+    rtHostInputInfo_t entry = {};
+    entry.dataOffset = 48U;
+    rtArgsEx_t args = {};
+    args.args = source_.data();
+    args.argsSize = source_.size();
+    args.hostInputInfoPtr = &entry;
+    args.hostInputInfoNum = 1U;
+    ASSERT_EQ(stream_->GetCaptureStatus(), RT_STREAM_CAPTURE_STATUS_NONE);
+    ASSERT_EQ(SetKernelLaunchParams(stream_, &args, task_), RT_ERROR_NONE);
+    const auto& info = ownedUpdate_->latestParams.u.kernelUpdateParams;
+    EXPECT_EQ(info.hostBuffer.hostArgs, oldHost);
+    EXPECT_EQ(info.hostBuffer.placeHolderArray[0].dataOffset, 32U);
+    EXPECT_EQ(ownedUpdate_->loadedParams.placeHolderArray, oldTable);
+    EXPECT_EQ(ownedUpdate_->loadedParams.placeHolderArray[0].dataOffset, 32U);
+}
+
+TEST_F(ArgsCopyTest, FailedKernelApplyRetainsNewRelocationMetadata)
+{
+    PlainProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    Kernel kernel("copy-failed-apply-layout", 0ULL, &program, RT_KERNEL_ATTR_TYPE_AICORE, 0U);
+    rtPlaceHolderInfo_t entry = {};
+    entry.dataOffset = 32U;
+    CacheHostArgs(entry);
+    ApplyCachedArgs();
+    entry.dataOffset = 48U;
+    CacheHostArgs(entry);
+    auto& info = ownedUpdate_->latestParams.u.kernelUpdateParams;
+    info.kernel = &kernel;
+    MOCKER(TaskClearForUpdate).stubs();
+    MOCKER(GetPrefetchCntAndMixTypeWithKernel).stubs().will(returnValue(RT_ERROR_KERNEL_NULL));
+    ASSERT_EQ(UpdateKernelParams(&task_, &info), RT_ERROR_KERNEL_NULL);
+    ASSERT_EQ(ownedUpdate_->loadedParams.placeHolderNum, 1U);
+    EXPECT_EQ(ownedUpdate_->loadedParams.placeHolderArray[0].dataOffset, 48U);
+}
+
+TEST_F(ArgsCopyTest, LoadedSnapshotDoesNotCopyHostArgumentPayload)
+{
+    rtPlaceHolderInfo_t entry = {};
+    entry.dataOffset = 32U;
+    CacheHostArgs(entry);
+    state_.snapshotHostArgs = ownedUpdate_->latestParams.u.kernelUpdateParams.hostBuffer.hostArgs;
+    MOCKER(memcpy_s).stubs().will(invoke(ObserveLoadedArgsSnapshotCopy));
+    ApplyCachedArgs();
+    EXPECT_EQ(state_.snapshotHostCopies, 0U);
+    const uint64_t originalAddress = reinterpret_cast<uintptr_t>(source_.data()) + entry.dataOffset;
+    std::memcpy(source_.data(), &originalAddress, sizeof(originalAddress));
+    void* backup = nullptr;
+    size_t size = 0U;
+    ASSERT_EQ(rtModelTaskCopyArgsDeviceBuffer(&task_, &backup, &size), RT_ERROR_NONE);
+    ASSERT_NE(backup, nullptr);
+    EXPECT_EQ(ReadAddress(backup), reinterpret_cast<uintptr_t>(backup) + entry.dataOffset);
+}
+
+TEST_F(ArgsCopyTest, RelocatesLoadedMetadataDespitePendingSetAndSurvivesSourcePoison)
+{
+    rtPlaceHolderInfo_t entry = {};
+    entry.dataOffset = 32U;
+    CacheHostArgs(entry);
+    ApplyCachedArgs();
+    auto& loaded = ownedUpdate_->loadedParams;
+    EXPECT_NE(loaded.placeHolderArray, ownedUpdate_->latestParams.u.kernelUpdateParams.hostBuffer.placeHolderArray);
+    entry.addrOffset = 8U;
+    entry.dataOffset = 48U;
+    CacheHostArgs(entry); // pending Set must not replace the already loaded offsets
+    const uint64_t oldAddress = reinterpret_cast<uintptr_t>(source_.data()) + 32U;
+    std::memcpy(source_.data(), &oldAddress, sizeof(oldAddress));
+    const auto original = source_;
+    void* first = nullptr;
+    size_t size = 0U;
+    ASSERT_EQ(rtModelTaskCopyArgsDeviceBuffer(&task_, &first, &size), RT_ERROR_NONE);
+    EXPECT_EQ(ReadAddress(first), reinterpret_cast<uintptr_t>(first) + 32U);
+    EXPECT_EQ(size, source_.size());
+    EXPECT_EQ(std::memcmp(static_cast<uint8_t*>(first) + 8U, original.data() + 8U, size - 8U), 0);
+    EXPECT_EQ(source_, original);
+    void* second = nullptr;
+    ASSERT_EQ(rtModelTaskCopyArgsDeviceBuffer(&task_, &second, &size), RT_ERROR_NONE);
+    EXPECT_NE(first, second);
+    EXPECT_EQ(ReadAddress(second), reinterpret_cast<uintptr_t>(second) + 32U);
+    source_.fill(0xA5U);
+    EXPECT_EQ(*reinterpret_cast<const uint8_t*>(ReadAddress(first)), original[32]);
+    EXPECT_EQ(*reinterpret_cast<const uint8_t*>(ReadAddress(second)), original[32]);
+    EXPECT_EQ(
+        state_.copyKinds,
+        (std::vector<rtMemcpyKind_t>{
+            RT_MEMCPY_DEVICE_TO_HOST, RT_MEMCPY_HOST_TO_DEVICE, RT_MEMCPY_DEVICE_TO_HOST, RT_MEMCPY_HOST_TO_DEVICE}));
+}
+
+TEST_F(ArgsCopyTest, RepeatedSetPreservesLoadedTableAcrossHostAndDeviceArgumentForms)
+{
+    rtPlaceHolderInfo_t entry = {};
+    entry.dataOffset = 32U;
+    CacheHostArgs(entry);
+    ApplyCachedArgs();
+    auto& loaded = ownedUpdate_->loadedParams;
+    auto* const previous = loaded.placeHolderArray;
+    PlainProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    Kernel kernel("copy-pending-set", 0ULL, &program, RT_KERNEL_ATTR_TYPE_AICORE, 0U);
+    task_.u.aicTaskInfo.kernel = &kernel;
+    ApiImpl api;
+    rtTaskParams params = {};
+    params.type = RT_TASK_KERNEL;
+    auto& input = params.kernelTaskParams;
+    input.argsType = RT_KERNEL_ARGS_HOST_BUFFER;
+    input.hostBuffer = {source_.data(), source_.size(), &entry, 1U};
+    for (uint32_t offset : {48U, 56U}) {
+        entry.dataOffset = offset;
+        ASSERT_EQ(api.TaskSetParams(&task_, &params, &kernel), RT_ERROR_NONE);
+        EXPECT_EQ(loaded.placeHolderArray, previous);
+        EXPECT_EQ(loaded.placeHolderArray[0].dataOffset, 32U);
+        EXPECT_EQ(ownedUpdate_->latestParams.u.kernelUpdateParams.hostBuffer.placeHolderArray[0].dataOffset, offset);
+    }
+    input.argsType = RT_KERNEL_ARGS_DEVICE_BUFFER;
+    input.deviceBuffer = {source_.data(), source_.size()};
+    ASSERT_EQ(api.TaskSetParams(&task_, &params, &kernel), RT_ERROR_NONE);
+    EXPECT_EQ(loaded.placeHolderArray, previous);
+    EXPECT_EQ(loaded.placeHolderArray[0].dataOffset, 32U);
+    const uint64_t originalAddress = reinterpret_cast<uintptr_t>(source_.data()) + 32U;
+    std::memcpy(source_.data(), &originalAddress, sizeof(originalAddress));
+    void* backup = nullptr;
+    size_t size = 0U;
+    ASSERT_EQ(rtModelTaskCopyArgsDeviceBuffer(&task_, &backup, &size), RT_ERROR_NONE);
+    EXPECT_EQ(ReadAddress(backup), reinterpret_cast<uintptr_t>(backup) + 32U);
+    // Applying pending DEVICE_BUFFER arguments clears the previous relocation metadata.
+    ApplyCachedArgs();
+    EXPECT_EQ(loaded.placeHolderArray, nullptr);
+    EXPECT_EQ(loaded.placeHolderNum, 0U);
+}
+
+TEST_F(ArgsCopyTest, FailedTableCopyClearsPreviousLoadedTable)
+{
+    rtPlaceHolderInfo_t entry = {};
+    entry.dataOffset = 32U;
+    CacheHostArgs(entry);
+    ApplyCachedArgs();
+    entry.dataOffset = 48U;
+    CacheHostArgs(entry);
+    MOCKER(memcpy_s).stubs().will(returnValue(EINVAL));
+    EXPECT_EQ(UpdateKernelLoadedParams(ownedUpdate_), RT_ERROR_SEC_HANDLE);
+    EXPECT_EQ(ownedUpdate_->loadedParams.placeHolderArray, nullptr);
+    EXPECT_EQ(ownedUpdate_->loadedParams.placeHolderNum, 0U);
+}
+
+TEST_F(ArgsCopyTest, RelocationCopyFailuresFreeNewBufferAndDoNotPublish)
+{
+    rtPlaceHolderInfo_t entry = {};
+    entry.dataOffset = 32U;
+    CacheHostArgs(entry);
+    ApplyCachedArgs();
+    const auto original = source_;
+    state_.copyError = RT_ERROR_DRV_ERR;
+    for (auto kind : {RT_MEMCPY_DEVICE_TO_HOST, RT_MEMCPY_HOST_TO_DEVICE}) {
+        state_.failedKind = kind;
+        ExpectFailure();
+        EXPECT_TRUE(state_.allocations.empty());
+        EXPECT_TRUE(model_->argsDeviceBufferBackups_.empty());
+        EXPECT_EQ(source_, original);
+    }
+    EXPECT_EQ(state_.frees, 2U);
+}
+
+TEST_F(ArgsCopyTest, RejectsInvalidLoadedRelocationTable)
+{
+    rtPlaceHolderInfo_t entry = {};
+    entry.dataOffset = 32U;
+    CacheHostArgs(entry);
+    ApplyCachedArgs();
+    auto& loaded = ownedUpdate_->loadedParams;
+    auto* const table = loaded.placeHolderArray;
+    loaded.placeHolderArray = nullptr;
+    ExpectFailure(ACL_ERROR_RT_PARAM_INVALID);
+    loaded.placeHolderArray = table;
+    loaded.placeHolderNum = static_cast<size_t>(UINT16_MAX) + 1U;
+    ExpectFailure(ACL_ERROR_RT_PARAM_INVALID);
+    loaded.placeHolderNum = 1U;
+    EXPECT_EQ(state_.copies, 0U);
+    EXPECT_EQ(state_.frees, 2U);
+    EXPECT_TRUE(state_.allocations.empty());
+}
+
+TEST_F(ArgsCopyTest, DeviceLoadClearsPreviousRelocationTableWithoutOwningDeviceArgs)
+{
+    rtPlaceHolderInfo_t entry = {};
+    CacheHostArgs(entry);
+    ApplyCachedArgs();
+    auto& params = ownedUpdate_->latestParams.u.kernelUpdateParams;
+    ASSERT_NE(ownedUpdate_->loadedParams.placeHolderArray, nullptr);
+    FreeKernelUpdateInfoBuffers(params);
+    params.argsType = RT_KERNEL_ARGS_DEVICE_BUFFER;
+    params.deviceBuffer = {source_.data(), source_.size()};
+    ApplyCachedArgs();
+    EXPECT_EQ(ownedUpdate_->loadedParams.placeHolderArray, nullptr);
+    EXPECT_EQ(ownedUpdate_->loadedParams.placeHolderNum, 0U);
+    EXPECT_EQ(params.deviceBuffer.deviceArgs, source_.data());
+    ASSERT_NE(Copy(), nullptr);
+    EXPECT_EQ(state_.copyKinds, (std::vector<rtMemcpyKind_t>{RT_MEMCPY_DEVICE_TO_DEVICE}));
+}
+
+TEST_F(ArgsCopyTest, LoadedMetadataIgnoresMissingInvalidAndNonKernelCaches)
+{
+    EXPECT_EQ(UpdateKernelLoadedParams(nullptr), RT_ERROR_NONE);
+    rtPlaceHolderInfo_t entry = {};
+    CacheHostArgs(entry);
+    auto& latest = ownedUpdate_->latestParams;
+    latest.isValid = 0U;
+    EXPECT_EQ(UpdateKernelLoadedParams(ownedUpdate_), RT_ERROR_NONE);
+    EXPECT_EQ(ownedUpdate_->loadedParams.placeHolderArray, nullptr);
+    latest.isValid = 1U;
+    latest.type = RT_TASK_VALUE_WRITE;
+    EXPECT_EQ(UpdateKernelLoadedParams(ownedUpdate_), RT_ERROR_NONE);
+    EXPECT_EQ(ownedUpdate_->loadedParams.placeHolderArray, nullptr);
+    latest.type = RT_TASK_KERNEL;
+    EXPECT_EQ(ownedUpdate_->loadedParams.placeHolderNum, 0U);
+}
+
+TEST_F(ArgsCopyTest, LoadedMetadataTransfersToPooledTask)
+{
+    rtPlaceHolderInfo_t entry = {};
+    entry.dataOffset = 32U;
+    CacheHostArgs(entry);
+    ApplyCachedArgs();
+    const auto* const table = ownedUpdate_->loadedParams.placeHolderArray;
+    TaskInfo pooled = {};
+    pooled.stream = stream_;
+    SaveTaskInfo(&pooled, &task_);
+    ASSERT_EQ(task_.updateInfo, nullptr);
+    ASSERT_EQ(pooled.updateInfo, ownedUpdate_);
+    EXPECT_EQ(pooled.updateInfo->loadedParams.placeHolderArray, table);
+    EXPECT_EQ(pooled.updateInfo->loadedParams.placeHolderNum, 1U);
+    EXPECT_EQ(pooled.updateInfo->loadedParams.placeHolderArray[0].dataOffset, 32U);
+    // The fixture owns the allocation; the pooled task is a local ownership-transfer probe.
+    pooled.updateInfo = nullptr;
+    task_.updateInfo = ownedUpdate_;
+}
+
+TEST_F(ArgsCopyTest, ArrayLoadClearsPreviousRelocationTable)
+{
+    rtPlaceHolderInfo_t entry = {};
+    CacheHostArgs(entry);
+    ApplyCachedArgs();
+    auto& params = ownedUpdate_->latestParams.u.kernelUpdateParams;
+    ASSERT_NE(ownedUpdate_->loadedParams.placeHolderArray, nullptr);
+    FreeKernelUpdateInfoBuffers(params);
+    params.argsType = RT_KERNEL_ARGS_ARRAY;
+    // ARRAY has no Runtime-generated relocation fields; applying it clears the previous table.
+    ApplyCachedArgs();
+    EXPECT_EQ(ownedUpdate_->loadedParams.placeHolderArray, nullptr);
+    EXPECT_EQ(ownedUpdate_->loadedParams.placeHolderNum, 0U);
+}
+
+TEST_F(ArgsCopyTest, SimtSetAndCaptureLaunchKeepIndependentLoadedMetadata)
+{
+    PlainProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    Kernel kernel("copy-simt-metadata", 0ULL, &program, RT_KERNEL_ATTR_TYPE_AICORE, 0U);
+    task_.u.aicTaskInfo.kernel = &kernel;
+    task_.u.aicTaskInfo.simtParamOffset = SIMT_IMPLICIT_PARAM_SIZE;
+    rtPlaceHolderInfo_t entry = {};
+    entry.dataOffset = 32U;
+    rtTaskParams params = {};
+    params.type = RT_TASK_SIMT_KERNEL;
+    auto& input = params.simtKernelTaskParams;
+    input.argsType = RT_KERNEL_ARGS_HOST_BUFFER;
+    input.hostBuffer = {source_.data(), source_.size(), &entry, 1U};
+    input.gridDimX = input.gridDimY = input.gridDimZ = 1U;
+    input.blockDimX = input.blockDimY = input.blockDimZ = 1U;
+    ApiImpl api;
+    const rtError_t error = api.TaskSetParams(&task_, &params, &kernel);
+    ownedUpdate_ = task_.updateInfo;
+    ASSERT_EQ(error, RT_ERROR_NONE);
+    ApplyCachedArgs();
+    auto& info = ownedUpdate_->latestParams.u.simtKernelUpdateParams;
+    EXPECT_NE(ownedUpdate_->loadedParams.placeHolderArray, info.hostBuffer.placeHolderArray);
+    entry.dataOffset = 48U;
+    ASSERT_EQ(api.TaskSetParams(&task_, &params, &kernel), RT_ERROR_NONE);
+    EXPECT_EQ(info.hostBuffer.placeHolderArray[0].dataOffset, 48U);
+    EXPECT_EQ(ownedUpdate_->loadedParams.placeHolderArray[0].dataOffset, 32U);
+    SimtArgsHost launch = {};
+    launch.hostArgs = source_.data();
+    launch.argsSize = source_.size();
+    launch.placeHolderArray = &entry;
+    launch.placeHolderNum = 1U;
+    launch.gridDim = {1U, 1U, 1U};
+    launch.blockDim = {1U, 1U, 1U};
+    rtStreamLaunchKernelV2ExtendArgs_t extend = {};
+    extend.simtArgsHost = &launch;
+    entry.dataOffset = 56U;
+    stream_->SetCaptureStatus(RT_STREAM_CAPTURE_STATUS_ACTIVE);
+    const rtError_t launchError = SetKernelLaunchParams(stream_, nullptr, task_, &extend);
+    stream_->SetCaptureStatus(RT_STREAM_CAPTURE_STATUS_NONE);
+    ASSERT_EQ(launchError, RT_ERROR_NONE);
+    EXPECT_EQ(ownedUpdate_->loadedParams.placeHolderArray[0].dataOffset, 56U);
+    FreeKernelUpdateInfoBuffers(info);
+    info.argsType = RT_KERNEL_ARGS_ARRAY;
+    info.argsArray = nullptr;
+    ApplyCachedArgs();
+    EXPECT_EQ(ownedUpdate_->loadedParams.placeHolderArray, nullptr);
+    EXPECT_EQ(ownedUpdate_->loadedParams.placeHolderNum, 0U);
+}
 
 TEST_F(ArgsCopyTest, IndependentSnapshotsSurviveSourceChangeAndTaskDestruction)
 {

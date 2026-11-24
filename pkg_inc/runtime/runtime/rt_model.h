@@ -594,6 +594,9 @@ RT_RUNTIME_DEPRECATED_DECLS_END
  * @ingroup rt_model
  * @brief Synchronously back up the loaded device arguments of an AclGraph kernel task.
  * @note Copies the current execution buffer, independently of cached SetParams updates.
+ *       Runtime-declared placeholder and inline-tiling pointers are rebased into the returned buffer
+ *       using the loaded parameter layout. Other pointer values are copied unchanged; their target
+ *       memory must remain valid for all consumers of the backup.
  *       The returned buffer is owned by the model and remains valid until model destruction.
  *       The caller must not free it and must ensure that source loading has completed successfully
  *       and that the source arguments remain valid and stable throughout the copy.

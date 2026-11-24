@@ -14,6 +14,7 @@
 #include "rt_inner_task.h"
 #include "kernel.h"
 #include "stars_arg_manager.hpp"
+#include "task_info.hpp"
 
 namespace cce {
 namespace runtime {
@@ -29,6 +30,9 @@ rtError_t CacheSimtKernelTaskParams(TaskInfo* const taskInfo, const rtTaskParams
 // device pointer is user-owned and never freed here
 template <typename KernelUpdateInfoT>
 void FreeKernelUpdateInfoBuffers(KernelUpdateInfoT& kernelUpdateInfo);
+// Refresh the relocation metadata before loading/applying arguments; failures do not restore the old table.
+rtError_t UpdateKernelLoadedParams(TaskUpdateInfo* updateInfo);
+
 rtError_t UpdateKernelParams(TaskInfo* const taskInfo, KernelTaskUpdateInfo* const kernelUpdateInfo);
 rtError_t GetKernelAttribute(
     const TaskInfo* const taskInfo, rtLaunchKernelAttrId attrId, rtLaunchKernelAttrVal_t* attrValue);

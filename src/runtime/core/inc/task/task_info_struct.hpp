@@ -87,6 +87,11 @@ struct SimtKernelTaskUpdateInfo {
     const void* launchFunc; // same semantics as KernelTaskUpdateInfo::launchFunc
 };
 
+struct KernelLoadedParams {
+    rtPlaceHolderInfo_t* placeHolderArray;
+    size_t placeHolderNum;
+};
+
 struct EventRecordTaskUpdateInfo {
     Event* event;
     uint32_t eventFlag;
@@ -121,8 +126,9 @@ struct TaskUpdateItem {
 };
 
 struct TaskUpdateInfo {
-    TaskUpdateParams latestParams; // 必须用graph里面的update锁
-    std::mutex updateMutex;        // 只锁queue，用来保证和回收线程互斥
+    TaskUpdateParams latestParams;     // 必须用graph里面的update锁
+    KernelLoadedParams loadedParams{}; // relocation metadata refreshed at capture launch or RIUpdate
+    std::mutex updateMutex;            // 只锁queue，用来保证和回收线程互斥
     std::queue<TaskUpdateItem> updateQueue;
 };
 

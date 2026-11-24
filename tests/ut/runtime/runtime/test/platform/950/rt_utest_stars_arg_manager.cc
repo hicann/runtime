@@ -1269,6 +1269,9 @@ TEST_F(ArgManagePcieTest, TaskUpdateInfoFree_UnpublishedEntry_StillReleases)
     info->latestParams.u.kernelUpdateParams.argsType = RT_KERNEL_ARGS_ARRAY;
     info->latestParams.u.kernelUpdateParams.argsArray = reinterpret_cast<void**>(new (std::nothrow) uint8_t[64]);
     ASSERT_NE(info->latestParams.u.kernelUpdateParams.argsArray, nullptr);
+    info->loadedParams.placeHolderArray = new (std::nothrow) rtPlaceHolderInfo_t[1]{};
+    ASSERT_NE(info->loadedParams.placeHolderArray, nullptr);
+    info->loadedParams.placeHolderNum = 1U;
     task.updateInfo = info;
 
     TaskUpdateInfoFree(&task);
@@ -1291,6 +1294,9 @@ TEST_F(ArgManagePcieTest, TaskUpdateInfoFree_SimtEntry_Releases)
     info->latestParams.u.simtKernelUpdateParams.hostBuffer.placeHolderNum = 1U;
     ASSERT_NE(info->latestParams.u.simtKernelUpdateParams.hostBuffer.hostArgs, nullptr);
     ASSERT_NE(info->latestParams.u.simtKernelUpdateParams.hostBuffer.placeHolderArray, nullptr);
+    info->loadedParams.placeHolderArray = new (std::nothrow) rtPlaceHolderInfo_t[1]{};
+    ASSERT_NE(info->loadedParams.placeHolderArray, nullptr);
+    info->loadedParams.placeHolderNum = 1U;
     task.updateInfo = info;
 
     TaskUpdateInfoFree(&task);
@@ -1308,6 +1314,9 @@ TEST_F(ArgManagePcieTest, TaskUpdateInfoFree_NonKernelType_DeletesObjectOnly)
     ASSERT_NE(info, nullptr);
     info->latestParams.isValid = 1U;
     info->latestParams.type = RT_TASK_VALUE_WRITE;
+    info->loadedParams.placeHolderArray = new (std::nothrow) rtPlaceHolderInfo_t[1]{};
+    ASSERT_NE(info->loadedParams.placeHolderArray, nullptr);
+    info->loadedParams.placeHolderNum = 1U;
     task.updateInfo = info;
 
     TaskUpdateInfoFree(&task);

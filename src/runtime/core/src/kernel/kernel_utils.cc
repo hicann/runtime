@@ -522,6 +522,41 @@ static rtError_t CacheHostBufferForm(
     return RT_ERROR_NONE;
 }
 
+rtError_t UpdateKernelLoadedParams(TaskUpdateInfo* updateInfo)
+{
+    if ((updateInfo == nullptr) || (updateInfo->latestParams.isValid != 1U)) {
+        return RT_ERROR_NONE;
+    }
+    auto& loaded = updateInfo->loadedParams;
+    delete[] loaded.placeHolderArray;
+    loaded = {};
+    const auto& latest = updateInfo->latestParams;
+    const rtPlaceHolderInfo_t* placeHolderArray = nullptr;
+    size_t placeHolderNum = 0U;
+    if (latest.type == RT_TASK_KERNEL) {
+        const auto& info = latest.u.kernelUpdateParams;
+        if (info.argsType != RT_KERNEL_ARGS_HOST_BUFFER) {
+            return RT_ERROR_NONE;
+        }
+        placeHolderArray = info.hostBuffer.placeHolderArray;
+        placeHolderNum = info.hostBuffer.placeHolderNum;
+    } else if (latest.type == RT_TASK_SIMT_KERNEL) {
+        const auto& info = latest.u.simtKernelUpdateParams;
+        if (info.argsType != RT_KERNEL_ARGS_HOST_BUFFER) {
+            return RT_ERROR_NONE;
+        }
+        placeHolderArray = info.hostBuffer.placeHolderArray;
+        placeHolderNum = info.hostBuffer.placeHolderNum;
+    }
+    if (placeHolderNum == 0U) {
+        return RT_ERROR_NONE;
+    }
+    const rtError_t error = CopyPlaceHolderArray(placeHolderArray, placeHolderNum, loaded.placeHolderArray);
+    ERROR_RETURN(error, "Copy loaded kernel placeholder information failed, retCode=%#x.", error);
+    loaded.placeHolderNum = placeHolderNum;
+    return RT_ERROR_NONE;
+}
+
 // 旧形态入口：三字段语义与历史一致（非 0 深拷贝，0 零拷贝），结果写入新形态
 static rtError_t CacheLegacyArgsForm(const rtKernelTaskParams* const kernelTaskParams, KernelTaskUpdateInfo& info)
 {
@@ -804,6 +839,9 @@ rtError_t UpdateKernelParams(TaskInfo* const taskInfo, KernelTaskUpdateInfo* con
     ERROR_RETURN(
         error, "failed to build the args load input, retCode=%#x, device_id=%u, stream_id=%d, task_id=%hu.", error,
         dev->Id_(), stm->Id_(), taskInfo->id);
+
+    error = UpdateKernelLoadedParams(taskInfo->updateInfo);
+    ERROR_RETURN(error, "Copy loaded kernel placeholder information failed, retCode=%#x.", error);
 
     TaskClearForUpdate(taskInfo);
 
@@ -1188,12 +1226,11 @@ static rtError_t SetNormalKernelLaunchParams(
     return RT_ERROR_NONE;
 }
 
-// cache the launch args (capture only); Set overwrites, Update keeps; guards aicTaskInfo.kernel (may be null)
+// Cache capture launch arguments and their relocation metadata.
 rtError_t SetKernelLaunchParams(
     const Stream* const stm, const rtArgsEx_t* const argsInfo, TaskInfo& task,
     const rtStreamLaunchKernelV2ExtendArgs_t* extendArgs)
 {
-    // 非capture模式下，不需要设置
     if (stm->GetCaptureStatus() == RT_STREAM_CAPTURE_STATUS_NONE) {
         return RT_ERROR_NONE;
     }
@@ -1220,10 +1257,14 @@ rtError_t SetKernelLaunchParams(
 
     const bool isSimtForm =
         (extendArgs != nullptr) && ((extendArgs->simtArgsArray != nullptr) || (extendArgs->simtArgsHost != nullptr));
+    rtError_t error = RT_ERROR_NONE;
     if (isSimtForm) {
-        return SetSimtKernelLaunchParams(extendArgs, kernel, task, latestParams);
+        error = SetSimtKernelLaunchParams(extendArgs, kernel, task, latestParams);
+    } else {
+        error = SetNormalKernelLaunchParams(argsInfo, extendArgs, task, kernel, latestParams);
     }
-    return SetNormalKernelLaunchParams(argsInfo, extendArgs, task, kernel, latestParams);
+    COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
+    return UpdateKernelLoadedParams(task.updateInfo);
 }
 
 // deep copy argsArray[i] to dest at kernel-metadata offsets; outArgsArray[i] is wired to the copy
