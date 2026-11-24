@@ -435,9 +435,7 @@ public:
         const int32_t deviceId, const uint32_t id, const uint32_t tsId, const uint32_t notifyFlag = 0,
         const bool isCountNotify = false) = 0;
     // Create IPC Notify
-    virtual rtError_t CreateIpcNotify(
-        char_t* const name, const uint32_t len, const int32_t devId, uint32_t* const notifyId, const uint32_t tsId,
-        const uint32_t notifyFlag = 0) = 0;
+    virtual rtError_t CreateIpcNotify(const IpcNotifyCreatePara& createPara, uint32_t* const notifyId) = 0;
 
     // Destroy IPC Notify
     virtual rtError_t DestroyIpcNotify(
@@ -723,6 +721,8 @@ rtError_t GetDrvSentinelMode(void);
 bool IsOfflineNotSupportMemType(const rtMemType_t& type);
 rtError_t GetIpcNotifyVa(
     const uint32_t notifyId, Driver* const curDrv, const uint32_t deviceId, const uint32_t phyId, uint64_t& Va);
+rtError_t GetCrossEventVa(uint32_t notifyId, uint32_t deviceId, uint32_t phyId, bool isCountNotify, uint64_t& addr);
+rtError_t ReleaseCrossEventVa(uint32_t notifyId, uint32_t deviceId, uint32_t phyId, bool isCountNotify);
 bool isNeedOpenDevice(const bool isTscOpen, const bool isTsvOpen, const uint32_t tsId);
 bool isNeedCloseDevice(const bool isTscOpen, const bool isTsvOpen);
 rtError_t SetModelNameWithCtrlMsg(Model* const mdl);

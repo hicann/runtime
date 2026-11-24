@@ -897,10 +897,10 @@ void ConstructSecondDavidSqeForMemWaitValueTask(
     PrintDavidSqe(davidSqe, "MemWaitValueTask condition sqe");
     RT_LOG(
         RT_LOG_INFO,
-        "MemWaitValueTask condition sqe, stream_id=%d, task_id=%hu, devAddr=0x%llx, "
-        "value=0x%llx, sqHeadPre=%u, flag=%u, taskSn=%u",
-        taskInfo->stream->Id_(), taskInfo->id, fcPara.devAddr, fcPara.value, fcPara.sqHeadPre, fcPara.flag,
-        taskInfo->taskSn);
+        "MemWaitValueTask condition sqe, device_id=%u, stream_id=%d, task_id=%hu, devAddr=0x%llx, "
+        "value=0x%llx, awSize=%u, sqHeadPre=%u, flag=%u, taskSn=%u",
+        taskInfo->stream->Device_()->Id_(), taskInfo->stream->Id_(), taskInfo->id, fcPara.devAddr, fcPara.value,
+        static_cast<uint32_t>(fcPara.awSize), fcPara.sqHeadPre, fcPara.flag, taskInfo->taskSn);
 }
 #endif
 

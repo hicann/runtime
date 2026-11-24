@@ -1426,6 +1426,25 @@ void MemWaitInstrWaitFailedForNonSoftwareSq(
     ConstructBranch(r3, r0, RT_STARS_COND_ISA_BRANCH_FUNC3_BNE, static_cast<uint8_t>(endOffset), fc.branch8);
 }
 
+static rtStarsCondIsaLoadImmFunc3_t GetMemWaitLoadOp(const uint16_t width)
+{
+    switch (width) {
+        case RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT:
+            return RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LBU;
+        case RT_STARS_WRITE_VALUE_SIZE_TYPE_16BIT:
+            return RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LHU;
+        case RT_STARS_WRITE_VALUE_SIZE_TYPE_32BIT:
+            return RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LWU;
+        case RT_STARS_WRITE_VALUE_SIZE_TYPE_64BIT:
+            return RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD;
+        default:
+            RT_LOG(
+                RT_LOG_WARNING, "Unsupported memory wait access size encoding=%u, using 64-bit load.",
+                static_cast<uint32_t>(width));
+            return RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD;
+    }
+}
+
 /* used for none-sofeware sq */
 void ConstructMemWaitValueInstr2(RtStarsMemWaitValueLastInstrFc& fc, const RtStarsMemWaitValueInstrFcPara& fcPara)
 {
@@ -1440,9 +1459,7 @@ void ConstructMemWaitValueInstr2(RtStarsMemWaitValueLastInstrFc& fc, const RtSta
     rtStarsCondIsaBranchFunc3_t reverseBranchFunc = RT_STARS_COND_ISA_BRANCH_FUNC3_BNE;
     rtStarsCondIsaOpFunc3_t opFunc3 = RT_STARS_COND_ISA_OP_FUNC3_OR;
     RtStarsCondIsaOpFunc7 opFunc7 = RT_STARS_COND_ISA_OP_FUNC7_OR;
-    const rtStarsCondIsaLoadImmFunc3_t opFunc8 = (fcPara.awSize == RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT) ?
-                                                     RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LBU :
-                                                     RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD;
+    const rtStarsCondIsaLoadImmFunc3_t opFunc8 = GetMemWaitLoadOp(fcPara.awSize);
     uint64_t value1 = 0ULL;
     uint64_t value2 = fcPara.value;
 
@@ -1788,9 +1805,7 @@ void ConstructMemWaitValueInstr2Ex(RtStarsMemWaitValueLastInstrFcEx& fc, const R
     rtStarsCondIsaBranchFunc3_t reverseBranchFunc = RT_STARS_COND_ISA_BRANCH_FUNC3_BNE;
     rtStarsCondIsaOpFunc3_t opFunc3 = RT_STARS_COND_ISA_OP_FUNC3_OR;
     RtStarsCondIsaOpFunc7 opFunc7 = RT_STARS_COND_ISA_OP_FUNC7_OR;
-    const rtStarsCondIsaLoadImmFunc3_t opFunc8 = (fcPara.awSize == RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT) ?
-                                                     RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LBU :
-                                                     RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD;
+    const rtStarsCondIsaLoadImmFunc3_t opFunc8 = GetMemWaitLoadOp(fcPara.awSize);
     uint64_t value1 = 0ULL;
     uint64_t value2 = fcPara.value;
 
@@ -2047,9 +2062,7 @@ void ConstructMemWaitValueInstr2WithDynamicProf(
     rtStarsCondIsaBranchFunc3_t reverseBranchFunc = RT_STARS_COND_ISA_BRANCH_FUNC3_BNE;
     rtStarsCondIsaOpFunc3_t opFunc3 = RT_STARS_COND_ISA_OP_FUNC3_OR;
     RtStarsCondIsaOpFunc7 opFunc7 = RT_STARS_COND_ISA_OP_FUNC7_OR;
-    const rtStarsCondIsaLoadImmFunc3_t opFunc8 = (fcPara.awSize == RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT) ?
-                                                     RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LBU :
-                                                     RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD;
+    const rtStarsCondIsaLoadImmFunc3_t opFunc8 = GetMemWaitLoadOp(fcPara.awSize);
     uint64_t value1 = 0ULL;
     uint64_t value2 = fcPara.value;
 
@@ -2402,9 +2415,7 @@ void ConstructMemWaitValueInstr2ExWithDynamicProf(
     rtStarsCondIsaBranchFunc3_t reverseBranchFunc = RT_STARS_COND_ISA_BRANCH_FUNC3_BNE;
     rtStarsCondIsaOpFunc3_t opFunc3 = RT_STARS_COND_ISA_OP_FUNC3_OR;
     RtStarsCondIsaOpFunc7 opFunc7 = RT_STARS_COND_ISA_OP_FUNC7_OR;
-    const rtStarsCondIsaLoadImmFunc3_t opFunc8 = (fcPara.awSize == RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT) ?
-                                                     RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LBU :
-                                                     RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD;
+    const rtStarsCondIsaLoadImmFunc3_t opFunc8 = GetMemWaitLoadOp(fcPara.awSize);
     uint64_t value1 = 0ULL;
     uint64_t value2 = fcPara.value;
 

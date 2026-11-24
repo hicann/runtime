@@ -98,6 +98,73 @@ rtError_t GetIpcNotifyVa(
     return RT_ERROR_NONE;
 }
 
+static void InitCrossEventMapInfo(
+    uint32_t notifyId, uint32_t deviceId, uint32_t phyId, bool isCountNotify, trs_res_map_priv& priv,
+    res_map_info_in& info)
+{
+    priv.flag = TSDRV_RES_REMOTE_ID;
+    priv.local_devid = deviceId;
+    priv.remote_devid = phyId;
+    info.target_proc_type = PROCESS_CP1;
+    info.res_type = isCountNotify ? RES_ADDR_TYPE_STARS_CNT_NOTIFY_RECORD : RES_ADDR_TYPE_STARS_NOTIFY_RECORD;
+    info.res_id = notifyId;
+    info.priv_len = sizeof(priv);
+    info.priv = &priv;
+}
+
+rtError_t ReleaseCrossEventVa(uint32_t notifyId, uint32_t deviceId, uint32_t phyId, bool isCountNotify)
+{
+    COND_RETURN_WARN(
+        &halResAddrUnmapV2 == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT, "[drv api] halResAddrUnmapV2 does not exist");
+    trs_res_map_priv priv = {};
+    res_map_info_in info = {};
+    InitCrossEventMapInfo(notifyId, deviceId, phyId, isCountNotify, priv, info);
+    const drvError_t ret = halResAddrUnmapV2(deviceId, &info);
+    if (ret != DRV_ERROR_NONE) {
+        DRV_ERROR_PROCESS(
+            ret, "Unmap cross-device event failed, device_id=%u, notify_id=%u, drvRetCode=%d.", deviceId, notifyId,
+            static_cast<int32_t>(ret));
+    }
+    return RT_GET_DRV_ERRCODE(ret);
+}
+
+rtError_t GetCrossEventVa(uint32_t notifyId, uint32_t deviceId, uint32_t phyId, bool isCountNotify, uint64_t& addr)
+{
+    COND_RETURN_WARN(
+        &halResAddrMapV2 == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT, "[drv api] halResAddrMapV2 does not exist");
+    COND_RETURN_WARN(
+        &halResAddrUnmapV2 == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT, "[drv api] halResAddrUnmapV2 does not exist");
+    COND_RETURN_WARN(
+        !NpuDriver::CheckIsSupportFeature(deviceId, FEATURE_APM_RES_MAP_REMOTE), RT_ERROR_DRV_NOT_SUPPORT,
+        "The driver does not support remote event resource mapping, device_id=%u.", deviceId);
+    trs_res_map_priv priv = {};
+    res_map_info_in info = {};
+    res_map_info_out out = {};
+    InitCrossEventMapInfo(notifyId, deviceId, phyId, isCountNotify, priv, info);
+    const drvError_t ret = halResAddrMapV2(deviceId, &info, &out);
+    if (ret != DRV_ERROR_NONE) {
+        DRV_ERROR_PROCESS(
+            ret, "Map cross-device event failed, device_id=%u, notify_id=%u, drvRetCode=%d.", deviceId, notifyId,
+            static_cast<int32_t>(ret));
+        return RT_GET_DRV_ERRCODE(ret);
+    }
+    const uint32_t requiredSize = isCountNotify ? sizeof(uint32_t) : sizeof(uint8_t);
+    if ((out.va == 0UL) || (out.len < requiredSize) || ((out.va % requiredSize) != 0UL)) {
+        (void)ReleaseCrossEventVa(notifyId, deviceId, phyId, isCountNotify);
+        RT_LOG(
+            RT_LOG_ERROR, "Invalid mapped event address, device_id=%u, notify_id=%u, va=%#" PRIx64 ", length=%u.",
+            deviceId, notifyId, static_cast<uint64_t>(out.va), out.len);
+        return RT_ERROR_INVALID_VALUE;
+    }
+    addr = out.va;
+    RT_LOG(
+        RT_LOG_INFO,
+        "Cross-device event map success: device_id=%u, peer_phy_id=%u, notify_id=%u, "
+        "res_type=%u, va=%#" PRIx64 ", length=%u.",
+        deviceId, phyId, notifyId, static_cast<uint32_t>(info.res_type), static_cast<uint64_t>(out.va), out.len);
+    return RT_ERROR_NONE;
+}
+
 bool isNeedOpenDevice(const bool isTscOpen, const bool isTsvOpen, const uint32_t tsId)
 {
     UNUSED(isTscOpen);

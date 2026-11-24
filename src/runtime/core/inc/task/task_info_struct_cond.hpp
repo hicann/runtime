@@ -11,6 +11,7 @@
 #define CCE_RUNTIME_TASK_INFO_STRUCT_COND_HPP
 
 #include "task_info_base.hpp"
+#include "event_resource.hpp"
 
 #define THREAD_FOR_PRE_LOAD (30U)
 
@@ -71,6 +72,7 @@ struct MemWaitValueTaskInfo {
     Event* event;
     // 普通stream wait消费software event latest时会增加eventId引用，task回收时需按本次绑定的id释放。
     int32_t ownedEventId;
+    CrossEventWaitInfo crossDeviceWaitInfo;
 };
 
 struct DqsCommonTaskInfo {

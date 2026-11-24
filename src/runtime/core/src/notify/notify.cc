@@ -428,8 +428,8 @@ rtError_t Notify::CreateIpcNotify(char_t* const ipcNotifyName, const uint32_t le
     NULL_PTR_RETURN(driver_, RT_ERROR_DRV_NULL);
     uint32_t curNotifyId = notifyid_;
 
-    rtError_t error =
-        driver_->CreateIpcNotify(ipcNotifyName, len, static_cast<int32_t>(deviceId_), &curNotifyId, tsId_, notifyFlag_);
+    const IpcNotifyCreatePara createPara = {ipcNotifyName, len, static_cast<int32_t>(deviceId_), tsId_, notifyFlag_};
+    rtError_t error = driver_->CreateIpcNotify(createPara, &curNotifyId);
     COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), error);
 
     if (curNotifyId != notifyid_) {

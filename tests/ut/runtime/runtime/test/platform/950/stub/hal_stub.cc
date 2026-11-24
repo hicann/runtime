@@ -873,6 +873,8 @@ drvError_t halResAddrMapV2(
     return DRV_ERROR_NONE;
 }
 
+drvError_t halResAddrUnmapV2(unsigned int devId, struct res_map_info_in* res_info_in) { return DRV_ERROR_NONE; }
+
 drvError_t halDeviceCanAccessPeer(int32_t* canAccessPeer, uint32_t device, uint32_t peerDevice)
 {
     return DRV_ERROR_NONE;

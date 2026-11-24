@@ -671,6 +671,7 @@ rtError_t ApiImplDavid::StreamWaitEvent(
         evt->GetEventFlag(), curStm->IsModelStream());
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Triggering stream event waiting");
+    const bool isCrossDevice = evt->Device_()->Id_() != curStm->Device_()->Id_();
     if (flag == RT_EVENT_WAIT_EXTERNAL) {
         COND_RETURN_AND_MSG_OUTER(
             (!curStm->IsCapturing()), RT_ERROR_STREAM_NOT_CAPTURED, ErrorCode::EE1016, "Triggering event waiting",
@@ -679,6 +680,8 @@ rtError_t ApiImplDavid::StreamWaitEvent(
         if (supportRet != RT_ERROR_NONE) {
             return supportRet;
         }
+        COND_RETURN_WARN(
+            isCrossDevice, RT_ERROR_FEATURE_NOT_SUPPORT, "Cross-device external event waits are not supported.");
         return Starsv2CaptureExternalEventWait(evt, curStm);
     }
     if (evt->IsCapturing()) {
@@ -698,6 +701,9 @@ rtError_t ApiImplDavid::StreamWaitEvent(
             evt->EventId_(), evt->GetEventFlag());
         const std::lock_guard<std::mutex> lk(curCtx->GetCaptureLock());
         if (evt->IsCapturing()) {
+            COND_RETURN_WARN(
+                isCrossDevice, RT_ERROR_FEATURE_NOT_SUPPORT,
+                "Cross-device event waits are not supported in capture mode.");
             const rtError_t retCode = CaptureWaitEvent(curCtx, curStm, evt, timeout);
             ERROR_PROC_RETURN_MSG_INNER(
                 retCode, TerminateCapture(evt, curStm), "Capture wait event failed, stream_id=%d.", curStm->Id_());
@@ -733,6 +739,12 @@ rtError_t ApiImplDavid::StreamWaitEvent(
     rtError_t error = RT_ERROR_NONE;
     if (evt->GetEventFlag() == RT_EVENT_IPC) {
         error = (dynamic_cast<IpcEvent*>(evt))->IpcEventWaitStarsV2(curStm);
+    } else if (isCrossDevice) {
+        auto* const davidEvt = static_cast<DavidEvent*>(evt);
+        bool needWait = false;
+        error = CheckEventBeforeWait(davidEvt, curStm, needWait);
+        COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE) || !needWait, error);
+        error = CrossEvtWait(davidEvt, curStm);
     } else if ((!evt->IsHardwareMode()) && evt->HasRecord() && (evt->GetEventAddr() != nullptr)) {
         error = EvtWaitSoftwareMode(evt, curStm);
     } else {

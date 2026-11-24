@@ -11,6 +11,7 @@
 #include "runtime/event.h"
 #include "runtime/base.h"
 #include "event_david.hpp"
+#include "event_c.hpp"
 #include "stream_david.hpp"
 #include "cnt_notify_res.hpp"
 #include "device.hpp"
@@ -43,6 +44,7 @@ DavidEvent::DavidEvent(Device* device, uint64_t eventFlag, Context* ctx, bool is
 
 DavidEvent::~DavidEvent() noexcept
 {
+    (void)DestroyCrossEventSharedInfo(device_, notifySharedInfo_);
     if ((eventId_ != INVALID_EVENT_ID) && !isCntNotify_) {
         RT_LOG(RT_LOG_DEBUG, "DavidEvent FreeEventIdFromDrv");
         (void)device_->FreeEventIdFromDrv(eventId_, static_cast<uint32_t>(eventFlag_));
@@ -96,6 +98,32 @@ bool DavidEvent::DavidUpdateWaitMapAndDestroyEvent(TaskInfo* taskInfo)
     }
     waitTaskMap_.erase(taskInfo);
     return isNeedDestroy_.Value() && AreTaskMapsEmptyLocked();
+}
+
+rtError_t DavidEvent::GetCrossDeviceIpcName(char* name, uint32_t len)
+{
+    std::shared_ptr<Stream> sourceStream;
+    const std::lock_guard<std::mutex> lock(recordStateMutex_);
+    if (!IsCntNotify()) {
+        return GetOrCreateCrossEventSharedInfo(
+            device_, static_cast<uint32_t>(eventId_), false, notifySharedInfo_, name, len);
+    }
+
+    const int32_t sourceStreamId = latestRecordTask_.streamId;
+    const rtError_t error =
+        device_->GetStreamSqCqManage()->GetStreamSharedPtrById(static_cast<uint32_t>(sourceStreamId), sourceStream);
+    ERROR_RETURN(error, "Failed to get source stream for count notify sharing, stream_id=%d.", sourceStreamId);
+    auto* const davidStream = dynamic_cast<DavidStream*>(sourceStream.get());
+    NULL_PTR_RETURN_MSG(davidStream, RT_ERROR_STREAM_NULL);
+    const std::lock_guard<std::mutex> notifyLock(davidStream->cntNotifyInfoLock_);
+    NULL_PTR_RETURN_MSG(davidStream->cntNotifyRes_, RT_ERROR_INVALID_VALUE);
+    const uint32_t notifyId = davidStream->cntNotifyRes_->GetNotifyId();
+    COND_RETURN_ERROR(
+        notifyId != static_cast<uint32_t>(eventId_), RT_ERROR_INVALID_VALUE,
+        "Event notify ID does not match source stream count notify, stream_id=%d, event_id=%d, notify_id=%u.",
+        sourceStreamId, eventId_, notifyId);
+    return GetOrCreateCrossEventSharedInfo(
+        davidStream->Device_(), notifyId, true, davidStream->cntNotifySharedInfo_, name, len);
 }
 
 rtError_t DavidEvent::GenEventId()

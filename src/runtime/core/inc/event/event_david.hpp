@@ -16,6 +16,7 @@
 #include <atomic>
 #include <shared_mutex>
 #include "event.hpp"
+#include "event_resource.hpp"
 
 namespace cce {
 namespace runtime {
@@ -73,6 +74,7 @@ public:
              0U));
     }
     bool IsCntNotify() const { return isCntNotify_; }
+    rtError_t GetCrossDeviceIpcName(char* name, uint32_t len);
     uint32_t CntValue() const { return cntValue_; }
     void SetCntValue(uint32_t val) { cntValue_ = val; }
     // 仅只读/UT 使用
@@ -91,6 +93,7 @@ public:
     DavidRecordTaskInfo GetLatestRecordInfo() { return latestRecordTask_; }
 
 private:
+    CrossEventSharedInfo notifySharedInfo_;
     bool isCntNotify_{false};
     uint32_t cntValue_{0U};
     DavidEventState_t status_;

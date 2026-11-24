@@ -143,11 +143,21 @@ struct AsyncDmaWqeDestroyInfoBatch {
     std::array<uint32_t, ASYNC_CPY_BATCH_DESTROY_RSV_LEN> rsv;
 };
 
+struct IpcNotifyCreatePara {
+    char_t* name;
+    uint32_t len;
+    int32_t devId;
+    uint32_t tsId;
+    uint32_t flag{0U};
+    bool isCountNotify{false};
+};
+
 struct IpcNotifyOpenPara {
     const char_t* name;
     uint32_t flag;
     uint32_t localDevId;
     uint32_t localTsId;
+    bool isCountNotify{false};
 };
 
 struct AsyncDmaJettyHandle {

@@ -1233,7 +1233,7 @@ struct halResourceDetailInfo {
     uint32_t reserve[2];
 };
 
-enum shr_id_type { SHR_ID_NOTIFY_TYPE = 0, SHR_ID_EVENT_TYPE = 1, SHR_ID_TYPE_MAX };
+enum shr_id_type { SHR_ID_NOTIFY_TYPE = 0, SHR_ID_EVENT_TYPE = 1, SHR_ID_CNT_NOTIFY_TYPE = 2, SHR_ID_TYPE_MAX };
 
 /* when flag is TSDRV_FLAG_SHR_ID_SHADOW, devid is sdid */
 struct drvShrIdInfo {

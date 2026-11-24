@@ -697,50 +697,42 @@ rtError_t NpuDriver::CheckIpcMapRoute(const char_t* const name, uint64_t attr, u
     return RT_ERROR_NONE;
 }
 
-rtError_t NpuDriver::CreateIpcNotifyWithFlag(
-    char_t* const name, const uint32_t len, const int32_t devId, uint32_t* const notifyId, const uint32_t tsId,
-    const uint32_t notifyFlag) const
+rtError_t NpuDriver::CreateIpcNotify(const IpcNotifyCreatePara& createPara, uint32_t* const notifyId)
 {
     if (&halShrIdCreate == nullptr) {
-        RT_LOG(RT_LOG_ERROR, "Driver unsupported flag, name=%s.", name);
+        RT_LOG(RT_LOG_ERROR, "Driver unsupported flag, name=%s.", createPara.name);
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
 
     drvShrIdInfo drvInfo;
-    drvInfo.devid = static_cast<uint32_t>(devId);
-    drvInfo.tsid = tsId;
+    drvInfo.devid = static_cast<uint32_t>(createPara.devId);
+    drvInfo.tsid = createPara.tsId;
     drvInfo.shrid = *notifyId;
-    drvInfo.id_type = SHR_ID_NOTIFY_TYPE;
+    drvInfo.id_type = createPara.isCountNotify ? SHR_ID_CNT_NOTIFY_TYPE : SHR_ID_NOTIFY_TYPE;
     drvInfo.flag =
-        (notifyFlag == static_cast<uint32_t>(RT_NOTIFY_MC2)) ? static_cast<uint32_t>(TSDRV_FLAG_REMOTE_ID) : 0U;
+        (createPara.flag == static_cast<uint32_t>(RT_NOTIFY_MC2)) ? static_cast<uint32_t>(TSDRV_FLAG_REMOTE_ID) : 0U;
 
     RT_LOG(
         RT_LOG_INFO, "create ipc notify begin, deviceId=%u, notifyId=%u, tsId=%u, flag=%u", drvInfo.devid,
         drvInfo.shrid, drvInfo.tsid, drvInfo.flag);
-    const drvError_t drvRet = halShrIdCreate(&drvInfo, name, len);
+    const drvError_t drvRet = halShrIdCreate(&drvInfo, createPara.name, createPara.len);
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(
             drvRet,
             "halShrIdCreate call failed, drvRetCode=%d, name=%s, drvDevId=%d, tsId=%u, notifyId=%u, "
             "notifyFlag=%u.",
-            static_cast<int32_t>(drvRet), name, devId, tsId, *notifyId, notifyFlag);
+            static_cast<int32_t>(drvRet), createPara.name, createPara.devId, createPara.tsId, *notifyId,
+            createPara.flag);
         return RT_GET_DRV_ERRCODE(drvRet);
     }
     RT_LOG(
         RT_LOG_INFO,
         "Create ipc notify success,name=%s, deviceId=%d, tsId=%u, notifyId=%u, "
         "len=%u, drvInfo.notifyId=%u.",
-        name, devId, tsId, *notifyId, len, drvInfo.shrid);
+        createPara.name, createPara.devId, createPara.tsId, *notifyId, createPara.len, drvInfo.shrid);
 
     *notifyId = drvInfo.shrid;
     return RT_ERROR_NONE;
-}
-
-rtError_t NpuDriver::CreateIpcNotify(
-    char_t* const name, const uint32_t len, const int32_t devId, uint32_t* const notifyId, const uint32_t tsId,
-    const uint32_t notifyFlag)
-{
-    return CreateIpcNotifyWithFlag(name, len, devId, notifyId, tsId, notifyFlag);
 }
 
 rtError_t NpuDriver::SetMemShareHandleDisablePidVerify(uint64_t shareableHandle)
@@ -827,6 +819,17 @@ rtError_t NpuDriver::DestroyIpcNotify(
     return RT_ERROR_NONE;
 }
 
+static std::string DriverShrIdTypeToString(const uint32_t type)
+{
+    static constexpr std::initializer_list<ErrMsgNamedValue> SHR_ID_TYPE_NAMES = {
+        {SHR_ID_NOTIFY_TYPE, "SHR_ID_NOTIFY_TYPE"},
+        {SHR_ID_EVENT_TYPE, "SHR_ID_EVENT_TYPE"},
+        {SHR_ID_CNT_NOTIFY_TYPE, "SHR_ID_CNT_NOTIFY_TYPE"},
+        {SHR_ID_TYPE_MAX, "SHR_ID_TYPE_MAX"},
+    };
+    return EnumValueDescription(type, SHR_ID_TYPE_NAMES);
+}
+
 static rtError_t OpenIpcNotifyWithFlag(
     const IpcNotifyOpenPara& openPara, uint32_t* const phyId, uint32_t* const notifyId, uint32_t* const tsId,
     uint32_t* const isPod, uint32_t* const adcDieId)
@@ -839,7 +842,8 @@ static rtError_t OpenIpcNotifyWithFlag(
     drvShrIdInfo drvInfo;
     drvInfo.devid = openPara.localDevId;
     drvInfo.tsid = openPara.localTsId;
-    drvInfo.id_type = SHR_ID_NOTIFY_TYPE;
+    const uint32_t expectedType = openPara.isCountNotify ? SHR_ID_CNT_NOTIFY_TYPE : SHR_ID_NOTIFY_TYPE;
+    drvInfo.id_type = expectedType;
     drvInfo.flag =
         (((openPara.flag & static_cast<uint32_t>(RT_NOTIFY_FLAG_DOWNLOAD_TO_DEV)) != 0U) ?
              static_cast<uint32_t>(TSDRV_FLAG_REMOTE_ID) :
@@ -854,16 +858,11 @@ static rtError_t OpenIpcNotifyWithFlag(
         return RT_GET_DRV_ERRCODE(drvRet);
     }
 
-    if (drvInfo.id_type != SHR_ID_NOTIFY_TYPE) {
+    if (drvInfo.id_type != expectedType) {
         RT_LOG(
-            RT_LOG_ERROR,
-            "[drv api] halShrIdOpen return type invalid: name=%s, "
-            "id_type=%s(%d), expected=SHR_ID_NOTIFY_TYPE(0).",
-            openPara.name,
-            (drvInfo.id_type == SHR_ID_EVENT_TYPE) ?
-                "SHR_ID_EVENT_TYPE" :
-                ((drvInfo.id_type == SHR_ID_TYPE_MAX) ? "SHR_ID_TYPE_MAX" : "UNKNOWN"),
-            static_cast<int32_t>(drvInfo.id_type));
+            RT_LOG_ERROR, "[drv api] halShrIdOpen resource type mismatch, name=%s, id_type=%s, expected=%s.",
+            openPara.name, DriverShrIdTypeToString(drvInfo.id_type).c_str(),
+            DriverShrIdTypeToString(expectedType).c_str());
         (void)halShrIdClose(openPara.name);
         return RT_ERROR_DRV_NO_NOTIFY_RESOURCES;
     }

@@ -2599,10 +2599,10 @@ TEST_F(NpuDriverTest2, raw_driver)
     NpuDriver driver;
     IpcNotifyOpenPara openPara = {"tmp", RT_NOTIFY_FLAG_DEFAULT, 0, 0};
     rtError_t error;
-    int32_t devId;
-    uint32_t tsId;
-    uint32_t notifyId;
-    uint32_t len;
+    const int32_t devId = 0;
+    uint32_t tsId = 0U;
+    uint32_t notifyId = 0U;
+    char name[] = "tmp";
 
     uint64_t devAddrOffset;
     uint32_t devIndex;
@@ -2619,7 +2619,8 @@ TEST_F(NpuDriverTest2, raw_driver)
     MOCKER(halResourceIdFree).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
     error = driver.NotifyIdFree(devId, notifyId, tsId);
     EXPECT_EQ(error, RT_ERROR_DRV_INPUT);
-    error = driver.CreateIpcNotify("tmp", len, devId, &notifyId, tsId);
+    const IpcNotifyCreatePara createPara = {name, sizeof(name), devId, tsId};
+    error = driver.CreateIpcNotify(createPara, &notifyId);
     EXPECT_EQ(error, RT_ERROR_NONE);
     error = driver.OpenIpcNotify(openPara, &phyId, &notifyId, &tsId, &isPod, &adcDieId);
     EXPECT_EQ(error, RT_ERROR_NONE);

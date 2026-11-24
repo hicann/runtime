@@ -147,3 +147,11 @@ TEST_F(TaskTestV201F, DISABLED_TestSetdevice2)
     error = rtDeviceReset(0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
+
+TEST(CrossEventVaV201Test, UnsupportedMappingPreservesOutputs)
+{
+    uint64_t addr = 0x1234U;
+    EXPECT_EQ(GetCrossEventVa(7U, 1U, 0U, true, addr), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(ReleaseCrossEventVa(7U, 1U, 0U, true), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(addr, 0x1234U);
+}

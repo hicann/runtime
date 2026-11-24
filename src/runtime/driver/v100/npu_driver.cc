@@ -50,6 +50,25 @@ rtError_t GetIpcNotifyVa(
     return RT_ERROR_NONE;
 }
 
+rtError_t GetCrossEventVa(uint32_t notifyId, uint32_t deviceId, uint32_t phyId, bool isCountNotify, uint64_t& addr)
+{
+    UNUSED(notifyId);
+    UNUSED(deviceId);
+    UNUSED(phyId);
+    UNUSED(isCountNotify);
+    UNUSED(addr);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t ReleaseCrossEventVa(uint32_t notifyId, uint32_t deviceId, uint32_t phyId, bool isCountNotify)
+{
+    UNUSED(notifyId);
+    UNUSED(deviceId);
+    UNUSED(phyId);
+    UNUSED(isCountNotify);
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
 bool isNeedOpenDevice(const bool isTscOpen, const bool isTsvOpen, const uint32_t tsId)
 {
     UNUSED(isTscOpen);

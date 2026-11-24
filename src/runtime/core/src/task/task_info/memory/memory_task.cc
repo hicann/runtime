@@ -375,6 +375,9 @@ void MemWaitTaskUnInit(TaskInfo* taskInfo)
     }
 
     memWaitValueTask->funCallMemSize2 = 0UL;
+    if (memWaitValueTask->crossDeviceWaitInfo.release != nullptr) {
+        memWaitValueTask->crossDeviceWaitInfo.release(taskInfo);
+    }
 }
 
 static rtError_t AllocFuncCallMemForMemWaitTask(TaskInfo* taskInfo)
@@ -462,6 +465,7 @@ rtError_t MemWaitValueTaskInit(TaskInfo* taskInfo, const void* const devAddr, co
     memWaitValueTask->writeValueAddr = nullptr;
     memWaitValueTask->funCallMemSize2 = 0ULL;
     memWaitValueTask->ownedEventId = INVALID_EVENT_ID;
+    memWaitValueTask->crossDeviceWaitInfo = {};
     memWaitValueTask->awSize = RT_STARS_WRITE_VALUE_SIZE_TYPE_64BIT;
 
     rtError_t ret = AllocFuncCallMemForMemWaitTask(taskInfo);

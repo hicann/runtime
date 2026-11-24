@@ -45,6 +45,7 @@
 #include "task_recycle.hpp"
 #include "securec.h"
 #include "npu_driver.hpp"
+#include "npu_driver_base.hpp"
 #include "task_submit.hpp"
 #include "stream_c.hpp"
 #include "thread_local_container.hpp"
@@ -2312,4 +2313,212 @@ TEST_F(EventTestDavid, EventStateLog_PreservesQueryResultAndRecordedStatus)
     event->SetRecord(false);
     event->SetRecordStatus(DavidEventState_t::EVT_NOT_RECORDED);
     EXPECT_EQ(rtEventDestroy(handle), RT_ERROR_NONE);
+}
+
+namespace {
+struct CrossEventWaitTestState {
+    TaskInfo task{};
+    uint32_t createCalls{0U};
+    uint32_t openCalls{0U};
+    uint32_t mapCalls{0U};
+    uint32_t unmapCalls{0U};
+    uint32_t closeCalls{0U};
+    uint32_t destroyCalls{0U};
+    uint32_t createType{SHR_ID_TYPE_MAX};
+    bool countNotify{false};
+    drvError_t mapResult{DRV_ERROR_NONE};
+};
+CrossEventWaitTestState* g_crossEventWaitState = nullptr;
+
+static drvError_t CrossEventCreateStub(drvShrIdInfo* info, char* name, uint32_t len)
+{
+    ++g_crossEventWaitState->createCalls;
+    g_crossEventWaitState->createType = info->id_type;
+    EXPECT_EQ(info->devid, 0U);
+    EXPECT_EQ(strcpy_s(name, len, "cross_event_wait"), EOK);
+    info->shrid = 67U;
+    return DRV_ERROR_NONE;
+}
+
+static drvError_t CrossEventOpenStub(const char*, drvShrIdInfo* info)
+{
+    ++g_crossEventWaitState->openCalls;
+    EXPECT_EQ(info->devid, 1U);
+    EXPECT_EQ(info->id_type, g_crossEventWaitState->countNotify ? SHR_ID_CNT_NOTIFY_TYPE : SHR_ID_NOTIFY_TYPE);
+    info->devid = 8U;
+    info->shrid = 91U;
+    info->tsid = 0U;
+    info->flag = 0U;
+    info->rsv[0] = 0U;
+    return DRV_ERROR_NONE;
+}
+
+static drvError_t CrossEventMapStub(uint32_t devId, res_map_info_in* info, res_map_info_out* out)
+{
+    ++g_crossEventWaitState->mapCalls;
+    EXPECT_EQ(devId, 1U);
+    EXPECT_EQ(info->res_id, 91U);
+    EXPECT_EQ(info->id, 0U);
+    EXPECT_EQ(info->target_proc_type, PROCESS_CP1);
+    EXPECT_EQ(
+        info->res_type,
+        g_crossEventWaitState->countNotify ? RES_ADDR_TYPE_STARS_CNT_NOTIFY_RECORD : RES_ADDR_TYPE_STARS_NOTIFY_RECORD);
+    const auto* priv = static_cast<const trs_res_map_priv*>(info->priv);
+    EXPECT_EQ(priv->local_devid, 1U);
+    EXPECT_EQ(priv->remote_devid, 8U);
+    EXPECT_EQ(priv->flag, TSDRV_RES_REMOTE_ID);
+    out->va = 0x100000U;
+    out->len = sizeof(uint32_t);
+    return g_crossEventWaitState->mapResult;
+}
+
+static drvError_t CrossEventUnmapStub(uint32_t devId, res_map_info_in* info)
+{
+    ++g_crossEventWaitState->unmapCalls;
+    EXPECT_EQ(devId, 1U);
+    EXPECT_EQ(info->res_id, 91U);
+    return DRV_ERROR_NONE;
+}
+
+static drvError_t CrossEventCloseStub(const char*, drvIpcNotifyInfo* info)
+{
+    ++g_crossEventWaitState->closeCalls;
+    EXPECT_EQ(info->notifyId, 91U);
+    return DRV_ERROR_NONE;
+}
+
+static drvError_t CrossEventDestroyStub(const char*)
+{
+    ++g_crossEventWaitState->destroyCalls;
+    return DRV_ERROR_NONE;
+}
+
+static rtError_t CrossEventPhyIdStub(Driver*, uint32_t deviceId, uint32_t* phyId)
+{
+    *phyId = deviceId + 8U;
+    return RT_ERROR_NONE;
+}
+
+static TaskInfo* CrossEventAllocTaskStub(
+    Stream* stream, TaskInfo*, tsTaskType_t, rtError_t& error, uint32_t sqeNum, UpdateTaskFlag)
+{
+    auto& task = g_crossEventWaitState->task;
+    task = {};
+    task.stream = stream;
+    task.sqeNum = sqeNum;
+    task.taskSn = 7U;
+    error = RT_ERROR_NONE;
+    return &task;
+}
+
+static void InstallCrossEventWaitStubs(Driver* driver)
+{
+    MOCKER(halShrIdCreate).stubs().will(invoke(CrossEventCreateStub));
+    MOCKER(halShrIdOpen).stubs().will(invoke(CrossEventOpenStub));
+    MOCKER(halShrIdDestroy).stubs().will(invoke(CrossEventDestroyStub));
+    MOCKER(drvCloseIpcNotify).stubs().will(invoke(CrossEventCloseStub));
+    MOCKER(halResAddrMapV2).stubs().will(invoke(CrossEventMapStub));
+    MOCKER(halResAddrUnmapV2).stubs().will(invoke(CrossEventUnmapStub));
+    MOCKER_CPP(NpuDriver::CheckIsSupportFeature).stubs().will(returnValue(true));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::GetDevicePhyIdByIndex).stubs().will(invoke(CrossEventPhyIdStub));
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(static_cast<TaskInfo* (Stream::*)(TaskInfo*, tsTaskType_t, rtError_t&, uint32_t, UpdateTaskFlag)>(
+                   &Stream::AllocTask))
+        .stubs()
+        .will(invoke(CrossEventAllocTaskStub));
+    MOCKER(TaskRollBack).stubs();
+    MOCKER(DavidSendTask).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(SubmitTaskPostProc).stubs().will(returnValue(RT_ERROR_NONE));
+}
+
+static void ExerciseCrossEventWait(EventTestDavid* fixture, bool countNotify, bool failMap)
+{
+    rtStream_t targetHandle = nullptr;
+    Stream* target = nullptr;
+    // 只构造目标设备描述，不初始化第二套设备队列，避免污染公共 HAL 桩的全局 SQ ID 池。
+    // Stream 没有替换 Device 的公开接口；本 UT 仅在调用期间替换并在销毁前恢复。
+    RawDevice targetDevice(1U);
+    targetDevice.SetChipType(CHIP_DAVID);
+    targetDevice.RefreshDevProperties(fixture->device_->GetDevProperties());
+    targetDevice.featureSet_ = static_cast<RawDevice*>(fixture->device_)->featureSet_;
+    targetDevice.driver_ = fixture->device_->Driver_();
+    CrossEventWaitTestState state;
+    state.countNotify = countNotify;
+    state.mapResult = failMap ? DRV_ERROR_INVALID_VALUE : DRV_ERROR_NONE;
+    g_crossEventWaitState = &state;
+    ScopeGuard cleanup([&]() {
+        if (state.task.u.memWaitValueTask.crossDeviceWaitInfo.release != nullptr) {
+            TaskUnInitProc(&state.task);
+        }
+        if (target != nullptr) {
+            target->device_ = fixture->device_;
+        }
+        if (targetHandle != nullptr) {
+            EXPECT_EQ(rtStreamDestroy(targetHandle), RT_ERROR_NONE);
+        }
+        if (countNotify) {
+            EXPECT_EQ(
+                DestroyCrossEventSharedInfo(
+                    fixture->device_, static_cast<DavidStream*>(fixture->stream_)->cntNotifySharedInfo_),
+                RT_ERROR_NONE);
+        }
+        targetDevice.driver_ = nullptr;
+        g_crossEventWaitState = nullptr;
+    });
+    ASSERT_EQ(rtStreamCreate(&targetHandle, 0), RT_ERROR_NONE);
+    target = rt_ut::UnwrapOrNull<Stream>(targetHandle);
+    ASSERT_NE(target, nullptr);
+    target->device_ = &targetDevice;
+    InstallCrossEventWaitStubs(fixture->device_->Driver_());
+    DavidEvent event(fixture->device_, countNotify ? RT_EVENT_DEFAULT : RT_EVENT_DDSYNC, fixture->stream_->Context_());
+    int32_t eventId = INVALID_EVENT_ID;
+    if (countNotify) {
+        ASSERT_EQ(event.AllocEventIdResource(fixture->stream_, eventId), RT_ERROR_NONE);
+        event.SetEventId(eventId);
+        event.SetCntValue(257U);
+    } else {
+        ASSERT_EQ(event.GenEventId(), RT_ERROR_NONE);
+    }
+    const DavidRecordTaskInfo record = {fixture->stream_->Id_(), 1U, 0ULL};
+    event.UpdateLatestRecord(record, DavidEventState_t::EVT_NOT_RECORDED, UINT64_MAX);
+    ApiImplDavid apiImpl;
+    for (uint32_t i = 0U; i < 2U; ++i) {
+        const rtError_t error = apiImpl.StreamWaitEvent(target, &event, 0U, RT_EVENT_WAIT_DEFAULT);
+        ASSERT_EQ(error, failMap ? RT_GET_DRV_ERRCODE(DRV_ERROR_INVALID_VALUE) : RT_ERROR_NONE);
+        if (!failMap) {
+            EXPECT_STREQ(state.task.typeName, "CROSS_DEVICE_EVENT_WAIT");
+            EXPECT_EQ(state.task.u.memWaitValueTask.devAddr, 0x100000U);
+            EXPECT_EQ(state.task.u.memWaitValueTask.value, countNotify ? 257U : 1U);
+            EXPECT_EQ(
+                state.task.u.memWaitValueTask.awSize,
+                countNotify ? RT_STARS_WRITE_VALUE_SIZE_TYPE_32BIT : RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT);
+            rtDavidSqe_t sqes[MEM_WAIT_V2_SQE_NUM] = {};
+            ConstructDavidSqeForMemWaitValueTask(&state.task, sqes, {0ULL, 0ULL});
+            TaskUnInitProc(&state.task);
+        }
+        EXPECT_EQ(state.task.u.memWaitValueTask.crossDeviceWaitInfo.release, nullptr);
+        EXPECT_EQ(state.closeCalls, i + 1U);
+    }
+    EXPECT_EQ(state.createCalls, 1U);
+    EXPECT_EQ(state.createType, countNotify ? SHR_ID_CNT_NOTIFY_TYPE : SHR_ID_NOTIFY_TYPE);
+    EXPECT_EQ(state.openCalls, 2U);
+    EXPECT_EQ(state.mapCalls, 2U);
+    EXPECT_EQ(state.unmapCalls, failMap ? 0U : 2U);
+    EXPECT_EQ(state.destroyCalls, 0U);
+}
+} // namespace
+
+TEST_F(EventTestDavid, CrossDeviceSingleNotifyWaitReusesSharedName)
+{
+    ASSERT_NO_FATAL_FAILURE(ExerciseCrossEventWait(this, false, false));
+}
+
+TEST_F(EventTestDavid, CrossDeviceCountNotifyWaitReusesSharedName)
+{
+    ASSERT_NO_FATAL_FAILURE(ExerciseCrossEventWait(this, true, false));
+}
+
+TEST_F(EventTestDavid, CrossDeviceWaitMapFailureClosesNotifyAndKeepsSharedName)
+{
+    ASSERT_NO_FATAL_FAILURE(ExerciseCrossEventWait(this, false, true));
 }

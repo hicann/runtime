@@ -11,10 +11,30 @@
 #define CCE_RUNTIME_EVENT_RESOURCE_HPP
 
 #include <cstdint>
+#include <mutex>
 
 namespace cce {
 namespace runtime {
 class Event;
+struct tagTaskInfoStru;
+
+constexpr uint32_t IPC_NOTIFY_NAME_BUFFER_LEN = 65U;
+
+struct CrossEventSharedInfo {
+    std::mutex mutex;
+    uint32_t shrId{UINT32_MAX}; // UINT32_MAX 表示共享关系尚未创建
+    char name[IPC_NOTIFY_NAME_BUFFER_LEN]{};
+};
+
+struct CrossEventWaitInfo {
+    void (*release)(tagTaskInfoStru*);
+    uint32_t shrId; // halShrIdOpen 返回的共享资源 ID
+    uint32_t tsId;
+    uint32_t phyId;
+    char name[IPC_NOTIFY_NAME_BUFFER_LEN];
+    bool isCountNotify;
+    bool mapped;
+};
 
 struct EventResource {
     Event* event{nullptr};

@@ -11,6 +11,7 @@
 #define __CCE_RUNTIME_STREAM_DAVID_HPP__
 #include "stream.hpp"
 #include "stars_arg_manager.hpp"
+#include "event_resource.hpp"
 
 namespace cce {
 namespace runtime {
@@ -117,6 +118,8 @@ public:
     rtError_t UpdateMemcpyTaskAndSqe(TaskInfo* task, Stream* const stream) const;
 
 private:
+    friend class DavidEvent;
+
     void BuildTraceEventForTask(TaskInfo* const task, const uint32_t flags, TraceEvent& record) const;
     rtError_t HandleTaskUpdate(
         TaskInfo* workTask, Model* model, uint8_t* sqeBufferBackup, uint32_t sendSqeNum) override;
@@ -134,6 +137,7 @@ private:
 
     std::mutex cntNotifyInfoLock_;
     CntNotifyRes* cntNotifyRes_{nullptr};
+    CrossEventSharedInfo cntNotifySharedInfo_;
     Atomic<uint32_t> recordVersion_{0U};
     uint32_t publicQueueHead_{0U};
     uint32_t publicQueueTail_{0U};

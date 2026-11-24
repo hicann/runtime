@@ -16,6 +16,7 @@
 #include "stream_david.hpp"
 #include "profiler_c.hpp"
 #include "event_david.hpp"
+#include "event_resource.hpp"
 #include "common_task.h"
 #include "event_state_callback_manager.hpp"
 namespace cce {
@@ -175,6 +176,170 @@ rtError_t ProcStreamRecordTask(Stream* const stm, int32_t timeout)
         return error;
     }
     ERROR_RETURN(error, "Failed to recycle task, stream_id=%d, retCode=%#x.", stm->Id_(), static_cast<uint32_t>(error));
+    return RT_ERROR_NONE;
+}
+
+rtError_t GetOrCreateCrossEventSharedInfo(
+    Device* source, uint32_t notifyId, bool isCountNotify, CrossEventSharedInfo& info, char* name, uint32_t len)
+{
+    const std::lock_guard<std::mutex> lock(info.mutex);
+    if (info.shrId == UINT32_MAX) {
+        uint32_t shrId = notifyId;
+        info.name[0] = '\0';
+        const IpcNotifyCreatePara createPara = {
+            info.name, sizeof(info.name), static_cast<int32_t>(source->Id_()), source->DevGetTsId(), 0U, isCountNotify};
+        const rtError_t error = source->Driver_()->CreateIpcNotify(createPara, &shrId);
+        ERROR_RETURN(
+            error, "Failed to create cross-device event shared name, device_id=%u, notify_id=%u.", source->Id_(),
+            notifyId);
+        COND_RETURN_ERROR(
+            info.name[0] == '\0', RT_ERROR_INVALID_VALUE,
+            "Driver returned an empty shared name for a cross-device event, device_id=%u, notify_id=%u.", source->Id_(),
+            notifyId);
+        info.shrId = shrId;
+    }
+    const errno_t ret = strcpy_s(name, len, info.name);
+    COND_RETURN_ERROR(
+        ret != EOK, RT_ERROR_INVALID_VALUE, "Failed to copy cross-device event shared name, ret=%d.", ret);
+    return RT_ERROR_NONE;
+}
+
+rtError_t DestroyCrossEventSharedInfo(Device* source, CrossEventSharedInfo& info)
+{
+    const std::lock_guard<std::mutex> lock(info.mutex);
+    if (info.shrId == UINT32_MAX) {
+        return RT_ERROR_NONE;
+    }
+    const rtError_t error = source->Driver_()->DestroyIpcNotify(
+        info.name, static_cast<int32_t>(source->Id_()), info.shrId, source->DevGetTsId());
+    ERROR_RETURN(
+        error, "Failed to destroy cross-device event shared name, device_id=%u, shrid=%u.", source->Id_(), info.shrId);
+    info.shrId = UINT32_MAX;
+    info.name[0] = '\0';
+    return RT_ERROR_NONE;
+}
+
+static void ReleaseCrossEventWaitResource(TaskInfo* const task)
+{
+    auto& waitInfo = task->u.memWaitValueTask;
+    auto& info = waitInfo.crossDeviceWaitInfo;
+    Event* event = waitInfo.event;
+    info.release = nullptr;
+    waitInfo.event = nullptr;
+    Device* const target = task->stream->Device_();
+    if (info.mapped) {
+        (void)ReleaseCrossEventVa(info.shrId, target->Id_(), info.phyId, info.isCountNotify);
+        (void)target->Driver_()->CloseIpcNotify(info.name, static_cast<int32_t>(target->Id_()), info.shrId, info.tsId);
+    }
+    info = {};
+    DavidUpdateAndTryToDestroyEvent(task, &event, DavidTaskMapType::TASK_MAP_TYPE_WAIT_MAP);
+}
+
+static rtError_t PrepareCrossEventWait(Device* const target, CrossEventWaitInfo& info, uint64_t& addr)
+{
+    uint32_t isPod = 0U;
+    uint32_t adcDieId = 0U;
+    const uint32_t flag = RT_NOTIFY_IMPORT_FLAG_ENABLE_PEER_ACCESS;
+    const IpcNotifyOpenPara open = {info.name, flag, target->Id_(), target->DevGetTsId(), info.isCountNotify};
+    rtError_t error = target->Driver_()->OpenIpcNotify(open, &info.phyId, &info.shrId, &info.tsId, &isPod, &adcDieId);
+    COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
+    ScopeGuard closeNotify([&]() {
+        (void)target->Driver_()->CloseIpcNotify(info.name, static_cast<int32_t>(target->Id_()), info.shrId, info.tsId);
+    });
+    COND_RETURN_WARN(
+        isPod != 0U, RT_ERROR_FEATURE_NOT_SUPPORT, "Cross-server event resource mappings are not supported.");
+    uint32_t localPhyId = 0U;
+    error = target->Driver_()->GetDevicePhyIdByIndex(target->Id_(), &localPhyId);
+    COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
+    COND_RETURN_WARN(
+        localPhyId == info.phyId, RT_ERROR_FEATURE_NOT_SUPPORT,
+        "Cross-device event mapping requires different physical devices, device_id=%u.", target->Id_());
+    error = GetCrossEventVa(info.shrId, target->Id_(), info.phyId, info.isCountNotify, addr);
+    COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
+    info.mapped = true;
+    closeNotify.ReleaseGuard();
+    return target->Driver_()->EnableP2PNotify(target->Id_(), info.phyId, flag);
+}
+
+rtError_t CheckEventBeforeWait(DavidEvent* const evt, Stream* const stm, bool& needWait)
+{
+    COND_RETURN_WARN(
+        evt->IsCapturing() || stm->IsCapturing(), RT_ERROR_FEATURE_NOT_SUPPORT,
+        "Cross-device event waits are not supported in capture mode.");
+    COND_RETURN_WARN(
+        !evt->IsHardwareMode(), RT_ERROR_FEATURE_NOT_SUPPORT, "Cross-device software event waits are not supported.");
+
+    int32_t eventId = INVALID_EVENT_ID;
+    needWait = evt->WaitSendCheck(stm, eventId);
+    if (!needWait) {
+        RT_LOG(RT_LOG_INFO, "no need wait, return success, event_id=%d", eventId);
+        return RT_ERROR_NONE;
+    }
+
+    COND_RETURN_AND_MSG_OUTER(
+        ((evt->GetEventFlag() & (RT_EVENT_DDSYNC_NS | RT_EVENT_EXTERNAL)) == 0U) && !evt->HasRecord(),
+        RT_ERROR_INVALID_VALUE, ErrorCode::EE1018, "Waiting for an event",
+        "Waiting for this event requires a prior Record operation. "
+        "Call aclrtRecordEvent on a stream before waiting for the event");
+    COND_RETURN_ERROR(
+        eventId == INVALID_EVENT_ID, RT_ERROR_INVALID_VALUE, "Cannot share an invalid event ID, device_id=%u.",
+        evt->Device_()->Id_());
+
+    const rtError_t error = CheckTaskCanSend(stm);
+    ERROR_RETURN(error, "Failed to check stream, stream_id=%d, retCode=%#x.", stm->Id_(), static_cast<uint32_t>(error));
+
+    COND_RETURN_WARN(
+        stm->GetBindFlag() || stm->IsModelStream(), RT_ERROR_FEATURE_NOT_SUPPORT,
+        "Cross-device event waits require an unbound target stream.");
+    COND_RETURN_WARN(
+        !stm->Device_()->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_NOTIFY_USER_VA_MAPPING),
+        RT_ERROR_FEATURE_NOT_SUPPORT, "The device does not support mapped notify resources.");
+    return RT_ERROR_NONE;
+}
+
+rtError_t CrossEvtWait(DavidEvent* const evt, Stream* const stm)
+{
+    const bool isCountNotify = evt->IsCntNotify();
+    CrossEventWaitInfo info{};
+    rtError_t error = evt->GetCrossDeviceIpcName(info.name, sizeof(info.name));
+    COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
+    info.release = &ReleaseCrossEventWaitResource;
+    info.isCountNotify = isCountNotify;
+    stm->StreamLock();
+    TaskInfo* const tsk = stm->AllocTask(nullptr, TS_TASK_TYPE_MEM_WAIT_VALUE, error, MEM_WAIT_V2_SQE_NUM);
+    if (tsk == nullptr) {
+        stm->StreamUnLock();
+        return error;
+    }
+    Stream* const target = tsk->stream;
+    const uint32_t pos = tsk->id;
+    ScopeGuard rollback([&]() {
+        TaskUnInitProc(tsk);
+        TaskRollBack(target, pos);
+        stm->StreamUnLock();
+    });
+    tsk->type = TS_TASK_TYPE_MEM_WAIT_VALUE;
+    const uint64_t waitValue = isCountNotify ? static_cast<uint64_t>(evt->CntValue()) : 1ULL;
+    error = MemWaitValueTaskInit(tsk, nullptr, waitValue, MEM_WAIT_VALUE_TYPE_GEQ);
+    COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
+    evt->InsertWaitToMap(tsk);
+    auto& waitInfo = tsk->u.memWaitValueTask;
+    waitInfo.crossDeviceWaitInfo = info;
+    waitInfo.event = evt;
+    error = PrepareCrossEventWait(target->Device_(), waitInfo.crossDeviceWaitInfo, waitInfo.devAddr);
+    COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
+    tsk->typeName = "CROSS_DEVICE_EVENT_WAIT";
+    tsk->needPostProc = true;
+    waitInfo.awSize = isCountNotify ? RT_STARS_WRITE_VALUE_SIZE_TYPE_32BIT : RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT;
+    tsk->stmArgPos = static_cast<DavidStream*>(target)->GetArgPos();
+    error = DavidSendTask(tsk, target);
+    COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
+    rollback.ReleaseGuard();
+    stm->StreamUnLock();
+    SET_THREAD_TASKID_AND_STREAMID(target->GetExposedStreamId(), tsk->taskSn);
+    error = SubmitTaskPostProc(target, pos);
+    COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
+    EventStateCallbackManager::Instance().Notify(stm, evt, EventStatePeriod::EVENT_STATE_PERIOD_WAIT);
     return RT_ERROR_NONE;
 }
 

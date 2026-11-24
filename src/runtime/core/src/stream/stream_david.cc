@@ -126,6 +126,7 @@ bool DavidStream::ReleaseDriverResourcesOnDestroy()
     {
         const std::lock_guard<std::mutex> notifyLock(cntNotifyInfoLock_);
         if (cntNotifyRes_ != nullptr) {
+            (void)DestroyCrossEventSharedInfo(device_, cntNotifySharedInfo_);
             cntNotifyRes_->ReleaseOwner(); // owner 引用；归零则 NotifyIdFree + delete
             cntNotifyRes_ = nullptr;
         }

@@ -392,9 +392,7 @@ public:
         const int32_t deviceId, const uint32_t id, const uint32_t tsId, const uint32_t notifyFlag = 0,
         const bool isCountNotify = false) override;
     // Create IPC Notify
-    rtError_t CreateIpcNotify(
-        char_t* const name, const uint32_t len, const int32_t devId, uint32_t* const notifyId, const uint32_t tsId,
-        const uint32_t notifyFlag = 0) override;
+    rtError_t CreateIpcNotify(const IpcNotifyCreatePara& createPara, uint32_t* const notifyId) override;
 
     // Destroy IPC Notify
     rtError_t DestroyIpcNotify(
@@ -850,10 +848,6 @@ private:
         const DevMemAllocConfig* const config = &defaultDevMemAllocConfig) const;
 
     rtError_t transMemAttribute(const uint32_t memPolicy, rtMemType_t* const type) const;
-
-    rtError_t CreateIpcNotifyWithFlag(
-        char_t* const name, const uint32_t len, const int32_t devId, uint32_t* const notifyId, const uint32_t tsId,
-        const uint32_t notifyFlag) const;
 
     rtError_t GetSqRegVirtualAddrBySqidForDavid(
         const int32_t deviceId, const uint32_t tsId, const uint32_t sqId, uint64_t* const addr) const;
