@@ -270,6 +270,11 @@ public:
     virtual rtError_t RegisterAndLaunchDcacheLockOp(Context* ctx) = 0;
     virtual rtError_t SendTopicMsgVersionToAicpu() = 0;
     virtual const DevProperties& GetDevProperties(void) const = 0;
+    // Cache the registered process functions once during device initialization.
+    virtual void InitDevInfoProcFuncCache() = 0;
+    // Returns only the process functions cached during device initialization. Use GET_DEV_INFO_PROC_FUNC to query
+    // process functions registered after device initialization.
+    virtual const DevDynInfoProcFunc& GetCachedDevInfoProcFunc() const = 0;
     virtual void RefreshDevProperties(const DevProperties& props) = 0;
     virtual rtError_t SetQosCfg(const QosMasterConfigType& qosCfg, uint32_t index) = 0;
     bool IsStarsPlatform() const { return GetDevProperties().isStars; }

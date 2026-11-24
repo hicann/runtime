@@ -2416,19 +2416,20 @@ rtError_t ApiImpl::DevMalloc(void** const devPtr, const uint64_t size, const rtM
 {
     RT_LOG(RT_LOG_DEBUG, "size=%" PRIu64 ", type=%u, moduleId=%hu.", size, type, moduleId);
 
-    DevDynInfoProcFunc func{};
-    if ((GET_DEV_INFO_PROC_FUNC(Runtime::Instance()->GetChipType(), func) == RT_ERROR_NONE) &&
-        (func.memProcFunc.devMalloc != nullptr)) {
-        return func.memProcFunc.devMalloc(devPtr, size, type, moduleId);
-    }
-
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    Device* const device = curCtx->Device_();
+    NULL_PTR_RETURN_MSG(device, RT_ERROR_DEVICE_NULL);
+
+    const auto devMalloc = device->GetCachedDevInfoProcFunc().memProcFunc.devMalloc;
+    if (devMalloc != nullptr) {
+        return devMalloc(devPtr, size, type, moduleId);
+    }
 
     const uint64_t tmpSize = (((size + 0x1FU) >> 5U) << 5U); // 32 byte align
 
-    auto driver = curCtx->Device_()->Driver_();
-    const uint32_t devId = curCtx->Device_()->Id_();
+    auto driver = device->Driver_();
+    const uint32_t devId = device->Id_();
     DevMemAllocConfig allocConfig = {};
     allocConfig.moduleId = moduleId;
     allocConfig.isLogError = false;
@@ -2554,18 +2555,16 @@ rtError_t ApiImpl::MemCopySync(
         ContextManage::ReportContextValidationError();
         return RT_ERROR_CONTEXT_NULL;
     }
+    Device* device = curCtx->Device_();
+    NULL_PTR_RETURN_MSG(device, RT_ERROR_INVALID_VALUE);
 
-    DevDynInfoProcFunc func{};
-    if ((GET_DEV_INFO_PROC_FUNC(Runtime::Instance()->GetChipType(), func) == RT_ERROR_NONE) &&
-        (func.memProcFunc.memCopySync != nullptr)) {
+    const auto memCopySync = device->GetCachedDevInfoProcFunc().memProcFunc.memCopySync;
+    if (memCopySync != nullptr) {
         CHECK_CAPTURE_MODE_SUPPORT_AND_RETURN_WITH_FUNC_DESC(curCtx, "Synchronous memory copy");
-
-        const rtError_t callbackError = func.memProcFunc.memCopySync(dst, destMax, src, cnt, kind);
+        const rtError_t callbackError = memCopySync(dst, destMax, src, cnt, kind);
         COND_RETURN_WITH_NOLOG(callbackError != RT_ERROR_CONTINUE_EXECUTE, callbackError);
     }
 
-    Device* device = curCtx->Device_();
-    NULL_PTR_RETURN_MSG(device, RT_ERROR_INVALID_VALUE);
     const rtError_t error = device->GetDeviceStatus();
     COND_PROC((error == RT_ERROR_DEVICE_TASK_ABORT), return error);
 

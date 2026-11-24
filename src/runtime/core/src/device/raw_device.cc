@@ -157,10 +157,8 @@ RawDevice::~RawDevice() noexcept
         return;
     }
 
-    DevDynInfoProcFunc devInfoProcFunc{};
-    if ((GET_DEV_INFO_PROC_FUNC(chipType_, devInfoProcFunc) == RT_ERROR_NONE) &&
-        (devInfoProcFunc.ccProcFunc.devResourceRelease != nullptr)) {
-        devInfoProcFunc.ccProcFunc.devResourceRelease(deviceId_);
+    if (devInfoProcFuncCache_.ccProcFunc.devResourceRelease != nullptr) {
+        devInfoProcFuncCache_.ccProcFunc.devResourceRelease(deviceId_);
     }
 
     ReleaseOwnedObjectsOnDestroy();
@@ -614,6 +612,19 @@ bool RawDevice::IsSupportFeature(RtOptionalFeatureType f) const
         return false;
     }
     return featureSet_[index];
+}
+
+void RawDevice::InitDevInfoProcFuncCache()
+{
+    DevDynInfoProcFunc procFunc{};
+    const rtError_t error = GET_DEV_INFO_PROC_FUNC(chipType_, procFunc);
+    if (error != RT_ERROR_NONE) {
+        RT_LOG(
+            RT_LOG_DEBUG, "Device process functions are not registered, chipType=%d, device_id=%u, retCode=%#x.",
+            static_cast<int32_t>(chipType_), deviceId_, static_cast<uint32_t>(error));
+        return;
+    }
+    devInfoProcFuncCache_ = procFunc;
 }
 
 rtError_t RawDevice::Init()

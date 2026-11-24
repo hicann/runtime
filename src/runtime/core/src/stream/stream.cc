@@ -331,9 +331,8 @@ Stream::~Stream()
         // CC 模式回调：释放 Stream 级 CC BAR 资源并取消未执行任务。
         // 时序保证：Worker 处理任务期间持有 shared_ptr<Stream>，~Stream 在所有引用释放后才执行，
         // 因此回调不会与执行中的 Worker 并发访问 CCStreamResManage。回调仅在 CC 模式注册。
-        DevDynInfoProcFunc func{};
-        if ((GET_DEV_INFO_PROC_FUNC(rt->GetChipType(), func) == RT_ERROR_NONE) &&
-            (func.ccProcFunc.streamResDestroy != nullptr)) {
+        const DevDynInfoProcFunc& func = device_->GetCachedDevInfoProcFunc();
+        if (func.ccProcFunc.streamResDestroy != nullptr) {
             func.ccProcFunc.streamResDestroy(this);
         }
 

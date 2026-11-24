@@ -41,10 +41,9 @@ rtError_t MemcopyAsyncPtr(
     InitStarsSdmaSqeForDavid(&sdmaSqe, cfgInfo, stm);
     RT_LOG(RT_LOG_INFO, "memcpyAddrInfo=0x%lx, qos=%u", RtPtrToValue(memcpyAddrInfo), sdmaSqe.qos);
 
-    DevDynInfoProcFunc func{};
-    if ((GET_DEV_INFO_PROC_FUNC(Runtime::Instance()->GetChipType(), func) == RT_ERROR_NONE) &&
-        (func.memProcFunc.memCopySync != nullptr)) {
-        error = func.memProcFunc.memCopySync(memcpyAddrInfo, cpySize, &sdmaSqe, cpySize, RT_MEMCPY_HOST_TO_DEVICE);
+    const auto memCopySync = dev->GetCachedDevInfoProcFunc().memProcFunc.memCopySync;
+    if (memCopySync != nullptr) {
+        error = memCopySync(memcpyAddrInfo, cpySize, &sdmaSqe, cpySize, RT_MEMCPY_HOST_TO_DEVICE);
     } else {
         error = dev->Driver_()->MemCopySync(memcpyAddrInfo, cpySize, &sdmaSqe, cpySize, RT_MEMCPY_HOST_TO_DEVICE);
     }

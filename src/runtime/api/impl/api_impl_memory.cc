@@ -193,21 +193,21 @@ rtError_t ApiImpl::MemCopy2DSync(
         "sync memcpy2d, dstPitch=%" PRIu64 ", srcPitch=%" PRIu64 ", width=%" PRIu64 ", height=%" PRIu64 ", kind=%s.",
         dstPitch, srcPitch, width, height, MemcpyKindToStr(kind));
 
-    DevDynInfoProcFunc func{};
-    if ((GET_DEV_INFO_PROC_FUNC(Runtime::Instance()->GetChipType(), func) == RT_ERROR_NONE) &&
-        (func.memProcFunc.memCopy2DSync != nullptr)) {
-        const rtError_t callbackError =
-            func.memProcFunc.memCopy2DSync(dst, dstPitch, src, srcPitch, width, height, kind, newKind);
-        COND_RETURN_WITH_NOLOG(callbackError != RT_ERROR_CONTINUE_EXECUTE, callbackError);
-    }
-
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    Device* const device = curCtx->Device_();
+    NULL_PTR_RETURN_MSG(device, RT_ERROR_DEVICE_NULL);
+
+    const auto memCopy2DSync = device->GetCachedDevInfoProcFunc().memProcFunc.memCopy2DSync;
+    if (memCopy2DSync != nullptr) {
+        const rtError_t callbackError = memCopy2DSync(dst, dstPitch, src, srcPitch, width, height, kind, newKind);
+        COND_RETURN_WITH_NOLOG(callbackError != RT_ERROR_CONTINUE_EXECUTE, callbackError);
+    }
 
     CHECK_CAPTURE_MODE_SUPPORT_AND_RETURN_WITH_FUNC_DESC(curCtx, "Synchronous 2D memory copy");
 
     TIMESTAMP_BEGIN(MemCopy2D);
-    const rtError_t ret = curCtx->Device_()->Driver_()->MemCopy2D(
+    const rtError_t ret = device->Driver_()->MemCopy2D(
         dst, dstPitch, src, srcPitch, width, height, kind, static_cast<uint32_t>(DEVMM_MEMCPY2D_SYNC), 0UL, nullptr);
     TIMESTAMP_END(MemCopy2D);
 
@@ -401,16 +401,15 @@ rtError_t ApiImpl::DevMalloc(
     }
     RT_LOG(RT_LOG_INFO, "type=%#x.", type);
 
-    DevDynInfoProcFunc func{};
-    if ((GET_DEV_INFO_PROC_FUNC(Runtime::Instance()->GetChipType(), func) == RT_ERROR_NONE) &&
-        (func.memProcFunc.devMallocWithCfg != nullptr)) {
-        return func.memProcFunc.devMallocWithCfg(devPtr, tmpSize, type, realDeviceId, cfgVal.moduleId);
+    Device* const device = curCtx->Device_();
+    const auto devMallocWithCfg = device->GetCachedDevInfoProcFunc().memProcFunc.devMallocWithCfg;
+    if (devMallocWithCfg != nullptr) {
+        return devMallocWithCfg(devPtr, tmpSize, type, realDeviceId, cfgVal.moduleId);
     }
     DevMemAllocConfig allocConfig = {};
     allocConfig.moduleId = cfgVal.moduleId;
     const uint64_t drvFlag = NpuDriver::BuildDevMemAllocFlag(realDeviceId, &allocConfig);
-    return (curCtx->Device_()->Driver_())
-        ->DevMemAllocWithFlag(devPtr, tmpSize, type, realDeviceId, &allocConfig, drvFlag);
+    return device->Driver_()->DevMemAllocWithFlag(devPtr, tmpSize, type, realDeviceId, &allocConfig, drvFlag);
 }
 
 rtError_t ApiImpl::MemcpyBatch(
@@ -419,10 +418,13 @@ rtError_t ApiImpl::MemcpyBatch(
 {
     RT_LOG(RT_LOG_DEBUG, "Start to batch memcpy, count=%zd, numAttrs=%zd.", count, numAttrs);
 
-    DevDynInfoProcFunc func{};
-    if ((GET_DEV_INFO_PROC_FUNC(Runtime::Instance()->GetChipType(), func) == RT_ERROR_NONE) &&
-        (func.memProcFunc.memcpyBatch != nullptr)) {
-        return func.memProcFunc.memcpyBatch(dsts, srcs, sizes, count, attrs, attrsIdxs, numAttrs, failIdx);
+    Context* const curCtx = CurrentContext();
+    CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
+    Device* const device = curCtx->Device_();
+    NULL_PTR_RETURN_MSG(device, RT_ERROR_DEVICE_NULL);
+    const auto memcpyBatch = device->GetCachedDevInfoProcFunc().memProcFunc.memcpyBatch;
+    if (memcpyBatch != nullptr) {
+        return memcpyBatch(dsts, srcs, sizes, count, attrs, attrsIdxs, numAttrs, failIdx);
     }
 
     rtError_t error;

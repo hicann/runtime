@@ -57,6 +57,11 @@ static uint32_t g_expectAicCondIndex = 1U;
 static RawDevice* g_deferredSyncArgsDevice = nullptr;
 static SyncFuncArgs* g_deferredSyncArgs = nullptr;
 
+static rtError_t MemCopySyncCallbackStub(void*, const uint64_t, const void*, const uint64_t, const rtMemcpyKind_t)
+{
+    return RT_ERROR_NONE;
+}
+
 static void ObserveDeferredSyncArgsDestroy(SyncFuncArgs* const args)
 {
     EXPECT_EQ(args, g_deferredSyncArgs);
@@ -147,6 +152,24 @@ class AiCoreTaskSyncCheckDeviceTest : public testing::Test {
 protected:
     void TearDown() override { GlobalMockObject::verify(); }
 };
+
+TEST_F(DeviceTest, InitDevInfoProcFuncCachesRegisteredTable)
+{
+    DevDynInfoProcFunc original{};
+    ASSERT_EQ(GET_DEV_INFO_PROC_FUNC(CHIP_910_B_93, original), RT_ERROR_NONE);
+    const ScopeGuard restore(
+        [&original]() { (void)DevInfoManage::Instance().RegDevInfoProcFunc(CHIP_910_B_93, original); });
+
+    DevDynInfoProcFunc expected = original;
+    expected.memProcFunc.memCopySync = &MemCopySyncCallbackStub;
+    ASSERT_TRUE(DevInfoManage::Instance().RegDevInfoProcFunc(CHIP_910_B_93, expected));
+
+    RawDevice device(0U);
+    device.chipType_ = CHIP_910_B_93;
+    device.InitDevInfoProcFuncCache();
+    ASSERT_TRUE(DevInfoManage::Instance().RegDevInfoProcFunc(CHIP_910_B_93, original));
+    EXPECT_EQ(device.GetCachedDevInfoProcFunc().memProcFunc.memCopySync, &MemCopySyncCallbackStub);
+}
 
 TEST_F(AiCoreTaskSyncCheckDeviceTest, FeatureUnsupportedSkipsEnvironmentAndDriver)
 {

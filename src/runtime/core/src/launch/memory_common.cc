@@ -260,10 +260,9 @@ rtError_t MemSetAsync(
 rtError_t DevMemSetAsyncByMemcpy(
     Stream* const stm, void* const ptr, const uint64_t destMax, const uint32_t fillVal, const uint64_t fillCount)
 {
-    DevDynInfoProcFunc func{};
-    if ((GET_DEV_INFO_PROC_FUNC(Runtime::Instance()->GetChipType(), func) == RT_ERROR_NONE) &&
-        (func.memProcFunc.devMemsetAsync != nullptr)) {
-        const rtError_t callbackError = func.memProcFunc.devMemsetAsync(stm, ptr, destMax, fillVal, fillCount);
+    const auto devMemsetAsync = stm->Device_()->GetCachedDevInfoProcFunc().memProcFunc.devMemsetAsync;
+    if (devMemsetAsync != nullptr) {
+        const rtError_t callbackError = devMemsetAsync(stm, ptr, destMax, fillVal, fillCount);
         COND_RETURN_WITH_NOLOG(callbackError != RT_ERROR_CONTINUE_EXECUTE, callbackError);
     }
     void* hostPtr = nullptr;

@@ -3803,12 +3803,12 @@ TEST_F(TaskTest, TestTaskFailCallBackWithRawAicpuExceptionInfo)
     MOCKER(GetTaskInfo).stubs().will(returnValue(&taskInfo));
     MOCKER_CPP(&TaskFactory::GetTask).stubs().will(returnValue(&taskInfo));
 
-    DevDynInfoProcFunc procFunc{};
-    procFunc.memProcFunc.memCopySync = &RawAicpuMemCopyCallback;
-    MOCKER_CPP(&DevInfoManage::GetDevInfoProcFunc)
-        .stubs()
-        .with(mockcpp::any(), outBound(procFunc))
-        .will(returnValue(RT_ERROR_NONE));
+    RawDevice* const device = static_cast<RawDevice*>(stream_->Device_());
+    ASSERT_NE(device, nullptr);
+    const DevDynInfoProcFunc originalProcFunc = device->devInfoProcFuncCache_;
+    const ScopeGuard restoreProcFunc(
+        [device, originalProcFunc]() { device->devInfoProcFuncCache_ = originalProcFunc; });
+    device->devInfoProcFuncCache_.memProcFunc.memCopySync = &RawAicpuMemCopyCallback;
     g_rawAicpuMemCopyCallbackResult = RT_ERROR_NONE;
 
     TaskFailCallBack(
@@ -3875,12 +3875,12 @@ TEST_F(TaskTest, TestTaskFailCallBackHandlesRawAicpuNameCopyFailure)
     MOCKER(GetTaskInfo).stubs().will(returnValue(&taskInfo));
     MOCKER_CPP(&TaskFactory::GetTask).stubs().will(returnValue(&taskInfo));
 
-    DevDynInfoProcFunc procFunc{};
-    procFunc.memProcFunc.memCopySync = &RawAicpuMemCopyCallback;
-    MOCKER_CPP(&DevInfoManage::GetDevInfoProcFunc)
-        .stubs()
-        .with(mockcpp::any(), outBound(procFunc))
-        .will(returnValue(RT_ERROR_NONE));
+    RawDevice* const device = static_cast<RawDevice*>(stream_->Device_());
+    ASSERT_NE(device, nullptr);
+    const DevDynInfoProcFunc originalProcFunc = device->devInfoProcFuncCache_;
+    const ScopeGuard restoreProcFunc(
+        [device, originalProcFunc]() { device->devInfoProcFuncCache_ = originalProcFunc; });
+    device->devInfoProcFuncCache_.memProcFunc.memCopySync = &RawAicpuMemCopyCallback;
     g_rawAicpuMemCopyCallbackResult = RT_ERROR_CONTINUE_EXECUTE;
 
     NpuDriver drv;

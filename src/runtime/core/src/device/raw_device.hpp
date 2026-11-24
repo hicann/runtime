@@ -548,6 +548,9 @@ public:
 
     const DevProperties& GetDevProperties(void) const override { return properties_; }
 
+    void InitDevInfoProcFuncCache() override;
+    const DevDynInfoProcFunc& GetCachedDevInfoProcFunc() const override { return devInfoProcFuncCache_; }
+
     void RefreshDevProperties(const DevProperties& props) override { properties_ = props; }
 
     std::map<std::pair<uint32_t, uint32_t>, std::vector<rtExceptionErrRegInfo_t>>& GetExceptionRegMap() override
@@ -745,6 +748,7 @@ private:
     bool isDrvSupportPinRegister_ = false;
     std::array<bool, FEATURE_MAX_VALUE> featureSet_{};
     DevProperties properties_;
+    DevDynInfoProcFunc devInfoProcFuncCache_{};
     std::unordered_set<Event*> events_;
     std::mutex eventLock_;
     std::unordered_set<Notify*> notifies_;

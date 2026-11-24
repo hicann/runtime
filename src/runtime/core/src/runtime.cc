@@ -3361,6 +3361,8 @@ Device* Runtime::DeviceRetain(const uint32_t devId, const uint32_t tsId)
                 (devInfoProcFunc.ccProcFunc.devResourceInit != nullptr)) {
                 error = devInfoProcFunc.ccProcFunc.devResourceInit(dev);
                 if (error != RT_ERROR_NONE) {
+                    // Cache the release callback for device rollback.
+                    dev->InitDevInfoProcFuncCache();
                     dev->SetDeviceRelease();
                     (void)dev->Stop();
                     ERROR_GOTO(
@@ -3368,6 +3370,7 @@ Device* Runtime::DeviceRetain(const uint32_t devId, const uint32_t tsId)
                         devId, static_cast<uint32_t>(error));
                 }
             }
+            dev->InitDevInfoProcFuncCache();
 
             if (!IS_SUPPORT_CHIP_FEATURE(chipType_, RtOptionalFeatureType::RT_FEATURE_DFX_ATRACE)) {
                 InitAtrace(dev, curAtraceHandle);

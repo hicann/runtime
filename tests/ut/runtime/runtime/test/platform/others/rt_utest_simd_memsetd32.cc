@@ -34,6 +34,13 @@
 #include "task_base.hpp"
 using namespace cce::runtime;
 
+namespace {
+rtError_t DeviceMemset32Stub(void*, const uint64_t, const uint32_t, const uint64_t, Stream*, const bool)
+{
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+} // namespace
+
 // 测试 MemsetD32Optimized 对齐地址填充
 class MemsetTaskTest : public testing::Test {
 protected:
@@ -171,8 +178,21 @@ TEST_F(MemsetTaskTest, MemsetD32OnHost_zero_count)
 
 TEST_F(MemsetTaskTest, MemsetD32OnDevice_totalBytes_exceeds_destMax)
 {
-    rtError_t error = MemsetD32OnDevice(nullptr, 8U, 0xABABABABU, 10U, nullptr, false);
+    rtError_t error = MemsetD32OnDevice(nullptr, 8U, 0xABABABABU, 10U, nullptr, false, 0U, nullptr);
     EXPECT_EQ(error, RT_ERROR_INVALID_VALUE);
+}
+
+TEST_F(MemsetTaskTest, MemsetD32OnDeviceUsesExplicitDeviceCallback)
+{
+    RawDevice* const device = static_cast<RawDevice*>(Runtime::Instance()->CurrentContext()->Device_());
+    ASSERT_NE(device, nullptr);
+    const DevDynInfoProcFunc originalProcFunc = device->devInfoProcFuncCache_;
+    const ScopeGuard restoreProcFunc(
+        [device, originalProcFunc]() { device->devInfoProcFuncCache_ = originalProcFunc; });
+    device->devInfoProcFuncCache_.memProcFunc.devMemset32 = &DeviceMemset32Stub;
+
+    EXPECT_EQ(
+        MemsetD32OnDevice(nullptr, 0U, 0U, 0U, nullptr, false, device->Id_(), device), RT_ERROR_FEATURE_NOT_SUPPORT);
 }
 
 // 场景：D8 MemsetOnDeviceByBatch 已移除，D8 回退 V1 baseline 全走 drvMemsetD8
@@ -193,7 +213,8 @@ TEST_F(MemsetTaskTest, MemsetD32OnDevice_sync_small_size_skip_batch)
     if (Runtime::Instance()->CurrentContext() == nullptr) {
         GTEST_SKIP() << "No device context";
     }
-    rtError_t error = MemsetD32OnDevice(nullptr, 1024U, 0xABABABABU, 4U, nullptr, false);
+    Device* const device = Runtime::Instance()->CurrentContext()->Device_();
+    rtError_t error = MemsetD32OnDevice(nullptr, 1024U, 0xABABABABU, 4U, nullptr, false, 0U, device);
     EXPECT_NE(error, RT_ERROR_NONE);
 }
 
@@ -203,7 +224,7 @@ TEST_F(MemsetTaskTest, MemsetD32OnDevice_async_path_unchanged)
     if (Runtime::Instance()->CurrentContext() == nullptr) {
         GTEST_SKIP() << "No device context";
     }
-    rtError_t error = MemsetD32OnDevice(nullptr, 1024U, 0xABABABABU, 4U, nullptr, true);
+    rtError_t error = MemsetD32OnDevice(nullptr, 1024U, 0xABABABABU, 4U, nullptr, true, 0U, nullptr);
     EXPECT_NE(error, RT_ERROR_NONE);
 }
 
@@ -255,7 +276,8 @@ TEST_F(MemsetTaskTest, MemsetD32OnDevice_sync_threshold_goes_batch)
     MOCKER(halMemcpyBatch).stubs().will(returnValue(DRV_ERROR_NONE));
 
     const uint64_t count = MEMSET_D32_THRESHOLD / sizeof(uint32_t);
-    rtError_t error = MemsetD32OnDevice(nullptr, MEMSET_D32_THRESHOLD, 0xABABABABU, count, nullptr, false);
+    Device* const device = Runtime::Instance()->CurrentContext()->Device_();
+    rtError_t error = MemsetD32OnDevice(nullptr, MEMSET_D32_THRESHOLD, 0xABABABABU, count, nullptr, false, 0U, device);
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
@@ -268,7 +290,8 @@ TEST_F(MemsetTaskTest, MemsetD32OnDevice_sync_below_threshold_goes_bymemcpy)
     const uint64_t belowThreshold = MEMSET_D32_THRESHOLD - 4U;
     const uint64_t count = belowThreshold / sizeof(uint32_t);
     // Below threshold, ByMemcpy path is taken, which will fail with nullptr dst
-    rtError_t error = MemsetD32OnDevice(nullptr, belowThreshold, 0xABABABABU, count, nullptr, false);
+    Device* const device = Runtime::Instance()->CurrentContext()->Device_();
+    rtError_t error = MemsetD32OnDevice(nullptr, belowThreshold, 0xABABABABU, count, nullptr, false, 0U, device);
     EXPECT_NE(error, RT_ERROR_NONE);
 }
 

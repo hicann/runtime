@@ -667,7 +667,7 @@ rtError_t ApiImpl::MemsetD32(void* const dst, const uint64_t destMax, const uint
     if (attr.location.type == RT_MEMORY_LOC_HOST || attr.location.type == RT_MEMORY_LOC_HOST_NUMA) {
         return MemsetD32OnHost(dst, destMax, value, count);
     } else {
-        return MemsetD32OnDevice(dst, destMax, value, count, nullptr, false, attr.location.id);
+        return MemsetD32OnDevice(dst, destMax, value, count, nullptr, false, attr.location.id, device);
     }
 }
 
@@ -702,7 +702,7 @@ rtError_t ApiImpl::MemsetD32Async(
         COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
             curStm, curCtx, RT_ERROR_STREAM_CONTEXT,
             "Setting the memory content to a specified 32-bit unsigned integer value asynchronously");
-        return MemsetD32OnDevice(dst, destMax, value, count, curStm, true, attr.location.id);
+        return MemsetD32OnDevice(dst, destMax, value, count, curStm, true, attr.location.id, curStm->Device_());
     }
 }
 

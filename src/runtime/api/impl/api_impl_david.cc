@@ -765,11 +765,9 @@ rtError_t ApiImplDavid::SetMemcpyDesc(
 
     constexpr uint64_t dstMax = MEMCPY_DESC_SIZE_V2; // 64U
 
-    DevDynInfoProcFunc func{};
-    if ((GET_DEV_INFO_PROC_FUNC(Runtime::Instance()->GetChipType(), func) == RT_ERROR_NONE) &&
-        (func.memProcFunc.memCopySync != nullptr)) {
-        const rtError_t callbackError =
-            func.memProcFunc.memCopySync(desc, dstMax, &memcpyData, dstMax, RT_MEMCPY_HOST_TO_DEVICE);
+    const auto memCopySync = dev->GetCachedDevInfoProcFunc().memProcFunc.memCopySync;
+    if (memCopySync != nullptr) {
+        const rtError_t callbackError = memCopySync(desc, dstMax, &memcpyData, dstMax, RT_MEMCPY_HOST_TO_DEVICE);
         COND_RETURN_WITH_NOLOG(callbackError != RT_ERROR_CONTINUE_EXECUTE, callbackError);
     }
 
@@ -801,21 +799,6 @@ rtError_t ApiImplDavid::MemCopy2DAsync(
         "Sync memcpy2d, dstPitch=%" PRIu64 ", srcPitch=%" PRIu64 ", width=%" PRIu64 ", height=%" PRIu64 ", kind=%s.",
         dstPitch, srcPitch, width, height, MemcpyKindToStr(kind));
 
-    DevDynInfoProcFunc func{};
-    if ((GET_DEV_INFO_PROC_FUNC(Runtime::Instance()->GetChipType(), func) == RT_ERROR_NONE) &&
-        (func.memProcFunc.memCopy2DAsync != nullptr)) {
-        const rtError_t callbackError =
-            func.memProcFunc.memCopy2DAsync(dst, dstPitch, src, srcPitch, width, height, stm, kind, newKind);
-        COND_RETURN_WITH_NOLOG(callbackError != RT_ERROR_CONTINUE_EXECUTE, callbackError);
-    }
-
-    rtError_t error = RT_ERROR_NONE;
-    uint64_t remainSize = width * height;
-    const uint64_t totalSize = remainSize;
-    uint64_t realSize = 0UL;
-    uint64_t fixedSize = 0UL;
-    uint64_t srcoffset = 0UL;
-    uint64_t dstoffset = 0UL;
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
@@ -826,7 +809,23 @@ rtError_t ApiImplDavid::MemCopy2DAsync(
     }
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Asynchronous 2D memory copy");
+    Device* const device = curStm->Device_();
+    NULL_PTR_RETURN_MSG(device, RT_ERROR_DEVICE_NULL);
 
+    const auto memCopy2DAsync = device->GetCachedDevInfoProcFunc().memProcFunc.memCopy2DAsync;
+    if (memCopy2DAsync != nullptr) {
+        const rtError_t callbackError =
+            memCopy2DAsync(dst, dstPitch, src, srcPitch, width, height, curStm, kind, newKind);
+        COND_RETURN_WITH_NOLOG(callbackError != RT_ERROR_CONTINUE_EXECUTE, callbackError);
+    }
+
+    rtError_t error = RT_ERROR_NONE;
+    uint64_t remainSize = width * height;
+    const uint64_t totalSize = remainSize;
+    uint64_t realSize = 0UL;
+    uint64_t fixedSize = 0UL;
+    uint64_t srcoffset = 0UL;
+    uint64_t dstoffset = 0UL;
     bool isUbMemcpy = false;
     error = GetUbMemcpyFlag(dst, src, kind, curStm, isUbMemcpy);
     COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
@@ -954,29 +953,28 @@ rtError_t ApiImplDavid::MemcpyBatchAsync(
     const rtMemcpyBatchAttr* const attrs, const size_t* const attrsIdxs, const size_t numAttrs, size_t* const failIdx,
     Stream* const stm)
 {
-    DevDynInfoProcFunc func{};
-    if ((GET_DEV_INFO_PROC_FUNC(Runtime::Instance()->GetChipType(), func) == RT_ERROR_NONE) &&
-        (func.memProcFunc.memcpyBatchAsync != nullptr)) {
-        return func.memProcFunc.memcpyBatchAsync(
-            dsts, destMaxs, srcs, sizes, count, attrs, attrsIdxs, numAttrs, failIdx, stm);
-    }
-
     Context* curCtx = Runtime::Instance()->CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
-    NULL_PTR_RETURN_MSG(curCtx->Device_(), RT_ERROR_DEVICE_NULL);
 
     Stream* curStm = stm;
     if (curStm == nullptr) {
         curStm = curCtx->DefaultStream_();
         NULL_PTR_RETURN_MSG(curStm, RT_ERROR_STREAM_NULL);
     }
+    Device* const device = curStm->Device_();
+    NULL_PTR_RETURN_MSG(device, RT_ERROR_DEVICE_NULL);
 
-    if (!NpuDriver::CheckIsSupportFeature(curCtx->Device_()->Id_(), FEATURE_MEMCPY_BATCH_ASYNC)) {
+    const auto memcpyBatchAsync = device->GetCachedDevInfoProcFunc().memProcFunc.memcpyBatchAsync;
+    if (memcpyBatchAsync != nullptr) {
+        return memcpyBatchAsync(dsts, destMaxs, srcs, sizes, count, attrs, attrsIdxs, numAttrs, failIdx, curStm);
+    }
+
+    if (!NpuDriver::CheckIsSupportFeature(device->Id_(), FEATURE_MEMCPY_BATCH_ASYNC)) {
         // ub 单算子
         if (Runtime::Instance()->GetConnectUbFlag()) {
             return BatchMemcpyAsync(dsts, destMaxs, srcs, sizes, count, attrs, attrsIdxs, numAttrs, failIdx, curStm);
         } else {
-            return LoopMemcpyAsync(dsts, destMaxs, srcs, sizes, count, attrs, attrsIdxs, numAttrs, failIdx, stm);
+            return LoopMemcpyAsync(dsts, destMaxs, srcs, sizes, count, attrs, attrsIdxs, numAttrs, failIdx, curStm);
         }
     }
     return RT_ERROR_DRV_NOT_SUPPORT;
@@ -989,15 +987,6 @@ rtError_t ApiImplDavid::MemcpyAsync(
 {
     RT_LOG(RT_LOG_DEBUG, "Async memcpy, count=%" PRIu64 ", kind=%s", cnt, MemcpyKindToStr(kind));
 
-    // 已注册的拷贝回调作为 CC 模式标志，回调为空时 或 返回值为RT_ERROR_CONTINUE_EXECUTE，沿用原 Runtime 路径。
-    DevDynInfoProcFunc func{};
-    if ((GET_DEV_INFO_PROC_FUNC(Runtime::Instance()->GetChipType(), func) == RT_ERROR_NONE) &&
-        (func.memProcFunc.memcpyAsync != nullptr)) {
-        const rtError_t callbackError =
-            func.memProcFunc.memcpyAsync(dst, destMax, src, cnt, kind, stm, cfgInfo, addrCfg, checkKind, memcpyConfig);
-        COND_RETURN_WITH_NOLOG(callbackError != RT_ERROR_CONTINUE_EXECUTE, callbackError);
-    }
-
     Context* const curCtx = CurrentContext();
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
@@ -1006,6 +995,17 @@ rtError_t ApiImplDavid::MemcpyAsync(
         curStm = curCtx->DefaultStream_();
         NULL_PTR_RETURN_MSG(curStm, RT_ERROR_STREAM_NULL);
     }
+    Device* const device = curStm->Device_();
+    NULL_PTR_RETURN_MSG(device, RT_ERROR_DEVICE_NULL);
+
+    // 已注册的拷贝回调作为 CC 模式标志，回调为空时或返回 RT_ERROR_CONTINUE_EXECUTE 时沿用原 Runtime 路径。
+    const auto memcpyAsync = device->GetCachedDevInfoProcFunc().memProcFunc.memcpyAsync;
+    if (memcpyAsync != nullptr) {
+        const rtError_t callbackError =
+            memcpyAsync(dst, destMax, src, cnt, kind, curStm, cfgInfo, addrCfg, checkKind, memcpyConfig);
+        COND_RETURN_WITH_NOLOG(callbackError != RT_ERROR_CONTINUE_EXECUTE, callbackError);
+    }
+
     COND_RETURN_AND_MSG_INVALID_CONTEXT_STREAM_WITH_FUNC_DESC(
         curStm, curCtx, RT_ERROR_STREAM_CONTEXT, "Asynchronous memory copy");
     if (Runtime::Instance()->GetConnectUbFlag() &&

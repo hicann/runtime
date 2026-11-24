@@ -576,13 +576,14 @@ TEST_F(ApiImplTest, DeviceFaultLog_PreservesFaultAndReportedError)
 TEST_F(ApiImplTest, AllocationAdviceLog_PreservesSizeTypeModuleAndFailure)
 {
     MOCKER(CheckLogLevel).stubs().will(returnValue(1));
-    DevDynInfoProcFunc procFunc{};
-    procFunc.memProcFunc.devMallocWithCfg = [](void**, const uint64_t, const rtMemType_t, const uint32_t,
-                                               const uint16_t) -> rtError_t { return RT_ERROR_INVALID_VALUE; };
-    MOCKER_CPP(&DevInfoManage::GetDevInfoProcFunc)
-        .stubs()
-        .with(mockcpp::any(), outBound(procFunc))
-        .will(returnValue(RT_ERROR_NONE));
+    RawDevice* const device = static_cast<RawDevice*>(Runtime::Instance()->CurrentContext()->Device_());
+    const DevDynInfoProcFunc originalProcFunc = device->devInfoProcFuncCache_;
+    const ScopeGuard restoreProcFunc(
+        [device, originalProcFunc]() { device->devInfoProcFuncCache_ = originalProcFunc; });
+    device->devInfoProcFuncCache_.memProcFunc.devMallocWithCfg = [](void**, const uint64_t, const rtMemType_t,
+                                                                    const uint32_t, const uint16_t) -> rtError_t {
+        return RT_ERROR_INVALID_VALUE;
+    };
     ApiImpl impl;
     void* pointer = nullptr;
     ClearLastDlogRecordLine();
@@ -3564,6 +3565,50 @@ TEST_F(ApiImplTest, TestDevMalloc_01)
     error = impl.DevMalloc(&ptr, 64, RT_MEM_MALLOC_HUGE1G_ONLY_P2P, RT_MEM_ADVISE_NONE, cfgPtr);
     EXPECT_EQ(error, RT_ERROR_NONE);
     ((Runtime*)Runtime::Instance())->DeviceRelease(device);
+}
+
+namespace {
+rtError_t DeviceDevMallocStub(void**, uint64_t, rtMemType_t, uint16_t) { return RT_ERROR_FEATURE_NOT_SUPPORT; }
+
+rtError_t DeviceMemCopySyncStub(void*, uint64_t, const void*, uint64_t, rtMemcpyKind_t)
+{
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t DeviceMemCopy2DSyncStub(
+    void*, uint64_t, const void*, uint64_t, uint64_t, uint64_t, rtMemcpyKind_t, rtMemcpyKind)
+{
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+rtError_t DeviceMemcpyBatchStub(void**, void**, size_t*, size_t, rtMemcpyBatchAttr*, size_t*, size_t, size_t*)
+{
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+} // namespace
+
+TEST_F(ApiImplTest, SyncMemoryCallbacksUseCurrentDeviceCache)
+{
+    Context* const context = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(context, nullptr);
+    RawDevice* const device = static_cast<RawDevice*>(context->Device_());
+    ASSERT_NE(device, nullptr);
+    const DevDynInfoProcFunc originalProcFunc = device->devInfoProcFuncCache_;
+    const ScopeGuard restoreProcFunc(
+        [device, originalProcFunc]() { device->devInfoProcFuncCache_ = originalProcFunc; });
+    device->devInfoProcFuncCache_.memProcFunc.devMalloc = &DeviceDevMallocStub;
+    device->devInfoProcFuncCache_.memProcFunc.memCopySync = &DeviceMemCopySyncStub;
+    device->devInfoProcFuncCache_.memProcFunc.memCopy2DSync = &DeviceMemCopy2DSyncStub;
+    device->devInfoProcFuncCache_.memProcFunc.memcpyBatch = &DeviceMemcpyBatchStub;
+
+    ApiImpl impl;
+    void* ptr = nullptr;
+    EXPECT_EQ(impl.DevMalloc(&ptr, 1U, RT_MEMORY_DEFAULT, MODULEID_RUNTIME), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(impl.MemCopySync(nullptr, 0U, nullptr, 0U, RT_MEMCPY_HOST_TO_DEVICE), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(
+        impl.MemCopy2DSync(nullptr, 1U, nullptr, 1U, 1U, 1U, RT_MEMCPY_HOST_TO_DEVICE), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(
+        impl.MemcpyBatch(nullptr, nullptr, nullptr, 0U, nullptr, nullptr, 0U, nullptr), RT_ERROR_FEATURE_NOT_SUPPORT);
 }
 
 TEST_F(ApiImplTest, DevMallocRetrySuccessOnlyEnablesErrorReportingForFinalAttempt)

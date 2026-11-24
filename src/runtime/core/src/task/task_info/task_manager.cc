@@ -663,16 +663,16 @@ static void CopyAicpuExceptionNameFromArgs(TaskInfo* const taskInfo, const void*
     }
 
     char_t nameBuffer[KERNEL_INFO_ENTRY_SIZE] = {};
-    Driver* const driver = taskInfo->stream->Device_()->Driver_();
+    Device* const dev = taskInfo->stream->Device_();
+    Driver* const driver = dev->Driver_();
     if (driver == nullptr) {
         return;
     }
 
     rtError_t error = RT_ERROR_NONE;
-    DevDynInfoProcFunc func{};
-    if ((GET_DEV_INFO_PROC_FUNC(Runtime::Instance()->GetChipType(), func) == RT_ERROR_NONE) &&
-        (func.memProcFunc.memCopySync != nullptr)) {
-        error = func.memProcFunc.memCopySync(nameBuffer, copySize, nameAddr, copySize, RT_MEMCPY_DEVICE_TO_HOST);
+    const auto memCopySync = dev->GetCachedDevInfoProcFunc().memProcFunc.memCopySync;
+    if (memCopySync != nullptr) {
+        error = memCopySync(nameBuffer, copySize, nameAddr, copySize, RT_MEMCPY_DEVICE_TO_HOST);
         if (error == RT_ERROR_CONTINUE_EXECUTE) {
             error = driver->MemCopySync(nameBuffer, copySize, nameAddr, copySize, RT_MEMCPY_DEVICE_TO_HOST);
         }

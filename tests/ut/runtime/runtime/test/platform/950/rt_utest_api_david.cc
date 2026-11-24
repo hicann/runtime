@@ -4314,6 +4314,68 @@ public:
 };
 rtChipType_t ApiDavidTest::originType_ = CHIP_DAVID;
 
+static uint32_t gDeviceAsyncCallbackCount = 0U;
+static Stream* gExpectedDeviceAsyncStream = nullptr;
+
+static rtError_t RecordDeviceAsyncCallback(Stream* const stm)
+{
+    EXPECT_EQ(stm, gExpectedDeviceAsyncStream);
+    ++gDeviceAsyncCallbackCount;
+    return RT_ERROR_FEATURE_NOT_SUPPORT;
+}
+
+static rtError_t DeviceMemcpyAsyncStub(
+    void*, uint64_t, const void*, uint64_t, rtMemcpyKind_t, Stream* const stm, const rtTaskCfgInfo_t*,
+    const rtD2DAddrCfgInfo_t*, bool, const rtMemcpyConfig_t*)
+{
+    return RecordDeviceAsyncCallback(stm);
+}
+
+static rtError_t DeviceMemCopy2DAsyncStub(
+    void*, uint64_t, const void*, uint64_t, uint64_t, uint64_t, Stream* const stm, rtMemcpyKind_t, rtMemcpyKind)
+{
+    return RecordDeviceAsyncCallback(stm);
+}
+
+static rtError_t DeviceMemcpyBatchAsyncStub(
+    void**, const size_t*, void**, const size_t*, size_t, const rtMemcpyBatchAttr*, const size_t*, size_t, size_t*,
+    Stream* const stm)
+{
+    return RecordDeviceAsyncCallback(stm);
+}
+
+TEST_F(ApiDavidTest, AsyncMemcpyCallbacksUseDeviceCacheAndResolvedDefaultStream)
+{
+    RawDevice* const device = static_cast<RawDevice*>(stream_->Device_());
+    ASSERT_NE(device, nullptr);
+    const DevDynInfoProcFunc originalProcFunc = device->devInfoProcFuncCache_;
+    const ScopeGuard restoreProcFunc(
+        [device, originalProcFunc]() { device->devInfoProcFuncCache_ = originalProcFunc; });
+    device->devInfoProcFuncCache_.memProcFunc.memcpyAsync = &DeviceMemcpyAsyncStub;
+    device->devInfoProcFuncCache_.memProcFunc.memCopy2DAsync = &DeviceMemCopy2DAsyncStub;
+    device->devInfoProcFuncCache_.memProcFunc.memcpyBatchAsync = &DeviceMemcpyBatchAsyncStub;
+
+    Context* const context = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(context, nullptr);
+    Stream* const defaultStream = context->DefaultStream_();
+    ASSERT_NE(defaultStream, nullptr);
+    gDeviceAsyncCallbackCount = 0U;
+    gExpectedDeviceAsyncStream = defaultStream;
+    ApiImplDavid impl;
+
+    EXPECT_EQ(
+        impl.MemcpyAsync(nullptr, 0U, nullptr, 0U, RT_MEMCPY_HOST_TO_DEVICE, nullptr, nullptr, nullptr, true, nullptr),
+        RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(
+        impl.MemCopy2DAsync(nullptr, 1U, nullptr, 1U, 1U, 1U, nullptr, RT_MEMCPY_HOST_TO_DEVICE),
+        RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(
+        impl.MemcpyBatchAsync(nullptr, nullptr, nullptr, nullptr, 0U, nullptr, nullptr, 0U, nullptr, nullptr),
+        RT_ERROR_FEATURE_NOT_SUPPORT);
+
+    EXPECT_EQ(gDeviceAsyncCallbackCount, 3U);
+}
+
 rtError_t UbDirectWqeSendTaskInitStub(TaskInfo* taskInfo, rtUbWqeInfo_t* wqeInfo)
 {
     DirectSendTaskInfo* directSend = &taskInfo->u.directSendTask;

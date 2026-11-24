@@ -189,7 +189,8 @@ rtError_t MemsetD32OnDeviceByBatch(void* dst, uint64_t destMax, uint32_t value, 
 // - Async: try hardware SDMA Memset task first, fallback to ByMemcpy if not supported
 // - Sync: >= 2MB goes ByBatch, < 2MB goes ByMemcpy
 rtError_t MemsetD32OnDevice(
-    void* dst, uint64_t destMax, uint32_t value, uint64_t count, Stream* stm, bool isAsync, uint32_t memDevId)
+    void* dst, uint64_t destMax, uint32_t value, uint64_t count, Stream* stm, bool isAsync, uint32_t memDevId,
+    Device* device)
 {
     const uint64_t totalBytes = count * sizeof(uint32_t);
     if (totalBytes > destMax) {
@@ -199,10 +200,10 @@ rtError_t MemsetD32OnDevice(
         return RT_ERROR_INVALID_VALUE;
     }
 
+    NULL_PTR_RETURN_MSG(device, RT_ERROR_DEVICE_NULL);
     // Only async path tries SDMA Memset
     if (isAsync) {
         NULL_PTR_RETURN_MSG(stm, RT_ERROR_STREAM_NULL);
-        Device* device = stm->Device_();
         const DevProperties& props = device->GetDevProperties();
         if (IsSupportMemsetTask(memDevId, device->Id_(), props)) {
             return DevMemSetAsyncByMemset(
@@ -210,10 +211,9 @@ rtError_t MemsetD32OnDevice(
         }
     }
 
-    DevDynInfoProcFunc func{};
-    if ((GET_DEV_INFO_PROC_FUNC(Runtime::Instance()->GetChipType(), func) == RT_ERROR_NONE) &&
-        (func.memProcFunc.devMemset32 != nullptr)) {
-        const rtError_t callbackError = func.memProcFunc.devMemset32(dst, destMax, value, count, stm, isAsync);
+    const auto devMemset32 = device->GetCachedDevInfoProcFunc().memProcFunc.devMemset32;
+    if (devMemset32 != nullptr) {
+        const rtError_t callbackError = devMemset32(dst, destMax, value, count, stm, isAsync);
         COND_RETURN_WITH_NOLOG(callbackError != RT_ERROR_CONTINUE_EXECUTE, callbackError);
     }
 

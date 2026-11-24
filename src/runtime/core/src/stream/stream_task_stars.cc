@@ -99,11 +99,9 @@ rtError_t StreamCmoAddrTaskLaunch(
     Driver* const devDrv = device->Driver_();
     if (devDrv != nullptr) {
         constexpr uint64_t dstMax = 8ULL;
-        DevDynInfoProcFunc func{};
-        if ((GET_DEV_INFO_PROC_FUNC(Runtime::Instance()->GetChipType(), func) == RT_ERROR_NONE) &&
-            (func.memProcFunc.memCopySync != nullptr)) {
-            error =
-                func.memProcFunc.memCopySync(starsCmoAddrInfo, dstMax, &sdmaCmoSqe, dstMax, RT_MEMCPY_HOST_TO_DEVICE);
+        const auto memCopySync = device->GetCachedDevInfoProcFunc().memProcFunc.memCopySync;
+        if (memCopySync != nullptr) {
+            error = memCopySync(starsCmoAddrInfo, dstMax, &sdmaCmoSqe, dstMax, RT_MEMCPY_HOST_TO_DEVICE);
         } else {
             error = devDrv->MemCopySync(starsCmoAddrInfo, dstMax, &sdmaCmoSqe, dstMax, RT_MEMCPY_HOST_TO_DEVICE);
         }

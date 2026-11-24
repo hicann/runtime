@@ -83,6 +83,7 @@ hal_cc_mode_type gCcMode = HAL_CC_MODE_NORMAL;
 drvError_t gCcQueryResult = DRV_ERROR_NONE;
 uint32_t gCcResourceReleaseCount = 0U;
 uint32_t gCcResourceInitCount = 0U;
+Stream* gDestroyedCcStream = nullptr;
 uint32_t gDevMemAllocCount = 0U;
 bool gReturnNullDriver = false;
 bool gPcieRegFail = false;
@@ -315,6 +316,7 @@ rtError_t InitCcResourceStub(Device* const device)
         return RT_ERROR_DEVICE_NULL;
     }
     EXPECT_EQ(device->Id_(), CC_TEST_DEVICE_ID);
+    EXPECT_EQ(device->GetCachedDevInfoProcFunc().ccProcFunc.devResourceInit, nullptr);
     ++gCcResourceInitCount;
     return RT_ERROR_NONE;
 }
@@ -329,6 +331,8 @@ rtError_t InitCcResourceFailedStub(Device* const device)
     ++gCcResourceInitCount;
     return RT_ERROR_CC_INIT_FAILED;
 }
+
+void DestroyCcStreamResourceStub(Stream* const stream) { gDestroyedCcStream = stream; }
 
 drvError_t QueryCcInfoStub(
     const uint32_t deviceId, const int32_t moduleType, const int32_t infoType, void* const buffer, int32_t* const size)
@@ -645,6 +649,7 @@ protected:
         gCcQueryResult = DRV_ERROR_NONE;
         gCcResourceReleaseCount = 0U;
         gCcResourceInitCount = 0U;
+        gDestroyedCcStream = nullptr;
         gDevMemAllocCount = 0U;
         gReturnNullDriver = false;
         gPcieRegFail = false;
@@ -3600,8 +3605,9 @@ TEST_F(CCManagerTest, InitCcFeature_CcModeFlow)
     const rtChipType_t chipType = GetCurrentChipType();
     DevDynInfoProcFunc originalProcFunc{};
     ASSERT_EQ(GET_DEV_INFO_PROC_FUNC(chipType, originalProcFunc), RT_ERROR_NONE);
-    originalProcFunc.regCCFeatureProcFunc = &RegCCManagerProcFunc;
-    ASSERT_TRUE(DevInfoManage::Instance().RegDevInfoProcFunc(chipType, originalProcFunc));
+    DevDynInfoProcFunc testProcFunc = originalProcFunc;
+    testProcFunc.regCCFeatureProcFunc = &RegCCManagerProcFunc;
+    ASSERT_TRUE(DevInfoManage::Instance().RegDevInfoProcFunc(chipType, testProcFunc));
     const char_t* const visibleDevices = std::getenv("ASCEND_RT_VISIBLE_DEVICES");
     const bool visibleDevicesSet = visibleDevices != nullptr;
     const std::string originalVisibleDevices = visibleDevicesSet ? visibleDevices : "";
@@ -3641,6 +3647,12 @@ TEST_F(CCManagerTest, InitCcFeature_CcModeFlow)
 
     // 测试点5：通过已注册的资源回调初始化当前 Device 的密钥和 6 Worker 线程池。
     RETAIN_DEVICE(dev);
+    RawDevice* const rawDev = static_cast<RawDevice*>(dev);
+    const DevDynInfoProcFunc originalDeviceProcFunc = rawDev->devInfoProcFuncCache_;
+    ScopeGuard restoreDeviceProcFunc(
+        [rawDev, originalDeviceProcFunc]() { rawDev->devInfoProcFuncCache_ = originalDeviceProcFunc; });
+    // Fixture 已提前创建设备；显式模拟生产时“先注册、后创建设备缓存”的初始化顺序。
+    rawDev->devInfoProcFuncCache_ = registeredProcFunc;
     Stream* const ctrlStm = dev->GetCtrlSQStream(nullptr);
     ASSERT_NE(ctrlStm, nullptr);
     MOCKER_CPP_VIRTUAL(ctrlStm, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
@@ -3652,12 +3664,13 @@ TEST_F(CCManagerTest, InitCcFeature_CcModeFlow)
     // 不产生真实流任务，避免 TearDown 复位时挂起。
     Api* const apiImpl = Runtime::Instance()->ApiImpl_();
     ASSERT_NE(apiImpl, nullptr);
-    MOCKER_CPP_VIRTUAL(apiImpl, &Api::LaunchHostFunc).stubs().will(returnValue(RT_ERROR_NONE));
-    MOCKER(CondMemWaitValue).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(apiImpl, &Api::LaunchHostFunc).expects(exactly(2)).will(returnValue(RT_ERROR_NONE));
+    MOCKER(CondMemWaitValue).expects(once()).will(returnValue(RT_ERROR_NONE));
     ApiImplDavid apiImplDavid;
     EXPECT_EQ(
         apiImplDavid.MemcpyAsync(
-            nullptr, 0U, nullptr, 0U, RT_MEMCPY_HOST_TO_DEVICE, nullptr, nullptr, nullptr, true, nullptr),
+            nullptr, CC_SMALL_PLAINTEXT_CAPACITY + 1U, nullptr, CC_SMALL_PLAINTEXT_CAPACITY + 1U,
+            RT_MEMCPY_HOST_TO_DEVICE, nullptr, nullptr, nullptr, true, nullptr),
         RT_ERROR_NONE);
 
     // 测试点7：释放 default 流上挂载的 CC 流资源（此时 resources_[0] 仍有效，走正常释放路径）。
@@ -3669,6 +3682,8 @@ TEST_F(CCManagerTest, InitCcFeature_CcModeFlow)
     // 测试点8：通过已注册的释放回调销毁当前 Device 的线程池并释放密钥。
     registeredProcFunc.ccProcFunc.devResourceRelease(0U);
 
+    rawDev->devInfoProcFuncCache_ = originalDeviceProcFunc;
+    restoreDeviceProcFunc.ReleaseGuard();
     ((Runtime*)Runtime::Instance())->DeviceRelease(dev);
 
     // drvGetDevNum 的 expects(once()) 已被消费，TearDown 的 rtDeviceReset 还会再调，
@@ -3685,8 +3700,9 @@ TEST_F(CCManagerTest, InitCcFeature_SysfsEnablePath)
     const rtChipType_t chipType = GetCurrentChipType();
     DevDynInfoProcFunc originalProcFunc{};
     ASSERT_EQ(GET_DEV_INFO_PROC_FUNC(chipType, originalProcFunc), RT_ERROR_NONE);
-    originalProcFunc.regCCFeatureProcFunc = &RegCCManagerProcFunc;
-    ASSERT_TRUE(DevInfoManage::Instance().RegDevInfoProcFunc(chipType, originalProcFunc));
+    DevDynInfoProcFunc testProcFunc = originalProcFunc;
+    testProcFunc.regCCFeatureProcFunc = &RegCCManagerProcFunc;
+    ASSERT_TRUE(DevInfoManage::Instance().RegDevInfoProcFunc(chipType, testProcFunc));
     const ScopeGuard restoreProcFunc([chipType, originalProcFunc]() {
         (void)DevInfoManage::Instance().RegDevInfoProcFunc(chipType, originalProcFunc);
     });
@@ -3722,25 +3738,17 @@ TEST_F(CCManagerTest, InitCcFeature_SysfsEnablePath)
 
 TEST_F(CCManagerTest, RawDeviceDestructor_ReleasesCcResource)
 {
-    const rtChipType_t chipType = GetCurrentChipType();
-    DevDynInfoProcFunc originalProcFunc{};
-    ASSERT_EQ(GET_DEV_INFO_PROC_FUNC(chipType, originalProcFunc), RT_ERROR_NONE);
-    const ScopeGuard restoreProcFunc([chipType, originalProcFunc]() {
-        (void)DevInfoManage::Instance().RegDevInfoProcFunc(chipType, originalProcFunc);
-    });
-
-    DevDynInfoProcFunc procFunc = originalProcFunc;
+    DevDynInfoProcFunc procFunc{};
     procFunc.ccProcFunc.devResourceRelease = &ReleaseCcResourceStub;
-    ASSERT_TRUE(DevInfoManage::Instance().RegDevInfoProcFunc(chipType, procFunc));
     {
         RawDevice device(0U);
-        device.chipType_ = chipType;
+        device.devInfoProcFuncCache_ = procFunc;
     }
 
     EXPECT_EQ(gCcResourceReleaseCount, 1U);
 }
 
-TEST_F(CCManagerTest, ContextCreate_InitializesCcResource)
+TEST_F(CCManagerTest, ContextCreate_InitializesCcResourceBeforeCachingProcFunc)
 {
     ASSERT_EQ(Runtime::Instance()->GetDevice(CC_TEST_DEVICE_ID, RT_TSC_ID, false), nullptr);
 
@@ -3764,6 +3772,9 @@ TEST_F(CCManagerTest, ContextCreate_InitializesCcResource)
         }
     });
     EXPECT_EQ(gCcResourceInitCount, 1U);
+    Device* const device = Runtime::Instance()->GetDevice(CC_TEST_DEVICE_ID, RT_TSC_ID, false);
+    ASSERT_NE(device, nullptr);
+    EXPECT_EQ(device->GetCachedDevInfoProcFunc().ccProcFunc.devResourceInit, &InitCcResourceStub);
     EXPECT_EQ(rtCtxDestroy(context), RT_ERROR_NONE);
     context = nullptr;
 }
@@ -3790,6 +3801,26 @@ TEST_F(CCManagerTest, ContextCreate_FailsWhenCcResourceInitFails)
     if (context != nullptr) {
         (void)rtCtxDestroy(context);
     }
+}
+
+TEST_F(CCManagerTest, StreamDestructor_ReleasesCcResourceFromOwningDevice)
+{
+    Runtime* const runtime = Runtime::Instance();
+    const bool disableThread = runtime->GetDisableThread();
+    runtime->SetDisableThread(false);
+    const ScopeGuard restoreDisableThread([runtime, disableThread]() { runtime->SetDisableThread(disableThread); });
+
+    RawDevice device(0U);
+    MOCKER_CPP_VIRTUAL(device, &RawDevice::GetDevRunningState)
+        .stubs()
+        .will(returnValue(static_cast<uint32_t>(DEV_RUNNING_DOWN)));
+    device.devInfoProcFuncCache_.ccProcFunc.streamResDestroy = &DestroyCcStreamResourceStub;
+    Stream* const stream = new (std::nothrow) Stream(&device, 0U);
+    ASSERT_NE(stream, nullptr);
+
+    delete stream;
+
+    EXPECT_EQ(gDestroyedCcStream, stream);
 }
 
 TEST_F(CCManagerTest, InitCcFeature_HostCcOffWhenNoCcSignal)

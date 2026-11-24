@@ -65,10 +65,9 @@ void SetLabelInfoForLabelSetTask(TaskInfo* taskInfo, const uint32_t pos)
         static_cast<uint32_t>(labelId), sqId, pos, labelInfo[0U], RtPtrToValue((devDstAddr)));
 
     rtError_t error = RT_ERROR_NONE;
-    DevDynInfoProcFunc func{};
-    if ((GET_DEV_INFO_PROC_FUNC(Runtime::Instance()->GetChipType(), func) == RT_ERROR_NONE) &&
-        (func.memProcFunc.memCopySync != nullptr)) {
-        error = func.memProcFunc.memCopySync(
+    const auto memCopySync = stm->Device_()->GetCachedDevInfoProcFunc().memProcFunc.memCopySync;
+    if (memCopySync != nullptr) {
+        error = memCopySync(
             devDstAddr, RT_CHIP_CLOUD_V2_LABEL_INFO_SIZE, static_cast<void*>(labelInfo),
             RT_CHIP_CLOUD_V2_LABEL_INFO_SIZE, RT_MEMCPY_HOST_TO_DEVICE);
         if (error != RT_ERROR_CONTINUE_EXECUTE) {
