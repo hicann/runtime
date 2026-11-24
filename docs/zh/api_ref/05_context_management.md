@@ -10,7 +10,7 @@
 - [`aclError aclrtCtxGetSysParamOpt(aclSysParamOpt opt, int64_t *value)`](#aclrtCtxGetSysParamOpt)：获取当前Context中的系统参数值。
 - [`aclError aclrtCtxGetCurrentDefaultStream(aclrtStream *stream)`](#aclrtCtxGetCurrentDefaultStream)：获取Context上的默认Stream。
 - [`aclError aclrtGetPrimaryCtxState(int32_t deviceId, uint32_t *flags, int32_t *active)`](#aclrtGetPrimaryCtxState)：获取默认Context的状态。
-- [`aclError aclrtCtxGetFloatOverflowAddr(void **overflowAddr)`](#aclrtCtxGetFloatOverflowAddr)：饱和模式下，获取保存溢出标记的Device内存地址，该内存地址后续需作为Workspace参数传递给AI Core算子。
+- [`aclError aclrtCtxGetFloatOverflowAddr(void **overflowAddr)`](#aclrtCtxGetFloatOverflowAddr)：获取保存溢出标记的Device内存地址，该内存地址后续需作为Workspace参数传递给AI Core算子。
 
 <a class="method_anchor" id="aclrtCreateContext"></a>
 
