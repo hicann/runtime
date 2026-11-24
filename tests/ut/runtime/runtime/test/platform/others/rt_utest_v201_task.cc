@@ -66,6 +66,8 @@
 #include "para_convertor.hpp"
 #include "api_decorator.hpp"
 #include "api_impl_v201.hpp"
+#include "model.hpp"
+#include "inner_thread_local.hpp"
 #include "capture_adapt.hpp"
 #include "task_fail_callback_manager.hpp"
 #include "notify_task.h"
@@ -75,6 +77,9 @@
 #include "../../task_test_helper.h"
 #include "aic_aiv_sqe_common.hpp"
 #include "model_serial_sched_task.hpp"
+#include "device_error_proc_c.hpp"
+#include "device_debug_c.hpp"
+#include "task_scheduler_error.h"
 
 using namespace testing;
 using namespace cce::runtime;
@@ -2689,4 +2694,237 @@ TEST_F(TaskTestV201, Test_ModelSerialSchedAttrToSqe)
     delete notify;
     ret = rtModelDestroy(model);
     EXPECT_EQ(ret, RT_ERROR_NONE);
+}
+
+namespace {
+// Preserve the platform hook when exercising constructor registration and fallback paths.
+class ScopedV201TaskSnHook {
+public:
+    // runtime_utest_task_v201 enables -fno-access-control for test-only state access.
+    ScopedV201TaskSnHook() : runtime_(Runtime::Instance()), oldHook_(runtime_->allocTaskSnHook_) {}
+    ~ScopedV201TaskSnHook() { runtime_->SetAllocTaskSnHook(oldHook_); }
+
+private:
+    Runtime* runtime_;
+    Runtime::AllocTaskSnHook oldHook_;
+};
+} // namespace
+
+TEST_F(TaskTestV201, AllocTaskSn_EncodesStreamAndTaskId)
+{
+    ScopedV201TaskSnHook restoreHook;
+    ApiImplV201 impl;
+    TaskInfo task = {};
+    task.stream = stream_;
+    for (const uint16_t taskId : {0U, 1U, 4088U}) {
+        task.id = taskId;
+        uint32_t taskSn = 0U;
+        Runtime::Instance()->AllocTaskSn(&task, taskSn);
+        EXPECT_EQ(taskSn & 0xFFFFU, static_cast<uint32_t>(stream_->Id_()) & 0xFFFFU);
+        EXPECT_EQ(taskSn >> 16U, taskId);
+        EXPECT_EQ(GetThreadLocalTaskId(static_cast<uint32_t>(stream_->Id_()), taskSn), taskId);
+    }
+}
+
+TEST_F(TaskTestV201, AllocTaskSn_InvalidTaskFallsBackToSequence)
+{
+    ScopedV201TaskSnHook restoreHook;
+    ApiImplV201 impl;
+    TaskInfo task = {};
+    uint32_t first = 0U;
+    uint32_t second = 0U;
+    Runtime::Instance()->AllocTaskSn(nullptr, first);
+    Runtime::Instance()->AllocTaskSn(&task, second);
+    EXPECT_EQ(second, (first + 1U) & 0x7FFFFFFFU);
+}
+
+TEST_F(TaskTestV201, ThreadLocalTaskId_MismatchedStreamKeepsOriginalValue)
+{
+    ScopedV201TaskSnHook restoreHook;
+    ApiImplV201 impl;
+    EXPECT_EQ(GetThreadLocalTaskId(2U, 0x12340001U), 0x12340001U);
+}
+
+TEST_F(TaskTestV201, SetThreadTaskId_DecodesTaskSnAndPreservesStream)
+{
+    ScopedV201TaskSnHook restoreHook;
+    ApiImplV201 impl;
+    const uint32_t oldTaskId = InnerThreadLocalContainer::GetLastTaskId();
+    const uint32_t oldStreamId = InnerThreadLocalContainer::GetLastStreamId();
+    SET_THREAD_TASKID_AND_STREAMID(7U, 0x00110007U);
+    EXPECT_EQ(InnerThreadLocalContainer::GetLastTaskId(), 17U);
+    EXPECT_EQ(InnerThreadLocalContainer::GetLastStreamId(), 7U);
+    InnerThreadLocalContainer::SetLastTaskId(oldTaskId);
+    InnerThreadLocalContainer::SetLastStreamId(oldStreamId);
+}
+
+TEST_F(TaskTestV201, AutoSplitSq_IsNotSupportedByV201)
+{
+    EXPECT_FALSE(device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MODEL_PERSISTENT_STREAM_UNLIMITED_DEPTH));
+}
+
+TEST_F(TaskTestV201, GetModelTaskId_PreservesPlatformSemantics)
+{
+    ScopedV201TaskSnHook restoreHook;
+    ApiImplV201 impl;
+    TaskInfo task = {};
+    task.stream = stream_;
+    task.id = 17U;
+    Runtime::Instance()->AllocTaskSn(&task, task.taskSn);
+    const uint32_t encodedTaskSn = task.taskSn;
+    EXPECT_GT(encodedTaskSn, 65535U);
+    EXPECT_EQ(Runtime::Instance()->GetModelTaskId(task), 17U);
+    EXPECT_EQ(task.taskSn, encodedTaskSn);
+    Model model;
+    model.SetKernelTaskId(Runtime::Instance()->GetModelTaskId(task), stream_->GetExposedStreamId());
+    uint32_t taskId = 0U;
+    uint32_t streamId = 0U;
+    EXPECT_EQ(impl.ModelGetTaskId(&model, &taskId, &streamId), RT_ERROR_NONE);
+    EXPECT_EQ(taskId, 17U);
+    EXPECT_EQ(streamId, static_cast<uint32_t>(stream_->GetExposedStreamId()));
+}
+
+TEST_F(TaskTestV201, GetExceptionTaskId_UsesTaskIdWithoutChangingTaskSn)
+{
+    ScopedV201TaskSnHook restoreHook;
+    ApiImplV201 impl;
+    TaskInfo task = {};
+    task.stream = stream_;
+    for (const uint16_t taskId : {0U, 1U, 4088U, 32759U}) {
+        task.id = taskId;
+        Runtime::Instance()->AllocTaskSn(&task, task.taskSn);
+        const uint32_t originalTaskSn = task.taskSn;
+        EXPECT_EQ(Runtime::Instance()->GetExceptionTaskId(task), taskId);
+        EXPECT_EQ(task.taskSn, originalTaskSn);
+    }
+}
+
+TEST_F(TaskTestV201, GetDvppReportTaskId_MatchesLaunchTaskId)
+{
+    ScopedV201TaskSnHook restoreHook;
+    ApiImplV201 impl;
+    for (const uint16_t taskId : {0U, 1U, 4088U, 32759U}) {
+        for (const uint16_t streamId : {0U, 5U, 65535U}) {
+            const uint32_t reportTaskSn = (static_cast<uint32_t>(taskId) << 16U) | streamId;
+            EXPECT_EQ(Runtime::Instance()->GetDvppReportTaskId(reportTaskSn), taskId);
+            EXPECT_EQ(GetThreadLocalTaskId(streamId, reportTaskSn), taskId);
+        }
+    }
+}
+
+namespace {
+void CheckV201ExceptionCallbackTaskId(rtExceptionInfo_t* exceptionInfo)
+{
+    EXPECT_EQ(exceptionInfo->taskid, 17U);
+    EXPECT_EQ(exceptionInfo->tid, 23U);
+}
+
+void CheckV201MissingExceptionTaskId(rtExceptionInfo_t* exceptionInfo)
+{
+    EXPECT_EQ(exceptionInfo->taskid, 0xFFFFFFFFU);
+}
+
+bool DeclineV201ExceptionTaskId(
+    Runtime::TaskSnHookOp op, const TaskInfo* task, uint32_t streamId, uint32_t taskId, uint32_t& taskSn)
+{
+    UNUSED(task);
+    UNUSED(streamId);
+    UNUSED(taskId);
+    EXPECT_EQ(op, Runtime::TaskSnHookOp::EXCEPTION_TASK_ID);
+    // A hook that declines handling must not change the fallback result, even if it wrote the output.
+    taskSn = 0U;
+    return false;
+}
+} // namespace
+
+TEST_F(TaskTestV201, TaskFailCallback_ReportsTaskIdInsteadOfEncodedTaskSn)
+{
+    ScopedV201TaskSnHook restoreHook;
+    ApiImplV201 impl;
+    TaskInfo task = {};
+    task.stream = stream_;
+    task.id = 17U;
+    task.type = TS_TASK_TYPE_STARS_COMMON;
+    Runtime::Instance()->AllocTaskSn(&task, task.taskSn);
+    EXPECT_TRUE(device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_TASK_ALLOC_FROM_STREAM_POOL));
+    MOCKER(GetTaskInfo).expects(once()).will(returnValue(&task));
+    MOCKER(TaskFailCallBackNotify).expects(once()).will(invoke(CheckV201ExceptionCallbackTaskId));
+    TaskFailCallBack(stream_->Id_(), task.id, 23U, TS_ERROR_AICORE_OVERFLOW, device_, false);
+}
+
+TEST_F(TaskTestV201, TaskFailCallback_MissingTaskPreservesInvalidTaskId)
+{
+    EXPECT_TRUE(device_->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_TASK_ALLOC_FROM_STREAM_POOL));
+    MOCKER(GetTaskInfo).expects(once()).will(returnValue(static_cast<TaskInfo*>(nullptr)));
+    MOCKER(TaskFailCallBackNotify).expects(once()).will(invoke(CheckV201MissingExceptionTaskId));
+    TaskFailCallBack(stream_->Id_(), 17U, 23U, TS_ERROR_AICORE_OVERFLOW, device_, false);
+}
+
+TEST_F(TaskTestV201, GetExceptionTaskId_DeclinedHookPreservesFullTaskSn)
+{
+    ScopedV201TaskSnHook restoreHook;
+    Runtime::Instance()->SetAllocTaskSnHook(&DeclineV201ExceptionTaskId);
+    TaskInfo task = {};
+    task.id = 17U;
+    task.taskSn = 0x00110005U;
+    EXPECT_EQ(Runtime::Instance()->GetExceptionTaskId(task), 0x00110005U);
+}
+
+TEST_F(TaskTestV201, ExceptionRegisters_UseCallbackTaskIdAndAreRemovedAfterNotify)
+{
+    ScopedV201TaskSnHook restoreHook;
+    ApiImplV201 impl;
+    // Exception register lookup and notification resolve the device on TS0, whereas this fixture uses TS1.
+    const uint32_t previousTsId = InnerThreadLocalContainer::GetTsId();
+    rtContext_t previousContext = nullptr;
+    ASSERT_EQ(rtCtxGetCurrent(&previousContext), RT_ERROR_NONE);
+    const ScopeGuard restoreContext([previousTsId, previousContext]() {
+        EXPECT_EQ(rtSetTSDevice(previousTsId), RT_ERROR_NONE);
+        EXPECT_EQ(rtCtxSetCurrent(previousContext), RT_ERROR_NONE);
+    });
+    ASSERT_EQ(rtSetTSDevice(RT_TSC_ID), RT_ERROR_NONE);
+    ASSERT_EQ(rtSetDevice(0), RT_ERROR_NONE);
+    rtStream_t registerStreamHandle = nullptr;
+    ASSERT_EQ(rtStreamCreateWithFlags(&registerStreamHandle, 0, RT_STREAM_DQS_CTRL), RT_ERROR_NONE);
+    const ScopeGuard destroyRegisterStream(
+        [&registerStreamHandle]() { EXPECT_EQ(rtStreamDestroy(registerStreamHandle), RT_ERROR_NONE); });
+    Stream* const registerStream = rt_ut::UnwrapOrNull<Stream>(registerStreamHandle);
+    ASSERT_NE(registerStream, nullptr);
+    Device* const registerDevice = registerStream->Device_();
+    ASSERT_EQ(registerDevice, Runtime::Instance()->GetDevice(registerDevice->Id_(), 0U, false));
+    TaskInfo task = {};
+    task.stream = registerStream;
+    task.id = 17U;
+    Runtime::Instance()->AllocTaskSn(&task, task.taskSn);
+    StarsDeviceErrorInfo report = {};
+    report.u.davidCoreErrorInfo.comm.streamId = static_cast<uint32_t>(registerStream->GetExposedStreamId());
+    report.u.davidCoreErrorInfo.info[0].coreId = 3U;
+    report.u.davidCoreErrorInfo.info[0].pcStart = 0x1234U;
+    AddExceptionRegInfo(&report, 0U, AICORE_ERROR, &task);
+
+    rtExceptionInfo_t exceptionInfo = {};
+    exceptionInfo.deviceid = registerDevice->Id_();
+    EXPECT_EQ(
+        Runtime::Instance()->GetUserDevIdByDeviceId(registerDevice->Id_(), &exceptionInfo.deviceid), RT_ERROR_NONE);
+    exceptionInfo.streamid = report.u.davidCoreErrorInfo.comm.streamId;
+    exceptionInfo.taskid = 17U;
+    exceptionInfo.expandInfo.type = RT_EXCEPTION_INVALID;
+    rtExceptionErrRegInfo_t* registers = nullptr;
+    uint32_t count = 0U;
+    EXPECT_EQ(GetExceptionRegInfo(&exceptionInfo, &registers, &count), RT_ERROR_NONE);
+    EXPECT_EQ(count, 1U);
+    if (registers != nullptr) {
+        EXPECT_EQ(registers[0].coreId, 3U);
+        EXPECT_EQ(registers[0].startPC, 0x1234U);
+    }
+    EXPECT_NE(registers, nullptr);
+
+    // Notify accepts a physical device ID and converts it before calling registered callbacks.
+    exceptionInfo.deviceid = registerDevice->Id_();
+    TaskFailCallBackNotify(&exceptionInfo);
+    registers = nullptr;
+    count = 1U;
+    EXPECT_EQ(GetExceptionRegInfo(&exceptionInfo, &registers, &count), RT_ERROR_NONE);
+    EXPECT_EQ(count, 0U);
+    EXPECT_EQ(registers, nullptr);
 }

@@ -17,6 +17,8 @@ namespace cce {
 namespace runtime {
 class ApiImplV201 : public ApiImplDavid {
 public:
+    ApiImplV201();
+
     // dqs
     rtError_t LaunchDqsTask(Stream* const stm, const rtDqsTaskCfg_t* const taskCfg) override;
     rtError_t EventRecord(Event* const evt, Stream* const stm, const uint32_t flag = RT_EVENT_RECORD_DEFAULT) override;

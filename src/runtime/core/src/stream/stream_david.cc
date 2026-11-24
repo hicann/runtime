@@ -809,7 +809,7 @@ rtError_t DavidStream::StarsAddTaskToStream(TaskInfo* const tsk, const uint32_t 
         COND_PROC_RETURN_ERROR(ret != RT_ERROR_NONE, ret, SetTaskGroupErrCode(ret);
                                , "Failed to pack task group, stream_id=%d, task_id=%hu.", streamId_, tsk->id);
         if ((this->Model_() != nullptr) && (tsk->type != TS_TASK_TYPE_MODEL_MAINTAINCE)) {
-            this->Model_()->SetKernelTaskId(tsk->taskSn, GetExposedStreamId());
+            this->Model_()->SetKernelTaskId(Runtime::Instance()->GetModelTaskId(*tsk), GetExposedStreamId());
         }
         delayRecycleTaskid_.push_back(tsk->id);
 

@@ -53,7 +53,8 @@ static inline void InvokeCallBack(
     rtDvppGrpRptInfo_t dvppReport = {};
     dvppReport.deviceId = userDeviceId;
     dvppReport.streamId = streamId;
-    dvppReport.taskId = (static_cast<uint32_t>(report.taskId) << UINT16_BIT_NUM) | report.streamId;
+    const uint32_t reportTaskSn = (static_cast<uint32_t>(report.taskId) << UINT16_BIT_NUM) | report.streamId;
+    dvppReport.taskId = Runtime::Instance()->GetDvppReportTaskId(reportTaskSn);
     dvppReport.sqeType = report.sqeType;
     dvppReport.cqeErrorCode = GetStarsDefinedErrCode(report.errorType);
     dvppReport.accErrorCode = report.errorCode;
@@ -76,7 +77,8 @@ static inline void InvokeCallBack(
     rtDvppGrpRptInfo_t dvppReport = {};
     dvppReport.deviceId = userDeviceId;
     dvppReport.streamId = streamId;
-    dvppReport.taskId = (static_cast<uint32_t>(report.taskId) << UINT16_BIT_NUM) | report.streamId;
+    const uint32_t reportTaskSn = (static_cast<uint32_t>(report.taskId) << UINT16_BIT_NUM) | report.streamId;
+    dvppReport.taskId = Runtime::Instance()->GetDvppReportTaskId(reportTaskSn);
     dvppReport.sqeType = sqeType;
     dvppReport.cqeErrorCode = cqeErrorCode;
     dvppReport.accErrorCode = report.errorCode;

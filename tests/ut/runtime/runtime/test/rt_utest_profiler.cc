@@ -4639,6 +4639,7 @@ TEST_F(ProfilerTest, ModifyTrackData_ClearsReusedEventExtInfoForAicpu)
     profiler.ModifyTrackData(&aicpuTask, 0U, &trackData);
 
     EXPECT_EQ(runtimeTrack.taskType, static_cast<uint64_t>(TS_TASK_TYPE_KERNEL_AICPU));
+    EXPECT_EQ(static_cast<uint32_t>(runtimeTrack.tsId), 0U);
     for (const uint8_t value : runtimeTrack.extInfo.rsv) {
         EXPECT_EQ(value, 0U);
     }
@@ -4966,6 +4967,50 @@ TEST_F(ProfilerTest, FillRecordWaitTrackInfo_UnhandledTypes)
     serialTrack.taskType = serialTask.type;
     EXPECT_FALSE(FillRecordWaitTrackInfo(serialTask, serialTrack));
     EXPECT_EQ(serialTrack.taskType, static_cast<uint64_t>(TS_TASK_TYPE_MODEL_SERIAL_SCHED_NOTIFY_WAIT));
+}
+
+namespace {
+int32_t CheckDestroyFlipTaskWithoutStream(uint32_t agingFlag, const VOID_PTR data, uint32_t length)
+{
+    EXPECT_EQ(length, sizeof(MsprofCompactInfo));
+    const auto* const info = static_cast<const MsprofCompactInfo*>(data);
+    if (info->type == RT_PROFILE_TYPE_TASK_TRACK) {
+        EXPECT_EQ(static_cast<uint32_t>(info->data.runtimeTrack.tsId), 0U);
+        EXPECT_EQ(info->data.runtimeTrack.streamId, RT_MAX_STREAM_ID);
+        EXPECT_EQ(info->data.runtimeTrack.taskId, 0xFFFFFFFFU);
+    } else {
+        EXPECT_EQ(info->type, RT_PROFILE_TYPE_TASK_TRACK_V2);
+        EXPECT_EQ(info->data.runtimeTrackV2.taskId, 0xFFFFFFFFU);
+    }
+    return MSPROF_ERROR_NONE;
+}
+} // namespace
+
+TEST_F(ProfilerTest, ReportDestroyFlipTask_NullStreamUsesTsZero)
+{
+    MOCKER(MsprofReportCompactInfo).expects(exactly(2)).will(invoke(CheckDestroyFlipTaskWithoutStream));
+    Profiler profiler(nullptr);
+    profiler.ReportDestroyFlipTask(nullptr, 0U);
+}
+
+TEST_F(ProfilerTest, ModifyTrackData_UsesStreamTsId)
+{
+    RawDevice device(0U);
+    // Stream destruction queries the device engine, which is created by Init().
+    ASSERT_EQ(device.Init(), RT_ERROR_NONE);
+    const uint32_t originalTsId = device.DevGetTsId();
+    EXPECT_EQ(device.DevSetTsId(1U), RT_ERROR_NONE);
+    Stream stream(&device, 0U);
+    TaskInfo task = {};
+    task.stream = &stream;
+    task.type = TS_TASK_TYPE_KERNEL_AICPU;
+    RuntimeProfTrackData trackData = {};
+    Profiler profiler(nullptr);
+    profiler.ModifyTrackData(&task, 0U, &trackData);
+    EXPECT_EQ(static_cast<uint32_t>(trackData.compactInfo.data.runtimeTrack.tsId), 1U);
+    EXPECT_EQ(static_cast<uint32_t>(trackData.compactInfo.data.runtimeTrack.deviceId), 0U);
+    // Release the resources using the TS ID under which Init() allocated them.
+    EXPECT_EQ(device.DevSetTsId(originalTsId), RT_ERROR_NONE);
 }
 
 void ClearLastDlogRecordLine();

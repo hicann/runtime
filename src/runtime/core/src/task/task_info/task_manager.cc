@@ -784,7 +784,7 @@ static TaskInfo* GetTaskForFailCallback(
     if (dev->IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_TASK_ALLOC_FROM_STREAM_POOL)) {
         TaskInfo* const workTask = GetTaskInfo(dev, streamId, taskId, isNeedTransTaskId);
         if (workTask != nullptr) {
-            exceptionTaskId = workTask->taskSn;
+            exceptionTaskId = Runtime::Instance()->GetExceptionTaskId(*workTask);
         }
         return workTask;
     }

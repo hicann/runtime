@@ -640,10 +640,12 @@ void AddExceptionRegInfo(
     GetRegInfoErrReg(info, regInfo);
 
     Device* dev = errTaskPtr->stream->Device_();
-    uint32_t taskSn = errTaskPtr->taskSn;
+    const uint32_t exceptionTaskId = Runtime::Instance()->GetExceptionTaskId(*errTaskPtr);
     uint32_t streamId = starsInfo->u.davidCoreErrorInfo.comm.streamId;
-    RT_LOG(RT_LOG_ERROR, "add error register: core_id=%u, stream_id=%u, task_sn=%u", regInfo.coreId, streamId, taskSn);
-    std::pair<uint32_t, uint32_t> key = {streamId, taskSn};
+    RT_LOG(
+        RT_LOG_ERROR, "add error register: core_id=%u, stream_id=%u, task_id=%u", regInfo.coreId, streamId,
+        exceptionTaskId);
+    std::pair<uint32_t, uint32_t> key = {streamId, exceptionTaskId};
     auto& exceptionRegMap = dev->GetExceptionRegMap();
     std::lock_guard<std::mutex> lock(dev->GetExceptionRegMutex());
     exceptionRegMap[key].push_back(regInfo);
