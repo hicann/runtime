@@ -74,7 +74,7 @@ private:
         void* const dst, const void* const src, const uint64_t count, const rtMemcpyKind_t kind, Stream* const stm,
         std::shared_ptr<void> guardMem = nullptr);
     static void SubmitCcTaskCallback(void* userData);
-    static bool CanUseSmallCcMemcpy(uint64_t count, rtMemcpyKind_t kind, Stream* stm, bool isSync);
+    static bool CanUseSmallCcMemcpy(uint64_t count, rtMemcpyKind_t kind, const Stream* stm, bool isSync);
     static rtError_t SubmitSmallCcMemcpyTask(
         void* dst, uint64_t destMax, const void* src, uint64_t count, rtMemcpyKind_t kind, Stream* stm, bool isSync);
     static rtError_t SubmitCcMemcpy2DTasks(

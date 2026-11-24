@@ -73,7 +73,7 @@ rtError_t InitSmallCryptoParam(
 }
 
 rtError_t PrepareSmallH2DParam(
-    CCResManage* resource, uint32_t deviceId, const void* src, void* dst, uint64_t count,
+    CCResManage* resource, uint32_t deviceId, const void* src, const void* dst, uint64_t count,
     CCSmallCryptoKernelParam& param)
 {
     auto& metadata = param.metadata;
@@ -82,7 +82,8 @@ rtError_t PrepareSmallH2DParam(
     size_t ciphertextLen = 0U;
     const rtError_t ret = resource->Crypto().Encrypt(
         deviceId, CC_CRYPTO_CIPHER::AES_128, static_cast<const uint8_t*>(src), count,
-        reinterpret_cast<const uint8_t*>(&metadata), sizeof(metadata), param.ciphertext, &ciphertextLen);
+        static_cast<const uint8_t*>(static_cast<const void*>(&metadata)), sizeof(metadata), param.ciphertext,
+        &ciphertextLen);
     COND_RETURN_WITH_NOLOG(ret != RT_ERROR_NONE, ret);
     COND_RETURN_ERROR(
         ciphertextLen != expectedCiphertextLen, RT_ERROR_CC_CRYPTO_FAILED, "Unexpected CC small ciphertext length.");
@@ -123,7 +124,7 @@ rtError_t PrepareSmallD2HParam(
 }
 
 rtError_t CompleteSmallD2HCopy(
-    Device* device, CCResManage* resource, CCSmallD2HResources* buffers, const CCSmallCryptoMetadata& metadata,
+    const Device* device, CCResManage* resource, CCSmallD2HResources* buffers, const CCSmallCryptoMetadata& metadata,
     void* dst, uint64_t destMax)
 {
     const uint32_t deviceId = device->Id_();
@@ -148,7 +149,7 @@ rtError_t CompleteSmallD2HCopy(
     size_t plaintextLen = 0U;
     ret = resource->Crypto().Decrypt(
         deviceId, CC_CRYPTO_CIPHER::AES_128, static_cast<const uint8_t*>(buffers->hostBuffer), expectedCiphertextLen,
-        reinterpret_cast<const uint8_t*>(&metadata), sizeof(metadata), plaintext, &plaintextLen);
+        static_cast<const uint8_t*>(static_cast<const void*>(&metadata)), sizeof(metadata), plaintext, &plaintextLen);
     COND_RETURN_WITH_NOLOG(ret != RT_ERROR_NONE, ret);
     COND_RETURN_ERROR(plaintextLen != count, RT_ERROR_CC_CRYPTO_FAILED, "Unexpected CC small plaintext length.");
     const int32_t copyRet = memcpy_s(dst, destMax, plaintext, plaintextLen);
@@ -548,7 +549,7 @@ rtError_t CCManager::SubmitCcMemcpyTask(
     return RT_ERROR_NONE;
 }
 
-bool CCManager::CanUseSmallCcMemcpy(uint64_t count, rtMemcpyKind_t kind, Stream* stm, bool isSync)
+bool CCManager::CanUseSmallCcMemcpy(uint64_t count, rtMemcpyKind_t kind, const Stream* stm, bool isSync)
 {
     if (count > CC_SMALL_PLAINTEXT_CAPACITY) {
         return false;
@@ -585,7 +586,7 @@ rtError_t CCManager::SubmitSmallCcMemcpyTask(
     std::unique_ptr<uint8_t[]> paramStorage;
     rtError_t ret = InitSmallCryptoParam(resource, mode, count, paramStorage);
     COND_RETURN_WITH_NOLOG(ret != RT_ERROR_NONE, ret);
-    auto& param = *reinterpret_cast<CCSmallCryptoKernelParam*>(paramStorage.get());
+    auto& param = *static_cast<CCSmallCryptoKernelParam*>(static_cast<void*>(paramStorage.get()));
     auto& metadata = param.metadata;
 
     // Keep the stream and its CC resources alive throughout Host post-processing.
