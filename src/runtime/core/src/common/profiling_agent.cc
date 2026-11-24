@@ -18,8 +18,18 @@
 namespace cce {
 namespace runtime {
 namespace {
-constexpr size_t PROF_API_STACK_RESERVE_SIZE = 8U;
+constexpr size_t PROF_API_STACK_MAX_SIZE = 64U;
 thread_local std::vector<ProfApiContext> g_apiProfStack{};
+// Set to false right before g_apiProfStack is destroyed: the guard is constructed after the
+// vector, so its destructor runs first. Decorated api calls may still arrive from
+// thread-exit/TLS-destructor context (e.g. rtDevBinaryUnRegister invoked by librts_aicoredev
+// during teardown); touching the already freed vector there corrupts the heap.
+thread_local bool g_apiProfStackAlive = true;
+thread_local size_t g_apiProfStackOverflowDepth = 0U;
+struct ApiProfStackDestructGuard {
+    ~ApiProfStackDestructGuard() { g_apiProfStackAlive = false; }
+};
+thread_local ApiProfStackDestructGuard g_apiProfStackDestructGuard{};
 thread_local ProfApiContext g_fallbackProfApiContext{};
 
 static uint32_t GetProfExtInfoDataLen(const uint32_t extInfoType, const char*& typeName)
@@ -657,8 +667,24 @@ void ProfilingAgent::ReportProfApi(const uint32_t devId, RuntimeProfApiData& pro
 
 ProfApiContext* ProfilerPushProfApiContext(void)
 {
+    if (!g_apiProfStackAlive) {
+        // Thread is exiting: the stack is already/being destroyed, refuse to touch it.
+        return nullptr;
+    }
+    // Reserve the whole capacity at first use and never let the vector grow afterwards.
+    // Growing it would move the elements, so pointers/references already handed out by
+    // ProfilerGetTopProfApiContext()/ProfilerGetProfApiData() would point to the freed
+    // old buffer and the caller would corrupt the heap when writing through them.
     if (g_apiProfStack.capacity() == 0U) {
-        g_apiProfStack.reserve(PROF_API_STACK_RESERVE_SIZE);
+        g_apiProfStack.reserve(PROF_API_STACK_MAX_SIZE);
+    }
+    if ((g_apiProfStackOverflowDepth != 0U) || (g_apiProfStack.size() >= g_apiProfStack.capacity())) {
+        // Pair a rejected Begin with its End without popping an active outer frame.
+        ++g_apiProfStackOverflowDepth;
+        RT_LOG(
+            RT_LOG_ERROR, "api profiling context stack is full, size=%zu, capacity=%zu.", g_apiProfStack.size(),
+            g_apiProfStack.capacity());
+        return nullptr;
     }
     (void)g_apiProfStack.emplace_back();
     return &g_apiProfStack.back();
@@ -666,6 +692,13 @@ ProfApiContext* ProfilerPushProfApiContext(void)
 
 bool ProfilerPopProfApiContext(ProfApiContext& profApiContext)
 {
+    if (!g_apiProfStackAlive) {
+        return false;
+    }
+    if (g_apiProfStackOverflowDepth != 0U) {
+        --g_apiProfStackOverflowDepth;
+        return false;
+    }
     if (g_apiProfStack.empty()) {
         return false;
     }
@@ -675,8 +708,14 @@ bool ProfilerPopProfApiContext(ProfApiContext& profApiContext)
     return true;
 }
 
+bool ProfilerIsProfApiContextOverflowed(void) { return g_apiProfStackAlive && (g_apiProfStackOverflowDepth != 0U); }
+
 ProfApiContext* ProfilerGetTopProfApiContext(void)
 {
+    // A rejected frame must not expose an active outer frame to its API body.
+    if (!g_apiProfStackAlive || ProfilerIsProfApiContextOverflowed()) {
+        return nullptr;
+    }
     if (g_apiProfStack.empty()) {
         return nullptr;
     }

@@ -55,6 +55,7 @@ private:
 ProfApiContext* ProfilerPushProfApiContext(void);
 bool ProfilerPopProfApiContext(ProfApiContext& profApiContext);
 ProfApiContext* ProfilerGetTopProfApiContext(void);
+bool ProfilerIsProfApiContextOverflowed(void);
 RuntimeProfApiData& ProfilerGetProfApiData(void);
 TaskTrackInfo& ProfilerGetProfTaskTrackData(void);
 } // namespace runtime

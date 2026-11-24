@@ -800,6 +800,92 @@ TEST_F(ProfilerTest, KernelArgsModuleProfileIsPairedForSuccessAndRawFailure)
     ClearApiProfContextStack(profiler);
 }
 
+TEST_F(ProfilerTest, ApiProfileStackOverflowPreservesOuterFrames)
+{
+    profiler = Runtime::Instance()->profiler_;
+    ClearApiProfContextStack(profiler);
+    ProfApiContext* outer = profiler->PushProfApiContext();
+    ASSERT_NE(outer, nullptr);
+    outer->apiData.profileType = RT_PROF_API_STREAM_DESTROY;
+    for (size_t i = 1U; i < 64U; ++i) {
+        EXPECT_NE(profiler->PushProfApiContext(), nullptr);
+    }
+    ProfApiContext* top = profiler->GetTopProfApiContext();
+    EXPECT_EQ(outer->apiData.profileType, RT_PROF_API_STREAM_DESTROY);
+    EXPECT_EQ(profiler->PushProfApiContext(), nullptr);
+    EXPECT_EQ(profiler->PushProfApiContext(), nullptr);
+    ProfApiContext context{};
+    EXPECT_FALSE(profiler->PopProfApiContext(context));
+    EXPECT_EQ(profiler->GetTopProfApiContext(), nullptr);
+    EXPECT_FALSE(profiler->PopProfApiContext(context));
+    EXPECT_EQ(profiler->GetTopProfApiContext(), top);
+    for (size_t i = 0U; i < 63U; ++i) {
+        EXPECT_TRUE(profiler->PopProfApiContext(context));
+    }
+    EXPECT_EQ(profiler->GetTopProfApiContext(), outer);
+    EXPECT_EQ(outer->apiData.profileType, RT_PROF_API_STREAM_DESTROY);
+    EXPECT_TRUE(profiler->PopProfApiContext(context));
+    EXPECT_EQ(profiler->GetTopProfApiContext(), nullptr);
+}
+
+TEST_F(ProfilerTest, ApiProfileStackOverflowIsolatesOuterData)
+{
+    Runtime* rt = Runtime::Instance();
+    profiler = rt->profiler_;
+    const bool oldApiEnable = profiler->GetApiProfEnable();
+    const bool oldTrackEnable = profiler->GetTrackProfEnable();
+    ClearApiProfContextStack(profiler);
+    profiler->SetApiProfEnable(true);
+    profiler->SetTrackProfEnable(true);
+    for (size_t i = 0U; i < 64U; ++i) {
+        EXPECT_NE(profiler->PushProfApiContext(), nullptr);
+    }
+    ProfApiContext* outer = profiler->GetTopProfApiContext();
+    ASSERT_NE(outer, nullptr);
+    outer->needReport = true;
+    outer->taskTrackInfo.taskNum = 1U;
+    profiler->CallApiBegin(RT_PROF_API_DEV_FREE);
+    EXPECT_EQ(rt->GetRuntimeReportProfApiData(), nullptr);
+    rt->FillRuntimeMemMngExtInfo(0x1234ULL, 16U, RT_PROF_MEM_MNG_TYPE_FREE, 0U, nullptr);
+    TaskInfo task{};
+    task.type = TS_TASK_TYPE_MEMCPY;
+    MOCKER(MsprofReportCompactInfo).expects(never());
+    profiler->ReportTaskTrack(&task, 0U);
+    EXPECT_EQ(outer->apiData.extInfoCount, 0U);
+    EXPECT_EQ(outer->taskTrackInfo.taskNum, 1U);
+    profiler->CallApiEnd(RT_ERROR_NONE, 0U);
+    EXPECT_EQ(profiler->GetTopProfApiContext(), outer);
+    profiler->SetApiProfEnable(oldApiEnable);
+    profiler->SetTrackProfEnable(oldTrackEnable);
+    ClearApiProfContextStack(profiler);
+}
+
+TEST_F(ProfilerTest, ApiProfileStackOverflowKeepsPairingAcrossSwitchChanges)
+{
+    profiler = Runtime::Instance()->profiler_;
+    const bool oldEnable = profiler->GetApiProfEnable();
+    ClearApiProfContextStack(profiler);
+    for (size_t i = 0U; i < 64U; ++i) {
+        EXPECT_NE(profiler->PushProfApiContext(), nullptr);
+    }
+    ProfApiContext* outer = profiler->GetTopProfApiContext();
+    profiler->SetApiProfEnable(true);
+    profiler->CallApiBegin(RT_PROF_API_DEV_FREE);
+    profiler->SetApiProfEnable(false);
+    profiler->CallApiBegin(RT_PROF_API_STREAM_DESTROY);
+    EXPECT_EQ(profiler->GetTopProfApiContext(), nullptr);
+    profiler->CallApiEnd(RT_ERROR_NONE, 0U);
+    EXPECT_EQ(profiler->GetTopProfApiContext(), nullptr);
+    profiler->SetApiProfEnable(true);
+    profiler->CallApiBegin(RT_PROF_API_DEV_FREE);
+    profiler->CallApiEnd(RT_ERROR_NONE, 0U);
+    EXPECT_EQ(profiler->GetTopProfApiContext(), nullptr);
+    profiler->CallApiEnd(RT_ERROR_NONE, 0U);
+    EXPECT_EQ(profiler->GetTopProfApiContext(), outer);
+    profiler->SetApiProfEnable(oldEnable);
+    ClearApiProfContextStack(profiler);
+}
+
 TEST_F(ProfilerTest, ApiProfileNestedContextLifo)
 {
     Runtime* rt = ((Runtime*)Runtime::Instance());

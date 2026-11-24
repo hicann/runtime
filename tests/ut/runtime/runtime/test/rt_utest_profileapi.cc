@@ -1209,6 +1209,35 @@ INSTANTIATE_TEST_SUITE_P(
             static_cast<uint32_t>(PROF_COMMANDHANDLE_TYPE_MODEL_UNSUBSCRIBE)),
         testing::Values(false, true)));
 
+TEST_F(ProfileApiTest, SwitchCallbackCannotChangeBackendDevice)
+{
+    constexpr uint32_t moduleId = 234U;
+    auto& manager = ProfCtrlCallbackManager::Instance();
+    const auto changeDevice = [](uint32_t, void* data, uint32_t) -> rtError_t {
+        static_cast<rtProfCommandHandle_t*>(data)->devIdList[0] = UINT32_MAX;
+        return RT_ERROR_NONE;
+    };
+    ASSERT_EQ(manager.RegProfCtrlCallback(moduleId, changeDevice), RT_ERROR_NONE);
+    MOCKER(RtIsHeterogenous).stubs().will(returnValue(false));
+    const auto validDevice = [](uint32_t* ids) mutable { return ids != nullptr && ids[0] == 0U; };
+    MOCKER_CPP_VIRTUAL(Api::Instance(), &Api::ProfilerStart)
+        .expects(once())
+        .with(mockcpp::any(), eq(1), checkWith(validDevice))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(Api::Instance(), &Api::ProfilerStop)
+        .expects(once())
+        .with(mockcpp::any(), eq(1), checkWith(validDevice))
+        .will(returnValue(RT_ERROR_NONE));
+    rtProfCommandHandle_t command{};
+    command.devNums = 1U;
+    for (const auto type : {PROF_COMMANDHANDLE_TYPE_START, PROF_COMMANDHANDLE_TYPE_STOP}) {
+        command.type = type;
+        EXPECT_EQ(rtProfSetProSwitch(&command, sizeof(command)), ACL_RT_SUCCESS);
+        EXPECT_EQ(command.devIdList[0], 0U);
+    }
+    EXPECT_EQ(manager.RegProfCtrlCallback(moduleId, nullptr), RT_ERROR_NONE);
+}
+
 TEST_F(ProfileApiTest, rtProfSetProSwitchAcceptsDeviceCountBoundaries)
 {
     MOCKER(RtIsHeterogenous).stubs().will(returnValue(false));

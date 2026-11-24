@@ -509,17 +509,19 @@ void Profiler::ReportTaskTrack(TaskInfo* const taskInfo, const uint32_t devId) c
         }
     }
 
-    if (!GetTrackProfEnable()) {
+    // Rejected API frames must not append to an outer frame or the shared fallback buffer.
+    if (!GetTrackProfEnable() || ProfilerIsProfApiContextOverflowed()) {
         return;
     }
 
-    TaskTrackInfo& trackMngInfo = GetProfTaskTrackData();
-    uint32_t taskNum = trackMngInfo.taskNum;
-
+    // NOTE: do not cache the reference returned by GetProfTaskTrackData(): it points inside
+    // the per-thread api profiling stack, which is reset/reallocated by nested api calls, so a
+    // cached reference would dangle and corrupt the heap when written to.
+    uint32_t taskNum = GetProfTaskTrackData().taskNum;
     if (taskNum == RUNTIME_TASK_TRACK_BUFF_NUM) {
         RuntimeProfTrackData* trackData;
         for (uint32_t i = 0U; i < RUNTIME_TASK_TRACK_BUFF_NUM; i++) {
-            trackData = &trackMngInfo.trackBuff[i];
+            trackData = &GetProfTaskTrackData().trackBuff[i];
             const int32_t ret = ReportCompactInfo(trackData);
             if (ret != MSPROF_ERROR_NONE) {
                 RT_LOG_CALL_MSG(ERR_MODULE_PROFILE, "Failed to report profiling task track data, retCode=%d.", ret);
@@ -527,13 +529,13 @@ void Profiler::ReportTaskTrack(TaskInfo* const taskInfo, const uint32_t devId) c
             }
         }
 
-        trackMngInfo.taskNum = 0U;
+        GetProfTaskTrackData().taskNum = 0U;
         taskNum = 0U;
     }
 
-    RuntimeProfTrackData* trackData = &(trackMngInfo.trackBuff[taskNum]);
+    RuntimeProfTrackData* trackData = &(GetProfTaskTrackData().trackBuff[taskNum]);
     ModifyTrackData(taskInfo, devId, trackData);
-    trackMngInfo.taskNum++;
+    GetProfTaskTrackData().taskNum++;
 
     ProfApiContext* profApiContext = GetTopProfApiContext();
     if ((profApiContext == nullptr) ||
@@ -543,7 +545,7 @@ void Profiler::ReportTaskTrack(TaskInfo* const taskInfo, const uint32_t devId) c
             RT_LOG_CALL_MSG(ERR_MODULE_PROFILE, "Failed to report profiling task track data, retCode=%d.", ret);
             return;
         }
-        trackMngInfo.taskNum = 0U;
+        GetProfTaskTrackData().taskNum = 0U;
         return;
     }
 }
@@ -965,7 +967,8 @@ void Profiler::CallApiBegin(const uint16_t profileType, const uint64_t dataSize,
     ProfApiContext* profApiContext = nullptr;
     if (!GetApiProfEnable()) {
         // profiling 关闭时，栈空场景可直接返回；
-        if (GetTopProfApiContext() == nullptr) {
+        // Overflow still represents active Begin calls even though their frames are hidden.
+        if ((GetTopProfApiContext() == nullptr) && !ProfilerIsProfApiContextOverflowed()) {
             return;
         }
 
@@ -1005,8 +1008,9 @@ void Profiler::CallApiBegin(const uint16_t profileType, const uint64_t dataSize,
 void Profiler::CallApiEnd(const rtError_t retCode, const uint32_t devId) const
 {
     ProfApiContext profApiContext{};
+    const bool overflowed = ProfilerIsProfApiContextOverflowed();
     if (!PopProfApiContext(profApiContext)) {
-        if (!GetApiProfEnable()) {
+        if (overflowed || !GetApiProfEnable()) {
             return;
         }
         RT_LOG(

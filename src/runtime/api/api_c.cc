@@ -1511,54 +1511,56 @@ rtError_t rtProfSetProSwitch(void* data, uint32_t len)
         RT_LOG_OUTER_MSG_INVALID_PARAM(len, sizeof(rtProfCommandHandle_t));
         return GetRtExtErrCodeAndSetGlobalErr(RT_ERROR_INVALID_VALUE);
     }
-    rtProfCommandHandle_t* const profilerConfig = static_cast<rtProfCommandHandle_t*>(data);
+    rtProfCommandHandle_t profilerConfig = *static_cast<const rtProfCommandHandle_t*>(data);
     COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER_WITH_PARAM_NAME(
-        profilerConfig->devNums > RT_PROF_MAX_DEV_NUM, RT_ERROR_INVALID_VALUE, profilerConfig->devNums, "devNums",
+        profilerConfig.devNums > RT_PROF_MAX_DEV_NUM, RT_ERROR_INVALID_VALUE, profilerConfig.devNums, "devNums",
         RtFmtMsg("[0, %u]", static_cast<uint32_t>(RT_PROF_MAX_DEV_NUM)));
-    ProfCtrlCallbackManager::Instance().SaveProfSwitchData(profilerConfig, len);
-    ProfCtrlCallbackManager::Instance().Notify(static_cast<uint32_t>(RT_PROF_CTRL_SWITCH), data, len);
-    RT_LOG(
-        RT_LOG_INFO, "profSwitch:%#" PRIx64 ", profSwitchHi:%#" PRIx64 ", type:%u", profilerConfig->profSwitch,
-        profilerConfig->profSwitchHi, profilerConfig->type);
     if (!RtIsHeterogenous()) {
-        const rtError_t ret = RtCheckDeviceIdListValid(profilerConfig->devIdList, profilerConfig->devNums);
+        const rtError_t ret = RtCheckDeviceIdListValid(profilerConfig.devIdList, profilerConfig.devNums);
         if (ret != RT_ERROR_NONE) {
             return ACL_ERROR_RT_PARAM_INVALID;
         }
     }
+    ProfCtrlCallbackManager::Instance().SaveProfSwitchData(&profilerConfig, len);
+    // Callbacks receive writable data. Keep their changes separate from the validated command.
+    rtProfCommandHandle_t callbackConfig = profilerConfig;
+    ProfCtrlCallbackManager::Instance().Notify(static_cast<uint32_t>(RT_PROF_CTRL_SWITCH), &callbackConfig, len);
+    RT_LOG(
+        RT_LOG_INFO, "profSwitch:%#" PRIx64 ", profSwitchHi:%#" PRIx64 ", type:%u", profilerConfig.profSwitch,
+        profilerConfig.profSwitchHi, profilerConfig.type);
 
     Api* const apiInstance = Api::Instance();
     NULL_RETURN_ERROR_WITH_EXT_ERRCODE(apiInstance);
-    if (profilerConfig->type == PROF_COMMANDHANDLE_TYPE_START) {
+    if (profilerConfig.type == PROF_COMMANDHANDLE_TYPE_START) {
         const rtError_t error = apiInstance->ProfilerStart(
-            profilerConfig->profSwitch, static_cast<int32_t>(profilerConfig->devNums), profilerConfig->devIdList,
-            profilerConfig->cacheFlag, profilerConfig->profSwitchHi);
+            profilerConfig.profSwitch, static_cast<int32_t>(profilerConfig.devNums), profilerConfig.devIdList,
+            profilerConfig.cacheFlag, profilerConfig.profSwitchHi);
         ERROR_RETURN_WITH_EXT_ERRCODE(error);
-        if (((profilerConfig->profSwitch) & (PROF_INSTR)) != 0U) {
+        if (((profilerConfig.profSwitch) & (PROF_INSTR)) != 0U) {
             Runtime::Instance()->SetBiuperfProfFlag(true);
         }
-        if (((profilerConfig->profSwitch) & (PROF_L2CACHE)) != 0U) {
+        if (((profilerConfig.profSwitch) & (PROF_L2CACHE)) != 0U) {
             Runtime::Instance()->SetL2CacheProfFlag(true);
         }
-        if ((profilerConfig->profSwitch & PROF_OP_MASK) != 0U) {
+        if ((profilerConfig.profSwitch & PROF_OP_MASK) != 0U) {
             Runtime::Instance()->SetTaskLevelProfFlag(true);
         }
-    } else if (profilerConfig->type == PROF_COMMANDHANDLE_TYPE_STOP) {
+    } else if (profilerConfig.type == PROF_COMMANDHANDLE_TYPE_STOP) {
         const rtError_t error = apiInstance->ProfilerStop(
-            profilerConfig->profSwitch, static_cast<int32_t>(profilerConfig->devNums), profilerConfig->devIdList,
-            profilerConfig->profSwitchHi);
+            profilerConfig.profSwitch, static_cast<int32_t>(profilerConfig.devNums), profilerConfig.devIdList,
+            profilerConfig.profSwitchHi);
         ERROR_RETURN_WITH_EXT_ERRCODE(error);
-        if (((profilerConfig->profSwitch) & (PROF_INSTR)) != 0U) {
+        if (((profilerConfig.profSwitch) & (PROF_INSTR)) != 0U) {
             Runtime::Instance()->SetBiuperfProfFlag(false);
         }
-        if (((profilerConfig->profSwitch) & (PROF_L2CACHE)) != 0U) {
+        if (((profilerConfig.profSwitch) & (PROF_L2CACHE)) != 0U) {
             Runtime::Instance()->SetL2CacheProfFlag(false);
         }
-        if ((profilerConfig->profSwitch & PROF_OP_MASK) != 0U) {
+        if ((profilerConfig.profSwitch & PROF_OP_MASK) != 0U) {
             Runtime::Instance()->SetTaskLevelProfFlag(false);
         }
     } else {
-        RT_LOG(RT_LOG_INFO, "runtime does not support type:%u", profilerConfig->type);
+        RT_LOG(RT_LOG_INFO, "runtime does not support type:%u", profilerConfig.type);
     }
 
     return ACL_RT_SUCCESS;
