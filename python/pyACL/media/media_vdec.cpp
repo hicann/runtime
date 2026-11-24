@@ -24,12 +24,12 @@ std::map<const aclvdecChannelDesc*, PyObject*> g_callbackMap;
 
 static void VdecCallback(acldvppStreamDesc* input, acldvppPicDesc* output, void* userData)
 {
-    PyGILState_STATE state = PyGILState_Ensure();
     ACL_APP_LOG(ACL_DEBUG, "VdecCallback in");
     if (userData == nullptr) {
         ACL_APP_LOG(ACL_ERROR, "VdecCallback data is null");
         return;
     }
+    PyGILState_STATE state = PyGILState_Ensure();
     auto wrapData = (WrapDataStruct*)userData;
     PyObject* pData = wrapData->userData;
     PyObject* argslist =

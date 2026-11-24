@@ -24,13 +24,13 @@ std::map<const aclvencChannelDesc*, PyObject*> g_callbackMapVenc;
 
 static void VencCallback(acldvppPicDesc* input, acldvppStreamDesc* output, void* userData)
 {
-    PyGILState_STATE state = PyGILState_Ensure();
     ACL_APP_LOG(ACL_DEBUG, "VencCallback in");
     if (userData == nullptr) {
         ACL_APP_LOG(ACL_ERROR, "VencCallback args error");
         return;
     }
 
+    PyGILState_STATE state = PyGILState_Ensure();
     auto wrapData = (WrapDataStruct*)userData;
     PyObject* pData = wrapData->userData;
     PyObject* argslist =

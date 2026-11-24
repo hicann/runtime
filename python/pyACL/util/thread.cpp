@@ -61,13 +61,13 @@ static std::string GetExceptionInfo(pthread_t tid)
 
 static void* ThrFunc(void* userData)
 {
-    PyGILState_STATE state = PyGILState_Ensure();
     ACL_APP_LOG(ACL_DEBUG, "ThrFunc in");
 
     if (userData == nullptr) {
         ACL_APP_LOG(ACL_ERROR, "ThrFunc args error");
         return nullptr;
     }
+    PyGILState_STATE state = PyGILState_Ensure();
     auto data = (PyFuncStruct*)userData;
     PyObject* argslist = nullptr;
     if ((data->pyFuncArgs != nullptr) && (PyObject_TypeCheck(data->pyFuncArgs, &_PyNone_Type) == 0)) {

@@ -129,12 +129,12 @@ struct PyFuncStruct {
 
 static void LaunchCallFunc(void* userData)
 {
-    PyGILState_STATE state = PyGILState_Ensure();
     ACL_APP_LOG(ACL_DEBUG, "LaunchCallFunc in");
     if (userData == nullptr) {
         ACL_APP_LOG(ACL_ERROR, "LaunchCallFunc args error");
         return;
     }
+    PyGILState_STATE state = PyGILState_Ensure();
     auto data = (PyFuncStruct*)userData;
     PyObject* argslist = Py_BuildValue("(O)", data->pyFuncArgs);
 
