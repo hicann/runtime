@@ -1,3 +1,7 @@
+# README 生成模板
+
+本文件是 Runtime 架构文档 README 的生成模板。模板内所有相对链接（如 `architecture.md`、`modules/runtime/runtime.md`）均以实际生成的 README 所在目录为基准，而非本模板文件所在目录。例如生成到仓库内 `docs/zh/design/` 时，`architecture.md` 解析为 `docs/zh/design/architecture.md`。
+
 ```markdown
 # Runtime 架构文档
 

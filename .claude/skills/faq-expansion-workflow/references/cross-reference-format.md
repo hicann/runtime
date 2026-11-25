@@ -1,5 +1,7 @@
 # 交叉引用规范
 
+**路径基准**：本文示例中的相对路径均以生成后的 FAQ 文档位置（`docs/zh/FAQ/`）为基准，而非本参考文件所在目录。例如 `../api_ref/xxx.md` 写入 FAQ 文档后解析为 `docs/zh/api_ref/xxx.md`。
+
 ## API 文档引用
 
 格式：
@@ -24,7 +26,7 @@
 
 格式：
 ```markdown
-参见：[aclrtMalloc 内存申请失败](aclrtMalloc内存申请失败常见原因.md)
+参见：[aclrtMalloc 内存申请失败](aclrtMalloc_allocation_failures.md)
 ```
 
 注意：同目录下的 FAQ 用相对文件名引用，不需要 `../zh/FAQ/` 前缀。
@@ -36,7 +38,7 @@
 
 - [aclrtReserveMemAddress API 参考](../api_ref/11-04_virtual_memory_management.md#aclrtReserveMemAddress)
 - [内存管理最佳实践](../dev_guide/02_memory_management.md)
-- [aclrtMalloc 内存申请失败](aclrtMalloc内存申请失败常见原因.md)
+- [aclrtMalloc 内存申请失败](aclrtMalloc_allocation_failures.md)
 ```
 
 ## 引用路径校验
@@ -45,7 +47,7 @@
 ```bash
 ls docs/zh/api_ref/11-01_device_memory_malloc_and_free.md
 ls docs/zh/dev_guide/02_memory_management.md
-ls docs/zh/FAQ/aclrtMalloc内存申请失败常见原因.md
+ls docs/zh/FAQ/aclrtMalloc_allocation_failures.md
 ```
 
 如果文件不存在，不要添加引用。

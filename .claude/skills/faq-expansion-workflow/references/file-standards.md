@@ -5,8 +5,8 @@
 禁止文件名包含空格（导致 Markdown 链接解析异常）
 
 正确示例：
-- `ACLGraph 捕获过程中任务提交限制.md` ✓
-- `aclrtMalloc 内存申请失败常见原因.md` ✓
+- `ACLGraph_restrictions.md` ✓
+- `aclrtMalloc_allocation_failures.md` ✓
 
 错误示例：
 - `ACL Graph 捕获限制.md` ❌（包含空格）
