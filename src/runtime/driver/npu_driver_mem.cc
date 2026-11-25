@@ -944,7 +944,9 @@ rtError_t NpuDriver::HostMemAlloc(
             drvFlag |= static_cast<uint64_t>(MEM_PAGE_HUGE);
         } else if (hostMemMallocPolicy == RT_HOST_MEM_MALLOC_HUGE_1G_ONLY) {
             drvFlag |= static_cast<uint64_t>(MEM_PAGE_GIANT);
-        } else if (hostMemMallocPolicy != RT_HOST_MEM_MALLOC_NORMAL) {
+        } else if (hostMemMallocPolicy == RT_HOST_MEM_MALLOC_NORMAL) {
+            // 4k page allocation requires no additional flag.
+        } else {
             return RT_ERROR_INVALID_VALUE;
         }
     }
