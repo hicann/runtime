@@ -1305,7 +1305,11 @@ aclError aclrtMemRetainAllocationHandle(void* virPtr, aclrtDrvMemHandle *handle)
 
 若多次调用本接口，则需相应地调用相同次数的aclrtFreePhysical来释放物理内存handle。
 
-若调用接口时返回ACL_ERROR_RT_FEATURE_NOT_SUPPORT，这表示底层驱动不支持该特性，需将驱动包升级到26.0.RC1或更高版本。您可以单击[Link](https://www.hiascend.com/hardware/firmware-drivers/commercial)，在“固件与驱动”页面下载对应版本的驱动安装包，并参照其文档进行安装和升级。
+若调用接口时返回ACL_ERROR_RT_FEATURE_NOT_SUPPORT，这表示底层驱动不支持该特性，需将驱动包升级到26.0.RC1或更高版本。
+
+<!-- npu="950,A3,910b,910,310p,310b" id44 -->
+您可以单击[Link](https://www.hiascend.com/hardware/firmware-drivers/commercial)，在“固件与驱动”页面下载对应版本的驱动安装包，并参照其文档进行安装和升级。
+<!-- end id44 -->
 
 ### 参数说明
 

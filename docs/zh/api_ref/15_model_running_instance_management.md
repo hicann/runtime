@@ -444,7 +444,11 @@ aclError aclmdlRICaptureTaskUpdateBegin(aclrtStream stream, aclrtTaskGrp handle)
 
 aclmdlRICaptureTaskUpdateBegin、[aclmdlRICaptureTaskUpdateEnd](#aclmdlRICaptureTaskUpdateEnd)接口之间的任务数量、任务类型必须与[aclmdlRICaptureTaskGrpBegin](#aclmdlRICaptureTaskGrpBegin)、[aclmdlRICaptureTaskGrpEnd](#aclmdlRICaptureTaskGrpEnd)接口之间任务数量、任务类型保持一致。
 
-若任务更新时返回ACL\_ERROR\_RT\_FEATURE\_NOT\_SUPPORT，这表示底层驱动不支持该特性，需升级驱动包。您可以单击[Link](https://www.hiascend.com/hardware/firmware-drivers/commercial)，在“固件与驱动”页面下载对应版本的驱动安装包，并参照其文档进行安装和升级。
+若任务更新时返回ACL\_ERROR\_RT\_FEATURE\_NOT\_SUPPORT，这表示底层驱动不支持该特性，需升级驱动包。
+
+<!-- npu="950,A3,910b,910,310p,310b" id4 -->
+您可以单击[Link](https://www.hiascend.com/hardware/firmware-drivers/commercial)，在“固件与驱动”页面下载对应版本的驱动安装包，并参照其文档进行安装和升级。
+<!-- end id4 -->
 
 <!-- npu="A3,910b" id1 -->
 - 针对Atlas A2系列产品、Atlas A3系列产品，需将驱动包升级到25.0.RC1或更高版本。
