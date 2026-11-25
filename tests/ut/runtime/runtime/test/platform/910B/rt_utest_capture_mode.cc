@@ -2702,7 +2702,7 @@ TEST_F(CloudV2CaptureModelTest, cascade_stream)
     GlobalMockObject::verify();
 }
 
-rtStream_t* createModelAndGetStreams(rtModel_t* model, rtStream_t* stream)
+rtStream_t* createModelAndGetStreams(rtModel_t* model, rtStream_t* stream, rtEvent_t userEvent = nullptr)
 {
     rtError_t error;
     rtStreamCaptureStatus status;
@@ -2720,6 +2720,10 @@ rtStream_t* createModelAndGetStreams(rtModel_t* model, rtStream_t* stream)
     error = rtStreamGetCaptureInfo(*stream, &status, model);
     EXPECT_EQ(error, RT_ERROR_NONE);
     EXPECT_EQ(status, RT_STREAM_CAPTURE_STATUS_ACTIVE);
+
+    if (userEvent != nullptr) {
+        EXPECT_EQ(rtEventRecord(userEvent, *stream), RT_ERROR_NONE);
+    }
 
     // get model streams before end capture
     uint32_t numStreams = 0;
@@ -2864,9 +2868,11 @@ TEST_F(CloudV2CaptureModelTest, stream_get_tasks_normal)
     error = rtStreamCreate(&stream, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
-    rtStream_t* inputStreams = createModelAndGetStreams(&model, &stream);
+    rtEvent_t userEvent = nullptr;
+    ASSERT_EQ(rtEventCreateExWithFlag(&userEvent, RT_EVENT_WITH_FLAG), RT_ERROR_NONE);
+    rtStream_t* inputStreams = createModelAndGetStreams(&model, &stream, userEvent);
 
-    // Hardware Event Record remains visible; internal Wait/Reset and EndGraph Notify are hidden.
+    // The user Event Record and its Reset remain visible; internal Event tasks and Notify are hidden.
     rtStream_t recordStream = nullptr;
     uint32_t visibleTotal = 0U;
     for (uint32_t i = 0U; i < 2U; ++i) {
@@ -2882,15 +2888,24 @@ TEST_F(CloudV2CaptureModelTest, stream_get_tasks_normal)
             EXPECT_EQ(hiddenTasks[1], nullptr);
             continue;
         }
-        ASSERT_EQ(count, 1U);
-        rtTask_t task = nullptr;
-        ASSERT_EQ(rtStreamGetTasks(inputStreams[i], &task, &count), RT_ERROR_NONE);
-        rtTaskType type = RT_TASK_DEFAULT;
-        ASSERT_EQ(rtTaskGetType(task, &type), RT_ERROR_NONE);
-        EXPECT_EQ(type, RT_TASK_EVENT_RECORD);
+        ASSERT_EQ(count, 2U);
+        rtTask_t userTasks[2] = {};
+        ASSERT_EQ(rtStreamGetTasks(inputStreams[i], userTasks, &count), RT_ERROR_NONE);
+        bool foundRecord = false;
+        bool foundReset = false;
+        for (rtTask_t task : userTasks) {
+            ASSERT_NE(task, nullptr);
+            EXPECT_EQ(static_cast<TaskInfo*>(task)->taskOwner, static_cast<uint8_t>(TaskOwner::RT_TASK_USER));
+            rtTaskType type = RT_TASK_DEFAULT;
+            ASSERT_EQ(rtTaskGetType(task, &type), RT_ERROR_NONE);
+            foundRecord = foundRecord || (type == RT_TASK_EVENT_RECORD);
+            foundReset = foundReset || (type == RT_TASK_EVENT_RESET);
+        }
+        EXPECT_TRUE(foundRecord);
+        EXPECT_TRUE(foundReset);
         recordStream = inputStreams[i];
     }
-    ASSERT_EQ(visibleTotal, 1U);
+    ASSERT_EQ(visibleTotal, 2U);
     ASSERT_NE(recordStream, nullptr);
 
     uint32_t modelTaskCount = 2U;
@@ -2902,13 +2917,13 @@ TEST_F(CloudV2CaptureModelTest, stream_get_tasks_normal)
     uint32_t numTasks = 0;
     error = rtStreamGetTasks(recordStream, nullptr, &numTasks);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    EXPECT_EQ(numTasks, 1);
+    EXPECT_EQ(numTasks, 2);
 
     // input numTasks = actual task num
     rtTask_t* tasks = (rtTask_t*)malloc(sizeof(rtTask_t) * numTasks);
     error = rtStreamGetTasks(recordStream, tasks, &numTasks);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    EXPECT_EQ(numTasks, 1);
+    EXPECT_EQ(numTasks, 2);
 
     // input numTasks < actual task num
     uint32_t numTasksLess = 0;
@@ -2922,13 +2937,15 @@ TEST_F(CloudV2CaptureModelTest, stream_get_tasks_normal)
     rtTask_t* inputTasksLarger = (rtTask_t*)malloc(sizeof(rtTask_t) * numTasksLarger);
     error = rtStreamGetTasks(recordStream, inputTasksLarger, &numTasksLarger);
     EXPECT_EQ(error, RT_ERROR_NONE);
-    EXPECT_EQ(numTasksLarger, 1);
+    EXPECT_EQ(numTasksLarger, 2);
     for (uint32_t i = numTasksLarger; i < 5U; ++i) {
         EXPECT_EQ(inputTasksLarger[i], nullptr);
     }
 
     error = rtModelDestroy(model);
     EXPECT_EQ(error, RT_ERROR_NONE);
+
+    EXPECT_EQ(rtEventDestroy(userEvent), RT_ERROR_NONE);
 
     error = rtStreamDestroy(stream);
     EXPECT_EQ(error, RT_ERROR_NONE);

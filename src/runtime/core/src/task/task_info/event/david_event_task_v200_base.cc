@@ -48,6 +48,9 @@ rtError_t DavidEventRecordTaskInit(TaskInfo* const taskInfo, Event* const eventP
     taskInfo->needPostProc = true;
     DavidEvent* evt = dynamic_cast<DavidEvent*>(eventPtr);
     eventRecordTaskInfo->event = evt;
+    if (evt->EventOwner_() == EventOwner::EVENT_INNER) {
+        taskInfo->taskOwner = static_cast<uint8_t>(TaskOwner::RT_TASK_INNER);
+    }
     eventRecordTaskInfo->timestamp = 0ULL;
     eventRecordTaskInfo->eventId = newEventId;
     eventRecordTaskInfo->timeout = -1;
@@ -182,6 +185,9 @@ void DavidEventWaitTaskInit(
     taskInfo->needPostProc = true;
     DavidEvent* evt = dynamic_cast<DavidEvent*>(eventPtr);
     eventWaitTaskInfo->event = evt;
+    if (evt->EventOwner_() == EventOwner::EVENT_INNER) {
+        taskInfo->taskOwner = static_cast<uint8_t>(TaskOwner::RT_TASK_INNER);
+    }
     eventWaitTaskInfo->eventId = eventIndex;
     eventWaitTaskInfo->timeout = timeout;
     eventWaitTaskInfo->isCountNotify = evt->IsCntNotify();
@@ -309,6 +315,9 @@ void DavidEventResetTaskInit(TaskInfo* const taskInfo, Event* const eventPtr, co
     DavidEvent* evt = dynamic_cast<DavidEvent*>(eventPtr);
     eventResetTaskInfo->eventId = eventIndex;
     eventResetTaskInfo->event = evt;
+    if (evt->EventOwner_() == EventOwner::EVENT_INNER) {
+        taskInfo->taskOwner = static_cast<uint8_t>(TaskOwner::RT_TASK_INNER);
+    }
     eventResetTaskInfo->isCountNotify = evt->IsCntNotify();
     eventResetTaskInfo->cntRes = nullptr;
     if (eventResetTaskInfo->isCountNotify == 1U) {
