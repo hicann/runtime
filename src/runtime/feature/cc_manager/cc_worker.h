@@ -44,25 +44,25 @@ private:
     rtError_t SetupTask(
         CCMemcpyTask& task, std::shared_ptr<Stream>& stream, CCStreamResManage*& resource, uint32_t& sliceNum);
     rtError_t ProcessSlices(
-        CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t sliceNum, void* pluginTaskCtx);
+        CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t sliceNum, void* pluginTaskCtx) const;
     rtError_t RetireDoneH2DSlices(
         CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t totalSlices, void* pluginTaskCtx,
-        uint32_t& doneIdx, bool waitAll);
+        uint32_t& doneIdx, bool waitAll) const;
     rtError_t ProcessTask(CCMemcpyTask& task);
     rtError_t ProcessTaskImpl(CCMemcpyTask& task);
-    void FailTask(const CCMemcpyTask& task, rtError_t ret);
+    void FailTask(const CCMemcpyTask& task, const rtError_t ret) const;
     rtError_t ProcessH2DSlice(
         CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t sliceIdx, size_t offset, size_t sliceSize,
-        void* pluginTaskCtx = nullptr);
+        void* pluginTaskCtx = nullptr) const;
     rtError_t PublishD2HSlice(
         CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t sliceIdx, size_t offset, size_t sliceSize,
-        void* pluginTaskCtx = nullptr);
-    rtError_t WaitD2HSliceDone(const uint32_t streamId, BarTaskQueue* barQueue, const uint32_t sliceIdx);
+        void* pluginTaskCtx = nullptr) const;
+    rtError_t WaitD2HSliceDone(const uint32_t streamId, BarTaskQueue* const barQueue, const uint32_t sliceIdx) const;
     rtError_t ProcessD2HSlice(
         CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t sliceIdx, size_t offset, size_t sliceSize,
-        uint32_t totalSlices, void* pluginTaskCtx = nullptr);
-    rtError_t WaitH2DConsumed(const uint32_t streamId, BarTaskQueue* barQueue, uint32_t totalSlices);
-    bool ShouldWorkerExit(const uint32_t streamId);
+        uint32_t totalSlices, void* pluginTaskCtx = nullptr) const;
+    rtError_t WaitH2DConsumed(const uint32_t streamId, BarTaskQueue* const barQueue, const uint32_t totalSlices) const;
+    bool ShouldWorkerExit(const uint32_t streamId) const;
 
     uint32_t workerId_{0};
     uint32_t maxSliceSize_{0};

@@ -13,7 +13,6 @@
 #include <cstddef>
 
 #include "cc_task_queue.h"
-#include "../../task_queue/task_queue_abi.h"
 #include "crypto/cc_crypto.h"
 #include "crypto/cc_crypto_plugin.h"
 

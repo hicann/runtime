@@ -168,7 +168,7 @@ void CCWorker::Run()
     RT_LOG(RT_LOG_INFO, "CC worker %u exited", workerId_);
 }
 
-bool CCWorker::ShouldWorkerExit(const uint32_t streamId)
+bool CCWorker::ShouldWorkerExit(const uint32_t streamId) const
 {
     if (cancelled_.load()) {
         return true;
@@ -247,7 +247,7 @@ rtError_t CCWorker::ProcessTask(CCMemcpyTask& task)
     return ret;
 }
 
-void CCWorker::FailTask(const CCMemcpyTask& task, const rtError_t ret)
+void CCWorker::FailTask(const CCMemcpyTask& task, const rtError_t ret) const
 {
     std::shared_ptr<Stream> stream;
     if ((device_ == nullptr) || (device_->GetStreamSqCqManage() == nullptr) ||
@@ -349,7 +349,8 @@ rtError_t CCWorker::ProcessTaskImpl(CCMemcpyTask& task)
     return ret;
 }
 
-rtError_t CCWorker::WaitD2HSliceDone(const uint32_t streamId, BarTaskQueue* const barQueue, const uint32_t sliceIdx)
+rtError_t CCWorker::WaitD2HSliceDone(
+    const uint32_t streamId, BarTaskQueue* const barQueue, const uint32_t sliceIdx) const
 {
     COND_RETURN_ERROR(barQueue == nullptr, RT_ERROR_CC_WORKER_FAILED, "CC worker bar task queue is null.");
     const auto waitStart = std::chrono::steady_clock::now();
@@ -385,7 +386,7 @@ static void FillSliceDescCommon(AiccSliceDescBase* desc, const void* remoteAddr,
 }
 
 rtError_t CCWorker::ProcessSlices(
-    CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t sliceNum, void* pluginTaskCtx)
+    CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t sliceNum, void* pluginTaskCtx) const
 {
     size_t totalSize = task.totalSize;
     rtError_t ret = RT_ERROR_NONE;
@@ -424,7 +425,7 @@ rtError_t CCWorker::ProcessSlices(
 
 rtError_t CCWorker::RetireDoneH2DSlices(
     CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t totalSlices, void* pluginTaskCtx, uint32_t& doneIdx,
-    bool waitAll)
+    bool waitAll) const
 {
     BarTaskQueue* const barQueue = resource->BarQueue();
     rtError_t ret = RT_ERROR_NONE;
@@ -460,7 +461,7 @@ rtError_t CCWorker::RetireDoneH2DSlices(
 
 rtError_t CCWorker::ProcessH2DSlice(
     CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t sliceIdx, size_t offset, size_t sliceSize,
-    void* pluginTaskCtx)
+    void* pluginTaskCtx) const
 {
     BarTaskQueue* const barQueue = resource->BarQueue();
     const auto waitStart = std::chrono::steady_clock::now();
@@ -516,7 +517,7 @@ rtError_t CCWorker::ProcessH2DSlice(
 
 rtError_t CCWorker::PublishD2HSlice(
     CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t sliceIdx, size_t offset, size_t sliceSize,
-    void* pluginTaskCtx)
+    void* pluginTaskCtx) const
 {
     BarTaskQueue* const barQueue = resource->BarQueue();
     const auto waitStart = std::chrono::steady_clock::now();
@@ -563,7 +564,7 @@ rtError_t CCWorker::PublishD2HSlice(
 
 rtError_t CCWorker::ProcessD2HSlice(
     CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t sliceIdx, size_t offset, size_t sliceSize,
-    uint32_t totalSlices, void* pluginTaskCtx)
+    uint32_t totalSlices, void* pluginTaskCtx) const
 {
     BarTaskQueue* const barQueue = resource->BarQueue();
     if (sliceIdx == 0U) {
@@ -614,7 +615,8 @@ rtError_t CCWorker::ProcessD2HSlice(
     return RT_ERROR_NONE;
 }
 
-rtError_t CCWorker::WaitH2DConsumed(const uint32_t streamId, BarTaskQueue* const barQueue, const uint32_t totalSlices)
+rtError_t CCWorker::WaitH2DConsumed(
+    const uint32_t streamId, BarTaskQueue* const barQueue, const uint32_t totalSlices) const
 {
     COND_RETURN_ERROR(barQueue == nullptr, RT_ERROR_CC_WORKER_FAILED, "CC worker bar task queue is null.");
     if (totalSlices == 0U) {

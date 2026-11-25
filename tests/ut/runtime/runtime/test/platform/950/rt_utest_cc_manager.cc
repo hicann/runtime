@@ -1316,7 +1316,7 @@ TEST_F(CCManagerTest, Worker_HookFlow_H2D_And_D2H_RoundTrip)
         return true;
     };
     ksOps.releaseContext = [](KeystreamContext&) {};
-    ksOps.fillSegment = [](KeystreamSegment& segment, Stream*, const uint8_t*) {
+    ksOps.fillSegment = [](KeystreamSegment& segment, Stream*, const uint8_t*, size_t) {
         (void)memset_s(
             segment.hostAddr, static_cast<size_t>(segment.segmentSize), 0xFF, static_cast<size_t>(segment.segmentSize));
         return RT_ERROR_NONE;
@@ -4059,4 +4059,72 @@ TEST_F(CCManagerTest, ThreadPool_DestroyFromWorker)
         std::this_thread::sleep_for(std::chrono::milliseconds(5));
     }
     EXPECT_FALSE(guard->FindThreadTid(id));
+}
+
+namespace {
+// 派生类不 override 基类钩子，用于覆盖 CCCryptoPlugin 的默认实现。
+class CcDefaultHooksPlugin final : public CCCryptoPlugin {
+public:
+    CcDefaultHooksPlugin()
+        : CCCryptoPlugin(CC_CRYPTO_ALG_TYPE::CTR, ActiveCryptoCipherRef(), "CcDefaultHooks", sizeof(AiccSliceDescBase))
+    {}
+    ~CcDefaultHooksPlugin() override = default;
+
+    rtError_t LaunchTransfer(Stream* /* stm */, uint64_t /* taskQueueAddr */, const CCMemcpyTask& /* task */) override
+    {
+        return RT_ERROR_NONE;
+    }
+};
+} // namespace
+
+TEST_F(CCManagerTest, CryptoPlugin_DefaultHooksReturnNone)
+{
+    CcDefaultHooksPlugin plugin;
+    const CCMemcpyTask task{};
+    void* pluginTaskCtx = nullptr;
+    EXPECT_EQ(plugin.OnTaskBegin(task, 0U, 1U, &pluginTaskCtx), RT_ERROR_NONE);
+    EXPECT_EQ(pluginTaskCtx, nullptr);
+
+    CCCryptoSliceCtx sliceCtx{};
+    size_t dmaLen = 0U;
+    EXPECT_EQ(plugin.PrepareH2DSlice(sliceCtx, dmaLen), RT_ERROR_NONE);
+    EXPECT_EQ(plugin.OnH2DSliceDone(sliceCtx), RT_ERROR_NONE);
+    EXPECT_EQ(plugin.PrepareD2HSlice(sliceCtx), RT_ERROR_NONE);
+    EXPECT_EQ(plugin.FinishD2HSlice(sliceCtx), RT_ERROR_NONE);
+    plugin.OnTaskEnd(task, 0U, 1U, nullptr);
+}
+
+TEST_F(CCManagerTest, KeystreamManager_DefaultFillTaskGeneratesIv)
+{
+    KeystreamOps ops;
+    ops.initContext = [](KeystreamContext& context) {
+        if (!context.fillStreams.empty()) {
+            context.fillStreams[0] = reinterpret_cast<Stream*>(static_cast<uintptr_t>(0x1000U));
+        }
+        return true;
+    };
+    ops.allocSegment = [](KeystreamSegment& segment) {
+        segment.hostAddr = static_cast<uint8_t*>(std::malloc(static_cast<size_t>(segment.segmentSize)));
+        segment.deviceAddr = static_cast<uint8_t*>(std::malloc(static_cast<size_t>(segment.segmentSize)));
+        return (segment.hostAddr != nullptr) && (segment.deviceAddr != nullptr);
+    };
+    ops.freeSegment = [](KeystreamSegment& segment) {
+        std::free(segment.hostAddr);
+        std::free(segment.deviceAddr);
+        segment.hostAddr = nullptr;
+        segment.deviceAddr = nullptr;
+    };
+    ops.releaseContext = [](KeystreamContext&) {};
+
+    // devId 取 -1：默认 FillSegment 在设备下发前即返回，只覆盖 Host 侧 IV 生成与默认入口。
+    KeystreamManager manager(-1, &ops);
+    KeystreamKey key{};
+    const std::vector<KeystreamConfig> config{{16, 16, 1}};
+    ASSERT_EQ(manager.Init(config, key), RT_ERROR_NONE);
+    const std::shared_ptr<KeystreamContext> context = manager.context_;
+    ASSERT_NE(context, nullptr);
+    for (uint32_t i = 0U; (i < 400U) && (context->fillError.load(std::memory_order_acquire) == 0); ++i) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    }
+    manager.Release();
 }

@@ -40,7 +40,7 @@ struct CCCryptoSliceCtx {
 // 每设备一个插件；Begin 创建任务状态，End 在成功/失败路径均须调用。
 class CCCryptoPlugin : public NoCopy {
 public:
-    virtual ~CCCryptoPlugin();
+    ~CCCryptoPlugin() override;
 
     CC_CRYPTO_ALG_TYPE AlgType() const;
     CC_CRYPTO_CIPHER Cipher() const;
@@ -55,7 +55,8 @@ public:
     virtual void OnTaskEnd(const CCMemcpyTask& task, uint32_t deviceId, uint32_t totalSlices, void* pluginTaskCtx);
     virtual rtError_t LaunchTransfer(Stream* stm, uint64_t taskQueueAddr, const CCMemcpyTask& task) = 0;
 
-    static rtError_t LaunchDeviceKernel(Stream* stm, const char_t* kernelName, void* args, uint32_t argsSize);
+    static rtError_t LaunchDeviceKernel(
+        Stream* const stm, const char_t* const kernelName, void* const args, const uint32_t argsSize);
 
 protected:
     CCCryptoPlugin(

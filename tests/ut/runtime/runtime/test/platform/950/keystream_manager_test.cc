@@ -102,7 +102,7 @@ bool FakeInitContext(KeystreamContext& context)
 
 void FakeReleaseContext(KeystreamContext& /* context */) { g_fakeOps->releaseCount.fetch_add(1); }
 
-rtError_t FakeFillSegment(KeystreamSegment& segment, Stream* /* stream */, const uint8_t* /* iv */)
+rtError_t FakeFillSegment(KeystreamSegment& segment, Stream* /* stream */, const uint8_t* /* iv */, size_t /* ivLen */)
 {
     FakeKeystreamOps& ops = *g_fakeOps;
     if (ops.fillFail.load()) {
@@ -457,7 +457,7 @@ TEST(KeystreamFillTaskTest, BuildPagesAndCounters)
     constexpr uint32_t segmentSize = (2U * KS_FILL_PAGE_SIZE) + 128U; // 2 整页 + 128B，16B 对齐
     uint8_t baseIv[AICC_CTR_IV_SIZE] = {0};
     std::vector<AiccKeystreamFillTask> tasks;
-    const uint32_t taskLen = BuildKsFillTasks(0x1000U, segmentSize, baseIv, tasks);
+    const uint32_t taskLen = BuildKsFillTasks(0x1000U, segmentSize, baseIv, AICC_CTR_IV_SIZE, tasks);
     ASSERT_EQ(taskLen, 3U);
     ASSERT_EQ(tasks.size(), 3U);
 
@@ -480,9 +480,10 @@ TEST(KeystreamFillTaskTest, BuildRejectsUnalignedSegment)
 {
     uint8_t baseIv[AICC_CTR_IV_SIZE] = {0};
     std::vector<AiccKeystreamFillTask> tasks;
-    EXPECT_EQ(BuildKsFillTasks(0x1000U, 100U, baseIv, tasks), 0U); // 非 16B 对齐
-    EXPECT_EQ(BuildKsFillTasks(0x1000U, 0U, baseIv, tasks), 0U);
-    EXPECT_EQ(BuildKsFillTasks(0x1000U, AICC_BLOCK_SIZE, nullptr, tasks), 0U);
+    EXPECT_EQ(BuildKsFillTasks(0x1000U, 100U, baseIv, AICC_CTR_IV_SIZE, tasks), 0U); // 非 16B 对齐
+    EXPECT_EQ(BuildKsFillTasks(0x1000U, 0U, baseIv, AICC_CTR_IV_SIZE, tasks), 0U);
+    EXPECT_EQ(BuildKsFillTasks(0x1000U, AICC_BLOCK_SIZE, nullptr, AICC_CTR_IV_SIZE, tasks), 0U);
+    EXPECT_EQ(BuildKsFillTasks(0x1000U, AICC_BLOCK_SIZE, baseIv, AICC_CTR_IV_SIZE - 1U, tasks), 0U); // IV 长度不足
 }
 
 TEST_F(KeystreamManagerTest, ReleasedPairIsIdempotentAtCcryptoLayer)

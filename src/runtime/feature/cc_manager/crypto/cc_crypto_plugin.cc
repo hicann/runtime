@@ -52,23 +52,50 @@ const char_t* CCCryptoPlugin::KernelName() const { return kernelName_; }
 
 uint32_t CCCryptoPlugin::SliceDescSize() const { return sliceDescSize_; }
 
-rtError_t CCCryptoPlugin::OnTaskBegin(const CCMemcpyTask&, uint32_t, uint32_t, void** pluginTaskCtx)
+rtError_t CCCryptoPlugin::OnTaskBegin(
+    const CCMemcpyTask& task, uint32_t deviceId, uint32_t totalSlices, void** pluginTaskCtx)
 {
+    UNUSED(task);
+    UNUSED(deviceId);
+    UNUSED(totalSlices);
     if (pluginTaskCtx != nullptr) {
         *pluginTaskCtx = nullptr; // 原语轨默认无 per-task 状态
     }
     return RT_ERROR_NONE;
 }
 
-rtError_t CCCryptoPlugin::PrepareH2DSlice(CCCryptoSliceCtx&, size_t&) { return RT_ERROR_NONE; }
+rtError_t CCCryptoPlugin::PrepareH2DSlice(CCCryptoSliceCtx& ctx, size_t& dmaLen)
+{
+    UNUSED(ctx);
+    UNUSED(dmaLen);
+    return RT_ERROR_NONE;
+}
 
-rtError_t CCCryptoPlugin::OnH2DSliceDone(CCCryptoSliceCtx&) { return RT_ERROR_NONE; }
+rtError_t CCCryptoPlugin::OnH2DSliceDone(CCCryptoSliceCtx& ctx)
+{
+    UNUSED(ctx);
+    return RT_ERROR_NONE;
+}
 
-rtError_t CCCryptoPlugin::PrepareD2HSlice(CCCryptoSliceCtx&) { return RT_ERROR_NONE; }
+rtError_t CCCryptoPlugin::PrepareD2HSlice(CCCryptoSliceCtx& ctx)
+{
+    UNUSED(ctx);
+    return RT_ERROR_NONE;
+}
 
-rtError_t CCCryptoPlugin::FinishD2HSlice(CCCryptoSliceCtx&) { return RT_ERROR_NONE; }
+rtError_t CCCryptoPlugin::FinishD2HSlice(CCCryptoSliceCtx& ctx)
+{
+    UNUSED(ctx);
+    return RT_ERROR_NONE;
+}
 
-void CCCryptoPlugin::OnTaskEnd(const CCMemcpyTask&, uint32_t, uint32_t, void*) {}
+void CCCryptoPlugin::OnTaskEnd(const CCMemcpyTask& task, uint32_t deviceId, uint32_t totalSlices, void* pluginTaskCtx)
+{
+    UNUSED(task);
+    UNUSED(deviceId);
+    UNUSED(totalSlices);
+    UNUSED(pluginTaskCtx);
+}
 
 namespace {
 rtError_t LaunchBuiltinAicpuKernel(

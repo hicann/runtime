@@ -18,7 +18,6 @@
 #include "base.hpp"
 #include "rt_external_mem.h"
 #include "crypto/cc_crypto.h"
-#include "task_queue/task_queue_abi.h"
 
 namespace cce {
 namespace runtime {
@@ -59,7 +58,7 @@ struct CCMemcpyTaskQueue {
     bool Pop(CCMemcpyTask& task)
     {
         std::unique_lock<std::mutex> lock(mutex_);
-        cv_.wait(lock, [&]() { return !queue_.empty() || closed_; });
+        cv_.wait(lock, [this]() { return !queue_.empty() || closed_; });
         if (queue_.empty()) {
             return false;
         }

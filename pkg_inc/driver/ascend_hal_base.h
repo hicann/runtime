@@ -1981,16 +1981,16 @@ struct drv_addr_range {
     void* end_addr;
 };
 
-#define DV_MEM_LOCK_HOST 0x0008
-#define DV_MEM_LOCK_DEV 0x0010
-#define DV_MEM_LOCK_DEV_DVPP 0x0020
-#define DV_MEM_LOCK_HOST_AGENT 0x0040
-#define DV_MEM_USER_MALLOC 0x0080
-#define DV_MEM_USER_REGISTER 0x0100
-#define DV_MEM_UVM 0x0200
-#define DV_MEM_SOMA 0x0400
+#define DV_MEM_LOCK_HOST 0x0008U
+#define DV_MEM_LOCK_DEV 0x0010U
+#define DV_MEM_LOCK_DEV_DVPP 0x0020U
+#define DV_MEM_LOCK_HOST_AGENT 0x0040U
+#define DV_MEM_USER_MALLOC 0x0080U
+#define DV_MEM_USER_REGISTER 0x0100U
+#define DV_MEM_UVM 0x0200U
+#define DV_MEM_SOMA 0x0400U
 
-#define DV_MEM_RESV 8
+#define DV_MEM_RESV 8U
 struct DVattribute {
     /**< DV_MEM_SVM_DEVICE : svm memory & mapped device */
     /**< DV_MEM_SVM_HOST   : svm memory & mapped host */

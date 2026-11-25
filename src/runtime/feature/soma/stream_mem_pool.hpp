@@ -11,14 +11,14 @@
 #define STREAM_MEM_POOL_HPP
 
 #include "common/enum_log.hpp"
+#include <cstddef>
 #include <cstdint>
 #include <set>
 #include <vector>
 #include <mutex>
 #include <map>
 #include <unordered_map>
-#include <bitset>
-#include <list>
+#include <unordered_set>
 #include <memory>
 #include <atomic>
 

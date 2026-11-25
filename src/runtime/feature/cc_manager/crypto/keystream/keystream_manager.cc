@@ -167,10 +167,14 @@ bool AllocSegment(KeystreamSegment& segment)
     }
 
     // 只要求 VA 连续
+    void* devAddr = nullptr;
     const rtError_t error = segment.ksContext->rtContext->Device_()->Driver_()->DevMemAllocWithBackupFlag(
-        reinterpret_cast<void**>(&segment.deviceAddr), segment.segmentSize, RT_MEMORY_HBM, segment.devId,
-        DevMemBackupType::SNAPSHOT_NO_BACKUP);
-    return error == RT_ERROR_NONE;
+        &devAddr, segment.segmentSize, RT_MEMORY_HBM, segment.devId, DevMemBackupType::SNAPSHOT_NO_BACKUP);
+    if (error != RT_ERROR_NONE) {
+        return false;
+    }
+    segment.deviceAddr = static_cast<uint8_t*>(devAddr);
+    return true;
 }
 
 void FreeSegment(KeystreamSegment& segment)
@@ -255,11 +259,11 @@ void ReleaseContext(KeystreamContext& context)
     }
 }
 
-rtError_t FillSegment(KeystreamSegment& segment, Stream* stream, const uint8_t* iv)
+rtError_t FillSegment(KeystreamSegment& segment, Stream* stream, const uint8_t* iv, size_t ivLen)
 {
     const KeystreamOps* const ops = GetOps(segment.ksContext);
     if ((ops != nullptr) && (ops->fillSegment)) {
-        return ops->fillSegment(segment, stream, iv);
+        return ops->fillSegment(segment, stream, iv, ivLen);
     }
 
     const rtError_t error = SetDeviceByLogicDevId(segment.devId);
@@ -269,11 +273,14 @@ rtError_t FillSegment(KeystreamSegment& segment, Stream* stream, const uint8_t* 
     if ((segment.ksContext == nullptr) || (segment.ksContext->key.keyAddr == 0U)) {
         return RT_ERROR_CC_CRYPTO_FAILED;
     }
+    if ((iv == nullptr) || (ivLen < AICC_CTR_IV_SIZE)) {
+        return RT_ERROR_INVALID_VALUE;
+    }
     const KeystreamKey& key = segment.ksContext->key;
 
     std::vector<AiccKeystreamFillTask> tasks;
     const uint32_t taskLen =
-        BuildKsFillTasks(PtrToValue(segment.deviceAddr), static_cast<uint32_t>(segment.segmentSize), iv, tasks);
+        BuildKsFillTasks(PtrToValue(segment.deviceAddr), static_cast<uint32_t>(segment.segmentSize), iv, ivLen, tasks);
     if (taskLen == 0U) {
         return RT_ERROR_CC_CRYPTO_FAILED;
     }
@@ -427,11 +434,12 @@ void AddIvCounter(uint8_t iv[AICC_CTR_IV_SIZE], uint64_t blocks)
 }
 
 uint32_t BuildKsFillTasks(
-    uint64_t keystreamAddr, uint32_t segmentSize, const uint8_t baseIv[AICC_CTR_IV_SIZE],
+    uint64_t keystreamAddr, uint32_t segmentSize, const uint8_t baseIv[AICC_CTR_IV_SIZE], size_t ivLen,
     std::vector<AiccKeystreamFillTask>& tasks)
 {
     tasks.clear();
-    if ((segmentSize == 0U) || ((segmentSize % AICC_BLOCK_SIZE) != 0U) || (baseIv == nullptr)) {
+    if ((segmentSize == 0U) || ((segmentSize % AICC_BLOCK_SIZE) != 0U) || (baseIv == nullptr) ||
+        (ivLen < AICC_CTR_IV_SIZE)) {
         return 0U;
     }
 
@@ -464,12 +472,16 @@ static rtError_t FillKeystreamTask(KeystreamSegment* segment, Stream* stream, st
     std::uniform_int_distribution<uint32_t> distU32(0, UINT32_MAX);
     std::uniform_int_distribution<uint64_t> distU64(0, UINT64_MAX);
 
-    uint8_t iv[AICC_CTR_IV_SIZE];
-    *reinterpret_cast<uint64_t*>(iv) = distU64(rd);
-    *reinterpret_cast<uint32_t*>(iv + 8) = distU32(rd);
-    *reinterpret_cast<uint32_t*>(iv + 12) = 0;
+    uint8_t iv[AICC_CTR_IV_SIZE] = {0};
+    constexpr size_t ivRandom64Size = sizeof(uint64_t);
+    constexpr size_t ivRandom32Size = sizeof(uint32_t);
+    static_assert((ivRandom64Size + (2U * ivRandom32Size)) == AICC_CTR_IV_SIZE, "IV layout must match the CTR ABI");
+    const uint64_t ivRandom64 = distU64(rd);
+    const uint32_t ivRandom32 = distU32(rd);
+    (void)memcpy_s(iv, ivRandom64Size, &ivRandom64, ivRandom64Size);
+    (void)memcpy_s(iv + ivRandom64Size, ivRandom32Size, &ivRandom32, ivRandom32Size);
 
-    const rtError_t error = FillSegment(*segment, stream, iv);
+    const rtError_t error = FillSegment(*segment, stream, iv, sizeof(iv));
     cleanup.result = error;
     if (error != RT_ERROR_NONE) {
         RT_LOG(
@@ -522,7 +534,7 @@ void KeystreamSegment::Release()
     this->threshold = 0;
 }
 
-rtError_t KeystreamSegment::GetKeystreamPair(KeystreamPair& ksPair, int length)
+rtError_t KeystreamSegment::GetKeystreamPair(KeystreamPair& pair, int length)
 {
     if ((length <= 0) || (length > this->segmentSize) || !this->ready.load(std::memory_order_acquire)) {
         return RT_ERROR_INVALID_VALUE;
@@ -553,16 +565,16 @@ rtError_t KeystreamSegment::GetKeystreamPair(KeystreamPair& ksPair, int length)
         this->needFill = true;
     }
 
-    ksPair.keystreamId = this->segmentId;
-    ksPair.length = static_cast<size_t>(length);
-    ksPair.keystreamHost = this->hostAddr + curPos;
-    ksPair.keystreamDevice = this->deviceAddr + curPos;
+    pair.keystreamId = this->segmentId;
+    pair.length = static_cast<size_t>(length);
+    pair.keystreamHost = this->hostAddr + curPos;
+    pair.keystreamDevice = this->deviceAddr + curPos;
     return RT_ERROR_NONE;
 }
 
-rtError_t KeystreamSegment::FreeKeystreamPair(KeystreamPair& ksPair)
+rtError_t KeystreamSegment::FreeKeystreamPair(KeystreamPair& pair)
 {
-    if (ksPair.keystreamId != this->segmentId) {
+    if (pair.keystreamId != this->segmentId) {
         return RT_ERROR_INVALID_VALUE;
     }
 
@@ -572,7 +584,7 @@ rtError_t KeystreamSegment::FreeKeystreamPair(KeystreamPair& ksPair)
         return RT_ERROR_INVALID_VALUE;
     }
 
-    ksPair = {-1, 0U, nullptr, nullptr};
+    pair = {-1, 0U, nullptr, nullptr};
 
     if ((this->needFill.load(std::memory_order_acquire) == true) &&
         (this->currentConsumers.load(std::memory_order_acquire) == 0)) {
@@ -778,7 +790,7 @@ void KeystreamManager::Release()
     context.reset();
 }
 
-rtError_t KeystreamManager::GetKeystreamPair(KeystreamPair& pair, int length, int timeoutMs)
+rtError_t KeystreamManager::GetKeystreamPair(KeystreamPair& ksPair, int length, int timeoutMs)
 {
     if ((this->isInit_.load(std::memory_order_acquire) == false) || (length <= 0)) {
         return RT_ERROR_INVALID_VALUE;
@@ -797,7 +809,7 @@ rtError_t KeystreamManager::GetKeystreamPair(KeystreamPair& pair, int length, in
 
     const auto getStart = std::chrono::steady_clock::now();
     bool waited = false;
-    auto finishGet = [&](rtError_t result) {
+    auto finishGet = [&waited, getStart, length](rtError_t result) {
         const auto spendUs =
             std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - getStart);
         RT_LOG(
@@ -813,7 +825,7 @@ rtError_t KeystreamManager::GetKeystreamPair(KeystreamPair& pair, int length, in
         return finishGet(fillErr);
     }
 
-    if (TryPickSegment(segments, pair, length) == RT_ERROR_NONE) {
+    if (TryPickSegment(segments, ksPair, length) == RT_ERROR_NONE) {
         return finishGet(RT_ERROR_NONE);
     }
 
@@ -828,7 +840,7 @@ rtError_t KeystreamManager::GetKeystreamPair(KeystreamPair& pair, int length, in
         }
 
         std::unique_lock<std::mutex> lock(context->stateMutex_);
-        if (TryPickSegment(segments, pair, length) == RT_ERROR_NONE) {
+        if (TryPickSegment(segments, ksPair, length) == RT_ERROR_NONE) {
             return finishGet(RT_ERROR_NONE);
         }
         if (std::chrono::steady_clock::now() >= timeEnd) {

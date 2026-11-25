@@ -796,9 +796,9 @@ typedef struct {
 #define MEM_HOST_AGENT_TYPE (1u << MEM_HOST_AGENT_VAL)
 #define MEM_RESERVE_TYPE (1u << MEM_RESERVE_VAL)
 
-#define DV_MEM_SVM 0x0001
-#define DV_MEM_SVM_HOST 0x0002
-#define DV_MEM_SVM_DEVICE 0x0004
+#define DV_MEM_SVM 0x0001U
+#define DV_MEM_SVM_HOST 0x0002U
+#define DV_MEM_SVM_DEVICE 0x0004U
 
 #define DEVMM_MAX_MEM_TYPE_VALUE 4     /**< max memory type */
 

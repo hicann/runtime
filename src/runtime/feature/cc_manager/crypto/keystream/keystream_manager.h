@@ -23,7 +23,6 @@
 #include <memory>
 #include <mutex>
 #include <random>
-#include <utility>
 #include <vector>
 
 #include "base.hpp"
@@ -82,7 +81,7 @@ static_assert(offsetof(AiccKeystreamFillParam, tasks) == 24U, "AiccKeystreamFill
 void AddIvCounter(uint8_t iv[AICC_CTR_IV_SIZE], uint64_t blocks);
 
 uint32_t BuildKsFillTasks(
-    uint64_t keystreamAddr, uint32_t segmentSize, const uint8_t baseIv[AICC_CTR_IV_SIZE],
+    uint64_t keystreamAddr, uint32_t segmentSize, const uint8_t baseIv[AICC_CTR_IV_SIZE], size_t ivLen,
     std::vector<AiccKeystreamFillTask>& tasks);
 
 class KeystreamManager;
@@ -100,7 +99,8 @@ struct KeystreamOps {
     std::function<void(KeystreamSegment& segment)> freeSegment;    // 释放段缓冲
     std::function<bool(KeystreamContext& context)> initContext;    // 初始化上下文（设备、密钥、stream）
     std::function<void(KeystreamContext& context)> releaseContext; // 释放上下文资源
-    std::function<rtError_t(KeystreamSegment& segment, Stream* stream, const uint8_t* iv)> fillSegment; // 填充一段
+    std::function<rtError_t(KeystreamSegment& segment, Stream* stream, const uint8_t* iv, size_t ivLen)>
+        fillSegment;                                               // 填充一段
 };
 
 int32_t GenerateKeystream(const uint8_t* key, const uint8_t* iv, uint8_t* keystream, int32_t length);

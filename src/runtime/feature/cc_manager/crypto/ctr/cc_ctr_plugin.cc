@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "common/cc_defs.h"
+#include "task_queue/task_queue_abi.h"
 
 namespace cce {
 namespace runtime {
