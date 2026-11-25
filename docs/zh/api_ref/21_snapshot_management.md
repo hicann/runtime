@@ -1,8 +1,6 @@
 # 21. 快照管理
 
-本章节描述 CANN Runtime 的快照管理接口，用于目标进程状态的锁定、备份、恢复和查询，以及本进程的回调注册与注销。
-
-跨进程调用链、线程生命周期和 Socket 协议等内部设计参见[跨进程 Snapshot 设计](../design/modules/snapshot/cross_process_snapshot.md)。
+本章节描述CANN Runtime的快照管理接口，用于目标进程状态的锁定、备份、恢复和查询，以及本进程的回调注册与注销。
 
 - [`aclError aclrtSnapShotProcessLock(int pid, void* reserve)`](#aclrtSnapShotProcessLock)：锁定目标进程，以阻止目标进程后续的运行时接口调用，包括Device设置/释放、内存的申请/释放/拷贝、Context/Stream/Event/Notify等资源的创建与销毁、以及部分任务下发接口。
 - [`aclError aclrtSnapShotProcessBackup(int pid, aclrtSnapShotBackupArgs *args)`](#aclrtSnapShotProcessBackup)：备份目标进程中的Device资源，并将Device资源保存在Host侧，以便后续恢复。针对目标进程，支持多次备份，以最后一次生效。
@@ -10,20 +8,14 @@
 - [`aclError aclrtSnapShotProcessUnlock(int pid, void* reserve)`](#aclrtSnapShotProcessUnlock)：解锁Device上的目标进程，同时解除目标进程中运行时接口的阻塞调用。
 - [`aclError aclrtSnapShotCallbackRegister(aclrtSnapShotStage stage, aclrtSnapShotCallBack callback, void *args)`](#aclrtSnapShotCallbackRegister)：在本进程注册一个回调函数，该回调函数将在本进程快照操作的不同阶段被调用。不支持重复注册。
 - [`aclError aclrtSnapShotCallbackUnregister(aclrtSnapShotStage stage, aclrtSnapShotCallBack callback)`](#aclrtSnapShotCallbackUnregister)：取消注册本进程的回调函数。取消注册之后，本进程对应快照阶段将不再调用该回调函数。
-- [`aclError aclrtSnapshotProcessGetState(int pid, aclrtProcessState* state)`](#aclrtSnapshotProcessGetState)：查询目标进程的 Snapshot 状态。
-- [`aclError aclrtSnapshotProcessGetRestoreThreadId(int pid, int* tid)`](#aclrtSnapshotProcessGetRestoreThreadId)：查询目标进程执行跨进程 Snapshot 操作的 Linux 线程ID。
+- [`aclError aclrtSnapshotProcessGetState(int pid, aclrtProcessState* state)`](#aclrtSnapshotProcessGetState)：查询目标进程的快照状态。
+- [`aclError aclrtSnapshotProcessGetRestoreThreadId(int pid, int* tid)`](#aclrtSnapshotProcessGetRestoreThreadId)：查询目标进程的快照线程ID。
 
 ## 跨进程调用约束
 
-Lock、Backup、Restore、Unlock 以及本章两个查询接口均支持目标 PID。本进程调用直接执行；跨进程调用由目标进程中名为 `RT_SNAPSHOT` 的 Snapshot 服务线程执行，并在该服务线程中调用目标进程内预先注册的回调。
-
-- 回调注册、注销仅作用于调用方本进程，不支持跨进程注册、注销。
-- 目标进程必须已初始化 Runtime、运行在支持 Snapshot 的产品上，并成功启动服务。接口不负责启动或初始化目标进程。
-- 调用方与目标进程须位于同一台 Linux 主机，并处于可见的 PID 和文件系统环境中。调用方有效用户须与目标进程相同，或为 root；目录和 Socket 的访问权限、对端身份校验均须通过。
-- 服务使用目标有效用户家目录下的 `.cann_snapshot/<pid>.sock`。目录所属用户应为目标用户、权限为 `0700`，Socket 权限为 `0600`。
-- 接口同步返回操作结果。客户端等待结果不设固定超时；发送请求和服务端收发协议报文采用5秒的单次收发超时。连接断开或通信失败返回错误，已开始的操作不会因此取消。目标进程一直不返回且保持连接时，调用线程会持续等待，可由应用工作线程发起调用。
-- 备份、恢复须遵循目标进程状态：`RUNNING → Lock → LOCKED → Backup → BACKED_UP → Restore → LOCKED → Unlock → RUNNING`。资源处理或回调失败可能进入 `FAILED`，此时应终止进程。CRIU 等进程快照工具的使用及驱动能力须满足部署环境要求；跨进程调用不替代进程快照工具。
-- 状态查询反映调用被服务线程执行时的进程状态，不是任务进度或某次请求的完成凭据。服务串行执行请求，前面有耗时操作时，查询也可能等待。
+- 调用方与目标进程须位于同一台Linux主机，且处于相同的PID和文件系统视图中，另外，调用方的有效用户须与目标进程相同，或为root用户。
+- 目标进程须已初始化Runtime。目标用户须有可访问的家目录，且能在其中创建或写入快照服务目录。
+- 跨进程接口同步返回，会等待任务执行完成。通信中断时，已开始的操作仍会继续执行。
 
 <a class="method_anchor" id="aclrtSnapShotProcessLock"></a>
 
@@ -432,26 +424,18 @@ aclError aclrtSnapshotProcessGetState(int pid, aclrtProcessState* state)
 
 ### 功能说明
 
-查询目标进程的Snapshot状态，支持本进程及满足本章约束的跨进程调用，不修改目标进程状态。
+查询目标进程的快照状态。
 
 ### 参数说明
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| pid | 输入 | 目标进程ID，必须大于0。 |
-| state | 输出 | 目标进程的Snapshot状态，类型及各状态含义参见[aclrtProcessState](25-02_Enumerations.md#aclrtProcessState)。不得为NULL，成功时写入状态，失败时保持原值。 |
+| pid | 输入 | 目标进程ID，必须大于0。支持本进程及满足本章跨进程调用约束的其他进程。 |
+| state | 输出 | 目标进程的快照状态，不得为NULL。成功时写入状态，失败时保持原值。状态含义参见[aclrtProcessState](25-02_Enumerations.md#aclrtProcessState)。 |
 
 ### 返回值说明
 
-返回0表示成功，其他值表示失败，参见 [aclError](25-01_aclError.md#aclError)。
-
-```c
-aclrtProcessState state;
-aclError ret = aclrtSnapshotProcessGetState(targetPid, &state);
-if (ret == ACL_SUCCESS && state == ACL_RT_PROCESS_STATE_BACKED_UP) {
-    /* 已观测到备份完成状态；按进程快照方案执行后续步骤。 */
-}
-```
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
 <br>
 <br>
@@ -498,23 +482,15 @@ aclError aclrtSnapshotProcessGetRestoreThreadId(int pid, int* tid)
 
 ### 功能说明
 
-返回目标进程中执行跨进程 Snapshot 操作的 `RT_SNAPSHOT` 线程的 Linux TID，可用于进程快照工具识别该线程；它不是调用进程线程的ID，也不是异步任务ID。服务线程尚未发布 TID、未成功启动或已停止时返回错误。Runtime 初始化不等待服务线程发布 TID，因此初始化后立即进行本地查询也可能返回服务不可用；调用方可稍后重试。
+查询目标进程中执行跨进程快照操作的线程ID。
 
 ### 参数说明
 
 | 参数名 | 输入/输出 | 说明 |
 | --- | :---: | --- |
-| pid | 输入 | 目标进程ID，必须大于0。 |
-| tid | 输出 | 目标进程Snapshot服务线程（线程名为`RT_SNAPSHOT`）的Linux线程ID，用于进程快照工具识别该线程。不得为NULL，成功时写入大于0的TID，失败时保持原值；取值以目标所处PID命名空间为准。 |
+| pid | 输入 | 目标进程ID，必须大于0。支持本进程及满足本章跨进程调用约束的其他进程。 |
+| tid | 输出 | 目标进程所在PID命名空间中的Linux线程ID，不得为NULL。成功时写入大于0的TID，失败时保持原值。 |
 
 ### 返回值说明
 
-返回0表示成功，其他值表示失败，参见 [aclError](25-01_aclError.md#aclError)。
-
-```c
-int tid = 0;
-aclError ret = aclrtSnapshotProcessGetRestoreThreadId(targetPid, &tid);
-if (ret == ACL_SUCCESS) {
-    /* 在目标 PID 命名空间的 /proc/<targetPid>/task/<tid> 中识别服务线程。 */
-}
-```
+返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
