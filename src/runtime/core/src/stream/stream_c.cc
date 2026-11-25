@@ -197,6 +197,10 @@ rtError_t StreamCmoAddrTaskLaunch(
         const auto memCopySync = dev->GetCachedDevInfoProcFunc().memProcFunc.memCopySync;
         if (memCopySync != nullptr) {
             error = memCopySync(davidCmoAddrInfo, dstMax, &sdmaCmoSqe, dstMax, RT_MEMCPY_HOST_TO_DEVICE);
+            COND_RETURN_AND_MSG_OUTER(
+                error == RT_ERROR_CONTINUE_EXECUTE, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
+                "Using the memory descriptor to operate the cache memory on the device", "cmoAddrInfo",
+                "The specified address must be a device address");
         } else {
             error = devDrv->MemCopySync(davidCmoAddrInfo, dstMax, &sdmaCmoSqe, dstMax, RT_MEMCPY_HOST_TO_DEVICE);
         }

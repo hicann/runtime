@@ -4344,6 +4344,12 @@ static rtError_t DeviceMemcpyBatchAsyncStub(
     return RecordDeviceAsyncCallback(stm);
 }
 
+static rtError_t MemCopySyncContinueExecuteStub(
+    void*, const uint64_t, const void*, const uint64_t, const rtMemcpyKind_t)
+{
+    return RT_ERROR_CONTINUE_EXECUTE;
+}
+
 TEST_F(ApiDavidTest, AsyncMemcpyCallbacksUseDeviceCacheAndResolvedDefaultStream)
 {
     RawDevice* const device = static_cast<RawDevice*>(stream_->Device_());
@@ -5955,6 +5961,29 @@ TEST_F(ApiDavidTest, test_cmo_task_on_david)
     stream_->SetSqBaseAddr(oldSqAddr);
     free(sqe);
     sqe = nullptr;
+}
+
+TEST_F(ApiDavidTest, test_cmo_task_reject_host_addr_on_david)
+{
+    RawDevice* const device = static_cast<RawDevice*>(stream_->Device_());
+    ASSERT_NE(device, nullptr);
+
+    rtModel_t model = nullptr;
+    ASSERT_EQ(rtModelCreate(&model, 0U), RT_ERROR_NONE);
+    stream_->SetModel(rt_ut::UnwrapOrNull<Model>(model));
+
+    const DevDynInfoProcFunc originalProcFunc = device->devInfoProcFuncCache_;
+    const ScopeGuard restoreProcFunc(
+        [device, originalProcFunc]() { device->devInfoProcFuncCache_ = originalProcFunc; });
+    device->devInfoProcFuncCache_.memProcFunc.memCopySync = &MemCopySyncContinueExecuteStub;
+
+    rtDavidCmoAddrInfo cmoAddrInfo = {};
+    EXPECT_EQ(
+        StreamCmoAddrTaskLaunch(&cmoAddrInfo, sizeof(cmoAddrInfo), RT_CMO_PREFETCH, stream_, 0U),
+        RT_ERROR_INVALID_VALUE);
+
+    stream_->SetModel(nullptr);
+    EXPECT_EQ(rtModelDestroy(model), RT_ERROR_NONE);
 }
 
 TEST_F(ApiDavidTest, test_data_dump_info_load_task_on_david)
