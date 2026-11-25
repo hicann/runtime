@@ -213,7 +213,7 @@ drvError_t drvBindHostPid(struct drvBindHostpidInfo info) { return DRV_ERROR_NON
 drvError_t drvQueryProcessHostPid(
     int pid, unsigned int* chip_id, unsigned int* vfid, unsigned int* host_pid, unsigned int* cp_type)
 {
-    if (pid = 123789) {
+    if (pid == 123789) {
         *host_pid = 789123;
     }
     return DRV_ERROR_NONE;
