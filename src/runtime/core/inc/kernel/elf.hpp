@@ -108,7 +108,7 @@ enum KernelFunctionType {
 
     KERNEL_FUNCTION_TYPE_MAX = 8U,
 };
-RT_ENUM_LOG_DECLARE(KernelFunctionTypeToString, const KernelFunctionType)
+RT_ENUM_LOG_DECLARE(KernelFunctionTypeToString, KernelFunctionType)
 
 std::string KernelFuncTypeToString(const uint32_t funcType);
 

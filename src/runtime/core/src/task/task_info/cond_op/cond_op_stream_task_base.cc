@@ -8,7 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#include "../../../common/enum_log_impl.hpp"
+#include "common/enum_log.hpp"
 #include "runtime/base.h"
 #include "enum_desc.hpp"
 #include "stream.hpp"
@@ -22,13 +22,6 @@ namespace cce {
 namespace runtime {
 
 #if F_DESC("StreamSwitchNTask")
-#if RUNTIME_ENABLE_ENUM_LOG_NAMES
-#define RT_STREAM_SWITCH_DATA_TYPE_META(X) \
-    X(RT_SWITCH_INT32, "SWITCH_INT32")     \
-    X(RT_SWITCH_INT64, "SWITCH_INT64")
-
-RT_ENUM_STRING_TO_STRING_U32(RtSwitchDataTypeToString, rtSwitchDataType_t, RT_STREAM_SWITCH_DATA_TYPE_META)
-#endif
 
 rtError_t StreamSwitchNTaskInit(
     TaskInfo* taskInfo, const void* const ptrAddr, const uint32_t ptrSize, const void* const valPtr,

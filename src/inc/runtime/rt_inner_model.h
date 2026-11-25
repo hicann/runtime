@@ -43,7 +43,7 @@ typedef enum tagRtCondTaskType {
     RT_COND_TASK_TYPE_SWITCH = 2,
     RT_COND_TASK_TYPE_MAX = 3,
 } rtCondTaskType_t;
-RT_ENUM_LOG_DECLARE_IN_NAMESPACE(RtCondTaskTypeToString, const rtCondTaskType_t)
+RT_ENUM_LOG_DECLARE_IN_NAMESPACE(RtCondTaskTypeToString, rtCondTaskType_t)
 
 typedef enum tagRtCondNumber {
     RT_COND_NUMBER_ZERO = 0,

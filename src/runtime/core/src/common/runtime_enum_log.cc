@@ -13,6 +13,7 @@
 #if RUNTIME_ENABLE_ENUM_LOG_NAMES
 #include "../../inc/kernel/elf.hpp"
 #include "../../inc/task/task_base.hpp"
+#include "../../inc/task/task_info.hpp"
 #include <cstring>
 
 #define RT_KERNEL_FUNCTION_TYPE_META(X)                                       \
@@ -30,11 +31,15 @@ namespace cce {
 namespace runtime {
 
 // These wrappers borrow names from Runtime task and kernel implementations.
-const char_t* GetTaskDescByType(uint8_t taskType);
 const char* TsTaskTypeToString(const tsTaskType_t value) noexcept
 {
     const char_t* name = GetTaskDescByType(static_cast<uint8_t>(value));
-    return (name != nullptr && std::strcmp(name, "unknown") != 0) ? name : "UNKNOWN";
+    constexpr char unknownStr[] = "unknown";
+    constexpr std::size_t unknownStrLen = sizeof(unknownStr) - 1;
+    if (name == nullptr || std::strncmp(name, unknownStr, unknownStrLen) == 0) {
+        name = "UNKNOWN";
+    }
+    return name;
 }
 
 RT_ENUM_STRING_TO_STRING_U32(KernelFunctionTypeToString, KernelFunctionType, RT_KERNEL_FUNCTION_TYPE_META)

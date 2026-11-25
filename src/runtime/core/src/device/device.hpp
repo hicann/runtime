@@ -138,7 +138,7 @@ enum class DeviceStateCallback : uint8_t {
     RTS_DEVICE_STATE_CALLBACK,
     DEVICE_CALLBACK_TYPE_MAX
 };
-RT_ENUM_LOG_DECLARE(DeviceStateCallbackLogToString, const DeviceStateCallback)
+RT_ENUM_LOG_DECLARE(DeviceStateCallbackLogToString, DeviceStateCallback)
 
 enum class TaskFailCallbackType : uint8_t {
     RT_SET_TASK_FAIL_CALLBACK = 0,
