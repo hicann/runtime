@@ -51,7 +51,8 @@
 | --- | --- |
 | ret | int，错误码，返回0表示成功，返回[其它值](../datatypes/aclError.md)表示失败。 |
 
-## 约束说明
+<!-- npu="310p" id8 -->
+### 约束说明
 
-- 需调用两次[acl.rt.device\_disable\_peer\_access](function-device_disable_peer_access.md)接口使能两个Device之间的数据交互功能（例如，调用一次[acl.rt.device\_enable\_peer\_access](../device/function-device_enable_peer_access.md)接口使能Device 0到Device 1的数据交互，再调用一次[acl.rt.device\_disable\_peer\_access](function-device_disable_peer_access.md)接口使能Device 1到Device 0的数据交互）。
-- 不支持在Atlas 500 Pro智能边缘服务器（型号 3000）上使用。
+Atlas推理系列产品，Control CPU开放形态下，应用程序运行在Device的Control CPU上时，该接口不支持Device之间的数据交互。
+<!-- end id8 -->

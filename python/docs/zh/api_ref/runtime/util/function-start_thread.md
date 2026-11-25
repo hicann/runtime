@@ -43,7 +43,7 @@ thr_id, ret = acl.util.start_thread(thr_func, args_list)
 | 返回值 | 说明 |
 | --- | --- |
 | thr_id | int，线程ID号。 |
-| ret | int，错误码。<br>返回0表示成功。<br>返回[其它值](../datatypes/aclError.md)表示失败。 |
+| ret | int，错误码，0表示线程创建成功，其他值为线程创建失败时返回的POSIX错误号。 |
 
 ## 约束说明
 

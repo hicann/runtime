@@ -41,4 +41,4 @@ ret = acl.util.stop_thread(thr_id)
 
 | 返回值 | 说明 |
 | --- | --- |
-| ret | int，错误码。<br>返回0表示成功。<br>返回[其它值](../datatypes/aclError.md)表示失败。 |
+| ret | int，错误码，0表示成功等待目标线程结束，其他值为等待失败时返回的POSIX错误号。 |

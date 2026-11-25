@@ -23,7 +23,7 @@
 
 ## 功能说明
 
-获取当前进程的Device资源限制。
+获取当前Device资源限制。
 
 ## 函数原型
 
@@ -54,7 +54,19 @@
 
 ## 约束说明
 
-- 通过acl.rt.device\_set\_limit接口配置的Device资源限制作用于当前进程，所有Device共用同一套配置，任意Device上查询返回相同值。
-- 通过本接口获取的是当前进程的瞬时值，不保证多线程并发安全。
+- 通过acl.rt.device\_set\_limit接口配置的SIMD相关选项及SIMT相关选项的资源限制，这些配置作用于当前进程，所有Device共用同一套配置，任意Device上查询返回相同值。
+- 当查询SIMD相关选项及SIMT相关选项的资源限制，通过本接口获取的是当前进程的瞬时值，不保证多线程并发安全。
 
     例如：首先调用acl.rt.device\_set\_limit将栈大小设置为A，随后调用acl.rt.set\_device使其生效。此时，调用acl.rt.device\_get\_limit接口查询得到的值为A，且资源限制的大小亦为A。随后再次调用acl.rt.device\_set\_limit将其修改为B，但未重新调用acl.rt.set\_device。此时，调用acl.rt.device\_get\_limit接口查询得到的值为B，而实际资源限制的大小仍为A。
+
+<!-- npu="950" id7 -->
+- 当查询L2 Cache持久化大小时，需先指定用于运算的Device（例如调用acl.rt.set\_device接口），不同Device可返回不同值。仅Ascend 950PR&950DT系列产品支持查询该配置。
+<!-- end id7 -->
+
+<!-- npu="A3,910b" id8 -->
+- 对于Atlas A3系列产品、Atlas A2系列产品，查询ACL\_RT\_DEV\_LIMIT\_SIMT\_STACK\_SIZE、ACL\_RT\_DEV\_LIMIT\_SIMT\_DVG\_WARP\_STACK\_SIZE、ACL\_RT\_DEV\_LIMIT\_SIMT\_PRINTF\_FIFO\_SIZE、ACL\_RT\_DEV\_LIMIT\_PERSISTING\_L2CACHE\_SIZE时返回ACL\_ERROR\_RT\_FEATURE\_NOT\_SUPPORT。
+<!-- end id8 -->
+
+<!-- npu="950" id9 -->
+- 对于Ascend 950PR&950DT系列产品，查询ACL\_RT\_DEV\_LIMIT\_SIMT\_STACK\_SIZE返回对齐后×32的值（每warp线程数），如设置256则查询返回8192；查询ACL\_RT\_DEV\_LIMIT\_SIMT\_DVG\_WARP\_STACK\_SIZE返回对齐后的值（不乘线程数），如设置512则查询返回512。
+<!-- end id9 -->

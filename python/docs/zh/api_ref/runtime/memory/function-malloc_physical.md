@@ -63,7 +63,24 @@
 <!-- npu="310b" id7 -->
 - Atlas 200I/500 A2推理产品上，Ascend RC形态不支持调用本接口。
 <!-- end id7 -->
-
+<!-- npu="A3,910b,910,310p,310b" id38 -->
+- 针对以下产品型号，当内存所在位置prop\["location"\]\["type"\] = ACL\_MEM\_LOCATION\_TYPE\_HOST\_NUMA，且内存属性类型prop\["memAttr"\]为普通内存选项（例如ACL\_MEM\_NORMAL）时，不支持使用该参数组合申请内存。
+    <!-- npu="A3" id39 -->
+    - Atlas A3系列产品
+    <!-- end id39 -->
+    <!-- npu="910b" id40 -->
+    - Atlas A2系列产品
+    <!-- end id40 -->
+    <!-- npu="310b" id41 -->
+    - Atlas 200I/500 A2推理产品
+    <!-- end id41 -->
+    <!-- npu="310p" id42 -->
+    - Atlas推理系列产品
+    <!-- end id42 -->
+    <!-- npu="910" id43 -->
+    - Atlas训练系列产品
+    <!-- end id43 -->
+<!-- end id38 -->
 <!-- npu="A3" id8 -->
 - 针对Atlas A3系列产品中的超节点产品，当内存所在位置prop\["location"\]\["type"\] = ACL\_MEM\_LOCATION\_TYPE\_HOST\_NUMA，且内存属性类型prop\["memAttr"\]为P2P选项（例如ACL\_MEM\_P2P\_HUGE）时，可申请到的最大内存大小根据服务器型号、Bios版本会有所不同。建议通过acl.rt.malloc\_physical接口按内存规划尝试申请，以确认内存是否足够。
 <!-- end id8 -->

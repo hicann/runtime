@@ -47,8 +47,8 @@
 | dpitch | int，目的内存中相邻两行数据的地址距离。 |
 | src | int，源内存地址的指针地址。 |
 | spitch | int，源内存中相邻两行数据的地址距离。 |
-| width | int，待复制的矩阵宽度。<br>width最大设置为5000000，且必须小于或等于dpitch和spitch。 |
-| height | int，待复制的矩阵高度。<br>“height”最大可设置为5 *1024* 1024 = 5242880，否则接口返回失败。 |
+| width | int，待复制的矩阵宽度。<br>取值不能超过5000000，且必须小于或等于dpitch和spitch。 |
+| height | int，待复制的矩阵高度。<br>取值不能超过5242880（即5\*1024\*1024）。 |
 | kind | int，内存复制的类型。<br>ACL_MEMCPY_HOST_TO_HOST = 0 // Host内的内存复制<br>ACL_MEMCPY_HOST_TO_DEVICE = 1 // Host到Device的内存复制<br>ACL_MEMCPY_DEVICE_TO_HOST = 2 // Device到Host的内存复制<br>ACL_MEMCPY_DEVICE_TO_DEVICE = 3 // Device内的内存复制<br>ACL_MEMCPY_DEFAULT = 4 // 由系统根据源、目的内存地址自行判断拷贝方向 |
 | stream | int，指定Stream的指针地址。 |
 
@@ -61,7 +61,7 @@
 ## 约束说明
 
 - 该接口是异步接口，调用接口成功仅表示任务下发成功，不表示任务执行成功。调用该接口后，需调用同步等待接口（例如，[acl.rt.synchronize\_stream](../stream/function-synchronize_stream.md)）确保内存复制的任务已执行完成。
-- 本接口仅支持ACL\_MEMCPY\_HOST\_TO\_DEVICE、ACL\_MEMCPY\_DEVICE\_TO\_HOST或ACL\_MEMCPY\_DEVICE\_TO\_DEVICE内存复制类型，且不同型号支持的类型不同。对于不支持的内存复制类型，接口返回ACL\_ERROR\_INVALID\_PARAM。
+- 本接口支持ACL\_MEMCPY\_HOST\_TO\_DEVICE、ACL\_MEMCPY\_DEVICE\_TO\_HOST、ACL\_MEMCPY\_DEVICE\_TO\_DEVICE和ACL\_MEMCPY\_DEFAULT内存复制类型，且不同型号支持的类型不同。对于不支持的内存复制类型，接口返回ACL\_ERROR\_INVALID\_PARAM。
 
     <!-- npu="950,A3,910b" id7 -->
     其中ACL\_MEMCPY\_DEVICE\_TO\_DEVICE类型，以下型号支持：

@@ -86,7 +86,6 @@
 - 本接口分配的内存不会进行对内容的初始化，建议在使用内存前先调用[acl.rt.memset](function-memset.md)接口先初始化内存，清除内存中的随机数。
 - 本接口内部不会进行隐式的Device同步或流同步。如果申请内存成功或申请内存失败会立刻返回结果。
 - policy处仅支持配置单个枚举项，不支持配置多个枚举项位或。
-- 针对ACL\_MEM\_MALLOC\_HUGE\_FIRST\_P2P、ACL\_MEM\_MALLOC\_HUGE\_ONLY\_P2P内存分配规则，建议使用[acl.rt.malloc\_with\_cfg](function-malloc_with_cfg.md)接口，否则可能存在性能问题或无法申请到内存。
 - 使用[acl.rt.malloc](../memory/function-malloc.md)接口申请的内存，需要通过[acl.rt.free](../memory/function-free.md)接口释放内存。
 - 频繁调用[acl.rt.malloc](../memory/function-malloc.md)接口申请内存、调用[acl.rt.free](../memory/function-free.md)接口释放内存，会损耗性能，建议用户提前做内存预先分配或二次管理，避免频繁申请/释放内存。
 - 调用[acl.rt.malloc](../memory/function-malloc.md)接口申请内存时，会对用户输入的size向上对齐成32字节整数倍后，再多加32字节。

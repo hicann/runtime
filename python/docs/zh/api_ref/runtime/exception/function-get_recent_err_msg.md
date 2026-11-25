@@ -38,7 +38,7 @@
 - **python函数**
 
     ```python
-    msg = acl.get_recent_err_msg()
+    ret = acl.get_recent_err_msg()
     ```
 
 ## 参数说明
@@ -49,7 +49,7 @@
 
 | 返回值 | 说明 |
 | --- | --- |
-| ret | int，错误码，返回0表示成功，返回[其它值](../datatypes/aclError.md)表示失败。 |
+| ret | str或None，返回错误描述信息；获取错误描述信息失败时返回None。 |
 
 ## 约束说明
 

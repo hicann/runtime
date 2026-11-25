@@ -51,3 +51,5 @@
     用于控制SIMT算子可以Printf打印的空间大小，单位Byte。默认值为2097152Byte（即2M）。
 
     设置为ACL\_RT\_DEV\_LIMIT\_SIMT\_PRINTF\_FIFO\_SIZE类型时，value取值必须是8Byte的整数倍，如果传入的不是8Byte的整数倍，则接口内部会自动向上取整，确保其为8Byte的整数倍。value的取值范围为\[1048576, 67108864\]Byte，即\[1, 64\]MB。
+
+- ACL\_RT\_DEV\_LIMIT\_PERSISTING\_L2CACHE\_SIZE：用于设置或查询当前Device的L2 Cache持久化大小，单位Byte。设置范围为[0, L2 Cache大小]，L2 Cache大小可通过`acl.rt.get_device_info`查询`ACL_DEV_ATTR_L2_CACHE_SIZE`获取。设置L2 Cache持久化大小时，设置值按档位生效，向上对齐取值。最终生效值可通过`acl.rt.device_get_limit`接口获取。示例：L2 Cache大小为117440512Byte（即112MB），共划分为8个档位，每个档位间隔14MB；若配置为16777216Byte（即16M），最终生效值向上对齐到最近档位，结果为29360128Byte（即28M）。
