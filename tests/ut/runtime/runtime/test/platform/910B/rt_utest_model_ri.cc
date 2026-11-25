@@ -154,14 +154,10 @@ TEST_F(ModelRIGetTasksTest, model_get_tasks_normal)
     ASSERT_EQ(PrepareModelWithTasks({2U, 3U}), RT_ERROR_NONE);
     // A disabled task remains in the list; never modify the list between queries.
     taskInfos_[0].updateFlag = static_cast<uint8_t>(TaskUpdateFlag::RT_TASK_DISABLE);
-    MOCKER_CPP(&TaskFactory::GetTask).expects(never());
+    MockTaskLookup();
     uint32_t count = 0U;
     ASSERT_EQ(rtModelGetTasks(model_, nullptr, &count), RT_ERROR_NONE);
     ASSERT_EQ(count, 5U);
-    GlobalMockObject::verify();
-    GlobalMockObject::reset();
-
-    MockTaskLookup();
     std::vector<rtTask_t> tasks(count);
     count = static_cast<uint32_t>(tasks.size());
     ASSERT_EQ(rtModelGetTasks(model_, tasks.data(), &count), RT_ERROR_NONE);
@@ -251,7 +247,7 @@ TEST_F(ModelRIGetTasksTest, model_get_tasks_capacity_less)
 TEST_F(ModelRIGetTasksTest, model_get_tasks_capacity_zero)
 {
     ASSERT_EQ(PrepareModelWithTasks({2U, 3U}), RT_ERROR_NONE);
-    MOCKER_CPP(&TaskFactory::GetTask).expects(never());
+    MockTaskLookup();
     rtTask_t task = model_;
     uint32_t count = 0U;
     EXPECT_EQ(rtModelGetTasks(model_, &task, &count), ACL_ERROR_RT_INSUFFICIENT_INPUT_ARRAY);
@@ -283,7 +279,13 @@ TEST_F(ModelRIGetTasksTest, model_get_tasks_factory_lookup_failed)
     EXPECT_EQ(count, 8U); // ByStream preserves the input count on a factory lookup error.
     // Task pointers are validated before writing any output elements.
     EXPECT_EQ(tasks, std::vector<rtTask_t>(8U, model_));
+    count = 1U;
+    EXPECT_EQ(rtModelGetTasks(model_, tasks.data(), &count), ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(count, 1U);
+    EXPECT_EQ(tasks, std::vector<rtTask_t>(8U, model_));
     count = 0U;
+    EXPECT_EQ(rtModelGetTasks(model_, nullptr, &count), ACL_ERROR_RT_PARAM_INVALID);
+    EXPECT_EQ(count, 0U);
     EXPECT_EQ(taskInfos_[2].stream->StreamGetTasks(nullptr, &count), RT_ERROR_INVALID_VALUE);
 }
 
@@ -302,45 +304,43 @@ TEST_F(ModelRIGetTasksTest, model_get_tasks_context_mismatch)
     EXPECT_EQ(rtModelGetTasks(model_, nullptr, &count), ACL_ERROR_RT_MODEL_CONTEXT);
 }
 
-TEST_F(ModelRIGetTasksTest, model_get_tasks_count_overflow)
+TEST_F(ModelRIGetTasksTest, model_get_tasks_filters_inner_tasks)
 {
-    ASSERT_EQ(PrepareModelWithTasks({0U, 0U}), RT_ERROR_NONE);
-    struct CountCase {
-        size_t first;
-        size_t second;
-        rtError_t error;
-        uint32_t output;
-    };
-    const std::array<CountCase, 3U> cases{{
-        {UINT32_MAX - 1U, 1U, RT_ERROR_NONE, UINT32_MAX},
-        {UINT32_MAX, 0U, RT_ERROR_NONE, UINT32_MAX},
-        {UINT32_MAX, 1U, RT_ERROR_INVALID_VALUE, 0U},
-    }};
-    // Inject counts only; do not allocate huge task lists or expose the file-local helper.
-    for (const auto& testCase : cases) {
-        MOCKER_CPP(&TaskFactory::GetTask).expects(never());
-        MOCKER_CPP(&Stream::GetDelayRecycleTaskIdWithLock).stubs().will(ignoreReturnValue());
-        MOCKER_CPP(&std::vector<uint16_t>::size)
-            .stubs()
-            .will(returnValue(testCase.first))
-            .then(returnValue(testCase.second));
-        uint32_t count = 0U;
-        EXPECT_EQ(mdl_->ModelGetTasks(nullptr, &count), testCase.error);
-        EXPECT_EQ(count, testCase.output);
-        GlobalMockObject::verify();
-        GlobalMockObject::reset();
+    ASSERT_EQ(PrepareModelWithTasks({3U, 3U}), RT_ERROR_NONE);
+    for (const size_t index : {0U, 2U, 3U, 5U}) {
+        taskInfos_[index].taskOwner = static_cast<uint8_t>(TaskOwner::RT_TASK_INNER);
     }
-    if (sizeof(size_t) > sizeof(uint32_t)) {
-        const uint64_t oversized = static_cast<uint64_t>(UINT32_MAX) + 1U;
-        MOCKER_CPP(&TaskFactory::GetTask).expects(never());
-        MOCKER_CPP(&Stream::GetDelayRecycleTaskIdWithLock).stubs().will(ignoreReturnValue());
-        MOCKER_CPP(&std::vector<uint16_t>::size).stubs().will(returnValue(static_cast<size_t>(oversized)));
-        uint32_t count = 0U;
-        EXPECT_EQ(mdl_->ModelGetTasks(nullptr, &count), RT_ERROR_INVALID_VALUE);
-        EXPECT_EQ(count, 0U);
-        GlobalMockObject::verify();
-        GlobalMockObject::reset();
-    }
+    // 用户 DEFAULT 类型和 AddStream 的 Notify 不能仅因类型而被过滤。
+    taskInfos_[1].type = TS_TASK_TYPE_KERNEL_AICPU;
+    taskInfos_[4].type = TS_TASK_TYPE_NOTIFY_RECORD;
+    MockTaskLookup();
+    uint32_t count = 0U;
+    ASSERT_EQ(rtModelGetTasks(model_, nullptr, &count), RT_ERROR_NONE);
+    EXPECT_EQ(count, 2U);
+    rtTask_t tasks[4] = {model_, model_, model_, model_};
+    count = 1U;
+    EXPECT_EQ(rtModelGetTasks(model_, tasks, &count), ACL_ERROR_RT_INSUFFICIENT_INPUT_ARRAY);
+    EXPECT_EQ(count, 1U);
+    EXPECT_EQ(tasks[0], expected_[1]);
+    EXPECT_EQ(tasks[1], model_);
+    count = 3U;
+    ASSERT_EQ(rtModelGetTasks(model_, tasks, &count), RT_ERROR_NONE);
+    EXPECT_EQ(count, 2U);
+    EXPECT_EQ(tasks[0], expected_[1]);
+    EXPECT_EQ(tasks[1], expected_[4]);
+    EXPECT_EQ(tasks[2], nullptr);
+    EXPECT_EQ(tasks[3], model_);
+    taskInfos_[1].taskOwner = taskInfos_[4].taskOwner = static_cast<uint8_t>(TaskOwner::RT_TASK_INNER);
+    count = 0U;
+    ASSERT_EQ(rtModelGetTasks(model_, nullptr, &count), RT_ERROR_NONE);
+    EXPECT_EQ(count, 0U);
+    count = 3U;
+    ASSERT_EQ(rtModelGetTasks(model_, tasks, &count), RT_ERROR_NONE);
+    EXPECT_EQ(count, 0U);
+    EXPECT_EQ(tasks[0], nullptr);
+    EXPECT_EQ(tasks[1], nullptr);
+    EXPECT_EQ(tasks[2], nullptr);
+    EXPECT_EQ(tasks[3], model_);
 }
 
 // A re-executed process prevents earlier tests from pre-initializing the C API's static feature cache.
