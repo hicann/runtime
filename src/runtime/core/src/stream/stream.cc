@@ -2413,19 +2413,22 @@ rtError_t Stream::Query(void) const
     rtError_t error;
     // Check whether the tasks are complete
     if (device_->IsStarsPlatform()) {
+        const bool isPersistent = (Flags() & RT_STREAM_PERSISTENT) != 0U;
+        // 非 Persistent 流先取软件 tail，避免并发提交使 tail 回绕后与旧硬件 head 相等，误判为完成。
+        uint16_t tail = isPersistent ? 0U : static_cast<uint16_t>(GetTaskPosTail());
         uint16_t sqHead = 0U;
-        uint16_t sqTail = 0U;
         error = device_->Driver_()->GetSqHead(device_->Id_(), device_->DevGetTsId(), this->GetSqId(), sqHead);
         COND_RETURN_ERROR_MSG_INNER(
             error != RT_ERROR_NONE, RT_ERROR_STREAM_NOT_COMPLETE, "Query sq head failed, retCode=%#x.",
             static_cast<uint32_t>(error));
-        error = device_->Driver_()->GetSqTail(device_->Id_(), device_->DevGetTsId(), this->GetSqId(), sqTail);
-        COND_RETURN_ERROR_MSG_INNER(
-            error != RT_ERROR_NONE, RT_ERROR_STREAM_NOT_COMPLETE, "Query sq tail failed, retCode=%#x.",
-            static_cast<uint32_t>(error));
-        if (sqHead != sqTail) {
-            RT_LOG(
-                RT_LOG_DEBUG, "Task not complete, stream_id=%d, sqHead=%hu, sqTail=%hu", this->Id_(), sqHead, sqTail);
+        if (isPersistent) {
+            error = device_->Driver_()->GetSqTail(device_->Id_(), device_->DevGetTsId(), this->GetSqId(), tail);
+            COND_RETURN_ERROR_MSG_INNER(
+                error != RT_ERROR_NONE, RT_ERROR_STREAM_NOT_COMPLETE, "Query sq tail failed, retCode=%#x.",
+                static_cast<uint32_t>(error));
+        }
+        if (sqHead != tail) {
+            RT_LOG(RT_LOG_DEBUG, "Task not complete, stream_id=%d, sqHead=%hu, sqTail=%hu", this->Id_(), sqHead, tail);
             return RT_ERROR_STREAM_NOT_COMPLETE;
         }
     } else {
