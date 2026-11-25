@@ -1496,6 +1496,82 @@ TEST_F(CloudV2CaptureModelUpdateTest, rtModelTaskDisable_Success)
     GlobalMockObject::verify();
 }
 
+// 执行异常状态的模型：就绪检查必须拒绝执行并返回 RT_ERROR_MODEL_EXE_FAILED。
+TEST_F(CloudV2CaptureModelUpdateTest, CheckExecuteReadyRejectedWhenExecuteException)
+{
+    Context* const context = ((Runtime*)Runtime::Instance())->CurrentContext();
+    ASSERT_NE(context, nullptr);
+
+    CaptureModel model;
+    model.context_ = context;
+    model.SetExecuteExceptionFlagForAllModels(true);
+    EXPECT_EQ(model.CheckExecuteReady(), RT_ERROR_MODEL_EXE_FAILED);
+    model.SetExecuteExceptionFlagForAllModels(false);
+    GlobalMockObject::verify();
+}
+
+// 执行异常状态的模型：更新必须被拒绝，模型状态置为 FAULT 且不再进入正常更新流程。
+TEST_F(CloudV2CaptureModelUpdateTest, rtModelUpdateRejectedWhenExecuteException)
+{
+    rtContext_t ctx;
+    rtError_t ret = rtCtxCreate(&ctx, 0, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtStream_t stream;
+    ret = rtStreamCreate(&stream, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtStreamBeginCapture(stream, RT_STREAM_CAPTURE_MODE_GLOBAL);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    MOCKER(memcpy_s).stubs().will(returnValue(NULL));
+
+    void* args[] = {&ret, NULL};
+    ret = rtKernelLaunch(&function_, 1, (void*)args, sizeof(args), NULL, stream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    rtModel_t model;
+    ret = rtStreamEndCapture(stream, &model);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    uint32_t numStreams = 1;
+    rtStream_t inputStreams[numStreams];
+    ret = rtModelGetStreams(model, inputStreams, &numStreams);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    uint32_t numTask = 2;
+    rtTask_t inputTasks[numTask];
+    ret = rtStreamGetTasks(inputStreams[0], inputTasks, &numTask);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    TaskInfo* const taskInfo = static_cast<TaskInfo*>(inputTasks[0]);
+    ASSERT_NE(taskInfo, nullptr);
+    ASSERT_NE(taskInfo->stream, nullptr);
+    CaptureModel* const captureModel = dynamic_cast<CaptureModel*>(taskInfo->stream->Model_());
+    ASSERT_NE(captureModel, nullptr);
+
+    ret = rtModelTaskDisable(inputTasks[0]);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    EXPECT_EQ(captureModel->GetCaptureModelStatus(), RtCaptureModelStatus::UPDATING);
+
+    captureModel->SetExecuteExceptionFlagForAllModels(true);
+    ret = rtModelUpdate(model);
+    EXPECT_EQ(ret, RT_GET_EXT_ERRCODE(RT_ERROR_MODEL_UPDATE_FAILED));
+    EXPECT_EQ(captureModel->GetCaptureModelStatus(), RtCaptureModelStatus::FAULT);
+    captureModel->SetExecuteExceptionFlagForAllModels(false);
+
+    ret = rtModelDestroy(model);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtStreamDestroy(stream);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    ret = rtCtxDestroy(ctx);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+
+    GlobalMockObject::verify();
+}
+
 // 纯 SIMT 任务的禁用：ConvertTaskType 依 simtParamOffset 将任务归类为 RT_TASK_SIMT_KERNEL，
 // 禁用白名单须覆盖该类型（回归：归类变更前 SIMT 任务按 RT_TASK_KERNEL 可禁用）。
 // Disable 经 updateFlag 生效（UpdateCachedParamsToTask 对 DISABLE 任务先于类型 switch 跳过），

@@ -330,7 +330,7 @@ public:
     void SetJettyBindFlag(bool bound) { jettyBindFlag_ = bound; }
     rtError_t EndCaptureAdapterProc();
     CaptureModel* GetRootModel();
-    bool IsExecuteException();
+    bool IsExecuteException() const;
     void SetExecuteExceptionFlagForAllModels(bool flag);
     void ClearExecuteExceptionFlagForAllModels();
 
