@@ -1781,10 +1781,10 @@ TEST_F(CloudV2CondHandleTest, CondHandleWhileE2E)
 
     uint32_t taskCount = 0U;
     ASSERT_EQ(rtModelGetTasks(subModelResult, nullptr, &taskCount), RT_ERROR_NONE);
-    ASSERT_EQ(taskCount, 2U);
+    ASSERT_EQ(taskCount, 1U);
     rtTask_t modelTasks[2] = {};
     ASSERT_EQ(rtModelGetTasks(subModelResult, modelTasks, &taskCount), RT_ERROR_NONE);
-    ASSERT_EQ(taskCount, 2U);
+    ASSERT_EQ(taskCount, 1U);
     rtTask_t streamTasks[2] = {};
     ASSERT_EQ(rtStreamGetTasks(capturedStream, streamTasks, &taskCount), RT_ERROR_NONE);
     ASSERT_EQ(taskCount, 1U);
@@ -2907,6 +2907,12 @@ TEST_F(CloudV2CaptureModelTest, stream_get_tasks_normal)
     }
     ASSERT_EQ(visibleTotal, 2U);
     ASSERT_NE(recordStream, nullptr);
+
+    uint32_t modelTaskCount = 2U;
+    rtTask_t modelTasks[2] = {model, model};
+    ASSERT_EQ(rtModelGetTasks(model, modelTasks, &modelTaskCount), RT_ERROR_NONE);
+    ASSERT_EQ(modelTaskCount, visibleTotal);
+    EXPECT_EQ(modelTasks[1], nullptr);
 
     uint32_t numTasks = 0;
     error = rtStreamGetTasks(recordStream, nullptr, &numTasks);

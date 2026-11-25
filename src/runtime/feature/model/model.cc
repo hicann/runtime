@@ -2569,15 +2569,6 @@ rtError_t Model::ModelGetStreams(Stream** streams, uint32_t* numStreams) const
     return RT_ERROR_NONE;
 }
 
-static inline rtError_t AccumulateTaskCount(const size_t count, uint32_t& total)
-{
-    COND_RETURN_ERROR_MSG_INNER(
-        count > static_cast<size_t>(UINT32_MAX - total), RT_ERROR_INVALID_VALUE,
-        "Model task count exceeds UINT32_MAX, accumulated=%u, next stream count=%zu.", total, count);
-    total += static_cast<uint32_t>(count);
-    return RT_ERROR_NONE;
-}
-
 rtError_t Model::ModelGetTasks(void** tasks, uint32_t* numTasks) const
 {
     RT_LOG(RT_LOG_INFO, "start to get model tasks, modelId=%u, input numTasks=%u.", id_, *numTasks);
@@ -2591,15 +2582,8 @@ rtError_t Model::ModelGetTasks(void** tasks, uint32_t* numTasks) const
     for (Stream* const stm : streams_) {
         std::vector<uint16_t> taskIds;
         stm->GetDelayRecycleTaskIdWithLock(taskIds);
-        const rtError_t error = AccumulateTaskCount(taskIds.size(), total);
-        ERROR_RETURN(error, "Failed to accumulate model task count, modelId=%u.", id_);
-        if (tasks == nullptr) {
-            continue;
-        }
-        // Count all tasks, but keep only the prefix that can fit in the caller's array.
-        const size_t count = std::min(taskIds.size(), static_cast<size_t>(capacity) - taskInfos.size());
-        for (size_t i = 0U; i < count; ++i) {
-            const uint16_t taskId = taskIds[i];
+        // 数量和列表查询均过滤内部任务；数组已满时仍统计全部可见任务。
+        for (const uint16_t taskId : taskIds) {
             TaskInfo* const task = stm->Device_()->GetTaskFactory()->GetTask(stm->Id_(), taskId);
             if (task == nullptr) {
                 RT_LOG(
@@ -2607,7 +2591,15 @@ rtError_t Model::ModelGetTasks(void** tasks, uint32_t* numTasks) const
                     static_cast<uint32_t>(taskId));
                 return RT_ERROR_INVALID_VALUE;
             }
-            taskInfos.push_back(task);
+            if (task->taskOwner == static_cast<uint8_t>(TaskOwner::RT_TASK_INNER)) {
+                continue;
+            }
+            COND_RETURN_ERROR_MSG_INNER(
+                total == UINT32_MAX, RT_ERROR_INVALID_VALUE, "Model task count exceeds UINT32_MAX, modelId=%u.", id_);
+            ++total;
+            if ((tasks != nullptr) && (taskInfos.size() < capacity)) {
+                taskInfos.push_back(task);
+            }
         }
     }
 
