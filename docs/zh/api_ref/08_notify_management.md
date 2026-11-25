@@ -406,7 +406,10 @@ aclError aclrtNotifyGetExportKey(aclrtNotify notify, char *key, size_t len, uint
 
 ### 约束说明
 
-昇腾虚拟化实例场景不支持该操作。
+<!-- npu="950" id10 -->
+- 对于Ascend 950PR系列产品，仅当Device之间采用PCIe互连时支持调用本接口。
+<!-- end id10 -->
+- 昇腾虚拟化实例场景不支持该操作。
 
 <br>
 <br>
@@ -461,11 +464,12 @@ aclError aclrtNotifySetImportPid(aclrtNotify notify, int32_t *pid, size_t num)
 
 返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
-<!-- npu="910b,910,310p" id5 -->
 ### 约束说明
 
-昇腾虚拟化实例场景不支持该操作。
+<!-- npu="950" id5 -->
+- 对于Ascend 950PR系列产品，仅当Device之间采用PCIe互连时支持调用本接口。
 <!-- end id5 -->
+- 昇腾虚拟化实例场景不支持该操作。
 
 <br>
 <br>
@@ -574,8 +578,9 @@ aclError aclrtNotifyImportByKey(aclrtNotify *notify, const char *key, uint64_t f
 
 返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
 
-<!-- npu="910b,910,310p" id7 -->
 ### 约束说明
 
-昇腾虚拟化实例场景不支持该操作。
+<!-- npu="950" id7 -->
+- 对于Ascend 950PR系列产品，仅当Device之间采用PCIe互连时支持调用本接口。
 <!-- end id7 -->
+- 昇腾虚拟化实例场景不支持该操作。
