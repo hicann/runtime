@@ -170,7 +170,8 @@ class Driver;
 class Config;
 class Bitmap;
 class CbSubscribe;
-typedef struct tagTaskInfoStru TaskInfo;
+struct tagTaskInfoStru;
+using TaskInfo = tagTaskInfoStru;
 
 typedef TDT_StatusType (*FUNC_TDT_OPEN)(uint32_t, uint32_t);
 typedef TDT_StatusType (*FUNC_TDT_OPEN_EX)(uint32_t, uint32_t, uint32_t);

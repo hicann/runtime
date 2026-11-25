@@ -414,6 +414,75 @@ static rtError_t SubLogicCqReportV2Once(
 }
 void DvppGrpCallbackFunc(rtDvppGrpRptInfo_t* report) { UNUSED(report); }
 
+namespace {
+rtDvppGrpRptInfo_t g_taskSnCallbackReport = {};
+uint32_t g_taskSnCallbackCount = 0U;
+
+void CaptureTaskSnCallback(rtDvppGrpRptInfo_t* report)
+{
+    ASSERT_NE(report, nullptr);
+    g_taskSnCallbackReport = *report;
+    ++g_taskSnCallbackCount;
+}
+} // namespace
+
+class DvppTaskSnCallbackTest : public DavidTaskRecycleTest, public testing::WithParamInterface<bool> {};
+
+TEST_P(DvppTaskSnCallbackTest, PreservesFullTaskSnInGroupCallback)
+{
+    rtDvppGrp_t grp = nullptr;
+    ASSERT_EQ(rtDvppGroupCreate(&grp, 0), RT_ERROR_NONE);
+    const ScopeGuard groupGuard([&grp]() { EXPECT_EQ(rtDvppGroupDestory(grp), RT_ERROR_NONE); });
+    rtStream_t stream = nullptr;
+    ASSERT_EQ(rtStreamCreateByGrp(&stream, 0, 0, grp), RT_ERROR_NONE);
+    const ScopeGuard streamGuard([&stream]() { EXPECT_EQ(rtStreamDestroy(stream), RT_ERROR_NONE); });
+    Stream* const stm = rt_ut::UnwrapOrNull<Stream>(stream);
+    ASSERT_NE(stm, nullptr);
+    ASSERT_EQ(Runtime::Instance()->allocTaskSnHook_, nullptr);
+
+    const rtLogicCqReport_t savedReport = g_cqReport;
+    const ScopeGuard reportGuard([savedReport]() {
+        g_cqReport = savedReport;
+        g_taskSnCallbackReport = {};
+        g_taskSnCallbackCount = 0U;
+    });
+    g_taskSnCallbackReport = {};
+    g_taskSnCallbackCount = 0U;
+    g_cqReport = {};
+    g_cqReport.sqId = stm->GetSqId();
+    g_cqReport.taskId = 0x1234U;
+    g_cqReport.streamId = 0x5678U;
+    g_cqReport.sqeType = RT_DAVID_SQE_TYPE_JPEGD;
+
+    TaskInfo task = {};
+    task.stream = stm;
+    task.type = GetParam() ? TS_TASK_TYPE_MULTIPLE_TASK : TS_TASK_TYPE_KERNEL_AICORE;
+    task.sqeNum = GetParam() ? 2U : 1U;
+    MOCKER(GetTaskInfo).stubs().will(returnValue(&task));
+    if (GetParam()) {
+        MOCKER(CompleteProcMultipleTaskReport).expects(once()).will(returnValue(true));
+    } else {
+        MOCKER(ProcReportIsDvppErrorAndRetry).expects(once()).will(returnValue(false));
+    }
+    MOCKER(ProcLogicCqReport).stubs();
+    MOCKER(StarsResumeRtsq).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER(RecycleTaskBySqHead).stubs().will(returnValue(RT_ERROR_NONE));
+    Driver* const driver = stm->Device_()->Driver_();
+    MOCKER_CPP_VIRTUAL(static_cast<NpuDriver*>(driver), &NpuDriver::LogicCqReportV2)
+        .stubs()
+        .will(invoke(Sub_LogicCqReportV2));
+
+    EXPECT_EQ(rtDvppWaitGroupReport(grp, CaptureTaskSnCallback, 0), RT_ERROR_NONE);
+    EXPECT_EQ(g_taskSnCallbackCount, 1U);
+    EXPECT_EQ(g_taskSnCallbackReport.taskId, 0x12345678U);
+    EXPECT_EQ(g_taskSnCallbackReport.streamId, static_cast<uint32_t>(stm->Id_()));
+    EXPECT_EQ(g_taskSnCallbackReport.sqeType, GetParam() ? RT_STARS_SQE_TYPE_VIR_TYPE : RT_DAVID_SQE_TYPE_JPEGD);
+    EXPECT_EQ(g_taskSnCallbackReport.accErrorCode, 0U);
+    GlobalMockObject::verify();
+}
+
+INSTANTIATE_TEST_SUITE_P(OrdinaryAndMultipleTask, DvppTaskSnCallbackTest, testing::Values(false, true));
+
 TEST_F(DavidTaskRecycleTest, DvppWaitGroup)
 {
     rtError_t ret;
