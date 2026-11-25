@@ -144,7 +144,7 @@ rtError_t CaptureModel::ModelIdAlloc()
     return RT_ERROR_NONE;
 }
 
-bool CaptureModel::IsExecuteException() { return isExecuteException_; }
+bool CaptureModel::IsExecuteException() const { return isExecuteException_; }
 
 void CaptureModel::SetExecuteExceptionFlagForAllModels(bool flag)
 {
@@ -566,6 +566,13 @@ rtError_t CaptureModel::CheckExecuteReady(void) const
             ErrorCode::EE1017, "Checking whether the capture model is ready", "modelRI",
             RtFmtMsg("ModelRI (model_id=%u) is in capturing state, status=CAPTURING", Id_()));
         return RT_ERROR_MODEL_CAPTURED;
+    }
+
+    if (IsExecuteException()) {
+        RT_LOG_OUTER_MSG_IMPL(
+            ErrorCode::EE1017, "Checking whether the capture model is ready", "modelRI",
+            RtFmtMsg("ModelRI (model_id=%u) is not ready, status=EXECUTION_FAILED", Id_()));
+        return RT_ERROR_MODEL_EXE_FAILED;
     }
 
     if ((captureModelStatus_ != RtCaptureModelStatus::READY) &&

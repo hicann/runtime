@@ -357,6 +357,15 @@ rtError_t ApiImpl::ModelUpdate(Model* mdl)
         return RT_ERROR_MODEL_UPDATE_FAILED;
     }
 
+    if (captureModel->IsExecuteException()) {
+        RT_LOG_OUTER_MSG_IMPL(
+            ErrorCode::EE1017, "Checking whether the capture model is ready", "modelRI",
+            RtFmtMsg("ModelRI (model_id=%u) is not ready, status=EXECUTION_FAILED", captureModel->Id_()));
+        captureModel->ClearGraphUpdateTask();
+        captureModel->SetCaptureModelStatus(RtCaptureModelStatus::FAULT);
+        return RT_ERROR_MODEL_UPDATE_FAILED;
+    }
+
     // 只支持静态更新（模型未执行），模型正在执行报错。
     const bool isRunning = captureModel->IsCaptureModelRunningAfterPoll();
     if (isRunning) {
