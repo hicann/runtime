@@ -63,6 +63,7 @@ target_compile_definitions(stackcore PRIVATE
     $<$<STREQUAL:${PRODUCT},ascend950>:LOG_CORETRACE>
     $<$<STREQUAL:${PRODUCT},ascend950esl>:LOG_CORETRACE>
     $<$<STREQUAL:${PRODUCT},ascend350>:LOG_CORETRACE>
+    $<$<STREQUAL:${PRODUCT},ascend310N>:LOG_CORETRACE>
     _GNU_SOURCE
 )
 

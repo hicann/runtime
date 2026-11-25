@@ -52,6 +52,7 @@ target_compile_definitions(log_server PRIVATE
     $<$<STREQUAL:${PRODUCT},ascend350>:HDC_PROFILING_SUPPORT>
     $<$<STREQUAL:${PRODUCT},ascend960>:HDC_PROFILING_SUPPORT>
     $<$<STREQUAL:${PRODUCT},ascend960esl>:HDC_PROFILING_SUPPORT>
+    $<$<STREQUAL:${PRODUCT},ascend310N>:HDC_PROFILING_SUPPORT>
 )
 
 target_link_libraries(log_server PRIVATE

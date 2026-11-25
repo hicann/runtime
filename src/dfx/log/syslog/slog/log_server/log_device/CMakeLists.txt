@@ -146,7 +146,8 @@ if ((${PRODUCT} STREQUAL "ascend950") OR
         (${PRODUCT} STREQUAL "ascend950esl") OR 
         (${PRODUCT} STREQUAL "ascend350") OR 
         (${PRODUCT} STREQUAL "ascend960") OR 
-        (${PRODUCT} STREQUAL "ascend960esl"))
+        (${PRODUCT} STREQUAL "ascend960esl") OR 
+        (${PRODUCT} STREQUAL "ascend310N"))
     list(APPEND slogdSrcFiles 
         ${CMAKE_CURRENT_SOURCE_DIR}/../../../common/driver/log_drv.c
         ${CMAKE_CURRENT_SOURCE_DIR}/../../../common/driver/driver_api.c
@@ -215,6 +216,10 @@ target_compile_definitions(slogd PRIVATE
     $<$<AND:$<STREQUAL:${PRODUCT},ascend350>,$<NOT:$<BOOL:${ENABLE_RC}>>>:APP_LOG_REPORT EP_MODE IAM_MONITOR APP_LOG_PID_RECORD KERNEL_LOG DRV_EVENT_LOG OS_SLOG STATIC_BUFFER DRIVER_STATIC_BUFFER>
     # ascend350rc: Similar to 350 but without static buffer
     $<$<AND:$<STREQUAL:${PRODUCT},ascend350>,$<STREQUAL:${ENABLE_RC},true>>:APP_LOG_REPORT RC_MODE IAM_MONITOR APP_LOG_PID_RECORD KERNEL_LOG DRV_EVENT_LOG OS_SLOG>
+    # ascend310N: With kernel log and OS slog support
+    $<$<AND:$<STREQUAL:${PRODUCT},ascend310N>,$<NOT:$<BOOL:${ENABLE_RC}>>>:APP_LOG_REPORT EP_MODE IAM_MONITOR APP_LOG_PID_RECORD KERNEL_LOG DRV_EVENT_LOG OS_SLOG STATIC_BUFFER DRIVER_STATIC_BUFFER>
+    # ascend310Nrc: Similar to 310n but without static buffer
+    $<$<AND:$<STREQUAL:${PRODUCT},ascend310N>,$<STREQUAL:${ENABLE_RC},true>>:APP_LOG_REPORT RC_MODE IAM_MONITOR APP_LOG_PID_RECORD KERNEL_LOG DRV_EVENT_LOG OS_SLOG>
 )
 ### INTERNAL END ###
 
@@ -275,6 +280,7 @@ target_link_options(slogd PRIVATE
     $<$<STREQUAL:${PRODUCT},ascend350>:-Wl,-rpath-link,${CMAKE_BINARY_DIR}/extend_rootfs/lib64>
     $<$<STREQUAL:${PRODUCT},ascend960>:-Wl,-rpath-link,${CMAKE_BINARY_DIR}/extend_rootfs/lib64>
     $<$<STREQUAL:${PRODUCT},ascend960esl>:-Wl,-rpath-link,${CMAKE_BINARY_DIR}/extend_rootfs/lib64>
+    $<$<STREQUAL:${PRODUCT},ascend310N>:-Wl,-rpath-link,${CMAKE_BINARY_DIR}/extend_rootfs/lib64>
     # Security hardening linker flags
     -Wl,-z,relro,-z,now,-z,noexecstack              # RELRO, immediate binding, no exec stack
     -Wl,--gc-sections                                # Remove unused sections
@@ -291,6 +297,7 @@ target_link_directories(slogd PRIVATE
     $<$<STREQUAL:${PRODUCT},ascend350>:${CMAKE_INSTALL_PREFIX}/lib>
     $<$<STREQUAL:${PRODUCT},ascend960>:${CMAKE_INSTALL_PREFIX}/lib>
     $<$<STREQUAL:${PRODUCT},ascend960esl>:${CMAKE_INSTALL_PREFIX}/lib>
+    $<$<STREQUAL:${PRODUCT},ascend310N>:${CMAKE_INSTALL_PREFIX}/lib>
 )
 ### INTERNAL END ###
 
@@ -431,6 +438,14 @@ target_link_libraries(slogd PRIVATE
     $<$<STREQUAL:${PRODUCT},ascend960esl>:urma_common>
     $<$<STREQUAL:${PRODUCT},ascend960esl>:utrace_server_share>
     
+    # ascend310N libraries
+    $<$<STREQUAL:${PRODUCT},ascend310N>:ascend_hal>
+    $<$<STREQUAL:${PRODUCT},ascend310N>:iam>
+    $<$<STREQUAL:${PRODUCT},ascend310N>:stackcore>
+    $<$<STREQUAL:${PRODUCT},ascend310N>:log_server>
+    $<$<STREQUAL:${PRODUCT},ascend310N>:utrace_server_share>
+    
+    
     bbox_proc
     # Common security library (required for all products)
     c_sec
@@ -519,7 +534,8 @@ if ((${PRODUCT} STREQUAL "ascend950") OR
         (${PRODUCT} STREQUAL "ascend950esl") OR 
         (${PRODUCT} STREQUAL "ascend350") OR 
         (${PRODUCT} STREQUAL "ascend960") OR 
-        (${PRODUCT} STREQUAL "ascend960esl"))
+        (${PRODUCT} STREQUAL "ascend960esl") OR 
+        (${PRODUCT} STREQUAL "ascend310N"))
     add_custom_target(slogDeviceFiles
         COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/../../etc/david_910_95/slog.conf ${CMAKE_CURRENT_BINARY_DIR}/slog.conf
         COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/../../etc/david_910_95/log.yaml ${CMAKE_CURRENT_BINARY_DIR}
@@ -592,7 +608,8 @@ if ((${PRODUCT} STREQUAL "ascend950") OR
         (${PRODUCT} STREQUAL "ascend950esl") OR 
         (${PRODUCT} STREQUAL "ascend350") OR 
         (${PRODUCT} STREQUAL "ascend960") OR 
-        (${PRODUCT} STREQUAL "ascend960esl"))
+        (${PRODUCT} STREQUAL "ascend960esl") OR 
+        (${PRODUCT} STREQUAL "ascend310N"))
     install(FILES
         ${CMAKE_CURRENT_BINARY_DIR}/log.yaml
         ${CMAKE_CURRENT_BINARY_DIR}/slogd.yaml
