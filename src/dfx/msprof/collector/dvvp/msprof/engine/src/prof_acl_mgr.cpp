@@ -123,21 +123,30 @@ std::string GetInstrProfilingFreqReason()
            std::to_string(INSTR_PROFILING_SAMPLE_FREQ_MAX) + "]";
 }
 
-std::string GetAicMetricsConfigReason()
+std::string GetCustomAicMetricsConfigReason()
 {
-    const std::string metricsPrompt = Platform::instance()->GenerateAicoreMetricsPrompt();
-    if (metricsPrompt.empty() || metricsPrompt.front() != '[') {
-        return metricsPrompt;
-    }
     int32_t minEvent = 0;
     int32_t maxEvent = 0;
     GetAiCoreEventRange(minEvent, maxEvent);
-    const std::string maxEventNum = std::to_string(Platform::instance()->GetMaxMonitorNumber());
     std::stringstream eventRange;
-    eventRange << "range [0x" << std::hex << minEvent << ", 0x" << maxEvent << "]";
-    return "Please input in the range of " + metricsPrompt +
-           " or Custom:<event-list>. Custom event list supports hexadecimal or decimal events in the " +
-           eventRange.str() + ", separated by comma, up to " + maxEventNum + " events";
+    eventRange << "Custom:<event-list>. Custom event list supports hexadecimal or decimal events in the range [0x"
+               << std::hex << std::uppercase << minEvent << ", 0x" << maxEvent << "], separated by comma, up to "
+               << std::dec << Platform::instance()->GetMaxMonitorNumber() << " events";
+    return eventRange.str();
+}
+
+std::string GetAicMetricsConfigReason()
+{
+    const std::string metricsPrompt = Platform::instance()->GenerateAicoreMetricsPrompt();
+    if (metricsPrompt.empty()) {
+        // GenerateAicoreMetricsPrompt is not expected to return empty in the current production
+        // implementation. Keep this fallback to ensure the error reason is always actionable.
+        return GetCustomAicMetricsConfigReason();
+    }
+    if (metricsPrompt.front() != '[') {
+        return "No predefined aic_metrics supported on current platform. " + GetCustomAicMetricsConfigReason();
+    }
+    return "Please input in the range of " + metricsPrompt + " or " + GetCustomAicMetricsConfigReason();
 }
 
 std::string GetTaskTraceConfigReason()

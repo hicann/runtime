@@ -2371,6 +2371,43 @@ TEST_F(MSPROF_ACL_CORE_UTEST, MsprofInitAclJsonInvalidMetricsAndFreqReportInputE
     ExpectLastInputErrorParamAndReasonContains("sys_cpu_freq", "should be an integer");
 }
 
+TEST_F(MSPROF_ACL_CORE_UTEST, MsprofInitAclJsonNoPredefinedAicMetricsReportsInputError)
+{
+    using namespace Msprofiler::Api;
+    MOCKER_CPP(&ProfAclMgr::CallbackInitPrecheck).stubs().will(returnValue(PROFILING_SUCCESS));
+    MOCKER_CPP(&Platform::CheckIfSupport, bool(Platform::*)(const PlatformFeature) const)
+        .stubs()
+        .will(returnValue(true));
+    MOCKER_CPP(&Platform::GenerateAicoreMetricsPrompt)
+        .stubs()
+        .will(returnValue(std::string("No aic_metrics supported on current platform")));
+
+    PlatformTypeGuard platformGuard(PlatformType::CHIP_CLOUD_V3);
+    int32_t minEvent = 0;
+    int32_t maxEvent = 0;
+    GetAiCoreEventRange(minEvent, maxEvent);
+    std::stringstream expectedRange;
+    expectedRange << "[0x" << std::uppercase << std::hex << minEvent << ", 0x" << maxEvent << "]";
+    const std::string expectedMaxEvents =
+        "up to " + std::to_string(Platform::instance()->GetMaxMonitorNumber()) + " events";
+
+    std::vector<std::string> invalidCustomAicMetrics = {
+        "{\"switch\":\"on\",\"aic_metrics\":\"Custom:-0x1\"}",
+        "{\"switch\":\"on\",\"aic_metrics\":\"Custom:0x80000000\"}"};
+    for (const auto& aicMetrics : invalidCustomAicMetrics) {
+        MsprofUtestStub::ResetMsprofLastInputErrorCode();
+        EXPECT_EQ(
+            MSPROF_ERROR_CONFIG_INVALID,
+            ProfAclMgr::instance()->MsprofInitAclJson((void*)aicMetrics.c_str(), aicMetrics.size()));
+        EXPECT_EQ("EK0003", MsprofUtestStub::GetMsprofLastInputErrorCode());
+        ExpectLastInputErrorParamAndReasonContains("aic_metrics", "Custom:<event-list>");
+        ExpectLastInputErrorReasonContains("No predefined aic_metrics supported on current platform");
+        ExpectLastInputErrorReasonContains(expectedRange.str());
+        ExpectLastInputErrorReasonContains("separated by comma");
+        ExpectLastInputErrorReasonContains(expectedMaxEvents);
+    }
+}
+
 TEST_F(MSPROF_ACL_CORE_UTEST, MsprofInitAclJsonUnsupportedInstrProfilingFreqReportsInputError)
 {
     using namespace Msprofiler::Api;

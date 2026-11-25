@@ -48,11 +48,12 @@ DavidV121Platform::DavidV121Platform()
 
 void DavidV121Platform::InsertPmuFeature()
 {
-    const auto pmuFeature = {// PMU
-                             PLATFORM_TASK_AU_PMU,       PLATFORM_TASK_PU_PMU,       PLATFORM_TASK_PUEXCT_PMU,
-                             PLATFORM_TASK_MEMORY_PMU,   PLATFORM_TASK_MEMORYL0_PMU, PLATFORM_TASK_MEMORYUB_PMU,
-                             PLATFORM_TASK_L2_CACHE_PMU, PLATFORM_TASK_RCR_PMU,      PLATFORM_TASK_SOC_PMU,
-                             PLATFORM_TASK_SOC_PMU_NOC};
+    const auto pmuFeature = {
+        // PMU
+        PLATFORM_TASK_AU_PMU,       PLATFORM_TASK_PU_PMU,       PLATFORM_TASK_MEMORY_PMU,
+        PLATFORM_TASK_MEMORYL0_PMU, PLATFORM_TASK_MEMORYUB_PMU, PLATFORM_TASK_L2_CACHE_PMU,
+        PLATFORM_TASK_RCR_PMU,      PLATFORM_TASK_SOC_PMU,      PLATFORM_TASK_SOC_PMU_NOC,
+    };
     supportedFeature_.insert(pmuFeature.begin(), pmuFeature.end());
 }
 
