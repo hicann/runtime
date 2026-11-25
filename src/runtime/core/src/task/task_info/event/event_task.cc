@@ -55,6 +55,9 @@ rtError_t EventRecordTaskInit(
 
     taskInfo->type = TS_TASK_TYPE_EVENT_RECORD;
     taskInfo->typeName = const_cast<char_t*>("EVENT_RECORD");
+    if (eventPtr->EventOwner_() == EventOwner::EVENT_INNER) {
+        taskInfo->taskOwner = static_cast<uint8_t>(TaskOwner::RT_TASK_INNER);
+    }
     taskInfo->needPostProc = true;
     eventRecordTaskInfo->event = eventPtr;
     eventRecordTaskInfo->timestamp = 0LU;

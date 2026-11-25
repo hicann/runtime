@@ -13921,24 +13921,31 @@ TEST_F(ApiDavidTest, HcclCaptureModelRegistrationAndQueries)
     ASSERT_EQ(rtStreamEndCapture(streamHandle_, &model), ACL_RT_SUCCESS);
     // The driver stub cannot advance device SQ tails during capture-model teardown.
     MOCKER_CPP(&Model::UnBindSqPerStream).stubs().will(returnValue(RT_ERROR_NONE));
+    uint32_t modelTaskCount = 0U;
+    ASSERT_EQ(rtModelGetTasks(model, nullptr, &modelTaskCount), RT_ERROR_NONE);
+    std::vector<rtTask_t> modelTasks(modelTaskCount);
+    ASSERT_EQ(rtModelGetTasks(model, modelTasks.data(), &modelTaskCount), RT_ERROR_NONE);
+    bool foundInternalRecord = false;
+    for (rtTask_t task : modelTasks) {
+        const TaskInfo* const taskInfo = static_cast<const TaskInfo*>(task);
+        if (taskInfo->type == TS_TASK_TYPE_DAVID_EVENT_RECORD) {
+            foundInternalRecord = true;
+            EXPECT_EQ(taskInfo->taskOwner, static_cast<uint8_t>(TaskOwner::RT_TASK_INNER));
+            rtTaskType type = RT_TASK_EVENT_RECORD;
+            ASSERT_EQ(ConvertTaskType(taskInfo, &type), RT_ERROR_NONE);
+            EXPECT_EQ(type, RT_TASK_DEFAULT);
+        }
+    }
+    EXPECT_TRUE(foundInternalRecord);
     for (Stream* captureStream : rt_ut::UnwrapOrNull<Model>(model)->StreamList_()) {
-        const uint32_t expectedCount = captureStream == sink ? 1U : 2U;
         uint32_t visibleTasks = 0U;
         ASSERT_EQ(captureStream->StreamGetTasks(nullptr, &visibleTasks), RT_ERROR_NONE);
-        ASSERT_EQ(visibleTasks, expectedCount);
+        ASSERT_EQ(visibleTasks, 0U);
         rtTask_t tasks[3] = {};
         visibleTasks = 3U;
         ASSERT_EQ(captureStream->StreamGetTasks(tasks, &visibleTasks), RT_ERROR_NONE);
-        ASSERT_EQ(visibleTasks, expectedCount);
-        ASSERT_NE(tasks[0], nullptr);
-        // David Event Record/Wait/Reset remain visible; the EndGraph Notify is hidden.
-        EXPECT_EQ(
-            static_cast<TaskInfo*>(tasks[0])->type,
-            captureStream == sink ? TS_TASK_TYPE_DAVID_EVENT_RECORD : TS_TASK_TYPE_DAVID_EVENT_WAIT);
-        if (captureStream != sink) {
-            ASSERT_NE(tasks[1], nullptr);
-            EXPECT_EQ(static_cast<TaskInfo*>(tasks[1])->type, TS_TASK_TYPE_DAVID_EVENT_RESET);
-        }
+        ASSERT_EQ(visibleTasks, 0U);
+        // Internal Event Record/Wait/Reset and EndGraph Notify are hidden from stream queries.
         for (uint32_t i = visibleTasks; i < 3U; ++i) {
             EXPECT_EQ(tasks[i], nullptr);
         }

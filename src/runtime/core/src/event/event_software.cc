@@ -45,6 +45,9 @@ static rtError_t SubmitMemWaitValueTask(Event* const event, Stream* const stm, c
     tsk->type = captureWait ? TS_TASK_TYPE_CAPTURE_WAIT : TS_TASK_TYPE_MEM_WAIT_VALUE;
     error = MemWaitValueTaskInit(tsk, eventAddr, 1UL, 0U);
     ERROR_RETURN_MSG_INNER(error, "Failed to initialize mem wait task, retCode=%#x.", static_cast<uint32_t>(error));
+    if (event->EventOwner_() == EventOwner::EVENT_INNER) {
+        tsk->taskOwner = static_cast<uint8_t>(TaskOwner::RT_TASK_INNER);
+    }
     MemWaitValueTaskInfo* const memWaitValueTask = &tsk->u.memWaitValueTask;
     memWaitValueTask->event = event;
     memWaitValueTask->awSize = RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT;
@@ -83,6 +86,9 @@ rtError_t Event::RecordSoftwareEvent(Stream* const stm)
         PublishSoftwareRecordResource(eventAddr, newEventId, stm->Id_(), tsk->id, 0U);
     }
     (void)MemWriteValueTaskInit(tsk, eventAddr, static_cast<uint64_t>(1U));
+    if (this->EventOwner_() == EventOwner::EVENT_INNER) {
+        tsk->taskOwner = static_cast<uint8_t>(TaskOwner::RT_TASK_INNER);
+    }
     tsk->typeName = "EVENT_RECORD";
     // capture task需按实际所属stream的bind状态选择任务类型。
     tsk->type = (!tsk->stream->GetBindFlag()) ? TS_TASK_TYPE_MEM_WRITE_VALUE : TS_TASK_TYPE_CAPTURE_RECORD;
@@ -143,6 +149,9 @@ rtError_t Event::ResetSoftwareEvent(Stream* const stm)
     (void)MemWriteValueTaskInit(tsk, eventAddr, static_cast<uint64_t>(0));
     tsk->typeName = "EVENT_RESET";
     tsk->type = TS_TASK_TYPE_MEM_WRITE_VALUE;
+    if (this->EventOwner_() == EventOwner::EVENT_INNER) {
+        tsk->taskOwner = static_cast<uint8_t>(TaskOwner::RT_TASK_INNER);
+    }
     MemWriteValueTaskInfo* memWriteValueTask = &tsk->u.memWriteValueTask;
     memWriteValueTask->awSize = RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT;
     memWriteValueTask->event = this;

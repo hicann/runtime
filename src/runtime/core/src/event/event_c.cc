@@ -99,6 +99,9 @@ rtError_t EvtRecordSoftwareMode(Event* const evt, Stream* const stm)
     davidEvt->PublishSoftwareRecordResource(eventAddr, newEventId, dstStm->Id_(), tsk->id, 0U);
 
     (void)MemWriteValueTaskInit(tsk, eventAddr, 1UL);
+    if (davidEvt->EventOwner_() == EventOwner::EVENT_INNER) {
+        tsk->taskOwner = static_cast<uint8_t>(TaskOwner::RT_TASK_INNER);
+    }
     tsk->typeName = "EVENT_RECORD";
     tsk->type = (!dstStm->GetBindFlag()) ? TS_TASK_TYPE_MEM_WRITE_VALUE : TS_TASK_TYPE_CAPTURE_RECORD;
     MemWriteValueTaskInfo* memWriteValueTask = &tsk->u.memWriteValueTask;
@@ -438,6 +441,9 @@ rtError_t EvtWaitSoftwareMode(Event* const evt, Stream* const stm)
     ERROR_PROC_RETURN_MSG_INNER(error, TaskRollBack(dstStm, pos); stm->StreamUnLock();
                                 , "Failed to initialize task, stream_id=%d, retCode=%#x.", stm->Id_(),
                                 static_cast<uint32_t>(error));
+    if (davidEvt->EventOwner_() == EventOwner::EVENT_INNER) {
+        tsk->taskOwner = static_cast<uint8_t>(TaskOwner::RT_TASK_INNER);
+    }
     MemWaitValueTaskInfo* memWaitValueTask = &tsk->u.memWaitValueTask;
     memWaitValueTask->event = davidEvt;
     memWaitValueTask->awSize = RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT;
@@ -525,6 +531,9 @@ rtError_t EvtResetSoftwareMode(Event* const evt, Stream* const stm)
     (void)MemWriteValueTaskInit(tsk, eventAddr, 0UL);
     tsk->typeName = "EVENT_RESET";
     tsk->type = TS_TASK_TYPE_MEM_WRITE_VALUE;
+    if (davidEvt->EventOwner_() == EventOwner::EVENT_INNER) {
+        tsk->taskOwner = static_cast<uint8_t>(TaskOwner::RT_TASK_INNER);
+    }
     MemWriteValueTaskInfo* memWriteValueTask = &tsk->u.memWriteValueTask;
     memWriteValueTask->event = davidEvt;
     memWriteValueTask->awSize = RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT;
