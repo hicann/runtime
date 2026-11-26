@@ -12,6 +12,7 @@
 
 #include "profiling_agent.hpp"
 #include "api.hpp"
+#include "api_prof_stack_destruct_guard.hpp"
 #include "base.hpp"
 #include "task.hpp"
 
@@ -26,9 +27,7 @@ thread_local std::vector<ProfApiContext> g_apiProfStack{};
 // during teardown); touching the already freed vector there corrupts the heap.
 thread_local bool g_apiProfStackAlive = true;
 thread_local size_t g_apiProfStackOverflowDepth = 0U;
-struct ApiProfStackDestructGuard {
-    ~ApiProfStackDestructGuard() { g_apiProfStackAlive = false; }
-};
+ApiProfStackDestructGuard::~ApiProfStackDestructGuard() { g_apiProfStackAlive = false; }
 thread_local ApiProfStackDestructGuard g_apiProfStackDestructGuard{};
 thread_local ProfApiContext g_fallbackProfApiContext{};
 
