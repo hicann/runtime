@@ -732,6 +732,20 @@ void MemsetAsyncTaskInit(
 #endif
 
 #if F_DESC("MemWaitValueTask")
+void DavidMemWaitTaskUnInit(TaskInfo* const taskInfo)
+{
+    MemWaitTaskUnInit(taskInfo);
+
+    auto& waitInfo = taskInfo->u.memWaitValueTask;
+    const auto release = waitInfo.crossDeviceWaitInfo.release;
+    if (release != nullptr) {
+        Event* event = waitInfo.event;
+        waitInfo.event = nullptr;
+        release(taskInfo);
+        DavidUpdateAndTryToDestroyEvent(taskInfo, &event, DavidTaskMapType::TASK_MAP_TYPE_WAIT_MAP);
+    }
+}
+
 void ConstructDavidSqeForMemWaitValueTask(TaskInfo* taskInfo, void* const sqe, const TaskSqeInfo& sqeInfo)
 {
     rtDavidSqe_t* davidSqe = static_cast<rtDavidSqe_t*>(sqe);

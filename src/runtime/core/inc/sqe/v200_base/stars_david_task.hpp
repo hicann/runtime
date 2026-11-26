@@ -48,6 +48,7 @@ void DavidEventResetTaskInit(TaskInfo* const taskInfo, Event* const eventPtr, co
 void DavidEventRecordTaskUnInit(TaskInfo* const taskInfo);
 void DavidEventWaitTaskUnInit(TaskInfo* const taskInfo);
 void DavidEventResetTaskUnInit(TaskInfo* const taskInfo);
+void DavidMemWaitTaskUnInit(TaskInfo* taskInfo);
 void DavidUpdateAndTryToDestroyEvent(TaskInfo* taskInfo, Event** eventPtr, DavidTaskMapType taskMapType);
 void DoCompleteSuccessForDavidEventRecordTask(TaskInfo* const taskInfo, const uint32_t devId);
 void DoCompleteSuccessForDavidEventWaitTask(TaskInfo* const taskInfo, const uint32_t devId);
