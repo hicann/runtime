@@ -2402,6 +2402,9 @@ ACL_FUNC_VISIBILITY aclError aclrtMemInvalidate(void* devPtr, size_t size);
  *  aclrtMallocAlign32, aclrtMallocCached, aclrtMallocWithCfg, and
  *  aclrtMemAllocManaged.
  *
+ * @par Restriction
+ * @li The devPtr parameter must not be NULL. Passing NULL returns ACL_ERROR_INVALID_PARAM.
+ *
  * @param  devPtr [IN]  Pointer to memory to be freed
  *
  * @retval ACL_SUCCESS The function is successfully executed.
