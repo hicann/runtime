@@ -372,7 +372,7 @@ static bool MemoryTaskRegister()
         .toCommandFunc = nullptr,
         .toSqeFunc = &ConstructDavidSqeForMemWaitValueTask,
         .doCompleteSuccFunc = &DoCompleteSuccess,
-        .taskUnInitFunc = &MemWaitTaskUnInit,
+        .taskUnInitFunc = &DavidMemWaitTaskUnInit,
         .waitAsyncCpCompleteFunc = nullptr,
         .printErrorInfoFunc = &PrintErrorInfoCommon,
         .setResultFunc = nullptr,

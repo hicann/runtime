@@ -224,18 +224,14 @@ rtError_t DestroyCrossEventSharedInfo(Device* source, CrossEventSharedInfo& info
 
 static void ReleaseCrossEventWaitResource(TaskInfo* const task)
 {
-    auto& waitInfo = task->u.memWaitValueTask;
-    auto& info = waitInfo.crossDeviceWaitInfo;
-    Event* event = waitInfo.event;
+    auto& info = task->u.memWaitValueTask.crossDeviceWaitInfo;
     info.release = nullptr;
-    waitInfo.event = nullptr;
     Device* const target = task->stream->Device_();
     if (info.mapped) {
         (void)ReleaseCrossEventVa(info.shrId, target->Id_(), info.phyId, info.isCountNotify);
         (void)target->Driver_()->CloseIpcNotify(info.name, static_cast<int32_t>(target->Id_()), info.shrId, info.tsId);
     }
     info = {};
-    DavidUpdateAndTryToDestroyEvent(task, &event, DavidTaskMapType::TASK_MAP_TYPE_WAIT_MAP);
 }
 
 static rtError_t PrepareCrossEventWait(Device* const target, CrossEventWaitInfo& info, uint64_t& addr)

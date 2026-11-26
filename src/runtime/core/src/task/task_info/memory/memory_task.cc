@@ -375,9 +375,6 @@ void MemWaitTaskUnInit(TaskInfo* taskInfo)
     }
 
     memWaitValueTask->funCallMemSize2 = 0UL;
-    if (memWaitValueTask->crossDeviceWaitInfo.release != nullptr) {
-        memWaitValueTask->crossDeviceWaitInfo.release(taskInfo);
-    }
 }
 
 static rtError_t AllocFuncCallMemForMemWaitTask(TaskInfo* taskInfo)

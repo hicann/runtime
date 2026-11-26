@@ -26,6 +26,9 @@ struct CrossEventSharedInfo {
     char name[IPC_NOTIFY_NAME_BUFFER_LEN]{};
 };
 
+// 同一 CountNotify Event 可由不同 Stream 下发 Record，已提交的 Wait 仍需按提交时的导入信息回收。因此，
+// 每个 Wait 任务独立 Open/Map，保存本次 Open 使用的共享名、返回的 ID 和映射状态，以便任务完成或回滚时独立执行
+// Unmap/Close。
 struct CrossEventWaitInfo {
     void (*release)(tagTaskInfoStru*);
     uint32_t shrId; // halShrIdOpen 返回的共享资源 ID
