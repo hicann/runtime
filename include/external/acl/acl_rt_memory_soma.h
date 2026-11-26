@@ -94,7 +94,7 @@ ACL_FUNC_VISIBILITY aclError aclrtMemPoolGetAttr(aclrtMemPool memPool, aclrtMemP
  *
  * @param ptr [OUT] pointer to the device memory address allocated from memory pool
  * @param size [IN] size of memory to allocate (unit: bytes, must be greater than 0)
- * @param memPool [IN] unique ID of the target memory pool
+ * @param memPool [IN] virtual mem pool handle
  * @param stream [IN] stream ID for asynchronous memory allocation operation
  *
  * @retval ACL_SUCCESS The function is successfully executed.
