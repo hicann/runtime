@@ -2453,14 +2453,14 @@ ACL_FUNC_VISIBILITY aclError aclrtMemAllocManaged(void** ptr, uint64_t size, uin
  * @brief free host memory
  *
  * @par Function
- *  can only free memory allocated through the aclrtMallocHost interface
+ *  can free memory allocated through the aclrtMallocHost or aclrtMallocHostWithCfg interfaces
  *
  * @param  hostPtr [IN]   free memory pointer
  *
  * @retval ACL_SUCCESS The function is successfully executed.
  * @retval OtherValues Failure
  *
- * @see aclrtMallocHost
+ * @see aclrtMallocHost | aclrtMallocHostWithCfg
  */
 ACL_FUNC_VISIBILITY aclError aclrtFreeHost(void* hostPtr);
 
@@ -2486,14 +2486,14 @@ ACL_FUNC_VISIBILITY aclError aclrtFreeWithDevSync(void* devPtr);
  * @brief free host memory with device synchronize
  *
  * @par Function
- *  can only free memory allocated through the aclrtMallocHost interface
+ *  can free memory allocated through the aclrtMallocHost or aclrtMallocHostWithCfg interfaces
  *
  * @param  hostPtr [IN]   free memory pointer
  *
  * @retval ACL_SUCCESS The function is successfully executed.
  * @retval OtherValues Failure
  *
- * @see aclrtMallocHost
+ * @see aclrtMallocHost | aclrtMallocHostWithCfg
  */
 ACL_FUNC_VISIBILITY aclError aclrtFreeHostWithDevSync(void* hostPtr);
 
