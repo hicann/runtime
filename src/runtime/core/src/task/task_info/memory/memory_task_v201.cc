@@ -62,7 +62,7 @@ void ConstructDavidSqeForMemcpyAsyncTask(TaskInfo* const taskInfo, void* const s
     PrintDavidSqe(davidSqe, "sdmaTask");
     RT_LOG(
         RT_LOG_INFO,
-        "ConstructMemcpySqe, size=%u, qos=%u, partid=%u, copyType=" RT_ENUM_LOG_FORMAT(
+        "ConstructMemcpySqe, size=%u bytes, qos=%u, partid=%u, copyType=" RT_ENUM_LOG_FORMAT(
             "%u") ", deviceId=%u, streamId=%d,taskId=%hu",
         static_cast<uint32_t>(memcpyAsyncTaskInfo->size), memcpyAsyncSqe->qos, memcpyAsyncSqe->mapamPartId,
         RT_ENUM_LOG_VALUE(

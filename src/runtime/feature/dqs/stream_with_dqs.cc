@@ -115,7 +115,7 @@ static rtError_t InvokeCreateDqsCtrlSpace(
 
     COND_RETURN_ERROR_MSG_INNER(
         (res.cs_va == nullptr) || (res.status != 0U), RT_ERROR_DRV_IOCTRL,
-        "Ioctl failed, res.cs_va cannot be a NULL pointer and res.status must be 0, retCode=%#x.",
+        "Ioctl failed, status=%u, cs_va must be non-null and status must be 0, retCode=%#x.", res.status,
         static_cast<uint32_t>(RT_ERROR_DRV_IOCTRL));
 
     ctrlSpacePtr = res.cs_va;

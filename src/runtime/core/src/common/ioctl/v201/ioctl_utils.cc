@@ -48,7 +48,9 @@ rtError_t IoctlUtil::CloseFd()
     COND_RETURN_WARN((starsFd_ < 0), RT_ERROR_NONE, "No need to close file descriptor, fd_ is invalid.");
 
     const int32_t ret = mmClose(starsFd_);
-    COND_RETURN_ERROR((ret != 0), RT_ERROR_DRV_IOCTRL, "Close file descriptor failed, ret=%d.", ret);
+    COND_RETURN_ERROR(
+        (ret != 0), RT_ERROR_DRV_IOCTRL, "Close file descriptor failed, fd[%d], path=[%s], ret=%d.", starsFd_,
+        starsFile_.c_str(), ret);
     starsFd_ = IOCTL_INVALID_FD;
 
     return RT_ERROR_NONE;

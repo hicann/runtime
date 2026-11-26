@@ -975,7 +975,7 @@ static rtError_t PrepareSqeInfoForDqsMbufFreeTask(TaskInfo* const taskInfo)
         RT_MEMCPY_DEVICE_TO_DEVICE);
     if (ret != RT_ERROR_NONE) {
         (void)FreeDqsCommonTaskFuncCall(dqsMbufFreeTask, taskInfo);
-        RT_LOG(RT_LOG_ERROR, "MemCopySync for Dqs MbufFree func call failed,retCode=%#x.", ret);
+        RT_LOG(RT_LOG_ERROR, "MemCopySync for Dqs MbufFree func call failed, retCode=%#x.", static_cast<uint32_t>(ret));
     }
 
     return ret;
@@ -1180,7 +1180,7 @@ rtError_t DqsInterChipPostProcTaskInit(TaskInfo* taskInfo, const uint32_t groupI
     InitDqsCommonTaskInfo(commonTaskInfo, sizeof(RtStarsDqsInterChipPostProcFc), stm->GetSqId());
 
     const rtError_t error = PrepareSqeInfoForDqsInterChipPostProcTask(taskInfo);
-    ERROR_RETURN(error, "Init failed, retCode=%#x", static_cast<uint32_t>(error));
+    ERROR_RETURN(error, "Init for DqsInterChipPostProcTask failed, retCode=%#x", static_cast<uint32_t>(error));
 
     return RT_ERROR_NONE;
 }
@@ -1592,7 +1592,7 @@ static rtError_t PrepareSqeInfoForDqsPrepareTask(TaskInfo* taskInfo)
         RT_MEMCPY_DEVICE_TO_DEVICE);
     if (ret != RT_ERROR_NONE) {
         (void)FreeDqsCommonTaskFuncCall(dqsPrepareTask, taskInfo);
-        RT_LOG(RT_LOG_ERROR, "MemCopySync for Dqs prepare func call failed,retCode=%#x.", ret);
+        RT_LOG(RT_LOG_ERROR, "MemCopySync for Dqs prepare func call failed, retCode=%#x.", ret);
     }
 
     return ret;
@@ -1698,7 +1698,7 @@ static rtError_t PrepareSqeInfoForDqsFrameAlignTask(TaskInfo* taskInfo)
 
     if (ret != RT_ERROR_NONE) {
         (void)FreeDqsCommonTaskFuncCall(dqsFrameAlignTask, taskInfo);
-        RT_LOG(RT_LOG_ERROR, "MemCopySync for Dqs frame align func call failed,retCode=%#x.", ret);
+        RT_LOG(RT_LOG_ERROR, "MemCopySync for Dqs frame align func call failed, retCode=%#x.", ret);
     }
 
     return ret;

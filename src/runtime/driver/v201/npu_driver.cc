@@ -132,8 +132,9 @@ rtError_t SetModelNameWithCtrlMsg(Model* const mdl)
         deviceId, TSDRV_CTL_CMD_CTRL_MSG, static_cast<void*>(&para), sizeof(tsdrv_ctrl_msg),
         static_cast<void*>(&modelNameAck), &ackCount);
     COND_RETURN_ERROR_MSG_CALL(
-        ERR_MODULE_DRV, drvRet != DRV_ERROR_NONE, RT_GET_DRV_ERRCODE(drvRet), "device_id=%u, ts_id=%u, drvRetCode=%d.",
-        deviceId, tsId, static_cast<int32_t>(drvRet));
+        ERR_MODULE_DRV, drvRet != DRV_ERROR_NONE, RT_GET_DRV_ERRCODE(drvRet),
+        "Call driver api halTsdrvCtl failed, device_id=%u, ts_id=%u, drvRetCode=%d.", deviceId, tsId,
+        static_cast<int32_t>(drvRet));
 
     return RT_ERROR_NONE;
 }

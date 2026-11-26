@@ -2928,3 +2928,84 @@ TEST_F(TaskTestV201, ExceptionRegisters_UseCallbackTaskIdAndAreRemovedAfterNotif
     EXPECT_EQ(count, 0U);
     EXPECT_EQ(registers, nullptr);
 }
+
+TEST_F(TaskTestV201, Test_IoctlUtil_CloseFd_Failed)
+{
+    GlobalMockObject::reset();
+    IoctlUtil::GetInstance().starsFd_ = 5;
+    MOCKER(mmClose).stubs().will(returnValue(-1));
+    rtError_t ret = IoctlUtil::GetInstance().CloseFd();
+    EXPECT_NE(ret, RT_ERROR_NONE);
+}
+
+TEST_F(TaskTestV201, Test_SetModelNameWithCtrlMsg_Failed)
+{
+    rtModel_t model;
+    rtError_t ret = rtModelCreate(&model, 0);
+    ASSERT_EQ(ret, RT_ERROR_NONE);
+    Model* mdl = rt_ut::UnwrapOrNull<Model>(model);
+    ASSERT_NE(mdl, nullptr);
+
+    MOCKER(halTsdrvCtl).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
+    ret = SetModelNameWithCtrlMsg(mdl);
+    EXPECT_NE(ret, RT_ERROR_NONE);
+
+    ret = rtModelDestroy(model);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+}
+
+TEST_F(TaskTestV201, Test_DqsInterChipPostProcTaskInit_Failed)
+{
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    Stream* stm = CreateStreamAndGet(device_, 0, RT_STREAM_DQS_CTRL, nullptr);
+    EXPECT_NE(stm, nullptr);
+
+    TaskInfo task = {};
+    task.stream = stm;
+    rtError_t error = DqsInterChipPostProcTaskInit(&task, 0U, DqsInterChipTaskType::DQS_INTER_CHIP_TASK_POSTPROC);
+    EXPECT_NE(error, RT_ERROR_NONE);
+
+    delete stm;
+}
+
+TEST_F(TaskTestV201, Test_DqsPrepareTaskInit_MemCopySyncFailed)
+{
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    Stream* stm = CreateStreamAndGet(device_, 0, RT_STREAM_DQS_CTRL, nullptr);
+    EXPECT_NE(stm, nullptr);
+
+    stars_dqs_ctrl_space_t ctrlSpace = {};
+    StreamWithDqs* streamWithDqs = static_cast<StreamWithDqs*>(stm);
+    streamWithDqs->SetDqsCtrlSpace(&ctrlSpace);
+
+    TaskInfo task = {};
+    task.stream = stm;
+    MOCKER_CPP_VIRTUAL((NpuDriver*)(device_->Driver_()), &NpuDriver::MemCopySync)
+        .stubs()
+        .will(returnValue(RT_ERROR_DRV_MEMORY));
+    rtError_t error = DqsPrepareTaskInit(&task, stm, nullptr);
+    EXPECT_NE(error, RT_ERROR_NONE);
+
+    delete stm;
+}
+
+TEST_F(TaskTestV201, Test_DqsFrameAlignTaskInit_MemCopySyncFailed)
+{
+    MOCKER(CheckTaskCanSend).stubs().will(returnValue(RT_ERROR_NONE));
+    Stream* stm = CreateStreamAndGet(device_, 0, RT_STREAM_DQS_CTRL, nullptr);
+    EXPECT_NE(stm, nullptr);
+
+    stars_dqs_ctrl_space_t ctrlSpace = {};
+    StreamWithDqs* streamWithDqs = static_cast<StreamWithDqs*>(stm);
+    streamWithDqs->SetDqsCtrlSpace(&ctrlSpace);
+
+    TaskInfo task = {};
+    task.stream = stm;
+    MOCKER_CPP_VIRTUAL((NpuDriver*)(device_->Driver_()), &NpuDriver::MemCopySync)
+        .stubs()
+        .will(returnValue(RT_ERROR_DRV_MEMORY));
+    rtError_t error = DqsFrameAlignTaskInit(&task, stm, nullptr);
+    EXPECT_NE(error, RT_ERROR_NONE);
+
+    delete stm;
+}
