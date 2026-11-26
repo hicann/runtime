@@ -16,6 +16,7 @@
 #include "group_device.hpp"
 #include <tuple>
 #include "device.hpp"
+#include "capability.hpp"
 #include "base_david.hpp"
 #include "event_expanding.hpp"
 #include "ctrl_sq.hpp"
