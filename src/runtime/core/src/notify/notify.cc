@@ -306,8 +306,7 @@ rtError_t Notify::GetNotifyAddress(Stream* const streamIn, uint64_t& addr)
         static_cast<void*>(this));
     COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), RT_ERROR_NOTIFY_NOT_COMPLETE);
 
-    (void)GetIpcSqeWriteAddrForNotifyRecordTask(&notifyTask, addr);
-    return RT_ERROR_NONE;
+    return GetIpcSqeWriteAddrForNotifyRecordTask(&notifyTask, addr);
 }
 
 rtError_t Notify::RevisedWait(Stream* const streamIn, const uint32_t timeout)

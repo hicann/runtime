@@ -352,6 +352,36 @@ TEST_F(NotifyTest, notify_ipc_create)
     delete notify;
 }
 
+TEST_F(NotifyTest, GetNotifyAddressPropagatesIpcQueryError)
+{
+    Notify notify(0U, 0U);
+    ASSERT_EQ(notify.Setup(), RT_ERROR_NONE);
+    char name[32] = {};
+    ASSERT_EQ(notify.CreateIpcNotify(name, sizeof(name)), RT_ERROR_NONE);
+    Stream* const stream = Runtime::Instance()->CurrentContext()->DefaultStream_();
+    MOCKER(GetIpcSqeWriteAddrForNotifyRecordTask).expects(once()).will(returnValue(RT_ERROR_DRV_ERR));
+    uint64_t address = 0x12345678ULL;
+    EXPECT_EQ(notify.GetNotifyAddress(stream, address), RT_ERROR_DRV_ERR);
+    EXPECT_EQ(address, 0x12345678ULL);
+}
+
+TEST_F(NotifyTest, GetNotifyAddressPublishesSuccessfulIpcQuery)
+{
+    Notify notify(0U, 0U);
+    ASSERT_EQ(notify.Setup(), RT_ERROR_NONE);
+    char name[32] = {};
+    ASSERT_EQ(notify.CreateIpcNotify(name, sizeof(name)), RT_ERROR_NONE);
+    Stream* const stream = Runtime::Instance()->CurrentContext()->DefaultStream_();
+    const uint64_t expected = 0x12345678ULL;
+    MOCKER(GetIpcSqeWriteAddrForNotifyRecordTask)
+        .expects(once())
+        .with(mockcpp::any(), outBound(expected))
+        .will(returnValue(RT_ERROR_NONE));
+    uint64_t address = 0U;
+    EXPECT_EQ(notify.GetNotifyAddress(stream, address), RT_ERROR_NONE);
+    EXPECT_EQ(address, expected);
+}
+
 TEST_F(NotifyTest, notify_ipc_multi_create)
 {
     rtError_t error;
