@@ -13894,21 +13894,31 @@ TEST_F(ApiDavidTest, HcclCaptureModelRegistrationAndQueries)
     MOCKER_CPP(&Model::UnBindSqPerStream).stubs().will(returnValue(RT_ERROR_NONE));
     uint32_t modelTaskCount = 0U;
     ASSERT_EQ(rtModelGetTasks(model, nullptr, &modelTaskCount), RT_ERROR_NONE);
-    std::vector<rtTask_t> modelTasks(modelTaskCount);
-    ASSERT_EQ(rtModelGetTasks(model, modelTasks.data(), &modelTaskCount), RT_ERROR_NONE);
-    bool foundInternalRecord = false;
+    EXPECT_EQ(modelTaskCount, 0U);
+    rtTask_t modelTasks[3] = {model, model, model};
+    modelTaskCount = 3U;
+    ASSERT_EQ(rtModelGetTasks(model, modelTasks, &modelTaskCount), RT_ERROR_NONE);
+    EXPECT_EQ(modelTaskCount, 0U);
     for (rtTask_t task : modelTasks) {
-        const TaskInfo* const taskInfo = static_cast<const TaskInfo*>(task);
-        if (taskInfo->type == TS_TASK_TYPE_DAVID_EVENT_RECORD) {
-            foundInternalRecord = true;
-            EXPECT_EQ(taskInfo->taskOwner, static_cast<uint8_t>(TaskOwner::RT_TASK_INNER));
-            rtTaskType type = RT_TASK_EVENT_RECORD;
-            ASSERT_EQ(ConvertTaskType(taskInfo, &type), RT_ERROR_NONE);
-            EXPECT_EQ(type, RT_TASK_DEFAULT);
-        }
+        EXPECT_EQ(task, nullptr);
     }
-    EXPECT_TRUE(foundInternalRecord);
+    bool foundInternalRecord = false;
     for (Stream* captureStream : rt_ut::UnwrapOrNull<Model>(model)->StreamList_()) {
+        // Inspect retained tasks directly: model and stream queries both hide internal tasks.
+        std::vector<uint16_t> taskIds;
+        captureStream->GetDelayRecycleTaskIdWithLock(taskIds);
+        for (const uint16_t taskId : taskIds) {
+            const TaskInfo* const taskInfo =
+                captureStream->Device_()->GetTaskFactory()->GetTask(captureStream->Id_(), taskId);
+            ASSERT_NE(taskInfo, nullptr);
+            if (taskInfo->type == TS_TASK_TYPE_DAVID_EVENT_RECORD) {
+                foundInternalRecord = true;
+                EXPECT_EQ(taskInfo->taskOwner, static_cast<uint8_t>(TaskOwner::RT_TASK_INNER));
+                rtTaskType type = RT_TASK_EVENT_RECORD;
+                ASSERT_EQ(ConvertTaskType(taskInfo, &type), RT_ERROR_NONE);
+                EXPECT_EQ(type, RT_TASK_DEFAULT);
+            }
+        }
         uint32_t visibleTasks = 0U;
         ASSERT_EQ(captureStream->StreamGetTasks(nullptr, &visibleTasks), RT_ERROR_NONE);
         ASSERT_EQ(visibleTasks, 0U);
@@ -13921,6 +13931,7 @@ TEST_F(ApiDavidTest, HcclCaptureModelRegistrationAndQueries)
             EXPECT_EQ(tasks[i], nullptr);
         }
     }
+    EXPECT_TRUE(foundInternalRecord);
     EXPECT_EQ(rtModelDestroy(model), ACL_RT_SUCCESS);
     EXPECT_EQ(rtStreamDestroy(hcclStream), ACL_RT_SUCCESS);
 }

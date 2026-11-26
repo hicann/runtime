@@ -2908,11 +2908,23 @@ TEST_F(CloudV2CaptureModelTest, stream_get_tasks_normal)
     ASSERT_EQ(visibleTotal, 2U);
     ASSERT_NE(recordStream, nullptr);
 
-    uint32_t modelTaskCount = 2U;
-    rtTask_t modelTasks[2] = {model, model};
+    uint32_t modelTaskCount = 3U;
+    rtTask_t modelTasks[3] = {model, model, model};
     ASSERT_EQ(rtModelGetTasks(model, modelTasks, &modelTaskCount), RT_ERROR_NONE);
     ASSERT_EQ(modelTaskCount, visibleTotal);
-    EXPECT_EQ(modelTasks[1], nullptr);
+    bool modelHasRecord = false;
+    bool modelHasReset = false;
+    for (uint32_t i = 0U; i < modelTaskCount; ++i) {
+        ASSERT_NE(modelTasks[i], nullptr);
+        EXPECT_EQ(static_cast<TaskInfo*>(modelTasks[i])->taskOwner, static_cast<uint8_t>(TaskOwner::RT_TASK_USER));
+        rtTaskType type = RT_TASK_DEFAULT;
+        ASSERT_EQ(rtTaskGetType(modelTasks[i], &type), RT_ERROR_NONE);
+        modelHasRecord = modelHasRecord || (type == RT_TASK_EVENT_RECORD);
+        modelHasReset = modelHasReset || (type == RT_TASK_EVENT_RESET);
+    }
+    EXPECT_TRUE(modelHasRecord);
+    EXPECT_TRUE(modelHasReset);
+    EXPECT_EQ(modelTasks[2], nullptr);
 
     uint32_t numTasks = 0;
     error = rtStreamGetTasks(recordStream, nullptr, &numTasks);
