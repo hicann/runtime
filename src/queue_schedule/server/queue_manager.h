@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Copyright (c) 2025 Huawei Technologies Co., Ltd.
  * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
  * CANN Open Software License Agreement Version 2.0 (the "License").
@@ -20,6 +20,11 @@
 #include "bqs_util.h"
 
 namespace bqs {
+enum class AsyncMemBuffEventType : uint32_t {
+    DEQUEUE,
+    ENQUEUE,
+};
+
 class QueueManager {
 public:
     static QueueManager& GetInstance();
@@ -89,6 +94,8 @@ public:
      * @return BQS_STATUS_OK:success other:failed
      */
     BqsStatus EnqueueAsynMemBuffEvent();
+
+    BqsStatus EnqueueAsynMemBuffEvent(const AsyncMemBuffEventType eventType);
 
     /**
      * handle the event of asyn mem buff event
@@ -173,7 +180,6 @@ private:
     void ClearQueue(const uint32_t queueId, const QUEUE_EVENT_TYPE eventType) const;
     void MakeUpF2NFMbuf(const uint32_t index);
     void MakeUpMbuf(Mbuf** mbufPtr) const;
-    void DrainAsynMemBuffQueue(bool& triggerFlag, const uint32_t queueId);
 
 private:
     uint32_t deviceId_;
@@ -202,8 +208,8 @@ private:
     Mbuf* mbufForF2nfExtra_;
     SpinLock f2nfLockExtra_;
     std::atomic<bool> f2nfQueueEmptyFlagExtra_;
-    bool isTriggeredByAsyncMemDequeue_;
-    bool isTriggeredByAsyncMemEnqueue_;
+    std::atomic<bool> isTriggeredByAsyncMemDequeue_;
+    std::atomic<bool> isTriggeredByAsyncMemEnqueue_;
     bool asyncMemBuffEventQInitialized_;
     bool initializedExtra_;
 };

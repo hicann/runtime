@@ -617,6 +617,29 @@ bool QueueManager::HandleFullToNotFullEvent(const uint32_t index)
  */
 BqsStatus QueueManager::EnqueueAsynMemBuffEvent()
 {
+    if (isTriggeredByAsyncMemDequeue_.load(std::memory_order_acquire)) {
+        return EnqueueAsynMemBuffEvent(AsyncMemBuffEventType::DEQUEUE);
+    }
+    if (isTriggeredByAsyncMemEnqueue_.load(std::memory_order_acquire)) {
+        return EnqueueAsynMemBuffEvent(AsyncMemBuffEventType::ENQUEUE);
+    }
+
+    BQS_LOG_ERROR("No async memory event was enabled.");
+    return BQS_STATUS_PARAM_INVALID;
+}
+
+BqsStatus QueueManager::EnqueueAsynMemBuffEvent(const AsyncMemBuffEventType eventType)
+{
+    uint32_t asyncMemBuffQId = 0;
+    if (eventType == AsyncMemBuffEventType::DEQUEUE) {
+        asyncMemBuffQId = asyncMemDequeueBuffQId_;
+    } else if (eventType == AsyncMemBuffEventType::ENQUEUE) {
+        asyncMemBuffQId = asyncMemEnqueueBuffQId_;
+    } else {
+        BQS_LOG_ERROR("Invalid async memory event type.");
+        return BQS_STATUS_PARAM_INVALID;
+    }
+
     // avoid parallel halEnQueue
     std::lock_guard<std::mutex> lock(mutex_);
     Mbuf* mbufPtr = nullptr;
@@ -627,17 +650,7 @@ BqsStatus QueueManager::EnqueueAsynMemBuffEvent()
         return BQS_STATUS_DRIVER_ERROR;
     }
 
-    uint32_t asyncMemBuffQId = 0;
-    if (isTriggeredByAsyncMemDequeue_) {
-        asyncMemBuffQId = asyncMemDequeueBuffQId_;
-        ret = halQueueEnQueue(deviceId_, asyncMemDequeueBuffQId_, mbufPtr);
-    } else if (isTriggeredByAsyncMemEnqueue_) {
-        asyncMemBuffQId = asyncMemEnqueueBuffQId_;
-        ret = halQueueEnQueue(deviceId_, asyncMemEnqueueBuffQId_, mbufPtr);
-    } else {
-        ;
-    }
-
+    ret = halQueueEnQueue(deviceId_, asyncMemBuffQId, mbufPtr);
     if (ret != DRV_ERROR_NONE) {
         BQS_LOG_ERROR("halQueueEnQueue error, queue id:[%u], ret=[%d]", asyncMemBuffQId, ret);
         (void)halMbufFree(mbufPtr);
@@ -648,41 +661,42 @@ BqsStatus QueueManager::EnqueueAsynMemBuffEvent()
 }
 
 /**
- * drain one asyn mem buff queue: dequeue and free mbuf until queue empty or driver error,
- * clear trigger flag on empty, keep flag on error for retry
- * @return NA
- */
-void QueueManager::DrainAsynMemBuffQueue(bool& triggerFlag, const uint32_t queueId)
-{
-    while (triggerFlag) {
-        Mbuf* mbufPtr = nullptr;
-        const int32_t ret = halQueueDeQueue(deviceId_, queueId, PtrToPtr<Mbuf*, void*>(&mbufPtr));
-        if (ret == DRV_ERROR_QUEUE_EMPTY) {
-            triggerFlag = false;
-            return;
-        }
-        if (ret != DRV_ERROR_NONE) {
-            BQS_LOG_ERROR("halQueueDeQueue error, queue id:[%u], ret=[%d]", queueId, ret);
-            return;
-        }
-        StatisticManager::GetInstance().AsynMemDequeueStat();
-        const int32_t freeRet = halMbufFree(mbufPtr);
-        if (freeRet != DRV_ERROR_NONE) {
-            BQS_LOG_ERROR("halMbufFree error, queue id:[%u], ret=[%d]", queueId, freeRet);
-        }
-    }
-}
-
-/**
  * handle the event of Aysn mem buffer
  * @return true:has handle Aysn mem buffer msg, false:not handle
  */
 bool QueueManager::HandleAsynMemBuffEvent(const uint32_t index)
 {
     (void)index;
-    DrainAsynMemBuffQueue(isTriggeredByAsyncMemDequeue_, asyncMemDequeueBuffQId_);
-    DrainAsynMemBuffQueue(isTriggeredByAsyncMemEnqueue_, asyncMemEnqueueBuffQId_);
-    return true;
+    bool handled = false;
+    const auto drainQueue = [&](std::atomic<bool>& triggered, const uint32_t queueId) {
+        // Claim the flag before draining. If a producer sets it while the queue is
+        // being drained, the exchange below observes it and performs another pass.
+        while (triggered.exchange(false)) {
+            while (true) {
+                Mbuf* mbufPtr = nullptr;
+                const int32_t ret = halQueueDeQueue(deviceId_, queueId, PtrToPtr<Mbuf*, void*>(&mbufPtr));
+                if (ret == DRV_ERROR_QUEUE_EMPTY) {
+                    break;
+                }
+                if (ret != DRV_ERROR_NONE) {
+                    BQS_LOG_ERROR("halQueueDeQueue error, queue id:[%u], ret=[%d]", queueId, ret);
+                    triggered.store(true, std::memory_order_release);
+                    return;
+                }
+
+                handled = true;
+                StatisticManager::GetInstance().AsynMemDequeueStat();
+                const int32_t freeRet = halMbufFree(mbufPtr);
+                if (freeRet != DRV_ERROR_NONE) {
+                    BQS_LOG_ERROR("halMbufFree error, queue id:[%u], ret=[%d]", queueId, freeRet);
+                }
+            }
+        }
+    };
+
+    drainQueue(isTriggeredByAsyncMemDequeue_, asyncMemDequeueBuffQId_);
+    drainQueue(isTriggeredByAsyncMemEnqueue_, asyncMemEnqueueBuffQId_);
+    return handled;
 }
 
 void QueueManager::LogErrorRelationQueueStatus() const { LogErrorQueueStatus(relationEventQId_); }

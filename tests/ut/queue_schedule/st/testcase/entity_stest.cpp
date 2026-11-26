@@ -331,7 +331,10 @@ TEST_F(EntitySTest, ClientDoDequeueMbuf_Fail01)
     EXPECT_EQ(entity.DoDequeueMbuf(&mbuf), dgw::FsmStatus::FSM_SUCCESS);
 
     // DoDequeueMbuf success but EnqueueAsynMemBuffEvent fail
-    MOCKER_CPP(&bqs::QueueManager::EnqueueAsynMemBuffEvent).stubs().will(returnValue(bqs::BQS_STATUS_DRIVER_ERROR));
+    MOCKER_CPP(static_cast<bqs::BqsStatus (bqs::QueueManager::*)(const bqs::AsyncMemBuffEventType)>(
+                   &bqs::QueueManager::EnqueueAsynMemBuffEvent))
+        .stubs()
+        .will(returnValue(bqs::BQS_STATUS_DRIVER_ERROR));
     entity.DoClientDequeue();
     EXPECT_EQ(entity.asyncDataState_, AsyncDataState::FSM_ASYNC_DATA_SENT);
 }

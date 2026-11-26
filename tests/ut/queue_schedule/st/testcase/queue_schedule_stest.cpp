@@ -2667,7 +2667,10 @@ TEST_F(QueueScheduleSTest, ScheduleDataBuffAll_MemQueue_SrcClientQ_Failed_Event)
         .with(mockcpp::any(), outBoundP((void**)&headBufAddr))
         .will(returnValue((int)DRV_ERROR_NONE));
     MOCKER(halQueueDeQueueBuff).stubs().will(returnValue((int)DRV_ERROR_NONE));
-    MOCKER(&bqs::QueueManager::EnqueueAsynMemBuffEvent).stubs().will(returnValue((int)bqs::BQS_STATUS_PARAM_INVALID));
+    MOCKER(static_cast<bqs::BqsStatus (bqs::QueueManager::*)(const bqs::AsyncMemBuffEventType)>(
+               &bqs::QueueManager::EnqueueAsynMemBuffEvent))
+        .stubs()
+        .will(returnValue((int)bqs::BQS_STATUS_PARAM_INVALID));
     queueSchedule.ScheduleDataBuffAll(dataEnqueue);
     int32_t reTry = 0;
     while (reTry++ < 3) {
@@ -3037,7 +3040,10 @@ TEST_F(QueueScheduleSTest, ScheduleDataBuffAll_MemQueue_DstClientQ_Failed_Event)
         .with(mockcpp::any(), outBoundP((void**)&pmbuf))
         .will(returnValue((int)DRV_ERROR_NONE));
     MOCKER(halQueueEnQueueBuff).stubs().will(returnValue((int)DRV_ERROR_NONE));
-    MOCKER(&bqs::QueueManager::EnqueueAsynMemBuffEvent).stubs().will(returnValue((int)bqs::BQS_STATUS_PARAM_INVALID));
+    MOCKER(static_cast<bqs::BqsStatus (bqs::QueueManager::*)(const bqs::AsyncMemBuffEventType)>(
+               &bqs::QueueManager::EnqueueAsynMemBuffEvent))
+        .stubs()
+        .will(returnValue((int)bqs::BQS_STATUS_PARAM_INVALID));
     queueSchedule.ScheduleDataBuffAll(dataEnqueue);
     int32_t reTry = 0;
     while (reTry++ < 3) {

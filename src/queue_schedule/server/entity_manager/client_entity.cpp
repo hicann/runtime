@@ -60,7 +60,7 @@ void ClientEntity::DoClientDequeue()
     asyncDataState_ = AsyncDataState::FSM_ASYNC_DATA_SENT;
     // enable AsyncMemDequeue Queue flag
     bqs::QueueManager::GetInstance().enableAsyncMemDequeueFlag();
-    const auto bqsRet = bqs::QueueManager::GetInstance().EnqueueAsynMemBuffEvent();
+    const auto bqsRet = bqs::QueueManager::GetInstance().EnqueueAsynMemBuffEvent(bqs::AsyncMemBuffEventType::DEQUEUE);
     if (bqsRet != bqs::BQS_STATUS_OK) {
         DGW_LOG_ERROR(
             "failed to EnqueueAsynMemBuffEvent for entity[%s], ret[%d].", entityDesc_.c_str(),
@@ -225,7 +225,8 @@ FsmStatus ClientEntity::DoClientEnqueue(Mbuf* const mbuf)
         dgw::EntityManager::Instance().SetExistAsyncMemEntity();
         // enable AsyncMemEnqueue Queue flag
         bqs::QueueManager::GetInstance().enableAsyncMemEnqueueFlag();
-        const auto bqsRet = bqs::QueueManager::GetInstance().EnqueueAsynMemBuffEvent();
+        const auto bqsRet =
+            bqs::QueueManager::GetInstance().EnqueueAsynMemBuffEvent(bqs::AsyncMemBuffEventType::ENQUEUE);
         if (bqsRet != bqs::BQS_STATUS_OK) {
             DGW_LOG_ERROR("failed to EnqueueAsynMemBuffEvent, ret[%d].", static_cast<int32_t>(bqsRet));
         }

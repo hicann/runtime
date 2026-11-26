@@ -508,8 +508,24 @@ TEST_F(BQS_QUEUE_MANAGER_UTest, HandleAsynMemBuffEventFailed02)
     instance.isTriggeredByAsyncMemEnqueue_ = true;
     instance.asyncMemDequeueBuffQId_ = 101;
     bool ret = instance.HandleAsynMemBuffEvent(0);
+    EXPECT_TRUE(ret);
     ret = instance.HandleAsynMemBuffEvent(0);
-    EXPECT_EQ(ret, true);
+    EXPECT_FALSE(ret);
+}
+
+TEST_F(BQS_QUEUE_MANAGER_UTest, HandleAsynMemBuffEventFailedReserved)
+{
+    MOCKER(halQueueDeQueue).stubs().will(returnValue((int)DRV_ERROR_NONE)).then(returnValue((int)DRV_ERROR_RESERVED));
+    MOCKER(halMbufFree).stubs().will(returnValue((int)DRV_ERROR_QUEUE_EMPTY));
+    instance.isTriggeredByAsyncMemDequeue_ = true;
+    instance.isTriggeredByAsyncMemEnqueue_ = true;
+    instance.asyncMemDequeueBuffQId_ = 101;
+    bool ret = instance.HandleAsynMemBuffEvent(0);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(true, instance.isTriggeredByAsyncMemDequeue_);
+    EXPECT_EQ(true, instance.isTriggeredByAsyncMemEnqueue_);
+    ret = instance.HandleAsynMemBuffEvent(0);
+    EXPECT_FALSE(ret);
 }
 
 TEST_F(BQS_QUEUE_MANAGER_UTest, HandleAsynMemBuffEventSuccess)
@@ -546,6 +562,14 @@ TEST_F(BQS_QUEUE_MANAGER_UTest, HandleAsynMemBuffEventBothQueuesFree)
     EXPECT_EQ(2U, g_mbufFreeCount);
     EXPECT_EQ(false, instance.isTriggeredByAsyncMemDequeue_);
     EXPECT_EQ(false, instance.isTriggeredByAsyncMemEnqueue_);
+}
+
+TEST_F(BQS_QUEUE_MANAGER_UTest, EnqueueAsynMemBuffEventWithoutTrigger)
+{
+    MOCKER(halMbufAlloc).expects(never());
+    MOCKER(halMbufFree).expects(never());
+
+    EXPECT_EQ(instance.EnqueueAsynMemBuffEvent(), bqs::BQS_STATUS_PARAM_INVALID);
 }
 
 TEST_F(BQS_QUEUE_MANAGER_UTest, HandleFullToNotFullEventResumeSuccess)
