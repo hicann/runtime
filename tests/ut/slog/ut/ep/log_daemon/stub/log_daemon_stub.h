@@ -10,6 +10,7 @@
 #ifndef LOG_DAEMON_STUB_H
 #define LOG_DAEMON_STUB_H
 
+#include <stdint.h>
 #include "ascend_hal_error.h"
 
 #define SET_SUCCESS_MSG "Configuration successfully set"
@@ -37,6 +38,9 @@ int LogGetZpAlarmNum(void);
 int LogGetZpStatNum(void);
 int LogGetFrameStart(void);
 void LogClearPrintNum(void);
+
+extern int32_t g_utAdxDrainCallCount;
+extern int32_t g_utAdxUnregisterCount;
 
 #ifdef __cplusplus
 }

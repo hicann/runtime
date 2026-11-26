@@ -93,6 +93,75 @@ static void ExpectOneReply(const char* expectMsg)
     EXPECT_STREQ(HDC_END_MSG, g_sendBuf[1]);
 }
 
+// configurable HDC_SESSION_ATTR_RUN_ENV / HDC_SESSION_ATTR_VFID answers for the lib_load peer
+// gate; the defaults mirror the C stub (physical machine, directly connected), DEV_ID resolves
+static int32_t g_utRunEnv = RUN_ENV_PHYSICAL;
+static int32_t g_utVfId = 0;
+static drvError_t HalGetSessionAttrRunEnvStub(HDC_SESSION session, int attr, int* value)
+{
+    (void)session;
+    *value = 0;
+    if (attr == HDC_SESSION_ATTR_RUN_ENV) {
+        *value = g_utRunEnv;
+        return DRV_ERROR_NONE;
+    }
+    if (attr == HDC_SESSION_ATTR_VFID) {
+        *value = g_utVfId;
+        return DRV_ERROR_NONE;
+    }
+    if (attr == HDC_SESSION_ATTR_DEV_ID) {
+        *value = 0;
+        return DRV_ERROR_NONE;
+    }
+    return DRV_ERROR_NONE;
+}
+
+// the run environment and the vfId resolve, but the device id does not: keeps the devId
+// retrieval branch of LibLoadServerProcess covered although the peer gate queries the
+// same api first
+static drvError_t HalGetSessionAttrDevIdFailedStub(HDC_SESSION session, int attr, int* value)
+{
+    (void)session;
+    *value = 0;
+    if (attr == HDC_SESSION_ATTR_DEV_ID) {
+        return DRV_ERROR_NO_DEVICE;
+    }
+    if (attr == HDC_SESSION_ATTR_RUN_ENV) {
+        *value = RUN_ENV_PHYSICAL;
+    }
+    if (attr == HDC_SESSION_ATTR_VFID) {
+        *value = 0;
+    }
+    return DRV_ERROR_NONE;
+}
+
+// the run environment does not resolve: the gate must fail closed instead of letting an
+// unreported environment pass as an allowed one
+static drvError_t HalGetSessionAttrRunEnvFailedStub(HDC_SESSION session, int attr, int* value)
+{
+    (void)session;
+    *value = 0;
+    if (attr == HDC_SESSION_ATTR_RUN_ENV) {
+        return DRV_ERROR_NO_DEVICE;
+    }
+    return DRV_ERROR_NONE;
+}
+
+// the run environment resolves, but the vfId does not: the gate must fail closed instead
+// of treating an unreported vfId as directly connected
+static drvError_t HalGetSessionAttrVfIdFailedStub(HDC_SESSION session, int attr, int* value)
+{
+    (void)session;
+    *value = 0;
+    if (attr == HDC_SESSION_ATTR_VFID) {
+        return DRV_ERROR_NO_DEVICE;
+    }
+    if (attr == HDC_SESSION_ATTR_RUN_ENV) {
+        *value = RUN_ENV_PHYSICAL;
+    }
+    return DRV_ERROR_NONE;
+}
+
 class LIB_LOAD_EXCP_UTEST : public testing::Test {
 protected:
     virtual void SetUp()
@@ -252,7 +321,9 @@ TEST_F(LIB_LOAD_EXCP_UTEST, LibLoadSystemFunc)
     LogDataMsg* msg = (LogDataMsg*)malloc(sizeof(LogDataMsg) + sizeof(LibLoadInfo));
     (void)memcpy_s(msg->data, sizeof(LibLoadInfo), &info, sizeof(LibLoadInfo));
 
-    MOCKER(halHdcGetSessionAttr).stubs().will(returnValue(1)).then(returnValue(0));
+    // the gate queries run env and vfId before the devId: keep this case on the devId
+    // failure branch with a stub that answers both gate queries successfully
+    MOCKER(halHdcGetSessionAttr).stubs().will(invoke(HalGetSessionAttrDevIdFailedStub));
     EXPECT_EQ(LOG_FAILURE, LibLoadServerProcess(&handle, msg, sizeof(LogDataMsg) + sizeof(LibLoadInfo)));
     free(msg);
 }
@@ -351,12 +422,162 @@ TEST_F(LIB_LOAD_EXCP_UTEST, LibLoadGetDevIdFailedReply)
     LogDataMsg* msg = (LogDataMsg*)malloc(sizeof(LogDataMsg) + sizeof(LibLoadInfo));
     (void)memcpy_s(msg->data, sizeof(LibLoadInfo), &info, sizeof(LibLoadInfo));
     MOCKER(AdxSendMsg).stubs().will(invoke(AdxSendMsgCaptureStub));
-    MOCKER(halHdcGetSessionAttr).stubs().will(returnValue(1));
+    MOCKER(halHdcGetSessionAttr).stubs().will(invoke(HalGetSessionAttrDevIdFailedStub));
 
     ResetSendCapture();
     EXPECT_EQ(LOG_FAILURE, LibLoadServerProcess(&handle, msg, sizeof(LogDataMsg) + sizeof(LibLoadInfo)));
     ExpectOneReply("system function failed");
 
+    LibLoadServerDestroy();
+    free(msg);
+}
+
+TEST_F(LIB_LOAD_EXCP_UTEST, LibLoadContainerProhibitedReply)
+{
+    MOCKER(ToolRealPath).stubs().will(returnValue(SYS_OK));
+    EXPECT_EQ(LOG_SUCCESS, LibLoadServerInit());
+    CommHandle handle{COMM_HDC, (OptHandle)0x12345678};
+    char name[] = {"libhbm_detect.so"};
+    LibLoadInfo info{0x0F0F0F0FU, 0x1000U, strlen(name), "libhbm_detect.so"};
+    LogDataMsg* msg = (LogDataMsg*)malloc(sizeof(LogDataMsg) + sizeof(LibLoadInfo));
+    (void)memcpy_s(msg->data, sizeof(LibLoadInfo), &info, sizeof(LibLoadInfo));
+    MOCKER(AdxSendMsg).stubs().will(invoke(AdxSendMsgCaptureStub));
+    MOCKER(halHdcGetSessionAttr).stubs().will(invoke(HalGetSessionAttrRunEnvStub));
+    g_utAdxDrainCallCount = 0;
+    g_utAdxUnregisterCount = 0;
+
+    // a container inside a virtual machine is not directly connected to the device: the request
+    // must be refused and must never reach the upgrade path, whose ServerRelease plus drain
+    // would make every detect service on slogd unavailable
+    g_utRunEnv = RUN_ENV_VIRTUAL_CONTAINER;
+    ResetSendCapture();
+    EXPECT_EQ(LOG_SUCCESS, LibLoadServerProcess(&handle, msg, sizeof(LogDataMsg) + sizeof(LibLoadInfo)));
+    ExpectOneReply("prohibit container operate lib load");
+    EXPECT_EQ(0, g_utAdxUnregisterCount);
+    EXPECT_EQ(0, g_utAdxDrainCallCount);
+
+    // an unreported environment is treated like a container and refused as well
+    g_utRunEnv = RUN_ENV_UNKNOW;
+    ResetSendCapture();
+    EXPECT_EQ(LOG_SUCCESS, LibLoadServerProcess(&handle, msg, sizeof(LogDataMsg) + sizeof(LibLoadInfo)));
+    ExpectOneReply("prohibit container operate lib load");
+    EXPECT_EQ(0, g_utAdxUnregisterCount);
+    EXPECT_EQ(0, g_utAdxDrainCallCount);
+
+    g_utRunEnv = RUN_ENV_PHYSICAL;
+    LibLoadServerDestroy();
+    free(msg);
+}
+
+TEST_F(LIB_LOAD_EXCP_UTEST, LibLoadRunEnvGetFailedReply)
+{
+    MOCKER(ToolRealPath).stubs().will(returnValue(SYS_OK));
+    EXPECT_EQ(LOG_SUCCESS, LibLoadServerInit());
+    CommHandle handle{COMM_HDC, (OptHandle)0x12345678};
+    char name[] = {"libhbm_detect.so"};
+    LibLoadInfo info{0x0F0F0F0FU, 0x1000U, strlen(name), "libhbm_detect.so"};
+    LogDataMsg* msg = (LogDataMsg*)malloc(sizeof(LogDataMsg) + sizeof(LibLoadInfo));
+    (void)memcpy_s(msg->data, sizeof(LibLoadInfo), &info, sizeof(LibLoadInfo));
+    MOCKER(AdxSendMsg).stubs().will(invoke(AdxSendMsgCaptureStub));
+    MOCKER(halHdcGetSessionAttr).stubs().will(invoke(HalGetSessionAttrRunEnvFailedStub));
+    g_utAdxDrainCallCount = 0;
+    g_utAdxUnregisterCount = 0;
+
+    // the driver cannot report the run environment: fail closed, never let the request through
+    ResetSendCapture();
+    EXPECT_EQ(LOG_FAILURE, LibLoadServerProcess(&handle, msg, sizeof(LogDataMsg) + sizeof(LibLoadInfo)));
+    ExpectOneReply("system function failed");
+    EXPECT_EQ(0, g_utAdxUnregisterCount);
+    EXPECT_EQ(0, g_utAdxDrainCallCount);
+
+    LibLoadServerDestroy();
+    free(msg);
+}
+
+TEST_F(LIB_LOAD_EXCP_UTEST, LibLoadVfIdGetFailedReply)
+{
+    MOCKER(ToolRealPath).stubs().will(returnValue(SYS_OK));
+    EXPECT_EQ(LOG_SUCCESS, LibLoadServerInit());
+    CommHandle handle{COMM_HDC, (OptHandle)0x12345678};
+    char name[] = {"libhbm_detect.so"};
+    LibLoadInfo info{0x0F0F0F0FU, 0x1000U, strlen(name), "libhbm_detect.so"};
+    LogDataMsg* msg = (LogDataMsg*)malloc(sizeof(LogDataMsg) + sizeof(LibLoadInfo));
+    (void)memcpy_s(msg->data, sizeof(LibLoadInfo), &info, sizeof(LibLoadInfo));
+    MOCKER(AdxSendMsg).stubs().will(invoke(AdxSendMsgCaptureStub));
+    MOCKER(halHdcGetSessionAttr).stubs().will(invoke(HalGetSessionAttrVfIdFailedStub));
+    g_utAdxDrainCallCount = 0;
+    g_utAdxUnregisterCount = 0;
+
+    // the driver cannot report the vfId: fail closed, an unreported vfId must never pass
+    // as directly connected
+    ResetSendCapture();
+    EXPECT_EQ(LOG_FAILURE, LibLoadServerProcess(&handle, msg, sizeof(LogDataMsg) + sizeof(LibLoadInfo)));
+    ExpectOneReply("system function failed");
+    EXPECT_EQ(0, g_utAdxUnregisterCount);
+    EXPECT_EQ(0, g_utAdxDrainCallCount);
+
+    LibLoadServerDestroy();
+    free(msg);
+}
+
+TEST_F(LIB_LOAD_EXCP_UTEST, LibLoadPowerGroupProhibitedReply)
+{
+    MOCKER(ToolRealPath).stubs().will(returnValue(SYS_OK));
+    EXPECT_EQ(LOG_SUCCESS, LibLoadServerInit());
+    CommHandle handle{COMM_HDC, (OptHandle)0x12345678};
+    char name[] = {"libhbm_detect.so"};
+    LibLoadInfo info{0x0F0F0F0FU, 0x1000U, strlen(name), "libhbm_detect.so"};
+    LogDataMsg* msg = (LogDataMsg*)malloc(sizeof(LogDataMsg) + sizeof(LibLoadInfo));
+    (void)memcpy_s(msg->data, sizeof(LibLoadInfo), &info, sizeof(LibLoadInfo));
+    MOCKER(AdxSendMsg).stubs().will(invoke(AdxSendMsgCaptureStub));
+    MOCKER(halHdcGetSessionAttr).stubs().will(invoke(HalGetSessionAttrRunEnvStub));
+    g_utAdxDrainCallCount = 0;
+    g_utAdxUnregisterCount = 0;
+
+    // a compute power group session (vfId != 0) shares the device with other hosts: an
+    // otherwise allowed environment must still be refused, the upgrade would release and
+    // drain the detect services for every host of the group
+    g_utRunEnv = RUN_ENV_VIRTUAL;
+    g_utVfId = 1;
+    ResetSendCapture();
+    EXPECT_EQ(LOG_SUCCESS, LibLoadServerProcess(&handle, msg, sizeof(LogDataMsg) + sizeof(LibLoadInfo)));
+    ExpectOneReply("prohibit compute power group operate lib load");
+    EXPECT_EQ(0, g_utAdxUnregisterCount);
+    EXPECT_EQ(0, g_utAdxDrainCallCount);
+
+    g_utRunEnv = RUN_ENV_PHYSICAL;
+    g_utVfId = 0;
+    LibLoadServerDestroy();
+    free(msg);
+}
+
+TEST_F(LIB_LOAD_EXCP_UTEST, LibLoadDirectEnvAllowedReply)
+{
+    MOCKER(ToolRealPath).stubs().will(returnValue(SYS_OK));
+    EXPECT_EQ(LOG_SUCCESS, LibLoadServerInit());
+    CommHandle handle{COMM_HDC, (OptHandle)0x12345678};
+    char name[] = {"libhbm_detect.so"};
+    LibLoadInfo info{0x0F0F0F0FU, 0x1000U, strlen(name), "libhbm_detect.so"};
+    LogDataMsg* msg = (LogDataMsg*)malloc(sizeof(LogDataMsg) + sizeof(LibLoadInfo));
+    (void)memcpy_s(msg->data, sizeof(LibLoadInfo), &info, sizeof(LibLoadInfo));
+    MOCKER(AdxSendMsg).stubs().will(invoke(AdxSendMsgCaptureStub));
+    MOCKER(halHdcGetSessionAttr).stubs().will(invoke(HalGetSessionAttrRunEnvStub));
+    // no upgrade package on the device plugin paths is the designed success fallback
+    MOCKER(ToolAccess).stubs().will(returnValue(SYS_ERROR));
+
+    // the container deployed directly on the physical machine and the virtual machine stay
+    // allowed for detection
+    g_utRunEnv = RUN_ENV_PHYSICAL_CONTAINER;
+    ResetSendCapture();
+    EXPECT_EQ(LOG_SUCCESS, LibLoadServerProcess(&handle, msg, sizeof(LogDataMsg) + sizeof(LibLoadInfo)));
+    ExpectOneReply("load library successfully");
+
+    g_utRunEnv = RUN_ENV_VIRTUAL;
+    ResetSendCapture();
+    EXPECT_EQ(LOG_SUCCESS, LibLoadServerProcess(&handle, msg, sizeof(LogDataMsg) + sizeof(LibLoadInfo)));
+    ExpectOneReply("load library successfully");
+
+    g_utRunEnv = RUN_ENV_PHYSICAL;
     LibLoadServerDestroy();
     free(msg);
 }
