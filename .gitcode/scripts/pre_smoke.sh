@@ -20,7 +20,13 @@ export ASCEND_SLOG_PRINT_TO_STDOUT=0
 
 source /usr/local/Ascend/cann/set_env.sh
 echo "1. downaload rttest_data.zip"
-wget -nv https://opencann-obs.obs.cn-north-4.myhuaweicloud.com/ci/rttest_data.zip && unzip -q rttest_data.zip
+if [ -z "$soc" ];then
+    wget -nv https://opencann-obs.obs.cn-north-4.myhuaweicloud.com/ci/rttest_data.zip 
+    unzip -q rttest_data.zip
+else
+    wget -nv https://opencann-obs.obs.cn-north-4.myhuaweicloud.com/ci/rttest_data_a5.zip 
+    unzip -q rttest_data_a5.zip -d rttest_data
+fi
 echo "2. download businesscode"
 
 # 安装 runtime 包到 /usr/local/Ascend
@@ -37,9 +43,11 @@ echo "Run all examples success" >> ./run_test.log
 # 打包plog
 mkdir -p /root/ascend
 slog_name="slog.tar.gz"
-tar -zcf slog.tar.gz -C /root/ascend log
-
-
+if [ -z "$soc" ];then
+    tar -zcf slog.tar.gz -C /root/ascend log
+else
+    tar -zcf slog_A5.tar.gz -C /root/ascend log
+fi
 npu-smi info
 echo "4. checking test results ..."
 date_time=`date +%Y%m%d`"."`date +%H%M%S`

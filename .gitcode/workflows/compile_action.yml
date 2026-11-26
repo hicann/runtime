@@ -26,9 +26,9 @@ on:
         required: false
         type: string
     outputs:
-      arm_run_url:
+      run_url:
         value: ${{jobs.JOB_compile.outputs.primary-url}}
-      arm_run_key:
+      run_key:
         value: ${{jobs.JOB_compile.outputs.primary-key}}
       package_name:
         value: ${{jobs.JOB_compile.outputs.package_name}}
