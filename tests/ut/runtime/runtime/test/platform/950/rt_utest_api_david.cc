@@ -6754,7 +6754,7 @@ TEST_F(ApiDavidTest, test_process_report_task_success)
 {
     ApiImplDavid apiImpl;
     rtError_t error;
-    Device* devPointer = stream_->Device_();
+    const Device* devPointer = stream_->Device_();
     MOCKER_CPP(&Runtime::GetDevAndGroupIdByThreadId)
         .stubs()
         .with(mockcpp::any(), outBoundP(&devPointer), mockcpp::any(), mockcpp::any())
@@ -6956,7 +6956,7 @@ TEST_F(ApiDavidTest, NonBlockingReportProcessesEntireBatch)
         reports[index].taskId = static_cast<uint16_t>(11U + index);
         reports[index].isBlock = 0U;
     }
-    Device* devPointer = stream_->Device_();
+    const Device* devPointer = stream_->Device_();
     uint32_t groupId = 0U;
     MOCKER_CPP(&Runtime::GetDevAndGroupIdByThreadId)
         .stubs()

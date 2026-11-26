@@ -1617,7 +1617,7 @@ rtError_t ApiImplDavid::SubscribeReport(const uint64_t threadId, Stream* const s
 }
 
 static rtError_t ProcessReportForBlockCqe(
-    Device* const dev, rtHostFuncCqReport_t* const report, const uint32_t deviceId, uint32_t tsId)
+    const Device* const dev, rtHostFuncCqReport_t* const report, const uint32_t deviceId, uint32_t tsId)
 {
     if (report->isBlock != 0) {
         Runtime* const rt = Runtime::Instance();
@@ -1640,7 +1640,7 @@ rtError_t ApiImplDavid::ProcessReport(const int32_t timeout, const bool noLog)
     Runtime* const rt = Runtime::Instance();
 
     const uint64_t threadId = PidTidFetcher::GetCurrentUserTid();
-    Device* dev = nullptr;
+    const Device* dev = nullptr;
     rtError_t ret = rt->GetDevAndGroupIdByThreadId(threadId, &dev, &groupId, noLog);
     COND_RETURN_WARN_WITH_NOLOG_SWITCH(
         ret != RT_ERROR_NONE, noLog, ret, "get groupId fail, threadIdentifier=%" PRIu64 ", retCode=%#x", threadId, ret);

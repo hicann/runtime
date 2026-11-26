@@ -3283,7 +3283,7 @@ TEST_F(TaskTest, Subscribe)
     // CbSubscribe::GetDevAndGroupIdByThreadId
     uint32_t key1 = RT_CB_SUBSCRIBE_MK_INFO_KEY(tsId, devId);
     cbSubscribe->subscribeMapByThreadId_[threadId][key1][streamId] = subscribeInfo1;
-    Device* devGet = nullptr;
+    const Device* devGet = nullptr;
     ret = cbSubscribe->GetDevAndGroupIdByThreadId(threadId, &devGet, &groupId);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     EXPECT_EQ(devGet, stm->Device_());
@@ -3311,7 +3311,7 @@ TEST_F(TaskTest, GetDevAndGroupIdRejectsNullDevice)
     cbSubscribe.subscribeMapByThreadId_[threadId][key][stm->Id_()] = subscribeInfo;
     stm->device_ = nullptr;
 
-    Device* subscribedDev = nullptr;
+    const Device* subscribedDev = nullptr;
     uint32_t subscribedGroupId = 0U;
     EXPECT_EQ(
         cbSubscribe.GetDevAndGroupIdByThreadId(threadId, &subscribedDev, &subscribedGroupId), RT_ERROR_DEVICE_NULL);

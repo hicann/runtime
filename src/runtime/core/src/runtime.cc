@@ -4748,7 +4748,7 @@ rtError_t Runtime::GetGroupIdByStreamId(const uint32_t devId, const int32_t stre
 }
 
 rtError_t Runtime::GetDevAndGroupIdByThreadId(
-    const uint64_t threadId, Device** const dev, uint32_t* const groupId, const bool noLog)
+    const uint64_t threadId, const Device** const dev, uint32_t* const groupId, const bool noLog)
 {
     NULL_PTR_RETURN_MSG(cbSubscribe_, RT_ERROR_SUBSCRIBE_NULL);
     const rtError_t error = cbSubscribe_->GetDevAndGroupIdByThreadId(threadId, dev, groupId, noLog);

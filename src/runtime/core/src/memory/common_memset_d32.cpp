@@ -190,7 +190,7 @@ rtError_t MemsetD32OnDeviceByBatch(void* dst, uint64_t destMax, uint32_t value, 
 // - Sync: >= 2MB goes ByBatch, < 2MB goes ByMemcpy
 rtError_t MemsetD32OnDevice(
     void* dst, uint64_t destMax, uint32_t value, uint64_t count, Stream* stm, bool isAsync, uint32_t memDevId,
-    Device* device)
+    const Device* const device)
 {
     const uint64_t totalBytes = count * sizeof(uint32_t);
     if (totalBytes > destMax) {

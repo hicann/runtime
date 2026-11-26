@@ -56,7 +56,7 @@ public:
     rtError_t Delete(const uint64_t threadId, Stream* const stm);
     rtError_t Delete(Stream* const stm);
     rtError_t GetDevAndGroupIdByThreadId(
-        const uint64_t threadId, Device** const dev, uint32_t* const groupId, const bool noLog = false);
+        const uint64_t threadId, const Device** const dev, uint32_t* const groupId, const bool noLog = false);
     rtError_t GetGroupIdByStreamId(const uint32_t devId, const int32_t streamId, uint32_t* const groupId);
     rtError_t GetEventByStreamId(const uint32_t devId, const int32_t streamId, Event** const evt);
     rtError_t GetNotifyByStreamId(const uint32_t devId, const int32_t streamId, Notify** const notify);

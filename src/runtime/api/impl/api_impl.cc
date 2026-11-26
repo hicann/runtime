@@ -4533,7 +4533,7 @@ rtError_t ApiImpl::ProcessReport(const int32_t timeout, const bool noLog)
     Runtime* const rt = Runtime::Instance();
 
     const uint64_t threadId = PidTidFetcher::GetCurrentUserTid();
-    Device* dev = nullptr;
+    const Device* dev = nullptr;
     rtError_t ret = rt->GetDevAndGroupIdByThreadId(threadId, &dev, &groupId, noLog);
     COND_RETURN_WARN(
         (ret != RT_ERROR_NONE) && (!noLog), ret, "get groupId fail, threadIdentifier=%" PRIu64 ", retCode=%#x",
@@ -6720,7 +6720,7 @@ rtError_t ApiImpl::LaunchHostFuncV2(Stream* const stm, const rtHostCpuFunc callB
 }
 
 void ApiImpl::ProcessHostFunc(
-    const uint64_t funcAddr, const uint64_t fnDataAddr, Device* const dev, const uint16_t streamId) const
+    const uint64_t funcAddr, const uint64_t fnDataAddr, const Device* const dev, const uint16_t streamId) const
 {
     void* const fnData = RtValueToPtr<void*>(fnDataAddr);
     if (!GlobalContainer::IsHostCpuFunc(funcAddr)) {

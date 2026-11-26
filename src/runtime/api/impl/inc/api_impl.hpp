@@ -715,7 +715,7 @@ protected:
     static rtError_t CheckEventAndStreamDevice(
         const Event* const evt, const Stream* const stm, const char_t* const funcDesc);
     void ProcessHostFunc(
-        const uint64_t funcAddr, const uint64_t fnDataAddr, Device* const dev, const uint16_t streamId) const;
+        const uint64_t funcAddr, const uint64_t fnDataAddr, const Device* const dev, const uint16_t streamId) const;
     virtual rtError_t GetDeviceSimtInfo(rtDevAttr attr, int64_t* val);
     virtual rtError_t GetDevRunningStreamSnapshotMsg(const rtGetMsgCallback callback);
     rtError_t LoopMemcpyAsync(
