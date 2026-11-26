@@ -1157,6 +1157,67 @@ TEST_F(DavidStreamTest, GetTaskPosTail_taskResMangIsNull)
     delete stream;
 }
 
+TEST_F(DavidStreamTest, QueryUsesDavidTaskResourceTail)
+{
+    auto* const resources = static_cast<TaskResManageDavid*>(stream_->taskResMang_);
+    ASSERT_NE(resources, nullptr);
+    ASSERT_TRUE(device_->IsStarsPlatform());
+    ASSERT_TRUE(Runtime::Instance()->GetDisableThread());
+
+    // Make the David resource tail differ from the base Stream tail.
+    uint16_t hardwareHead = 1U;
+    const uint16_t originalResourceTail = resources->GetResTail();
+    const uint32_t originalStreamTail = stream_->taskPosTail_.Value();
+    const ScopeGuard restoreTails([&]() {
+        resources->taskResATail_.Set(originalResourceTail);
+        stream_->taskPosTail_.Set(originalStreamTail);
+    });
+    resources->taskResATail_.Set(hardwareHead);
+    stream_->taskPosTail_.Set(0U);
+
+    MOCKER_CPP_VIRTUAL(device_->Driver_(), &Driver::GetSqHead)
+        .expects(once())
+        .with(mockcpp::any(), mockcpp::any(), eq(stream_->GetSqId()), outBound(hardwareHead), mockcpp::any())
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(device_->Driver_(), &Driver::GetSqTail).expects(never());
+    EXPECT_EQ(stream_->Query(), RT_ERROR_NONE);
+    GlobalMockObject::verify();
+}
+
+TEST_F(DavidStreamTest, QueryUsesHardwareTailForPersistentStream)
+{
+    ASSERT_TRUE(Runtime::Instance()->GetDisableThread());
+    ASSERT_TRUE(device_->IsStarsPlatform());
+
+    MOCKER_CPP_VIRTUAL(device_->Driver_(), &Driver::DevMemAllocWithBackupFlag).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(device_->Driver_(), &Driver::GetSqRegVirtualAddrBySqid).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(device_->Driver_(), &Driver::MemCopySync).stubs().will(returnValue(RT_ERROR_NONE));
+    rtStream_t handle = nullptr;
+    ASSERT_EQ(rtStreamCreateWithFlags(&handle, 0, RT_STREAM_PERSISTENT), RT_ERROR_NONE);
+    ScopeGuard destroyStream([handle]() { EXPECT_EQ(rtStreamDestroy(handle), RT_ERROR_NONE); });
+    Stream* const stream = rt_ut::UnwrapOrNull<Stream>(handle);
+    ASSERT_NE(stream, nullptr);
+
+    MOCKER_CPP_VIRTUAL(stream, &Stream::GetTaskPosTail).expects(never());
+    uint16_t hardwareHead = 0U;
+    uint16_t hardwareTail = 1U;
+    MOCKER_CPP_VIRTUAL(device_->Driver_(), &Driver::GetSqHead)
+        .expects(once())
+        .with(mockcpp::any(), mockcpp::any(), eq(stream->GetSqId()), outBound(hardwareHead), mockcpp::any())
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(device_->Driver_(), &Driver::GetSqTail)
+        .expects(once())
+        .with(mockcpp::any(), mockcpp::any(), eq(stream->GetSqId()), outBound(hardwareTail))
+        .will(returnValue(RT_ERROR_NONE));
+
+    EXPECT_EQ(stream->Query(), RT_ERROR_STREAM_NOT_COMPLETE);
+
+    // Destroy the stream before verify() clears the driver stubs used by teardown.
+    destroyStream.ReleaseGuard();
+    EXPECT_EQ(rtStreamDestroy(handle), RT_ERROR_NONE);
+    GlobalMockObject::verify();
+}
+
 TEST_F(DavidStreamTest, SeparateSendAndRecycleError2)
 {
     DavidStream* stream = (DavidStream*)stream_;

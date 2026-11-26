@@ -248,6 +248,118 @@ TEST_F(CloudV2StreamTest, Query_test)
     GlobalMockObject::verify();
 }
 
+TEST_F(CloudV2StreamTest, QueryUsesHostTailWhileHardwareTailIsStale)
+{
+    auto* const runtime = const_cast<Runtime*>(Runtime::Instance());
+    auto* const device = runtime->DeviceRetain(0, 0);
+    ASSERT_NE(device, nullptr);
+    const ScopeGuard releaseDevice([&]() { runtime->DeviceRelease(device); });
+    ASSERT_TRUE(device->IsStarsPlatform());
+
+    const bool disableThread = runtime->GetDisableThread();
+    runtime->SetDisableThread(true);
+    const ScopeGuard restoreMode([&]() { runtime->SetDisableThread(disableThread); });
+    Stream stream(device, 0U);
+    stream.sqId_ = 1U;
+    uint16_t submittedPos = 1U;
+    stream.taskPosTail_.Set(submittedPos);
+
+    // Immediately after submission, the hardware head and tail can both still be 0.
+    // The Host tail must be captured before sampling the hardware head.
+    MOCKER_CPP_VIRTUAL(&stream, &Stream::GetTaskPosTail)
+        .expects(once())
+        .will(returnValue(static_cast<uint32_t>(submittedPos)))
+        .id("query_host_tail");
+    uint16_t staleHead = 0U;
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::GetSqHead)
+        .expects(once())
+        .with(mockcpp::any(), mockcpp::any(), eq(stream.GetSqId()), outBound(staleHead), mockcpp::any())
+        .after("query_host_tail")
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::GetSqTail).expects(never());
+    EXPECT_EQ(stream.Query(), RT_ERROR_STREAM_NOT_COMPLETE);
+    GlobalMockObject::verify();
+
+    // Once the head reaches the submitted position, the hardware tail is still irrelevant.
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::GetSqHead)
+        .expects(once())
+        .with(mockcpp::any(), mockcpp::any(), eq(stream.GetSqId()), outBound(submittedPos), mockcpp::any())
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::GetSqTail).expects(never());
+    EXPECT_EQ(stream.Query(), RT_ERROR_NONE);
+    GlobalMockObject::verify();
+}
+
+TEST_F(CloudV2StreamTest, QueryWaitsForHardwareHeadToWrap)
+{
+    auto* const runtime = const_cast<Runtime*>(Runtime::Instance());
+    auto* const device = runtime->DeviceRetain(0, 0);
+    ASSERT_NE(device, nullptr);
+    const ScopeGuard releaseDevice([&]() { runtime->DeviceRelease(device); });
+    ASSERT_TRUE(device->IsStarsPlatform());
+
+    const bool disableThread = runtime->GetDisableThread();
+    runtime->SetDisableThread(true);
+    const ScopeGuard restoreMode([&]() { runtime->SetDisableThread(disableThread); });
+    Stream stream(device, 0U);
+    stream.sqId_ = 1U;
+    ASSERT_GT(stream.GetSqDepth(), 1U);
+
+    // The Host tail has wrapped; the last SQE is pending until the hardware head wraps too.
+    stream.taskPosTail_.Set(0U);
+    uint16_t hardwareHead = static_cast<uint16_t>(stream.GetSqDepth() - 1U);
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::GetSqHead)
+        .expects(once())
+        .with(mockcpp::any(), mockcpp::any(), eq(stream.GetSqId()), outBound(hardwareHead), mockcpp::any())
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::GetSqTail).expects(never());
+    EXPECT_EQ(stream.Query(), RT_ERROR_STREAM_NOT_COMPLETE);
+    GlobalMockObject::verify();
+
+    hardwareHead = 0U;
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::GetSqHead)
+        .expects(once())
+        .with(mockcpp::any(), mockcpp::any(), eq(stream.GetSqId()), outBound(hardwareHead), mockcpp::any())
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::GetSqTail).expects(never());
+    EXPECT_EQ(stream.Query(), RT_ERROR_NONE);
+    GlobalMockObject::verify();
+}
+
+TEST_F(CloudV2StreamTest, QuerySelectsTailByPersistentFlag)
+{
+    auto* const runtime = const_cast<Runtime*>(Runtime::Instance());
+    auto* const device = runtime->DeviceRetain(0, 0);
+    ASSERT_NE(device, nullptr);
+    const ScopeGuard releaseDevice([&]() { runtime->DeviceRelease(device); });
+    ASSERT_TRUE(device->IsStarsPlatform());
+
+    const bool disableThread = runtime->GetDisableThread();
+    runtime->SetDisableThread(true);
+    const ScopeGuard restoreMode([&]() { runtime->SetDisableThread(disableThread); });
+    Stream modelStream(device, 0U, RT_STREAM_PERSISTENT);
+    modelStream.sqId_ = 1U;
+    modelStream.taskPosTail_.Set(1U);
+
+    uint16_t hardwarePos = 0U;
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::GetSqHead)
+        .expects(exactly(3))
+        .with(mockcpp::any(), mockcpp::any(), eq(modelStream.GetSqId()), outBound(hardwarePos), mockcpp::any())
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::GetSqTail)
+        .expects(exactly(3))
+        .with(mockcpp::any(), mockcpp::any(), eq(modelStream.GetSqId()), outBound(hardwarePos))
+        .will(returnValue(RT_ERROR_NONE));
+
+    // The creation flag selects the hardware tail even before the first binding.
+    EXPECT_EQ(modelStream.Query(), RT_ERROR_NONE);
+    modelStream.SetBindFlag(true);
+    EXPECT_EQ(modelStream.Query(), RT_ERROR_NONE);
+    modelStream.SetBindFlag(false);
+    EXPECT_EQ(modelStream.Query(), RT_ERROR_NONE);
+    GlobalMockObject::verify();
+}
+
 TEST_F(CloudV2StreamTest, TestIsTaskLimitedWithTaskFinished)
 {
     Runtime* rtInstance = (Runtime*)Runtime::Instance();
