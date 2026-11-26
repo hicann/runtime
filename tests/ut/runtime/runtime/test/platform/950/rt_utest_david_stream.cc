@@ -1194,7 +1194,7 @@ TEST_F(DavidStreamTest, QueryUsesHardwareTailForPersistentStream)
     MOCKER_CPP_VIRTUAL(device_->Driver_(), &Driver::MemCopySync).stubs().will(returnValue(RT_ERROR_NONE));
     rtStream_t handle = nullptr;
     ASSERT_EQ(rtStreamCreateWithFlags(&handle, 0, RT_STREAM_PERSISTENT), RT_ERROR_NONE);
-    const ScopeGuard destroyStream([handle]() { EXPECT_EQ(rtStreamDestroy(handle), RT_ERROR_NONE); });
+    ScopeGuard destroyStream([handle]() { EXPECT_EQ(rtStreamDestroy(handle), RT_ERROR_NONE); });
     Stream* const stream = rt_ut::UnwrapOrNull<Stream>(handle);
     ASSERT_NE(stream, nullptr);
 
@@ -1211,6 +1211,10 @@ TEST_F(DavidStreamTest, QueryUsesHardwareTailForPersistentStream)
         .will(returnValue(RT_ERROR_NONE));
 
     EXPECT_EQ(stream->Query(), RT_ERROR_STREAM_NOT_COMPLETE);
+
+    // Destroy the stream before verify() clears the driver stubs used by teardown.
+    destroyStream.ReleaseGuard();
+    EXPECT_EQ(rtStreamDestroy(handle), RT_ERROR_NONE);
     GlobalMockObject::verify();
 }
 
