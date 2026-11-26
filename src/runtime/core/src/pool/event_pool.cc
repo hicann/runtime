@@ -15,12 +15,17 @@ namespace cce {
 namespace runtime {
 EventPool::EventPool(Device* device, uint32_t tsId)
     : NoCopy(), device_(device), poolSize_(0U), tsId_(tsId), isAging_(false)
+{}
+
+rtError_t EventPool::Init()
 {
-    poolSize_ = device->GetDevProperties().eventPoolSize;
+    poolSize_ = device_->GetDevProperties().eventPoolSize;
     eventQueue_ = new (std::nothrow) int32_t[poolSize_]();
     if (eventQueue_ == nullptr) {
         RT_LOG(RT_LOG_ERROR, "alloc eventQueue memory failed");
+        return RT_ERROR_MEMORY_ALLOCATION;
     }
+    return RT_ERROR_NONE;
 }
 
 EventPool::~EventPool() noexcept

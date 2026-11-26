@@ -38,6 +38,25 @@ using namespace testing;
 using namespace cce::runtime;
 
 namespace {
+using NothrowArrayNewFunc = void* (*)(std::size_t, const std::nothrow_t&);
+std::size_t eventPoolArraySize = 0U;
+uint32_t eventPoolArrayFailures = 0U;
+
+void* FailEventPoolArrayNew(std::size_t size, const std::nothrow_t&) noexcept
+{
+    if (size == eventPoolArraySize) {
+        ++eventPoolArrayFailures;
+        return nullptr;
+    }
+    return ::operator new[](size);
+}
+
+rtError_t AllocEventPoolId(EventPool*, int32_t* const eventId)
+{
+    *eventId = 17;
+    return RT_ERROR_NONE;
+}
+
 void ClearEnginePending(Device* const device)
 {
     if (device == nullptr) {
@@ -601,9 +620,93 @@ TEST_F(EventTest910B, TestGetTimeStampInvalidFreq)
     delete stub;
 }
 
+TEST_F(EventTest910B, EventPoolArrayAllocationFailureCleansUpDevice)
+{
+    RawDevice device(1);
+    eventPoolArraySize = static_cast<std::size_t>(device_->GetDevProperties().eventPoolSize) * sizeof(int32_t);
+    eventPoolArrayFailures = 0U;
+    MOCKER(static_cast<NothrowArrayNewFunc>(&operator new[])).stubs().will(invoke(FailEventPoolArrayNew));
+
+    EXPECT_EQ(device.Init(), RT_ERROR_MEMORY_ALLOCATION);
+    EXPECT_EQ(eventPoolArrayFailures, 1U);
+    EXPECT_EQ(device.eventPool_, nullptr);
+    EXPECT_EQ(device.spmPool_, nullptr);
+    EXPECT_EQ(device.engine_, nullptr);
+    EXPECT_EQ(device.driver_, nullptr);
+}
+
+TEST_F(EventTest910B, EventPoolArrayAllocationFailureDestroysEmptyPool)
+{
+    eventPoolArraySize = static_cast<std::size_t>(device_->GetDevProperties().eventPoolSize) * sizeof(int32_t);
+    eventPoolArrayFailures = 0U;
+    MOCKER(static_cast<NothrowArrayNewFunc>(&operator new[])).expects(once()).will(invoke(FailEventPoolArrayNew));
+    MOCKER_CPP_VIRTUAL(device_, &Device::FreeEventIdFromDrv).expects(never());
+    {
+        EventPool eventPool(device_, 0U);
+        EXPECT_EQ(eventPool.Init(), RT_ERROR_MEMORY_ALLOCATION);
+        EXPECT_EQ(eventPool.eventQueue_, nullptr);
+        EXPECT_EQ(eventPool.eventQueueHead_, eventPool.eventQueueTail_);
+    }
+    EXPECT_EQ(eventPoolArrayFailures, 1U);
+    GlobalMockObject::verify();
+    GlobalMockObject::reset();
+}
+
+TEST_F(EventTest910B, EventPoolArrayAllocationFailureCanRetry)
+{
+    EventPool eventPool(device_, 0U);
+    eventPoolArraySize = static_cast<std::size_t>(device_->GetDevProperties().eventPoolSize) * sizeof(int32_t);
+    eventPoolArrayFailures = 0U;
+    MOCKER(static_cast<NothrowArrayNewFunc>(&operator new[])).expects(once()).will(invoke(FailEventPoolArrayNew));
+    EXPECT_EQ(eventPool.Init(), RT_ERROR_MEMORY_ALLOCATION);
+    EXPECT_EQ(eventPoolArrayFailures, 1U);
+    GlobalMockObject::verify();
+    GlobalMockObject::reset();
+
+    EXPECT_EQ(eventPool.Init(), RT_ERROR_NONE);
+    EXPECT_NE(eventPool.eventQueue_, nullptr);
+    EXPECT_EQ(eventPool.GetQueueAvilableNum(), 0U);
+}
+
+TEST_F(EventTest910B, EventPoolAllocFreeAgingAndRestore)
+{
+    EventPool eventPool(device_, 0U);
+    ASSERT_EQ(eventPool.Init(), RT_ERROR_NONE);
+    MOCKER_CPP(&EventPool::AllocEventIdFromDrv).expects(exactly(3)).will(invoke(AllocEventPoolId));
+    MOCKER_CPP_VIRTUAL(device_, &Device::FreeEventIdFromDrv).expects(exactly(3)).will(returnValue(RT_ERROR_NONE));
+
+    int32_t eventId = INVALID_EVENT_ID;
+    EXPECT_EQ(eventPool.AllocEventId(&eventId), RT_ERROR_NONE);
+    EXPECT_EQ(eventId, 17);
+    EXPECT_EQ(eventPool.FreeEventId(eventId), RT_ERROR_NONE);
+    EXPECT_EQ(eventPool.GetQueueAvilableNum(), 1U);
+    eventId = INVALID_EVENT_ID;
+    EXPECT_EQ(eventPool.AllocEventId(&eventId), RT_ERROR_NONE);
+    EXPECT_EQ(eventId, 17);
+    EXPECT_EQ(eventPool.GetQueueAvilableNum(), 0U);
+
+    EXPECT_EQ(eventPool.FreeEventId(eventId), RT_ERROR_NONE);
+    Driver* const driver = device_->Driver_();
+    MOCKER_CPP_VIRTUAL(driver, &Driver::ReAllocResourceId)
+        .expects(exactly(2))
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), eq(17U), eq(DRV_EVENT_ID), mockcpp::any())
+        .will(returnValue(RT_ERROR_DRV_ERR))
+        .then(returnValue(RT_ERROR_NONE));
+    EXPECT_EQ(eventPool.EventIdReAlloc(), RT_ERROR_DRV_ERR);
+    EXPECT_EQ(eventPool.GetQueueAvilableNum(), 1U);
+    EXPECT_EQ(eventPool.EventIdReAlloc(), RT_ERROR_NONE);
+    EXPECT_EQ(eventPool.FreeAllEvent(), RT_ERROR_NONE);
+    EXPECT_EQ(eventPool.GetQueueAvilableNum(), 0U);
+    EXPECT_TRUE(eventPool.isAging_);
+    EXPECT_EQ(eventPool.EventIdReAlloc(), RT_ERROR_NONE);
+    EXPECT_FALSE(eventPool.AllocEventIdFromPool(&eventId));
+    EXPECT_FALSE(eventPool.isAging_);
+}
+
 TEST_F(EventTest910B, TestGetQueueSize)
 {
     EventPool* eventPool = new (std::nothrow) EventPool(device_, 0);
+    ASSERT_EQ(eventPool->Init(), RT_ERROR_NONE);
     eventPool->poolSize_ = 100;
     eventPool->eventQueueHead_ = 0;
     eventPool->eventQueueTail_ = 10;
@@ -615,6 +718,7 @@ TEST_F(EventTest910B, TestGetQueueSize)
 TEST_F(EventTest910B, TestTryAllocEventIdForPool)
 {
     EventPool* eventPool = new (std::nothrow) EventPool(device_, 0);
+    ASSERT_EQ(eventPool->Init(), RT_ERROR_NONE);
     eventPool->eventQueueHead_ = 0;
     eventPool->eventQueueTail_ = 99;
     eventPool->isAging_ = true;
@@ -653,6 +757,7 @@ TEST_F(EventTest910B, TestTryAllocEventIdForPool)
 TEST_F(EventTest910B, TestFreeAllEvent)
 {
     EventPool* eventPool = new (std::nothrow) EventPool(device_, 0);
+    ASSERT_EQ(eventPool->Init(), RT_ERROR_NONE);
 
     eventPool->eventQueueHead_ = 0;
     eventPool->eventQueueTail_ = 2;
@@ -669,6 +774,7 @@ TEST_F(EventTest910B, TestFreeAllEvent)
 TEST_F(EventTest910B, TestAllocEventIdFromPool)
 {
     EventPool* eventPool = new (std::nothrow) EventPool(device_, 0);
+    ASSERT_EQ(eventPool->Init(), RT_ERROR_NONE);
     eventPool->eventQueueHead_ = 0;
     eventPool->eventQueueTail_ = 2;
     eventPool->eventQueue_[0] = 1;

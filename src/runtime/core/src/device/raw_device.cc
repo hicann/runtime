@@ -755,6 +755,8 @@ rtError_t RawDevice::Init()
         COND_GOTO_MSG_OUTER(
             eventPool_ == nullptr, SPM_FREE, error, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013, sizeof(EventPool),
             "new");
+        error = eventPool_->Init();
+        ERROR_GOTO(error, EVENT_FREE, "Failed to init event pool, retCode=%#x.", static_cast<uint32_t>(error));
     }
 
     if (IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_DFX_PROCESS_SNAPSHOT)) {

@@ -977,7 +977,9 @@ TEST_F(TinyStubTest, ipc_event_stub)
 TEST_F(TinyStubTest, event_pool_stub)
 {
     EventPool eventPool(nullptr, 0U);
-    rtError_t ret = eventPool.AllocEventIdFromDrv(nullptr);
+    rtError_t ret = eventPool.Init();
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    ret = eventPool.AllocEventIdFromDrv(nullptr);
     EXPECT_EQ(ret, RT_ERROR_NONE);
     ret = eventPool.FreeEventId(0U);
     EXPECT_EQ(ret, RT_ERROR_NONE);

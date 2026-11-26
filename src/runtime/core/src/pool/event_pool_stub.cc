@@ -19,6 +19,8 @@ EventPool::EventPool(Device* device, uint32_t tsId)
 
 EventPool::~EventPool() noexcept {}
 
+rtError_t EventPool::Init() { return RT_ERROR_NONE; }
+
 rtError_t EventPool::AllocEventIdFromDrv(int32_t* const eventId)
 {
     UNUSED(eventId);

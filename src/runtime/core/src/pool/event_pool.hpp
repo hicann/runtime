@@ -21,6 +21,7 @@ class EventPool : public NoCopy {
 public:
     explicit EventPool(Device* device, uint32_t tsId);
     ~EventPool() noexcept override;
+    rtError_t Init();
     void TryAllocEventIdForPool();
     rtError_t FreeEventId(const int32_t eventId);
     bool AllocEventIdFromPool(int32_t* eventId);
