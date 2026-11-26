@@ -37,7 +37,7 @@ typedef struct acltdtChannelHandle acltdtChannelHandle;
  * @param dataItem [IN] pointer to the data item
  *
  * @retval Tensor type.
- * @retval ACL_DT_UNDEFINED if dataItem is null
+ * @retval ACL_TENSOR_DATA_UNDEFINED if dataItem is null
  */
 ACL_FUNC_VISIBILITY acltdtTensorType acltdtGetTensorTypeFromItem(const acltdtDataItem* dataItem);
 
