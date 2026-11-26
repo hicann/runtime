@@ -187,6 +187,12 @@ source ${install_path}/cann/set_env.sh
 
 ### 编译runtime包
 
+执行本节命令前，请先进入克隆得到的 `runtime` 目录。
+
+```bash
+cd runtime
+```
+
 若您的编译环境可以访问网络，编译过程中将自动下载开源第三方软件，可以使用如下命令进行编译：
 
 ```bash

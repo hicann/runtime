@@ -188,6 +188,12 @@ source ${install_path}/cann/set_env.sh
 
 ### Compile runtime package
 
+Enter the cloned `runtime` directory before running the commands in this section.
+
+```bash
+cd runtime
+```
+
 If your build environment can access the network, the build process automatically downloads open-source third-party software. Run the following command to build Runtime:
 
 ```bash
