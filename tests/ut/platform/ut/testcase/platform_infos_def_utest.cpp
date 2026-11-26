@@ -58,35 +58,35 @@ TEST_F(PlatFormInfosDefUTest, GetPlatformRes_StringString_NotInit_ReturnsTrue)
 {
     PlatFormInfos uninitialized;
     std::string val;
-    EXPECT_TRUE(uninitialized.GetPlatformRes("label", "key", val));
+    EXPECT_FALSE(uninitialized.GetPlatformRes("label", "key", val));
 }
 
 TEST_F(PlatFormInfosDefUTest, GetPlatformResWithLock_StringString_NotInit_ReturnsTrue)
 {
     PlatFormInfos uninitialized;
     std::string val;
-    EXPECT_TRUE(uninitialized.GetPlatformResWithLock("label", "key", val));
+    EXPECT_FALSE(uninitialized.GetPlatformResWithLock("label", "key", val));
 }
 
 TEST_F(PlatFormInfosDefUTest, GetPlatformRes_LabelMap_NotInit_ReturnsTrue)
 {
     PlatFormInfos uninitialized;
     std::map<std::string, std::string> res;
-    EXPECT_TRUE(uninitialized.GetPlatformRes("label", res));
+    EXPECT_FALSE(uninitialized.GetPlatformRes("label", res));
 }
 
 TEST_F(PlatFormInfosDefUTest, GetPlatformResWithLock_LabelMap_NotInit_ReturnsTrue)
 {
     PlatFormInfos uninitialized;
     std::map<std::string, std::string> res;
-    EXPECT_TRUE(uninitialized.GetPlatformResWithLock("label", res));
+    EXPECT_FALSE(uninitialized.GetPlatformResWithLock("label", res));
 }
 
 TEST_F(PlatFormInfosDefUTest, GetPlatformResWithLock_MapMap_NotInit_ReturnsTrue)
 {
     PlatFormInfos uninitialized;
     std::map<std::string, std::map<std::string, std::string>> res;
-    EXPECT_TRUE(uninitialized.GetPlatformResWithLock(res));
+    EXPECT_FALSE(uninitialized.GetPlatformResWithLock(res));
 }
 
 TEST_F(PlatFormInfosDefUTest, SetAICoreIntrinsicDtype_NotInit_NoEffect)

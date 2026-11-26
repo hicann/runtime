@@ -97,7 +97,7 @@ map<string, vector<string>> PlatFormInfos::GetVectorCoreIntrinsicDtype()
 bool PlatFormInfos::GetPlatformResWithOutLock(const string& label, const string& key, string& val)
 {
     if (platform_infos_impl_ == nullptr) {
-        return true;
+        return false;
     }
     return platform_infos_impl_->GetPlatformRes(label, key, val);
 }
@@ -106,7 +106,7 @@ bool PlatFormInfos::GetPlatformRes(const string& label, const string& key, strin
 {
     std::lock_guard<std::mutex> lock_guard(plt_info_mutex);
     if (platform_infos_impl_ == nullptr) {
-        return true;
+        return false;
     }
     return platform_infos_impl_->GetPlatformRes(label, key, val);
 }
@@ -115,7 +115,7 @@ bool PlatFormInfos::GetPlatformResWithLock(const string& label, const string& ke
 {
     std::lock_guard<std::mutex> lock_guard(plt_info_mutex);
     if (platform_infos_impl_ == nullptr) {
-        return true;
+        return false;
     }
     return platform_infos_impl_->GetPlatformRes(label, key, val);
 }
@@ -124,7 +124,7 @@ bool PlatFormInfos::GetPlatformRes(const std::string& label, std::map<std::strin
 {
     std::lock_guard<std::mutex> lock_guard(plt_info_mutex);
     if (platform_infos_impl_ == nullptr) {
-        return true;
+        return false;
     }
     return platform_infos_impl_->GetPlatformRes(label, res);
 }
@@ -133,7 +133,7 @@ bool PlatFormInfos::GetPlatformResWithLock(const std::string& label, std::map<st
 {
     std::lock_guard<std::mutex> lock_guard(plt_info_mutex);
     if (platform_infos_impl_ == nullptr) {
-        return true;
+        return false;
     }
     return platform_infos_impl_->GetPlatformRes(label, res);
 }
@@ -142,7 +142,7 @@ bool PlatFormInfos::GetPlatformResWithLock(std::map<std::string, std::map<std::s
 {
     std::lock_guard<std::mutex> lock_guard(plt_info_mutex);
     if (platform_infos_impl_ == nullptr) {
-        return true;
+        return false;
     }
     return platform_infos_impl_->GetPlatformRes(res);
 }
