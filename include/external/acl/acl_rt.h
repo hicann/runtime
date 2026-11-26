@@ -1962,10 +1962,10 @@ ACL_FUNC_VISIBILITY aclError aclrtCreateEventExWithFlag(aclrtEvent* event, uint3
  * @brief destroy event instance
  *
  * @par Function
- *  Event instances created or opened through supported Event APIs can be destroyed. When destroying an event,
- *  the user must ensure that the tasks involved in the aclrtSynchronizeEvent
- *  interface or the aclrtStreamWaitEvent interface are completed before
- *  they are destroyed.
+ *  Event instances created or opened through supported Event APIs can be destroyed before their associated tasks
+ *  are completed. This interface does not block waiting for device tasks submitted through aclrtRecordEvent or
+ *  aclrtStreamWaitEvent; the Event resources are released automatically after the tasks complete and release their
+ *  references to the Event. The caller must not use the Event handle on successful return.
  *
  * @param  event [IN]   event to destroy
  *
