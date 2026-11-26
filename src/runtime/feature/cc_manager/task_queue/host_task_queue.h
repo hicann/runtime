@@ -25,13 +25,10 @@ constexpr int32_t BAR_TASK_QUEUE_DEFAULT_TIMEOUT_MS = 30000;
 
 rtError_t CreateBarTaskQueue(BarTaskQueue** queue, Device* device, uint32_t depth, uint32_t taskDescSize);
 
-// 调用方须先收尾双侧终止信号；一般任务轮次使用 BeginBarTaskRound。
+// 调用方须先收尾双侧终止信号。
 rtError_t ResetBarTaskQueue(BarTaskQueue* queue);
 
 bool IsBarTaskQueueTerminated(const BarTaskQueue* queue);
-
-// Host 已终止时保留信号并置 proceed=false；其余情况复位上一轮。
-rtError_t BeginBarTaskRound(BarTaskQueue* queue, bool* proceed);
 
 rtError_t FreeBarTaskQueue(BarTaskQueue* queue);
 

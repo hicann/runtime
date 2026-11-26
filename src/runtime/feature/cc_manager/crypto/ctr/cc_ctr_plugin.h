@@ -28,11 +28,14 @@ public:
     rtError_t OnTaskBegin(
         const CCMemcpyTask& task, uint32_t deviceId, uint32_t totalSlices, void** pluginTaskCtx) override;
     rtError_t PrepareH2DSlice(CCCryptoSliceCtx& ctx, size_t& dmaLen) override;
-    rtError_t OnH2DSliceDone(CCCryptoSliceCtx& ctx) override;
+    rtError_t FinishH2DSlice(CCCryptoSliceCtx& ctx) override;
     rtError_t PrepareD2HSlice(CCCryptoSliceCtx& ctx) override;
     rtError_t FinishD2HSlice(CCCryptoSliceCtx& ctx) override;
     rtError_t LaunchTransfer(Stream* stm, uint64_t taskQueueAddr, const CCMemcpyTask& task) override;
     void OnTaskEnd(const CCMemcpyTask& task, uint32_t deviceId, uint32_t totalSlices, void* pluginTaskCtx) override;
+    // The CTR keystream fill runs on the AIV kernel, whose handle is cached per context.
+    rtError_t EnsureLaunchResource(uint32_t deviceId) override;
+    void ReleaseLaunchResource(uint32_t deviceId) override;
 
 private:
     CCrypto* crypto_{nullptr}; // 密钥流接口来源（GetKeyStreamPair/KeystreamEncrypt/FreeKeyStream）

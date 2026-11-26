@@ -14,7 +14,6 @@
 #include <algorithm>
 #include <cstdlib>
 #include <cstring>
-#include <mutex>
 #include <string>
 #include <vector>
 
@@ -29,9 +28,8 @@ namespace runtime {
 namespace {
 CCCryptoPluginFactory g_cryptoPluginFactories[static_cast<uint32_t>(CC_CRYPTO_ALG_TYPE::MAX)] = {nullptr};
 
-std::mutex g_activeAlgMutex;                                    // 保护模式缓存
-CC_CRYPTO_ALG_TYPE g_activeCryptoAlg = CC_CRYPTO_ALG_TYPE::GCM; // 静态初值；节点不可读时 GetActiveCryptoAlg 回落 GCM
-bool g_activeCryptoAlgResolved = false;                         // 模式是否已解析（true 后不再读节点）
+// MAX is the unresolved sentinel; fall back to GCM when the node cannot be read.
+std::atomic<CC_CRYPTO_ALG_TYPE> g_activeCryptoAlg{CC_CRYPTO_ALG_TYPE::MAX};
 
 std::atomic<CC_CRYPTO_CIPHER> g_activeCryptoCipher{CC_CRYPTO_CIPHER::AES_128}; // 生效加密算法（缺省 AES_128）
 
@@ -71,7 +69,7 @@ rtError_t CCCryptoPlugin::PrepareH2DSlice(CCCryptoSliceCtx& ctx, size_t& dmaLen)
     return RT_ERROR_NONE;
 }
 
-rtError_t CCCryptoPlugin::OnH2DSliceDone(CCCryptoSliceCtx& ctx)
+rtError_t CCCryptoPlugin::FinishH2DSlice(CCCryptoSliceCtx& ctx)
 {
     UNUSED(ctx);
     return RT_ERROR_NONE;
@@ -97,9 +95,14 @@ void CCCryptoPlugin::OnTaskEnd(const CCMemcpyTask& task, uint32_t deviceId, uint
     UNUSED(pluginTaskCtx);
 }
 
+rtError_t CCCryptoPlugin::EnsureLaunchResource(uint32_t) { return RT_ERROR_NONE; }
+
+void CCCryptoPlugin::ReleaseLaunchResource(uint32_t) {}
+
 namespace {
 rtError_t LaunchBuiltinAicpuKernel(
-    Stream* const stm, const char_t* const kernelName, void* const args, const uint32_t argsSize)
+    Stream* const stm, const char_t* const kernelName, void* const args, const uint32_t argsSize,
+    const uint32_t coreDim)
 {
     rtKernelLaunchNames_t launchNames{};
     launchNames.soName = nullptr;
@@ -111,12 +114,13 @@ rtError_t LaunchBuiltinAicpuKernel(
     argsInfo.argsSize = argsSize;
     argsInfo.isNoNeedH2DCopy = 0U; // 参数多是 host 栈变量，让 Runtime 拷到 device
 
-    return StreamLaunchCpuKernel(&launchNames, 1U, &argsInfo, stm, RT_KERNEL_DEFAULT);
+    return StreamLaunchCpuKernel(&launchNames, coreDim, &argsInfo, stm, RT_KERNEL_DEFAULT);
 }
 } // namespace
 
 rtError_t CCCryptoPlugin::LaunchDeviceKernel(
-    Stream* const stm, const char_t* const kernelName, void* const args, const uint32_t argsSize)
+    Stream* const stm, const char_t* const kernelName, void* const args, const uint32_t argsSize,
+    const uint32_t coreDim)
 {
     COND_RETURN_ERROR(stm == nullptr, RT_ERROR_STREAM_NULL, "CC device kernel launch stream is null.");
     COND_RETURN_ERROR(kernelName == nullptr, RT_ERROR_CC_INIT_FAILED, "CC device kernel name is null.");
@@ -128,7 +132,7 @@ rtError_t CCCryptoPlugin::LaunchDeviceKernel(
             "CC KeystreamXor args size %u is invalid.", argsSize);
         return CcLaunchAivKsXor(stm, *reinterpret_cast<const AiccKeystreamXorParam*>(args));
     }
-    return LaunchBuiltinAicpuKernel(stm, kernelName, args, argsSize);
+    return LaunchBuiltinAicpuKernel(stm, kernelName, args, argsSize, coreDim);
 }
 
 rtError_t RegisterCryptoPlugin(CC_CRYPTO_ALG_TYPE algType, CCCryptoPluginFactory factory)
@@ -161,16 +165,15 @@ rtError_t CreateCryptoPlugin(CC_CRYPTO_ALG_TYPE algType, CCrypto* crypto, CCCryp
 
 CC_CRYPTO_ALG_TYPE GetActiveCryptoAlg()
 {
-    std::lock_guard<std::mutex> lock(g_activeAlgMutex);
-    if (g_activeCryptoAlgResolved) {
-        return g_activeCryptoAlg;
+    CC_CRYPTO_ALG_TYPE alg = g_activeCryptoAlg.load(std::memory_order_acquire);
+    if (alg != CC_CRYPTO_ALG_TYPE::MAX) {
+        return alg;
     }
     std::string encryptMode;
-    g_activeCryptoAlg = (ReadCcEncryptMode(encryptMode) && (encryptMode == CC_SYSFS_MEM_ENCRYPT_MODE_CTR)) ?
-                            CC_CRYPTO_ALG_TYPE::CTR :
-                            CC_CRYPTO_ALG_TYPE::GCM;
-    g_activeCryptoAlgResolved = true;
-    return g_activeCryptoAlg;
+    const bool ctrMode = ReadCcEncryptMode(encryptMode) && (encryptMode == CC_SYSFS_MEM_ENCRYPT_MODE_CTR);
+    alg = ctrMode ? CC_CRYPTO_ALG_TYPE::CTR : CC_CRYPTO_ALG_TYPE::GCM;
+    g_activeCryptoAlg.store(alg, std::memory_order_release);
+    return alg;
 }
 
 std::atomic<CC_CRYPTO_CIPHER>& ActiveCryptoCipherRef() { return g_activeCryptoCipher; }

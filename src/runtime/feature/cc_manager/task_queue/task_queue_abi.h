@@ -14,7 +14,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-// Host：WAITING -> WORKING -> WAITING，异常置 TERMINATED；Device 消费完后置 TERMINATED。
+// Host: WAITING -> WORKING -> WAITING, TERMINATED on error; Device sets TERMINATED after consuming the queue.
 enum TaskQueueStatus : uint32_t {
     TASK_QUEUE_STATUS_WAITING = 0, // 当工作线程尚未启动时，算子不应读取控制头其他数据（可能尚未初始化）
     TASK_QUEUE_STATUS_WORKING = 1, // 工作线程初始化以后进入该状态并保持；算子被动收取任务，不应长期处于该状态
@@ -26,7 +26,7 @@ constexpr uint32_t AICC_QUEUE_ERR_PARAM_INVALID = 1U;
 constexpr uint32_t AICC_QUEUE_ERR_TERMINATED = 2U;
 
 // SPSC 环：Host 推进 head，Device 推进 tail/complete，可用槽位数为 depth-1。
-typedef struct BarTaskQueue {
+struct BarTaskQueue {
     volatile TaskQueueStatus hostStatus;
     volatile TaskQueueStatus deviceStatus;
     volatile uint32_t complete;     // 已完成的任务数量，device 写，host 读
@@ -36,7 +36,7 @@ typedef struct BarTaskQueue {
     volatile uint32_t taskDescSize; // 任务描述大小，host写，device读
     volatile uint32_t deviceErrCode;
     uint8_t taskDescList[];         // 任务描述列表，host写，device读，大小为 depth*taskDescSize
-} BarTaskQueue;
+};
 
 constexpr uint32_t BAR_TASK_DESC_ALIGN = 8U; // 描述符起点和步长均须 8B 对齐。
 
@@ -81,7 +81,7 @@ struct AiccKeystreamXorParam {
     uint32_t mode;          // ENCRYPT(D2H，设备加密) / DECRYPT(H2D，设备解密)，均为纯 XOR
     uint32_t totalSlices;   // 本条 memcpy 的总分片数（设备按此逐片消费后退出）
     uint32_t blockDim;      // 消费副本数（AICPU 历史协议字段；host 恒填 0，AIV 下发不读）
-    uint32_t reserved; // 对齐填充；host 借该字段传递本次明文字节数用于选 blockDim（设备不读）
+    uint32_t totalBytes;    // Plaintext bytes; host slices it in 16 KiB units for blockDim. Device does not read it.
 };
 static_assert(
     sizeof(AiccKeystreamXorParam) == 24U,

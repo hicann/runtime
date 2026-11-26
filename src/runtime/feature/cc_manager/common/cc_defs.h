@@ -27,7 +27,7 @@ constexpr const char* CC_KERNEL_KEYSTREAM_FILL = "AiccKeystreamFill"; // 密钥�
 constexpr const char* CC_KERNEL_AICC_CRYPTO = "AiccCrypto";           // GCM 整体 AEAD
 constexpr const char* CC_KERNEL_AICC_LOAD_KEY = "AiccLoadKey";        // 装载方向密钥
 
-constexpr uint32_t CC_AIV_DIM_UNIT_BYTES = 256U * 1024U;
+constexpr uint32_t CC_AIV_DIM_UNIT_BYTES = 16U * 1024U;
 
 constexpr uint32_t CcNextPow2(const uint32_t n)
 {
@@ -40,7 +40,6 @@ constexpr uint32_t CcNextPow2(const uint32_t n)
 
 constexpr uint32_t CcSelectAivBlockDim(const uint32_t totalSize, const uint32_t maxDim)
 {
-    // 每核 256 KiB，向上取 2 的幂；0 字节沿用上限，先减后除避免溢出。
     const uint32_t cap = (maxDim == 0U) ? 1U : maxDim;
     if (totalSize == 0U) {
         return cap;

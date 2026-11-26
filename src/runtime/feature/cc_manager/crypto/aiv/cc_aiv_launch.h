@@ -18,8 +18,12 @@ namespace runtime {
 
 class Stream;
 
-// CC 初始化时加载一次，运行期复用核句柄。
-rtError_t CcInitAivKsKernel();
+// Load the AIV keystream kernel on first CC use and reuse the handle afterwards.
+// The current context and its device are resolved inside, and must belong to devId.
+rtError_t CcInitAivKsKernel(uint32_t devId);
+
+// Clear the load state of this device; the next CC operation loads it again.
+void CcResetAivKsKernel(uint32_t devId);
 
 rtError_t CcLaunchAivKsXor(Stream* stm, const AiccKeystreamXorParam& param);
 

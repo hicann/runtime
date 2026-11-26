@@ -2601,13 +2601,21 @@ protected:
     void TearDown() override
     {
         GlobalMockObject::verify();
+        StarsEngine* engine = nullptr;
         if (stream_ != nullptr) {
+            engine = dynamic_cast<StarsEngine*>(static_cast<RawDevice*>(stream_->Device_())->Engine_());
             // These tests use synthetic pending counts, without real device tasks.
             stream_->pendingNum_.Set(0U);
             stream_->SetAbortStatus(RT_ERROR_NONE);
             stream_->SetBeingAbortedFlag(false);
             stream_->SetStopped(false);
             EXPECT_EQ(rtStreamDestroy(handle_), ACL_RT_SUCCESS);
+        }
+        if (engine != nullptr) {
+            // Stream teardown submits a maintenance destroy task, and the recycle thread is destroyed in SetUp,
+            // so those engine-level pending tasks are never reclaimed. 910B waits for completion without a
+            // timeout, so clear the count right before device reset to avoid an endless WaitCompletion loop.
+            engine->pendingNum_.Set(0U);
         }
         EXPECT_EQ(rtDeviceReset(0), ACL_RT_SUCCESS);
         GlobalContainer::SetHardwareSocVersion(hardwareSocVersion_);

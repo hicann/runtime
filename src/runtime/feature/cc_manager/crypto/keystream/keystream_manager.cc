@@ -48,14 +48,12 @@ void PublishFillError(KeystreamContext& context, rtError_t result)
 // 发布结果与等待谓词共用 stateMutex_，最后清除 inFlight 并唤醒等待者。
 struct FillTaskCleanup {
     KeystreamContext* context;
-    std::atomic<int>& streamRef;
     std::atomic<bool>& inFlight;
     std::atomic<int32_t>& fillResult;
     rtError_t result = RT_ERROR_NONE;
 
     ~FillTaskCleanup()
     {
-        streamRef.fetch_sub(1, std::memory_order_relaxed);
         if (context == nullptr) {
             inFlight.store(false, std::memory_order_release);
             return;
@@ -69,29 +67,6 @@ struct FillTaskCleanup {
         context->stateCv_.notify_all();
     }
 };
-
-Api* GetApiInstance()
-{
-    Runtime* const runtime = Runtime::Instance();
-    return (runtime == nullptr) ? nullptr : runtime->Api_();
-}
-
-rtError_t SetDeviceByLogicDevId(int devId)
-{
-    if (devId < 0) {
-        return RT_ERROR_INVALID_VALUE;
-    }
-    uint32_t userDevId = 0U;
-    const rtError_t error = Runtime::Instance()->GetUserDevIdByDeviceId(static_cast<uint32_t>(devId), &userDevId);
-    if (error != RT_ERROR_NONE) {
-        return error;
-    }
-    Api* const api = GetApiInstance();
-    if (api == nullptr) {
-        return RT_ERROR_INVALID_VALUE;
-    }
-    return api->SetDevice(static_cast<int32_t>(userDevId));
-}
 
 const KeystreamOps* GetOps(const KeystreamContext* context)
 {
@@ -162,13 +137,13 @@ bool AllocSegment(KeystreamSegment& segment)
     }
 
     segment.hostAddr = static_cast<uint8_t*>(malloc(static_cast<size_t>(segment.segmentSize)));
-    if ((segment.hostAddr == nullptr) || (segment.ksContext == nullptr) || (segment.ksContext->rtContext == nullptr)) {
+    if ((segment.hostAddr == nullptr) || (segment.ksContext == nullptr) || (segment.ksContext->fillStream == nullptr)) {
         return false;
     }
 
     // 只要求 VA 连续
     void* devAddr = nullptr;
-    const rtError_t error = segment.ksContext->rtContext->Device_()->Driver_()->DevMemAllocWithBackupFlag(
+    const rtError_t error = segment.ksContext->fillStream->Device_()->Driver_()->DevMemAllocWithBackupFlag(
         &devAddr, segment.segmentSize, RT_MEMORY_HBM, segment.devId, DevMemBackupType::SNAPSHOT_NO_BACKUP);
     if (error != RT_ERROR_NONE) {
         return false;
@@ -187,8 +162,8 @@ void FreeSegment(KeystreamSegment& segment)
     free(segment.hostAddr);
     segment.hostAddr = nullptr;
     if ((segment.deviceAddr != nullptr) && (segment.ksContext != nullptr) &&
-        (segment.ksContext->rtContext != nullptr)) {
-        (void)segment.ksContext->rtContext->Device_()->Driver_()->DevMemFree(segment.deviceAddr, segment.devId);
+        (segment.ksContext->fillStream != nullptr)) {
+        (void)segment.ksContext->fillStream->Device_()->Driver_()->DevMemFree(segment.deviceAddr, segment.devId);
         segment.deviceAddr = nullptr;
     }
 }
@@ -210,16 +185,11 @@ bool InitContext(KeystreamContext& context)
         return ops->initContext(context);
     }
 
-    const rtError_t error = SetDeviceByLogicDevId(context.devId);
-    if (error != RT_ERROR_NONE) {
+    Device* const device = Runtime::Instance()->GetDevice(static_cast<uint32_t>(context.devId), RT_TSC_ID, false);
+    context.fillStream = device == nullptr ? nullptr : device->GetCtrlSQStream(nullptr);
+    if (context.fillStream == nullptr || !context.fillStream->IsCtrlSQStream()) {
         return false;
     }
-    Runtime* const runtime = Runtime::Instance();
-    context.rtContext = (runtime == nullptr) ? nullptr : runtime->CurrentContext(true, DEFAULT_DEVICE_ID);
-    if (context.rtContext == nullptr) {
-        return false;
-    }
-
     context.fillBlockDim = std::min(KS_FILL_BLOCK_DIM_MAX, std::max(1U, QueryAicpuCoreNum()));
     RT_LOG(RT_LOG_INFO, "CC keystream fill blockDim=%u (AICPU cores), devId=%d", context.fillBlockDim, context.devId);
 
@@ -227,14 +197,6 @@ bool InitContext(KeystreamContext& context)
         return false;
     }
 
-    for (size_t i = 0U; i < context.fillStreams.size(); ++i) {
-        const rtError_t streamError =
-            context.rtContext->StreamCreate(RT_STREAM_PRIORITY_DEFAULT, 0U, &context.fillStreams[i]);
-        if (streamError != RT_ERROR_NONE) {
-            return false;
-        }
-        context.fillStreamRefs[i] = 0;
-    }
     return true;
 }
 
@@ -245,18 +207,7 @@ void ReleaseContext(KeystreamContext& context)
         ops->releaseContext(context);
         return;
     }
-    for (auto& stream : context.fillStreams) {
-        if ((stream != nullptr) && (context.rtContext != nullptr)) {
-            // 必须先同步，才能销毁设备侧仍可能使用的 stream。
-            (void)SetDeviceByLogicDevId(context.devId);
-            Api* const api = GetApiInstance();
-            if (api != nullptr) {
-                (void)api->StreamSynchronize(stream, -1);
-            }
-            (void)context.rtContext->StreamDestroy(stream, false);
-            stream = nullptr;
-        }
-    }
+    context.fillStream = nullptr;
 }
 
 rtError_t FillSegment(KeystreamSegment& segment, Stream* stream, const uint8_t* iv, size_t ivLen)
@@ -266,10 +217,6 @@ rtError_t FillSegment(KeystreamSegment& segment, Stream* stream, const uint8_t* 
         return ops->fillSegment(segment, stream, iv, ivLen);
     }
 
-    const rtError_t error = SetDeviceByLogicDevId(segment.devId);
-    if (error != RT_ERROR_NONE) {
-        return error;
-    }
     if ((segment.ksContext == nullptr) || (segment.ksContext->key.keyAddr == 0U)) {
         return RT_ERROR_CC_CRYPTO_FAILED;
     }
@@ -318,6 +265,12 @@ rtError_t FillSegment(KeystreamSegment& segment, Stream* stream, const uint8_t* 
         genFn();
     }
 
+    const auto waitHostGen = [&hostFutures]() {
+        for (auto& hostFuture : hostFutures) {
+            hostFuture.get();
+        }
+    };
+
     const uint32_t pagesPerLaunch = std::min(taskLen, KS_FILL_PAGES_PER_LAUNCH_MAX);
     const uint32_t blockDim = segment.ksContext->fillBlockDim;
     const size_t headerSize = offsetof(AiccKeystreamFillParam, tasks);
@@ -340,8 +293,9 @@ rtError_t FillSegment(KeystreamSegment& segment, Stream* stream, const uint8_t* 
             segment.segmentId, static_cast<void*>(stream), segment.segmentSize, taskLen, batch, blockDim,
             argsBlob.size());
         const rtError_t launchRet = CCCryptoPlugin::LaunchDeviceKernel(
-            stream, CC_KERNEL_KEYSTREAM_FILL, argsBlob.data(), static_cast<uint32_t>(argsBlob.size()));
+            stream, CC_KERNEL_KEYSTREAM_FILL, argsBlob.data(), static_cast<uint32_t>(argsBlob.size()), blockDim);
         if (launchRet != RT_ERROR_NONE) {
+            waitHostGen();
             RT_LOG(
                 RT_LOG_ERROR,
                 "KeystreamFillParallel launch failed, seg=%d taskLen=%u batch=%u blockDim=%u blob=%zu ret=%#x",
@@ -351,17 +305,7 @@ rtError_t FillSegment(KeystreamSegment& segment, Stream* stream, const uint8_t* 
         launched += batch;
     }
 
-    const auto waitHostGen = [&hostFutures]() {
-        for (auto& hostFuture : hostFutures) {
-            hostFuture.get();
-        }
-    };
-    Api* const api = GetApiInstance();
-    if (api == nullptr) {
-        waitHostGen();
-        return RT_ERROR_INVALID_VALUE;
-    }
-    const rtError_t syncRet = api->StreamSynchronize(stream, -1);
+    const rtError_t syncRet = stream->Synchronize();
     if (syncRet != RT_ERROR_NONE) {
         waitHostGen();
         RT_LOG(
@@ -458,15 +402,13 @@ uint32_t BuildKsFillTasks(
     return static_cast<uint32_t>(tasks.size());
 }
 
-static rtError_t FillKeystreamTask(KeystreamSegment* segment, Stream* stream, std::atomic<int>& fillStreamRef)
+static rtError_t FillKeystreamTask(KeystreamSegment* segment, Stream* stream)
 {
-    fillStreamRef.fetch_add(1, std::memory_order_relaxed);
     if ((segment == nullptr) || (stream == nullptr)) {
-        fillStreamRef.fetch_sub(1, std::memory_order_relaxed);
         return RT_ERROR_INVALID_VALUE;
     }
 
-    FillTaskCleanup cleanup{segment->ksContext, fillStreamRef, segment->fillInFlight, segment->fillResult};
+    FillTaskCleanup cleanup{segment->ksContext, segment->fillInFlight, segment->fillResult};
 
     static thread_local std::random_device rd;
     std::uniform_int_distribution<uint32_t> distU32(0, UINT32_MAX);
@@ -622,11 +564,7 @@ bool KeystreamContext::InitFillDone(
 
 KeystreamContext::KeystreamContext(
     KeystreamManager* manager, int devId, const std::vector<KeystreamConfig>& config, const KeystreamKey& key)
-    : manager(manager),
-      devId(devId),
-      key(key),
-      fillStreams(static_cast<size_t>(KS_FILL_THREAD_POOL_SIZE)),
-      fillStreamRefs(static_cast<size_t>(KS_FILL_THREAD_POOL_SIZE))
+    : manager(manager), devId(devId), key(key)
 {
     // 失败时由 Manager 先 Shutdown 填充任务，再释放 stream 和段缓冲。
     if (!InitContext(*this)) {
@@ -666,9 +604,8 @@ KeystreamContext::KeystreamContext(
 
 void KeystreamContext::Release()
 {
-    ReleaseContext(*this);
-
     this->segments.clear();
+    ReleaseContext(*this);
 
     this->isInit = false;
 }
@@ -682,26 +619,13 @@ bool KeystreamContext::FillKeystreamAsync(KeystreamSegment* segment)
         return false;
     }
     // CAS 去重后仍需检查消费者，避免覆盖已分配的密钥流。
-    if ((segment->currentConsumers.load(std::memory_order_acquire) != 0) || this->fillStreams.empty()) {
+    if ((segment->currentConsumers.load(std::memory_order_acquire) != 0) || this->fillStream == nullptr) {
         segment->fillInFlight.store(false, std::memory_order_release);
         return false;
     }
 
-    int minPos = 0;
-    int minVal = INT32_MAX;
-    const int streamNum = static_cast<int>(this->fillStreams.size());
-    for (int i = 0; i < streamNum; i++) {
-        const int refCount = this->fillStreamRefs[static_cast<size_t>(i)].load(std::memory_order_relaxed);
-        if (refCount < minVal) {
-            minVal = refCount;
-            minPos = i;
-        }
-    }
-    Stream* stream = this->fillStreams[static_cast<size_t>(minPos)];
-    std::atomic<int>* streamRef = &this->fillStreamRefs[static_cast<size_t>(minPos)];
-
-    const std::future<void> fillFuture = this->manager->FillThreads().Submit(
-        [segment, stream, streamRef]() { (void)FillKeystreamTask(segment, stream, *streamRef); });
+    const std::future<void> fillFuture =
+        this->manager->FillThreads().Submit([segment, this]() { (void)FillKeystreamTask(segment, fillStream); });
     const bool ret = fillFuture.valid();
     if (ret == false) {
         {

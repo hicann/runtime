@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include <cstdio>
+#include <array>
 #include <stdlib.h>
 #include <thread>
 #include <chrono>
@@ -447,6 +448,7 @@ public:
             }
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
+        queue->deviceStatus = TASK_QUEUE_STATUS_TERMINATED;
     }
 
     static void RunD2HConsumer(
@@ -478,6 +480,7 @@ public:
             const uint32_t newCount = consumedCount.fetch_add(1U, std::memory_order_relaxed) + 1U;
             queue->complete = newCount;
         }
+        queue->deviceStatus = TASK_QUEUE_STATUS_TERMINATED;
     }
 };
 
@@ -507,12 +510,16 @@ rtError_t HostMemAllocStub(
 const char_t* gLaunchKernelName = nullptr;
 uint8_t gLaunchArgs[128] = {0};
 uint32_t gLaunchArgsSize = 0U;
+uint32_t gLaunchCoreDim = 0U;
+Stream* gLaunchStream = nullptr;
 AiccKeystreamXorParam gLaunchAiccKeystreamXorParam = {};
 
 void ResetLaunchCapture()
 {
     gLaunchKernelName = nullptr;
     gLaunchArgsSize = 0U;
+    gLaunchCoreDim = 0U;
+    gLaunchStream = nullptr;
     (void)memset_s(gLaunchArgs, sizeof(gLaunchArgs), 0, sizeof(gLaunchArgs));
     gLaunchAiccKeystreamXorParam = AiccKeystreamXorParam{};
 }
@@ -521,10 +528,10 @@ rtError_t StreamLaunchCpuKernelCapture(
     const rtKernelLaunchNames_t* const launchNames, const uint32_t coreDim, const rtArgsEx_t* const argsInfo,
     Stream* const stm, const uint32_t flag, const uint64_t timeout)
 {
-    (void)coreDim;
-    (void)stm;
     (void)flag;
     (void)timeout;
+    gLaunchCoreDim = coreDim;
+    gLaunchStream = stm;
     gLaunchKernelName = (launchNames == nullptr) ? nullptr : launchNames->kernelName;
     if ((argsInfo != nullptr) && (argsInfo->args != nullptr)) {
         gLaunchArgsSize = argsInfo->argsSize;
@@ -1125,7 +1132,7 @@ TEST_F(CCManagerTest, Plugin_Ctr_LaunchTransfer_UsesAiccKeystreamXorParam)
     EXPECT_EQ(gLaunchAiccKeystreamXorParam.mode, static_cast<uint32_t>(CC_CRYPTO_DIRECTION::DECRYPT));
     // 总分片数与 CCWorker::SetupTask 同口径：64B 单分片
     EXPECT_EQ(gLaunchAiccKeystreamXorParam.totalSlices, 1U);
-    EXPECT_EQ(gLaunchAiccKeystreamXorParam.reserved, 64U);
+    EXPECT_EQ(gLaunchAiccKeystreamXorParam.totalBytes, 64U);
 
     (void)stm->TakeCCStreamResource();
     rtStreamDestroy(stmHandle);
@@ -1155,6 +1162,37 @@ TEST_F(CCManagerTest, Plugin_LaunchDeviceKernel_LoadKey_UsesBuiltinAicpuKernel)
     const auto* const launched = reinterpret_cast<const CCLoadKeyKernelParam*>(gLaunchArgs);
     EXPECT_EQ(launched->keyAddr, 0x1000ULL);
     EXPECT_EQ(launched->keyLen, AICC_KEY_SIZE);
+
+    ((Runtime*)Runtime::Instance())->DeviceRelease(dev);
+}
+
+TEST_F(CCManagerTest, Plugin_LaunchKeystreamFill_UsesCtrlSqAndConfiguredCoreDim)
+{
+    RETAIN_DEVICE(dev);
+    Stream* const ctrlStm = dev->GetCtrlSQStream(nullptr);
+    ASSERT_NE(ctrlStm, nullptr);
+    ASSERT_TRUE(ctrlStm->IsCtrlSQStream());
+
+    std::array<uint8_t, offsetof(AiccKeystreamFillParam, tasks) + sizeof(AiccKeystreamFillTask)> args{};
+    auto* const param = reinterpret_cast<AiccKeystreamFillParam*>(args.data());
+    param->keyAddr = 0x1000ULL;
+    param->keyLen = AICC_KEY_SIZE;
+    param->algType = static_cast<uint32_t>(AICC_ALG_AES128_KEYSTREAM);
+    param->taskNum = 1U;
+    param->tasks[0].keystreamAddr = 0x2000ULL;
+    param->tasks[0].keystreamLen = KS_FILL_PAGE_SIZE;
+    param->tasks[0].iv[0] = 1U;
+
+    ResetLaunchCapture();
+    MOCKER(StreamLaunchCpuKernel).expects(once()).will(invoke(StreamLaunchCpuKernelCapture));
+    MOCKER(CcLaunchAivKsXor).expects(never());
+    EXPECT_EQ(
+        CCCryptoPlugin::LaunchDeviceKernel(
+            ctrlStm, CC_KERNEL_KEYSTREAM_FILL, args.data(), static_cast<uint32_t>(args.size()), KS_FILL_BLOCK_DIM_MAX),
+        RT_ERROR_NONE);
+    EXPECT_STREQ(gLaunchKernelName, CC_KERNEL_KEYSTREAM_FILL);
+    EXPECT_EQ(gLaunchStream, ctrlStm);
+    EXPECT_EQ(gLaunchCoreDim, KS_FILL_BLOCK_DIM_MAX);
 
     ((Runtime*)Runtime::Instance())->DeviceRelease(dev);
 }
@@ -1217,16 +1255,16 @@ TEST_F(CCManagerTest, Plugin_ActiveAlg)
 
 TEST_F(CCManagerTest, CcSelectAivBlockDim_Cases)
 {
-    // 每核 256KiB → 取 2 的幂 → 钳到 [1, maxDim]；边界与 AIV 下发实现一致。
-    constexpr uint32_t kUnit = CC_AIV_DIM_UNIT_BYTES;
+    // 每核 16 KiB → 取 2 的幂 → 钳到 [1, maxDim]；边界与 AIV 下发实现一致。
+    constexpr uint32_t kUnit = 16U * 1024U;
     EXPECT_EQ(CcSelectAivBlockDim(0U, AICC_MAX_BLOCK_DIM), AICC_MAX_BLOCK_DIM); // 旧 host 未填 → 上限
     EXPECT_EQ(CcSelectAivBlockDim(8U, AICC_MAX_BLOCK_DIM), 1U);
     EXPECT_EQ(CcSelectAivBlockDim(kUnit, AICC_MAX_BLOCK_DIM), 1U);
     EXPECT_EQ(CcSelectAivBlockDim(kUnit + 1U, AICC_MAX_BLOCK_DIM), 2U);
-    EXPECT_EQ(CcSelectAivBlockDim(kUnit * 3U, AICC_MAX_BLOCK_DIM), 4U);                 // 768KiB
-    EXPECT_EQ(CcSelectAivBlockDim(kUnit * 4U, AICC_MAX_BLOCK_DIM), 4U);                 // 1MiB
+    EXPECT_EQ(CcSelectAivBlockDim(kUnit * 3U, AICC_MAX_BLOCK_DIM), 4U);                 // 48 KiB
+    EXPECT_EQ(CcSelectAivBlockDim(kUnit * 4U, AICC_MAX_BLOCK_DIM), 4U);                 // 64 KiB
     EXPECT_EQ(CcSelectAivBlockDim(kUnit * 4U + 1U, AICC_MAX_BLOCK_DIM), AICC_MAX_BLOCK_DIM);
-    EXPECT_EQ(CcSelectAivBlockDim(kUnit * 8U, AICC_MAX_BLOCK_DIM), AICC_MAX_BLOCK_DIM); // 2MiB
+    EXPECT_EQ(CcSelectAivBlockDim(kUnit * 8U, AICC_MAX_BLOCK_DIM), AICC_MAX_BLOCK_DIM); // 128 KiB
     EXPECT_EQ(CcSelectAivBlockDim(kUnit * 8U, 4U), 4U);                                 // 钳到 maxDim
     EXPECT_EQ(CcSelectAivBlockDim(8U, 0U), 1U);                                         // maxDim=0 至少一核
     EXPECT_LE(AICC_MAX_BLOCK_DIM, 8U); // FFTS flag14 同步粒度为一组 8 个 AIV
@@ -1310,9 +1348,7 @@ TEST_F(CCManagerTest, Worker_HookFlow_H2D_And_D2H_RoundTrip)
         segment.deviceAddr = nullptr;
     };
     ksOps.initContext = [](KeystreamContext& context) {
-        for (auto& fillStream : context.fillStreams) {
-            fillStream = reinterpret_cast<Stream*>(static_cast<uintptr_t>(0x1000U));
-        }
+        context.fillStream = reinterpret_cast<Stream*>(static_cast<uintptr_t>(0x1000U));
         return true;
     };
     ksOps.releaseContext = [](KeystreamContext&) {};
@@ -1367,8 +1403,20 @@ TEST_F(CCManagerTest, Worker_HookFlow_H2D_And_D2H_RoundTrip)
     task.kind = RT_MEMCPY_HOST_TO_DEVICE;
     std::atomic<bool> stop{false};
     std::atomic<uint32_t> consumedCount{0U};
-    std::thread consumer(
-        &AicpuSimulator::RunH2DConsumer, streamRes.BarQueue(), 1U, std::cref(stop), std::ref(consumedCount));
+    std::thread consumer([&]() {
+        BarTaskQueue* queue = streamRes.BarQueue();
+        while (!stop.load() && queue->head == queue->tail) {
+            std::this_thread::yield();
+        }
+        if (stop.load()) {
+            return;
+        }
+        const auto* desc = reinterpret_cast<const AiccKeystreamXorSliceDesc*>(queue->taskDescList);
+        EXPECT_EQ(desc->ciphertextLen, sizeof(src));
+        EXPECT_EQ(desc->plaintextLen, sizeof(src));
+        EXPECT_GE(desc->keystreamAddr, 0x3FF0000ULL);
+        AicpuSimulator::RunH2DConsumer(queue, 1U, stop, consumedCount);
+    });
     const ScopeGuard stopConsumer([&stop, &consumer]() {
         stop.store(true);
         if (consumer.joinable()) {
@@ -1380,18 +1428,11 @@ TEST_F(CCManagerTest, Worker_HookFlow_H2D_And_D2H_RoundTrip)
     for (uint32_t i = 0U; i < sizeof(src); ++i) {
         EXPECT_EQ(deviceBufA[i], static_cast<uint8_t>(~src[i]));
     }
-    // desc 按 CTR 40B 发布：ciphertextLen = 明文长度（无密文头），keystreamAddr 为 mock 桩地址（0x3ff0000 起）
-    const AiccKeystreamXorSliceDesc* const desc0 =
-        reinterpret_cast<const AiccKeystreamXorSliceDesc*>(streamRes.BarQueue()->taskDescList);
-    EXPECT_EQ(desc0->ciphertextLen, sizeof(src));
-    EXPECT_EQ(desc0->plaintextLen, sizeof(src));
-    EXPECT_NE(desc0->keystreamAddr, 0U);
-    EXPECT_GE(desc0->keystreamAddr, 0x3FF0000ULL);
-    // 任务收尾：门铃状态回到 WAITING（MEM_WAIT 不再放行）
+    EXPECT_EQ(streamRes.BarQueue()->complete, 0U);
+    EXPECT_EQ(streamRes.BarQueue()->deviceStatus, TASK_QUEUE_STATUS_WAITING);
     EXPECT_EQ(streamRes.BarQueue()->hostStatus, TASK_QUEUE_STATUS_WAITING);
 
     // ② D2H 回调轨：模拟设备按同段密钥流 XOR 加密（mock 全 1 → 写入按位取反的明文）
-    streamRes.Reset();
     task.kind = RT_MEMCPY_DEVICE_TO_HOST;
     for (uint32_t i = 0U; i < sizeof(src); ++i) {
         src[i] = static_cast<uint8_t>(0xA5U ^ i);
@@ -1409,6 +1450,7 @@ TEST_F(CCManagerTest, Worker_HookFlow_H2D_And_D2H_RoundTrip)
         }
         streamRes.BarQueue()->tail = (streamRes.BarQueue()->tail + 1U) % streamRes.BarQueue()->depth;
         streamRes.BarQueue()->complete = 1U;
+        streamRes.BarQueue()->deviceStatus = TASK_QUEUE_STATUS_TERMINATED;
     });
     const ScopeGuard stopD2h([&stop, &d2hConsumer]() {
         stop.store(true);
@@ -1531,65 +1573,6 @@ TEST_F(CCManagerTest, StreamResManage_Reset)
     EXPECT_EQ(queue->hostStatus, TASK_QUEUE_STATUS_WAITING);
     EXPECT_EQ(queue->deviceStatus, TASK_QUEUE_STATUS_WAITING);
     EXPECT_EQ(queue->deviceErrCode, 0U);
-
-    ((Runtime*)Runtime::Instance())->DeviceRelease(dev);
-}
-
-// BeginBarTaskRound 是 Host 侧的「回合准入」：按 task_queue_abi.h 的状态机收口上一轮并复位控制头。
-// 覆盖三个分支：参数校验、外部中断（不掩盖终止标记）、上一轮正常终态（Reset 收回 WAITING），
-// 以及公开的 IsBarTaskQueueTerminated 判据。
-TEST_F(CCManagerTest, TaskQueue_BeginRound_StateMachine)
-{
-    RETAIN_DEVICE(dev);
-
-    CCStreamResManage resource;
-
-    MOCKER_CPP_VIRTUAL(dev->Driver_(), &Driver::DevMemAllocWithBackupFlag).stubs().will(invoke(DevMemAllocEntryStub));
-    StubPcieAndFree(dev->Driver_());
-
-    ASSERT_EQ(resource.Init(dev, sizeof(AiccCryptoSliceDesc)), RT_ERROR_NONE);
-    BarTaskQueue* const queue = resource.BarQueue();
-    ASSERT_NE(queue, nullptr);
-
-    // ① 参数校验
-    bool proceed = true;
-    EXPECT_EQ(BeginBarTaskRound(nullptr, &proceed), RT_ERROR_INVALID_VALUE);
-    EXPECT_EQ(BeginBarTaskRound(queue, nullptr), RT_ERROR_INVALID_VALUE);
-
-    // ② Host 侧已被外部中断置 TERMINATED：不掩盖终止信号，本轮不下发，控制头保持原样
-    queue->head = 2U;
-    queue->tail = 1U;
-    queue->complete = 5U;
-    queue->hostStatus = TASK_QUEUE_STATUS_TERMINATED;
-    queue->deviceStatus = TASK_QUEUE_STATUS_WAITING;
-    proceed = true;
-    EXPECT_EQ(BeginBarTaskRound(queue, &proceed), RT_ERROR_NONE);
-    EXPECT_FALSE(proceed);
-    EXPECT_EQ(queue->hostStatus, TASK_QUEUE_STATUS_TERMINATED);
-    EXPECT_EQ(queue->complete, 5U);
-
-    // ③ 上一轮设备正常终态（deviceStatus=TERMINATED）：Reset 收口，允许开新一轮
-    queue->hostStatus = TASK_QUEUE_STATUS_WAITING;
-    queue->deviceStatus = TASK_QUEUE_STATUS_TERMINATED;
-    queue->head = 1U;
-    queue->tail = 2U;
-    queue->complete = 3U;
-    queue->deviceErrCode = 7U;
-    proceed = false;
-    EXPECT_EQ(BeginBarTaskRound(queue, &proceed), RT_ERROR_NONE);
-    EXPECT_TRUE(proceed);
-    EXPECT_EQ(queue->hostStatus, TASK_QUEUE_STATUS_WAITING);
-    EXPECT_EQ(queue->deviceStatus, TASK_QUEUE_STATUS_WAITING);
-    EXPECT_EQ(queue->head, 0U);
-    EXPECT_EQ(queue->tail, 0U);
-    EXPECT_EQ(queue->complete, 0U);
-    EXPECT_EQ(queue->deviceErrCode, 0U);
-
-    // ④ IsBarTaskQueueTerminated：任一侧 TERMINATED 即终止，空指针视为不可用
-    EXPECT_FALSE(IsBarTaskQueueTerminated(queue));
-    queue->deviceStatus = TASK_QUEUE_STATUS_TERMINATED;
-    EXPECT_TRUE(IsBarTaskQueueTerminated(queue));
-    EXPECT_TRUE(IsBarTaskQueueTerminated(nullptr));
 
     ((Runtime*)Runtime::Instance())->DeviceRelease(dev);
 }
@@ -2324,15 +2307,28 @@ TEST_F(CCManagerTest, Worker_ProcessTask_H2D_MultiSlice)
         EXPECT_EQ(hostBuf[i], 0xABU);
     }
     BarTaskQueue* taskQueue = streamRes.BarQueue();
-    EXPECT_EQ(taskQueue->complete, 3U);
+    EXPECT_EQ(taskQueue->complete, 0U);
     EXPECT_EQ(taskQueue->head, taskQueue->tail);
-    // 任务收尾门铃复位：hostStatus 回到 WAITING，下一任务的 MEM_WAIT 不会提前放行
+    // 已确认设备退出，同一环可以直接用于下一轮。
     EXPECT_EQ(taskQueue->hostStatus, TASK_QUEUE_STATUS_WAITING);
 
     worker.device_ = nullptr;
     (void)stm->TakeCCStreamResource();
     rtStreamDestroy(stmHandle);
     ((Runtime*)Runtime::Instance())->DeviceRelease(dev);
+}
+
+TEST_F(CCManagerTest, Worker_RejectsPrematureDeviceTermination)
+{
+    BarTaskQueue queue{};
+    queue.hostStatus = TASK_QUEUE_STATUS_WORKING;
+    queue.deviceStatus = TASK_QUEUE_STATUS_TERMINATED;
+    CCWorker worker;
+    EXPECT_EQ(worker.WaitDeviceRoundEnd(0U, &queue, 1U), RT_ERROR_CC_WORKER_FAILED);
+    queue.complete = 1U;
+    queue.deviceErrCode = AICC_QUEUE_ERR_PARAM_INVALID;
+    EXPECT_EQ(worker.WaitDeviceRoundEnd(0U, &queue, 1U), RT_ERROR_CC_WORKER_FAILED);
+    EXPECT_EQ(queue.deviceErrCode, AICC_QUEUE_ERR_PARAM_INVALID);
 }
 
 TEST_F(CCManagerTest, Worker_ProcessTask_TerminatedQueueDropsTask)
@@ -2381,8 +2377,8 @@ TEST_F(CCManagerTest, Worker_ProcessTask_TerminatedQueueDropsTask)
     BarTaskQueue* const queue = streamRes.BarQueue();
     queue->hostStatus = TASK_QUEUE_STATUS_TERMINATED;
 
-    // 门铃 CAS 失败且显式判 terminated：外部中断场景静默丢弃任务，不发布分片，终止标记保留
-    EXPECT_EQ(worker.ProcessTask(task), RT_ERROR_NONE);
+    // 队列已终止（外部中断/上一轮失败）：轮首状态校验直接拒绝，不再静默成功；不发布分片，终止标记保留
+    EXPECT_EQ(worker.ProcessTask(task), RT_ERROR_CC_INIT_FAILED);
     EXPECT_EQ(queue->hostStatus, TASK_QUEUE_STATUS_TERMINATED);
     EXPECT_EQ(queue->head, queue->tail);
     EXPECT_EQ(queue->complete, 0U);
@@ -2554,6 +2550,7 @@ TEST_F(CCManagerTest, Worker_ProcessTask_D2H_ThreeSlicesReusesBuffers)
             const uint32_t newCount = consumedCount.fetch_add(1U, std::memory_order_relaxed) + 1U;
             taskQueue->complete = newCount;
         }
+        taskQueue->deviceStatus = TASK_QUEUE_STATUS_TERMINATED;
     });
     const ScopeGuard stopConsumer([&stop, &consumer]() {
         stop.store(true);
@@ -2570,7 +2567,7 @@ TEST_F(CCManagerTest, Worker_ProcessTask_D2H_ThreeSlicesReusesBuffers)
     EXPECT_TRUE(descriptorValid.load());
     EXPECT_EQ(consumedCount.load(), sliceNum);
     EXPECT_EQ(taskQueue->head, taskQueue->tail);
-    EXPECT_EQ(taskQueue->complete, sliceNum);
+    EXPECT_EQ(taskQueue->complete, 0U);
     EXPECT_EQ(memcmp(dst.data(), src.data(), totalSize), 0);
 
     worker.device_ = nullptr;
@@ -3660,12 +3657,17 @@ TEST_F(CCManagerTest, InitCcFeature_CcModeFlow)
     ASSERT_EQ(registeredProcFunc.ccProcFunc.devResourceInit(dev), RT_ERROR_NONE);
 
     // 测试点6：H2D MemcpyAsync 命中 CC 回调并完整走通提交链路；
-    // Host 回调 / mem-wait（taskNum 门铃）/ crypto kernel 三条流任务提交边界均打桩，
+    // 验证 Host 回调和 crypto kernel 的提交顺序，
     // 不产生真实流任务，避免 TearDown 复位时挂起。
     Api* const apiImpl = Runtime::Instance()->ApiImpl_();
     ASSERT_NE(apiImpl, nullptr);
-    MOCKER_CPP_VIRTUAL(apiImpl, &Api::LaunchHostFunc).expects(exactly(2)).will(returnValue(RT_ERROR_NONE));
-    MOCKER(CondMemWaitValue).expects(once()).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(apiImpl, &Api::LaunchHostFunc).expects(once()).will(returnValue(RT_ERROR_NONE));
+    constexpr auto working = static_cast<uint64_t>(TASK_QUEUE_STATUS_WORKING);
+    constexpr auto geq = static_cast<uint32_t>(MEM_WAIT_VALUE_TYPE_GEQ);
+    MOCKER(CondMemWaitValue)
+        .expects(once())
+        .with(mockcpp::any(), eq(working), eq(geq), mockcpp::any(), eq(RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT))
+        .will(returnValue(RT_ERROR_NONE));
     ApiImplDavid apiImplDavid;
     EXPECT_EQ(
         apiImplDavid.MemcpyAsync(
@@ -4061,6 +4063,82 @@ TEST_F(CCManagerTest, ThreadPool_DestroyFromWorker)
     EXPECT_FALSE(guard->FindThreadTid(id));
 }
 
+TEST_F(CCManagerTest, KeystreamPoolRetriesFailedCtrlSqWarmup)
+{
+    Device* dev = Runtime::Instance()->GetDevice(0U, RT_TSC_ID, false);
+    ASSERT_NE(dev, nullptr);
+    Stream* ctrl = dev->GetCtrlSQStream(nullptr);
+    ASSERT_NE(ctrl, nullptr);
+    ASSERT_TRUE(ctrl->IsCtrlSQStream());
+    ASSERT_TRUE(OpenSSLLoader::Instance().Init());
+    KeystreamManager manager(0);
+    KeystreamKey key{};
+    key.keyAddr = 0x1000U;
+    const std::vector<KeystreamConfig> config{{0, 4096, 1}};
+    MOCKER(StreamLaunchCpuKernel)
+        .expects(exactly(2))
+        .will(returnValue(RT_ERROR_INVALID_VALUE))
+        .then(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(ctrl, &Stream::Synchronize).expects(once()).will(returnValue(RT_ERROR_NONE));
+    EXPECT_EQ(manager.Init(config, key), RT_ERROR_CC_INIT_FAILED);
+    ASSERT_EQ(manager.Init(config, key), RT_ERROR_NONE);
+    KeystreamPair pair{};
+    ASSERT_EQ(manager.GetKeystreamPair(pair, 16), RT_ERROR_NONE);
+    EXPECT_NE(pair.keystreamDevice, nullptr);
+    EXPECT_NE(pair.keystreamHost, nullptr);
+    EXPECT_EQ(manager.FreeKeystreamPair(pair), RT_ERROR_NONE);
+}
+
+TEST_F(CCManagerTest, AivInitRejectsWrongDeviceAndFailedBinaryLoad)
+{
+    CCCtrPlugin plugin(nullptr);
+    EXPECT_EQ(plugin.EnsureLaunchResource(RT_MAX_DEV_NUM), RT_ERROR_DEVICE_ID);
+    EXPECT_EQ(plugin.EnsureLaunchResource(1U), RT_ERROR_STREAM_CONTEXT);
+    Api* api = Runtime::Instance()->ApiImpl_();
+    MOCKER_CPP_VIRTUAL(api, &Api::BinaryLoadFromFile).expects(once()).will(returnValue(RT_ERROR_INVALID_VALUE));
+    EXPECT_EQ(plugin.EnsureLaunchResource(0U), RT_ERROR_CC_INIT_FAILED);
+    AiccKeystreamXorParam param{};
+    auto* stream = Runtime::Instance()->CurrentContext(true, DEFAULT_DEVICE_ID)->DefaultStream_();
+    EXPECT_EQ(CcLaunchAivKsXor(stream, param), RT_ERROR_CC_INIT_FAILED);
+}
+
+// Program registration is process-wide and intentionally survives a per-device reset.
+// Re-exec this lifecycle test so its mock handles cannot reach another fixture.
+TEST_F(CCManagerTest, AivResetRequiresLookupButReusesRegisteredProgram)
+{
+    const auto originalStyle = ::testing::FLAGS_gtest_death_test_style;
+    ScopeGuard restoreStyle([originalStyle]() { ::testing::FLAGS_gtest_death_test_style = originalStyle; });
+    ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+    ASSERT_EXIT(
+        {
+            Api* api = Runtime::Instance()->ApiImpl_();
+            auto* stream = Runtime::Instance()->CurrentContext(true, DEFAULT_DEVICE_ID)->DefaultStream_();
+            Program* program = reinterpret_cast<Program*>(api);
+            Kernel* kernel = reinterpret_cast<Kernel*>(stream);
+            MOCKER_CPP_VIRTUAL(api, &Api::BinaryLoadFromFile)
+                .expects(once())
+                .with(mockcpp::any(), mockcpp::any(), outBoundP(&program, sizeof(program)))
+                .will(returnValue(RT_ERROR_NONE));
+            MOCKER_CPP_VIRTUAL(api, &Api::BinaryGetFunctionByName)
+                .expects(exactly(2))
+                .with(eq(static_cast<const Program*>(program)), mockcpp::any(), outBoundP(&kernel, sizeof(kernel)))
+                .will(returnValue(RT_ERROR_NONE));
+            MOCKER_CPP_VIRTUAL(api, &Api::LaunchKernel).expects(once()).will(returnValue(RT_ERROR_NONE));
+            CCCtrPlugin plugin(nullptr);
+            EXPECT_EQ(plugin.EnsureLaunchResource(0U), RT_ERROR_NONE);
+            EXPECT_EQ(plugin.EnsureLaunchResource(0U), RT_ERROR_NONE);
+            AiccKeystreamXorParam param{};
+            param.totalSlices = 1U;
+            EXPECT_EQ(CcLaunchAivKsXor(stream, param), RT_ERROR_NONE);
+            CcResetAivKsKernel(0U);
+            EXPECT_EQ(CcLaunchAivKsXor(stream, param), RT_ERROR_CC_INIT_FAILED);
+            EXPECT_EQ(plugin.EnsureLaunchResource(0U), RT_ERROR_NONE);
+            GlobalMockObject::verify();
+            std::exit(::testing::Test::HasFailure() ? 1 : 0);
+        },
+        ::testing::ExitedWithCode(0), "");
+}
+
 namespace {
 // 派生类不 override 基类钩子，用于覆盖 CCCryptoPlugin 的默认实现。
 class CcDefaultHooksPlugin final : public CCCryptoPlugin {
@@ -4088,7 +4166,7 @@ TEST_F(CCManagerTest, CryptoPlugin_DefaultHooksReturnNone)
     CCCryptoSliceCtx sliceCtx{};
     size_t dmaLen = 0U;
     EXPECT_EQ(plugin.PrepareH2DSlice(sliceCtx, dmaLen), RT_ERROR_NONE);
-    EXPECT_EQ(plugin.OnH2DSliceDone(sliceCtx), RT_ERROR_NONE);
+    EXPECT_EQ(plugin.FinishH2DSlice(sliceCtx), RT_ERROR_NONE);
     EXPECT_EQ(plugin.PrepareD2HSlice(sliceCtx), RT_ERROR_NONE);
     EXPECT_EQ(plugin.FinishD2HSlice(sliceCtx), RT_ERROR_NONE);
     plugin.OnTaskEnd(task, 0U, 1U, nullptr);
@@ -4098,9 +4176,7 @@ TEST_F(CCManagerTest, KeystreamManager_DefaultFillTaskGeneratesIv)
 {
     KeystreamOps ops;
     ops.initContext = [](KeystreamContext& context) {
-        if (!context.fillStreams.empty()) {
-            context.fillStreams[0] = reinterpret_cast<Stream*>(static_cast<uintptr_t>(0x1000U));
-        }
+        context.fillStream = reinterpret_cast<Stream*>(static_cast<uintptr_t>(0x1000U));
         return true;
     };
     ops.allocSegment = [](KeystreamSegment& segment) {
@@ -4116,7 +4192,7 @@ TEST_F(CCManagerTest, KeystreamManager_DefaultFillTaskGeneratesIv)
     };
     ops.releaseContext = [](KeystreamContext&) {};
 
-    // devId 取 -1：默认 FillSegment 在设备下发前即返回，只覆盖 Host 侧 IV 生成与默认入口。
+    // 缺少设备密钥地址，填充任务在下发前报告失败。
     KeystreamManager manager(-1, &ops);
     KeystreamKey key{};
     const std::vector<KeystreamConfig> config{{16, 16, 1}};
@@ -4126,5 +4202,6 @@ TEST_F(CCManagerTest, KeystreamManager_DefaultFillTaskGeneratesIv)
     for (uint32_t i = 0U; (i < 400U) && (context->fillError.load(std::memory_order_acquire) == 0); ++i) {
         std::this_thread::sleep_for(std::chrono::milliseconds(5));
     }
+    EXPECT_EQ(context->fillError.load(), RT_ERROR_CC_CRYPTO_FAILED);
     manager.Release();
 }

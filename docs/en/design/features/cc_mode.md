@@ -489,14 +489,14 @@ flowchart TD
     K --> L[H2D: GetKeyStreamPair + Host XOR encryption]
     L --> M[DMA to Device Buffer]
     M --> N[AIV AiccKeystreamXor decrypts by XOR with the keystream]
-    N --> O[OnH2DSliceDone returns the keystream]
+    N --> O[FinishH2DSlice returns the keystream]
 ```
 
 Key implementation details:
 
 - Segment configuration (`keystream_manager.cc:498`): 7 tiers with a uniform segment size of 4MB and thresholds from 32KB to 2MB. Each of the first 6 tiers has 2 segments, and the last tier has 4 segments, for a total of 16 segments per device. Request lengths are allocated with 16B alignment, and a refill is triggered when `availablePos` of a segment is insufficient.
 - Device keystream filling (`keystream_manager.cc:258`): `BuildKsFillTasks` generates tasks in 128KB pages. The Host uses OpenSSL AES-CTR to encrypt all-zero blocks and generate the same keystream, and the Device uses `AiccKeystreamFill` to fill in parallel. The Host generation pool is a process-level elastic pool of 2 to 8 threads.
-- Transfer kernel (`cc_ctr_plugin.cc:65-79`): `PrepareH2DSlice` obtains a keystream pair and performs local XOR, and `dmaLen = sliceSize`. `OnH2DSliceDone` returns the keystream. For D2H, the device kernel encrypts, and the Worker reads the data back and calls `KeystreamDecrypt`.
+- Transfer kernel (`cc_ctr_plugin.cc:65-79`): `PrepareH2DSlice` obtains a keystream pair and performs local XOR, and `dmaLen = sliceSize`. `FinishH2DSlice` returns the keystream. For D2H, the device kernel encrypts, and the Worker reads the data back and calls `KeystreamDecrypt`.
 - Device kernel launch (`cc_ctr_plugin.cc:112-127`): the parameter is `AiccKeystreamXorParam`. `mode` indicates ENCRYPT/D2H or DECRYPT/H2D, and `reserved` carries the plaintext byte count for the current launch, which is used to select the AIV blockDim.
 - AIV blockDim (`cc_defs.h:41`): 256KB per core. The value is rounded up to a power of 2 and clamped to `AICC_MAX_BLOCK_DIM = 8`. AIV kernels use `SyncAll<true>()`, and the synchronization granularity is 8 AIV cores, so the upper limit is 8.
 - Failure fallback: when a task fails, `OnTaskEnd` returns the keystreams still held slice by slice (`cc_ctr_plugin.cc:129-141`).
@@ -608,7 +608,7 @@ classDiagram
         <<abstract>>
         +OnTaskBegin(...)
         +PrepareH2DSlice(...)
-        +OnH2DSliceDone(...)
+        +FinishH2DSlice(...)
         +PrepareD2HSlice(...)
         +FinishD2HSlice(...)
         +OnTaskEnd(...)

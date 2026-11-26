@@ -46,7 +46,7 @@ constexpr int KS_GET_KEYSTREAM_TIMEOUT_MS = 5000;    // 请求密钥流资源超
 constexpr int KS_FILL_THREAD_POOL_SIZE = 1;
 constexpr uint32_t KS_FILL_PAGE_SIZE = 128U * 1024U; // 并行填充的单页大小（16B 对齐）
 constexpr uint32_t KS_FILL_BLOCK_DIM_DEFAULT = 6U;   // 查不到 AICPU 核数时的缺省并行度
-constexpr uint32_t KS_FILL_BLOCK_DIM_MAX = 8U;       // AICPU 并行度上限
+constexpr uint32_t KS_FILL_BLOCK_DIM_MAX = 6U;       // Fixed core count for the fill launch.
 constexpr uint32_t KS_FILL_PAGES_PER_LAUNCH_MAX = 128U;
 constexpr int KS_INIT_FILL_TIMEOUT_SEC = 120;        // Init 等待全部段首次填充的超时（秒）
 
@@ -154,10 +154,8 @@ public:
     int devId = -1;                                         // 所属设备 ID
     KeystreamKey key;                                       // 填充使用的密钥材料（CTR 单密钥）
     std::deque<std::unique_ptr<KeystreamSegment>> segments; // 按配置创建的密钥流段
-    std::vector<Stream*> fillStreams;                       // 用于执行密钥流填充任务的 stream 数组
-    std::vector<std::atomic<int>> fillStreamRefs;           // 每个 stream 的引用计数，避免过载
+    Stream* fillStream = nullptr;                           // CtrlSQ owned by the device
     uint32_t fillBlockDim = KS_FILL_BLOCK_DIM_DEFAULT;
-    Context* rtContext = nullptr;                           // 所属设备的运行时上下文
     bool isInit = false;
     std::mutex stateMutex_;
     std::condition_variable stateCv_;

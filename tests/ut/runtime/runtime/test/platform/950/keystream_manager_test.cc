@@ -93,9 +93,7 @@ bool FakeInitContext(KeystreamContext& context)
 {
     FakeKeystreamOps& ops = *g_fakeOps;
     // 填充任务要求 stream 非空；伪造指针，不实际解引用（fill 由 fake 实现接管）
-    for (size_t i = 0U; i < context.fillStreams.size(); ++i) {
-        context.fillStreams[i] = reinterpret_cast<Stream*>(static_cast<uintptr_t>(0x1000U + i));
-    }
+    context.fillStream = reinterpret_cast<Stream*>(static_cast<uintptr_t>(0x1000U));
     ops.initCount.fetch_add(1);
     return true;
 }

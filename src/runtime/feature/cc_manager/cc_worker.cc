@@ -10,6 +10,7 @@
 #include "cc_worker.h"
 #include <algorithm>
 #include <chrono>
+#include <cinttypes>
 #include <cstdio>
 #include <cstring>
 #include <thread>
@@ -293,60 +294,35 @@ rtError_t CCWorker::ProcessTaskImpl(CCMemcpyTask& task)
 
     COND_RETURN_ERROR(plugin_ == nullptr, RT_ERROR_CC_INIT_FAILED, "CC worker crypto plugin is null.");
     const std::lock_guard<std::mutex> processLock(resource->ProcessMutex());
-    // 同流锁覆盖重置、发布和消费确认，防止多个 worker 相互重置环状态。
-    bool proceed = false;
-    ret = BeginBarTaskRound(resource->BarQueue(), &proceed);
-    COND_RETURN_ERROR(ret != RT_ERROR_NONE, ret, "CC worker %u: begin bar task round failed, ret=%#x.", workerId_, ret);
-    if (!proceed) {
-        resource->BarQueue()->hostStatus = TASK_QUEUE_STATUS_TERMINATED;
-        RT_LOG(
-            RT_LOG_WARNING, "CC worker %u: queue terminated before round, task dropped, stream_id=%u", workerId_,
-            task.streamId);
-        return RT_ERROR_NONE;
-    }
+    BarTaskQueue* const barQueue = resource->BarQueue();
+    COND_RETURN_ERROR(
+        barQueue->hostStatus != TASK_QUEUE_STATUS_WAITING, RT_ERROR_CC_INIT_FAILED,
+        "CC worker %u: unexpected bar task queue state at round start, stream_id=%u, hostStatus=%" PRIu32
+        ", deviceStatus=%" PRIu32 ", complete=%" PRIu32 ", head=%" PRIu32 ", tail=%" PRIu32 ".",
+        workerId_, task.streamId, static_cast<uint32_t>(barQueue->hostStatus),
+        static_cast<uint32_t>(barQueue->deviceStatus), static_cast<uint32_t>(barQueue->complete),
+        static_cast<uint32_t>(barQueue->head), static_cast<uint32_t>(barQueue->tail));
+
     void* pluginTaskCtx = nullptr;
     ret = plugin_->OnTaskBegin(task, device_->Id_(), sliceNum, &pluginTaskCtx);
     if (ret != RT_ERROR_NONE) {
         resource->BarQueue()->hostStatus = TASK_QUEUE_STATUS_TERMINATED;
         return ret;
     }
-    BarTaskQueue* const barQueue = resource->BarQueue();
     if (!__sync_bool_compare_and_swap(&barQueue->hostStatus, TASK_QUEUE_STATUS_WAITING, TASK_QUEUE_STATUS_WORKING)) {
-        switch (barQueue->hostStatus) {
-            case TASK_QUEUE_STATUS_WORKING:
-                break;
-            case TASK_QUEUE_STATUS_TERMINATED:
-                plugin_->OnTaskEnd(task, device_->Id_(), sliceNum, pluginTaskCtx);
-                RT_LOG(
-                    RT_LOG_WARNING, "CC worker %u: queue terminated, task dropped, stream_id=%u", workerId_,
-                    task.streamId);
-                return RT_ERROR_NONE;
-            default:
-                barQueue->hostStatus = TASK_QUEUE_STATUS_TERMINATED;
-                plugin_->OnTaskEnd(task, device_->Id_(), sliceNum, pluginTaskCtx);
-                RT_LOG(
-                    RT_LOG_ERROR, "CC worker %u: unexpected host status %d when arming doorbell, stream_id=%u",
-                    workerId_, static_cast<int32_t>(barQueue->hostStatus), task.streamId);
-                return RT_ERROR_CC_WORKER_FAILED;
-        }
+        plugin_->OnTaskEnd(task, device_->Id_(), sliceNum, pluginTaskCtx);
+        return RT_ERROR_CC_WORKER_FAILED;
     }
     ret = ProcessSlices(task, resource, sliceNum, pluginTaskCtx);
-    if (task.kind == RT_MEMCPY_HOST_TO_DEVICE) {
-        if (ret == RT_ERROR_NONE) {
-            ret = WaitH2DConsumed(task.streamId, resource->BarQueue(), sliceNum);
-        }
-        uint32_t doneIdx = 0U;
-        // 失败时不能等待未发布的分片；残留资源由 OnTaskEnd 归还。
-        (void)RetireDoneH2DSlices(task, resource, sliceNum, pluginTaskCtx, doneIdx, ret == RT_ERROR_NONE);
-    }
     plugin_->OnTaskEnd(task, device_->Id_(), sliceNum, pluginTaskCtx);
     if (ret != RT_ERROR_NONE) {
         barQueue->hostStatus = TASK_QUEUE_STATUS_TERMINATED;
-    } else {
-        (void)__sync_bool_compare_and_swap(&barQueue->hostStatus, TASK_QUEUE_STATUS_WORKING, TASK_QUEUE_STATUS_WAITING);
+        RT_LOG(
+            RT_LOG_ERROR, "CC worker %u: ProcessSlices failed, stream_id=%u, ret=%#x.", workerId_, task.streamId,
+            static_cast<uint32_t>(ret));
+        return ret;
     }
-
-    return ret;
+    return ResetBarTaskQueue(barQueue);
 }
 
 rtError_t CCWorker::WaitD2HSliceDone(
@@ -355,6 +331,8 @@ rtError_t CCWorker::WaitD2HSliceDone(
     COND_RETURN_ERROR(barQueue == nullptr, RT_ERROR_CC_WORKER_FAILED, "CC worker bar task queue is null.");
     const auto waitStart = std::chrono::steady_clock::now();
     for (;;) {
+        const bool terminated = barQueue->deviceStatus == TASK_QUEUE_STATUS_TERMINATED;
+        __sync_synchronize();
         uint32_t completed = 0U;
         const rtError_t ret = GetCompletedBarTaskNum(barQueue, &completed);
         COND_RETURN_ERROR(
@@ -363,6 +341,7 @@ rtError_t CCWorker::WaitD2HSliceDone(
         if (completed > sliceIdx) {
             break;
         }
+        COND_RETURN_ERROR(terminated, RT_ERROR_CC_WORKER_FAILED, "CC worker: device kernel exited early.");
         if (ShouldWorkerExit(streamId)) {
             return RT_ERROR_CC_WORKER_TIMEOUT;
         }
@@ -395,10 +374,10 @@ rtError_t CCWorker::ProcessSlices(
     for (uint32_t i = 0U; i < sliceNum; ++i) {
         if (ShouldWorkerExit(task.streamId)) {
             RT_LOG(RT_LOG_ERROR, "CC worker %u: hook task interrupted, slice=%u/%u", workerId_, i, sliceNum);
-            break;
+            return RT_ERROR_CC_WORKER_TIMEOUT;
         }
         if (task.kind == RT_MEMCPY_HOST_TO_DEVICE) {
-            ret = RetireDoneH2DSlices(task, resource, sliceNum, pluginTaskCtx, doneIdx, false);
+            ret = RetireDoneH2DSlices(resource, sliceNum, pluginTaskCtx, doneIdx);
             if (ret != RT_ERROR_NONE) {
                 break;
             }
@@ -420,35 +399,29 @@ rtError_t CCWorker::ProcessSlices(
         }
     }
 
+    if (ret == RT_ERROR_NONE) {
+        ret = WaitDeviceRoundEnd(task.streamId, resource->BarQueue(), sliceNum);
+    }
+    if ((ret == RT_ERROR_NONE) && (task.kind == RT_MEMCPY_HOST_TO_DEVICE)) {
+        ret = RetireDoneH2DSlices(resource, sliceNum, pluginTaskCtx, doneIdx);
+    }
     return ret;
 }
 
 rtError_t CCWorker::RetireDoneH2DSlices(
-    CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t totalSlices, void* pluginTaskCtx, uint32_t& doneIdx,
-    bool waitAll) const
+    CCStreamResManage* const resource, uint32_t totalSlices, void* pluginTaskCtx, uint32_t& doneIdx) const
 {
     BarTaskQueue* const barQueue = resource->BarQueue();
     rtError_t ret = RT_ERROR_NONE;
-    const auto waitStart = std::chrono::steady_clock::now();
-    while (doneIdx < totalSlices) {
-        uint32_t completed = 0U;
-        ret = GetCompletedBarTaskNum(barQueue, &completed);
-        if (ret != RT_ERROR_NONE) {
-            return ret;
-        }
-        if (completed <= doneIdx) {
-            if (!waitAll) {
-                return RT_ERROR_NONE; // 非阻塞收割：暂无新完成分片
-            }
-            if (ShouldWorkerExit(task.streamId)) {
-                return RT_ERROR_NONE; // 外部中断：剩余分片由 OnTaskEnd 兜底释放
-            }
-            DebugDumpRingState("RetireH2D wait", workerId_, barQueue, doneIdx + 1U);
-            CCSpinWait(waitStart);
-            continue;
-        }
-        CCCryptoSliceCtx ctx{nullptr, nullptr, nullptr, nullptr, 0U, doneIdx, device_->Id_(), pluginTaskCtx};
-        ret = plugin_->OnH2DSliceDone(ctx);
+    uint32_t completed = 0U;
+    ret = GetCompletedBarTaskNum(barQueue, &completed);
+    if (ret != RT_ERROR_NONE) {
+        return ret;
+    }
+    CCCryptoSliceCtx ctx{nullptr, nullptr, nullptr, nullptr, 0U, 0U, device_->Id_(), pluginTaskCtx};
+    while (doneIdx < std::min(completed, totalSlices)) {
+        ctx.sliceIdx = doneIdx;
+        ret = plugin_->FinishH2DSlice(ctx);
         if (ret != RT_ERROR_NONE) {
             RT_LOG(
                 RT_LOG_ERROR, "CC worker %u: slice done callback failed, slice=%u, ret=%#x", workerId_, doneIdx, ret);
@@ -471,7 +444,7 @@ rtError_t CCWorker::ProcessH2DSlice(
         if (!isFull) {
             break;
         }
-        if (ShouldWorkerExit(task.streamId)) {
+        if (IsBarTaskQueueTerminated(barQueue) || ShouldWorkerExit(task.streamId)) {
             return RT_ERROR_CC_WORKER_TIMEOUT;
         }
         DebugDumpRingState("H2D wait slot", workerId_, barQueue, sliceIdx + 1U);
@@ -527,7 +500,7 @@ rtError_t CCWorker::PublishD2HSlice(
         if (!isFull) {
             break;
         }
-        if (ShouldWorkerExit(task.streamId)) {
+        if (IsBarTaskQueueTerminated(barQueue) || ShouldWorkerExit(task.streamId)) {
             return RT_ERROR_CC_WORKER_TIMEOUT;
         }
         DebugDumpRingState("D2H wait slot", workerId_, barQueue, sliceIdx + 1U);
@@ -615,30 +588,27 @@ rtError_t CCWorker::ProcessD2HSlice(
     return RT_ERROR_NONE;
 }
 
-rtError_t CCWorker::WaitH2DConsumed(
+rtError_t CCWorker::WaitDeviceRoundEnd(
     const uint32_t streamId, BarTaskQueue* const barQueue, const uint32_t totalSlices) const
 {
     COND_RETURN_ERROR(barQueue == nullptr, RT_ERROR_CC_WORKER_FAILED, "CC worker bar task queue is null.");
-    if (totalSlices == 0U) {
-        return RT_ERROR_NONE;
-    }
     const auto waitStart = std::chrono::steady_clock::now();
-    for (;;) {
-        uint32_t completed = 0U;
-        const rtError_t ret = GetCompletedBarTaskNum(barQueue, &completed);
-        COND_RETURN_ERROR(
-            ret != RT_ERROR_NONE, ret, "CC worker %u: get completed num failed, totalSlices=%u, ret=%#x.", workerId_,
-            totalSlices, ret);
-        if (completed >= totalSlices) {
-            break;
+    while (barQueue->deviceStatus != TASK_QUEUE_STATUS_TERMINATED) {
+        if (barQueue->hostStatus == TASK_QUEUE_STATUS_TERMINATED || ShouldWorkerExit(streamId)) {
+            return RT_ERROR_CC_WORKER_TIMEOUT;
         }
-        if (ShouldWorkerExit(streamId)) {
-            return RT_ERROR_NONE;
-        }
-        DebugDumpRingState("WaitH2DConsumed", workerId_, barQueue, totalSlices);
+        DebugDumpRingState("WaitDeviceRoundEnd", workerId_, barQueue, totalSlices);
         CCSpinWait(waitStart);
     }
     __sync_synchronize();
+    COND_RETURN_ERROR(
+        (barQueue->deviceErrCode != AICC_QUEUE_ERR_OK) || (barQueue->complete != totalSlices) ||
+            (barQueue->hostStatus != TASK_QUEUE_STATUS_WORKING),
+        RT_ERROR_CC_WORKER_FAILED,
+        "CC worker %u: device round ended abnormally, deviceErrCode=%" PRIu32 ", complete=%" PRIu32 "/%" PRIu32
+        ", hostStatus=%" PRIu32 ".",
+        workerId_, static_cast<uint32_t>(barQueue->deviceErrCode), static_cast<uint32_t>(barQueue->complete),
+        totalSlices, static_cast<uint32_t>(barQueue->hostStatus));
     return RT_ERROR_NONE;
 }
 

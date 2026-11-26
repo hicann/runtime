@@ -16,12 +16,14 @@
 
 #include "common/cc_defs.h"
 #include "task_queue/task_queue_abi.h"
+#include "crypto/aiv/cc_aiv_launch.h"
+#include "task_queue/task_queue_abi.h"
 
 namespace cce {
 namespace runtime {
 
 namespace {
-constexpr int KS_GET_TIMEOUT_MS = 60000;
+constexpr int KS_GET_TIMEOUT_MS = 18 * 60 * 1000;
 
 using CtrTaskState = std::vector<KeystreamPair>;
 } // namespace
@@ -79,7 +81,7 @@ rtError_t CCCtrPlugin::PrepareH2DSlice(CCCryptoSliceCtx& ctx, size_t& dmaLen)
     return RT_ERROR_NONE;
 }
 
-rtError_t CCCtrPlugin::OnH2DSliceDone(CCCryptoSliceCtx& ctx)
+rtError_t CCCtrPlugin::FinishH2DSlice(CCCryptoSliceCtx& ctx)
 {
     auto* state = static_cast<CtrTaskState*>(ctx.pluginTaskCtx);
     if ((state == nullptr) || (ctx.sliceIdx >= state->size())) {
@@ -121,9 +123,8 @@ rtError_t CCCtrPlugin::LaunchTransfer(Stream* const stm, const uint64_t taskQueu
     param.mode = static_cast<uint32_t>(direction);
     param.totalSlices =
         static_cast<uint32_t>((task.totalSize + CC_PLAINTEXT_SLICE_SIZE - 1U) / CC_PLAINTEXT_SLICE_SIZE);
-    param.reserved = (task.totalSize > static_cast<size_t>(std::numeric_limits<uint32_t>::max())) ?
-                         std::numeric_limits<uint32_t>::max() :
-                         static_cast<uint32_t>(task.totalSize);
+    const size_t maxTotalBytes = static_cast<size_t>(std::numeric_limits<uint32_t>::max());
+    param.totalBytes = static_cast<uint32_t>((task.totalSize > maxTotalBytes) ? maxTotalBytes : task.totalSize);
     return LaunchDeviceKernel(stm, CC_KERNEL_KEYSTREAM_XOR, &param, static_cast<uint32_t>(sizeof(param)));
 }
 
@@ -140,6 +141,10 @@ void CCCtrPlugin::OnTaskEnd(const CCMemcpyTask& task, uint32_t deviceId, uint32_
     }
     delete state;
 }
+
+rtError_t CCCtrPlugin::EnsureLaunchResource(const uint32_t deviceId) { return CcInitAivKsKernel(deviceId); }
+
+void CCCtrPlugin::ReleaseLaunchResource(const uint32_t deviceId) { CcResetAivKsKernel(deviceId); }
 
 CC_REGISTER_CRYPTO_PLUGIN(CC_CRYPTO_ALG_TYPE::CTR, CCCtrPlugin);
 

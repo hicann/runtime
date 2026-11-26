@@ -46,8 +46,7 @@ private:
     rtError_t ProcessSlices(
         CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t sliceNum, void* pluginTaskCtx) const;
     rtError_t RetireDoneH2DSlices(
-        CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t totalSlices, void* pluginTaskCtx,
-        uint32_t& doneIdx, bool waitAll) const;
+        CCStreamResManage* const resource, uint32_t totalSlices, void* pluginTaskCtx, uint32_t& doneIdx) const;
     rtError_t ProcessTask(CCMemcpyTask& task);
     rtError_t ProcessTaskImpl(CCMemcpyTask& task);
     void FailTask(const CCMemcpyTask& task, const rtError_t ret) const;
@@ -61,7 +60,8 @@ private:
     rtError_t ProcessD2HSlice(
         CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t sliceIdx, size_t offset, size_t sliceSize,
         uint32_t totalSlices, void* pluginTaskCtx = nullptr) const;
-    rtError_t WaitH2DConsumed(const uint32_t streamId, BarTaskQueue* const barQueue, const uint32_t totalSlices) const;
+    rtError_t WaitDeviceRoundEnd(
+        const uint32_t streamId, BarTaskQueue* const barQueue, const uint32_t totalSlices) const;
     bool ShouldWorkerExit(const uint32_t streamId) const;
 
     uint32_t workerId_{0};
@@ -72,7 +72,7 @@ private:
     CCCryptoPlugin* plugin_{nullptr}; // per-device 算法插件（Init 时绑定，不持有；加解密原语由插件持有）
     void* hostCryptoBuf_{nullptr};     // Host buffer (for HostDmaMap/HostRegister and encrypt/decrypt)
     bool hostCryptoRegistered_{false}; // hostCryptoBuf 已登记（HostDmaMap 或 HostRegister 回退）
-    void* deviceBuffers_[CC_BUFFER_SLOT_NUM]{nullptr, nullptr};
+    void* deviceBuffers_[CC_BUFFER_SLOT_NUM]{};
 
     CCMemcpyTaskQueue* taskQueue_{nullptr};
 };

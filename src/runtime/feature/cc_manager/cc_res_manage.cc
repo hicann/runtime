@@ -11,13 +11,11 @@
 #include "cc_res_manage.h"
 #include "cc_stream_res_manage.h"
 #include "cc_worker.h"
-#include "crypto/aiv/cc_aiv_launch.h"
 #include "crypto/cc_crypto_plugin.h"
 #include "common/cc_defs.h"
 
 #include "aicpu_c.hpp"
 #include "base.hpp"
-#include "context.hpp"
 #include "device.hpp"
 #include "runtime.hpp"
 #include "stream.hpp"
@@ -82,15 +80,6 @@ rtError_t CCResManage::InitCcResource()
         rollback();
         RT_LOG(RT_LOG_ERROR, "CC load key initialization failed, deviceId=%u, ret=%#x", deviceId_, ret);
         return RT_ERROR_CC_INIT_FAILED;
-    }
-
-    if (GetActiveCryptoAlg() == CC_CRYPTO_ALG_TYPE::CTR) {
-        ret = CcInitAivKsKernel();
-        if (ret != RT_ERROR_NONE) {
-            rollback();
-            RT_LOG(RT_LOG_ERROR, "CC AIV kernel init failed, deviceId=%u, ret=%#x", deviceId_, ret);
-            return RT_ERROR_CC_INIT_FAILED;
-        }
     }
 
     ret = InitWorkerPool(CC_WORKER_COUNT, CC_SLICE_SIZE);
@@ -158,6 +147,10 @@ void CCResManage::DestroyCcResource()
 {
     smallCryptoSupported_ = false;
     DestroyWorkerPool();
+    if (plugin_ != nullptr) {
+        // Release the plugin-private resource while the plugin is still alive.
+        plugin_->ReleaseLaunchResource(deviceId_);
+    }
     plugin_.reset();
     {
         const std::lock_guard<std::mutex> lock(streamResourceMutex_);

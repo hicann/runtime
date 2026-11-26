@@ -18,11 +18,12 @@
 #include "base.hpp"
 #include "rt_external_mem.h"
 #include "crypto/cc_crypto.h"
+#include "task_queue/task_queue_abi.h"
 
 namespace cce {
 namespace runtime {
 
-constexpr uint32_t CC_SLICE_DESC_SLOT_NUM = 3U;
+constexpr uint32_t CC_SLICE_DESC_SLOT_NUM = CC_BUFFER_SLOT_NUM + 1U; // 环保留一个空槽以区分满和空。
 // 密文 buffer 大小（header + plaintext）
 constexpr uint32_t CC_SLICE_SIZE = 2U * 1024U * 1024U;
 // 单分片密文头大小

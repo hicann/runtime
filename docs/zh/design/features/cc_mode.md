@@ -488,14 +488,14 @@ flowchart TD
     K --> L[H2D: GetKeyStreamPair + Host XOR 加密]
     L --> M[DMA 到 Device Buffer]
     M --> N[AIV AiccKeystreamXor 用密钥流 XOR 解密]
-    N --> O[OnH2DSliceDone 归还密钥流]
+    N --> O[FinishH2DSlice 归还密钥流]
 ```
 
 关键实现：
 
 - 段配置（`keystream_manager.cc:498`）：7 档，段大小统一为 4MB，阈值从 32KB 到 2MB；前 6 档各 2 段、末档 4 段，合计 16 段/设备。请求长度按 16B 对齐占用，段的 `availablePos` 不足时触发补填。
 - 设备密钥流填充（`keystream_manager.cc:258`）：`BuildKsFillTasks` 按 128KB 分页生成任务，Host 用 OpenSSL AES-CTR 加密全零块生成同一密钥流，设备用 `AiccKeystreamFill` 并行填充；Host 生成池为进程级 2→8 弹性线程。
-- 传输核（`cc_ctr_plugin.cc:65-79`）：`PrepareH2DSlice` 取密钥流对并做本地 XOR，`dmaLen = sliceSize`；`OnH2DSliceDone` 归还密钥流。D2H 由设备核加密、Worker 回读后 `KeystreamDecrypt`。
+- 传输核（`cc_ctr_plugin.cc:65-79`）：`PrepareH2DSlice` 取密钥流对并做本地 XOR，`dmaLen = sliceSize`；`FinishH2DSlice` 归还密钥流。D2H 由设备核加密、Worker 回读后 `KeystreamDecrypt`。
 - 设备核下发（`cc_ctr_plugin.cc:112-127`）：参数为 `AiccKeystreamXorParam`，`mode` 指明 ENCRYPT/D2H 或 DECRYPT/H2D，`reserved` 携带本次明文字节数用于选择 AIV blockDim。
 - AIV blockDim（`cc_defs.h:41`）：每核 256KB，向上取 2 的幂并夹到 `AICC_MAX_BLOCK_DIM = 8`；AIV 核使用 `SyncAll<true>()`，同步粒度为 8 个 AIV，因此上限为 8。
 - 失败兜底：任务失败时 `OnTaskEnd` 逐片归还仍持有的密钥流（`cc_ctr_plugin.cc:129-141`）。
@@ -607,7 +607,7 @@ classDiagram
         <<abstract>>
         +OnTaskBegin(...)
         +PrepareH2DSlice(...)
-        +OnH2DSliceDone(...)
+        +FinishH2DSlice(...)
         +PrepareD2HSlice(...)
         +FinishD2HSlice(...)
         +OnTaskEnd(...)

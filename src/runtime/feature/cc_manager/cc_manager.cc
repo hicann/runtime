@@ -11,6 +11,7 @@
 #include <cinttypes>
 #include <cstddef>
 #include <new>
+#include "cond_c.hpp"
 #include "cc_manager.h"
 #include "crypto/cc_crypto_plugin.h"
 #include "common/cc_defs.h"
@@ -33,7 +34,6 @@
 #include "task_david.hpp"
 #include "stream_david.hpp"
 #include "inner_thread_local.hpp"
-#include "cond_c.hpp"
 #include "memset_common.h"
 #include <unordered_map>
 #include <vector>
@@ -175,6 +175,7 @@ struct CCHostCallbackParam {
     uint32_t deviceId;
     CCMemcpyTask task;
     bool releaseInCallback;
+    CCStreamResManage* streamResource;
 };
 
 struct CCGraphResources {
@@ -216,17 +217,19 @@ rtError_t GetCcModelInfo(Stream* const stm, Stream*& resourceStm, Model*& ownerM
 }
 
 rtError_t AllocCcCallbackParam(
-    Model* const ownerModel, uint32_t deviceId, const CCMemcpyTask& task, CCHostCallbackParam*& out)
+    Model* const ownerModel, uint32_t deviceId, const CCMemcpyTask& task, CCStreamResManage* streamResource,
+    CCHostCallbackParam*& out)
 {
     out = nullptr;
     // 单算子流，Callback里面处理完后就释放内存，最后一个参数为true
     if (ownerModel == nullptr) {
-        out = new (std::nothrow) CCHostCallbackParam{deviceId, task, true};
+        out = new (std::nothrow) CCHostCallbackParam{deviceId, task, true, streamResource};
         COND_RETURN_ERROR(out == nullptr, RT_ERROR_MEMORY_ALLOCATION, "Alloc CC callback param failed.");
         return RT_ERROR_NONE;
     }
 
-    std::unique_ptr<CCHostCallbackParam> param(new (std::nothrow) CCHostCallbackParam{deviceId, task, false});
+    std::unique_ptr<CCHostCallbackParam> param(new (std::nothrow)
+                                                   CCHostCallbackParam{deviceId, task, false, streamResource});
     COND_RETURN_ERROR(param == nullptr, RT_ERROR_MEMORY_ALLOCATION, "Alloc CC model callback param failed.");
 
     std::lock_guard<std::mutex> lock(g_ccGraphResourceMutex);
@@ -403,8 +406,13 @@ void CCManager::ReleaseDeviceResource(const uint32_t deviceId)
     COND_RETURN_VOID(deviceId >= RT_MAX_DEV_NUM, "Invalid CC resource device id, deviceId=%u.", deviceId);
 
     CCManager& manager = CCManager::Instance();
-    const std::lock_guard<std::mutex> lock(manager.resourceMutex_);
-    manager.resources_[deviceId].reset();
+    std::unique_ptr<CCResManage> resource;
+    {
+        const std::lock_guard<std::mutex> lock(manager.resourceMutex_);
+        resource = std::move(manager.resources_[deviceId]);
+    }
+    // The moved copy may hold a CCWorker's last reference to a business stream. Destroy it outside the lock so
+    // waiting for the worker does not block the stream-destroy callback that takes the same mutex.
 }
 
 void CCManager::DestroyStreamResource(Stream* stm)
@@ -416,6 +424,7 @@ void CCManager::DestroyStreamResource(Stream* stm)
     const Device* const device = stm->Device_();
     COND_RETURN_VOID(device == nullptr, "CC destroy stream resource: device is null.");
     const uint32_t deviceId = device->Id_();
+    COND_RETURN_VOID(deviceId >= RT_MAX_DEV_NUM, "CC destroy stream resource: invalid deviceId=%u.", deviceId);
 
     CCManager& manager = CCManager::Instance();
     const std::lock_guard<std::mutex> lock(manager.resourceMutex_);
@@ -462,6 +471,10 @@ void CCManager::SubmitCcTaskCallback(void* userData)
     CCHostCallbackParam* const rawParam = static_cast<CCHostCallbackParam*>(userData);
     std::unique_ptr<CCHostCallbackParam> paramGuard(rawParam->releaseInCallback ? rawParam : nullptr);
 
+    // Join the previous worker before the stream can launch another kernel on the same BAR.
+    if (rawParam->streamResource != nullptr) {
+        const std::lock_guard<std::mutex> previousRound(rawParam->streamResource->ProcessMutex());
+    }
     CCManager& manager = CCManager::Instance();
     std::lock_guard<std::mutex> lock(manager.resourceMutex_);
     if ((rawParam->deviceId >= RT_MAX_DEV_NUM) || (manager.resources_[rawParam->deviceId] == nullptr)) {
@@ -499,6 +512,10 @@ rtError_t CCManager::SubmitCcMemcpyTask(
         ret != RT_ERROR_NONE, ret,
         "Failed to start AICPU SD before launching the CC crypto kernel, deviceId=%u, retCode=%#x.", deviceId,
         static_cast<uint32_t>(ret));
+    ret = plugin->EnsureLaunchResource(deviceId);
+    COND_RETURN_ERROR(
+        ret != RT_ERROR_NONE, ret, "CC launch resource init failed, deviceId=%u, ret=%#x.", deviceId,
+        static_cast<uint32_t>(ret));
     // 组装AICPU算子所需的参数
     CCStreamResManage* streamResource = nullptr;
     ret = manager.resources_[deviceId]->GetOrCreateStreamResource(resourceStm, streamResource);
@@ -510,7 +527,7 @@ rtError_t CCManager::SubmitCcMemcpyTask(
     const CCMemcpyTask task{
         src, dst, static_cast<size_t>(count), kind, static_cast<uint32_t>(resourceStm->Id_()), std::move(guardMem)};
     CCHostCallbackParam* cbParam = nullptr;
-    ret = AllocCcCallbackParam(ownerModel, deviceId, task, cbParam);
+    ret = AllocCcCallbackParam(ownerModel, deviceId, task, streamResource, cbParam);
     COND_RETURN_ERROR(ret != RT_ERROR_NONE, ret, "Alloc CC callback param failed, ret=%#x.", ret);
 
     // 流级别的大锁，防止多线程并发下这三个算子
@@ -525,27 +542,32 @@ rtError_t CCManager::SubmitCcMemcpyTask(
         return ret;
     }
 
-    const uint64_t memWaitAddr = taskQueueAddr + static_cast<uint64_t>(offsetof(BarTaskQueue, hostStatus));
+    // Wait for this worker before occupying a device core. A terminated round must also pass
+    // so the kernel can observe the abort. Read only the low byte of the little-endian status.
+    const uint64_t statusAddr = taskQueueAddr + offsetof(BarTaskQueue, hostStatus);
     ret = CondMemWaitValue(
-        RtValueToPtr<void*>(memWaitAddr), static_cast<uint64_t>(TASK_QUEUE_STATUS_WORKING),
-        static_cast<uint32_t>(MEM_WAIT_VALUE_TYPE_EQ), stm, RT_STARS_WRITE_VALUE_SIZE_TYPE_32BIT);
-    COND_RETURN_ERROR(ret != RT_ERROR_NONE, ret, "Failed to submit memory wait value task in CC mode, ret=%#x.", ret);
+        RtValueToPtr<void*>(statusAddr), static_cast<uint64_t>(TASK_QUEUE_STATUS_WORKING),
+        static_cast<uint32_t>(MEM_WAIT_VALUE_TYPE_GEQ), stm, RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT);
+    COND_RETURN_ERROR(ret != RT_ERROR_NONE, ret, "Failed to submit CC worker start wait, ret=%#x.", ret);
 
     ret = plugin->LaunchTransfer(stm, taskQueueAddr, task);
     COND_RETURN_ERROR(
         ret != RT_ERROR_NONE, ret, "Failed to launch CC crypto transfer, deviceId=%u, ret=%#x.", deviceId,
         static_cast<uint32_t>(ret));
 
-    // D2H 在设备核完成后仍需由 worker 搬运、解密到用户缓冲，流完成必须等待 worker 收尾。
-    ret = Runtime::Instance()->ApiImpl_()->LaunchHostFunc(
-        stm,
-        [](void* data) {
-            auto* resource = static_cast<CCStreamResManage*>(data);
-            const std::lock_guard<std::mutex> lock(resource->ProcessMutex());
-        },
-        streamResource);
-    COND_RETURN_ERROR(ret != RT_ERROR_NONE, ret, "CC host completion callback failed, ret=%#x.", ret);
-
+    if (kind == RT_MEMCPY_DEVICE_TO_HOST) {
+        // D2H 在设备核完成后仍需由 worker 搬运、解密到用户缓冲，流完成必须等待 worker 收尾。
+        ret = Runtime::Instance()->ApiImpl_()->LaunchHostFunc(
+            stm,
+            [](void* data) {
+                auto* const resource = static_cast<CCStreamResManage*>(data);
+                if (resource != nullptr) {
+                    const std::lock_guard<std::mutex> lock(resource->ProcessMutex());
+                }
+            },
+            streamResource);
+        COND_RETURN_ERROR(ret != RT_ERROR_NONE, ret, "CC host completion callback failed, ret=%#x.", ret);
+    }
     return RT_ERROR_NONE;
 }
 

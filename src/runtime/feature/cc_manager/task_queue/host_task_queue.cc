@@ -121,25 +121,6 @@ bool IsBarTaskQueueTerminated(const BarTaskQueue* queue)
            (queue->deviceStatus == TASK_QUEUE_STATUS_TERMINATED);
 }
 
-rtError_t BeginBarTaskRound(BarTaskQueue* queue, bool* proceed)
-{
-    COND_RETURN_ERROR(queue == nullptr, RT_ERROR_INVALID_VALUE, "Bar task queue is null.");
-    COND_RETURN_ERROR(proceed == nullptr, RT_ERROR_INVALID_VALUE, "Bar task queue proceed flag out ptr is null.");
-    *proceed = false;
-
-    // Host 的外部终止信号不能被 Reset 掩盖。
-    if (queue->hostStatus == TASK_QUEUE_STATUS_TERMINATED) {
-        RT_LOG(
-            RT_LOG_WARNING, "Bar task queue host side terminated, round not started, complete=%u.",
-            static_cast<uint32_t>(queue->complete));
-        return RT_ERROR_NONE;
-    }
-
-    const rtError_t ret = ResetBarTaskQueue(queue);
-    *proceed = (ret == RT_ERROR_NONE);
-    return ret;
-}
-
 rtError_t FreeBarTaskQueue(BarTaskQueue* queue)
 {
     COND_RETURN_ERROR(queue == nullptr, RT_ERROR_INVALID_VALUE, "Bar task queue is null.");
