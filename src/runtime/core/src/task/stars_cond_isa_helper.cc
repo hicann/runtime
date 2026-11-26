@@ -1428,21 +1428,27 @@ void MemWaitInstrWaitFailedForNonSoftwareSq(
 
 static rtStarsCondIsaLoadImmFunc3_t GetMemWaitLoadOp(const uint16_t width)
 {
+    rtStarsCondIsaLoadImmFunc3_t loadOp = RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD;
     switch (width) {
         case RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT:
-            return RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LBU;
+            loadOp = RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LBU;
+            break;
         case RT_STARS_WRITE_VALUE_SIZE_TYPE_16BIT:
-            return RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LHU;
+            loadOp = RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LHU;
+            break;
         case RT_STARS_WRITE_VALUE_SIZE_TYPE_32BIT:
-            return RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LWU;
+            loadOp = RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LWU;
+            break;
         case RT_STARS_WRITE_VALUE_SIZE_TYPE_64BIT:
-            return RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD;
+            loadOp = RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD;
+            break;
         default:
             RT_LOG(
                 RT_LOG_WARNING, "Unsupported memory wait access size encoding=%u, using 64-bit load.",
                 static_cast<uint32_t>(width));
-            return RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD;
+            break;
     }
+    return loadOp;
 }
 
 /* used for none-sofeware sq */

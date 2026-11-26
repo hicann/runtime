@@ -183,7 +183,7 @@ rtError_t ProcStreamRecordTask(Stream* const stm, int32_t timeout)
 }
 
 rtError_t GetOrCreateCrossEventSharedInfo(
-    Device* source, uint32_t notifyId, bool isCountNotify, CrossEventSharedInfo& info, char* name, uint32_t len)
+    const Device* source, uint32_t notifyId, bool isCountNotify, CrossEventSharedInfo& info, char* name, uint32_t len)
 {
     const std::lock_guard<std::mutex> lock(info.mutex);
     if (info.shrId == UINT32_MAX) {
@@ -207,7 +207,7 @@ rtError_t GetOrCreateCrossEventSharedInfo(
     return RT_ERROR_NONE;
 }
 
-rtError_t DestroyCrossEventSharedInfo(Device* source, CrossEventSharedInfo& info)
+rtError_t DestroyCrossEventSharedInfo(const Device* source, CrossEventSharedInfo& info)
 {
     const std::lock_guard<std::mutex> lock(info.mutex);
     if (info.shrId == UINT32_MAX) {
@@ -238,7 +238,7 @@ static void ReleaseCrossEventWaitResource(TaskInfo* const task)
     DavidUpdateAndTryToDestroyEvent(task, &event, DavidTaskMapType::TASK_MAP_TYPE_WAIT_MAP);
 }
 
-static rtError_t PrepareCrossEventWait(Device* const target, CrossEventWaitInfo& info, uint64_t& addr)
+static rtError_t PrepareCrossEventWait(const Device* const target, CrossEventWaitInfo& info, uint64_t& addr)
 {
     uint32_t isPod = 0U;
     uint32_t adcDieId = 0U;
@@ -264,7 +264,7 @@ static rtError_t PrepareCrossEventWait(Device* const target, CrossEventWaitInfo&
     return target->Driver_()->EnableP2PNotify(target->Id_(), info.phyId, flag);
 }
 
-rtError_t CheckEventBeforeWait(DavidEvent* const evt, Stream* const stm, bool& needWait)
+rtError_t CheckEventBeforeWait(DavidEvent* const evt, const Stream* const stm, bool& needWait)
 {
     COND_RETURN_WARN(
         evt->IsCapturing() || stm->IsCapturing(), RT_ERROR_FEATURE_NOT_SUPPORT,

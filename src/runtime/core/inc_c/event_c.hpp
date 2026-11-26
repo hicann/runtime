@@ -19,11 +19,11 @@ class DavidEvent;
 struct CrossEventSharedInfo;
 
 rtError_t GetOrCreateCrossEventSharedInfo(
-    Device* source, uint32_t notifyId, bool isCountNotify, CrossEventSharedInfo& info, char* name, uint32_t len);
-rtError_t DestroyCrossEventSharedInfo(Device* source, CrossEventSharedInfo& info);
+    const Device* source, uint32_t notifyId, bool isCountNotify, CrossEventSharedInfo& info, char* name, uint32_t len);
+rtError_t DestroyCrossEventSharedInfo(const Device* source, CrossEventSharedInfo& info);
 
 rtError_t EvtRecord(Event* const evt, Stream* const stm);
-rtError_t CheckEventBeforeWait(DavidEvent* const evt, Stream* const stm, bool& needWait);
+rtError_t CheckEventBeforeWait(DavidEvent* const evt, const Stream* const stm, bool& needWait);
 rtError_t CrossEvtWait(DavidEvent* const evt, Stream* const stm);
 rtError_t EvtWait(Event* const evt, Stream* const stm, const uint32_t timeout);
 rtError_t EvtReset(Event* const evt, Stream* const stm);
