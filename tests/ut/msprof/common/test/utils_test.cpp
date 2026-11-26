@@ -28,6 +28,7 @@
 #include <errno.h>
 #include <algorithm>
 #include <fstream>
+#include <iterator>
 // mac
 #include <net/if.h>
 #include <sys/prctl.h>
@@ -1125,21 +1126,14 @@ TEST_F(COMMON_UTILS_UTILS_TEST, WriteFile2)
 TEST_F(COMMON_UTILS_UTILS_TEST, WriteFile4)
 {
     GlobalMockObject::verify();
-    FILE* file = (FILE*)0x12345;
     std::string profName = "PROF_000001_20220222182700493_BABQCAKDOMCOLMJB\n";
+    const std::string result = "/tmp/write_file4_ut";
+    const std::string cleanup = "rm -rf " + result;
+    const std::string prepare = cleanup + " && mkdir -p " + result;
+    (void)system(prepare.c_str());
 
-    MOCKER_CPP(fopen).stubs().will(returnValue(file));
-
-    MOCKER_CPP(fileno).stubs().will(returnValue(2));
-
-    MOCKER_CPP(flock).stubs().will(returnValue(0));                  // success
-
-    MOCKER_CPP(fwrite).stubs().will(returnValue(profName.length())); // success. 47 is not equal to the lenth of
-                                                                     // PROF_000001_20220222182700493_BABQCAKDOMCOLMJB\n
-
-    MOCKER_CPP(fclose).stubs().will(returnValue(2));
-
-    EXPECT_EQ(PROFILING_SUCCESS, analysis::dvvp::common::utils::WriteFile("", "", profName));
+    EXPECT_EQ(PROFILING_SUCCESS, analysis::dvvp::common::utils::WriteFile(result + "/record", "record", profName));
+    (void)system(cleanup.c_str());
 }
 
 TEST_F(COMMON_UTILS_UTILS_TEST, WriteFile_fileno_failed)
@@ -1155,6 +1149,118 @@ TEST_F(COMMON_UTILS_UTILS_TEST, WriteFile_fileno_failed)
     MOCKER_CPP(fclose).stubs().will(returnValue(2));
     // fileno failed
     EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::common::utils::WriteFile("", "test", profName));
+}
+
+TEST_F(COMMON_UTILS_UTILS_TEST, WriteFileSecureAppend)
+{
+    GlobalMockObject::verify();
+    const std::string result = "/tmp/write_file_secure_ut";
+    const std::string record = result + "/record";
+    const std::string profName = "PROF_000001_20220222182700493_BABQCAKDOMCOLMJB\n";
+    const std::string cleanup = "rm -rf " + result;
+    const std::string prepare = cleanup + " && mkdir -p " + result;
+    (void)system(prepare.c_str());
+
+    EXPECT_EQ(PROFILING_SUCCESS, analysis::dvvp::common::utils::WriteFile(record, "record", profName));
+    EXPECT_EQ(PROFILING_SUCCESS, analysis::dvvp::common::utils::WriteFile(record, "record", profName));
+
+    struct stat fileStat = {};
+    ASSERT_EQ(0, stat(record.c_str(), &fileStat));
+    EXPECT_TRUE(S_ISREG(fileStat.st_mode));
+    EXPECT_EQ(static_cast<mode_t>(0640), fileStat.st_mode & 0777);
+
+    std::ifstream input(record);
+    std::string content((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
+    EXPECT_EQ(profName + profName, content);
+
+    const std::string target = result + "/target";
+    std::ofstream targetFile(target);
+    targetFile << "victim data" << std::endl;
+    targetFile.close();
+    (void)unlink(record.c_str());
+    ASSERT_EQ(0, symlink(target.c_str(), record.c_str()));
+    EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::common::utils::WriteFile(record, "record", profName));
+    EXPECT_TRUE(Utils::IsFileExist(target));
+
+    (void)system(cleanup.c_str());
+}
+
+TEST_F(COMMON_UTILS_UTILS_TEST, WriteFileSecureAppendChmodFailed)
+{
+    GlobalMockObject::verify();
+    const std::string result = "/tmp/write_file_chmod_failed_ut";
+    const std::string record = result + "/record";
+    const std::string profName = "PROF_000001_20220222182700493_BABQCAKDOMCOLMJB\n";
+    const std::string cleanup = "rm -rf " + result;
+    (void)system((cleanup + " && mkdir -p " + result).c_str());
+    std::ofstream recordFile(record);
+    recordFile << profName;
+    recordFile.close();
+
+    MOCKER_CPP(fchmod).stubs().will(returnValue(-1));
+    EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::common::utils::WriteFile(record, "record", profName));
+    GlobalMockObject::verify();
+    (void)system(cleanup.c_str());
+}
+
+TEST_F(COMMON_UTILS_UTILS_TEST, WriteFileRejectFifo)
+{
+    GlobalMockObject::verify();
+    const std::string result = "/tmp/write_file_fifo_ut";
+    const std::string record = result + "/record";
+    const std::string profName = "PROF_000001_20220222182700493_BABQCAKDOMCOLMJB\n";
+    const std::string cleanup = "rm -rf " + result;
+    (void)system((cleanup + " && mkdir -p " + result).c_str());
+    ASSERT_EQ(0, mkfifo(record.c_str(), 0600));
+
+    EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::common::utils::WriteFile(record, "record", profName));
+
+    (void)unlink(record.c_str());
+    (void)system(cleanup.c_str());
+}
+
+TEST_F(COMMON_UTILS_UTILS_TEST, WriteFileFailedOpenInvalidPath)
+{
+    GlobalMockObject::verify();
+    const std::string profName = "PROF_000001_20220222182700493_BABQCAKDOMCOLMJB\n";
+    EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::common::utils::WriteFile("/not_exist_dir/record", "record", profName));
+}
+
+TEST_F(COMMON_UTILS_UTILS_TEST, WriteFileRejectInvalidRecordFile)
+{
+    GlobalMockObject::verify();
+    const std::string result = "/tmp/write_file_invalid_record_ut";
+    const std::string target = result + "/target";
+    const std::string record = result + "/record";
+    const std::string profName = "PROF_000001_20220222182700493_BABQCAKDOMCOLMJB\n";
+    const std::string cleanup = "rm -rf " + result;
+    (void)system((cleanup + " && mkdir -p " + result).c_str());
+    std::ofstream targetFile(target);
+    targetFile << "victim data" << std::endl;
+    targetFile.close();
+    ASSERT_EQ(0, symlink(target.c_str(), record.c_str()));
+
+    EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::common::utils::WriteFile(record, "record", profName));
+
+    (void)unlink(record.c_str());
+    (void)system(cleanup.c_str());
+}
+
+TEST_F(COMMON_UTILS_UTILS_TEST, WriteFileAppendNonRegularFile)
+{
+    GlobalMockObject::verify();
+    const std::string result = "/tmp/write_file_nonregular_ut";
+    const std::string record = result + "/record";
+    const std::string target = result + "/target";
+    const std::string profName = "PROF_000001_20220222182700493_BABQCAKDOMCOLMJB\n";
+    const std::string cleanup = "rm -rf " + result;
+    (void)system((cleanup + " && mkdir -p " + result).c_str());
+    ASSERT_EQ(0, mkfifo(record.c_str(), 0600));
+
+    EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::common::utils::WriteFile(record, "record", profName));
+
+    (void)unlink(record.c_str());
+    (void)system(cleanup.c_str());
 }
 
 TEST_F(COMMON_UTILS_UTILS_TEST, CheckStringIsUnsignedIntNum)

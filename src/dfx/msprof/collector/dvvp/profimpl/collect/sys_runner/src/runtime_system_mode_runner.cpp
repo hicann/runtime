@@ -124,20 +124,20 @@ int32_t RuntimeSystemModeRunner::RecordOutPut() const
     const std::string pidStr = std::to_string(params_->msprofBinPid);
     const std::string recordFile = pidStr + MSVP_UNDERLINE + OUTPUT_RECORD;
     const std::string absolutePath = params_->result_dir + MSVP_SLASH + recordFile;
+#if (defined(linux) || defined(__linux__))
+    const std::string profName = baseDir_ + "\n";
+    return WriteFile(absolutePath, recordFile, profName);
+#else
     std::ofstream file;
     file.open(absolutePath, std::ios::out | std::ios::app);
     if (!file.is_open()) {
         MSPROF_LOGE("Failed to open %s", Utils::BaseName(recordFile).c_str());
         return PROFILING_FAILED;
     }
-    if (OsalChmod(absolutePath.c_str(), SYSTEM_MODE_FILE_MODE) != OSAL_EN_OK) {
-        file.close();
-        MSPROF_LOGE("Failed to change file mode for %s", Utils::BaseName(recordFile).c_str());
-        return PROFILING_FAILED;
-    }
     file << baseDir_ << std::endl << std::flush;
     file.close();
     return PROFILING_SUCCESS;
+#endif
 }
 
 SHARED_PTR_ALIA<message::ProfileParams> RuntimeSystemModeRunner::GenerateHostParam(

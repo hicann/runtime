@@ -63,16 +63,27 @@ TEST_F(COMMON_UTILS_UTILS_STEST, RemoveDir)
     EXPECT_EQ(g_scanDir, 1);
 }
 
-TEST_F(COMMON_UTILS_UTILS_STEST, WriteFile_fileno_failed)
+TEST_F(COMMON_UTILS_UTILS_STEST, WriteFileRejectSoftLink)
 {
     GlobalMockObject::verify();
-    std::string profName = "test\n";
-    system("touch ./writeFile_test");
-    MOCKER_CPP(fileno).stubs().will(returnValue(-1));
-    MOCKER_CPP(fclose).stubs().will(returnValue(2));
-    // fileno failed
-    EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::common::utils::WriteFile("./test", "test", profName));
-    system("rm -rf ./writeFile_test");
+    const std::string result = "/tmp/write_file_secure_stest";
+    const std::string record = result + "/record";
+    const std::string target = result + "/target";
+    const std::string profName = "test\n";
+
+    const std::string cleanup = "rm -rf " + result;
+    const std::string prepare = cleanup + " && mkdir -p " + result;
+    (void)system(prepare.c_str());
+    std::ofstream targetFile(target);
+    targetFile << "victim data" << std::endl;
+    targetFile.close();
+    ASSERT_EQ(0, symlink(target.c_str(), record.c_str()));
+
+    EXPECT_EQ(PROFILING_FAILED, analysis::dvvp::common::utils::WriteFile(record, "record", profName));
+    EXPECT_TRUE(Utils::IsFileExist(target));
+
+    (void)unlink(record.c_str());
+    (void)system(cleanup.c_str());
 }
 
 TEST_F(COMMON_UTILS_UTILS_STEST, get_child_dirs_out_range_of_depth)
