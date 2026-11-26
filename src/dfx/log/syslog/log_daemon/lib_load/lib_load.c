@@ -21,6 +21,8 @@
 #define LIB_LOAD_REPLY_INVALID_INPUT "check input validity failed"
 #define LIB_LOAD_REPLY_SYSTEM_FUNCTION "system function failed"
 #define LIB_LOAD_REPLY_SUCCESS "load library successfully"
+#define LIB_LOAD_REPLY_PROHIBIT_CONTAINER "prohibit container operate lib load"
+#define LIB_LOAD_REPLY_PROHIBIT_POWER_GROUP "prohibit compute power group operate lib load"
 
 #define LIB_LOAD_DEFAULT_LIBRARY_PATH "/usr/lib64/"
 #define LIB_LOAD_DEVICE_DRIVER_EXTEND_PATH "/usr/lib64/device-compat-plugin/"
@@ -42,11 +44,14 @@ typedef int32_t (*DfxDetectInit)(void*);
 typedef void (*DfxDetectExit)(void);
 
 // classification of one lib load request: the enum decides BOTH the reply payload
-// (LibLoadSendReply) and the function return code (SUCCESS vs FAILURE)
+// (LibLoadSendReply) and the function return code (SUCCESS, also for the served refusals,
+// vs FAILURE)
 typedef enum {
     LIB_LOAD_RESULT_SUCCESS = 0,
     LIB_LOAD_RESULT_INVALID_INPUT,
     LIB_LOAD_RESULT_SYSTEM_FUNCTION,
+    LIB_LOAD_RESULT_PROHIBIT_CONTAINER,
+    LIB_LOAD_RESULT_PROHIBIT_POWER_GROUP,
 } LibLoadResult;
 
 typedef struct LibOpenInfo {
@@ -229,6 +234,10 @@ STATIC void LibLoadSendReply(const CommHandle* handle, LibLoadResult result)
         msg = LIB_LOAD_REPLY_SUCCESS;
     } else if (result == LIB_LOAD_RESULT_INVALID_INPUT) {
         msg = LIB_LOAD_REPLY_INVALID_INPUT;
+    } else if (result == LIB_LOAD_RESULT_PROHIBIT_CONTAINER) {
+        msg = LIB_LOAD_REPLY_PROHIBIT_CONTAINER;
+    } else if (result == LIB_LOAD_RESULT_PROHIBIT_POWER_GROUP) {
+        msg = LIB_LOAD_REPLY_PROHIBIT_POWER_GROUP;
     }
     LibLoadReplyMsg(handle, msg, strlen(msg));
 }
@@ -389,6 +398,51 @@ STATIC LibLoadResult LibLoadUpgradeProcess(const LibLoadInfo* loadInfo, int32_t 
     return result;
 }
 
+/**
+ * @brief       : gate the request by the peer run environment before any upgrade action:
+ *                only the physical machine, the container deployed directly on it and a
+ *                virtual machine directly connected to the device may drive the upgrade.
+ *                This component is registered via ServerCreateEx and never passes the
+ *                ServerCheckContainer gate of ServerProcess, while the upgrade path
+ *                (ServerRelease plus the drain inside LibLoadCheckAndUpgradeLibrary) lets
+ *                one forbidden request make every detect service on slogd unavailable for
+ *                up to 15000ms
+ * @param [in]  : handle     handle for communicating with the peer end
+ * @param [out] : result     terminal classification when the stage fails
+ * @return      : LOG_SUCCESS: peer allowed; LOG_FAILURE: prohibited or attr unavailable
+ */
+STATIC int32_t LibLoadCheckPeerEnv(const CommHandle* handle, LibLoadResult* result)
+{
+    int32_t runEnv = RUN_ENV_UNKNOW;
+    int32_t ret = AdxGetAttrByCommHandle(handle, HDC_SESSION_ATTR_RUN_ENV, &runEnv);
+    if (ret != IDE_DAEMON_OK) {
+        SELF_LOG_ERROR("get run env failed, %d.", ret);
+        *result = LIB_LOAD_RESULT_SYSTEM_FUNCTION;
+        return LOG_FAILURE;
+    }
+    if ((runEnv != RUN_ENV_PHYSICAL) && (runEnv != RUN_ENV_PHYSICAL_CONTAINER) && (runEnv != RUN_ENV_VIRTUAL)) {
+        SELF_LOG_WARN("prohibit container operate lib load, runEnv=%d.", runEnv);
+        *result = LIB_LOAD_RESULT_PROHIBIT_CONTAINER;
+        return LOG_FAILURE;
+    }
+
+    // compute power group (vfId != 0): several hosts share one device, the peer is not
+    // directly connected to it and an upgrade would disturb every other host of the group
+    int32_t vfId = -1;
+    ret = AdxGetAttrByCommHandle(handle, HDC_SESSION_ATTR_VFID, &vfId);
+    if (ret != IDE_DAEMON_OK) {
+        SELF_LOG_ERROR("get vfId failed, %d.", ret);
+        *result = LIB_LOAD_RESULT_SYSTEM_FUNCTION;
+        return LOG_FAILURE;
+    }
+    if (vfId != 0) {
+        SELF_LOG_WARN("prohibit compute power group operate lib load, vfId=%d.", vfId);
+        *result = LIB_LOAD_RESULT_PROHIBIT_POWER_GROUP;
+        return LOG_FAILURE;
+    }
+    return LOG_SUCCESS;
+}
+
 int32_t LibLoadServerProcess(const CommHandle* handle, const void* value, uint32_t len)
 {
     SELF_LOG_INFO("the lib_load process start");
@@ -400,6 +454,11 @@ int32_t LibLoadServerProcess(const CommHandle* handle, const void* value, uint32
 
     LibLoadResult result = LIB_LOAD_RESULT_INVALID_INPUT;
     do {
+        // the peer environment is the first gate: no untrusted payload is parsed before it,
+        // a container request must never reach the release and drain of the upgrade path
+        if (LibLoadCheckPeerEnv(handle, &result) != LOG_SUCCESS) {
+            break;
+        }
         if (value == NULL) {
             SELF_LOG_ERROR("invalid input, value is null");
             break;
@@ -429,5 +488,10 @@ int32_t LibLoadServerProcess(const CommHandle* handle, const void* value, uint32
     // so every request must send exactly one payload message + one HDC_END_MSG here
     LibLoadSendReply(handle, result);
     SELF_LOG_INFO("the lib_load process finished, result: %d", (int32_t)result);
+    if ((result == LIB_LOAD_RESULT_PROHIBIT_CONTAINER) || (result == LIB_LOAD_RESULT_PROHIBIT_POWER_GROUP)) {
+        // legacy contract shared with ServerCheckContainer and HbmDetectCheckContainer: a
+        // refused peer counts as a served request, the reply payload carries the reason
+        return LOG_SUCCESS;
+    }
     return (result == LIB_LOAD_RESULT_SUCCESS) ? LOG_SUCCESS : LOG_FAILURE;
 }

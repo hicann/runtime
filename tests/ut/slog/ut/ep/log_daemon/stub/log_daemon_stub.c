@@ -265,19 +265,34 @@ drvError_t halGetDevIDsEx(uint32_t hw_type, uint32_t* devices, uint32_t len)
 
 void AdxDestroyCommHandle(AdxCommHandle handle) { return; }
 
+int32_t g_utAdxDrainCallCount = 0;
+int32_t g_utAdxUnregisterCount = 0;
+
 int AdxRegisterService(
     int serverType, ComponentType componentType, AdxComponentInit init, AdxComponentProcess process,
     AdxComponentUnInit uninit)
 {
+    (void)serverType;
+    (void)componentType;
+    (void)init;
+    (void)process;
+    (void)uninit;
     return 0;
 }
 
-int AdxUnRegisterService(int32_t serverType, ComponentType componentType) { return 0; }
+int AdxUnRegisterService(int32_t serverType, ComponentType componentType)
+{
+    (void)serverType;
+    (void)componentType;
+    g_utAdxUnregisterCount++;
+    return 0;
+}
 
 int AdxWaitComponentDrained(int32_t serverType, ComponentType componentType, uint32_t timeoutMs)
 {
     (void)serverType;
     (void)componentType;
     (void)timeoutMs;
+    g_utAdxDrainCallCount++;
     return 0;
 }
