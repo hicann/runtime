@@ -85,6 +85,8 @@ set(logDaemonSrc
     ${CMAKE_CURRENT_SOURCE_DIR}/testcase/event_process/event_process_func_utest.cc
     # file monitor
     ${CMAKE_CURRENT_SOURCE_DIR}/testcase/file_monitor/file_monitor_func_utest.cc
+    # server mgr ownership model (kept last: dedicated TU, real monitor threads)
+    ${CMAKE_CURRENT_SOURCE_DIR}/testcase/server_mgr_func_utest.cc
     ${TOP_DIR}/tests/ut/slog/ut/slog/testcase/main.cc
 )
 

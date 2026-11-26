@@ -39,12 +39,31 @@ typedef void (*ServerStop)(void);
 typedef int32_t (*ServerSend)(ServerHandle, const char*, uint32_t);
 typedef int32_t (*ServerRecv)(ServerHandle, char**, uint32_t*, uint32_t);
 
+// per-session comm reference node: created when ServerProcess publishes a session handle,
+// destroyed together with the handle. refs counts every holder of the comm handle (the
+// session monitor's lifetime reference plus in-flight requests); dying marks a handle
+// detached by its monitor or rolled back by ServerProcess. Nodes are kept in commList and
+// referenced by pointer: each generation is counted on its own node, references of
+// different sessions never mix, so a generation is destroyed exactly once by its own
+// last releaser.
+typedef struct ServerCommNode {
+    AdxCommConHandle comm;
+    uint32_t refs;
+    bool dying;
+    struct ServerCommNode* next;
+} ServerCommNode;
+
 typedef struct ServerMgr {
     bool init;             // init is used only once; true: be used; false: free
     bool processFlag;      // true: running process exists; false: no running process
     bool monitorRunFlag;   // true: running status; false: stopped status
     ToolThread monitorTid; // tid of session monitor
-    AdxCommConHandle handle;
+    // commList and current are guarded by stateLock (lock order: lock -> stateLock).
+    // The session monitor tail and the acquire/release paths take stateLock ONLY: a caller
+    // joining the monitor under lock (SessionMonitorCreate) must never share a lock with the
+    // joined thread, otherwise concurrent session turnover can deadlock.
+    ServerCommNode* commList; // all session generations, a dying node leaves the list when its refs drops to 0
+    ServerCommNode* current;  // the published session node, the only source of new references
     uint32_t maxNum;
     uint32_t linkedNum;
     uint32_t linkType;
@@ -54,6 +73,7 @@ typedef struct ServerMgr {
     ServerSend send;
     ServerRecv recv;
     ToolMutex lock;
+    ToolMutex stateLock;
 } ServerMgr;
 
 // total 256 byte

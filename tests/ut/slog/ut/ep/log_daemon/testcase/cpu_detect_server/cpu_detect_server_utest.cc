@@ -158,7 +158,6 @@ TEST_F(CPU_DETECT_EXCP_UTEST, CpuDetectServerStartInvalidMagic)
 {
     ServerMgr tmp = {};
     CommHandle comm = {COMM_HDC, 0x12345, COMPONENT_GETD_FILE};
-    tmp.handle = &comm;
     tmp.send = ServerSendMsgStub;
     tmp.recv = ServerRecvMsgStub;
     ServerHandle handle = &tmp;
@@ -172,7 +171,6 @@ TEST_F(CPU_DETECT_EXCP_UTEST, CpuDetectServerStart)
 
     ServerMgr tmp = {};
     CommHandle comm = {COMM_HDC, 0x12345, COMPONENT_GETD_FILE};
-    tmp.handle = &comm;
     tmp.send = ServerSendMsgStub;
     tmp.recv = ServerRecvMsgStub;
     ServerHandle handle = &tmp;
@@ -189,7 +187,6 @@ TEST_F(CPU_DETECT_EXCP_UTEST, CpuDetectServerStartCpuDetectStartNull)
 
     ServerMgr tmp = {};
     CommHandle comm = {COMM_HDC, 0x12345, COMPONENT_GETD_FILE};
-    tmp.handle = &comm;
     tmp.send = ServerSendMsgStub;
     tmp.recv = ServerRecvMsgStub;
     ServerHandle handle = &tmp;
@@ -205,7 +202,6 @@ TEST_F(CPU_DETECT_EXCP_UTEST, CpuDetectTestcaseFailed)
     MOCKER(CpuDetectStart).stubs().will(returnValue(100));
     ServerMgr tmp = {};
     CommHandle comm = {COMM_HDC, 0x12345, COMPONENT_GETD_FILE};
-    tmp.handle = &comm;
     tmp.send = ServerSendMsgStub;
     tmp.recv = ServerRecvMsgStub;
     ServerHandle handle = &tmp;
@@ -221,7 +217,6 @@ TEST_F(CPU_DETECT_EXCP_UTEST, CpuDetectTestcaseTimeout)
     MOCKER(CpuDetectStart).stubs().will(returnValue(1000));
     ServerMgr tmp = {};
     CommHandle comm = {COMM_HDC, 0x12345, COMPONENT_GETD_FILE};
-    tmp.handle = &comm;
     tmp.send = ServerSendMsgStub;
     tmp.recv = ServerRecvMsgStub;
     ServerHandle handle = &tmp;
@@ -237,7 +232,6 @@ TEST_F(CPU_DETECT_EXCP_UTEST, CpuDetectServerStartRecvFailed)
 
     ServerMgr tmp = {};
     CommHandle comm = {COMM_HDC, 0x12345, COMPONENT_GETD_FILE};
-    tmp.handle = &comm;
     tmp.send = ServerSendMsgStub;
     tmp.recv = ServerRecvMsgFailedStub;
     ServerHandle handle = &tmp;
@@ -253,7 +247,6 @@ TEST_F(CPU_DETECT_EXCP_UTEST, CpuDetectServerLifecycleMultiRequest)
 
     ServerMgr tmp = {};
     CommHandle comm = {COMM_HDC, 0x12345, COMPONENT_GETD_FILE};
-    tmp.handle = &comm;
     tmp.send = ServerSendMsgStub;
     tmp.recv = ServerRecvMsgStub;
     ServerHandle handle = &tmp;

@@ -366,7 +366,10 @@ TEST_F(EP_LOG_DAEMON_FUNC_UTEST, LogDaemonMainInvalidRunEnv)
 TEST_F(EP_LOG_DAEMON_FUNC_UTEST, LogDaemonMainServerProcessFailed)
 {
     ServerAttr attr = {0};
-    attr.num = 1;
+    // num is 2: the ack-failed session reserves one link slot until the session monitor
+    // releases it; pthread_create is stubbed so no monitor thread runs and the slot stays
+    // reserved, one more slot keeps the success path below reachable.
+    attr.num = 2;
     attr.linkType = 0;
     attr.runEnv = 1;
     MOCKER(ToolJoinTask).stubs().will(returnValue(0));
