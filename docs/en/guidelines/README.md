@@ -6,7 +6,6 @@ This directory collects the software design template, coding guidelines, test ca
 
 | Document | Content | Applicable scenario |
 |------|------|----------|
-| [Agent Skill Development Guidelines V1.0](agent-skill-guidelines.md) | Agent Skill development guidelines of the Turing Solution Platform Development Department. The guidelines cover creation conditions, content organization, permissions, evaluation, release, and maintenance requirements | When you develop, review, release, or maintain an Agent Skill, refer to the guideline scope and the internal guidelines of the component |
 | [design_document_template.md](design_document_template.md) | Runtime design document template. The template covers interfaces, architecture, document synchronization, and DT check items | When you produce a design proposal, interface design, or feature design |
 | [coding-guidelines.md](coding-guidelines.md) | Unified coding guidelines to follow when you implement Runtime code | During daily development, self-check, `/runtime-code-review`, and PR review |
 | [ut-coding-guidelines.md](ut-coding-guidelines.md) | Mandatory guidelines for Runtime UT code. The guidelines supplement the constraints at the test implementation level | When you write, modify, or review UT code |
