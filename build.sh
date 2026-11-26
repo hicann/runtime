@@ -114,7 +114,7 @@ checkopts() {
         shift
         ;;
       --pkg-type)
-        if ["X$2" != "Xrun"] && ["X$2" != "Xrpm"] && ["X$2" != "Xdeb"]; then
+        if [[ "$2" != "run" && "$2" != "rpm" && "$2" != "deb" ]]; then
           usage && echo "Error: Invalid value '$2' for option '$1'" && exit 1
         fi
         PACKAGE_TYPE="$2"
