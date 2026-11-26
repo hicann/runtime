@@ -139,7 +139,7 @@ rtError_t InitAicpuPrintInfoImpl(RawDevice* device)
     }
 
     RT_LOG(
-        RT_LOG_INFO, "InitAicpuPrintInfo succ, device_id=%u, aicpuPrintfAddr_=%p, aicpuPrintfMemSize_=%u.",
+        RT_LOG_INFO, "InitAicpuPrintInfo succeeded, device_id=%u, aicpuPrintfAddr_=%p, aicpuPrintfMemSize_=%u bytes.",
         device->deviceId_, device->aicpuPrintfAddr_, device->aicpuPrintfMemSize_);
     return RT_ERROR_NONE;
 }
