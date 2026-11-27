@@ -991,7 +991,7 @@ rtError_t RawDevice::AllocStackPhyAddrForDcache()
     }
 
     RT_LOG(
-        RT_LOG_DEBUG, "AllocStackPhyBase device_id=%u, stackPhyBase16k_=0x%llx, stackPhySize=%uB.", deviceId_,
+        RT_LOG_DEBUG, "AllocStackPhyBase device_id=%u, stackPhyBase16k_=0x%llx, stackPhySize=%" PRIu64 "B.", deviceId_,
         RtPtrToValue(stackPhyBase16k_), stackPhySize);
     stackAddrIsDcache_ = true;
     stackPhyBase32kAlign_ = stackPhyBase32k_;
@@ -1011,8 +1011,8 @@ rtError_t RawDevice::AllocStackPhyBaseForCloudV2()
         (error != RT_ERROR_NONE) || (stackPhyBase32k_ == nullptr), error,
         "Alloc stack phy base failed, mem alloc failed, retCode=%#x.", static_cast<uint32_t>(error));
     RT_LOG(
-        RT_LOG_INFO, "device_id=%u, stackPhyBase32k_=0x%llx, stackPhySize=%uB.", Id_(), RtPtrToValue(stackPhyBase32k_),
-        stackPhySize);
+        RT_LOG_INFO, "device_id=%u, stackPhyBase32k_=0x%llx, stackPhySize=%" PRIu64 "B.", Id_(),
+        RtPtrToValue(stackPhyBase32k_), stackPhySize);
     stackPhyBase32kAlign_ = stackPhyBase32k_;
     // alloc 16k stack for aic/aiv
     if (stackPhyBase16k_ != nullptr) {
@@ -1023,7 +1023,7 @@ rtError_t RawDevice::AllocStackPhyBaseForCloudV2()
     error = driver_->DevMemAllocWithBackupFlag(
         &stackPhyBase16k_, stackPhySize, RT_MEMORY_DDR, Id_(), DevMemBackupType::SNAPSHOT_OPTIONAL_BACKUP);
     RT_LOG(
-        RT_LOG_DEBUG, "AllocStackPhyBase device_id=%u, stackPhyBase16k_=0x%llx, stackPhySize=%uB.", Id_(),
+        RT_LOG_DEBUG, "AllocStackPhyBase device_id=%u, stackPhyBase16k_=0x%llx, stackPhySize=%" PRIu64 "B.", Id_(),
         RtPtrToValue(stackPhyBase16k_), stackPhySize);
     if ((error != RT_ERROR_NONE) || (stackPhyBase16k_ == nullptr)) {
         (void)driver_->DevMemFree(stackPhyBase32k_, Id_());
@@ -1054,7 +1054,7 @@ rtError_t RawDevice::AllocStackPhyBase()
     const rtError_t error = driver_->DevMemAllocWithBackupFlag(
         &stackPhyBase32k_, stackPhySize, RT_MEMORY_DDR, Id_(), DevMemBackupType::SNAPSHOT_OPTIONAL_BACKUP);
     RT_LOG(
-        RT_LOG_INFO, "AllocStackPhyBase device_id=%u, stackPhyBase32k_=0x%llx, stackPhySize=%uB.", Id_(),
+        RT_LOG_INFO, "AllocStackPhyBase device_id=%u, stackPhyBase32k_=0x%llx, stackPhySize=%" PRIu64 "B.", Id_(),
         RtPtrToValue(stackPhyBase32k_), stackPhySize);
     COND_RETURN_ERROR(
         (error != RT_ERROR_NONE) || (stackPhyBase32k_ == nullptr), error,
@@ -1376,7 +1376,8 @@ rtError_t RawDevice::Start()
     COND_GOTO_MSG_OUTER(
         primaryStream_ == nullptr, ERROR_FREE, error, RT_ERROR_STREAM_NEW, ErrorCode::EE1013, sizeof(Stream), "new");
     error = primaryStream_->Setup();
-    ERROR_GOTO_MSG_INNER(error, ERROR_FREE, "The primary stream setup failed.");
+    ERROR_GOTO_MSG_INNER(
+        error, ERROR_FREE, "Failed to set up the primary stream, retCode=%#x.", static_cast<uint32_t>(error));
 
     RT_LOG(
         RT_LOG_INFO, "new primary Stream ok, Runtime_alloc_size %zu(bytes), stream_id=%d.", sizeof(Stream),
