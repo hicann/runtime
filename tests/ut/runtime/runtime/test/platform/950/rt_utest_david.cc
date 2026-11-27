@@ -588,6 +588,48 @@ protected:
     Device* dev_ = nullptr;
 };
 
+TEST_F(DavidTaskTest, FusionDefaultTilingKeyIsRejectedBeforeKernelPreparation)
+{
+    PlainProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    InitEmbeddedInnerHandle<Program>(&program);
+    rtLaunchAttribute_t attribute{};
+    attribute.id = RT_LAUNCH_ATTRIBUTE_BLOCKDIM;
+    attribute.value.blockDim = 1U;
+    rtLaunchConfig_t config{};
+    config.numAttrs = 1U;
+    config.attrs = &attribute;
+    rtFunsionTaskInfo_t fusion{};
+    fusion.subTaskNum = 1U;
+    fusion.subTask[0].type = RT_FUSION_AICORE;
+    auto& core = fusion.subTask[0].task.aicoreInfo;
+    core.hdl = program.GetInnerHandle();
+    core.tilingKey = DEFAULT_TILING_KEY;
+    core.config = &config;
+    MOCKER(StreamLaunchKernelPrepare).expects(never());
+    EXPECT_EQ(LaunchFusionKernel(stream_, &fusion, nullptr), RT_ERROR_INVALID_VALUE);
+}
+
+TEST_F(DavidTaskTest, FusionConcreteTilingKeyPreservesPreparationError)
+{
+    PlainProgram program(RT_KERNEL_ATTR_TYPE_AICORE);
+    InitEmbeddedInnerHandle<Program>(&program);
+    rtLaunchAttribute_t attribute{};
+    attribute.id = RT_LAUNCH_ATTRIBUTE_BLOCKDIM;
+    attribute.value.blockDim = 1U;
+    rtLaunchConfig_t config{};
+    config.numAttrs = 1U;
+    config.attrs = &attribute;
+    rtFunsionTaskInfo_t fusion{};
+    fusion.subTaskNum = 1U;
+    fusion.subTask[0].type = RT_FUSION_AICORE;
+    auto& core = fusion.subTask[0].task.aicoreInfo;
+    core.hdl = program.GetInnerHandle();
+    core.tilingKey = 1U;
+    core.config = &config;
+    MOCKER(StreamLaunchKernelPrepare).expects(once()).will(returnValue(RT_ERROR_KERNEL_NULL));
+    EXPECT_EQ(LaunchFusionKernel(stream_, &fusion, nullptr), RT_ERROR_KERNEL_NULL);
+}
+
 TEST_F(DavidTest, GetPrefetchCnt_program_kernel)
 {
     rtError_t ret = RT_ERROR_NONE;

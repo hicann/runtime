@@ -158,6 +158,9 @@ static rtError_t PreProcAicAivTaskForFusion(
         ERROR_RETURN(
             handleRet, "Failed to validate fusion program handle, retCode=%#x.", static_cast<uint32_t>(handleRet));
         tilingKey = aicInfo->tilingKey;
+        COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
+            tilingKey == DEFAULT_TILING_KEY, RT_ERROR_INVALID_VALUE, "AIC/AIV subtask preprocessing", tilingKey,
+            "not equal to DEFAULT_TILING_KEY(0xffffffffffffffff)");
     }
 
     const uint32_t coreDim = launchTaskCfg->blockDim;
