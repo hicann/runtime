@@ -193,13 +193,7 @@ public:
         return *poolRegistry_;
     }
 
-    static void DestroyPoolRegistry()
-    {
-        if (poolRegistry_ != nullptr) {
-            delete poolRegistry_;
-            poolRegistry_ = nullptr;
-        }
-    }
+    static void DestroyPoolRegistry();
     rtError_t Init();
     ~PoolRegistry();
     static rtError_t InitializeMemPool(SegmentManager* mgr, uint64_t va, uint64_t size);

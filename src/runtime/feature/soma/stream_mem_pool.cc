@@ -19,6 +19,14 @@
 namespace cce {
 namespace runtime {
 
+void PoolRegistry::DestroyPoolRegistry()
+{
+    if (poolRegistry_ != nullptr) {
+        delete poolRegistry_;
+        poolRegistry_ = nullptr;
+    }
+}
+
 std::once_flag PoolRegistry::initFlag_;
 PoolRegistry* PoolRegistry::poolRegistry_ = nullptr;
 

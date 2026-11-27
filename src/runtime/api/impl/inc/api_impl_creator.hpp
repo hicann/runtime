@@ -32,6 +32,7 @@ Api* CreateImplAndGet();
 bool IsImplMbufSupported();
 ApiMbuf* CreateImplMbufAndGet();
 void DestroyImplMbuf(ApiMbuf*& apiImplMbuf);
+bool IsImplSomaSupported();
 ApiSoma* CreateImplSomaAndGet();
 ApiEvent* CreateImplEventAndGet();
 bool IsImplKernelFuncSupported();

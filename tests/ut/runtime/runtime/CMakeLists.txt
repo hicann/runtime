@@ -437,6 +437,8 @@ set(runtimeut_src_callback_list
 )
 
 set(runtimeut_src_tiny_exclude_list
+    ${TOP_DIR}/src/runtime/feature/soma/soma.cc
+    ${TOP_DIR}/src/runtime/feature/soma/stream_mem_pool.cc
     ${TOP_DIR}/src/runtime/feature/snapshot/snapshot_socket.cc
     ${TOP_DIR}/src/runtime/api/api_c_device_topology.cc
     ${TOP_DIR}/src/runtime/core/src/cqe/v100/stars_cq_adapter.cc
@@ -544,6 +546,7 @@ set(runtimeut_src_tiny_exclude_list
 )
 
 set(runtimeut_src_tiny_include_list
+    ${TOP_DIR}/src/runtime/feature/soma/stream_mem_pool_stub.cc
     ${TOP_DIR}/src/runtime/api/impl/stub/api_impl_snapshot_stub.cc
     ${RUNTIME_UT_TINY_GENERATED_API_STUB_SOURCE}
     ${TOP_DIR}/src/runtime/api/api_c_tiny.cc

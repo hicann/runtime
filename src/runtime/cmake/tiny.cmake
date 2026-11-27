@@ -550,7 +550,7 @@ set(libruntime_v100_src_files
     ${RUNTIME_CORE_DIR}/src/task/task_fail_callback_manager.cc
     ${RUNTIME_CORE_DIR}/src/task/v100/stub_task.cc
     ${RUNTIME_CORE_DIR}/src/memory/mem_type.cc
-    ${RUNTIME_FEATURE_DIR}/soma/stream_mem_pool.cc
+    ${RUNTIME_FEATURE_DIR}/soma/stream_mem_pool_stub.cc
     ${libruntime_v100_task_src_files}
     ${libruntime_context_src_files}
     ${libruntime_stream_src_files}

@@ -1660,10 +1660,13 @@ rtError_t ApiImpl::StreamSynchronize(Stream* const stm, const int32_t timeout)
             static_cast<uint64_t>(RtPtrToValue(CurrentContext())));
     }
 
-    RT_LOG(RT_LOG_INFO, "Trigger implicit mempool trim (exclude graph pool).");
-    rtError_t trimRet = Runtime::Instance()->ApiSoma_()->MemPoolTrimImplicit(false);
-    if (trimRet != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_WARNING, "Implicit mempool trim with errors, ret=%d.", trimRet);
+    ApiSoma* const soma = Runtime::Instance()->ApiSoma_();
+    if (soma != nullptr) {
+        RT_LOG(RT_LOG_INFO, "Trigger implicit mempool trim (exclude graph pool).");
+        const rtError_t trimRet = soma->MemPoolTrimImplicit(false);
+        if (trimRet != RT_ERROR_NONE) {
+            RT_LOG(RT_LOG_WARNING, "Implicit mempool trim with errors, ret=%d.", trimRet);
+        }
     }
 
     return errCode;
@@ -2403,10 +2406,13 @@ rtError_t ApiImpl::EventSynchronize(Event* const evt, const int32_t timeout)
             " The timeout interval is %d ms, device_id=%u.",
             timeout, evt->Device_()->Id_()));
     ERROR_RETURN(error, "Synchronize event failed.");
-    RT_LOG(RT_LOG_INFO, "Event synchronize success, trigger implicit mempool trim (exclude graph pool).");
-    rtError_t trimRet = Runtime::Instance()->ApiSoma_()->MemPoolTrimImplicit(false);
-    if (trimRet != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_WARNING, "Implicit mempool trim with errors, ret=%d.", trimRet);
+    ApiSoma* const soma = Runtime::Instance()->ApiSoma_();
+    if (soma != nullptr) {
+        RT_LOG(RT_LOG_INFO, "Event synchronize success, trigger implicit mempool trim (exclude graph pool).");
+        const rtError_t trimRet = soma->MemPoolTrimImplicit(false);
+        if (trimRet != RT_ERROR_NONE) {
+            RT_LOG(RT_LOG_WARNING, "Implicit mempool trim with errors, ret=%d.", trimRet);
+        }
     }
 
     return error;
@@ -2436,14 +2442,17 @@ rtError_t ApiImpl::DevMalloc(void** const devPtr, const uint64_t size, const rtM
     const uint64_t drvFlag = NpuDriver::BuildDevMemAllocFlag(devId, &allocConfig);
     rtError_t ret = driver->DevMemAllocWithFlag(devPtr, tmpSize, type, devId, &allocConfig, drvFlag);
     if (ret != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_INFO, "DevMemAlloc first try not successful, ret=%d, trigger implicit mempool trim.", ret);
-        rtError_t trimRet = Runtime::Instance()->ApiSoma_()->MemPoolTrimImplicit(true);
-        if (trimRet != RT_ERROR_NONE) {
-            RT_LOG(RT_LOG_WARNING, "Implicit mempool trim with errors, ret=%d.", trimRet);
+        RT_LOG(RT_LOG_INFO, "DevMemAlloc first try not successful, ret=%d, retry allocation.", ret);
+        ApiSoma* const soma = Runtime::Instance()->ApiSoma_();
+        if (soma != nullptr) {
+            const rtError_t trimRet = soma->MemPoolTrimImplicit(true);
+            if (trimRet != RT_ERROR_NONE) {
+                RT_LOG(RT_LOG_WARNING, "Implicit mempool trim with errors, ret=%d.", trimRet);
+            }
         }
         allocConfig.isLogError = true;
         ret = driver->DevMemAllocWithFlag(devPtr, tmpSize, type, devId, &allocConfig, drvFlag);
-        COND_RETURN_ERROR(ret != RT_ERROR_NONE, ret, "DevMemAlloc retry after trim failed, ret=%d.", ret);
+        COND_RETURN_ERROR(ret != RT_ERROR_NONE, ret, "DevMemAlloc retry failed, ret=%d.", ret);
     }
     return ret;
 }
@@ -2454,11 +2463,15 @@ rtError_t ApiImpl::DevFree(void* const devPtr)
     RT_LOG(RT_LOG_INFO, "device free mem=0x%llx", RtPtrToPtr<uint64_t*>(devPtr));
     Context* const curCtx = CurrentContext(false);
     const rtError_t error = DevFreeStatic(devPtr, curCtx);
-    if ((error == RT_ERROR_NONE) && Runtime::Instance()->ApiSoma_()->InMemPoolRegion(devPtr)) {
+    if (error != RT_ERROR_NONE) {
+        return error;
+    }
+    ApiSoma* const soma = Runtime::Instance()->ApiSoma_();
+    if ((soma != nullptr) && soma->InMemPoolRegion(devPtr)) {
         RT_LOG(
             RT_LOG_INFO, "Pointer %#" PRIx64 " is in SOMA memory pool range, assuming it's allocated by async api.",
             RtPtrToValue(devPtr));
-        return Runtime::Instance()->ApiSoma_()->MemPoolFreeSync(devPtr);
+        return soma->MemPoolFreeSync(devPtr);
     }
     return error;
 }
@@ -3301,10 +3314,13 @@ rtError_t ApiImpl::DeviceSynchronize(const int32_t timeout)
         ReportAicpuTimeoutError(curCtx->Device_(), "Device synchronize", error);
     }
 
-    RT_LOG(RT_LOG_INFO, "Trigger implicit mempool trim (exclude graph pool).");
-    rtError_t trimRet = Runtime::Instance()->ApiSoma_()->MemPoolTrimImplicit(false);
-    if (trimRet != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_WARNING, "Implicit mempool trim with errors, ret=%d.", trimRet);
+    ApiSoma* const soma = Runtime::Instance()->ApiSoma_();
+    if (soma != nullptr) {
+        RT_LOG(RT_LOG_INFO, "Trigger implicit mempool trim (exclude graph pool).");
+        const rtError_t trimRet = soma->MemPoolTrimImplicit(false);
+        if (trimRet != RT_ERROR_NONE) {
+            RT_LOG(RT_LOG_WARNING, "Implicit mempool trim with errors, ret=%d.", trimRet);
+        }
     }
 
     return error;

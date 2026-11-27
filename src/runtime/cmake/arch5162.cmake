@@ -362,8 +362,7 @@ set(libruntime_src_files
     ${RUNTIME_FEATURE_DIR}/model/model_stars.cc
     ${RUNTIME_FEATURE_DIR}/model/model_rebuild.cc
     ${RUNTIME_FEATURE_DIR}/runtime_thread_aicpu/runtime_thread_aicpu.cc
-    ${RUNTIME_FEATURE_DIR}/soma/soma.cc
-    ${RUNTIME_FEATURE_DIR}/soma/stream_mem_pool.cc
+    ${RUNTIME_FEATURE_DIR}/soma/stream_mem_pool_stub.cc
 )
 
 set(RUNTIME_INC_DIR_ARCH5162

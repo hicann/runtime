@@ -335,8 +335,7 @@ set(runtimeut_src_list
     ${TOP_DIR}/src/runtime/feature/model/model.cc
     ${TOP_DIR}/src/runtime/feature/model/model_stars.cc
     ${TOP_DIR}/src/runtime/feature/model/model_rebuild.cc
-    ${TOP_DIR}/src/runtime/feature/soma/soma.cc
-    ${TOP_DIR}/src/runtime/feature/soma/stream_mem_pool.cc
+    ${TOP_DIR}/src/runtime/feature/soma/stream_mem_pool_stub.cc
     ${TOP_DIR}/src/runtime/config/arch5162/dev_info_reg.cc
 )
 

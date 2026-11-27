@@ -1185,13 +1185,15 @@ rtError_t Runtime::InitApiImplies()
         }
     }
 
-    apiImplSoma_ = CreateImplSomaAndGet();
-    if (apiImplSoma_ == nullptr) {
-        RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1013, sizeof(ApiImplSoma), "new");
-        RT_LOG(RT_LOG_ERROR, "create ApiImplSoma failed.");
-        return RT_ERROR_API_NEW;
+    if (IsImplSomaSupported()) {
+        apiImplSoma_ = CreateImplSomaAndGet();
+        if (apiImplSoma_ == nullptr) {
+            RT_LOG_OUTER_MSG_IMPL(ErrorCode::EE1013, sizeof(ApiImplSoma), "new");
+            RT_LOG(RT_LOG_ERROR, "create ApiImplSoma failed.");
+            return RT_ERROR_API_NEW;
+        }
+        RT_LOG(RT_LOG_INFO, "ApiImplSoma:Runtime_alloc_size %zu bytes", sizeof(ApiImplSoma));
     }
-    RT_LOG(RT_LOG_INFO, "ApiImplSoma:Runtime_alloc_size %zu bytes", sizeof(ApiImplSoma));
 
     apiImplEvent_ = CreateImplEventAndGet();
     if (apiImplEvent_ == nullptr) {

@@ -8,11 +8,16 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "api_impl.hpp"
-#include "api_impl_soma.hpp"
+#include "api_impl_creator.hpp"
 #include "notify.hpp"
 
 namespace cce {
 namespace runtime {
+
+bool IsImplSomaSupported() { return false; }
+
+ApiSoma* CreateImplSomaAndGet() { return nullptr; }
+
 rtError_t ApiImpl::DirectNotifyRecord(Notify* const notify)
 {
     UNUSED(notify);
@@ -347,52 +352,6 @@ rtError_t ApiImpl::EventWorkModeGet(uint8_t* mode)
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
 
-rtError_t ApiImplSoma::StreamMemPoolCreate(rtMemPool_t* memPool, const rtMemPoolProps* poolProps)
-{
-    UNUSED(memPool);
-    UNUSED(poolProps);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiImplSoma::StreamMemPoolDestroy(rtMemPool_t const memPool)
-{
-    UNUSED(memPool);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiImplSoma::StreamMemPoolSetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void* value)
-{
-    UNUSED(memPool);
-    UNUSED(attr);
-    UNUSED(value);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiImplSoma::StreamMemPoolGetAttr(rtMemPool_t memPool, rtMemPoolAttr attr, void* value)
-{
-    UNUSED(memPool);
-    UNUSED(attr);
-    UNUSED(value);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiImplSoma::MemPoolMallocAsync(
-    void** const ptr, const uint64_t size, const rtMemPool_t memPoolId, Stream* const stm)
-{
-    UNUSED(ptr);
-    UNUSED(size);
-    UNUSED(memPoolId);
-    UNUSED(stm);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiImplSoma::MemPoolFreeAsync(void* const ptr, Stream* const stm)
-{
-    UNUSED(ptr);
-    UNUSED(stm);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
 rtError_t ApiImpl::ManagedMemAlloc(void** const ptr, const uint64_t size, const uint32_t flag, const uint16_t moduleId)
 {
     UNUSED(ptr);
@@ -441,31 +400,6 @@ rtError_t ApiImpl::MemManagedGetAttrs(
     UNUSED(dataSizes);
     return RT_ERROR_FEATURE_NOT_SUPPORT;
 }
-rtError_t ApiImplSoma::MemPoolTrimTo(rtMemPool_t memPool, uint64_t minBytesToKeep)
-{
-    UNUSED(memPool);
-    UNUSED(minBytesToKeep);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-rtError_t ApiImplSoma::MemPoolTrimImplicit(bool includeGraphPool)
-{
-    UNUSED(includeGraphPool);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
-bool ApiImplSoma::InMemPoolRegion(void* const ptr)
-{
-    UNUSED(ptr);
-    return false;
-}
-
-rtError_t ApiImplSoma::MemPoolFreeSync(void* const ptr)
-{
-    UNUSED(ptr);
-    return RT_ERROR_FEATURE_NOT_SUPPORT;
-}
-
 rtError_t ApiImpl::MemManagedPrefetchAsync(
     const void* ptr, size_t size, rtMemManagedLocation location, uint32_t flags, Stream* const stream)
 {

@@ -9,6 +9,7 @@
  */
 #include "api_impl.hpp"
 #include "api_impl_soma.hpp"
+#include "api_impl_creator.hpp"
 #include "base.hpp"
 #include "stream.hpp"
 #include "thread_local_container.hpp"
@@ -22,6 +23,10 @@
 
 namespace cce {
 namespace runtime {
+
+bool IsImplSomaSupported() { return true; }
+
+ApiSoma* CreateImplSomaAndGet() { return new (std::nothrow) ApiImplSoma(); }
 
 rtError_t ApiImplSoma::StreamMemPoolCreate(rtMemPool_t* memPool, const rtMemPoolProps* poolProps)
 {

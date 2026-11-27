@@ -83,6 +83,7 @@
 #include "runtime/base.h"
 #include "task_to_sqe.hpp"
 #include "api_impl_kernel_func.hpp"
+#include "soma.hpp"
 #include "kernel_utils.hpp"
 #include "capture_model_utils.hpp"
 
@@ -3619,6 +3620,8 @@ TEST_F(ApiImplTest, DevMallocRetrySuccessOnlyEnablesErrorReportingForFinalAttemp
     Driver* const driver = context->Device_()->Driver_();
     ASSERT_NE(driver, nullptr);
 
+    ASSERT_NE(Runtime::Instance()->ApiSoma_(), nullptr);
+    MOCKER(&SomaApi::MemPoolTrimImplicit).expects(once()).with(eq(true)).will(returnValue(RT_ERROR_DRV_ERR));
     g_devMemAllocRetryTestData = {};
     g_devMemAllocRetryTestData.retryResult = RT_ERROR_NONE;
     MOCKER_CPP_VIRTUAL(driver, &Driver::DevMemAllocWithFlag).expects(exactly(2)).will(invoke(DevMemAllocRetryStub));
@@ -3631,6 +3634,104 @@ TEST_F(ApiImplTest, DevMallocRetrySuccessOnlyEnablesErrorReportingForFinalAttemp
     EXPECT_EQ(g_devMemAllocRetryTestData.callCount, 2U);
     EXPECT_FALSE(g_devMemAllocRetryTestData.isLogError[0]);
     EXPECT_TRUE(g_devMemAllocRetryTestData.isLogError[1]);
+}
+
+class ApiImplWithoutSomaTest : public ApiImplTest {
+protected:
+    void SetUp() override
+    {
+        ApiImplTest::SetUp();
+        savedSoma_ = Runtime::Instance()->apiSoma_;
+        Runtime::Instance()->apiSoma_ = nullptr;
+    }
+
+    void TearDown() override
+    {
+        Runtime::Instance()->apiSoma_ = savedSoma_;
+        ApiImplTest::TearDown();
+    }
+
+private:
+    ApiSoma* savedSoma_ = nullptr;
+};
+
+TEST_F(ApiImplWithoutSomaTest, DevMallocRetriesAfterFirstDriverFailure)
+{
+    auto* const context = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(context, nullptr);
+    auto* const driver = context->Device_()->Driver_();
+    g_devMemAllocRetryTestData = {};
+    MOCKER_CPP_VIRTUAL(driver, &Driver::DevMemAllocWithFlag).expects(exactly(2)).will(invoke(DevMemAllocRetryStub));
+
+    ApiImpl impl;
+    void* ptr = nullptr;
+    EXPECT_EQ(impl.DevMalloc(&ptr, 64U, RT_MEMORY_DEFAULT, MODULEID_RUNTIME), RT_ERROR_NONE);
+    EXPECT_EQ(ptr, reinterpret_cast<void*>(0x1000));
+}
+
+TEST_F(ApiImplWithoutSomaTest, StreamSynchronizePreservesStreamError)
+{
+    auto* const context = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(context, nullptr);
+    Stream stream(context->Device_(), 0);
+    stream.SetContext(context);
+    MOCKER_CPP_VIRTUAL(&stream, &Stream::Synchronize).expects(once()).will(returnValue(RT_ERROR_INVALID_VALUE));
+
+    ApiImpl impl;
+    EXPECT_EQ(impl.StreamSynchronize(&stream, -1), RT_ERROR_INVALID_VALUE);
+}
+
+TEST_F(ApiImplWithoutSomaTest, DevFreeReturnsDriverResult)
+{
+    auto* const context = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(context, nullptr);
+    auto* const driver = context->Device_()->Driver_();
+    uint32_t storage = 0U;
+    MOCKER_CPP_VIRTUAL(driver, &Driver::DevMemFree)
+        .expects(exactly(2))
+        .will(returnValue(RT_ERROR_INVALID_VALUE))
+        .then(returnValue(RT_ERROR_NONE));
+
+    ApiImpl impl;
+    EXPECT_EQ(impl.DevFree(&storage), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(impl.DevFree(&storage), RT_ERROR_NONE);
+}
+
+TEST_F(ApiImplTest, ImplicitTrimFailurePreservesSynchronizationResults)
+{
+    auto* const context = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(context, nullptr);
+    ASSERT_NE(Runtime::Instance()->ApiSoma_(), nullptr);
+    Stream stream(context->Device_(), 0);
+    stream.SetContext(context);
+    ApiEventTestEvent event;
+    MOCKER_CPP_VIRTUAL(&stream, &Stream::Synchronize).expects(once()).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(static_cast<Event*>(&event), &Event::Synchronize)
+        .expects(once())
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&Context::Synchronize).expects(once()).will(returnValue(RT_ERROR_INVALID_VALUE));
+    MOCKER(&SomaApi::MemPoolTrimImplicit).expects(exactly(3)).with(eq(false)).will(returnValue(RT_ERROR_DRV_ERR));
+
+    ApiImpl impl;
+    EXPECT_EQ(impl.StreamSynchronize(&stream, -1), RT_ERROR_NONE);
+    EXPECT_EQ(impl.EventSynchronize(&event, -1), RT_ERROR_NONE);
+    EXPECT_EQ(impl.DeviceSynchronize(-1), RT_ERROR_INVALID_VALUE);
+}
+
+TEST_F(ApiImplTest, DevFreePropagatesPoolFreeResultForPoolPointer)
+{
+    auto* const context = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(context, nullptr);
+    ASSERT_NE(Runtime::Instance()->ApiSoma_(), nullptr);
+    auto* const driver = context->Device_()->Driver_();
+    uint32_t storage = 0U;
+    void* const ptr = &storage;
+    MOCKER_CPP_VIRTUAL(driver, &Driver::DevMemFree).expects(once()).will(returnValue(RT_ERROR_NONE));
+    MOCKER(&SomaApi::InMemPoolRegion).expects(once()).with(eq(ptr)).will(returnValue(true));
+    MOCKER(&SomaApi::FreeToMemPool).expects(once()).with(eq(ptr), eq(true)).will(returnValue(RT_ERROR_DRV_ERR));
+
+    ApiImpl impl;
+    EXPECT_EQ(impl.DevFree(ptr), RT_ERROR_DRV_ERR);
 }
 
 TEST_F(ApiImplTest, DevMallocRetryFailureEnablesErrorReportingForFinalAttempt)

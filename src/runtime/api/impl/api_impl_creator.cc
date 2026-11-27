@@ -10,13 +10,10 @@
 
 #include "api_impl_creator.hpp"
 #include "api_impl.hpp"
-#include "api_impl_soma.hpp"
 #include "api_impl_event.hpp"
 
 namespace cce {
 namespace runtime {
-
-ApiSoma* CreateImplSomaAndGet() { return new (std::nothrow) ApiImplSoma(); }
 
 ApiEvent* CreateImplEventAndGet() { return new (std::nothrow) ApiImplEvent(); }
 

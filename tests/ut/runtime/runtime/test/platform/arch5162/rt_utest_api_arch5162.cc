@@ -15,6 +15,7 @@
 #include "aicpu_dfx.hpp"
 #include "model.hpp"
 #include "snapshot_socket.hpp"
+#include "stream_mem_pool.hpp"
 
 using namespace cce::runtime;
 
@@ -48,6 +49,14 @@ TEST(Arch5162ApiTest, SnapshotApiImplStub_NotSupport)
     ApiSnapshot* apiImplSnapshot = CreateImplSnapshotAndGet();
     EXPECT_EQ(apiImplSnapshot, nullptr);
     DestroyImplSnapshot(apiImplSnapshot);
+}
+
+TEST(Arch5162ApiTest, SomaFactoryAndTeardownWithoutPool)
+{
+    EXPECT_FALSE(IsImplSomaSupported());
+    EXPECT_EQ(CreateImplSomaAndGet(), nullptr);
+    PoolRegistry::DestroyPoolRegistry();
+    PoolRegistry::DestroyPoolRegistry();
 }
 
 TEST(Arch5162ApiTest, SnapshotSocketStubDoesNotStartServiceOrChangeQueryOutput)
