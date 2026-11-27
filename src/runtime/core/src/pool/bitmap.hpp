@@ -29,6 +29,7 @@ public:
     void FreeId(const int32_t id);
     bool IsIdOccupied(const int32_t id) const;
     void OccupyId(const int32_t id) const;
+    bool IsInitialized() const { return freeBitmap_ != nullptr; }
 
 private:
     volatile uint64_t* freeBitmap_;

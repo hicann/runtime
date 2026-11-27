@@ -128,6 +128,34 @@ TEST_F(DriverTest, bitmap_normalizes_allocation_hint_for_smaller_limit)
     EXPECT_EQ(map.AllocId(64U), -1);
 }
 
+TEST_F(DriverTest, BitmapInitializationStateSurvivesExhaustionAndRelease)
+{
+    Bitmap bitmap(1U);
+    EXPECT_FALSE(bitmap.IsInitialized());
+
+    ASSERT_EQ(bitmap.AllocBitmap(), RT_ERROR_NONE);
+    EXPECT_TRUE(bitmap.IsInitialized());
+    const int32_t id = bitmap.AllocId();
+    ASSERT_GE(id, 0);
+
+    EXPECT_EQ(bitmap.AllocId(), -1);
+    EXPECT_TRUE(bitmap.IsInitialized());
+
+    bitmap.FreeId(id);
+    EXPECT_TRUE(bitmap.IsInitialized());
+    EXPECT_EQ(bitmap.AllocId(), id);
+}
+
+TEST_F(DriverTest, BitmapZeroCapacityRemainsUninitialized)
+{
+    Bitmap bitmap(0U);
+    EXPECT_FALSE(bitmap.IsInitialized());
+    EXPECT_EQ(bitmap.AllocBitmap(), RT_ERROR_POOL_RESOURCE);
+    EXPECT_FALSE(bitmap.IsInitialized());
+    EXPECT_EQ(bitmap.AllocId(), -1);
+    EXPECT_FALSE(bitmap.IsInitialized());
+}
+
 TEST_F(DriverTest, get_plat_info_succ)
 {
     uint32_t info = 0;

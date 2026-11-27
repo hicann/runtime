@@ -61,8 +61,11 @@ static uint32_t TprtProcConfigSq(TprtDevice* dev, TprtSqCqOpInfo_t* opInfo)
         default:
             error = TPRT_INPUT_OP_TYPE_INVALID;
             TPRT_LOG(
-                TPRT_LOG_ERROR, "device_id[%u] sq_id[%u] prop[%u].", dev->TprtDevGetDevId_(), opInfo->reqId,
-                opInfo->prop);
+                TPRT_LOG_ERROR,
+                "The parameter prop %u is invalid. Expected value: TPRT_SQCQ_PROP_SQ_SET_STATUS_QUIT(%u). "
+                "device_id[%u] sq_id[%u].",
+                opInfo->prop, static_cast<uint32_t>(TPRT_SQCQ_PROP_SQ_SET_STATUS_QUIT), dev->TprtDevGetDevId_(),
+                opInfo->reqId);
             break;
     }
     return error;
@@ -166,7 +169,7 @@ uint32_t TprtDevice::TprtSqCqAlloc(const uint32_t sqId, const uint32_t cqId)
 
     const uint32_t ret = worker->TprtWorkerStart();
     if (ret != TPRT_SUCCESS) {
-        TPRT_LOG(TPRT_LOG_ERROR, "start worker, device_id=%u", devId_);
+        TPRT_LOG(TPRT_LOG_ERROR, "Failed to start worker, device_id=%u, ret=%u.", devId_, ret);
         return ret;
     }
     allocErrRecycle.ReleaseGuard();

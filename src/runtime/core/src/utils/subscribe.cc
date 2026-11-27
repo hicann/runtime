@@ -48,14 +48,23 @@ rtError_t CbSubscribe::AssignGroupId(
     while (true) {
         groupId = grpIdBitmap_.AllocId();
         if (groupId < 0) {
-            RT_LOG_INNER_MSG(
-                RT_LOG_ERROR,
-                "Failed to allocate a callback subscription group ID. Possible causes: "
-                "1. The maximum group count is 0. 2. Host memory allocation for the group bitmap failed. "
-                "3. All group IDs are already allocated. max_group_num=%u, "
-                "thread_id=%" PRIu64 ", device_id=%u, ts_id=%u, stream_id=%d, retCode=%#x.",
-                maxGroupNum_, threadId, stm->Device_()->Id_(), stm->Device_()->DevGetTsId(), stm->Id_(),
-                static_cast<uint32_t>(RT_ERROR_SUBSCRIBE_GROUP));
+            if (!grpIdBitmap_.IsInitialized()) {
+                RT_LOG(
+                    RT_LOG_ERROR,
+                    "Failed to allocate a callback subscription group ID because the group bitmap "
+                    "is not initialized, max_group_num=%u, thread_id=%" PRIu64
+                    ", device_id=%u, ts_id=%u, stream_id=%d.",
+                    maxGroupNum_, threadId, stm->Device_()->Id_(), stm->Device_()->DevGetTsId(), stm->Id_());
+            } else {
+                RT_LOG_OUTER_MSG_WITH_FUNC_DESC(
+                    ErrorCode::EE1023, "Allocating a callback subscription group ID",
+                    RtFmtMsg(
+                        "No additional callback processing threads can currently be registered "
+                        "for streams in this process "
+                        "(thread_id=%" PRIu64 ", stream_id=%d, device_id=%u, ts_id=%u). "
+                        "At most %u callback processing threads can be registered per process",
+                        threadId, stm->Id_(), stm->Device_()->Id_(), stm->Device_()->DevGetTsId(), maxGroupNum_));
+            }
             return RT_ERROR_SUBSCRIBE_GROUP;
         }
         if (grpIdWaitBitmap_.IsIdOccupied(groupId)) {

@@ -50,6 +50,7 @@
 #include <thread>
 #include <chrono>
 #include <limits>
+#include <new>
 #include <cerrno>
 #include "ctrl_stream.hpp"
 #include "ctrl_stream.hpp"
@@ -3291,6 +3292,59 @@ TEST_F(TaskTest, Subscribe)
     delete cbSubscribe;
     delete stm;
     delete dev;
+}
+
+TEST_F(TaskTest, ZeroCapacityPreservesInitializationFailure)
+{
+    ClearLastDlogRecordLine();
+    CbSubscribe subscribe(0U);
+    constexpr uint64_t threadId = 4294967303ULL;
+
+    EXPECT_EQ(subscribe.Insert(threadId, stream_, nullptr), RT_ERROR_SUBSCRIBE_GROUP);
+
+    EXPECT_FALSE(subscribe.IsExistInStreamMap(stream_));
+    EXPECT_TRUE(DlogRecordContains("max ID count is 0"));
+    EXPECT_TRUE(DlogRecordContains("group bitmap is not initialized"));
+}
+
+TEST_F(TaskTest, BitmapMemoryFailurePreservesAllocationError)
+{
+    ClearLastDlogRecordLine();
+    CbSubscribe subscribe(1U);
+    constexpr uint64_t threadId = 4294967303ULL;
+    using NothrowArrayNew = void* (*)(std::size_t, const std::nothrow_t&);
+    MOCKER(static_cast<NothrowArrayNew>(&operator new[])).stubs().will(returnValue(static_cast<void*>(nullptr)));
+
+    EXPECT_EQ(subscribe.Insert(threadId, stream_, nullptr), RT_ERROR_SUBSCRIBE_GROUP);
+
+    EXPECT_FALSE(subscribe.IsExistInStreamMap(stream_));
+    EXPECT_TRUE(DlogRecordContains("group bitmap is not initialized"));
+}
+
+TEST_F(TaskTest, ExhaustionReportsResourceLimit)
+{
+    ClearLastDlogRecordLine();
+    rtStream_t requestStreamHandle = nullptr;
+    ASSERT_EQ(rtStreamCreate(&requestStreamHandle, RT_STREAM_PRIORITY_DEFAULT), RT_ERROR_NONE);
+    const ScopeGuard streamGuard([&]() { (void)rtStreamDestroy(requestStreamHandle); });
+    Stream* const requestStream = rt_ut::UnwrapOrNull<Stream>(requestStreamHandle);
+    ASSERT_NE(requestStream, nullptr);
+
+    CbSubscribe subscribe(1U);
+    constexpr uint64_t firstThreadId = 1U;
+    constexpr uint64_t requestThreadId = 4294967303ULL;
+    ASSERT_EQ(subscribe.Insert(firstThreadId, stream_, nullptr), RT_ERROR_NONE);
+    uint32_t firstGroupId = UINT32_MAX;
+    ASSERT_EQ(subscribe.GetGroupIdByStreamId(stream_->Device_()->Id_(), stream_->Id_(), &firstGroupId), RT_ERROR_NONE);
+    ClearLastDlogRecordLine();
+
+    EXPECT_EQ(subscribe.Insert(requestThreadId, requestStream, nullptr), RT_ERROR_SUBSCRIBE_GROUP);
+
+    EXPECT_FALSE(subscribe.IsExistInStreamMap(requestStream));
+    uint32_t retainedGroupId = UINT32_MAX;
+    EXPECT_EQ(
+        subscribe.GetGroupIdByStreamId(stream_->Device_()->Id_(), stream_->Id_(), &retainedGroupId), RT_ERROR_NONE);
+    EXPECT_EQ(retainedGroupId, firstGroupId);
 }
 
 TEST_F(TaskTest, GetDevAndGroupIdRejectsNullDevice)
