@@ -183,14 +183,20 @@ rtError_t ProcStreamRecordTask(Stream* const stm, int32_t timeout)
 }
 
 rtError_t GetOrCreateCrossEventSharedInfo(
-    Device* source, uint32_t notifyId, bool isCountNotify, CrossEventSharedInfo& info, char* name, uint32_t len)
+    const Device* source, uint32_t notifyId, bool isCountNotify, CrossEventSharedInfo& info, char* name, uint32_t len)
 {
     const std::lock_guard<std::mutex> lock(info.mutex);
     if (info.shrId == UINT32_MAX) {
         uint32_t shrId = notifyId;
         info.name[0] = '\0';
         const IpcNotifyCreatePara createPara = {
-            info.name, sizeof(info.name), static_cast<int32_t>(source->Id_()), source->DevGetTsId(), 0U, isCountNotify};
+            info.name,
+            IPC_NOTIFY_NAME_BUFFER_LEN,
+            static_cast<int32_t>(source->Id_()),
+            source->DevGetTsId(),
+            0U, // flag
+            isCountNotify,
+        };
         const rtError_t error = source->Driver_()->CreateIpcNotify(createPara, &shrId);
         ERROR_RETURN(
             error, "Failed to create cross-device event shared name, device_id=%u, notify_id=%u.", source->Id_(),
@@ -207,7 +213,7 @@ rtError_t GetOrCreateCrossEventSharedInfo(
     return RT_ERROR_NONE;
 }
 
-rtError_t DestroyCrossEventSharedInfo(Device* source, CrossEventSharedInfo& info)
+rtError_t DestroyCrossEventSharedInfo(const Device* source, CrossEventSharedInfo& info)
 {
     const std::lock_guard<std::mutex> lock(info.mutex);
     if (info.shrId == UINT32_MAX) {
@@ -234,15 +240,15 @@ static void ReleaseCrossEventWaitResource(TaskInfo* const task)
     info = {};
 }
 
-static rtError_t PrepareCrossEventWait(Device* const target, CrossEventWaitInfo& info, uint64_t& addr)
+static rtError_t PrepareCrossEventWait(const Device* const target, CrossEventWaitInfo& info, uint64_t& addr)
 {
     uint32_t isPod = 0U;
     uint32_t adcDieId = 0U;
-    const uint32_t flag = RT_NOTIFY_IMPORT_FLAG_ENABLE_PEER_ACCESS;
+    constexpr uint32_t flag = RT_NOTIFY_IMPORT_FLAG_ENABLE_PEER_ACCESS;
     const IpcNotifyOpenPara open = {info.name, flag, target->Id_(), target->DevGetTsId(), info.isCountNotify};
     rtError_t error = target->Driver_()->OpenIpcNotify(open, &info.phyId, &info.shrId, &info.tsId, &isPod, &adcDieId);
     COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
-    ScopeGuard closeNotify([&]() {
+    ScopeGuard closeNotify([target, &info]() {
         (void)target->Driver_()->CloseIpcNotify(info.name, static_cast<int32_t>(target->Id_()), info.shrId, info.tsId);
     });
     COND_RETURN_WARN(
@@ -260,7 +266,7 @@ static rtError_t PrepareCrossEventWait(Device* const target, CrossEventWaitInfo&
     return target->Driver_()->EnableP2PNotify(target->Id_(), info.phyId, flag);
 }
 
-rtError_t CheckEventBeforeWait(DavidEvent* const evt, Stream* const stm, bool& needWait)
+rtError_t CheckEventBeforeWait(DavidEvent* const evt, const Stream* const stm, bool& needWait)
 {
     COND_RETURN_WARN(
         evt->IsCapturing() || stm->IsCapturing(), RT_ERROR_FEATURE_NOT_SUPPORT,
@@ -300,7 +306,7 @@ rtError_t CrossEvtWait(DavidEvent* const evt, Stream* const stm)
 {
     const bool isCountNotify = evt->IsCntNotify();
     CrossEventWaitInfo info{};
-    rtError_t error = evt->GetCrossDeviceIpcName(info.name, sizeof(info.name));
+    rtError_t error = evt->GetCrossDeviceIpcName(info.name, IPC_NOTIFY_NAME_BUFFER_LEN);
     COND_RETURN_WITH_NOLOG(error != RT_ERROR_NONE, error);
     info.release = &ReleaseCrossEventWaitResource;
     info.isCountNotify = isCountNotify;
@@ -312,7 +318,7 @@ rtError_t CrossEvtWait(DavidEvent* const evt, Stream* const stm)
     }
     Stream* const target = tsk->stream;
     const uint32_t pos = tsk->id;
-    ScopeGuard rollback([&]() {
+    ScopeGuard rollback([tsk, target, pos, stm]() {
         TaskUnInitProc(tsk);
         TaskRollBack(target, pos);
         stm->StreamUnLock();

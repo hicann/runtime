@@ -827,7 +827,7 @@ static std::string DriverShrIdTypeToString(const uint32_t type)
         {SHR_ID_CNT_NOTIFY_TYPE, "SHR_ID_CNT_NOTIFY_TYPE"},
         {SHR_ID_TYPE_MAX, "SHR_ID_TYPE_MAX"},
     };
-    return EnumValueDescription(type, SHR_ID_TYPE_NAMES);
+    return EnumValueDescription(static_cast<int64_t>(type), SHR_ID_TYPE_NAMES);
 }
 
 static rtError_t OpenIpcNotifyWithFlag(

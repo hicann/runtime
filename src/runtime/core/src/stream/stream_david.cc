@@ -896,6 +896,18 @@ rtError_t DavidStream::ApplyCntNotifyId(int32_t& newEventId)
 
 CntNotifyRes* DavidStream::GetCntNotifyRes() { return cntNotifyRes_; }
 
+rtError_t DavidStream::GetCountNotifyIpcName(int32_t eventId, char* name, uint32_t len)
+{
+    const std::lock_guard<std::mutex> notifyLock(cntNotifyInfoLock_);
+    NULL_PTR_RETURN_MSG(cntNotifyRes_, RT_ERROR_INVALID_VALUE);
+    const uint32_t notifyId = cntNotifyRes_->GetNotifyId();
+    COND_RETURN_ERROR(
+        notifyId != static_cast<uint32_t>(eventId), RT_ERROR_INVALID_VALUE,
+        "Event notify ID does not match source stream count notify, stream_id=%d, event_id=%d, notify_id=%u.", Id_(),
+        eventId, notifyId);
+    return GetOrCreateCrossEventSharedInfo(Device_(), notifyId, true, cntNotifySharedInfo_, name, len);
+}
+
 uint32_t DavidStream::GetCurSqPos() const
 {
     if (IsSoftwareSqEnable() || IsAutoSplitSq()) {

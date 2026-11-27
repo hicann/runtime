@@ -20,7 +20,7 @@ void SaveTaskCommonInfo(TaskInfo* taskInfo, Stream* stm, uint32_t sqeNum = 1U);
 void TaskRollBack(Stream* const stm, uint32_t pos);
 rtError_t ProcAicpuTask(TaskInfo* submitTask);
 rtError_t SubmitTaskPostProc(Stream* const stm, uint32_t pos, bool isNeedStreamSync = false, int32_t timeout = -1);
-rtError_t CheckTaskCanSend(Stream* const stm);
+rtError_t CheckTaskCanSend(const Stream* const stm);
 } // namespace runtime
 } // namespace cce
 #endif // __CCE_RUNTIME_TASK_DAVID_HPP__

@@ -43,6 +43,7 @@ public:
     bool IsCntNotifyReachThreshold(void) override;
     rtError_t ApplyCntNotifyId(int32_t& newEventId) override;
     CntNotifyRes* GetCntNotifyRes();
+    rtError_t GetCountNotifyIpcName(int32_t eventId, char* name, uint32_t len);
     rtError_t ApplyCntValue(uint32_t& cntValue) override;
     rtError_t ResClear(uint64_t timeout = 0) override;
     uint32_t StarsGetMaxTryCount() const override;
@@ -118,8 +119,6 @@ public:
     rtError_t UpdateMemcpyTaskAndSqe(TaskInfo* task, Stream* const stream) const;
 
 private:
-    friend class DavidEvent;
-
     void BuildTraceEventForTask(TaskInfo* const task, const uint32_t flags, TraceEvent& record) const;
     rtError_t HandleTaskUpdate(
         TaskInfo* workTask, Model* model, uint8_t* sqeBufferBackup, uint32_t sendSqeNum) override;

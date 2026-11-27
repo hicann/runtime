@@ -593,7 +593,7 @@ rtError_t DavidSendTask(TaskInfo* taskInfo, Stream* const stm)
     return drvRet != DRV_ERROR_NONE ? RT_ERROR_DRV_ERR : RT_ERROR_NONE;
 }
 
-rtError_t CheckTaskCanSend(Stream* const stm)
+rtError_t CheckTaskCanSend(const Stream* const stm)
 {
     COND_RETURN_AND_MSG_OUTER(
         (!stm->IsSoftwareSqEnable() && stm->GetBindFlag() && (stm->Model_() != nullptr) && stm->isModelComplete),

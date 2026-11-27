@@ -231,7 +231,7 @@ void ConstructStarsSqeForConditionNotifyWait(TaskInfo* taskInfo, uint8_t* const 
     Construct2ndSqeForCaptureConditionTask(taskInfo, RtPtrToPtr<rtStarsSqe_t*>(command));
 }
 
-rtError_t CheckTaskCanSend(Stream* const stm)
+rtError_t CheckTaskCanSend(const Stream* const stm)
 {
     UNUSED(stm);
     return RT_ERROR_NONE;

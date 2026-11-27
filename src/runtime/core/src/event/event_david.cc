@@ -115,15 +115,7 @@ rtError_t DavidEvent::GetCrossDeviceIpcName(char* name, uint32_t len)
     ERROR_RETURN(error, "Failed to get source stream for count notify sharing, stream_id=%d.", sourceStreamId);
     auto* const davidStream = dynamic_cast<DavidStream*>(sourceStream.get());
     NULL_PTR_RETURN_MSG(davidStream, RT_ERROR_STREAM_NULL);
-    const std::lock_guard<std::mutex> notifyLock(davidStream->cntNotifyInfoLock_);
-    NULL_PTR_RETURN_MSG(davidStream->cntNotifyRes_, RT_ERROR_INVALID_VALUE);
-    const uint32_t notifyId = davidStream->cntNotifyRes_->GetNotifyId();
-    COND_RETURN_ERROR(
-        notifyId != static_cast<uint32_t>(eventId_), RT_ERROR_INVALID_VALUE,
-        "Event notify ID does not match source stream count notify, stream_id=%d, event_id=%d, notify_id=%u.",
-        sourceStreamId, eventId_, notifyId);
-    return GetOrCreateCrossEventSharedInfo(
-        davidStream->Device_(), notifyId, true, davidStream->cntNotifySharedInfo_, name, len);
+    return davidStream->GetCountNotifyIpcName(eventId_, name, len);
 }
 
 rtError_t DavidEvent::GenEventId()

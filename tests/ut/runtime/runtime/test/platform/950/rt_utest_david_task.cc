@@ -3413,6 +3413,23 @@ TEST_F(TaskTestDavid, ConstructMemWaitValueInstr2ExWithDynamicProf_basic)
     ConstructMemWaitValueInstr2ExWithDynamicProf(fcEx, fcPara);
 }
 
+TEST_F(TaskTestDavid, MemWaitLoadInstructionMatchesAccessWidth)
+{
+    const auto checkLoadOp = [](const RtStarsWriteValueSizeType width, const rtStarsCondIsaLoadImmFunc3_t expected) {
+        RtStarsMemWaitValueInstrFcPara params = {};
+        params.awSize = static_cast<uint16_t>(width);
+        RtStarsMemWaitValueLastInstrFc result = {};
+        ConstructMemWaitValueInstr2(result, params);
+        EXPECT_EQ(result.loadValue.func3, expected) << "width=" << static_cast<uint16_t>(width);
+    };
+
+    checkLoadOp(RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT, RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LBU);
+    checkLoadOp(RT_STARS_WRITE_VALUE_SIZE_TYPE_16BIT, RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LHU);
+    checkLoadOp(RT_STARS_WRITE_VALUE_SIZE_TYPE_32BIT, RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LWU);
+    checkLoadOp(RT_STARS_WRITE_VALUE_SIZE_TYPE_64BIT, RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD);
+    checkLoadOp(RT_STARS_WRITE_VALUE_SIZE_TYPE_128BIT, RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD);
+}
+
 TEST_F(TaskTestDavid, ExternalWaitRebuildUsesOriginalTaskPosition)
 {
     TaskInfo taskInfo = {};
@@ -4739,8 +4756,9 @@ INSTANTIATE_TEST_SUITE_P(SqExecTimesAddr, SqExecTimesAddrFailureDavid, testing::
 
 TEST_F(TaskTestDavid, SqExecTimesAddrRejectedStreamDoesNotAllocateTask)
 {
+    const Stream* const expectedStream = stream_;
     MOCKER_CPP_VIRTUAL(device_, &Device::GetCtrlSQStream).stubs().will(returnValue(stream_));
-    MOCKER(CheckTaskCanSend).expects(once()).with(eq(stream_)).will(returnValue(RT_ERROR_STREAM_ABORT));
+    MOCKER(CheckTaskCanSend).expects(once()).with(eq(expectedStream)).will(returnValue(RT_ERROR_STREAM_ABORT));
     MOCKER_CPP(&Stream::AllocTask).expects(never());
     EXPECT_EQ(SendTaskToUnsetSqExecTimesAddr(device_), RT_ERROR_STREAM_ABORT);
     GlobalMockObject::verify();
