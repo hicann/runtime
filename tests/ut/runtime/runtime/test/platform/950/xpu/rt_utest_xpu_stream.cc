@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "gtest/gtest.h"
+#include <thread>
 #include "mockcpp/mockcpp.hpp"
 #include "xpu_context.hpp"
 #define private public
@@ -21,6 +22,7 @@
 #include "task_info.hpp"
 #include "stream_xpu_c.hpp"
 #include "task_xpu.hpp"
+#include "task_manager_xpu.hpp"
 #undef private
 #undef protected
 #include "xpu_stub.h"
@@ -28,6 +30,180 @@
 #include "../../../common/rt_utest_xpu_helper.hpp"
 
 using namespace cce::runtime;
+
+class XpuSubmitTest : public testing::Test {
+protected:
+    void SetUp() override
+    {
+        MOCKER_CPP(&XpuStream::XpuFreeStreamId).stubs();
+        MOCKER(ToConstructXpuSqe).stubs();
+    }
+    void TearDown() override { GlobalMockObject::verify(); }
+
+    void InitStream(XpuStream& stream)
+    {
+        stream.taskPublicBuffSize_ = 8U;
+        stream.taskPublicBuff_ = new uint32_t[8U]();
+        ASSERT_EQ(stream.CreateStreamTaskRes(), RT_ERROR_NONE);
+    }
+
+    TaskInfo* AllocTask(XpuStream& stream, uint32_t& pos)
+    {
+        TaskInfo* task = nullptr;
+        EXPECT_EQ(XpuAllocTaskInfo(&task, &stream, pos), RT_ERROR_NONE);
+        if (task != nullptr) {
+            XpuSaveTaskCommonInfo(task, &stream, pos);
+            task->needPostProc = true;
+        }
+        return task;
+    }
+};
+
+TEST_F(XpuSubmitTest, FailedPushRollsBackRegistrationBeforeTaskSlotReuse)
+{
+    XpuDevice device(0U);
+    XpuStream stream(&device, RT_STREAM_DEFAULT);
+    InitStream(stream);
+    stream.SetLastTaskId(17U);
+    MOCKER(TprtSqPushTask)
+        .expects(exactly(2))
+        .will(returnValue(static_cast<uint32_t>(TPRT_SQ_QUEUE_FULL)))
+        .then(returnValue(static_cast<uint32_t>(TPRT_SUCCESS)));
+    uint32_t pos = 0U;
+    TaskInfo* task = AllocTask(stream, pos);
+    ASSERT_NE(task, nullptr);
+    ASSERT_EQ(XpuSendTask(task, &stream), RT_ERROR_DRV_ERR);
+    EXPECT_EQ(stream.publicQueueHead_, stream.publicQueueTail_);
+    EXPECT_EQ(stream.GetLastTaskId(), 17U);
+    XpuTaskRollBack(&stream, pos);
+    EXPECT_EQ(stream.taskResMang_->GetResTail(), pos);
+    uint32_t retryPos = UINT32_MAX;
+    task = AllocTask(stream, retryPos);
+    ASSERT_NE(task, nullptr);
+    ASSERT_EQ(retryPos, pos);
+    ASSERT_EQ(XpuSendTask(task, &stream), RT_ERROR_NONE);
+    EXPECT_EQ(stream.publicQueueTail_, 1U);
+    EXPECT_EQ(stream.taskPublicBuff_[0U], pos);
+    EXPECT_EQ(stream.GetLastTaskId(), task->taskSn);
+    EXPECT_EQ(stream.DavidUpdatePublicQueue(), RT_ERROR_NONE);
+    EXPECT_EQ(stream.DavidUpdatePublicQueue(), RT_ERROR_STREAM_EMPTY);
+}
+
+TEST_F(XpuSubmitTest, FailedPushPreservesWrappedQueueAndLastTask)
+{
+    XpuDevice device(0U);
+    XpuStream stream(&device, RT_STREAM_DEFAULT);
+    InitStream(stream);
+    stream.publicQueueHead_ = 6U;
+    stream.publicQueueTail_ = 7U;
+    stream.taskPublicBuff_[6U] = 123U;
+    stream.SetLastTaskId(19U);
+    MOCKER(TprtSqPushTask).expects(once()).will(returnValue(static_cast<uint32_t>(TPRT_SQ_QUEUE_FULL)));
+    uint32_t pos = 0U;
+    TaskInfo* task = AllocTask(stream, pos);
+    ASSERT_NE(task, nullptr);
+    EXPECT_EQ(XpuSendTask(task, &stream), RT_ERROR_DRV_ERR);
+    EXPECT_EQ(stream.publicQueueHead_, 6U);
+    EXPECT_EQ(stream.publicQueueTail_, 7U);
+    EXPECT_EQ(stream.taskPublicBuff_[6U], 123U);
+    EXPECT_EQ(stream.GetLastTaskId(), 19U);
+    XpuTaskRollBack(&stream, pos);
+}
+
+TEST_F(XpuSubmitTest, FullPublicQueueRejectsBeforePush)
+{
+    XpuDevice device(0U);
+    XpuStream stream(&device, RT_STREAM_DEFAULT);
+    InitStream(stream);
+    stream.publicQueueTail_ = 7U;
+    MOCKER(TprtSqPushTask).expects(never());
+    uint32_t pos = 0U;
+    TaskInfo* task = AllocTask(stream, pos);
+    ASSERT_NE(task, nullptr);
+    EXPECT_EQ(XpuSendTask(task, &stream), RT_ERROR_STREAM_FULL);
+    EXPECT_EQ(stream.publicQueueTail_, 7U);
+    EXPECT_EQ(stream.GetLastTaskId(), MAX_UINT32_NUM);
+    XpuTaskRollBack(&stream, pos);
+}
+
+TEST_F(XpuSubmitTest, FailedTaskWithoutPostProcessingPreservesLastTask)
+{
+    XpuDevice device(0U);
+    XpuStream stream(&device, RT_STREAM_DEFAULT);
+    InitStream(stream);
+    MOCKER(TprtSqPushTask).expects(once()).will(returnValue(static_cast<uint32_t>(TPRT_SQ_QUEUE_FULL)));
+    uint32_t pos = 0U;
+    TaskInfo* task = AllocTask(stream, pos);
+    ASSERT_NE(task, nullptr);
+    task->needPostProc = false;
+    EXPECT_EQ(XpuSendTask(task, &stream), RT_ERROR_DRV_ERR);
+    EXPECT_EQ(stream.publicQueueHead_, stream.publicQueueTail_);
+    EXPECT_EQ(stream.GetLastTaskId(), MAX_UINT32_NUM);
+    XpuTaskRollBack(&stream, pos);
+}
+
+TEST_F(XpuSubmitTest, SuccessfulTaskWithoutPostProcessingCommitsLastTask)
+{
+    XpuDevice device(0U);
+    XpuStream stream(&device, RT_STREAM_DEFAULT);
+    InitStream(stream);
+    MOCKER(TprtSqPushTask).expects(once()).will(returnValue(static_cast<uint32_t>(TPRT_SUCCESS)));
+    uint32_t pos = 0U;
+    TaskInfo* task = AllocTask(stream, pos);
+    ASSERT_NE(task, nullptr);
+    task->needPostProc = false;
+    EXPECT_EQ(XpuSendTask(task, &stream), RT_ERROR_NONE);
+    EXPECT_EQ(stream.publicQueueHead_, stream.publicQueueTail_);
+    EXPECT_EQ(stream.GetLastTaskId(), task->taskSn);
+    EXPECT_EQ(stream.taskResMang_->GetResTail(), pos + 1U);
+}
+
+TEST_F(XpuSubmitTest, ExistingRegistrationRetainsQueueAndTaskAccounting)
+{
+    XpuDevice device(0U);
+    XpuStream stream(&device, RT_STREAM_DEFAULT);
+    InitStream(stream);
+    MOCKER(TprtSqPushTask).expects(never());
+    uint32_t pos = 0U;
+    TaskInfo* task = AllocTask(stream, pos);
+    ASSERT_NE(task, nullptr);
+    EXPECT_EQ(stream.StarsAddTaskToStream(task, task->sqeNum), RT_ERROR_NONE);
+    EXPECT_EQ(stream.publicQueueTail_, 1U);
+    EXPECT_EQ(stream.taskPublicBuff_[0U], pos);
+    EXPECT_EQ(stream.GetLastTaskId(), task->taskSn);
+}
+
+static XpuStream* submittingStream = nullptr;
+static uint32_t CheckRecycleExclusion(uint32_t, const TprtTaskSendInfo_t*)
+{
+    bool acquired = false;
+    std::thread recycler([&acquired]() {
+        acquired = submittingStream->publicTaskMutex_.try_lock();
+        if (acquired) {
+            submittingStream->publicTaskMutex_.unlock();
+        }
+    });
+    recycler.join();
+    EXPECT_FALSE(acquired);
+    return TPRT_SQ_QUEUE_FULL;
+}
+
+TEST_F(XpuSubmitTest, RecyclerCannotObservePendingPushRegistration)
+{
+    XpuDevice device(0U);
+    XpuStream stream(&device, RT_STREAM_DEFAULT);
+    InitStream(stream);
+    submittingStream = &stream;
+    MOCKER(TprtSqPushTask).expects(once()).will(invoke(CheckRecycleExclusion));
+    uint32_t pos = 0U;
+    TaskInfo* task = AllocTask(stream, pos);
+    ASSERT_NE(task, nullptr);
+    EXPECT_EQ(XpuSendTask(task, &stream), RT_ERROR_DRV_ERR);
+    EXPECT_EQ(stream.publicQueueHead_, stream.publicQueueTail_);
+    XpuTaskRollBack(&stream, pos);
+    submittingStream = nullptr;
+}
+
 class XpuStreamTest : public testing::Test {
 protected:
     static void SetUpTestCase()

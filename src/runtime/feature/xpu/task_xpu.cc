@@ -106,28 +106,21 @@ rtError_t XpuSendTask(TaskInfo* taskInfo, Stream* const stm)
         }
     }
     ToConstructXpuSqe(taskInfo, sqeAddr);
-    // update the host-side head and tail
-    const rtError_t error = stm->StarsAddTaskToStream(taskInfo, taskInfo->sqeNum);
-    if (error != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_ERROR, "Add task failed stream_id=%d, task_id=%u.", stm->Id_(), taskInfo->id);
-        return error;
-    }
-
     TprtTaskSendInfo_t sendInfo = {};
     sendInfo.sqeNum = taskInfo->sqeNum;
     sendInfo.sqId = sqId;
     sendInfo.sqeAddr = RtPtrToPtr<uint8_t*, TprtSqe_t*>(sqeAddr);
-    uint32_t result = TprtSqPushTask(devId, &sendInfo);
-    if (result == TPRT_SUCCESS) {
+    const rtError_t error = static_cast<XpuStream*>(stm)->SubmitTask(taskInfo, sendInfo);
+    if (error == RT_ERROR_NONE) {
         XpuSendTaskPostProc(stm, pos, taskInfo->sqeNum);
     }
     RT_LOG(
         RT_LOG_INFO,
         "device_id=%u, stream_id=%d, task_id=%hu, latest flip_num=%u, task_type=%u(%s),"
-        " drvRet=%u.",
+        " retCode=%#x.",
         devId, stm->Id_(), taskInfo->id, stm->GetTaskIdFlipNum(), static_cast<uint32_t>(taskInfo->type),
-        GetTaskDescByType(taskInfo->type), result);
-    return result != TPRT_SUCCESS ? RT_ERROR_DRV_ERR : RT_ERROR_NONE;
+        GetTaskDescByType(taskInfo->type), static_cast<uint32_t>(error));
+    return error;
 }
 
 rtError_t XpuCheckTaskCanSend(Stream* const stm)

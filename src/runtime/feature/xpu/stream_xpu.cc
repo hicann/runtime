@@ -15,6 +15,8 @@
 #include "base.hpp"
 #include "error_message_manage.hpp"
 #include "tprt_type.h"
+#include "tprt_api.h"
+#include "tprt_error_code.h"
 #include "task_res_da.hpp"
 #include "xpu_context.hpp"
 #include "thread_local_container.hpp"
@@ -98,8 +100,13 @@ rtError_t XpuStream::Setup(void)
 
 rtError_t XpuStream::AddTaskToList(const TaskInfo* const tsk)
 {
+    const std::lock_guard<std::mutex> stmLock(publicTaskMutex_);
+    return AddTaskToListLocked(tsk);
+}
+
+rtError_t XpuStream::AddTaskToListLocked(const TaskInfo* const tsk)
+{
     if (tsk->needPostProc == true) {
-        const std::lock_guard<std::mutex> stmLock(publicTaskMutex_);
         const uint32_t tail = (publicQueueTail_ + 1U) % taskPublicBuffSize_;
         if (unlikely(publicQueueHead_ == tail)) {
             RT_LOG(
@@ -117,6 +124,25 @@ rtError_t XpuStream::AddTaskToList(const TaskInfo* const tsk)
             streamId_, tsk->id, static_cast<int32_t>(tsk->type), tsk->typeName, publicQueueHead_, publicQueueTail_);
     }
 
+    return RT_ERROR_NONE;
+}
+
+rtError_t XpuStream::SubmitTask(TaskInfo* const tsk, const TprtTaskSendInfo_t& sendInfo)
+{
+    // The caller holds StreamLock. Keep recycling outside the registration/push transaction.
+    const std::lock_guard<std::mutex> stmLock(publicTaskMutex_);
+    const uint32_t previousTail = publicQueueTail_;
+    const rtError_t error = AddTaskToListLocked(tsk);
+    if (error != RT_ERROR_NONE) {
+        return error;
+    }
+    const uint32_t result = TprtSqPushTask(Device_()->Id_(), &sendInfo);
+    if (result != TPRT_SUCCESS) {
+        publicQueueTail_ = previousTail;
+        RT_LOG(RT_LOG_ERROR, "Push task failed, stream_id=%d, task_id=%hu, drvRet=%u.", streamId_, tsk->id, result);
+        return RT_ERROR_DRV_ERR;
+    }
+    SetLastTaskId(tsk->taskSn);
     return RT_ERROR_NONE;
 }
 

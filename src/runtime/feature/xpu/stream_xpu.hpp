@@ -11,6 +11,7 @@
 #define __CCE_RUNTIME_STREAM_XPU_HPP__
 #include "stream.hpp"
 #include "arg_manage_xpu.hpp"
+#include "tprt_type.h"
 
 namespace cce {
 namespace runtime {
@@ -21,6 +22,7 @@ public:
     rtError_t Setup(void) override;
     rtError_t TearDown(const bool terminal = false, bool flag = true) override;
     rtError_t AddTaskToList(const TaskInfo* const tsk) override;
+    rtError_t SubmitTask(TaskInfo* const tsk, const TprtTaskSendInfo_t& sendInfo);
     rtError_t StarsAddTaskToStream(TaskInfo* const tsk, const uint32_t sendSqeNum) override;
     rtError_t StarsGetPublicTaskHead(
         TaskInfo* workTask, const bool isTaskBind, const uint16_t tailTaskId, uint16_t* const delTaskId) override;
@@ -66,6 +68,9 @@ protected:
     uint32_t publicQueueHead_{0U};
     uint32_t publicQueueTail_{0U};
     uint32_t recycleFinishTaskId_{MAX_UINT32_NUM};
+
+private:
+    rtError_t AddTaskToListLocked(const TaskInfo* const tsk);
 };
 
 } // namespace runtime
