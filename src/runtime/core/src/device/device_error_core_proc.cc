@@ -1424,8 +1424,11 @@ void DeviceErrorProc::ProcessStarsTimeoutDfxSlotInfo(
         return;
     }
     StarsOneTimeoutSlotDfxInfo slotInfo = info->u.coreTimeoutDfxInfo.slotInfo[slotIdx];
-    const uint16_t streamId = slotInfo.streamId;
     const uint16_t taskId = slotInfo.taskId;
+    uint32_t streamId = slotInfo.streamId;
+    if ((slotInfo.sqId != UINT16_MAX) && (slotInfo.streamId == UINT16_MAX)) {
+        (void)dev->GetStreamSqCqManage()->GetStreamIdBySqId(slotInfo.sqId, streamId);
+    }
 
     TaskInfo* taskInfo = dev->GetTaskFactory()->GetTask(static_cast<int32_t>(streamId), taskId);
     if (taskInfo == nullptr) {
@@ -1464,8 +1467,11 @@ void DeviceErrorProc::ProcessStarsTimeoutDfxSlotInfo4FftsPlus(
         return;
     }
     StarsOneTimeoutSlotDfxInfo slotInfo = info->u.coreTimeoutDfxInfo.slotInfo[slotIdx];
-    const uint16_t streamId = slotInfo.streamId;
     const uint16_t taskId = slotInfo.taskId;
+    uint32_t streamId = slotInfo.streamId;
+    if ((slotInfo.sqId != UINT16_MAX) && (slotInfo.streamId == UINT16_MAX)) {
+        (void)dev->GetStreamSqCqManage()->GetStreamIdBySqId(slotInfo.sqId, streamId);
+    }
 
     TaskInfo* taskInfo = dev->GetTaskFactory()->GetTask(static_cast<int32_t>(streamId), taskId);
     if (taskInfo == nullptr) {

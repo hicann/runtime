@@ -689,6 +689,14 @@ rtError_t StarsEngine::MonitorTaskReclaim(uint16_t errorStreamId)
     if (stm->Context_() != nullptr) {
         Runtime::Instance()->SetInternalThreadContext(stm->Context_());
     }
+
+    if ((stm->Model_() != nullptr) && stm->Model_()->IsSupportDecoupling()) {
+        stm->SetNeedRecvCqeFlag(true);
+        stm->Device_()->WakeUpRecycleThread();
+        stm.reset();
+        return RT_ERROR_NONE;
+    }
+
     if (stm->GetPendingNum() == 0U || stm->IsBindDvppGrp()) {
         // dvpp task recycled by rtDvppWaitGroupReport
         stm.reset();
@@ -1487,7 +1495,9 @@ void StarsEngine::ProcLogicCqReport(const rtCqReport_t& logicCq, const bool isSt
                 faultTaskPtr->type != TS_TASK_TYPE_KERNEL_AICPU) { // Try to get ringbuffer for N-seconds fast recovery.
                 (void)GetDevice()->ProcDeviceErrorInfo(faultTaskPtr);
             }
-            if (!reportTask->stream->IsSeparateSendAndRecycle()) {
+            Stream* const stm = reportTask->stream;
+            const bool isSupportDecoupling = ((stm->Model_() != nullptr) && (stm->Model_()->IsSupportDecoupling()));
+            if ((!reportTask->stream->IsSeparateSendAndRecycle()) && (!isSupportDecoupling)) {
                 reportTask->stream->EnterFailureAbort();
             }
         } else {
@@ -1840,9 +1850,11 @@ void StarsEngine::RecycleThreadDo()
 
 void StarsEngine::ProcCqeForSinkStm(Stream* const stm)
 {
-    if ((!stm->IsExistCqe()) && (stm->GetCqePendingCnt() == 0U)) {
+    if ((!stm->IsExistCqe()) && (stm->GetCqePendingCnt() == 0U) && (stm->GetNeedRecvCqeFlag() == false)) {
         return;
     }
+
+    stm->SetNeedRecvCqeFlag(false);
     uint32_t taskId = MAX_UINT16_NUM;
     (void)ProcLogicCqUntilEmpty(stm, taskId);
 }

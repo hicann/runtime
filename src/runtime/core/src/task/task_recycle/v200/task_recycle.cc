@@ -319,9 +319,11 @@ rtError_t TaskReclaimForSeparatedStm(Stream* const stm)
 
 static void ProcCqeForSinkStm(Stream* const stm)
 {
-    if ((!stm->IsExistCqe()) && (stm->GetCqePendingCnt() == 0U)) {
+    if ((!stm->IsExistCqe()) && (stm->GetCqePendingCnt() == 0U) && (stm->GetNeedRecvCqeFlag() == false)) {
         return;
     }
+
+    stm->SetNeedRecvCqeFlag(false);
     ProcLogicCqUntilEmpty(stm);
 }
 

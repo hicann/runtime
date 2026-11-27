@@ -863,6 +863,7 @@ rtError_t DeviceErrorProc::ProcessReportRingBuffer(
 
     copySize = (copySize < elementSize) ? copySize : elementSize;
     StreamTaskId sTaskId;
+    uint32_t streamId = UINT32_MAX;
     std::shared_ptr<Stream> stm = nullptr;
     RingBufferElementInfo* info = nullptr;
     while (head != tail) {
@@ -884,7 +885,12 @@ rtError_t DeviceErrorProc::ProcessReportRingBuffer(
             continue;
         }
         GetStreamAndTaskIdFromErrorInfo(info->errorType, rbErrorInfo, sTaskId);
-        error = device_->GetStreamSqCqManage()->GetStreamSharedPtrById(static_cast<uint32_t>(sTaskId.streamId), stm);
+        streamId = sTaskId.streamId;
+        if ((info->sqId != UINT16_MAX) && (sTaskId.streamId == UINT16_MAX)) {
+            (void)device_->GetStreamSqCqManage()->GetStreamIdBySqId(info->sqId, streamId);
+        }
+
+        error = device_->GetStreamSqCqManage()->GetStreamSharedPtrById(streamId, stm);
         COND_RETURN_WITH_NOLOG((error != RT_ERROR_NONE), RT_ERROR_TASK_MONITOR);
 
         if ((stm->Flags() & RT_STREAM_CP_PROCESS_USE) == 0U) {
@@ -894,10 +900,11 @@ rtError_t DeviceErrorProc::ProcessReportRingBuffer(
     }
 
     COND_RETURN_WITH_NOLOG((stm == nullptr), RT_ERROR_TASK_MONITOR);
-    if (stm->Model_() != nullptr && stm->Model_()->GetExeStream() != nullptr) {
-        sTaskId.streamId = stm->Model_()->GetExeStream()->Id_();
+    if ((stm->Model_() != nullptr) && (stm->Model_()->GetExeStream() != nullptr) &&
+        !stm->Model_()->IsSupportDecoupling()) {
+        streamId = stm->Model_()->GetExeStream()->Id_();
     }
-    *errorStreamId = sTaskId.streamId;
+    *errorStreamId = streamId;
 
     if (stm->Model_() != nullptr && stm->Model_()->GetModelExecutorType() == MODEL_EXECUTOR_AICPU) {
         (void)ProcTaskErrorWithoutLock(nullptr, true);
@@ -911,8 +918,8 @@ rtError_t DeviceErrorProc::ProcessReportRingBuffer(
     }
 
     RT_LOG(
-        RT_LOG_INFO, "Monitor get stream_id=%hu, type=%u, device=%p, monitorflag=%u", sTaskId.streamId, info->errorType,
-        stm->Device_(), monitorFlag);
+        RT_LOG_INFO, "Monitor get stream_id=%hu, error stream_id=%u, type=%u, device=%p, monitorflag=%u",
+        sTaskId.streamId, streamId, info->errorType, stm->Device_(), monitorFlag);
     stm.reset();
     return RT_ERROR_TASK_MONITOR;
 }

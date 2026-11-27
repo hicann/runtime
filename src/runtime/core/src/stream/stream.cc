@@ -4808,7 +4808,8 @@ void Stream::EnterFailureAbort()
             return;
         }
     } else {
-        if (IsSeparateSendAndRecycle()) {
+        const bool isSupportDecoupling = ((Model_() != nullptr) && (Model_()->IsSupportDecoupling()));
+        if (IsSeparateSendAndRecycle() || isSupportDecoupling) {
             context_->PushContextErrMsg();
         }
         if (context_->GetCtxMode() != STOP_ON_FAILURE) {
