@@ -13,6 +13,7 @@
 #include "adump_platform_manager.h"
 #include "adx_dump_record.h"
 #include "common/thread.h"
+#include "component/adx_server_manager.h"
 #include "dump_manager.h"
 #include "file_utils.h"
 #include "operator_preliminary.h"
@@ -26,7 +27,8 @@ protected:
         ResetAllPlatformManagers();
         DumpManager::Instance().SetKFCInitStatus(false);
         DumpManager::operatorMap_.clear();
-        MOCKER(Thread::CreateDetachTaskWithDefaultAttr).stubs().will(returnValue(EN_OK));
+        MOCKER(Thread::CreateDetachTaskWithDefaultStack).stubs().will(returnValue(EN_OK));
+        MOCKER_CPP(&Adx::AdxServerManager::WaitServerInitted).stubs().will(returnValue(true));
         MOCKER(&AdxDumpRecord::RecordDumpDataToQueue).stubs().will(returnValue(true));
     }
 

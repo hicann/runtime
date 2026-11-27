@@ -102,6 +102,7 @@ target_compile_definitions(adx_soc_dump_utest PRIVATE
 
 target_link_libraries(adx_soc_dump_utest PRIVATE
     $<BUILD_INTERFACE:adx_utestonetrack_pub>
+    ${CMAKE_DL_LIBS}
 )
 
 target_compile_options(adx_soc_dump_utest PRIVATE

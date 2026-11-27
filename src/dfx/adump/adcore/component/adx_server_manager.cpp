@@ -473,7 +473,7 @@ bool AdxServerManager::LaunchComponentProcess(CommHandle& handle, SharedPtr<MsgP
         std::lock_guard<std::mutex> lck(processMtx_);
         ++processingNum_;
     }
-    const int32_t ret = Thread::CreateDetachTask(tid, funcBlock);
+    const int32_t ret = CreateDetachThreadTask(tid, funcBlock);
     if (ret != EN_OK) {
         {
             std::lock_guard<std::mutex> lck(processMtx_);

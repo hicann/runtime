@@ -40,7 +40,47 @@ int32_t Thread::CreateDetachTaskWithDefaultAttr(mmThread& tid, mmUserBlock_t& fu
     return mmCreateTaskWithThreadAttr(&tid, &funcBlock, &threadAttr);
 }
 
-Runnable::Runnable() : tid_(0), quit_(false), isStarted_(false), threadName_("adx") {}
+/**
+ * @brief create thread with system default stack size
+ * @param [out]tid : thread id
+ * @param [in]funcBlock : function name and parameter
+ *
+ * @return
+ *        EN_OK: succ
+ *        other: failed
+ */
+int32_t Thread::CreateTaskWithDefaultStack(mmThread& tid, mmUserBlock_t& funcBlock)
+{
+    return mmCreateTask(&tid, &funcBlock);
+}
+
+/**
+ * @brief create detach thread with system default stack size
+ * @param [out] tid : thread id
+ * @param [in]  funcBlock : function name and parameter
+ *
+ * @return
+ *        EN_OK: succ
+ *        other: failed
+ */
+int32_t Thread::CreateDetachTaskWithDefaultStack(mmThread& tid, mmUserBlock_t& funcBlock)
+{
+    return mmCreateTaskWithDetach(&tid, &funcBlock);
+}
+
+Runnable::Runnable() : tid_(0), quit_(false), isStarted_(false), threadName_("adx"), useDefaultStack_(false) {}
+
+int32_t Runnable::CreateThreadTask(mmThread& tid, mmUserBlock_t& funcBlock)
+{
+    return useDefaultStack_ ? Thread::CreateTaskWithDefaultStack(tid, funcBlock) :
+                              Thread::CreateTaskWithDefaultAttr(tid, funcBlock);
+}
+
+int32_t Runnable::CreateDetachThreadTask(mmThread& tid, mmUserBlock_t& funcBlock)
+{
+    return useDefaultStack_ ? Thread::CreateDetachTaskWithDefaultStack(tid, funcBlock) :
+                              Thread::CreateDetachTask(tid, funcBlock);
+}
 
 Runnable::~Runnable() { Stop(); }
 
@@ -54,7 +94,7 @@ int32_t Runnable::Start()
     funcBlock.procFunc = Runnable::Process;
     funcBlock.pulArg = this;
     quit_ = false;
-    int32_t ret = Thread::CreateTaskWithDefaultAttr(tid_, funcBlock);
+    int32_t ret = CreateThreadTask(tid_, funcBlock);
     if (ret != EN_OK) {
         tid_ = 0;
         return IDE_DAEMON_ERROR;
@@ -99,6 +139,8 @@ int32_t Runnable::Join()
 }
 
 bool Runnable::IsQuit() const { return quit_; }
+
+void Runnable::UseDefaultThreadStack() { useDefaultStack_ = true; }
 
 void Runnable::SetThreadName(const std::string& name) { threadName_ = name; }
 

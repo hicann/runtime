@@ -13,6 +13,7 @@
 #include "dump_config_converter.h"
 #include "dump_manager.h"
 #include "common/thread.h"
+#include "component/adx_server_manager.h"
 #include "adx_dump_record.h"
 #include "adump_pub.h"
 #include "adump_platform_manager.h"
@@ -270,7 +271,8 @@ protected:
     virtual void SetUp()
     {
         ResetAllPlatformManagers();
-        MOCKER(Thread::CreateDetachTaskWithDefaultAttr).stubs().will(returnValue(EN_OK));
+        MOCKER(Thread::CreateDetachTaskWithDefaultStack).stubs().will(returnValue(EN_OK));
+        MOCKER_CPP(&Adx::AdxServerManager::WaitServerInitted).stubs().will(returnValue(true));
         MOCKER(&AdxDumpRecord::RecordDumpDataToQueue).stubs().will(returnValue(true));
     }
     virtual void TearDown()

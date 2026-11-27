@@ -25,7 +25,7 @@ using namespace Adx;
 
 class ADX_DATADUMP_SERVER_UTEST : public testing::Test {
 protected:
-    virtual void SetUp() {}
+    virtual void SetUp() { MOCKER_CPP(&Adx::AdxServerManager::WaitServerInitted).stubs().will(returnValue(true)); }
     virtual void TearDown()
     {
         GlobalMockObject::verify();
@@ -97,8 +97,12 @@ TEST_F(ADX_DATADUMP_SERVER_UTEST, AdxDataDumpServerInit_CreateRecordProcess_Fail
 TEST_F(ADX_DATADUMP_SERVER_UTEST, AdxDataDumpServerInit_CreateServerProcess_Failed)
 {
     MOCKER(rtGetRunMode).stubs().will(returnValue(1));
-    MOCKER_CPP(&Thread::CreateDetachTaskWithDefaultAttr).stubs().will(returnValue(EN_ERROR));
+    MOCKER_CPP(&Thread::CreateDetachTaskWithDefaultStack).stubs().will(returnValue(EN_ERROR));
+    const std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
     EXPECT_EQ(IDE_DAEMON_ERROR, AdxDataDumpServerInit());
+    const std::chrono::milliseconds cost =
+        std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - begin);
+    EXPECT_LT(cost.count(), 5000);
     EXPECT_EQ(Adx::AdxDumpRecord::Instance().GetDumpInitNum(), 0);
     EXPECT_EQ(IDE_DAEMON_OK, AdxDataDumpServerUnInit());
     EXPECT_EQ(Adx::AdxDumpRecord::Instance().GetDumpInitNum(), 0);

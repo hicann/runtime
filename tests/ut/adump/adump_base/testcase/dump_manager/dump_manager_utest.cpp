@@ -16,6 +16,7 @@
 #include "dump_manager.h"
 #include "utils.h"
 #include "common/thread.h"
+#include "component/adx_server_manager.h"
 #include "rts/rts_snapshot.h"
 #include "adx_dump_record.h"
 #include "dump_stream_info.h"
@@ -40,7 +41,8 @@ protected:
     virtual void SetUp()
     {
         MOCKER(DumpResourceSafeMap::WaitInterval).stubs().will(invoke(WaitInterval_stub));
-        MOCKER(Thread::CreateDetachTaskWithDefaultAttr).stubs().will(returnValue(EN_OK));
+        MOCKER(Thread::CreateDetachTaskWithDefaultStack).stubs().will(returnValue(EN_OK));
+        MOCKER_CPP(&Adx::AdxServerManager::WaitServerInitted).stubs().will(returnValue(true));
         MOCKER(&AdxDumpRecord::RecordDumpDataToQueue).stubs().will(returnValue(true));
     }
     virtual void TearDown()
@@ -57,7 +59,6 @@ protected:
 
 TEST_F(DumpManagerUtest, Test_SetDumpConfig)
 {
-    MOCKER(Thread::CreateDetachTaskWithDefaultAttr).stubs().will(returnValue(EN_OK));
     int32_t ret = DumpManager::Instance().SetDumpConfig(nullptr, 0);
     EXPECT_EQ(ret, ADUMP_FAILED);
 
@@ -79,7 +80,6 @@ TEST_F(DumpManagerUtest, Test_SetDumpConfig)
 
 TEST_F(DumpManagerUtest, Test_UnSetDumpConfig)
 {
-    MOCKER(Thread::CreateDetachTaskWithDefaultAttr).stubs().will(returnValue(EN_OK));
     std::string validConfigData = ReadFileToString(JSON_BASE "datadump/dump_data_stats.json");
     int32_t ret = DumpManager::Instance().SetDumpConfig(validConfigData.c_str(), validConfigData.size());
     EXPECT_EQ(ret, ADUMP_SUCCESS);
@@ -98,7 +98,6 @@ TEST_F(DumpManagerUtest, Test_UnSetDumpConfig)
 // datadump 使能时，当前算子超时时间小于阈值，应延长至阈值并备份原值；关闭时恢复
 TEST_F(DumpManagerUtest, Test_AdjustAndRestoreOpExecuteTimeOut)
 {
-    MOCKER(Thread::CreateDetachTaskWithDefaultAttr).stubs().will(returnValue(EN_OK));
     (void)rtSetOpExecuteTimeOutWithMs(300U); // 小于阈值
     DumpManager::Instance().opTimeoutModified_ = false;
     DumpManager::Instance().originOpExecuteTimeOut_ = 0U;
@@ -119,7 +118,6 @@ TEST_F(DumpManagerUtest, Test_AdjustAndRestoreOpExecuteTimeOut)
 // datadump 使能时，当前算子超时时间不小于阈值，不修改也不备份
 TEST_F(DumpManagerUtest, Test_AdjustOpExecuteTimeOut_NoNeed)
 {
-    MOCKER(Thread::CreateDetachTaskWithDefaultAttr).stubs().will(returnValue(EN_OK));
     (void)rtSetOpExecuteTimeOutWithMs(OP_EXECUTE_TIMEOUT_FOR_DATADUMP_MS + 100U); // 不小于阈值
     DumpManager::Instance().opTimeoutModified_ = false;
     DumpManager::Instance().originOpExecuteTimeOut_ = 0U;
@@ -139,7 +137,6 @@ TEST_F(DumpManagerUtest, Test_AdjustOpExecuteTimeOut_NoNeed)
 // 获取算子超时时间失败时，调整失败导致使能失败，不备份
 TEST_F(DumpManagerUtest, Test_AdjustOpExecuteTimeOut_GetFailed)
 {
-    MOCKER(Thread::CreateDetachTaskWithDefaultAttr).stubs().will(returnValue(EN_OK));
     MOCKER(rtGetOpExecuteTimeoutV2).stubs().will(returnValue(static_cast<rtError_t>(1)));
     (void)rtSetOpExecuteTimeOutWithMs(300U);
     DumpManager::Instance().opTimeoutModified_ = false;
@@ -156,7 +153,6 @@ TEST_F(DumpManagerUtest, Test_AdjustOpExecuteTimeOut_GetFailed)
 // 调整时设置算子超时失败，使能失败，应保持未修改状态，不备份原值
 TEST_F(DumpManagerUtest, Test_AdjustOpExecuteTimeOut_SetFailed)
 {
-    MOCKER(Thread::CreateDetachTaskWithDefaultAttr).stubs().will(returnValue(EN_OK));
     (void)rtSetOpExecuteTimeOutWithMs(300U); // 小于阈值
     DumpManager::Instance().opTimeoutModified_ = false;
     DumpManager::Instance().originOpExecuteTimeOut_ = 0U;
@@ -177,7 +173,6 @@ TEST_F(DumpManagerUtest, Test_AdjustOpExecuteTimeOut_SetFailed)
 // 恢复时设置算子超时失败，应保持已修改状态，以便下次关闭时重试
 TEST_F(DumpManagerUtest, Test_RestoreOpExecuteTimeOut_SetFailed)
 {
-    MOCKER(Thread::CreateDetachTaskWithDefaultAttr).stubs().will(returnValue(EN_OK));
     (void)rtSetOpExecuteTimeOutWithMs(300U); // 小于阈值
     DumpManager::Instance().opTimeoutModified_ = false;
     DumpManager::Instance().originOpExecuteTimeOut_ = 0U;
@@ -444,7 +439,6 @@ TEST_F(DumpManagerUtest, Test_StartDumpArgs_CallbackNoDeadlock)
     int32_t ret = DumpManager::Instance().RegisterCallback(1001, CallbackWithLockAccess, CallbackWithLockAccess);
     EXPECT_EQ(ret, ADUMP_SUCCESS);
 
-    MOCKER(Thread::CreateDetachTaskWithDefaultAttr).stubs().will(returnValue(EN_OK));
     std::string validConfigData = ReadFileToString(JSON_BASE "datadump/dump_data_stats.json");
     ret = DumpManager::Instance().SetDumpConfig(validConfigData.c_str(), validConfigData.size());
     EXPECT_EQ(ret, ADUMP_SUCCESS);

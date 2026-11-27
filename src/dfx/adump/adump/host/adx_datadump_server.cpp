@@ -39,6 +39,7 @@ IdeThreadArg AdxDataDumpServerProcess(const IdeThreadArg arg)
     ret = g_manager.ComponentInit();
     IDE_CTRL_VALUE_FAILED(ret, return nullptr, "component Init error");
     g_manager.SetThreadName(std::string("adx_data_dump_thread"));
+    g_manager.UseDefaultThreadStack();
     g_manager.Start();
     (void)g_manager.Join();
     return nullptr;
@@ -101,12 +102,17 @@ int32_t AdxDataDumpServerInit()
     }
     funcBlock.procFunc = AdxDataDumpServerProcess;
     funcBlock.pulArg = nullptr;
-    ret = Thread::CreateDetachTaskWithDefaultAttr(tid, funcBlock);
-    (void)g_manager.WaitServerInitted();
-    if (ret == EN_OK) {
-        AdxDumpRecord::Instance().UpdateDumpInitNum(true);
+    ret = Thread::CreateDetachTaskWithDefaultStack(tid, funcBlock);
+    if (ret != EN_OK) {
+        IDE_LOGE("create detach task with default stack failed, ret=%d.", ret);
+        return IDE_DAEMON_ERROR;
     }
-    return (ret != EN_OK) ? IDE_DAEMON_ERROR : IDE_DAEMON_OK;
+    if (!g_manager.WaitServerInitted()) {
+        IDE_LOGE("wait dump server inited timeout.");
+        return IDE_DAEMON_ERROR;
+    }
+    AdxDumpRecord::Instance().UpdateDumpInitNum(true);
+    return IDE_DAEMON_OK;
 }
 
 int32_t AdxDataDumpServerUnInit()

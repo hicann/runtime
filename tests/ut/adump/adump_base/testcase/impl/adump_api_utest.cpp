@@ -21,6 +21,7 @@
 #include "adump_api.h"
 #include "sys_utils.h"
 #include "dump_manager.h"
+#include "component/adx_server_manager.h"
 #include "operator_dumper.h"
 #include "dump_file.h"
 #include "acl/acl_base.h"
@@ -40,7 +41,11 @@ using namespace Adx;
 // test dump_manager.cpp
 class AdumpApiUtest : public testing::Test {
 protected:
-    virtual void SetUp() { MOCKER(Thread::CreateDetachTaskWithDefaultAttr).stubs().will(returnValue(EN_OK)); }
+    virtual void SetUp()
+    {
+        MOCKER(Thread::CreateDetachTaskWithDefaultStack).stubs().will(returnValue(EN_OK));
+        MOCKER_CPP(&Adx::AdxServerManager::WaitServerInitted).stubs().will(returnValue(true));
+    }
     virtual void TearDown()
     {
         DumpManager::Instance().Reset();
@@ -585,7 +590,6 @@ TEST_F(AdumpApiUtest, Test_GetEnv_Exception)
 
 TEST_F(AdumpApiUtest, Test_AdumpSetDump)
 {
-    MOCKER(Thread::CreateDetachTaskWithDefaultAttr).stubs().will(returnValue(EN_OK));
     int32_t ret = AdumpSetDump(nullptr, 0);
     EXPECT_EQ(ret, ADUMP_FAILED);
 
@@ -788,7 +792,6 @@ TEST_F(AdumpApiUtest, Test_aclopStartDumpArgs_InvalidDumpType)
 
 TEST_F(AdumpApiUtest, Test_Callback_AdumpSetDump_AdumpUnSetDump)
 {
-    MOCKER(Thread::CreateDetachTaskWithDefaultAttr).stubs().will(returnValue(EN_OK));
     EXPECT_EQ(ADUMP_SUCCESS, AdumpRegisterCallback(11, AdumpCallbackFuncTest, AdumpCallbackFuncTest));
     std::string configData = ReadFileToString(JSON_BASE "datadump/dump_ge_tensor.json");
     int32_t ret = AdumpSetDump(configData.c_str(), configData.size());
@@ -811,7 +814,6 @@ TEST_F(AdumpApiUtest, Test_AdumpSetDump_Callback_AdumpUnSetDump)
 
 TEST_F(AdumpApiUtest, Test_Invalid_Callback_AdumpSetDump_AdumpUnSetDump)
 {
-    MOCKER(Thread::CreateDetachTaskWithDefaultAttr).stubs().will(returnValue(EN_OK));
     EXPECT_EQ(DumpManager::Instance().HandleDumpEvent(100, DumpEnableAction::DISABLE), ADUMP_FAILED);
     EXPECT_EQ(DumpManager::Instance().HandleDumpEvent(100, static_cast<DumpEnableAction>(10)), ADUMP_FAILED);
     EXPECT_EQ(ADUMP_FAILED, AdumpRegisterCallback(13, AdumpCallbackFuncTest, nullptr));

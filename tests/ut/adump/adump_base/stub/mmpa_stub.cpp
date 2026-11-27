@@ -277,6 +277,10 @@ INT32 mmCreateTaskWithThreadAttr(mmThread* threadHandle, const mmUserBlock_t* fu
     return 0;
 }
 
+INT32 mmCreateTask(mmThread* pstThreadHandle, mmUserBlock_t* pstFuncBlock) { return 0; }
+
+INT32 mmCreateTaskWithDetach(mmThread* pstThreadHandle, mmUserBlock_t* pstFuncBlock) { return 0; }
+
 mmSockHandle mmSocket(INT32 sockFamily, INT32 type, INT32 protocol) { return 1; }
 
 INT32 mmBind(mmSockHandle sockfd, mmSockAddr* addr, mmSocklen_t addrlen) { return 0; }

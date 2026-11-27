@@ -23,6 +23,8 @@ class Thread {
 public:
     static int32_t CreateTask(mmThread& tid, mmUserBlock_t& funcBlock);
     static int32_t CreateDetachTask(mmThread& tid, mmUserBlock_t& funcBlock);
+    static int32_t CreateTaskWithDefaultStack(mmThread& tid, mmUserBlock_t& funcBlock);
+    static int32_t CreateDetachTaskWithDefaultStack(mmThread& tid, mmUserBlock_t& funcBlock);
     static int32_t CreateTaskWithDefaultAttr(mmThread& tid, mmUserBlock_t& funcBlock);
     static int32_t CreateDetachTaskWithDefaultAttr(mmThread& tid, mmUserBlock_t& funcBlock);
 };
@@ -38,9 +40,12 @@ public:
     bool IsQuit() const;
     void SetThreadName(const std::string& name);
     const std::string& GetThreadName() const;
+    void UseDefaultThreadStack();
 
 protected:
     virtual void Run() = 0;
+    int32_t CreateThreadTask(mmThread& tid, mmUserBlock_t& funcBlock);
+    int32_t CreateDetachThreadTask(mmThread& tid, mmUserBlock_t& funcBlock);
 
 private:
     static IdeThreadArg Process(IdeThreadArg arg);
@@ -50,6 +55,7 @@ private:
     mutable bool quit_;
     mutable bool isStarted_;
     std::string threadName_;
+    bool useDefaultStack_;
 };
 } // namespace Adx
 #endif
