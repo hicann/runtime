@@ -279,7 +279,7 @@ rtError_t FillSegment(KeystreamSegment& segment, Stream* stream, const uint8_t* 
         const uint32_t batch = std::min(taskLen - launched, pagesPerLaunch);
         const size_t tasksBytes = static_cast<size_t>(batch) * sizeof(AiccKeystreamFillTask);
         std::vector<uint8_t> argsBlob(headerSize + tasksBytes, 0U);
-        auto* const param = reinterpret_cast<AiccKeystreamFillParam*>(argsBlob.data());
+        auto* const param = RtPtrToPtr<AiccKeystreamFillParam*>(argsBlob.data());
         param->keyAddr = key.keyAddr;
         param->keyLen = key.keyLen;
         param->algType = static_cast<uint32_t>(AICC_ALG_AES128_KEYSTREAM);

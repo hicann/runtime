@@ -44,21 +44,21 @@ private:
     rtError_t SetupTask(
         CCMemcpyTask& task, std::shared_ptr<Stream>& stream, CCStreamResManage*& resource, uint32_t& sliceNum);
     rtError_t ProcessSlices(
-        CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t sliceNum, void* pluginTaskCtx) const;
+        const CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t sliceNum, void* pluginTaskCtx) const;
     rtError_t RetireDoneH2DSlices(
         CCStreamResManage* const resource, uint32_t totalSlices, void* pluginTaskCtx, uint32_t& doneIdx) const;
     rtError_t ProcessTask(CCMemcpyTask& task);
     rtError_t ProcessTaskImpl(CCMemcpyTask& task);
     void FailTask(const CCMemcpyTask& task, const rtError_t ret) const;
     rtError_t ProcessH2DSlice(
-        CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t sliceIdx, size_t offset, size_t sliceSize,
+        const CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t sliceIdx, size_t offset, size_t sliceSize,
         void* pluginTaskCtx = nullptr) const;
     rtError_t PublishD2HSlice(
-        CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t sliceIdx, size_t offset, size_t sliceSize,
+        const CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t sliceIdx, size_t offset, size_t sliceSize,
         void* pluginTaskCtx = nullptr) const;
     rtError_t WaitD2HSliceDone(const uint32_t streamId, BarTaskQueue* const barQueue, const uint32_t sliceIdx) const;
     rtError_t ProcessD2HSlice(
-        CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t sliceIdx, size_t offset, size_t sliceSize,
+        const CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t sliceIdx, size_t offset, size_t sliceSize,
         uint32_t totalSlices, void* pluginTaskCtx = nullptr) const;
     rtError_t WaitDeviceRoundEnd(
         const uint32_t streamId, BarTaskQueue* const barQueue, const uint32_t totalSlices) const;

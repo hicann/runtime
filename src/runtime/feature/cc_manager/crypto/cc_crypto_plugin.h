@@ -55,10 +55,10 @@ public:
     virtual void OnTaskEnd(const CCMemcpyTask& task, uint32_t deviceId, uint32_t totalSlices, void* pluginTaskCtx);
     // Algorithm-private resource that must be ready before the first device kernel launch of a device.
     // The default is a no-op, so algorithms that need none (for example GCM) keep the base behavior.
-    virtual rtError_t EnsureLaunchResource(uint32_t deviceId);
+    virtual rtError_t EnsureLaunchResource(const uint32_t deviceId);
     // Release the resource acquired above; called while the plugin and the device runtime are still alive.
-    virtual void ReleaseLaunchResource(uint32_t deviceId);
-    virtual rtError_t LaunchTransfer(Stream* stm, uint64_t taskQueueAddr, const CCMemcpyTask& task) = 0;
+    virtual void ReleaseLaunchResource(const uint32_t deviceId);
+    virtual rtError_t LaunchTransfer(Stream* const stm, const uint64_t taskQueueAddr, const CCMemcpyTask& task) = 0;
 
     static rtError_t LaunchDeviceKernel(
         Stream* const stm, const char_t* const kernelName, void* const args, const uint32_t argsSize,

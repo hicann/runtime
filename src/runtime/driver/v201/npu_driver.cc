@@ -115,7 +115,8 @@ rtError_t SetModelNameWithCtrlMsg(Model* const mdl)
     constexpr size_t modelNameMaxLen = sizeof(modelNameIn.u.set_model_name_info.model_name);
     const size_t copyLen = std::min(modelName.length(), modelNameMaxLen - 1);
     const errno_t ret = memcpy_s(
-        const_cast<char*>(modelNameIn.u.set_model_name_info.model_name), modelNameMaxLen, modelName.c_str(), copyLen);
+        RtPtrToUnConstPtr<char*>(modelNameIn.u.set_model_name_info.model_name), modelNameMaxLen, modelName.c_str(),
+        copyLen);
     if (ret != EOK) {
         RT_LOG(RT_LOG_ERROR, "memcpy_s model name failed, retCode=%d, srcLen=%zu", ret, copyLen);
         return RT_ERROR_SEC_HANDLE;

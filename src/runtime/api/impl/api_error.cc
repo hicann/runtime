@@ -2279,8 +2279,9 @@ rtError_t ApiErrorDecorator::MemcpyAsync(
         IsUbDmaWithSubModel(stm, kind, src, dst), RT_ERROR_FEATURE_NOT_SUPPORT,
         "stream belongs to sub ACL Graph, does not support asynchronous memory copy.");
     if (isD2HorH2DInvolvePageableMemory || isH2HCopy) {
-        const char* captureRejectDesc = isH2HCopy ? "The H2H memory copy task does not support graph capture" :
-                                                    "The pageable memory copy task does not support graph capture";
+        [[maybe_unused]] const char* captureRejectDesc =
+            isH2HCopy ? "The H2H memory copy task does not support graph capture" :
+                        "The pageable memory copy task does not support graph capture";
         COND_RETURN_AND_MSG_OUTER(
             ((stm != nullptr) && (stm->IsCapturing())), RT_ERROR_INVALID_VALUE, ErrorCode::EE1016,
             "Asynchronous copy task", captureRejectDesc);
@@ -2352,8 +2353,8 @@ rtError_t ApiErrorDecorator::MemcpyAsyncPtr(
         "Performing asynchronous memory copy using the address description on the device", count,
         RtFmtMsg("(0, %u]", MAX_MEMCPY_SIZE_OF_D2D));
     if ((RtPtrToValue(memcpyAddrInfo) % 64ULL) != 0ULL) {
-        const char_t* const paramDesc = isMemcpyDesc ? "desc" : "memcpyAddrInfo";
-        const char_t* const funcDesc =
+        [[maybe_unused]] const char_t* const paramDesc = isMemcpyDesc ? "desc" : "memcpyAddrInfo";
+        [[maybe_unused]] const char_t* const funcDesc =
             isMemcpyDesc ? "Performing asynchronous memory copy using the memory copy descriptor" :
                            "Performing asynchronous memory copy using the address description on the device";
         RT_LOG_OUTER_MSG_IMPL(

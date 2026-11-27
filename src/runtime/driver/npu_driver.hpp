@@ -691,7 +691,7 @@ public:
     static rtError_t MemRetainAllocationHandle(void* virPtr, rtDrvMemHandle* handle);
     static rtError_t MemGetAllocationPropertiesFromHandle(rtDrvMemHandle handle, rtDrvMemProp_t* prop);
     static rtError_t MemGetAddressRange(void* ptr, void** pbase, size_t* psize);
-    static rtError_t MemRegisterUbSegment(const uint32_t deviceId, void* const addr, const size_t size);
+    static rtError_t MemRegisterUbSegment(const uint32_t deviceId, const void* const addr, const size_t size);
     static rtError_t HostGetDevicePointerAddrCount(uint32_t deviceId, uint32_t* count);
     static rtError_t HostGetDevicePointerAddrRange(uint32_t deviceId, rtAddrRange* addrRange, uint32_t* count);
     static rtError_t MemHandleSetAttribute(rtDrvMemHandle handle, HandleAttrType type, rtHandleAttr& attr);

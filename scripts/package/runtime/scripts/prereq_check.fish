@@ -12,8 +12,8 @@
 set -x MIN_PIP_VERSION 19
 set -x PYTHON_VERSION 3.7.5
 
-set -lx version (pip3 --version | cut -d" " -f2 | cut -d"." -f1)
-if test {$version} -lt {$MIN_PIP_VERSION}
+set -lx pip_version (pip3 --version | cut -d" " -f2 | cut -d"." -f1)
+if test {$pip_version} -lt {$MIN_PIP_VERSION}
     echo "pip3 version is lower than $MIN_PIP_VERSION.x.x"
 end
 

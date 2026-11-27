@@ -25,7 +25,7 @@ rtError_t CcInitAivKsKernel(uint32_t devId);
 // Clear the load state of this device; the next CC operation loads it again.
 void CcResetAivKsKernel(uint32_t devId);
 
-rtError_t CcLaunchAivKsXor(Stream* stm, const AiccKeystreamXorParam& param);
+rtError_t CcLaunchAivKsXor(Stream* const stm, const AiccKeystreamXorParam& param);
 
 } // namespace runtime
 } // namespace cce

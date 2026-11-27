@@ -38,7 +38,7 @@ std::mutex g_aivKsInitMutex;
 std::string ResolveKernelDir()
 {
     Dl_info info{};
-    if ((dladdr(reinterpret_cast<void*>(&ResolveKernelDir), &info) != 0) && (info.dli_fname != nullptr)) {
+    if ((dladdr(RtPtrToPtr<void*>(&ResolveKernelDir), &info) != 0) && (info.dli_fname != nullptr)) {
         const std::string self(info.dli_fname);
         const size_t slash = self.rfind('/');
         if (slash != std::string::npos) {

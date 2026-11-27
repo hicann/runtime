@@ -25,15 +25,15 @@ CCGcmPlugin::CCGcmPlugin(CCrypto* crypto)
 
 rtError_t CCGcmPlugin::PrepareH2DSlice(CCCryptoSliceCtx& ctx, size_t& dmaLen)
 {
-    auto* const desc = reinterpret_cast<AiccCryptoSliceDesc*>(ctx.desc);
+    auto* const desc = RtPtrToPtr<AiccCryptoSliceDesc*>(ctx.desc);
     if ((desc == nullptr) || (crypto_ == nullptr)) {
         return RT_ERROR_INVALID_VALUE;
     }
     desc->ciphertextLen = CC_CIPHER_HEADER_SIZE + static_cast<uint32_t>(ctx.sliceSize);
     size_t ctLen = 0U;
     const rtError_t ret = crypto_->Encrypt(
-        ctx.deviceId, Cipher(), static_cast<const uint8_t*>(ctx.src), ctx.sliceSize,
-        reinterpret_cast<const uint8_t*>(desc), sizeof(*desc), static_cast<uint8_t*>(ctx.hostBuf), &ctLen);
+        ctx.deviceId, Cipher(), static_cast<const uint8_t*>(ctx.src), ctx.sliceSize, RtPtrToPtr<const uint8_t*>(desc),
+        sizeof(*desc), static_cast<uint8_t*>(ctx.hostBuf), &ctLen);
     if (ret != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR, "CC GCM encrypt failed, slice=%u, ret=%#x", ctx.sliceIdx, ret);
         return ret;
@@ -44,7 +44,7 @@ rtError_t CCGcmPlugin::PrepareH2DSlice(CCCryptoSliceCtx& ctx, size_t& dmaLen)
 
 rtError_t CCGcmPlugin::PrepareD2HSlice(CCCryptoSliceCtx& ctx)
 {
-    auto* const desc = reinterpret_cast<AiccCryptoSliceDesc*>(ctx.desc);
+    auto* const desc = RtPtrToPtr<AiccCryptoSliceDesc*>(ctx.desc);
     if (desc == nullptr) {
         return RT_ERROR_INVALID_VALUE;
     }
@@ -54,14 +54,14 @@ rtError_t CCGcmPlugin::PrepareD2HSlice(CCCryptoSliceCtx& ctx)
 
 rtError_t CCGcmPlugin::FinishD2HSlice(CCCryptoSliceCtx& ctx)
 {
-    const auto* const desc = reinterpret_cast<const AiccCryptoSliceDesc*>(ctx.desc);
+    const auto* const desc = RtPtrToPtr<const AiccCryptoSliceDesc*>(ctx.desc);
     if ((desc == nullptr) || (crypto_ == nullptr)) {
         return RT_ERROR_INVALID_VALUE;
     }
     size_t ptLen = 0U;
     const rtError_t ret = crypto_->Decrypt(
         ctx.deviceId, Cipher(), static_cast<const uint8_t*>(ctx.hostBuf), desc->ciphertextLen,
-        reinterpret_cast<const uint8_t*>(desc), sizeof(*desc), static_cast<uint8_t*>(ctx.dst), &ptLen);
+        RtPtrToPtr<const uint8_t*>(desc), sizeof(*desc), static_cast<uint8_t*>(ctx.dst), &ptLen);
     if (ret != RT_ERROR_NONE) {
         RT_LOG(RT_LOG_ERROR, "CC GCM decrypt failed, slice=%u, ret=%#x", ctx.sliceIdx, ret);
     }

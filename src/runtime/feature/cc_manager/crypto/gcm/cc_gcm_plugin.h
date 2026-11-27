@@ -56,7 +56,7 @@ public:
     rtError_t PrepareH2DSlice(CCCryptoSliceCtx& ctx, size_t& dmaLen) override;
     rtError_t PrepareD2HSlice(CCCryptoSliceCtx& ctx) override;
     rtError_t FinishD2HSlice(CCCryptoSliceCtx& ctx) override;
-    rtError_t LaunchTransfer(Stream* stm, uint64_t taskQueueAddr, const CCMemcpyTask& task) override;
+    rtError_t LaunchTransfer(Stream* const stm, const uint64_t taskQueueAddr, const CCMemcpyTask& task) override;
 
 private:
     CCrypto* crypto_{nullptr}; // 加解密原语来源（Encrypt/Decrypt）

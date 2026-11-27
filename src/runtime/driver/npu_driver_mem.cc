@@ -200,7 +200,7 @@ rtError_t NpuDriver::FreeHostSharedMemory(rtFreeHostSharedMemoryIn* const in, co
     return RT_ERROR_NONE;
 }
 
-rtError_t NpuDriver::MemRegisterUbSegment(const uint32_t deviceId, void* const addr, const size_t size)
+rtError_t NpuDriver::MemRegisterUbSegment(const uint32_t deviceId, const void* const addr, const size_t size)
 {
     COND_PROC_RETURN_AND_MSG_OUTER(
         &halMemRegUbSegment == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT, ErrorCode::EE1015,
@@ -2369,7 +2369,7 @@ drvError_t NpuDriver::MemCopySyncAdapter(
         if (supported) {
             memcpy_info drvInfo = {};
             return halMemcpy(
-                dst, static_cast<size_t>(destMax), const_cast<void*>(src), static_cast<size_t>(size),
+                dst, static_cast<size_t>(destMax), RtPtrToUnConstPtr<void*>(src), static_cast<size_t>(size),
                 BuildDrvMemcpyInfo(kind, drvInfo, devId));
         }
     }
@@ -2452,7 +2452,7 @@ rtError_t NpuDriver::MemCopyAsync(
         RT_LOG(RT_LOG_INFO, "not support halMemCpyAsync api, use sync copy api.");
     } else {
         drvRet = halMemCpyAsync(
-            RtPtrToPtr<UINT64>(dst), destMax, RtPtrToPtr<UINT64>(src), size, const_cast<uint64_t*>(&copyFd));
+            RtPtrToPtr<UINT64>(dst), destMax, RtPtrToPtr<UINT64>(src), size, RtPtrToUnConstPtr<uint64_t*>(&copyFd));
         RT_LOG(
             RT_LOG_INFO,
             "call halMemCpyAsync success, destMax=%" PRIu64 ","
@@ -2533,7 +2533,7 @@ rtError_t NpuDriver::MemCopy2D(
     if (type == static_cast<uint32_t>(DEVMM_MEMCPY2D_SYNC)) {
         memCpy2DValue.copy2d.dst = RtPtrToPtr<UINT64*>(dst);
         memCpy2DValue.copy2d.dpitch = dstPitch;
-        memCpy2DValue.copy2d.src = RtPtrToPtr<UINT64*>(const_cast<void*>(src));
+        memCpy2DValue.copy2d.src = RtPtrToPtr<UINT64*>(RtPtrToUnConstPtr<void*>(src));
         memCpy2DValue.copy2d.spitch = srcPitch;
         memCpy2DValue.copy2d.width = width;
         memCpy2DValue.copy2d.height = height;
@@ -2542,7 +2542,7 @@ rtError_t NpuDriver::MemCopy2D(
         memCpy2DValue.copy2dAsync.copy2dInfo.direction = kind;
         memCpy2DValue.copy2dAsync.copy2dInfo.dst = RtPtrToPtr<UINT64*>(dst);
         memCpy2DValue.copy2dAsync.copy2dInfo.dpitch = dstPitch;
-        memCpy2DValue.copy2dAsync.copy2dInfo.src = RtPtrToPtr<UINT64*>(const_cast<void*>(src));
+        memCpy2DValue.copy2dAsync.copy2dInfo.src = RtPtrToPtr<UINT64*>(RtPtrToUnConstPtr<void*>(src));
         memCpy2DValue.copy2dAsync.copy2dInfo.spitch = srcPitch;
         memCpy2DValue.copy2dAsync.copy2dInfo.width = width;
         memCpy2DValue.copy2dAsync.copy2dInfo.height = height;

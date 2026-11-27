@@ -93,7 +93,7 @@ rtError_t CCCtrPlugin::FinishH2DSlice(CCCryptoSliceCtx& ctx)
 rtError_t CCCtrPlugin::PrepareD2HSlice(CCCryptoSliceCtx& ctx)
 {
     auto* state = static_cast<CtrTaskState*>(ctx.pluginTaskCtx);
-    auto* desc = reinterpret_cast<AiccKeystreamXorSliceDesc*>(ctx.desc); // 公共前缀布局兼容（offsetof 断言保证）
+    auto* desc = RtPtrToPtr<AiccKeystreamXorSliceDesc*>(ctx.desc); // 公共前缀布局兼容（offsetof 断言保证）
     if ((state == nullptr) || (desc == nullptr) || (ctx.sliceIdx >= state->size())) {
         return RT_ERROR_INVALID_VALUE;
     }

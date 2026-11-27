@@ -13,6 +13,7 @@
 #include <chrono>
 #include <thread>
 
+#include "base.hpp" // RtPtrToPtr（x86 SIMD 分支用）
 #include "securec.h"
 
 #if defined(__aarch64__)
@@ -70,15 +71,15 @@ void XorBytesOptimized(const uint8_t* inputA, const uint8_t* inputB, uint8_t* ou
 #elif defined(__x86_64__) || defined(_M_X64)
 #if defined(__AVX2__)
     for (; i + sizeof(__m256i) <= length; i += sizeof(__m256i)) {
-        const __m256i va = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(inputA + i));
-        const __m256i vb = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(inputB + i));
-        _mm256_storeu_si256(reinterpret_cast<__m256i*>(output + i), _mm256_xor_si256(va, vb));
+        const __m256i va = _mm256_loadu_si256(RtPtrToPtr<const __m256i*>(inputA + i));
+        const __m256i vb = _mm256_loadu_si256(RtPtrToPtr<const __m256i*>(inputB + i));
+        _mm256_storeu_si256(RtPtrToPtr<__m256i*>(output + i), _mm256_xor_si256(va, vb));
     }
 #endif
     for (; i + sizeof(__m128i) <= length; i += sizeof(__m128i)) {
-        const __m128i va = _mm_loadu_si128(reinterpret_cast<const __m128i*>(inputA + i));
-        const __m128i vb = _mm_loadu_si128(reinterpret_cast<const __m128i*>(inputB + i));
-        _mm_storeu_si128(reinterpret_cast<__m128i*>(output + i), _mm_xor_si128(va, vb));
+        const __m128i va = _mm_loadu_si128(RtPtrToPtr<const __m128i*>(inputA + i));
+        const __m128i vb = _mm_loadu_si128(RtPtrToPtr<const __m128i*>(inputB + i));
+        _mm_storeu_si128(RtPtrToPtr<__m128i*>(output + i), _mm_xor_si128(va, vb));
     }
 #endif
     for (; i + sizeof(uint64_t) <= length; i += sizeof(uint64_t)) {

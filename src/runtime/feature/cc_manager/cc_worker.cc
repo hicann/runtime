@@ -365,7 +365,7 @@ static void FillSliceDescCommon(AiccSliceDescBase* desc, const void* remoteAddr,
 }
 
 rtError_t CCWorker::ProcessSlices(
-    CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t sliceNum, void* pluginTaskCtx) const
+    const CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t sliceNum, void* pluginTaskCtx) const
 {
     size_t totalSize = task.totalSize;
     rtError_t ret = RT_ERROR_NONE;
@@ -433,7 +433,7 @@ rtError_t CCWorker::RetireDoneH2DSlices(
 }
 
 rtError_t CCWorker::ProcessH2DSlice(
-    CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t sliceIdx, size_t offset, size_t sliceSize,
+    const CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t sliceIdx, size_t offset, size_t sliceSize,
     void* pluginTaskCtx) const
 {
     BarTaskQueue* const barQueue = resource->BarQueue();
@@ -452,7 +452,7 @@ rtError_t CCWorker::ProcessH2DSlice(
     }
 
     alignas(CC_SLICE_DESC_ALIGN_BYTES) uint8_t descBuf[CC_SLICE_DESC_MAX_SIZE] = {0};
-    auto* desc = reinterpret_cast<AiccSliceDescBase*>(descBuf);
+    auto* desc = RtPtrToPtr<AiccSliceDescBase*>(descBuf);
     void* const deviceBuffer = DeviceBuffer(sliceIdx);
     FillSliceDescCommon(desc, static_cast<uint8_t*>(task.dst) + offset, sliceSize, sliceIdx);
     desc->ciphertextAddr = PtrToValue(deviceBuffer);
@@ -489,7 +489,7 @@ rtError_t CCWorker::ProcessH2DSlice(
 }
 
 rtError_t CCWorker::PublishD2HSlice(
-    CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t sliceIdx, size_t offset, size_t sliceSize,
+    const CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t sliceIdx, size_t offset, size_t sliceSize,
     void* pluginTaskCtx) const
 {
     BarTaskQueue* const barQueue = resource->BarQueue();
@@ -508,7 +508,7 @@ rtError_t CCWorker::PublishD2HSlice(
     }
 
     alignas(CC_SLICE_DESC_ALIGN_BYTES) uint8_t descBuf[CC_SLICE_DESC_MAX_SIZE] = {0};
-    auto* desc = reinterpret_cast<AiccSliceDescBase*>(descBuf);
+    auto* desc = RtPtrToPtr<AiccSliceDescBase*>(descBuf);
     void* const deviceBuffer = DeviceBuffer(sliceIdx);
     FillSliceDescCommon(desc, static_cast<const uint8_t*>(task.src) + offset, sliceSize, sliceIdx);
     desc->ciphertextAddr = PtrToValue(deviceBuffer);
@@ -536,7 +536,7 @@ rtError_t CCWorker::PublishD2HSlice(
 }
 
 rtError_t CCWorker::ProcessD2HSlice(
-    CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t sliceIdx, size_t offset, size_t sliceSize,
+    const CCMemcpyTask& task, CCStreamResManage* const resource, uint32_t sliceIdx, size_t offset, size_t sliceSize,
     uint32_t totalSlices, void* pluginTaskCtx) const
 {
     BarTaskQueue* const barQueue = resource->BarQueue();
@@ -561,7 +561,7 @@ rtError_t CCWorker::ProcessD2HSlice(
     }
 
     void* const deviceBuffer = DeviceBuffer(sliceIdx);
-    auto* const sliceDesc = reinterpret_cast<AiccSliceDescBase*>(
+    auto* const sliceDesc = RtPtrToPtr<AiccSliceDescBase*>(
         barQueue->taskDescList + (static_cast<size_t>(sliceIdx % barQueue->depth) * barQueue->taskDescSize));
     const uint32_t ciphertextLen = sliceDesc->ciphertextLen;
     drvError_t drvRet =

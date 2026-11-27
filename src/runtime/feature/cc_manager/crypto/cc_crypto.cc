@@ -255,7 +255,8 @@ int32_t AeadDecrypt(
         }
         total = static_cast<size_t>(len);
 
-        if (ssl.Api.CtxCtrl(ctx, EVP_CTRL_GCM_SET_TAG, static_cast<int>(tagSize), const_cast<uint8_t*>(tag)) != 1) {
+        if (ssl.Api.CtxCtrl(ctx, EVP_CTRL_GCM_SET_TAG, static_cast<int>(tagSize), RtPtrToUnConstPtr<uint8_t*>(tag)) !=
+            1) {
             ret = AICC_CRYPTO_AUTH_FAILURE;
             break;
         }

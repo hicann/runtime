@@ -130,7 +130,7 @@ rtError_t CCCryptoPlugin::LaunchDeviceKernel(
         COND_RETURN_ERROR(
             argsSize != sizeof(AiccKeystreamXorParam), RT_ERROR_INVALID_VALUE,
             "CC KeystreamXor args size %u is invalid.", argsSize);
-        return CcLaunchAivKsXor(stm, *reinterpret_cast<const AiccKeystreamXorParam*>(args));
+        return CcLaunchAivKsXor(stm, *RtPtrToPtr<const AiccKeystreamXorParam*>(args));
     }
     return LaunchBuiltinAicpuKernel(stm, kernelName, args, argsSize, coreDim);
 }

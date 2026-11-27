@@ -240,7 +240,7 @@ rtError_t GetBarTaskQueueDevAddr(BarTaskQueue* queue, uint64_t* devAddr)
     std::lock_guard<std::mutex> lock(g_barTaskQueueMetaMutex);
     const auto iter = g_barTaskQueueMetas.find(queue);
     COND_RETURN_ERROR(iter == g_barTaskQueueMetas.end(), RT_ERROR_INVALID_VALUE, "Bar task queue is not created.");
-    *devAddr = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(iter->second.devAddr));
+    *devAddr = RtPtrToValue(iter->second.devAddr);
     return RT_ERROR_NONE;
 }
 
