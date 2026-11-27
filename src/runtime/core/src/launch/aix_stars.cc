@@ -117,7 +117,7 @@ rtError_t InternalLaunchKernelPrepare(
         KernelAttrTypeToString(kernelAttrType).c_str(), RT_KERNEL_ATTR_TYPE_AICORE, RT_KERNEL_ATTR_TYPE_MIX);
     COND_RETURN_ERROR_MSG_INNER(
         kernelAttrType == RT_KERNEL_ATTR_TYPE_AICPU, RT_ERROR_FEATURE_NOT_SUPPORT,
-        "Launch kernel failed, not support CCE Aicpu kernel task, kernelAttrType=%s.",
+        "Launch kernel failed, CCE Aicpu kernel task is not supported, kernelAttrType=%s.",
         KernelAttrTypeToString(kernelAttrType).c_str());
 
     if (device->GetDevProperties().enabledTSNum == ENABLED_TS_NUM_2) {

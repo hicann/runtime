@@ -496,9 +496,7 @@ void DavidStream::DebugJsonPrintForModelStm(
     std::ofstream& outputFile, const uint32_t modelId, const bool isLastStm, const uint32_t flags)
 {
     if (!GetBindFlag()) {
-        RT_LOG(
-            RT_LOG_DEBUG, "Model debug json print unmatch, bindFlag=%d, device_id=%u, stream_id=%d.", GetBindFlag(),
-            device_->Id_(), Id_());
+        RT_LOG(RT_LOG_DEBUG, "non-model stream, device_id=%u, stream_id=%d.", device_->Id_(), Id_());
         return;
     }
 
@@ -1223,7 +1221,8 @@ rtError_t DavidStream::ResClear(uint64_t timeout)
                 "device_id=%u is down, clear stream_id=%u", device_->Id_(), streamId_);
             isForceRecycle_ = true;
             SetNeedRecvCqeFlag(false);
-            RT_LOG(RT_LOG_INFO, "stream_id=%d, pendingNum=%d, forcerecycle.", streamId_, taskResMang_->GetPendingNum());
+            RT_LOG(
+                RT_LOG_INFO, "force recycle, stream_id=%d, pendingNum=%d.", streamId_, taskResMang_->GetPendingNum());
             StreamSyncLock();
             if (IsSeparateSendAndRecycle()) {
                 StreamRecycleLock();

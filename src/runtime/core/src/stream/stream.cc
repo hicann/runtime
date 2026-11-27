@@ -2440,7 +2440,7 @@ rtError_t Stream::Query(void) const
         if ((latestTskId == UINT32_MAX) || (latestTskId != lastTaskId_)) {
             RT_LOG(
                 RT_LOG_DEBUG,
-                "Task not complete or query a invalid id,"
+                "Task not complete or query an invalid id,"
                 " stream_id=%d, latestTskId=%u, lastTaskId_=%u",
                 this->Id_(), latestTskId, lastTaskId_);
             return RT_ERROR_STREAM_NOT_COMPLETE;
@@ -2840,7 +2840,7 @@ int32_t Stream::GetRecycleTaskHeadId(const uint16_t tailTaskId, uint16_t& recycl
             streamId_, static_cast<uint32_t>(tailTaskId), static_cast<uint32_t>(recycleTaskId), earlyRecycleTaskHead_,
             taskTail_);
     } else {
-        RT_LOG(RT_LOG_INFO, "earlyRecycleTaskHead_ value is equal taskTail_[%u]", static_cast<uint32_t>(tailTaskId));
+        RT_LOG(RT_LOG_INFO, "earlyRecycleTaskHead_ value is equal to taskTail_[%u]", static_cast<uint32_t>(tailTaskId));
         return RT_ERROR_STREAM_EMPTY;
     }
     return RT_ERROR_NONE;
@@ -5100,11 +5100,7 @@ rtError_t Stream::ResClear(uint64_t timeout)
         RT_LOG_INFO, "stream_id=%d, pendingNum=%u, force recycle, recycle task begin.", streamId_, pendingNum_.Value());
     uint64_t tryCount = 0;
     constexpr uint64_t perDetectTimes = 1000U;
-    mmTimespec endCnt = {};
-    uint64_t endTime;
-    const mmTimespec startCnt = mmGetTickCount();
-    const uint64_t startTime =
-        static_cast<uint64_t>(startCnt.tv_sec) * RT_MS_PER_S + static_cast<uint64_t>(startCnt.tv_nsec) / RT_MS_TO_NS;
+    const uint64_t startTime = ClockGetTimeUs();
     while (pendingNum_.Value() > 0U) {
         COND_RETURN_ERROR_MSG_INNER(
             (device_->GetDevRunningState() == static_cast<uint32_t>(DEV_RUNNING_DOWN)), RT_ERROR_DRV_ERR,
@@ -5125,14 +5121,11 @@ rtError_t Stream::ResClear(uint64_t timeout)
         }
         tryCount++;
         if (timeout > 0 && tryCount % perDetectTimes == 0) {
-            endCnt = mmGetTickCount();
-            endTime = static_cast<uint64_t>(endCnt.tv_sec) * RT_MS_PER_S +
-                      static_cast<uint64_t>(endCnt.tv_nsec) / RT_MS_TO_NS;
+            const uint64_t timeCost = ClockGetTimeIntervalUs(startTime);
             COND_RETURN_ERROR_MSG_INNER(
-                ((endTime - startTime) > timeout), RT_ERROR_WAIT_TIMEOUT,
-                "Task reclaim timeout, "
-                "stream_id=%d, sq_id=%u, cq_id=%u, pendingNum=%u.",
-                streamId_, sqId_, cqId_, pendingNum_.Value());
+                (timeCost > timeout), RT_ERROR_WAIT_TIMEOUT,
+                "Task reclaim timeout, stream_id=%d, sq_id=%u, cq_id=%u, pendingNum=%u, timeout=%" PRIu64 "us.",
+                streamId_, sqId_, cqId_, pendingNum_.Value(), timeout);
         }
     }
     rtError_t error = RT_ERROR_NONE;
@@ -5878,7 +5871,9 @@ rtError_t Stream::StreamGetTasks(void** tasks, uint32_t* numTasks)
     for (const uint16_t taskId : taskIdList) {
         TaskInfo* task = taskFactory->GetTask(streamId_, taskId);
         if (task == nullptr) {
-            RT_LOG(RT_LOG_ERROR, "task is nullptr, deviceId=%u, streamId=%d.", device_->Id_(), streamId_);
+            RT_LOG(
+                RT_LOG_ERROR, "task is nullptr, device_id=%u, stream_id=%d, task_id=%u.", device_->Id_(), streamId_,
+                taskId);
             return RT_ERROR_INVALID_VALUE;
         }
         if (task->taskOwner == static_cast<uint8_t>(TaskOwner::RT_TASK_INNER)) {
