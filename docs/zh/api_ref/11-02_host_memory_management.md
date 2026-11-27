@@ -559,10 +559,10 @@ aclError aclrtHostGetDevicePointerAddrRange(aclrtAddrRange *addrRange, uint32_t 
 - Ascend 950DT系列产品：不支持
 <!-- end id974 -->
 <!-- npu="A3" id975 -->
-- Atlas A3系列产品：不支持
+- Atlas A3系列产品：支持
 <!-- end id975 -->
 <!-- npu="910b" id976 -->
-- Atlas A2系列产品：不支持
+- Atlas A2系列产品：支持
 <!-- end id976 -->
 <!-- npu="310b" id977 -->
 - Atlas 200I/500 A2推理产品：不支持
@@ -595,3 +595,9 @@ aclError aclrtHostGetDevicePointerAddrRange(aclrtAddrRange *addrRange, uint32_t 
 ### 返回值说明
 
 返回0表示成功，返回其他值表示失败，请参见[aclError](25-01_aclError.md#aclError)。
+
+<!-- npu="A3" id5011 -->
+### 约束说明
+
+对于Atlas A3系列产品，本接口仅支持PCIe（Peripheral Component Interconnect Express，高速外围组件互连）互连形态的设备。
+<!-- end id5011 -->
