@@ -322,6 +322,12 @@ struct DevProperties final {
     bool simtStackUseMaxDavidDieNum = false;
     bool modelScheduleSoftware = false;
     uint32_t userBufferSize = 0U;
+    // Local memory capacities in bytes; ini AICoreSpec values override these defaults.
+    uint32_t l0ASize = 65536U;
+    uint32_t l0BSize = 65536U;
+    uint32_t l0CSize = 262144U;
+    uint32_t l1Size = 524288U;
+    uint32_t ubSize = 262144U;
 };
 } // namespace runtime
 } // namespace cce

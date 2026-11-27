@@ -18,6 +18,8 @@
 
 #include "driver/ascend_hal.h"
 #include "runtime/rt.h"
+#include <map>
+#include <string>
 #include "gtest/gtest.h"
 #include "mockcpp/mockcpp.hpp"
 #define private public
@@ -96,9 +98,48 @@
 #include "david_sqe_adapter.hpp"
 #include "davinci_multiple_task.h"
 #include "kernel_utils.hpp"
+#include "ini_parse_utils.h"
 
 using namespace testing;
 using namespace cce::runtime;
+
+extern int32_t stubPlatformManagerV2GetSocSpec(
+    const std::string& socVersion, const std::string& label, const std::string& key, std::string& value);
+
+namespace {
+int32_t GetDebugMemorySocSpec(
+    const std::string& socVersion, const std::string& label, const std::string& key, std::string& value)
+{
+    if ((label != "AICoreSpec") || (socVersion == "missing")) {
+        return RT_ERROR_NOT_FOUND;
+    }
+    if (socVersion == "query_error") {
+        return RT_ERROR_INVALID_VALUE;
+    }
+    if (socVersion == "valid") {
+        const std::map<std::string, std::string> sizes = {
+            {"l0_a_size", "32768"},
+            {"l0_b_size", "131072"},
+            {"l0_c_size", "524288"},
+            {"l1_size", "1048576"},
+            {"ub_size", "253952"}};
+        const auto it = sizes.find(key);
+        if (it == sizes.end()) {
+            return RT_ERROR_NOT_FOUND;
+        }
+        value = it->second;
+    } else if (socVersion == "partial") {
+        if (key != "ub_size") {
+            return RT_ERROR_NOT_FOUND;
+        }
+        value = "253952";
+    } else {
+        value = socVersion;
+    }
+    return RT_ERROR_NONE;
+}
+
+} // namespace
 
 TEST(DavidAicpuSqeLayoutTest, KernelUserDataPreservesWireWords)
 {
@@ -1144,6 +1185,116 @@ TEST_F(TaskTestDavid, DebugReadAICore_l1_boundary)
     param.memLen = 1U;
     ApiImplDavid api;
     EXPECT_EQ(api.DebugReadAICore(&param), RT_ERROR_INVALID_VALUE);
+    GlobalMockObject::verify();
+}
+
+TEST_F(TaskTestDavid, DebugReadAICore_uses_independent_ini_memory_boundaries)
+{
+    Context* const ctx = Runtime::Instance()->CurrentContext();
+    ASSERT_NE(ctx, nullptr);
+    Device* const device = ctx->Device_();
+    ASSERT_NE(device, nullptr);
+    ASSERT_EQ(device->GetChipType(), CHIP_DAVID);
+    Driver* const driver = device->Driver_();
+    const DevProperties originalDeviceProps = device->GetDevProperties();
+    DevProperties originalProps;
+    ASSERT_EQ(GET_DEV_PROPERTIES(CHIP_DAVID, originalProps), RT_ERROR_NONE);
+    ScopeGuard restoreProperties([&]() {
+        SET_DEV_PROPERTIES(CHIP_DAVID, originalProps);
+        device->RefreshDevProperties(originalDeviceProps);
+    });
+
+    MOCKER(stubPlatformManagerV2GetSocSpec).stubs().will(invoke(GetDebugMemorySocSpec));
+    RtIniAttributes iniAttrs = {};
+    ParseIniFile("valid", iniAttrs);
+    ((Runtime*)Runtime::Instance())->UpdateDevPropertiesFromIniAttrs(CHIP_DAVID, iniAttrs);
+    DevProperties props;
+    ASSERT_EQ(GET_DEV_PROPERTIES(CHIP_DAVID, props), RT_ERROR_NONE);
+    device->RefreshDevProperties(props);
+    device->SetCoredumpEnable();
+
+    uint8_t buffer[4096U] = {};
+    uint8_t output = 0U;
+    void* deviceMemory = buffer;
+    MOCKER_CPP_VIRTUAL(driver, &Driver::DevMemAllocWithBackupFlag)
+        .expects(exactly(5))
+        .with(outBoundP(&deviceMemory, sizeof(deviceMemory)))
+        .will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::DevMemFree).expects(exactly(5)).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::MemSetSync).expects(exactly(5)).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::MemCopySync).expects(exactly(5)).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::DebugSqTaskSend).expects(exactly(10)).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(driver, &Driver::DebugCqReport).expects(exactly(10)).will(returnValue(RT_ERROR_NONE));
+
+    const std::pair<rtDebugMemoryType_t, uint64_t> boundaries[] = {
+        {RT_MEM_TYPE_L0A, 32768U},
+        {RT_MEM_TYPE_L0B, 131072U},
+        {RT_MEM_TYPE_L0C, 524288U},
+        {RT_MEM_TYPE_L1, 1048576U},
+        {RT_MEM_TYPE_UB, 253952U}};
+    ApiImplDavid api;
+    for (const auto& boundary : boundaries) {
+        SCOPED_TRACE(boundary.first);
+        rtDebugMemoryParam_t param = {};
+        param.debugMemType = boundary.first;
+        param.dstAddr = PtrToValue(&output);
+        param.srcAddr = boundary.second - 1U;
+        param.memLen = 1U;
+        EXPECT_EQ(api.DebugReadAICore(&param), RT_ERROR_NONE);
+        param.memLen = 2U;
+        EXPECT_EQ(api.DebugReadAICore(&param), RT_ERROR_INVALID_VALUE);
+        param.srcAddr = boundary.second;
+        param.memLen = 1U;
+        EXPECT_EQ(api.DebugReadAICore(&param), RT_ERROR_INVALID_VALUE);
+        param.srcAddr = UINT64_MAX;
+        EXPECT_EQ(api.DebugReadAICore(&param), RT_ERROR_INVALID_VALUE);
+        param.srcAddr = 1U;
+        param.memLen = UINT64_MAX;
+        EXPECT_EQ(api.DebugReadAICore(&param), RT_ERROR_INVALID_VALUE);
+    }
+    GlobalMockObject::verify();
+}
+
+TEST_F(TaskTestDavid, LocalMemoryIni_invalid_or_missing_values_keep_properties)
+{
+    DevProperties originalProps;
+    ASSERT_EQ(GET_DEV_PROPERTIES(CHIP_DAVID, originalProps), RT_ERROR_NONE);
+    ScopeGuard restoreProperties([&]() { SET_DEV_PROPERTIES(CHIP_DAVID, originalProps); });
+    MOCKER(stubPlatformManagerV2GetSocSpec).stubs().will(invoke(GetDebugMemorySocSpec));
+
+    for (const std::string& value : {"missing", "query_error", "invalid", "0", "-1", "4294967296"}) {
+        SCOPED_TRACE(value);
+        RtIniAttributes iniAttrs = {};
+        ParseIniFile(value, iniAttrs);
+        ((Runtime*)Runtime::Instance())->UpdateDevPropertiesFromIniAttrs(CHIP_DAVID, iniAttrs);
+        DevProperties props;
+        ASSERT_EQ(GET_DEV_PROPERTIES(CHIP_DAVID, props), RT_ERROR_NONE);
+        EXPECT_EQ(props.l0ASize, originalProps.l0ASize);
+        EXPECT_EQ(props.l0BSize, originalProps.l0BSize);
+        EXPECT_EQ(props.l0CSize, originalProps.l0CSize);
+        EXPECT_EQ(props.l1Size, originalProps.l1Size);
+        EXPECT_EQ(props.ubSize, originalProps.ubSize);
+    }
+    GlobalMockObject::verify();
+}
+
+TEST_F(TaskTestDavid, LocalMemoryIni_partial_config_only_updates_ub)
+{
+    DevProperties originalProps;
+    ASSERT_EQ(GET_DEV_PROPERTIES(CHIP_DAVID, originalProps), RT_ERROR_NONE);
+    ScopeGuard restoreProperties([&]() { SET_DEV_PROPERTIES(CHIP_DAVID, originalProps); });
+    MOCKER(stubPlatformManagerV2GetSocSpec).stubs().will(invoke(GetDebugMemorySocSpec));
+
+    RtIniAttributes iniAttrs = {};
+    ParseIniFile("partial", iniAttrs);
+    ((Runtime*)Runtime::Instance())->UpdateDevPropertiesFromIniAttrs(CHIP_DAVID, iniAttrs);
+    DevProperties props;
+    ASSERT_EQ(GET_DEV_PROPERTIES(CHIP_DAVID, props), RT_ERROR_NONE);
+    EXPECT_EQ(props.l0ASize, originalProps.l0ASize);
+    EXPECT_EQ(props.l0BSize, originalProps.l0BSize);
+    EXPECT_EQ(props.l0CSize, originalProps.l0CSize);
+    EXPECT_EQ(props.l1Size, originalProps.l1Size);
+    EXPECT_EQ(props.ubSize, 253952U);
     GlobalMockObject::verify();
 }
 

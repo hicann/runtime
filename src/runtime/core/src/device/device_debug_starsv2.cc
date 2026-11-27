@@ -27,14 +27,12 @@
 namespace cce {
 namespace runtime {
 
-constexpr uint64_t L0A_L0B_SIZE_V100 = 65536ULL; // L0B_SIZE相同
-constexpr uint64_t L0C_UB_SIZE_V100 = 262144ULL; // UB_SIZE相同
-constexpr uint64_t L1_SIZE_V100 = 524288ULL;
 constexpr uint64_t COREDUMP_MEM_SIZE = 4096ULL;
 
-static const std::map<rtDebugMemoryType_t, uint64_t> debugMemSizeMap = {
-    {RT_MEM_TYPE_L0A, L0A_L0B_SIZE_V100}, {RT_MEM_TYPE_L0B, L0A_L0B_SIZE_V100}, {RT_MEM_TYPE_L0C, L0C_UB_SIZE_V100},
-    {RT_MEM_TYPE_L1, L1_SIZE_V100},       {RT_MEM_TYPE_UB, L0C_UB_SIZE_V100},
+static const std::map<rtDebugMemoryType_t, uint32_t DevProperties::*> debugMemSizeMap = {
+    {RT_MEM_TYPE_L0A, &DevProperties::l0ASize}, {RT_MEM_TYPE_L0B, &DevProperties::l0BSize},
+    {RT_MEM_TYPE_L0C, &DevProperties::l0CSize}, {RT_MEM_TYPE_L1, &DevProperties::l1Size},
+    {RT_MEM_TYPE_UB, &DevProperties::ubSize},
 };
 
 constexpr uint32_t MAX_WARP_NUM_PER_VECTOR = 64U;
@@ -89,17 +87,18 @@ static uint32_t GetDieOffset(const Device* device, const uint32_t coreType, cons
     return (coreType == 0U) ? offsetBase : offsetBase + aicNumPerDie;
 }
 
-static rtError_t CheckMemoryParam(const rtDebugMemoryParam_t* const param)
+static rtError_t CheckMemoryParam(const rtDebugMemoryParam_t* const param, const DevProperties& properties)
 {
     NULL_PTR_RETURN_MSG(param, RT_ERROR_INVALID_VALUE);
     const auto& iter = debugMemSizeMap.find(param->debugMemType);
     if (iter != debugMemSizeMap.end()) {
-        const bool isValid = ((param->srcAddr + param->memLen) <= iter->second);
+        const uint64_t boundary = properties.*(iter->second);
+        const bool isValid = (param->srcAddr <= boundary) && (param->memLen <= boundary - param->srcAddr);
         COND_RETURN_ERROR(
             (!isValid), RT_ERROR_INVALID_VALUE,
             "The read memory boundary exceeds the hardware memory boundary of the specified memory type,"
             " debugMemType=%s(%d), srcAddr=0x%llx, memLen=%llu, boundary=%llu.",
-            DebugMemoryTypeName(param->debugMemType), param->debugMemType, param->srcAddr, param->memLen, iter->second);
+            DebugMemoryTypeName(param->debugMemType), param->debugMemType, param->srcAddr, param->memLen, boundary);
     }
     if (param->debugMemType == RT_MEM_TYPE_REGISTER) {
         COND_RETURN_ERROR(
@@ -208,7 +207,7 @@ rtError_t DebugReadAICore(const rtDebugMemoryParam_t* const param, const Device*
     NULL_PTR_RETURN(curDevice, RT_ERROR_DEVICE_NULL);
     COND_RETURN_ERROR((!curDevice->IsCoredumpEnable()), RT_ERROR_INVALID_VALUE, "Coredump mode is disabled.");
 
-    rtError_t ret = CheckMemoryParam(param);
+    rtError_t ret = CheckMemoryParam(param, curDevice->GetDevProperties());
     COND_RETURN_WITH_NOLOG((ret != RT_ERROR_NONE), ret);
     RT_LOG(
         RT_LOG_DEBUG,

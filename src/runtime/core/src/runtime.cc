@@ -567,6 +567,22 @@ void Runtime::UpdateDevPropertiesFromIniAttrs(const rtChipType_t chipTypeValue, 
         // no update to maxTaskNumPerStream
     }
 
+    if (iniAttrs.l0ASize != 0U) {
+        props.l0ASize = iniAttrs.l0ASize;
+    }
+    if (iniAttrs.l0BSize != 0U) {
+        props.l0BSize = iniAttrs.l0BSize;
+    }
+    if (iniAttrs.l0CSize != 0U) {
+        props.l0CSize = iniAttrs.l0CSize;
+    }
+    if (iniAttrs.l1Size != 0U) {
+        props.l1Size = iniAttrs.l1Size;
+    }
+    if (iniAttrs.ubSize != 0U) {
+        props.ubSize = iniAttrs.ubSize;
+    }
+
     props.npuArch = iniAttrs.npuArch;
     props.modelScheduleSoftware = (iniAttrs.modelScheduleSoftware == 1U);
 

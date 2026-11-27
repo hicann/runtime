@@ -22,19 +22,25 @@ namespace runtime {
 
 namespace {
 // Anonymous namespace keeps these helpers local to this translation unit.
-struct StreamFieldConfig {
+struct IniUint32FieldConfig {
     const char* fieldName;
     // Pointer-to-member: stores which RtIniAttributes field this ini item maps to.
     uint32_t RtIniAttributes::*target;
 };
 
 // constexpr makes the mapping table a compile-time constant with no runtime initialization.
-constexpr StreamFieldConfig kStreamFieldConfigs[] = {
+constexpr IniUint32FieldConfig kStreamFieldConfigs[] = {
     {"normal_stream_num", &RtIniAttributes::normalStreamNum},
     {"normal_stream_depth", &RtIniAttributes::normalStreamDepth},
     {"huge_stream_num", &RtIniAttributes::hugeStreamNum},
     {"huge_stream_depth", &RtIniAttributes::hugeStreamDepth},
     {"io_die_num", &RtIniAttributes::ioDieNum},
+};
+
+constexpr IniUint32FieldConfig kLocalMemoryFieldConfigs[] = {
+    {"l0_a_size", &RtIniAttributes::l0ASize}, {"l0_b_size", &RtIniAttributes::l0BSize},
+    {"l0_c_size", &RtIniAttributes::l0CSize}, {"l1_size", &RtIniAttributes::l1Size},
+    {"ub_size", &RtIniAttributes::ubSize},
 };
 
 } // namespace
@@ -132,6 +138,27 @@ static void GetArchInfoFromIniFile(const std::string& socVersion, RtIniAttribute
     RT_LOG(RT_LOG_INFO, "iniAttrs: socVersion=%s, npuArch=%ld.", socVersion.c_str(), iniAttrs.npuArch);
 }
 
+static void GetLocalMemorySpecFromIniFile(const std::string& socVersion, RtIniAttributes& iniAttrs)
+{
+    for (const auto& fieldConfig : kLocalMemoryFieldConfigs) {
+        uint32_t value = 0U;
+        const int32_t ret =
+            ReadIniUint32(socVersion, platform_config::kAICoreSpecSection, fieldConfig.fieldName, value);
+        if (ret == RT_ERROR_NOT_FOUND) {
+            continue;
+        }
+        if (ret != RT_ERROR_NONE) {
+            RT_LOG(
+                RT_LOG_WARNING, "Get local memory config[%s] failed for socVersion[%s], ret=%d, keep default.",
+                fieldConfig.fieldName, socVersion.c_str(), ret);
+            continue;
+        }
+        if (value != 0U) {
+            iniAttrs.*(fieldConfig.target) = value;
+        }
+    }
+}
+
 static void GetModelScheduleSoftwareFromIniFile(const std::string& socVersion, RtIniAttributes& iniAttrs)
 {
     std::string value;
@@ -159,6 +186,7 @@ void ParseIniFile(const std::string& socVersion, RtIniAttributes& iniAttrs)
     GetStreamSpecFromIniFile(socVersion, iniAttrs);
     GetArchInfoFromIniFile(socVersion, iniAttrs);
     GetModelScheduleSoftwareFromIniFile(socVersion, iniAttrs);
+    GetLocalMemorySpecFromIniFile(socVersion, iniAttrs);
 }
 
 } // namespace runtime

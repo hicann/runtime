@@ -27,6 +27,11 @@ struct RtIniAttributes {
     int64_t npuArch = 0;                 // ini version.NpuArch, 0 means invalid or uninitialized
     uint32_t ioDieNum = 0U;              // ini SoCInfo.io_die_num
     uint32_t modelScheduleSoftware = 0U; // ini SoCInfo.model_schedule_software, only 1 means enabled
+    uint32_t l0ASize = 0U;               // ini AICoreSpec.l0_a_size, bytes
+    uint32_t l0BSize = 0U;               // ini AICoreSpec.l0_b_size, bytes
+    uint32_t l0CSize = 0U;               // ini AICoreSpec.l0_c_size, bytes
+    uint32_t l1Size = 0U;                // ini AICoreSpec.l1_size, bytes
+    uint32_t ubSize = 0U;                // ini AICoreSpec.ub_size, bytes
 };
 
 class Stream;
