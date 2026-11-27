@@ -80,6 +80,9 @@ namespace {
 int32_t g_logCmdResponseMode = 0;
 std::string g_capturedCmd;
 std::string g_capturedEndMsg;
+std::string g_capturedSrcPath;
+std::string g_capturedDesPath;
+int g_capturedSendFileCount = 0;
 
 int32_t AdxCreateProcessCaptureStub(IdeString command)
 {
@@ -92,6 +95,18 @@ int32_t AdxSendEndMsgCaptureStub(const CommHandle* handle, CmdClassT type, IdeSt
     (void)handle;
     (void)type;
     g_capturedEndMsg.assign(data, len == 0U ? 0U : len - 1U);
+    return SYS_OK;
+}
+
+int32_t AdxSendFileByHandleCaptureStub(
+    AdxCommConHandle handle, CmdClassT type, AdxString srcPath, AdxString desPath, SendFileType flag)
+{
+    (void)handle;
+    (void)type;
+    (void)flag;
+    g_capturedSrcPath = srcPath;
+    g_capturedDesPath = desPath;
+    ++g_capturedSendFileCount;
     return SYS_OK;
 }
 
@@ -249,7 +264,7 @@ TEST_F(EP_FILE_DUMP_FUNC_UTEST, FileDumpTableIncludesCcuInfo)
         EXPECT_EQ(nullptr, info.scriptArgs);
         EXPECT_EQ(100000U, info.timeout);
         EXPECT_EQ(TYPE_10, info.type);
-        EXPECT_FALSE(info.isRoot);
+        EXPECT_TRUE(info.isRoot);
     }
     EXPECT_EQ(1U, foundCount);
 }
@@ -269,6 +284,25 @@ TEST_F(EP_FILE_DUMP_FUNC_UTEST, FileDumpTableIncludesNetworkInfo)
         EXPECT_EQ(40000U, info.timeout);
         EXPECT_EQ(TYPE_11, info.type);
         EXPECT_FALSE(info.isRoot);
+    }
+    EXPECT_EQ(1U, foundCount);
+}
+
+TEST_F(EP_FILE_DUMP_FUNC_UTEST, FileDumpTableIncludesPageowner)
+{
+    size_t foundCount = 0;
+    for (const auto& info : MSNPUREPORT_FILE_DUMP_INFO) {
+        if (std::string(info.label) != "pageowner_info") {
+            continue;
+        }
+        ++foundCount;
+        EXPECT_STREQ("pageowner_info", info.hostFilePath);
+        EXPECT_STREQ("pageowner_info", info.deviceFilePath);
+        EXPECT_STREQ("/var/sys_pageowner_log.sh", info.deviceScriptPath);
+        EXPECT_EQ(nullptr, info.scriptArgs);
+        EXPECT_EQ(60000U, info.timeout);
+        EXPECT_EQ(TYPE_12, info.type);
+        EXPECT_TRUE(info.isRoot);
     }
     EXPECT_EQ(1U, foundCount);
 }
@@ -400,6 +434,76 @@ TEST_F(EP_FILE_DUMP_FUNC_UTEST, LogGetFileTransfersKnownPathsAndRejectsInvalidPa
     std::vector<std::string> files;
     EXPECT_EQ(SYS_INVALID_PARAM, getFile.GetFileList("dvpp", files, 42));
     LogGetFile::g_numToPid.clear();
+}
+
+TEST_F(EP_FILE_DUMP_FUNC_UTEST, LogGetFileTransfersScriptDumpFileWithoutTmpFile)
+{
+    LogGetFile getFile;
+    ASSERT_EQ(SYS_OK, getFile.Init());
+    CommHandle handle = {};
+    handle.type = COMM_HDC;
+    handle.session = 1U;
+
+    const std::string source = "/home/HwHiAiUser/ide_daemon/pageowner_info/42/pageowner.log";
+    g_capturedSrcPath.clear();
+    g_capturedDesPath.clear();
+    g_capturedSendFileCount = 0;
+    MOCKER(AdxSendFileByHandle).stubs().will(invoke(AdxSendFileByHandleCaptureStub));
+    MOCKER_CPP(&LogFileUtils::CopyFileAndRename).expects(never());
+
+    EXPECT_EQ(SYS_OK, getFile.TransferFile(handle, "pageowner_info", source, 42));
+    EXPECT_EQ(source, g_capturedSrcPath);
+    EXPECT_EQ("/pageowner.log", g_capturedDesPath);
+    EXPECT_EQ(1, g_capturedSendFileCount);
+    LogGetFile::g_numToPid.clear();
+}
+
+TEST_F(EP_FILE_DUMP_FUNC_UTEST, LogGetFileKeepsTmpFileForNormalLogs)
+{
+    LogGetFile getFile;
+    ASSERT_EQ(SYS_OK, getFile.Init());
+    CommHandle handle = {};
+    handle.type = COMM_HDC;
+    handle.session = 1U;
+
+    const std::string source = "/var/log/npu/slog/device.log";
+    g_capturedSrcPath.clear();
+    g_capturedDesPath.clear();
+    g_capturedSendFileCount = 0;
+    MOCKER(AdxSendFileByHandle).stubs().will(invoke(AdxSendFileByHandleCaptureStub));
+    MOCKER_CPP(&LogFileUtils::CopyFileAndRename).stubs().will(returnValue(SYS_OK));
+    MOCKER_CPP(&LogGetFile::GetPathPrefix)
+        .stubs()
+        .with(mockcpp::any(), outBound(std::string("/var/log/npu/slog/")), mockcpp::any())
+        .will(returnValue(SYS_OK));
+
+    EXPECT_EQ(SYS_OK, getFile.TransferFile(handle, "slog", source, 42));
+    EXPECT_EQ(source + ".42.tmp", g_capturedSrcPath);
+    EXPECT_EQ("device.log", g_capturedDesPath);
+    EXPECT_EQ(1, g_capturedSendFileCount);
+    LogGetFile::g_numToPid.clear();
+}
+
+TEST_F(EP_FILE_DUMP_FUNC_UTEST, LogGetFileRejectsMovedScriptDumpPathPrefix)
+{
+    LogGetFile getFile;
+    CommHandle handle = {};
+    handle.type = COMM_HDC;
+    handle.session = 1U;
+
+    const std::string source = "/prefix/home/HwHiAiUser/ide_daemon/pageowner_info/42/pageowner.log";
+    g_capturedSrcPath.clear();
+    g_capturedDesPath.clear();
+    g_capturedSendFileCount = 0;
+    MOCKER(AdxSendFileByHandle).stubs().will(invoke(AdxSendFileByHandleCaptureStub));
+    MOCKER_CPP(&LogFileUtils::CopyFileAndRename).expects(never());
+
+    EXPECT_EQ(SYS_ERROR, getFile.TransferFile(handle, "pageowner_info", source, 42));
+    EXPECT_EQ(0, g_capturedSendFileCount);
+    EXPECT_TRUE(g_capturedSrcPath.empty());
+    EXPECT_TRUE(g_capturedDesPath.empty());
+    LogGetFile::g_numToPid.clear();
+    ResetErrLog();
 }
 
 TEST_F(EP_FILE_DUMP_FUNC_UTEST, LogGetFileHandlesMessagePreprocessAndClearFailures)
@@ -599,7 +703,7 @@ TEST_F(EP_FILE_DUMP_FUNC_UTEST, LogGetFileProcessExportsCcuInfoScript)
     ASSERT_NE(nullptr, request);
 
     EXPECT_EQ(SYS_OK, getFile.Process(handle, request));
-    EXPECT_EQ("/var/ccu_info_collect.sh 42", g_capturedCmd);
+    EXPECT_EQ("sudo /var/ccu_info_collect.sh 42", g_capturedCmd);
     EXPECT_EQ("game_over", g_capturedEndMsg);
     ResetErrLog();
 }
@@ -625,6 +729,32 @@ TEST_F(EP_FILE_DUMP_FUNC_UTEST, LogGetFileProcessExportsNetworkInfoScript)
 
     EXPECT_EQ(SYS_OK, getFile.Process(handle, request));
     EXPECT_EQ("/var/network_info_collect.sh 42", g_capturedCmd);
+    EXPECT_EQ("game_over", g_capturedEndMsg);
+    EXPECT_EQ(0, GetErrLogNum());
+    ResetErrLog();
+}
+
+TEST_F(EP_FILE_DUMP_FUNC_UTEST, LogGetFileProcessExportsPageownerScript)
+{
+    LogGetFile getFile;
+    ASSERT_EQ(SYS_OK, getFile.Init());
+    CommHandle handle = {};
+    handle.type = COMM_HDC;
+    handle.session = 1U;
+
+    g_capturedCmd.clear();
+    g_capturedEndMsg.clear();
+    MOCKER(LogIdeGetRunEnvBySession).stubs().will(invoke(LogIdeNonContainerCoverageStub));
+    MOCKER(LogIdeGetPidBySession).stubs().will(invoke(LogIdePidCoverageStub));
+    MOCKER_CPP(&LogFileUtils::IsFileExist).stubs().will(returnValue(true));
+    MOCKER_CPP(&LogFileUtils::IsDirExist).stubs().will(returnValue(false));
+    MOCKER(AdxCreateProcess).stubs().will(invoke(AdxCreateProcessCaptureStub));
+    MOCKER(AdxSendMsgByHandle).stubs().will(invoke(AdxSendEndMsgCaptureStub));
+    auto request = MakeFileRequest(MsgType::MSG_DATA, "pageowner_info");
+    ASSERT_NE(nullptr, request);
+
+    EXPECT_EQ(SYS_OK, getFile.Process(handle, request));
+    EXPECT_EQ("sudo /var/sys_pageowner_log.sh 42", g_capturedCmd);
     EXPECT_EQ("game_over", g_capturedEndMsg);
     EXPECT_EQ(0, GetErrLogNum());
     ResetErrLog();

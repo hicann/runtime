@@ -81,30 +81,36 @@ int32_t LogGetFile::TransferFile(
     const CommHandle& handle, const std::string& logType, const std::string& filePath, int32_t pid) const
 {
     std::string tmpSuffix;
-    std::string tmpFilePath;
-
-    if ((logType != EVENT_LOG) && (logType != MESSAGE_LOG)) {
+    std::string transferFilePath = filePath;
+    const bool isScriptDumpFile = !GetScriptDumpDevicePath(logType).empty();
+    const bool needTmpFile = (logType != EVENT_LOG) && (logType != MESSAGE_LOG) && !isScriptDumpFile;
+    if (needTmpFile) {
         tmpSuffix = "." + std::to_string(pid) + ".tmp";
-        tmpFilePath = filePath + tmpSuffix;
-        if (LogFileUtils::CopyFileAndRename(filePath, tmpFilePath) != SYS_OK) {
+        transferFilePath = filePath + tmpSuffix;
+        if (LogFileUtils::CopyFileAndRename(filePath, transferFilePath) != SYS_OK) {
             SELF_LOG_ERROR("copy target file to tmp file failed, %s", filePath.c_str());
             return SYS_ERROR;
         }
-    } else {
-        tmpFilePath = filePath;
     }
 
     int32_t result = SYS_ERROR;
     do {
         // match prefixPath, such as: /var/log/npu/slog or /var/log/npu/coredump or /var/log/npu/hisi_logs
         std::string matchStr;
-        if (GetPathPrefix(tmpFilePath, matchStr, pid) != SYS_OK) {
+        if (GetPathPrefix(transferFilePath, matchStr, pid) != SYS_OK) {
             break;
         }
-        // remove .tmp and prefixPath
+        // remove prefixPath and tmp suffix: GetPathPrefix only requires a substring hit, so the
+        // prefix may sit mid string or out length the path, guard it before substr
+        const size_t tmpSuffixLen = needTmpFile ? tmpSuffix.length() : 0U;
+        if ((transferFilePath.length() < (matchStr.length() + tmpSuffixLen)) ||
+            (transferFilePath.compare(0, matchStr.length(), matchStr) != 0)) {
+            SELF_LOG_ERROR("file path mismatch, path is %s, prefix is %s", transferFilePath.c_str(), matchStr.c_str());
+            break;
+        }
         std::string truncatedPath =
-            tmpFilePath.substr(matchStr.length(), tmpFilePath.length() - tmpSuffix.length() - matchStr.length());
-        int32_t err = TransferProcess(handle, logType, tmpFilePath, truncatedPath);
+            transferFilePath.substr(matchStr.length(), transferFilePath.length() - matchStr.length() - tmpSuffixLen);
+        int32_t err = TransferProcess(handle, logType, transferFilePath, truncatedPath);
         if (err != SYS_OK) {
             SELF_LOG_ERROR(" Send file name or file content failed, path is %s", truncatedPath.c_str());
             break;
@@ -112,8 +118,8 @@ int32_t LogGetFile::TransferFile(
         result = SYS_OK;
     } while (0);
 
-    if ((logType != EVENT_LOG) && (logType != MESSAGE_LOG)) {
-        (void)remove(tmpFilePath.c_str());
+    if (needTmpFile) {
+        (void)remove(transferFilePath.c_str());
     }
     return result;
 }
