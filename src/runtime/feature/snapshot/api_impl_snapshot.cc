@@ -30,7 +30,7 @@ ApiSnapshot* CreateImplSnapshotAndGet()
         RT_LOG(RT_LOG_ERROR, "create ApiImplSnapshot failed.");
         return nullptr;
     }
-    RT_LOG(RT_LOG_INFO, "ApiImplSnapshot:Runtime_alloc_size %zu", sizeof(ApiImplSnapshot));
+    RT_LOG(RT_LOG_INFO, "ApiImplSnapshot:Runtime_alloc_size %zu bytes", sizeof(ApiImplSnapshot));
     return apiImplSnapshot;
 }
 

@@ -606,8 +606,8 @@ aclError QueueProcessor::acltdtEnqueueData(
     const size_t userDataSize, const int32_t timeout, const uint32_t rsv)
 {
     ACL_LOG_INFO(
-        "Start to enqueue data qid is %u, dataSize is %zu, userDataSize is %zu, "
-        "timeout is %d, rsv is %u",
+        "Start to enqueue data qid is %u, dataSize is %zu bytes, userDataSize is %zu bytes, "
+        "timeout is %d ms, rsv is %u",
         qid, dataSize, userDataSize, timeout, rsv);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(data);
     ACL_REQUIRES_POSITIVE_REPORT(dataSize);
@@ -643,8 +643,8 @@ aclError QueueProcessor::acltdtDequeueData(
     const size_t userDataSize, const int32_t timeout)
 {
     ACL_LOG_INFO(
-        "Start to dequeue data qid is %u, dataSize is %zu, userDataSize is %zu, "
-        "timeout is %d,",
+        "Start to dequeue data qid is %u, dataSize is %zu bytes, userDataSize is %zu bytes, "
+        "timeout is %d ms",
         qid, dataSize, userDataSize, timeout);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(data);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(retDataSize);

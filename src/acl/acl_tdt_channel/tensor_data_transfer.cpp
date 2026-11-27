@@ -101,7 +101,7 @@ void* GetFunction(const std::string& func_name)
 #else
     static void* handler = GetHandler();
     if (handler == nullptr) {
-        ACL_LOG_ERROR("Get handler failed when get %s function.", func_name.c_str());
+        ACL_LOG_ERROR("Get handler failed when getting %s function.", func_name.c_str());
         return nullptr;
     }
     (void)mmDlerror();
@@ -698,7 +698,7 @@ aclError EnsureCurrentThreadHasContext(const acltdtChannelHandle* handle)
     }
     if (rtCtx == nullptr) {
         if (handle->ctx_ == nullptr) {
-            ACL_LOG_INFO("current thread need to create new context");
+            ACL_LOG_INFO("current thread needs to create a new context");
             ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(
                 rtCtxCreateEx(&rtCtx, static_cast<uint32_t>(RT_CTX_NORMAL_MODE), static_cast<int32_t>(handle->devId)),
                 rtCtxCreateEx);
@@ -726,11 +726,11 @@ static size_t GetMallocSize(const size_t bufLen)
 
 aclError GetOrMallocHostMem(const acltdtChannelHandle* handle, acltdtDataset* dataset, size_t bufLen, void*& hostPtr)
 {
-    ACL_LOG_INFO("current need size is %zu, current mem size is %zu", bufLen, dataset->sharedMemSize_);
+    ACL_LOG_INFO("current need size is %zu bytes, current mem size is %zu bytes", bufLen, dataset->sharedMemSize_);
     ACL_REQUIRES_OK(EnsureCurrentThreadHasContext(handle));
     if (bufLen > dataset->sharedMemSize_) {
         const size_t mallocSize = GetMallocSize(bufLen);
-        ACL_LOG_INFO("need malloc host size %zu, bufLen is %zu", mallocSize, bufLen);
+        ACL_LOG_INFO("need malloc host size %zu bytes, bufLen is %zu bytes", mallocSize, bufLen);
         void* outHostAddr = nullptr;
         ACL_REQUIRES_RTS_OK_WARN_NOT_SUPPORT(
             rtMallocHost(&outHostAddr, mallocSize, acl::ACL_MODE_ID_U16), rtMallocHost);
@@ -1223,7 +1223,7 @@ aclError acltdtSendTensor(const acltdtChannelHandle* handle, const acltdtDataset
     const auto ret = acl::TensorDatasetSerializes(dataset, itemVec);
     if (ret != ACL_SUCCESS) {
         ACL_LOG_INNER_ERROR(
-            "[Serialize][Dataset]Failed to TensorDatasetSerializes, device is %u, name is %s.", handle->devId,
+            "[Serialize][Dataset]Failed to serialize dataset, device is %u, name is %s.", handle->devId,
             handle->name.c_str());
         itemVec.clear();
         return ret;
@@ -1283,7 +1283,7 @@ aclError acltdtReceiveTensor(const acltdtChannelHandle* handle, acltdtDataset* d
     const auto ret = acl::TensorDatasetDeserializes(itemVec, dataset);
     if (ret != ACL_SUCCESS) {
         ACL_LOG_INNER_ERROR(
-            "[Deserialize][Dataset]Failed to TensorDatasetDeserializes, device is %u, name is %s.", handle->devId,
+            "[Deserialize][Dataset]Failed to deserialize dataset, device is %u, name is %s.", handle->devId,
             handle->name.c_str());
         return ret;
     }

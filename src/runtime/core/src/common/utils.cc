@@ -173,7 +173,7 @@ bool GetConfigIniValueDouble(const std::string& userFileName, const std::string&
 
     std::ifstream ifs(fileName, std::ifstream::in);
     if (!ifs.is_open()) {
-        RT_LOG(RT_LOG_INFO, "file %s does not exist or cannot access.", fileName.c_str());
+        RT_LOG(RT_LOG_INFO, "file %s does not exist or cannot be accessed.", fileName.c_str());
         return false;
     }
 
