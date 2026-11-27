@@ -1139,7 +1139,7 @@ static rtError_t GetOneAicoreQosCfg(const uint32_t deviceId, QosMasterConfigType
     int32_t bufSize = static_cast<int32_t>(sizeof(QosMasterConfigType));
     RT_LOG(
         RT_LOG_INFO,
-        "Begin get QOS info from halGetDeviceInfoByBuff, deviceId=%u, type=" RT_ENUM_LOG_FORMAT(
+        "Begin to get QOS info from halGetDeviceInfoByBuff, deviceId=%u, type=" RT_ENUM_LOG_FORMAT(
             "%u") ", moduleType=%d, infoType=%d.",
         deviceId, RT_ENUM_LOG_VALUE(static_cast<uint32_t>(aicoreQosCfg.type), QosMasterTypeToString(aicoreQosCfg.type)),
         MODULE_TYPE_QOS, INFO_TYPE_QOS_MASTER_CONFIG);
@@ -2648,7 +2648,7 @@ rtError_t RawDevice::ParseSimtPrintInfo()
     }
     rtError_t ret = RT_ERROR_NONE;
     if (simtPrintfAddr_ == nullptr) {
-        RT_LOG(RT_LOG_EVENT, "Printf addr is nullptr when parse simt print info, device_id=%u", deviceId_);
+        RT_LOG(RT_LOG_EVENT, "Printf addr is nullptr when parsing simt print info, device_id=%u", deviceId_);
         ret = InitSimtPrintInfo();
         COND_RETURN_ERROR(
             (ret != RT_ERROR_NONE), ret, "InitSimtPrintInfo failed, device_id=%u, ret=%u.", deviceId_, ret);
@@ -2676,7 +2676,7 @@ rtError_t RawDevice::ParseSimdPrintInfo()
     }
     rtError_t ret = RT_ERROR_NONE;
     if (printfAddr_ == nullptr) {
-        RT_LOG(RT_LOG_EVENT, "Printf addr is nullptr when parse simd print info, device_id=%u", deviceId_);
+        RT_LOG(RT_LOG_EVENT, "Printf addr is nullptr when parsing simd print info, device_id=%u", deviceId_);
         ret = InitPrintInfo();
         COND_RETURN_ERROR((ret != RT_ERROR_NONE), ret, "InitPrintInfo failed, device_id=%u, ret=%u.", deviceId_, ret);
     }

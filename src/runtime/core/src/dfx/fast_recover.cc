@@ -252,8 +252,9 @@ rtError_t DavidDeviceTaskAbort(const int32_t devId, const uint32_t time)
     ERROR_RETURN_MSG_INNER(error, "Failed to stop task delivery, retCode=%#x.", static_cast<uint32_t>(error));
     timeCost[++index] = ClockGetTimeIntervalUs(startTime);
     COND_RETURN_ERROR(
-        ((timeout != 0U) && (timeCost[index] >= timeout)), RT_ERROR_WAIT_TIMEOUT, "DeviceStop timeout, device_id=%d.",
-        devId);
+        ((timeout != 0U) && (timeCost[index] >= timeout)), RT_ERROR_WAIT_TIMEOUT,
+        "DeviceStop timeout, device_id=%d, timeCost=%" PRIu64 "us, timeout=%" PRIu64 "us.", devId, timeCost[index],
+        timeout);
 
     /* 2. Callback HCCL to stop MC2 expand */
     const uint64_t abortTimeout = (timeout != 0U) ? (timeout - timeCost[index]) : timeout;
@@ -264,8 +265,9 @@ rtError_t DavidDeviceTaskAbort(const int32_t devId, const uint32_t time)
         static_cast<uint32_t>(error));
     timeCost[++index] = ClockGetTimeIntervalUs(startTime);
     COND_RETURN_ERROR(
-        ((timeout != 0U) && (timeCost[index] >= timeout)), RT_ERROR_WAIT_TIMEOUT, "ABORT_PRE timeout, device_id=%d.",
-        devId);
+        ((timeout != 0U) && (timeCost[index] >= timeout)), RT_ERROR_WAIT_TIMEOUT,
+        "ABORT_PRE timeout, device_id=%d, timeCost=%" PRIu64 "us, timeout=%" PRIu64 "us.", devId, timeCost[index],
+        timeout);
 
     /* 3. Notice TS terminate all sq */
     error = DavidDeviceKill(devId, OP_ABORT_APP, (timeout != 0U) ? (timeout - timeCost[index]) : timeout);
@@ -273,8 +275,9 @@ rtError_t DavidDeviceTaskAbort(const int32_t devId, const uint32_t time)
         error, "Failed to notify the TS to terminate all tasks in the SQ, retCode=%#x.", static_cast<uint32_t>(error));
     timeCost[++index] = ClockGetTimeIntervalUs(startTime);
     COND_RETURN_ERROR(
-        ((timeout != 0U) && (timeCost[index] >= timeout)), RT_ERROR_WAIT_TIMEOUT, "Abort app timeout, device_id=%d.",
-        devId);
+        ((timeout != 0U) && (timeCost[index] >= timeout)), RT_ERROR_WAIT_TIMEOUT,
+        "Abort app timeout, device_id=%d, timeCost=%" PRIu64 "us, timeout=%" PRIu64 "us.", devId, timeCost[index],
+        timeout);
 
     /* 4. Query all single and model stream terminate/stop succ */
     const uint64_t queryAbortTimeRemain = (timeout != 0U) ? (timeout - timeCost[index]) : timeout;
@@ -284,8 +287,9 @@ rtError_t DavidDeviceTaskAbort(const int32_t devId, const uint32_t time)
         static_cast<uint32_t>(error));
     timeCost[++index] = ClockGetTimeIntervalUs(startTime);
     COND_RETURN_ERROR(
-        ((timeout != 0U) && (timeCost[index] >= timeout)), RT_ERROR_WAIT_TIMEOUT, "Query abort timeout, device_id=%d.",
-        devId);
+        ((timeout != 0U) && (timeCost[index] >= timeout)), RT_ERROR_WAIT_TIMEOUT,
+        "Query abort timeout, device_id=%d, timeCost=%" PRIu64 "us, timeout=%" PRIu64 "us.", devId, timeCost[index],
+        timeout);
 
     /* 5. Callback HCCL to clean all communication domain */
     error = rtInstance->TaskAbortCallBack(
@@ -295,8 +299,9 @@ rtError_t DavidDeviceTaskAbort(const int32_t devId, const uint32_t time)
         static_cast<uint32_t>(error));
     timeCost[++index] = ClockGetTimeIntervalUs(startTime);
     COND_RETURN_ERROR(
-        ((timeout != 0U) && (timeCost[index] >= timeout)), RT_ERROR_WAIT_TIMEOUT, "ABORT_POST timeout, device_id=%d.",
-        devId);
+        ((timeout != 0U) && (timeCost[index] >= timeout)), RT_ERROR_WAIT_TIMEOUT,
+        "ABORT_POST timeout, device_id=%d, timeCost=%" PRIu64 "us, timeout=%" PRIu64 "us.", devId, timeCost[index],
+        timeout);
 
     /* 6. Notice TS recover all stop sq */
     error = DavidDeviceKill(devId, OP_RECOVER_APP, (timeout != 0U) ? (timeout - timeCost[index]) : timeout);
@@ -304,8 +309,9 @@ rtError_t DavidDeviceTaskAbort(const int32_t devId, const uint32_t time)
         error, "Failed to notify the TS to restore the status of all SQs, retCode=%#x.", static_cast<uint32_t>(error));
     timeCost[++index] = ClockGetTimeIntervalUs(startTime);
     COND_RETURN_ERROR(
-        ((timeout != 0U) && (timeCost[index] >= timeout)), RT_ERROR_WAIT_TIMEOUT, "Recover app timeout, device_id=%d.",
-        devId);
+        ((timeout != 0U) && (timeCost[index] >= timeout)), RT_ERROR_WAIT_TIMEOUT,
+        "Recover app timeout, device_id=%d, timeCost=%" PRIu64 "us, timeout=%" PRIu64 "us.", devId, timeCost[index],
+        timeout);
 
     /* 7. Query all sq terminate succ */
     error = DavidDeviceQuery(devId, OP_QUERY_RECOVER_STATUS, (timeout != 0U) ? (timeout - timeCost[index]) : timeout);
@@ -315,7 +321,8 @@ rtError_t DavidDeviceTaskAbort(const int32_t devId, const uint32_t time)
     timeCost[++index] = ClockGetTimeIntervalUs(startTime);
     COND_RETURN_ERROR(
         ((timeout != 0U) && (timeCost[index] >= timeout)), RT_ERROR_WAIT_TIMEOUT,
-        "Query recover timeout, device_id=%d.", devId);
+        "Query recover timeout, device_id=%d, timeCost=%" PRIu64 "us, timeout=%" PRIu64 "us.", devId, timeCost[index],
+        timeout);
 
     /* 8. Resume device send */
     error = DeviceTaskSendResume(devId, (timeout != 0U) ? (timeout - timeCost[index]) : timeout);
@@ -323,8 +330,9 @@ rtError_t DavidDeviceTaskAbort(const int32_t devId, const uint32_t time)
         error, "Failed to restore the running status of Runtime, retCode=%#x.", static_cast<uint32_t>(error));
     timeCost[++index] = ClockGetTimeIntervalUs(startTime);
     COND_RETURN_ERROR(
-        ((timeout != 0U) && (timeCost[index] > timeout)), RT_ERROR_WAIT_TIMEOUT, "DeviceResume timeout, device_id=%d.",
-        devId);
+        ((timeout != 0U) && (timeCost[index] > timeout)), RT_ERROR_WAIT_TIMEOUT,
+        "DeviceResume timeout, device_id=%d, timeCost=%" PRIu64 "us, timeout=%" PRIu64 "us.", devId, timeCost[index],
+        timeout);
     return error;
 }
 
