@@ -432,7 +432,8 @@ rtError_t Model::ClearMemory()
     for (struct DMA_ADDR curDmaAddr : dmaAddrRecord_) {
         error = deviceDrv->MemDestroyAddr(&curDmaAddr);
         ERROR_RETURN_MSG_INNER(
-            error, "Free dma addr failed after convert memory address, retCode=%#x.", static_cast<uint32_t>(error));
+            error, "Failed to free DMA address after converting memory address, retCode=%#x.",
+            static_cast<uint32_t>(error));
     }
     dmaAddrRecord_.clear();
     for (void* const activeArgs : argActiveStreamRecord_) {
@@ -1507,7 +1508,9 @@ rtError_t Model::GetStreamToAsyncExecute(Stream* stm)
         executeGroupLocked = true;
     }
     error = SubmitExecuteTask(stm);
-    ERROR_GOTO_MSG_INNER(error, ERROR_RELEASE, "Failed to submit execution task, stream_id=%d.", stm->Id_());
+    ERROR_GOTO_MSG_INNER(
+        error, ERROR_RELEASE, "Failed to submit execution task, stream_id=%d, retCode=%#x.", stm->Id_(),
+        static_cast<uint32_t>(error));
 
     if ((dev->IsStarsPlatform()) && (GetModelExecutorType() != EXECUTOR_AICPU)) {
         error = EndGraphNtyWait(endGraphNotify_, stm, MAX_UINT32_NUM);
@@ -1549,7 +1552,7 @@ ERROR_RELEASE:
             error2 != RT_ERROR_NONE, "fail to destroy model exe stream, retCode=%#x", static_cast<uint32_t>(error2));
     }
 
-    RT_LOG(RT_LOG_ERROR, "Failed to execute model, model_id=%d!", id_);
+    RT_LOG(RT_LOG_ERROR, "Failed to execute model, model_id=%d, retCode=%#x.", id_, static_cast<uint32_t>(error));
     SetExeStream(nullptr);
     return error;
 }
@@ -1759,7 +1762,9 @@ rtError_t Model::PacketAllStreamInfo(rtAicpuModelInfo_t* const aicpuModelInfoIn)
     rtError_t error = deviceDrv->DevMemAllocWithBackupFlag(
         &streamInfoPtr_, streamInfoSize, RT_MEMORY_DEFAULT, dev->Id_(), DevMemBackupType::SNAPSHOT_OPTIONAL_BACKUP);
     if (error != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_ERROR, "Malloc stream info failed, modelId=%d, deviceId=%u!", id_, dev->Id_());
+        RT_LOG(
+            RT_LOG_ERROR, "Malloc stream info failed, modelId=%d, deviceId=%u, retCode=%#x.", id_, dev->Id_(),
+            static_cast<uint32_t>(error));
         DELETE_A(streamInfo);
         return error;
     }
@@ -2116,7 +2121,11 @@ rtError_t MdlAbort(Model* const mdl)
         RT_LOG_DEBUG, "Submit task to ts, model_id=%u, executor_flag=%u, stream_id=%d.", mdl->Id_(), executorFlag,
         streamObj->Id_());
     error = streamObj->Synchronize();
-    COND_RETURN_AND_MSG_OUTER(error == RT_ERROR_STREAM_SYNC_TIMEOUT, error, ErrorCode::EE1002, "model abort stream.");
+    COND_RETURN_AND_MSG_OUTER(
+        error == RT_ERROR_STREAM_SYNC_TIMEOUT, error, ErrorCode::EE1002,
+        RtFmtMsg(
+            "Failed to wait for the model abort task to complete, model_id=%u, stream_id=%d.", mdl->Id_(),
+            streamObj->Id_()));
     ERROR_RETURN_MSG_INNER(
         error, "Failed to synchronize model abort stream, retCode=%#x.", static_cast<uint32_t>(error));
     return RT_ERROR_NONE;
@@ -2244,7 +2253,7 @@ rtError_t Model::MallocDevString(const char_t* const str, void** ptr) const
     error = deviceDrv->MemSetSync(*ptr, devStrBufLen, 0U, devStrBufLen);
     if (error != RT_ERROR_NONE) {
         ERROR_GOTO(
-            error, FAIL_ALLOC, "Memset string failed, string=%s, size=%zu, retCode=%#x!", str, devStrBufLen,
+            error, FAIL_ALLOC, "Memset string failed, string=%s, size=%zu bytes, retCode=%#x!", str, devStrBufLen,
             static_cast<uint32_t>(error));
     }
 
@@ -2256,7 +2265,7 @@ rtError_t Model::MallocDevString(const char_t* const str, void** ptr) const
                 "The driver does not support synchronous host-to-device memory copy");
         }
         ERROR_GOTO(
-            error, FAIL_ALLOC, "Memory copy string failed, string=%s, size=%zu, retCode=%#x!", str, devStrLen,
+            error, FAIL_ALLOC, "Memory copy string failed, string=%s, size=%zu bytes, retCode=%#x!", str, devStrLen,
             static_cast<uint32_t>(error));
     }
 
@@ -2283,7 +2292,7 @@ rtError_t Model::MallocDevValue(const void* const data, const uint32_t size, voi
     if (error != RT_ERROR_NONE) {
         RT_LOG_INNER_MSG(
             RT_LOG_ERROR,
-            "Failed to allocate device memory, size=%u, kind=%u(RT_MEMORY_DEFAULT), "
+            "Failed to allocate device memory, size=%u bytes, kind=%u(RT_MEMORY_DEFAULT), "
             "retCode=%#x.",
             size, RT_MEMORY_DEFAULT, static_cast<uint32_t>(error));
         return error;
@@ -2291,7 +2300,8 @@ rtError_t Model::MallocDevValue(const void* const data, const uint32_t size, voi
 
     error = deviceDrv->MemSetSync(*ptr, static_cast<uint64_t>(size), 0U, static_cast<uint64_t>(size));
     if (error != RT_ERROR_NONE) {
-        ERROR_GOTO(error, FAIL_ALLOC, "Memset value failed, size=%u, retCode=%#x.", size, static_cast<uint32_t>(error));
+        ERROR_GOTO(
+            error, FAIL_ALLOC, "Memset value failed, size=%u bytes, retCode=%#x.", size, static_cast<uint32_t>(error));
     }
 
     error = deviceDrv->MemCopySync(
@@ -2323,7 +2333,7 @@ rtError_t Model::LabelAlloc(Label* const labelIn, uint16_t& labelId)
         isModelDelete_, RT_ERROR_LABEL_ALLOCATOR, ErrorCode::EE1018, "Label creation",
         "The model associated with the label has been destroyed");
     const rtError_t ret = labelAllocator_->LabelIdAlloc(labelId);
-    ERROR_RETURN_MSG_INNER(ret, "Failed to alloc label id.");
+    ERROR_RETURN_MSG_INNER(ret, "Failed to allocate label ID, retCode=%#x.", static_cast<uint32_t>(ret));
     labelMap_[labelId] = labelIn;
     return ret;
 }
