@@ -302,6 +302,23 @@ TEST_F(SYSTEM_MODE_RUNNER_UTEST, RunnerFileAndJobDirBatch)
     EXPECT_EQ(PROFILING_FAILED, runner.StartDeviceJobs("not-number"));
 }
 
+TEST_F(SYSTEM_MODE_RUNNER_UTEST, RunnerRecordOutPutUsesSecureWriteFile)
+{
+    auto params = std::make_shared<ProfileParams>();
+    params->result_dir = "/tmp/st_runner_record";
+    params->msprofBinPid = 123;
+    analysis::dvvp::runner::RuntimeSystemModeRunner runner(params, "PROF_record");
+    (void)system("rm -rf /tmp/st_runner_record && mkdir -p /tmp/st_runner_record");
+
+    EXPECT_EQ(PROFILING_SUCCESS, runner.RecordOutPut());
+    struct stat fileStat = {};
+    const std::string record = "/tmp/st_runner_record/123_profiling_output_record";
+    ASSERT_EQ(0, stat(record.c_str(), &fileStat));
+    EXPECT_TRUE(S_ISREG(fileStat.st_mode));
+    EXPECT_EQ(static_cast<mode_t>(0640), fileStat.st_mode & 0777);
+    (void)system("rm -rf /tmp/st_runner_record");
+}
+
 TEST_F(SYSTEM_MODE_RUNNER_UTEST, RunnerNullParamsAndFileFailurePaths)
 {
     auto params = std::make_shared<ProfileParams>();

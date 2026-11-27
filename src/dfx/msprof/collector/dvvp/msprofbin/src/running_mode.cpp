@@ -9,6 +9,7 @@
  */
 #include "running_mode.h"
 #include <chrono>
+#include <cctype>
 #include "errno/error_code.h"
 #include "input_parser.h"
 #include "cmd_log/cmd_log.h"
@@ -25,9 +26,136 @@
 #include "env_manager.h"
 #include "dyn_prof_client.h"
 
+#if (defined(linux) || defined(__linux__))
+#include <cerrno>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+#endif
+
 namespace Collector {
 namespace Dvvp {
 namespace Msprofbin {
+using namespace analysis::dvvp::common::config;
+using namespace analysis::dvvp::common::error;
+using namespace analysis::dvvp::common::utils;
+
+namespace {
+constexpr int32_t OPEN_FAILED = -1;
+
+bool IsSingleLevelDirName(const std::string& dirName)
+{
+    if (dirName.empty() || dirName == "." || dirName == ".." || dirName.size() > MAX_PATH_LENGTH ||
+        dirName.find('/') != std::string::npos || dirName.find('\\') != std::string::npos) {
+        return false;
+    }
+    return std::all_of(dirName.begin(), dirName.end(), [](unsigned char ch) { return std::iscntrl(ch) == 0; });
+}
+
+int32_t ReadRecordFile(const std::string& absolutePath, const std::string& recordFile, std::string& content)
+{
+    content.clear();
+    const int32_t fd = open(absolutePath.c_str(), O_RDONLY | O_CLOEXEC | O_NOFOLLOW | O_NONBLOCK | O_NOCTTY);
+    if (fd < 0) {
+        const int32_t openErrno = errno;
+        MSPROF_LOGE("Failed to open %s, errno=%d, err=%s", recordFile.c_str(), openErrno, strerror(openErrno));
+        return PROFILING_FAILED;
+    }
+    struct stat fileStat;
+    if (fstat(fd, &fileStat) != 0 || !S_ISREG(fileStat.st_mode) || fileStat.st_uid != geteuid() ||
+        fileStat.st_size <= 0 || fileStat.st_size > MSVP_SMALL_FILE_MAX_LEN) {
+        (void)close(fd);
+        MSPROF_LOGE("Record file %s is invalid", recordFile.c_str());
+        return PROFILING_FAILED;
+    }
+    const int32_t flags = fcntl(fd, F_GETFL);
+    const uint32_t flagsToSet = static_cast<uint32_t>(flags) & ~static_cast<uint32_t>(O_NONBLOCK);
+    const int32_t newFlags = flags < 0 ? 0 : fcntl(fd, F_SETFL, static_cast<int32_t>(flagsToSet));
+    if (flags < 0 || newFlags != 0) {
+        const int32_t flagsErrno = errno;
+        (void)close(fd);
+        MSPROF_LOGE(
+            "Failed to reset flags for %s, errno=%d, err=%s", recordFile.c_str(), flagsErrno, strerror(flagsErrno));
+        return PROFILING_FAILED;
+    }
+
+    std::vector<char> buffer(static_cast<size_t>(fileStat.st_size));
+    size_t readSize = 0;
+    while (readSize < buffer.size()) {
+        const ssize_t onceSize = read(fd, buffer.data() + readSize, buffer.size() - readSize);
+        if (onceSize < 0 && errno == EINTR) {
+            continue;
+        }
+        if (onceSize <= 0) {
+            break;
+        }
+        readSize += static_cast<size_t>(onceSize);
+    }
+    const int32_t readErrno = errno;
+    const int32_t closeRet = close(fd);
+    if (readSize != buffer.size() || closeRet != 0) {
+        MSPROF_LOGE("Failed to read %s, errno=%d, err=%s", recordFile.c_str(), readErrno, strerror(readErrno));
+        return PROFILING_FAILED;
+    }
+    content.assign(buffer.data(), readSize);
+    return PROFILING_SUCCESS;
+}
+
+int32_t ParseRecordContent(
+    const std::string& resultDir, const std::string& content, std::set<std::string>& jobResultDirList)
+{
+    std::string canonicalResultDir = Utils::CanonicalizePath(resultDir);
+    if (canonicalResultDir.empty()) {
+        MSPROF_LOGE("The output dir is invalid");
+        return PROFILING_FAILED;
+    }
+    const int32_t rootFd = open(canonicalResultDir.c_str(), O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+    if (rootFd == OPEN_FAILED) {
+        MSPROF_LOGE("Failed to open output dir %s", canonicalResultDir.c_str());
+        return PROFILING_FAILED;
+    }
+
+    std::istringstream contentStream(content);
+    std::string baseDir;
+    std::set<std::string> parsedDirs;
+    while (std::getline(contentStream, baseDir)) {
+        Utils::RemoveEndCharacter(baseDir, '\r');
+        int32_t dirFd = OPEN_FAILED;
+        struct stat dirStat;
+        if (!IsSingleLevelDirName(baseDir) ||
+            (dirFd = openat(rootFd, baseDir.c_str(), O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC)) == OPEN_FAILED ||
+            fstat(dirFd, &dirStat) != 0 || !S_ISDIR(dirStat.st_mode) || dirStat.st_uid != geteuid()) {
+            if (dirFd != OPEN_FAILED) {
+                (void)close(dirFd);
+            }
+            MSPROF_LOGW("Invalid record dir in output record");
+            continue;
+        }
+        (void)close(dirFd);
+        parsedDirs.insert(resultDir + baseDir);
+    }
+    (void)close(rootFd);
+    if (parsedDirs.empty()) {
+        MSPROF_LOGW("Output record is empty");
+        return PROFILING_FAILED;
+    }
+    jobResultDirList.insert(parsedDirs.begin(), parsedDirs.end());
+    return PROFILING_SUCCESS;
+}
+
+bool IsSecureResultDir(const std::string& resultDir)
+{
+    const int32_t dirFd = open(resultDir.c_str(), O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+    if (dirFd < 0) {
+        return false;
+    }
+    struct stat dirStat;
+    const bool isValid = fstat(dirFd, &dirStat) == 0 && S_ISDIR(dirStat.st_mode) && dirStat.st_uid == geteuid();
+    (void)close(dirFd);
+    return isValid;
+}
+} // namespace
 using namespace analysis::dvvp::message;
 using namespace analysis::dvvp::common::cmdlog;
 using namespace analysis::dvvp::common::error;
@@ -144,6 +272,23 @@ int32_t RunningMode::GetOutputDirInfoFromRecord()
         MSPROF_LOGW("Unable to get output info from record, exist output info before.");
         return PROFILING_FAILED;
     }
+#if (defined(linux) || defined(__linux__))
+    std::string resultDirTmp = params_->result_dir;
+    Utils::EnsureEndsInSlash(resultDirTmp);
+    std::string pidStr = std::to_string(Utils::GetPid());
+    std::string recordFile = pidStr + MSVP_UNDERLINE + OUTPUT_RECORD;
+    std::string outPut = resultDirTmp + recordFile;
+    std::string content;
+    if (ReadRecordFile(outPut, recordFile, content) != PROFILING_SUCCESS) {
+        return PROFILING_FAILED;
+    }
+
+    const int32_t parseRet = ParseRecordContent(resultDirTmp, content, jobResultDirList_);
+    if (parseRet == PROFILING_SUCCESS) {
+        RemoveRecordFile(outPut);
+    }
+    return parseRet;
+#else
     std::string baseDir;
     std::ifstream fin;
     std::string resultDirTmp = params_->result_dir;
@@ -161,20 +306,20 @@ int32_t RunningMode::GetOutputDirInfoFromRecord()
         outPut.empty(), return PROFILING_FAILED, "The output path: %s does not exist or permission denied.",
         outPut.c_str());
     fin.open(outPut, std::ifstream::in);
-    if (fin.is_open()) {
-        while (getline(fin, baseDir)) {
-            jobResultDirList_.insert(resultDirTmp + baseDir);
-        }
-        fin.close();
-        RemoveRecordFile(outPut);
-        return PROFILING_SUCCESS;
-    } else {
+    if (!fin.is_open()) {
         char errBuf[MAX_ERR_STRING_LEN + 1] = {0};
         MSPROF_LOGE(
             "Open file failed, fileName:%s, error: %s", Utils::BaseName(recordFile).c_str(),
             OsalGetErrorFormatMessage(OsalGetErrorCode(), errBuf, MAX_ERR_STRING_LEN));
         return PROFILING_FAILED;
     }
+    while (getline(fin, baseDir)) {
+        jobResultDirList_.insert(resultDirTmp + baseDir);
+    }
+    fin.close();
+    RemoveRecordFile(outPut);
+    return PROFILING_SUCCESS;
+#endif
 }
 
 void RunningMode::RemoveRecordFile(const std::string& fileName) const
@@ -629,9 +774,17 @@ int32_t AppMode::RunModeTasks()
     std::set<std::string>::iterator iter;
     for (iter = jobResultDirList_.begin(); iter != jobResultDirList_.end(); ++iter) {
         jobResultDir_ = *iter;
+        if (!IsSecureResultDir(jobResultDir_)) {
+            MSPROF_LOGW("[App Mode] Invalid result dir before export task: %s", Utils::BaseName(jobResultDir_).c_str());
+            return PROFILING_FAILED;
+        }
         if (StartExportTask() != PROFILING_SUCCESS) {
             MSPROF_LOGW("[App Mode] The export task did not complete successfully.");
             return PROFILING_SUCCESS;
+        }
+        if (!IsSecureResultDir(jobResultDir_)) {
+            MSPROF_LOGW("[App Mode] Invalid result dir before query task: %s", Utils::BaseName(jobResultDir_).c_str());
+            return PROFILING_FAILED;
         }
         if (StartQueryTask() != PROFILING_SUCCESS) {
             MSPROF_LOGW("[App Mode] The query task did not complete successfully.");
@@ -876,9 +1029,19 @@ int32_t SystemMode::RunModeTasks()
     std::set<std::string>::iterator iter;
     for (iter = jobResultDirList_.begin(); iter != jobResultDirList_.end(); ++iter) {
         jobResultDir_ = *iter;
+        if (!IsSecureResultDir(jobResultDir_)) {
+            MSPROF_LOGW(
+                "[System Mode] Invalid result dir before export task: %s", Utils::BaseName(jobResultDir_).c_str());
+            return PROFILING_FAILED;
+        }
         if (StartExportTask() != PROFILING_SUCCESS) {
             MSPROF_LOGW("[System Mode] The export task did not complete successfully.");
             return PROFILING_SUCCESS;
+        }
+        if (!IsSecureResultDir(jobResultDir_)) {
+            MSPROF_LOGW(
+                "[System Mode] Invalid result dir before query task: %s", Utils::BaseName(jobResultDir_).c_str());
+            return PROFILING_FAILED;
         }
         if (StartQueryTask() != PROFILING_SUCCESS) {
             MSPROF_LOGW("[System Mode] The query task did not complete successfully.");
@@ -919,21 +1082,20 @@ int32_t SystemMode::RecordOutPut() const
     std::string pidStr = std::to_string(Utils::GetPid());
     std::string recordFile = pidStr + MSVP_UNDERLINE + OUTPUT_RECORD;
     std::string absolutePath = params_->result_dir + MSVP_SLASH + recordFile;
+#if (defined(linux) || defined(__linux__))
+    const std::string profName = baseDir_ + "\n";
+    return WriteFile(absolutePath, recordFile, profName);
+#else
     std::ofstream file;
     file.open(absolutePath, std::ios::out | std::ios::app);
     if (!file.is_open()) {
         MSPROF_LOGE("Failed to open %s", Utils::BaseName(recordFile).c_str());
         return PROFILING_FAILED;
     }
-    if (OsalChmod(absolutePath.c_str(), 0640) != OSAL_EN_OK) {
-        file.close();
-        MSPROF_LOGE("Failed to change file mode for %s", absolutePath.c_str());
-        return PROFILING_FAILED;
-    }
     file << baseDir_ << std::endl << std::flush;
     file.close();
-
     return PROFILING_SUCCESS;
+#endif
 }
 
 int32_t SystemMode::StartHostTask(const std::string resultDir, uint32_t deviceId)

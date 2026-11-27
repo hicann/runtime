@@ -166,6 +166,8 @@ TEST_F(MSPROF_MANAGER_STEST, MsProcessCmd)
     std::ofstream out;
     std::string result_dir = "/tmp/msprof_manager_stest";
     Utils::CreateDir(result_dir);
+    Utils::CreateDir(result_dir + "/PROF_000001_20211211194055303_DANEQIJKACHMDGNB");
+    Utils::CreateDir(result_dir + "/JOB44444444444");
     out.open(result_dir + '/' + "1_" + OUTPUT_RECORD);
     out << "PROF_000001_20211211194055303_DANEQIJKACHMDGNB" << std::endl << "JOB44444444444" << std::endl;
     out.close();
@@ -195,6 +197,8 @@ TEST_F(MSPROF_MANAGER_STEST, MsProcessCmd)
     Utils::RemoveDir(result_dir);
 
     Utils::CreateDir(result_dir);
+    Utils::CreateDir(result_dir + "/PROF_000001_20211211194055303_DANEQIJKACHMDGNB");
+    Utils::CreateDir(result_dir + "/JOB44444444444");
     out.open(result_dir + '/' + "1_" + OUTPUT_RECORD);
     out << "PROF_000001_20211211194055303_DANEQIJKACHMDGNB" << std::endl << "JOB44444444444" << std::endl;
     out.close();
@@ -251,6 +255,11 @@ TEST_F(MSPROF_MANAGER_STEST, MsProcessCmd)
     EXPECT_EQ(PROFILING_FAILED, msprofManager->MsProcessCmd());
     msprofManager->params_ = params;
     msprofManager->rMode_ = systemMode;
+    Utils::CreateDir(result_dir + "/PROF_000001_20211211194055303_DANEQIJKACHMDGNB");
+    Utils::CreateDir(result_dir + "/JOB44444444444");
+    out.open(result_dir + '/' + "1_" + OUTPUT_RECORD);
+    out << "PROF_000001_20211211194055303_DANEQIJKACHMDGNB" << std::endl << "JOB44444444444" << std::endl;
+    out.close();
     EXPECT_EQ(PROFILING_SUCCESS, msprofManager->MsProcessCmd());
 
     std::shared_ptr<Collector::Dvvp::Msprofbin::ExportMode> exportMode(
@@ -259,6 +268,11 @@ TEST_F(MSPROF_MANAGER_STEST, MsProcessCmd)
     EXPECT_EQ(PROFILING_FAILED, msprofManager->MsProcessCmd());
     msprofManager->params_ = params;
     msprofManager->rMode_ = systemMode;
+    Utils::CreateDir(result_dir + "/PROF_000001_20211211194055303_DANEQIJKACHMDGNB");
+    Utils::CreateDir(result_dir + "/JOB44444444444");
+    out.open(result_dir + '/' + "1_" + OUTPUT_RECORD);
+    out << "PROF_000001_20211211194055303_DANEQIJKACHMDGNB" << std::endl << "JOB44444444444" << std::endl;
+    out.close();
     EXPECT_EQ(PROFILING_SUCCESS, msprofManager->MsProcessCmd());
 
     std::string path_gov = Utils::IdeGetHomedir();

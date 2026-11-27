@@ -135,6 +135,8 @@ TEST_F(RUNNING_MODE_STEST, GetOutputDirInfoFromRecord)
     MOCKER(Utils::GetPid).stubs().will(returnValue(1));
     params->result_dir = result;
     Utils::CreateDir(result);
+    Utils::CreateDir(result + "/PROF_000001_20211211194055303_DANEQIJKACHMDGNB");
+    Utils::CreateDir(result + "/JOB44444444444");
     std::ofstream out;
     out.open(result + '/' + "1_" + OUTPUT_RECORD);
     out << "PROF_000001_20211211194055303_DANEQIJKACHMDGNB" << std::endl << "JOB44444444444" << std::endl;
@@ -498,7 +500,9 @@ TEST_F(RUNNING_MODE_STEST, AppModeRunModeTasks)
     Collector::Dvvp::Msprofbin::AppMode rMode("app", nullptr);
     EXPECT_EQ(PROFILING_FAILED, rMode.RunModeTasks());
     rMode.params_ = params;
-    rMode.jobResultDirList_.insert("PROF");
+    const std::string resultDir = "/tmp/running_mode_stest_app/PROF_000001_20211211194055303_DANEQIJKACHMDGNB";
+    Utils::CreateDir(resultDir);
+    rMode.jobResultDirList_.insert(resultDir);
     MOCKER_CPP(&AppMode::StartAppTask).stubs().will(returnValue(PROFILING_FAILED)).then(returnValue(PROFILING_SUCCESS));
     MOCKER_CPP(&AppMode::CheckAnalysisEnv)
         .stubs()
@@ -728,7 +732,9 @@ TEST_F(RUNNING_MODE_STEST, SystemModeRunModeTasks)
     EXPECT_EQ(PROFILING_FAILED, rMode.RunModeTasks());
     rMode.params_ = params;
     rMode.params_->ai_core_profiling = "on";
-    rMode.jobResultDirList_.insert("PROF");
+    const std::string sysResultDir = "/tmp/running_mode_stest_system/JOB44444444444";
+    Utils::CreateDir(sysResultDir);
+    rMode.jobResultDirList_.insert(sysResultDir);
     MOCKER_CPP(&SystemMode::StartSysTask)
         .stubs()
         .will(returnValue(PROFILING_FAILED))
