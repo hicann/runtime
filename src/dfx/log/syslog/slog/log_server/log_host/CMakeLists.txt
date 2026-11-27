@@ -42,7 +42,8 @@ if ((${PRODUCT} STREQUAL "ascend950") OR
         (${PRODUCT} STREQUAL "ascend350") OR 
         (${PRODUCT} STREQUAL "ascend960") OR 
         (${PRODUCT} STREQUAL "ascend960esl") OR 
-        (${PRODUCT} STREQUAL "ascend310N"))
+        (${PRODUCT} STREQUAL "ascend310N") OR
+        (${PRODUCT} STREQUAL "ascend970"))
     add_custom_target(slogHostFiles
         COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/../../etc/david_910_95/slog.conf ${CMAKE_CURRENT_BINARY_DIR}
         COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/../../etc/david_910_95/rsyslog_proc.conf ${CMAKE_CURRENT_BINARY_DIR}

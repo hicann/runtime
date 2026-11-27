@@ -56,6 +56,7 @@ target_compile_definitions(hdclog_device PRIVATE
     $<$<STREQUAL:${PRODUCT},ascend960>:CONFIG_EXPAND>
     $<$<STREQUAL:${PRODUCT},ascend960esl>:CONFIG_EXPAND>
     $<$<STREQUAL:${PRODUCT},ascend310N>:CONFIG_EXPAND>
+    $<$<STREQUAL:${PRODUCT},ascend970>:CONFIG_EXPAND>
 )
 
 target_compile_options(hdclog_device PRIVATE
