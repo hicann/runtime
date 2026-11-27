@@ -325,8 +325,8 @@ rtError_t GetIpcNotifyVirtualAddrForNotifyRecordTask(TaskInfo* taskInfo, uint64_
     if (error != RT_ERROR_NONE) {
         return error;
     }
-    COND_RETURN_ERROR_MSG_INNER(
-        mappedAddr == 0ULL, RT_ERROR_DRV_ERR, "halResAddrMap returned a null Notify address, device_id=%u.", devId);
+    COND_RETURN_WARN(
+        mappedAddr == 0ULL, RT_ERROR_DRV_NOT_SUPPORT, "halResAddrMap returned a null address, device_id=%u.", devId);
     addr = mappedAddr;
     RT_LOG(
         RT_LOG_INFO,

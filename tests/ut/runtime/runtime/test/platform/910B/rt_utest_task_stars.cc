@@ -1364,7 +1364,9 @@ TEST_F(StarsTaskTest, NotifyIpcSdmaRecordAndCache)
         IPC_NOTIFY_VA);
 }
 
-TEST_F(StarsTaskTest, NotifyIpcMapNotSupportedFallsBackToWriteValue)
+class NotifyIpcMapFallbackTest : public StarsTaskTest, public testing::WithParamInterface<drvError_t> {};
+
+TEST_P(NotifyIpcMapFallbackTest, FallsBackToWriteValue)
 {
     Notify notify(IPC_REMOTE_LOGICAL_ID, 0U);
     TaskInfo task = {};
@@ -1377,7 +1379,13 @@ TEST_F(StarsTaskTest, NotifyIpcMapNotSupportedFallsBackToWriteValue)
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&localServerId, sizeof(localServerId)))
         .will(returnValue(RT_ERROR_NONE));
 
-    MOCKER(halResAddrMap).expects(once()).will(returnValue(DRV_ERROR_NOT_SUPPORT));
+    // 驱动不支持映射或映射成功但地址为 0 时，都回退到旧地址。
+    unsigned long mappedAddr = 0UL;
+    unsigned int len = sizeof(uint32_t);
+    MOCKER(halResAddrMap)
+        .expects(once())
+        .with(mockcpp::any(), mockcpp::any(), outBoundP(&mappedAddr, sizeof(mappedAddr)), outBoundP(&len, sizeof(len)))
+        .will(returnValue(GetParam()));
 
     rtStarsSqe_t sqe = {};
     ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
@@ -1393,18 +1401,14 @@ TEST_F(StarsTaskTest, NotifyIpcMapNotSupportedFallsBackToWriteValue)
         expectedAddr);
     EXPECT_FALSE(notify.GetLastIsSdma());
     EXPECT_EQ(notify.GetLastBaseAddr(), expectedAddr);
+    EXPECT_EQ(notify.GetLastLocalId(), dev_->Id_());
 }
 
-struct IpcNotifyMapFailure {
-    drvError_t result;
-    uint64_t address;
-};
+INSTANTIATE_TEST_SUITE_P(
+    DriverResults, NotifyIpcMapFallbackTest, testing::Values(DRV_ERROR_NOT_SUPPORT, DRV_ERROR_NONE));
 
-class NotifyIpcMapFailureTest : public StarsTaskTest, public testing::WithParamInterface<IpcNotifyMapFailure> {};
-
-TEST_P(NotifyIpcMapFailureTest, InvalidatesSqeWithoutCaching)
+TEST_F(StarsTaskTest, InvalidatesSqeWithoutCaching)
 {
-    const auto param = GetParam();
     Notify notify(IPC_REMOTE_LOGICAL_ID, 0U);
     TaskInfo task = {};
     ASSERT_EQ(InitIpcSdmaTask(task, stream_, notify), RT_ERROR_NONE);
@@ -1416,12 +1420,12 @@ TEST_P(NotifyIpcMapFailureTest, InvalidatesSqeWithoutCaching)
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&localServerId, sizeof(localServerId)))
         .will(returnValue(RT_ERROR_NONE));
 
-    unsigned long mappedAddr = static_cast<unsigned long>(param.address);
+    unsigned long mappedAddr = static_cast<unsigned long>(IPC_NOTIFY_VA);
     unsigned int len = sizeof(uint32_t);
     MOCKER(halResAddrMap)
         .expects(once())
         .with(mockcpp::any(), mockcpp::any(), outBoundP(&mappedAddr, sizeof(mappedAddr)), outBoundP(&len, sizeof(len)))
-        .will(returnValue(param.result));
+        .will(returnValue(DRV_ERROR_INVALID_VALUE));
 
     rtStarsSqe_t sqe = {};
     ToConstructSqe(&task, &sqe, TaskSqeInfo{0ULL, 0ULL});
@@ -1431,11 +1435,6 @@ TEST_P(NotifyIpcMapFailureTest, InvalidatesSqeWithoutCaching)
     EXPECT_EQ(notify.GetLastBaseAddr(), 0ULL);
     EXPECT_FALSE(notify.GetLastIsSdma());
 }
-
-INSTANTIATE_TEST_SUITE_P(
-    DriverResults, NotifyIpcMapFailureTest,
-    testing::Values(
-        IpcNotifyMapFailure{DRV_ERROR_INVALID_VALUE, IPC_NOTIFY_VA}, IpcNotifyMapFailure{DRV_ERROR_NONE, 0ULL}));
 
 TEST_F(StarsTaskTest, EventResetTask_DoCompleteSuccess)
 {
