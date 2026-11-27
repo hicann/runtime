@@ -1429,7 +1429,7 @@ void MemWaitInstrWaitFailedForNonSoftwareSq(
 static rtStarsCondIsaLoadImmFunc3_t GetMemWaitLoadOp(const uint16_t width)
 {
     rtStarsCondIsaLoadImmFunc3_t loadOp = RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LD;
-    switch (width) {
+    switch (static_cast<int32_t>(width)) {
         case RT_STARS_WRITE_VALUE_SIZE_TYPE_8BIT:
             loadOp = RT_STARS_COND_ISA_LOAD_IMM_FUNC3_LBU;
             break;
