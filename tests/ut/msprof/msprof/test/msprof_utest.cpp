@@ -30,6 +30,9 @@
 #include "prof_stamp_pool.h"
 #include "prof_tx_plugin.h"
 #include "msproftx_adaptor.h"
+#include "common/platform/platform.h"
+// msprof_utest is built with -fno-access-control. Keep the test-only access
+// macros before headers whose members are touched by this translation unit.
 #define private public
 #define protected public
 #include "msprof_tx_manager.h"
@@ -43,6 +46,8 @@ static bool createPluginTrue = true;
 static bool pluginInitTrue = true;
 static std::string moduleName = "counter";
 using namespace analysis::dvvp::common::error;
+using namespace Analysis::Dvvp::Common::Config;
+using namespace Analysis::Dvvp::Common::Platform;
 using namespace Msprof::Engine;
 using namespace Msprof::MsprofTx;
 using namespace analysis::dvvp::proto;
@@ -53,10 +58,52 @@ protected:
     virtual void TearDown() {}
 };
 
+namespace {
+class PlatformTypeGuard {
+public:
+    explicit PlatformTypeGuard(PlatformType platformType)
+    {
+        originalType_ = static_cast<PlatformType>(ConfigManager::instance()->GetPlatformType());
+        wasInitialized_ = Platform::instance()->CheckIfPlatformExist();
+        Platform::instance()->Uninit();
+        ConfigManager::instance()->configMap_["type"] = std::to_string(static_cast<int32_t>(platformType));
+        Platform::instance()->Init();
+    }
+
+    ~PlatformTypeGuard()
+    {
+        ConfigManager::instance()->configMap_["type"] = std::to_string(static_cast<int32_t>(originalType_));
+        Platform::instance()->Uninit();
+        if (wasInitialized_) {
+            Platform::instance()->Init();
+        }
+    }
+
+private:
+    PlatformType originalType_{};
+    bool wasInitialized_{false};
+};
+} // namespace
+
 TEST_F(MSPROF_TEST, MsprofTxLiteAdaptorStub)
 {
     MsprofTxInit();
     MsprofTxUnInit();
+}
+
+TEST_F(MSPROF_TEST, AicMetricsPromptHidesInternalPipeUtilizationExctOnCloudV2)
+{
+    // CHIP_V4_1_0 is the configuration enum whose numeric value maps the profiler
+    // platform reflection to CHIP_CLOUD_V2.
+    PlatformTypeGuard platformGuard(PlatformType::CHIP_V4_1_0);
+    ASSERT_EQ(::Dvvp::Collect::Platform::CHIP_CLOUD_V2, Platform::instance()->GetPlatformType());
+    const std::string prompt = Platform::instance()->GenerateAicoreMetricsPrompt();
+
+    EXPECT_EQ(std::string::npos, prompt.find("PipeUtilizationExct"));
+    EXPECT_NE(std::string::npos, prompt.find("ArithmeticUtilization"));
+
+    EXPECT_EQ(true, Platform::instance()->CheckIfSupport(PLATFORM_TASK_PUEXCT_PMU));
+    EXPECT_EQ(PLATFORM_TASK_PUEXCT_PMU, Platform::instance()->PmuToFeatureInMap("PipeUtilizationExct"));
 }
 
 void func_counter(Reporter* reporter)

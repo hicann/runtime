@@ -280,7 +280,9 @@ std::string Platform::GenerateAicoreMetricsPrompt() const
 
     result << "[";
     for (const auto& metricsFeature : METRIC_FEATURE_MAP) {
-        if (!CheckIfSupport(metricsFeature.second)) {
+        if (metricsFeature.second == PLATFORM_TASK_PUEXCT_PMU || !CheckIfSupport(metricsFeature.second)) {
+            // PipeUtilizationExct is an internal metric. Keep its parsing and collection
+            // capability, but do not expose it in user-facing prompts.
             continue;
         }
         if (!isFirstMetrics) {
