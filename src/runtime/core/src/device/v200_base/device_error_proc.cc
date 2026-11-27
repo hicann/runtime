@@ -117,6 +117,7 @@ void DeviceErrorProc::ProcessReportFastRingBuffer()
         uint32_t streamId = report->streamId;
         if (streamId == UINT16_MAX) {
             (void)device_->GetStreamSqCqManage()->GetStreamIdBySqId(report->sqId, streamId);
+            report->streamId = streamId;
         }
         TaskInfo* tsk = GetTaskInfo(device_, streamId, static_cast<uint32_t>(report->sqHead), true);
         if (tsk == nullptr) {
@@ -150,11 +151,11 @@ void DeviceErrorProc::ProcessReportFastRingBuffer()
             errModule,
             "The fast ring buffer reports %s error,"
             " device_id=%u, stream_id=%u, task_id=%u, sq_head=%u, sqe_type=%u, error_code=%#x, kernel_name=%s.",
-            errMsg, device_->Id_(), report->streamId, report->taskId, report->sqHead, report->sqeType,
-            report->errorCode, GetTaskKernelName(tsk).c_str());
+            errMsg, device_->Id_(), streamId, report->taskId, report->sqHead, report->sqeType, report->errorCode,
+            GetTaskKernelName(tsk).c_str());
         tsk->stream->SetErrCode(report->errorCode);
         tsk->stream->EnterFailureAbort();
-        TaskFailCallBack(report->streamId, report->taskId, tsk->tid, report->errorCode, device_);
+        TaskFailCallBack(streamId, report->taskId, tsk->tid, report->errorCode, device_);
         head = (head + 1U) % depth;
         ctrlInfo->head = head;
     }

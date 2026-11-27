@@ -309,7 +309,9 @@ void ProcCqReportException(
                 *outFaultTaskPtr = faultTaskPtr;
             }
             (void)dev->ProcDeviceErrorInfo(faultTaskPtr);
-            if (!reportTask->stream->IsSeparateSendAndRecycle()) {
+            Stream* const stm = reportTask->stream;
+            const bool isSupportDecoupling = ((stm->Model_() != nullptr) && (stm->Model_()->IsSupportDecoupling()));
+            if ((!reportTask->stream->IsSeparateSendAndRecycle()) && (!isSupportDecoupling)) {
                 reportTask->stream->EnterFailureAbort();
             }
         } else {

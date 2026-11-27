@@ -126,17 +126,13 @@ void ProcErrorInfoForModelTask(const rtCqReport_t& logicCq, const bool isExcepti
         Runtime::Instance()->SetWatchDogDevStatus(dev, RT_DEVICE_STATUS_ABNORMAL);
     }
 
+    Runtime::Instance()->SetInternalThreadContext(stm->Context_());
     SetStarsResult(reportTask, logicCq);
     ReportErrorInfoForModelTask(reportTask);
     stm->SetNeedRecvCqeFlag(true);
     if (isExceptionFlag) {
-        rtError_t rtErrCode = RT_ERROR_NONE;
-        (void)GetTsErrCodeMap(stm->GetErrCode(), &rtErrCode);
-        if (stm->Context_()->GetFailureError() == RT_ERROR_NONE) {
-            stm->Context_()->SetFailureError(rtErrCode);
-        }
+        stm->EnterFailureAbort();
         stm->SetNeedRecvCqeFlag(false);
-        stm->Context_()->PushContextErrMsg();
     }
 
     // Set monitor device status normal to get next error

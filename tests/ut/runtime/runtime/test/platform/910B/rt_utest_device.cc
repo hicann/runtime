@@ -15,10 +15,12 @@
 #define protected public
 #include "runtime.hpp"
 #include "raw_device.hpp"
+#include "stars_engine.hpp"
 #include "module.hpp"
 #include "event.hpp"
 #include "task_info.hpp"
 #include "task.hpp"
+#include "stub_task.hpp"
 #include "davinci_kernel_task.h"
 #include "device/device_error_proc.hpp"
 #include "device.hpp"
@@ -84,6 +86,7 @@ public:
     static uint16_t g_tId;
     static uint32_t g_printType;
     static uint32_t g_reportElementIndex;
+    static uint32_t g_sqId;
     static rtError_t MemCopySyncForRingBuffer(
         Driver* drv, void* dst, uint64_t destMax, const void* src, uint64_t size, rtMemcpyKind_t kind)
     {
@@ -177,6 +180,29 @@ public:
         return RT_ERROR_NONE;
     }
 
+    static rtError_t MemCopySyncForRingBufferWithInvalidStreamId(
+        Driver* drv, void* dst, uint64_t destMax, const void* src, uint64_t size, rtMemcpyKind_t kind)
+    {
+        if (size == sizeof(DevRingBufferCtlInfo)) {
+            DevRingBufferCtlInfo* tmpCtrlInfo = reinterpret_cast<DevRingBufferCtlInfo*>(dst);
+            tmpCtrlInfo->magic = RINGBUFFER_MAGIC;
+            tmpCtrlInfo->tail = 1;
+            tmpCtrlInfo->head = 0;
+            tmpCtrlInfo->ringBufferLen = RINGBUFFER_LEN;
+            tmpCtrlInfo->elementSize = RINGBUFFER_EXT_ONE_ELEMENT_LENGTH;
+            return RT_ERROR_NONE;
+        }
+        if (size == RINGBUFFER_EXT_ONE_ELEMENT_LENGTH) {
+            RingBufferElementInfo* info = reinterpret_cast<RingBufferElementInfo*>(dst);
+            StarsDeviceErrorInfo* errorInfo = reinterpret_cast<StarsDeviceErrorInfo*>(info + 1);
+            info->errorType = AICORE_ERROR;
+            info->sqId = static_cast<uint16_t>(g_sqId);
+            errorInfo->u.coreErrorInfo.comm.streamId = UINT16_MAX;
+            errorInfo->u.coreErrorInfo.comm.taskId = g_tId;
+        }
+        return RT_ERROR_NONE;
+    }
+
     static rtError_t MemCopySyncForRingBuffer2(
         Driver* drv, void* dst, uint64_t destMax, const void* src, uint64_t size, rtMemcpyKind_t kind)
     {
@@ -257,6 +283,7 @@ uint16_t CloudV2DeviceTest::g_sId = 0;
 uint16_t CloudV2DeviceTest::g_tId = 0;
 uint32_t CloudV2DeviceTest::g_printType = 0;
 uint32_t CloudV2DeviceTest::g_reportElementIndex = 0;
+uint32_t CloudV2DeviceTest::g_sqId = 0;
 
 static void DeleteFakeStream(Stream* const stream)
 {
@@ -655,6 +682,95 @@ TEST_F(CloudV2DeviceTest, device_reportRingbuffer_skip_standalone_ext)
     EXPECT_EQ(error, RT_ERROR_NONE);
     errorProc->deviceRingBufferAddr_ = nullptr;
     GlobalMockObject::verify();
+    delete errorProc;
+    ((Runtime*)Runtime::Instance())->DeviceRelease(device);
+}
+
+// ringbuffer 上报 streamId 无效且携带 sqId 时，通过 sqId 反查出真实 streamId。
+TEST_F(CloudV2DeviceTest, device_reportRingbuffer_resolve_stream_by_sq_id)
+{
+    rtStream_t stream;
+    uint16_t streamId = 0U;
+    Device* device = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
+    DeviceErrorProc* errorProc = new DeviceErrorProc(device);
+    std::unique_ptr<char[]> hostAddr(new (std::nothrow) char[16]);
+
+    rtError_t error = rtStreamCreate(&stream, 0);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    g_streamId = rt_ut::UnwrapOrNull<Stream>(stream)->Id_();
+    g_sqId = 7U;
+    g_tId = 0U;
+    device->GetStreamSqCqManage()->SetStreamIdToStream(
+        static_cast<const uint32_t>(g_streamId), rt_ut::UnwrapOrNull<Stream>(stream));
+    device->GetStreamSqCqManage()->sqIdToStreamIdMap_[g_sqId] = g_streamId;
+
+    error = errorProc->ProcRingBufferTask(hostAddr.get(), false, 1);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    errorProc->deviceRingBufferAddr_ = hostAddr.get();
+
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::MemCopySync)
+        .stubs()
+        .will(invoke(MemCopySyncForRingBufferWithInvalidStreamId));
+    MOCKER_CPP(&DeviceErrorProc::CheckValid).stubs().will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP(&Stream::StarsWaitForTask).stubs().will(returnValue(RT_ERROR_NONE));
+    error = errorProc->ReportRingBuffer(&streamId);
+    EXPECT_EQ(error, RT_ERROR_TASK_MONITOR);
+    EXPECT_EQ(streamId, g_streamId);
+
+    error = rtStreamDestroy(stream);
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    errorProc->deviceRingBufferAddr_ = nullptr;
+    GlobalMockObject::verify();
+    delete errorProc;
+    ((Runtime*)Runtime::Instance())->DeviceRelease(device);
+}
+
+// fast ringbuffer 上报 streamId 无效且携带 sqId 时，反查出的 streamId 需写回上报元素。
+TEST_F(CloudV2DeviceTest, device_error_fast_ringbuffer_resolve_stream_by_sq_id)
+{
+    Device* device = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
+    DeviceErrorProc* errorProc = new DeviceErrorProc(device);
+    std::unique_ptr<char[]> hostAddr(new (std::nothrow) char[512]);
+    memset_s(hostAddr.get(), 512, 0, 512);
+
+    MOCKER_CPP_VIRTUAL(device, &Device::CheckFeatureSupport).stubs().will(returnValue(true));
+    MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::AllocFastRingBufferAndDispatch)
+        .stubs()
+        .will(returnValue(RT_ERROR_NONE));
+    rtError_t error = errorProc->CreateFastRingbuffer();
+    EXPECT_EQ(error, RT_ERROR_NONE);
+    errorProc->fastRingBufferAddr_ = hostAddr.get();
+
+    g_streamId = 11U;
+    g_sqId = 7U;
+    g_tId = 3U;
+    device->GetStreamSqCqManage()->sqIdToStreamIdMap_[g_sqId] = g_streamId;
+
+    DevRingBufferCtlInfo* ctrlInfo = RtPtrToPtr<DevRingBufferCtlInfo*>(errorProc->fastRingBufferAddr_);
+    ctrlInfo->magic = RINGBUFFER_MAGIC;
+    ctrlInfo->tail = 1U;
+    ctrlInfo->head = 0U;
+    ctrlInfo->ringBufferLen = 2U; // FAST_RING_BUFFER_DEPTH
+    StarsOpExceptionInfo* report = RtValueToPtr<StarsOpExceptionInfo*>(
+        RtPtrToValue(errorProc->fastRingBufferAddr_) + sizeof(DevRingBufferCtlInfo) + sizeof(RingBufferElementInfo));
+    report->streamId = UINT16_MAX;
+    report->sqId = static_cast<uint16_t>(g_sqId);
+    report->sqHead = g_tId;
+
+    Stream* stm = new Stream(device, 1);
+    TaskInfo fakeTask = {};
+    fakeTask.stream = stm;
+    MOCKER_CPP(&TaskFactory::GetTask).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(&fakeTask));
+    MOCKER(TaskFailCallBack)
+        .expects(once())
+        .with(eq(g_streamId), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any());
+
+    errorProc->ProcessReportFastRingBuffer();
+    GlobalMockObject::verify();
+
+    delete stm;
+    GlobalMockObject::verify();
+    errorProc->fastRingBufferAddr_ = nullptr;
     delete errorProc;
     ((Runtime*)Runtime::Instance())->DeviceRelease(device);
 }
@@ -3183,4 +3299,40 @@ TEST_F(CloudV2DeviceTest, InitQosCfg)
     delete errorProc;
     dev->deviceErrorProc_ = nullptr;
     delete dev;
+}
+
+// 解耦模型场景：MonitorTaskReclaim 置 CQE 接收标志并唤醒回收线程，ProcCqeForSinkStm 消费后清除标志。
+TEST_F(CloudV2DeviceTest, StarsEngineMonitorTaskReclaimDecoupledModelWakesRecycle)
+{
+    rtStream_t stmHandle = nullptr;
+    rtError_t ret = rtStreamCreate(&stmHandle, 0);
+    ASSERT_EQ(ret, RT_ERROR_NONE);
+    Stream* const stm = rt_ut::UnwrapOrNull<Stream>(stmHandle);
+    ASSERT_NE(stm, nullptr);
+    Device* device = stm->Device_();
+    ASSERT_NE(device, nullptr);
+    device->GetStreamSqCqManage()->SetStreamIdToStream(static_cast<uint32_t>(stm->Id_()), stm);
+
+    Context* const context = ((Runtime*)Runtime::Instance())->CurrentContext();
+    ASSERT_NE(context, nullptr);
+    Model model;
+    model.context_ = context;
+    model.SetSupportDecouplingEnable();
+    stm->SetModel(&model);
+
+    StarsEngine* const engine = dynamic_cast<StarsEngine*>(static_cast<RawDevice*>(device)->engine_);
+    ASSERT_NE(engine, nullptr);
+    MOCKER_CPP_VIRTUAL(device, &Device::WakeUpRecycleThread).expects(once());
+
+    EXPECT_EQ(engine->MonitorTaskReclaim(static_cast<uint16_t>(stm->Id_())), RT_ERROR_NONE);
+    EXPECT_TRUE(stm->GetNeedRecvCqeFlag());
+    GlobalMockObject::verify();
+    GlobalMockObject::reset();
+
+    engine->ProcCqeForSinkStm(stm);
+    EXPECT_FALSE(stm->GetNeedRecvCqeFlag());
+
+    stm->SetModel(nullptr);
+    ret = rtStreamDestroy(stmHandle);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
 }

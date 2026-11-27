@@ -222,7 +222,7 @@ std::string DeviceStreamSnapshotHandler::GetActiveStreamSnapshot(
         }
 
         Stream* curStm = nullptr;
-        (void)dev_->GetStreamSqCqManage()->GetStreamById(static_cast<uint32_t>(streamSnapshot.streamId), &curStm);
+        (void)dev_->GetStreamSqCqManage()->GetStreamById(streamId, &curStm);
         COND_PROC((curStm == nullptr), continue;);
 
         std::string taskTag = curStm->GetTaskTag(tsk->id);

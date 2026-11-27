@@ -32,6 +32,7 @@
 #include "context.hpp"
 #include "api_impl.hpp"
 #include "aicpu_err_msg.hpp"
+#include "model_execute_task.h"
 #include "thread_local_container.hpp"
 #include "runtime_exit_test_helper.h"
 #include "device_snapshot.hpp"
@@ -2952,4 +2953,42 @@ TEST_F(DeviceTest, GetAllGroupInfoWithinSpecifiedCount)
     EXPECT_EQ(device.GetGroupInfo(-1, output, 1U), RT_ERROR_NONE);
     EXPECT_EQ(output[0].groupId, 0);
     EXPECT_EQ(output[1].groupId, -1);
+}
+
+// 异常上报：ProcErrorInfoForModelTask 异常标志触发流失败中止。
+TEST_F(DeviceTest, ProcErrorInfoForModelTaskEntersFailureAbortOnException)
+{
+    Device* device = ((Runtime*)Runtime::Instance())->DeviceRetain(0, 0);
+    ASSERT_NE(device, nullptr);
+    Stream* stm = new Stream(device, 1);
+    stm->streamId_ = 1;
+    Context* const context = ((Runtime*)Runtime::Instance())->CurrentContext();
+    ASSERT_NE(context, nullptr);
+    stm->context_ = context;
+
+    rtError_t errCode = RT_ERROR_NONE;
+    TaskInfo* const taskInfo = device->GetTaskFactory()->Alloc(stm, TS_TASK_TYPE_FFTS_PLUS, errCode);
+    ASSERT_NE(taskInfo, nullptr);
+    FftsPlusTaskInfo* fftsPlusTaskInfo = &(taskInfo->u.fftsPlusTask);
+    fftsPlusTaskInfo->descAlignBuf = malloc(256);
+    ASSERT_NE(fftsPlusTaskInfo->descAlignBuf, nullptr);
+    fftsPlusTaskInfo->descBufLen = 256;
+
+    MOCKER(SetStarsResult).stubs();
+    MOCKER(ReportErrorInfoForModelTask).stubs();
+
+    context->SetCtxMode(STOP_ON_FAILURE);
+    const rtCqReport_t logicCq = {};
+    ProcErrorInfoForModelTask(logicCq, true, taskInfo);
+    EXPECT_EQ(stm->GetFailureMode(), static_cast<uint64_t>(ABORT_ON_FAILURE));
+    EXPECT_FALSE(stm->GetNeedRecvCqeFlag());
+    context->SetCtxMode(CONTINUE_ON_FAILURE);
+
+    GlobalMockObject::verify();
+    GlobalMockObject::reset();
+    (void)device->GetTaskFactory()->Recycle(taskInfo);
+    stm->device_ = nullptr;
+    delete stm;
+    free(fftsPlusTaskInfo->descAlignBuf);
+    ((Runtime*)Runtime::Instance())->DeviceRelease(device);
 }

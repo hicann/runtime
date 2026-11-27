@@ -38,6 +38,7 @@
 #include "rdma_task.h"
 #include "capture_model_utils.hpp"
 #include "thread_local_container.hpp"
+#include "rt_unwrap.h"
 #include "../../data/elf.h"
 #undef private
 #undef protected
@@ -1569,6 +1570,34 @@ TEST_F(CloudV2CaptureModelUpdateTest, rtModelUpdateRejectedWhenExecuteException)
     ret = rtCtxDestroy(ctx);
     EXPECT_EQ(ret, RT_ERROR_NONE);
 
+    GlobalMockObject::verify();
+}
+
+// 解耦模型场景：流执行失败中止时推送错误消息并将流错误码写入 context 失败错误。
+TEST_F(CloudV2CaptureModelUpdateTest, StreamEnterFailureAbortDecouplingModelSetsFailureError)
+{
+    Context* const context = ((Runtime*)Runtime::Instance())->CurrentContext();
+    ASSERT_NE(context, nullptr);
+
+    rtStream_t streamHandle = nullptr;
+    rtError_t ret = rtStreamCreate(&streamHandle, 0);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
+    Stream* const stream = rt_ut::UnwrapOrNull<Stream>(streamHandle);
+    ASSERT_NE(stream, nullptr);
+
+    CaptureModel model;
+    model.context_ = context;
+    model.SetSupportDecouplingEnable();
+    stream->SetModel(&model);
+
+    context->SetCtxMode(STOP_ON_FAILURE);
+    stream->EnterFailureAbort();
+    EXPECT_EQ(context->GetFailureError(), stream->GetError());
+    EXPECT_EQ(stream->GetFailureMode(), static_cast<uint64_t>(ABORT_ON_FAILURE));
+
+    stream->SetModel(nullptr);
+    ret = rtStreamDestroy(streamHandle);
+    EXPECT_EQ(ret, RT_ERROR_NONE);
     GlobalMockObject::verify();
 }
 
