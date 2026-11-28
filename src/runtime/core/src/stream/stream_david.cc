@@ -593,21 +593,26 @@ rtError_t DavidStream::TearDown(const bool terminal, bool flag)
             MT_STREAM_RECYCLE_TASK, isForceRecycle, stmId);
     }
 
+    bool oldFlag = isForceRecycle;
     while ((!taskResMang_->IsEmpty()) && (device_->GetDevRunningState() == static_cast<uint32_t>(DEV_RUNNING_NORMAL))) {
         if (abortStatus_ == RT_ERROR_DEVICE_TASK_ABORT) {
             RT_LOG(RT_LOG_WARNING, "stream is aborted, stream_id=%d, pendingNum=%d.", stmId, pendingNum_.Value());
             break;
         }
 
-        isForceRecycle = GetForceRecycleFlag(flag);
-        exeStream = dev->GetCtrlSQStream(dev->PrimaryStream_());
-        if (this == exeStream) {
-            isForceRecycle = false;
+        if (oldFlag != true) {
+            isForceRecycle = GetForceRecycleFlag(flag);
+            exeStream = dev->GetCtrlSQStream(dev->PrimaryStream_());
+            if (this == exeStream) {
+                isForceRecycle = false;
+            }
+
+            isForceRecycle_ = isForceRecycle;
+            oldFlag = isForceRecycle;
+            (void)static_cast<DavidStream*>(exeStream)->SubmitMaintenanceTask(
+                MT_STREAM_RECYCLE_TASK, isForceRecycle, stmId);
         }
 
-        isForceRecycle_ = isForceRecycle;
-        (void)static_cast<DavidStream*>(exeStream)->SubmitMaintenanceTask(
-            MT_STREAM_RECYCLE_TASK, isForceRecycle, stmId);
         StreamSyncLock();
         taskResMang_->GetHeadTail(head, tail);
         COND_PROC_RETURN_AND_MSG_OUTER(
