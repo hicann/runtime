@@ -13,7 +13,6 @@
 #include "stream_xpu.hpp"
 #include "stream.hpp"
 #include "tprt_api.h"
-#include "tprt_error_code.h"
 #include "xpu_context.hpp"
 #include "task_manager_xpu.hpp"
 #include "xpu_device.hpp"
