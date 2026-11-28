@@ -93,7 +93,7 @@ void AicpuThreadPackageWorker::PreProcessPackage(const std::string& packagePath,
 
     const TSD_StatusT ret = OpenVerifyFile();
     if (ret != TSD_OK) {
-        TSD_ERROR("Open verify file failed.");
+        TSD_ERROR("Open verify file failed, path=%s, ret=%u", verifyFilePath_.c_str(), ret);
     }
 
     return;

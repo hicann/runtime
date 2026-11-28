@@ -141,9 +141,6 @@ std::shared_ptr<ClientManager> ClientManager::GetInstance(
     if (iter != tsdClientInstanceMap_.end()) {
         return iter->second;
     } else {
-        TSD_INFO(
-            "[ClientManager] GetInstance, deviceId[%u], g_runningMode[%d], begin saving instance", logicDeviceId,
-            g_runningMode);
         const RunningMode curMode = GetClientRunMode(logicDeviceId);
         TSD_RUN_INFO("[ClientManager] Current mode:%u", static_cast<uint32_t>(curMode));
         if (curMode == RunningMode::PROCESS_MODE) {
@@ -151,7 +148,11 @@ std::shared_ptr<ClientManager> ClientManager::GetInstance(
         } else if (curMode == RunningMode::THREAD_MODE) {
             clientManager.reset(new (std::nothrow) ThreadModeManager(logicDeviceId));
         } else {
-            TSD_ERROR("[TsdClient] current mode is error");
+            TSD_ERROR(
+                "[TsdClient][logicDeviceId=%u] invalid running mode [%u], expected PROCESS_MODE [%u] or THREAD_MODE "
+                "[%u]",
+                logicDeviceId, static_cast<uint32_t>(curMode), static_cast<uint32_t>(RunningMode::PROCESS_MODE),
+                static_cast<uint32_t>(RunningMode::THREAD_MODE));
             return nullptr;
         }
         TSD_CHECK((clientManager != nullptr), nullptr, "Fail to create clientManager");
@@ -354,11 +355,11 @@ bool ClientManager::GetVisibleDevices()
             break;
         }
         if (tmpValue >= deviceCnt) {
-            TSD_WARN("[TsdClient] splitInputStr [%s] is exceed device count [%u]", splitInputStr[i].c_str(), deviceCnt);
+            TSD_WARN("[TsdClient] device id [%s] is out of range [0, %u)", splitInputStr[i].c_str(), deviceCnt);
             break;
         }
         if (std::find(userDeviceInfo.begin(), userDeviceInfo.end(), tmpValue) != userDeviceInfo.end()) {
-            TSD_ERROR("[TsdClient] splitInputStr [%s] is repeat", splitInputStr[i].c_str());
+            TSD_ERROR("[TsdClient] duplicate device id [%s]", splitInputStr[i].c_str());
             break;
         }
         userDeviceInfo.push_back(tmpValue);
@@ -395,7 +396,8 @@ TSD_StatusT ClientManager::ChangeUserDeviceIdToLogicDeviceId(const uint32_t user
         return TSD_OK;
     } else {
         TSD_ERROR(
-            "[TsdClient] userDevId [%u] is exceed g_userDeviceInfo size [%zu]", userDevId, g_userDeviceInfo->size());
+            "[TsdClient] userDevId [%u] is not present in visible-device mapping, size [%zu]", userDevId,
+            g_userDeviceInfo->size());
         return TSD_PARAMETER_INVALID;
     }
 }

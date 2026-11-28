@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "tsd/tsd_client.h"
+#include <cinttypes>
 #include "common/enum_name.h"
 #include "tsd_log.h"
 #include "inc/client_manager.h"
@@ -221,7 +222,9 @@ uint32_t TsdFileLoad(
     TSD_CHECK_NULLPTR(clientManager, tsd::TSD_CLT_OPEN_FAILED, "Get ClientManager failed for TsdFileLoad.");
     const tsd::TSD_StatusT ret = clientManager->LoadFileToDevice(filePath, pathLen, fileName, fileNameLen);
     if (ret != tsd::TSD_OK) {
-        TSD_ERROR("TsdFileLoad failed, pathLen[%llu], fileNameLen[%llu].", pathLen, fileNameLen);
+        TSD_ERROR(
+            "TsdFileLoad failed, deviceId[%u], ret[%u], pathLen[%" PRIu64 "], fileNameLen[%" PRIu64 "].", logicDeviceId,
+            ret, pathLen, fileNameLen);
     }
     return ret;
 }

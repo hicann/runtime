@@ -128,7 +128,7 @@ TSD_StatusT HdcClient::CommRecvData(const uint32_t sessionId, const bool ignoreR
 
     hdcMsg.set_device_id(deviceId_); // 回传时填写的DEVICEID用创建时的补充
     MessageParseClient::GetInstance()->ProcessMessage(sessionId, hdcMsg);
-    TSD_INFO("[deviceId=%u] the Tsd recv data already", deviceId_);
+    TSD_INFO("[deviceId=%u] TSD has received data", deviceId_);
     return TSD_OK;
 }
 
@@ -145,7 +145,8 @@ TSD_StatusT HdcClient::CommCreateSession(uint32_t& sessionId)
         return TSD_HDC_CLIENT_CLOSED;
     }
     if (sessionIdNumVec_.empty()) {
-        TSD_ERROR("the connect session is greater than %u", HDC_CLIENT_DEFAULT_MAX_SESSION_NUM);
+        TSD_ERROR(
+            "[deviceId=%u] no session ID available, session limit[%u]", deviceId_, HDC_CLIENT_DEFAULT_MAX_SESSION_NUM);
         return TSD_HDCSESSIONID_NOT_AVAILABLE;
     }
     HDC_SESSION session = nullptr;

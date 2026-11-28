@@ -160,7 +160,7 @@ TSD_StatusT TsdProcessController::Close(uint32_t flag)
             "[TsdClient][deviceId=%u] [sessionId=%u] wait hccp and computer process close response",
             sharedCtx_.logicDeviceId, commAgent_.GetSessionId());
         ret = WaitRsp(0U, false, true);
-        TSD_CHECK(ret == TSD_OK, ret, "Wait open response from device failed.");
+        TSD_CHECK(ret == TSD_OK, ret, "Wait close response from device failed.");
         TSD_RUN_INFO(
             "[TsdClient][logicDeviceId_=%u] has recv close hccp and computer process response",
             sharedCtx_.logicDeviceId);
@@ -496,7 +496,7 @@ TSD_StatusT TsdProcessController::ProcessQueueGrant(
 {
     const uint32_t outLen = queueInfoOutBuff.outLen;
     if (outLen == 0U) {
-        TSD_RUN_INFO("[TsdClient] Current process does not create queue yet. need not to sync");
+        TSD_RUN_INFO("[TsdClient] No queues to synchronize for the current process");
         return TSD_OK;
     }
     if ((outLen % sizeof(queueInfoList->queQueryQuesOfProcInfo[0U])) != 0U) {
@@ -514,7 +514,7 @@ TSD_StatusT TsdProcessController::ProcessQueueGrant(
     for (uint32_t i = 0U; i < queueNum; ++i) {
         const uint32_t queueId = static_cast<uint32_t>(queueInfoList->queQueryQuesOfProcInfo[i].qid);
         if (queueId >= MAX_QUEUE_ID_NUM) {
-            TSD_ERROR("Get invalid queueid[%d]", queueId);
+            TSD_ERROR("Get invalid queueid[%u], valid range [0, %u)", queueId, MAX_QUEUE_ID_NUM);
             return TSD_INTERNAL_ERROR;
         }
         if (!static_cast<bool>(queueInfoList->queQueryQuesOfProcInfo[i].attr.manage)) {

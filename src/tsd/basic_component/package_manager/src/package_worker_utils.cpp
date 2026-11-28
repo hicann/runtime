@@ -24,7 +24,6 @@ TSD_StatusT PackageWorkerUtils::VerifyPackage(const std::string& pkgPath)
     const PackageVerify pkgVerify(pkgPath);
     const TSD_StatusT ret = pkgVerify.VerifyPackage();
     if (ret != TSD_OK) {
-        TSD_ERROR("Verify package failed, ret=%u, path=%s", ret, pkgPath.c_str());
         return TSD_VERIFY_OPP_FAIL;
     }
 

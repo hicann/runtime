@@ -116,9 +116,9 @@ TSD_StatusT HdcCommon::SendNormalShortMsg(const HDCMessage& msg, const uint32_t 
     (void)msg.SerializePartialToArray(serializedMsg + HDC_MSG_SHORT_HEAD_SIZE, static_cast<int32_t>(size));
     const TSD_StatusT result = SendHdcDefaultMsg(session, serializedMsg, serialMsgSizeCur);
     if (result != TSD_OK) {
-        TSD_CHECK_EQ_RETURN_RUNWARN_LOG(
-            result == TSD_HDC_SERVER_CLIENT_SOCKET_CLOSED, TSD_HDC_SERVER_CLIENT_SOCKET_CLOSED,
-            "halHdcSend return socket close");
+        if (result == TSD_HDC_SERVER_CLIENT_SOCKET_CLOSED) {
+            return result;
+        }
 
         TSD_CHECK_NO_RETURN(result == TSD_HDC_SERVER_CLIENT_SOCKET_CLOSED, "Send failed ret[%u]", result);
         return TSD_HDC_SEND_MSG_ERROR;

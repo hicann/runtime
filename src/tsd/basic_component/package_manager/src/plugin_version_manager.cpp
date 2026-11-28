@@ -41,9 +41,11 @@ PluginUpdateStrategy PluginVersionManager::GetPluginUpdateStrategy()
     if (flag < static_cast<int64_t>(PluginUpdateStrategy::PLUGIN_NOT_FORCE_UPDATE) ||
         flag > static_cast<int64_t>(PluginUpdateStrategy::PLUGIN_NO_UPDATE)) {
         TSD_RUN_WARN(
-            "[TsdClient][deviceId=%u] invalid plugin update strategy from DRV: %lld,"
+            "[TsdClient][deviceId=%u] invalid plugin update strategy from DRV: %lld, valid range [%u,%u],"
             " fallback to PLUGIN_NOT_FORCE_UPDATE",
-            envInfo_.GetLogicDeviceId(), flag);
+            envInfo_.GetLogicDeviceId(), static_cast<long long>(flag),
+            static_cast<uint32_t>(PluginUpdateStrategy::PLUGIN_NOT_FORCE_UPDATE),
+            static_cast<uint32_t>(PluginUpdateStrategy::PLUGIN_NO_UPDATE));
         return PluginUpdateStrategy::PLUGIN_NOT_FORCE_UPDATE;
     }
     pluginUpdateStrategy_ = static_cast<PluginUpdateStrategy>(flag);

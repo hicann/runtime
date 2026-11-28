@@ -30,7 +30,7 @@ bool PackageWorkerFactory::RegisterPackageWorkerCreator(
     std::lock_guard<std::mutex> lk(creatorMapMtx_);
     auto iter = creatorMap_.find(type);
     if (iter != creatorMap_.end()) {
-        TSD_RUN_WARN("Register[%u] package worker already exist", static_cast<uint32_t>(type));
+        TSD_RUN_WARN("Package worker[%u] is already registered", static_cast<uint32_t>(type));
         return true;
     }
 

@@ -50,8 +50,8 @@ TSD_StatusT PackageSender::SendAICPUPackageSimple(
             peerNode, static_cast<int32_t>(envInfo_.GetLogicDeviceId()), orgFile.c_str(), dstFile.c_str(), nullptr);
         if (ret != DRV_ERROR_NONE) {
             TSD_ERROR(
-                "[TsdClient][deviceId=%u] drvHdcSendFile file[%s] to [%s] failed ret = %d", envInfo_.GetLogicDeviceId(),
-                orgFile.c_str(), dstFile.c_str(), ret);
+                "[TsdClient][deviceId=%u] drvHdcSendFileV2 file[%s] to [%s] failed ret = %d",
+                envInfo_.GetLogicDeviceId(), orgFile.c_str(), dstFile.c_str(), ret);
             return TSD_INTERNAL_ERROR;
         }
     } else {

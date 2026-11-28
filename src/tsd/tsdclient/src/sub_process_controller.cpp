@@ -9,6 +9,7 @@
  */
 
 #include "inc/sub_process_controller.h"
+#include <cinttypes>
 #include "common/enum_name.h"
 #include "tsd_log.h"
 #include "tsd_scope_guard.h"
@@ -37,7 +38,10 @@ SubProcessController::SubProcessController(
 bool SubProcessController::SetCommonOpenParamList(MessageContext& ctx, const ProcOpenArgs* const procArgs) const
 {
     if ((procArgs->envCnt > PROCESS_OPEN_MAX_ENV_CNT) || (procArgs->extParamCnt > PROCESS_OPEN_MAX_EXT_PARAM_CNT)) {
-        TSD_ERROR("input param error envCnt:%llu, extParamCnt:%llu", procArgs->envCnt, procArgs->extParamCnt);
+        TSD_ERROR(
+            "input param error envCnt:%" PRIu64 ", valid range [0, %" PRIu64 "], extParamCnt:%" PRIu64
+            ", valid range [0, %" PRIu64 "]",
+            procArgs->envCnt, PROCESS_OPEN_MAX_ENV_CNT, procArgs->extParamCnt, PROCESS_OPEN_MAX_EXT_PARAM_CNT);
         return false;
     }
     try {
@@ -170,7 +174,9 @@ TSD_StatusT SubProcessController::CloseSubProc(const pid_t closePid)
 
     TSD_StatusT ret = commAgent_.SendMsg(msg);
     if (ret != TSD_OK) {
-        TSD_ERROR("[TsdClient][deviceId=%u] send remove msg to device error", sharedCtx_.logicDeviceId);
+        TSD_ERROR(
+            "[TsdClient][deviceId=%u] send close-subprocess msg to device failed, closePid:%d, ret:%u",
+            sharedCtx_.logicDeviceId, closePid, ret);
         return TSD_INTERNAL_ERROR;
     }
     ret = tsdCtrl_.WaitRsp(0U);
@@ -215,7 +221,9 @@ TSD_StatusT SubProcessController::GetSubProcStatus(ProcStatusInfo* pidInfo, cons
 TSD_StatusT SubProcessController::GetSubProcListStatus(ProcStatusParam* pidInfo, const uint32_t arrayLen)
 {
     if ((pidInfo == nullptr) || (arrayLen == 0U) || (arrayLen > MAX_PROCESS_PID_CNT)) {
-        TSD_ERROR("input param is invalid in GetSubProcListStatus");
+        TSD_ERROR(
+            "input param is invalid in GetSubProcListStatus, pidInfo is null:%u, arrayLen:%u, valid range [1, %u]",
+            static_cast<uint32_t>(pidInfo == nullptr), arrayLen, MAX_PROCESS_PID_CNT);
         return TSD_INTERNAL_ERROR;
     }
 
@@ -248,7 +256,10 @@ TSD_StatusT SubProcessController::GetSubProcListStatus(ProcStatusParam* pidInfo,
 TSD_StatusT SubProcessController::RemoveFileOnDevice(const char_t* const filePath, const uint64_t pathLen)
 {
     if ((filePath == nullptr) || (pathLen == 0UL) || (pathLen >= 4096UL)) {
-        TSD_ERROR("input param is invalid in RemoveFileOnDevice");
+        TSD_ERROR(
+            "input param is invalid in RemoveFileOnDevice, filePath is null:%u, pathLen:%" PRIu64
+            ", valid range [1, 4096)",
+            static_cast<uint32_t>(filePath == nullptr), pathLen);
         return TSD_INTERNAL_ERROR;
     }
     try {

@@ -51,7 +51,7 @@ void MessageParseInterface::ProcessMessage(const uint32_t sessionID, const HDCMe
                 static_cast<uint32_t>(type), parseFuncMap_.size());
             uint32_t i = 0;
             for (auto iter = parseFuncMap_.begin(); iter != parseFuncMap_.end(); iter++, i++) {
-                TSD_RUN_INFO("func type = %u\n", static_cast<uint32_t>(iter->first));
+                TSD_RUN_INFO("func type = %u", static_cast<uint32_t>(iter->first));
             }
         }
     }

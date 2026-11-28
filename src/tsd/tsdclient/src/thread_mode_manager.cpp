@@ -241,7 +241,7 @@ TSD_StatusT ThreadModeManager::HandleAICPUPackage(const uint32_t packageType) co
 {
     if (packageName_[packageType] == "") {
         TSD_RUN_INFO(
-            "[TsdClient][deviceId_=%u] package is not existed, skip send, packageType[%u]", logicDeviceId_,
+            "[TsdClient][deviceId_=%u] package name is empty, skip loading, packageType[%u]", logicDeviceId_,
             packageType);
         return TSD_OK;
     }
@@ -274,12 +274,12 @@ void ThreadModeManager::Destroy()
 {
     if (tfSoHandle_ != nullptr) {
         (void)mmDlclose(tfSoHandle_);
-        TSD_INFO("[TsdClient] close aicpu-sd so");
+        TSD_INFO("[TsdClient] close libtensorflow.so");
         tfSoHandle_ = nullptr;
     }
     if (handle_ != nullptr) {
         (void)mmDlclose(handle_);
-        TSD_INFO("[TsdClient] close aicpu-sd so");
+        TSD_INFO("[TsdClient] close libaicpu_scheduler.so");
         handle_ = nullptr;
         startAicpu_ = nullptr;
         stopAicpu_ = nullptr;
@@ -306,8 +306,9 @@ ThreadModeManager::~ThreadModeManager() { Destroy(); }
 TSD_StatusT ThreadModeManager::InitQs(const InitFlowGwInfo* const initInfo)
 {
     (void)initInfo;
-    if (StartCallQS(logicDeviceId_) != TSD_OK) {
-        TSD_ERROR("[TsdClient] handle aicpu package to device failed");
+    const TSD_StatusT ret = StartCallQS(logicDeviceId_);
+    if (ret != TSD_OK) {
+        TSD_ERROR("[TsdClient] QS initialization failed, logicDeviceId:%u, ret:%u", logicDeviceId_, ret);
         return TSD_INTERNAL_ERROR;
     }
     TSD_RUN_INFO("[TsdClient][logicDeviceId_=%u] start QS process success", logicDeviceId_);
@@ -510,7 +511,9 @@ TSD_StatusT ThreadModeManager::ProcessCloseSubProcList(const ProcStatusParam* cl
 TSD_StatusT ThreadModeManager::GetSubProcListStatus(ProcStatusParam* pidInfo, const uint32_t arrayLen)
 {
     if ((pidInfo == nullptr) || (arrayLen == 0U) || (arrayLen > MAX_PROCESS_PID_CNT)) {
-        TSD_ERROR("input param is invalid");
+        TSD_ERROR(
+            "input param is invalid in GetSubProcListStatus, pidInfo is null:%u, arrayLen:%u, valid range [1, %u]",
+            static_cast<uint32_t>(pidInfo == nullptr), arrayLen, MAX_PROCESS_PID_CNT);
         return TSD_INTERNAL_ERROR;
     }
 

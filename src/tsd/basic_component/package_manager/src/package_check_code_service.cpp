@@ -125,7 +125,7 @@ TSD_StatusT PackageCheckCodeService::GetDeviceCheckCode()
 {
     if (ctx_.aicpuPackageExistInDevice) {
         TSD_RUN_INFO(
-            "[PackageManager][deviceId=%u] aicpu package already exist in device", envInfo_.GetLogicDeviceId());
+            "[PackageManager][deviceId=%u] aicpu package already exists on the device", envInfo_.GetLogicDeviceId());
         return TSD_AICPUPACKAGE_EXISTED;
     }
 
@@ -140,7 +140,7 @@ TSD_StatusT PackageCheckCodeService::GetDeviceCheckCode()
     TSD_CHECK_NULLPTR(versionVerify, TSD_INTERNAL_ERROR, "no VersionVerify available.");
 
     if (!versionVerify->SpecialFeatureCheck(HDCMessage::TSD_CHECK_PACKAGE)) {
-        TSD_RUN_INFO("[TsdClient] Device does not support search check_code before send aicpu package.");
+        TSD_RUN_INFO("[TsdClient] Device does not support querying check_code before sending the aicpu package.");
         ctx_.aicpuPackageExistInDevice = true;
         return TSD_OK;
     }

@@ -10,6 +10,7 @@
 #include "package_verify.h"
 
 #include <unistd.h>
+#include <cerrno>
 #include <fstream>
 #include "mmpa/mmpa_api.h"
 #include "tsd_log.h"
@@ -274,7 +275,9 @@ TSD_StatusT PackageVerify::ReWriteAicpuPackage(
     const ScopeGuard closeFileGuard([&fp]() { (void)fclose(fp); });
     const size_t writeRet = fwrite(buf, len, 1, fp);
     if (writeRet != 1) {
-        TSD_ERROR("[CMSCBB_VERIFY] fwrite failed writeRet[%zu]", writeRet);
+        TSD_ERROR(
+            "[CMSCBB_VERIFY] fwrite failed, path[%s], expectedBytes[%u], writtenElements[%zu], errno[%d]",
+            srcPath.c_str(), len, writeRet, errno);
         return static_cast<uint32_t>(TSD_START_FAIL);
     }
     TSD_INFO("[CMSCBB_VERIFY] end write new file:%s, len:%u", srcPath.c_str(), len);

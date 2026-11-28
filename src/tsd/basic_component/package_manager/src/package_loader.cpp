@@ -12,6 +12,7 @@
 #include "package_sender.h"
 #include "package_check_code_service.h"
 #include "plugin_version_manager.h"
+#include <cinttypes>
 #include <string>
 #include <vector>
 #include "driver/ascend_inpackage_hal.h"
@@ -246,7 +247,7 @@ TSD_StatusT PackageLoader::LoadCannHsPkgToDevice(const std::string& pkgPureName,
         return TSD_INTERNAL_ERROR;
     }
     if (orgFile.empty()) {
-        TSD_RUN_WARN("cannot find package:%s, optional is true skip", pkgPureName.c_str());
+        TSD_RUN_WARN("Optional package not found:%s, skip loading", pkgPureName.c_str());
         return TSD_OK;
     }
 
@@ -300,7 +301,9 @@ TSD_StatusT PackageLoader::LoadOmFileToDevice(
     const MessageContext& baseCtx)
 {
     if ((filePath == nullptr) || (pathLen == 0UL) || (pathLen >= HELPER_INPUT_MAX_FILE_PATH_LEN)) {
-        TSD_ERROR("input param is invalid");
+        TSD_ERROR(
+            "input param is invalid, filePath is null:%u, pathLen:%" PRIu64 ", expected 0 < pathLen < %" PRIu64,
+            static_cast<uint32_t>(filePath == nullptr), pathLen, HELPER_INPUT_MAX_FILE_PATH_LEN);
         return TSD_INTERNAL_ERROR;
     }
     try {
@@ -355,7 +358,9 @@ TSD_StatusT PackageLoader::LoadFileToDevice(
 bool PackageLoader::IsOkToLoadFileToDevice(const char_t* const fileName, const uint64_t fileNameLen) const
 {
     if ((fileName == nullptr) || (fileNameLen == 0UL) || (fileNameLen >= HELPER_INPUT_MAX_FILE_NAME_LEN)) {
-        TSD_ERROR("input param is invalid");
+        TSD_ERROR(
+            "input param is invalid, fileName is null:%u, fileNameLen:%" PRIu64 ", expected 0 < fileNameLen < %" PRIu64,
+            static_cast<uint32_t>(fileName == nullptr), fileNameLen, HELPER_INPUT_MAX_FILE_NAME_LEN);
         return false;
     }
     if (!capabilityMgr_.IsSupportCommonInterface(TSD_SUPPORT_HS_AISERVER_FEATURE_BIT)) {
@@ -441,13 +446,13 @@ bool PackageLoader::SupportLoadPkg(const std::string& pkgName) const
     }
 
     if ((pkgName == UDF_PKG_NAME) || (pkgName == HCCD_PKG_NAME)) {
-        TSD_INFO("package is not need load, name:%s", pkgName.c_str());
+        TSD_INFO("package does not need to be loaded, name:%s", pkgName.c_str());
         return false;
     }
 
     for (const auto chip : iter->second) {
         if (envInfo_.GetPlatInfoChipType() == static_cast<uint32_t>(chip)) {
-            TSD_INFO("current device chip:%u support package:%s", envInfo_.GetPlatInfoChipType(), pkgName.c_str());
+            TSD_INFO("current device chip:%u supports package:%s", envInfo_.GetPlatInfoChipType(), pkgName.c_str());
             return true;
         }
     }
@@ -479,7 +484,7 @@ TSD_StatusT PackageLoader::LoadSinglePackageToDevice(
         return TSD_INTERNAL_ERROR;
     }
     if (orgFile.empty()) {
-        TSD_RUN_INFO("cannot find package:%s, optional is true skip", pkgPureName.c_str());
+        TSD_RUN_INFO("Optional package not found:%s, skip loading", pkgPureName.c_str());
         return TSD_OK;
     }
     const std::string hostPkgHash = CalFileSha256HashValue(orgFile);
