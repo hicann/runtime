@@ -192,7 +192,7 @@ static rtError_t PreProcAicAivTaskForFusion(
     aicAivInfo->program = (prog != nullptr) ? prog : realProgram;
     RT_LOG(
         RT_LOG_INFO,
-        "kernel info: stream_id=%d, kernelAttrType=%s, kernel_name=%s,mixType=" RT_ENUM_LOG_FORMAT(
+        "kernel info: stream_id=%d, kernelAttrType=%s, kernel_name=%s, mixType=" RT_ENUM_LOG_FORMAT(
             "%u") ", taskRation=%u, tilingKey=%llu.",
         stm->Id_(), KernelAttrTypeToString(kernelAttrType).c_str(), registeredKernel->Name_().c_str(),
         RT_ENUM_LOG_VALUE(static_cast<uint32_t>(mixType), RtMixTypeToString(static_cast<RtMixType>(mixType))),
@@ -454,7 +454,15 @@ static rtError_t CheckUpdateFusionTaskInfo(
             (updateTask->u.fusionKernelTask.aicPart.kernel->GetFuncType() != kernel->GetFuncType()) ||
             (updateTask->u.fusionKernelTask.aicAivType != kernelType),
         RT_ERROR_KERNEL_TYPE, ErrorCode::EE1017, "Checking and updating fusion task information", "kernelType",
-        "kernel type (mixType, funcType, machine) must match the original fusion task");
+        RtFmtMsg(
+            "kernel type must match the original fusion task. The actual kernel type is "
+            "(mixType=%s, funcType=%s, machine=%u) and the original is "
+            "(mixType=%s, funcType=%s, machine=%u); machine 0 means AIC and 1 means AIV",
+            KernelMixTypeToString(kernel->GetMixType()).c_str(), KernelFuncTypeToString(kernel->GetFuncType()).c_str(),
+            static_cast<uint32_t>(kernelType),
+            KernelMixTypeToString(updateTask->u.fusionKernelTask.aicPart.kernel->GetMixType()).c_str(),
+            KernelFuncTypeToString(updateTask->u.fusionKernelTask.aicPart.kernel->GetFuncType()).c_str(),
+            static_cast<uint32_t>(updateTask->u.fusionKernelTask.aicAivType)));
 
     return RT_ERROR_NONE;
 }

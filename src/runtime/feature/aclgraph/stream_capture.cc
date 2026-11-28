@@ -103,7 +103,7 @@ rtError_t UpdateStreamTask(Stream* stm, TaskInfo** task)
     *task = taskInfo;
     capture->UpdateTaskIndex(taskIndex + 1U);
     RT_LOG(
-        RT_LOG_DEBUG, "stream_id=%hu, task_id=%hu, current task index=%u, task group size=%u", streamId, taskId,
+        RT_LOG_DEBUG, "stream_id=%hu, task_id=%hu, current task index=%u, task group size=%zu", streamId, taskId,
         taskIndex, updateTaskGroup->taskIds.size());
     return RT_ERROR_NONE;
 }
