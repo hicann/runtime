@@ -78,7 +78,11 @@ void IncMultipleTaskCqeNum(TaskInfo* taskInfo)
     DavinciMultiTaskInfo* davinciMultiTaskInfo = &(taskInfo->u.davinciMultiTaskInfo);
 
     if (davinciMultiTaskInfo->multipleTaskCqeNum == 0xFFU) {
-        RT_LOG(RT_LOG_WARNING, "multipleTaskCqeNum_=%u", davinciMultiTaskInfo->multipleTaskCqeNum);
+        RT_LOG(
+            RT_LOG_WARNING,
+            "Skipping CQE count increment because the counter is at its maximum. "
+            "multipleTaskCqeNum_=%u, expected range before increment is [0, 254].",
+            davinciMultiTaskInfo->multipleTaskCqeNum);
         return;
     }
 
@@ -105,7 +109,11 @@ void DecMultipleTaskCqeNum(TaskInfo* taskInfo)
 {
     DavinciMultiTaskInfo* davinciMultiTaskInfo = &(taskInfo->u.davinciMultiTaskInfo);
     if (davinciMultiTaskInfo->multipleTaskCqeNum == 0U) {
-        RT_LOG(RT_LOG_WARNING, "multipleTaskCqeNum_=%u", davinciMultiTaskInfo->multipleTaskCqeNum);
+        RT_LOG(
+            RT_LOG_WARNING,
+            "Skipping CQE count decrement because the counter is 0. "
+            "multipleTaskCqeNum_=%u, expected range before decrement is [1, 255].",
+            davinciMultiTaskInfo->multipleTaskCqeNum);
         return;
     }
 

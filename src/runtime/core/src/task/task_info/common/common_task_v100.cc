@@ -166,7 +166,7 @@ static void ConstructSqeForStreamClearTask(TaskInfo* const taskInfo, rtStarsSqe_
     PrintSqe(command, "StreamClearTask");
     RT_LOG(
         RT_LOG_INFO,
-        "Send stream clear task succ,sqe_type=" RT_ENUM_LOG_FORMAT(
+        "Send stream clear task succ, sqe_type=" RT_ENUM_LOG_FORMAT(
             "%u") ", pre_p=%u, stream_id=%u, task_id=%u, task_type=" RT_ENUM_LOG_FORMAT("%u") ", clear target "
                                                                                               "stream_id=%u.",
         RT_ENUM_LOG_VALUE(static_cast<uint32_t>(sqe->type), "STARS_SQE_TYPE_PLACE_HOLDER"), sqe->pre_p,
@@ -196,7 +196,7 @@ static void ConstructSqeForNotifyResetTask(TaskInfo* const taskInfo, rtStarsSqe_
     PrintSqe(command, "NotifyResetTask");
     RT_LOG(
         RT_LOG_INFO,
-        "Send NotifyReset task succ,sqe_type=" RT_ENUM_LOG_FORMAT(
+        "Send NotifyReset task succ, sqe_type=" RT_ENUM_LOG_FORMAT(
             "%u") ", pre_p=%u, stream_id=%u, task_id=%u, task_type=" RT_ENUM_LOG_FORMAT("%u") ", reset target "
                                                                                               "notify_id=%u.",
         RT_ENUM_LOG_VALUE(static_cast<uint32_t>(sqe->type), "STARS_SQE_TYPE_PLACE_HOLDER"), sqe->pre_p,

@@ -114,7 +114,7 @@ void* TaskResManage::MallocPcieBarBuffer(const uint32_t size, Device* const dev,
     rtError_t ret = dev->Driver_()->DevMemAllocWithFlag(
         &addr, static_cast<uint64_t>(size), RT_MEMORY_P2P_HBM, dev->Id_(), &allocConfig, drvFlag);
     if (ret != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_WARNING, "alloc dev mem failed, retCode=%#x, size=%u, dev_id=%u.", ret, size, dev->Id_());
+        RT_LOG(RT_LOG_WARNING, "alloc dev mem failed, retCode=%#x, size=%u bytes, dev_id=%u.", ret, size, dev->Id_());
         return nullptr;
     }
     ret = dev->Driver_()->PcieHostRegister(addr, static_cast<uint64_t>(size), dev->Id_(), outAddr);
@@ -148,7 +148,7 @@ bool TaskResManage::CreateTaskRes(Stream* stm)
     COND_RETURN_WARN(
         (taskResBaseAddr_ == nullptr), false,
         "no memory for taskRes,"
-        "taskResSize=%u, taskPoolNum_=%u.",
+        " taskResSize=%u bytes, taskPoolNum_=%u.",
         taskResCellSize, taskPoolNum_);
 
     streamId_ = stm->Id_();
@@ -230,7 +230,8 @@ uint16_t TaskResManage::GetTaskPoolSizeByChipType(const rtChipType_t chipType) c
     DevProperties prop;
     const rtError_t ret = GET_DEV_PROPERTIES(chipType, prop);
     COND_RETURN_ERROR_MSG_INNER(
-        ret != RT_ERROR_NONE, 0U, "GetDevProperties failed, chip type=%d.", static_cast<int32_t>(chipType));
+        ret != RT_ERROR_NONE, 0U, "GetDevProperties failed, chip type=%d, ret=%#x.", static_cast<int32_t>(chipType),
+        static_cast<uint32_t>(ret));
     if (prop.taskPoolSizeFromRtsqDepth) {
         return prop.rtsqDepth;
     }
@@ -364,7 +365,7 @@ bool TaskResManage::RecycleTaskInfoO1(uint32_t taskId)
     } else {
         RT_LOG(
             RT_LOG_WARNING,
-            "taskDesHeadIdx is already recycle, device_id=%u, stream_id=%d, taskId=%u, "
+            "taskDesHeadIdx is already recycled, device_id=%u, stream_id=%d, taskId=%u, "
             "taskDesHeadIdx=%u, taskResHead_=%u, tail=%u, taskResTail_=%u, resTaskId=%hu",
             deviceId_, streamId_, taskId, taskDesHeadIdx, taskResHead_, tail, taskResTail_,
             taskRes_[taskDesHeadIdx].taskInfo.id);
@@ -427,7 +428,7 @@ TaskInfo* TaskResManage::AllocTaskInfoByTaskResId(
         task->isValidInO1 = true;
         tail = (tail + 1U) % taskPoolNum_;
         RT_LOG(
-            RT_LOG_DEBUG, "taskResId is not equal taskResTail_, taskResId=%u, taskResTail_=%u", taskResId,
+            RT_LOG_DEBUG, "taskResId is not equal to taskResTail_, taskResId=%u, taskResTail_=%u", taskResId,
             taskResTail_);
     }
 

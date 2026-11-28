@@ -62,7 +62,7 @@ rtError_t TaskFactory::Init()
         TaskAllocator(GetTaskMaxSize(), INIT_TASK_CAPACITY, device_->GetDevProperties().maxSupportTaskNum);
     COND_RETURN_AND_MSG_OUTER(
         allocator_ == nullptr, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013, sizeof(TaskAllocator), "new");
-    RT_LOG(RT_LOG_DEBUG, "TaskFactory::Init ok, alloc size is %zu.", sizeof(TaskAllocator));
+    RT_LOG(RT_LOG_DEBUG, "TaskFactory::Init ok, alloc size is %zu bytes.", sizeof(TaskAllocator));
     return RT_ERROR_NONE;
 }
 
@@ -224,7 +224,11 @@ TaskInfo* TaskFactory::Alloc(Stream* stream, tsTaskType_t taskType, rtError_t& e
             id = TryAgainAlloc(stream, errCode);
             COND_RETURN_AND_MSG_OUTER(
                 !exitFlag_ && (id < 0) && (errCode == RT_ERROR_TASK_OUT_OF_RANGE), nullptr, ErrorCode::EE1019,
-                "Allocating task info", "The number of pending tasks in the stream exceeds the limit");
+                "Allocating task info",
+                RtFmtMsg(
+                    "The device limit for non-sink tasks has been reached "
+                    "(device_id=%u, stream_id=%d, allocation_result=%d, task_limit=%u)",
+                    device_->Id_(), stream->Id_(), id, device_->GetDevProperties().maxSupportTaskNum));
             COND_RETURN_AND_MSG_OUTER(
                 !exitFlag_ && (id < 0) && (errCode == RT_ERROR_TASK_NEW), nullptr, ErrorCode::EE1013,
                 sizeof(TaskIdManager), "new");
