@@ -2578,8 +2578,13 @@ rtError_t ApiImpl::MemCopySync(
                                                                                         RT_MEMCPY_DEVICE_TO_DEVICE;
     }
 
-    UNUSED(checkKind);
-    return driver->MemCopySync(dst, destMax, src, cnt, curKind, true, device->Id_());
+    const bool mbufCopy =
+        ((checkKind == WITHOUT_CHECK_KIND) || (checkKind == NOT_CHECK_KIND_BUT_CHECK_PINNED)) &&
+        IS_SUPPORT_CHIP_FEATURE(Runtime::Instance()->GetChipType(), RtOptionalFeatureType::RT_FEATURE_MEM_MBUF_COPY);
+    if (mbufCopy || NpuDriver::CheckIsSupportFeature(device->Id_(), FEATURE_SVM_MEMCPY_SUPPORT_REGISTER_ADDR)) {
+        return driver->MemCopySync(dst, destMax, src, cnt, curKind, true, device->Id_());
+    }
+    return driver->MemCopySync(dst, destMax, src, cnt, curKind);
 }
 
 static void ConvertMappedAddrToDevice(Device* const device, void*& src, rtMemcpyKind_t& kind)

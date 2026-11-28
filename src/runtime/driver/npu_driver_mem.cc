@@ -2355,21 +2355,10 @@ drvError_t NpuDriver::MemCopySyncAdapter(
     const uint32_t devId)
 {
     if ((devId != INVALID_COPY_MODULEID) && (&halMemcpy != nullptr)) {
-        // Mbuf buffer memory on mbuf chips can only be copied by halMemcpy.
-        const bool isMbufChip = IS_SUPPORT_CHIP_FEATURE(chipType_, RtOptionalFeatureType::RT_FEATURE_MEM_MBUF_COPY);
-        // halMemcpy supports D2H only, so the shortcut applies to D2H; other directions use the feature query below.
-        const bool isMbufD2H = isMbufChip && (kind == RT_MEMCPY_DEVICE_TO_HOST);
-        const bool supported = isMbufD2H || ((&halSupportFeature != nullptr) &&
-                                             halSupportFeature(devId, FEATURE_SVM_MEMCPY_SUPPORT_REGISTER_ADDR));
-        RT_LOG(
-            RT_LOG_DEBUG, "Memcpy feature query: deviceId=%" PRIu32 ", mbufChip=%" PRId32 ", supported=%" PRId32 ".",
-            devId, isMbufChip, supported);
-        if (supported) {
-            memcpy_info drvInfo = {};
-            return halMemcpy(
-                dst, static_cast<size_t>(destMax), const_cast<void*>(src), static_cast<size_t>(size),
-                BuildDrvMemcpyInfo(kind, drvInfo, devId));
-        }
+        memcpy_info drvInfo = {};
+        return halMemcpy(
+            dst, static_cast<size_t>(destMax), const_cast<void*>(src), static_cast<size_t>(size),
+            BuildDrvMemcpyInfo(kind, drvInfo, devId));
     }
     RT_LOG(RT_LOG_DEBUG, "Memcpy fallback to drvMemcpy: deviceId=%" PRIu32, devId);
     return drvMemcpy(RtPtrToPtr<UINT64>(dst), destMax, RtPtrToPtr<UINT64>(src), size);
