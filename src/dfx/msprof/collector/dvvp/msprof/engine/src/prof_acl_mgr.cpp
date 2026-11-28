@@ -1311,8 +1311,17 @@ std::string ProfAclMgr::GetOpTypeConfig()
     return params_->opType;
 }
 
-std::string ProfAclMgr::GetParamJsonStr()
+// Keys that only carry user input and can be dropped when the payload has to shrink. Listed
+// in trim order: the first entry is dropped first, so the most valuable switches survive.
+static const std::vector<std::string>& DroppableFields()
 {
+    static const std::vector<std::string> kFields = {"app_parameters"};
+    return kFields;
+}
+
+std::string ProfAclMgr::BuildParamJson(bool trimPayload, std::vector<std::string>& droppedFields)
+{
+    droppedFields.clear();
     if (params_ == nullptr) {
         MSPROF_LOGW("ProfileParams is empty");
         return "{}";
@@ -1323,7 +1332,27 @@ std::string ProfAclMgr::GetParamJsonStr()
     object.RemoveByKey("ubProfiling");
     object.RemoveByKey("ubInterval");
     object.RemoveByKey("opType");
+    if (trimPayload) {
+        // Dropped like the fields above: the receiving side leaves each key at its default and
+        // the corresponding consumer skips it (application.cpp for app_parameters).
+        for (const auto& field : DroppableFields()) {
+            object.RemoveByKey(field);
+            droppedFields.push_back(field);
+        }
+    }
     return object.ToString();
+}
+
+std::string ProfAclMgr::GetParamJsonStr()
+{
+    std::vector<std::string> droppedFields;
+    return BuildParamJson(false, droppedFields);
+}
+
+bool ProfAclMgr::GetTrimmedParamJsonStr(std::string& paramJson, std::vector<std::string>& droppedFields)
+{
+    paramJson = BuildParamJson(true, droppedFields);
+    return paramJson.size() <= PARAM_LEN_MAX;
 }
 
 /**

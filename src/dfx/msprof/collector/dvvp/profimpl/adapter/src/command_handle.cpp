@@ -11,6 +11,7 @@
 #include <map>
 #include <thread>
 #include <algorithm>
+#include <vector>
 #include "prof_api.h"
 #include "prof_api_common.h"
 #include "msprof_dlog.h"
@@ -26,6 +27,20 @@ using namespace analysis::dvvp::common::error;
 using namespace analysis::dvvp::common::utils;
 using namespace Analysis::Dvvp::Common::Platform;
 using namespace Msprofiler::Parser;
+
+namespace {
+std::string JoinFieldNames(const std::vector<std::string>& fields)
+{
+    std::string joined;
+    for (const auto& field : fields) {
+        if (!joined.empty()) {
+            joined += ", ";
+        }
+        joined += field;
+    }
+    return joined;
+}
+} // namespace
 
 ProfModuleReprotMgr::~ProfModuleReprotMgr() {}
 
@@ -142,8 +157,26 @@ int32_t ProfModuleReprotMgr::SetCommandHandleProf(ProfCommand& command) const
     // msprof param
     std::string msprofParams = Msprofiler::Api::ProfAclMgr::instance()->GetParamJsonStr();
     if (msprofParams.size() > PARAM_LEN_MAX) {
-        MSPROF_LOGE("tparamsLen:%zu bytes, exceeds:%d bytes", msprofParams.size(), PARAM_LEN_MAX);
-        return ACL_ERROR;
+        // The payload is mostly the --application command line, which is unbounded user input.
+        // Dropping it is preferable to failing the whole collection: the receiving side would
+        // otherwise reject a truncated profData. Only app_parameters is dropped, every other
+        // switch is preserved.
+        MSPROF_LOGW(
+            "Profiling param length %zu bytes exceeds %d bytes, retry without the fields "
+            "that only carry user input.",
+            msprofParams.size(), PARAM_LEN_MAX);
+        std::vector<std::string> droppedFields;
+        if (!Msprofiler::Api::ProfAclMgr::instance()->GetTrimmedParamJsonStr(msprofParams, droppedFields)) {
+            MSPROF_LOGE(
+                "Profiling param length %zu bytes exceeds %d bytes even after dropping the "
+                "optional fields",
+                msprofParams.size(), PARAM_LEN_MAX);
+            return ACL_ERROR;
+        }
+        MSPROF_LOGW(
+            "%s was removed to fit the profData limit; shorten the corresponding options to "
+            "keep them.",
+            JoinFieldNames(droppedFields).c_str());
     }
 
     command.params.profDataLen = msprofParams.size();

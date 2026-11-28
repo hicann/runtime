@@ -2202,11 +2202,11 @@ TEST_F(COMMANDHANDLE_STEST, commandHandle_api)
 
     // Command initialization and callback dispatch are covered by COMMANDHANDLE_TEST.commandHandle_api.
     // This legacy ST test file is excluded from the current CMake targets.
-    std::string retStr(4099, 'a');
+    std::string overLenStr(PARAM_LEN_MAX + 1, 'a');
     std::string zeroStr = "{}";
     MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::GetParamJsonStr)
         .stubs()
-        .will(returnValue(retStr))
+        .will(returnValue(overLenStr))
         .then(returnValue(zeroStr));
     MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsHelperHostSide).stubs().will(returnValue(false));
     uint32_t devList[] = {0, 1};
