@@ -226,6 +226,61 @@ TEST_F(ApiTest, testRtDevBinaryRegisterAllApiTest)
     EXPECT_EQ(error, RT_ERROR_NONE);
 }
 
+TEST_F(ApiTest, MemCopySyncDriverSelection)
+{
+    ApiImpl impl;
+    auto* runtime = static_cast<Runtime*>(Runtime::Instance());
+    const auto originalChip = GlobalContainer::GetRtChipType();
+    auto* device = runtime->CurrentContext()->Device_();
+    const uint32_t devId = device->Id_();
+    uint32_t src = 1U;
+    uint32_t dst = 0U;
+    for (const auto chip : {CHIP_CLOUD, CHIP_910_B_93}) {
+        GlobalContainer::SetRtChipType(chip);
+        for (const bool feature18 : {false, true}) {
+            SCOPED_TRACE(testing::Message() << "chip=" << chip << ", feature18=" << feature18);
+            auto expectDevice = [&](uint32_t expectedId) {
+                using mockcpp::any;
+                MOCKER(halSupportFeature)
+                    .stubs()
+                    .with(eq(devId), eq(FEATURE_SVM_MEMCPY_SUPPORT_REGISTER_ADDR))
+                    .will(returnValue(feature18));
+                MOCKER_CPP_VIRTUAL(device->Driver_(), &Driver::MemCopySync)
+                    .expects(once())
+                    .with(any(), any(), any(), any(), eq(RT_MEMCPY_DEVICE_TO_HOST), eq(true), eq(expectedId))
+                    .will(returnValue(RT_ERROR_NONE));
+            };
+            const uint32_t checks[] = {
+                INVALID_CHECK_KIND, WITHOUT_CHECK_KIND, CHECK_MEMORY_PINNED, NOT_CHECK_KIND_BUT_CHECK_PINNED};
+            for (const auto check : checks) {
+                SCOPED_TRACE(check);
+                const bool mbuf = (chip == CHIP_910_B_93) &&
+                                  ((check == WITHOUT_CHECK_KIND) || (check == NOT_CHECK_KIND_BUT_CHECK_PINNED));
+                expectDevice((mbuf || feature18) ? devId : INVALID_COPY_MODULEID);
+                if (check == INVALID_CHECK_KIND) {
+                    EXPECT_EQ(rtMemcpy(&dst, sizeof(dst), &src, sizeof(src), RT_MEMCPY_DEVICE_TO_HOST), ACL_RT_SUCCESS);
+                } else {
+                    EXPECT_EQ(
+                        impl.MemCopySync(&dst, sizeof(dst), &src, sizeof(src), RT_MEMCPY_DEVICE_TO_HOST, check),
+                        RT_ERROR_NONE);
+                }
+                GlobalMockObject::verify();
+            }
+            expectDevice(((chip == CHIP_910_B_93) || feature18) ? devId : INVALID_COPY_MODULEID);
+            EXPECT_EQ(
+                impl.MemCopySyncEx(&dst, sizeof(dst), &src, sizeof(src), RT_MEMCPY_DEVICE_TO_HOST), RT_ERROR_NONE);
+            GlobalMockObject::verify();
+            MOCKER_CPP_VIRTUAL(runtime, &Runtime::ChipIsHaveStars).stubs().will(returnValue(true));
+            expectDevice(feature18 ? devId : INVALID_COPY_MODULEID);
+            EXPECT_EQ(
+                impl.MemcpyHostTask(&dst, sizeof(dst), &src, sizeof(src), RT_MEMCPY_DEVICE_TO_HOST, nullptr),
+                RT_ERROR_NONE);
+            GlobalMockObject::verify();
+        }
+    }
+    GlobalContainer::SetRtChipType(originalChip);
+}
+
 TEST_F(ApiTest, testMemcpyHostTaskTest)
 {
     ApiImpl impl;

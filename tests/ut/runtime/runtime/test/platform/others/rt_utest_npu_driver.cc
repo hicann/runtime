@@ -455,17 +455,14 @@ TEST_F(NpuDriverTest, memcpy_all_type)
     delete rawDrv;
 }
 
-TEST_F(NpuDriverTest, MemCopySyncAdapterSupportedFeatureUsesHalMemcpy)
+TEST_F(NpuDriverTest, MemCopySyncAdapterValidDeviceUsesHalMemcpy)
 {
     NpuDriver driver;
     uint32_t src = 1U;
     uint32_t dst = 0U;
     constexpr uint32_t deviceId = 3U;
     g_memcpyInfo = {};
-    MOCKER(halSupportFeature)
-        .expects(once())
-        .with(eq(deviceId), eq(FEATURE_SVM_MEMCPY_SUPPORT_REGISTER_ADDR))
-        .will(returnValue(true));
+    MOCKER(halSupportFeature).expects(never());
     MOCKER(drvMemcpy).expects(never());
     MOCKER(halMemcpy).expects(once()).will(invoke(CaptureHalMemcpyInfo));
 
@@ -486,10 +483,7 @@ TEST_F(NpuDriverTest, MemCopySyncAdapterNonBasicKindPassesNullInfo)
     constexpr uint32_t deviceId = 3U;
     const rtMemcpyKind_t nonBasicKinds[] = {
         RT_MEMCPY_HOST_TO_DEVICE_EX, RT_MEMCPY_DEVICE_TO_HOST_EX, RT_MEMCPY_DEFAULT};
-    MOCKER(halSupportFeature)
-        .stubs()
-        .with(eq(deviceId), eq(FEATURE_SVM_MEMCPY_SUPPORT_REGISTER_ADDR))
-        .will(returnValue(true));
+    MOCKER(halSupportFeature).expects(never());
     MOCKER(drvMemcpy).expects(never());
     MOCKER(halMemcpy).expects(exactly(3)).will(invoke(CaptureHalMemcpyNullInfo));
 
@@ -500,16 +494,13 @@ TEST_F(NpuDriverTest, MemCopySyncAdapterNonBasicKindPassesNullInfo)
     }
 }
 
-TEST_F(NpuDriverTest, MemCopySyncAdapterUnsupportedFeatureFallsBackToDrvMemcpy)
+TEST_F(NpuDriverTest, MemCopySyncAdapterInvalidDeviceFallsBackToDrvMemcpy)
 {
     NpuDriver driver;
     uint32_t src = 1U;
     uint32_t dst = 0U;
-    constexpr uint32_t deviceId = 3U;
-    MOCKER(halSupportFeature)
-        .expects(once())
-        .with(eq(deviceId), eq(FEATURE_SVM_MEMCPY_SUPPORT_REGISTER_ADDR))
-        .will(returnValue(false));
+    constexpr uint32_t deviceId = INVALID_COPY_MODULEID;
+    MOCKER(halSupportFeature).expects(never());
     MOCKER(halMemcpy).expects(never());
     MOCKER(drvMemcpy).expects(once()).will(returnValue(DRV_ERROR_NONE));
 
