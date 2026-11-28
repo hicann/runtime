@@ -452,6 +452,28 @@ rtError_t CCrypto::Encrypt(
     if (!keyCtx_->is_init) {
         return RT_ERROR_CC_KEY_NOT_INITIALIZED;
     }
+    if (mode_ == CC_CRYPTO_ALG_TYPE::CTR) {
+        if (cipher != CC_CRYPTO_CIPHER::AES_128) {
+            return RT_ERROR_FEATURE_NOT_SUPPORT;
+        }
+        AiccCiphertextHeader header{};
+        auto& ssl = OpenSSLLoader::Instance();
+        if (!ssl.Ready() || (ssl.Api.RandBytes(header.iv, AICC_CTR_IV_SIZE - AICC_IV_COUNTER_SIZE) != 1)) {
+            return RT_ERROR_CC_CRYPTO_FAILED;
+        }
+        const rtError_t ret = TransformCtr(plaintext, ptLen, header.iv, ciphertext + sizeof(header));
+        if (ret != RT_ERROR_NONE) {
+            return ret;
+        }
+        header.version = AICC_CIPHER_VERSION;
+        header.totalLen = static_cast<uint32_t>(sizeof(header) + ptLen);
+        header.ivLen = AICC_CTR_IV_SIZE;
+        header.ciphertextLen = static_cast<uint32_t>(ptLen);
+        (void)memcpy_s(ciphertext, sizeof(header), &header, sizeof(header));
+        *ctLen = header.totalLen;
+        keyCtx_->ivH2D.totalBytes.fetch_add(static_cast<uint64_t>(ptLen));
+        return RT_ERROR_NONE;
+    }
     const CryptoCipherBundle* bundle = FindCryptoAlg(cipher);
     if ((bundle == nullptr) || (bundle->cipherFn == nullptr)) {
         RT_LOG(RT_LOG_ERROR, "CCrypto cipher not implemented, cipher=%u", static_cast<uint32_t>(cipher));
@@ -522,6 +544,21 @@ rtError_t CCrypto::Decrypt(
         return RT_ERROR_INVALID_VALUE;
     }
 
+    if (mode_ == CC_CRYPTO_ALG_TYPE::CTR) {
+        if (cipher != CC_CRYPTO_CIPHER::AES_128) {
+            return RT_ERROR_FEATURE_NOT_SUPPORT;
+        }
+        if ((hdr->version != AICC_CIPHER_VERSION) || (hdr->ivLen != AICC_CTR_IV_SIZE) || (hdr->tagLen != 0U)) {
+            return RT_ERROR_CC_CRYPTO_FAILED;
+        }
+        const rtError_t ret = TransformCtr(ciphertext + sizeof(AiccCiphertextHeader), enc_len, hdr->iv, plaintext);
+        if (ret == RT_ERROR_NONE) {
+            *ptLen = enc_len;
+            keyCtx_->totalBytesD2H.fetch_add(static_cast<uint64_t>(enc_len));
+        }
+        return ret;
+    }
+
     const CryptoCipherBundle* bundle = FindCryptoAlg(cipher);
     if ((bundle == nullptr) || (bundle->cipherFn == nullptr)) {
         RT_LOG(RT_LOG_ERROR, "CCrypto cipher not implemented, cipher=%u", static_cast<uint32_t>(cipher));
@@ -549,6 +586,33 @@ rtError_t CCrypto::Decrypt(
     *ptLen = dec_len;
     keyCtx_->totalBytesD2H.fetch_add(static_cast<uint64_t>(dec_len));
     return RT_ERROR_NONE;
+}
+
+rtError_t CCrypto::TransformCtr(const uint8_t* input, size_t length, const uint8_t* iv, uint8_t* output) const
+{
+    auto& ssl = OpenSSLLoader::Instance();
+    if (!ssl.Ready()) {
+        return RT_ERROR_CC_CRYPTO_FAILED;
+    }
+    EVP_CIPHER_CTX* ctx = ssl.Api.CipherCtxNew();
+    if (ctx == nullptr) {
+        return RT_ERROR_CC_CRYPTO_FAILED;
+    }
+    const std::unique_ptr<EVP_CIPHER_CTX, OpenSSLApi::EVP_CIPHER_CTX_free_fn> guard(ctx, ssl.Api.CipherCtxFree);
+    const EVP_CIPHER* cipher = ssl.Api.Aes128Ctr();
+    if ((cipher == nullptr) || (ssl.Api.EncInit(ctx, cipher, nullptr, keyCtx_->host_key_H2D, iv) != 1)) {
+        return RT_ERROR_CC_CRYPTO_FAILED;
+    }
+    int outputLen = 0;
+    if ((ssl.Api.EncUpdate(ctx, output, &outputLen, input, static_cast<int>(length)) != 1) ||
+        (outputLen != static_cast<int>(length))) {
+        return RT_ERROR_CC_CRYPTO_FAILED;
+    }
+    uint8_t finalBytes[AICC_BLOCK_SIZE]{};
+    int finalLen = 0;
+    const int finalRet = ssl.Api.EncFinal(ctx, finalBytes, &finalLen);
+    (void)memset_s(finalBytes, sizeof(finalBytes), 0, sizeof(finalBytes));
+    return ((finalRet == 1) && (finalLen == 0)) ? RT_ERROR_NONE : RT_ERROR_CC_CRYPTO_FAILED;
 }
 
 rtError_t CCrypto::GetDeviceKeyAddr(CC_CRYPTO_DIRECTION direction, uint64_t* keyAddr) const

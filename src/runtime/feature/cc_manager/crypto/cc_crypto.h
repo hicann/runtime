@@ -163,6 +163,8 @@ public:
 
     rtError_t GetDeviceKeyAddr(CC_CRYPTO_DIRECTION direction, uint64_t* keyAddr) const;
 
+    CC_CRYPTO_ALG_TYPE Mode() const { return mode_; }
+
     rtError_t GetKeyStreamPair(uint32_t deviceId, size_t length, int timeout, KeystreamPair& pair);
 
     rtError_t FreeKeyStream(uint32_t deviceId, KeystreamPair& pair);
@@ -174,6 +176,7 @@ public:
         const KeystreamPair& pair, const void* ciphertext, size_t ctLen, void* plaintext, size_t ptLen) const;
 
 private:
+    rtError_t TransformCtr(const uint8_t* input, size_t length, const uint8_t* iv, uint8_t* output) const;
     rtError_t EnsureKeystreamPool() const;
 
     struct KeyCtx;

@@ -139,9 +139,11 @@ rtError_t CompleteSmallD2HCopy(
     COND_RETURN_ERROR(
         (header->totalLen != expectedCiphertextLen) || (header->ciphertextLen != count), RT_ERROR_INVALID_VALUE,
         "Invalid CC small ciphertext length.");
+    const bool ctr = (resource->Crypto().Mode() == CC_CRYPTO_ALG_TYPE::CTR);
     COND_RETURN_ERROR(
-        (header->version != 1U) || (header->ivLen != 12U) || (header->tagLen != 16U), RT_ERROR_CC_CRYPTO_FAILED,
-        "Invalid CC small ciphertext header.");
+        (header->version != AICC_CIPHER_VERSION) || (header->ivLen != (ctr ? AICC_CTR_IV_SIZE : AICC_GCM_IV_SIZE)) ||
+            (header->tagLen != (ctr ? 0U : AICC_GCM_TAG_SIZE)),
+        RT_ERROR_CC_CRYPTO_FAILED, "Invalid CC small ciphertext header.");
     // Authenticate into private storage: GCM may write plaintext before checking its tag.
     uint8_t plaintext[CC_SMALL_PLAINTEXT_CAPACITY]{};
     const ScopeGuard plaintextGuard(

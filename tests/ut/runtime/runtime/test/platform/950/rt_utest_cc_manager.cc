@@ -124,6 +124,7 @@ std::atomic<bool> gExpectedD2HSlicePublishedAtDma{false};
 std::atomic<bool> gAllowD2HNextConsume{false};
 struct SmallLaunchRecord {
     CCSmallCryptoMetadata metadata;
+    uint32_t algType;
     uint8_t ciphertext[CC_SMALL_CIPHER_CAPACITY];
 };
 std::vector<SmallLaunchRecord> gSmallLaunches;
@@ -151,9 +152,11 @@ rtError_t SmallLaunchStub(
     const auto& param = *static_cast<const CCSmallCryptoKernelParam*>(args->args);
     const size_t payloadSize = args->argsSize - headerSize;
     EXPECT_EQ(param.keyLen, AICC_KEY_SIZE);
-    EXPECT_EQ(param.algType, AICC_ALG_AES128_GCM);
+    auto& crypto = CCManager::Instance().resources_[stm->Device_()->Id_()]->Crypto();
+    EXPECT_EQ(param.algType, (crypto.Mode() == CC_CRYPTO_ALG_TYPE::CTR) ? AICC_ALG_AES128_CTR : AICC_ALG_AES128_GCM);
     SmallLaunchRecord record{};
     record.metadata = param.metadata;
+    record.algType = param.algType;
     if (payloadSize != 0U) {
         EXPECT_EQ(memcpy_s(record.ciphertext, sizeof(record.ciphertext), param.ciphertext, payloadSize), EOK);
     }
@@ -161,7 +164,6 @@ rtError_t SmallLaunchStub(
     if (param.mode == static_cast<uint32_t>(CC_CRYPTO_DIRECTION::ENCRYPT)) {
         auto* ciphertext = RtValueToPtr<uint8_t*>(param.metadata.dstAddr);
         size_t ciphertextLen = 0U;
-        auto& crypto = CCManager::Instance().resources_[stm->Device_()->Id_()]->Crypto();
         const rtError_t ret = crypto.Encrypt(
             stm->Device_()->Id_(), CC_CRYPTO_CIPHER::AES_128, RtValueToPtr<const uint8_t*>(param.metadata.srcAddr),
             param.metadata.plaintextLen, reinterpret_cast<const uint8_t*>(&param.metadata), sizeof(param.metadata),
@@ -710,8 +712,9 @@ protected:
 
     static rtChipType_t GetCurrentChipType() { return Runtime::Instance()->GetChipType(); }
 
-    Stream* PrepareSmallTransfer()
+    Stream* PrepareSmallTransfer(CC_CRYPTO_ALG_TYPE mode = CC_CRYPTO_ALG_TYPE::GCM)
     {
+        MOCKER(GetActiveCryptoAlg).stubs().will(returnValue(mode));
         Stream* stm = Runtime::Instance()->CurrentContext(true, DEFAULT_DEVICE_ID)->DefaultStream_();
         Device* dev = stm->Device_();
         auto resource = std::make_unique<CCResManage>(dev);
@@ -738,9 +741,9 @@ protected:
         return stm;
     }
 
-    Stream* PrepareSmallD2H()
+    Stream* PrepareSmallD2H(CC_CRYPTO_ALG_TYPE mode = CC_CRYPTO_ALG_TYPE::GCM)
     {
-        Stream* stm = PrepareSmallTransfer();
+        Stream* stm = PrepareSmallTransfer(mode);
         Driver* driver = stm->Device_()->Driver_();
         MOCKER_CPP_VIRTUAL(driver, &Driver::DevMemAllocWithBackupFlag).stubs().will(invoke(DevMemAllocEntryStub));
         MOCKER_CPP_VIRTUAL(driver, &Driver::HostMemAlloc).stubs().will(invoke(HostMemAllocStub));
@@ -946,6 +949,97 @@ TEST_F(CCManagerTest, Crypto_EncryptDecrypt_RoundTrip)
     EXPECT_EQ(ret, RT_ERROR_NONE);
     EXPECT_EQ(ptLen, sizeof(plaintext));
     EXPECT_EQ(memcmp(plaintext, decrypted, sizeof(plaintext)), 0);
+}
+
+TEST_F(CCManagerTest, Crypto_SmallCtr_UsesH2DKeyInBothDirections)
+{
+    CCrypto crypto(CC_CRYPTO_ALG_TYPE::CTR);
+    MOCKER(GetKeyFromKernel).stubs().will(invoke(+[](int32_t, CRYPTO_KEY_DIRECTION direction, uint8_t* key) {
+        EXPECT_EQ(direction, CRYPTO_KEY_DIRECTION::H2D);
+        (void)memset_s(key, AICC_KEY_SIZE, 0x5A, AICC_KEY_SIZE);
+        return int32_t{0};
+    }));
+    ASSERT_EQ(crypto.InitKey(0U), RT_ERROR_NONE);
+    auto& ssl = OpenSSLLoader::Instance();
+    const auto savedEncInit = ssl.Api.EncInit;
+    const ScopeGuard restoreEncInit([&ssl, savedEncInit]() { ssl.Api.EncInit = savedEncInit; });
+    ssl.Api.EncInit =
+        +[](EVP_CIPHER_CTX*, const EVP_CIPHER* cipher, ENGINE*, const unsigned char* key, const unsigned char* iv) {
+            EXPECT_EQ(cipher, OpenSSLLoader::Instance().Api.Aes128Ctr());
+            EXPECT_NE(iv, nullptr);
+            for (size_t index = 0U; index < AICC_KEY_SIZE; ++index) {
+                EXPECT_EQ(key[index], 0x5A);
+            }
+            return 1;
+        };
+    uint8_t plaintext[CC_SMALL_PLAINTEXT_CAPACITY];
+    (void)memset_s(plaintext, sizeof(plaintext), 0xA5, sizeof(plaintext));
+    uint8_t ciphertext[CC_SMALL_CIPHER_CAPACITY]{};
+    size_t ciphertextLen = 0U;
+    ASSERT_EQ(
+        crypto.Encrypt(
+            0U, CC_CRYPTO_CIPHER::AES_128, plaintext, sizeof(plaintext), nullptr, 0U, ciphertext, &ciphertextLen),
+        RT_ERROR_NONE);
+    EXPECT_EQ(ciphertextLen, sizeof(AiccCiphertextHeader) + sizeof(plaintext));
+    AiccCiphertextHeader header{};
+    (void)memcpy_s(&header, sizeof(header), ciphertext, sizeof(header));
+    EXPECT_EQ(header.ivLen, AICC_CTR_IV_SIZE);
+    EXPECT_EQ(header.tagLen, 0U);
+    uint8_t decoded[CC_SMALL_PLAINTEXT_CAPACITY]{};
+    size_t decodedLen = 0U;
+    ASSERT_EQ(
+        crypto.Decrypt(0U, CC_CRYPTO_CIPHER::AES_128, ciphertext, ciphertextLen, nullptr, 0U, decoded, &decodedLen),
+        RT_ERROR_NONE);
+    EXPECT_EQ(decodedLen, sizeof(plaintext));
+    EXPECT_EQ(memcmp(plaintext, decoded, sizeof(plaintext)), 0);
+    EXPECT_EQ(crypto.keystreamPool_, nullptr);
+}
+
+TEST_F(CCManagerTest, Crypto_SmallCtr_RejectsInvalidHeader)
+{
+    CCrypto crypto(CC_CRYPTO_ALG_TYPE::CTR);
+    MOCKER(GetKeyFromKernel).stubs().will(returnValue(0));
+    ASSERT_EQ(crypto.InitKey(0U), RT_ERROR_NONE);
+    uint8_t plaintext[1]{};
+    uint8_t ciphertext[CC_SMALL_CIPHER_CAPACITY]{};
+    size_t ciphertextLen = 0U;
+    ASSERT_EQ(
+        crypto.Encrypt(0U, CC_CRYPTO_CIPHER::AES_128, plaintext, 1U, nullptr, 0U, ciphertext, &ciphertextLen),
+        RT_ERROR_NONE);
+    AiccCiphertextHeader header{};
+    (void)memcpy_s(&header, sizeof(header), ciphertext, sizeof(header));
+    header.tagLen = AICC_GCM_TAG_SIZE;
+    (void)memcpy_s(ciphertext, sizeof(ciphertext), &header, sizeof(header));
+    uint8_t decoded[CC_SMALL_PLAINTEXT_CAPACITY];
+    (void)memset_s(decoded, sizeof(decoded), 0xA5, sizeof(decoded));
+    size_t decodedLen = 123U;
+    EXPECT_EQ(
+        crypto.Decrypt(0U, CC_CRYPTO_CIPHER::AES_128, ciphertext, ciphertextLen, nullptr, 0U, decoded, &decodedLen),
+        RT_ERROR_CC_CRYPTO_FAILED);
+    EXPECT_EQ(decodedLen, 123U);
+    EXPECT_EQ(decoded[0], 0xA5);
+}
+
+TEST_F(CCManagerTest, Crypto_SmallCtr_RandomFailureDoesNotPublishCiphertext)
+{
+    CCrypto crypto(CC_CRYPTO_ALG_TYPE::CTR);
+    MOCKER(GetKeyFromKernel).stubs().will(returnValue(0));
+    ASSERT_EQ(crypto.InitKey(0U), RT_ERROR_NONE);
+    auto& ssl = OpenSSLLoader::Instance();
+    const auto savedRandBytes = ssl.Api.RandBytes;
+    const ScopeGuard restoreRandBytes([&ssl, savedRandBytes]() { ssl.Api.RandBytes = savedRandBytes; });
+    ssl.Api.RandBytes = +[](unsigned char*, int) { return 0; };
+    uint8_t plaintext[1] = {1U};
+    uint8_t ciphertext[CC_SMALL_CIPHER_CAPACITY];
+    (void)memset_s(ciphertext, sizeof(ciphertext), 0xA5, sizeof(ciphertext));
+    size_t ciphertextLen = 123U;
+    EXPECT_EQ(
+        crypto.Encrypt(
+            0U, CC_CRYPTO_CIPHER::AES_128, plaintext, sizeof(plaintext), nullptr, 0U, ciphertext, &ciphertextLen),
+        RT_ERROR_CC_CRYPTO_FAILED);
+    EXPECT_EQ(ciphertextLen, 123U);
+    EXPECT_EQ(ciphertext[0], 0xA5);
+    EXPECT_EQ(crypto.keystreamPool_, nullptr);
 }
 
 TEST_F(CCManagerTest, Crypto_GetDeviceKeyAddr_Basic)
@@ -3000,6 +3094,47 @@ TEST_F(CCManagerTest, CCResManage_SubmitTask_Basics)
 // ============================================================================
 // CCManager Tests
 // ============================================================================
+
+TEST_F(CCManagerTest, SmallTransfer_CtrH2DUsesSharedKernelAndCtrAlgorithm)
+{
+    Stream* stm = PrepareSmallTransfer(CC_CRYPTO_ALG_TYPE::CTR);
+    uint8_t source[CC_SMALL_PLAINTEXT_CAPACITY]{};
+    uint8_t destination[CC_SMALL_PLAINTEXT_CAPACITY]{};
+    EXPECT_TRUE(CCManager::CanUseSmallCcMemcpy(sizeof(source), RT_MEMCPY_HOST_TO_DEVICE, stm, false));
+    ASSERT_EQ(
+        CCManager::SubmitSmallCcMemcpyTask(
+            destination, sizeof(destination), source, sizeof(source), RT_MEMCPY_HOST_TO_DEVICE, stm, false),
+        RT_ERROR_NONE);
+    ASSERT_EQ(gSmallLaunches.size(), 1U);
+    EXPECT_EQ(gSmallLaunches[0].algType, AICC_ALG_AES128_CTR);
+    EXPECT_EQ(gSmallLaunches[0].metadata.dstAddr, RtPtrToValue(destination));
+    AiccCiphertextHeader header{};
+    (void)memcpy_s(&header, sizeof(header), gSmallLaunches[0].ciphertext, sizeof(header));
+    EXPECT_EQ(header.ivLen, AICC_CTR_IV_SIZE);
+    EXPECT_EQ(header.tagLen, 0U);
+    EXPECT_EQ(header.ciphertextLen, sizeof(source));
+    EXPECT_EQ(CCManager::Instance().resources_[stm->Device_()->Id_()]->Crypto().keystreamPool_, nullptr);
+}
+
+TEST_F(CCManagerTest, SmallTransfer_CtrD2HUsesSharedKernelAndCtrAlgorithm)
+{
+    Stream* stm = PrepareSmallD2H(CC_CRYPTO_ALG_TYPE::CTR);
+    MOCKER_CPP_VIRTUAL(stm, &Stream::Synchronize).stubs().will(returnValue(RT_ERROR_NONE));
+    uint8_t source[CC_SMALL_PLAINTEXT_CAPACITY];
+    (void)memset_s(source, sizeof(source), 0x5A, sizeof(source));
+    uint8_t destination[CC_SMALL_PLAINTEXT_CAPACITY]{};
+    EXPECT_TRUE(CCManager::CanUseSmallCcMemcpy(sizeof(source), RT_MEMCPY_DEVICE_TO_HOST, stm, true));
+    EXPECT_FALSE(CCManager::CanUseSmallCcMemcpy(sizeof(source), RT_MEMCPY_DEVICE_TO_HOST, stm, false));
+    ASSERT_EQ(
+        CCManager::SubmitSmallCcMemcpyTask(
+            destination, sizeof(destination), source, sizeof(source), RT_MEMCPY_DEVICE_TO_HOST, stm, true),
+        RT_ERROR_NONE);
+    ASSERT_EQ(gSmallLaunches.size(), 1U);
+    EXPECT_EQ(gSmallLaunches[0].algType, AICC_ALG_AES128_CTR);
+    EXPECT_EQ(gSmallLaunches[0].metadata.srcAddr, RtPtrToValue(source));
+    EXPECT_EQ(memcmp(source, destination, sizeof(source)), 0);
+    EXPECT_EQ(CCManager::Instance().resources_[stm->Device_()->Id_()]->Crypto().keystreamPool_, nullptr);
+}
 
 TEST_F(CCManagerTest, SmallTransfer_EligibilityAndLegacyFallback)
 {

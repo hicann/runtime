@@ -93,9 +93,8 @@ rtError_t CCResManage::InitCcResource()
     bool supported = false;
     const rtError_t queryRet =
         AicpuTimeoutControl::CheckKernelSupported(device_, AICC_SMALL_CRYPTO_KERNEL_NAME, supported);
-    smallCryptoSupported_ = (queryRet == RT_ERROR_NONE) && supported &&
-                            (GetActiveCryptoAlg() == CC_CRYPTO_ALG_TYPE::GCM) &&
-                            (GetActiveCryptoCipher() == CC_CRYPTO_CIPHER::AES_128);
+    smallCryptoSupported_ =
+        (queryRet == RT_ERROR_NONE) && supported && (GetActiveCryptoCipher() == CC_CRYPTO_CIPHER::AES_128);
     RT_LOG(RT_LOG_INFO, "CCResManage initialized for device %u, smallCrypto=%d", deviceId_, smallCryptoSupported_);
     return RT_ERROR_NONE;
 }
@@ -107,7 +106,7 @@ rtError_t CCResManage::BuildDeviceCryptoParam(CC_CRYPTO_DIRECTION mode, CCCrypto
     COND_RETURN_WITH_NOLOG(ret != RT_ERROR_NONE, ret);
     param->keyLen = AICC_KEY_SIZE;
     param->mode = static_cast<uint32_t>(mode);
-    param->algType = AICC_ALG_AES128_GCM;
+    param->algType = (crypto_.Mode() == CC_CRYPTO_ALG_TYPE::CTR) ? AICC_ALG_AES128_CTR : AICC_ALG_AES128_GCM;
     return RT_ERROR_NONE;
 }
 
