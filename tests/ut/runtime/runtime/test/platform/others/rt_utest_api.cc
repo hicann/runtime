@@ -6162,6 +6162,13 @@ TEST_F(ApiTest, rtMemQueueEnQueueBuff_128)
     rtError_t error = rtMemQueueEnQueueBuff(0, 0, &queueBuf, 0);
     EXPECT_EQ(error, RT_ERROR_NONE);
 
+    queueBufInfoVec[0].len = SIZE_MAX;
+    queueBufInfoVec[1].len = 1U;
+    error = rtMemQueueEnQueueBuff(0, 0, &queueBuf, 0);
+    EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);
+
+    queueBufInfoVec[0].len = sizeof(dataTmp);
+    queueBufInfoVec[1].len = sizeof(dataTmp);
     MOCKER(drvMemcpy).stubs().will(returnValue(DRV_ERROR_INVALID_VALUE));
     error = rtMemQueueEnQueueBuff(0, 0, &queueBuf, 0);
     EXPECT_EQ(error, ACL_ERROR_RT_PARAM_INVALID);

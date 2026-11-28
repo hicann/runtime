@@ -4691,6 +4691,29 @@ TEST_F(NpuDriverTest, host_register_02)
     delete dev;
 }
 
+TEST_F(NpuDriverTest, host_register_not_supported)
+{
+    NpuDriver driver;
+    const uint32_t feature = static_cast<uint32_t>(RtOptionalFeatureType::RT_FEATURE_MEM_HOST_REGISTER);
+    driver.featureSet_[feature] = false;
+    int32_t ptr = 0;
+    void* devPtr = nullptr;
+
+    EXPECT_EQ(
+        driver.HostRegister(&ptr, sizeof(ptr), RT_HOST_REGISTER_MAPPED, &devPtr, 0U), RT_ERROR_FEATURE_NOT_SUPPORT);
+    EXPECT_EQ(driver.HostUnregister(&ptr, 0U), RT_ERROR_FEATURE_NOT_SUPPORT);
+}
+
+TEST_F(NpuDriverTest, get_addr_module_id_not_supported)
+{
+    NpuDriver driver;
+    uint64_t addr = 0U;
+    uint32_t moduleId = 0U;
+    MOCKER(halMemCtl).expects(once()).will(returnValue(DRV_ERROR_NOT_SUPPORT));
+
+    EXPECT_EQ(driver.GetAddrModuleId(&addr, &moduleId), RT_ERROR_FEATURE_NOT_SUPPORT);
+}
+
 uint32_t gHalHostDmaMapCallCount = 0U;
 
 drvError_t HalHostDmaMapStub(void* hostPtr, UINT64 size, UINT32 flag, UINT32 deviceId)

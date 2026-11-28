@@ -39,7 +39,7 @@ namespace runtime {
 
 rtError_t NpuDriver::BuffAlloc(const uint64_t size, void** buff)
 {
-    RT_LOG(RT_LOG_INFO, "alloc buff, size=%" PRIu64, size);
+    RT_LOG(RT_LOG_INFO, "alloc buff, size=%" PRIu64 "(bytes)", size);
     COND_RETURN_WARN(&halBuffAlloc == nullptr, RT_ERROR_FEATURE_NOT_SUPPORT, "[drv api] halBuffAlloc does not exist.");
     const drvError_t drvRet = static_cast<drvError_t>(halBuffAlloc(size, buff));
     if (drvRet != DRV_ERROR_NONE) {
@@ -675,7 +675,7 @@ static rtError_t GetBuffIovec(struct buff_iovec* const vec, const rtMemQueueBuff
     for (uint32_t i = 0U; i < inBuf->buffCount; ++i) {
         COND_RETURN_ERROR(
             len > (SIZE_MAX - inBuf->buffInfo[i].len), RT_ERROR_INVALID_VALUE,
-            "Overflow occurs when calculating total size, current len is %zu, added len is %zu.", len,
+            "Overflow occurs when calculating total size, current len is %zu(bytes), added len is %zu(bytes).", len,
             inBuf->buffInfo[i].len);
         len += inBuf->buffInfo[i].len;
     }

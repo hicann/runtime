@@ -225,7 +225,7 @@ rtError_t NpuDriver::MemRegisterUbSegment(const uint32_t deviceId, const void* c
 rtError_t NpuDriver::HostRegister(void* ptr, uint64_t size, uint32_t type, void** devPtr, const uint32_t deviceId)
 {
     if (!IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MEM_HOST_REGISTER)) {
-        RT_LOG(RT_LOG_WARNING, "not support current chiptype");
+        RT_LOG(RT_LOG_WARNING, "This feature is not supported on the current chip type.");
         RT_LOG_OUTER_MSG_WITH_FUNC_DESC(ErrorCode::EE1005, "host memory address registration");
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
@@ -297,7 +297,7 @@ rtError_t NpuDriver::HostDmaMap(void* ptr, uint64_t size, const uint32_t deviceI
 rtError_t NpuDriver::HostUnregister(void* ptr, const uint32_t deviceId, const bool supportDrvPinReg)
 {
     if (!IsSupportFeature(RtOptionalFeatureType::RT_FEATURE_MEM_HOST_REGISTER)) {
-        RT_LOG(RT_LOG_WARNING, "not support current chiptype");
+        RT_LOG(RT_LOG_WARNING, "This feature is not supported on the current chip type.");
         RT_LOG_OUTER_MSG_WITH_FUNC_DESC(ErrorCode::EE1005, "host memory deregistration");
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
@@ -2438,7 +2438,7 @@ rtError_t NpuDriver::MemCopyAsync(
     if (&halMemCpyAsync == nullptr) {
         drvRet = drvMemcpy(RtPtrToPtr<UINT64>(dst), destMax, RtPtrToPtr<UINT64>(src), size);
         copyFd = ASYNC_COPY_STATU_SUCC;
-        RT_LOG(RT_LOG_INFO, "not support halMemCpyAsync api, use sync copy api.");
+        RT_LOG(RT_LOG_INFO, "The halMemCpyAsync API is not supported. Use the synchronous copy API.");
     } else {
         drvRet = halMemCpyAsync(
             RtPtrToPtr<UINT64>(dst), destMax, RtPtrToPtr<UINT64>(src), size, RtPtrToUnConstPtr<uint64_t*>(&copyFd));
@@ -2484,7 +2484,7 @@ rtError_t NpuDriver::MemCopyAsyncEx(struct DMA_ADDR* dmaHandle)
 rtError_t NpuDriver::MemCopyAsyncWaitFinish(const uint64_t copyFd)
 {
     if (&halMemCpyAsyncWaitFinish == nullptr) {
-        RT_LOG(RT_LOG_INFO, "not support halMemCpyAsyncWaitFinish api, return ok.");
+        RT_LOG(RT_LOG_INFO, "The halMemCpyAsyncWaitFinish API is not supported. The operation returns success.");
         return RT_ERROR_NONE;
     }
 
@@ -2612,7 +2612,7 @@ rtError_t NpuDriver::Support1GHugePageCtrl()
         ret = RT_GET_DRV_ERRCODE(drvRet);
     }
 
-    RT_LOG(RT_LOG_INFO, "chip type=%d, support flag=%llu", curChipType, outVal.support_feature);
+    RT_LOG(RT_LOG_INFO, "chip type=%d, support flag=%llu", static_cast<int32_t>(curChipType), outVal.support_feature);
     return ret;
 }
 
@@ -2777,7 +2777,7 @@ rtError_t NpuDriver::GetAddrModuleId(void* memcpyAddr, uint32_t* moduleId) const
         static_cast<int32_t>(CTRL_TYPE_GET_ADDR_MODULE_ID), memcpyAddr, sizeof(uint64_t), moduleId, &moduleidSize);
     COND_RETURN_WARN(
         drvRet == DRV_ERROR_NOT_SUPPORT, RT_ERROR_FEATURE_NOT_SUPPORT,
-        "[drv api] halMemCtl not support get module id.");
+        "[drv api] halMemCtl does not support getting the module ID.");
     if (drvRet != DRV_ERROR_NONE) {
         DRV_ERROR_PROCESS(drvRet, "Call driver api halMemCtl failed, drvRetCode=%d.", static_cast<int32_t>(drvRet));
         return RT_GET_DRV_ERRCODE(drvRet);
