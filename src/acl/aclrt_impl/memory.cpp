@@ -1189,7 +1189,7 @@ aclError aclrtMallocPhysicalImpl(
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtMallocPhysical);
     ACL_ADD_APPLY_TOTAL_COUNT(acl::ACL_STATISTICS_MALLOC_FREE_PHYSICAL_MEMORY);
-    ACL_LOG_DEBUG("start to execute aclrtMallocPhysical, size = %zu", size);
+    ACL_LOG_DEBUG("start to execute aclrtMallocPhysical, size = %zu(bytes)", size);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(handle);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(prop);
 
@@ -1204,8 +1204,8 @@ aclError aclrtMallocPhysicalImpl(
     if (prop->location.type == ACL_MEM_LOCATION_TYPE_UNREGISTERED ||
         prop->location.type == ACL_MEM_LOCATION_TYPE_MANAGED) {
         ACL_LOG_ERROR(
-            "[Check][PARAM]prop->location.type is invalid, location type does not support %s. value=%s",
-            acl::GetMemLocationTypeDesc(prop->location.type), acl::GetMemLocationTypeDesc(prop->location.type));
+            "[Check][PARAM]prop->location.type is invalid, location type does not support %s.",
+            acl::GetMemLocationTypeDesc(prop->location.type));
         std::string errMsg = acl::AclErrorLogManager::FormatStr(
             "location type does not support %s", acl::GetMemLocationTypeDesc(prop->location.type));
         std::string funcName = acl::AclErrorLogManager::GetFuncNameWithoutImplSuffix(__func__);
@@ -1279,7 +1279,7 @@ aclError aclrtMapMemImpl(void* virPtr, size_t size, size_t offset, aclrtDrvMemHa
 {
     ACL_PROFILING_REG(acl::AclProfType::AclrtMapMem);
     ACL_ADD_APPLY_TOTAL_COUNT(acl::ACL_STATISTICS_MAP_UNMAP_MEMORY);
-    ACL_LOG_DEBUG("start to execute aclrtMapMem, size = %zu, offset = %zu", size, offset);
+    ACL_LOG_DEBUG("start to execute aclrtMapMem, size = %zu(bytes), offset = %zu(bytes)", size, offset);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(virPtr);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(handle);
 
@@ -1307,8 +1307,8 @@ aclError aclrtMemMapNoAccessImpl(void* virPtr, size_t size, size_t offset, aclrt
     ACL_PROFILING_REG(acl::AclProfType::AclrtMemMapNoAccess);
     ACL_ADD_APPLY_TOTAL_COUNT(acl::ACL_STATISTICS_MAP_UNMAP_MEMORY);
     ACL_LOG_DEBUG(
-        "start to execute aclrtMemMapNoAccess, virPtr = %p, size = %zu, offset = %zu, flags = %" PRIu64, virPtr, size,
-        offset, flags);
+        "start to execute aclrtMemMapNoAccess, virPtr = %p, size = %zu(bytes), offset = %zu(bytes), flags = %" PRIu64,
+        virPtr, size, offset, flags);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(virPtr);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(handle);
     ACL_REQUIRES_POSITIVE_REPORT(size);

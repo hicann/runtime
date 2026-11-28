@@ -41,7 +41,7 @@ rtError_t HostMallocImpl(void** const hostPtr, const uint64_t size, const uint16
     Context* const curCtx = Runtime::Instance()->CurrentContext(true, DEFAULT_DEVICE_ID);
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
     const uint32_t deviceId = curCtx->Device_()->Id_();
-    RT_LOG(RT_LOG_INFO, "size=%" PRIu64 ", moduleId=%hu, deviceId=%u.", size, moduleId, deviceId);
+    RT_LOG(RT_LOG_INFO, "size=%" PRIu64 "(bytes), moduleId=%hu, deviceId=%u.", size, moduleId, deviceId);
 
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         size > (UINT64_MAX - 0x1FU), RT_ERROR_INVALID_VALUE, "Host memory allocation", size,
@@ -91,7 +91,7 @@ ApiHostMemory* CreateImplHostMemoryAndGet()
         RT_LOG(RT_LOG_ERROR, "create ApiImplHostMemory failed.");
         return nullptr;
     }
-    RT_LOG(RT_LOG_INFO, "ApiImplHostMemory:Runtime_alloc_size %zu", sizeof(ApiImplHostMemory));
+    RT_LOG(RT_LOG_INFO, "ApiImplHostMemory:Runtime_alloc_size %zu(bytes)", sizeof(ApiImplHostMemory));
     return apiImplHostMemory;
 }
 
@@ -290,7 +290,7 @@ rtError_t ApiImplHostMemory::MallocHostSharedMemory(
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(out, RT_ERROR_INVALID_VALUE, "Shared memory allocation");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(in->name, RT_ERROR_INVALID_VALUE, "Shared memory allocation");
     ZERO_RETURN_AND_MSG_OUTER_WITH_FUNC_DESC(in->size, "Shared memory allocation");
-    RT_LOG(RT_LOG_INFO, "sharedMemName=%s, sharedMemSize=%" PRIu64 ", flag=%u.", in->name, in->size, in->flag);
+    RT_LOG(RT_LOG_INFO, "sharedMemName=%s, sharedMemSize=%" PRIu64 "(bytes), flag=%u.", in->name, in->size, in->flag);
     Context* const curCtx = Runtime::Instance()->CurrentContext(true, DEFAULT_DEVICE_ID);
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
@@ -310,7 +310,7 @@ rtError_t ApiImplHostMemory::FreeHostSharedMemory(rtFreeHostSharedMemoryIn* cons
     ZERO_RETURN_AND_MSG_OUTER_WITH_FUNC_DESC(in->size, "Releasing host shared memory");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(in->ptr, RT_ERROR_INVALID_VALUE, "Releasing host shared memory");
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(in->devPtr, RT_ERROR_INVALID_VALUE, "Releasing host shared memory");
-    RT_LOG(RT_LOG_INFO, "sharedMemName=%s, sharedMemSize=%" PRIu64 ", fd=%u.", in->name, in->size, in->fd);
+    RT_LOG(RT_LOG_INFO, "sharedMemName=%s, sharedMemSize=%" PRIu64 "(bytes), fd=%u.", in->name, in->size, in->fd);
     Context* const curCtx = Runtime::Instance()->CurrentContext(true, DEFAULT_DEVICE_ID);
     CHECK_CONTEXT_VALID_WITH_RETURN(curCtx, RT_ERROR_CONTEXT_NULL);
 
