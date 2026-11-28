@@ -157,7 +157,7 @@ aclError aclrtLaunchKernelImpl(
     const rtError_t rtErr = rtLaunchKernelByFuncHandleV3(funcHandle, numBlocks, &argsInfo, stream, nullptr);
     if (rtErr != RT_ERROR_NONE) {
         if (rtErr == ACL_ERROR_RT_INVALID_HANDLE) {
-            ACL_LOG_WARN("rtLaunchKernelByFuncHandleV3 funHandle is invalid, runtime result = %d.", rtErr);
+            ACL_LOG_WARN("rtLaunchKernelByFuncHandleV3 funcHandle is invalid, runtime result = %d.", rtErr);
             return ACL_ERROR_RT_INVALID_HANDLE;
         } else {
             return ACL_GET_ERRCODE_RTS(rtErr);

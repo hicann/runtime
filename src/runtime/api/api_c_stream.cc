@@ -372,7 +372,7 @@ rtError_t rtStreamSwitchN(
     COND_RETURN_EXT_ERRCODE_AND_MSG_OUTER(
         ((INVALID_UINT32 / size) <= elementSize), RT_ERROR_INVALID_VALUE, ErrorCode::EE1011, __func__,
         std::to_string(elementSize), "elementSize",
-        "elementSize should be less than INVALID_UINT32 / size to avoid total data size overflow");
+        "elementSize should be less than UINT32_MAX / size to avoid total data size overflow");
     std::vector<Stream*> realTrueStreams(elementSize);
     for (uint32_t i = 0U; i < elementSize; ++i) {
         RT_VALIDATE_AND_UNWRAP_OBJECT(trueStreamPtr[i], Stream, trueExeStream);

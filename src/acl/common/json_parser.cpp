@@ -435,7 +435,7 @@ aclError JsonParser::GetStackSizeByType(
             size_t rawSize = stackSizeJs.at(typeName.c_str()).get<size_t>();
             outSize = rawSize;
             outExist = true;
-            ACL_LOG_INFO("successfully parse %s, size is %zu", typeName.c_str(), outSize);
+            ACL_LOG_INFO("successfully parse %s, stack size is %zu bytes", typeName.c_str(), outSize);
         }
     } catch (const nlohmann::json::exception& e) {
         ACL_LOG_ERROR("parse config file [%s], exception: %s", fileName, e.what());
