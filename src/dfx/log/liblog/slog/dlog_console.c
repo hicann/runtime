@@ -37,6 +37,9 @@ extern "C" {
 #define STDOUT_ENV_NAME "ASCEND_LOG_PRINT_TO_STDOUT"
 #define STDOUT_ENV_NAME_DEPRECATED "ASCEND_SLOG_PRINT_TO_STDOUT"
 
+// 全局日志级别环境变量名（与 dlog_level_env.c 的级别初始化同源）。
+#define GLOBAL_LEVEL_ENV_NAME "ASCEND_GLOBAL_LOG_LEVEL"
+
 // 读取单个环境变量并判定 stdout 打屏档位，输出维测日志。
 // replacementName 非 NULL 时，表示 envName 已废弃、应改用 replacementName，
 // 在确认变量存在后先打印一次废弃告警；为 NULL 表示 envName 未废弃，不打印该告警。
@@ -88,12 +91,48 @@ STATIC bool DlogGetStdoutEnv(const char* envName, const char* replacementName, i
     return true;
 }
 
+// 读取 ASCEND_GLOBAL_LOG_LEVEL：仅显式配置且取值合法时返回级别值，未配置/非法返回 -1
+// （非法值按未配置处理，级别初始化同样按默认值回退）。解析方式与
+// DlogInitGlobalLogLevelByEnv 保持一致（LogStrToInt + 级别范围校验），
+// 确保两处读取对同一份环境变量得到相同结论。
+STATIC int32_t DlogGetGlobalEnvLevel(void)
+{
+    const char* envValue = getenv(GLOBAL_LEVEL_ENV_NAME);
+    if (envValue == NULL) {
+        return -1; // 未配置
+    }
+    int64_t level = -1;
+    if ((LogStrToInt(envValue, &level) != LOG_SUCCESS) || (level < DLOG_DEBUG) || (level > DLOG_NULL)) {
+        return -1; // 非法值按未配置处理，不参与打屏阈值组合
+    }
+    return (int32_t)level;
+}
+
+// issue #1519：打屏阈值档（新变量 "2"/"3"）与全局级别环境变量取最大值，
+// 得到实际打屏阈值：该阈值约束所有日志类别的上屏（run/security 类的落盘级别门
+// 不受全局变量影响，但上屏一律受组合阈值约束）；全局变量未配置/非法时不参与组合。
+// =1（无阈值档）与旧变量兼容档不参与组合，行为保持不变。
+STATIC int32_t DlogCombineStdoutThreshold(int32_t stdoutLevel)
+{
+    if (stdoutLevel <= DLOG_DEBUG) {
+        return stdoutLevel; // 关闭档/无阈值档（=1）不参与组合：组合只收紧阈值，不开启打屏
+    }
+    int32_t globalLevel = DlogGetGlobalEnvLevel();
+    if (globalLevel <= stdoutLevel) {
+        return stdoutLevel;
+    }
+    SELF_LOG_INFO(
+        "Log-to-stdout threshold raised from %d to %d by environment variable '%s'.", stdoutLevel, globalLevel,
+        GLOBAL_LEVEL_ENV_NAME);
+    return globalLevel;
+}
+
 /**
  * @brief       : get stdout print threshold level, execute getenv only once
  * @return      : STDOUT_LEVEL_OFF(-1)   disable;
  *                DLOG_DEBUG              no threshold (new env "1");
- *                DLOG_WARN               warning and above (new env "2");
- *                DLOG_ERROR              error only (new env "3");
+ *                DLOG_WARN               warning and above (new env "2", combined with global env by #1519);
+ *                DLOG_ERROR              error only (new env "3", combined with global env by #1519);
  *                STDOUT_LEVEL_LEGACY     print-only legacy mode (deprecated env "1")
  */
 int32_t DlogGetEnvStdoutLevel(void)
@@ -103,7 +142,7 @@ int32_t DlogGetEnvStdoutLevel(void)
         int32_t level = STDOUT_LEVEL_OFF;
         // 新变量优先：ASCEND_LOG_PRINT_TO_STDOUT（未废弃，故 replacementName 传 NULL）
         if (DlogGetStdoutEnv(STDOUT_ENV_NAME, NULL, &level)) {
-            stdoutLevel = level;
+            stdoutLevel = DlogCombineStdoutThreshold(level);
         } else if (DlogGetStdoutEnv(STDOUT_ENV_NAME_DEPRECATED, STDOUT_ENV_NAME, &level)) {
             // 新变量未配置时回退旧变量（兼容期保留），并提示废弃。
             //

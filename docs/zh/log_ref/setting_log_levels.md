@@ -50,7 +50,7 @@
 export ASCEND_LOG_PRINT_TO_STDOUT=2
 ```
 
-实际打屏的日志级别由该环境变量与ASCEND\_GLOBAL\_LOG\_LEVEL共同决定，取两者中较高的级别。例如ASCEND\_GLOBAL\_LOG\_LEVEL=2、ASCEND\_LOG\_PRINT\_TO\_STDOUT=3时，打屏日志级别为ERROR，debug类日志落盘级别为WARNING。
+实际打屏的日志级别由该环境变量与ASCEND\_GLOBAL\_LOG\_LEVEL共同决定，取两者中较高的级别。例如ASCEND\_GLOBAL\_LOG\_LEVEL=2、ASCEND\_LOG\_PRINT\_TO\_STDOUT=3时，打屏日志级别为ERROR。
 
 废弃变量ASCEND\_SLOG\_PRINT\_TO\_STDOUT不支持该能力：仅保持原有0/1开关语义（=1时只打屏不落盘）。
 
