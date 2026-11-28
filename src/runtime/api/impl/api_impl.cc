@@ -6391,7 +6391,7 @@ rtError_t ApiImpl::GetLastErr(rtLastErrLevel_t level)
     } else {
         // do nothing
     }
-    RT_LOG(RT_LOG_EVENT, "level=%s err=%d.", LastErrLevelToString(level).c_str(), ret);
+    RT_LOG(RT_LOG_DEBUG, "level=%s err=%#x.", LastErrLevelToString(level).c_str(), static_cast<uint32_t>(ret));
     return ret;
 }
 
@@ -6407,7 +6407,7 @@ rtError_t ApiImpl::PeekLastErr(rtLastErrLevel_t level)
     } else {
         // do nothing
     }
-    RT_LOG(RT_LOG_EVENT, "level=%s err=%u.", LastErrLevelToString(level).c_str(), ret);
+    RT_LOG(RT_LOG_DEBUG, "level=%s err=%#x.", LastErrLevelToString(level).c_str(), static_cast<uint32_t>(ret));
     return ret;
 }
 
