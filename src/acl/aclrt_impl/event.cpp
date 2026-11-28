@@ -352,7 +352,7 @@ aclError aclrtMemUceRepairImpl(int32_t deviceId, aclrtMemUceInfo* memUceInfoArra
     // reserved value check, should be filled with 0
     size_t reservedZeroValue[UCE_INFO_RESERVED_SIZE] = {0};
     for (size_t i = 0; i < arraySize; ++i) {
-        if (memcmp(memUceInfoArray[i].reserved, reservedZeroValue, UCE_INFO_RESERVED_SIZE)) {
+        if (memcmp(memUceInfoArray[i].reserved, reservedZeroValue, sizeof(memUceInfoArray[i].reserved))) {
             ACL_LOG_ERROR("Failed to execute aclrtMemUceRepair with mismatched version, "
                           "please set valid values only for ptr and len.");
             const char_t* argList[] = {"func", "param", "reason"};

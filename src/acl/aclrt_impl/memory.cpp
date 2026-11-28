@@ -2024,6 +2024,8 @@ aclError aclrtIpcMemSetImportPidImpl(const char* key, int32_t* pid, size_t num)
     ACL_LOG_INFO("start to execute aclrtIpcMemSetImportPid, num is [%zu]", num);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(key);
     ACL_REQUIRES_NOT_NULL_WITH_INPUT_REPORT(pid);
+    ACL_CHECK_INVALID_VALUE_WITH_EXPECT_RET(
+        (num > 0U) && (num <= static_cast<size_t>(INT32_MAX)), num, "(0, INT32_MAX]", ACL_ERROR_RT_PARAM_INVALID);
     ACL_REQUIRES_RTS_OK(rtsIpcMemSetImportPid(key, pid, static_cast<int32_t>(num)));
     return ACL_SUCCESS;
 }

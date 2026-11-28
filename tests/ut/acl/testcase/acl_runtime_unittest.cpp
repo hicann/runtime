@@ -5268,7 +5268,8 @@ TEST_F(UTEST_ACL_Runtime, mem_uce_repair_success)
     size_t arraySize = 8;
 
     for (size_t i = 0; i < arraySize; ++i) {
-        (void)memset_s(memUceInfoArray[i].reserved, UCE_INFO_RESERVED_SIZE, 0, UCE_INFO_RESERVED_SIZE);
+        (void)memset_s(
+            memUceInfoArray[i].reserved, sizeof(memUceInfoArray[i].reserved), 0, sizeof(memUceInfoArray[i].reserved));
     }
 
     aclError ret = aclrtMemUceRepair(deviceId, memUceInfoArray, arraySize);
@@ -5291,7 +5292,8 @@ TEST_F(UTEST_ACL_Runtime, mem_uce_repair_failed_with_nonzero_reserved_value)
     size_t arraySize = 8;
 
     for (size_t i = 0; i < arraySize; ++i) {
-        (void)memset_s(memUceInfoArray[i].reserved, UCE_INFO_RESERVED_SIZE, 0, UCE_INFO_RESERVED_SIZE);
+        (void)memset_s(
+            memUceInfoArray[i].reserved, sizeof(memUceInfoArray[i].reserved), 0, sizeof(memUceInfoArray[i].reserved));
         memUceInfoArray[i].reserved[0] = 1;
     }
 
