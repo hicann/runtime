@@ -499,8 +499,10 @@ int32_t DlogWriteInner(LogMsgArg* msgArg, const char* fmt, va_list v)
         return LOG_SUCCESS;
     }
     // issue #1307：新变量 env 打屏按阈值过滤（=1 无阈值；=2 warning 及以上；=3 error），
-    // 且打屏后不再提前返回，继续走 plog/socket 同步落盘一份；
-    // 落盘级别仍由级别门控制，实际打屏级别 = max(级别门, 打屏阈值)。
+    // 且打屏后不再提前返回，继续走 plog/socket 同步落盘一份；落盘级别仍由级别门控制。
+    // issue #1519：阈值档（=2/=3）的实际打屏阈值 = max(打屏变量级别, ASCEND_GLOBAL_LOG_LEVEL)
+    // （由 DlogGetEnvStdoutLevel 组合后返回），所有日志类别的上屏均受该阈值约束；
+    // =1 与旧变量兼容档不参与组合。
     // 旧变量 "1" 不适配此特性：走兼容档，保持 #1307 前旧行为（只打屏、不落盘）。
     // 事件日志（DLOG_EVENT）为独立级别（仅受 ASCEND_GLOBAL_EVENT_ENABLE 门控、落盘走独立映射），
     // 不参与级别阈值过滤；仅在无阈值档（=1）随打屏输出，与旧变量=1 屏幕行为对齐

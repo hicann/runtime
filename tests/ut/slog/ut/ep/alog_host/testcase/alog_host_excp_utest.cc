@@ -482,17 +482,23 @@ TEST_F(EP_ALOG_HOST_EXCP_UTEST, dlog_e2e_new_env_priority_to_file)
 
 // 白盒分支：校验 DlogGetEnvStdoutLevel 返回值 + 各维测日志。返回 0 表示全部符合。
 // invalidSubstr：期望出现的非法值告警子串（新旧变量合法值域不同，告警文案不同）；nullptr 表示不应出现非法值告警。
+// globalEnv（issue #1519）：额外配置的 ASCEND_GLOBAL_LOG_LEVEL 取值；nullptr 表示确保未配置。
+// 预期语义（#1519）：阈值档（2/3）时打屏阈值与全局级别取最大值；=1/未配置/非法全局值不参与组合。
 static int Issue1307ScenarioCheckLevel(
     const char* newVal, const char* oldVal, int32_t expectLevel, bool expectEnableInfo, const char* invalidSubstr,
-    bool expectDeprecatedWarn)
+    bool expectDeprecatedWarn, const char* globalEnv)
 {
     unsetenv("ASCEND_LOG_PRINT_TO_STDOUT");
     unsetenv("ASCEND_SLOG_PRINT_TO_STDOUT");
+    unsetenv("ASCEND_GLOBAL_LOG_LEVEL");
     if (newVal != nullptr) {
         setenv("ASCEND_LOG_PRINT_TO_STDOUT", newVal, 1);
     }
     if (oldVal != nullptr) {
         setenv("ASCEND_SLOG_PRINT_TO_STDOUT", oldVal, 1);
+    }
+    if (globalEnv != nullptr) {
+        setenv("ASCEND_GLOBAL_LOG_LEVEL", globalEnv, 1);
     }
     if (DlogGetEnvStdoutLevel() != expectLevel) {
         return 1;
@@ -617,7 +623,7 @@ TEST_F(EP_ALOG_HOST_EXCP_UTEST, dlog_check_env_stdout_level_new_env_warn)
 {
     testing::GTEST_FLAG(death_test_style) = "threadsafe";
     EXPECT_EXIT(
-        std::exit(Issue1307ScenarioCheckLevel("2", nullptr, DLOG_WARN, true, nullptr, false)),
+        std::exit(Issue1307ScenarioCheckLevel("2", nullptr, DLOG_WARN, true, nullptr, false, nullptr)),
         testing::ExitedWithCode(0), "");
 }
 
@@ -626,7 +632,7 @@ TEST_F(EP_ALOG_HOST_EXCP_UTEST, dlog_check_env_stdout_level_new_env_error3)
 {
     testing::GTEST_FLAG(death_test_style) = "threadsafe";
     EXPECT_EXIT(
-        std::exit(Issue1307ScenarioCheckLevel("3", nullptr, DLOG_ERROR, true, nullptr, false)),
+        std::exit(Issue1307ScenarioCheckLevel("3", nullptr, DLOG_ERROR, true, nullptr, false, nullptr)),
         testing::ExitedWithCode(0), "");
 }
 
@@ -635,7 +641,7 @@ TEST_F(EP_ALOG_HOST_EXCP_UTEST, dlog_check_env_stdout_level_new_env_all)
 {
     testing::GTEST_FLAG(death_test_style) = "threadsafe";
     EXPECT_EXIT(
-        std::exit(Issue1307ScenarioCheckLevel("1", nullptr, DLOG_DEBUG, true, nullptr, false)),
+        std::exit(Issue1307ScenarioCheckLevel("1", nullptr, DLOG_DEBUG, true, nullptr, false, nullptr)),
         testing::ExitedWithCode(0), "");
 }
 
@@ -645,7 +651,7 @@ TEST_F(EP_ALOG_HOST_EXCP_UTEST, dlog_check_env_stdout_level_invalid_value)
     testing::GTEST_FLAG(death_test_style) = "threadsafe";
     EXPECT_EXIT(
         std::exit(Issue1307ScenarioCheckLevel(
-            "4", nullptr, -1, false, "expected '0', '1', '2' or '3'. Log-to-stdout disabled", false)),
+            "4", nullptr, -1, false, "expected '0', '1', '2' or '3'. Log-to-stdout disabled", false, nullptr)),
         testing::ExitedWithCode(0), "");
 }
 
@@ -654,8 +660,8 @@ TEST_F(EP_ALOG_HOST_EXCP_UTEST, dlog_check_env_stdout_level_new_env_priority)
 {
     testing::GTEST_FLAG(death_test_style) = "threadsafe";
     EXPECT_EXIT(
-        std::exit(Issue1307ScenarioCheckLevel("3", "1", DLOG_ERROR, true, nullptr, false)), testing::ExitedWithCode(0),
-        "");
+        std::exit(Issue1307ScenarioCheckLevel("3", "1", DLOG_ERROR, true, nullptr, false, nullptr)),
+        testing::ExitedWithCode(0), "");
 }
 
 // TC-1307-006 仅旧变量=2：非法值（旧变量不适配 2/3）→ 关闭 + 旧合法值域告警（0/1）+ 废弃告警
@@ -663,8 +669,8 @@ TEST_F(EP_ALOG_HOST_EXCP_UTEST, dlog_check_env_stdout_level_old_env_invalid)
 {
     testing::GTEST_FLAG(death_test_style) = "threadsafe";
     EXPECT_EXIT(
-        std::exit(
-            Issue1307ScenarioCheckLevel(nullptr, "2", -1, false, "expected '0' or '1'. Log-to-stdout disabled", true)),
+        std::exit(Issue1307ScenarioCheckLevel(
+            nullptr, "2", -1, false, "expected '0' or '1'. Log-to-stdout disabled", true, nullptr)),
         testing::ExitedWithCode(0), "");
 }
 
@@ -673,8 +679,8 @@ TEST_F(EP_ALOG_HOST_EXCP_UTEST, dlog_check_env_stdout_level_new_env_off)
 {
     testing::GTEST_FLAG(death_test_style) = "threadsafe";
     EXPECT_EXIT(
-        std::exit(Issue1307ScenarioCheckLevel("0", nullptr, -1, false, nullptr, false)), testing::ExitedWithCode(0),
-        "");
+        std::exit(Issue1307ScenarioCheckLevel("0", nullptr, -1, false, nullptr, false, nullptr)),
+        testing::ExitedWithCode(0), "");
 }
 
 // TC-1307-008 仅旧变量=1：兼容档 STDOUT_LEVEL_LEGACY（只打屏、不落盘）+ 废弃告警
@@ -682,7 +688,7 @@ TEST_F(EP_ALOG_HOST_EXCP_UTEST, dlog_check_env_stdout_level_old_env_legacy)
 {
     testing::GTEST_FLAG(death_test_style) = "threadsafe";
     EXPECT_EXIT(
-        std::exit(Issue1307ScenarioCheckLevel(nullptr, "1", STDOUT_LEVEL_LEGACY, true, nullptr, true)),
+        std::exit(Issue1307ScenarioCheckLevel(nullptr, "1", STDOUT_LEVEL_LEGACY, true, nullptr, true, nullptr)),
         testing::ExitedWithCode(0), "");
 }
 
@@ -895,6 +901,137 @@ TEST_F(EP_ALOG_HOST_EXCP_UTEST, dlog_e2e_stdout_event_legacy_printed)
 {
     testing::GTEST_FLAG(death_test_style) = "threadsafe";
     EXPECT_EXIT(std::exit(Issue1307RunEventScenario(nullptr, "1", true, false)), testing::ExitedWithCode(0), "");
+}
+
+// ---------------------------------------------------------------------------
+// issue #1519：ASCEND_LOG_PRINT_TO_STDOUT 阈值档（2/3）与 ASCEND_GLOBAL_LOG_LEVEL
+// 组合取最大值：打屏阈值 = max(打屏变量级别, 全局变量级别)，作用于所有日志类别
+// （run/security 类日志的落盘级别门不受全局变量影响，但上屏受组合阈值约束）。
+// =1（无阈值档）不参与组合；全局变量未配置/非法值不参与组合；落盘行为保持不变。
+// ---------------------------------------------------------------------------
+
+// TC-1519-001 白盒：GLOBAL=3 + STDOUT=2 → 组合阈值 ERROR（issue 原始场景）
+TEST_F(EP_ALOG_HOST_EXCP_UTEST, dlog_check_env_stdout_level_comb3and2)
+{
+    testing::GTEST_FLAG(death_test_style) = "threadsafe";
+    EXPECT_EXIT(
+        std::exit(Issue1307ScenarioCheckLevel("2", nullptr, DLOG_ERROR, true, nullptr, false, "3")),
+        testing::ExitedWithCode(0), "");
+}
+
+// TC-1519-002 白盒：GLOBAL=2 + STDOUT=3 → 组合阈值 ERROR（反向组合）
+TEST_F(EP_ALOG_HOST_EXCP_UTEST, dlog_check_env_stdout_level_comb2and3)
+{
+    testing::GTEST_FLAG(death_test_style) = "threadsafe";
+    EXPECT_EXIT(
+        std::exit(Issue1307ScenarioCheckLevel("3", nullptr, DLOG_ERROR, true, nullptr, false, "2")),
+        testing::ExitedWithCode(0), "");
+}
+
+// TC-1519-003 白盒：GLOBAL=0 + STDOUT=2 → 组合取较高者 WARN（全局低于阈值不放宽）
+TEST_F(EP_ALOG_HOST_EXCP_UTEST, dlog_check_env_stdout_level_comb0and2)
+{
+    testing::GTEST_FLAG(death_test_style) = "threadsafe";
+    EXPECT_EXIT(
+        std::exit(Issue1307ScenarioCheckLevel("2", nullptr, DLOG_WARN, true, nullptr, false, "0")),
+        testing::ExitedWithCode(0), "");
+}
+
+// TC-1519-004 白盒：GLOBAL=3 + STDOUT=1 → =1 无阈值档不参与组合（=1 行为不受影响）
+TEST_F(EP_ALOG_HOST_EXCP_UTEST, dlog_check_env_stdout_level_comb3and1)
+{
+    testing::GTEST_FLAG(death_test_style) = "threadsafe";
+    EXPECT_EXIT(
+        std::exit(Issue1307ScenarioCheckLevel("1", nullptr, DLOG_DEBUG, true, nullptr, false, "3")),
+        testing::ExitedWithCode(0), "");
+}
+
+// TC-1519-005 白盒：GLOBAL 非法值 + STDOUT=2 → 非法全局值不参与组合（阈值不变）
+TEST_F(EP_ALOG_HOST_EXCP_UTEST, dlog_check_env_stdout_level_comb_invalid_global)
+{
+    testing::GTEST_FLAG(death_test_style) = "threadsafe";
+    EXPECT_EXIT(
+        std::exit(Issue1307ScenarioCheckLevel("2", nullptr, DLOG_WARN, true, nullptr, false, "9")),
+        testing::ExitedWithCode(0), "");
+}
+
+// TC-1519-101 E2E：GLOBAL=3 + STDOUT=2，run 类日志：WARN 不上屏（组合阈值 ERROR）、
+// ERROR 上屏；run 目录正常落盘（落盘级别门不受影响，行为保持不变）
+TEST_F(EP_ALOG_HOST_EXCP_UTEST, dlog_e2e_stdout_comb_gate3_level2_run_log)
+{
+    testing::GTEST_FLAG(death_test_style) = "threadsafe";
+    EXPECT_EXIT(
+        std::exit([]() {
+            setenv("ASCEND_LOG_PRINT_TO_STDOUT", "2", 1);
+            setenv("ASCEND_GLOBAL_LOG_LEVEL", "3", 1);
+            setenv("ASCEND_PROCESS_LOG_PATH", PATH_ROOT, 1);
+            const char* capture = PATH_ROOT "/stdout_capture.txt";
+            Issue1307RedirectStdout(capture);
+            DlogInit();
+            (void)ProcessLogInit();
+            AlogRecord(SLOG, DLOG_TYPE_RUN, DLOG_WARN, "[issue1519] RUN_WARN_MARKER");
+            AlogRecord(SLOG, DLOG_TYPE_RUN, DLOG_ERROR, "[issue1519] RUN_ERROR_MARKER");
+            (void)ProcessLogFree();
+            DlogFree();
+            unsetenv("ASCEND_LOG_PRINT_TO_STDOUT");
+            unsetenv("ASCEND_GLOBAL_LOG_LEVEL");
+            unsetenv("ASCEND_PROCESS_LOG_PATH");
+            (void)fflush(stdout);
+            if (Issue1307FileHas(capture, "RUN_WARN_MARKER")) {
+                return 1; // 组合阈值 ERROR：run 类 WARN 不得上屏
+            }
+            if (!Issue1307FileHas(capture, "RUN_ERROR_MARKER")) {
+                return 2; // run 类 ERROR 应上屏
+            }
+            if (!Issue1307DirHas(PATH_ROOT "/run", "RUN_WARN_MARKER")) {
+                return 3; // 落盘行为不变：run 类 WARN 正常落盘 run 目录
+            }
+            if (!Issue1307DirHas(PATH_ROOT "/run", "RUN_ERROR_MARKER")) {
+                return 4; // 落盘行为不变：run 类 ERROR 正常落盘 run 目录
+            }
+            return 0;
+        }()),
+        testing::ExitedWithCode(0), "");
+}
+
+// TC-1519-102 E2E：GLOBAL=3 + STDOUT=2，security 类日志不上屏、security 目录正常落盘。
+// security 类日志级别在 DlogParseLogMsg 中固定为 DLOG_INFO（先于打屏阈值过滤执行），
+// 故阈值档下无论发起级别为何均不上屏，属设计行为；落盘行为保持不变。
+TEST_F(EP_ALOG_HOST_EXCP_UTEST, dlog_e2e_stdout_comb_gate3_level2_security_log)
+{
+    testing::GTEST_FLAG(death_test_style) = "threadsafe";
+    EXPECT_EXIT(
+        std::exit([]() {
+            setenv("ASCEND_LOG_PRINT_TO_STDOUT", "2", 1);
+            setenv("ASCEND_GLOBAL_LOG_LEVEL", "3", 1);
+            setenv("ASCEND_PROCESS_LOG_PATH", PATH_ROOT, 1);
+            const char* capture = PATH_ROOT "/stdout_capture.txt";
+            Issue1307RedirectStdout(capture);
+            DlogInit();
+            (void)ProcessLogInit();
+            dlog_info(SLOG | SECURITY_LOG_MASK, "[issue1519] SECURITY_INFO_MARKER");
+            dlog_error(SLOG | SECURITY_LOG_MASK, "[issue1519] SECURITY_ERROR_MARKER");
+            (void)ProcessLogFree();
+            DlogFree();
+            unsetenv("ASCEND_LOG_PRINT_TO_STDOUT");
+            unsetenv("ASCEND_GLOBAL_LOG_LEVEL");
+            unsetenv("ASCEND_PROCESS_LOG_PATH");
+            (void)fflush(stdout);
+            if (Issue1307FileHas(capture, "SECURITY_INFO_MARKER")) {
+                return 1; // 组合阈值 ERROR：security 类日志不得上屏
+            }
+            if (Issue1307FileHas(capture, "SECURITY_ERROR_MARKER")) {
+                return 2; // security 类日志级别固定为 INFO，ERROR 发起亦不得上屏
+            }
+            if (!Issue1307DirHas(PATH_ROOT "/security", "SECURITY_INFO_MARKER")) {
+                return 3; // 落盘行为不变：security 类日志正常落盘 security 目录
+            }
+            if (!Issue1307DirHas(PATH_ROOT "/security", "SECURITY_ERROR_MARKER")) {
+                return 4;
+            }
+            return 0;
+        }()),
+        testing::ExitedWithCode(0), "");
 }
 
 // ---------------------------------------------------------------------------
