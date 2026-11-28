@@ -18,12 +18,10 @@ bool GetValueFromPyDict(PyObject* pyDict, const char* keyName, unsigned short& v
         return true;
     }
 
-    unsigned short tmp = static_cast<unsigned short>(PyLong_AsUnsignedLong(pyObj));
-    if (PyErr_Occurred()) {
-        PyErr_SetString(PyExc_ValueError, "PyLong_AsUnsignedLong failed");
-        return false;
-    }
-    value = tmp;
+    unsigned long tmp = PyLong_AsUnsignedLong(pyObj);
+    CHECK_BOOL(PyErr_Occurred() == nullptr, "PyLong_AsUnsignedLong failed", PyExc_ValueError);
+    CHECK_BOOL(tmp <= USHRT_MAX, "value exceeds unsigned short range", PyExc_ValueError);
+    value = static_cast<unsigned short>(tmp);
     return true;
 }
 
@@ -34,12 +32,10 @@ bool GetValueFromPyDict(PyObject* pyDict, const char* keyName, unsigned char& va
         return true;
     }
 
-    unsigned char tmp = static_cast<unsigned char>(PyLong_AsUnsignedLong(pyObj));
-    if (PyErr_Occurred()) {
-        PyErr_SetString(PyExc_ValueError, "PyLong_AsUnsignedLong failed");
-        return false;
-    }
-    value = tmp;
+    unsigned long tmp = PyLong_AsUnsignedLong(pyObj);
+    CHECK_BOOL(PyErr_Occurred() == nullptr, "PyLong_AsUnsignedLong failed", PyExc_ValueError);
+    CHECK_BOOL(tmp <= UCHAR_MAX, "value exceeds unsigned char range", PyExc_ValueError);
+    value = static_cast<unsigned char>(tmp);
     return true;
 }
 
@@ -50,12 +46,10 @@ bool GetValueFromPyDict(PyObject* pyDict, const char* keyName, unsigned int& val
         return true;
     }
 
-    unsigned int tmp = static_cast<unsigned int>(PyLong_AsUnsignedLong(pyObj));
-    if (PyErr_Occurred()) {
-        PyErr_SetString(PyExc_ValueError, "PyLong_AsUnsignedLong failed");
-        return false;
-    }
-    value = tmp;
+    unsigned long tmp = PyLong_AsUnsignedLong(pyObj);
+    CHECK_BOOL(PyErr_Occurred() == nullptr, "PyLong_AsUnsignedLong failed", PyExc_ValueError);
+    CHECK_BOOL(tmp <= UINT_MAX, "value exceeds unsigned int range", PyExc_ValueError);
+    value = static_cast<unsigned int>(tmp);
     return true;
 }
 
@@ -183,12 +177,10 @@ bool GetValueFromPyDict(PyObject* pyDict, const char* keyName, hi_u8* value, int
             return true;
         }
 
-        hi_u8 tmp = static_cast<hi_u8>(PyLong_AsUnsignedLong(obj));
-        if (PyErr_Occurred()) {
-            PyErr_SetString(PyExc_ValueError, "PyLong_AsUnsignedLong failed");
-            return false;
-        }
-        value[i] = tmp;
+        unsigned long tmp = PyLong_AsUnsignedLong(obj);
+        CHECK_BOOL(PyErr_Occurred() == nullptr, "PyLong_AsUnsignedLong failed", PyExc_ValueError);
+        CHECK_BOOL(tmp <= UCHAR_MAX, "value exceeds unsigned char range", PyExc_ValueError);
+        value[i] = static_cast<hi_u8>(tmp);
     }
     return true;
 }
@@ -324,12 +316,10 @@ bool GetValueFromPyDict(PyObject* pyDict, const char* keyName, unsigned int* val
             return true;
         }
 
-        unsigned int tmp = static_cast<unsigned int>(PyLong_AsUnsignedLong(obj));
-        if (PyErr_Occurred()) {
-            PyErr_SetString(PyExc_ValueError, "PyLong_AsUnsignedLong failed");
-            return false;
-        }
-        value[i] = tmp;
+        unsigned long tmp = PyLong_AsUnsignedLong(obj);
+        CHECK_BOOL(PyErr_Occurred() == nullptr, "PyLong_AsUnsignedLong failed", PyExc_ValueError);
+        CHECK_BOOL(tmp <= UINT_MAX, "value exceeds unsigned int range", PyExc_ValueError);
+        value[i] = static_cast<unsigned int>(tmp);
     }
     return true;
 }
