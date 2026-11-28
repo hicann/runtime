@@ -1688,6 +1688,8 @@ rtError_t Stream::TearDown(const bool terminal, bool flag)
         (void)SubmitStreamRecycle(exeStream, isForceRecycle, static_cast<uint16_t>(logicCqId), tsk);
     }
 
+    bool oldFlag = isForceRecycle;
+    bool isNeedRetry;
     while ((pendingNum_.Value() > 0U) && (device_->GetDevRunningState() == static_cast<uint32_t>(DEV_RUNNING_NORMAL))) {
         // Stream may be destroyed without sync, so MT task can get abort_failure status
         isForceRecycle = GetForceRecycleFlag(flag);
@@ -1698,7 +1700,13 @@ rtError_t Stream::TearDown(const bool terminal, bool flag)
                 "Stream (stream_id=%d) is stopped and has unfinished tasks. Call aclrtStreamAbort to clean up tasks "
                 "and restore the stream before destroying it",
                 stmId));
-        if (isForceRecycle && (dev->GetCtrlStream(nullptr) != nullptr)) {
+        if (dev->CtrlStream_() != nullptr) {
+            isNeedRetry = true;
+        } else {
+            isNeedRetry = (oldFlag != true);
+        }
+        if (isNeedRetry && isForceRecycle && (dev->GetCtrlStream(nullptr) != nullptr)) {
+            oldFlag = true;
             // ctrl sq is fast, normal task may be handled after ctrl task
             // so try to send more force recycle task.
             tskForceRecycleCnt = (tskForceRecycleCnt >= RECYCLE_CNT) ? RECYCLE_CNT : tskForceRecycleCnt;
