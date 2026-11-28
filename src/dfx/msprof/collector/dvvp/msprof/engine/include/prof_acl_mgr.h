@@ -13,6 +13,7 @@
 
 #include <condition_variable>
 #include <string>
+#include <vector>
 #include <array>
 #include <atomic>
 #include "acl/acl_prof.h"
@@ -226,6 +227,11 @@ public:
     uint64_t GetCmdModeDataTypeConfig();
     std::string GetOpTypeConfig();
     std::string GetParamJsonStr();
+    // Same payload as GetParamJsonStr() minus the dispatches that only carry user input, for use
+    // when the full payload exceeds PARAM_LEN_MAX and the receiving side would reject a truncated
+    // profData. droppedFields reports which keys were removed so the caller can tell the user what
+    // was lost. Returns false when nothing could be dropped, i.e. dropping did not help.
+    bool GetTrimmedParamJsonStr(std::string& paramJson, std::vector<std::string>& droppedFields);
     // task datatypeconfig add
     void AddAiCpuModelConf(uint64_t& dataTypeConfig) const;
     void AddRuntimeTraceConf(uint64_t& dataTypeConfig) const;
@@ -430,6 +436,9 @@ private:
     uint64_t startIndex_;
     uint32_t subscribeType_;
     ProfImplRegisterTransport createTransport_{nullptr};
+    // Shared JSON build for GetParamJsonStr / GetTrimmedParamJsonStr so their RemoveByKey
+    // lists cannot drift; trimPayload also removes the keys listed in DroppableFields().
+    std::string BuildParamJson(bool trimPayload, std::vector<std::string>& droppedFields);
 };
 } // namespace Api
 } // namespace Msprofiler

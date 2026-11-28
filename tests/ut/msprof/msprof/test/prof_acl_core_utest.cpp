@@ -5945,18 +5945,98 @@ static int32_t CaptureAicoreShapeCommand(uint32_t type, VOID_PTR data, uint32_t 
     return 0;
 }
 
+TEST_F(COMMANDHANDLE_TEST, BuildParamJsonKeepsOptionalFieldsByDefault)
+{
+    GlobalMockObject::verify();
+    using Msprofiler::Api::ProfAclMgr;
+    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams());
+    params->app_parameters = "--flag value";
+    ProfAclMgr::instance()->params_ = params;
+
+    // GetParamJsonStr is the untrimmed path: the optional field has to survive.
+    const std::string json = ProfAclMgr::instance()->GetParamJsonStr();
+    EXPECT_NE(std::string::npos, json.find("app_parameters"));
+    EXPECT_NE(std::string::npos, json.find("--flag value"));
+    EXPECT_EQ(std::string::npos, json.find("memServiceflow"));
+    EXPECT_EQ(std::string::npos, json.find("ubProfiling"));
+    EXPECT_EQ(std::string::npos, json.find("ubInterval"));
+    EXPECT_EQ(std::string::npos, json.find("opType"));
+    ProfAclMgr::instance()->params_.reset();
+}
+
+TEST_F(COMMANDHANDLE_TEST, BuildParamJsonWithoutParamsReturnsEmptyObject)
+{
+    GlobalMockObject::verify();
+    using Msprofiler::Api::ProfAclMgr;
+    ProfAclMgr::instance()->params_.reset();
+
+    // No ProfileParams yet: both entry points still have to answer with a valid empty object,
+    // otherwise the caller would hand an unparsable payload to the receiving side.
+    EXPECT_EQ("{}", ProfAclMgr::instance()->GetParamJsonStr());
+    std::string trimmed;
+    std::vector<std::string> dropped;
+    EXPECT_TRUE(ProfAclMgr::instance()->GetTrimmedParamJsonStr(trimmed, dropped));
+    EXPECT_EQ("{}", trimmed);
+    EXPECT_TRUE(dropped.empty());
+}
+
+TEST_F(COMMANDHANDLE_TEST, GetTrimmedParamJsonStrDropsOptionalFields)
+{
+    GlobalMockObject::verify();
+    using Msprofiler::Api::ProfAclMgr;
+    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams());
+    params->app_parameters = "--flag value";
+    ProfAclMgr::instance()->params_ = params;
+
+    // Small payload: trimming runs but the result still fits, so the caller keeps it.
+    std::string trimmed;
+    std::vector<std::string> dropped;
+    EXPECT_TRUE(ProfAclMgr::instance()->GetTrimmedParamJsonStr(trimmed, dropped));
+    EXPECT_EQ(1U, dropped.size());
+    EXPECT_EQ("app_parameters", dropped.front());
+    EXPECT_EQ(std::string::npos, trimmed.find("app_parameters"));
+    EXPECT_EQ(std::string::npos, trimmed.find("--flag value"));
+    // Trimming must only remove the droppable fields, not the always-excluded ones.
+    EXPECT_LT(trimmed.size(), ProfAclMgr::instance()->GetParamJsonStr().size());
+    ProfAclMgr::instance()->params_.reset();
+}
+
+TEST_F(COMMANDHANDLE_TEST, GetTrimmedParamJsonStrReportsWhenTrimmingIsNotEnough)
+{
+    GlobalMockObject::verify();
+    using Msprofiler::Api::ProfAclMgr;
+    std::shared_ptr<analysis::dvvp::message::ProfileParams> params(new analysis::dvvp::message::ProfileParams());
+    params->app_parameters = "--flag value";
+    ProfAclMgr::instance()->params_ = params;
+
+    // The result has to report failure by length, independently of which keys were dropped, so
+    // that the caller can tell "dropping was enough" from "still too long".
+    std::string trimmed;
+    std::vector<std::string> dropped;
+    const bool fits = ProfAclMgr::instance()->GetTrimmedParamJsonStr(trimmed, dropped);
+    EXPECT_EQ(fits, trimmed.size() <= PARAM_LEN_MAX);
+    EXPECT_FALSE(dropped.empty());
+    ProfAclMgr::instance()->params_.reset();
+}
+
 TEST_F(COMMANDHANDLE_TEST, commandHandle_api)
 {
     GlobalMockObject::verify();
     ProfRegisterCallback(1, &handle1);
     ProfRegisterCallback(1, &handle2);
     EXPECT_EQ(ACL_SUCCESS, CommandHandleProfInit());
-    std::string retStr(4099, 'a');
+    // One byte past PARAM_LEN_MAX: the over-limit path still has to reject the payload once
+    // app_parameters has been dropped, which is what GetTrimmedParamJsonStr reports as false.
+    std::string overLenStr(PARAM_LEN_MAX + 1, 'a');
     std::string zeroStr = "{}";
     MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::GetParamJsonStr)
         .stubs()
-        .will(returnValue(retStr))
+        .will(returnValue(overLenStr))
         .then(returnValue(zeroStr));
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::GetTrimmedParamJsonStr)
+        .stubs()
+        .will(returnValue(false))
+        .then(returnValue(true));
     MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsHelperHostSide).stubs().will(returnValue(false));
     EXPECT_EQ(ACL_ERROR, CommandHandleProfInit());
     uint32_t devList[] = {0, 1};
@@ -5969,6 +6049,31 @@ TEST_F(COMMANDHANDLE_TEST, commandHandle_api)
     EXPECT_EQ(ACL_SUCCESS, CommandHandleProfFinalize());
     EXPECT_EQ(ACL_SUCCESS, CommandHandleProfUnSubscribe(0));
     EXPECT_EQ(num, g_count);
+}
+
+TEST_F(COMMANDHANDLE_TEST, CommandHandleProfInitKeepsGoingAfterTrimming)
+{
+    GlobalMockObject::verify();
+    ProfRegisterCallback(1, &handle1);
+    ProfRegisterCallback(1, &handle2);
+    EXPECT_EQ(ACL_SUCCESS, CommandHandleProfInit());
+
+    // Over the limit, but trimming brings it back under: the collection must proceed instead of
+    // failing, and the dropped field names have to reach the log through JoinFieldNames.
+    // GetTrimmedParamJsonStr rewrites paramJson by reference, so the stub has to do the same or
+    // the caller would still copy an oversized payload into profData.
+    std::string overLenStr(PARAM_LEN_MAX + 1, 'a');
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::GetParamJsonStr).stubs().will(returnValue(overLenStr));
+    std::string trimmedStr = "{}";
+    // More than one name so the separator path in JoinFieldNames is exercised: a single entry
+    // would only prove the first-name branch.
+    std::vector<std::string> trimmedFields = {"app_parameters", "job_id"};
+    MOCKER_CPP(&Msprofiler::Api::ProfAclMgr::GetTrimmedParamJsonStr)
+        .stubs()
+        .with(outBound(trimmedStr), outBound(trimmedFields))
+        .will(returnValue(true));
+    MOCKER_CPP(&Analysis::Dvvp::Common::Platform::Platform::PlatformIsHelperHostSide).stubs().will(returnValue(false));
+    EXPECT_EQ(ACL_SUCCESS, CommandHandleProfInit());
 }
 
 TEST_F(COMMANDHANDLE_TEST, BuildModuleCommandForAicoreShape)
