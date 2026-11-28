@@ -237,7 +237,7 @@ rtError_t AicpuInfoLoadTaskInit(TaskInfo* taskInfo, const void* const aicpuInfo,
     taskInfo->u.aicpuInfoLoadTask.aicpuInfo = RtPtrToValue(aicpuInfo);
     taskInfo->u.aicpuInfoLoadTask.length = len;
     RT_LOG(
-        RT_LOG_DEBUG, "aicpu task load info,stream_id=%d,task_id=%hu,length=%u,task_type=%d(%s)",
+        RT_LOG_DEBUG, "aicpu task load info, stream_id=%d, task_id=%hu, length=%u bytes, task_type=%d(%s)",
         taskInfo->stream->Id_(), taskInfo->id, len, static_cast<int32_t>(taskInfo->type), taskInfo->typeName);
 
     return RT_ERROR_NONE;

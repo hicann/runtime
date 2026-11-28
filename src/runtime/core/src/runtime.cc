@@ -3491,7 +3491,7 @@ rtError_t Runtime::PrepareDeviceRetain(
     }
     errorTrace = RT_ERROR_NONE;
     if (AtraceReportStart != nullptr) {
-        RT_LOG(RT_LOG_INFO, "[dlog api] AtraceReportStart exist.");
+        RT_LOG(RT_LOG_INFO, "[dlog api] AtraceReportStart exists.");
         errorTrace = AtraceReportStart(static_cast<int32_t>(devId));
         COND_LOG_WARN(
             errorTrace != RT_ERROR_NONE, "call AtraceReportStart api failed, retCode=%#x devId=%u.", errorTrace, devId);
@@ -4115,7 +4115,7 @@ rtError_t Runtime::ProfilerStart(
         RT_LOG(RT_LOG_INFO, "PROF_TASK_TIME_MASK need to report task track.");
     }
     if (bProfileLog && (!bTaskTrack)) {
-        RT_LOG(RT_LOG_INFO, "Start with new profilerlog.");
+        RT_LOG(RT_LOG_INFO, "Start with new profiler log.");
 
         // status check:
         if ((apiProfilingType_ & PROF_RUNTIME_API_MASK) != 0ULL) {
@@ -5356,7 +5356,7 @@ rtError_t Runtime::GetVisibleDevices()
             deviceInfo[setDeviceCnt] = static_cast<uint32_t>(std::stoi(tokens[i]));
         } catch (...) {
             deviceInfo[setDeviceCnt] = MAX_UINT32_NUM;
-            RT_LOG(RT_LOG_EVENT, "ASCEND_RT_VISIBLE_DEVICES[%s] exceed MAX_UINT32_NUM.", tokens[i].c_str());
+            RT_LOG(RT_LOG_EVENT, "ASCEND_RT_VISIBLE_DEVICES[%s] exceeds MAX_UINT32_NUM.", tokens[i].c_str());
         }
         if (deviceInfo[setDeviceCnt] > (deviceCnt - 1U)) {
             deviceInfo[setDeviceCnt] = MAX_UINT32_NUM;

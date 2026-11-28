@@ -107,7 +107,10 @@ void FeatureToTsVersionInit(void)
 bool CheckFeatureIsSupportOld(const uint32_t tschVersion, rtFeature feature)
 {
     if (feature >= RT_FEATURE_MAX) {
-        RT_LOG(RT_LOG_WARNING, "bad feature=%d, tschVersion=%u", feature, tschVersion);
+        RT_LOG(
+            RT_LOG_WARNING, "Invalid feature=" RT_ENUM_LOG_FORMAT("%d") ", valid range [0, %u), tschVersion=%u.",
+            RT_ENUM_LOG_VALUE(static_cast<int32_t>(feature), RtFeatureToString(feature)),
+            static_cast<uint32_t>(RT_FEATURE_MAX), tschVersion);
         return false;
     }
     // Not stars, use the code branch, this is TS_BRANCH_TRUNK.

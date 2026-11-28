@@ -61,7 +61,8 @@ rtError_t RdmaDbSendTaskInit(TaskInfo* taskInfo, const uint32_t dbIndex, const u
         }
         const uint32_t vfId = rdmaDbSend->taskDbIndex.dbIndexStars.vfId;
         const uint32_t dieId = rdmaDbSend->taskDbIndex.dbIndexStars.dieId;
-        COND_RETURN_ERROR_MSG_CALL(ERR_MODULE_HCCL, vfId != 0U, RT_ERROR_INVALID_VALUE, "invalid vfId, vfId=%u", vfId);
+        COND_RETURN_ERROR_MSG_CALL(
+            ERR_MODULE_HCCL, vfId != 0U, RT_ERROR_INVALID_VALUE, "invalid vfId, vfId=%u, expect vfId=0", vfId);
 
         const int64_t phyDieId = taskInfo->stream->Device_()->GetPhyDieId();
         COND_RETURN_ERROR_MSG_CALL(

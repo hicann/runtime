@@ -38,7 +38,7 @@ void ToCommandBodyForLabelSetTask(TaskInfo* taskInfo, rtCommand_t* const command
             static_cast<int32_t>(stm->Device_()->Id_()), RtPtrToValue(taskInfo->u.labelSetTask.devDstAddr), &pptr);
         COND_RETURN_VOID(error != RT_ERROR_NONE, "convert memory address from virtual to physical failed");
         command->u.labelSetTask.labelPtr = pptr;
-        RT_LOG(RT_LOG_DEBUG, "ts support 64k table,add label dev addr=%" PRIu64 " to command.", pptr);
+        RT_LOG(RT_LOG_DEBUG, "ts support 64k table, add label dev addr=%" PRIu64 " to command.", pptr);
     }
 }
 

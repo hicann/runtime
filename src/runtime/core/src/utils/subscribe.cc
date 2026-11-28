@@ -580,8 +580,12 @@ void CbSubscribe::DeleteAll()
                 if (event != nullptr) {
                     const rtError_t error = event->WaitForBusy();
                     if (error != RT_ERROR_NONE) {
+                        const int32_t streamId = it.second.stream->Id_();
+                        const uint64_t threadId = it.second.threadId;
                         lock.unlock();
-                        RT_LOG(RT_LOG_ERROR, "Stream is aborted");
+                        RT_LOG(
+                            RT_LOG_ERROR, "Stream is aborted, stream_id=%d, thread_id=%" PRIu64 ", retCode=%#x.",
+                            streamId, threadId, static_cast<uint32_t>(error));
                         return;
                     }
                     delete event;

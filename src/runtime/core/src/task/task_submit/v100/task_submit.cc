@@ -341,7 +341,7 @@ rtError_t SubmitTaskDc(TaskInfo* submitTask, Stream* stm, uint32_t* const flipTa
     COND_RETURN_ERROR(
         error != RT_ERROR_NONE, error,
         "AllocTaskAndSendDc fail, streamId=%d, taskId=%hu,"
-        "taskType=%s(%u), retCode=%#x",
+        " taskType=%s(%u), retCode=%#x",
         stm->Id_(), submitTask->id, GetTaskDescByType(submitTask->type), submitTask->type, error);
     taskId = submitTask->id;
     Engine* engine = ((RawDevice*)(stm->Device_()))->Engine_();
@@ -571,10 +571,15 @@ rtError_t StarsAllocTaskAndSend(TaskInfo* submitTask, Stream* stm, uint32_t* con
 
     while (taskInfo == nullptr) {
         if (stm->GetBindFlag()) {
+            const uint32_t pendingTaskCount = stm->GetPendingNum();
+            UNUSED(pendingTaskCount);
             stm->StreamUnLock();
             RT_LOG_OUTER_MSG_IMPL(
                 ErrorCode::EE1019, "Allocating task info",
-                "The number of pending tasks in the stream exceeds the limit");
+                RtFmtMsg(
+                    "The task resource queue for stream (stream_id=%d) could not accept the requested task "
+                    "(pending_tasks=%u, task_resource_limit=%u)",
+                    stm->Id_(), pendingTaskCount, taskPool - 1U));
             return RT_ERROR_STREAM_FULL;
         }
         stm->StreamUnLock();

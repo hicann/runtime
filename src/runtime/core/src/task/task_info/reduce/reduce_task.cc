@@ -60,7 +60,7 @@ void ToCommandBodyForReduceAsyncV2Task(TaskInfo* const taskInfo, rtCommand_t* co
             static_cast<int32_t>(stream->Device_()->Id_()), RtPtrToValue<void*>(reduceAsyncV2TaskInfo->overflowAddr),
             &offset);
         COND_RETURN_VOID(
-            error != RT_ERROR_NONE, "Failed to translate address to physic for reduce async v2 address, retCode=%#x.",
+            error != RT_ERROR_NONE, "Failed to translate address to physical for reduce async v2 address, retCode=%#x.",
             error);
         RT_LOG(
             RT_LOG_INFO, "ReduceAsyncV2Task offset=%#" PRIx64 ", dir=%u, size_=%" PRIu64, offset,

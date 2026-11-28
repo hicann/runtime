@@ -69,7 +69,7 @@ rtError_t SomaApi::StreamMemPoolCreate(rtMemPool_t* memPool, const rtMemPoolProp
     uint32_t phyDevId;
     error = Runtime::Instance()->ChgUserDevIdToDeviceId(curPoolProps.devId, &phyDevId, false);
     ERROR_RETURN(
-        error, "Convert user devId to physical devId failed! userDevId=%u, error Code=%u!", curPoolProps.devId,
+        error, "Convert user devId to physical devId failed! userDevId=%u, errorCode=%u.", curPoolProps.devId,
         static_cast<uint32_t>(error));
     curPoolProps.devId = phyDevId;
 

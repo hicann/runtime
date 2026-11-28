@@ -31,7 +31,7 @@ rtError_t RingBufferMaintainTaskInit(TaskInfo* taskInfo, const void* const addr,
     ringBufMtTsk->deviceRingBufferAddr = RtPtrToUnConstPtr<void*, const void*>(addr);
     ringBufMtTsk->deleteFlag = delFlag;
     ringBufMtTsk->bufferLen = len;
-    RT_LOG(RT_LOG_DEBUG, "Success to create device ringbuffer task");
+    RT_LOG(RT_LOG_DEBUG, "Successfully created device ringbuffer task");
     return RT_ERROR_NONE;
 }
 

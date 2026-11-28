@@ -115,7 +115,7 @@ rtError_t DeviceSnapshot::OpMemoryBackup(void)
     }
     const size_t opTotalHostMemSize = GetOpTotalHostMemSize();
     if (opTotalHostMemSize == 0U) {
-        RT_LOG(RT_LOG_DEBUG, "no memory need to back up.");
+        RT_LOG(RT_LOG_DEBUG, "no memory needs to be backed up.");
         return RT_ERROR_NONE;
     }
 
@@ -151,7 +151,7 @@ rtError_t DeviceSnapshot::OpMemoryRestore(void)
 {
     const size_t opTotalHostMemSize = GetOpTotalHostMemSize();
     if (opTotalHostMemSize == 0U) {
-        RT_LOG(RT_LOG_DEBUG, "no task args memory need to restore.");
+        RT_LOG(RT_LOG_DEBUG, "no task args memory needs to be restored.");
         return RT_ERROR_NONE;
     }
     std::unique_ptr<uint8_t[]>& opBackupAddr = GetOpBackUpAddr();
