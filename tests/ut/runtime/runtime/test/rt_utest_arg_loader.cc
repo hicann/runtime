@@ -1306,3 +1306,37 @@ TEST_F(ArgLoaderTest, SelectFallbackAllocator_maxArgNull_fallback_random)
     delete rawDrv;
     ((Runtime*)Runtime::Instance())->DeviceRelease(device);
 }
+
+TEST_F(ArgLoaderTest, ForcedCpuCopyPrechecksLegacyAddressFields)
+{
+    std::shared_ptr<Device> device(
+        Runtime::Instance()->DeviceRetain(0, 0), [](Device* dev) { Runtime::Instance()->DeviceRelease(dev); });
+    ASSERT_NE(device, nullptr);
+    Stream stream(device.get(), 0, RT_STREAM_FORCE_COPY | RT_STREAM_PERSISTENT);
+    UmaArgLoader loader(device.get());
+    ASSERT_EQ(loader.Init(), RT_ERROR_NONE);
+    uint64_t host[4] = {11U, 22U, 33U, 0xA5A5A5A5A5A5A5A5ULL};
+    const uint64_t before[4] = {11U, 22U, 33U, 0xA5A5A5A5A5A5A5A5ULL};
+    rtHostInputInfo_t fields[2] = {{0U, 0U}, {24U, 0U}};
+    rtAicpuArgsEx_t cpu{};
+    cpu.args = host;
+    cpu.argsSize = 24U;
+    cpu.isNoNeedH2DCopy = true;
+    cpu.hostInputInfoNum = 1U;
+    cpu.hostInputInfoPtr = fields;
+    cpu.kernelOffsetInfoNum = 1U;
+    cpu.kernelOffsetInfoPtr = fields + 1;
+    ArgLoaderResult result{};
+    EXPECT_EQ(loader.LoadCpuKernelArgsEx(&cpu, &stream, &result), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(result.handle, nullptr);
+    EXPECT_EQ(memcmp(host, before, sizeof(host)), 0);
+    rtArgsEx_t args{};
+    args.args = host;
+    args.argsSize = 24U;
+    args.isNoNeedH2DCopy = 1U;
+    args.hasTiling = 1U;
+    args.tilingAddrOffset = 24U;
+    EXPECT_EQ(loader.LoadCpuKernelArgs(&args, &stream, &result), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(result.handle, nullptr);
+    EXPECT_EQ(memcmp(host, before, sizeof(host)), 0);
+}

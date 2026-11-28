@@ -9,6 +9,7 @@
  */
 #include "common/api_enum_log.hpp"
 #include "api_error.hpp"
+#include "arg_loader_utils.hpp"
 #include "device_enum_desc.hpp"
 #include "driver_enum_desc.hpp"
 #include "capture_model_enum_desc.hpp"
@@ -247,11 +248,12 @@ rtError_t ApiErrorDecorator::CheckArgs(const rtArgsEx_t* const argsInfo) const
                     "Parameter argsInfo->tilingDataOffset %u should be less than parameter argsInfo->argsSize %u",
                     argsInfo->tilingDataOffset, argsInfo->argsSize));
             COND_RETURN_AND_MSG_OUTER(
-                (argsInfo->tilingAddrOffset >= argsInfo->argsSize), RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
-                "Operator parameter verification", "argsInfo->tilingAddrOffset or argsInfo->argsSize",
+                (static_cast<uint64_t>(argsInfo->tilingAddrOffset) + sizeof(uint64_t) > argsInfo->argsSize),
+                RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Operator parameter verification",
+                "argsInfo->tilingAddrOffset or argsInfo->argsSize",
                 RtFmtMsg(
-                    "Parameter argsInfo->tilingAddrOffset %u should be less than parameter argsInfo->argsSize %u",
-                    argsInfo->tilingAddrOffset, argsInfo->argsSize));
+                    "Parameter argsInfo->tilingAddrOffset %u must leave %zu bytes within argsInfo->argsSize %u",
+                    argsInfo->tilingAddrOffset, sizeof(uint64_t), argsInfo->argsSize));
         }
 
         if (argsInfo->hostInputInfoNum != 0U) {
@@ -259,13 +261,14 @@ rtError_t ApiErrorDecorator::CheckArgs(const rtArgsEx_t* const argsInfo) const
                 argsInfo->hostInputInfoPtr, RT_ERROR_INVALID_VALUE, "Operator parameter verification");
             for (uint16_t i = 0U; i < argsInfo->hostInputInfoNum; i++) {
                 COND_RETURN_AND_MSG_OUTER(
-                    argsInfo->hostInputInfoPtr[i].addrOffset >= argsInfo->argsSize, RT_ERROR_INVALID_VALUE,
-                    ErrorCode::EE1017, "Operator parameter verification",
+                    static_cast<uint64_t>(argsInfo->hostInputInfoPtr[i].addrOffset) + sizeof(uint64_t) >
+                        argsInfo->argsSize,
+                    RT_ERROR_INVALID_VALUE, ErrorCode::EE1017, "Operator parameter verification",
                     RtFmtMsg("argsInfo->hostInputInfoPtr[%hu].addrOffset or argsInfo->argsSize", i),
                     RtFmtMsg(
-                        "Parameter argsInfo->hostInputInfoPtr[%hu].addrOffset %u should be less than parameter"
+                        "Parameter argsInfo->hostInputInfoPtr[%hu].addrOffset %u must leave %zu bytes within"
                         " argsInfo->argsSize %u",
-                        i, argsInfo->hostInputInfoPtr[i].addrOffset, argsInfo->argsSize));
+                        i, argsInfo->hostInputInfoPtr[i].addrOffset, sizeof(uint64_t), argsInfo->argsSize));
                 COND_RETURN_AND_MSG_OUTER(
                     argsInfo->hostInputInfoPtr[i].dataOffset >= argsInfo->argsSize, RT_ERROR_INVALID_VALUE,
                     ErrorCode::EE1017, "Operator parameter verification",
@@ -317,6 +320,14 @@ rtError_t ApiErrorDecorator::CheckNonArgsHandle(const RtArgsHandle* const argsHa
     return RT_ERROR_NONE;
 }
 
+static rtError_t CheckAicpuAddressFields(const rtAicpuArgsEx_t* const argsInfo)
+{
+    if (argsInfo->isNoNeedH2DCopy) {
+        return RT_ERROR_NONE;
+    }
+    return CheckArgsAddressFields(argsInfo);
+}
+
 static rtError_t CheckCpuArgsInfo(const rtCpuKernelArgs_t* const argsInfo)
 {
     NULL_PTR_RETURN_MSG_OUTER_WITH_FUNC_DESC(
@@ -326,7 +337,7 @@ static rtError_t CheckCpuArgsInfo(const rtCpuKernelArgs_t* const argsInfo)
     ZERO_RETURN_AND_MSG_OUTER_WITH_FUNC_DESC(
         argsInfo->baseArgs.argsSize, "Checking the parameter information of the AI CPU operator");
 
-    return RT_ERROR_NONE;
+    return CheckAicpuAddressFields(&argsInfo->baseArgs);
 }
 
 // SIMT capability + param metadata, shared by the launch path and aclmdlRITaskSetParams
@@ -351,12 +362,13 @@ static rtError_t CheckSimtPlaceHolder(
 {
     for (uint32_t i = 0U; i < placeHolderNum; i++) {
         COND_RETURN_AND_MSG_OUTER(
-            placeHolderArray[i].addrOffset >= argsSize, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
-            "Checking SIMT parameters",
+            static_cast<uint64_t>(placeHolderArray[i].addrOffset) + sizeof(uint64_t) > argsSize, RT_ERROR_INVALID_VALUE,
+            ErrorCode::EE1017, "Checking SIMT parameters",
             RtFmtMsg("placeHolderArray[%u].addrOffset or %s", i, (isDim3Form ? "argsSize" : "hostArgsSize")),
             RtFmtMsg(
-                "Parameter placeHolderArray[%u].addrOffset %u should be less than parameter %s %u", i,
-                placeHolderArray[i].addrOffset, (isDim3Form ? "argsSize" : "hostArgsSize"), argsSize));
+                "Parameter placeHolderArray[%u].addrOffset %u must leave %zu bytes within %s %u", i,
+                placeHolderArray[i].addrOffset, sizeof(uint64_t), (isDim3Form ? "argsSize" : "hostArgsSize"),
+                argsSize));
         COND_RETURN_AND_MSG_OUTER(
             placeHolderArray[i].dataOffset >= argsSize, RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
             "Checking SIMT parameters",
@@ -1236,6 +1248,8 @@ rtError_t ApiErrorDecorator::CpuKernelLaunchExWithArgs(
         argsInfo->args, RT_ERROR_INVALID_VALUE, "Starting the compute task of an AI CPU operator");
     ZERO_RETURN_AND_MSG_OUTER_WITH_FUNC_DESC(argsInfo->argsSize, "Starting the compute task of an AI CPU operator");
 
+    const rtError_t checkError = CheckAicpuAddressFields(argsInfo);
+    COND_RETURN_WITH_NOLOG(checkError != RT_ERROR_NONE, checkError);
     const rtError_t error = impl_->CpuKernelLaunchExWithArgs(opName, coreDim, argsInfo, stm, flag, kernelType);
     ERROR_RETURN(
         error,

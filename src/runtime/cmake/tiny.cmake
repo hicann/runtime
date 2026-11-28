@@ -200,6 +200,7 @@ set(libruntime_profile_src_files
 )
 set(libruntime_arg_loader_files
     ${RUNTIME_CORE_DIR}/src/kernel/arg_loader/uma_arg_loader.cc
+    ${RUNTIME_CORE_DIR}/src/kernel/arg_loader/arg_loader_utils.cc
     ${RUNTIME_CORE_DIR}/src/kernel/arg_loader/load_policy.cc
     ${RUNTIME_CORE_DIR}/src/kernel/arg_loader/stars_arg_manager.cc
     ${RUNTIME_CORE_DIR}/src/kernel/arg_loader/arg_manage_pcie.cc

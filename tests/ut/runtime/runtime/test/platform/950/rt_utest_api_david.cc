@@ -10685,6 +10685,34 @@ void RegStreamStateCallbackFunc(rtStream_t stream, const bool isCreate)
     RT_LOG(RT_LOG_ERROR, "RegStreamStateCallback, stream=[%p], isCreate=[%d]\n", stream, isCreate);
 }
 
+TEST_F(ApiDavidTest, FusionHostInputRequiresCompleteAddressFields)
+{
+    ApiImplDavid impl;
+    ApiErrorDecorator api(&impl);
+    MOCKER_CPP_VIRTUAL(impl, &ApiImplDavid::FusionLaunch).expects(exactly(2)).will(returnValue(RT_ERROR_NONE));
+    rtFunsionTaskInfo_t fusion{};
+    fusion.subTaskNum = 2U;
+    fusion.subTask[0].type = RT_FUSION_AICPU;
+    fusion.subTask[1].type = RT_FUSION_AICORE;
+    uint64_t buffer[3] = {};
+    rtHostInputInfo_t input{16U, 23U};
+    rtFusionArgsEx_t args{};
+    args.args = buffer;
+    args.argsSize = sizeof(buffer);
+    args.aicpuNum = 1U;
+    args.hostInputInfoNum = 1U;
+    args.hostInputInfoPtr = &input;
+    for (uint32_t offset = 16U; offset < sizeof(buffer); ++offset) {
+        input.addrOffset = offset;
+        EXPECT_EQ(api.FusionLaunch(&fusion, stream_, &args), offset == 16U ? RT_ERROR_NONE : RT_ERROR_INVALID_VALUE);
+    }
+    // no-copy name offsets retain their existing contract (R28A-BUG-002).
+    args.isNoNeedH2DCopy = 1U;
+    args.aicpuArgs[0].soNameAddrOffset = UINT16_MAX;
+    args.aicpuArgs[0].kernelNameAddrOffset = UINT16_MAX;
+    EXPECT_EQ(api.FusionLaunch(&fusion, stream_, &args), RT_ERROR_NONE);
+}
+
 TEST_F(ApiDavidTest, fusion_launch_with_hdl_and_stubFunc_null_or_not_null)
 {
     uint64_t tilingKey = 0x123ULL;

@@ -2100,3 +2100,154 @@ TEST_F(ArgManageUbTest, UbArgManage_LoadSimtHostArgs_H2DCopyFail)
     TestLoadSimtHostArgsH2DCopyFailCommon(stm, false);
     delete stm;
 }
+
+namespace {
+void MockAddressFieldTestAllocation(PcieArgManage& manager, void* deviceArgs)
+{
+    StarsArgLoaderResult allocated{};
+    allocated.kerArgs = deviceArgs;
+    MOCKER_CPP_VIRTUAL(&manager, &PcieArgManage::AllocCopyPtr)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&allocated, sizeof(allocated)))
+        .will(returnValue(RT_ERROR_NONE));
+}
+} // namespace
+
+TEST_F(ArgManagePcieTest, ForcedCpuCopyRejectsAllAddressFieldsBeforeWriting)
+{
+    std::unique_ptr<DavidStream> stm(new (std::nothrow)
+                                         DavidStream(device_, 0, RT_STREAM_FORCE_COPY | RT_STREAM_PERSISTENT, nullptr));
+    ASSERT_NE(stm, nullptr);
+    PcieArgManage manager(stm.get());
+    uint64_t host[4] = {11U, 22U, 33U, 0xA5A5A5A5A5A5A5A5ULL};
+    const uint64_t before[4] = {11U, 22U, 33U, 0xA5A5A5A5A5A5A5A5ULL};
+    uint64_t deviceArgs[4] = {};
+    MockAddressFieldTestAllocation(manager, deviceArgs);
+    rtHostInputInfo_t inputs[2] = {{0U, 0U}, {24U, 0U}};
+    rtAicpuArgsEx_t args{};
+    args.args = host;
+    args.argsSize = 24U;
+    args.isNoNeedH2DCopy = true;
+    args.hostInputInfoNum = 1U;
+    args.hostInputInfoPtr = inputs;
+    args.kernelOffsetInfoNum = 1U;
+    args.kernelOffsetInfoPtr = inputs + 1;
+    StarsArgLoaderResult result{};
+    // A valid first array must not be written when the second array is invalid.
+    EXPECT_EQ(manager.LoadArgs(&args, false, &result, LoadPolicy::LP_CPU_KRN_EX), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(memcmp(host, before, sizeof(host)), 0);
+    args.kernelOffsetInfoNum = 0U;
+    args.hostInputInfoNum = 2U;
+    for (uint32_t offset : {17U, 23U, 24U, UINT32_MAX}) {
+        inputs[1].addrOffset = offset;
+        EXPECT_EQ(manager.LoadArgs(&args, false, &result, LoadPolicy::LP_CPU_KRN_EX), RT_ERROR_INVALID_VALUE);
+        EXPECT_EQ(memcmp(host, before, sizeof(host)), 0);
+    }
+    args.hostInputInfoNum = 1U;
+    for (uint32_t size = 1U; size < sizeof(uint64_t); ++size) {
+        args.argsSize = size;
+        EXPECT_EQ(manager.LoadArgs(&args, false, &result, LoadPolicy::LP_CPU_KRN_EX), RT_ERROR_INVALID_VALUE);
+        EXPECT_EQ(memcmp(host, before, sizeof(host)), 0);
+    }
+}
+
+TEST_F(ArgManagePcieTest, ForcedCpuCopyPreservesLastLegalAddressFieldAndDataOffset)
+{
+    std::unique_ptr<DavidStream> stm(new (std::nothrow)
+                                         DavidStream(device_, 0, RT_STREAM_FORCE_COPY | RT_STREAM_PERSISTENT, nullptr));
+    ASSERT_NE(stm, nullptr);
+    PcieArgManage manager(stm.get());
+    uint64_t host[4] = {0U, 0U, 0U, 0xA5A5A5A5A5A5A5A5ULL};
+    uint64_t deviceArgs[3] = {};
+    MockAddressFieldTestAllocation(manager, deviceArgs);
+    rtHostInputInfo_t input{16U, UINT32_MAX};
+    rtAicpuArgsEx_t args{};
+    args.args = host;
+    args.argsSize = sizeof(deviceArgs);
+    args.isNoNeedH2DCopy = true;
+    args.kernelOffsetInfoNum = 1U;
+    args.kernelOffsetInfoPtr = &input;
+    StarsArgLoaderResult result{};
+    EXPECT_EQ(manager.LoadArgs(&args, false, &result, LoadPolicy::LP_CPU_KRN_EX), RT_ERROR_NONE);
+    EXPECT_EQ(host[2], RtPtrToValue(deviceArgs) + UINT32_MAX);
+    EXPECT_EQ(deviceArgs[2], host[2]);
+    EXPECT_EQ(host[3], 0xA5A5A5A5A5A5A5A5ULL);
+}
+
+TEST_F(ArgManagePcieTest, NoCopyCpuIgnoresUnusedAddressMetadata)
+{
+    std::unique_ptr<DavidStream> stm(new (std::nothrow) DavidStream(device_, 0, 0, nullptr));
+    ASSERT_NE(stm, nullptr);
+    PcieArgManage manager(stm.get());
+    MOCKER_CPP_VIRTUAL(&manager, &PcieArgManage::AllocCopyPtr).expects(never());
+    MOCKER_CPP_VIRTUAL(&manager, &PcieArgManage::AllocNoCopyPtr).expects(once()).will(returnValue(RT_ERROR_NONE));
+    uint64_t host = 0xA5A5A5A5A5A5A5A5ULL;
+    rtAicpuArgsEx_t args{};
+    args.args = &host;
+    args.argsSize = sizeof(host);
+    args.isNoNeedH2DCopy = true;
+    args.hostInputInfoNum = 1U;
+    args.kernelOffsetInfoNum = 1U;
+    StarsArgLoaderResult result{};
+    EXPECT_EQ(manager.LoadArgs(&args, false, &result, LoadPolicy::LP_CPU_KRN_EX), RT_ERROR_NONE);
+    EXPECT_EQ(result.kerArgs, &host);
+    EXPECT_EQ(host, 0xA5A5A5A5A5A5A5A5ULL);
+    stm.reset();
+    GlobalMockObject::verify();
+}
+
+TEST_F(ArgManagePcieTest, ForcedCpuCopyChecksTilingBeforeHostAddressFields)
+{
+    std::unique_ptr<DavidStream> stm(new (std::nothrow)
+                                         DavidStream(device_, 0, RT_STREAM_FORCE_COPY | RT_STREAM_PERSISTENT, nullptr));
+    ASSERT_NE(stm, nullptr);
+    PcieArgManage manager(stm.get());
+    uint64_t host[4] = {11U, 22U, 33U, 0xA5A5A5A5A5A5A5A5ULL};
+    const uint64_t before[4] = {11U, 22U, 33U, 0xA5A5A5A5A5A5A5A5ULL};
+    uint64_t deviceArgs[3] = {};
+    MockAddressFieldTestAllocation(manager, deviceArgs);
+    rtHostInputInfo_t input{0U, 0U};
+    rtArgsEx_t args{};
+    args.args = host;
+    args.argsSize = sizeof(deviceArgs);
+    args.isNoNeedH2DCopy = 1U;
+    args.hasTiling = 1U;
+    args.tilingAddrOffset = 24U;
+    args.hostInputInfoNum = 1U;
+    args.hostInputInfoPtr = &input;
+    StarsArgLoaderResult result{};
+    EXPECT_EQ(manager.LoadArgs(&args, false, &result, LoadPolicy::LP_CPU_KRN), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(memcmp(host, before, sizeof(host)), 0);
+}
+
+TEST_F(ArgManagePcieTest, FusionCopyPrechecksHostAddressFieldsAndKeepsNoCopy)
+{
+    std::unique_ptr<DavidStream> stm(new (std::nothrow) DavidStream(device_, 0, 0, nullptr));
+    ASSERT_NE(stm, nullptr);
+    PcieArgManage manager(stm.get());
+    uint64_t host[4] = {0U, 0U, 0U, 0xA5A5A5A5A5A5A5A5ULL};
+    const uint64_t before[4] = {0U, 0U, 0U, 0xA5A5A5A5A5A5A5A5ULL};
+    uint64_t deviceArgs[3] = {};
+    MockAddressFieldTestAllocation(manager, deviceArgs);
+    rtHostInputInfo_t input{24U, 23U};
+    rtFusionArgsEx_t args{};
+    args.args = host;
+    args.argsSize = sizeof(deviceArgs);
+    args.hostInputInfoNum = 1U;
+    args.hostInputInfoPtr = &input;
+    StarsArgLoaderResult result{};
+    EXPECT_EQ(manager.LoadArgs(&args, false, &result), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(memcmp(host, before, sizeof(host)), 0);
+    input.addrOffset = 16U;
+    EXPECT_EQ(manager.LoadArgs(&args, false, &result), RT_ERROR_NONE);
+    EXPECT_EQ(host[2], RtPtrToValue(deviceArgs) + input.dataOffset);
+    EXPECT_EQ(deviceArgs[2], host[2]);
+    EXPECT_EQ(host[3], 0xA5A5A5A5A5A5A5A5ULL);
+    args.isNoNeedH2DCopy = 1U;
+    args.hostInputInfoPtr = nullptr;
+    const uint64_t addressValue = host[2];
+    EXPECT_EQ(manager.LoadArgs(&args, false, &result), RT_ERROR_NONE);
+    EXPECT_EQ(result.kerArgs, host);
+    EXPECT_EQ(host[2], addressValue);
+    EXPECT_EQ(host[3], 0xA5A5A5A5A5A5A5A5ULL);
+}

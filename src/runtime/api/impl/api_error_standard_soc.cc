@@ -545,13 +545,15 @@ static rtError_t CheckArgsForFusionKernel(const rtFusionArgsEx_t* const argsInfo
                 "Checking the validity of fusion kernel startup parameters");
             for (uint16_t i = 0U; i < argsInfo->hostInputInfoNum; i++) {
                 COND_RETURN_AND_MSG_OUTER(
-                    argsInfo->hostInputInfoPtr[i].addrOffset >= argsInfo->argsSize, RT_ERROR_INVALID_VALUE,
-                    ErrorCode::EE1017, "Checking the validity of fusion kernel startup parameters",
+                    static_cast<uint64_t>(argsInfo->hostInputInfoPtr[i].addrOffset) + sizeof(uint64_t) >
+                        argsInfo->argsSize,
+                    RT_ERROR_INVALID_VALUE, ErrorCode::EE1017,
+                    "Checking the validity of fusion kernel startup parameters",
                     RtFmtMsg("argsInfo->hostInputInfoPtr[%hu].addrOffset or argsInfo->argsSize", i),
                     RtFmtMsg(
-                        "Parameter argsInfo->hostInputInfoPtr[%hu].addrOffset %u should be less than parameter "
+                        "Parameter argsInfo->hostInputInfoPtr[%hu].addrOffset %u must leave %zu bytes within "
                         "argsInfo->argsSize %u",
-                        i, argsInfo->hostInputInfoPtr[i].addrOffset, argsInfo->argsSize));
+                        i, argsInfo->hostInputInfoPtr[i].addrOffset, sizeof(uint64_t), argsInfo->argsSize));
                 COND_RETURN_AND_MSG_OUTER(
                     argsInfo->hostInputInfoPtr[i].dataOffset >= argsInfo->argsSize, RT_ERROR_INVALID_VALUE,
                     ErrorCode::EE1017, "Checking the validity of fusion kernel startup parameters",

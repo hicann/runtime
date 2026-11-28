@@ -338,6 +338,7 @@ set_source_files_properties(${libruntime_cmodel_aclrt_impl_src_files}
 
 set(libruntime_cmodel_arg_loader_files
     ${RUNTIME_CORE_DIR}/src/kernel/arg_loader/uma_arg_loader.cc
+    ${RUNTIME_CORE_DIR}/src/kernel/arg_loader/arg_loader_utils.cc
     ${RUNTIME_CORE_DIR}/src/kernel/arg_loader/load_policy.cc
     ${RUNTIME_CORE_DIR}/src/kernel/arg_loader/stars_arg_manager.cc
     ${RUNTIME_CORE_DIR}/src/kernel/arg_loader/arg_manage_pcie.cc
@@ -646,6 +647,7 @@ set(libruntime_cmodel_v200_src_files
     ${RUNTIME_FEATURE_DIR}/aclgraph/v200/capture_adapt_v200.cc
     ${RUNTIME_FEATURE_DIR}/aclgraph/v200/capture_model_adapt_v200.cc
     ${RUNTIME_CORE_DIR}/src/kernel/arg_loader/arg_loader_ub.cc
+    ${RUNTIME_CORE_DIR}/src/kernel/arg_loader/arg_loader_utils.cc
     ${RUNTIME_CORE_DIR}/src/kernel/arg_loader/load_policy.cc
     ${RUNTIME_CORE_DIR}/src/kernel/arg_loader/stars_arg_manager.cc
     ${RUNTIME_CORE_DIR}/src/kernel/arg_loader/arg_manage_pcie.cc

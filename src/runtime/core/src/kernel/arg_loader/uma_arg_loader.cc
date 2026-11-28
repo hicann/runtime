@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "uma_arg_loader.hpp"
+#include "arg_loader_utils.hpp"
 #include <vector>
 #include "securec.h"
 #include "runtime.hpp"
@@ -429,6 +430,8 @@ rtError_t UmaArgLoader::LoadCpuKernelArgs(
     bool copyArgs = false;
 
     if ((stm->NonSupportModelCompile()) || (argsInfo->isNoNeedH2DCopy == 0)) {
+        const rtError_t checkError = CheckArgsAddressFields(argsInfo);
+        COND_RETURN_WITH_NOLOG(checkError != RT_ERROR_NONE, checkError);
         uint64_t cpySize;
         if (argsInfo->argsSize > MULTI_GRAPH_ARG_ENTRY_SIZE) {
             COND_RETURN_ERROR(
@@ -485,6 +488,8 @@ rtError_t UmaArgLoader::LoadCpuKernelArgsEx(
     bool copyArgs = false;
 
     if ((stm->NonSupportModelCompile()) || (argsInfo->isNoNeedH2DCopy == 0U)) {
+        const rtError_t checkError = CheckArgsAddressFields(argsInfo);
+        COND_RETURN_WITH_NOLOG(checkError != RT_ERROR_NONE, checkError);
         uint64_t cpySize;
         if (size > (ARG_ENTRY_INCRETMENT_SIZE + itemSize_)) {
             // if args size is greater than max size,

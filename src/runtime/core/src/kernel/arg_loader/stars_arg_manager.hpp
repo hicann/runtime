@@ -12,6 +12,7 @@
 #include <mutex>
 #include "task_info.hpp"
 #include "arg_loader.hpp"
+#include "arg_loader_utils.hpp"
 #include "arg_loader_ub.hpp"
 
 namespace cce {
@@ -132,6 +133,8 @@ private:
     template <typename T>
     rtError_t LoadArgsWithCopy(const T* argsInfo, bool useArgPool, LoadPolicy policy, StarsArgLoaderResult* result)
     {
+        const rtError_t checkError = CheckArgsAddressFields(argsInfo);
+        COND_RETURN_WITH_NOLOG(checkError != RT_ERROR_NONE, checkError);
         const uint32_t devId = GetDevId();
         const int32_t stmId = GetStmId();
         const uint32_t size = argsInfo->argsSize;

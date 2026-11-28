@@ -151,6 +151,7 @@ set(runtimeut_david_series_common_src_task_list
     ${TOP_DIR}/src/runtime/core/src/task/task_info/reduce/reduce_task_v200_base.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_info/model/model_graph_task_v200_base.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/arg_loader/arg_loader_ub.cc
+    ${TOP_DIR}/src/runtime/core/src/kernel/arg_loader/arg_loader_utils.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/arg_loader/load_policy.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/arg_loader/arg_manage_ub.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/arg_loader/arg_manage_pcie.cc
@@ -403,6 +404,7 @@ set(runtimeut_src_profile_list
 
 set(runtime_src_arg_loader_list
     ${TOP_DIR}/src/runtime/core/src/kernel/arg_loader/uma_arg_loader.cc
+    ${TOP_DIR}/src/runtime/core/src/kernel/arg_loader/arg_loader_utils.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/arg_loader/load_policy.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/arg_loader/stars_arg_manager.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/arg_loader/arg_manage_pcie.cc
@@ -645,6 +647,7 @@ set(runtime_xpu_src
     ${TOP_DIR}/src/tprt/feature/src/tprt_timer.cc
     ${TOP_DIR}/src/runtime/core/src/task/task_res_manage/v200/task_res_da.cc
     ${TOP_DIR}/src/runtime/feature/xpu/task_xpu_recycle.cc
+    ${TOP_DIR}/src/runtime/core/src/kernel/arg_loader/arg_loader_utils.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/arg_loader/load_policy.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/arg_loader/stars_arg_manager.cc
     ${TOP_DIR}/src/runtime/feature/xpu/arg_manage_xpu.cc
@@ -1127,6 +1130,7 @@ add_executable(runtime_utest
     test/rt_utest_device.cc
     test/rt_utest_resource_id_allocator.cc
     test/rt_utest_arg_loader.cc
+    test/rt_utest_arg_loader_utils.cc
     test/rt_utest_context.cc
     test/rt_utest_pool.cc
     test/rt_utest_agent.cc
@@ -1559,6 +1563,7 @@ add_executable(runtime_utest_tiny_stub
     test/rt_utest_api_kernel_func_stub.cc
     test/rt_utest_device_topology_stub.cc
     test/rt_utest_stub.cc
+    ${TOP_DIR}/tests/ut/runtime/runtime/test/rt_utest_arg_loader_utils.cc
 )
 set_property(TARGET runtime_utest_tiny_stub PROPERTY RUNTIME_API_WEAK_PROVIDER TRUE)
 # This API-stub UT compiles its Runtime sources directly and consumes no source archive.

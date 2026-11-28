@@ -200,6 +200,7 @@ set(runtimeut_src_profile_list
 
 set(runtime_src_arg_loader_list
     ${TOP_DIR}/src/runtime/core/src/kernel/arg_loader/arg_manage_nocopy.cc
+    ${TOP_DIR}/src/runtime/core/src/kernel/arg_loader/arg_loader_utils.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/arg_loader/load_policy.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/arg_loader/uma_arg_loader_nocopy.cc
 )
@@ -402,6 +403,7 @@ add_executable(runtime_utest_arch5162
     rt_utest_api_arch5162.cc
     rt_utest_runtime_thread_aicpu.cc
     rt_utest_arg_loader_nocopy.cc
+    ${TOP_DIR}/tests/ut/runtime/runtime/test/rt_utest_arg_loader_utils.cc
     ../../rt_utest_esched_stub.cc
     ../../rt_utest_device_topology_stub.cc
     rt_utest_device_arch5162.cc

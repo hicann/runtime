@@ -14,6 +14,7 @@
 #include "error_message_manage.hpp"
 #include "enum_desc.hpp"
 #include "arg_loader.hpp"
+#include "arg_loader_utils.hpp"
 #include "task_res.hpp"
 #include "task.hpp"
 
@@ -28,6 +29,8 @@ rtError_t TaskResManage::LoadInputOutputArgs(
     const rtArgsEx_t* const argsInfo) const
 {
     if ((stm->NonSupportModelCompile()) || (stm->Model_() == nullptr) || (argsInfo->isNoNeedH2DCopy == 0U)) {
+        const rtError_t checkError = CheckArgsAddressFields(argsInfo);
+        COND_RETURN_WITH_NOLOG(checkError != RT_ERROR_NONE, checkError);
         kerArgs = taskRes_[taskResId].copyDev;
 
         if (argsInfo->hasTiling != 0U) { // set tiling data offset to tiling addr
@@ -52,6 +55,8 @@ rtError_t TaskResManage::LoadInputOutputArgs(
     const rtAicpuArgsEx_t* const argsInfo) const
 {
     if ((stm->NonSupportModelCompile()) || (stm->Model_() == nullptr) || (argsInfo->isNoNeedH2DCopy == 0U)) {
+        const rtError_t checkError = CheckArgsAddressFields(argsInfo);
+        COND_RETURN_WITH_NOLOG(checkError != RT_ERROR_NONE, checkError);
         kerArgs = taskRes_[taskResId].copyDev;
 
         UpdateAddrField(kerArgs, argsInfo->args, argsInfo->hostInputInfoNum, argsInfo->hostInputInfoPtr);

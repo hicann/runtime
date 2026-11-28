@@ -101,6 +101,135 @@ void InitPtrAttr(rtPtrAttributes_t& attr, rtMemLocationType type)
 }
 } // namespace
 
+TEST_F(ApiKernelTest, CheckArgsRequiresCompleteHostAddressFields)
+{
+    ApiImpl impl;
+    ApiErrorDecorator api(&impl);
+    uint64_t buffer[3] = {};
+    rtHostInputInfo_t input{0U, 0U};
+    rtArgsEx_t args{};
+    args.args = buffer;
+    args.hostInputInfoNum = 1U;
+    args.hostInputInfoPtr = &input;
+    for (uint32_t size = 1U; size < sizeof(uint64_t); ++size) {
+        args.argsSize = size;
+        EXPECT_EQ(api.CheckArgs(&args), RT_ERROR_INVALID_VALUE) << size;
+    }
+    args.argsSize = sizeof(buffer);
+    input.dataOffset = sizeof(buffer) - 1U;
+    for (uint32_t offset = 16U; offset < sizeof(buffer); ++offset) {
+        input.addrOffset = offset;
+        EXPECT_EQ(api.CheckArgs(&args), offset == 16U ? RT_ERROR_NONE : RT_ERROR_INVALID_VALUE) << offset;
+    }
+    input.addrOffset = UINT32_MAX;
+    EXPECT_EQ(api.CheckArgs(&args), RT_ERROR_INVALID_VALUE);
+    args.isNoNeedH2DCopy = 1U;
+    EXPECT_EQ(api.CheckArgs(&args), RT_ERROR_NONE);
+    EXPECT_EQ(buffer[0], 0U);
+    EXPECT_EQ(buffer[2], 0U);
+}
+
+TEST_F(ApiKernelTest, CheckArgsRequiresCompleteTilingAddressField)
+{
+    ApiImpl impl;
+    ApiErrorDecorator api(&impl);
+    uint64_t buffer[3] = {};
+    rtArgsEx_t args{};
+    args.args = buffer;
+    args.hasTiling = 1U;
+    for (uint32_t size = 1U; size < sizeof(uint64_t); ++size) {
+        args.argsSize = size;
+        EXPECT_EQ(api.CheckArgs(&args), RT_ERROR_INVALID_VALUE) << size;
+    }
+    args.argsSize = sizeof(buffer);
+    args.tilingDataOffset = sizeof(buffer) - 1U;
+    for (uint32_t offset = 16U; offset < sizeof(buffer); ++offset) {
+        args.tilingAddrOffset = offset;
+        EXPECT_EQ(api.CheckArgs(&args), offset == 16U ? RT_ERROR_NONE : RT_ERROR_INVALID_VALUE) << offset;
+    }
+    args.tilingAddrOffset = UINT32_MAX;
+    EXPECT_EQ(api.CheckArgs(&args), RT_ERROR_INVALID_VALUE);
+    args.isNoNeedH2DCopy = 1U;
+    EXPECT_EQ(api.CheckArgs(&args), RT_ERROR_NONE);
+}
+
+TEST_F(ApiKernelTest, CpuLaunchChecksBothAddressFieldArraysBeforeForwarding)
+{
+    ApiImpl impl;
+    ApiErrorDecorator api(&impl);
+    MOCKER_CPP_VIRTUAL(impl, &ApiImpl::CpuKernelLaunchExWithArgs).stubs().will(returnValue(RT_ERROR_NONE));
+    uint64_t buffer[3] = {};
+    rtHostInputInfo_t inputs[2] = {{0U, 0U}, {23U, 0U}};
+    rtAicpuArgsEx_t args{};
+    args.args = buffer;
+    args.argsSize = sizeof(buffer);
+    args.hostInputInfoNum = 2U;
+    args.hostInputInfoPtr = inputs;
+    EXPECT_EQ(api.CpuKernelLaunchExWithArgs("address_field_test", 1U, &args, nullptr, 0U, 2U), RT_ERROR_INVALID_VALUE);
+    args.hostInputInfoPtr = nullptr;
+    EXPECT_EQ(api.CpuKernelLaunchExWithArgs("address_field_test", 1U, &args, nullptr, 0U, 2U), RT_ERROR_INVALID_VALUE);
+    args.hostInputInfoPtr = inputs;
+    args.hostInputInfoNum = 0U;
+    args.kernelOffsetInfoNum = 2U;
+    args.kernelOffsetInfoPtr = inputs;
+    EXPECT_EQ(api.CpuKernelLaunchExWithArgs("address_field_test", 1U, &args, nullptr, 0U, 2U), RT_ERROR_INVALID_VALUE);
+    inputs[1] = {16U, 23U};
+    EXPECT_EQ(api.CpuKernelLaunchExWithArgs("address_field_test", 1U, &args, nullptr, 0U, 2U), RT_ERROR_NONE);
+    // dataOffset is an address value to store, not an eight-byte address field.
+    inputs[1].dataOffset = UINT32_MAX;
+    EXPECT_EQ(api.CpuKernelLaunchExWithArgs("address_field_test", 1U, &args, nullptr, 0U, 2U), RT_ERROR_NONE);
+    args.kernelOffsetInfoPtr = nullptr;
+    EXPECT_EQ(api.CpuKernelLaunchExWithArgs("address_field_test", 1U, &args, nullptr, 0U, 2U), RT_ERROR_INVALID_VALUE);
+    args.isNoNeedH2DCopy = true;
+    EXPECT_EQ(api.CpuKernelLaunchExWithArgs("address_field_test", 1U, &args, nullptr, 0U, 2U), RT_ERROR_NONE);
+    EXPECT_EQ(buffer[0], 0U);
+    EXPECT_EQ(buffer[2], 0U);
+}
+
+TEST_F(ApiKernelTest, TypedCpuArgsChecksKernelAddressFieldArray)
+{
+    ApiImpl impl;
+    ApiErrorDecorator api(&impl);
+    uint64_t buffer[3] = {};
+    rtHostInputInfo_t input{23U, 0U};
+    rtCpuKernelArgs_t cpu{};
+    cpu.baseArgs.args = buffer;
+    cpu.baseArgs.argsSize = sizeof(buffer);
+    cpu.baseArgs.kernelOffsetInfoNum = 1U;
+    cpu.baseArgs.kernelOffsetInfoPtr = &input;
+    RtArgsWithType typed{};
+    typed.type = RT_ARGS_CPU_EX;
+    typed.args.cpuArgsInfo = &cpu;
+    EXPECT_EQ(api.CheckArgsWithType(nullptr, &typed), RT_ERROR_INVALID_VALUE);
+    input = {16U, 23U};
+    EXPECT_EQ(api.CheckArgsWithType(nullptr, &typed), RT_ERROR_NONE);
+}
+
+TEST_F(ApiKernelTest, SimtHostArgsRequiresCompleteAddressFields)
+{
+    ApiImpl impl;
+    ApiErrorDecorator api(&impl);
+    Kernel* kernel = CreateTestKernelForCheckArgs(RT_KERNEL_ATTR_TYPE_AICORE, RT_KERNEL_REG_TYPE_NON_CPU, true, 1U);
+    kernel->SetKernelVfType_(static_cast<uint32_t>(AivTypeFlag::AIV_TYPE_SIMT_VF_ONLY));
+    uint64_t buffer[3] = {};
+    rtPlaceHolderInfo_t placeholder{16U, 23U};
+    SimtArgsHost simt{};
+    simt.gridDim = {1U, 1U, 1U};
+    simt.blockDim = {1U, 1U, 1U};
+    simt.hostArgs = buffer;
+    simt.argsSize = sizeof(buffer);
+    simt.placeHolderArray = &placeholder;
+    simt.placeHolderNum = 1U;
+    RtArgsWithType typed{};
+    typed.type = RT_SIMT_ARGS_HOST;
+    typed.args.simtArgsHost = &simt;
+    for (uint32_t offset = 16U; offset < sizeof(buffer); ++offset) {
+        placeholder.addrOffset = offset;
+        EXPECT_EQ(api.CheckArgsWithType(kernel, &typed), offset == 16U ? RT_ERROR_NONE : RT_ERROR_INVALID_VALUE);
+    }
+    DestroyTestKernel(kernel);
+}
+
 TEST_F(ApiKernelTest, TestRtsBinaryLoadFromFileSuccess)
 {
     Program* prog = new PlainProgram();

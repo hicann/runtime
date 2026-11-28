@@ -77,6 +77,7 @@ TEST_F(TaskResManageTest, TestLoadInputOutputArgs)
     rtArgsEx_t argsInfo = {};
     uint32_t args[128];
     argsInfo.args = args;
+    argsInfo.argsSize = sizeof(args);
     argsInfo.hostInputInfoPtr = &hostInputInfo;
     argsInfo.hasTiling = 1U;
     uint32_t taskResId;
@@ -103,6 +104,7 @@ TEST_F(TaskResManageTest, TestLoadInputOutputArgsWithAicpuArgs)
     rtAicpuArgsEx_t argsInfo = {};
     uint32_t args[128];
     argsInfo.args = args;
+    argsInfo.argsSize = sizeof(args);
     argsInfo.hostInputInfoPtr = &hostInputInfo;
     argsInfo.kernelOffsetInfoPtr = &hostInputInfo;
     uint32_t taskResId;
@@ -393,4 +395,42 @@ TEST_F(TaskResManageTest, FastErrorProcess5)
     EXPECT_EQ(error, ACL_RT_SUCCESS);
     error = rtEventDestroy(event);
     EXPECT_EQ(error, ACL_RT_SUCCESS);
+}
+
+TEST_F(TaskResManageTest, CopyPrechecksAllAddressFieldsBeforePublishingOrWriting)
+{
+    rtStream_t handle = nullptr;
+    ASSERT_EQ(rtStreamCreate(&handle, 0), RT_ERROR_NONE);
+    Stream* stm = rt_ut::UnwrapOrNull<Stream>(handle);
+    ASSERT_NE(stm, nullptr);
+    TaskResManage manager;
+    ASSERT_TRUE(manager.CreateTaskRes(stm));
+    uint32_t id = 0U;
+    ASSERT_TRUE(manager.AllocTaskResId(id));
+    uint64_t host[4] = {11U, 22U, 33U, 0xA5A5A5A5A5A5A5A5ULL};
+    const uint64_t before[4] = {11U, 22U, 33U, 0xA5A5A5A5A5A5A5A5ULL};
+    rtHostInputInfo_t fields[2] = {{0U, 0U}, {24U, 0U}};
+    rtAicpuArgsEx_t cpu{};
+    cpu.args = host;
+    cpu.argsSize = 24U;
+    cpu.isNoNeedH2DCopy = true;
+    cpu.hostInputInfoNum = 1U;
+    cpu.hostInputInfoPtr = fields;
+    cpu.kernelOffsetInfoNum = 1U;
+    cpu.kernelOffsetInfoPtr = fields + 1;
+    void* kerArgs = host;
+    EXPECT_EQ(manager.LoadInputOutputArgs(stm, kerArgs, id, 24U, host, &cpu), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(kerArgs, host);
+    EXPECT_EQ(memcmp(host, before, sizeof(host)), 0);
+    rtArgsEx_t args{};
+    args.args = host;
+    args.argsSize = 24U;
+    args.isNoNeedH2DCopy = 1U;
+    args.hasTiling = 1U;
+    args.tilingAddrOffset = 24U;
+    EXPECT_EQ(manager.LoadInputOutputArgs(stm, kerArgs, id, 24U, host, &args), RT_ERROR_INVALID_VALUE);
+    EXPECT_EQ(kerArgs, host);
+    EXPECT_EQ(memcmp(host, before, sizeof(host)), 0);
+    manager.ReleaseTaskResource(stm);
+    EXPECT_EQ(rtStreamDestroy(handle), RT_ERROR_NONE);
 }

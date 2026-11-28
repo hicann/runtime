@@ -183,6 +183,7 @@ set(runtimeut_src_profile_list
 
 set(runtime_src_arg_loader_list
     ${TOP_DIR}/src/runtime/core/src/kernel/arg_loader/uma_arg_loader.cc
+    ${TOP_DIR}/src/runtime/core/src/kernel/arg_loader/arg_loader_utils.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/arg_loader/load_policy.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/arg_loader/stars_arg_manager.cc
     ${TOP_DIR}/src/runtime/core/src/kernel/arg_loader/arg_manage_pcie.cc
