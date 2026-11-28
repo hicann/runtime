@@ -15,6 +15,8 @@
 #define private public
 #define protected public
 #include "pool.hpp"
+#include "bitmap.hpp"
+#include "spm_pool.hpp"
 #include "runtime.hpp"
 #include "event.hpp"
 #undef private
@@ -46,3 +48,18 @@ protected:
         GlobalMockObject::verify();
     }
 };
+
+TEST_F(PoolTest, FreeSpmRejectsInvalidAddress)
+{
+    SpmPool pool(nullptr);
+    pool.spmAllocator_ = new BufferAllocator(sizeof(uint32_t), 1U, 1U, BufferAllocator::LINEAR);
+    ASSERT_NE(pool.spmAllocator_, nullptr);
+    uint32_t invalidAddress = 0U;
+    EXPECT_EQ(pool.FreeSPM(&invalidAddress), RT_ERROR_POOL_RESOURCE);
+}
+
+TEST_F(PoolTest, BitmapRejectsZeroMaxIdCount)
+{
+    Bitmap bitmap(0U);
+    EXPECT_EQ(bitmap.AllocBitmap(), RT_ERROR_POOL_RESOURCE);
+}

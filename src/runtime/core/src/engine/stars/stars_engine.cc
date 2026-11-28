@@ -138,7 +138,7 @@ void StarsEngine::Run(const void* const param)
             break;
         }
         default: {
-            RT_LOG(RT_LOG_ERROR, "Unknown thread type.");
+            RT_LOG(RT_LOG_ERROR, "Unknown thread type, type=UNKNOWN(%" PRIu64 ").", RtPtrToValue(param));
             break;
         }
     }
@@ -938,7 +938,9 @@ bool StarsEngine::ProcReportIsVpcErrorAndRetry(const rtCqReport_t& report)
     }
 
     if (reportTask->u.starsCommTask.errorTimes != 0U) { // vpc retry error, return false
-        RT_LOG(RT_LOG_ERROR, "Vpc task error, streamId=%hu, taskId=%hu", report.streamId, report.taskId);
+        RT_LOG(
+            RT_LOG_ERROR, "Vpc task error, stream_id=%hu, task_id=%hu, errType=%#x, errCode=%#x", report.streamId,
+            report.taskId, static_cast<uint32_t>(report.errorType), report.errorCode);
         return false;
     }
 
@@ -1063,7 +1065,9 @@ void StarsEngine::IsSyncTaskFinish(Stream* const stm, const uint32_t taskId) con
     uint16_t sqHead = 0U;
     rtError_t error = curDrv->GetSqHead(devId, tsId, sqId, sqHead);
     if (error != RT_ERROR_NONE) {
-        RT_LOG(RT_LOG_ERROR, "Failed to query SQ head, retCode=%#x.", static_cast<uint32_t>(error));
+        RT_LOG(
+            RT_LOG_ERROR, "Failed to query SQ head, device_id=%u, ts_id=%u, sq_id=%u, retCode=%#x.", devId, tsId, sqId,
+            static_cast<uint32_t>(error));
         return;
     }
 
@@ -1297,7 +1301,7 @@ rtError_t StarsEngine::StarsResumeRtsq(
                 RT_LOG(RT_LOG_EVENT, "dev_id=%u, ts_id=%u, sqId=%hu, enable=%u", devId, tsId, logicCq.sqId, enable);
             }
             if (!enable) {
-                RT_LOG(RT_LOG_WARNING, "sq already disable, stream_id=%hu, queryCnt=%u", logicCq.streamId, queryCnt);
+                RT_LOG(RT_LOG_WARNING, "SQ already disabled, stream_id=%hu, queryCnt=%u", logicCq.streamId, queryCnt);
                 break;
             }
             abortStatus = failStm->GetAbortStatus();
@@ -1560,7 +1564,9 @@ void StarsEngine::ProcLogicCqReport(const rtCqReport_t& logicCq, const bool isSt
         } else if (likely(CheckPackageState(reportTask))) {
             (void)ProcessTask(reportTask, GetDevice()->Id_());
         } else {
-            RT_LOG(RT_LOG_WARNING, "No operation.");
+            RT_LOG(
+                RT_LOG_WARNING, "Skip task process because package state check failed, stream_id=%hu, task_id=%hu.",
+                streamId, taskId);
         }
     }
 

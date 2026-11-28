@@ -1355,14 +1355,47 @@ TEST_F(CloudV2StarsEngineTest, ProcReportIsVpcErrorAndRetry)
 
     rtError_t error = RT_ERROR_NONE;
     TaskInfo* const tsk = device_->GetTaskFactory()->Alloc(stream_, TS_TASK_TYPE_STARS_COMMON, error);
+    ASSERT_EQ(error, RT_ERROR_NONE);
+    ASSERT_NE(tsk, nullptr);
 
     device_->GetTaskFactory()->SetSerialId(stream_, tsk);
     cqReport.errorType = RT_STARS_CQE_ERR_TYPE_EXCEPTION;
     cqReport.streamId = tsk->stream->Id_();
     cqReport.taskId = tsk->id;
+    auto* const taskResMang = stream_->taskResMang_;
+    stream_->taskResMang_ = nullptr;
+    EXPECT_EQ(device_->GetTaskFactory()->GetTask(cqReport.streamId, cqReport.taskId), tsk);
     rt = engine->ProcReportIsVpcErrorAndRetry(cqReport);
-    EXPECT_EQ(rt, false);
+    EXPECT_TRUE(rt);
+    EXPECT_EQ(tsk->u.starsCommTask.errorTimes, 1U);
+    rt = engine->ProcReportIsVpcErrorAndRetry(cqReport);
+    EXPECT_FALSE(rt);
+    EXPECT_EQ(tsk->u.starsCommTask.errorTimes, 1U);
     (void)device_->GetTaskFactory()->Recycle(tsk);
+    stream_->taskResMang_ = taskResMang;
+}
+
+TEST_F(CloudV2StarsEngineTest, IsSyncTaskFinishGetSqHeadFailed)
+{
+    Driver* const driver = Runtime::Instance()->driverFactory_.GetDriver(NPU_DRIVER);
+    ASSERT_NE(driver, nullptr);
+    MOCKER_CPP_VIRTUAL(driver, &Driver::GetSqHead).expects(atLeast(1)).will(returnValue(RT_ERROR_DRV_ERR));
+    MOCKER_CPP_VIRTUAL(stream_, &Stream::GetTaskIdByPos).expects(never());
+
+    const uint32_t taskPosHead = stream_->GetTaskPosHead();
+    static_cast<StarsEngine*>(engine_)->IsSyncTaskFinish(stream_, 0U);
+    GlobalMockObject::verify();
+    EXPECT_EQ(stream_->GetTaskPosHead(), taskPosHead);
+}
+
+TEST_F(CloudV2StarsEngineTest, RunIgnoresUnknownThreadType)
+{
+    MOCKER_CPP(&StarsEngine::RecycleThreadRun).expects(never());
+    MOCKER_CPP(&StarsEngine::MonitoringRun).expects(never());
+    MOCKER_CPP(&Engine::PrintfRun).expects(never());
+    const uint32_t pendingNum = engine_->GetPendingNum();
+    engine_->Run(RtValueToPtr<const void*>(UINT64_MAX));
+    EXPECT_EQ(engine_->GetPendingNum(), pendingNum);
 }
 
 void testDvppGrpCallbackFunc(rtDvppGrpRptInfo_t* report)

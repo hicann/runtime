@@ -81,8 +81,8 @@ rtError_t SpmPool::FreeSPM(const void* const dptr)
     const int32_t id = spmAllocator_->GetIdByItem(dptr);
     COND_RETURN_ERROR_MSG_CALL(
         ERR_MODULE_GE, id < 0, RT_ERROR_POOL_RESOURCE,
-        "Free SPM failed, invalid SPM address,"
-        "id should be larger than 0, current id is %d",
+        "Free SPM failed, invalid SPM address, "
+        "id must be greater than or equal to 0, current id is %d",
         id);
     spmAllocator_->FreeById(id);
     RT_LOG(RT_LOG_DEBUG, "FreeSPM success, id=%d", id);

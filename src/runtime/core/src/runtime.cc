@@ -790,8 +790,11 @@ rtError_t Runtime::GetAicoreNumByLevel(const rtChipType_t chipTypeValue, int64_t
             aicoreNum = RT_AICORE_NUM_30;
         } else {
             RT_LOG_INNER_MSG(
-                RT_LOG_ERROR, "AI Core number level not supported, aicoreNumLevel=%" PRId64 ", chipType=%d.",
-                aicoreNumLevel, static_cast<int32_t>(chipType_));
+                RT_LOG_ERROR,
+                "AI Core number level not supported, aicoreNumLevel=%" PRId64 ", chipType=%d, valid levels: "
+                "AG(%d)/PG(%d).",
+                aicoreNumLevel, static_cast<int32_t>(chipType_), static_cast<int32_t>(AICORE_NUM_LEVEL_AG),
+                static_cast<int32_t>(AICORE_NUM_LEVEL_PG));
             return RT_ERROR_DRV_ERR;
         }
     }
@@ -825,7 +828,9 @@ void Runtime::InitSocTypeFrom310BVersion(const int64_t hardwareVersion)
         socVersion_ = "Ascend310B4";
     } else {
         RT_LOG(
-            RT_LOG_ERROR, "The hardwareVersion (%#" PRIx64 ") reported by the driver is invalid.",
+            RT_LOG_ERROR,
+            "The hardwareVersion (%#" PRIx64 ") reported by the driver is invalid, expected version: "
+            "RT_VER_NA or RT_VER_BIN1 through RT_VER_BIN4.",
             static_cast<uint64_t>(hardwareVersion));
     }
 }
@@ -1639,7 +1644,7 @@ static rtError_t GetDavidDcacheLockMixPath(std::string& binaryPath)
     binaryPath = libPath.substr(findr + 1U, diff - 1U);
     binaryPath = binaryPath + "/ascend910_95/dcache_lock_mix.o";
     RT_LOG(
-        RT_LOG_INFO, "path:%s, diff:%u, find:%u, findr:%u, npos:%u.", binaryPath.c_str(), diff, find, findr,
+        RT_LOG_INFO, "Path:%s, diff:%zu, find:%zu, findr:%zu, npos:%zu.", binaryPath.c_str(), diff, find, findr,
         libPath.npos);
     return RT_ERROR_NONE;
 }
@@ -2191,12 +2196,14 @@ rtError_t Runtime::MixKernelRegister(Program* const prog)
 rtError_t Runtime::MallocProgramAndRegMixKernel(const void* data, const uint64_t length, Program** const newProg) const
 {
     Program* prog = new (std::nothrow) ElfProgram(GetDefaultKernelAttrType());
-    RT_LOG(RT_LOG_INFO, "new ElfProgram ok, Runtime_alloc_size %zu", sizeof(ElfProgram));
+    RT_LOG(RT_LOG_INFO, "New ElfProgram ok, Runtime_alloc_size %zu bytes", sizeof(ElfProgram));
 
     COND_RETURN_AND_MSG_OUTER(prog == nullptr, RT_ERROR_PROGRAM_NEW, ErrorCode::EE1013, sizeof(ElfProgram), "new");
     const rtError_t error = prog->Register(data, length);
     if (error != RT_ERROR_NONE) {
-        RT_LOG_CALL_MSG(ERR_MODULE_GE, "Mix program register failed.");
+        RT_LOG_CALL_MSG(
+            ERR_MODULE_GE, "Mix program register failed, retCode=%#x, data=%p, length=%" PRIu64 ".",
+            static_cast<uint32_t>(error), data, length);
         delete prog;
         prog = nullptr;
         return error;
@@ -2699,19 +2706,19 @@ rtError_t Runtime::LookupAddrByFun(const void* const stubFunc, Context* const ct
     rtError_t error;
     const Kernel* const kernelObj = rt->kernelTable_.Lookup(stubFunc);
     if (unlikely(kernelObj == nullptr)) {
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Cannot find kernel.");
+        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Cannot find kernel, stubFunc=%p.", stubFunc);
         goto LOOKUP_ERROR;
     }
 
     prog = kernelObj->Program_();
     if (unlikely(prog == nullptr)) {
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Cannot find program.");
+        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Cannot find program for kernel, stubFunc=%p.", stubFunc);
         goto LOOKUP_ERROR;
     }
 
     programModule = ctx->GetModule(prog);
     if (unlikely(programModule == nullptr)) {
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Cannot find module.");
+        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Cannot find module for program=%p, stubFunc=%p.", prog, stubFunc);
         goto MODULE_ERROR;
     }
 
@@ -2719,7 +2726,9 @@ rtError_t Runtime::LookupAddrByFun(const void* const stubFunc, Context* const ct
 
     error = programModule->GetFunction(kernelObj, &tmp_addr);
     if (unlikely(error != RT_ERROR_NONE)) {
-        RT_LOG_INNER_MSG(RT_LOG_ERROR, "Get function failed by kernel.");
+        RT_LOG_INNER_MSG(
+            RT_LOG_ERROR, "Get function failed by kernel, stubFunc=%p, retCode=%#x.", stubFunc,
+            static_cast<uint32_t>(error));
         goto MODULE_ERROR;
     }
 
@@ -2904,7 +2913,7 @@ RefObject<Context*>* Runtime::PrimaryContextRetain(const uint32_t devId)
         }
 
         const uint64_t refObjValue = refObj.GetRef();
-        RT_LOG(RT_LOG_INFO, "Context inc ref, devId=%u, ts_id=%u, count=%#llx", devId, i, refObjValue);
+        RT_LOG(RT_LOG_DEBUG, "Context inc ref, devId=%u, ts_id=%u, count=%#llx", devId, i, refObjValue);
         Context* const ctx = refObj.GetVal();
         if (ctx != nullptr) {
             continue;
@@ -2950,7 +2959,7 @@ rtError_t Runtime::GetPrimaryCtxState(const int32_t devId, uint32_t* flags, int3
     for (uint32_t i = 0U; i < tsNum_; i++) {
         RefObject<Context*>& refObj = priCtxs_[devId][i];
         const uint64_t refCnt = refObj.GetRefCount();
-        RT_LOG(RT_LOG_INFO, "Default ctx state, devId=%u, ts_id=%u, count=%#llx", devId, i, refCnt);
+        RT_LOG(RT_LOG_DEBUG, "Default ctx state, devId=%u, ts_id=%u, count=%#llx", devId, i, refCnt);
         if (refCnt > 0ULL) {
             *active = 1; // 1 means ctx is in use
             return RT_ERROR_NONE;
@@ -3485,7 +3494,7 @@ rtError_t Runtime::PrepareDeviceRetain(
     const uint32_t devId, const uint32_t tsId, rtError_t& errorTrace, bool& aicpuExecutorStarted) const
 {
     if (DlogReportStart != nullptr) {
-        RT_LOG(RT_LOG_INFO, "[dlog api] DlogReportStart exist.");
+        RT_LOG(RT_LOG_INFO, "[dlog api] DlogReportStart exists.");
         const rtError_t error = DlogReportStart(static_cast<int32_t>(devId), LOG_SAVE_MODE_DEF_RUN);
         COND_LOG_WARN(error != RT_ERROR_NONE, "call DlogReportStart api failed, retCode=%#x devId=%u.", error, devId);
     }
@@ -4883,7 +4892,8 @@ static rtError_t SetTimeoutConfigTaskSubmit(Stream* const stm, const rtTaskTimeo
 {
     DevProperties prop;
     rtError_t ret = GET_DEV_PROPERTIES(Runtime::Instance()->GetChipType(), prop);
-    COND_RETURN_ERROR_MSG_INNER(ret != RT_ERROR_NONE, ret, "GetDevProperties failed.");
+    COND_RETURN_ERROR_MSG_INNER(
+        ret != RT_ERROR_NONE, ret, "GetDevProperties failed, retCode=%#x.", static_cast<uint32_t>(ret));
     if (prop.timeoutUpdateMethod == TimeoutUpdateMethod::TIMEOUT_WITHOUT_TASK) {
         return RT_ERROR_NONE;
     }
@@ -4951,7 +4961,8 @@ rtError_t Runtime::SetTimeoutConfig(
     uint32_t taskTimeout;
     DevProperties prop;
     rtError_t ret = GET_DEV_PROPERTIES(chipType, prop);
-    COND_RETURN_ERROR_MSG_INNER(ret != RT_ERROR_NONE, ret, "GetDevProperties failed.");
+    COND_RETURN_ERROR_MSG_INNER(
+        ret != RT_ERROR_NONE, ret, "GetDevProperties failed, retCode=%#x.", static_cast<uint32_t>(ret));
     if ((type == RT_TIMEOUT_TYPE_OP_EXECUTE) && (prop.opExecuteTimeout)) {
         taskTimeout = opExcTaskTimeout / RT_TIMEOUT_MS_TO_US; // ms
     } else {
@@ -5048,7 +5059,8 @@ rtMemType_t Runtime::GetTsMemType(rtMemRequestFeature_t featureType, uint64_t me
     UNUSED(featureType);
     DevProperties props;
     rtError_t error = GET_DEV_PROPERTIES(Runtime::Instance()->GetChipType(), props);
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, error, "GetDevProperties failed.");
+    COND_RETURN_ERROR_MSG_INNER(
+        error != RT_ERROR_NONE, error, "GetDevProperties failed, retCode=%#x.", static_cast<uint32_t>(error));
     if (props.getTsMemTypeMethod == GetTsMemTypeMethod::GET_TS_MEM_TYPE_STATIC) {
         return RT_MEMORY_HBM;
     }
@@ -5225,7 +5237,9 @@ rtError_t Runtime::BinaryLoad(const Device* const device, Program* const prog)
     readonly = prog->IsReadOnly();
     error =
         prog->RefreshSymbolAddr(); // May differ from the initially registered binary, mainly due to the symbol address
-    COND_RETURN_ERROR_MSG_INNER(error != RT_ERROR_NONE, RT_ERROR_PROGRAM_DATA, "Refresh symbol address failed.");
+    COND_RETURN_ERROR_MSG_INNER(
+        error != RT_ERROR_NONE, RT_ERROR_PROGRAM_DATA, "Refresh symbol address failed, retCode=%#x.",
+        static_cast<uint32_t>(error));
     NULL_PTR_RETURN_MSG(data, RT_ERROR_PROGRAM_NULL);
     if (size == 0U) {
         RT_LOG_INNER_MSG(
@@ -5795,7 +5809,8 @@ rtError_t Runtime::CheckDeviceIdIsValid(const int32_t devId)
     COND_RETURN_ERROR_MSG_INNER(
         error != RT_ERROR_NONE, error, "Get device cnt failed, retCode=%#x", static_cast<uint32_t>(error));
     COND_RETURN_ERROR_MSG_INNER(
-        devCnt < 0, RT_ERROR_INVALID_VALUE, "The device count %d obtained from the driver is invalid.", devCnt);
+        devCnt < 0, RT_ERROR_INVALID_VALUE,
+        "The device count %d obtained from the driver is invalid, valid device count must be at least 0.", devCnt);
     COND_RETURN_AND_MSG_OUTER_WITH_PARAM_AND_FUNC_DESC(
         (devId < 0) || ((devId >= devCnt) && (devCnt != 0)), RT_ERROR_DEVICE_ID, "Verifying the device ID validity",
         devId, "[0, " + std::to_string(devCnt) + ")");
@@ -6108,8 +6123,9 @@ void Runtime::ReportPageFaultProc(void)
             if (pageFaultCnt > PAGE_FAULT_CNT_THRESHOLD) {
                 if ((currentTime - device->GetPageFaultBaseTime()) >= PAGE_FAULT_TIME_THRESHOLD) {
                     RT_LOG(
-                        RT_LOG_ERROR, "Page fault count exceeds the limit, drv devId=%u, current page fault count=%u.",
-                        device->Id_(), pageFaultCnt);
+                        RT_LOG_ERROR,
+                        "Page fault count exceeds the limit, drv devId=%u, current page fault count=%u, threshold=%u.",
+                        device->Id_(), pageFaultCnt, PAGE_FAULT_CNT_THRESHOLD);
                     ProcPageFault(device, pageFaultCnt);
                 }
             }

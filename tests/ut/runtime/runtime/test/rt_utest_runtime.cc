@@ -1400,6 +1400,23 @@ TEST_F(RuntimeTest, LookupAddrByFun_KernelNotFound)
     EXPECT_EQ(rtInstance->LookupAddrByFun(&dummyStub, nullptr, &addr), RT_ERROR_KERNEL_LOOKUP);
 }
 
+TEST_F(RuntimeTest, GetAicoreNumByLevelRejectsUnknownLevel)
+{
+    uint32_t devNum = 1U;
+    int64_t reportedLevel = -1;
+    MOCKER(drvGetDevNum).stubs().with(outBoundP(&devNum, sizeof(devNum))).will(returnValue(DRV_ERROR_NONE));
+    MOCKER(halGetDeviceInfo)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&reportedLevel, sizeof(reportedLevel)))
+        .will(returnValue(DRV_ERROR_NONE));
+
+    int64_t level = 0;
+    uint32_t aicoreNum = 0;
+    EXPECT_EQ(Runtime::Instance()->GetAicoreNumByLevel(CHIP_CLOUD, level, aicoreNum), RT_ERROR_DRV_ERR);
+    EXPECT_EQ(level, reportedLevel);
+    EXPECT_EQ(aicoreNum, 0U);
+}
+
 TEST_F(RuntimeTest, LookupAddrAndPrefCntWithHandle_KernelNotFound)
 {
     Runtime* rtInstance = (Runtime*)Runtime::Instance();

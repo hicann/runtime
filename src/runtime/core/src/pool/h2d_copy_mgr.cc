@@ -454,13 +454,13 @@ uint64_t H2DCopyMgr::GetUbHostAddr(const uint64_t devAddr, void** devTsegInfo, v
     const ReadProtect rp(cpyInfoUbMap_.mapLock);
     const auto iter = cpyInfoUbMap_.cpyUbMap.find(devAddr);
     if (iter == cpyInfoUbMap_.cpyUbMap.end()) {
-        RT_LOG(RT_LOG_ERROR, "Can't find ub info by args device addr.");
+        RT_LOG(RT_LOG_ERROR, "Can't find ub info by args device addr=%#" PRIx64 ".", devAddr);
         return 0ULL;
     }
     uint32_t poolIndex = iter->second.poolIndex;
     const auto tsegInfo = cpyInfoUbMap_.memTsegInfoMap.find(poolIndex);
     if (tsegInfo == cpyInfoUbMap_.memTsegInfoMap.end()) {
-        RT_LOG(RT_LOG_ERROR, "Can't find tseg info by pool index.");
+        RT_LOG(RT_LOG_ERROR, "Can't find tseg info by pool index=%u.", poolIndex);
         return 0ULL;
     }
     *devTsegInfo = static_cast<void*>(&(cpyInfoUbMap_.memTsegInfoMap[poolIndex]->devTsegInfo));
@@ -557,7 +557,7 @@ void H2DCopyMgr::FreeUbBuffer(void* const addr, void* const para)
     const ReadProtect rp(cpyInfoUbInfo->mapLock);
     const auto iter = cpyInfoUbInfo->cpyUbMap.find(RtPtrToValue(addr));
     if ((iter == cpyInfoUbInfo->cpyUbMap.end()) || (iter->second.devBaseAddr != RtPtrToValue(addr))) {
-        RT_LOG(RT_LOG_ERROR, "Invalid buffer addr.");
+        RT_LOG(RT_LOG_ERROR, "Invalid buffer addr=%#" PRIx64 ".", RtPtrToValue(addr));
         return;
     }
 
@@ -566,7 +566,7 @@ void H2DCopyMgr::FreeUbBuffer(void* const addr, void* const para)
     uint32_t poolIndex = iter->second.poolIndex;
     const auto tsegInfo = cpyInfoUbInfo->memTsegInfoMap.find(poolIndex);
     if (tsegInfo == cpyInfoUbInfo->memTsegInfoMap.end()) {
-        RT_LOG(RT_LOG_ERROR, "Can't find tseg info by pool index.");
+        RT_LOG(RT_LOG_ERROR, "Can't find tseg info by pool index=%u.", poolIndex);
         return;
     }
     (void)dev->Driver_()->PutTsegInfo(dev->Id_(), &(cpyInfoUbInfo->memTsegInfoMap[poolIndex]->hostTsegInfo));

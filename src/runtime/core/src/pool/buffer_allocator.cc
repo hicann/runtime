@@ -339,7 +339,8 @@ void* BufferAllocator::GetItemById(const int32_t id, const bool isLogError) cons
             (void)sched_yield();
         }
         if (pool_[poolIdx] == nullptr) {
-            RtLogErrorLevelControl(isLogError, "pool failed, poolIdx=%u, id=%d", poolIdx, id);
+            RtLogErrorLevelControl(
+                isLogError, "Failed to get item from pool because pool entry is null, poolIdx=%u, id=%d.", poolIdx, id);
             return nullptr;
         }
         return static_cast<void*>(

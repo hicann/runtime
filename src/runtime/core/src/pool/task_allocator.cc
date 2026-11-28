@@ -190,14 +190,15 @@ void* TaskAllocator::GetItemById(const int32_t streamId, const int32_t taskId, r
     if (iter != nullptr) {
         const int32_t bufferId = iter->mapTaskIds[taskId];
         COND_PROC_RETURN_WARN(
-            bufferId < 0, nullptr, errCode = RT_ERROR_TASK_ID_ALLOCATION, "stream_id=%d, task_id=%d, buffer_id=%d",
-            streamId, taskId, bufferId);
+            bufferId < 0, nullptr, errCode = RT_ERROR_TASK_ID_ALLOCATION,
+            "Get task item failed, bufferId is invalid, stream_id=%d, task_id=%d, buffer_id=%d", streamId, taskId,
+            bufferId);
         return allocator_.GetItemById(bufferId);
     } else {
         RT_LOG_INNER_MSG(
             RT_LOG_ERROR,
             "Get task failed, the stream_id %d is invalid,"
-            "current stream_id is not in tasklist",
+            " current stream_id is not in tasklist",
             streamId);
         errCode = RT_ERROR_STREAM_INVALID;
         return nullptr;

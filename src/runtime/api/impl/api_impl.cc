@@ -5657,11 +5657,11 @@ static rtError_t QueryQueueInfo(
     COND_RETURN_AND_MSG_OUTER(
         static_cast<size_t>(inLen) < sizeof(uint32_t), RT_ERROR_INVALID_VALUE, ErrorCode::EE1011,
         "Querying queue information", static_cast<size_t>(inLen), "inLen",
-        "The value of parameter of inLen must be greater than or equal to " + std::to_string(sizeof(uint32_t)));
+        RtFmtMsg("The value of parameter inLen must be greater than or equal to %zu bytes", sizeof(uint32_t)));
     COND_RETURN_AND_MSG_OUTER(
         static_cast<size_t>(*outLen) < sizeof(uint32_t), RT_ERROR_INVALID_VALUE, ErrorCode::EE1011,
         "Querying queue information", static_cast<size_t>(*outLen), "outLen",
-        "The value of parameter of outLen must be greater than or equal to " + std::to_string(sizeof(uint32_t)));
+        RtFmtMsg("The value of parameter outLen must be greater than or equal to %zu bytes", sizeof(uint32_t)));
 
     const uint32_t* const qidPtr = RtPtrToPtr<const uint32_t* const>(inBuff);
     QueueInfo memQueInfo = {};

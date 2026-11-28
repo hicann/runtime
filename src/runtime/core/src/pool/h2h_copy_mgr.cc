@@ -76,7 +76,7 @@ void H2HCopyMgr::FreeHostMem(void* item) const
 rtError_t H2HCopyMgr::H2DMemCopy(void* dst, const void* const src, const uint32_t size) const
 {
     if (dst == nullptr || src == nullptr) {
-        RT_LOG(RT_LOG_ERROR, "destination address, source address parameters are illegal");
+        RT_LOG(RT_LOG_ERROR, "Destination address=%p, source address=%p parameters are illegal.", dst, src);
         return RT_ERROR_INVALID_VALUE;
     }
     uint32_t offset = 0U;

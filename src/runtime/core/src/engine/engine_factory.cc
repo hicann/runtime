@@ -30,28 +30,32 @@ Engine* EngineFactory::CreateEngine(const rtChipType_t chipType, Device* dev)
     if (dev->IsStarsPlatform()) {
         newEngine = new (std::nothrow) StarsEngine(dev);
         allocSize = sizeof(StarsEngine);
-        RT_LOG(RT_LOG_INFO, "new StarsEngine, Runtime_alloc_size %zu bytes", sizeof(StarsEngine));
+        RT_LOG(RT_LOG_INFO, "New StarsEngine, Runtime_alloc_size %zu bytes", sizeof(StarsEngine));
     } else if (props.taskEngineType == EngineCreateType::DIRECT_HWTS_ENGINE) {
         newEngine = new (std::nothrow) DirectHwtsEngine(dev);
         allocSize = sizeof(DirectHwtsEngine);
-        RT_LOG(RT_LOG_INFO, "new DirectHwtsEngine, Runtime_alloc_size %zu bytes", sizeof(DirectHwtsEngine));
+        RT_LOG(RT_LOG_INFO, "New DirectHwtsEngine, Runtime_alloc_size %zu bytes", sizeof(DirectHwtsEngine));
     } else {
         newEngine = new (std::nothrow) AsyncHwtsEngine(dev);
-        RT_LOG(RT_LOG_INFO, "new Engine, Runtime_alloc_size %zu bytes", sizeof(AsyncHwtsEngine));
+        RT_LOG(RT_LOG_INFO, "New Engine, Runtime_alloc_size %zu bytes", sizeof(AsyncHwtsEngine));
         allocSize = sizeof(AsyncHwtsEngine);
     }
     COND_RETURN_AND_MSG_OUTER(
         (newEngine == nullptr), nullptr, ErrorCode::EE1013, std::to_string(allocSize).c_str(), "new");
     error = newEngine->Init();
     COND_RETURN_INFO((error == RT_ERROR_NONE), newEngine, "Engine init success.");
-    COND_PROC_RETURN_ERROR((error != RT_ERROR_DRV_INPUT), nullptr, DELETE_O(newEngine), "Engine init failed.");
+    COND_PROC_RETURN_ERROR(
+        (error != RT_ERROR_DRV_INPUT), nullptr, DELETE_O(newEngine), "Engine init failed, retCode=%#x.",
+        static_cast<uint32_t>(error));
     delete newEngine;
     newEngine = new (std::nothrow) AsyncHwtsEngine(dev);
     COND_RETURN_AND_MSG_OUTER(
         (newEngine == nullptr), nullptr, ErrorCode::EE1013, std::to_string(sizeof(AsyncHwtsEngine)).c_str(), "new");
     RT_LOG(RT_LOG_INFO, "New Engine, Runtime_alloc_size %zu bytes", sizeof(AsyncHwtsEngine));
     error = newEngine->Init();
-    COND_PROC_RETURN_ERROR((error != RT_ERROR_NONE), nullptr, DELETE_O(newEngine), "Engine init failed.");
+    COND_PROC_RETURN_ERROR(
+        (error != RT_ERROR_NONE), nullptr, DELETE_O(newEngine), "Engine init failed, retCode=%#x.",
+        static_cast<uint32_t>(error));
 
     RT_LOG(RT_LOG_INFO, "Engine init success.");
     return newEngine;

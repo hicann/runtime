@@ -36,7 +36,7 @@ rtError_t Bitmap::AllocBitmap()
     uint64_t* tmpBitmap = nullptr;
     COND_PROC_RETURN_ERROR_MSG_INNER(
         (maxIdCount_ == 0U), RT_ERROR_POOL_RESOURCE, mutex_.unlock(),
-        "Failed to allocate bitmap because max ID count is 0.");
+        "Failed to allocate bitmap because max ID count is 0, it must be greater than 0.");
     const uint32_t maxBitmapIdx = (maxIdCount_ - 1U) / 64U; // 64:bit of uint64_t
     tmpBitmap = new (std::nothrow) uint64_t[maxBitmapIdx + 1U];
     COND_PROC_RETURN_AND_MSG_OUTER(

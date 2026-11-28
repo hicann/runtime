@@ -19,11 +19,13 @@ Engine* EngineFactory::CreateEngine(const rtChipType_t chipType, Device* dev)
     Engine* newEngine = nullptr;
 
     newEngine = new (std::nothrow) StarsEngine(dev);
-    RT_LOG(RT_LOG_INFO, "new StarsEngine, Runtime_alloc_size %zu", sizeof(StarsEngine));
+    RT_LOG(RT_LOG_INFO, "New StarsEngine, Runtime_alloc_size %zu bytes", sizeof(StarsEngine));
     COND_RETURN_ERROR((newEngine == nullptr), nullptr, "Create engine failed, engine is null.");
 
     rtError_t error = newEngine->Init();
-    COND_PROC_RETURN_ERROR((error != RT_ERROR_NONE), nullptr, DELETE_O(newEngine), "Engine init failed.");
+    COND_PROC_RETURN_ERROR(
+        (error != RT_ERROR_NONE), nullptr, DELETE_O(newEngine), "Engine init failed, retCode=%#x.",
+        static_cast<uint32_t>(error));
 
     RT_LOG(RT_LOG_INFO, "Engine init success.");
     return newEngine;

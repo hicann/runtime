@@ -404,6 +404,42 @@ TEST_F(DavidSnapshotTest, H2DCopyMgrUbArgsPoolConvertAddr_TsegInfoNotFound)
     delete copyMgr;
 }
 
+TEST_F(DavidSnapshotTest, H2DCopyMgrGetUbHostAddrMissingMappings)
+{
+    H2DCopyMgr copyMgr(dev_, COPY_POLICY_UB);
+    copyMgr.cpyInfoUbMap_.mapLock = &copyMgr.mapLock_;
+    void* devTsegInfo = nullptr;
+    void* hostTsegInfo = nullptr;
+    EXPECT_EQ(copyMgr.GetUbHostAddr(0x1000U, &devTsegInfo, &hostTsegInfo), 0U);
+
+    CpyAddrUbMgr addrMgr = {};
+    addrMgr.poolIndex = 1U;
+    copyMgr.cpyInfoUbMap_.cpyUbMap[0x1000U] = addrMgr;
+    EXPECT_EQ(copyMgr.GetUbHostAddr(0x1000U, &devTsegInfo, &hostTsegInfo), 0U);
+    EXPECT_EQ(devTsegInfo, nullptr);
+    EXPECT_EQ(hostTsegInfo, nullptr);
+}
+
+TEST_F(DavidSnapshotTest, H2DCopyMgrFreeUbBufferMissingMappings)
+{
+    H2DCopyMgr copyMgr(dev_, COPY_POLICY_UB);
+    CpyUbInfo& info = copyMgr.cpyInfoUbMap_;
+    info.device = dev_;
+    info.mapLock = &copyMgr.mapLock_;
+    H2DCopyMgr::FreeUbBuffer(reinterpret_cast<void*>(0x1000U), &info);
+    EXPECT_TRUE(info.cpyUbMap.empty());
+
+    CpyAddrUbMgr addrMgr = {};
+    addrMgr.devBaseAddr = 0x1000U;
+    addrMgr.hostBaseAddr = 0x2000U;
+    addrMgr.poolIndex = 1U;
+    info.cpyUbMap[0x1000U] = addrMgr;
+    MOCKER_CPP_VIRTUAL(dev_->Driver_(), &Driver::HostMemFree).expects(atLeast(1)).will(returnValue(RT_ERROR_NONE));
+    MOCKER_CPP_VIRTUAL(dev_->Driver_(), &Driver::DevMemFree).expects(atLeast(1)).will(returnValue(RT_ERROR_NONE));
+    H2DCopyMgr::FreeUbBuffer(reinterpret_cast<void*>(0x1000U), &info);
+    GlobalMockObject::verify();
+}
+
 TEST_F(DavidSnapshotTest, RuntimeRestoreModule_EmptyBackupList)
 {
     Runtime* rt = Runtime::Instance();
