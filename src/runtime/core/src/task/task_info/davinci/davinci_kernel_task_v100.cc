@@ -9,10 +9,13 @@
  */
 
 #include "common/enum_log.hpp"
+#include "runtime/kernel.h"
 #include "stars/stars_base.hpp"
 #include "runtime/base.h"
 #include "qos.hpp"
 #include "davinci_kernel_task.h"
+#include "kernel/elf.hpp"
+#include "task/task_base.hpp"
 #include "npu_driver.hpp"
 #include "task_info_v100.h"
 #include "stream.hpp"
@@ -262,13 +265,16 @@ void ConstructAICpuSqeForDavinciTask(TaskInfo* taskInfo, void* const sqeBuffer, 
     PrintSqe(command, "AICpuTask");
     RT_LOG(
         RT_LOG_INFO,
-        "taskType=" RT_ENUM_LOG_FORMAT("%u") ", topic_type=" RT_ENUM_LOG_FORMAT(
-            "%u") ", kernel_type=%hu, debug_dump_en=%u, curVersion=%u, isNeedNoTimeout=%u, "
-                  "timeout=%hus, kernel_credit=%hu",
+        // clang-format off
+        "taskType=" RT_ENUM_LOG_FORMAT("%u") ", topic_type=" RT_ENUM_LOG_FORMAT("%u")
+        ", kernel_type=" RT_ENUM_LOG_FORMAT("%hu") ", debug_dump_en=%u, curVersion=%u, "
+        "isNeedNoTimeout=%u, timeout=%hus, kernel_credit=%hu",
+        // clang-format on
         RT_ENUM_LOG_VALUE(static_cast<uint32_t>(taskInfo->type), RT_ENUM_LOG_NAME(taskInfo->typeName)),
         RT_ENUM_LOG_VALUE(
             static_cast<uint32_t>(sqe->topic_type), RtTopicTypeToString(static_cast<RtTopicType>(sqe->topic_type))),
-        sqe->kernel_type, sqe->debug_dump_en, curVersion, isNeedNoTimeout, aicpuTaskInfo->timeout, sqe->kernel_credit);
+        RT_ENUM_LOG_VALUE(sqe->kernel_type, AicpuTaskKernelTypeToString(sqe->kernel_type)), sqe->debug_dump_en,
+        curVersion, isNeedNoTimeout, aicpuTaskInfo->timeout, sqe->kernel_credit);
 
     return;
 }
@@ -758,7 +764,8 @@ void FillFftsAicAivCtxForDavinciTask(
         CheckBlockDim(taskInfo, nullptr, fftsCtx);
         fftsCtx->schem = aicTaskInfo->schemMode;
         RT_LOG(
-            RT_LOG_INFO, "set schemMode=%u, taskType=" RT_ENUM_LOG_FORMAT("%u"), fftsCtx->schem,
+            RT_LOG_INFO, "set schemMode=" RT_ENUM_LOG_FORMAT("%u") ", taskType=" RT_ENUM_LOG_FORMAT("%u"),
+            RT_ENUM_LOG_VALUE(fftsCtx->schem, RtSchemModeTypeToString(fftsCtx->schem)),
             RT_ENUM_LOG_VALUE(static_cast<uint32_t>(taskInfo->type), RT_ENUM_LOG_NAME(taskInfo->typeName)));
     }
     fftsCtx->atm = 0U;
@@ -914,12 +921,16 @@ void ConstructAICoreSqeForDavinciTask(TaskInfo* const taskInfo, void* const sqeB
 
     RT_LOG(
         RT_LOG_INFO,
-        "bindFlag=%d, biuperfProfFlag=%d, fftsType=%u, funcType=%u, prefetchCnt1=%u, chipType=%u, "
-        "cfgInfo schemMode=%u, taskType=" RT_ENUM_LOG_FORMAT(
-            "%u") ", kernelFlag=%u, l2CacheProfFlag=%u, kernelCredit=%u, kernelAttrType=%s, "
-                  "minStackSize=%u(bytes), stackSize=%u(bytes), stackPhyBase=%#llx.",
-        stm->GetBindFlag(), Runtime::Instance()->GetBiuperfProfFlag(), sqe->fftsType, funcType, prefetchCnt1,
-        Runtime::Instance()->GetChipType(), aicTaskInfo->schemMode,
+        // clang-format off
+        "bindFlag=%d, biuperfProfFlag=%d, fftsType=%u, funcType=" RT_ENUM_LOG_FORMAT("%u")
+        ", prefetchCnt1=%u, chipType=%u, cfgInfo schemMode=" RT_ENUM_LOG_FORMAT("%u")
+        ", taskType=" RT_ENUM_LOG_FORMAT("%u") ", kernelFlag=%u, l2CacheProfFlag=%u, kernelCredit=%u, "
+        "kernelAttrType=%s, minStackSize=%u(bytes), stackSize=%u(bytes), stackPhyBase=%#llx.",
+        // clang-format on
+        stm->GetBindFlag(), Runtime::Instance()->GetBiuperfProfFlag(), sqe->fftsType,
+        RT_ENUM_LOG_VALUE(funcType, KernelFunctionTypeToString(funcType)), prefetchCnt1,
+        Runtime::Instance()->GetChipType(),
+        RT_ENUM_LOG_VALUE(aicTaskInfo->schemMode, RtSchemModeTypeToString(aicTaskInfo->schemMode)),
         RT_ENUM_LOG_VALUE(static_cast<uint32_t>(taskInfo->type), RT_ENUM_LOG_NAME(taskInfo->typeName)),
         aicTaskInfo->comm.kernelFlag, Runtime::Instance()->GetL2CacheProfFlag(), sqe->kernel_credit,
         KernelAttrTypeToString(kernelAttrType).c_str(), minStackSize, stackSize, stackPhyBase);
@@ -928,7 +939,8 @@ void ConstructAICoreSqeForDavinciTask(TaskInfo* const taskInfo, void* const sqeB
             CheckBlockDim(taskInfo, sqe, nullptr);
             sqe->schem = aicTaskInfo->schemMode;
             RT_LOG(
-                RT_LOG_INFO, "set schemMode=%u, taskType=" RT_ENUM_LOG_FORMAT("%u"), sqe->schem,
+                RT_LOG_INFO, "set schemMode=" RT_ENUM_LOG_FORMAT("%u") ", taskType=" RT_ENUM_LOG_FORMAT("%u"),
+                RT_ENUM_LOG_VALUE(sqe->schem, RtSchemModeTypeToString(sqe->schem)),
                 RT_ENUM_LOG_VALUE(static_cast<uint32_t>(taskInfo->type), RT_ENUM_LOG_NAME(taskInfo->typeName)));
         }
     }

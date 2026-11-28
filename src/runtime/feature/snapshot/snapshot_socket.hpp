@@ -12,7 +12,7 @@
 #include <atomic>
 #include <cstdint>
 #include <string>
-#include "base.h"
+#include "runtime/base.h"
 #include "rts_snapshot.h"
 #include "mmpa/mmpa_api.h"
 namespace cce {
@@ -36,6 +36,7 @@ enum class rtSnapshotOp : uint32_t {
     GET_STATE = 5U,
     GET_RESTORE_THREAD_ID = 6U,
 };
+RT_ENUM_LOG_DECLARE(SnapshotOpToString, uint32_t)
 
 // All integer fields are encoded in network byte order. No process pointers cross the socket.
 struct SnapshotRequestHeader {

@@ -191,11 +191,13 @@ rtError_t TaskReclaimByStream(const Stream* const stm, const bool limited, const
     rtError_t error;
     if (unlikely(stm->GetFailureMode() == ABORT_ON_FAILURE) || stm->isForceRecycle_) {
         error = SendingProcReport(stm, false, tail);
+        const uint64_t failureMode = stm->GetFailureMode();
         RT_LOG(
             RT_LOG_INFO,
             "stream is in failure abort or isForceRecycle and need to reclaim all, streamId=%d,"
-            " posHead=%u, posTail=%u, failuremode=%" PRIu64 ", isForceRecycle=%s.",
-            stm->Id_(), head, tail, stm->GetFailureMode(), stm->isForceRecycle_ ? "true" : "false");
+            " posHead=%u, posTail=%u, failuremode=" RT_ENUM_LOG_FORMAT("%" PRIu64) ", isForceRecycle=%s.",
+            stm->Id_(), head, tail, RT_ENUM_LOG_VALUE(failureMode, StreamFailureModeLogToString(failureMode)),
+            stm->isForceRecycle_ ? "true" : "false");
         return error;
     }
 
@@ -292,11 +294,13 @@ rtError_t RecycleTaskBySqHead(Stream* const stm)
 rtError_t RecycleTaskBySqHeadForRecycleThread(Stream* const stm)
 {
     if (unlikely(stm->GetFailureMode() == ABORT_ON_FAILURE) || stm->isForceRecycle_) {
+        const uint64_t failureMode = stm->GetFailureMode();
         RT_LOG(
             RT_LOG_INFO,
             "stream is in failure abort and need to reclaim all, device_id=%u, stream_id=%d, lastTaskId=%u, "
-            "failuremode=%" PRIu64,
-            stm->Device_()->Id_(), stm->Id_(), stm->GetLastTaskId(), stm->GetFailureMode());
+            "failuremode=" RT_ENUM_LOG_FORMAT("%" PRIu64),
+            stm->Device_()->Id_(), stm->Id_(), stm->GetLastTaskId(),
+            RT_ENUM_LOG_VALUE(failureMode, StreamFailureModeLogToString(failureMode)));
         const uint32_t lastTaskId = stm->GetLastTaskId();
         stm->SetExecuteEndTaskId(static_cast<uint16_t>(lastTaskId));
         return FinishedTaskReclaim(stm, false, stm->taskResMang_->GetResHead(), stm->taskResMang_->GetResTail());

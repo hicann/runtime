@@ -138,6 +138,17 @@ def _check_direction_alias(source):
             )
 
 
+def _check_prof_task_begin_alias(source):
+    # The begin marker shares the first task's value and cannot have a separate case.
+    items = _enum_items(source, "PROF_TASK_TYPE_KERNEL_SIMT")
+    initializers = {item[0]: item[1:] for item in items}
+    if initializers["PROF_TASK_TYPE_KERNEL_SIMT"] != ["=", "PROF_TASK_TYPE_BEGIN"]:
+        raise SyncError(
+            "RT_PROF_TASK_TYPE_META: alias exception needs re-review: "
+            "PROF_TASK_TYPE_KERNEL_SIMT must remain initialized from PROF_TASK_TYPE_BEGIN"
+        )
+
+
 def metadata_tables(source):
     """Return table symbols; diagnostic text remains implementation data."""
     source = _source_without_comments(source)
@@ -198,7 +209,7 @@ def check_members(table, expected, actual, ignored=()):
 # Exclusions must be exact names with a reason; never exclude by suffix or value.
 # H2H and H2D are the same existing zero-valued task direction; the switch
 # uses H2D, as verified by TaskEnumLogTest.DirectionAliasesAndHolesPreserveCarrierWidth.
-# The driver register type also retains its existing V2/PCIE_TH alias.
+# PROF_TASK_TYPE_BEGIN shares the value of PROF_TASK_TYPE_KERNEL_SIMT.
 # Only these exact aliases are excluded; new aliases still need review.
 DOMAINS = {
     "RT_FUSION_SCHEM_MODE_META": ("pkg_inc/runtime/rt_external_base.h", "RT_SCHEM_MODE_NORMAL", ()),
@@ -248,6 +259,7 @@ DOMAINS = {
     "RT_REPORT_PACKAGE_TYPE_META": ("src/runtime/core/inc/task/task_base.hpp", "RT_PACKAGE_TYPE_TASK_REPORT", ()),
     "RT_MODEL_MAINTENANCE_TYPE_META": ("src/runtime/core/inc/task/task_base.hpp", "MMT_STREAM_ADD", ()),
     "RT_MODEL_AICPU_KERNEL_TYPE_META": ("src/runtime/core/inc/task/task_base.hpp", "TS_AICPU_KERNEL_CCE", ()),
+    "RT_ASYNC_CPY_METHOD_META": ("src/runtime/core/inc/task/task_info_base.hpp", "RT_ASYNC_CPY", ()),
     "RT_RUNTIME_FEATURE_META": ("src/runtime/core/inc/utils/capability.hpp", "RT_FEATURE_STARS_COMPATIBILITY", ()),
     "RT_QOS_MASTER_TYPE_META": ("src/runtime/core/inc/utils/qos.hpp", "MASTER_DVPP_ALL", ()),
     "RT_EVENT_STATE_PERIOD_META": (
@@ -259,16 +271,35 @@ DOMAINS = {
     "RT_STREAM_SUBSCRIBE_FLAG_META": ("src/runtime/core/src/stream/stream.hpp", "SUBSCRIBE_NONE", ()),
     "RT_SOMA_REUSE_FLAG_META": ("src/runtime/feature/soma/stream_mem_pool.hpp", "REUSE_FLAG_STANDARD", ()),
     "RT_TASK_FAIL_CALLBACK_TYPE_META": ("src/runtime/core/src/device/device.hpp", "RT_SET_TASK_FAIL_CALLBACK", ()),
+    "RT_DEVICE_SPLIT_MODE_META": ("src/runtime/core/src/device/device.hpp", "RT_NO_SPLIT_MODE", ()),
     "RT_DEVICE_STATE_CALLBACK_TYPE_META": ("src/runtime/core/src/device/device.hpp", "RT_DEVICE_STATE_CALLBACK", ()),
     "RT_NOTIFY_WAIT_MODE_META": ("pkg_inc/runtime/runtime/rts/rts_event.h", "WAIT_LESS_MODE", ()),
     "RT_COND_TASK_TYPE_META": ("src/inc/runtime/rt_inner_model.h", "RT_COND_TASK_TYPE_IF", ()),
     "RT_KERNEL_FUNCTION_TYPE_META": ("src/runtime/core/inc/kernel/elf.hpp", "KERNEL_FUNCTION_TYPE_INVALID", ()),
     "RT_STREAM_SWITCH_DATA_TYPE_META": ("pkg_inc/runtime/runtime/base.h", "RT_SWITCH_INT32", ()),
+    "RT_TS_AICPU_MODEL_CMD_META": ("pkg_inc/runtime/runtime/rt_model.h", "TS_AICPU_MODEL_LOAD", ()),
+    "RT_CC_TASK_QUEUE_STATUS_META": (
+        "src/runtime/feature/cc_manager/task_queue/task_queue_abi.h", "TASK_QUEUE_STATUS_WAITING", (),
+    ),
+    "RT_PROF_CTRL_TYPE_META": ("pkg_inc/runtime/runtime/base.h", "RT_PROF_CTRL_SWITCH", ()),
+    "RT_PROF_DRV_OP_META": ("src/runtime/core/inc/common/profiler_struct.hpp", "RT_PROF_DRV_API_DrvMemcpy", ()),
+    "RT_PROF_TASK_TYPE_META": (
+        "src/runtime/core/inc/task/task_base.hpp", "PROF_TASK_TYPE_KERNEL_SIMT", ("PROF_TASK_TYPE_BEGIN",),
+    ),
+    "RT_OPERATION_TYPE_META": ("src/runtime/core/inc/runtime_tsch_defines.h", "OP_ABORT_APP", ()),
+    "RT_SNAPSHOT_OP_META": ("src/runtime/feature/snapshot/snapshot_socket.hpp", "GET_RESTORE_THREAD_ID", ()),
+    "RT_SQ_ADDR_MEM_ORDER_TYPE_META": (
+        "src/runtime/core/src/device/sq_addr_memory_pool.hpp", "SQ_ADDR_MEM_ORDER_TYPE_32K", (),
+    ),
+    "RT_STREAM_FAILURE_MODE_META": ("src/runtime/core/src/stream/stream.hpp", "CONTINUE_ON_FAILURE", ()),
+    "RT_STREAM_REPORT_STATUS_META": (
+        "src/runtime/core/inc/common/profiler_struct.hpp", "STREAM_STATUS_CREATE", (),
+    ),
+    "RT_TASK_WR_CQE_FLAG_META": ("src/runtime/core/inc/task/task_base.hpp", "TASK_WR_CQE_DEFAULT", ()),
 }
 
 
-# Most metadata lives in enum-log translation units; this two-value helper
-# deliberately retains source-local linkage in its sole business owner.
+# Scan the former source-local mapping location to catch accidental reintroduction.
 LOCAL_METADATA_SOURCES = (
     "src/runtime/core/src/task/task_info/cond_op/cond_op_stream_task_base.cc",
 )
@@ -311,6 +342,8 @@ def check_repository(root, overrides=None):
         try:
             if table == "RT_MEMCPY_DIRECTION_META":
                 _check_direction_alias(read(path))
+            elif table == "RT_PROF_TASK_TYPE_META":
+                _check_prof_task_begin_alias(read(path))
             check_members(table, enum_members(read(path), anchor), tables[table], ignored)
         except SyncError as error:
             raise SyncError(f"{path}: {error}") from error

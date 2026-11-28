@@ -102,11 +102,12 @@ static void ConstructMixSubSqe(
     ConfigArch920xOstEnable(aicPart->kernel, sqe);
     RT_LOG(
         RT_LOG_INFO,
-        "sqeIndex=%u, mixType=" RT_ENUM_LOG_FORMAT(
-            "%u") ", cfgInfo schemMode=%u, sqe_schem=%hu, ratio=%hhu, loose=%u, piMix=%u, "
-                  "aivSimtDcuSmSize=%u.",
+        "sqeIndex=%u, mixType=" RT_ENUM_LOG_FORMAT("%u") ", cfgInfo schemMode=" RT_ENUM_LOG_FORMAT(
+            "%u") ", sqe_schem=" RT_ENUM_LOG_FORMAT("%hu") ", ratio=%hhu, loose=%u, piMix=%u, aivSimtDcuSmSize=%u.",
         idx, RT_ENUM_LOG_VALUE(static_cast<uint32_t>(mixType), RtMixTypeToString(static_cast<RtMixType>(mixType))),
-        aicPart->schemMode, sqe->schem, sqe->ratio, sqe->loose, sqe->piMix, sqe->aivSimtDcuSmSize);
+        RT_ENUM_LOG_VALUE(aicPart->schemMode, RtSchemModeTypeToString(aicPart->schemMode)),
+        RT_ENUM_LOG_VALUE(sqe->schem, RtSchemModeTypeToString(sqe->schem)), sqe->ratio, sqe->loose, sqe->piMix,
+        sqe->aivSimtDcuSmSize);
 
     PrintDavidSqe(sqe, "FusionKernelTask-Mix");
 }

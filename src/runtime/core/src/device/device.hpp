@@ -57,6 +57,7 @@ enum SplitMode {
     RT_NO_SPLIT_MODE = 0,
     RT_SPLIT_MODE = 1,
 };
+RT_ENUM_LOG_DECLARE(SplitModeToString, uint32_t)
 
 enum VmngSplitMode : int32_t {
     RT_VMNG_NORMAL_NONE_SPLIT_MODE = 0,

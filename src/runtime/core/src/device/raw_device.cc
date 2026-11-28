@@ -1287,8 +1287,8 @@ void RawDevice::InitSplitMode()
     }
 
     RT_LOG(
-        RT_LOG_INFO, "Get device split mode, device_id=%u, drvSplitMode=%u, splitMode=%u.", deviceId_, drvSplitMode,
-        splitMode_);
+        RT_LOG_INFO, "Get device split mode, device_id=%u, drvSplitMode=%u, splitMode=" RT_ENUM_LOG_FORMAT("%u") ".",
+        deviceId_, drvSplitMode, RT_ENUM_LOG_VALUE(splitMode_, SplitModeToString(splitMode_)));
     return;
 }
 

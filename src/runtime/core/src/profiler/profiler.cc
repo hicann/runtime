@@ -35,23 +35,20 @@
 namespace cce {
 namespace runtime {
 namespace {
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+const char* ProfilerTaskTypeToString(const uint64_t value) noexcept
+{
+    if (value < static_cast<uint64_t>(TS_TASK_TYPE_RESERVED)) {
+        return TsTaskTypeToString(static_cast<tsTaskType_t>(value));
+    }
+    return ProfTaskTypeToString(value);
+}
+#endif
+
 const std::set<tsTaskType_t> KERNEL_TASK_TYPE = {
     TS_TASK_TYPE_KERNEL_AICORE, TS_TASK_TYPE_KERNEL_AIVEC, TS_TASK_TYPE_KERNEL_AICPU};
 
 static inline bool IsKernelTask(const TaskInfo& taskInfo) { return KERNEL_TASK_TYPE.count(taskInfo.type) > 0U; }
-
-#if RUNTIME_ENABLE_ENUM_LOG_NAMES
-const char_t* ProfilerTaskTypeToString(const uint64_t value) noexcept
-{
-    if (value == static_cast<uint64_t>(ProfTaskType::PROF_TASK_TYPE_KERNEL_SIMT)) {
-        return "PROF_TASK_TYPE_KERNEL_SIMT";
-    }
-    if (value > UINT8_MAX) {
-        return "UNKNOWN";
-    }
-    return TsTaskTypeToString(static_cast<tsTaskType_t>(value));
-}
-#endif
 
 inline uint64_t GetKernelNameId(TaskInfo& taskInfo)
 {
@@ -172,7 +169,9 @@ void Profiler::ReportStreamSynctaskFinish(const uint16_t profileType) const
     profApiData.exitTime = profApiData.entryTime; // entry
 
     ProfilingAgent::Instance().ReportProfApi(0, profApiData);
-    RT_LOG(RT_LOG_DEBUG, "profileType=%hu", profileType);
+    RT_LOG(
+        RT_LOG_DEBUG, "profileType=" RT_ENUM_LOG_FORMAT("%hu"),
+        RT_ENUM_LOG_VALUE(profileType, RtProfApiTypeToString(profileType)));
 }
 
 void ChangeTrackDataTaskType(struct MsprofRuntimeTrack& runtimeTrack, const TaskInfo* const taskInfo)
@@ -226,9 +225,11 @@ void FillKernelLaunchExtInfo(struct MsprofRuntimeTrack& runtimeTrack, const Task
         RT_LOG(
             RT_LOG_DEBUG,
             "Fill ext info, gridDim=[%u,%u,%u], blockDim=[%u,%u,%u], argsSize=%hu, "
-            "original argsSize=%u, schedMode=%u",
+            "original argsSize=%u, schedMode=" RT_ENUM_LOG_FORMAT("%u"),
             gridDim.x, gridDim.y, gridDim.z, blockDim.x, blockDim.y, blockDim.z, argsSizeU16, argsSize,
-            runtimeTrack.extInfo.simtKernelInfo.schedMode);
+            RT_ENUM_LOG_VALUE(
+                runtimeTrack.extInfo.simtKernelInfo.schedMode,
+                RtSchemModeTypeToString(runtimeTrack.extInfo.simtKernelInfo.schedMode)));
     } else {
         const uint8_t mixType = (aicTaskInfo.kernel != nullptr) ? aicTaskInfo.kernel->GetMixType() : 0U;
         runtimeTrack.extInfo.kernelInfo.numBlocks = aicTaskInfo.comm.dim;
@@ -247,9 +248,11 @@ void FillKernelLaunchExtInfo(struct MsprofRuntimeTrack& runtimeTrack, const Task
         RT_LOG(
             RT_LOG_DEBUG,
             "Fill ext info, numBlocks=%u, argsSize=%hu, "
-            "original argsSize=%u, ratio=%u, schedMode=%u",
+            "original argsSize=%u, ratio=%u, schedMode=" RT_ENUM_LOG_FORMAT("%u"),
             runtimeTrack.extInfo.kernelInfo.numBlocks, argsSizeU16, argsSize, ratio,
-            runtimeTrack.extInfo.kernelInfo.schedMode);
+            RT_ENUM_LOG_VALUE(
+                runtimeTrack.extInfo.kernelInfo.schedMode,
+                RtSchemModeTypeToString(runtimeTrack.extInfo.kernelInfo.schedMode)));
     }
 }
 
@@ -482,10 +485,13 @@ static int32_t ReportCompactInfo(RuntimeProfTrackData* const trackData)
     RT_LOG(
         RT_LOG_DEBUG,
         "Report compact info, isModel=%u, threadId=%u, timeStamp=%llu, devId=%hu, "
-        "streamId=%hu, taskId=%u ,taskType=%llu, kernelName=%llu",
+        "streamId=%hu, taskId=%u ,taskType=" RT_ENUM_LOG_FORMAT("%" PRIu64) ", kernelName=%llu",
         trackData->isModel, trackData->compactInfo.threadId, trackData->compactInfo.timeStamp,
         trackData->compactInfo.data.runtimeTrack.deviceId, trackData->compactInfo.data.runtimeTrack.streamId,
-        trackData->compactInfo.data.runtimeTrack.taskId, trackData->compactInfo.data.runtimeTrack.taskType,
+        trackData->compactInfo.data.runtimeTrack.taskId,
+        RT_ENUM_LOG_VALUE(
+            trackData->compactInfo.data.runtimeTrack.taskType,
+            ProfilerTaskTypeToString(trackData->compactInfo.data.runtimeTrack.taskType)),
         trackData->compactInfo.data.runtimeTrack.kernelName);
     const bool agingFlag = (trackData->isModel != 0) ? false : true;
     return MsprofReportCompactInfo(
@@ -960,11 +966,13 @@ void ReportStreamSqInfoForProfiling(const Stream* stream, uint16_t streamStatus)
 
     RT_LOG(
         RT_LOG_DEBUG,
-        "Report stream sq info for profiling successfully, streamStatus=%hu, streamId=%hu, "
-        "rtsqId=%hu, deviceId=%hu, tsId=%hu.",
-        compactInfo.data.streamSqInfo.streamStatus, compactInfo.data.streamSqInfo.streamId,
-        compactInfo.data.streamSqInfo.rtsqId, compactInfo.data.streamSqInfo.deviceId,
-        compactInfo.data.streamSqInfo.tsId);
+        "Report stream sq info for profiling successfully, "
+        "streamStatus=" RT_ENUM_LOG_FORMAT("%hu") ", streamId=%hu, rtsqId=%hu, deviceId=%hu, tsId=%hu.",
+        RT_ENUM_LOG_VALUE(
+            compactInfo.data.streamSqInfo.streamStatus,
+            StreamReportStatusLogName(compactInfo.data.streamSqInfo.streamStatus)),
+        compactInfo.data.streamSqInfo.streamId, compactInfo.data.streamSqInfo.rtsqId,
+        compactInfo.data.streamSqInfo.deviceId, compactInfo.data.streamSqInfo.tsId);
 }
 
 void Profiler::CallApiBegin(const uint16_t profileType, const uint64_t dataSize, const uint16_t cpyDirection) const
@@ -1006,7 +1014,9 @@ void Profiler::CallApiBegin(const uint16_t profileType, const uint64_t dataSize,
     profApiData.profileType = profileType;
     profApiData.extInfoCount = 0U;
 
-    RT_LOG(RT_LOG_DEBUG, "profileType=%hu", profApiData.profileType);
+    RT_LOG(
+        RT_LOG_DEBUG, "profileType=" RT_ENUM_LOG_FORMAT("%hu"),
+        RT_ENUM_LOG_VALUE(profApiData.profileType, RtProfApiTypeToString(profApiData.profileType)));
     profApiData.entryTime = MsprofSysCycleTime();
 }
 
@@ -1047,10 +1057,13 @@ void Profiler::CallApiEnd(const rtError_t retCode, const uint32_t devId) const
         RT_LOG(
             RT_LOG_DEBUG,
             "isModel=%u, threadId=%u, timeStamp=%llu, devId=%u, stream_id=%u, task_id=%u, "
-            "task_type=%u, kernel_name=%llu",
+            "task_type=" RT_ENUM_LOG_FORMAT("%" PRIu64) ", kernel_name=%llu",
             data->isModel, data->compactInfo.threadId, data->compactInfo.timeStamp,
             data->compactInfo.data.runtimeTrack.deviceId, data->compactInfo.data.runtimeTrack.streamId,
-            data->compactInfo.data.runtimeTrack.taskId, data->compactInfo.data.runtimeTrack.taskType,
+            data->compactInfo.data.runtimeTrack.taskId,
+            RT_ENUM_LOG_VALUE(
+                data->compactInfo.data.runtimeTrack.taskType,
+                ProfilerTaskTypeToString(data->compactInfo.data.runtimeTrack.taskType)),
             data->compactInfo.data.runtimeTrack.kernelName);
         const bool agingFlag = (data->isModel != 0) ? false : true;
         const int32_t ret = MsprofReportCompactInfo(
@@ -1067,7 +1080,9 @@ void Profiler::CallApiEnd(const rtError_t retCode, const uint32_t devId) const
     profApiData.retCode = static_cast<uint32_t>(RT_TRANS_EXT_ERRCODE(retCode));
     profApiData.exitTime = endTime;
     ReportProfApi(deviceId, profApiData);
-    RT_LOG(RT_LOG_DEBUG, "profileType=%hu, devId=%u, retCode=%u", profApiData.profileType, deviceId, retCode);
+    RT_LOG(
+        RT_LOG_DEBUG, "profileType=" RT_ENUM_LOG_FORMAT("%hu") ", devId=%u, retCode=%u",
+        RT_ENUM_LOG_VALUE(profApiData.profileType, RtProfApiTypeToString(profApiData.profileType)), deviceId, retCode);
 }
 
 } // namespace runtime

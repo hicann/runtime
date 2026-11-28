@@ -9,13 +9,16 @@
  */
 
 #include "common/enum_log.hpp"
+#include "runtime/kernel.h"
 #include "runtime/base.h"
+#include "stars/stars_base.hpp"
 #include "stars_david.hpp"
 #include "david_sqe_adapter.hpp"
 #include "base_david.hpp"
 #include "kernel.hpp"
 #include "runtime_task_manager.h"
 #include "davinci_kernel_task.h"
+#include "task/task_base.hpp"
 
 namespace cce {
 namespace runtime {
@@ -54,9 +57,15 @@ void ConstructDavidAICpuSqeForDavinciTask(TaskInfo* const taskInfo, void* const 
 
     PrintDavidSqe(davidSqe, "AICpuTask");
     RT_LOG(
-        RT_LOG_INFO, "type=" RT_ENUM_LOG_FORMAT("%u") ", topic_type=%hu, kernel_type=%u, dump_en=%u",
+        RT_LOG_INFO,
+        // clang-format off
+        "type=" RT_ENUM_LOG_FORMAT("%u") ", topic_type=" RT_ENUM_LOG_FORMAT("%hu")
+        ", kernel_type=" RT_ENUM_LOG_FORMAT("%u") ", dump_en=%u",
+        // clang-format on
         RT_ENUM_LOG_VALUE(static_cast<uint32_t>(aicpuKernelSqe->header.type), "DAVID_SQE_TYPE_AICPU_D"),
-        aicpuKernelSqe->topicType, aicpuKernelSqe->kernelType, aicpuKernelSqe->usrData.debugDumpEn);
+        RT_ENUM_LOG_VALUE(aicpuKernelSqe->topicType, RtTopicTypeToString(aicpuKernelSqe->topicType)),
+        RT_ENUM_LOG_VALUE(aicpuKernelSqe->kernelType, AicpuTaskKernelTypeToString(aicpuKernelSqe->kernelType)),
+        aicpuKernelSqe->usrData.debugDumpEn);
     UpdateDavidSqeHeadUpdate(taskInfo, sqe);
     return;
 }

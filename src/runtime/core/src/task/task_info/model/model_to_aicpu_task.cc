@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/enum_log.hpp"
 #include "stream.hpp"
 #include "davinci_kernel_task.h"
 #include "runtime.hpp"
@@ -55,11 +56,13 @@ rtError_t ModelToAicpuTaskInit(
     taskInfo->u.modelToAicpuTask.modelArgPtr = modelPtr;
     RT_LOG(
         RT_LOG_DEBUG,
-        "Create model to aicpu task,model_id=%u,executor flag=%u,cmd_type=%u,stream_id=%d, "
-        "task_id=%u, task_type=%d(%s).",
+        "Create model to aicpu task,model_id=%u,executor flag=%u,"
+        "cmd_type=" RT_ENUM_LOG_FORMAT("%u") ",stream_id=%d, task_id=%u, task_type=%d(%s).",
         taskInfo->u.modelToAicpuTask.modelId, taskInfo->u.modelToAicpuTask.executorFlag,
-        taskInfo->u.modelToAicpuTask.cmdType, taskInfo->stream->Id_(), static_cast<uint32_t>(taskInfo->id),
-        static_cast<int32_t>(taskInfo->type), taskInfo->typeName);
+        RT_ENUM_LOG_VALUE(
+            taskInfo->u.modelToAicpuTask.cmdType, TsAicpuModelCmdToString(taskInfo->u.modelToAicpuTask.cmdType)),
+        taskInfo->stream->Id_(), static_cast<uint32_t>(taskInfo->id), static_cast<int32_t>(taskInfo->type),
+        taskInfo->typeName);
     return RT_ERROR_NONE;
 }
 

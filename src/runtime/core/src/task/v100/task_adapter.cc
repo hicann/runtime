@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "task.hpp"
+#include "common/enum_log.hpp"
 #include "task_info_v100.h"
 #include "memory_task.h"
 #include "rdma_task.h"
@@ -64,8 +65,9 @@ void ConstructSqeBase(TaskInfo* const taskInfo, void* const sqeBuffer, const Tas
     command->phSqe.kernel_credit = RT_STARS_DEFAULT_KERNEL_CREDIT;
 
     RT_LOG(
-        RT_LOG_INFO, "No need to construct sqe. type:%u, task_id:%u, stream_id:%u", taskInfo->type,
-        static_cast<uint32_t>(taskInfo->id), taskInfo->stream->Id_());
+        RT_LOG_INFO, "No need to construct sqe. type:" RT_ENUM_LOG_FORMAT("%u") ", task_id:%u, stream_id:%u",
+        RT_ENUM_LOG_VALUE(taskInfo->type, RT_ENUM_LOG_NAME(taskInfo->typeName)), static_cast<uint32_t>(taskInfo->id),
+        taskInfo->stream->Id_());
 }
 } // namespace runtime
 } // namespace cce

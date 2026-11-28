@@ -20,16 +20,21 @@
 #include "../../inc/kernel/kernel.hpp"
 #include "../../inc/printf.hpp"
 #include "../../inc/runtime.hpp"
+#include "../../inc/runtime_tsch_defines.h"
 #include "../../inc/stars/stars_base.hpp"
 #include "../../inc/task/task_base.hpp"
+#include "../../inc/task/task_info_base.hpp"
 #include "../../inc/utils/capability.hpp"
 #include "../../inc/utils/qos.hpp"
 #include "../device/device.hpp"
+#include "../device/sq_addr_memory_pool.hpp"
 #include "../event/event_state_callback_manager.hpp"
 #include "../pool/h2d_copy_mgr.hpp"
 #include "../pool/h2h_copy_mgr.hpp"
 #include "../stream/stream.hpp"
+#include "../../../feature/cc_manager/task_queue/task_queue_abi.h"
 #include "../../../feature/soma/stream_mem_pool.hpp"
+#include "runtime/kernel.h"
 #include "../../inc/common/driver_enum_desc.hpp"
 #include "../../inc/device/device_enum_desc.hpp"
 #include "../../inc/notify/notify_enum_desc.hpp"
@@ -267,6 +272,10 @@
     X(REUSE_FLAG_NONE, "REUSE_FLAG_NONE")         \
     X(REUSE_FLAG_INVALID, "UNKNOWN")
 
+#define RT_DEVICE_SPLIT_MODE_META(X)     \
+    X(RT_NO_SPLIT_MODE, "NO_SPLIT_MODE") \
+    X(RT_SPLIT_MODE, "SPLIT_MODE")
+
 #define RT_DEVICE_STATE_CALLBACK_TYPE_META(X)                 \
     X(RT_DEVICE_STATE_CALLBACK, "DEVICE_STATE_CALLBACK")      \
     X(RTS_DEVICE_STATE_CALLBACK, "RTS_DEVICE_STATE_CALLBACK") \
@@ -286,10 +295,85 @@
     X(RT_COND_TASK_TYPE_SWITCH, "COND_TASK_TYPE_SWITCH") \
     X(RT_COND_TASK_TYPE_MAX, "UNKNOWN")
 
+#define RT_SQ_ADDR_MEM_ORDER_TYPE_META(X)                         \
+    X(SQ_ADDR_MEM_ORDER_TYPE_32K, "SQ_ADDR_MEM_ORDER_TYPE_32K")   \
+    X(SQ_ADDR_MEM_ORDER_TYPE_64K, "SQ_ADDR_MEM_ORDER_TYPE_64K")   \
+    X(SQ_ADDR_MEM_ORDER_TYPE_128K, "SQ_ADDR_MEM_ORDER_TYPE_128K") \
+    X(SQ_ADDR_MEM_ORDER_TYPE_256K, "SQ_ADDR_MEM_ORDER_TYPE_256K") \
+    X(SQ_ADDR_MEM_ORDER_TYPE_512K, "SQ_ADDR_MEM_ORDER_TYPE_512K") \
+    X(SQ_ADDR_MEM_ORDER_TYPE_1M, "SQ_ADDR_MEM_ORDER_TYPE_1M")     \
+    X(SQ_ADDR_MEM_ORDER_TYPE_2M, "SQ_ADDR_MEM_ORDER_TYPE_2M")     \
+    X(SQ_ADDR_MEM_ORDER_TYPE_MAX, "UNKNOWN")
+
+#define RT_PROF_DRV_OP_META(X)                            \
+    X(RT_PROF_DRV_API_BASE, "UNKNOWN")                    \
+    X(RT_PROF_DRV_API_DrvMemcpy, "DrvMemcpy")             \
+    X(RT_PROF_DRV_API_DrvMemsetD8, "DrvMemsetD8")         \
+    X(RT_PROF_DRV_API_HalMemAlloc, "HalMemAlloc")         \
+    X(RT_PROF_DRV_API_DevMallocCached, "DevMallocCached") \
+    X(RT_PROF_DRV_API_DevFree, "DevFree")                 \
+    X(RT_PROF_DRV_API_DevDvppMalloc, "DevDvppMalloc")     \
+    X(RT_PROF_DRV_API_DevDvppFree, "DevDvppFree")         \
+    X(RT_PROF_DRV_API_HostMalloc, "HostMalloc")           \
+    X(RT_PROF_DRV_API_HostFree, "HostFree")               \
+    X(RT_PROF_DRV_API_MngMalloc, "MngMalloc")             \
+    X(RT_PROF_DRV_API_MngFree, "MngFree")                 \
+    X(RT_PROF_DRV_API_HalMemcpy2D, "HalMemcpy2D")         \
+    X(RT_PROF_DRV_API_MemcpyBatch, "MemcpyBatch")
+
+#define RT_STREAM_REPORT_STATUS_META(X)             \
+    X(STREAM_STATUS_CREATE, "STREAM_STATUS_CREATE") \
+    X(STREAM_STATUS_DESTROY, "STREAM_STATUS_DESTROY")
+
+#define RT_STREAM_FAILURE_MODE_META(X)            \
+    X(CONTINUE_ON_FAILURE, "CONTINUE_ON_FAILURE") \
+    X(STOP_ON_FAILURE, "STOP_ON_FAILURE")         \
+    X(ABORT_ON_FAILURE, "ABORT_ON_FAILURE")
+
+#define RT_TASK_WR_CQE_FLAG_META(X)               \
+    X(TASK_WR_CQE_DEFAULT, "TASK_WR_CQE_DEFAULT") \
+    X(TASK_WR_CQE_NEVER, "TASK_WR_CQE_NEVER")     \
+    X(TASK_WR_CQE_ALWAYS, "TASK_WR_CQE_ALWAYS")
+
+#define RT_OPERATION_TYPE_META(X)                                             \
+    X(OP_ABORT_APP, "OP_ABORT_APP")                                           \
+    X(OP_QUERY_ABORT_STATUS, "OP_QUERY_ABORT_STATUS")                         \
+    X(OP_ABORT_STREAM, "OP_ABORT_STREAM")                                     \
+    X(OP_QUERY_STREAM_ABORT_STATUS, "OP_QUERY_STREAM_ABORT_STATUS")           \
+    X(OP_QUERY_DCACHE_LOCK_STATUS, "OP_QUERY_DCACHE_LOCK_STATUS")             \
+    X(OP_QUERY_STARS_REG_BASE_ADDR, "OP_QUERY_STARS_REG_BASE_ADDR")           \
+    X(OP_QUERY_TSFW_VERSION, "OP_QUERY_TSFW_VERSION")                         \
+    X(OP_ABORT_MODEL, "OP_ABORT_MODEL")                                       \
+    X(OP_RECOVER_STREAM, "OP_RECOVER_STREAM")                                 \
+    X(OP_RECOVER_APP, "OP_RECOVER_APP")                                       \
+    X(OP_QUERY_RECOVER_STATUS, "OP_QUERY_RECOVER_STATUS")                     \
+    X(OP_QUERY_OP_EXEC_TIMEOUT_INTERVAL, "OP_QUERY_OP_EXEC_TIMEOUT_INTERVAL") \
+    X(OP_STOP_STREAM, "OP_STOP_STREAM")                                       \
+    X(OP_QUERY_OVERFLOW, "OP_QUERY_OVERFLOW")                                 \
+    X(OP_UPDATE_STREAM_PRIORITY, "OP_UPDATE_STREAM_PRIORITY")                 \
+    X(OP_QUERY_STREAM_PRIORITY, "OP_QUERY_STREAM_PRIORITY")                   \
+    X(OP_QUERY_SWAP_BUFFER_INFO, "OP_QUERY_SWAP_BUFFER_INFO")                 \
+    X(OP_SET_MODEL_NAME, "OP_SET_MODEL_NAME")                                 \
+    X(OP_GET_SIMT_STACK_SHARED_ADDR, "OP_GET_SIMT_STACK_SHARED_ADDR")         \
+    X(OP_ENABLE_AICORE_SYNC_CHECK, "OP_ENABLE_AICORE_SYNC_CHECK")             \
+    X(OP_INVALID, "UNKNOWN")
+
+#define RT_ASYNC_CPY_METHOD_META(X)    \
+    X(RT_ASYNC_CPY, "ASYNC_CPY")       \
+    X(RT_ASYNC_CPY_2D, "ASYNC_CPY_2D") \
+    X(RT_ASYNC_CPY_BATCH, "ASYNC_CPY_BATCH")
+
+#define RT_CC_TASK_QUEUE_STATUS_META(X)                       \
+    X(TASK_QUEUE_STATUS_WAITING, "TASK_QUEUE_STATUS_WAITING") \
+    X(TASK_QUEUE_STATUS_WORKING, "TASK_QUEUE_STATUS_WORKING") \
+    X(TASK_QUEUE_STATUS_TERMINATED, "TASK_QUEUE_STATUS_TERMINATED")
+
 namespace cce {
 namespace runtime {
 
 RT_ENUM_STRING_TO_STRING_U32(RtTopicTypeToString, RtTopicType, RT_AICPU_TOPIC_TYPE_META)
+
+RT_ENUM_STRING_FROM_VALUE(RtTopicTypeToString, RtTopicType, RT_AICPU_TOPIC_TYPE_META, uint32_t)
 
 RT_ENUM_STRING_TO_STRING_U32(ArgsTypeToString, ArgsType, RT_KERNEL_ARGS_TYPE_META)
 
@@ -329,6 +413,17 @@ RT_ENUM_STRING_TO_STRING_U32(RtMemCopyAsyncDirectToString, rtMemCopyAsyncDirect,
 
 RT_ENUM_STRING_TO_STRING_U32(TsAicpuKernelTypeToString, tsAicpuKernelType, RT_MODEL_AICPU_KERNEL_TYPE_META)
 
+const char* AicpuTaskKernelTypeToString(uint32_t value) noexcept
+{
+    switch (value) {
+        RT_MODEL_AICPU_KERNEL_TYPE_META(RT_ENUM_STRING_CASE)
+        case KERNEL_TYPE_CUSTOM_KFC:
+            return RtKernelTypeToString(KERNEL_TYPE_CUSTOM_KFC);
+        default:
+            return "UNKNOWN";
+    }
+}
+
 RT_ENUM_STRING_IMPL(
     RtModelExecutorFlagToString, RtModelExecutorFlag, RT_MODEL_EXECUTOR_TYPE_META, RT_ENUM_STRING_CASE, uint32_t,
     "UNKNOWN")
@@ -361,6 +456,8 @@ RT_ENUM_STRING_TO_STRING_SCOPED(StreamSubscribeFlagToString, StreamSubscribeFlag
 
 RT_ENUM_STRING_TO_STRING(RtTaskTimeUnitTypeToString, RtTaskTimeUnitType, RT_TASK_TIME_UNIT_META)
 
+RT_ENUM_STRING_FROM_VALUE(SplitModeToString, SplitMode, RT_DEVICE_SPLIT_MODE_META, uint32_t)
+
 RT_ENUM_STRING_TO_STRING_SCOPED(DeviceStateCallbackLogToString, DeviceStateCallback, RT_DEVICE_STATE_CALLBACK_TYPE_META)
 
 RT_ENUM_STRING_TO_STRING_U32(RtCntNotifyWaitModeToString, rtCntNotifyWaitMode_t, RT_NOTIFY_WAIT_MODE_META)
@@ -371,6 +468,22 @@ const char* JettyTypeToString(const JettyType value) noexcept
 {
     return (value == JettyType::JETTY_TYPE_MAX) ? "UNKNOWN" : JettyTypeName(value);
 }
+
+RT_ENUM_STRING_FROM_VALUE(RtAsyncCpyMethodToString, rtAsyncCpyMethod, RT_ASYNC_CPY_METHOD_META, uint32_t)
+
+RT_ENUM_STRING_FROM_VALUE(SqAddrMemOrderTypeToString, SQ_ADDR_MEM_ORDER_TYPE, RT_SQ_ADDR_MEM_ORDER_TYPE_META, uint32_t)
+
+RT_ENUM_STRING_FROM_VALUE(ProfDrvOpLogName, rtProfDrvApiType, RT_PROF_DRV_OP_META, uint32_t)
+
+RT_ENUM_STRING_FROM_VALUE(StreamReportStatusLogName, StreamReportStatus, RT_STREAM_REPORT_STATUS_META, uint32_t)
+
+RT_ENUM_STRING_FROM_VALUE(StreamFailureModeLogToString, TsStreamFailureMode, RT_STREAM_FAILURE_MODE_META, uint64_t)
+
+RT_ENUM_STRING_FROM_VALUE(TaskWrCqeFlagToString, TaskWrCqeFlag, RT_TASK_WR_CQE_FLAG_META, uint32_t)
+
+RT_ENUM_STRING_FROM_VALUE(OperationTypeToString, OPERATION_TYPE, RT_OPERATION_TYPE_META, uint32_t)
+
+RT_ENUM_STRING_FROM_VALUE(TaskQueueStatusToString, TaskQueueStatus, RT_CC_TASK_QUEUE_STATUS_META, uint32_t)
 
 } // namespace runtime
 } // namespace cce

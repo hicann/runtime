@@ -9,6 +9,8 @@
  */
 
 #include "task/task_base.hpp"
+#include "common/enum_log.hpp"
+#include "runtime/kernel.h"
 #include "task_enum_desc.hpp"
 #include "model.hpp"
 #if (!defined(CFG_VECTOR_CAST))
@@ -1729,14 +1731,10 @@ rtError_t Model::SaveAicpuStreamTask(const Stream* const streamIn, const rtComma
     mapAicpuTask_[static_cast<uint32_t>(streamIn->Id_())].push_back(taskInfo);
     RT_LOG(
         RT_LOG_DEBUG,
-        "save aicpu stream task, stream_id=%u, task_id=%u, kernel_type=" RT_ENUM_LOG_FORMAT(
-            "%u") ", task_type=" RT_ENUM_LOG_FORMAT("%u") ".",
+        "save aicpu stream task, stream_id=%u, task_id=%u, "
+        "kernel_type=" RT_ENUM_LOG_FORMAT("%u") ", task_type=" RT_ENUM_LOG_FORMAT("%u") ".",
         taskInfo.streamID, taskInfo.taskID,
-        RT_ENUM_LOG_VALUE(
-            static_cast<uint32_t>(taskInfo.kernelType),
-            (taskInfo.kernelType <= TS_AICPU_KERNEL_RESERVED ?
-                 TsAicpuKernelTypeToString(static_cast<tsAicpuKernelType>(taskInfo.kernelType)) :
-                 "UNKNOWN")),
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(taskInfo.kernelType), AicpuTaskKernelTypeToString(taskInfo.kernelType)),
         RT_ENUM_LOG_VALUE(static_cast<uint32_t>(static_cast<int32_t>(type)), TsTaskTypeToString(type)));
     return RT_ERROR_NONE;
 }

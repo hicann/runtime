@@ -5588,7 +5588,8 @@ rtError_t ApiErrorDecorator::MemcpyHostTask(
     if ((devRunMode != RT_RUN_MODE_ONLINE) ||
         ((kind != RT_MEMCPY_HOST_TO_DEVICE) && (kind != RT_MEMCPY_DEVICE_TO_HOST))) {
         RT_LOG(
-            RT_LOG_INFO, "unsupported MemcpyHostTask feature, kind=%s, run mode=%u", MemcpyKindToStr(kind), devRunMode);
+            RT_LOG_INFO, "unsupported MemcpyHostTask feature, kind=%s, run mode=" RT_ENUM_LOG_FORMAT("%u"),
+            MemcpyKindToStr(kind), RT_ENUM_LOG_VALUE(devRunMode, RtRunModeToString(devRunMode)));
         return RT_ERROR_FEATURE_NOT_SUPPORT;
     }
     return impl_->MemcpyHostTask(dst, destMax, src, cnt, kind, stm);

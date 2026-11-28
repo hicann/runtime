@@ -549,11 +549,13 @@ rtError_t StarsEngine::TaskReclaimByStm(Stream* const stm, const bool limited, u
     rtError_t error;
     if (unlikely(stm->GetFailureMode() == ABORT_ON_FAILURE) || stm->isForceRecycle_) {
         error = SendingProcReport(stm, false, static_cast<uint16_t>(stm->GetTaskPosTail()), taskId);
+        const uint64_t failureMode = stm->GetFailureMode();
         RT_LOG(
             RT_LOG_INFO,
             "stream is in failure abort or isForceRecycle and need to reclaim all, streamId=%d,"
-            " posHead=%u, posTail=%u, taskId=%u, failuremode=%" PRIu64 ", isForceRecycle=%u",
-            stm->Id_(), stm->GetTaskPosHead(), stm->GetTaskPosTail(), taskId, stm->GetFailureMode(),
+            " posHead=%u, posTail=%u, taskId=%u, failuremode=" RT_ENUM_LOG_FORMAT("%" PRIu64) ", isForceRecycle=%u",
+            stm->Id_(), stm->GetTaskPosHead(), stm->GetTaskPosTail(), taskId,
+            RT_ENUM_LOG_VALUE(failureMode, StreamFailureModeLogToString(failureMode)),
             static_cast<uint32_t>(stm->isForceRecycle_));
         return error;
     }
@@ -1473,11 +1475,11 @@ void StarsEngine::ProcLogicCqReport(const rtCqReport_t& logicCq, const bool isSt
         if ((captureModel != nullptr) && !isExceptionFlag) {
             RT_LOG(
                 RT_LOG_INFO,
-                "Receive capture model CQE, device_id=%u, model_id=%u, stream_id=%d, task_id=%hu, task_type=%u, "
-                "sq_head=%hu, sqe_type=%u, err_type=%#x, err_code=%#x.",
+                "Receive capture model CQE, device_id=%u, model_id=%u, stream_id=%d, task_id=%hu, "
+                "task_type=" RT_ENUM_LOG_FORMAT("%u") ", sq_head=%hu, sqe_type=%u, err_type=%#x, err_code=%#x.",
                 GetDevice()->Id_(), captureModel->Id_(), reportTask->stream->Id_(), reportTask->id,
-                static_cast<uint32_t>(reportTask->type), logicCq.sqHead, static_cast<uint32_t>(logicCq.sqeType),
-                logicCq.errorType, logicCq.errorCode);
+                RT_ENUM_LOG_VALUE(static_cast<uint32_t>(reportTask->type), ReportTaskTypeName(reportTask)),
+                logicCq.sqHead, static_cast<uint32_t>(logicCq.sqeType), logicCq.errorType, logicCq.errorCode);
             captureModel->ProcessExternalRecordNormalCqe(reportTask, logicCq);
             return;
         }
@@ -1937,11 +1939,13 @@ rtError_t StarsEngine::TaskReclaimBySqHeadForSeparatedStm(Stream* const stm)
     uint32_t endTaskId = MAX_UINT16_NUM;
     if (unlikely(stm->GetFailureMode() == ABORT_ON_FAILURE)) {
         endTaskId = stm->GetLastTaskId();
+        const uint64_t failureMode = stm->GetFailureMode();
         RT_LOG(
             RT_LOG_INFO,
             "stream is in failure abort and need to reclaim all, stream_id=%d, lastTaskId=%u, "
-            "failuremode=%" PRIu64,
-            stm->Id_(), stm->GetLastTaskId(), stm->GetFailureMode());
+            "failuremode=" RT_ENUM_LOG_FORMAT("%" PRIu64),
+            stm->Id_(), stm->GetLastTaskId(),
+            RT_ENUM_LOG_VALUE(failureMode, StreamFailureModeLogToString(failureMode)));
         return RecycleSeparatedStmByFinishedId(stm, endTaskId);
     }
 

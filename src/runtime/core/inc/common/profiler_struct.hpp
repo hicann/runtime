@@ -240,6 +240,7 @@ enum rtProfApiType_t : uint32_t {
     RT_PROF_API_DIRECT_NOTIFY_RECORD = 190,
     RT_PROF_API_MAX = 200
 };
+RT_ENUM_LOG_DECLARE(RtProfApiTypeToString, uint32_t)
 
 enum rtProfDrvApiType : uint16_t {
     RT_PROF_DRV_API_BASE = static_cast<uint16_t>(RT_PROF_API_MAX) + 1U,
@@ -257,6 +258,7 @@ enum rtProfDrvApiType : uint16_t {
     RT_PROF_DRV_API_HalMemcpy2D = RT_PROF_DRV_API_BASE + 12U,    // halMemcpy2D
     RT_PROF_DRV_API_MemcpyBatch = RT_PROF_DRV_API_BASE + 13U     // halMemcpyBatch
 };
+RT_ENUM_LOG_DECLARE(ProfDrvOpLogName, uint32_t)
 
 /*
 for new data struct
@@ -289,6 +291,7 @@ enum rtProfileDataType_t : uint32_t {
 };
 
 enum StreamReportStatus : uint16_t { STREAM_STATUS_CREATE = 0U, STREAM_STATUS_DESTROY = 1U };
+RT_ENUM_LOG_DECLARE(StreamReportStatusLogName, uint32_t)
 
 enum rtProfMemMngType_t : uint16_t {
     RT_PROF_MEM_MNG_TYPE_MALLOC = 0U,

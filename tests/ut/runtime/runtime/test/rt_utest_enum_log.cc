@@ -10,6 +10,7 @@
 
 #include "common/api_enum_log.hpp"
 #include "runtime/event.h"
+#include "runtime/rt_model.h"
 #include <cstdio>
 #include <cinttypes>
 #include <type_traits>
@@ -35,10 +36,57 @@
 #include "notify/notify_enum_desc.hpp"
 #include "printf.hpp"
 #include "stream_mem_pool.hpp"
+#include "stars/stars_base.hpp"
+#include "task/task_info_base.hpp"
 
 using namespace cce::runtime;
 
 #if RUNTIME_ENABLE_ENUM_LOG_NAMES
+TEST(EnumLogNamesTest, RawValuesKeepUnknownValuesAndSentinelRules)
+{
+    EXPECT_STREQ(RtRunModeToString(static_cast<uint32_t>(RT_RUN_MODE_ONLINE)), "RUN_MODE_ONLINE");
+    EXPECT_STREQ(RtRunModeToString(UINT32_MAX), "UNKNOWN");
+    EXPECT_STREQ(RtSchemModeTypeToString(static_cast<uint32_t>(RT_SCHEM_MODE_BATCH)), "SCHEM_MODE_BATCH");
+    EXPECT_STREQ(RtSchemModeTypeToString(UINT32_MAX), "UNKNOWN");
+    EXPECT_STREQ(RtTopicTypeToString(static_cast<uint32_t>(TOPIC_TYPE_HOST_CTRL_CPU)), "TOPIC_TYPE_HOST_CTRL_CPU");
+    EXPECT_STREQ(RtTopicTypeToString(UINT32_MAX), "UNKNOWN");
+    EXPECT_STREQ(StreamFailureModeLogToString(STOP_ON_FAILURE), "STOP_ON_FAILURE");
+    EXPECT_STREQ(StreamFailureModeLogToString(3), "UNKNOWN");
+    EXPECT_STREQ(SplitModeToString(RT_NO_SPLIT_MODE), "NO_SPLIT_MODE");
+    EXPECT_STREQ(SplitModeToString(RT_SPLIT_MODE), "SPLIT_MODE");
+    EXPECT_STREQ(SplitModeToString(UINT32_MAX), "UNKNOWN");
+    EXPECT_STREQ(ProfCtrlTypeToString(RT_PROF_CTRL_INVALID), "UNKNOWN");
+    EXPECT_STREQ(ProfCtrlTypeToString(RT_PROF_CTRL_REPORTER), "PROF_CTRL_REPORTER");
+    EXPECT_STREQ(ProfCtrlTypeToString(RT_PROF_CTRL_BUTT), "UNKNOWN");
+    EXPECT_STREQ(TsAicpuModelCmdToString(TS_AICPU_MODEL_LOAD), "TS_AICPU_MODEL_LOAD");
+    EXPECT_STREQ(TsAicpuModelCmdToString(TS_AICPU_MODEL_ABORT), "TS_AICPU_MODEL_ABORT");
+    EXPECT_STREQ(TsAicpuModelCmdToString(TS_AICPU_MODEL_RESERVED), "UNKNOWN");
+}
+
+TEST(EnumLogNamesTest, TaskAndPublicKernelTypesKeepTheirOwnNames)
+{
+    EXPECT_STREQ(TsAicpuKernelTypeToString(static_cast<tsAicpuKernelType>(KERNEL_TYPE_CUSTOM_KFC)), "UNKNOWN");
+    EXPECT_STREQ(RtKernelTypeToString(KERNEL_TYPE_CUSTOM_KFC), "KERNEL_TYPE_CUSTOM_KFC");
+    EXPECT_STREQ(TsAicpuKernelTypeToString(TS_AICPU_KERNEL_AICPU_KFC), "TS_AICPU_KERNEL_AICPU_KFC");
+    EXPECT_STREQ(AicpuTaskKernelTypeToString(KERNEL_TYPE_CUSTOM_KFC), "KERNEL_TYPE_CUSTOM_KFC");
+    EXPECT_STREQ(AicpuTaskKernelTypeToString(TS_AICPU_KERNEL_AICPU_KFC), "TS_AICPU_KERNEL_AICPU_KFC");
+    EXPECT_STREQ(AicpuTaskKernelTypeToString(0x106U), "UNKNOWN");
+    EXPECT_STREQ(TsAicpuKernelTypeToString(TS_AICPU_KERNEL_RESERVED), "UNKNOWN");
+    EXPECT_STREQ(RtKernelTypeToString(KERNEL_TYPE_RESERVED), "KERNEL_TYPE_RESERVED");
+    EXPECT_STREQ(ExecutableKernelTypeToString(static_cast<uint32_t>(KERNEL_TYPE_HWTS)), "KERNEL_TYPE_HWTS");
+    EXPECT_STREQ(ExecutableKernelTypeToString(static_cast<uint32_t>(KERNEL_TYPE_RESERVED)), "UNKNOWN");
+    EXPECT_STREQ(ExecutableKernelTypeToString(UINT32_MAX), "UNKNOWN");
+}
+
+TEST(EnumLogNamesTest, AsyncCopyMethodNamesCoverAllMethods)
+{
+    EXPECT_STREQ(RtAsyncCpyMethodToString(static_cast<uint32_t>(rtAsyncCpyMethod::RT_ASYNC_CPY)), "ASYNC_CPY");
+    EXPECT_STREQ(RtAsyncCpyMethodToString(static_cast<uint32_t>(rtAsyncCpyMethod::RT_ASYNC_CPY_2D)), "ASYNC_CPY_2D");
+    EXPECT_STREQ(
+        RtAsyncCpyMethodToString(static_cast<uint32_t>(rtAsyncCpyMethod::RT_ASYNC_CPY_BATCH)), "ASYNC_CPY_BATCH");
+    EXPECT_STREQ(RtAsyncCpyMethodToString(256U), "UNKNOWN");
+}
+
 TEST(EnumLogNamesTest, UtilizationNamesIncludeUnknownSentinel)
 {
     EXPECT_EQ(std::string(RtTypeUtilToString(RT_UTIL_TYPE_AICORE)), "UTIL_TYPE_AICORE");
@@ -1037,5 +1085,19 @@ TEST(EnumLogNamesTest, TaskFailCallbackNamesKeepSentinelAndOwnedResults)
             RT_ENUM_LOG_VALUE(values[i], TaskFailCallbackTypeToString(values[i])));
         EXPECT_STREQ(buffer, expected[i]);
     }
+#endif
+}
+
+TEST(EnumLogFormatTest, RawValuePreservesOriginalWidthInBothModes)
+{
+    const uint64_t value = UINT64_C(4294967297);
+    char buffer[96] = {};
+    std::snprintf(
+        buffer, sizeof(buffer), "mode=" RT_ENUM_LOG_FORMAT("%" PRIu64) ", next=%d",
+        RT_ENUM_LOG_VALUE(value, StreamFailureModeLogToString(value)), -7);
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+    EXPECT_STREQ(buffer, "mode=UNKNOWN(4294967297), next=-7");
+#else
+    EXPECT_STREQ(buffer, "mode=4294967297, next=-7");
 #endif
 }

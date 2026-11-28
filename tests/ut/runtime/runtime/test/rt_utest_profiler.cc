@@ -5016,6 +5016,15 @@ TEST_F(ProfilerTest, ModifyTrackData_UsesStreamTsId)
 void ClearLastDlogRecordLine();
 bool DlogRecordContains(const std::string& keyword);
 
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+TEST(EnumLogNamesTest, ProfApiTypeUsesRegisteredNames)
+{
+    EXPECT_STREQ(RtProfApiTypeToString(RT_PROF_API_GET_HOST_ATOMIC_CAPABILITIES), "GetHostAtomicCapabilities");
+    EXPECT_STREQ(RtProfApiTypeToString(RT_PROF_API_BUTT), "UNKNOWN");
+    EXPECT_STREQ(RtProfApiTypeToString(UINT32_MAX), "UNKNOWN");
+}
+#endif
+
 TEST_F(ProfilerTest, RecordTypeLog_PreservesUnknownTypeAndFollowingFields)
 {
     MOCKER(CheckLogLevel).stubs().will(returnValue(1));
@@ -5030,7 +5039,7 @@ TEST_F(ProfilerTest, RecordTypeLog_PreservesUnknownTypeAndFollowingFields)
     ClearLastDlogRecordLine();
     record.PrintRecord(info);
 #if RUNTIME_ENABLE_ENUM_LOG_NAMES
-    EXPECT_TRUE(DlogRecordContains("RecordType=UNKNOWN(65535) OperationType=17 pid=23"));
+    EXPECT_TRUE(DlogRecordContains("RecordType=UNKNOWN(65535) OperationType=HostFree(17) pid=23"));
 #else
     EXPECT_TRUE(DlogRecordContains("RecordType=65535 OperationType=17 pid=23"));
 #endif
@@ -5058,7 +5067,7 @@ TEST_F(ProfilerTest, DriverRecordTypeLog_PreservesOriginalRecordDomain)
     ClearLastDlogRecordLine();
     record.PrintRecord(info);
 #if RUNTIME_ENABLE_ENUM_LOG_NAMES
-    EXPECT_TRUE(DlogRecordContains("RecordType=PROFILE_RECORD_TYPE_RT_CALL_DRV(2) OperationType=19"));
+    EXPECT_TRUE(DlogRecordContains("RecordType=PROFILE_RECORD_TYPE_RT_CALL_DRV(2) OperationType=UNKNOWN(19)"));
 #else
     EXPECT_TRUE(DlogRecordContains("RecordType=2 OperationType=19"));
 #endif
@@ -5070,6 +5079,15 @@ TEST_F(ProfilerTest, TaskTrackLog_Preserves64BitUnknownAndSimtDomain)
     MOCKER(CheckLogLevel).stubs().will(returnValue(1));
     TaskInfo task = {};
     MsprofRuntimeTrack track = {};
+    track.taskType = TS_TASK_TYPE_KERNEL_AICORE;
+    ClearLastDlogRecordLine();
+    ChangeTrackDataTaskType(track, &task);
+    EXPECT_EQ(track.taskType, static_cast<uint64_t>(TS_TASK_TYPE_KERNEL_AICORE));
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+    EXPECT_TRUE(DlogRecordContains("runtimeTrack.taskType=KERNEL_AICORE(0)"));
+#else
+    EXPECT_TRUE(DlogRecordContains("runtimeTrack.taskType=0, mixType=0"));
+#endif
     track.taskType = 4294967297ULL;
     ClearLastDlogRecordLine();
     ChangeTrackDataTaskType(track, &task);
@@ -5078,6 +5096,16 @@ TEST_F(ProfilerTest, TaskTrackLog_Preserves64BitUnknownAndSimtDomain)
     EXPECT_TRUE(DlogRecordContains("runtimeTrack.taskType=UNKNOWN(4294967297)"));
 #else
     EXPECT_TRUE(DlogRecordContains("runtimeTrack.taskType=4294967297, mixType=0"));
+#endif
+    // Narrowing this value to uint16_t would produce the known SIMT task ID (600).
+    track.taskType = 66136ULL;
+    ClearLastDlogRecordLine();
+    ChangeTrackDataTaskType(track, &task);
+    EXPECT_EQ(track.taskType, 66136ULL);
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+    EXPECT_TRUE(DlogRecordContains("runtimeTrack.taskType=UNKNOWN(66136)"));
+#else
+    EXPECT_TRUE(DlogRecordContains("runtimeTrack.taskType=66136, mixType=0"));
 #endif
     task.u.aicTaskInfo.simtParamOffset = 100U;
     ClearLastDlogRecordLine();

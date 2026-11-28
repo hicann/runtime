@@ -71,10 +71,12 @@ static void ConstructSqeForTimeoutSetTask(TaskInfo* taskInfo, void* const sqeBuf
     sqe->dest_pid = 0U;
     PrintSqe(command, "TaskTimeoutSetTask");
     RT_LOG(
-        RT_LOG_INFO, "TaskTimeoutSetTask ConstructSqe finish, topic_type=" RT_ENUM_LOG_FORMAT("%u") ", cmd_type=%u",
+        RT_LOG_INFO,
+        "TaskTimeoutSetTask ConstructSqe finish, "
+        "topic_type=" RT_ENUM_LOG_FORMAT("%u") ", cmd_type=" RT_ENUM_LOG_FORMAT("%u"),
         RT_ENUM_LOG_VALUE(
             static_cast<uint32_t>(static_cast<uint32_t>(sqe->topic_type)), "TOPIC_TYPE_DEVICE_AICPU_ONLY"),
-        sqe->usr_data.cmd_type);
+        RT_ENUM_LOG_VALUE(sqe->usr_data.cmd_type, "AICPU_TIMEOUT_CONFIG"));
 }
 #endif
 

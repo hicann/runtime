@@ -27,6 +27,7 @@
 #include "runtime/rt_external_preload.h"
 
 RT_ENUM_LOG_DECLARE(ExecutableKernelTypeToString, rtKernelType_t)
+RT_ENUM_LOG_DECLARE(ExecutableKernelTypeToString, uint32_t)
 
 namespace cce {
 namespace runtime {

@@ -1851,23 +1851,29 @@ rtError_t ElfProgram::GetKernelTypeAndMixType(
 
     COND_RETURN_INFO(
         (kernelAttrType != static_cast<rtKernelAttrType>(RT_KERNEL_ATTR_TYPE_INVALID)), RT_ERROR_NONE,
-        "Get kernel type success, kernelName=%s, funcType=%u, kernelAttrType=%s, mixType=" RT_ENUM_LOG_FORMAT("%hhu"),
-        elfkernelInfo->name, metaInfo->funcType, KernelAttrTypeToString(kernelAttrType).c_str(),
+        "Get kernel type success, kernelName=%s, "
+        "funcType=" RT_ENUM_LOG_FORMAT("%u") ", kernelAttrType=%s, mixType=" RT_ENUM_LOG_FORMAT("%hhu"),
+        elfkernelInfo->name, RT_ENUM_LOG_VALUE(metaInfo->funcType, KernelFunctionTypeToString(metaInfo->funcType)),
+        KernelAttrTypeToString(kernelAttrType).c_str(),
         RT_ENUM_LOG_VALUE(mixType, RtMixTypeToString(static_cast<RtMixType>(mixType))));
 
     GetKernelTypeAndMixTypeByName(elfkernelInfo->name, kernelAttrType, mixType);
     COND_RETURN_INFO(
         (kernelAttrType != static_cast<rtKernelAttrType>(RT_KERNEL_ATTR_TYPE_INVALID)), RT_ERROR_NONE,
-        "Get kernel type success, kernelName=%s, funcType=%u, kernelAttrType=%s, mixType=" RT_ENUM_LOG_FORMAT("%hhu"),
-        elfkernelInfo->name, metaInfo->funcType, KernelAttrTypeToString(kernelAttrType).c_str(),
+        "Get kernel type success, kernelName=%s, "
+        "funcType=" RT_ENUM_LOG_FORMAT("%u") ", kernelAttrType=%s, mixType=" RT_ENUM_LOG_FORMAT("%hhu"),
+        elfkernelInfo->name, RT_ENUM_LOG_VALUE(metaInfo->funcType, KernelFunctionTypeToString(metaInfo->funcType)),
+        KernelAttrTypeToString(kernelAttrType).c_str(),
         RT_ENUM_LOG_VALUE(mixType, RtMixTypeToString(static_cast<RtMixType>(mixType))));
 
     kernelAttrType = GetDefaultKernelAttrType();
 
     RT_LOG(
         RT_LOG_INFO,
-        "Get kernel type success, kernelName=%s, funcType=%u, kernelAttrType=%s, mixType=" RT_ENUM_LOG_FORMAT("%hhu"),
-        elfkernelInfo->name, metaInfo->funcType, KernelAttrTypeToString(kernelAttrType).c_str(),
+        "Get kernel type success, kernelName=%s, "
+        "funcType=" RT_ENUM_LOG_FORMAT("%u") ", kernelAttrType=%s, mixType=" RT_ENUM_LOG_FORMAT("%hhu"),
+        elfkernelInfo->name, RT_ENUM_LOG_VALUE(metaInfo->funcType, KernelFunctionTypeToString(metaInfo->funcType)),
+        KernelAttrTypeToString(kernelAttrType).c_str(),
         RT_ENUM_LOG_VALUE(mixType, RtMixTypeToString(static_cast<RtMixType>(mixType))));
 
     return RT_ERROR_NONE;
@@ -1905,12 +1911,15 @@ rtError_t ElfProgram::BuildNewKernel(
 
     RT_LOG(
         RT_LOG_INFO,
+        // clang-format off
         "new kernel success, size=%zu, programId=%u, original kernel_name=%s, register kernel_name=%s, "
-        "tilingKey=%llu, functionEntry=%llu, funcType=%u, kernelAttrType=%s, mixType=" RT_ENUM_LOG_FORMAT(
-            "%hu") ", taskRation=%u, "
-                   "offset=%u, dfxAddr=%#" PRIu64 ", dfxSize=%u, earlyStartEnable=%d",
+        "tilingKey=%llu, functionEntry=%llu, funcType=" RT_ENUM_LOG_FORMAT("%u")
+        ", kernelAttrType=%s, mixType=" RT_ENUM_LOG_FORMAT("%hu") ", taskRation=%u, "
+        "offset=%u, dfxAddr=%#" PRIu64 ", dfxSize=%u, earlyStartEnable=%d",
+        // clang-format on
         sizeof(Kernel), Id_(), elfkernelInfo->name, tripKernelName.c_str(), tilingKey, metaInfo->functionEntry,
-        metaInfo->funcType, KernelAttrTypeToString(kernelAttrType).c_str(),
+        RT_ENUM_LOG_VALUE(metaInfo->funcType, KernelFunctionTypeToString(metaInfo->funcType)),
+        KernelAttrTypeToString(kernelAttrType).c_str(),
         RT_ENUM_LOG_VALUE(mixType, RtMixTypeToString(static_cast<RtMixType>(mixType))), metaInfo->taskRation,
         static_cast<uint32_t>(elfkernelInfo->offset), static_cast<uint64_t>(RtPtrToPtr<uintptr_t>(metaInfo->dfxAddr)),
         metaInfo->dfxSize, metaInfo->earlyStartEnable);

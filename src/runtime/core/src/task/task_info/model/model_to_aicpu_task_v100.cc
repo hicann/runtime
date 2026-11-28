@@ -73,10 +73,13 @@ static void ConstructSqeForModelToAicpuTask(TaskInfo* taskInfo, void* const sqeB
     PrintSqe(command, "ModelToAicpuTask");
     RT_LOG(
         RT_LOG_INFO,
-        "ModelToAicpuTask::ConstructSqe finish,topic_type=" RT_ENUM_LOG_FORMAT("%u") " sqe addr=%p cmdType_=%u",
+        "ModelToAicpuTask::ConstructSqe finish,"
+        "topic_type=" RT_ENUM_LOG_FORMAT("%u") " sqe addr=%p cmdType_=" RT_ENUM_LOG_FORMAT("%u"),
         RT_ENUM_LOG_VALUE(
             static_cast<uint32_t>(static_cast<uint32_t>(sqe->topic_type)), "TOPIC_TYPE_DEVICE_AICPU_ONLY"),
-        command, taskInfo->u.modelToAicpuTask.cmdType);
+        command,
+        RT_ENUM_LOG_VALUE(
+            taskInfo->u.modelToAicpuTask.cmdType, TsAicpuModelCmdToString(taskInfo->u.modelToAicpuTask.cmdType)));
 }
 
 #endif

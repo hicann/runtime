@@ -112,10 +112,10 @@ rtError_t ConvertTaskType(const TaskInfo* const task, rtTaskType* type)
         RT_LOG(
             RT_LOG_INFO,
             "end to get task type, streamId=%d, taskId=%u, alloc taskType=" RT_ENUM_LOG_FORMAT(
-                "%d") ", taskOwner=%d, convert to rtTaskType=%s.",
+                "%d") ", taskOwner=" RT_ENUM_LOG_FORMAT("%d") ", convert to rtTaskType=%s.",
             task->stream->Id_(), task->id,
             RT_ENUM_LOG_VALUE(static_cast<int32_t>(task->type), RT_ENUM_LOG_NAME(task->typeName)),
-            static_cast<int32_t>(task->taskOwner), TaskTypeToString(*type).c_str());
+            RT_ENUM_LOG_VALUE(static_cast<int32_t>(task->taskOwner), "TASK_INNER"), TaskTypeToString(*type).c_str());
         return RT_ERROR_NONE;
     }
 
@@ -888,19 +888,22 @@ rtError_t UpdateKernelParams(TaskInfo* const taskInfo, KernelTaskUpdateInfo* con
     ERROR_RETURN(error, "PostUpdateKernelParams failed, retCode=%#x.", error);
     RT_LOG(
         RT_LOG_INFO,
+        // clang-format off
         "device_id=%u, stream_id=%d, task_id=%hu, kernelAttrType=%s, kernel_name=%s, argsType=%s, arg_size=%u, "
-        "blockDim=%u, taskRation=%u, funcType=%u, addr1=0x%llx, addr2=0x%llx, "
-        "mixType=" RT_ENUM_LOG_FORMAT(
-            "%u") ", kernelFlag=0x%x, qos=%u, partId=%u, "
-                  "schemMode=%u, infoAddr=%p, atomicIndex=%u, "
-                  "shareMemSize=%u, kernelVfType=%u, dynamicShareMemSize=%u, simtDcuSmSize=%u.",
+        "blockDim=%u, taskRation=%u, funcType=" RT_ENUM_LOG_FORMAT("%u") ", addr1=0x%llx, addr2=0x%llx, "
+        "mixType=" RT_ENUM_LOG_FORMAT("%u") ", kernelFlag=0x%x, qos=%u, partId=%u, schemMode=" RT_ENUM_LOG_FORMAT("%u")
+        ", infoAddr=%p, atomicIndex=%u, shareMemSize=%u, kernelVfType=%u, dynamicShareMemSize=%u, simtDcuSmSize=%u.",
+        // clang-format on
         dev->Id_(), stm->Id_(), taskInfo->id, KernelAttrTypeToString(kernelAttrType).c_str(), kernel->Name_().c_str(),
         KernelArgsTypeToString(kernelUpdateInfo->argsType).c_str(), argsInfo.argsSize, kernelUpdateInfo->numBlocks,
-        kernel->GetTaskRation(), kernel->GetFuncType(), kernelPc1, kernelPc2,
+        kernel->GetTaskRation(),
+        RT_ENUM_LOG_VALUE(kernel->GetFuncType(), KernelFunctionTypeToString(kernel->GetFuncType())), kernelPc1,
+        kernelPc2,
         RT_ENUM_LOG_VALUE(static_cast<uint32_t>(mixType), RtMixTypeToString(static_cast<RtMixType>(mixType))),
-        aicTask->comm.kernelFlag, aicTask->qos, aicTask->partId, aicTask->schemMode, aicTask->inputArgsSize.infoAddr,
-        aicTask->inputArgsSize.atomicIndex, kernel->ShareMemSize_(), kernel->KernelVfType_(),
-        aicTask->dynamicShareMemSize, aicTask->simtDcuSmSize);
+        aicTask->comm.kernelFlag, aicTask->qos, aicTask->partId,
+        RT_ENUM_LOG_VALUE(aicTask->schemMode, RtSchemModeTypeToString(aicTask->schemMode)),
+        aicTask->inputArgsSize.infoAddr, aicTask->inputArgsSize.atomicIndex, kernel->ShareMemSize_(),
+        kernel->KernelVfType_(), aicTask->dynamicShareMemSize, aicTask->simtDcuSmSize);
     return RT_ERROR_NONE;
 }
 
@@ -966,7 +969,10 @@ rtError_t GetKernelAttribute(
                 attrValue->schemMode = aicTaskInfo->schemMode;
             }
             RT_LOG(
-                RT_LOG_INFO, "config schemMode=%u, current schemMode=%u", aicTaskInfo->schemMode, attrValue->schemMode);
+                RT_LOG_INFO,
+                "config schemMode=" RT_ENUM_LOG_FORMAT("%u") ", current schemMode=" RT_ENUM_LOG_FORMAT("%u"),
+                RT_ENUM_LOG_VALUE(aicTaskInfo->schemMode, RtSchemModeTypeToString(aicTaskInfo->schemMode)),
+                RT_ENUM_LOG_VALUE(attrValue->schemMode, RtSchemModeTypeToString(attrValue->schemMode)));
             break;
         case RT_LAUNCH_KERNEL_ATTR_DYN_UBUF_SIZE:
             attrValue->dynUBufSize = aicTaskInfo->dynamicShareMemSize;

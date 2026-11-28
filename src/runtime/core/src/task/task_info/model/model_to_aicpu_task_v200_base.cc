@@ -8,6 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/enum_log.hpp"
+#include "stars/stars_base.hpp"
 #include "stream.hpp"
 #include "runtime.hpp"
 #include "stars_david.hpp"
@@ -65,9 +67,11 @@ static void ConstructDavidSqeForModelToAicpuTask(TaskInfo* const taskInfo, void*
     PrintDavidSqe(davidSqe, "ModelToAicpuTask");
     RT_LOG(
         RT_LOG_INFO,
-        "ModelToAicpuTask, topic_type=%u, cmd_type=%u, device_id=%u,"
-        "stream_id=%d, task_id=%hu, task_sn=%u.",
-        static_cast<uint32_t>(aicpuCtrlSqe->topicType), taskInfo->u.modelToAicpuTask.cmdType,
+        "ModelToAicpuTask, topic_type=" RT_ENUM_LOG_FORMAT("%u") ", cmd_type=" RT_ENUM_LOG_FORMAT(
+            "%u") ", device_id=%u,stream_id=%d, task_id=%hu, task_sn=%u.",
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(aicpuCtrlSqe->topicType), RtTopicTypeToString(aicpuCtrlSqe->topicType)),
+        RT_ENUM_LOG_VALUE(
+            taskInfo->u.modelToAicpuTask.cmdType, TsAicpuModelCmdToString(taskInfo->u.modelToAicpuTask.cmdType)),
         taskInfo->stream->Device_()->Id_(), stm->Id_(), taskInfo->id, taskInfo->taskSn);
     UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }

@@ -38,15 +38,17 @@ void NpuDriverRecord::PrintRecord(const rtProfileRecordSyncDrv_t& recordSyncDrv)
 {
     RT_LOG(
         RT_LOG_INFO,
-        "DrvApiCall: RecordType=" RT_ENUM_LOG_FORMAT("%u") " OperationType=%hu"
-                                                           " pid=%u tid=%u seq=%u start=%" PRIu64 " end=%" PRIu64 "",
+        // clang-format off
+        "DrvApiCall: RecordType=" RT_ENUM_LOG_FORMAT("%u") " OperationType=" RT_ENUM_LOG_FORMAT("%hu")
+        " pid=%u tid=%u seq=%u start=%" PRIu64 " end=%" PRIu64,
+        // clang-format on
         RT_ENUM_LOG_VALUE(
             static_cast<uint32_t>(recordSyncDrv.type),
             (recordSyncDrv.type <= PROFILE_RECORD_TYPE_END ?
                  RtProfileRecordTypeToString(static_cast<rtProfileRecordType_t>(recordSyncDrv.type)) :
                  "UNKNOWN")),
-        recordSyncDrv.drvOpType, recordSyncDrv.pid, recordSyncDrv.tid, recordSyncDrv.seqId, recordSyncDrv.startStamp,
-        recordSyncDrv.endStamp);
+        RT_ENUM_LOG_VALUE(recordSyncDrv.drvOpType, ProfDrvOpLogName(recordSyncDrv.drvOpType)), recordSyncDrv.pid,
+        recordSyncDrv.tid, recordSyncDrv.seqId, recordSyncDrv.startStamp, recordSyncDrv.endStamp);
     return;
 }
 

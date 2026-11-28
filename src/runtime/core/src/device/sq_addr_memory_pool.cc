@@ -32,7 +32,6 @@ constexpr uint32_t SQ_ADDR_MAX_ITEM_2M = 4096U;
 
 namespace cce {
 namespace runtime {
-
 static uint32_t g_orderMemSizes[SQ_ADDR_MEM_ORDER_TYPE_MAX] = {
     SQ_ADDR_ITEM_SIZE_32K,  SQ_ADDR_ITEM_SIZE_64K, SQ_ADDR_ITEM_SIZE_128K, SQ_ADDR_ITEM_SIZE_256K,
     SQ_ADDR_ITEM_SIZE_512K, SQ_ADDR_ITEM_SIZE_1M,  SQ_ADDR_ITEM_SIZE_2M,
@@ -94,7 +93,9 @@ BufferAllocator* SqAddrMemoryOrder::FindSqMemPoolByMemOrderType(const uint32_t m
         return pair.first == memOrderType;
     });
     if (it != sqAddrAllocators_.end()) {
-        RT_LOG(RT_LOG_DEBUG, "Find memOrderType=%u, it=%p", memOrderType, it->second);
+        RT_LOG(
+            RT_LOG_DEBUG, "Find memOrderType=" RT_ENUM_LOG_FORMAT("%u") ", it=%p",
+            RT_ENUM_LOG_VALUE(memOrderType, SqAddrMemOrderTypeToString(memOrderType)), it->second);
         return it->second;
     }
 
@@ -113,7 +114,9 @@ BufferAllocator* SqAddrMemoryOrder::SetUp(const uint32_t memOrderType)
         {SQ_ADDR_ITEM_SIZE_1M, SQ_ADDR_ITEM_HUGE_PAGE_SIZE / SQ_ADDR_ITEM_SIZE_1M, SQ_ADDR_MAX_ITEM_1M},
         {SQ_ADDR_ITEM_SIZE_2M, SQ_ADDR_ITEM_HUGE_PAGE_SIZE / SQ_ADDR_ITEM_SIZE_2M, SQ_ADDR_MAX_ITEM_2M}};
 
-    RT_LOG(RT_LOG_DEBUG, "SetUp sq addr memory order memOrderType=%u", memOrderType);
+    RT_LOG(
+        RT_LOG_DEBUG, "SetUp sq addr memory order memOrderType=" RT_ENUM_LOG_FORMAT("%u"),
+        RT_ENUM_LOG_VALUE(memOrderType, SqAddrMemOrderTypeToString(memOrderType)));
     if (memOrderType >= SQ_ADDR_MEM_ORDER_TYPE_MAX) {
         return nullptr;
     }
@@ -163,7 +166,9 @@ void SqAddrMemoryOrder::DrvFreeSqAddr(void* const addr, void* const para)
 
 rtError_t SqAddrMemoryOrder::AllocSqAddr(const uint32_t memOrderType, uint64_t** sqAddr)
 {
-    RT_LOG(RT_LOG_DEBUG, "memOrderType=%d", memOrderType);
+    RT_LOG(
+        RT_LOG_DEBUG, "memOrderType=" RT_ENUM_LOG_FORMAT("%d"),
+        RT_ENUM_LOG_VALUE(static_cast<int32_t>(memOrderType), SqAddrMemOrderTypeToString(memOrderType)));
     if (sqAddr == nullptr) {
         return RT_ERROR_INVALID_VALUE;
     }
@@ -187,7 +192,9 @@ rtError_t SqAddrMemoryOrder::AllocSqAddr(const uint32_t memOrderType, uint64_t**
 
 rtError_t SqAddrMemoryOrder::FreeSqAddr(const uint64_t* sqAddr, const uint32_t memOrderType)
 {
-    RT_LOG(RT_LOG_DEBUG, "memOrderType=%d", memOrderType);
+    RT_LOG(
+        RT_LOG_DEBUG, "memOrderType=" RT_ENUM_LOG_FORMAT("%d"),
+        RT_ENUM_LOG_VALUE(static_cast<int32_t>(memOrderType), SqAddrMemOrderTypeToString(memOrderType)));
     if ((sqAddr == nullptr) || (memOrderType >= SQ_ADDR_MEM_ORDER_TYPE_MAX)) {
         return RT_ERROR_INVALID_VALUE;
     }

@@ -13,7 +13,6 @@
 
 // Internal host logging helpers and declaration macros for enum owners.
 
-#include <cstdint>
 #include "enum_log.h"
 
 #if defined(__GNUC__) || defined(__clang__)

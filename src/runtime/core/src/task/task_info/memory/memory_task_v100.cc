@@ -8,7 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#include "common/enum_log.hpp"
+#include "common/api_enum_log.hpp"
 #include "task/task_base.hpp"
 #include "runtime/base.h"
 #include "task_info_v100.h"
@@ -38,6 +38,7 @@ constexpr uint8_t MEM_WAIT_SQE_INDEX_0 = 0U;
 constexpr uint8_t MEM_WAIT_SQE_INDEX_1 = 1U;
 constexpr uint8_t MEM_WAIT_SQE_INDEX_2 = 2U;
 constexpr uint8_t MEM_WAIT_SQE_INDEX_3 = 3U;
+
 } // namespace
 
 #if F_DESC("MemcpyAsyncTask")
@@ -347,16 +348,19 @@ static void ConstructMemcpySqe(TaskInfo* const taskInfo, rtStarsSqe_t* const com
     }
     RT_LOG(
         RT_LOG_INFO,
-        "ConstructSqe size=%llu bytes, qos=%u, partid=%u, copyType=" RT_ENUM_LOG_FORMAT(
-            "%u") ", kernelCredit=%u, dstSubStreamId=%u, "
-                  "copyKind=%u, Opcode=0x%x, taskType=" RT_ENUM_LOG_FORMAT("%d") ".",
+        // clang-format off
+        "ConstructSqe size=%llu bytes, qos=%u, partid=%u, copyType=" RT_ENUM_LOG_FORMAT("%u")
+        ", kernelCredit=%u, dstSubStreamId=%u, copyKind=" RT_ENUM_LOG_FORMAT("%u")
+        ", Opcode=0x%x, taskType=" RT_ENUM_LOG_FORMAT("%d") ".",
+        // clang-format on
         memcpyAsyncTaskInfo->size, sqe->qos, sqe->partid,
         RT_ENUM_LOG_VALUE(
             static_cast<uint32_t>(copyType),
             (copyType <= RT_MEMCPY_DIR_SDMA_AUTOMATIC_EQUAL ?
                  RtMemCopyAsyncDirectToString(static_cast<rtMemCopyAsyncDirect>(copyType)) :
                  "UNKNOWN")),
-        sqe->kernelCredit, static_cast<uint32_t>(sqe->dstSubStreamId), static_cast<uint32_t>(copyKind),
+        sqe->kernelCredit, static_cast<uint32_t>(sqe->dstSubStreamId),
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(copyKind), MemcpyOrReduceKindToString(copyKind)),
         static_cast<uint32_t>(sqe->opcode),
         RT_ENUM_LOG_VALUE(static_cast<int32_t>(taskInfo->type), RT_ENUM_LOG_NAME(taskInfo->typeName)));
     PrintSqe(command, "sdmaTask");
@@ -809,8 +813,11 @@ void ConstructSqeForCaptureExternalRecordTask(TaskInfo* taskInfo, void* const sq
             command[1].commonSqe.sqeHeader.wr_cqe = (writeValueTask->cqeFlag == TASK_WR_CQE_NEVER) ? 0U : 1U;
         }
         RT_LOG(
-            RT_LOG_INFO, "stream_id=%d, task_id=%hu, cqeFlag=%u, wrCqe=%u.", taskInfo->stream->Id_(), taskInfo->id,
-            writeValueTask->cqeFlag, command[1].commonSqe.sqeHeader.wr_cqe);
+            RT_LOG_INFO, "stream_id=%d, task_id=%hu, cqeFlag=" RT_ENUM_LOG_FORMAT("%u") ", wrCqe=%u.",
+            taskInfo->stream->Id_(), taskInfo->id,
+            RT_ENUM_LOG_VALUE(
+                static_cast<uint32_t>(writeValueTask->cqeFlag), TaskWrCqeFlagToString(writeValueTask->cqeFlag)),
+            command[1].commonSqe.sqeHeader.wr_cqe);
     }
 }
 

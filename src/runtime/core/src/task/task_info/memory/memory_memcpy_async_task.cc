@@ -747,8 +747,12 @@ bool NeedUpdateMemcpyTaskInfoForSnapshot(const TaskInfo* const taskInfo)
     }
 
     RT_LOG(
-        RT_LOG_DEBUG, "Skip snapshot dma update for memcpy task, stream_id=%d, task_id=%hu, copyMethod=%u.",
-        taskInfo->stream->Id_(), taskInfo->id, static_cast<uint32_t>(memcpyAsyncTaskInfo->copyMethod));
+        RT_LOG_DEBUG,
+        "Skip snapshot dma update for memcpy task, stream_id=%d, task_id=%hu, copyMethod=" RT_ENUM_LOG_FORMAT("%u") ".",
+        taskInfo->stream->Id_(), taskInfo->id,
+        RT_ENUM_LOG_VALUE(
+            static_cast<uint32_t>(memcpyAsyncTaskInfo->copyMethod),
+            RtAsyncCpyMethodToString(memcpyAsyncTaskInfo->copyMethod)));
     return false;
 }
 

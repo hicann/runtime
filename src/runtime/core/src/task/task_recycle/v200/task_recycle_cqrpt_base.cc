@@ -392,11 +392,11 @@ rtError_t ProcReport(
         if ((captureModel != nullptr) && (!ProcReportIsException(report))) {
             RT_LOG(
                 RT_LOG_INFO,
-                "Receive capture model CQE, device_id=%u, model_id=%u, stream_id=%d, task_id=%hu, task_type=%u, "
-                "sq_head=%hu, sqe_type=%u, err_type=%#x, err_code=%#x.",
+                "Receive capture model CQE, device_id=%u, model_id=%u, stream_id=%d, task_id=%hu, "
+                "task_type=" RT_ENUM_LOG_FORMAT("%u") ", sq_head=%hu, sqe_type=%u, err_type=%#x, err_code=%#x.",
                 dev->Id_(), captureModel->Id_(), reportTask->stream->Id_(), reportTask->id,
-                static_cast<uint32_t>(reportTask->type), report.sqHead, static_cast<uint32_t>(report.sqeType),
-                report.errorType, report.errorCode);
+                RT_ENUM_LOG_VALUE(static_cast<uint32_t>(reportTask->type), RT_ENUM_LOG_NAME(reportTask->typeName)),
+                report.sqHead, static_cast<uint32_t>(report.sqeType), report.errorType, report.errorCode);
             captureModel->ProcessExternalRecordNormalCqe(reportTask, report);
             isFinished = false;
             hasCqeReportErr = false;

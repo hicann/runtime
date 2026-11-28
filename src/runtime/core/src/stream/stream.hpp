@@ -106,6 +106,7 @@ typedef enum TagStreamFailureMode {
     STOP_ON_FAILURE = 1U,
     ABORT_ON_FAILURE = 2U,
 } TsStreamFailureMode;
+RT_ENUM_LOG_DECLARE(StreamFailureModeLogToString, uint64_t)
 
 enum class StreamStateCallback : uint8_t {
     RT_STREAM_STATE_CALLBACK = 0,

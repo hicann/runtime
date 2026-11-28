@@ -9,6 +9,7 @@
  */
 
 #include "base.hpp"
+#include "common/enum_log.hpp"
 #include "base_info.hpp"
 #include "internal_error_define.hpp"
 #include "stars_david.hpp"
@@ -112,8 +113,10 @@ static rtError_t CheckLaunchCfg(const LaunchTaskCfgInfo_t* const launchTaskCfg)
     }
 
     RT_LOG(
-        RT_LOG_DEBUG, "Launch kernel, blockDim=%u, groupDim=%u, groupBlockDim=%u, schemMode=%hhu.", blockDim, groupDim,
-        groupBlockDim, launchTaskCfg->schemMode);
+        RT_LOG_DEBUG,
+        "Launch kernel, blockDim=%u, groupDim=%u, groupBlockDim=%u, schemMode=" RT_ENUM_LOG_FORMAT("%hhu") ".",
+        blockDim, groupDim, groupBlockDim,
+        RT_ENUM_LOG_VALUE(launchTaskCfg->schemMode, RtSchemModeTypeToString(launchTaskCfg->schemMode)));
     return RT_ERROR_NONE;
 }
 

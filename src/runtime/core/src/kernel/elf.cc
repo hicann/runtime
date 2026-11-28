@@ -9,6 +9,7 @@
  */
 #include "enum_desc.hpp"
 #include "elf.hpp"
+#include "common/enum_log.hpp"
 #include <cstdlib>
 #include "securec.h"
 #include "logger.hpp"
@@ -1255,20 +1256,24 @@ rtError_t UpdateKernelsInfo(
 
         RT_LOG(
             RT_LOG_INFO,
-            "update meta info, kernel_name=%s, dfxAddr=0x%llx, dfxSize=%u, funcType=%u, "
-            "elfDataFlag=%d, userArgsNum=%hu, crossCoreSync=%u, kernelVfType=%u, shareMemSize=%u, "
-            "minStackSize=%u, funcEntryType=" RT_ENUM_LOG_FORMAT(
-                "%u") ", functionEntry=%lu, schedMode=%u, "
-                      "taskRation_0=%hu, taskRation_1=%hu, hasParamSummary=%d, paramCount=%u, paramTotalSize=%llu, "
-                      "earlyStartEnable=%d.",
-            kernels[index].name, metaInfo->dfxAddr, metaInfo->dfxSize, metaInfo->funcType, metaInfo->elfDataFlag,
-            metaInfo->userArgsNum, metaInfo->crossCoreSync, metaInfo->kernelVfType, metaInfo->shareMemSize,
-            metaInfo->minStackSize,
+            // clang-format off
+            "update meta info, kernel_name=%s, dfxAddr=0x%llx, dfxSize=%u, funcType=" RT_ENUM_LOG_FORMAT("%u")
+            ", elfDataFlag=%d, userArgsNum=%hu, crossCoreSync=%u, kernelVfType=%u, shareMemSize=%u, "
+            "minStackSize=%u, funcEntryType=" RT_ENUM_LOG_FORMAT("%u") ", functionEntry=%lu, schedMode="
+            RT_ENUM_LOG_FORMAT("%u") ", taskRation_0=%hu, taskRation_1=%hu, hasParamSummary=%d, "
+            "paramCount=%u, paramTotalSize=%llu, earlyStartEnable=%d.",
+            // clang-format on
+            kernels[index].name, metaInfo->dfxAddr, metaInfo->dfxSize,
+            RT_ENUM_LOG_VALUE(metaInfo->funcType, KernelFunctionTypeToString(metaInfo->funcType)),
+            metaInfo->elfDataFlag, metaInfo->userArgsNum, metaInfo->crossCoreSync, metaInfo->kernelVfType,
+            metaInfo->shareMemSize, metaInfo->minStackSize,
             RT_ENUM_LOG_VALUE(
                 static_cast<uint32_t>(metaInfo->funcEntryType),
                 KernelFunctionEntryTypeToString(metaInfo->funcEntryType)),
-            metaInfo->functionEntry, metaInfo->schedMode, iter->second->taskRation[0], iter->second->taskRation[1],
-            metaInfo->hasParamSummary, metaInfo->paramCount, metaInfo->paramTotalSize, metaInfo->earlyStartEnable);
+            metaInfo->functionEntry,
+            RT_ENUM_LOG_VALUE(metaInfo->schedMode, RtSchemModeTypeToString(metaInfo->schedMode)),
+            iter->second->taskRation[0], iter->second->taskRation[1], metaInfo->hasParamSummary, metaInfo->paramCount,
+            metaInfo->paramTotalSize, metaInfo->earlyStartEnable);
 
         // section no taskRation && not support mix ratio
         if (((iter->second->taskRation[0] == 0U) && (iter->second->taskRation[1] == 0U)) ||

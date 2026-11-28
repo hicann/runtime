@@ -12,6 +12,7 @@
 
 #if RUNTIME_ENABLE_ENUM_LOG_NAMES
 #include "enum_log_impl.hpp"
+#include "runtime/rt_model.h"
 
 // Public enums stay as ordinary declarations; log-only metadata is private to this translation unit.
 #define RT_FUSION_SCHEM_MODE_META(X)             \
@@ -89,6 +90,13 @@
 #define RT_MODEL_QUEUE_FLAG_META(X)              \
     X(RT_MODEL_INPUT_QUEUE, "MODEL_INPUT_QUEUE") \
     X(RT_MODEL_OUTPUT_QUEUE, "MODEL_OUTPUT_QUEUE")
+
+#define RT_TS_AICPU_MODEL_CMD_META(X)                   \
+    X(TS_AICPU_MODEL_LOAD, "TS_AICPU_MODEL_LOAD")       \
+    X(TS_AICPU_MODEL_EXECUTE, "TS_AICPU_MODEL_EXECUTE") \
+    X(TS_AICPU_MODEL_DESTROY, "TS_AICPU_MODEL_DESTROY") \
+    X(TS_AICPU_MODEL_ABORT, "TS_AICPU_MODEL_ABORT")     \
+    X(TS_AICPU_MODEL_RESERVED, "UNKNOWN")
 
 #define RT_TASK_BUFFER_TYPE_META(X)                                          \
     X(HWTS_STATIC_TASK_DESC, "HWTS_STATIC_TASK_DESC")   /**< static task */  \
@@ -214,6 +222,8 @@ RT_ENUM_STRING_IMPL(
 
 RT_ENUM_STRING_IMPL(RtRunModeToString, rtRunMode, RT_RUN_MODE_META, RT_ENUM_STRING_CASE, uint32_t, "UNKNOWN")
 
+RT_ENUM_STRING_FROM_VALUE(RtRunModeToString, rtRunMode, RT_RUN_MODE_META, uint32_t)
+
 RT_ENUM_STRING_IMPL(
     RtEventStatusToString, rtEventStatus_t, RT_EVENT_STATUS_META, RT_ENUM_STRING_CASE, int32_t, "UNKNOWN")
 
@@ -224,6 +234,11 @@ const char* ExecutableKernelTypeToString(rtKernelType_t value) noexcept
 {
     // RESERVED is not an executable task kernel type.
     return (value == KERNEL_TYPE_RESERVED) ? "UNKNOWN" : RtKernelTypeToString(value);
+}
+
+const char* ExecutableKernelTypeToString(uint32_t value) noexcept
+{
+    return (value < KERNEL_TYPE_RESERVED) ? RtKernelTypeToString(static_cast<rtKernelType_t>(value)) : "UNKNOWN";
 }
 
 RT_ENUM_STRING_IMPL(
@@ -248,6 +263,8 @@ RT_ENUM_STRING_TO_STRING_U32(RtMemcpyKindToString, rtMemcpyKind_t, RT_MEMCPY_OR_
 
 RT_ENUM_STRING_TO_STRING(RtModelQueueFlagToString, rtModelQueueFlag_t, RT_MODEL_QUEUE_FLAG_META)
 
+RT_ENUM_STRING_FROM_VALUE(TsAicpuModelCmdToString, tsAicpuModelCmd, RT_TS_AICPU_MODEL_CMD_META, uint32_t)
+
 RT_ENUM_STRING_TO_STRING(RtTaskBuffTypeToString, rtTaskBuffType_t, RT_TASK_BUFFER_TYPE_META)
 
 RT_ENUM_STRING_TO_STRING_U32(RtTaskTypeToString, rtTaskType_t, RT_PRELOAD_TASK_TYPE_META)
@@ -255,6 +272,8 @@ RT_ENUM_STRING_TO_STRING_U32(RtTaskTypeToString, rtTaskType_t, RT_PRELOAD_TASK_T
 RT_ENUM_STRING_TO_STRING(RtExceptionExpandTypeToString, rtExceptionExpandType_t, RT_EXCEPTION_EXPAND_TYPE_META)
 
 RT_ENUM_STRING_TO_STRING_U32(RtSchemModeTypeToString, rtschemModeType_t, RT_FUSION_SCHEM_MODE_META)
+
+RT_ENUM_STRING_FROM_VALUE(RtSchemModeTypeToString, rtschemModeType_t, RT_FUSION_SCHEM_MODE_META, uint32_t)
 
 RT_ENUM_STRING_TO_STRING(RtTypeUtilToString, rtTypeUtil_t, RT_UTILIZATION_TYPE_META)
 

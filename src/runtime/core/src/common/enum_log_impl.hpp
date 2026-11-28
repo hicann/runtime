@@ -12,6 +12,7 @@
 #define CCE_RUNTIME_ENUM_LOG_IMPL_HPP
 
 #include "common/enum_log.hpp"
+#include <type_traits>
 
 // Private implementation macros; keep metadata and generated functions in source files.
 #define RT_ENUM_STRING_CASE(symbol, text) \
@@ -22,6 +23,9 @@
         return text;
 #define RT_ENUM_LOG_I64_CASE(symbol, text)          \
     case static_cast<int64_t>(EnumLogType::symbol): \
+        return text;
+#define RT_ENUM_STRING_VALUE_CASE(symbol, text)                                     \
+    case static_cast<std::underlying_type<EnumLogType>::type>(EnumLogType::symbol): \
         return text;
 
 #if RUNTIME_ENABLE_ENUM_LOG_NAMES
@@ -46,6 +50,9 @@
 // Compare raw diagnostic values without narrowing them to the enum type.
 #define RT_ENUM_STRING_TO_STRING_I64(funcName, enumType, metaTable) \
     RT_ENUM_STRING_IMPL_TYPED(funcName, int64_t, enumType, metaTable, RT_ENUM_LOG_I64_CASE, int64_t, "UNKNOWN")
+// Compare the original integer; convert only the named case constants.
+#define RT_ENUM_STRING_FROM_VALUE(funcName, enumType, metaTable, valueType) \
+    RT_ENUM_STRING_IMPL_TYPED(funcName, valueType, enumType, metaTable, RT_ENUM_STRING_VALUE_CASE, valueType, "UNKNOWN")
 
 #endif // RUNTIME_ENABLE_ENUM_LOG_NAMES
 

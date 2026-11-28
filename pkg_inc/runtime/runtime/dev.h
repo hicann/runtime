@@ -57,6 +57,7 @@ typedef enum tagRtRunMode {
     RT_RUN_MODE_RESERVED
 } rtRunMode;
 RT_ENUM_LOG_DECLARE(RtRunModeToString, rtRunMode)
+RT_ENUM_LOG_DECLARE(RtRunModeToString, uint32_t)
 
 typedef enum tagRtAicpuDeployType {
     AICPU_DEPLOY_CROSS_OS = 0x0,

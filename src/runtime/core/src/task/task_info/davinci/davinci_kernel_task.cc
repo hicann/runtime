@@ -9,6 +9,7 @@
  */
 
 #include "common/enum_log.hpp"
+#include "runtime/kernel.h"
 #include "runtime/base.h"
 #include "davinci_kernel_task.h"
 #include "stream.hpp"
@@ -333,11 +334,11 @@ void ToCommandBodyForAicAivTask(TaskInfo* taskInfo, rtCommand_t* const command)
 
     RT_LOG(
         RT_LOG_DEBUG,
-        "funcAddr=%#" PRIx64 ", args=%#" PRIx64
-        ", isConvertAddr=%u, kernelFlag=%u, schemMode=%u, taskType=" RT_ENUM_LOG_FORMAT("%u") ".",
+        "funcAddr=%#" PRIx64 ", args=%#" PRIx64 ", isConvertAddr=%u, kernelFlag=%u, "
+        "schemMode=" RT_ENUM_LOG_FORMAT("%u") ", taskType=" RT_ENUM_LOG_FORMAT("%u") ".",
         command->u.kernelTask.funcPtr, command->u.kernelTask.funcDesc,
         static_cast<uint32_t>(command->u.kernelTask.isConvertAddr), static_cast<uint32_t>(aicTaskInfo->comm.kernelFlag),
-        command->u.kernelTask.schemMode,
+        RT_ENUM_LOG_VALUE(command->u.kernelTask.schemMode, RtSchemModeTypeToString(command->u.kernelTask.schemMode)),
         RT_ENUM_LOG_VALUE(static_cast<uint32_t>(taskInfo->type), RT_ENUM_LOG_NAME(taskInfo->typeName)));
 }
 
@@ -365,11 +366,13 @@ void ToCommandBodyForAicpuTask(TaskInfo* taskInfo, rtCommand_t* const command)
 
     RT_LOG(
         RT_LOG_DEBUG,
+        // clang-format off
         "Set aicpu: kernel type[" RT_ENUM_LOG_FORMAT("%u") "], so name[%" PRIu64 "], kernel name[%" PRIu64 "], "
-                                                           "args=%#" PRIx64 ", isConvertAddr=%u, kernelFlag=%u.",
+        "args=%#" PRIx64 ", isConvertAddr=%u, kernelFlag=%u.",
+        // clang-format on
         RT_ENUM_LOG_VALUE(
             static_cast<uint32_t>(aicpuTaskInfo->aicpuKernelType),
-            TsAicpuKernelTypeToString(static_cast<tsAicpuKernelType>(aicpuTaskInfo->aicpuKernelType))),
+            AicpuTaskKernelTypeToString(aicpuTaskInfo->aicpuKernelType)),
         command->u.kernelTask.literalSrcAddr, command->u.kernelTask.funcPtr, command->u.kernelTask.funcDesc,
         static_cast<uint32_t>(command->u.kernelTask.isConvertAddr),
         static_cast<uint32_t>(aicpuTaskInfo->comm.kernelFlag));

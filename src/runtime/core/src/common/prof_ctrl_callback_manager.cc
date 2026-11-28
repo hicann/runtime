@@ -9,12 +9,14 @@
  */
 
 #include "prof_ctrl_callback_manager.hpp"
+#include "common/enum_log.hpp"
 #include "runtime.hpp"
 #include "error_message_manage.hpp"
 #include "profiling_agent.hpp"
 
 namespace cce {
 namespace runtime {
+
 ProfCtrlCallbackManager& ProfCtrlCallbackManager::Instance()
 {
     static ProfCtrlCallbackManager instance;
@@ -40,7 +42,9 @@ void ProfCtrlCallbackManager::SaveProfSwitchData(const rtProfCommandHandle_t* co
 void ProfCtrlCallbackManager::NotifyOneModule(
     const uint32_t moduleId, const uint32_t dataType, void* const data, const uint32_t dataLen)
 {
-    RT_LOG(RT_LOG_DEBUG, "notify moduleId:%u, dataType:%u, dataLen:%u.", moduleId, dataType, dataLen);
+    RT_LOG(
+        RT_LOG_DEBUG, "notify moduleId:%u, dataType:" RT_ENUM_LOG_FORMAT("%u") ", dataLen:%u.", moduleId,
+        RT_ENUM_LOG_VALUE(dataType, ProfCtrlTypeToString(dataType)), dataLen);
     rtProfCtrlHandle callback = nullptr;
     {
         const std::unique_lock<std::mutex> cbMapLock(mapMutex_);
@@ -51,7 +55,9 @@ void ProfCtrlCallbackManager::NotifyOneModule(
     }
     if (callback != nullptr) {
         callback(dataType, data, dataLen);
-        RT_LOG(RT_LOG_DEBUG, "notify moduleId:%u dataType:%u.", moduleId, dataType);
+        RT_LOG(
+            RT_LOG_DEBUG, "notify moduleId:%u dataType:" RT_ENUM_LOG_FORMAT("%u") ".", moduleId,
+            RT_ENUM_LOG_VALUE(dataType, ProfCtrlTypeToString(dataType)));
     }
 }
 
@@ -95,7 +101,9 @@ rtError_t ProfCtrlCallbackManager::RegProfCtrlCallback(const uint32_t moduleId, 
 
 void ProfCtrlCallbackManager::Notify(const uint32_t dataType, void* const data, const uint32_t dataLen)
 {
-    RT_LOG(RT_LOG_DEBUG, "notify dataType:%u dataLen:%u.", dataType, dataLen);
+    RT_LOG(
+        RT_LOG_DEBUG, "notify dataType:" RT_ENUM_LOG_FORMAT("%u") " dataLen:%u.",
+        RT_ENUM_LOG_VALUE(dataType, ProfCtrlTypeToString(dataType)), dataLen);
     // Avoid callback function use long time lock,so copy to tmp map to call callback function.
     std::map<std::uint32_t, rtProfCtrlHandle> notifyMap;
     {

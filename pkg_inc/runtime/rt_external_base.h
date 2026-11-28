@@ -128,6 +128,7 @@ typedef enum schemModeType {
     RT_SCHEM_MODE_END
 } rtschemModeType_t;
 RT_ENUM_LOG_DECLARE_IN_NAMESPACE(RtSchemModeTypeToString, rtschemModeType_t)
+RT_ENUM_LOG_DECLARE_IN_NAMESPACE(RtSchemModeTypeToString, uint32_t)
 
 typedef enum tagSysParamOpt {
     SYS_OPT_DETERMINISTIC = 0,       // value: 0:disable, 1:deterministic, 2:strong consistency, 3:batch consistency
@@ -481,6 +482,7 @@ typedef enum {
     RT_PROF_CTRL_REPORTER,
     RT_PROF_CTRL_BUTT
 } rtProfCtrlType_t;
+RT_ENUM_LOG_DECLARE_IN_NAMESPACE(ProfCtrlTypeToString, uint32_t)
 
 /**
  * @ingroup profiling_base
@@ -600,7 +602,7 @@ RTS_API rtError_t rtGetSocSpec(const char* label, const char* key, char* val, co
 // clang-format on
 enum { rt_ext_base_common_end_line_guard_ = __LINE__ }; // CCE_RUNTIME_BASE_COMMON_DATA END
 RT_STATIC_ASSERT(
-    ((rt_ext_base_common_end_line_guard_ - rt_ext_base_common_begin_line_guard_) == 561),
+    ((rt_ext_base_common_end_line_guard_ - rt_ext_base_common_begin_line_guard_) == 563),
     "Inside CCE_RUNTIME_BASE_COMMON_DATA is the data shared between rt_external_base.h and base.h. "
     "Adding data structures is not allowed; please add them outside the macro definition.");
 

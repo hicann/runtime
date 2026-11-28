@@ -27,6 +27,13 @@
     X(KERNEL_FUNCTION_TYPE_AIV_ROLLBACK, "KERNEL_FUNCTION_TYPE_AIV_ROLLBACK") \
     X(KERNEL_FUNCTION_TYPE_MAX, "UNKNOWN")
 
+#define RT_PROF_TASK_TYPE_META(X)                                               \
+    X(PROF_TASK_TYPE_KERNEL_SIMT, "PROF_TASK_TYPE_KERNEL_SIMT")                 \
+    X(PROF_TASK_TYPE_MODEL_WAIT_COMPLETE, "PROF_TASK_TYPE_MODEL_WAIT_COMPLETE") \
+    X(PROF_TASK_TYPE_NOTIFY_RESET, "PROF_TASK_TYPE_NOTIFY_RESET")               \
+    X(PROF_TASK_TYPE_COUNT_NOTIFY_RECORD, "PROF_TASK_TYPE_COUNT_NOTIFY_RECORD") \
+    X(PROF_TASK_TYPE_COUNT_NOTIFY_WAIT, "PROF_TASK_TYPE_COUNT_NOTIFY_WAIT")
+
 namespace cce {
 namespace runtime {
 
@@ -43,6 +50,10 @@ const char* TsTaskTypeToString(const tsTaskType_t value) noexcept
 }
 
 RT_ENUM_STRING_TO_STRING_U32(KernelFunctionTypeToString, KernelFunctionType, RT_KERNEL_FUNCTION_TYPE_META)
+
+RT_ENUM_STRING_FROM_VALUE(KernelFunctionTypeToString, KernelFunctionType, RT_KERNEL_FUNCTION_TYPE_META, uint32_t)
+
+RT_ENUM_STRING_FROM_VALUE(ProfTaskTypeToString, ProfTaskType, RT_PROF_TASK_TYPE_META, uint64_t)
 
 } // namespace runtime
 } // namespace cce

@@ -41,11 +41,16 @@ void DebugDumpRingState(
         return;
     }
     lastDump = now;
+    [[maybe_unused]] const TaskQueueStatus hostStatus = barQueue->hostStatus;
+    [[maybe_unused]] const TaskQueueStatus deviceStatus = barQueue->deviceStatus;
     RT_LOG(
         RT_LOG_DEBUG,
-        "CC ring dump [%s] worker=%u hostStatus=%d deviceStatus=%d complete=%u head=%u tail=%u depth=%u "
-        "descSize=%u expect=%u",
-        where, workerId, static_cast<int32_t>(barQueue->hostStatus), static_cast<int32_t>(barQueue->deviceStatus),
+        // clang-format off
+        "CC ring dump [%s] worker=%u hostStatus=" RT_ENUM_LOG_FORMAT("%d") " deviceStatus=" RT_ENUM_LOG_FORMAT("%d")
+        " complete=%u head=%u tail=%u depth=%u descSize=%u expect=%u",
+        // clang-format on
+        where, workerId, RT_ENUM_LOG_VALUE(static_cast<int32_t>(hostStatus), TaskQueueStatusToString(hostStatus)),
+        RT_ENUM_LOG_VALUE(static_cast<int32_t>(deviceStatus), TaskQueueStatusToString(deviceStatus)),
         barQueue->complete, barQueue->head, barQueue->tail, barQueue->depth, barQueue->taskDescSize, expectSlices);
 }
 

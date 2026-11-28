@@ -14,10 +14,14 @@
 #include <stdint.h>
 
 #include "base.hpp"         // Runtime API
+#include "common/enum_log.h"
 #include "task_queue_abi.h" // 跨端 ABI：机密 Task Queue 下发契约
 
 namespace cce {
 namespace runtime {
+
+// Host-side log names for enum TaskQueueStatus from task_queue_abi.h.
+RT_ENUM_LOG_DECLARE(TaskQueueStatusToString, uint32_t)
 
 class Device;
 

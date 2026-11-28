@@ -11,6 +11,7 @@
 #include "driver/ascend_hal.h"
 #include "driver/ascend_inpackage_hal.h"
 #include "task.hpp"
+#include "fast_recover.hpp"
 #include "runtime.hpp"
 #include "errcode_manage.hpp"
 #include "error_message_manage.hpp"
@@ -228,8 +229,8 @@ rtError_t NpuDriver::GetRasSyscnt(const uint32_t deviceId, RtHbmRasInfo* hbmRasI
     constexpr int32_t moduleType = RT_MODULE_TYPE_MEMORY;
     int32_t size = sizeof(RtHbmRasInfo);
     RT_LOG(
-        RT_LOG_INFO, "get hbm ras syscnt begin, device_id=%u, moduleType=%d, infoType=%d", deviceId, moduleType,
-        infoType);
+        RT_LOG_INFO, "get hbm ras syscnt begin, device_id=%u, moduleType=" RT_ENUM_LOG_FORMAT("%d") ", infoType=%d",
+        deviceId, RT_ENUM_LOG_VALUE(moduleType, "MODULE_TYPE_MEMORY"), infoType);
     drvRet = halGetDeviceInfoByBuff(deviceId, moduleType, infoType, static_cast<void*>(hbmRasInfo), &size);
     COND_RETURN_WARN(
         drvRet == DRV_ERROR_NOT_SUPPORT, RT_ERROR_FEATURE_NOT_SUPPORT,
@@ -254,8 +255,8 @@ rtError_t NpuDriver::GetMemUceInfo(const uint32_t deviceId, rtMemUceInfo* memUce
     constexpr int32_t moduleType = RT_MODULE_TYPE_MEMORY;
     int32_t size = sizeof(rtMemUceInfo);
     RT_LOG(
-        RT_LOG_INFO, "get mem uce info begin, device_id=%u, moduleType=%d, infoType=%d", deviceId, moduleType,
-        infoType);
+        RT_LOG_INFO, "get mem uce info begin, device_id=%u, moduleType=" RT_ENUM_LOG_FORMAT("%d") ", infoType=%d",
+        deviceId, RT_ENUM_LOG_VALUE(moduleType, "MODULE_TYPE_MEMORY"), infoType);
     drvRet = halGetDeviceInfoByBuff(deviceId, moduleType, infoType, static_cast<void*>(memUceInfo), &size);
     COND_RETURN_WARN(
         drvRet == DRV_ERROR_NOT_SUPPORT, RT_ERROR_FEATURE_NOT_SUPPORT,
@@ -447,7 +448,9 @@ rtError_t NpuDriver::TaskAbortByType(
     para.msg = static_cast<void*>(&killIn);
 
     COND_RETURN_WARN(&halTsdrvCtl == nullptr, RT_ERROR_DRV_NOT_SUPPORT, "[drv api] halTsdrvCtl does not exist.");
-    RT_LOG(RT_LOG_INFO, "device_id=%u, op_type=%u, target_id=%u.", deviceId, opType, targetId);
+    RT_LOG(
+        RT_LOG_INFO, "device_id=%u, op_type=" RT_ENUM_LOG_FORMAT("%u") ", target_id=%u.", deviceId,
+        RT_ENUM_LOG_VALUE(opType, OperationTypeToString(opType)), targetId);
     const drvError_t drvRet = halTsdrvCtl(
         deviceId, TSDRV_CTL_CMD_CTRL_MSG, static_cast<void*>(&para), sizeof(tsdrv_ctrl_msg),
         static_cast<void*>(&killAck), &ackCount);
@@ -519,7 +522,9 @@ rtError_t NpuDriver::RecoverAbortByType(
     para.msg = static_cast<void*>(&recoverIn);
 
     COND_RETURN_WARN(&halTsdrvCtl == nullptr, RT_ERROR_DRV_NOT_SUPPORT, "[drv api] halTsdrvCtl does not exist.");
-    RT_LOG(RT_LOG_INFO, "device_id=%u, op_type=%u, target_id=%u.", deviceId, opType, targetId);
+    RT_LOG(
+        RT_LOG_INFO, "device_id=%u, op_type=" RT_ENUM_LOG_FORMAT("%u") ", target_id=%u.", deviceId,
+        RT_ENUM_LOG_VALUE(opType, OperationTypeToString(opType)), targetId);
     const drvError_t drvRet = halTsdrvCtl(
         deviceId, TSDRV_CTL_CMD_CTRL_MSG, static_cast<void*>(&para), sizeof(tsdrv_ctrl_msg),
         static_cast<void*>(&recoverAck), &ackCount);

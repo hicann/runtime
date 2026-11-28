@@ -29,6 +29,7 @@ enum SQ_ADDR_MEM_ORDER_TYPE : std::uint32_t {
 
     SQ_ADDR_MEM_ORDER_TYPE_MAX,
 };
+RT_ENUM_LOG_DECLARE(SqAddrMemOrderTypeToString, uint32_t)
 
 typedef struct {
     uint32_t sqAddrItemSize;  // Size of memory units in each pool

@@ -8,6 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include "common/enum_log.hpp"
+#include "stars/stars_base.hpp"
 #include "stream.hpp"
 #include "runtime.hpp"
 #include "context.hpp"
@@ -71,9 +73,10 @@ static void ConstructDavidSqeForTimeoutSetTask(TaskInfo* taskInfo, void* const s
     RT_LOG(
         RT_LOG_INFO,
         "TaskTimeoutSetTask, device_id=%u, stream_id=%d, task_id=%hu, task_sn=%u, "
-        "topicType=%u, cmdType=%u.",
+        "topicType=" RT_ENUM_LOG_FORMAT("%u") ", cmdType=" RT_ENUM_LOG_FORMAT("%u") ".",
         stm->Device_()->Id_(), stm->Id_(), taskInfo->id, taskInfo->taskSn,
-        static_cast<uint32_t>(aicpuCtrlSqe->topicType), aicpuCtrlSqe->usrData.cmdType);
+        RT_ENUM_LOG_VALUE(static_cast<uint32_t>(aicpuCtrlSqe->topicType), RtTopicTypeToString(aicpuCtrlSqe->topicType)),
+        RT_ENUM_LOG_VALUE(aicpuCtrlSqe->usrData.cmdType, "TS_AICPU_TIMEOUT_CONFIG"));
     UpdateDavidSqeHeadUpdate(taskInfo, sqe);
 }
 #endif

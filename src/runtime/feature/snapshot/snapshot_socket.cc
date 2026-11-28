@@ -22,6 +22,7 @@
 #include <unistd.h>
 #include <vector>
 #include "base.hpp"
+#include "common/enum_log.hpp"
 #include "error_message_manage.hpp"
 #include "osal.hpp"
 #include "securec.h"
@@ -510,7 +511,9 @@ void SnapshotService::HandleConnection(int32_t fd)
     // A disconnected client does not cancel an RT operation that has already started.
     uint32_t value = 0U;
     const int32_t result = DispatchSnapshotRequest(op, argsSize == 0U ? nullptr : &args, value);
-    RT_LOG(RT_LOG_DEBUG, "Snapshot request finished, op=%u, result=%d.", opValue, result);
+    RT_LOG(
+        RT_LOG_DEBUG, "Snapshot request finished, op=" RT_ENUM_LOG_FORMAT("%u") ", result=%d.",
+        RT_ENUM_LOG_VALUE(opValue, SnapshotOpToString(opValue)), result);
     const SnapshotResponse response = {
         htonl(SNAPSHOT_MAGIC), htonl(SNAPSHOT_VERSION), htonl(static_cast<uint32_t>(result)), htonl(value)};
     if (!SendSocket(fd, &response, sizeof(response), stopFd_) && !stopping_.load()) {

@@ -141,11 +141,16 @@ rtError_t InternalLaunchWithArgs(
     kernelTask->u.aicpuTaskInfo.timeout = ConvertAicpuTimeout(stm->Device_(), argsInfo, nullptr, flag);
     RT_LOG(
         RT_LOG_INFO,
+        // clang-format off
         "Force flag device_id=%u, stream_id=%d, task_id=%u, model_num=%u, NonSupportModelCompile=%u "
-        "isNoNeedH2DCopy=%u, kernel_type=%u, flag=0x%x, timeout=%" PRIu64 "us, kernelFlag=0x%x, blkdim=%u",
+        "isNoNeedH2DCopy=%u, kernel_type=" RT_ENUM_LOG_FORMAT("%u") ", flag=0x%x, "
+        "timeout=%" PRIu64 "us, kernelFlag=0x%x, blkdim=%u",
+        // clang-format on
         curCtx->Device_()->Id_(), streamId, kernelTask->id, (stm->IsModelStream() ? 1U : 0U),
-        stm->NonSupportModelCompile(), argsInfo->isNoNeedH2DCopy, kernelType, flag, kernelTask->u.aicpuTaskInfo.timeout,
-        kernelTask->u.aicpuTaskInfo.comm.kernelFlag, kernelTask->u.aicpuTaskInfo.comm.dim);
+        stm->NonSupportModelCompile(), argsInfo->isNoNeedH2DCopy,
+        RT_ENUM_LOG_VALUE(kernelType, ExecutableKernelTypeToString(kernelType)), flag,
+        kernelTask->u.aicpuTaskInfo.timeout, kernelTask->u.aicpuTaskInfo.comm.kernelFlag,
+        kernelTask->u.aicpuTaskInfo.comm.dim);
 
     error = curCtx->Device_()->SubmitTask(kernelTask);
     ERROR_GOTO_MSG_INNER(error, ERROR_FREE, "Failed to submit kernel task, retCode=%#x", error);

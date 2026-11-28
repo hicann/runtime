@@ -126,8 +126,11 @@ inline void ConstructAivSqePart(const T* const kernelInfo, SqeType* const sqe, u
     sqe->aivTaskParamPtrLow = static_cast<uint32_t>(addr);
     sqe->aivTaskParamPtrHigh = (sqe->aivTaskParamPtrHigh & 0xFFF00000U) | static_cast<uint32_t>(addr >> UINT32_BIT_NUM);
     RT_LOG(
-        RT_LOG_INFO, "set cfgInfo schemMode=%u, sqe_schem=%u, ratio=%u, aivSimtDcuSmSize=%u.", schemMode, sqe->schem,
-        sqe->ratio, sqe->aivSimtDcuSmSize);
+        RT_LOG_INFO,
+        "set cfgInfo schemMode=" RT_ENUM_LOG_FORMAT("%u") ", sqe_schem=" RT_ENUM_LOG_FORMAT(
+            "%u") ", ratio=%u, aivSimtDcuSmSize=%u.",
+        RT_ENUM_LOG_VALUE(schemMode, RtSchemModeTypeToString(schemMode)),
+        RT_ENUM_LOG_VALUE(sqe->schem, RtSchemModeTypeToString(sqe->schem)), sqe->ratio, sqe->aivSimtDcuSmSize);
 }
 
 template <typename T, typename SqeType>
@@ -336,8 +339,11 @@ inline void ConstructAicSqePart(T* const kernelInfo, SqeType* const sqe, uint64_
     sqe->aivTaskParamPtrLow = 0U;
     sqe->aivTaskParamPtrHigh = 0U;
     RT_LOG(
-        RT_LOG_INFO, "set cfgInfo schemMode=%u, sqe_schem=%u, ratio=%u, aivSimtDcuSmSize=%u.", schemMode, sqe->schem,
-        sqe->ratio, sqe->aivSimtDcuSmSize);
+        RT_LOG_INFO,
+        "set cfgInfo schemMode=" RT_ENUM_LOG_FORMAT("%u") ", sqe_schem=" RT_ENUM_LOG_FORMAT(
+            "%u") ", ratio=%u, aivSimtDcuSmSize=%u.",
+        RT_ENUM_LOG_VALUE(schemMode, RtSchemModeTypeToString(schemMode)),
+        RT_ENUM_LOG_VALUE(sqe->schem, RtSchemModeTypeToString(sqe->schem)), sqe->ratio, sqe->aivSimtDcuSmSize);
 }
 
 template <typename SqeType>
@@ -362,10 +368,13 @@ inline void ConstructMixSqeCommonForDavinciTask(TaskInfo* const taskInfo, SqeTyp
 
     RT_LOG(
         RT_LOG_INFO,
-        "set cfgInfo schemMode=%u, sqe_schem=%u, taskType=" RT_ENUM_LOG_FORMAT(
-            "%u") ", ratio=%u, mix=%u, loose=%u, piMix=%u,"
-                  "aivSimtDcuSmSize=%u, featureFlag=0x%x.",
-        aicTaskInfo->schemMode, sqe->schem,
+        // clang-format off
+        "set cfgInfo schemMode=" RT_ENUM_LOG_FORMAT("%u") ", sqe_schem=" RT_ENUM_LOG_FORMAT("%u")
+        ", taskType=" RT_ENUM_LOG_FORMAT("%u") ", ratio=%u, mix=%u, loose=%u, piMix=%u,"
+        "aivSimtDcuSmSize=%u, featureFlag=0x%x.",
+        // clang-format on
+        RT_ENUM_LOG_VALUE(aicTaskInfo->schemMode, RtSchemModeTypeToString(aicTaskInfo->schemMode)),
+        RT_ENUM_LOG_VALUE(sqe->schem, RtSchemModeTypeToString(sqe->schem)),
         RT_ENUM_LOG_VALUE(static_cast<uint32_t>(taskInfo->type), RT_ENUM_LOG_NAME(taskInfo->typeName)), sqe->ratio,
         sqe->mix, sqe->loose, sqe->piMix, sqe->aivSimtDcuSmSize, sqe->featureFlag);
 }

@@ -9,9 +9,13 @@
  */
 
 #include "stars_david.hpp"
+#include "common/enum_log.hpp"
+#include "runtime/kernel.h"
+#include "stars/stars_base.hpp"
 #include "david_sqe_adapter.hpp"
 #include "runtime_task_manager.h"
 #include "davinci_kernel_task.h"
+#include "task/task_base.hpp"
 #include "arch920x/aic_aiv_sqe.h"
 
 namespace cce {
@@ -29,8 +33,10 @@ void ConstructDavidAICpuSqeForDavinciTask(TaskInfo* const taskInfo, void* const 
     RtDavidStarsAicpuKernelSqe* const aicpuKernelSqe = &(davidSqe->aicpuSqe);
     PrintDavidSqe(davidSqe, "AICpuTask");
     RT_LOG(
-        RT_LOG_INFO, "topic_type=%hu, kernel_type=%u, dump_en=%u", aicpuKernelSqe->topicType,
-        aicpuKernelSqe->kernelType, aicpuKernelSqe->usrData.debugDumpEn);
+        RT_LOG_INFO, "topic_type=" RT_ENUM_LOG_FORMAT("%hu") ", kernel_type=" RT_ENUM_LOG_FORMAT("%u") ", dump_en=%u",
+        RT_ENUM_LOG_VALUE(aicpuKernelSqe->topicType, RtTopicTypeToString(aicpuKernelSqe->topicType)),
+        RT_ENUM_LOG_VALUE(aicpuKernelSqe->kernelType, AicpuTaskKernelTypeToString(aicpuKernelSqe->kernelType)),
+        aicpuKernelSqe->usrData.debugDumpEn);
     UpdateDavidSqeHeadUpdate(taskInfo, sqe);
     return;
 }

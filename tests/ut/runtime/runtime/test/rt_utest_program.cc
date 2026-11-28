@@ -1223,6 +1223,13 @@ TEST_F(ProgramTest, AdviseMemoryLog_PreservesWideSizeAndEarlyReturn)
 }
 
 #if RUNTIME_ENABLE_ENUM_LOG_NAMES
+TEST(EnumLogNamesTest, KernelFunctionTypeAcceptsRawValues)
+{
+    EXPECT_STREQ(
+        KernelFunctionTypeToString(static_cast<uint32_t>(KERNEL_FUNCTION_TYPE_AIC)), "KERNEL_FUNCTION_TYPE_AIC");
+    EXPECT_STREQ(KernelFunctionTypeToString(UINT32_MAX), "UNKNOWN");
+}
+
 TEST_F(ProgramTest, TaskTypeNamesBorrowAndNormalizeProviderResults)
 {
     // Typed inputs fit 0..255; unknown provider results still normalize to UNKNOWN.

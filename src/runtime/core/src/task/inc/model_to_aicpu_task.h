@@ -10,6 +10,7 @@
 #ifndef RUNTIME_MODEL_TO_AICPU_TASK_H
 #define RUNTIME_MODEL_TO_AICPU_TASK_H
 
+#include "runtime/rt_model.h"
 #include "task_info.hpp"
 #include "hwts.hpp"
 

@@ -431,6 +431,7 @@ enum class rtAsyncCpyMethod : uint8_t {
     RT_ASYNC_CPY_2D = 1,   // rtMemcpy2dAsync
     RT_ASYNC_CPY_BATCH = 2 // rtMemcpyBatchAsync
 };
+RT_ENUM_LOG_DECLARE(RtAsyncCpyMethodToString, uint32_t)
 
 enum class rtDavidUbDmaSqeMode : uint16_t {
     RT_DAVID_SQE_DIRECTWQE_MODE = 0, // direct wqe

@@ -1332,7 +1332,9 @@ rtError_t NpuDriver::DevMemAllocWithFlag(
 {
     const uint32_t devRunMode = GetRunMode();
 
-    RT_LOG(RT_LOG_DEBUG, "device_id=%d, type=%u, size=%" PRIu64 ", mode=%u.", deviceId, type, size, devRunMode);
+    RT_LOG(
+        RT_LOG_DEBUG, "device_id=%d, type=%u, size=%" PRIu64 ", mode=" RT_ENUM_LOG_FORMAT("%u") ".", deviceId, type,
+        size, RT_ENUM_LOG_VALUE(devRunMode, RtRunModeToString(devRunMode)));
     if (devRunMode == static_cast<uint32_t>(RT_RUN_MODE_ONLINE)) {
         return DevMemAllocOnline(dptr, size, type, curFlag, config);
     }

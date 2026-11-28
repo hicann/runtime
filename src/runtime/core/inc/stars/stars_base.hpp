@@ -145,6 +145,7 @@ enum RtTopicType {
     TOPIC_TYPE_DEVICE_AICPU_SRC_PID = 10,
 };
 RT_ENUM_LOG_DECLARE(RtTopicTypeToString, RtTopicType)
+RT_ENUM_LOG_DECLARE(RtTopicTypeToString, uint32_t)
 
 enum RtModelExecutorFlag {
     MODEL_EXECUTOR_TS = 1,

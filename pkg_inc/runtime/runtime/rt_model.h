@@ -97,6 +97,7 @@ typedef enum tagTsAicpuModelCmd {
     TS_AICPU_MODEL_ABORT,
     TS_AICPU_MODEL_RESERVED,
 } tsAicpuModelCmd;
+RT_ENUM_LOG_DECLARE_IN_NAMESPACE(TsAicpuModelCmdToString, uint32_t)
 
 typedef struct tagAicpuTaskInfo {
     uint32_t taskID;

@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "fast_recover.hpp"
+#include "common/enum_log.hpp"
 #include "stream_c.hpp"
 #include "task_david.hpp"
 #include "stream_factory.hpp"
@@ -87,7 +88,9 @@ rtError_t DeviceTaskSendStop(const int32_t devId, const uint64_t timeRemain)
 
 rtError_t DavidDeviceKill(const int32_t devId, const uint32_t op, const uint64_t timeRemain)
 {
-    RT_LOG(RT_LOG_INFO, "DeviceKill[%u] op=%u start", devId, op);
+    RT_LOG(
+        RT_LOG_INFO, "DeviceKill[%u] op=" RT_ENUM_LOG_FORMAT("%u") " start", devId,
+        RT_ENUM_LOG_VALUE(op, OperationTypeToString(op)));
     rtError_t error = RT_ERROR_CONTEXT_NULL;
     const uint64_t startTime = ClockGetTimeUs();
     uint64_t count = 0U;
@@ -130,7 +133,9 @@ rtError_t DavidDeviceKill(const int32_t devId, const uint32_t op, const uint64_t
             (void)mmSleep(1U);
         }
 
-        RT_LOG(RT_LOG_INFO, "DeviceKill[%u] op=%u, time cost=%" PRIu64 "us, end", devId, op, count);
+        RT_LOG(
+            RT_LOG_INFO, "DeviceKill[%u] op=" RT_ENUM_LOG_FORMAT("%u") ", time cost=%" PRIu64 "us, end", devId,
+            RT_ENUM_LOG_VALUE(op, OperationTypeToString(op)), count);
         return error; // one pid kill once
     }
     return error;
@@ -138,7 +143,9 @@ rtError_t DavidDeviceKill(const int32_t devId, const uint32_t op, const uint64_t
 
 rtError_t DavidDeviceQuery(const int32_t devId, const uint32_t op, const uint64_t timeRemain)
 {
-    RT_LOG(RT_LOG_INFO, "DeviceQuery[%u] op=%u start.", devId, op);
+    RT_LOG(
+        RT_LOG_INFO, "DeviceQuery[%u] op=" RT_ENUM_LOG_FORMAT("%u") " start.", devId,
+        RT_ENUM_LOG_VALUE(op, OperationTypeToString(op)));
     rtError_t error = RT_ERROR_CONTEXT_NULL;
     const uint64_t startTime = ClockGetTimeUs();
     const ReadProtect rp(&ContextDataManage::Instance().GetSetRwLock());
@@ -180,7 +187,9 @@ rtError_t DavidDeviceQuery(const int32_t devId, const uint32_t op, const uint64_
             (void)mmSleep(5U);
         }
 
-        RT_LOG(RT_LOG_INFO, "DeviceQuery[%u] op=%u end, time cost=%" PRIu64 "us.", devId, op, count);
+        RT_LOG(
+            RT_LOG_INFO, "DeviceQuery[%u] op=" RT_ENUM_LOG_FORMAT("%u") " end, time cost=%" PRIu64 "us.", devId,
+            RT_ENUM_LOG_VALUE(op, OperationTypeToString(op)), count);
         return error; // one pid kill once
     }
     return error;

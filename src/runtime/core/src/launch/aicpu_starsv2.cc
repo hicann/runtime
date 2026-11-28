@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "aicpu_c.hpp"
+#include "common/api_enum_log.hpp"
 #include "davinci_kernel_task.h"
 #include "stream_c.hpp"
 #include "runtime.hpp"
@@ -321,8 +322,9 @@ static rtError_t StreamLaunchCpuKernelExWithArgsForAicpuStm(
     aicpuTask->aicpuKernelType = static_cast<uint8_t>(kernelType);
     aicpuTask->timeout = ConvertAicpuTimeout(stm->Device_(), argsInfo, taskCfg, flag);
     RT_LOG(
-        RT_LOG_INFO, "kernel type=%u, flag=0x%x, timeout=%hus, kernelFlag=0x%x, blkdim=%u.", kernelType, flag,
-        aicpuTask->timeout, aicpuTask->comm.kernelFlag, aicpuTask->comm.dim);
+        RT_LOG_INFO, "kernel type=" RT_ENUM_LOG_FORMAT("%u") ", flag=0x%x, timeout=%hus, kernelFlag=0x%x, blkdim=%u.",
+        RT_ENUM_LOG_VALUE(kernelType, ExecutableKernelTypeToString(kernelType)), flag, aicpuTask->timeout,
+        aicpuTask->comm.kernelFlag, aicpuTask->comm.dim);
     error = ProcAicpuTask(kernelTask);
     ERROR_PROC_RETURN_MSG_INNER(error, StreamLaunchKernelRecycle(result, kernelTask, nullptr, stm);
                                 , "Process AI CPU task failed, stream_id=%d.", streamId);
@@ -349,9 +351,11 @@ static void SetTaskInfo(
     aicpuTask->timeout = ConvertAicpuTimeout(kernelTask->stream->Device_(), argsInfo, taskCfg, flag);
     aicpuTask->headParamOffset = static_cast<uint32_t>(cpuParamHeadOffset);
     RT_LOG(
-        RT_LOG_INFO, "kernel type=%u, flag=0x%x, timeout=%hus, kernelFlag=0x%x, blkdim=%u, headParamOffset=%u.",
-        kernelType, flag, aicpuTask->timeout, aicpuTask->comm.kernelFlag, aicpuTask->comm.dim,
-        aicpuTask->headParamOffset);
+        RT_LOG_INFO,
+        "kernel type=" RT_ENUM_LOG_FORMAT(
+            "%u") ", flag=0x%x, timeout=%hus, kernelFlag=0x%x, blkdim=%u, headParamOffset=%u.",
+        RT_ENUM_LOG_VALUE(kernelType, ExecutableKernelTypeToString(kernelType)), flag, aicpuTask->timeout,
+        aicpuTask->comm.kernelFlag, aicpuTask->comm.dim, aicpuTask->headParamOffset);
 }
 
 rtError_t StreamLaunchCpuKernelExWithArgs(

@@ -103,6 +103,7 @@ enum TaskWrCqeFlag {
     TASK_WR_CQE_NEVER,
     TASK_WR_CQE_ALWAYS
 };
+RT_ENUM_LOG_DECLARE(TaskWrCqeFlagToString, uint32_t)
 
 enum { MAX_REPORT_COUNT = 4 };
 
@@ -239,6 +240,7 @@ enum class ProfTaskType : uint16_t {
     PROF_TASK_TYPE_COUNT_NOTIFY_RECORD,
     PROF_TASK_TYPE_COUNT_NOTIFY_WAIT,
 };
+RT_ENUM_LOG_DECLARE(ProfTaskTypeToString, uint64_t)
 
 enum class PhCmdType : uint8_t {
     CMD_STREAM_CLEAR = 0,
@@ -290,6 +292,7 @@ typedef enum tagTsAicpuKernelType {
     TS_AICPU_KERNEL_RESERVED = 128
 } tsAicpuKernelType;
 RT_ENUM_LOG_DECLARE(TsAicpuKernelTypeToString, tsAicpuKernelType)
+RT_ENUM_LOG_DECLARE(AicpuTaskKernelTypeToString, uint32_t)
 
 /**
  * @ingroup

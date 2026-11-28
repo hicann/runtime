@@ -10,10 +10,15 @@
 #ifndef CCE_RUNTIME_FAST_RECOVER_HPP
 #define CCE_RUNTIME_FAST_RECOVER_HPP
 
+#include "common/enum_log.h"
 #include "context.hpp"
+#include "runtime_tsch_defines.h"
 
 namespace cce {
 namespace runtime {
+// Host-side log names for enum OPERATION_TYPE from the TS control protocol.
+RT_ENUM_LOG_DECLARE(OperationTypeToString, uint32_t)
+
 rtError_t DavidDeviceTaskAbort(const int32_t devId, const uint32_t time);
 rtError_t DeviceTaskSendResume(const int32_t devId, const uint64_t timeRemain);
 rtError_t DavidDeviceQuery(const int32_t devId, const uint32_t op, const uint64_t timeRemain);

@@ -120,9 +120,9 @@ void ProfilingAgent::SetMsprofReporterCallback(MsprofReporterCallback const call
 
 MsprofReporterCallback ProfilingAgent::GetMsprofReporterCallback() const { return profReporterCallback_; }
 
-rtError_t ProfilingAgent::RegisterProfTypeInfo() const
+static const auto& GetProfTypeRegisterInfo() noexcept
 {
-    ProfTypeRegisterInfo registerInfo[] = {
+    static constexpr ProfTypeRegisterInfo registerInfo[] = {
         // task type, register task type and task name for parse, or profiling don't get task name
         {TS_TASK_TYPE_KERNEL_AICORE, "KERNEL_AICORE"},
         {TS_TASK_TYPE_KERNEL_MIX_AIC, "KERNEL_MIX_AIC"},
@@ -577,8 +577,53 @@ rtError_t ProfilingAgent::RegisterProfTypeInfo() const
         {static_cast<uint32_t>(RT_PROFILE_TYPE_API_BEGIN) + static_cast<uint32_t>(RT_PROF_API_CCU_LAUNCH), "CCULaunch"},
         {static_cast<uint32_t>(RT_PROFILE_TYPE_API_BEGIN) + static_cast<uint32_t>(RT_PROF_API_CACHE_LAST_TASK_OP_INFO),
          "CacheLastTaskOpInfo"},
+        {static_cast<uint32_t>(RT_PROFILE_TYPE_API_BEGIN) + static_cast<uint32_t>(RT_PROF_API_KERNEL_FUSION_END),
+         "KERNEL_FUSION_END"},
+        {static_cast<uint32_t>(RT_PROFILE_TYPE_API_BEGIN) + static_cast<uint32_t>(RT_PROF_API_MEM_ASYNC), "MEM_ASYNC"},
+        {static_cast<uint32_t>(RT_PROFILE_TYPE_API_BEGIN) + static_cast<uint32_t>(RT_PROF_API_IPC_EVENT_CREATE),
+         "IPC_EVENT_CREATE"},
+        {static_cast<uint32_t>(RT_PROFILE_TYPE_API_BEGIN) + static_cast<uint32_t>(RT_PROF_API_IPC_EVENT_OPEN),
+         "IPC_EVENT_OPEN"},
+        {static_cast<uint32_t>(RT_PROFILE_TYPE_API_BEGIN) + static_cast<uint32_t>(RT_PROF_API_IPC_MEMORY_CREATE),
+         "IPC_MEMORY_CREATE"},
+        {static_cast<uint32_t>(RT_PROFILE_TYPE_API_BEGIN) + static_cast<uint32_t>(RT_PROF_API_IPC_MEMORY_OPEN),
+         "IPC_MEMORY_OPEN"},
+        {static_cast<uint32_t>(RT_PROFILE_TYPE_API_BEGIN) + static_cast<uint32_t>(RT_PROF_API_IPC_MEMORY_CLOSE),
+         "IPC_MEMORY_CLOSE"},
+        {static_cast<uint32_t>(RT_PROFILE_TYPE_API_BEGIN) + static_cast<uint32_t>(RT_PROF_API_MEMORY_ADVISE),
+         "MEMORY_ADVISE"},
+        {static_cast<uint32_t>(RT_PROFILE_TYPE_API_BEGIN) + static_cast<uint32_t>(RT_PROF_API_MODEL_GET_TASKID),
+         "MODEL_GET_TASKID"},
+        {static_cast<uint32_t>(RT_PROFILE_TYPE_API_BEGIN) + static_cast<uint32_t>(RT_PROF_API_rtSwitch), "rtSwitch"},
+        {static_cast<uint32_t>(RT_PROFILE_TYPE_API_BEGIN) + static_cast<uint32_t>(RT_PROF_API_rtStreamActive),
+         "rtStreamActive"},
+        {static_cast<uint32_t>(RT_PROFILE_TYPE_API_BEGIN) + static_cast<uint32_t>(RT_PROF_API_LabelSwitchByCond),
+         "LabelSwitchByCond"},
+        {static_cast<uint32_t>(RT_PROFILE_TYPE_API_BEGIN) + static_cast<uint32_t>(RT_PROF_API_STARS_COMMON),
+         "STARS_COMMON"},
+        {static_cast<uint32_t>(RT_PROFILE_TYPE_API_BEGIN) + static_cast<uint32_t>(RT_PROF_API_FFTS), "FFTS"},
+        {static_cast<uint32_t>(RT_PROFILE_TYPE_API_BEGIN) + static_cast<uint32_t>(RT_PROF_API_EventReset),
+         "EventReset"},
+        {static_cast<uint32_t>(RT_PROFILE_TYPE_API_BEGIN) + static_cast<uint32_t>(RT_PROF_API_TaskInfoLaunch),
+         "TaskInfoLaunch"},
+        {static_cast<uint32_t>(RT_PROFILE_TYPE_API_BEGIN) + static_cast<uint32_t>(RT_PROF_API_IpcIntNotice),
+         "IpcIntNotice"},
+        {static_cast<uint32_t>(RT_PROFILE_TYPE_API_BEGIN) +
+             static_cast<uint32_t>(RT_PROF_API_GET_HOST_ATOMIC_CAPABILITIES),
+         "GetHostAtomicCapabilities"},
+        {static_cast<uint32_t>(RT_PROFILE_TYPE_API_BEGIN) +
+             static_cast<uint32_t>(RT_PROF_API_GET_P2P_ATOMIC_CAPABILITIES),
+         "GetP2PAtomicCapabilities"},
+        {static_cast<uint32_t>(RT_PROFILE_TYPE_API_BEGIN) +
+             static_cast<uint32_t>(RT_PROF_API_CACHE_LAST_TASK_EXTEND_INFO),
+         "CacheLastTaskExtendInfo"},
     };
+    return registerInfo;
+}
 
+rtError_t ProfilingAgent::RegisterProfTypeInfo() const
+{
+    const auto& registerInfo = GetProfTypeRegisterInfo();
     for (uint32_t i = 0U; i < sizeof(registerInfo) / sizeof(ProfTypeRegisterInfo); i++) {
         const int32_t ret = MsprofRegTypeInfo(MSPROF_REPORT_RUNTIME_LEVEL, registerInfo[i].type, registerInfo[i].name);
         if (ret != MSPROF_ERROR_NONE) {
@@ -591,6 +636,21 @@ rtError_t ProfilingAgent::RegisterProfTypeInfo() const
 
     return RT_ERROR_NONE;
 }
+
+#if RUNTIME_ENABLE_ENUM_LOG_NAMES
+const char* RtProfApiTypeToString(uint32_t value) noexcept
+{
+    if (value < RT_PROF_API_MAX) {
+        const uint32_t type = RT_PROFILE_TYPE_API_BEGIN + value;
+        for (const auto& info : GetProfTypeRegisterInfo()) {
+            if (info.type == type) {
+                return info.name;
+            }
+        }
+    }
+    return "UNKNOWN";
+}
+#endif
 
 rtError_t ProfilingAgent::Init() const
 {

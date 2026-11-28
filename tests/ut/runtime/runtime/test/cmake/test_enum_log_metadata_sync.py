@@ -324,6 +324,41 @@ class RepositoryMetadataTest(unittest.TestCase):
                 with self.assertRaisesRegex(sync.SyncError, table + ".*alias exception"):
                     sync.check_repository(ROOT, {path: mutated})
 
+    def test_profiling_registration_covers_each_api_once(self):
+        owner = (ROOT / "src/runtime/core/inc/common/profiler_struct.hpp").read_text(encoding="utf-8")
+        source = (ROOT / "src/runtime/core/src/common/profiling_agent.cc").read_text(encoding="utf-8")
+        tables = re.findall(r"\bProfTypeRegisterInfo\s+\w+\s*\[\s*\]\s*=\s*\{(.*?)^[ \t]*\};",
+                            sync._source_without_comments(source), re.MULTILINE | re.DOTALL)
+        self.assertEqual(len(tables), 1, "expected one profiling registration table")
+
+        declared = sync.enum_members(owner, "RT_PROF_API_DEVBINARY_REGISTER")
+        registered = []
+        for entry in re.findall(r"\{([^{}]+)\}", tables[0]):
+            if "RT_PROFILE_TYPE_API_BEGIN" in entry or "RT_PROF_API_" in entry:
+                match = re.fullmatch(
+                    r"\s*static_cast<uint32_t>\(RT_PROFILE_TYPE_API_BEGIN\)\s*\+\s*"
+                    r'static_cast<uint32_t>\((RT_PROF_API_\w+)\)\s*,\s*"[^"\n]+"\s*', entry,
+                )
+                self.assertIsNotNone(match, entry)
+                registered.append(match[1])
+        self.assertCountEqual(declared, registered + ["RT_PROF_API_BUTT", "RT_PROF_API_MAX"])
+
+    def test_prof_task_begin_alias_requires_the_original_initializer(self):
+        table = "RT_PROF_TASK_TYPE_META"
+        path, anchor, _ = sync.DOMAINS[table]
+        source = (ROOT / path).read_text(encoding="utf-8")
+        members = sync.enum_members(source, anchor)
+        for initializer in (" = 700", ""):
+            with self.subTest(initializer=initializer):
+                mutated, changes = re.subn(
+                    r"\bPROF_TASK_TYPE_KERNEL_SIMT\s*=\s*PROF_TASK_TYPE_BEGIN\b",
+                    "PROF_TASK_TYPE_KERNEL_SIMT" + initializer, source, count=1,
+                )
+                self.assertEqual(changes, 1, "the alias mutation must edit the actual declaration")
+                self.assertEqual(sync.enum_members(mutated, anchor), members)
+                with self.assertRaisesRegex(sync.SyncError, table + ".*alias exception"):
+                    sync.check_repository(ROOT, {path: mutated})
+
 
 class RepositoryDiscoveryTest(unittest.TestCase):
     def setUp(self):
