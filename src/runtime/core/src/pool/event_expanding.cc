@@ -122,6 +122,11 @@ rtError_t EventExpandingPool::AllocAndInsertEvent(void** const eventAddr, int32_
             COND_RETURN_AND_MSG_OUTER(
                 eventAllocator_[poolIndex_] == nullptr, RT_ERROR_MEMORY_ALLOCATION, ErrorCode::EE1013,
                 std::to_string(sizeof(BufferAllocator)).c_str(), "new");
+            if (!eventAllocator_[poolIndex_]->IsInitializedSuccess()) {
+                DELETE_O(eventAllocator_[poolIndex_]);
+                RT_LOG(RT_LOG_ERROR, "Failed to initialize expanded event buffer, poolIndex=%hu.", poolIndex_);
+                return RT_ERROR_MEMORY_ALLOCATION;
+            }
             RT_LOG(
                 RT_LOG_INFO, "Init EventExpandingPool success, poolIndex=%hu, barSupported=%d.", poolIndex_,
                 IsBarSupported());

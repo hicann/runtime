@@ -158,9 +158,8 @@ int32_t BufferAllocator::AllocIdWithoutRetry(const bool isLogError)
 int32_t BufferAllocator::AllocIdWithoutRetryInner(const bool isLogError, bool& canRetry)
 {
     if (pool_ == nullptr) {
-        if (enablePoolRelease_) {
-            canRetry = false;
-        }
+        // Bitmap retries cannot recover a failed pool initialization.
+        canRetry = false;
         RT_LOG(RT_LOG_ERROR, "Failed to allocate ID because pool array is null.");
         return -1;
     }
@@ -187,6 +186,7 @@ int32_t BufferAllocator::AllocIdWithoutRetryInner(const bool isLogError, bool& c
                 const auto ptr = allocFunc_(newPoolSize, para_);
                 if (ptr == nullptr) {
                     allocFuncState_.Set(false); // allocFunc fail
+                    canRetry = false;
                     RtLogErrorLevelControl(
                         isLogError, "Failed to call allocFunc, newPoolSize=%zu, poolIdx=%u", newPoolSize, poolIdx);
                     return -1;
@@ -204,7 +204,15 @@ int32_t BufferAllocator::AllocIdWithoutRetryInner(const bool isLogError, bool& c
 
 int32_t BufferAllocator::FinishAllocatedId(const int32_t id, const bool isLogError, bool& canRetry)
 {
-    if ((id < 0) || !enablePoolRelease_) {
+    if (id < 0) {
+        return id;
+    }
+    if (!enablePoolRelease_) {
+        if (!allocFuncState_.Value() && (pool_[GetPoolIndex(static_cast<uint32_t>(id))] == nullptr)) {
+            FreeBitmapId(id);
+            canRetry = false;
+            return -1;
+        }
         return id;
     }
     if (PrepareAllocatedId(id, isLogError)) {
@@ -280,6 +288,9 @@ void BufferAllocator::FreeBitmapId(const int32_t id)
 
 void BufferAllocator::FreeById(const int32_t id)
 {
+    if (pool_ == nullptr) {
+        return;
+    }
     if (!enablePoolRelease_) {
         FreeBitmapId(id);
         return;
@@ -369,23 +380,26 @@ int32_t BufferAllocator::GetIdByItem(const void* const item) const
 rtError_t BufferAllocator::MemsetBuffers(Device* device, uint32_t value)
 {
     NULL_PTR_RETURN(device, RT_ERROR_INVALID_VALUE);
+    COND_RETURN_ERROR(
+        pool_ == nullptr, RT_ERROR_MEMORY_ALLOCATION,
+        "Buffer allocator initialization failed because pool array is null.");
     const uint64_t memSize = initCount_ * itemSize_;
 
     std::unique_lock<std::shared_mutex> lock(poolMutex_, std::defer_lock);
     if (enablePoolRelease_) {
         lock.lock();
     }
-    for (uint32_t bufIdx = 0U; bufIdx < poolSize_; ++bufIdx) {
-        if (enablePoolRelease_ &&
-            ((poolMeta_[bufIdx].state.Value() != PoolState::INITIALIZED) || (pool_[bufIdx] == nullptr))) {
+    const uint32_t allocatedPoolSize = GetPoolIndex(currentCount_ - 1U) + 1U;
+    for (uint32_t bufIdx = 0U; bufIdx < allocatedPoolSize; ++bufIdx) {
+        if (enablePoolRelease_ && (poolMeta_[bufIdx].state.Value() == PoolState::RELEASED)) {
             continue;
         }
-        if (pool_[bufIdx] != nullptr) {
-            const rtError_t error = device->Driver_()->MemSetSync(pool_[bufIdx], memSize, value, memSize);
-            ERROR_RETURN(
-                error, "Failed to call MemSetSync, destMax=%" PRIu64 ", value=%u, count=%" PRIu64, memSize, value,
-                memSize);
-        }
+        COND_RETURN_ERROR(
+            pool_[bufIdx] == nullptr, RT_ERROR_MEMORY_ALLOCATION,
+            "Failed to reset buffer because pool initialization failed, poolIdx=%u.", bufIdx);
+        const rtError_t error = device->Driver_()->MemSetSync(pool_[bufIdx], memSize, value, memSize);
+        ERROR_RETURN(
+            error, "Failed to call MemSetSync, destMax=%" PRIu64 ", value=%u, count=%" PRIu64, memSize, value, memSize);
     }
     return RT_ERROR_NONE;
 }

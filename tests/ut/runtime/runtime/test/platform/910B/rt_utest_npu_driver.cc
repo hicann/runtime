@@ -1252,8 +1252,10 @@ TEST_F(CloudV2NpuDriverTest, buffer_allocator_test1)
 TEST_F(CloudV2NpuDriverTest, buffer_allocator_error1)
 {
     BufferAllocator alloc(0); // itemSize = 0
+    EXPECT_FALSE(alloc.IsInitializedSuccess());
     auto id = alloc.AllocId();
-    EXPECT_TRUE(id == 1 || id == 0);
+    EXPECT_EQ(id, -1);
+    EXPECT_EQ(alloc.AllocItem(), nullptr);
 }
 
 void* DefaultAllocFail(size_t size, void* para) { return nullptr; }
@@ -1265,8 +1267,10 @@ TEST_F(CloudV2NpuDriverTest, buffer_allocator_error2)
 {
     BufferAllocator alloc(sizeof(uint32_t), 64, 128, BufferAllocator::LINEAR, DefaultAllocFail, FreeFuncFail);
 
+    EXPECT_FALSE(alloc.IsInitializedSuccess());
     auto id = alloc.AllocId();
-    EXPECT_TRUE(id == 1 || id == 0);
+    EXPECT_EQ(id, -1);
+    EXPECT_EQ(alloc.AllocItem(), nullptr);
 }
 
 // 1st call ok, 2end call fail

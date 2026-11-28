@@ -50,6 +50,7 @@ public:
     static void OpenHugeBuff(void) { openHugeBuff_ = true; }
 
     rtError_t MemsetBuffers(Device* device, uint32_t value);
+    bool IsInitializedSuccess() const { return pool_ != nullptr; }
 
 private:
     enum class PoolState : uint8_t { UNEXPANDED, INITIALIZING, INITIALIZED, RELEASED };

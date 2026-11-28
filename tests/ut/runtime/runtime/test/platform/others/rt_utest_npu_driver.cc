@@ -30,6 +30,7 @@
 #include "runtime.hpp"
 #include "cmodel_driver.h"
 #include "raw_device.hpp"
+#include "event_expanding.hpp"
 #include "thread_local_container.hpp"
 #include "runtime/base.h"
 #undef private
@@ -1880,7 +1881,7 @@ TEST_F(NpuDriverTest, buffer_allocator_error1)
     BufferAllocator alloc(0); // itemSize = 0
 
     auto id = alloc.AllocId();
-    EXPECT_TRUE(id == 1 || id == 0);
+    EXPECT_EQ(id, -1);
 }
 
 void* DefaultAllocFail(size_t size, void* para) { return nullptr; }
@@ -1893,7 +1894,233 @@ TEST_F(NpuDriverTest, buffer_allocator_error2)
     BufferAllocator alloc(sizeof(uint32_t), 64, 128, BufferAllocator::LINEAR, DefaultAllocFail, FreeFuncFail);
 
     auto id = alloc.AllocId();
-    EXPECT_TRUE(id == 1 || id == 0);
+    EXPECT_EQ(id, -1);
+}
+
+namespace {
+void CheckUnavailableBufferAllocator(BufferAllocator& allocator, Device* const device)
+{
+    EXPECT_FALSE(allocator.IsInitializedSuccess());
+    EXPECT_EQ(allocator.AllocIdWithoutRetry(), -1);
+    EXPECT_EQ(allocator.AllocId(), -1);
+    EXPECT_EQ(allocator.AllocId(), -1);
+    EXPECT_EQ(allocator.AllocItem(), nullptr);
+    EXPECT_EQ(allocator.GetItemById(0), nullptr);
+    EXPECT_EQ(allocator.GetIdByItem(nullptr), -1);
+    allocator.FreeById(0);
+    allocator.FreeByItem(nullptr);
+    EXPECT_EQ(allocator.MemsetBuffers(device, 0U), RT_ERROR_MEMORY_ALLOCATION);
+}
+} // namespace
+
+TEST_F(NpuDriverTest, buffer_allocator_invalid_initialization_rejects_recovery)
+{
+    RawDevice device(0U);
+    for (const bool release : {false, true}) {
+        BufferAllocatorReleaseContext context;
+        for (const uint32_t initCount : {0U, 1U}) {
+            BufferAllocator allocator(
+                sizeof(uint32_t), initCount, 0U, BufferAllocator::LINEAR, BufferAllocatorReleaseAlloc,
+                BufferAllocatorReleaseFree, &context, release);
+            CheckUnavailableBufferAllocator(allocator, &device);
+        }
+        BufferAllocator allocator(
+            sizeof(uint32_t), 0U, 4U, BufferAllocator::LINEAR, BufferAllocatorReleaseAlloc, BufferAllocatorReleaseFree,
+            &context, release);
+        CheckUnavailableBufferAllocator(allocator, &device);
+        EXPECT_EQ(context.allocCount.load(), 0U);
+        EXPECT_EQ(context.freeCount.load(), 0U);
+    }
+}
+
+TEST_F(NpuDriverTest, buffer_allocator_host_array_failure_rejects_use_and_recovery)
+{
+    RawDevice device(0U);
+    for (const bool release : {false, true}) {
+        BufferAllocatorReleaseContext context;
+        MOCKER(malloc).expects(once()).will(returnValue(static_cast<void*>(nullptr)));
+        BufferAllocator allocator(
+            sizeof(uint32_t), 2U, 4U, BufferAllocator::LINEAR, BufferAllocatorReleaseAlloc, BufferAllocatorReleaseFree,
+            &context, release);
+        GlobalMockObject::verify();
+        CheckUnavailableBufferAllocator(allocator, &device);
+        EXPECT_EQ(context.allocCount.load(), 0U);
+        EXPECT_EQ(context.freeCount.load(), 0U);
+    }
+}
+
+TEST_F(NpuDriverTest, buffer_allocator_array_clear_failure_rejects_use_and_recovery)
+{
+    RawDevice device(0U);
+    BufferAllocatorReleaseContext context;
+    MOCKER(memset_s).expects(once()).will(returnValue(EINVAL));
+    BufferAllocator allocator(
+        sizeof(uint32_t), 2U, 4U, BufferAllocator::LINEAR, BufferAllocatorReleaseAlloc, BufferAllocatorReleaseFree,
+        &context, true);
+    GlobalMockObject::verify();
+    CheckUnavailableBufferAllocator(allocator, &device);
+    EXPECT_EQ(context.allocCount.load(), 0U);
+    EXPECT_EQ(context.freeCount.load(), 0U);
+}
+
+TEST_F(NpuDriverTest, buffer_allocator_metadata_failure_rejects_use_and_recovery)
+{
+    RawDevice device(0U);
+    BufferAllocatorReleaseContext context;
+    using NothrowArrayNew = void* (*)(std::size_t, const std::nothrow_t&);
+    MOCKER(static_cast<NothrowArrayNew>(&operator new[]))
+        .expects(once())
+        .will(returnValue(static_cast<void*>(nullptr)));
+    BufferAllocator allocator(
+        sizeof(uint32_t), 2U, 4U, BufferAllocator::LINEAR, BufferAllocatorReleaseAlloc, BufferAllocatorReleaseFree,
+        &context, true);
+    GlobalMockObject::verify();
+    CheckUnavailableBufferAllocator(allocator, &device);
+    EXPECT_EQ(context.allocCount.load(), 0U);
+    EXPECT_EQ(context.freeCount.load(), 0U);
+}
+
+TEST_F(NpuDriverTest, buffer_allocator_initial_buffer_failure_rejects_use_and_recovery)
+{
+    RawDevice device(0U);
+    for (const bool release : {false, true}) {
+        BufferAllocatorReleaseContext context;
+        context.failAlloc.store(true);
+        {
+            BufferAllocator allocator(
+                sizeof(uint32_t), 2U, 4U, BufferAllocator::LINEAR, BufferAllocatorReleaseAlloc,
+                BufferAllocatorReleaseFree, &context, release);
+            CheckUnavailableBufferAllocator(allocator, &device);
+            context.failAlloc.store(false);
+            CheckUnavailableBufferAllocator(allocator, &device);
+        }
+        EXPECT_EQ(context.allocCount.load(), 1U);
+        EXPECT_EQ(context.freeCount.load(), 0U);
+        {
+            BufferAllocator retry(
+                sizeof(uint32_t), 2U, 4U, BufferAllocator::LINEAR, BufferAllocatorReleaseAlloc,
+                BufferAllocatorReleaseFree, &context, release);
+            EXPECT_GE(retry.AllocId(), 0);
+        }
+        EXPECT_EQ(context.allocCount.load(), 2U);
+        EXPECT_EQ(context.freeCount.load(), 1U);
+    }
+}
+
+TEST_F(NpuDriverTest, buffer_allocator_recovery_keeps_expansion_and_release_semantics)
+{
+    NpuDriver driver;
+    RawDevice device(0U);
+    device.driver_ = &driver;
+    for (const bool release : {false, true}) {
+        BufferAllocatorReleaseContext context;
+        {
+            BufferAllocator allocator(
+                sizeof(uint32_t), 1U, 3U, BufferAllocator::LINEAR, BufferAllocatorReleaseAlloc,
+                BufferAllocatorReleaseFree, &context, release);
+            const int32_t id0 = allocator.AllocId();
+            const int32_t id1 = allocator.AllocId();
+            ASSERT_GE(id0, 0);
+            ASSERT_GE(id1, 0);
+            MOCKER_CPP_VIRTUAL(&driver, &NpuDriver::MemSetSync).expects(exactly(2)).will(returnValue(RT_ERROR_NONE));
+            EXPECT_EQ(allocator.MemsetBuffers(&device, 0U), RT_ERROR_NONE);
+            GlobalMockObject::verify();
+            allocator.FreeById(id1);
+            EXPECT_TRUE(allocator.IsInitializedSuccess());
+            MOCKER_CPP_VIRTUAL(&driver, &NpuDriver::MemSetSync)
+                .expects(exactly(release ? 1 : 2))
+                .will(returnValue(RT_ERROR_NONE));
+            EXPECT_EQ(allocator.MemsetBuffers(&device, 0U), RT_ERROR_NONE);
+            GlobalMockObject::verify();
+            EXPECT_GE(allocator.AllocId(), 0);
+            MOCKER_CPP_VIRTUAL(&driver, &NpuDriver::MemSetSync).expects(once()).will(returnValue(RT_ERROR_DRV_ERR));
+            EXPECT_EQ(allocator.MemsetBuffers(&device, 0U), RT_ERROR_DRV_ERR);
+            GlobalMockObject::verify();
+        }
+        EXPECT_EQ(context.allocCount.load(), context.freeCount.load());
+    }
+    device.driver_ = nullptr;
+}
+
+TEST_F(NpuDriverTest, buffer_allocator_recovery_rejects_failed_expansion)
+{
+    NpuDriver driver;
+    RawDevice device(0U);
+    device.driver_ = &driver;
+    for (const bool release : {false, true}) {
+        BufferAllocatorReleaseContext context;
+        BufferAllocator allocator(
+            sizeof(uint32_t), 1U, 2U, BufferAllocator::LINEAR, BufferAllocatorReleaseAlloc, BufferAllocatorReleaseFree,
+            &context, release);
+        ASSERT_GE(allocator.AllocId(), 0);
+        context.failAlloc.store(true);
+        (void)allocator.AllocIdWithoutRetry();
+        MOCKER_CPP_VIRTUAL(&driver, &NpuDriver::MemSetSync).stubs().will(returnValue(RT_ERROR_NONE));
+        EXPECT_EQ(allocator.MemsetBuffers(&device, 0U), RT_ERROR_MEMORY_ALLOCATION);
+        GlobalMockObject::verify();
+    }
+    device.driver_ = nullptr;
+}
+
+TEST_F(NpuDriverTest, buffer_allocator_failed_expansion_does_not_publish_bitmap_id)
+{
+    for (const bool release : {false, true}) {
+        BufferAllocatorReleaseContext context;
+        BufferAllocator allocator(
+            sizeof(uint32_t), 1U, 2U, BufferAllocator::LINEAR, BufferAllocatorReleaseAlloc, BufferAllocatorReleaseFree,
+            &context, release);
+        const int32_t id0 = allocator.AllocId();
+        ASSERT_EQ(id0, 0);
+        void* const item0 = allocator.GetItemById(id0);
+        ASSERT_NE(item0, nullptr);
+
+        context.failAlloc.store(true);
+        EXPECT_EQ(allocator.AllocId(), -1);
+        EXPECT_EQ(allocator.AllocIdWithoutRetry(), -1);
+        EXPECT_FALSE(allocator.BitmapIsOccupied(1));
+        EXPECT_TRUE(allocator.IsInitializedSuccess());
+        EXPECT_EQ(context.allocCount.load(), 2U);
+
+        allocator.FreeById(id0);
+        context.failAlloc.store(false);
+        EXPECT_EQ(allocator.AllocId(), id0);
+        EXPECT_EQ(allocator.GetItemById(id0), item0);
+    }
+}
+
+TEST_F(NpuDriverTest, buffer_allocator_event_pool_initialization_failure_can_retry)
+{
+    NpuDriver driver;
+    RawDevice device(0U);
+    device.driver_ = &driver;
+    MOCKER_CPP_VIRTUAL(&driver, &NpuDriver::CheckSupportPcieBarCopy)
+        .stubs()
+        .will(returnValue(RT_ERROR_DRV_NOT_SUPPORT));
+    void* const buffer = malloc(EVENT_INIT_CNT);
+    ASSERT_NE(buffer, nullptr);
+    MOCKER(&EventExpandingPool::MallocBufferForEvent)
+        .expects(exactly(2))
+        .will(returnValue(static_cast<void*>(nullptr)))
+        .then(returnValue(buffer));
+    MOCKER(&EventExpandingPool::FreeBufferForEvent).expects(once());
+    {
+        EventExpandingPool pool(&device);
+        void* address = nullptr;
+        int32_t id = -1;
+        EXPECT_EQ(pool.AllocAndInsertEvent(&address, &id), RT_ERROR_MEMORY_ALLOCATION);
+        EXPECT_EQ(address, nullptr);
+        EXPECT_EQ(id, -1);
+        EXPECT_EQ(pool.eventIdCount_, EVENT_INIT_VALUE);
+        EXPECT_EQ(pool.eventAllocator_[0], nullptr);
+        EXPECT_EQ(pool.poolIndex_, 0U);
+        EXPECT_EQ(pool.AllocAndInsertEvent(&address, &id), RT_ERROR_NONE);
+        EXPECT_EQ(address, buffer);
+        EXPECT_EQ(id, EVENT_INIT_VALUE);
+        EXPECT_EQ(pool.eventIdCount_, EVENT_INIT_VALUE + 1);
+    }
+    device.driver_ = nullptr;
+    GlobalMockObject::verify();
+    free(buffer);
 }
 
 // 1st call ok, 2end call fail
